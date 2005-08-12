@@ -41,7 +41,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(uxtheme);
  * Defines and global variables
  */
 
-DWORD dwDialogTextureFlags;
+extern ATOM atDialogThemeEnabled;
 
 /***********************************************************************/
 
@@ -50,8 +50,19 @@ DWORD dwDialogTextureFlags;
  */
 HRESULT WINAPI EnableThemeDialogTexture(HWND hwnd, DWORD dwFlags)
 {
+    static const WCHAR szTab[] = { 'T','a','b',0 };
+    HRESULT hr;
+
     TRACE("(%p,0x%08lx\n", hwnd, dwFlags);
-    dwDialogTextureFlags = dwFlags;
+    hr = SetPropW (hwnd, MAKEINTATOMW (atDialogThemeEnabled), 
+        (HANDLE)(dwFlags|0x80000000)); 
+        /* 0x80000000 serves as a "flags set" flag */
+    if (FAILED(hr))
+          return hr;
+    if (dwFlags & ETDT_USETABTEXTURE)
+        return SetWindowTheme (hwnd, NULL, szTab);
+    else
+        return SetWindowTheme (hwnd, NULL, NULL);
     return S_OK;
  }
 
@@ -60,7 +71,15 @@ HRESULT WINAPI EnableThemeDialogTexture(HWND hwnd, DWORD dwFlags)
  */
 BOOL WINAPI IsThemeDialogTextureEnabled(HWND hwnd)
 {
+    DWORD dwDialogTextureFlags;
     TRACE("(%p)\n", hwnd);
+
+    dwDialogTextureFlags = (DWORD)GetPropW (hwnd, 
+        MAKEINTATOMW (atDialogThemeEnabled));
+    if (dwDialogTextureFlags == 0) 
+        /* Means EnableThemeDialogTexture wasn't called for this dialog */
+        return TRUE;
+
     return (dwDialogTextureFlags & ETDT_ENABLE) && !(dwDialogTextureFlags & ETDT_DISABLE);
 }
 
@@ -95,7 +114,7 @@ HRESULT WINAPI DrawThemeParentBackground(HWND hwnd, HDC hdc, RECT *prc)
         MapWindowPoints(hParent, NULL, (LPPOINT)&rt, 2);
     }
 
-    SetViewportOrgEx(hdc, rt.left, rt.top, &org);
+    OffsetViewportOrgEx(hdc, -rt.left, -rt.top, &org);
 
     SendMessageW(hParent, WM_ERASEBKGND, (WPARAM)hdc, 0);
     SendMessageW(hParent, WM_PRINTCLIENT, (WPARAM)hdc, PRF_CLIENT);
@@ -190,7 +209,7 @@ static HRESULT UXTHEME_LoadImage(HTHEME hTheme, HDC hdc, int iPartId, int iState
                           HBITMAP *hBmp, RECT *bmpRect)
 {
     int imagelayout = IL_VERTICAL;
-    int imagecount = 0;
+    int imagecount = 1;
     BITMAP bmp;
     WCHAR szPath[MAX_PATH];
     PTHEME_PROPERTY tp = UXTHEME_SelectImage(hTheme, hdc, iPartId, iStateId, pRect, glyph);
@@ -213,12 +232,12 @@ static HRESULT UXTHEME_LoadImage(HTHEME hTheme, HDC hdc, int iPartId, int iState
         int height = bmp.bmHeight/imagecount;
         bmpRect->left = 0;
         bmpRect->right = bmp.bmWidth;
-        bmpRect->top = (min(imagecount, iStateId)-1) * height;
+        bmpRect->top = (max(min(imagecount, iStateId), 1)-1) * height;
         bmpRect->bottom = bmpRect->top + height;
     }
     else {
         int width = bmp.bmWidth/imagecount;
-        bmpRect->left = (min(imagecount, iStateId)-1) * width;
+        bmpRect->left = (max(min(imagecount, iStateId), 1)-1) * width;
         bmpRect->right = bmpRect->left + width;
         bmpRect->top = 0;
         bmpRect->bottom = bmp.bmHeight;
@@ -302,8 +321,8 @@ static HRESULT UXTHEME_DrawImageGlyph(HTHEME hTheme, HDC hdc, int iPartId,
     GetThemeBool(hTheme, iPartId, iStateId, TMT_GLYPHTRANSPARENT, &transparent);
     if(transparent) {
         if(FAILED(GetThemeColor(hTheme, iPartId, iStateId, TMT_GLYPHTRANSPARENTCOLOR, &transparentcolor))) {
-            /* If image is transparent, but no color was specified, get the color of the upper left corner */
-            transparentcolor = GetPixel(hdcSrc, 0, 0);
+            /* If image is transparent, but no color was specified, use magenta */
+            transparentcolor = RGB(255, 0, 255);
         }
     }
     GetThemeEnumValue(hTheme, iPartId, iStateId, TMT_VALIGN, &valign);
@@ -588,15 +607,17 @@ static HRESULT UXTHEME_DrawBorderRectangle(HTHEME hTheme, HDC hdc, int iPartId,
 
     GetThemeInt(hTheme, iPartId, iStateId, TMT_BORDERSIZE, &bordersize);
     if(bordersize > 0) {
-        POINT ptCorners[4];
+        POINT ptCorners[5];
         ptCorners[0].x = pRect->left;
         ptCorners[0].y = pRect->top;
-        ptCorners[1].x = pRect->right;
+        ptCorners[1].x = pRect->right-1;
         ptCorners[1].y = pRect->top;
-        ptCorners[2].x = pRect->right;
-        ptCorners[2].y = pRect->bottom;
+        ptCorners[2].x = pRect->right-1;
+        ptCorners[2].y = pRect->bottom-1;
         ptCorners[3].x = pRect->left;
-        ptCorners[3].y = pRect->bottom;
+        ptCorners[3].y = pRect->bottom-1;
+        ptCorners[4].x = pRect->left;
+        ptCorners[4].y = pRect->top;
 
         InflateRect(pRect, -bordersize, -bordersize);
         if(pOptions->dwFlags & DTBG_OMITBORDER)
@@ -607,7 +628,7 @@ static HRESULT UXTHEME_DrawBorderRectangle(HTHEME hTheme, HDC hdc, int iPartId,
             return HRESULT_FROM_WIN32(GetLastError());
         oldPen = SelectObject(hdc, hPen);
 
-        if(!Polyline(hdc, ptCorners, 4))
+        if(!Polyline(hdc, ptCorners, 5))
             hr = HRESULT_FROM_WIN32(GetLastError());
 
         SelectObject(hdc, oldPen);
@@ -855,15 +876,34 @@ HRESULT WINAPI GetThemeBackgroundContentRect(HTHEME hTheme, HDC hdc, int iPartId
     if(!hTheme)
         return E_HANDLE;
 
+    /* try content margins property... */
     hr = GetThemeMargins(hTheme, hdc, iPartId, iStateId, TMT_CONTENTMARGINS, NULL, &margin);
-    if(FAILED(hr)) {
-        TRACE("Margins not found\n");
-        return hr;
+    if(SUCCEEDED(hr)) {
+        pContentRect->left = pBoundingRect->left + margin.cxLeftWidth;
+        pContentRect->top  = pBoundingRect->top + margin.cyTopHeight;
+        pContentRect->right = pBoundingRect->right - margin.cxRightWidth;
+        pContentRect->bottom = pBoundingRect->bottom - margin.cyBottomHeight;
+    } else {
+        /* otherwise, try to determine content rect from the background type and props */
+        int bgtype = BT_BORDERFILL;
+        memcpy(pContentRect, pBoundingRect, sizeof(RECT));
+
+        GetThemeEnumValue(hTheme, iPartId, iStateId, TMT_BGTYPE, &bgtype);
+        if(bgtype == BT_BORDERFILL) {
+            int bordersize = 1;
+    
+            GetThemeInt(hTheme, iPartId, iStateId, TMT_BORDERSIZE, &bordersize);
+            InflateRect(pContentRect, -bordersize, -bordersize);
+        } else if ((bgtype == BT_IMAGEFILE)
+                && (SUCCEEDED(hr = GetThemeMargins(hTheme, hdc, iPartId, iStateId, 
+                TMT_SIZINGMARGINS, NULL, &margin)))) {
+            pContentRect->left = pBoundingRect->left + margin.cxLeftWidth;
+            pContentRect->top  = pBoundingRect->top + margin.cyTopHeight;
+            pContentRect->right = pBoundingRect->right - margin.cxRightWidth;
+            pContentRect->bottom = pBoundingRect->bottom - margin.cyBottomHeight;
+        }
+        /* If nothing was found, leave unchanged */
     }
-    pContentRect->left = pBoundingRect->left + margin.cxLeftWidth;
-    pContentRect->top  = pBoundingRect->top + margin.cyTopHeight;
-    pContentRect->right = pBoundingRect->right - margin.cxRightWidth;
-    pContentRect->bottom = pBoundingRect->bottom - margin.cyBottomHeight;
 
     TRACE("left:%ld,top:%ld,right:%ld,bottom:%ld\n", pContentRect->left, pContentRect->top, pContentRect->right, pContentRect->bottom);
 

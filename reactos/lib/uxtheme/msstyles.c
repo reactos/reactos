@@ -253,7 +253,7 @@ PUXINI_FILE MSSTYLES_GetThemeIni(PTHEME_FILE tf)
  *
  * Retrieve the ini file for the selected color/style
  */
-PUXINI_FILE MSSTYLES_GetActiveThemeIni(PTHEME_FILE tf)
+static PUXINI_FILE MSSTYLES_GetActiveThemeIni(PTHEME_FILE tf)
 {
     static const WCHAR szFileResNamesResource[] = {
         'F','I','L','E','R','E','S','N','A','M','E','S','\0'
@@ -320,7 +320,7 @@ PUXINI_FILE MSSTYLES_GetActiveThemeIni(PTHEME_FILE tf)
  *     iPartId             Location to store part id
  *     iStateId            Location to store state id
  */
-BOOL MSSTYLES_ParseIniSectionName(LPCWSTR lpSection, DWORD dwLen, LPWSTR szAppName, LPWSTR szClassName, int *iPartId, int *iStateId)
+static BOOL MSSTYLES_ParseIniSectionName(LPCWSTR lpSection, DWORD dwLen, LPWSTR szAppName, LPWSTR szClassName, int *iPartId, int *iStateId)
 {
     WCHAR sec[255];
     WCHAR part[60] = {'\0'};
@@ -423,7 +423,7 @@ PTHEME_CLASS MSSTYLES_FindClass(PTHEME_FILE tf, LPCWSTR pszAppName, LPCWSTR pszC
  * RETURNS
  *  The class added, or a class previously added with the same name
  */
-PTHEME_CLASS MSSTYLES_AddClass(PTHEME_FILE tf, LPCWSTR pszAppName, LPCWSTR pszClassName)
+static PTHEME_CLASS MSSTYLES_AddClass(PTHEME_FILE tf, LPCWSTR pszAppName, LPCWSTR pszClassName)
 {
     PTHEME_CLASS cur = MSSTYLES_FindClass(tf, pszAppName, pszClassName);
     if(cur) return cur;
@@ -480,7 +480,7 @@ PTHEME_PARTSTATE MSSTYLES_FindPartState(PTHEME_CLASS tc, int iPartId, int iState
  * RETURNS
  *  The part/state added, or a part/state previously added with the same IDs
  */
-PTHEME_PARTSTATE MSSTYLES_AddPartState(PTHEME_CLASS tc, int iPartId, int iStateId)
+static PTHEME_PARTSTATE MSSTYLES_AddPartState(PTHEME_CLASS tc, int iPartId, int iStateId)
 {
     PTHEME_PARTSTATE cur = MSSTYLES_FindPartState(tc, iPartId, iStateId, NULL);
     if(cur) return cur;
@@ -507,7 +507,7 @@ PTHEME_PARTSTATE MSSTYLES_AddPartState(PTHEME_CLASS tc, int iPartId, int iStateI
  * RETURNS
  *  The property found, or NULL
  */
-PTHEME_PROPERTY MSSTYLES_LFindProperty(PTHEME_PROPERTY tp, int iPropertyPrimitive, int iPropertyId)
+static PTHEME_PROPERTY MSSTYLES_LFindProperty(PTHEME_PROPERTY tp, int iPropertyPrimitive, int iPropertyId)
 {
     PTHEME_PROPERTY cur = tp;
     while(cur) {
@@ -596,7 +596,7 @@ PTHEME_PROPERTY MSSTYLES_FindMetric(int iPropertyPrimitive, int iPropertyId)
  * RETURNS
  *  The property added, or a property previously added with the same IDs
  */
-PTHEME_PROPERTY MSSTYLES_AddProperty(PTHEME_PARTSTATE ps, int iPropertyPrimitive, int iPropertyId, LPCWSTR lpValue, DWORD dwValueLen, BOOL isGlobal)
+static PTHEME_PROPERTY MSSTYLES_AddProperty(PTHEME_PARTSTATE ps, int iPropertyPrimitive, int iPropertyId, LPCWSTR lpValue, DWORD dwValueLen, BOOL isGlobal)
 {
     PTHEME_PROPERTY cur = MSSTYLES_PSFindProperty(ps, iPropertyPrimitive, iPropertyId);
     /* Should duplicate properties overwrite the original, or be ignored? */
@@ -637,7 +637,7 @@ PTHEME_PROPERTY MSSTYLES_AddProperty(PTHEME_PARTSTATE ps, int iPropertyPrimitive
  * RETURNS
  *  The property added, or a property previously added with the same IDs
  */
-PTHEME_PROPERTY MSSTYLES_AddMetric(PTHEME_FILE tf, int iPropertyPrimitive, int iPropertyId, LPCWSTR lpValue, DWORD dwValueLen)
+static PTHEME_PROPERTY MSSTYLES_AddMetric(PTHEME_FILE tf, int iPropertyPrimitive, int iPropertyId, LPCWSTR lpValue, DWORD dwValueLen)
 {
     PTHEME_PROPERTY cur = MSSTYLES_FFindMetric(tf, iPropertyPrimitive, iPropertyId);
     /* Should duplicate properties overwrite the original, or be ignored? */
@@ -709,6 +709,10 @@ void MSSTYLES_ParseThemeIni(PTHEME_FILE tf)
                             FIXME("Invalid color value for %s\n", debugstr_w(szPropertyName));
                         }
                     }
+		    else if (iPropertyId == TMT_FLATMENUS) {
+			BOOL flatMenus = (*lpValue == 'T') || (*lpValue == 't');
+			SystemParametersInfoW (SPI_SETFLATMENU, 0, (PVOID)flatMenus, 0);
+		    }
                     /* Catch all metrics, including colors */
                     MSSTYLES_AddMetric(tf, iPropertyPrimitive, iPropertyId, lpValue, dwValueLen);
                 }
@@ -806,6 +810,8 @@ PTHEME_CLASS MSSTYLES_OpenThemeClass(LPCWSTR pszAppName, LPCWSTR pszClassList)
     }
     if(cls) {
         TRACE("Opened app %s, class %s from list %s\n", debugstr_w(cls->szAppName), debugstr_w(cls->szClassName), debugstr_w(pszClassList));
+	cls->tf = tfActiveTheme;
+	cls->tf->dwRefCount++;
     }
     return cls;
 }
@@ -819,11 +825,12 @@ PTHEME_CLASS MSSTYLES_OpenThemeClass(LPCWSTR pszAppName, LPCWSTR pszClassList)
  *     tc                  Theme class to close
  *
  * NOTES
- *  There is currently no need clean anything up for theme classes,
- *  so do nothing for now
+ *  The MSSTYLES_CloseThemeFile decreases the refcount of the owning
+ *  theme file and cleans it up, if needed.
  */
 HRESULT MSSTYLES_CloseThemeClass(PTHEME_CLASS tc)
 {
+    MSSTYLES_CloseThemeFile (tc->tf);
     return S_OK;
 }
 

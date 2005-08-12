@@ -46,8 +46,11 @@ typedef struct _THEME_PARTSTATE {
     struct _THEME_PARTSTATE *next;
 } THEME_PARTSTATE, *PTHEME_PARTSTATE;
 
+struct _THEME_FILE;
+
 typedef struct _THEME_CLASS {
     HMODULE hTheme;
+    struct _THEME_FILE* tf;
     WCHAR szAppName[MAX_THEME_APP_NAME];
     WCHAR szClassName[MAX_THEME_CLASS_NAME];
     PTHEME_PARTSTATE partstate;
