@@ -456,7 +456,7 @@ MmSetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
       {
          Table =
             Segment->PageDirectory.PageTables[DirectoryOffset] =
-               ExAllocatePoolWithTag(PagedPool, sizeof(SECTION_PAGE_TABLE),
+               ExAllocatePoolWithTag(NonPagedPool, sizeof(SECTION_PAGE_TABLE),
                                      TAG_SECTION_PAGE_TABLE);
          if (Table == NULL)
          {
@@ -3292,7 +3292,7 @@ MmCreatePageFileSection(PSECTION_OBJECT *SectionObject,
    KeInitializeSpinLock(&Section->ViewListLock);
    Section->FileObject = NULL;
    Section->MaximumSize = MaximumSize;
-   Segment = ExAllocatePoolWithTag(PagedPool, sizeof(MM_SECTION_SEGMENT),
+   Segment = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_SECTION_SEGMENT),
                                    TAG_MM_SECTION_SEGMENT);
    if (Segment == NULL)
    {
@@ -3476,7 +3476,7 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
 
    if (Segment == NULL)
    {
-      Segment = ExAllocatePoolWithTag(PagedPool, sizeof(MM_SECTION_SEGMENT),
+      Segment = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_SECTION_SEGMENT),
                                       TAG_MM_SECTION_SEGMENT);
       if (Segment == NULL)
       {
@@ -3637,7 +3637,7 @@ ExeFmtpAllocateSegments(IN ULONG NrSegments)
  /* TODO: check for integer overflow */
  SizeOfSegments = sizeof(MM_SECTION_SEGMENT) * NrSegments;
 
- Segments = ExAllocatePoolWithTag(PagedPool,
+ Segments = ExAllocatePoolWithTag(NonPagedPool,
                                   SizeOfSegments,
                                   TAG_MM_SECTION_SEGMENT);
 
@@ -4210,7 +4210,7 @@ ExeFmtpCreateImageSection(PFILE_OBJECT FileObject,
 
       SizeOfSegments = sizeof(MM_SECTION_SEGMENT) * ImageSectionObject->NrSegments;
 
-      Segments = ExAllocatePoolWithTag(PagedPool,
+      Segments = ExAllocatePoolWithTag(NonPagedPool,
                                        SizeOfSegments,
                                        TAG_MM_SECTION_SEGMENT);
 
@@ -4341,7 +4341,7 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
 	 }
       }
 
-      ImageSectionObject = ExAllocatePoolWithTag(PagedPool, sizeof(MM_IMAGE_SECTION_OBJECT), TAG_MM_SECTION_SEGMENT);
+      ImageSectionObject = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_IMAGE_SECTION_OBJECT), TAG_MM_SECTION_SEGMENT);
       if (ImageSectionObject == NULL)
       {
          ObDereferenceObject(FileObject);
