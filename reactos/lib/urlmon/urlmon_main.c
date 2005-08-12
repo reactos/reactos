@@ -89,7 +89,7 @@ HRESULT WINAPI URLMON_DllCanUnloadNow(void)
 typedef struct {
     IClassFactory ITF_IClassFactory;
 
-    DWORD ref;
+    LONG ref;
     HRESULT (*pfnCreateInstance)(IUnknown *pUnkOuter, LPVOID *ppObj);
 } IClassFactoryImpl;
 
@@ -125,8 +125,6 @@ CF_QueryInterface(LPCLASSFACTORY iface,REFIID riid,LPVOID *ppobj)
 static ULONG WINAPI CF_AddRef(LPCLASSFACTORY iface)
 {
     IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
-    URLMON_LockModule();
-    
     return InterlockedIncrement(&This->ref);
 }
 
@@ -136,10 +134,10 @@ static ULONG WINAPI CF_Release(LPCLASSFACTORY iface)
 
     ULONG ref = InterlockedDecrement(&This->ref);
 
-    if (ref == 0)
-	HeapFree(GetProcessHeap(), 0, This);
-
-    URLMON_UnlockModule();
+    if (ref == 0) {
+        HeapFree(GetProcessHeap(), 0, This);
+        URLMON_UnlockModule();
+    }
 
     return ref;
 }
@@ -229,10 +227,12 @@ DWORD WINAPI URLMON_DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 
     factory->ITF_IClassFactory.lpVtbl = &CF_Vtbl;
     factory->ref = 1;
-
     factory->pfnCreateInstance = object_creation[i].pfnCreateInstance;
 
     *ppv = &(factory->ITF_IClassFactory);
+
+    URLMON_LockModule();
+
     return S_OK;
 }
 

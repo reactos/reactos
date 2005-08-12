@@ -253,7 +253,8 @@ static HRESULT WINAPI IStream_fnSeek (       IStream * iface,
                                    DWORD dwOrigin,
                                    ULARGE_INTEGER* plibNewPosition)
 {
-    DWORD pos, newposlo, newposhi;
+    DWORD pos, newposlo;
+    LONG newposhi;
 
     IUMCacheStream *This = (IUMCacheStream *)iface;
 
@@ -262,7 +263,7 @@ static HRESULT WINAPI IStream_fnSeek (       IStream * iface,
     pos = dlibMove.QuadPart; /* FIXME: truncates */
     newposhi = 0;
     newposlo = SetFilePointer( This->handle, pos, &newposhi, dwOrigin );
-    if( newposlo == INVALID_SET_FILE_POINTER )
+    if( newposlo == INVALID_SET_FILE_POINTER && GetLastError())
        return E_FAIL;
 
     if (plibNewPosition)

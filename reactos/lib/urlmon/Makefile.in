@@ -14,6 +14,8 @@ C_SRCS = \
 	umstream.c \
 	urlmon_main.c
 
+RC_SRCS = rsrc.rc
+
 SUBDIRS = tests
 
 @MAKE_DLL_RULES@

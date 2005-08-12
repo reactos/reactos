@@ -1,0 +1,29 @@
+[version]
+Signature="$CHICAGO$"
+
+
+[RegisterDll]
+AddReg=Protocols.Reg
+
+
+[UnregisterDll]
+DelReg=Protocols.Reg
+
+
+[Protocols.Reg]
+HKCR,"PROTOCOLS\Handler\cdl",,,"CDL: Asynchronous Pluggable Protocol Handler"
+HKCR,"PROTOCOLS\Handler\cdl","CLSID",,"%CLSID_CdlProtocol%"
+HKCR,"PROTOCOLS\Handler\file",,,"file:, local: Asynchronous Pluggable Protocol Handler"
+HKCR,"PROTOCOLS\Handler\file","CLSID",,"%CLSID_FileProtocol%"
+HKCR,"PROTOCOLS\Handler\local",,,"file:, local: Asynchronous Pluggable Protocol Handler"
+HKCR,"PROTOCOLS\Handler\local","CLSID",,"%CLSID_FileProtocol%"
+HKCR,"PROTOCOLS\Handler\ftp",,,"ftp: Asynchronous Pluggable Protocol Handler"
+HKCR,"PROTOCOLS\Handler\ftp","CLSID",,"%CLSID_FtpProtocol%"
+HKCR,"PROTOCOLS\Handler\gopher",,,"gopher: Asynchronous Pluggable Protocol Handler"
+HKCR,"PROTOCOLS\Handler\gopher","CLSID",,"%CLSID_GopherProtocol%"
+HKCR,"PROTOCOLS\Handler\http",,,"http: Asynchronous Pluggable Protocol Handler"
+HKCR,"PROTOCOLS\Handler\http","CLSID",,"%CLSID_HttpProtocol%"
+HKCR,"PROTOCOLS\Handler\https",,,"https: Asynchronous Pluggable Protocol Handler"
+HKCR,"PROTOCOLS\Handler\https","CLSID",,"%CLSID_HttpsProtocol%"
+HKCR,"PROTOCOLS\Handler\mk",,,"mk: Asynchronous Pluggable Protocol Handler"
+HKCR,"PROTOCOLS\Handler\mk","CLSID",,"%CLSID_MkProtocol%"
