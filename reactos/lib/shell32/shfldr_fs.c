@@ -61,7 +61,7 @@ WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
 typedef struct {
     const IUnknownVtbl        *lpVtbl;
-    DWORD                ref;
+    LONG                ref;
     const IShellFolder2Vtbl   *lpvtblShellFolder;
     const IPersistFolder3Vtbl *lpvtblPersistFolder3;
     const IDropTargetVtbl     *lpvtblDropTarget;
@@ -590,8 +590,10 @@ IShellFolder_fnGetAttributesOf (IShellFolder2 * iface, UINT cidl,
         LPCITEMIDLIST rpidl = NULL;
 
         hr = SHBindToParent(This->pidlRoot, &IID_IShellFolder, (LPVOID*)&psfParent, (LPCITEMIDLIST*)&rpidl);
-        if(SUCCEEDED(hr))
+        if(SUCCEEDED(hr)) {
             SHELL32_GetItemAttributes (psfParent, rpidl, rgfInOut);
+            IShellFolder_Release(psfParent);
+        }
     }
     else {
         while (cidl > 0 && *apidl) {
@@ -698,7 +700,20 @@ static const WCHAR HideFileExtW[] = { 'H','i','d','e','F','i','l','e','E','x',
 static const WCHAR NeverShowExtW[] = { 'N','e','v','e','r','S','h','o','w','E',
  'x','t',0 };
 
-static BOOL hide_extension(LPWSTR szPath)
+/******************************************************************************
+ * SHELL_FS_HideExtension [Internal]
+ *
+ * Query the registry if the filename extension of a given path should be 
+ * hidden.
+ *
+ * PARAMS
+ *  szPath [I] Relative or absolute path of a file
+ *  
+ * RETURNS
+ *  TRUE, if the filename's extension should be hidden
+ *  FALSE, otherwise.
+ */
+BOOL SHELL_FS_HideExtension(LPWSTR szPath)
 {
     HKEY hKey;
     DWORD dwData;
@@ -737,7 +752,7 @@ void SHELL_FS_ProcessDisplayFilename(LPSTR szPath, DWORD dwFlags)
     if (!(dwFlags & SHGDN_FORPARSING) &&
         ((dwFlags & SHGDN_INFOLDER) || (dwFlags == SHGDN_NORMAL))) {
         MultiByteToWideChar(CP_ACP, 0, szPath, -1, pathW, MAX_PATH);
-        if (hide_extension(pathW) && szPath[0] != '.')
+        if (SHELL_FS_HideExtension(pathW) && szPath[0] != '.')
             PathRemoveExtensionA (szPath);
     }
 }
@@ -842,7 +857,7 @@ static HRESULT WINAPI IShellFolder_fnSetNameOf (IShellFolder2 * iface,
     } else
         lstrcpynW(szDest, lpName, MAX_PATH);
 
-    if(!(dwFlags & SHGDN_FORPARSING) && hide_extension(szSrc)) {
+    if(!(dwFlags & SHGDN_FORPARSING) && SHELL_FS_HideExtension(szSrc)) {
         WCHAR *ext = PathFindExtensionW(szSrc);
         if(*ext != '\0') {
             INT len = strlenW(szDest);

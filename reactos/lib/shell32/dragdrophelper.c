@@ -49,7 +49,7 @@ WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
 typedef struct {
     const IDropTargetHelperVtbl *lpVtbl;
-    DWORD ref;
+    LONG ref;
 } IDropTargetHelperImpl;
 
 static const IDropTargetHelperVtbl vt_IDropTargetHelper;

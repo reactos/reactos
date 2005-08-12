@@ -64,7 +64,7 @@ typedef struct
 {
     const IAutoCompleteVtbl  *lpVtbl;
     const IAutoComplete2Vtbl *lpvtblAutoComplete2;
-    DWORD ref;
+    LONG ref;
     BOOL  enabled;
     HWND hwndEdit;
     HWND hwndListBox;

@@ -44,7 +44,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 */
 typedef struct
 {	const IContextMenu2Vtbl *lpVtbl;
-	DWORD		ref;
+	LONG		ref;
 	IShellFolder*	pSFParent;
 	LPITEMIDLIST	pidl;		/* root pidl */
 	LPITEMIDLIST	*apidl;		/* array of child pidls */

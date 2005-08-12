@@ -133,7 +133,7 @@ typedef struct
 	const IShellExtInitVtbl *lpvtblShellExtInit;
 	const IContextMenuVtbl *lpvtblContextMenu;
 
-	DWORD           ref;
+	LONG            ref;
 
 	/* data structures according to the informations in the link */
 	LPITEMIDLIST	pPidl;
@@ -660,7 +660,7 @@ static LPWSTR Stream_LoadPath( LPSTR p, DWORD maxlen )
 static HRESULT Stream_LoadLocation( IStream *stm,
                 volume_info *volume, LPWSTR *path )
 {
-    unsigned char *p = NULL;
+    char *p = NULL;
     LOCATION_INFO *loc;
     HRESULT r;
     int n;

@@ -500,11 +500,11 @@ HRESULT WINAPI SHGetDesktopFolder(IShellFolder **psf)
 typedef struct
 {
     const IClassFactoryVtbl    *lpVtbl;
-    DWORD                       ref;
+    LONG                        ref;
     CLSID			*rclsid;
     LPFNCREATEINSTANCE		lpfnCI;
     const IID *			riidInst;
-    ULONG *			pcRefDll; /* pointer to refcounter in external dll (ugrrr...) */
+    LONG *			pcRefDll; /* pointer to refcounter in external dll (ugrrr...) */
 } IDefClFImpl;
 
 static const IClassFactoryVtbl dclfvt;

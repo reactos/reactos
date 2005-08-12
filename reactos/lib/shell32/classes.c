@@ -49,7 +49,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 #define MAX_EXTENSION_LENGTH 20
 
-BOOL HCR_MapTypeToValueW(LPCWSTR szExtension, LPWSTR szFileType, DWORD len, BOOL bPrependDot)
+BOOL HCR_MapTypeToValueW(LPCWSTR szExtension, LPWSTR szFileType, LONG len, BOOL bPrependDot)
 {	
 	HKEY	hkey;
 	WCHAR	szTemp[MAX_EXTENSION_LENGTH + 2];
@@ -83,7 +83,7 @@ BOOL HCR_MapTypeToValueW(LPCWSTR szExtension, LPWSTR szFileType, DWORD len, BOOL
 	return TRUE;
 }
 
-BOOL HCR_MapTypeToValueA(LPCSTR szExtension, LPSTR szFileType, DWORD len, BOOL bPrependDot)
+BOOL HCR_MapTypeToValueA(LPCSTR szExtension, LPSTR szFileType, LONG len, BOOL bPrependDot)
 {
 	HKEY	hkey;
 	char	szTemp[MAX_EXTENSION_LENGTH + 2];
@@ -194,7 +194,7 @@ static BOOL HCR_RegGetDefaultIconA(HKEY hkey, LPSTR szDest, DWORD len, LPDWORD d
 	char sTemp[MAX_PATH];
 	char  sNum[5];
 
-	if (!RegQueryValueExA(hkey, NULL, 0, &dwType, szDest, &len))
+	if (!RegQueryValueExA(hkey, NULL, 0, &dwType, (LPBYTE)szDest, &len))
 	{
       if (dwType == REG_EXPAND_SZ)
 	  {
@@ -319,7 +319,7 @@ BOOL HCR_GetClassNameA(REFIID riid, LPSTR szDest, DWORD len)
 	szDest[0] = 0;
 	if (HCR_RegOpenClassIDKey(riid, &hkey))
 	{
-	  if (!RegQueryValueExA(hkey,"",0,NULL,szDest,&len))
+	  if (!RegQueryValueExA(hkey,"",0,NULL,(LPBYTE)szDest,&len))
 	  {
 	    ret = TRUE;
 	  }
@@ -404,10 +404,10 @@ BOOL HCR_GetFolderAttributes(LPCITEMIDLIST pidlFolder, LPDWORD pdwAttributes)
                                            (LPVOID*)&psfFolder);
             if (SUCCEEDED(hr)) { 
                 hr = IShellFolder_GetAttributesOf(psfFolder, 0, NULL, pdwAttributes);
+                IShellFolder_Release(psfFolder);
             }
+            IShellFolder_Release(psfDesktop);
         }
-        IShellFolder_Release(psfFolder);
-        IShellFolder_Release(psfDesktop);
         if (FAILED(hr)) return FALSE;
     } else {
         lResult = RegQueryValueExW(hSFKey, wszAttributes, 0, NULL, (LPBYTE)&dwTemp, &dwLen);

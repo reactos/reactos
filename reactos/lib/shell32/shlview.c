@@ -77,7 +77,7 @@ typedef struct
 typedef struct
 {
 	const IShellViewVtbl*	lpVtbl;
-	DWORD			ref;
+	LONG			ref;
 	const IOleCommandTargetVtbl* lpvtblOleCommandTarget;
 	const IDropTargetVtbl*	lpvtblDropTarget;
 	const IDropSourceVtbl*	lpvtblDropSource;

@@ -56,14 +56,14 @@ BOOL PidlToSicIndex (IShellFolder * sh, LPCITEMIDLIST pidl, BOOL bBigIcon, UINT 
 INT SIC_GetIconIndex (LPCWSTR sSourceFile, INT dwSourceIndex, DWORD dwFlags );
 
 /* Classes Root */
-BOOL HCR_MapTypeToValueW(LPCWSTR szExtension, LPWSTR szFileType, DWORD len, BOOL bPrependDot);
+BOOL HCR_MapTypeToValueW(LPCWSTR szExtension, LPWSTR szFileType, LONG len, BOOL bPrependDot);
 BOOL HCR_GetExecuteCommandW( HKEY hkeyClass, LPCWSTR szClass, LPCWSTR szVerb, LPWSTR szDest, DWORD len );
 BOOL HCR_GetDefaultIconW(LPCWSTR szClass, LPWSTR szDest, DWORD len, LPDWORD dwNr);
 BOOL HCR_GetDefaultIconFromGUIDW(REFIID riid, LPWSTR szDest, DWORD len, LPDWORD dwNr);
 BOOL HCR_GetClassNameW(REFIID riid, LPWSTR szDest, DWORD len);
 
 /* ANSI versions of above functions, supposed to go away as soon as they are not used anymore */
-BOOL HCR_MapTypeToValueA(LPCSTR szExtension, LPSTR szFileType, DWORD len, BOOL bPrependDot);
+BOOL HCR_MapTypeToValueA(LPCSTR szExtension, LPSTR szFileType, LONG len, BOOL bPrependDot);
 BOOL HCR_GetDefaultIconA(LPCSTR szClass, LPSTR szDest, DWORD len, LPDWORD dwNr);
 BOOL HCR_GetClassNameA(REFIID riid, LPSTR szDest, DWORD len);
 
@@ -223,6 +223,7 @@ UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOperation,
 
 extern WCHAR swShell32Name[MAX_PATH];
 
+BOOL UNIXFS_is_rooted_at_desktop(void);
 extern const GUID CLSID_UnixFolder;
 extern const GUID CLSID_UnixDosFolder;
 

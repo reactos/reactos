@@ -61,7 +61,7 @@ WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
 typedef struct {
     const IShellFolder2Vtbl *lpVtbl;
-    DWORD ref;
+    LONG ref;
 
     CLSID *pclsid;
 

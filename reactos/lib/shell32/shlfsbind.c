@@ -43,7 +43,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(pidl);
 typedef struct
 {
     const IFileSystemBindDataVtbl *lpVtbl;
-    DWORD              ref;
+    LONG              ref;
     WIN32_FIND_DATAW findFile;
 } IFileSystemBindDataImpl;
 

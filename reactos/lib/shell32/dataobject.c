@@ -43,7 +43,7 @@ typedef struct
 {
     /* IUnknown fields */
     const IEnumFORMATETCVtbl *lpVtbl;
-    DWORD                        ref;
+    LONG                      ref;
     /* IEnumFORMATETC fields */
     UINT        posFmt;
     UINT        countFmt;
@@ -205,7 +205,7 @@ typedef struct
 {
 	/* IUnknown fields */
 	const IDataObjectVtbl *lpVtbl;
-	DWORD		ref;
+	LONG		ref;
 
 	/* IDataObject fields */
 	LPITEMIDLIST	pidl;

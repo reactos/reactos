@@ -50,7 +50,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 typedef struct
 {
 	const IExtractIconWVtbl *lpVtbl;
-	DWORD              ref;
+	LONG               ref;
 	const IPersistFileVtbl  *lpvtblPersistFile;
 	const IExtractIconAVtbl *lpvtblExtractIconA;
 	LPITEMIDLIST       pidl;

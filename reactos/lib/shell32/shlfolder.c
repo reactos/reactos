@@ -204,7 +204,9 @@ HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot,	LPCSTR pathRoot,
 	IPersistFolder *pPF;
 	IPersistFolder3 *ppf;
 
-	if (SUCCEEDED (IUnknown_QueryInterface ((IUnknown *) * ppvOut, &IID_IPersistFolder3, (LPVOID *) & ppf))) {
+        if (_ILIsFolder(pidlChild) &&
+            SUCCEEDED (IUnknown_QueryInterface ((IUnknown *) * ppvOut, &IID_IPersistFolder3, (LPVOID *) & ppf))) 
+        {
 	    PERSIST_FOLDER_TARGET_INFO ppfti;
 	    char szDestPath[MAX_PATH];
 

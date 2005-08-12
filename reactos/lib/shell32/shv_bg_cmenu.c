@@ -45,7 +45,7 @@ typedef struct
 {
 	const IContextMenu2Vtbl *lpVtbl;
 	IShellFolder*	pSFParent;
-	DWORD		ref;
+	LONG		ref;
 	BOOL		bDesktop;
 } BgCmImpl;
 

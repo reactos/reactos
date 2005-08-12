@@ -46,7 +46,7 @@ typedef struct tagENUMLIST
 typedef struct
 {
 	const IEnumIDListVtbl          *lpVtbl;
-	DWORD				ref;
+	LONG				ref;
 	LPENUMLIST			mpFirst;
 	LPENUMLIST			mpLast;
 	LPENUMLIST			mpCurrent;

@@ -132,43 +132,9 @@ FONT 8, "MS Shell Dlg"
  PUSHBUTTON "&Procurar...", 12288, 170, 63, 50, 14, WS_TABSTOP
 }
 
-/*
-	special folders
-*/
 STRINGTABLE DISCARDABLE
 {
-	IDS_DESKTOP		"Área de trabalho"
-	IDS_MYCOMPUTER		"Meu computador"
-}
-
-/*
-	context menus
-*/
-STRINGTABLE DISCARDABLE
-{
-	IDS_VIEW_LARGE		"Ícones &grandes"
-	IDS_VIEW_SMALL		"Ícones &pequenos"
-	IDS_VIEW_LIST		"&Lista"
-	IDS_VIEW_DETAILS	"&Detalhes"
-	IDS_SELECT		"Selecionar"
-	IDS_OPEN		"Abrir"
-}
-
-STRINGTABLE DISCARDABLE
-{
-	IDS_CREATEFOLDER_DENIED "Não pode criar nova pasta: Permissão negada."
-	IDS_CREATEFOLDER_CAPTION "Erro durante a criação da nova pasta"
-	IDS_DELETEITEM_CAPTION "Confirmar exclusão de arquivo"
-	IDS_DELETEFOLDER_CAPTION "Confirmar exclusão de pasta"
-	IDS_DELETEITEM_TEXT "Você tem certeza que deseja excluir '%1'?"
-	IDS_DELETEMULTIPLE_TEXT "Você tem certeza que deseja excluir estes %1 itens?"
-	IDS_OVERWRITEFILE_TEXT "Sobreescrever arquivo %1?"
-	IDS_OVERWRITEFILE_CAPTION "Confirmar sobreescrever arquivo"
-}
-
-/*	colunas no shellview	*/
-STRINGTABLE
-BEGIN
+        /* columns in the shellview */
 	IDS_SHV_COLUMN1		"Arquivo"
 	IDS_SHV_COLUMN2		"Tamanho"
 	IDS_SHV_COLUMN3		"Tipo"
@@ -178,20 +144,37 @@ BEGIN
 	IDS_SHV_COLUMN7		"Disponível"
 	IDS_SHV_COLUMN8		"Nome"
 	IDS_SHV_COLUMN9		"Comentários"
-END
+	IDS_SHV_COLUMN10	"Dono"
+	IDS_SHV_COLUMN11	"Grupo"
 
-/* message box strings */
-STRINGTABLE DISCARDABLE
-{
-       IDS_RESTART_TITLE       "Reiniciar"
-       IDS_RESTART_PROMPT      "Você quer simular a reinicialização do Windows?"
-       IDS_SHUTDOWN_TITLE      "Desligar"
-       IDS_SHUTDOWN_PROMPT     "Você quer finalizar a sessão no ReactOS?"
-}
+        /* special folders */
+	IDS_DESKTOP		"Área de trabalho"
+	IDS_MYCOMPUTER		"Meu computador"
 
-/* shell folder path default values - */
-STRINGTABLE DISCARDABLE
-{
+        /* context menus */
+	IDS_VIEW_LARGE		"Ícones &grandes"
+	IDS_VIEW_SMALL		"Ícones &pequenos"
+	IDS_VIEW_LIST		"&Lista"
+	IDS_VIEW_DETAILS	"&Detalhes"
+	IDS_SELECT		"Selecionar"
+	IDS_OPEN		"Abrir"
+
+	IDS_CREATEFOLDER_DENIED "Não pode criar nova pasta: Permissão negada."
+	IDS_CREATEFOLDER_CAPTION "Erro durante a criação da nova pasta"
+	IDS_DELETEITEM_CAPTION "Confirmar exclusão de arquivo"
+	IDS_DELETEFOLDER_CAPTION "Confirmar exclusão de pasta"
+	IDS_DELETEITEM_TEXT "Você tem certeza que deseja excluir '%1'?"
+	IDS_DELETEMULTIPLE_TEXT "Você tem certeza que deseja excluir estes %1 itens?"
+	IDS_OVERWRITEFILE_TEXT "Sobreescrever arquivo %1?"
+	IDS_OVERWRITEFILE_CAPTION "Confirmar sobreescrever arquivo"
+
+        /* message box strings */
+	IDS_RESTART_TITLE       "Reiniciar"
+	IDS_RESTART_PROMPT      "Você quer simular a reinicialização do Windows?"
+	IDS_SHUTDOWN_TITLE      "Desligar"
+	IDS_SHUTDOWN_PROMPT     "Você quer finalizar a sessão no ReactOS?"
+
+        /* shell folder path default values */
 	IDS_PROGRAMS                "Menu Iniciar\\Programas"
 	IDS_PERSONAL                "Meus Documentos"
 	IDS_FAVORITES               "Favoritos"

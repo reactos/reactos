@@ -189,7 +189,7 @@
  202 stub SHLocalReAlloc
  203 stub AddCommasW
  204 stub ShortSizeFormatW
- 205 stub Printer_LoadIconsW
+ 205 stdcall Printer_LoadIconsW(wstr ptr ptr)
  206 stub Link_AddExtraDataSection
  207 stub Link_ReadExtraDataSection
  208 stub Link_RemoveExtraDataSection
@@ -197,8 +197,8 @@
  210 stub LargeIntegerToString
  211 stub Printers_GetPidl
  212 stub Printers_AddPrinterPropPages
- 213 stub Printers_RegisterWindowW
- 214 stub Printers_UnregisterWindow
+ 213 stdcall Printers_RegisterWindowW(wstr long ptr ptr)
+ 214 stdcall Printers_UnregisterWindow(long long)
  215 stdcall -noname SHStartNetConnectionDialog(long str long)
  243 stdcall @(long long) shell32_243
  244 stdcall -noname SHInitRestricted(ptr ptr)

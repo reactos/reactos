@@ -18,6 +18,7 @@ C_SRCS = \
 	clipboard.c \
 	control.c \
 	cpanelfolder.c \
+	dde.c \
 	dataobject.c \
 	debughlp.c \
 	dialogs.c \

@@ -20,6 +20,7 @@
 
 #include <stdarg.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "windef.h"
 #include "winbase.h"
@@ -30,6 +31,7 @@
 #include "ole2.h"
 #include "shlguid.h"
 #include "shell32_main.h"
+#include "shfldr.h"
 
 #include "wine/debug.h"
 
@@ -78,6 +80,16 @@ struct regsvr_coclass
 
 static HRESULT register_coclasses(struct regsvr_coclass const *list);
 static HRESULT unregister_coclasses(struct regsvr_coclass const *list);
+
+struct regsvr_namespace
+{
+    CLSID const *clsid; /* CLSID of the namespace extension. NULL for end of list */
+    LPCWSTR parent;     /* Mount point (MyComputer, Desktop, ..). */
+    LPCWSTR value;      /* Display name of the extension. */
+};
+
+static HRESULT register_namespace_extensions(struct regsvr_namespace const *list);
+static HRESULT unregister_namespace_extensions(struct regsvr_namespace const *list);
 
 /***********************************************************************
  *		static string constants
@@ -377,6 +389,66 @@ error_return:
     return res != ERROR_SUCCESS ? HRESULT_FROM_WIN32(res) : S_OK;
 }
 
+/**********************************************************************
+ * register_namespace_extensions
+ */
+static WCHAR *get_namespace_key(struct regsvr_namespace const *list) {
+    static const WCHAR wszExplorerKey[] = {
+        'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\',
+        'W','i','n','d','o','w','s','\\','C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
+        'E','x','p','l','o','r','e','r','\\',0 };
+    static const WCHAR wszNamespace[] = { '\\','N','a','m','e','s','p','a','c','e','\\',0 };
+    WCHAR *pwszKey, *pwszCLSID;
+
+    pwszKey = HeapAlloc(GetProcessHeap(), 0, sizeof(wszExplorerKey)+sizeof(wszNamespace)+
+                                             sizeof(WCHAR)*(lstrlenW(list->parent)+CHARS_IN_GUID));
+    if (!pwszKey)
+        return NULL;
+
+    lstrcpyW(pwszKey, wszExplorerKey);
+    lstrcatW(pwszKey, list->parent);
+    lstrcatW(pwszKey, wszNamespace);
+    if (FAILED(StringFromCLSID(list->clsid, &pwszCLSID))) {
+        HeapFree(GetProcessHeap(), 0, pwszKey);
+        return NULL;
+    }
+    lstrcatW(pwszKey, pwszCLSID);
+    CoTaskMemFree(pwszCLSID);
+
+    return pwszKey;
+}
+
+static HRESULT register_namespace_extensions(struct regsvr_namespace const *list) {
+    WCHAR *pwszKey;
+    HKEY hKey;
+    
+    for (; list->clsid; list++) {
+        pwszKey = get_namespace_key(list);
+            
+        /* Create the key and set the value. */
+        if (pwszKey && ERROR_SUCCESS == 
+            RegCreateKeyExW(HKEY_LOCAL_MACHINE, pwszKey, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL)) 
+        {
+            RegSetValueExW(hKey, NULL, 0, REG_SZ, (LPBYTE)list->value, sizeof(WCHAR)*(lstrlenW(list->value)+1));
+            RegCloseKey(hKey);
+        }
+
+        HeapFree(GetProcessHeap(), 0, pwszKey);
+    }
+    return S_OK;
+}
+
+static HRESULT unregister_namespace_extensions(struct regsvr_namespace const *list) {
+    WCHAR *pwszKey;
+    
+    for (; list->clsid; list++) {
+        pwszKey = get_namespace_key(list);
+        RegDeleteKeyW(HKEY_LOCAL_MACHINE, pwszKey);
+        HeapFree(GetProcessHeap(), 0, pwszKey);
+    }
+    return S_OK;
+}
+
 /***********************************************************************
  *		regsvr_key_guid
  */
@@ -545,6 +617,16 @@ static struct regsvr_interface const interface_list[] = {
 };
 
 /***********************************************************************
+ *              namespace extensions list
+ */
+static const WCHAR wszDesktop[] = { 'D','e','s','k','t','o','p',0 };
+static const WCHAR wszSlash[] = { '/', 0 };
+
+static struct regsvr_namespace const namespace_extensions_list[] = {
+    { NULL }
+};
+
+/***********************************************************************
  *		DllRegisterServer (SHELL32.@)
  */
 HRESULT WINAPI SHELL32_DllRegisterServer()
@@ -558,6 +640,8 @@ HRESULT WINAPI SHELL32_DllRegisterServer()
 	hr = register_interfaces(interface_list);
     if (SUCCEEDED(hr))
 	hr = SHELL_RegisterShellFolders();
+    if (SUCCEEDED(hr))
+        hr = register_namespace_extensions(namespace_extensions_list);
     return hr;
 }
 
@@ -573,5 +657,7 @@ HRESULT WINAPI SHELL32_DllUnregisterServer()
     hr = unregister_coclasses(coclass_list);
     if (SUCCEEDED(hr))
 	hr = unregister_interfaces(interface_list);
+    if (SUCCEEDED(hr))
+        hr = unregister_namespace_extensions(namespace_extensions_list);
     return hr;
 }

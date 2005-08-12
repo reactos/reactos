@@ -255,7 +255,7 @@ void FillList (HWND hCb, char *pszLatest)
     if (icList > 0)
         {
         pszList = HeapAlloc( GetProcessHeap(), 0, icList) ;
-        if (ERROR_SUCCESS != RegQueryValueExA (hkey, "MRUList", NULL, NULL, pszList, &icList))
+        if (ERROR_SUCCESS != RegQueryValueExA (hkey, "MRUList", NULL, NULL, (LPBYTE)pszList, &icList))
             MessageBoxA (hCb, "Unable to grab MRUList !", "Nix", MB_OK) ;
         }
     else
@@ -278,7 +278,7 @@ void FillList (HWND hCb, char *pszLatest)
             pszCmd = HeapReAlloc(GetProcessHeap(), 0, pszCmd, icCmd) ;
         else
             pszCmd = HeapAlloc(GetProcessHeap(), 0, icCmd) ;
-        if (ERROR_SUCCESS != RegQueryValueExA (hkey, szIndex, NULL, NULL, pszCmd, &icCmd))
+        if (ERROR_SUCCESS != RegQueryValueExA (hkey, szIndex, NULL, NULL, (LPBYTE)pszCmd, &icCmd))
             MessageBoxA (hCb, "Unable to grab index", "Nix", MB_OK) ;
 
         if (NULL != pszLatest)
@@ -328,7 +328,7 @@ void FillList (HWND hCb, char *pszLatest)
             memmove (&pszList[1], pszList, Nix) ;
             pszList[0] = cMatch ;
             szIndex[0] = cMatch ;
-            RegSetValueExA (hkey, szIndex, 0, REG_SZ, pszLatest, strlen (pszLatest) + 1) ;
+            RegSetValueExA (hkey, szIndex, 0, REG_SZ, (LPBYTE)pszLatest, strlen (pszLatest) + 1) ;
             }
         }
 
@@ -350,10 +350,10 @@ void FillList (HWND hCb, char *pszLatest)
         memmove (&pszList[1], pszList, icList - 1) ;
         pszList[0] = cMatch ;
         szIndex[0] = cMatch ;
-        RegSetValueExA (hkey, szIndex, 0, REG_SZ, pszLatest, strlen (pszLatest) + 1) ;
+        RegSetValueExA (hkey, szIndex, 0, REG_SZ, (LPBYTE)pszLatest, strlen (pszLatest) + 1) ;
         }
 
-    RegSetValueExA (hkey, "MRUList", 0, REG_SZ, pszList, strlen (pszList) + 1) ;
+    RegSetValueExA (hkey, "MRUList", 0, REG_SZ, (LPBYTE)pszList, strlen (pszList) + 1) ;
 
     HeapFree( GetProcessHeap(), 0, pszCmd) ;
     HeapFree( GetProcessHeap(), 0, pszList) ;

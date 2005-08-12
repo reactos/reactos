@@ -59,7 +59,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 typedef struct {
     const IShellFolder2Vtbl      *lpVtbl;
-    DWORD                   ref;
+    LONG                   ref;
     const IPersistFolder2Vtbl    *lpVtblPersistFolder2;
     const IShellExecuteHookWVtbl *lpVtblShellExecuteHookW;
     const IShellExecuteHookAVtbl *lpVtblShellExecuteHookA;

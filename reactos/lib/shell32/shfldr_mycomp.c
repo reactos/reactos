@@ -56,7 +56,7 @@ WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
 typedef struct {
     const IShellFolder2Vtbl   *lpVtbl;
-    DWORD                ref;
+    LONG                ref;
     const IPersistFolder2Vtbl *lpVtblPersistFolder2;
 
     /* both paths are parsible from the desktop */
@@ -443,8 +443,10 @@ static HRESULT WINAPI ISF_MyComputer_fnGetAttributesOf (IShellFolder2 * iface,
         LPCITEMIDLIST rpidl = NULL;
 
         hr = SHBindToParent(This->pidlRoot, &IID_IShellFolder, (LPVOID*)&psfParent, (LPCITEMIDLIST*)&rpidl);
-        if(SUCCEEDED(hr))
+        if(SUCCEEDED(hr)) {
             SHELL32_GetItemAttributes (psfParent, rpidl, rgfInOut);
+            IShellFolder_Release(psfParent);
+        }
     } else {
         while (cidl > 0 && *apidl) {
             pdump (*apidl);
