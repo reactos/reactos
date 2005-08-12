@@ -334,6 +334,13 @@ static UINT ACTION_AppSearchReg(MSIPACKAGE *package, BOOL *appFound,
             goto end;
         }
 
+        /* bail out if the registry key is empty */
+        if (sz == 0)
+        {
+            rc = ERROR_SUCCESS;
+            goto end;
+        }
+        
         switch (regType)
         {
             case REG_SZ:

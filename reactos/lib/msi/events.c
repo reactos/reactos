@@ -57,21 +57,23 @@ UINT ControlEvent_HandleControlEvent(MSIPACKAGE *, LPCWSTR, LPCWSTR, msi_dialog*
 /*
  * Create a dialog box and run it if it's modal
  */
-static UINT event_do_dialog( MSIPACKAGE *package, LPCWSTR name )
+static UINT event_do_dialog( MSIPACKAGE *package, LPCWSTR name, BOOL destroy_modeless )
 {
     msi_dialog *dialog;
     UINT r;
-
-    /* kill the current modeless dialog */
-    if( package->dialog )
-        msi_dialog_destroy( package->dialog );
-    package->dialog = NULL;
 
     /* create a new dialog */
     dialog = msi_dialog_create( package, name,
                                 ControlEvent_HandleControlEvent );
     if( dialog )
     {
+        /* kill the current modeless dialog */
+        if( destroy_modeless && package->dialog )
+        {
+            msi_dialog_destroy( package->dialog );
+            package->dialog = NULL;
+        }
+
         /* modeless dialogs return an error message */
         r = msi_dialog_run_message_loop( dialog );
         if( r == ERROR_SUCCESS )
@@ -139,7 +141,8 @@ static UINT ControlEvent_NewDialog(MSIPACKAGE* package, LPCWSTR argument,
 static UINT ControlEvent_SpawnDialog(MSIPACKAGE* package, LPCWSTR argument, 
                               msi_dialog *dialog)
 {
-    event_do_dialog( package, argument );
+    /* don't destroy a modeless dialogs that might be our parent */
+    event_do_dialog( package, argument, FALSE );
     if( package->CurrentInstallState != ERROR_SUCCESS )
         msi_dialog_end_dialog( dialog );
     return ERROR_SUCCESS;
@@ -339,13 +342,13 @@ UINT ACTION_DialogBox( MSIPACKAGE* package, LPCWSTR szDialogName )
      *  dialog, as it returns ERROR_IO_PENDING when we try to run
      *  its message loop.
      */
-    r = event_do_dialog( package, szDialogName );
+    r = event_do_dialog( package, szDialogName, TRUE );
     while( r == ERROR_SUCCESS && package->next_dialog )
     {
         LPWSTR name = package->next_dialog;
 
         package->next_dialog = NULL;
-        r = event_do_dialog( package, name );
+        r = event_do_dialog( package, name, TRUE );
         HeapFree( GetProcessHeap(), 0, name );
     }
 

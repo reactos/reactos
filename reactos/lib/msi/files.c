@@ -37,6 +37,7 @@
 #include "winerror.h"
 #include "wine/debug.h"
 #include "fdi.h"
+#include "msi.h"
 #include "msidefs.h"
 #include "msvcrt/fcntl.h"
 #include "msipriv.h"
@@ -359,7 +360,81 @@ static VOID set_file_source(MSIPACKAGE* package, MSIFILE* file, MSICOMPONENT*
         file->SourcePath = build_directory_name(2, path, file->File);
 }
 
-static UINT ready_media_for_file(MSIPACKAGE *package, int fileindex,
+static BOOL check_volume(LPCWSTR path, LPCWSTR want_volume, LPWSTR volume, 
+        UINT *intype)
+{
+    WCHAR drive[4];
+    WCHAR name[MAX_PATH];
+    UINT type;
+
+    if (!(path[0] && path[1] == ':'))
+        return TRUE;
+
+    drive[0] = path[0];
+    drive[1] = path[1];
+    drive[2] = '\\';
+    drive[3] = 0;
+    TRACE("Checking volume %s .. (%s)\n",debugstr_w(drive), debugstr_w(want_volume));
+    type = GetDriveTypeW(drive);
+    TRACE("drive is of type %x\n",type);
+
+    if (type == DRIVE_UNKNOWN || type == DRIVE_NO_ROOT_DIR || 
+            type == DRIVE_FIXED || type == DRIVE_RAMDISK)
+        return TRUE;
+
+    GetVolumeInformationW(drive, name, MAX_PATH, NULL, NULL, NULL, NULL, 0);
+    TRACE("Drive contains %s\n", debugstr_w(name));
+    volume = strdupW(name);
+    if (*intype)
+        *intype=type;
+    return (strcmpiW(want_volume,name)==0);
+}
+
+static BOOL check_for_sourcefile(LPCWSTR source)
+{
+    DWORD attrib = GetFileAttributesW(source);
+    return (!(attrib == INVALID_FILE_ATTRIBUTES));
+}
+
+static UINT ready_volume(MSIPACKAGE* package, LPCWSTR path, LPWSTR last_volume, 
+                         MSIRECORD *row,UINT *type )
+{
+    LPWSTR volume = NULL; 
+    LPCWSTR want_volume = MSI_RecordGetString(row, 5);
+    BOOL ok = check_volume(path, want_volume, volume, type);
+
+    TRACE("Readying Volume for %s (%s, %s)\n",debugstr_w(path), debugstr_w(want_volume), debugstr_w(last_volume));
+
+    if (check_for_sourcefile(path) && !ok)
+    {
+        FIXME("Found the Sourcefile but not on the correct volume.(%s,%s,%s)\n",
+                debugstr_w(path),debugstr_w(want_volume), debugstr_w(volume));
+        return ERROR_SUCCESS;
+    }
+
+    while (!ok)
+    {
+        INT rc;
+        LPCWSTR prompt;
+        LPWSTR msg;
+      
+        prompt = MSI_RecordGetString(row,3);
+        msg = generate_error_string(package, 1302, 1, prompt);
+        rc = MessageBoxW(NULL,msg,NULL,MB_OKCANCEL);
+        HeapFree(GetProcessHeap(),0,volume);
+        HeapFree(GetProcessHeap(),0,msg);
+        if (rc == IDOK)
+            ok = check_for_sourcefile(path);
+        else
+            return ERROR_INSTALL_USEREXIT;
+    }
+
+    HeapFree(GetProcessHeap(),0,last_volume);
+    last_volume = strdupW(volume);
+    return ERROR_SUCCESS;
+}
+
+static UINT ready_media_for_file(MSIPACKAGE *package, int fileindex, 
                                  MSICOMPONENT* comp)
 {
     UINT rc = ERROR_SUCCESS;
@@ -371,17 +446,27 @@ static UINT ready_media_for_file(MSIPACKAGE *package, int fileindex,
          '`','L','a','s','t','S','e','q','u','e','n','c','e','`',' ','>','=',
          ' ','%', 'i',' ','O','R','D','E','R',' ','B','Y',' ',
          '`','L','a','s','t','S','e','q','u','e','n','c','e','`',0};
-    LPCWSTR cab;
+    LPCWSTR cab, volume;
     DWORD sz;
     INT seq;
     static UINT last_sequence = 0; 
+    static LPWSTR last_volume = NULL;
     static LPWSTR last_path = NULL;
     MSIFILE* file = NULL;
+    UINT type;
+    LPCWSTR prompt;
+    static DWORD count = 0;
 
     /* cleanup signal */
     if (!package)
     {
         HeapFree(GetProcessHeap(),0,last_path);
+        HeapFree(GetProcessHeap(),0,last_volume);
+        last_sequence = 0;
+        last_path = NULL;
+        last_volume = NULL;
+        count = 0;
+        memset(source,0,sizeof(source));
         return ERROR_SUCCESS;
     }
 
@@ -394,6 +479,7 @@ static UINT ready_media_for_file(MSIPACKAGE *package, int fileindex,
         return ERROR_SUCCESS;
     }
 
+    count ++;
     row = MSI_QueryGetRecord(package->db, ExecSeqQuery, file->Sequence);
     if (!row)
     {
@@ -404,6 +490,9 @@ static UINT ready_media_for_file(MSIPACKAGE *package, int fileindex,
     seq = MSI_RecordGetInteger(row,2);
     last_sequence = seq;
 
+    volume = MSI_RecordGetString(row, 5);
+    prompt = MSI_RecordGetString(row, 3);
+
     HeapFree(GetProcessHeap(),0,last_path);
     last_path = NULL;
 
@@ -411,6 +500,23 @@ static UINT ready_media_for_file(MSIPACKAGE *package, int fileindex,
     {
         last_path = resolve_folder(package, comp->Directory, TRUE, FALSE, NULL);
         set_file_source(package,file,comp,last_path);
+        rc = ready_volume(package, file->SourcePath, last_volume, row,&type);
+
+        MsiSourceListAddMediaDiskW(package->ProductCode, NULL, 
+            MSIINSTALLCONTEXT_USERMANAGED, MSICODE_PRODUCT, count, volume,
+            prompt);
+
+        if (type == DRIVE_REMOVABLE || type == DRIVE_CDROM || 
+                type == DRIVE_RAMDISK)
+            MsiSourceListSetInfoW(package->ProductCode, NULL, 
+                MSIINSTALLCONTEXT_USERMANAGED, 
+                MSICODE_PRODUCT|MSISOURCETYPE_MEDIA,
+                INSTALLPROPERTY_LASTUSEDSOURCEW, last_path);
+        else
+            MsiSourceListSetInfoW(package->ProductCode, NULL, 
+                MSIINSTALLCONTEXT_USERMANAGED, 
+                MSICODE_PRODUCT|MSISOURCETYPE_NETWORK,
+                INSTALLPROPERTY_LASTUSEDSOURCEW, last_path);
         msiobj_release(&row->hdr);
         return rc;
     }
@@ -422,9 +528,24 @@ static UINT ready_media_for_file(MSIPACKAGE *package, int fileindex,
         /* the stream does not contain the # character */
         if (cab[0]=='#')
         {
+            LPWSTR path;
+
             writeout_cabinet_stream(package,&cab[1],source);
             last_path = strdupW(source);
             *(strrchrW(last_path,'\\')+1)=0;
+
+            path = load_dynamic_property(package,cszSourceDir,NULL);
+
+            MsiSourceListAddMediaDiskW(package->ProductCode, NULL, 
+                MSIINSTALLCONTEXT_USERMANAGED, MSICODE_PRODUCT, count,
+                volume, prompt);
+
+            MsiSourceListSetInfoW(package->ProductCode, NULL,
+                MSIINSTALLCONTEXT_USERMANAGED,
+                MSICODE_PRODUCT|MSISOURCETYPE_NETWORK,
+                INSTALLPROPERTY_LASTUSEDSOURCEW, path);
+
+            HeapFree(GetProcessHeap(),0,path);
         }
         else
         {
@@ -439,6 +560,20 @@ static UINT ready_media_for_file(MSIPACKAGE *package, int fileindex,
             {
                 strcpyW(last_path,source);
                 strcatW(source,cab);
+
+                rc = ready_volume(package, source, last_volume, row, &type);
+                if (type == DRIVE_REMOVABLE || type == DRIVE_CDROM || 
+                        type == DRIVE_RAMDISK)
+                    MsiSourceListSetInfoW(package->ProductCode, NULL,
+                            MSIINSTALLCONTEXT_USERMANAGED,
+                            MSICODE_PRODUCT|MSISOURCETYPE_MEDIA,
+                            INSTALLPROPERTY_LASTUSEDSOURCEW, last_path);
+                else
+                    MsiSourceListSetInfoW(package->ProductCode, NULL,
+                            MSIINSTALLCONTEXT_USERMANAGED,
+                            MSICODE_PRODUCT|MSISOURCETYPE_NETWORK,
+                            INSTALLPROPERTY_LASTUSEDSOURCEW, last_path);
+
                 /* extract the cab file into a folder in the temp folder */
                 sz = MAX_PATH;
                 if (MSI_GetPropertyW(package, cszTempFolder,last_path, &sz) 
@@ -456,8 +591,26 @@ static UINT ready_media_for_file(MSIPACKAGE *package, int fileindex,
         last_path = HeapAlloc(GetProcessHeap(),0,MAX_PATH*sizeof(WCHAR));
         MSI_GetPropertyW(package,cszSourceDir,source,&sz);
         strcpyW(last_path,source);
+        rc = ready_volume(package, last_path, last_volume, row, &type);
+
+        if (type == DRIVE_REMOVABLE || type == DRIVE_CDROM || 
+                type == DRIVE_RAMDISK)
+            MsiSourceListSetInfoW(package->ProductCode, NULL,
+                    MSIINSTALLCONTEXT_USERMANAGED,
+                    MSICODE_PRODUCT|MSISOURCETYPE_MEDIA,
+                    INSTALLPROPERTY_LASTUSEDSOURCEW, last_path);
+        else
+            MsiSourceListSetInfoW(package->ProductCode, NULL,
+                    MSIINSTALLCONTEXT_USERMANAGED,
+                    MSICODE_PRODUCT|MSISOURCETYPE_NETWORK,
+                    INSTALLPROPERTY_LASTUSEDSOURCEW, last_path);
     }
     set_file_source(package, file, comp, last_path);
+
+    MsiSourceListAddMediaDiskW(package->ProductCode, NULL,
+            MSIINSTALLCONTEXT_USERMANAGED, MSICODE_PRODUCT, count, volume,
+            prompt);
+
     msiobj_release(&row->hdr);
 
     return rc;
@@ -499,6 +652,7 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
 {
     UINT rc = ERROR_SUCCESS;
     DWORD index;
+    LPWSTR ptr;
 
     if (!package)
         return ERROR_INVALID_HANDLE;
@@ -506,6 +660,18 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
     /* increment progress bar each time action data is sent */
     ui_progress(package,1,1,0,0);
 
+    /* handle the keys for the SouceList */
+    ptr = strrchrW(package->PackagePath,'\\');
+    if (ptr)
+    {
+        ptr ++;
+        MsiSourceListSetInfoW(package->ProductCode, NULL,
+                MSIINSTALLCONTEXT_USERMANAGED,
+                MSICODE_PRODUCT,
+                INSTALLPROPERTY_PACKAGENAMEW, ptr);
+    }
+    FIXME("Write DiskPrompt\n");
+    
     /* Pass 1 */
     for (index = 0; index < package->loaded_files; index++)
     {

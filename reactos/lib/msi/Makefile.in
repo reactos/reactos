@@ -33,6 +33,7 @@ C_SRCS = \
 	registry.c \
 	regsvr.c \
 	select.c \
+	source.c \
 	string.c \
 	suminfo.c \
 	table.c \

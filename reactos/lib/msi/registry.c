@@ -873,9 +873,18 @@ UINT WINAPI MsiEnumComponentQualifiersW( LPWSTR szComponent, DWORD iIndex,
     rc = RegEnumValueW(key, iIndex, lpQualifierBuf, pcchQualifierBuf, NULL, 
                     NULL, (LPBYTE)full_buffer, &full_buffer_size);
 
+    if (rc == ERROR_MORE_DATA)
+    {
+        HeapFree(GetProcessHeap(),0,full_buffer);
+        full_buffer_size+=sizeof(WCHAR);
+        full_buffer = HeapAlloc(GetProcessHeap(),0,full_buffer_size);
+        rc = RegEnumValueW(key, iIndex, lpQualifierBuf, pcchQualifierBuf, NULL, 
+                    NULL, (LPBYTE)full_buffer, &full_buffer_size);
+    }
+    
     RegCloseKey(key);
 
-    if (rc == ERROR_SUCCESS || rc == ERROR_MORE_DATA)
+    if (rc == ERROR_SUCCESS)
     {
         if (lpApplicationDataBuf && pcchApplicationDataBuf)
         {
@@ -897,6 +906,8 @@ UINT WINAPI MsiEnumComponentQualifiersW( LPWSTR szComponent, DWORD iIndex,
         TRACE("Providing %s and %s\n", debugstr_w(lpQualifierBuf), 
                         debugstr_w(lpApplicationDataBuf));
     }
+
+    HeapFree(GetProcessHeap(),0,full_buffer);
 
     return rc;
 }

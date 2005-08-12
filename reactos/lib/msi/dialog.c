@@ -53,8 +53,9 @@ struct msi_control_tag
     msi_handler handler;
     LPWSTR property;
     LPWSTR value;
-    IPicture *pic;
+    HBITMAP hBitmap;
     HICON hIcon;
+    LPWSTR tabnext;
     WCHAR name[1];
 };
 
@@ -76,6 +77,7 @@ struct msi_dialog_tag
     LPWSTR default_font;
     msi_font *font_list;
     msi_control *control_list;
+    HWND hWndFocus;
     WCHAR name[1];
 };
 
@@ -143,6 +145,8 @@ static msi_control *msi_dialog_find_control( msi_dialog *dialog, LPCWSTR name )
 {
     msi_control *control;
 
+    if( !name )
+        return NULL;
     for( control = dialog->control_list; control; control = control->next )
         if( !strcmpW( control->name, name ) ) /* FIXME: case sensitive? */
             break;
@@ -297,8 +301,9 @@ static msi_control *msi_dialog_create_window( msi_dialog *dialog,
     control->handler = NULL;
     control->property = NULL;
     control->value = NULL;
-    control->pic = NULL;
+    control->hBitmap = NULL;
     control->hIcon = NULL;
+    control->tabnext = strdupW( MSI_RecordGetString( rec, 11) );
 
     x = MSI_RecordGetInteger( rec, 4 );
     y = MSI_RecordGetInteger( rec, 5 );
@@ -330,6 +335,97 @@ static msi_control *msi_dialog_create_window( msi_dialog *dialog,
 
     return control;
 }
+
+static MSIRECORD *msi_get_binary_record( MSIDATABASE *db, LPCWSTR name )
+{
+    const static WCHAR query[] = {
+        's','e','l','e','c','t',' ','*',' ',
+        'f','r','o','m',' ','B','i','n','a','r','y',' ',
+        'w','h','e','r','e',' ',
+            '`','N','a','m','e','`',' ','=',' ','\'','%','s','\'',0
+    };
+
+    return MSI_QueryGetRecord( db, query, name );
+}
+
+static LPWSTR msi_create_tmp_path(void)
+{
+    WCHAR tmp[MAX_PATH];
+    LPWSTR path = NULL;
+    static const WCHAR prefix[] = { 'm','s','i',0 };
+    DWORD len, r;
+
+    r = GetTempPathW( MAX_PATH, tmp );
+    if( !r )
+        return path;
+    len = lstrlenW( tmp ) + 20;
+    path = HeapAlloc( GetProcessHeap(), 0, len * sizeof (WCHAR) );
+    if( path )
+    {
+        r = GetTempFileNameW( tmp, prefix, 0, path );
+        if (!r)
+        {
+            HeapFree( GetProcessHeap(), 0, path );
+            path = NULL;
+        }
+    }
+    return path;
+}
+
+
+static HANDLE msi_load_image( MSIDATABASE *db, LPCWSTR name, UINT type,
+                              UINT cx, UINT cy, UINT flags )
+{
+    MSIRECORD *rec = NULL;
+    HANDLE himage = NULL;
+    LPWSTR tmp;
+    UINT r;
+
+    TRACE("%p %s %u %u %08x\n", db, debugstr_w(name), cx, cy, flags);
+
+    tmp = msi_create_tmp_path();
+    if( !tmp )
+        return himage;
+
+    rec = msi_get_binary_record( db, name );
+    if( rec )
+    {
+        r = MSI_RecordStreamToFile( rec, 2, tmp );
+        if( r == ERROR_SUCCESS )
+        {
+            himage = LoadImageW( 0, tmp, type, cx, cy, flags );
+            DeleteFileW( tmp );
+        }
+        msiobj_release( &rec->hdr );
+    }
+
+    HeapFree( GetProcessHeap(), 0, tmp );
+    return himage;
+}
+
+static HICON msi_load_icon( MSIDATABASE *db, LPCWSTR text, UINT attributes )
+{
+    DWORD cx = 0, cy = 0, flags;
+
+    flags = LR_LOADFROMFILE | LR_DEFAULTSIZE;
+    if( attributes & msidbControlAttributesFixedSize )
+    {
+        flags &= ~LR_DEFAULTSIZE;
+        if( attributes & msidbControlAttributesIconSize16 )
+        {
+            cx += 16;
+            cy += 16;
+        }
+        if( attributes & msidbControlAttributesIconSize32 )
+        {
+            cx += 32;
+            cy += 32;
+        }
+        /* msidbControlAttributesIconSize48 handled by above logic */
+    }
+    return msi_load_image( db, text, IMAGE_ICON, cx, cy, flags );
+}
+
 
 /* called from the Control Event subscription code */
 void msi_dialog_handle_event( msi_dialog* dialog, LPCWSTR control, 
@@ -475,11 +571,27 @@ static UINT msi_dialog_text_control( msi_dialog *dialog, MSIRECORD *rec )
 static UINT msi_dialog_button_control( msi_dialog *dialog, MSIRECORD *rec )
 {
     msi_control *control;
+    UINT attributes, style;
+    LPCWSTR text;
 
     TRACE("%p %p\n", dialog, rec);
 
-    control = msi_dialog_add_control( dialog, rec, szButton, WS_TABSTOP );
+    style = WS_TABSTOP;
+    attributes = MSI_RecordGetInteger( rec, 8 );
+    if( attributes & msidbControlAttributesIcon )
+        style |= BS_ICON;
+
+    control = msi_dialog_add_control( dialog, rec, szButton, style );
+    if( !control )
+        return ERROR_FUNCTION_FAILED;
+
     control->handler = msi_dialog_button_handler;
+
+    /* set the icon */
+    text = MSI_RecordGetString( rec, 10 );
+    control->hIcon = msi_load_icon( dialog->package->db, text, attributes );
+    if( attributes & msidbControlAttributesIcon )
+        SendMessageW( control->hwnd, BM_SETIMAGE, IMAGE_ICON, (LPARAM) control->hIcon );
 
     return ERROR_SUCCESS;
 }
@@ -611,161 +723,56 @@ static UINT msi_dialog_scrolltext_control( msi_dialog *dialog, MSIRECORD *rec )
     return ERROR_SUCCESS;
 }
 
-static MSIRECORD *msi_get_binary_record( MSIDATABASE *db, LPCWSTR name )
-{
-    const static WCHAR query[] = {
-        's','e','l','e','c','t',' ','*',' ',
-        'f','r','o','m',' ','B','i','n','a','r','y',' ',
-        'w','h','e','r','e',' ',
-            '`','N','a','m','e','`',' ','=',' ','\'','%','s','\'',0
-    };
-
-    return MSI_QueryGetRecord( db, query, name );
-}
-
-static UINT msi_load_bitmap( MSIDATABASE *db, LPCWSTR name, IPicture **pic )
-{
-    MSIRECORD *rec = NULL;
-    IStream *stm = NULL;
-    UINT r;
-
-    rec = msi_get_binary_record( db, name );
-    if( !rec )
-        return ERROR_FUNCTION_FAILED;
-
-    r = MSI_RecordGetIStream( rec, 2, &stm );
-    msiobj_release( &rec->hdr );
-    if( r != ERROR_SUCCESS )
-        return r;
-
-    r = OleLoadPicture( stm, 0, TRUE, &IID_IPicture, (LPVOID*) pic );
-    IStream_Release( stm );
-    if( FAILED( r ) )
-        return ERROR_FUNCTION_FAILED;
-
-    return ERROR_SUCCESS;
-}
-
 static UINT msi_dialog_bitmap_control( msi_dialog *dialog, MSIRECORD *rec )
 {
-    IPicture *pic = NULL;
+    UINT cx, cy, flags, style, attributes;
     msi_control *control;
-    OLE_HANDLE hBitmap = 0;
     LPCWSTR text;
-    UINT r;
 
-    control = msi_dialog_add_control( dialog, rec, szStatic,
-                            SS_BITMAP | SS_LEFT | SS_CENTERIMAGE );
-    text = MSI_RecordGetString( rec, 10 );
-    r = msi_load_bitmap( dialog->package->db, text, &pic );
-    if( r == ERROR_SUCCESS )
+    flags = LR_LOADFROMFILE;
+    style = SS_BITMAP | SS_LEFT | WS_GROUP;
+
+    attributes = MSI_RecordGetInteger( rec, 8 );
+    if( attributes & msidbControlAttributesFixedSize )
     {
-        r = IPicture_get_Handle( pic, &hBitmap );
-        if( SUCCEEDED( r ) )
-            SendMessageW( control->hwnd, STM_SETIMAGE, IMAGE_BITMAP, hBitmap );
-        control->pic = pic;
+        flags |= LR_DEFAULTSIZE;
+        style |= SS_CENTERIMAGE;
     }
+
+    control = msi_dialog_add_control( dialog, rec, szStatic, style );
+    text = MSI_RecordGetString( rec, 10 );
+    cx = MSI_RecordGetInteger( rec, 6 );
+    cy = MSI_RecordGetInteger( rec, 7 );
+    cx = msi_dialog_scale_unit( dialog, cx );
+    cy = msi_dialog_scale_unit( dialog, cy );
+
+    control->hBitmap = msi_load_image( dialog->package->db, text,
+                                       IMAGE_BITMAP, cx, cy, flags );
+    if( control->hBitmap )
+        SendMessageW( control->hwnd, STM_SETIMAGE,
+                      IMAGE_BITMAP, (LPARAM) control->hBitmap );
+    else
+        ERR("Failed to load bitmap %s\n", debugstr_w(text));
     
     return ERROR_SUCCESS;
-}
-
-static LPWSTR msi_create_tmp_path(void)
-{
-    WCHAR tmp[MAX_PATH];
-    LPWSTR path = NULL;
-    static const WCHAR prefix[] = { 'm','s','i',0 };
-    DWORD len, r;
-
-    r = GetTempPathW( MAX_PATH, tmp );
-    if( !r )
-        return path;
-    len = lstrlenW( tmp ) + 20;
-    path = HeapAlloc( GetProcessHeap(), 0, len * sizeof (WCHAR) );
-    if( path )
-    {
-        r = GetTempFileNameW( tmp, prefix, 0, path );
-        if (!r)
-        {
-            HeapFree( GetProcessHeap(), 0, path );
-            path = NULL;
-        }
-    }
-    return path;
-}
-
-static UINT
-msi_load_icon( MSIDATABASE *db, LPCWSTR name, DWORD attributes, HICON *picon )
-{
-    UINT r = ERROR_FUNCTION_FAILED;
-    LPWSTR tmp;
-    MSIRECORD *rec;
-    HICON hicon = 0;
-
-    TRACE("loading %s\n", debugstr_w( name ) );
-
-    tmp = msi_create_tmp_path();
-    if( !tmp )
-        return r;
-
-    rec = msi_get_binary_record( db, name );
-    if( rec )
-    {
-        r = MSI_RecordStreamToFile( rec, 2, tmp );
-        if( r == ERROR_SUCCESS )
-        {
-            DWORD cx = 0, cy = 0, flags = LR_LOADFROMFILE | LR_DEFAULTSIZE;
-            
-            if( attributes & msidbControlAttributesFixedSize )
-            {
-                flags &= ~LR_DEFAULTSIZE;
-                if( attributes & msidbControlAttributesIconSize16 )
-                {
-                    cx += 16;
-                    cy += 16;
-                }
-                if( attributes & msidbControlAttributesIconSize32 )
-                {
-                    cx += 32;
-                    cy += 32;
-                }
-                /* msidbControlAttributesIconSize48 handled by above logic */
-            }
-            
-            hicon = LoadImageW( 0, tmp, IMAGE_ICON, cx, cy, flags );
-            if( hicon )
-                *picon = hicon;
-            else
-                ERR("failed to load icon from %s\n", debugstr_w( tmp ));
-            DeleteFileW( tmp );
-        }
-        msiobj_release( &rec->hdr );
-    }
-
-    HeapFree( GetProcessHeap(), 0, tmp );
-
-    return r;
 }
 
 static UINT msi_dialog_icon_control( msi_dialog *dialog, MSIRECORD *rec )
 {
     msi_control *control;
     DWORD attributes;
-    HICON hIcon = 0;
     LPCWSTR text;
-    UINT r;
 
     TRACE("\n");
 
     control = msi_dialog_add_control( dialog, rec, szStatic,
                             SS_ICON | SS_CENTERIMAGE | WS_GROUP );
-    text = MSI_RecordGetString( rec, 10 );
+            
     attributes = MSI_RecordGetInteger( rec, 8 );
-    r = msi_load_icon( dialog->package->db, text, attributes, &hIcon );
-    if( r == ERROR_SUCCESS )
-    {
-        r = SendMessageW( control->hwnd, STM_SETICON, (WPARAM) hIcon, 0 );
-        control->hIcon = hIcon;
-    }
+    text = MSI_RecordGetString( rec, 10 );
+    control->hIcon = msi_load_icon( dialog->package->db, text, attributes );
+    if( control->hIcon )
+        SendMessageW( control->hwnd, STM_SETICON, (WPARAM) control->hIcon, 0 );
     else
         ERR("Failed to load bitmap %s\n", debugstr_w(text));
     return ERROR_SUCCESS;
@@ -853,6 +860,28 @@ static void msi_mask_control_change( struct msi_maskedit_info *info )
     HeapFree( GetProcessHeap(), 0, val );
 }
 
+/* now move to the next control if necessary */
+static VOID msi_mask_next_control( struct msi_maskedit_info *info, HWND hWnd )
+{
+    HWND hWndNext;
+    UINT len, i;
+
+    for( i=0; i<info->num_groups; i++ )
+        if( info->group[i].hwnd == hWnd )
+            break;
+
+    /* don't move from the last control */
+    if( i >= (info->num_groups-1) )
+        return;
+
+    len = SendMessageW( hWnd, WM_GETTEXTLENGTH, 0, 0 );
+    if( len < info->group[i].len )
+        return;
+
+    hWndNext = GetNextDlgTabItem( GetParent( hWnd ), hWnd, FALSE );
+    SetFocus( hWndNext );
+}
+
 static LRESULT WINAPI
 MSIMaskedEdit_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -869,7 +898,10 @@ MSIMaskedEdit_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
     case WM_COMMAND:
         if (HIWORD(wParam) == EN_CHANGE)
+        {
             msi_mask_control_change( info );
+            msi_mask_next_control( info, (HWND) lParam );
+        }
         break;
     case WM_NCDESTROY:
         HeapFree( GetProcessHeap(), 0, info->prop );
@@ -1351,6 +1383,39 @@ static void msi_dialog_adjust_dialog_size( msi_dialog *dialog, LPSIZE sz )
     sz->cy = rect.bottom - rect.top;
 }
 
+static BOOL msi_control_set_next( msi_control *control, msi_control *next )
+{
+    return SetWindowPos( next->hwnd, control->hwnd, 0, 0, 0, 0,
+                         SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOREDRAW |
+                         SWP_NOREPOSITION | SWP_NOSENDCHANGING | SWP_NOSIZE );
+}
+
+static UINT msi_dialog_set_tab_order( msi_dialog *dialog )
+{
+    msi_control *control, *tab_next;
+
+    for( control = dialog->control_list; control; control = control->next )
+    {
+        tab_next = msi_dialog_find_control( dialog, control->tabnext );
+        if( !tab_next )
+            continue;
+        msi_control_set_next( control, tab_next );
+    }
+
+    return ERROR_SUCCESS;
+}
+
+static void msi_dialog_set_first_control( msi_dialog* dialog, LPCWSTR name )
+{
+    msi_control *control;
+
+    control = msi_dialog_find_control( dialog, name );
+    if( control )
+        dialog->hWndFocus = control->hwnd;
+    else
+        dialog->hWndFocus = NULL;
+}
+
 static LRESULT msi_dialog_oncreate( HWND hwnd, LPCREATESTRUCTW cs )
 {
     static const WCHAR df[] = {
@@ -1390,11 +1455,13 @@ static LRESULT msi_dialog_oncreate( HWND hwnd, LPCREATESTRUCTW cs )
                   SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOREDRAW );
 
     HeapFree( GetProcessHeap(), 0, title );
-    msiobj_release( &rec->hdr );
 
     msi_dialog_build_font_list( dialog );
     msi_dialog_fill_controls( dialog );
     msi_dialog_evaluate_control_conditions( dialog );
+    msi_dialog_set_tab_order( dialog );
+    msi_dialog_set_first_control( dialog, MSI_RecordGetString( rec, 8 ) );
+    msiobj_release( &rec->hdr );
 
     return 0;
 }
@@ -1617,6 +1684,16 @@ static LRESULT msi_dialog_oncommand( msi_dialog *dialog, WPARAM param, HWND hwnd
     return 0;
 }
 
+static void msi_dialog_setfocus( msi_dialog *dialog )
+{
+    HWND hwnd = dialog->hWndFocus;
+
+    hwnd = GetNextDlgTabItem( dialog->hwnd, hwnd, TRUE);
+    hwnd = GetNextDlgTabItem( dialog->hwnd, hwnd, FALSE);
+    SetFocus( hwnd );
+    dialog->hWndFocus = hwnd;
+}
+
 static LRESULT WINAPI MSIDialog_WndProc( HWND hwnd, UINT msg,
                 WPARAM wParam, LPARAM lParam )
 {
@@ -1631,6 +1708,17 @@ static LRESULT WINAPI MSIDialog_WndProc( HWND hwnd, UINT msg,
 
     case WM_COMMAND:
         return msi_dialog_oncommand( dialog, wParam, (HWND)lParam );
+
+    case WM_ACTIVATE:
+        if( LOWORD(wParam) == WA_INACTIVE )
+            dialog->hWndFocus = GetFocus();
+        else
+            msi_dialog_setfocus( dialog );
+        return 0;
+
+    case WM_SETFOCUS:
+        msi_dialog_setfocus( dialog );
+        return 0;
 
     /* bounce back to our subclassed static control */
     case WM_CTLCOLORSTATIC:
@@ -1821,10 +1909,11 @@ void msi_dialog_destroy( msi_dialog *dialog )
         /* leave dialog->hwnd - destroying parent destroys child windows */
         HeapFree( GetProcessHeap(), 0, t->property );
         HeapFree( GetProcessHeap(), 0, t->value );
-        if( t->pic )
-            IPicture_Release( t->pic );
+        if( t->hBitmap )
+            DeleteObject( t->hBitmap );
         if( t->hIcon )
             DestroyIcon( t->hIcon );
+        HeapFree( GetProcessHeap(), 0, t->tabnext );
         HeapFree( GetProcessHeap(), 0, t );
     }
 

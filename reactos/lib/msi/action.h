@@ -187,13 +187,19 @@ enum SCRIPTS {
         TOTAL_SCRIPTS = 3
 };
 
+#define SEQUENCE_UI       0x1
+#define SEQUENCE_EXEC     0x2
+#define SEQUENCE_INSTALL  0x10
+
 typedef struct tagMSISCRIPT
 {
     LPWSTR  *Actions[TOTAL_SCRIPTS];
     UINT    ActionCount[TOTAL_SCRIPTS];
     BOOL    ExecuteSequenceRun;
-    BOOL    FindRelatedProductsRun;
     BOOL    CurrentlyScripting;
+    UINT    InWhatSequence;
+    LPWSTR  *UniqueActions;
+    UINT    UniqueActionsCount;
 }MSISCRIPT;
 
 
@@ -234,6 +240,9 @@ void reduce_to_longfilename(WCHAR*);
 void reduce_to_shortfilename(WCHAR*);
 LPWSTR create_component_advertise_string(MSIPACKAGE*, MSICOMPONENT*, LPCWSTR);
 void ACTION_UpdateComponentStates(MSIPACKAGE *package, LPCWSTR szFeature);
+UINT register_unique_action(MSIPACKAGE *, LPCWSTR);
+BOOL check_unique_action(MSIPACKAGE *, LPCWSTR);
+WCHAR* generate_error_string(MSIPACKAGE *, UINT, DWORD, ... );
 
 
 /* control event stuff */

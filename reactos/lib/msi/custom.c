@@ -36,6 +36,7 @@ http://msdn.microsoft.com/library/default.asp?url=/library/en-us/msi/setup/summa
 #include "wine/debug.h"
 #include "fdi.h"
 #include "msi.h"
+#include "msidefs.h"
 #include "msiquery.h"
 #include "fcntl.h"
 #include "objbase.h"
@@ -74,6 +75,45 @@ static UINT HANDLE_CustomType50(MSIPACKAGE *package, LPCWSTR source,
 static UINT HANDLE_CustomType34(MSIPACKAGE *package, LPCWSTR source,
                                 LPCWSTR target, const INT type, LPCWSTR action);
 
+
+static BOOL check_execution_scheduling_options(MSIPACKAGE *package, LPCWSTR action, UINT options)
+{
+    if (!package->script)
+        return TRUE;
+
+    if ((options & msidbCustomActionTypeClientRepeat) == 
+            msidbCustomActionTypeClientRepeat)
+    {
+        if (!(package->script->InWhatSequence & SEQUENCE_UI &&
+            package->script->InWhatSequence & SEQUENCE_EXEC))
+        {
+            TRACE("Skipping action due to dbCustomActionTypeClientRepeat option.\n");
+            return FALSE;
+        }
+    }
+    else if (options & msidbCustomActionTypeFirstSequence)
+    {
+        if (package->script->InWhatSequence & SEQUENCE_UI &&
+            package->script->InWhatSequence & SEQUENCE_EXEC )
+        {
+            TRACE("Skipping action due to msidbCustomActionTypeFirstSequence option.\n");
+            return FALSE;
+        }
+    }
+    else if (options & msidbCustomActionTypeOncePerProcess)
+    {
+        if (check_unique_action(package,action))
+        {
+            TRACE("Skipping action due to msidbCustomActionTypeOncePerProcess option.\n");
+            return FALSE;
+        }
+        else
+            register_unique_action(package,action);
+    }
+
+    return TRUE;
+}
+
 UINT ACTION_CustomAction(MSIPACKAGE *package,LPCWSTR action, BOOL execute)
 {
     UINT rc = ERROR_SUCCESS;
@@ -101,9 +141,15 @@ UINT ACTION_CustomAction(MSIPACKAGE *package,LPCWSTR action, BOOL execute)
           debugstr_w(source), debugstr_w(target));
 
     /* handle some of the deferred actions */
-    if (type & 0x400)
+    if (type & msidbCustomActionTypeTSAware)
+        FIXME("msidbCustomActionTypeTSAware not handled\n");
+
+    if (type & msidbCustomActionTypeInScript)
     {
-        if (type & 0x100)
+        if (type & msidbCustomActionTypeNoImpersonate)
+            FIXME("msidbCustomActionTypeNoImpersonate not handled\n");
+
+        if (type & msidbCustomActionTypeRollback)
         {
             FIXME("Rollback only action... rollbacks not supported yet\n");
             schedule_action(package, ROLLBACK_SCRIPT, action);
@@ -114,7 +160,7 @@ UINT ACTION_CustomAction(MSIPACKAGE *package,LPCWSTR action, BOOL execute)
         }
         if (!execute)
         {
-            if (type & 0x200)
+            if (type & msidbCustomActionTypeCommit)
             {
                 TRACE("Deferring Commit Action!\n");
                 schedule_action(package, COMMIT_SCRIPT, action);
@@ -136,11 +182,16 @@ UINT ACTION_CustomAction(MSIPACKAGE *package,LPCWSTR action, BOOL execute)
 
             static const WCHAR szActionData[] = {
             'C','u','s','t','o','m','A','c','t','i','o','n','D','a','t','a',0};
+            static const WCHAR szBlank[] = {0};
             LPWSTR actiondata = load_dynamic_property(package,action,NULL);
             if (actiondata)
                 MSI_SetPropertyW(package,szActionData,actiondata);
+            else
+                MSI_SetPropertyW(package,szActionData,szBlank);
         }
     }
+    else if (!check_execution_scheduling_options(package,action,type))
+        return ERROR_SUCCESS;
 
     switch (type & CUSTOM_ACTION_TYPE_MASK)
     {
@@ -304,7 +355,7 @@ static UINT process_handle(MSIPACKAGE* package, UINT type,
 {
     UINT rc = ERROR_SUCCESS;
 
-    if (!(type & 0x80))
+    if (!(type & msidbCustomActionTypeAsync))
     {
         /* synchronous */
         TRACE("Synchronous Execution of action %s\n",debugstr_w(Name));
@@ -313,7 +364,7 @@ static UINT process_handle(MSIPACKAGE* package, UINT type,
         else
             msi_dialog_check_messages(ThreadHandle);
 
-        if (!(type & 0x40))
+        if (!(type & msidbCustomActionTypeContinue))
         {
             if (ProcessHandle)
                 rc = process_action_return_value(2,ProcessHandle);
@@ -331,7 +382,7 @@ static UINT process_handle(MSIPACKAGE* package, UINT type,
     {
         TRACE("Asynchronous Execution of action %s\n",debugstr_w(Name));
         /* asynchronous */
-        if (type & 0x40)
+        if (type & msidbCustomActionTypeContinue)
         {
             if (ProcessHandle)
             {

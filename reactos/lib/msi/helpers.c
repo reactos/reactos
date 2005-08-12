@@ -40,7 +40,6 @@ static const WCHAR cszTargetDir[] = {'T','A','R','G','E','T','D','I','R',0};
 static const WCHAR cszDatabase[]={'D','A','T','A','B','A','S','E',0};
 
 const WCHAR cszSourceDir[] = {'S','o','u','r','c','e','D','i','r',0};
-const WCHAR szProductCode[]= {'P','r','o','d','u','c','t','C','o','d','e',0};
 const WCHAR cszRootDrive[] = {'R','O','O','T','D','R','I','V','E',0};
 const WCHAR cszbs[]={'\\',0};
 
@@ -88,10 +87,8 @@ DWORD build_version_dword(LPCWSTR version_string)
 UINT build_icon_path(MSIPACKAGE *package, LPCWSTR icon_name, 
                             LPWSTR *FilePath)
 {
-    LPWSTR ProductCode;
     LPWSTR SystemFolder;
     LPWSTR dest;
-    UINT rc;
 
     static const WCHAR szInstaller[] = 
         {'M','i','c','r','o','s','o','f','t','\\',
@@ -99,20 +96,15 @@ UINT build_icon_path(MSIPACKAGE *package, LPCWSTR icon_name,
     static const WCHAR szFolder[] =
         {'A','p','p','D','a','t','a','F','o','l','d','e','r',0};
 
-    ProductCode = load_dynamic_property(package,szProductCode,&rc);
-    if (!ProductCode)
-        return rc;
-
     SystemFolder = load_dynamic_property(package,szFolder,NULL);
 
-    dest = build_directory_name(3, SystemFolder, szInstaller, ProductCode);
+    dest = build_directory_name(3, SystemFolder, szInstaller, package->ProductCode);
 
     create_full_pathW(dest);
 
     *FilePath = build_directory_name(2, dest, icon_name);
 
     HeapFree(GetProcessHeap(),0,SystemFolder);
-    HeapFree(GetProcessHeap(),0,ProductCode);
     HeapFree(GetProcessHeap(),0,dest);
     return ERROR_SUCCESS;
 }
@@ -576,10 +568,17 @@ void ACTION_free_package_structures( MSIPACKAGE* package)
         
             HeapFree(GetProcessHeap(),0,package->script->Actions[i]);
         }
+
+        for (i = 0; i < package->script->UniqueActionsCount; i++)
+            HeapFree(GetProcessHeap(),0,package->script->UniqueActions[i]);
+
+        HeapFree(GetProcessHeap(),0,package->script->UniqueActions);
         HeapFree(GetProcessHeap(),0,package->script);
     }
 
     HeapFree(GetProcessHeap(),0,package->PackagePath);
+    HeapFree(GetProcessHeap(),0,package->msiFilePath);
+    HeapFree(GetProcessHeap(),0,package->ProductCode);
 
     /* cleanup control event subscriptions */
     ControlEvent_CleanupSubscriptions(package);
@@ -795,7 +794,6 @@ void reduce_to_shortfilename(WCHAR* filename)
 LPWSTR create_component_advertise_string(MSIPACKAGE* package, 
                 MSICOMPONENT* component, LPCWSTR feature)
 {
-    LPWSTR productid=NULL;
     GUID clsid;
     WCHAR productid_85[21];
     WCHAR component_85[21];
@@ -814,8 +812,7 @@ LPWSTR create_component_advertise_string(MSIPACKAGE* package,
     memset(productid_85,0,sizeof(productid_85));
     memset(component_85,0,sizeof(component_85));
 
-    productid = load_dynamic_property(package,szProductCode,NULL);
-    CLSIDFromString(productid, &clsid);
+    CLSIDFromString(package->ProductCode, &clsid);
     
     encode_base85_guid(&clsid,productid_85);
 
@@ -840,8 +837,6 @@ LPWSTR create_component_advertise_string(MSIPACKAGE* package,
         sprintfW(output,fmt2,productid_85,feature,component_85);
     else
         sprintfW(output,fmt1,productid_85,feature);
-
-    HeapFree(GetProcessHeap(),0,productid);
     
     return output;
 }
@@ -910,4 +905,92 @@ void ACTION_UpdateComponentStates(MSIPACKAGE *package, LPCWSTR szFeature)
             newstate, debugstr_w(component->Component), component->Installed, 
             component->Action, component->ActionRequest);
     } 
+}
+
+UINT register_unique_action(MSIPACKAGE *package, LPCWSTR action)
+{
+    UINT count;
+    LPWSTR *newbuf = NULL;
+
+    if (!package || !package->script)
+        return FALSE;
+
+    TRACE("Registering Action %s as having fun\n",debugstr_w(action));
+    
+    count = package->script->UniqueActionsCount;
+    package->script->UniqueActionsCount++;
+    if (count != 0)
+        newbuf = HeapReAlloc(GetProcessHeap(),0,
+                        package->script->UniqueActions,
+                        package->script->UniqueActionsCount* sizeof(LPWSTR));
+    else
+        newbuf = HeapAlloc(GetProcessHeap(),0, sizeof(LPWSTR));
+
+    newbuf[count] = strdupW(action);
+    package->script->UniqueActions = newbuf;
+
+   return ERROR_SUCCESS;
+}
+
+BOOL check_unique_action(MSIPACKAGE *package, LPCWSTR action)
+{
+    INT i;
+
+    if (!package || !package->script)
+        return FALSE;
+
+    for (i = 0; i < package->script->UniqueActionsCount; i++)
+        if (!strcmpW(package->script->UniqueActions[i],action))
+            return TRUE;
+
+    return FALSE;
+}
+
+WCHAR* generate_error_string(MSIPACKAGE *package, UINT error, DWORD count, ... )
+{
+    static const WCHAR query[] = {'S','E','L','E','C','T',' ','`','M','e','s','s','a','g','e','`',' ','F','R','O','M',' ','`','E','r','r','o','r','`',' ','W','H','E','R','E',' ','`','E','r','r','o','r','`',' ','=',' ','%','i',0};
+
+    MSIRECORD *rec;
+    MSIRECORD *row;
+    DWORD size = 0;
+    DWORD i;
+    va_list va;
+    LPCWSTR str;
+    LPWSTR data;
+
+    row = MSI_QueryGetRecord(package->db, query, error);
+    if (!row)
+        return 0;
+
+    rec = MSI_CreateRecord(count+2);
+
+    str = MSI_RecordGetString(row,1);
+    MSI_RecordSetStringW(rec,0,str);
+    msiobj_release( &row->hdr );
+    MSI_RecordSetInteger(rec,1,error);
+
+    va_start(va,count);
+    for (i = 0; i < count; i++)
+    {
+        str = va_arg(va,LPCWSTR);
+        MSI_RecordSetStringW(rec,(i+2),str);
+    }
+    va_end(va);
+
+    MSI_FormatRecordW(package,rec,NULL,&size);
+    if (size >= 0)
+    {
+        size++;
+        data = HeapAlloc(GetProcessHeap(),0,size*sizeof(WCHAR));
+        if (size > 1)
+            MSI_FormatRecordW(package,rec,data,&size);
+        else
+            data[0] = 0;
+        msiobj_release( &rec->hdr );
+        return data;
+    }
+
+    msiobj_release( &rec->hdr );
+    data = NULL;
+    return data;
 }

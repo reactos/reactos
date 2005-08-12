@@ -47,6 +47,7 @@
 	<file>registry.c</file>
 	<file>regsvr.c</file>
 	<file>select.c</file>
+	<file>source.c</file>
 	<file>sql.tab.c</file>
 	<file>string.c</file>
 	<file>suminfo.c</file>

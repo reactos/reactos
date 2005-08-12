@@ -333,7 +333,7 @@ static DWORD write_string( LPBYTE data, DWORD ofs, LPCSTR str )
     DWORD len = lstrlenA( str ) + 1;
     write_dword( data, ofs, len );
     if( data )
-        lstrcpyA( &data[ofs + 4], str );
+        memcpy( &data[ofs + 4], str, len );
     return (7 + len) & ~3;
 }
 

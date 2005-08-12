@@ -585,3 +585,26 @@ UINT WINAPI MsiGetComponentStateW(MSIHANDLE hInstall, LPWSTR szComponent,
     msiobj_release( &package->hdr );
     return ret;
 }
+
+/***********************************************************************
+ * MsiGetLanguage (MSI.@)
+ */
+LANGID WINAPI MsiGetLanguage(MSIHANDLE hInstall)
+{
+    MSIPACKAGE* package;
+    LANGID langid;
+    LPWSTR buffer;
+    static const WCHAR szProductLanguage[] =
+        {'P','r','o','d','u','c','t','L','a','n','g','u','a','g','e',0};
+    
+    package = msihandle2msiinfo(hInstall, MSIHANDLETYPE_PACKAGE);
+    if (!package)
+        return ERROR_INVALID_HANDLE;
+
+    buffer = load_dynamic_property(package,szProductLanguage,NULL);
+    langid = atoiW(buffer);
+
+    HeapFree(GetProcessHeap(),0,buffer);
+    msiobj_release (&package->hdr);
+    return langid;
+}

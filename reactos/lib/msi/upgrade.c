@@ -136,10 +136,6 @@ static UINT ITERATE_FindRelatedProducts(MSIRECORD *rec, LPVOID param)
             DWORD sz = 0x100;
             HKEY hukey;
             INT r;
-            static const WCHAR szVersion[] =
-                {'V','e','r','s','i','o','n',0};
-            static const WCHAR szLanguage[] =
-                {'L','a','n','g','u','a','g','e',0};
 
             unsquash_guid(product,productid);
             rc = MSIREG_OpenUserProductsKey(productid, &hukey, FALSE);
@@ -151,8 +147,8 @@ static UINT ITERATE_FindRelatedProducts(MSIRECORD *rec, LPVOID param)
             }
           
             sz = sizeof(DWORD);
-            RegQueryValueExW(hukey, szVersion, NULL, NULL, (LPBYTE)&check, 
-                            &sz);
+            RegQueryValueExW(hukey, INSTALLPROPERTY_VERSIONW, NULL, NULL,
+                    (LPBYTE)&check, &sz);
             /* check min */
             ver = MSI_RecordGetString(rec,2);
             comp_ver = build_version_dword(ver);
@@ -179,8 +175,8 @@ static UINT ITERATE_FindRelatedProducts(MSIRECORD *rec, LPVOID param)
 
             /* check language*/
             sz = sizeof(DWORD);
-            RegQueryValueExW(hukey, szLanguage, NULL, NULL, (LPBYTE)&check, 
-                            &sz);
+            RegQueryValueExW(hukey, INSTALLPROPERTY_LANGUAGEW, NULL, NULL,
+                    (LPBYTE)&check, &sz);
             RegCloseKey(hukey);
             language = MSI_RecordGetString(rec,4);
             TRACE("Checking languages 0x%lx and %s\n", check, 
@@ -211,12 +207,14 @@ UINT ACTION_FindRelatedProducts(MSIPACKAGE *package)
     UINT rc = ERROR_SUCCESS;
     MSIQUERY *view;
 
-    if (package->script && package->script->FindRelatedProductsRun)
+    if (check_unique_action(package,szFindRelatedProducts))
+    {
+        TRACE("Skipping FindRelatedProducts action: already done on client side\n");
         return ERROR_SUCCESS;
+    }
+    else
+        register_unique_action(package,szFindRelatedProducts);
 
-    if (package->script)
-        package->script->FindRelatedProductsRun = TRUE;
-    
     rc = MSI_DatabaseOpenViewW(package->db, Query, &view);
     if (rc != ERROR_SUCCESS)
         return ERROR_SUCCESS;
