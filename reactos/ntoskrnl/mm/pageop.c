@@ -83,7 +83,8 @@ MmCheckForPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
    {
       Hash = (((ULONG_PTR)Segment) | (((ULONG_PTR)Offset) / PAGE_SIZE));
    }
-   else if (MArea->Type == MEMORY_AREA_VIRTUAL_MEMORY)
+   else if (MArea->Type == MEMORY_AREA_VIRTUAL_MEMORY ||
+            MArea->Type == MEMORY_AREA_PEB_OR_TEB)
    {
       Hash = (((ULONG_PTR)Pid) | (((ULONG_PTR)Address) / PAGE_SIZE));
    }
@@ -157,7 +158,8 @@ MmGetPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
    {
       Hash = (((ULONG_PTR)Segment) | (((ULONG_PTR)Offset) / PAGE_SIZE));
    }
-   else if (MArea->Type == MEMORY_AREA_VIRTUAL_MEMORY)
+   else if (MArea->Type == MEMORY_AREA_VIRTUAL_MEMORY ||
+            MArea->Type == MEMORY_AREA_PEB_OR_TEB)
    {
       Hash = (((ULONG_PTR)Pid) | (((ULONG_PTR)Address) / PAGE_SIZE));
    }
