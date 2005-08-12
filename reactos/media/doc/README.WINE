@@ -26,57 +26,58 @@ This will allow you to use the WINE tools and librarys with very little
 work to import a new dll.
 
 The following build tools are shared with Wine.
-reactos/tools/unicode		# Synced to Wine-20050628
-reactos/tools/wpp		# Synced to Wine-20050628
+reactos/tools/unicode		# Synced to Wine-20050725
+reactos/tools/wpp		# Synced to Wine-20050725
 reactos/tools/bin2res		# Resource to binary converter
-reactos/tools/winebuild		# Synced to Wine-20050628
+reactos/tools/winebuild		# Synced to Wine-20050725
 reactos/tools/wmc		# Wine Message Compiler
-reactos/tools/wrc		# Synced to Wine-20050628
-reactos/tools/widl		# Synced to Wine-20050628 (merge back to winehq in progress)
+reactos/tools/wrc		# Synced to Wine-20050725
+reactos/tools/widl		# Forked at Wine-20050628
 
 The following libraries are shared with Wine.
 
-reactos/lib/cabinet             # Synced to Wine-20050628
-reactos/lib/comctl32            # Synced to Wine-20050628
-reactos/lib/comdlg32		# Synced to Wine-20050628
-reactos/lib/dinput		# Synced to Wine-20050310
-reactos/lib/dinput8		# Synced to Wine-20050628
-reactos/lib/icmp		# Synced to Wine-20050628
+reactos/lib/cabinet             # Synced to Wine-20050725
+reactos/lib/comctl32            # Synced to Wine-20050725
+reactos/lib/comdlg32		# Synced to Wine-20050725
+reactos/lib/dbghelp		# 
+reactos/lib/dinput		# Forked at Wine-20050310
+reactos/lib/dinput8		# Synced to Wine-20050725
+reactos/lib/icmp		# Synced to Wine-20050725
 reactos/lib/iphlpapi		# Out of sync
 reactos/lib/imagehlp		# Patches for BindImage need review and submission to winehq.
 reactos/lib/msvcrt20		# Out of sync
-reactos/lib/mpr                 # Synced to Wine-20050628
+reactos/lib/mpr                 # Synced to Wine-20050725
 reactos/lib/msacm		# Out of sync
-reactos/lib/msimg32		# Synced to Wine-20050628
-reactos/lib/msi			# Synced to Wine-20050628
+reactos/lib/msimg32		# Synced to Wine-20050725
+reactos/lib/msi			# Synced to Wine-20050725
 reactos/lib/msvideo		# Out of sync
 reactos/lib/netapi32		# Out of sync
 reactos/lib/objsel		# Synced to Wine-20050726
 reactos/lib/odbc32		# In sync. Depends on port of Linux ODBC.
-reactos/lib/ole32               # Synced to Wine-20050628
-reactos/lib/oleaut32		# Synced to Wine-20050628
-reactos/lib/oledlg              # Synced to Wine-20050628
-reactos/lib/olepro32		# Synced to Wine-20050628
-reactos/lib/riched20		# Synced to Wine-20050628
-reactos/lib/richedit		# Synced to Wine-20050628
-reactos/lib/rpcrt4		# Synced to Wine-20050628
-reactos/lib/setupapi		# Synced to Wine-20050524
-reactos/lib/shell32             # Synced to Wine-20050628
-reactos/lib/shdocvw             # Synced to Wine-20050628
-reactos/lib/shlwapi             # Synced to Wine-20050628
+reactos/lib/ole32               # Synced to Wine-20050725
+reactos/lib/oleaut32		# Synced to Wine-20050725
+reactos/lib/oledlg              # Synced to Wine-20050725
+reactos/lib/olepro32		# Synced to Wine-20050725
+reactos/lib/riched20		# Synced to Wine-20050725
+reactos/lib/richedit		# Synced to Wine-20050725
+reactos/lib/rpcrt4		# Synced to Wine-20050725
+reactos/lib/setupapi		# Forked at Wine-20050524
+reactos/lib/shell32             # Synced to Wine-20050725
+reactos/lib/shdocvw             # Synced to Wine-20050725
+reactos/lib/shlwapi             # Synced to Wine-20050725
 reactos/lib/twain		# Out of sync
-reactos/lib/urlmon		# Synced to Wine-20050628
-reactos/lib/uxtheme		# Synced to Wine-20050703
+reactos/lib/urlmon		# Synced to Wine-20050725
+reactos/lib/uxtheme		# Synced to Wine-20050725
 reactos/lib/version		# Out of sync
 reactos/lib/wininet		# Out of sync
-reactos/lib/winmm		# Synced to Wine-20050628
-reactos/lib/winmm/midimap       # Synced to Wine-20050628
-reactos/lib/winmm/wavemap       # Synced to Wine-20050628
+reactos/lib/winmm		# Forked at Wine-20050628
+reactos/lib/winmm/midimap       # Forked at Wine-20050628
+reactos/lib/winmm/wavemap       # Forked at Wine-20050628
 
 ReactOS shares the following programs with Winehq.
 reactos/subsys/system/regedit	# Out of sync
 reactos/subsys/system/expand	# Out of sync
-reactos/subsys/system/msiexec	# Synced to Wine-20050628
+reactos/subsys/system/msiexec	# Synced to Wine-20050725
 
 In addition the following libs, dlls and source files are mostly based on code ported
 from Winehq CVS. If you are looking to update something in these files
