@@ -72,7 +72,7 @@ struct OLEFontImpl
   /*
    * Reference count for that instance of the class.
    */
-  ULONG ref;
+  LONG ref;
 
   /*
    * This structure contains the description of the class.
@@ -2102,7 +2102,7 @@ typedef struct
 {
     /* IUnknown fields */
     const IClassFactoryVtbl    *lpVtbl;
-    DWORD                       ref;
+    LONG                        ref;
 } IClassFactoryImpl;
 
 static HRESULT WINAPI

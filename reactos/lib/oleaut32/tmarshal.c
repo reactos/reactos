@@ -262,7 +262,8 @@ _get_typeinfo_for_iid(REFIID riid, ITypeInfo**ti) {
     char	tlguid[200],typelibkey[300],interfacekey[300],ver[100];
     char	tlfn[260];
     OLECHAR	tlfnW[260];
-    DWORD	tlguidlen, verlen, type, tlfnlen;
+    DWORD	tlguidlen, verlen, type;
+    LONG	tlfnlen;
     ITypeLib	*tl;
 
     sprintf( interfacekey, "Interface\\{%08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}\\Typelib",
@@ -277,14 +278,14 @@ _get_typeinfo_for_iid(REFIID riid, ITypeInfo**ti) {
     }
     type = (1<<REG_SZ);
     tlguidlen = sizeof(tlguid);
-    if (RegQueryValueExA(ikey,NULL,NULL,&type,tlguid,&tlguidlen)) {
+    if (RegQueryValueExA(ikey,NULL,NULL,&type,(LPBYTE)tlguid,&tlguidlen)) {
 	ERR("Getting typelib guid failed.\n");
 	RegCloseKey(ikey);
 	return E_FAIL;
     }
     type = (1<<REG_SZ);
     verlen = sizeof(ver);
-    if (RegQueryValueExA(ikey,"Version",NULL,&type,ver,&verlen)) {
+    if (RegQueryValueExA(ikey,"Version",NULL,&type,(LPBYTE)ver,&verlen)) {
 	ERR("Could not get version value?\n");
 	RegCloseKey(ikey);
 	return E_FAIL;
@@ -357,7 +358,7 @@ typedef struct _TMAsmProxy {
 typedef struct _TMProxyImpl {
     LPVOID                             *lpvtbl;
     const IRpcProxyBufferVtbl          *lpvtbl2;
-    ULONG				ref;
+    LONG				ref;
 
     TMAsmProxy				*asmstubs;
     ITypeInfo*				tinfo;
@@ -564,15 +565,18 @@ serialize_param(
         if (writeit) {
             /* ptr to ptr to magic widestring, basically */
             BSTR *bstr = (BSTR *) *arg;
+            DWORD len;
             if (!*bstr) {
                 /* -1 means "null string" which is equivalent to empty string */
-                DWORD fakelen = -1;     
-                xbuf_add(buf, (LPBYTE)&fakelen,4);
+                len = -1;     
+                hres = xbuf_add(buf, (LPBYTE)&len,sizeof(DWORD));
+		if (hres) return hres;
             } else {
-                /* BSTRs store the length behind the first character */
-                DWORD *len = ((DWORD *)(*bstr))-1;
-                hres = xbuf_add(buf, (LPBYTE) len, *len + 4);
-                if (hres) return hres;
+		len = *((DWORD*)*bstr-1)/sizeof(WCHAR);
+		hres = xbuf_add(buf,(LPBYTE)&len,sizeof(DWORD));
+		if (hres) return hres;
+		hres = xbuf_add(buf,(LPBYTE)*bstr,len * sizeof(WCHAR));
+		if (hres) return hres;
             }
         }
 
@@ -591,17 +595,18 @@ serialize_param(
 		    TRACE_(olerelay)("<bstr NULL>");
 	}
 	if (writeit) {
-	    if (!*arg) {
-		DWORD fakelen = -1;
-		hres = xbuf_add(buf,(LPBYTE)&fakelen,4);
-		if (hres)
-		    return hres;
+            BSTR bstr = (BSTR)*arg;
+            DWORD len;
+	    if (!bstr) {
+		len = -1;
+		hres = xbuf_add(buf,(LPBYTE)&len,sizeof(DWORD));
+		if (hres) return hres;
 	    } else {
-		DWORD *bstr = ((DWORD*)(*arg))-1;
-
-		hres = xbuf_add(buf,(LPBYTE)bstr,bstr[0]+4);
-		if (hres)
-		    return hres;
+		len = *((DWORD*)bstr-1)/sizeof(WCHAR);
+		hres = xbuf_add(buf,(LPBYTE)&len,sizeof(DWORD));
+		if (hres) return hres;
+		hres = xbuf_add(buf,(LPBYTE)bstr,len * sizeof(WCHAR));
+		if (hres) return hres;
 	    }
 	}
 
@@ -704,6 +709,14 @@ serialize_param(
 	    if (debugout) TRACE_(olerelay)("}");
 	    break;
 	}
+	case TKIND_ALIAS:
+	    return serialize_param(tinfo2,writeit,debugout,dealloc,&tattr->tdescAlias,arg,buf);
+	case TKIND_ENUM:
+	    hres = S_OK;
+	    if (debugout) TRACE_(olerelay)("%lx",*arg);
+	    if (writeit)
+	        hres = xbuf_add(buf,(LPBYTE)arg,sizeof(DWORD));
+	    return hres;
 	default:
 	    FIXME("Unhandled typekind %d\n",tattr->typekind);
 	    hres = E_FAIL;
@@ -1130,8 +1143,8 @@ deserialize_param(
 		    **bstr = NULL;
 		    if (debugout) TRACE_(olerelay)("<bstr NULL>");
 		} else {
-		    str  = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,len+sizeof(WCHAR));
-		    hres = xbuf_get(buf,(LPBYTE)str,len);
+		    str  = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,(len+1)*sizeof(WCHAR));
+		    hres = xbuf_get(buf,(LPBYTE)str,len*sizeof(WCHAR));
 		    if (hres) {
 			ERR("Failed to read BSTR.\n");
 			return hres;
@@ -1160,8 +1173,8 @@ deserialize_param(
 		    *arg = 0;
 		    if (debugout) TRACE_(olerelay)("<bstr NULL>");
 		} else {
-		    str  = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,len+sizeof(WCHAR));
-		    hres = xbuf_get(buf,(LPBYTE)str,len);
+		    str  = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,(len+1)*sizeof(WCHAR));
+		    hres = xbuf_get(buf,(LPBYTE)str,len*sizeof(WCHAR));
 		    if (hres) {
 			ERR("Failed to read BSTR.\n");
 			return hres;
@@ -1275,6 +1288,15 @@ deserialize_param(
 		    if (debugout) TRACE_(olerelay)("}");
 		    break;
 		}
+		case TKIND_ALIAS:
+		    return deserialize_param(tinfo2,readit,debugout,alloc,&tattr->tdescAlias,arg,buf);
+		case TKIND_ENUM:
+		    if (readit) {
+		        hres = xbuf_get(buf,(LPBYTE)arg,sizeof(DWORD));
+		        if (hres) ERR("Failed to read enum (4 byte)\n");
+		    }
+		    if (debugout) TRACE_(olerelay)("%lx",*arg);
+		    return hres;
 		default:
 		    ERR("Unhandled typekind %d\n",tattr->typekind);
 		    hres = E_FAIL;
@@ -1911,7 +1933,7 @@ PSFacBuf_CreateProxy(
 
 typedef struct _TMStubImpl {
     const IRpcStubBufferVtbl   *lpvtbl;
-    ULONG			ref;
+    LONG			ref;
 
     LPUNKNOWN			pUnk;
     ITypeInfo			*tinfo;
@@ -1952,6 +1974,7 @@ TMStubImpl_Release(LPRPCSTUBBUFFER iface)
     if (!refCount)
     {
         IRpcStubBuffer_Disconnect(iface);
+        ITypeInfo_Release(This->tinfo);
         CoTaskMemFree(This);
     }
     return refCount;
@@ -1976,9 +1999,11 @@ TMStubImpl_Disconnect(LPRPCSTUBBUFFER iface)
 
     TRACE("(%p)->()\n", This);
 
-    IUnknown_Release(This->pUnk);
-    This->pUnk = NULL;
-    return;
+    if (This->pUnk)
+    {
+        IUnknown_Release(This->pUnk);
+        This->pUnk = NULL;
+    }
 }
 
 static HRESULT WINAPI

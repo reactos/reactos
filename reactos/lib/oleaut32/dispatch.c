@@ -217,7 +217,7 @@ typedef struct
     const IDispatchVtbl *lpVtbl;
     void * pvThis;
     ITypeInfo * pTypeInfo;
-    ULONG ref;
+    LONG ref;
 } StdDispatch;
 
 /******************************************************************************

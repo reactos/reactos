@@ -157,17 +157,19 @@ typedef struct tagMSFT_TypeInfoBase {
                                 /* else it is zero? */
         INT     res18;          /* always? 0 */
 /*060*/ INT     res19;          /* always? -1 */
-    } MSFT_TypeInfoBase;
+} MSFT_TypeInfoBase;
 
 /* layout of an entry with information on imported types */
 typedef struct tagMSFT_ImpInfo {
-    INT     res0;           /* bits 0 - 15:  count */
+    INT     flags;          /* bits 0 - 15:  count */
                             /* bit  16:      if set oGuid is an offset to Guid */
                             /*               if clear oGuid is a typeinfo index in the specified typelib */
                             /* bits 24 - 31: TKIND of reference */
     INT     oImpFile;       /* offset in the Import File table */
     INT     oGuid;          /* offset in Guid table or typeinfo index (see bit 16 of res0) */
-    } MSFT_ImpInfo;
+} MSFT_ImpInfo;
+
+#define MSFT_IMPINFO_OFFSET_IS_GUID 0x00010000
 
 /* function description data */
 typedef struct {

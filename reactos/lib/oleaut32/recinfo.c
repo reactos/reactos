@@ -42,7 +42,7 @@ typedef struct {
 
 typedef struct {
     const IRecordInfoVtbl *lpVtbl;
-    ULONG ref;
+    LONG ref;
 
     GUID guid;
     UINT lib_index;

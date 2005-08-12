@@ -148,7 +148,7 @@ typedef struct tagICreateTypeLib2Impl
     const ICreateTypeLib2Vtbl *lpVtbl;
     const ITypeLib2Vtbl       *lpVtblTypeLib2;
 
-    ULONG ref;
+    LONG ref;
 
     WCHAR *filename;
 
@@ -174,7 +174,7 @@ typedef struct tagICreateTypeInfo2Impl
     const ICreateTypeInfo2Vtbl *lpVtbl;
     const ITypeInfo2Vtbl       *lpVtblTypeInfo2;
 
-    ULONG ref;
+    LONG ref;
 
     ICreateTypeLib2Impl *typelib;
     MSFT_TypeInfoBase *typeinfo;
@@ -1242,7 +1242,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnSetTypeFlags(ICreateTypeInfo2 *iface, U
 	guidoffset = ctl2_alloc_guid(This->typelib, &foo);
 	if (guidoffset == -1) return E_OUTOFMEMORY;
 
-	impinfo.res0 = 0x03010000;
+	impinfo.flags = TKIND_INTERFACE << 24 | MSFT_IMPINFO_OFFSET_IS_GUID;
 	impinfo.oImpFile = fileoffset;
 	impinfo.oGuid = guidoffset;
 	ctl2_alloc_importinfo(This->typelib, &impinfo);

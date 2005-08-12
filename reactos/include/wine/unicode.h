@@ -20,6 +20,7 @@
 #define strcmpiW(s1,s2) _wcsicmp((const wchar_t *)(s1),(const wchar_t *)(s2))
 #define strncmpiW(s1,s2,n) _wcsnicmp((const wchar_t *)(s1),(const wchar_t *)(s2),(n))
 #define strtoulW(s1,s2,b) wcstoul((const wchar_t *)(s1),(wchar_t **)(s2),(b))
+#define strspnW(str, accept) wcsspn((const wchar_t *)(str), (const wchar_t *)(accept))
 #define tolowerW(n) towlower((n))
 #define toupperW(n) towupper((n))
 #define islowerW(n) iswlower((n))

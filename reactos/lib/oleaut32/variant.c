@@ -82,7 +82,6 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
 {
   HRESULT res = DISP_E_TYPEMISMATCH;
   VARTYPE vtFrom =  V_TYPE(ps);
-  BOOL bIgnoreOverflow = FALSE;
   DWORD dwFlags = 0;
 
   TRACE("(%p->(%s%s),0x%08lx,0x%04x,%p->(%s%s),%s%s)\n", pd, debugstr_VT(pd),
@@ -117,11 +116,7 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
   if (vtFrom == VT_INT)
     vtFrom = VT_I4;
   else if (vtFrom == VT_UINT)
-  {
     vtFrom = VT_UI4;
-    if (vt == VT_I4)
-      bIgnoreOverflow = TRUE;
-  }
 
   if (vt == vtFrom)
      return VariantCopy(pd, ps);
@@ -155,7 +150,7 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_EMPTY:    V_I1(pd) = 0; return S_OK;
     case VT_I2:       return VarI1FromI2(V_I2(ps), &V_I1(pd));
     case VT_I4:       return VarI1FromI4(V_I4(ps), &V_I1(pd));
-    case VT_UI1:      return VarI1FromUI1(V_UI1(ps), &V_I1(pd));
+    case VT_UI1:      V_I1(pd) = V_UI1(ps); return S_OK;
     case VT_UI2:      return VarI1FromUI2(V_UI2(ps), &V_I1(pd));
     case VT_UI4:      return VarI1FromUI4(V_UI4(ps), &V_I1(pd));
     case VT_I8:       return VarI1FromI8(V_I8(ps), &V_I1(pd));
@@ -178,7 +173,7 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_I1:       return VarI2FromI1(V_I1(ps), &V_I2(pd));
     case VT_I4:       return VarI2FromI4(V_I4(ps), &V_I2(pd));
     case VT_UI1:      return VarI2FromUI1(V_UI1(ps), &V_I2(pd));
-    case VT_UI2:      return VarI2FromUI2(V_UI2(ps), &V_I2(pd));
+    case VT_UI2:      V_I2(pd) = V_UI2(ps); return S_OK;
     case VT_UI4:      return VarI2FromUI4(V_UI4(ps), &V_I2(pd));
     case VT_I8:       return VarI2FromI8(V_I8(ps), &V_I2(pd));
     case VT_UI8:      return VarI2FromUI8(V_UI8(ps), &V_I2(pd));
@@ -201,14 +196,7 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_I2:       return VarI4FromI2(V_I2(ps), &V_I4(pd));
     case VT_UI1:      return VarI4FromUI1(V_UI1(ps), &V_I4(pd));
     case VT_UI2:      return VarI4FromUI2(V_UI2(ps), &V_I4(pd));
-    case VT_UI4:      
-          if (bIgnoreOverflow)
-          {
-            V_VT(pd) = VT_I4;
-            V_I4(pd) = V_I4(ps);
-            return S_OK;
-          }
-          return VarI4FromUI4(V_UI4(ps), &V_I4(pd));
+    case VT_UI4:      V_I4(pd) = V_UI4(ps); return S_OK;
     case VT_I8:       return VarI4FromI8(V_I8(ps), &V_I4(pd));
     case VT_UI8:      return VarI4FromUI8(V_UI8(ps), &V_I4(pd));
     case VT_R4:       return VarI4FromR4(V_R4(ps), &V_I4(pd));
@@ -226,7 +214,7 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     switch (vtFrom)
     {
     case VT_EMPTY:    V_UI1(pd) = 0; return S_OK;
-    case VT_I1:       return VarUI1FromI1(V_I1(ps), &V_UI1(pd));
+    case VT_I1:       V_UI1(pd) = V_I1(ps); return S_OK;
     case VT_I2:       return VarUI1FromI2(V_I2(ps), &V_UI1(pd));
     case VT_I4:       return VarUI1FromI4(V_I4(ps), &V_UI1(pd));
     case VT_UI2:      return VarUI1FromUI2(V_UI2(ps), &V_UI1(pd));
@@ -249,7 +237,7 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     {
     case VT_EMPTY:    V_UI2(pd) = 0; return S_OK;
     case VT_I1:       return VarUI2FromI1(V_I1(ps), &V_UI2(pd));
-    case VT_I2:       return VarUI2FromI2(V_I2(ps), &V_UI2(pd));
+    case VT_I2:       V_UI2(pd) = V_I2(ps); return S_OK;
     case VT_I4:       return VarUI2FromI4(V_I4(ps), &V_UI2(pd));
     case VT_UI1:      return VarUI2FromUI1(V_UI1(ps), &V_UI2(pd));
     case VT_UI4:      return VarUI2FromUI4(V_UI4(ps), &V_UI2(pd));
@@ -272,7 +260,7 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_EMPTY:    V_UI4(pd) = 0; return S_OK;
     case VT_I1:       return VarUI4FromI1(V_I1(ps), &V_UI4(pd));
     case VT_I2:       return VarUI4FromI2(V_I2(ps), &V_UI4(pd));
-    case VT_I4:       return VarUI4FromI4(V_I4(ps), &V_UI4(pd));
+    case VT_I4:       V_UI4(pd) = V_I4(ps); return S_OK;
     case VT_UI1:      return VarUI4FromUI1(V_UI1(ps), &V_UI4(pd));
     case VT_UI2:      return VarUI4FromUI2(V_UI2(ps), &V_UI4(pd));
     case VT_I8:       return VarUI4FromI8(V_I8(ps), &V_UI4(pd));
@@ -298,7 +286,7 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_UI1:      return VarUI8FromUI1(V_UI1(ps), &V_UI8(pd));
     case VT_UI2:      return VarUI8FromUI2(V_UI2(ps), &V_UI8(pd));
     case VT_UI4:      return VarUI8FromUI4(V_UI4(ps), &V_UI8(pd));
-    case VT_I8:       return VarUI8FromI8(V_I8(ps), &V_UI8(pd));
+    case VT_I8:       V_UI8(pd) = V_I8(ps); return S_OK;
     case VT_R4:       return VarUI8FromR4(V_R4(ps), &V_UI8(pd));
     case VT_R8:       return VarUI8FromR8(V_R8(ps), &V_UI8(pd));
     case VT_DATE:     return VarUI8FromDate(V_DATE(ps), &V_UI8(pd));
@@ -320,7 +308,7 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_UI1:      return VarI8FromUI1(V_UI1(ps), &V_I8(pd));
     case VT_UI2:      return VarI8FromUI2(V_UI2(ps), &V_I8(pd));
     case VT_UI4:      return VarI8FromUI4(V_UI4(ps), &V_I8(pd));
-    case VT_UI8:      return VarI8FromUI8(V_I8(ps), &V_I8(pd));
+    case VT_UI8:      V_I8(pd) = V_UI8(ps); return S_OK;
     case VT_R4:       return VarI8FromR4(V_R4(ps), &V_I8(pd));
     case VT_R8:       return VarI8FromR8(V_R8(ps), &V_I8(pd));
     case VT_DATE:     return VarI8FromDate(V_DATE(ps), &V_I8(pd));
@@ -2443,6 +2431,17 @@ VarNumFromParseNum_DecOverflow:
 
 /**********************************************************************
  *              VarCat [OLEAUT32.318]
+ *
+ * Concatenates one variant onto another.
+ *
+ * PARAMS
+ *  left    [I] First variant
+ *  right   [I] Second variant
+ *  result  [O] Result variant
+ *
+ * RETURNS
+ *  Success: S_OK.
+ *  Failure: An HRESULT error code indicating the error.
  */
 HRESULT WINAPI VarCat(LPVARIANT left, LPVARIANT right, LPVARIANT out)
 {
@@ -2638,6 +2637,16 @@ HRESULT WINAPI VarCmp(LPVARIANT left, LPVARIANT right, LCID lcid, DWORD flags)
 /**********************************************************************
  *              VarAnd [OLEAUT32.142]
  *
+ * Computes the logical AND of two variants.
+ *
+ * PARAMS
+ *  left    [I] First variant
+ *  right   [I] Second variant
+ *  result  [O] Result variant
+ *
+ * RETURNS
+ *  Success: S_OK.
+ *  Failure: An HRESULT error code indicating the error.
  */
 HRESULT WINAPI VarAnd(LPVARIANT left, LPVARIANT right, LPVARIANT result)
 {
@@ -3073,6 +3082,16 @@ end:
 /**********************************************************************
  *              VarDiv [OLEAUT32.143]
  *
+ * Divides one variant with another.
+ *
+ * PARAMS
+ *  left    [I] First variant
+ *  right   [I] Second variant
+ *  result  [O] Result variant
+ *
+ * RETURNS
+ *  Success: S_OK.
+ *  Failure: An HRESULT error code indicating the error.
  */
 HRESULT WINAPI VarDiv(LPVARIANT left, LPVARIANT right, LPVARIANT result)
 {
@@ -3132,6 +3151,16 @@ HRESULT WINAPI VarDiv(LPVARIANT left, LPVARIANT right, LPVARIANT result)
 /**********************************************************************
  *              VarSub [OLEAUT32.159]
  *
+ * Subtract two variants.
+ *
+ * PARAMS
+ *  left    [I] First variant
+ *  right   [I] Second variant
+ *  result  [O] Result variant
+ *
+ * RETURNS
+ *  Success: S_OK.
+ *  Failure: An HRESULT error code indicating the error.
  */
 HRESULT WINAPI VarSub(LPVARIANT left, LPVARIANT right, LPVARIANT result)
 {
@@ -4528,6 +4557,16 @@ HRESULT WINAPI VarMod(LPVARIANT left, LPVARIANT right, LPVARIANT result)
 /**********************************************************************
  *              VarPow [OLEAUT32.158]
  *
+ * Computes the power of one variant to another variant.
+ *
+ * PARAMS
+ *  left    [I] First variant
+ *  right   [I] Second variant
+ *  result  [O] Result variant
+ *
+ * RETURNS
+ *  Success: S_OK.
+ *  Failure: An HRESULT error code indicating the error.
  */
 HRESULT WINAPI VarPow(LPVARIANT left, LPVARIANT right, LPVARIANT result)
 {

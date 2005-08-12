@@ -54,7 +54,7 @@ typedef struct ConnectionPointImpl {
   IUnknown *Obj;
 
   /* Reference count */
-  DWORD ref;
+  LONG ref;
 
   /* IID of sink interface */
   IID iid;
@@ -76,7 +76,7 @@ typedef struct EnumConnectionsImpl {
 
   const IEnumConnectionsVtbl *lpvtbl;
 
-  DWORD ref;
+  LONG ref;
 
   /* IUnknown of ConnectionPoint, used for ref counting */
   IUnknown *pUnk;
