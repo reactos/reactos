@@ -982,7 +982,7 @@ static int hcd_submit_urb (struct urb *urb, int mem_flags)
 
 	if (!hcd || !dev)
 		return -ENODEV;
-	printk("submit_urb %p, # %i, t %i\n",urb,urb->dev->devnum,usb_pipetype(urb->pipe));
+	//printk("submit_urb %p, # %i, t %i\n",urb,urb->dev->devnum,usb_pipetype(urb->pipe));
 	/*
 	 * FIXME:  make urb timeouts be generic, keeping the HCD cores
 	 * as simple as possible.
