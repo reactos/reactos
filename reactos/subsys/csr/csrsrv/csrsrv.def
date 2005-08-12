@@ -1,0 +1,37 @@
+; $Id$
+LIBRARY csrsrv.dll
+EXPORTS
+CsrAddStaticServerThread@4
+CsrCallServerFromServer@0
+CsrCreateProcess@8
+CsrCreateRemoteThread@0
+CsrCreateThread@8
+CsrCreateWait@8
+CsrDebugProcess@4
+CsrDebugProcessStop@4
+CsrDereferenceProcess@4
+CsrDereferenceThread@4
+CsrDereferenceWait@4
+CsrDestroyProcess@4
+CsrDestroyThread@4
+CsrExecServerThread@0
+CsrGetProcessLuid@8
+CsrImpersonateClient@0
+CsrLockProcessByClientId@0
+CsrLockThreadByClientId@0
+CsrMoveSatisfiedWait@4
+CsrNotifyWait@4
+CsrQueryApiPort@0
+CsrReferenceThread@4
+CsrRevertToSelf@0
+CsrServerInitialization@8
+CsrSetBackgroundPriority@0
+CsrSetCallingSpooler@0
+CsrSetForegroundPriority@0
+CsrShutdownProcesses@4
+CsrUnhandledExceptionFilter@0
+CsrUnlockProcess@4
+CsrUnlockThread@4
+CsrValidateMessageBuffer@0
+CsrValidateMessageString@0
+; EOF
