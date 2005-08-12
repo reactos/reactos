@@ -31,10 +31,10 @@
   + EM_EMPTYUNDOBUFFER
   + EM_EXGETSEL
   - EM_EXLIMITTEXT
-  - EM_EXLINEFROMCHAR
+  + EM_EXLINEFROMCHAR
   + EM_EXSETSEL
-  - EM_FINDTEXT
-  - EM_FINDTEXTEX
+  + EM_FINDTEXT (only FR_DOWN flag implemented)
+  + EM_FINDTEXTEX (only FR_DOWN flag implemented)
   - EM_FINDWORDBREAK
   - EM_FMTLINES
   - EM_FORMATRANGE
@@ -51,7 +51,7 @@
   - EM_GETLANGOPTIONS 2.0
   - EM_GETLIMITTEXT
   - EM_GETLINE        
-  - EM_GETLINECOUNT   returns number of rows, not of paragraphs
+  + EM_GETLINECOUNT   returns number of rows, not of paragraphs
   + EM_GETMODIFY
   - EM_GETOLEINTERFACE
   - EM_GETOPTIONS
@@ -73,12 +73,12 @@
   - EM_GETWORDBREAKPROC
   - EM_GETWORDBREAKPROCEX
   - EM_GETWORDWRAPMODE 1.0asian
-  - EM_SETZOOM 3.0
+  + EM_GETZOOM 3.0
   - EM_HIDESELECTION
   - EM_LIMITTEXT
-  - EM_LINEFROMCHAR
-  - EM_LINEINDEX
-  - EM_LINELENGTH
+  + EM_LINEFROMCHAR
+  + EM_LINEINDEX
+  + EM_LINELENGTH
   + EM_LINESCROLL
   - EM_PASTESPECIAL
   - EM_POSFROMCHARS
@@ -112,17 +112,17 @@
   - EM_SETSCROLLPOS 3.0
   - EM_SETTABSTOPS 3.0
   - EM_SETTARGETDEVICE
-  - EM_SETTEXTEX 3.0
+  + EM_SETTEXTEX 3.0 (unicode only, no rich text insertion handling, proper style?)
   - EM_SETTEXTMODE 2.0
   - EM_SETTYPOGRAPHYOPTIONS 3.0
   - EM_SETUNDOLIMIT 2.0
   - EM_SETWORDBREAKPROC
   - EM_SETWORDBREAKPROCEX
   - EM_SETWORDWRAPMODE 1.0asian
-  - EM_SETZOOM 3.0
+  + EM_SETZOOM 3.0
   - EM_SHOWSCROLLBAR 2.0
   - EM_STOPGROUPTYPING 2.0
-  + EM_STREAMIN (can't fall back to text when the RTF isn't really RTF)
+  + EM_STREAMIN
   + EM_STREAMOUT
   + EM_UNDO
   + WM_CHAR
@@ -205,6 +205,9 @@
  * - when should EN_SELCHANGE be sent after text change ? (before/after EN_UPDATE?)
  * - WM_SETTEXT may use wrong style (but I'm 80% sure it's OK)
  * - EM_GETCHARFORMAT with SCF_SELECTION may not behave 100% like in original (but very close)
+ * - full justification
+ * - hyphenation
+ * - tables
  *
  * Bugs that are probably fixed, but not so easy to verify:
  * - EN_UPDATE/EN_CHANGE are handled very incorrectly (should be OK now)
@@ -218,6 +221,7 @@
  */
 
 #include "editor.h"
+#include "commdlg.h"
 #include "ole2.h"
 #include "richole.h"
 #include "winreg.h"
@@ -231,7 +235,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 int me_debug = 0;
 HANDLE me_heap = NULL;
 
-ME_TextBuffer *ME_MakeText(void) {
+static ME_TextBuffer *ME_MakeText(void) {
   
   ME_TextBuffer *buf = ALLOC_OBJ(ME_TextBuffer);
 
@@ -295,7 +299,7 @@ static LRESULT ME_StreamInText(ME_TextEditor *editor, DWORD dwFormat, ME_InStrea
   return 0;
 }
 
-void ME_RTFCharAttrHook(RTF_Info *info)
+static void ME_RTFCharAttrHook(RTF_Info *info)
 {
   CHARFORMAT2W fmt;
   fmt.cbSize = sizeof(fmt);
@@ -394,7 +398,7 @@ void ME_RTFCharAttrHook(RTF_Info *info)
 
 /* FIXME this function doesn't get any information about context of the RTF tag, which is very bad,
    the same tags mean different things in different contexts */
-void ME_RTFParAttrHook(RTF_Info *info)
+static void ME_RTFParAttrHook(RTF_Info *info)
 {
   PARAFORMAT2 fmt;
   fmt.cbSize = sizeof(fmt);
@@ -459,7 +463,7 @@ void ME_RTFParAttrHook(RTF_Info *info)
   }
 }
 
-void ME_RTFReadHook(RTF_Info *info) {
+static void ME_RTFReadHook(RTF_Info *info) {
   switch(info->rtfClass)
   {
     case rtfGroup:
@@ -651,11 +655,75 @@ ME_FindItemAtOffset(ME_TextEditor *editor, ME_DIType nItemType, int nOffset, int
 }
 
 
+static int
+ME_FindText(ME_TextEditor *editor, DWORD flags, CHARRANGE *chrg, WCHAR *text, CHARRANGE *chrgText)
+{
+  int nStart = chrg->cpMin;
+  int nLen = lstrlenW(text);
+  ME_DisplayItem *item = ME_FindItemAtOffset(editor, diRun, nStart, &nStart);
+  ME_DisplayItem *para;
+  
+  if (!item)
+    return -1;
+
+  if (!nLen)
+  {
+    if (chrgText)
+      chrgText->cpMin = chrgText->cpMax = chrg->cpMin;
+    return chrg->cpMin;
+  }
+ 
+  if (!(flags & FR_DOWN))
+    FIXME("Backward search not implemented\n");
+  if (!(flags & FR_MATCHCASE))
+    FIXME("Case-insensitive search not implemented\n");
+  if (flags & ~(FR_DOWN | FR_MATCHCASE))
+    FIXME("Flags 0x%08lx not implemented\n", flags & ~(FR_DOWN | FR_MATCHCASE));
+  
+  para = ME_GetParagraph(item);
+  while (item && para->member.para.nCharOfs + item->member.run.nCharOfs + nStart + nLen < chrg->cpMax)
+  {
+    ME_DisplayItem *pCurItem = item;
+    int nCurStart = nStart;
+    int nMatched = 0;
+    
+    while (pCurItem->member.run.strText->szData[nCurStart + nMatched] == text[nMatched])
+    {
+      nMatched++;
+      if (nMatched == nLen)
+      {
+        nStart += para->member.para.nCharOfs + item->member.run.nCharOfs;
+        if (chrgText)
+        {
+          chrgText->cpMin = nStart;
+          chrgText->cpMax = nStart + nLen;
+        }
+        return nStart;
+      }
+      if (nCurStart + nMatched == ME_StrLen(pCurItem->member.run.strText))
+      {
+        pCurItem = ME_FindItemFwd(pCurItem, diRun);
+        nCurStart = -nMatched;
+      }
+    }
+    nStart++;
+    if (nStart == ME_StrLen(item->member.run.strText))
+    {
+      item = ME_FindItemFwd(item, diRun);
+      para = ME_GetParagraph(item);
+      nStart = 0;
+    }
+  }
+  return -1;
+}
+
+
 ME_TextEditor *ME_MakeEditor(HWND hWnd) {
   ME_TextEditor *ed = ALLOC_OBJ(ME_TextEditor);
   HDC hDC;
   int i;
   ed->hWnd = hWnd;
+  ed->bEmulateVersion10 = FALSE;
   ed->pBuffer = ME_MakeText();
   hDC = GetDC(hWnd);
   ME_MakeFirstParagraph(hDC, ed->pBuffer);
@@ -679,6 +747,7 @@ ME_TextEditor *ME_MakeEditor(HWND hWnd) {
   ed->nParagraphs = 1;
   ed->nLastSelStart = ed->nLastSelEnd = 0;
   ed->nScrollPosY = 0;
+  ed->nZoomNumerator = ed->nZoomDenominator = 0;
   for (i=0; i<HFONT_CACHE_SIZE; i++)
   {
     ed->pFontCache[i].nRefs = 0;
@@ -753,6 +822,7 @@ static DWORD CALLBACK ME_ReadFromHGLOBALRTF(DWORD_PTR dwCookie, LPBYTE lpBuff, L
   return 0;
 }
 
+
 void ME_DestroyEditor(ME_TextEditor *editor)
 {
   ME_DisplayItem *pFirst = editor->pBuffer->pFirst;
@@ -808,6 +878,140 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
     FIXME(#e ": stub\n"); \
     return DefWindowProcW(hWnd, msg, wParam, lParam);
 
+static const char * const edit_messages[] = {
+  "EM_GETSEL",
+  "EM_SETSEL",
+  "EM_GETRECT",
+  "EM_SETRECT",
+  "EM_SETRECTNP",
+  "EM_SCROLL",
+  "EM_LINESCROLL",
+  "EM_SCROLLCARET",
+  "EM_GETMODIFY",
+  "EM_SETMODIFY",
+  "EM_GETLINECOUNT",
+  "EM_LINEINDEX",
+  "EM_SETHANDLE",
+  "EM_GETHANDLE",
+  "EM_GETTHUMB",
+  "EM_UNKNOWN_BF",
+  "EM_UNKNOWN_C0",
+  "EM_LINELENGTH",
+  "EM_REPLACESEL",
+  "EM_UNKNOWN_C3",
+  "EM_GETLINE",
+  "EM_LIMITTEXT",
+  "EM_CANUNDO",
+  "EM_UNDO",
+  "EM_FMTLINES",
+  "EM_LINEFROMCHAR",
+  "EM_UNKNOWN_CA",
+  "EM_SETTABSTOPS",
+  "EM_SETPASSWORDCHAR",
+  "EM_EMPTYUNDOBUFFER",
+  "EM_GETFIRSTVISIBLELINE",
+  "EM_SETREADONLY",
+  "EM_SETWORDBREAKPROC",
+  "EM_GETWORDBREAKPROC",
+  "EM_GETPASSWORDCHAR",
+  "EM_SETMARGINS",
+  "EM_GETMARGINS",
+  "EM_GETLIMITTEXT",
+  "EM_POSFROMCHAR",
+  "EM_CHARFROMPOS"
+};
+
+static const char * const richedit_messages[] = {
+  "EM_CANPASTE",
+  "EM_DISPLAYBAND",
+  "EM_EXGETSEL",
+  "EM_EXLIMITTEXT",
+  "EM_EXLINEFROMCHAR",
+  "EM_EXSETSEL",
+  "EM_FINDTEXT",
+  "EM_FORMATRANGE",
+  "EM_GETCHARFORMAT",
+  "EM_GETEVENTMASK",
+  "EM_GETOLEINTERFACE",
+  "EM_GETPARAFORMAT",
+  "EM_GETSELTEXT",
+  "EM_HIDESELECTION",
+  "EM_PASTESPECIAL",
+  "EM_REQUESTRESIZE",
+  "EM_SELECTIONTYPE",
+  "EM_SETBKGNDCOLOR",
+  "EM_SETCHARFORMAT",
+  "EM_SETEVENTMASK",
+  "EM_SETOLECALLBACK",
+  "EM_SETPARAFORMAT",
+  "EM_SETTARGETDEVICE",
+  "EM_STREAMIN",
+  "EM_STREAMOUT",
+  "EM_GETTEXTRANGE",
+  "EM_FINDWORDBREAK",
+  "EM_SETOPTIONS",
+  "EM_GETOPTIONS",
+  "EM_FINDTEXTEX",
+  "EM_GETWORDBREAKPROCEX",
+  "EM_SETWORDBREAKPROCEX",
+  "EM_SETUNDOLIMIT",
+  "EM_UNKNOWN_USER_83",
+  "EM_REDO",
+  "EM_CANREDO",
+  "EM_GETUNDONAME",
+  "EM_GETREDONAME",
+  "EM_STOPGROUPTYPING",
+  "EM_SETTEXTMODE",
+  "EM_GETTEXTMODE",
+  "EM_AUTOURLDETECT",
+  "EM_GETAUTOURLDETECT",
+  "EM_SETPALETTE",
+  "EM_GETTEXTEX",
+  "EM_GETTEXTLENGTHEX",
+  "EM_SHOWSCROLLBAR",
+  "EM_SETTEXTEX",
+  "EM_UNKNOWN_USER_98",
+  "EM_UNKNOWN_USER_99",
+  "EM_SETPUNCTUATION",
+  "EM_GETPUNCTUATION",
+  "EM_SETWORDWRAPMODE",
+  "EM_GETWORDWRAPMODE",
+  "EM_SETIMECOLOR",
+  "EM_GETIMECOLOR",
+  "EM_SETIMEOPTIONS",
+  "EM_GETIMEOPTIONS",
+  "EM_CONVPOSITION",
+  "EM_UNKNOWN_USER_109",
+  "EM_UNKNOWN_USER_110",
+  "EM_UNKNOWN_USER_111",
+  "EM_UNKNOWN_USER_112",
+  "EM_UNKNOWN_USER_113",
+  "EM_UNKNOWN_USER_114",
+  "EM_UNKNOWN_USER_115",
+  "EM_UNKNOWN_USER_116",
+  "EM_UNKNOWN_USER_117",
+  "EM_UNKNOWN_USER_118",
+  "EM_UNKNOWN_USER_119",
+  "EM_SETLANGOPTIONS",
+  "EM_GETLANGOPTIONS",
+  "EM_GETIMECOMPMODE",
+  "EM_FINDTEXTW",
+  "EM_FINDTEXTEXW",
+  "EM_RECONVERSION",
+  "EM_SETIMEMODEBIAS",
+  "EM_GETIMEMODEBIAS"
+};
+
+static const char *
+get_msg_name(UINT msg)
+{
+  if (msg >= EM_GETSEL && msg <= EM_SETLIMITTEXT)
+    return edit_messages[msg - EM_GETSEL];
+  if (msg >= EM_CANPASTE && msg <= EM_GETIMEMODEBIAS)
+    return richedit_messages[msg - EM_CANPASTE];
+  return "";
+}
+
 /******************************************************************
  *        RichEditANSIWndProc (RICHED20.10)
  */
@@ -816,16 +1020,15 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
   PAINTSTRUCT ps;
   SCROLLINFO si;
   ME_TextEditor *editor = (ME_TextEditor *)GetWindowLongW(hWnd, 0);
-  TRACE("msg %d %08x %08lx\n", msg, wParam, lParam);
+  
+  TRACE("msg %d (%s) %08x %08lx\n", msg, get_msg_name(msg), wParam, lParam);
+  
   switch(msg) {
   
   UNSUPPORTED_MSG(EM_AUTOURLDETECT)
   UNSUPPORTED_MSG(EM_CHARFROMPOS)
   UNSUPPORTED_MSG(EM_DISPLAYBAND)
   UNSUPPORTED_MSG(EM_EXLIMITTEXT)
-  UNSUPPORTED_MSG(EM_EXLINEFROMCHAR)
-  UNSUPPORTED_MSG(EM_FINDTEXT)
-  UNSUPPORTED_MSG(EM_FINDTEXTEX)
   UNSUPPORTED_MSG(EM_FINDWORDBREAK)
   UNSUPPORTED_MSG(EM_FMTLINES)
   UNSUPPORTED_MSG(EM_FORMATRANGE)
@@ -838,25 +1041,19 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
   UNSUPPORTED_MSG(EM_GETLANGOPTIONS)
   UNSUPPORTED_MSG(EM_GETLIMITTEXT)
   UNSUPPORTED_MSG(EM_GETLINE)
-  UNSUPPORTED_MSG(EM_GETLINECOUNT)
   /* UNSUPPORTED_MSG(EM_GETOLEINTERFACE) separate stub */
   UNSUPPORTED_MSG(EM_GETOPTIONS)
   UNSUPPORTED_MSG(EM_GETPASSWORDCHAR)
   UNSUPPORTED_MSG(EM_GETRECT)
   UNSUPPORTED_MSG(EM_GETREDONAME)
   UNSUPPORTED_MSG(EM_GETSCROLLPOS)
-  UNSUPPORTED_MSG(EM_GETTEXTEX)
   UNSUPPORTED_MSG(EM_GETTEXTMODE)
   UNSUPPORTED_MSG(EM_GETTYPOGRAPHYOPTIONS)
   UNSUPPORTED_MSG(EM_GETUNDONAME)
   UNSUPPORTED_MSG(EM_GETWORDBREAKPROC)
   UNSUPPORTED_MSG(EM_GETWORDBREAKPROCEX)
-  UNSUPPORTED_MSG(EM_GETZOOM)
   UNSUPPORTED_MSG(EM_HIDESELECTION)
   UNSUPPORTED_MSG(EM_LIMITTEXT) /* also known as EM_SETLIMITTEXT */
-  UNSUPPORTED_MSG(EM_LINEFROMCHAR)
-  UNSUPPORTED_MSG(EM_LINEINDEX)
-  UNSUPPORTED_MSG(EM_LINELENGTH)
   UNSUPPORTED_MSG(EM_PASTESPECIAL)
 /*  UNSUPPORTED_MSG(EM_POSFROMCHARS) missing in Wine headers */
   UNSUPPORTED_MSG(EM_REQUESTRESIZE)
@@ -876,14 +1073,12 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
   UNSUPPORTED_MSG(EM_SETSCROLLPOS)
   UNSUPPORTED_MSG(EM_SETTABSTOPS)
   UNSUPPORTED_MSG(EM_SETTARGETDEVICE)
-  UNSUPPORTED_MSG(EM_SETTEXTEX)
   UNSUPPORTED_MSG(EM_SETTEXTMODE)
   UNSUPPORTED_MSG(EM_SETTYPOGRAPHYOPTIONS)
   UNSUPPORTED_MSG(EM_SETUNDOLIMIT)
   UNSUPPORTED_MSG(EM_SETWORDBREAKPROC)
   UNSUPPORTED_MSG(EM_SETWORDBREAKPROCEX)
   UNSUPPORTED_MSG(EM_SHOWSCROLLBAR)
-  UNSUPPORTED_MSG(EM_SETZOOM)
   UNSUPPORTED_MSG(WM_SETFONT)
   UNSUPPORTED_MSG(WM_STYLECHANGING)
   UNSUPPORTED_MSG(WM_STYLECHANGED)
@@ -905,6 +1100,7 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
   case WM_NCCREATE:
   {
     CREATESTRUCTW *pcs = (CREATESTRUCTW *)lParam;
+    TRACE("WM_NCCREATE: style 0x%08lx\n", pcs->style);
     editor = ME_MakeEditor(hWnd);
     SetWindowLongW(hWnd, 0, (long)editor);
     pcs = 0; /* ignore */
@@ -928,6 +1124,7 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
   {
     CHARRANGE *pRange = (CHARRANGE *)lParam;
     ME_GetSelection(editor, (int *)&pRange->cpMin, (int *)&pRange->cpMax);
+    TRACE("EM_EXGETSEL = (%ld,%ld)\n", pRange->cpMin, pRange->cpMax);
     return 0;
   }
   case EM_CANUNDO:
@@ -950,11 +1147,43 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
   case EM_EXSETSEL:
   {
     CHARRANGE *pRange = (CHARRANGE *)lParam;
+    TRACE("EM_EXSETSEL (%ld,%ld)\n", pRange->cpMin, pRange->cpMax);
     ME_SetSelection(editor, pRange->cpMin, pRange->cpMax);
     /* FIXME optimize */
     ME_Repaint(editor);
     ME_SendSelChange(editor);
     return 0;
+  }
+  case EM_SETTEXTEX:
+  {
+    LPWSTR wszText = (LPWSTR)lParam;
+    SETTEXTEX *pStruct = (SETTEXTEX *)wParam;
+    size_t len = lstrlenW(wszText);
+    int from, to;
+    ME_Style *style;
+    TRACE("EM_SETTEXEX - %s, flags %d, cp %d\n", debugstr_w(wszText), (int)pStruct->flags, pStruct->codepage);
+    if (pStruct->codepage != 1200) {
+      FIXME("EM_SETTEXTEX only supports unicode right now!\n"); 
+      return 0;
+    }
+    /* FIXME: this should support RTF strings too, according to MSDN */
+    if (pStruct->flags & ST_SELECTION) {
+      ME_GetSelection(editor, &from, &to);
+      style = ME_GetSelectionInsertStyle(editor);
+      ME_InternalDeleteText(editor, from, to - from);
+      ME_InsertTextFromCursor(editor, 0, wszText, len, style);
+      ME_ReleaseStyle(style);
+    }
+    else {
+      ME_InternalDeleteText(editor, 0, ME_GetTextLength(editor));
+      ME_InsertTextFromCursor(editor, 0, wszText, -1, editor->pBuffer->pDefaultStyle);
+      len = 1;
+    }
+    ME_CommitUndo(editor);
+    if (!(pStruct->flags & ST_KEEPUNDO))
+      ME_EmptyUndoStack(editor);
+    ME_UpdateRepaint(editor);
+    return len;
   }
   case EM_SETBKGNDCOLOR:
   {
@@ -1002,7 +1231,7 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
     if (!wParam)
       ME_SetDefaultCharFormat(editor, p);
     else if (wParam == (SCF_WORD | SCF_SELECTION))
-      FIXME("word selection not supported\n");
+      FIXME("EM_SETCHARFORMAT: word selection not supported\n");
     else if (wParam == SCF_ALL)
       ME_SetCharFormat(editor, 0, ME_GetTextLength(editor), p);
     else {
@@ -1018,14 +1247,19 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
   }
   case EM_GETCHARFORMAT:
   {
-    CHARFORMAT2W tmp;
+    CHARFORMAT2W tmp, *dst = (CHARFORMAT2W *)lParam;
+    if (dst->cbSize != sizeof(CHARFORMATA) &&
+        dst->cbSize != sizeof(CHARFORMATW) &&
+        dst->cbSize != sizeof(CHARFORMAT2A) &&
+        dst->cbSize != sizeof(CHARFORMAT2W))
+      return 0;
     tmp.cbSize = sizeof(tmp);
     if (!wParam)
       ME_GetDefaultCharFormat(editor, &tmp);
     else
       ME_GetSelectionCharFormat(editor, &tmp);
-    ME_CopyToCFAny((CHARFORMAT2W *)lParam, &tmp);
-    return 0;
+    ME_CopyToCFAny(dst, &tmp);
+    return tmp.dwMask;
   }
   case EM_SETPARAFORMAT:
     ME_SetSelectionParaFormat(editor, (PARAFORMAT2 *)lParam);
@@ -1087,12 +1321,21 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
   }
   case WM_SETTEXT:
   {
-    LPWSTR wszText = ME_ToUnicode(hWnd, (void *)lParam);
-    TRACE("WM_SETTEXT - %s\n", (char *)(wszText)); /* debugstr_w() */
     ME_InternalDeleteText(editor, 0, ME_GetTextLength(editor));
-    /* uses default style! */
-    ME_InsertTextFromCursor(editor, 0, wszText, -1, editor->pBuffer->pDefaultStyle);
-    ME_EndToUnicode(hWnd, wszText);
+    if (lParam)
+    {
+      LPWSTR wszText = ME_ToUnicode(hWnd, (void *)lParam);
+      TRACE("WM_SETTEXT lParam==%lx\n",lParam);
+      TRACE("WM_SETTEXT - %s\n", debugstr_w(wszText)); /* debugstr_w() */
+      if (lstrlenW(wszText) > 0)
+      {
+        /* uses default style! */
+        ME_InsertTextFromCursor(editor, 0, wszText, -1, editor->pBuffer->pDefaultStyle);
+      }
+      ME_EndToUnicode(hWnd, wszText);
+    }
+    else
+      TRACE("WM_SETTEXT - NULL\n");
     ME_CommitUndo(editor);
     ME_EmptyUndoStack(editor);
     ME_UpdateRepaint(editor);
@@ -1184,6 +1427,29 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
     tr.lpstrText = (WCHAR *)lParam;
     return RichEditANSIWndProc(hWnd, EM_GETTEXTRANGE, 0, (LPARAM)&tr);
   }
+  case EM_GETTEXTEX:
+  {
+    GETTEXTEX *ex = (GETTEXTEX*)wParam;
+
+    if (ex->flags != 0)
+        FIXME("Unhandled EM_GETTEXTEX flags 0x%lx\n",ex->flags);
+
+    if (IsWindowUnicode(hWnd))
+      return ME_GetTextW(editor, (LPWSTR)lParam, 0, ex->cb, FALSE);
+    else
+    {
+        LPWSTR buffer = HeapAlloc(GetProcessHeap(),0,ex->cb*sizeof(WCHAR));
+        DWORD buflen = ex->cb;
+        LRESULT rc;
+        DWORD flags = 0;
+
+        buflen = ME_GetTextW(editor, buffer, 0, buflen, FALSE);
+        rc = WideCharToMultiByte(ex->codepage, flags, buffer, buflen, (LPSTR)lParam, ex->cb, ex->lpDefaultChar, ex->lpUsedDefaultChar);
+
+        HeapFree(GetProcessHeap(),0,buffer);
+        return rc;
+    }
+  }
   case EM_GETSELTEXT:
   {
     int from, to;
@@ -1213,6 +1479,114 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
     }
     return ME_GetTextW(editor, rng->lpstrText, rng->chrg.cpMin, rng->chrg.cpMax-rng->chrg.cpMin, FALSE);
   }
+  case EM_GETLINECOUNT:
+  {
+    ME_DisplayItem *item = editor->pBuffer->pFirst->next;
+    int nRows = 0;
+
+    while (item != editor->pBuffer->pLast)
+    {
+      assert(item->type == diParagraph);
+      nRows += item->member.para.nRows;
+      item = item->member.para.next_para;
+    }
+    TRACE("EM_GETLINECOUNT: nRows==%d\n", nRows);
+    return max(1, nRows);
+  }
+  case EM_LINEFROMCHAR:
+  {
+    if (wParam == -1)
+      return ME_RowNumberFromCharOfs(editor, ME_GetCursorOfs(editor, 1));
+    else
+      return ME_RowNumberFromCharOfs(editor, wParam);
+  }
+  case EM_EXLINEFROMCHAR:
+  {
+    return ME_RowNumberFromCharOfs(editor, lParam);
+  }
+  case EM_LINEINDEX:
+  {
+    ME_DisplayItem *item, *para;
+    int nCharOfs;
+    
+    if (wParam == -1)
+      item = ME_FindItemBack(editor->pCursors[0].pRun, diStartRow);
+    else
+      item = ME_FindRowWithNumber(editor, wParam);
+    if (!item)
+      return -1;
+    para = ME_GetParagraph(item);
+    item = ME_FindItemFwd(item, diRun);
+    nCharOfs = para->member.para.nCharOfs + item->member.run.nCharOfs;
+    TRACE("EM_LINEINDEX: nCharOfs==%d\n", nCharOfs);
+    return nCharOfs;
+  }
+  case EM_LINELENGTH:
+  {
+    ME_DisplayItem *item, *item_end;
+    int nChars = 0;
+    
+    if (wParam > ME_GetTextLength(editor))
+      return 0;
+    if (wParam == -1)
+    {
+      FIXME("EM_LINELENGTH: returning number of unselected characters on lines with selection unsupported.\n");
+      return 0;
+    }
+    item = ME_FindItemAtOffset(editor, diRun, wParam, NULL);
+    item = ME_RowStart(item);
+    item_end = ME_RowEnd(item);
+    if (!item_end)
+    {
+      /* Empty buffer, no runs */
+      nChars = 0;
+    }
+    else
+    {
+      nChars = ME_CharOfsFromRunOfs(editor, item_end, ME_StrLen(item_end->member.run.strText));
+      nChars -= ME_CharOfsFromRunOfs(editor, item, 0);
+    }
+    TRACE("EM_LINELENGTH(%d)==%d\n",wParam, nChars);
+    return nChars;
+  }
+  case EM_FINDTEXT:
+  {
+    FINDTEXTA *ft = (FINDTEXTA *)lParam;
+    int nChars = MultiByteToWideChar(CP_ACP, 0, ft->lpstrText, -1, NULL, 0);
+    WCHAR *tmp;
+    
+    if ((tmp = ALLOC_N_OBJ(WCHAR, nChars)) != NULL)
+      MultiByteToWideChar(CP_ACP, 0, ft->lpstrText, -1, tmp, nChars);
+    return ME_FindText(editor, wParam, &ft->chrg, tmp, NULL);
+  }
+  case EM_FINDTEXTEX:
+  {
+    FINDTEXTEXA *ex = (FINDTEXTEXA *)lParam;
+    int nChars = MultiByteToWideChar(CP_ACP, 0, ex->lpstrText, -1, NULL, 0);
+    WCHAR *tmp;
+    
+    if ((tmp = ALLOC_N_OBJ(WCHAR, nChars)) != NULL)
+      MultiByteToWideChar(CP_ACP, 0, ex->lpstrText, -1, tmp, nChars);
+    return ME_FindText(editor, wParam, &ex->chrg, tmp, &ex->chrgText);
+  }
+  case EM_FINDTEXTW:
+  {
+    FINDTEXTW *ft = (FINDTEXTW *)lParam;
+    return ME_FindText(editor, wParam, &ft->chrg, ft->lpstrText, NULL);
+  }
+  case EM_FINDTEXTEXW:
+  {
+    FINDTEXTEXW *ex = (FINDTEXTEXW *)lParam;
+    return ME_FindText(editor, wParam, &ex->chrg, ex->lpstrText, &ex->chrgText);
+  }
+  case EM_GETZOOM:
+    if (!wParam || !lParam)
+      return FALSE;
+    *(int *)wParam = editor->nZoomNumerator;
+    *(int *)lParam = editor->nZoomDenominator;
+    return TRUE;
+  case EM_SETZOOM:
+    return ME_SetZoom(editor, wParam, lParam);
   case WM_CREATE:
     ME_CommitUndo(editor);
     ME_WrapMarkedParagraphs(editor);
@@ -1369,10 +1743,7 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
   }
   case WM_SIZE:
   {
-    ME_MarkAllForWrapping(editor);
-    ME_WrapMarkedParagraphs(editor);
-    ME_UpdateScrollBar(editor);
-    ME_Repaint(editor);
+    ME_RewrapRepaint(editor);
     return DefWindowProcW(hWnd, msg, wParam, lParam);
   }
   case EM_GETOLEINTERFACE:
@@ -1388,13 +1759,24 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
   return 0L;
 }
 
+
 /******************************************************************
  *        RichEdit10ANSIWndProc (RICHED20.9)
  */
 LRESULT WINAPI RichEdit10ANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+  LRESULT result;
+  
   /* FIXME: this is NOT the same as 2.0 version */
-  return RichEditANSIWndProc(hWnd, msg, wParam, lParam);
+  result = RichEditANSIWndProc(hWnd, msg, wParam, lParam);
+  if (msg == WM_NCCREATE)
+  {
+    ME_TextEditor *editor = (ME_TextEditor *)GetWindowLongW(hWnd, 0);
+    
+    editor->bEmulateVersion10 = TRUE;
+    editor->pBuffer->pLast->member.para.nCharOfs = 2;
+  }
+  return result;
 }
 
 void ME_SendOldNotify(ME_TextEditor *editor, int nCode)

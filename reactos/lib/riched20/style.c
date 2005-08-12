@@ -249,14 +249,23 @@ void ME_DumpStyleToBuf(CHARFORMAT2W *pFmt, char buf[2048])
   ME_DumpStyleEffect(&p, "Text protected:", pFmt, CFM_PROTECTED);
 }
 
-void ME_LogFontFromStyle(HDC hDC, LOGFONTW *lf, ME_Style *s)
+
+static void
+ME_LogFontFromStyle(HDC hDC, LOGFONTW *lf, ME_Style *s, int nZoomNumerator, int nZoomDenominator)
 {
   int rx, ry;
   rx = GetDeviceCaps(hDC, LOGPIXELSX);
   ry = GetDeviceCaps(hDC, LOGPIXELSY);
   ZeroMemory(lf, sizeof(LOGFONTW));
   lstrcpyW(lf->lfFaceName, s->fmt.szFaceName);
-  lf->lfHeight = -s->fmt.yHeight*ry/1440;
+
+  if (nZoomNumerator == 0)
+  {
+    nZoomNumerator = 1;
+    nZoomDenominator = 1;
+  }
+  lf->lfHeight = -s->fmt.yHeight*ry*nZoomNumerator/nZoomDenominator/1440;
+  
   lf->lfWeight = 400;
   if (s->fmt.dwEffects & s->fmt.dwMask & CFM_BOLD)
     lf->lfWeight = 700;
@@ -294,7 +303,7 @@ HFONT ME_SelectStyleFont(ME_TextEditor *editor, HDC hDC, ME_Style *s)
   assert(hDC);
   assert(s);
   
-  ME_LogFontFromStyle(hDC, &lf, s);
+  ME_LogFontFromStyle(hDC, &lf, s, editor->nZoomNumerator, editor->nZoomDenominator);
   
   for (i=0; i<HFONT_CACHE_SIZE; i++)
     editor->pFontCache[i].nAge++;

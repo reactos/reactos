@@ -94,7 +94,7 @@ void ME_PaintContent(ME_TextEditor *editor, HDC hDC, BOOL bOnlyNew, RECT *rcUpda
   ME_DestroyContext(&c);
 }
 
-void ME_MarkParagraphRange(ME_TextEditor *editor, ME_DisplayItem *p1,
+static void ME_MarkParagraphRange(ME_TextEditor *editor, ME_DisplayItem *p1,
                            ME_DisplayItem *p2, int nFlags)
 {
   ME_DisplayItem *p3;  
@@ -113,7 +113,7 @@ void ME_MarkParagraphRange(ME_TextEditor *editor, ME_DisplayItem *p1,
   } while (p1 != p2);
 }
 
-void ME_MarkOffsetRange(ME_TextEditor *editor, int from, int to, int nFlags)
+static void ME_MarkOffsetRange(ME_TextEditor *editor, int from, int to, int nFlags)
 {
   ME_Cursor c1, c2;
   ME_CursorFromCharOfs(editor, from, &c1);
@@ -122,7 +122,7 @@ void ME_MarkOffsetRange(ME_TextEditor *editor, int from, int to, int nFlags)
   ME_MarkParagraphRange(editor, ME_GetParagraph(c1.pRun), ME_GetParagraph(c2.pRun), nFlags);
 }
 
-void ME_MarkSelectionForRepaint(ME_TextEditor *editor)
+static void ME_MarkSelectionForRepaint(ME_TextEditor *editor)
 {
   int from, to, from2, to2, end;
   
@@ -173,7 +173,18 @@ void ME_UpdateRepaint(ME_TextEditor *editor)
   ME_SendSelChange(editor);
 }
 
-void ME_DrawTextWithStyle(ME_Context *c, int x, int y, LPCWSTR szText, int nChars, 
+
+void
+ME_RewrapRepaint(ME_TextEditor *editor)
+{
+  ME_MarkAllForWrapping(editor);
+  ME_WrapMarkedParagraphs(editor);
+  ME_UpdateScrollBar(editor);
+  ME_Repaint(editor);
+}
+
+
+static void ME_DrawTextWithStyle(ME_Context *c, int x, int y, LPCWSTR szText, int nChars, 
   ME_Style *s, int *width, int nSelFrom, int nSelTo, int ymin, int cy) {
   HDC hDC = c->hDC;
   HGDIOBJ hOldFont;
@@ -193,7 +204,17 @@ void ME_DrawTextWithStyle(ME_Context *c, int x, int y, LPCWSTR szText, int nChar
     if (s->fmt.dwEffects & CFE_SUBSCRIPT) yTwipsOffset = -s->fmt.yHeight/12;
   }
   if (yTwipsOffset)
-    yOffset = yTwipsOffset*GetDeviceCaps(hDC, LOGPIXELSY)/1440;
+  {
+    int numerator = 1;
+    int denominator = 1;
+    
+    if (c->editor->nZoomNumerator)
+    {
+      numerator = c->editor->nZoomNumerator;
+      denominator = c->editor->nZoomDenominator;
+    }
+    yOffset = yTwipsOffset * GetDeviceCaps(hDC, LOGPIXELSY) * numerator / denominator / 1440;
+  }
   ExtTextOutW(hDC, x, y-yOffset, 0, NULL, szText, nChars, NULL);
   if (width) {
     SIZE sz;
@@ -214,7 +235,7 @@ void ME_DrawTextWithStyle(ME_Context *c, int x, int y, LPCWSTR szText, int nChar
   ME_UnselectStyleFont(c->editor, hDC, s, hOldFont);
 }
 
-void ME_DebugWrite(HDC hDC, POINT *pt, WCHAR *szText) {
+static void ME_DebugWrite(HDC hDC, POINT *pt, WCHAR *szText) {
   int align = SetTextAlign(hDC, TA_LEFT|TA_TOP);
   HGDIOBJ hFont = SelectObject(hDC, GetStockObject(DEFAULT_GUI_FONT));
   COLORREF color = SetTextColor(hDC, RGB(128,128,128));
@@ -252,7 +273,7 @@ void ME_DrawGraphics(ME_Context *c, int x, int y, ME_Run *run,
   }
 }
 
-void ME_DrawRun(ME_Context *c, int x, int y, ME_DisplayItem *rundi, ME_Paragraph *para) {
+static void ME_DrawRun(ME_Context *c, int x, int y, ME_DisplayItem *rundi, ME_Paragraph *para) {
   ME_Run *run = &rundi->member.run;
   int runofs = run->nCharOfs+para->nCharOfs;
   
@@ -483,4 +504,26 @@ void ME_EnsureVisible(ME_TextEditor *editor, ME_DisplayItem *pRun)
     ScrollWindow(hWnd, 0, -(newy-yold), NULL, NULL);
     UpdateWindow(hWnd);
   }
+}
+        
+
+BOOL
+ME_SetZoom(ME_TextEditor *editor, int numerator, int denominator)
+{
+  /* TODO: Zoom images and objects */
+
+  if (numerator != 0)
+  {
+    if (denominator == 0)
+      return FALSE;
+    if (1.0 / 64.0 > (float)numerator / (float)denominator
+        || (float)numerator / (float)denominator > 64.0)
+      return FALSE;
+  }
+  
+  editor->nZoomNumerator = numerator;
+  editor->nZoomDenominator = denominator;
+  
+  ME_RewrapRepaint(editor);
+  return TRUE;
 }

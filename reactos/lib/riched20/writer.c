@@ -33,6 +33,7 @@ ME_StreamOutInit(ME_TextEditor *editor, EDITSTREAM *stream)
 {
   editor->pStream = ALLOC_OBJ(ME_OutStream);
   editor->pStream->stream = stream;
+  editor->pStream->stream->dwError = 0;
   editor->pStream->pos = 0;
   editor->pStream->written = 0;
   editor->pStream->nFontTblLen = 0;
@@ -108,7 +109,7 @@ ME_StreamOutMove(ME_TextEditor *editor, BYTE *buffer, int len)
 
 
 static BOOL
-ME_StreamOutPrint(ME_TextEditor *editor, char *format, ...)
+ME_StreamOutPrint(ME_TextEditor *editor, const char *format, ...)
 {
   char string[STREAMOUT_BUFFER_SIZE]; /* This is going to be enough */
   int len;
@@ -125,7 +126,7 @@ ME_StreamOutPrint(ME_TextEditor *editor, char *format, ...)
 static BOOL
 ME_StreamOutRTFHeader(ME_TextEditor *editor, int dwFormat)
 {
-  char *cCharSet = NULL;
+  const char *cCharSet = NULL;
   UINT nCodePage;
   LANGID language;
   BOOL success;
@@ -567,7 +568,7 @@ ME_StreamOutRTFText(ME_TextEditor *editor, WCHAR *text, LONG nChars)
 {
   char buffer[STREAMOUT_BUFFER_SIZE];
   int pos = 0;
-  int fit, i;
+  int fit, nBytes, i;
 
   if (nChars == -1)
     nChars = lstrlenW(text);
@@ -577,18 +578,18 @@ ME_StreamOutRTFText(ME_TextEditor *editor, WCHAR *text, LONG nChars)
     if (editor->pStream->nDefaultCodePage == CP_UTF8) {
       /* 6 is the maximum character length in UTF-8 */
       fit = min(nChars, STREAMOUT_BUFFER_SIZE / 6);
-      WideCharToMultiByte(CP_UTF8, 0, text, fit, buffer, STREAMOUT_BUFFER_SIZE,
-                          NULL, NULL);
+      nBytes = WideCharToMultiByte(CP_UTF8, 0, text, fit, buffer,
+                                   STREAMOUT_BUFFER_SIZE, NULL, NULL);
       nChars -= fit;
       text += fit;
-      for (i = 0; buffer[i]; i++)
+      for (i = 0; i < nBytes; i++)
         if (buffer[i] == '{' || buffer[i] == '}' || buffer[i] == '\\') {
           if (!ME_StreamOutPrint(editor, "%.*s\\", i - pos, buffer + pos))
             return FALSE;
           pos = i;
         }
       if (!pos)
-        if (!ME_StreamOutPrint(editor, "%s", buffer + pos))
+        if (!ME_StreamOutMove(editor, buffer + pos, nBytes - pos))
           return FALSE;
       pos = 0;
     } else if (*text < 128) {
@@ -599,7 +600,6 @@ ME_StreamOutRTFText(ME_TextEditor *editor, WCHAR *text, LONG nChars)
     } else {
       BOOL unknown = FALSE;
       BYTE letter[3];
-      int nBytes, i;
       
       /* FIXME: In the MS docs for WideCharToMultiByte there is a big list of
        * codepages including CP_SYMBOL for which the last parameter must be set
@@ -759,11 +759,13 @@ ME_StreamOutText(ME_TextEditor *editor, int nStart, int nChars, DWORD dwFormat)
         }
         WideCharToMultiByte(nCodePage, 0, item->member.run.strText->szData + nStart,
                             nLen, buffer, nSize, NULL, NULL);
-        success = ME_StreamOutMove(editor, buffer, nSize - 1);
+        success = ME_StreamOutMove(editor, buffer, nSize);
       }
     }
     
     nChars -= nLen;
+    if (editor->bEmulateVersion10 && nChars && item->member.run.nFlags & MERF_ENDPARA)
+      nChars--;
     nStart = 0;
     item = ME_FindItemFwd(item, diRun);
   }
@@ -791,7 +793,7 @@ ME_StreamOut(ME_TextEditor *editor, DWORD dwFormat, EDITSTREAM *stream)
     nTo = ME_GetTextLength(editor);
   TRACE("from %d to %d\n", nStart, nTo);
   
-  if (dwFormat & SF_RTF || dwFormat & SF_RTFNOOBJS)
+  if (dwFormat & SF_RTF)
     ME_StreamOutRTF(editor, nStart, nTo - nStart, dwFormat);
   else if (dwFormat & SF_TEXT || dwFormat & SF_TEXTIZED)
     ME_StreamOutText(editor, nStart, nTo - nStart, dwFormat);

@@ -100,6 +100,8 @@ ME_DisplayItem *ME_FindRowStart(ME_Context *c, ME_DisplayItem *run, int nRelPos)
 ME_DisplayItem *ME_RowStart(ME_DisplayItem *item);
 ME_DisplayItem *ME_RowEnd(ME_DisplayItem *item);
 void ME_RenumberParagraphs(ME_DisplayItem *item); /* TODO */
+ME_DisplayItem *ME_FindRowWithNumber(ME_TextEditor *editor, int nRow);
+int ME_RowNumberFromCharOfs(ME_TextEditor *editor, int nOfs);
 
 /* run.c */
 ME_DisplayItem *ME_MakeRun(ME_Style *s, ME_String *strData, int nFlags);
@@ -189,6 +191,7 @@ void ME_MarkAllForWrapping(ME_TextEditor *editor);
 /* paint.c */
 void ME_PaintContent(ME_TextEditor *editor, HDC hDC, BOOL bOnlyNew, RECT *rcUpdate);
 void ME_Repaint(ME_TextEditor *editor);
+void ME_RewrapRepaint(ME_TextEditor *editor);
 void ME_UpdateRepaint(ME_TextEditor *editor);
 void ME_DrawParagraph(ME_Context *c, ME_DisplayItem *paragraph);
 void ME_UpdateScrollBar(ME_TextEditor *editor);
@@ -196,6 +199,7 @@ int ME_GetYScrollPos(ME_TextEditor *editor);
 void ME_EnsureVisible(ME_TextEditor *editor, ME_DisplayItem *pRun);
 COLORREF ME_GetBackColor(ME_TextEditor *editor);
 void ME_Scroll(ME_TextEditor *editor, int cx, int cy);
+BOOL ME_SetZoom(ME_TextEditor *editor, int numerator, int denominator);
 
 /* richole.c */
 extern LRESULT CreateIRichEditOle(LPVOID *);
