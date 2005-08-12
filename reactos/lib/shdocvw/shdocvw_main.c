@@ -152,7 +152,7 @@ HRESULT WINAPI DllCanUnloadNow(void)
  */
 typedef struct _IBindStatusCallbackImpl {
     const IBindStatusCallbackVtbl *vtbl;
-    DWORD ref;
+    LONG ref;
     HWND hDialog;
     BOOL *pbCancelled;
 } IBindStatusCallbackImpl;

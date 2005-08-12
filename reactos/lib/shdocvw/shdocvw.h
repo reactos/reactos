@@ -42,7 +42,7 @@ typedef struct
 {
     /* IUnknown fields */
     const IClassFactoryVtbl *lpVtbl;
-    DWORD ref;
+    LONG ref;
 } IClassFactoryImpl;
 
 extern IClassFactoryImpl SHDOCVW_ClassFactory;
@@ -55,7 +55,7 @@ typedef struct
 {
     /* IUnknown fields */
     const IOleObjectVtbl *lpVtbl;
-    DWORD ref;
+    LONG ref;
 } IOleObjectImpl;
 
 extern IOleObjectImpl SHDOCVW_OleObject;
@@ -67,7 +67,7 @@ typedef struct
 {
     /* IUnknown fields */
     const IWebBrowserVtbl *lpVtbl;
-    DWORD ref;
+    LONG ref;
 } IWebBrowserImpl;
 
 extern IWebBrowserImpl SHDOCVW_WebBrowser;
@@ -80,7 +80,7 @@ typedef struct
 {
     /* IUnknown fields */
     const IProvideClassInfoVtbl *lpVtbl;
-    DWORD ref;
+    LONG ref;
 } IProvideClassInfoImpl;
 
 extern IProvideClassInfoImpl SHDOCVW_ProvideClassInfo;
@@ -93,7 +93,7 @@ typedef struct
 {
     /* IUnknown fields */
     const IProvideClassInfo2Vtbl *lpVtbl;
-    DWORD ref;
+    LONG ref;
 } IProvideClassInfo2Impl;
 
 extern IProvideClassInfo2Impl SHDOCVW_ProvideClassInfo2;
@@ -106,7 +106,7 @@ typedef struct
 {
     /* IUnknown fields */
     const IPersistStorageVtbl *lpVtbl;
-    DWORD ref;
+    LONG ref;
 } IPersistStorageImpl;
 
 extern IPersistStorageImpl SHDOCVW_PersistStorage;
@@ -119,7 +119,7 @@ typedef struct
 {
     /* IUnknown fields */
     const IPersistStreamInitVtbl *lpVtbl;
-    DWORD ref;
+    LONG ref;
 } IPersistStreamInitImpl;
 
 extern IPersistStreamInitImpl SHDOCVW_PersistStreamInit;
@@ -132,7 +132,7 @@ typedef struct
 {
     /* IUnknown fields */
     const IQuickActivateVtbl *lpVtbl;
-    DWORD ref;
+    LONG ref;
 } IQuickActivateImpl;
 
 extern IQuickActivateImpl SHDOCVW_QuickActivate;
@@ -145,7 +145,7 @@ typedef struct
 {
     /* IUnknown fields */
     const IConnectionPointContainerVtbl *lpVtbl;
-    DWORD ref;
+    LONG ref;
 } IConnectionPointContainerImpl;
 
 extern IConnectionPointContainerImpl SHDOCVW_ConnectionPointContainer;
@@ -158,7 +158,7 @@ typedef struct
 {
     /* IUnknown fields */
     const IConnectionPointVtbl *lpVtbl;
-    DWORD ref;
+    LONG ref;
 } IConnectionPointImpl;
 
 /**********************************************************************
