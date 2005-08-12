@@ -203,7 +203,7 @@ int CC_RGBtoHSL(char c, int r, int g, int b)
 /***********************************************************************
  *                  CC_DrawCurrentFocusRect                       [internal]
  */
-void CC_DrawCurrentFocusRect( LCCPRIV lpp )
+static void CC_DrawCurrentFocusRect( LCCPRIV lpp )
 {
   if (lpp->hwndFocus)
   {
@@ -216,7 +216,7 @@ void CC_DrawCurrentFocusRect( LCCPRIV lpp )
 /***********************************************************************
  *                  CC_DrawFocusRect                       [internal]
  */
-void CC_DrawFocusRect( LCCPRIV lpp, HWND hwnd, int x, int y, int rows, int cols)
+static void CC_DrawFocusRect( LCCPRIV lpp, HWND hwnd, int x, int y, int rows, int cols)
 {
   RECT rect;
   int dx, dy;
@@ -822,7 +822,7 @@ BOOL CC_HookCallChk( LPCHOOSECOLORW lpcc )
 /***********************************************************************
  *                              CC_WMInitDialog                  [internal]
  */
-LONG CC_WMInitDialog( HWND hDlg, WPARAM wParam, LPARAM lParam )
+static LONG CC_WMInitDialog( HWND hDlg, WPARAM wParam, LPARAM lParam )
 {
    int i, res;
    int r, g, b;

@@ -427,7 +427,7 @@ static int SetFontSizesToCombo3(HWND hwnd, LPCHOOSEFONTW lpcf)
 /*************************************************************************
  *              CFn_GetDC                           [internal]
  */
-inline HDC CFn_GetDC(LPCHOOSEFONTW lpcf)
+static inline HDC CFn_GetDC(LPCHOOSEFONTW lpcf)
 {
     HDC ret = ((lpcf->Flags & CF_PRINTERFONTS) && lpcf->hDC) ?
         lpcf->hDC :
@@ -439,7 +439,7 @@ inline HDC CFn_GetDC(LPCHOOSEFONTW lpcf)
 /*************************************************************************
  *              CFn_ReleaseDC                           [internal]
  */
-inline void CFn_ReleaseDC(LPCHOOSEFONTW lpcf, HDC hdc)
+static inline void CFn_ReleaseDC(LPCHOOSEFONTW lpcf, HDC hdc)
 {
         if(!((lpcf->Flags & CF_PRINTERFONTS) && lpcf->hDC))
             ReleaseDC(0, hdc);
@@ -722,11 +722,13 @@ LRESULT CFn_WMMeasureItem(HWND hDlg, WPARAM wParam, LPARAM lParam)
     HFONT hfontprev;
     TEXTMETRICW tm;
     LPMEASUREITEMSTRUCT lpmi=(LPMEASUREITEMSTRUCT)lParam;
+    INT height = 0;
+
     if (!himlTT)
         himlTT = ImageList_LoadImageW( COMDLG32_hInstance, MAKEINTRESOURCEW(38),
                 TTBITMAP_XSIZE, 0, CLR_DEFAULT, IMAGE_BITMAP, 0);
-    ImageList_GetIconSize( himlTT, 0, &lpmi->itemHeight);
-    lpmi->itemHeight += 2;
+    ImageList_GetIconSize( himlTT, 0, &height);
+    lpmi->itemHeight = height + 2;
     /* use MAX of bitmap height and tm.tmHeight .*/
     hdc=GetDC(hDlg);
     if(!hdc) return 0;
@@ -1021,7 +1023,7 @@ LRESULT CFn_WMCommand(HWND hDlg, WPARAM wParam, LPARAM lParam,
     return(FALSE);
 }
 
-LRESULT CFn_WMDestroy(HWND hwnd, WPARAM wParam, LPARAM lParam, LPCHOOSEFONTW lpcfw)
+static LRESULT CFn_WMDestroy(HWND hwnd, WPARAM wParam, LPARAM lParam, LPCHOOSEFONTW lpcfw)
 {
     LPCHOOSEFONTA lpcfa;
     LPSTR lpszStyle;
