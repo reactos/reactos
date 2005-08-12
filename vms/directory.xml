@@ -1,3 +1,4 @@
+<group>
 <directory name="lib">
 	<xi:include href="lib/directory.xml" />
 </directory>
@@ -9,4 +10,4 @@
 <directory name="tools">
 	<xi:include href="tools/directory.xml" />
 </directory>
-
+</group>
