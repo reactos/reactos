@@ -261,6 +261,7 @@ PspExitThread(NTSTATUS ExitStatus)
           happens when the last thread just terminates without explicitly
           terminating the process. */
        CurrentProcess->ExitTime = CurrentThread->ExitTime;
+       CurrentProcess->ExitStatus = ExitStatus;
     }
 
     /* Check if the process has a debug port */
@@ -573,6 +574,7 @@ NtTerminateProcess(IN HANDLE ProcessHandle  OPTIONAL,
            we kill ourselves to prevent threads outside of our process trying
            to kill us */
         KeQuerySystemTime(&Process->ExitTime);
+        Process->ExitStatus = ExitStatus;
 
         /* Only master thread remains... kill it off */
         if (CurrentThread->ThreadsProcess == Process) {
