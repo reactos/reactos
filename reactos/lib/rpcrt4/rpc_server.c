@@ -117,7 +117,7 @@ static RpcPacket* spacket_head;
 static RpcPacket* spacket_tail;
 static HANDLE server_sem;
 
-static DWORD worker_count, worker_free, worker_tls;
+static LONG worker_count, worker_free, worker_tls;
 
 static UUID uuid_nil;
 

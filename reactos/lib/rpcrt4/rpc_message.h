@@ -24,9 +24,6 @@
 #include "wine/rpcss_shared.h"
 #include "rpc_defs.h"
 
-VOID RPCRT4_BuildCommonHeader(RpcPktHdr *Header, unsigned char PacketType, unsigned long DataRepresentation);
-RpcPktHdr *RPCRT4_BuildRequestHeader(unsigned long DataRepresentation, unsigned long BufferLength, unsigned short ProcNum, UUID *ObjectUuid);
-RpcPktHdr *RPCRT4_BuildResponseHeader(unsigned long DataRepresentation, unsigned long BufferLength);
 RpcPktHdr *RPCRT4_BuildFaultHeader(unsigned long DataRepresentation, RPC_STATUS Status);
 RpcPktHdr *RPCRT4_BuildBindHeader(unsigned long DataRepresentation, unsigned short MaxTransmissionSize, unsigned short MaxReceiveSize, RPC_SYNTAX_IDENTIFIER *AbstractId, RPC_SYNTAX_IDENTIFIER *TransferId);
 RpcPktHdr *RPCRT4_BuildBindNackHeader(unsigned long DataRepresentation, unsigned char RpcVersion, unsigned char RpcVersionMinor);

@@ -223,7 +223,7 @@ static LPSTREAM RpcStream_Create(PMIDL_STUB_MESSAGE pStubMsg, BOOL init)
   return (LPSTREAM)This;
 }
 
-const IID* get_ip_iid(PMIDL_STUB_MESSAGE pStubMsg, unsigned char *pMemory, PFORMAT_STRING pFormat)
+static const IID* get_ip_iid(PMIDL_STUB_MESSAGE pStubMsg, unsigned char *pMemory, PFORMAT_STRING pFormat)
 {
   const IID *riid;
   if (!pFormat) return &IID_IUnknown;

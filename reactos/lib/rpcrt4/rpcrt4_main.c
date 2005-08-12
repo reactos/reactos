@@ -57,7 +57,7 @@
  *
  * - ORPC is RPC for OLE; once we have a working RPC framework, we can
  *   use it to implement out-of-process OLE client/server communications.
- *   ATM there is maybe a disconnect between the marshalling in the OLE DLL's
+ *   ATM there is maybe a disconnect between the marshalling in the OLE DLLs
  *   and the marshalling going on here [TODO: well, is there or not?]
  * 
  * - In-source API Documentation, at least for those functions which we have

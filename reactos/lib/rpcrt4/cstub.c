@@ -100,8 +100,7 @@ ULONG WINAPI NdrCStdStubBuffer_Release(LPRPCSTUBBUFFER iface,
   TRACE("(%p)->Release()\n",This);
 
   if (!--(This->RefCount)) {
-    if(This->pvServerObject)
-        IUnknown_Release(This->pvServerObject);
+    IRpcStubBuffer_Disconnect(iface);
     if(This->pPSFactory)
         IPSFactoryBuffer_Release(This->pPSFactory);
     HeapFree(GetProcessHeap(),0,This);
@@ -123,7 +122,11 @@ void WINAPI CStdStubBuffer_Disconnect(LPRPCSTUBBUFFER iface)
 {
   CStdStubBuffer *This = (CStdStubBuffer *)iface;
   TRACE("(%p)->Disconnect()\n",This);
-  This->pvServerObject = NULL;
+  if (This->pvServerObject)
+  {
+    IUnknown_Release(This->pvServerObject);
+    This->pvServerObject = NULL;
+  }
 }
 
 HRESULT WINAPI CStdStubBuffer_Invoke(LPRPCSTUBBUFFER iface,

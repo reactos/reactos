@@ -150,17 +150,17 @@
 @ stdcall NdrAllocate(ptr long)
 @ stub NdrAsyncClientCall
 @ stub NdrAsyncServerCall
-@ stub NdrByteCountPointerBufferSize
-@ stub NdrByteCountPointerFree
-@ stub NdrByteCountPointerMarshall
-@ stub NdrByteCountPointerUnmarshall
+@ stdcall NdrByteCountPointerBufferSize(ptr ptr ptr)
+@ stdcall NdrByteCountPointerFree(ptr ptr ptr)
+@ stdcall NdrByteCountPointerMarshall(ptr ptr ptr)
+@ stdcall NdrByteCountPointerUnmarshall(ptr ptr ptr long)
 @ stub NdrCStdStubBuffer2_Release
 @ stdcall NdrCStdStubBuffer_Release(ptr ptr)
 @ stdcall NdrClearOutParameters(ptr ptr ptr)
 @ varargs NdrClientCall2(ptr ptr)
 @ stub NdrClientCall
-@ stub NdrClientContextMarshall
-@ stub NdrClientContextUnmarshall
+@ stdcall NdrClientContextMarshall(ptr ptr long)
+@ stdcall NdrClientContextUnmarshall(ptr ptr ptr)
 @ stub NdrClientInitialize
 @ stdcall NdrClientInitializeNew(ptr ptr ptr long)
 @ stdcall NdrComplexArrayBufferSize(ptr ptr ptr)
@@ -182,21 +182,21 @@
 @ stdcall NdrConformantStringMarshall(ptr ptr ptr)
 @ stdcall NdrConformantStringMemorySize(ptr ptr)
 @ stdcall NdrConformantStringUnmarshall(ptr ptr ptr long)
-@ stub NdrConformantStructBufferSize
-@ stub NdrConformantStructFree
-@ stub NdrConformantStructMarshall
-@ stub NdrConformantStructMemorySize
-@ stub NdrConformantStructUnmarshall
+@ stdcall NdrConformantStructBufferSize(ptr ptr ptr)
+@ stdcall NdrConformantStructFree(ptr ptr ptr)
+@ stdcall NdrConformantStructMarshall(ptr ptr ptr)
+@ stdcall NdrConformantStructMemorySize(ptr ptr)
+@ stdcall NdrConformantStructUnmarshall(ptr ptr ptr long)
 @ stdcall NdrConformantVaryingArrayBufferSize(ptr ptr ptr)
 @ stdcall NdrConformantVaryingArrayFree(ptr ptr ptr)
 @ stdcall NdrConformantVaryingArrayMarshall(ptr ptr ptr)
 @ stdcall NdrConformantVaryingArrayMemorySize(ptr ptr)
 @ stdcall NdrConformantVaryingArrayUnmarshall(ptr ptr ptr long)
-@ stub NdrConformantVaryingStructBufferSize
-@ stub NdrConformantVaryingStructFree
-@ stub NdrConformantVaryingStructMarshall
-@ stub NdrConformantVaryingStructMemorySize
-@ stub NdrConformantVaryingStructUnmarshall
+@ stdcall NdrConformantVaryingStructBufferSize(ptr ptr ptr)
+@ stdcall NdrConformantVaryingStructFree(ptr ptr ptr)
+@ stdcall NdrConformantVaryingStructMarshall(ptr ptr ptr)
+@ stdcall NdrConformantVaryingStructMemorySize(ptr ptr)
+@ stdcall NdrConformantVaryingStructUnmarshall(ptr ptr ptr long)
 @ stub NdrContextHandleInitialize
 @ stub NdrContextHandleSize
 @ stdcall NdrConvert2(ptr ptr long)
@@ -210,16 +210,16 @@
 @ stdcall NdrDllGetClassObject(ptr ptr ptr ptr ptr ptr)
 @ stdcall NdrDllRegisterProxy(long ptr ptr)
 @ stdcall NdrDllUnregisterProxy(long ptr ptr)
-@ stub NdrEncapsulatedUnionBufferSize
-@ stub NdrEncapsulatedUnionFree
-@ stub NdrEncapsulatedUnionMarshall
-@ stub NdrEncapsulatedUnionMemorySize
-@ stub NdrEncapsulatedUnionUnmarshall
-@ stub NdrFixedArrayBufferSize
-@ stub NdrFixedArrayFree
-@ stub NdrFixedArrayMarshall
-@ stub NdrFixedArrayMemorySize
-@ stub NdrFixedArrayUnmarshall
+@ stdcall NdrEncapsulatedUnionBufferSize(ptr ptr ptr)
+@ stdcall NdrEncapsulatedUnionFree(ptr ptr ptr)
+@ stdcall NdrEncapsulatedUnionMarshall(ptr ptr ptr)
+@ stdcall NdrEncapsulatedUnionMemorySize(ptr ptr)
+@ stdcall NdrEncapsulatedUnionUnmarshall(ptr ptr ptr long)
+@ stdcall NdrFixedArrayBufferSize(ptr ptr ptr)
+@ stdcall NdrFixedArrayFree(ptr ptr ptr)
+@ stdcall NdrFixedArrayMarshall(ptr ptr ptr)
+@ stdcall NdrFixedArrayMemorySize(ptr ptr)
+@ stdcall NdrFixedArrayUnmarshall(ptr ptr ptr long)
 @ stdcall NdrFreeBuffer(ptr)
 @ stub NdrFullPointerFree
 @ stub NdrFullPointerInsertRefId
@@ -236,11 +236,11 @@
 @ stub NdrGetSimpleTypeMemorySize # wxp
 @ stub NdrGetTypeFlags # wxp
 @ stub NdrGetUserMarshallInfo
-@ stub NdrHardStructBufferSize
-@ stub NdrHardStructFree
-@ stub NdrHardStructMarshall
-@ stub NdrHardStructMemorySize
-@ stub NdrHardStructUnmarshall
+@ stub NdrHardStructBufferSize #(ptr ptr ptr)
+@ stub NdrHardStructFree #(ptr ptr ptr)
+@ stub NdrHardStructMarshall #(ptr ptr ptr)
+@ stub NdrHardStructMemorySize #(ptr ptr)
+@ stub NdrHardStructUnmarshall #(ptr ptr ptr long)
 @ stdcall NdrInterfacePointerBufferSize(ptr ptr ptr)
 @ stdcall NdrInterfacePointerFree(ptr ptr ptr)
 @ stdcall NdrInterfacePointerMarshall(ptr ptr ptr)
@@ -261,15 +261,15 @@
 @ stub NdrMesTypeEncode2
 @ stub NdrMesTypeEncode
 @ stub NdrMesTypeFree2
-@ stub NdrNonConformantStringBufferSize
-@ stub NdrNonConformantStringMarshall
-@ stub NdrNonConformantStringMemorySize
-@ stub NdrNonConformantStringUnmarshall
-@ stub NdrNonEncapsulatedUnionBufferSize
-@ stub NdrNonEncapsulatedUnionFree
-@ stub NdrNonEncapsulatedUnionMarshall
-@ stub NdrNonEncapsulatedUnionMemorySize
-@ stub NdrNonEncapsulatedUnionUnmarshall
+@ stub NdrNonConformantStringBufferSize #(ptr ptr ptr)
+@ stub NdrNonConformantStringMarshall #(ptr ptr ptr)
+@ stub NdrNonConformantStringMemorySize #(ptr ptr)
+@ stub NdrNonConformantStringUnmarshall #(ptr ptr ptr long)
+@ stdcall NdrNonEncapsulatedUnionBufferSize(ptr ptr ptr)
+@ stdcall NdrNonEncapsulatedUnionFree(ptr ptr ptr)
+@ stdcall NdrNonEncapsulatedUnionMarshall(ptr ptr ptr)
+@ stdcall NdrNonEncapsulatedUnionMemorySize(ptr ptr)
+@ stdcall NdrNonEncapsulatedUnionUnmarshall(ptr ptr ptr long)
 @ stub NdrNsGetBuffer
 @ stub NdrNsSendReceive
 @ stdcall NdrOleAllocate(long)
@@ -341,16 +341,16 @@
 @ stdcall NdrUserMarshalMemorySize(ptr ptr)
 @ stub NdrUserMarshalSimpleTypeConvert
 @ stdcall NdrUserMarshalUnmarshall(ptr ptr ptr long)
-@ stub NdrVaryingArrayBufferSize
-@ stub NdrVaryingArrayFree
-@ stub NdrVaryingArrayMarshall
-@ stub NdrVaryingArrayMemorySize
-@ stub NdrVaryingArrayUnmarshall
-@ stub NdrXmitOrRepAsBufferSize
-@ stub NdrXmitOrRepAsFree
-@ stub NdrXmitOrRepAsMarshall
-@ stub NdrXmitOrRepAsMemorySize
-@ stub NdrXmitOrRepAsUnmarshall
+@ stdcall NdrVaryingArrayBufferSize(ptr ptr ptr)
+@ stdcall NdrVaryingArrayFree(ptr ptr ptr)
+@ stdcall NdrVaryingArrayMarshall(ptr ptr ptr)
+@ stdcall NdrVaryingArrayMemorySize(ptr ptr)
+@ stdcall NdrVaryingArrayUnmarshall(ptr ptr ptr long)
+@ stdcall NdrXmitOrRepAsBufferSize(ptr ptr ptr)
+@ stdcall NdrXmitOrRepAsFree(ptr ptr ptr)
+@ stdcall NdrXmitOrRepAsMarshall(ptr ptr ptr)
+@ stdcall NdrXmitOrRepAsMemorySize(ptr ptr)
+@ stdcall NdrXmitOrRepAsUnmarshall(ptr ptr ptr long)
 @ stub NdrpCreateProxy # wxp
 @ stub NdrpCreateStub # wxp
 @ stub NdrpGetProcFormatString # wxp

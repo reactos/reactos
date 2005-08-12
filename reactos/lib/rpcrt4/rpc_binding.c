@@ -312,7 +312,7 @@ RPC_STATUS RPCRT4_SpawnConnection(RpcConnection** Connection, RpcConnection* Old
   return err;
 }
 
-RPC_STATUS RPCRT4_AllocBinding(RpcBinding** Binding, BOOL server)
+static RPC_STATUS RPCRT4_AllocBinding(RpcBinding** Binding, BOOL server)
 {
   RpcBinding* NewBinding;
 

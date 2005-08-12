@@ -41,7 +41,7 @@ typedef struct _RpcConnection
 /* don't know what MS's structure looks like */
 typedef struct _RpcBinding
 {
-  DWORD refs;
+  LONG refs;
   struct _RpcBinding* Next;
   BOOL server;
   UUID ObjectUuid;
