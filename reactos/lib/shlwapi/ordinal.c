@@ -139,7 +139,7 @@ BOOL    WINAPI SHAboutInfoW(LPWSTR,DWORD);
  The reason for these functions to be there is to provide a wrapper
  for unicode functions to provide these functions on systems without
  unicode functions eg. win95/win98. Since we have such functions we just
- call these. If running Wine with native DLL's, some late bound calls may
+ call these. If running Wine with native DLLs, some late bound calls may
  fail. However, it is better to implement the functions in the forward DLL
  and recommend the builtin rather than reimplementing the calls here!
 */

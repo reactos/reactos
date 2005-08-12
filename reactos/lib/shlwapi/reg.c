@@ -935,7 +935,7 @@ LONG  WINAPI SHRegWriteUSValueA(HUSKEY hUSKey, LPCSTR pszValue, DWORD dwType,
 LONG  WINAPI SHRegWriteUSValueW(HUSKEY hUSKey, LPCWSTR pszValue, DWORD dwType,
                                 LPVOID pvData, DWORD cbData, DWORD dwFlags)
 {
-    LONG dummy;
+    DWORD dummy;
     LPSHUSKEY hKey = (LPSHUSKEY)hUSKey;
     LONG ret = ERROR_SUCCESS;
 
