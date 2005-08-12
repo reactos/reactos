@@ -131,7 +131,7 @@ typedef struct ErrorInfoImpl
 	const IErrorInfoVtbl           *lpvtei;
 	const ICreateErrorInfoVtbl     *lpvtcei;
 	const ISupportErrorInfoVtbl    *lpvtsei;
-	DWORD				ref;
+	LONG				ref;
 
 	GUID m_Guid;
 	BSTR bstrSource;

@@ -89,7 +89,7 @@ const CLSID CLSID_PSFactoryBuffer = { 0x00000320, 0, 0, {0xc0, 0, 0, 0, 0, 0, 0,
  */
 typedef struct _CFStub {
     const IRpcStubBufferVtbl   *lpvtbl;
-    DWORD			ref;
+    LONG			ref;
 
     LPUNKNOWN			pUnkServer;
 } CFStub;
@@ -117,7 +117,10 @@ CFStub_Release(LPRPCSTUBBUFFER iface) {
     ULONG ref;
 
     ref = InterlockedDecrement(&This->ref);
-    if (!ref) HeapFree(GetProcessHeap(),0,This);
+    if (!ref) {
+        IRpcStubBuffer_Disconnect(iface);
+        HeapFree(GetProcessHeap(),0,This);
+    }
     return ref;
 }
 
@@ -134,9 +137,12 @@ static void WINAPI
 CFStub_Disconnect(LPRPCSTUBBUFFER iface) {
     CFStub *This = (CFStub *)iface;
 
-    IUnknown_Release(This->pUnkServer);
-    This->pUnkServer = NULL;
+    if (This->pUnkServer) {
+        IUnknown_Release(This->pUnkServer);
+        This->pUnkServer = NULL;
+    }
 }
+
 static HRESULT WINAPI
 CFStub_Invoke(
     LPRPCSTUBBUFFER iface,RPCOLEMESSAGE* msg,IRpcChannelBuffer* chanbuf
@@ -269,7 +275,7 @@ CFStub_Construct(LPRPCSTUBBUFFER *ppv) {
 typedef struct _CFProxy {
     const IClassFactoryVtbl		*lpvtbl_cf;
     const IRpcProxyBufferVtbl	*lpvtbl_proxy;
-    DWORD				ref;
+    LONG				ref;
 
     IRpcChannelBuffer			*chanbuf;
     IUnknown *outer_unknown;
@@ -460,7 +466,7 @@ CFProxy_Construct(IUnknown *pUnkOuter, LPVOID *ppv,LPVOID *ppProxy) {
 typedef struct
 {
     const IRpcStubBufferVtbl *lpVtbl;
-    ULONG refs;
+    LONG refs;
     IRemUnknown *iface;
 } RemUnkStub;
 
@@ -546,12 +552,15 @@ static HRESULT WINAPI RemUnkStub_Invoke(LPRPCSTUBBUFFER iface,
     hr = IRemUnknown_RemQueryInterface(This->iface, &ipid, cRefs, cIids, iids, &pQIResults);
 
     /* out */
-    pMsg->cbBuffer = cIids * sizeof(REMQIRESULT);
+    pMsg->cbBuffer = cIids * sizeof(REMQIRESULT) + sizeof(HRESULT);
 
     I_RpcGetBuffer((RPC_MESSAGE *)pMsg);
-    if (hr) return hr;
 
     buf = pMsg->Buffer;
+    *(HRESULT *)buf = hr;
+    buf += sizeof(HRESULT);
+    
+    if (hr) return hr;
     /* FIXME: pQIResults is a unique pointer so pQIResults can be NULL! */
     memcpy(buf, pQIResults, cIids * sizeof(REMQIRESULT));
 
@@ -655,7 +664,7 @@ static HRESULT RemUnkStub_Construct(IRpcStubBuffer **ppStub)
     RemUnkStub *This = HeapAlloc(GetProcessHeap(), 0, sizeof(*This));
     if (!This) return E_OUTOFMEMORY;
     This->lpVtbl = &RemUnkStub_VTable;
-    This->refs = 0;
+    This->refs = 1;
     This->iface = NULL;
     *ppStub = (IRpcStubBuffer*)This;
     return S_OK;
@@ -665,7 +674,7 @@ static HRESULT RemUnkStub_Construct(IRpcStubBuffer **ppStub)
 typedef struct _RemUnkProxy {
     const IRemUnknownVtbl		*lpvtbl_remunk;
     const IRpcProxyBufferVtbl	*lpvtbl_proxy;
-    DWORD				refs;
+    LONG				refs;
 
     IRpcChannelBuffer			*chan;
     IUnknown *outer_unknown;
@@ -745,8 +754,14 @@ static HRESULT WINAPI RemUnkProxy_RemQueryInterface(LPREMUNKNOWN iface,
 
     hr = IRpcChannelBuffer_SendReceive(This->chan, &msg, &status);
 
+    buf = msg.Buffer;
+
     if (SUCCEEDED(hr)) {
-      buf = msg.Buffer;
+        hr = *(HRESULT *)buf;
+        buf += sizeof(HRESULT);
+    }
+
+    if (SUCCEEDED(hr)) {
       *ppQIResults = CoTaskMemAlloc(cIids*sizeof(REMQIRESULT));
       memcpy(*ppQIResults, buf, cIids*sizeof(REMQIRESULT));
     }

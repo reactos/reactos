@@ -294,8 +294,8 @@ void WINAPI OleUninitialize(void)
 /******************************************************************************
  *		OleInitializeWOW	[OLE32.@]
  */
-HRESULT WINAPI OleInitializeWOW(DWORD x) {
-        FIXME("(0x%08lx),stub!\n",x);
+HRESULT WINAPI OleInitializeWOW(DWORD x, DWORD y) {
+        FIXME("(0x%08lx, 0x%08lx),stub!\n",x, y);
         return 0;
 }
 
@@ -394,7 +394,7 @@ HRESULT WINAPI OleRegGetUserType(
   DWORD   cbData;
   HKEY    clsidKey;
   LONG    hres;
-  LPBYTE  buffer;
+  LPSTR   buffer;
   HRESULT retVal;
   /*
    * Initialize the out parameter.
@@ -464,7 +464,7 @@ HRESULT WINAPI OleRegGetUserType(
 			  "",
 			  NULL,
 			  &dwKeyType,
-			  buffer,
+			  (LPBYTE) buffer,
 			  &cbData);
 
   RegCloseKey(clsidKey);

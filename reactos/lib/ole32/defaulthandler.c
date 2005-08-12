@@ -78,7 +78,7 @@ struct DefaultHandler
   /*
    * Reference count of this object
    */
-  ULONG ref;
+  LONG ref;
 
   /*
    * IUnknown implementation of the outer object.

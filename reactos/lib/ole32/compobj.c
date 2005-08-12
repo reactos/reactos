@@ -1403,6 +1403,8 @@ HRESULT WINAPI CoRegisterClassObject(
   newClass->classIdentifier = *rclsid;
   newClass->runContext      = dwClsContext;
   newClass->connectFlags    = flags;
+  newClass->pMarshaledData  = NULL;
+
   /*
    * Use the address of the chain node as the cookie since we are sure it's
    * unique. FIXME: not on 64-bit platforms.

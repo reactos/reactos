@@ -60,7 +60,7 @@ struct rot_entry
 typedef struct RunningObjectTableImpl
 {
     const IRunningObjectTableVtbl *lpVtbl;
-    ULONG ref;
+    LONG ref;
 
     struct list rot; /* list of ROT entries */
     CRITICAL_SECTION lock;
@@ -73,7 +73,7 @@ static RunningObjectTableImpl* runningObjectTableInstance = NULL;
 static inline HRESULT WINAPI
 IrotRegister(DWORD *cookie)
 {
-    static DWORD last_cookie = 1;
+    static LONG last_cookie = 1;
     *cookie = InterlockedIncrement(&last_cookie);
     return S_OK;
 }
@@ -82,7 +82,7 @@ IrotRegister(DWORD *cookie)
 typedef struct EnumMonikerImpl
 {
     const IEnumMonikerVtbl *lpVtbl;
-    ULONG      ref;
+    LONG ref;
 
     MInterfacePointer **monikers;
     ULONG moniker_count;
@@ -988,7 +988,7 @@ typedef struct MonikerMarshal
     const IUnknownVtbl *lpVtbl;
     const IMarshalVtbl *lpVtblMarshal;
     
-    ULONG ref;
+    LONG ref;
     IMoniker *moniker;
 } MonikerMarshal;
 

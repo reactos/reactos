@@ -52,7 +52,7 @@ typedef struct BindCtxImpl{
 
     const IBindCtxVtbl *lpVtbl; /* VTable relative to the IBindCtx interface.*/
 
-    ULONG ref; /* reference counter for this object */
+    LONG ref; /* reference counter for this object */
 
     BindCtxObject* bindCtxTable; /* this is a table in which all bounded objects are stored*/
     DWORD          bindCtxTableLastIndex;  /* first free index in the table */

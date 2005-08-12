@@ -222,7 +222,7 @@ struct StorageBaseImpl
   /*
    * Reference count of this object
    */
-  ULONG ref;
+  LONG ref;
 
   /*
    * Ancestor storage (top level)
@@ -430,7 +430,7 @@ struct IEnumSTATSTGImpl
   const IEnumSTATSTGVtbl *lpVtbl;    /* Needs to be the first item in the struct
 				* since we want to cast this in an IEnumSTATSTG pointer */
 
-  ULONG		 ref;		        /* Reference count */
+  LONG		 ref;		        /* Reference count */
   StorageImpl* parentStorage;         /* Reference to the parent storage */
   ULONG          firstPropertyNode;     /* Index of the root of the storage to enumerate */
 
@@ -487,7 +487,7 @@ struct StgStreamImpl
   /*
    * Reference count
    */
-  ULONG		     ref;
+  LONG		     ref;
 
   /*
    * Storage that is the parent(owner) of the stream

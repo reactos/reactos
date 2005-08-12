@@ -366,7 +366,7 @@ static const IMallocSpyVtbl VT_IMallocSpy;
 
 typedef struct {
         const IMallocSpyVtbl *lpVtbl;
-        DWORD ref;
+        LONG ref;
 } _MallocSpy;
 
 /* this is the static object instance */

@@ -38,7 +38,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
 typedef struct _FTMarshalImpl {
 	const IUnknownVtbl *lpVtbl;
-	DWORD ref;
+	LONG ref;
 	const IMarshalVtbl *lpvtblFTM;
 
 	IUnknown *pUnkOuter;

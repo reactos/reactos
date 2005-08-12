@@ -60,7 +60,7 @@ struct HGLOBALStreamImpl
   /*
    * Reference count
    */
-  ULONG		     ref;
+  LONG		     ref;
 
   /*
    * Support for the stream

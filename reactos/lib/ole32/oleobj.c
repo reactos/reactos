@@ -43,7 +43,7 @@ typedef struct OleAdviseHolderImpl
 {
   const IOleAdviseHolderVtbl *lpVtbl;
 
-  DWORD ref;
+  LONG ref;
 
   DWORD         maxSinks;
   IAdviseSink** arrayOfSinks;
@@ -357,7 +357,7 @@ typedef struct DataAdviseHolder
 {
   const IDataAdviseHolderVtbl *lpVtbl;
 
-  DWORD                 ref;
+  LONG                  ref;
   DWORD                 maxCons;
   DataAdviseConnection* Connections;
 } DataAdviseHolder;

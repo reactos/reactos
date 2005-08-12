@@ -57,7 +57,7 @@ struct HGLOBALLockBytesImpl
   /*
    * Reference count
    */
-  ULONG        ref;
+  LONG        ref;
 
   /*
    * Support for the LockBytes object
@@ -155,6 +155,24 @@ static const ILockBytesVtbl HGLOBALLockBytesImpl_Vtbl =
 
 /******************************************************************************
  *           CreateILockBytesOnHGlobal     [OLE32.@]
+ *
+ * Create a byte array object which is intended to be the compound file foundation.
+ * This object supports a COM implementation of the ILockBytes interface.
+ *
+ * PARAMS
+ *  hGlobal           [ I] Global memory handle
+ *  fDeleteOnRelease  [ I] Whether the handle should be freed when the object is released. 
+ *  ppLkbyt           [ O] Address of ILockBytes pointer that receives
+ *                         the interface pointer to the new byte array object.
+ *
+ * RETURNS
+ *  Success: S_OK
+ *
+ * NOTES
+ *  The supplied ILockBytes pointer can be used by the StgCreateDocfileOnILockBytes
+ *  function to build a compound file on top of this byte array object.
+ *  The ILockBytes interface instance calls the GlobalReAlloc function to grow
+ *  the memory block as required.
  */
 HRESULT WINAPI CreateILockBytesOnHGlobal(HGLOBAL      hGlobal,
                                          BOOL         fDeleteOnRelease,
@@ -176,6 +194,17 @@ HRESULT WINAPI CreateILockBytesOnHGlobal(HGLOBAL      hGlobal,
 
 /******************************************************************************
  *           GetHGlobalFromILockBytes     [OLE32.@]
+ *
+ * Retrieve a global memory handle to a byte array object created
+ * using the CreateILockBytesOnHGlobal function.
+ *
+ * PARAMS
+ *  plkbyt   [ I]  Pointer to the ILockBytes interface on byte array object
+ *  phglobal [ O]  Address to store a global memory handle
+ * RETURNS
+ *  S_OK          if *phglobal has a correct value
+ *  E_INVALIDARG  if any parameters are invalid
+ *  
  */
 HRESULT WINAPI GetHGlobalFromILockBytes(ILockBytes* plkbyt, HGLOBAL* phglobal)
 {
@@ -224,10 +253,10 @@ HRESULT WINAPI GetHGlobalFromILockBytes(ILockBytes* plkbyt, HGLOBAL* phglobal)
 /******************************************************************************
  * This is the constructor for the HGLOBALLockBytesImpl class.
  *
- * Params:
- *    hGlobal          - Handle that will support the stream. can be NULL.
- *    fDeleteOnRelease - Flag set to TRUE if the HGLOBAL will be released
- *                       when the IStream object is destroyed.
+ * PARAMS
+ *    hGlobal          [ I] Handle that will support the stream. can be NULL.
+ *    fDeleteOnRelease [ I] Flag set to TRUE if the HGLOBAL will be released
+ *                          when the IStream object is destroyed.
  */
 HGLOBALLockBytesImpl* HGLOBALLockBytesImpl_Construct(HGLOBAL hGlobal,
                                                      BOOL    fDeleteOnRelease)

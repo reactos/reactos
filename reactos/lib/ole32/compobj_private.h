@@ -112,7 +112,7 @@ struct proxy_manager
   OXID oxid;                /* object exported ID (RO) */
   OID oid;                  /* object ID (RO) */
   struct list interfaces;   /* imported interfaces (CS cs) */
-  DWORD refs;               /* proxy reference count (LOCK) */
+  LONG refs;                /* proxy reference count (LOCK) */
   CRITICAL_SECTION cs;      /* thread safety for this object and children */
   ULONG sorflags;           /* STDOBJREF flags (RO) */
   IRemUnknown *remunk;      /* proxy to IRemUnknown used for lifecycle management (CS cs) */
@@ -124,12 +124,12 @@ struct apartment
 {
   struct list entry;       
 
-  DWORD refs;              /* refcount of the apartment (LOCK) */
+  LONG  refs;              /* refcount of the apartment (LOCK) */
   DWORD model;             /* threading model (RO) */
   DWORD tid;               /* thread id (RO) */
   HANDLE thread;           /* thread handle (RO) */
   OXID oxid;               /* object exporter ID (RO) */
-  DWORD ipidc;             /* interface pointer ID counter, starts at 1 (LOCK) */
+  LONG ipidc;              /* interface pointer ID counter, starts at 1 (LOCK) */
   HWND win;                /* message window (RO) */
   CRITICAL_SECTION cs;     /* thread safety */
   LPMESSAGEFILTER filter;  /* message filter (CS cs) */

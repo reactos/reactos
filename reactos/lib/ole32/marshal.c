@@ -85,18 +85,27 @@ inline static HRESULT get_facbuf_for_iid(REFIID riid, IPSFactoryBuffer **facbuf)
 }
 
 /* creates a new stub manager */
-HRESULT marshal_object(APARTMENT *apt, STDOBJREF *stdobjref, REFIID riid, IUnknown *obj, MSHLFLAGS mshlflags)
+HRESULT marshal_object(APARTMENT *apt, STDOBJREF *stdobjref, REFIID riid, IUnknown *object, MSHLFLAGS mshlflags)
 {
     struct stub_manager *manager;
     struct ifstub       *ifstub;
     BOOL                 tablemarshal;
     IRpcStubBuffer      *stub = NULL;
     HRESULT              hr;
+    IUnknown            *iobject = NULL; /* object of type riid */
 
     hr = apartment_getoxid(apt, &stdobjref->oxid);
     if (hr != S_OK)
         return hr;
 
+    hr = IUnknown_QueryInterface(object, riid, (void **)&iobject);
+    if (hr != S_OK)
+    {
+        ERR("object doesn't expose interface %s, failing with error 0x%08lx\n",
+            debugstr_guid(riid), hr);
+        return E_NOINTERFACE;
+    }
+  
     /* IUnknown doesn't require a stub buffer, because it never goes out on
      * the wire */
     if (!IsEqualIID(riid, &IID_IUnknown))
@@ -107,19 +116,19 @@ HRESULT marshal_object(APARTMENT *apt, STDOBJREF *stdobjref, REFIID riid, IUnkno
         if (hr != S_OK)
         {
             ERR("couldn't get IPSFactory buffer for interface %s\n", debugstr_guid(riid));
+            IUnknown_Release(iobject);
             return hr;
         }
     
-        hr = IPSFactoryBuffer_CreateStub(psfb, riid, obj, &stub);
+        hr = IPSFactoryBuffer_CreateStub(psfb, riid, iobject, &stub);
         IPSFactoryBuffer_Release(psfb);
         if (hr != S_OK)
         {
             ERR("Failed to create an IRpcStubBuffer from IPSFactory for %s\n", debugstr_guid(riid));
+            IUnknown_Release(iobject);
             return hr;
         }
     }
-    else /* need to addref object anyway */
-        IUnknown_AddRef(obj);
 
     if (mshlflags & MSHLFLAGS_NOPING)
         stdobjref->flags = SORF_NOPING;
@@ -128,16 +137,17 @@ HRESULT marshal_object(APARTMENT *apt, STDOBJREF *stdobjref, REFIID riid, IUnkno
 
     /* FIXME: what happens if we register an interface twice with different
      * marshaling flags? */
-    if ((manager = get_stub_manager_from_object(apt, obj)))
+    if ((manager = get_stub_manager_from_object(apt, object)))
         TRACE("registering new ifstub on pre-existing manager\n");
     else
     {
         TRACE("constructing new stub manager\n");
 
-        manager = new_stub_manager(apt, obj, mshlflags);
+        manager = new_stub_manager(apt, object, mshlflags);
         if (!manager)
         {
             if (stub) IRpcStubBuffer_Release(stub);
+            IUnknown_Release(iobject);
             return E_OUTOFMEMORY;
         }
     }
@@ -145,10 +155,11 @@ HRESULT marshal_object(APARTMENT *apt, STDOBJREF *stdobjref, REFIID riid, IUnkno
 
     tablemarshal = ((mshlflags & MSHLFLAGS_TABLESTRONG) || (mshlflags & MSHLFLAGS_TABLEWEAK));
 
-    ifstub = stub_manager_new_ifstub(manager, stub, obj, riid);
+    ifstub = stub_manager_new_ifstub(manager, stub, iobject, riid);
+    IUnknown_Release(iobject);
+    if (stub) IRpcStubBuffer_Release(stub);
     if (!ifstub)
     {
-        IRpcStubBuffer_Release(stub);
         stub_manager_int_release(manager);
         /* FIXME: should we do another release to completely destroy the
          * stub manager? */
@@ -763,7 +774,7 @@ HRESULT apartment_disconnectproxies(struct apartment *apt)
 typedef struct _StdMarshalImpl
 {
     const IMarshalVtbl	*lpvtbl;
-    DWORD		ref;
+    LONG		ref;
 
     IID			iid;
     DWORD		dwDestContext;
@@ -826,7 +837,6 @@ StdMarshalImpl_MarshalInterface(
     void* pvDestContext, DWORD mshlflags)
 {
     STDOBJREF             stdobjref;
-    IUnknown             *pUnk;  
     ULONG                 res;
     HRESULT               hres;
     APARTMENT            *apt = COM_CurrentApt();
@@ -842,18 +852,7 @@ StdMarshalImpl_MarshalInterface(
     /* make sure this apartment can be reached from other threads / processes */
     RPC_StartRemoting(apt);
 
-    hres = IUnknown_QueryInterface((LPUNKNOWN)pv, riid, (LPVOID*)&pUnk);
-    if (hres != S_OK)
-    {
-        ERR("object doesn't expose interface %s, failing with error 0x%08lx\n",
-            debugstr_guid(riid), hres);
-        return E_NOINTERFACE;
-    }
-
-    hres = marshal_object(apt, &stdobjref, riid, pUnk, mshlflags);
-  
-    IUnknown_Release(pUnk);
-  
+    hres = marshal_object(apt, &stdobjref, riid, (IUnknown *)pv, mshlflags);
     if (hres)
     {
         ERR("Failed to create ifstub, hres=0x%lx\n", hres);

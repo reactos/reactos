@@ -122,7 +122,7 @@ struct OLEClipbrd
   /*
    * Reference count of this object
    */
-  ULONG                      ref;
+  LONG                       ref;
 };
 
 typedef struct OLEClipbrd OLEClipbrd;
@@ -145,7 +145,7 @@ typedef struct
   /*
    * Reference count of this object
    */
-  DWORD                        ref;
+  LONG                         ref;
 
   /*
    * IUnknown implementation of the parent data object.

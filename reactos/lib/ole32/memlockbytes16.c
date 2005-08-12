@@ -53,7 +53,7 @@ struct HGLOBALLockBytesImpl16
    * since we want to cast this in an ILockBytes pointer
    */
   const ILockBytes16Vtbl *lpVtbl;
-  ULONG        ref;
+  LONG        ref;
 
   /*
    * Support for the LockBytes object
@@ -73,61 +73,6 @@ struct HGLOBALLockBytesImpl16
 
 typedef struct HGLOBALLockBytesImpl16 HGLOBALLockBytesImpl16;
 
-HGLOBALLockBytesImpl16* HGLOBALLockBytesImpl16_Construct(
-    HGLOBAL16  hGlobal,
-    BOOL16     fDeleteOnRelease);
-
-void HGLOBALLockBytesImpl16_Destroy(HGLOBALLockBytesImpl16* This);
-
-HRESULT WINAPI HGLOBALLockBytesImpl16_QueryInterface(
-    ILockBytes16* iface,
-    REFIID        riid,        /* [in] */
-    void**        ppvObject);  /* [out][iid_is] */
-
-ULONG WINAPI HGLOBALLockBytesImpl16_AddRef(
-    ILockBytes16* iface);
-
-ULONG WINAPI HGLOBALLockBytesImpl16_Release(
-    ILockBytes16* iface);
-
-HRESULT WINAPI HGLOBALLockBytesImpl16_ReadAt(
-    ILockBytes16*  iface,
-    ULARGE_INTEGER ulOffset,  /* [in] */
-    void*          pv,        /* [out][length_is][size_is] */
-    ULONG          cb,        /* [in] */
-    ULONG*         pcbRead);  /* [out] */
-
-HRESULT WINAPI HGLOBALLockBytesImpl16_WriteAt(
-    ILockBytes16*  iface,
-    ULARGE_INTEGER ulOffset,    /* [in] */
-    const void*    pv,          /* [in][size_is] */
-    ULONG          cb,          /* [in] */
-    ULONG*         pcbWritten); /* [out] */
-
-HRESULT WINAPI HGLOBALLockBytesImpl16_Flush(
-    ILockBytes16*   iface);
-
-HRESULT WINAPI HGLOBALLockBytesImpl16_SetSize(
-    ILockBytes16*   iface,
-    ULARGE_INTEGER  libNewSize);  /* [in] */
-
-HRESULT WINAPI HGLOBALLockBytesImpl16_LockRegion(
-    ILockBytes16*  iface,
-    ULARGE_INTEGER libOffset,   /* [in] */
-    ULARGE_INTEGER cb,          /* [in] */
-    DWORD          dwLockType); /* [in] */
-
-HRESULT WINAPI HGLOBALLockBytesImpl16_UnlockRegion(
-    ILockBytes16*  iface,
-    ULARGE_INTEGER libOffset,   /* [in] */
-    ULARGE_INTEGER cb,          /* [in] */
-    DWORD          dwLockType); /* [in] */
-
-HRESULT WINAPI HGLOBALLockBytesImpl16_Stat(
-    ILockBytes16*  iface,
-    STATSTG16*     pstatstg,     /* [out] */
-    DWORD          grfStatFlag); /* [in]  */
-
 /******************************************************************************
  *
  * HGLOBALLockBytesImpl16 implementation
@@ -142,7 +87,7 @@ HRESULT WINAPI HGLOBALLockBytesImpl16_Stat(
  *    fDeleteOnRelease - Flag set to TRUE if the HGLOBAL16 will be released
  *                       when the IStream object is destroyed.
  */
-HGLOBALLockBytesImpl16*
+static HGLOBALLockBytesImpl16*
 HGLOBALLockBytesImpl16_Construct(HGLOBAL16 hGlobal,
 				 BOOL16 fDeleteOnRelease)
 {
@@ -207,7 +152,7 @@ HGLOBALLockBytesImpl16_Construct(HGLOBAL16 hGlobal,
  * HGLOBALLockBytesImpl16 class. The pointer passed-in to this function will be
  * freed and will not be valid anymore.
  */
-void HGLOBALLockBytesImpl16_Destroy(HGLOBALLockBytesImpl16* This)
+static void HGLOBALLockBytesImpl16_Destroy(HGLOBALLockBytesImpl16* This)
 {
   TRACE("()\n");
   /*
@@ -226,10 +171,24 @@ void HGLOBALLockBytesImpl16_Destroy(HGLOBALLockBytesImpl16* This)
 }
 
 /******************************************************************************
+ * This implements the IUnknown method AddRef for this
+ * class
+ */
+ULONG HGLOBALLockBytesImpl16_AddRef(ILockBytes16* iface)
+{
+  HGLOBALLockBytesImpl16* const This=(HGLOBALLockBytesImpl16*)iface;
+
+  TRACE("(%p)\n",This);
+
+  return InterlockedIncrement(&This->ref);
+}
+
+
+/******************************************************************************
  * This implements the IUnknown method QueryInterface for this
  * class
  */
-HRESULT WINAPI HGLOBALLockBytesImpl16_QueryInterface(
+HRESULT HGLOBALLockBytesImpl16_QueryInterface(
       ILockBytes16*  iface,	/* [in] SEGPTR */
       REFIID       riid,        /* [in] */
       void**       ppvObject)   /* [out][iid_is] (ptr to SEGPTR!) */
@@ -258,8 +217,10 @@ HRESULT WINAPI HGLOBALLockBytesImpl16_QueryInterface(
   /*
    * Check that we obtained an interface.
    */
-  if ((*ppvObject)==0)
+  if ((*ppvObject)==0) {
+    FIXME("Unknown IID %s\n", debugstr_guid(riid));
     return E_NOINTERFACE;
+  }
 
   /*
    * Query Interface always increases the reference count by one when it is
@@ -271,23 +232,10 @@ HRESULT WINAPI HGLOBALLockBytesImpl16_QueryInterface(
 }
 
 /******************************************************************************
- * This implements the IUnknown method AddRef for this
- * class
- */
-ULONG WINAPI HGLOBALLockBytesImpl16_AddRef(ILockBytes16* iface)
-{
-  HGLOBALLockBytesImpl16* const This=(HGLOBALLockBytesImpl16*)iface;
-
-  TRACE("(%p)\n",This);
-
-  return InterlockedIncrement(&This->ref);
-}
-
-/******************************************************************************
  * This implements the IUnknown method Release for this
  * class
  */
-ULONG WINAPI HGLOBALLockBytesImpl16_Release(ILockBytes16* iface)
+ULONG HGLOBALLockBytesImpl16_Release(ILockBytes16* iface)
 {
   HGLOBALLockBytesImpl16* const This=(HGLOBALLockBytesImpl16*)iface;
   ULONG ref;
@@ -312,7 +260,7 @@ ULONG WINAPI HGLOBALLockBytesImpl16_Release(ILockBytes16* iface)
  *
  * See the documentation of ILockBytes for more info.
  */
-HRESULT WINAPI HGLOBALLockBytesImpl16_ReadAt(
+HRESULT HGLOBALLockBytesImpl16_ReadAt(
       ILockBytes16*  iface,
       ULARGE_INTEGER ulOffset,  /* [in] */
       void*          pv,        /* [out][length_is][size_is] */
@@ -380,12 +328,50 @@ HRESULT WINAPI HGLOBALLockBytesImpl16_ReadAt(
 /******************************************************************************
  * This method is part of the ILockBytes interface.
  *
+ * It will change the size of the byte array.
+ *
+ * See the documentation of ILockBytes for more info.
+ */
+HRESULT HGLOBALLockBytesImpl16_SetSize(
+      ILockBytes16*   iface,
+      ULARGE_INTEGER  libNewSize)   /* [in] */
+{
+  HGLOBALLockBytesImpl16* const This=(HGLOBALLockBytesImpl16*)iface;
+  HGLOBAL16 supportHandle;
+
+  TRACE("(%p,%ld)\n",This,libNewSize.u.LowPart);
+  /*
+   * As documented.
+   */
+  if (libNewSize.u.HighPart != 0)
+    return STG_E_INVALIDFUNCTION;
+
+  if (This->byteArraySize.u.LowPart == libNewSize.u.LowPart)
+    return S_OK;
+
+  /*
+   * Re allocate the HGlobal to fit the new size of the stream.
+   */
+  supportHandle = GlobalReAlloc16(This->supportHandle, libNewSize.u.LowPart, 0);
+
+  if (supportHandle == 0)
+    return STG_E_MEDIUMFULL;
+
+  This->supportHandle = supportHandle;
+  This->byteArraySize.u.LowPart = libNewSize.u.LowPart;
+
+  return S_OK;
+}
+
+/******************************************************************************
+ * This method is part of the ILockBytes interface.
+ *
  * It writes the specified bytes at the specified offset.
  * position. If the array is too small, it will be resized.
  *
  * See the documentation of ILockBytes for more info.
  */
-HRESULT WINAPI HGLOBALLockBytesImpl16_WriteAt(
+HRESULT HGLOBALLockBytesImpl16_WriteAt(
       ILockBytes16*  iface,
       ULARGE_INTEGER ulOffset,    /* [in] */
       const void*    pv,          /* [in][size_is] */
@@ -447,47 +433,9 @@ HRESULT WINAPI HGLOBALLockBytesImpl16_WriteAt(
  *
  * See the documentation of ILockBytes for more info.
  */
-HRESULT WINAPI HGLOBALLockBytesImpl16_Flush(ILockBytes16* iface)
+HRESULT HGLOBALLockBytesImpl16_Flush(ILockBytes16* iface)
 {
   TRACE("(%p)\n",iface);
-  return S_OK;
-}
-
-/******************************************************************************
- * This method is part of the ILockBytes interface.
- *
- * It will change the size of the byte array.
- *
- * See the documentation of ILockBytes for more info.
- */
-HRESULT WINAPI HGLOBALLockBytesImpl16_SetSize(
-      ILockBytes16*   iface,
-      ULARGE_INTEGER  libNewSize)   /* [in] */
-{
-  HGLOBALLockBytesImpl16* const This=(HGLOBALLockBytesImpl16*)iface;
-  HGLOBAL16 supportHandle;
-
-  TRACE("(%p,%ld)\n",This,libNewSize.u.LowPart);
-  /*
-   * As documented.
-   */
-  if (libNewSize.u.HighPart != 0)
-    return STG_E_INVALIDFUNCTION;
-
-  if (This->byteArraySize.u.LowPart == libNewSize.u.LowPart)
-    return S_OK;
-
-  /*
-   * Re allocate the HGlobal to fit the new size of the stream.
-   */
-  supportHandle = GlobalReAlloc16(This->supportHandle, libNewSize.u.LowPart, 0);
-
-  if (supportHandle == 0)
-    return STG_E_MEDIUMFULL;
-
-  This->supportHandle = supportHandle;
-  This->byteArraySize.u.LowPart = libNewSize.u.LowPart;
-
   return S_OK;
 }
 
@@ -498,7 +446,7 @@ HRESULT WINAPI HGLOBALLockBytesImpl16_SetSize(
  *
  * See the documentation of ILockBytes for more info.
  */
-HRESULT WINAPI HGLOBALLockBytesImpl16_LockRegion(
+HRESULT HGLOBALLockBytesImpl16_LockRegion(
       ILockBytes16*  iface,
       ULARGE_INTEGER libOffset,   /* [in] */
       ULARGE_INTEGER cb,          /* [in] */
@@ -514,7 +462,7 @@ HRESULT WINAPI HGLOBALLockBytesImpl16_LockRegion(
  *
  * See the documentation of ILockBytes for more info.
  */
-HRESULT WINAPI HGLOBALLockBytesImpl16_UnlockRegion(
+HRESULT HGLOBALLockBytesImpl16_UnlockRegion(
       ILockBytes16*  iface,
       ULARGE_INTEGER libOffset,   /* [in] */
       ULARGE_INTEGER cb,          /* [in] */
@@ -531,7 +479,7 @@ HRESULT WINAPI HGLOBALLockBytesImpl16_UnlockRegion(
  *
  * See the documentation of ILockBytes for more info.
  */
-HRESULT WINAPI HGLOBALLockBytesImpl16_Stat(
+HRESULT HGLOBALLockBytesImpl16_Stat(
       ILockBytes16*iface,
       STATSTG16*   pstatstg,     /* [out] */
       DWORD        grfStatFlag)  /* [in] */

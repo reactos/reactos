@@ -52,7 +52,7 @@ typedef struct ItemMonikerImpl{
      */
     const IROTDataVtbl*  lpvtbl2;  /* VTable relative to the IROTData interface.*/
 
-    ULONG ref; /* reference counter for this object */
+    LONG ref; /* reference counter for this object */
 
     LPOLESTR itemName; /* item name identified by this ItemMoniker */
 

@@ -188,7 +188,7 @@
 @ stdcall OleGetIconOfClass(ptr ptr long)
 @ stub OleGetIconOfFile
 @ stdcall OleInitialize(ptr)
-@ stdcall OleInitializeWOW(long)
+@ stdcall OleInitializeWOW(long long)
 @ stdcall OleIsCurrentClipboard(ptr)
 @ stdcall OleIsRunning(ptr)
 @ stdcall OleLoad(ptr ptr ptr ptr)

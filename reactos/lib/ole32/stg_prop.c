@@ -155,7 +155,7 @@ static const IPropertyStorageVtbl IPropertyStorage_Vtbl;
 typedef struct tagPropertyStorage_impl
 {
     const IPropertyStorageVtbl *vtbl;
-    DWORD ref;
+    LONG ref;
     CRITICAL_SECTION cs;
     IStream *stm;
     BOOL  dirty;

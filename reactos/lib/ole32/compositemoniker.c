@@ -54,7 +54,7 @@ typedef struct CompositeMonikerImpl{
      */
     const IROTDataVtbl*  lpvtbl2;  /* VTable relative to the IROTData interface.*/
 
-    ULONG ref; /* reference counter for this object */
+    LONG ref; /* reference counter for this object */
 
     IMoniker** tabMoniker; /* dynamaic table containing all components (monikers) of this composite moniker */
 
@@ -70,7 +70,7 @@ typedef struct EnumMonikerImpl{
 
     const IEnumMonikerVtbl *lpVtbl;  /* VTable relative to the IEnumMoniker interface.*/
 
-    ULONG ref; /* reference counter for this object */
+    LONG ref; /* reference counter for this object */
 
     IMoniker** tabMoniker; /* dynamic table containing the enumerated monikers */
 
