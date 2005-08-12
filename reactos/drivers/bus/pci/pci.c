@@ -296,7 +296,27 @@ PciCreateInstanceIDString(PUNICODE_STRING InstanceID,
 
   return TRUE;
 #endif
-  return PciCreateUnicodeString(InstanceID, L"0000", PagedPool);
+  WCHAR Buffer[256];
+
+  swprintf(Buffer,
+           L"PCI\\VEN_%04X&DEV_%04X&SUBSYS_%08X&REV_%02X",
+           Device->PciConfig.VendorID,
+           Device->PciConfig.DeviceID,
+           (Device->PciConfig.u.type0.SubSystemID << 16) +
+           Device->PciConfig.u.type0.SubVendorID,
+           Device->PciConfig.RevisionID);
+
+  // XBOX HACK
+  if (!wcscmp(L"PCI\\VEN_10DE&DEV_01C2&SUBSYS_00000000&REV_D4", Buffer))
+  {
+     //DPRINT("xbox ohci controler found at bus 0x%lX, dev num %d, func num %d\n", Device->BusNumber, Device->SlotNumber.u.bits.DeviceNumber, Device->SlotNumber.u.bits.FunctionNumber);
+	 if (Device->SlotNumber.u.bits.DeviceNumber == 2)
+       return PciCreateUnicodeString(InstanceID, L"0000", PagedPool);
+	 else
+       return PciCreateUnicodeString(InstanceID, L"0001", PagedPool);
+  }
+  else
+	return PciCreateUnicodeString(InstanceID, L"0000", PagedPool);
 }
 
 
