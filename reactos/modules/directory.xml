@@ -20,6 +20,13 @@
 		</xi:fallback>
 	</xi:include>
 </directory>
+<directory name="rosky">
+	<xi:include href="rosky/directory.xml">
+		<xi:fallback>
+			<xi:include href="empty.xml" />
+		</xi:fallback>
+	</xi:include>
+</directory>
 <directory name="vms">
 	<xi:include href="vms/directory.xml">
 		<xi:fallback>
