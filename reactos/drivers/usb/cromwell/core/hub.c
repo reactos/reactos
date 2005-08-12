@@ -7,7 +7,6 @@
  * (C) Copyright 2001 Brad Hards (bhards@bigpond.net.au)
  *
  */
-#define DEBUG
 #if 0
 #include <linux/config.h>
 #include <linux/kernel.h>
@@ -34,11 +33,13 @@
 
 #include "hcd.h"
 #include "hub.h"
+
 #else
+
 #include "../usb_wrapper.h"
 #include "hcd.h"
 #include "hub.h"
-#define DEBUG
+
 #endif
 
 /* Wakes up khubd */
@@ -152,7 +153,7 @@ static void hub_irq(struct urb *urb, struct pt_regs *regs)
 		
 	default:		/* presumably an error */
 		/* Cause a hub reset after 10 consecutive errors */
-		//printe("hub_irq got ...: error %d URB: %d",hub->error,urb->status);
+		printk("hub_irq got ...: error %d URB: %d",hub->error,urb->status);
 		
 		dev_dbg (&hub->intf->dev, "transfer --> %d\n", urb->status);
 		if ((++hub->nerrors < 10) || hub->error)
@@ -379,8 +380,8 @@ static int hub_configure(struct usb_hub *hub,
 		goto fail;
 	} else if (hub->descriptor->bNbrPorts > USB_MAXCHILDREN) {
 		message = "hub has too many ports!";
-		ret = -ENODEV;
-		goto fail;
+		// XBOX PATCH		hub->descriptor->bNbrPorts = 4;		//ret = -ENODEV;
+		//goto fail;
 	}
 
 	hub_dev = hubdev(dev);
@@ -517,6 +518,7 @@ static int hub_configure(struct usb_hub *hub,
 
 	/* Wake up khubd */
 	wake_up(&khubd_wait);
+	printk("hub_thread should woke up\n");
 
 	hub_power_on(hub);
 
@@ -597,7 +599,7 @@ static int hub_probe(struct usb_interface *intf, const struct usb_device_id *id)
 	/*  specs is not defined, but it works */
 	if ((desc->desc.bInterfaceSubClass != 0) &&
 	    (desc->desc.bInterfaceSubClass != 1)) {
-descriptor_error:
+//descriptor_error:
 		desc->desc.bInterfaceSubClass =0;
 		dev_err (&intf->dev, "bad descriptor, ignoring hub\n");
 		//return -EIO;
@@ -1208,6 +1210,8 @@ static void hub_events(void)
 // ReactOS: STDCALL is needed here
 static int STDCALL hub_thread(void *__hub)
 {
+	//LARGE_INTEGER delay;
+
 	/*
 	 * This thread doesn't need any user-level access,
 	 * so get rid of all our resources
@@ -1219,6 +1223,11 @@ static int STDCALL hub_thread(void *__hub)
 	// Initialize khubd spinlock
 	KeInitializeSpinLock((PKSPIN_LOCK)&hub_event_lock);
 
+		//delay.QuadPart = -10000000*5; // wait 5 seconds before powering up
+		//KeDelayExecutionThread(KernelMode, FALSE, &delay); //wait_us(1);
+
+	printk("hub_thread starting");
+
 	/* Send me a signal to get me die (for debugging) */
 	do {
 		LARGE_INTEGER delay;
@@ -1226,7 +1235,7 @@ static int STDCALL hub_thread(void *__hub)
 		/* The following is just for debug */
 		inc_jiffies(1);
         do_all_timers();
-        handle_irqs(-1);
+        //handle_irqs(-1);
 		/* End of debug hack*/
 		hub_events();
 		/* The following is just for debug */

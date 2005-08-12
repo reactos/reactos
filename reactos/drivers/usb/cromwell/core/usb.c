@@ -54,8 +54,6 @@
 #include "hcd.h"
 #endif
 
-#define DEBUG
-
 extern int  usb_hub_init(void);
 extern void usb_hub_cleanup(void);
 extern int usb_major_init(void);

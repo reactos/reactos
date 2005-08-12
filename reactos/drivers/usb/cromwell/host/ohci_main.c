@@ -5,6 +5,9 @@
 */
 
 #include <ddk/ntddk.h>
+#include <ddk/ntddkbd.h>
+#include <ddk/ntdd8042.h>
+
 #include <debug.h>
 #include "../usb_wrapper.h"
 #include "../core/hcd.h"
@@ -20,13 +23,73 @@ extern struct pci_driver ohci_pci_driver;
 extern const struct pci_device_id pci_ids[];
 
 
-
 // This should be removed, but for testing purposes it's here
 struct pci_dev *dev;
 //struct pci_device_id *dev_id;
+static bool xbox_workaround=false;
+
+// data for embedded drivers
+CONNECT_DATA KbdClassInformation;
+CONNECT_DATA MouseClassInformation;
+PDEVICE_OBJECT KeyboardFdo = NULL;
+PDEVICE_OBJECT MouseFdo = NULL;
 
 
 #define USB_OHCI_TAG TAG('u','s','b','o')
+
+NTSTATUS AddDevice_Keyboard(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT pdo)
+{
+	UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\KeyboardClass0");
+	PDEVICE_OBJECT fdo;
+	NTSTATUS Status;
+
+	Status = IoCreateDevice(DriverObject,
+	               8, // debug
+	               &DeviceName,
+	               FILE_DEVICE_KEYBOARD,
+	               FILE_DEVICE_SECURE_OPEN,
+	               TRUE,
+	               &fdo);
+
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT1("IoCreateDevice for usb keyboard driver failed\n");
+		return Status;
+	}
+	KeyboardFdo = fdo;
+	fdo->Flags &= ~DO_DEVICE_INITIALIZING;
+	DPRINT1("Created keyboard fdo: %p\n", fdo);
+
+	return STATUS_SUCCESS;
+}
+
+NTSTATUS AddDevice_Mouse(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT pdo)
+{
+	UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\PointerClass0");
+	PDEVICE_OBJECT fdo;
+	NTSTATUS Status;
+
+	Status = IoCreateDevice(DriverObject,
+	               8, // debug
+	               &DeviceName,
+	               FILE_DEVICE_MOUSE,
+	               FILE_DEVICE_SECURE_OPEN,
+	               TRUE,
+	               &fdo);
+
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT1("IoCreateDevice for usb mouse driver failed\n");
+		return Status;
+	}
+	MouseFdo = fdo;
+	fdo->Flags &= ~DO_DEVICE_INITIALIZING;
+
+	DPRINT1("Created mouse fdo: %p\n", fdo);
+
+	return STATUS_SUCCESS;
+}
+
 
 NTSTATUS STDCALL AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT pdo)
 {
@@ -39,6 +102,11 @@ NTSTATUS STDCALL AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT pdo)
 	ULONG Size, DeviceNumber;
 
 	DPRINT1("ohci: AddDevice called\n");
+
+	if (xbox_workaround)
+		return STATUS_INSUFFICIENT_RESOURCES; // Fail for any other host controller than the first
+	
+	xbox_workaround = true;
 
 	// Allocate driver extension now
 	DriverExtension = IoGetDriverObjectExtension(DriverObject, DriverObject);
@@ -105,8 +173,14 @@ NTSTATUS STDCALL AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT pdo)
 	}
 
 	DPRINT("Done AddDevice\n");
-	return STATUS_SUCCESS;
+
+	// create embedded keyboard driver
+	Status = AddDevice_Keyboard(DriverObject, pdo);
+	Status = AddDevice_Mouse(DriverObject, pdo);
+
+	return Status;
 }
+
 
 VOID STDCALL DriverUnload(PDRIVER_OBJECT DriverObject)
 {
@@ -196,6 +270,9 @@ OHCD_PnPStartDevice(IN PDEVICE_OBJECT DeviceObject,
 	NTSTATUS Status; // debug
 	LONGLONG delay; // debug
 
+	if (DeviceObject == KeyboardFdo || DeviceObject == MouseFdo)
+		return STATUS_SUCCESS;
+
 	/*
 	* Get the initialization data we saved in VideoPortInitialize.
 	*/
@@ -264,10 +341,12 @@ OHCD_PnPStartDevice(IN PDEVICE_OBJECT DeviceObject,
 	* Init wrapper with this object
 	*/
 	//return InitLinuxWrapper(DeviceObject);
+
+	// debug wait
 	Status = InitLinuxWrapper(DeviceObject);
 
-	delay = -10000000*60*2; // wait 2 minutes
-	KeDelayExecutionThread(KernelMode, FALSE, (LARGE_INTEGER *)&delay); //wait_us(1);
+	//delay = -10000000*30; // wait 30 secs
+	//KeDelayExecutionThread(KernelMode, FALSE, (LARGE_INTEGER *)&delay); //wait_us(1);
 
 	return Status;
 }
@@ -279,6 +358,9 @@ NTSTATUS STDCALL DispatchPnp(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    NTSTATUS Status;
 
    IrpSp = IoGetCurrentIrpStackLocation(Irp);
+
+   DPRINT("PNP for %p, minorfunc=0x%x\n", DeviceObject, IrpSp->MinorFunction);
+
 
    switch (IrpSp->MinorFunction)
    {
@@ -331,16 +413,254 @@ NTSTATUS STDCALL DispatchPower(PDEVICE_OBJECT fido, PIRP Irp)
 	return STATUS_SUCCESS;
 }
 
+NTSTATUS STDCALL UsbCoreDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+{
+	ULONG MajorFunction = IoGetCurrentIrpStackLocation(Irp)->MajorFunction;
+
+	DPRINT("usbohci: Dispatching major function 0x%lx\n", MajorFunction);
+
+	IoCompleteRequest (Irp, IO_NO_INCREMENT);
+	return STATUS_SUCCESS;
+}
+
+
+NTSTATUS STDCALL UsbCoreInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+{
+	NTSTATUS Status = STATUS_INVALID_DEVICE_REQUEST;
+
+	DPRINT("INT_IOCTL for %p, code=0x%x\n", DeviceObject, IoGetCurrentIrpStackLocation(Irp)->Parameters.DeviceIoControl.IoControlCode);
+
+	if (DeviceObject == KeyboardFdo)
+	{
+		// it's keyboard's IOCTL
+		PIO_STACK_LOCATION Stk;
+
+		Irp->IoStatus.Information = 0;
+		Stk = IoGetCurrentIrpStackLocation(Irp);
+
+		switch (Stk->Parameters.DeviceIoControl.IoControlCode) {
+			case IOCTL_INTERNAL_KEYBOARD_CONNECT:
+				DPRINT("IOCTL_INTERNAL_KEYBOARD_CONNECT\n");
+				if (Stk->Parameters.DeviceIoControl.InputBufferLength <	sizeof(CONNECT_DATA)) {
+					DPRINT1("Keyboard IOCTL_INTERNAL_KEYBOARD_CONNECT "
+							"invalid buffer	size\n");
+					Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+					goto intcontfailure;
+				}
+
+				memcpy(&KbdClassInformation,
+					Stk->Parameters.DeviceIoControl.Type3InputBuffer,
+					sizeof(CONNECT_DATA));
+	
+				Irp->IoStatus.Status = STATUS_SUCCESS;
+				break;
+
+		case IOCTL_INTERNAL_I8042_KEYBOARD_WRITE_BUFFER:
+			DPRINT("IOCTL_INTERNAL_I8042_KEYBOARD_WRITE_BUFFER\n");
+			if (Stk->Parameters.DeviceIoControl.InputBufferLength <	1) {
+				Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+				goto intcontfailure;
+			}
+/*			if (!DevExt->KeyboardInterruptObject) {
+				Irp->IoStatus.Status = STATUS_DEVICE_NOT_READY;
+				goto intcontfailure;
+			}*/
+
+			Irp->IoStatus.Status = STATUS_SUCCESS;
+			break;
+		case IOCTL_KEYBOARD_QUERY_ATTRIBUTES:
+			DPRINT("IOCTL_KEYBOARD_QUERY_ATTRIBUTES\n");
+			if (Stk->Parameters.DeviceIoControl.OutputBufferLength <
+				sizeof(KEYBOARD_ATTRIBUTES)) {
+					DPRINT("Keyboard IOCTL_KEYBOARD_QUERY_ATTRIBUTES "
+						"invalid buffer	size\n");
+					Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+					goto intcontfailure;
+				}
+				/*memcpy(Irp->AssociatedIrp.SystemBuffer,
+					&DevExt->KeyboardAttributes,
+					sizeof(KEYBOARD_ATTRIBUTES));*/
+
+				Irp->IoStatus.Status = STATUS_SUCCESS;
+				break;
+		case IOCTL_KEYBOARD_QUERY_INDICATORS:
+			DPRINT("IOCTL_KEYBOARD_QUERY_INDICATORS\n");
+			if (Stk->Parameters.DeviceIoControl.OutputBufferLength <
+				sizeof(KEYBOARD_INDICATOR_PARAMETERS)) {
+					DPRINT("Keyboard IOCTL_KEYBOARD_QUERY_INDICATORS "
+						"invalid buffer	size\n");
+					Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+					goto intcontfailure;
+				}
+				/*memcpy(Irp->AssociatedIrp.SystemBuffer,
+					&DevExt->KeyboardIndicators,
+					sizeof(KEYBOARD_INDICATOR_PARAMETERS));*/
+
+				Irp->IoStatus.Status = STATUS_SUCCESS;
+				break;
+		case IOCTL_KEYBOARD_QUERY_TYPEMATIC:
+			DPRINT("IOCTL_KEYBOARD_QUERY_TYPEMATIC\n");
+			if (Stk->Parameters.DeviceIoControl.OutputBufferLength <
+				sizeof(KEYBOARD_TYPEMATIC_PARAMETERS)) {
+					DPRINT("Keyboard IOCTL_KEYBOARD_QUERY_TYPEMATIC	"
+						"invalid buffer	size\n");
+					Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+					goto intcontfailure;
+				}
+				/*memcpy(Irp->AssociatedIrp.SystemBuffer,
+					&DevExt->KeyboardTypematic,
+					sizeof(KEYBOARD_TYPEMATIC_PARAMETERS));*/
+
+				Irp->IoStatus.Status = STATUS_SUCCESS;
+				break;
+		case IOCTL_KEYBOARD_SET_INDICATORS:
+			DPRINT("IOCTL_KEYBOARD_SET_INDICATORS\n");
+			if (Stk->Parameters.DeviceIoControl.InputBufferLength <
+				sizeof(KEYBOARD_INDICATOR_PARAMETERS)) {
+					DPRINT("Keyboard IOCTL_KEYBOARD_SET_INDICTATORS	"
+						"invalid buffer	size\n");
+					Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+					goto intcontfailure;
+				}
+
+				/*memcpy(&DevExt->KeyboardIndicators,
+					Irp->AssociatedIrp.SystemBuffer,
+					sizeof(KEYBOARD_INDICATOR_PARAMETERS));*/
+
+				//DPRINT("%x\n", DevExt->KeyboardIndicators.LedFlags);
+
+				Irp->IoStatus.Status = STATUS_SUCCESS;
+				break;
+		case IOCTL_KEYBOARD_SET_TYPEMATIC:
+			DPRINT("IOCTL_KEYBOARD_SET_TYPEMATIC\n");
+			if (Stk->Parameters.DeviceIoControl.InputBufferLength <
+				sizeof(KEYBOARD_TYPEMATIC_PARAMETERS)) {
+					DPRINT("Keyboard IOCTL_KEYBOARD_SET_TYPEMATIC "
+						"invalid buffer	size\n");
+					Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+					goto intcontfailure;
+				}
+
+				/*memcpy(&DevExt->KeyboardTypematic,
+					Irp->AssociatedIrp.SystemBuffer,
+					sizeof(KEYBOARD_TYPEMATIC_PARAMETERS));*/
+
+				Irp->IoStatus.Status = STATUS_SUCCESS;
+				break;
+		case IOCTL_KEYBOARD_QUERY_INDICATOR_TRANSLATION:
+			/* We should check the UnitID, but it's	kind of	pointless as
+			* all keyboards	are	supposed to	have the same one
+			*/
+#if 0
+			if (Stk->Parameters.DeviceIoControl.OutputBufferLength <
+				sizeof(LOCAL_KEYBOARD_INDICATOR_TRANSLATION)) {
+					DPRINT("IOCTL_KEYBOARD_QUERY_INDICATOR_TRANSLATION:	"
+						"invalid buffer	size (expected)\n");
+					/* It's	to query the buffer	size */
+					Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+					goto intcontfailure;
+				}
+				Irp->IoStatus.Information =
+					sizeof(LOCAL_KEYBOARD_INDICATOR_TRANSLATION);
+#endif
+				/*memcpy(Irp->AssociatedIrp.SystemBuffer,
+					&IndicatorTranslation,
+					sizeof(LOCAL_KEYBOARD_INDICATOR_TRANSLATION));*/
+
+				Irp->IoStatus.Status = STATUS_SUCCESS;
+				break;
+		case IOCTL_INTERNAL_I8042_HOOK_KEYBOARD:
+			/* Nothing to do here */
+			Irp->IoStatus.Status = STATUS_SUCCESS;
+			break;
+		default:
+			Irp->IoStatus.Status = STATUS_INVALID_DEVICE_REQUEST;
+			break;
+			}
+
+	intcontfailure:
+			Status = Irp->IoStatus.Status;
+	}
+	else if (DeviceObject == MouseFdo)
+	{
+		// it's mouse's IOCTL
+		PIO_STACK_LOCATION Stk;
+
+		Irp->IoStatus.Information = 0;
+		Stk = IoGetCurrentIrpStackLocation(Irp);
+
+		switch (Stk->Parameters.DeviceIoControl.IoControlCode) {
+			case IOCTL_INTERNAL_MOUSE_CONNECT:
+				DPRINT("IOCTL_INTERNAL_MOUSE_CONNECT\n");
+				if (Stk->Parameters.DeviceIoControl.InputBufferLength <	sizeof(CONNECT_DATA)) {
+					DPRINT1("Mouse IOCTL_INTERNAL_MOUSE_CONNECT "
+							"invalid buffer	size\n");
+					Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+					goto intcontfailure2;
+				}
+
+				memcpy(&MouseClassInformation,
+					Stk->Parameters.DeviceIoControl.Type3InputBuffer,
+					sizeof(CONNECT_DATA));
+	
+				Irp->IoStatus.Status = STATUS_SUCCESS;
+				break;
+
+		default:
+			Irp->IoStatus.Status = STATUS_SUCCESS;//STATUS_INVALID_DEVICE_REQUEST;
+			break;
+			}
+	intcontfailure2:
+			Status = Irp->IoStatus.Status;
+	}
+	else
+	{
+		DPRINT("We got IOCTL for UsbCore\n");
+		IoCompleteRequest(Irp, IO_NO_INCREMENT);
+		return STATUS_SUCCESS;
+	}
+
+
+	if (Status == STATUS_INVALID_DEVICE_REQUEST) {
+		DPRINT1("Invalid internal device request!\n");
+	}
+
+	if (Status != STATUS_PENDING)
+		IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+	return Status;
+}
+
+
 /*
  * Standard DriverEntry method.
  */
 NTSTATUS STDCALL
 DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING RegPath)
 {
+	int i;
+	USBPORT_INTERFACE UsbPortInterface;
+
 	DriverObject->DriverUnload = DriverUnload;
 	DriverObject->DriverExtension->AddDevice = AddDevice;
+
+	for (i = 0; i < IRP_MJ_MAXIMUM_FUNCTION; i++)
+		DriverObject->MajorFunction[i] = UsbCoreDispatch;
+
 	DriverObject->MajorFunction[IRP_MJ_PNP] = DispatchPnp;
 	DriverObject->MajorFunction[IRP_MJ_POWER] = DispatchPower;
+	DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = UsbCoreInternalDeviceControl;
+
+	// Register in usbcore.sys
+	UsbPortInterface.KbdConnectData = &KbdClassInformation;
+	UsbPortInterface.MouseConnectData = &MouseClassInformation;
+	
+	KbdClassInformation.ClassService = NULL;
+	KbdClassInformation.ClassDeviceObject = NULL;
+	MouseClassInformation.ClassService = NULL;
+	MouseClassInformation.ClassDeviceObject = NULL;
+	
+	RegisterPortDriver(DriverObject, &UsbPortInterface);
 
 	return STATUS_SUCCESS;
 }

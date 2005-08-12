@@ -201,8 +201,8 @@ int STDCALL usb_submit_urb(struct urb *urb, int mem_flags)
 	struct usb_device	*dev;
 	struct usb_operations	*op;
 	int			is_out;
-	printk("sub dev %p bus %p num %i op %p sub %p\n",
-	       urb->dev, urb->dev->bus,urb->dev->devnum,urb->dev->bus->op, urb->dev->bus->op->submit_urb);
+	//printk("sub dev %p bus %p num %i op %p sub %p\n",
+	//       urb->dev, urb->dev->bus,urb->dev->devnum,urb->dev->bus->op, urb->dev->bus->op->submit_urb);
 	if (!urb || urb->hcpriv || !urb->complete)
 		return -EINVAL;
 	if (!(dev = urb->dev) ||

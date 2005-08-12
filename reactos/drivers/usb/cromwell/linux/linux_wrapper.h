@@ -703,13 +703,12 @@ extern struct list_head interrupt_list;
 /*------------------------------------------------------------------------*/ 
 void STDCALL usb_hcd_pci_remove (struct pci_dev *dev);
 
-#define my_wait_ms(x) wait_ms(x)
+#define my_wait_ms(x) wait_ms(x) // milliseconds
 
-#define my_udelay(x) wait_ms(x)
-#define udelay(x) my_udelay(x)
+#define udelay(x) my_udelay(x) // microseconds
 
 #define my_mdelay(x) wait_ms(1+x/1000);
-#define mdelay(x) my_mdelay(x);
+#define mdelay(x) my_mdelay(x); // milliseconds = udelay(1000*x)
 
 #define pci_find_slot(a,b) my_pci_find_slot(a,b)
 struct pci_dev *my_pci_find_slot(int a,int b);
@@ -851,3 +850,7 @@ void do_all_timers(void);
 
 int my_pci_write_config_word(struct pci_dev *, int, u16);
 
+void UsbKeyBoardInit(void);
+void UsbKeyBoardRemove(void);
+void UsbMouseInit(void);
+void UsbMouseRemove(void);

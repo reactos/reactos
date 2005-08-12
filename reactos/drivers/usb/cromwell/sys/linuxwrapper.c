@@ -258,7 +258,7 @@ int my_schedule_timeout(int x)
 	x+=5; // safety
 	x = x*1000;	// to us format
 	*/
-	x = 300; // it's enough for most purposes
+	x = 50; // it's enough for most purposes
 
 	while(x>0)
 	{
@@ -701,7 +701,7 @@ void * my_pci_pool_alloc(struct pci_pool * pool, int mem_flags, dma_addr_t *dma_
 
 			if ((i + block) < pool->blocks_per_page)
 			{
-				DPRINT("pci_pool_alloc(): Allocating block %p:%d:%d:%d\n", pool, page, map, block);
+				//DPRINT("pci_pool_alloc(): Allocating block %p:%d:%d:%d\n", pool, page, map, block);
 				clear_bit(block, &pool->pages[page].bitmap[map]);
 				offset = (BITS_PER_LONG * map) + block;
 				offset *= pool->size;
@@ -763,7 +763,7 @@ void my_pci_pool_free (struct pci_pool * pool, void * vaddr, dma_addr_t dma)
 	set_bit (block, &pool->pages[page].bitmap[map]);
 
 	pool->blocks_allocated--;
-	DPRINT("pci_pool_free(): alloc'd: %d\n", pool->blocks_allocated);
+	//DPRINT("pci_pool_free(): alloc'd: %d\n", pool->blocks_allocated);
 }
 
 /*
