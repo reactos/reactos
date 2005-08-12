@@ -321,7 +321,7 @@
 @ stdcall SetupDiGetDeviceInfoListDetailA(ptr ptr)
 @ stdcall SetupDiGetDeviceInfoListDetailW(ptr ptr)
 @ stdcall SetupDiGetDeviceInstallParamsA(ptr ptr ptr)
-@ stub SetupDiGetDeviceInstallParamsW
+@ stdcall SetupDiGetDeviceInstallParamsW(ptr ptr ptr)
 @ stub SetupDiGetDeviceInstanceIdA
 @ stub SetupDiGetDeviceInstanceIdW
 @ stdcall SetupDiGetDeviceRegistryPropertyA(long ptr long ptr ptr long ptr)
@@ -350,8 +350,9 @@
 @ stub SetupDiInstallClassExA
 @ stub SetupDiInstallClassExW
 @ stdcall SetupDiInstallClassW(long wstr long ptr)
-@ stub SetupDiInstallDevice
-@ stub SetupDiInstallDriverFiles
+@ stdcall SetupDiInstallDevice(ptr ptr)
+@ stdcall SetupDiInstallDeviceInterfaces(ptr ptr)
+@ stdcall SetupDiInstallDriverFiles(ptr ptr)
 @ stub SetupDiLoadClassIcon
 @ stub SetupDiMoveDuplicateDevice
 @ stdcall SetupDiOpenClassRegKey(ptr long)
@@ -363,9 +364,11 @@
 @ stdcall SetupDiOpenDeviceInterfaceA(ptr str long ptr)
 @ stub SetupDiOpenDeviceInterfaceRegKey
 @ stdcall SetupDiOpenDeviceInterfaceW(ptr wstr long ptr)
+@ stdcall SetupDiRegisterCoDeviceInstallers(ptr ptr)
 @ stub SetupDiRegisterDeviceInfo
 @ stub SetupDiRemoveDevice
 @ stub SetupDiRemoveDeviceInterface
+@ stdcall SetupDiSelectBestCompatDrv(ptr ptr)
 @ stub SetupDiSelectDevice
 @ stub SetupDiSelectOEMDrv
 @ stdcall SetupDiSetClassInstallParamsA(ptr ptr ptr long)

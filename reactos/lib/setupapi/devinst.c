@@ -79,8 +79,32 @@ static const WCHAR EnumKeyName[] = {'S','y','s','t','e','m','\\',
 /* FIXME: header mess */
 DEFINE_GUID(GUID_NULL,
   0x00000000L, 0x0000, 0x0000, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00);
+typedef DWORD
+(CALLBACK* CLASS_INSTALL_PROC) (
+    IN DI_FUNCTION InstallFunction,
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL);
+typedef BOOL
+(WINAPI* DEFAULT_CLASS_INSTALL_PROC) (
+    IN HDEVINFO DeviceInfoSet,
+    IN OUT PSP_DEVINFO_DATA DeviceInfoData);
+typedef DWORD 
+(CALLBACK* COINSTALLER_PROC) (
+    IN DI_FUNCTION InstallFunction,
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
+    IN OUT PCOINSTALLER_CONTEXT_DATA Context);
 
 #define SETUP_DEV_INFO_SET_MAGIC 0xd00ff057
+
+struct CoInstallerElement
+{
+    LIST_ENTRY ListEntry;
+
+    COINSTALLER_PROC Function;
+    BOOL DoPostProcessing;
+    PVOID PrivateData;
+};
 
 struct DeviceInterface /* Element of DeviceInfoElement.InterfaceListHead */
 {
@@ -2758,21 +2782,303 @@ BOOL WINAPI SetupDiSetClassInstallParamsA(
  *		SetupDiCallClassInstaller (SETUPAPI.@)
  */
 BOOL WINAPI SetupDiCallClassInstaller(
-       DI_FUNCTION InstallFunction,
-       HDEVINFO DeviceInfoSet,
-       PSP_DEVINFO_DATA DeviceInfoData)
+       IN DI_FUNCTION InstallFunction,
+       IN HDEVINFO DeviceInfoSet,
+       IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL)
 {
-    FIXME("%ld %p %p\n", InstallFunction, DeviceInfoSet, DeviceInfoData);
-    return FALSE;
+    BOOL ret = FALSE;
+
+    TRACE("%ld %p %p\n", InstallFunction, DeviceInfoSet, DeviceInfoData);
+
+    if (!DeviceInfoSet)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if (((struct DeviceInfoSet *)DeviceInfoSet)->HKLM != HKEY_LOCAL_MACHINE)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if (DeviceInfoData && DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else
+    {
+#define CLASS_COINSTALLER  0x1
+#define DEVICE_COINSTALLER 0x2
+#define CLASS_INSTALLER    0x4
+        UCHAR CanHandle = 0;
+        DEFAULT_CLASS_INSTALL_PROC DefaultHandler = NULL;
+
+        switch (InstallFunction)
+        {
+            case DIF_ALLOW_INSTALL:
+                CanHandle = CLASS_COINSTALLER | CLASS_INSTALLER;
+                break;
+            case DIF_DESTROYPRIVATEDATA:
+                CanHandle = CLASS_INSTALLER;
+                break;
+            case DIF_INSTALLDEVICE:
+                CanHandle = CLASS_COINSTALLER | DEVICE_COINSTALLER | CLASS_INSTALLER;
+                DefaultHandler = SetupDiInstallDevice;
+                break;
+            case DIF_INSTALLDEVICEFILES:
+                CanHandle = CLASS_COINSTALLER | CLASS_INSTALLER;
+                DefaultHandler = SetupDiInstallDriverFiles;
+                break;
+            case DIF_INSTALLINTERFACES:
+                CanHandle = CLASS_COINSTALLER | DEVICE_COINSTALLER | CLASS_INSTALLER;
+                DefaultHandler = SetupDiInstallDeviceInterfaces;
+                break;
+            case DIF_NEWDEVICEWIZARD_FINISHINSTALL:
+                CanHandle = CLASS_COINSTALLER | DEVICE_COINSTALLER | CLASS_INSTALLER;
+                break;
+            case DIF_NEWDEVICEWIZARD_POSTANALYZE:
+                CanHandle = CLASS_COINSTALLER | CLASS_INSTALLER;
+                break;
+            case DIF_NEWDEVICEWIZARD_PREANALYZE:
+                CanHandle = CLASS_COINSTALLER | CLASS_INSTALLER;
+                break;
+            case DIF_REGISTER_COINSTALLERS:
+                CanHandle = CLASS_COINSTALLER | CLASS_INSTALLER;
+                DefaultHandler = SetupDiRegisterCoDeviceInstallers;
+                break;
+            case DIF_SELECTBESTCOMPATDRV:
+                CanHandle = CLASS_COINSTALLER | CLASS_INSTALLER;
+                DefaultHandler = SetupDiSelectBestCompatDrv;
+                break;
+            default:
+                FIXME("Install function %ld not implemented\n", InstallFunction);
+                SetLastError(ERROR_INVALID_PARAMETER);
+        }
+
+        if (CanHandle != 0)
+        {
+            LIST_ENTRY ClassCoInstallersListHead;
+            LIST_ENTRY DeviceCoInstallersListHead;
+            CLASS_INSTALL_PROC ClassInstaller = NULL;
+            COINSTALLER_CONTEXT_DATA Context;
+            PLIST_ENTRY ListEntry;
+            HKEY hKey;
+            DWORD dwRegType, dwLength;
+            DWORD rc = NO_ERROR;
+
+            InitializeListHead(&ClassCoInstallersListHead);
+            InitializeListHead(&DeviceCoInstallersListHead);
+
+            if (CanHandle & CLASS_COINSTALLER)
+            {
+                FIXME("Doesn't use Class co-installers at the moment\n");
+            }
+            if (CanHandle & DEVICE_COINSTALLER)
+            {
+                rc = RegOpenKeyEx(
+                    HKEY_LOCAL_MACHINE,
+                    L"SYSTEM\\CurrentControlSet\\Control\\CoDeviceInstallers",
+                    0, /* Options */
+                    KEY_QUERY_VALUE,
+                    &hKey);
+                if (rc == ERROR_SUCCESS)
+                {
+                    LPWSTR lpGuidString;
+                    if (UuidToStringW((UUID*)&DeviceInfoData->ClassGuid, &lpGuidString) == RPC_S_OK)
+                    {
+                        rc = RegQueryValueExW(hKey, L"Installer32", NULL, &dwRegType, NULL, &dwLength);
+                        if (rc == ERROR_SUCCESS && dwRegType == REG_SZ)
+                        {
+                            LPWSTR KeyBuffer = HeapAlloc(GetProcessHeap(), 0, dwLength);
+                            if (KeyBuffer != NULL)
+                            {
+                                rc = RegQueryValueExW(hKey, L"Installer32", NULL, NULL, (LPBYTE)KeyBuffer, &dwLength);
+                                if (rc == ERROR_SUCCESS)
+                                {
+                                    LPCWSTR ptr;
+                                    for (ptr = KeyBuffer; *ptr; ptr += strlenW(ptr) + 1)
+                                    {
+                                        /* Add coinstaller to DeviceCoInstallersListHead list */
+                                        FIXME("Device coinstaller is '%S'\n", ptr);
+                                    }
+                                }
+                                HeapFree(GetProcessHeap(), 0, KeyBuffer);
+                            }
+                        }
+                        RpcStringFreeW(&lpGuidString);
+                    }
+                    RegCloseKey(hKey);
+                }
+            }
+            if (CanHandle & CLASS_INSTALLER)
+            {
+                hKey = SetupDiOpenClassRegKey(&DeviceInfoData->ClassGuid, KEY_QUERY_VALUE);
+                if (hKey != INVALID_HANDLE_VALUE)
+                {
+                    rc = RegQueryValueExW(hKey, L"Installer32", NULL, &dwRegType, NULL, &dwLength);
+                    if (rc == ERROR_SUCCESS && dwRegType == REG_SZ)
+                    {
+                        LPWSTR KeyBuffer = HeapAlloc(GetProcessHeap(), 0, dwLength);
+                        if (KeyBuffer != NULL)
+                        {
+                            rc = RegQueryValueExW(hKey, L"Installer32", NULL, NULL, (LPBYTE)KeyBuffer, &dwLength);
+                            if (rc == ERROR_SUCCESS)
+                            {
+                                /* Set ClassInstaller function pointer */
+                                FIXME("Installer is '%S'\n", KeyBuffer);
+                            }
+                            HeapFree(GetProcessHeap(), 0, KeyBuffer);
+                        }
+                    }
+                    RegCloseKey(hKey);
+                }
+            }
+
+            /* Call Class co-installers */
+            Context.PostProcessing = FALSE;
+            rc = NO_ERROR;
+            ListEntry = ClassCoInstallersListHead.Flink;
+            while (rc == NO_ERROR && ListEntry != &ClassCoInstallersListHead)
+            {
+                struct CoInstallerElement *coinstaller = (struct CoInstallerElement *)ListEntry;
+                rc = (*coinstaller->Function)(InstallFunction, DeviceInfoSet, DeviceInfoData, &Context);
+                coinstaller->PrivateData = Context.PrivateData;
+                if (rc == ERROR_DI_POSTPROCESSING_REQUIRED)
+                {
+                    coinstaller->DoPostProcessing = TRUE;
+                    rc = NO_ERROR;
+                }
+                ListEntry = ListEntry->Flink;
+            }
+
+            /* Call Device co-installers */
+            ListEntry = DeviceCoInstallersListHead.Flink;
+            while (rc == NO_ERROR && ListEntry != &DeviceCoInstallersListHead)
+            {
+                struct CoInstallerElement *coinstaller = (struct CoInstallerElement *)ListEntry;
+                rc = (*coinstaller->Function)(InstallFunction, DeviceInfoSet, DeviceInfoData, &Context);
+                coinstaller->PrivateData = Context.PrivateData;
+                if (rc == ERROR_DI_POSTPROCESSING_REQUIRED)
+                {
+                    coinstaller->DoPostProcessing = TRUE;
+                    rc = NO_ERROR;
+                }
+                ListEntry = ListEntry->Flink;
+            }
+
+            /* Call Class installer */
+            if (ClassInstaller)
+                rc = (*ClassInstaller)(InstallFunction, DeviceInfoSet, DeviceInfoData);
+            else
+                rc = ERROR_DI_DO_DEFAULT;
+
+            /* Call default handler */
+            if (rc == ERROR_DI_DO_DEFAULT)
+            {
+                if (DefaultHandler /*FIXME && DI_NODI_DEFAULTACTION not set */)
+                {
+                    if ((*DefaultHandler)(DeviceInfoSet, DeviceInfoData))
+                        rc = NO_ERROR;
+                    else
+                        rc = GetLastError();
+                }
+                else
+                    rc = NO_ERROR;
+            }
+
+            /* Call Class co-installers that required postprocessing */
+            Context.PostProcessing = TRUE;
+            ListEntry = ClassCoInstallersListHead.Flink;
+            while (ListEntry != &ClassCoInstallersListHead)
+            {
+                struct CoInstallerElement *coinstaller = (struct CoInstallerElement *)ListEntry;
+                if (coinstaller->DoPostProcessing)
+                {
+                    Context.InstallResult = rc;
+                    Context.PrivateData = coinstaller->PrivateData;
+                    rc = (*coinstaller->Function)(InstallFunction, DeviceInfoSet, DeviceInfoData, &Context);
+                }
+                ListEntry = ListEntry->Flink;
+            }
+
+            /* Call Device co-installers that required postprocessing */
+            ListEntry = DeviceCoInstallersListHead.Flink;
+            while (ListEntry != &DeviceCoInstallersListHead)
+            {
+                struct CoInstallerElement *coinstaller = (struct CoInstallerElement *)ListEntry;
+                if (coinstaller->DoPostProcessing)
+                {
+                    Context.InstallResult = rc;
+                    Context.PrivateData = coinstaller->PrivateData;
+                    rc = (*coinstaller->Function)(InstallFunction, DeviceInfoSet, DeviceInfoData, &Context);
+                }
+                ListEntry = ListEntry->Flink;
+            }
+
+            /* Free allocated memory */
+            while (!IsListEmpty(&ClassCoInstallersListHead))
+            {
+                ListEntry = RemoveHeadList(&ClassCoInstallersListHead);
+                HeapFree(GetProcessHeap(), 0, ListEntry);
+            }
+            while (!IsListEmpty(&DeviceCoInstallersListHead))
+            {
+                ListEntry = RemoveHeadList(&DeviceCoInstallersListHead);
+                HeapFree(GetProcessHeap(), 0, ListEntry);
+            }
+
+            ret = (rc == NO_ERROR);
+        }
+    }
+
+    TRACE("Returning %d\n", ret);
+    return ret;
 }
 
 /***********************************************************************
  *		SetupDiGetDeviceInstallParamsA (SETUPAPI.@)
  */
 BOOL WINAPI SetupDiGetDeviceInstallParamsA(
-       HDEVINFO DeviceInfoSet,
-       PSP_DEVINFO_DATA DeviceInfoData,
-       PSP_DEVINSTALL_PARAMS_A DeviceInstallParams)
+       IN HDEVINFO DeviceInfoSet,
+       IN PSP_DEVINFO_DATA DeviceInfoData,
+       OUT PSP_DEVINSTALL_PARAMS_A DeviceInstallParams)
+{
+    SP_DEVINSTALL_PARAMS_W deviceInstallParamsW;
+    BOOL ret = FALSE;
+
+    TRACE("%p %p %p\n", DeviceInfoSet, DeviceInfoData, DeviceInstallParams);
+
+    if (DeviceInstallParams == NULL)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (DeviceInstallParams->cbSize != sizeof(SP_DEVINSTALL_PARAMS_A))
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else
+    {
+        deviceInstallParamsW.cbSize = sizeof(SP_DEVINSTALL_PARAMS_W);
+        ret = SetupDiGetDeviceInstallParamsW(DeviceInfoSet, DeviceInfoData, &deviceInstallParamsW);
+
+        if (ret)
+        {
+            /* Do W->A conversion */
+            memcpy(
+                DeviceInstallParams,
+                &deviceInstallParamsW,
+                FIELD_OFFSET(SP_DEVINSTALL_PARAMS_W, DriverPath));
+            if (WideCharToMultiByte(CP_ACP, 0, deviceInstallParamsW.DriverPath, -1,
+                DeviceInstallParams->DriverPath, MAX_PATH, NULL, NULL) == 0)
+            {
+                DeviceInstallParams->DriverPath[0] = '\0';
+                ret = FALSE;
+            }
+        }
+    }
+
+    TRACE("Returning %d\n", ret);
+    return ret;
+}
+
+/***********************************************************************
+ *		SetupDiGetDeviceInstallParamsW (SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiGetDeviceInstallParamsW(
+       IN HDEVINFO DeviceInfoSet,
+       IN PSP_DEVINFO_DATA DeviceInfoData,
+       OUT PSP_DEVINSTALL_PARAMS_W DeviceInstallParams)
 {
     FIXME("%p %p %p\n", DeviceInfoSet, DeviceInfoData, DeviceInstallParams);
     return FALSE;
@@ -3863,4 +4169,115 @@ SetupDiSetSelectedDriverW(
 
     TRACE("Returning %d\n", ret);
     return ret;
+}
+
+/***********************************************************************
+ *		SetupDiSelectBestCompatDrv (SETUPAPI.@)
+ */
+BOOL WINAPI
+SetupDiSelectBestCompatDrv(
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData)
+{
+    SP_DRVINFO_DATA_W drvInfoData;
+    BOOL ret;
+
+    TRACE("%p %p\n", DeviceInfoSet, DeviceInfoData);
+
+    FIXME("SetupDiSelectBestCompatDrv() is selecting the 1st driver...\n");
+
+    drvInfoData.cbSize = sizeof(SP_DRVINFO_DATA_W);
+    ret = SetupDiEnumDriverInfoW(
+        DeviceInfoSet,
+        DeviceInfoData,
+        SPDIT_COMPATDRIVER,
+        0, /* Member index */
+        &drvInfoData);
+
+    if (ret)
+    {
+        ret = SetupDiSetSelectedDriverW(
+            DeviceInfoSet,
+            DeviceInfoData,
+            &drvInfoData);
+    }
+
+    TRACE("Returning %d\n", ret);
+    return ret;
+}
+
+/***********************************************************************
+ *		SetupDiInstallDriverFiles (SETUPAPI.@)
+ */
+BOOL WINAPI
+SetupDiInstallDriverFiles(
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL)
+{
+    TRACE("%p %p\n", DeviceInfoSet, DeviceInfoData);
+
+    FIXME("SetupDiInstallDriverFiles not implemented. Doing nothing\n");
+    //SetLastError(ERROR_GEN_FAILURE);
+    //return FALSE;
+    return TRUE;
+}
+
+/***********************************************************************
+ *		SetupDiRegisterCoDeviceInstallers (SETUPAPI.@)
+ */
+BOOL WINAPI
+SetupDiRegisterCoDeviceInstallers(
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData)
+{
+    TRACE("%p %p\n", DeviceInfoSet, DeviceInfoData);
+
+    FIXME("SetupDiRegisterCoDeviceInstallers not implemented. Doing nothing\n");
+    //SetLastError(ERROR_GEN_FAILURE);
+    //return FALSE;
+    return TRUE;
+}
+
+/***********************************************************************
+ *		SetupDiInstallDeviceInterfaces (SETUPAPI.@)
+ */
+BOOL WINAPI
+SetupDiInstallDeviceInterfaces(
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData)
+{
+    TRACE("%p %p\n", DeviceInfoSet, DeviceInfoData);
+
+    FIXME("SetupDiInstallDeviceInterfaces not implemented. Doing nothing\n");
+    //SetLastError(ERROR_GEN_FAILURE);
+    //return FALSE;
+    return TRUE;
+}
+
+/***********************************************************************
+ *		SetupDiInstallDevice (SETUPAPI.@)
+ */
+BOOL WINAPI
+SetupDiInstallDevice(
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData)
+{
+    TRACE("%p %p\n", DeviceInfoSet, DeviceInfoData);
+
+    /* Steps to follow:
+     * 0. If DI_FLAGSEX_SETFAILEDINSTALL is set, set FAILEDINSTALL flag in ConfigFlags registry and exit
+     * 1. Create driver key and write InfPath and ProviderName
+     * 2a Process inf sections: {DDInstall}, {DDInstall}.HW [SetupDiOpenDevRegKey]
+     *  b Process {DDInstall}.LogConfigOverride if present [SetupDiOpenDevRegKey]
+     *  c Process {DDInstall}.Services [SetupDiOpenDevRegKey]
+     * 3. Copy inf file to Inf\ directory [SetupCopyOEMInf]
+     * 4. Install other waiting files
+     * 5. Load the driver/Call AddDevice
+     * 6. Send IRP_MN_START_DEVICE if DI_NEEDRESTART, DI_NEEDREBOOT and DI_DONOTCALLCONFIGMG are not set
+     */
+
+    FIXME("SetupDiInstallDevice not implemented. Doing nothing\n");
+    //SetLastError(ERROR_GEN_FAILURE);
+    //return FALSE;
+    return TRUE;
 }
