@@ -7,6 +7,14 @@ CcRosInitializeFileCache (PFILE_OBJECT	FileObject,
 NTSTATUS STDCALL
 CcRosReleaseFileCache (PFILE_OBJECT	FileObject);
 
+struct _BCB;
+
+VOID
+STDCALL
+CcRosTraceCacheMap (
+	struct _BCB* Bcb,
+	BOOLEAN Trace );
+
 #define FSCTL_ROS_QUERY_LCN_MAPPING \
         CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 63, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
