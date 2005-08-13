@@ -14,28 +14,54 @@ typedef struct _CSR_SESSION
 
 typedef struct _CSR_PROCESS
 {
-	HANDLE        Process;
-	PCSR_SESSION  CsrSession;
+	CLIENT_ID     ClientId;
+	LIST_ENTRY    ListLink;
+	LIST_ENTRY    ThreadList;
+	PCSR_SESSION  NtSession;
+	ULONG         ExpectedVersion;
+	HANDLE        ClientPort;
+	ULONG_PTR     ClientViewBase;
+	ULONG_PTR     ClientViewBounds;
+	HANDLE        ProcessHandle;
+	ULONG         SequenceNumber;
+	ULONG         Flags;
+	ULONG         DebugFlags;
 	ULONG         ReferenceCount;
-	PVOID         ServerData;
+	ULONG         ProcessGroupId;
+	ULONG         ProcessGroupSequence;
+	ULONG         fVDM;
+	ULONG         ThreadCount;
+	ULONG         PriorityClass;
+	ULONG         Reserved;
+	ULONG         ShutdownLevel;
+	ULONG         ShutdownFlags;
+	PVOID         ServerData; 
 	
 } CSR_PROCESS, * PCSR_PROCESS;
 
+struct _CSR_WAIT;
+
 typedef struct _CSR_THREAD
 {
-	HANDLE        Thread;
-	PCSR_SESSION  CsrSession;
-	PCSR_PROCESS  CsrProcess;
-	ULONG         ReferenceCount;
-	PVOID         ServerData;
+	LARGE_INTEGER     CreateTime;
+	LIST_ENTRY        Link;
+	LIST_ENTRY        HashLinks;
+	CLIENT_ID         ClientId;
+	PCSR_PROCESS      Process;
+	struct _CSR_WAIT  *WaitBlock;
+	HANDLE            ThreadHandle;
+	ULONG             Flags;
+	ULONG             ReferenceCount;
+	ULONG             ImpersonationCount; 
 	
 } CSR_THREAD, * PCSR_THREAD;
 
 typedef struct _CSR_WAIT
 {
-	PCSR_PROCESS CsrThread;
+	PCSR_THREAD CsrThread;
 
 } CSR_WAIT, * PCSR_WAIT;
+
 
 typedef VOID (CALLBACK * CSR_SERVER_THREAD)(PVOID);
 
