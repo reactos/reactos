@@ -28,6 +28,8 @@
 //#define NDEBUG
 #include <debug.h>
 
+typedef NTSTATUS (STDCALL * CSR_SERVER_DLL_INIT_PROC)(ULONG,LPWSTR*);
+
 typedef struct _CSRSRV_SERVER_DLL
 {
 	USHORT             ServerIndex;
@@ -95,6 +97,51 @@ NTSTATUS STDCALL CsrSrvRegisterServerDll (PCSR_SERVER_DLL pServerDll)
 	}
 	return STATUS_SUCCESS;
 }
+/**********************************************************************
+ * CsrSrvInitializeServerDll/1					PRIVATE
+ *
+ * NOTE
+ * 	Code dapted from CsrpInitWin32Csr.
+ */
+static NTSTATUS CsrSrvInitializeServerDll (USHORT ServerIndex)
+{
+	NTSTATUS                  Status = STATUS_SUCCESS;
+	HINSTANCE                 hInst;
+	ANSI_STRING               ProcName;
+	CSR_SERVER_DLL_INIT_PROC  InitProc;
+
+	DPRINT("CSRSRV: %s called\n", __FUNCTION__);
+
+	Status = LdrLoadDll (NULL, 0, & ServerThread[ServerIndex].DllName, (PVOID *) &hInst);
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT1("CSRSRV:%s: loading ServerDll '%S' failed (Status=%08lx)\n",
+			__FUNCTION__, ServerThread[ServerIndex].DllName.Buffer, Status);
+		return Status;
+	}
+	RtlInitAnsiString (& ProcName, "ServerDllInitialization");
+	Status = LdrGetProcedureAddress(hInst, &ProcName, 0, (PVOID *) &InitProc);
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT1("CSRSRV:%s: ServerDll '%S!%s' not found (Status=%08lx)\n",
+			__FUNCTION__,
+			ServerThread[ServerIndex].DllName.Buffer,
+			"ServerDllInitialization",
+			Status);
+		return Status;
+	}
+	Status = InitProc (0, NULL);
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT1("CSRSRV:%s: %S.%s failed with Status=%08lx\n",
+			__FUNCTION__,
+			ServerThread[ServerIndex].DllName.Buffer,
+			"ServerDllInitialization",
+			Status);
+	}
+	return Status;
+}
+
 /**********************************************************************
  * CsrpCreateObjectDirectory/1					PRIVATE
  */
@@ -175,7 +222,15 @@ NTSTATUS STDCALL CsrSrvBootstrap (VOID)
 			{
 				if (NULL == ServerThread [ServerIndex].ServerThread)
 				{
-					//TODO: load DLL and call ServerDllInitialize
+					Status = CsrSrvInitializeServerDll (ServerIndex);
+					if (!NT_SUCCESS(Status))
+					{
+						DPRINT1("CSRSRV:%s: server thread #%d init failed!\n",
+							__FUNCTION__, ServerIndex);
+					}
+				} else {
+					DPRINT1("CSRSRV:%s: server thread #%d initialized more than once!\n",
+						__FUNCTION__, ServerIndex);
 				}
 			}
 		}
