@@ -1,9 +1,9 @@
 <module name="vmsdll" type="nativedll">
-	<bootstrap base="reactos/system32" />
 	<importlibrary definition="vmsdll.def" />
 	<include base="vmsdll">../include</include>
 	<linkerflag>-lgcc</linkerflag>
 	<file>dllmain.c</file>
+	<file>vmsdll.rc</file>
 	<directory name="lib">
 		<file>stubs.c</file>
 	</directory>
