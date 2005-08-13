@@ -44,6 +44,9 @@
 <directory name="dbghelp">
 	<xi:include href="dbghelp/dbghelp.xml" />
 </directory>
+<directory name="ddraw">
+	<xi:include href="ddraw/ddraw.xml" />
+</directory>
 <directory name="devenum">
 	<xi:include href="devenum/devenum.xml" />
 </directory>

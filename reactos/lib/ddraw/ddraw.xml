@@ -14,6 +14,7 @@
 	<library>dxguid</library>
 	<library>ole32</library>
 
+	<file>ddraw.rc</file>
 	<file>main.c</file>
 	<file>regsvr.c</file>
 
