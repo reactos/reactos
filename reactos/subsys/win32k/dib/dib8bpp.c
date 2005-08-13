@@ -345,6 +345,18 @@ DIB_8BPP_BitBlt(PBLTINFO BltInfo)
    return TRUE;
 }
 
+/* BitBlt Optimize */
+BOOLEAN 
+DIB_8BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
+{			 
+  ULONG DestY;			
+	for (DestY = DestRect->top; DestY< DestRect->bottom; DestY++)
+  {
+    DIB_8BPP_HLine (DestSurface, DestRect->left, DestRect->right, DestY, color);
+  }
+	
+	return TRUE;
+}
 /*
 =======================================
  Stretching functions goes below

@@ -18,12 +18,9 @@
  * The code is based on information published in WDJ January 1999 issue.
  */
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
-#include <ntos/synch.h>
-
+#include <ntdll.h>
 #define NDEBUG
-#include <ntdll/ntdll.h>
+#include <debug.h>
 
 
 /* FUNCTIONS ****************************************************************/

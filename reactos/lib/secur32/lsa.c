@@ -11,8 +11,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <windows.h>
-#include <ddk/ntddk.h>
-#include <rosrtl/string.h>
+#include <ntsecapi.h>
 #include <lsass/lsass.h>
 #include <string.h>
 
@@ -83,9 +82,9 @@ LsaCallAuthenticationPackage(HANDLE LsaHandle,
    Reply = (PLSASS_REPLY)RawReply;
    
    Request->Header.DataSize = sizeof(LSASS_REQUEST) + SubmitBufferLength -
-     sizeof(LPC_MESSAGE);
+     LPC_MESSAGE_BASE_SIZE;
    Request->Header.MessageSize = 
-     Request->Header.DataSize + sizeof(LPC_MESSAGE);
+     Request->Header.DataSize + LPC_MESSAGE_BASE_SIZE;
    Request->Type = LSASS_REQUEST_CALL_AUTHENTICATION_PACKAGE;
    Request->d.CallAuthenticationPackageRequest.AuthenticationPackage =
      AuthenticationPackage;
@@ -146,9 +145,9 @@ LsaLookupAuthenticationPackage(HANDLE LsaHandle,
    
    Request = (PLSASS_REQUEST)RawRequest;
    Request->Header.DataSize = sizeof(LSASS_REQUEST) + PackageName->Length -
-     sizeof(LPC_MESSAGE);
+     LPC_MESSAGE_BASE_SIZE;
    Request->Header.MessageSize = Request->Header.DataSize +
-     sizeof(LPC_MESSAGE);
+     LPC_MESSAGE_BASE_SIZE;
    Request->Type = LSASS_REQUEST_LOOKUP_AUTHENTICATION_PACKAGE;
    
    Status = NtRequestWaitReplyPort(LsaHandle,
@@ -196,7 +195,7 @@ LsaLogonUser(HANDLE LsaHandle,
    UCHAR RawReply[MAX_MESSAGE_DATA];
    NTSTATUS Status;
    
-   RequestLength = sizeof(LSASS_REQUEST) - sizeof(LPC_MESSAGE);
+   RequestLength = sizeof(LSASS_REQUEST) - LPC_MESSAGE_BASE_SIZE;
    RequestLength = RequestLength + (OriginName->Length * sizeof(WCHAR));
    RequestLength = RequestLength + AuthenticationInformationLength;
    RequestLength = RequestLength + 
@@ -236,8 +235,8 @@ LsaLogonUser(HANDLE LsaHandle,
    Request->d.LogonUserRequest.SourceContext = *SourceContext;
    
    Request->Type = LSASS_REQUEST_LOGON_USER;
-   Request->Header.DataSize = RequestLength - sizeof(LPC_MESSAGE);
-   Request->Header.MessageSize = RequestLength + sizeof(LPC_MESSAGE);
+   Request->Header.DataSize = RequestLength - LPC_MESSAGE_BASE_SIZE;
+   Request->Header.MessageSize = RequestLength + LPC_MESSAGE_BASE_SIZE;
    
    Reply = (PLSASS_REPLY)RawReply;
    
@@ -281,7 +280,7 @@ LsaRegisterLogonProcess(PLSA_STRING LsaLogonProcessName,
 			PHANDLE Handle,
 			PLSA_OPERATIONAL_MODE OperationalMode)
 {
-   UNICODE_STRING Portname = ROS_STRING_INITIALIZER(L"\\SeLsaCommandPort");
+   UNICODE_STRING Portname = RTL_CONSTANT_STRING(L"\\SeLsaCommandPort");
    ULONG ConnectInfoLength;
    NTSTATUS Status;
    LSASS_REQUEST Request;
@@ -303,12 +302,13 @@ LsaRegisterLogonProcess(PLSA_STRING LsaLogonProcessName,
    
    Request.Type = LSASS_REQUEST_REGISTER_LOGON_PROCESS;
    Request.Header.DataSize = sizeof(LSASS_REQUEST) - 
-     sizeof(LPC_MESSAGE);
+     LPC_MESSAGE_BASE_SIZE;
    Request.Header.MessageSize = sizeof(LSASS_REQUEST);
    
    Request.d.RegisterLogonProcessRequest.Length = LsaLogonProcessName->Length;
-   wcscpy(Request.d.RegisterLogonProcessRequest.LogonProcessNameBuffer,
-	  LsaLogonProcessName->Buffer);
+   memcpy(Request.d.RegisterLogonProcessRequest.LogonProcessNameBuffer,
+	  LsaLogonProcessName->Buffer,
+	  Request.d.RegisterLogonProcessRequest.Length);
    
    Status = NtRequestWaitReplyPort(*Handle,
 				   &Request.Header,

@@ -13,7 +13,7 @@ typedef struct _ROSRGNDATA {
 
 #define  RGNDATA_FreeRgn(hRgn)  GDIOBJ_FreeObj((HGDIOBJ)hRgn, GDI_OBJECT_TYPE_REGION)
 #define  RGNDATA_LockRgn(hRgn) ((PROSRGNDATA)GDIOBJ_LockObj((HGDIOBJ)hRgn, GDI_OBJECT_TYPE_REGION))
-#define  RGNDATA_UnlockRgn(hRgn) GDIOBJ_UnlockObj((HGDIOBJ)hRgn)
+#define  RGNDATA_UnlockRgn(pRgn) GDIOBJ_UnlockObjByPtr(pRgn)
 HRGN FASTCALL RGNDATA_AllocRgn(INT n);
 BOOL INTERNAL_CALL RGNDATA_Cleanup(PVOID ObjectBody);
 

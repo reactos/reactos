@@ -29,7 +29,8 @@
 
 #include <windows.h>
 #include <winerror.h>
-#include <string.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 
 #include <samlib.h>
 

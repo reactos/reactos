@@ -27,8 +27,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntos.h>
 #include <windows.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
+
 #include <commctrl.h>
 #include <stdio.h>
 #include <tchar.h>

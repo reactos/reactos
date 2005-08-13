@@ -72,10 +72,10 @@ KiInitializeGdt(PKPCR Pcr)
   /*
    * Allocate a GDT
    */
-  Gdt = KiGdtArray[Pcr->ProcessorNumber];
+  Gdt = KiGdtArray[Pcr->Number];
   if (Gdt == NULL)
     {
-      DbgPrint("No GDT (%d)\n", Pcr->ProcessorNumber);
+      DbgPrint("No GDT (%d)\n", Pcr->Number);
       KEBUGCHECK(0);
     }
 
@@ -148,7 +148,7 @@ l4:
 /*
  * @unimplemented
  */
-NTSTATUS
+NTSTATUS STDCALL
 KeI386FlatToGdtSelector(
 	IN ULONG	Base,
 	IN USHORT	Length,
@@ -162,7 +162,7 @@ KeI386FlatToGdtSelector(
 /*
  * @unimplemented
  */
-NTSTATUS
+NTSTATUS STDCALL
 KeI386ReleaseGdtSelectors(
 	OUT PULONG SelArray,
 	IN ULONG NumOfSelectors
@@ -175,10 +175,10 @@ KeI386ReleaseGdtSelectors(
 /*
  * @unimplemented
  */
-NTSTATUS
+NTSTATUS STDCALL
 KeI386AllocateGdtSelectors(
 	OUT PULONG SelArray,
-    IN ULONG NumOfSelectors
+	IN ULONG NumOfSelectors
 )
 {
 	UNIMPLEMENTED;

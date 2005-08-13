@@ -31,12 +31,11 @@
 #error usbdi.h cannot be included with usb.h
 #else
 
+#include "usb100.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "ntddk.h"
-#include "usb100.h"
 
 typedef LONG USBD_STATUS;
 typedef PVOID USBD_PIPE_HANDLE;

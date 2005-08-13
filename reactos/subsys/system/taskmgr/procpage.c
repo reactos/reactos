@@ -158,7 +158,7 @@ void ProcessPageOnNotify(WPARAM wParam, LPARAM lParam)
     ULONG            Index;
     ULONG            ColumnIndex;
     IO_COUNTERS        iocounters;
-    TIME            time;
+    LARGE_INTEGER      time;
 
     idctrl = (int) wParam;
     pnmh = (LPNMHDR) lParam;

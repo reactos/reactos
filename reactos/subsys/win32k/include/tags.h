@@ -51,6 +51,7 @@
 #define TAG_FONTOBJ	TAG('F', 'N', 'T', 'O') /* font object */
 #define TAG_WNDOBJ	TAG('W', 'N', 'D', 'O') /* window object */
 #define TAG_XLATEOBJ	TAG('X', 'L', 'A', 'O') /* xlate object */
+#define TAG_BITMAPOBJ	TAG('B', 'M', 'P', 'O') /* bitmap object */
 
 /* misc */
 #define TAG_DRIVER	TAG('G', 'D', 'R', 'V') /* video drivers */

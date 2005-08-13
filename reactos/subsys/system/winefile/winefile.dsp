@@ -208,10 +208,6 @@ SOURCE=.\pt.rc
 # End Source File
 # Begin Source File
 
-SOURCE=.\resource.h
-# End Source File
-# Begin Source File
-
 SOURCE=.\resource.rc
 # PROP Exclude_From_Build 1
 # End Source File
@@ -251,10 +247,11 @@ SOURCE=.\zh.rc
 # Begin Source File
 
 SOURCE=.\license.c
+# PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
 
-SOURCE=.\license.h
+SOURCE=.\resource.h
 # End Source File
 # Begin Source File
 
@@ -273,6 +270,10 @@ SOURCE=.\winefile.c
 # Begin Source File
 
 SOURCE=.\winefile.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\winefile.xml
 # End Source File
 # End Target
 # End Project

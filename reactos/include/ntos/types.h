@@ -116,8 +116,6 @@ typedef float *PFLOAT;
 typedef wchar_t *PWCH;
 typedef unsigned short *PWORD;
 
-#include <msvcrt/crttypes.h> /* for definition of LONGLONG, PLONGLONG etc */
-
 typedef const void *LPCVOID;
 typedef BYTE *LPBYTE, *PBYTE;
 typedef BOOL *PBOOL;
@@ -137,6 +135,10 @@ typedef ULONG WAIT_TYPE;
 typedef USHORT CSHORT;
 typedef const wchar_t *PCWSTR;
 typedef char* PCSZ;
+typedef long long LONGLONG;
+typedef LONGLONG *PLONGLONG;
+typedef unsigned long long ULONGLONG;
+typedef ULONGLONG *PULONGLONG;
 
 typedef DWORD STDCALL_FUNC (*PTHREAD_START_ROUTINE) (LPVOID);
 

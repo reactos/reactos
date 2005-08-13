@@ -25,34 +25,10 @@
  *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
-
-#include "precomp.h"
-#include <ntdll/rtl.h>
-
-#include <ntos/minmax.h>
-#include <reactos/resource.h>
-#include <rosrtl/string.h>
-
 #include "usetup.h"
-#include "console.h"
-#include "partlist.h"
-#include "inicache.h"
-#include "infcache.h"
-#include "filequeue.h"
-#include "progress.h"
-#include "bootsup.h"
-#include "registry.h"
-#include "format.h"
-#include "fslist.h"
-#include "cabinet.h"
-#include "filesup.h"
-#include "drivesup.h"
-#include "genlist.h"
-#include "settings.h"
 
 #define NDEBUG
 #include <debug.h>
-
 
 typedef enum _PAGE_NUMBER
 {
@@ -536,7 +512,7 @@ CheckUnattendedSetup(VOID)
  *	Number of the next page.
  */
 static PAGE_NUMBER
-StartPage(PINPUT_RECORD Ir)
+SetupStartPage(PINPUT_RECORD Ir)
 {
   SYSTEM_DEVICE_INFORMATION Sdi;
   NTSTATUS Status;
@@ -1548,7 +1524,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 
 	  return SELECT_FILE_SYSTEM_PAGE;
 	}
-      else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_C) /* C */
+      else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'c') /* C */
 	{
 	  if (PartitionList->CurrentPartition->Unpartitioned == FALSE)
 	    {
@@ -1564,7 +1540,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 
 	  return CREATE_PARTITION_PAGE;
 	}
-      else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_D) /* D */
+      else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'd') /* D */
 	{
 	  if (PartitionList->CurrentPartition->Unpartitioned == TRUE)
 	    {
@@ -1716,7 +1692,7 @@ ShowPartitionSizeInputBox(SHORT Left,
 				strlen (Buffer),
 				coPos);
 
-  sprintf(Buffer, "%d", MaxSize);
+  sprintf(Buffer, "%lu", MaxSize);
   Index = strlen(Buffer);
   DrawInputField (PARTITION_SIZE_INPUT_FIELD_LENGTH,
 		  iLeft,
@@ -2074,7 +2050,7 @@ DeletePartitionPage (PINPUT_RECORD Ir)
 	{
 	  return SELECT_PARTITION_PAGE;
 	}
-      else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_D) /* D */
+      else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'd') /* D */
 	{
 	  DeleteCurrentPartition (PartitionList);
 
@@ -2896,7 +2872,7 @@ PrepareCopyPageInfFile(HINF InfFile,
     }
 
   /* Create the install directory */
-  Status = CreateDirectory(PathBuffer);
+  Status = SetupCreateDirectory(PathBuffer);
   if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_COLLISION)
     {
       DPRINT("Creating directory '%S' failed: Status = 0x%08lx", PathBuffer, Status);
@@ -2967,7 +2943,7 @@ PrepareCopyPageInfFile(HINF InfFile,
 
 	  DPRINT("FullPath: '%S'\n", PathBuffer);
 
-	  Status = CreateDirectory(PathBuffer);
+	  Status = SetupCreateDirectory(PathBuffer);
 	  if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_COLLISION)
 	    {
 	      DPRINT("Creating directory '%S' failed: Status = 0x%08lx", PathBuffer, Status);
@@ -3729,10 +3705,9 @@ SignalInitEvent()
 {
   NTSTATUS Status;
   OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING UnicodeString;
+  UNICODE_STRING UnicodeString = RTL_CONSTANT_STRING(L"\\ReactOSInitDone");
   HANDLE ReactOSInitEvent;
 
-  RtlRosInitUnicodeStringFromLiteral(&UnicodeString, L"\\ReactOSInitDone");
   InitializeObjectAttributes(&ObjectAttributes,
     &UnicodeString,
     EVENT_ALL_ACCESS,
@@ -3808,7 +3783,7 @@ NtProcessStartup(PPEB Peb)
 	{
 	  /* Start page */
 	  case START_PAGE:
-	    Page = StartPage(&Ir);
+	    Page = SetupStartPage(&Ir);
 	    break;
 
 	  /* License page */

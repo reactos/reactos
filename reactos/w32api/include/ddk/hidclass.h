@@ -27,12 +27,11 @@
 #pragma GCC system_header
 #endif
 
+#include "hidpi.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "ntddk.h"
-#include "hidpi.h"
 
 #define HID_REVISION                      0x00000001
 

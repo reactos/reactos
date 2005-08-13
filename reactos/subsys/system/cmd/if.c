@@ -130,7 +130,7 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 		while (_istdigit (*pp))
 			n = n * 10 + (*pp++ - _T('0'));
 
-		x_flag ^= (nErrorLevel < n) ? 0 : X_EXEC;
+		x_flag ^= (nErrorLevel != n) ? 0 : X_EXEC;
 
 		x_flag |= X_EMPTY;          /* Syntax error if comd empty */
 	}

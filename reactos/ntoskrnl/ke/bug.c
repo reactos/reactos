@@ -299,11 +299,17 @@ KeBugCheckWithTf(ULONG BugCheckCode,
     PLIST_ENTRY CurrentEntry;
     MODULE_TEXT_SECTION* CurrentSection = NULL;
     extern LIST_ENTRY ModuleTextListHead;
+#if 0
     CHAR PrintString[100];
-
+#endif
     /* Make sure we're switching back to the blue screen and print messages on it */
     HalReleaseDisplayOwnership();
-    KdpDebugMode.Screen = TRUE;
+    if (!KdpDebugMode.Screen)
+    {
+       /* Enable screen debug mode */
+       KdpDebugMode.Screen = TRUE;
+       InitRoutines[0](&DispatchTable[0], 0);
+    }
 
     /* Try to find out who did this. For this, we need a Trap Frame.
      * Note: Some special BSODs pass the Frame/EIP as a Param. MSDN has the
@@ -348,22 +354,32 @@ KeBugCheckWithTf(ULONG BugCheckCode,
     /* FIXMEs: Use inbv to clear, fill and write to screen. */
 
     /* Show the STOP Message */
+#if 0
     InbvDisplayString("A problem has been detected and ReactOS has been shut down to prevent "
                       "damage to your computer.\n\n");
-
+#else
+    DbgPrint("A problem has been detected and ReactOS has been shut down to prevent "
+             "damage to your computer.\n\n");
+#endif
     /* Show the module name of who caused this */
     if (GotExtendedCrashInfo) 
     {
+#if 0
         sprintf(PrintString, 
                 "The problem seems to be caused by the following file: %S\n\n",
                 CurrentSection->Name);
         InbvDisplayString(PrintString);
+#else
+        DbgPrint("The problem seems to be caused by the following file: %S\n\n",
+                 CurrentSection->Name);
+#endif
     }
 
     /* Find the Bug Code String */
     KeGetBugMessageText(BugCheckCode, NULL);
 
     /* Show the techincal Data */
+#if 0
     sprintf(PrintString,
             "Technical information:\n\n*** STOP: 0x%08lX (0x%p,0x%p,0x%p,0x%p)\n\n",
             BugCheckCode,
@@ -372,10 +388,18 @@ KeBugCheckWithTf(ULONG BugCheckCode,
             (PVOID)BugCheckParameter3,
             (PVOID)BugCheckParameter4);
     InbvDisplayString(PrintString);
-
+#else
+    DbgPrint("Technical information:\n\n*** STOP: 0x%08lX (0x%p,0x%p,0x%p,0x%p)\n\n",
+             BugCheckCode,
+            (PVOID)BugCheckParameter1,
+            (PVOID)BugCheckParameter2,
+            (PVOID)BugCheckParameter3,
+            (PVOID)BugCheckParameter4);
+#endif
     /* Show the module name and more data of who caused this */
     if (GotExtendedCrashInfo) 
     {
+#if 0
         sprintf(PrintString,
                 "***    %S - Address 0x%p base at 0x%p, DateStamp 0x%x\n\n",
                 CurrentSection->Name,
@@ -383,6 +407,13 @@ KeBugCheckWithTf(ULONG BugCheckCode,
                 (PVOID)CurrentSection->Base,
                 0);
         InbvDisplayString(PrintString);
+#else
+        DbgPrint("***    %S - Address 0x%p base at 0x%p, DateStamp 0x%x\n\n",
+                 CurrentSection->Name,
+                 Address,
+                 (PVOID)CurrentSection->Base,
+                 0);
+#endif
     }
 
     /* There can only be one Bugcheck per Bootup */

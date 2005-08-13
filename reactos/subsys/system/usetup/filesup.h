@@ -28,7 +28,7 @@
 #define __FILESUP_H__
 
 NTSTATUS
-CreateDirectory(PWCHAR DirectoryName);
+SetupCreateDirectory(PWCHAR DirectoryName);
 
 NTSTATUS
 SetupCopyFile(PWCHAR SourceFileName,

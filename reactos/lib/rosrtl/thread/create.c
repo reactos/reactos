@@ -3,12 +3,12 @@
 /*
 */
 
-#include <stdarg.h>
+#include <windows.h>
 #define NTOS_MODE_USER
-#include <ntos.h>
+#include <ndk/ntndk.h>
 
 #define NDEBUG
-#include <ntdll/ntdll.h>
+#include <debug.h>
 
 #include <rosrtl/thread.h>
 

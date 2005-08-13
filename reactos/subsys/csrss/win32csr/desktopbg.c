@@ -7,20 +7,9 @@
  * ReactOS Operating System
  */
 
-/*
- * There is a problem with size of LPC_MESSAGE structure. In the old ReactOS
- * headers it doesn't contain the data field and so it has a different size.
- * We must use this workaround to get our Data field 0-sized.
- */
-
-#include <windef.h>
-#include <winnt.h>
-#undef ANYSIZE_ARRAY
-#define ANYSIZE_ARRAY 0
-#include <ddk/ntapi.h>
-
 #include <windows.h>
-#include <csrss/csrss.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 
 #include "api.h"
 #include "desktopbg.h"
@@ -217,15 +206,15 @@ CSR_API(CsrCreateDesktop)
 
   DPRINT("CsrCreateDesktop\n");
 
-  Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
+  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
   if (! BgInitialized)
     {
       BgInitialized = TRUE;
       if (! DtbgInit())
         {
-          return Reply->Status = STATUS_UNSUCCESSFUL;
+          return Request->Status = STATUS_UNSUCCESSFUL;
         }
     }
 
@@ -238,7 +227,7 @@ CSR_API(CsrCreateDesktop)
   if (NULL == ThreadData.Event)
     {
       DPRINT1("Failed to create event (error %d)\n", GetLastError());
-      return Reply->Status = STATUS_UNSUCCESSFUL;
+      return Request->Status = STATUS_UNSUCCESSFUL;
     }
   ThreadHandle = CreateThread(NULL,
                               0,
@@ -250,16 +239,16 @@ CSR_API(CsrCreateDesktop)
     {
       CloseHandle(ThreadData.Event);
       DPRINT1("Failed to create desktop window thread.\n");
-      return Reply->Status = STATUS_UNSUCCESSFUL;
+      return Request->Status = STATUS_UNSUCCESSFUL;
     }
   CloseHandle(ThreadHandle);
 
   WaitForSingleObject(ThreadData.Event, INFINITE);
   CloseHandle(ThreadData.Event);
 
-  Reply->Status = ThreadData.Status;
+  Request->Status = ThreadData.Status;
 
-  return Reply->Status;
+  return Request->Status;
 }
 
 CSR_API(CsrShowDesktop)
@@ -267,8 +256,8 @@ CSR_API(CsrShowDesktop)
   PRIVATE_NOTIFY_DESKTOP nmh;
   DPRINT("CsrShowDesktop\n");
 
-  Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
+  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
   nmh.hdr.hwndFrom = Request->Data.ShowDesktopRequest.DesktopWindow;
   nmh.hdr.idFrom = 0;
@@ -277,13 +266,13 @@ CSR_API(CsrShowDesktop)
   nmh.ShowDesktop.Width = (int)Request->Data.ShowDesktopRequest.Width;
   nmh.ShowDesktop.Height = (int)Request->Data.ShowDesktopRequest.Height;
 
-  Reply->Status = SendMessageW(Request->Data.ShowDesktopRequest.DesktopWindow,
+  Request->Status = SendMessageW(Request->Data.ShowDesktopRequest.DesktopWindow,
                                WM_NOTIFY,
                                (WPARAM)nmh.hdr.hwndFrom,
                                (LPARAM)&nmh)
                   ? STATUS_UNSUCCESSFUL : STATUS_SUCCESS;
 
-  return Reply->Status;
+  return Request->Status;
 }
 
 CSR_API(CsrHideDesktop)
@@ -291,20 +280,20 @@ CSR_API(CsrHideDesktop)
   PRIVATE_NOTIFY_DESKTOP nmh;
   DPRINT("CsrHideDesktop\n");
 
-  Reply->Header.MessageSize = sizeof(CSRSS_API_REPLY);
-  Reply->Header.DataSize = sizeof(CSRSS_API_REPLY) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.MessageSize = sizeof(CSR_API_MESSAGE);
+  Request->Header.DataSize = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
 
   nmh.hdr.hwndFrom = Request->Data.ShowDesktopRequest.DesktopWindow;
   nmh.hdr.idFrom = 0;
   nmh.hdr.code = PM_HIDE_DESKTOP;
 
-  Reply->Status = SendMessageW(Request->Data.ShowDesktopRequest.DesktopWindow,
+  Request->Status = SendMessageW(Request->Data.ShowDesktopRequest.DesktopWindow,
                                WM_NOTIFY,
                                (WPARAM)nmh.hdr.hwndFrom,
                                (LPARAM)&nmh)
                   ? STATUS_UNSUCCESSFUL : STATUS_SUCCESS;
 
-  return Reply->Status;
+  return Request->Status;
 }
 
 BOOL FASTCALL

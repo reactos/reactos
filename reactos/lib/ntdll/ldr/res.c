@@ -23,16 +23,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <reactos/config.h>
-#include <ddk/ntddk.h>
-#include <windows.h>
-#include <string.h>
-#include <wchar.h>
-#include <ntdll/ldr.h>
-#include <ntos/minmax.h>
-
+#include <ntdll.h>
 #define NDEBUG
-#include <ntdll/ntdll.h>
+#include <debug.h>
 
 /* PROTOTYPES ****************************************************************/
 

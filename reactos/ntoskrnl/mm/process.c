@@ -28,8 +28,8 @@ MiCreatePebOrTeb(PEPROCESS Process,
     PMADDRESS_SPACE ProcessAddressSpace = &Process->AddressSpace;
     PMEMORY_AREA MemoryArea;
     PHYSICAL_ADDRESS BoundaryAddressMultiple;
-    BoundaryAddressMultiple.QuadPart = 0;
     PVOID AllocatedBase = BaseAddress;
+    BoundaryAddressMultiple.QuadPart = 0;
 
     /* Acquire the Lock */
     MmLockAddressSpace(ProcessAddressSpace);
@@ -54,7 +54,7 @@ MiCreatePebOrTeb(PEPROCESS Process,
                                     TRUE,
                                     FALSE,
                                     BoundaryAddressMultiple);
-        AllocatedBase = AllocatedBase - PAGE_SIZE;
+        AllocatedBase = RVA(AllocatedBase, -PAGE_SIZE);
     } while (Status != STATUS_SUCCESS);
 
     /* Initialize the Region */
@@ -69,7 +69,7 @@ MiCreatePebOrTeb(PEPROCESS Process,
     /* Unlock Address Space */
     DPRINT("Returning\n");
     MmUnlockAddressSpace(ProcessAddressSpace);
-    return AllocatedBase + PAGE_SIZE;
+    return RVA(AllocatedBase, PAGE_SIZE);
 }
 
 VOID
@@ -345,9 +345,9 @@ MmCreateProcessAddressSpace(IN PEPROCESS Process,
     PVOID BaseAddress;
     PMEMORY_AREA MemoryArea;
     PHYSICAL_ADDRESS BoundaryAddressMultiple;
-    BoundaryAddressMultiple.QuadPart = 0;
     ULONG ViewSize = 0;
     PVOID ImageBase = 0;
+    BoundaryAddressMultiple.QuadPart = 0;
 
     /* Initialize the Addresss Space */
     MmInitializeAddressSpace(Process, ProcessAddressSpace);

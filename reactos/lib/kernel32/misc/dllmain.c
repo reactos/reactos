@@ -47,7 +47,7 @@ static NTSTATUS
 OpenBaseDirectory(PHANDLE DirHandle)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING Name = ROS_STRING_INITIALIZER(L"\\BaseNamedObjects");
+  UNICODE_STRING Name = RTL_CONSTANT_STRING(L"\\BaseNamedObjects");
   NTSTATUS Status;
 
   InitializeObjectAttributes(&ObjectAttributes,
@@ -98,7 +98,12 @@ DllMain(HANDLE hDll,
 	/*
 	 * Connect to the csrss server
 	 */
-	Status = CsrClientConnectToServer();
+	Status = CsrClientConnectToServer(NULL,
+                                      0,
+                                      NULL,
+                                      NULL,
+                                      0,
+                                      NULL);
 	if (!NT_SUCCESS(Status))
 	  {
 	    DbgPrint("Failed to connect to csrss.exe (Status %lx)\n",

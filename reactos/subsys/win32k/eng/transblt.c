@@ -193,8 +193,8 @@ EngTransparentBlt(SURFOBJ *Dest,
 }
 
 BOOL FASTCALL
-IntEngTransparentBlt(BITMAPOBJ *DestObj,
-                     BITMAPOBJ *SourceObj,
+IntEngTransparentBlt(SURFOBJ *DestSurf,
+                     SURFOBJ *SourceSurf,
                      CLIPOBJ *Clip,
                      XLATEOBJ *ColorTranslation,
                      PRECTL DestRect,
@@ -204,18 +204,18 @@ IntEngTransparentBlt(BITMAPOBJ *DestObj,
 {
   BOOL Ret;
   RECTL OutputRect, InputClippedRect;
-  SURFOBJ *DestSurf;
-  SURFOBJ *SourceSurf;
-
-  ASSERT(DestObj);
-  ASSERT(SourceObj);
-  ASSERT(DestRect);
-
-  DestSurf = &DestObj->SurfObj;
-  SourceSurf = &SourceObj->SurfObj;
+  BITMAPOBJ *DestObj;
+  BITMAPOBJ *SourceObj;
 
   ASSERT(DestSurf);
   ASSERT(SourceSurf);
+  ASSERT(DestRect);
+
+  DestObj = CONTAINING_RECORD(DestSurf, BITMAPOBJ, SurfObj);
+  SourceObj = CONTAINING_RECORD(SourceSurf, BITMAPOBJ, SurfObj);
+
+  ASSERT(DestObj);
+  ASSERT(SourceObj);
 
   InputClippedRect = *DestRect;
   if(InputClippedRect.right < InputClippedRect.left)
@@ -249,9 +249,11 @@ IntEngTransparentBlt(BITMAPOBJ *DestObj,
 
   if(SourceSurf != DestSurf)
   {
+    BITMAPOBJ_LockBitmapBits(SourceObj);
     MouseSafetyOnDrawStart(SourceSurf, SourceRect->left, SourceRect->top,
                            SourceRect->right, SourceRect->bottom);
   }
+  BITMAPOBJ_LockBitmapBits(DestObj);
   MouseSafetyOnDrawStart(DestSurf, OutputRect.left, OutputRect.top,
                          OutputRect.right, OutputRect.bottom);
 
@@ -271,9 +273,11 @@ IntEngTransparentBlt(BITMAPOBJ *DestObj,
   }
 
   MouseSafetyOnDrawEnd(DestSurf);
+  BITMAPOBJ_UnlockBitmapBits(DestObj);
   if(SourceSurf != DestSurf)
   {
     MouseSafetyOnDrawEnd(SourceSurf);
+    BITMAPOBJ_UnlockBitmapBits(SourceObj);
   }
 
   return Ret;

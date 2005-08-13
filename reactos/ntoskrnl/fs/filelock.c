@@ -1372,7 +1372,7 @@ FsRtlReleaseFile(
     if ((FcbHeader = (PFSRTL_COMMON_FCB_HEADER)FileObject->FsContext)) {
 
         /* Use a Resource Release */
-        ExReleaseResource(FcbHeader->Resource);
+        ExReleaseResourceLite(FcbHeader->Resource);
 
         return;
     }

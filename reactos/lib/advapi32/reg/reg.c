@@ -179,7 +179,7 @@ static NTSTATUS
 OpenClassesRootKey (PHANDLE KeyHandle)
 {
   OBJECT_ATTRIBUTES Attributes;
-  UNICODE_STRING KeyName = ROS_STRING_INITIALIZER(L"\\Registry\\Machine\\Software\\CLASSES");
+  UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software\\CLASSES");
 
   DPRINT("OpenClassesRootKey()\n");
 
@@ -198,7 +198,7 @@ static NTSTATUS
 OpenLocalMachineKey (PHANDLE KeyHandle)
 {
   OBJECT_ATTRIBUTES Attributes;
-  UNICODE_STRING KeyName = ROS_STRING_INITIALIZER(L"\\Registry\\Machine");
+  UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine");
   NTSTATUS Status;
 
   DPRINT("OpenLocalMachineKey()\n");
@@ -221,7 +221,7 @@ static NTSTATUS
 OpenUsersKey (PHANDLE KeyHandle)
 {
   OBJECT_ATTRIBUTES Attributes;
-  UNICODE_STRING KeyName = ROS_STRING_INITIALIZER(L"\\Registry\\User");
+  UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\User");
 
   DPRINT("OpenUsersKey()\n");
 
@@ -241,7 +241,7 @@ OpenCurrentConfigKey (PHANDLE KeyHandle)
 {
   OBJECT_ATTRIBUTES Attributes;
   UNICODE_STRING KeyName =
-  ROS_STRING_INITIALIZER(L"\\Registry\\Machine\\System\\CurrentControlSet\\Hardware Profiles\\Current");
+  RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Hardware Profiles\\Current");
 
   DPRINT("OpenCurrentConfigKey()\n");
 

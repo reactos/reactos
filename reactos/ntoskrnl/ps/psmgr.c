@@ -173,8 +173,7 @@ PsInitProcessManagment(VOID)
 				ProcessObject,
 				sizeof(EPROCESS),
 				FALSE);
-   PsIdleProcess->Pcb.DirectoryTableBase =
-     (LARGE_INTEGER)(LONGLONG)(ULONG)MmGetPageDirectory();
+   PsIdleProcess->Pcb.DirectoryTableBase.QuadPart = (ULONG_PTR)MmGetPageDirectory();
    strcpy(PsIdleProcess->ImageFileName, "Idle");
 
    /*
@@ -234,6 +233,7 @@ PsInitProcessManagment(VOID)
    InitializeListHead(&PsInitialSystemProcess->ThreadListHead);
 
 #ifndef SCHED_REWRITE
+    {
     PTOKEN BootToken;
 
     /* No parent, this is the Initial System Process. Assign Boot Token */
@@ -241,6 +241,7 @@ PsInitProcessManagment(VOID)
     BootToken->TokenInUse = TRUE;
     PsInitialSystemProcess->Token.Object = BootToken; /* FIXME */
     ObReferenceObject(BootToken);
+	}
 #endif
 }
 

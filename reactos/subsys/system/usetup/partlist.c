@@ -25,18 +25,7 @@
  *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
-#include "precomp.h"
-#include <ddk/ntddscsi.h>
-
-#include <ntdll/rtl.h>
-
-#include <ntos/minmax.h>
-
 #include "usetup.h"
-#include "console.h"
-#include "partlist.h"
-#include "drivesup.h"
-#include "bootsup.h"
 
 #define NDEBUG
 #include <debug.h>

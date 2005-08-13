@@ -9,10 +9,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <roscfg.h>
 #include <ntoskrnl.h>
-#include <reactos/rossym.h>
 
 #define NDEBUG
 #include <internal/debug.h>
@@ -26,6 +23,7 @@ typedef struct _IMAGE_SYMBOL_INFO_CACHE {
   PROSSYM_INFO RosSymInfo;
 } IMAGE_SYMBOL_INFO_CACHE, *PIMAGE_SYMBOL_INFO_CACHE;
 
+static BOOLEAN LoadSymbols;
 static LIST_ENTRY SymbolFileListHead;
 static KSPIN_LOCK SymbolFileListLock;
 
@@ -53,7 +51,7 @@ KdbpSymFindUserModule(IN PVOID Address  OPTIONAL,
                       OUT PKDB_MODULE_INFO pInfo)
 {
   PLIST_ENTRY current_entry;
-  PLDR_MODULE current;
+  PLDR_DATA_TABLE_ENTRY current;
   PEPROCESS CurrentProcess;
   PPEB Peb = NULL;
   INT Count = 0;
@@ -74,10 +72,10 @@ KdbpSymFindUserModule(IN PVOID Address  OPTIONAL,
   while (current_entry != &Peb->Ldr->InLoadOrderModuleList &&
          current_entry != NULL)
     {
-      current = CONTAINING_RECORD(current_entry, LDR_MODULE, InLoadOrderModuleList);
+      current = CONTAINING_RECORD(current_entry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
 
-      if ((Address != NULL && (Address >= (PVOID)current->BaseAddress &&
-                               Address < (PVOID)((char *)current->BaseAddress + current->ResidentSize))) ||
+      if ((Address != NULL && (Address >= (PVOID)current->DllBase &&
+                               Address < (PVOID)((char *)current->DllBase + current->SizeOfImage))) ||
           (Name != NULL && _wcsicmp(current->BaseDllName.Buffer, Name) == 0) ||
           (Index >= 0 && Count++ == Index))
         {
@@ -86,8 +84,8 @@ KdbpSymFindUserModule(IN PVOID Address  OPTIONAL,
 	    Length = 255;
 	  wcsncpy(pInfo->Name, current->BaseDllName.Buffer, Length);
 	  pInfo->Name[Length] = L'\0';
-          pInfo->Base = (ULONG_PTR)current->BaseAddress;
-          pInfo->Size = current->ResidentSize;
+          pInfo->Base = (ULONG_PTR)current->DllBase;
+          pInfo->Size = current->SizeOfImage;
           pInfo->RosSymInfo = current->RosSymInfo;
           return TRUE;
         }
@@ -415,6 +413,12 @@ KdbpSymLoadModuleSymbols(IN PUNICODE_STRING FileName,
   /* Allow KDB to break on module load */
   KdbModuleLoaded(FileName);
 
+  if (! LoadSymbols)
+    {
+      *RosSymInfo = NULL;
+      return;
+    }
+
   /*  Try to find cached (already loaded) symbol file  */
   *RosSymInfo = KdbpSymFindCachedFile(FileName);
   if (*RosSymInfo != NULL)
@@ -484,11 +488,13 @@ KdbpSymUnloadModuleSymbols(IN PROSSYM_INFO RosSymInfo)
  * \param LdrModule Pointer to the module to load symbols for.
  */
 VOID
-KdbSymLoadUserModuleSymbols(IN PLDR_MODULE LdrModule)
+KdbSymLoadUserModuleSymbols(IN PLDR_DATA_TABLE_ENTRY LdrModule)
 {
   static WCHAR Prefix[] = L"\\??\\";
   UNICODE_STRING KernelName;
   DPRINT("LdrModule %p\n", LdrModule);
+
+  LdrModule->RosSymInfo = NULL;
 
   KernelName.MaximumLength = sizeof(Prefix) + LdrModule->FullDllName.Length;
   KernelName.Length = KernelName.MaximumLength - sizeof(WCHAR);
@@ -501,8 +507,6 @@ KdbSymLoadUserModuleSymbols(IN PLDR_MODULE LdrModule)
   memcpy(KernelName.Buffer + sizeof(Prefix) / sizeof(WCHAR) - 1, LdrModule->FullDllName.Buffer,
          LdrModule->FullDllName.Length);
   KernelName.Buffer[KernelName.Length / sizeof(WCHAR)] = L'\0';
-
-  LdrModule->RosSymInfo = NULL;
 
   KdbpSymLoadModuleSymbols(&KernelName, &LdrModule->RosSymInfo);
 
@@ -517,7 +521,7 @@ VOID
 KdbSymFreeProcessSymbols(IN PEPROCESS Process)
 {
   PLIST_ENTRY CurrentEntry;
-  PLDR_MODULE Current;
+  PLDR_DATA_TABLE_ENTRY Current;
   PEPROCESS CurrentProcess;
   PPEB Peb;
 
@@ -534,7 +538,7 @@ KdbSymFreeProcessSymbols(IN PEPROCESS Process)
   while (CurrentEntry != &Peb->Ldr->InLoadOrderModuleList &&
 	 CurrentEntry != NULL)
     {
-      Current = CONTAINING_RECORD(CurrentEntry, LDR_MODULE, InLoadOrderModuleList);
+      Current = CONTAINING_RECORD(CurrentEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
 
       KdbpSymUnloadModuleSymbols(Current->RosSymInfo);
 
@@ -612,6 +616,12 @@ KdbSymProcessBootSymbols(IN PCHAR FileName)
 
   if (ModuleObject != NULL)
   {
+     if (! LoadSymbols)
+     {
+        ModuleObject->TextSection->RosSymInfo = NULL;
+        return;
+     }
+
      for (i = 0; i < KeLoaderBlock.ModsCount; i++)
      {
         if (0 == _stricmp(FileName, (PCHAR)KeLoaderModules[i].String))
@@ -670,11 +680,62 @@ VOID
 KdbSymInit(IN PMODULE_TEXT_SECTION NtoskrnlTextSection,
 	   IN PMODULE_TEXT_SECTION LdrHalTextSection)
 {
+  PCHAR p1, p2;
+  int Found;
+  char YesNo;
+
   NtoskrnlTextSection->RosSymInfo = NULL;
   LdrHalTextSection->RosSymInfo = NULL;
 
   InitializeListHead(&SymbolFileListHead);
   KeInitializeSpinLock(&SymbolFileListLock);
+
+#ifdef DBG
+  LoadSymbols = TRUE;
+#else
+  LoadSymbols = FALSE;
+#endif
+
+  /* Check the command line for /LOADSYMBOLS, /NOLOADSYMBOLS,
+   * /LOADSYMBOLS={YES|NO}, /NOLOADSYMBOLS={YES|NO} */
+  p1 = (PCHAR) KeLoaderBlock.CommandLine;
+  while('\0' != *p1 && NULL != (p2 = strchr(p1, '/')))
+    {
+      p2++;
+      Found = 0;
+      if (0 == _strnicmp(p2, "LOADSYMBOLS", 11))
+        {
+          Found = +1;
+          p2 += 11;
+        }
+      else if (0 == _strnicmp(p2, "NOLOADSYMBOLS", 13))
+        {
+          Found = -1;
+          p2 += 13;
+        }
+      if (0 != Found)
+        {
+          while (isspace(*p2))
+            {
+              p2++;
+            }
+          if ('=' == *p2)
+            {
+              p2++;
+              while (isspace(*p2))
+                {
+                  p2++;
+                }
+              YesNo = toupper(*p2);
+              if ('N' == YesNo || 'F' == YesNo || '0' == YesNo)
+                {
+                  Found = -1 * Found;
+                }
+            }
+          LoadSymbols = (0 < Found);
+        }
+      p1 = p2;
+    }
 
   RosSymInitKernelMode();
 }

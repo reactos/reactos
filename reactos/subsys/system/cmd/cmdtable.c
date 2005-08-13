@@ -18,6 +18,7 @@
  */
 
 #include "precomp.h"
+#include "resource.h"
 
 
 /* a list of all the internal commands, associating their command names */
@@ -27,6 +28,7 @@
 COMMAND cmds[] =
 {
 	{_T("?"), 0, CommandShowCommands},
+
 
 #ifdef INCLUDE_CMD_ACTIVATE
 	{_T("activate"), 0, CommandActivate},
@@ -112,6 +114,8 @@ COMMAND cmds[] =
 #endif
 
 	{_T("goto"), CMD_BATCHONLY, cmd_goto},
+
+	{_T("help"), 0, CommandShowCommandsDetail},
 
 #ifdef FEATURE_HISTORY
 	{_T("history"), 0, CommandHistory},
@@ -254,6 +258,12 @@ VOID PrintCommandList (VOID)
 
 	if (y != 0)
 		ConOutChar ('\n');
+}
+
+VOID PrintCommandListDetail (VOID)
+{
+	ConOutResPuts(STRING_HELP1);
+	ConOutResPuts(STRING_HELP2);
 }
 
 /* EOF */

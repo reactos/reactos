@@ -5,8 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <windows.h>
-#define NTOS_MODE_USER
-#include <ntos.h>
 #include <fmifs.h>
 #include <tchar.h>
 #include "resource.h"

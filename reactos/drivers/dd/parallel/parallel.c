@@ -13,7 +13,6 @@
 /* FUNCTIONS **************************************************************/
 
 #include <ddk/ntddk.h>
-#include <rosrtl/string.h>
 
 #include "parallel.h"
 
@@ -128,7 +127,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
  */
 {
    PDEVICE_OBJECT DeviceObject;
-   UNICODE_STRING DeviceName = ROS_STRING_INITIALIZER(L"\\Device\\Parallel");
+   UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\Parallel");
    NTSTATUS Status;
 
    DPRINT("Parallel Port Driver 0.0.1\n");

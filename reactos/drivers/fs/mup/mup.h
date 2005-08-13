@@ -1,10 +1,9 @@
 #ifndef MUP_H
 #define MUP_H
 
-#include <ddk/ntifs.h>
-
-
+#ifndef TAG
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
+#endif
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 

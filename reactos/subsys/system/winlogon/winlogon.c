@@ -10,18 +10,7 @@
  */
 
 /* INCLUDES *****************************************************************/
-
-#define NTOS_MODE_USER
-#include <ntos.h>
-#include <windows.h>
-#include <stdio.h>
-#include <ntsecapi.h>
-#include <wchar.h>
-#include <userenv.h>
-
-#include "setup.h"
 #include "winlogon.h"
-#include "resource.h"
 
 #define NDEBUG
 #include <debug.h>

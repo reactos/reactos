@@ -36,7 +36,7 @@ SourceFileTest::IncludeTest ()
 {
 	const Project project ( RBUILD_BASE "tests" SSEP "data" SSEP "automaticdependency_include.xml" );
 	AutomaticDependency automaticDependency ( project );
-	automaticDependency.Process ();
+	automaticDependency.ParseFiles ();
 	ARE_EQUAL( 4, automaticDependency.sourcefile_map.size () );
 	const SourceFile* include = automaticDependency.RetrieveFromCache ( RBUILD_BASE "tests" SSEP "data" SSEP "sourcefile_include.h" );
 	IS_NOT_NULL( include );
@@ -49,7 +49,7 @@ SourceFileTest::FullParseTest ()
 {
 	const Project project ( RBUILD_BASE "tests" SSEP "data" SSEP "automaticdependency.xml" );
 	AutomaticDependency automaticDependency ( project );
-	automaticDependency.Process ();
+	automaticDependency.ParseFiles ();
 	ARE_EQUAL( 5, automaticDependency.sourcefile_map.size () );
 	const SourceFile* header1 = automaticDependency.RetrieveFromCache ( RBUILD_BASE "tests" SSEP "data" SSEP "sourcefile1_header1.h" );
 	IS_NOT_NULL( header1 );

@@ -129,7 +129,7 @@ void	printf __P((const char *, ...));
 int __cdecl vprintf(const char *, va_list);
 
 #define log bsd_log
-static int bsd_log ( int blah, const char* fmt, ... )
+static __inline int bsd_log ( int blah, const char* fmt, ... )
 {
 	va_list arg;
 	int i;

@@ -1,15 +1,13 @@
-#include <wine/windef.h>
 #include <windows.h>
-#include <ddraw.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 #include <ddentry.h>
+#include <ddraw.h>
+#include <ddk/prntfont.h>
 #include <string.h>
 #include <win32k/kapi.h>
-#include <ddk/prntfont.h>
 #include <rosrtl/logfont.h>
 #include <rosrtl/devmode.h>
-#include <wine/unicode.h>
-#define NTOS_MODE_USER
-#include <ntos.h>
 
 #define NtUserGetDCBrushColor(hbr) \
   (COLORREF)NtUserCallTwoParam((DWORD)(hbr), OBJ_BRUSH, TWOPARAM_ROUTINE_GETDCCOLOR)

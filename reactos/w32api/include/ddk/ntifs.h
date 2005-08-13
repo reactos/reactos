@@ -28,12 +28,12 @@
 #pragma GCC system_header
 #endif
 
+#include "ntddk.h"
+//#include "ntapi.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "ntddk.h"
-#include "ntapi.h"
 
 #pragma pack(push,4)
 
@@ -44,15 +44,27 @@ extern "C" {
 #endif
 
 #ifndef NTKERNELAPI
-#define NTKERNELAPI STDCALL
+#define NTKERNELAPI DECLSPEC_IMPORT
 #endif
 
 typedef struct _SE_EXPORTS                  *PSE_EXPORTS;
 
-extern PUCHAR                       *FsRtlLegalAnsiCharacterArray;
+#ifdef _NTOSKRNL_
+extern PUCHAR                       FsRtlLegalAnsiCharacterArray;
+#else
+extern DECLSPEC_IMPORT PUCHAR       FsRtlLegalAnsiCharacterArray;
+#endif
 extern PSE_EXPORTS                  SeExports;
 extern PACL                         SePublicDefaultDacl;
 extern PACL                         SeSystemDefaultDacl;
+
+extern KSPIN_LOCK                   IoStatisticsLock;
+extern ULONG                        IoReadOperationCount;
+extern ULONG                        IoWriteOperationCount;
+extern ULONG                        IoOtherOperationCount;
+extern LARGE_INTEGER                IoReadTransferCount;
+extern LARGE_INTEGER                IoWriteTransferCount;
+extern LARGE_INTEGER                IoOtherTransferCount;
 
 #define ANSI_DOS_STAR                   ('<')
 #define ANSI_DOS_QM                     ('>')
@@ -63,10 +75,31 @@ extern PACL                         SeSystemDefaultDacl;
 #define DOS_DOT                         (L'"')
 
 /* also in winnt.h */
-#define ACCESS_ALLOWED_ACE_TYPE         (0x0)
-#define ACCESS_DENIED_ACE_TYPE          (0x1)
-#define SYSTEM_AUDIT_ACE_TYPE           (0x2)
-#define SYSTEM_ALARM_ACE_TYPE           (0x3)
+#define ACCESS_MIN_MS_ACE_TYPE                  (0x0)
+#define ACCESS_ALLOWED_ACE_TYPE                 (0x0)
+#define ACCESS_DENIED_ACE_TYPE                  (0x1)
+#define SYSTEM_AUDIT_ACE_TYPE                   (0x2)
+#define SYSTEM_ALARM_ACE_TYPE                   (0x3)
+#define ACCESS_MAX_MS_V2_ACE_TYPE               (0x3)
+#define ACCESS_ALLOWED_COMPOUND_ACE_TYPE        (0x4)
+#define ACCESS_MAX_MS_V3_ACE_TYPE               (0x4)
+#define ACCESS_MIN_MS_OBJECT_ACE_TYPE           (0x5)
+#define ACCESS_ALLOWED_OBJECT_ACE_TYPE          (0x5)
+#define ACCESS_DENIED_OBJECT_ACE_TYPE           (0x6)
+#define SYSTEM_AUDIT_OBJECT_ACE_TYPE            (0x7)
+#define SYSTEM_ALARM_OBJECT_ACE_TYPE            (0x8)
+#define ACCESS_MAX_MS_OBJECT_ACE_TYPE           (0x8)
+#define ACCESS_MAX_MS_V4_ACE_TYPE               (0x8)
+#define ACCESS_MAX_MS_ACE_TYPE                  (0x8)
+#define ACCESS_ALLOWED_CALLBACK_ACE_TYPE        (0x9)
+#define ACCESS_DENIED_CALLBACK_ACE_TYPE         (0xA)
+#define ACCESS_ALLOWED_CALLBACK_OBJECT_ACE_TYPE (0xB)
+#define ACCESS_DENIED_CALLBACK_OBJECT_ACE_TYPE  (0xC)
+#define SYSTEM_AUDIT_CALLBACK_ACE_TYPE          (0xD)
+#define SYSTEM_ALARM_CALLBACK_ACE_TYPE          (0xE)
+#define SYSTEM_AUDIT_CALLBACK_OBJECT_ACE_TYPE   (0xF)
+#define SYSTEM_ALARM_CALLBACK_OBJECT_ACE_TYPE   (0x10)
+#define ACCESS_MAX_MS_V5_ACE_TYPE               (0x10)
 
 #define COMPRESSION_FORMAT_NONE         (0x0000)
 #define COMPRESSION_FORMAT_DEFAULT      (0x0001)
@@ -220,6 +253,13 @@ extern PACL                         SeSystemDefaultDacl;
 
 #define FSRTL_WILD_CHARACTER            0x08
 
+#define FSRTL_FAT_LEGAL                 0x01
+#define FSRTL_HPFS_LEGAL                0x02
+#define FSRTL_NTFS_LEGAL                0x04
+#define FSRTL_WILD_CHARACTER            0x08
+#define FSRTL_OLE_LEGAL                 0x10
+#define FSRTL_NTFS_STREAM_LEGAL         0x14
+
 #ifdef _X86_
 #define HARDWARE_PTE    HARDWARE_PTE_X86
 #define PHARDWARE_PTE   PHARDWARE_PTE_X86
@@ -289,9 +329,6 @@ extern PACL                         SeSystemDefaultDacl;
 #define PIN_NO_READ                     (4)
 #define PIN_IF_BCB                      (8)
 
-#define PORT_CONNECT                    0x0001
-#define PORT_ALL_ACCESS                 (STANDARD_RIGHTS_ALL |\
-                                         PORT_CONNECT)
 /* also in winnt.h */
 #define SEC_BASED	0x00200000
 #define SEC_NO_CHANGE	0x00400000
@@ -306,6 +343,8 @@ extern PACL                         SeSystemDefaultDacl;
 #define SECURITY_WORLD_RID              (0x00000000L)
 
 #define SID_REVISION                    1
+#define SID_MAX_SUB_AUTHORITIES         15
+#define SID_RECOMMENDED_SUB_AUTHORITIES 1
 
 #define TOKEN_ASSIGN_PRIMARY            (0x0001)
 #define TOKEN_DUPLICATE                 (0x0002)
@@ -349,6 +388,23 @@ extern PACL                         SeSystemDefaultDacl;
 
 #define VACB_MAPPING_GRANULARITY        (0x40000)
 #define VACB_OFFSET_SHIFT               (18)
+
+#define SE_OWNER_DEFAULTED              0x0001
+#define SE_GROUP_DEFAULTED              0x0002
+#define SE_DACL_PRESENT                 0x0004
+#define SE_DACL_DEFAULTED               0x0008
+#define SE_SACL_PRESENT                 0x0010
+#define SE_SACL_DEFAULTED               0x0020
+#define SE_DACL_UNTRUSTED               0x0040
+#define SE_SERVER_SECURITY              0x0080
+#define SE_DACL_AUTO_INHERIT_REQ        0x0100
+#define SE_SACL_AUTO_INHERIT_REQ        0x0200
+#define SE_DACL_AUTO_INHERITED          0x0400
+#define SE_SACL_AUTO_INHERITED          0x0800
+#define SE_DACL_PROTECTED               0x1000
+#define SE_SACL_PROTECTED               0x2000
+#define SE_RM_CONTROL_VALID             0x4000
+#define SE_SELF_RELATIVE                0x8000
 
 #define FSCTL_REQUEST_OPLOCK_LEVEL_1    CTL_CODE(FILE_DEVICE_FILE_SYSTEM,  0, METHOD_BUFFERED, FILE_ANY_ACCESS)
 #define FSCTL_REQUEST_OPLOCK_LEVEL_2    CTL_CODE(FILE_DEVICE_FILE_SYSTEM,  1, METHOD_BUFFERED, FILE_ANY_ACCESS)
@@ -462,28 +518,29 @@ extern PACL                         SeSystemDefaultDacl;
 
 #define IOCTL_REDIR_QUERY_PATH          CTL_CODE(FILE_DEVICE_NETWORK_FILE_SYSTEM, 99, METHOD_NEITHER, FILE_ANY_ACCESS)
 
-typedef PVOID PEJOB;
 typedef PVOID OPLOCK, *POPLOCK;
 
 typedef struct _CACHE_MANAGER_CALLBACKS         *PCACHE_MANAGER_CALLBACKS;
 typedef struct _EPROCESS_QUOTA_BLOCK            *PEPROCESS_QUOTA_BLOCK;
 typedef struct _FILE_GET_QUOTA_INFORMATION      *PFILE_GET_QUOTA_INFORMATION;
 typedef struct _HANDLE_TABLE                    *PHANDLE_TABLE;
-typedef struct _KEVENT_PAIR                     *PKEVENT_PAIR;
 typedef struct _KPROCESS                        *PKPROCESS;
 typedef struct _KQUEUE                          *PKQUEUE;
 typedef struct _KTRAP_FRAME                     *PKTRAP_FRAME;
-typedef struct _MAILSLOT_CREATE_PARAMETERS      *PMAILSLOT_CREATE_PARAMETERS;
 typedef struct _MMWSL                           *PMMWSL;
-typedef struct _NAMED_PIPE_CREATE_PARAMETERS    *PNAMED_PIPE_CREATE_PARAMETERS;
 typedef struct _OBJECT_DIRECTORY                *POBJECT_DIRECTORY;
 typedef struct _PAGEFAULT_HISTORY               *PPAGEFAULT_HISTORY;
 typedef struct _PS_IMPERSONATION_INFORMATION    *PPS_IMPERSONATION_INFORMATION;
 typedef struct _SECTION_OBJECT                  *PSECTION_OBJECT;
 typedef struct _SHARED_CACHE_MAP                *PSHARED_CACHE_MAP;
-typedef struct _TERMINATION_PORT                *PTERMINATION_PORT;
 typedef struct _VACB                            *PVACB;
 typedef struct _VAD_HEADER                      *PVAD_HEADER;
+
+typedef ULONG LBN;
+typedef LBN *PLBN;
+
+typedef ULONG VBN;
+typedef VBN *PVBN;
 
 typedef struct _NOTIFY_SYNC
 {
@@ -517,10 +574,6 @@ typedef enum _FILE_STORAGE_TYPE {
     StorageTypeStream
 } FILE_STORAGE_TYPE;
 
-typedef enum _IO_COMPLETION_INFORMATION_CLASS {
-    IoCompletionBasicInformation
-} IO_COMPLETION_INFORMATION_CLASS;
-
 typedef enum _OBJECT_INFO_CLASS {
     ObjectBasicInfo,
     ObjectNameInfo,
@@ -535,7 +588,7 @@ typedef struct _KAPC_STATE {
     BOOLEAN     KernelApcInProgress;
     BOOLEAN     KernelApcPending;
     BOOLEAN     UserApcPending;
-} KAPC_STATE, *PKAPC_STATE, *__restrict PRKAPC_STATE;
+} KAPC_STATE, *PKAPC_STATE, *RESTRICTED_POINTER PRKAPC_STATE;
 
 #if (VER_PRODUCTBUILD >= 2600)
 
@@ -679,6 +732,10 @@ typedef struct _EX_PUSH_LOCK {
         PVOID   Ptr;
     } DUMMYUNIONNAME;
 } EX_PUSH_LOCK, *PEX_PUSH_LOCK;
+
+#define EX_RUNDOWN_ACTIVE               0x1
+#define EX_RUNDOWN_COUNT_SHIFT          0x1
+#define EX_RUNDOWN_COUNT_INC            (1 << EX_RUNDOWN_COUNT_SHIFT)
 
 typedef struct _EX_RUNDOWN_REF {
     _ANONYMOUS_UNION union {
@@ -1070,6 +1127,15 @@ typedef struct _FILE_PIPE_EVENT_BUFFER {
     ULONG NumberRequests;
 } FILE_PIPE_EVENT_BUFFER, *PFILE_PIPE_EVENT_BUFFER;
 
+typedef struct _FILE_PIPE_PEEK_BUFFER
+{
+    ULONG NamedPipeState;
+    ULONG ReadDataAvailable;
+    ULONG NumberOfMessages;
+    ULONG MessageLength;
+    CHAR Data[1];
+} FILE_PIPE_PEEK_BUFFER, *PFILE_PIPE_PEEK_BUFFER;
+
 typedef struct _FILE_PIPE_INFORMATION {
     ULONG ReadMode;
     ULONG CompletionMode;
@@ -1099,16 +1165,6 @@ typedef struct _FILE_PIPE_WAIT_FOR_BUFFER {
     BOOLEAN         TimeoutSpecified;
     WCHAR           Name[1];
 } FILE_PIPE_WAIT_FOR_BUFFER, *PFILE_PIPE_WAIT_FOR_BUFFER;
-
-typedef struct _FILE_QUOTA_INFORMATION {
-    ULONG           NextEntryOffset;
-    ULONG           SidLength;
-    LARGE_INTEGER   ChangeTime;
-    LARGE_INTEGER   QuotaUsed;
-    LARGE_INTEGER   QuotaThreshold;
-    LARGE_INTEGER   QuotaLimit;
-    SID             Sid;
-} FILE_QUOTA_INFORMATION, *PFILE_QUOTA_INFORMATION;
 
 typedef struct _FILE_RENAME_INFORMATION {
     BOOLEAN ReplaceIfExists;
@@ -1159,6 +1215,55 @@ typedef struct _FSRTL_COMMON_FCB_HEADER {
     LARGE_INTEGER   ValidDataLength;
 } FSRTL_COMMON_FCB_HEADER, *PFSRTL_COMMON_FCB_HEADER;
 
+#if (VER_PRODUCTBUILD >= 2600)
+
+typedef struct _FSRTL_ADVANCED_FCB_HEADER {
+    CSHORT          NodeTypeCode;
+    CSHORT          NodeByteSize;
+    UCHAR           Flags;
+    UCHAR           IsFastIoPossible;
+    UCHAR           Flags2;
+    UCHAR           Reserved;
+    PERESOURCE      Resource;
+    PERESOURCE      PagingIoResource;
+    LARGE_INTEGER   AllocationSize;
+    LARGE_INTEGER   FileSize;
+    LARGE_INTEGER   ValidDataLength;
+    PFAST_MUTEX     FastMutex;
+    LIST_ENTRY      FilterContexts;
+} FSRTL_ADVANCED_FCB_HEADER, *PFSRTL_ADVANCED_FCB_HEADER;
+
+typedef struct _FSRTL_PER_STREAM_CONTEXT {
+    LIST_ENTRY     Links;
+    PVOID          OwnerId;
+    PVOID          InstanceId;
+    PFREE_FUNCTION FreeCallback;
+} FSRTL_PER_STREAM_CONTEXT, *PFSRTL_PER_STREAM_CONTEXT;
+
+#endif /* (VER_PRODUCTBUILD >= 2600) */
+
+typedef struct _BASE_MCB
+{
+    ULONG MaximumPairCount;
+    ULONG PairCount;
+    POOL_TYPE PoolType;
+    PVOID Mapping;
+} BASE_MCB;
+typedef BASE_MCB *PBASE_MCB;
+
+typedef struct _LARGE_MCB
+{
+    PFAST_MUTEX FastMutex;
+    BASE_MCB BaseMcb;
+} LARGE_MCB;
+typedef LARGE_MCB *PLARGE_MCB;
+
+typedef struct _MCB 
+{
+    LARGE_MCB DummyFieldThatSizesThisStructureCorrectly;
+} MCB;
+typedef MCB *PMCB;
+
 typedef struct _GENERATE_NAME_CONTEXT {
     USHORT  Checksum;
     BOOLEAN CheckSumInserted;
@@ -1168,25 +1273,6 @@ typedef struct _GENERATE_NAME_CONTEXT {
     WCHAR   ExtensionBuffer[4];
     ULONG   LastIndexValue;
 } GENERATE_NAME_CONTEXT, *PGENERATE_NAME_CONTEXT;
-
-typedef struct _HANDLE_TABLE_ENTRY_INFO {
-    ULONG AuditMask;
-} HANDLE_TABLE_ENTRY_INFO, *PHANDLE_TABLE_ENTRY_INFO;
-
-typedef struct _HANDLE_TABLE_ENTRY {
-    union {
-        PVOID Object;
-        ULONG ObAttributes;
-        PHANDLE_TABLE_ENTRY_INFO InfoTable;
-        ULONG_PTR Value;
-    } u1;
-    union {
-        ULONG GrantedAccess;
-        USHORT GrantedAccessIndex;
-        LONG NextFreeTableEntry;
-    } u2;
-    USHORT CreatorBackTraceIndex;
-} HANDLE_TABLE_ENTRY, *PHANDLE_TABLE_ENTRY;
 
 typedef struct _MAPPING_PAIR {
     ULONGLONG Vcn;
@@ -1208,13 +1294,6 @@ typedef struct _IO_COMPLETION_BASIC_INFORMATION {
     LONG Depth;
 } IO_COMPLETION_BASIC_INFORMATION, *PIO_COMPLETION_BASIC_INFORMATION;
 
-typedef struct _KEVENT_PAIR {
-    USHORT Type;
-    USHORT Size;
-    KEVENT Event1;
-    KEVENT Event2;
-} KEVENT_PAIR, *PKEVENT_PAIR;
-
 typedef struct _KQUEUE {
     DISPATCHER_HEADER   Header;
     LIST_ENTRY          EntryListHead;
@@ -1222,13 +1301,6 @@ typedef struct _KQUEUE {
     ULONG               MaximumCount;
     LIST_ENTRY          ThreadListHead;
 } KQUEUE, *PKQUEUE, *RESTRICTED_POINTER PRKQUEUE;
-
-typedef struct _MAILSLOT_CREATE_PARAMETERS {
-    ULONG           MailslotQuota;
-    ULONG           MaximumMessageSize;
-    LARGE_INTEGER   ReadTimeout;
-    BOOLEAN         TimeoutSpecified;
-} MAILSLOT_CREATE_PARAMETERS, *PMAILSLOT_CREATE_PARAMETERS;
 
 typedef struct _MBCB {
     CSHORT          NodeTypeCode;
@@ -1251,17 +1323,6 @@ typedef struct _MOVEFILE_DESCRIPTOR {
      ULONG          NumVcns;
      ULONG          Reserved1;
 } MOVEFILE_DESCRIPTOR, *PMOVEFILE_DESCRIPTOR;
-
-typedef struct _NAMED_PIPE_CREATE_PARAMETERS {
-    ULONG           NamedPipeType;
-    ULONG           ReadMode;
-    ULONG           CompletionMode;
-    ULONG           MaximumInstances;
-    ULONG           InboundQuota;
-    ULONG           OutboundQuota;
-    LARGE_INTEGER   DefaultTimeout;
-    BOOLEAN         TimeoutSpecified;
-} NAMED_PIPE_CREATE_PARAMETERS, *PNAMED_PIPE_CREATE_PARAMETERS;
 
 typedef struct _OBJECT_BASIC_INFO {
     ULONG           Attributes;
@@ -1303,13 +1364,6 @@ typedef struct _OBJECT_ALL_TYPES_INFO {
     OBJECT_TYPE_INFO    ObjectsTypeInfo[1];
 } OBJECT_ALL_TYPES_INFO, *POBJECT_ALL_TYPES_INFO;
 
-typedef struct _PAGEFAULT_HISTORY {
-    ULONG                           CurrentIndex;
-    ULONG                           MaxIndex;
-    KSPIN_LOCK                      SpinLock;
-    PVOID                           Reserved;
-    PROCESS_WS_WATCH_INFORMATION    WatchInfo[1];
-} PAGEFAULT_HISTORY, *PPAGEFAULT_HISTORY;
 
 typedef struct _PATHNAME_BUFFER {
     ULONG PathNameLength;
@@ -1444,28 +1498,6 @@ typedef struct _SE_EXPORTS {
 
 } SE_EXPORTS, *PSE_EXPORTS;
 
-typedef struct _SECTION_BASIC_INFORMATION {
-    PVOID           BaseAddress;
-    ULONG           Attributes;
-    LARGE_INTEGER   Size;
-} SECTION_BASIC_INFORMATION, *PSECTION_BASIC_INFORMATION;
-
-typedef struct _SECTION_IMAGE_INFORMATION {
-    ULONG     EntryPoint;
-    ULONG     Unknown1;
-    ULONG_PTR StackReserve;
-    ULONG_PTR StackCommit;
-    ULONG     Subsystem;
-    USHORT    MinorSubsystemVersion;
-    USHORT    MajorSubsystemVersion;
-    ULONG     Unknown2;
-    ULONG     Characteristics;
-    USHORT    ImageNumber;
-    BOOLEAN   Executable;
-    UCHAR     Unknown3;
-    ULONG     Unknown4[3];
-} SECTION_IMAGE_INFORMATION, *PSECTION_IMAGE_INFORMATION;
-
 #if (VER_PRODUCTBUILD >= 2600)
 
 typedef struct _SHARED_CACHE_MAP {
@@ -1518,20 +1550,6 @@ typedef struct _STARTING_VCN_INPUT_BUFFER {
     LARGE_INTEGER StartingVcn;
 } STARTING_VCN_INPUT_BUFFER, *PSTARTING_VCN_INPUT_BUFFER;
 
-typedef struct _SYSTEM_CACHE_INFORMATION {
-    ULONG CurrentSize;
-    ULONG PeakSize;
-    ULONG PageFaultCount;
-    ULONG MinimumWorkingSet;
-    ULONG MaximumWorkingSet;
-    ULONG Unused[4];
-} SYSTEM_CACHE_INFORMATION, *PSYSTEM_CACHE_INFORMATION;
-
-typedef struct _TERMINATION_PORT {
-    struct _TERMINATION_PORT*   Next;
-    PVOID                       Port;
-} TERMINATION_PORT, *PTERMINATION_PORT;
-
 typedef struct _SECURITY_CLIENT_CONTEXT {
     SECURITY_QUALITY_OF_SERVICE SecurityQos;
     PACCESS_TOKEN               ClientToken;
@@ -1571,6 +1589,90 @@ typedef struct _VAD_HEADER {
     ULONG       Unknown;
     LIST_ENTRY  Secured;
 } VAD_HEADER, *PVAD_HEADER;
+
+#if (VER_PRODUCTBUILD >= 2600)
+
+typedef BOOLEAN
+(NTAPI *PFILTER_REPORT_CHANGE) (
+    IN PVOID  NotifyContext,
+    IN PVOID  FilterContext
+);
+
+typedef enum _FS_FILTER_SECTION_SYNC_TYPE {
+    SyncTypeOther = 0,
+    SyncTypeCreateSection
+} FS_FILTER_SECTION_SYNC_TYPE, *PFS_FILTER_SECTION_SYNC_TYPE;
+
+typedef union _FS_FILTER_PARAMETERS {
+    struct {
+        PLARGE_INTEGER  EndingOffset;
+    } AcquireForModifiedPageWriter;
+
+    struct {
+        PERESOURCE  ResourceToRelease;
+    } ReleaseForModifiedPageWriter;
+
+    struct {
+        FS_FILTER_SECTION_SYNC_TYPE  SyncType;
+        ULONG  PageProtection;
+    } AcquireForSectionSynchronization;
+
+    struct {
+        PVOID  Argument1;
+        PVOID  Argument2;
+        PVOID  Argument3;
+        PVOID  Argument4;
+        PVOID  Argument5;
+    } Others;
+} FS_FILTER_PARAMETERS, *PFS_FILTER_PARAMETERS;
+
+typedef struct _FS_FILTER_CALLBACK_DATA {
+    ULONG                  SizeOfFsFilterCallbackData;
+    UCHAR                  Operation;
+    UCHAR                  Reserved;
+    struct _DEVICE_OBJECT  *DeviceObject;
+    struct _FILE_OBJECT    *FileObject;
+    FS_FILTER_PARAMETERS   Parameters;
+} FS_FILTER_CALLBACK_DATA, *PFS_FILTER_CALLBACK_DATA;
+
+typedef NTSTATUS
+(NTAPI *PFS_FILTER_CALLBACK) (
+    IN PFS_FILTER_CALLBACK_DATA  Data,
+    OUT PVOID                    *CompletionContext
+);
+
+typedef VOID
+(NTAPI *PFS_FILTER_COMPLETION_CALLBACK) (
+    IN PFS_FILTER_CALLBACK_DATA  Data,
+    IN NTSTATUS                  OperationStatus,
+    IN PVOID                     CompletionContext
+);
+
+typedef struct _FS_FILTER_CALLBACKS {
+    ULONG                           SizeOfFsFilterCallbacks;
+    ULONG                           Reserved;
+    PFS_FILTER_CALLBACK             PreAcquireForSectionSynchronization;
+    PFS_FILTER_COMPLETION_CALLBACK  PostAcquireForSectionSynchronization;
+    PFS_FILTER_CALLBACK             PreReleaseForSectionSynchronization;
+    PFS_FILTER_COMPLETION_CALLBACK  PostReleaseForSectionSynchronization;
+    PFS_FILTER_CALLBACK             PreAcquireForCcFlush;
+    PFS_FILTER_COMPLETION_CALLBACK  PostAcquireForCcFlush;
+    PFS_FILTER_CALLBACK             PreReleaseForCcFlush;
+    PFS_FILTER_COMPLETION_CALLBACK  PostReleaseForCcFlush;
+    PFS_FILTER_CALLBACK             PreAcquireForModifiedPageWriter;
+    PFS_FILTER_COMPLETION_CALLBACK  PostAcquireForModifiedPageWriter;
+    PFS_FILTER_CALLBACK             PreReleaseForModifiedPageWriter;
+    PFS_FILTER_COMPLETION_CALLBACK  PostReleaseForModifiedPageWriter;
+} FS_FILTER_CALLBACKS, *PFS_FILTER_CALLBACKS;
+
+typedef struct _READ_LIST {
+    PFILE_OBJECT          FileObject;
+    ULONG                 NumberOfEntries;
+    LOGICAL               IsImage;
+    FILE_SEGMENT_ELEMENT  List[ANYSIZE_ARRAY];
+} READ_LIST, *PREAD_LIST;
+
+#endif
 
 NTKERNELAPI
 BOOLEAN
@@ -1708,6 +1810,7 @@ CcGetFlushedValidData (
 
 NTKERNELAPI
 LARGE_INTEGER
+NTAPI
 CcGetLsnForFileObject (
     IN PFILE_OBJECT     FileObject,
     OUT PLARGE_INTEGER  OldestLsn OPTIONAL
@@ -2025,16 +2128,78 @@ NTKERNELAPI
 VOID
 NTAPI
 ExDisableResourceBoostLite (
-    IN PERESOURCE Resource
+    IN PERESOURCE  Resource
 );
 
 NTKERNELAPI
 ULONG
 NTAPI
 ExQueryPoolBlockSize (
-    IN PVOID        PoolBlock,
-    OUT PBOOLEAN    QuotaCharged
+    IN PVOID      PoolBlock,
+    OUT PBOOLEAN  QuotaCharged
 );
+
+#if (VER_PRODUCTBUILD >= 2600)
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExInitializeRundownProtection (
+    IN PEX_RUNDOWN_REF  RunRef
+);
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExReInitializeRundownProtection (
+    IN PEX_RUNDOWN_REF  RunRef
+);
+
+NTKERNELAPI
+BOOLEAN
+FASTCALL
+ExAcquireRundownProtection (
+    IN PEX_RUNDOWN_REF  RunRef
+);
+
+NTKERNELAPI
+BOOLEAN
+FASTCALL
+ExAcquireRundownProtectionEx (
+    IN PEX_RUNDOWN_REF  RunRef,
+    IN ULONG            Count
+);
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExReleaseRundownProtection (
+    IN PEX_RUNDOWN_REF  RunRef
+);
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExReleaseRundownProtectionEx (
+    IN PEX_RUNDOWN_REF  RunRef,
+    IN ULONG            Count
+);
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExRundownCompleted (
+    IN PEX_RUNDOWN_REF  RunRef
+);
+
+NTKERNELAPI
+VOID
+FASTCALL
+ExWaitForRundownProtectionRelease (
+    IN PEX_RUNDOWN_REF  RunRef
+);
+
+#endif /* (VER_PRODUCTBUILD >= 2600) */
 
 #define FlagOn(x, f) ((x) & (f))
 
@@ -2141,15 +2306,15 @@ FsRtlCheckLockForWriteAccess (
 );
 
 typedef
-VOID NTAPI
-(*POPLOCK_WAIT_COMPLETE_ROUTINE) (
+VOID
+(NTAPI*POPLOCK_WAIT_COMPLETE_ROUTINE) (
     IN PVOID    Context,
     IN PIRP     Irp
 );
 
 typedef
-VOID NTAPI
-(*POPLOCK_FS_PREPOST_IRP) (
+VOID
+(NTAPI*POPLOCK_FS_PREPOST_IRP) (
     IN PVOID    Context,
     IN PIRP     Irp
 );
@@ -2416,11 +2581,43 @@ FsRtlIsNtstatusExpected (
     IN NTSTATUS Ntstatus
 );
 
+#define NLS_MB_CODE_PAGE_TAG NlsMbCodePageTag
+#define NLS_MB_OEM_CODE_PAGE_TAG NlsMbOemCodePageTag
+#define NLS_MB_CODE_PAGE_TAG NlsMbOemCodePageTag
+#define NLS_OEM_LEAD_BYTE_INFO NlsOemLeadByteInfo
+
+extern BOOLEAN NlsMbCodePageTag;
+extern BOOLEAN NlsMbOemCodePageTag;
+extern PUSHORT NlsOemLeadByteInfo;
+
+#define FsRtlIsLeadDbcsCharacter(DBCS_CHAR) (                               \
+    (BOOLEAN)((UCHAR)(DBCS_CHAR) < 0x80 ? FALSE :                           \
+              (NLS_MB_CODE_PAGE_TAG &&                                      \
+               (NLS_OEM_LEAD_BYTE_INFO[(UCHAR)(DBCS_CHAR)] != 0)))          \
+)
+
+#define FsRtlIsAnsiCharacterWild(C) (                                       \
+    FlagOn(FsRtlLegalAnsiCharacterArray[(UCHAR)(C)], FSRTL_WILD_CHARACTER ) \
+)
+
 #define FsRtlIsUnicodeCharacterWild(C) (                                    \
     (((C) >= 0x40) ?                                                        \
     FALSE :                                                                 \
-    FlagOn((*FsRtlLegalAnsiCharacterArray)[(C)], FSRTL_WILD_CHARACTER ))    \
+    FlagOn(FsRtlLegalAnsiCharacterArray[(C)], FSRTL_WILD_CHARACTER ))       \
 )
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlMdlReadDev (
+    IN PFILE_OBJECT       FileObject,
+    IN PLARGE_INTEGER     FileOffset,
+    IN ULONG              Length,
+    IN ULONG              LockKey,
+    OUT PMDL              *MdlChain,
+    OUT PIO_STATUS_BLOCK  IoStatus,
+    IN PDEVICE_OBJECT     DeviceObject
+);
 
 NTKERNELAPI
 BOOLEAN
@@ -2437,6 +2634,19 @@ FsRtlMdlReadCompleteDev (
     IN PFILE_OBJECT     FileObject,
     IN PMDL             MdlChain,
     IN PDEVICE_OBJECT   DeviceObject
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+FsRtlPrepareMdlWriteDev (
+    IN PFILE_OBJECT       FileObject,
+    IN PLARGE_INTEGER     FileOffset,
+    IN ULONG              Length,
+    IN ULONG              LockKey,
+    OUT PMDL              *MdlChain,
+    OUT PIO_STATUS_BLOCK  IoStatus,
+    IN PDEVICE_OBJECT     DeviceObject
 );
 
 NTKERNELAPI
@@ -2529,7 +2739,7 @@ NTKERNELAPI
 VOID
 NTAPI
 FsRtlNotifyInitializeSync (
-    IN PNOTIFY_SYNC NotifySync
+    IN PNOTIFY_SYNC *NotifySync
 );
 
 NTKERNELAPI
@@ -2547,7 +2757,7 @@ NTKERNELAPI
 VOID
 NTAPI
 FsRtlNotifyUninitializeSync (
-    IN PNOTIFY_SYNC NotifySync
+    IN PNOTIFY_SYNC *NotifySync
 );
 
 #if (VER_PRODUCTBUILD >= 2195)
@@ -2644,6 +2854,30 @@ FsRtlRegisterUncProvider (
     IN BOOLEAN          MailslotsSupported
 );
 
+typedef VOID
+(NTAPI *PFSRTL_STACK_OVERFLOW_ROUTINE) (
+    IN PVOID    Context,
+    IN PKEVENT  Event
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlPostStackOverflow (
+    IN PVOID                          Context,
+    IN PKEVENT                        Event,
+    IN PFSRTL_STACK_OVERFLOW_ROUTINE  StackOverflowRoutine
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+FsRtlPostPagingFileStackOverflow (
+    IN PVOID                          Context,
+    IN PKEVENT                        Event,
+    IN PFSRTL_STACK_OVERFLOW_ROUTINE  StackOverflowRoutine
+);
+
 NTKERNELAPI
 VOID
 NTAPI
@@ -2679,12 +2913,14 @@ HalSetRealTimeClock (
     IN PTIME_FIELDS TimeFields
 );
 
-#define InitializeMessageHeader(m, l, t) {                  \
-    (m)->Length = (USHORT)(l);                              \
-    (m)->DataLength = (USHORT)(l - sizeof( LPC_MESSAGE ));  \
-    (m)->MessageType = (USHORT)(t);                         \
-    (m)->DataInfoOffset = 0;                                \
-}
+NTKERNELAPI
+NTSTATUS
+NTAPI
+IoAttachDeviceToDeviceStackSafe(
+    IN PDEVICE_OBJECT   SourceDevice,
+    IN PDEVICE_OBJECT   TargetDevice,
+    OUT PDEVICE_OBJECT  *AttachedToDeviceObject
+);
 
 NTKERNELAPI
 VOID
@@ -2718,8 +2954,8 @@ IoCheckFunctionAccess (
     IN UCHAR                    MajorFunction,
     IN UCHAR                    MinorFunction,
     IN ULONG                    IoControlCode,
-    IN PFILE_INFORMATION_CLASS  FileInformationClass OPTIONAL,
-    IN PFS_INFORMATION_CLASS    FsInformationClass OPTIONAL
+    IN PVOID                    Argument1 OPTIONAL,
+    IN PVOID                    Argument2 OPTIONAL
 );
 
 #if (VER_PRODUCTBUILD >= 2195)
@@ -2875,6 +3111,13 @@ IoQueryVolumeInformation (
 NTKERNELAPI
 VOID
 NTAPI
+IoQueueThreadIrp(
+    IN PIRP Irp
+);
+
+NTKERNELAPI
+VOID
+NTAPI
 IoRegisterFileSystem (
     IN OUT PDEVICE_OBJECT DeviceObject
 );
@@ -2956,7 +3199,7 @@ IoUnregisterFileSystem (
 #if (VER_PRODUCTBUILD >= 1381)
 
 NTKERNELAPI
-NTSTATUS
+VOID
 NTAPI
 IoUnregisterFsRegistrationChange (
     IN PDRIVER_OBJECT           DriverObject,
@@ -2977,7 +3220,7 @@ NTKERNELAPI
 VOID
 NTAPI
 KeAttachProcess (
-    IN PEPROCESS Process
+    IN PKPROCESS Process
 );
 
 NTKERNELAPI
@@ -3042,6 +3285,31 @@ PLIST_ENTRY
 NTAPI
 KeRundownQueue (
     IN PRKQUEUE Queue
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+KeInitializeMutant (
+    IN PRKMUTANT  Mutant,
+    IN BOOLEAN    InitialOwner
+);
+
+NTKERNELAPI
+LONG
+NTAPI
+KeReadStateMutant (
+    IN PRKMUTANT  Mutant
+);
+
+NTKERNELAPI
+LONG
+NTAPI
+KeReleaseMutant (
+    IN PRKMUTANT  Mutant,
+    IN KPRIORITY  Increment,
+    IN BOOLEAN    Abandoned,
+    IN BOOLEAN    Wait
 );
 
 #if (VER_PRODUCTBUILD >= 2195)
@@ -3216,12 +3484,29 @@ ObReferenceObjectByName (
 );
 
 NTKERNELAPI
+NTSTATUS
+NTAPI
+PsAssignImpersonationToken (
+    IN PETHREAD     Thread,
+    IN HANDLE       Token
+);
+
+NTKERNELAPI
 VOID
 NTAPI
 PsChargePoolQuota (
     IN PEPROCESS    Process,
     IN POOL_TYPE    PoolType,
     IN ULONG        Amount
+);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PsChargeProcessPoolQuota (
+    IN PEPROCESS    Process,
+    IN POOL_TYPE    PoolType,
+    IN ULONG_PTR    Amount
 );
 
 #define PsDereferenceImpersonationToken(T)  \
@@ -3235,10 +3520,36 @@ PsChargePoolQuota (
 #define PsDereferencePrimaryToken(T) (ObDereferenceObject((T)))
 
 NTKERNELAPI
-ULONGLONG
+BOOLEAN
+NTAPI
+PsDisableImpersonation(
+    IN PETHREAD                 Thread,
+    IN PSE_IMPERSONATION_STATE  ImpersonationState
+);
+
+NTKERNELAPI
+LARGE_INTEGER
 NTAPI
 PsGetProcessExitTime (
     VOID
+);
+
+NTKERNELAPI
+NTSTATUS
+NTAPI
+PsImpersonateClient(
+    IN PETHREAD                      Thread,
+    IN PACCESS_TOKEN                 Token,
+    IN BOOLEAN                       CopyOnOpen,
+    IN BOOLEAN                       EffectiveOnly,
+    IN SECURITY_IMPERSONATION_LEVEL  ImpersonationLevel
+);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+PsIsSystemThread(
+    IN PETHREAD Thread
 );
 
 NTKERNELAPI
@@ -3288,6 +3599,14 @@ HANDLE
 NTAPI
 PsReferencePrimaryToken (
     IN PEPROCESS Process
+);
+
+NTKERNELAPI
+VOID
+NTAPI
+PsRestoreImpersonation(
+    IN PETHREAD                 Thread,
+    IN PSE_IMPERSONATION_STATE  ImpersonationState
 );
 
 NTKERNELAPI
@@ -3550,27 +3869,6 @@ RtlSecondsSince1970ToTime (
     OUT PLARGE_INTEGER  Time
 );
 
-#if (VER_PRODUCTBUILD >= 2195)
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-RtlSelfRelativeToAbsoluteSD (
-    IN PSECURITY_DESCRIPTOR_RELATIVE SelfRelativeSD,
-    OUT PSECURITY_DESCRIPTOR         AbsoluteSD,
-    IN PULONG                        AbsoluteSDSize,
-    IN PACL                          Dacl,
-    IN PULONG                        DaclSize,
-    IN PACL                          Sacl,
-    IN PULONG                        SaclSize,
-    IN PSID                          Owner,
-    IN PULONG                        OwnerSize,
-    IN PSID                          PrimaryGroup,
-    IN PULONG                        PrimaryGroupSize
-);
-
-#endif /* (VER_PRODUCTBUILD >= 2195) */
-
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -3651,16 +3949,6 @@ VOID
 NTAPI
 SeCaptureSubjectContext (
     OUT PSECURITY_SUBJECT_CONTEXT SubjectContext
-);
-
-NTKERNELAPI
-NTSTATUS
-NTAPI
-SeCreateAccessState (
-    OUT PACCESS_STATE   AccessState,
-    IN PVOID            AuxData,
-    IN ACCESS_MASK      AccessMask,
-    IN PGENERIC_MAPPING Mapping
 );
 
 NTKERNELAPI
@@ -3920,6 +4208,7 @@ SeUnlockSubjectContext (
 
 NTKERNELAPI
 NTSTATUS
+NTAPI
 SeUnregisterLogonSessionTerminatedRoutine (
     IN PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine
 );
@@ -4347,44 +4636,12 @@ ZwQueryInformationToken (
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwQueryObject (
-    IN HANDLE                      ObjectHandle,
-    IN OBJECT_INFORMATION_CLASS    ObjectInformationClass,
-    OUT PVOID                      ObjectInformation,
-    IN ULONG                       Length,
-    OUT PULONG                     ResultLength
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwQuerySection (
-    IN HANDLE                       SectionHandle,
-    IN SECTION_INFORMATION_CLASS    SectionInformationClass,
-    OUT PVOID                       SectionInformation,
-    IN ULONG                        SectionInformationLength,
-    OUT PULONG                      ResultLength OPTIONAL
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
 ZwQuerySecurityObject (
     IN HANDLE                   FileHandle,
     IN SECURITY_INFORMATION     SecurityInformation,
     OUT PSECURITY_DESCRIPTOR    SecurityDescriptor,
     IN ULONG                    Length,
     OUT PULONG                  ResultLength
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwQuerySystemInformation (
-    IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
-    OUT PVOID                   SystemInformation,
-    IN ULONG                    Length,
-    OUT PULONG                  ReturnLength
 );
 
 NTSYSAPI
@@ -4476,16 +4733,6 @@ ZwSetEvent (
 NTSYSAPI
 NTSTATUS
 NTAPI
-ZwSetInformationObject (
-    IN HANDLE                       ObjectHandle,
-    IN OBJECT_INFORMATION_CLASS    ObjectInformationClass,
-    IN PVOID                        ObjectInformation,
-    IN ULONG                        ObjectInformationLength
-);
-
-NTSYSAPI
-NTSTATUS
-NTAPI
 ZwSetInformationProcess (
     IN HANDLE           ProcessHandle,
     IN PROCESSINFOCLASS ProcessInformationClass,
@@ -4505,15 +4752,6 @@ ZwSetSecurityObject (
 );
 
 #endif /* (VER_PRODUCTBUILD >= 2195) */
-
-NTSYSAPI
-NTSTATUS
-NTAPI
-ZwSetSystemInformation (
-    IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
-    IN PVOID                    SystemInformation,
-    IN ULONG                    Length
-);
 
 NTSYSAPI
 NTSTATUS

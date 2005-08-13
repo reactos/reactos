@@ -167,7 +167,7 @@ BOOLEAN ListUserModules( PPEB peb )
 {
 	PLIST_ENTRY UserModuleListHead;
 	PLIST_ENTRY Entry;
-	PLDR_MODULE Module;
+	PLDR_DATA_TABLE_ENTRY Module;
 	PPEB_LDR_DATA Ldr;
 
 	ENTER_FUNC();
@@ -179,7 +179,7 @@ BOOLEAN ListUserModules( PPEB peb )
 		Entry = UserModuleListHead->Flink;
 		while (Entry != UserModuleListHead)
 		{
-			Module = CONTAINING_RECORD(Entry, LDR_MODULE, InLoadOrderModuleList);
+			Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
 			//DbgPrint("Module: %x, BaseAddress: %x\n", Module, Module->BaseAddress);
 
 			DPRINT((0,"FullName: %S, BaseName: %S, Length: %ld, EntryPoint: %x, BaseAddress: %x\n", Module->FullDllName.Buffer,

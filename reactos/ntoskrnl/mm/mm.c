@@ -483,7 +483,7 @@ MmSetAddressRangeModified (
  * @implemented
  */
 PVOID
-NTKERNELAPI
+STDCALL
 MmGetSystemRoutineAddress (
     IN PUNICODE_STRING SystemRoutineName
     )

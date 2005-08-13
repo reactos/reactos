@@ -140,7 +140,7 @@ NtGdiDPtoLP(HDC  hDC,
 
    if (!UnsafePoints || Count <= 0)
    {
-     DC_UnlockDc(hDC);
+     DC_UnlockDc(dc);
      SetLastWin32Error(ERROR_INVALID_PARAMETER);
      return FALSE;
    }
@@ -150,7 +150,7 @@ NtGdiDPtoLP(HDC  hDC,
    Points = (LPPOINT)ExAllocatePoolWithTag(PagedPool, Size, TAG_COORD);
    if(!Points)
    {
-     DC_UnlockDc(hDC);
+     DC_UnlockDc(dc);
      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
      return FALSE;
    }
@@ -158,7 +158,7 @@ NtGdiDPtoLP(HDC  hDC,
    Status = MmCopyFromCaller(Points, UnsafePoints, Size);
    if(!NT_SUCCESS(Status))
    {
-     DC_UnlockDc(hDC);
+     DC_UnlockDc(dc);
      ExFreePool(Points);
      SetLastNtError(Status);
      return FALSE;
@@ -169,13 +169,13 @@ NtGdiDPtoLP(HDC  hDC,
    Status = MmCopyToCaller(UnsafePoints, Points, Size);
    if(!NT_SUCCESS(Status))
    {
-     DC_UnlockDc(hDC);
+     DC_UnlockDc(dc);
      ExFreePool(Points);
      SetLastNtError(Status);
      return FALSE;
    }
 
-   DC_UnlockDc(hDC);
+   DC_UnlockDc(dc);
    ExFreePool(Points);
    return TRUE;
 }
@@ -204,7 +204,7 @@ NtGdiGetGraphicsMode ( HDC hDC )
 
   GraphicsMode = dc->w.GraphicsMode;
 
-  DC_UnlockDc ( hDC );
+  DC_UnlockDc(dc);
   return GraphicsMode;
 }
 
@@ -224,14 +224,14 @@ NtGdiGetWorldTransform(HDC  hDC,
   }
   if (!XForm)
   {
-    DC_UnlockDc ( hDC );
+    DC_UnlockDc(dc);
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
 
   Status = MmCopyToCaller(XForm, &dc->w.xformWorld2Wnd, sizeof(XFORM));
 
-  DC_UnlockDc ( hDC );
+  DC_UnlockDc(dc);
   return NT_SUCCESS(Status);
 }
 
@@ -289,7 +289,7 @@ NtGdiLPtoDP ( HDC hDC, LPPOINT UnsafePoints, INT Count )
 
    if (!UnsafePoints || Count <= 0)
    {
-     DC_UnlockDc(hDC);
+     DC_UnlockDc(dc);
      SetLastWin32Error(ERROR_INVALID_PARAMETER);
      return FALSE;
    }
@@ -299,7 +299,7 @@ NtGdiLPtoDP ( HDC hDC, LPPOINT UnsafePoints, INT Count )
    Points = (LPPOINT)ExAllocatePoolWithTag(PagedPool, Size, TAG_COORD);
    if(!Points)
    {
-     DC_UnlockDc(hDC);
+     DC_UnlockDc(dc);
      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
      return FALSE;
    }
@@ -307,7 +307,7 @@ NtGdiLPtoDP ( HDC hDC, LPPOINT UnsafePoints, INT Count )
    Status = MmCopyFromCaller(Points, UnsafePoints, Size);
    if(!NT_SUCCESS(Status))
    {
-     DC_UnlockDc(hDC);
+     DC_UnlockDc(dc);
      ExFreePool(Points);
      SetLastNtError(Status);
      return FALSE;
@@ -318,13 +318,13 @@ NtGdiLPtoDP ( HDC hDC, LPPOINT UnsafePoints, INT Count )
    Status = MmCopyToCaller(UnsafePoints, Points, Size);
    if(!NT_SUCCESS(Status))
    {
-     DC_UnlockDc(hDC);
+     DC_UnlockDc(dc);
      ExFreePool(Points);
      SetLastNtError(Status);
      return FALSE;
    }
 
-   DC_UnlockDc(hDC);
+   DC_UnlockDc(dc);
    ExFreePool(Points);
    return TRUE;
 }
@@ -348,7 +348,7 @@ NtGdiModifyWorldTransform(HDC            hDC,
 
    if (!UnsafeXForm)
    {
-     DC_UnlockDc(hDC);
+     DC_UnlockDc(dc);
      SetLastWin32Error(ERROR_INVALID_PARAMETER);
      return FALSE;
    }
@@ -356,7 +356,7 @@ NtGdiModifyWorldTransform(HDC            hDC,
    Status = MmCopyFromCaller(&SafeXForm, UnsafeXForm, sizeof(XFORM));
    if(!NT_SUCCESS(Status))
    {
-     DC_UnlockDc(hDC);
+     DC_UnlockDc(dc);
      SetLastNtError(Status);
      return FALSE;
    }
@@ -381,13 +381,13 @@ NtGdiModifyWorldTransform(HDC            hDC,
        break;
 
      default:
-       DC_UnlockDc(hDC);
+       DC_UnlockDc(dc);
        SetLastWin32Error(ERROR_INVALID_PARAMETER);
        return FALSE;
   }
 
   DC_UpdateXforms(dc);
-  DC_UnlockDc(hDC);
+  DC_UnlockDc(dc);
   return TRUE;
 }
 
@@ -417,7 +417,7 @@ NtGdiOffsetViewportOrgEx(HDC hDC,
 	if ( !NT_SUCCESS(Status) )
 	  {
 	    SetLastNtError(Status);
-	    DC_UnlockDc ( hDC );
+	    DC_UnlockDc(dc);
 	    return FALSE;
 	  }
     }
@@ -426,7 +426,7 @@ NtGdiOffsetViewportOrgEx(HDC hDC,
   dc->vportOrgY += YOffset;
   DC_UpdateXforms(dc);
 
-  DC_UnlockDc ( hDC );
+  DC_UnlockDc(dc);
   return TRUE;
 }
 
@@ -458,7 +458,7 @@ NtGdiOffsetWindowOrgEx(HDC  hDC,
       if(!NT_SUCCESS(Status))
       {
         SetLastNtError(Status);
-        DC_UnlockDc(hDC);
+        DC_UnlockDc(dc);
         return FALSE;
       }
     }
@@ -467,7 +467,7 @@ NtGdiOffsetWindowOrgEx(HDC  hDC,
   dc->wndOrgY += YOffset;
 
   DC_UpdateXforms(dc);
-  DC_UnlockDc(hDC);
+  DC_UnlockDc(dc);
 
   return TRUE;
 }
@@ -521,14 +521,14 @@ NtGdiSetGraphicsMode(HDC  hDC,
 
   if ((Mode != GM_COMPATIBLE) && (Mode != GM_ADVANCED))
     {
-      DC_UnlockDc( hDC );
+      DC_UnlockDc(dc);
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return 0;
     }
 
   ret = dc->w.GraphicsMode;
   dc->w.GraphicsMode = Mode;
-  DC_UnlockDc( hDC );
+  DC_UnlockDc(dc);
   return  ret;
 }
 
@@ -550,7 +550,7 @@ NtGdiSetMapMode(HDC  hDC,
   PrevMapMode = dc->w.MapMode;
   dc->w.MapMode = MapMode;
 
-  DC_UnlockDc ( hDC );
+  DC_UnlockDc(dc);
 
   return PrevMapMode;
 }
@@ -579,7 +579,7 @@ NtGdiSetViewportExtEx(HDC  hDC,
       case MM_LOMETRIC:
       case MM_TEXT:
       case MM_TWIPS:
-	DC_UnlockDc(hDC);
+	DC_UnlockDc(dc);
 	return FALSE;
 
       case MM_ISOTROPIC:
@@ -600,7 +600,7 @@ NtGdiSetViewportExtEx(HDC  hDC,
       if(!NT_SUCCESS(Status))
       {
         SetLastNtError(Status);
-        DC_UnlockDc(hDC);
+        DC_UnlockDc(dc);
         return FALSE;
       }
     }
@@ -609,7 +609,7 @@ NtGdiSetViewportExtEx(HDC  hDC,
   dc->vportExtY = YExtent;
 
   DC_UpdateXforms(dc);
-  DC_UnlockDc(hDC);
+  DC_UnlockDc(dc);
 
   return TRUE;
 }
@@ -642,7 +642,7 @@ NtGdiSetViewportOrgEx(HDC  hDC,
       if(!NT_SUCCESS(Status))
       {
         SetLastNtError(Status);
-        DC_UnlockDc(hDC);
+        DC_UnlockDc(dc);
         return FALSE;
       }
     }
@@ -651,7 +651,7 @@ NtGdiSetViewportOrgEx(HDC  hDC,
   dc->vportOrgY = Y;
 
   DC_UpdateXforms(dc);
-  DC_UnlockDc(hDC);
+  DC_UnlockDc(dc);
 
   return TRUE;
 }
@@ -680,7 +680,7 @@ NtGdiSetWindowExtEx(HDC  hDC,
       case MM_LOMETRIC:
       case MM_TEXT:
       case MM_TWIPS:
-	DC_UnlockDc(hDC);
+	DC_UnlockDc(dc);
 	return FALSE;
     }
 
@@ -696,7 +696,7 @@ NtGdiSetWindowExtEx(HDC  hDC,
       if(!NT_SUCCESS(Status))
       {
         SetLastNtError(Status);
-        DC_UnlockDc(hDC);
+        DC_UnlockDc(dc);
         return FALSE;
       }
     }
@@ -705,7 +705,7 @@ NtGdiSetWindowExtEx(HDC  hDC,
   dc->wndExtY = YExtent;
 
   DC_UpdateXforms(dc);
-  DC_UnlockDc(hDC);
+  DC_UnlockDc(dc);
 
   return TRUE;
 }
@@ -738,7 +738,7 @@ NtGdiSetWindowOrgEx(HDC  hDC,
       if(!NT_SUCCESS(Status))
       {
         SetLastNtError(Status);
-        DC_UnlockDc(hDC);
+        DC_UnlockDc(dc);
         return FALSE;
       }
     }
@@ -747,7 +747,7 @@ NtGdiSetWindowOrgEx(HDC  hDC,
   dc->wndOrgY = Y;
 
   DC_UpdateXforms(dc);
-  DC_UnlockDc(hDC);
+  DC_UnlockDc(dc);
 
   return TRUE;
 }
@@ -769,7 +769,7 @@ NtGdiSetWorldTransform(HDC  hDC,
 
   if (!XForm)
   {
-    DC_UnlockDc( hDC );
+    DC_UnlockDc(dc);
     /* Win doesn't set LastError */
     return  FALSE;
   }
@@ -777,19 +777,19 @@ NtGdiSetWorldTransform(HDC  hDC,
   /* Check that graphics mode is GM_ADVANCED */
   if ( dc->w.GraphicsMode != GM_ADVANCED )
   {
-    DC_UnlockDc( hDC );
+    DC_UnlockDc(dc);
     return  FALSE;
   }
 
   Status = MmCopyFromCaller(&dc->w.xformWorld2Wnd, XForm, sizeof(XFORM));
   if(!NT_SUCCESS(Status))
   {
-    DC_UnlockDc( hDC );
+    DC_UnlockDc(dc);
     return FALSE;
   }
 
-  DC_UpdateXforms (dc);
-  DC_UnlockDc( hDC );
+  DC_UpdateXforms(dc);
+  DC_UnlockDc(dc);
   return  TRUE;
 }
 

@@ -4,7 +4,6 @@
 #include <limits.h>
 #include <ddk/ntddk.h>
 #include <ddk/ndis.h>
-#include <rosrtl/string.h>
 #include <roscfg.h>
 #include <debug.h>
 #include <pseh.h>

@@ -37,9 +37,18 @@ typedef u32 dma_addr_t;
 typedef  int spinlock_t;
 typedef int atomic_t;
 #ifndef STANDALONE
+#ifndef _MODE_T_
+#define _MODE_T_
 typedef int mode_t;
+#endif
+#ifndef _PID_T_
+#define _PID_T_
 typedef int pid_t;
+#endif
+#ifndef _SSIZE_T_
+#define _SSIZE_T_
 typedef int ssize_t;
+#endif
 
 #endif
 typedef int irqreturn_t;
@@ -517,7 +526,7 @@ void my_interruptible_sleep_on(PKEVENT evnt);
 
 #define flush_scheduled_work() do {} while(0)
 #define refrigerator(x)        do {} while(0)
-#define signal_pending(x)      1  // fall through threads
+#define signal_pending(x)      0  // Don't fall through threads! ReactOS implements this correctly
 #define complete_and_exit(a,b) return 0
 
 //#define kill_proc(a,b,c)     0

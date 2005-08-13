@@ -29,6 +29,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
+#include <ntddcdrm.h>
 
 #define NDEBUG
 #include <debug.h>

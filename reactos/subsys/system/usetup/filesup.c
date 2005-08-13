@@ -27,12 +27,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include "precomp.h"
-#include <ntdll/rtl.h>
-
 #include "usetup.h"
-#include "filesup.h"
-#include "cabinet.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -44,7 +39,7 @@ static BOOLEAN HasCurrentCabinet = FALSE;
 static WCHAR CurrentCabinetName[MAX_PATH];
 
 NTSTATUS
-CreateDirectory(PWCHAR DirectoryName)
+SetupCreateDirectory(PWCHAR DirectoryName)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   IO_STATUS_BLOCK IoStatusBlock;

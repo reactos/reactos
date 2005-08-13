@@ -5,8 +5,9 @@
  * FILE:            lib/smdll/query.c
  * PURPOSE:         Call SM API SM_API_QUERY_INFORMATION (not in NT)
  */
+#include <windows.h>
 #define NTOS_MODE_USER
-#include <ntos.h>
+#include <ndk/ntndk.h>
 #include <sm/helper.h>
 
 #define NDEBUG

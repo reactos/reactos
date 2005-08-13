@@ -11,7 +11,6 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntos.h>
 #include <windows.h>
 #include <stdio.h>
 #include <wchar.h>

@@ -349,9 +349,9 @@ IntGetDesktopWorkArea(PDESKTOP_OBJECT Desktop, PRECT Rect)
     {
       Ret->right = BitmapObj->SurfObj.sizlBitmap.cx;
       Ret->bottom = BitmapObj->SurfObj.sizlBitmap.cy;
-      BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
+      BITMAPOBJ_UnlockBitmap(BitmapObj);
     }
-    DC_UnlockDc(ScreenDeviceContext);
+    DC_UnlockDc(dc);
   }
 
   if(Rect)
@@ -506,15 +506,14 @@ BOOL FASTCALL IntDesktopUpdatePerUserSettings(BOOL bEnable)
 NTSTATUS FASTCALL
 IntShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width, ULONG Height)
 {
-  CSRSS_API_REQUEST Request;
-  CSRSS_API_REPLY Reply;
+  CSR_API_MESSAGE Request;
 
-  Request.Type = CSRSS_SHOW_DESKTOP;
+  Request.Type = MAKE_CSR_API(SHOW_DESKTOP, CSR_GUI);
   Request.Data.ShowDesktopRequest.DesktopWindow = Desktop->DesktopWindow;
   Request.Data.ShowDesktopRequest.Width = Width;
   Request.Data.ShowDesktopRequest.Height = Height;
 
-  return CsrNotify(&Request, &Reply);
+  return CsrNotify(&Request);
 }
 
 NTSTATUS FASTCALL
@@ -729,8 +728,7 @@ NtUserCreateDesktop(
   UNICODE_STRING DesktopName;
   NTSTATUS Status;
   HDESK Desktop;
-  CSRSS_API_REQUEST Request;
-  CSRSS_API_REPLY Reply;
+  CSR_API_MESSAGE Request;
 
   DPRINT("CreateDesktop: %wZ\n", lpszDesktopName);
 
@@ -842,7 +840,7 @@ NtUserCreateDesktop(
   /*
    * Create a handle for CSRSS and notify CSRSS
    */
-  Request.Type = CSRSS_CREATE_DESKTOP;
+  Request.Type = MAKE_CSR_API(CREATE_DESKTOP, CSR_GUI);
   Status = CsrInsertObject(Desktop,
                            GENERIC_ALL,
                            (HANDLE*)&Request.Data.CreateDesktopRequest.DesktopHandle);
@@ -854,7 +852,7 @@ NtUserCreateDesktop(
     return NULL;
   }
 
-  Status = CsrNotify(&Request, &Reply);
+  Status = CsrNotify(&Request);
   if (! NT_SUCCESS(Status))
     {
       CsrCloseHandle(Request.Data.CreateDesktopRequest.DesktopHandle);
@@ -1361,7 +1359,7 @@ NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
      may be a bit safer (e.g. when the desktop is being destroyed */
   /* switch into the context of the thread we're trying to get the desktop from,
      so we can use the handle */
-  KeAttachProcess(Thread->ThreadsProcess);
+  KeAttachProcess(EPROCESS_TO_KPROCESS(Thread->ThreadsProcess));
   Status = ObReferenceObjectByHandle(hThreadDesktop,
                                      GENERIC_ALL,
 				     ExDesktopObjectType,

@@ -76,7 +76,7 @@ NtGdiEscape(HDC  hDC,
   /* TODO FIXME - don't pass umode buffer to an Int function */
   ret = IntGdiEscape(dc, Escape, InSize, InData, OutData);
 
-  DC_UnlockDc( hDC );
+  DC_UnlockDc( dc );
   return ret;
 }
 
@@ -132,7 +132,7 @@ IntGdiExtEscape(
          OutSize,
          (PVOID)OutData );
    }
-   BITMAPOBJ_UnlockBitmap(dc->w.hBitmap);
+   BITMAPOBJ_UnlockBitmap(BitmapObj);
 
    return Result;
 }
@@ -160,7 +160,7 @@ NtGdiExtEscape(
    }
    if ( pDC->IsIC )
    {
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(pDC);
       return 0;
    }
 
@@ -169,7 +169,7 @@ NtGdiExtEscape(
       SafeInData = ExAllocatePoolWithTag ( PagedPool, InSize, TAG_PRINT );
       if ( !SafeInData )
       {
-         DC_UnlockDc(hDC);
+         DC_UnlockDc(pDC);
          SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
          return -1;
       }
@@ -177,7 +177,7 @@ NtGdiExtEscape(
       if ( !NT_SUCCESS(Status) )
       {
          ExFreePool ( SafeInData );
-         DC_UnlockDc(hDC);
+         DC_UnlockDc(pDC);
          SetLastNtError(Status);
          return -1;
       }
@@ -190,7 +190,7 @@ NtGdiExtEscape(
       {
          if ( SafeInData )
             ExFreePool ( SafeInData );
-         DC_UnlockDc(hDC);
+         DC_UnlockDc(pDC);
          SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
          return -1;
       }
@@ -198,7 +198,7 @@ NtGdiExtEscape(
 
    Result = IntGdiExtEscape ( pDC, Escape, InSize, SafeInData, OutSize, SafeOutData );
 
-   DC_UnlockDc(hDC);
+   DC_UnlockDc(pDC);
 
    if ( SafeInData )
       ExFreePool ( SafeInData );

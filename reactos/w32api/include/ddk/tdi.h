@@ -27,14 +27,13 @@
 #pragma GCC system_header
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include "ntddk.h"
 #include "ntddtdi.h"
 #include "tdistat.h"
 #include "netpnp.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /* Basic types */
 

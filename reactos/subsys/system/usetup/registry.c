@@ -26,17 +26,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#include "precomp.h"
-#include <ntdll/rtl.h>
-#include <rosrtl/string.h>
-
 #include "usetup.h"
-#include "registry.h"
-#include "infcache.h"
 
 #define NDEBUG
 #include <debug.h>
-
 
 #define FLG_ADDREG_BINVALUETYPE           0x00000001
 #define FLG_ADDREG_NOCLOBBER              0x00000002
@@ -611,14 +604,12 @@ BOOLEAN
 SetInstallPathValue(PUNICODE_STRING InstallPath)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING KeyName;
-  UNICODE_STRING ValueName;
+  UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\HARDWARE");
+  UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"InstallPath");
   HANDLE KeyHandle;
   NTSTATUS Status;
 
-  /* Create the 'secret' InstallPath key */
-  RtlRosInitUnicodeStringFromLiteral (&KeyName,
-				   L"\\Registry\\Machine\\HARDWARE");
+  /* Create the 'secret' InstallPath key */			   
   InitializeObjectAttributes (&ObjectAttributes,
 			      &KeyName,
 			      OBJ_CASE_INSENSITIVE,
@@ -633,8 +624,6 @@ SetInstallPathValue(PUNICODE_STRING InstallPath)
       return FALSE;
     }
 
-  RtlRosInitUnicodeStringFromLiteral (&ValueName,
-				   L"InstallPath");
   Status = NtSetValueKey (KeyHandle,
 			  &ValueName,
 			  0,

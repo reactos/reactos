@@ -10,9 +10,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntos.h>
-#include <internal/ke.h>
-#include <internal/ps.h>
+#include <ntoskrnl.h>
 
 #define NDEBUG
 #include <debug.h>

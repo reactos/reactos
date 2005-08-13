@@ -72,7 +72,7 @@ NtGdiCloseFigure ( HDC hDC )
   if ( dc )
   {
     ret = IntCloseFigure ( dc );
-    DC_UnlockDc ( hDC );
+    DC_UnlockDc ( dc );
   }
 
   return ret;

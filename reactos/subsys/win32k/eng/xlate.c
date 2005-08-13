@@ -272,9 +272,9 @@ IntEngCreateXlate(USHORT DestPalType, USHORT SourcePalType,
 
 end:
    if (PaletteSource != NULL)
-      PALETTE_UnlockPalette(PaletteSource);
+      PALETTE_UnlockPalette(SourcePalGDI);
    if (PaletteDest != NULL && PaletteDest != PaletteSource)
-      PALETTE_UnlockPalette(PaletteDest);
+      PALETTE_UnlockPalette(DestPalGDI);
    return XlateObj;
 }
 
@@ -337,7 +337,7 @@ IntEngCreateMonoXlate(
          break;
    }
 
-   PALETTE_UnlockPalette(PaletteSource);
+   PALETTE_UnlockPalette(SourcePalGDI);
 
    return XlateObj;
 }
@@ -358,7 +358,7 @@ IntEngCreateSrcMonoXlate(HPALETTE PaletteDest,
    XlateGDI = EngAllocMem(0, sizeof(XLATEGDI), TAG_XLATEOBJ);
    if (XlateGDI == NULL)
    {
-      PALETTE_UnlockPalette(PaletteDest);
+      PALETTE_UnlockPalette(DestPalGDI);
       DPRINT1("Failed to allocate memory for a XLATE structure!\n");
       return NULL;
    }
@@ -367,7 +367,7 @@ IntEngCreateSrcMonoXlate(HPALETTE PaletteDest,
    XlateGDI->translationTable = EngAllocMem(0, sizeof(ULONG) * 2, 0);
    if (XlateGDI->translationTable == NULL)
    {
-      PALETTE_UnlockPalette(PaletteDest);
+      PALETTE_UnlockPalette(DestPalGDI);
       EngFreeMem(XlateGDI);
       return NULL;
    }
@@ -407,7 +407,7 @@ IntEngCreateSrcMonoXlate(HPALETTE PaletteDest,
                            DestPalGDI->NumColors);
    }
 
-   PALETTE_UnlockPalette(PaletteDest);
+   PALETTE_UnlockPalette(DestPalGDI);
 
    return XlateObj;
 }
@@ -498,7 +498,7 @@ XLATEOBJ_iXlate(XLATEOBJ *XlateObj, ULONG Color)
       {
          /* Return closest match for the given color. */
          Closest = ClosestColorMatch(XlateGDI, (LPPALETTEENTRY)&Color, PalGDI->IndexedColors, PalGDI->NumColors);
-         PALETTE_UnlockPalette(XlateGDI->DestPal);
+         PALETTE_UnlockPalette(PalGDI);
          return Closest;
       }
    }
@@ -538,7 +538,7 @@ XLATEOBJ_cGetPalette(XLATEOBJ *XlateObj, ULONG PalOutType, ULONG cPal,
        *OutPal = *InPal;
      }
 
-     PALETTE_UnlockPalette(hPalette);
+     PALETTE_UnlockPalette(PalGDI);
 
      return cPal;
    }

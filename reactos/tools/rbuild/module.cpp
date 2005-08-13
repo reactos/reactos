@@ -99,6 +99,15 @@ NormalizeFilename ( const string& filename )
 	return FixSeparator ( relativeNormalizedPath );
 }
 
+bool
+GetBooleanValue ( const string& value )
+{
+	if ( value == "1" )
+		return true;
+	else
+		return false;
+}
+
 IfableData::~IfableData()
 {
 	size_t i;
@@ -153,11 +162,21 @@ Module::Module ( const Project& project,
 		                                  __LINE__,
 		                                  "Module created with non-<module> node" );
 
-	xmlbuildFile = Path::RelativeFromWorkingDirectory ( moduleNode.xmlFile->filename() );
+	xmlbuildFile = Path::RelativeFromWorkingDirectory ( moduleNode.xmlFile->filename () );
 
 	path = FixSeparator ( modulePath );
 
-	const XMLAttribute* att = moduleNode.GetAttribute ( "name", true );
+	enabled = true;
+
+	const XMLAttribute* att = moduleNode.GetAttribute ( "if", false );
+	if ( att != NULL )
+		enabled = GetBooleanValue ( project.ResolveProperties ( att->value ) );
+
+	att = moduleNode.GetAttribute ( "ifnot", false );
+	if ( att != NULL )
+		enabled = !GetBooleanValue ( project.ResolveProperties ( att->value ) );
+
+	att = moduleNode.GetAttribute ( "name", true );
 	assert(att);
 	name = att->value;
 
@@ -405,6 +424,16 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 			non_if_data.ifs.push_back ( pIf );
 		subs_invalid = false;
 	}
+	else if ( e.name == "ifnot" )
+	{
+		If* pOldIf = pIf;
+		pIf = new If ( e, project, this, true );
+		if ( pOldIf )
+			pOldIf->data.ifs.push_back ( pIf );
+		else
+			non_if_data.ifs.push_back ( pIf );
+		subs_invalid = false;
+	}
 	else if ( e.name == "compilerflag" )
 	{
 		CompilerFlag* pCompilerFlag = new CompilerFlag ( project, this, e );
@@ -640,6 +669,36 @@ Module::IsDLL () const
 		case BootSector:
 		case Iso:
 		case LiveIso:
+		case RpcServer:
+		case RpcClient:
+			return false;
+	}
+	throw InvalidOperationException ( __FILE__,
+	                                  __LINE__ );
+}
+
+bool
+Module::GenerateInOutputTree () const
+{
+	switch ( type )
+	{
+		case Kernel:
+		case KernelModeDLL:
+		case NativeDLL:
+		case Win32DLL:
+		case KernelModeDriver:
+		case NativeCUI:
+		case Win32CUI:
+		case Test:
+		case Win32GUI:
+		case BuildTool:
+		case BootLoader:
+		case BootSector:
+		case Iso:
+		case LiveIso:
+			return true;
+		case StaticLibrary:
+		case ObjectLibrary:
 		case RpcServer:
 		case RpcClient:
 			return false;
@@ -965,8 +1024,9 @@ ImportLibrary::ImportLibrary ( const XMLElement& _node,
 
 If::If ( const XMLElement& node_,
          const Project& project_,
-         const Module* module_ )
-	: node(node_), project(project_), module(module_)
+         const Module* module_,
+         const bool negated_ )
+	: node(node_), project(project_), module(module_), negated(negated_)
 {
 	const XMLAttribute* att;
 

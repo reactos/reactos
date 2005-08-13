@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          GDI EngCopyBits Function
@@ -44,12 +43,21 @@ EngCopyBits(SURFOBJ *Dest,
   RECT_ENUM RectEnum;
   BOOL      EnumMore;
   BLTINFO   BltInfo;
+  BITMAPOBJ *DestObj = NULL;
+  BITMAPOBJ *SourceObj;
 
   ASSERT(Dest != NULL && Source != NULL && DestRect != NULL && SourcePoint != NULL);
 
+  SourceObj = CONTAINING_RECORD(Source, BITMAPOBJ, SurfObj);
+  BITMAPOBJ_LockBitmapBits(SourceObj);
   MouseSafetyOnDrawStart(Source, SourcePoint->x, SourcePoint->y,
                          (SourcePoint->x + abs(DestRect->right - DestRect->left)),
                          (SourcePoint->y + abs(DestRect->bottom - DestRect->top)));
+  if (Dest != Source)
+    {
+    DestObj = CONTAINING_RECORD(Dest, BITMAPOBJ, SurfObj);
+    BITMAPOBJ_LockBitmapBits(DestObj);
+    }
   MouseSafetyOnDrawStart(Dest, DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
 
   // FIXME: Don't punt to the driver's DrvCopyBits immediately. Instead,
@@ -71,7 +79,12 @@ EngCopyBits(SURFOBJ *Dest,
           Dest, Source, Clip, ColorTranslation, DestRect, SourcePoint);
 
         MouseSafetyOnDrawEnd(Dest);
+        if (Dest != Source)
+          {
+          BITMAPOBJ_UnlockBitmapBits(DestObj);
+          }
         MouseSafetyOnDrawEnd(Source);
+        BITMAPOBJ_UnlockBitmapBits(SourceObj);
 
         return ret;
       }
@@ -88,20 +101,29 @@ EngCopyBits(SURFOBJ *Dest,
           Dest, Source, Clip, ColorTranslation, DestRect, SourcePoint);
 
         MouseSafetyOnDrawEnd(Dest);
+        if (Dest != Source)
+          {
+          BITMAPOBJ_UnlockBitmapBits(DestObj);
+          }
         MouseSafetyOnDrawEnd(Source);
+        BITMAPOBJ_UnlockBitmapBits(SourceObj);
 
         return ret;
       }
     }
 
     // If CopyBits wasn't hooked, BitBlt must be
-    /* FIXME: Remove the typecast! */
-    ret = IntEngBitBlt((BITMAPOBJ*)Dest, (BITMAPOBJ*)Source,
+    ret = IntEngBitBlt(Dest, Source,
                        NULL, Clip, ColorTranslation, DestRect, SourcePoint,
                        NULL, NULL, NULL, ROP3_TO_ROP4(SRCCOPY));
 
     MouseSafetyOnDrawEnd(Dest);
+    if (Dest != Source)
+      {
+      BITMAPOBJ_UnlockBitmapBits(DestObj);
+      }
     MouseSafetyOnDrawEnd(Source);
+    BITMAPOBJ_UnlockBitmapBits(SourceObj);
 
     return ret;
   }
@@ -130,7 +152,12 @@ EngCopyBits(SURFOBJ *Dest,
         DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo);
 
         MouseSafetyOnDrawEnd(Dest);
+        if (Dest != Source)
+          {
+          BITMAPOBJ_UnlockBitmapBits(DestObj);
+          }
         MouseSafetyOnDrawEnd(Source);
+        BITMAPOBJ_UnlockBitmapBits(SourceObj);
 
         return(TRUE);
 
@@ -144,7 +171,12 @@ EngCopyBits(SURFOBJ *Dest,
         DibFunctionsForBitmapFormat[Dest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo);
 
         MouseSafetyOnDrawEnd(Dest);
+        if (Dest != Source)
+          {
+          BITMAPOBJ_UnlockBitmapBits(DestObj);
+          }
         MouseSafetyOnDrawEnd(Source);
+        BITMAPOBJ_UnlockBitmapBits(SourceObj);
 
         return(TRUE);
 
@@ -177,13 +209,23 @@ EngCopyBits(SURFOBJ *Dest,
           } while(EnumMore);
 
           MouseSafetyOnDrawEnd(Dest);
+          if (Dest != Source)
+            {
+            BITMAPOBJ_UnlockBitmapBits(DestObj);
+            }
           MouseSafetyOnDrawEnd(Source);
+          BITMAPOBJ_UnlockBitmapBits(SourceObj);
 
           return(TRUE);
     }
 
   MouseSafetyOnDrawEnd(Dest);
+  if (Dest != Source)
+    {
+    BITMAPOBJ_UnlockBitmapBits(DestObj);
+    }
   MouseSafetyOnDrawEnd(Source);
+  BITMAPOBJ_UnlockBitmapBits(SourceObj);
 
   return FALSE;
 }

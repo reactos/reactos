@@ -47,6 +47,7 @@ typedef struct _INTERNAL_NDIS_MINIPORT_WORK_ITEM {
 #define EXPORT STDCALL
 #endif
 
+#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 #define NDIS_TAG  0x4e4d4953
 
 #ifdef DBG

@@ -29,8 +29,6 @@
 
 #pragma pack(push,4)
 
-#include "ntddk.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif

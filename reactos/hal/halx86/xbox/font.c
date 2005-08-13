@@ -14,8 +14,9 @@
 #include <ddk/ntddk.h>
 #include "halxbox.h"
 
-#define NDEBUG
 #include <internal/debug.h>
+#define NDEBUG
+#include <debug.h>
 
 BYTE XboxFont8x16[256 * 16] =
 {

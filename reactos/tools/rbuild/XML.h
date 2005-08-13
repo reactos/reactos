@@ -5,6 +5,8 @@
 
 class XMLElement;
 
+extern std::string working_directory;
+
 void
 InitWorkingDirectory();
 

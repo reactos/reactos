@@ -20,6 +20,9 @@ static KSPIN_LOCK LdtLock;
 
 /* FUNCTIONS *****************************************************************/
 
+/* gdt.c */
+extern VOID KeSetGdtSelector(ULONG Entry, ULONG Value1, ULONG Value2);
+
 BOOL PspIsDescriptorValid(PLDT_ENTRY ldt_entry)
 {
   ULONG Base, SegLimit;

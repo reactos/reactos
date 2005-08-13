@@ -150,12 +150,12 @@ static inline void usb_set_intfdata (struct usb_interface *intf, void *data)
  */
 struct usb_host_config {
 	struct usb_config_descriptor	desc;
-//	
-//	/* the interfaces associated with this configuration
-//	 * these will be in numeric order, 0..desc.bNumInterfaces
-//	 */
-//
-	struct usb_interface *pinterface;
+	
+	/* the interfaces associated with this configuration
+	 * these will be in numeric order, 0..desc.bNumInterfaces
+	 */
+
+	struct usb_interface *interface;
 
 	unsigned char *extra;   /* Extra descriptors */
 	int extralen;
@@ -292,7 +292,7 @@ extern void usb_driver_claim_interface(struct usb_driver *driver,
 extern int usb_interface_claimed(struct usb_interface *iface);
 extern void usb_driver_release_interface(struct usb_driver *driver,
 			struct usb_interface *iface);
-const struct usb_device_id *usb_match_id(struct usb_interface *pinterface,
+const struct usb_device_id *usb_match_id(struct usb_interface *interface,
 					 const struct usb_device_id *id);
 
 extern struct usb_interface *usb_find_interface(struct usb_driver *drv, int minor);

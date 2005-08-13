@@ -952,25 +952,20 @@ IntMouseInput(MOUSEINPUT *mi)
     if (dc)
     {
       hBitmap = dc->w.hBitmap;
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
 
       BitmapObj = BITMAPOBJ_LockBitmap(hBitmap);
       if (BitmapObj)
       {
         SurfObj = &BitmapObj->SurfObj;
 
-        if (GDIDEV(SurfObj)->Pointer.MovePointer)
-        {
-          GDIDEV(SurfObj)->Pointer.MovePointer(SurfObj, MousePos.x, MousePos.y, &(GDIDEV(SurfObj)->Pointer.Exclude));
-        } else {
-	  EngMovePointer(SurfObj, MousePos.x, MousePos.y, &(GDIDEV(SurfObj)->Pointer.Exclude));
-	}
+        IntEngMovePointer(SurfObj, MousePos.x, MousePos.y, &(GDIDEV(SurfObj)->Pointer.Exclude));
         /* Only now, update the info in the GDIDEVICE, so EngMovePointer can
 	 * use the old values to move the pointer image */
 	GDIDEV(SurfObj)->Pointer.Pos.x = MousePos.x;
 	GDIDEV(SurfObj)->Pointer.Pos.y = MousePos.y;
 
-        BITMAPOBJ_UnlockBitmap(hBitmap);
+        BITMAPOBJ_UnlockBitmap(BitmapObj);
       }
     }
   }

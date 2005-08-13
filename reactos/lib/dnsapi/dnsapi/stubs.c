@@ -1,8 +1,7 @@
 #include <windows.h>
-/*#include <windns.h>*/
 #include <winerror.h>
 #define NTOS_MODE_USER
-#include <ntos.h>
+#include <ndk/ntndk.h>
 #include <debug.h>
 
 typedef ULONG DNS_STATUS;

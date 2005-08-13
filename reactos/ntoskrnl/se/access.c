@@ -49,7 +49,7 @@ SeCreateAccessState(PACCESS_STATE AccessState,
     /* Set Access State Data */
     AccessState->AuxData = AuxData;
     AccessState->RemainingDesiredAccess  = AccessMask;
-    AccessState->OriginallyDesiredAccess = AccessMask;
+    AccessState->OriginalDesiredAccess = AccessMask;
     ExpAllocateLocallyUniqueId(&AccessState->OperationID);
 
     /* Get the Token to use */

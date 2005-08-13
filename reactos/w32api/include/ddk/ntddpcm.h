@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#include "ntddk.h"
-
 #define IOCTL_PCMCIA_BASE                 FILE_DEVICE_CONTROLLER
 
 #define DD_PCMCIA_DEVICE_NAME             "\\\\.\\Pcmcia"

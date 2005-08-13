@@ -365,7 +365,9 @@ ifa_ifwithroute(flags, dst, gateway)
 
 #define ROUNDUP(a) (a>0 ? (1 + (((a) - 1) | (sizeof(long) - 1))) : sizeof(long))
 
+#ifndef __REACTOS__
 static int rt_fixdelete(struct radix_node *, void *);
+#endif
 static int rt_fixchange(struct radix_node *, void *);
 
 struct rtfc_arg {
@@ -385,7 +387,9 @@ rtrequest(req, dst, gateway, netmask, flags, ret_nrt)
 	register struct radix_node_head *rnh;
 	struct ifaddr *ifa;
 	struct sockaddr *ndst;
+#ifndef __REACTOS__
 	u_long prflags = 0UL;
+#endif
 #define senderr(x) { error = x ; goto bad; }
 
 	if ((rnh = rt_tables[dst->sa_family]) == 0)
@@ -561,6 +565,7 @@ bad:
  * rnh->rnh_walktree_from() above, and those that actually are children of
  * the late parent (passed in as VP here) are themselves deleted.
  */
+#ifndef __REACTOS__
 static int
 rt_fixdelete(struct radix_node *rn, void *vp)
 {
@@ -574,6 +579,7 @@ rt_fixdelete(struct radix_node *rn, void *vp)
 	}
 	return 0;
 }
+#endif
 
 /*
  * This routine is called from rt_setgate() to do the analogous thing for

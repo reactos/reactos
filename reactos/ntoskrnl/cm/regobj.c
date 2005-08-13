@@ -674,7 +674,7 @@ CmiGetLinkTarget(PREGISTRY_HIVE RegistryHive,
 		 PKEY_CELL KeyCell,
 		 PUNICODE_STRING TargetPath)
 {
-  UNICODE_STRING LinkName = ROS_STRING_INITIALIZER(L"SymbolicLinkValue");
+  UNICODE_STRING LinkName = RTL_CONSTANT_STRING(L"SymbolicLinkValue");
   PVALUE_CELL ValueCell;
   PDATA_CELL DataCell;
   NTSTATUS Status;

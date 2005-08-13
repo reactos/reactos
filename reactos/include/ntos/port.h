@@ -13,17 +13,11 @@
 #ifndef __INCLUDE_PORT_H
 #define __INCLUDE_PORT_H
 
-#ifndef __USE_W32API
-
 /* Port Object Access */
 
 #define PORT_ALL_ACCESS               (0x1)
 
-#else /* __USE_W32API */
-
 #include <ddk/ntifs.h>
-
-#endif /* __USE_W32API */
 
 #endif /* __INCLUDE_PORT_H */
 

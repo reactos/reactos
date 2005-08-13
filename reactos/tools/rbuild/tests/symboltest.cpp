@@ -21,5 +21,5 @@ void SymbolTest::Run()
 	
 	StubbedSymbol& symbol2 = *component1.symbols[1];
 	ARE_EQUAL ( "LdrAccessResource@16", symbol2.symbol );
-	ARE_EQUAL ( "LdrAccessResource@16", symbol2.newname );
+	ARE_EQUAL ( "LdrAccessResource", symbol2.newname );
 }

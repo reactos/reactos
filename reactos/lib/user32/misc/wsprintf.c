@@ -31,11 +31,7 @@
  * NOTES:            Adapted from Wine
  */
 
-#include "user32.h"
-#include <stdarg.h>
-#include <string.h>
-#include <stdio.h>
-#include "strpool.h"
+#include <user32.h>
 
 #define WPRINTF_LEFTALIGN   0x0001  /* Align output on the left ('-' prefix) */
 #define WPRINTF_PREFIX_HEX  0x0002  /* Prefix hex with 0x ('#' prefix) */

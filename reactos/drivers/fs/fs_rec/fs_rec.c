@@ -27,7 +27,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#include <ntifs.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -154,7 +154,7 @@ FsRecRegisterFs(PDRIVER_OBJECT DriverObject,
 			NULL,
 			0,
 			FILE_SHARE_READ | FILE_SHARE_WRITE,
-			OPEN_EXISTING,
+			FILE_OPEN,
 			0,
 			NULL,
 			0);

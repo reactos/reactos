@@ -26,17 +26,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#include "precomp.h"
-#include <ntdll/rtl.h>
-#include <fslib/vfatlib.h>
-
 #include "usetup.h"
-#include "console.h"
-#include "progress.h"
 
 #define NDEBUG
 #include <debug.h>
-
 
 PPROGRESSBAR ProgressBar = NULL;
 

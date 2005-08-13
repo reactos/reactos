@@ -19,7 +19,6 @@
  */
 
 #include "user32.h"
-#include "user32/regcontrol.h"
 #include "controls.h"
 #include "wine/unicode.h"
 

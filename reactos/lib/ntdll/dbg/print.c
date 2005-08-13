@@ -9,11 +9,9 @@
  *                  Created 28/12/1999
  */
 
-#include <ddk/ntddk.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
-
+#include <ntdll.h>
+#define NDEBUG
+#include <debug.h>
 
 /* FUNCTIONS ***************************************************************/
 

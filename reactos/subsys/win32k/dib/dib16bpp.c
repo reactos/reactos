@@ -17,6 +17,7 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 /* $Id$ */
+
 #include <w32k.h>
 
 VOID
@@ -42,32 +43,34 @@ DIB_16BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 {
   PDWORD addr = (PDWORD)((PWORD)(SurfObj->pvScan0 + y * SurfObj->lDelta) + x1);
 
+ 
 #ifdef _M_IX86
   /* This is about 10% faster than the generic C code below */
   LONG Count = x2 - x1;
 
-  __asm__(
+  __asm__ __volatile__ (
 "  cld\n"
-"  andl $0xffff, %0\n"  /* If the pixel value is "abcd", put "abcdabcd" in %eax */
 "  mov  %0, %%eax\n"
 "  shl  $16, %%eax\n"
+"  andl $0xffff, %0\n"  /* If the pixel value is "abcd", put "abcdabcd" in %eax */
 "  or   %0, %%eax\n"
-"  test $0x01, %%edi\n" /* Align to fullword boundary */
-"  jz   .L1\n"
+"  mov  %2, %%edi\n"
+"  test $0x03, %%edi\n" /* Align to fullword boundary */
+"  jz   0f\n"
 "  stosw\n"
 "  dec  %1\n"
-"  jz   .L2\n"
-".L1:\n"
+"  jz   1f\n"
+"0:\n"
 "  mov  %1,%%ecx\n"     /* Setup count of fullwords to fill */
 "  shr  $1,%%ecx\n"
 "  rep stosl\n"         /* The actual fill */
 "  test $0x01, %1\n"    /* One left to do at the right side? */
-"  jz   .L2\n"
+"  jz   1f\n"
 "  stosw\n"
-".L2:\n"
+"1:\n"
   : /* no output */
-  : "r"(c), "r"(Count), "D"(addr)
-  : "%eax", "%ecx");
+  : "r"(c), "r"(Count), "m"(addr)
+  : "%eax", "%ecx", "%edi");
 #else /* _M_IX86 */
   LONG cx = x1;
   DWORD cc;
@@ -88,9 +91,42 @@ DIB_16BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 #endif /* _M_IX86 */
 }
 
+
 VOID
 DIB_16BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 {
+#ifdef _M_IX86
+  asm volatile(
+    "   testl %2, %2"       "\n\t"
+    "   jle   2f"           "\n\t"
+    "   movl  %2, %%ecx"    "\n\t"
+    "   shrl  $2, %2"       "\n\t"
+    "   andl  $3, %%ecx"    "\n\t"
+    "   jz    1f"           "\n\t"
+    "0:"                    "\n\t"
+    "   movw  %%ax, (%0)"   "\n\t"
+    "   addl  %1, %0"       "\n\t"
+    "   decl  %%ecx"        "\n\t"
+    "   jnz   0b"           "\n\t"
+    "   testl %2, %2"       "\n\t"
+    "   jz    2f"           "\n\t"
+    "1:"                    "\n\t"
+    "   movw  %%ax, (%0)"   "\n\t"
+    "   addl  %1, %0"       "\n\t"
+    "   movw  %%ax, (%0)"   "\n\t"
+    "   addl  %1, %0"       "\n\t"
+    "   movw  %%ax, (%0)"   "\n\t"
+    "   addl  %1, %0"       "\n\t"
+    "   movw  %%ax, (%0)"   "\n\t"
+    "   addl  %1, %0"       "\n\t"
+    "   decl  %2"           "\n\t"
+    "   jnz   1b"           "\n\t"
+    "2:"                    "\n\t"
+    : /* no output */
+    : "r"(SurfObj->pvScan0 + (y1 * SurfObj->lDelta) + (x * sizeof (WORD))), 
+      "r"(SurfObj->lDelta), "r"(y2 - y1), "a"(c)
+    : "cc", "memory", "%ecx");
+#else
   PBYTE byteaddr = SurfObj->pvScan0 + y1 * SurfObj->lDelta;
   PWORD addr = (PWORD)byteaddr + x;
   LONG lDelta = SurfObj->lDelta;
@@ -102,6 +138,7 @@ DIB_16BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
     byteaddr += lDelta;
     addr = (PWORD)byteaddr;
   }
+#endif
 }
 
 BOOLEAN
@@ -390,7 +427,54 @@ DIB_16BPP_BitBlt(PBLTINFO BltInfo)
    return TRUE;
 }
 
+/* Optimize for bitBlt */
+BOOLEAN
+DIB_16BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
+{
+  ULONG DestY;	
 
+#ifdef _M_IX86
+  /* This is about 10% faster than the generic C code below */ 
+  ULONG delta = DestSurface->lDelta;
+  ULONG width = (DestRect->right - DestRect->left) ;
+  PULONG pos =  (PULONG) (DestSurface->pvScan0 + DestRect->top * delta + (DestRect->left<<1));
+  color = (color&0xffff);  /* If the color value is "abcd", put "abcdabcd" into color */
+  color += (color<<16);
+  
+  for (DestY = DestRect->top; DestY< DestRect->bottom; DestY++)
+  {   
+  __asm__ __volatile__ (
+    "  cld\n"
+    "  mov  %1,%%ebx\n" 
+    "  mov  %2,%%edi\n" 
+    "  test $0x03, %%edi\n" /* Align to fullword boundary */
+    "  jz   .FL1\n"
+    "  stosw\n"
+    "  dec  %%ebx\n"
+    "  jz   .FL2\n"
+    ".FL1:\n"
+    "  mov  %%ebx,%%ecx\n"     /* Setup count of fullwords to fill */
+    "  shr  $1,%%ecx\n"
+    "  rep stosl\n"         /* The actual fill */
+    "  test $0x01, %%ebx\n"    /* One left to do at the right side? */
+    "  jz   .FL2\n"
+    "  stosw\n"
+    ".FL2:\n"
+    :
+    : "a" (color), "r" (width), "m" (pos)
+    : "%ecx", "%ebx", "%edi");
+     pos =(PULONG)((ULONG_PTR)pos + delta);	 
+  }
+
+#else /* _M_IX86 */
+
+	for (DestY = DestRect->top; DestY< DestRect->bottom; DestY++)
+  {
+    DIB_16BPP_HLine (DestSurface, DestRect->left, DestRect->right, DestY, color);
+  }
+#endif
+return TRUE;
+}
 /*
 =======================================
  Stretching functions goes below

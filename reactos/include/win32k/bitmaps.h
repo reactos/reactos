@@ -2,19 +2,22 @@
 #ifndef __WIN32K_BITMAPS_H
 #define __WIN32K_BITMAPS_H
 
-#include <win32k/dc.h>
-#include <win32k/gdiobj.h>
-
 /* GDI logical bitmap object */
 typedef struct _BITMAPOBJ
 {
   SURFOBJ     SurfObj;
   FLONG	      flHooks;
   FLONG       flFlags;
-  SIZE        dimension;   /* For SetBitmapDimension(), do NOT use
-                              to get width/height of bitmap, use
-                              bitmap.bmWidth/bitmap.bmHeight for
-                              that */
+  SIZE        dimension;    /* For SetBitmapDimension(), do NOT use
+                               to get width/height of bitmap, use
+                               bitmap.bmWidth/bitmap.bmHeight for
+                               that */
+#ifdef NTOS_MODE_USER
+  PVOID BitsLock;
+#else
+  PFAST_MUTEX BitsLock;     /* You need to hold this lock before you touch
+                               the actual bits in the bitmap */
+#endif
 
   /* For device-independent bitmaps: */
   DIBSECTION *dib;
@@ -29,9 +32,15 @@ typedef struct _BITMAPOBJ
   ((HBITMAP) GDIOBJ_AllocObj (GDI_OBJECT_TYPE_BITMAP))
 #define  BITMAPOBJ_FreeBitmap(hBMObj)  \
   GDIOBJ_FreeObj((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_BITMAP)
-#define  BITMAPOBJ_LockBitmap(hBMObj) GDIOBJ_LockObj((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_BITMAP)
-#define  BITMAPOBJ_UnlockBitmap(hBMObj) GDIOBJ_UnlockObj((HGDIOBJ) hBMObj)
+/* NOTE: Use shared locks! */
+#define  BITMAPOBJ_LockBitmap(hBMObj) (PBITMAPOBJ)EngLockSurface((HSURF)hBMObj)
+#define  BITMAPOBJ_UnlockBitmap(pBMObj) EngUnlockSurface(&pBMObj->SurfObj)
 BOOL INTERNAL_CALL BITMAP_Cleanup(PVOID ObjectBody);
+
+BOOL INTERNAL_CALL BITMAPOBJ_InitBitsLock(BITMAPOBJ *pBMObj);
+#define BITMAPOBJ_LockBitmapBits(pBMObj) ExAcquireFastMutex((pBMObj)->BitsLock)
+#define BITMAPOBJ_UnlockBitmapBits(pBMObj) ExReleaseFastMutex((pBMObj)->BitsLock)
+void INTERNAL_CALL BITMAPOBJ_CleanupBitsLock(BITMAPOBJ *pBMObj);
 
 INT     FASTCALL BITMAPOBJ_GetWidthBytes (INT bmWidth, INT bpp);
 HBITMAP FASTCALL BITMAPOBJ_CopyBitmap (HBITMAP  hBitmap);

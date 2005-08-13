@@ -37,5 +37,5 @@ $(RSYM_INT_)rsym_common.o: $(RSYM_BASE_)rsym_common.c | $(RSYM_INT)
 
 .PHONY: rsym_clean
 rsym_clean:
-	-@$(nrm) $(RSYM_TARGET) $(RSYM_OBJECTS) 2>$(NUL)
+	-@$(rm) $(RSYM_TARGET) $(RSYM_OBJECTS) 2>$(NUL)
 clean: rsym_clean

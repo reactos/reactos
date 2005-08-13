@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#include "ntddk.h"
-
 #define DOT4_MAX_CHANNELS                 128
 #define NO_TIMEOUT                        0
 

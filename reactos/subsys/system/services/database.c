@@ -25,15 +25,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NTOS_MODE_USER
-#include <ntos.h>
-#include <rosrtl/string.h>
-
-#include <windows.h>
-#include <tchar.h>
-
-#include <services/services.h>
 #include "services.h"
+#include <services/services.h>
+
+#include <rosrtl/string.h>
 
 #define NDEBUG
 #include <debug.h>

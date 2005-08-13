@@ -1,11 +1,45 @@
-/*
- * Higher level memory managment definitions
+/* $Id$
+ *
+ * Copyright (C) 1998-2005 ReactOS Team (and the authors from the programmers section)
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ *
+ *
+ * PROJECT:         ReactOS kernel
+ * FILE:            ntoskrnl/include/internal/mm.h
+ * PURPOSE:         level memory managment definitions
+ * 
+ * PROGRAMMERS:     David Welch
+ *                  Casper Hornstrup
+ *                  Hartmut Birr
+ *                  Ge van Geldorp
+ *                  Eric Kohl
+ *                  Andrew Greenwood
+ *                  James Tabor
+ *                  Alex Ionescu
+ *                  Mike Nordell
+ *                  Thomas Weidenmueller
+ *                  Filip Navara
+ *                  KJK::Hyperion
+ *                  Gregor Anich
+ *                  Steven Edwards
  */
 
 #ifndef __INCLUDE_INTERNAL_MM_H
 #define __INCLUDE_INTERNAL_MM_H
 
-#include <internal/ntoskrnl.h>
 #include <internal/arch/mm.h>
 
 /* TYPES *********************************************************************/
@@ -154,8 +188,6 @@ typedef struct _SECTION_OBJECT
   ULONG SectionPageProtection;
   ULONG AllocationAttributes;
   PFILE_OBJECT FileObject;
-  LIST_ENTRY ViewListHead;
-  KSPIN_LOCK ViewListLock;
   union
   {
     PMM_IMAGE_SECTION_OBJECT ImageSection;
@@ -239,7 +271,6 @@ typedef struct _MEMORY_AREA
   ULONG Type;
   ULONG Attributes;
   ULONG LockCount;
-  struct _EPROCESS* Process; /* FIXME: We don't need this! */
   BOOLEAN DeleteInProgress;
   ULONG PageOpCount;
   union
@@ -303,6 +334,10 @@ typedef struct
 extern MM_STATS MmStats;
 
 #define MM_PHYSICAL_PAGE_MPW_PENDING     (0x8)
+
+#define MM_CORE_DUMP_TYPE_NONE            (0x0)
+#define MM_CORE_DUMP_TYPE_MINIMAL         (0x1)
+#define MM_CORE_DUMP_TYPE_FULL            (0x2)
 
 #define MM_PAGEOP_PAGEIN        (1)
 #define MM_PAGEOP_PAGEOUT       (2)
@@ -836,6 +871,16 @@ ULONG MiGetUserPageDirectoryCount(VOID);
 
 NTSTATUS MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages);
 
+/* cont.c ********************************************************************/
+
+PVOID STDCALL
+MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
+					  IN PHYSICAL_ADDRESS LowestAcceptableAddress,
+			          IN PHYSICAL_ADDRESS HighestAcceptableAddress,
+			          IN PHYSICAL_ADDRESS BoundaryAddressMultiple OPTIONAL,
+			          IN MEMORY_CACHING_TYPE CacheType OPTIONAL,
+					  IN ULONG Alignment);
+                      
 /* region.c ************************************************************/
 
 NTSTATUS MmAlterRegion(PMADDRESS_SPACE AddressSpace, PVOID BaseAddress,

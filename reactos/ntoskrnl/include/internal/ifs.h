@@ -1,12 +1,21 @@
 #ifndef __INCLUDE_INTERNAL_IFS_H
 #define __INCLUDE_INTERNAL_IFS_H
-/* $Id$ */
-
-#include <ddk/ntifs.h>
-#include <ntos.h>
 
 /* Look for "FSrt" in mem view */
 #define IFS_POOL_TAG 0x74725346
+
+typedef struct _FILE_LOCK_GRANTED {
+	LIST_ENTRY			ListEntry;
+	FILE_LOCK_INFO			Lock;
+   PVOID             UnlockContext;
+} FILE_LOCK_GRANTED, *PFILE_LOCK_GRANTED;
+
+
+typedef struct _FILE_LOCK_TOC {
+	KSPIN_LOCK			SpinLock;
+	LIST_ENTRY			GrantedListHead;
+	LIST_ENTRY			PendingListHead;
+} FILE_LOCK_TOC, *PFILE_LOCK_TOC;
 
 VOID
 STDCALL INIT_FUNCTION

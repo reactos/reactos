@@ -11,11 +11,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
-#include <rosrtl/string.h>
+#include <ntdll.h>
+#define NDEBUG
+#include <debug.h>
 #include <rosrtl/thread.h>
-#include <ntdll/dbg.h>
 
 /* FUNCTIONS *****************************************************************/
 
@@ -84,7 +83,7 @@ DbgSsInitialize(HANDLE ReplyPort,
 		ULONG Unknown3)
 {
 	SECURITY_QUALITY_OF_SERVICE Qos;
-	UNICODE_STRING PortName = ROS_STRING_INITIALIZER(L"\\DbgSsApiPort");
+	UNICODE_STRING PortName = RTL_CONSTANT_STRING(L"\\DbgSsApiPort");
 	NTSTATUS Status;
 
 	Qos.Length = sizeof(SECURITY_QUALITY_OF_SERVICE);
@@ -130,7 +129,7 @@ NTSTATUS STDCALL
 DbgUiConnectToDbg(VOID)
 {
 	SECURITY_QUALITY_OF_SERVICE Qos;
-	UNICODE_STRING PortName = ROS_STRING_INITIALIZER(L"\\DbgUiApiPort");
+	UNICODE_STRING PortName = RTL_CONSTANT_STRING(L"\\DbgUiApiPort");
 	NTSTATUS Status;
 	PTEB Teb;
 	ULONG InfoSize;

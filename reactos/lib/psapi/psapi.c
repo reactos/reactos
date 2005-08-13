@@ -101,7 +101,7 @@ typedef struct _ENUM_PROCESS_MODULES_CONTEXT
 
 NTSTATUS STDCALL
 EnumProcessModulesCallback(IN HANDLE ProcessHandle,
-                           IN PLDR_MODULE CurrentModule,
+                           IN PLDR_DATA_TABLE_ENTRY CurrentModule,
                            IN OUT PVOID CallbackContext)
 {
   PENUM_PROCESS_MODULES_CONTEXT Context = (PENUM_PROCESS_MODULES_CONTEXT)CallbackContext;
@@ -113,7 +113,7 @@ EnumProcessModulesCallback(IN HANDLE ProcessHandle,
   }
 
   /* return current process */
-  *Context->lphModule = CurrentModule->BaseAddress;
+  *Context->lphModule = CurrentModule->DllBase;
 
   /* go to next array slot */
   Context->lphModule++;
@@ -386,13 +386,13 @@ typedef struct _GET_MODULE_INFORMATION_CONTEXT
 
 NTSTATUS STDCALL
 GetModuleInformationCallback(IN HANDLE ProcessHandle,
-                             IN PLDR_MODULE CurrentModule,
+                             IN PLDR_DATA_TABLE_ENTRY CurrentModule,
                              IN OUT PVOID CallbackContext)
 {
   PGET_MODULE_INFORMATION_CONTEXT Context = (PGET_MODULE_INFORMATION_CONTEXT)CallbackContext;
 
   /* found the module we were looking for */
-  if(CurrentModule->BaseAddress == Context->hModule)
+  if(CurrentModule->DllBase == Context->hModule)
   {
     /* we want the module name */
     if(Context->Flags.bWantName)
@@ -514,17 +514,17 @@ exitWithStatus:
       ULONG nSize = Context->nBufSize;
 
       /* base address */
-      if(nSize >= sizeof(CurrentModule->BaseAddress))
+      if(nSize >= sizeof(CurrentModule->DllBase))
       {
-        Context->lpmodinfo->lpBaseOfDll = CurrentModule->BaseAddress;
-        nSize -= sizeof(CurrentModule->BaseAddress);
+        Context->lpmodinfo->lpBaseOfDll = CurrentModule->DllBase;
+        nSize -= sizeof(CurrentModule->DllBase);
       }
 
       /* image size */
-      if(nSize >= sizeof(CurrentModule->ResidentSize))
+      if(nSize >= sizeof(CurrentModule->SizeOfImage))
       {
-        Context->lpmodinfo->SizeOfImage = CurrentModule->ResidentSize;
-        nSize -= sizeof(CurrentModule->ResidentSize);
+        Context->lpmodinfo->SizeOfImage = CurrentModule->SizeOfImage;
+        nSize -= sizeof(CurrentModule->SizeOfImage);
       }
 
       /* entry point */
@@ -1129,7 +1129,7 @@ EnumPageFilesW(PENUM_PAGE_FILE_CALLBACKW pCallbackRoutine,
       return FALSE;
     }
 
-    Status = NtQuerySystemInformation(SystemPagefileInformation,
+    Status = NtQuerySystemInformation(SystemPageFileInformation,
                                       Buffer,
                                       BufferSize,
                                       NULL);
@@ -1301,16 +1301,16 @@ GetPerformanceInfo(PPERFORMANCE_INFORMATION pPerformanceInformation,
    */
 
   pPerformanceInformation->cb = sizeof(PERFORMANCE_INFORMATION);
-  pPerformanceInformation->CommitTotal = spi.TotalCommittedPages;
-  pPerformanceInformation->CommitLimit = spi.TotalCommitLimit;
+  pPerformanceInformation->CommitTotal = spi.CommittedPages;
+  pPerformanceInformation->CommitLimit = spi.CommitLimit;
   pPerformanceInformation->CommitPeak = spi.PeakCommitment;
   pPerformanceInformation->PhysicalTotal = sbi.NumberOfPhysicalPages;
   pPerformanceInformation->PhysicalAvailable = spi.AvailablePages;
   pPerformanceInformation->SystemCache = 0; /* FIXME - where to get this information from? */
-  pPerformanceInformation->KernelTotal = spi.PagedPoolUsage + spi.NonPagedPoolUsage;
-  pPerformanceInformation->KernelPaged = spi.PagedPoolUsage;
-  pPerformanceInformation->KernelNonpaged = spi.NonPagedPoolUsage;
-  pPerformanceInformation->PageSize = sbi.PhysicalPageSize;
+  pPerformanceInformation->KernelTotal = spi.PagedPoolPages + spi.NonPagedPoolPages;
+  pPerformanceInformation->KernelPaged = spi.PagedPoolPages;
+  pPerformanceInformation->KernelNonpaged = spi.NonPagedPoolPages;
+  pPerformanceInformation->PageSize = sbi.PageSize;
   pPerformanceInformation->HandleCount = shi.NumberOfHandles;
   pPerformanceInformation->ProcessCount = ProcessCount;
   pPerformanceInformation->ThreadCount = ThreadCount;

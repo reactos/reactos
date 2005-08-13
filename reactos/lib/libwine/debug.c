@@ -29,6 +29,18 @@
 
 /* ---------------------------------------------------------------------- */
 
+static CRITICAL_SECTION WineDebugCS;
+static CRITICAL_SECTION_DEBUG critsect_debug =
+{
+    0, 0, &WineDebugCS,
+    { &critsect_debug.ProcessLocksList, &critsect_debug.ProcessLocksList },
+    0, 0, { 0, 0 }
+};
+static CRITICAL_SECTION WineDebugCS = { &critsect_debug, -1, 0, 0, 0, 0 };
+static DWORD WineDebugTlsIndex = TLS_OUT_OF_INDEXES;
+
+/* ---------------------------------------------------------------------- */
+
 struct debug_info
 {
     char *str_pos;       /* current position in strings buffer */
@@ -37,28 +49,40 @@ struct debug_info
     char  output[1024];  /* current output line */
 };
 
-static struct debug_info tmp;
+static struct debug_info tmp = { tmp.strings, tmp.output };
 
 /* get the debug info pointer for the current thread */
 static inline struct debug_info *get_info(void)
 {
-    struct debug_info *info = NtCurrentTeb()->WineDebugInfo;
-    if (!info)
+    struct debug_info *info;
+
+    if (WineDebugTlsIndex == TLS_OUT_OF_INDEXES)
     {
-        if (!tmp.str_pos)
+        EnterCriticalSection(&WineDebugCS);
+        if (WineDebugTlsIndex == TLS_OUT_OF_INDEXES)
         {
-            tmp.str_pos = tmp.strings;
-            tmp.out_pos = tmp.output;
+            DWORD NewTlsIndex = TlsAlloc();
+            if (NewTlsIndex == TLS_OUT_OF_INDEXES)
+            {
+               LeaveCriticalSection(&WineDebugCS);
+               return &tmp;
+            }
+            info = HeapAlloc(GetProcessHeap(), 0, sizeof(*info));
+            if (!info)
+            {
+               LeaveCriticalSection(&WineDebugCS);
+               TlsFree(NewTlsIndex);
+               return &tmp;
+            }
+            info->str_pos = info->strings;
+            info->out_pos = info->output;
+            TlsSetValue(NewTlsIndex, info);
+            WineDebugTlsIndex = NewTlsIndex;
         }
-        if (!RtlGetProcessHeap()) return &tmp;
-        /* setup the temp structure in case HeapAlloc wants to print something */
-        NtCurrentTeb()->WineDebugInfo = &tmp;
-        info = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(*info));
-        info->str_pos = info->strings;
-        info->out_pos = info->output;
-        NtCurrentTeb()->WineDebugInfo = info;
+        LeaveCriticalSection(&WineDebugCS);
     }
-    return info;
+
+    return TlsGetValue(WineDebugTlsIndex);
 }
 
 /* allocate some tmp space for a string */
@@ -75,7 +99,11 @@ static void *gimme1(int n)
 /* release extra space that we requested in gimme1() */
 static inline void release(void *ptr)
 {
-    struct debug_info *info = NtCurrentTeb()->WineDebugInfo;
+    struct debug_info *info;
+    if (WineDebugTlsIndex == TLS_OUT_OF_INDEXES)
+        info = &tmp;
+    else
+        info = TlsGetValue(WineDebugTlsIndex);
     info->str_pos = ptr;
 }
 

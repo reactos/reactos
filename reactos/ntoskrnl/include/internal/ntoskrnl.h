@@ -7,12 +7,6 @@
 
 #ifndef __ASM__
 
-#include <stdarg.h>
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
-
-#include "internal/ke.h"
-
 /*
  * Use these to place a function in a specific section of the executable
  */
@@ -61,6 +55,13 @@ BOOLEAN CmImportSystemHive(PCHAR ChunkBase, ULONG ChunkSize);
 BOOLEAN CmImportHardwareHive(PCHAR ChunkBase, ULONG ChunkSize);
 VOID KdInitSystem(ULONG Reserved, PLOADER_PARAMETER_BLOCK LoaderBlock);
 
+BOOLEAN
+FASTCALL
+RtlpCreateUnicodeString(
+   IN OUT PUNICODE_STRING UniDest,
+   IN PCWSTR  Source,
+   IN POOL_TYPE PoolType);
+   
 #endif /* __ASM__ */
 
 /*

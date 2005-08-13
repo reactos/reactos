@@ -19,6 +19,12 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_I386_PS_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_I386_PS_H
 
+#ifdef __USE_W32API
+#ifndef __ASM__
+#include <ndk/potypes.h> /* FIXME: TEMP HACK */
+#endif
+#endif
+
 /*
  * Defines for accessing KPCR and KTHREAD structure members
  */
@@ -238,7 +244,7 @@ typedef struct _KPCR {
   KAFFINITY  SetMember;         /* 48 */
   ULONG  StallScaleFactor;      /* 4C */
   UCHAR  DebugActive;           /* 50 */
-  UCHAR  ProcessorNumber;       /* 51 */
+  UCHAR  Number;                /* 51 */
   UCHAR  Reserved;              /* 52 */
   UCHAR  L2CacheAssociativity;  /* 53 */
   ULONG  VdmAlert;              /* 54 */
@@ -253,6 +259,41 @@ typedef struct _KPCR {
 #pragma pack(pop)
 #endif /* __USE_W32API */
 
+#pragma pack(push,4)
+
+/*
+ * This is the complete, internal KPCR structure
+ */
+typedef struct _KIPCR {
+  KPCR_TIB  Tib;                /* 00 */
+  struct _KPCR  *Self;          /* 1C */
+  struct _KPRCB  *Prcb;         /* 20 */
+  KIRQL  Irql;                  /* 24 */
+  ULONG  IRR;                   /* 28 */
+  ULONG  IrrActive;             /* 2C */
+  ULONG  IDR;                   /* 30 */
+  PVOID  KdVersionBlock;        /* 34 */
+  PUSHORT  IDT;                 /* 38 */
+  PUSHORT  GDT;                 /* 3C */
+  struct _KTSS  *TSS;           /* 40 */
+  USHORT  MajorVersion;         /* 44 */
+  USHORT  MinorVersion;         /* 46 */
+  KAFFINITY  SetMember;         /* 48 */
+  ULONG  StallScaleFactor;      /* 4C */
+  UCHAR  SparedUnused;          /* 50 */
+  UCHAR  Number;                /* 51 */
+  UCHAR  Reserved;              /* 52 */
+  UCHAR  L2CacheAssociativity;  /* 53 */
+  ULONG  VdmAlert;              /* 54 */
+  ULONG  KernelReserved[14];    /* 58 */
+  ULONG  L2CacheSize;           /* 90 */
+  ULONG  HalReserved[16];       /* 94 */
+  ULONG  InterruptMode;         /* D4 */
+  UCHAR  KernelReserved2[0x48]; /* D8 */
+  KPRCB  PrcbData;              /* 120 */
+} KIPCR, *PKIPCR;
+
+#pragma pack(pop)
 
 #ifndef __USE_W32API
 

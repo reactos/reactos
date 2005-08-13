@@ -33,7 +33,7 @@
 #include <ddk/scsi.h>
 #include <ddk/ntddscsi.h>
 #include <ntos/minmax.h>
-#include <rosrtl/string.h>
+#include <stdio.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -274,6 +274,7 @@ ScsiPortCompleteRequest(IN PVOID HwDeviceExtension,
 /*
  * @implemented
  */
+#undef ScsiPortConvertPhysicalAddressToUlong
 ULONG STDCALL
 ScsiPortConvertPhysicalAddressToUlong(IN SCSI_PHYSICAL_ADDRESS Address)
 {
@@ -925,7 +926,7 @@ ScsiPortInitialize(IN PVOID Argument1,
       PortConfig->DemandMode = FALSE;
       PortConfig->MapBuffers = HwInitializationData->MapBuffers;
       PortConfig->NeedPhysicalAddresses = HwInitializationData->NeedPhysicalAddresses;
-      PortConfig->TaggedQueuing = HwInitializationData->TaggedQueueing;
+      PortConfig->TaggedQueuing = HwInitializationData->TaggedQueuing;
       PortConfig->AutoRequestSense = HwInitializationData->AutoRequestSense;
       PortConfig->MultipleRequestPerLu = HwInitializationData->MultipleRequestPerLu;
       PortConfig->ReceiveEvent = HwInitializationData->ReceiveEvent;
@@ -937,7 +938,7 @@ ScsiPortInitialize(IN PVOID Argument1,
       PortConfig->SrbExtensionSize = HwInitializationData->SrbExtensionSize;
       PortConfig->SpecificLuExtensionSize = HwInitializationData->SpecificLuExtensionSize;
 
-      PortConfig->AccessRanges = (PACCESS_RANGE)(PortConfig + 1);
+      PortConfig->AccessRanges = (ACCESS_RANGE(*)[])(PortConfig + 1);
 
       /* Search for matching PCI device */
       if ((HwInitializationData->AdapterInterfaceType == PCIBus) &&
@@ -1458,9 +1459,9 @@ SpiGetPciConfigData (IN struct _HW_INITIALIZATION_DATA *HwInitializationData,
 
 		  for (i = 0; i < PortConfig->NumberOfAccessRanges; i++)
 		    {
-		      PortConfig->AccessRanges[i].RangeStart.QuadPart =
+		      (*PortConfig->AccessRanges)[i].RangeStart.QuadPart =
 			PciConfig.u.type0.BaseAddresses[i] & PCI_ADDRESS_IO_ADDRESS_MASK;
-		      if (PortConfig->AccessRanges[i].RangeStart.QuadPart != 0)
+		      if ((*PortConfig->AccessRanges)[i].RangeStart.QuadPart != 0)
 			{
 			  RangeLength = (ULONG)-1;
 			  HalSetBusDataByOffset (PCIConfiguration,
@@ -1485,9 +1486,9 @@ SpiGetPciConfigData (IN struct _HW_INITIALIZATION_DATA *HwInitializationData,
 						 sizeof(ULONG));
 			  if (RangeLength != 0)
 			    {
-			      PortConfig->AccessRanges[i].RangeLength =
+			      (*PortConfig->AccessRanges)[i].RangeLength =
 			        -(RangeLength & PCI_ADDRESS_IO_ADDRESS_MASK);
-			      PortConfig->AccessRanges[i].RangeInMemory =
+			      (*PortConfig->AccessRanges)[i].RangeInMemory =
 				!(PciConfig.u.type0.BaseAddresses[i] & PCI_ADDRESS_IO_SPACE);
 
 			      DPRINT("RangeStart 0x%lX  RangeLength 0x%lX  RangeInMemory %s\n",
@@ -2337,7 +2338,8 @@ SpiBuildDeviceMap (PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 {
   PSCSI_PORT_LUN_EXTENSION LunExtension;
   OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING KeyName;
+  UNICODE_STRING KeyName =
+    RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Hardware\\DeviceMap\\Scsi");
   UNICODE_STRING ValueName;
   WCHAR NameBuffer[64];
   ULONG Disposition;
@@ -2365,8 +2367,6 @@ SpiBuildDeviceMap (PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
     }
 
   /* Open or create the 'Scsi' subkey */
-  RtlRosInitUnicodeStringFromLiteral(&KeyName,
-				  L"\\Registry\\Machine\\Hardware\\DeviceMap\\Scsi");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &KeyName,
 			     OBJ_CASE_INSENSITIVE | OBJ_OPENIF,
@@ -2471,7 +2471,7 @@ SpiBuildDeviceMap (PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
     }
 
   /* Set 'IOAddress' (REG_DWORD) value (NT4 only) */
-  UlongData = ScsiPortConvertPhysicalAddressToUlong(DeviceExtension->PortConfig->AccessRanges[0].RangeStart);
+  UlongData = ScsiPortConvertPhysicalAddressToUlong((*DeviceExtension->PortConfig->AccessRanges)[0].RangeStart);
   DPRINT("  IOAddress = %lx\n", UlongData);
   RtlInitUnicodeString(&ValueName,
 		       L"IOAddress");

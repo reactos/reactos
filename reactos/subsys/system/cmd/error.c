@@ -119,12 +119,14 @@ VOID error_too_many_parameters (LPTSTR s)
 VOID error_path_not_found (VOID)
 {
 	ConErrResPuts(STRING_ERROR_PATH_NOT_FOUND);
+	nErrorLevel = 1;
 }
 
 
 VOID error_file_not_found (VOID)
 {
 	ConErrResPuts(STRING_ERROR_FILE_NOT_FOUND);
+	nErrorLevel = 1;
 }
 
 
@@ -134,6 +136,7 @@ VOID error_sfile_not_found (LPTSTR f)
 
 	LoadString(CMD_ModuleHandle, STRING_ERROR_FILE_NOT_FOUND, szMsg, RC_STRING_MAX_SIZE);
 	ConErrPrintf(_T("%s - %s\n"), szMsg, f);
+  nErrorLevel = 1;
 }
 
 
@@ -152,6 +155,7 @@ VOID error_invalid_drive (VOID)
 VOID error_bad_command (VOID)
 {
 	ConErrResPuts(STRING_ERROR_BADCOMMAND);
+	nErrorLevel = 9009;
 }
 
 

@@ -89,7 +89,7 @@ typedef NTSTATUS NTAPI (*PSYSMOD_ENUM_ROUTINE)
 typedef NTSTATUS NTAPI (*PPROCMOD_ENUM_ROUTINE)
 (
  IN HANDLE ProcessHandle,
- IN PLDR_MODULE CurrentModule,
+ IN PLDR_DATA_TABLE_ENTRY CurrentModule,
  IN OUT PVOID CallbackContext
 );
 

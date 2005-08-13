@@ -35,7 +35,7 @@ NtSystemDebugControl(DEBUG_CONTROL_CODE ControlCode,
             break;
 
         case DebugDbgLoadSymbols:
-            KDB_LOADUSERMODULE_HOOK((PLDR_MODULE) InputBuffer);
+            KDB_LOADUSERMODULE_HOOK((PLDR_DATA_TABLE_ENTRY) InputBuffer);
             break;
 
         default:

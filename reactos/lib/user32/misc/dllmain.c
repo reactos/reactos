@@ -1,16 +1,9 @@
-#undef __USE_W32API
-#include <windows.h>
-#include <debug.h>
-#include <ddk/ntddk.h>
-#include <user32/callback.h>
-#include <user32/accel.h>
-#include <window.h>
-#include <menu.h>
-#include <message.h>
-#define _WIN32K_KAPI_H
 #include <user32.h>
-#include <strpool.h>
-#include <roscfg.h>
+
+/* FIXME: Belongs to some header. */
+WINBOOL STDCALL GdiDllInitialize(HANDLE, DWORD, LPVOID);
+void InitStockObjects(void);
+VOID DeleteFrameBrushes(VOID);
 
 #ifdef DBG
 
@@ -22,7 +15,6 @@ DWORD DebugTraceLevel = MIN_TRACE;
 extern CRITICAL_SECTION gcsMPH;
 static ULONG User32TlsIndex;
 HINSTANCE User32Instance;
-
 HWINSTA ProcessWindowStation;
 
 PUSER32_THREAD_DATA

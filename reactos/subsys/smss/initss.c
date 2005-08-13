@@ -23,11 +23,7 @@
  *
  * --------------------------------------------------------------------
  */
-
-
 #include "smss.h"
-
-#include <rosrtl/string.h>
 
 #define NDEBUG
 #include <debug.h>

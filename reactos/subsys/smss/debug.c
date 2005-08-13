@@ -23,9 +23,6 @@
  *
  * --------------------------------------------------------------------
  */
-#define NTOS_MODE_USER
-#include <ntos.h>
-#include <rosrtl/string.h>
 #include "smss.h"
 
 #define NDEBUG

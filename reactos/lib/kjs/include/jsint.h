@@ -32,7 +32,6 @@
 
 /* We have always jsconfig.h */
 #include <jsconfig.h>
-#include "ddk/exfuncs.h"
 
 #include <stdio.h>
 #include <assert.h>

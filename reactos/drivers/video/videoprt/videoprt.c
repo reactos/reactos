@@ -22,12 +22,11 @@
  */
 
 #include "videoprt.h"
-#include "internal/ps.h"
 
 /* GLOBAL VARIABLES ***********************************************************/
 
 ULONG CsrssInitialized = FALSE;
-PEPROCESS Csrss = NULL;
+PKPROCESS Csrss = NULL;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -495,34 +494,21 @@ IntVideoPortFindAdapter(
 }
 
 VOID FASTCALL
-IntAttachToCSRSS(PEPROCESS *CallingProcess, PEPROCESS *PrevAttachedProcess)
+IntAttachToCSRSS(PKPROCESS *CallingProcess, PKAPC_STATE ApcState)
 {
-   *CallingProcess = PsGetCurrentProcess();
+   *CallingProcess = (PKPROCESS)PsGetCurrentProcess();
    if (*CallingProcess != Csrss)
    {
-      if (PsGetCurrentThread()->ThreadsProcess != *CallingProcess)
-      {
-         *PrevAttachedProcess = *CallingProcess;
-         KeDetachProcess();
-      }
-      else
-      {
-         *PrevAttachedProcess = NULL;
-      }
-      KeAttachProcess(Csrss);
+      KeStackAttachProcess(Csrss, ApcState);
    }
 }
 
 VOID FASTCALL
-IntDetachFromCSRSS(PEPROCESS *CallingProcess, PEPROCESS *PrevAttachedProcess)
+IntDetachFromCSRSS(PKPROCESS *CallingProcess, PKAPC_STATE ApcState)
 {
    if (*CallingProcess != Csrss)
    {
-      KeDetachProcess();
-      if (NULL != *PrevAttachedProcess)
-      {
-         KeAttachProcess(*PrevAttachedProcess);
-      }
+      KeUnstackDetachProcess(ApcState);
    }
 }
 
@@ -852,8 +838,8 @@ VideoPortGetRomImage(
    IN ULONG Length)
 {
    static PVOID RomImageBuffer = NULL;
-   PEPROCESS CallingProcess;
-   PEPROCESS PrevAttachedProcess;
+   PKPROCESS CallingProcess;
+   KAPC_STATE ApcState;
 
    DPRINT("VideoPortGetRomImage(HwDeviceExtension 0x%X Length 0x%X)\n",
           HwDeviceExtension, Length);
@@ -890,9 +876,9 @@ VideoPortGetRomImage(
          return NULL;
       }
 
-      IntAttachToCSRSS(&CallingProcess, &PrevAttachedProcess);
+      IntAttachToCSRSS(&CallingProcess, &ApcState);
       RtlCopyMemory(RomImageBuffer, (PUCHAR)0xC0000, Length);
-      IntDetachFromCSRSS(&CallingProcess, &PrevAttachedProcess);
+      IntDetachFromCSRSS(&CallingProcess, &ApcState);
 
       return RomImageBuffer;
    }

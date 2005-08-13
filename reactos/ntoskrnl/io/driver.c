@@ -337,8 +337,8 @@ INIT_FUNCTION
 IopDisplayLoadingMessage(PVOID ServiceName, 
                          BOOLEAN Unicode)
 {
-    if (SetupMode) return;
     CHAR TextBuffer[256];
+    if (SetupMode) return;
     if (Unicode) 
     {
         sprintf(TextBuffer, "Loading %S...\n", (PWCHAR)ServiceName);
@@ -1659,15 +1659,15 @@ IopReinitializeDrivers(VOID)
   KeAcquireSpinLock(&DriverReinitListLock,
 		    &Irql);
 
-  if (DriverReinitTailEntry == NULL)
-  {
-    KeReleaseSpinLock(&DriverReinitListLock,
-		      Irql);
-    return;
-  }
+  Entry = DriverReinitTailEntry;
 
   KeReleaseSpinLock(&DriverReinitListLock,
 		    Irql);
+
+  if (Entry == NULL)
+  {
+    return;
+  }
 
   for (;;)
   {

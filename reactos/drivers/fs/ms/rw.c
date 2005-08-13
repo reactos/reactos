@@ -9,8 +9,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntos/minmax.h>
+#include <ntifs.h>
 #include "msfs.h"
 
 #define NDEBUG

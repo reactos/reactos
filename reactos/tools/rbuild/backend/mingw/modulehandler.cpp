@@ -458,19 +458,29 @@ MingwModuleHandler::GenerateInstallTarget () const
 	if ( module.installName.length () == 0 )
 		return;
 	fprintf ( fMakefile, ".PHONY: %s_install\n", module.name.c_str() );
-	fprintf ( fMakefile, "%s_install:\n", module.name.c_str() );
-	string sourceFilename = MingwModuleHandler::PassThruCacheDirectory (
-		NormalizeFilename ( module.GetPath () ),
-		backend->outputDirectory );
 	string normalizedTargetFilename = MingwModuleHandler::PassThruCacheDirectory (
 		NormalizeFilename ( module.installBase + SSEP + module.installName ),
 		backend->installDirectory );
 	fprintf ( fMakefile,
-	          "\t$(ECHO_CP)\n" );
+	          "%s_install: %s\n",
+	          module.name.c_str (),
+	          normalizedTargetFilename.c_str() );
+}
+
+void
+MingwModuleHandler::GenerateDependsTarget () const
+{
 	fprintf ( fMakefile,
-	          "\t${cp} %s %s 1>$(NUL)\n",
-	          sourceFilename.c_str (),
-	          normalizedTargetFilename.c_str () );
+	          ".PHONY: %s_depends\n",
+	          module.name.c_str() );
+	fprintf ( fMakefile,
+	          "%s_depends: $(RBUILD_TARGET)\n",
+	          module.name.c_str () );
+	fprintf ( fMakefile,
+	          "\t$(ECHO_RBUILD)\n" );
+	fprintf ( fMakefile,
+	          "\t$(Q)$(RBUILD_TARGET) -dm%s mingw\n",
+	          module.name.c_str () );
 }
 
 string
@@ -721,7 +731,8 @@ MingwModuleHandler::GenerateMacros (
 		{
 			fprintf (
 				fMakefile,
-				"ifeq (\"$(%s)\",\"%s\")\n",
+				"%s (\"$(%s)\",\"%s\")\n",
+				rIf.negated ? "ifneq" : "ifeq",
 				rIf.property.c_str(),
 				rIf.value.c_str() );
 			GenerateMacros (
@@ -805,7 +816,8 @@ MingwModuleHandler::GenerateObjectMacros (
 		{
 			fprintf (
 				fMakefile,
-				"ifeq (\"$(%s)\",\"%s\")\n",
+				"%s (\"$(%s)\",\"%s\")\n",
+				rIf.negated ? "ifneq" : "ifeq",
 				rIf.property.c_str(),
 				rIf.value.c_str() );
 			GenerateObjectMacros (
@@ -1738,8 +1750,15 @@ MingwModuleHandler::GenerateRules ()
 	string cppc = ( module.host == HostTrue ? "${host_gpp}" : "${gpp}" );
 	string ar = ( module.host == HostTrue ? "${host_ar}" : "${ar}" );
 
-	string targetMacro = GetTargetMacro ( module );
+	if ( module.name != "zlib" ) /* Avoid make warning */
+	{
+		string proxyMakefile = PassThruCacheDirectory (
+			NormalizeFilename ( module.GetBasePath () + SSEP + "makefile" ),
+			backend->outputDirectory );
+		CLEAN_FILE ( proxyMakefile );
+	}
 
+	string targetMacro = GetTargetMacro ( module );
 	CLEAN_FILE ( targetMacro );
 
 	// generate phony target for module name
@@ -2573,6 +2592,8 @@ MingwIsoModuleHandler::OutputBootstrapfileCopyCommands (
 	for ( size_t i = 0; i < module.project.modules.size (); i++ )
 	{
 		const Module& m = *module.project.modules[i];
+		if ( !m.enabled )
+			continue;
 		if ( m.bootstrap != NULL )
 		{
 			string sourceFilename = PassThruCacheDirectory (
@@ -2619,6 +2640,8 @@ MingwIsoModuleHandler::GetBootstrapCdDirectories ( const string& bootcdDirectory
 	for ( size_t i = 0; i < module.project.modules.size (); i++ )
 	{
 		const Module& m = *module.project.modules[i];
+		if ( !m.enabled )
+			continue;
 		if ( m.bootstrap != NULL )
 		{
 			string targetDirectory ( bootcdDirectory + SSEP + m.bootstrap->base );
@@ -2664,6 +2687,8 @@ MingwIsoModuleHandler::GetBootstrapCdFiles (
 	for ( size_t i = 0; i < module.project.modules.size (); i++ )
 	{
 		const Module& m = *module.project.modules[i];
+		if ( !m.enabled )
+			continue;
 		if ( m.bootstrap != NULL )
 		{
 			string filename = PassThruCacheDirectory (
@@ -2795,6 +2820,8 @@ MingwLiveIsoModuleHandler::OutputModuleCopyCommands ( string& livecdDirectory,
 	for ( size_t i = 0; i < module.project.modules.size (); i++ )
 	{
 		const Module& m = *module.project.modules[i];
+		if ( !m.enabled )
+			continue;
 		if ( m.installName.length () > 0 )
 		{
 			string sourceFilename = MingwModuleHandler::PassThruCacheDirectory (

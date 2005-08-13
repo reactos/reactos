@@ -80,6 +80,8 @@
  *
  */
 
+#define __WINE__
+
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -91,7 +93,7 @@
 #include "wingdi.h"
 #include "winuser.h"
 #include "wine/unicode.h"
-#include "user32/regcontrol.h"
+#include "user32.h"
 #include <winnls.h>
 #include "wine/debug.h"
 #include "dlgs.h"

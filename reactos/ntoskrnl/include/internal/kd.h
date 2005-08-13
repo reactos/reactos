@@ -6,12 +6,7 @@
 #ifndef __INCLUDE_INTERNAL_KERNEL_DEBUGGER_H
 #define __INCLUDE_INTERNAL_KERNEL_DEBUGGER_H
 
-#include <internal/ke.h>
-#include <internal/ldr.h>
-#include <ntdll/ldr.h>
-
 struct _KD_DISPATCH_TABLE;
-#define KdPrintEx(_x_) DbgPrintEx _x_
 
 #ifdef DBG
 #include "kdgdb.h"
@@ -23,7 +18,7 @@ struct _KD_DISPATCH_TABLE;
 #if defined(KDBG) || defined(DBG)
 
 VOID
-KdbSymLoadUserModuleSymbols(IN PLDR_MODULE LdrModule);
+KdbSymLoadUserModuleSymbols(IN PLDR_DATA_TABLE_ENTRY LdrModule);
 
 VOID
 KdbSymFreeProcessSymbols(IN PEPROCESS Process);
@@ -108,24 +103,20 @@ typedef enum _KD_CONTINUE_TYPE
 
 typedef
 VOID
-STDCALL
-(*PKDP_INIT_ROUTINE)(struct _KD_DISPATCH_TABLE *DispatchTable,
+(STDCALL*PKDP_INIT_ROUTINE)(struct _KD_DISPATCH_TABLE *DispatchTable,
                      ULONG BootPhase);
 
 typedef
 VOID
-STDCALL
-(*PKDP_PRINT_ROUTINE)(PCH String);
+(STDCALL*PKDP_PRINT_ROUTINE)(PCH String);
 
 typedef
 VOID
-STDCALL
-(*PKDP_PROMPT_ROUTINE)(PCH String);
+(STDCALL*PKDP_PROMPT_ROUTINE)(PCH String);
 
 typedef
 KD_CONTINUE_TYPE
-STDCALL
-(*PKDP_EXCEPTION_ROUTINE)(PEXCEPTION_RECORD ExceptionRecord,
+(STDCALL*PKDP_EXCEPTION_ROUTINE)(PEXCEPTION_RECORD ExceptionRecord,
                           PCONTEXT Context,
                           PKTRAP_FRAME TrapFrame);
 

@@ -30,23 +30,22 @@
 #pragma GCC system_header
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdarg.h>
 #include <winbase.h>
 #include "ntddk.h"
 #include "ntpoapi.h"
 
-#pragma pack(push,4)
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef struct _PEB *PPEB;
 
 /* FIXME: Unknown definitions */
 typedef PVOID POBJECT_TYPE_LIST;
 typedef PVOID PEXECUTION_STATE;
-typedef PVOID PLANGID;
+
+typedef unsigned short LANGID, *PLANGID;
 
 #ifndef NtCurrentProcess
 #define NtCurrentProcess() ( (HANDLE) 0xFFFFFFFF )
@@ -249,27 +248,13 @@ typedef struct _SYSTEM_TIME_OF_DAY_INFORMATION {
 	ULONG  CurrentTimeZoneId;
 } SYSTEM_TIME_OF_DAY_INFORMATION, *PSYSTEM_TIME_OF_DAY_INFORMATION;
 
-typedef struct _VM_COUNTERS {
-	ULONG  PeakVirtualSize;
-	ULONG  VirtualSize;
-	ULONG  PageFaultCount;
-	ULONG  PeakWorkingSetSize;
-	ULONG  WorkingSetSize;
-	ULONG  QuotaPeakPagedPoolUsage;
-	ULONG  QuotaPagedPoolUsage;
-	ULONG  QuotaPeakNonPagedPoolUsage;
-	ULONG  QuotaNonPagedPoolUsage;
-	ULONG  PagefileUsage;
-	ULONG  PeakPagefileUsage;
-} VM_COUNTERS;
-
 typedef enum _THREAD_STATE {
 	Initialized,
 	Ready,
 	Running,
 	Standby,
 	Terminated,
-	Wait,
+	Waiting,
 	Transition,
 	DeferredReady
 } THREAD_STATE;
@@ -463,6 +448,15 @@ typedef struct _SYSTEM_INSTRUCTION_EMULATION_INFORMATION {
 	ULONG  GenericInvalidOpcode;
 } SYSTEM_INSTRUCTION_EMULATION_INFORMATION, *PSYSTEM_INSTRUCTION_EMULATION_INFORMATION;
 
+typedef struct _SYSTEM_CACHE_INFORMATION {
+	ULONG  CurrentSize;
+	ULONG  PeakSize;
+	ULONG  PageFaultCount;
+	ULONG  MinimumWorkingSet;
+	ULONG  MaximumWorkingSet;
+	ULONG  Unused[4];
+} SYSTEM_CACHE_INFORMATION, *PSYSTEM_CACHE_INFORMATION;
+
 typedef struct _SYSTEM_POOL_TAG_INFORMATION {
 	CHAR  Tag[4];
 	ULONG  PagedPoolAllocs;
@@ -472,6 +466,15 @@ typedef struct _SYSTEM_POOL_TAG_INFORMATION {
 	ULONG  NonPagedPoolFrees;
 	ULONG  NonPagedPoolUsage;
 } SYSTEM_POOL_TAG_INFORMATION, *PSYSTEM_POOL_TAG_INFORMATION;
+
+typedef struct _SYSTEM_INTERRUPT_INFORMATION {
+	ULONG	ContextSwitches;
+	ULONG	DpcCount;
+	ULONG	DpcRate;
+	ULONG	TimeIncrement;
+	ULONG	DpcBypassCount;
+	ULONG	ApcBypassCount;
+} SYSTEM_INTERRUPT_INFORMATION, *PSYSTEM_INTERRUPT_INFORMATION;
 
 typedef struct _SYSTEM_PROCESSOR_STATISTICS {
 	ULONG  ContextSwitches;
@@ -1469,22 +1472,6 @@ typedef struct _PROCESS_ACCESS_TOKEN {
 #define SEM_NOALIGNMENTFAULTEXCEPT        0x0004
 #define SEM_NOOPENFILEERRORBOX            0x8000
 /* end winbase.h */
-typedef struct _POOLED_USAGE_AND_LIMITS {
-	ULONG  PeakPagedPoolUsage;
-	ULONG  PagedPoolUsage;
-	ULONG  PagedPoolLimit;
-	ULONG  PeakNonPagedPoolUsage;
-	ULONG  NonPagedPoolUsage;
-	ULONG  NonPagedPoolLimit;
-	ULONG  PeakPagefileUsage;
-	ULONG  PagefileUsage;
-	ULONG  PagefileLimit;
-} POOLED_USAGE_AND_LIMITS, *PPOOLED_USAGE_AND_LIMITS;
-
-typedef struct _PROCESS_WS_WATCH_INFORMATION {
-  PVOID  FaultingPc;
-  PVOID  FaultingVa;
-} PROCESS_WS_WATCH_INFORMATION, *PPROCESS_WS_WATCH_INFORMATION;
 
 /* PROCESS_PRIORITY_CLASS.PriorityClass constants */
 #define PC_IDLE                           1
@@ -1991,7 +1978,6 @@ typedef struct _LPC_MESSAGE {
 	CLIENT_ID  ClientId;
 	ULONG  MessageId;
 	ULONG  SectionSize;
-	UCHAR  Data[ANYSIZE_ARRAY];
 } LPC_MESSAGE, *PLPC_MESSAGE;
 
 #define LPC_MESSAGE_BASE_SIZE	24
@@ -2331,10 +2317,6 @@ ZwReplaceKey(
 	IN POBJECT_ATTRIBUTES  NewFileObjectAttributes,
 	IN HANDLE  KeyHandle,
 	IN POBJECT_ATTRIBUTES  OldFileObjectAttributes);
-
-typedef enum _KEY_SET_INFORMATION_CLASS {
-  KeyLastWriteTimeInformation
-} KEY_SET_INFORMATION_CLASS;
 
 NTOSAPI
 NTSTATUS
@@ -2802,10 +2784,16 @@ NTOSAPI
 NTSTATUS
 NTAPI
 NtAllocateUuids(
-  OUT PLARGE_INTEGER  UuidLastTimeAllocated,
+  OUT PULARGE_INTEGER  UuidLastTimeAllocated,
   OUT PULONG  UuidDeltaTime,
   OUT PULONG  UuidSequenceNumber,
   OUT PUCHAR  UuidSeed);
+
+NTOSAPI
+NTSTATUS
+NTAPI
+NtSetUuidSeed(
+  IN PUCHAR  UuidSeed);
 
 NTOSAPI
 NTSTATUS
@@ -2893,7 +2881,7 @@ NtDeleteAtom(
 
 typedef enum _ATOM_INFORMATION_CLASS {
 	AtomBasicInformation,
-	AtomListInformation
+	AtomTableInformation
 } ATOM_INFORMATION_CLASS;
 
 NTOSAPI
@@ -2907,8 +2895,8 @@ NtQueryInformationAtom(
   OUT PULONG  ReturnLength  OPTIONAL);
 
 typedef struct _ATOM_BASIC_INFORMATION {
-	USHORT  ReferenceCount;
-	USHORT  Pinned;
+	USHORT  UsageCount;
+	USHORT  Flags;
 	USHORT  NameLength;
 	WCHAR  Name[1];
 } ATOM_BASIC_INFORMATION, *PATOM_BASIC_INFORMATION;
@@ -2933,8 +2921,6 @@ NTAPI
 NtVdmControl(
   IN ULONG  ControlCode,
   IN PVOID  ControlData);
-
-#pragma pack(pop)
 
 #ifdef __cplusplus
 }

@@ -38,6 +38,8 @@
 
 #include "tme.h"
 
+#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
+
 #if DBG
 // Declare the global debug flag for this driver.
 //ULONG PacketDebugFlag = PACKET_DEBUG_LOUD;

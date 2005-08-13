@@ -118,6 +118,9 @@ extern "C" {
 #elif defined(__WATCOMC__)
 #define DECLSPEC_NORETURN
 #define DECLARE_STDCALL_P( type ) type __stdcall
+#elif defined(_MSC_VER)
+#define DECLSPEC_NORETURN __declspec(noreturn)
+#define DECLARE_STDCALL_P( type ) type __stdcall
 #endif /* __GNUC__/__WATCOMC__ */
 #define MAKEWORD(a,b)	((WORD)(((BYTE)(a))|(((WORD)((BYTE)(b)))<<8)))
 #define MAKELONG(a,b)	((LONG)(((WORD)(a))|(((DWORD)((WORD)(b)))<<16)))
@@ -160,7 +163,7 @@ extern "C" {
 #endif /* __cplusplus */
 #endif /* __GNUC__ > 2 || (__GNUC__ == 2 && __GNUC_MINOR__ >= 95) */
 #endif /* NONAMELESSUNION */
-#elif defined(__WATCOMC__)
+#elif defined(__WATCOMC__) || defined(_MSC_VER)
 #define _ANONYMOUS_UNION
 #define _ANONYMOUS_STRUCT
 #endif /* __GNUC__/__WATCOMC__ */

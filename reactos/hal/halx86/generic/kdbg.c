@@ -12,10 +12,9 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-
+#include <hal.h>
 #define NDEBUG
-#include <internal/debug.h>
+#include <debug.h>
 
 
 #define DEFAULT_BAUD_RATE    19200

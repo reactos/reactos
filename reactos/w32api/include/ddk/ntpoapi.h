@@ -27,12 +27,11 @@
 #pragma GCC system_header
 #endif
 
+#include "batclass.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "ntddk.h"
-#include "batclass.h"
 
 #define POWER_PERF_SCALE                  100
 #define PERF_LEVEL_TO_PERCENT(x)          (((x) * 1000) / (POWER_PERF_SCALE * 10))
@@ -44,8 +43,8 @@ typedef struct _PROCESSOR_IDLE_TIMES {
 	ULONG  IdleHandlerReserved[4];
 } PROCESSOR_IDLE_TIMES, *PPROCESSOR_IDLE_TIMES;
 
-typedef BOOLEAN DDKFASTAPI
-(*PPROCESSOR_IDLE_HANDLER)(
+typedef BOOLEAN
+(DDKFASTAPI*PPROCESSOR_IDLE_HANDLER)(
   IN OUT PPROCESSOR_IDLE_TIMES IdleTimes);
 
 typedef struct _PROCESSOR_IDLE_HANDLER_INFO {
@@ -53,12 +52,12 @@ typedef struct _PROCESSOR_IDLE_HANDLER_INFO {
   PPROCESSOR_IDLE_HANDLER  Handler;
 } PROCESSOR_IDLE_HANDLER_INFO, *PPROCESSOR_IDLE_HANDLER_INFO;
 
-typedef VOID DDKFASTAPI
-(*PSET_PROCESSOR_THROTTLE)(
+typedef VOID
+(DDKFASTAPI*PSET_PROCESSOR_THROTTLE)(
   IN UCHAR  Throttle);
 
-typedef NTSTATUS DDKFASTAPI
-(*PSET_PROCESSOR_THROTTLE2)(
+typedef NTSTATUS
+(DDKFASTAPI*PSET_PROCESSOR_THROTTLE2)(
   IN UCHAR  Throttle);
 
 #define MAX_IDLE_HANDLERS                 3
@@ -82,12 +81,12 @@ typedef enum _POWER_STATE_HANDLER_TYPE {
 	PowerStateMaximum
 } POWER_STATE_HANDLER_TYPE, *PPOWER_STATE_HANDLER_TYPE;
 
-typedef NTSTATUS DDKAPI
-(*PENTER_STATE_SYSTEM_HANDLER)(
+typedef NTSTATUS
+(DDKAPI*PENTER_STATE_SYSTEM_HANDLER)(
   IN PVOID  SystemContext);
 
-typedef NTSTATUS DDKAPI
-(*PENTER_STATE_HANDLER)(
+typedef NTSTATUS
+(DDKAPI*PENTER_STATE_HANDLER)(
   IN PVOID  Context,
   IN PENTER_STATE_SYSTEM_HANDLER  SystemHandler  OPTIONAL,
   IN PVOID  SystemContext,
@@ -102,8 +101,8 @@ typedef struct _POWER_STATE_HANDLER {
 	PVOID  Context;
 } POWER_STATE_HANDLER, *PPOWER_STATE_HANDLER;
 
-typedef NTSTATUS STDCALL
-(*PENTER_STATE_NOTIFY_HANDLER)(
+typedef NTSTATUS
+(STDCALL*PENTER_STATE_NOTIFY_HANDLER)(
   IN POWER_STATE_HANDLER_TYPE  State,
   IN PVOID  Context,
   IN BOOLEAN  Entering);
@@ -154,53 +153,6 @@ typedef struct _PROCESSOR_STATE_HANDLER2 {
 	UCHAR  NumPerfStates;
 	PROCESSOR_PERF_LEVEL  PerfLevel[1];
 } PROCESSOR_STATE_HANDLER2, *PPROCESSOR_STATE_HANDLER2;
-
-typedef struct _PROCESSOR_POWER_STATE {
-	PVOID IdleFunction;
-	ULONG Idle0KernelTimeLimit;
-	ULONG Idle0LastTime;
-	PVOID IdleHandlers;
-	PVOID IdleState;
-	ULONG IdleHandlersCount;
-	ULONGLONG LastCheck;
-	PROCESSOR_IDLE_TIMES IdleTimes;
-	ULONG IdleTime1;
-	ULONG PromotionCheck;
-	ULONG IdleTime2;
-	UCHAR CurrentThrottle;
-	UCHAR ThermalThrottleLimit;
-	UCHAR CurrentThrottleIndex;
-	UCHAR ThermalThrottleIndex;
-	ULONG LastKernelUserTime;
-	ULONG PerfIdleTime;
-	ULONG DebugDelta;
-	ULONG DebugCount;
-	ULONG LastSysTime;
-	ULONG TotalIdleStateTime[3];
-	ULONG TotalIdleTransitions[3];
-	ULONGLONG PreviousC3StateTime;
-	UCHAR KneeThrottleIndex;
-	UCHAR ThrottleLimitIndex;
-	UCHAR PerfStatesCount;
-	UCHAR ProcessorMinThrottle;
-	UCHAR ProcessorMaxThrottle;
-	UCHAR LastBusyPercentage;
-	UCHAR LastC3Percentage;
-	UCHAR LastAdjustedBusyPercentage;
-	ULONG PromotionCount;
-	ULONG DemotionCount;
-	ULONG ErrorCount;
-	ULONG RetryCount;
-	ULONG Flags;
-	LARGE_INTEGER PerfCounterFrequency;
-	ULONG PerfTickCount;
-	KTIMER PerfTimer;
-	KDPC PerfDpc;
-	PROCESSOR_PERF_STATE *PerfStates;
-	PVOID PerfSetThrottle;
-	ULONG LastC3KernelUserTime;
-	ULONG Spare1[1];
-} PROCESSOR_POWER_STATE, *PPROCESSOR_POWER_STATE;
 
 NTOSAPI
 NTSTATUS

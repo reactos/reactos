@@ -104,7 +104,7 @@ IntEngWndUpdateClipObj(
           }
         }
       }
-      RGNDATA_UnlockRgn(hVisRgn);
+      RGNDATA_UnlockRgn(visRgn);
     }
     else
     {

@@ -381,6 +381,11 @@ EngLineTo(SURFOBJ *DestObj,
   deltax = x2 - x1;
   deltay = y2 - y1;
 
+  if (0 == deltax && 0 == deltay)
+    {
+      return TRUE;
+    }
+
   if (deltax < 0)
     {
       xchange = -1;
@@ -413,16 +418,18 @@ EngLineTo(SURFOBJ *DestObj,
 	  EnumMore = CLIPOBJ_bEnum(Clip, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
 	  for (i = 0; i < RectEnum.c && RectEnum.arcl[i].top + Translate.y <= y1; i++)
 	    {
-	      if (y1 < RectEnum.arcl[i].bottom + Translate.y &&
-	          RectEnum.arcl[i].left + Translate.x <= hx + deltax &&
-	          hx < RectEnum.arcl[i].right + Translate.x)
-		{
-		  DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_HLine(
+              if (y1 < RectEnum.arcl[i].bottom + Translate.y &&
+                  RectEnum.arcl[i].left + Translate.x <= hx + deltax &&
+                  hx < RectEnum.arcl[i].right + Translate.x &&
+                  max(hx, RectEnum.arcl[i].left + Translate.x) <
+                  min(hx + deltax, RectEnum.arcl[i].right + Translate.x))
+                {
+                  DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_HLine(
                                        OutputObj,
-		                       max(hx, RectEnum.arcl[i].left + Translate.x),
-		                       min(hx + deltax, RectEnum.arcl[i].right + Translate.x),
-		                       y1, Pixel);
-		}
+                                       max(hx, RectEnum.arcl[i].left + Translate.x),
+                                       min(hx + deltax, RectEnum.arcl[i].right + Translate.x),
+                                       y1, Pixel);
+               	}
 	    }
 	}
       while (EnumMore);
@@ -480,8 +487,8 @@ EngLineTo(SURFOBJ *DestObj,
 }
 
 BOOL STDCALL
-IntEngLineTo(BITMAPOBJ *DestObj,
-	     CLIPOBJ *Clip,
+IntEngLineTo(SURFOBJ *DestSurf,
+	     CLIPOBJ *ClipObj,
 	     BRUSHOBJ *Brush,
 	     LONG x1,
 	     LONG y1,
@@ -491,13 +498,13 @@ IntEngLineTo(BITMAPOBJ *DestObj,
 	     MIX Mix)
 {
   BOOLEAN ret;
-  SURFOBJ *DestSurf;
+  BITMAPOBJ *DestObj;
   PGDIBRUSHINST GdiBrush;
   RECTL b;
 
-  ASSERT(DestObj);
-  DestSurf = &DestObj->SurfObj;
   ASSERT(DestSurf);
+  DestObj = CONTAINING_RECORD(DestSurf, BITMAPOBJ, SurfObj);
+  ASSERT(DestObj);
 
   GdiBrush = CONTAINING_RECORD(
      Brush,
@@ -512,19 +519,41 @@ IntEngLineTo(BITMAPOBJ *DestObj,
   /* No success yet */
   ret = FALSE;
 
+  /* Clip lines totally outside the clip region. This is not done as an
+   * optimization (there are very few lines drawn outside the region) but
+   * as a workaround for what seems to be a problem in the CL54XX driver */
+  if (NULL == ClipObj || DC_TRIVIAL == ClipObj->iDComplexity)
+    {
+      b.left = 0;
+      b.right = DestSurf->sizlBitmap.cx;
+      b.top = 0;
+      b.bottom = DestSurf->sizlBitmap.cy;
+    }
+  else
+    {
+      b = ClipObj->rclBounds;
+    }
+  if ((x1 < b.left && x2 < b.left) || (b.right <= x1 && b.right <= x2) ||
+      (y1 < b.top && y2 < b.top) || (b.bottom <= y1 && b.bottom <= y2))
+    {
+      return TRUE;
+    }
+
   b.left = min(x1, x2);
   b.right = max(x1, x2);
   b.top = min(y1, y2);
   b.bottom = max(y1, y2);
   if (b.left == b.right) b.right++;
   if (b.top == b.bottom) b.bottom++;
+
+  BITMAPOBJ_LockBitmapBits(DestObj);
   MouseSafetyOnDrawStart(DestSurf, x1, y1, x2, y2);
 
   if (DestObj->flHooks & HOOK_LINETO)
     {
     /* Call the driver's DrvLineTo */
     ret = GDIDEVFUNCS(DestSurf).LineTo(
-      DestSurf, Clip, Brush, x1, y1, x2, y2, /*RectBounds*/&b, Mix);
+      DestSurf, ClipObj, Brush, x1, y1, x2, y2, &b, Mix);
     }
 
 #if 0
@@ -536,16 +565,17 @@ IntEngLineTo(BITMAPOBJ *DestObj,
 
   if (! ret)
     {
-      ret = EngLineTo(DestSurf, Clip, Brush, x1, y1, x2, y2, RectBounds, Mix);
+      ret = EngLineTo(DestSurf, ClipObj, Brush, x1, y1, x2, y2, RectBounds, Mix);
     }
 
   MouseSafetyOnDrawEnd(DestSurf);
+  BITMAPOBJ_UnlockBitmapBits(DestObj);
 
   return ret;
 }
 
 BOOL STDCALL
-IntEngPolyline(BITMAPOBJ *DestObj,
+IntEngPolyline(SURFOBJ *DestSurf,
 	       CLIPOBJ *Clip,
 	       BRUSHOBJ *Brush,
 	       CONST LPPOINT  pt,
@@ -563,7 +593,7 @@ IntEngPolyline(BITMAPOBJ *DestObj,
       rect.top = min(pt[i-1].y, pt[i].y);
       rect.right = max(pt[i-1].x, pt[i].x);
       rect.bottom = max(pt[i-1].y, pt[i].y);
-      ret = IntEngLineTo(DestObj,
+      ret = IntEngLineTo(DestSurf,
 	                 Clip,
 	                 Brush,
                          pt[i-1].x,

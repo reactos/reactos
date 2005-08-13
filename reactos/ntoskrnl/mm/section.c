@@ -1,11 +1,47 @@
 /* $Id$
  *
- * COPYRIGHT:       See COPYING in the top level directory
+ * Copyright (C) 1998-2005 ReactOS Team (and the authors from the programmers section)
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ *
+ *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/section.c
  * PURPOSE:         Implements section objects
  *
- * PROGRAMMERS:     David Welch (welch@mcmail.com)
+ * PROGRAMMERS:     Rex Jolliff
+ *                  David Welch
+ *                  Eric Kohl
+ *                  Emanuele Aliberti
+ *                  Eugene Ingerman
+ *                  Hartmut Birr
+ *                  Casper Hornstrup
+ *                  KJK::Hyperion
+ *                  Guido de Jong
+ *                  Ge van Geldorp
+ *                  Royce Mitchell III
+ *                  Filip Navara
+ *                  Aleksey Bragin 
+ *                  Jason Filby
+ *                  Thomas Weidenmueller
+ *                  Gunnar Andre' Dalsnes
+ *                  Mike Nordell
+ *                  Alex Ionescu
+ *                  Gregor Anich
+ *                  Steven Edwards
+ *                  Herve Poussineau
  */
 
 /* INCLUDES *****************************************************************/
@@ -1115,7 +1151,7 @@ MmspNotPresentFaultImageSectionView(PMADDRESS_SPACE AddressSpace,
          /* FIXME: Should we call MmCreateVirtualMappingUnsafe if
           * (Section->AllocationAttributes & SEC_PHYSICALMEMORY) is true?
           */
-         Status = MmCreateVirtualMapping(MemoryArea->Process,
+         Status = MmCreateVirtualMapping(AddressSpace->Process,
                                          Address,
                                          Attributes,
                                          &Pfn[0],
@@ -1125,7 +1161,7 @@ MmspNotPresentFaultImageSectionView(PMADDRESS_SPACE AddressSpace,
             DbgPrint("Unable to create virtual mapping\n");
             KEBUGCHECK(0);
          }
-         MmInsertRmap(Pfn[0], MemoryArea->Process, (PVOID)PAddress);
+         MmInsertRmap(Pfn[0], AddressSpace->Process, (PVOID)PAddress);
       }
       if (Locked)
       {
@@ -1953,7 +1989,7 @@ MmspNotPresentFaultPageFileSectionView(PMADDRESS_SPACE AddressSpace,
 
          MmSharePageEntrySectionSegment(Segment, Offset);
 
-         Status = MmCreateVirtualMapping(MemoryArea->Process,
+         Status = MmCreateVirtualMapping(AddressSpace->Process,
                                          Address,
                                          Attributes,
                                          &Pfn,
@@ -1963,7 +1999,7 @@ MmspNotPresentFaultPageFileSectionView(PMADDRESS_SPACE AddressSpace,
             DbgPrint("Unable to create virtual mapping\n");
             KEBUGCHECK(0);
          }
-         MmInsertRmap(Pfn, MemoryArea->Process, (PVOID)PAddress);
+         MmInsertRmap(Pfn, AddressSpace->Process, (PVOID)PAddress);
       }
       if (Locked)
       {
@@ -2245,7 +2281,8 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
     * Find the offset of the page
     */
    PAddress = MM_ROUND_DOWN(Address, PAGE_SIZE);
-   Offset = (ULONG_PTR)PAddress - (ULONG_PTR)MemoryArea->StartingAddress;
+   Offset = (ULONG_PTR)PAddress - (ULONG_PTR)MemoryArea->StartingAddress 
+            + MemoryArea->Data.SectionData.ViewOffset;
 
    Segment = MemoryArea->Data.SectionData.Segment;
    Section = MemoryArea->Data.SectionData.Section;
@@ -2442,7 +2479,8 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
    Context.Segment = MemoryArea->Data.SectionData.Segment;
    Context.Section = MemoryArea->Data.SectionData.Section;
 
-   Context.Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress;
+   Context.Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress 
+                    + MemoryArea->Data.SectionData.ViewOffset;
    FileOffset = Context.Offset + Context.Segment->FileOffset;
 
    IsImageSection = Context.Section->AllocationAttributes & SEC_IMAGE ? TRUE : FALSE;
@@ -2600,14 +2638,14 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
           */
          if (Context.Private)
          {
-            Status = MmCreateVirtualMapping(MemoryArea->Process,
+            Status = MmCreateVirtualMapping(AddressSpace->Process,
                                             Address,
                                             MemoryArea->Attributes,
                                             &Page,
                                             1);
-            MmSetDirtyPage(MemoryArea->Process, Address);
+            MmSetDirtyPage(AddressSpace->Process, Address);
             MmInsertRmap(Page,
-                         MemoryArea->Process,
+                         AddressSpace->Process,
                          Address);
          }
          else
@@ -2617,14 +2655,14 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
              * set it back into the section segment entry so we don't loose
              * our copy. Otherwise it will be handled by the cache manager.
              */
-            Status = MmCreateVirtualMapping(MemoryArea->Process,
+            Status = MmCreateVirtualMapping(AddressSpace->Process,
                                             Address,
                                             MemoryArea->Attributes,
                                             &Page,
                                             1);
-            MmSetDirtyPage(MemoryArea->Process, Address);
+            MmSetDirtyPage(AddressSpace->Process, Address);
             MmInsertRmap(Page,
-                         MemoryArea->Process,
+                         AddressSpace->Process,
                          Address);
             Entry = MAKE_SSE(Page << PAGE_SHIFT, 0);
             MmSharePage(Page);
@@ -2650,26 +2688,26 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
        */
       if (Context.Private)
       {
-         Status = MmCreateVirtualMapping(MemoryArea->Process,
+         Status = MmCreateVirtualMapping(AddressSpace->Process,
                                          Address,
                                          MemoryArea->Attributes,
                                          &Page,
                                          1);
-         MmSetDirtyPage(MemoryArea->Process, Address);
+         MmSetDirtyPage(AddressSpace->Process, Address);
          MmInsertRmap(Page,
-                      MemoryArea->Process,
+                      AddressSpace->Process,
                       Address);
       }
       else
       {
-         Status = MmCreateVirtualMapping(MemoryArea->Process,
+         Status = MmCreateVirtualMapping(AddressSpace->Process,
                                          Address,
                                          MemoryArea->Attributes,
                                          &Page,
                                          1);
-         MmSetDirtyPage(MemoryArea->Process, Address);
+         MmSetDirtyPage(AddressSpace->Process, Address);
          MmInsertRmap(Page,
-                      MemoryArea->Process,
+                      AddressSpace->Process,
                       Address);
          Entry = MAKE_SSE(Page << PAGE_SHIFT, 0);
          MmSharePage(Page);
@@ -2697,7 +2735,7 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
 
    if (Context.Private)
    {
-      Status = MmCreatePageFileMapping(MemoryArea->Process,
+      Status = MmCreatePageFileMapping(AddressSpace->Process,
                                        Address,
                                        SwapEntry);
       if (!NT_SUCCESS(Status))
@@ -2737,7 +2775,8 @@ MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
 
    Address = (PVOID)PAGE_ROUND_DOWN(Address);
 
-   Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress;
+   Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress 
+            + MemoryArea->Data.SectionData.ViewOffset;
 
    /*
     * Get the segment and section.
@@ -2819,7 +2858,7 @@ MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
 #if 1
       KEBUGCHECK(0);
 #else
-      CcRosMarkDirtyCacheSegment(Bcb, Offset + MemoryArea->Data.SectionData.ViewOffset);
+      CcRosMarkDirtyCacheSegment(Bcb, Offset + Segment->FileOffset);
 #endif
       PageOp->Status = STATUS_SUCCESS;
       MmspCompleteAndReleasePageOp(PageOp);
@@ -2905,7 +2944,8 @@ MmAlterViewAttributes(PMADDRESS_SPACE AddressSpace,
             ULONG Entry;
             PFN_TYPE Page;
 
-            Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress;
+            Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress 
+                     + MemoryArea->Data.SectionData.ViewOffset;
             Entry = MmGetPageEntrySectionSegment(Segment, Offset);
             Page = MmGetPfnForProcess(AddressSpace->Process, Address);
 
@@ -2964,9 +3004,7 @@ MmQuerySectionView(PMEMORY_AREA MemoryArea,
    PMM_REGION Region;
    PVOID RegionBaseAddress;
    PSECTION_OBJECT Section;
-   PLIST_ENTRY CurrentEntry;
-   PMEMORY_AREA CurrentMArea;
-   KIRQL oldIrql;
+   PMM_SECTION_SEGMENT Segment;
 
    Region = MmFindRegion((PVOID)MemoryArea->StartingAddress,
                          &MemoryArea->Data.SectionData.RegionListHead,
@@ -2975,37 +3013,21 @@ MmQuerySectionView(PMEMORY_AREA MemoryArea,
    {
       return STATUS_UNSUCCESSFUL;
    }
+
    Section = MemoryArea->Data.SectionData.Section;
    if (Section->AllocationAttributes & SEC_IMAGE)
    {
-      KeAcquireSpinLock(&Section->ViewListLock, &oldIrql);
-      CurrentEntry = Section->ViewListHead.Flink;
-      Info->AllocationBase = NULL;
-      while (CurrentEntry != &Section->ViewListHead)
-      {
-         CurrentMArea = CONTAINING_RECORD(CurrentEntry, MEMORY_AREA, Data.SectionData.ViewListEntry);
-         CurrentEntry = CurrentEntry->Flink;
-         if (Info->AllocationBase == NULL)
-         {
-            Info->AllocationBase = CurrentMArea->StartingAddress;
-         }
-         else if (CurrentMArea->StartingAddress < Info->AllocationBase)
-         {
-            Info->AllocationBase = CurrentMArea->StartingAddress;
-         }
-      }
-      KeReleaseSpinLock(&Section->ViewListLock, oldIrql);
-      Info->BaseAddress = RegionBaseAddress;
-      Info->AllocationProtect = MemoryArea->Attributes;
+      Segment = MemoryArea->Data.SectionData.Segment;
+      Info->AllocationBase = (PBYTE)MemoryArea->StartingAddress - Segment->VirtualAddress;
       Info->Type = MEM_IMAGE;
    }
    else
    {
-      Info->BaseAddress = RegionBaseAddress;
       Info->AllocationBase = MemoryArea->StartingAddress;
-      Info->AllocationProtect = MemoryArea->Attributes;
       Info->Type = MEM_MAPPED;
    }
+   Info->BaseAddress = RegionBaseAddress;
+   Info->AllocationProtect = MemoryArea->Attributes;
    Info->RegionSize = PAGE_ROUND_UP((ULONG_PTR)MemoryArea->EndingAddress -
                                     (ULONG_PTR)MemoryArea->StartingAddress);
    Info->State = MEM_COMMIT;
@@ -3179,6 +3201,7 @@ MmCreatePhysicalMemorySection(VOID)
       ObDereferenceObject(PhysSection);
    }
    PhysSection->AllocationAttributes |= SEC_PHYSICALMEMORY;
+   PhysSection->Segment->Flags &= ~MM_PAGEFILE_SEGMENT;
 
    return(STATUS_SUCCESS);
 }
@@ -3288,8 +3311,6 @@ MmCreatePageFileSection(PSECTION_OBJECT *SectionObject,
    Section->SectionPageProtection = SectionPageProtection;
    Section->AllocationAttributes = AllocationAttributes;
    Section->Segment = NULL;
-   InitializeListHead(&Section->ViewListHead);
-   KeInitializeSpinLock(&Section->ViewListLock);
    Section->FileObject = NULL;
    Section->MaximumSize = MaximumSize;
    Segment = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_SECTION_SEGMENT),
@@ -3362,8 +3383,6 @@ MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
    Section->SectionPageProtection = SectionPageProtection;
    Section->AllocationAttributes = AllocationAttributes;
    Section->Segment = NULL;
-   InitializeListHead(&Section->ViewListHead);
-   KeInitializeSpinLock(&Section->ViewListLock);
 
    /*
     * Check file access required
@@ -3683,7 +3702,6 @@ ExeFmtpReadFile(IN PFILE_OBJECT FileObject,
       KEBUGCHECK(STATUS_INVALID_PARAMETER_5);
    }
 
-   ASSERT(PAGE_SIZE <= MAXULONG);
    AdjustOffset = PAGE_ROUND_DOWN(FileOffset.u.LowPart);
    OffsetAdjustment = FileOffset.u.LowPart - AdjustOffset;
    FileOffset.u.LowPart = AdjustOffset;
@@ -4312,8 +4330,6 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
    Section->SectionPageProtection = SectionPageProtection;
    Section->AllocationAttributes = AllocationAttributes;
    DPRINT("%x\n", Section->AllocationAttributes);
-   InitializeListHead(&Section->ViewListHead);
-   KeInitializeSpinLock(&Section->ViewListLock);
 
    ASSERT (FileObject->SectionObjectPointer);
 
@@ -4613,7 +4629,6 @@ MmMapViewOfSegment(PEPROCESS Process,
 {
    PMEMORY_AREA MArea;
    NTSTATUS Status;
-   KIRQL oldIrql;
    PHYSICAL_ADDRESS BoundaryAddressMultiple;
 
    BoundaryAddressMultiple.QuadPart = 0;
@@ -4635,10 +4650,6 @@ MmMapViewOfSegment(PEPROCESS Process,
       return(Status);
    }
 
-   KeAcquireSpinLock(&Section->ViewListLock, &oldIrql);
-   InsertTailList(&Section->ViewListHead,
-                  &MArea->Data.SectionData.ViewListEntry);
-   KeReleaseSpinLock(&Section->ViewListLock, oldIrql);
 
    ObReferenceObjectByPointer((PVOID)Section,
                               SECTION_MAP_READ,
@@ -4844,7 +4855,6 @@ VOID STATIC
 MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
                   PFN_TYPE Page, SWAPENTRY SwapEntry, BOOLEAN Dirty)
 {
-   PMEMORY_AREA MArea;
    ULONG Entry;
 //   PFILE_OBJECT FileObject;
 //   PBCB Bcb;
@@ -4854,23 +4864,24 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
    NTSTATUS Status;
    PSECTION_OBJECT Section;
    PMM_SECTION_SEGMENT Segment;
+   PMADDRESS_SPACE AddressSpace;
 
-   MArea = (PMEMORY_AREA)Context;
+   AddressSpace = (PMADDRESS_SPACE)Context;
 
    Address = (PVOID)PAGE_ROUND_DOWN(Address);
 
-   Offset = ((ULONG_PTR)Address - (ULONG_PTR)MArea->StartingAddress) +
+   Offset = ((ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress) +
             MemoryArea->Data.SectionData.ViewOffset;
 
-   Section = MArea->Data.SectionData.Section;
-   Segment = MArea->Data.SectionData.Segment;
+   Section = MemoryArea->Data.SectionData.Section;
+   Segment = MemoryArea->Data.SectionData.Segment;
 
-   PageOp = MmCheckForPageOp(MArea, NULL, NULL, Segment, Offset);
+   PageOp = MmCheckForPageOp(MemoryArea, NULL, NULL, Segment, Offset);
 
    while (PageOp)
    {
       MmUnlockSectionSegment(Segment);
-      MmUnlockAddressSpace(&MArea->Process->AddressSpace);
+      MmUnlockAddressSpace(AddressSpace);
 
       Status = MmspWaitForPageOpCompletionEvent(PageOp);
       if (Status != STATUS_SUCCESS)
@@ -4879,10 +4890,10 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
          KEBUGCHECK(0);
       }
 
-      MmLockAddressSpace(&MArea->Process->AddressSpace);
+      MmLockAddressSpace(AddressSpace);
       MmLockSectionSegment(Segment);
       MmspCompleteAndReleasePageOp(PageOp);
-      PageOp = MmCheckForPageOp(MArea, NULL, NULL, Segment, Offset);
+      PageOp = MmCheckForPageOp(MemoryArea, NULL, NULL, Segment, Offset);
    }
 
    Entry = MmGetPageEntrySectionSegment(Segment, Offset);
@@ -4920,12 +4931,12 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
             MmFreeSwapPage(SavedSwapEntry);
             MmSetSavedSwapEntryPage(Page, 0);
          }
-         MmDeleteRmap(Page, MArea->Process, Address);
+         MmDeleteRmap(Page, AddressSpace->Process, Address);
          MmReleasePageMemoryConsumer(MC_USER, Page);
       }
       else
       {
-         MmDeleteRmap(Page, MArea->Process, Address);
+         MmDeleteRmap(Page, AddressSpace->Process, Address);
 	 DPRINT("%x\n", Address);
          MmUnsharePageEntrySectionSegment(Section, Segment, Offset, Dirty, FALSE);
       }
@@ -4940,7 +4951,6 @@ MmUnmapViewOfSegment(PMADDRESS_SPACE AddressSpace,
    PMEMORY_AREA MemoryArea;
    PSECTION_OBJECT Section;
    PMM_SECTION_SEGMENT Segment;
-   KIRQL oldIrql;
    PLIST_ENTRY CurrentEntry;
    PMM_REGION CurrentRegion;
    PLIST_ENTRY RegionListHead;
@@ -4957,9 +4967,6 @@ MmUnmapViewOfSegment(PMADDRESS_SPACE AddressSpace,
    Segment = MemoryArea->Data.SectionData.Segment;
 
    MmLockSectionSegment(Segment);
-   KeAcquireSpinLock(&Section->ViewListLock, &oldIrql);
-   RemoveEntryList(&MemoryArea->Data.SectionData.ViewListEntry);
-   KeReleaseSpinLock(&Section->ViewListLock, oldIrql);
 
    RegionListHead = &MemoryArea->Data.SectionData.RegionListHead;
    while (!IsListEmpty(RegionListHead))
@@ -4981,7 +4988,7 @@ MmUnmapViewOfSegment(PMADDRESS_SPACE AddressSpace,
       Status = MmFreeMemoryArea(AddressSpace,
                                 MemoryArea,
                                 MmFreeSectionPage,
-                                MemoryArea);
+                                AddressSpace);
    }
    MmUnlockSectionSegment(Segment);
    ObDereferenceObject(Section);
@@ -6383,7 +6390,6 @@ ULONG MmGetPageEntryForProcess(PEPROCESS Process, PVOID Address);
 NTSTATUS STDCALL
 MmMapViewInSystemCache(PCACHE_VIEW CacheView)
 {
-   KIRQL oldIrql;
    PSECTION_OBJECT Section;
    PMM_SECTION_SEGMENT Segment;
 
@@ -6394,10 +6400,6 @@ MmMapViewInSystemCache(PCACHE_VIEW CacheView)
 
    MmLockSectionSegment(Segment);
 
-   KeAcquireSpinLock(&Section->ViewListLock, &oldIrql);
-   InsertTailList(&Section->ViewListHead,
-                  &CacheView->SectionData.ViewListEntry);
-   KeReleaseSpinLock(&Section->ViewListLock, oldIrql);
 
    ObReferenceObjectByPointer((PVOID)Section,
                               SECTION_MAP_READ|SECTION_MAP_WRITE,
@@ -6416,7 +6418,6 @@ MmUnmapViewInSystemCache(PCACHE_VIEW CacheView)
 {
    PSECTION_OBJECT Section;
    PMM_SECTION_SEGMENT Segment;
-   KIRQL oldIrql;
    PLIST_ENTRY CurrentEntry;
    PMM_REGION CurrentRegion;
    PLIST_ENTRY RegionListHead;
@@ -6432,9 +6433,6 @@ MmUnmapViewInSystemCache(PCACHE_VIEW CacheView)
    DPRINT("%x %x\n", CacheView->BaseAddress, CacheView->SectionData.ViewOffset);
 
    MmLockSectionSegment(Segment);
-   KeAcquireSpinLock(&Section->ViewListLock, &oldIrql);
-   RemoveEntryList(&CacheView->SectionData.ViewListEntry);
-   KeReleaseSpinLock(&Section->ViewListLock, oldIrql);
 
    RegionListHead = &CacheView->SectionData.RegionListHead;
    while (!IsListEmpty(RegionListHead))

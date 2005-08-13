@@ -17,6 +17,10 @@
 
 #include <reactos/exeformat.h>
 
+#ifndef MAXULONG
+#define MAXULONG ((ULONG)(~1))
+#endif
+
 static ULONG SectionCharacteristicsToProtect[16] =
 {
  PAGE_NOACCESS,          /* 0 = NONE */

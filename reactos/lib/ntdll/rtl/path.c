@@ -10,17 +10,9 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
-#include <ntos/minmax.h>
-#include <string.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <base.h>
-#include <ddk/obfuncs.h>
-
+#include <ntdll.h>
 #define NDEBUG
-#include <ntdll/ntdll.h>
+#include <debug.h>
 
 /* DEFINITONS and MACROS ******************************************************/
 

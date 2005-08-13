@@ -2,11 +2,6 @@
 #ifndef __WIN32K_DC_H
 #define __WIN32K_DC_H
 
-#include <windows.h>
-#include <win32k/driver.h>
-#include <win32k/gdiobj.h>
-#include <win32k/path.h>
-
 typedef struct _WIN_DC_INFO
 {
   int  flags;
@@ -135,7 +130,11 @@ typedef struct
   GDIINFO GDIInfo;
   DEVINFO DevInfo;
   DRIVER_FUNCTIONS DriverFunctions;
+#ifdef NTOS_MODE_USER
+  PVOID VideoFileObject;
+#else
   PFILE_OBJECT VideoFileObject;
+#endif
   BOOLEAN PreparedDriver;
   ULONG DisplayNumber;
 
@@ -149,10 +148,12 @@ typedef struct
 
 /*  Internal functions  */
 
+#ifndef NTOS_MODE_USER
+
 #define  DC_LockDc(hDC)  \
   ((PDC) GDIOBJ_LockObj ((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC))
-#define  DC_UnlockDc(hDC)  \
-  GDIOBJ_UnlockObj ((HGDIOBJ) hDC)
+#define  DC_UnlockDc(pDC)  \
+  GDIOBJ_UnlockObjByPtr (pDC)
 
 HDC  FASTCALL RetrieveDisplayHDC(VOID);
 HDC  FASTCALL DC_AllocDC(PUNICODE_STRING  Driver);
@@ -166,6 +167,8 @@ VOID FASTCALL DC_SetOwnership(HDC DC, PEPROCESS Owner);
 
 VOID FASTCALL DC_UpdateXforms(PDC  dc);
 BOOL FASTCALL DC_InvertXform(const XFORM *xformSrc, XFORM *xformDest);
+
+#endif
 
 /*  User entry points */
 
@@ -185,11 +188,6 @@ INT STDCALL  NtGdiDrawEscape(HDC  hDC,
                             INT  nEscape,
                             INT  cbInput,
                             LPCSTR  lpszInData);
-
-#ifndef __USE_W32API
-/* FIXME: this typedef should go somewhere else...  */
-typedef VOID (*GOBJENUMPROC)(PVOID, LPARAM);
-#endif
 
 INT STDCALL  NtGdiEnumObjects(HDC  hDC,
                              INT  ObjectType,

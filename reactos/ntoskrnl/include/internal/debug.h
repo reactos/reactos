@@ -18,8 +18,6 @@
 #ifndef __INTERNAL_DEBUG
 #define __INTERNAL_DEBUG
 
-#include <internal/ntoskrnl.h>
-
 #if defined(_MSC_VER) && (_MSC_VER < 1300)
 /* TODO: Verify which version the MS compiler learned the __FUNCTION__ macro */
 #define __FUNCTION__ "<unknown>"
@@ -33,11 +31,12 @@
 
 #ifdef DBG
 
+#ifndef __USE_W32API
 /* Assert only on "checked" version */
 #ifndef NASSERT
 #ifdef CONFIG_SMP
-#define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d for CPU%d\n", __FILE__,__LINE__, KeGetCurrentKPCR()->ProcessorNumber), DbgBreakPoint(); }
-#define ASSERT(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d for CPU%d\n", __FILE__,__LINE__, KeGetCurrentKPCR()->ProcessorNumber), DbgBreakPoint(); }
+#define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d for CPU%d\n", __FILE__,__LINE__, KeGetCurrentKPCR()->Number), DbgBreakPoint(); }
+#define ASSERT(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d for CPU%d\n", __FILE__,__LINE__, KeGetCurrentKPCR()->Number), DbgBreakPoint(); }
 #else
 #define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); DbgBreakPoint(); }
 #define ASSERT(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); DbgBreakPoint(); }
@@ -65,6 +64,7 @@
 #define ASSERTMSG(_c_, _m_)
 
 #endif
+#endif /* !__USE_W32API */
 
 /* Print if using a "checked" version */
 #ifdef __GNUC__ /* using GNU C/C99 macro ellipsis */
@@ -83,10 +83,12 @@
 
 #define CPRINT(args...)
 #define DPRINT1(args...)
+#ifndef __USE_W32API
 #define assert(x)
 #define ASSERT(x)
 #define assertmsg(_c_, _m_)
 #define ASSERTMSG(_c_, _m_)
+#endif /* !__USE_W32API */
 
 #endif /* DBG */
 

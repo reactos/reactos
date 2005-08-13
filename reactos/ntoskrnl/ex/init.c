@@ -248,8 +248,8 @@ ExecuteRuntimeAsserts(VOID)
     ASSERT(FIELD_OFFSET(KV86M_TRAP_FRAME, orig_ebp) == TF_ORIG_EBP);
     ASSERT(FIELD_OFFSET(KPCR, Tib.ExceptionList) == KPCR_EXCEPTION_LIST);
     ASSERT(FIELD_OFFSET(KPCR, Self) == KPCR_SELF);
-    ASSERT(FIELD_OFFSET(KPCR, PrcbData) + FIELD_OFFSET(KPRCB, CurrentThread) == KPCR_CURRENT_THREAD);
-    ASSERT(FIELD_OFFSET(KPCR, PrcbData) + FIELD_OFFSET(KPRCB, NpxThread) == KPCR_NPX_THREAD);
+    ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, CurrentThread) == KPCR_CURRENT_THREAD);
+    ASSERT(FIELD_OFFSET(KIPCR, PrcbData) + FIELD_OFFSET(KPRCB, NpxThread) == KPCR_NPX_THREAD);
     ASSERT(FIELD_OFFSET(KTSS, Esp0) == KTSS_ESP0);
     ASSERT(FIELD_OFFSET(KTSS, Eflags) == KTSS_EFLAGS);
     ASSERT(FIELD_OFFSET(KTSS, IoMapBase) == KTSS_IOMAPBASE);
@@ -496,7 +496,7 @@ ExpInitializeExecutive(VOID)
         KeCreateApplicationProcessorIdleThread(KeNumberProcessors);
 
         /* Allocate a stack for use when booting the processor */
-        ProcessorStack = Ki386InitialStackArray[((int)KeNumberProcessors)] + MM_STACK_SIZE;
+        ProcessorStack = RVA(Ki386InitialStackArray[((int)KeNumberProcessors)], MM_STACK_SIZE);
 
         /* Tell HAL a new CPU is being started */
         HalStartNextProcessor(0, (ULONG)ProcessorStack - 2*sizeof(FX_SAVE_AREA));

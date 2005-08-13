@@ -213,7 +213,9 @@ typedef struct _CCB
   ULONG LastOffset;
 } CCB, *PCCB;
 
+#ifndef TAG
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
+#endif
 
 #define TAG_CCB TAG('I', 'C', 'C', 'B')
 

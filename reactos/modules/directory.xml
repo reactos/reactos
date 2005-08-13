@@ -1,0 +1,5 @@
+<xi:include href="rosapps/directory.xml">
+	<xi:fallback>
+		<xi:include href="empty.xml" />
+	</xi:fallback>
+</xi:include>

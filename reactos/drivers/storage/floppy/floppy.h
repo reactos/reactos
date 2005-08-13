@@ -29,39 +29,11 @@
 #define MAX_DRIVES_PER_CONTROLLER 4
 #define MAX_CONTROLLERS 4
 
-#ifdef _MSC_VER
 /* MS doesn't prototype this but the w2k kernel exports it */
 int _cdecl swprintf(const WCHAR *, ...);
 
 /* need ioctls in ddk build mode */
 #include <ntdddisk.h>
-#endif
-
-/* missing from ros headers */
-/* TODO: fix this right */
-#ifndef KdPrint
-#if 0
-#define KdPrint(x) DbgPrint x
-#else
-#define KdPrint(x)
-#endif
-#endif
-
-#ifndef ASSERT
-#define ASSERT(x) { if(!(x)) __asm__("int $3\n"); }
-#endif
-
-#ifndef assert
-#define assert(x) ASSERT(x)
-#endif
-
-#ifndef PAGED_CODE
-#define PAGED_CODE() {ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);}
-#endif
-
-#ifndef UNREFERENCED_PARAMETER
-#define UNREFERENCED_PARAMETER(x) { (x) = (x); }
-#endif
 
 struct _CONTROLLER_INFO;
 

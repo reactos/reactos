@@ -76,7 +76,10 @@ public:
 	bool Verbose;
 	bool CleanAsYouGo;
 	bool AutomaticDependencies;
+	bool CheckDependenciesForModuleOnly;
+	std::string CheckDependenciesForModuleOnlyModule;
 	bool MakeHandlesInstallDirectories;
+	bool GenerateProxyMakefilesInSourceTree;
 };
 
 class Environment
@@ -134,7 +137,9 @@ public:
 	Module* LocateModule ( const std::string& name );
 	const Module* LocateModule ( const std::string& name ) const;
 	std::string GetProjectFilename () const;
+	std::string ResolveProperties ( const std::string& s ) const;
 private:
+	std::string ResolveNextProperty ( std::string& s ) const;
 	const Property* LookupProperty ( const std::string& name ) const;
 	void SetConfigurationOption ( char* s,
 	                              std::string name,
@@ -210,6 +215,7 @@ public:
 	std::string installName;
 	bool useWRC;
 	bool enableWarnings;
+	bool enabled;
 
 	Module ( const Project& project,
 	         const XMLElement& moduleNode,
@@ -219,6 +225,7 @@ public:
 	                           const XMLAttribute& attribute );
 	bool HasImportLibrary () const;
 	bool IsDLL () const;
+	bool GenerateInOutputTree () const;
 	std::string GetTargetName () const;
 	std::string GetDependencyPath () const;
 	std::string GetBasePath () const;
@@ -388,12 +395,14 @@ public:
 	const XMLElement& node;
 	const Project& project;
 	const Module* module;
+	const bool negated;
 	std::string property, value;
 	IfableData data;
 
 	If ( const XMLElement& node_,
 	     const Project& project_,
-	     const Module* module_ );
+	     const Module* module_,
+	     const bool negated_ = false );
 	~If();
 
 	void ProcessXML();
@@ -485,6 +494,7 @@ private:
 	                                         int* stubIndex );
 	void WriteStubsFile ( Module& module );
 	std::string GetStartupFilename ( Module& module );
+	bool IsUnknownCharacter ( char ch );
 	std::string GetTestDispatcherName ( std::string filename );
 	bool IsTestFile ( std::string& filename ) const;
 	void GetSourceFilenames ( string_list& list,
@@ -566,7 +576,6 @@ public:
 
 	AutomaticDependency ( const Project& project );
 	~AutomaticDependency ();
-	void Process ();
 	std::string GetFilename ( const std::string& filename );
 	bool LocateIncludedFile ( const std::string& directory,
 	                          const std::string& includedFilename,
@@ -581,13 +590,19 @@ public:
 	                                       SourceFile* parentSourceFile );
 	SourceFile* RetrieveFromCache ( const std::string& filename );
 	void CheckAutomaticDependencies ( bool verbose );
+	void CheckAutomaticDependencies ( Module& module,
+	                                  bool verbose );
+	void CheckAutomaticDependencies ( Module& module,
+	                                  bool verbose,
+	                                  bool parseFiles );
 	void CheckAutomaticDependenciesForFile ( SourceFile* sourceFile );
 private:
 	void GetModuleFiles ( Module& module,
                               std::vector<File*>& files ) const;
-	void ProcessModule ( Module& module );
-	void ProcessFile ( Module& module,
-	                   const File& file );
+	void ParseFiles ();
+	void ParseFiles ( Module& module );
+	void ParseFile ( Module& module,
+	                 const File& file );
 	std::map<std::string, SourceFile*> sourcefile_map;
 };
 

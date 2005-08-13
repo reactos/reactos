@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#include "ntddk.h"
-
 #define MAXIMUM_USB_STRING_LENGTH         255
 
 #define USB_DEVICE_CLASS_RESERVED           0x00

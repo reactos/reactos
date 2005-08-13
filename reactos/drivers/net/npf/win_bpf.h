@@ -45,9 +45,11 @@
 /* BSD style release date */
 #define BPF_RELEASE 199606
 
+#ifndef _BSDTYPES_DEFINED
 typedef UCHAR u_char;
 typedef USHORT u_short;
 typedef UINT u_int;
+#endif
 typedef LONG bpf_int32;
 typedef ULONG bpf_u_int32;
 typedef ULONG u_int32;

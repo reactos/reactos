@@ -11,16 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntos.h>
-#include <windows.h>
-#include <stdio.h>
-#include <winwlx.h>
-#include <wchar.h>
-#include <reactos/winlogon.h>
-
-#include "setup.h"
 #include "winlogon.h"
-#include "resource.h"
 
 #define NDEBUG
 #include <debug.h>

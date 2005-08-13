@@ -26,19 +26,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#include "precomp.h"
-#include <ntdll/rtl.h>
-#include <ntos/minmax.h>
-#include <rosrtl/string.h>
-
 #include "usetup.h"
-#include "infcache.h"
-#include "genlist.h"
-#include "settings.h"
 
 #define NDEBUG
 #include <debug.h>
-
 
 /* FUNCTIONS ****************************************************************/
 

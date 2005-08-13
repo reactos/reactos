@@ -5,10 +5,11 @@
  * FILE:            lib/smlib/execpgm.c
  * PURPOSE:         Call SM API SM_API_EXECPGM
  */
+#include <windows.h>
 #define NTOS_MODE_USER
-#include <ntos.h>
+#include <ndk/ntndk.h>
+
 #include <sm/helper.h>
-#include <string.h>
 
 #define NDEBUG
 #include <debug.h>

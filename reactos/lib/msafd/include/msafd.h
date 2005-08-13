@@ -10,21 +10,15 @@
 #include <roscfg.h>
 #include <stdlib.h>
 #include <windows.h>
-#include <ddk/ntddk.h>
-#include <ddk/ntifs.h>
-#include <wsahelp.h> /* comment for msvc */
-//#include "C:\Programming\ReactOS\reactos\w32api\include\wsahelp.h" uncomment for MSVC
+#include <wsahelp.h>
 #include <winsock2.h>
 #include <ws2spi.h>
-//#include "C:\Programming\ReactOS\reactos\w32api\include\ddk\tdi.h" uncomment for MSVC
-#include <ddk/tdi.h> /* comment for msvc */
+#include <ddk/tdi.h>
 #include <afd/shared.h>
 #include <helpers.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 #include <debug.h>
-
-/* Because our headers are f*cked up */
-typedef LARGE_INTEGER TIME;
-#include <ntos/zw.h>
 
 extern HANDLE GlobalHeap;
 extern WSPUPCALLTABLE Upcalls;

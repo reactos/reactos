@@ -130,7 +130,7 @@ DceAllocDCE(HWND hWnd, DCE_TYPE Type)
 
   Dce = DCEOBJ_LockDCE(DceHandle);
   /* No real locking, just get the pointer */
-  DCEOBJ_UnlockDCE(DceHandle);
+  DCEOBJ_UnlockDCE(Dce);
   Dce->Self = DceHandle;
   Dce->hDC = IntGdiCreateDC(&DriverName, NULL, NULL, NULL, FALSE);
   if (NULL == defaultDCstate)
@@ -200,7 +200,7 @@ DceSetDrawable(PWINDOW_OBJECT WindowObject, HDC hDC, ULONG Flags,
 	  dc->w.DCOrgY = WindowObject->ClientRect.top;
 	}
     }
-  DC_UnlockDc(hDC);
+  DC_UnlockDc(dc);
 }
 
 
@@ -855,7 +855,7 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window)
                   NtGdiOffsetRgn(pDCE->hClipRgn, DeltaX, DeltaY);
                 }
             }
-          DC_UnlockDc(pDCE->hDC);
+          DC_UnlockDc(dc);
 
           DceUpdateVisRgn(pDCE, CurrentWindow, pDCE->DCXFlags);
 

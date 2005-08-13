@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#include "ntddk.h"
-
 #define DD_BEEP_DEVICE_NAME               "\\Device\\Beep"
 #define DD_BEEP_DEVICE_NAME_U             L"\\Device\\Beep"
 

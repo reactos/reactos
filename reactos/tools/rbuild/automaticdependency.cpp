@@ -281,10 +281,10 @@ AutomaticDependency::~AutomaticDependency ()
 }
 
 void
-AutomaticDependency::Process ()
+AutomaticDependency::ParseFiles ()
 {
 	for ( size_t i = 0; i < project.modules.size (); i++ )
-		ProcessModule ( *project.modules[i] );
+		ParseFiles ( *project.modules[i] );
 }
 
 void
@@ -301,17 +301,17 @@ AutomaticDependency::GetModuleFiles ( Module& module,
 }
 
 void
-AutomaticDependency::ProcessModule ( Module& module )
+AutomaticDependency::ParseFiles ( Module& module )
 {
 	vector<File*> files;
 	GetModuleFiles ( module, files );
 	for ( size_t i = 0; i < files.size (); i++ )
-		ProcessFile ( module, *files[i] );
+		ParseFile ( module, *files[i] );
 }
 
 void
-AutomaticDependency::ProcessFile ( Module& module,
-                                   const File& file )
+AutomaticDependency::ParseFile ( Module& module,
+                                 const File& file )
 {
 	string normalizedFilename = NormalizeFilename ( file.name );
 	RetrieveFromCacheOrParse ( module,
@@ -412,34 +412,54 @@ AutomaticDependency::RetrieveFromCache ( const string& filename )
 void
 AutomaticDependency::CheckAutomaticDependencies ( bool verbose )
 {
-	struct utimbuf timebuf;
+	ParseFiles ();
 	for ( size_t mi = 0; mi < project.modules.size (); mi++ )
 	{
-		vector<File*> files;
-		GetModuleFiles ( *project.modules[mi], files );
-		for ( size_t fi = 0; fi < files.size (); fi++ )
-		{
-			File& file = *files[fi];
-			string normalizedFilename = NormalizeFilename ( file.name );
+		Module& module = *project.modules[mi];
+		CheckAutomaticDependencies ( module, verbose, false );
+	}
+}
 
-			SourceFile* sourceFile = RetrieveFromCache ( normalizedFilename );
-			if ( sourceFile != NULL )
+void
+AutomaticDependency::CheckAutomaticDependencies ( Module& module,
+	                                              bool verbose )
+{
+	CheckAutomaticDependencies ( module, verbose, true );
+}
+
+void
+AutomaticDependency::CheckAutomaticDependencies ( Module& module,
+	                                              bool verbose,
+	                                              bool parseFiles )
+{
+	if ( parseFiles )
+		ParseFiles ( module );
+
+	struct utimbuf timebuf;
+	vector<File*> files;
+	GetModuleFiles ( module, files );
+	for ( size_t fi = 0; fi < files.size (); fi++ )
+	{
+		File& file = *files[fi];
+		string normalizedFilename = NormalizeFilename ( file.name );
+
+		SourceFile* sourceFile = RetrieveFromCache ( normalizedFilename );
+		if ( sourceFile != NULL )
+		{
+			CheckAutomaticDependenciesForFile ( sourceFile );
+			assert ( sourceFile->youngestLastWriteTime != 0 );
+			if ( sourceFile->youngestLastWriteTime > sourceFile->lastWriteTime )
 			{
-				CheckAutomaticDependenciesForFile ( sourceFile );
-				assert ( sourceFile->youngestLastWriteTime != 0 );
-				if ( sourceFile->youngestLastWriteTime > sourceFile->lastWriteTime )
+				if ( verbose )
 				{
-					if ( verbose )
-					{
-						printf ( "Marking %s for rebuild due to younger file %s\n",
-						         sourceFile->filename.c_str (),
-						         sourceFile->youngestFile->filename.c_str () );
-					}
-					timebuf.actime = sourceFile->youngestLastWriteTime;
-					timebuf.modtime = sourceFile->youngestLastWriteTime;
-					utime ( sourceFile->filename.c_str (),
-					        &timebuf );
+					printf ( "Marking %s for rebuild due to younger file %s\n",
+					         sourceFile->filename.c_str (),
+					         sourceFile->youngestFile->filename.c_str () );
 				}
+				timebuf.actime = sourceFile->youngestLastWriteTime;
+				timebuf.modtime = sourceFile->youngestLastWriteTime;
+				utime ( sourceFile->filename.c_str (),
+				        &timebuf );
 			}
 		}
 	}

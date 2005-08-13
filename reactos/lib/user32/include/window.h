@@ -5,7 +5,6 @@
  * PURPOSE:     Window management definitions
  */
 #include <windows.h>
-#include <user32/wininternal.h>
 
 extern COLORREF SysColors[];
 extern HPEN SysPens[];

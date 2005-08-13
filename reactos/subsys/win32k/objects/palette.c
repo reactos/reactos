@@ -77,7 +77,7 @@ PALETTE_AllocPalette(ULONG Mode,
       PalGDI->IndexedColors = ExAllocatePoolWithTag(PagedPool, sizeof(PALETTEENTRY) * NumColors, TAG_PALETTE);
       if (NULL == PalGDI->IndexedColors)
 	{
-	  PALETTE_UnlockPalette(NewPalette);
+	  PALETTE_UnlockPalette(PalGDI);
 	  PALETTE_FreePalette(NewPalette);
 	  return NULL;
 	}
@@ -95,7 +95,7 @@ PALETTE_AllocPalette(ULONG Mode,
       PalGDI->BlueMask = Blue;
     }
 
-  PALETTE_UnlockPalette(NewPalette);
+  PALETTE_UnlockPalette(PalGDI);
 
   return NewPalette;
 }
@@ -124,7 +124,7 @@ PALETTE_AllocPaletteIndexedRGB(ULONG NumColors,
   PalGDI->IndexedColors = ExAllocatePoolWithTag(PagedPool, sizeof(PALETTEENTRY) * NumColors, TAG_PALETTE);
   if (NULL == PalGDI->IndexedColors)
     {
-      PALETTE_UnlockPalette(NewPalette);
+      PALETTE_UnlockPalette(PalGDI);
       PALETTE_FreePalette(NewPalette);
       return NULL;
     }
@@ -138,7 +138,7 @@ PALETTE_AllocPaletteIndexedRGB(ULONG NumColors,
 
   PalGDI->NumColors = NumColors;
 
-  PALETTE_UnlockPalette(NewPalette);
+  PALETTE_UnlockPalette(PalGDI);
 
   return NewPalette;
 }
@@ -180,7 +180,7 @@ HPALETTE FASTCALL PALETTE_Init(VOID)
       DbgPrint("Win32k: Can not create palette mapping -- out of memory!");
       return FALSE;
     }
-    PALETTE_UnlockPalette(hpalette);
+    PALETTE_UnlockPalette(palObj);
   }
 #endif
 
@@ -233,7 +233,7 @@ INT STDCALL PALETTE_SetMapping(PALOBJ *palPtr, UINT uStart, UINT uNum, BOOL mapO
   /* FIXME - handle pSysPal == NULL!!!!!!! */
 
   COLOR_sysPal = pSysPal->IndexedColors;
-  PALETTE_UnlockPalette(hSysPal); // FIXME: Is this a right way to obtain pointer to the system palette?
+  PALETTE_UnlockPalette(pSysPal); // FIXME: Is this a right way to obtain pointer to the system palette?
 
 
   // reset dynamic system palette entries

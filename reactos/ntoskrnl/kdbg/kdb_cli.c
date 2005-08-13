@@ -37,6 +37,10 @@
 
 /* DEFINES *******************************************************************/
 
+/* FIXME: NDK headers */
+#define TempEsp TempEip
+#define TempSegSs TempCs
+
 #define KEY_BS          8
 #define KEY_ESC         27
 #define KEY_DEL         127
@@ -374,19 +378,6 @@ KdbpCmdRegs(ULONG Argc, PCHAR Argv[])
 
    if (Argv[0][0] == 'r') /* regs */
    {
-      ULONG Esp;
-      USHORT Ss;
-
-      if (!(Tf->Cs & 1))
-      {
-          Esp = (ULONG)Tf->TempEsp;
-          Ss = (USHORT)((ULONG)Tf->TempSegSs & 0xFFFF);
-      }
-      else
-      {
-          Esp = Tf->Esp;
-          Ss = Tf->Ss;
-      }
       KdbpPrint("CS:EIP  0x%04x:0x%08x\n"
                 "SS:ESP  0x%04x:0x%08x\n"
                 "   EAX  0x%08x   EBX  0x%08x\n"
@@ -394,7 +385,7 @@ KdbpCmdRegs(ULONG Argc, PCHAR Argv[])
                 "   ESI  0x%08x   EDI  0x%08x\n"
                 "   EBP  0x%08x\n",
                 Tf->Cs & 0xFFFF, Tf->Eip,
-                Ss, Esp,
+                Tf->Ss, Tf->Esp,
                 Tf->Eax, Tf->Ebx,
                 Tf->Ecx, Tf->Edx,
                 Tf->Esi, Tf->Edi,
@@ -580,8 +571,10 @@ KdbpCmdBackTrace(ULONG Argc, PCHAR Argv[])
    }
 
    KdbpPrint("Frames:\n");
-   while (Frame != 0)
+   for (;;)
    {
+      if (Frame == 0)
+         break;
       if (!NT_SUCCESS(KdbpSafeReadMemory(&Address, (PVOID)(Frame + sizeof(ULONG_PTR)), sizeof (ULONG_PTR))))
       {
          KdbpPrint("Couldn't access memory at 0x%x!\n", Frame + sizeof(ULONG_PTR));
@@ -591,6 +584,8 @@ KdbpCmdBackTrace(ULONG Argc, PCHAR Argv[])
          KdbpPrint("<%08x>\n", Address);
       else
          KdbpPrint("\n");
+      if (Address == 0)
+         break;
       if (!NT_SUCCESS(KdbpSafeReadMemory(&Frame, (PVOID)Frame, sizeof (ULONG_PTR))))
       {
          KdbpPrint("Couldn't access memory at 0x%x!\n", Frame);
@@ -953,7 +948,10 @@ KdbpCmdThread(ULONG Argc, PCHAR Argv[])
 
          if (Thread->Tcb.TrapFrame != NULL)
          {
-            Esp = (PULONG)Thread->Tcb.TrapFrame->Esp;
+            if (Thread->Tcb.TrapFrame->PreviousMode == KernelMode)
+               Esp = (PULONG)Thread->Tcb.TrapFrame->TempEsp;
+            else
+               Esp = (PULONG)Thread->Tcb.TrapFrame->Esp;
             Ebp = (PULONG)Thread->Tcb.TrapFrame->Ebp;
             Eip = Thread->Tcb.TrapFrame->Eip;
          }
@@ -1428,7 +1426,7 @@ KdbpCmdGdtLdtIdt(ULONG Argc, PCHAR Argv[])
 STATIC BOOLEAN
 KdbpCmdPcr(ULONG Argc, PCHAR Argv[])
 {
-   PKPCR Pcr = KeGetCurrentKPCR();
+   PKIPCR Pcr = (PKIPCR)KeGetCurrentKPCR();
 
    KdbpPrint("Current PCR is at 0x%08x.\n", (INT)Pcr);
    KdbpPrint("  Tib.ExceptionList:         0x%08x\n"
@@ -1452,8 +1450,7 @@ KdbpCmdPcr(ULONG Argc, PCHAR Argv[])
              "  MinorVersion:              0x%04x\n"
              "  SetMember:                 0x%08x\n"
              "  StallScaleFactor:          0x%08x\n"
-             "  DebugActive:               0x%02x\n"
-             "  ProcessorNumber:           0x%02x\n"
+             "  Number:                    0x%02x\n"
              "  L2CacheAssociativity:      0x%02x\n"
              "  VdmAlert:                  0x%08x\n"
              "  L2CacheSize:               0x%08x\n"
@@ -1463,7 +1460,7 @@ KdbpCmdPcr(ULONG Argc, PCHAR Argv[])
              Pcr->Tib.Self, Pcr->Self, Pcr->Prcb, Pcr->Irql, Pcr->IRR, Pcr->IrrActive,
              Pcr->IDR, Pcr->KdVersionBlock, Pcr->IDT, Pcr->GDT, Pcr->TSS,
              Pcr->MajorVersion, Pcr->MinorVersion, Pcr->SetMember, Pcr->StallScaleFactor,
-             Pcr->DebugActive, Pcr->ProcessorNumber, Pcr->L2CacheAssociativity,
+             Pcr->Number, Pcr->L2CacheAssociativity,
              Pcr->VdmAlert, Pcr->L2CacheSize, Pcr->InterruptMode);
 
    return TRUE;

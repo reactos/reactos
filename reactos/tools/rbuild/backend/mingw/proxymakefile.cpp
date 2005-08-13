@@ -15,13 +15,26 @@ ProxyMakefile::~ProxyMakefile ()
 {
 }
 
+bool
+ProxyMakefile::GenerateProxyMakefile ( Module& module )
+{
+	return module.GenerateInOutputTree ();
+}
+
 void
-ProxyMakefile::GenerateProxyMakefiles ( bool verbose )
+ProxyMakefile::GenerateProxyMakefiles ( bool verbose,
+                                        string outputTree )
 {
 	for ( size_t i = 0; i < project.modules.size (); i++ )
 	{
-		GenerateProxyMakefileForModule ( *project.modules[i],
-		                                 verbose );
+		Module& module = *project.modules[i];
+		if ( !module.enabled )
+			continue;
+		if ( !GenerateProxyMakefile ( module ) )
+			continue;
+		GenerateProxyMakefileForModule ( module,
+		                                 verbose,
+		                                 outputTree );
 	}
 }
 
@@ -53,7 +66,8 @@ ProxyMakefile::GetPathToTopDirectory ( Module& module )
 
 void
 ProxyMakefile::GenerateProxyMakefileForModule ( Module& module,
-                                                bool verbose )
+                                                bool verbose,
+                                                string outputTree )
 {
 	char* buf;
 	char* s;
@@ -64,8 +78,20 @@ ProxyMakefile::GenerateProxyMakefileForModule ( Module& module,
 		         module.name.c_str () );
 	}
 
-	string proxyMakefile = NormalizeFilename ( module.GetBasePath () + SSEP "makefile" );
-	string pathToTopDirectory = GetPathToTopDirectory ( module );
+	string base;
+	string pathToTopDirectory;
+	if ( outputTree.length () > 0 )
+	{
+		base = outputTree + SSEP + module.GetBasePath ();
+		Path path;
+		pathToTopDirectory = working_directory;
+	}
+	else
+	{
+		base = module.GetBasePath ();
+		pathToTopDirectory = GetPathToTopDirectory ( module );
+	}
+	string proxyMakefile = NormalizeFilename ( base + SSEP "makefile" );
 	string defaultTarget = module.name;
 
 	buf = (char*) malloc ( 10*1024 );

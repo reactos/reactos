@@ -3,6 +3,9 @@
 #if __GNUC__ >=3
 #pragma GCC system_header
 #endif
+ 
+/* TODO: some compilers support this */
+#define RESTRICTED_POINTER
 
 #define NTAPI __stdcall
 #define OBJ_INHERIT          0x00000002
@@ -52,6 +55,11 @@ typedef enum _SECTION_INHERIT {
   ViewShare = 1,
   ViewUnmap = 2
 } SECTION_INHERIT;
+typedef enum _NT_PRODUCT_TYPE {
+	NtProductWinNt = 1,
+	NtProductLanManNt,
+	NtProductServer
+} NT_PRODUCT_TYPE, *PNT_PRODUCT_TYPE;
 #if !defined(_NTSECAPI_H)
 typedef struct _OBJECT_ATTRIBUTES {
   ULONG Length;

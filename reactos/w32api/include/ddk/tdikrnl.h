@@ -27,12 +27,11 @@
 #pragma GCC system_header
 #endif
 
+#include "tdi.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "ntddk.h"
-#include "tdi.h"
 
 #if defined(_TDI_)
   #define TDIKRNLAPI DECLSPEC_EXPORT

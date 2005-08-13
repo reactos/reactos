@@ -27,9 +27,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include "precomp.h"
 #include "usetup.h"
-#include "inicache.h"
 
 #define NDEBUG
 #include <debug.h>

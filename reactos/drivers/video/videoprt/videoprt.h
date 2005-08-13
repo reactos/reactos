@@ -24,13 +24,18 @@
 #ifndef VIDEOPRT_H
 #define VIDEOPRT_H
 
+#include <ddk/ntddk.h>
 #include <ddk/miniport.h>
 #include <ddk/video.h>
 #include <ddk/ntddvdeo.h>
 #include <ddk/ntapi.h>
 #include <ddk/ntagp.h>
+/* For process attaching functions */
+#include <ddk/ntifs.h>
 #define NDEBUG
 #include <debug.h>
+
+#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 
 int swprintf(wchar_t *buf, const wchar_t *fmt, ...);
 int vsprintf(char *buf, const char *fmt, va_list args);
@@ -188,7 +193,7 @@ IntVideoPortMapPhysicalMemory(
 /* videoprt.c */
 
 extern ULONG CsrssInitialized;
-extern PEPROCESS Csrss;
+extern PKPROCESS Csrss;
 
 VP_STATUS STDCALL
 VideoPortEnumerateChildren(
@@ -201,10 +206,10 @@ VideoPortGetProcAddress(
    IN PUCHAR FunctionName);
 
 VOID FASTCALL
-IntAttachToCSRSS(PEPROCESS *CallingProcess, PEPROCESS *PrevAttachedProcess);
+IntAttachToCSRSS(PKPROCESS *CallingProcess, PKAPC_STATE ApcState);
 
 VOID FASTCALL
-IntDetachFromCSRSS(PEPROCESS *CallingProcess, PEPROCESS *PrevAttachedProcess);
+IntDetachFromCSRSS(PKPROCESS *CallingProcess, PKAPC_STATE ApcState);
 
 NTSTATUS STDCALL
 IntVideoPortCreateAdapterDeviceObject(

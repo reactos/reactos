@@ -9,60 +9,6 @@
 #include <ddk/ntapi.h>
 #endif /* !__USE_W32API */
 
-#ifndef __USE_W32API
-
-typedef struct _CLIENT_ID
-{
-   HANDLE UniqueProcess;
-   HANDLE UniqueThread;
-} CLIENT_ID, *PCLIENT_ID;
-
-typedef struct _RTL_USER_PROCESS_PARAMETERS {
-	ULONG  AllocationSize;
-	ULONG  Size;
-	ULONG  Flags;
-	ULONG  DebugFlags;
-	HANDLE  hConsole;
-	ULONG  ProcessGroup;
-	HANDLE  hStdInput;
-	HANDLE  hStdOutput;
-	HANDLE  hStdError;
-	UNICODE_STRING  CurrentDirectoryName;
-	HANDLE  CurrentDirectoryHandle;
-	UNICODE_STRING  DllPath;
-	UNICODE_STRING  ImagePathName;
-	UNICODE_STRING  CommandLine;
-	PWSTR  Environment;
-	ULONG  dwX;
-	ULONG  dwY;
-	ULONG  dwXSize;
-	ULONG  dwYSize;
-	ULONG  dwXCountChars;
-	ULONG  dwYCountChars;
-	ULONG  dwFillAttribute;
-	ULONG  dwFlags;
-	ULONG  wShowWindow;
-	UNICODE_STRING  WindowTitle;
-	UNICODE_STRING  DesktopInfo;
-	UNICODE_STRING  ShellInfo;
-	UNICODE_STRING  RuntimeInfo;
-} RTL_USER_PROCESS_PARAMETERS, *PRTL_USER_PROCESS_PARAMETERS;
-
-typedef struct _NT_TIB {
-    struct _EXCEPTION_REGISTRATION_RECORD* ExceptionList;  /* 00h */
-    PVOID StackBase;                                       /* 04h */
-    PVOID StackLimit;                                      /* 08h */
-    PVOID SubSystemTib;                                    /* 0Ch */
-    union {
-        PVOID FiberData;                                   /* 10h */
-        ULONG Version;                                     /* 10h */
-    };
-    PVOID ArbitraryUserPointer;                            /* 14h */
-    struct _NT_TIB *Self;                                  /* 18h */
-} NT_TIB, *PNT_TIB;
-
-#endif /* !__USE_W32API */
-
 typedef struct _CURDIR
 {
    UNICODE_STRING DosPath;
@@ -162,12 +108,6 @@ typedef struct _PEB
    UNICODE_STRING CSDVersion;                       /* 1DCh */
 } PEB;
 
-#ifndef __USE_W32API
-
-typedef PEB *PPEB;
-
-#endif /* !__USE_W32API */
-
 typedef struct _GDI_TEB_BATCH
 {
    ULONG Offset;
@@ -238,66 +178,6 @@ typedef struct _TEB
    PVOID FlsSlots;                     /* FB4h */
    PVOID WineDebugInfo;                /* Needed for WINE DLL's  */
 } TEB, *PTEB;
-
-#if (!defined(__USE_W32API) || __W32API_MAJOR_VERSION < 2 || __W32API_MINOR_VERSION < 5)
-
-/* FIXME: at least NtCurrentTeb should be defined in winnt.h */
-
-#ifndef NtCurrentTeb
-
-#if defined(_M_IX86)
-/* on the x86, the TEB is contained in the FS segment */
-static inline struct _TEB * NtCurrentTeb(void)
-{
- struct _TEB * pTeb;
-
-#if defined(__GNUC__)
- /* FIXME: instead of hardcoded offsets, use offsetof() - if possible */
- __asm__ __volatile__
- (
-  "movl %%fs:0x18, %0\n" /* fs:18h == Teb->Tib.Self */
-  : "=r" (pTeb) /* can't have two memory operands */
-  : /* no inputs */
- );
-#elif defined(_MSC_VER)
- __asm mov eax, fs:0x18
- __asm mov pTeb, eax
-#else
-#error Unknown compiler for inline assembler
-#endif
-
- return pTeb;
-}
-#define NtCurrentTeb NtCurrentTeb
-
-#elif defined(_M_ALPHA)
-
-void * __rdteb(void);
-#pragma intrinsic(__rdteb)
-
-/* on the Alpha AXP, we call the rdteb PAL to retrieve the address of the TEB */
-#define NtCurrentTeb() ((struct _TEB *)__rdteb())
-
-#elif defined(_M_MIPS)
-
-/* on the MIPS R4000, the TEB is loaded at a fixed address */
-#define NtCurrentTeb() ((struct _TEB *)0x7FFFF4A8)
-
-#elif defined(_M_PPC)
-
-unsigned __gregister_get(unsigned const regnum);
-#pragma intrinsic(__gregister_get)
-
-/* on the PowerPC, the TEB is pointed to by GPR 13 */
-#define NtCurrentTeb() ((struct _TEB *)__gregister_get(13))
-
-#else
-struct _TEB * NtCurrentTeb(void);
-#endif
-
-#endif
-
-#endif /* !defined(__USE_W32API) || __W32API_MAJOR_VERSION < 2 || __W32API_MINOR_VERSION < 5 */
 
 #ifdef _M_IX86
 

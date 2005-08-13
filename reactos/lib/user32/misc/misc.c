@@ -28,9 +28,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include "user32.h"
-#include <debug.h>
-#include <ntdll/csr.h>
+#include <user32.h>
 
 /* FUNCTIONS *****************************************************************/
 
@@ -85,18 +83,18 @@ STDCALL
 SetLogonNotifyWindow (HWND Wnd, HWINSTA WinSta)
 {
   /* Maybe we should call NtUserSetLogonNotifyWindow and let that one inform CSRSS??? */
-  CSRSS_API_REQUEST Request;
-  CSRSS_API_REPLY Reply;
+  CSR_API_MESSAGE Request;
+  ULONG CsrRequest;
   NTSTATUS Status;
 
-  Request.Type = CSRSS_SET_LOGON_NOTIFY_WINDOW;
+  CsrRequest = MAKE_CSR_API(SET_LOGON_NOTIFY_WINDOW, CSR_GUI);
   Request.Data.SetLogonNotifyWindowRequest.LogonNotifyWindow = Wnd;
 
   Status = CsrClientCallServer(&Request,
-			       &Reply,
-			       sizeof(CSRSS_API_REQUEST),
-			       sizeof(CSRSS_API_REPLY));
-  if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
+			       NULL,
+                   CsrRequest,
+			       sizeof(CSR_API_MESSAGE));
+  if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
     {
       SetLastError(RtlNtStatusToDosError(Status));
       return(FALSE);

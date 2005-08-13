@@ -27,7 +27,17 @@
 #ifndef __WINLOGON_MAIN_H__
 #define __WINLOGON_MAIN_H__
 
+#include <windows.h>
+#include <ntsecapi.h>
+#include <userenv.h>
 #include <winwlx.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
+
+#include <reactos/winlogon.h>
+
+#include "setup.h"
+#include "resource.h"
 
 VOID WINAPI WlxUseCtrlAltDel(HANDLE hWlx);
 VOID WINAPI WlxSetContextPointer(HANDLE hWlx, PVOID pWlxContext);

@@ -513,20 +513,20 @@
 @ stdcall SetupTerminateFileLog(long)
 @ stub ShouldDeviceBeExcluded
 @ stdcall StampFileSecurity(wstr ptr)
-@ stub StringTableAddString
+@ stdcall StringTableAddString(ptr wstr long)
 @ stub StringTableAddStringEx
-@ stub StringTableDestroy
+@ stdcall StringTableDestroy(ptr)
 @ stub StringTableDuplicate
 @ stub StringTableEnum
 @ stub StringTableGetExtraData
-@ stub StringTableInitialize
+@ stdcall StringTableInitialize()
 @ stub StringTableInitializeEx
-@ stub StringTableLookUpString
+@ stdcall StringTableLookUpString(ptr wstr long)
 @ stub StringTableLookUpStringEx
 @ stub StringTableSetExtraData
-@ stub StringTableStringFromId
-@ stub StringTableStringFromIdEx
-@ stub StringTableTrim
+@ stdcall StringTableStringFromId(ptr long)
+@ stdcall StringTableStringFromIdEx(ptr long ptr ptr)
+@ stdcall StringTableTrim(ptr)
 @ stdcall TakeOwnershipOfFile(wstr)
 @ stdcall UnicodeToMultiByte(wstr long)
 @ stdcall UnmapAndCloseFile(long long ptr)

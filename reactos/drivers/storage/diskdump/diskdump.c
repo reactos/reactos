@@ -29,8 +29,11 @@
 
 #include <ddk/ntddk.h>
 #include <ddk/scsi.h>
-#include <ddk/class2.h>
+#include <ddk/ntdddisk.h>
 #include <ddk/ntddscsi.h>
+#include <ddk/class2.h>
+
+#include <ndk/ntndk.h>
 #include <napi/core.h>
 #include "../scsiport/scsiport_int.h"
 
@@ -220,7 +223,7 @@ DiskDumpInit(VOID)
 {
   KIRQL CurrentIrql = KeGetCurrentIrql();
   IsDumping = TRUE;
-  if (CurrentIrql >= CoreDumpPortDeviceExtension->Interrupt->SynchLevel)
+  if (CurrentIrql >= CoreDumpPortDeviceExtension->Interrupt->SynchronizeIrql)
     {
       DbgPrint("DISKDUMP: Error: Crash inside high priority interrupt routine.\n");
       return(STATUS_UNSUCCESSFUL);
@@ -242,9 +245,9 @@ DiskDumpWrite(LARGE_INTEGER Address, PMDL Mdl)
   KIRQL OldIrql, OldIrql2;
   KIRQL CurrentIrql = KeGetCurrentIrql();
 
-  if (CurrentIrql < (CoreDumpPortDeviceExtension->Interrupt->SynchLevel - 1))
+  if (CurrentIrql < (CoreDumpPortDeviceExtension->Interrupt->SynchronizeIrql - 1))
     {
-      KeRaiseIrql(CoreDumpPortDeviceExtension->Interrupt->SynchLevel - 1, &OldIrql);
+      KeRaiseIrql(CoreDumpPortDeviceExtension->Interrupt->SynchronizeIrql - 1, &OldIrql);
     }
 
   /* Adjust the address for the start of the partition. */
@@ -258,7 +261,7 @@ DiskDumpWrite(LARGE_INTEGER Address, PMDL Mdl)
 
   /* Start i/o on the HBA. */
   IrqComplete = IrqNextRequest = FALSE;
-  KeRaiseIrql(CoreDumpPortDeviceExtension->Interrupt->SynchLevel, &OldIrql2);
+  KeRaiseIrql(CoreDumpPortDeviceExtension->Interrupt->SynchronizeIrql, &OldIrql2);
   if (!CoreDumpPortDeviceExtension->HwStartIo(&CoreDumpPortDeviceExtension->MiniPortDeviceExtension,
 					      &CoreDumpSrb))
     {
@@ -274,7 +277,7 @@ DiskDumpWrite(LARGE_INTEGER Address, PMDL Mdl)
     {
       __asm__ ("hlt\n\t");
     }
-  if (CurrentIrql < (CoreDumpPortDeviceExtension->Interrupt->SynchLevel - 1))
+  if (CurrentIrql < (CoreDumpPortDeviceExtension->Interrupt->SynchronizeIrql - 1))
     {
       KeLowerIrql(OldIrql);
     }
@@ -295,7 +298,7 @@ DiskDumpPrepare(PDEVICE_OBJECT DeviceObject, PDUMP_POINTERS DumpPointers)
   PIMAGE_NT_HEADERS NtHeader;
   PVOID ImportDirectory;
   ULONG ImportDirectorySize;
-  PIMAGE_IMPORT_MODULE_DIRECTORY ImportModuleDirectory;
+  PIMAGE_IMPORT_DESCRIPTOR ImportModuleDirectory;
   PVOID DriverBase;
   PCH Name;
   ULONG i;
@@ -323,12 +326,12 @@ DiskDumpPrepare(PDEVICE_OBJECT DeviceObject, PDUMP_POINTERS DumpPointers)
       return(STATUS_UNSUCCESSFUL);
     }
   /*  Process each import module  */
-  ImportModuleDirectory = (PIMAGE_IMPORT_MODULE_DIRECTORY)ImportDirectory;
+  ImportModuleDirectory = (PIMAGE_IMPORT_DESCRIPTOR)ImportDirectory;
   DPRINT("Processeing import directory at %p\n", ImportModuleDirectory);
-  while (ImportModuleDirectory->dwRVAModuleName)
+  while (ImportModuleDirectory->Name)
     {
       /*  Check to make sure that import lib is kernel  */
-      Name = (PCHAR) DriverBase + ImportModuleDirectory->dwRVAModuleName;
+      Name = (PCHAR) DriverBase + ImportModuleDirectory->Name;
 
       if (strcmp(Name, "scsiport.sys") != 0)
 	{
@@ -339,18 +342,18 @@ DiskDumpPrepare(PDEVICE_OBJECT DeviceObject, PDUMP_POINTERS DumpPointers)
 
       /*  Get the import address list  */
       ImportAddressList = (PVOID *) ((PUCHAR)DriverBase +
-				     ImportModuleDirectory->dwRVAFunctionAddressList);
+				     (ULONG_PTR)ImportModuleDirectory->FirstThunk);
 
       /*  Get the list of functions to import  */
-      if (ImportModuleDirectory->dwRVAFunctionNameList != 0)
+      if (ImportModuleDirectory->OriginalFirstThunk != 0)
 	{
 	  FunctionNameList = (PULONG) ((PUCHAR)DriverBase +
-				       ImportModuleDirectory->dwRVAFunctionNameList);
+				       (ULONG_PTR)ImportModuleDirectory->OriginalFirstThunk);
 	}
       else
 	{
 	  FunctionNameList = (PULONG) ((PUCHAR)DriverBase +
-				       ImportModuleDirectory->dwRVAFunctionAddressList);
+				       (ULONG_PTR)ImportModuleDirectory->FirstThunk);
 	}
       /*  Walk through function list and fixup addresses  */
       while (*FunctionNameList != 0L)

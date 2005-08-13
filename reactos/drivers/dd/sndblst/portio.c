@@ -9,7 +9,6 @@
  *                       Sept 28, 2003: Created
  */
 
-#include <windows.h>
 #include <ddk/ntddk.h>
 #include "sndblst.h"
 

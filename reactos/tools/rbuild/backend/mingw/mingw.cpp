@@ -256,6 +256,8 @@ MingwBackend::ProcessModules ()
 	for ( i = 0; i < ProjectNode.modules.size (); i++ )
 	{
 		Module& module = *ProjectNode.modules[i];
+		if ( !module.enabled )
+			continue;
 		MingwModuleHandler* h = MingwModuleHandler::InstanciateHandler (
 			module,
 			this );
@@ -291,14 +293,46 @@ MingwBackend::ProcessModules ()
 		h.GenerateInvocations ();
 		h.GenerateCleanTarget ();
 		h.GenerateInstallTarget ();
+		h.GenerateDependsTarget ();
 		delete v[i];
 	}
 
 	printf ( "done\n" );
 }
-	
+
 void
 MingwBackend::Process ()
+{
+	if ( configuration.CheckDependenciesForModuleOnly )
+		CheckAutomaticDependenciesForModuleOnly ();
+	else
+		ProcessNormal ();
+}
+
+void
+MingwBackend::CheckAutomaticDependenciesForModuleOnly ()
+{
+	if ( configuration.AutomaticDependencies )
+	{
+		Module* module = ProjectNode.LocateModule ( configuration.CheckDependenciesForModuleOnlyModule );
+		if ( module == NULL )
+		{
+			printf ( "Module '%s' does not exist\n",
+			        configuration.CheckDependenciesForModuleOnlyModule.c_str () );
+			return;
+		}
+		
+		printf ( "Checking automatic dependencies for module '%s'...",
+		         module->name.c_str () );
+		AutomaticDependency automaticDependency ( ProjectNode );
+		automaticDependency.CheckAutomaticDependencies ( *module,
+		                                                 configuration.Verbose );
+		printf ( "done\n" );
+	}
+}
+
+void
+MingwBackend::ProcessNormal ()
 {
 	DetectCompiler ();
 	DetectNetwideAssembler ();
@@ -547,6 +581,8 @@ MingwBackend::GetBuildToolDependencies () const
 	for ( size_t i = 0; i < ProjectNode.modules.size (); i++ )
 	{
 		Module& module = *ProjectNode.modules[i];
+		if ( !module.enabled )
+			continue;
 		if ( module.type == BuildTool )
 		{
 			if ( dependencies.length () > 0 )
@@ -572,7 +608,7 @@ MingwBackend::GenerateRegTestsRunTarget () const
 	fprintf ( fMakefile,
 	          "REGTESTS_RUN_TARGET = regtests.dll\n" );
 	fprintf ( fMakefile,
-	          "$(REGTESTS_RUN_TARGET):\n" );
+	          "$(REGTESTS_RUN_TARGET): $(REGTESTS_TARGET)\n" );
 	fprintf ( fMakefile,
 	          "\t$(cp) $(REGTESTS_TARGET) $(REGTESTS_RUN_TARGET)\n" );
 	fprintf ( fMakefile, "\n" );
@@ -641,12 +677,22 @@ MingwBackend::GenerateTestSupportCode ()
 	printf ( "done\n" );
 }
 
+string
+MingwBackend::GetProxyMakefileTree () const
+{
+	if ( configuration.GenerateProxyMakefilesInSourceTree )
+		return "";
+	else
+		return Environment::GetOutputPath ();
+}
+
 void
 MingwBackend::GenerateProxyMakefiles ()
 {
 	printf ( "Generating proxy makefiles..." );
 	ProxyMakefile proxyMakefile ( ProjectNode );
-	proxyMakefile.GenerateProxyMakefiles ( configuration.Verbose );
+	proxyMakefile.GenerateProxyMakefiles ( configuration.Verbose,
+	                                       GetProxyMakefileTree () );
 	printf ( "done\n" );
 }
 
@@ -657,7 +703,6 @@ MingwBackend::CheckAutomaticDependencies ()
 	{
 		printf ( "Checking automatic dependencies..." );
 		AutomaticDependency automaticDependency ( ProjectNode );
-		automaticDependency.Process ();
 		automaticDependency.CheckAutomaticDependencies ( configuration.Verbose );
 		printf ( "done\n" );
 	}
@@ -845,6 +890,8 @@ MingwBackend::GetModuleInstallTargetFiles (
 	for ( size_t i = 0; i < ProjectNode.modules.size (); i++ )
 	{
 		const Module& module = *ProjectNode.modules[i];
+		if ( !module.enabled )
+			continue;
 		if ( module.installName.length () > 0 )
 		{
 			string targetFilenameNoFixup;
@@ -915,14 +962,16 @@ MingwBackend::OutputModuleInstallTargets ()
 	for ( size_t i = 0; i < ProjectNode.modules.size (); i++ )
 	{
 		const Module& module = *ProjectNode.modules[i];
+		if ( !module.enabled )
+			continue;
 		if ( module.installName.length () > 0 )
 		{
 			string sourceFilename = MingwModuleHandler::PassThruCacheDirectory (
 				NormalizeFilename ( module.GetPath () ),
 				outputDirectory );
 			OutputInstallTarget ( sourceFilename,
-		                          module.installName,
-		                          module.installBase );
+			                      module.installName,
+			                      module.installBase );
 		}
 	}
 }
@@ -1004,6 +1053,8 @@ MingwBackend::GetModuleTestTargets (
 	for ( size_t i = 0; i < ProjectNode.modules.size (); i++ )
 	{
 		const Module& module = *ProjectNode.modules[i];
+		if ( !module.enabled )
+			continue;
 		if ( module.type == Test )
 			out.push_back ( module.name );
 	}

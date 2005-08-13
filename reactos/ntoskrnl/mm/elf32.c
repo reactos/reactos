@@ -11,6 +11,11 @@
 #define __ELF_WORD_SIZE 32
 #include "elf.inc.h"
 
+#define IMAGE_FILE_MACHINE_ARM               0x01c0  // ARM little-endian
+#define IMAGE_FILE_MACHINE_AXP64             IMAGE_FILE_MACHINE_ALPHA64
+#define IMAGE_FILE_MACHINE_ALPHA64           0x0284  // Alpha AXP, full 64-bit support
+#define IMAGE_FILE_MACHINE_M32R              0x9041  // M32R little-endian
+
 extern NTSTATUS NTAPI Elf64FmtCreateSection
 (
  IN CONST VOID * FileHeader,

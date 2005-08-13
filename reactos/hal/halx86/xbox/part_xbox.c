@@ -11,13 +11,13 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
 #include <hal.h>
+#include <ddk/ntdddisk.h>
 #include "halxbox.h"
-#include <internal/ps.h>
 
-#define NDEBUG
 #include <internal/debug.h>
+#define NDEBUG
+#include <debug.h>
 
 #define XBOX_SIGNATURE_SECTOR 3
 #define XBOX_SIGNATURE        ('B' | ('R' << 8) | ('F' << 16) | ('R' << 24))
@@ -306,6 +306,8 @@ HalpXboxIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
   DPRINT1("Xbox partitions are fixed, can't change them\n");
   return STATUS_ACCESS_DENIED;
 }
+
+#define HalExamineMBR HALDISPATCH->HalExamineMBR
 
 void
 HalpXboxInitPartIo(void)

@@ -14,6 +14,9 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+/* FIXME: Header mess */
+#undef CreateMailslot
+
 /* GLOBALS *******************************************************************/
 
 extern GENERIC_MAPPING IopFileMapping;
@@ -1353,7 +1356,7 @@ NtCancelIoFile(IN HANDLE FileHandle,
    BOOLEAN OurIrpsInList = FALSE;
    LARGE_INTEGER Interval;
 
-   if ((ULONG_PTR)IoStatusBlock >= MmUserProbeAddress &&
+   if ((ULONG_PTR)IoStatusBlock >= (ULONG_PTR)MmUserProbeAddress &&
        KeGetPreviousMode() == UserMode)
       return STATUS_ACCESS_VIOLATION;
 
@@ -2879,7 +2882,7 @@ NtSetInformationFile(HANDLE FileHandle,
         else
         {
             /* Reference the Port */
-            Status = ObReferenceObjectByHandle(CompletionInfo->IoCompletionHandle,
+            Status = ObReferenceObjectByHandle(CompletionInfo->Port,
                                                IO_COMPLETION_MODIFY_STATE,
                                                IoCompletionType,
                                                PreviousMode,
@@ -2893,7 +2896,7 @@ NtSetInformationFile(HANDLE FileHandle,
                                                 TAG('I', 'o', 'C', 'p'));
 
                 /* Set the Data */
-                Context->Key = CompletionInfo->CompletionKey;
+                Context->Key = CompletionInfo->Key;
                 Context->Port = Queue;
                 FileObject->CompletionContext = Context;
 

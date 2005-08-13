@@ -9,14 +9,13 @@
 #include <winbase.h>
 #include <winnt.h>
 
-#include <msvcrt/crttypes.h>
 #include <stddef.h>
 
 typedef struct _ThreadData
 {
   int terrno;                   /* *nix error code */
   unsigned long tdoserrno;      /* Win32 error code (for I/O only) */
-  unsigned LONGLONG tnext;      /* used by rand/srand */
+  unsigned __int64 tnext;       /* used by rand/srand */
 
   char *lasttoken;              /* used by strtok */
   wchar_t *wlasttoken;          /* used by wcstok */

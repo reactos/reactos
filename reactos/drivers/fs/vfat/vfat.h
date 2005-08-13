@@ -25,14 +25,13 @@ NTSTATUS NTAPI RtlUnicodeStringToOemString(POEM_STRING, PCUNICODE_STRING, BOOLEA
 #endif
 
 #ifdef USE_ROS_CC_AND_FS
+#ifndef __INCLUDE_DDK_NTIFS_H
 NTSTATUS STDCALL CcRosInitializeFileCache(PFILE_OBJECT, ULONG);
 NTSTATUS STDCALL CcRosReleaseFileCache(PFILE_OBJECT);
 #define FSCTL_ROS_QUERY_LCN_MAPPING CTL_CODE(FILE_DEVICE_FILE_SYSTEM, 63, METHOD_BUFFERED, FILE_ANY_ACCESS)
 typedef struct _ROS_QUERY_LCN_MAPPING { LARGE_INTEGER LcnDiskOffset; } ROS_QUERY_LCN_MAPPING, *PROS_QUERY_LCN_MAPPING;
 #endif
-
-#define KEBUGCHECK(a) DbgPrint("KeBugCheck at %s:%i\n",__FILE__,__LINE__), KeBugCheck(a)
-#define KEBUGCHECKEX(a,b,c,d,e) DbgPrint("KeBugCheckEx at %s:%i\n",__FILE__,__LINE__), KeBugCheckEx(a,b,c,d,e)
+#endif
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 #define ROUND_DOWN(N, S) ((N) - ((N) % (S)))

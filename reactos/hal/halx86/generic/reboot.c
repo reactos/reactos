@@ -9,9 +9,9 @@
  *                  Created 11/10/99
  */
 
-
-#include <ddk/ntddk.h>
 #include <hal.h>
+#define NDEBUG
+#include <debug.h>
 
 
 static VOID
@@ -57,12 +57,12 @@ HalReturnToFirmware (
 	ULONG	Action
 	)
 {
-    if (Action == FIRMWARE_HALT)
+    if (Action == HalHaltRoutine)
     {
         DbgPrint ("HalReturnToFirmware called!\n");
         DbgBreakPoint ();
     }
-    else if (Action == FIRMWARE_REBOOT)
+    else if (Action == HalRebootRoutine)
     {
         HalReleaseDisplayOwnership();
         HalReboot ();

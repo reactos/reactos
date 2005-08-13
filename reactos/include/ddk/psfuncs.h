@@ -45,32 +45,12 @@ PsCreateSystemThread (PHANDLE ThreadHandle,
 NTSTATUS STDCALL
 PsTerminateSystemThread (NTSTATUS ExitStatus);
 
-NTSTATUS STDCALL
-PsCreateSystemProcess (PHANDLE ProcessHandle,
-		       ACCESS_MASK DesiredAccess,
-		       POBJECT_ATTRIBUTES ObjectAttributes);
-
-NTSTATUS STDCALL PsCreateWin32Process(struct _EPROCESS* Process);
-NTSTATUS STDCALL PsCreateWin32Thread(struct _ETHREAD* Thread);
-
 VOID
 STDCALL PsChargePoolQuota(
     IN PEPROCESS Process,
     IN POOL_TYPE PoolType,
     IN ULONG_PTR Amount
     );
-
-NTSTATUS
-STDCALL PsChargeProcessNonPagedPoolQuota (
-   	IN PEPROCESS Process,
-    IN ULONG_PTR Amount
-	);
-
-NTSTATUS
-STDCALL PsChargeProcessPagedPoolQuota (
-   	IN PEPROCESS Process,
-    IN ULONG_PTR Amount
-	);
 
 NTSTATUS
 STDCALL PsChargeProcessPoolQuota(
@@ -95,173 +75,10 @@ STDCALL PsDisableImpersonation(
     IN PSE_IMPERSONATION_STATE ImpersonationState
     );
 
-ULONG
-STDCALL PsGetCurrentProcessSessionId (
-    VOID
-	);
-
-KPROCESSOR_MODE
-STDCALL PsGetCurrentThreadPreviousMode (
-    VOID
-	);
-
-
-PVOID
-STDCALL PsGetCurrentThreadStackBase (
-    VOID
-	);
-
-PVOID
-STDCALL PsGetCurrentThreadStackLimit (
-    VOID
-	);
-
-PVOID
-STDCALL PsGetJobLock(
-    PEJOB	Job
-	);
-
-PVOID
-STDCALL PsGetJobSessionId(
-    PEJOB	Job
-	);
-
-ULONG
-STDCALL PsGetJobUIRestrictionsClass(
-   	PEJOB	Job
-	);
-
-LONGLONG
-STDCALL PsGetProcessCreateTimeQuadPart(
-    PEPROCESS	Process
-	);
-
-PVOID
-STDCALL PsGetProcessDebugPort(
-    PEPROCESS	Process
-	);
-
-
-BOOLEAN
-STDCALL PsGetProcessExitProcessCalled(
-    PEPROCESS	Process
-	);
-
-NTSTATUS
-STDCALL PsGetProcessExitStatus(
-	PEPROCESS Process
-	);
-
-HANDLE
-STDCALL PsGetProcessId(
-   	PEPROCESS	Process
-	);
-
-LPSTR
-STDCALL PsGetProcessImageFileName(
-    PEPROCESS	Process
-	);
-
-HANDLE
-STDCALL PsGetProcessInheritedFromUniqueProcessId(
-    	PEPROCESS	Process
-	);
-
-PEJOB
-STDCALL PsGetProcessJob(
-	PEPROCESS Process
-	);
-
-PPEB
-STDCALL PsGetProcessPeb(
-    PEPROCESS	Process
-	);
-
-ULONG
-STDCALL PsGetProcessPriorityClass(
-    PEPROCESS	Process
-	);
-
-PVOID
-STDCALL PsGetProcessSectionBaseAddress(
-    PEPROCESS	Process
-	);
-
-PVOID
-STDCALL PsGetProcessSecurityPort(
-	PEPROCESS Process
-	);
-
-HANDLE
-STDCALL PsGetProcessSessionId(
-    PEPROCESS	Process
-	);
-
-PVOID
-STDCALL PsGetProcessWin32Process(
-	PEPROCESS Process
-	);
-
-PVOID
-STDCALL PsGetProcessWin32WindowStation(
-    PEPROCESS	Process
-	);
-
-ULONG
-STDCALL PsGetThreadFreezeCount(
-	struct _ETHREAD* Thread
-	);
-
-BOOLEAN
-STDCALL PsGetThreadHardErrorsAreDisabled(
-    struct _ETHREAD*	Thread
-	);
-
-HANDLE
-STDCALL PsGetThreadId(
-    struct _ETHREAD*	Thread
-	);
-
-PEPROCESS
-STDCALL PsGetThreadProcess(
-    struct _ETHREAD*	Thread
-	);
-
-HANDLE
-STDCALL PsGetThreadProcessId(
-    struct _ETHREAD*	Thread
-	);
-
-HANDLE
-STDCALL PsGetThreadSessionId(
-    struct _ETHREAD*	Thread
-	);
-
-PTEB
-STDCALL PsGetThreadTeb(
-    struct _ETHREAD*	Thread
-	);
-
-PVOID
-STDCALL PsGetThreadWin32Thread(
-    struct _ETHREAD*	Thread
-	);
-
-BOOLEAN
-STDCALL PsIsProcessBeingDebugged(
-    PEPROCESS	Process
-	);
-
-                         
 BOOLEAN                             
 STDCALL PsIsSystemThread(                   
     struct _ETHREAD* Thread                 
      );
-
-BOOLEAN
-STDCALL PsIsThreadImpersonating(
-    struct _ETHREAD*	Thread
-	);
 
 NTSTATUS
 STDCALL PsRemoveCreateThreadNotifyRoutine (
@@ -286,85 +103,10 @@ STDCALL PsReturnPoolQuota(
     IN ULONG_PTR Amount
     );
 
-VOID
-STDCALL PsReturnProcessNonPagedPoolQuota(
-    IN PEPROCESS Process,
-    IN ULONG_PTR Amount
-    );
-
-VOID
-STDCALL PsReturnProcessPagedPoolQuota(
-    IN PEPROCESS Process,
-    IN ULONG_PTR Amount
-    );
-
 VOID 
 STDCALL PsRevertToSelf(
 	VOID
 	); 
-
-VOID
-STDCALL
-PsRevertThreadToSelf(
-	IN struct _ETHREAD* Thread
-	);
-
-VOID
-STDCALL PsSetJobUIRestrictionsClass(
-    PEJOB	Job,
-    ULONG	UIRestrictionsClass	
-	);
-
-ULONG 
-STDCALL PsSetLegoNotifyRoutine(   	
-	PVOID LegoNotifyRoutine  	 
-	);
-
-VOID
-STDCALL PsSetProcessPriorityClass(
-    PEPROCESS	Process,
-    ULONG	PriorityClass	
-	);
-
-VOID
-STDCALL PsSetProcessSecurityPort(
-    PEPROCESS	Process,
-    PVOID	SecurityPort	
-	);
-
-VOID
-STDCALL PsSetProcessWin32Process(
-    PEPROCESS	Process,
-    PVOID	Win32Process
-	);
-
-VOID
-STDCALL PsSetProcessWin32WindowStation(
-    PEPROCESS	Process,
-    PVOID	WindowStation
-	);
-
-VOID
-STDCALL PsSetThreadHardErrorsAreDisabled(
-    struct _ETHREAD*	Thread,
-    BOOLEAN	HardErrorsAreDisabled
-	);
-
-VOID
-STDCALL PsSetThreadWin32Thread(
-    struct _ETHREAD*	Thread,
-    PVOID	Win32Thread
-	);
-
-struct _W32_OBJECT_CALLBACK;
-
-VOID STDCALL
-STDCALL PsEstablishWin32Callouts (PW32_PROCESS_CALLBACK W32ProcessCallback,
-			  PW32_THREAD_CALLBACK W32ThreadCallback,
-			  struct _W32_OBJECT_CALLBACK *W32ObjectCallback,
-			  PVOID Param4,
-			  ULONG W32ThreadSize,
-			  ULONG W32ProcessSize);
 
 #define PsGetCurrentProcess() IoGetCurrentProcess()
 #define PsGetCurrentThread() ((struct _ETHREAD*) (KeGetCurrentThread()))
@@ -385,9 +127,6 @@ PsImpersonateClient (IN struct _ETHREAD* Thread,
 		     IN BOOLEAN EffectiveOnly,
 		     IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel);
 
-VOID STDCALL
-PsRevertToSelf (VOID);
-
 BOOLEAN STDCALL PsGetVersion (PULONG		MajorVersion	OPTIONAL,
 			      PULONG		MinorVersion	OPTIONAL,
 			      PULONG		BuildNumber	OPTIONAL,
@@ -395,18 +134,6 @@ BOOLEAN STDCALL PsGetVersion (PULONG		MajorVersion	OPTIONAL,
 
 LARGE_INTEGER STDCALL PsGetProcessExitTime(VOID);
 BOOLEAN STDCALL PsIsThreadTerminating(struct _ETHREAD* Thread);
-
-NTSTATUS STDCALL PsLookupProcessByProcessId(IN HANDLE ProcessId,
-					    OUT PEPROCESS *Process);
-
-NTSTATUS STDCALL PsLookupProcessThreadByCid(IN PCLIENT_ID Cid,
-					    OUT PEPROCESS *Process OPTIONAL,
-					    OUT struct _ETHREAD **Thread);
-					 /* OUT PETHREAD *Thread); */
-
-NTSTATUS STDCALL PsLookupThreadByThreadId(IN HANDLE ThreadId,
-					  OUT struct _ETHREAD **Thread);
-					/* OUT PETHREAD *Thread); */
 
 NTSTATUS STDCALL
 PsSetCreateProcessNotifyRoutine(IN PCREATE_PROCESS_NOTIFY_ROUTINE NotifyRoutine,

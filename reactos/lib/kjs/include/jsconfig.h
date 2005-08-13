@@ -168,7 +168,6 @@
 #define HAVE_UNISTD_H 1
 
 #include "ddk/ntddk.h"
-#include "ntos/rtl.h"
 /* #include "assert.h" */
 #ifndef __TYPE_UINT64
 typedef unsigned __int64 __uint64;

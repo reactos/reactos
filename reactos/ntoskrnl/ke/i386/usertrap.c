@@ -20,7 +20,7 @@ BOOLEAN
 print_user_address(PVOID address)
 {
    PLIST_ENTRY current_entry;
-   PLDR_MODULE current;
+   PLDR_DATA_TABLE_ENTRY current;
    PEPROCESS CurrentProcess;
    PPEB Peb = NULL;
    ULONG_PTR RelativeAddress;
@@ -51,13 +51,13 @@ print_user_address(PVOID address)
 	  current_entry != NULL)
      {
 	current =
-	  CONTAINING_RECORD(current_entry, LDR_MODULE, InLoadOrderModuleList);
+	  CONTAINING_RECORD(current_entry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
 
-	if (address >= (PVOID)current->BaseAddress &&
-	    address < (PVOID)((char*)current->BaseAddress + current->ResidentSize))
+	if (address >= (PVOID)current->DllBase &&
+	    address < (PVOID)((char*)current->DllBase + current->SizeOfImage))
 	  {
             RelativeAddress =
-	      (ULONG_PTR) address - (ULONG_PTR)current->BaseAddress;
+	      (ULONG_PTR) address - (ULONG_PTR)current->DllBase;
 	    DbgPrint("<%wZ: %x>", &current->BaseDllName, RelativeAddress);
 	    return(TRUE);
 	  }

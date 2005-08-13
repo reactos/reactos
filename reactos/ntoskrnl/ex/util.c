@@ -19,8 +19,8 @@
 /*
  * @unimplemented
  */
-STDCALL
 NTSTATUS
+STDCALL
 ExUuidCreate(
     OUT UUID *Uuid
     )
@@ -32,8 +32,8 @@ ExUuidCreate(
 /*
  * @implemented
  */
-STDCALL
 BOOLEAN
+STDCALL
 ExVerifySuite(
     SUITE_TYPE SuiteType
     )

@@ -53,44 +53,6 @@ typedef struct _EVENT_BASIC_INFORMATION
 } EVENT_BASIC_INFORMATION, *PEVENT_BASIC_INFORMATION;
 
 // wmi trace event data
-typedef struct _EVENT_TRACE_HEADER {
-  USHORT           Size;
-  union {
-    USHORT FieldTypeFlags;
-    struct {
-      UCHAR            HeaderType;
-      UCHAR            MarkerFlags;
-    };
-  };
-  union {
-    ULONG         Version;
-    struct {
-      UCHAR     Type;
-      UCHAR     Level;
-      USHORT    Version;
-    } Class;
-  };
-  ULONG ThreadId;
-  ULONG ProcessId;
-  LARGE_INTEGER    TimeStamp;
-  union {
-    GUID      Guid;
-    ULONGLONG GuidPtr;
-  };
- union {
-    struct {
-      ULONG ClientContext;
-      ULONG Flags;
-    };
-    struct {
-      ULONG KernelTime;
-      ULONG UserTime;
-    };
-    ULONG64 ProcessorTime;
-  };
-} EVENT_TRACE_HEADER, *PEVENT_TRACE_HEADER;
-
-
 typedef struct _FILE_USER_QUOTA_INFORMATION {
 	ULONG NextEntryOffset;
 	ULONG SidLength;
@@ -6501,6 +6463,24 @@ typedef struct _SECTION_IMAGE_INFORMATION
 } SECTION_IMAGE_INFORMATION, *PSECTION_IMAGE_INFORMATION;
 
 #endif /* !__USE_W32API */
+
+struct _PLUGPLAY_EVENT_BLOCK;
+NTSTATUS 
+STDCALL
+NtGetPlugPlayEvent(
+    ULONG Reserved1,
+    ULONG Reserved2,
+    struct _PLUGPLAY_EVENT_BLOCK *Buffer,
+    ULONG BufferSize
+);
+
+NTSTATUS 
+STDCALL
+NtPlugPlayControl(
+    ULONG ControlCode,
+    PVOID Buffer,
+    ULONG BufferSize
+);
 
 /*
  * FUNCTION: Loads a registry key.

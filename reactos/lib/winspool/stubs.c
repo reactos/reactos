@@ -8,7 +8,6 @@
  * REVISIONS:
  */
 
-#undef __USE_W32API
 #include <windows.h>
 #include <winerror.h>
 
@@ -616,7 +615,7 @@ DeletePrintProvidorW(LPWSTR Name, LPWSTR Environment, LPWSTR PrintProvidor)
 /*
  * @unimplemented
  */
-int
+DWORD
 STDCALL
 DeviceCapabilitiesA(LPCSTR Device, LPCSTR Port, WORD Capability, LPSTR Buffer, CONST DEVMODEA *DevMode)
 {
@@ -630,7 +629,7 @@ DeviceCapabilitiesA(LPCSTR Device, LPCSTR Port, WORD Capability, LPSTR Buffer, C
 /*
  * @unimplemented
  */
-int
+DWORD
 STDCALL
 DeviceCapabilitiesW(LPCWSTR Device, LPCWSTR Port, WORD Capability, LPWSTR Buffer, CONST DEVMODEW *DevMode)
 {
@@ -993,7 +992,7 @@ FindNextPrinterChangeNotification(HANDLE Printer, PDWORD Change, PVOID NotifyOpt
  */
 BOOL
 STDCALL
-FreePrinterNotifyInfo(PVOID /* Really PPRINTER_NOTIFY_INFO */ NotifyInfo)
+FreePrinterNotifyInfo(PPRINTER_NOTIFY_INFO NotifyInfo)
 {
   OutputDebugStringW(L"winspool FreePrinterNotifyInfo stub called\n");
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);

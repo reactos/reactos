@@ -9,7 +9,7 @@
 #define PENOBJ_AllocPen() ((HPEN)GDIOBJ_AllocObj(GDI_OBJECT_TYPE_PEN))
 #define PENOBJ_FreePen(hBMObj) GDIOBJ_FreeObj((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_PEN)
 #define PENOBJ_LockPen(hBMObj) ((PGDIBRUSHOBJ)GDIOBJ_LockObj((HGDIOBJ) hBMObj, GDI_OBJECT_TYPE_PEN))
-#define PENOBJ_UnlockPen(hBMObj) GDIOBJ_UnlockObj((HGDIOBJ) hBMObj)
+#define PENOBJ_UnlockPen(pPenObj) GDIOBJ_UnlockObjByPtr(pPenObj)
 
 HPEN STDCALL
 NtGdiCreatePen(

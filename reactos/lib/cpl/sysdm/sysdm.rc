@@ -2,7 +2,6 @@
 #include "resource.h"
 #include "windows.h"
 
-#include <defines.h>
 #include <commctrl.h>
 #include "resource.h"
 

@@ -36,7 +36,7 @@ typedef struct _PERFDATA
 	WCHAR				UserName[MAX_PATH];
 	ULONG				SessionId;
 	ULONG				CPUUsage;
-	TIME				CPUTime;
+	LARGE_INTEGER		CPUTime;
 	ULONG				WorkingSetSizeBytes;
 	ULONG				PeakWorkingSetSizeBytes;
 	ULONG				WorkingSetSizeDelta;
@@ -52,8 +52,8 @@ typedef struct _PERFDATA
 	ULONG				GDIObjectCount;
 	IO_COUNTERS			IOCounters;
 
-	TIME				UserTime;
-	TIME				KernelTime;
+	LARGE_INTEGER		UserTime;
+	LARGE_INTEGER		KernelTime;
 } PERFDATA, *PPERFDATA;
 
 BOOL	PerfDataInitialize(void);
@@ -69,7 +69,7 @@ ULONG	PerfDataGetProcessId(ULONG Index);
 BOOL	PerfDataGetUserName(ULONG Index, LPTSTR lpUserName, int nMaxCount);
 ULONG	PerfDataGetSessionId(ULONG Index);
 ULONG	PerfDataGetCPUUsage(ULONG Index);
-TIME	PerfDataGetCPUTime(ULONG Index);
+LARGE_INTEGER	PerfDataGetCPUTime(ULONG Index);
 ULONG	PerfDataGetWorkingSetSizeBytes(ULONG Index);
 ULONG	PerfDataGetPeakWorkingSetSizeBytes(ULONG Index);
 ULONG	PerfDataGetWorkingSetSizeDelta(ULONG Index);

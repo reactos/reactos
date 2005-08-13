@@ -6,8 +6,6 @@
 #ifndef __WIN32K_GDIOBJ_H
 #define __WIN32K_GDIOBJ_H
 
-#include <ddk/ntddk.h>
-
 /* base address where the handle table is mapped to */
 #define GDI_HANDLE_TABLE_BASE_ADDRESS (0x400000)
 
@@ -67,7 +65,11 @@ typedef BOOL (INTERNAL_CALL *GDICLEANUPPROC)(PVOID ObjectBody);
 */
 typedef struct _GDIOBJHDR
 {
+#ifdef NTOS_MODE_USER
+  PVOID LockingThread;
+#else
   PETHREAD LockingThread; /* only assigned if a thread is holding the lock! */
+#endif
   ULONG Locks;
 #ifdef GDI_DEBUG
   const char* createdfile;
@@ -77,10 +79,13 @@ typedef struct _GDIOBJHDR
 #endif
 } GDIOBJHDR, *PGDIOBJHDR;
 
+#ifndef NTOS_MODE_USER
+
 BOOL    INTERNAL_CALL GDIOBJ_OwnedByCurrentProcess(HGDIOBJ ObjectHandle);
 void    INTERNAL_CALL GDIOBJ_SetOwnership(HGDIOBJ ObjectHandle, PEPROCESS Owner);
 void    INTERNAL_CALL GDIOBJ_CopyOwnership(HGDIOBJ CopyFrom, HGDIOBJ CopyTo);
 BOOL    INTERNAL_CALL GDIOBJ_ConvertToStockObj(HGDIOBJ *hObj);
+VOID    INTERNAL_CALL GDIOBJ_UnlockObjByPtr(PGDIOBJ Object);
 
 #define GDIOBJ_GetObjectType(Handle) \
   GDI_HANDLE_GET_TYPE(Handle)
@@ -91,26 +96,28 @@ BOOL    INTERNAL_CALL GDIOBJ_ConvertToStockObj(HGDIOBJ *hObj);
 #define GDIOBJ_AllocObj(ty) GDIOBJ_AllocObjDbg(__FILE__,__LINE__,ty)
 #define GDIOBJ_FreeObj(obj,ty) GDIOBJ_FreeObjDbg(__FILE__,__LINE__,obj,ty)
 #define GDIOBJ_LockObj(obj,ty) GDIOBJ_LockObjDbg(__FILE__,__LINE__,obj,ty)
-#define GDIOBJ_UnlockObj(obj) GDIOBJ_UnlockObjDbg(__FILE__,__LINE__,obj)
+#define GDIOBJ_ShareLockObj(obj,ty) GDIOBJ_ShareLockObjDbg(__FILE__,__LINE__,obj,ty)
 
 HGDIOBJ INTERNAL_CALL GDIOBJ_AllocObjDbg(const char* file, int line, ULONG ObjectType);
 BOOL    INTERNAL_CALL GDIOBJ_FreeObjDbg (const char* file, int line, HGDIOBJ hObj, DWORD ObjectType);
 PGDIOBJ INTERNAL_CALL GDIOBJ_LockObjDbg (const char* file, int line, HGDIOBJ hObj, DWORD ObjectType);
-BOOL    INTERNAL_CALL GDIOBJ_UnlockObjDbg (const char* file, int line, HGDIOBJ hObj);
+PGDIOBJ INTERNAL_CALL GDIOBJ_ShareLockObjDbg (const char* file, int line, HGDIOBJ hObj, DWORD ObjectType);
 
 #else /* !GDI_DEBUG */
 
 HGDIOBJ INTERNAL_CALL GDIOBJ_AllocObj(ULONG ObjectType);
 BOOL    INTERNAL_CALL GDIOBJ_FreeObj (HGDIOBJ hObj, DWORD ObjectType);
 PGDIOBJ INTERNAL_CALL GDIOBJ_LockObj (HGDIOBJ hObj, DWORD ObjectType);
-BOOL    INTERNAL_CALL GDIOBJ_UnlockObj (HGDIOBJ hObj);
+PGDIOBJ INTERNAL_CALL GDIOBJ_ShareLockObj (HGDIOBJ hObj, DWORD ObjectType);
 
 #endif /* GDI_DEBUG */
+
+PVOID   INTERNAL_CALL GDI_MapHandleTable(PEPROCESS Process);
+
+#endif
 
 #define GDIOBJFLAG_DEFAULT	(0x0)
 #define GDIOBJFLAG_IGNOREPID 	(0x1)
 #define GDIOBJFLAG_IGNORELOCK 	(0x2)
-
-PVOID   INTERNAL_CALL GDI_MapHandleTable(PEPROCESS Process);
 
 #endif

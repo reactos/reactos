@@ -72,10 +72,6 @@ extern void js_free( void * );
 extern void *js_realloc( void *, int );
 extern void *js_malloc( int );
 
-#define realloc js_realloc
-#define malloc js_malloc
-#define free js_free
-
 #ifdef _LIBC
 /* We have to keep the namespace clean.  */
 # define regfree(preg) __regfree (preg)
@@ -320,6 +316,11 @@ init_syntax_once ()
 # define SIGN_EXTEND_CHAR(c) ((((unsigned char) (c)) ^ 128) - 128)
 #endif
 
+
+#define realloc js_realloc
+#define malloc js_malloc
+#define free js_free
+
 /* Should we use malloc or alloca?  If REGEX_MALLOC is not defined, we
    use `alloca' instead of `malloc'.  This is because using malloc in
    re_search* or re_match* could cause memory leaks when C-g is used in

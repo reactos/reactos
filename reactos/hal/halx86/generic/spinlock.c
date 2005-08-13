@@ -17,16 +17,16 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <internal/ps.h>
-
-#include <internal/debug.h>
+#include <hal.h>
+#define NDEBUG
+#include <debug.h>
 
 /* Hmm, needed for KDBG := 1. Why? */
 #undef KeGetCurrentIrql
 
 /* FUNCTIONS ***************************************************************/
 
+#undef KeAcquireSpinLock
 VOID STDCALL
 KeAcquireSpinLock (
 	PKSPIN_LOCK	SpinLock,
@@ -55,6 +55,7 @@ KeAcquireSpinLockRaiseToSynch (
   return OldIrql;
 }
 
+#undef KeReleaseSpinLock
 VOID STDCALL
 KeReleaseSpinLock (
 	PKSPIN_LOCK	SpinLock,

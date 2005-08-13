@@ -11,6 +11,7 @@
 
 #include <ddk/ntddk.h>
 #include <win32k/ntddraw.h>
+#include <ddk/winddi.h>
 #include <win32k/win32k.h>
 #include <include/intddraw.h>
 #include <win32k/gdiobj.h>
@@ -51,7 +52,7 @@ HANDLE STDCALL NtGdiDdCreateDirectDrawObject(
 	if (!pDC->DriverFunctions.EnableDirectDraw)
 	{
 		// Driver doesn't support DirectDraw
-		DC_UnlockDc(hdc);
+		DC_UnlockDc(pDC);
 		return NULL;
 	}
 
@@ -61,7 +62,7 @@ HANDLE STDCALL NtGdiDdCreateDirectDrawObject(
 	if (!success)
 	{
 		// DirectDraw creation failed
-		DC_UnlockDc(hdc);
+		DC_UnlockDc(pDC);
 		return NULL;
 	}
 
@@ -121,8 +122,8 @@ HANDLE STDCALL NtGdiDdCreateDirectDrawObject(
 	if (palette_callbacks.dwFlags & DDHAL_PALCB32_SETENTRIES)
 		pDirectDraw->DdSetEntries = palette_callbacks.SetEntries;
 
-	GDIOBJ_UnlockObj(hDirectDraw);
-	DC_UnlockDc(hdc);
+	GDIOBJ_UnlockObjByPtr(pDirectDraw);
+	DC_UnlockDc(pDC);
 
 	return hDirectDraw;
 }
@@ -162,7 +163,7 @@ BOOL STDCALL NtGdiDdQueryDirectDrawObject(
 
 	if (!success)
 	{
-		GDIOBJ_UnlockObj(hDirectDrawLocal);
+		GDIOBJ_UnlockObjByPtr(pDirectDraw);
 		return FALSE;
 	}
 
@@ -189,7 +190,7 @@ BOOL STDCALL NtGdiDdQueryDirectDrawObject(
 	}
 
 
-	GDIOBJ_UnlockObj(hDirectDrawLocal);
+	GDIOBJ_UnlockObjByPtr(pDirectDraw);
 
 	return TRUE;
 }
@@ -235,8 +236,8 @@ HANDLE STDCALL NtGdiDdCreateSurfaceObject(
 	// FIXME: figure out how to use this
 	pSurface->bComplete = bComplete;
 
-	GDIOBJ_UnlockObj(hSurface);
-	GDIOBJ_UnlockObj(hDirectDrawLocal);
+	GDIOBJ_UnlockObjByPtr(pSurface);
+	GDIOBJ_UnlockObjByPtr(pDirectDraw);
 
 	return hSurface;
 }
@@ -260,7 +261,7 @@ BOOL STDCALL NtGdiDdAttachSurface(
 	PDD_SURFACE pSurfaceTo = GDIOBJ_LockObj(hSurfaceTo, GDI_OBJECT_TYPE_DD_SURFACE);
 	if (!pSurfaceTo)
 	{
-		GDIOBJ_UnlockObj(hSurfaceFrom);
+		GDIOBJ_UnlockObjByPtr(pSurfaceFrom);
 		return FALSE;
 	}
 
@@ -269,8 +270,8 @@ BOOL STDCALL NtGdiDdAttachSurface(
 		pSurfaceFrom->Local.lpAttachListFrom = pSurfaceFrom->AttachListFrom;
 	}
 
-	GDIOBJ_UnlockObj(hSurfaceFrom);
-	GDIOBJ_UnlockObj(hSurfaceTo);
+	GDIOBJ_UnlockObjByPtr(pSurfaceFrom);
+	GDIOBJ_UnlockObjByPtr(pSurfaceTo);
 	return TRUE;
 }
 */
@@ -295,7 +296,7 @@ DWORD STDCALL NtGdiDdGetDriverInfo(
                  pDirectDraw->Global.dhpdev,(PDD_HALINFO) puGetDriverInfoData,
                  &pdwNumHeaps, pvmList, &pdwNumFourCC, pdwFourCC);
 
-    GDIOBJ_UnlockObj(hDirectDrawLocal);
+    GDIOBJ_UnlockObjByPtr(pDirectDraw);
 
 	return ddRVal;
 }
@@ -314,7 +315,7 @@ DWORD STDCALL NtGdiDdWaitForVerticalBlank(
 
 	ddRVal = pDirectDraw->DdWaitForVerticalBlank(puWaitForVerticalBlankData);
 
-    GDIOBJ_UnlockObj(hDirectDrawLocal);
+    GDIOBJ_UnlockObjByPtr(pDirectDraw);
 
 	return ddRVal;
 }
@@ -333,7 +334,7 @@ DWORD STDCALL NtGdiDdCanCreateSurface(
 
 	ddRVal = pDirectDraw->DdCanCreateSurface(puCanCreateSurfaceData);
 
-	GDIOBJ_UnlockObj(hDirectDrawLocal);
+	GDIOBJ_UnlockObjByPtr(pDirectDraw);
 
 	return ddRVal;
 }
@@ -356,7 +357,7 @@ DWORD STDCALL NtGdiDdBlt(
 
  ddRVal = pDirectDraw->DdBlt(puBltData);
 
- GDIOBJ_UnlockObj(hSurfaceDest);
+ GDIOBJ_UnlockObjByPtr(pDirectDraw);
 
  return ddRVal;
 }

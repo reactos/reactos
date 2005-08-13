@@ -15,6 +15,10 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#ifndef MUTANT_INCREMENT
+#define MUTANT_INCREMENT                1
+#endif
+
 POBJECT_TYPE ExMutantObjectType = NULL;
 
 static GENERIC_MAPPING ExpMutantMapping = {

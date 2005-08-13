@@ -15,7 +15,9 @@
 
 /* GLOBALS *******************************************************************/
 
+extern ULONG CcFastReadNotPossible;
 extern ULONG CcFastReadResourceMiss;
+extern ULONG CcFastReadWait;
 extern ULONG CcFastReadNoWait;
 
 /* FUNCTIONS *****************************************************************/

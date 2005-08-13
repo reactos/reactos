@@ -16,8 +16,6 @@
 
 /* GLOBALS *******************************************************************/
 
-#define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
-
 static PFN_TYPE CcZeroPage = 0;
 
 #define MAX_ZERO_LENGTH	(256 * 1024)

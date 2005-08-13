@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#include "ntddk.h"
-
 #define IOCTL_STORAGE_BASE                FILE_DEVICE_MASS_STORAGE
 
 #define IOCTL_STORAGE_CHECK_VERIFY \

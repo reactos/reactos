@@ -3,7 +3,7 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Serial enumerator driver
  * FILE:            drivers/bus/serenum/serenum.c
- * PURPOSE:         Serial enumeration driver entry point
+ * PURPOSE:         Serial enumerator driver entry point
  *
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
  */

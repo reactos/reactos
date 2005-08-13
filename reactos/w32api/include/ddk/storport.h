@@ -27,12 +27,11 @@
 #pragma GCC system_header
 #endif
 
+#include "srb.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "ntddk.h"
-#include "srb.h"
 
 #if defined(_STORPORT_)
   #define STORPORTAPI DECLSPEC_EXPORT

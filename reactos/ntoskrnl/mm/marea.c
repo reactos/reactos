@@ -1,11 +1,44 @@
 /* $Id$
  *
- * COPYRIGHT:       See COPYING in the top level directory
+ * Copyright (C) 1998-2005 ReactOS Team (and the authors from the programmers section)
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ *
+ *
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/mm/marea.c
  * PURPOSE:         Implements memory areas
  *
- * PROGRAMMERS:     David Welch (welch@mcmail.com)
+ * PROGRAMMERS:     Rex Jolliff
+ *                  David Welch
+ *                  Eric Kohl
+ *                  Philip Susi
+ *                  Casper Hornstrup
+ *                  Hartmut Birr
+ *                  Eric Kohl
+ *                  Ge van Geldorp
+ *                  Royce Mitchell III
+ *                  Aleksey Bragin 
+ *                  Jason Filby
+ *                  Thomas Weidenmueller
+ *                  Gunnar Andre' Dalsnes
+ *                  Mike Nordell
+ *                  Alex Ionescu
+ *                  Filip Navara
+ *                  Herve Poussineau
+ *                  Steven Edwards
  */
 
 /* INCLUDES *****************************************************************/
@@ -974,7 +1007,6 @@ MmCreateMemoryArea(PEPROCESS Process,
    MemoryArea->EndingAddress = (PVOID)((ULONG_PTR)*BaseAddress + tmpLength);
    MemoryArea->Attributes = Attributes;
    MemoryArea->LockCount = 0;
-   MemoryArea->Process = Process;
    MemoryArea->PageOpCount = 0;
    MemoryArea->DeleteInProgress = FALSE;
 

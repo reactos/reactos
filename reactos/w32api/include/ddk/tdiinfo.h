@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#include "ntddk.h"
-
 typedef struct TDIEntityID {
   ULONG  tei_entity;
   ULONG  tei_instance;

@@ -169,7 +169,7 @@ NtUserGetSystemMetrics(ULONG Index)
 	{
 	  Width = ScreenDC->GDIInfo->ulHorzRes;
 	  Height = ScreenDC->GDIInfo->ulVertRes;
-	  DC_UnlockDc(ScreenDCHandle);
+	  DC_UnlockDc(ScreenDC);
 	}
 	NtGdiDeleteDC(ScreenDCHandle);
       }

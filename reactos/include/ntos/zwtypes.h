@@ -1120,13 +1120,6 @@ typedef struct _RETRIEVAL_POINTERS_BUFFER {
 } RETRIEVAL_POINTERS_BUFFER, *PRETRIEVAL_POINTERS_BUFFER;
 #include <poppack.h>
 
-typedef struct _SECTION_BASIC_INFORMATION
-{
-  PVOID BaseAddress;
-  ULONG Attributes;
-  LARGE_INTEGER Size;
-} SECTION_BASIC_INFORMATION, *PSECTION_BASIC_INFORMATION;
-
 typedef enum _SECTION_INFORMATION_CLASS 
 {
   SectionBasicInformation,
@@ -1179,6 +1172,30 @@ extern EXPORTED ULONG NtBuildNumber;
 extern IMPORTED ULONG NtBuildNumber;
 #endif
 #endif	/* __GNUC__ */
+
+typedef struct _SECTION_BASIC_INFORMATION
+{
+  PVOID BaseAddress;
+  ULONG Attributes;
+  LARGE_INTEGER Size;
+} SECTION_BASIC_INFORMATION, *PSECTION_BASIC_INFORMATION;
+
+typedef struct _SECTION_IMAGE_INFORMATION 
+{
+    ULONG     EntryPoint;
+    ULONG     Unknown1;
+    ULONG_PTR StackReserve;
+    ULONG_PTR StackCommit;
+    ULONG     Subsystem;
+    USHORT    MinorSubsystemVersion;
+    USHORT    MajorSubsystemVersion;
+    ULONG     Unknown2;
+    ULONG     Characteristics;
+    USHORT    ImageNumber;
+    BOOLEAN   Executable;
+    UCHAR     Unknown3;
+    ULONG     Unknown4[3];
+} SECTION_IMAGE_INFORMATION, *PSECTION_IMAGE_INFORMATION;
 
 
 // event access mask
@@ -1720,18 +1737,29 @@ typedef struct _LPC_MESSAGE
 
 #define PORT_MESSAGE_TYPE(m) (LPC_TYPE)((m).Header.MessageType)
 
+#endif /* __USE_W32API */
+
 #define PORT_MAX_DATA_LENGTH    0x104
 #define PORT_MAX_MESSAGE_LENGTH 0x148
 
-#endif /* __USE_W32API */
-
 #define MAX_MESSAGE_DATA   (0x130)
 
+#ifdef __USE_W32API
+typedef union _LPC_MAX_MESSAGE
+{
+   LPC_MESSAGE Header;
+   struct {
+     BYTE LpcHeader[LPC_MESSAGE_BASE_SIZE];
+     BYTE Data[MAX_MESSAGE_DATA];
+   };
+} LPC_MAX_MESSAGE, *PLPC_MAX_MESSAGE;
+#else
 typedef struct _LPC_MAX_MESSAGE
 {
    LPC_MESSAGE Header;
    BYTE Data[MAX_MESSAGE_DATA];
 } LPC_MAX_MESSAGE, *PLPC_MAX_MESSAGE;
+#endif
 
 typedef struct _LPC_PORT_BASIC_INFORMATION
 {
@@ -1753,22 +1781,48 @@ typedef struct _LPC_PORT_BASIC_INFORMATION
 } LPC_PORT_BASIC_INFORMATION, * PLPC_PORT_BASIC_INFORMATION;
 
 
+#if 0
 typedef struct _KINTERRUPT
 {
-   ULONG Vector;
-   KAFFINITY ProcessorEnableMask;
-   KSPIN_LOCK SpinLock;
-   PKSPIN_LOCK ActualLock;
-   BOOLEAN Shareable;
-   BOOLEAN FloatingSave;
-   CHAR ProcessorNumber;
-   PKSERVICE_ROUTINE ServiceRoutine;
-   PVOID ServiceContext;
-   LIST_ENTRY Entry;
-   KIRQL Irql;
-   KIRQL SynchLevel;
-   KINTERRUPT_MODE InterruptMode;
+   ULONG Vector; // Idem
+   KAFFINITY ProcessorEnableMask; // not needed
+   KSPIN_LOCK SpinLock; // Idem
+   PKSPIN_LOCK ActualLock; // Idem
+   BOOLEAN Shareable; // ShareVector
+   BOOLEAN FloatingSave; // Idem
+   CHAR ProcessorNumber; // Number
+   PKSERVICE_ROUTINE ServiceRoutine; // Idem
+   PVOID ServiceContext; // Idem
+   LIST_ENTRY Entry; // InteruptListEntry
+   KIRQL Irql; // Irql
+   KIRQL SynchLevel; // SynchronizeIrql
+   KINTERRUPT_MODE InterruptMode; // Mode
 } KINTERRUPT;
+#endif
+
+typedef struct _KINTERRUPT 
+{
+    CSHORT              Type;
+    CSHORT              Size;
+    LIST_ENTRY          InterruptListEntry;
+    PKSERVICE_ROUTINE   ServiceRoutine;
+    PVOID               ServiceContext;
+    KSPIN_LOCK          SpinLock;
+    ULONG               TickCount;
+    PKSPIN_LOCK         ActualLock;
+    PVOID               DispatchAddress;
+    ULONG               Vector;
+    KIRQL               Irql;
+    KIRQL               SynchronizeIrql;
+    BOOLEAN             FloatingSave;
+    BOOLEAN             Connected;
+    CHAR                Number;
+    UCHAR               ShareVector;
+    KINTERRUPT_MODE     Mode;
+    ULONG               ServiceCount;
+    ULONG               DispatchCount;
+    ULONG               DispatchCode[106];
+} KINTERRUPT, *PKINTERRUPT;
 
 #ifndef __USE_W32API
 
@@ -1781,6 +1835,11 @@ typedef VOID STDCALL_FUNC
   IN LONG  TimerHighValue);
 
 #endif /* __USE_W32API */
+
+typedef enum _IO_COMPLETION_INFORMATION_CLASS 
+{
+    IoCompletionBasicInformation
+} IO_COMPLETION_INFORMATION_CLASS;
 
 /* BEGIN REACTOS ONLY */
 

@@ -1,13 +1,6 @@
 #ifndef NTOSKRNL_KDB_H
 #define NTOSKRNL_KDB_H
 
-/* INCLUDES ******************************************************************/
-
-#define NTOS_MODE_KERNEL
-#include <ntos.h>
-
-#include <internal/ke.h>
-
 /* DEFINES *******************************************************************/
 
 #define TAG_KDBG        (('K' << 24) | ('D' << 16) | ('B' << 8) | 'G')

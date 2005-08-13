@@ -99,16 +99,6 @@ NtUserCallHwndParamLock(
   return 0;
 }
 
-DWORD
-STDCALL
-NtUserCallMsgFilter(
-  DWORD Unknown0,
-  DWORD Unknown1)
-{
-  UNIMPLEMENTED
-
-  return 0;
-}
 
 DWORD
 STDCALL

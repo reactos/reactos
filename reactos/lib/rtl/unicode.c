@@ -21,6 +21,7 @@
  */
 #define __NTDRIVER__
 #include "rtl.h"
+#include <rosrtl/string.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -341,8 +342,8 @@ RtlEqualString(
 BOOLEAN
 STDCALL
 RtlEqualUnicodeString(
-   IN PUNICODE_STRING String1,
-   IN PUNICODE_STRING String2,
+   IN CONST UNICODE_STRING *String1,
+   IN CONST UNICODE_STRING *String2,
    IN BOOLEAN  CaseInsensitive)
 {
    ULONG i;
@@ -1602,19 +1603,55 @@ RtlEraseUnicodeString(
 }
 
 /*
-* @unimplemented
+* @implemented
 */
 NTSTATUS
 STDCALL
 RtlHashUnicodeString(
-	IN const UNICODE_STRING *String,
-	IN BOOLEAN CaseInSensitive,
-	IN ULONG HashAlgorithm,
-	OUT PULONG HashValue
-	)
+  IN CONST UNICODE_STRING *String,
+  IN BOOLEAN CaseInSensitive,
+  IN ULONG HashAlgorithm,
+  OUT PULONG HashValue)
 {
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
+    if (String != NULL && HashValue != NULL)
+    {
+        switch (HashAlgorithm)
+        {
+            case HASH_STRING_ALGORITHM_DEFAULT:
+            case HASH_STRING_ALGORITHM_X65599:
+            {
+                WCHAR *c, *end;
+
+                *HashValue = 0;
+                end = String->Buffer + (String->Length / sizeof(WCHAR));
+
+                if (CaseInSensitive)
+                {
+                    for (c = String->Buffer;
+                         c != end;
+                         c++)
+                    {
+                        /* only uppercase characters if they are 'a' ... 'z'! */
+                        *HashValue = ((65599 * (*HashValue)) +
+                                      (ULONG)(((*c) >= L'a' && (*c) <= L'z') ?
+                                              (*c) - L'a' + L'A' : (*c)));
+                    }
+                }
+                else
+                {
+                    for (c = String->Buffer;
+                         c != end;
+                         c++)
+                    {
+                        *HashValue = ((65599 * (*HashValue)) + (ULONG)(*c));
+                    }
+                }
+                return STATUS_SUCCESS;
+            }
+        }
+    }
+
+    return STATUS_INVALID_PARAMETER;
 }
 
 /*

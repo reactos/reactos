@@ -40,6 +40,7 @@
 #define VER_NT_SERVER					0x0000003
 */
 
+  
 typedef struct _CONTROLLER_OBJECT
 {
   CSHORT Type;
@@ -187,28 +188,6 @@ typedef struct _INITIAL_TEB
   PVOID StackReserved;
 } INITIAL_TEB, *PINITIAL_TEB;
 
-#else /* __USE_W32API */
-
-#include <ddk/ntifs.h>
-
-#endif /* __USE_W32API */
-
-typedef struct _RTL_HEAP_DEFINITION
-{
-  ULONG Length;
-  ULONG Unknown[11];
-} RTL_HEAP_DEFINITION, *PRTL_HEAP_DEFINITION;
-
-typedef struct _RTL_ATOM_TABLE
-{
-  ULONG TableSize;
-  ULONG NumberOfAtoms;
-  PVOID Lock;		/* fast mutex (kernel mode)/ critical section (user mode) */
-  PVOID HandleTable;
-  LIST_ENTRY Slot[0];
-} RTL_ATOM_TABLE, *PRTL_ATOM_TABLE;
-
-
 #define MAXIMUM_LEADBYTES 12
 
 typedef struct _CPTABLEINFO
@@ -234,6 +213,30 @@ typedef struct _NLSTABLEINFO
   PUSHORT UpperCaseTable;
   PUSHORT LowerCaseTable;
 } NLSTABLEINFO, *PNLSTABLEINFO;
+
+
+#else /* __USE_W32API */
+
+#include <ddk/ntifs.h>
+
+#endif /* __USE_W32API */
+
+typedef struct _RTL_HEAP_DEFINITION
+{
+  ULONG Length;
+  ULONG Unknown[11];
+} RTL_HEAP_DEFINITION, *PRTL_HEAP_DEFINITION;
+
+typedef struct _RTL_ATOM_TABLE
+{
+  ULONG TableSize;
+  ULONG NumberOfAtoms;
+  PVOID Lock;		/* fast mutex (kernel mode)/ critical section (user mode) */
+  PVOID HandleTable;
+  LIST_ENTRY Slot[0];
+} RTL_ATOM_TABLE, *PRTL_ATOM_TABLE;
+
+
 
 
 #include <pshpack1.h>
@@ -437,5 +440,45 @@ typedef RTL_GENERIC_TABLE *PRTL_GENERIC_TABLE;
 typedef NTSTATUS
 (*PHEAP_ENUMERATION_ROUTINE)(IN PVOID HeapHandle,
                              IN PVOID UserParam);
+
+                             
+#define RTL_RANGE_LIST_ADD_IF_CONFLICT    0x00000001
+#define RTL_RANGE_LIST_ADD_SHARED         0x00000002
+
+#define RTL_RANGE_LIST_SHARED_OK          0x00000001
+#define RTL_RANGE_LIST_NULL_CONFLICT_OK   0x00000002
+
+#define RTL_RANGE_LIST_MERGE_IF_CONFLICT  RTL_RANGE_LIST_ADD_IF_CONFLICT
+
+typedef struct _RTL_RANGE {
+  ULONGLONG  Start;
+  ULONGLONG  End;
+  PVOID  UserData;
+  PVOID  Owner;
+  UCHAR  Attributes;
+  UCHAR  Flags;
+} RTL_RANGE, *PRTL_RANGE;
+
+#define RTL_RANGE_SHARED                  0x01
+#define RTL_RANGE_CONFLICT                0x02
+
+typedef struct _RTL_RANGE_LIST {
+  LIST_ENTRY  ListHead;
+  ULONG  Flags;
+  ULONG  Count;
+  ULONG  Stamp;
+} RTL_RANGE_LIST, *PRTL_RANGE_LIST;
+
+typedef struct _RANGE_LIST_ITERATOR {
+  PLIST_ENTRY  RangeListHead;
+  PLIST_ENTRY  MergedHead;
+  PVOID  Current;
+  ULONG  Stamp;
+} RTL_RANGE_LIST_ITERATOR, *PRTL_RANGE_LIST_ITERATOR;
+
+typedef BOOLEAN
+(STDCALL *PRTL_CONFLICT_RANGE_CALLBACK)(
+  IN PVOID  Context,
+  IN PRTL_RANGE  Range);
 
 #endif /* __DDK_RTLTYPES_H */

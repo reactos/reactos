@@ -96,36 +96,8 @@ SeAuditingFileOrGlobalEvents(
 	IN PSECURITY_SUBJECT_CONTEXT SubjectSecurityContext
 	);
 
-NTSTATUS
-STDCALL
-SeCaptureSecurityDescriptor(
-	IN PSECURITY_DESCRIPTOR OriginalSecurityDescriptor,
-	IN KPROCESSOR_MODE CurrentMode,
-	IN POOL_TYPE PoolType,
-	IN BOOLEAN CaptureIfKernel,
-	OUT PSECURITY_DESCRIPTOR *CapturedSecurityDescriptor
-	);
-
-
 VOID STDCALL
 SeCaptureSubjectContext(OUT PSECURITY_SUBJECT_CONTEXT SubjectContext);
-
-VOID
-STDCALL
-SeCloseObjectAuditAlarm(
-	IN PVOID Object,
-	IN HANDLE Handle,
-	IN BOOLEAN PerformAction
-	);
-
-NTSTATUS
-STDCALL
-SeCreateAccessState(
-	PACCESS_STATE AccessState,
-	PAUX_DATA AuxData,
-	ACCESS_MASK Access,
-	PGENERIC_MAPPING GenericMapping
-	);
 
 NTSTATUS STDCALL
 SeCreateClientSecurity(IN struct _ETHREAD *Thread,
@@ -144,9 +116,6 @@ SeCreateClientSecurityFromSubjectContext(
 
 NTSTATUS STDCALL
 SeDeassignSecurity(IN OUT PSECURITY_DESCRIPTOR* SecurityDescriptor);
-
-VOID STDCALL
-SeDeleteAccessState(IN PACCESS_STATE AccessState);
 
 VOID STDCALL
 SeDeleteObjectAuditAlarm(IN PVOID Object,
@@ -211,17 +180,6 @@ SePrivilegeCheck(IN OUT PPRIVILEGE_SET RequiredPrivileges,
 		 IN PSECURITY_SUBJECT_CONTEXT SubjectContext,
 		 IN KPROCESSOR_MODE AccessMode);
 
-VOID
-STDCALL
-SePrivilegeObjectAuditAlarm(
-	IN HANDLE Handle,
-	IN PSECURITY_SUBJECT_CONTEXT SubjectContext,
-	IN ACCESS_MASK DesiredAccess,
-	IN PPRIVILEGE_SET Privileges,
-	IN BOOLEAN AccessGranted,
-	IN KPROCESSOR_MODE CurrentMode
-	);
-
 NTSTATUS STDCALL
 SeQueryAuthenticationIdToken(IN PACCESS_TOKEN Token,
 			     OUT PLUID LogonId);
@@ -250,14 +208,6 @@ SeQuerySessionIdToken(
 
 NTSTATUS STDCALL
 SeRegisterLogonSessionTerminatedRoutine(IN PSE_LOGON_SESSION_TERMINATED_ROUTINE CallbackRoutine);
-
-NTSTATUS
-STDCALL
-SeReleaseSecurityDescriptor(
-	IN PSECURITY_DESCRIPTOR CapturedSecurityDescriptor,
-	IN KPROCESSOR_MODE CurrentMode,
-	IN BOOLEAN CaptureIfKernelMode
-	);
 
 VOID STDCALL
 SeReleaseSubjectContext(IN PSECURITY_SUBJECT_CONTEXT SubjectContext);
@@ -290,9 +240,6 @@ BOOLEAN STDCALL
 SeSinglePrivilegeCheck(IN LUID PrivilegeValue,
 		       IN KPROCESSOR_MODE PreviousMode);
 
-SECURITY_IMPERSONATION_LEVEL STDCALL
-SeTokenImpersonationLevel(IN PACCESS_TOKEN Token);
-
 BOOLEAN
 STDCALL
 SeTokenIsAdmin(
@@ -302,12 +249,6 @@ SeTokenIsAdmin(
 BOOLEAN
 STDCALL
 SeTokenIsRestricted(
-	IN PACCESS_TOKEN Token
-	);
-
-BOOLEAN
-STDCALL
-SeTokenIsWriteRestricted(
 	IN PACCESS_TOKEN Token
 	);
 

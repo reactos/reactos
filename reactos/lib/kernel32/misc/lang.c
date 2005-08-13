@@ -293,7 +293,8 @@ EnumSystemLocalesW (
 {
 	NTSTATUS result;
 	HANDLE langKey;
-	UNICODE_STRING langKeyName;
+	UNICODE_STRING langKeyName = RTL_CONSTANT_STRING(
+    L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Nls\\Locale");
 	OBJECT_ATTRIBUTES objectAttributes;
 	ULONG index, length;
 	unsigned char fullInfo[sizeof(KEY_VALUE_FULL_INFORMATION)+255*2]; //FIXME: MAX_PATH*2
@@ -313,9 +314,6 @@ EnumSystemLocalesW (
 
 	// Open language registry key
 	//FIXME: Should we use critical section here?
-
-	RtlRosInitUnicodeStringFromLiteral(&langKeyName,
-		L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Nls\\Locale");
 
 	InitializeObjectAttributes(&objectAttributes,
 			     &langKeyName,

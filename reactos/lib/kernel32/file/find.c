@@ -28,7 +28,7 @@
 typedef struct _KERNEL32_FIND_FILE_DATA
 {
    HANDLE DirectoryHandle;
-   PFILE_BOTH_DIRECTORY_INFORMATION pFileInfo;
+   PFILE_BOTH_DIR_INFORMATION pFileInfo;
 } KERNEL32_FIND_FILE_DATA, *PKERNEL32_FIND_FILE_DATA;
 
 
@@ -94,7 +94,7 @@ InternalFindFirstFile (
 	PKERNEL32_FIND_FILE_DATA IData;
 	IO_STATUS_BLOCK IoStatusBlock;
 	UNICODE_STRING NtPathU;
-	UNICODE_STRING PatternStr;
+	UNICODE_STRING PatternStr = RTL_CONSTANT_STRING(L"*");
 	NTSTATUS Status;
 	PWSTR e1, e2;
 	WCHAR CurrentDir[256];
@@ -234,11 +234,7 @@ InternalFindFirstFile (
 	}
 
 	/* change pattern: "*.*" --> "*" */
-	if (!wcscmp (SearchPattern, L"*.*"))
-	{
-	    RtlRosInitUnicodeStringFromLiteral(&PatternStr, L"*");
-	}
-	else
+	if (wcscmp (SearchPattern, L"*.*"))
 	{
 	    RtlInitUnicodeString(&PatternStr, SearchPattern);
 	}

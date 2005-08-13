@@ -10,19 +10,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <reactos/config.h>
-#include <ddk/ntddk.h>
-#include <windows.h>
-#include <ntdll/ldr.h>
-#include <ntdll/rtl.h>
-#include <csrss/csrss.h>
-#include <ntdll/csr.h>
-#include <user32/callback.h>
-#include <rosrtl/string.h>
-
+#include <ntdll.h>
 #define NDEBUG
-#include <ntdll/ntdll.h>
-
+#include <debug.h>
+#include <win32k/callback.h>
 
 VOID RtlInitializeHeapManager (VOID);
 VOID LdrpInitLoader(VOID);
@@ -32,10 +23,10 @@ VOID LdrpInitLoader(VOID);
 
 extern unsigned int _image_base__;
 
-static CRITICAL_SECTION PebLock;
-static CRITICAL_SECTION LoaderLock;
+static RTL_CRITICAL_SECTION PebLock;
+static RTL_CRITICAL_SECTION LoaderLock;
 static RTL_BITMAP TlsBitMap;
-PLDR_MODULE ExeModule;
+PLDR_DATA_TABLE_ENTRY ExeModule;
 
 NTSTATUS LdrpAttachThread (VOID);
 
@@ -115,7 +106,8 @@ LoadCompatibilitySettings(PPEB Peb)
 	HANDLE KeyHandle;
 	HANDLE SubKeyHandle;
 	OBJECT_ATTRIBUTES ObjectAttributes;
-	UNICODE_STRING KeyName;
+	UNICODE_STRING KeyName = RTL_CONSTANT_STRING(
+    L"Software\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers");
 	UNICODE_STRING ValueName;
 	UCHAR ValueBuffer[VALUE_BUFFER_SIZE];
 	PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
@@ -132,9 +124,6 @@ LoadCompatibilitySettings(PPEB Peb)
 		{
 			return FALSE;
 		}
-
-		RtlRosInitUnicodeStringFromLiteral(&KeyName,
-			L"Software\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers");
 
 		InitializeObjectAttributes(&ObjectAttributes,
 			&KeyName,
@@ -236,7 +225,7 @@ __true_LdrInitializeThunk (ULONG Unknown1,
    PIMAGE_DOS_HEADER PEDosHeader;
    PVOID ImageBase;
    PPEB Peb;
-   PLDR_MODULE NtModule;  // ntdll
+   PLDR_DATA_TABLE_ENTRY NtModule;  // ntdll
    NLSTABLEINFO NlsTable;
    WCHAR FullNtDllPath[MAX_PATH];
    SYSTEM_BASIC_INFORMATION SystemInformation;
@@ -259,9 +248,9 @@ __true_LdrInitializeThunk (ULONG Unknown1,
        PEDosHeader = (PIMAGE_DOS_HEADER) ImageBase;
        DPRINT("PEDosHeader %x\n", PEDosHeader);
 
-       if (PEDosHeader->e_magic != IMAGE_DOS_MAGIC ||
+       if (PEDosHeader->e_magic != IMAGE_DOS_SIGNATURE ||
            PEDosHeader->e_lfanew == 0L ||
-           *(PULONG)((PUCHAR)ImageBase + PEDosHeader->e_lfanew) != IMAGE_PE_MAGIC)
+           *(PULONG)((PUCHAR)ImageBase + PEDosHeader->e_lfanew) != IMAGE_NT_SIGNATURE)
          {
            DPRINT1("Image has bad header\n");
            ZwTerminateProcess(NtCurrentProcess(), STATUS_UNSUCCESSFUL);
@@ -289,7 +278,7 @@ __true_LdrInitializeThunk (ULONG Unknown1,
 	   ZwTerminateProcess(NtCurrentProcess(), Status);
 	 }
 
-       Peb->NumberOfProcessors = SystemInformation.NumberProcessors;
+       Peb->NumberOfProcessors = SystemInformation.NumberOfProcessors;
 
        /* Initialize Critical Section Data */
        RtlpInitDeferedCriticalSection();
@@ -361,17 +350,17 @@ __true_LdrInitializeThunk (ULONG Unknown1,
        wcscat (FullNtDllPath, L"\\system32\\ntdll.dll");
 
        /* add entry for ntdll */
-       NtModule = (PLDR_MODULE)RtlAllocateHeap (Peb->ProcessHeap,
+       NtModule = (PLDR_DATA_TABLE_ENTRY)RtlAllocateHeap (Peb->ProcessHeap,
                                                 0,
-                                                sizeof(LDR_MODULE));
+                                                sizeof(LDR_DATA_TABLE_ENTRY));
        if (NtModule == NULL)
          {
            DPRINT1("Failed to create loader module entry (NTDLL)\n");
            ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
 	 }
-       memset(NtModule, 0, sizeof(LDR_MODULE));
+       memset(NtModule, 0, sizeof(LDR_DATA_TABLE_ENTRY));
 
-       NtModule->BaseAddress = (PVOID)&_image_base__;
+       NtModule->DllBase = (PVOID)&_image_base__;
        NtModule->EntryPoint = 0; /* no entry point */
        RtlCreateUnicodeString (&NtModule->FullDllName,
                                FullNtDllPath);
@@ -381,11 +370,11 @@ __true_LdrInitializeThunk (ULONG Unknown1,
 
        NtModule->LoadCount = -1; /* don't unload */
        NtModule->TlsIndex = -1;
-       NtModule->SectionHandle = NULL;
+       NtModule->SectionPointer = NULL;
        NtModule->CheckSum = 0;
 
-       NTHeaders = RtlImageNtHeader (NtModule->BaseAddress);
-       NtModule->ResidentSize = LdrpGetResidentSize(NTHeaders);
+       NTHeaders = RtlImageNtHeader (NtModule->DllBase);
+       NtModule->SizeOfImage = LdrpGetResidentSize(NTHeaders);
        NtModule->TimeDateStamp = NTHeaders->FileHeader.TimeDateStamp;
 
        InsertTailList(&Peb->Ldr->InLoadOrderModuleList,
@@ -400,15 +389,15 @@ __true_LdrInitializeThunk (ULONG Unknown1,
 #endif /* DBG || KDBG */
 
        /* add entry for executable (becomes first list entry) */
-       ExeModule = (PLDR_MODULE)RtlAllocateHeap (Peb->ProcessHeap,
+       ExeModule = (PLDR_DATA_TABLE_ENTRY)RtlAllocateHeap (Peb->ProcessHeap,
                                                  0,
-                                                 sizeof(LDR_MODULE));
+                                                 sizeof(LDR_DATA_TABLE_ENTRY));
        if (ExeModule == NULL)
          {
            DPRINT1("Failed to create loader module infomation\n");
            ZwTerminateProcess(NtCurrentProcess(),STATUS_UNSUCCESSFUL);
          }
-       ExeModule->BaseAddress = Peb->ImageBaseAddress;
+       ExeModule->DllBase = Peb->ImageBaseAddress;
 
        if ((Peb->ProcessParameters == NULL) ||
            (Peb->ProcessParameters->ImagePathName.Length == 0))
@@ -429,11 +418,11 @@ __true_LdrInitializeThunk (ULONG Unknown1,
        ExeModule->Flags = ENTRY_PROCESSED;
        ExeModule->LoadCount = -1; /* don't unload */
        ExeModule->TlsIndex = -1;
-       ExeModule->SectionHandle = NULL;
+       ExeModule->SectionPointer = NULL;
        ExeModule->CheckSum = 0;
 
-       NTHeaders = RtlImageNtHeader (ExeModule->BaseAddress);
-       ExeModule->ResidentSize = LdrpGetResidentSize(NTHeaders);
+       NTHeaders = RtlImageNtHeader (ExeModule->DllBase);
+       ExeModule->SizeOfImage = LdrpGetResidentSize(NTHeaders);
        ExeModule->TimeDateStamp = NTHeaders->FileHeader.TimeDateStamp;
 
        InsertHeadList(&Peb->Ldr->InLoadOrderModuleList,
@@ -448,7 +437,7 @@ __true_LdrInitializeThunk (ULONG Unknown1,
 #endif /* DBG || KDBG */
 
        EntryPoint = LdrPEStartup((PVOID)ImageBase, NULL, NULL, NULL);
-       ExeModule->EntryPoint = (ULONG)EntryPoint;
+       ExeModule->EntryPoint = EntryPoint;
 
        /* all required dlls are loaded now */
        Peb->Ldr->Initialized = TRUE;

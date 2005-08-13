@@ -145,7 +145,7 @@ MmUnmapIoSpace (IN PVOID BaseAddress,
    PVOID Address = BaseAddress;
 
    Offset = (ULONG_PTR)Address % PAGE_SIZE;
-   Address -= Offset;
+   Address = RVA(Address, - Offset);
    NumberOfBytes += Offset;
 
    MmLockAddressSpace(MmGetKernelAddressSpace());

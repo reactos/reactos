@@ -22,11 +22,6 @@
 
 /* INCLUDES *****************************************************************/
 
-#ifndef __ASM__
-#include <ddk/ntifs.h>
-#include <stdarg.h>
-#endif /* not __ASM__ */
-
 #include "arch/ke.h"
 
 /* INTERNAL KERNEL TYPES ****************************************************/
@@ -36,10 +31,9 @@
 #ifndef __USE_W32API
 
 typedef struct _KPROCESS *PKPROCESS;
+typedef struct _DISPATCHER_HEADER *PDISPATCHER_HEADER;
 
 #endif /* __USE_W32API */
-
-typedef struct _DISPATCHER_HEADER *PDISPATCHER_HEADER;
 
 typedef struct _HARDWARE_PTE_X86 {
     ULONG Valid             : 1;
@@ -218,11 +212,6 @@ typedef struct _KPROCESS
 
 /* INTERNAL KERNEL FUNCTIONS ************************************************/
 
-#ifdef __USE_W32API
-struct _KPROCESS* KeGetCurrentProcess(VOID);
-VOID KeSetGdtSelector(ULONG Entry, ULONG Value1, ULONG Value2);
-#endif
-
 struct _KIRQ_TRAPFRAME;
 struct _KPCR;
 struct _KPRCB;
@@ -233,28 +222,15 @@ struct _KEXCEPTION_FRAME;
 #define IPI_REQUEST_DPC		    2
 #define IPI_REQUEST_FREEZE	    3
 
-#ifndef __USE_W32API
-typedef enum _KTHREAD_STATE {
-    Initialized,
-    Ready,
-    Running,
-    Standby,
-    Terminated,
-    Waiting,
-    Transition,
-    DeferredReady,
-} THREAD_STATE, *PTHREAD_STATE;
-#endif
-
 /* MACROS *************************************************************************/
 
-#define KeEnterCriticalRegion(X) \
+#define KeEnterCriticalRegion() \
 { \
     PKTHREAD _Thread = KeGetCurrentThread(); \
     if (_Thread) _Thread->KernelApcDisable--; \
 }
 
-#define KeLeaveCriticalRegion(X) \
+#define KeLeaveCriticalRegion() \
 { \
     PKTHREAD _Thread = KeGetCurrentThread(); \
     if((_Thread) && (++_Thread->KernelApcDisable == 0)) \
@@ -267,7 +243,7 @@ typedef enum _KTHREAD_STATE {
 }
 
 #ifndef __USE_W32API
-#define KeGetCurrentProcessorNumber() (KeGetCurrentKPCR()->ProcessorNumber)
+#define KeGetCurrentProcessorNumber() (KeGetCurrentKPCR()->Number)
 #endif
 
 /* threadsch.c ********************************************************************/
@@ -378,8 +354,8 @@ extern PLOADER_MODULE CachedModules[MaximumCachedModuleType];
 VOID STDCALL
 DbgBreakPointNoBugCheck(VOID);
 
-STDCALL
 VOID
+STDCALL
 KeInitializeProfile(struct _KPROFILE* Profile,
                     struct _KPROCESS* Process,
                     PVOID ImageBase,
@@ -388,21 +364,21 @@ KeInitializeProfile(struct _KPROFILE* Profile,
                     KPROFILE_SOURCE ProfileSource,
                     KAFFINITY Affinity);
 
-STDCALL
 VOID
+STDCALL
 KeStartProfile(struct _KPROFILE* Profile,
                PVOID Buffer);
 
-STDCALL
 VOID
+STDCALL
 KeStopProfile(struct _KPROFILE* Profile);
 
-STDCALL
 ULONG
+STDCALL
 KeQueryIntervalProfile(KPROFILE_SOURCE ProfileSource);
 
-STDCALL
 VOID
+STDCALL
 KeSetIntervalProfile(KPROFILE_SOURCE ProfileSource,
                      ULONG Interval);
 

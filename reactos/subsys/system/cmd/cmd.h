@@ -124,6 +124,7 @@ typedef struct tagCOMMAND
 extern COMMAND cmds[];		/* The internal command table */
 
 VOID PrintCommandList (VOID);
+VOID PrintCommandListDetail (VOID);
 
 
 /* Prototypes for COLOR.C */
@@ -259,7 +260,7 @@ INT  cmd_rmdir (LPTSTR, LPTSTR);
 INT  CommandExit (LPTSTR, LPTSTR);
 INT  CommandRem (LPTSTR, LPTSTR);
 INT  CommandShowCommands (LPTSTR, LPTSTR);
-
+INT  CommandShowCommandsDetail (LPTSTR, LPTSTR);
 
 /* Prototypes for LABEL.C */
 INT cmd_label (LPTSTR, LPTSTR);

@@ -26,13 +26,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include "precomp.h"
-#include <ddk/ntddblue.h>
-#include <ddk/ntddkbd.h>
-
 #include "usetup.h"
-#include "console.h"
-#include "keytrans.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -48,7 +42,7 @@ static SHORT yScreen = 0;
 
 
 NTSTATUS
-GetConsoleScreenBufferInfo(PCONSOLE_SCREEN_BUFFER_INFO ConsoleScreenBufferInfo);
+ConGetConsoleScreenBufferInfo(PCONSOLE_SCREEN_BUFFER_INFO ConsoleScreenBufferInfo);
 
 
 /* FUNCTIONS *****************************************************************/
@@ -56,7 +50,7 @@ GetConsoleScreenBufferInfo(PCONSOLE_SCREEN_BUFFER_INFO ConsoleScreenBufferInfo);
 
 
 NTSTATUS
-AllocConsole(VOID)
+ConAllocConsole(VOID)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   IO_STATUS_BLOCK IoStatusBlock;
@@ -98,7 +92,7 @@ AllocConsole(VOID)
   if (!NT_SUCCESS(Status))
     return(Status);
 
-  GetConsoleScreenBufferInfo(&csbi);
+  ConGetConsoleScreenBufferInfo(&csbi);
 
   xScreen = csbi.dwSize.X;
   yScreen = csbi.dwSize.Y;
@@ -108,7 +102,7 @@ AllocConsole(VOID)
 
 
 VOID
-FreeConsole(VOID)
+ConFreeConsole(VOID)
 {
   DPRINT("FreeConsole() called\n");
 
@@ -125,9 +119,9 @@ FreeConsole(VOID)
 
 
 NTSTATUS
-WriteConsole(PCHAR Buffer,
-	     ULONG NumberOfCharsToWrite,
-	     PULONG NumberOfCharsWritten)
+ConWriteConsole(PCHAR Buffer,
+	        ULONG NumberOfCharsToWrite,
+	        PULONG NumberOfCharsWritten)
 {
   IO_STATUS_BLOCK IoStatusBlock;
   NTSTATUS Status = STATUS_SUCCESS;
@@ -192,7 +186,7 @@ ReadConsoleA(HANDLE hConsoleInput,
 
 
 NTSTATUS
-ReadConsoleInput(PINPUT_RECORD Buffer)
+ConReadConsoleInput(PINPUT_RECORD Buffer)
 {
   IO_STATUS_BLOCK Iosb;
   NTSTATUS Status;
@@ -220,10 +214,10 @@ ReadConsoleInput(PINPUT_RECORD Buffer)
 
 
 NTSTATUS
-ReadConsoleOutputCharacters(LPSTR lpCharacter,
-			    ULONG nLength,
-			    COORD dwReadCoord,
-			    PULONG lpNumberOfCharsRead)
+ConReadConsoleOutputCharacters(LPSTR lpCharacter,
+			       ULONG nLength,
+			       COORD dwReadCoord,
+			       PULONG lpNumberOfCharsRead)
 {
   IO_STATUS_BLOCK IoStatusBlock;
   OUTPUT_CHARACTER Buffer;
@@ -252,10 +246,10 @@ ReadConsoleOutputCharacters(LPSTR lpCharacter,
 
 
 NTSTATUS
-ReadConsoleOutputAttributes(PUSHORT lpAttribute,
-			    ULONG nLength,
-			    COORD dwReadCoord,
-			    PULONG lpNumberOfAttrsRead)
+ConReadConsoleOutputAttributes(PUSHORT lpAttribute,
+			       ULONG nLength,
+			       COORD dwReadCoord,
+			       PULONG lpNumberOfAttrsRead)
 {
   IO_STATUS_BLOCK IoStatusBlock;
   OUTPUT_ATTRIBUTE Buffer;
@@ -284,9 +278,9 @@ ReadConsoleOutputAttributes(PUSHORT lpAttribute,
 
 
 NTSTATUS
-WriteConsoleOutputCharacters(LPCSTR lpCharacter,
-			     ULONG nLength,
-			     COORD dwWriteCoord)
+ConWriteConsoleOutputCharacters(LPCSTR lpCharacter,
+			        ULONG nLength,
+			        COORD dwWriteCoord)
 {
   IO_STATUS_BLOCK IoStatusBlock;
   PCHAR Buffer;
@@ -323,9 +317,9 @@ WriteConsoleOutputCharacters(LPCSTR lpCharacter,
 
 
 NTSTATUS
-WriteConsoleOutputCharactersW(LPCWSTR lpCharacter,
-			      ULONG nLength,
-			      COORD dwWriteCoord)
+ConWriteConsoleOutputCharactersW(LPCWSTR lpCharacter,
+			         ULONG nLength,
+			         COORD dwWriteCoord)
 {
   IO_STATUS_BLOCK IoStatusBlock;
   PCHAR Buffer;
@@ -367,10 +361,10 @@ WriteConsoleOutputCharactersW(LPCWSTR lpCharacter,
 
 
 NTSTATUS
-WriteConsoleOutputAttributes(CONST USHORT *lpAttribute,
-			     ULONG nLength,
-			     COORD dwWriteCoord,
-			     PULONG lpNumberOfAttrsWritten)
+ConWriteConsoleOutputAttributes(CONST USHORT *lpAttribute,
+			        ULONG nLength,
+			        COORD dwWriteCoord,
+			        PULONG lpNumberOfAttrsWritten)
 {
   IO_STATUS_BLOCK IoStatusBlock;
   PUSHORT Buffer;
@@ -407,10 +401,10 @@ WriteConsoleOutputAttributes(CONST USHORT *lpAttribute,
 
 
 NTSTATUS
-FillConsoleOutputAttribute(USHORT wAttribute,
-			   ULONG nLength,
-			   COORD dwWriteCoord,
-			   PULONG lpNumberOfAttrsWritten)
+ConFillConsoleOutputAttribute(USHORT wAttribute,
+			      ULONG nLength,
+			      COORD dwWriteCoord,
+			      PULONG lpNumberOfAttrsWritten)
 {
   IO_STATUS_BLOCK IoStatusBlock;
   OUTPUT_ATTRIBUTE Buffer;
@@ -441,10 +435,10 @@ FillConsoleOutputAttribute(USHORT wAttribute,
 
 
 NTSTATUS
-FillConsoleOutputCharacter(CHAR Character,
-			   ULONG Length,
-			   COORD WriteCoord,
-			   PULONG NumberOfCharsWritten)
+ConFillConsoleOutputCharacter(CHAR Character,
+			      ULONG Length,
+			      COORD WriteCoord,
+			      PULONG NumberOfCharsWritten)
 {
   IO_STATUS_BLOCK IoStatusBlock;
   OUTPUT_CHARACTER Buffer;
@@ -562,7 +556,7 @@ SetConsoleMode(HANDLE hConsoleHandle,
 
 
 NTSTATUS
-GetConsoleScreenBufferInfo(PCONSOLE_SCREEN_BUFFER_INFO ConsoleScreenBufferInfo)
+ConGetConsoleScreenBufferInfo(PCONSOLE_SCREEN_BUFFER_INFO ConsoleScreenBufferInfo)
 {
   IO_STATUS_BLOCK IoStatusBlock;
   NTSTATUS Status;
@@ -583,7 +577,7 @@ GetConsoleScreenBufferInfo(PCONSOLE_SCREEN_BUFFER_INFO ConsoleScreenBufferInfo)
 
 
 NTSTATUS
-SetConsoleCursorInfo(PCONSOLE_CURSOR_INFO lpConsoleCursorInfo)
+ConSetConsoleCursorInfo(PCONSOLE_CURSOR_INFO lpConsoleCursorInfo)
 {
   IO_STATUS_BLOCK IoStatusBlock;
   NTSTATUS Status;
@@ -604,13 +598,13 @@ SetConsoleCursorInfo(PCONSOLE_CURSOR_INFO lpConsoleCursorInfo)
 
 
 NTSTATUS
-SetConsoleCursorPosition(COORD dwCursorPosition)
+ConSetConsoleCursorPosition(COORD dwCursorPosition)
 {
   CONSOLE_SCREEN_BUFFER_INFO ConsoleScreenBufferInfo;
   IO_STATUS_BLOCK IoStatusBlock;
   NTSTATUS Status;
 
-  Status = GetConsoleScreenBufferInfo(&ConsoleScreenBufferInfo);
+  Status = ConGetConsoleScreenBufferInfo(&ConsoleScreenBufferInfo);
   if (!NT_SUCCESS(Status))
     return(Status);
 
@@ -633,7 +627,7 @@ SetConsoleCursorPosition(COORD dwCursorPosition)
 
 
 NTSTATUS
-SetConsoleTextAttribute(USHORT wAttributes)
+ConSetConsoleTextAttribute(USHORT wAttributes)
 {
   IO_STATUS_BLOCK IoStatusBlock;
   NTSTATUS Status;
@@ -661,7 +655,7 @@ ConInKey(PINPUT_RECORD Buffer)
 
   while (TRUE)
     {
-      ReadConsoleInput(Buffer);
+      ConReadConsoleInput(Buffer);
 
       if ((Buffer->EventType == KEY_EVENT) &&
 	  (Buffer->Event.KeyEvent.bKeyDown == TRUE))
@@ -675,9 +669,9 @@ ConOutChar(CHAR c)
 {
   ULONG Written;
 
-  WriteConsole(&c,
-	       1,
-	       &Written);
+  ConWriteConsole(&c,
+	          1,
+	          &Written);
 }
 
 
@@ -686,12 +680,12 @@ ConOutPuts(LPSTR szText)
 {
   ULONG Written;
 
-  WriteConsole(szText,
-	       strlen(szText),
-	       &Written);
-  WriteConsole("\n",
-	       1,
-	       &Written);
+  ConWriteConsole(szText,
+	          strlen(szText),
+	          &Written);
+  ConWriteConsole("\n",
+	          1,
+	          &Written);
 }
 
 
@@ -706,9 +700,9 @@ ConOutPrintf(LPSTR szFormat, ...)
   vsprintf(szOut, szFormat, arg_ptr);
   va_end(arg_ptr);
 
-  WriteConsole(szOut,
-	       strlen(szOut),
-	       &dwWritten);
+  ConWriteConsole(szOut,
+	          strlen(szOut),
+	          &dwWritten);
 }
 
 
@@ -720,7 +714,7 @@ GetCursorX(VOID)
 {
   CONSOLE_SCREEN_BUFFER_INFO csbi;
 
-  GetConsoleScreenBufferInfo(&csbi);
+  ConGetConsoleScreenBufferInfo(&csbi);
 
   return(csbi.dwCursorPosition.X);
 }
@@ -731,7 +725,7 @@ GetCursorY(VOID)
 {
   CONSOLE_SCREEN_BUFFER_INFO csbi;
 
-  GetConsoleScreenBufferInfo(&csbi);
+  ConGetConsoleScreenBufferInfo(&csbi);
 
   return(csbi.dwCursorPosition.Y);
 }
@@ -743,7 +737,7 @@ GetScreenSize(SHORT *maxx,
 {
   CONSOLE_SCREEN_BUFFER_INFO csbi;
 
-  GetConsoleScreenBufferInfo(&csbi);
+  ConGetConsoleScreenBufferInfo(&csbi);
 
   if (maxx)
     *maxx = csbi.dwSize.X;
@@ -762,7 +756,7 @@ SetCursorType(BOOL bInsert,
   cci.dwSize = bInsert ? 10 : 99;
   cci.bVisible = bVisible;
 
-  SetConsoleCursorInfo(&cci);
+  ConSetConsoleCursorInfo(&cci);
 }
 
 
@@ -774,7 +768,7 @@ SetCursorXY(SHORT x,
 
   coPos.X = x;
   coPos.Y = y;
-  SetConsoleCursorPosition(coPos);
+  ConSetConsoleCursorPosition(coPos);
 }
 
 
@@ -896,28 +890,28 @@ SetInputTextXY(SHORT x, SHORT y, SHORT len, PWCHAR Text)
       Length = len - 1;
     }
 
-  FillConsoleOutputAttribute(0x70,
-			     len,
-			     coPos,
-			     &Written);
+  ConFillConsoleOutputAttribute(0x70,
+			        len,
+			        coPos,
+			        &Written);
 
-  WriteConsoleOutputCharactersW(Text,
-				Length,
-				coPos);
+  ConWriteConsoleOutputCharactersW(Text,
+				   Length,
+				   coPos);
 
   coPos.X += Length;
-  FillConsoleOutputCharacter('_',
-			     1,
-			     coPos,
-			     &Written);
+  ConFillConsoleOutputCharacter('_',
+			        1,
+			        coPos,
+			        &Written);
 
   if (len > Length + 1)
     {
       coPos.X++;
-      FillConsoleOutputCharacter(' ',
-				 len - Length - 1,
-				 coPos,
-				 &Written);
+      ConFillConsoleOutputCharacter(' ',
+				    len - Length - 1,
+				    coPos,
+				    &Written);
     }
 }
 
@@ -934,15 +928,15 @@ SetUnderlinedTextXY(SHORT x, SHORT y, PCHAR Text)
 
   Length = strlen(Text);
 
-  WriteConsoleOutputCharacters(Text,
-			       Length,
-			       coPos);
+  ConWriteConsoleOutputCharacters(Text,
+			          Length,
+			          coPos);
 
   coPos.Y++;
-  FillConsoleOutputCharacter(0xCD,
-			     Length,
-			     coPos,
-			     &Written);
+  ConFillConsoleOutputCharacter(0xCD,
+			        Length,
+			        coPos,
+			        &Written);
 }
 
 
@@ -958,14 +952,14 @@ SetInvertedTextXY(SHORT x, SHORT y, PCHAR Text)
 
   Length = strlen(Text);
 
-  FillConsoleOutputAttribute(0x71,
-			     Length,
-			     coPos,
-			     &Written);
+  ConFillConsoleOutputAttribute(0x71,
+			        Length,
+			        coPos,
+			        &Written);
 
-  WriteConsoleOutputCharacters(Text,
-			       Length,
-			       coPos);
+  ConWriteConsoleOutputCharacters(Text,
+			          Length,
+			          coPos);
 }
 
 
@@ -981,14 +975,14 @@ SetHighlightedTextXY(SHORT x, SHORT y, PCHAR Text)
 
   Length = strlen(Text);
 
-  FillConsoleOutputAttribute(0x1F,
-			     Length,
-			     coPos,
-			     &Written);
+  ConFillConsoleOutputAttribute(0x1F,
+			        Length,
+			        coPos,
+			        &Written);
 
-  WriteConsoleOutputCharacters(Text,
-			       Length,
-			       coPos);
+  ConWriteConsoleOutputCharacters(Text,
+			          Length,
+			          coPos);
 }
 
 
@@ -1006,9 +1000,9 @@ PrintTextXY(SHORT x, SHORT y, char* fmt, ...)
   coPos.X = x;
   coPos.Y = y;
 
-  WriteConsoleOutputCharacters(buffer,
-			       strlen(buffer),
-			       coPos);
+  ConWriteConsoleOutputCharacters(buffer,
+			          strlen(buffer),
+			          coPos);
 }
 
 
@@ -1034,18 +1028,18 @@ PrintTextXYN(SHORT x, SHORT y, SHORT len, char* fmt, ...)
       Length = len - 1;
     }
 
-  WriteConsoleOutputCharacters(buffer,
-			       Length,
-			       coPos);
+  ConWriteConsoleOutputCharacters(buffer,
+			          Length,
+			          coPos);
 
   coPos.X += Length;
 
   if (len > Length)
     {
-      FillConsoleOutputCharacter(' ',
-				 len - Length,
-				 coPos,
-				 &Written);
+      ConFillConsoleOutputCharacter(' ',
+				    len - Length,
+				    coPos,
+				    &Written);
     }
 }
 

@@ -28,10 +28,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include "user32.h"
-#include <string.h>
-#include <debug.h>
-#include <stdlib.h>
+#include <user32.h>
 
 /*forward declerations... actualy in user32\windows\icon.c but usful here****/
 HICON ICON_CreateCursorFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cxDesired, int cyDesired, int xHotspot, int yHotspot);

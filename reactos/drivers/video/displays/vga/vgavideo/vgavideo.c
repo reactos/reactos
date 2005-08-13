@@ -1,3 +1,4 @@
+#include <ddk/ntddk.h>
 #include <ddk/ntddvdeo.h>
 #include <ddk/winddi.h>
 #include <ntos/minmax.h>

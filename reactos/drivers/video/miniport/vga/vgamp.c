@@ -223,7 +223,7 @@ VGAStartIO(PVOID DeviceExtension,
       if (RequestPacket->InputBufferLength < sizeof(VIDEO_CLUT) ||
           RequestPacket->InputBufferLength <
           (((PVIDEO_CLUT)RequestPacket->InputBuffer)->NumEntries * sizeof(ULONG)) +
-          sizeof(VIDEO_CLUT))
+          FIELD_OFFSET(VIDEO_CLUT, LookupTable))
       {
         RequestPacket->StatusBlock->Status = ERROR_INSUFFICIENT_BUFFER;
         return TRUE;

@@ -6,23 +6,17 @@
 #define __DD_INCLUDED__
 
 #include <ddraw.h>
-#include <ole32/guiddef.h>
+#include <ddk/ddrawi.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/* pointer to video memory */
-typedef ULONG_PTR FLATPTR;
-
 // FIXME: These should have been defined in other header files!
-typedef struct _DDVIDEOPORTCAPS      *LPDDVIDEOPORTCAPS; /* should be in dvp.h */
 typedef struct _DDVIDEOPORTDESC      *LPDDVIDEOPORTDESC; /* should be in dvp.h */
 typedef struct _DDVIDEOPORTBANDWIDTH *LPDDVIDEOPORTBANDWIDTH; /* should be in dvp.h */
 typedef struct _DDVIDEOPORTCONNECT   *LPDDVIDEOPORTCONNECT; /* should be in dvp.h */
 typedef struct _DDVIDEOPORTINFO      *LPDDVIDEOPORTINFO; /* should be in dvp.h */
-typedef struct _DDKERNELCAPS         *LPDDKERNELCAPS; /* should be in ddkernel.h */
-typedef struct _VMEMHEAP             *LPVMEMHEAP; /* should be in dmemmgr.h */
 typedef struct _DD_VIDEOPORT_LOCAL   *PDD_VIDEOPORT_LOCAL; /* should be defined here once we have dvp.h */
 
 /************************************************************************/
@@ -46,13 +40,6 @@ typedef struct
 		DWORD      dwHeight;
 	};
 } VIDEOMEMORY, *PVIDEOMEMORY;
-
-#define VIDMEM_ISLINEAR      (1<<0)
-#define VIDMEM_ISRECTANGULAR (1<<1)
-#define VIDMEM_ISHEAP        (1<<2)
-#define VIDMEM_ISNONLOCAL    (1<<3)
-#define VIDMEM_ISWC          (1<<4)
-#define VIDMEM_ISDISABLED    (1<<5)
 
 typedef struct
 {
@@ -155,14 +142,6 @@ typedef struct
 	PDD_ATTACHLIST     lpAttachListFrom;
 	RECT               rcOverlaySrc;
 } DD_SURFACE_LOCAL, *PDD_SURFACE_LOCAL;
-
-#define DDRAWISURF_HASCKEYSRCBLT  0x00000800L
-#define DDRAWISURF_HASPIXELFORMAT 0x00002000L
-#define DDRAWISURF_HASOVERLAYDATA 0x00004000L
-#define DDRAWISURF_FRONTBUFFER    0x04000000L
-#define DDRAWISURF_BACKBUFFER     0x08000000L
-#define DDRAWISURF_INVALID        0x10000000L
-#define DDRAWISURF_DRIVERMANAGED  0x40000000L
 
 typedef struct _DD_ATTACHLIST
 {
@@ -1130,8 +1109,12 @@ typedef struct
 	// Output:
 	DWORD   dwActualSize;
 	HRESULT ddRVal;
+	ULONG_PTR  dwContext;
 } DD_GETDRIVERINFODATA, *PDD_GETDRIVERINFODATA;
 typedef DWORD (STDCALL *PDD_GETDRIVERINFO)(PDD_GETDRIVERINFODATA);
+
+
+
 
 /************************************************************************/
 /* Driver info structures                                               */
@@ -1204,6 +1187,7 @@ typedef struct
 	PDD_D3DBUFCALLBACKS lpD3DBufCallbacks;
 } DD_HALINFO, *PDD_HALINFO;
 
+
 DEFINE_GUID(GUID_NonLocalVidMemCaps, 0x86C4FA80, 0x8D84, 0x11D0, 0x94, 0xE8, 0x00, 0xC0, 0x4F, 0xC3, 0x41, 0x37);
 
 typedef struct
@@ -1228,6 +1212,8 @@ typedef struct
 		DDSCAPSEX ddsCapsExAlt;
 	} ddsExtendedHeapRestrictions[1];
 } DD_MORESURFACECAPS, *PDD_MORESURFACECAPS;
+
+
 
 #ifdef __cplusplus
 } /* extern "C" */

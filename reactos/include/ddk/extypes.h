@@ -30,22 +30,6 @@ typedef enum _WORK_QUEUE_TYPE {
     MaximumWorkQueue
 } WORK_QUEUE_TYPE;
 
-typedef struct _EX_QUEUE_WORKER_INFO {
-    UCHAR QueueDisabled:1;
-    UCHAR MakeThreadsAsNecessary:1;
-    UCHAR WaitMode:1;
-    ULONG WorkerCount:29;
-} EX_QUEUE_WORKER_INFO, *PEX_QUEUE_WORKER_INFO;
-
-typedef struct _EX_WORK_QUEUE {
-    KQUEUE WorkerQueue;
-    ULONG DynamicThreadCount;
-    ULONG WorkItemsProcessed;
-    ULONG WorkItemsProcessedLastPass;
-    ULONG QueueDepthLastPass;
-    EX_QUEUE_WORKER_INFO Info;    
-} EX_WORK_QUEUE, *PEX_WORK_QUEUE;
-
 typedef ULONG_PTR ERESOURCE_THREAD, *PERESOURCE_THREAD;
 
 typedef struct _OWNER_ENTRY
@@ -219,18 +203,6 @@ typedef struct _PP_LOOKASIDE_LIST
    PGENERAL_LOOKASIDE P;
    PGENERAL_LOOKASIDE L;
 } PP_LOOKASIDE_LIST, *PPP_LOOKASIDE_LIST;
-
-typedef enum _PP_NPAGED_LOOKASIDE_NUMBER
-{
-   LookasideSmallIrpList = 0,
-   LookasideLargeIrpList = 1,
-   LookasideMdlList = 2,
-   LookasideCreateInfoList = 3,
-   LookasideNameBufferList = 4,
-   LookasideTwilightList = 5,
-   LookasideCompletionList = 6,
-   LookasideMaximumList = 7
-} PP_NPAGED_LOOKASIDE_NUMBER;
 
 typedef enum _EX_POOL_PRIORITY {
     LowPoolPriority,

@@ -5,10 +5,12 @@
 #ifndef __INCLUDE_NTDLL_RTL_H
 #define __INCLUDE_NTDLL_RTL_H
 
-#include <ntos/types.h>
-#include <napi/teb.h>
-#include <ddk/ntddk.h>
+#ifndef _NTNDK_
 #include <ddk/ntifs.h>
+#include <ntos/types.h>
+#include <ntos/zwtypes.h>
+#include <napi/teb.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -21,7 +23,7 @@ extern VOID FASTCALL CHECK_PAGED_CODE_RTL(char *file, int line);
 #define PAGED_CODE_RTL()
 #endif
 
-#ifndef __USE_W32API
+#if !defined(__USE_W32API) || defined(_NTNDK_)
 
 #define RTL_CONSTANT_STRING(__SOURCE_STRING__) \
 { \
@@ -104,38 +106,9 @@ typedef struct _DEBUG_LOCK_INFORMATION {
 	ULONG  NumberOfExclusiveWaiters;
 } DEBUG_LOCK_INFORMATION, *PDEBUG_LOCK_INFORMATION;
 
-typedef struct _CRITICAL_SECTION_DEBUG
-{
-  USHORT Type;
-  USHORT CreatorBackTraceIndex;
-  struct _CRITICAL_SECTION *CriticalSection;
-  LIST_ENTRY ProcessLocksList;
-  ULONG EntryCount;
-  ULONG ContentionCount;
-  PVOID Spare[2];
-} CRITICAL_SECTION_DEBUG, *PCRITICAL_SECTION_DEBUG;
+#endif
 
-
-typedef struct _CRITICAL_SECTION
-{
-  PCRITICAL_SECTION_DEBUG DebugInfo;
-  LONG LockCount;
-  LONG RecursionCount;
-  HANDLE OwningThread;
-  HANDLE LockSemaphore;
-  ULONG_PTR SpinCount;
-} CRITICAL_SECTION, *PCRITICAL_SECTION, *LPCRITICAL_SECTION;
-
-#define RTL_CRITSECT_TYPE 0
-
-typedef CRITICAL_SECTION RTL_CRITICAL_SECTION;
-typedef PCRITICAL_SECTION PRTL_CRITICAL_SECTION;
-typedef LPCRITICAL_SECTION LPRTL_CRITICAL_SECTION;
-typedef CRITICAL_SECTION_DEBUG RTL_CRITICAL_SECTION_DEBUG;
-typedef PCRITICAL_SECTION_DEBUG PRTL_CRITICAL_SECTION_DEBUG;
-
-#endif /* !__USE_W32API */
-
+#ifndef _NTNDK_
 typedef struct _RTL_PROCESS_INFO
 {
    ULONG Size;
@@ -144,10 +117,11 @@ typedef struct _RTL_PROCESS_INFO
    CLIENT_ID ClientId;
    SECTION_IMAGE_INFORMATION ImageInfo;
 } RTL_PROCESS_INFO, *PRTL_PROCESS_INFO;
+#endif
 
 typedef struct _RTL_RESOURCE
 {
-   CRITICAL_SECTION Lock;
+   RTL_CRITICAL_SECTION Lock;
    HANDLE SharedSemaphore;
    ULONG SharedWaiters;
    HANDLE ExclusiveSemaphore;
@@ -740,11 +714,7 @@ RtlRunEncodeUnicodeString (IN OUT PUCHAR Hash,
 
 /* Timer Queue functions */
 
-#ifdef __USE_W32API
 #include <winnt.h>
-#else /* __USE_W32API */
-typedef VOID (CALLBACK *WAITORTIMERCALLBACKFUNC) (PVOID, BOOLEAN );
-#endif /* __USE_W32API */
 
 NTSTATUS
 STDCALL

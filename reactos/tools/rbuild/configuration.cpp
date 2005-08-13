@@ -8,7 +8,9 @@ Configuration::Configuration ()
 	Verbose = false;
 	CleanAsYouGo = false;
 	AutomaticDependencies = true;
+	CheckDependenciesForModuleOnly = false;
 	MakeHandlesInstallDirectories = false;
+	GenerateProxyMakefilesInSourceTree = false;
 }
 
 Configuration::~Configuration ()

@@ -19,19 +19,20 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#ifndef __WINE_DDRAWI_H
-#define __WINE_DDRAWI_H
+#ifndef __DDRAWI_INCLUDED__
+#define __DDRAWI_INCLUDED__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #include <ddraw.h>
-#include <dciddi.h> /* the DD HAL is layered onto DCI escapes */
 
+#ifndef __DDK_DDRAWINT_H
 typedef struct _DDVIDEOPORTCAPS *LPDDVIDEOPORTCAPS; /* should be in dvp.h */
 typedef struct _DDKERNELCAPS *LPDDKERNELCAPS; /* should be in ddkernel.h */
 typedef struct _VMEMHEAP *LPVMEMHEAP; /* should be in dmemmgr.h */
+#endif
 
 #define DDAPI WINAPI
 
@@ -67,8 +68,10 @@ typedef struct {
 
 typedef DWORD (PASCAL *LPDD32BITDRIVERINIT)(DWORD dwContext);
 
+#ifndef __DDK_DDRAWINT_H
 /* pointer to video memory */
 typedef ULONG_PTR FLATPTR;
+#endif
 
 /* predeclare some structures */
 typedef struct _DDHALINFO *LPDDHALINFO;
@@ -90,22 +93,6 @@ typedef struct _DDRAWI_DDVIDEOPORT_INT *LPDDRAWI_DDVIDEOPORT_INT;
 typedef struct _DDRAWI_DDVIDEOPORT_LCL *LPDDRAWI_DDVIDEOPORT_LCL;
 typedef struct _DDRAWI_DDMOTIONCOMP_INT *LPDDRAWI_DDMOTIONCOMP_INT;
 typedef struct _DDRAWI_DDMOTIONCOMP_LCL *LPDDRAWI_DDMOTIONCOMP_LCL;
-
-/* structure GUIDs for GetDriverInfo */
-DEFINE_GUID( GUID_MiscellaneousCallbacks,	0xEFD60CC0,0x49E7,0x11D0,0x88,0x9D,0x00,0xAA,0x00,0xBB,0xB7,0x6A );
-/* ...videport stuff here... */
-DEFINE_GUID( GUID_D3DCallbacks2,		0x0BA584E1,0x70B6,0x11D0,0x88,0x9D,0x00,0xAA,0x00,0xBB,0xB7,0x6A );
-DEFINE_GUID( GUID_D3DCallbacks3,		0xDDF41230,0xEC0A,0x11D0,0xA9,0xB6,0x00,0xAA,0x00,0xC0,0x99,0x3E );
-DEFINE_GUID( GUID_NonLocalVidMemCaps,		0x86C4FA80,0x8D84,0x11D0,0x94,0xE8,0x00,0xC0,0x4F,0xC3,0x41,0x37 );
-/* ...kernel stuff here... */
-DEFINE_GUID( GUID_D3DExtendedCaps,		0x7DE41F80,0x9D93,0x11D0,0x89,0xAB,0x00,0xA0,0xC9,0x05,0x41,0x29 );
-DEFINE_GUID( GUID_ZPixelFormats,		0x93869880,0x36CF,0x11D1,0x9B,0x1B,0x00,0xAA,0x00,0xBB,0xB8,0xAE );
-DEFINE_GUID( GUID_DDMoreSurfaceCaps,		0x3B8A0466,0xF269,0x11D1,0x88,0x0B,0x00,0xC0,0x4F,0xD9,0x30,0xC5 );
-DEFINE_GUID( GUID_DDStereoMode,			0xF828169C,0xA8E8,0x11D2,0xA1,0xF2,0x00,0xA0,0xC9,0x83,0xEA,0xF6 );
-/* ...more stuff here... */
-DEFINE_GUID(GUID_D3DParseUnknownCommandCallback,0x2E04FFA0,0x98E4,0x11D1,0x8C,0xE1,0x00,0xA0,0xC9,0x06,0x29,0xA8 );
-/* ...motioncomp stuff here... */
-DEFINE_GUID( GUID_Miscellaneous2Callbacks,	0x406B2F00,0x3E5A,0x11D1,0xB6,0x40,0x00,0xAA,0x00,0xA1,0xF9,0x6A );
 
 /*****************************************************************************
  * driver->ddraw callbacks
@@ -162,12 +149,14 @@ typedef struct _VIDMEM {
     } DUMMYUNIONNAME2;
 } VIDMEM,*LPVIDMEM;
 
+#ifndef __DDK_DDRAWINT_H
 #define VIDMEM_ISLINEAR		0x00000001
 #define VIDMEM_ISRECTANGULAR	0x00000002
 #define VIDMEM_ISHEAP		0x00000004
 #define VIDMEM_ISNONLOCAL	0x00000008
 #define VIDMEM_ISWC		0x00000010
 #define VIDMEM_ISDISABLED	0x00000020
+#endif
 
 typedef struct _VIDMEMINFO {
     FLATPTR		fpPrimary;
@@ -266,9 +255,6 @@ typedef struct _DDNONLOCALVIDMEMCAPS {
     DWORD	dwNLVBFXCaps;
     DWORD	dwNLVBRops[DD_ROP_SPACE];
 } DDNONLOCALVIDMEMCAPS,*LPDDNONLOCALVIDMEMCAPS;
-
-
-
 
 #define DDSCAPS_EXECUTEBUFFER	DDSCAPS_RESERVED2
 #define DDSCAPS2_VERTEXBUFFER	DDSCAPS2_RESERVED1
@@ -630,6 +616,9 @@ typedef struct _DDHAL_GETDRIVERINFODATA {
 /*****************************************************************************
  * high-level ddraw implementation structures
  */
+#ifndef __USE_W32API
+typedef DWORD IUnknown; /* FIXME: implement proper definition */
+#endif
 typedef struct _IUNKNOWN_LIST {
     struct _IUNKNOWN_LIST *	lpLink;
     LPGUID			lpGuid;
@@ -984,13 +973,21 @@ typedef struct _DDRAWI_DDRAWSURFACE_LCL {
 #define DDRAWISURF_HASCKEYDESTOVERLAY	0x00000100
 #define DDRAWISURF_HASCKEYDESTBLT	0x00000200
 #define DDRAWISURF_HASCKEYSRCOVERLAY	0x00000400
+#ifndef DDRAWISURF_HASCKEYSRCBLT
 #define DDRAWISURF_HASCKEYSRCBLT	0x00000800
+#endif
 #define DDRAWISURF_LOCKEXCLUDEDCURSOR	0x00001000
+#ifndef DDRAWISURF_HASPIXELFORMAT
 #define DDRAWISURF_HASPIXELFORMAT	0x00002000
+#endif
+#ifndef DDRAWISURF_HASOVERLAYDATA
 #define DDRAWISURF_HASOVERLAYDATA	0x00004000
+#endif
 #define DDRAWISURF_SETGAMMA		0x00008000
 /* more... */
+#ifndef DDRAWISURF_INVALID
 #define DDRAWISURF_INVALID		0x10000000
+#endif
 
 /* palettes */
 typedef struct _DDRAWI_DDRAWPALETTE_INT {
@@ -1048,8 +1045,287 @@ typedef struct _DDRAWI_DDRAWPALETTE_LCL {
     ULONG_PTR			dwDDRAWReserved3;
 } DDRAWI_DDRAWPALETTE_LCL;
 
+typedef struct _DDHAL_GETMOCOMPGUIDSDATA FAR *LPDDHAL_GETMOCOMPGUIDSDATA;
+typedef struct _DDHAL_GETMOCOMPFORMATSDATA FAR *LPDDHAL_GETMOCOMPFORMATSDATA;
+typedef struct _DDHAL_CREATEMOCOMPDATA FAR *LPDDHAL_CREATEMOCOMPDATA;
+typedef struct _DDHAL_GETMOCOMPCOMPBUFFDATA FAR *LPDDHAL_GETMOCOMPCOMPBUFFDATA;
+typedef struct _DDHAL_GETINTERNALMOCOMPDATA FAR *LPDDHAL_GETINTERNALMOCOMPDATA;
+typedef struct _DDHAL_BEGINMOCOMPFRAMEDATA FAR *LPDDHAL_BEGINMOCOMPFRAMEDATA;
+typedef struct _DDHAL_ENDMOCOMPFRAMEDATA FAR *LPDDHAL_ENDMOCOMPFRAMEDATA;
+typedef struct _DDHAL_RENDERMOCOMPDATA FAR *LPDDHAL_RENDERMOCOMPDATA;
+typedef struct _DDHAL_QUERYMOCOMPSTATUSDATA FAR *LPDDHAL_QUERYMOCOMPSTATUSDATA;
+typedef struct _DDHAL_DESTROYMOCOMPDATA FAR *LPDDHAL_DESTROYMOCOMPDATA;
+typedef struct _DDHAL_COLORCONTROLDATA FAR *LPDDHAL_COLORCONTROLDATA;
+
+typedef DWORD (FAR PASCAL *LPDDHALMOCOMPCB_GETGUIDS)( LPDDHAL_GETMOCOMPGUIDSDATA);
+typedef DWORD (FAR PASCAL *LPDDHALMOCOMPCB_GETFORMATS)( LPDDHAL_GETMOCOMPFORMATSDATA);
+typedef DWORD (FAR PASCAL *LPDDHALMOCOMPCB_CREATE)( LPDDHAL_CREATEMOCOMPDATA);
+typedef DWORD (FAR PASCAL *LPDDHALMOCOMPCB_GETCOMPBUFFINFO)( LPDDHAL_GETMOCOMPCOMPBUFFDATA);
+typedef DWORD (FAR PASCAL *LPDDHALMOCOMPCB_GETINTERNALINFO)( LPDDHAL_GETINTERNALMOCOMPDATA);
+typedef DWORD (FAR PASCAL *LPDDHALMOCOMPCB_BEGINFRAME)( LPDDHAL_BEGINMOCOMPFRAMEDATA);
+typedef DWORD (FAR PASCAL *LPDDHALMOCOMPCB_ENDFRAME)( LPDDHAL_ENDMOCOMPFRAMEDATA);
+typedef DWORD (FAR PASCAL *LPDDHALMOCOMPCB_RENDER)( LPDDHAL_RENDERMOCOMPDATA);
+typedef DWORD (FAR PASCAL *LPDDHALMOCOMPCB_QUERYSTATUS)( LPDDHAL_QUERYMOCOMPSTATUSDATA);
+typedef DWORD (FAR PASCAL *LPDDHALMOCOMPCB_DESTROY)( LPDDHAL_DESTROYMOCOMPDATA);
+typedef DWORD (FAR PASCAL *LPDDHALCOLORCB_COLORCONTROL)(LPDDHAL_COLORCONTROLDATA);
+
+typedef struct _DDMCCOMPBUFFERINFO
+{
+    DWORD                       dwSize;             // [in]   size of the struct
+    DWORD                       dwNumCompBuffers;   // [out]  number of buffers required for compressed data
+    DWORD                       dwWidthToCreate;    // [out]    Width of surface to create
+    DWORD                       dwHeightToCreate;   // [out]    Height of surface to create
+    DWORD                       dwBytesToAllocate;  // [out]    Total number of bytes used by each surface
+    DDSCAPS2                    ddCompCaps;         // [out]    caps to create surfaces to store compressed data
+    DDPIXELFORMAT               ddPixelFormat;      // [out]  format to create surfaces to store compressed data
+} DDMCCOMPBUFFERINFO, *LPDDMCCOMPBUFFERINFO;
+
+typedef struct _DDMCBUFFERINFO
+{
+    DWORD                       dwSize;         // [in]    size of the struct
+    LPDDRAWI_DDRAWSURFACE_LCL   lpCompSurface;  // [in]    pointer to buffer containing compressed data
+    DWORD                       dwDataOffset;   // [in]    offset of relevant data from the beginning of buffer
+    DWORD                       dwDataSize;     // [in]    size of relevant data
+    LPVOID                      lpPrivate;      // Reserved for DirectDraw;
+} DDMCBUFFERINFO, *LPDDMCBUFFERINFO;
+
+typedef struct _DDHAL_GETDRIVERSTATEDATA {
+    DWORD                       dwFlags;
+    union
+    {
+        ULONG_PTR               dwhContext;
+    };
+    LPDWORD                     lpdwStates;
+    DWORD                       dwLength;
+    HRESULT                     ddRVal;
+} DDHAL_GETDRIVERSTATEDATA;
+
+typedef struct _DDHAL_ADDATTACHEDSURFACEDATA
+{
+    LPDDRAWI_DIRECTDRAW_GBL         lpDD;
+    LPDDRAWI_DDRAWSURFACE_LCL       lpDDSurface;
+    LPDDRAWI_DDRAWSURFACE_LCL       lpSurfAttached;
+    HRESULT                         ddRVal;
+    LPDDHALSURFCB_ADDATTACHEDSURFACE    AddAttachedSurface;
+} DDHAL_ADDATTACHEDSURFACEDATA;
+
+typedef struct _DDHAL_BEGINMOCOMPFRAMEDATA
+{
+    LPDDRAWI_DIRECTDRAW_LCL     lpDD;
+    LPDDRAWI_DDMOTIONCOMP_LCL   lpMoComp;
+    LPDDRAWI_DDRAWSURFACE_LCL   lpDestSurface;        // [in]  destination buffer in which to decoding this frame
+    DWORD                       dwInputDataSize;      // [in]  size of other misc input data to begin frame
+    LPVOID                      lpInputData;          // [in]  pointer to misc input data
+    DWORD                       dwOutputDataSize;     // [in]  size of other misc output data to begin frame
+    LPVOID                      lpOutputData;         // [in]  pointer to output misc data (allocated by client)
+    HRESULT                     ddRVal;               // [out]
+    LPDDHALMOCOMPCB_BEGINFRAME  BeginMoCompFrame;
+} DDHAL_BEGINMOCOMPFRAMEDATA;
+
+typedef struct _DDHAL_COLORCONTROLDATA
+{
+    LPDDRAWI_DIRECTDRAW_GBL     lpDD;       // driver struct
+    LPDDRAWI_DDRAWSURFACE_LCL   lpDDSurface;    // surface
+    LPDDCOLORCONTROL            lpColorData;    // color control information
+    DWORD                       dwFlags;    // DDRAWI_GETCOLOR/DDRAWI_SETCOLOR
+    HRESULT                     ddRVal;     // return value
+    LPDDHALCOLORCB_COLORCONTROL ColorControl;   // PRIVATE: ptr to callback
+} DDHAL_COLORCONTROLDATA;
+
+typedef struct _DDHAL_CREATEMOCOMPDATA
+{
+    LPDDRAWI_DIRECTDRAW_LCL     lpDD;
+    LPDDRAWI_DDMOTIONCOMP_LCL   lpMoComp;
+    LPGUID                      lpGuid;
+    DWORD                       dwUncompWidth;
+    DWORD                       dwUncompHeight;
+    DDPIXELFORMAT               ddUncompPixelFormat;
+    LPVOID                      lpData;
+    DWORD                       dwDataSize;
+    HRESULT                     ddRVal;
+    LPDDHALMOCOMPCB_CREATE      CreateMoComp;
+} DDHAL_CREATEMOCOMPDATA;
+
+typedef struct _DDHAL_DESTROYMOCOMPDATA
+{
+    LPDDRAWI_DIRECTDRAW_LCL     lpDD;
+    LPDDRAWI_DDMOTIONCOMP_LCL   lpMoComp;
+    HRESULT                     ddRVal;
+    LPDDHALMOCOMPCB_DESTROY     DestroyMoComp;
+} DDHAL_DESTROYMOCOMPDATA;
+
+typedef struct _DDHAL_ENDMOCOMPFRAMEDATA
+{
+    LPDDRAWI_DIRECTDRAW_LCL     lpDD;
+    LPDDRAWI_DDMOTIONCOMP_LCL   lpMoComp;
+    LPVOID                      lpInputData;
+    DWORD                       dwInputDataSize;
+    HRESULT                     ddRVal;
+    LPDDHALMOCOMPCB_ENDFRAME    EndMoCompFrame;
+} DDHAL_ENDMOCOMPFRAMEDATA;
+
+typedef struct _DDHAL_FLIPTOGDISURFACEDATA
+{
+    LPDDRAWI_DIRECTDRAW_GBL     lpDD;         // driver struct
+    DWORD                       dwToGDI;          // TRUE if flipping to the GDI surface, FALSE if flipping away
+    DWORD                       dwReserved;       // reserved for future use
+    HRESULT            ddRVal;       // return value
+    LPDDHAL_FLIPTOGDISURFACE    FlipToGDISurface; // PRIVATE: ptr to callback
+} DDHAL_FLIPTOGDISURFACEDATA;
+
+typedef struct _DDHAL_GETAVAILDRIVERMEMORYDATA
+{
+    LPDDRAWI_DIRECTDRAW_GBL lpDD;        // driver struct
+    DDSCAPS                 DDSCaps;     // caps for type of surface memory
+    DWORD                   dwTotal;     // total memory for this kind of surface
+    DWORD                   dwFree;      // free memory for this kind of surface
+    HRESULT                 ddRVal;      // return value
+    LPDDHAL_GETAVAILDRIVERMEMORY   GetAvailDriverMemory; // PRIVATE: ptr to callback
+    DDSCAPSEX               ddsCapsEx;       // Added in V6. Driver should check DDVERSION info
+                                                 // to see if this field is present.
+} DDHAL_GETAVAILDRIVERMEMORYDATA;
+
+typedef struct _DDHAL_GETBLTSTATUSDATA
+{
+    LPDDRAWI_DIRECTDRAW_GBL     lpDD;       // driver struct
+    LPDDRAWI_DDRAWSURFACE_LCL   lpDDSurface;    // surface struct
+    DWORD                       dwFlags;    // flags
+    HRESULT                     ddRVal;     // return value
+    LPDDHALSURFCB_GETBLTSTATUS  GetBltStatus;   // PRIVATE: ptr to callback
+} DDHAL_GETBLTSTATUSDATA;
+
+typedef struct _DDHAL_GETFLIPSTATUSDATA
+{
+    LPDDRAWI_DIRECTDRAW_GBL     lpDD;       // driver struct
+    LPDDRAWI_DDRAWSURFACE_LCL   lpDDSurface;    // surface struct
+    DWORD                       dwFlags;    // flags
+    HRESULT                     ddRVal;     // return value
+    LPDDHALSURFCB_GETFLIPSTATUS GetFlipStatus;  // PRIVATE: ptr to callback
+} DDHAL_GETFLIPSTATUSDATA;
+
+typedef struct _DDHAL_GETINTERNALMOCOMPDATA
+{
+    LPDDRAWI_DIRECTDRAW_LCL     lpDD;
+    LPGUID                      lpGuid;
+    DWORD                       dwWidth;            // [in]   width of uncompressed data
+    DWORD                       dwHeight;           // [in]   height of uncompressed data
+    DDPIXELFORMAT               ddPixelFormat;      // [in]   pixel-format of uncompressed data
+    DWORD                       dwScratchMemAlloc;  // [out]  amount of scratch memory will the hal allocate for its private use
+    HRESULT                     ddRVal;             // [out]
+    LPDDHALMOCOMPCB_GETINTERNALINFO  GetInternalMoCompInfo;
+} DDHAL_GETINTERNALMOCOMPDATA;
+
+typedef struct _DDHAL_GETMOCOMPCOMPBUFFDATA
+{
+    LPDDRAWI_DIRECTDRAW_LCL     lpDD;
+    LPGUID                      lpGuid;
+    DWORD                       dwWidth;            // [in]   width of uncompressed data
+    DWORD                       dwHeight;           // [in]   height of uncompressed data
+    DDPIXELFORMAT               ddPixelFormat;      // [in]   pixel-format of uncompressed data
+    DWORD                       dwNumTypesCompBuffs;// [in/out] number of memory types required for comp buffers
+    LPDDMCCOMPBUFFERINFO        lpCompBuffInfo;     // [in]   driver supplied info regarding comp buffers (allocated by client)
+    HRESULT                     ddRVal;             // [out]
+    LPDDHALMOCOMPCB_GETCOMPBUFFINFO  GetMoCompBuffInfo;
+} DDHAL_GETMOCOMPCOMPBUFFDATA;
+
+typedef struct _DDHAL_GETMOCOMPGUIDSDATA
+{
+    LPDDRAWI_DIRECTDRAW_LCL lpDD;
+    DWORD               dwNumGuids;
+    LPGUID              lpGuids;
+    HRESULT             ddRVal;
+    LPDDHALMOCOMPCB_GETGUIDS GetMoCompGuids;
+} DDHAL_GETMOCOMPGUIDSDATA;
+
+typedef struct _DDHAL_GETMOCOMPFORMATSDATA
+{
+    LPDDRAWI_DIRECTDRAW_LCL lpDD;
+    LPGUID              lpGuid;
+    DWORD               dwNumFormats;
+    LPDDPIXELFORMAT     lpFormats;
+    HRESULT             ddRVal;
+    LPDDHALMOCOMPCB_GETFORMATS   GetMoCompFormats;
+} DDHAL_GETMOCOMPFORMATSDATA;
+
+typedef struct _DDHAL_GETSCANLINEDATA
+{
+    LPDDRAWI_DIRECTDRAW_GBL     lpDD;       // driver struct
+    DWORD                       dwScanLine; // returned scan line
+    HRESULT                     ddRVal;     // return value
+    LPDDHAL_GETSCANLINE         GetScanLine;    // PRIVATE: ptr to callback
+} DDHAL_GETSCANLINEDATA;
+
+typedef struct _DDHAL_QUERYMOCOMPSTATUSDATA
+{
+    LPDDRAWI_DIRECTDRAW_LCL     lpDD;
+    LPDDRAWI_DDMOTIONCOMP_LCL   lpMoComp;
+    LPDDRAWI_DDRAWSURFACE_LCL   lpSurface;      // [in]  Surface being queried
+    DWORD                       dwFlags;        // [in]  DDMCQUERY_XXX falgs
+    HRESULT                     ddRVal;         // [out]
+    LPDDHALMOCOMPCB_QUERYSTATUS QueryMoCompStatus;
+} DDHAL_QUERYMOCOMPSTATUSDATA;
+
+typedef struct _DDHAL_RENDERMOCOMPDATA
+{
+    LPDDRAWI_DIRECTDRAW_LCL     lpDD;
+    LPDDRAWI_DDMOTIONCOMP_LCL   lpMoComp;
+    DWORD                       dwNumBuffers;   // [in]  Number of entries in the lpMacroBlockInfo array
+    LPDDMCBUFFERINFO            lpBufferInfo;   // [in]  Surfaces containing macro block info
+    DWORD                       dwFunction;     // [in]  Function
+    LPVOID                      lpInputData;
+    DWORD                       dwInputDataSize;
+    LPVOID                      lpOutputData;
+    DWORD                       dwOutputDataSize;
+    HRESULT                     ddRVal;         // [out]
+    LPDDHALMOCOMPCB_RENDER      RenderMoComp;
+} DDHAL_RENDERMOCOMPDATA;
+
+typedef struct _DDHAL_SETCOLORKEYDATA
+{
+    LPDDRAWI_DIRECTDRAW_GBL     lpDD;       // driver struct
+    LPDDRAWI_DDRAWSURFACE_LCL   lpDDSurface;    // surface struct
+    DWORD                       dwFlags;    // flags
+    DDCOLORKEY                  ckNew;      // new color key
+    HRESULT                     ddRVal;     // return value
+    LPDDHALSURFCB_SETCOLORKEY   SetColorKey;    // PRIVATE: ptr to callback
+} DDHAL_SETCOLORKEYDATA;
+
+typedef struct _DDHAL_SETOVERLAYPOSITIONDATA
+{
+    LPDDRAWI_DIRECTDRAW_GBL     lpDD;       // driver struct
+    LPDDRAWI_DDRAWSURFACE_LCL   lpDDSrcSurface; // src surface
+    LPDDRAWI_DDRAWSURFACE_LCL   lpDDDestSurface;// dest surface
+    LONG                        lXPos;      // x position
+    LONG                        lYPos;      // y position
+    HRESULT                     ddRVal;     // return value
+    LPDDHALSURFCB_SETOVERLAYPOSITION SetOverlayPosition; // PRIVATE: ptr to callback
+} DDHAL_SETOVERLAYPOSITIONDATA;
+
+typedef struct _DDHAL_UPDATEOVERLAYDATA
+{
+    LPDDRAWI_DIRECTDRAW_GBL     lpDD;       // driver struct
+    LPDDRAWI_DDRAWSURFACE_LCL   lpDDDestSurface;// dest surface
+    RECTL                       rDest;      // dest rect
+    LPDDRAWI_DDRAWSURFACE_LCL   lpDDSrcSurface; // src surface
+    RECTL                       rSrc;       // src rect
+    DWORD                       dwFlags;    // flags
+    DDOVERLAYFX                 overlayFX;  // overlay FX
+    HRESULT                     ddRVal;     // return value
+    LPDDHALSURFCB_UPDATEOVERLAY UpdateOverlay;  // PRIVATE: ptr to callback
+} DDHAL_UPDATEOVERLAYDATA;
+
+typedef struct _DDHAL_WAITFORVERTICALBLANKDATA
+{
+    LPDDRAWI_DIRECTDRAW_GBL     lpDD;       // driver struct
+    DWORD                       dwFlags;    // flags
+    DWORD                       bIsInVB;    // is in vertical blank
+    ULONG_PTR                   hEvent;     // event
+    HRESULT                     ddRVal;     // return value
+    LPDDHAL_WAITFORVERTICALBLANK    WaitForVerticalBlank; // PRIVATE: ptr to callback
+} DDHAL_WAITFORVERTICALBLANKDATA;
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#endif /* __WINE_DDRAWI_H */
+#endif /* __DDRAWI_INCLUDED__ */

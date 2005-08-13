@@ -22,8 +22,9 @@
 #include <bus.h>
 #include "halxbox.h"
 
-#define NDEBUG
 #include <internal/debug.h>
+#define NDEBUG
+#include <debug.h>
 
 /* VARIABLES ***************************************************************/
 

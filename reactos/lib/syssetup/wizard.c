@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
  * PURPOSE:           System setup
@@ -1448,13 +1447,15 @@ InstallWizard(VOID)
   ahpsp[5] = CreatePropertySheetPage(&psp);
 
 
-  /* Create the Process page
+  /* Create the Process page */
+#if 0
   psp.dwFlags = PSP_DEFAULT | PSP_USEHEADERTITLE | PSP_USEHEADERSUBTITLE;
   psp.pszHeaderTitle = MAKEINTRESOURCE(IDS_PROCESSTITLE);
   psp.pszHeaderSubTitle = MAKEINTRESOURCE(IDS_PROCESSSUBTITLE);
   psp.pfnDlgProc = ProcessPageDlgProc;
   psp.pszTemplate = MAKEINTRESOURCE(IDD_PROCESSPAGE);
-  ahpsp[6] = CreatePropertySheetPage(&psp); */
+  ahpsp[6] = CreatePropertySheetPage(&psp);
+#endif
 
 
   /* Create the Finish page */

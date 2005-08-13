@@ -766,7 +766,7 @@ typedef struct _CRITICAL_SECTION {
 	LONG RecursionCount;
 	HANDLE OwningThread;
 	HANDLE LockSemaphore;
-	DWORD SpinCount;
+	ULONG_PTR SpinCount;
 } CRITICAL_SECTION,*PCRITICAL_SECTION,*LPCRITICAL_SECTION;
 typedef struct _SYSTEMTIME {
 	WORD wYear;

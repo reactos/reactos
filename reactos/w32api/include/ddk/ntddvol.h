@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#include "ntddk.h"
-
 #define IOCTL_VOLUME_BASE                 ((ULONG) 'V')
 
 #define IOCTL_VOLUME_LOGICAL_TO_PHYSICAL \

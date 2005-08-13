@@ -27,13 +27,11 @@
 #pragma GCC system_header
 #endif
 
+#include <winsock2.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <winsock2.h>
-#include "ntddk.h"
-
 
 #define WSPAPI STDCALL
 

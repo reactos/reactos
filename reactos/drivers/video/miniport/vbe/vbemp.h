@@ -23,19 +23,11 @@
 
 /* INCLUDES *******************************************************************/
 
-#include "stddef.h"
-#include "windef.h"
-#include "wingdi.h"
+#include <ddk/ntddk.h>
 #include <ddk/miniport.h>
 #include <ddk/video.h>
 #include <ddk/ntddvdeo.h>
 #include <ddk/ntapi.h>
-
-#ifdef DBG
-#define DPRINT(arg) DbgPrint arg;
-#else
-#define DPRINT(arg)
-#endif
 
 /*
  * Compile-time define to get VBE 1.2 support. The implementation

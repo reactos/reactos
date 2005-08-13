@@ -28,9 +28,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include "user32.h"
-#include <strpool.h>
-#include <debug.h>
+#include <user32.h>
 
 typedef struct _PROPLISTITEM
 {

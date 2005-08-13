@@ -6,6 +6,9 @@ $(DEFAULT):
 all:
 	@$(MAKE) -C $(TOP) all
 
+depends:
+	@$(MAKE) -C $(TOP) $(DEFAULT)_depends
+
 install:
 	@$(MAKE) -C $(TOP) $(DEFAULT)_install
 

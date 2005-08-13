@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-#include "ntddk.h"
-
 /* Parallel port device GUIDs */
 
 DEFINE_GUID (GUID_DEVINTERFACE_PARALLEL,

@@ -30,7 +30,7 @@
 #include <ddk/csq.h>
 
 
-VOID NTAPI IopCsqCancelRoutine(PDEVICE_OBJECT DeviceObject,
+static VOID NTAPI IopCsqCancelRoutine(PDEVICE_OBJECT DeviceObject,
                                PIRP Irp)
 /*
  * FUNCTION: Cancel routine that is installed on any IRP that this library manages

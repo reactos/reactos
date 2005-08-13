@@ -32,8 +32,6 @@ extern "C" {
 
 #pragma pack(push,4)
 
-#include "ntddk.h"
-
 #define MEDIA_ERASEABLE                   0x00000001
 #define MEDIA_WRITE_ONCE                  0x00000002
 #define MEDIA_READ_ONLY                   0x00000004

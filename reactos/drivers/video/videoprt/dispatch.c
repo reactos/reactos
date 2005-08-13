@@ -25,7 +25,6 @@
 
 /* EXTERNAL FUNCTIONS *********************************************************/
 
-typedef PVOID PHAL_RESET_DISPLAY_PARAMETERS;
 VOID STDCALL HalAcquireDisplayOwnership(IN PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParameters);
 VOID STDCALL HalReleaseDisplayOwnership();
 
@@ -115,7 +114,7 @@ IntVideoPortDispatchOpen(
        */
 
       DPRINT("Referencing CSRSS\n");
-      Csrss = PsGetCurrentProcess();
+      Csrss = (PKPROCESS)PsGetCurrentProcess();
       DPRINT("Csrss %p\n", Csrss);
 
       CsrssInitialized = TRUE;

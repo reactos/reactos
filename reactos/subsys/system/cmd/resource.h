@@ -212,6 +212,8 @@
 #define STRING_SCREEN_COL                  715
 #define STRING_SCREEN_ROW                  716
 #define STRING_TIMER_TIME                  717
+#define STRING_HELP1                       718
+#define STRING_HELP2                       719
 
 /* These strings are language independent (cmd.rc) */
 #define STRING_FREEDOS_DEV                 800

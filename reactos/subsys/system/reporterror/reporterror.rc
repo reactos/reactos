@@ -1,4 +1,4 @@
-#include <defines.h>
+#include <windows.h>
 #include "reporterror.h"
 
 #define REACTOS_STR_FILE_DESCRIPTION	"ReactOS Error Reporting Assistant\0"

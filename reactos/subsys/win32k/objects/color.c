@@ -88,7 +88,7 @@ BOOL STDCALL NtGdiAnimatePalette(HPALETTE hPal, UINT StartIndex,
         pal_entries = palPtr->NumColors;
         if (StartIndex >= pal_entries)
         {
-          PALETTE_UnlockPalette(hPal);
+          PALETTE_UnlockPalette(palPtr);
           return FALSE;
         }
         if (StartIndex+NumEntries > pal_entries) NumEntries = pal_entries - StartIndex;
@@ -102,7 +102,7 @@ BOOL STDCALL NtGdiAnimatePalette(HPALETTE hPal, UINT StartIndex,
           }
         }
  
-        PALETTE_UnlockPalette(hPal);
+        PALETTE_UnlockPalette(palPtr);
  
         /* Immediately apply the new palette if current window uses it */		
 		hHwd = NtUserGetDesktopWindow();
@@ -112,11 +112,11 @@ BOOL STDCALL NtGdiAnimatePalette(HPALETTE hPal, UINT StartIndex,
         {
           if (dc->w.hPalette == hPal)
           {
-            DC_UnlockDc(hDC);
+            DC_UnlockDc(dc);
             NtGdiRealizePalette(hDC);
           }
           else
-            DC_UnlockDc(hDC);
+            DC_UnlockDc(dc);
         }		
 		NtUserReleaseDC(hHwd,hDC);   
     }
@@ -176,7 +176,7 @@ HPALETTE STDCALL NtGdiCreatePalette(CONST PLOGPALETTE palette)
   PALETTE_ValidateFlags(PalGDI->IndexedColors, PalGDI->NumColors);
   PalGDI->logicalToSystem = NULL;
 
-  PALETTE_UnlockPalette(NewPalette);
+  PALETTE_UnlockPalette(PalGDI);
 
   return NewPalette;
 }
@@ -210,7 +210,7 @@ COLORREF STDCALL NtGdiGetNearestColor(HDC hDC, COLORREF Color)
       palGDI = (PPALGDI) PALETTE_LockPalette(hpal);
       if (!palGDI)
       {
-         DC_UnlockDc(hDC);
+         DC_UnlockDc(dc);
          return nearest;
       }
 
@@ -234,8 +234,8 @@ COLORREF STDCALL NtGdiGetNearestColor(HDC hDC, COLORREF Color)
               (GetBValue(Color) >> BBits) << BBits);
             break;
       }
-      PALETTE_UnlockPalette(hpal);
-      DC_UnlockDc(hDC);
+      PALETTE_UnlockPalette(palGDI);
+      DC_UnlockDc(dc);
    }
 
    return nearest;
@@ -251,7 +251,7 @@ UINT STDCALL NtGdiGetNearestPaletteIndex(HPALETTE  hpal,
     {
       /* Return closest match for the given RGB color */
       index = COLOR_PaletteLookupPixel(palGDI->IndexedColors, palGDI->NumColors, NULL, Color, FALSE);
-      PALETTE_UnlockPalette(hpal);
+      PALETTE_UnlockPalette(palGDI);
     }
 
   return index;
@@ -280,7 +280,7 @@ UINT STDCALL NtGdiGetPaletteEntries(HPALETTE  hpal,
     {
       if (numEntries <= StartIndex)
 	{
-	  PALETTE_UnlockPalette(hpal);
+	  PALETTE_UnlockPalette(palGDI);
 	  return 0;
 	}
       memcpy(pe, palGDI->IndexedColors + StartIndex, Entries * sizeof(PALETTEENTRY));
@@ -293,7 +293,7 @@ UINT STDCALL NtGdiGetPaletteEntries(HPALETTE  hpal,
 	}
     }
 
-  PALETTE_UnlockPalette(hpal);
+  PALETTE_UnlockPalette(palGDI);
   return Entries;
 }
 
@@ -411,8 +411,8 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
   // need to pass this to IntEngCreateXlate with palettes unlocked
   sysMode = sysGDI->Mode;
   palMode = palGDI->Mode;
-  PALETTE_UnlockPalette(systemPalette);
-  PALETTE_UnlockPalette(dc->w.hPalette);
+  PALETTE_UnlockPalette(sysGDI);
+  PALETTE_UnlockPalette(palGDI);
 
   // Step 3: Create the XLATEOBJ for device managed DCs
   if(dc->w.flags != DC_MEMORY)
@@ -421,7 +421,7 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
     palGDI->logicalToSystem = IntEngCreateXlate(sysMode, palMode, systemPalette, dc->w.hPalette);
   }
 
-  DC_UnlockDc(hDC);
+  DC_UnlockDc(dc);
 
   return realized;
 }
@@ -501,13 +501,13 @@ HPALETTE STDCALL NtGdiSelectPalette(HDC  hDC,
           if ((dc->w.bitsPerPixel <= 8 && PAL_INDEXED == PalGDI->Mode)
               || (8 < dc->w.bitsPerPixel && PAL_INDEXED != PalGDI->Mode))
             {
-              PALETTE_UnlockPalette(hpal);
+              PALETTE_UnlockPalette(PalGDI);
               oldPal = dc->w.hPalette;
               dc->w.hPalette = hpal;
             }
           else
             {
-              PALETTE_UnlockPalette(hpal);
+              PALETTE_UnlockPalette(PalGDI);
               oldPal = NULL;
             }
 	}
@@ -515,7 +515,7 @@ HPALETTE STDCALL NtGdiSelectPalette(HDC  hDC,
 	{
 	  oldPal = NULL;
 	}
-      DC_UnlockDc(hDC);
+      DC_UnlockDc(dc);
     }
 
   return oldPal;
@@ -542,7 +542,7 @@ UINT STDCALL NtGdiSetPaletteEntries(HPALETTE  hpal,
   numEntries = palGDI->NumColors;
   if (Start >= numEntries)
     {
-      PALETTE_UnlockPalette(hpal);
+      PALETTE_UnlockPalette(palGDI);
       return 0;
     }
   if (numEntries < Start + Entries)
@@ -553,7 +553,7 @@ UINT STDCALL NtGdiSetPaletteEntries(HPALETTE  hpal,
   PALETTE_ValidateFlags(palGDI->IndexedColors, palGDI->NumColors);
   ExFreePool(palGDI->logicalToSystem);
   palGDI->logicalToSystem = NULL;
-  PALETTE_UnlockPalette(hpal);
+  PALETTE_UnlockPalette(palGDI);
 
   return Entries;
 }

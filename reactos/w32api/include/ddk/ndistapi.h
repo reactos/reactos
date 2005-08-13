@@ -27,11 +27,11 @@
 #pragma GCC system_header
 #endif
 
+#include "ndis.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include "ndis.h"
 
 #ifndef NDIS_TAPI_CURRENT_VERSION
 #define NDIS_TAPI_CURRENT_VERSION         0x00010003

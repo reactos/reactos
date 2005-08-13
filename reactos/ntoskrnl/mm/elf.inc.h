@@ -12,6 +12,10 @@
 #error __ELF_WORD_SIZE must be defined
 #endif
 
+#ifndef MAXULONG
+#define MAXULONG ((ULONG)(~1))
+#endif
+
 #include <elf.h>
 
 /* TODO: Intsafe should be made into a library, as it's generally useful */

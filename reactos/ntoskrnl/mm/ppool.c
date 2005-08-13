@@ -45,7 +45,7 @@ static PR_POOL MmPagedPool = NULL;
 /* FUNCTIONS *****************************************************************/
 
 VOID INIT_FUNCTION
-MmInitializePagedPool()
+MmInitializePagedPool(VOID)
 {
 	/*
 	 * We are still at a high IRQL level at this point so explicitly commit

@@ -1,12 +1,9 @@
 /**/
 
-#include <stdio.h>
-#include <ddk/ntddk.h>
-#include <ntos/heap.h>
-
+#include <ntdll.h>
 #define NDEBUG
-#include <ntdll/ntdll.h>
-
+#include <debug.h>
+#include <stdio.h>
 
 /* helper function for *scanf.  Returns the value of character c in the
  * given base, or -1 if the given character is not a digit of the base.

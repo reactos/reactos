@@ -71,8 +71,7 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
    HANDLE FileHandle;
    NTSTATUS Status;
    ULONG FileAttributes, Flags = 0;
-   CSRSS_API_REQUEST Request;
-   CSRSS_API_REPLY Reply;
+   CSR_API_MESSAGE Request;
    PVOID EaBuffer = NULL;
    ULONG EaLength = 0;
 
@@ -177,19 +176,18 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
    if (0 == _wcsicmp(L"CONOUT$", lpFileName))
    {
       /* FIXME: Send required access rights to Csrss */
-      Request.Type = CSRSS_GET_OUTPUT_HANDLE;
       Status = CsrClientCallServer(&Request,
-			           &Reply,
-			           sizeof(CSRSS_API_REQUEST),
-			           sizeof(CSRSS_API_REPLY));
-      if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
+			           NULL,
+			           MAKE_CSR_API(GET_OUTPUT_HANDLE, CSR_NATIVE),
+			           sizeof(CSR_API_MESSAGE));
+      if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
       {
          SetLastErrorByStatus(Status);
 	 return INVALID_HANDLE_VALUE;
       }
       else
       {
-         return Reply.Data.GetOutputHandleReply.OutputHandle;
+         return Request.Data.GetOutputHandleRequest.OutputHandle;
       }
    }
 
@@ -197,19 +195,18 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
    if (0 == _wcsicmp(L"CONIN$", lpFileName))
    {
       /* FIXME: Send required access rights to Csrss */
-      Request.Type = CSRSS_GET_INPUT_HANDLE;
       Status = CsrClientCallServer(&Request,
-			           &Reply,
-			           sizeof(CSRSS_API_REQUEST),
-			           sizeof(CSRSS_API_REPLY));
-      if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Reply.Status))
+			           NULL,
+			           MAKE_CSR_API(GET_INPUT_HANDLE, CSR_NATIVE),
+			           sizeof(CSR_API_MESSAGE));
+      if (!NT_SUCCESS(Status) || !NT_SUCCESS(Status = Request.Status))
       {
          SetLastErrorByStatus(Status);
 	 return INVALID_HANDLE_VALUE;
       }
       else
       {
-         return Reply.Data.GetInputHandleReply.InputHandle;
+         return Request.Data.GetInputHandleRequest.InputHandle;
       }
    }
 

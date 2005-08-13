@@ -11,14 +11,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include "user32.h"
-#include <window.h>
-#include <string.h>
-#include <strpool.h>
-#include <user32/callback.h>
-#include <user32/regcontrol.h>
-#define NDEBUG
-#include <debug.h>
+#include <user32.h>
 
 BOOL ControlsInitialized = FALSE;
 

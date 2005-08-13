@@ -5,9 +5,7 @@
  * Reactos Session Manager
  *
  */
-
 #include "smss.h"
-#include <rosrtl/string.h>
 
 #define NDEBUG
 #include <debug.h>

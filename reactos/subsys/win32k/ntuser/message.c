@@ -291,6 +291,16 @@ UnpackParam(LPARAM lParamPacked, UINT Msg, WPARAM wParam, LPARAM lParam)
   return STATUS_INVALID_PARAMETER;
 }
 
+BOOL
+STDCALL
+NtUserCallMsgFilter(
+  LPMSG msg,
+  INT code)
+{
+  
+    if (HOOK_CallHooks( WH_SYSMSGFILTER, code, 0, (LPARAM)msg)) return TRUE; 
+        return HOOK_CallHooks( WH_MSGFILTER, code, 0, (LPARAM)msg);
+}
 
 LRESULT STDCALL
 NtUserDispatchMessage(PNTUSERDISPATCHMESSAGEINFO UnsafeMsgInfo)

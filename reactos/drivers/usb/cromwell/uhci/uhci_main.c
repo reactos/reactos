@@ -25,7 +25,7 @@ extern struct pci_device_id uhci_pci_ids[];
 
 
 // This should be removed, but for testing purposes it's here
-struct pci_dev *dev;
+//struct pci_dev *dev;
 //struct pci_device_id *dev_id;
 
 #define USB_UHCI_TAG TAG('u','s','b','u')
@@ -37,6 +37,8 @@ AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT pdo)
 	NTSTATUS Status;
 	WCHAR DeviceBuffer[20];
 	UNICODE_STRING DeviceName;
+	WCHAR LinkDeviceBuffer[20];
+	UNICODE_STRING LinkDeviceName;
 	POHCI_DRIVER_EXTENSION DriverExtension;
 	POHCI_DEVICE_EXTENSION DeviceExtension;
 	ULONG Size, DeviceNumber;
@@ -62,7 +64,7 @@ AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT pdo)
    
 	// Create a unicode device name
 	DeviceNumber = 0; //TODO: Allocate new device number every time
-	swprintf(DeviceBuffer, L"\\Device\\USBPDO-%lu", DeviceNumber);
+	swprintf(DeviceBuffer, L"\\Device\\USBFDO-%lu", DeviceNumber);
 	RtlInitUnicodeString(&DeviceName, DeviceBuffer);
 
 	Status = IoCreateDevice(DriverObject,
@@ -93,6 +95,16 @@ AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT pdo)
 	DeviceExtension->FunctionalDeviceObject = fdo;
 	DeviceExtension->DriverExtension = DriverExtension;
 
+	swprintf(LinkDeviceBuffer, L"\\??\\HCD%lu", DeviceNumber);
+	RtlInitUnicodeString(&LinkDeviceName, LinkDeviceBuffer);
+	Status = IoCreateSymbolicLink(&LinkDeviceName, &DeviceName);
+
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT1("IoCreateSymbolicLink call failed with status 0x%08x\n", Status);
+		return Status;
+	}
+
 	/* Get bus number from the upper level bus driver. */
 	Size = sizeof(ULONG);
 /*	Status = IoGetDeviceProperty(
@@ -112,9 +124,19 @@ AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT pdo)
 	return STATUS_SUCCESS;
 }
 
+
 VOID STDCALL 
 DriverUnload(PDRIVER_OBJECT DriverObject)
 {
+	POHCI_DEVICE_EXTENSION DeviceExtension;
+	PDEVICE_OBJECT DeviceObject;
+	struct pci_dev *dev;	
+
+	DeviceObject = DriverObject->DeviceObject;
+	DeviceExtension = (POHCI_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+	dev = DeviceExtension->pdev;
+
 	DPRINT1("DriverUnload()\n");
 
 	// Exit usb device
@@ -135,10 +157,14 @@ InitLinuxWrapper(PDEVICE_OBJECT DeviceObject)
 {
 	NTSTATUS Status;
 	POHCI_DEVICE_EXTENSION DeviceExtension = (POHCI_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+	struct pci_dev *dev;
 
 	// Fill generic linux structs
 	dev = ExAllocatePoolWithTag(PagedPool, sizeof(struct pci_dev), USB_UHCI_TAG);
-	
+
+	/* dev->data = (struct usb_hcd hcd) used in uhci-hub.c called from uhci-hcd.c */
+	DeviceExtension->pdev = dev;
+
 	init_wrapper(dev);
 	dev->irq = DeviceExtension->InterruptVector;
 	dev->dev_ext = (PVOID)DeviceExtension;

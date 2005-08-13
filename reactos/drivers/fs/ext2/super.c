@@ -10,7 +10,6 @@
 /* INCLUDES *****************************************************************/
 
 #include <ddk/ntddk.h>
-#include <rosrtl/string.h>
 
 //#define NDEBUG
 #include <debug.h>
@@ -155,7 +154,7 @@ DriverEntry(PDRIVER_OBJECT _DriverObject,
 {
    PDEVICE_OBJECT DeviceObject;
    NTSTATUS ret;
-   UNICODE_STRING DeviceName = ROS_STRING_INITIALIZER(L"\\Device\\Ext2Fsd");
+   UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\Ext2Fsd");
 
    DbgPrint("Ext2 FSD 0.0.1\n");
 

@@ -22,15 +22,6 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-/* Remove this once w32api conversion is done */
-#ifndef __USE_W32API
-#define __USE_W32API
-#define _WIN32_IE 0x600
-#define	_WIN32_WINNT 0x501
-#define	WINVER 0x501
-#define __need_offsetof
-#endif /* __USE_W32API */
-
 #include <stdarg.h>
 #include <string.h>
 #include <stdlib.h>	/* abs() */

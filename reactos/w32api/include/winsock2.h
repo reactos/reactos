@@ -96,8 +96,10 @@ if (__i == ((fd_set *)(set))->fd_count) {\
     This may cause runtime problems with W32 sockets"
 #endif /* ndef _SYS_TYPES_FD_SET */
 #if !(defined (__INSIDE_CYGWIN__) || (__INSIDE_MSYS__))
-#ifndef _TIMEVAL_DEFINED /* also in sys/time.h */
+#ifndef _TIMEVAL_DEFINED
+/* also in sys/time.h */
 #define _TIMEVAL_DEFINED
+#define _STRUCT_TIMEVAL
 struct timeval {
 	long    tv_sec;
 	long    tv_usec;
@@ -562,7 +564,10 @@ u_long PASCAL htonl(u_long);
 u_long PASCAL ntohl(u_long);
 u_short PASCAL htons(u_short);
 u_short PASCAL ntohs(u_short);
+#ifndef _SYS_SELECT_H /* Work around for Linux Compilers */ 
+#define _SYS_SELECT_H
 int PASCAL select(int nfds,fd_set*,fd_set*,fd_set*,const struct timeval*);
+#endif
 #endif /* ! (__INSIDE_CYGWIN__ || __INSIDE_MSYS__) */
 
 int PASCAL gethostname(char*,int);
@@ -665,29 +670,7 @@ typedef enum
 	GuaranteedService
 } GUARANTEE;
 
-/* TODO: FLOWSPEC and related definitions belong in qos.h */
-
-/*
-   Windows Sockets 2 Application Programming Interface,
-   revision 2.2.2 (1997) uses the type uint32 for SERVICETYPE
-   and the elements of _flowspec, but the type uint32 is not defined
-   or used anywhere else in the w32api. For now, just use
-   unsigned int, which is 32 bits on _WIN32 and _WIN64.
-*/
-
-typedef unsigned int	SERVICETYPE;
-typedef struct _flowspec
-{
-	unsigned int	TokenRate;
-	unsigned int	TokenBucketSize;
-	unsigned int	PeakBandwidth;
-	unsigned int	Latency;
-	unsigned int	DelayVariation;
-	SERVICETYPE	ServiceType;
-	unsigned int	MaxSduSize;
-	unsigned int	MinimumPolicedSize;
-   } FLOWSPEC, *PFLOWSPEC, *LPFLOWSPEC;
-
+#include <qos.h>
 typedef struct _QualityOfService
 {
 	FLOWSPEC	SendingFlowspec;

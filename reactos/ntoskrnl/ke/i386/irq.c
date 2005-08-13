@@ -278,7 +278,7 @@ KiInterruptDispatch2 (ULONG vector, KIRQL old_level)
 
   while (current != &CurrentIsr->ListHead)
     {
-      isr = CONTAINING_RECORD(current,KINTERRUPT,Entry);
+      isr = CONTAINING_RECORD(current,KINTERRUPT,InterruptListEntry);
       oldlvl = KeAcquireInterruptSpinLock(isr);
       if (isr->ServiceRoutine(isr, isr->ServiceContext))
         {
@@ -401,7 +401,7 @@ KeDumpIrqList(VOID)
 	    KiAcquireSpinLock(&IsrTable[i][j].Lock);
 
 	    current_entry = IsrTable[i][j].ListHead.Flink;
-	    current = CONTAINING_RECORD(current_entry,KINTERRUPT,Entry);
+	    current = CONTAINING_RECORD(current_entry,KINTERRUPT,InterruptListEntry);
 	    while (current_entry!=&(IsrTable[i][j].ListHead))
 	      {
 	        if (printed == FALSE)
@@ -411,7 +411,7 @@ KeDumpIrqList(VOID)
 		  }
 	        DPRINT("   Isr %x\n",current);
 	        current_entry = current_entry->Flink;
-	        current = CONTAINING_RECORD(current_entry,KINTERRUPT,Entry);
+	        current = CONTAINING_RECORD(current_entry,KINTERRUPT,InterruptListEntry);
 	      }
 	    KiReleaseSpinLock(&IsrTable[i][j].Lock);
 	  }
@@ -422,7 +422,8 @@ KeDumpIrqList(VOID)
 /*
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN 
+STDCALL
 KeConnectInterrupt(PKINTERRUPT InterruptObject)
 {
    KIRQL oldlvl,synch_oldlvl;
@@ -440,11 +441,11 @@ KeConnectInterrupt(PKINTERRUPT InterruptObject)
 
    Vector -= IRQ_BASE;
 
-   ASSERT (InterruptObject->ProcessorNumber < KeNumberProcessors);
+   ASSERT (InterruptObject->Number < KeNumberProcessors);
 
-   KeSetSystemAffinityThread(1 << InterruptObject->ProcessorNumber);
+   KeSetSystemAffinityThread(1 << InterruptObject->Number);
 
-   CurrentIsr = &IsrTable[Vector][(ULONG)InterruptObject->ProcessorNumber];
+   CurrentIsr = &IsrTable[Vector][(ULONG)InterruptObject->Number];
 
    KeRaiseIrql(VECTOR2IRQL(Vector + IRQ_BASE),&oldlvl);
    KiAcquireSpinLock(&CurrentIsr->Lock);
@@ -454,8 +455,8 @@ KeConnectInterrupt(PKINTERRUPT InterruptObject)
     */
    if (!IsListEmpty(&CurrentIsr->ListHead))
    {
-      ListHead = CONTAINING_RECORD(CurrentIsr->ListHead.Flink,KINTERRUPT,Entry);
-      if (InterruptObject->Shareable == FALSE || ListHead->Shareable==FALSE)
+      ListHead = CONTAINING_RECORD(CurrentIsr->ListHead.Flink,KINTERRUPT,InterruptListEntry);
+      if (InterruptObject->ShareVector == FALSE || ListHead->ShareVector==FALSE)
       {
          KiReleaseSpinLock(&CurrentIsr->Lock);
          KeLowerIrql(oldlvl);
@@ -468,13 +469,14 @@ KeConnectInterrupt(PKINTERRUPT InterruptObject)
 
    DPRINT("%x %x\n",CurrentIsr->ListHead.Flink, CurrentIsr->ListHead.Blink);
 
-   Result = HalEnableSystemInterrupt(Vector + IRQ_BASE, InterruptObject->Irql, InterruptObject->InterruptMode);
+   Result = HalEnableSystemInterrupt(Vector + IRQ_BASE, InterruptObject->Irql, InterruptObject->Mode);
    if (Result)
    {
-      InsertTailList(&CurrentIsr->ListHead,&InterruptObject->Entry);
-      DPRINT("%x %x\n",InterruptObject->Entry.Flink, InterruptObject->Entry.Blink);
+      InsertTailList(&CurrentIsr->ListHead,&InterruptObject->InterruptListEntry);
+      DPRINT("%x %x\n",InterruptObject->InterruptListEntry.Flink, InterruptObject->Entry.Blink);
    }
 
+   InterruptObject->Connected = TRUE;
    KeReleaseInterruptSpinLock(InterruptObject, synch_oldlvl);
 
    /*
@@ -490,78 +492,112 @@ KeConnectInterrupt(PKINTERRUPT InterruptObject)
    return Result;
 }
 
-
 /*
  * @implemented
- */
-VOID STDCALL
-KeDisconnectInterrupt(PKINTERRUPT InterruptObject)
-/*
+ *
  * FUNCTION: Releases a drivers isr
  * ARGUMENTS:
  *        InterruptObject = isr to release
  */
+BOOLEAN 
+STDCALL
+KeDisconnectInterrupt(PKINTERRUPT InterruptObject)
 {
-   KIRQL oldlvl,synch_oldlvl;
-   PISR_TABLE CurrentIsr;
+    KIRQL oldlvl,synch_oldlvl;
+    PISR_TABLE CurrentIsr;
+    BOOLEAN State;
 
-   DPRINT("KeDisconnectInterrupt\n");
+    DPRINT1("KeDisconnectInterrupt\n");
+    ASSERT (InterruptObject->Number < KeNumberProcessors);
 
-   ASSERT (InterruptObject->ProcessorNumber < KeNumberProcessors);
+    /* Set the affinity */
+    KeSetSystemAffinityThread(1 << InterruptObject->Number);
 
-   KeSetSystemAffinityThread(1 << InterruptObject->ProcessorNumber);
+    /* Get the ISR Tabe */
+    CurrentIsr = &IsrTable[InterruptObject->Vector - IRQ_BASE]
+                          [(ULONG)InterruptObject->Number];
 
-   CurrentIsr = &IsrTable[InterruptObject->Vector - IRQ_BASE][(ULONG)InterruptObject->ProcessorNumber];
+    /* Raise IRQL to required level and lock table */
+    KeRaiseIrql(VECTOR2IRQL(InterruptObject->Vector),&oldlvl);
+    KiAcquireSpinLock(&CurrentIsr->Lock);
 
-   KeRaiseIrql(VECTOR2IRQL(InterruptObject->Vector),&oldlvl);
-   KiAcquireSpinLock(&CurrentIsr->Lock);
+    /* Check if it's actually connected */
+    if ((State = InterruptObject->Connected))
+    {
+        /* Lock the Interrupt */
+        synch_oldlvl = KeAcquireInterruptSpinLock(InterruptObject);
 
-   synch_oldlvl = KeAcquireInterruptSpinLock(InterruptObject);
+        /* Remove this one, and check if all are gone */
+        RemoveEntryList(&InterruptObject->InterruptListEntry);
+        if (IsListEmpty(&CurrentIsr->ListHead))
+        {
+            /* Completely Disable the Interrupt */
+            HalDisableSystemInterrupt(InterruptObject->Vector, InterruptObject->Irql);
+        }
+        
+        /* Disconnect it */
+        InterruptObject->Connected = FALSE;
+    
+        /* Release the interrupt lock */
+        KeReleaseInterruptSpinLock(InterruptObject, synch_oldlvl);
+    }
+    /* Release the table spinlock */
+    KiReleaseSpinLock(&CurrentIsr->Lock);
+    KeLowerIrql(oldlvl);
 
-   RemoveEntryList(&InterruptObject->Entry);
-   if (IsListEmpty(&CurrentIsr->ListHead))
-   {
-      HalDisableSystemInterrupt(InterruptObject->Vector, 0);
-   }
-   KeReleaseInterruptSpinLock(InterruptObject, synch_oldlvl);
-
-   /*
-    * Release the table spinlock
-    */
-   KiReleaseSpinLock(&CurrentIsr->Lock);
-   KeLowerIrql(oldlvl);
-
-   KeRevertToUserAffinityThread();
+    /* Go back to default affinity */
+    KeRevertToUserAffinityThread();
+    
+    /* Return Old Interrupt State */
+    return State;
 }
-
 
 /*
  * @implemented
  */
 VOID
 STDCALL
-KeInitializeInterrupt(PKINTERRUPT InterruptObject,
-		      PKSERVICE_ROUTINE ServiceRoutine,
-		      PVOID ServiceContext,
-		      PKSPIN_LOCK SpinLock,
-		      ULONG Vector,
-		      KIRQL Irql,
-		      KIRQL SynchronizeIrql,
-		      KINTERRUPT_MODE InterruptMode,
-		      BOOLEAN ShareVector,
-		      CHAR ProcessorNumber,
-		      BOOLEAN FloatingSave)
+KeInitializeInterrupt(PKINTERRUPT Interrupt,
+                      PKSERVICE_ROUTINE ServiceRoutine,
+                      PVOID ServiceContext,
+                      PKSPIN_LOCK SpinLock,
+                      ULONG Vector,
+                      KIRQL Irql,
+                      KIRQL SynchronizeIrql,
+                      KINTERRUPT_MODE InterruptMode,
+                      BOOLEAN ShareVector,
+                      CHAR ProcessorNumber,
+                      BOOLEAN FloatingSave)
 {
-   InterruptObject->ServiceRoutine = ServiceRoutine;
-   InterruptObject->ServiceContext = ServiceContext;
-   InterruptObject->ActualLock = SpinLock;
-   InterruptObject->Vector = Vector;
-   InterruptObject->Irql = Irql;
-   InterruptObject->SynchLevel = SynchronizeIrql;
-   InterruptObject->InterruptMode = InterruptMode;
-   InterruptObject->Shareable = ShareVector;
-   InterruptObject->ProcessorNumber = ProcessorNumber;
-   InterruptObject->FloatingSave = FloatingSave;
+    /* Set the Interrupt Header */
+    Interrupt->Type = InterruptObject;
+    Interrupt->Size = sizeof(KINTERRUPT);
+    
+    /* Check if we got a spinlock */
+    if (SpinLock)
+    {
+        Interrupt->ActualLock = SpinLock;
+    }
+    else
+    {
+        /* This means we'll be usin the built-in one */
+        KeInitializeSpinLock(&Interrupt->SpinLock);
+        Interrupt->ActualLock = &Interrupt->SpinLock;
+    }
+    
+    /* Set the other settings */
+    Interrupt->ServiceRoutine = ServiceRoutine;
+    Interrupt->ServiceContext = ServiceContext;
+    Interrupt->Vector = Vector;
+    Interrupt->Irql = Irql;
+    Interrupt->SynchronizeIrql = SynchronizeIrql;
+    Interrupt->Mode = InterruptMode;
+    Interrupt->ShareVector = ShareVector;
+    Interrupt->Number = ProcessorNumber;
+    Interrupt->FloatingSave = FloatingSave;
+    
+    /* Disconnect it at first */
+    Interrupt->Connected = FALSE;
 }
 
 VOID KePrintInterruptStatistic(VOID)

@@ -3,6 +3,8 @@
 
 #include <roscfg.h>
 #include <windows.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 #include <winnt.h>
 #include <iprtrmib.h>
 #include <iphlpapi.h>
@@ -27,8 +29,6 @@
 #define RRF_RT_REG_SZ 2
 typedef void *VOIDPTR;
 
-#define NTOS_MODE_USER
-#include <ntos.h>
 typedef u_int32_t uintTIME;
 #define TIME uintTIME
 #include "dhcpd.h"

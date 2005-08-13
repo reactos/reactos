@@ -31,10 +31,11 @@
  * 		First standalone run under ReactOS (it
  * 		actually does nothing but running).
  */
-#include <ddk/ntddk.h>
-#include <ntdll/rtl.h>
+
+#include <windows.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 #include <csrss/csrss.h>
-#include <rosrtl/string.h>
 #include <reactos/buildno.h>
 
 #include "api.h"

@@ -26,8 +26,8 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <string.h>
+#include <ntdll.h>
+#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ***************************************************************/

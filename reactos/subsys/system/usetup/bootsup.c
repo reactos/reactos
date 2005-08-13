@@ -24,13 +24,7 @@
  * PROGRAMMER:      Eric Kohl
  */
 
-#include "precomp.h"
-#include <ntdll/rtl.h>
-
 #include "usetup.h"
-#include "inicache.h"
-#include "filesup.h"
-#include "bootsup.h"
 
 #define NDEBUG
 #include <debug.h>

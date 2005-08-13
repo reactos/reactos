@@ -268,7 +268,7 @@ GetModuleFileNameA (
 	ANSI_STRING FileName;
 	PLIST_ENTRY ModuleListHead;
 	PLIST_ENTRY Entry;
-	PLDR_MODULE Module;
+	PLDR_DATA_TABLE_ENTRY Module;
 	PPEB Peb;
 	ULONG Length = 0;
 
@@ -283,8 +283,8 @@ GetModuleFileNameA (
 
 	while (Entry != ModuleListHead)
 	{
-		Module = CONTAINING_RECORD(Entry, LDR_MODULE, InLoadOrderModuleList);
-		if (Module->BaseAddress == (PVOID)hModule)
+		Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
+		if (Module->DllBase == (PVOID)hModule)
 		{
 			if (nSize * sizeof(WCHAR) < Module->FullDllName.Length)
 			{
@@ -336,7 +336,7 @@ GetModuleFileNameW (
 	UNICODE_STRING FileName;
 	PLIST_ENTRY ModuleListHead;
 	PLIST_ENTRY Entry;
-	PLDR_MODULE Module;
+	PLDR_DATA_TABLE_ENTRY Module;
 	PPEB Peb;
 	ULONG Length = 0;
 
@@ -350,9 +350,9 @@ GetModuleFileNameW (
 	Entry = ModuleListHead->Flink;
 	while (Entry != ModuleListHead)
 	{
-		Module = CONTAINING_RECORD(Entry, LDR_MODULE, InLoadOrderModuleList);
+		Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
 
-		if (Module->BaseAddress == (PVOID)hModule)
+		if (Module->DllBase == (PVOID)hModule)
 		{
 			if (nSize * sizeof(WCHAR) < Module->FullDllName.Length)
 			{

@@ -132,20 +132,6 @@ typedef struct _CPU_REGISTER
 
 #define EIP_REGNO 8
 
-typedef
-VOID
-STDCALL_FUNC
-(*PKSYSTEM_ROUTINE)(PKSTART_ROUTINE StartRoutine,
-                    PVOID StartContext);
-
-VOID
-STDCALL
-KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
-                PKSTART_ROUTINE StartRoutine,
-                PVOID StartContext,
-                BOOLEAN UserThread,
-                KTRAP_FRAME TrapFrame);
-
 static CPU_REGISTER GspRegisters[NUMREGS] =
 {
   { 4, FIELD_OFFSET (KTRAP_FRAME_X86, Eax), FIELD_OFFSET (CONTEXT, Eax), TRUE },

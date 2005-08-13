@@ -37,8 +37,6 @@ extern "C" {
 
 #pragma pack(push,4)
 
-#include "ntddk.h"
-
 #if defined(_BATTERYCLASS_)
   #define USBCAMAPI DECLSPEC_EXPORT
 #else

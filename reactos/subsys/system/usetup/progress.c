@@ -1,12 +1,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#include "precomp.h"
-#include <ntdll/rtl.h>
-
 #include "usetup.h"
-#include "progress.h"
-#include "console.h"
+
+#define NDEBUG
+#include <debug.h>
 
 /* FUNCTIONS ****************************************************************/
 

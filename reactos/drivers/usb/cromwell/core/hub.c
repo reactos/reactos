@@ -67,7 +67,7 @@ static inline char *portspeed (int portstatus)
 /* for dev_info, dev_dbg, etc */
 static inline struct device *hubdev (struct usb_device *dev)
 {
-	return &dev->actconfig->pinterface [0].dev;
+	return &dev->actconfig->interface [0].dev;
 }
 
 /* USB 2.0 spec Section 11.24.4.5 */
@@ -700,7 +700,7 @@ static void hub_start_disconnect(struct usb_device *dev)
 static int hub_port_status(struct usb_device *dev, int port,
 			       u16 *status, u16 *change)
 {
-	struct usb_hub *hub = usb_get_intfdata (dev->actconfig->pinterface);
+	struct usb_hub *hub = usb_get_intfdata (dev->actconfig->interface);
 	int ret;
 
 	ret = get_port_status(dev, port + 1, &hub->status->port);
@@ -1019,6 +1019,7 @@ static void hub_events(void)
 	 * safe since we delete the hub from the event list.
 	 * Not the most efficient, but avoids deadlocks.
 	 */
+	//DPRINT1("hub_events() called\n");
 
 	while (m<5) {
 		m++;
@@ -1138,7 +1139,8 @@ static void hub_events(void)
 	spin_unlock_irqrestore(&hub_event_lock, flags);
 }
 
-static int hub_thread(void *__hub)
+// ReactOS: STDCALL is needed here
+static int STDCALL hub_thread(void *__hub)
 {
 	/*
 	 * This thread doesn't need any user-level access,
@@ -1149,14 +1151,25 @@ static int hub_thread(void *__hub)
 	allow_signal(SIGKILL);
 	/* Send me a signal to get me die (for debugging) */
 	do {
-		
+
+		/* The following is just for debug */
+		inc_jiffies(1);
+        do_all_timers();
+        handle_irqs(-1);
+		/* End of debug hack*/
+
 		hub_events();
+
+		/* The following is just for debug */
+        handle_irqs(-1);
+		/* End of debug hack*/
+
 
 		//FIXME: Correct this
 		//wait_event_interruptible(khubd_wait, !list_empty(&hub_event_list)); // interruptable_sleep_on analog - below
-		while (!list_empty(&hub_event_list)) {
-			interruptible_sleep_on(&khubd_wait);
-		}
+		//while (!list_empty(&hub_event_list)) {
+		//	interruptible_sleep_on(&khubd_wait);
+		//}
 
 		if (current->flags & PF_FREEZE)
 			refrigerator(PF_IOTHREAD);
@@ -1364,7 +1377,7 @@ int usb_physical_reset_device(struct usb_device *dev)
 	}
 
 	for (i = 0; i < dev->actconfig->desc.bNumInterfaces; i++) {
-		struct usb_interface *intf = &dev->actconfig->pinterface[i];
+		struct usb_interface *intf = &dev->actconfig->interface[i];
 		struct usb_interface_descriptor *as;
 
 		as = &intf->altsetting[intf->act_altsetting].desc;

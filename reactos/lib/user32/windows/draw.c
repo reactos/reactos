@@ -28,17 +28,7 @@
 
 /* INCLUDES *******************************************************************/
 
-#ifndef __USE_W32API
-#define __USE_W32API
-#define _WIN32_WINNT 0x0500
-#define WINVER 0x0500
-#endif
-
-#include <windows.h>
-#include <string.h>
-#include <wine/unicode.h>
 #include <user32.h>
-#include <debug.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -1388,7 +1378,7 @@ IntGrayString(
         if (unicode)
             nCount = lstrlenW((WCHAR*)lpData);
         else
-            nCount = strlen((CHAR*)lpData);
+            nCount = lstrlenA((CHAR*)lpData);
     }
 
     if (! nWidth || ! nHeight)
@@ -1545,9 +1535,9 @@ IntDrawState(HDC hdc, HBRUSH hbr, DRAWSTATEPROC func, LPARAM lp, WPARAM wp,
     if((opcode == DST_TEXT || opcode == DST_PREFIXTEXT) && !len)    /* The string is '\0' terminated */
     {
         if(unicode)
-            len = strlenW((LPWSTR)lp);
+            len = lstrlenW((LPWSTR)lp);
         else
-            len = strlen((LPSTR)lp);
+            len = lstrlenA((LPSTR)lp);
     }
 
     /* Find out what size the image has if not given by caller */

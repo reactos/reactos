@@ -42,6 +42,10 @@
  * John Polstra <jdp@polstra.com>.
  */
 
+#include <ntdll.h>
+#define NDEBUG
+#include <debug.h>
+
 #if 0
 
 #ifndef __GNUC__

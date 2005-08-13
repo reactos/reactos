@@ -12,9 +12,6 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_PO_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_PO_H
 
-#include <ddk/ntddk.h>
-#include <internal/io.h>
-
 extern PDEVICE_NODE PopSystemPowerDeviceNode;
 
 VOID

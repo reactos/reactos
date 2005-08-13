@@ -31,10 +31,6 @@
 #pragma GCC system_header
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <stdarg.h>
 #include <windef.h>
 #include <ntdef.h>
@@ -54,11 +50,11 @@ typedef CONST char *PCSZ;
 #endif
 
 #ifndef DECL_IMPORT
-#define DECL_IMPORT __attribute__((dllimport))
+#define DECL_IMPORT __declspec(dllimport)
 #endif
 
 #ifndef DECL_EXPORT
-#define DECL_EXPORT __attribute__((dllexport))
+#define DECL_EXPORT __declspec(dllexport)
 #endif
 
 /* Windows NT status codes */
@@ -78,9 +74,5 @@ typedef CONST char *PCSZ;
 
 /* Definitions only in Windows NT 4 */
 #include "winnt4.h"
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* __NTDDK_H */

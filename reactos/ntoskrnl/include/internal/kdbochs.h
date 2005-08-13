@@ -6,13 +6,12 @@
 #ifndef __INCLUDE_INTERNAL_KD_BOCHS_H
 #define __INCLUDE_INTERNAL_KD_BOCHS_H
 
-#include <internal/ke.h>
-#include <internal/ldr.h>
-#include <ntdll/ldr.h>
-
 VOID
 STDCALL
 KdpBochsInit(struct _KD_DISPATCH_TABLE *DispatchTable,
              ULONG BootPhase);
+VOID
+STDCALL
+KdpBochsDebugPrint(IN PCH Message);
 
 #endif /* __INCLUDE_INTERNAL_KD_BOCHS_H */

@@ -6,14 +6,10 @@
  * PROGRAMMERS: Hartmut Birr
  * REVISIONS:
  */
-#define NDEBUG
-#include <debug.h>
-#define NTOS_MODE_USER
-#include <ntos.h>
-#include <ddk/ntddscsi.h>
-#include <mem.h>
 #include "vfatxlib.h"
 
+#define NDEBUG
+#include <debug.h>
 
 static ULONG
 GetShiftCount(ULONG Value)

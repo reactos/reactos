@@ -14,9 +14,6 @@
 #define NDEBUG
 #include "../include/debug.h"
 
-/* stolen from include/ntos/synch.h */
-#define EVENT_QUERY_STATE (1)
-
 /* FUNCTIONS *****************************************************************/
 
 /*

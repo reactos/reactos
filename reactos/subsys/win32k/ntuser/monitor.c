@@ -506,7 +506,7 @@ NtUserEnumDisplayMonitors(
 			return -1;
 		}
 		dcVisRgn = dc->w.hVisRgn;
-		DC_UnlockDc(hDC);
+		DC_UnlockDc(dc);
 
 		regionType = NtGdiGetRgnBox(dcVisRgn, &dcRect);
 		if (regionType == 0)
