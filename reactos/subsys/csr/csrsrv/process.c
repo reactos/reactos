@@ -68,7 +68,7 @@ NTSTATUS STDCALL CsrCreateProcess (PCSR_SESSION pCsrSession, PCSR_PROCESS * ppCs
 	{
 		Status = STATUS_NO_MEMORY;
 	} else {
-		pCsrProcess->CsrSession = pCsrSession;
+		pCsrProcess->NtSession = pCsrSession;
 		if (NULL != ppCsrProcess)
 		{
 			*ppCsrProcess = pCsrProcess;

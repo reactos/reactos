@@ -53,7 +53,7 @@ NTSTATUS STDCALL CsrCreateThread (PCSR_PROCESS pCsrProcess, PCSR_THREAD *ppCsrTh
 	{
 		return STATUS_INVALID_PARAMETER;
 	}
-	pCsrSession = pCsrProcess->CsrSession;
+	pCsrSession = pCsrProcess->NtSession;
 	pCsrThread = RtlAllocateHeap (pCsrSession->Heap,
 					HEAP_ZERO_MEMORY,
 					sizeof (CSR_THREAD));
@@ -62,8 +62,7 @@ NTSTATUS STDCALL CsrCreateThread (PCSR_PROCESS pCsrProcess, PCSR_THREAD *ppCsrTh
 		DPRINT1("CSRSRV:%s: out of memory!\n", __FUNCTION__);
 		return STATUS_NO_MEMORY;
 	}
-	pCsrThread->CsrSession = pCsrSession;
-	pCsrThread->CsrProcess = pCsrProcess;	
+	pCsrThread->Process = pCsrProcess;	
 	return Status;
 }
 
