@@ -85,5 +85,9 @@ CFG=make_winefile - Win32 Debug
 
 SOURCE=.\Makefile.MinGW
 # End Source File
+# Begin Source File
+
+SOURCE=.\winefile.xml
+# End Source File
 # End Target
 # End Project
