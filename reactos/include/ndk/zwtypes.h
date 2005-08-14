@@ -39,7 +39,7 @@
 
 /* ENUMERATIONS **************************************************************/
 
-typedef enum _HARDERROR_RESPONSE_OPTION 
+typedef enum _HARDERROR_RESPONSE_OPTION
 {
     OptionAbortRetryIgnore,
     OptionOk,
@@ -50,7 +50,7 @@ typedef enum _HARDERROR_RESPONSE_OPTION
     OptionShutdownSystem
 } HARDERROR_RESPONSE_OPTION, *PHARDERROR_RESPONSE_OPTION;
 
-typedef enum _HARDERROR_RESPONSE 
+typedef enum _HARDERROR_RESPONSE
 {
     ResponseReturnToCaller,
     ResponseNotHandled,
@@ -63,7 +63,7 @@ typedef enum _HARDERROR_RESPONSE
     ResponseYes
 } HARDERROR_RESPONSE, *PHARDERROR_RESPONSE;
 
-typedef enum SHUTDOWN_ACTION_TAG 
+typedef enum SHUTDOWN_ACTION_TAG
 {
     ShutdownNoReboot,
     ShutdownReboot,
@@ -77,13 +77,13 @@ typedef enum _PLUGPLAY_BUS_CLASS
     MaxPlugPlayBusClass
 } PLUGPLAY_BUS_CLASS, *PPLUGPLAY_BUS_CLASS;
 
-typedef enum _PLUGPLAY_VIRTUAL_BUS_TYPE 
+typedef enum _PLUGPLAY_VIRTUAL_BUS_TYPE
 {
     Root,
     MaxPlugPlayVirtualBusType
 } PLUGPLAY_VIRTUAL_BUS_TYPE, *PPLUGPLAY_VIRTUAL_BUS_TYPE;
 
-typedef enum _SYSTEM_DOCK_STATE 
+typedef enum _SYSTEM_DOCK_STATE
 {
     SystemDockStateUnknown,
     SystemUndocked,
@@ -95,21 +95,19 @@ typedef enum _SYSTEM_DOCK_STATE
 /*
  * Process (extra ones not defined in DDK)
  */
-/* FIXME: Temporary hack until all KMODE stuf are NDK */
-#ifndef __WINDDK_H
 typedef enum _PROCESS_INFORMATION_FLAGS
-{    
+{
     ProcessUnknown33 = 33,
     ProcessUnknown34,
     ProcessUnknown35,
-    ProcessCookie
+    ProcessCookie,
+    MaximumProcessInformationClass
 } PROCESS_INFORMATION_FLAGS;
-#endif
 
 /*
  * System
  */
-typedef enum _SYSTEM_INFORMATION_CLASS 
+typedef enum _SYSTEM_INFORMATION_CLASS
 {
     SystemBasicInformation,
     SystemProcessorInformation,
@@ -171,7 +169,7 @@ typedef enum _SYSTEM_INFORMATION_CLASS
 /*
  * Object
  */
-typedef enum _OBJECT_INFORMATION_CLASS 
+typedef enum _OBJECT_INFORMATION_CLASS
 {
     ObjectBasicInformation,
     ObjectNameInformation,
@@ -183,7 +181,7 @@ typedef enum _OBJECT_INFORMATION_CLASS
 /*
  * Memory
  */
-typedef enum _MEMORY_INFORMATION_CLASS 
+typedef enum _MEMORY_INFORMATION_CLASS
 {
     MemoryBasicInformation,
     MemoryWorkingSetList,
@@ -194,7 +192,7 @@ typedef enum _MEMORY_INFORMATION_CLASS
 /*
  * Mutant
  */
-typedef enum _MUTANT_INFORMATION_CLASS 
+typedef enum _MUTANT_INFORMATION_CLASS
 {
     MutantBasicInformation
 } MUTANT_INFORMATION_CLASS;
@@ -211,7 +209,7 @@ typedef enum _ATOM_INFORMATION_CLASS
 /*
  * Section
  */
-typedef enum _SECTION_INFORMATION_CLASS 
+typedef enum _SECTION_INFORMATION_CLASS
 {
     SectionBasicInformation,
     SectionImageInformation,
@@ -227,7 +225,7 @@ typedef enum _TIMER_INFORMATION_CLASS {
 /*
  * Semaphore
  */
-typedef enum _SEMAPHORE_INFORMATION_CLASS 
+typedef enum _SEMAPHORE_INFORMATION_CLASS
 {
     SemaphoreBasicInformation
 } SEMAPHORE_INFORMATION_CLASS;
@@ -235,7 +233,7 @@ typedef enum _SEMAPHORE_INFORMATION_CLASS
 /*
  * Event
  */
-typedef enum _EVENT_INFORMATION_CLASS 
+typedef enum _EVENT_INFORMATION_CLASS
 {
     EventBasicInformation
 } EVENT_INFORMATION_CLASS;
@@ -243,7 +241,7 @@ typedef enum _EVENT_INFORMATION_CLASS
 /*
  * I/O Completion
  */
-typedef enum _IO_COMPLETION_INFORMATION_CLASS 
+typedef enum _IO_COMPLETION_INFORMATION_CLASS
 {
     IoCompletionBasicInformation
 } IO_COMPLETION_INFORMATION_CLASS;
@@ -260,7 +258,7 @@ struct _PLUGPLAY_EVENT_BLOCK; /* FIXME: Ask Filip if it's OK to define it */
  */
 
 /* Class 0 */
-typedef struct _MUTANT_BASIC_INFORMATION 
+typedef struct _MUTANT_BASIC_INFORMATION
 {
     LONG CurrentCount;
     BOOLEAN OwnedByCaller;
@@ -295,7 +293,7 @@ typedef struct _ATOM_BASIC_INFORMATION {
 } ATOM_BASIC_INFORMATION, *PATOM_BASIC_INFORMATION;
 
 /* Class 1 */
-typedef struct _ATOM_TABLE_INFORMATION 
+typedef struct _ATOM_TABLE_INFORMATION
 {
     ULONG NumberOfAtoms;
     USHORT Atoms[1];
@@ -313,26 +311,27 @@ typedef struct _OBJECT_DIRECTORY_INFORMATION
 /*
  * Memory
  */
- 
+
  /* Class 1 */
-typedef struct _MEMORY_WORKING_SET_LIST 
+typedef struct _MEMORY_WORKING_SET_LIST
 {
     ULONG NumberOfPages;
     ULONG WorkingSetList[1];
 } MEMORY_WORKING_SET_LIST, *PMEMORY_WORKING_SET_LIST;
 
 /* Class 2 */
-typedef struct {
+typedef struct
+{
     UNICODE_STRING SectionFileName;
     WCHAR          NameBuffer[ANYSIZE_ARRAY];
 } MEMORY_SECTION_NAME, *PMEMORY_SECTION_NAME;
- 
+
 /*
  * Section
  */
 
 /* Class 0 */
-typedef struct _SECTION_BASIC_INFORMATION 
+typedef struct _SECTION_BASIC_INFORMATION
 {
     PVOID           BaseAddress;
     ULONG           Attributes;
@@ -340,7 +339,7 @@ typedef struct _SECTION_BASIC_INFORMATION
 } SECTION_BASIC_INFORMATION, *PSECTION_BASIC_INFORMATION;
 
 /* Class 1 */
-typedef struct _SECTION_IMAGE_INFORMATION 
+typedef struct _SECTION_IMAGE_INFORMATION
 {
     ULONG     EntryPoint;
     ULONG     Unknown1;
@@ -358,11 +357,11 @@ typedef struct _SECTION_IMAGE_INFORMATION
 } SECTION_IMAGE_INFORMATION, *PSECTION_IMAGE_INFORMATION;
 
 /*
- * Object 
+ * Object
  */
 
 /* Class 4 */
-typedef struct _OBJECT_HANDLE_ATTRIBUTE_INFORMATION 
+typedef struct _OBJECT_HANDLE_ATTRIBUTE_INFORMATION
 {
     BOOLEAN Inherit;
     BOOLEAN ProtectFromClose;
@@ -373,7 +372,7 @@ typedef struct _OBJECT_HANDLE_ATTRIBUTE_INFORMATION
  */
 
 /* Class 0 */
-typedef struct _TIMER_BASIC_INFORMATION 
+typedef struct _TIMER_BASIC_INFORMATION
 {
     LARGE_INTEGER TimeRemaining;
     BOOLEAN SignalState;
@@ -384,7 +383,8 @@ typedef struct _TIMER_BASIC_INFORMATION
  */
 
 /* Class 0 */
-typedef struct _SEMAPHORE_BASIC_INFORMATION {
+typedef struct _SEMAPHORE_BASIC_INFORMATION
+{
     LONG CurrentCount;
     LONG MaximumCount;
 } SEMAPHORE_BASIC_INFORMATION, *PSEMAPHORE_BASIC_INFORMATION;
@@ -393,7 +393,7 @@ typedef struct _SEMAPHORE_BASIC_INFORMATION {
  * Event
  */
 /* Class 0 */
-typedef struct _EVENT_BASIC_INFORMATION 
+typedef struct _EVENT_BASIC_INFORMATION
 {
     EVENT_TYPE EventType;
     LONG EventState;
@@ -441,13 +441,13 @@ typedef struct _PROCESS_PRIORITY_CLASS
 /* Class 23 */
 typedef struct _PROCESS_DEVICEMAP_INFORMATION
 {
-    union 
+    union
     {
-        struct 
+        struct
         {
             HANDLE DirectoryHandle;
         } Set;
-        struct 
+        struct
         {
             ULONG DriveMap;
             UCHAR DriveType[32];
@@ -492,7 +492,7 @@ typedef struct _SYSTEM_PROCESSOR_INFORMATION
 } SYSTEM_PROCESSOR_INFORMATION, *PSYSTEM_PROCESSOR_INFORMATION;
 
 /* Class 2 */
-typedef struct _SYSTEM_PERFORMANCE_INFORMATION 
+typedef struct _SYSTEM_PERFORMANCE_INFORMATION
 {
     LARGE_INTEGER IdleProcessTime;
     LARGE_INTEGER IoReadTransferCount;
@@ -584,7 +584,7 @@ typedef struct _SYSTEM_TIMEOFDAY_INFORMATION
 /* This class is obsoleted, please use KUSER_SHARED_DATA instead */
 
 /* Class 5 */
-typedef struct _SYSTEM_THREAD_INFORMATION 
+typedef struct _SYSTEM_THREAD_INFORMATION
 {
     LARGE_INTEGER KernelTime;
     LARGE_INTEGER UserTime;
@@ -598,6 +598,7 @@ typedef struct _SYSTEM_THREAD_INFORMATION
     ULONG ThreadState;
     ULONG WaitReason;
 } SYSTEM_THREAD_INFORMATION, *PSYSTEM_THREAD_INFORMATION;
+
 typedef struct _SYSTEM_PROCESS_INFORMATION
 {
     ULONG NextEntryOffset;
@@ -615,9 +616,9 @@ typedef struct _SYSTEM_PROCESS_INFORMATION
     ULONG HandleCount;
     ULONG SessionId;
     ULONG PageDirectoryFrame;
-    
-    /* 
-     * This part corresponds to VM_COUNTERS_EX. 
+
+    /*
+     * This part corresponds to VM_COUNTERS_EX.
      * NOTE: *NOT* THE SAME AS VM_COUNTERS!
      */
     ULONG PeakVirtualSize;
@@ -632,7 +633,7 @@ typedef struct _SYSTEM_PROCESS_INFORMATION
     ULONG PagefileUsage;
     ULONG PeakPagefileUsage;
     ULONG PrivateUsage;
-    
+
     /* This part corresponds to IO_COUNTERS */
     LARGE_INTEGER ReadOperationCount;
     LARGE_INTEGER WriteOperationCount;
@@ -640,17 +641,17 @@ typedef struct _SYSTEM_PROCESS_INFORMATION
     LARGE_INTEGER ReadTransferCount;
     LARGE_INTEGER WriteTransferCount;
     LARGE_INTEGER OtherTransferCount;
-    
+
     /* Finally, the array of Threads */
     SYSTEM_THREAD_INFORMATION TH[1];
 } SYSTEM_PROCESS_INFORMATION, *PSYSTEM_PROCESS_INFORMATION;
 
 /* Class 6 */
-typedef struct _SYSTEM_CALL_COUNT_INFORMATION 
+typedef struct _SYSTEM_CALL_COUNT_INFORMATION
 {
     ULONG Length;
     ULONG NumberOfTables;
-} SYSTEM_CALL_COUNT_INFORMATION, *PSYSTEM_CALL_COUNT_INFORMATION; 
+} SYSTEM_CALL_COUNT_INFORMATION, *PSYSTEM_CALL_COUNT_INFORMATION;
 
 /* Class 7 */
 typedef struct _SYSTEM_DEVICE_INFORMATION
@@ -664,7 +665,7 @@ typedef struct _SYSTEM_DEVICE_INFORMATION
 } SYSTEM_DEVICE_INFORMATION, *PSYSTEM_DEVICE_INFORMATION;
 
 /* Class 8 */
-typedef struct _SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION 
+typedef struct _SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION
 {
     LARGE_INTEGER IdleTime;
     LARGE_INTEGER KernelTime;
@@ -675,13 +676,13 @@ typedef struct _SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION
 } SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION, *PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION;
 
 /* Class 9 */
-typedef struct _SYSTEM_FLAGS_INFORMATION 
+typedef struct _SYSTEM_FLAGS_INFORMATION
 {
     ULONG Flags;
 } SYSTEM_FLAGS_INFORMATION, *PSYSTEM_FLAGS_INFORMATION;
 
 /* Class 10 */
-typedef struct _SYSTEM_CALL_TIME_INFORMATION 
+typedef struct _SYSTEM_CALL_TIME_INFORMATION
 {
     ULONG Length;
     ULONG TotalCalls;
@@ -689,7 +690,7 @@ typedef struct _SYSTEM_CALL_TIME_INFORMATION
 } SYSTEM_CALL_TIME_INFORMATION, *PSYSTEM_CALL_TIME_INFORMATION;
 
 /* Class 11 */
-typedef struct _SYSTEM_MODULE_INFORMATION_ENTRY 
+typedef struct _SYSTEM_MODULE_INFORMATION_ENTRY
 {
     ULONG  Unknown1;
     ULONG  Unknown2;
@@ -702,14 +703,14 @@ typedef struct _SYSTEM_MODULE_INFORMATION_ENTRY
     USHORT  PathLength;
     CHAR  ImageName[256];
 } SYSTEM_MODULE_INFORMATION_ENTRY, *PSYSTEM_MODULE_INFORMATION_ENTRY;
-typedef struct _SYSTEM_MODULE_INFORMATION 
+typedef struct _SYSTEM_MODULE_INFORMATION
 {
     ULONG Count;
     SYSTEM_MODULE_INFORMATION_ENTRY Module[1];
 } SYSTEM_MODULE_INFORMATION, *PSYSTEM_MODULE_INFORMATION;
 
 /* Class 12 */
-typedef struct _SYSTEM_RESOURCE_LOCK_ENTRY 
+typedef struct _SYSTEM_RESOURCE_LOCK_ENTRY
 {
     ULONG  ResourceAddress;
     ULONG  Always1;
@@ -720,7 +721,8 @@ typedef struct _SYSTEM_RESOURCE_LOCK_ENTRY
     ULONG  NumberOfSharedWaiters;
     ULONG  NumberOfExclusiveWaiters;
 } SYSTEM_RESOURCE_LOCK_ENTRY, *PSYSTEM_RESOURCE_LOCK_ENTRY;
-typedef struct _SYSTEM_RESOURCE_LOCK_INFO 
+
+typedef struct _SYSTEM_RESOURCE_LOCK_INFO
 {
     ULONG Count;
     SYSTEM_RESOURCE_LOCK_ENTRY Lock[1];
@@ -731,6 +733,7 @@ typedef struct _SYSTEM_BACKTRACE_INFORMATION_ENTRY
 {
     /* FIXME */
 } SYSTEM_BACKTRACE_INFORMATION_ENTRY, *PSYSTEM_BACKTRACE_INFORMATION_ENTRY;
+
 typedef struct _SYSTEM_BACKTRACE_INFORMATION
 {
     /* FIXME */
@@ -740,19 +743,21 @@ typedef struct _SYSTEM_BACKTRACE_INFORMATION
 } SYSTEM_BACKTRACE_INFORMATION, *PSYSTEM_BACKTRACE_INFORMATION;
 
 /* Class 14 - 15 */
-typedef struct _SYSTEM_POOL_ENTRY 
+typedef struct _SYSTEM_POOL_ENTRY
 {
     BOOLEAN Allocated;
     BOOLEAN Spare0;
     USHORT AllocatorBackTraceIndex;
     ULONG Size;
-    union {
+    union
+    {
         UCHAR Tag[4];
         ULONG TagUlong;
         PVOID ProcessChargedQuota;
     };
 } SYSTEM_POOL_ENTRY, *PSYSTEM_POOL_ENTRY;
-typedef struct _SYSTEM_POOL_INFORMATION 
+
+typedef struct _SYSTEM_POOL_INFORMATION
 {
     ULONG TotalSize;
     PVOID FirstEntry;
@@ -764,7 +769,7 @@ typedef struct _SYSTEM_POOL_INFORMATION
 } SYSTEM_POOL_INFORMATION, *PSYSTEM_POOL_INFORMATION;
 
 /* Class 16 */
-typedef struct _SYSTEM_HANDLE_TABLE_ENTRY_INFO 
+typedef struct _SYSTEM_HANDLE_TABLE_ENTRY_INFO
 {
     USHORT UniqueProcessId;
     USHORT CreatorBackTraceIndex;
@@ -773,15 +778,16 @@ typedef struct _SYSTEM_HANDLE_TABLE_ENTRY_INFO
     USHORT HandleValue;
     PVOID Object;
     ULONG GrantedAccess;
-} SYSTEM_HANDLE_TABLE_ENTRY_INFO, *PSYSTEM_HANDLE_TABLE_ENTRY_INFO; 
-typedef struct _SYSTEM_HANDLE_INFORMATION 
+} SYSTEM_HANDLE_TABLE_ENTRY_INFO, *PSYSTEM_HANDLE_TABLE_ENTRY_INFO;
+
+typedef struct _SYSTEM_HANDLE_INFORMATION
 {
     ULONG NumberOfHandles;
     SYSTEM_HANDLE_TABLE_ENTRY_INFO Handles[1];
 } SYSTEM_HANDLE_INFORMATION, *PSYSTEM_HANDLE_INFORMATION;
 
 /* Class 17 */
-typedef struct _SYSTEM_OBJECTTYPE_INFORMATION 
+typedef struct _SYSTEM_OBJECTTYPE_INFORMATION
 {
     ULONG NextEntryOffset;
     ULONG NumberOfObjects;
@@ -794,8 +800,9 @@ typedef struct _SYSTEM_OBJECTTYPE_INFORMATION
     BOOLEAN SecurityRequired;
     BOOLEAN WaitableObject;
     UNICODE_STRING TypeName;
-} SYSTEM_OBJECTTYPE_INFORMATION, *PSYSTEM_OBJECTTYPE_INFORMATION; 
-typedef struct _SYSTEM_OBJECT_INFORMATION 
+} SYSTEM_OBJECTTYPE_INFORMATION, *PSYSTEM_OBJECTTYPE_INFORMATION;
+
+typedef struct _SYSTEM_OBJECT_INFORMATION
 {
     ULONG NextEntryOffset;
     PVOID Object;
@@ -812,7 +819,7 @@ typedef struct _SYSTEM_OBJECT_INFORMATION
 } SYSTEM_OBJECT_INFORMATION, *PSYSTEM_OBJECT_INFORMATION;
 
 /* Class 18 */
-typedef struct _SYSTEM_PAGEFILE_INFORMATION 
+typedef struct _SYSTEM_PAGEFILE_INFORMATION
 {
     ULONG NextEntryOffset;
     ULONG TotalSize;
@@ -822,7 +829,7 @@ typedef struct _SYSTEM_PAGEFILE_INFORMATION
 } SYSTEM_PAGEFILE_INFORMATION, *PSYSTEM_PAGEFILE_INFORMATION;
 
 /* Class 19 */
-typedef struct _SYSTEM_VDM_INSTEMUL_INFO 
+typedef struct _SYSTEM_VDM_INSTEMUL_INFO
 {
     ULONG SegmentNotPresent;
     ULONG VdmOpcode0F;
@@ -861,14 +868,14 @@ typedef struct _SYSTEM_VDM_INSTEMUL_INFO
 } SYSTEM_VDM_INSTEMUL_INFO, *PSYSTEM_VDM_INSTEMUL_INFO;
 
 /* Class 20 */
-typedef struct _SYSTEM_VDM_BOP_INFO 
+typedef struct _SYSTEM_VDM_BOP_INFO
 {
     /* FIXME */
     PVOID Dummy;
 } SYSTEM_VDM_BOP_INFO, *PSYSTEM_VDM_BOP_INFO;
 
 /* Class 21 */
-typedef struct _SYSTEM_CACHE_INFORMATION 
+typedef struct _SYSTEM_CACHE_INFORMATION
 {
     ULONG CurrentSize;
     ULONG PeakSize;
@@ -881,9 +888,9 @@ typedef struct _SYSTEM_CACHE_INFORMATION
 } SYSTEM_CACHE_INFORMATION, *PSYSTEM_CACHE_INFORMATION;
 
 /* Class 22 */
-typedef struct _SYSTEM_POOLTAG 
+typedef struct _SYSTEM_POOLTAG
 {
-    union 
+    union
     {
         UCHAR Tag[4];
         ULONG TagUlong;
@@ -895,14 +902,14 @@ typedef struct _SYSTEM_POOLTAG
     ULONG NonPagedFrees;
     ULONG NonPagedUsed;
 } SYSTEM_POOLTAG, *PSYSTEM_POOLTAG;
-typedef struct _SYSTEM_POOLTAG_INFORMATION 
+typedef struct _SYSTEM_POOLTAG_INFORMATION
 {
     ULONG Count;
     SYSTEM_POOLTAG TagInfo[1];
 } SYSTEM_POOLTAG_INFORMATION, *PSYSTEM_POOLTAG_INFORMATION;
 
 /* Class 23 */
-typedef struct _SYSTEM_INTERRUPT_INFORMATION 
+typedef struct _SYSTEM_INTERRUPT_INFORMATION
 {
     ULONG ContextSwitches;
     ULONG DpcCount;
@@ -913,25 +920,25 @@ typedef struct _SYSTEM_INTERRUPT_INFORMATION
 } SYSTEM_INTERRUPT_INFORMATION, *PSYSTEM_INTERRUPT_INFORMATION;
 
 /* Class 24 */
-typedef struct _SYSTEM_DPC_BEHAVIOR_INFORMATION 
+typedef struct _SYSTEM_DPC_BEHAVIOR_INFORMATION
 {
     ULONG Spare;
     ULONG DpcQueueDepth;
     ULONG MinimumDpcRate;
     ULONG AdjustDpcThreshold;
     ULONG IdealDpcRate;
-} SYSTEM_DPC_BEHAVIOR_INFORMATION, *PSYSTEM_DPC_BEHAVIOR_INFORMATION; 
+} SYSTEM_DPC_BEHAVIOR_INFORMATION, *PSYSTEM_DPC_BEHAVIOR_INFORMATION;
 
 /* Class 25 */
-typedef struct _SYSTEM_MEMORY_INFO 
+typedef struct _SYSTEM_MEMORY_INFO
 {
     PUCHAR StringOffset;
     USHORT ValidCount;
     USHORT TransitionCount;
     USHORT ModifiedCount;
     USHORT PageTableCount;
-} SYSTEM_MEMORY_INFO, *PSYSTEM_MEMORY_INFO; 
-typedef struct _SYSTEM_MEMORY_INFORMATION 
+} SYSTEM_MEMORY_INFO, *PSYSTEM_MEMORY_INFO;
+typedef struct _SYSTEM_MEMORY_INFORMATION
 {
     ULONG InfoSize;
     ULONG StringStart;
@@ -939,13 +946,14 @@ typedef struct _SYSTEM_MEMORY_INFORMATION
 } SYSTEM_MEMORY_INFORMATION, *PSYSTEM_MEMORY_INFORMATION;
 
 /* Class 26 */
-typedef struct _SYSTEM_GDI_DRIVER_INFORMATION {
+typedef struct _SYSTEM_GDI_DRIVER_INFORMATION
+{
     UNICODE_STRING DriverName;
     PVOID ImageAddress;
     PVOID SectionPointer;
     PVOID EntryPoint;
     PIMAGE_EXPORT_DIRECTORY ExportSectionPointer;
-} SYSTEM_GDI_DRIVER_INFORMATION, *PSYSTEM_GDI_DRIVER_INFORMATION; 
+} SYSTEM_GDI_DRIVER_INFORMATION, *PSYSTEM_GDI_DRIVER_INFORMATION;
 
 /* Class 27 */
 /* Not an actuall class, simply a PVOID to the ImageAddress */
@@ -957,7 +965,8 @@ typedef struct _SYSTEM_QUERY_TIME_ADJUST_INFORMATION
     ULONG TimeIncrement;
     BOOLEAN Enable;
 } SYSTEM_QUERY_TIME_ADJUST_INFORMATION, *PSYSTEM_QUERY_TIME_ADJUST_INFORMATION;
-typedef struct _SYSTEM_SET_TIME_ADJUST_INFORMATION 
+
+typedef struct _SYSTEM_SET_TIME_ADJUST_INFORMATION
 {
     ULONG TimeAdjustment;
     BOOLEAN Enable;
@@ -969,32 +978,32 @@ typedef struct _SYSTEM_SET_TIME_ADJUST_INFORMATION
 /* FIXME */
 
 /* Class 32 */
-typedef struct _SYSTEM_CRASH_DUMP_INFORMATION 
+typedef struct _SYSTEM_CRASH_DUMP_INFORMATION
 {
     HANDLE CrashDumpSection;
-} SYSTEM_CRASH_DUMP_INFORMATION, *PSYSTEM_CRASH_DUMP_INFORMATION; 
+} SYSTEM_CRASH_DUMP_INFORMATION, *PSYSTEM_CRASH_DUMP_INFORMATION;
 
 /* Class 33 */
-typedef struct _SYSTEM_EXCEPTION_INFORMATION 
+typedef struct _SYSTEM_EXCEPTION_INFORMATION
 {
     ULONG AlignmentFixupCount;
     ULONG ExceptionDispatchCount;
     ULONG FloatingEmulationCount;
     ULONG ByteWordEmulationCount;
 } SYSTEM_EXCEPTION_INFORMATION, *PSYSTEM_EXCEPTION_INFORMATION;
- 
+
 /* Class 34 */
-typedef struct _SYSTEM_CRASH_STATE_INFORMATION 
+typedef struct _SYSTEM_CRASH_STATE_INFORMATION
 {
     ULONG ValidCrashDump;
 } SYSTEM_CRASH_STATE_INFORMATION, *PSYSTEM_CRASH_STATE_INFORMATION;
 
 /* Class 35 */
-typedef struct _SYSTEM_KERNEL_DEBUGGER_INFORMATION 
+typedef struct _SYSTEM_KERNEL_DEBUGGER_INFORMATION
 {
     BOOLEAN KernelDebuggerEnabled;
     BOOLEAN KernelDebuggerNotPresent;
-} SYSTEM_KERNEL_DEBUGGER_INFORMATION, *PSYSTEM_KERNEL_DEBUGGER_INFORMATION; 
+} SYSTEM_KERNEL_DEBUGGER_INFORMATION, *PSYSTEM_KERNEL_DEBUGGER_INFORMATION;
 
 /* Class 36 */
 typedef struct _SYSTEM_CONTEXT_SWITCH_INFORMATION {
@@ -1013,7 +1022,7 @@ typedef struct _SYSTEM_CONTEXT_SWITCH_INFORMATION {
 } SYSTEM_CONTEXT_SWITCH_INFORMATION, *PSYSTEM_CONTEXT_SWITCH_INFORMATION;
 
 /* Class 37 */
-typedef struct _SYSTEM_REGISTRY_QUOTA_INFORMATION 
+typedef struct _SYSTEM_REGISTRY_QUOTA_INFORMATION
 {
     ULONG RegistryQuotaAllowed;
     ULONG RegistryQuotaUsed;
@@ -1026,30 +1035,32 @@ typedef struct _SYSTEM_REGISTRY_QUOTA_INFORMATION
 /* Class 39 */
 /* Not a structure, simply send a ULONG containing the new separation */
 
-/* Class 40 */ 
+/* Class 40 */
 typedef struct _PLUGPLAY_BUS_TYPE
 {
     PLUGPLAY_BUS_CLASS BusClass;
-    union 
+    union
     {
         INTERFACE_TYPE SystemBusType;
         PLUGPLAY_VIRTUAL_BUS_TYPE PlugPlayVirtualBusType;
     };
-} PLUGPLAY_BUS_TYPE, *PPLUGPLAY_BUS_TYPE; 
-typedef struct _PLUGPLAY_BUS_INSTANCE 
+} PLUGPLAY_BUS_TYPE, *PPLUGPLAY_BUS_TYPE;
+
+typedef struct _PLUGPLAY_BUS_INSTANCE
 {
     PLUGPLAY_BUS_TYPE BusType;
     ULONG BusNumber;
     WCHAR BusName[MAX_BUS_NAME];
 } PLUGPLAY_BUS_INSTANCE, *PPLUGPLAY_BUS_INSTANCE;
-typedef struct _SYSTEM_PLUGPLAY_BUS_INFORMATION 
+
+typedef struct _SYSTEM_PLUGPLAY_BUS_INFORMATION
 {
     ULONG BusCount;
     PLUGPLAY_BUS_INSTANCE BusInstance[1];
 } SYSTEM_PLUGPLAY_BUS_INFORMATION, *PSYSTEM_PLUGPLAY_BUS_INFORMATION;
 
 /* Class 41 */
-typedef struct _SYSTEM_DOCK_INFORMATION 
+typedef struct _SYSTEM_DOCK_INFORMATION
 {
     SYSTEM_DOCK_STATE DockState;
     INTERFACE_TYPE DeviceBusType;
@@ -1085,7 +1096,7 @@ typedef struct _SYSTEM_LEGACY_DRIVER_INFORMATION
 typedef struct _TIME_ZONE_INFORMATION RTL_TIME_ZONE_INFORMATION;
 
 /* Class 45 */
-typedef struct _SYSTEM_LOOKASIDE_INFORMATION 
+typedef struct _SYSTEM_LOOKASIDE_INFORMATION
 {
     USHORT CurrentDepth;
     USHORT MaximumDepth;
@@ -1120,7 +1131,7 @@ typedef struct _SYSTEM_LOOKASIDE_INFORMATION
 /* FIXME */
 
 /* Class 53 */
-typedef struct _SYSTEM_SESSION_PROCESSES_INFORMATION 
+typedef struct _SYSTEM_SESSION_PROCESSES_INFORMATION
 {
     ULONG    SessionId;
     ULONG    BufferSize;

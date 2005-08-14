@@ -91,8 +91,8 @@ strtoul(const char *nptr, char **endptr, int base)
   }
   if (base == 0)
     base = c == '0' ? 8 : 10;
-  cutoff = (unsigned long)ULONG_MAX / (unsigned long)base;
-  cutlim = (unsigned long)ULONG_MAX % (unsigned long)base;
+  cutoff = (unsigned long)0xffffffff / (unsigned long)base;
+  cutlim = (unsigned long)0xffffffff % (unsigned long)base;
   for (acc = 0, any = 0;; c = *s++)
   {
     if (isdigit(c))
@@ -113,7 +113,7 @@ strtoul(const char *nptr, char **endptr, int base)
   }
   if (any < 0)
   {
-    acc = ULONG_MAX;
+    acc = 0xffffffff;
   }
   else if (neg)
     acc = -acc;

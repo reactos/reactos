@@ -907,7 +907,7 @@ ObReferenceObjectByPointer(IN PVOID Object,
  * @implemented
  */
 NTSTATUS STDCALL
-ObOpenObjectByPointer(IN POBJECT Object,
+ObOpenObjectByPointer(IN PVOID Object,
 		      IN ULONG HandleAttributes,
 		      IN PACCESS_STATE PassedAccessState,
 		      IN ACCESS_MASK DesiredAccess,

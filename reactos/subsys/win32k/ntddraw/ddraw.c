@@ -1,5 +1,4 @@
 /*
- *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Native DirectDraw implementation
@@ -9,12 +8,7 @@
  *       25-10-2003  PB  Created
  */
 
-#include <ddk/ntddk.h>
-#include <win32k/ntddraw.h>
-#include <ddk/winddi.h>
-#include <win32k/win32k.h>
-#include <include/intddraw.h>
-#include <win32k/gdiobj.h>
+#include <w32k.h>
 
 #define NDEBUG
 #include <debug.h>

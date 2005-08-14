@@ -34,12 +34,12 @@ extern ULONG NTOSAPI KdComPortInUse;
 /* ENUMERATIONS **************************************************************/
 typedef enum _FIRMWARE_ENTRY
 {
-  HalHaltRoutine,
-  HalPowerDownRoutine,
-  HalRestartRoutine,
-  HalRebootRoutine,
-  HalInteractiveModeRoutine,
-  HalMaximumRoutine
+    HalHaltRoutine,
+    HalPowerDownRoutine,
+    HalRestartRoutine,
+    HalRebootRoutine,
+    HalInteractiveModeRoutine,
+    HalMaximumRoutine
 } FIRMWARE_REENTRY, *PFIRMWARE_REENTRY;
 
 /* TYPES *********************************************************************/
@@ -55,35 +55,35 @@ extern NTOSAPI HAL_PRIVATE_DISPATCH HalPrivateDispatchTable;
 extern NTOSAPI PHAL_PRIVATE_DISPATCH HalPrivateDispatchTable;
 #endif
 
-#define HAL_PRIVATE_DISPATCH_VERSION	1
+#define HAL_PRIVATE_DISPATCH_VERSION    1
 
-typedef struct _LOADER_MODULE 
+typedef struct _LOADER_MODULE
 {
-   ULONG ModStart;
-   ULONG ModEnd;
-   ULONG String;
-   ULONG Reserved;
+    ULONG ModStart;
+    ULONG ModEnd;
+    ULONG String;
+    ULONG Reserved;
 } LOADER_MODULE, *PLOADER_MODULE;
 
 typedef struct _LOADER_PARAMETER_BLOCK
 {
-   ULONG Flags;
-   ULONG MemLower;
-   ULONG MemHigher;
-   ULONG BootDevice;
-   ULONG CommandLine;
-   ULONG ModsCount;
-   ULONG ModsAddr;
-   UCHAR Syms[12];
-   ULONG MmapLength;
-   ULONG MmapAddr;
-   ULONG DrivesCount;
-   ULONG DrivesAddr;
-   ULONG ConfigTable;
-   ULONG BootLoaderName;
-   ULONG PageDirectoryStart;
-   ULONG PageDirectoryEnd;
-   ULONG KernelBase;
+    ULONG Flags;
+    ULONG MemLower;
+    ULONG MemHigher;
+    ULONG BootDevice;
+    ULONG CommandLine;
+    ULONG ModsCount;
+    ULONG ModsAddr;
+    UCHAR Syms[12];
+    ULONG MmapLength;
+    ULONG MmapAddr;
+    ULONG DrivesCount;
+    ULONG DrivesAddr;
+    ULONG ConfigTable;
+    ULONG BootLoaderName;
+    ULONG PageDirectoryStart;
+    ULONG PageDirectoryEnd;
+    ULONG KernelBase;
 } LOADER_PARAMETER_BLOCK, *PLOADER_PARAMETER_BLOCK;
 
 #endif

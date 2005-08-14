@@ -6,6 +6,8 @@
 #endif
 
 #include <win32k/brush.h>
+#include <win32k/callback.h>
+#include <win32k/caret.h>
 #include <win32k/cliprgn.h>
 #include <win32k/color.h>
 #include <win32k/cursoricon.h>

@@ -1,9 +1,6 @@
 #ifndef _WIN32K_HOOK_H
 #define _WIN32K_HOOK_H
 
-#include <windows.h>
-#include <internal/ps.h>
-
 #define HOOK_THREAD_REFERENCED	(0x1)
 
 typedef struct tagHOOK

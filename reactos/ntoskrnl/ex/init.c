@@ -10,7 +10,6 @@
  */
 
 #include <ntoskrnl.h>
-#include <ntos/bootvid.h>
 #define NDEBUG
 #include <internal/debug.h>
 

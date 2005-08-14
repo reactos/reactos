@@ -33,5 +33,23 @@ LdrFindResource_U(
     IN  ULONG Level,
     OUT PIMAGE_RESOURCE_DATA_ENTRY *ResourceDataEntry
 );
-                  
+
+NTSTATUS
+STDCALL 
+LdrFindResourceDirectory_U(
+    IN PVOID BaseAddress,
+    IN PLDR_RESOURCE_INFO ResourceInfo,
+    IN ULONG Level,
+    OUT PIMAGE_RESOURCE_DIRECTORY *ResourceDirectory
+);
+
+NTSTATUS
+STDCALL
+LdrGetProcedureAddress(
+    IN PVOID BaseAddress,
+    IN PANSI_STRING Name,
+    IN ULONG Ordinal,
+    OUT PVOID *ProcedureAddress
+);
+
 #endif

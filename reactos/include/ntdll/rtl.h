@@ -132,19 +132,21 @@ typedef struct _RTL_RESOURCE
    PVOID DebugInfo; /* ?? */
 } RTL_RESOURCE, *PRTL_RESOURCE;
 
-typedef struct _RTL_HANDLE
+typedef struct _RTL_HANDLE_TABLE_ENTRY
 {
-   struct _RTL_HANDLE *Next;	/* pointer to next free handle */
-} RTL_HANDLE, *PRTL_HANDLE;
+     ULONG Flags;
+     struct _RTL_HANDLE_TABLE_ENTRY *NextFree;
+} RTL_HANDLE_TABLE_ENTRY, *PRTL_HANDLE_TABLE_ENTRY;
 
 typedef struct _RTL_HANDLE_TABLE
 {
-   ULONG TableSize;		/* maximum number of handles */
-   ULONG HandleSize;		/* size of handle in bytes */
-   PRTL_HANDLE Handles;		/* pointer to handle array */
-   PRTL_HANDLE Limit;		/* limit of pointers */
-   PRTL_HANDLE FirstFree;	/* pointer to first free handle */
-   PRTL_HANDLE LastUsed;	/* pointer to last allocated handle */
+     ULONG MaximumNumberOfHandles;
+     ULONG SizeOfHandleTableEntry;
+     ULONG Reserved[2];
+     PRTL_HANDLE_TABLE_ENTRY FreeHandles;
+     PRTL_HANDLE_TABLE_ENTRY CommittedHandles;
+     PRTL_HANDLE_TABLE_ENTRY UnCommittedHandles;
+     PRTL_HANDLE_TABLE_ENTRY MaxReservedHandles;
 } RTL_HANDLE_TABLE, *PRTL_HANDLE_TABLE;
 
 
@@ -594,7 +596,7 @@ RtlReleaseResource (
 
 /* handle table functions */
 
-PRTL_HANDLE
+PRTL_HANDLE_TABLE_ENTRY
 STDCALL
 RtlAllocateHandle (
 	IN	PRTL_HANDLE_TABLE	HandleTable,
@@ -611,7 +613,7 @@ BOOLEAN
 STDCALL
 RtlFreeHandle (
 	IN	PRTL_HANDLE_TABLE	HandleTable,
-	IN	PRTL_HANDLE		Handle
+	IN	PRTL_HANDLE_TABLE_ENTRY	Handle
 	);
 
 VOID
@@ -626,14 +628,14 @@ BOOLEAN
 STDCALL
 RtlIsValidHandle (
 	IN	PRTL_HANDLE_TABLE	HandleTable,
-	IN	PRTL_HANDLE		Handle
+	IN	PRTL_HANDLE_TABLE_ENTRY	Handle
 	);
 
 BOOLEAN
 STDCALL
 RtlIsValidIndexHandle (
 	IN	PRTL_HANDLE_TABLE	HandleTable,
-	IN OUT	PRTL_HANDLE		*Handle,
+	IN OUT	PRTL_HANDLE_TABLE_ENTRY	*Handle,
 	IN	ULONG			Index
 	);
 

@@ -24,6 +24,10 @@ HalAcquireDisplayOwnership(
 
 BOOLEAN
 STDCALL
+HalQueryDisplayOwnership(VOID);
+
+BOOLEAN
+STDCALL
 HalAllProcessorsStarted(VOID);
 
 NTSTATUS
@@ -35,7 +39,7 @@ HalAllocateAdapterChannel(
     IN PDRIVER_CONTROL ExecutionRoutine
 );
 
-BOOLEAN 
+BOOLEAN
 STDCALL
 HalBeginSystemInterrupt(
     ULONG Vector,
@@ -136,7 +140,7 @@ HalStartNextProcessor(
     ULONG Unknown1,
     ULONG Unknown2
 );
-              
+
 VOID
 STDCALL
 IoAssignDriveLetters(

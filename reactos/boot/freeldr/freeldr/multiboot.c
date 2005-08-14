@@ -71,25 +71,6 @@ BOOLEAN PaeModeEnabled;
 /* Kernel Entrypoint in Physical Memory */
 ULONG_PTR KernelEntry;
 
-/* Page Directory and Tables for non-PAE Systems */
-extern ULONG_PTR startup_pagedirectory;
-extern ULONG_PTR lowmem_pagetable;
-extern ULONG_PTR kernel_pagetable;
-extern ULONG_PTR hyperspace_pagetable;
-extern ULONG_PTR _pae_pagedirtable;
-extern ULONG_PTR apic_pagetable;
-extern ULONG_PTR kpcr_pagetable;
-
-/* Page Directory and Tables for PAE Systems */
-extern ULONG_PTR startup_pagedirectorytable_pae;
-extern ULONG_PTR startup_pagedirectory_pae;
-extern ULONG_PTR lowmem_pagetable_pae;
-extern ULONG_PTR kernel_pagetable_pae;
-extern ULONG_PTR hyperspace_pagetable_pae;
-extern ULONG_PTR pagedirtable_pae;
-extern ULONG_PTR apic_pagetable_pae;
-extern ULONG_PTR kpcr_pagetable_pae;
-
 typedef struct _HARDWARE_PTE_X86 {
     ULONG Valid             : 1;
     ULONG Write             : 1;
@@ -126,7 +107,7 @@ typedef struct _HARDWARE_PTE_X64 {
 
 typedef struct _PAGE_DIRECTORY_X86 {
     HARDWARE_PTE_X86 Pde[1024];
-} PAGE_DIRECTORY_x86, *PPAGE_DIRECTORY_X86;
+} PAGE_DIRECTORY_X86, *PPAGE_DIRECTORY_X86;
 
 typedef struct _PAGE_DIRECTORY_X64 {
     HARDWARE_PTE_X64 Pde[2048];
@@ -135,6 +116,25 @@ typedef struct _PAGE_DIRECTORY_X64 {
 typedef struct _PAGE_DIRECTORY_TABLE_X64 {
     HARDWARE_PTE_X64 Pde[4];
 } PAGE_DIRECTORY_TABLE_X64, *PPAGE_DIRECTORY_TABLE_X64;
+
+/* Page Directory and Tables for non-PAE Systems */
+extern PAGE_DIRECTORY_X86 startup_pagedirectory;
+extern PAGE_DIRECTORY_X86 lowmem_pagetable;
+extern PAGE_DIRECTORY_X86 kernel_pagetable;
+extern ULONG_PTR hyperspace_pagetable;
+extern ULONG_PTR _pae_pagedirtable;
+extern PAGE_DIRECTORY_X86 apic_pagetable;
+extern PAGE_DIRECTORY_X86 kpcr_pagetable;
+
+/* Page Directory and Tables for PAE Systems */
+extern PAGE_DIRECTORY_TABLE_X64 startup_pagedirectorytable_pae;
+extern PAGE_DIRECTORY_X64 startup_pagedirectory_pae;
+extern PAGE_DIRECTORY_X64 lowmem_pagetable_pae;
+extern PAGE_DIRECTORY_X64 kernel_pagetable_pae;
+extern ULONG_PTR hyperspace_pagetable_pae;
+extern ULONG_PTR pagedirtable_pae;
+extern PAGE_DIRECTORY_X64 apic_pagetable_pae;
+extern PAGE_DIRECTORY_X64 kpcr_pagetable_pae;
 
 /* FUNCTIONS *****************************************************************/
 

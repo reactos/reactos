@@ -1,25 +1,60 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/ex/callback.c
  * PURPOSE:         Executive callbacks
- *
- * PROGRAMMERS:     David Welch (welch@mcmail.com)
- *                  Alex Ionescu (alex@relsoft.net)
- */
-
-
-/*
- * NOTE:            These funtions are not implemented in NT4, but
- *                  they are implemented in Win2k.
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */
 
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-#include <internal/callbacks.h>
+#define NDEBUG
 #include <internal/debug.h>
+
+/* TYPES ********************************************************************/
+
+/* Mapping for Callback Object */
+GENERIC_MAPPING ExpCallbackMapping =
+{
+   CALLBACK_READ,
+   CALLBACK_WRITE,
+   CALLBACK_EXECUTE,
+   CALLBACK_ALL_ACCESS
+};
+
+/* Structure used to hold Callbacks */
+typedef struct _CALLBACK_REGISTRATION
+{
+   LIST_ENTRY RegisteredCallbacks;
+   PCALLBACK_OBJECT CallbackObject;
+   PCALLBACK_FUNCTION CallbackFunction;
+   PVOID CallbackContext;
+   ULONG InUse;
+   BOOLEAN PendingDeletion;
+} CALLBACK_REGISTRATION, *PCALLBACK_REGISTRATION;
+
+typedef struct
+{
+    PCALLBACK_OBJECT *CallbackObject;
+    PWSTR Name;
+} SYSTEM_CALLBACKS;
+
+/* Kernel Default Callbacks */
+PCALLBACK_OBJECT SetSystemTimeCallback;
+PCALLBACK_OBJECT SetSystemStateCallback;
+PCALLBACK_OBJECT PowerStateCallback;
+
+SYSTEM_CALLBACKS ExpInitializeCallback[] =
+{
+   {&SetSystemTimeCallback, L"\\Callback\\SetSystemTime"},
+   {&SetSystemStateCallback, L"\\Callback\\SetSystemState"},
+   {&PowerStateCallback, L"\\Callback\\PowerState"},
+   {NULL, NULL}
+};
+
+POBJECT_TYPE ExCallbackObjectType;
+KEVENT ExpCallbackEvent;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -51,7 +86,7 @@ ExpInitializeCallbacks(VOID)
    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
    RtlInitUnicodeString(&Name, L"Callback");
    ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
-   ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(_INT_CALLBACK_OBJECT);
+   ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(CALLBACK_OBJECT);
    ObjectTypeInitializer.GenericMapping = ExpCallbackMapping;
    ObjectTypeInitializer.PoolType = NonPagedPool;
    ObjectTypeInitializer.UseDefaultObject = TRUE;
@@ -153,7 +188,7 @@ ExCreateCallback(
    IN BOOLEAN AllowMultipleCallbacks
 )
 {
-   PINT_CALLBACK_OBJECT Callback;
+   PCALLBACK_OBJECT Callback;
    NTSTATUS    Status;
    HANDLE     Handle;
 
@@ -183,7 +218,7 @@ ExCreateCallback(
                               ObjectAttributes,
                               KernelMode,
                               NULL,
-                              sizeof(_INT_CALLBACK_OBJECT),
+                              sizeof(CALLBACK_OBJECT),
                               0,
                               0,
                               (PVOID *)&Callback );
@@ -251,7 +286,7 @@ ExNotifyCallback(
    IN PVOID Argument2
 )
 {
-   PINT_CALLBACK_OBJECT    CallbackObject = (PINT_CALLBACK_OBJECT)OpaqueCallbackObject;
+   PCALLBACK_OBJECT    CallbackObject = (PCALLBACK_OBJECT)OpaqueCallbackObject;
    PLIST_ENTRY             RegisteredCallbacks;
    PCALLBACK_REGISTRATION  CallbackRegistration;
    KIRQL                   OldIrql;
@@ -330,7 +365,7 @@ ExRegisterCallback(
    IN PVOID CallbackContext
 )
 {
-   PINT_CALLBACK_OBJECT CallbackObject = (PINT_CALLBACK_OBJECT)OpaqueCallbackObject;
+   PCALLBACK_OBJECT CallbackObject = (PCALLBACK_OBJECT)OpaqueCallbackObject;
    PCALLBACK_REGISTRATION  CallbackRegistration = NULL;
    KIRQL     OldIrql;
 
@@ -398,7 +433,7 @@ ExUnregisterCallback(
 )
 {
    PCALLBACK_REGISTRATION  CallbackRegistration;
-   PINT_CALLBACK_OBJECT    CallbackObject;
+   PCALLBACK_OBJECT    CallbackObject;
    KIRQL                   OldIrql;
 
    PAGED_CODE();

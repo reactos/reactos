@@ -18,25 +18,20 @@
 POBJECT_TYPE EXPORTED ExWindowStationObjectType = NULL;
 POBJECT_TYPE EXPORTED ExDesktopObjectType = NULL;
 
-static GENERIC_MAPPING ExpWindowStationMapping = {
-
-    STANDARD_RIGHTS_READ     | WINSTA_ENUMDESKTOPS      | WINSTA_ENUMERATE         | WINSTA_READATTRIBUTES | WINSTA_READSCREEN,
-    STANDARD_RIGHTS_WRITE    | WINSTA_ACCESSCLIPBOARD   | WINSTA_CREATEDESKTOP     | WINSTA_WRITEATTRIBUTES,
-    STANDARD_RIGHTS_EXECUTE  | WINSTA_ACCESSGLOBALATOMS | WINSTA_EXITWINDOWS,
-    STANDARD_RIGHTS_REQUIRED | WINSTA_ACCESSCLIPBOARD   | WINSTA_ACCESSGLOBALATOMS | WINSTA_CREATEDESKTOP  |
-                               WINSTA_ENUMDESKTOPS      | WINSTA_ENUMERATE         | WINSTA_EXITWINDOWS    |
-                               WINSTA_READATTRIBUTES    | WINSTA_READSCREEN        | WINSTA_WRITEATTRIBUTES
+static GENERIC_MAPPING ExpWindowStationMapping = 
+{
+    STANDARD_RIGHTS_READ,
+    STANDARD_RIGHTS_WRITE,
+    STANDARD_RIGHTS_EXECUTE,
+    STANDARD_RIGHTS_REQUIRED
 };
 
-static GENERIC_MAPPING ExpDesktopMapping = {
-
-    STANDARD_RIGHTS_READ     | DESKTOP_ENUMERATE       | DESKTOP_READOBJECTS,
-    STANDARD_RIGHTS_WRITE    | DESKTOP_CREATEMENU      | DESKTOP_CREATEWINDOW    | DESKTOP_HOOKCONTROL   |
-                               DESKTOP_JOURNALPLAYBACK | DESKTOP_JOURNALRECORD   | DESKTOP_WRITEOBJECTS,
-    STANDARD_RIGHTS_EXECUTE  | DESKTOP_SWITCHDESKTOP,
-    STANDARD_RIGHTS_REQUIRED | DESKTOP_CREATEMENU      | DESKTOP_CREATEWINDOW    | DESKTOP_ENUMERATE     |
-                               DESKTOP_HOOKCONTROL     | DESKTOP_JOURNALPLAYBACK | DESKTOP_JOURNALRECORD |
-                               DESKTOP_READOBJECTS     | DESKTOP_SWITCHDESKTOP   | DESKTOP_WRITEOBJECTS
+static GENERIC_MAPPING ExpDesktopMapping =
+{
+    STANDARD_RIGHTS_READ,
+    STANDARD_RIGHTS_WRITE,
+    STANDARD_RIGHTS_EXECUTE,
+    STANDARD_RIGHTS_REQUIRED
 };
 
 OB_OPEN_METHOD ExpWindowStationObjectOpen = NULL;
@@ -74,7 +69,7 @@ ExpWinStaObjectDelete(PVOID DeletedObject)
 
 PVOID
 STDCALL
-ExpWinStaObjectFind(PWINSTATION_OBJECT WinStaObject,
+ExpWinStaObjectFind(PVOID WinStaObject,
                     PWSTR Name,
                     ULONG Attributes)
 {
@@ -135,7 +130,6 @@ ExpWin32kInit(VOID)
     RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
     RtlInitUnicodeString(&Name, L"WindowStation");
     ObjectTypeInitializer.Length = sizeof(ObjectTypeInitializer);
-    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(WINSTATION_OBJECT);
     ObjectTypeInitializer.GenericMapping = ExpWindowStationMapping;
     ObjectTypeInitializer.PoolType = NonPagedPool;
     ObjectTypeInitializer.UseDefaultObject = TRUE;
@@ -146,7 +140,6 @@ ExpWin32kInit(VOID)
 
     /* Create desktop object type */
     RtlInitUnicodeString(&Name, L"Desktop");
-    ObjectTypeInitializer.DefaultNonPagedPoolCharge = sizeof(DESKTOP_OBJECT);
     ObjectTypeInitializer.GenericMapping = ExpDesktopMapping;
     ObjectTypeInitializer.OpenProcedure = NULL;
     ObjectTypeInitializer.DeleteProcedure = ExpDesktopDelete;

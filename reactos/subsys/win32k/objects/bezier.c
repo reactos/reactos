@@ -20,6 +20,9 @@
 
 #include <w32k.h>
 
+#define NDEBUG
+#include <debug.h>
+
 /******************************************************************
  *
  *   *Very* simple bezier drawing code,

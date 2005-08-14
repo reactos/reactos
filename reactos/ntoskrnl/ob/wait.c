@@ -92,7 +92,7 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
 	       {
 	         DPRINT1("Waiting for object type '%wZ' is not supported\n",
 		         &BODY_TO_HEADER(ObjectPtrArray[i])->Type->Name);
-	         Status = STATUS_HANDLE_NOT_WAITABLE;
+	         Status = STATUS_INVALID_HANDLE;
 		 i++;
 	       }
              /* dereference all referenced objects */
@@ -179,7 +179,7 @@ NtWaitForSingleObject(IN HANDLE ObjectHandle,
      {
        DPRINT1("Waiting for object type '%wZ' is not supported\n",
 	       &BODY_TO_HEADER(ObjectPtr)->Type->Name);
-       Status = STATUS_HANDLE_NOT_WAITABLE;
+       Status = STATUS_INVALID_HANDLE;
      }
    else
      {

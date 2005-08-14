@@ -93,4 +93,14 @@ ObReferenceObjectByName (
     OUT PVOID           *Object
 );
 
+NTSTATUS 
+STDCALL
+ObFindHandleForObject(
+    IN PEPROCESS Process,
+    IN PVOID Object,
+    IN POBJECT_TYPE ObjectType,
+    IN POBJECT_HANDLE_INFORMATION HandleInformation,
+    OUT PHANDLE Handle
+);
+
 #endif

@@ -170,7 +170,7 @@ static inline VOID LdrpTlsCallback(PLDR_DATA_TABLE_ENTRY Module, ULONG dwReason)
 
 static BOOLEAN LdrpCallDllEntry(PLDR_DATA_TABLE_ENTRY Module, DWORD dwReason, PVOID lpReserved)
 {
-   if (!(Module->Flags & IMAGE_DLL) ||
+   if (!(Module->Flags & LDRP_IMAGE_DLL) ||
        Module->EntryPoint == 0)
      {
        return TRUE;
@@ -1723,7 +1723,7 @@ LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
              {
                BOOLEAN WrongForwarder;
                WrongForwarder = FALSE;
-               if (ImportedModule->Flags & IMAGE_NOT_AT_BASE)
+               if (ImportedModule->Flags & LDRP_IMAGE_NOT_AT_BASE)
                  {
                    TRACE_LDR("%wZ has stale binding to %s\n",
                              &Module->BaseDllName, ImportedName);
@@ -1757,7 +1757,7 @@ LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
                            LdrpDecrementLoadCount(Module, FALSE);
                          }
                        if (ForwarderModule->TimeDateStamp != BoundForwarderRef->TimeDateStamp ||
-                           ForwarderModule->Flags & IMAGE_NOT_AT_BASE)
+                           ForwarderModule->Flags & LDRP_IMAGE_NOT_AT_BASE)
                          {
                            TRACE_LDR("%wZ has stale binding to %s\n",
                                      &Module->BaseDllName, ForwarderName);
@@ -1771,7 +1771,7 @@ LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
                      }
                  }
                if (WrongForwarder ||
-                   ImportedModule->Flags & IMAGE_NOT_AT_BASE)
+                   ImportedModule->Flags & LDRP_IMAGE_NOT_AT_BASE)
                  {
                    Status = LdrpProcessImportDirectory(Module, ImportedModule, ImportedName);
                    if (!NT_SUCCESS(Status))
@@ -1780,7 +1780,7 @@ LdrFixupImports(IN PWSTR SearchPath OPTIONAL,
                        return Status;
                      }
                  }
-               else if (ImportedModule->Flags & IMAGE_NOT_AT_BASE)
+               else if (ImportedModule->Flags & LDRP_IMAGE_NOT_AT_BASE)
                  {
                    TRACE_LDR("Adjust imports for %s from %wZ\n",
                              ImportedName, &Module->BaseDllName);
@@ -1938,7 +1938,7 @@ PEPFUNC LdrPEStartup (PVOID  ImageBase,
 
    if (ImageBase != (PVOID) NTHeaders->OptionalHeader.ImageBase)
      {
-       (*Module)->Flags |= IMAGE_NOT_AT_BASE;
+       (*Module)->Flags |= LDRP_IMAGE_NOT_AT_BASE;
      }
 
    /*
@@ -2107,11 +2107,11 @@ LdrpLoadModule(IN PWSTR SearchPath OPTIONAL,
         (*Module)->SectionPointer = SectionHandle;
         if (ImageBase != (PVOID) NtHeaders->OptionalHeader.ImageBase)
           {
-            (*Module)->Flags |= IMAGE_NOT_AT_BASE;
+            (*Module)->Flags |= LDRP_IMAGE_NOT_AT_BASE;
           }
         if (NtHeaders->FileHeader.Characteristics & IMAGE_FILE_DLL)
           {
-            (*Module)->Flags |= IMAGE_DLL;
+            (*Module)->Flags |= LDRP_IMAGE_DLL;
           }
         /* fixup the imported calls entry points */
         Status = LdrFixupImports(SearchPath, *Module);
@@ -2292,7 +2292,7 @@ LdrDisableThreadCalloutsForDll(IN PVOID BaseAddress)
           {
             if (Module->TlsIndex == 0xFFFF)
               {
-                Module->Flags |= DONT_CALL_FOR_THREAD;
+                Module->Flags |= LDRP_DONT_CALL_FOR_THREADS;
                 Status = STATUS_SUCCESS;
               }
             break;
@@ -2420,15 +2420,15 @@ LdrpDetachProcess(BOOLEAN UnloadAll)
      {
        Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InInitializationOrderModuleList);
        if (((UnloadAll && Module->LoadCount <= 0) || Module->LoadCount == 0) &&
-           Module->Flags & ENTRY_PROCESSED &&
-           !(Module->Flags & UNLOAD_IN_PROGRESS))
+           Module->Flags & LDRP_ENTRY_PROCESSED &&
+           !(Module->Flags & LDRP_UNLOAD_IN_PROGRESS))
          {
-           Module->Flags |= UNLOAD_IN_PROGRESS;
+           Module->Flags |= LDRP_UNLOAD_IN_PROGRESS;
            if (Module == LdrpLastModule)
              {
                LdrpLastModule = NULL;
              }
-           if (Module->Flags & PROCESS_ATTACH_CALLED)
+           if (Module->Flags & LDRP_PROCESS_ATTACH_CALLED)
              {
                TRACE_LDR("Unload %wZ - Calling entry point at %x\n",
                          &Module->BaseDllName, Module->EntryPoint);
@@ -2453,7 +2453,7 @@ LdrpDetachProcess(BOOLEAN UnloadAll)
          {
            Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InInitializationOrderModuleList);
            Entry = Entry->Blink;
-           if (Module->Flags & UNLOAD_IN_PROGRESS &&
+           if (Module->Flags & LDRP_UNLOAD_IN_PROGRESS &&
                ((UnloadAll && Module->LoadCount != 0xFFFF) || Module->LoadCount == 0))
              {
                /* remove the module entry from the list */
@@ -2512,9 +2512,9 @@ LdrpAttachProcess(VOID)
    while (Entry != ModuleListHead)
      {
        Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InInitializationOrderModuleList);
-       if (!(Module->Flags & (LOAD_IN_PROGRESS|UNLOAD_IN_PROGRESS|ENTRY_PROCESSED)))
+       if (!(Module->Flags & (LDRP_LOAD_IN_PROGRESS|LDRP_UNLOAD_IN_PROGRESS|LDRP_ENTRY_PROCESSED)))
          {
-           Module->Flags |= LOAD_IN_PROGRESS;
+           Module->Flags |= LDRP_LOAD_IN_PROGRESS;
            TRACE_LDR("%wZ loaded - Calling init routine at %x for process attaching\n",
                      &Module->BaseDllName, Module->EntryPoint);
            Result = LdrpCallDllEntry(Module, DLL_PROCESS_ATTACH, (PVOID)(Module->LoadCount == 0xFFFF ? 1 : 0));
@@ -2523,15 +2523,15 @@ LdrpAttachProcess(VOID)
                Status = STATUS_DLL_INIT_FAILED;
                break;
              }
-           if (Module->Flags & IMAGE_DLL && Module->EntryPoint != 0)
+           if (Module->Flags & LDRP_IMAGE_DLL && Module->EntryPoint != 0)
              {
-               Module->Flags |= PROCESS_ATTACH_CALLED|ENTRY_PROCESSED;
+               Module->Flags |= LDRP_PROCESS_ATTACH_CALLED|LDRP_ENTRY_PROCESSED;
              }
            else
              {
-               Module->Flags |= ENTRY_PROCESSED;
+               Module->Flags |= LDRP_ENTRY_PROCESSED;
              }
-           Module->Flags &= ~LOAD_IN_PROGRESS;
+           Module->Flags &= ~LDRP_LOAD_IN_PROGRESS;
          }
        Entry = Entry->Flink;
      }
@@ -2578,9 +2578,9 @@ LdrpAttachThread (VOID)
       while (Entry != ModuleListHead)
         {
           Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InInitializationOrderModuleList);
-          if (Module->Flags & PROCESS_ATTACH_CALLED &&
-              !(Module->Flags & DONT_CALL_FOR_THREAD) &&
-              !(Module->Flags & UNLOAD_IN_PROGRESS))
+          if (Module->Flags & LDRP_PROCESS_ATTACH_CALLED &&
+              !(Module->Flags & LDRP_DONT_CALL_FOR_THREADS) &&
+              !(Module->Flags & LDRP_UNLOAD_IN_PROGRESS))
             {
               TRACE_LDR("%wZ - Calling entry point at %x for thread attaching\n",
                         &Module->BaseDllName, Module->EntryPoint);
@@ -2623,9 +2623,9 @@ LdrShutdownThread (VOID)
      {
        Module = CONTAINING_RECORD(Entry, LDR_DATA_TABLE_ENTRY, InInitializationOrderModuleList);
 
-       if (Module->Flags & PROCESS_ATTACH_CALLED &&
-           !(Module->Flags & DONT_CALL_FOR_THREAD) &&
-           !(Module->Flags & UNLOAD_IN_PROGRESS))
+       if (Module->Flags & LDRP_PROCESS_ATTACH_CALLED &&
+           !(Module->Flags & LDRP_DONT_CALL_FOR_THREADS) &&
+           !(Module->Flags & LDRP_UNLOAD_IN_PROGRESS))
          {
            TRACE_LDR("%wZ - Calling entry point at %x for thread detaching\n",
                      &Module->BaseDllName, Module->EntryPoint);

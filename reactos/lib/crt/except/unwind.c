@@ -1,6 +1,6 @@
 #include "precomp.h"
 #include <excpt.h>
-#include <wine/winternl.h>
+#include <winternl.h>
 
 /*
  * @implemented

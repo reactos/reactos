@@ -14,6 +14,7 @@
     #include "kdtypes.h"    /* Kernel Debugger Types */
     #include "kdfuncs.h"    /* Kernel Debugger Functions */
     #include "cctypes.h"    /* Cache Manager Types */
+    #include "dbgktypes.h"  /* User-Mode Kernel Debugging Types */
     #include "extypes.h"    /* Executive Types */
     #include "haltypes.h"   /* Hardware Abstraction Layer Types */
     #include "halfuncs.h"   /* Hardware Abstraction Layer Functions */
@@ -22,9 +23,9 @@
     #include "iofuncs.h"    /* Input/Output Manager Functions */
     #include "ketypes.h"    /* Kernel Types */
     #include "kefuncs.h"    /* Kernel Functions */
-    #include "ldrfuncs.h"   /* Loader Functions */
     #include "lpctypes.h"   /* Local Procedure Call Types */
     #include "mmtypes.h"    /* Memory Manager Types */
+    #include "mmfuncs.h"    /* Memory Manager Functions */
     #include "obtypes.h"    /* Object Manager Types */
     #include "obfuncs.h"    /* Object Manager Functions */
     #include "potypes.h"    /* Power Manager Types */
@@ -38,6 +39,7 @@
 #endif
 
 /* Shared NDK */
+#include "ldrfuncs.h"       /* Loader Functions */
 #include "ldrtypes.h"       /* Loader Types */
 #include "pstypes.h"        /* Process Manager Types */
 #include "rtltypes.h"       /* Runtime Library Types */

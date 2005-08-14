@@ -1,8 +1,6 @@
 #ifndef _WIN32K_MONITOR_H
 #define _WIN32K_MONITOR_H
 
-#include <windows.h>
-
 struct GDIDEVICE;
 
 /* monitor object */

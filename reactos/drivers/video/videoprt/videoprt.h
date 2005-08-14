@@ -28,28 +28,13 @@
 #include <ddk/miniport.h>
 #include <ddk/video.h>
 #include <ddk/ntddvdeo.h>
-#include <ddk/ntapi.h>
 #include <ddk/ntagp.h>
-/* For process attaching functions */
 #include <ddk/ntifs.h>
+#include <ndk/ntndk.h>
+#include <reactos/helper.h>
+
 #define NDEBUG
 #include <debug.h>
-
-#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-
-int swprintf(wchar_t *buf, const wchar_t *fmt, ...);
-int vsprintf(char *buf, const char *fmt, va_list args);
-
-BOOLEAN STDCALL
-HalDisableSystemInterrupt(ULONG Vector,
-  KIRQL Irql);
-
-BOOLEAN STDCALL
-HalEnableSystemInterrupt(ULONG Vector,
-  KIRQL Irql,
-  KINTERRUPT_MODE InterruptMode);
-
-PIMAGE_NT_HEADERS STDCALL RtlImageNtHeader(IN PVOID BaseAddress);
 
 #define TAG_VIDEO_PORT  TAG('V', 'I', 'D', 'P')
 

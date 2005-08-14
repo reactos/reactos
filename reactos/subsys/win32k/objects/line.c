@@ -16,7 +16,11 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+
 #include <w32k.h>
+
+#define NDEBUG
+#include <debug.h>
 
 // Some code from the WINE project source (www.winehq.com)
 

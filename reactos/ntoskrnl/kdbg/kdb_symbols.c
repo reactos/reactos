@@ -508,7 +508,7 @@ KdbSymLoadUserModuleSymbols(IN PLDR_DATA_TABLE_ENTRY LdrModule)
          LdrModule->FullDllName.Length);
   KernelName.Buffer[KernelName.Length / sizeof(WCHAR)] = L'\0';
 
-  KdbpSymLoadModuleSymbols(&KernelName, &LdrModule->RosSymInfo);
+  KdbpSymLoadModuleSymbols(&KernelName, (PROSSYM_INFO*)&LdrModule->RosSymInfo);
 
   ExFreePool(KernelName.Buffer);
 }

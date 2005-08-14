@@ -11,8 +11,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
-#include <ntos/bootvid.h>
-#include <ddk/ntbootvid.h>
+#include "../../drivers/dd/bootvid/ntbootvid.h"
 #define NDEBUG
 #include <internal/debug.h>
 
@@ -37,9 +36,8 @@ InbvCheckBootVid(VOID)
     {
       NTSTATUS Status;
       OBJECT_ATTRIBUTES ObjectAttributes;
-      UNICODE_STRING BootVidName;
+      UNICODE_STRING BootVidName = RTL_CONSTANT_STRING(L"\\Device\\BootVid");
 
-      RtlRosInitUnicodeStringFromLiteral(&BootVidName, L"\\Device\\BootVid");
       InitializeObjectAttributes(&ObjectAttributes,
 				 &BootVidName,
 				 0,

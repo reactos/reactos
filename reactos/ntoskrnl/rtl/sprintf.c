@@ -558,7 +558,7 @@ int sprintf(char * buf, const char *fmt, ...)
   int i;
 
   va_start(args, fmt);
-  i=_vsnprintf(buf,INT_MAX,fmt,args);
+  i=_vsnprintf(buf,MAXLONG,fmt,args);
   va_end(args);
   return i;
 }
@@ -584,7 +584,7 @@ int _snprintf(char * buf, size_t cnt, const char *fmt, ...)
  */
 int vsprintf(char *buf, const char *fmt, va_list args)
 {
-  return _vsnprintf(buf,INT_MAX,fmt,args);
+  return _vsnprintf(buf,MAXLONG,fmt,args);
 }
 
 /* EOF */

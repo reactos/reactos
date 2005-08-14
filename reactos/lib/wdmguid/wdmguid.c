@@ -6,6 +6,6 @@
 
 #include <ddk/wdmguid.h>
 #define __GUIDS_ONLY__
-#include <ntos/ntpnp.h>
+#include <ddk/ntpnp.h>
 
 /* EOF */

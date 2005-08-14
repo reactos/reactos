@@ -72,7 +72,7 @@ static LIST_ENTRY GroupListHead = {NULL, NULL};
 static LIST_ENTRY ServiceListHead  = {NULL, NULL};
 
 static UNICODE_STRING IopHardwareDatabaseKey =
-   ROS_STRING_INITIALIZER(L"\\REGISTRY\\MACHINE\\HARDWARE\\DESCRIPTION\\SYSTEM");
+   RTL_CONSTANT_STRING(L"\\REGISTRY\\MACHINE\\HARDWARE\\DESCRIPTION\\SYSTEM");
 
 POBJECT_TYPE EXPORTED IoDriverObjectType = NULL;
 
@@ -1019,7 +1019,7 @@ IoCreateDriverList(VOID)
   RTL_QUERY_REGISTRY_TABLE QueryTable[2];
   PKEY_BASIC_INFORMATION KeyInfo = NULL;
   OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING ServicesKeyName;
+  UNICODE_STRING ServicesKeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services");
   UNICODE_STRING SubKeyName;
   HANDLE KeyHandle;
   NTSTATUS Status;
@@ -1050,9 +1050,6 @@ IoCreateDriverList(VOID)
     return(Status);
 
   /* Enumerate services and create the service list */
-  RtlRosInitUnicodeStringFromLiteral(&ServicesKeyName,
-		       L"\\Registry\\Machine\\System\\CurrentControlSet\\Services");
-
   InitializeObjectAttributes(&ObjectAttributes,
 			     &ServicesKeyName,
 			     OBJ_CASE_INSENSITIVE,

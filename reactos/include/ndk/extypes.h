@@ -19,15 +19,30 @@ extern NTOSAPI POBJECT_TYPE ExMutantObjectType;
 extern NTOSAPI POBJECT_TYPE ExTimerType;
 
 /* CONSTANTS *****************************************************************/
+
+/* FIXME: Win32k uses windows.h! */
+#ifndef __WIN32K__
 #define INVALID_HANDLE_VALUE (HANDLE)-1
+#endif
+
+/* Callback Object Access Rights */
+#define CALLBACK_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|0x0001)
+#define CALLBACK_EXECUTE    (STANDARD_RIGHTS_EXECUTE|SYNCHRONIZE|0x0001)
+#define CALLBACK_WRITE      (STANDARD_RIGHTS_WRITE|SYNCHRONIZE|0x0001)
+#define CALLBACK_READ       (STANDARD_RIGHTS_READ|SYNCHRONIZE|0x0001)
 
 /* ENUMERATIONS **************************************************************/
 
 /* TYPES *********************************************************************/
 
+/* You'll need the IFS for this, so use an equivalent version */
+#ifndef _NTIFS_
+typedef PVOID EX_RUNDOWN_REF;
+#endif
+
 /* You'll need the IFS for these, so let's not force everyone to have it */
 #ifdef _NTIFS_
-typedef struct _EX_QUEUE_WORKER_INFO 
+typedef struct _EX_QUEUE_WORKER_INFO
 {
     UCHAR QueueDisabled:1;
     UCHAR MakeThreadsAsNecessary:1;
@@ -35,38 +50,71 @@ typedef struct _EX_QUEUE_WORKER_INFO
     ULONG WorkerCount:29;
 } EX_QUEUE_WORKER_INFO, *PEX_QUEUE_WORKER_INFO;
 
-typedef struct _EX_WORK_QUEUE 
+typedef struct _EX_WORK_QUEUE
 {
     KQUEUE WorkerQueue;
     ULONG DynamicThreadCount;
     ULONG WorkItemsProcessed;
     ULONG WorkItemsProcessedLastPass;
     ULONG QueueDepthLastPass;
-    EX_QUEUE_WORKER_INFO Info;    
+    EX_QUEUE_WORKER_INFO Info;
 } EX_WORK_QUEUE, *PEX_WORK_QUEUE;
 #endif
 
-typedef struct _HANDLE_TABLE_ENTRY_INFO 
+typedef struct _EX_FAST_REF
+{
+    union
+    {
+        PVOID Object;
+        ULONG RefCnt:3;
+        ULONG Value;
+    };
+} EX_FAST_REF, *PEX_FAST_REF;
+
+typedef struct _EX_PUSH_LOCK
+{
+    union
+    {
+        struct
+        {
+            ULONG Waiting:1;
+            ULONG Exclusive:1;
+            ULONG Shared:30;
+        };
+        ULONG Value;
+        PVOID Ptr;
+    };
+} EX_PUSH_LOCK, *PEX_PUSH_LOCK;
+
+typedef struct _HANDLE_TABLE_ENTRY_INFO
 {
     ULONG AuditMask;
 } HANDLE_TABLE_ENTRY_INFO, *PHANDLE_TABLE_ENTRY_INFO;
 
-typedef struct _RUNDOWN_DESCRIPTOR 
+typedef struct _RUNDOWN_DESCRIPTOR
 {
     ULONG_PTR References;
     KEVENT RundownEvent;
 } RUNDOWN_DESCRIPTOR, *PRUNDOWN_DESCRIPTOR;
 
-typedef struct _HANDLE_TABLE_ENTRY 
+typedef struct _CALLBACK_OBJECT
 {
-    union 
+    ULONG Name;
+    KSPIN_LOCK Lock;
+    LIST_ENTRY RegisteredCallbacks;
+    ULONG AllowMultipleCallbacks;
+} CALLBACK_OBJECT , *PCALLBACK_OBJECT;
+
+typedef struct _HANDLE_TABLE_ENTRY
+{
+    union
     {
         PVOID Object;
         ULONG_PTR ObAttributes;
         PHANDLE_TABLE_ENTRY_INFO InfoTable;
         ULONG_PTR Value;
     } u1;
-    union 
+    union
     {
         ULONG GrantedAccess;
         USHORT GrantedAccessIndex;
@@ -86,7 +134,7 @@ typedef struct _HANDLE_TABLE
     ERESOURCE HandleTableLock;
     LIST_ENTRY HandleTableList;
     KEVENT HandleContentionEvent;
-} HANDLE_TABLE;
+} HANDLE_TABLE, *PHANDLE_TABLE;
 
 #endif
 

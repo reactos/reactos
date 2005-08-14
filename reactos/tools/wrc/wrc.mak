@@ -93,7 +93,7 @@ $(WRC_INT_)utils.o: $(WRC_BASE_)utils.c | $(WRC_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
-$(WRC_INT_)wrc.o: $(WRC_BASE_)wrc.c $(WRC_INT)
+$(WRC_INT_)wrc.o: $(WRC_BASE_)wrc.c | $(WRC_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 

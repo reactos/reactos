@@ -19,7 +19,11 @@
  *
  * $Id$
  */
+
 #include <w32k.h>
+
+#define NDEBUG
+#include <debug.h>
 
 static const USHORT HatchBrushes[NB_HATCH_STYLES][8] =
 {

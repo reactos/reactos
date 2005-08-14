@@ -182,7 +182,7 @@ IoInit (VOID)
     UNICODE_STRING Name;
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING DirName;
-    UNICODE_STRING LinkName;
+    UNICODE_STRING LinkName = RTL_CONSTANT_STRING(L"\\DosDevices");
     HANDLE Handle;
 
     IopInitDriverImplementation();
@@ -222,7 +222,7 @@ IoInit (VOID)
   /*
    * Create the '\Driver' object directory
    */
-  RtlRosInitUnicodeStringFromLiteral(&DirName, L"\\Driver");
+  RtlInitUnicodeString(&DirName, L"\\Driver");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &DirName,
 			     0,
@@ -235,7 +235,7 @@ IoInit (VOID)
   /*
    * Create the '\FileSystem' object directory
    */
-  RtlRosInitUnicodeStringFromLiteral(&DirName,
+  RtlInitUnicodeString(&DirName,
 		       L"\\FileSystem");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &DirName,
@@ -249,7 +249,7 @@ IoInit (VOID)
   /*
    * Create the '\Device' directory
    */
-  RtlRosInitUnicodeStringFromLiteral(&DirName,
+  RtlInitUnicodeString(&DirName,
 		       L"\\Device");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &DirName,
@@ -263,7 +263,7 @@ IoInit (VOID)
   /*
    * Create the '\??' directory
    */
-  RtlRosInitUnicodeStringFromLiteral(&DirName,
+  RtlInitUnicodeString(&DirName,
 		       L"\\??");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &DirName,
@@ -277,7 +277,7 @@ IoInit (VOID)
   /*
    * Create the '\ArcName' directory
    */
-  RtlRosInitUnicodeStringFromLiteral(&DirName,
+  RtlInitUnicodeString(&DirName,
 		       L"\\ArcName");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &DirName,
@@ -304,9 +304,7 @@ IoInit (VOID)
   /*
    * Create link from '\DosDevices' to '\??' directory
    */
-  RtlRosInitUnicodeStringFromLiteral(&LinkName,
-		       L"\\DosDevices");
-  RtlRosInitUnicodeStringFromLiteral(&DirName,
+  RtlInitUnicodeString(&DirName,
 		       L"\\??");
   IoCreateSymbolicLink(&LinkName,
 		       &DirName);

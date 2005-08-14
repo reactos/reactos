@@ -26,7 +26,6 @@
 #include "stddef.h" 
 #include "windef.h"
 //#include <ddk/miniport.h>
-#include <ddk/ntapi.h>
 
 // Export funcs here
 /*

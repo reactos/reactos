@@ -27,13 +27,11 @@
 
 /* INCLUDES *****************************************************************/
 
-#define NTOS_MODE_USER
-#include <ntos.h>
-#include <ntos/ntpnp.h>
-#include <ddk/wdmguid.h>
 #include <windows.h>
-#include <tchar.h>
-#include <stdio.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
+#include <ddk/wdmguid.h>
+#include <ddk/ntpnp.h>
 
 #include <rpc.h>
 #include <rpcdce.h>
@@ -43,8 +41,6 @@
 #define NDEBUG
 #include <debug.h>
 
-
-
 /* GLOBALS ******************************************************************/
 
 static VOID CALLBACK
@@ -52,7 +48,7 @@ ServiceMain(DWORD argc, LPTSTR *argv);
 
 static SERVICE_TABLE_ENTRY ServiceTable[2] =
 {
-  {_T("PlugPlay"), ServiceMain},
+  {TEXT("PlugPlay"), ServiceMain},
   {NULL, NULL}
 };
 

@@ -1,8 +1,6 @@
 #ifndef _WIN32K_MENU_H
 #define _WIN32K_MENU_H
 
-#include <ddk/ntddk.h>
-#include <napi/win32.h>
 #include <win32k/menu.h>
 
 #define IS_ATOM(x) \

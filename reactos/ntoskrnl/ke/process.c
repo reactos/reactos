@@ -11,7 +11,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-#include <ntdll/napi.h>
+#include <internal/napi.h>
 #define NDEBUG
 #include <internal/debug.h>
 

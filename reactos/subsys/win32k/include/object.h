@@ -1,7 +1,6 @@
 #ifndef _WIN32K_OBJECT_H
 #define _WIN32K_OBJECT_H
 
-#include <windows.h>
 #include <win32k/gdiobj.h>
 #include <win32k/bitmaps.h>
 #include <win32k/pen.h>

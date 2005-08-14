@@ -33,7 +33,7 @@
 #include <w32k.h>
 
 #define NDEBUG
-#include <win32k/debug1.h>
+#include <debug.h>
 
 #define DCX_USESTYLE 0x10000
 

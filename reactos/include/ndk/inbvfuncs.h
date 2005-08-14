@@ -90,11 +90,7 @@ VOID
 STDCALL
 VidCleanUp(VOID);
 
-BOOLEAN
-STDCALL
-VidInitialize(VOID);
-
-BOOLEAN
+BOOL
 STDCALL
 VidResetDisplay(VOID);
 

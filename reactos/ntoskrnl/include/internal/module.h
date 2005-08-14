@@ -3,33 +3,33 @@
 
 typedef struct _MODULE_TEXT_SECTION
 {
-  ULONG Base;
-  ULONG Length;
-  LIST_ENTRY ListEntry;
-  PWCH Name;
-  PIMAGE_OPTIONAL_HEADER OptionalHeader;
-  PROSSYM_INFO RosSymInfo;
+    ULONG Base;
+    ULONG Length;
+    LIST_ENTRY ListEntry;
+    PWCH Name;
+    PIMAGE_OPTIONAL_HEADER OptionalHeader;
+    PROSSYM_INFO RosSymInfo;
 } MODULE_TEXT_SECTION, *PMODULE_TEXT_SECTION;
 
 typedef struct _MODULE_OBJECT
 {
-  CSHORT  ObjectType;
-  CSHORT  ObjectSize;
-  PVOID  Base;
-  ULONG Length;
-  ULONG Flags;
-  PVOID  EntryPoint;
-  LIST_ENTRY ListEntry;
-  UNICODE_STRING FullName;
-  UNICODE_STRING BaseName;
-  PMODULE_TEXT_SECTION TextSection;
-  union
+    CSHORT  ObjectType;
+    CSHORT  ObjectSize;
+    PVOID  Base;
+    ULONG Length;
+    ULONG Flags;
+    PVOID  EntryPoint;
+    LIST_ENTRY ListEntry;
+    UNICODE_STRING FullName;
+    UNICODE_STRING BaseName;
+    PMODULE_TEXT_SECTION TextSection;
+    union
     {
-      struct
+        struct
         {
-          PIMAGE_FILE_HEADER FileHeader;
-          PIMAGE_OPTIONAL_HEADER OptionalHeader;
-          PIMAGE_SECTION_HEADER SectionList;
+             PIMAGE_FILE_HEADER FileHeader;
+             PIMAGE_OPTIONAL_HEADER OptionalHeader;
+             PIMAGE_SECTION_HEADER SectionList;
         } PE;
     } Image;
 } MODULE_OBJECT, *PMODULE_OBJECT;
@@ -44,7 +44,7 @@ typedef MODULE_OBJECT MODULE, *PMODULE;
 
 typedef struct _INSTANCE
 {
-  HANDLE ModuleHandle;
+    HANDLE ModuleHandle;
 } INSTANCE, *PINSTANCE;
 
 BOOLEAN process_boot_module(unsigned int start);

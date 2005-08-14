@@ -17,10 +17,11 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 /* $Id$ */
+
 #include <w32k.h>
 
-
-
+#define NDEBUG
+#include <debug.h>
 
 VOID
 DIB_32BPP_PutPixel(SURFOBJ *SurfObj, LONG x, LONG y, ULONG c)

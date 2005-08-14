@@ -23,11 +23,15 @@
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 /* $Id$ */
+
 #include <w32k.h>
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
 #include <freetype/tttables.h>
+
+#define NDEBUG
+#include <debug.h>
 
 FT_Library  library;
 

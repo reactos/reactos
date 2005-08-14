@@ -74,7 +74,7 @@ PGD_ENABLEDRIVER DRIVER_FindDDIDriver(LPCWSTR Name)
 {
   static WCHAR DefaultPath[] = L"\\SystemRoot\\System32\\";
   static WCHAR DefaultExtension[] = L".DLL";
-  SYSTEM_LOAD_IMAGE GdiDriverInfo;
+  SYSTEM_GDI_DRIVER_INFORMATION GdiDriverInfo;
   GRAPHICS_DRIVER *Driver = DriverList;
   NTSTATUS Status;
   WCHAR *FullName;
@@ -140,8 +140,8 @@ PGD_ENABLEDRIVER DRIVER_FindDDIDriver(LPCWSTR Name)
   }
 
   /* If not, then load it */
-  RtlInitUnicodeString (&GdiDriverInfo.ModuleName, (LPWSTR)FullName);
-  Status = ZwSetSystemInformation (SystemLoadImage, &GdiDriverInfo, sizeof(SYSTEM_LOAD_IMAGE));
+  RtlInitUnicodeString (&GdiDriverInfo.DriverName, (LPWSTR)FullName);
+  Status = ZwSetSystemInformation (SystemLoadGdiDriverInformation, &GdiDriverInfo, sizeof(SYSTEM_GDI_DRIVER_INFORMATION));
   ExFreePool(FullName);
   if (!NT_SUCCESS(Status)) return NULL;
 

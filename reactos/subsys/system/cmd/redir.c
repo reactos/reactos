@@ -20,6 +20,9 @@
  *
  *    26-Jan-1999 (Eric Kohl <ekohl@abo.rhein-zeitung.de>)
  *        Added new error AND output redirection "&>" and "&>>".
+ *
+ *    24-Jun-2005 (Brandon Turner <turnerb7@msu.edu>)
+ *        simple check to fix > and | bug with 'rem'
  */
 
 #include "precomp.h"
@@ -54,6 +57,23 @@ INT GetRedirection (LPTSTR s, LPTSTR ifn, LPTSTR ofn, LPTSTR efn, LPINT lpnFlags
 	LPTSTR dp = s;
 	LPTSTR sp = s;
 
+#ifdef INCLUDE_CMD_REM
+
+	TCHAR * line = s;
+
+	while (_istspace (*line))
+			line++;
+
+	/*first thing first.  check to see if this is "rem" and hope out*/
+	if(!_tcsncmp (line, _T("rem "), 4))
+	{
+		lpnFlags = 0;
+		*ifn=('\0');
+		*ofn=('\0');
+		*efn=_T('\0');
+		return 1;
+	}
+#endif
 	/* find and remove all the redirections first */
 	while (*sp)
 	{

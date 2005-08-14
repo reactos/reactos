@@ -6,13 +6,9 @@
  * UPDATE HISTORY:
  *      06-07-2003  CSH  Created
  */
-#include <ctype.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <malloc.h>
+#include <windows.h>
 #define NTOS_MODE_USER
-#include <ntos.h>
+#include <ndk/ntndk.h>
 #include <pseh.h>
 #include "regtests.h"
 

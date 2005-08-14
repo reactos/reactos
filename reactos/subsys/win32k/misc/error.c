@@ -26,7 +26,11 @@
  * REVISION HISTORY:
  *       06-06-2001  CSH  Created
  */
+
 #include <w32k.h>
+
+#define NDEBUG
+#include <debug.h>
 
 VOID FASTCALL
 SetLastNtError(NTSTATUS Status)

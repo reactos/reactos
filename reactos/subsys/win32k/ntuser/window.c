@@ -30,6 +30,9 @@
 
 #include <w32k.h>
 
+#define NDEBUG
+#include <debug.h>
+
 static WndProcHandle *WndProcHandlesArray = 0;
 static WORD WndProcHandlesArraySize = 0;
 #define WPH_SIZE 0x40 /* the size to add to the WndProcHandle array each time */

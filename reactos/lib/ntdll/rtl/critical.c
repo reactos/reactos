@@ -99,10 +99,10 @@ DWORD
 STDCALL
 RtlSetCriticalSectionSpinCount(
    PRTL_CRITICAL_SECTION CriticalSection,
-   DWORD SpinCount
+   ULONG SpinCount
    )
 {
-    DWORD OldCount = CriticalSection->SpinCount;
+    ULONG OldCount = CriticalSection->SpinCount;
 
     /* Set to parameter if MP, or to 0 if this is Uniprocessor */
     CriticalSection->SpinCount = (NtCurrentPeb()->NumberOfProcessors > 1) ? SpinCount : 0;
@@ -214,7 +214,7 @@ NTSTATUS
 STDCALL
 RtlInitializeCriticalSectionAndSpinCount (
     PRTL_CRITICAL_SECTION CriticalSection,
-    DWORD SpinCount)
+    ULONG SpinCount)
 {
     PRTL_CRITICAL_SECTION_DEBUG CritcalSectionDebugData;
 

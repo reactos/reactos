@@ -1,11 +1,10 @@
-/* $Id:
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         Serial driver
  * FILE:            drivers/dd/serial/serial.c
  * PURPOSE:         Serial driver loading/unloading
  *
- * PROGRAMMERS:     Hervé Poussineau (poussine@freesurf.fr)
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
  */
 
 //#define NDEBUG

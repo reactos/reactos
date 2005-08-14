@@ -130,7 +130,7 @@ WriteFileHeader(FILE * StubFile,
             " * PROGRAMMER:      Computer Generated File. See tools/nci/ncitool.c\n"
             " * REMARK:          DO NOT EDIT OR COMMIT MODIFICATIONS TO THIS FILE\n"
             " */\n\n\n"
-            "#include <napi/shared_data.h>\n\n",
+            "#define KUSER_SHARED_SYSCALL 0x7FFE0300\n\n",
             FileDescription,
             FileLocation);
 }
@@ -527,7 +527,7 @@ int main(int argc, char* argv[])
     WriteFileHeader(Files[NtosKernelStubs], 
                     "System Call Stubs for Native API", 
                     argv[NtosKernelStubs + 1]);
-    fputs("#include <internal/i386/segment.h>\n\n", Files[NtosKernelStubs]);
+    fputs("#include <ndk/i386/segment.h>\n\n", Files[NtosKernelStubs]);
     
     WriteFileHeader(Files[Win32kGdiStubs], 
                     "System Call Stubs for Native API", 

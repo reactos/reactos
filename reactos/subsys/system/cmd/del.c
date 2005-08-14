@@ -35,6 +35,9 @@
  *
  *    22-Jun-2005 (Brandon Turner <turnerb7@msu.edu>)
  *        Added exclusive deletion "del * -abc.txt -text*.txt"
+ *
+ *    22-Jun-2005 (Brandon Turner <turnerb7@msu.edu>)
+ *        Implemented /A   example "del /A:H /A:-R *.exe -ping.exe"
  */
 
 #include "precomp.h"
@@ -45,7 +48,7 @@
 
 enum
 {
-	DEL_ATTRIBUTES = 0x001,   /* /A : not implemented */
+	DEL_ATTRIBUTES = 0x001,   /* /A */
 	DEL_ERROR      = 0x002,   /* /E : not implemented */
 	DEL_NOTHING    = 0x004,   /* /N */
 	DEL_PROMPT     = 0x008,   /* /P */
@@ -56,6 +59,18 @@ enum
 	DEL_EMPTYDIR   = 0x100,   /* /X : not implemented */
 	DEL_YES        = 0x200,   /* /Y */
 	DEL_ZAP        = 0x400    /* /Z */
+};
+
+enum
+{
+	ATTR_ARCHIVE     = 0x001,   /* /A:A */
+	ATTR_HIDDEN      = 0x002,   /* /A:H */
+	ATTR_SYSTEM      = 0x004,   /* /A:S */
+	ATTR_READ_ONLY   = 0x008,   /* /A:R */
+	ATTR_N_ARCHIVE   = 0x010,   /* /A:-A */
+	ATTR_N_HIDDEN    = 0x020,   /* /A:-H */
+	ATTR_N_SYSTEM    = 0x040,   /* /A:-S */
+	ATTR_N_READ_ONLY = 0x080    /* /A:-R */
 };
 
 
@@ -99,6 +114,25 @@ RemoveFile (LPTSTR lpFileName, DWORD dwFlags)
 		ConOutPrintf (_T("100%% %s\n"),szMsg);
 		CloseHandle (file);
 	}
+	/*check to see if it is read only and if this is done based on /A
+	  if it is done by file name, access is denied. However, if it is done 
+	  using the /A switch you must un-read only the file and allow it to be
+	  deleted*/
+	if((dwFlags & DEL_ATTRIBUTES))
+	{
+		HANDLE hFile;
+		WIN32_FIND_DATA f2;
+		hFile = FindFirstFile(lpFileName, &f2);
+		if(f2.dwFileAttributes & FILE_ATTRIBUTE_READONLY)
+		{
+			/*setting file to normal, not saving old attrs first
+			  because the file is going to be deleted anyways
+			  so the only thing that matters is that it isnt
+			  read only.*/
+			SetFileAttributes(lpFileName,FILE_ATTRIBUTE_NORMAL);
+		}
+
+	}
 	return DeleteFile (lpFileName);
 }
 
@@ -120,6 +154,7 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 	INT res;
 	INT   nEvalArgs = 0; /* nunber of evaluated arguments */
 	DWORD dwFlags = 0;
+	DWORD dwAttrFlags = 0;
 	DWORD dwFiles = 0;
 	HANDLE hFile;
 	HANDLE hFileExcl;
@@ -183,12 +218,67 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 					{
 						dwFlags |= DEL_ZAP;
 					}
+					else if (ch == _T('A'))
+					{
+
+						dwFlags |= DEL_ATTRIBUTES;
+						/*the proper syntax for /A has a min of 4 chars
+						i.e. /A:R or /A:-H */
+						if (_tcslen (arg[i]) < 4)
+						{
+							error_invalid_parameter_format(arg[i]);
+							return 0;
+						}
+						ch = _totupper (arg[i][3]);
+						if (_tcslen (arg[i]) == 4)
+						{						
+							if(ch == _T('A'))
+							{
+								dwAttrFlags |= ATTR_ARCHIVE;
+							}
+							if(ch == _T('H'))
+							{
+								dwAttrFlags |= ATTR_HIDDEN;
+							}
+							if(ch == _T('S'))
+							{
+								dwAttrFlags |= ATTR_SYSTEM;
+							}
+							if(ch == _T('R'))
+							{
+								dwAttrFlags |= ATTR_READ_ONLY;
+							}
+						}
+						if (_tcslen (arg[i]) == 5)
+						{
+							if(ch == _T('-'))
+							{
+								ch = _totupper (arg[i][4]);
+								if(ch == _T('A'))
+								{
+									dwAttrFlags |= ATTR_N_ARCHIVE;
+								}
+								if(ch == _T('H'))
+								{
+									dwAttrFlags |= ATTR_N_HIDDEN;
+								}
+								if(ch == _T('S'))
+								{
+									dwAttrFlags |= ATTR_N_SYSTEM;
+								}
+								if(ch == _T('R'))
+								{
+									dwAttrFlags |= ATTR_N_READ_ONLY;
+								}
+							}
+						}
+					}
 				}
 
 				nEvalArgs++;
 			}
 		}
-
+		
 		/* there are only options on the command line --> error!!!
 		   there is the same number of args as there is flags, so none of the args were filenames*/
 		if (args == nEvalArgs)
@@ -246,16 +336,17 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 #endif
 
 					hFile = FindFirstFile (szFullPath, &f);
-					if (hFile == INVALID_HANDLE_VALUE)
-					{
-						error_file_not_found ();
-						freep (arg);
-						return 0;
-					}
 
 					do
 					{
 
+
+						if (hFile == INVALID_HANDLE_VALUE)
+						{
+							error_file_not_found ();
+							freep (arg);
+							return 0;
+						}
 
 						/*bExclusion is the check varible to see if it has a match
 						  and it needs to be set to false before each loop, as it hasnt been matched yet*/						
@@ -264,8 +355,8 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 						/*loop through each of the arguments*/
 						for (ii = 0; ii < args; ii++)
 						{
-							/*check to see if it is a exclusion tag*/
-							if(_tcschr (arg[ii], _T('-')))
+							/*check to see if it is a exclusion tag but not a ':' (used in ATTR)*/
+							if(_tcschr (arg[ii], _T('-')) && _tcschr (arg[ii], _T(':')) == NULL)
 							{
 								/*remove the - from the front to get the real name*/
 								_tcscpy (exfileName , arg[ii]);								
@@ -284,7 +375,38 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 								while (FindNextFile (hFileExcl, &f2));
 							}
 						}
-				
+
+						/*if it is going to be excluded by - no need to check attrs*/
+						if(dwFlags & DEL_ATTRIBUTES && bExclusion == 0)
+						{
+
+							/*save if file attr check if user doesnt care about that attr anyways*/
+							if(dwAttrFlags & ATTR_ARCHIVE)
+								{if(!(f.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE))
+									bExclusion = 1;}
+							if(dwAttrFlags & ATTR_HIDDEN)
+								{if(!(f.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN))
+									bExclusion = 1;}
+							if(dwAttrFlags & ATTR_SYSTEM)
+								{if(!(f.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM))
+									bExclusion = 1;}
+							if(dwAttrFlags & ATTR_READ_ONLY)
+								{if(!(f.dwFileAttributes & FILE_ATTRIBUTE_READONLY))
+									bExclusion = 1;}
+							if(dwAttrFlags & ATTR_N_ARCHIVE)
+								{if(f.dwFileAttributes & FILE_ATTRIBUTE_ARCHIVE)
+									bExclusion = 1;}
+							if(dwAttrFlags & ATTR_N_HIDDEN)
+								{if(f.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
+									bExclusion = 1;}
+							if(dwAttrFlags & ATTR_N_SYSTEM)
+								{if(f.dwFileAttributes & FILE_ATTRIBUTE_SYSTEM)
+									bExclusion = 1;}
+							if(dwAttrFlags & ATTR_N_READ_ONLY)
+								{if(f.dwFileAttributes & FILE_ATTRIBUTE_READONLY)
+									bExclusion = 1;}
+						}
+
 						if(!bExclusion)
 						{
 						/* ignore ".", ".." and directories */

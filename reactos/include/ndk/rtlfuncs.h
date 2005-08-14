@@ -16,8 +16,6 @@
 
 /* PROTOTYPES ****************************************************************/
 
-/* FIXME: FILE NEEDS SOME ALPHABETIZING AND REGROUP */
-
 /*
  * Error and Exception Functions
  */
@@ -53,23 +51,23 @@ VOID
 STDCALL
 RtlRaiseException(IN PEXCEPTION_RECORD ExceptionRecord);
 
-VOID 
-STDCALL 
+VOID
+STDCALL
 RtlRaiseStatus(NTSTATUS Status);
 
 VOID
 STDCALL
 RtlUnwind(
-  PEXCEPTION_REGISTRATION RegistrationFrame,
-  PVOID ReturnAddress,
-  PEXCEPTION_RECORD ExceptionRecord,
-  DWORD EaxValue
+    PEXCEPTION_REGISTRATION RegistrationFrame,
+    PVOID ReturnAddress,
+    PEXCEPTION_RECORD ExceptionRecord,
+    DWORD EaxValue
 );
 
 /*
- * Heap Functions 
+ * Heap Functions
  */
- 
+
 PVOID
 STDCALL
 RtlAllocateHeap(
@@ -95,8 +93,8 @@ RtlCompactHeap(
     HANDLE heap,
     DWORD flags
 );
-    
-HANDLE 
+
+HANDLE
 STDCALL
 RtlDestroyHeap(HANDLE hheap);
 
@@ -114,8 +112,8 @@ RtlGetProcessHeaps(
     ULONG HeapCount,
     HANDLE *HeapArray
 );
-    
-PVOID 
+
+PVOID
 STDCALL
 RtlReAllocateHeap(
     HANDLE Heap,
@@ -124,23 +122,23 @@ RtlReAllocateHeap(
     ULONG Size
 );
 
-BOOLEAN 
+BOOLEAN
 STDCALL
 RtlLockHeap(IN HANDLE Heap);
 
-BOOLEAN 
+BOOLEAN
 STDCALL
 RtlUnlockHeap(IN HANDLE Heap);
 
-ULONG 
+ULONG
 STDCALL
 RtlSizeHeap(
-    IN PVOID HeapHandle, 
-    IN ULONG Flags, 
+    IN PVOID HeapHandle,
+    IN ULONG Flags,
     IN PVOID MemoryPointer
 );
-    
-BOOLEAN 
+
+BOOLEAN
 STDCALL
 RtlValidateHeap(
     HANDLE Heap,
@@ -171,8 +169,8 @@ RtlAddAccessAllowedAce(
     PSID Sid
 );
 
-NTSTATUS 
-STDCALL 
+NTSTATUS
+STDCALL
 RtlAddAccessAllowedAceEx(
     IN OUT PACL pAcl,
     IN DWORD dwAceRevision,
@@ -181,7 +179,7 @@ RtlAddAccessAllowedAceEx(
     IN PSID pSid
 );
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 RtlAddAccessDeniedAce(
     PACL Acl,
@@ -190,7 +188,7 @@ RtlAddAccessDeniedAce(
     PSID Sid
 );
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 RtlAddAccessDeniedAceEx(
     IN OUT PACL Acl,
@@ -200,7 +198,7 @@ RtlAddAccessDeniedAceEx(
     IN PSID Sid
 );
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 RtlAddAuditAccessAceEx(
     IN OUT PACL Acl,
@@ -212,7 +210,7 @@ RtlAddAuditAccessAceEx(
     IN BOOLEAN Failure
 );
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 RtlAddAce(
     PACL Acl,
@@ -222,7 +220,7 @@ RtlAddAce(
     ULONG AceListLength
 );
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 RtlAddAuditAccessAce(
     PACL Acl,
@@ -232,7 +230,7 @@ RtlAddAuditAccessAce(
     BOOLEAN Success,
     BOOLEAN Failure
 );
-          
+
 NTSTATUS
 STDCALL
 RtlAllocateAndInitializeSid(
@@ -249,14 +247,14 @@ RtlAllocateAndInitializeSid(
     OUT PSID *Sid
 );
 
-BOOLEAN 
+BOOLEAN
 STDCALL
 RtlAreAllAccessesGranted(
     ACCESS_MASK GrantedAccess,
     ACCESS_MASK DesiredAccess
 );
 
-BOOLEAN 
+BOOLEAN
 STDCALL
 RtlAreAnyAccessesGranted(
     ACCESS_MASK GrantedAccess,
@@ -270,15 +268,15 @@ RtlCopyLuid(
     IN PLUID LuidSrc
 );
 
-VOID 
+VOID
 STDCALL
 RtlCopyLuidAndAttributesArray(
     ULONG Count,
     PLUID_AND_ATTRIBUTES Src,
     PLUID_AND_ATTRIBUTES Dest
 );
-        
-NTSTATUS 
+
+NTSTATUS
 STDCALL
 RtlCopySidAndAttributesArray(
     ULONG Count,
@@ -321,27 +319,27 @@ RtlCreateSecurityDescriptor(
     ULONG Revision
 );
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 RtlCreateSecurityDescriptorRelative(
     PSECURITY_DESCRIPTOR_RELATIVE SecurityDescriptor,
     ULONG Revision
 );
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 RtlDeleteAce(
     PACL Acl,
     ULONG AceIndex
 );
 
-BOOLEAN 
+BOOLEAN
 STDCALL
 RtlEqualPrefixSid(
     PSID Sid1,
     PSID Sid2
 );
-         
+
 BOOLEAN
 STDCALL
 RtlEqualSid (
@@ -349,7 +347,7 @@ RtlEqualSid (
     IN PSID Sid2
 );
 
-BOOLEAN 
+BOOLEAN
 STDCALL
 RtlFirstFreeAce(
     PACL Acl,
@@ -362,7 +360,7 @@ RtlFreeSid (
     IN PSID Sid
 );
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 RtlGetAce(
     PACL Acl,
@@ -370,14 +368,14 @@ RtlGetAce(
     PACE *Ace
 );
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 RtlGetControlSecurityDescriptor(
     PSECURITY_DESCRIPTOR SecurityDescriptor,
     PSECURITY_DESCRIPTOR_CONTROL Control,
     PULONG Revision
 );
-                 
+
 NTSTATUS
 STDCALL
 RtlGetDaclSecurityDescriptor(
@@ -412,14 +410,14 @@ RtlGetOwnerSecurityDescriptor(
     OUT PBOOLEAN OwnerDefaulted
 );
 
-BOOLEAN 
+BOOLEAN
 STDCALL
 RtlGetSecurityDescriptorRMControl(
     PSECURITY_DESCRIPTOR SecurityDescriptor,
     PUCHAR RMControl
 );
-                  
-PSID_IDENTIFIER_AUTHORITY 
+
+PSID_IDENTIFIER_AUTHORITY
 STDCALL
 RtlIdentifierAuthoritySid(PSID Sid);
 
@@ -443,14 +441,14 @@ ULONG
 STDCALL
 RtlLengthSid(IN PSID Sid);
 
-VOID 
+VOID
 STDCALL
 RtlMapGenericMask(
     PACCESS_MASK AccessMask,
     PGENERIC_MAPPING GenericMapping
 );
-           
-NTSTATUS 
+
+NTSTATUS
 STDCALL
 RtlQueryInformationAcl(
     PACL Acl,
@@ -475,7 +473,7 @@ RtlSelfRelativeToAbsoluteSD(
     IN PULONG PrimaryGroupSize
 );
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 RtlSetControlSecurityDescriptor(
     IN PSECURITY_DESCRIPTOR SecurityDescriptor,
@@ -500,7 +498,7 @@ RtlSetGroupSecurityDescriptor(
     IN BOOLEAN GroupDefaulted
 );
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 RtlSetInformationAcl(
     PACL Acl,
@@ -526,7 +524,7 @@ RtlSetSaclSecurityDescriptor(
     IN BOOLEAN SaclDefaulted
 );
 
-VOID 
+VOID
 STDCALL
 RtlSetSecurityDescriptorRMControl(
     PSECURITY_DESCRIPTOR SecurityDescriptor,
@@ -554,7 +552,7 @@ RtlValidRelativeSecurityDescriptor(
     IN SECURITY_INFORMATION RequiredInformation
 );
 
-BOOLEAN 
+BOOLEAN
 STDCALL
 RtlValidSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor);
 
@@ -562,14 +560,51 @@ BOOLEAN
 STDCALL
 RtlValidSid(IN PSID Sid);
 
-BOOLEAN 
+BOOLEAN
 STDCALL
 RtlValidAcl(PACL Acl);
+
+NTSTATUS
+STDCALL
+RtlDeleteSecurityObject(
+    IN PSECURITY_DESCRIPTOR *ObjectDescriptor
+);
+
+NTSTATUS
+STDCALL
+RtlNewSecurityObject(
+    IN PSECURITY_DESCRIPTOR ParentDescriptor,
+    IN PSECURITY_DESCRIPTOR CreatorDescriptor,
+    OUT PSECURITY_DESCRIPTOR *NewDescriptor,
+    IN BOOLEAN IsDirectoryObject,
+    IN HANDLE Token,
+    IN PGENERIC_MAPPING GenericMapping
+);
+
+NTSTATUS
+STDCALL
+RtlQuerySecurityObject(
+    IN PSECURITY_DESCRIPTOR ObjectDescriptor,
+    IN SECURITY_INFORMATION SecurityInformation,
+    OUT PSECURITY_DESCRIPTOR ResultantDescriptor,
+    IN ULONG DescriptorLength,
+    OUT PULONG ReturnLength
+);
+
+NTSTATUS
+STDCALL
+RtlSetSecurityObject(
+    IN SECURITY_INFORMATION SecurityInformation,
+    IN PSECURITY_DESCRIPTOR ModificationDescriptor,
+    OUT PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor,
+    IN PGENERIC_MAPPING GenericMapping,
+    IN HANDLE Token
+);
 
 /*
  * Single-Character Functions
  */
-NTSTATUS 
+NTSTATUS
 STDCALL
 RtlLargeIntegerToChar(
     IN PLARGE_INTEGER Value,
@@ -577,16 +612,16 @@ RtlLargeIntegerToChar(
     IN ULONG Length,
     IN OUT PCHAR String
 );
-    
-CHAR 
+
+CHAR
 STDCALL
 RtlUpperChar(CHAR Source);
 
 WCHAR
 STDCALL
 RtlUpcaseUnicodeChar(WCHAR Source);
-    
-WCHAR 
+
+WCHAR
 STDCALL
 RtlDowncaseUnicodeChar(IN WCHAR Source);
 
@@ -599,7 +634,7 @@ RtlIntegerToChar(
     IN OUT PCHAR String
 );
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 RtlIntegerToUnicode(
     IN ULONG Value,
@@ -623,18 +658,18 @@ RtlCharToInteger(
     ULONG Base,
     PULONG Value
 );
-    
-USHORT 
+
+USHORT
 FASTCALL
 RtlUshortByteSwap(IN USHORT Source);
 
 /*
- * Unicode->Ansi String Functions 
- */     
+ * Unicode->Ansi String Functions
+ */
 ULONG
 STDCALL
 RtlUnicodeStringToAnsiSize(IN PUNICODE_STRING UnicodeString);
-   
+
 NTSTATUS
 STDCALL
 RtlUnicodeStringToAnsiString(
@@ -677,7 +712,7 @@ RtlUnicodeStringToOemString(
     PUNICODE_STRING SourceString,
     BOOLEAN AllocateDestinationString
 );
-    
+
 NTSTATUS
 STDCALL
 RtlUpcaseUnicodeToOemN(
@@ -687,7 +722,7 @@ RtlUpcaseUnicodeToOemN(
     PWCHAR UnicodeString,
     ULONG UnicodeSize
 );
-     
+
 ULONG
 STDCALL
 RtlUnicodeStringToOemSize(IN PUNICODE_STRING UnicodeString);
@@ -701,9 +736,9 @@ RtlUnicodeToOemN(
     PWCHAR UnicodeString,
     ULONG UnicodeSize
 );
-    
+
 /*
- * Unicode->MultiByte String Functions 
+ * Unicode->MultiByte String Functions
  */
 NTSTATUS
 STDCALL
@@ -724,7 +759,7 @@ RtlUpcaseUnicodeToMultiByteN(
     PWCHAR UnicodeString,
     ULONG UnicodeSize
 );
-    
+
 NTSTATUS
 STDCALL
 RtlUnicodeToMultiByteSize(
@@ -735,11 +770,11 @@ RtlUnicodeToMultiByteSize(
 
 /*
  * OEM to Unicode Functions
- */    
+ */
 ULONG
 STDCALL
 RtlOemStringToUnicodeSize(POEM_STRING AnsiString);
-    
+
 NTSTATUS
 STDCALL
 RtlOemStringToUnicodeString(
@@ -757,11 +792,7 @@ RtlOemToUnicodeN(
     IN PCHAR OemString,
     ULONG BytesInOemString
 );
-    
-/*
- * Ansi->Multibyte String Functions
- */
- 
+
 /*
  * Ansi->Unicode String Functions
  */
@@ -772,14 +803,14 @@ RtlAnsiStringToUnicodeString(
     PANSI_STRING SourceString,
     BOOLEAN AllocateDestinationString
 );
-    
+
 ULONG
 STDCALL
 RtlAnsiStringToUnicodeSize(
     PANSI_STRING AnsiString
 );
-   
-BOOLEAN 
+
+BOOLEAN
 STDCALL
 RtlCreateUnicodeStringFromAsciiz(
     OUT PUNICODE_STRING Destination,
@@ -811,7 +842,7 @@ RtlCompareUnicodeString(
     BOOLEAN CaseInsensitive
 );
 
-VOID 
+VOID
 STDCALL
 RtlCopyUnicodeString(
     PUNICODE_STRING DestinationString,
@@ -824,7 +855,7 @@ RtlCreateUnicodeString(
     PUNICODE_STRING DestinationString,
     PCWSTR SourceString
 );
-    
+
 BOOLEAN
 STDCALL
 RtlEqualUnicodeString(
@@ -843,6 +874,14 @@ RtlInitUnicodeString(
   IN OUT PUNICODE_STRING  DestinationString,
   IN PCWSTR  SourceString);
 
+ULONG
+STDCALL
+RtlIsTextUnicode(
+    PVOID Buffer,
+    ULONG Length,
+    ULONG *Flags
+);
+
 BOOLEAN
 STDCALL
 RtlPrefixUnicodeString(
@@ -859,6 +898,14 @@ RtlUnicodeStringToInteger(
     PULONG Value
 );
 
+NTSTATUS
+STDCALL
+RtlHashUnicodeString(
+    IN CONST UNICODE_STRING *String,
+    IN BOOLEAN CaseInSensitive,
+    IN ULONG HashAlgorithm,
+    OUT PULONG HashValue);
+
 /*
  * Ansi String Functions
  */
@@ -872,15 +919,15 @@ RtlInitAnsiString(
     PANSI_STRING DestinationString,
     PCSZ SourceString
 );
- 
+
 /*
  * OEM String Functions
  */
-VOID 
+VOID
 STDCALL
 RtlFreeOemString(IN POEM_STRING OemString);
 
-/* 
+/*
  * MultiByte->Unicode String Functions
  */
 NTSTATUS
@@ -926,7 +973,7 @@ RtlDeleteAtomFromAtomTable(
     IN RTL_ATOM Atom
 );
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 RtlDestroyAtomTable(IN PRTL_ATOM_TABLE AtomTable);
 
@@ -940,7 +987,7 @@ RtlQueryAtomInAtomTable(
     IN OUT PWSTR AtomName OPTIONAL,
     IN OUT PULONG NameLength OPTIONAL
 );
-    
+
 NTSTATUS
 STDCALL
 RtlLookupAtomInAtomTable(
@@ -952,14 +999,14 @@ RtlLookupAtomInAtomTable(
 /*
  * Memory Functions
  */
-SIZE_T 
+SIZE_T
 STDCALL
 RtlCompareMemory(
     IN const VOID *Source1,
     IN const VOID *Source2,
     IN SIZE_T Length
 );
-                 
+
 VOID
 STDCALL
 RtlFillMemoryUlong(
@@ -967,12 +1014,10 @@ RtlFillMemoryUlong(
     IN ULONG Length,
     IN ULONG Fill
 );
-                 
+
 /*
  * Process Management Functions
  */
-/* FIXME: Some of these will be split up into enviro/path functions */
-
 VOID
 STDCALL
 RtlAcquirePebLock(VOID);
@@ -991,7 +1036,7 @@ RtlCreateProcessParameters (
     IN PUNICODE_STRING ShellInfo OPTIONAL,
     IN PUNICODE_STRING RuntimeInfo OPTIONAL
 );
-    
+
 NTSTATUS
 STDCALL
 RtlCreateUserProcess(
@@ -1005,21 +1050,6 @@ RtlCreateUserProcess(
     IN HANDLE DebugPort OPTIONAL,
     IN HANDLE ExceptionPort OPTIONAL,
     OUT PRTL_PROCESS_INFO ProcessInfo
-);
-
-NTSTATUS
-STDCALL
-RtlDestroyProcessParameters(IN PRTL_USER_PROCESS_PARAMETERS ProcessParameters);
-
-VOID
-STDCALL
-RtlReleasePebLock(VOID);
-
-NTSTATUS
-STDCALL
-RtlCreateEnvironment(
-    BOOLEAN Inherit,
-    PWSTR *Environment
 );
 
 NTSTATUS
@@ -1039,24 +1069,33 @@ RtlCreateUserThread(
 
 PRTL_USER_PROCESS_PARAMETERS
 STDCALL
-RtlDeNormalizeProcessParams(
-    IN PRTL_USER_PROCESS_PARAMETERS ProcessParameters
+RtlDeNormalizeProcessParams(IN PRTL_USER_PROCESS_PARAMETERS ProcessParameters);
+
+NTSTATUS
+STDCALL
+RtlDestroyProcessParameters(IN PRTL_USER_PROCESS_PARAMETERS ProcessParameters);
+
+PRTL_USER_PROCESS_PARAMETERS
+STDCALL
+RtlNormalizeProcessParams(IN PRTL_USER_PROCESS_PARAMETERS ProcessParameters);
+
+VOID
+STDCALL
+RtlReleasePebLock(VOID);
+
+/*
+ * Environment/Path Functions
+ */
+NTSTATUS
+STDCALL
+RtlCreateEnvironment(
+    BOOLEAN Inherit,
+    PWSTR *Environment
 );
 
 VOID
 STDCALL
-RtlDestroyEnvironment(
-    PWSTR Environment
-);
-    
-NTSTATUS
-STDCALL
-RtlExpandEnvironmentStrings_U(
-    PWSTR Environment,
-    PUNICODE_STRING Source,
-    PUNICODE_STRING Destination,
-    PULONG Length
-);
+RtlDestroyEnvironment(PWSTR Environment);
 
 BOOLEAN
 STDCALL
@@ -1065,7 +1104,7 @@ RtlDoesFileExists_U(PWSTR FileName);
 ULONG
 STDCALL
 RtlDetermineDosPathNameType_U(PCWSTR Path);
-    
+
 ULONG
 STDCALL
 RtlDosSearchPath_U(
@@ -1076,7 +1115,25 @@ RtlDosSearchPath_U(
     WCHAR *buffer,
     WCHAR **shortname
 );
-    
+
+BOOLEAN
+STDCALL
+RtlDosPathNameToNtPathName_U(
+    PWSTR DosName,
+    PUNICODE_STRING NtName,
+    PWSTR *ShortName,
+    PCURDIR CurrentDirectory
+);
+
+NTSTATUS
+STDCALL
+RtlExpandEnvironmentStrings_U(
+    PWSTR Environment,
+    PUNICODE_STRING Source,
+    PUNICODE_STRING Destination,
+    PULONG Length
+);
+
 ULONG
 STDCALL
 RtlGetCurrentDirectory_U(
@@ -1093,10 +1150,12 @@ RtlGetFullPathName_U(
     WCHAR **shortname
 );
 
-PRTL_USER_PROCESS_PARAMETERS
+BOOLEAN
 STDCALL
-RtlNormalizeProcessParams(
-    IN PRTL_USER_PROCESS_PARAMETERS ProcessParameters
+RtlIsNameLegalDOS8Dot3(
+    IN PUNICODE_STRING UnicodeName,
+    IN PANSI_STRING AnsiName,
+    PBOOLEAN Unknown
 );
 
 NTSTATUS
@@ -1110,7 +1169,7 @@ RtlQueryEnvironmentVariable_U(
 NTSTATUS
 STDCALL
 RtlSetCurrentDirectory_U(PUNICODE_STRING name);
-    
+
 NTSTATUS
 STDCALL
 RtlSetEnvironmentVariable(
@@ -1125,33 +1184,95 @@ RtlSetEnvironmentVariable(
 NTSTATUS
 STDCALL
 RtlDeleteCriticalSection (
-     PRTL_CRITICAL_SECTION CriticalSection
+    IN PRTL_CRITICAL_SECTION CriticalSection
 );
- 
+
 NTSTATUS
 STDCALL
 RtlEnterCriticalSection(
-     PRTL_CRITICAL_SECTION CriticalSection
+    IN PRTL_CRITICAL_SECTION CriticalSection
 );
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 RtlInitializeCriticalSection(
-     PRTL_CRITICAL_SECTION CriticalSection
+    IN PRTL_CRITICAL_SECTION CriticalSection
 );
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 RtlInitializeCriticalSectionAndSpinCount(
-    PRTL_CRITICAL_SECTION CriticalSection,
-    ULONG SpinCount
+    IN PRTL_CRITICAL_SECTION CriticalSection,
+    IN ULONG SpinCount
 );
 
 NTSTATUS
 STDCALL
 RtlLeaveCriticalSection(
-     PRTL_CRITICAL_SECTION CriticalSection
-); 
+    IN PRTL_CRITICAL_SECTION CriticalSection
+);
+
+VOID
+STDCALL
+RtlpUnWaitCriticalSection(
+    IN PRTL_CRITICAL_SECTION CriticalSection
+);
+
+NTSTATUS
+STDCALL
+RtlpWaitForCriticalSection(
+    IN PRTL_CRITICAL_SECTION CriticalSection
+);
+
+BOOLEAN
+STDCALL
+RtlAcquireResourceExclusive(
+    IN PRTL_RESOURCE Resource,
+    IN BOOLEAN Wait
+);
+
+BOOLEAN
+STDCALL
+RtlAcquireResourceShared(
+    IN PRTL_RESOURCE Resource,
+    IN BOOLEAN Wait
+);
+
+VOID
+STDCALL
+RtlConvertExclusiveToShared(
+    IN PRTL_RESOURCE Resource
+);
+
+VOID
+STDCALL
+RtlConvertSharedToExclusive(
+    IN PRTL_RESOURCE Resource
+);
+
+VOID
+STDCALL
+RtlDeleteResource(
+    IN PRTL_RESOURCE Resource
+);
+
+VOID
+STDCALL
+RtlDumpResource(
+    IN PRTL_RESOURCE Resource
+);
+
+VOID
+STDCALL
+RtlInitializeResource(
+    IN PRTL_RESOURCE Resource
+);
+
+VOID
+STDCALL
+RtlReleaseResource(
+    IN PRTL_RESOURCE Resource
+);
 
 /*
  * Compression Functions
@@ -1191,7 +1312,7 @@ RtlGetCompressionWorkSpaceSize(
 /*
  * Debug Info Functions
  */
-PDEBUG_BUFFER 
+PDEBUG_BUFFER
 STDCALL
 RtlCreateQueryDebugBuffer(
     IN ULONG Size,
@@ -1202,14 +1323,14 @@ NTSTATUS
 STDCALL
 RtlDestroyQueryDebugBuffer(IN PDEBUG_BUFFER DebugBuffer);
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 RtlQueryProcessDebugInformation(
     IN ULONG ProcessId,
     IN ULONG DebugInfoClassMask,
     IN OUT PDEBUG_BUFFER DebugBuffer
 );
-                
+
 /*
  * Bitmap Functions
  */
@@ -1240,17 +1361,17 @@ RtlClearBits(
 ULONG
 STDCALL
 RtlFindClearBits(
-    PRTL_BITMAP BitMapHeader,
-    ULONG NumberToFind,
-    ULONG HintIndex
+    IN PRTL_BITMAP BitMapHeader,
+    IN ULONG NumberToFind,
+    IN ULONG HintIndex
 );
 
 ULONG
 STDCALL
 RtlFindClearBitsAndSet(
-    PRTL_BITMAP BitMapHeader,
-    ULONG NumberToFind,
-    ULONG HintIndex
+    IN PRTL_BITMAP BitMapHeader,
+    IN ULONG NumberToFind,
+    IN ULONG HintIndex
 );
 
 VOID
@@ -1264,9 +1385,9 @@ RtlInitializeBitMap(
 VOID
 STDCALL
 RtlSetBits (
-    PRTL_BITMAP BitMapHeader,
-    ULONG StartingIndex,
-    ULONG NumberToSet
+    IN PRTL_BITMAP BitMapHeader,
+    IN ULONG StartingIndex,
+    IN ULONG NumberToSet
 );
 
 /*
@@ -1276,7 +1397,7 @@ NTSTATUS
 STDCALL
 RtlCreateTimer(
     HANDLE TimerQueue,
-    PHANDLE phNewTimer, 
+    PHANDLE phNewTimer,
     WAITORTIMERCALLBACKFUNC Callback,
     PVOID Parameter,
     DWORD DueTime,
@@ -1317,7 +1438,7 @@ STDCALL
 RtlDeleteTimerQueue(HANDLE TimerQueue);
 
 /*
- * Debug Functions 
+ * Debug Functions
  */
 ULONG
 CDECL
@@ -1333,47 +1454,47 @@ DbgBreakPoint(VOID);
 /*
  * Handle Table Functions
  */
-PRTL_HANDLE
+PRTL_HANDLE_TABLE_ENTRY
 STDCALL
-RtlAllocateHandle (
-    IN	PRTL_HANDLE_TABLE	HandleTable,
-    IN OUT	PULONG			Index
+RtlAllocateHandle(
+    IN PRTL_HANDLE_TABLE HandleTable,
+    IN OUT PULONG Index
 );
 
 VOID
 STDCALL
-RtlDestroyHandleTable (IN	PRTL_HANDLE_TABLE	HandleTable);
+RtlDestroyHandleTable(IN PRTL_HANDLE_TABLE HandleTable);
 
 BOOLEAN
 STDCALL
-RtlFreeHandle (
-    IN	PRTL_HANDLE_TABLE	HandleTable,
-    IN	PRTL_HANDLE		Handle
+RtlFreeHandle(
+    IN PRTL_HANDLE_TABLE HandleTable,
+    IN PRTL_HANDLE_TABLE_ENTRY Handle
 );
 
 VOID
 STDCALL
-RtlInitializeHandleTable (
-    IN	ULONG			TableSize,
-    IN	ULONG			HandleSize,
-    IN	PRTL_HANDLE_TABLE	HandleTable
+RtlInitializeHandleTable(
+    IN ULONG TableSize,
+    IN ULONG HandleSize,
+    IN PRTL_HANDLE_TABLE HandleTable
 );
 
 BOOLEAN
 STDCALL
-RtlIsValidHandle (
-    IN	PRTL_HANDLE_TABLE	HandleTable,
-    IN	PRTL_HANDLE		Handle
+RtlIsValidHandle(
+    IN PRTL_HANDLE_TABLE HandleTable,
+    IN PRTL_HANDLE_TABLE_ENTRY Handle
 );
 
 BOOLEAN
 STDCALL
-RtlIsValidIndexHandle (
-    IN	PRTL_HANDLE_TABLE	HandleTable,
-    IN OUT	PRTL_HANDLE		*Handle,
-    IN	ULONG			Index
+RtlIsValidIndexHandle(
+    IN PRTL_HANDLE_TABLE HandleTable,
+    IN OUT PRTL_HANDLE_TABLE_ENTRY *Handle,
+    IN ULONG Index
 );
-    
+
 /*
  * PE Functions
  */
@@ -1387,10 +1508,10 @@ RtlFindMessage(
     OUT PRTL_MESSAGE_RESOURCE_ENTRY *MessageResourceEntry
 );
 
-ULONG 
+ULONG
 STDCALL
 RtlGetNtGlobalFlags(VOID);
-              
+
 PVOID
 STDCALL
 RtlImageDirectoryEntryToData(
@@ -1430,12 +1551,12 @@ RtlCheckRegistryKey(
     ULONG RelativeTo,
     PWSTR Path
 );
-    
-NTSTATUS 
+
+NTSTATUS
 STDCALL
 RtlFormatCurrentUserKeyPath(IN OUT PUNICODE_STRING KeyPath);
-    
-NTSTATUS 
+
+NTSTATUS
 STDCALL
 RtlpNtOpenKey(
     OUT HANDLE KeyHandle,
@@ -1443,7 +1564,7 @@ RtlpNtOpenKey(
     IN POBJECT_ATTRIBUTES ObjectAttributes,
     IN ULONG Unused
 );
-          
+
 NTSTATUS
 STDCALL
 RtlOpenCurrentUser(
@@ -1471,10 +1592,10 @@ RtlWriteRegistryValue(
     PVOID ValueData,
     ULONG ValueLength
 );
-  
+
 /*
  * NLS Functions
- */      
+ */
 VOID
 STDCALL
 RtlInitNlsTables(
@@ -1490,43 +1611,15 @@ RtlInitCodePageTable(
     IN PUSHORT TableBase,
     OUT PCPTABLEINFO CodePageTable
 );
-   
+
 VOID
 STDCALL
 RtlResetRtlTranslations(IN PNLSTABLEINFO NlsTable);
 
 /*
- * Misc String Functions
- */     
-BOOLEAN
-STDCALL
-RtlDosPathNameToNtPathName_U(
-    PWSTR DosName,
-    PUNICODE_STRING NtName,
-    PWSTR *ShortName,
-    PCURDIR CurrentDirectory
-);
-                 
-BOOLEAN
-STDCALL
-RtlIsNameLegalDOS8Dot3(
-    IN PUNICODE_STRING UnicodeName,
-    IN PANSI_STRING AnsiName,
-    PBOOLEAN Unknown
-);
-
-ULONG
-STDCALL
-RtlIsTextUnicode(
-    PVOID Buffer,
-    ULONG Length,
-    ULONG *Flags
-);
-
-/*
  * Misc conversion functions
  */
-LARGE_INTEGER 
+LARGE_INTEGER
 STDCALL
 RtlConvertLongToLargeInteger(IN LONG SignedInteger);
 
@@ -1551,8 +1644,8 @@ RtlEnlargedUnsignedMultiply(
     ULONG Multiplicand,
     ULONG Multiplier
 );
-    
-ULONG 
+
+ULONG
 STDCALL
 RtlUniform(PULONG Seed);
 
@@ -1562,7 +1655,7 @@ RtlUniform(PULONG Seed);
 NTSTATUS
 STDCALL
 RtlQueryTimeZoneInformation(LPTIME_ZONE_INFORMATION TimeZoneInformation);
-    
+
 VOID
 STDCALL
 RtlSecondsSince1970ToTime(
@@ -1570,11 +1663,11 @@ RtlSecondsSince1970ToTime(
     OUT PLARGE_INTEGER Time
 );
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 RtlSetTimeZoneInformation(LPTIME_ZONE_INFORMATION TimeZoneInformation);
-                      
-BOOLEAN 
+
+BOOLEAN
 STDCALL
 RtlTimeFieldsToTime(
     PTIME_FIELDS TimeFields,
@@ -1598,7 +1691,7 @@ RtlVerifyVersionInfo(
     IN ULONG TypeMask,
     IN ULONGLONG ConditionMask
 );
-    
+
 NTSTATUS
 STDCALL
 RtlGetVersion(IN OUT PRTL_OSVERSIONINFOW lpVersionInformation);

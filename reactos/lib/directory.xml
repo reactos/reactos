@@ -19,6 +19,9 @@
 <directory name="cards">
 	<xi:include href="cards/cards.xml" />
 </directory>
+<directory name="cfgmgr32">
+	<xi:include href="cfgmgr32/cfgmgr32.xml" />
+</directory>
 <directory name="comctl32">
 	<xi:include href="comctl32/comctl32.xml" />
 </directory>
@@ -129,6 +132,9 @@
 </directory>
 <directory name="libwine">
 	<xi:include href="libwine/libwine.xml" />
+</directory>
+<directory name="lsasrv">
+	<xi:include href="lsasrv/lsasrv.xml" />
 </directory>
 <directory name="lzexpand">
 	<xi:include href="lzexpand/lz32.xml" />

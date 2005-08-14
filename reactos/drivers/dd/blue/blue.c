@@ -12,9 +12,9 @@
 /* INCLUDES ******************************************************************/
 
 #include <ddk/ntddk.h>
-#include <ntos/halfuncs.h>
+#include <wincon.h>
 #include <ddk/ntddblue.h>
-#include <string.h>
+#include <ndk/halfuncs.h>
 
 #define NDEBUG
 #include <debug.h>

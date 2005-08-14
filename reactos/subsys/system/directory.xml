@@ -22,6 +22,9 @@
 <directory name="format">
 	<xi:include href="format/format.xml" />
 </directory>
+<directory name="lsass">
+	<xi:include href="lsass/lsass.xml" />
+</directory>
 <directory name="msiexec">
 	<xi:include href="msiexec/msiexec.xml" />
 </directory>

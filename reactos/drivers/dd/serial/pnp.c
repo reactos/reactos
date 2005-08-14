@@ -1,11 +1,10 @@
-/* $Id:
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         Serial port driver
  * FILE:            drivers/dd/serial/pnp.c
  * PURPOSE:         Serial IRP_MJ_PNP operations
  *
- * PROGRAMMERS:     Hervé Poussineau (poussine@freesurf.fr)
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
  */
 /* FIXME: call IoAcquireRemoveLock/IoReleaseRemoveLock around each I/O operation */
 

@@ -21,7 +21,11 @@
  * DC.C - Device context functions
  *
  */
+
 #include <w32k.h>
+
+#define NDEBUG
+#include <debug.h>
 
 #ifndef OBJ_COLORSPACE
 #define OBJ_COLORSPACE	(14)

@@ -196,7 +196,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
 
     /* Initialize LPC */
     DPRINT("Initialliazing Thread Semaphore\n");
-    KeInitializeSemaphore(&Thread->LpcReplySemaphore, 0, LONG_MAX);
+    KeInitializeSemaphore(&Thread->LpcReplySemaphore, 0, MAXLONG);
 
     /* Allocate Stack for non-GUI Thread */
     DPRINT("Initialliazing Thread Stack\n");

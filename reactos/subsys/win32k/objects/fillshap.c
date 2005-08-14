@@ -16,7 +16,11 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+
 #include <w32k.h>
+
+#define NDEBUG
+#include <debug.h>
 
 /*
  * a couple macros to fill a single pixel or a line

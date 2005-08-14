@@ -10,9 +10,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <ntifs.h>
-#include <ntos/fstypes.h> /* FIXME: NDK */
-/* FIXME: The headers are broken! */
-#undef CreateMailslot
+#include <ndk/iotypes.h>
 #include "msfs.h"
 
 #define NDEBUG

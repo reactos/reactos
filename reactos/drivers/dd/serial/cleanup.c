@@ -1,11 +1,10 @@
-/* $Id:
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         Serial port driver
  * FILE:            drivers/dd/serial/cleanup.c
  * PURPOSE:         Serial IRP_MJ_CLEANUP operations
  *
- * PROGRAMMERS:     Hervé Poussineau (poussine@freesurf.fr)
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
  */
 
 #define NDEBUG

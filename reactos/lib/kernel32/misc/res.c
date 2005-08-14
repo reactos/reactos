@@ -8,7 +8,6 @@
  */
 
 #include <k32.h>
-#include <ddk/ldrfuncs.h>
 
 #define NDEBUG
 #include "../include/debug.h"

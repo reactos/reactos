@@ -28,20 +28,11 @@
  */
 
 /* INCLUDES ******************************************************************/
+
 #include <w32k.h>
 
-#if 0
-/* not yet defined in w32api... */
-NTSTATUS STDCALL
-ObFindHandleForObject(IN PEPROCESS Process,
-                      IN PVOID Object,
-                      IN POBJECT_TYPE ObjectType,
-                      IN POBJECT_HANDLE_INFORMATION HandleInformation,
-                      OUT PHANDLE Handle);
-#else
-#define ObFindHandleForObject(Process, Object, ObjectType, HandleInformation, Handle) \
-  (STATUS_UNSUCCESSFUL)
-#endif
+#define NDEBUG
+#include <debug.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -54,9 +45,24 @@ BOOL g_PaintDesktopVersion = FALSE;
 
 /* INITALIZATION FUNCTIONS ****************************************************/
 
+static GENERIC_MAPPING IntDesktopMapping =
+{
+   STANDARD_RIGHTS_READ     | DESKTOP_ENUMERATE       | DESKTOP_READOBJECTS,
+   STANDARD_RIGHTS_WRITE    | DESKTOP_CREATEMENU      | DESKTOP_CREATEWINDOW    | DESKTOP_HOOKCONTROL   |
+                              DESKTOP_JOURNALPLAYBACK | DESKTOP_JOURNALRECORD   | DESKTOP_WRITEOBJECTS,
+   STANDARD_RIGHTS_EXECUTE  | DESKTOP_SWITCHDESKTOP,
+   STANDARD_RIGHTS_REQUIRED | DESKTOP_CREATEMENU      | DESKTOP_CREATEWINDOW    | DESKTOP_ENUMERATE     |
+                              DESKTOP_HOOKCONTROL     | DESKTOP_JOURNALPLAYBACK | DESKTOP_JOURNALRECORD |
+                              DESKTOP_READOBJECTS     | DESKTOP_SWITCHDESKTOP   | DESKTOP_WRITEOBJECTS
+};
+
 NTSTATUS FASTCALL
 InitDesktopImpl(VOID)
 {
+   /* Set Desktop Object Attributes */
+   ExDesktopObjectType->TypeInfo.DefaultNonPagedPoolCharge = sizeof(DESKTOP_OBJECT);
+   ExDesktopObjectType->TypeInfo.GenericMapping = IntDesktopMapping;
+   
   return STATUS_SUCCESS;
 }
 
@@ -1359,7 +1365,7 @@ NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
      may be a bit safer (e.g. when the desktop is being destroyed */
   /* switch into the context of the thread we're trying to get the desktop from,
      so we can use the handle */
-  KeAttachProcess(EPROCESS_TO_KPROCESS(Thread->ThreadsProcess));
+  KeAttachProcess(&Thread->ThreadsProcess->Pcb);
   Status = ObReferenceObjectByHandle(hThreadDesktop,
                                      GENERIC_ALL,
 				     ExDesktopObjectType,

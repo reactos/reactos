@@ -3,9 +3,6 @@
 
 #include <windows.h>
 #include <ddk/ntddblue.h>
-#ifndef _NTNDK_
-#include <ntos.h>
-#endif
 
 #define CSR_NATIVE     0x0000
 #define CSR_CONSOLE    0x0001

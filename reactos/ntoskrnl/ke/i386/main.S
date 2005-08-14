@@ -1,10 +1,6 @@
 #include <roscfg.h>
-#include <internal/ntoskrnl.h>
-#include <internal/i386/ke.h>
-#include <internal/i386/segment.h>
-#include <internal/ps.h>
-#include <internal/i386/mm.h>
-#include <internal/i386/fpu.h>
+#include <internal/asm.h>
+#include <ndk/i386/segment.h>
 
 #define AP_MAGIC (0x12481020)
 

@@ -90,7 +90,7 @@ LpcpInitializePort (IN OUT  PEPORT Port,
   }
   memset (Port, 0, sizeof(EPORT));
   KeInitializeSpinLock (& Port->Lock);
-  KeInitializeSemaphore( &Port->Semaphore, 0, LONG_MAX );
+  KeInitializeSemaphore( &Port->Semaphore, 0, MAXLONG );
   Port->RequestPort = Parent;
   Port->OtherPort = NULL;
   Port->QueueLength = 0;

@@ -31,7 +31,7 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winreg.h"
-#include "wine/winternl.h"
+#include "winternl.h"
 #include <internal/wine/msvcrt.h>
 #include "wine/exception.h"
 #include "excpt.h"

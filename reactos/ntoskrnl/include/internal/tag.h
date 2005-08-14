@@ -1,11 +1,3 @@
-/*
- * NTOSKRNL Tag names.
- * License GPL
- *
- * FIXME: Replace with standard GPL Header.
- * FIXME: Add notes as needed
- */
-
 #ifndef _NTOSKRNL_TAG_H
 #define _NTOSKRNL_TAG_H
 
@@ -13,6 +5,9 @@
 #define TAG_CSEG  TAG('C', 'S', 'E', 'G')
 #define TAG_BCB   TAG('B', 'C', 'B', ' ')
 #define TAG_IBCB  TAG('i', 'B', 'C', 'B')
+
+/* formely located in include/callback.h */
+#define CALLBACK_TAG        TAG('C','L','B','K')
 
 /* formerly located in ex/resource.c */
 #define TAG_OWNER_TABLE     TAG('R', 'O', 'W', 'N')
@@ -39,6 +34,7 @@
 /* formerly located in io/fs.c */
 #define TAG_FILE_SYSTEM       TAG('F', 'S', 'Y', 'S')
 #define TAG_FS_CHANGE_NOTIFY  TAG('F', 'S', 'C', 'N')
+#define IFS_POOL_TAG          TAG('F', 'S', 'r', 't')
 
 /* formerly located in io/iocomp.c */
 #define IOC_TAG   TAG('I', 'O', 'C', 'T')
@@ -85,6 +81,7 @@
 
 /* formerly located in kdbg/kdb_symbols.c */
 #define TAG_KDBS TAG('K', 'D', 'B', 'S')
+#define TAG_KDBG TAG('K', 'D', 'B', 'G')
 
 /* formerly located in ldr/loader.c */
 #define TAG_DRIVER_MEM  TAG('D', 'R', 'V', 'M') /* drvm */
@@ -118,6 +115,7 @@
 #define TAG_SECTION_PAGE_TABLE   TAG('M', 'S', 'P', 'T')
 
 /* formerly located in ob/symlink.c */
+#define TAG_OBJECT_TYPE         TAG('O', 'b', 'j', 'T')
 #define TAG_SYMLINK_TTARGET     TAG('S', 'Y', 'T', 'T')
 #define TAG_SYMLINK_TARGET      TAG('S', 'Y', 'M', 'T')
 
@@ -144,5 +142,9 @@
 
 /* formerly located in se/sd.c */
 #define TAG_SD     TAG('S', 'e', 'S', 'd')
+
+/* LPC Tags */
+#define TAG_LPC_MESSAGE   TAG('L', 'p', 'c', 'M')
+#define TAG_LPC_ZONE      TAG('L', 'p', 'c', 'Z')
 
 #endif /* _NTOSKRNL_TAG_H */

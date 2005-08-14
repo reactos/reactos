@@ -37,27 +37,32 @@ typedef struct _INTERNAL_BCB
 
 VOID
 STDCALL
-CcMdlReadCompleteDev(IN PMDL MdlChain,
-                     IN PFILE_OBJECT FileObject);
+CcMdlReadCompleteDev(
+    IN PMDL MdlChain,
+    IN PFILE_OBJECT FileObject
+);
 
 VOID
 STDCALL
-CcMdlWriteCompleteDev(IN PLARGE_INTEGER FileOffset,
-                      IN PMDL MdlChain,
-                      IN PFILE_OBJECT FileObject);
+CcMdlWriteCompleteDev(
+    IN PLARGE_INTEGER FileOffset,
+    IN PMDL MdlChain,
+    IN PFILE_OBJECT FileObject
+);
 
 VOID
 CcInitView(VOID);
 
-
 VOID CcInit(VOID);
-
 
 VOID
 CcInitCacheZeroPage(VOID);
 
 NTSTATUS
-CcRosFlushDirtyPages(ULONG Target, PULONG Count);
+CcRosFlushDirtyPages(
+    ULONG Target, 
+    PULONG Count
+);
 
 VOID
 CcRosDereferenceCache(PFILE_OBJECT FileObject);
@@ -67,7 +72,6 @@ CcRosReferenceCache(PFILE_OBJECT FileObject);
 
 VOID
 CcRosSetRemoveOnClose(PSECTION_OBJECT_POINTERS SectionObjectPointer);
-
 
 /*
  * Macro for generic cache manage bugchecking. Note that this macro assumes

@@ -22,9 +22,6 @@
 #define PA_SYSTEM          (0)
 #endif
 
-
-#ifndef __ASM__
-
 #define KERNEL_BASE        (ULONG)MmSystemRangeStart
 
 #if defined(__GNUC__)
@@ -59,7 +56,5 @@ PULONG MmGetPageDirectory(VOID);
 
 #define PAGE_MASK(x)		((x)&(~0xfff))
 #define PAE_PAGE_MASK(x)	((x)&(~0xfffLL))
-
-#endif /* ASSEMBLER */
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_I386_MM_H */

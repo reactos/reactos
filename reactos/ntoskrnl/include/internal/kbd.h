@@ -1,4 +1,3 @@
-/* ReactOS System Header -- kbd.h */
 #define __KBD_H
 
 #if __GNUC__ >=3

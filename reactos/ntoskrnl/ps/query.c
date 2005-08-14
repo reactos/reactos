@@ -190,9 +190,9 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 	  ProcessBasicInformationP->PebBaseAddress = Process->Peb;
 	  ProcessBasicInformationP->AffinityMask = Process->Pcb.Affinity;
 	  ProcessBasicInformationP->UniqueProcessId =
-	    Process->UniqueProcessId;
+	    (ULONG)Process->UniqueProcessId;
 	  ProcessBasicInformationP->InheritedFromUniqueProcessId =
-	    Process->InheritedFromUniqueProcessId;
+	    (ULONG)Process->InheritedFromUniqueProcessId;
 	  ProcessBasicInformationP->BasePriority =
 	    Process->Pcb.BasePriority;
 

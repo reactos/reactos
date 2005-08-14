@@ -12,8 +12,9 @@
 
 #include <windows.h>
 #include <ntsecapi.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 #include <lsass/lsass.h>
-#include <string.h>
 
 /* GLOBALS *******************************************************************/
 

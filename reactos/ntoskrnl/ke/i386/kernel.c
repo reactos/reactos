@@ -456,8 +456,9 @@ Ki386SetProcessorFeatures(VOID)
 {
    PKIPCR Pcr = (PKIPCR)KeGetCurrentKPCR();
    OBJECT_ATTRIBUTES ObjectAttributes;
-   UNICODE_STRING KeyName;
-   UNICODE_STRING ValueName;
+   UNICODE_STRING KeyName =
+   RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Session Manager\\Kernel");
+   UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"FastSystemCallDisable");
    HANDLE KeyHandle;
    ULONG ResultLength;
    KEY_VALUE_PARTIAL_INFORMATION ValueData;
@@ -488,10 +489,6 @@ Ki386SetProcessorFeatures(VOID)
         /* FIXME: Check for Family == 6, Model < 3 and Stepping < 3 and disable */
 
         /* Make sure it's not disabled in registry */
-        RtlRosInitUnicodeStringFromLiteral(&KeyName,
-                                           L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Session Manager\\Kernel");
-        RtlRosInitUnicodeStringFromLiteral(&ValueName,
-                                           L"FastSystemCallDisable");
         InitializeObjectAttributes(&ObjectAttributes,
                                    &KeyName,
                                    OBJ_CASE_INSENSITIVE,

@@ -26,7 +26,11 @@
  * REVISION HISTORY:
  *        2/10/1999: Created
  */
+
 #include <w32k.h>
+
+#define NDEBUG
+#include <debug.h>
 
 BOOL
 STDCALL

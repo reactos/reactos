@@ -15,4 +15,5 @@
 	<file>part_xbox.c</file>
 	<file>pci_xbox.c</file>
 	<file>halxbox.rc</file>
+    <pch>../include/hal.h</pch>
 </module>

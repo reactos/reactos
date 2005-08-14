@@ -46,18 +46,6 @@ STATIC MODULE_TEXT_SECTION NtoskrnlTextSection;
 STATIC MODULE_TEXT_SECTION LdrHalTextSection;
 ULONG_PTR LdrHalBase;
 
-#define OPTHDROFFSET(a) ((LPVOID)((BYTE *)a		     + \
-			 ((PIMAGE_DOS_HEADER)a)->e_lfanew    + \
-			 IMAGE_SIZEOF_NT_OPTIONAL_HEADER     + \
-			 sizeof (IMAGE_FILE_HEADER)))
-
-#ifndef HIWORD
-#define HIWORD(X)   ((WORD) (((DWORD) (X) >> 16) & 0xFFFF))
-#endif
-#ifndef LOWORD
-#define LOWORD(X)   ((WORD) (X))
-#endif
-
 /* FORWARD DECLARATIONS ******************************************************/
 
 NTSTATUS

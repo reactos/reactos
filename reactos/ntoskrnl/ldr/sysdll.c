@@ -173,7 +173,7 @@ STDCALL
 INIT_FUNCTION
 LdrpInitializeSystemDll(VOID)
 {
-    UNICODE_STRING DllPathname = ROS_STRING_INITIALIZER(L"\\SystemRoot\\system32\\ntdll.dll");
+    UNICODE_STRING DllPathname = RTL_CONSTANT_STRING(L"\\SystemRoot\\system32\\ntdll.dll");
     OBJECT_ATTRIBUTES FileObjectAttributes;
     IO_STATUS_BLOCK Iosb;
     HANDLE FileHandle;

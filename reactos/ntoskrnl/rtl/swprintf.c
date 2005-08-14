@@ -546,7 +546,7 @@ int swprintf(wchar_t *buf, const wchar_t *fmt, ...)
 	int i;
 
 	va_start(args, fmt);
-	i=_vsnwprintf(buf,INT_MAX,fmt,args);
+	i=_vsnwprintf(buf,MAXLONG,fmt,args);
 	va_end(args);
 	return i;
 }
@@ -569,7 +569,7 @@ int _snwprintf(wchar_t *buf, size_t cnt, const wchar_t *fmt, ...)
 
 int vswprintf(wchar_t *buf, const wchar_t *fmt, va_list args)
 {
-	return _vsnwprintf(buf,INT_MAX,fmt,args);
+	return _vsnwprintf(buf,MAXLONG,fmt,args);
 }
 
 /* EOF */

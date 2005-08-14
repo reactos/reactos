@@ -32,9 +32,10 @@
 #include <ddk/ntdddisk.h>
 #include <ddk/ntddscsi.h>
 #include <ddk/class2.h>
+#include <ddk/core.h>
 
-#include <ndk/ntndk.h>
-#include <napi/core.h>
+#include <ndk/extypes.h>
+#include <ndk/rtlfuncs.h>
 #include "../scsiport/scsiport_int.h"
 
 #define NDEBUG

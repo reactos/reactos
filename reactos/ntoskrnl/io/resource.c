@@ -827,7 +827,7 @@ IoReportHalResourceUsage(PUNICODE_STRING HalDescription,
   HANDLE DescriptionKey;
 
   /* Open/Create 'RESOURCEMAP' key. */
-  RtlRosInitUnicodeStringFromLiteral(&Name,
+  RtlInitUnicodeString(&Name,
 		       L"\\Registry\\Machine\\HARDWARE\\RESOURCEMAP");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &Name,
@@ -845,7 +845,7 @@ IoReportHalResourceUsage(PUNICODE_STRING HalDescription,
     return(Status);
 
   /* Open/Create 'Hardware Abstraction Layer' key */
-  RtlRosInitUnicodeStringFromLiteral(&Name,
+  RtlInitUnicodeString(&Name,
 		       L"Hardware Abstraction Layer");
   InitializeObjectAttributes(&ObjectAttributes,
 			     &Name,
@@ -881,7 +881,7 @@ IoReportHalResourceUsage(PUNICODE_STRING HalDescription,
     return(Status);
 
   /* Add '.Raw' value. */
-  RtlRosInitUnicodeStringFromLiteral(&Name,
+  RtlInitUnicodeString(&Name,
 		       L".Raw");
   Status = ZwSetValueKey(DescriptionKey,
 			 &Name,
@@ -896,7 +896,7 @@ IoReportHalResourceUsage(PUNICODE_STRING HalDescription,
     }
 
   /* Add '.Translated' value. */
-  RtlRosInitUnicodeStringFromLiteral(&Name,
+  RtlInitUnicodeString(&Name,
 		       L".Translated");
   Status = ZwSetValueKey(DescriptionKey,
 			 &Name,

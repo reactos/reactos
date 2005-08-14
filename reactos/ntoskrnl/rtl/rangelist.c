@@ -14,15 +14,11 @@
 #define NDEBUG
 #include <internal/debug.h>
 
-
-#define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
-
 typedef struct _RTL_RANGE_ENTRY
 {
   LIST_ENTRY Entry;
   RTL_RANGE Range;
 } RTL_RANGE_ENTRY, *PRTL_RANGE_ENTRY;
-
 
 /* FUNCTIONS ***************************************************************/
 

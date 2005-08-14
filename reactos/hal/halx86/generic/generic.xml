@@ -24,6 +24,7 @@
 	<file>sysinfo.c</file>
 	<file>time.c</file>
 	<file>timer.c</file>
+    <pch>../include/hal.h</pch>
 </module>
 <module name="hal_generic_up" type="objectlibrary">
 	<include base="hal_generic_up">../include</include>

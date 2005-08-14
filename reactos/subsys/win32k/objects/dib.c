@@ -18,8 +18,11 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+
 #include <w32k.h>
-#include <pseh.h>
+
+#define NDEBUG
+#include <debug.h>
 
 UINT STDCALL
 NtGdiSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Colors)

@@ -9,6 +9,9 @@
 
 #include <w32k.h>
 
+#define NDEBUG
+#include <debug.h>
+
 static HANDLE WindowsApiPort = NULL;
 PEPROCESS CsrProcess = NULL;
            
@@ -58,7 +61,7 @@ CsrNotify(PCSR_API_MESSAGE Request)
   OldProcess = PsGetCurrentProcess();
   if (CsrProcess != OldProcess)
     {
-      KeAttachProcess(EPROCESS_TO_KPROCESS(CsrProcess));
+      KeAttachProcess(&CsrProcess->Pcb);
     }
   Status = ZwRequestWaitReplyPort(WindowsApiPort,
                                   &Request->Header,
@@ -132,7 +135,7 @@ CsrCloseHandle(HANDLE Handle)
   OldProcess = PsGetCurrentProcess();
   if (CsrProcess != OldProcess)
     {
-      KeAttachProcess(EPROCESS_TO_KPROCESS(CsrProcess));
+      KeAttachProcess(&CsrProcess->Pcb);
     }
 
   Status = ZwClose(Handle);

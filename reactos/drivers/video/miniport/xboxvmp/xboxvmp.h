@@ -28,7 +28,7 @@
 #include <ddk/miniport.h>
 #include <ddk/video.h>
 #include <ddk/ntddvdeo.h>
-#include <ddk/ntapi.h>
+#include <ndk/ntndk.h>
 
 #define NDEBUG
 #include <debug.h>

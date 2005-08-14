@@ -11,7 +11,6 @@
 #ifndef __INCLUDE_LSASS_LSASS_H
 #define __INCLUDE_LSASS_LSASS_H
 
-#include <ntos.h>
 #include <ntsecapi.h>
 
 #define LSASS_REQUEST_REGISTER_LOGON_PROCESS               (1)

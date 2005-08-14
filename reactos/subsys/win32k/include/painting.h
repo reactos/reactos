@@ -1,8 +1,6 @@
 #ifndef _WIN32K_PAINTING_H
 #define _WIN32K_PAINTING_H
 
-#include <windows.h>
-#include <ddk/ntddk.h>
 #include <include/class.h>
 #include <include/msgqueue.h>
 #include <include/window.h>
