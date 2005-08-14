@@ -1,7 +1,6 @@
 #include <windows.h>
-#include <GdiPlusPrivate.h>
+#include <gdiplusprivate.h>
 #include <debug.h>
-#include <GdiPlusPrivate.h>
 
 /*
  * @unimplemented

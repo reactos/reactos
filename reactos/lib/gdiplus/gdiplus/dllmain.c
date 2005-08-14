@@ -1,5 +1,5 @@
 #include <windows.h>
-#include <GdiPlusPrivate.h>
+#include <gdiplusprivate.h>
 #include <debug.h>
 
 #ifdef DBG
