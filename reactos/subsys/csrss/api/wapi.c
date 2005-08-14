@@ -165,7 +165,7 @@ ClientConnectionThread(HANDLE ServerPort)
     
     /* Close the port and exit the thread */
     NtClose(ServerPort);
-    NtTerminateThread(NtCurrentThread(), STATUS_SUCCESS);
+    RtlExitUserThread(STATUS_SUCCESS);
 }
 
 /**********************************************************************
@@ -237,8 +237,8 @@ ServerApiPortThread (PVOID PortHandle)
 				     NULL,
 				     FALSE,
 				     0,
-				     NULL,
-				     NULL,
+				     0,
+				     0,
 				     (PTHREAD_START_ROUTINE)ClientConnectionThread,
 				     ServerPort,
 				     & ServerThread,

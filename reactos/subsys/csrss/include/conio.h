@@ -50,7 +50,7 @@ typedef struct tagCSRSS_SCREEN_BUFFER
 typedef struct tagCSRSS_CONSOLE_VTBL
 {
   VOID (STDCALL *InitScreenBuffer)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer);
-  VOID (STDCALL *WriteStream)(PCSRSS_CONSOLE Console, RECT *Block, UINT CursorStartX, UINT CursorStartY,
+  VOID (STDCALL *WriteStream)(PCSRSS_CONSOLE Console, RECT *Block, LONG CursorStartX, LONG CursorStartY,
                               UINT ScrolledLines, CHAR *Buffer, UINT Length);
   VOID (STDCALL *DrawRegion)(PCSRSS_CONSOLE Console, RECT *Region);
   BOOL (STDCALL *SetCursorInfo)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer);

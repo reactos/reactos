@@ -457,7 +457,7 @@ GuiInvalidateCell(PGUI_CONSOLE_DATA GuiData, HWND Wnd, UINT x, UINT y)
 }
 
 static VOID STDCALL
-GuiWriteStream(PCSRSS_CONSOLE Console, RECT *Region, UINT CursorStartX, UINT CursorStartY,
+GuiWriteStream(PCSRSS_CONSOLE Console, RECT *Region, LONG CursorStartX, LONG CursorStartY,
                UINT ScrolledLines, CHAR *Buffer, UINT Length)
 {
   PGUI_CONSOLE_DATA GuiData = (PGUI_CONSOLE_DATA) Console->PrivateData;

@@ -62,7 +62,7 @@ NTSTATUS STDCALL SmCreateUserProcess(LPWSTR ImagePath,
 				     LPWSTR CommandLine,
 				     BOOLEAN WaitForIt,
 				     PLARGE_INTEGER Timeout OPTIONAL,
-				     PRTL_PROCESS_INFO UserProcessInfo OPTIONAL);
+				     PRTL_USER_PROCESS_INFORMATION UserProcessInfo OPTIONAL);
 NTSTATUS FASTCALL SmExecPgm(PSM_PORT_MESSAGE);
 
 /* smapicomp.c */
@@ -92,7 +92,7 @@ typedef struct _SM_CLIENT_DATA
 
 } SM_CLIENT_DATA, *PSM_CLIENT_DATA;
 NTSTATUS SmInitializeClientManagement (VOID);
-NTSTATUS STDCALL SmCreateClient (PRTL_PROCESS_INFO,PWSTR);
+NTSTATUS STDCALL SmCreateClient (PRTL_USER_PROCESS_INFORMATION,PWSTR);
 NTSTATUS STDCALL SmDestroyClient (ULONG);
 NTSTATUS STDCALL SmBeginClientInitialization (PSM_PORT_MESSAGE,PSM_CLIENT_DATA*);
 NTSTATUS STDCALL SmCompleteClientInitialization (ULONG);

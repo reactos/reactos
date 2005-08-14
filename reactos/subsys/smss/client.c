@@ -283,7 +283,7 @@ SmCompleteClientInitialization (ULONG ProcessId)
  * 	NTSTATUS:
  */
 NTSTATUS STDCALL
-SmCreateClient (PRTL_PROCESS_INFO ProcessInfo, PWSTR ProgramName)
+SmCreateClient (PRTL_USER_PROCESS_INFORMATION ProcessInfo, PWSTR ProgramName)
 {
 	NTSTATUS Status = STATUS_SUCCESS;
 
