@@ -95,6 +95,7 @@ BEGIN
   IDS_FAILEDTOSELVGADRIVER "Failed to activate the ReactOS VGA driver!"
   IDS_FAILEDTOSELVBEDRIVER "Failed to activate the ReactOS VBE driver!"
   IDS_UNINSTNOTICE "The VMware(r) SVGA driver files have not yet been deleted.\nPlease delete them manually after a system reboot."
+  IDS_FAILEDTOADDREGENTRIES "Failed to create registry entries for the VMware(r) SVGA driver!"
 END
 
 STRINGTABLE

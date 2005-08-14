@@ -32,6 +32,10 @@
 #include <string.h>
 #include "vmwinst.h"
 
+extern VOID CALLBACK InstallHinfSectionW(HWND hwnd, HINSTANCE ModuleHandle,
+                                         PCWSTR CmdLineBuffer, INT nCmdShow);
+
+
 HINSTANCE hAppInstance;
 BOOL StartVMwConfigWizard, DriverFilesFound, ActivateVBE = FALSE, UninstallDriver = FALSE;
 
@@ -382,6 +386,79 @@ EnableVmwareDriver(BOOL VBE, BOOL VGA, BOOL VMX)
   return TRUE;
 }
 
+/* Make sure the required registry entries are present */
+BOOL
+AddVmwareRegistryEntries()
+{
+  HRSRC VmwareInfResource;
+  HGLOBAL VmwareInfMem;
+  PVOID VmwareInfLocked;
+  DWORD Size;
+  WCHAR TempPath[MAX_PATH];
+  WCHAR BufferSize;
+  WCHAR TempFileName[MAX_PATH];
+  HANDLE TempFile;
+  DWORD Written;
+  WCHAR CmdLine[19 + MAX_PATH];
+
+  VmwareInfResource = FindResourceW(hAppInstance,
+                                    MAKEINTRESOURCE(IDR_VMWARE_INF),
+                                    L"RT_INF");
+  if (NULL == VmwareInfResource)
+  {
+    return FALSE;
+  }
+  Size = SizeofResource(hAppInstance, VmwareInfResource);
+  if (0 == Size)
+  {
+    return FALSE;
+  }
+  VmwareInfMem = LoadResource(hAppInstance, VmwareInfResource);
+  if (NULL == VmwareInfMem)
+  {
+    return FALSE;
+  }
+  VmwareInfLocked = LockResource(VmwareInfMem);
+  if (NULL == VmwareInfLocked)
+  {
+    return FALSE;
+  }
+
+  BufferSize = GetTempPathW(sizeof(TempPath) / sizeof(TempPath[0]), TempPath);
+  if (0 == BufferSize || sizeof(TempPath) / sizeof(TempPath[0]) < BufferSize)
+  {
+    return FALSE;
+  }
+  if (0 == GetTempFileNameW(TempPath, L"vmx", 0, TempFileName))
+  {
+    return FALSE;
+  }
+
+  TempFile = CreateFileW(TempFileName, GENERIC_WRITE, 0, NULL, OPEN_EXISTING,
+                         FILE_ATTRIBUTE_NORMAL, NULL);
+  if (INVALID_HANDLE_VALUE == TempFile)
+  {
+    DeleteFile(TempFileName);
+    return FALSE;
+  }
+  if (! WriteFile(TempFile, VmwareInfLocked, Size, &Written, NULL) ||
+      Written != Size)
+  {
+    CloseHandle(TempFile);
+    DeleteFile(TempFileName);
+    return FALSE;
+  }
+  CloseHandle(TempFile);
+
+  wcscpy(CmdLine, L"DefaultInstall 128 ");
+  wcscat(CmdLine, TempFileName);
+  InstallHinfSectionW(NULL, NULL, CmdLine, 0);
+
+  DeleteFile(TempFileName);
+
+  return TRUE;
+}
+
 /* GUI */
 
 void
@@ -426,7 +503,15 @@ PageWelcomeProc(
         {
           if(DriverFilesFound)
           {
-            if(!EnableVmwareDriver(FALSE, FALSE, TRUE))
+            if(!AddVmwareRegistryEntries())
+            {
+              WCHAR Msg[1024];
+              LoadString(hAppInstance, IDS_FAILEDTOADDREGENTRIES, Msg, sizeof(Msg) / sizeof(WCHAR));
+              MessageBox(GetParent(hwndDlg), Msg, NULL, MB_ICONWARNING);
+              SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_WELCOMEPAGE);
+              return TRUE;
+            }
+            if(!EnableVmwareDriver(TRUE, TRUE, TRUE))
             {
 
               WCHAR Msg[1024];
@@ -548,7 +633,7 @@ InstInstallationThread(LPVOID lpParameter)
 
   if(AbortInstall != 0) goto done;
   PostMessage(hInstallationNotifyWnd, WM_INSTSTATUSUPDATE, IDS_ENABLINGDRIVER, 0);
-  if(!EnableVmwareDriver(FALSE, FALSE, TRUE))
+  if(!EnableVmwareDriver(TRUE, TRUE, TRUE))
   {
     PostMessage(hInstallationNotifyWnd, WM_INSTABORT, IDS_FAILEDTOACTIVATEDRIVER, 0);
     goto cleanup;
@@ -935,7 +1020,7 @@ PageSelectDriverProc(
           }
           ActivateVBE = (SendDlgItemMessage(hwndDlg, IDC_VBE, BM_GETCHECK, 0, 0) == BST_CHECKED);
           if(!EnableVmwareDriver(ActivateVBE,
-                                 !ActivateVBE,
+                                 TRUE,
                                  FALSE))
           {
             WCHAR Msg[1024];
@@ -984,7 +1069,7 @@ PageDoUninstallProc(
           if(UninstallDriver)
           {
             if(!EnableVmwareDriver(ActivateVBE,
-                                   !ActivateVBE,
+                                   TRUE,
                                    FALSE))
             {
               WCHAR Msg[1024];
