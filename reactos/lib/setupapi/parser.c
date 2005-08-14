@@ -1714,7 +1714,7 @@ BOOL WINAPI SetupGetBinaryField( PINFCONTEXT context, DWORD index, BYTE *buffer,
         SetLastError( ERROR_LINE_NOT_FOUND );
         return FALSE;
     }
-    if (!index || index >= line->nb_fields)
+    if (!index || index > line->nb_fields)
     {
         SetLastError( ERROR_INVALID_PARAMETER );
         return FALSE;
@@ -1773,7 +1773,7 @@ BOOL WINAPI SetupGetMultiSzFieldA( PINFCONTEXT context, DWORD index, PSTR buffer
         SetLastError( ERROR_LINE_NOT_FOUND );
         return FALSE;
     }
-    if (!index || index >= line->nb_fields)
+    if (!index || index > line->nb_fields)
     {
         SetLastError( ERROR_INVALID_PARAMETER );
         return FALSE;
@@ -1822,7 +1822,7 @@ BOOL WINAPI SetupGetMultiSzFieldW( PINFCONTEXT context, DWORD index, PWSTR buffe
         SetLastError( ERROR_LINE_NOT_FOUND );
         return FALSE;
     }
-    if (!index || index >= line->nb_fields)
+    if (!index || index > line->nb_fields)
     {
         SetLastError( ERROR_INVALID_PARAMETER );
         return FALSE;
