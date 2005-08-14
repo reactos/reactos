@@ -44,7 +44,7 @@
 
 /* command line buffer length */
 #ifdef __REACTOS__
-#define CMDLINE_LENGTH  512
+#define CMDLINE_LENGTH  8192
 #else
 #define CMDLINE_LENGTH  8192
 //#define CMDLINE_LENGTH  1024
