@@ -147,7 +147,7 @@ CreateICA(
   NTSTATUS Status;
   LPWSTR lpszDriverW, lpszDeviceW, lpszOutputW;
   UNICODE_STRING Driver, Device, Output;
-  DEVMODEW dvmInitW;
+  LPDEVMODEW dvmInitW;
   HDC rc = 0;
 
   Status = HEAP_strdupA2W ( &lpszDriverW, lpszDriver );
@@ -166,7 +166,7 @@ CreateICA(
 	else
 	  {
 	    if ( lpdvmInit )
-	      RosRtlDevModeA2W ( &dvmInitW, (const LPDEVMODEA)lpdvmInit );
+          dvmInitW = GdiConvertToDevmodeW((LPDEVMODEA)lpdvmInit);
         
         RtlInitUnicodeString(&Driver, lpszDriverW);
         RtlInitUnicodeString(&Device, lpszDeviceW);
@@ -174,8 +174,8 @@ CreateICA(
 	    rc = NtGdiCreateIC ( &Driver,
 				&Device,
 				&Output,
-				lpdvmInit ? &dvmInitW : NULL );
-
+				lpdvmInit ? dvmInitW : NULL );
+        HEAP_free (dvmInitW);
 	    HEAP_free ( lpszOutputW );
 	  }
 	HEAP_free ( lpszDeviceW );
@@ -264,7 +264,7 @@ GetObjectA(HGDIOBJ Handle, int Size, LPVOID Buffer)
         {
           return 0;
         }
-      RosRtlLogFontW2A((LPLOGFONTA) Buffer, &LogFontW);
+      LogFontW2A((LPLOGFONTA) Buffer, &LogFontW);
       Result = sizeof(LOGFONTA);
     }
   else
@@ -362,11 +362,14 @@ ResetDCA(
 	CONST DEVMODEA	*lpInitData
 	)
 {
-  DEVMODEW InitDataW;
+  LPDEVMODEW InitDataW;
+  HDC hDc;
 
-  RosRtlDevModeA2W ( &InitDataW, (CONST LPDEVMODEA)lpInitData );
+  InitDataW = GdiConvertToDevmodeW((LPDEVMODEA)lpInitData);
 
-  return NtGdiResetDC ( hdc, &InitDataW );
+  hDc = NtGdiResetDC ( hdc, InitDataW );
+  HEAP_free(InitDataW);
+  return hDc;
 }
 
 

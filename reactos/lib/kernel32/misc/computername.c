@@ -29,9 +29,6 @@
 
 #include <k32.h>
 
-/* FIXME */
-#include <rosrtl/registry.h> 
-
 #define NDEBUG
 #include "../include/debug.h"
 
@@ -125,8 +122,9 @@ GetComputerNameExW (
     )
 {
     UNICODE_STRING ResultString;
-    UNICODE_STRING DomainPart, Dot;
-    UNICODE_STRING RegKey, RegValue;
+    UNICODE_STRING DomainPart;
+    RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+    NTSTATUS Status;
 
     switch( NameType ) {
     case ComputerNameNetBIOS:
@@ -146,30 +144,45 @@ GetComputerNameExW (
 	      nSize );
 
     case ComputerNameDnsFullyQualified:
-	RtlInitUnicodeString(&Dot,L".");
-	RtlInitUnicodeString(&ResultString, NULL);
-    ResultString.Length = *nSize * sizeof(WCHAR);
-    ResultString.MaximumLength = *nSize * sizeof(WCHAR);
-	RtlInitUnicodeString(&RegKey,
-			     L"\\Registry\\Machine\\System"
-			     L"\\CurrentControlSet\\Services\\Tcpip"
-			     L"\\Parameters");
-	RtlInitUnicodeString(&RegValue,L"HostName");
-	RtlInitUnicodeString(&DomainPart,L"");
-	if( NT_SUCCESS(RosReadRegistryValue(&RegKey,&RegValue,&DomainPart)) ) {
-	    RtlAppendUnicodeStringToString(&ResultString,&DomainPart);
-	    RtlAppendUnicodeStringToString(&ResultString,&Dot);
-	    RtlFreeUnicodeString(&DomainPart);
-	    RtlInitUnicodeString(&RegValue,L"Domain");
-	    RtlInitUnicodeString(&DomainPart,L"");
-	    if( NT_SUCCESS(RosReadRegistryValue
-			   (&RegKey,&RegValue,&DomainPart)) ) {
-		RtlAppendUnicodeStringToString(&ResultString,&DomainPart);
-		RtlFreeUnicodeString(&DomainPart);
-		*nSize = ResultString.Length / sizeof(WCHAR);
-		return TRUE;
-	    }
-	}
+        ResultString.Length = 0;
+        ResultString.MaximumLength = *nSize * sizeof(WCHAR);
+        ResultString.Buffer = lpBuffer;
+
+        RtlZeroMemory(QueryTable, sizeof(QueryTable));
+        RtlInitUnicodeString(&DomainPart, NULL);
+        QueryTable[0].Name = L"HostName";
+        QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
+        QueryTable[0].EntryContext = &DomainPart;
+	
+        Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
+                                        L"\\Registry\\Machine\\System"
+                                        L"\\CurrentControlSet\\Services\\Tcpip"
+                                        L"\\Parameters",
+                                        QueryTable, NULL, NULL);
+
+        if( NT_SUCCESS(Status) ) {
+            RtlAppendUnicodeStringToString(&ResultString, &DomainPart);
+            RtlAppendUnicodeToString(&ResultString, L".");
+            RtlFreeUnicodeString(&DomainPart);
+
+            RtlInitUnicodeString(&DomainPart, NULL);
+            QueryTable[0].Name = L"Domain";
+            QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
+            QueryTable[0].EntryContext = &DomainPart;
+
+            Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
+                                            L"\\Registry\\Machine\\System"
+                                            L"\\CurrentControlSet\\Services\\Tcpip"
+                                            L"\\Parameters",
+                                            QueryTable, NULL, NULL);
+
+            if( NT_SUCCESS(Status) ) {
+                RtlAppendUnicodeStringToString(&ResultString, &DomainPart);
+                RtlFreeUnicodeString(&DomainPart);
+                *nSize = ResultString.Length / sizeof(WCHAR);
+                return TRUE;
+            }
+        }
 	return FALSE;
 
     case ComputerNameDnsHostname:

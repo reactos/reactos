@@ -1,3 +1,4 @@
+#if 0
 #include <windows.h>
 #include <string.h>
 #include <rosrtl/devmode.h>
@@ -144,3 +145,4 @@ RosRtlDevModeW2A( LPDEVMODEA pA, const LPDEVMODEW pW )
 #undef SIZEOF_DEVMODEW_300
 #undef SIZEOF_DEVMODEW_400
 #undef SIZEOF_DEVMODEW_500
+#endif

@@ -14,7 +14,7 @@
 /* INCLUDES */
 #include <ntddk.h>
 
-#include <pseh.h>
+#include <pseh/pseh.h>
 
 #include "null.h"
 

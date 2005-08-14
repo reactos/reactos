@@ -9,7 +9,7 @@
  */
 #include <afd.h>
 #ifndef _MSC_VER
-#include <pseh.h>
+#include <pseh/pseh.h>
 #endif
 #include "debug.h"
 #include "tdiconn.h"

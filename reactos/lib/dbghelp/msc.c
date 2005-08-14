@@ -52,7 +52,7 @@
 #include "winreg.h"
 #include "winternl.h"
  
-#include <pseh.h>
+#include <pseh/pseh.h>
  
 #include "wine/debug.h"
 #include "dbghelp_private.h"

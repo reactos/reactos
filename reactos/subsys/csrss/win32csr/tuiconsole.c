@@ -6,13 +6,7 @@
  * PURPOSE:         Implementation of text-mode consoles
  */
 
-#include <windows.h>
-#include <ddk/ntddblue.h>
-#include <string.h>
-#include "api.h"
-#include "conio.h"
-#include "tuiconsole.h"
-#include "win32csr.h"
+#include "w32csr.h"
 
 #define NDEBUG
 #include <debug.h>

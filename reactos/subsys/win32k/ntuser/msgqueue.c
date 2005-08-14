@@ -526,8 +526,8 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
         {
           MSLLHOOKSTRUCT MouseHookData;
 
-          MouseHookData.pt.x = GET_X_LPARAM(Msg.lParam); 
-          MouseHookData.pt.y = GET_Y_LPARAM(Msg.lParam); 
+          MouseHookData.pt.x = LOWORD(Msg.lParam); 
+          MouseHookData.pt.y = HIWORD(Msg.lParam); 
           switch(Msg.message)
             {
               case WM_MOUSEWHEEL:

@@ -23,23 +23,25 @@ RtlFirstFreeAce(PACL Acl,
                 PACE* Ace)
 {
    PACE Current;
-   PVOID AclEnd;
+   ULONG_PTR AclEnd;
    ULONG i;
 
    PAGED_CODE_RTL();
 
    Current = (PACE)(Acl + 1);
    *Ace = NULL;
-   i = 0;
+
    if (Acl->AceCount == 0)
    {
       *Ace = Current;
       return(TRUE);
    }
-   AclEnd = Acl->AclSize + (PVOID)Acl;
+   
+   i = 0;
+   AclEnd = (ULONG_PTR)Acl + Acl->AclSize;
    do
    {
-      if ((PVOID)Current >= AclEnd)
+      if ((ULONG_PTR)Current >= AclEnd)
       {
          return(FALSE);
       }
@@ -48,12 +50,11 @@ RtlFirstFreeAce(PACL Acl,
       {
          return(FALSE);
       }
-      Current = (PACE)((ULONG_PTR)Current + (ULONG_PTR)Current->Header.AceSize);
-      i++;
+      Current = (PACE)((ULONG_PTR)Current + Current->Header.AceSize);
    }
-   while (i < Acl->AceCount);
+   while (++i < Acl->AceCount);
 
-   if ((PVOID)Current < AclEnd)
+   if ((ULONG_PTR)Current < AclEnd)
    {
       *Ace = Current;
    }
@@ -74,29 +75,25 @@ RtlGetAce(PACL Acl,
 
    PAGED_CODE_RTL();
 
-   *Ace = (PACE)(Acl + 1);
-
    if (Acl->AclRevision < MIN_ACL_REVISION ||
-       Acl->AclRevision > MAX_ACL_REVISION)
+       Acl->AclRevision > MAX_ACL_REVISION ||
+       AceIndex >= Acl->AceCount)
    {
       return(STATUS_INVALID_PARAMETER);
    }
-
-   if (AceIndex >= Acl->AceCount)
-   {
-      return(STATUS_INVALID_PARAMETER);
-   }
+   
+   *Ace = (PACE)(Acl + 1);
 
    for (i = 0; i < AceIndex; i++)
    {
-      if ((PVOID)*Ace >= (PVOID)Acl + Acl->AclSize)
+      if ((ULONG_PTR)*Ace >= (ULONG_PTR)Acl + Acl->AclSize)
       {
          return(STATUS_INVALID_PARAMETER);
       }
-      *Ace = (PACE)((PVOID)(*Ace) + (ULONG)(*Ace)->Header.AceSize);
+      *Ace = (PACE)((ULONG_PTR)(*Ace) + (*Ace)->Header.AceSize);
    }
 
-   if ((PVOID)*Ace >= (PVOID)Acl + Acl->AclSize)
+   if ((ULONG_PTR)*Ace >= (ULONG_PTR)Acl + Acl->AclSize)
    {
       return(STATUS_INVALID_PARAMETER);
    }
@@ -244,16 +241,16 @@ RtlpAddData(PVOID AceList,
 {
    if (Offset > 0)
    {
-      memcpy((PVOID)Ace + AceListLength,
-             Ace,
-             Offset);
+      RtlCopyMemory((PVOID)((ULONG_PTR)Ace + AceListLength),
+                    Ace,
+                    Offset);
    }
 
    if (AceListLength != 0)
    {
-      memcpy(Ace,
-             AceList,
-             AceListLength);
+      RtlCopyMemory(Ace,
+                    AceList,
+                    AceListLength);
    }
 }
 
@@ -276,12 +273,8 @@ RtlAddAce(PACL Acl,
    PAGED_CODE_RTL();
 
    if (Acl->AclRevision < MIN_ACL_REVISION ||
-       Acl->AclRevision > MAX_ACL_REVISION)
-   {
-      return(STATUS_INVALID_PARAMETER);
-   }
-
-   if (!RtlFirstFreeAce(Acl,&Ace))
+       Acl->AclRevision > MAX_ACL_REVISION ||
+       !RtlFirstFreeAce(Acl, &Ace))
    {
       return(STATUS_INVALID_PARAMETER);
    }
@@ -291,29 +284,25 @@ RtlAddAce(PACL Acl,
       AclRevision = Acl->AclRevision;
    }
 
-   if (((PVOID)AceList + AceListLength) <= (PVOID)AceList)
+   if (((ULONG_PTR)AceList + AceListLength) <= (ULONG_PTR)AceList)
    {
       return(STATUS_INVALID_PARAMETER);
    }
 
    i = 0;
    Current = (PACE)(Acl + 1);
-   while ((PVOID)Current < ((PVOID)AceList + AceListLength))
+   while ((ULONG_PTR)Current < ((ULONG_PTR)AceList + AceListLength))
    {
       if (AceList->Header.AceType == ACCESS_ALLOWED_COMPOUND_ACE_TYPE &&
           AclRevision < ACL_REVISION3)
       {
          return(STATUS_INVALID_PARAMETER);
       }
-      Current = (PACE)((PVOID)Current + Current->Header.AceSize);
+      Current = (PACE)((ULONG_PTR)Current + Current->Header.AceSize);
    }
 
-   if (Ace == NULL)
-   {
-      return(STATUS_BUFFER_TOO_SMALL);
-   }
-
-   if (((PVOID)Ace + AceListLength) >= ((PVOID)Acl + Acl->AclSize))
+   if (Ace == NULL ||
+       ((ULONG_PTR)Ace + AceListLength) >= ((ULONG_PTR)Acl + Acl->AclSize))
    {
       return(STATUS_BUFFER_TOO_SMALL);
    }
@@ -325,7 +314,7 @@ RtlAddAce(PACL Acl,
          Current = (PACE)(Acl + 1);
          for (j = 0; j < StartingIndex; j++)
          {
-            Current = (PACE)((PVOID)Current + Current->Header.AceSize);
+            Current = (PACE)((ULONG_PTR)Current + Current->Header.AceSize);
          }
       }
    }
@@ -333,7 +322,7 @@ RtlAddAce(PACL Acl,
    RtlpAddData(AceList,
                AceListLength,
                Current,
-               (ULONG)Ace - (ULONG)Current);
+               (ULONG)((ULONG_PTR)Ace - (ULONG_PTR)Current));
    Acl->AceCount = Acl->AceCount + i;
    Acl->AclRevision = AclRevision;
 
@@ -388,12 +377,8 @@ RtlAddAuditAccessAce(PACL Acl,
       return(STATUS_INVALID_ACL);
    }
 
-   if (Ace == NULL)
-   {
-      return(STATUS_ALLOTTED_SPACE_EXCEEDED);
-   }
-
-   if (((PVOID)Ace + RtlLengthSid(Sid) + sizeof(ACE)) >= ((PVOID)Acl + Acl->AclSize))
+   if (Ace == NULL ||
+       ((ULONG_PTR)Ace + RtlLengthSid(Sid) + sizeof(ACE)) > ((ULONG_PTR)Acl + Acl->AclSize))
    {
       return(STATUS_ALLOTTED_SPACE_EXCEEDED);
    }
@@ -459,12 +444,8 @@ RtlAddAuditAccessAceEx(PACL Acl,
     return STATUS_INVALID_ACL;
   }
 
-  if (Ace == NULL)
-  {
-    return STATUS_ALLOTTED_SPACE_EXCEEDED;
-  }
-
-  if (((PVOID)Ace + RtlLengthSid(Sid) + sizeof(ACE)) >= ((PVOID)Acl + Acl->AclSize))
+  if (Ace == NULL ||
+      ((ULONG_PTR)Ace + RtlLengthSid(Sid) + sizeof(ACE)) >= ((ULONG_PTR)Acl + Acl->AclSize))
   {
     return STATUS_ALLOTTED_SPACE_EXCEEDED;
   }
@@ -490,16 +471,15 @@ RtlpDeleteData(PVOID Ace,
 {
    if (AceSize < Offset)
    {
-      memcpy(Ace,
-             (PUCHAR)Ace + AceSize,
-             Offset - AceSize);
+      RtlCopyMemory(Ace,
+                    (PVOID)((ULONG_PTR)Ace + AceSize),
+                    Offset - AceSize);
    }
 
    if (Offset - AceSize < Offset)
    {
-      memset((PUCHAR)Ace + Offset - AceSize,
-             0,
-             AceSize);
+      RtlZeroMemory((PVOID)((ULONG_PTR)Ace + Offset - AceSize),
+                    AceSize);
    }
 }
 
@@ -517,17 +497,9 @@ RtlDeleteAce(PACL Acl,
    PAGED_CODE_RTL();
 
    if (Acl->AclRevision < MIN_ACL_REVISION ||
-       Acl->AclRevision > MAX_ACL_REVISION)
-   {
-      return(STATUS_INVALID_PARAMETER);
-   }
-
-   if (Acl->AceCount <= AceIndex)
-   {
-      return(STATUS_INVALID_PARAMETER);
-   }
-
-   if (!RtlFirstFreeAce(Acl, &Ace))
+       Acl->AclRevision > MAX_ACL_REVISION ||
+       Acl->AceCount <= AceIndex ||
+       !RtlFirstFreeAce(Acl, &Ace))
    {
       return(STATUS_INVALID_PARAMETER);
    }
@@ -536,13 +508,13 @@ RtlDeleteAce(PACL Acl,
 
    while(AceIndex--)
    {
-      Current = (PACE)((PVOID)Current + Current->Header.AceSize);
+      Current = (PACE)((ULONG_PTR)Current + Current->Header.AceSize);
    }
 
    RtlpDeleteData(Current,
                   Current->Header.AceSize,
-                  Ace - Current);
-   Acl->AceCount++;
+                  (ULONG)((ULONG_PTR)Ace - (ULONG_PTR)Current));
+   Acl->AceCount--;
 
    return(STATUS_SUCCESS);
 }
@@ -558,18 +530,14 @@ RtlCreateAcl(PACL Acl,
 {
    PAGED_CODE_RTL();
 
-   if (AclSize < 8)
+   if (AclSize < sizeof(ACL))
    {
       return(STATUS_BUFFER_TOO_SMALL);
    }
 
    if (AclRevision < MIN_ACL_REVISION ||
-         AclRevision > MAX_ACL_REVISION)
-   {
-      return(STATUS_INVALID_PARAMETER);
-   }
-
-   if (AclSize > 0xffff)
+       AclRevision > MAX_ACL_REVISION ||
+       AclSize > 0xffff)
    {
       return(STATUS_INVALID_PARAMETER);
    }
@@ -635,7 +603,7 @@ RtlQueryInformationAcl(PACL Acl,
             Info->AceCount = Acl->AceCount;
             if (Ace != NULL)
             {
-               Info->AclBytesInUse = (PVOID)Ace - (PVOID)Acl;
+               Info->AclBytesInUse = (DWORD)((ULONG_PTR)Ace - (ULONG_PTR)Acl);
                Info->AclBytesFree  = Acl->AclSize - Info->AclBytesInUse;
             }
             else

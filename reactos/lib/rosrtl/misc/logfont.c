@@ -1,3 +1,4 @@
+#if 0
 #include <windows.h>
 #include <string.h>
 #include <rosrtl/logfont.h>
@@ -51,3 +52,4 @@ RosRtlLogFontW2A ( LPLOGFONTA pA, const LOGFONTW *pW )
 #undef COPYN
 #undef COPYS
 }
+#endif

@@ -29,7 +29,13 @@
 /* INCLUDES ******************************************************************/
 
 #include <user32.h>
-#include <rosrtl/devmode.h>
+
+#define SIZEOF_DEVMODEA_300 124
+#define SIZEOF_DEVMODEA_400 148
+#define SIZEOF_DEVMODEA_500 156
+#define SIZEOF_DEVMODEW_300 188
+#define SIZEOF_DEVMODEW_400 212
+#define SIZEOF_DEVMODEW_500 220
 
 /* FUNCTIONS *****************************************************************/
 
@@ -211,8 +217,62 @@ EnumDisplaySettingsExA(
   rc = NtUserEnumDisplaySettings ( &DeviceName, iModeNum, &lpDevModeW,
                                    dwFlags );
 
-  RosRtlDevModeW2A ( lpDevMode, &lpDevModeW );
+#define COPYS(f,len) WideCharToMultiByte( CP_THREAD_ACP, 0, lpDevModeW.f, len, (LPSTR)lpDevMode->f, len, NULL, NULL )
+#define COPYN(f) lpDevMode->f = lpDevModeW.f
+  COPYS(dmDeviceName, CCHDEVICENAME );
+  COPYN(dmSpecVersion);
+  COPYN(dmDriverVersion);
+  switch ( lpDevModeW.dmSize )
+    {
+    case SIZEOF_DEVMODEW_300:
+      lpDevMode->dmSize = SIZEOF_DEVMODEA_300;
+      break;
+    case SIZEOF_DEVMODEW_400:
+      lpDevMode->dmSize = SIZEOF_DEVMODEA_400;
+      break;
+    case SIZEOF_DEVMODEW_500:
+    default: /* FIXME what to do??? */
+      lpDevMode->dmSize = SIZEOF_DEVMODEA_500;
+      break;
+    }
+  COPYN(dmDriverExtra);
+  COPYN(dmFields);
+  COPYN(dmPosition.x);
+  COPYN(dmPosition.y);
+  COPYN(dmScale);
+  COPYN(dmCopies);
+  COPYN(dmDefaultSource);
+  COPYN(dmPrintQuality);
+  COPYN(dmColor);
+  COPYN(dmDuplex);
+  COPYN(dmYResolution);
+  COPYN(dmTTOption);
+  COPYN(dmCollate);
+  COPYS(dmFormName,CCHFORMNAME);
+  COPYN(dmLogPixels);
+  COPYN(dmBitsPerPel);
+  COPYN(dmPelsWidth);
+  COPYN(dmPelsHeight);
+  COPYN(dmDisplayFlags); // aka dmNup
+  COPYN(dmDisplayFrequency);
 
+  if ( lpDevModeW.dmSize <= SIZEOF_DEVMODEW_300 )
+    goto done; // we're done with 0x300 fields
+
+  COPYN(dmICMMethod);
+  COPYN(dmICMIntent);
+  COPYN(dmMediaType);
+  COPYN(dmDitherType);
+  COPYN(dmReserved1);
+  COPYN(dmReserved2);
+
+  if ( lpDevModeW.dmSize <= SIZEOF_DEVMODEW_400 )
+    goto done; // we're done with 0x400 fields
+
+  COPYN(dmPanningWidth);
+  COPYN(dmPanningHeight);
+
+done:
   RtlFreeUnicodeString ( &DeviceName );
 
 
@@ -380,8 +440,7 @@ ChangeDisplaySettingsExA(
   LONG rc;
   UNICODE_STRING DeviceName;
   PUNICODE_STRING pDeviceName = &DeviceName;
-  DEVMODEW DevModeW;
-  LPDEVMODEW pDevModeW = &DevModeW;
+  LPDEVMODEW pDevModeW;
 
   if (lpszDeviceName != NULL)
     {
@@ -395,7 +454,7 @@ ChangeDisplaySettingsExA(
     pDeviceName = NULL;
 
   if (lpDevMode != NULL)
-    RosRtlDevModeA2W ( pDevModeW, lpDevMode );
+    pDevModeW = GdiConvertToDevmodeW(lpDevMode);
   else
     pDevModeW = NULL;
 

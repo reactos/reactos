@@ -231,7 +231,7 @@ IntEnumFontFamilies(HDC Dc, LPLOGFONTW LogFont, PVOID EnumProc, LPARAM lParam,
         }
       else
         {
-          RosRtlLogFontW2A(&EnumLogFontExA.elfLogFont, &Info[i].EnumLogFontEx.elfLogFont);
+          LogFontW2A(&EnumLogFontExA.elfLogFont, &Info[i].EnumLogFontEx.elfLogFont);
           WideCharToMultiByte(CP_THREAD_ACP, 0, Info[i].EnumLogFontEx.elfFullName, -1,
                               (LPSTR)EnumLogFontExA.elfFullName, LF_FULLFACESIZE, NULL, NULL);
           WideCharToMultiByte(CP_THREAD_ACP, 0, Info[i].EnumLogFontEx.elfStyle, -1,
@@ -292,7 +292,7 @@ EnumFontFamiliesExA (HDC hdc, LPLOGFONTA lpLogfont, FONTENUMPROCA lpEnumFontFamE
 {
   LOGFONTW LogFontW;
 
-  RosRtlLogFontA2W(&LogFontW, lpLogfont);
+  LogFontA2W(&LogFontW, lpLogfont);
 
   /* no need to convert LogFontW back to lpLogFont b/c it's an [in] parameter only */
   return IntEnumFontFamilies(hdc, &LogFontW, lpEnumFontFamExProc, lParam, FALSE);
@@ -532,7 +532,7 @@ CreateFontIndirectA(
 {
   LOGFONTW tlf;
 
-  RosRtlLogFontA2W(&tlf, lplf);
+  LogFontA2W(&tlf, lplf);
 
   return NtGdiCreateFontIndirect(&tlf);
 }

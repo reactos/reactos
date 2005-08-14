@@ -1,13 +1,24 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS System Libraries
+ * FILE:            lib/gdi32/include/precomp.h
+ * PURPOSE:         User-Mode Win32 GDI Library Header
+ * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
+ */
+
+/* INCLUDES ******************************************************************/
+
+/* SDK/DDK/NDK Headers. */
 #include <windows.h>
+#include <ddraw.h>
+#include <ddk/winddi.h>
+#include <ddk/prntfont.h>
+#include <ddrawgdi.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
-#include <ddentry.h>
-#include <ddraw.h>
-#include <ddk/prntfont.h>
-#include <string.h>
+
+/* Win32K External Headers */
 #include <win32k/kapi.h>
-#include <rosrtl/logfont.h>
-#include <rosrtl/devmode.h>
 
 #define NtUserGetDCBrushColor(hbr) \
   (COLORREF)NtUserCallTwoParam((DWORD)(hbr), OBJ_BRUSH, TWOPARAM_ROUTINE_GETDCCOLOR)
@@ -21,7 +32,6 @@
 #define NtUserSetDCPenColor(hbr, crColor) \
   (COLORREF)NtUserCallTwoParam((DWORD)(hbr), (DWORD)crColor, TWOPARAM_ROUTINE_SETDCPENCOLOR)
 
-#ifdef __USE_W32API
 typedef int (CALLBACK* EMFPLAYPROC)( HDC, INT, HANDLE );
 typedef DWORD FULLSCREENCONTROL;
 typedef DWORD UNIVERSAL_FONT_ID;
@@ -30,7 +40,6 @@ typedef DWORD REALIZATION_INFO;
 typedef REALIZATION_INFO *PREALIZATION_INFO;
 typedef DWORD CHWIDTHINFO;
 typedef CHWIDTHINFO *PCHWIDTHINFO;
-#endif
 
 /* == GLOBAL VARIABLES ====================================================== */
 
@@ -60,4 +69,16 @@ BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, PVOID *UserData);
 BOOL STDCALL CalculateColorTableSize(CONST BITMAPINFOHEADER *BitmapInfoHeader, UINT *ColorSpec, UINT *ColorTableSize);
 LPBITMAPINFO STDCALL ConvertBitmapInfo(CONST BITMAPINFO *BitmapInfo, UINT ColorSpec, UINT *BitmapInfoSize, BOOL FollowedByData);
 
+/* == CONVERSION FUNCTIONS ================================================== */
+DEVMODEW *
+STDCALL
+GdiConvertToDevmodeW(DEVMODEA *dm);
+
+VOID
+STDCALL
+LogFontA2W(LPLOGFONTW pW, CONST LOGFONTA *pA);
+
+VOID
+STDCALL
+LogFontW2A(LPLOGFONTA pA, CONST LOGFONTW *pW);
 /* EOF */

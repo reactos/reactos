@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include <tchar.h>
 #include <string.h>
-#include <rosrtl/resstr.h>
 #include "resources.h"
 
 typedef struct _MIXER_WINDOW

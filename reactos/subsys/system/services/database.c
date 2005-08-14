@@ -28,8 +28,6 @@
 #include "services.h"
 #include <services/services.h>
 
-#include <rosrtl/string.h>
-
 #define NDEBUG
 #include <debug.h>
 
@@ -298,7 +296,8 @@ ScmCreateServiceDataBase(VOID)
 {
   RTL_QUERY_REGISTRY_TABLE QueryTable[2];
   OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING ServicesKeyName;
+  UNICODE_STRING ServicesKeyName = 
+  RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services");
   UNICODE_STRING SubKeyName;
   HKEY ServicesKey;
   ULONG Index;
@@ -328,9 +327,6 @@ ScmCreateServiceDataBase(VOID)
 				  NULL);
   if (!NT_SUCCESS(Status))
     return Status;
-
-  RtlRosInitUnicodeStringFromLiteral(&ServicesKeyName,
-		       L"\\Registry\\Machine\\System\\CurrentControlSet\\Services");
 
   InitializeObjectAttributes(&ObjectAttributes,
 			     &ServicesKeyName,
@@ -417,12 +413,12 @@ ScmCheckDriver(PSERVICE Service)
 
   if (Service->Type == SERVICE_KERNEL_DRIVER)
     {
-      RtlRosInitUnicodeStringFromLiteral(&DirName,
+      RtlInitUnicodeString(&DirName,
 			   L"\\Driver");
     }
   else
     {
-      RtlRosInitUnicodeStringFromLiteral(&DirName,
+      RtlInitUnicodeString(&DirName,
 			   L"\\FileSystem");
     }
 

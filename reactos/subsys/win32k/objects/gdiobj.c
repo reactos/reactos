@@ -776,10 +776,10 @@ GDIOBJ_LockObj (HGDIOBJ hObj, DWORD ObjectType)
             }
             else
             {
-               InterlockedIncrement(&GdiHdr->Locks);
+               InterlockedIncrement((PLONG)&GdiHdr->Locks);
                if (GdiHdr->LockingThread != Thread)
                {
-                  InterlockedDecrement(&GdiHdr->Locks);
+                  InterlockedDecrement((PLONG)&GdiHdr->Locks);
 
                   /* Unlock the handle table entry. */
                   InterlockedExchangePointer(&HandleEntry->ProcessId, PrevProcId);
@@ -917,13 +917,13 @@ GDIOBJ_ShareLockObj (HGDIOBJ hObj, DWORD ObjectType)
             PGDIOBJHDR GdiHdr = GDIBdyToHdr(HandleEntry->KernelData);
 
 #ifdef GDI_DEBUG
-            if (InterlockedIncrement(&GdiHdr->Locks) == 1)
+            if (InterlockedIncrement((PLONG)&GdiHdr->Locks) == 1)
             {
                GdiHdr->lockfile = file;
                GdiHdr->lockline = line;
             }
 #else
-            InterlockedIncrement(&GdiHdr->Locks);
+            InterlockedIncrement((PLONG)&GdiHdr->Locks);
 #endif
             Object = HandleEntry->KernelData;
          }
@@ -987,13 +987,13 @@ GDIOBJ_UnlockObjByPtr(PGDIOBJ Object)
 {
    PGDIOBJHDR GdiHdr = GDIBdyToHdr(Object);
 #ifdef GDI_DEBUG
-   if (InterlockedDecrement(&GdiHdr->Locks) == 0)
+   if (InterlockedDecrement((PLONG)&GdiHdr->Locks) == 0)
    {
       GdiHdr->lockfile = NULL;
       GdiHdr->lockline = 0;
    }
 #else
-   InterlockedDecrement(&GdiHdr->Locks);
+   InterlockedDecrement((PLONG)&GdiHdr->Locks);
 #endif
 }
 

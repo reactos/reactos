@@ -58,7 +58,9 @@
 
 typedef PVOID PGDIOBJ;
 
+#ifndef NTOS_MODE_USER
 typedef BOOL (INTERNAL_CALL *GDICLEANUPPROC)(PVOID ObjectBody);
+#endif
 
 /*!
  * GDI object header. This is a part of any GDI object

@@ -13,7 +13,6 @@
 
 /* include the ntoskrnl config.h file */
 #include "config.h"
-#include <roscfg.h>
 
 /* DDK/IFS/NDK Headers */
 #include <ddk/ntddk.h>
@@ -35,7 +34,7 @@
 #include <wchar.h>
 
 /* SEH support with PSEH */
-#include <pseh.h>
+#include <pseh/pseh.h>
 
 /* Helper Header */
 #include <reactos/helper.h>

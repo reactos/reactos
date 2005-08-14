@@ -10,8 +10,32 @@
  */
 
 #include <user32.h>
-#include <rosrtl/devmode.h>
-#include <rosrtl/logfont.h>
+
+VOID
+STDCALL
+LogFontW2A(LPLOGFONTA pA, CONST LOGFONTW *pW)
+{
+#define COPYS(f,len) WideCharToMultiByte ( CP_THREAD_ACP, 0, pW->f, len, pA->f, len, NULL, NULL )
+#define COPYN(f) pA->f = pW->f
+
+  COPYN(lfHeight);
+  COPYN(lfWidth);
+  COPYN(lfEscapement);
+  COPYN(lfOrientation);
+  COPYN(lfWeight);
+  COPYN(lfItalic);
+  COPYN(lfUnderline);
+  COPYN(lfStrikeOut);
+  COPYN(lfCharSet);
+  COPYN(lfOutPrecision);
+  COPYN(lfClipPrecision);
+  COPYN(lfQuality);
+  COPYN(lfPitchAndFamily);
+  COPYS(lfFaceName,LF_FACESIZE);
+
+#undef COPYN
+#undef COPYS
+}
 
 /*
  * @implemented
@@ -76,11 +100,11 @@ SystemParametersInfoA(UINT uiAction,
            nclma->iSmCaptionHeight = nclmw.iSmCaptionHeight;
            nclma->iMenuWidth = nclmw.iMenuWidth;
            nclma->iMenuHeight = nclmw.iMenuHeight;
-           RosRtlLogFontW2A(&(nclma->lfCaptionFont), &(nclmw.lfCaptionFont));
-           RosRtlLogFontW2A(&(nclma->lfSmCaptionFont), &(nclmw.lfSmCaptionFont));
-           RosRtlLogFontW2A(&(nclma->lfMenuFont), &(nclmw.lfMenuFont));
-           RosRtlLogFontW2A(&(nclma->lfStatusFont), &(nclmw.lfStatusFont));
-           RosRtlLogFontW2A(&(nclma->lfMessageFont), &(nclmw.lfMessageFont));
+           LogFontW2A(&(nclma->lfCaptionFont), &(nclmw.lfCaptionFont));
+           LogFontW2A(&(nclma->lfSmCaptionFont), &(nclmw.lfSmCaptionFont));
+           LogFontW2A(&(nclma->lfMenuFont), &(nclmw.lfMenuFont));
+           LogFontW2A(&(nclma->lfStatusFont), &(nclmw.lfStatusFont));
+           LogFontW2A(&(nclma->lfMessageFont), &(nclmw.lfMessageFont));
            return TRUE;
         }
       case SPI_GETICONTITLELOGFONT:
@@ -88,7 +112,7 @@ SystemParametersInfoA(UINT uiAction,
            LOGFONTW lfw;
            if (!SystemParametersInfoW(uiAction, 0, &lfw, fWinIni))
              return FALSE;
-           RosRtlLogFontW2A(pvParam, &lfw);
+           LogFontW2A(pvParam, &lfw);
            return TRUE;
         }
       case SPI_GETDESKWALLPAPER:
@@ -310,7 +334,7 @@ CreateDesktopA(LPCSTR lpszDesktop,
   ANSI_STRING DesktopNameA;
   UNICODE_STRING DesktopNameU;
   HDESK hDesktop;
-  DEVMODEW DevmodeW;
+  LPDEVMODEW DevmodeW;
 
   if (lpszDesktop != NULL)
     {
@@ -322,11 +346,11 @@ CreateDesktopA(LPCSTR lpszDesktop,
       RtlInitUnicodeString(&DesktopNameU, NULL);
     }
 
-  RosRtlDevModeA2W ( &DevmodeW, pDevmode );
+  DevmodeW = GdiConvertToDevmodeW(pDevmode);
 
   hDesktop = CreateDesktopW(DesktopNameU.Buffer,
 			    NULL,
-			    &DevmodeW,
+			    DevmodeW,
 			    dwFlags,
 			    dwDesiredAccess,
 			    lpsa);

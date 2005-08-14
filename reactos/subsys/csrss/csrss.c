@@ -32,13 +32,7 @@
  * 		actually does nothing but running).
  */
 
-#include <windows.h>
-#define NTOS_MODE_USER
-#include <ndk/ntndk.h>
-#include <csrss/csrss.h>
-#include <reactos/buildno.h>
-
-#include "api.h"
+#include "csrss.h"
 
 #define NDEBUG
 #include <debug.h>

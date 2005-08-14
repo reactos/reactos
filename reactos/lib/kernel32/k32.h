@@ -28,7 +28,7 @@
 #include "include/kernel32.h"
 
 /* PSEH for SEH Support */
-#include <pseh.h>
+#include <pseh/pseh.h>
 
 /* Helper Header */
 #include <reactos/helper.h>

@@ -11,11 +11,14 @@
 
 #include "precomp.h"
 
+#define SIZEOF_DEVMODEA_300 124
+#define SIZEOF_DEVMODEA_400 148
+#define SIZEOF_DEVMODEA_500 156
+#define SIZEOF_DEVMODEW_300 188
+#define SIZEOF_DEVMODEW_400 212
+#define SIZEOF_DEVMODEW_500 220
+
 #define UNIMPLEMENTED DbgPrint("GDI32: %s is unimplemented, please try again later.\n", __FUNCTION__);
-
-
-
-
 
 /*
  * @unimplemented
@@ -2676,15 +2679,74 @@ GdiConvertMetaFilePict(HGLOBAL hMem)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 DEVMODEW *
 STDCALL
 GdiConvertToDevmodeW(DEVMODEA *dm)
 {
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
+  LPDEVMODEW dmw;
+  
+  dmw = HEAP_alloc(sizeof(DEVMODEW));
+#define COPYS(f,len) MultiByteToWideChar ( CP_THREAD_ACP, 0, (LPSTR)dm->f, len, dmw->f, len )
+#define COPYN(f) dmw->f = dm->f
+  COPYS(dmDeviceName, CCHDEVICENAME );
+  COPYN(dmSpecVersion);
+  COPYN(dmDriverVersion);
+  switch ( dm->dmSize )
+    {
+    case SIZEOF_DEVMODEA_300:
+      dmw->dmSize = SIZEOF_DEVMODEW_300;
+      break;
+    case SIZEOF_DEVMODEA_400:
+      dmw->dmSize = SIZEOF_DEVMODEW_400;
+      break;
+    case SIZEOF_DEVMODEA_500:
+    default: /* FIXME what to do??? */
+      dmw->dmSize = SIZEOF_DEVMODEW_500;
+      break;
+    }
+  COPYN(dmDriverExtra);
+  COPYN(dmFields);
+  COPYN(dmPosition.x);
+  COPYN(dmPosition.y);
+  COPYN(dmScale);
+  COPYN(dmCopies);
+  COPYN(dmDefaultSource);
+  COPYN(dmPrintQuality);
+  COPYN(dmColor);
+  COPYN(dmDuplex);
+  COPYN(dmYResolution);
+  COPYN(dmTTOption);
+  COPYN(dmCollate);
+  COPYS(dmFormName,CCHFORMNAME);
+  COPYN(dmLogPixels);
+  COPYN(dmBitsPerPel);
+  COPYN(dmPelsWidth);
+  COPYN(dmPelsHeight);
+  COPYN(dmDisplayFlags); // aka dmNup
+  COPYN(dmDisplayFrequency);
+
+  if ( dm->dmSize <= SIZEOF_DEVMODEA_300 )
+    return dmw; // we're done with 0x300 fields
+
+  COPYN(dmICMMethod);
+  COPYN(dmICMIntent);
+  COPYN(dmMediaType);
+  COPYN(dmDitherType);
+  COPYN(dmReserved1);
+  COPYN(dmReserved2);
+
+  if ( dm->dmSize <= SIZEOF_DEVMODEA_400 )
+    return dmw; // we're done with 0x400 fields
+
+  COPYN(dmPanningWidth);
+  COPYN(dmPanningHeight);
+
+  return dmw;
+
+#undef COPYN
+#undef COPYS
 }
 
 /*

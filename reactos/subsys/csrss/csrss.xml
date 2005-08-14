@@ -13,6 +13,7 @@
 		<file>user.c</file>
 		<file>wapi.c</file>
 	</directory>
+    <pch>csrss.h</pch>
 	<file>csrss.c</file>
 	<file>init.c</file>
 	<file>print.c</file>
