@@ -266,7 +266,7 @@ __true_LdrInitializeThunk (ULONG Unknown1,
                          &NlsTable);
        RtlResetRtlTranslations (&NlsTable);
 
-       NTHeaders = (PIMAGE_NT_HEADERS)(ImageBase + PEDosHeader->e_lfanew);
+       NTHeaders = (PIMAGE_NT_HEADERS)((ULONG_PTR)ImageBase + PEDosHeader->e_lfanew);
 
        /* Get number of processors */
        Status = ZwQuerySystemInformation(SystemBasicInformation,

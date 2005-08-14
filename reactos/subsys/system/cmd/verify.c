@@ -18,7 +18,7 @@
  *        Remove all hardcode string to En.rc
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include "resource.h"
 
 #ifdef INCLUDE_CMD_VERIFY
@@ -34,9 +34,11 @@ INT cmd_verify (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_VERIFY_HELP1);
+		ConOutResPaging(TRUE,STRING_VERIFY_HELP1);
 		return 0;
 	}
+
+  nErrorLevel = 0;
 
 	if (!*param)
 	{

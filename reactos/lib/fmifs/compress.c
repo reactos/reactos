@@ -13,8 +13,6 @@
 #define _UNICODE
 #include <windows.h>
 #include <winioctl.h>
-#include <fmifs.h>
-
 
 /*
  * @implemented

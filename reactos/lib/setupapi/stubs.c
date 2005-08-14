@@ -69,29 +69,6 @@ BOOL WINAPI SetupDiGetDeviceInfoListDetailW(HDEVINFO devinfo, PSP_DEVINFO_LIST_D
 }
 
 /***********************************************************************
- *		  (SETUPAPI.@)
- *
- * NO WINAPI in description given
- */
-HDEVINFO WINAPI SetupDiGetClassDevsExA(const GUID *class, PCSTR filter, HWND parent, DWORD flags, HDEVINFO deviceset, PCSTR machine, PVOID reserved)
-{
-  FIXME("filter %s machine %s\n",debugstr_a(filter),debugstr_a(machine));
-  return FALSE;
-}
-
-/***********************************************************************
- *		  (SETUPAPI.@)
- *
- * NO WINAPI in description given
- */
-HDEVINFO WINAPI SetupDiGetClassDevsExW(const GUID *class, PCWSTR filter, HWND parent, DWORD flags, HDEVINFO deviceset, PCWSTR machine, PVOID reserved)
-{
-  FIXME("\n");
-  return FALSE;
-}
-
-
-/***********************************************************************
  *		SetupCopyOEMInfA  (SETUPAPI.@)
  */
 BOOL WINAPI SetupCopyOEMInfA(PCSTR sourceinffile, PCSTR sourcemedialoc,

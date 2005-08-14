@@ -19,7 +19,7 @@
  *
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include "resource.h"
 
 #ifdef INCLUDE_CMD_CHOICE
@@ -105,7 +105,7 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	LPTSTR lpOptions;
-	TCHAR Options[2];
+	TCHAR Options[6];
 	LPTSTR lpText    = NULL;
 	BOOL   bNoPrompt = FALSE;
 	BOOL   bCaseSensitive = FALSE;
@@ -123,12 +123,12 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
 	TCHAR Ch;
 	DWORD amount,clk;
 
-	LoadString(CMD_ModuleHandle, STRING_CHOICE_OPTION, Options, 2);
+	LoadString(CMD_ModuleHandle, STRING_CHOICE_OPTION, Options, 4);
 	lpOptions = Options;
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
-		ConOutResPuts(STRING_CHOICE_HELP);
+		ConOutResPaging(TRUE,STRING_CHOICE_HELP);
 		return 0;
 	}
 
@@ -228,7 +228,7 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
 
 		for (i = 1; (unsigned)i < _tcslen (lpOptions); i++)
 			ConOutPrintf (_T(",%c"), lpOptions[i]);
-
+     
 		ConOutPrintf (_T("]?"));
 	}
 
@@ -239,17 +239,27 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
 		while (TRUE)
 		{
 			ConInKey (&ir);
-
+      
+      if (bNoPrompt != FALSE)
+      {
 			val = IsKeyInString (lpOptions,
 #ifdef _UNICODE
 			                     ir.Event.KeyEvent.uChar.UnicodeChar,
 #else
 			                     ir.Event.KeyEvent.uChar.AsciiChar,
-#endif /* _UNICODE */
+#endif 
 			                     bCaseSensitive);
+      }
+      else
+      {
+
+      val = IsKeyInString (lpOptions,
+			                     ir.Event.KeyEvent.uChar.UnicodeChar,
+			                     bCaseSensitive);
+      }
 
 			if (val >= 0)
-			{
+			{        
 				ConOutPrintf (_T("%c\n"), lpOptions[val]);
 
 				nErrorLevel = val + 1;

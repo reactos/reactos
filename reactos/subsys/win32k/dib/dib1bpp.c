@@ -25,7 +25,7 @@
 VOID
 DIB_1BPP_PutPixel(SURFOBJ *SurfObj, LONG x, LONG y, ULONG c)
 {
-  PBYTE addr = SurfObj->pvScan0 + y * SurfObj->lDelta + (x >> 3);
+  PBYTE addr = (PBYTE)SurfObj->pvScan0 + y * SurfObj->lDelta + (x >> 3);
 
   if (0 == (c & 0x01))
     *addr &= ~MASK1BPP(x);
@@ -36,7 +36,7 @@ DIB_1BPP_PutPixel(SURFOBJ *SurfObj, LONG x, LONG y, ULONG c)
 ULONG
 DIB_1BPP_GetPixel(SURFOBJ *SurfObj, LONG x, LONG y)
 {
-  PBYTE addr = SurfObj->pvScan0 + y * SurfObj->lDelta + (x >> 3);
+  PBYTE addr = (PBYTE)SurfObj->pvScan0 + y * SurfObj->lDelta + (x >> 3);
 
   return (*addr & MASK1BPP(x) ? 1 : 0);
 }
@@ -378,7 +378,7 @@ DIB_1BPP_BitBlt(PBLTINFO BltInfo)
       DestX = BltInfo->DestRect.left;
       SourceX = BltInfo->SourcePoint.x;
       DestBits = (PULONG)(
-         BltInfo->DestSurface->pvScan0 +
+         (PBYTE)BltInfo->DestSurface->pvScan0 +
          (BltInfo->DestRect.left >> 3) +
          DestY * BltInfo->DestSurface->lDelta);
 

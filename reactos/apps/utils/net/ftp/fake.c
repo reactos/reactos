@@ -100,7 +100,7 @@ int fgetcSocket(int s)
        index = 0;
        total = recv(s, buffer, sizeof(buffer), 0);
 
-       if (total == INVALID_SOCKET)
+       if (total == SOCKET_ERROR)
 	 {
 	   total = 0;
 	   return ERROR;

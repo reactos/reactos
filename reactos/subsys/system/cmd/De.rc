@@ -560,7 +560,7 @@ TYPE     Zeigt den Inhalt einer Textdatei an.\n\
 VER      Zeigt die Windows-Version an.\n\
 VERIFY   Legt fest, ob ueberwacht werden soll, ob Dateien korrekt auf den\n\
          Datentraeger geschrieben werden.\n\
-VOL      Zeigt die Datentraegervolumebezeichnung und die Seriennummer an."
+VOL      Zeigt die Datentraegervolumebezeichnung und die Seriennummer an.\n"
 
 
 STRING_CHOICE_OPTION,         "JN"

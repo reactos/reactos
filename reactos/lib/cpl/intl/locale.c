@@ -153,7 +153,7 @@ LocalePageProc(HWND hwndDlg,
 	case WM_NOTIFY:
 		{
 			LPNMHDR lpnm = (LPNMHDR)lParam;
-			if (lpnm->code == PSN_APPLY)
+			if (lpnm->code == (UINT)PSN_APPLY)
 			{
 				// Apply changes
 				LCID NewLcid;
@@ -172,7 +172,7 @@ LocalePageProc(HWND hwndDlg,
 					iCurSel,
 					0);
 
-				if (NewLcid == CB_ERR)
+				if (NewLcid == (LCID)CB_ERR)
 					break;
                 
                 

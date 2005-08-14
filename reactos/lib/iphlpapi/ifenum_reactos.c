@@ -367,20 +367,20 @@ static NTSTATUS getInterfaceInfoSet( HANDLE tcpFile,
                     DWORD numAddrs;
                     IPAddrEntry *addrs;
                     TDIEntityID ip_ent;
-                    int j,k;
+                    int j;
 
                     interfaceInfoComplete = FALSE;
 		    status = getNthIpEntity( tcpFile, 0, &ip_ent );
 		    if( NT_SUCCESS(status) )
 			status = tdiGetIpAddrsForIpEntity
 			    ( tcpFile, &ip_ent, &addrs, &numAddrs );
-		    for( k = 0; k < numAddrs && NT_SUCCESS(status); k++ ) {
-			DPRINT("ADDR %d: index %d (target %d)\n", k, addrs[k].iae_index, infoSetInt[curInterf].if_info.ent.if_index);
-			if( addrs[k].iae_index == 
+		    for( j = 0; j < numAddrs && NT_SUCCESS(status); j++ ) {
+			DPRINT("ADDR %d: index %d (target %d)\n", j, addrs[j].iae_index, infoSetInt[curInterf].if_info.ent.if_index);
+			if( addrs[j].iae_index == 
 			    infoSetInt[curInterf].if_info.ent.if_index ) {
 			    memcpy( &infoSetInt[curInterf].ip_addr,
-				    &addrs[k],
-				    sizeof( addrs[k] ) );
+				    &addrs[j],
+				    sizeof( addrs[j] ) );
 			    curInterf++;
 			    break;
 			}
@@ -847,7 +847,6 @@ NTSTATUS deleteIpAddress( ULONG NteContext )
 {
   HANDLE tcpFile;
   NTSTATUS status = openTcpFile( &tcpFile );
-  USHORT TheNteContext = NteContext;
   IO_STATUS_BLOCK Iosb;
 
   DPRINT("Called.\n");

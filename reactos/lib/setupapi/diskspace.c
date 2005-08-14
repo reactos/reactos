@@ -67,7 +67,6 @@ HDSKSPC WINAPI SetupCreateDiskSpaceListW(PVOID Reserved1, DWORD Reserved2, UINT 
     while (*ptr)
     {
         DWORD type = GetDriveTypeW(ptr);
-        DWORD len;
         if (type == DRIVE_FIXED)
         {
             DWORD clusters;
@@ -81,9 +80,7 @@ HDSKSPC WINAPI SetupCreateDiskSpaceListW(PVOID Reserved1, DWORD Reserved2, UINT 
             list->Drives[list->dwDriveCount].dwWantedSpace = 0;
             list->dwDriveCount++;
         }
-       len = lstrlenW(ptr);
-       len++;
-       ptr+=sizeof(WCHAR)*len;
+       ptr += lstrlenW(ptr) + 1;
     }
     return  (HANDLE)list;
 }

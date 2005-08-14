@@ -140,7 +140,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
    NTSTATUS Status;
 
    DPRINT("MmPageOutVirtualMemory(Address 0x%.8X) PID %d\n",
-          Address, MemoryArea->Process->UniqueProcessId);
+          Address, AddressSpace->Process->UniqueProcessId);
 
    /*
     * Check for paging out from a deleted virtual memory area.

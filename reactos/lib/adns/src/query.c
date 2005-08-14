@@ -286,7 +286,7 @@ int adns_submit_reverse_any(adns_state ads,
   iaddr= (const unsigned char*) &(((const struct sockaddr_in*)addr) -> sin_addr);
 
   lreq= strlen(zone) + 4*4 + 1;
-  if (lreq > sizeof(shortbuf)) {
+  if (lreq > (int)sizeof(shortbuf)) {
     buf= malloc( strlen(zone) + 4*4 + 1 );
     if (!buf) return errno;
     buf_free= buf;

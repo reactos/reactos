@@ -131,6 +131,7 @@ typedef struct tagPropSheetInfo
   int width;
   int height;
   HIMAGELIST hImageList;
+  BOOL ended;
 } PropSheetInfo;
 
 typedef struct
@@ -296,7 +297,7 @@ static void PROPSHEET_GetPageRect(const PropSheetInfo * psInfo, HWND hwndDlg,
  *
  * Find page index corresponding to page resource id.
  */
-INT PROPSHEET_FindPageByResId(PropSheetInfo * psInfo, LRESULT resId)
+static INT PROPSHEET_FindPageByResId(PropSheetInfo * psInfo, LRESULT resId)
 {
    INT i;
 
@@ -707,39 +708,21 @@ int PROPSHEET_CreateDialog(PropSheetInfo* psInfo)
    * -1 (error). */
   if( psInfo->unicode )
   {
-    if (!(psInfo->ppshheader.dwFlags & PSH_MODELESS))
-      ret = DialogBoxIndirectParamW(psInfo->ppshheader.hInstance,
-                                    (LPDLGTEMPLATEW) temp,
-                                    psInfo->ppshheader.hwndParent,
-                                    PROPSHEET_DialogProc,
-                                    (LPARAM)psInfo);
-    else
-    {
-      ret = (int)CreateDialogIndirectParamW(psInfo->ppshheader.hInstance,
-                                            (LPDLGTEMPLATEW) temp,
-                                            psInfo->ppshheader.hwndParent,
-                                            PROPSHEET_DialogProc,
-                                            (LPARAM)psInfo);
-      if ( !ret ) ret = -1;
-    }
+    ret = (int)CreateDialogIndirectParamW(psInfo->ppshheader.hInstance,
+                                          (LPDLGTEMPLATEW) temp,
+                                          psInfo->ppshheader.hwndParent,
+                                          PROPSHEET_DialogProc,
+                                          (LPARAM)psInfo);
+    if ( !ret ) ret = -1;
   }
   else
   {
-    if (!(psInfo->ppshheader.dwFlags & PSH_MODELESS))
-      ret = DialogBoxIndirectParamA(psInfo->ppshheader.hInstance,
-                                    (LPDLGTEMPLATEA) temp,
-                                    psInfo->ppshheader.hwndParent,
-                                    PROPSHEET_DialogProc,
-                                    (LPARAM)psInfo);
-    else
-    {
-      ret = (int)CreateDialogIndirectParamA(psInfo->ppshheader.hInstance,
-                                            (LPDLGTEMPLATEA) temp,
-                                            psInfo->ppshheader.hwndParent,
-                                            PROPSHEET_DialogProc,
-                                            (LPARAM)psInfo);
-      if ( !ret ) ret = -1;
-    }
+    ret = (int)CreateDialogIndirectParamA(psInfo->ppshheader.hInstance,
+                                          (LPDLGTEMPLATEA) temp,
+                                          psInfo->ppshheader.hwndParent,
+                                          PROPSHEET_DialogProc,
+                                          (LPARAM)psInfo);
+    if ( !ret ) ret = -1;
   }
 
   Free(temp);
@@ -1265,7 +1248,7 @@ static BOOL PROPSHEET_CreateTabControl(HWND hwndParent,
  * Subclassing window procedure for wizard extrior pages to prevent drawing
  * background and so drawing above the watermark.
  */
-LRESULT CALLBACK
+static LRESULT CALLBACK
 PROPSHEET_WizardSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam, UINT_PTR uID, DWORD_PTR dwRef)
 {
   switch (uMsg)
@@ -1757,7 +1740,7 @@ static BOOL PROPSHEET_Finish(HWND hwndDlg)
   if (psInfo->isModeless)
     psInfo->activeValid = FALSE;
   else
-    EndDialog(hwndDlg, TRUE);
+    psInfo->ended = TRUE;
 
   return TRUE;
 }
@@ -1870,7 +1853,7 @@ static void PROPSHEET_Cancel(HWND hwndDlg, LPARAM lParam)
      psInfo->activeValid = FALSE;
   }
   else
-    EndDialog(hwndDlg, FALSE);
+    psInfo->ended = TRUE;
 }
 
 /******************************************************************************
@@ -2396,7 +2379,7 @@ static BOOL PROPSHEET_RemovePage(HWND hwndDlg,
       psInfo->active_page = -1;
       if (!psInfo->isModeless)
       {
-         EndDialog(hwndDlg, FALSE);
+         psInfo->ended = TRUE;
          return TRUE;
       }
     }
@@ -2737,6 +2720,34 @@ static void PROPSHEET_CleanUp(HWND hwndDlg)
   GlobalFree((HGLOBAL)psInfo);
 }
 
+static INT do_loop(PropSheetInfo *psInfo)
+{
+    MSG msg;
+    INT ret = -1;
+    HWND hwnd = psInfo->hwnd;
+
+    while(IsWindow(hwnd) && !psInfo->ended && (ret = GetMessageW(&msg, NULL, 0, 0)))
+    {
+        if(ret == -1)
+            break;
+
+        if(!IsDialogMessageW(hwnd, &msg))
+        {
+            TranslateMessage(&msg);
+            DispatchMessageW(&msg);
+        }
+    }
+
+    if(ret == 0)
+    {
+        PostQuitMessage(msg.wParam);
+        ret = -1;
+    }
+
+    DestroyWindow(hwnd);
+    return ret;
+}
+
 /******************************************************************************
  *            PropertySheet    (COMCTL32.@)
  *            PropertySheetA   (COMCTL32.@)
@@ -2787,7 +2798,11 @@ INT WINAPI PropertySheetA(LPCPROPSHEETHEADERA lppsh)
   }
 
   psInfo->unicode = FALSE;
+  psInfo->ended = FALSE;
+
   bRet = PROPSHEET_CreateDialog(psInfo);
+  if(!psInfo->isModeless)
+      bRet = do_loop(psInfo);
 
   return bRet;
 }
@@ -2834,7 +2849,11 @@ INT WINAPI PropertySheetW(LPCPROPSHEETHEADERW lppsh)
   }
 
   psInfo->unicode = TRUE;
+  psInfo->ended = FALSE;
+
   bRet = PROPSHEET_CreateDialog(psInfo);
+  if(!psInfo->isModeless)
+      bRet = do_loop(psInfo);
 
   return bRet;
 }
@@ -3039,7 +3058,7 @@ static BOOL PROPSHEET_DoCommand(HWND hwnd, WORD wID)
 		    if (psInfo->isModeless)
 			psInfo->activeValid = FALSE;
 		    else
-			EndDialog(hwnd, result);
+                        psInfo->ended = TRUE;
 		}
 	    else
 		EnableWindow(hwndApplyBtn, FALSE);
@@ -3423,6 +3442,17 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
           }
       }
       return TRUE;
+
+    case WM_SYSCOMMAND:
+      switch(wParam & 0xfff0)
+      {
+        case SC_CLOSE:
+          PROPSHEET_Cancel(hwnd, 1);
+          return TRUE;
+
+        default:
+          return FALSE;
+      }
 
     case WM_NOTIFY:
     {

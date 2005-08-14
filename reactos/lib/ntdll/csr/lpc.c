@@ -48,7 +48,7 @@ CsrCaptureParameterBuffer(PVOID ParameterBuffer,
     memcpy(Block, ParameterBuffer, ParameterBufferSize);
   }
   *ClientAddress = Block;
-  *ServerAddress = Block - CsrSectionMapBase + CsrSectionMapServerBase;
+  *ServerAddress = (PVOID)((ULONG_PTR)Block - (ULONG_PTR)CsrSectionMapBase + (ULONG_PTR)CsrSectionMapServerBase);
   return(STATUS_SUCCESS);
 }
 

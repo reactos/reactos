@@ -48,7 +48,7 @@ UrlEncode(LPSTR in, LPSTR out)
 {
   CHAR buffer[4];
   UCHAR iu;
-  INT i;
+  size_t i;
 
   for (i = 0; i < strlen(in); i++)
   {

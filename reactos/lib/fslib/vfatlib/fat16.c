@@ -286,17 +286,17 @@ Fat16Format (HANDLE FileHandle,
   /* Calculate cluster size */
   if (ClusterSize == 0)
     {
-      if (PartitionInfo->PartitionLength.QuadPart < 16ULL * 1024ULL * 1024ULL)
+      if (PartitionInfo->PartitionLength.QuadPart < 16LL * 1024LL * 1024LL)
 	{
 	  /* Partition < 16MB ==> 1KB Cluster */
 	  ClusterSize = 1024;
 	}
-      else if (PartitionInfo->PartitionLength.QuadPart < 128ULL * 1024ULL * 1024ULL)
+      else if (PartitionInfo->PartitionLength.QuadPart < 128LL * 1024LL * 1024LL)
 	{
 	  /* Partition < 128MB ==> 2KB Cluster */
 	  ClusterSize = 2048;
 	}
-      else if (PartitionInfo->PartitionLength.QuadPart < 256ULL * 1024ULL * 1024ULL)
+      else if (PartitionInfo->PartitionLength.QuadPart < 256LL * 1024LL * 1024LL)
 	{
 	  /* Partition < 256MB ==> 4KB Cluster */
 	  ClusterSize = 4096;

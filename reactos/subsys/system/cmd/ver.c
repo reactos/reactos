@@ -21,7 +21,7 @@
  *        New version info and some output changes.
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include "resource.h"
 #include <reactos/resource.h>
 
@@ -65,9 +65,11 @@ INT cmd_ver (LPTSTR cmd, LPTSTR param)
 {
 	INT i;
 
+  nErrorLevel = 0;
+
 	if (_tcsstr (param, _T("/?")) != NULL)
 	{
-		ConOutResPuts(STRING_VERSION_HELP1);
+		ConOutResPaging(TRUE,STRING_VERSION_HELP1);
 		return 0;
 	}
 

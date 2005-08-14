@@ -833,7 +833,7 @@ ObReferenceObjectByHandle(HANDLE Handle,
 
    if (ObjectType != NULL && ObjectType != ObjectHeader->Type)
      {
-        DPRINT("ObjectType mismatch: %wZ vs %wZ (handle 0x%x)\n", &ObjectType->TypeName, ObjectHeader->Type ? &ObjectHeader->Type->TypeName : NULL, Handle);
+        DPRINT("ObjectType mismatch: %wZ vs %wZ (handle 0x%x)\n", &ObjectType->Name, ObjectHeader->Type ? &ObjectHeader->Type->Name : NULL, Handle);
 
         ExUnlockHandleTableEntry(HandleTable,
                                  HandleEntry);
@@ -1142,7 +1142,7 @@ ObInsertObject(IN PVOID Object,
                                  ObjectCreateInfo->Attributes & OBJ_INHERIT,
                                  Handle);
         DPRINT("handle Created: %d. refcount. handlecount %d %d\n",
-                 *Handle, Header->RefCount, Header->HandleCount);
+                 *Handle, Header->PointerCount, Header->HandleCount);
     }
     
     /* We can delete the Create Info now */

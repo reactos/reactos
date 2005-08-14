@@ -19,14 +19,6 @@
 #include <windows.h>
 #include <ndk/ntndk.h>
 
-/* FIXME: ReactOS will be R-Rated if I really write what I'm about to */
-NTSTATUS 
-STDCALL
-MmCopyFromCaller(PVOID Dest, const VOID *Src, ULONG NumberOfBytes);
-NTSTATUS 
-STDCALL
-MmCopyToCaller(PVOID Dest, const VOID *Src, ULONG NumberOfBytes);
-
 /* SEH Support with PSEH */
 #include <pseh/pseh.h>
 

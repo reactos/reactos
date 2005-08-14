@@ -9,11 +9,14 @@
  *
  *    03-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
  *        Remove all hardcode string to En.rc
+ *
+ *    01-Jul-2005 (Brandon Turner) <turnerb7@msu.edu>)
+ *        Added ConPrintfPaging and ConOutPrintfPaging
  */
 
 
 
-#include "precomp.h"
+#include <precomp.h>
 #include "resource.h"
 
 
@@ -184,6 +187,13 @@ VOID ConPuts(LPTSTR szText, DWORD nStdHandle)
 #endif
 }
 
+VOID ConOutResPaging(BOOL NewPage, UINT resID)
+{
+  TCHAR szMsg[RC_STRING_MAX_SIZE];
+  LoadString(CMD_ModuleHandle, resID, szMsg, RC_STRING_MAX_SIZE);
+  ConOutPrintfPaging(NewPage, szMsg);
+}
+
 VOID ConOutResPuts (UINT resID)
 {
   TCHAR szMsg[RC_STRING_MAX_SIZE];
@@ -212,11 +222,109 @@ VOID ConPrintf(LPTSTR szFormat, va_list arg_ptr, DWORD nStdHandle)
 #else
 	pBuf = szOut;
 #endif
+
 	WriteFile (GetStdHandle (nStdHandle),
 	           pBuf,
 	           len,
 	           &dwWritten,
 	           NULL);
+
+
+#ifdef UNICODE
+	free(pBuf);
+#endif
+}
+
+VOID ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHandle)
+{
+	INT len;
+	PCHAR pBuf;
+	CONSOLE_SCREEN_BUFFER_INFO csbi;
+	TCHAR szOut[OUTPUT_BUFFER_SIZE];
+	DWORD dwWritten;
+  
+  /* used to count number of lines since last pause */
+	static int LineCount = 0;
+
+  /* used to see how big the screen is */
+	int ScreenLines = 0;  
+
+  /* the number of chars in a roow */
+	int ScreenCol = 0;  
+
+  /* chars since end of line */
+	int CharEL = 0; 
+  
+	int i = 0;
+
+	if(NewPage == TRUE)
+		LineCount = 0;
+
+  /* rest LineCount and return if no string have been given */
+  if (szFormat == NULL)
+     return;
+
+
+	//get the size of the visual screen that can be printed too
+	GetConsoleScreenBufferInfo(hConsole, &csbi);
+	//subtract 2 to account for "press any key..." and for the blank line at the end of PagePrompt()
+	ScreenLines = (csbi.srWindow.Bottom  - csbi.srWindow.Top) - 4;
+	ScreenCol = (csbi.srWindow.Right - csbi.srWindow.Left) + 1;
+
+	//make sure they didnt make the screen to small
+	if(ScreenLines<4)
+  {
+	   ConPrintf(szFormat, arg_ptr, nStdHandle);
+     return ;
+  }
+	   
+	len = _vstprintf (szOut, szFormat, arg_ptr);
+#ifdef _UNICODE
+	pBuf = malloc(len + 1);
+	len = WideCharToMultiByte( OutputCodePage, 0, szOut, len + 1, pBuf, len + 1, NULL, NULL) - 1;
+#else
+	pBuf = szOut;
+#endif
+	      
+		for(i = 0; i < len; i++)
+		{ 
+      
+      if(szOut[i] == _T('\n'))
+			{			        
+				LineCount++; 
+        CharEL=0;
+			}      
+      else
+      {      
+        CharEL++;           
+        if (CharEL>=ScreenCol)
+        {        
+          if (i+1<len)
+          {
+             if(szOut[i+1] != _T('\n')) LineCount++;          
+          }
+          CharEL=0;
+        }
+       }
+
+      /* FIXME : write more that one char at time */
+      WriteFile (GetStdHandle (nStdHandle),&pBuf[i],sizeof(TCHAR),&dwWritten,NULL);
+	    if(LineCount >= ScreenLines)
+	      {
+         if(_tcsncicmp(&szOut[i],_T("\n"),2)!=0)
+           WriteFile (GetStdHandle (nStdHandle),_T("\n"),sizeof(TCHAR),&dwWritten,NULL); 
+
+		     if(PagePrompt() != PROMPT_YES)
+		     {
+			    return;
+		     }
+		     //reset the number of lines being printed         
+		     LineCount = 0;
+         CharEL=0;
+	       }
+      
+		}
+
 #ifdef UNICODE
 	free(pBuf);
 #endif
@@ -241,13 +349,13 @@ VOID ConOutFormatMessage (DWORD MessageId, ...)
 	va_end (arg_ptr);
 	if(ret > 0)
 	{
-		ConErrPuts (text);
+		ConOutPuts (text);
 		LocalFree(text);
 	}
 	else
 	{
 		LoadString(CMD_ModuleHandle, STRING_CONSOLE_ERROR, szMsg, RC_STRING_MAX_SIZE);
-		ConErrPrintf(szMsg);
+		ConOutPrintf(szMsg);
 	}
 }
 
@@ -257,6 +365,15 @@ VOID ConOutPrintf (LPTSTR szFormat, ...)
 
 	va_start (arg_ptr, szFormat);
 	ConPrintf(szFormat, arg_ptr, STD_OUTPUT_HANDLE);
+	va_end (arg_ptr);
+}
+
+VOID ConOutPrintfPaging (BOOL NewPage, LPTSTR szFormat, ...)
+{
+	va_list arg_ptr;
+
+	va_start (arg_ptr, szFormat);
+	ConPrintfPaging(NewPage, szFormat, arg_ptr, STD_OUTPUT_HANDLE);
 	va_end (arg_ptr);
 }
 

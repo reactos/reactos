@@ -44,12 +44,28 @@ int nb_lib_paths = 0;
 int nb_errors = 0;
 int display_warnings = 0;
 int kill_at = 0;
-
-/* we only support relay debugging on i386 */
-#ifdef __i386__
-int debugging = 1;
-#else
 int debugging = 0;
+
+#ifdef __i386__
+enum target_cpu target_cpu = CPU_x86;
+#elif defined(__sparc__)
+enum target_cpu target_cpu = CPU_SPARC;
+#elif defined(__ALPHA__)
+enum target_cpu target_cpu = CPU_ALPHA;
+#elif defined(__powerpc__)
+enum target_cpu target_cpu = CPU_POWERPC;
+#else
+#error Unsupported CPU
+#endif
+
+#ifdef __APPLE__
+enum target_platform target_platform = PLATFORM_APPLE;
+#elif defined(__svr4__)
+enum target_platform target_platform = PLATFORM_SVR4;
+#elif defined(_WINDOWS)
+enum target_platform target_platform = PLATFORM_WINDOWS;
+#else
+enum target_platform target_platform = PLATFORM_UNSPECIFIED;
 #endif
 
 char **debug_channels = NULL;
@@ -453,6 +469,9 @@ int main(int argc, char **argv)
 
     output_file = stdout;
     argv = parse_options( argc, argv, spec );
+
+    /* we only support relay debugging on i386 */
+    debugging = (target_cpu == CPU_x86);
 
     switch(exec_mode)
     {

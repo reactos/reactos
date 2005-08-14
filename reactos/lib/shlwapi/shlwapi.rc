@@ -29,5 +29,6 @@
 #include "shlwapi_Nl.rc"
 #include "shlwapi_It.rc"
 #include "shlwapi_Ja.rc"
+#include "shlwapi_Pl.rc"
 #include "shlwapi_Pt.rc"
 #include "shlwapi_Sv.rc"

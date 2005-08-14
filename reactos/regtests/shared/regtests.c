@@ -113,7 +113,7 @@ ControlPerformanceTest(HANDLE hThread,
   do {
     _Sleep(1);
 
-    if (_SuspendThread(hThread) == -1)
+    if (_SuspendThread(hThread) == (DWORD)-1)
       break;
 
     if (_GetThreadContext(hThread, &currentContext) == 0)
@@ -122,7 +122,7 @@ ControlPerformanceTest(HANDLE hThread,
    if (IsContextChanged(&currentContext, &lastContext))
      Args->Time++;
 
-    if (_ResumeThread(hThread) == -1)
+    if (_ResumeThread(hThread) == (DWORD)-1)
       break;
 
     if (Args->Time >= TimeOut)

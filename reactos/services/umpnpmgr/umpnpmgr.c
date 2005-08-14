@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             services/umpnpmgr/umpnpmgr.c
@@ -30,8 +29,8 @@
 #include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
+#include <ndk/sysguid.h>
 #include <ddk/wdmguid.h>
-#include <ddk/ntpnp.h>
 
 #include <rpc.h>
 #include <rpcdce.h>
@@ -108,10 +107,22 @@ void __RPC_USER midl_user_free(void __RPC_FAR * ptr)
 }
 
 
-//WORD PNP_GetVersion(RPC_BINDING_HANDLE BindingHandle)
-WORD PNP_GetVersion(handle_t BindingHandle)
+//CONFIRET PNP_GetVersion(RPC_BINDING_HANDLE BindingHandle,
+//                        WORD *Version)
+unsigned long PNP_GetVersion(handle_t BindingHandle,
+                             unsigned short *Version)
 {
-  return 0x0400;
+  *Version = 0x0400;
+  return 0; /* CR_SUCCESS */
+}
+
+
+unsigned long PNP_GetGlobalState(handle_t BindingHandle,
+                                 unsigned long *State,
+                                 unsigned long Flags)
+{
+    *State = 5;
+    return 0; /* CR_SUCCESS */
 }
 
 
@@ -162,7 +173,7 @@ PnpEventThread(LPVOID lpParameter)
     /* FIXME: Process the pnp event */
 
     /* Dequeue the current pnp event and signal the next one */
-    NtPlugPlayControl(PLUGPLAY_USER_RESPONSE, NULL, 0);
+    NtPlugPlayControl(PlugPlayControlUserResponse, NULL, 0);
   }
 
   HeapFree(GetProcessHeap(), 0, PnpEvent);

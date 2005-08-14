@@ -57,7 +57,7 @@ typedef struct _ADAPTER
   ULONG Flags;
   ULONG InterruptVector;
   ULONG IoBaseAddress;
-  PVOID PortOffset;
+  ULONG_PTR PortOffset;
   NDIS_MINIPORT_INTERRUPT InterruptObject;
   NDIS_MEDIA_STATE MediaState;
   NDIS_MINIPORT_TIMER MediaDetectionTimer;

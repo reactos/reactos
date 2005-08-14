@@ -452,7 +452,7 @@ inline static int is_eol( struct parser *parser, const CHAR *ptr )
 /* push data from current token start up to pos into the current token */
 static int push_token( struct parser *parser, const CHAR *pos )
 {
-  int len = pos - parser->start;
+  unsigned int len = pos - parser->start;
   const CHAR *src = parser->start;
   WCHAR *dst = parser->token + parser->token_len;
 
@@ -1349,7 +1349,7 @@ InfGetBinaryField (PINFCONTEXT Context,
 
   CacheLine = (PINFCACHELINE)Context->Line;
 
-  if (FieldIndex > CacheLine->FieldCount)
+  if (FieldIndex > (ULONG)CacheLine->FieldCount)
     return FALSE;
 
   CacheField = CacheLine->FirstField;
@@ -1399,7 +1399,7 @@ InfGetIntField (PINFCONTEXT Context,
 
   CacheLine = (PINFCACHELINE)Context->Line;
 
-  if (FieldIndex > CacheLine->FieldCount)
+  if (FieldIndex > (ULONG)CacheLine->FieldCount)
     {
       DPRINT("Invalid parameter\n");
       return FALSE;
@@ -1449,7 +1449,7 @@ InfGetMultiSzField (PINFCONTEXT Context,
 
   CacheLine = (PINFCACHELINE)Context->Line;
 
-  if (FieldIndex > CacheLine->FieldCount)
+  if (FieldIndex > (ULONG)CacheLine->FieldCount)
     return FALSE;
 
   CacheField = CacheLine->FirstField;
@@ -1517,7 +1517,7 @@ InfGetStringField (PINFCONTEXT Context,
 
   CacheLine = (PINFCACHELINE)Context->Line;
 
-  if (FieldIndex > CacheLine->FieldCount)
+  if (FieldIndex > (ULONG)CacheLine->FieldCount)
     return FALSE;
 
   if (FieldIndex == 0)
@@ -1602,7 +1602,7 @@ InfGetDataField (PINFCONTEXT Context,
 
   CacheLine = (PINFCACHELINE)Context->Line;
 
-  if (FieldIndex > CacheLine->FieldCount)
+  if (FieldIndex > (ULONG)CacheLine->FieldCount)
     return FALSE;
 
   if (FieldIndex == 0)

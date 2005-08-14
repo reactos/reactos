@@ -36,7 +36,7 @@
 #include <tchar.h>
 #include <stdlib.h>
 
-#include <samlib.h>
+#include <samlib/samlib.h>
 #include <syssetup.h>
 #include <userenv.h>
 #include <setupapi.h>
@@ -84,11 +84,12 @@ RunVMWInstall(VOID)
 {
   PROCESS_INFORMATION ProcInfo;
   STARTUPINFO si;
+  WCHAR InstallName[] = L"vmwinst.exe";
 
   ZeroMemory(&si, sizeof(STARTUPINFO));
   si.cb = sizeof(STARTUPINFO);
 
-  if(CreateProcess(NULL, _T("vmwinst.exe"), NULL, NULL, TRUE, NORMAL_PRIORITY_CLASS,
+  if(CreateProcess(NULL, InstallName, NULL, NULL, TRUE, NORMAL_PRIORITY_CLASS,
                    NULL, NULL, &si, &ProcInfo))
   {
     WaitForSingleObject(ProcInfo.hProcess, INFINITE);

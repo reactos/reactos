@@ -141,7 +141,7 @@ static void write_formatstring( int proc )
   print_proxy( "\n");
 }
 
-static void init_proxy()
+static void init_proxy(void)
 {
   if (proxy) return;
   if(!(proxy = fopen(proxy_name, "w")))

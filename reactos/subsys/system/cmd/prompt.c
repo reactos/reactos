@@ -46,7 +46,7 @@
  *    30-Apr-2005 (Magnus Olsen) <magnus@greatlord.com>)
  *        Remove all hardcode string to En.rc
  */
-#include "precomp.h"
+#include <precomp.h>
 #include "resource.h"
 
 /*
@@ -105,6 +105,8 @@ VOID PrintPrompt(VOID)
 
 				case _T('H'):
 					ConOutChar (_T('\x08'));
+          ConOutChar (_T(' '));
+          ConOutChar (_T('\x08'));
 					break;
 
 				case _T('L'):
@@ -131,10 +133,18 @@ VOID PrintPrompt(VOID)
 					ConOutChar (_T('='));
 					break;
 
-				case _T('T'):
-					PrintTime ();
+        case _T('S'):
+					ConOutChar (_T(' '));
 					break;
 
+				case _T('T'):					
+          {
+          TCHAR szTime[32];          
+	        GetTimeFormat(LOCALE_USER_DEFAULT, 0, NULL, NULL,szTime, sizeof(szTime));
+          ConOutPrintf("%s",szTime);
+          }
+					break;
+          
 				case _T('V'):
 					switch (osvi.dwPlatformId)
 					{
@@ -145,6 +155,7 @@ VOID PrintPrompt(VOID)
 							else
 								ConOutPrintf (_T("Windows 95"));
 							break;
+
 
 						case VER_PLATFORM_WIN32_NT:
 							ConOutPrintf (_T("Windows NT Version %lu.%lu"),
@@ -184,12 +195,12 @@ INT cmd_prompt (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_PROMPT_HELP1);
+		ConOutResPaging(TRUE,STRING_PROMPT_HELP1);
 
 #ifdef FEATURE_DIRECTORY_STACK
-		ConOutResPuts(STRING_PROMPT_HELP2);
+		ConOutResPaging(FALSE,STRING_PROMPT_HELP2);
 #endif
-		ConOutResPuts(STRING_PROMPT_HELP3);
+		ConOutResPaging(FALSE,STRING_PROMPT_HELP3);
 		return 0;
 	}
 

@@ -31,7 +31,7 @@
  *        Remove all hardcode string to En.rc
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include "resource.h"
 
 #ifdef INCLUDE_CMD_DATE
@@ -192,9 +192,11 @@ INT cmd_date (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_DATE_HELP4);
+		ConOutResPaging(TRUE,STRING_DATE_HELP4);
 		return 0;
 	}
+  
+  nErrorLevel = 0;
 
 	/* build parameter array */
 	arg = split (param, &argc, FALSE);

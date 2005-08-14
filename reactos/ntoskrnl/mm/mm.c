@@ -35,7 +35,7 @@ MmCopyToCaller(PVOID Dest, const VOID *Src, ULONG NumberOfBytes)
 
   if (ExGetPreviousMode() == UserMode)
     {
-      if ((ULONG_PTR)Dest >= KERNEL_BASE)
+      if (Dest >= MmSystemRangeStart)
    {
      return(STATUS_ACCESS_VIOLATION);
    }
@@ -56,7 +56,7 @@ MmCopyFromCaller(PVOID Dest, const VOID *Src, ULONG NumberOfBytes)
 
   if (ExGetPreviousMode() == UserMode)
     {
-      if ((ULONG_PTR)Src >= KERNEL_BASE)
+      if (Src >= MmSystemRangeStart)
    {
      return(STATUS_ACCESS_VIOLATION);
    }
@@ -158,7 +158,7 @@ BOOLEAN STDCALL MmIsAddressValid(PVOID VirtualAddress)
    MEMORY_AREA* MemoryArea;
    PMADDRESS_SPACE AddressSpace;
 
-   if ((ULONG_PTR)VirtualAddress >= KERNEL_BASE)
+   if (VirtualAddress >= MmSystemRangeStart)
    {
       AddressSpace = MmGetKernelAddressSpace();
    }
@@ -205,7 +205,7 @@ NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
    /*
     * Find the memory area for the faulting address
     */
-   if (Address >= KERNEL_BASE)
+   if (Address >= (ULONG_PTR)MmSystemRangeStart)
    {
       /*
        * Check permissions
@@ -325,7 +325,7 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
        * after my init patch anyways
        */
       CPRINT("No current process\n");
-      if (Address < KERNEL_BASE)
+      if (Address < (ULONG_PTR)MmSystemRangeStart)
       {
          return(STATUS_UNSUCCESSFUL);
       }
@@ -334,7 +334,7 @@ NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
    /*
     * Find the memory area for the faulting address
     */
-   if (Address >= KERNEL_BASE)
+   if (Address >= (ULONG_PTR)MmSystemRangeStart)
    {
       /*
        * Check permissions

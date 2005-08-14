@@ -219,7 +219,7 @@ DrawListEntries(PGENERIC_LIST GenericList)
 
       coPos.X++;
       WriteConsoleOutputCharacters (ListEntry->Text,
-				    min (strlen(ListEntry->Text), Width - 2),
+				    min (strlen(ListEntry->Text), (SIZE_T)Width - 2),
 				    coPos);
       coPos.X--;
 

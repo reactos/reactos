@@ -102,7 +102,7 @@ static LONG RawFsQueueCount = 0;
 BOOLEAN
 RawFsIsRawFileSystemDeviceObject(IN PDEVICE_OBJECT DeviceObject)
 {
-  DPRINT("RawFsIsRawFileSystemDeviceObject(DeviceObject %x)\n", DeviceObject);
+  DPRINT("RawFsIsRawFileSystemDeviceObject(DeviceObject 0x%p)\n", DeviceObject);
 
   if (DeviceObject == DiskDeviceObject)
     return TRUE;
@@ -129,7 +129,7 @@ RawFsReadDisk(IN PDEVICE_OBJECT pDeviceObject,
 
   KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
-  DPRINT("RawFsReadDisk(pDeviceObject %x, Offset %I64x, Length %d, Buffer %x)\n",
+  DPRINT("RawFsReadDisk(pDeviceObject 0x%p, Offset %I64x, Length %d, Buffer 0x%p)\n",
 	  pDeviceObject, ReadOffset->QuadPart, ReadLength, Buffer);
 
   DPRINT ("Building synchronous FSD Request...\n");
@@ -146,26 +146,26 @@ RawFsReadDisk(IN PDEVICE_OBJECT pDeviceObject,
       return STATUS_UNSUCCESSFUL;
     }
 
-  DPRINT("Calling IO Driver... with irp %x\n", Irp);
+  DPRINT("Calling IO Driver... with irp 0x%p\n", Irp);
   Status = IoCallDriver(pDeviceObject, Irp);
 
-  DPRINT("Waiting for IO Operation for %x\n", Irp);
+  DPRINT("Waiting for IO Operation for 0x%p\n", Irp);
   if (Status == STATUS_PENDING)
     {
       DPRINT("Operation pending\n");
       KeWaitForSingleObject (&Event, Suspended, KernelMode, FALSE, NULL);
-      DPRINT("Getting IO Status... for %x\n", Irp);
+      DPRINT("Getting IO Status... for 0x%p\n", Irp);
       Status = IoStatus.Status;
     }
 
   if (!NT_SUCCESS(Status))
     {
       DPRINT("RawFsReadDisk() failed. Status %x\n", Status);
-      DPRINT("(pDeviceObject %x, Offset %I64x, Size %d, Buffer %x\n",
+      DPRINT("(pDeviceObject 0x%p, Offset %I64x, Size %d, Buffer 0x%p\n",
 	      pDeviceObject, ReadOffset->QuadPart, ReadLength, Buffer);
       return Status;
     }
-  DPRINT("Block request succeeded for %x\n", Irp);
+  DPRINT("Block request succeeded for 0x%p\n", Irp);
   return STATUS_SUCCESS;
 }
 
@@ -180,7 +180,7 @@ RawFsWriteDisk(IN PDEVICE_OBJECT pDeviceObject,
   KEVENT Event;
   PIRP Irp;
 
-  DPRINT("RawFsWriteDisk(pDeviceObject %x, Offset %I64x, Size %d, Buffer %x)\n",
+  DPRINT("RawFsWriteDisk(pDeviceObject 0x%p, Offset %I64x, Size %d, Buffer 0x%p)\n",
 	  pDeviceObject, WriteOffset->QuadPart, WriteLength, Buffer);
 
   KeInitializeEvent(&Event, NotificationEvent, FALSE);
@@ -212,7 +212,7 @@ RawFsWriteDisk(IN PDEVICE_OBJECT pDeviceObject,
   if (!NT_SUCCESS(Status))
     {
       DPRINT("RawFsWriteDisk() failed. Status %x\n", Status);
-      DPRINT("(pDeviceObject %x, Offset %I64x, Size %d, Buffer %x\n",
+      DPRINT("(pDeviceObject 0x%p, Offset %I64x, Size %d, Buffer 0x%p\n",
 	      pDeviceObject, WriteOffset->QuadPart, WriteLength, Buffer);
       return Status;
     }
@@ -234,9 +234,9 @@ RawFsBlockDeviceIoControl(IN PDEVICE_OBJECT DeviceObject,
 	IO_STATUS_BLOCK IoStatus;
 	NTSTATUS Status;
 
-	DPRINT("RawFsBlockDeviceIoControl(DeviceObject %x, CtlCode %x, "
-    "InputBuffer %x, InputBufferSize %x, OutputBuffer %x, "
-    "POutputBufferSize %x (%x)\n", DeviceObject, CtlCode,
+	DPRINT("RawFsBlockDeviceIoControl(DeviceObject 0x%p, CtlCode %x, "
+    "InputBuffer 0x%p, InputBufferSize %x, OutputBuffer 0x%p, "
+    "POutputBufferSize 0x%p (%x)\n", DeviceObject, CtlCode,
     InputBuffer, InputBufferSize, OutputBuffer, pOutputBufferSize,
     pOutputBufferSize ? *pOutputBufferSize : 0);
 
@@ -263,15 +263,15 @@ RawFsBlockDeviceIoControl(IN PDEVICE_OBJECT DeviceObject,
   		return STATUS_INSUFFICIENT_RESOURCES;
   	}
 
-	DPRINT("Calling IO Driver... with irp %x\n", Irp);
+	DPRINT("Calling IO Driver... with irp 0x%p\n", Irp);
 	Status = IoCallDriver(DeviceObject, Irp);
 
-	DPRINT("Waiting for IO Operation for %x\n", Irp);
+	DPRINT("Waiting for IO Operation for 0x%p\n", Irp);
 	if (Status == STATUS_PENDING)
     {
     	DPRINT("Operation pending\n");
     	KeWaitForSingleObject (&Event, Suspended, KernelMode, FALSE, NULL);
-    	DPRINT("Getting IO Status... for %x\n", Irp);
+    	DPRINT("Getting IO Status... for 0x%p\n", Irp);
     	Status = IoStatus.Status;
     }
 	if (OutputBufferSize)
@@ -327,7 +327,7 @@ RawFsAllocateIrpContext(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
   PRAWFS_IRP_CONTEXT IrpContext;
   UCHAR MajorFunction;
 
-  DPRINT("RawFsAllocateIrpContext(DeviceObject %x, Irp %x)\n", DeviceObject, Irp);
+  DPRINT("RawFsAllocateIrpContext(DeviceObject 0x%p, Irp 0x%p)\n", DeviceObject, Irp);
 
   ASSERT(DeviceObject);
   ASSERT(Irp);
@@ -364,7 +364,7 @@ RawFsAllocateIrpContext(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 static VOID
 RawFsFreeIrpContext(IN PRAWFS_IRP_CONTEXT IrpContext)
 {
-  DPRINT("RawFsFreeIrpContext(IrpContext %x)\n", IrpContext);
+  DPRINT("RawFsFreeIrpContext(IrpContext 0x%p)\n", IrpContext);
 
   ASSERT(IrpContext);
 
@@ -378,7 +378,7 @@ STDCALL RawFsDoRequest(PVOID IrpContext)
 
   Count = InterlockedDecrement(&RawFsQueueCount);
 
-  DPRINT("RawFsDoRequest(IrpContext %x), MajorFunction %x, %d\n",
+  DPRINT("RawFsDoRequest(IrpContext 0x%p), MajorFunction %x, %d\n",
     IrpContext, ((PRAWFS_IRP_CONTEXT) IrpContext)->MajorFunction, Count);
 
   RawFsDispatchRequest((PRAWFS_IRP_CONTEXT) IrpContext);
@@ -394,7 +394,7 @@ RawFsQueueRequest(PRAWFS_IRP_CONTEXT IrpContext)
 
   Count = InterlockedIncrement(&RawFsQueueCount);
 
-  DPRINT("RawFsQueueRequest (IrpContext %x), %d\n", IrpContext, Count);
+  DPRINT("RawFsQueueRequest (IrpContext 0x%p), %d\n", IrpContext, Count);
 
   IrpContext->Flags |= IRPCONTEXT_CANWAIT;
   IoMarkIrpPending (IrpContext->Irp);
@@ -406,7 +406,7 @@ RawFsQueueRequest(PRAWFS_IRP_CONTEXT IrpContext)
 static NTSTATUS
 RawFsClose(IN PRAWFS_IRP_CONTEXT IrpContext)
 {
-  DPRINT("RawFsClose(IrpContext %x)\n", IrpContext);
+  DPRINT("RawFsClose(IrpContext 0x%p)\n", IrpContext);
   UNIMPLEMENTED;
   return STATUS_NOT_IMPLEMENTED;
 }
@@ -469,7 +469,7 @@ RawFsCreate(IN PRAWFS_IRP_CONTEXT IrpContext)
 {
   NTSTATUS Status;
 
-  DPRINT("RawFsCreate(IrpContext %x)\n", IrpContext);
+  DPRINT("RawFsCreate(IrpContext 0x%p)\n", IrpContext);
 
   ASSERT(IrpContext);
 
@@ -504,7 +504,7 @@ RawFsCreate(IN PRAWFS_IRP_CONTEXT IrpContext)
 static NTSTATUS
 RawFsRead(IN PRAWFS_IRP_CONTEXT IrpContext)
 {
-  DPRINT("RawFsRead(IrpContext %x)\n", IrpContext);
+  DPRINT("RawFsRead(IrpContext 0x%p)\n", IrpContext);
   UNIMPLEMENTED;
   return STATUS_NOT_IMPLEMENTED;
 }
@@ -512,7 +512,7 @@ RawFsRead(IN PRAWFS_IRP_CONTEXT IrpContext)
 static NTSTATUS
 RawFsWrite(IN PRAWFS_IRP_CONTEXT IrpContext)
 {
-  DPRINT("RawFsWrite(IrpContext %x)\n", IrpContext);
+  DPRINT("RawFsWrite(IrpContext 0x%p)\n", IrpContext);
   UNIMPLEMENTED;
   return STATUS_NOT_IMPLEMENTED;
 }
@@ -531,7 +531,7 @@ RawFsMount(IN PRAWFS_IRP_CONTEXT IrpContext)
   NTSTATUS Status;
   ULONG Size;
 
-  DPRINT("RawFsMount(IrpContext %x)\n", IrpContext);
+  DPRINT("RawFsMount(IrpContext 0x%p)\n", IrpContext);
 
   ASSERT(IrpContext);
 
@@ -669,7 +669,7 @@ RawFsFileSystemControl(IN PRAWFS_IRP_CONTEXT IrpContext)
 {
   NTSTATUS Status;
 
-  DPRINT("RawFsFileSystemControl(IrpContext %x)\n", IrpContext);
+  DPRINT("RawFsFileSystemControl(IrpContext 0x%p)\n", IrpContext);
 
   ASSERT(IrpContext);
 
@@ -707,7 +707,7 @@ RawFsFileSystemControl(IN PRAWFS_IRP_CONTEXT IrpContext)
 static NTSTATUS
 RawFsQueryInformation(IN PRAWFS_IRP_CONTEXT IrpContext)
 {
-  DPRINT("RawFsQueryInformation(IrpContext %x)\n", IrpContext);
+  DPRINT("RawFsQueryInformation(IrpContext 0x%p)\n", IrpContext);
   UNIMPLEMENTED;
   return STATUS_NOT_IMPLEMENTED;
 }
@@ -715,7 +715,7 @@ RawFsQueryInformation(IN PRAWFS_IRP_CONTEXT IrpContext)
 static NTSTATUS
 RawFsSetInformation(IN PRAWFS_IRP_CONTEXT IrpContext)
 {
-  DPRINT("RawFsSetInformation(IrpContext %x)\n", IrpContext);
+  DPRINT("RawFsSetInformation(IrpContext 0x%p)\n", IrpContext);
   UNIMPLEMENTED;
   return STATUS_NOT_IMPLEMENTED;
 }
@@ -723,7 +723,7 @@ RawFsSetInformation(IN PRAWFS_IRP_CONTEXT IrpContext)
 static NTSTATUS
 RawFsDirectoryControl(IN PRAWFS_IRP_CONTEXT IrpContext)
 {
-  DPRINT("RawFsDirectoryControl(IrpContext %x)\n", IrpContext);
+  DPRINT("RawFsDirectoryControl(IrpContext 0x%p)\n", IrpContext);
   UNIMPLEMENTED;
   return STATUS_NOT_IMPLEMENTED;
 }
@@ -731,7 +731,7 @@ RawFsDirectoryControl(IN PRAWFS_IRP_CONTEXT IrpContext)
 static NTSTATUS
 RawFsQueryVolumeInformation(IN PRAWFS_IRP_CONTEXT IrpContext)
 {
-  DPRINT("RawFsQueryVolumeInformation(IrpContext %x)\n", IrpContext);
+  DPRINT("RawFsQueryVolumeInformation(IrpContext 0x%p)\n", IrpContext);
   UNIMPLEMENTED;
   return STATUS_NOT_IMPLEMENTED;
 }
@@ -739,7 +739,7 @@ RawFsQueryVolumeInformation(IN PRAWFS_IRP_CONTEXT IrpContext)
 static NTSTATUS
 RawFsSetVolumeInformation(IN PRAWFS_IRP_CONTEXT IrpContext)
 {
-  DPRINT("RawFsSetVolumeInformation(IrpContext %x)\n", IrpContext);
+  DPRINT("RawFsSetVolumeInformation(IrpContext 0x%p)\n", IrpContext);
   UNIMPLEMENTED;
   return STATUS_NOT_IMPLEMENTED;
 }
@@ -747,7 +747,7 @@ RawFsSetVolumeInformation(IN PRAWFS_IRP_CONTEXT IrpContext)
 static NTSTATUS
 RawFsLockControl(IN PRAWFS_IRP_CONTEXT IrpContext)
 {
-  DPRINT("RawFsLockControl(IrpContext %x)\n", IrpContext);
+  DPRINT("RawFsLockControl(IrpContext 0x%p)\n", IrpContext);
   UNIMPLEMENTED;
   return STATUS_NOT_IMPLEMENTED;
 }
@@ -755,7 +755,7 @@ RawFsLockControl(IN PRAWFS_IRP_CONTEXT IrpContext)
 static NTSTATUS
 RawFsCleanup(IN PRAWFS_IRP_CONTEXT IrpContext)
 {
-  DPRINT("RawFsCleanup(IrpContext %x)\n", IrpContext);
+  DPRINT("RawFsCleanup(IrpContext 0x%p)\n", IrpContext);
   UNIMPLEMENTED;
   return STATUS_NOT_IMPLEMENTED;
 }
@@ -763,7 +763,7 @@ RawFsCleanup(IN PRAWFS_IRP_CONTEXT IrpContext)
 static NTSTATUS
 RawFsFlush(IN PRAWFS_IRP_CONTEXT IrpContext)
 {
-  DPRINT("RawFsFlush(IrpContext %x)\n", IrpContext);
+  DPRINT("RawFsFlush(IrpContext 0x%p)\n", IrpContext);
   UNIMPLEMENTED;
   return STATUS_NOT_IMPLEMENTED;
 }
@@ -771,7 +771,7 @@ RawFsFlush(IN PRAWFS_IRP_CONTEXT IrpContext)
 static NTSTATUS STDCALL
 RawFsShutdown(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
-  DPRINT("RawFsShutdown(DeviceObject %x, Irp %x)\n", DeviceObject, Irp);
+  DPRINT("RawFsShutdown(DeviceObject 0x%p, Irp 0x%p)\n", DeviceObject, Irp);
 
   /*
    * Note: Do NOT call UNIMPLEMENTED here!
@@ -784,7 +784,7 @@ RawFsShutdown(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 static NTSTATUS
 RawFsDispatchRequest(IN PRAWFS_IRP_CONTEXT IrpContext)
 {
-  DPRINT("RawFsDispatchRequest(IrpContext %x), MajorFunction %x\n",
+  DPRINT("RawFsDispatchRequest(IrpContext 0x%p), MajorFunction %x\n",
     IrpContext, IrpContext->MajorFunction);
 
   ASSERT(IrpContext);
@@ -833,7 +833,7 @@ RawFsBuildRequest(IN PDEVICE_OBJECT DeviceObject,
   PRAWFS_IRP_CONTEXT IrpContext;
   NTSTATUS Status;
 
-  DPRINT("RawFsBuildRequest(DeviceObject %x, Irp %x)\n", DeviceObject, Irp);
+  DPRINT("RawFsBuildRequest(DeviceObject 0x%p, Irp 0x%p)\n", DeviceObject, Irp);
 
   ASSERT(DeviceObject);
   ASSERT(Irp);

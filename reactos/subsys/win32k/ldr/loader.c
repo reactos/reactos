@@ -58,17 +58,17 @@ LdrGetProcedureAddress (IN PVOID BaseAddress,
         return STATUS_INVALID_PARAMETER;
      }
 
-   AddressPtr = (PULONG)((ULONG)BaseAddress + (ULONG)ExportDir->AddressOfFunctions);
+   AddressPtr = (PULONG)((ULONG_PTR)BaseAddress + (ULONG)ExportDir->AddressOfFunctions);
    if (Name && Name->Length)
      {
         /* by name */
-        OrdinalPtr = (PUSHORT)((ULONG)BaseAddress + (ULONG)ExportDir->AddressOfNameOrdinals);
-        NamePtr = (PULONG)((ULONG)BaseAddress + (ULONG)ExportDir->AddressOfNames);
+        OrdinalPtr = (PUSHORT)((ULONG_PTR)BaseAddress + (ULONG)ExportDir->AddressOfNameOrdinals);
+        NamePtr = (PULONG)((ULONG_PTR)BaseAddress + (ULONG)ExportDir->AddressOfNames);
         for( i = 0; i < ExportDir->NumberOfNames; i++, NamePtr++, OrdinalPtr++)
           {
-             if (!_strnicmp(Name->Buffer, (char*)(BaseAddress + *NamePtr), Name->Length))
+             if (!_strnicmp(Name->Buffer, (char*)((ULONG_PTR)BaseAddress + *NamePtr), Name->Length))
                {
-                  *ProcedureAddress = (PVOID)((ULONG)BaseAddress + (ULONG)AddressPtr[*OrdinalPtr]);
+                  *ProcedureAddress = (PVOID)((ULONG_PTR)BaseAddress + (ULONG)AddressPtr[*OrdinalPtr]);
                   return STATUS_SUCCESS;
                }
           }

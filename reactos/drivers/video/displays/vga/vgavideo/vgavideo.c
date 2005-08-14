@@ -266,7 +266,7 @@ BOOL vgaHLine(INT x, INT y, INT len, UCHAR c)
   UCHAR a;
   ULONG pre1;
   ULONG orgpre1, orgx, midpre1;
-  ULONG ileftpix, imidpix, irightpix;
+  LONG ileftpix, imidpix, irightpix;
 
   orgx = x;
 
@@ -341,7 +341,7 @@ BOOL vgaHLine(INT x, INT y, INT len, UCHAR c)
 
 BOOL vgaVLine(INT x, INT y, INT len, UCHAR c)
 {
-  ULONG offset, i;
+  INT offset, i;
   UCHAR a;
 
   offset = xconv[x]+y80[y];
@@ -391,9 +391,9 @@ void DIB_BltFromVGA(int x, int y, int w, int h, void *b, int Dest_lDelta)
   ULONG left = x >> 3;
   ULONG shift = x - (x & ~0x7);
   UCHAR pixel, nextpixel;
-  ULONG rightcount;
-  ULONG i, j;
-  ULONG stride = w >> 3;
+  LONG rightcount;
+  INT i, j;
+  LONG stride = w >> 3;
 
   /* Calculate the number of rightmost bytes not in a dword block. */
   if (w >= 8)
@@ -409,7 +409,7 @@ void DIB_BltFromVGA(int x, int y, int w, int h, void *b, int Dest_lDelta)
   /* Reset the destination. */
   for (j = 0; j < h; j++)
     {
-      memset(b + (j * Dest_lDelta), 0, abs(Dest_lDelta));
+      memset((PVOID)((ULONG_PTR)b + (j * Dest_lDelta)), 0, abs(Dest_lDelta));
     }
 
   for (plane = 0; plane < 4; plane++)
@@ -528,9 +528,9 @@ void DIB_BltFromVGA(int x, int y, int w, int h, void *b, int Dest_lDelta)
 void DIB_BltToVGA(int x, int y, int w, int h, void *b, int Source_lDelta, int StartMod)
 {
   PBYTE pb, opb = b;
-  ULONG i, j;
-  ULONG x2 = x + w;
-  ULONG y2 = y + h;
+  LONG i, j;
+  LONG x2 = x + w;
+  LONG y2 = y + h;
   ULONG offset;
   UCHAR a;
 
@@ -986,7 +986,7 @@ void DFB_BltToDIB(int x, int y, int w, int h, void *b, int bw, void *bdib, int d
   int i, j, dib_shift;
 
   bpX = b;
-  dib = bdib + y * dibw + (x / 2);
+  dib = (unsigned char *)bdib + y * dibw + (x / 2);
 
   for (i=w; i>0; i--) {
 
@@ -1015,7 +1015,7 @@ void DIB_BltToDFB(int x, int y, int w, int h, void *b, int bw, void *bdib, int d
   int i, j, dib_shift, dib_and;
 
   bpX = b;
-  dib = bdib + y * dibw + (x / 2);
+  dib = (unsigned char *)bdib + y * dibw + (x / 2);
 
   for (i=w; i>0; i--) {
 

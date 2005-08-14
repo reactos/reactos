@@ -51,7 +51,7 @@ PVOID WINAPI FlsGetValue(DWORD dwFlsIndex)
 
  if(dwFlsIndex >= 128) goto l_InvalidParam;
 
- ppFlsSlots = NtCurrentTeb()->FlsSlots;
+ ppFlsSlots = NtCurrentTeb()->FlsData;
 
  if(ppFlsSlots == NULL) goto l_InvalidParam;
 
@@ -76,11 +76,11 @@ BOOL WINAPI FlsSetValue(DWORD dwFlsIndex, PVOID lpFlsData)
 
  if(dwFlsIndex >= 128) goto l_InvalidParam;
 
- ppFlsSlots = pTeb->FlsSlots;
+ ppFlsSlots = pTeb->FlsData;
 
  if(ppFlsSlots == NULL)
  {
-  PEB * pPeb = pTeb->Peb;
+  PEB * pPeb = pTeb->ProcessEnvironmentBlock;
 
   ppFlsSlots = RtlAllocateHeap
   (
@@ -91,7 +91,7 @@ BOOL WINAPI FlsSetValue(DWORD dwFlsIndex, PVOID lpFlsData)
 
   if(ppFlsSlots == NULL) goto l_OutOfMemory;
 
-  pTeb->FlsSlots = ppFlsSlots;
+  pTeb->FlsData = ppFlsSlots;
 
   RtlAcquirePebLock();
 

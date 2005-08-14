@@ -9,6 +9,7 @@
 	<define name="_NTOSKRNL_" />
 	<library>rtl</library>
 	<library>rosrtl</library>
+	<library>intrlck</library>
 	<library>string</library>
 	<linkerflag>-lgcc</linkerflag>
 	<directory name="csr">

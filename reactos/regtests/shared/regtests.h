@@ -25,8 +25,8 @@ void SetupOnce()
 #define TT_PERFORMANCE    1
 
 /* Valid values for return values of TestRoutine */
-#define TS_TIMEDOUT      -2
-#define TS_EXCEPTION     -1
+#define TS_TIMEDOUT      ((DWORD)-2)
+#define TS_EXCEPTION     ((DWORD)-1)
 #define TS_OK             0
 #define TS_FAILED         1
 

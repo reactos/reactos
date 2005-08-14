@@ -906,7 +906,7 @@ bpf_validate(f, len,mem_ex_size)
 		IF_LOUD(DbgPrint("Validating program");)
 
 		flag=0;
-		for(j=0;j<VALID_INSTRUCTIONS_LEN;j++)
+		for(j=0;j<(int32)VALID_INSTRUCTIONS_LEN;j++)
 			if (p->code==valid_instructions[j])
 				flag=1;
 		if (flag==0)

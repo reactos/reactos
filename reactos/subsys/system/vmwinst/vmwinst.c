@@ -59,7 +59,7 @@ LONG WINAPI ExceptionHandler(LPEXCEPTION_POINTERS ExceptionInfo)
 {
   /* This is rude, but i don't know how to continue execution properly, that's why
      we just exit here when we're not running inside of VMware */
-  ExitProcess(ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_PRIVILEGED_INSTRUCTION);
+  ExitProcess(ExceptionInfo->ExceptionRecord->ExceptionCode == EXCEPTION_PRIV_INSTRUCTION);
   return EXCEPTION_CONTINUE_EXECUTION;
 }
 

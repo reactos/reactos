@@ -24,7 +24,7 @@
  *        Remove all hardcode string to En.rc
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include "resource.h"
 
 #ifdef INCLUDE_CMD_BEEP
@@ -34,7 +34,7 @@ INT cmd_beep (LPTSTR cmd, LPTSTR param)
 {
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
-		ConOutResPuts(STRING_BEEP_HELP);
+		ConOutResPaging(TRUE,STRING_BEEP_HELP);
 		return 0;
 	}
 

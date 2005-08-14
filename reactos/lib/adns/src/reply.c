@@ -222,7 +222,7 @@ void adns__procdgram(adns_state ads, const byte *dgram, int dglen,
 	 * it contains the relevant info.
 	 */
       }
-    } else if (rrtype == (qu->typei->type & adns__rrt_typemask)) {
+    } else if (rrtype == ((INT)qu->typei->type & (INT)adns__rrt_typemask)) {
       wantedrrs++;
     } else {
       adns__debug(ads,serv,qu,"ignoring answer RR with irrelevant type %d",rrtype);
@@ -322,7 +322,7 @@ void adns__procdgram(adns_state ads, const byte *dgram, int dglen,
 		     &ownermatched);
     assert(!st); assert(rrtype != -1);
     if (rrclass != DNS_CLASS_IN ||
-	rrtype != (qu->typei->type & adns__rrt_typemask) ||
+	rrtype != ((INT)qu->typei->type & (INT)adns__rrt_typemask) ||
 	!ownermatched)
       continue;
     adns__update_expires(qu,ttl,now);

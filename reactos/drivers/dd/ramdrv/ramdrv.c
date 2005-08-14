@@ -63,9 +63,9 @@ NTSTATUS STDCALL RamdrvDispatchReadWrite(PDEVICE_OBJECT DeviceObject,
     Stk->Parameters.Read.Length = devext->Size - Stk->Parameters.Read.ByteOffset.u.LowPart;
   if( Stk->MajorFunction == IRP_MJ_READ )
     RtlCopyMemory( MmGetSystemAddressForMdl( Irp->MdlAddress ),
-		   devext->Buffer + Stk->Parameters.Read.ByteOffset.u.LowPart,
+		   (PVOID)((ULONG_PTR)devext->Buffer + Stk->Parameters.Read.ByteOffset.u.LowPart),
 		   Stk->Parameters.Read.Length );
-  else RtlCopyMemory( devext->Buffer + Stk->Parameters.Read.ByteOffset.u.LowPart,
+  else RtlCopyMemory( (PVOID)((ULONG_PTR)devext->Buffer + Stk->Parameters.Read.ByteOffset.u.LowPart),
 		      MmGetSystemAddressForMdl( Irp->MdlAddress ),
 		      Stk->Parameters.Read.Length );
   Irp->IoStatus.Status = STATUS_SUCCESS;

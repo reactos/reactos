@@ -116,7 +116,7 @@ static void checkc_global(adns_state ads) {
     break;
   case server_disconnected:
   case server_broken:
-    assert(ads->tcpsocket == -1);
+    assert(ads->tcpsocket == INVALID_SOCKET);
     checkc_notcpbuf(ads);
     break;
   case server_ok:

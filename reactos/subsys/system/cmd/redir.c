@@ -25,7 +25,7 @@
  *        simple check to fix > and | bug with 'rem'
  */
 
-#include "precomp.h"
+#include <precomp.h>
 
 #ifdef FEATURE_REDIRECTION
 
@@ -61,6 +61,7 @@ INT GetRedirection (LPTSTR s, LPTSTR ifn, LPTSTR ofn, LPTSTR efn, LPINT lpnFlags
 
 	TCHAR * line = s;
 
+ 
 	while (_istspace (*line))
 			line++;
 
@@ -70,9 +71,9 @@ INT GetRedirection (LPTSTR s, LPTSTR ifn, LPTSTR ofn, LPTSTR efn, LPINT lpnFlags
 		lpnFlags = 0;
 		*ifn=('\0');
 		*ofn=('\0');
-		*efn=_T('\0');
+		*efn=_T('\0');    
 		return 1;
-	}
+	}  
 #endif
 	/* find and remove all the redirections first */
 	while (*sp)
@@ -89,7 +90,7 @@ INT GetRedirection (LPTSTR s, LPTSTR ifn, LPTSTR ofn, LPTSTR efn, LPINT lpnFlags
 			*dp++ = *sp++;
 		}
 		else if ((*sp == _T('<')) || (*sp == _T('>')) ||
-				 (*sp == _T('2')) || (*sp == _T('&')))
+				 (*sp == _T('1')) || (*sp == _T('2')) || (*sp == _T('&')))
 		{
 			/* MS-DOS ignores multiple redirection symbols and uses the last */
 			/* redirection, so we'll emulate that and not check */
@@ -127,6 +128,50 @@ INT GetRedirection (LPTSTR s, LPTSTR ifn, LPTSTR ofn, LPTSTR efn, LPINT lpnFlags
 					*ofn++ = *sp++;
 				*ofn = _T('\0');
 			}
+
+      else if (*sp == _T('1'))
+			{
+				/* error redirection */
+				sp++;
+
+				if (*sp == _T('>'))
+				{
+					/* output redirection */
+				*lpnFlags |= OUTPUT_REDIRECTION;
+				sp++;
+
+				/* append request ? */
+				if (*sp == _T('>'))
+				{
+					*lpnFlags |= OUTPUT_APPEND;
+					sp++;
+				}
+
+				while (_istspace (*sp))
+					sp++;
+
+				/* copy file name */
+				while (*sp && !IsRedirection (*sp) && !_istspace (*sp))
+					*ofn++ = *sp++;
+				*ofn = _T('\0');
+				}
+				else
+				{
+					/* no redirection!! copy the '1' character! */
+					sp--;
+					*dp++ = *sp++;
+					continue;
+				}
+
+				while (_istspace (*sp))
+					sp++;
+
+				/* copy file name */
+				while (*sp && !IsRedirection (*sp) && !_istspace (*sp))
+					*efn++ = *sp++;
+				*efn = _T('\0');
+			}
+
 			else if (*sp == _T('2'))
 			{
 				/* error redirection */
@@ -146,7 +191,7 @@ INT GetRedirection (LPTSTR s, LPTSTR ifn, LPTSTR ofn, LPTSTR efn, LPINT lpnFlags
 				}
 				else
 				{
-					/* no redirection!! copy the '2' character! */
+					/* no redirection!! copy the '2'  character! */
 					sp--;
 					*dp++ = *sp++;
 					continue;
@@ -197,6 +242,7 @@ INT GetRedirection (LPTSTR s, LPTSTR ifn, LPTSTR ofn, LPTSTR efn, LPINT lpnFlags
 		else
 			*dp++ = *sp++;
 	}
+
 	*dp++ = _T('\0');
 	*dp = _T('\0');
 

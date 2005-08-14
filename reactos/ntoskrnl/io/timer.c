@@ -56,7 +56,7 @@ IopTimerDispatch(IN PKDPC Dpc,
 
 			Timer = CONTAINING_RECORD(TimerEntry, IO_TIMER, IoTimerList);
 			if (Timer->TimerEnabled) {
-				DPRINT("Dispatching a Timer Routine: %x for Device Object: %x \n",
+				DPRINT("Dispatching a Timer Routine: 0x%p for Device Object: 0x%p \n",
 					Timer->TimerRoutine,
 					Timer->DeviceObject);
 				Timer->TimerRoutine(Timer->DeviceObject, Timer->Context);
@@ -129,7 +129,7 @@ IoInitializeTimer(PDEVICE_OBJECT DeviceObject,
  * RETURNS: Status
  */
 {
-	DPRINT("IoInitializeTimer() called for Device Object: %x with Routine: %x \n", DeviceObject, TimerRoutine);
+	DPRINT("IoInitializeTimer() called for Device Object: 0x%p with Routine: 0x%p \n", DeviceObject, TimerRoutine);
 
 	/* Allocate Timer */
 	if (!DeviceObject->Timer) {
@@ -172,7 +172,7 @@ IoStartTimer(PDEVICE_OBJECT DeviceObject)
 {
 	KIRQL OldIrql;
 
-	DPRINT("IoStartTimer for Device Object: %x\n", DeviceObject);
+	DPRINT("IoStartTimer for Device Object: 0x%p\n", DeviceObject);
 
 	/* Lock Timers */
 	KeAcquireSpinLock(&IopTimerLock, &OldIrql);
@@ -185,7 +185,7 @@ IoStartTimer(PDEVICE_OBJECT DeviceObject)
 
 	/* Unlock Timers */
 	KeReleaseSpinLock(&IopTimerLock, OldIrql);
-	DPRINT("IoStartTimer Completed for Device Object: %x New Count: %x \n", DeviceObject, IopTimerCount);
+	DPRINT("IoStartTimer Completed for Device Object: 0x%p New Count: %x \n", DeviceObject, IopTimerCount);
 }
 
 /*
@@ -203,7 +203,7 @@ IoStopTimer(PDEVICE_OBJECT DeviceObject)
 {
 	KIRQL OldIrql;
 
-	DPRINT("IoStopTimer for Device Object: %x\n", DeviceObject);
+	DPRINT("IoStopTimer for Device Object: 0x%p\n", DeviceObject);
 
 	/* Lock Timers */
 	KeAcquireSpinLock(&IopTimerLock, &OldIrql);
@@ -216,7 +216,7 @@ IoStopTimer(PDEVICE_OBJECT DeviceObject)
 
 	/* Unlock Timers */
 	KeReleaseSpinLock(&IopTimerLock, OldIrql);
-	DPRINT("IoStopTimer Completed for Device Object: %x New Count: %x \n", DeviceObject, IopTimerCount);
+	DPRINT("IoStopTimer Completed for Device Object: 0x%p New Count: %x \n", DeviceObject, IopTimerCount);
 }
 
 

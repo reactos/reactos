@@ -232,7 +232,7 @@ IoGetDmaAdapter(
   if (PhysicalDeviceObject != NULL)
   {
     if (DeviceDescription->InterfaceType == 0x0F /*PNPBus*/ ||
-        DeviceDescription->InterfaceType == 0xFFFFFFFF)
+        DeviceDescription->InterfaceType == (INTERFACE_TYPE)0xFFFFFFFF)
     {
       RtlCopyMemory(&PrivateDeviceDescription, DeviceDescription,
         sizeof(DEVICE_DESCRIPTION));

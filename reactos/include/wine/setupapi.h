@@ -613,7 +613,7 @@ DECL_WINELIB_SETUPAPI_TYPE_AW(PFILEPATHS)
 #define ERROR_NO_SUCH_INTERFACE_DEVICE    ERROR_NO_SUCH_DEVICE_INTERFACE
 #define ERROR_NOT_INSTALLED               (APPLICATION_ERROR_MASK|ERROR_SEVERITY_ERROR|0x1000)
 
-/* flags for SetupDiGetClassDevs */
+/* flags for SetupDiGetClassDevs(Ex) */
 #define DIGCF_DEFAULT         0x00000001
 #define DIGCF_PRESENT         0x00000002
 #define DIGCF_ALLCLASSES      0x00000004
@@ -675,6 +675,7 @@ LONG     WINAPI AddTagToGroupOrderList(PCWSTR, DWORD, DWORD);
 VOID     WINAPI AssertFail(LPSTR, UINT, LPSTR);
 DWORD    WINAPI CaptureAndConvertAnsiArg(PCSTR lpSrc, PWSTR *lpDst);
 DWORD    WINAPI CaptureStringArg(PCWSTR lpSrc, PWSTR *lpDst);
+VOID     WINAPI CenterWindowRelativeToParent(HWND);
 BOOL     WINAPI ConcatenatePaths(LPWSTR, LPCWSTR, DWORD, LPDWORD);
 BOOL     WINAPI DelayedMove(PCWSTR lpExistingFileName, PCWSTR lpNewFileName);
 BOOL     WINAPI DoesUserHavePrivilege(PCWSTR lpPrivilegeName);
@@ -682,6 +683,7 @@ PWSTR    WINAPI DuplicateString(PCWSTR lpSrc);
 BOOL     WINAPI EnablePrivilege(PCWSTR lpPrivilegeName, BOOL bEnable);
 BOOL     WINAPI FileExists(PCWSTR lpFileName, PWIN32_FIND_DATAW lpFileFindData);
 DWORD    WINAPI GetSetFileTimestamp(PCWSTR, PFILETIME, PFILETIME, PFILETIME, BOOLEAN);
+BOOL     WINAPI GetVersionInfoFromImage(LPWSTR, PULARGE_INTEGER, LPWORD);
 void     WINAPI InstallHinfSectionA( HWND hwnd, HINSTANCE handle, PCSTR cmdline, INT show );
 void     WINAPI InstallHinfSectionW( HWND hwnd, HINSTANCE handle, PCWSTR cmdline, INT show );
 #define         InstallHinfSection WINELIB_NAME_AW(InstallHinfSection)
@@ -718,6 +720,9 @@ BOOL     WINAPI SetupDiClassNameFromGuidW(const GUID*, PWSTR, DWORD, PDWORD);
 BOOL     WINAPI SetupDiClassNameFromGuidExA(const GUID*, PSTR, DWORD, PDWORD, PCSTR, PVOID);
 BOOL     WINAPI SetupDiClassNameFromGuidExW(const GUID*, PWSTR, DWORD, PDWORD, PCWSTR, PVOID);
 #define         SetupDiClassNameFromGuidEx WINELIB_NAME_AW(SetupDiClassNameFromGuidEx)
+BOOL     WINAPI SetupDiCreateDeviceInfoA(HDEVINFO,PCSTR,LPGUID,PCSTR,HWND,DWORD,PSP_DEVINFO_DATA);
+BOOL     WINAPI SetupDiCreateDeviceInfoW(HDEVINFO,PCWSTR,LPGUID,PCWSTR,HWND,DWORD,PSP_DEVINFO_DATA);
+#define         SetupDiCreateDeviceInfo WINELIB_NAME_AW(SetupDiCreateDeviceInfo)
 HDEVINFO WINAPI SetupDiCreateDeviceInfoList(const GUID *, HWND);
 HDEVINFO WINAPI SetupDiCreateDeviceInfoListExA(const GUID *, HWND, PCSTR, PVOID);
 HDEVINFO WINAPI SetupDiCreateDeviceInfoListExW(const GUID *, HWND, PCWSTR, PVOID);
@@ -736,12 +741,16 @@ BOOL     WINAPI SetupDiGetClassDescriptionExW(const GUID*, PWSTR, DWORD, PDWORD,
 HDEVINFO WINAPI SetupDiGetClassDevsA(CONST GUID *,LPCSTR,HWND,DWORD);
 HDEVINFO WINAPI SetupDiGetClassDevsW(CONST GUID *,LPCWSTR,HWND,DWORD);
 #define         SetupDiGetClassDevs WINELIB_NAME_AW(SetupDiGetClassDevs)
+HDEVINFO WINAPI SetupDiGetClassDevsExA(CONST GUID *,LPCSTR,HWND,DWORD,HDEVINFO,LPCSTR,PVOID);
+HDEVINFO WINAPI SetupDiGetClassDevsExW(CONST GUID *,LPCWSTR,HWND,DWORD,HDEVINFO,LPCWSTR,PVOID);
+#define         SetupDiGetClassDevsEx WINELIB_NAME_AW(SetupDiGetClassDevsEx)
 BOOL     WINAPI SetupDiGetDeviceInterfaceDetailA(HDEVINFO, PSP_DEVICE_INTERFACE_DATA, PSP_DEVICE_INTERFACE_DETAIL_DATA_A,
                                                  DWORD, PDWORD, PSP_DEVINFO_DATA);
 BOOL     WINAPI SetupDiGetDeviceInterfaceDetailW(HDEVINFO, PSP_DEVICE_INTERFACE_DATA, PSP_DEVICE_INTERFACE_DETAIL_DATA_W,
                                                  DWORD, PDWORD, PSP_DEVINFO_DATA);
 #define         SetupDiGetDeviceInterfaceDetail WINELIB_NAME_AW(SetupDiGetDeviceInterfaceDetail)
 BOOL     WINAPI SetupDiGetDeviceRegistryPropertyA(HDEVINFO, PSP_DEVINFO_DATA, DWORD, PDWORD, PBYTE, DWORD, PDWORD);
+BOOL     WINAPI SetupDiGetDeviceRegistryPropertyW(HDEVINFO, PSP_DEVINFO_DATA, DWORD, PDWORD, PBYTE, DWORD, PDWORD);
 BOOL     WINAPI SetupDiInstallClassA(HWND, PCSTR, DWORD, HSPFILEQ);
 BOOL     WINAPI SetupDiInstallClassW(HWND, PCWSTR, DWORD, HSPFILEQ);
 #define         SetupDiInstallClass WINELIB_NAME_AW(SetupDiInstallClass)
@@ -836,6 +845,7 @@ DWORD    WINAPI StampFileSecurity(PCWSTR, PSECURITY_DESCRIPTOR);
 
 DWORD    WINAPI StringTableAddString(HSTRING_TABLE, LPWSTR, DWORD);
 VOID     WINAPI StringTableDestroy(HSTRING_TABLE);
+HSTRING_TABLE WINAPI StringTableDuplicate(HSTRING_TABLE);
 HSTRING_TABLE WINAPI StringTableInitialize(VOID);
 DWORD    WINAPI StringTableLookUpString(HSTRING_TABLE, LPWSTR, DWORD);
 LPWSTR   WINAPI StringTableStringFromId(HSTRING_TABLE, DWORD);

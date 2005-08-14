@@ -67,7 +67,7 @@ CcFlushCache(IN PSECTION_OBJECT_POINTERS SectionObjectPointers,
    PBCB Bcb;
    NTSTATUS Status = STATUS_SUCCESS;
 
-   DPRINT("CcFlushCache(SectionObjectPointers %x, FileOffset %x, Length %d, IoStatus %x)\n",
+   DPRINT("CcFlushCache(SectionObjectPointers 0x%p, FileOffset 0x%p, Length %d, IoStatus 0x%p)\n",
            SectionObjectPointers, FileOffset, Length, IoStatus);
 
    if (SectionObjectPointers && SectionObjectPointers->SharedCacheMap)
@@ -134,7 +134,7 @@ CcInitView(VOID)
 
    BoundaryAddressMultiple.QuadPart = 0LL;
 
-   Size = MmSystemRangeStart >= (PVOID)0xC0000000 ? 0x18000000 : 0x30000000;
+   Size = MmSystemRangeStart >= (PVOID)0xC0000000 ? 0x18000000 : 0x20000000;
    CcCacheViewBase = (PVOID)(0xF0000000 - Size);
    MmLockAddressSpace(MmGetKernelAddressSpace());
    Status = MmCreateMemoryArea(NULL,
@@ -148,6 +148,7 @@ CcInitView(VOID)
 			       FALSE,
 			       BoundaryAddressMultiple);
    MmUnlockAddressSpace(MmGetKernelAddressSpace());
+   DPRINT1("CcCacheViewBase: %x\n", CcCacheViewBase);
    if (!NT_SUCCESS(Status))
    {
       KEBUGCHECK(0);

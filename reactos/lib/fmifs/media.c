@@ -12,8 +12,6 @@
 #define UNICODE
 #define _UNICODE
 #include <windows.h>
-#include <fmifs.h>
-
 
 /* FMIFS.9 */
 VOID STDCALL

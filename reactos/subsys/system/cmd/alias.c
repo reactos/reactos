@@ -30,7 +30,7 @@
  */
 
 
-#include "precomp.h"
+#include <precomp.h>
 #include "resource.h"
 
 #ifdef FEATURE_ALIASES
@@ -308,7 +308,7 @@ INT CommandAlias (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_ALIAS_HELP);
+		ConOutResPaging(TRUE,STRING_ALIAS_HELP);
 		return 0;
 	}
 

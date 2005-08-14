@@ -22,18 +22,6 @@
 ULONG NtMajorVersion = 5;
 ULONG NtMinorVersion = 0;
 ULONG NtOSCSDVersion = BUILD_OSCSDVERSION(6, 0);
-#ifdef  __GNUC__
-ULONG EXPORTED NtBuildNumber = KERNEL_VERSION_BUILD;
-ULONG EXPORTED NtGlobalFlag = 0;
-CHAR  EXPORTED KeNumberProcessors;
-KAFFINITY  EXPORTED KeActiveProcessors;
-LOADER_PARAMETER_BLOCK EXPORTED KeLoaderBlock;
-ULONG EXPORTED KeDcacheFlushCount = 0;
-ULONG EXPORTED KeIcacheFlushCount = 0;
-ULONG EXPORTED KiDmaIoCoherency = 0; /* RISC Architectures only */
-ULONG EXPORTED InitSafeBootMode = 0; /* KB83764 */
-#else
-/* Microsoft-style declarations */
 EXPORTED ULONG NtBuildNumber = KERNEL_VERSION_BUILD;
 EXPORTED ULONG NtGlobalFlag = 0;
 EXPORTED CHAR  KeNumberProcessors;
@@ -43,7 +31,6 @@ EXPORTED ULONG KeDcacheFlushCount = 0;
 EXPORTED ULONG KeIcacheFlushCount = 0;
 EXPORTED ULONG KiDmaIoCoherency = 0; /* RISC Architectures only */
 EXPORTED ULONG InitSafeBootMode = 0; /* KB83764 */
-#endif	/* __GNUC__ */
 
 LOADER_MODULE KeLoaderModules[64];
 static CHAR KeLoaderModuleStrings[64][256];
@@ -68,6 +55,9 @@ ULONG trap_stack_top;
 
 /* Cached modules from the loader block */
 PLOADER_MODULE CachedModules[MaximumCachedModuleType];
+
+extern unsigned int _image_base__;
+ULONG_PTR KERNEL_BASE = (ULONG_PTR)&_image_base__;
 
 /* FUNCTIONS ****************************************************************/
 

@@ -34,13 +34,13 @@
 #define PA_ACCESSED  (1 << PA_BIT_ACCESSED)
 #define PA_GLOBAL    (1 << PA_BIT_GLOBAL)
 
-#define PAGETABLE_MAP		(0xf0000000)
-#define PAGEDIRECTORY_MAP	(0xf0000000 + (PAGETABLE_MAP / (1024)))
+#define PAGETABLE_MAP		(0xc0000000)
+#define PAGEDIRECTORY_MAP	(0xc0000000 + (PAGETABLE_MAP / (1024)))
 
-#define PAE_PAGEDIRECTORY_MAP	(0xf0000000 + (PAGETABLE_MAP / (512)))
+#define PAE_PAGEDIRECTORY_MAP	(0xc0000000 + (PAGETABLE_MAP / (512)))
 
-#define HYPERSPACE		(0xf0800000)
-#define IS_HYPERSPACE(v)	(((ULONG)(v) >= 0xF0800000 && (ULONG)(v) < 0xF0C00000))
+#define HYPERSPACE		(Ke386Pae ? 0xc0800000 : 0xc0400000)
+#define IS_HYPERSPACE(v)	(((ULONG)(v) >= HYPERSPACE && (ULONG)(v) < HYPERSPACE + 0x400000))
 
 ULONG MmGlobalKernelPageDirectory[1024];
 ULONGLONG MmGlobalKernelPageDirectoryForPAE[2048];
@@ -105,7 +105,7 @@ MiFlushTlb(PULONG Pt, PVOID Address)
       MiFlushTlbIpiRoutine(Address);
    }
 #else
-   if ((Pt && MmUnmapPageTable(Pt)) || Address >= (PVOID)KERNEL_BASE)
+   if ((Pt && MmUnmapPageTable(Pt)) || Address >= MmSystemRangeStart)
    {
       FLUSH_TLB_ONE(Address);
    }
@@ -226,7 +226,7 @@ NTSTATUS Mmi386ReleaseMmInfo(PEPROCESS Process)
       for (i = 0; i < 4; i++)
       {
          PageDir = (PULONGLONG)MmCreateHyperspaceMapping(PAE_PTE_TO_PFN(PageDirTable[i]));
-         if (i < PAE_ADDR_TO_PDTE_OFFSET(KERNEL_BASE))
+         if (i < PAE_ADDR_TO_PDTE_OFFSET(MmSystemRangeStart))
 	 {
 	    for (j = 0; j < 512; j++)
 	    {
@@ -274,7 +274,7 @@ NTSTATUS Mmi386ReleaseMmInfo(PEPROCESS Process)
       PULONG Pde;
       PULONG PageDir;
       PageDir = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase.u.LowPart));
-      for (i = 0; i < ADDR_TO_PDE_OFFSET(KERNEL_BASE); i++)
+      for (i = 0; i < ADDR_TO_PDE_OFFSET(MmSystemRangeStart); i++)
       {
          if (PageDir[i] != 0)
          {
@@ -358,7 +358,7 @@ MmCopyMmInfo(PEPROCESS Src,
 	 PageDirTable[i] = PAE_PFN_TO_PTE(Pfn[1+i]) | PA_PRESENT;
       }
       MmDeleteHyperspaceMapping(PageDirTable);
-      for (i = PAE_ADDR_TO_PDTE_OFFSET(KERNEL_BASE); i < 4; i++)
+      for (i = PAE_ADDR_TO_PDTE_OFFSET(MmSystemRangeStart); i < 4; i++)
       {
          PageDir = (PULONGLONG)MmCreateHyperspaceMapping(Pfn[i+1]);
          memcpy(PageDir, &MmGlobalKernelPageDirectoryForPAE[i * 512], 512 * sizeof(ULONGLONG));
@@ -382,9 +382,9 @@ MmCopyMmInfo(PEPROCESS Src,
       PULONG PageDirectory;
       PageDirectory = MmCreateHyperspaceMapping(Pfn[0]);
 
-      memcpy(PageDirectory + ADDR_TO_PDE_OFFSET(KERNEL_BASE),
-             MmGlobalKernelPageDirectory + ADDR_TO_PDE_OFFSET(KERNEL_BASE),
-             (1024 - ADDR_TO_PDE_OFFSET(KERNEL_BASE)) * sizeof(ULONG));
+      memcpy(PageDirectory + ADDR_TO_PDE_OFFSET(MmSystemRangeStart),
+             MmGlobalKernelPageDirectory + ADDR_TO_PDE_OFFSET(MmSystemRangeStart),
+             (1024 - ADDR_TO_PDE_OFFSET(MmSystemRangeStart)) * sizeof(ULONG));
 
       DPRINT("Addr %x\n",ADDR_TO_PDE_OFFSET(PAGETABLE_MAP));
       PageDirectory[ADDR_TO_PDE_OFFSET(PAGETABLE_MAP)] = PFN_TO_PTE(Pfn[0]) | PA_PRESENT | PA_READWRITE;
@@ -416,7 +416,7 @@ VOID MmDeletePageTable(PEPROCESS Process, PVOID Address)
    {
       *(ADDR_TO_PDE(Address)) = 0;
    }
-   if (Address >= (PVOID)KERNEL_BASE)
+   if (Address >= MmSystemRangeStart)
    {
       KEBUGCHECK(0);
       //       MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] = 0;
@@ -474,7 +474,7 @@ VOID MmFreePageTable(PEPROCESS Process, PVOID Address)
    }
    MiFlushTlb(NULL, Address);
 
-   if (Address >= (PVOID)KERNEL_BASE)
+   if (Address >= MmSystemRangeStart)
    {
       //    MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] = 0;
       KEBUGCHECK(0);
@@ -502,11 +502,11 @@ MmGetPageTableForProcessForPAE(PEPROCESS Process, PVOID Address, BOOLEAN Create)
 
    DPRINT("MmGetPageTableForProcessForPAE(%x %x %d)\n",
           Process, Address, Create);
-   if (Address >= (PVOID)PAGETABLE_MAP && Address < (PVOID)PAGETABLE_MAP + 0x800000)
+   if (Address >= (PVOID)PAGETABLE_MAP && Address < (PVOID)((ULONG_PTR)PAGETABLE_MAP + 0x800000))
    {
       KEBUGCHECK(0);
    }
-   if (Address < (PVOID)KERNEL_BASE && Process && Process != PsGetCurrentProcess())
+   if (Address < MmSystemRangeStart && Process && Process != PsGetCurrentProcess())
    {
       PageDirTable = MmCreateHyperspaceMapping(PAE_PTE_TO_PFN(Process->Pcb.DirectoryTableBase.QuadPart));
       if (PageDirTable == NULL)
@@ -556,7 +556,7 @@ MmGetPageTableForProcessForPAE(PEPROCESS Process, PVOID Address, BOOLEAN Create)
    PageDir = PAE_ADDR_TO_PDE(Address);
    if (0LL == ExfInterlockedCompareExchange64UL(PageDir, &ZeroEntry, &ZeroEntry))
    {
-      if (Address >= (PVOID)KERNEL_BASE)
+      if (Address >= MmSystemRangeStart)
       {
 	 if (MmGlobalKernelPageDirectoryForPAE[PAE_ADDR_TO_PDE_OFFSET(Address)] == 0LL)
 	 {
@@ -612,7 +612,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
    ULONG Entry;
    PULONG Pt, PageDir;
 
-   if (Address < (PVOID)KERNEL_BASE && Process && Process != PsGetCurrentProcess())
+   if (Address < MmSystemRangeStart && Process && Process != PsGetCurrentProcess())
    {
       PageDir = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase.QuadPart));
       if (PageDir == NULL)
@@ -653,7 +653,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
    PageDir = ADDR_TO_PDE(Address);
    if (0 == InterlockedCompareExchangeUL(PageDir, 0, 0))
    {
-      if (Address >= (PVOID)KERNEL_BASE)
+      if (Address >= MmSystemRangeStart)
       {
          if (0 == InterlockedCompareExchangeUL(&MmGlobalKernelPageDirectory[PdeOffset], 0, 0))
 	 {
@@ -1024,7 +1024,7 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage,
     */
    if (Process != NULL && WasValid &&
        Process->AddressSpace.PageTableRefCountTable != NULL &&
-       Address < (PVOID)KERNEL_BASE)
+       Address < MmSystemRangeStart)
    {
       PUSHORT Ptrc;
       ULONG Idx;
@@ -1072,7 +1072,7 @@ MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
        */
       if (Process != NULL && Pte &&
           Process->AddressSpace.PageTableRefCountTable != NULL &&
-          Address < (PVOID)KERNEL_BASE)
+          Address < MmSystemRangeStart)
       {
          PUSHORT Ptrc;
 
@@ -1116,7 +1116,7 @@ MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
        */
       if (Process != NULL && Pte &&
           Process->AddressSpace.PageTableRefCountTable != NULL &&
-          Address < (PVOID)KERNEL_BASE)
+          Address < MmSystemRangeStart)
       {
          PUSHORT Ptrc;
 
@@ -1193,7 +1193,7 @@ BOOLEAN MmIsDirtyPage(PEPROCESS Process, PVOID Address)
 BOOLEAN
 MmIsAccessedAndResetAccessPage(PEPROCESS Process, PVOID Address)
 {
-   if (Address < (PVOID)KERNEL_BASE && Process == NULL)
+   if (Address < MmSystemRangeStart && Process == NULL)
    {
       DPRINT1("MmIsAccessedAndResetAccessPage is called for user space without a process.\n");
       KEBUGCHECK(0);
@@ -1258,7 +1258,7 @@ MmIsAccessedAndResetAccessPage(PEPROCESS Process, PVOID Address)
 
 VOID MmSetCleanPage(PEPROCESS Process, PVOID Address)
 {
-   if (Address < (PVOID)KERNEL_BASE && Process == NULL)
+   if (Address < MmSystemRangeStart && Process == NULL)
    {
       DPRINT1("MmSetCleanPage is called for user space without a process.\n");
       KEBUGCHECK(0);
@@ -1321,7 +1321,7 @@ VOID MmSetCleanPage(PEPROCESS Process, PVOID Address)
 
 VOID MmSetDirtyPage(PEPROCESS Process, PVOID Address)
 {
-   if (Address < (PVOID)KERNEL_BASE && Process == NULL)
+   if (Address < MmSystemRangeStart && Process == NULL)
    {
       DPRINT1("MmSetDirtyPage is called for user space without a process.\n");
       KEBUGCHECK(0);
@@ -1475,7 +1475,7 @@ MmCreateVirtualMappingForKernel(PVOID Address,
    DPRINT("MmCreateVirtualMappingForKernel(%x, %x, %x, %d)\n",
            Address, flProtect, Pages, PageCount);
 
-   if (Address < (PVOID)KERNEL_BASE)
+   if (Address < MmSystemRangeStart)
    {
       DPRINT1("MmCreateVirtualMappingForKernel is called for user space\n");
       KEBUGCHECK(0);
@@ -1500,7 +1500,7 @@ MmCreateVirtualMappingForKernel(PVOID Address,
       ULONGLONG Pte;
 
       oldPdeOffset = PAE_ADDR_TO_PDE_OFFSET(Addr) + 1;
-      for (i = 0; i < PageCount; i++, Addr += PAGE_SIZE)
+      for (i = 0; i < PageCount; i++, Addr = (PVOID)((ULONG_PTR)Addr + PAGE_SIZE))
       {
          if (!(Attributes & PA_PRESENT) && Pages[i] != 0)
          {
@@ -1550,7 +1550,7 @@ MmCreateVirtualMappingForKernel(PVOID Address,
       }
       Pt--;
 
-      for (i = 0; i < PageCount; i++, Addr += PAGE_SIZE)
+      for (i = 0; i < PageCount; i++, Addr = (PVOID)((ULONG_PTR)Addr + PAGE_SIZE))
       {
          if (!(Attributes & PA_PRESENT) && Pages[i] != 0)
          {
@@ -1592,12 +1592,12 @@ MmCreatePageFileMapping(PEPROCESS Process,
                         PVOID Address,
                         SWAPENTRY SwapEntry)
 {
-   if (Process == NULL && Address < (PVOID)KERNEL_BASE)
+   if (Process == NULL && Address < MmSystemRangeStart)
    {
       DPRINT1("No process\n");
       KEBUGCHECK(0);
    }
-   if (Process != NULL && Address >= (PVOID)KERNEL_BASE)
+   if (Process != NULL && Address >= MmSystemRangeStart)
    {
       DPRINT1("Setting kernel address with process context\n");
       KEBUGCHECK(0);
@@ -1661,7 +1661,7 @@ MmCreatePageFileMapping(PEPROCESS Process,
    }
    if (Process != NULL &&
        Process->AddressSpace.PageTableRefCountTable != NULL &&
-       Address < (PVOID)KERNEL_BASE)
+       Address < MmSystemRangeStart)
    {
      PUSHORT Ptrc;
      ULONG Idx;
@@ -1692,7 +1692,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
 
    if (Process == NULL)
    {
-      if (Address < (PVOID)KERNEL_BASE)
+      if (Address < MmSystemRangeStart)
       {
          DPRINT1("No process\n");
          KEBUGCHECK(0);
@@ -1706,13 +1706,14 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
    }
    else
    {
-      if (Address >= (PVOID)KERNEL_BASE)
+      if (Address >= MmSystemRangeStart)
       {
          DPRINT1("Setting kernel address with process context\n");
          KEBUGCHECK(0);
       }
-      if (PageCount > KERNEL_BASE / PAGE_SIZE ||
-	  (ULONG_PTR) Address / PAGE_SIZE + PageCount > KERNEL_BASE / PAGE_SIZE)
+      if (PageCount > (ULONG_PTR)MmSystemRangeStart / PAGE_SIZE ||
+	  (ULONG_PTR) Address / PAGE_SIZE + PageCount >
+	  (ULONG_PTR)MmSystemRangeStart / PAGE_SIZE)
       {
          DPRINT1("Page Count to large\n");
 	 KEBUGCHECK(0);
@@ -1725,7 +1726,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
       NoExecute = TRUE;
    }
    Attributes &= 0xfff;
-   if (Address >= (PVOID)KERNEL_BASE)
+   if (Address >= MmSystemRangeStart)
    {
       Attributes &= ~PA_USER;
       if (Ke386GlobalPagesEnabled)
@@ -1746,7 +1747,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
       PULONGLONG Pt = NULL;
 
       oldPdeOffset = PAE_ADDR_TO_PDE_OFFSET(Addr) + 1;
-      for (i = 0; i < PageCount; i++, Addr += PAGE_SIZE)
+      for (i = 0; i < PageCount; i++, Addr = (PVOID)((ULONG_PTR)Addr + PAGE_SIZE))
       {
          if (!(Attributes & PA_PRESENT) && Pages[i] != 0)
          {
@@ -1786,7 +1787,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
          {
             MmMarkPageUnmapped(PAE_PTE_TO_PFN((Pte)));
          }
-         if (Address < (PVOID)KERNEL_BASE &&
+         if (Address < MmSystemRangeStart &&
 	     Process->AddressSpace.PageTableRefCountTable != NULL &&
              Attributes & PA_PRESENT)
          {
@@ -1798,7 +1799,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
          }
          if (Pte != 0LL)
          {
-            if (Address > (PVOID)KERNEL_BASE ||
+            if (Address > MmSystemRangeStart ||
                 (Pt >= (PULONGLONG)PAGETABLE_MAP && Pt < (PULONGLONG)PAGETABLE_MAP + 4*512*512))
             {
               MiFlushTlb((PULONG)Pt, Address);
@@ -1815,7 +1816,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
       PULONG Pt = NULL;
       ULONG Pte;
       oldPdeOffset = ADDR_TO_PDE_OFFSET(Addr) + 1;
-      for (i = 0; i < PageCount; i++, Addr += PAGE_SIZE)
+      for (i = 0; i < PageCount; i++, Addr = (PVOID)((ULONG_PTR)Addr + PAGE_SIZE))
       {
          if (!(Attributes & PA_PRESENT) && Pages[i] != 0)
          {
@@ -1851,7 +1852,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
             MmMarkPageUnmapped(PTE_TO_PFN((Pte)));
          }
 	 InterlockedExchangeUL(Pt, PFN_TO_PTE(Pages[i]) | Attributes);
-         if (Address < (PVOID)KERNEL_BASE &&
+         if (Address < MmSystemRangeStart &&
 	     Process->AddressSpace.PageTableRefCountTable != NULL &&
              Attributes & PA_PRESENT)
          {
@@ -1863,7 +1864,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
          }
          if (Pte != 0)
          {
-            if (Address > (PVOID)KERNEL_BASE ||
+            if (Address > MmSystemRangeStart ||
                 (Pt >= (PULONG)PAGETABLE_MAP && Pt < (PULONG)PAGETABLE_MAP + 1024*1024))
             {
                MiFlushTlb(Pt, Address);
@@ -1963,7 +1964,7 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
       NoExecute = TRUE;
    }
    Attributes &= 0xfff;
-   if (Address >= (PVOID)KERNEL_BASE)
+   if (Address >= MmSystemRangeStart)
    {
       Attributes &= ~PA_USER;
       if (Ke386GlobalPagesEnabled)
@@ -2063,7 +2064,7 @@ PVOID
 MmCreateHyperspaceMapping(PFN_TYPE Page)
 {
    PVOID Address;
-   LONG i;
+   ULONG i;
 
    if (Ke386Pae)
    {
@@ -2101,14 +2102,14 @@ MmCreateHyperspaceMapping(PFN_TYPE Page)
       }
       else
       {
-         for (i = Page %1024; i >= 0; i--, Pte--)
+         for (i = Page %1024; (LONG)i >= 0; i--, Pte--)
          {
             if (0LL == ExfInterlockedCompareExchange64UL(Pte, &Entry, &ZeroEntry))
 	    {
 	       break;
 	    }
          }
-         if (i < 0)
+         if ((LONG)i < 0)
          {
             Pte = PAE_ADDR_TO_PTE(HYPERSPACE) + 1023;
 	    for (i = 1023; i > Page % 1024; i--, Pte--)
@@ -2158,14 +2159,14 @@ MmCreateHyperspaceMapping(PFN_TYPE Page)
       }
       else
       {
-         for (i = Page % 1024; i >= 0; i--, Pte--)
+         for (i = Page % 1024; (LONG)i >= 0; i--, Pte--)
          {
             if (0 == InterlockedCompareExchange((PLONG)Pte, (LONG)Entry, 0))
             {
                break;
             }
          }
-         if (i < 0)
+         if ((LONG)i < 0)
          {
             Pte = ADDR_TO_PTE(HYPERSPACE) + 1023;
             for (i = 1023; i > Page % 1024; i--, Pte--)
@@ -2182,7 +2183,7 @@ MmCreateHyperspaceMapping(PFN_TYPE Page)
          }
       }
    }
-   Address = (PVOID)HYPERSPACE + i * PAGE_SIZE;
+   Address = (PVOID)((ULONG_PTR)HYPERSPACE + i * PAGE_SIZE);
    FLUSH_TLB_ONE(Address);
    return Address;
 }
@@ -2233,7 +2234,7 @@ VOID MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
 {
    ULONG StartOffset, EndOffset, Offset;
 
-   if (Address < (PVOID)KERNEL_BASE)
+   if (Address < MmSystemRangeStart)
    {
       KEBUGCHECK(0);
    }
@@ -2244,7 +2245,7 @@ VOID MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
       ULONGLONG ZeroPde = 0LL;
       ULONG i;
 
-      for (i = PAE_ADDR_TO_PDTE_OFFSET(Address); i <= PAE_ADDR_TO_PDTE_OFFSET(Address + Size); i++)
+      for (i = PAE_ADDR_TO_PDTE_OFFSET(Address); i <= PAE_ADDR_TO_PDTE_OFFSET((PVOID)((ULONG_PTR)Address + Size)); i++)
       {
          if (i == PAE_ADDR_TO_PDTE_OFFSET(Address))
 	 {
@@ -2254,9 +2255,9 @@ VOID MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
 	 {
 	    StartOffset = 0;
 	 }
-	 if (i == PAE_ADDR_TO_PDTE_OFFSET(Address + Size))
+	 if (i == PAE_ADDR_TO_PDTE_OFFSET((PVOID)((ULONG_PTR)Address + Size)))
 	 {
-	    EndOffset = PAE_ADDR_TO_PDE_PAGE_OFFSET(Address + Size);
+	    EndOffset = PAE_ADDR_TO_PDE_PAGE_OFFSET((PVOID)((ULONG_PTR)Address + Size));
 	 }
 	 else
 	 {
@@ -2288,7 +2289,7 @@ VOID MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
    {
       PULONG Pde;
       StartOffset = ADDR_TO_PDE_OFFSET(Address);
-      EndOffset = ADDR_TO_PDE_OFFSET(Address + Size);
+      EndOffset = ADDR_TO_PDE_OFFSET((PVOID)((ULONG_PTR)Address + Size));
 
       if (Process != NULL && Process != PsGetCurrentProcess())
       {
@@ -2322,7 +2323,7 @@ MmInitGlobalKernelPageDirectory(VOID)
    if (Ke386Pae)
    {
       PULONGLONG CurrentPageDirectory = (PULONGLONG)PAE_PAGEDIRECTORY_MAP;
-      for (i = PAE_ADDR_TO_PDE_OFFSET(KERNEL_BASE); i < 4 * 512; i++)
+      for (i = PAE_ADDR_TO_PDE_OFFSET(MmSystemRangeStart); i < 4 * 512; i++)
       {
          if (!(i >= PAE_ADDR_TO_PDE_OFFSET(PAGETABLE_MAP) && i < PAE_ADDR_TO_PDE_OFFSET(PAGETABLE_MAP) + 4) &&
 	     !(i >= PAE_ADDR_TO_PDE_OFFSET(HYPERSPACE) && i < PAE_ADDR_TO_PDE_OFFSET(HYPERSPACE) + 2) &&
@@ -2340,7 +2341,7 @@ MmInitGlobalKernelPageDirectory(VOID)
    else
    {
       PULONG CurrentPageDirectory = (PULONG)PAGEDIRECTORY_MAP;
-      for (i = ADDR_TO_PDE_OFFSET(KERNEL_BASE); i < 1024; i++)
+      for (i = ADDR_TO_PDE_OFFSET(MmSystemRangeStart); i < 1024; i++)
       {
          if (i != ADDR_TO_PDE_OFFSET(PAGETABLE_MAP) &&
 	     i != ADDR_TO_PDE_OFFSET(HYPERSPACE) &&
@@ -2360,7 +2361,7 @@ MmInitGlobalKernelPageDirectory(VOID)
 ULONG
 MiGetUserPageDirectoryCount(VOID)
 {
-   return Ke386Pae ? PAE_ADDR_TO_PDE_OFFSET(KERNEL_BASE) : ADDR_TO_PDE_OFFSET(KERNEL_BASE);
+   return Ke386Pae ? PAE_ADDR_TO_PDE_OFFSET(MmSystemRangeStart) : ADDR_TO_PDE_OFFSET(MmSystemRangeStart);
 }
 
 VOID INIT_FUNCTION
@@ -2370,32 +2371,41 @@ MiInitPageDirectoryMap(VOID)
    MEMORY_AREA* hyperspace_desc = NULL;
    PHYSICAL_ADDRESS BoundaryAddressMultiple;
    PVOID BaseAddress;
+   NTSTATUS Status;
 
    DPRINT("MiInitPageDirectoryMap()\n");
 
    BoundaryAddressMultiple.QuadPart = 0;
    BaseAddress = (PVOID)PAGETABLE_MAP;
-   MmCreateMemoryArea(NULL,
-                      MmGetKernelAddressSpace(),
-                      MEMORY_AREA_SYSTEM,
-                      &BaseAddress,
-		      Ke386Pae ? 0x800000 : 0x400000,
-                      0,
-                      &kernel_map_desc,
-                      TRUE,
-                      FALSE,
-                      BoundaryAddressMultiple);
+   Status = MmCreateMemoryArea(NULL,
+                               MmGetKernelAddressSpace(),
+                               MEMORY_AREA_SYSTEM,
+                               &BaseAddress,
+		               Ke386Pae ? 0x800000 : 0x400000,
+                               0,
+                               &kernel_map_desc,
+                               TRUE,
+                               FALSE,
+                               BoundaryAddressMultiple);
+   if (!NT_SUCCESS(Status))
+   {
+      KEBUGCHECK(0);
+   }
    BaseAddress = (PVOID)HYPERSPACE;
-   MmCreateMemoryArea(NULL,
-                      MmGetKernelAddressSpace(),
-                      MEMORY_AREA_SYSTEM,
-                      &BaseAddress,
-		      0x400000,
-                      0,
-                      &hyperspace_desc,
-                      TRUE,
-                      FALSE,
-                      BoundaryAddressMultiple);
+   Status = MmCreateMemoryArea(NULL,
+                               MmGetKernelAddressSpace(),
+                               MEMORY_AREA_SYSTEM,
+                               &BaseAddress,
+		               0x400000,
+                               0,
+                               &hyperspace_desc,
+                               TRUE,
+                               FALSE,
+                               BoundaryAddressMultiple);
+   if (!NT_SUCCESS(Status))
+   {
+      KEBUGCHECK(0);
+   }
 }
 
 /* EOF */

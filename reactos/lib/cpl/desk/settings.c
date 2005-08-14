@@ -247,7 +247,7 @@ OnDisplayDeviceChanged(IN HWND hwndDlg, IN PDISPLAY_DEVICE_ENTRY pDeviceEntry)
 		if (LoadString(hApplet, (2900 + Current->dmBitsPerPel), Buffer, sizeof(Buffer) / sizeof(TCHAR)))
 		{
 			index = SendDlgItemMessage(hwndDlg, IDC_SETTINGS_BPP, CB_FINDSTRINGEXACT, (WPARAM)-1, (LPARAM)Buffer);
-			if (index == CB_ERR)
+			if (index == (DWORD)CB_ERR)
 			{
 				index = SendDlgItemMessage(hwndDlg, IDC_SETTINGS_BPP, CB_ADDSTRING, 0, (LPARAM)Buffer);
 				SendDlgItemMessage(hwndDlg, IDC_SETTINGS_BPP, CB_SETITEMDATA, index, Current->dmBitsPerPel);
@@ -519,7 +519,7 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 		case WM_NOTIFY:
 		{
 			LPNMHDR lpnm = (LPNMHDR)lParam;
-			if (lpnm->code == PSN_APPLY)
+			if (lpnm->code == (UINT)PSN_APPLY)
 			{
 				if (CurrentDisplayDevice->CurrentSettings->dmPelsWidth != CurrentDisplayDevice->InitialSettings.dmPelsWidth
 				 || CurrentDisplayDevice->CurrentSettings->dmPelsHeight != CurrentDisplayDevice->InitialSettings.dmPelsHeight

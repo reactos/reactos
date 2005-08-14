@@ -50,7 +50,7 @@ IopCreateFile(PVOID ObjectBody,
   POBJECT_TYPE ParentObjectType;
   NTSTATUS Status;
 
-  DPRINT("IopCreateFile(ObjectBody %x, Parent %x, RemainingPath %S)\n",
+  DPRINT("IopCreateFile(ObjectBody 0x%p, Parent 0x%p, RemainingPath %S)\n",
          ObjectBody,
          Parent,
          RemainingPath);
@@ -69,7 +69,7 @@ IopCreateFile(PVOID ObjectBody,
       ParentObjectType != IoFileObjectType)
     {
       DPRINT("Parent [%wZ] is a %S which is neither a file type nor a device type ; remaining path = %S\n",
-             &BODY_TO_HEADER(Parent)->NameInfo->Name,
+             &HEADER_TO_OBJECT_NAME(BODY_TO_HEADER(Parent))->Name,
              BODY_TO_HEADER(Parent)->Type->Name.Buffer,
              RemainingPath);
       return(STATUS_UNSUCCESSFUL);
@@ -81,7 +81,7 @@ IopCreateFile(PVOID ObjectBody,
                                       UserMode);
   if (!NT_SUCCESS(Status))
     {
-      CPRINT("Failed to reference parent object %x\n", Parent);
+      CPRINT("Failed to reference parent object 0x%p\n", Parent);
       return(Status);
     }
 
@@ -89,7 +89,7 @@ IopCreateFile(PVOID ObjectBody,
     {
       /* Parent is a devce object */
       DeviceObject = IoGetAttachedDevice((PDEVICE_OBJECT)Parent);
-      DPRINT("DeviceObject %x\n", DeviceObject);
+      DPRINT("DeviceObject 0x%p\n", DeviceObject);
 
       if (RemainingPath == NULL)
         {
@@ -143,7 +143,7 @@ IopCreateFile(PVOID ObjectBody,
         }
 
       DeviceObject = ((PFILE_OBJECT)Parent)->DeviceObject;
-      DPRINT("DeviceObject %x\n", DeviceObject);
+      DPRINT("DeviceObject 0x%p\n", DeviceObject);
 
       FileObject->RelatedFileObject = (PFILE_OBJECT)Parent;
 
@@ -154,7 +154,7 @@ IopCreateFile(PVOID ObjectBody,
   DPRINT("FileObject->FileName %wZ\n",
          &FileObject->FileName);
   FileObject->DeviceObject = DeviceObject;
-  DPRINT("FileObject %x DeviceObject %x\n",
+  DPRINT("FileObject 0x%p DeviceObject 0x%p\n",
          FileObject,
          DeviceObject);
   FileObject->Vpb = DeviceObject->Vpb;
@@ -399,7 +399,7 @@ IopQueryNameFile(PVOID ObjectBody,
                  ULONG Length,
                  PULONG ReturnLength)
 {
-    PVOID LocalInfo;
+    POBJECT_NAME_INFORMATION LocalInfo;
     PFILE_OBJECT FileObject;
     ULONG LocalReturnLength;
     NTSTATUS Status;
@@ -428,7 +428,7 @@ IopQueryNameFile(PVOID ObjectBody,
     
     /* Write Device Path */
     Status = RtlAppendUnicodeStringToString(&ObjectNameInfo->Name,
-                                            &((POBJECT_NAME_INFORMATION)LocalInfo)->Name);
+                                            &(LocalInfo)->Name);
 
     /* Query the File name */
     Status = IoQueryFileInformation(FileObject,
@@ -531,10 +531,10 @@ IopDeviceFsIoControl(IN HANDLE DeviceHandle,
     BOOLEAN LocalEvent = FALSE;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
 
-    DPRINT("IopDeviceFsIoControl(DeviceHandle %x Event %x UserApcRoutine %x "
-           "UserApcContext %x IoStatusBlock %x IoControlCode %x "
-           "InputBuffer %x InputBufferLength %x OutputBuffer %x "
-           "OutputBufferLength %x)\n",
+    DPRINT("IopDeviceFsIoControl(DeviceHandle 0x%p Event 0x%p UserApcRoutine 0x%p "
+           "UserApcContext 0x%p IoStatusBlock 0x%p IoControlCode %x "
+           "InputBuffer 0x%p InputBufferLength %x OutputBuffer 0x%p "
+           "OutputBufferLength 0x%p)\n",
            DeviceHandle,Event,UserApcRoutine,UserApcContext,IoStatusBlock,
            IoControlCode,InputBuffer,InputBufferLength,OutputBuffer,
            OutputBufferLength);
@@ -758,8 +758,8 @@ IoCreateFile(OUT PHANDLE  FileHandle,
    PVOID                SystemEaBuffer = NULL;
    NTSTATUS  Status = STATUS_SUCCESS;
 
-   DPRINT("IoCreateFile(FileHandle %x, DesiredAccess %x, "
-          "ObjectAttributes %x ObjectAttributes->ObjectName->Buffer %S)\n",
+   DPRINT("IoCreateFile(FileHandle 0x%p, DesiredAccess %x, "
+          "ObjectAttributes 0x%p ObjectAttributes->ObjectName->Buffer %S)\n",
           FileHandle,DesiredAccess,ObjectAttributes,
           ObjectAttributes->ObjectName->Buffer);
 
@@ -933,8 +933,8 @@ IoCreateFile(OUT PHANDLE  FileHandle,
    KeInitializeEvent(&FileObject->Lock, SynchronizationEvent, TRUE);
    KeInitializeEvent(&FileObject->Event, NotificationEvent, FALSE);
 
-   DPRINT("FileObject %x\n", FileObject);
-   DPRINT("FileObject->DeviceObject %x\n", FileObject->DeviceObject);
+   DPRINT("FileObject 0x%p\n", FileObject);
+   DPRINT("FileObject->DeviceObject 0x%p\n", FileObject->DeviceObject);
    /*
     * Create a new IRP to hand to
     * the FS driver: this may fail
@@ -1048,7 +1048,7 @@ IoCreateFile(OUT PHANDLE  FileHandle,
 
    ASSERT_IRQL(PASSIVE_LEVEL);
 
-   DPRINT("Finished IoCreateFile() (*FileHandle) %x\n", (*FileHandle));
+   DPRINT("Finished IoCreateFile() (*FileHandle) 0x%p\n", (*FileHandle));
 
    return Status;
 }
@@ -1112,7 +1112,7 @@ IoCreateStreamFileObject(PFILE_OBJECT FileObject,
        reason. These hacks need to be removed.
     */
 
-    DPRINT("IoCreateStreamFileObject(FileObject %x, DeviceObject %x)\n",
+    DPRINT("IoCreateStreamFileObject(FileObject 0x%p, DeviceObject 0x%p)\n",
             FileObject, DeviceObject);
     PAGED_CODE();
 
@@ -1134,7 +1134,7 @@ IoCreateStreamFileObject(PFILE_OBJECT FileObject,
 
     /* Choose Device Object */
     if (FileObject) DeviceObject = FileObject->DeviceObject;
-    DPRINT("DeviceObject %x\n", DeviceObject);
+    DPRINT("DeviceObject 0x%p\n", DeviceObject);
     
     /* HACK */
     DeviceObject = IoGetAttachedDevice(DeviceObject);
@@ -1240,7 +1240,7 @@ IoQueryFileInformation(IN PFILE_OBJECT FileObject,
                                         KernelMode);
     if (!NT_SUCCESS(Status)) return(Status);
 
-    DPRINT("FileObject %x\n", FileObject);
+    DPRINT("FileObject 0x%p\n", FileObject);
 
     /* Get the Device Object */
     DeviceObject = IoGetRelatedDeviceObject(FileObject);
@@ -1500,8 +1500,8 @@ NtCreateMailslotFile(OUT PHANDLE FileHandle,
 {
     MAILSLOT_CREATE_PARAMETERS Buffer;
 
-    DPRINT("NtCreateMailslotFile(FileHandle %x, DesiredAccess %x, "
-           "ObjectAttributes %x ObjectAttributes->ObjectName->Buffer %S)\n",
+    DPRINT("NtCreateMailslotFile(FileHandle 0x%p, DesiredAccess %x, "
+           "ObjectAttributes 0x%p ObjectAttributes->ObjectName->Buffer %S)\n",
            FileHandle,DesiredAccess,ObjectAttributes,
            ObjectAttributes->ObjectName->Buffer);
     PAGED_CODE();
@@ -1561,8 +1561,8 @@ NtCreateNamedPipeFile(PHANDLE FileHandle,
 {
     NAMED_PIPE_CREATE_PARAMETERS Buffer;
 
-    DPRINT("NtCreateNamedPipeFile(FileHandle %x, DesiredAccess %x, "
-           "ObjectAttributes %x ObjectAttributes->ObjectName->Buffer %S)\n",
+    DPRINT("NtCreateNamedPipeFile(FileHandle 0x%p, DesiredAccess %x, "
+           "ObjectAttributes 0x%p ObjectAttributes->ObjectName->Buffer %S)\n",
             FileHandle,DesiredAccess,ObjectAttributes,
             ObjectAttributes->ObjectName->Buffer);
     PAGED_CODE();
@@ -2403,7 +2403,7 @@ NtQueryInformationFile(HANDLE FileHandle,
     ASSERT(IoStatusBlock != NULL);
     ASSERT(FileInformation != NULL);
 
-    DPRINT("NtQueryInformationFile(Handle %x StatBlk %x FileInfo %x Length %d "
+    DPRINT("NtQueryInformationFile(Handle 0x%p StatBlk 0x%p FileInfo 0x%p Length %d "
            "Class %d)\n", FileHandle, IoStatusBlock, FileInformation,
             Length, FileInformationClass);
 
@@ -2446,7 +2446,7 @@ NtQueryInformationFile(HANDLE FileHandle,
         return STATUS_ACCESS_DENIED;
     }
 
-    DPRINT("FileObject %x\n", FileObject);
+    DPRINT("FileObject 0x%p\n", FileObject);
 
     /* Check if this is a direct open or not */
     if (FileObject->Flags & FO_DIRECT_DEVICE_OPEN)
@@ -2589,8 +2589,8 @@ NtReadFile(IN HANDLE FileHandle,
     BOOLEAN LocalEvent = FALSE;
     PKEVENT EventObject = NULL;
 
-    DPRINT("NtReadFile(FileHandle %x Buffer %x Length %x ByteOffset %x, "
-           "IoStatusBlock %x)\n", FileHandle, Buffer, Length, ByteOffset,
+    DPRINT("NtReadFile(FileHandle 0x%p Buffer 0x%p Length %x ByteOffset 0x%p, "
+           "IoStatusBlock 0x%p)\n", FileHandle, Buffer, Length, ByteOffset,
             IoStatusBlock);
     PAGED_CODE();
 
@@ -2629,7 +2629,7 @@ NtReadFile(IN HANDLE FileHandle,
     /* Check the Byte Offset */
     if (!ByteOffset ||
         (ByteOffset->u.LowPart == FILE_USE_FILE_POINTER_POSITION &&
-         ByteOffset->u.HighPart == 0xffffffff))
+         ByteOffset->u.HighPart == -1))
     {
         /* a valid ByteOffset is required if asynch. op. */
         if (!(FileObject->Flags & FO_SYNCHRONOUS_IO))
@@ -2814,7 +2814,7 @@ NtSetInformationFile(HANDLE FileHandle,
     ASSERT(IoStatusBlock != NULL);
     ASSERT(FileInformation != NULL);
 
-    DPRINT("NtSetInformationFile(Handle %x StatBlk %x FileInfo %x Length %d "
+    DPRINT("NtSetInformationFile(Handle 0x%p StatBlk 0x%p FileInfo 0x%p Length %d "
            "Class %d)\n", FileHandle, IoStatusBlock, FileInformation,
             Length, FileInformationClass);
 
@@ -2862,7 +2862,7 @@ NtSetInformationFile(HANDLE FileHandle,
         return STATUS_ACCESS_DENIED;
     }
 
-    DPRINT("FileObject %x\n", FileObject);
+    DPRINT("FileObject 0x%p\n", FileObject);
 
     /* FIXME: Later, we can implement a lot of stuff here and avoid a driver call */
     /* Handle IO Completion Port quickly */
@@ -3177,8 +3177,8 @@ NtWriteFile (IN HANDLE FileHandle,
     BOOLEAN LocalEvent = FALSE;
     PKEVENT EventObject = NULL;
 
-    DPRINT("NtWriteFile(FileHandle %x Buffer %x Length %x ByteOffset %x, "
-            "IoStatusBlock %x)\n", FileHandle, Buffer, Length, ByteOffset,
+    DPRINT("NtWriteFile(FileHandle 0x%p Buffer 0x%p Length %x ByteOffset 0x%p, "
+            "IoStatusBlock 0x%p)\n", FileHandle, Buffer, Length, ByteOffset,
             IoStatusBlock);
 
     /* Validate User-Mode Buffers */
@@ -3228,7 +3228,7 @@ NtWriteFile (IN HANDLE FileHandle,
         /* Check the Byte Offset */
         if (!ByteOffset ||
             (ByteOffset->u.LowPart == FILE_USE_FILE_POINTER_POSITION &&
-             ByteOffset->u.HighPart == 0xffffffff))
+             ByteOffset->u.HighPart == -1))
         {
             /* a valid ByteOffset is required if asynch. op. */
             if (!(FileObject->Flags & FO_SYNCHRONOUS_IO))

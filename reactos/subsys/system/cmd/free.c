@@ -11,7 +11,7 @@
  *        Remove all hardcode string to En.rc
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include "resource.h"
 
 #ifdef INCLUDE_CMD_FREE
@@ -135,7 +135,7 @@ INT CommandFree (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_FREE_HELP2);
+		ConOutResPaging(TRUE,STRING_FREE_HELP2);
 		return 0;
 	}
 

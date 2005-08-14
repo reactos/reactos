@@ -169,6 +169,7 @@ ifeq ($(HALFVERBOSEECHO),yes)
   ECHO_MKHIVE  =@echo $(QUOTE)[MKHIVE]   $@$(QUOTE)
   ECHO_REGTESTS=@echo $(QUOTE)[REGTESTS] $@$(QUOTE)
   ECHO_TEST    =@echo $(QUOTE)[TEST]     $@$(QUOTE)
+  ECHO_GENDIB  =@echo $(QUOTE)[GENDIB]   $@$(QUOTE)
 else
   ECHO_CP      =
   ECHO_MKDIR   =
@@ -196,6 +197,7 @@ else
   ECHO_MKHIVE  =
   ECHO_REGTESTS=
   ECHO_TEST    =
+  ECHO_GENDIB  =
 endif
 
 
@@ -288,16 +290,19 @@ ERRCODES_RC = lib$(SEP)kernel32$(SEP)errcodes.rc
 
 include lib/lib.mak
 include tools/tools.mak
+include boot/freeldr/bootsect/bootsect.mak
 -include makefile.auto
 
 PREAUTO := \
+	$(BIN2C_TARGET) \
 	$(BIN2RES_TARGET) \
 	$(BUILDNO_H) \
 	$(BUGCODES_H) \
 	$(BUGCODES_RC) \
 	$(ERRCODES_H) \
 	$(ERRCODES_RC) \
-	$(NCI_SERVICE_FILES)
+	$(NCI_SERVICE_FILES) \
+	$(GENDIB_DIB_FILES)
 
 makefile.auto: $(RBUILD_TARGET) $(PREAUTO) $(XMLBUILDFILES)
 	$(ECHO_RBUILD)

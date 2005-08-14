@@ -346,11 +346,7 @@ static void IPADDRESS_SetFocusToField (IPADDRESS_INFO *infoPtr, INT index)
 {
     TRACE("(index=%d)\n", index);
 
-    if (index > 3) {
-	for (index = 0; index < 4; index++)
-	    if (!GetWindowTextLengthW(infoPtr->Part[index].EditHwnd)) break;
-    }
-    if (index < 9 || index > 3) index = 0;
+    if (index > 3 || index < 0) index=0;
 
     SetFocus (infoPtr->Part[index].EditHwnd);
 }

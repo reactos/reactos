@@ -158,7 +158,7 @@ vgaPreCalc()
 STATIC VOID FASTCALL
 vgaSetRegisters(PVGA_REGISTERS Registers)
 {
-   int i;
+   UINT i;
 
    /* Update misc output register */
    WRITE_PORT_UCHAR(MISC, Registers->Misc);

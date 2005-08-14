@@ -128,7 +128,7 @@
  *		  translate to other langues.
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include "resource.h"
 
 #ifdef INCLUDE_CMD_CHDIR
@@ -168,9 +168,11 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_CD_HELP);
+		ConOutResPaging(TRUE,STRING_CD_HELP);
 		return 0;
 	}
+
+   nErrorLevel = 0;
 
 	/* The whole param string is our parameter these days. The only thing we do is eliminating every quotation mark */
 	/* Is it safe to change the characters param is pointing to? I presume it is, as there doesn't seem to be any
@@ -258,13 +260,14 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 	{
 
 	    hSearch = FindFirstFile(dir, &FileData); 
-        if (hSearch == INVALID_HANDLE_VALUE) 
-        { 
+      if (hSearch == INVALID_HANDLE_VALUE) 
+      { 
 	        ConOutFormatMessage(GetLastError());
-			free (lpOldPath);
-		    lpOldPath = NULL;
-            return 1;
-		}
+          free (lpOldPath);
+          lpOldPath = NULL;
+          nErrorLevel = 1;
+          return 1;
+      }
 
 		
         while (!fFinished) 
@@ -282,6 +285,7 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 				 ConOutFormatMessage(GetLastError());
 			     free (lpOldPath);
 		         lpOldPath = NULL;
+         nErrorLevel = 1;
 				 return 1;
 			 }
 				
@@ -293,6 +297,7 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
             {             
 		     FindClose(hSearch);
 			 ConOutFormatMessage(GetLastError());
+       nErrorLevel = 1;
 			 free (lpOldPath);
 		     lpOldPath = NULL;
 			 return 1;
@@ -301,6 +306,7 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 
 		//ErrorMessage (GetLastError(), _T("CD"));
 		ConOutFormatMessage(GetLastError());
+    nErrorLevel = 1;
 
 		/* throw away current directory */
 		free (lpOldPath);
@@ -345,7 +351,7 @@ INT cmd_mkdir (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_MKDIR_HELP);
+		ConOutResPaging(TRUE,STRING_MKDIR_HELP);
 		return 0;
 	}
 
@@ -418,7 +424,7 @@ INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_RMDIR_HELP);
+		ConOutResPaging(TRUE,STRING_RMDIR_HELP);
 		return 0;
 	}
 
@@ -482,7 +488,7 @@ INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
 INT CommandExit (LPTSTR cmd, LPTSTR param)
 {
 	if (!_tcsncmp (param, _T("/?"), 2))
-		ConOutResPuts(STRING_EXIT_HELP);
+		ConOutResPaging(TRUE,STRING_EXIT_HELP);
 
 	if (bc != NULL && _tcsnicmp(param,_T("/b"),2) == 0)
 	{
@@ -511,7 +517,7 @@ INT CommandRem (LPTSTR cmd, LPTSTR param)
 {
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_REM_HELP);
+		ConOutResPaging(TRUE,STRING_REM_HELP);
 	}
 
 	return 0;

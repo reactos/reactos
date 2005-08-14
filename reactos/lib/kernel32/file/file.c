@@ -22,7 +22,6 @@
 
 BOOL bIsFileApiAnsi = TRUE; // set the file api to ansi or oem
 
-
 /* FUNCTIONS ****************************************************************/
 
 
@@ -77,7 +76,7 @@ FilenameU2A_FitOrFail(
    ret = bIsFileApiAnsi? RtlUnicodeStringToAnsiSize(SourceU) : RtlUnicodeStringToOemSize(SourceU);
    /* ret incl. nullchar */
 
-   if (DestA && ret <= destLen)
+   if (DestA && (INT)ret <= destLen)
    {
       ANSI_STRING str;
 
@@ -178,20 +177,30 @@ FilenameW2A_N(
 /*
  * @implemented
  */
-VOID STDCALL
+VOID
+STDCALL
 SetFileApisToOEM(VOID)
 {
-   bIsFileApiAnsi = FALSE;
+    /* Set the correct Base Api */
+    Basep8BitStringToUnicodeString = RtlOemStringToUnicodeString;
+
+    /* FIXME: Old, deprecated way */
+    bIsFileApiAnsi = FALSE;
 }
 
 
 /*
  * @implemented
  */
-VOID STDCALL
+VOID
+STDCALL
 SetFileApisToANSI(VOID)
 {
-   bIsFileApiAnsi = TRUE;
+    /* Set the correct Base Api */
+    Basep8BitStringToUnicodeString = RtlAnsiStringToUnicodeString;
+
+    /* FIXME: Old, deprecated way */
+    bIsFileApiAnsi = TRUE;
 }
 
 
@@ -534,15 +543,15 @@ GetFileType(HANDLE hFile)
   switch ((ULONG)hFile)
     {
       case STD_INPUT_HANDLE:
-	hFile = NtCurrentPeb()->ProcessParameters->hStdInput;
+	hFile = NtCurrentPeb()->ProcessParameters->StandardInput;
 	break;
 
       case STD_OUTPUT_HANDLE:
-	hFile = NtCurrentPeb()->ProcessParameters->hStdOutput;
+	hFile = NtCurrentPeb()->ProcessParameters->StandardOutput;
 	break;
 
       case STD_ERROR_HANDLE:
-	hFile = NtCurrentPeb()->ProcessParameters->hStdError;
+	hFile = NtCurrentPeb()->ProcessParameters->StandardError;
 	break;
     }
 

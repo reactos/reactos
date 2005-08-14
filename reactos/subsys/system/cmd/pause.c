@@ -17,7 +17,7 @@
  *        Unicode ready!
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include "resource.h"
 
 #ifdef INCLUDE_CMD_PAUSE
@@ -44,7 +44,7 @@ INT cmd_pause (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_PAUSE_HELP1);
+		ConOutResPaging(TRUE,STRING_PAUSE_HELP1);
 		return 0;
 	}
 

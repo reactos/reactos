@@ -147,7 +147,7 @@ CreateICA(
   NTSTATUS Status;
   LPWSTR lpszDriverW, lpszDeviceW, lpszOutputW;
   UNICODE_STRING Driver, Device, Output;
-  LPDEVMODEW dvmInitW;
+  LPDEVMODEW dvmInitW = NULL;
   HDC rc = 0;
 
   Status = HEAP_strdupA2W ( &lpszDriverW, lpszDriver );
@@ -254,7 +254,7 @@ GetObjectA(HGDIOBJ Handle, int Size, LPVOID Buffer)
 
   if (OBJ_FONT == Type)
     {
-      if (Size < sizeof(LOGFONTA))
+      if (Size < (int)sizeof(LOGFONTA))
         {
           SetLastError(ERROR_BUFFER_OVERFLOW);
           return 0;

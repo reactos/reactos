@@ -1270,7 +1270,7 @@ CmiHiveSyncRoutine(PVOID DeferredContext)
   ExReleaseResourceLite(&CmiRegistryLock);
   KeLeaveCriticalRegion();
 
-  DPRINT("DeferredContext %x\n", DeferredContext);
+  DPRINT("DeferredContext 0x%p\n", DeferredContext);
   ExFreePool(DeferredContext);
 
   DPRINT("CmiHiveSyncRoutine() done\n");
@@ -1297,7 +1297,7 @@ CmiHiveSyncDpcRoutine(PKDPC Dpc,
 		       CmiHiveSyncRoutine,
 		       WorkQueueItem);
 
-  DPRINT("DeferredContext %x\n", WorkQueueItem);
+  DPRINT("DeferredContext 0x%p\n", WorkQueueItem);
   ExQueueWorkItem(WorkQueueItem,
 		  CriticalWorkQueue);
 }

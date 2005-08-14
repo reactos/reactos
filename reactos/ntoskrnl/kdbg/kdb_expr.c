@@ -485,7 +485,7 @@ get_operand:
 
          /* Copy register name/memory size */
          while (isspace(p[--i2]));
-         i2 = min(i2 + 1, sizeof (Buffer) - 1);
+         i2 = min(i2 + 1, (INT)sizeof (Buffer) - 1);
          strncpy(Buffer, p, i2);
          Buffer[i2] = '\0';
 

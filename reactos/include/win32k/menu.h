@@ -22,6 +22,7 @@ typedef struct tagROSMENUINFO {
   WORD Height;        /* Height of the whole menu */
   HWND WndOwner;     /* window receiving the messages for ownerdraw */
   BOOL TimeToHide;   /* Request hiding when receiving a second click in the top-level menu item */
+  SIZE maxBmpSize;   /* Maximum size of the bitmap items in MIIM_BITMAP state */
 } ROSMENUINFO, *PROSMENUINFO;
 
 /* (other FocusedItem values give the position of the focused item) */

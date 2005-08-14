@@ -21,8 +21,8 @@
 #define __FREELDR_H
 
 #include <ddk/ntddk.h>
+#include <ndk/ntndk.h>
 #include <arch.h>
-#include <reactos.h>
 #include <rtl.h>
 #include <disk.h>
 #include <fs.h>
@@ -33,6 +33,7 @@
 #include <inifile.h>
 #include <video.h>
 #include <portio.h>
+#include <reactos.h>
 
 #define ROUND_UP(N, S) (((N) + (S) - 1) & ~((S) - 1))
 #define ROUND_DOWN(N, S) ((N) & ~((S) - 1))

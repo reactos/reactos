@@ -107,12 +107,6 @@ static const char version_string[] = "Wine Resource Compiler Version " WRC_FULLV
 			"          1994 Martin von Loewis\n";
 
 /*
- * External functions
- */
-void write_resfile(char *outname, resource_t *top);
-void verify_translations(resource_t *top);
-
-/*
  * Set if compiling in 32bit mode (default).
  */
 int win32 = 1;

@@ -64,7 +64,7 @@ NTSTATUS
 PsInitWin32Thread (PETHREAD Thread)
 {
     PEPROCESS Process;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     Process = Thread->ThreadsProcess;
 

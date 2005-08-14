@@ -1220,10 +1220,10 @@ ZwGetContextThread(
 NTSTATUS
 STDCALL
 NtGetPlugPlayEvent(
-    ULONG Reserved1,
-    ULONG Reserved2,
-    struct _PLUGPLAY_EVENT_BLOCK *Buffer,
-    ULONG BufferSize
+    IN ULONG Reserved1,
+    IN ULONG Reserved2,
+    OUT PPLUGPLAY_EVENT_BLOCK Buffer,
+    IN ULONG BufferSize
 );
 
 ULONG
@@ -1868,9 +1868,9 @@ ZwOpenTimer(
 NTSTATUS
 STDCALL
 NtPlugPlayControl(
-    ULONG ControlCode,
-    PVOID Buffer,
-    ULONG BufferSize
+    IN PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
+    IN OUT PVOID Buffer,
+    IN ULONG BufferSize
 );
 
 NTSTATUS
@@ -3693,6 +3693,7 @@ NtTerminateThread(
     IN HANDLE ThreadHandle,
     IN NTSTATUS ExitStatus
 );
+
 NTSTATUS
 STDCALL
 ZwTerminateThread(

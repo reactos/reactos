@@ -67,17 +67,22 @@
 @ stdcall WNetEnumCachedPasswords(str long long ptr long)
 @ stdcall WNetEnumResourceA(long ptr ptr ptr)
 @ stdcall WNetEnumResourceW(long ptr ptr ptr)
+@ stub WNetFMXEditPerm
+@ stub WNetFMXGetPermCaps
+@ stub WNetFMXGetPermHelp
 @ stub WNetFormatNetworkNameA
 @ stub WNetFormatNetworkNameW
 @ stdcall WNetGetCachedPassword(ptr long ptr ptr long)
 @ stdcall WNetGetConnectionA(str ptr ptr)
 @ stdcall WNetGetConnectionW(wstr ptr ptr)
+@ stub WNetGetDirectoryTypeA
 @ stub WNetGetHomeDirectoryA
 @ stub WNetGetHomeDirectoryW
 @ stdcall WNetGetLastErrorA(ptr ptr long ptr long)
 @ stdcall WNetGetLastErrorW(ptr ptr long ptr long)
 @ stdcall WNetGetNetworkInformationA(str ptr)
 @ stdcall WNetGetNetworkInformationW(wstr ptr)
+@ stub WNetGetPropertyTextA
 @ stdcall WNetGetProviderNameA(long ptr ptr)
 @ stdcall WNetGetProviderNameW(long ptr ptr)
 @ stdcall WNetGetResourceInformationA(ptr ptr ptr ptr)
@@ -91,10 +96,14 @@
 @ stdcall WNetLogoffA(str long)
 @ stdcall WNetLogoffW(wstr long)
 @ stdcall WNetLogonA(str long)
+@ stub WNetLogonNotify
 @ stdcall WNetLogonW(wstr long)
 @ stdcall WNetOpenEnumA(long long long ptr ptr)
 @ stdcall WNetOpenEnumW(long long long ptr ptr)
+@ stub WNetPasswordChangeNotify
+@ stub WNetPropertyDialogA
 @ stdcall WNetRemoveCachedPassword(long long long)
+@ stub WNetRestoreConnection
 @ stdcall WNetRestoreConnectionA(long str)
 @ stdcall WNetRestoreConnectionW(long wstr)
 @ stdcall WNetSetConnectionA(str long ptr)
@@ -103,14 +112,3 @@
 @ stdcall WNetUseConnectionW(long ptr wstr wstr long wstr ptr ptr)
 @ stdcall WNetVerifyPasswordA(str ptr)
 @ stdcall WNetVerifyPasswordW(wstr ptr)
-
-#additions, not in win95 mpr.dll
-@ stub WNetRestoreConnection
-@ stub WNetLogonNotify
-@ stub WNetPasswordChangeNotify
-@ stub WNetGetPropertyTextA
-@ stub WNetPropertyDialogA
-@ stub WNetGetDirectoryTypeA
-@ stub WNetFMXGetPermHelp
-@ stub WNetFMXEditPerm
-@ stub WNetFMXGetPermCaps

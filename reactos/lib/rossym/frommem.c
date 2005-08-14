@@ -44,8 +44,8 @@ RosSymCreateFromMem(PVOID ImageStart, ULONG_PTR ImageSize, PROSSYM_INFO *RosSymI
 
   /* Search for the section header */
   SectionHeader = IMAGE_FIRST_SECTION(NtHeaders);
-  if (ImageSize < (char *) (SectionHeader + NtHeaders->FileHeader.NumberOfSections)
-                  - (char *) ImageStart) 
+  if (ImageSize < (ULONG_PTR)((char *) (SectionHeader + NtHeaders->FileHeader.NumberOfSections)
+                              - (char *) ImageStart))
     {
       DPRINT1("Image doesn't have valid section headers\n");
       return FALSE;

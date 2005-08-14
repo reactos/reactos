@@ -32,9 +32,6 @@
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 
-#include <samlib.h>
-
-
 #define NDEBUG
 #include "debug.h"
 

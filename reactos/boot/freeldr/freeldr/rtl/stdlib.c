@@ -127,11 +127,11 @@ int tolower(int c)
 	return c;
 }
 
-int atoi(char *string)
+int atoi(const char *string)
 {
 	int	base;
 	int	result = 0;
-	char	*str;
+	const char	*str;
 
 	if((string[0] == '0') && (string[1] == 'x'))
 	{

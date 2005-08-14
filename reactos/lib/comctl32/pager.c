@@ -1227,9 +1227,9 @@ PAGER_Size (PAGER_INFO* infoPtr, INT type, INT x, INT y)
     TRACE("[%p] %d,%d\n", infoPtr->hwndSelf, x, y);
 
     if (infoPtr->dwStyle & PGS_HORZ)
-        infoPtr->nHeight = x;
+        infoPtr->nHeight = y;
     else
-        infoPtr->nWidth = y;
+        infoPtr->nWidth = x;
 
     return PAGER_RecalcSize(infoPtr);
 }

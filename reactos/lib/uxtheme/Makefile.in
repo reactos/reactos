@@ -1,0 +1,25 @@
+TOPSRCDIR = @top_srcdir@
+TOPOBJDIR = ../..
+SRCDIR    = @srcdir@
+VPATH     = @srcdir@
+MODULE    = uxtheme.dll
+IMPORTLIB = libuxtheme.$(IMPLIBEXT)
+IMPORTS   = shlwapi user32 gdi32 advapi32 kernel32 ntdll
+DELAYIMPORTS = msimg32
+EXTRALIBS = $(LIBUNICODE)
+
+C_SRCS = \
+	draw.c \
+	main.c \
+	metric.c \
+	msstyles.c \
+	property.c \
+	stylemap.c \
+	system.c \
+	uxini.c
+
+RC_SRCS = version.rc
+
+@MAKE_DLL_RULES@
+
+### Dependencies:

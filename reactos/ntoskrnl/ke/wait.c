@@ -245,7 +245,7 @@ KeWaitForSingleObject(PVOID Object,
         if (KiIsObjectSignaled(CurrentObject, CurrentThread)) {
 
             /* Just unwait this guy and exit */
-            if (CurrentObject->SignalState != MINLONG) {
+            if (CurrentObject->SignalState != (LONG)MINLONG) {
 
                 /* It has a normal signal state, so unwait it and return */
                 KiSatisfyObjectWait(CurrentObject, CurrentThread);
@@ -455,7 +455,7 @@ KeWaitForMultipleObjects(ULONG Count,
                 if (WaitType == WaitAny) {
 
                     /* This is a Wait Any, so just unwait this guy and exit */
-                    if (CurrentObject->SignalState != MINLONG) {
+                    if (CurrentObject->SignalState != (LONG)MINLONG) {
 
                         /* It has a normal signal state, so unwait it and return */
                         KiSatisfyObjectWait(CurrentObject, CurrentThread);

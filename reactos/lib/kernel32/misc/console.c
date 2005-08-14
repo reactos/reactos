@@ -91,7 +91,7 @@ SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
 		RtlEnterCriticalSection(&ConsoleLock);
 
 		if(!(nCode == CTRL_C_EVENT &&
-			NtCurrentPeb()->ProcessParameters->ProcessGroup & 1))
+			NtCurrentPeb()->ProcessParameters->ConsoleFlags & 1))
 		{
 			for(i = NrCtrlHandlers; i > 0; -- i)
 				if(CtrlHandlers[i - 1](nCode)) break;
@@ -110,7 +110,7 @@ SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST);
 	RtlEnterCriticalSection(&ConsoleLock);
 
 	if(!(nCode == CTRL_C_EVENT &&
-		NtCurrentPeb()->ProcessParameters->ProcessGroup & 1))
+		NtCurrentPeb()->ProcessParameters->ConsoleFlags & 1))
 	{
 	i = NrCtrlHandlers;
 	while(i > 0)
@@ -255,15 +255,15 @@ ExpungeConsoleCommandHistoryA (DWORD	Unknown0)
  * @unimplemented
  */
 DWORD STDCALL
-GetConsoleAliasW (DWORD	Unknown0,
-		  DWORD	Unknown1,
-		  DWORD	Unknown2,
-		  DWORD	Unknown3)
+GetConsoleAliasW (LPWSTR	lpSource,
+		  LPWSTR	lpTargetBuffer,
+		  DWORD		TargetBufferLength,
+		  LPWSTR	lpExeName)
      /*
       * Undocumented
       */
 {
-  DPRINT1("GetConsoleAliasW(0x%x, 0x%x, 0x%x, 0x%x) UNIMPLEMENTED!\n", Unknown0, Unknown1, Unknown2, Unknown3);
+  DPRINT1("GetConsoleAliasW(0x%p, 0x%p, 0x%x, 0x%p) UNIMPLEMENTED!\n", lpSource, lpTargetBuffer, TargetBufferLength, lpExeName);
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return 0;
 }
@@ -273,15 +273,15 @@ GetConsoleAliasW (DWORD	Unknown0,
  * @unimplemented
  */
 DWORD STDCALL
-GetConsoleAliasA (DWORD	Unknown0,
-		  DWORD	Unknown1,
-		  DWORD	Unknown2,
-		  DWORD	Unknown3)
+GetConsoleAliasA (LPSTR	lpSource,
+		  LPSTR	lpTargetBuffer,
+		  DWORD	TargetBufferLength,
+		  LPSTR	lpExeName)
      /*
       * Undocumented
       */
 {
-  DPRINT1("GetConsoleAliasA(0x%x, 0x%x, 0x%x, 0x%x) UNIMPLEMENTED!\n", Unknown0, Unknown1, Unknown2, Unknown3);
+  DPRINT1("GetConsoleAliasA(0x%p, 0x%p, 0x%x, 0x%p) UNIMPLEMENTED!\n", lpSource, lpTargetBuffer, TargetBufferLength, lpExeName);
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return 0;
 }
@@ -291,13 +291,13 @@ GetConsoleAliasA (DWORD	Unknown0,
  * @unimplemented
  */
 DWORD STDCALL
-GetConsoleAliasExesW (DWORD	Unknown0,
-		      DWORD	Unknown1)
+GetConsoleAliasExesW (LPWSTR	lpExeNameBuffer,
+		      DWORD	ExeNameBufferLength)
      /*
       * Undocumented
       */
 {
-  DPRINT1("GetConsoleAliasExesW(0x%x, 0x%x) UNIMPLEMENTED!\n", Unknown0, Unknown1);
+  DPRINT1("GetConsoleAliasExesW(0x%p, 0x%x) UNIMPLEMENTED!\n", lpExeNameBuffer, ExeNameBufferLength);
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return 0;
 }
@@ -307,13 +307,13 @@ GetConsoleAliasExesW (DWORD	Unknown0,
  * @unimplemented
  */
 DWORD STDCALL
-GetConsoleAliasExesA (DWORD	Unknown0,
-		      DWORD	Unknown1)
+GetConsoleAliasExesA (LPSTR	lpExeNameBuffer,
+		      DWORD	ExeNameBufferLength)
      /*
       * Undocumented
       */
 {
-  DPRINT1("GetConsoleAliasExesA(0x%x, 0x%x) UNIMPLEMENTED!\n", Unknown0, Unknown1);
+  DPRINT1("GetConsoleAliasExesA(0x%p, 0x%x) UNIMPLEMENTED!\n", lpExeNameBuffer, ExeNameBufferLength);
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return 0;
 }
@@ -387,12 +387,12 @@ GetConsoleAliasesA (DWORD	Unknown0,
  * @unimplemented
  */
 DWORD STDCALL
-GetConsoleAliasesLengthW (DWORD Unknown0)
+GetConsoleAliasesLengthW (LPWSTR lpExeName)
      /*
       * Undocumented
       */
 {
-  DPRINT1("GetConsoleAliasesLengthW(0x%x) UNIMPLEMENTED!\n", Unknown0);
+  DPRINT1("GetConsoleAliasesLengthW(0x%p) UNIMPLEMENTED!\n", lpExeName);
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return 0;
 }
@@ -402,12 +402,12 @@ GetConsoleAliasesLengthW (DWORD Unknown0)
  * @unimplemented
  */
 DWORD STDCALL
-GetConsoleAliasesLengthA (DWORD Unknown0)
+GetConsoleAliasesLengthA (LPSTR lpExeName)
      /*
       * Undocumented
       */
 {
-  DPRINT1("GetConsoleAliasesLengthA(0x%x) UNIMPLEMENTED!\n", Unknown0);
+  DPRINT1("GetConsoleAliasesLengthA(0x%p) UNIMPLEMENTED!\n", lpExeName);
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return 0;
 }
@@ -1012,21 +1012,6 @@ CloseConsoleHandle(HANDLE Handle)
   return TRUE;
 }
 
-
-/*
- * internal function
- */
-BOOL STDCALL
-IsConsoleHandle(HANDLE Handle)
-{
-  if ((((ULONG)Handle) & 0x10000003) == 0x3)
-    {
-      return(TRUE);
-    }
-  return(FALSE);
-}
-
-
 /*
  * @implemented
  */
@@ -1047,13 +1032,13 @@ GetStdHandle(DWORD nStdHandle)
   switch (nStdHandle)
     {
       case STD_INPUT_HANDLE:
-	return Ppb->hStdInput;
+	return Ppb->StandardInput;
 
       case STD_OUTPUT_HANDLE:
-	return Ppb->hStdOutput;
+	return Ppb->StandardOutput;
 
       case STD_ERROR_HANDLE:
-	return Ppb->hStdError;
+	return Ppb->StandardError;
     }
 
   SetLastError (ERROR_INVALID_PARAMETER);
@@ -1085,15 +1070,15 @@ SetStdHandle(DWORD nStdHandle,
   switch (nStdHandle)
     {
       case STD_INPUT_HANDLE:
-	Ppb->hStdInput = hHandle;
+	Ppb->StandardInput = hHandle;
 	return TRUE;
 
       case STD_OUTPUT_HANDLE:
-	Ppb->hStdOutput = hHandle;
+	Ppb->StandardOutput = hHandle;
 	return TRUE;
 
       case STD_ERROR_HANDLE:
-	Ppb->hStdError = hHandle;
+	Ppb->StandardError = hHandle;
 	return TRUE;
     }
 
@@ -1347,7 +1332,7 @@ BOOL STDCALL AllocConsole(VOID)
    NTSTATUS Status;
    HANDLE hStdError;
 
-   if(NtCurrentPeb()->ProcessParameters->hConsole)
+   if(NtCurrentPeb()->ProcessParameters->ConsoleHandle)
    {
 	DPRINT("AllocConsole: Allocate duplicate console to the same Process\n");
 	SetLastErrorByStatus (STATUS_OBJECT_NAME_EXISTS);
@@ -1363,7 +1348,7 @@ BOOL STDCALL AllocConsole(VOID)
 	 SetLastErrorByStatus ( Status );
 	 return FALSE;
       }
-   NtCurrentPeb()->ProcessParameters->hConsole = Request.Data.AllocConsoleRequest.Console;
+   NtCurrentPeb()->ProcessParameters->ConsoleHandle = Request.Data.AllocConsoleRequest.Console;
    SetStdHandle( STD_INPUT_HANDLE, Request.Data.AllocConsoleRequest.InputHandle );
    SetStdHandle( STD_OUTPUT_HANDLE, Request.Data.AllocConsoleRequest.OutputHandle );
    hStdError = DuplicateConsoleHandle(Request.Data.AllocConsoleRequest.OutputHandle,
@@ -2605,6 +2590,14 @@ SetConsoleMode(
   
   NTSTATUS Status;
 
+  if (!IsConsoleHandle (hConsoleHandle))
+  {
+    DPRINT("SetConsoleMode was called with a non console handle\n");
+    SetLastError (ERROR_INVALID_PARAMETER);
+    return FALSE;
+  }
+
+
   CsrRequest = MAKE_CSR_API(SET_CONSOLE_MODE, CSR_CONSOLE);
   Request.Data.SetConsoleModeRequest.ConsoleHandle = hConsoleHandle;
   Request.Data.SetConsoleModeRequest.Mode = dwMode;
@@ -3469,7 +3462,7 @@ SetConsoleInputExeNameW(LPCWSTR lpInputExeName)
   int lenName = lstrlenW(lpInputExeName);
 
   if(lenName < 1 ||
-     lenName > (sizeof(InputExeName) / sizeof(InputExeName[0])) - 1)
+     lenName > (int)(sizeof(InputExeName) / sizeof(InputExeName[0])) - 1)
   {
     /* Fail if string is empty or too long */
     SetLastError(ERROR_INVALID_PARAMETER);
@@ -3551,7 +3544,7 @@ GetConsoleInputExeNameW(DWORD nBufferLength, LPWSTR lpBuffer)
   RtlEnterCriticalSection(&ConsoleLock);
 
   lenName = lstrlenW(InputExeName);
-  if(lenName >= nBufferLength)
+  if(lenName >= (int)nBufferLength)
   {
     /* buffer is not large enough, return the required size */
     RtlLeaveCriticalSection(&ConsoleLock);

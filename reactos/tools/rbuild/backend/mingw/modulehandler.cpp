@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2005 Casper S. Hornstrup
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 #include "../../pch.h"
 #include <assert.h>
 
@@ -615,7 +632,7 @@ MingwModuleHandler::GenerateImportLibraryDependenciesFromVector (
 			dependencies += " \\\n\t\t", wrap_count = 0;
 		else if ( dependencies.size () > 0 )
 			dependencies += " ";
-		dependencies += GetImportLibraryDependency ( *libraries[i]->imported_module );
+		dependencies += GetImportLibraryDependency ( *libraries[i]->importedModule );
 	}
 	return dependencies;
 }
@@ -633,13 +650,24 @@ MingwModuleHandler::GenerateMacro (
 	const IfableData& data )
 {
 	size_t i;
+	bool generateAssignment;
 
-	fprintf (
-		fMakefile,
-		"%s %s",
-		macro.c_str(),
-		assignmentOperation );
-	
+	generateAssignment = (use_pch && module.pch != NULL ) || data.includes.size () > 0 || data.defines.size () > 0 || data.compilerFlags.size () > 0;
+	if ( generateAssignment )
+	{
+		fprintf ( fMakefile,
+		          "%s %s",
+		          macro.c_str(),
+		          assignmentOperation );
+	}
+
+	if ( use_pch && module.pch != NULL )
+	{
+		fprintf ( fMakefile,
+		          " -I%s",
+		          GetDirectory ( GetPrecompiledHeaderFilename () ).c_str () );
+	}
+
 	string compilerParameters = GenerateCompilerParametersFromVector ( data.compilerFlags );
 	if ( compilerParameters.size () > 0 )
 	{
@@ -669,7 +697,10 @@ MingwModuleHandler::GenerateMacro (
 				"=%s",
 				d.value.c_str() );
 	}
-	fprintf ( fMakefile, "\n" );
+	if ( generateAssignment )
+	{
+		fprintf ( fMakefile, "\n" );
+	}
 }
 
 void
@@ -680,15 +711,12 @@ MingwModuleHandler::GenerateMacros (
 {
 	size_t i;
 
-	if ( data.includes.size () > 0 || data.defines.size () > 0 || data.compilerFlags.size () > 0 )
-	{
-		GenerateMacro ( assignmentOperation,
-		                cflagsMacro,
-		                data );
-		GenerateMacro ( assignmentOperation,
-		                windresflagsMacro,
-		                data );
-	}
+	GenerateMacro ( assignmentOperation,
+	                cflagsMacro,
+	                data );
+	GenerateMacro ( assignmentOperation,
+	                windresflagsMacro,
+	                data );
 	
 	if ( linkerFlags != NULL )
 	{
@@ -844,6 +872,14 @@ MingwModuleHandler::GenerateObjectMacros (
 	CleanupFileVector ( sourceFiles );
 }
 
+string
+MingwModuleHandler::GetPrecompiledHeaderFilename () const
+{
+	const string& basePchFilename = module.pch->file.name + ".gch";
+	return PassThruCacheDirectory ( NormalizeFilename ( basePchFilename ),
+	                                backend->intermediateDirectory );
+}
+
 void
 MingwModuleHandler::GenerateGccCommand (
 	const string& sourceFilename,
@@ -852,10 +888,12 @@ MingwModuleHandler::GenerateGccCommand (
 {
 	string dependencies = sourceFilename;
 	if ( module.pch && use_pch )
-		dependencies += " " + module.pch->file.name + ".gch";
+		dependencies += " " + GetPrecompiledHeaderFilename ();
 	
 	/* WIDL generated headers may be used */
-	dependencies += " " + GetLinkingDependenciesMacro ();
+	vector<string> rpcDependencies;
+	GetRpcHeaderDependencies ( rpcDependencies );
+	dependencies += " " + v2s ( rpcDependencies, 5 );
 	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
 
 	string objectFilename = GetObjectFilename (
@@ -1255,7 +1293,7 @@ MingwModuleHandler::GenerateBuildNonSymbolStrippedCode ()
 
 void
 MergeStringVector ( const vector<string>& input,
-	                vector<string>& output )
+                    vector<string>& output )
 {
 	int wrap_at = 25;
 	string s;
@@ -1341,39 +1379,16 @@ MingwModuleHandler::GenerateLinkerCommand (
 
 	if ( module.IsDLL () )
 	{
-		string base_tmp = ros_temp + module.name + ".base.tmp";
-		CLEAN_FILE ( base_tmp );
-		string junk_tmp = ros_temp + module.name + ".junk.tmp";
-		CLEAN_FILE ( junk_tmp );
 		string temp_exp = ros_temp + module.name + ".temp.exp";
 		CLEAN_FILE ( temp_exp );
 	
-		fprintf ( fMakefile,
-		          "\t%s %s -Wl,--base-file,%s -o %s %s %s %s\n",
-		          linker.c_str (),
-		          linkerParameters.c_str (),
-		          base_tmp.c_str (),
-		          junk_tmp.c_str (),
-		          objectsMacro.c_str (),
-		          libsMacro.c_str (),
-		          GetLinkerMacro ().c_str () );
-	
-		fprintf ( fMakefile,
-		          "\t-@${rm} %s 2>$(NUL)\n",
-		          junk_tmp.c_str () );
-	
 		string killAt = module.mangledSymbols ? "" : "--kill-at";
 		fprintf ( fMakefile,
-		          "\t${dlltool} --dllname %s --base-file %s --def %s --output-exp %s %s\n",
+		          "\t${dlltool} --dllname %s --def %s --output-exp %s %s\n",
 		          targetName.c_str (),
-		          base_tmp.c_str (),
 		          def_file.c_str (),
 		          temp_exp.c_str (),
 		          killAt.c_str () );
-	
-		fprintf ( fMakefile,
-		          "\t-@${rm} %s 2>$(NUL)\n",
-		          base_tmp.c_str () );
 	
 		fprintf ( fMakefile,
 		          "\t%s %s %s -o %s %s %s %s\n",
@@ -1481,27 +1496,22 @@ MingwModuleHandler::GenerateObjectFileTargets (
 	const string& windresflagsMacro,
 	const string& widlflagsMacro )
 {
-	if ( module.pch )
+	if ( module.pch && use_pch )
 	{
-		const string& pch_file = module.pch->file.name;
-		string gch_file = pch_file + ".gch";
-		CLEAN_FILE(gch_file);
-		if ( use_pch )
-		{
-			fprintf (
-				fMakefile,
-				"%s: %s\n",
-				gch_file.c_str(),
-				pch_file.c_str() );
-			fprintf ( fMakefile, "\t$(ECHO_PCH)\n" );
-			fprintf (
-				fMakefile,
-				"\t%s -o %s %s -g %s\n\n",
-				( module.cplusplus ? cppc.c_str() : cc.c_str() ),
-				gch_file.c_str(),
-				cflagsMacro.c_str(),
-				pch_file.c_str() );
-		}
+		const string& baseHeaderFilename = module.pch->file.name;
+		const string& pchFilename = GetPrecompiledHeaderFilename ();
+		CLEAN_FILE(pchFilename);
+		fprintf ( fMakefile,
+		          "%s: %s\n",
+		          pchFilename.c_str(),
+		          baseHeaderFilename.c_str() );
+		fprintf ( fMakefile, "\t$(ECHO_PCH)\n" );
+		fprintf ( fMakefile,
+		          "\t%s -o %s %s -g %s\n\n",
+		          module.cplusplus ? cppc.c_str() : cc.c_str(),
+		          pchFilename.c_str(),
+		          cflagsMacro.c_str(),
+		          baseHeaderFilename.c_str() );
 	}
 
 	GenerateObjectFileTargets ( module.non_if_data,
@@ -1607,25 +1617,25 @@ MingwModuleHandler::GenerateTargetMacro ()
 
 void
 MingwModuleHandler::GetRpcHeaderDependencies (
-	string_list& dependencies ) const
+	vector<string>& dependencies ) const
 {
 	for ( size_t i = 0; i < module.non_if_data.libraries.size (); i++ )
 	{
 		Library& library = *module.non_if_data.libraries[i];
-		if ( library.imported_module->type == RpcServer ||
-		     library.imported_module->type == RpcClient )
+		if ( library.importedModule->type == RpcServer ||
+		     library.importedModule->type == RpcClient )
 		{
 
-			for ( size_t j = 0; j < library.imported_module->non_if_data.files.size (); j++ )
+			for ( size_t j = 0; j < library.importedModule->non_if_data.files.size (); j++ )
 			{
-				File& file = *library.imported_module->non_if_data.files[j];
+				File& file = *library.importedModule->non_if_data.files[j];
 				string extension = GetExtension ( file.name );
 				if ( extension == ".idl" || extension == ".IDL" )
 				{
 					string basename = GetBasename ( file.name );
-					if ( library.imported_module->type == RpcServer )
+					if ( library.importedModule->type == RpcServer )
 						dependencies.push_back ( GetRpcServerHeaderFilename ( basename ) );
-					if ( library.imported_module->type == RpcClient )
+					if ( library.importedModule->type == RpcClient )
 						dependencies.push_back ( GetRpcClientHeaderFilename ( basename ) );
 				}
 			}
@@ -1649,7 +1659,7 @@ MingwModuleHandler::GenerateOtherMacros ()
 		module.non_if_data,
 		&module.linkerFlags );
 
-	string_list s;
+	vector<string> s;
 	if ( module.importLibrary )
 	{
 		const vector<File*>& files = module.non_if_data.files;
@@ -1661,7 +1671,6 @@ MingwModuleHandler::GenerateOtherMacros ()
 				GetSpecObjectDependencies ( s, file.name );
 		}
 	}
-	GetRpcHeaderDependencies ( s );
 	if ( s.size () > 0 )
 	{
 		fprintf (
@@ -2095,7 +2104,7 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ()
 
 		string dependencies = linkDepsMacro + " " + objectsMacro;
 
-		string linkerParameters = ssprintf ( "-Wl,-T,%s" SSEP "ntoskrnl.lnk -Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll --dll",
+		string linkerParameters = ssprintf ( "-Wl,-T,%s" SSEP "ntoskrnl.lnk -Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -shared",
 		                                     module.GetBasePath ().c_str (),
 		                                     module.entrypoint.c_str (),
 		                                     module.baseaddress.c_str () );
@@ -2182,7 +2191,7 @@ MingwKernelModeDLLModuleHandler::GenerateKernelModeDLLModuleTarget ()
 
 		string dependencies = linkDepsMacro + " " + objectsMacro;
 
-		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll --dll",
+		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -shared",
 		                                     module.entrypoint.c_str (),
 		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( dependencies,
@@ -2229,7 +2238,7 @@ MingwKernelModeDriverModuleHandler::GenerateKernelModeDriverModuleTarget ()
 
 		string dependencies = linkDepsMacro + " " + objectsMacro;
 
-		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -mdll --dll",
+		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -shared",
 		                                     module.entrypoint.c_str (),
 		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( dependencies,
@@ -2275,7 +2284,7 @@ MingwNativeDLLModuleHandler::GenerateNativeDLLModuleTarget ()
 
 		string dependencies = linkDepsMacro + " " + objectsMacro;
 
-		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -nostdlib -mdll --dll",
+		string linkerParameters = ssprintf ( "-Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -nostdlib -shared",
 		                                     module.entrypoint.c_str (),
 		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( dependencies,
@@ -2373,7 +2382,7 @@ MingwWin32DLLModuleHandler::GenerateWin32DLLModuleTarget ()
 		else
 			linker = "${gcc}";
 
-		string linkerParameters = ssprintf ( "-Wl,--subsystem,console -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -mdll --dll",
+		string linkerParameters = ssprintf ( "-Wl,--subsystem,console -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -shared",
 		                                     module.entrypoint.c_str (),
 		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( dependencies,

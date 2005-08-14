@@ -4,7 +4,7 @@
 #include <ndk/ntndk.h>
 
 #include <psapi.h>
-#include <epsapi.h>
+#include <epsapi/epsapi.h>
 
 #include "internal.h"
 

@@ -875,6 +875,11 @@ static int encode_type(
             chat("encode_type: trying to ref not added type\n");
             switch(type->type) {
             case RPC_FC_STRUCT:
+            case RPC_FC_PSTRUCT:
+            case RPC_FC_CSTRUCT:
+            case RPC_FC_CPSTRUCT:
+            case RPC_FC_CVSTRUCT:
+            case RPC_FC_BOGUS_STRUCT:
                 add_structure_typeinfo(typelib, type);
                 break;
             case RPC_FC_IP:

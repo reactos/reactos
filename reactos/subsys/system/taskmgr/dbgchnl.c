@@ -219,7 +219,7 @@ struct dll_option_layout
     void*               next;
     void*               prev;
     char* const*        channels;
-    int                 nb_channels;
+    unsigned int        nb_channels;
 };
 
 typedef int (*EnumChannelCB)(HANDLE, void*, TCHAR*, void*);
@@ -233,12 +233,12 @@ typedef int (*EnumChannelCB)(HANDLE, void*, TCHAR*, void*);
 static int enum_channel(HANDLE hProcess, EnumChannelCB ce, void* user, unsigned unique)
 {
     struct dll_option_layout    dol;
-    int                         i, j, ret = 1;
+    int                         ret = 1;
     void*                       buf_addr;
     TCHAR                       buffer[32];
     void*                       addr;
     const TCHAR**                cache = NULL;
-    unsigned                    num_cache, used_cache;
+    unsigned                    i, j, num_cache, used_cache;
 
     addr = get_symbol(hProcess, "first_dll", "libwine.so");
     if (!addr) return -1;

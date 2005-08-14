@@ -4,6 +4,8 @@
 #pragma GCC system_header
 #endif
 
+#include <commctrl.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -45,7 +47,7 @@ typedef enum THEMESIZE {
 	TS_MIN,
 	TS_TRUE,
 	TS_DRAW
-} THEME_SIZE;
+} THEMESIZE;
 typedef struct _DTBGOPTS {
 	DWORD dwSize;
 	DWORD dwFlags;
@@ -83,12 +85,12 @@ HRESULT WINAPI GetThemeColor(HTHEME,int,int,int,COLORREF*);
 HRESULT WINAPI GetThemeDocumentationProperty(LPCWSTR,LPCWSTR,LPWSTR,int);
 HRESULT WINAPI GetThemeEnumValue(HTHEME,int,int,int,int*);
 HRESULT WINAPI GetThemeFilename(HTHEME,int,int,int,LPWSTR,int);
-HRESULT WINAPI GetThemeFont(HTHEME,HDC,int,int,int,LOGFONT*);
+HRESULT WINAPI GetThemeFont(HTHEME,HDC,int,int,int,LOGFONTW*);
 HRESULT WINAPI GetThemeInt(HTHEME,int,int,int,int*);
 HRESULT WINAPI GetThemeIntList(HTHEME,int,int,int,INTLIST*);
 HRESULT WINAPI GetThemeMargins(HTHEME,HDC,int,int,int,RECT*,MARGINS*);
 HRESULT WINAPI GetThemeMetric(HTHEME,HDC,int,int,int,int*);
-HRESULT WINAPI GetThemePartSize(HTHEME,HDC,int,int,RECT*,THEME_SIZE,SIZE*);
+HRESULT WINAPI GetThemePartSize(HTHEME,HDC,int,int,RECT*,THEMESIZE,SIZE*);
 HRESULT WINAPI GetThemePosition(HTHEME,int,int,int,POINT*);
 HRESULT WINAPI GetThemePropertyOrigin(HTHEME,int,int,int,PROPERTYORIGIN*);
 HRESULT WINAPI GetThemeRect(HTHEME,int,int,int,RECT*);
@@ -96,12 +98,12 @@ HRESULT WINAPI GetThemeString(HTHEME,int,int,int,LPWSTR,int);
 BOOL WINAPI GetThemeSysBool(HTHEME,int);
 COLORREF WINAPI GetThemeSysColor(HTHEME,int);
 HBRUSH WINAPI GetThemeSysColorBrush(HTHEME,int);
-HRESULT WINAPI GetThemeSysFont(HTHEME,int,LOGFONT*);
+HRESULT WINAPI GetThemeSysFont(HTHEME,int,LOGFONTW*);
 HRESULT WINAPI GetThemeSysInt(HTHEME,int,int*);
 int WINAPI GetThemeSysSize(HTHEME,int);
 HRESULT WINAPI GetThemeSysString(HTHEME,int,LPWSTR,int);
 HRESULT WINAPI GetThemeTextExtent(HTHEME,HDC,int,int,LPCWSTR,int,DWORD,const RECT*,RECT*);
-HRESULT WINAPI GetThemeTextMetrics(HTHEME,HDC,int,int,TEXTMETRIC*);
+HRESULT WINAPI GetThemeTextMetrics(HTHEME,HDC,int,int,TEXTMETRICW*);
 HTHEME WINAPI GetWindowTheme(HWND);
 HRESULT WINAPI HitTestThemeBackground(HTHEME,HDC,int,int,DWORD,const RECT*,HRGN,POINT,WORD*);
 BOOL WINAPI IsAppThemed();

@@ -44,5 +44,27 @@ BOOL DissectArcPath(CHAR *ArcPath, CHAR *BootPath, ULONG* BootDrive, ULONG* Boot
 VOID ConstructArcPath(PCHAR ArcPath, PCHAR SystemFolder, ULONG Disk, ULONG Partition);
 ULONG ConvertArcNameToBiosDriveNumber(PCHAR ArcPath);
 
+///////////////////////////////////////////////////////////////////////////////////////
+//
+// Loader Functions And Definitions
+//
+///////////////////////////////////////////////////////////////////////////////////////
+ 
+extern LOADER_PARAMETER_BLOCK LoaderBlock; /* Multiboot info structure passed to kernel */
+extern char					reactos_kernel_cmdline[255];	// Command line passed to kernel
+extern LOADER_MODULE		reactos_modules[64];		// Array to hold boot module info loaded for the kernel
+extern char					reactos_module_strings[64][256];	// Array to hold module names
+extern unsigned long		reactos_memory_map_descriptor_size;
+extern memory_map_t			reactos_memory_map[32];		// Memory map
+
+VOID FASTCALL FrLdrSetupPae(ULONG Magic);
+VOID FASTCALL FrLdrSetupPageDirectory(VOID);
+VOID FASTCALL FrLdrGetPaeMode(VOID);
+BOOL STDCALL FrLdrMapKernel(FILE *KernelImage);
+ULONG_PTR STDCALL FrLdrCreateModule(LPSTR ModuleName);
+ULONG_PTR STDCALL FrLdrLoadModule(FILE *ModuleImage, LPSTR ModuleName, PULONG ModuleSize);
+BOOL STDCALL FrLdrCloseModule(ULONG_PTR ModuleBase, ULONG dwModuleSize);
+VOID STDCALL FrLdrStartup(ULONG Magic);
+typedef VOID (FASTCALL *ASMCODE)(ULONG Magic, PLOADER_PARAMETER_BLOCK LoaderBlock);
 
 #endif // defined __REACTOS_H

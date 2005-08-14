@@ -28,12 +28,12 @@ RtlImageNtHeader (IN PVOID BaseAddress)
   if (DosHeader && DosHeader->e_magic != IMAGE_DOS_SIGNATURE)
     {
       DPRINT1("DosHeader->e_magic %x\n", DosHeader->e_magic);
-      DPRINT1("NtHeader %x\n", (BaseAddress + DosHeader->e_lfanew));
+      DPRINT1("NtHeader 0x%p\n", ((ULONG_PTR)BaseAddress + DosHeader->e_lfanew));
     }
 
   if (DosHeader && DosHeader->e_magic == IMAGE_DOS_SIGNATURE)
     {
-      NtHeader = (PIMAGE_NT_HEADERS)(BaseAddress + DosHeader->e_lfanew);
+      NtHeader = (PIMAGE_NT_HEADERS)((ULONG_PTR)BaseAddress + DosHeader->e_lfanew);
       if (NtHeader->Signature == IMAGE_NT_SIGNATURE)
 	return NtHeader;
     }
@@ -72,7 +72,7 @@ RtlImageDirectoryEntryToData (
 		*Size = NtHeader->OptionalHeader.DataDirectory[Directory].Size;
 
 	if (bFlag)
-		return (PVOID)(BaseAddress + Va);
+		return (PVOID)((ULONG_PTR)BaseAddress + Va);
 
 	/* image mapped as ordinary file, we must find raw pointer */
 	return (PVOID)RtlImageRvaToVa (NtHeader, BaseAddress, Va, NULL);
@@ -138,10 +138,10 @@ RtlImageRvaToVa (
 			*SectionHeader = Section;
 	}
 
-	return (ULONG)(BaseAddress +
+	return (ULONG)((ULONG_PTR)BaseAddress +
 	               Rva +
 	               Section->PointerToRawData -
-	               Section->VirtualAddress);
+	               (ULONG_PTR)Section->VirtualAddress);
 }
 
 /* EOF */

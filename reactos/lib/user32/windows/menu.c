@@ -3475,7 +3475,7 @@ CheckMenuItem(HMENU hmenu,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 CheckMenuRadioItem(HMENU hmenu,
@@ -3484,8 +3484,43 @@ CheckMenuRadioItem(HMENU hmenu,
 		   UINT idCheck,
 		   UINT uFlags)
 {
+  ROSMENUINFO mi;
+  PROSMENUITEMINFO Items;
+  int i;
+  BOOL ret = FALSE;
+
+  mi.cbSize = sizeof(MENUINFO);
+
   UNIMPLEMENTED;
-  return FALSE;
+
+  if(idFirst > idLast) return ret;
+
+  if(!NtUserMenuInfo(hmenu, &mi, FALSE)) return ret;
+
+  if(MenuGetAllRosMenuItemInfo(mi.Self, &Items) <= 0) return ret;
+
+  for (i = 0 ; i < mi.MenuItemCount; i++)
+    {
+      if (0 != (Items[i].fType & MF_MENUBARBREAK)) break;
+      if ( i >= idFirst && i <= idLast )
+      {
+         if ( i == idCheck)
+         {
+             Items[i].fType |= MFT_RADIOCHECK;
+             Items[i].fState |= MFS_CHECKED;
+         }
+         else
+         {
+             Items[i].fType &= ~MFT_RADIOCHECK;
+             Items[i].fState &= ~MFS_CHECKED;
+         }
+         if(!MenuSetRosMenuItemInfo(mi.Self, i ,&Items[i]))
+             break;
+      }
+   if ( i == mi.MenuItemCount) ret = TRUE;
+    }
+  MenuCleanupRosMenuItemInfo(Items);
+  return ret;
 }
 
 
@@ -3534,14 +3569,12 @@ DestroyMenu(HMENU hMenu)
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 DrawMenuBar(HWND hWnd)
 {
-  UNIMPLEMENTED
-  /* FIXME - return NtUserCallHwndLock(hWnd, 0x55); */
-  return FALSE;
+  return (BOOL)NtUserCallHwndLock(hWnd, HWNDLOCK_ROUTINE_DRAWMENUBAR);
 }
 
 
@@ -3739,7 +3772,7 @@ GetMenuItemInfoA(
 
    RtlCopyMemory(mii, &miiW, miiW.cbSize);
    mii->dwTypeData = AnsiBuffer;
-
+   mii->cch = strlen(AnsiBuffer);
    return TRUE;
 }
 
@@ -3817,7 +3850,7 @@ GetMenuState(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 STDCALL
@@ -3828,13 +3861,22 @@ GetMenuStringA(
   int nMaxCount,
   UINT uFlag)
 {
-  UNIMPLEMENTED;
-  return 0;
+  MENUITEMINFOA mii;
+  mii.dwTypeData = lpString;
+  mii.fMask = MIIM_STRING;
+  mii.fType = MF_STRING;
+  mii.cbSize = sizeof(MENUITEMINFOA);
+  mii.cch = nMaxCount;
+
+  if(!(GetMenuItemInfoA( hMenu, uIDItem, (BOOL)(MF_BYPOSITION & uFlag),&mii)))
+     return 0;
+  else
+     return mii.cch;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 int
 STDCALL
@@ -3845,8 +3887,16 @@ GetMenuStringW(
   int nMaxCount,
   UINT uFlag)
 {
-  UNIMPLEMENTED;
-  return 0;
+  MENUITEMINFOW miiW;
+  miiW.dwTypeData = lpString;
+  miiW.fMask = MIIM_STRING;
+  miiW.cbSize = sizeof(MENUITEMINFOW);
+  miiW.cch = nMaxCount;
+
+  if(!(GetMenuItemInfoW( hMenu, uIDItem, (BOOL)(MF_BYPOSITION & uFlag),&miiW)))
+     return 0;
+  else
+     return miiW.cch;
 }
 
 
@@ -4249,7 +4299,7 @@ MenuItemFromPoint(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -4260,13 +4310,93 @@ ModifyMenuA(
   UINT_PTR uIDNewItem,
   LPCSTR lpNewItem)
 {
+  MENUITEMINFOA mii;
+  mii.cbSize = sizeof(MENUITEMINFOA);
+  mii.fMask = MIIM_FTYPE | MIIM_STRING | MIIM_STATE;
+  mii.fType = 0;
+  mii.fState = MFS_ENABLED;
+
   UNIMPLEMENTED;
-  return FALSE;
+
+  if(!GetMenuItemInfoA( hMnu,
+                        uPosition,
+                       (BOOL)!(MF_BYPOSITION & uFlags),
+                        &mii)) return FALSE;
+
+  if(uFlags & MF_BITMAP)
+  {
+    mii.fType |= MFT_BITMAP;
+    mii.fMask |= MIIM_BITMAP;
+    mii.hbmpItem = (HBITMAP) lpNewItem;
+  }
+  else if(uFlags & MF_OWNERDRAW)
+  {
+    mii.fType |= MFT_OWNERDRAW;
+    mii.fMask |= MIIM_DATA;
+    mii.dwItemData = (DWORD) lpNewItem;
+  }
+  else /* Default action MF_STRING. */
+  {
+    if(mii.dwTypeData != NULL)
+    {
+      HeapFree(GetProcessHeap(),0, mii.dwTypeData);
+    }
+    /* Item beginning with a backspace is a help item */
+    if (*lpNewItem == '\b')
+    {
+       mii.fType |= MF_HELP;
+       lpNewItem++;
+    }
+    mii.fMask |= MIIM_TYPE;
+    mii.dwTypeData = (LPSTR)lpNewItem;
+    mii.cch = (NULL == lpNewItem ? 0 : strlen(lpNewItem));
+  }
+
+  if(uFlags & MF_RIGHTJUSTIFY)
+  {
+    mii.fType |= MFT_RIGHTJUSTIFY;
+  }
+  if(uFlags & MF_MENUBREAK)
+  {
+    mii.fType |= MFT_MENUBREAK;
+  }
+  if(uFlags & MF_MENUBARBREAK)
+  {
+    mii.fType |= MFT_MENUBARBREAK;
+  }
+  if(uFlags & MF_DISABLED)
+  {
+    mii.fState |= MFS_DISABLED;
+  }
+  if(uFlags & MF_GRAYED)
+  {
+    mii.fState |= MFS_GRAYED;
+  }
+
+  if ((mii.fType & MF_POPUP) && (uFlags & MF_POPUP) && (mii.hSubMenu != (HMENU)uIDNewItem))
+    NtUserDestroyMenu( mii.hSubMenu );   /* ModifyMenu() spec */
+
+  if(uFlags & MF_POPUP)
+  {
+    mii.fType |= MF_POPUP;
+    mii.fMask |= MIIM_SUBMENU;
+    mii.hSubMenu = (HMENU)uIDNewItem;
+  }
+  else
+  {
+    mii.fMask |= MIIM_ID;
+    mii.wID = (UINT)uIDNewItem;
+  }
+
+  return SetMenuItemInfoA( hMnu,
+                           uPosition,
+                          (BOOL)!(MF_BYPOSITION & uFlags),
+                           &mii);
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -4277,8 +4407,88 @@ ModifyMenuW(
   UINT_PTR uIDNewItem,
   LPCWSTR lpNewItem)
 {
+  MENUITEMINFOW mii;
+  mii.cbSize = sizeof(MENUITEMINFOW);
+  mii.fMask = MIIM_FTYPE | MIIM_STRING | MIIM_STATE;
+  mii.fType = 0;
+  mii.fState = MFS_ENABLED;
+
   UNIMPLEMENTED;
-  return FALSE;
+
+  if(!NtUserMenuItemInfo( hMnu,
+                          uPosition,
+                         (BOOL)!(MF_BYPOSITION & uFlags),
+                         (PROSMENUITEMINFO) &mii,
+                          FALSE)) return FALSE;
+
+  if(uFlags & MF_BITMAP)
+  {
+    mii.fType |= MFT_BITMAP;
+    mii.fMask |= MIIM_BITMAP;
+    mii.hbmpItem = (HBITMAP) lpNewItem;
+  }
+  else if(uFlags & MF_OWNERDRAW)
+  {
+    mii.fType |= MFT_OWNERDRAW;
+    mii.fMask |= MIIM_DATA;
+    mii.dwItemData = (DWORD) lpNewItem;
+  }
+  else
+  {
+    if(mii.dwTypeData != NULL)
+    {
+      HeapFree(GetProcessHeap(),0, mii.dwTypeData);
+    }
+    if (*lpNewItem == '\b')
+    {
+       mii.fType |= MF_HELP;
+       lpNewItem++;
+    }
+    mii.fMask |= MIIM_TYPE;
+    mii.dwTypeData = (LPWSTR)lpNewItem;
+    mii.cch = (NULL == lpNewItem ? 0 : wcslen(lpNewItem));
+  }
+
+  if(uFlags & MF_RIGHTJUSTIFY)
+  {
+    mii.fType |= MFT_RIGHTJUSTIFY;
+  }
+  if(uFlags & MF_MENUBREAK)
+  {
+    mii.fType |= MFT_MENUBREAK;
+  }
+  if(uFlags & MF_MENUBARBREAK)
+  {
+    mii.fType |= MFT_MENUBARBREAK;
+  }
+  if(uFlags & MF_DISABLED)
+  {
+    mii.fState |= MFS_DISABLED;
+  }
+  if(uFlags & MF_GRAYED)
+  {
+    mii.fState |= MFS_GRAYED;
+  }
+
+  if ((mii.fType & MF_POPUP) && (uFlags & MF_POPUP) && (mii.hSubMenu != (HMENU)uIDNewItem))
+    NtUserDestroyMenu( mii.hSubMenu );
+
+  if(uFlags & MF_POPUP)
+  {
+    mii.fType |= MF_POPUP;
+    mii.fMask |= MIIM_SUBMENU;
+    mii.hSubMenu = (HMENU)uIDNewItem;
+  }
+  else
+  {
+    mii.fMask |= MIIM_ID;
+    mii.wID = (UINT)uIDNewItem;
+  }
+
+  return SetMenuItemInfoW( hMnu,
+                           uPosition,
+                           (BOOL)!(MF_BYPOSITION & uFlags),
+                           &mii);
 }
 
 

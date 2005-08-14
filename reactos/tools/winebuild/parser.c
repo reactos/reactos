@@ -485,14 +485,12 @@ static int parse_spec_ordinal( int ordinal, DLLSPEC *spec )
         assert( 0 );
     }
 
-#ifndef __i386__
-    if (odp->flags & FLAG_I386)
+    if ((target_cpu != CPU_x86) && (odp->flags & FLAG_I386))
     {
         /* ignore this entry point on non-Intel archs */
         spec->nb_entry_points--;
         return 1;
     }
-#endif
 
     if (ordinal != -1)
     {
@@ -627,17 +625,17 @@ static void assign_ordinals( DLLSPEC *spec )
     }
 
     /* now assign ordinals to the rest */
-    for (i = 0, ordinal = spec->base; i < spec->nb_names; i++)
+    for (i = 0, ordinal = spec->base; i < spec->nb_entry_points; i++)
     {
-        if (spec->names[i]->ordinal != -1) continue;  /* already has an ordinal */
+        if (spec->entry_points[i].ordinal != -1) continue;
         while (spec->ordinals[ordinal]) ordinal++;
         if (ordinal >= MAX_ORDINALS)
         {
-            current_line = spec->names[i]->lineno;
+            current_line = spec->entry_points[i].lineno;
             fatal_error( "Too many functions defined (max %d)\n", MAX_ORDINALS );
         }
-        spec->names[i]->ordinal = ordinal;
-        spec->ordinals[ordinal] = spec->names[i];
+        spec->entry_points[i].ordinal = ordinal;
+        spec->ordinals[ordinal] = &spec->entry_points[i];
     }
     if (ordinal > spec->limit) spec->limit = ordinal;
 }

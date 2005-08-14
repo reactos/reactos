@@ -14,7 +14,7 @@
  *        Added DIRS command.
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include "resource.h"
 
 #ifdef FEATURE_DIRECTORY_STACK

@@ -32,7 +32,7 @@ GdiProcessSetup (VOID)
 	hProcessHeap = GetProcessHeap();
 
         /* map the gdi handle table to user space */
-	GdiHandleTable = NtCurrentTeb()->Peb->GdiSharedHandleTable;
+	GdiHandleTable = NtCurrentTeb()->ProcessEnvironmentBlock->GdiSharedHandleTable;
 	CurrentProcessId = NtCurrentTeb()->Cid.UniqueProcess;
 }
 

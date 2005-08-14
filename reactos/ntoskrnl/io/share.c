@@ -269,7 +269,7 @@ IoSetInformation(IN PFILE_OBJECT FileObject,
       return(Status);
    }
 
-   DPRINT("FileObject %x\n", FileObject);
+   DPRINT("FileObject 0x%p\n", FileObject);
 
    DeviceObject = FileObject->DeviceObject;
 

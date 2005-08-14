@@ -134,9 +134,14 @@
  *
  *    06-May-2005 (Klemens Friedl <frik85@gmail.com>)
  *        Add 'help' command (list all commands plus description)
+ *
+ *    06-jul-2005 (Magnus Olsen <magnus@greatlord.com>)
+ *        translate '%errorlevel%' to the internal value.
+ *        Add proper memmory alloc ProcessInput, the error 
+ *        handling for memmory handling need to be improve
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include "resource.h"
 
 #ifndef NT_SUCCESS
@@ -636,17 +641,21 @@ VOID ParseCommandLine (LPTSTR cmd)
 		HANDLE hFile;
 		SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
 
+    /* we need make sure the LastError msg is zero before calling CreateFile */
+		SetLastError(0); 
+
+    /* Set up pipe for the standard input handler */
 		hFile = CreateFile (in, GENERIC_READ, FILE_SHARE_READ, &sa, OPEN_EXISTING,
 		                    FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hFile == INVALID_HANDLE_VALUE)
-		{
+		{      
 			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 			ConErrPrintf(szMsg, in);
 			return;
 		}
 
 		if (!SetStdHandle (STD_INPUT_HANDLE, hFile))
-		{
+		{      
 			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 			ConErrPrintf(szMsg, in);
 			return;
@@ -663,15 +672,19 @@ VOID ParseCommandLine (LPTSTR cmd)
 	while (num-- > 1)
 	{
 		SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
-
-		/* Create unique temporary file name */
+    
+    /* Create unique temporary file name */
 		GetTempFileName (szTempPath, _T("CMD"), 0, szFileName[1]);
+
+    /* we need make sure the LastError msg is zero before calling CreateFile */
+		 SetLastError(0); 
 
 		/* Set current stdout to temporary file */
 		hFile[1] = CreateFile (szFileName[1], GENERIC_WRITE, 0, &sa,
 				       TRUNCATE_EXISTING, FILE_ATTRIBUTE_TEMPORARY, NULL);
-		if (hFile[1] == INVALID_HANDLE_VALUE)
-		{
+		
+    if (hFile[1] == INVALID_HANDLE_VALUE)
+		{            
 			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR2, szMsg, RC_STRING_MAX_SIZE);
 			ConErrPrintf(szMsg);
 			return;
@@ -704,6 +717,9 @@ VOID ParseCommandLine (LPTSTR cmd)
 		_tcscpy (szFileName[0], szFileName[1]);
 		*szFileName[1] = _T('\0');
 
+    /* we need make sure the LastError msg is zero before calling CreateFile */
+		SetLastError(0); 
+
 		/* open new stdin file */
 		hFile[0] = CreateFile (szFileName[0], GENERIC_READ, 0, &sa,
 		                       OPEN_EXISTING, FILE_ATTRIBUTE_TEMPORARY, NULL);
@@ -719,15 +735,37 @@ VOID ParseCommandLine (LPTSTR cmd)
 		/* Final output to here */
 		HANDLE hFile;
 		SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
+		
+    /* we need make sure the LastError msg is zero before calling CreateFile */
+		SetLastError(0); 
 
-		hFile = CreateFile (out, GENERIC_WRITE, FILE_SHARE_READ, &sa,
+    hFile = CreateFile (out, GENERIC_WRITE, FILE_SHARE_READ, &sa,
 		                    (nRedirFlags & OUTPUT_APPEND) ? OPEN_ALWAYS : CREATE_ALWAYS,
 		                    FILE_ATTRIBUTE_NORMAL, NULL);
-		if (hFile == INVALID_HANDLE_VALUE)
+		
+    if (hFile == INVALID_HANDLE_VALUE)
 		{
-			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR3, szMsg, RC_STRING_MAX_SIZE);
-			ConErrPrintf(szMsg, out);
-			return;
+      INT size = _tcslen(out)-1;
+      
+      if (out[size] != _T(':'))
+      {
+			   LoadString(CMD_ModuleHandle, STRING_CMD_ERROR3, szMsg, RC_STRING_MAX_SIZE);
+			   ConErrPrintf(szMsg, out);
+			   return;
+      }
+      
+      out[size]=_T('\0');
+      hFile = CreateFile (out, GENERIC_WRITE, FILE_SHARE_READ, &sa,
+		                    (nRedirFlags & OUTPUT_APPEND) ? OPEN_ALWAYS : CREATE_ALWAYS,
+		                    FILE_ATTRIBUTE_NORMAL, NULL);
+
+     if (hFile == INVALID_HANDLE_VALUE)
+     {
+			   LoadString(CMD_ModuleHandle, STRING_CMD_ERROR3, szMsg, RC_STRING_MAX_SIZE);
+			   ConErrPrintf(szMsg, out);
+			   return;
+      }
+      
 		}
 
 		if (!SetStdHandle (STD_OUTPUT_HANDLE, hFile))
@@ -980,24 +1018,120 @@ ProcessInput (BOOL bFlag)
 						if ((tp != NULL) &&
 						    (tp <= _tcschr(ip, _T(' ')) - 1))
 						{
-							TCHAR evar[512];
+              INT size = 512;
+							TCHAR *evar;
 							*tp = _T('\0');
 
-							/* FIXME: This is just a quick hack!! */
-							/* Do a proper memory allocation!! */
-							if (GetEnvironmentVariable (ip, evar, 512))
-								cp = _stpcpy (cp, evar);
+              /* FIXME: Correct error handling when it can not alloc memmory */
+                          	
+              /* %CD% */
+              if (_tcsicmp(ip,_T("cd")) ==0)
+              {
+                TCHAR szPath[MAX_PATH];
+		            GetCurrentDirectory (MAX_PATH, szPath);
+                cp = _stpcpy (cp, szPath);                 
+              }
 
+              /* %TIME% */
+              else if (_tcsicmp(ip,_T("time")) ==0)
+              {
+                TCHAR szTime[40];                                                               
+                GetTimeFormat(LOCALE_USER_DEFAULT, 0, NULL, NULL, szTime, sizeof(szTime));              
+                cp = _stpcpy (cp, szTime);                 	              
+              }
+              
+              /* %DATE% */
+              else if (_tcsicmp(ip,_T("date")) ==0)
+              {
+              TCHAR szDate[40];
+
+	            GetDateFormat(LOCALE_USER_DEFAULT, 0, NULL, _T("ddd"), szDate, sizeof (szDate));
+              cp = _stpcpy (cp, szDate);        
+              cp = _stpcpy (cp, _T(" "));        
+              GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, NULL, NULL, szDate, sizeof (szDate));
+              cp = _stpcpy (cp, szDate);        
+              }
+
+              /* %RANDOM% */
+              else if (_tcsicmp(ip,_T("random")) ==0)
+              {
+               TCHAR szRand[40];               
+               /* Get random number */
+               _itot(rand(),szRand,10);
+               cp = _stpcpy (cp, szRand); 
+              }
+               
+              /* %CMDCMDLINE% */
+              else if (_tcsicmp(ip,_T("cmdcmdline")) ==0)
+              {                      
+               TCHAR *pargv;               
+               /* Get random number */        
+               pargv = GetCommandLine();
+               cp = _stpcpy (cp, pargv); 
+              }
+
+              /* %CMDEXTVERSION% */
+              else if (_tcsicmp(ip,_T("cmdextversion")) ==0)
+              {
+               TCHAR szVER[40];               
+               /* Set version number to 2 */
+               _itot(2,szVER,10);
+               cp = _stpcpy (cp, szVER); 
+              }
+                       
+              /* %ERRORLEVEL% */
+              else if (_tcsicmp(ip,_T("errorlevel")) ==0)
+              {
+                evar = malloc ( size * sizeof(TCHAR));
+                if (evar==NULL) 
+                    return 1; 
+
+                memset(evar,0,512 * sizeof(TCHAR));
+                _itot(nErrorLevel,evar,10);        
+                cp = _stpcpy (cp, evar);
+
+                free(evar);
+              }               
+							else 
+              {
+                evar = malloc ( 512 * sizeof(TCHAR));
+                if (evar==NULL) 
+                    return 1; 
+
+                size = GetEnvironmentVariable (ip, evar, 512);
+                if (size > 512)
+                {
+                    evar = realloc(evar,size * sizeof(TCHAR) );
+                    if (evar==NULL)
+                    {
+                      return 1;
+                    }
+                    size = GetEnvironmentVariable (ip, evar, size);
+                }
+
+                if (size)
+                {
+								 cp = _stpcpy (cp, evar);
+                }
+
+                free(evar);
+              }
+               
 							ip = tp + 1;
+
 						}
 						else
 						{
 							*cp++ = _T('%');
-						}
+						}              
+           
 						break;
 				}
 				continue;
 			}
+
+
+     
 
 			if (_istcntrl (*ip))
 				*ip = _T(' ');
@@ -1007,10 +1141,10 @@ ProcessInput (BOOL bFlag)
 		*cp = _T('\0');
 
 		/* strip trailing spaces */
-		while ((--cp >= commandline) && _istspace (*cp));
+		while ((--cp >= commandline) && _istspace (*cp));     
 
 		*(cp + 1) = _T('\0');
-
+   
 		/* JPP 19980807 */
 		/* Echo batch file line */
 		if (bEchoThisLine)
@@ -1147,7 +1281,7 @@ Initialize (int argc, TCHAR* argv[])
 
 	if (argc >= 2 && !_tcsncmp (argv[1], _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_CMD_HELP8);
+		ConOutResPaging(TRUE,STRING_CMD_HELP8);
 		ExitProcess(0);
 	}
 	SetConsoleMode (hIn, ENABLE_PROCESSED_INPUT);
@@ -1410,6 +1544,7 @@ int main (int argc, char *argv[])
   argv = CommandLineToArgvW(GetCommandLineW(), &argc);
 #endif
 #endif
+     
 
   SetFileApisToOEM();
   InputCodePage= 0;
@@ -1429,16 +1564,18 @@ int main (int argc, char *argv[])
   InputCodePage= GetConsoleCP();
   OutputCodePage = GetConsoleOutputCP();
   CMD_ModuleHandle = GetModuleHandle(NULL);
-
+  
   /* check switches on command-line */
   Initialize(argc, argv);
 
   /* call prompt routine */
   nExitCode = ProcessInput(FALSE);
 
+  
   /* do the cleanup */
   Cleanup(argc, argv);
 
+  
   return(nExitCode);
 }
 

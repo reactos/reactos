@@ -11,7 +11,7 @@
  *        Remove all hardcode string to En.rc
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include "resource.h"
 
 #ifdef INCLUDE_CMD_START
@@ -25,7 +25,7 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 
 	if (_tcsncmp (rest, _T("/?"), 2) == 0)
 	{
-		ConOutResPuts(STRING_START_HELP1);
+		ConOutResPaging(TRUE,STRING_START_HELP1);
 		return 0;
 	}
 

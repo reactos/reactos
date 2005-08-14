@@ -14,7 +14,6 @@
 #include <ntdll.h>
 #define NDEBUG
 #include <debug.h>
-#include <rosrtl/thread.h>
 
 /* FUNCTIONS *****************************************************************/
 
@@ -111,8 +110,8 @@ DbgSsInitialize(HANDLE ReplyPort,
 	                              NULL,
 	                              FALSE,
 	                              0,
-	                              NULL,
-	                              NULL,
+	                              0,
+	                              0,
 	                              (PTHREAD_START_ROUTINE)DbgSsServerThread,
 	                              NULL,
 	                              NULL,
@@ -184,14 +183,11 @@ DbgUiWaitStateChange(ULONG Unknown1,
   return STATUS_NOT_IMPLEMENTED;
 }
 
-NTSTATUS STDCALL DbgUiRemoteBreakin(VOID)
+VOID STDCALL DbgUiRemoteBreakin(VOID)
 {
  DbgBreakPoint();
 
- RtlRosExitUserThread(0);
-
- DbgBreakPoint();
- return STATUS_SUCCESS;
+ RtlExitUserThread(STATUS_SUCCESS);
 }
 
 NTSTATUS STDCALL DbgUiIssueRemoteBreakin(HANDLE Process)
@@ -207,8 +203,8 @@ NTSTATUS STDCALL DbgUiIssueRemoteBreakin(HANDLE Process)
   NULL,
   FALSE,
   0,
-  &nStackSize,
-  &nStackSize,
+  nStackSize,
+  nStackSize,
   (PTHREAD_START_ROUTINE)DbgUiRemoteBreakin,
   NULL,
   &hThread,

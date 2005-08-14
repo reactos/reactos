@@ -90,4 +90,19 @@ RtlGetVersion(RTL_OSVERSIONINFOW *Info)
    return STATUS_INVALID_PARAMETER;
 }
 
+/*
+ * @implemented
+ */
+VOID 
+STDCALL 
+RtlExitUserThread(NTSTATUS Status)
+{
+    /* Call the Loader and tell him to notify the DLLs */
+    LdrShutdownThread();
+    
+    /* Shut us down */
+    NtCurrentTeb()->FreeStackOnTermination = TRUE;
+    NtTerminateThread(NtCurrentThread(), Status);
+}
+
 /* EOF */

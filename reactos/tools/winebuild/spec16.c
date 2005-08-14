@@ -36,20 +36,18 @@
 /*******************************************************************
  *         get_cs
  */
-#ifdef __i386__
 static inline unsigned short get_cs(void)
 {
-    unsigned short res;
-#ifdef __GNUC__
+    unsigned short res = 0;
+#ifdef __i386__
+# ifdef __GNUC__
     __asm__("movw %%cs,%w0" : "=r"(res));
-#elif defined(_MSC_VER)
+# elif defined(_MSC_VER)
     __asm { mov res, cs }
-#else
-    res = 0;
-#endif
+# endif
+#endif /* __i386__ */
     return res;
 }
-#endif /* __i386__ */
 
 
 /*******************************************************************
@@ -65,11 +63,7 @@ static void output_file_header( FILE *outfile )
     fprintf( outfile, "  unsigned long limit[8192];\n" );
     fprintf( outfile, "  unsigned char flags[8192];\n" );
     fprintf( outfile, "} wine_ldt_copy;\n\n" );
-#ifdef __i386__
     fprintf( outfile, "#define __stdcall __attribute__((__stdcall__))\n\n" );
-#else
-    fprintf( outfile, "#define __stdcall\n\n" );
-#endif
 }
 
 
@@ -166,7 +160,6 @@ static void output_bytes( FILE *outfile, const void *buffer, unsigned int size )
 }
 
 
-#ifdef __i386__
 /*******************************************************************
  *         BuildCallFrom16Func
  *
@@ -310,7 +303,6 @@ static void BuildCallFrom16Func( FILE *outfile, const char *profile, const char 
         fprintf( outfile, "%s        args + %d", i? ",\n" : "", argsize );
     fprintf( outfile, " );\n}\n\n" );
 }
-#endif
 
 
 /*******************************************************************
@@ -416,9 +408,7 @@ void BuildSpec16File( FILE *outfile, DLLSPEC *spec )
     unsigned int et_size, et_offset;
 
     char constructor[100], destructor[100];
-#ifdef __i386__
     unsigned short code_selector = get_cs();
-#endif
 
     /* File header */
 
@@ -473,7 +463,6 @@ void BuildSpec16File( FILE *outfile, DLLSPEC *spec )
     }
 
     /* Output CallFrom16 routines needed by this .spec file */
-#ifdef __i386__
     for ( i = 0; i < nTypes; i++ )
     {
         char profile[101];
@@ -481,17 +470,11 @@ void BuildSpec16File( FILE *outfile, DLLSPEC *spec )
         strcpy( profile, get_function_name( typelist[i] ));
         BuildCallFrom16Func( outfile, profile, spec->file_name );
     }
-#endif
 
     /* compute code and data sizes, set offsets, and output prototypes */
 
-#ifdef __i386__
     entrypoint_size = 2 + 5 + 4;    /* pushw bp + pushl target + call */
     callfrom_size = 5 + 7 + 4 + 8;  /* pushl relay + lcall cs:glue + lret n + args */
-#else
-    entrypoint_size = 4 + 4;  /* target + call */
-    callfrom_size = 4 + 8;    /* lret n + args */
-#endif
     code_size = nTypes * callfrom_size;
 
     for (i = 0; i <= spec->limit; i++)
@@ -638,22 +621,18 @@ void BuildSpec16File( FILE *outfile, DLLSPEC *spec )
 
     code_offset = et_offset + et_size;
     fprintf( outfile, "  struct {\n" );
-#ifdef __i386__
     fprintf( outfile, "    unsigned char pushl;\n" );      /* pushl $relay */
     fprintf( outfile, "    void *relay;\n" );
     fprintf( outfile, "    unsigned char lcall;\n" );      /* lcall __FLATCS__:glue */
     fprintf( outfile, "    void *glue;\n" );
     fprintf( outfile, "    unsigned short flatcs;\n" );
-#endif
     fprintf( outfile, "    unsigned short lret;\n" );      /* lret $args */
     fprintf( outfile, "    unsigned short args;\n" );
     fprintf( outfile, "    unsigned int arg_types[2];\n" );
     fprintf( outfile, "  } call[%d];\n", nTypes );
     fprintf( outfile, "  struct {\n" );
-#ifdef __i386__
     fprintf( outfile, "    unsigned short pushw_bp;\n" );  /* pushw %bp */
     fprintf( outfile, "    unsigned char pushl;\n" );      /* pushl $target */
-#endif
     fprintf( outfile, "    void (*target)();\n" );
     fprintf( outfile, "    unsigned short call;\n" );      /* call CALLFROM16 */
     fprintf( outfile, "    short callfrom16;\n" );
@@ -804,7 +783,6 @@ void BuildSpec16File( FILE *outfile, DLLSPEC *spec )
         if (typelist[i]->flags & FLAG_REGISTER) arg_types[0] |= ARG_REGISTER;
         if (typelist[i]->flags & FLAG_RET16) arg_types[0] |= ARG_RET16;
 
-#ifdef __i386__
         fprintf( outfile, "    { 0x68, __wine_%s_CallFrom16_%s, 0x9a, __wine_call_from_16_%s,\n",
                  make_c_identifier(spec->file_name), profile,
                  (typelist[i]->flags & FLAG_REGISTER) ? "regs":
@@ -815,14 +793,6 @@ void BuildSpec16File( FILE *outfile, DLLSPEC *spec )
         else
             fprintf( outfile, "      0x%04x, 0xcb66, 0x9090, { 0x%08x, 0x%08x } },\n",
                      code_selector, arg_types[0], arg_types[1] );
-#else
-        if (argsize)
-            fprintf( outfile, "    { 0xca66, %d, { 0x%08x, 0x%08x } },\n",
-                     argsize, arg_types[0], arg_types[1] );
-        else
-            fprintf( outfile, "     { 0xcb66, 0x9090, { 0x%08x, 0x%08x } },\n",
-                     arg_types[0], arg_types[1] );
-#endif
     }
     fprintf( outfile, "  },\n  {\n" );
 
@@ -841,11 +811,7 @@ void BuildSpec16File( FILE *outfile, DLLSPEC *spec )
 
             fprintf( outfile, "    /* %s.%d */ ", spec->dll_name, i );
             fprintf( outfile,
-#ifdef __i386__
                      "{ 0x5566, 0x68, %s, 0xe866, %d  /* %s */ },\n",
-#else
-                     "{ %s, 0xe866, %d, /* %s */ },\n",
-#endif
                      odp->link_name,
                      (type - typelist) * callfrom_size - (odp->offset + entrypoint_size),
                      get_function_name( odp ) );
@@ -877,7 +843,6 @@ void BuildSpec16File( FILE *outfile, DLLSPEC *spec )
 
     sprintf( constructor, "__wine_spec_%s_init", make_c_identifier(spec->file_name) );
     sprintf( destructor, "__wine_spec_%s_fini", make_c_identifier(spec->file_name) );
-    output_dll_init( outfile, constructor, destructor );
 
     fprintf( outfile,
              "void %s(void)\n"
@@ -891,4 +856,14 @@ void BuildSpec16File( FILE *outfile, DLLSPEC *spec )
              "    extern void __wine_dll_unregister_16( const struct module_data * );\n"
              "    __wine_dll_unregister_16( &module );\n"
              "}\n", destructor );
+
+    fprintf( outfile, "#ifndef __GNUC__\n" );
+    fprintf( outfile, "static void __asm__dummy_dll_init(void) {\n" );
+    fprintf( outfile, "#endif\n" );
+
+    output_dll_init( outfile, constructor, destructor );
+
+    fprintf( outfile, "#ifndef __GNUC__\n" );
+    fprintf( outfile, "}\n" );
+    fprintf( outfile, "#endif\n" );
 }

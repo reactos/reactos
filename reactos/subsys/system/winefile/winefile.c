@@ -21,6 +21,11 @@
 #ifdef __WINE__
 #include "config.h"
 #include "wine/port.h"
+
+/* for unix filesystem function calls */
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <dirent.h>
 #endif
 
 #include "winefile.h"
@@ -155,52 +160,6 @@ typedef struct {
 
 
 
-#ifdef __WINE__
-
-/* functions in unixcalls.c */
-
-extern void call_getcwd(char* buffer, size_t len);
-extern void* call_opendir(const char* path);
-extern int call_readdir(void* pdir, char* name, unsigned* pinode);
-extern void call_closedir(void* pdir);
-
-extern int call_stat(
-	const char* path, int* pis_dir,
-	unsigned long* psize_low, unsigned long* psize_high,
-	time_t* patime, time_t* pmtime,
-	unsigned long* plinks
-);
-
-/* call vswprintf() in msvcrt.dll */
-int swprintf(wchar_t* buffer, const wchar_t* fmt, ...)
-{
-	static int (__cdecl *vswprintf)(wchar_t*, const wchar_t*, va_list);
-
-	va_list ap;
-	int ret;
-
-	if (!vswprintf) {
-		HMODULE hmod = LoadLibraryA("msvcrt");
-		vswprintf = (int(__cdecl*)(wchar_t*,const wchar_t*,va_list)) GetProcAddress(hmod, "vswprintf");
-	}
-
-	va_start(ap, fmt);
-	ret = vswprintf(buffer, fmt, ap);
-	va_end(ap);
-
-	return 0;
-}
-
-
-#else
-
- // ugly hack to use alloca() while keeping Wine's developers happy
-#define HeapAlloc(h,f,s) alloca(s)
-#define HeapFree(h,f,p)
-
-#endif
-
-
 static void read_directory(Entry* dir, LPCTSTR path, SORT_ORDER sortOrder, HWND hwnd);
 static void set_curdir(ChildWnd* child, Entry* entry, int idx, HWND hwnd);
 static void refresh_child(ChildWnd* child);
@@ -276,6 +235,53 @@ static void display_network_error(HWND hwnd)
 	if (WNetGetLastError(&error, msg, BUFFER_LEN, provider, BUFFER_LEN) == NO_ERROR)
 		MessageBox(hwnd, msg, RS(b2,IDS_WINEFILE), MB_OK);
 }
+
+
+#ifdef __WINE__
+
+#ifdef UNICODE
+
+/* call vswprintf() in msvcrt.dll */
+/*TODO: fix swprintf() in non-msvcrt mode, so that this dynamic linking function can be removed */
+static int msvcrt_swprintf(WCHAR* buffer, const WCHAR* fmt, ...)
+{
+	static int (__cdecl *pvswprintf)(WCHAR*, const WCHAR*, va_list) = NULL;
+	va_list ap;
+	int ret;
+
+	if (!pvswprintf) {
+		HMODULE hModMsvcrt = LoadLibraryA("msvcrt");
+		pvswprintf = (int(__cdecl*)(WCHAR*,const WCHAR*,va_list)) GetProcAddress(hModMsvcrt, "vswprintf");
+	}
+
+	va_start(ap, fmt);
+	ret = (*pvswprintf)(buffer, fmt, ap);
+	va_end(ap);
+
+	return ret;
+}
+
+static LPCWSTR my_wcsrchr(LPCWSTR str, WCHAR c)
+{
+	LPCWSTR p = str;
+
+	while(*p)
+		++p;
+
+	do {
+		if (--p < str)
+			return NULL;
+	} while(*p != c);
+
+	return p;
+}
+
+#define _tcsrchr my_wcsrchr
+#else	/* UNICODE */
+#define _tcsrchr strrchr
+#endif	/* UNICODE */
+
+#endif	/* __WINE__ */
 
 
 /* allocate and initialise a directory entry */
@@ -500,8 +506,9 @@ static void read_directory_unix(Entry* dir, LPCTSTR path)
 	Entry* first_entry = NULL;
 	Entry* last = NULL;
 	Entry* entry;
-	void* pdir;
+	DIR* pdir;
 
+	int level = dir->level + 1;
 #ifdef UNICODE
 	char cpath[MAX_PATH];
 
@@ -510,17 +517,13 @@ static void read_directory_unix(Entry* dir, LPCTSTR path)
 	const char* cpath = path;
 #endif
 
-	pdir = call_opendir(cpath);
-
-	int level = dir->level + 1;
+	pdir = opendir(cpath);
 
 	if (pdir) {
-		char buffer[MAX_PATH];
-		time_t atime, mtime;
-		unsigned inode;
-		int is_dir;
+		struct stat st;
+		struct dirent* ent;
+		char buffer[MAX_PATH], *p;
 		const char* s;
-		char* p;
 
 		for(p=buffer,s=cpath; *s; )
 			*p++ = *s++;
@@ -528,7 +531,7 @@ static void read_directory_unix(Entry* dir, LPCTSTR path)
 		if (p==buffer || p[-1]!='/')
 			*p++ = '/';
 
-		while(call_readdir(pdir, p, &inode)) {
+		while((ent=readdir(pdir))) {
 			entry = alloc_entry();
 
 			if (!first_entry)
@@ -539,27 +542,30 @@ static void read_directory_unix(Entry* dir, LPCTSTR path)
 
 			entry->etype = ET_UNIX;
 
+			strcpy(p, ent->d_name);
 #ifdef UNICODE
 			MultiByteToWideChar(CP_UNIXCP, 0, p, -1, entry->data.cFileName, MAX_PATH);
 #else
 			lstrcpy(entry->data.cFileName, p);
 #endif
 
-			entry->data.dwFileAttributes = p[0]=='.'? FILE_ATTRIBUTE_HIDDEN: 0;
+			if (!stat(buffer, &st)) {
+				entry->data.dwFileAttributes = p[0]=='.'? FILE_ATTRIBUTE_HIDDEN: 0;
 
-			if (!call_stat(buffer, &is_dir,
-				&entry->data.nFileSizeLow, &entry->data.nFileSizeHigh,
-				&atime, &mtime, &entry->bhfi.nNumberOfLinks))
-			{
-				if (is_dir)
+				if (S_ISDIR(st.st_mode))
 					entry->data.dwFileAttributes |= FILE_ATTRIBUTE_DIRECTORY;
 
-				memset(&entry->data.ftCreationTime, 0, sizeof(FILETIME));
-				time_to_filetime(&atime, &entry->data.ftLastAccessTime);
-				time_to_filetime(&mtime, &entry->data.ftLastWriteTime);
+				entry->data.nFileSizeLow = st.st_size & 0xFFFFFFFF;
+				entry->data.nFileSizeHigh = st.st_size >> 32;
 
-				entry->bhfi.nFileIndexLow = inode;
+				memset(&entry->data.ftCreationTime, 0, sizeof(FILETIME));
+				time_to_filetime(&st.st_atime, &entry->data.ftLastAccessTime);
+				time_to_filetime(&st.st_mtime, &entry->data.ftLastWriteTime);
+
+				entry->bhfi.nFileIndexLow = ent->d_ino;
 				entry->bhfi.nFileIndexHigh = 0;
+
+				entry->bhfi.nNumberOfLinks = st.st_nlink;
 
 				entry->bhfi_valid = TRUE;
 			} else {
@@ -580,7 +586,7 @@ static void read_directory_unix(Entry* dir, LPCTSTR path)
 		if (last)
 			last->next = NULL;
 
-		call_closedir(pdir);
+		closedir(pdir);
 	}
 
 	dir->down = first_entry;
@@ -647,15 +653,22 @@ static Entry* read_tree_unix(Root* root, LPCTSTR path, SORT_ORDER sortOrder, HWN
 #ifdef _SHELL_FOLDERS
 
 #ifdef UNICODE
-#define	tcscpyn strcpyn
 #define	get_strret get_strretW
 #define	path_from_pidl path_from_pidlW
 #else
-#define	tcscpyn wcscpyn
 #define	get_strret get_strretA
 #define	path_from_pidl path_from_pidlA
 #endif
 
+
+static void free_strret(STRRET* str)
+{
+	if (str->uType == STRRET_WSTR)
+		(*Globals.iMalloc->lpVtbl->Free)(Globals.iMalloc, str->UNION_MEMBER(pOleStr));
+}
+
+
+#ifndef UNICODE
 
 static LPSTR strcpyn(LPSTR dest, LPCSTR source, size_t count)
 {
@@ -667,18 +680,6 @@ static LPSTR strcpyn(LPSTR dest, LPCSTR source, size_t count)
 
  return dest;
 }
-
-static LPWSTR wcscpyn(LPWSTR dest, LPCWSTR source, size_t count)
-{
- LPCWSTR s;
- LPWSTR d = dest;
-
- for(s=source; count&&(*d++=*s++); )
-  count--;
-
- return dest;
-}
-
 
 static void get_strretA(STRRET* str, const SHITEMID* shiid, LPSTR buffer, int len)
 {
@@ -694,6 +695,35 @@ static void get_strretA(STRRET* str, const SHITEMID* shiid, LPSTR buffer, int le
   case STRRET_CSTR:
 	strcpyn(buffer, str->UNION_MEMBER(cStr), len);
  }
+}
+
+static HRESULT path_from_pidlA(IShellFolder* folder, LPITEMIDLIST pidl, LPSTR buffer, int len)
+{
+	STRRET str;
+
+	 /* SHGDN_FORPARSING: get full path of id list */
+	HRESULT hr = (*folder->lpVtbl->GetDisplayNameOf)(folder, pidl, SHGDN_FORPARSING, &str);
+
+	if (SUCCEEDED(hr)) {
+		get_strretA(&str, &pidl->mkid, buffer, len);
+		free_strret(&str);
+	} else
+		buffer[0] = '\0';
+
+	return hr;
+}
+
+#endif
+
+static LPWSTR wcscpyn(LPWSTR dest, LPCWSTR source, size_t count)
+{
+ LPCWSTR s;
+ LPWSTR d = dest;
+
+ for(s=source; count&&(*d++=*s++); )
+  count--;
+
+ return dest;
 }
 
 static void get_strretW(STRRET* str, const SHITEMID* shiid, LPWSTR buffer, int len)
@@ -713,13 +743,6 @@ static void get_strretW(STRRET* str, const SHITEMID* shiid, LPWSTR buffer, int l
 }
 
 
-static void free_strret(STRRET* str)
-{
-	if (str->uType == STRRET_WSTR)
-		(*Globals.iMalloc->lpVtbl->Free)(Globals.iMalloc, str->UNION_MEMBER(pOleStr));
-}
-
-
 static HRESULT name_from_pidl(IShellFolder* folder, LPITEMIDLIST pidl, LPTSTR buffer, int len, SHGDNF flags)
 {
 	STRRET str;
@@ -735,22 +758,6 @@ static HRESULT name_from_pidl(IShellFolder* folder, LPITEMIDLIST pidl, LPTSTR bu
 	return hr;
 }
 
-
-static HRESULT path_from_pidlA(IShellFolder* folder, LPITEMIDLIST pidl, LPSTR buffer, int len)
-{
-	STRRET str;
-
-	 /* SHGDN_FORPARSING: get full path of id list */
-	HRESULT hr = (*folder->lpVtbl->GetDisplayNameOf)(folder, pidl, SHGDN_FORPARSING, &str);
-
-	if (SUCCEEDED(hr)) {
-		get_strretA(&str, &pidl->mkid, buffer, len);
-		free_strret(&str);
-	} else
-		buffer[0] = '\0';
-
-	return hr;
-}
 
 static HRESULT path_from_pidlW(IShellFolder* folder, LPITEMIDLIST pidl, LPWSTR buffer, int len)
 {
@@ -1433,7 +1440,7 @@ static ChildWnd* alloc_child_window(LPCTSTR path, LPITEMIDLIST pidl, HWND hwnd)
 		_tsplitpath(path, drv, dir, name, ext);
 	}
 
-	_tcscpy(child->filter_pattern, sAsterics);
+	lstrcpy(child->filter_pattern, sAsterics);
 	child->filter_flags = TF_ALL;
 
 	root->entry.level = 0;
@@ -1901,7 +1908,7 @@ static INT_PTR CALLBACK PropertiesDialogDlgProc(HWND hwnd, UINT nmsg, WPARAM wpa
 			SetWindowText(GetDlgItem(hwnd, IDC_STATIC_PROP_LASTCHANGE), b1);
 
 			size = ((ULONGLONG)pWFD->nFileSizeHigh << 32) | pWFD->nFileSizeLow;
-			wsprintf(b1, sLongNumFmt, size);
+			_stprintf(b1, sLongNumFmt, size);
 			wsprintf(b2, sByteFmt, b1);
 			SetWindowText(GetDlgItem(hwnd, IDC_STATIC_PROP_SIZE), b2);
 
@@ -2346,10 +2353,10 @@ static LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM
 
 
 #ifdef UNICODE
-					call_getcwd(cpath, MAX_PATH);
+					getcwd(cpath, MAX_PATH);
 					MultiByteToWideChar(CP_UNIXCP, 0, cpath, -1, path, MAX_PATH);
 #else
-					call_getcwd(path, MAX_PATH);
+					getcwd(path, MAX_PATH);
 #endif
 					child = alloc_child_window(path, NULL, hwnd);
 
@@ -2699,12 +2706,12 @@ static BOOL pattern_match(LPCTSTR str, LPCTSTR pattern)
 				return TRUE;
 
 			for(; *str; str++)
-				if (_totupper(*str)==_totupper(*pattern) && pattern_match(str, pattern))
+				if (*str==*pattern && pattern_match(str, pattern))
 					return TRUE;
 
 			return FALSE;
 		}
-		else if (_totupper(*str)!=_totupper(*pattern) && *pattern!='?')
+		else if (*str!=*pattern && *pattern!='?')
 			return FALSE;
 	}
 
@@ -2713,6 +2720,18 @@ static BOOL pattern_match(LPCTSTR str, LPCTSTR pattern)
 			return FALSE;
 
 	return TRUE;
+}
+
+static BOOL pattern_imatch(LPCTSTR str, LPCTSTR pattern)
+{
+	TCHAR b1[BUFFER_LEN], b2[BUFFER_LEN];
+
+	lstrcpy(b1, str);
+	lstrcpy(b2, pattern);
+	CharUpper(b1);
+	CharUpper(b2);
+
+	return pattern_match(b1, b2);
 }
 
 
@@ -2759,7 +2778,7 @@ static int insert_entries(Pane* pane, Entry* dir, LPCTSTR pattern, int filter_fl
 
 		/* filter using the file name pattern */
 		if (pattern)
-			if (!pattern_match(entry->data.cFileName, pattern))
+			if (!pattern_imatch(entry->data.cFileName, pattern))
 				continue;
 
 		/* filter system and hidden files */
@@ -2808,11 +2827,11 @@ static void format_bytes(LPTSTR buffer, LONGLONG bytes)
 	float fBytes = (float)bytes;
 
 	if (bytes >= 1073741824)	/* 1 GB */
-		_stprintf(buffer, sFmtGB, fBytes/1073741824.f+.5f);
+		wsprintf(buffer, sFmtGB, fBytes/1073741824.f+.5f);
 	else if (bytes >= 1048576)	/* 1 MB */
-		_stprintf(buffer, sFmtMB, fBytes/1048576.f+.5f);
+		wsprintf(buffer, sFmtMB, fBytes/1048576.f+.5f);
 	else if (bytes >= 1024)		/* 1 kB */
-		_stprintf(buffer, sFmtkB, fBytes/1024.f+.5f);
+		wsprintf(buffer, sFmtkB, fBytes/1024.f+.5f);
 	else
 		_stprintf(buffer, sLongNumFmt, bytes);
 }
@@ -2825,9 +2844,9 @@ static void set_space_status(void)
 	if (GetDiskFreeSpaceEx(NULL, &ulFreeBytesToCaller, &ulTotalBytes, &ulFreeBytes)) {
 		format_bytes(b1, ulFreeBytesToCaller.QuadPart);
 		format_bytes(b2, ulTotalBytes.QuadPart);
-		_stprintf(buffer, RS(fmt,IDS_FREE_SPACE_FMT), b1, b2);
+		wsprintf(buffer, RS(fmt,IDS_FREE_SPACE_FMT), b1, b2);
 	} else
-		_tcscpy(buffer, sQMarks);
+		lstrcpy(buffer, sQMarks);
 
 	SendMessage(Globals.hstatusbar, SB_SETTEXT, 0, (LPARAM)buffer);
 }
@@ -2888,7 +2907,7 @@ static void format_date(const FILETIME* ft, TCHAR* buffer, int visible_cols)
 		return;
 
 	if (!FileTimeToLocalFileTime(ft, &lft))
-		{err: _tcscpy(buffer,sQMarks); return;}
+		{err: lstrcpy(buffer,sQMarks); return;}
 
 	if (!FileTimeToSystemTime(&lft, &systime))
 		goto err;
@@ -3021,7 +3040,7 @@ static BOOL is_exe_file(LPCTSTR ext)
 		d++;
 
 	for(p=executable_extensions; (*p)[0]; p++)
-		if (!_tcsicmp(ext_buffer, *p))
+		if (!lstrcmpi(ext_buffer, *p))
 			return TRUE;
 
 	return FALSE;
@@ -3325,10 +3344,10 @@ static void draw_item(Pane* pane, LPDRAWITEMSTRUCT dis, Entry* entry, int calcWi
 	if (visible_cols & COL_ATTRIBUTES) {
 #ifdef _NO_EXTENSIONS
 		const static TCHAR s4Tabs[] = {' ','\t',' ','\t',' ','\t',' ','\t',' ','\0'};
-		_tcscpy(buffer, s4Tabs);
+		lstrcpy(buffer, s4Tabs);
 #else
 		const static TCHAR s11Tabs[] = {' ','\t',' ','\t',' ','\t',' ','\t',' ','\t',' ','\t',' ','\t',' ','\t',' ','\t',' ','\t',' ','\t',' ','\0'};
-		_tcscpy(buffer, s11Tabs);
+		lstrcpy(buffer, s11Tabs);
 #endif
 
 		if (attrs & FILE_ATTRIBUTE_NORMAL)					buffer[ 0] = 'N';
@@ -3370,7 +3389,7 @@ static void draw_item(Pane* pane, LPDRAWITEMSTRUCT dis, Entry* entry, int calcWi
 
 		DWORD rights = get_access_mask();
 
-		tcscpy(buffer, sSecTabs);
+		lstrcpy(buffer, sSecTabs);
 
 		if (rights & FILE_READ_DATA)			buffer[ 0] = 'R';
 		if (rights & FILE_WRITE_DATA)			buffer[ 2] = 'W';
@@ -3677,6 +3696,9 @@ static void set_curdir(ChildWnd* child, Entry* entry, int idx, HWND hwnd)
 {
 	TCHAR path[MAX_PATH];
 
+	if (!entry)
+		return;
+
 	path[0] = '\0';
 
 	child->left.cur = entry;
@@ -3827,20 +3849,6 @@ static BOOL launch_file(HWND hwnd, LPCTSTR cmd, UINT nCmdShow)
 
 	return TRUE;
 }
-
-#ifdef UNICODE
-static BOOL launch_fileA(HWND hwnd, LPSTR cmd, UINT nCmdShow)
-{
-	HINSTANCE hinst = ShellExecuteA(hwnd, NULL/*operation*/, cmd, NULL/*parameters*/, NULL/*dir*/, nCmdShow);
-
-	if ((int)hinst <= 32) {
-		display_error(hwnd, GetLastError());
-		return FALSE;
-	}
-
-	return TRUE;
-}
-#endif
 
 
 static BOOL launch_entry(Entry* entry, HWND hwnd, UINT nCmdShow)
@@ -4396,11 +4404,11 @@ static LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM
 					struct FilterDialog dlg;
 
 					memset(&dlg, 0, sizeof(struct FilterDialog));
-					_tcscpy(dlg.pattern, child->filter_pattern);
+					lstrcpy(dlg.pattern, child->filter_pattern);
 					dlg.flags = child->filter_flags;
 
 					if (DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(IDD_DIALOG_VIEW_TYPE), hwnd, FilterDialogDlgProc, (LPARAM)&dlg) == IDOK) {
-						_tcscpy(child->filter_pattern, dlg.pattern);
+						lstrcpy(child->filter_pattern, dlg.pattern);
 						child->filter_flags = dlg.flags;
 						refresh_right_pane(child);
 					}

@@ -191,4 +191,62 @@ BOOL WINAPI DPA_Merge (const HDPA, const HDPA, DWORD, PFNDPACOMPARE, PFNDPAMERGE
 LRESULT WINAPI SetPathWordBreakProc(HWND hwnd, BOOL bSet);
 BOOL WINAPI MirrorIcon(HICON *phicon1, HICON *phicon2);
 
+extern void ANIMATE_Register(void);
+extern void ANIMATE_Unregister(void);
+extern void COMBOEX_Register(void);
+extern void COMBOEX_Unregister(void);
+extern void DATETIME_Register(void);
+extern void DATETIME_Unregister(void);
+extern void FLATSB_Register(void);
+extern void FLATSB_Unregister(void);
+extern void HEADER_Register(void);
+extern void HEADER_Unregister(void);
+extern void HOTKEY_Register(void);
+extern void HOTKEY_Unregister(void);
+extern void IPADDRESS_Register(void);
+extern void IPADDRESS_Unregister(void);
+extern void LISTVIEW_Register(void);
+extern void LISTVIEW_Unregister(void);
+extern void MONTHCAL_Register(void);
+extern void MONTHCAL_Unregister(void);
+extern void NATIVEFONT_Register(void);
+extern void NATIVEFONT_Unregister(void);
+extern void PAGER_Register(void);
+extern void PAGER_Unregister(void);
+extern void PROGRESS_Register(void);
+extern void PROGRESS_Unregister(void);
+extern void REBAR_Register(void);
+extern void REBAR_Unregister(void);
+extern void STATUS_Register(void);
+extern void STATUS_Unregister(void);
+extern void SYSLINK_Register(void);
+extern void SYSLINK_Unregister(void);
+extern void TAB_Register(void);
+extern void TAB_Unregister(void);
+extern void TOOLBAR_Register(void);
+extern void TOOLBAR_Unregister(void);
+extern void TOOLTIPS_Register(void);
+extern void TOOLTIPS_Unregister(void);
+extern void TRACKBAR_Register(void);
+extern void TRACKBAR_Unregister(void);
+extern void TREEVIEW_Register(void);
+extern void TREEVIEW_Unregister(void);
+extern void UPDOWN_Register(void);
+extern void UPDOWN_Unregister(void);
+
+
+int MONTHCAL_MonthLength(int month, int year);
+
+static inline void MONTHCAL_CopyTime(const SYSTEMTIME *from, SYSTEMTIME *to)
+{
+  to->wYear = from->wYear;
+  to->wMonth = from->wMonth;
+  to->wDayOfWeek = from->wDayOfWeek;
+  to->wDay = from->wDay;
+  to->wHour = from->wHour;
+  to->wMinute = from->wMinute;
+  to->wSecond = from->wSecond;
+  to->wMilliseconds = from->wMilliseconds;
+}
+
 #endif  /* __WINE_COMCTL32_H */

@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2005 Casper S. Hornstrup
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 #ifndef MINGW_MODULEHANDLER_H
 #define MINGW_MODULEHANDLER_H
 
@@ -124,6 +141,7 @@ private:
 	std::string GenerateGccIncludeParameters () const;
 	std::string GenerateGccParameters () const;
 	std::string GenerateNasmParameters () const;
+	std::string MingwModuleHandler::GetPrecompiledHeaderFilename () const;
 	void GenerateGccCommand ( const std::string& sourceFilename,
 	                          const std::string& cc,
 	                          const std::string& cflagsMacro );
@@ -178,7 +196,7 @@ private:
 	void GenerateBuildMapCode ();
 	void GenerateBuildNonSymbolStrippedCode ();
 	void CleanupFileVector ( std::vector<File*>& sourceFiles );
-	void GetRpcHeaderDependencies ( string_list& dependencies ) const;
+	void GetRpcHeaderDependencies ( std::vector<std::string>& dependencies ) const;
 	std::string GetRpcServerHeaderFilename ( std::string basename ) const;
 	std::string GetRpcClientHeaderFilename ( std::string basename ) const;
 public:

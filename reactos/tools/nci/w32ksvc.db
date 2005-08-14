@@ -274,7 +274,7 @@ NtGdiSwapBuffers				1
 NtGdiTextOut				5
 NtGdiTransparentBlt         11
 NtGdiTranslateCharsetInfo		3
-NtGdiUnrealizeObject			2
+NtGdiUnrealizeObject			1
 NtGdiUpdateColors			1
 NtGdiUpdateICMRegKey			4
 NtGdiWidenPath				1

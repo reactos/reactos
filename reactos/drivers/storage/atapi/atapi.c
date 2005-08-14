@@ -3066,7 +3066,7 @@ AtapiInitDma(PATAPI_MINIPORT_EXTENSION DevExt,
   DPRINT("AtapiInitDma()\n");
 
   StartAddress = Srb->DataBuffer;
-  EndAddress = StartAddress + Srb->DataTransferLength;
+  EndAddress = (PVOID)((ULONG_PTR)StartAddress + Srb->DataTransferLength);
   DevExt->PRDCount = 0;
 
   while (StartAddress < EndAddress)
@@ -3105,7 +3105,7 @@ AtapiInitDma(PATAPI_MINIPORT_EXTENSION DevExt,
 	          return FALSE;
 	        }
               PhysicalAddress.u.LowPart += tmpLength;
-	      StartAddress += tmpLength;
+	      StartAddress = (PVOID)((ULONG_PTR)StartAddress + tmpLength);
 	      Length -= tmpLength;
 	      PRDEntry->PhysAddress = PhysicalAddress.u.LowPart;
 	    }
@@ -3114,7 +3114,7 @@ AtapiInitDma(PATAPI_MINIPORT_EXTENSION DevExt,
 	  PRDEntry->PhysAddress = PhysicalAddress.u.LowPart;
           PRDEntry->Length = tmpLength;
           PRDEntry++;
-          StartAddress += tmpLength;
+          StartAddress = (PVOID)((ULONG_PTR)StartAddress + tmpLength);
           PhysicalAddress.u.LowPart += tmpLength;
 	  Length -= tmpLength;
 	}

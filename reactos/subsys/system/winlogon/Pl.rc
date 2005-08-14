@@ -1,0 +1,46 @@
+//Polish translation by Sebastian Gasiorek
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+IDD_SHUTDOWNCOMPUTER DIALOG  45, 22, 164, 52
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Wy³¹czanie komputera"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Mo¿na bezpiecznie wy³¹czyæ komputer.", IDC_SHUTDOWNCOMPUTER, 31, 13, 132, 8
+    ICON  IDI_WINLOGON, IDC_SHTDOWNICON, 6, 7, 18, 20
+    DEFPUSHBUTTON "&Uruchom ponownie", IDC_BTNSHTDOWNCOMPUTER, 62, 32, 40, 14
+END
+
+IDD_GINALOADFAILED DIALOG  58, 83, 231, 119
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "B³¹d interfejsu u¿ytkownika"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Nie mo¿na za³adowaæ biblioteki DLL interfejsu logowania u¿ytkownika %s.", IDC_GINALOADFAILED, 39, 16, 156, 24
+    LTEXT "Skontaktuj siê z administratorem systemu, aby zamieni³ bibliotekê DLL lub odtworzy³ jej oryginaln¹ wersjê.", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
+    DEFPUSHBUTTON "&Uruchom ponownie", 1, 80, 91, 68, 14
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_PREPARENETWORKCONNECTIONS "Trwa przygotowywanie po³¹czeñ sieciowych..."
+    IDS_APPLYINGCOMPUTERSETTINGS "Trwa wprowadzanie ustawieñ komputera..."
+    IDS_RUNNINGSTARTUPSCRIPTS "Trwa uruchamianie skryptów uruchamiania..."
+    IDS_RUNNINGSHUTDOWNSCRIPTS "Trwa uruchamianie skryptów zamykania..."
+    IDS_APPLYINGYOURPERSONALSETTINGS "Trwa wprowadzanie ustawieñ osobistych..."
+    IDS_RUNNINGLOGOFFSCRIPTS "Trwa uruchamianie skryptów wylogowania..."
+    IDS_RUNNINGLOGONSCRIPTS "Trwa uruchamianie skryptów logowania..."
+    IDS_LOADINGYOURPERSONALSETTINGS "Trwa ³adowanie ustawieñ osobistych..."
+    IDS_CLOSINGNETWORKCONNECTIONS "Trwa zamykanie po³¹czeñ sieciowych..."
+    IDS_REACTOSISSHUTTINGDOWN "Trwa zamykanie systemu ReactOS..."
+    IDS_PREPARETOSTANDBY "Trwa przygotowywanie do przejœcia w stan wstrzymania..."
+    IDS_PREPARETOHIBERNATE "Trwa przygotowywanie do hibernacji..."
+    IDS_SAVEYOURSETTINGS "Trwa zapisywanie ustawieñ..."
+    IDS_REACTOSISSTARTINGUP "Trwa uruchamianie systemu ReactOS..."
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_FAILEDACTIVATEUSERSHELL "Winlogon nie móg³ aktywowaæ pow³oki u¿ytkownika!"
+END
+

@@ -122,7 +122,7 @@ CcSetFileSizes (IN PFILE_OBJECT FileObject,
    NTSTATUS Status;
    ULONG i;
 
-   DPRINT("CcSetFileSizes(FileObject %x, FileSizes %x)\n", 
+   DPRINT("CcSetFileSizes(FileObject 0x%p, FileSizes 0x%p)\n",
 	  FileObject, FileSizes);
    DPRINT("AllocationSize %d, FileSize %d, ValidDataLength %d\n",
           (ULONG)FileSizes->AllocationSize.QuadPart,

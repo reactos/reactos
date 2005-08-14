@@ -22,8 +22,6 @@
 #define PA_SYSTEM          (0)
 #endif
 
-#define KERNEL_BASE        (ULONG)MmSystemRangeStart
-
 #if defined(__GNUC__)
 
 #define FLUSH_TLB   {				\

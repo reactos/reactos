@@ -164,7 +164,7 @@ HFILE WINAPI LZInit( HFILE hfSrc )
 	ret=read_header(hfSrc,&head);
 	if (ret<=0) {
 		_llseek(hfSrc,0,SEEK_SET);
-		return ret?ret:hfSrc;
+		return ret?(HFILE)ret:hfSrc;
 	}
         for (i = 0; i < MAX_LZSTATES; i++) if (!lzstates[i]) break;
         if (i == MAX_LZSTATES) return LZERROR_GLOBALLOC;
@@ -424,7 +424,7 @@ LONG WINAPI LZSeek( HFILE fd, LONG off, INT type )
 		newwanted	= off;
 		break;
 	}
-	if (newwanted>lzs->reallength)
+	if (newwanted>(LONG)lzs->reallength)
 		return LZERROR_BADVALUE;
 	if (newwanted<0)
 		return LZERROR_BADVALUE;

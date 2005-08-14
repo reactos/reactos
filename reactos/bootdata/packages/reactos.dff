@@ -96,6 +96,7 @@ lib\kbdse\kbdse.dll                     1
 lib\kbdsg\kbdsg.dll                     1
 lib\kbduk\kbduk.dll                     1
 lib\kbdus\kbdus.dll                     1
+lib\kbdbe\kbdbe.dll			1
 lib\kernel32\kernel32.dll               1
 lib\lzexpand\lz32.dll                   1
 lib\mesa32\mesa32.dll                   1

@@ -51,7 +51,7 @@ NTSTATUS MmPageFault(ULONG Cs,
       Mode = KernelMode;
    }
 
-   if (Mode == KernelMode && Cr2 >= KERNEL_BASE &&
+   if (Mode == KernelMode && Cr2 >= (ULONG_PTR)MmSystemRangeStart &&
          Mmi386MakeKernelPageTableGlobal((PVOID)Cr2))
    {
       return(STATUS_SUCCESS);

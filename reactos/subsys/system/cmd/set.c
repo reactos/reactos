@@ -34,7 +34,7 @@
  *        Remove all hardcode string to En.rc
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include "resource.h"
 
 #ifdef INCLUDE_CMD_SET
@@ -51,7 +51,7 @@ INT cmd_set (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_SET_HELP);
+		ConOutResPaging(TRUE,STRING_SET_HELP);
 		return 0;
 	}
 

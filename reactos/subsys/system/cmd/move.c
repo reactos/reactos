@@ -29,7 +29,7 @@
 *        added /y and /-y
 */
 
-#include "precomp.h"
+#include <precomp.h>
 #include "resource.h"
 
 #ifdef INCLUDE_CMD_MOVE
@@ -86,7 +86,7 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 			"  /-Y\n"
 			"..."));
 #else
-		ConOutResPuts(STRING_MOVE_HELP2);
+		ConOutResPaging(TRUE,STRING_MOVE_HELP2);
 #endif
 		return 0;
 	}
@@ -170,7 +170,7 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 #endif
 				if (!(dwFlags & MOVE_NOTHING))
 					continue;
-				MoveFile (szSrcPath, szDestPath);
+				MoveFileEx (szSrcPath, szDestPath, MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH | MOVEFILE_COPY_ALLOWED);
 			}
 			else
 			{
@@ -182,9 +182,10 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 					/*build the dest string(accounts for *)*/
 					TCHAR szFullDestPath[MAX_PATH];
 					_tcscpy (szFullDestPath, szDestPath);
-					/*this line causes a one to many slashes, GetFullPathName must
-					be adding on a \ when it sees that is a dir*/
-					//_tcscat (szFullDestPath, _T("\\"));
+					/*check to see if there is an ending slash, if not add one*/
+					if(szFullDestPath[_tcslen(szFullDestPath) -  1] != _T('\\'))
+					   _tcscat (szFullDestPath, _T("\\"));
+
 					_tcscat (szFullDestPath, findBuffer.cFileName);
 
 					/*checks to make sure user wanted/wants the override*/
@@ -207,7 +208,7 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 					/*delete the file that might be there first*/
 					DeleteFile(szFullDestPath);
 					/*move the file*/
-					if (MoveFile (szSrcPath, szFullDestPath))
+					if (MoveFileEx (szSrcPath, szFullDestPath, MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH | MOVEFILE_COPY_ALLOWED))
 						LoadString(CMD_ModuleHandle, STRING_MOVE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 					else
 						LoadString(CMD_ModuleHandle, STRING_MOVE_ERROR2, szMsg, RC_STRING_MAX_SIZE);
@@ -245,7 +246,7 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 					if it was already there*/
 					DeleteFile(szDestPath);
 					/*do the moving*/
-					if (MoveFile (szSrcPath, szDestPath))
+					if (MoveFileEx (szSrcPath, szDestPath, MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH | MOVEFILE_COPY_ALLOWED))
 						LoadString(CMD_ModuleHandle, STRING_MOVE_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 					else
 						LoadString(CMD_ModuleHandle, STRING_MOVE_ERROR2, szMsg, RC_STRING_MAX_SIZE);

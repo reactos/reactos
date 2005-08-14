@@ -30,7 +30,7 @@
 /* GLOBALS ****************************************************************/
 
 static FAST_MUTEX UuidMutex;
-static LARGE_INTEGER UuidLastTime;
+static ULARGE_INTEGER UuidLastTime;
 static ULONG UuidSequence;
 static BOOLEAN UuidSequenceInitialized = FALSE;
 static BOOLEAN UuidSequenceChanged = FALSE;

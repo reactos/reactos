@@ -1,12 +1,20 @@
 ChangeLog
 
-2004-05-08 weiden
+2005-07-17 ekohl
+
+   tools/widl/client.c
+   tools/widl/server.c
+
+Fix bugs for in-string parameters.
+Implement out-string parameters (untested).
+
+2005-05-08 weiden
 
    tools/widl/server.c
 
 Don't generate lvalue assignment code.
 
-2004-05-08 weiden
+2005-05-08 weiden
 
    tools/widl/client.c
    tools/widl/proxy.c
@@ -154,7 +162,7 @@ Merge in Winehq changes to reduce noise.
 
   tools/widl/server.h
   tools/widl/client.h
-  tools/widl/proxy.h  
+  tools/widl/proxy.h
 
 Deleted unneeded headers.
 

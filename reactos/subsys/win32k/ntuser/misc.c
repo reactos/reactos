@@ -341,6 +341,12 @@ NtUserCallOneParam(
 
     case ONEPARAM_ROUTINE_MSQSETWAKEMASK:
       return (DWORD)IntMsqSetWakeMask(Param);
+
+    case ONEPARAM_ROUTINE_GETKEYBOARDTYPE:
+      return NtUserGetKeyboardType(Param);
+      
+    case ONEPARAM_ROUTINE_GETKEYBOARDLAYOUT:
+      return (DWORD)NtUserGetKeyboardLayout(Param);
   }
   DPRINT1("Calling invalid routine number 0x%x in NtUserCallOneParam(), Param=0x%x\n",
           Routine, Param);
@@ -651,8 +657,21 @@ NtUserCallHwndLock(
          break;
 
       case HWNDLOCK_ROUTINE_DRAWMENUBAR:
-         /* FIXME */
-         break;
+           {
+              PMENU_OBJECT MenuObject;
+              DPRINT("HWNDLOCK_ROUTINE_DRAWMENUBAR\n");
+              Ret = FALSE;
+              if (!((Window->Style & (WS_CHILD | WS_POPUP)) != WS_CHILD)) break;
+              MenuObject = IntGetMenuObject((HMENU) Window->IDMenu);
+              if(MenuObject == NULL) break;
+              MenuObject->MenuInfo.WndOwner = hWnd;
+              MenuObject->MenuInfo.Height = 0;
+              IntReleaseMenuObject(MenuObject);
+              WinPosSetWindowPos(hWnd, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
+                           SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED );
+              Ret = TRUE;
+              break;
+            }
 
       case HWNDLOCK_ROUTINE_REDRAWFRAME:
          /* FIXME */

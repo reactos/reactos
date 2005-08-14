@@ -109,6 +109,19 @@ typedef struct
     struct resource *resources;          /* array of dll resources (format differs between Win16/Win32) */
 } DLLSPEC;
 
+enum target_cpu
+{
+    CPU_x86, CPU_SPARC, CPU_ALPHA, CPU_POWERPC
+};
+
+enum target_platform
+{
+    PLATFORM_UNSPECIFIED, PLATFORM_APPLE, PLATFORM_SVR4, PLATFORM_WINDOWS
+};
+
+extern enum target_cpu target_cpu;
+extern enum target_platform target_platform;
+
 /* entry point flags */
 #define FLAG_NORELAY   0x01  /* don't use relay debugging for this function */
 #define FLAG_NONAME    0x02  /* don't import function by name */
@@ -166,7 +179,11 @@ extern int remove_stdcall_decoration( char *name );
 extern DLLSPEC *alloc_dll_spec(void);
 extern void free_dll_spec( DLLSPEC *spec );
 extern const char *make_c_identifier( const char *str );
-extern int get_alignment(int alignBoundary);
+extern unsigned int get_alignment(unsigned int align);
+extern unsigned int get_page_size(void);
+extern const char *asm_name( const char *func );
+extern const char *func_declaration( const char *func );
+extern const char *func_size( const char *func );
 
 extern void add_import_dll( const char *name, const char *filename );
 extern void add_delayed_import( const char *name );
@@ -174,6 +191,7 @@ extern void add_ignore_symbol( const char *name );
 extern void read_undef_symbols( char **argv );
 extern int resolve_imports( DLLSPEC *spec );
 extern int output_imports( FILE *outfile, DLLSPEC *spec, int *nb_delayed );
+extern void output_import_thunks( FILE *outfile, DLLSPEC *spec );
 extern int load_res32_file( const char *name, DLLSPEC *spec );
 extern void output_resources( FILE *outfile, DLLSPEC *spec );
 extern void load_res16_file( const char *name, DLLSPEC *spec );

@@ -62,7 +62,7 @@ VOID RemoveSelect( PAFD_ACTIVE_POLL Poll ) {
 
 VOID SignalSocket( PAFD_ACTIVE_POLL Poll, PAFD_POLL_INFO PollReq,
 		   NTSTATUS Status ) {
-    int i;
+    UINT i;
     PIRP Irp = Poll->Irp;
     AFD_DbgPrint(MID_TRACE,("Called (Status %x)\n", Status));
     KeCancelTimer( &Poll->Timer );
@@ -121,7 +121,7 @@ VOID KillSelectsForFCB( PAFD_DEVICE_EXTENSION DeviceExt,
     PIRP Irp;
     PAFD_POLL_INFO PollReq;
     PAFD_HANDLE HandleArray;
-    int i;
+    UINT i;
 
     AFD_DbgPrint(MID_TRACE,("Killing selects that refer to %x\n", FileObject));
 

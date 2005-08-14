@@ -111,19 +111,6 @@ LockWorkStation(VOID)
  */
 BOOL
 STDCALL
-TrackMouseEvent(
-  LPTRACKMOUSEEVENT lpEventTrack)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
 UnregisterDeviceNotification(
   HDEVNOTIFY Handle)
 {

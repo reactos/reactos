@@ -30,7 +30,7 @@
  *        Remove all hardcode string to En.rc
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include "resource.h"
 
 
@@ -61,7 +61,7 @@ INT cmd_for (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_FOR_HELP1);
+		ConOutResPaging(TRUE,STRING_FOR_HELP1);
 		return 0;
 	}
 

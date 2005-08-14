@@ -56,7 +56,7 @@ CallMsgFilter(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -66,7 +66,6 @@ CallMsgFilterA(
 {
    BOOL ret = FALSE;
 
-  UNIMPLEMENTED;
   if (nCode != HCBT_CREATEWND) ret = NtUserCallMsgFilter((LPMSG) lpMsg, nCode);
   else
      {
@@ -112,7 +111,7 @@ CallMsgFilterA(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -120,9 +119,7 @@ CallMsgFilterW(
   LPMSG lpMsg,
   int nCode)
 {
-  UNIMPLEMENTED;
   return  NtUserCallMsgFilter((LPMSG) lpMsg, nCode);
-//  return FALSE;
 }
 
 

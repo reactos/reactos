@@ -260,11 +260,11 @@ BOOLEAN
 KdbpShouldStepOverInstruction(ULONG_PTR Eip)
 {
    UCHAR Mem[3];
-   INT i = 0;
+   UINT i = 0;
 
    if (!NT_SUCCESS(KdbpSafeReadMemory(Mem, (PVOID)Eip, sizeof (Mem))))
    {
-      KdbpPrint("Couldn't access memory at 0x%x\n", (UINT)Eip);
+      KdbpPrint("Couldn't access memory at 0x%p\n", Eip);
       return FALSE;
    }
 
@@ -320,10 +320,7 @@ KdbpStepOverInstruction(ULONG_PTR Eip)
 BOOLEAN
 KdbpStepIntoInstruction(ULONG_PTR Eip)
 {
-   struct __attribute__((packed)) {
-      USHORT Limit;
-      ULONG Base;
-   } Idtr;
+   KDESCRIPTOR Idtr;
    UCHAR Mem[2];
    INT IntVect;
    ULONG IntDesc[2];
@@ -332,7 +329,7 @@ KdbpStepIntoInstruction(ULONG_PTR Eip)
    /* Read memory */
    if (!NT_SUCCESS(KdbpSafeReadMemory(Mem, (PVOID)Eip, sizeof (Mem))))
    {
-      /*KdbpPrint("Couldn't access memory at 0x%x\n", (UINT)Eip);*/
+      /*KdbpPrint("Couldn't access memory at 0x%p\n", Eip);*/
       return FALSE;
    }
 
@@ -353,7 +350,7 @@ KdbpStepIntoInstruction(ULONG_PTR Eip)
    }
 
    /* Read the interrupt descriptor table register  */
-   asm volatile("sidt %0" : : "m"(Idtr));
+   asm volatile("sidt %0" : : "m"(Idtr.Limit));
    if (IntVect >= (Idtr.Limit + 1) / 8)
    {
       /*KdbpPrint("IDT does not contain interrupt vector %d\n.", IntVect);*/
@@ -363,7 +360,7 @@ KdbpStepIntoInstruction(ULONG_PTR Eip)
    /* Get the interrupt descriptor */
    if (!NT_SUCCESS(KdbpSafeReadMemory(IntDesc, (PVOID)(Idtr.Base + (IntVect * 8)), sizeof (IntDesc))))
    {
-      /*KdbpPrint("Couldn't access memory at 0x%x\n", (UINT)Idtr.Base + (IntVect * 8));*/
+      /*KdbpPrint("Couldn't access memory at 0x%p\n", (ULONG_PTR)Idtr.Base + (IntVect * 8));*/
       return FALSE;
    }
 
@@ -510,7 +507,7 @@ KdbpInsertBreakPoint(
    {
       if ((Address % Size) != 0)
       {
-         KdbpPrint("Address (0x%x) must be aligned to a multiple of the size (%d)\n", Address, Size);
+         KdbpPrint("Address (0x%p) must be aligned to a multiple of the size (%d)\n", Address, Size);
          return STATUS_UNSUCCESSFUL;
       }
       if (AccessType == KdbAccessExec && Size != 1)
@@ -560,13 +557,13 @@ KdbpInsertBreakPoint(
    }
    else
    {
-      for (i = 0; i < RTL_NUMBER_OF(KdbBreakPoints); i++)
+      for (i = 0; i < (LONG)RTL_NUMBER_OF(KdbBreakPoints); i++)
       {
          if (KdbBreakPoints[i].Type == KdbBreakPointNone)
             break;
       }
    }
-   ASSERT(i < RTL_NUMBER_OF(KdbBreakPoints));
+   ASSERT(i < (LONG)RTL_NUMBER_OF(KdbBreakPoints));
 
    /* Set the breakpoint */
    ASSERT(KdbCurrentProcess != NULL);
@@ -658,7 +655,7 @@ KdbpIsBreakPointOurs(
    IN ULONG ExpNr,
    IN PKTRAP_FRAME TrapFrame)
 {
-   INT i;
+   UINT i;
    ASSERT(ExpNr == 1 || ExpNr == 3);
 
    if (ExpNr == 3) /* Software interrupt */
@@ -752,7 +749,7 @@ KdbpEnableBreakPoint(
                                         0xCC, &BreakPoint->Data.SavedInstruction);
       if (!NT_SUCCESS(Status))
       {
-         KdbpPrint("Couldn't access memory at 0x%x\n", BreakPoint->Address);
+         KdbpPrint("Couldn't access memory at 0x%p\n", BreakPoint->Address);
          return FALSE;
       }
       KdbSwBreakPoints[KdbSwBreakPointCount++] = BreakPoint;
@@ -864,7 +861,7 @@ KdbpDisableBreakPoint(
    IN LONG BreakPointNr  OPTIONAL,
    IN OUT PKDB_BREAKPOINT BreakPoint  OPTIONAL)
 {
-   INT i;
+   UINT i;
    NTSTATUS Status;
 
    if (BreakPointNr < 0)
@@ -914,7 +911,7 @@ KdbpDisableBreakPoint(
             break;
          }
       }
-      if (i != -1) /* not found */
+      if (i != (UINT)-1) /* not found */
          ASSERT(0);
    }
    else
@@ -940,7 +937,7 @@ KdbpDisableBreakPoint(
             break;
          }
       }
-      if (i != -1) /* not found */
+      if (i != (UINT)-1) /* not found */
          ASSERT(0);
    }
 
@@ -965,7 +962,7 @@ KdbpGetEnterCondition(
    IN BOOLEAN FirstChance,
    OUT KDB_ENTER_CONDITION *Condition)
 {
-   if (ExceptionNr >= RTL_NUMBER_OF(KdbEnterConditions))
+   if (ExceptionNr >= (LONG)RTL_NUMBER_OF(KdbEnterConditions))
       return FALSE;
 
    *Condition = KdbEnterConditions[ExceptionNr][FirstChance ? 0 : 1];
@@ -989,7 +986,7 @@ KdbpSetEnterCondition(
 {
    if (ExceptionNr < 0)
    {
-      for (ExceptionNr = 0; ExceptionNr < RTL_NUMBER_OF(KdbEnterConditions); ExceptionNr++)
+      for (ExceptionNr = 0; ExceptionNr < (LONG)RTL_NUMBER_OF(KdbEnterConditions); ExceptionNr++)
       {
          if (ExceptionNr == 1 || ExceptionNr == 8 ||
              ExceptionNr == 9 || ExceptionNr == 15) /* Reserved exceptions */
@@ -1001,7 +998,7 @@ KdbpSetEnterCondition(
    }
    else
    {
-      if (ExceptionNr >= RTL_NUMBER_OF(KdbEnterConditions) ||
+      if (ExceptionNr >= (LONG)RTL_NUMBER_OF(KdbEnterConditions) ||
           ExceptionNr == 1 || ExceptionNr == 8 || /* Do not allow changing of the debug */
           ExceptionNr == 9 || ExceptionNr == 15)  /* trap or reserved exceptions */
       {
@@ -1423,10 +1420,11 @@ KdbEnterDebuggerException(
       if (ExpNr == 14)
       {
          /* FIXME: Add noexec memory stuff */
-         ULONG Cr2, Err;
+         ULONG_PTR Cr2;
+         ULONG Err;
          asm volatile("movl %%cr2, %0" : "=r"(Cr2));
          Err = TrapFrame->ErrorCode;
-         DbgPrint("Memory at 0x%x could not be %s: ", Cr2, (Err & (1 << 1)) ? "written" : "read");
+         DbgPrint("Memory at 0x%p could not be %s: ", Cr2, (Err & (1 << 1)) ? "written" : "read");
          if ((Err & (1 << 0)) == 0)
             DbgPrint("Page not present.\n");
          else

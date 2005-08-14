@@ -62,7 +62,7 @@ size_t fwrite(const void *vptr, size_t size, size_t count, FILE *iop)
   {
      if (iop->_cnt > 0 && to_write > 0)
      {
-        copy = min(iop->_cnt, to_write);
+        copy = min((size_t)iop->_cnt, to_write);
         memcpy(iop->_ptr, ptr, copy);
         ptr += copy;
         iop->_ptr += copy;
@@ -76,7 +76,7 @@ size_t fwrite(const void *vptr, size_t size, size_t count, FILE *iop)
         // if the buffer is dirty it will have to be written now
         // otherwise the file pointer won't match anymore.
         fflush(iop);
-        if (to_write >= iop->_bufsiz)
+        if (to_write >= (size_t)iop->_bufsiz)
 	{
 	   while (to_write > 0)
 	   {

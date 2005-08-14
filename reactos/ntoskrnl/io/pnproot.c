@@ -825,7 +825,7 @@ PnpRootQueryBusRelations(
         return Status;
       }
 
-      DPRINT("Created PDO %x\n", Device->Pdo);
+      DPRINT("Created PDO 0x%p\n", Device->Pdo);
 
       Device->Pdo->Flags |= DO_BUS_ENUMERATED_DEVICE;
 
@@ -1057,7 +1057,7 @@ PnpRootPnpControl(
 
   DeviceExtension = (PPNPROOT_COMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
-  DPRINT("DeviceObject %x  DeviceExtension %x  IsFDO %d\n",
+  DPRINT("DeviceObject 0x%p  DeviceExtension 0x%p  IsFDO %d\n",
     DeviceObject,
     DeviceExtension,
     DeviceExtension->IsFDO);
@@ -1137,12 +1137,12 @@ PnpRootAddDevice(
     PhysicalDeviceObject);
 
   if (!PnpRootDeviceObject) {
-    CPRINT("PnpRootDeviceObject 0x%X\n", PnpRootDeviceObject);
+    CPRINT("PnpRootDeviceObject 0x%p\n", PnpRootDeviceObject);
     KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
   }
 
   if (!PhysicalDeviceObject) {
-    CPRINT("PhysicalDeviceObject 0x%X\n", PhysicalDeviceObject);
+    CPRINT("PhysicalDeviceObject 0x%p\n", PhysicalDeviceObject);
     KEBUGCHECKEX(PHASE1_INITIALIZATION_FAILED, Status, 0, 0, 0);
   }
 

@@ -46,8 +46,9 @@ CcMapData(IN PFILE_OBJECT FileObject,
    PLIST_ENTRY entry;
    PCACHE_VIEW current = NULL;
 
-   DPRINT("CcMapData(FileObject %x, FileOffset %x (%I64x), Length %x, Wait %d, piBcb %x, pBuffer %x)\n",
-           FileObject, FileOffset, FileOffset->QuadPart, Length, Wait, piBcb, pBuffer);
+   DPRINT("CcMapData(FileObject 0x%p, FileOffset %I64x, Length %d, Wait %d,"
+	  " pBcb 0x%p, pBuffer 0x%p)\n", FileObject, FileOffset->QuadPart,
+	  Length, Wait, pBcb, pBuffer);
 
    ASSERT (FileObject);
    ASSERT (FileObject->SectionObjectPointer);
@@ -154,7 +155,7 @@ CcMapData(IN PFILE_OBJECT FileObject,
    iBcb->Index = Index;
 
    *piBcb = iBcb;
-   *pBuffer = Bcb->CacheView[Index]->BaseAddress + (FileOffset->QuadPart - Bcb->CacheView[Index]->SectionData.ViewOffset);
+   *pBuffer = (PVOID)((ULONG_PTR)Bcb->CacheView[Index]->BaseAddress + (ULONG_PTR)(FileOffset->QuadPart - Bcb->CacheView[Index]->SectionData.ViewOffset));
 
    DPRINT("CcMapData() done\n");
 

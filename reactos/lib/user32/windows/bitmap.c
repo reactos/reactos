@@ -534,7 +534,7 @@ LoadBitmapImage(HINSTANCE hInstance, LPCWSTR lpszName, UINT fuLoad)
 	}
       HeaderSize = sizeof(BITMAPINFOHEADER) + ColorCount * sizeof(RGBQUAD);
     }
-  Data = (PVOID)BitmapInfo + HeaderSize;
+  Data = (PVOID)((ULONG_PTR)BitmapInfo + HeaderSize);
 
   PrivateInfo = RtlAllocateHeap(GetProcessHeap(), 0, HeaderSize);
   if (PrivateInfo == NULL)

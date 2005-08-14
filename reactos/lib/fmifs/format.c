@@ -14,7 +14,7 @@
 #include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
-#include <fmifs.h>
+#include <fmifs/fmifs.h>
 #include <fslib/vfatlib.h>
 #include <string.h>
 

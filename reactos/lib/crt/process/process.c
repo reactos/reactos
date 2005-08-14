@@ -37,7 +37,7 @@ const _TCHAR* find_execT(const _TCHAR* path, _TCHAR* rpath)
 {
    _TCHAR *rp;
    const _TCHAR *rd;
-   int i, found = 0;
+   unsigned int i, found = 0;
 
    DPRINT(MK_STR(find_execT)"('%"sT"', %x)\n", path, rpath);
 

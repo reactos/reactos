@@ -40,7 +40,7 @@
  *        Implemented /A   example "del /A:H /A:-R *.exe -ping.exe"
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include "resource.h"
 
 #ifdef INCLUDE_CMD_DEL
@@ -169,7 +169,7 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_DEL_HELP1);
+		ConOutResPaging(TRUE,STRING_DEL_HELP1);
 		return 0;
 	}
 

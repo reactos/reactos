@@ -74,6 +74,7 @@
 	<directory name="reactos">
 		<file>arcname.c</file>
 		<file>binhive.c</file>
+		<file>loader.c</file>
 		<file>reactos.c</file>
 		<file>registry.c</file>
 	</directory>
@@ -102,7 +103,6 @@
 	</directory>
 	<file>freeldr.c</file>
 	<file>debug.c</file>
-	<file>multiboot.c</file>
 	<file>version.c</file>
 	<file>cmdline.c</file>
 	<file>machine.c</file>

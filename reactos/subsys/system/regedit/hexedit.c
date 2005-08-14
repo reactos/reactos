@@ -34,10 +34,10 @@ typedef struct
   HLOCAL hBuffer;
   DWORD style;
   DWORD MaxBuffer;
-  DWORD ColumnsPerLine;
-  DWORD nLines;
-  DWORD nVisibleLinesComplete;
-  DWORD nVisibleLines;
+  INT ColumnsPerLine;
+  INT nLines;
+  INT nVisibleLinesComplete;
+  INT nVisibleLines;
   INT Position;
   INT LineHeight;
   INT CharWidth;
@@ -131,7 +131,7 @@ HEXEDIT_Update(PHEXEDIT_DATA hed)
   SCROLLINFO si;
   RECT rcClient;
   BOOL SbVisible;
-  DWORD bufsize, cvislines;
+  INT bufsize, cvislines;
 
   GetClientRect(hed->hWndSelf, &rcClient);
   hed->style = GetWindowLong(hed->hWndSelf, GWL_STYLE);
@@ -187,7 +187,8 @@ HEXEDIT_GetFixedFont(VOID)
 static VOID
 HEXEDIT_PaintLines(PHEXEDIT_DATA hed, HDC hDC, DWORD ScrollPos, DWORD First, DWORD Last, RECT *rc)
 {
-  DWORD x, dx, dy, linestart;
+  DWORD dx, dy, linestart;
+  INT x;
   PBYTE buf, current, end, line;
   UINT bufsize;
   TCHAR hex[3], addr[17];
@@ -656,7 +657,7 @@ HEXEDIT_WM_PAINT(PHEXEDIT_DATA hed)
   SCROLLINFO si;
   RECT rc;
   HBITMAP hbmp, hbmpold;
-  DWORD nLines, nFirst;
+  INT nLines, nFirst;
   HFONT hOldFont;
   HDC hTempDC;
   DWORD height;
@@ -795,7 +796,7 @@ HEXEDIT_WM_KEYDOWN(PHEXEDIT_DATA hed, INT VkCode)
       break;
 
     case VK_RIGHT:
-      if(hed->Position < bufsize)
+      if(hed->Position < (INT)bufsize)
       {
         if(++hed->CaretCol > hed->ColumnsPerLine)
 	{
@@ -826,13 +827,13 @@ HEXEDIT_WM_KEYDOWN(PHEXEDIT_DATA hed, INT VkCode)
       break;
 
     case VK_DOWN:
-      if(hed->Position <= bufsize)
+      if(hed->Position <= (INT)bufsize)
       {
         if(hed->CaretLine < hed->nLines - 1)
 	{
 	  hed->Position += hed->ColumnsPerLine;
 	  hed->CaretLine++;
-	  if(hed->Position > bufsize)
+	  if(hed->Position > (INT)bufsize)
 	  {
 	    hed->Position = bufsize;
 	    hed->CaretLine = (hed->nLines > 0 ? hed->nLines - 1 : 0);

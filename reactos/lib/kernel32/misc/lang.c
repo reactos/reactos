@@ -720,7 +720,7 @@ GetLocaleInfoW (
         return 0;
 
     ch = LockResource( hMem );
-    for (i = 0; i < (LCType & 0x0f); i++) ch += *ch + 1;
+    for (i = 0; i < (int)(LCType & 0x0f); i++) ch += *ch + 1;
 
     if (uiFlags & LOCALE_RETURN_NUMBER) nRet = sizeof(UINT) / sizeof(WCHAR);
     else nRet = (LCType == LOCALE_FONTSIGNATURE) ? *ch : *ch + 1;

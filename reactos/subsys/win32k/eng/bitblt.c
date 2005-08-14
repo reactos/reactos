@@ -123,7 +123,7 @@ BltMask(SURFOBJ* Dest,
    else
      PatternBitmap = NULL;
 
-   tMask = Mask->pvScan0 + SourcePoint->y * Mask->lDelta + (SourcePoint->x >> 3);
+   tMask = (PBYTE)Mask->pvScan0 + SourcePoint->y * Mask->lDelta + (SourcePoint->x >> 3);
    for (j = 0; j < dy; j++)
    {
       lMask = tMask;
@@ -919,7 +919,7 @@ AlphaBltMask(SURFOBJ* Dest,
       g = (int)GetGValue(BrushColor);
       b = (int)GetBValue(BrushColor);
 
-      tMask = Mask->pvScan0 + (SourcePoint->y * Mask->lDelta) + SourcePoint->x;
+      tMask = (PBYTE)Mask->pvScan0 + (SourcePoint->y * Mask->lDelta) + SourcePoint->x;
       for (j = 0; j < dy; j++)
         {
           lMask = tMask;

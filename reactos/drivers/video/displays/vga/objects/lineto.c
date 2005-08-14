@@ -301,7 +301,8 @@ DrvLineTo(SURFOBJ *DestObj,
 	  RECTL *RectBounds,
 	  MIX mix)
 {
-  LONG x, y, deltax, deltay, i, xchange, ychange, hx, vy;
+  LONG x, y, deltax, deltay, xchange, ychange, hx, vy;
+  ULONG i;
   ULONG Pixel = Brush->iSolidColor;
   RECT_ENUM RectEnum;
   BOOL EnumMore;
@@ -342,7 +343,7 @@ DrvLineTo(SURFOBJ *DestObj,
       CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_RIGHTDOWN, 0);
       do
 	{
-	  EnumMore = CLIPOBJ_bEnum(Clip, (ULONG) sizeof(RectEnum), (PVOID) &RectEnum);
+	  EnumMore = CLIPOBJ_bEnum(Clip, sizeof(RectEnum), (PVOID) &RectEnum);
 	  for (i = 0; i < RectEnum.c && RectEnum.arcl[i].top <= y1; i++)
 	    {
 	      if (y1 < RectEnum.arcl[i].bottom &&

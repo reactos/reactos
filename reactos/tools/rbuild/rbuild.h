@@ -1,3 +1,20 @@
+/*
+ * Copyright (C) 2005 Casper S. Hornstrup
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
 #ifndef __RBUILD_H
 #define __RBUILD_H
 
@@ -316,7 +333,7 @@ public:
 	const XMLElement& node;
 	const Module& module;
 	std::string name;
-	const Module* imported_module;
+	const Module* importedModule;
 
 	Library ( const XMLElement& _node,
 	          const Module& _module,
@@ -533,7 +550,7 @@ class SourceFile
 {
 public:
 	SourceFile ( AutomaticDependency* automaticDependency,
-	             Module& module,
+	             const Module& module,
 	             const std::string& filename,
 	             SourceFile* parent,
 	             bool isNonAutomaticDependency );
@@ -542,7 +559,7 @@ public:
 	std::string Location () const;
 	std::vector<SourceFile*> files;
 	AutomaticDependency* automaticDependency;
-	Module& module;
+	const Module& module;
 	std::string filename;
 	std::string filenamePart;
 	std::string directoryPart;
@@ -584,32 +601,32 @@ public:
 	                          const std::string& includedFilename,
 	                          std::string& resolvedFilename );
 	bool LocateIncludedFile ( SourceFile* sourceFile,
-	                          Module& module,
+	                          const Module& module,
 	                          const std::string& includedFilename,
 	                          bool searchCurrentDirectory,
 	                          bool includeNext,
 	                          std::string& resolvedFilename );
-	SourceFile* RetrieveFromCacheOrParse ( Module& module,
+	SourceFile* RetrieveFromCacheOrParse ( const Module& module,
 	                                       const std::string& filename,
 	                                       SourceFile* parentSourceFile );
 	SourceFile* RetrieveFromCache ( const std::string& filename );
 	void CheckAutomaticDependencies ( bool verbose );
-	void CheckAutomaticDependencies ( Module& module,
-	                                  bool verbose );
-	void CheckAutomaticDependencies ( Module& module,
-	                                  bool verbose,
-	                                  bool parseFiles );
-	void CheckAutomaticDependenciesForFile ( SourceFile* sourceFile );
+	void CheckAutomaticDependenciesForModule ( Module& module,
+	                                           bool verbose );
 private:
+	void GetModulesToCheck ( Module& module, std::vector<const Module*>& modules );
+	void CheckAutomaticDependencies ( const Module& module,
+                                          bool verbose );
+	void CheckAutomaticDependenciesForFile ( SourceFile* sourceFile );
 	void GetIncludeDirectories ( std::vector<Include*>& includes,
-	                             Module& module,
+	                             const Module& module,
                                      Include& currentDirectory,
                                      bool searchCurrentDirectory );
-	void GetModuleFiles ( Module& module,
+	void GetModuleFiles ( const Module& module,
                               std::vector<File*>& files ) const;
 	void ParseFiles ();
-	void ParseFiles ( Module& module );
-	void ParseFile ( Module& module,
+	void ParseFiles ( const Module& module );
+	void ParseFile ( const Module& module,
 	                 const File& file );
 	std::map<std::string, SourceFile*> sourcefile_map;
 };

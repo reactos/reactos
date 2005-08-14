@@ -305,7 +305,41 @@ typedef struct {
   PFNFCIDELETE       pfndelete;
   PFNFCIGETTEMPFILE  pfnfcigtf;
   PCCAB              pccab;
-  void *pv;
+  BOOL               fPrevCab;
+  BOOL               fNextCab;
+  BOOL               fSplitFolder;
+  cab_ULONG          statusFolderCopied;
+  cab_ULONG          statusFolderTotal;
+  BOOL               fGetNextCabInVain;
+  void               *pv;
+  char szPrevCab[CB_MAX_CABINET_NAME];    /* previous cabinet name */
+  char szPrevDisk[CB_MAX_DISK_NAME];      /* disk name of previous cabinet */
+  CCAB               oldCCAB;
+  char*              data_in;  /* uncompressed data blocks */
+  cab_UWORD          cdata_in;
+  char*              data_out; /* compressed data blocks */
+  ULONG              cCompressedBytesInFolder;
+  cab_UWORD          cFolders;
+  cab_UWORD          cFiles;
+  cab_ULONG          cDataBlocks;
+  cab_ULONG          cbFileRemainer; /* uncompressed, yet to be written data */
+               /* of spanned file of a spanning folder of a spanning cabinet */
+  cab_UBYTE          szFileNameCFDATA1[CB_MAX_FILENAME];
+  int                handleCFDATA1;
+  cab_UBYTE          szFileNameCFFILE1[CB_MAX_FILENAME];
+  int                handleCFFILE1;
+  cab_UBYTE          szFileNameCFDATA2[CB_MAX_FILENAME];
+  int                handleCFDATA2;
+  cab_UBYTE          szFileNameCFFILE2[CB_MAX_FILENAME];
+  int                handleCFFILE2;
+  cab_UBYTE          szFileNameCFFOLDER[CB_MAX_FILENAME];
+  int                handleCFFOLDER;
+  cab_ULONG          sizeFileCFDATA1;
+  cab_ULONG          sizeFileCFFILE1;
+  cab_ULONG          sizeFileCFDATA2;
+  cab_ULONG          sizeFileCFFILE2;
+  cab_ULONG          sizeFileCFFOLDER;
+  BOOL               fNewPrevious;
 } FCI_Int, *PFCI_Int;
 
 typedef struct {
@@ -325,6 +359,18 @@ typedef struct {
 
 /* cast an HFDI into a PFDI_Int */
 #define PFDI_INT(hfdi) ((PFDI_Int)(hfdi))
+
+/* quick pfci method invokers */
+#define PFCI_ALLOC(hfdi, size)            ((*PFCI_INT(hfdi)->pfnalloc) (size))
+#define PFCI_FREE(hfdi, ptr)              ((*PFCI_INT(hfdi)->pfnfree)  (ptr))
+#define PFCI_GETTEMPFILE(hfci,name,length) ((*PFCI_INT(hfci)->pfnfcigtf)(name,length,PFCI_INT(hfci)->pv))
+#define PFCI_DELETE(hfci,name,err,pv)      ((*PFCI_INT(hfci)->pfndelete)(name,err,pv))
+#define PFCI_OPEN(hfci,name,oflag,pmode,err,pv) ((*PFCI_INT(hfci)->pfnopen)(name,oflag,pmode,err,pv))
+#define PFCI_READ(hfci,hf,memory,cb,err,pv)((*PFCI_INT(hfci)->pfnread)(hf,memory,cb,err,pv))
+#define PFCI_WRITE(hfci,hf,memory,cb,err,pv)  ((*PFCI_INT(hfci)->pfnwrite)(hf,memory,cb,err,pv))
+#define PFCI_CLOSE(hfci,hf,err,pv)         ((*PFCI_INT(hfci)->pfnclose)(hf,err,pv))
+#define PFCI_SEEK(hfci,hf,dist,seektype,err,pv)((*PFCI_INT(hfci)->pfnseek)(hf,dist,seektype,err,pv))
+#define PFCI_FILEPLACED(hfci,pccab,name,cb,cont,pv)((*PFCI_INT(hfci)->pfnfiledest)(pccab,name,cb,cont,pv))
 
 /* quickie pfdi method invokers */
 #define PFDI_ALLOC(hfdi, size)            ((*PFDI_INT(hfdi)->pfnalloc) (size))

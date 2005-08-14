@@ -21,7 +21,7 @@
 #define NDEBUG
 #include <debug.h>
 
-#include <epsapi.h>
+#include <epsapi/epsapi.h>
 
 NTSTATUS NTAPI
 PsaEnumerateSystemModules(IN PSYSMOD_ENUM_ROUTINE Callback,

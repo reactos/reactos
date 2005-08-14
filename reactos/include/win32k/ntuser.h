@@ -187,6 +187,8 @@ NtUserCallNoParam(
 #define ONEPARAM_ROUTINE_ENABLEPROCWNDGHSTING 0x0d
 #define ONEPARAM_ROUTINE_GETWINDOWINSTANCE    0x10
 #define ONEPARAM_ROUTINE_MSQSETWAKEMASK       0x27
+#define ONEPARAM_ROUTINE_GETKEYBOARDTYPE      0x28
+#define ONEPARAM_ROUTINE_GETKEYBOARDLAYOUT    0x29
 DWORD
 STDCALL
 NtUserCallOneParam(
@@ -741,6 +743,11 @@ NtUserGetInternalWindowPos(
   DWORD Unknown1,
   DWORD Unknown2);
 
+HKL
+STDCALL 
+NtUserGetKeyboardLayout(
+  DWORD dwThreadid);
+
 DWORD
 STDCALL
 NtUserGetKeyboardLayoutList(
@@ -759,8 +766,13 @@ NtUserGetKeyboardState(
 
 DWORD
 STDCALL
-NtUserGetKeyNameText( LONG lParam, LPWSTR lpString, int nSize );
+NtUserGetKeyboardType(
+  DWORD TypeFlag);
 
+DWORD
+STDCALL
+NtUserGetKeyNameText( LONG lParam, LPWSTR lpString, int nSize );
+  
 DWORD
 STDCALL
 NtUserGetKeyState(

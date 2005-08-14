@@ -66,7 +66,6 @@ static int interface_status(struct interface_info *ifinfo);
 void
 discover_interfaces(struct interface_info *iface)
 {
-    NTSTATUS Status;
     PDHCP_ADAPTER Adapter = AdapterFindInfo( iface );
 
     if_register_receive(iface);

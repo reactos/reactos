@@ -798,7 +798,7 @@ FsRtlpDumpFileLocks(
    {
       Granted = CONTAINING_RECORD(EnumEntry, FILE_LOCK_GRANTED , ListEntry);
 
-      DPRINT1("%s, start: %i, len: %i, end: %i, key: %i, proc: 0x%X, fob: 0x%X\n",
+      DPRINT1("%s, start: %I64x, len: %I64x, end: %I64x, key: %i, proc: 0x%p, fob: 0x%p\n",
          Granted->Lock.ExclusiveLock ? "EXCL" : "SHRD",
          Granted->Lock.StartingByte.QuadPart,
          Granted->Lock.Length.QuadPart,
@@ -817,7 +817,7 @@ FsRtlpDumpFileLocks(
       Irp = CONTAINING_RECORD(EnumEntry, IRP , Tail.Overlay.ListEntry);
       Stack = IoGetCurrentIrpStackLocation(Irp);
 
-      DPRINT1("%s, start: %i, len: %i, end: %i, key: %i, proc: 0x%X, fob: 0x%X\n",
+      DPRINT1("%s, start: %I64x, len: %I64x, end: %I64x, key: %i, proc: 0x%p, fob: 0x%p\n",
          (Stack->Flags & SL_EXCLUSIVE_LOCK) ? "EXCL" : "SHRD",
          Stack->Parameters.LockControl.ByteOffset.QuadPart,
          Stack->Parameters.LockControl.Length->QuadPart,

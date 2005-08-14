@@ -264,7 +264,7 @@ VOID MmInitPageLookupTable(PVOID PageLookupTable, ULONG TotalPageCount, PBIOS_ME
 
 	// Mark the pages that the lookup tabel occupies as reserved
 	PageLookupTableStartPage = MmGetPageNumberFromAddress(PageLookupTable);
-	PageLookupTablePageCount = MmGetPageNumberFromAddress(PageLookupTable + ROUND_UP(TotalPageCount * sizeof(PAGE_LOOKUP_TABLE_ITEM), MM_PAGE_SIZE)) - PageLookupTableStartPage;
+	PageLookupTablePageCount = MmGetPageNumberFromAddress((PVOID)((ULONG_PTR)PageLookupTable + ROUND_UP(TotalPageCount * sizeof(PAGE_LOOKUP_TABLE_ITEM), MM_PAGE_SIZE))) - PageLookupTableStartPage;
 	DbgPrint((DPRINT_MEMORY, "Marking the page lookup table pages as reserved StartPage: %d PageCount: %d\n", PageLookupTableStartPage, PageLookupTablePageCount));
 	MmMarkPagesInLookupTable(PageLookupTable, PageLookupTableStartPage, PageLookupTablePageCount, MEMTYPE_RESERVED);
 }
@@ -384,8 +384,8 @@ ULONG MmFindAvailablePagesBeforePage(PVOID PageLookupTable, ULONG TotalPageCount
 
 VOID MmFixupSystemMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG* MapCount)
 {
-	int		Index;
-	int		Index2;
+	UINT		Index;
+	UINT		Index2;
 
 	// Loop through each entry in the array
 	for (Index=0; Index<*MapCount; Index++)

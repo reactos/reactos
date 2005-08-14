@@ -147,6 +147,7 @@ VOID ConInString (LPTSTR, DWORD);
 VOID ConOutChar (TCHAR);
 VOID ConOutPuts (LPTSTR);
 VOID ConOutPrintf (LPTSTR, ...);
+VOID ConOutPrintfPaging (BOOL NewPage, LPTSTR, ...);
 VOID ConErrChar (TCHAR);
 VOID ConErrPuts (LPTSTR);
 VOID ConErrPrintf (LPTSTR, ...);
@@ -162,6 +163,7 @@ VOID SetCursorType (BOOL, BOOL);
 
 VOID ConOutResPuts (UINT resID);
 VOID ConErrResPuts (UINT resID);
+VOID ConOutResPaging(BOOL NewPage, UINT resID);
 
 /* Prototypes for COPY.C */
 INT cmd_copy (LPTSTR, LPTSTR);

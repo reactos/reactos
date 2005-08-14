@@ -1751,11 +1751,11 @@ IntCreateWindowEx(DWORD dwExStyle,
     {
       CalculatedDefPosSize = IntCalcDefPosSize(ParentWindow, WindowObject, &rc, TRUE);
 
-      if(ProcessParams->dwFlags & STARTF_USEPOSITION)
+      if(ProcessParams->WindowFlags & STARTF_USEPOSITION)
       {
-        ProcessParams->dwFlags &= ~STARTF_USEPOSITION;
-        Pos.x = WorkArea.left + ProcessParams->dwX;
-        Pos.y = WorkArea.top + ProcessParams->dwY;
+        ProcessParams->WindowFlags &= ~STARTF_USEPOSITION;
+        Pos.x = WorkArea.left + ProcessParams->StartingX;
+        Pos.y = WorkArea.top + ProcessParams->StartingY;
       }
       else
       {
@@ -1776,11 +1776,11 @@ IntCreateWindowEx(DWORD dwExStyle,
       {
         IntCalcDefPosSize(ParentWindow, WindowObject, &rc, FALSE);
       }
-      if(ProcessParams->dwFlags & STARTF_USESIZE)
+      if(ProcessParams->WindowFlags & STARTF_USESIZE)
       {
-        ProcessParams->dwFlags &= ~STARTF_USESIZE;
-        Size.cx = ProcessParams->dwXSize;
-        Size.cy = ProcessParams->dwYSize;
+        ProcessParams->WindowFlags &= ~STARTF_USESIZE;
+        Size.cx = ProcessParams->CountX;
+        Size.cy = ProcessParams->CountY;
       }
       else
       {

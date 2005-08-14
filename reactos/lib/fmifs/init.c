@@ -12,7 +12,6 @@
 #define UNICODE
 #define _UNICODE
 #include <windows.h>
-#include <fmifs.h>
 
 static BOOL FmIfsInitialized = FALSE;
 

@@ -44,7 +44,7 @@ NTSTATUS AddUDPHeaderIPv4(
           sizeof(UDP_HEADER), (PVOID *)&UDPHeader );
 
     /* Build UDP header */
-    UDPHeader = (PUDP_HEADER)(IPPacket->Data - sizeof(UDP_HEADER));
+    UDPHeader = (PUDP_HEADER)((ULONG_PTR)IPPacket->Data - sizeof(UDP_HEADER));
     /* Port values are already big-endian values */
     UDPHeader->SourcePort = LocalPort;
     UDPHeader->DestPort   = RemotePort;

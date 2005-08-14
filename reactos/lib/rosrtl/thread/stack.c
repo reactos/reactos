@@ -29,12 +29,11 @@ NTSTATUS NTAPI RtlRosCreateStack
  ULONG_PTR nStackCommit = 0x100000;
  NTSTATUS nErrCode;
 
- if(StackReserve == NULL) StackReserve = &nStackReserve;
+ if(*StackReserve == 0) StackReserve = &nStackReserve;
  else *StackReserve = ROUNDUP(*StackReserve, PAGE_SIZE);
 
- if(StackCommit == NULL) StackCommit = &nStackCommit;
+ if(*StackCommit == 0) StackCommit = &nStackCommit;
  else *StackCommit = ROUNDUP(*StackCommit, PAGE_SIZE);
-
 #if 0
  /* the stack commit size must be equal to or less than the reserve size */
  if(*StackCommit > *StackReserve) *StackCommit = *StackReserve;
@@ -47,17 +46,17 @@ NTSTATUS NTAPI RtlRosCreateStack
  /* fixed stack */
  if(*StackCommit == *StackReserve)
  {
-  InitialTeb->StackCommit = NULL;
-  InitialTeb->StackCommitMax = NULL;
-  InitialTeb->StackReserved = NULL;
-
+  InitialTeb->StackBase = NULL;
   InitialTeb->StackLimit = NULL;
+  InitialTeb->AllocatedStackBase = NULL;
+
+  InitialTeb->PreviousStackLimit = NULL;
 
   /* allocate the stack */
   nErrCode = NtAllocateVirtualMemory
   (
    ProcessHandle,
-   &(InitialTeb->StackLimit),
+   &(InitialTeb->PreviousStackLimit),
    StackZeroBits,
    StackReserve,
    MEM_RESERVE | MEM_COMMIT,
@@ -68,8 +67,8 @@ NTSTATUS NTAPI RtlRosCreateStack
   if(!NT_SUCCESS(nErrCode)) goto l_Fail;
 
   /* store the highest (first) address of the stack */
-  InitialTeb->StackBase =
-   (PUCHAR)(InitialTeb->StackLimit) + *StackReserve;
+  InitialTeb->PreviousStackBase =
+   (PUCHAR)(InitialTeb->PreviousStackLimit) + *StackReserve;
 
   *StackCommit = *StackReserve;
  }
@@ -81,16 +80,16 @@ NTSTATUS NTAPI RtlRosCreateStack
 
   DPRINT("Expandable stack\n");
 
-  InitialTeb->StackBase = NULL;
-  InitialTeb->StackLimit =  NULL;
+  InitialTeb->PreviousStackBase = NULL;
+  InitialTeb->PreviousStackLimit =  NULL;
 
-  InitialTeb->StackReserved = NULL;
+  InitialTeb->AllocatedStackBase = NULL;
 
   /* reserve the stack */
   nErrCode = NtAllocateVirtualMemory
   (
    ProcessHandle,
-   &(InitialTeb->StackReserved),
+   &(InitialTeb->AllocatedStackBase),
    StackZeroBits,
    StackReserve,
    MEM_RESERVE,
@@ -103,22 +102,22 @@ NTSTATUS NTAPI RtlRosCreateStack
   DPRINT("Reserved %08X bytes\n", *StackReserve);
 
   /* expandable stack base - the highest address of the stack */
-  InitialTeb->StackCommit =
-   (PUCHAR)(InitialTeb->StackReserved) + *StackReserve;
+  InitialTeb->StackBase =
+   (PUCHAR)(InitialTeb->AllocatedStackBase) + *StackReserve;
 
   /* expandable stack limit - the lowest committed address of the stack */
-  InitialTeb->StackCommitMax =
-   (PUCHAR)(InitialTeb->StackCommit) - *StackCommit;
+  InitialTeb->StackLimit =
+   (PUCHAR)(InitialTeb->StackBase) - *StackCommit;
 
-  DPRINT("Stack commit      %p\n", InitialTeb->StackCommit);
-  DPRINT("Stack commit max  %p\n", InitialTeb->StackCommitMax);
-  DPRINT("Stack reserved    %p\n", InitialTeb->StackReserved);
+  DPRINT("Stack commit      %p\n", InitialTeb->StackBase);
+  DPRINT("Stack commit max  %p\n", InitialTeb->StackLimit);
+  DPRINT("Stack reserved    %p\n", InitialTeb->AllocatedStackBase);
 
   /* commit as much stack as requested */
   nErrCode = NtAllocateVirtualMemory
   (
    ProcessHandle,
-   &(InitialTeb->StackCommitMax),
+   &(InitialTeb->StackLimit),
    0,
    StackCommit,
    MEM_COMMIT,
@@ -131,9 +130,9 @@ NTSTATUS NTAPI RtlRosCreateStack
   ASSERT((*StackReserve - *StackCommit) >= PAGE_SIZE);
   ASSERT((*StackReserve - *StackCommit) % PAGE_SIZE == 0);
 
-  pGuardBase = (PUCHAR)(InitialTeb->StackCommitMax) - PAGE_SIZE;
+  pGuardBase = (PUCHAR)(InitialTeb->StackLimit) - PAGE_SIZE;
 
-  DPRINT("Guard base %p\n", InitialTeb->StackCommit);
+  DPRINT("Guard base %p\n", InitialTeb->StackBase);
 
   /* set up the guard page */
   nErrCode = NtAllocateVirtualMemory
@@ -149,7 +148,7 @@ NTSTATUS NTAPI RtlRosCreateStack
   /* failure */
   if(!NT_SUCCESS(nErrCode)) goto l_Cleanup;
 
-  DPRINT("Guard base %p\n", InitialTeb->StackCommit);
+  DPRINT("Guard base %p\n", InitialTeb->StackBase);
  }
 
 
@@ -176,9 +175,9 @@ NTSTATUS NTAPI RtlRosDeleteStack
  ULONG_PTR nSize;
 
  if(InitialTeb->StackLimit)
-  pStackLowest = InitialTeb->StackLimit;
- else if(InitialTeb->StackReserved)
-  pStackLowest = InitialTeb->StackReserved;
+  pStackLowest = InitialTeb->PreviousStackLimit;
+ else if(InitialTeb->AllocatedStackBase)
+  pStackLowest = InitialTeb->AllocatedStackBase;
 
  /* free the stack, if it was allocated */
  if(pStackLowest != NULL)
@@ -247,16 +246,16 @@ NTSTATUS NTAPI RtlpRosGetStackLimits
 )
 {
  /* fixed-size stack */
- if(InitialTeb->StackBase && InitialTeb->StackLimit)
+ if(InitialTeb->PreviousStackBase && InitialTeb->PreviousStackLimit)
+ {
+  *StackBase = InitialTeb->PreviousStackBase;
+  *StackLimit = InitialTeb->PreviousStackLimit;
+ }
+ /* expandable stack */
+ else if(InitialTeb->StackBase && InitialTeb->StackLimit)
  {
   *StackBase = InitialTeb->StackBase;
   *StackLimit = InitialTeb->StackLimit;
- }
- /* expandable stack */
- else if(InitialTeb->StackCommit && InitialTeb->StackCommitMax)
- {
-  *StackBase = InitialTeb->StackCommit;
-  *StackLimit = InitialTeb->StackCommitMax;
  }
  /* can't determine the type of stack: failure */
  else

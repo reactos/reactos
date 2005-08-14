@@ -2571,7 +2571,7 @@ static stringtable_t *find_stringtable(lvc_t *lvc)
 }
 
 /* qsort sorting function for string table entries */
-#define STE(p)	((stt_entry_t *)(p))
+#define STE(p)	((const stt_entry_t *)(p))
 static int sort_stt_entry(const void *e1, const void *e2)
 {
 	return STE(e1)->id - STE(e2)->id;

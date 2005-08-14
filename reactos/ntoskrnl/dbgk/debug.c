@@ -29,7 +29,7 @@ NtCreateDebugObject(OUT PHANDLE DebugHandle,
     NTSTATUS Status = STATUS_SUCCESS;
 
     PAGED_CODE();
-    DPRINT("NtCreateDebugObject(0x%x, 0x%x, 0x%x)\n", DebugHandle, DesiredAccess, ObjectAttributes);
+    DPRINT("NtCreateDebugObject(0x%p, 0x%x, 0x%p)\n", DebugHandle, DesiredAccess, ObjectAttributes);
 
     /* Check Output Safety */
     if(PreviousMode != KernelMode) {

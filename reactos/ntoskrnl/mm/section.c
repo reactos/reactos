@@ -1299,7 +1299,7 @@ MmspNotPresentFaultImageSectionView(PMADDRESS_SPACE AddressSpace,
       while (PageCount < 4)
       {
 	 if (SegmentOffset + PageCount * PAGE_SIZE < Segment->RawLength &&
-	     SegmentOffset + PageCount * PAGE_SIZE < RegionBase + Region->Length - MemoryArea->StartingAddress &&
+	     SegmentOffset + PageCount * PAGE_SIZE < (ULONG_PTR)RegionBase + Region->Length - (ULONG_PTR)MemoryArea->StartingAddress &&
 	     0 == MmGetPageEntrySectionSegment(Segment, SegmentOffset + PageCount * PAGE_SIZE))
 	 {
 	    PageOp[PageCount] = MmGetPageOp(MemoryArea, 0, 0, Segment, SegmentOffset + PageCount * PAGE_SIZE, MM_PAGEOP_PAGEIN, TRUE);
@@ -1402,7 +1402,7 @@ MmspNotPresentFaultImageSectionView(PMADDRESS_SPACE AddressSpace,
          MmSetPageEntrySectionSegment(Segment, SegmentOffset + i * PAGE_SIZE, Entry);
       }
       Status = MmCreateVirtualMapping(AddressSpace->Process,
-                                      MemoryArea->StartingAddress + SegmentOffset,
+                                      (PVOID)((ULONG_PTR)MemoryArea->StartingAddress + SegmentOffset),
                                       Attributes,
                                       Pfn,
                                       PageCount);
@@ -1415,7 +1415,7 @@ MmspNotPresentFaultImageSectionView(PMADDRESS_SPACE AddressSpace,
       }
       for (i = 0; i < PageCount; i++)
       {
-         MmInsertRmap(Pfn[i], AddressSpace->Process, (PVOID)PAddress + i * PAGE_SIZE);
+         MmInsertRmap(Pfn[i], AddressSpace->Process, (PVOID)((ULONG_PTR)PAddress + i * PAGE_SIZE));
       }
 
       if (Locked)
@@ -1736,7 +1736,7 @@ MmspNotPresentFaultDataFileSectionView(PMADDRESS_SPACE AddressSpace,
       while (PageCount < 4)
       {
          if (Offset + PageCount * PAGE_SIZE < Segment->RawLength &&
-	     Offset + PageCount * PAGE_SIZE < RegionBase + Region->Length - StartingAddress &&
+	     Offset + PageCount * PAGE_SIZE < (ULONG_PTR)RegionBase + Region->Length - (ULONG_PTR)StartingAddress &&
 	     0 == MmGetPageEntrySectionSegment(Segment, Offset + PageCount * PAGE_SIZE))
 	 {
 	    PageOp[PageCount] = MmGetPageOp(MemoryArea, 0, 0, Segment, Offset + PageCount * PAGE_SIZE, MM_PAGEOP_PAGEIN, TRUE);
@@ -1819,7 +1819,7 @@ MmspNotPresentFaultDataFileSectionView(PMADDRESS_SPACE AddressSpace,
       }
       for (i = 0; i < PageCount; i++)
       {
-         MmInsertRmap(Pfn[i], AddressSpace->Process, (PVOID)PAddress + i * PAGE_SIZE);
+         MmInsertRmap(Pfn[i], AddressSpace->Process, (PVOID)((ULONG_PTR)PAddress + i * PAGE_SIZE));
          if (i == 0 && Locked)
          {
             MmLockPage(Pfn[0]);
@@ -3729,7 +3729,7 @@ ExeFmtpReadFile(IN PFILE_OBJECT FileObject,
    Pages = alloca(BufferSize / PAGE_SIZE * sizeof(PFN_TYPE));
    for(i = 0; i < BufferSize / PAGE_SIZE; i++)
    {
-      Pages[i] = MmGetPfnForProcess(NULL, Buffer + i * PAGE_SIZE);
+      Pages[i] = MmGetPfnForProcess(NULL, (PVOID)((ULONG_PTR)Buffer + i * PAGE_SIZE));
    }
    Status = MmspRawReadPages(FileObject,
                              SectorSize,
@@ -4176,7 +4176,7 @@ ExeFmtpCreateImageSection(PFILE_OBJECT FileObject,
     */
    if (Status == STATUS_ROS_EXEFMT_UNKNOWN_FORMAT)
    {
-      Status = STATUS_INVALID_IMAGE_FORMAT;
+      Status = STATUS_INVALID_IMAGE_NOT_MZ;
       ASSERT(!NT_SUCCESS(Status));
    }
 
@@ -5230,15 +5230,15 @@ NtQuerySection(IN HANDLE SectionHandle,
                   PMM_IMAGE_SECTION_OBJECT ImageSectionObject;
                   ImageSectionObject = Section->ImageSection;
 
-                  Sii->EntryPoint = ImageSectionObject->EntryPoint;
-                  Sii->StackReserve = ImageSectionObject->StackReserve;
-                  Sii->StackCommit = ImageSectionObject->StackCommit;
-                  Sii->Subsystem = ImageSectionObject->Subsystem;
-                  Sii->MinorSubsystemVersion = ImageSectionObject->MinorSubsystemVersion;
-                  Sii->MajorSubsystemVersion = ImageSectionObject->MajorSubsystemVersion;
-                  Sii->Characteristics = ImageSectionObject->ImageCharacteristics;
-                  Sii->ImageNumber = ImageSectionObject->Machine;
-                  Sii->Executable = ImageSectionObject->Executable;
+                  Sii->TransferAddress = (PVOID)ImageSectionObject->EntryPoint;
+                  Sii->MaximumStackSize = ImageSectionObject->StackReserve;
+                  Sii->CommittedStackSize = ImageSectionObject->StackCommit;
+                  Sii->SubsystemType = ImageSectionObject->Subsystem;
+                  Sii->SubSystemMinorVersion = ImageSectionObject->MinorSubsystemVersion;
+                  Sii->SubSystemMajorVersion = ImageSectionObject->MajorSubsystemVersion;
+                  Sii->ImageCharacteristics = ImageSectionObject->ImageCharacteristics;
+                  Sii->Machine = ImageSectionObject->Machine;
+                  Sii->ImageContainsCode = ImageSectionObject->Executable;
                }
 
                if (ResultLength != NULL)
@@ -6444,15 +6444,15 @@ MmUnmapViewInSystemCache(PCACHE_VIEW CacheView)
 
    for (Offset = 0; Offset < CACHE_VIEW_SIZE; Offset += PAGE_SIZE)
    {
-      if (MmIsPageSwapEntry(NULL, (PVOID)CacheView->BaseAddress + Offset))
+      if (MmIsPageSwapEntry(NULL, (PVOID)((ULONG_PTR)CacheView->BaseAddress + Offset)))
       {
          KEBUGCHECK(0);
       }
       Pfn = 0;
-      MmDeleteVirtualMapping(NULL, (PVOID)CacheView->BaseAddress + Offset, FALSE, &Dirty, &Pfn);
+      MmDeleteVirtualMapping(NULL, (PVOID)((ULONG_PTR)CacheView->BaseAddress + Offset), FALSE, &Dirty, &Pfn);
       if (Pfn)
       {
-         MmDeleteRmap(Pfn, NULL, (PVOID)CacheView->BaseAddress + Offset);
+         MmDeleteRmap(Pfn, NULL, (PVOID)((ULONG_PTR)CacheView->BaseAddress + Offset));
          MmUnsharePageEntrySectionSegment(Section, Segment, CacheView->SectionData.ViewOffset + Offset, Dirty, FALSE);
       }
    }

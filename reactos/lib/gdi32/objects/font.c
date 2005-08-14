@@ -183,10 +183,10 @@ IntEnumFontFamilies(HDC Dc, LPLOGFONTW LogFont, PVOID EnumProc, LPARAM lParam,
                     BOOL Unicode)
 {
   int FontFamilyCount;
-  unsigned FontFamilySize;
+  int FontFamilySize;
   PFONTFAMILYINFO Info;
   int Ret = 0;
-  unsigned i;
+  int i;
   ENUMLOGFONTEXA EnumLogFontExA;
   NEWTEXTMETRICEXA NewTextMetricExA;
 

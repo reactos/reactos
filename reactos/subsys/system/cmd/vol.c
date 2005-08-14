@@ -20,7 +20,7 @@
  *        Redirection ready!
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include "resource.h"
 
 #ifdef INCLUDE_CMD_VOL
@@ -43,7 +43,7 @@ PrintVolumeHeader (LPTSTR pszRootPath)
 				  NULL,
 				  0))
 	{
-		ErrorMessage (GetLastError (), _T(""));
+		ErrorMessage (GetLastError (), _T(""));    
 		return 1;
 	}
 
@@ -73,9 +73,11 @@ INT cmd_vol (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_VOL_HELP4);
+		ConOutResPaging(TRUE,STRING_VOL_HELP4);
 		return 0;
 	}
+
+  nErrorLevel = 0;
 
 	if (param[0] == _T('\0'))
 	{
@@ -89,20 +91,24 @@ INT cmd_vol (LPTSTR cmd, LPTSTR param)
 			szRootPath[0] = param[0];
 		else
 		{
-			error_invalid_drive ();
+			error_invalid_drive ();     
+      nErrorLevel = 1;
 			return 1;
 		}
 	}
 
 	if (!IsValidPathName (szRootPath))
 	{
-		error_invalid_drive ();
+		error_invalid_drive ();    
+     nErrorLevel = 1;
 		return 1;
 	}
 
 	/* print the header */
 	if (!PrintVolumeHeader (szRootPath))
+  {    
 		return 1;
+  }
 
 	return 0;
 }

@@ -748,7 +748,7 @@ void write_forward(type_t *iface)
   }
 }
 
-void write_guid(const char *guid_prefix, const char *name, UUID *uuid)
+static void write_guid(const char *guid_prefix, const char *name, UUID *uuid)
 {
   if (!uuid) return;
   fprintf(header, "DEFINE_GUID(%s_%s, 0x%08lx, 0x%04x, 0x%04x, 0x%02x,0x%02x, 0x%02x,0x%02x,0x%02x,0x%02x,0x%02x,0x%02x);\n",
@@ -756,25 +756,25 @@ void write_guid(const char *guid_prefix, const char *name, UUID *uuid)
           uuid->Data4[2], uuid->Data4[3], uuid->Data4[4], uuid->Data4[5], uuid->Data4[6], uuid->Data4[7]);
 }
 
-void write_iface_guid(type_t *iface)
+static void write_iface_guid(type_t *iface)
 {
   UUID *uuid = get_attrp(iface->attrs, ATTR_UUID);
   write_guid("IID", iface->name, uuid);
 } 
 
-void write_dispiface_guid(type_t *iface)
+static void write_dispiface_guid(type_t *iface)
 {
   UUID *uuid = get_attrp(iface->attrs, ATTR_UUID);
   write_guid("DIID", iface->name, uuid);
 }
 
-void write_coclass_guid(class_t *cocl)
+static void write_coclass_guid(class_t *cocl)
 {
   UUID *uuid = get_attrp(cocl->attrs, ATTR_UUID);
   write_guid("CLSID", cocl->name, uuid);
 }
 
-void write_com_interface(type_t *iface)
+static void write_com_interface(type_t *iface)
 {
   if (!iface->funcs && !iface->ref) {
     yywarning("%s has no methods", iface->name);
@@ -836,7 +836,7 @@ void write_com_interface(type_t *iface)
   fprintf(header,"\n#endif  /* __%s_INTERFACE_DEFINED__ */\n\n", iface->name);
 }
 
-void write_rpc_interface(type_t *iface)
+static void write_rpc_interface(type_t *iface)
 {
   unsigned long ver = get_attrv(iface->attrs, ATTR_VERSION);
   char *var = get_attrp(iface->attrs, ATTR_IMPLICIT_HANDLE);

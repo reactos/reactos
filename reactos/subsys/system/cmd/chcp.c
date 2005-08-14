@@ -11,7 +11,7 @@
  *        Remove all hardcode string to En.rc
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include "resource.h"
 
 
@@ -28,7 +28,7 @@ INT CommandChcp (LPTSTR cmd, LPTSTR param)
 	/* print help */
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_CHCP_HELP);
+		ConOutResPaging(TRUE,STRING_CHCP_HELP);
 		return 0;
 	}
 

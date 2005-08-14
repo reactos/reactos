@@ -329,22 +329,6 @@ void output_resources( FILE *outfile, DLLSPEC *spec )
 
     tree = build_resource_tree( spec );
 
-    /* resource data */
-
-    for (i = 0, res = spec->resources; i < spec->nb_resources; i++, res++)
-    {
-        const unsigned int *p = res->data;
-        int size = res->data_size / 4;
-        /* dump data as ints to ensure correct alignment */
-        fprintf( outfile, "static const unsigned int res_%d[%d] = {\n  ", i, size );
-        for (j = 0; j < size - 1; j++, p++)
-        {
-            fprintf( outfile, "0x%08x,", *p );
-            if ((j % 8) == 7) fprintf( outfile, "\n  " );
-        }
-        fprintf( outfile, "0x%08x\n};\n\n", *p );
-    }
-
     /* directory structures */
 
     fprintf( outfile, "struct res_dir {\n" );
@@ -412,10 +396,12 @@ void output_resources( FILE *outfile, DLLSPEC *spec )
             else name->name_offset = name->name->id;
         }
     }
+    for (i = 0, res = spec->resources; i < spec->nb_resources; i++, res++)
+        fprintf( outfile, "  unsigned int          res_%d[%d];\n", i, res->data_size / 4 );
 
     /* resource directory contents */
 
-    fprintf( outfile, "} resources = {\n" );
+    fprintf( outfile, "} __wine_spec_resources = {\n" );
     fprintf( outfile, "  { 0, 0, 0, 0, %d, %d },\n", tree->nb_types - nb_id_types, nb_id_types );
 
     /* dump the type directory */
@@ -463,7 +449,7 @@ void output_resources( FILE *outfile, DLLSPEC *spec )
     fprintf( outfile, "  {\n" );
     for (i = 0, res = spec->resources; i < spec->nb_resources; i++, res++)
     {
-        fprintf( outfile, "    { res_%d, sizeof(res_%d), 0, 0 }, /* %08x */\n", i, i,
+        fprintf( outfile, "    { __wine_spec_resources.res_%d, sizeof(__wine_spec_resources.res_%d), 0, 0 }, /* %08x */\n", i, i,
                  data_offset + i * 4 * sizeof(int) );
     }
 
@@ -484,6 +470,24 @@ void output_resources( FILE *outfile, DLLSPEC *spec )
             }
         }
     }
-    fprintf( outfile, "  }\n};\n\n" );
+    fprintf( outfile, "  },\n" );
+
+    /* resource data */
+
+    for (i = 0, res = spec->resources; i < spec->nb_resources; i++, res++)
+    {
+        const unsigned int *p = res->data;
+        int size = res->data_size / 4;
+        /* dump data as ints to ensure correct alignment */
+        fprintf( outfile, "  {  /* res_%d */\n    ", i );
+        for (j = 0; j < size - 1; j++, p++)
+        {
+            fprintf( outfile, "0x%08x,", *p );
+            if ((j % 8) == 7) fprintf( outfile, "\n    " );
+        }
+        fprintf( outfile, "0x%08x\n  },\n", *p );
+    }
+    fprintf( outfile, "};\n\n" );
+
     free_resource_tree( tree );
 }

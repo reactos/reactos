@@ -13,6 +13,7 @@
 	<library>comctl32</library>
 	<library>kernel32</library>
 	<library>ntdll</library>
+    <library>wine</library>
 	<file>drawdib.c</file>
 	<file>mciwnd.c</file>
 	<file>msvfw32.rc</file>

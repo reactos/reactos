@@ -26,7 +26,7 @@
 VOID
 DIB_24BPP_PutPixel(SURFOBJ *SurfObj, LONG x, LONG y, ULONG c)
 {
-  PBYTE addr = SurfObj->pvScan0 + (y * SurfObj->lDelta) + (x << 1) + x;
+  PBYTE addr = (PBYTE)SurfObj->pvScan0 + (y * SurfObj->lDelta) + (x << 1) + x;
   *(PUSHORT)(addr) = c & 0xFFFF;
   *(addr + 2) = (c >> 16) & 0xFF;
 }
@@ -34,14 +34,14 @@ DIB_24BPP_PutPixel(SURFOBJ *SurfObj, LONG x, LONG y, ULONG c)
 ULONG
 DIB_24BPP_GetPixel(SURFOBJ *SurfObj, LONG x, LONG y)
 {
-  PBYTE addr = SurfObj->pvScan0 + y * SurfObj->lDelta + (x << 1) + x;
+  PBYTE addr = (PBYTE)SurfObj->pvScan0 + y * SurfObj->lDelta + (x << 1) + x;
   return *(PUSHORT)(addr) + (*(addr + 2) << 16);
 }
 
 VOID
 DIB_24BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 {
-  PBYTE addr = SurfObj->pvScan0 + y * SurfObj->lDelta + (x1 << 1) + x1;
+  PBYTE addr = (PBYTE)SurfObj->pvScan0 + y * SurfObj->lDelta + (x1 << 1) + x1;
   ULONG Count = x2 - x1;
 #ifndef _M_IX86
   ULONG MultiCount;
@@ -141,7 +141,7 @@ DIB_24BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
 VOID
 DIB_24BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 {
-  PBYTE addr = SurfObj->pvScan0 + y1 * SurfObj->lDelta + (x << 1) + x;
+  PBYTE addr = (PBYTE)SurfObj->pvScan0 + y1 * SurfObj->lDelta + (x << 1) + x;
   LONG lDelta = SurfObj->lDelta;
 
   c &= 0xFFFFFF;
@@ -161,7 +161,7 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
   PBYTE    SourceBits_4BPP, SourceLine_4BPP;
   PWORD    SourceBits_16BPP, SourceLine_16BPP;
 
-  DestBits = BltInfo->DestSurface->pvScan0 + (BltInfo->DestRect.top * BltInfo->DestSurface->lDelta) + BltInfo->DestRect.left * 3;
+  DestBits = (PBYTE)BltInfo->DestSurface->pvScan0 + (BltInfo->DestRect.top * BltInfo->DestSurface->lDelta) + BltInfo->DestRect.left * 3;
 
   switch(BltInfo->SourceSurface->iBitmapFormat)
   {
@@ -187,7 +187,7 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
       break;
 
     case BMF_4BPP:
-      SourceBits_4BPP = BltInfo->SourceSurface->pvScan0 + (BltInfo->SourcePoint.y * BltInfo->SourceSurface->lDelta) + (BltInfo->SourcePoint.x >> 1);
+      SourceBits_4BPP = (PBYTE)BltInfo->SourceSurface->pvScan0 + (BltInfo->SourcePoint.y * BltInfo->SourceSurface->lDelta) + (BltInfo->SourcePoint.x >> 1);
 
       for (j=BltInfo->DestRect.top; j<BltInfo->DestRect.bottom; j++)
       {
@@ -213,7 +213,7 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
       break;
 
     case BMF_8BPP:
-      SourceLine = BltInfo->SourceSurface->pvScan0 + (BltInfo->SourcePoint.y * BltInfo->SourceSurface->lDelta) + BltInfo->SourcePoint.x;
+      SourceLine = (PBYTE)BltInfo->SourceSurface->pvScan0 + (BltInfo->SourcePoint.y * BltInfo->SourceSurface->lDelta) + BltInfo->SourcePoint.x;
       DestLine = DestBits;
 
       for (j = BltInfo->DestRect.top; j < BltInfo->DestRect.bottom; j++)
@@ -236,7 +236,7 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
       break;
 
     case BMF_16BPP:
-      SourceBits_16BPP = BltInfo->SourceSurface->pvScan0 + (BltInfo->SourcePoint.y * BltInfo->SourceSurface->lDelta) + 2 * BltInfo->SourcePoint.x;
+      SourceBits_16BPP = (PWORD)((PBYTE)BltInfo->SourceSurface->pvScan0 + (BltInfo->SourcePoint.y * BltInfo->SourceSurface->lDelta) + 2 * BltInfo->SourcePoint.x);
 
       for (j=BltInfo->DestRect.top; j<BltInfo->DestRect.bottom; j++)
       {
@@ -262,7 +262,7 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
       {
 	if (BltInfo->DestRect.top < BltInfo->SourcePoint.y)
 	  {
-	    SourceBits = BltInfo->SourceSurface->pvScan0 + (BltInfo->SourcePoint.y * BltInfo->SourceSurface->lDelta) + 3 * BltInfo->SourcePoint.x;
+	    SourceBits = (PBYTE)BltInfo->SourceSurface->pvScan0 + (BltInfo->SourcePoint.y * BltInfo->SourceSurface->lDelta) + 3 * BltInfo->SourcePoint.x;
 	    for (j = BltInfo->DestRect.top; j < BltInfo->DestRect.bottom; j++)
 	      {
 		RtlMoveMemory(DestBits, SourceBits, 3 * (BltInfo->DestRect.right - BltInfo->DestRect.left));
@@ -272,8 +272,8 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 	  }
 	else
 	  {
-	    SourceBits = BltInfo->SourceSurface->pvScan0 + ((BltInfo->SourcePoint.y + BltInfo->DestRect.bottom - BltInfo->DestRect.top - 1) * BltInfo->SourceSurface->lDelta) + 3 * BltInfo->SourcePoint.x;
-	    DestBits = BltInfo->DestSurface->pvScan0 + ((BltInfo->DestRect.bottom - 1) * BltInfo->DestSurface->lDelta) + 3 * BltInfo->DestRect.left;
+	    SourceBits = (PBYTE)BltInfo->SourceSurface->pvScan0 + ((BltInfo->SourcePoint.y + BltInfo->DestRect.bottom - BltInfo->DestRect.top - 1) * BltInfo->SourceSurface->lDelta) + 3 * BltInfo->SourcePoint.x;
+	    DestBits = (PBYTE)BltInfo->DestSurface->pvScan0 + ((BltInfo->DestRect.bottom - 1) * BltInfo->DestSurface->lDelta) + 3 * BltInfo->DestRect.left;
 	    for (j = BltInfo->DestRect.bottom - 1; BltInfo->DestRect.top <= j; j--)
 	      {
 		RtlMoveMemory(DestBits, SourceBits, 3 * (BltInfo->DestRect.right - BltInfo->DestRect.left));
@@ -291,7 +291,7 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
       break;
 
     case BMF_32BPP:
-      SourceLine = BltInfo->SourceSurface->pvScan0 + (BltInfo->SourcePoint.y * BltInfo->SourceSurface->lDelta) + 4 * BltInfo->SourcePoint.x;
+      SourceLine = (PBYTE)BltInfo->SourceSurface->pvScan0 + (BltInfo->SourcePoint.y * BltInfo->SourceSurface->lDelta) + 4 * BltInfo->SourcePoint.x;
       DestLine = DestBits;
 
       for (j = BltInfo->DestRect.top; j < BltInfo->DestRect.bottom; j++)
@@ -337,7 +337,7 @@ DIB_24BPP_BitBlt(PBLTINFO BltInfo)
 
    SourceY = BltInfo->SourcePoint.y;
    DestBits = (PBYTE)(
-      BltInfo->DestSurface->pvScan0 +
+      (PBYTE)BltInfo->DestSurface->pvScan0 +
       (BltInfo->DestRect.left << 1) + BltInfo->DestRect.left +
       BltInfo->DestRect.top * BltInfo->DestSurface->lDelta);
 
@@ -397,7 +397,7 @@ DIB_24BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
   ULONG DestY;	
 
 #ifdef _M_IX86
-  PBYTE xaddr = DestSurface->pvScan0 + DestRect->top * DestSurface->lDelta + (DestRect->left << 1) + DestRect->left;
+  PBYTE xaddr = (PBYTE)DestSurface->pvScan0 + DestRect->top * DestSurface->lDelta + (DestRect->left << 1) + DestRect->left;
   PBYTE addr;
   ULONG Count;
   ULONG xCount=DestRect->right - DestRect->left;
@@ -1305,7 +1305,7 @@ DIB_24BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
   BYTE *DestBits;
 
   SourceY = SourcePoint->y;
-  DestBits = (BYTE*)(DestSurf->pvScan0 +
+  DestBits = (BYTE*)((PBYTE)DestSurf->pvScan0 +
                       (DestRect->left << 2) +
                       DestRect->top * DestSurf->lDelta);
   wd = DestSurf->lDelta - ((DestRect->right - DestRect->left) << 2);

@@ -52,7 +52,6 @@
 #define MB_INFO_FLAG_BOOT_LOADER_NAME	0x00000200
 #define MB_INFO_FLAG_APM_TABLE			0x00000400
 #define MB_INFO_FLAG_GRAPHICS_TABLE		0x00000800
-#define MB_INFO_FLAG_ACPI_TABLE         0x00001000
 
 #ifndef ASM
 /* Do not include here in boot.S. */
@@ -90,35 +89,6 @@ typedef struct elf_section_header_table
   unsigned long shndx;
 } elf_section_header_table_t;
 
-typedef struct _LOADER_PARAMETER_BLOCK
-{
-   ULONG Flags;
-   ULONG MemLower;
-   ULONG MemHigher;
-   ULONG BootDevice;
-   ULONG CommandLine;
-   ULONG ModsCount;
-   ULONG ModsAddr;
-   UCHAR Syms[12];
-   ULONG MmapLength;
-   ULONG MmapAddr;
-   ULONG DrivesCount;
-   ULONG DrivesAddr;
-   ULONG ConfigTable;
-   ULONG BootLoaderName;
-   ULONG PageDirectoryStart;
-   ULONG PageDirectoryEnd;
-   ULONG KernelBase;
-} LOADER_PARAMETER_BLOCK, *PLOADER_PARAMETER_BLOCK;
-
-/* The module structure. */
-typedef struct _FRLDR_MODULE {
-  ULONG_PTR ModuleStart;
-  ULONG_PTR ModuleEnd;
-  LPSTR ModuleName;
-  ULONG Reserved;
-} FRLDR_MODULE, *PFRLDR_MODULE;
-
 /* The memory map. Be careful that the offset 0 is base_addr_low
    but no size. */
 typedef struct memory_map
@@ -131,94 +101,6 @@ typedef struct memory_map
   unsigned long type;
   unsigned long reserved;
 } memory_map_t;
-
-
-LOADER_PARAMETER_BLOCK LoaderBlock; /* Multiboot info structure passed to kernel */
-char					multiboot_kernel_cmdline[255];	// Command line passed to kernel
-FRLDR_MODULE			multiboot_modules[64];		// Array to hold boot module info loaded for the kernel
-char					multiboot_module_strings[64][256];	// Array to hold module names
-unsigned long			multiboot_memory_map_descriptor_size;
-memory_map_t			multiboot_memory_map[32];		// Memory map
-
-
-void	boot_reactos(void);
-
-#include "fs.h"		// Included FILE structure definition
-
-BOOL
-STDCALL
-FrLdrBootReactOs(VOID);
-
-BOOL
-STDCALL
-FrLdrMapKernel(FILE *KernelImage);
-
-ULONG_PTR
-STDCALL
-FrLdrCreateModule(LPSTR ModuleName);
-
-ULONG_PTR
-STDCALL
-FrLdrLoadModule(FILE *ModuleImage,
-                LPSTR ModuleName,
-                PULONG ModuleSize);
-
-BOOL
-STDCALL
-FrLdrLoadKernel(PCHAR szFileName,
-                INT nPos);
-
-BOOL
-FrLdrLoadNlsFile(PCHAR szSystemRoot,
-                 PCHAR szErrorOut);
-
-BOOL
-FrLdrLoadDriver(PCHAR szFileName,
-                INT nPos);
-BOOL
-LoadSymbolFile(PCHAR szSystemRoot,
-               PCHAR ModuleName,
-               INT nPos);
-
-VOID
-FrLdrLoadBootDrivers(PCHAR szSystemRoot,
-                     INT nPos);
-
-BOOL
-STDCALL
-FrLdrCloseModule(ULONG_PTR ModuleBase,
-                 ULONG dwModuleSize);
-
-VOID
-STDCALL
-FrLdrStartup(ULONG Magic);
-
-VOID
-FASTCALL
-FrLdrGetKernelBase(VOID);
-
-VOID
-FASTCALL
-FrLdrSetupPae(ULONG Magic);
-
-VOID
-FASTCALL
-FrLdrGetPaeMode(VOID);
-
-VOID
-FASTCALL
-FrLdrSetupPageDirectory(VOID);
-
-VOID
-LoadAndBootReactOS(PCHAR OperatingSystemName);
-
-VOID FASTCALL AsmCode(VOID);
-typedef VOID (FASTCALL *ASMCODE)(ULONG Magic,
-                                 PLOADER_PARAMETER_BLOCK LoaderBlock);
-
-int	GetBootPartition(char *OperatingSystemName);
-
-
 
 #endif /* ! ASM */
 

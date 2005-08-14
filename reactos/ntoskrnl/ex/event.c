@@ -103,7 +103,7 @@ NtCreateEvent(OUT PHANDLE EventHandle,
     NTSTATUS Status = STATUS_SUCCESS;
 
     PAGED_CODE();
-    DPRINT("NtCreateEvent(0x%x, 0x%x, 0x%x)\n", EventHandle, DesiredAccess, ObjectAttributes);
+    DPRINT("NtCreateEvent(0x%p, 0x%x, 0x%p)\n", EventHandle, DesiredAccess, ObjectAttributes);
 
     /* Check Output Safety */
     if(PreviousMode != KernelMode) {
@@ -183,7 +183,7 @@ NtOpenEvent(OUT PHANDLE EventHandle,
     NTSTATUS Status = STATUS_SUCCESS;
 
     PAGED_CODE();
-    DPRINT("NtOpenEvent(0x%x, 0x%x, 0x%x)\n", EventHandle, DesiredAccess, ObjectAttributes);
+    DPRINT("NtOpenEvent(0x%p, 0x%x, 0x%p)\n", EventHandle, DesiredAccess, ObjectAttributes);
 
     /* Check Output Safety */
     if(PreviousMode != KernelMode) {
@@ -314,7 +314,7 @@ NtQueryEvent(IN HANDLE EventHandle,
     PEVENT_BASIC_INFORMATION BasicInfo = (PEVENT_BASIC_INFORMATION)EventInformation;
 
     PAGED_CODE();
-    DPRINT("NtQueryEvent(0x%x, 0x%x, 0x%x)\n", EventHandle, EventInformationClass);
+    DPRINT("NtQueryEvent(0x%p, 0x%x)\n", EventHandle, EventInformationClass);
 
     /* Check buffers and class validity */
     DefaultQueryInfoBufferCheck(EventInformationClass,

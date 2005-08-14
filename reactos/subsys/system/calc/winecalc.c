@@ -639,7 +639,7 @@ LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             break;
         default:
             {
-                int ret = parse(wParam, lParam);
+                parse(wParam, lParam);
             }
         } // switch WM_CHAR
 

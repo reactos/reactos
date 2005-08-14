@@ -39,7 +39,7 @@ typedef struct __GLOBAL_LOCAL_HANDLE
 
 #define HANDLE_TO_INTERN(h)  ((PGLOBAL_HANDLE)(((char *)(h))-4))
 #define INTERN_TO_HANDLE(i)  ((HGLOBAL) &((i)->Pointer))
-#define POINTER_TO_HANDLE(p) (*(PHANDLE)(p - HANDLE_SIZE))
+#define POINTER_TO_HANDLE(p) (*(PHANDLE)((ULONG_PTR)p - HANDLE_SIZE))
 #define ISHANDLE(h)          ((((ULONG)(h)) & 0x4)!=0)
 #define ISPOINTER(h)         ((((ULONG)(h)) & 0x4)==0)
 
@@ -105,7 +105,7 @@ GlobalAlloc(UINT uFlags,
                 if (palloc)
                 {
                     *(PHANDLE)palloc = INTERN_TO_HANDLE(phandle);
-                    phandle->Pointer = palloc + HANDLE_SIZE;
+                    phandle->Pointer = (PVOID)((ULONG_PTR)palloc + HANDLE_SIZE);
                 }
                 else /*failed to allocate the memory block*/
                 {
@@ -237,7 +237,7 @@ GlobalFree(HGLOBAL hMem)
             }
 
             if(phandle->Pointer)
-                RtlFreeHeap(GetProcessHeap(), 0, phandle->Pointer - HANDLE_SIZE);
+                RtlFreeHeap(GetProcessHeap(), 0, (PVOID)((ULONG_PTR)phandle->Pointer - HANDLE_SIZE));
 
             RtlFreeHeap(GetProcessHeap(), 0, phandle);
         }
@@ -549,7 +549,7 @@ GlobalReAlloc(HGLOBAL hMem,
                 if(phandle->Pointer)
                 {
                     palloc = RtlReAllocateHeap(GetProcessHeap(), heap_flags,
-                                         phandle->Pointer - HANDLE_SIZE,
+                                         (PVOID)((ULONG_PTR)phandle->Pointer - HANDLE_SIZE),
                                          dwBytes + HANDLE_SIZE);
                     if (0 == palloc)
                     {
@@ -558,7 +558,7 @@ GlobalReAlloc(HGLOBAL hMem,
                     else
                     {
                         *(PHANDLE)palloc = hMem;
-                        phandle->Pointer = palloc + HANDLE_SIZE;
+                        phandle->Pointer = (PVOID)((ULONG_PTR)palloc + HANDLE_SIZE);
                     }
                 }
                 else
@@ -571,7 +571,7 @@ GlobalReAlloc(HGLOBAL hMem,
                     else
                     {
                         *(PHANDLE)palloc = hMem;
-                        phandle->Pointer = palloc + HANDLE_SIZE;
+                        phandle->Pointer = (PVOID)((ULONG_PTR)palloc + HANDLE_SIZE);
                     }
                 }
             }
@@ -579,7 +579,7 @@ GlobalReAlloc(HGLOBAL hMem,
             {
                 if(phandle->Pointer)
                 {
-                    RtlFreeHeap(GetProcessHeap(), 0, phandle->Pointer - HANDLE_SIZE);
+                    RtlFreeHeap(GetProcessHeap(), 0, (PVOID)((ULONG_PTR)phandle->Pointer - HANDLE_SIZE));
                     phandle->Pointer = 0;
                 }
             }
@@ -613,7 +613,7 @@ GlobalSize(HGLOBAL hMem)
         {
             if (0 != phandle->Pointer)/*NOT DISCARDED*/
             {
-                retval = RtlSizeHeap(GetProcessHeap(), 0, phandle->Pointer - HANDLE_SIZE);
+                retval = RtlSizeHeap(GetProcessHeap(), 0, (PVOID)((ULONG_PTR)phandle->Pointer - HANDLE_SIZE));
 
                 if (retval == (SIZE_T)-1) /*RtlSizeHeap failed*/
                 {

@@ -1360,10 +1360,10 @@ RegImportValue (PHBIN RootBin,
   PWCHAR wName;
   PCHAR cName;
   LONG Error;
-  LONG DataSize;
+  ULONG DataSize;
   PCHAR cBuffer;
   PWCHAR wBuffer;
-  LONG i;
+  ULONG i;
 
   if (ValueCell->CellSize >= 0 || ValueCell->Id != REG_VALUE_CELL_ID)
     {

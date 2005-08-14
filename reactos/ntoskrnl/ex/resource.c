@@ -100,7 +100,7 @@ ExAcquireResourceExclusiveLite (
 {
    KIRQL oldIrql;
 
-   DPRINT("ExAcquireResourceExclusiveLite(Resource %x, Wait %d)\n",
+   DPRINT("ExAcquireResourceExclusiveLite(Resource 0x%p, Wait %d)\n",
 	  Resource, Wait);
 
    ASSERT_IRQL_LESS(DISPATCH_LEVEL);
@@ -222,7 +222,7 @@ static BOOLEAN EiAddSharedOwner(PERESOURCE Resource)
    POWNER_ENTRY freeEntry;
    ULONG i = 0;
 
-   DPRINT("EiAddSharedOwner(Resource %x)\n", Resource);
+   DPRINT("EiAddSharedOwner(Resource 0x%p)\n", Resource);
 
    if (Resource->ActiveCount == 0)
      {
@@ -292,7 +292,7 @@ static BOOLEAN EiAddSharedOwner(PERESOURCE Resource)
 	  }
      }
 
-   DPRINT("Found free entry %x\n", freeEntry);
+   DPRINT("Found free entry 0x%p\n", freeEntry);
 
    if (!freeEntry)
      {
@@ -346,7 +346,7 @@ ExAcquireResourceSharedLite (
 {
    KIRQL oldIrql;
 
-   DPRINT("ExAcquireResourceSharedLite(Resource %x, Wait %d)\n",
+   DPRINT("ExAcquireResourceSharedLite(Resource 0x%p, Wait %d)\n",
 	  Resource, Wait);
 
    ASSERT_IRQL_LESS(DISPATCH_LEVEL);
@@ -438,7 +438,7 @@ ExConvertExclusiveToSharedLite (
    ULONG oldWaiters;
    KIRQL oldIrql;
 
-   DPRINT("ExConvertExclusiveToSharedLite(Resource %x)\n", Resource);
+   DPRINT("ExConvertExclusiveToSharedLite(Resource 0x%p)\n", Resource);
 
    KeAcquireSpinLock(&Resource->SpinLock, &oldIrql);
 
@@ -519,7 +519,7 @@ ExAcquireSharedStarveExclusive (
 {
    KIRQL oldIrql;
 
-   DPRINT("ExAcquireSharedStarveExclusive(Resource %x, Wait %d)\n",
+   DPRINT("ExAcquireSharedStarveExclusive(Resource 0x%p, Wait %d)\n",
 	  Resource, Wait);
 
    KeAcquireSpinLock(&Resource->SpinLock, &oldIrql);
@@ -610,7 +610,7 @@ ExDeleteResourceLite (
 	PERESOURCE	Resource
 	)
 {
-   DPRINT("ExDeleteResourceLite(Resource %x)\n", Resource);
+   DPRINT("ExDeleteResourceLite(Resource 0x%p)\n", Resource);
    if (Resource->OwnerTable) ExFreePool(Resource->OwnerTable);
    if (Resource->SharedWaiters) ExFreePool(Resource->SharedWaiters);
    if (Resource->ExclusiveWaiters) ExFreePool(Resource->ExclusiveWaiters);
@@ -652,7 +652,7 @@ ExInitializeResource (
 NTSTATUS STDCALL
 ExInitializeResourceLite (PERESOURCE	Resource)
 {
-   DPRINT("ExInitializeResourceLite(Resource %x)\n", Resource);
+   DPRINT("ExInitializeResourceLite(Resource 0x%p)\n", Resource);
    memset(Resource,0,sizeof(ERESOURCE));
    Resource->NumberOfSharedWaiters = 0;
    Resource->NumberOfExclusiveWaiters = 0;
@@ -822,7 +822,7 @@ ExReleaseResourceForThreadLite (
 {
    KIRQL oldIrql;
 
-   DPRINT("ExReleaseResourceForThreadLite(Resource %x, ResourceThreadId %x)\n",
+   DPRINT("ExReleaseResourceForThreadLite(Resource 0x%p, ResourceThreadId 0x%p)\n",
 	  Resource, ResourceThreadId);
 
    ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);

@@ -17,7 +17,7 @@
  *        Remove all hardcode string to En.rc
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include "resource.h"
 
 #ifdef INCLUDE_CMD_LABEL
@@ -39,9 +39,11 @@ INT cmd_label (LPTSTR cmd, LPTSTR param)
 	/* print help */
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_LABEL_HELP1);
+		ConOutResPaging(TRUE,STRING_LABEL_HELP1);
 		return 0;
 	}
+
+  nErrorLevel = 0;
 
 	/* get parameters */
 	arg = split (param, &args, FALSE);
@@ -51,6 +53,7 @@ INT cmd_label (LPTSTR cmd, LPTSTR param)
 		/* too many parameters */
 		error_too_many_parameters (arg[args - 1]);
 		freep (arg);
+    nErrorLevel = 1;
 		return 1;
 	}
 
@@ -83,6 +86,7 @@ INT cmd_label (LPTSTR cmd, LPTSTR param)
 	{
 		error_invalid_drive ();
 		freep (arg);
+    nErrorLevel = 1;
 		return 1;
 	}
 

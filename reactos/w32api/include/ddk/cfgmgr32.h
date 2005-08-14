@@ -41,27 +41,27 @@ extern "C" {
 
 #include <pshpack1.h>
 
-#define CR_SUCCESS                  			0x00000000
+#define CR_SUCCESS                        0x00000000
 #define CR_DEFAULT                        0x00000001
 #define CR_OUT_OF_MEMORY                  0x00000002
 #define CR_INVALID_POINTER                0x00000003
 #define CR_INVALID_FLAG                   0x00000004
 #define CR_INVALID_DEVNODE                0x00000005
-#define CR_INVALID_DEVINST          			CR_INVALID_DEVNODE
+#define CR_INVALID_DEVINST                CR_INVALID_DEVNODE
 #define CR_INVALID_RES_DES                0x00000006
 #define CR_INVALID_LOG_CONF               0x00000007
 #define CR_INVALID_ARBITRATOR             0x00000008
 #define CR_INVALID_NODELIST               0x00000009
 #define CR_DEVNODE_HAS_REQS               0x0000000A
-#define CR_DEVINST_HAS_REQS         			CR_DEVNODE_HAS_REQS
+#define CR_DEVINST_HAS_REQS               CR_DEVNODE_HAS_REQS
 #define CR_INVALID_RESOURCEID             0x0000000B
 #define CR_DLVXD_NOT_FOUND                0x0000000C
 #define CR_NO_SUCH_DEVNODE                0x0000000D
-#define CR_NO_SUCH_DEVINST          			CR_NO_SUCH_DEVNODE
+#define CR_NO_SUCH_DEVINST                CR_NO_SUCH_DEVNODE
 #define CR_NO_MORE_LOG_CONF               0x0000000E
 #define CR_NO_MORE_RES_DES                0x0000000F
 #define CR_ALREADY_SUCH_DEVNODE           0x00000010
-#define CR_ALREADY_SUCH_DEVINST     			CR_ALREADY_SUCH_DEVNODE
+#define CR_ALREADY_SUCH_DEVINST           CR_ALREADY_SUCH_DEVNODE
 #define CR_INVALID_RANGE_LIST             0x00000011
 #define CR_INVALID_RANGE                  0x00000012
 #define CR_FAILURE                        0x00000013
@@ -150,21 +150,21 @@ typedef ULONG REGDISPOSITION;
 typedef ULONG RESOURCEID;
 typedef RESOURCEID *PRESOURCEID;
 
-#define CM_RESDES_WIDTH_DEFAULT 					0x00000000
-#define CM_RESDES_WIDTH_32      					0x00000001
-#define CM_RESDES_WIDTH_64      					0x00000002
-#define CM_RESDES_WIDTH_BITS    					0x00000003
+#define CM_RESDES_WIDTH_DEFAULT  0x00000000
+#define CM_RESDES_WIDTH_32       0x00000001
+#define CM_RESDES_WIDTH_64       0x00000002
+#define CM_RESDES_WIDTH_BITS     0x00000003
 
 
-#define MAX_CONFIG_VALUE      						9999
-#define MAX_INSTANCE_VALUE    						9999
+#define MAX_CONFIG_VALUE         9999
+#define MAX_INSTANCE_VALUE       9999
 
-#define MAX_DEVICE_ID_LEN     						200
-#define MAX_DEVNODE_ID_LEN    						MAX_DEVICE_ID_LEN
+#define MAX_DEVICE_ID_LEN        200
+#define MAX_DEVNODE_ID_LEN       MAX_DEVICE_ID_LEN
 
-#define MAX_CLASS_NAME_LEN    						32
-#define MAX_GUID_STRING_LEN   						39
-#define MAX_PROFILE_LEN       						80
+#define MAX_CLASS_NAME_LEN       32
+#define MAX_GUID_STRING_LEN      39
+#define MAX_PROFILE_LEN          80
 
 
 #define ResType_All                       0x00000000
@@ -183,7 +183,7 @@ typedef RESOURCEID *PRESOURCEID;
 #define ResType_PcCardConfig              0x00008002
 #define ResType_MfCardConfig              0x00008003
 
-#define CM_GETIDLIST_FILTER_NONE          		0x00000000
+#define CM_GETIDLIST_FILTER_NONE              0x00000000
 #define CM_GETIDLIST_FILTER_ENUMERATOR        0x00000001
 #define CM_GETIDLIST_FILTER_SERVICE           0x00000002
 #define CM_GETIDLIST_FILTER_EJECTRELATIONS    0x00000004
@@ -193,9 +193,9 @@ typedef RESOURCEID *PRESOURCEID;
 #define CM_GETIDLIST_DONOTGENERATE            0x10000040
 #define CM_GETIDLIST_FILTER_BITS              0x1000007F
 
-#define CM_GET_DEVICE_INTERFACE_LIST_PRESENT     	0x00000000
-#define CM_GET_DEVICE_INTERFACE_LIST_ALL_DEVICES 	0x00000001
-#define CM_GET_DEVICE_INTERFACE_LIST_BITS        	0x00000001
+#define CM_GET_DEVICE_INTERFACE_LIST_PRESENT      0x00000000
+#define CM_GET_DEVICE_INTERFACE_LIST_ALL_DEVICES  0x00000001
+#define CM_GET_DEVICE_INTERFACE_LIST_BITS         0x00000001
 
 
 typedef struct BusNumber_Des_s {
@@ -256,21 +256,21 @@ typedef struct DevPrivate_Resource_s {
 } DEVPRIVATE_RESOURCE, *PDEVPRIVATE_RESOURCE;
 
 /* DMA_DES.DD_Flags constants and masks */
-#define mDD_Width         								0x3
-#define fDD_BYTE          								0x0
-#define fDD_WORD          								0x1
-#define fDD_DWORD         								0x2
-#define fDD_BYTE_AND_WORD 								0x3
+#define mDD_Width                         0x3
+#define fDD_BYTE                          0x0
+#define fDD_WORD                          0x1
+#define fDD_DWORD                         0x2
+#define fDD_BYTE_AND_WORD                 0x3
 
-#define mDD_BusMaster     								0x4
-#define fDD_NoBusMaster   								0x0
-#define fDD_BusMaster     								0x4
+#define mDD_BusMaster                     0x4
+#define fDD_NoBusMaster                   0x0
+#define fDD_BusMaster                     0x4
 
-#define mDD_Type         									0x18
-#define fDD_TypeStandard 									0x00
-#define fDD_TypeA        									0x08
-#define fDD_TypeB        									0x10
-#define fDD_TypeF        									0x18
+#define mDD_Type                          0x18
+#define fDD_TypeStandard                  0x00
+#define fDD_TypeA                         0x08
+#define fDD_TypeB                         0x10
+#define fDD_TypeF                         0x18
 
 typedef struct DMA_Des_s {
   DWORD  DD_Count;
@@ -440,8 +440,8 @@ typedef struct Mem_Resource_s {
 } MEM_RESOURCE, *PMEM_RESOURCE;
 
 /* MFCARD_DES.PMF_Flags constants */
-#define fPMF_AUDIO_ENABLE   							0x8
-#define mPMF_AUDIO_ENABLE   							fPMF_AUDIO_ENABLE
+#define fPMF_AUDIO_ENABLE                 0x8
+#define mPMF_AUDIO_ENABLE                 fPMF_AUDIO_ENABLE
 
 typedef struct MfCard_Des_s {
   DWORD  PMF_Count;
@@ -585,7 +585,7 @@ CM_Add_Empty_Log_Conf_Ex(
   IN HMACHINE  hMachine);
 
 /* CM_Add_ID.ulFlags constants */
-#define CM_ADD_ID_HARDWARE              	0x00000000
+#define CM_ADD_ID_HARDWARE                0x00000000
 #define CM_ADD_ID_COMPATIBLE              0x00000001
 #define CM_ADD_ID_BITS                    0x00000001
 
@@ -1068,8 +1068,21 @@ CM_Get_First_Log_Conf_Ex(
   IN ULONG  ulFlags,
   IN HMACHINE  hMachine);
 
-/* FIXME: Obsolete CM_Get_Global_State */
-/* FIXME: Obsolete CM_Get_Global_State_Ex */
+CMAPI
+CONFIGRET
+WINAPI
+CM_Get_Global_State(
+  OUT PULONG  pulState,
+  IN ULONG  ulFlags);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Get_Global_State_Ex(
+  OUT PULONG  pulState,
+  IN ULONG  ulFlags,
+  IN HMACHINE  hMachine);
+
 /* FIXME: Obsolete CM_Get_Hardware_Profile_Info */
 /* FIXME: Obsolete CM_Get_Hardware_Profile_Info_Ex */
 /* FIXME: Obsolete CM_Get_HW_Prof_Flags */

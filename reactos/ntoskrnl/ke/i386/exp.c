@@ -135,7 +135,7 @@ KiRosPrintAddress(PVOID address)
           current_entry = current_entry->Flink;
        }
 
-     address = (PVOID)((ULONG_PTR)address & ~KERNEL_BASE);
+     address = (PVOID)((ULONG_PTR)address & ~(ULONG_PTR)MmSystemRangeStart);
    } while(++i <= 1);
 
    return(FALSE);
@@ -469,7 +469,7 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
  *        Complete CPU context
  */
 {
-   unsigned int cr2;
+   ULONG_PTR cr2;
    NTSTATUS Status;
    ULONG Esp0;
 
@@ -528,7 +528,7 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
     */
    if (ExceptionNr == 14)
      {
-        if (Ke386NoExecute && Tf->ErrorCode & 0x10 && cr2 >= KERNEL_BASE)
+        if (Ke386NoExecute && Tf->ErrorCode & 0x10 && cr2 >= (ULONG_PTR)MmSystemRangeStart)
 	{
            KEBUGCHECKWITHTF(ATTEMPTED_EXECUTE_OF_NOEXECUTE_MEMORY, 0, 0, 0, 0, Tf);
 	}
@@ -729,7 +729,7 @@ KeDumpStackFrames(PULONG Frame)
 		}
 
 		StackBase = Frame;
-		StackEnd = mbi.BaseAddress + mbi.RegionSize;
+		StackEnd = (PULONG)((ULONG_PTR)mbi.BaseAddress + mbi.RegionSize);
 
 		while ( Frame >= StackBase && Frame < StackEnd )
 		{
@@ -786,7 +786,7 @@ KeRosDumpStackFrames ( PULONG Frame, ULONG FrameCount )
 		}
 
 		StackBase = Frame;
-		StackEnd = mbi.BaseAddress + mbi.RegionSize;
+		StackEnd = (PULONG)((ULONG_PTR)mbi.BaseAddress + mbi.RegionSize);
 
 		while ( Frame >= StackBase && Frame < StackEnd && i++ < FrameCount )
 		{
@@ -838,7 +838,7 @@ KeRosGetStackFrames ( PULONG Frames, ULONG FrameCount )
 		}
 
 		StackBase = Frame;
-		StackEnd = mbi.BaseAddress + mbi.RegionSize;
+		StackEnd = (PULONG)((ULONG_PTR)mbi.BaseAddress + mbi.RegionSize);
 
 		while ( Count < FrameCount && Frame >= StackBase && Frame < StackEnd )
 		{

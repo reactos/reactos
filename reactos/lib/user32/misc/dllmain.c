@@ -47,15 +47,15 @@ VOID
 Init(VOID)
 {
   /* Set up the kernel callbacks. */
-  NtCurrentTeb()->Peb->KernelCallbackTable[USER32_CALLBACK_WINDOWPROC] =
+  NtCurrentTeb()->ProcessEnvironmentBlock->KernelCallbackTable[USER32_CALLBACK_WINDOWPROC] =
     (PVOID)User32CallWindowProcFromKernel;
-  NtCurrentTeb()->Peb->KernelCallbackTable[USER32_CALLBACK_SENDASYNCPROC] =
+  NtCurrentTeb()->ProcessEnvironmentBlock->KernelCallbackTable[USER32_CALLBACK_SENDASYNCPROC] =
     (PVOID)User32CallSendAsyncProcForKernel;
-  NtCurrentTeb()->Peb->KernelCallbackTable[USER32_CALLBACK_LOADSYSMENUTEMPLATE] =
+  NtCurrentTeb()->ProcessEnvironmentBlock->KernelCallbackTable[USER32_CALLBACK_LOADSYSMENUTEMPLATE] =
     (PVOID)User32LoadSysMenuTemplateForKernel;
-  NtCurrentTeb()->Peb->KernelCallbackTable[USER32_CALLBACK_LOADDEFAULTCURSORS] =
+  NtCurrentTeb()->ProcessEnvironmentBlock->KernelCallbackTable[USER32_CALLBACK_LOADDEFAULTCURSORS] =
     (PVOID)User32SetupDefaultCursors;
-  NtCurrentTeb()->Peb->KernelCallbackTable[USER32_CALLBACK_HOOKPROC] =
+  NtCurrentTeb()->ProcessEnvironmentBlock->KernelCallbackTable[USER32_CALLBACK_HOOKPROC] =
     (PVOID)User32CallHookProcFromKernel;
 
   /* Allocate an index for user32 thread local data. */

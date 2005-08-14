@@ -38,8 +38,8 @@
 @ stub CM_Dup_Range_List
 @ stub CM_Enable_DevNode
 @ stub CM_Enable_DevNode_Ex
-@ stub CM_Enumerate_Classes
-@ stub CM_Enumerate_Classes_Ex
+@ stdcall CM_Enumerate_Classes(long ptr long)
+@ stdcall CM_Enumerate_Classes_Ex(long ptr long ptr)
 @ stub CM_Enumerate_EnumeratorsA
 @ stub CM_Enumerate_EnumeratorsW
 @ stub CM_Enumerate_Enumerators_ExA
@@ -99,8 +99,8 @@
 @ stub CM_Get_Device_Interface_List_Size_ExW
 @ stub CM_Get_First_Log_Conf
 @ stub CM_Get_First_Log_Conf_Ex
-@ stub CM_Get_Global_State
-@ stub CM_Get_Global_State_Ex
+@ stdcall CM_Get_Global_State(ptr long)
+@ stdcall CM_Get_Global_State_Ex(ptr long long)
 @ stub CM_Get_HW_Prof_FlagsA
 @ stub CM_Get_HW_Prof_FlagsW
 @ stub CM_Get_HW_Prof_Flags_ExA
@@ -192,7 +192,7 @@
 @ stub CM_Unregister_Device_Interface_ExW
 @ stdcall CaptureAndConvertAnsiArg(str ptr)
 @ stdcall CaptureStringArg(wstr ptr)
-@ stub CenterWindowRelativeToParent
+@ stdcall CenterWindowRelativeToParent(long)
 @ stdcall ConcatenatePaths(wstr wstr long ptr)
 @ stdcall DelayedMove(wstr wstr)
 @ stub DelimStringToMultiSz
@@ -206,7 +206,7 @@
 @ stub GetCurrentDriverSigningPolicy
 @ stub GetNewInfName
 @ stdcall GetSetFileTimestamp(wstr ptr ptr ptr long)
-@ stub GetVersionInfoFromImage
+@ stdcall GetVersionInfoFromImage(wstr ptr ptr)
 @ stub InfIsFromOemLocation
 @ stub InstallCatalog
 @ stdcall InstallHinfSection(long long str long) InstallHinfSectionA
@@ -282,11 +282,11 @@
 @ stdcall SetupDiClassNameFromGuidW(ptr wstr long ptr)
 @ stub SetupDiCreateDevRegKeyA
 @ stub SetupDiCreateDevRegKeyW
-@ stub SetupDiCreateDeviceInfoA
+@ stdcall SetupDiCreateDeviceInfoA(ptr str ptr str ptr long ptr)
+@ stdcall SetupDiCreateDeviceInfoW(ptr wstr ptr wstr ptr long ptr)
 @ stdcall SetupDiCreateDeviceInfoList(ptr ptr)
 @ stdcall SetupDiCreateDeviceInfoListExA(ptr long str ptr)
-@ stdcall SetupDiCreateDeviceInfoListExW(ptr long str ptr)
-@ stub SetupDiCreateDeviceInfoW
+@ stdcall SetupDiCreateDeviceInfoListExW(ptr long wstr ptr)
 @ stub SetupDiDeleteDevRegKey
 @ stub SetupDiDeleteDeviceInfo
 @ stub SetupDiDeleteDeviceInterfaceData
@@ -516,7 +516,7 @@
 @ stdcall StringTableAddString(ptr wstr long)
 @ stub StringTableAddStringEx
 @ stdcall StringTableDestroy(ptr)
-@ stub StringTableDuplicate
+@ stdcall StringTableDuplicate(ptr)
 @ stub StringTableEnum
 @ stub StringTableGetExtraData
 @ stdcall StringTableInitialize()

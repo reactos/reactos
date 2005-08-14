@@ -2,6 +2,7 @@
  * SetupAPI device installer
  *
  * Copyright 2000 Andreas Mohr for CodeWeavers
+ *           2005 Hervé Poussineau (hpoussin@reactos.com)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,7 +21,7 @@
 
 #include "config.h"
 #include "wine/port.h"
- 
+
 #include <stdarg.h>
 
 #include "windef.h"
@@ -49,6 +50,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
 static const WCHAR ClassGUID[]  = {'C','l','a','s','s','G','U','I','D',0};
 static const WCHAR Class[]  = {'C','l','a','s','s',0};
 static const WCHAR ClassInstall32[]  = {'C','l','a','s','s','I','n','s','t','a','l','l','3','2',0};
+static const WCHAR DeviceInstance[]  = {'D','e','v','i','c','e','I','n','s','t','a','n','c','e',0};
 static const WCHAR NoDisplayClass[]  = {'N','o','D','i','s','p','l','a','y','C','l','a','s','s',0};
 static const WCHAR NoInstallClass[]  = {'N','o','I','s','t','a','l','l','C','l','a','s','s',0};
 static const WCHAR NoUseClass[]  = {'N','o','U','s','e','C','l','a','s','s',0};
@@ -67,6 +69,51 @@ static const WCHAR DeviceClasses[] = {'S','y','s','t','e','m','\\',
                                   'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
                                   'C','o','n','t','r','o','l','\\',
                                   'D','e','v','i','c','e','C','l','a','s','s','e','s',0};
+
+static const WCHAR EnumKeyName[] = {'S','y','s','t','e','m','\\',
+                                  'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
+                                  'E','n','u','m',0};
+
+
+typedef struct _DeviceInfo
+{
+    LIST_ENTRY ItemEntry;
+    BOOL IsDevice; /* This entry is a device or an interface */
+    union
+    {
+        struct
+        {
+            GUID ClassGuid;
+            WCHAR RegistryKey[0]; /* "0000", "0001"... */
+        } Device;
+        struct
+        {
+            GUID InterfaceGuid;
+#ifdef __WINE__
+            WCHAR InterfaceName[0]; /* "COMx" */
+#else
+            GUID ClassGuid;
+            WCHAR DeviceInstance[0]; /* "ACPI\PNP0501\4&2658d0a0&0"..., NULL on Wine */
+#endif
+        } Interface;
+    };
+} DeviceInfo;
+
+#define SETUP_DEV_INFO_LIST_MAGIC 0xd00ff056
+
+typedef struct _DeviceInfoList
+{
+    DWORD magic;
+    GUID ClassGuid; /* Only devices related of this class are in the device list */
+    HWND hWnd;
+    HKEY HKLM; /* Local or distant HKEY_LOCAL_MACHINE registry key */
+    DWORD numberOfEntries;
+    LIST_ENTRY ListHead;
+} DeviceInfoList;
+
+/* FIXME: header mess */
+DEFINE_GUID(GUID_NULL,
+  0x00000000L, 0x0000, 0x0000, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00);
 
 /***********************************************************************
  *              SetupDiBuildClassInfoList  (SETUPAPI.@)
@@ -126,7 +173,7 @@ BOOL WINAPI SetupDiBuildClassInfoListExW(
         LPCWSTR MachineName,
         PVOID Reserved)
 {
-    WCHAR szKeyName[40];
+    WCHAR szKeyName[MAX_GUID_STRING_LEN + 1];
     HKEY hClassesKey;
     HKEY hClassKey;
     DWORD dwLength;
@@ -151,7 +198,7 @@ BOOL WINAPI SetupDiBuildClassInfoListExW(
 
     for (dwIndex = 0; ; dwIndex++)
     {
-	dwLength = 40;
+	dwLength = MAX_GUID_STRING_LEN + 1;
 	lError = RegEnumKeyExW(hClassesKey,
 			       dwIndex,
 			       szKeyName,
@@ -292,7 +339,7 @@ BOOL WINAPI SetupDiClassGuidsFromNameExA(
     LPWSTR MachineNameW = NULL;
     BOOL bResult;
 
-    FIXME("\n");
+    TRACE("\n");
 
     ClassNameW = MultiByteToUnicode(ClassName, CP_ACP);
     if (ClassNameW == NULL)
@@ -331,7 +378,7 @@ BOOL WINAPI SetupDiClassGuidsFromNameExW(
         LPCWSTR MachineName,
         PVOID Reserved)
 {
-    WCHAR szKeyName[40];
+    WCHAR szKeyName[MAX_GUID_STRING_LEN + 1];
     WCHAR szClassName[256];
     HKEY hClassesKey;
     HKEY hClassKey;
@@ -344,7 +391,7 @@ BOOL WINAPI SetupDiClassGuidsFromNameExW(
 	*RequiredSize = 0;
 
     hClassesKey = SetupDiOpenClassRegKeyExW(NULL,
-                                            KEY_ALL_ACCESS,
+                                            KEY_ENUMERATE_SUB_KEYS,
                                             DIOCR_INSTALLER,
                                             MachineName,
                                             Reserved);
@@ -355,7 +402,7 @@ BOOL WINAPI SetupDiClassGuidsFromNameExW(
 
     for (dwIndex = 0; ; dwIndex++)
     {
-	dwLength = 40;
+	dwLength = MAX_GUID_STRING_LEN + 1;
 	lError = RegEnumKeyExW(hClassesKey,
 			       dwIndex,
 			       szKeyName,
@@ -372,7 +419,7 @@ BOOL WINAPI SetupDiClassGuidsFromNameExW(
 	    if (RegOpenKeyExW(hClassesKey,
 			      szKeyName,
 			      0,
-			      KEY_ALL_ACCESS,
+			      KEY_QUERY_VALUE,
 			      &hClassKey))
 	    {
 		RegCloseKey(hClassesKey);
@@ -503,9 +550,10 @@ BOOL WINAPI SetupDiClassNameFromGuidExW(
 {
     HKEY hKey;
     DWORD dwLength;
+    LONG rc;
 
     hKey = SetupDiOpenClassRegKeyExW(ClassGuid,
-                                     KEY_ALL_ACCESS,
+                                     KEY_QUERY_VALUE,
                                      DIOCR_INSTALLER,
                                      MachineName,
                                      Reserved);
@@ -517,13 +565,15 @@ BOOL WINAPI SetupDiClassNameFromGuidExW(
     if (RequiredSize != NULL)
     {
 	dwLength = 0;
-	if (RegQueryValueExW(hKey,
+	rc = RegQueryValueExW(hKey,
 			     Class,
 			     NULL,
 			     NULL,
 			     NULL,
-			     &dwLength))
+			     &dwLength);
+	if (rc != ERROR_SUCCESS)
 	{
+	    SetLastError(rc);
 	    RegCloseKey(hKey);
 	    return FALSE;
 	}
@@ -532,13 +582,15 @@ BOOL WINAPI SetupDiClassNameFromGuidExW(
     }
 
     dwLength = ClassNameSize * sizeof(WCHAR);
-    if (RegQueryValueExW(hKey,
+    rc = RegQueryValueExW(hKey,
 			 Class,
 			 NULL,
 			 NULL,
 			 (LPBYTE)ClassName,
-			 &dwLength))
+			 &dwLength);
+    if (rc != ERROR_SUCCESS)
     {
+	SetLastError(rc);
 	RegCloseKey(hKey);
 	return FALSE;
     }
@@ -597,26 +649,87 @@ SetupDiCreateDeviceInfoListExW(const GUID *ClassGuid,
 			       PCWSTR MachineName,
 			       PVOID Reserved)
 {
-  FIXME("\n");
-  return (HDEVINFO)INVALID_HANDLE_VALUE;
+  DeviceInfoList* list;
+  DWORD rc;
+
+  TRACE("%p %p %p %p\n", ClassGuid, hwndParent, MachineName, Reserved);
+
+  list = HeapAlloc(GetProcessHeap(), 0, sizeof(DeviceInfoList));
+  if (!list)
+  {
+    SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+    return (HDEVINFO)INVALID_HANDLE_VALUE;
+  }
+
+  list->magic = SETUP_DEV_INFO_LIST_MAGIC;
+  list->hWnd = hwndParent;
+  list->numberOfEntries = 0;
+  if (MachineName)
+    rc = RegConnectRegistryW(MachineName, HKEY_LOCAL_MACHINE, &list->HKLM);
+  else
+    rc = RegOpenKey(HKEY_LOCAL_MACHINE, NULL, &list->HKLM);
+  if (rc != ERROR_SUCCESS)
+  {
+    SetLastError(rc);
+    HeapFree(GetProcessHeap(), 0, list);
+    return (HDEVINFO)INVALID_HANDLE_VALUE;
+  }
+  memcpy(
+    &list->ClassGuid,
+    ClassGuid ? ClassGuid : &GUID_NULL,
+    sizeof(list->ClassGuid));
+  InitializeListHead(&list->ListHead);
+  return (HDEVINFO)list;
 }
 
 /***********************************************************************
  *		SetupDiEnumDeviceInfo (SETUPAPI.@)
  */
 BOOL WINAPI SetupDiEnumDeviceInfo(
-        HDEVINFO  devinfo,
-        DWORD  index,
-        PSP_DEVINFO_DATA info)
+        HDEVINFO DeviceInfoSet,
+        DWORD MemberIndex,
+        PSP_DEVINFO_DATA DeviceInfoData)
 {
-    FIXME("%p %ld %p\n", devinfo, index, info);
+    BOOL ret = FALSE;
 
-    if(info==NULL)
-        return FALSE;
-    if(info->cbSize < sizeof(*info))
-        return FALSE;
-
-    return FALSE;
+    TRACE("%p, 0x%08lx, %p\n", DeviceInfoSet, MemberIndex, DeviceInfoData);
+    if (!DeviceInfoData)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (DeviceInfoSet && DeviceInfoSet != (HDEVINFO)INVALID_HANDLE_VALUE)
+    {
+        DeviceInfoList *list = (DeviceInfoList *)DeviceInfoSet;
+        
+        if (list->magic != SETUP_DEV_INFO_LIST_MAGIC)
+            SetLastError(ERROR_INVALID_HANDLE);
+        else if (DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
+            SetLastError(ERROR_INVALID_USER_BUFFER);
+        else if (MemberIndex >= list->numberOfEntries)
+            SetLastError(ERROR_NO_MORE_ITEMS);
+        else
+        {
+            PLIST_ENTRY ItemList = list->ListHead.Flink;
+            DeviceInfo* DevInfo;
+            while (MemberIndex-- > 0)
+                ItemList = ItemList->Flink;
+            DevInfo = (DeviceInfo *)ItemList;
+            if (DevInfo->IsDevice)
+            {
+                memcpy(&DeviceInfoData->ClassGuid,
+                    &DevInfo->Device.ClassGuid,
+                    sizeof(GUID));
+                DeviceInfoData->DevInst = 0; /* FIXME */
+                DeviceInfoData->Reserved = (ULONG_PTR)0;
+                ret = TRUE;
+            }
+            else
+            {
+                SetLastError(ERROR_INVALID_PARAMETER);
+            }
+        }
+    }
+    else
+        SetLastError(ERROR_INVALID_HANDLE);
+    return ret;
 }
 
 /***********************************************************************
@@ -630,8 +743,47 @@ BOOL WINAPI SetupDiGetActualSectionToInstallA(
         PDWORD RequiredSize,
         PSTR *Extension)
 {
-    FIXME("\n");
-    return FALSE;
+    LPWSTR InfSectionNameW = NULL;
+    PWSTR InfSectionWithExtW = NULL;
+    PWSTR ExtensionW;
+    BOOL bResult;
+
+    TRACE("\n");
+
+    if (InfSectionName)
+    {
+        InfSectionNameW = MultiByteToUnicode(InfSectionName, CP_ACP);
+        if (InfSectionNameW == NULL) goto end;
+    }
+    if (InfSectionWithExt)
+    {
+        InfSectionWithExtW = HeapAlloc(GetProcessHeap(), 0, InfSectionWithExtSize * sizeof(WCHAR));
+        if (InfSectionWithExtW == NULL) goto end;
+    }
+
+    bResult = SetupDiGetActualSectionToInstallW(InfHandle, InfSectionNameW,
+                                                InfSectionWithExt ? InfSectionNameW : NULL,
+                                                InfSectionWithExtSize, RequiredSize,
+                                                Extension ? &ExtensionW : NULL);
+
+    if (bResult && InfSectionWithExt)
+    {
+         bResult = WideCharToMultiByte(CP_ACP, 0, InfSectionWithExtW, -1, InfSectionWithExt,
+             InfSectionWithExtSize, NULL, NULL) != 0;
+    }
+    if (bResult && Extension)
+    {
+        if (ExtensionW == NULL)
+            *Extension = NULL;
+         else
+            *Extension = &InfSectionWithExt[ExtensionW - InfSectionWithExtW];
+    }
+
+end:
+    if (InfSectionNameW) MyFree(InfSectionNameW);
+    if (InfSectionWithExtW) HeapFree(GetProcessHeap(), 0, InfSectionWithExtW);
+
+    return bResult;
 }
 
 /***********************************************************************
@@ -750,8 +902,48 @@ BOOL WINAPI SetupDiGetClassDescriptionExA(
         PCSTR MachineName,
         PVOID Reserved)
 {
-  FIXME("\n");
-  return FALSE;
+    PWCHAR ClassDescriptionW;
+    LPWSTR MachineNameW = NULL;
+    BOOL ret;
+
+    TRACE("\n");
+    if (ClassDescriptionSize > 0)
+    {
+        ClassDescriptionW = HeapAlloc(GetProcessHeap(), 0, ClassDescriptionSize * sizeof(WCHAR));
+        if (!ClassDescriptionW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            ret = FALSE;
+            goto end;
+        }
+    }
+
+    if (MachineName)
+    {
+        MachineNameW = MultiByteToUnicode(MachineName, CP_ACP);
+        if (!MachineNameW)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            ret = FALSE;
+            goto end;
+        }
+    }
+
+    ret = SetupDiGetClassDescriptionExW(ClassGuid, ClassDescriptionW, ClassDescriptionSize * sizeof(WCHAR),
+     NULL, MachineNameW, Reserved);
+    if (ret)
+    {
+        int len = WideCharToMultiByte(CP_ACP, 0, ClassDescriptionW, -1, ClassDescription,
+         ClassDescriptionSize, NULL, NULL);
+
+        if (!ClassDescriptionSize && RequiredSize)
+            *RequiredSize = len;
+    }
+
+end:
+    HeapFree(GetProcessHeap(), 0, ClassDescriptionW);
+    MyFree(MachineNameW);
+    return ret;
 }
 
 /***********************************************************************
@@ -822,8 +1014,38 @@ HDEVINFO WINAPI SetupDiGetClassDevsA(
        HWND parent,
        DWORD flags)
 {
+    return SetupDiGetClassDevsExA(class, enumstr, parent,
+                                  flags, NULL, NULL, NULL);
+}
+
+/***********************************************************************
+ *		SetupDiGetClassDevsW (SETUPAPI.@)
+ */
+HDEVINFO WINAPI SetupDiGetClassDevsW(
+       CONST GUID *class,
+       LPCWSTR enumstr,
+       HWND parent,
+       DWORD flags)
+{
+    return SetupDiGetClassDevsExW(class, enumstr, parent,
+                                  flags, NULL, NULL, NULL);
+}
+
+/***********************************************************************
+ *		SetupDiGetClassDevsExA (SETUPAPI.@)
+ */
+HDEVINFO WINAPI SetupDiGetClassDevsExA(
+       CONST GUID *class,
+       LPCSTR enumstr,
+       HWND parent,
+       DWORD flags,
+       HDEVINFO deviceset,
+       LPCSTR machine,
+       PVOID reserved)
+{
     HDEVINFO ret;
     LPWSTR enumstrW = NULL;
+    LPWSTR machineW = NULL;
 
     if (enumstr)
     {
@@ -836,127 +1058,453 @@ HDEVINFO WINAPI SetupDiGetClassDevsA(
         }
         MultiByteToWideChar(CP_ACP, 0, enumstr, -1, enumstrW, len);
     }
-    ret = SetupDiGetClassDevsW(class, enumstrW, parent, flags);
-    HeapFree(GetProcessHeap(), 0, enumstrW);
+    if (machine)
+    {
+        int len = MultiByteToWideChar(CP_ACP, 0, machine, -1, NULL, 0);
+        machineW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!machineW)
+        {
+            ret = (HDEVINFO)INVALID_HANDLE_VALUE;
+            goto end;
+        }
+        MultiByteToWideChar(CP_ACP, 0, machine, -1, machineW, len);
+    }
+    ret = SetupDiGetClassDevsExW(class, enumstrW, parent, flags, deviceset, machineW, reserved);
 
 end:
+    HeapFree(GetProcessHeap(), 0, enumstrW);
+    HeapFree(GetProcessHeap(), 0, machineW);
     return ret;
 }
 
-#define SETUP_SERIAL_PORT_MAGIC 0xd00ff055
-
-typedef struct _SerialPortName
+static LONG SETUP_CreateDevListFromClass(
+       DeviceInfoList *list,
+       PCWSTR MachineName,
+       LPGUID class,
+       PCWSTR Enumerator)
 {
-    WCHAR name[5];
-} SerialPortName;
+    HKEY KeyClass;
+    LONG rc;
+    DWORD subKeys = 0, maxSubKey;
+    DeviceInfo* deviceInfo;
+    DWORD i;
 
-typedef struct _SerialPortList
-{
-    DWORD magic;
-    UINT  numPorts;
-    SerialPortName names[1];
-} SerialPortList;
+    KeyClass = SetupDiOpenClassRegKeyExW(class, KEY_ENUMERATE_SUB_KEYS | KEY_QUERY_VALUE, DIOCR_INSTALLER, MachineName, NULL);
+    if (KeyClass == INVALID_HANDLE_VALUE)
+        return GetLastError();
 
-static HDEVINFO SETUP_CreateSerialDeviceList(void)
+    if (Enumerator)
+        FIXME("Enumerator parameter ignored\n");
+
+    rc = RegQueryInfoKeyW(
+        KeyClass,
+        NULL, NULL,
+        NULL,
+        &subKeys,
+        &maxSubKey,
+        NULL, NULL, NULL, NULL, NULL, NULL);
+    if (rc != ERROR_SUCCESS)
+    {
+        RegCloseKey(KeyClass);
+        return rc;
+    }
+
+    for (i = 0; i < subKeys; i++)
+    {
+        deviceInfo = HeapAlloc(GetProcessHeap(), 0, FIELD_OFFSET(DeviceInfo, Device.RegistryKey) + maxSubKey * sizeof(WCHAR));
+        if (!deviceInfo)
+        {
+           RegCloseKey(KeyClass);
+           return ERROR_NO_SYSTEM_RESOURCES;
+        }
+        rc = RegEnumKeyW(KeyClass, i, &deviceInfo->Device.RegistryKey[0], maxSubKey);
+        if (rc == ERROR_NO_MORE_ITEMS)
+            break;
+        if (rc != ERROR_SUCCESS)
+        {
+           RegCloseKey(KeyClass);
+           return rc;
+        }
+        deviceInfo->IsDevice = TRUE;
+        memcpy(&deviceInfo->Device.ClassGuid, class, sizeof(GUID));
+        InsertTailList(&list->ListHead, &deviceInfo->ItemEntry);
+        list->numberOfEntries++;
+    }
+
+    RegCloseKey(KeyClass);
+    return ERROR_SUCCESS;
+}
+
+#ifdef __WINE__
+static LONG SETUP_CreateSerialDeviceList(
+       DeviceInfoList *list,
+       PCWSTR MachineName,
+       LPGUID InterfaceGuid,
+       PCWSTR DeviceInstanceW)
 {
     static const size_t initialSize = 100;
     size_t size;
     WCHAR buf[initialSize];
     LPWSTR devices;
-    HDEVINFO ret;
-    BOOL failed = FALSE;
+    static const WCHAR devicePrefixW[] = { 'C','O','M',0 };
+    LPWSTR ptr;
+    DeviceInfo *deviceInfo;
+
+    if (MachineName)
+        WARN("'MachineName' is ignored on Wine!\n");
+    if (DeviceInstanceW){
+        WARN("'DeviceInstanceW' can't be set on Wine!\n");
 
     devices = buf;
     size = initialSize;
-    do {
-        if (QueryDosDeviceW(NULL, devices, size) == 0)
+    while (TRUE)
+    {
+        if (QueryDosDeviceW(NULL, devices, size) != 0)
+            break;
+        if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
         {
-            if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+            size *= 2;
+            if (devices != buf)
+                HeapFree(GetProcessHeap(), 0, devices);
+            devices = HeapAlloc(GetProcessHeap(), 0, size * sizeof(WCHAR));
+            if (!devices)
+                return ERROR_NO_SYSTEM_RESOURCES;
+            *devices = UNICODE_NULL;
+        }
+        else
+        {
+            if (devices != buf)
+                HeapFree(GetProcessHeap(), 0, devices);
+            return GetLastError();
+        }
+    }
+
+    /* 'devices' is a MULTI_SZ string */
+    for (ptr = devices; *ptr; ptr += strlenW(ptr) + 1)
+    {
+        if (strncmpW(devicePrefixW, ptr, sizeof(devicePrefixW) / sizeof(devicePrefixW[0]) - 1) == 0)
+        {
+            /* We have found a device */
+            TRACE("Adding %s to list\n", debugstr_w(ptr));
+            deviceInfo = HeapAlloc(GetProcessHeap(), 0,
+                FIELD_OFFSET(DeviceInfo, Interface.InterfaceName) + strlenW(ptr) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
+            if (!deviceInfo)
             {
-                size *= 2;
                 if (devices != buf)
                     HeapFree(GetProcessHeap(), 0, devices);
-                devices = HeapAlloc(GetProcessHeap(), 0, size * sizeof(WCHAR));
-                if (!devices)
-                    failed = TRUE;
-                else
-                    *devices = 0;
+                return ERROR_NO_SYSTEM_RESOURCES;
             }
-            else
-                failed = TRUE;
+            deviceInfo->IsDevice = FALSE;
+            memcpy(&deviceInfo->Interface.InterfaceGuid, InterfaceGuid, sizeof(GUID));
+            wcscpy(&deviceInfo->Interface.InterfaceName[0], ptr);
+            InsertTailList(&list->ListHead, &deviceInfo->ItemEntry);
+            list->numberOfEntries++;
         }
-    } while (!*devices && !failed);
-    if (!failed)
-    {
-        static const WCHAR comW[] = { 'C','O','M',0 };
-        LPWSTR ptr;
-        UINT numSerialPorts = 0;
-        SerialPortList *list;
-
-        for (ptr = devices; *ptr; ptr += strlenW(ptr) + 1)
-        {
-            if (!strncmpW(comW, ptr, sizeof(comW) / sizeof(comW[0]) - 1))
-                numSerialPorts++;
-        }
-        list = HeapAlloc(GetProcessHeap(), 0, sizeof(SerialPortList) +
-         numSerialPorts ? (numSerialPorts - 1) * sizeof(SerialPortName) : 0);
-        if (list)
-        {
-            list->magic = SETUP_SERIAL_PORT_MAGIC;
-            list->numPorts = 0;
-            for (ptr = devices; *ptr; ptr += strlenW(ptr) + 1)
-            {
-                if (!strncmpW(comW, ptr, sizeof(comW) / sizeof(comW[0]) - 1))
-                {
-                    lstrcpynW(list->names[list->numPorts].name, ptr,
-                     sizeof(list->names[list->numPorts].name) /
-                     sizeof(list->names[list->numPorts].name[0]));
-                    TRACE("Adding %s to list\n",
-                     debugstr_w(list->names[list->numPorts].name));
-                    list->numPorts++;
-                }
-            }
-            TRACE("list->numPorts is %d\n", list->numPorts);
-        }
-        ret = (HDEVINFO)list;
     }
-    else
-        ret = (HDEVINFO)INVALID_HANDLE_VALUE;
     if (devices != buf)
         HeapFree(GetProcessHeap(), 0, devices);
-    TRACE("returning %p\n", ret);
-    return ret;
+    return ERROR_SUCCESS;
 }
 
+#else /* __WINE__ */
+
+static LONG SETUP_CreateInterfaceList(
+       DeviceInfoList *list,
+       PCWSTR MachineName,
+       LPGUID InterfaceGuid,
+       PCWSTR DeviceInstanceW /* OPTIONAL */)
+{
+    HKEY hInterfaceKey, hEnumKey, hKey;
+    LONG rc;
+    WCHAR KeyBuffer[max(MAX_PATH, MAX_GUID_STRING_LEN) + 1];
+    DWORD i;
+    DWORD dwLength, dwRegType;
+    DeviceInfo *deviceInfo;
+
+    /* Open registry key related to this interface */
+    hInterfaceKey = SetupDiOpenClassRegKeyExW(InterfaceGuid, KEY_ENUMERATE_SUB_KEYS, DIOCR_INTERFACE, MachineName, NULL);
+    if (hInterfaceKey == INVALID_HANDLE_VALUE)
+        return GetLastError();
+
+    /* Enumerate sub keys */
+    i = 0;
+    while (TRUE)
+    {
+        dwLength = sizeof(KeyBuffer) / sizeof(KeyBuffer[0]);
+        rc = RegEnumKeyExW(hInterfaceKey, i, KeyBuffer, &dwLength, NULL, NULL, NULL, NULL);
+        if (rc == ERROR_NO_MORE_ITEMS)
+            break;
+        if (rc != ERROR_SUCCESS)
+        {
+            RegCloseKey(hInterfaceKey);
+            return rc;
+        }
+        i++;
+
+        /* Open sub key */
+        rc = RegOpenKeyEx(hInterfaceKey, KeyBuffer, 0, KEY_QUERY_VALUE, &hKey);
+        if (rc != ERROR_SUCCESS)
+        {
+            RegCloseKey(hInterfaceKey);
+            return rc;
+        }
+
+        /* Read DeviceInstance value */
+        rc = RegQueryValueExW(hKey, DeviceInstance, NULL, &dwRegType, NULL, &dwLength);
+        if (rc != ERROR_SUCCESS )
+        {
+            RegCloseKey(hKey);
+            RegCloseKey(hInterfaceKey);
+            return rc;
+        }
+        if (dwRegType != REG_SZ)
+        {
+            RegCloseKey(hKey);
+            RegCloseKey(hInterfaceKey);
+            return ERROR_GEN_FAILURE;
+        }
+
+        /* Allocate memory for list entry and read DeviceInstance */
+        deviceInfo = HeapAlloc(GetProcessHeap(), 0, FIELD_OFFSET(DeviceInfo, Interface.DeviceInstance) + dwLength + sizeof(UNICODE_NULL));
+        if (!deviceInfo)
+        {
+            RegCloseKey(hKey);
+            RegCloseKey(hInterfaceKey);
+            return ERROR_NO_SYSTEM_RESOURCES;
+        }
+        rc = RegQueryValueExW(hKey, DeviceInstance, NULL, NULL, (LPBYTE)&deviceInfo->Interface.DeviceInstance[0], &dwLength);
+        if (rc != ERROR_SUCCESS)
+        {
+            HeapFree(GetProcessHeap(), 0, deviceInfo);
+            RegCloseKey(hKey);
+            RegCloseKey(hInterfaceKey);
+            return rc;
+        }
+        deviceInfo->Interface.DeviceInstance[dwLength / sizeof(WCHAR)] = UNICODE_NULL;
+        TRACE("DeviceInstance %s\n", debugstr_w(deviceInfo->Interface.DeviceInstance));
+        RegCloseKey(hKey);
+
+        if (DeviceInstanceW)
+        {
+            /* Check if device enumerator is not the right one */
+            if (wcscmp(DeviceInstanceW, deviceInfo->Interface.DeviceInstance) != 0)
+            {
+                HeapFree(GetProcessHeap(), 0, deviceInfo);;
+                continue;
+            }
+        }
+
+        /* Find class GUID associated to the device instance */
+        rc = RegOpenKeyEx(
+            HKEY_LOCAL_MACHINE,
+            EnumKeyName,
+            0, /* Options */
+            KEY_ENUMERATE_SUB_KEYS,
+            &hEnumKey);
+        if (rc != ERROR_SUCCESS)
+        {
+            HeapFree(GetProcessHeap(), 0, deviceInfo);
+            RegCloseKey(hInterfaceKey);
+            return rc;
+        }
+        rc = RegOpenKeyEx(
+            hEnumKey,
+            deviceInfo->Interface.DeviceInstance,
+            0, /* Options */
+            KEY_QUERY_VALUE,
+            &hKey);
+        RegCloseKey(hEnumKey);
+        if (rc != ERROR_SUCCESS)
+        {
+            HeapFree(GetProcessHeap(), 0, deviceInfo);
+            RegCloseKey(hInterfaceKey);
+            return rc;
+        }
+        dwLength = sizeof(KeyBuffer) - sizeof(UNICODE_NULL);
+        rc = RegQueryValueExW(hKey, ClassGUID, NULL, NULL, (LPBYTE)KeyBuffer, &dwLength);
+        if (rc != ERROR_SUCCESS)
+        {
+            HeapFree(GetProcessHeap(), 0, deviceInfo);
+            RegCloseKey(hKey);
+            RegCloseKey(hInterfaceKey);
+            return rc;
+        }
+        KeyBuffer[dwLength / sizeof(WCHAR)] = UNICODE_NULL;
+        RegCloseKey(hKey);
+        KeyBuffer[37] = UNICODE_NULL; /* Replace the } by a NULL character */
+        if (UuidFromStringW(&KeyBuffer[1], &deviceInfo->Interface.ClassGuid) != RPC_S_OK)
+        {
+            HeapFree(GetProcessHeap(), 0, deviceInfo);
+            return ERROR_GEN_FAILURE;
+        }
+        TRACE("ClassGUID %s\n", debugstr_guid(&deviceInfo->Interface.ClassGuid));
+
+        /* If current device matches the list GUID (if any), append the entry to the list */
+        if (IsEqualIID(&list->ClassGuid, &GUID_NULL) || IsEqualIID(&list->ClassGuid, &deviceInfo->Interface.ClassGuid))
+        {
+            TRACE("Entry found\n");
+            deviceInfo->IsDevice = FALSE;
+            memcpy(
+                &deviceInfo->Interface.InterfaceGuid,
+                InterfaceGuid,
+                sizeof(deviceInfo->Interface.InterfaceGuid));
+            InsertTailList(&list->ListHead, &deviceInfo->ItemEntry);
+            list->numberOfEntries++;
+        }
+        else
+        {
+            HeapFree(GetProcessHeap(), 0, deviceInfo);
+        }
+    }
+    RegCloseKey(hInterfaceKey);
+    return ERROR_SUCCESS;
+}
+#endif /* __WINE__ */
+
 /***********************************************************************
- *		SetupDiGetClassDevsW (SETUPAPI.@)
+ *		SetupDiGetClassDevsExW (SETUPAPI.@)
  */
-HDEVINFO WINAPI SetupDiGetClassDevsW(
+HDEVINFO WINAPI SetupDiGetClassDevsExW(
        CONST GUID *class,
        LPCWSTR enumstr,
        HWND parent,
-       DWORD flags)
+       DWORD flags,
+       HDEVINFO deviceset,
+       LPCWSTR machine,
+       PVOID reserved)
 {
-    HDEVINFO ret = (HDEVINFO)INVALID_HANDLE_VALUE;
+    HDEVINFO hDeviceInfo = INVALID_HANDLE_VALUE;
+    DeviceInfoList *list;
+    LPGUID pClassGuid;
+    LPGUID ClassGuidList;
+    DWORD RequiredSize;
+    LONG i;
+    LONG rc;
 
-    TRACE("%s %s %p 0x%08lx\n", debugstr_guid(class), debugstr_w(enumstr),
-     parent, flags);
+    TRACE("%s %s %p 0x%08lx %p %s %p\n", debugstr_guid(class), debugstr_w(enumstr),
+     parent, flags, deviceset, debugstr_w(machine), reserved);
 
-    if (enumstr)
-        FIXME(": unimplemented for enumerator strings (%s)\n",
-         debugstr_w(enumstr));
-    else if (flags & DIGCF_ALLCLASSES)
-        FIXME(": unimplemented for DIGCF_ALLCLASSES\n");
+    /* Create the deviceset if not set */
+    if (deviceset)
+    {
+        list = (DeviceInfoList *)deviceset;
+        if (list->magic != SETUP_DEV_INFO_LIST_MAGIC)
+        {
+            SetLastError(ERROR_INVALID_HANDLE);
+            return INVALID_HANDLE_VALUE;
+        }
+        hDeviceInfo = deviceset;
+    }
     else
     {
-        if (IsEqualIID(class, &GUID_DEVINTERFACE_COMPORT))
-            ret = SETUP_CreateSerialDeviceList();
-        else if (IsEqualIID(class, &GUID_DEVINTERFACE_SERENUM_BUS_ENUMERATOR))
-            ret = SETUP_CreateSerialDeviceList();
-        else
-            FIXME("(%s): stub\n", debugstr_guid(class));
+         hDeviceInfo = SetupDiCreateDeviceInfoListExW(
+             flags & DIGCF_DEVICEINTERFACE ? NULL : class,
+             NULL, machine, NULL);
+         if (hDeviceInfo == INVALID_HANDLE_VALUE)
+             return INVALID_HANDLE_VALUE;
+         list = (DeviceInfoList *)hDeviceInfo;
     }
-    return ret;
+
+    if (IsEqualIID(&list->ClassGuid, &GUID_NULL))
+        pClassGuid = NULL;
+    else
+        pClassGuid = &list->ClassGuid;
+
+    if (flags & DIGCF_PRESENT)
+        FIXME(": flag DIGCF_PRESENT ignored\n");
+    if (flags & DIGCF_PROFILE)
+        FIXME(": flag DIGCF_PROFILE ignored\n");
+
+    if (flags & DIGCF_ALLCLASSES)
+    {
+        /* Get list of device classes */
+        SetupDiBuildClassInfoList(0, NULL, 0, &RequiredSize);
+        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+        {
+            if (!deviceset)
+                SetupDiDestroyDeviceInfoList(hDeviceInfo);
+            return INVALID_HANDLE_VALUE;
+        }
+        ClassGuidList = HeapAlloc(GetProcessHeap(), 0, RequiredSize * sizeof(GUID));
+        if (!ClassGuidList)
+        {
+            if (!deviceset)
+                SetupDiDestroyDeviceInfoList(hDeviceInfo);
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return INVALID_HANDLE_VALUE;
+        }
+        if (!SetupDiBuildClassInfoListExW(0, ClassGuidList, RequiredSize, &RequiredSize, machine, NULL))
+        {
+            HeapFree(GetProcessHeap(), 0, ClassGuidList);
+            if (!deviceset)
+                SetupDiDestroyDeviceInfoList(hDeviceInfo);
+            return INVALID_HANDLE_VALUE;
+        }
+
+        /* Enumerate devices in each device class */
+        for (i = 0; i < RequiredSize; i++)
+        {
+            if (pClassGuid == NULL || IsEqualIID(pClassGuid, &ClassGuidList[i]))
+            {
+                rc = SETUP_CreateDevListFromClass(list, machine, &ClassGuidList[i], enumstr);
+                if (rc != ERROR_SUCCESS)
+                {
+                    HeapFree(GetProcessHeap(), 0, ClassGuidList);
+                    SetLastError(rc);
+                    if (!deviceset)
+                        SetupDiDestroyDeviceInfoList(hDeviceInfo);
+                    return INVALID_HANDLE_VALUE;
+                }
+            }
+        }
+        HeapFree(GetProcessHeap(), 0, ClassGuidList);
+        return hDeviceInfo;
+    }
+    else if (flags & DIGCF_DEVICEINTERFACE)
+    {
+        if (class == NULL)
+        {
+            SetLastError(ERROR_INVALID_PARAMETER);
+            if (!deviceset)
+                SetupDiDestroyDeviceInfoList(hDeviceInfo);
+            return INVALID_HANDLE_VALUE;
+        }
+
+#ifdef __WINE__
+        /* Special case: find serial ports by calling QueryDosDevice */
+        if (IsEqualIID(class, &GUID_DEVINTERFACE_COMPORT))
+            rc = SETUP_CreateSerialDeviceList(list, machine, (LPGUID)class, enumstr);
+        if (IsEqualIID(class, &GUID_DEVINTERFACE_SERENUM_BUS_ENUMERATOR))
+            rc = SETUP_CreateSerialDeviceList(list, machine, (LPGUID)class, enumstr);
+        else
+        {
+            ERR("Wine can only enumerate serial devices at the moment!\n");
+            rc = ERROR_INVALID_PARAMETER;
+        }
+#else /* __WINE__ */
+        rc = SETUP_CreateInterfaceList(list, machine, (LPGUID)class, enumstr);
+#endif /* __WINE__ */
+        if (rc != ERROR_SUCCESS)
+        {
+            SetLastError(rc);
+            if (!deviceset)
+                SetupDiDestroyDeviceInfoList(hDeviceInfo);
+            return INVALID_HANDLE_VALUE;
+        }
+        return hDeviceInfo;
+    }
+    else
+    {
+        rc = SETUP_CreateDevListFromClass(list, machine, (LPGUID)class, enumstr);
+        if (rc != ERROR_SUCCESS)
+        {
+            SetLastError(rc);
+            if (!deviceset)
+                SetupDiDestroyDeviceInfoList(hDeviceInfo);
+            return INVALID_HANDLE_VALUE;
+        }
+        return hDeviceInfo;
+    }
 }
 
 /***********************************************************************
@@ -973,36 +1521,51 @@ BOOL WINAPI SetupDiEnumDeviceInterfaces(
 
     TRACE("%p, %p, %s, 0x%08lx, %p\n", DeviceInfoSet, DeviceInfoData,
      debugstr_guid(InterfaceClassGuid), MemberIndex, DeviceInterfaceData);
+    if (DeviceInfoData)
+        FIXME(": unimplemented with PSP_DEVINFO_DATA set\n");
+
     if (!DeviceInterfaceData)
         SetLastError(ERROR_INVALID_PARAMETER);
-    else if (DeviceInfoData)
-        FIXME(": unimplemented with PSP_DEVINFO_DATA set\n");
+    else if (DeviceInterfaceData->cbSize != sizeof(SP_DEVICE_INTERFACE_DATA))
+        SetLastError(ERROR_INVALID_USER_BUFFER);
     else if (DeviceInfoSet && DeviceInfoSet != (HDEVINFO)INVALID_HANDLE_VALUE)
     {
-        /* FIXME: this assumes the only possible enumeration is of serial
-         * ports.
-         */
-        SerialPortList *list = (SerialPortList *)DeviceInfoSet;
+        DeviceInfoList *list = (DeviceInfoList *)DeviceInfoSet;
 
-        if (list->magic == SETUP_SERIAL_PORT_MAGIC)
+        if (list->magic == SETUP_DEV_INFO_LIST_MAGIC)
         {
-            if (MemberIndex >= list->numPorts)
+            if (MemberIndex >= list->numberOfEntries)
                 SetLastError(ERROR_NO_MORE_ITEMS);
             else
             {
-                DeviceInterfaceData->cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
-                memcpy(&DeviceInterfaceData->InterfaceClassGuid,
-                 &GUID_DEVINTERFACE_SERENUM_BUS_ENUMERATOR,
-                 sizeof(DeviceInterfaceData->InterfaceClassGuid));
-                DeviceInterfaceData->Flags = 0;
-                /* Note: this appears to be dangerous, passing a private
-                 * pointer a heap-allocated datum to the caller.  However, the
-                 * expected lifetime of the device data is the same as the
-                 * HDEVINFO; once that is closed, the data are no longer valid.
-                 */
-                DeviceInterfaceData->Reserved =
-                 (ULONG_PTR)&list->names[MemberIndex].name;
-                ret = TRUE;
+                PLIST_ENTRY ItemList = list->ListHead.Flink;
+                DeviceInfo* DevInfo;
+                while (MemberIndex-- > 0)
+                    ItemList = ItemList->Flink;
+                DevInfo = (DeviceInfo *)ItemList;
+
+                if (!DevInfo->IsDevice)
+                {
+                    memcpy(&DeviceInterfaceData->InterfaceClassGuid,
+                        &DevInfo->Interface.InterfaceGuid,
+                        sizeof(DeviceInterfaceData->InterfaceClassGuid));
+                    DeviceInterfaceData->Flags = 0; /* FIXME */
+                    /* Note: this appears to be dangerous, passing a private
+                     * pointer a heap-allocated datum to the caller.  However, the
+                     * expected lifetime of the device data is the same as the
+                     * HDEVINFO; once that is closed, the data are no longer valid.
+                     */
+#ifdef __WINE__
+                    DeviceInterfaceData->Reserved = (ULONG_PTR)DevInfo->Interface.InterfaceName;
+#else
+                    DeviceInterfaceData->Reserved = (ULONG_PTR)DevInfo;
+#endif
+                    ret = TRUE;
+                }
+                else
+                {
+                    SetLastError(ERROR_INVALID_PARAMETER);
+                }
             }
         }
         else
@@ -1023,13 +1586,17 @@ BOOL WINAPI SetupDiDestroyDeviceInfoList(HDEVINFO devinfo)
     TRACE("%p\n", devinfo);
     if (devinfo && devinfo != (HDEVINFO)INVALID_HANDLE_VALUE)
     {
-        /* FIXME: this assumes the only possible enumeration is of serial
-         * ports.
-         */
-        SerialPortList *list = (SerialPortList *)devinfo;
+        DeviceInfoList *list = (DeviceInfoList *)devinfo;
 
-        if (list->magic == SETUP_SERIAL_PORT_MAGIC)
+        if (list->magic == SETUP_DEV_INFO_LIST_MAGIC)
         {
+            PLIST_ENTRY ListEntry;
+            while (!IsListEmpty(&list->ListHead))
+            {
+                ListEntry = RemoveHeadList(&list->ListHead);
+                HeapFree(GetProcessHeap(), 0, ListEntry);
+            }
+            RegCloseKey(list->HKLM);
             HeapFree(GetProcessHeap(), 0, list);
             ret = TRUE;
         }
@@ -1064,13 +1631,14 @@ BOOL WINAPI SetupDiGetDeviceInterfaceDetailA(
         SetLastError(ERROR_INVALID_PARAMETER);
     else if (DeviceInfoSet && DeviceInfoSet != (HDEVINFO)INVALID_HANDLE_VALUE)
     {
-        /* FIXME: this assumes the only possible enumeration is of serial
-         * ports.
-         */
-        SerialPortList *list = (SerialPortList *)DeviceInfoSet;
+        DeviceInfoList *list = (DeviceInfoList *)DeviceInfoSet;
 
-        if (list->magic == SETUP_SERIAL_PORT_MAGIC)
+        if (list->magic == SETUP_DEV_INFO_LIST_MAGIC)
         {
+#ifdef __WINE__
+            /* FIXME: this assumes the only possible enumeration is of serial
+             * ports.
+             */
             LPCWSTR devName = (LPCWSTR)DeviceInterfaceData->Reserved;
             DWORD sizeRequired = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA_A) +
              lstrlenW(devName);
@@ -1105,6 +1673,10 @@ BOOL WINAPI SetupDiGetDeviceInterfaceDetailA(
                 }
                 ret = TRUE;
             }
+#else /* __WINE__ */
+            FIXME("unimplemented\n");
+            ret = FALSE;
+#endif /* __WINE__ */
         }
         else
             SetLastError(ERROR_INVALID_HANDLE);
@@ -1144,11 +1716,86 @@ BOOL WINAPI SetupDiGetDeviceRegistryPropertyA(
         DWORD   PropertyBufferSize,
         PDWORD  RequiredSize)
 {
+    BOOL bResult;
+    BOOL bIsStringProperty;
+    DWORD RegType;
+    DWORD RequiredSizeA, RequiredSizeW;
+    DWORD PropertyBufferSizeW;
+    PBYTE PropertyBufferW;
+
+    TRACE("%04lx %p %ld %p %p %ld %p\n", (DWORD)devinfo, DeviceInfoData,
+        Property, PropertyRegDataType, PropertyBuffer, PropertyBufferSize,
+        RequiredSize);
+
+    PropertyBufferSizeW = PropertyBufferSize * 2;
+    PropertyBufferW = HeapAlloc(GetProcessHeap(), 0, PropertyBufferSizeW);
+
+    bResult = SetupDiGetDeviceRegistryPropertyW(
+        devinfo,
+        DeviceInfoData,
+        Property,
+        &RegType,
+        PropertyBufferW,
+        PropertyBufferSizeW,
+        &RequiredSizeW);
+
+    HeapFree(GetProcessHeap(), 0, PropertyBufferW);
+
+    if (!bResult)
+        return bResult;
+
+    bIsStringProperty = (RegType == REG_SZ || RegType == REG_MULTI_SZ);
+
+    if (bIsStringProperty)
+        RequiredSizeA = RequiredSizeW / sizeof(WCHAR);
+    else
+        RequiredSizeA = RequiredSizeW;
+
+    if (RequiredSizeA <= PropertyBufferSize)
+    {
+        if (bIsStringProperty && PropertyBufferSize > 0)
+        {
+            if (WideCharToMultiByte(CP_ACP, 0, (LPWSTR)PropertyBufferW, RequiredSizeW / sizeof(WCHAR), PropertyBuffer, PropertyBufferSize, NULL, NULL) == 0)
+            {
+                /* Last error is already set by WideCharToMultiByte */
+                bResult = FALSE;
+            }
+        }
+        else
+            memcpy(PropertyBuffer, PropertyBufferW, RequiredSizeA);
+    }
+    else
+    {
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        bResult = FALSE;
+    }
+
+    if (PropertyRegDataType)
+        *PropertyRegDataType = RegType;
+    if (RequiredSize)
+        *RequiredSize = RequiredSizeA;
+    return bResult;
+}
+
+/***********************************************************************
+ *		SetupDiGetDeviceRegistryPropertyW (SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiGetDeviceRegistryPropertyW(
+        HDEVINFO  devinfo,
+        PSP_DEVINFO_DATA  DeviceInfoData,
+        DWORD   Property,
+        PDWORD  PropertyRegDataType,
+        PBYTE   PropertyBuffer,
+        DWORD   PropertyBufferSize,
+        PDWORD  RequiredSize)
+{
     FIXME("%04lx %p %ld %p %p %ld %p\n", (DWORD)devinfo, DeviceInfoData,
         Property, PropertyRegDataType, PropertyBuffer, PropertyBufferSize,
         RequiredSize);
+    SetLastError(ERROR_GEN_FAILURE);
     return FALSE;
 }
+
 
 /***********************************************************************
  *		SetupDiInstallClassA (SETUPAPI.@)
@@ -1182,38 +1829,35 @@ static HKEY CreateClassKey(HINF hInf)
     DWORD RequiredSize;
     HKEY hClassKey;
 
+    Buffer[0] = '\\';
     if (!SetupGetLineTextW(NULL,
 			   hInf,
 			   Version,
 			   ClassGUID,
-			   Buffer,
-			   MAX_PATH,
+			   &Buffer[1],
+			   MAX_PATH - 1,
 			   &RequiredSize))
     {
-	return INVALID_HANDLE_VALUE;
+        return INVALID_HANDLE_VALUE;
     }
 
     lstrcpyW(FullBuffer, ControlClass);
     lstrcatW(FullBuffer, Buffer);
 
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-		      FullBuffer,
-		      0,
-		      KEY_ALL_ACCESS,
-		      &hClassKey))
-    {
-	if (!SetupGetLineTextW(NULL,
+
+    if (!SetupGetLineTextW(NULL,
 			       hInf,
 			       Version,
 			       Class,
 			       Buffer,
 			       MAX_PATH,
 			       &RequiredSize))
-	{
-	    return INVALID_HANDLE_VALUE;
-	}
+    {
+        RegDeleteKeyW(HKEY_LOCAL_MACHINE, FullBuffer);
+        return INVALID_HANDLE_VALUE;
+    }
 
-	if (RegCreateKeyExW(HKEY_LOCAL_MACHINE,
+    if (ERROR_SUCCESS != RegCreateKeyExW(HKEY_LOCAL_MACHINE,
 			    FullBuffer,
 			    0,
 			    NULL,
@@ -1221,24 +1865,22 @@ static HKEY CreateClassKey(HINF hInf)
 			    KEY_ALL_ACCESS,
 			    NULL,
 			    &hClassKey,
-			    NULL))
-	{
-	    return INVALID_HANDLE_VALUE;
-	}
-
+             NULL))
+    {
+        RegDeleteKeyW(HKEY_LOCAL_MACHINE, FullBuffer);
+        return INVALID_HANDLE_VALUE;
     }
 
-    if (RegSetValueExW(hClassKey,
+    if (ERROR_SUCCESS != RegSetValueExW(hClassKey,
 		       Class,
 		       0,
 		       REG_SZ,
 		       (LPBYTE)Buffer,
-		       RequiredSize * sizeof(WCHAR)))
+             RequiredSize * sizeof(WCHAR)))
     {
-	RegCloseKey(hClassKey);
-	RegDeleteKeyW(HKEY_LOCAL_MACHINE,
-		      FullBuffer);
-	return INVALID_HANDLE_VALUE;
+        RegCloseKey(hClassKey);
+        RegDeleteKeyW(HKEY_LOCAL_MACHINE, FullBuffer);
+        return INVALID_HANDLE_VALUE;
     }
 
     return hClassKey;
@@ -1287,6 +1929,7 @@ BOOL WINAPI SetupDiInstallClassW(
     }
 
 
+
     /* Try to append a layout file */
 #if 0
     SetupOpenAppendInfFileW(NULL, hInf, NULL);
@@ -1307,6 +1950,7 @@ BOOL WINAPI SetupDiInstallClassW(
 	if (FileQueue == INVALID_HANDLE_VALUE)
 	{
 	    SetupCloseInfFile(hInf);
+       RegCloseKey(hClassKey);
 	    return FALSE;
 	}
 
@@ -1334,6 +1978,7 @@ BOOL WINAPI SetupDiInstallClassW(
 
     SetupCloseInfFile(hInf);
 
+    RegCloseKey(hClassKey);
     return TRUE;
 }
 
@@ -1393,15 +2038,13 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
         PVOID Reserved)
 {
     LPWSTR lpGuidString;
+    LPWSTR lpFullGuidString;
+    DWORD dwLength;
+    HKEY HKLM;
     HKEY hClassesKey;
     HKEY hClassKey;
+    DWORD rc;
     LPCWSTR lpKeyName;
-
-    if (MachineName != NULL)
-    {
-        FIXME("Remote access not supported yet!\n");
-        return INVALID_HANDLE_VALUE;
-    }
 
     if (Flags == DIOCR_INSTALLER)
     {
@@ -1418,12 +2061,27 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
         return INVALID_HANDLE_VALUE;
     }
 
-    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+    if (MachineName != NULL)
+    {
+        rc = RegConnectRegistryW(MachineName, HKEY_LOCAL_MACHINE, &HKLM);
+        if (rc != ERROR_SUCCESS)
+        {
+            SetLastError(rc);
+            return INVALID_HANDLE_VALUE;
+        }
+    }
+    else
+        HKLM = HKEY_LOCAL_MACHINE;
+
+    rc = RegOpenKeyExW(HKLM,
 		      lpKeyName,
 		      0,
 		      KEY_ALL_ACCESS,
-		      &hClassesKey))
+		      &hClassesKey);
+    if (MachineName != NULL) RegCloseKey(HKLM);
+    if (rc != ERROR_SUCCESS)
     {
+	SetLastError(rc);
 	return INVALID_HANDLE_VALUE;
     }
 
@@ -1432,22 +2090,39 @@ HKEY WINAPI SetupDiOpenClassRegKeyExW(
 
     if (UuidToStringW((UUID*)ClassGuid, &lpGuidString) != RPC_S_OK)
     {
+	SetLastError(ERROR_GEN_FAILURE);
 	RegCloseKey(hClassesKey);
-	return FALSE;
+	return INVALID_HANDLE_VALUE;
     }
 
-    if (RegOpenKeyExW(hClassesKey,
-		      lpGuidString,
+    dwLength = lstrlenW(lpGuidString);
+    lpFullGuidString = HeapAlloc(GetProcessHeap(), 0, (dwLength + 3) * sizeof(WCHAR));
+    if (!lpFullGuidString)
+    {
+        SetLastError(ERROR_NO_SYSTEM_RESOURCES);
+        RpcStringFreeW(&lpGuidString);
+        return INVALID_HANDLE_VALUE;
+    }
+    lpFullGuidString[0] = '{';
+    memcpy(&lpFullGuidString[1], lpGuidString, dwLength * sizeof(WCHAR));
+    lpFullGuidString[dwLength + 1] = '}';
+    lpFullGuidString[dwLength + 2] = UNICODE_NULL;
+    RpcStringFreeW(&lpGuidString);
+
+    rc = RegOpenKeyExW(hClassesKey,
+		      lpFullGuidString,
 		      0,
 		      KEY_ALL_ACCESS,
-		      &hClassKey))
+		      &hClassKey);
+    if (rc != ERROR_SUCCESS)
     {
-	RpcStringFreeW(&lpGuidString);
+	SetLastError(rc);
+	HeapFree(GetProcessHeap(), 0, lpFullGuidString);
 	RegCloseKey(hClassesKey);
-	return FALSE;
+	return INVALID_HANDLE_VALUE;
     }
 
-    RpcStringFreeW(&lpGuidString);
+    HeapFree(GetProcessHeap(), 0, lpFullGuidString);
     RegCloseKey(hClassesKey);
 
     return hClassKey;
@@ -1533,4 +2208,66 @@ HKEY WINAPI SetupDiOpenDevRegKey(
     FIXME("%p %p %ld %ld %ld %lx\n", DeviceInfoSet, DeviceInfoData,
           Scope, HwProfile, KeyType, samDesired);
     return INVALID_HANDLE_VALUE;
+}
+
+/***********************************************************************
+ *		SetupDiCreateDeviceInfoA (SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiCreateDeviceInfoA(
+       HDEVINFO DeviceInfoSet,
+       PCSTR DeviceName,
+       LPGUID ClassGuid,
+       PCSTR DeviceDescription,
+       HWND hwndParent,
+       DWORD CreationFlags,
+       PSP_DEVINFO_DATA DeviceInfoData)
+{
+    LPWSTR DeviceNameW = NULL;
+    LPWSTR DeviceDescriptionW = NULL;
+    BOOL bResult;
+
+    TRACE("\n");
+
+    if (DeviceName)
+    {
+        DeviceNameW = MultiByteToUnicode(DeviceName, CP_ACP);
+        if (DeviceNameW == NULL) return FALSE;
+    }
+    if (DeviceDescription)
+    {
+        DeviceDescriptionW = MultiByteToUnicode(DeviceDescription, CP_ACP);
+        if (DeviceDescriptionW == NULL)
+        {
+            if (DeviceNameW) MyFree(DeviceNameW);
+            return FALSE;
+        }
+    }
+
+    bResult = SetupDiCreateDeviceInfoW(DeviceInfoSet, DeviceNameW,
+                                       ClassGuid, DeviceDescriptionW,
+                                       hwndParent, CreationFlags,
+                                       DeviceInfoData);
+
+    if (DeviceNameW) MyFree(DeviceNameW);
+    if (DeviceDescriptionW) MyFree(DeviceDescriptionW);
+
+    return bResult;
+}
+
+/***********************************************************************
+ *		SetupDiCreateDeviceInfoW (SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiCreateDeviceInfoW(
+       HDEVINFO DeviceInfoSet,
+       PCWSTR DeviceName,
+       LPGUID ClassGuid,
+       PCWSTR DeviceDescription,
+       HWND hwndParent,
+       DWORD CreationFlags,
+       PSP_DEVINFO_DATA DeviceInfoData)
+{
+    FIXME("%p %s %s %s %p %lx %p\n", DeviceInfoSet, debugstr_w(DeviceName),
+          debugstr_guid(ClassGuid), debugstr_w(DeviceDescription), hwndParent,
+          CreationFlags, DeviceInfoData);
+    return FALSE;
 }

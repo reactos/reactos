@@ -26,7 +26,7 @@
  *        Remove all hardcode string to En.rc
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include "resource.h"
 
 
@@ -40,7 +40,7 @@ INT CommandEcho (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_ECHO_HELP4);
+		ConOutResPaging(TRUE,STRING_ECHO_HELP4);
 		return 0;
 	}
 

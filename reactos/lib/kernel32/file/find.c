@@ -54,11 +54,11 @@ InternalFindNextFile (
 
 	if (IData->pFileInfo->NextEntryOffset != 0)
 	{
-	   IData->pFileInfo = (PVOID)IData->pFileInfo + IData->pFileInfo->NextEntryOffset;
+	   IData->pFileInfo = (PVOID)((ULONG_PTR)IData->pFileInfo + IData->pFileInfo->NextEntryOffset);
 	   DPRINT("Found %.*S\n",IData->pFileInfo->FileNameLength/sizeof(WCHAR), IData->pFileInfo->FileName);
 	   return TRUE;
 	}
-	IData->pFileInfo = (PVOID)IData + sizeof(KERNEL32_FIND_FILE_DATA);
+	IData->pFileInfo = (PVOID)((ULONG_PTR)IData + sizeof(KERNEL32_FIND_FILE_DATA));
 	IData->pFileInfo->FileIndex = 0;
 	Status = NtQueryDirectoryFile (IData->DirectoryHandle,
 	                               NULL,
@@ -271,7 +271,7 @@ InternalFindFirstFile (
 	   SetLastErrorByStatus (Status);
 	   return(NULL);
 	}
-	IData->pFileInfo = (PVOID)IData + sizeof(KERNEL32_FIND_FILE_DATA);
+	IData->pFileInfo = (PVOID)((ULONG_PTR)IData + sizeof(KERNEL32_FIND_FILE_DATA));
 	IData->pFileInfo->FileIndex = 0;
 
 	Status = NtQueryDirectoryFile (IData->DirectoryHandle,

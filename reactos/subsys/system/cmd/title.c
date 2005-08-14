@@ -9,7 +9,7 @@
  *        Remove all hardcode string to En.rc
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include "resource.h"
 
 #ifdef INCLUDE_CMD_TITLE
@@ -25,7 +25,7 @@ INT cmd_title (LPTSTR cmd, LPTSTR param)
 	/* Asking help? */
 	if (!_tcsncmp(param, _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_TITLE_HELP);
+		ConOutResPaging(TRUE,STRING_TITLE_HELP);
 		return 0;
 	}
 

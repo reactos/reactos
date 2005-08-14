@@ -157,7 +157,7 @@ TimePageProc(HWND hwndDlg,
       {
         LPNMHDR lpnm = (LPNMHDR)lParam;
 
-        if (lpnm->code == PSN_APPLY)
+        if (lpnm->code == (UINT)PSN_APPLY)
         {
           WCHAR Buffer[80];
           int nIndex;

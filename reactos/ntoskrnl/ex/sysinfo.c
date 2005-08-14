@@ -728,7 +728,7 @@ QSI_DEF(SystemProcessorPerformanceInformation)
 	PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION Spi
 		= (PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION) Buffer;
 
-        ULONG i;
+        LONG i;
 	LARGE_INTEGER CurrentTime;
 	PKPRCB Prcb;
 
@@ -836,7 +836,7 @@ ObpGetNextHandleByProcessCount(PSYSTEM_HANDLE_TABLE_ENTRY_INFO pshi,
 QSI_DEF(SystemHandleInformation)
 {
 	PEPROCESS pr, syspr;
-	int curSize, i = 0;
+	ULONG curSize, i = 0;
 	ULONG hCount = 0;
 
         PSYSTEM_HANDLE_INFORMATION Shi =
@@ -1023,7 +1023,7 @@ QSI_DEF(SystemPoolTagInformation)
 QSI_DEF(SystemInterruptInformation)
 {
   PKPRCB Prcb;
-  UINT i;
+  LONG i;
   ULONG ti;
   PSYSTEM_INTERRUPT_INFORMATION sii = (PSYSTEM_INTERRUPT_INFORMATION)Buffer;
 

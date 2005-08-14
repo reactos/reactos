@@ -47,9 +47,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(commdlg);
 typedef struct
 {
 
-    IShellBrowserVtbl   * lpVtbl;
-    ICommDlgBrowserVtbl * lpVtblCommDlgBrowser;
-    IServiceProviderVtbl* lpVtblServiceProvider;
+    const IShellBrowserVtbl *lpVtbl;
+    const ICommDlgBrowserVtbl *lpVtblCommDlgBrowser;
+    const IServiceProviderVtbl *lpVtblServiceProvider;
     DWORD ref;                                  /* Reference counter */
     HWND hwndOwner;                             /* Owner dialog of the interface */
 
@@ -58,9 +58,9 @@ typedef struct
 /**************************************************************************
 *   vtable
 */
-static IShellBrowserVtbl IShellBrowserImpl_Vtbl;
-static ICommDlgBrowserVtbl IShellBrowserImpl_ICommDlgBrowser_Vtbl;
-static IServiceProviderVtbl IShellBrowserImpl_IServiceProvider_Vtbl;
+static const IShellBrowserVtbl IShellBrowserImpl_Vtbl;
+static const ICommDlgBrowserVtbl IShellBrowserImpl_ICommDlgBrowser_Vtbl;
+static const IServiceProviderVtbl IShellBrowserImpl_IServiceProvider_Vtbl;
 
 /**************************************************************************
 *   Local Prototypes
@@ -76,19 +76,12 @@ LPITEMIDLIST GetSelectedPidl(IShellView *ppshv);
 */
 extern const char *FileOpenDlgInfosStr;
 
-extern HRESULT          GetName(LPSHELLFOLDER lpsf, LPITEMIDLIST pidl,DWORD dwFlags,LPSTR lpstrFileName);
-extern HRESULT          GetFileName(HWND hwnd, LPITEMIDLIST pidl, LPSTR lpstrFileName);
 extern IShellFolder*    GetShellFolderFromPidl(LPITEMIDLIST pidlAbs);
 extern LPITEMIDLIST     GetParentPidl(LPITEMIDLIST pidl);
 extern LPITEMIDLIST     GetPidlFromName(IShellFolder *psf,LPCSTR lpcstrFileName);
 
-extern BOOL    FILEDLG95_SHELL_FillIncludedItemList(HWND hwnd,
-                                                        LPITEMIDLIST pidlCurrentFolder,
-                                                        LPSTR lpstrMask);
-
 extern int     FILEDLG95_LOOKIN_SelectItem(HWND hwnd,LPITEMIDLIST pidl);
-extern BOOL    FILEDLG95_OnOpen(HWND hwnd);
-extern HRESULT SendCustomDlgNotificationMessage(HWND hwndParentDlg, UINT uCode);
+extern void    SendCustomDlgNotificationMessage(HWND hwndParentDlg, UINT uCode);
 
 
 /*
@@ -140,11 +133,25 @@ static void COMDLG32_DumpSBSPFlags(UINT uflags)
 
 static void COMDLG32_UpdateCurrentDir(FileOpenDlgInfos *fodInfos)
 {
-    char lpstrPath[MAX_PATH];
-    if(SHGetPathFromIDListA(fodInfos->ShellInfos.pidlAbsCurrent,lpstrPath)) {
-        SetCurrentDirectoryA(lpstrPath);
-        TRACE("new current folder %s\n", lpstrPath);
+    LPSHELLFOLDER psfDesktop;
+    STRRET strret;
+    HRESULT res;
+
+    res = SHGetDesktopFolder(&psfDesktop);
+    if (FAILED(res))
+        return;
+    
+    res = IShellFolder_GetDisplayNameOf(psfDesktop, fodInfos->ShellInfos.pidlAbsCurrent,
+                                        SHGDN_FORPARSING, &strret);
+    if (SUCCEEDED(res)) {
+        WCHAR wszCurrentDir[MAX_PATH];
+        
+        res = StrRetToBufW(&strret, fodInfos->ShellInfos.pidlAbsCurrent, wszCurrentDir, MAX_PATH);
+        if (SUCCEEDED(res))
+            SetCurrentDirectoryW(wszCurrentDir);
     }
+    
+    IShellFolder_Release(psfDesktop);
 }
 
 /* copied from shell32 to avoid linking to it */
@@ -675,7 +682,7 @@ HRESULT WINAPI IShellBrowserImpl_TranslateAcceleratorSB(IShellBrowser *iface,
     return E_NOTIMPL;
 }
 
-static IShellBrowserVtbl IShellBrowserImpl_Vtbl =
+static const IShellBrowserVtbl IShellBrowserImpl_Vtbl =
 {
         /* IUnknown */
         IShellBrowserImpl_QueryInterface,
@@ -900,7 +907,7 @@ HRESULT IShellBrowserImpl_ICommDlgBrowser_OnSelChange(ICommDlgBrowser *iface, IS
     return S_OK;
 }
 
-static ICommDlgBrowserVtbl IShellBrowserImpl_ICommDlgBrowser_Vtbl =
+static const ICommDlgBrowserVtbl IShellBrowserImpl_ICommDlgBrowser_Vtbl =
 {
         /* IUnknown */
         IShellBrowserImpl_ICommDlgBrowser_QueryInterface,
@@ -989,7 +996,7 @@ HRESULT WINAPI IShellBrowserImpl_IServiceProvider_QueryService(
 
 }
 
-static IServiceProviderVtbl IShellBrowserImpl_IServiceProvider_Vtbl =
+static const IServiceProviderVtbl IShellBrowserImpl_IServiceProvider_Vtbl =
 {
         /* IUnknown */
         IShellBrowserImpl_IServiceProvider_QueryInterface,

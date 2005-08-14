@@ -130,7 +130,7 @@ IopDeleteDriver(PVOID ObjectBody)
    KIRQL OldIrql;
    PPRIVATE_DRIVER_EXTENSIONS DriverExtension, NextDriverExtension;
 
-   DPRINT("IopDeleteDriver(ObjectBody %x)\n", ObjectBody);
+   DPRINT("IopDeleteDriver(ObjectBody 0x%p)\n", ObjectBody);
 
    ExFreePool(Object->DriverExtension);
    ExFreePool(Object->DriverName.Buffer);
@@ -434,7 +434,7 @@ IopLoadServiceModule(
    UNICODE_STRING ServiceImagePath;
    NTSTATUS Status;
 
-   DPRINT("IopLoadServiceModule(%wZ, %x)\n", ServiceName, ModuleObject);
+   DPRINT("IopLoadServiceModule(%wZ, 0x%p)\n", ServiceName, ModuleObject);
 
    /*
     * Get information about the service.
@@ -824,7 +824,7 @@ IopGetGroupOrderList(PWSTR ValueName,
 {
   PSERVICE_GROUP Group;
 
-  DPRINT("IopGetGroupOrderList(%S, %x, %x, %x, %x, %x)\n",
+  DPRINT("IopGetGroupOrderList(%S, %x, 0x%p, %x, 0x%p, 0x%p)\n",
          ValueName, ValueType, ValueData, ValueLength, Context, EntryContext);
 
   if (ValueType == REG_BINARY &&

@@ -89,15 +89,14 @@ HRESULT WINAPI CABINET_DllGetVersion (DLLVERSIONINFO *pdvi)
 HRESULT WINAPI Extract(EXTRACTdest *dest, LPCSTR what)
 {
 #define DUMPC(idx)      idx >= sizeof(EXTRACTdest) ? ' ' : \
-                        ptr[idx] >= 0x20 ? ptr[idx] : '.'
+                        ((unsigned char*) dest)[idx] >= 0x20 ? \
+                        ((unsigned char*) dest)[idx] : '.'
 
-#define DUMPH(idx)      idx >= sizeof(EXTRACTdest) ? 0x55 : ptr[idx]
+#define DUMPH(idx)      idx >= sizeof(EXTRACTdest) ? 0x55 : ((unsigned char*) dest)[idx]
 
   LPSTR dir;
-  unsigned char *ptr;
   unsigned int i;
 
-   ptr = ((unsigned char*) dest);
   TRACE("(dest == %0lx, what == %s)\n", (long) dest, debugstr_a(what));
 
   if (!dest) {

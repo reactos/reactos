@@ -24,7 +24,7 @@
  *        Remove all hardcode string to En.rc.
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include "resource.h"
 
 #ifdef INCLUDE_CMD_TIME
@@ -140,9 +140,11 @@ INT cmd_time (LPTSTR cmd, LPTSTR param)
 
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_TIME_HELP1);
+		ConOutResPaging(TRUE,STRING_TIME_HELP1);
 		return 0;
 	}
+
+  nErrorLevel = 0;
 
 	/* build parameter array */
 	arg = split (param, &argc, FALSE);
@@ -202,6 +204,7 @@ INT cmd_time (LPTSTR cmd, LPTSTR param)
 		}
 
 		ConErrResPuts(STRING_TIME_ERROR1);
+    nErrorLevel = 1;
 	}
 
 	freep (arg);

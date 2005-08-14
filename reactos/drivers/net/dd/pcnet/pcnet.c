@@ -564,7 +564,7 @@ MiniportHalt(
   NdisMDeregisterInterrupt(&Adapter->InterruptObject);
 
   /* deregister i/o port range */
-  NdisMDeregisterIoPortRange(Adapter->MiniportAdapterHandle, Adapter->IoBaseAddress, NUMBER_OF_PORTS, Adapter->PortOffset);
+  NdisMDeregisterIoPortRange(Adapter->MiniportAdapterHandle, Adapter->IoBaseAddress, NUMBER_OF_PORTS, (PVOID)Adapter->PortOffset);
 
   /* free shared memory */
   MiFreeSharedMemory(Adapter);
@@ -852,8 +852,8 @@ MiniportInitialize(
         }
 
       /* register an IO port range */
-      Status = NdisMRegisterIoPortRange(&Adapter->PortOffset, Adapter->MiniportAdapterHandle,
-          Adapter->IoBaseAddress, NUMBER_OF_PORTS);
+      Status = NdisMRegisterIoPortRange((PVOID*)&Adapter->PortOffset, Adapter->MiniportAdapterHandle,
+          (UINT)Adapter->IoBaseAddress, NUMBER_OF_PORTS);
       if(Status != NDIS_STATUS_SUCCESS)
         {
           DPRINT1("NdisMRegisterIoPortRange failed: 0x%x\n", Status);
@@ -914,7 +914,7 @@ MiniportInitialize(
       NdisMFreeMapRegisters(Adapter->MiniportAdapterHandle); /* doesn't hurt to free if we never alloc'd? */
 
       if(Adapter->PortOffset)
-        NdisMDeregisterIoPortRange(Adapter->MiniportAdapterHandle, Adapter->IoBaseAddress, NUMBER_OF_PORTS, Adapter->PortOffset);
+        NdisMDeregisterIoPortRange(Adapter->MiniportAdapterHandle, Adapter->IoBaseAddress, NUMBER_OF_PORTS, (PVOID)Adapter->PortOffset);
 
       if(InterruptRegistered)
         NdisMDeregisterInterrupt(&Adapter->InterruptObject);

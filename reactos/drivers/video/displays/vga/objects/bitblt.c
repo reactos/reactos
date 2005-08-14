@@ -52,14 +52,14 @@ DIBtoVGA(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
   if (NULL == ColorTranslation || 0 != (ColorTranslation->flXlate & XO_TRIVIAL))
     {
       DIB_BltToVGA(DestRect->left, DestRect->top, dx, dy,
-                   Source->pvScan0 + SourcePoint->y * Source->lDelta + (SourcePoint->x >> 1),
+                   (PVOID)((ULONG_PTR)Source->pvScan0 + SourcePoint->y * Source->lDelta + (SourcePoint->x >> 1)),
 		   Source->lDelta, SourcePoint->x % 2);
     }
   else
     {
       /* Perform color translation */
       DIB_BltToVGAWithXlate(DestRect->left, DestRect->top, dx, dy,
-                            Source->pvScan0 + SourcePoint->y * Source->lDelta + (SourcePoint->x >> 1),
+                            (PVOID)((ULONG_PTR)Source->pvScan0 + SourcePoint->y * Source->lDelta + (SourcePoint->x >> 1)),
 		            Source->lDelta, ColorTranslation);
     }
   return FALSE;
@@ -174,11 +174,11 @@ VGADDI_BltBrush(SURFOBJ* Dest, SURFOBJ* Source, SURFOBJ* MaskSurf,
 		BRUSHOBJ* Brush, POINTL* BrushPoint, ROP4 Rop4)
 {
   UCHAR SolidColor = 0;
-  ULONG Left;
-  ULONG Length;
+  LONG Left;
+  LONG Length;
   PUCHAR Video;
   UCHAR Mask;
-  ULONG i, j;
+  INT i, j;
   ULONG RasterOp = VGA_NORMAL;
 
   /* Punt brush blts to non-device surfaces. */

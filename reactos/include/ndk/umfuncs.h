@@ -122,7 +122,7 @@ DbgUiWaitStateChange(
     ULONG Unknown2
 );
 
-NTSTATUS
+VOID
 STDCALL
 DbgUiRemoteBreakin(VOID);
 

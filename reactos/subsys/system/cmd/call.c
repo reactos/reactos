@@ -28,7 +28,7 @@
  *        Remove all hardcode string to En.rc
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include "resource.h"
 
 
@@ -50,9 +50,11 @@ INT cmd_call (LPTSTR cmd, LPTSTR param)
 #endif
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
-		ConOutResPuts(STRING_CALL_HELP);
+		ConOutResPaging(TRUE,STRING_CALL_HELP);
 		return 0;
 	}
+
+  nErrorLevel = 1;
 
 	n = (LPBATCH_CONTEXT)malloc (sizeof (BATCH_CONTEXT));
 

@@ -24,7 +24,7 @@ KSPIN_LOCK KiIpiLock;
 VOID
 KiIpiSendRequest(ULONG TargetSet, ULONG IpiRequest)
 {
-   ULONG i;
+   LONG i;
    PKPCR Pcr;
 
    for (i = 0; i < KeNumberProcessors; i++)
@@ -118,7 +118,8 @@ VOID
 STDCALL
 KiIpiSendPacket(ULONG TargetSet, VOID (STDCALL*WorkerRoutine)(PVOID), PVOID Argument, ULONG Count, BOOLEAN Synchronize)
 {
-    ULONG i, Processor, CurrentProcessor;
+    ULONG Processor, CurrentProcessor;
+    LONG i;
     PKPRCB Prcb, CurrentPrcb;
     KIRQL oldIrql;
 

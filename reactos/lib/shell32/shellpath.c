@@ -1529,7 +1529,7 @@ static HRESULT _SHGetProfilesValue(HKEY profilesKey, LPCWSTR szValueName,
 static HRESULT _SHExpandEnvironmentStrings(LPCWSTR szSrc, LPWSTR szDest)
 {
     HRESULT hr = S_OK;
-    WCHAR szTemp[MAX_PATH], szProfilesPrefix[MAX_PATH] = { 0 };
+    WCHAR szTemp[MAX_PATH];
 
     TRACE("%s, %p\n", debugstr_w(szSrc), szDest);
 

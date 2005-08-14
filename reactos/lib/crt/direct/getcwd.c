@@ -24,7 +24,7 @@ _TCHAR* _tgetcwd(_TCHAR* buf, int size)
     return _tcsdup(dir);
   }
 
-  if (dir_len >= size)
+  if (dir_len >= (DWORD)size)
   {
     __set_errno(ERANGE);
     return NULL; /* buf too small */

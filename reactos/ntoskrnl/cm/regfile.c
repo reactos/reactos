@@ -1068,7 +1068,7 @@ CmiCreateVolatileHive(PREGISTRY_HIVE *RegistryHive)
   RtlZeroMemory (Hive,
 		 sizeof(REGISTRY_HIVE));
 
-  DPRINT("Hive %x\n", Hive);
+  DPRINT("Hive 0x%p\n", Hive);
 
   Hive->HiveHeader = (PHIVE_HEADER)ExAllocatePool (NonPagedPool,
 						   sizeof(HIVE_HEADER));
@@ -1138,7 +1138,7 @@ CmiCreateTempHive(PREGISTRY_HIVE *RegistryHive)
   RtlZeroMemory (Hive,
 		 sizeof(REGISTRY_HIVE));
 
-  DPRINT ("Hive %x\n", Hive);
+  DPRINT ("Hive 0x%p\n", Hive);
 
   Hive->HiveHeader = (PHIVE_HEADER)ExAllocatePool (NonPagedPool,
 						   REG_BLOCK_SIZE);
@@ -1151,7 +1151,7 @@ CmiCreateTempHive(PREGISTRY_HIVE *RegistryHive)
   RtlZeroMemory (Hive->HiveHeader,
 		 REG_BLOCK_SIZE);
 
-  DPRINT ("HiveHeader %x\n", Hive->HiveHeader);
+  DPRINT ("HiveHeader 0x%p\n", Hive->HiveHeader);
 
   Hive->Flags = HIVE_NO_FILE;
 
@@ -1260,7 +1260,7 @@ CmiLoadHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
   RtlZeroMemory (Hive,
 		 sizeof(REGISTRY_HIVE));
 
-  DPRINT ("Hive %x\n", Hive);
+  DPRINT ("Hive 0x%p\n", Hive);
   Hive->Flags = (Flags & REG_NO_LAZY_FLUSH) ? HIVE_NO_SYNCH : 0;
 
   Hive->HiveHeader = (PHIVE_HEADER)ExAllocatePool(NonPagedPool,

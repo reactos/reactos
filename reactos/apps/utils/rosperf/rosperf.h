@@ -28,8 +28,8 @@ typedef struct tagPERF_INFO
   COLORREF BackgroundColor;
   HDC ForegroundDc;
   HDC BackgroundDc;
-  ULONG WndWidth;
-  ULONG WndHeight;
+  INT WndWidth;
+  INT WndHeight;
 } PERF_INFO, *PPERF_INFO;
 
 typedef unsigned (*INITTESTPROC)(void **Context, PPERF_INFO PerfInfo, unsigned Reps);

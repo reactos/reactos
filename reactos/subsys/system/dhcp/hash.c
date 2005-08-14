@@ -40,6 +40,7 @@
  * Enterprises, see ``http://www.vix.com''.
  */
 
+#define lint
 #ifndef lint
 static char copyright[] =
 "$Id: hash.c,v 1.9.2.3 1999/04/09 17:39:41 mellon Exp $ Copyright (c) 1995, 1996, 1997, 1998 The Internet Software Consortium.  All rights reserved.\n";

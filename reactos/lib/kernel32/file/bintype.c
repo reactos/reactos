@@ -39,19 +39,19 @@ InternalIsOS2OrOldWin(HANDLE hFile, IMAGE_DOS_HEADER *mz, IMAGE_OS2_HEADER *ne)
   CurPos = SetFilePointer(hFile, 0, NULL, FILE_CURRENT);
 
   /* read modref table */
-  if((SetFilePointer(hFile, mz->e_lfanew + ne->ne_modtab, NULL, FILE_BEGIN) == -1) ||
+  if((SetFilePointer(hFile, mz->e_lfanew + ne->ne_modtab, NULL, FILE_BEGIN) == (DWORD)-1) ||
      (!(modtab = HeapAlloc(GetProcessHeap(), 0, ne->ne_cmod * sizeof(WORD)))) ||
      (!(ReadFile(hFile, modtab, ne->ne_cmod * sizeof(WORD), &Read, NULL))) ||
-     (Read != ne->ne_cmod * sizeof(WORD)))
+     (Read != (DWORD)ne->ne_cmod * sizeof(WORD)))
   {
     goto broken;
   }
 
   /* read imported names table */
-  if((SetFilePointer(hFile, mz->e_lfanew + ne->ne_imptab, NULL, FILE_BEGIN) == -1) ||
+  if((SetFilePointer(hFile, mz->e_lfanew + ne->ne_imptab, NULL, FILE_BEGIN) == (DWORD)-1) ||
      (!(nametab = HeapAlloc(GetProcessHeap(), 0, ne->ne_enttab - ne->ne_imptab))) ||
      (!(ReadFile(hFile, nametab, ne->ne_enttab - ne->ne_imptab, &Read, NULL))) ||
-     (Read != ne->ne_enttab - ne->ne_imptab))
+     (Read != (DWORD)ne->ne_enttab - ne->ne_imptab))
   {
     goto broken;
   }
@@ -101,7 +101,7 @@ InternalGetBinaryType(HANDLE hFile)
   char magic[4];
   DWORD Read;
 
-  if((SetFilePointer(hFile, 0, NULL, FILE_BEGIN) == -1) ||
+  if((SetFilePointer(hFile, 0, NULL, FILE_BEGIN) == (DWORD)-1) ||
      (!ReadFile(hFile, &Header, sizeof(Header), &Read, NULL) ||
       (Read != sizeof(Header))))
   {
@@ -144,7 +144,7 @@ InternalGetBinaryType(HANDLE hFile)
      * This will tell us if there is more header information
      * to read or not.
      */
-    if((SetFilePointer(hFile, Header.mz.e_lfanew, NULL, FILE_BEGIN) == -1) ||
+    if((SetFilePointer(hFile, Header.mz.e_lfanew, NULL, FILE_BEGIN) == (DWORD)-1) ||
        (!ReadFile(hFile, magic, sizeof(magic), &Read, NULL) ||
         (Read != sizeof(magic))))
     {

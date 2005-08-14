@@ -93,15 +93,17 @@ NullDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
      break;
 
     default:
-     Irp->IoStatus.Information = 0;
-     nErrCode = STATUS_NOT_IMPLEMENTED;
+     ASSERT(FALSE);
+
    }
 
    break;
   }
 
   default:
-   ASSERT(FALSE);
+   Irp->IoStatus.Information = 0;
+   nErrCode = STATUS_NOT_IMPLEMENTED;
+
  }
 
  Irp->IoStatus.Status = nErrCode;

@@ -198,7 +198,7 @@ KdbpEvaluateExpression(
 STATIC BOOLEAN
 KdbpCmdEvalExpression(ULONG Argc, PCHAR Argv[])
 {
-   INT i, len;
+   UINT i, len;
    ULONGLONG Result = 0;
    ULONG ul;
    LONG l = 0;
@@ -411,10 +411,7 @@ KdbpCmdRegs(ULONG Argc, PCHAR Argv[])
    else if (Argv[0][0] == 'c') /* cregs */
    {
       ULONG Cr0, Cr2, Cr3, Cr4;
-      struct __attribute__((packed)) {
-         USHORT Limit;
-         ULONG Base;
-      } Gdtr, Ldtr, Idtr;
+      KDESCRIPTOR Gdtr, Ldtr, Idtr;
       ULONG Tr;
       STATIC CONST PCHAR Cr0Bits[32] = { " PE", " MP", " EM", " TS", " ET", " NE", NULL, NULL,
                                          NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
@@ -431,9 +428,9 @@ KdbpCmdRegs(ULONG Argc, PCHAR Argv[])
       Cr4 = KdbCurrentTrapFrame->Cr4;
 
       /* Get descriptor table regs */
-      asm volatile("sgdt %0" : : "m"(Gdtr));
-      asm volatile("sldt %0" : : "m"(Ldtr));
-      asm volatile("sidt %0" : : "m"(Idtr));
+      asm volatile("sgdt %0" : : "m"(Gdtr.Limit));
+      asm volatile("sldt %0" : : "m"(Ldtr.Limit));
+      asm volatile("sidt %0" : : "m"(Idtr.Limit));
 
       /* Get the task register */
       asm volatile("str %0" : "=g"(Tr));
@@ -575,7 +572,7 @@ KdbpCmdBackTrace(ULONG Argc, PCHAR Argv[])
          break;
       if (!NT_SUCCESS(KdbpSafeReadMemory(&Address, (PVOID)(Frame + sizeof(ULONG_PTR)), sizeof (ULONG_PTR))))
       {
-         KdbpPrint("Couldn't access memory at 0x%x!\n", Frame + sizeof(ULONG_PTR));
+         KdbpPrint("Couldn't access memory at 0x%p!\n", Frame + sizeof(ULONG_PTR));
          break;
       }
       if (!KdbSymPrintAddress((PVOID)Address))
@@ -586,7 +583,7 @@ KdbpCmdBackTrace(ULONG Argc, PCHAR Argv[])
          break;
       if (!NT_SUCCESS(KdbpSafeReadMemory(&Frame, (PVOID)Frame, sizeof (ULONG_PTR))))
       {
-         KdbpPrint("Couldn't access memory at 0x%x!\n", Frame);
+         KdbpPrint("Couldn't access memory at 0x%p!\n", Frame);
          break;
       }
    }
@@ -773,7 +770,7 @@ KdbpCmdBreakPoint(ULONG Argc, PCHAR Argv[])
    KDB_BREAKPOINT_TYPE Type;
    UCHAR Size = 0;
    KDB_ACCESS_TYPE AccessType = 0;
-   INT AddressArgIndex, ConditionArgIndex, i;
+   UINT AddressArgIndex, ConditionArgIndex, i;
    BOOLEAN Global = TRUE;
 
    if (Argv[0][2] == 'x') /* software breakpoint */
@@ -1185,7 +1182,7 @@ KdbpCmdMod(ULONG Argc, PCHAR Argv[])
 
       if (!KdbpSymFindModuleByAddress((PVOID)Address, &Info))
       {
-         KdbpPrint("No module containing address 0x%x found!\n", Address);
+         KdbpPrint("No module containing address 0x%p found!\n", Address);
          return TRUE;
       }
       DisplayOnlyOneModule = TRUE;
@@ -1518,7 +1515,7 @@ KdbpCmdBugCheck(ULONG Argc, PCHAR Argv[])
 STATIC BOOLEAN
 KdbpCmdSet(ULONG Argc, PCHAR Argv[])
 {
-   LONG l;
+   ULONG l;
    BOOLEAN First;
    PCHAR pend = 0;
    KDB_ENTER_CONDITION ConditionFirst = KdbDoNotEnter;
@@ -1577,7 +1574,7 @@ KdbpCmdSet(ULONG Argc, PCHAR Argv[])
             l = -1;
          else
          {
-            l = (LONG)strtoul(Argv[2], &pend, 0);
+            l = strtoul(Argv[2], &pend, 0);
             if (Argv[2] == pend)
             {
                for (l = 0; l < RTL_NUMBER_OF(ExceptionNames); l++)
@@ -1699,8 +1696,8 @@ KdbpPrint(
    STATIC BOOLEAN TerminalReportsSize = TRUE;
    CHAR c = '\0';
    PCHAR p, p2;
-   INT Length;
-   INT i, j;
+   UINT Length;
+   UINT i, j;
    INT RowsPrintedByTerminal;
    ULONG ScanCode;
    va_list ap;
@@ -1812,7 +1809,7 @@ KdbpPrint(
       /*DbgPrint("!%d!%d!%d!%d!", KdbNumberOfRowsPrinted, KdbNumberOfColsPrinted, i, RowsPrintedByTerminal);*/
 
       /* Display a prompt if we printed one screen full of text */
-      if ((KdbNumberOfRowsPrinted + RowsPrintedByTerminal) >= KdbNumberOfRowsTerminal)
+      if ((LONG)(KdbNumberOfRowsPrinted + RowsPrintedByTerminal) >= KdbNumberOfRowsTerminal)
       {
          if (KdbNumberOfColsPrinted > 0)
             DbgPrint("\n");
@@ -1897,8 +1894,8 @@ STATIC VOID
 KdbpCommandHistoryAppend(
    IN PCHAR Command)
 {
-   LONG Length1 = strlen(Command) + 1;
-   LONG Length2 = 0;
+   ULONG Length1 = strlen(Command) + 1;
+   ULONG Length2 = 0;
    INT i;
    PCHAR Buffer;
 
@@ -1914,7 +1911,7 @@ KdbpCommandHistoryAppend(
    /* Calculate Length1 and Length2 */
    Buffer = KdbCommandHistoryBuffer + KdbCommandHistoryBufferIndex;
    KdbCommandHistoryBufferIndex += Length1;
-   if (KdbCommandHistoryBufferIndex >= RTL_NUMBER_OF(KdbCommandHistoryBuffer))
+   if (KdbCommandHistoryBufferIndex >= (LONG)RTL_NUMBER_OF(KdbCommandHistoryBuffer))
    {
       KdbCommandHistoryBufferIndex -= RTL_NUMBER_OF(KdbCommandHistoryBuffer);
       Length2 = KdbCommandHistoryBufferIndex;
@@ -2017,7 +2014,7 @@ KdbpReadCommand(
          NextKey = '\0';
       }
 
-      if ((Buffer - Orig) >= (Size - 1))
+      if ((ULONG)(Buffer - Orig) >= (Size - 1))
       {
          /* Buffer is full, accept only newlines */
          if (Key != '\n')
@@ -2103,7 +2100,7 @@ KdbpReadCommand(
          if (CmdHistIndex > 0 && CmdHistIndex != KdbCommandHistoryIndex)
          {
             i = CmdHistIndex + 1;
-            if (i >= RTL_NUMBER_OF(KdbCommandHistory))
+            if (i >= (INT)RTL_NUMBER_OF(KdbCommandHistory))
                i = 0;
             if (KdbCommandHistory[i] != NULL)
             {
@@ -2367,7 +2364,7 @@ KdbpCliInit()
       DPRINT("Could not read KDBinit file into memory (Status 0x%lx)\n", Status);
       return;
    }
-   FileSize = min(FileSize, Iosb.Information);
+   FileSize = min(FileSize, (INT)Iosb.Information);
    FileBuffer[FileSize] = '\0';
 
    /* Enter critical section */

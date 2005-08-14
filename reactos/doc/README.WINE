@@ -65,6 +65,7 @@ reactos/lib/shdocvw             # Synced to Wine-20050419
 reactos/lib/shlwapi             # Synced to Wine-20050419
 reactos/lib/twain		# Out of sync
 reactos/lib/urlmon		# Synced to Wine-20050419
+reactos/lib/uxtheme		# Synced to Wine-20050703
 reactos/lib/version		# Out of sync
 reactos/lib/wininet		# Out of sync
 reactos/lib/winmm		# Synced to Wine-20050419

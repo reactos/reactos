@@ -212,7 +212,7 @@ static void cxx_local_unwind( cxx_exception_frame* frame, cxx_function_descr *de
 
     while (trylevel != last_level)
     {
-        if (trylevel < 0 || trylevel >= descr->unwind_count)
+        if (trylevel < 0 || trylevel >= (int)descr->unwind_count)
         {
             ERR( "invalid trylevel %d\n", trylevel );
             MSVCRT_terminate();

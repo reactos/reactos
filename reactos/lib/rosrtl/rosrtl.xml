@@ -5,7 +5,6 @@
 	</directory>
 	<directory name="misc">
 		<file>devmode.c</file>
-		<file>intrlck.c</file>
 		<file>logfont.c</file>
 		<file>qsort.c</file>
  	</directory>

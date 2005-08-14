@@ -15,6 +15,7 @@
 		<file>dib4bpp.c</file>
 		<file>dib8bpp.c</file>
 		<file>dib16bpp.c</file>
+		<file>dib16gen.c</file>
 		<file>dib24bpp.c</file>
 		<file>dib32bpp.c</file>
 		<file>dib.c</file>
@@ -57,6 +58,7 @@
 		<file>math.c</file>
 		<file>object.c</file>
 		<file>ssec.c</file>
+		<file>copy.c</file>
 	</directory>
 	<directory name="ntddraw">
 		<file>ddraw.c</file>

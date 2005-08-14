@@ -16,11 +16,12 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDC_CPLICON ICON "resources/applet.ico"
 
 
-#include "Cz.rc"
 #include "En.rc"
+#include "Cz.rc"
 #include "De.rc"
 #include "Dk.rc"
 #include "Es.rc"
 #include "Fr.rc"
+#include "Pl.rc"
 #include "Ru.rc"
 #include "Sv.rc"

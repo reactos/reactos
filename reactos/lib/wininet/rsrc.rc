@@ -48,6 +48,7 @@
 #include "wininet_It.rc"
 #include "wininet_Ja.rc"
 #include "wininet_Nl.rc"
+#include "wininet_Pl.rc"
 #include "wininet_Pt.rc"
 #include "wininet_Ru.rc"
 #include "wininet_Si.rc"

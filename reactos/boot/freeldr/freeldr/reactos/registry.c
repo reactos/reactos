@@ -210,7 +210,7 @@ RegCreateKey(FRLDRHKEY ParentKey,
 	     PFRLDRHKEY Key)
 {
   PLIST_ENTRY Ptr;
-  FRLDRHKEY SearchKey = INVALID_HANDLE_VALUE;
+  FRLDRHKEY SearchKey = NULL;
   FRLDRHKEY CurrentKey;
   FRLDRHKEY NewKey;
   PCHAR p;
@@ -388,7 +388,7 @@ RegOpenKey(FRLDRHKEY ParentKey,
 	   PFRLDRHKEY Key)
 {
   PLIST_ENTRY Ptr;
-  FRLDRHKEY SearchKey = INVALID_HANDLE_VALUE;
+  FRLDRHKEY SearchKey = NULL;
   FRLDRHKEY CurrentKey;
   PCHAR p;
   PCHAR name;

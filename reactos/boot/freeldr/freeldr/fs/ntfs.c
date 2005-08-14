@@ -1,6 +1,6 @@
 /*
  *  FreeLoader NTFS support
- *  Copyright (C) 2004       Filip Navara  <xnavara@volny.cz>
+ *  Copyright (C) 2004  Filip Navara  <xnavara@volny.cz>
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -168,7 +168,7 @@ BOOL NtfsDiskRead(ULONGLONG Offset, ULONGLONG Length, PCHAR Buffer)
     }
 
     /* II. Read all complete 64-sector blocks. */
-    while (Length >= 64 * NtfsBootSector->BytesPerSector)
+    while (Length >= (ULONGLONG)64 * (ULONGLONG)NtfsBootSector->BytesPerSector)
     {
         if (!MachDiskReadLogicalSectors(NtfsDriveNumber, NtfsSectorOfClusterZero + (Offset / NtfsBootSector->BytesPerSector), 64, (PCHAR)DISKREADBUFFER))
             return FALSE;

@@ -9,7 +9,7 @@
  *
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include "resource.h"
 
 #ifdef INCLUDE_CMD_DELAY
@@ -22,7 +22,7 @@ INT CommandDelay (LPTSTR cmd, LPTSTR param)
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
-		ConOutResPuts(STRING_DELAY_HELP);
+		ConOutResPaging(TRUE,STRING_DELAY_HELP);
 		return 0;
 	}
 

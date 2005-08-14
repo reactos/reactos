@@ -238,7 +238,7 @@ static BOOL UPDOWN_GetArrowFromPoint (UPDOWN_INFO* infoPtr, RECT *rect, POINT pt
  *           UPDOWN_GetThousandSep
  * Returns the thousand sep. If an error occurs, it returns ','.
  */
-static WCHAR UPDOWN_GetThousandSep()
+static WCHAR UPDOWN_GetThousandSep(void)
 {
     WCHAR sep[2];
 

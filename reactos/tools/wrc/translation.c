@@ -20,6 +20,7 @@
 #include <stdlib.h>
 
 #include "dumpres.h"
+#include "wrc.h"
 
 #define MASTER_LANGUAGE LANG_ENGLISH
 #define NB_LANG 0x94

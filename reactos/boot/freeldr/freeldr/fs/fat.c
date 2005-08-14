@@ -689,7 +689,7 @@ BOOL FatXSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize
  */
 BOOL FatLookupFile(PCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer)
 {
-	int		i;
+	UINT		i;
 	ULONG		NumberOfPathParts;
 	CHAR		PathPart[261];
 	PVOID		DirectoryBuffer;
@@ -827,9 +827,9 @@ void FatParseShortFileName(PCHAR Buffer, PDIRENTRY DirEntry)
 BOOL FatGetFatEntry(ULONG Cluster, ULONG* ClusterPointer)
 {
 	ULONG		fat = 0;
-	int		FatOffset;
-	int		ThisFatSecNum;
-	int		ThisFatEntOffset;
+	UINT		FatOffset;
+	UINT		ThisFatSecNum;
+	UINT		ThisFatEntOffset;
 
 	DbgPrint((DPRINT_FILESYSTEM, "FatGetFatEntry() Retrieving FAT entry for cluster %d.\n", Cluster));
 
@@ -860,7 +860,7 @@ BOOL FatGetFatEntry(ULONG Cluster, ULONG* ClusterPointer)
 			}
 		}
 
-		fat = *((USHORT *) ((PVOID)FILESYSBUFFER + ThisFatEntOffset));
+		fat = *((USHORT *) ((ULONG_PTR)FILESYSBUFFER + ThisFatEntOffset));
 		if (Cluster & 0x0001)
 			fat = fat >> 4;	/* Cluster number is ODD */
 		else
@@ -880,7 +880,7 @@ BOOL FatGetFatEntry(ULONG Cluster, ULONG* ClusterPointer)
 			return FALSE;
 		}
 
-		fat = *((USHORT *) ((PVOID)FILESYSBUFFER + ThisFatEntOffset));
+		fat = *((USHORT *) ((ULONG_PTR)FILESYSBUFFER + ThisFatEntOffset));
 
 		break;
 
@@ -897,7 +897,7 @@ BOOL FatGetFatEntry(ULONG Cluster, ULONG* ClusterPointer)
 		}
 
 		// Get the fat entry
-		fat = (*((ULONG *) ((PVOID)FILESYSBUFFER + ThisFatEntOffset))) & 0x0FFFFFFF;
+		fat = (*((ULONG *) ((ULONG_PTR)FILESYSBUFFER + ThisFatEntOffset))) & 0x0FFFFFFF;
 
 		break;
 
@@ -1091,7 +1091,7 @@ BOOL FatReadClusterChain(ULONG StartClusterNumber, ULONG NumberOfClusters, PVOID
 		//
 		// Increment buffer address by cluster size
 		//
-		Buffer += SectorsPerCluster * BytesPerSector;
+		Buffer = (PVOID)((ULONG_PTR)Buffer + (SectorsPerCluster * BytesPerSector));
 
 		//
 		// Get next cluster
@@ -1132,7 +1132,7 @@ BOOL FatReadPartialCluster(ULONG ClusterNumber, ULONG StartingOffset, ULONG Leng
 		return FALSE;
 	}
 
-	memcpy(Buffer, ((PVOID)FILESYSBUFFER + StartingOffset), Length);
+	memcpy(Buffer, (PVOID)((ULONG_PTR)FILESYSBUFFER + StartingOffset), Length);
 
 	return TRUE;
 }
@@ -1234,7 +1234,7 @@ BOOL FatReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Bu
 		}
 		BytesToRead -= LengthInCluster;
 		FatFileInfo->FilePointer += LengthInCluster;
-		Buffer += LengthInCluster;
+		Buffer = (PVOID)((ULONG_PTR)Buffer + LengthInCluster);
 	}
 
 	//
@@ -1265,7 +1265,7 @@ BOOL FatReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Bu
 			}
 			BytesToRead -= (NumberOfClusters * BytesPerCluster);
 			FatFileInfo->FilePointer += (NumberOfClusters * BytesPerCluster);
-			Buffer += (NumberOfClusters * BytesPerCluster);
+			Buffer = (PVOID)((ULONG_PTR)Buffer + (NumberOfClusters * BytesPerCluster));
 		}
 	}
 
@@ -1290,7 +1290,7 @@ BOOL FatReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Bu
 		}
 		FatFileInfo->FilePointer += BytesToRead;
 		BytesToRead -= BytesToRead;
-		Buffer += BytesToRead;
+		Buffer = (PVOID)((ULONG_PTR)Buffer + BytesToRead);
 	}
 
 	return TRUE;

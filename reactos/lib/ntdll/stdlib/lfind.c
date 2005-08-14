@@ -9,7 +9,7 @@ void *_lfind(const void *key, const void *base, size_t *nelp,
          size_t width, int (*compar)(const void *, const void *))
 {
   char* char_base = (char*)base;
-  int i;
+  size_t i;
 
   for (i = 0; i < *nelp; i++)
     {

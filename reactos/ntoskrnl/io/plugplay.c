@@ -104,13 +104,68 @@ IopRemovePlugPlayEvent(VOID)
 
 
 /*
+ * Plug and Play event structure used by NtGetPlugPlayEvent.
+ *
+ * EventGuid
+ *    Can be one of the following values:
+ *       GUID_HWPROFILE_QUERY_CHANGE
+ *       GUID_HWPROFILE_CHANGE_CANCELLED
+ *       GUID_HWPROFILE_CHANGE_COMPLETE
+ *       GUID_TARGET_DEVICE_QUERY_REMOVE
+ *       GUID_TARGET_DEVICE_REMOVE_CANCELLED
+ *       GUID_TARGET_DEVICE_REMOVE_COMPLETE
+ *       GUID_PNP_CUSTOM_NOTIFICATION
+ *       GUID_PNP_POWER_NOTIFICATION
+ *       GUID_DEVICE_* (see above)
+ *
+ * EventCategory
+ *    Type of the event that happened.
+ *
+ * Result
+ *    ?
+ *
+ * Flags
+ *    ?
+ *
+ * TotalSize
+ *    Size of the event block including the device IDs and other
+ *    per category specific fields.
+ */
+/*
+ * NtGetPlugPlayEvent
+ *
+ * Returns one Plug & Play event from a global queue.
+ *
+ * Parameters
+ *    Reserved1
+ *    Reserved2
+ *       Always set to zero.
+ *
+ *    Buffer
+ *       The buffer that will be filled with the event information on
+ *       successful return from the function.
+ *
+ *    BufferSize
+ *       Size of the buffer pointed by the Buffer parameter. If the
+ *       buffer size is not large enough to hold the whole event
+ *       information, error STATUS_BUFFER_TOO_SMALL is returned and
+ *       the buffer remains untouched.
+ *
+ * Return Values
+ *    STATUS_PRIVILEGE_NOT_HELD
+ *    STATUS_BUFFER_TOO_SMALL
+ *    STATUS_SUCCESS
+ *
+ * Remarks
+ *    This function isn't multi-thread safe!
+ *
  * @implemented
  */
 NTSTATUS STDCALL
 NtGetPlugPlayEvent(IN ULONG Reserved1,
                    IN ULONG Reserved2,
                    OUT PPLUGPLAY_EVENT_BLOCK Buffer,
-                   IN ULONG BufferLength)
+                   IN ULONG BufferSize)
 {
   PPNP_EVENT_ENTRY Entry;
   NTSTATUS Status;
@@ -151,7 +206,7 @@ NtGetPlugPlayEvent(IN ULONG Reserved1,
                             ListEntry);
 
   /* Check the buffer size */
-  if (BufferLength < Entry->Event.TotalSize)
+  if (BufferSize < Entry->Event.TotalSize)
   {
     DPRINT1("Buffer is too small for the pnp-event\n");
     return STATUS_BUFFER_TOO_SMALL;
@@ -285,7 +340,33 @@ IopGetDeviceObjectFromDeviceInstance(PUNICODE_STRING DeviceInstance)
 
 
 static NTSTATUS
-IopGetRelatedDevice(PPLUGPLAY_RELATED_DEVICE_DATA RelatedDeviceData)
+IopGetDeviceProperty(PPLUGPLAY_CONTROL_PROPERTY_DATA PropertyData)
+{
+    PDEVICE_OBJECT DeviceObject = NULL;
+    NTSTATUS Status;
+
+    DPRINT("IopGetDeviceProperty() called\n");
+    DPRINT("Device name: %wZ\n", &PropertyData->DeviceInstance);
+
+    /* Get the device object */
+    DeviceObject = IopGetDeviceObjectFromDeviceInstance(&PropertyData->DeviceInstance);
+    if (DeviceObject == NULL)
+        return STATUS_NO_SUCH_DEVICE;
+
+    Status = IoGetDeviceProperty(DeviceObject,
+                                 PropertyData->Property,
+                                 PropertyData->BufferSize,
+                                 PropertyData->Buffer,
+                                 &PropertyData->BufferSize);
+
+    ObDereferenceObject(DeviceObject);
+
+    return Status;
+}
+
+
+static NTSTATUS
+IopGetRelatedDevice(PPLUGPLAY_CONTROL_RELATED_DEVICE_DATA RelatedDeviceData)
 {
     UNICODE_STRING RootDeviceName;
     PDEVICE_OBJECT DeviceObject = NULL;
@@ -293,12 +374,11 @@ IopGetRelatedDevice(PPLUGPLAY_RELATED_DEVICE_DATA RelatedDeviceData)
     PDEVICE_NODE RelatedDeviceNode;
 
     DPRINT("IopGetRelatedDevice() called\n");
-
-    DPRINT("Device name: %wZ\n", &RelatedDeviceData->DeviceInstance);
+    DPRINT("Device name: %wZ\n", &RelatedDeviceData->TargetDeviceInstance);
 
     RtlInitUnicodeString(&RootDeviceName,
                          L"HTREE\\ROOT\\0");
-    if (RtlEqualUnicodeString(&RelatedDeviceData->DeviceInstance,
+    if (RtlEqualUnicodeString(&RelatedDeviceData->TargetDeviceInstance,
                               &RootDeviceName,
                               TRUE))
     {
@@ -307,7 +387,7 @@ IopGetRelatedDevice(PPLUGPLAY_RELATED_DEVICE_DATA RelatedDeviceData)
     else
     {
         /* Get the device object */
-        DeviceObject = IopGetDeviceObjectFromDeviceInstance(&RelatedDeviceData->DeviceInstance);
+        DeviceObject = IopGetDeviceObjectFromDeviceInstance(&RelatedDeviceData->TargetDeviceInstance);
         if (DeviceObject == NULL)
             return STATUS_NO_SUCH_DEVICE;
 
@@ -377,34 +457,33 @@ IopGetRelatedDevice(PPLUGPLAY_RELATED_DEVICE_DATA RelatedDeviceData)
 
 
 static NTSTATUS
-IopDeviceStatus(PPLUGPLAY_DEVICE_STATUS_DATA DeviceStatusData)
+IopDeviceStatus(PPLUGPLAY_CONTROL_STATUS_DATA StatusData)
 {
     PDEVICE_OBJECT DeviceObject;
     PDEVICE_NODE DeviceNode;
 
     DPRINT("IopDeviceStatus() called\n");
-
-    DPRINT("Device name: %wZ\n", &DeviceStatusData->DeviceInstance);
+    DPRINT("Device name: %wZ\n", &StatusData->DeviceInstance);
 
     /* Get the device object */
-    DeviceObject = IopGetDeviceObjectFromDeviceInstance(&DeviceStatusData->DeviceInstance);
+    DeviceObject = IopGetDeviceObjectFromDeviceInstance(&StatusData->DeviceInstance);
     if (DeviceObject == NULL)
         return STATUS_NO_SUCH_DEVICE;
 
     DeviceNode = DeviceObject->DeviceObjectExtension->DeviceNode;
 
-    switch (DeviceStatusData->Action)
+    switch (StatusData->Operation)
     {
         case PNP_GET_DEVICE_STATUS:
             DPRINT("Get status data\n");
-            DeviceStatusData->Problem = DeviceNode->Problem;
-            DeviceStatusData->Flags = DeviceNode->Flags;
+            StatusData->DeviceStatus = DeviceNode->Flags;
+            StatusData->DeviceProblem = DeviceNode->Problem;
             break;
 
         case PNP_SET_DEVICE_STATUS:
             DPRINT("Set status data\n");
-            DeviceNode->Problem = DeviceStatusData->Problem;
-            DeviceNode->Flags = DeviceStatusData->Flags;
+            DeviceNode->Flags = StatusData->DeviceStatus;
+            DeviceNode->Problem = StatusData->DeviceProblem;
             break;
 
         case PNP_CLEAR_DEVICE_STATUS:
@@ -418,18 +497,95 @@ IopDeviceStatus(PPLUGPLAY_DEVICE_STATUS_DATA DeviceStatusData)
 }
 
 
+static NTSTATUS
+IopGetDeviceDepth(PPLUGPLAY_CONTROL_DEPTH_DATA DepthData)
+{
+    PDEVICE_OBJECT DeviceObject;
+    PDEVICE_NODE DeviceNode;
+
+    DPRINT("IopGetDeviceDepth() called\n");
+    DPRINT("Device name: %wZ\n", &DepthData->DeviceInstance);
+
+    /* Get the device object */
+    DeviceObject = IopGetDeviceObjectFromDeviceInstance(&DepthData->DeviceInstance);
+    if (DeviceObject == NULL)
+        return STATUS_NO_SUCH_DEVICE;
+
+    DeviceNode = DeviceObject->DeviceObjectExtension->DeviceNode;
+
+    DepthData->Depth = DeviceNode->Level;
+
+    ObDereferenceObject(DeviceObject);
+
+    return STATUS_SUCCESS;
+}
+
+
 /*
+ * NtPlugPlayControl
+ *
+ * A function for doing various Plug & Play operations from user mode.
+ *
+ * Parameters
+ *    PlugPlayControlClass
+ *       0x00   Reenumerate device tree
+ *
+ *              Buffer points to UNICODE_STRING decribing the instance
+ *              path (like "HTREE\ROOT\0" or "Root\ACPI_HAL\0000"). For
+ *              more information about instance paths see !devnode command
+ *              in kernel debugger or look at "Inside Windows 2000" book,
+ *              chapter "Driver Loading, Initialization, and Installation".
+ *
+ *       0x01   Register new device
+ *       0x02   Deregister device
+ *       0x03   Initialize device
+ *       0x04   Start device
+ *       0x06   Query and remove device
+ *       0x07   User response
+ *
+ *              Called after processing the message from NtGetPlugPlayEvent.
+ *
+ *       0x08   Generate legacy device
+ *       0x09   Get interface device list
+ *       0x0A   Get property data
+ *       0x0B   Device class association (Registration)
+ *       0x0C   Get related device
+ *       0x0D   Get device interface alias
+ *       0x0E   Get/set/clear device status
+ *       0x0F   Get device depth
+ *       0x10   Query device relations
+ *       0x11   Query target device relation
+ *       0x12   Query conflict list
+ *       0x13   Retrieve dock data
+ *       0x14   Reset device
+ *       0x15   Halt device
+ *       0x16   Get blocked driver data
+ *
+ *    Buffer
+ *       The buffer contains information that is specific to each control
+ *       code. The buffer is read-only.
+ *
+ *    BufferSize
+ *       Size of the buffer pointed by the Buffer parameter. If the
+ *       buffer size specifies incorrect value for specified control
+ *       code, error ??? is returned.
+ *
+ * Return Values
+ *    STATUS_PRIVILEGE_NOT_HELD
+ *    STATUS_SUCCESS
+ *    ...
+ *
  * @unimplemented
  */
 NTSTATUS STDCALL
-NtPlugPlayControl(IN ULONG ControlCode,
+NtPlugPlayControl(IN PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
                   IN OUT PVOID Buffer,
                   IN ULONG BufferLength)
 {
     NTSTATUS Status = STATUS_SUCCESS;
 
     DPRINT("NtPlugPlayControl(%lu %p %lu) called\n",
-           ControlCode, Buffer, BufferLength);
+           PlugPlayControlClass, Buffer, BufferLength);
 
     /* Function can only be called from user-mode */
     if (KeGetPreviousMode() != UserMode)
@@ -464,22 +620,35 @@ NtPlugPlayControl(IN ULONG ControlCode,
         return Status;
     }
 
-    switch (ControlCode)
+    switch (PlugPlayControlClass)
     {
-        case PLUGPLAY_USER_RESPONSE:
+        case PlugPlayControlUserResponse:
             if (Buffer || BufferLength != 0)
                 return STATUS_INVALID_PARAMETER;
             return IopRemovePlugPlayEvent();
 
-        case PLUGPLAY_GET_RELATED_DEVICE:
-            if (!Buffer || BufferLength < sizeof(PLUGPLAY_RELATED_DEVICE_DATA))
+        case PlugPlayControlProperty:
+            if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_PROPERTY_DATA))
                 return STATUS_INVALID_PARAMETER;
-            return IopGetRelatedDevice((PPLUGPLAY_RELATED_DEVICE_DATA)Buffer);
+            return IopGetDeviceProperty((PPLUGPLAY_CONTROL_PROPERTY_DATA)Buffer);
 
-        case PLUGPLAY_DEVICE_STATUS:
-            if (!Buffer || BufferLength < sizeof(PLUGPLAY_DEVICE_STATUS_DATA))
+        case PlugPlayControlGetRelatedDevice:
+            if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_RELATED_DEVICE_DATA))
                 return STATUS_INVALID_PARAMETER;
-            return IopDeviceStatus((PPLUGPLAY_DEVICE_STATUS_DATA)Buffer);
+            return IopGetRelatedDevice((PPLUGPLAY_CONTROL_RELATED_DEVICE_DATA)Buffer);
+
+        case PlugPlayControlDeviceStatus:
+            if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_STATUS_DATA))
+                return STATUS_INVALID_PARAMETER;
+            return IopDeviceStatus((PPLUGPLAY_CONTROL_STATUS_DATA)Buffer);
+
+        case PlugPlayControlGetDeviceDepth:
+            if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_DEPTH_DATA))
+                return STATUS_INVALID_PARAMETER;
+            return IopGetDeviceDepth((PPLUGPLAY_CONTROL_DEPTH_DATA)Buffer);
+
+        default:
+            return STATUS_NOT_IMPLEMENTED;
     }
 
     return STATUS_NOT_IMPLEMENTED;

@@ -208,7 +208,7 @@ DetectPciIrqRoutingTable(FRLDRHKEY BusKey)
       PartialDescriptor->ShareDisposition = CmResourceShareUndetermined;
       PartialDescriptor->u.DeviceSpecificData.DataSize = Table->Size;
 
-      memcpy(((PVOID)FullResourceDescriptor) + sizeof(CM_FULL_RESOURCE_DESCRIPTOR),
+      memcpy((PVOID)((ULONG_PTR)FullResourceDescriptor + sizeof(CM_FULL_RESOURCE_DESCRIPTOR)),
 	     Table,
 	     Table->Size);
 

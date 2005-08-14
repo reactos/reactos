@@ -91,6 +91,9 @@
 <directory name="imm32">
 	<xi:include href="imm32/imm32.xml" />
 </directory>
+<directory name="intrlck">
+	<xi:include href="intrlck/intrlck.xml" />
+</directory>
 <directory name="iphlpapi">
 	<xi:include href="iphlpapi/iphlpapi.xml" />
 </directory>
@@ -123,6 +126,9 @@
 </directory>
 <directory name="kbdus">
 	<xi:include href="kbdus/kbdus.xml" />
+</directory>
+<directory name="kbdbe">
+	<xi:include href="kbdbe/kbdbe.xml" />
 </directory>
 <directory name="kernel32">
 	<xi:include href="kernel32/kernel32.xml" />
@@ -270,6 +276,9 @@
 </directory>
 <directory name="uuid">
 	<xi:include href="uuid/uuid.xml" />
+</directory>
+<directory name="uxtheme">
+	<xi:include href="uxtheme/uxtheme.xml" />
 </directory>
 <directory name="version">
 	<xi:include href="version/version.xml" />

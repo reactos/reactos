@@ -1,11 +1,9 @@
 #ifndef ROSDHCP_H
 #define ROSDHCP_H
 
-#include <roscfg.h>
 #include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
-#include <winnt.h>
 #include <iprtrmib.h>
 #include <iphlpapi.h>
 #include <winsock2.h>
@@ -59,6 +57,8 @@ typedef DWORD (*PipeSendFunc)( COMM_DHCP_REPLY *Reply );
 #define random rand
 #define srandom srand
 
+void AdapterInit(VOID);
+HANDLE PipeInit(VOID);
 extern PDHCP_ADAPTER AdapterFindIndex( unsigned int AdapterIndex );
 extern PDHCP_ADAPTER AdapterFindInfo( struct interface_info *info );
 extern VOID ApiInit();
@@ -68,5 +68,5 @@ extern DWORD DSQueryHWInfo( PipeSendFunc Send, COMM_DHCP_REQ *Req );
 extern DWORD DSLeaseIpAddress( PipeSendFunc Send, COMM_DHCP_REQ *Req );
 extern DWORD DSRenewIpAddressLease( PipeSendFunc Send, COMM_DHCP_REQ *Req );
 extern DWORD DSReleaseIpAddressLease( PipeSendFunc Send, COMM_DHCP_REQ *Req );
-
+int warn( char *format, ... );
 #endif/*ROSDHCP_H*/

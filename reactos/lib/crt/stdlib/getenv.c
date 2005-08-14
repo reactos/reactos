@@ -18,7 +18,7 @@ char *getenv(const char *name)
    {
       char *str = *environ;
       char *pos = strchr(str,'=');
-      if (pos && ((pos - str) == length) && !_strnicmp(str, name, length))
+      if (pos && ((unsigned int)(pos - str) == length) && !_strnicmp(str, name, length))
          return pos + 1;
    }
    return NULL;
@@ -36,7 +36,7 @@ wchar_t *_wgetenv(const wchar_t *name)
    {
       wchar_t *str = *environ;
       wchar_t *pos = wcschr(str, L'=');
-      if (pos && ((pos - str) == length) && !_wcsnicmp(str, name, length))
+      if (pos && ((unsigned int)(pos - str) == length) && !_wcsnicmp(str, name, length))
          return pos + 1;
    }
    return NULL;

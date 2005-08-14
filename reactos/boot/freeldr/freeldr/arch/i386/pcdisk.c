@@ -258,7 +258,7 @@ static BOOL PcDiskReadLogicalSectorsCHS(ULONG DriveNumber, ULONGLONG SectorNumbe
 		// of checking the sector read count we will rely solely
 		// on the carry flag being set on error
 
-		Buffer += (NumberOfSectorsToRead * DriveGeometry.BytesPerSector);
+		Buffer = (PVOID)((ULONG_PTR)Buffer + (NumberOfSectorsToRead * DriveGeometry.BytesPerSector));
 		SectorCount -= NumberOfSectorsToRead;
 		SectorNumber += NumberOfSectorsToRead;
 	}

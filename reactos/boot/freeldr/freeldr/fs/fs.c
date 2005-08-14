@@ -339,10 +339,10 @@ BOOL FsIsEndOfFile(PFILE FileHandle)
  */
 ULONG FsGetNumPathParts(PCHAR Path)
 {
-	ULONG		i;
+	size_t		i;
 	ULONG		num;
 
-	for (i=0,num=0; i<(int)strlen(Path); i++)
+	for (i=0,num=0; i<strlen(Path); i++)
 	{
 		if ((Path[i] == '\\') || (Path[i] == '/'))
 		{
@@ -364,12 +364,12 @@ ULONG FsGetNumPathParts(PCHAR Path)
  */
 VOID FsGetFirstNameFromPath(PCHAR Buffer, PCHAR Path)
 {
-	ULONG		i;
+	size_t		i;
 
 	// Copy all the characters up to the end of the
 	// string or until we hit a '\' character
 	// and put them in Buffer
-	for (i=0; i<(int)strlen(Path); i++)
+	for (i=0; i<strlen(Path); i++)
 	{
 		if ((Path[i] == '\\') || (Path[i] == '/'))
 		{

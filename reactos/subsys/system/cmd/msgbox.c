@@ -10,7 +10,7 @@
  *        Remove all hardcode string to En.rc
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include "resource.h"
 
 #ifdef INCLUDE_CMD_MSGBOX
@@ -44,7 +44,7 @@ INT CommandMsgbox (LPTSTR cmd, LPTSTR param)
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
-		ConOutResPuts(STRING_MSGBOX_HELP);
+		ConOutResPaging(TRUE,STRING_MSGBOX_HELP);
 		return 0;
 	}
 

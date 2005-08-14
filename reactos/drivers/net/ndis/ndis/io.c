@@ -487,7 +487,7 @@ NdisMStartBufferPhysicalMapping(
  */
 {
   PLOGICAL_ADAPTER Adapter = 0;
-  VOID *CurrentVa;
+  PVOID CurrentVa;
   ULONG TotalLength;
   PHYSICAL_ADDRESS ReturnedAddress;
   UINT LoopCount =  0;
@@ -514,7 +514,7 @@ NdisMStartBufferPhysicalMapping(
       PhysicalAddressArray[LoopCount].Length = Length;
 
       TotalLength -= Length;
-      CurrentVa += Length;
+      CurrentVa = (PVOID)((ULONG_PTR)CurrentVa + Length);
 
       LoopCount++;
     }

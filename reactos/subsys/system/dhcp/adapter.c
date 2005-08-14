@@ -10,7 +10,7 @@ PCHAR *GetSubkeyNames( PCHAR MainKeyName, PCHAR Append ) {
     DWORD Error;
     HKEY MainKey;
     PCHAR *Out, OutKeyName;
-    DWORD CharTotal = 0, ThisKey, AppendLen = 1 + strlen(Append);
+    DWORD CharTotal = 0, AppendLen = 1 + strlen(Append);
     DWORD MaxSubKeyLen = 0, MaxSubKeys = 0;
 
     Error = RegOpenKey( HKEY_LOCAL_MACHINE, MainKeyName, &MainKey );
@@ -194,7 +194,7 @@ BOOL PrepareAdapterForService( PDHCP_ADAPTER Adapter ) {
             DefGatewayRow.dwForwardNextHop = inet_addr(DefaultGateway);
             Error = CreateIpForwardEntry( &DefGatewayRow );
             if( Error )
-                warning("Failed to set default gateway %s: %d\n",
+                warning("Failed to set default gateway %s: %ld\n",
                         DefaultGateway, Error);
         }
 

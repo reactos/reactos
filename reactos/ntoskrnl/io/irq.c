@@ -72,11 +72,12 @@ IoConnectInterrupt(PKINTERRUPT* InterruptObject,
     PIO_INTERRUPT IoInterrupt;
     PKSPIN_LOCK SpinLockUsed;
     BOOLEAN FirstRun = TRUE;
-    ULONG i, count;
+    ULONG count;
+    LONG i;
     
     PAGED_CODE();
 
-    DPRINT1("IoConnectInterrupt(Vector %x)\n",Vector);
+    DPRINT("IoConnectInterrupt(Vector %x)\n",Vector);
 
     /* Convert the Mask */
     ProcessorEnableMask &= ((1 << KeNumberProcessors) - 1);
@@ -183,7 +184,7 @@ STDCALL
 IoDisconnectInterrupt(PKINTERRUPT InterruptObject)
 
 {
-    ULONG i;
+    LONG i;
     PIO_INTERRUPT IoInterrupt;
     
     PAGED_CODE();

@@ -885,7 +885,7 @@ SetInputTextXY(SHORT x, SHORT y, SHORT len, PWCHAR Text)
   coPos.Y = y;
 
   Length = wcslen(Text);
-  if (Length > len - 1)
+  if (Length > (ULONG)len - 1)
     {
       Length = len - 1;
     }
@@ -905,7 +905,7 @@ SetInputTextXY(SHORT x, SHORT y, SHORT len, PWCHAR Text)
 			        coPos,
 			        &Written);
 
-  if (len > Length + 1)
+  if ((ULONG)len > Length + 1)
     {
       coPos.X++;
       ConFillConsoleOutputCharacter(' ',
@@ -1023,7 +1023,7 @@ PrintTextXYN(SHORT x, SHORT y, SHORT len, char* fmt, ...)
   coPos.Y = y;
 
   Length = strlen(buffer);
-  if (Length > len - 1)
+  if (Length > (ULONG)len - 1)
     {
       Length = len - 1;
     }
@@ -1034,7 +1034,7 @@ PrintTextXYN(SHORT x, SHORT y, SHORT len, char* fmt, ...)
 
   coPos.X += Length;
 
-  if (len > Length)
+  if ((ULONG)len > Length)
     {
       ConFillConsoleOutputCharacter(' ',
 				    len - Length,
