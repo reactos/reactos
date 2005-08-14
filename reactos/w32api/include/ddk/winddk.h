@@ -9824,7 +9824,7 @@ DbgPrintReturnControlC(
   IN ...);
 
 NTOSAPI
-NTSTATUS
+BOOLEAN
 DDKAPI
 DbgQueryDebugFilterState(
   IN ULONG  ComponentId,
