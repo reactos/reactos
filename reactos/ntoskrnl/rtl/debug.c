@@ -34,7 +34,7 @@ ULONG KdComponentTableEntries = 0;
 /*
  * @implemented
  */
-ULONG WINAPI
+ULONG STDCALL
 vDbgPrintExWithPrefix(IN LPCSTR Prefix,
                       IN ULONG ComponentId,
                       IN ULONG Level,
@@ -133,7 +133,7 @@ vDbgPrintExWithPrefix(IN LPCSTR Prefix,
 /*
  * @implemented
  */
-ULONG WINAPI
+ULONG STDCALL
 vDbgPrintEx(IN ULONG ComponentId,
             IN ULONG Level,
             IN LPCSTR Format,
@@ -156,8 +156,9 @@ DbgPrint(PCH Format, ...)
 	 *
 	 * https://www.osronline.com/article.cfm?article=295
 	 *
-	 * ( first need to add those items to registry by default tho so we don't anger
-	 *  ros-devs when DbgPrint() suddenly stops working )
+	 * ( first need to add those items to default registry and write the code
+	 *   to load those settings so we don't anger ros-devs when DbgPrint() suddenly
+	 *   stops working )
 	 *
 	 * ( also when you do this, remove -1 hack from DbgQueryDebugFilterState() )
 	 */
@@ -233,6 +234,7 @@ DbgQueryDebugFilterState(IN ULONG ComponentId,
 {
 	int i;
 
+	/* HACK HACK HACK - see comments in DbgPrint() */
 	if ( ComponentId == -1 )
 		return TRUE;
 
