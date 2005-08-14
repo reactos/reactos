@@ -21,7 +21,7 @@
  *    USBD_GetPdoRegistryParameters (implemented)
  */
 
-#include <windows.h>
+#include <ddk/ntddk.h>
 #include <ddk/usbdi.h>
 #ifndef PLUGPLAY_REGKEY_DRIVER
 #define PLUGPLAY_REGKEY_DRIVER              2
@@ -371,6 +371,31 @@ USBD_GetInterfaceLength(
 /*
  * @unimplemented
  */
+PUSB_COMMON_DESCRIPTOR STDCALL
+USBD_ParseDescriptors(
+    PVOID  DescriptorBuffer,
+    ULONG  TotalLength,
+    PVOID  StartPosition,
+    LONG  DescriptorType
+    )
+{
+    PUSB_COMMON_DESCRIPTOR PComDes = StartPosition;
+
+    while(PComDes)
+    {
+       if (PComDes >= (PUSB_COMMON_DESCRIPTOR)
+                            ((PLONG)DescriptorBuffer + TotalLength) ) break;
+       if (PComDes->bDescriptorType == DescriptorType) return PComDes;
+       if (PComDes->bLength == 0) break;
+       PComDes = PComDes + PComDes->bLength;
+    }
+    return NULL;
+}
+
+
+/*
+ * @unimplemented
+ */
 PUSB_INTERFACE_DESCRIPTOR STDCALL
 USBD_ParseConfigurationDescriptorEx(
     PUSB_CONFIGURATION_DESCRIPTOR ConfigurationDescriptor,
@@ -382,7 +407,46 @@ USBD_ParseConfigurationDescriptorEx(
     LONG InterfaceProtocol
     )
 {
-    return NULL;
+    int x = 0;
+    PUSB_INTERFACE_DESCRIPTOR UsbInterfaceDesc = StartPosition;
+
+    while(UsbInterfaceDesc)
+    {
+       UsbInterfaceDesc = (PUSB_INTERFACE_DESCRIPTOR)
+                           USBD_ParseDescriptors(ConfigurationDescriptor,
+                                        ConfigurationDescriptor->wTotalLength,
+                                        UsbInterfaceDesc,
+                                        USB_INTERFACE_DESCRIPTOR_TYPE);
+
+       if (!UsbInterfaceDesc) break;
+
+       if(InterfaceNumber != -1)
+       {
+          if(InterfaceNumber != UsbInterfaceDesc->bInterfaceNumber) x = 1;
+       }
+       if(AlternateSetting != -1)
+       {
+          if(AlternateSetting != UsbInterfaceDesc->bAlternateSetting) x = 1;
+       }
+       if(InterfaceClass != -1)
+       {
+          if(InterfaceClass != UsbInterfaceDesc->bInterfaceClass) x = 1;
+       }
+       if(InterfaceSubClass != -1)
+       {
+          if(InterfaceSubClass != UsbInterfaceDesc->bInterfaceSubClass) x = 1;
+       }
+       if(InterfaceProtocol != -1)
+       {
+          if(InterfaceProtocol != UsbInterfaceDesc->bInterfaceProtocol) x = 1;
+       }
+
+       if (!x) return UsbInterfaceDesc;
+
+       if (UsbInterfaceDesc->bLength == 0) break;
+       UsbInterfaceDesc = UsbInterfaceDesc + UsbInterfaceDesc->bLength;
+    }    
+    return NULL;    
 }
 
 /*
@@ -400,19 +464,6 @@ USBD_ParseConfigurationDescriptor(
         -1, -1, -1);
 }
 
-/*
- * @unimplemented
- */
-PUSB_COMMON_DESCRIPTOR STDCALL
-USBD_ParseDescriptors(
-    PVOID  DescriptorBuffer,
-    ULONG  TotalLength,
-    PVOID  StartPosition,
-    LONG  DescriptorType
-    )
-{
-    return NULL; 
-}
 
 /*
  * @implemented
