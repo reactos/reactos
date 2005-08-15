@@ -306,7 +306,7 @@ modules\rosapps\net\niclist\niclist.exe	1	optional
 modules\rosapps\notevil\notevil.exe	1	optional
 modules\rosapps\packmgr\cmd-line\rosget.exe	1	optional
 modules\rosapps\packmgr\gui\packmgr.exe	1	optional
-modules\rosapps\packmgr\lib\packlib.exe	1	optional
+modules\rosapps\packmgr\lib\packlib.dll	1	optional
 modules\rosapps\sysutils\ctm\ctm.exe	1	optional
 modules\rosapps\sysutils\lsdd\lsdd.exe	1	optional
 modules\rosapps\sysutils\man\man.exe	1	optional
