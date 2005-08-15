@@ -299,6 +299,7 @@ modules\rosapps\cmdutils\y.exe          1	o
 modules\rosapps\cmdutils\mode\mode.exe	1	o
 modules\rosapps\cmdutils\touch\touch.exe	1	o
 modules\rosapps\games\solitaire\sol.exe	1	o
+modules\rosapps\games\winemine\winemine.exe	1	o
 modules\rosapps\mc\mc.exe		1	o
 modules\rosapps\net\ncftp\ncftp.exe	1	o
 modules\rosapps\net\niclist\niclist.exe	1	o
