@@ -1016,7 +1016,7 @@ unsigned long CDFParser::PerformFileCopy()
     char SrcName[MAX_PATH];
     char DstName[MAX_PATH];
     char InfLine[MAX_PATH];
-    char Options[8];
+    char Options[128];
     char BaseFilename[MAX_PATH];
 
     *SrcName = '\0';
