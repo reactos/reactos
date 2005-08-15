@@ -150,10 +150,10 @@ lib\wshirda\wshirda.dll                 1
 lib\wsock32\wsock32.dll                 1
 subsys\csrss\csrss.exe                  1
 subsys\csrss\win32csr\win32csr.dll      1
-subsys\csr\csr.exe                      1	o
-subsys\csr\csrsrv\csrsrv.dll            1	o
-subsys\win\basesrv\basesrv.dll          1	o
-subsys\win\winsrv\winsrv.dll            1	o
+subsys\csr\csr.exe                      1	optional
+subsys\csr\csrsrv\csrsrv.dll            1	optional
+subsys\win\basesrv\basesrv.dll          1	optional
+subsys\win\winsrv\winsrv.dll            1	optional
 subsys\ntvdm\ntvdm.exe                  1
 subsys\smss\smss.exe                    1
 subsys\win32k\win32k.sys                1
@@ -283,35 +283,35 @@ media\inf\ports.inf                     6
 media\inf\scsi.inf                      6
 media\inf\syssetup.inf                  6
 media\inf\usbport.inf                   6
-modules\os2\server\os2srv.dll           1	o
-modules\os2\lib\doscalls\doscalls.dll   1	o
-modules\posix\server\psxsrv.dll         1	o
-modules\posix\lib\psxdll\psxdll.dll     1	o
+modules\os2\server\os2srv.dll           1	optional
+modules\os2\lib\doscalls\doscalls.dll   1	optional
+modules\posix\server\psxsrv.dll         1	optional
+modules\posix\lib\psxdll\psxdll.dll     1	optional
 modules\rosky\lib\libsky\libsky.dll     1       o
 modules\rosky\lib\libskygi\libskygi.dll 1       o
-modules\vms\server\vmssrv.dll           1	o
-modules\vms\lib\vmsdll\vmsdll.dll       1	o
-modules\rosapps\cmdutils\find.exe	1	o
-modules\rosapps\cmdutils\more.exe	1	o
-modules\rosapps\cmdutils\sort.exe	1	o
-modules\rosapps\cmdutils\tee.exe	1	o
-modules\rosapps\cmdutils\y.exe          1	o
-modules\rosapps\cmdutils\mode\mode.exe	1	o
-modules\rosapps\cmdutils\touch\touch.exe	1	o
-modules\rosapps\games\solitaire\sol.exe	1	o
-modules\rosapps\games\winemine\winemine.exe	1	o
-modules\rosapps\mc\mc.exe		1	o
-modules\rosapps\net\ncftp\ncftp.exe	1	o
-modules\rosapps\net\niclist\niclist.exe	1	o
-modules\rosapps\notevil\notevil.exe	1	o
-modules\rosapps\packmgr\cmd-line\rosget.exe	1	o
-modules\rosapps\packmgr\gui\packmgr.exe	1	o
-modules\rosapps\packmgr\lib\packlib.exe	1	o
-modules\rosapps\sysutils\ctm\ctm.exe	1	o
-modules\rosapps\sysutils\lsdd\lsdd.exe	1	o
-modules\rosapps\sysutils\man\man.exe	1	o
-modules\rosapps\sysutils\pedump\pedump.exe	1	o
-modules\rosapps\sysutils\regexpl\regexpl.exe	1	o
-modules\rosapps\sysutils\shutdown\shutdown.exe	1	o
-modules\rosapps\sysutils\tcat\cat.exe	1	o
-modules\rosapps\sysutils\tlist\tlist.exe	1	o
+modules\vms\server\vmssrv.dll           1	optional
+modules\vms\lib\vmsdll\vmsdll.dll       1	optional
+modules\rosapps\cmdutils\find.exe	1	optional
+modules\rosapps\cmdutils\more.exe	1	optional
+modules\rosapps\cmdutils\sort.exe	1	optional
+modules\rosapps\cmdutils\tee.exe	1	optional
+modules\rosapps\cmdutils\y.exe          1	optional
+modules\rosapps\cmdutils\mode\mode.exe	1	optional
+modules\rosapps\cmdutils\touch\touch.exe	1	optional
+modules\rosapps\games\solitaire\sol.exe	1	optional
+modules\rosapps\games\winemine\winemine.exe	1	optional
+modules\rosapps\mc\mc.exe		1	optional
+modules\rosapps\net\ncftp\ncftp.exe	1	optional
+modules\rosapps\net\niclist\niclist.exe	1	optional
+modules\rosapps\notevil\notevil.exe	1	optional
+modules\rosapps\packmgr\cmd-line\rosget.exe	1	optional
+modules\rosapps\packmgr\gui\packmgr.exe	1	optional
+modules\rosapps\packmgr\lib\packlib.exe	1	optional
+modules\rosapps\sysutils\ctm\ctm.exe	1	optional
+modules\rosapps\sysutils\lsdd\lsdd.exe	1	optional
+modules\rosapps\sysutils\man\man.exe	1	optional
+modules\rosapps\sysutils\pedump\pedump.exe	1	optional
+modules\rosapps\sysutils\regexpl\regexpl.exe	1	optional
+modules\rosapps\sysutils\shutdown\shutdown.exe	1	optional
+modules\rosapps\sysutils\tcat\cat.exe	1	optional
+modules\rosapps\sysutils\tlist\tlist.exe	1	optional

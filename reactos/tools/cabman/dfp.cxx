@@ -1112,7 +1112,7 @@ unsigned long CDFParser::PerformFileCopy()
         WriteInfLine(InfLine);
         break;
     case CAB_STATUS_CANNOT_OPEN:
-	if (strchr(Options,'o'))
+	if (strstr(Options,"optional"))
 	{
 		Status = CAB_STATUS_SUCCESS;
 	        printf("Optional file does not exist: %s.\n", SrcName);
@@ -1127,7 +1127,7 @@ unsigned long CDFParser::PerformFileCopy()
         printf("Cannot add file: %s (%lu).\n", SrcName, Status);
         break;
     }
-    return CAB_STATUS_SUCCESS;
+    return Status;
 }
 
 
