@@ -82,24 +82,26 @@ void* _alloca(size_t size);
 #endif
 
 #if defined(DBG) || defined(KDBG)
-static void CcRosCacheSegmentIncRefCount ( PCACHE_SEGMENT cs )
+static void CcRosCacheSegmentIncRefCount_ ( PCACHE_SEGMENT cs, const char* file, int line )
 {
 	++cs->ReferenceCount;
 	if ( cs->Bcb->Trace )
 	{
-		DPRINT1("CacheSegment %p ++RefCount=%d, Dirty %d, PageOut %d\n",
-			cs, cs->ReferenceCount, cs->Dirty, cs->PageOut );
+		DbgPrint("(%s:%i) CacheSegment %p ++RefCount=%d, Dirty %d, PageOut %d\n",
+			file, line, cs, cs->ReferenceCount, cs->Dirty, cs->PageOut );
 	}
 }
-static void CcRosCacheSegmentDecRefCount ( PCACHE_SEGMENT cs )
+static void CcRosCacheSegmentDecRefCount_ ( PCACHE_SEGMENT cs, const char* file, int line )
 {
 	--cs->ReferenceCount;
 	if ( cs->Bcb->Trace )
 	{
-		DPRINT1("CacheSegment %p --RefCount=%d, Dirty %d, PageOut %d\n",
-			cs, cs->ReferenceCount, cs->Dirty, cs->PageOut );
+		DbgPrint("(%s:%i) CacheSegment %p --RefCount=%d, Dirty %d, PageOut %d\n",
+			file, line, cs, cs->ReferenceCount, cs->Dirty, cs->PageOut );
 	}
 }
+#define CcRosCacheSegmentIncRefCount(cs) CcRosCacheSegmentIncRefCount_(cs,__FILE__,__LINE__)
+#define CcRosCacheSegmentDecRefCount(cs) CcRosCacheSegmentDecRefCount_(cs,__FILE__,__LINE__)
 #else
 #define CcRosCacheSegmentIncRefCount(cs) (++((cs)->ReferenceCount))
 #define CcRosCacheSegmentDecRefCount(cs) (--((cs)->ReferenceCount))
