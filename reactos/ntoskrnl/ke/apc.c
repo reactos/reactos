@@ -674,8 +674,8 @@ KiDeliverApc(KPROCESSOR_MODE DeliveryMode,
             }
 
             /* Dequeue the APC */
-            Apc->Inserted = FALSE;
             RemoveEntryList(ApcListEntry);
+            Apc->Inserted = FALSE;
 
             /* Go back to APC_LEVEL */
             KeReleaseSpinLock(&Thread->ApcQueueLock, OldIrql);
