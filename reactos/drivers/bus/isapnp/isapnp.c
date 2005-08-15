@@ -433,10 +433,10 @@ static BOOLEAN ReadTag(PUCHAR Type,
     }
 #endif
   }
-
+#if 0
 	DPRINT("Tag = 0x%X, Type = 0x%X, Size = %d (%s)\n",
     tag, *Type, *Size, TagName(*Type, *Small));
-
+#endif
   /* Probably invalid data */
   if ((*Type == 0xff) && (*Size == 0xffff)) {
     DPRINT("Invalid data (Type 0x%X  Size 0x%X)\n", *Type, *Size);

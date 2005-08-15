@@ -60,7 +60,7 @@ struct rot_entry
 typedef struct RunningObjectTableImpl
 {
     const IRunningObjectTableVtbl *lpVtbl;
-    ULONG ref;
+    LONG ref;
 
     struct list rot; /* list of ROT entries */
     CRITICAL_SECTION lock;
@@ -73,7 +73,7 @@ static RunningObjectTableImpl* runningObjectTableInstance = NULL;
 static inline HRESULT WINAPI
 IrotRegister(DWORD *cookie)
 {
-    static DWORD last_cookie = 1;
+    static LONG last_cookie = 1;
     *cookie = InterlockedIncrement(&last_cookie);
     return S_OK;
 }
@@ -82,7 +82,7 @@ IrotRegister(DWORD *cookie)
 typedef struct EnumMonikerImpl
 {
     const IEnumMonikerVtbl *lpVtbl;
-    ULONG      ref;
+    LONG ref;
 
     MInterfacePointer **monikers;
     ULONG moniker_count;
@@ -716,7 +716,7 @@ HRESULT WINAPI CreateClassMoniker(REFCLSID rclsid, IMoniker ** ppmk)
 }
 
 /* Virtual function table for the IRunningObjectTable class. */
-static IRunningObjectTableVtbl VT_RunningObjectTableImpl =
+static const IRunningObjectTableVtbl VT_RunningObjectTableImpl =
 {
     RunningObjectTableImpl_QueryInterface,
     RunningObjectTableImpl_AddRef,
@@ -968,7 +968,7 @@ static HRESULT WINAPI EnumMonikerImpl_CreateEnumROTMoniker(MInterfacePointer **m
 
     /* the initial reference is set to "1" */
     This->ref = 1;			/* set the ref count to one         */
-    This->pos = 0;		/* Set the list start posn to start */
+    This->pos = current_pos;		/* Set the list start posn */
     This->moniker_count = moniker_count; /* Need the same size table as ROT */
     This->monikers = monikers;
 
@@ -988,7 +988,7 @@ typedef struct MonikerMarshal
     const IUnknownVtbl *lpVtbl;
     const IMarshalVtbl *lpVtblMarshal;
     
-    ULONG ref;
+    LONG ref;
     IMoniker *moniker;
 } MonikerMarshal;
 

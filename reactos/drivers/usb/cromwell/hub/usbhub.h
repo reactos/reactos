@@ -23,7 +23,6 @@ typedef struct _HUB_DEVICE_EXTENSION
 	PDEVICE_OBJECT Children[USB_MAXCHILDREN];
 	
 	/* Fields valid only when IsFDO == FALSE */
-	UNICODE_STRING DeviceDescription; // REG_SZ
 	UNICODE_STRING DeviceId;          // REG_SZ
 	UNICODE_STRING InstanceId;        // REG_SZ
 	UNICODE_STRING HardwareIds;       // REG_MULTI_SZ

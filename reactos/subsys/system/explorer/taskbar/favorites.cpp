@@ -26,7 +26,7 @@
  //
 
 
-#include "precomp.h"
+#include <precomp.h>
 
 #include "startmenu.h"
 
@@ -362,7 +362,7 @@ void BookmarkList::fill_tree(HWND hwnd, HTREEITEM parent, HIMAGELIST himagelist,
 					tv.iImage = tv.iSelectedImage = icon.add_to_imagelist(himagelist, hdc_wnd);
 			}
 
-			TreeView_InsertItem(hwnd, &tvi);
+			(void)TreeView_InsertItem(hwnd, &tvi);
 		}
 	}
 }

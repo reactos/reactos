@@ -129,8 +129,7 @@ IopCreateFile(PVOID ObjectBody,
               DeviceObject = DeviceObject->Vpb->DeviceObject;
               DPRINT("FsDeviceObject %lx\n", DeviceObject);
             }
-          RtlpCreateUnicodeString(&(FileObject->FileName),
-                                  RemainingPath, NonPagedPool);
+          RtlCreateUnicodeString(&FileObject->FileName, RemainingPath);
         }
     }
   else
@@ -147,8 +146,7 @@ IopCreateFile(PVOID ObjectBody,
 
       FileObject->RelatedFileObject = (PFILE_OBJECT)Parent;
 
-      RtlpCreateUnicodeString(&(FileObject->FileName),
-                              RemainingPath, NonPagedPool);
+      RtlCreateUnicodeString(&FileObject->FileName, RemainingPath);
     }
 
   DPRINT("FileObject->FileName %wZ\n",
@@ -241,7 +239,10 @@ IopSecurityFile(PVOID ObjectBody,
                 SECURITY_OPERATION_CODE OperationCode,
                 SECURITY_INFORMATION SecurityInformation,
                 PSECURITY_DESCRIPTOR SecurityDescriptor,
-                PULONG BufferLength)
+                PULONG BufferLength,
+                PSECURITY_DESCRIPTOR *OldSecurityDescriptor,    
+                POOL_TYPE PoolType,
+                PGENERIC_MAPPING GenericMapping)
 {
     IO_STATUS_BLOCK IoStatusBlock;
     PIO_STACK_LOCATION StackPtr;
@@ -324,6 +325,7 @@ IopSecurityFile(PVOID ObjectBody,
 
     /* Set Stack Parameters */
     StackPtr = IoGetNextIrpStackLocation(Irp);
+    StackPtr->MajorFunction = MajorFunction;
     StackPtr->FileObject = FileObject;
 
     /* Set Parameters */
@@ -844,6 +846,7 @@ IoCreateFile(OUT PHANDLE  FileHandle,
      DPRINT1("FIXME: IO_CHECK_CREATE_PARAMETERS not yet supported!\n");
    }
 
+   /* First try to open an existing named object */
    Status = ObOpenObjectByName(ObjectAttributes,
                                NULL,
                                NULL,
@@ -854,6 +857,10 @@ IoCreateFile(OUT PHANDLE  FileHandle,
 
    if (NT_SUCCESS(Status))
    {
+      OBJECT_CREATE_INFORMATION ObjectCreateInfo;
+      OBJECT_ATTRIBUTES tmpObjectAttributes;
+      UNICODE_STRING ObjectName;
+
       Status = ObReferenceObjectByHandle(LocalHandle,
                                          DesiredAccess,
                                          NULL,
@@ -870,8 +877,43 @@ IoCreateFile(OUT PHANDLE  FileHandle,
          ObDereferenceObject (DeviceObject);
          return STATUS_OBJECT_NAME_COLLISION;
       }
+
+      Status = ObpCaptureObjectAttributes(ObjectAttributes,
+                                          AccessMode,
+                                          NULL,
+                                          &ObjectCreateInfo,
+                                          &ObjectName);
+      if (!NT_SUCCESS(Status))
+      {
+         ObDereferenceObject (DeviceObject);
+         return Status;
+      }
+         
+      InitializeObjectAttributes(&tmpObjectAttributes,
+                                 NULL,
+                                 ObjectCreateInfo.Attributes & OBJ_INHERIT,
+                                 0,
+                                 NULL);
+      ObpReleaseCapturedAttributes(&ObjectCreateInfo);
+      if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
+
+      
       /* FIXME: wt... */
-      FileObject = IoCreateStreamFileObject(NULL, DeviceObject);
+      Status = ObCreateObject(KernelMode,
+                              IoFileObjectType,
+                              &tmpObjectAttributes,
+                              KernelMode,
+                              NULL,
+                              sizeof(FILE_OBJECT),
+                              0,
+                              0,
+                              (PVOID*)&FileObject);
+
+   
+      /* Set File Object Data */
+      FileObject->DeviceObject = IoGetAttachedDevice(DeviceObject); 
+      FileObject->Vpb = FileObject->DeviceObject->Vpb;
+
       /* HACK */
       FileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
       DPRINT("%wZ\n", ObjectAttributes->ObjectName);
@@ -909,6 +951,7 @@ IoCreateFile(OUT PHANDLE  FileHandle,
    if (!NT_SUCCESS(Status))
      {
        DPRINT("ObInsertObject() failed! (Status %lx)\n", Status);
+       ObMakeTemporaryObject(FileObject);
        ObDereferenceObject (FileObject);
        return Status;
      }
@@ -1143,8 +1186,6 @@ IoCreateStreamFileObject(PFILE_OBJECT FileObject,
     CreatedFileObject->DeviceObject = DeviceObject; 
     CreatedFileObject->Vpb = DeviceObject->Vpb;
     CreatedFileObject->Type = IO_TYPE_FILE;
-    /* HACK */
-    CreatedFileObject->Flags |= FO_DIRECT_DEVICE_OPEN;
     CreatedFileObject->Flags |= FO_STREAM_FILE;
 
     /* Initialize Lock and Event */
@@ -2430,11 +2471,6 @@ NtQueryInformationFile(HANDLE FileHandle,
                 Failed = TRUE;
             break;
 
-        case FileAlignmentInformation:
-            if (!(FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING))
-                Failed = TRUE;
-            break;
-
         default:
             break;
     }
@@ -2444,6 +2480,30 @@ NtQueryInformationFile(HANDLE FileHandle,
         DPRINT1("NtQueryInformationFile() returns STATUS_ACCESS_DENIED!\n");
         ObDereferenceObject(FileObject);
         return STATUS_ACCESS_DENIED;
+    }
+
+    if (FileInformationClass == FilePositionInformation)
+    {
+       if (Length < sizeof(FILE_POSITION_INFORMATION))
+       {
+          Status = STATUS_BUFFER_OVERFLOW;
+       }
+       else
+       {
+          _SEH_TRY
+          {
+             ((PFILE_POSITION_INFORMATION)FileInformation)->CurrentByteOffset = FileObject->CurrentByteOffset;
+             IoStatusBlock->Information = sizeof(FILE_POSITION_INFORMATION);
+             Status = IoStatusBlock->Status = STATUS_SUCCESS;
+          }
+          _SEH_HANDLE
+          {
+             Status = _SEH_GetExceptionCode();
+          }
+          _SEH_END;
+       }
+       ObDereferenceObject(FileObject);
+       return Status;
     }
 
     DPRINT("FileObject 0x%p\n", FileObject);
@@ -2456,6 +2516,30 @@ NtQueryInformationFile(HANDLE FileHandle,
     else
     {
         DeviceObject = IoGetRelatedDeviceObject(FileObject);
+    }
+
+    if (FileInformationClass == FileAlignmentInformation)
+    {
+       if (Length < sizeof(FILE_ALIGNMENT_INFORMATION))
+       {
+          Status = STATUS_BUFFER_OVERFLOW;
+       }
+       else
+       {
+          _SEH_TRY
+          {
+             ((PFILE_ALIGNMENT_INFORMATION)FileInformation)->AlignmentRequirement = DeviceObject->AlignmentRequirement;
+             IoStatusBlock->Information = sizeof(FILE_ALIGNMENT_INFORMATION);
+             Status = IoStatusBlock->Status = STATUS_SUCCESS;
+          }
+          _SEH_HANDLE
+          {
+             Status = _SEH_GetExceptionCode();
+          }
+          _SEH_END;
+       }
+       ObDereferenceObject(FileObject);
+       return Status;
     }
 
     /* Check if we should use Sync IO or not */
@@ -2811,12 +2895,44 @@ NtSetInformationFile(HANDLE FileHandle,
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     BOOLEAN Failed = FALSE;
 
-    ASSERT(IoStatusBlock != NULL);
-    ASSERT(FileInformation != NULL);
-
     DPRINT("NtSetInformationFile(Handle 0x%p StatBlk 0x%p FileInfo 0x%p Length %d "
            "Class %d)\n", FileHandle, IoStatusBlock, FileInformation,
             Length, FileInformationClass);
+
+    if (PreviousMode != KernelMode)
+    {
+        _SEH_TRY
+        {
+            if (IoStatusBlock != NULL)
+            {
+                ProbeForWrite(IoStatusBlock,
+                              sizeof(IO_STATUS_BLOCK),
+                              sizeof(ULONG));
+            }
+            
+            if (Length != 0)
+            {
+                ProbeForRead(FileInformation,
+                             Length,
+                             1);
+            }
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+        
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+    }
+    else
+    {
+        ASSERT(IoStatusBlock != NULL);
+        ASSERT(FileInformation != NULL);
+    }
 
     /* Get the file object from the file handle */
     Status = ObReferenceObjectByHandle(FileHandle,
@@ -2863,6 +2979,30 @@ NtSetInformationFile(HANDLE FileHandle,
     }
 
     DPRINT("FileObject 0x%p\n", FileObject);
+
+    if (FileInformationClass == FilePositionInformation)
+    {
+       if (Length < sizeof(FILE_POSITION_INFORMATION))
+       {
+          Status = STATUS_BUFFER_OVERFLOW;
+       }
+       else
+       {
+          _SEH_TRY
+          {
+             FileObject->CurrentByteOffset = ((PFILE_POSITION_INFORMATION)FileInformation)->CurrentByteOffset;
+             IoStatusBlock->Information = 0;
+             Status = IoStatusBlock->Status = STATUS_SUCCESS;
+          }
+          _SEH_HANDLE
+          {
+             Status = _SEH_GetExceptionCode();
+          }
+          _SEH_END;
+       }
+       ObDereferenceObject(FileObject);
+       return Status;
+    }
 
     /* FIXME: Later, we can implement a lot of stuff here and avoid a driver call */
     /* Handle IO Completion Port quickly */
@@ -2942,13 +3082,43 @@ NtSetInformationFile(HANDLE FileHandle,
                                                                   Length,
                                                                   TAG_SYSB)))
     {
-        IoFreeIrp(Irp);
-        ObDereferenceObject(FileObject);
-        return STATUS_INSUFFICIENT_RESOURCES;
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto failfreeirp;
     }
 
     /* Copy the data inside */
-    MmSafeCopyFromUser(Irp->AssociatedIrp.SystemBuffer, FileInformation, Length);
+    if (PreviousMode != KernelMode)
+    {
+        _SEH_TRY
+        {
+            /* no need to probe again */
+            RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
+                          FileInformation,
+                          Length);
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+        
+        if (!NT_SUCCESS(Status))
+        {
+            ExFreePoolWithTag(Irp->AssociatedIrp.SystemBuffer,
+                              TAG_SYSB);
+            Irp->AssociatedIrp.SystemBuffer = NULL;
+failfreeirp:
+            IoFreeIrp(Irp);
+            ObDereferenceObject(FileObject);
+            return Status;
+        }
+    }
+    else
+    {
+        RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
+                      FileInformation,
+                      Length);
+    }
 
     /* Set up the IRP */
     Irp->Tail.Overlay.OriginalFileObject = FileObject;
@@ -2979,7 +3149,15 @@ NtSetInformationFile(HANDLE FileHandle,
                                   PreviousMode,
                                   FileObject->Flags & FO_ALERTABLE_IO,
                                   NULL);
-            Status = IoStatusBlock->Status;
+            _SEH_TRY
+            {
+                Status = IoStatusBlock->Status;
+            }
+            _SEH_HANDLE
+            {
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
         }
         else
         {
@@ -2988,7 +3166,15 @@ NtSetInformationFile(HANDLE FileHandle,
                                   PreviousMode,
                                   FileObject->Flags & FO_ALERTABLE_IO,
                                   NULL);
-            Status = FileObject->FinalStatus;
+            _SEH_TRY
+            {
+                Status = FileObject->FinalStatus;
+            }
+            _SEH_HANDLE
+            {
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
         }
     }
 

@@ -6,7 +6,7 @@
  * PURPOSE:         Security ID functions
  */
 
-#include "advapi32.h"
+#include <advapi32.h>
 #include <debug.h>
 
 
@@ -301,6 +301,46 @@ ConvertSidToStringSidA(PSID Sid, LPSTR *StringSid)
   LocalFree(StringSidW);
 
   return TRUE;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+EqualDomainSid(IN PSID pSid1,
+               IN PSID pSid2,
+               OUT BOOL* pfEqual)
+{
+    DPRINT1("%s() not implemented!\n", __FUNCTION__);
+    return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+GetWindowsAccountDomainSid(IN PSID pSid,
+                           OUT PSID ppDomainSid,
+                           IN OUT DWORD* cbSid)
+{
+    DPRINT1("%s() not implemented!\n", __FUNCTION__);
+    return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+CreateWellKnownSid(IN WELL_KNOWN_SID_TYPE WellKnownSidType,
+                   IN PSID DomainSid  OPTIONAL,
+                   OUT PSID pSid,
+                   IN OUT DWORD* cbSid)
+{
+    DPRINT1("%s() not implemented!\n", __FUNCTION__);
+    return FALSE;
 }
 
 /* EOF */

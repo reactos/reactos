@@ -111,7 +111,7 @@ BOOLEAN STDCALL I8042MouseResetIsr(PDEVICE_EXTENSION DevExt,
                                    UCHAR Status,
                                    PUCHAR Value)
 {
-	BOOLEAN ToReturn;
+	BOOLEAN ToReturn = FALSE;
 
 	if (I8042MouseCallIsrHook(DevExt, Status, Value, &ToReturn))
 		return ToReturn;
@@ -489,7 +489,7 @@ VOID STDCALL I8042MouseHandle(PDEVICE_EXTENSION DevExt,
 
 		if (Scroll) {
 			MouseInput->RawButtons |= MOUSE_WHEEL;
-			MouseInput->ButtonData = (USHORT) Scroll;
+			MouseInput->ButtonData = (USHORT)(Scroll * -WHEEL_DELTA);
 		}
 
 		if (DevExt->MouseType == IntellimouseExplorer) {
@@ -833,7 +833,7 @@ BOOLEAN STDCALL I8042MouseEnable(PDEVICE_EXTENSION DevExt)
 	}
 
 	Status = I8042ReadDataWait(DevExt, &Value);
-	if (Status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(Status)) {
 		DPRINT1("No response after read i8042 mode\n");
 		return FALSE;
 	}
@@ -869,7 +869,7 @@ BOOLEAN STDCALL I8042MouseDisable(PDEVICE_EXTENSION DevExt)
 	}
 
 	Status = I8042ReadDataWait(DevExt, &Value);
-	if (Status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(Status)) {
 		DPRINT1("No response after read i8042 mode\n");
 		return FALSE;
 	}

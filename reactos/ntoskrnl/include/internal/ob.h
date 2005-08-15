@@ -62,11 +62,6 @@ enum
 
 #define OBJECT_ALLOC_SIZE(ObjectSize) ((ObjectSize)+sizeof(OBJECT_HEADER))
 
-#define HANDLE_TO_EX_HANDLE(handle)                                            \
-  (LONG)(((LONG)(handle) >> 2) - 1)
-#define EX_HANDLE_TO_HANDLE(exhandle)                                          \
-  (HANDLE)(((exhandle) + 1) << 2)
-
 extern PDIRECTORY_OBJECT NameSpaceRoot;
 extern POBJECT_TYPE ObSymbolicLinkType;
 extern PHANDLE_TABLE ObpKernelHandleTable;

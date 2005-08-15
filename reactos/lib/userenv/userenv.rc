@@ -38,6 +38,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #include "En.rc"
 #include "De.rc"
+#include "Nl.rc"
 #include "Pl.rc"
 #include "Sv.rc"
 #include "Ru.rc"

@@ -1,11 +1,11 @@
-#include <ddk/ntddk.h>
+//#include <ddk/ntddk.h>
+// config and include core/hcd.h, for hc_device struct struct usb_interface *usb_ifnum_to_if(struct usb_device *dev, unsigned ifnum)
+
+#include "../usb_wrapper.h"
 #include <ddk/usbdi.h>
 #include <ddk/usbiodef.h>
 #include <initguid.h>
 
-// config and include core/hcd.h, for hc_device struct struct usb_interface *usb_ifnum_to_if(struct usb_device *dev, unsigned ifnum)
-
-#include "../usb_wrapper.h"
 #include "../core/hcd.h"
 
 #include "../host/ohci_main.h"

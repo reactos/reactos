@@ -126,9 +126,11 @@ BOOLEAN STDCALL
 RtlFreeHandle(PRTL_HANDLE_TABLE HandleTable,
 	      PRTL_HANDLE_TABLE_ENTRY Handle)
 {
+#if DBG
    /* check if handle is valid */
    if (RtlIsValidHandle(HandleTable, Handle))
      return FALSE;
+#endif
 
    /* clear handle */
    memset(Handle, 0, HandleTable->SizeOfHandleTableEntry);
@@ -161,13 +163,13 @@ RtlIsValidHandle(PRTL_HANDLE_TABLE HandleTable,
  * @implemented
  */
 BOOLEAN STDCALL
-RtlIsValidIndexHandle(PRTL_HANDLE_TABLE HandleTable,
-		      PRTL_HANDLE_TABLE_ENTRY *Handle,
-		      ULONG Index)
+RtlIsValidIndexHandle(IN PRTL_HANDLE_TABLE HandleTable,
+		      IN ULONG Index,
+		      OUT PRTL_HANDLE_TABLE_ENTRY *Handle)
 {
    PRTL_HANDLE_TABLE_ENTRY InternalHandle;
 
-   DPRINT("RtlIsValidIndexHandle(HandleTable %p Handle %p Index %x)\n", HandleTable, Handle, Index);
+   DPRINT("RtlIsValidIndexHandle(HandleTable %p Index %x Handle %p)\n", HandleTable, Index, Handle);
 
    if (HandleTable == NULL)
      return FALSE;

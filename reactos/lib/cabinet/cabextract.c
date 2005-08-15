@@ -51,7 +51,7 @@ THOSE_ZIP_CONSTS;
  */
 
 /* try to open a cabinet file, returns success */
-BOOL cabinet_open(struct cabinet *cab)
+static BOOL cabinet_open(struct cabinet *cab)
 {
   const char *name = cab->filename;
   HANDLE fh;
@@ -89,7 +89,7 @@ BOOL cabinet_open(struct cabinet *cab)
  *
  * close the file handle in a struct cabinet.
  */
-void cabinet_close(struct cabinet *cab) {
+static void cabinet_close(struct cabinet *cab) {
   TRACE("(cab == ^%p)\n", cab);
   if (cab->fh) CloseHandle(cab->fh);
   cab->fh = 0;
@@ -98,7 +98,7 @@ void cabinet_close(struct cabinet *cab) {
 /*******************************************************
  * ensure_filepath2 (internal)
  */
-BOOL ensure_filepath2(char *path) {
+static BOOL ensure_filepath2(char *path) {
   BOOL ret = TRUE;
   int len;
   char *new_path;
@@ -147,7 +147,7 @@ BOOL ensure_filepath2(char *path) {
  *
  * ensure_filepath("a\b\c\d.txt") ensures a, a\b and a\b\c exist as dirs
  */
-BOOL ensure_filepath(char *path) {
+static BOOL ensure_filepath(char *path) {
   char new_path[MAX_PATH];
   int len, i, lastslashpos = -1;
 
@@ -176,7 +176,7 @@ BOOL ensure_filepath(char *path) {
  *
  * opens a file for output, returns success
  */
-BOOL file_open(struct cab_file *fi, BOOL lower, LPCSTR dir)
+static BOOL file_open(struct cab_file *fi, BOOL lower, LPCSTR dir)
 {
   char c, *d, *name;
   BOOL ok = FALSE;
@@ -239,7 +239,7 @@ BOOL file_open(struct cab_file *fi, BOOL lower, LPCSTR dir)
  *
  * closes a completed file
  */
-void file_close(struct cab_file *fi)
+static void file_close(struct cab_file *fi)
 {
   TRACE("(fi == ^%p)\n", fi);
 
@@ -255,7 +255,7 @@ void file_close(struct cab_file *fi)
  * writes from buf to a file specified as a cab_file struct.
  * returns success/failure
  */
-BOOL file_write(struct cab_file *fi, cab_UBYTE *buf, cab_off_t length)
+static BOOL file_write(struct cab_file *fi, cab_UBYTE *buf, cab_off_t length)
 {
   DWORD bytes_written;
 
@@ -276,7 +276,7 @@ BOOL file_write(struct cab_file *fi, cab_UBYTE *buf, cab_off_t length)
  * advance the file pointer associated with the cab structure
  * by distance bytes
  */
-void cabinet_skip(struct cabinet *cab, cab_off_t distance)
+static void cabinet_skip(struct cabinet *cab, cab_off_t distance)
 {
   TRACE("(cab == ^%p, distance == %u)\n", cab, distance);
   if (SetFilePointer(cab->fh, distance, NULL, FILE_CURRENT) == INVALID_SET_FILE_POINTER) {
@@ -290,7 +290,7 @@ void cabinet_skip(struct cabinet *cab, cab_off_t distance)
  *
  * seek to the specified absolute offset in a cab
  */
-void cabinet_seek(struct cabinet *cab, cab_off_t offset) {
+static void cabinet_seek(struct cabinet *cab, cab_off_t offset) {
   TRACE("(cab == ^%p, offset == %u)\n", cab, offset);
   if (SetFilePointer(cab->fh, offset, NULL, FILE_BEGIN) != offset)
     ERR("%s seek failure\n", debugstr_a(cab->filename));
@@ -301,7 +301,7 @@ void cabinet_seek(struct cabinet *cab, cab_off_t offset) {
  *
  * returns the file pointer position of a cab
  */
-cab_off_t cabinet_getoffset(struct cabinet *cab) 
+static cab_off_t cabinet_getoffset(struct cabinet *cab) 
 {
   return SetFilePointer(cab->fh, 0, NULL, FILE_CURRENT);
 }
@@ -311,7 +311,7 @@ cab_off_t cabinet_getoffset(struct cabinet *cab)
  *
  * read data from a cabinet, returns success
  */
-BOOL cabinet_read(struct cabinet *cab, cab_UBYTE *buf, cab_off_t length)
+static BOOL cabinet_read(struct cabinet *cab, cab_UBYTE *buf, cab_off_t length)
 {
   DWORD bytes_read;
   cab_off_t avail = cab->filelen - cabinet_getoffset(cab);
@@ -339,7 +339,7 @@ BOOL cabinet_read(struct cabinet *cab, cab_UBYTE *buf, cab_off_t length)
  *
  * allocate and read an aribitrarily long string from the cabinet
  */
-char *cabinet_read_string(struct cabinet *cab)
+static char *cabinet_read_string(struct cabinet *cab)
 {
   cab_off_t len=256, base = cabinet_getoffset(cab), maxlen = cab->filelen - base;
   BOOL ok = FALSE;
@@ -387,7 +387,7 @@ char *cabinet_read_string(struct cabinet *cab)
  *
  * reads the header and all folder and file entries in this cabinet
  */
-BOOL cabinet_read_entries(struct cabinet *cab)
+static BOOL cabinet_read_entries(struct cabinet *cab)
 {
   int num_folders, num_files, header_resv, folder_resv = 0, i;
   struct cab_folder *fol, *linkfol = NULL;
@@ -525,7 +525,7 @@ BOOL cabinet_read_entries(struct cabinet *cab)
  * file [name]. Returns a cabinet structure if successful, or NULL
  * otherwise.
  */
-struct cabinet *load_cab_offset(LPCSTR name, cab_off_t offset)
+static struct cabinet *load_cab_offset(LPCSTR name, cab_off_t offset)
 {
   struct cabinet *cab = (struct cabinet *) calloc(1, sizeof(struct cabinet));
   int ok;
@@ -553,7 +553,7 @@ struct cabinet *load_cab_offset(LPCSTR name, cab_off_t offset)
 /********************************************************
  * Ziphuft_free (internal)
  */
-void Ziphuft_free(struct Ziphuft *t)
+static void Ziphuft_free(struct Ziphuft *t)
 {
   register struct Ziphuft *p, *q;
 
@@ -570,7 +570,7 @@ void Ziphuft_free(struct Ziphuft *t)
 /*********************************************************
  * Ziphuft_build (internal)
  */
-cab_LONG Ziphuft_build(cab_ULONG *b, cab_ULONG n, cab_ULONG s, cab_UWORD *d, cab_UWORD *e,
+static cab_LONG Ziphuft_build(cab_ULONG *b, cab_ULONG n, cab_ULONG s, cab_UWORD *d, cab_UWORD *e,
 struct Ziphuft **t, cab_LONG *m, cab_decomp_state *decomp_state)
 {
   cab_ULONG a;                   	/* counter for codes of length k */
@@ -750,7 +750,7 @@ struct Ziphuft **t, cab_LONG *m, cab_decomp_state *decomp_state)
 /*********************************************************
  * Zipinflate_codes (internal)
  */
-cab_LONG Zipinflate_codes(struct Ziphuft *tl, struct Ziphuft *td,
+static cab_LONG Zipinflate_codes(struct Ziphuft *tl, struct Ziphuft *td,
   cab_LONG bl, cab_LONG bd, cab_decomp_state *decomp_state)
 {
   register cab_ULONG e;  /* table entry flag/number of extra bits */
@@ -833,7 +833,7 @@ cab_LONG Zipinflate_codes(struct Ziphuft *tl, struct Ziphuft *td,
 /***********************************************************
  * Zipinflate_stored (internal)
  */
-cab_LONG Zipinflate_stored(cab_decomp_state *decomp_state)
+static cab_LONG Zipinflate_stored(cab_decomp_state *decomp_state)
 /* "decompress" an inflated type 0 (stored) block. */
 {
   cab_ULONG n;           /* number of bytes in block */
@@ -877,7 +877,7 @@ cab_LONG Zipinflate_stored(cab_decomp_state *decomp_state)
 /******************************************************
  * Zipinflate_fixed (internal)
  */
-cab_LONG Zipinflate_fixed(cab_decomp_state *decomp_state)
+static cab_LONG Zipinflate_fixed(cab_decomp_state *decomp_state)
 {
   struct Ziphuft *fixed_tl;
   struct Ziphuft *fixed_td;
@@ -923,7 +923,7 @@ cab_LONG Zipinflate_fixed(cab_decomp_state *decomp_state)
 /**************************************************************
  * Zipinflate_dynamic (internal)
  */
-cab_LONG Zipinflate_dynamic(cab_decomp_state *decomp_state)
+static cab_LONG Zipinflate_dynamic(cab_decomp_state *decomp_state)
  /* decompress an inflated type 2 (dynamic Huffman codes) block. */
 {
   cab_LONG i;          	/* temporary variables */
@@ -1058,7 +1058,7 @@ cab_LONG Zipinflate_dynamic(cab_decomp_state *decomp_state)
 /*****************************************************
  * Zipinflate_block (internal)
  */
-cab_LONG Zipinflate_block(cab_LONG *e, cab_decomp_state *decomp_state) /* e == last block flag */
+static cab_LONG Zipinflate_block(cab_LONG *e, cab_decomp_state *decomp_state) /* e == last block flag */
 { /* decompress an inflated block */
   cab_ULONG t;           	/* block type */
   register cab_ULONG b;     /* bit buffer */
@@ -1096,7 +1096,7 @@ cab_LONG Zipinflate_block(cab_LONG *e, cab_decomp_state *decomp_state) /* e == l
 /****************************************************
  * ZIPdecompress (internal)
  */
-int ZIPdecompress(int inlen, int outlen, cab_decomp_state *decomp_state)
+static int ZIPdecompress(int inlen, int outlen, cab_decomp_state *decomp_state)
 {
   cab_LONG e;               /* last block flag */
 
@@ -1132,7 +1132,7 @@ int ZIPdecompress(int inlen, int outlen, cab_decomp_state *decomp_state)
  *
  * Initialise a model which decodes symbols from [s] to [s]+[n]-1
  */
-void QTMinitmodel(struct QTMmodel *m, struct QTMmodelsym *sym, int n, int s) {
+static void QTMinitmodel(struct QTMmodel *m, struct QTMmodelsym *sym, int n, int s) {
   int i;
   m->shiftsleft = 4;
   m->entries    = n;
@@ -1149,7 +1149,7 @@ void QTMinitmodel(struct QTMmodel *m, struct QTMmodelsym *sym, int n, int s) {
 /******************************************************************
  * QTMinit (internal)
  */
-int QTMinit(int window, int level, cab_decomp_state *decomp_state) {
+static int QTMinit(int window, int level, cab_decomp_state *decomp_state) {
   unsigned int wndsize = 1 << window;
   int msz = window * 2, i;
   cab_ULONG j;
@@ -1256,7 +1256,7 @@ void QTMupdatemodel(struct QTMmodel *model, int sym) {
 /*******************************************************************
  * QTMdecompress (internal)
  */
-int QTMdecompress(int inlen, int outlen, cab_decomp_state *decomp_state)
+static int QTMdecompress(int inlen, int outlen, cab_decomp_state *decomp_state)
 {
   cab_UBYTE *inpos  = CAB(inbuf);
   cab_UBYTE *window = QTM(window);
@@ -1438,7 +1438,7 @@ int QTMdecompress(int inlen, int outlen, cab_decomp_state *decomp_state)
 /************************************************************
  * LZXinit (internal)
  */
-int LZXinit(int window, cab_decomp_state *decomp_state) {
+static int LZXinit(int window, cab_decomp_state *decomp_state) {
   cab_ULONG wndsize = 1 << window;
   int i, j, posn_slots;
 
@@ -1579,7 +1579,7 @@ int make_decode_table(cab_ULONG nsyms, cab_ULONG nbits, cab_UBYTE *length, cab_U
 /************************************************************
  * lzx_read_lens (internal)
  */
-int lzx_read_lens(cab_UBYTE *lens, cab_ULONG first, cab_ULONG last, struct lzx_bits *lb,
+static int lzx_read_lens(cab_UBYTE *lens, cab_ULONG first, cab_ULONG last, struct lzx_bits *lb,
                   cab_decomp_state *decomp_state) {
   cab_ULONG i,j, x,y;
   int z;
@@ -1626,7 +1626,7 @@ int lzx_read_lens(cab_UBYTE *lens, cab_ULONG first, cab_ULONG last, struct lzx_b
 /*******************************************************
  * LZXdecompress (internal)
  */
-int LZXdecompress(int inlen, int outlen, cab_decomp_state *decomp_state) {
+static int LZXdecompress(int inlen, int outlen, cab_decomp_state *decomp_state) {
   cab_UBYTE *inpos  = CAB(inbuf);
   cab_UBYTE *endinp = inpos + inlen;
   cab_UBYTE *window = LZX(window);
@@ -1949,7 +1949,7 @@ int LZXdecompress(int inlen, int outlen, cab_decomp_state *decomp_state) {
 /*********************************************************
  * find_cabs_in_file (internal)
  */
-struct cabinet *find_cabs_in_file(LPCSTR name, cab_UBYTE search_buf[])
+static struct cabinet *find_cabs_in_file(LPCSTR name, cab_UBYTE search_buf[])
 {
   struct cabinet *cab, *cab2, *firstcab = NULL, *linkcab = NULL;
   cab_UBYTE *pstart = &search_buf[0], *pend, *p;
@@ -2067,7 +2067,7 @@ struct cabinet *find_cabs_in_file(LPCSTR name, cab_UBYTE search_buf[])
  * tries to find *cabname, from the directory path of origcab, correcting the
  * case of *cabname if necessary, If found, writes back to *cabname.
  */
-void find_cabinet_file(char **cabname, LPCSTR origcab) {
+static void find_cabinet_file(char **cabname, LPCSTR origcab) {
 
   char *tail, *cab, *name, *nextpart, nametmp[MAX_PATH];
   int found = 0;
@@ -2156,7 +2156,7 @@ void find_cabinet_file(char **cabname, LPCSTR origcab) {
  * in CAB.c) for an implementation of this that correctly frees the discarded
  * file entries.
  */
-struct cab_file *process_files(struct cabinet *basecab) {
+static struct cab_file *process_files(struct cabinet *basecab) {
   struct cabinet *cab;
   struct cab_file *outfi = NULL, *linkfi = NULL, *nextfi, *fi, *cfi;
   struct cab_folder *fol, *firstfol, *lastfol = NULL, *predfol;
@@ -2259,7 +2259,7 @@ struct cab_file *process_files(struct cabinet *basecab) {
  * 
  * FIXME: use a winapi to do this
  */
-int convertUTF(cab_UBYTE *in) {
+static int convertUTF(cab_UBYTE *in) {
   cab_UBYTE c, *out = in, *end = in + strlen((char *) in) + 1;
   cab_ULONG x;
 
@@ -2291,7 +2291,7 @@ int convertUTF(cab_UBYTE *in) {
 /****************************************************
  * NONEdecompress (internal)
  */
-int NONEdecompress(int inlen, int outlen, cab_decomp_state *decomp_state)
+static int NONEdecompress(int inlen, int outlen, cab_decomp_state *decomp_state)
 {
   if (inlen != outlen) return DECR_ILLEGALDATA;
   memcpy(CAB(outbuf), CAB(inbuf), (size_t) inlen);
@@ -2322,7 +2322,7 @@ cab_ULONG checksum(cab_UBYTE *data, cab_UWORD bytes, cab_ULONG csum) {
 /**********************************************************
  * decompress (internal)
  */
-int decompress(struct cab_file *fi, int savemode, int fix, cab_decomp_state *decomp_state)
+static int decompress(struct cab_file *fi, int savemode, int fix, cab_decomp_state *decomp_state)
 {
   cab_ULONG bytes = savemode ? fi->length : fi->offset - CAB(offset);
   struct cabinet *cab = CAB(current)->cab[CAB(split)];
@@ -2412,7 +2412,7 @@ int decompress(struct cab_file *fi, int savemode, int fix, cab_decomp_state *dec
  *
  * workhorse to extract a particular file from a cab
  */
-void extract_file(struct cab_file *fi, int lower, int fix, LPCSTR dir, cab_decomp_state *decomp_state)
+static void extract_file(struct cab_file *fi, int lower, int fix, LPCSTR dir, cab_decomp_state *decomp_state)
 {
   struct cab_folder *fol = fi->folder, *oldfol = CAB(current);
   cab_LONG err = DECR_OK;
@@ -2523,7 +2523,7 @@ exit_handler:
 /*********************************************************
  * print_fileinfo (internal)
  */
-void print_fileinfo(struct cab_file *fi) {
+static void print_fileinfo(struct cab_file *fi) {
   char *fname = NULL;
 
   if (fi->attribs & cffile_A_NAME_IS_UTF) {

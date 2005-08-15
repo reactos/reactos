@@ -308,11 +308,17 @@ KeUpdateRunTime(
    /*
     * If we're at end of quantum request software interrupt. The rest
     * is handled in KiDispatchInterrupt.
+    *
+    * NOTE: If one stays at DISPATCH_LEVEL for a long time the DPC routine
+    * which checks for quantum end will not be executed and decrementing
+    * the quantum here can result in overflow. This is not a problem since
+    * we don't care about the quantum value anymore after the QuantumEnd
+    * flag is set.
     */
    if ((CurrentThread->Quantum -= 3) <= 0)
    {
-     Prcb->QuantumEnd = TRUE;
-     HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
+      Prcb->QuantumEnd = TRUE;
+      HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
    }
 }
 

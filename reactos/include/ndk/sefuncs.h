@@ -27,10 +27,30 @@ SeCaptureSecurityDescriptor(
 
 NTSTATUS
 STDCALL
+SeCreateAccessState(
+    PACCESS_STATE AccessState,
+    PAUX_DATA AuxData,
+    ACCESS_MASK Access,
+    PGENERIC_MAPPING GenericMapping
+);
+
+VOID
+STDCALL
+SeDeleteAccessState(IN PACCESS_STATE AccessState);
+
+NTSTATUS
+STDCALL
 SeReleaseSecurityDescriptor(
     IN PSECURITY_DESCRIPTOR CapturedSecurityDescriptor,
     IN KPROCESSOR_MODE CurrentMode,
     IN BOOLEAN CaptureIfKernelMode
+);
+
+VOID
+STDCALL
+SeSetAccessStateGenericMapping(
+    IN PACCESS_STATE AccessState,
+    IN PGENERIC_MAPPING GenericMapping
 );
 
 SECURITY_IMPERSONATION_LEVEL

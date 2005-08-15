@@ -41,10 +41,11 @@
 #include "rpc_binding.h"
 #include "rpc_misc.h"
 #include "rpc_defs.h"
+#include "rpc_message.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(rpc);
 
-DWORD RPCRT4_GetHeaderSize(RpcPktHdr *Header)
+static DWORD RPCRT4_GetHeaderSize(RpcPktHdr *Header)
 {
   static const DWORD header_sizes[] = {
     sizeof(Header->request), 0, sizeof(Header->response),
@@ -67,7 +68,7 @@ DWORD RPCRT4_GetHeaderSize(RpcPktHdr *Header)
   return ret;
 }
 
-VOID RPCRT4_BuildCommonHeader(RpcPktHdr *Header, unsigned char PacketType,
+static VOID RPCRT4_BuildCommonHeader(RpcPktHdr *Header, unsigned char PacketType,
                               unsigned long DataRepresentation)
 {
   Header->common.rpc_ver = RPC_VER_MAJOR;
@@ -83,7 +84,7 @@ VOID RPCRT4_BuildCommonHeader(RpcPktHdr *Header, unsigned char PacketType,
   /* Flags and fragment length are computed in RPCRT4_Send. */
 }                              
 
-RpcPktHdr *RPCRT4_BuildRequestHeader(unsigned long DataRepresentation,
+static RpcPktHdr *RPCRT4_BuildRequestHeader(unsigned long DataRepresentation,
                                      unsigned long BufferLength,
                                      unsigned short ProcNum,
                                      UUID *ObjectUuid)
@@ -113,7 +114,7 @@ RpcPktHdr *RPCRT4_BuildRequestHeader(unsigned long DataRepresentation,
   return header;
 }
 
-RpcPktHdr *RPCRT4_BuildResponseHeader(unsigned long DataRepresentation,
+static RpcPktHdr *RPCRT4_BuildResponseHeader(unsigned long DataRepresentation,
                                       unsigned long BufferLength)
 {
   RpcPktHdr *header;

@@ -21,36 +21,6 @@ VOID
 LdrInitModuleManagement (VOID);
 
 NTSTATUS
-STDCALL
-LdrpMapSystemDll(
-    PEPROCESS Process,
-    PVOID *DllBase
-);
-
-NTSTATUS
-STDCALL
-LdrpInitializeSystemDll(VOID);
-
-NTSTATUS
-STDCALL
-LdrpGetSystemDllEntryPoints(VOID);
-
-PVOID
-LdrpGetSystemDllEntryPoint (VOID);
-
-PVOID
-LdrpGetSystemDllApcDispatcher(VOID);
-
-PVOID
-LdrpGetSystemDllExceptionDispatcher(VOID);
-
-PVOID
-LdrpGetSystemDllCallbackDispatcher(VOID);
-
-PVOID
-LdrpGetSystemDllRaiseExceptionDispatcher(VOID);
-
-NTSTATUS
 LdrpMapImage(
     HANDLE	ProcessHandle,
     HANDLE	SectionHandle,
@@ -99,13 +69,13 @@ LdrSafePEProcessModule(
 NTSTATUS
 LdrLoadModule(
     PUNICODE_STRING Filename,
-    PMODULE_OBJECT *ModuleObject
+    PLDR_DATA_TABLE_ENTRY *ModuleObject
 );
 
 NTSTATUS
-LdrUnloadModule(PMODULE_OBJECT ModuleObject);
+LdrUnloadModule(PLDR_DATA_TABLE_ENTRY ModuleObject);
 
-PMODULE_OBJECT
+PLDR_DATA_TABLE_ENTRY
 LdrGetModuleObject(PUNICODE_STRING ModuleName);
 
 #endif /* __INCLUDE_INTERNAL_LDR_H */

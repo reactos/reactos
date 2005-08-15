@@ -20,6 +20,7 @@
 
 #define COM_NO_WINDOWS_H
 #include <stdarg.h>
+#include <stdio.h>
 #include <string.h>
 
 #include "windef.h"
@@ -28,12 +29,16 @@
 #include "wingdi.h"
 #include "winreg.h"
 #include "winerror.h"
+#include "advpub.h"
 
 #include "objbase.h"
 
 #include "urlmon.h"
 
 #include "wine/debug.h"
+
+#include "initguid.h"
+#include "urlmon_main.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
 
@@ -511,6 +516,48 @@ static struct regsvr_coclass const coclass_list[] = {
 	"urlmon.dll",
 	"Apartment"
     },
+    {   &CLSID_CdlProtocol,
+        "CDL: Asynchronous Pluggable Protocol Handler",
+        NULL,
+        "urlmon.dll",
+        "Apartment"
+    },
+    {   &CLSID_FileProtocol,
+        "file:, local: Asynchronous Pluggable Protocol Handler",
+        NULL,
+        "urlmon.dll",
+        "Apartment"
+    },
+    {   &CLSID_FtpProtocol,
+        "ftp: Asynchronous Pluggable Protocol Handler",
+        NULL,
+        "urlmon.dll",
+        "Apartment"
+    },
+    {   &CLSID_GopherProtocol,
+        "gopher: Asynchronous Pluggable Protocol Handler",
+        NULL,
+        "urlmon.dll",
+        "Apartment"
+    },
+    {   &CLSID_HttpProtocol,
+        "http: Asynchronous Pluggable Protocol Handler",
+        NULL,
+        "urlmon.dll",
+        "Apartment"
+    },
+    {   &CLSID_HttpsProtocol,
+        "https: Asynchronous Pluggable Protocol Handler",
+        NULL,
+        "urlmon.dll",
+        "Apartment"
+    },
+    {   &CLSID_MkProtocol,
+        "mk: Asynchronous Pluggable Protocol Handler",
+        NULL,
+        "urlmon.dll",
+        "Apartment"
+    },
     { NULL }			/* list terminator */
 };
 
@@ -521,6 +568,58 @@ static struct regsvr_coclass const coclass_list[] = {
 static struct regsvr_interface const interface_list[] = {
     { NULL }			/* list terminator */
 };
+
+/***********************************************************************
+ *              register_inf
+ */
+
+#define INF_SET_CLSID(clsid) \
+    pse[i].pszName = "CLSID_" #clsid; \
+    clsids[i++] = &CLSID_ ## clsid;
+
+static HRESULT register_inf(BOOL doregister)
+{
+    HRESULT hres;
+    HMODULE hAdvpack;
+    typeof(RegInstall) *pRegInstall;
+    STRTABLE strtable;
+    STRENTRY pse[7];
+    static CLSID const *clsids[34];
+    int i = 0;
+
+    static const WCHAR wszAdvpack[] = {'a','d','v','p','a','c','k','.','d','l','l',0};
+    
+    INF_SET_CLSID(CdlProtocol);
+    INF_SET_CLSID(FileProtocol);
+    INF_SET_CLSID(FtpProtocol);
+    INF_SET_CLSID(GopherProtocol);
+    INF_SET_CLSID(HttpProtocol);
+    INF_SET_CLSID(HttpsProtocol);
+    INF_SET_CLSID(MkProtocol);
+
+    for(i = 0; i < sizeof(pse)/sizeof(pse[0]); i++) {
+        pse[i].pszValue = HeapAlloc(GetProcessHeap(), 0, 39);
+        sprintf(pse[i].pszValue, "{%08lX-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
+                clsids[i]->Data1, clsids[i]->Data2, clsids[i]->Data3, clsids[i]->Data4[0],
+                clsids[i]->Data4[1], clsids[i]->Data4[2], clsids[i]->Data4[3], clsids[i]->Data4[4],
+                clsids[i]->Data4[5], clsids[i]->Data4[6], clsids[i]->Data4[7]);
+    }
+
+    strtable.cEntries = sizeof(pse)/sizeof(pse[0]);
+    strtable.pse = pse;
+
+    hAdvpack = LoadLibraryW(wszAdvpack);
+    pRegInstall = (typeof(RegInstall)*)GetProcAddress(hAdvpack, "RegInstall");
+
+    hres = pRegInstall(URLMON_hInstance, doregister ? "RegisterDll" : "UnregisterDll", &strtable);
+
+    for(i=0; i < sizeof(pse)/sizeof(pse[0]); i++)
+        HeapFree(GetProcessHeap(), 0, pse[i].pszValue);
+
+    return hres;
+}
+
+#undef INF_SET_CLSID
 
 /***********************************************************************
  *		DllRegisterServer (URLMON.@)
@@ -534,7 +633,9 @@ HRESULT WINAPI URLMON_DllRegisterServer(void)
     hr = register_coclasses(coclass_list);
     if (SUCCEEDED(hr))
 	hr = register_interfaces(interface_list);
-    return hr;
+    if(FAILED(hr))
+        return hr;
+    return register_inf(TRUE);
 }
 
 /***********************************************************************
@@ -549,5 +650,7 @@ HRESULT WINAPI URLMON_DllUnregisterServer(void)
     hr = unregister_coclasses(coclass_list);
     if (SUCCEEDED(hr))
 	hr = unregister_interfaces(interface_list);
-    return hr;
+    if(FAILED(hr))
+        return hr;
+    return register_inf(FALSE);
 }

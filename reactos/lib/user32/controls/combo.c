@@ -20,18 +20,9 @@
  * FIXME: roll up in Netscape 3.01.
  */
 
-#define __WINE__
 #include <user32.h>
-#include <stdarg.h>
-#include <string.h>
-
 #define NDEBUG
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include "controls.h"
-#include "wine/debug.h"
-#include "wine/unicode.h"
+#include <debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(combo);
 

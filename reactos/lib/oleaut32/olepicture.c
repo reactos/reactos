@@ -76,7 +76,6 @@
 #include "wine/unicode.h"
 
 #include "wine/wingdi16.h"
-#include "cursoricon.h"
 
 #ifdef HAVE_JPEGLIB_H
 /* This is a hack, so jpeglib.h does not redefine INT32 and the like*/
@@ -93,6 +92,29 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
+#include "pshpack1.h"
+
+typedef struct {
+    BYTE bWidth;
+    BYTE bHeight;
+    BYTE bColorCount;
+    BYTE bReserved;
+    WORD xHotspot;
+    WORD yHotspot;
+    DWORD dwDIBSize;
+    DWORD dwDIBOffset;
+} CURSORICONFILEDIRENTRY;
+
+typedef struct
+{
+    WORD                idReserved;
+    WORD                idType;
+    WORD                idCount;
+    CURSORICONFILEDIRENTRY  idEntries[1];
+} CURSORICONFILEDIR;
+
+#include "poppack.h"
+
 /*************************************************************************
  *  Declaration of implementation class
  */
@@ -103,13 +125,13 @@ typedef struct OLEPictureImpl {
    * IPicture handles IUnknown
    */
 
-    IPictureVtbl       *lpvtbl1;
-    IDispatchVtbl      *lpvtbl2;
-    IPersistStreamVtbl *lpvtbl3;
-    IConnectionPointContainerVtbl *lpvtbl4;
+    const IPictureVtbl       *lpvtbl1;
+    const IDispatchVtbl      *lpvtbl2;
+    const IPersistStreamVtbl *lpvtbl3;
+    const IConnectionPointContainerVtbl *lpvtbl4;
 
   /* Object reference count */
-    DWORD ref;
+    LONG ref;
 
   /* We own the object and must destroy it ourselves */
     BOOL fOwn;
@@ -156,10 +178,10 @@ typedef struct OLEPictureImpl {
 /*
  * Predeclare VTables.  They get initialized at the end.
  */
-static IPictureVtbl OLEPictureImpl_VTable;
-static IDispatchVtbl OLEPictureImpl_IDispatch_VTable;
-static IPersistStreamVtbl OLEPictureImpl_IPersistStream_VTable;
-static IConnectionPointContainerVtbl OLEPictureImpl_IConnectionPointContainer_VTable;
+static const IPictureVtbl OLEPictureImpl_VTable;
+static const IDispatchVtbl OLEPictureImpl_IDispatch_VTable;
+static const IPersistStreamVtbl OLEPictureImpl_IPersistStream_VTable;
+static const IConnectionPointContainerVtbl OLEPictureImpl_IConnectionPointContainer_VTable;
 
 /***********************************************************************
  * Implementation of the OLEPictureImpl class.
@@ -334,6 +356,9 @@ static void OLEPictureImpl_Destroy(OLEPictureImpl* Obj)
     case PICTYPE_ENHMETAFILE:
       DeleteEnhMetaFile(Obj->desc.u.emf.hemf);
       break;
+    case PICTYPE_NONE:
+      /* Nothing to do */
+      break;
     default:
       FIXME("Unsupported type %d - unable to delete\n", Obj->desc.picType);
       break;
@@ -485,6 +510,9 @@ static HRESULT WINAPI OLEPictureImpl_get_Handle(IPicture *iface,
   OLEPictureImpl *This = (OLEPictureImpl *)iface;
   TRACE("(%p)->(%p)\n", This, phandle);
   switch(This->desc.picType) {
+  case PICTYPE_NONE:
+    *phandle = 0;
+    break;
   case PICTYPE_BITMAP:
     *phandle = (OLE_HANDLE)This->desc.u.bmp.hbitmap;
     break;
@@ -512,8 +540,10 @@ static HRESULT WINAPI OLEPictureImpl_get_hPal(IPicture *iface,
 					      OLE_HANDLE *phandle)
 {
   OLEPictureImpl *This = (OLEPictureImpl *)iface;
-  FIXME("(%p)->(%p): stub\n", This, phandle);
-  return E_NOTIMPL;
+  FIXME("(%p)->(%p): stub, return 0 palette.\n", This, phandle);
+
+  *phandle = 0;
+  return S_OK;
 }
 
 /************************************************************************
@@ -992,7 +1022,8 @@ static int _gif_inputfunc(GifFileType *gif, GifByteType *data, int len) {
  */
 static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface,IStream*pStm) {
   HRESULT	hr = E_FAIL;
-  ULONG		xread;
+  BOOL		headerisdata = FALSE;
+  ULONG		xread, toread;
   BYTE 		*xbuf;
   DWORD		header[2];
   WORD		magic;
@@ -1013,43 +1044,54 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface,IStream*pStm) {
    */
   hr=IStream_Stat(pStm,&statstg,STATFLAG_NONAME);
   if (hr)
-    FIXME("Stat failed with hres %lx\n",hr);
+      FIXME("Stat failed with hres %lx\n",hr);
   hr=IStream_Read(pStm,header,8,&xread);
   if (hr || xread!=8) {
       FIXME("Failure while reading picture header (hr is %lx, nread is %ld).\n",hr,xread);
       return hr;
   }
-  if (!memcmp(&(header[0]), "GIF8",     4) ||   /* GIF header */
-      !memcmp(&(header[0]), "BM",       2) ||   /* BMP header */
-      !memcmp(&(header[0]), "\xff\xd8", 2) ||   /* JPEG header */
-      header[1] > statstg.cbSize.QuadPart || (header[1]==0)) {/* Incorrect header, assume none. */
-    xread = 8;
-    xbuf = This->data = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,statstg.cbSize.QuadPart);
-    memcpy(xbuf,&header,8);
-    This->datalen = statstg.cbSize.QuadPart;
-    while (xread < This->datalen) {
+
+  headerisdata = FALSE;
+  xread = 0;
+  if (!memcmp(&(header[0]),"lt\0\0", 4) && (header[1] <= statstg.cbSize.QuadPart-8)) {
+      toread = header[1];
+  } else {
+      if (!memcmp(&(header[0]), "GIF8",     4)	||   /* GIF header */
+	  !memcmp(&(header[0]), "BM",       2)	||   /* BMP header */
+	  !memcmp(&(header[0]), "\xff\xd8", 2)	||   /* JPEG header */
+	  (header[1] > statstg.cbSize.QuadPart)	||   /* invalid size */
+	  (header[1]==0)
+      ) {/* Incorrect header, assume none. */
+          headerisdata = TRUE;
+          toread = statstg.cbSize.QuadPart-8;
+	  xread = 8;
+      } else {
+	  FIXME("Unknown stream header magic: %08lx\n", header[0]);
+          toread = header[1];
+      }
+  }
+
+  This->datalen = toread+(headerisdata?8:0);
+  xbuf = This->data = HeapAlloc (GetProcessHeap(), HEAP_ZERO_MEMORY, This->datalen);
+
+  if (headerisdata)
+      memcpy (xbuf, &header, 8);
+
+  while (xread < This->datalen) {
       ULONG nread;
       hr = IStream_Read(pStm,xbuf+xread,This->datalen-xread,&nread);
       xread+=nread;
       if (hr || !nread)
 	break;
-    }
-    if (xread != This->datalen)
-      FIXME("Could only read %ld of %d bytes in no-header case?\n",xread,This->datalen);
-  } else {
-    xread = 0;
-    xbuf = This->data = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,header[1]);
-    This->datalen = header[1];
-    while (xread < header[1]) {
-      ULONG nread;
-      hr = IStream_Read(pStm,xbuf+xread,header[1]-xread,&nread);
-      xread+=nread;
-      if (hr || !nread)
-	break;
-    }
-    if (xread != header[1])
-      FIXME("Could only read %ld of %ld bytes?\n",xread,header[1]);
   }
+  if (xread != This->datalen)
+      FIXME("Could only read %ld of %d bytes out of stream?\n",xread,This->datalen);
+
+  if (This->datalen == 0) {	/* Marks the "NONE" picture */
+      This->desc.picType = PICTYPE_NONE;
+      return S_OK;
+  }
+
   magic = xbuf[0] + (xbuf[1]<<8);
   switch (magic) {
   case 0x4947: { /* GIF */
@@ -1097,12 +1139,12 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface,IStream*pStm) {
     );
     /* */
     padding = (gif->SWidth+3) & ~3;
-    bmi  = HeapAlloc(GetProcessHeap(),0,sizeof(BITMAPINFOHEADER)+(1<<gif->SColorResolution)*sizeof(RGBQUAD));
-    bytes= HeapAlloc(GetProcessHeap(),0,padding*gif->SHeight);
     si   = gif->SavedImages+0;
     gid  = &(si->ImageDesc);
     cm   = gid->ColorMap;
     if (!cm) cm = gif->SColorMap;
+    bmi  = HeapAlloc(GetProcessHeap(),0,sizeof(BITMAPINFOHEADER)+(cm->ColorCount)*sizeof(RGBQUAD));
+    bytes= HeapAlloc(GetProcessHeap(),0,padding*gif->SHeight);
     
     /* look for the transparent color extension */
     for (i = 0; i < si->ExtensionBlockCount; ++i) {
@@ -1114,7 +1156,7 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface,IStream*pStm) {
 	}
     }
 
-    for (i=0;i<(1<<gif->SColorResolution);i++) {
+    for (i = 0; i < cm->ColorCount; i++) {
       bmi->bmiColors[i].rgbRed = cm->Colors[i].Red;
       bmi->bmiColors[i].rgbGreen = cm->Colors[i].Green;
       bmi->bmiColors[i].rgbBlue = cm->Colors[i].Blue;
@@ -1161,7 +1203,7 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface,IStream*pStm) {
     bmi->bmiHeader.biSizeImage		= padding*gif->SHeight;
     bmi->bmiHeader.biXPelsPerMeter	= 0;
     bmi->bmiHeader.biYPelsPerMeter	= 0;
-    bmi->bmiHeader.biClrUsed		= 1 << gif->SColorResolution;
+    bmi->bmiHeader.biClrUsed		= cm->ColorCount;
     bmi->bmiHeader.biClrImportant	= 0;
 
     hdcref = GetDC(0);
@@ -1917,7 +1959,7 @@ static HRESULT WINAPI OLEPictureImpl_Invoke(
 }
 
 
-static IPictureVtbl OLEPictureImpl_VTable =
+static const IPictureVtbl OLEPictureImpl_VTable =
 {
   OLEPictureImpl_QueryInterface,
   OLEPictureImpl_AddRef,
@@ -1938,7 +1980,7 @@ static IPictureVtbl OLEPictureImpl_VTable =
   OLEPictureImpl_get_Attributes
 };
 
-static IDispatchVtbl OLEPictureImpl_IDispatch_VTable =
+static const IDispatchVtbl OLEPictureImpl_IDispatch_VTable =
 {
   OLEPictureImpl_IDispatch_QueryInterface,
   OLEPictureImpl_IDispatch_AddRef,
@@ -1949,7 +1991,7 @@ static IDispatchVtbl OLEPictureImpl_IDispatch_VTable =
   OLEPictureImpl_Invoke
 };
 
-static IPersistStreamVtbl OLEPictureImpl_IPersistStream_VTable =
+static const IPersistStreamVtbl OLEPictureImpl_IPersistStream_VTable =
 {
   OLEPictureImpl_IPersistStream_QueryInterface,
   OLEPictureImpl_IPersistStream_AddRef,
@@ -1961,7 +2003,7 @@ static IPersistStreamVtbl OLEPictureImpl_IPersistStream_VTable =
   OLEPictureImpl_GetSizeMax
 };
 
-static IConnectionPointContainerVtbl OLEPictureImpl_IConnectionPointContainer_VTable =
+static const IConnectionPointContainerVtbl OLEPictureImpl_IConnectionPointContainer_VTable =
 {
   OLEPictureImpl_IConnectionPointContainer_QueryInterface,
   OLEPictureImpl_IConnectionPointContainer_AddRef,
@@ -2189,8 +2231,8 @@ HRESULT WINAPI OleLoadPicturePath( LPOLESTR szURLorPath, LPUNKNOWN punkCaller,
 typedef struct
 {
     /* IUnknown fields */
-    IClassFactoryVtbl          *lpVtbl;
-    DWORD                       ref;
+    const IClassFactoryVtbl    *lpVtbl;
+    LONG                        ref;
 } IClassFactoryImpl;
 
 static HRESULT WINAPI
@@ -2227,7 +2269,7 @@ static HRESULT WINAPI SPCF_LockServer(LPCLASSFACTORY iface,BOOL dolock) {
 	return S_OK;
 }
 
-static IClassFactoryVtbl SPCF_Vtbl = {
+static const IClassFactoryVtbl SPCF_Vtbl = {
 	SPCF_QueryInterface,
 	SPCF_AddRef,
 	SPCF_Release,

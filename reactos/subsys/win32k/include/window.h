@@ -228,6 +228,9 @@ DWORD IntRemoveWndProcHandle(WNDPROC Handle);
 DWORD IntRemoveProcessWndProcHandles(HANDLE ProcessID);
 DWORD IntAddWndProcHandle(WNDPROC WindowProc, BOOL IsUnicode);
 
+BOOL FASTCALL
+IntShowOwnedPopups( HWND owner, BOOL fShow );
+
 #endif /* _WIN32K_WINDOW_H */
 
 /* EOF */

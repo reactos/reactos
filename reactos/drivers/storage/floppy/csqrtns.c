@@ -70,7 +70,7 @@ VOID NTAPI CsqRemoveIrp(PIO_CSQ UnusedCsq,
  */
 {
   UNREFERENCED_PARAMETER(UnusedCsq);
-  DPRINT(("CSQ: Removing IRP 0x%x\n", Irp));
+  DPRINT("CSQ: Removing IRP 0x%x\n", Irp);
   RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
 }
 
@@ -148,7 +148,7 @@ VOID NTAPI CsqCompleteCanceledIrp(PIO_CSQ UnusedCsq,
  */
 {
   UNREFERENCED_PARAMETER(UnusedCsq);
-  DPRINT(("CSQ: Canceling irp 0x%x\n", Irp));
+  DPRINT("CSQ: Canceling irp 0x%x\n", Irp);
   Irp->IoStatus.Status = STATUS_CANCELLED;
   Irp->IoStatus.Information = 0;
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -173,7 +173,7 @@ VOID NTAPI CsqInsertIrp(PIO_CSQ UnusedCsq,
  */
 {
   UNREFERENCED_PARAMETER(UnusedCsq);
-  DPRINT(("CSQ: Inserting IRP 0x%x\n", Irp));
+  DPRINT("CSQ: Inserting IRP 0x%x\n", Irp);
   InsertTailList(&IrpQueue, &Irp->Tail.Overlay.ListEntry);
   KeReleaseSemaphore(&QueueSemaphore, 0, 1, FALSE);
 }

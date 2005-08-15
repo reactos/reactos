@@ -63,17 +63,13 @@
 #include FT_FREETYPE_H
 #include FT_INTERNAL_STREAM_H
 
-#ifdef __GNUC__
-#include "../truetype/ttobjs.h"
-#include "../type1/t1objs.h"
+#if defined( __GNUC__ ) || defined( __IBMC__ )
   /* This is for Mac OS X.  Without redefinition, OS_INLINE */
   /* expands to `static inline' which doesn't survive the   */
   /* -ansi compilation flag of GCC.                         */
 #define OS_INLINE  static __inline__
 #include <Carbon/Carbon.h>
 #else
-#include "truetype/ttobjs.h"
-#include "type1/t1objs.h"
 #include <Resources.h>
 #include <Fonts.h>
 #include <Errors.h>
@@ -1012,11 +1008,13 @@
                            FT_Long       face_index,
                            FT_Face      *aface )
   {
+#if defined( __MWERKS__ ) && !TARGET_RT_MAC_MACHO
     FT_Open_Args  args;
-    FT_Error      error;
     FT_Stream     stream;
     FILE*         file;
     FT_Memory     memory;
+#endif
+    FT_Error      error;
 
 
     /* test for valid `library' and `aface' delayed to FT_Open_Face() */

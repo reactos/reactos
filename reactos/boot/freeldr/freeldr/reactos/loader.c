@@ -20,6 +20,7 @@
  */
 
 #include <freeldr.h>
+#include <../arch/i386/hardware.h>
 #include <internal/i386/ke.h>
 
 #define NDEBUG
@@ -279,32 +280,42 @@ VOID
 FASTCALL
 FrLdrGetPaeMode(VOID)
 {
-    PCHAR p;
+    BOOLEAN PaeModeSupported;
 
+    PaeModeSupported = FALSE;
     PaeModeEnabled = FALSE;
 
-    /* Read Command Line */
-    p = (PCHAR)LoaderBlock.CommandLine;
-    while ((p = strchr(p, '/')) != NULL) {
-
-        p++;
-        /* Find "PAE" */
-        if (!strnicmp(p, "PAE", 3)) {
-
-            /* Make sure there's nothing following it */
-            if (p[3] == ' ' || p[3] == 0) {
-
-                /* Use Pae */
-                PaeModeEnabled = TRUE;
-                break;
-            }
-        }
-    }
-    if (PaeModeEnabled)
+    if (CpuidSupported() & 1)
     {
-       /* FIXME:
-        *   Check if the cpu is pae capable
-        */
+       ULONG eax, ebx, ecx, FeatureBits;
+       GetCpuid(1, &eax, &ebx, &ecx, &FeatureBits);
+       if (FeatureBits & X86_FEATURE_PAE)
+       {
+          PaeModeSupported = TRUE;
+       }
+    }
+
+    if (PaeModeSupported)
+    {
+       PCHAR p;
+
+       /* Read Command Line */
+       p = (PCHAR)LoaderBlock.CommandLine;
+       while ((p = strchr(p, '/')) != NULL) {
+
+          p++;
+          /* Find "PAE" */
+          if (!strnicmp(p, "PAE", 3)) {
+
+              /* Make sure there's nothing following it */
+              if (p[3] == ' ' || p[3] == 0) {
+
+                  /* Use Pae */
+                  PaeModeEnabled = TRUE;
+                  break;
+              }
+          }
+       }
     }
 }
 

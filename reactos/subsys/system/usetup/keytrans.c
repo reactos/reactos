@@ -25,7 +25,7 @@
  *
  * NB: Hardcoded to US keyboard
  */
-#include "usetup.h"
+#include <usetup.h>
 
 #define NDEBUG
 #include <debug.h>

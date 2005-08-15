@@ -23,7 +23,6 @@
 
 There is still some work to be done:
 
-- currently no support for big-endian machines
 - the ERF error structure aren't used on error
 - no real compression yet
 - unknown behaviour if files>4GB or cabinet >4GB
@@ -44,10 +43,21 @@ There is still some work to be done:
 #include "windef.h"
 #include "winbase.h"
 #include "winerror.h"
+#include "winternl.h"
 #include "fci.h"
 #include "cabinet.h"
 
 #include "wine/debug.h"
+
+
+#ifdef WORDS_BIGENDIAN
+#define fci_endian_ulong(x) RtlUlongByteSwap(x)
+#define fci_endian_uword(x) RtlUshortByteSwap(x)
+#else
+#define fci_endian_ulong(x) (x)
+#define fci_endian_uword(x) (x)
+#endif
+
 
 WINE_DEFAULT_DEBUG_CHANNEL(cabinet);
 
@@ -556,7 +566,7 @@ static BOOL fci_flushfolder_copy_cfdata(HFCI hfci, char* buffer, UINT cbReserveC
         read_result=pcfdata->cbData;
         /* Modify the size of the compressed data to store only a part of the */
         /* data block into the current cabinet. This is done to prevent */
-        /* that the maximum cabinet size will be exceeded. The remainer */
+        /* that the maximum cabinet size will be exceeded. The remainder */
         /* will be stored into the next following cabinet. */
 
         /* The cabinet will be of size "p_fci_internal->oldCCAB.cb". */
@@ -599,11 +609,18 @@ static BOOL fci_flushfolder_copy_cfdata(HFCI hfci, char* buffer, UINT cbReserveC
         return FALSE;
       }
 
+      /* set little endian */
+      pcfdata->cbData=fci_endian_uword(pcfdata->cbData);
+      pcfdata->cbUncomp=fci_endian_uword(pcfdata->cbUncomp);
+
       /* get checksum and write to cfdata.csum */
       pcfdata->csum = fci_get_checksum( &(pcfdata->cbData),
         sizeof(CFDATA)+cbReserveCFData -
         sizeof(pcfdata->csum), fci_get_checksum( p_fci_internal->data_out, /*buffer*/
         pcfdata->cbData, 0 ) );
+
+      /* set little endian */
+      pcfdata->csum=fci_endian_ulong(pcfdata->csum);
 
       /* write cfdata with checksum to p_fci_internal->handleCFDATA2 */
       if( PFCI_WRITE(hfci, p_fci_internal->handleCFDATA2, /* file handle */
@@ -616,6 +633,11 @@ static BOOL fci_flushfolder_copy_cfdata(HFCI hfci, char* buffer, UINT cbReserveC
       /* TODO error handling of err */
 
       p_fci_internal->sizeFileCFDATA2 += sizeof(CFDATA)+cbReserveCFData;
+
+      /* reset little endian */
+      pcfdata->cbData=fci_endian_uword(pcfdata->cbData);
+      pcfdata->cbUncomp=fci_endian_uword(pcfdata->cbUncomp);
+      pcfdata->csum=fci_endian_ulong(pcfdata->csum);
 
       /* write compressed data into p_fci_internal->handleCFDATA2 */
       if( PFCI_WRITE(hfci, p_fci_internal->handleCFDATA2, /* file handle */
@@ -632,7 +654,7 @@ static BOOL fci_flushfolder_copy_cfdata(HFCI hfci, char* buffer, UINT cbReserveC
       p_fci_internal->statusFolderCopied += pcfdata->cbData;
       (*payload)+=pcfdata->cbUncomp;
       /* if cabinet size too large and data has been split */
-      /* write the remainer of the data block to the new CFDATA1 file */
+      /* write the remainder of the data block to the new CFDATA1 file */
       if( split_block  ) { /* This does not include the */
                                   /* abused one (just search for "abused" )*/
       /* copy all CFDATA structures from handleCFDATA1 to handleCFDATA1new */
@@ -641,7 +663,7 @@ static BOOL fci_flushfolder_copy_cfdata(HFCI hfci, char* buffer, UINT cbReserveC
           return FALSE;
         }
 
-        /* set cbData the size of the remainer of the data block */
+        /* set cbData to the size of the remainder of the data block */
         pcfdata->cbData = read_result - pcfdata->cbData;
         /*recover former value of cfdata.cbData; read_result will be the offset*/
         read_result -= pcfdata->cbData;
@@ -649,6 +671,7 @@ static BOOL fci_flushfolder_copy_cfdata(HFCI hfci, char* buffer, UINT cbReserveC
 
         /* reset checksum, it will be computed later */
         pcfdata->csum=0;
+
         /* write cfdata WITHOUT checksum to handleCFDATA1new */
         if( PFCI_WRITE(hfci, handleCFDATA1new, /* file handle */
             buffer, /* memory buffer */
@@ -657,7 +680,7 @@ static BOOL fci_flushfolder_copy_cfdata(HFCI hfci, char* buffer, UINT cbReserveC
             /* TODO write error */
           return FALSE;
         }
-        /* TODO error handling of err dont forget PFCI_FREE(hfci, reserved) */
+        /* TODO error handling of err don't forget PFCI_FREE(hfci, reserved) */
 
         *psizeFileCFDATA1new += sizeof(CFDATA)+cbReserveCFData;
 
@@ -676,7 +699,7 @@ static BOOL fci_flushfolder_copy_cfdata(HFCI hfci, char* buffer, UINT cbReserveC
 
         *psizeFileCFDATA1new += pcfdata->cbData;
         /* the two blocks of the split data block have been written */
-        /* dont reset split_data yet, because it is still needed see below */
+        /* don't reset split_data yet, because it is still needed see below */
       }
 
       /* report status with pfnfcis about copied size of folder */
@@ -721,7 +744,7 @@ static BOOL fci_flushfolder_copy_cfdata(HFCI hfci, char* buffer, UINT cbReserveC
           /* TODO read error */
           return FALSE;
         }
-        /* TODO error handling of err dont forget PFCI_FREE(hfci, reserved) */
+        /* TODO error handling of err don't forget PFCI_FREE(hfci, reserved) */
 
         /* write cfdata with checksum to handleCFDATA1new */
         if( PFCI_WRITE(hfci, handleCFDATA1new, /* file handle */
@@ -731,7 +754,7 @@ static BOOL fci_flushfolder_copy_cfdata(HFCI hfci, char* buffer, UINT cbReserveC
             /* TODO write error */
           return FALSE;
         }
-        /* TODO error handling of err dont forget PFCI_FREE(hfci, reserved) */
+        /* TODO error handling of err don't forget PFCI_FREE(hfci, reserved) */
 
         *psizeFileCFDATA1new += sizeof(CFDATA)+cbReserveCFData;
 
@@ -779,7 +802,7 @@ static BOOL fci_flushfolder_copy_cffolder(HFCI hfci, int* err, UINT cbReserveCFF
   /* absolute offset cannot be set yet, because the size of cabinet header, */
   /* the number of CFFOLDERs and the number of CFFILEs may change. */
   /* Instead the size of all previous data blocks will be stored and */
-  /* the remainer of the offset will be added when the cabinet will be */
+  /* the remainder of the offset will be added when the cabinet will be */
   /* flushed to disk. */
   /* This is exactly the way the original CABINET.DLL works!!! */
   cffolder.coffCabStart=sizeFileCFDATA2old;
@@ -965,6 +988,14 @@ static BOOL fci_flushfolder_copy_cffile(HFCI hfci, int* err, int handleCFFILE1ne
       cffile.iFolder=cffileCONTINUED_TO_NEXT;
     }
 
+    /* set little endian */
+    cffile.cbFile=fci_endian_ulong(cffile.cbFile);
+    cffile.uoffFolderStart=fci_endian_ulong(cffile.uoffFolderStart);
+    cffile.iFolder=fci_endian_uword(cffile.iFolder);
+    cffile.date=fci_endian_uword(cffile.date);
+    cffile.time=fci_endian_uword(cffile.time);
+    cffile.attribs=fci_endian_uword(cffile.attribs);
+
     /* write cffile to p_fci_internal->handleCFFILE2 */
     if( PFCI_WRITE(hfci, p_fci_internal->handleCFFILE2, /* file handle */
       &cffile, /* memory buffer */
@@ -976,6 +1007,14 @@ static BOOL fci_flushfolder_copy_cffile(HFCI hfci, int* err, int handleCFFILE1ne
     /* TODO error handling of err */
 
     p_fci_internal->sizeFileCFFILE2 += sizeof(cffile);
+
+    /* reset little endian */
+    cffile.cbFile=fci_endian_ulong(cffile.cbFile);
+    cffile.uoffFolderStart=fci_endian_ulong(cffile.uoffFolderStart);
+    cffile.iFolder=fci_endian_uword(cffile.iFolder);
+    cffile.date=fci_endian_uword(cffile.date);
+    cffile.time=fci_endian_uword(cffile.time);
+    cffile.attribs=fci_endian_uword(cffile.attribs);
 
     /* write file name to p_fci_internal->handleCFFILE2 */
     if( PFCI_WRITE(hfci, p_fci_internal->handleCFFILE2, /* file handle */
@@ -1580,6 +1619,18 @@ static BOOL fci_flush_cabinet(
     cfheader.iCabinet = p_fci_internal->pccab->iCab-1;
   }
 
+  /* set little endian */
+  cfheader.reserved1=fci_endian_ulong(cfheader.reserved1);
+  cfheader.cbCabinet=fci_endian_ulong(cfheader.cbCabinet);
+  cfheader.reserved2=fci_endian_ulong(cfheader.reserved2);
+  cfheader.coffFiles=fci_endian_ulong(cfheader.coffFiles);
+  cfheader.reserved3=fci_endian_ulong(cfheader.reserved3);
+  cfheader.cFolders=fci_endian_uword(cfheader.cFolders);
+  cfheader.cFiles=fci_endian_uword(cfheader.cFiles);
+  cfheader.flags=fci_endian_uword(cfheader.flags);
+  cfheader.setID=fci_endian_uword(cfheader.setID);
+  cfheader.iCabinet=fci_endian_uword(cfheader.iCabinet);
+
   /* write CFHEADER into cabinet file */
   if( PFCI_WRITE(hfci, handleCABINET, /* file handle */
       &cfheader, /* memory buffer */
@@ -1589,6 +1640,18 @@ static BOOL fci_flush_cabinet(
     return FALSE;
   }
   /* TODO error handling of err */
+
+  /* reset little endian */
+  cfheader.reserved1=fci_endian_ulong(cfheader.reserved1);
+  cfheader.cbCabinet=fci_endian_ulong(cfheader.cbCabinet);
+  cfheader.reserved2=fci_endian_ulong(cfheader.reserved2);
+  cfheader.coffFiles=fci_endian_ulong(cfheader.coffFiles);
+  cfheader.reserved3=fci_endian_ulong(cfheader.reserved3);
+  cfheader.cFolders=fci_endian_uword(cfheader.cFolders);
+  cfheader.cFiles=fci_endian_uword(cfheader.cFiles);
+  cfheader.flags=fci_endian_uword(cfheader.flags);
+  cfheader.setID=fci_endian_uword(cfheader.setID);
+  cfheader.iCabinet=fci_endian_uword(cfheader.iCabinet);
 
   if( cfheader.flags & cfheadRESERVE_PRESENT ) {
     /* NOTE: No checks for maximum value overflows as designed by MS!!! */
@@ -1600,6 +1663,10 @@ static BOOL fci_flush_cabinet(
     } else {
       cfreserved.cbCFData = p_fci_internal->pccab->cbReserveCFData;
     }
+
+    /* set little endian */
+    cfreserved.cbCFHeader=fci_endian_uword(cfreserved.cbCFHeader);
+
     /* write reserved info into cabinet file */
     if( PFCI_WRITE(hfci, handleCABINET, /* file handle */
         &cfreserved, /* memory buffer */
@@ -1609,6 +1676,9 @@ static BOOL fci_flush_cabinet(
       return FALSE;
     }
     /* TODO error handling of err */
+
+    /* reset little endian */
+    cfreserved.cbCFHeader=fci_endian_uword(cfreserved.cbCFHeader);
   }
 
   /* add optional reserved area */
@@ -1735,6 +1805,11 @@ static BOOL fci_flush_cabinet(
       }
     }
 
+    /* set little endian */
+    cffolder.coffCabStart=fci_endian_ulong(cffolder.coffCabStart);
+    cffolder.cCFData=fci_endian_uword(cffolder.cCFData);
+    cffolder.typeCompress=fci_endian_uword(cffolder.typeCompress);
+
     /* write cffolder to cabinet file */
     if( PFCI_WRITE(hfci, handleCABINET, /* file handle */
       &cffolder, /* memory buffer */
@@ -1744,6 +1819,11 @@ static BOOL fci_flush_cabinet(
       return FALSE;
     }
     /* TODO error handling of err */
+
+    /* reset little endian */
+    cffolder.coffCabStart=fci_endian_ulong(cffolder.coffCabStart);
+    cffolder.cCFData=fci_endian_uword(cffolder.cCFData);
+    cffolder.typeCompress=fci_endian_uword(cffolder.typeCompress);
 
     /* add optional reserved area */
 

@@ -267,12 +267,12 @@ static void output_exports( FILE *outfile, DLLSPEC *spec )
         fprintf( outfile, "    \"__wine_spec_exp_ordinals:\\n\"\n" );
         for (i = 0; i < spec->nb_names; i++)
         {
-            fprintf( outfile, "    \"\\t" __ASM_SHORT " %d\\n\"\n",
-                     spec->names[i]->ordinal - spec->base );
+            fprintf( outfile, "    \"\\t%s %d\\n\"\n",
+                     get_asm_short_keyword(), spec->names[i]->ordinal - spec->base );
         }
         if (spec->nb_names % 2)
         {
-            fprintf( outfile, "    \"\\t" __ASM_SHORT " 0\\n\"\n" );
+            fprintf( outfile, "    \"\\t%s 0\\n\"\n", get_asm_short_keyword() );
         }
     }
 
@@ -285,14 +285,15 @@ static void output_exports( FILE *outfile, DLLSPEC *spec )
         {
             ORDDEF *odp = spec->ordinals[i];
             if (odp && (odp->flags & FLAG_FORWARD))
-                fprintf( outfile, "    \"\\t" __ASM_STRING " \\\"%s\\\"\\n\"\n", odp->link_name );
+                fprintf( outfile, "    \"\\t%s \\\"%s\\\"\\n\"\n", get_asm_string_keyword(), odp->link_name );
         }
         fprintf( outfile, "    \"\\t.align %d\\n\"\n", get_alignment(4) );
     }
 
     /* output relays */
 
-    if (debugging)
+    /* we only support relay debugging on i386 */
+    if (target_cpu == CPU_x86)
     {
         for (i = spec->base; i <= spec->limit; i++)
         {
@@ -325,7 +326,7 @@ static void output_exports( FILE *outfile, DLLSPEC *spec )
             case TYPE_CDECL:
                 fprintf( outfile, "    \"\\tjmp %s\\n\"\n", asm_name(odp->link_name) );
                 fprintf( outfile, "    \"\\tret\\n\"\n" );
-                fprintf( outfile, "    \"\\t" __ASM_SHORT " %d\\n\"\n", args );
+                fprintf( outfile, "    \"\\t%s %d\\n\"\n", get_asm_short_keyword(), args );
                 fprintf( outfile, "    \"\\t.long %s,0x%08x\\n\"\n", asm_name(odp->link_name), mask );
                 break;
             default:

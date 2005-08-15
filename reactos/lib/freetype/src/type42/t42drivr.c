@@ -139,7 +139,7 @@
                         PS_FontInfoRec*  afont_info )
   {
     *afont_info = ((T42_Face)face)->type1.font_info;
-    return 0;
+    return T42_Err_Ok;
   }
 
 
@@ -151,10 +151,20 @@
   }
 
 
+  static FT_Error
+  t42_ps_get_font_private( FT_Face         face,
+                           PS_PrivateRec*  afont_private )
+  {
+    *afont_private = ((T42_Face)face)->type1.private_dict;
+    return T42_Err_Ok;
+  }
+
+
   static const FT_Service_PsInfoRec  t42_service_ps_info =
   {
-    (PS_GetFontInfoFunc)  t42_ps_get_font_info,
-    (PS_HasGlyphNamesFunc)t42_ps_has_glyph_names
+    (PS_GetFontInfoFunc)   t42_ps_get_font_info,
+    (PS_HasGlyphNamesFunc) t42_ps_has_glyph_names,
+    (PS_GetFontPrivateFunc)t42_ps_get_font_private
   };
 
 

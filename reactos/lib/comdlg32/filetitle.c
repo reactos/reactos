@@ -31,6 +31,7 @@
 #include "winuser.h"
 #include "commdlg.h"
 #include "cdlg.h"
+#include "cdlg16.h"
 #include "wine/unicode.h"
 #include "wine/debug.h"
 

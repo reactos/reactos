@@ -115,8 +115,6 @@ typedef struct _KTRAP_FRAME
     USHORT Reserved9;
 } KTRAP_FRAME, *PKTRAP_FRAME;
 
-/* FIXME: Win32k uses windows.h! */
-#ifndef __WIN32K__
 typedef struct _LDT_ENTRY
 {
     WORD LimitLow;
@@ -145,7 +143,6 @@ typedef struct _LDT_ENTRY
         } Bits;
     } HighWord;
 } LDT_ENTRY, *PLDT_ENTRY, *LPLDT_ENTRY;
-#endif
 
 typedef struct _KGDTENTRY
 {
@@ -262,7 +259,7 @@ typedef struct _KPRCB
     UCHAR Number;
     UCHAR Reserved;
     USHORT BuildType;
-    ULONG SetMember;
+    KAFFINITY SetMember;
     UCHAR CpuType;
     UCHAR CpuID;
     USHORT CpuStep;

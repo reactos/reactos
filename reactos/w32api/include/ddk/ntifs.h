@@ -627,6 +627,31 @@ typedef struct _EX_RUNDOWN_REF {
     } DUMMYUNIONNAME;
 } EX_RUNDOWN_REF, *PEX_RUNDOWN_REF;
 
+#define EX_PUSH_LOCK_LOCK_V          ((ULONG_PTR)0x0)
+#define EX_PUSH_LOCK_LOCK            ((ULONG_PTR)0x1)
+#define EX_PUSH_LOCK_WAITING         ((ULONG_PTR)0x2)
+#define EX_PUSH_LOCK_WAKING          ((ULONG_PTR)0x4)
+#define EX_PUSH_LOCK_MULTIPLE_SHARED ((ULONG_PTR)0x8)
+#define EX_PUSH_LOCK_SHARE_INC       ((ULONG_PTR)0x10)
+#define EX_PUSH_LOCK_PTR_BITS        ((ULONG_PTR)0xf)
+
+typedef struct _EX_PUSH_LOCK
+{
+    union
+    {
+        struct
+        {
+            ULONG_PTR Locked:1;
+            ULONG_PTR Waiting:1;
+            ULONG_PTR Waking:1;
+            ULONG_PTR MultipleShared:1;
+            ULONG_PTR Shared:sizeof (ULONG_PTR) * 8 - 4;
+        };
+        ULONG_PTR Value;
+        PVOID Ptr;
+    };
+} EX_PUSH_LOCK, *PEX_PUSH_LOCK;
+
 typedef struct _FILE_ACCESS_INFORMATION {
     ACCESS_MASK AccessFlags;
 } FILE_ACCESS_INFORMATION, *PFILE_ACCESS_INFORMATION;
@@ -1283,7 +1308,6 @@ typedef struct _QUERY_PATH_RESPONSE {
     ULONG LengthAccepted;
 } QUERY_PATH_RESPONSE, *PQUERY_PATH_RESPONSE;
 
-#pragma pack(push,8)
 typedef struct _RETRIEVAL_POINTERS_BUFFER {
     ULONG               ExtentCount;
     LARGE_INTEGER       StartingVcn;
@@ -1292,7 +1316,6 @@ typedef struct _RETRIEVAL_POINTERS_BUFFER {
         LARGE_INTEGER   Lcn;
     } Extents[1];
 } RETRIEVAL_POINTERS_BUFFER, *PRETRIEVAL_POINTERS_BUFFER;
-#pragma pack(pop)
 
 typedef struct _RTL_SPLAY_LINKS {
     struct _RTL_SPLAY_LINKS *Parent;
@@ -1358,6 +1381,11 @@ typedef struct _SE_EXPORTS {
 
 } SE_EXPORTS, *PSE_EXPORTS;
 
+typedef struct
+{
+  LARGE_INTEGER StartingLcn;
+} STARTING_LCN_INPUT_BUFFER, *PSTARTING_LCN_INPUT_BUFFER;
+
 typedef struct _STARTING_VCN_INPUT_BUFFER {
     LARGE_INTEGER StartingVcn;
 } STARTING_VCN_INPUT_BUFFER, *PSTARTING_VCN_INPUT_BUFFER;
@@ -1401,6 +1429,13 @@ typedef struct _VAD_HEADER {
     ULONG       Unknown;
     LIST_ENTRY  Secured;
 } VAD_HEADER, *PVAD_HEADER;
+
+typedef struct
+{
+  LARGE_INTEGER StartingLcn;
+  LARGE_INTEGER BitmapSize;
+  UCHAR Buffer[1];
+} VOLUME_BITMAP_BUFFER, *PVOLUME_BITMAP_BUFFER;
 
 #if (VER_PRODUCTBUILD >= 2600)
 
@@ -1485,6 +1520,27 @@ typedef struct _READ_LIST {
 } READ_LIST, *PREAD_LIST;
 
 #endif
+
+typedef NTSTATUS
+(NTAPI * PRTL_HEAP_COMMIT_ROUTINE) (
+    IN PVOID  Base,
+    IN OUT PVOID  *CommitAddress,
+    IN OUT PSIZE_T  CommitSize
+);
+
+typedef struct _RTL_HEAP_PARAMETERS {
+    ULONG                     Length;
+    SIZE_T                    SegmentReserve;
+    SIZE_T                    SegmentCommit;
+    SIZE_T                    DeCommitFreeBlockThreshold;
+    SIZE_T                    DeCommitTotalFreeThreshold;
+    SIZE_T                    MaximumAllocationSize;
+    SIZE_T                    VirtualMemoryThreshold;
+    SIZE_T                    InitialCommit;
+    SIZE_T                    InitialReserve;
+    PRTL_HEAP_COMMIT_ROUTINE  CommitRoutine;
+    SIZE_T                    Reserved[2];
+} RTL_HEAP_PARAMETERS, *PRTL_HEAP_PARAMETERS;
 
 NTKERNELAPI
 BOOLEAN
@@ -2171,6 +2227,18 @@ FsRtlCopyWrite (
 );
 
 NTKERNELAPI
+PVOID
+NTAPI
+RtlCreateHeap (
+    IN ULONG                Flags,
+    IN PVOID                HeapBase OPTIONAL,
+    IN SIZE_T               ReserveSize OPTIONAL,
+    IN SIZE_T               CommitSize OPTIONAL,
+    IN PVOID                Lock OPTIONAL,
+    IN PRTL_HEAP_PARAMETERS Parameters OPTIONAL
+);
+
+NTKERNELAPI
 BOOLEAN
 NTAPI
 FsRtlCurrentBatchOplock (
@@ -2197,6 +2265,13 @@ VOID
 NTAPI
 FsRtlDeregisterUncProvider (
     IN HANDLE Handle
+);
+
+NTKERNELAPI
+PVOID
+NTAPI
+RtlDestroyHeap(
+    IN PVOID HeapHandle
 );
 
 NTKERNELAPI
@@ -3442,7 +3517,7 @@ NTSTATUS
 NTAPI
 RtlAbsoluteToSelfRelativeSD (
     IN PSECURITY_DESCRIPTOR              AbsoluteSecurityDescriptor,
-    IN OUT PSECURITY_DESCRIPTOR_RELATIVE SelfRelativeSecurityDescriptor,
+    IN OUT PISECURITY_DESCRIPTOR_RELATIVE SelfRelativeSecurityDescriptor,
     IN PULONG                            BufferLength
 );
 

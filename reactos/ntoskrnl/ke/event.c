@@ -44,7 +44,7 @@ KeInitializeEvent(PKEVENT Event,
     /* Initialize the Dispatcher Header */
     KeInitializeDispatcherHeader(&Event->Header,
                                  Type,
-                                 sizeof(Event) / sizeof(ULONG),
+                                 sizeof(*Event) / sizeof(ULONG),
                                  State);
 }
 

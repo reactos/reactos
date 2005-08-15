@@ -31,7 +31,7 @@ typedef struct _EPORT
 
 typedef struct _EPORT_CONNECT_REQUEST_MESSAGE
 {
-  LPC_MESSAGE MessageHeader;
+  PORT_MESSAGE MessageHeader;
   PEPROCESS ConnectingProcess;
   struct _SECTION_OBJECT* SendSectionObject;
   LARGE_INTEGER SendSectionOffset;
@@ -42,7 +42,7 @@ typedef struct _EPORT_CONNECT_REQUEST_MESSAGE
 
 typedef struct _EPORT_CONNECT_REPLY_MESSAGE
 {
-  LPC_MESSAGE MessageHeader;
+  PORT_MESSAGE MessageHeader;
   PVOID SendServerViewBase;
   ULONG ReceiveClientViewSize;
   PVOID ReceiveClientViewBase;
@@ -58,7 +58,7 @@ typedef struct _TERMINATION_PORT {
 
 NTSTATUS STDCALL
 LpcRequestPort (PEPORT		Port,
-		PLPC_MESSAGE	LpcMessage);
+		PPORT_MESSAGE	LpcMessage);
 NTSTATUS
 STDCALL
 LpcSendTerminationPort (PEPORT	Port,
@@ -87,13 +87,13 @@ typedef struct _QUEUEDMESSAGE
 {
   PEPORT		Sender;
   LIST_ENTRY	QueueListEntry;
-  LPC_MESSAGE	Message;
+  PORT_MESSAGE	Message;
   UCHAR		MessageData [MAX_MESSAGE_DATA];
 } QUEUEDMESSAGE,  *PQUEUEDMESSAGE;
 
 typedef struct _LPC_DBG_MESSAGE
 {
-   LPC_MESSAGE Header;
+   PORT_MESSAGE Header;
    ULONG Type;
    ULONG Status;
    union
@@ -142,7 +142,7 @@ typedef struct _LPC_DBG_MESSAGE
 
 typedef struct _LPC_TERMINATION_MESSAGE
 {
-   LPC_MESSAGE Header;
+   PORT_MESSAGE Header;
    LARGE_INTEGER CreationTime;
 } LPC_TERMINATION_MESSAGE, *PLPC_TERMINATION_MESSAGE;
 
@@ -196,7 +196,7 @@ extern FAST_MUTEX	LpcpLock;
 
 NTSTATUS STDCALL
 EiReplyOrRequestPort (IN	PEPORT		Port,
-		      IN	PLPC_MESSAGE	LpcReply,
+		      IN	PPORT_MESSAGE	LpcReply,
 		      IN	ULONG		MessageType,
 		      IN	PEPORT		Sender);
 

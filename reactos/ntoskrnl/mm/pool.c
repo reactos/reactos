@@ -20,11 +20,6 @@ extern ULONG MmTotalPagedPoolQuota;
 extern ULONG MmTotalNonPagedPoolQuota;
 extern MM_STATS MmStats;
 
-/* GLOBALS *****************************************************************/
-
-ULONG STDCALL
-ExRosQueryPagedPoolTag ( PVOID Block );
-
 /* FUNCTIONS ***************************************************************/
 
 STATIC PVOID STDCALL
@@ -35,31 +30,17 @@ EiAllocatePool(POOL_TYPE PoolType,
 {
    PVOID Block;
 
-
-   switch(PoolType)
+   /* FIXME: Handle SESSION_POOL_MASK, VERIFIER_POOL_MASK, QUOTA_POOL_MASK */
+   if (PoolType & PAGED_POOL_MASK)
    {
-      case NonPagedPool:
-      case NonPagedPoolMustSucceed:
-      case NonPagedPoolCacheAligned:
-      case NonPagedPoolCacheAlignedMustS:
-         Block =
-            ExAllocateNonPagedPoolWithTag(PoolType,
-                                          NumberOfBytes,
-                                          Tag,
-                                          Caller);
-         break;
+      Block = ExAllocatePagedPoolWithTag(PoolType,NumberOfBytes,Tag);
+   }
+   else
+   {
+      Block = ExAllocateNonPagedPoolWithTag(PoolType,NumberOfBytes,Tag,Caller);
+   }
 
-      case PagedPool:
-      case PagedPoolCacheAligned:
-         Block = ExAllocatePagedPoolWithTag(PoolType,NumberOfBytes,Tag);
-         break;
-
-      default:
-         return(NULL);
-   };
-
-   if ((PoolType==NonPagedPoolMustSucceed ||
-         PoolType==NonPagedPoolCacheAlignedMustS) && Block==NULL)
+   if ((PoolType & MUST_SUCCEED_POOL_MASK) && Block==NULL)
    {
       KEBUGCHECK(MUST_SUCCEED_POOL_EMPTY);
    }
@@ -211,14 +192,14 @@ ExAllocatePoolWithQuotaTag (IN POOL_TYPE PoolType,
             return EXCEPTION_CONTINUE_SEARCH;
         } _SEH_TRY {
             //* FIXME: Is there a way to get the actual Pool size allocated from the pool header? */
-            PsChargePoolQuota(Process, PoolType, NumberOfBytes);
+            PsChargePoolQuota(Process, PoolType & PAGED_POOL_MASK, NumberOfBytes);
         } _SEH_EXCEPT(FreeAndGoOn) {
             /* Quota Exceeded and the caller had no SEH! */
             KeBugCheck(STATUS_QUOTA_EXCEEDED);
         } _SEH_END;
 #else /* assuming all other Win32 compilers understand SEH */
         __try {
-            PsChargePoolQuota(Process, PoolType, NumberOfBytes);
+            PsChargePoolQuota(Process, PoolType & PAGED_POOL_MASK, NumberOfBytes);
         }
         __except (ExFreePool(Block), EXCEPTION_CONTINUE_SEARCH) {
             KeBugCheck(STATUS_QUOTA_EXCEEDED);
@@ -335,22 +316,6 @@ MiRaisePoolQuota(
         *NewMaxQuota = CurrentMaxQuota + 65536;
         return TRUE;
     }
-}
-
-ULONG STDCALL
-ExRosQueryPoolTag ( PVOID Block )
-{
-   ASSERT_IRQL(DISPATCH_LEVEL);
-
-   if (Block >= MmPagedPoolBase && (char*)Block < ((char*)MmPagedPoolBase + MmPagedPoolSize))
-   {
-      return ExRosQueryPagedPoolTag(Block);
-   }
-   else
-   {
-      UNIMPLEMENTED;
-      return 0;
-   }
 }
 
 /* EOF */

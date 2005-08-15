@@ -166,7 +166,7 @@ GetTempPathW (
    WCHAR tmp_full_path[MAX_PATH];
    UINT ret;
 
-   DPRINT("GetTempPathW(%lu,%p)\n", nBufferLength, lpBuffer);
+   DPRINT("GetTempPathW(%lu,%p)\n", count, path);
 
    if (!(ret = GetEnvironmentVariableW( L"TMP", tmp_path, MAX_PATH )))
      if (!(ret = GetEnvironmentVariableW( L"TEMP", tmp_path, MAX_PATH )))

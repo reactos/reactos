@@ -63,7 +63,7 @@ typedef enum _KAPC_ENVIRONMENT
     CurrentApcEnvironment
 } KAPC_ENVIRONMENT;
 
-/* We don't want to force NTIFS usage only for a single structure */
+/* We don't want to force NTIFS usage only for two structures */
 #ifndef _NTIFS_
 typedef struct _KAPC_STATE
 {
@@ -73,6 +73,15 @@ typedef struct _KAPC_STATE
     BOOLEAN KernelApcPending;
     BOOLEAN UserApcPending;
 } KAPC_STATE, *PKAPC_STATE, *RESTRICTED_POINTER PRKAPC_STATE;
+
+typedef struct _KQUEUE
+{
+    DISPATCHER_HEADER Header;
+    LIST_ENTRY EntryListHead;
+    ULONG CurrentCount;
+    ULONG MaximumCount;
+    LIST_ENTRY ThreadListHead;
+} KQUEUE, *PKQUEUE, *RESTRICTED_POINTER PRKQUEUE;
 #endif
 
 typedef struct _KNODE

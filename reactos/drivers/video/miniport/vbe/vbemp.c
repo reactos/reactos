@@ -372,10 +372,10 @@ VBEInitialize(PVOID HwDeviceExtension)
    VBESortModes(VBEDeviceExtension);
 
    /*
-    * Print the supported video modes when DBG is set.
+    * Print the supported video modes when NDEBUG is not set.
     */
 
-#if defined(DBG) && ! defined(NDEBUG)
+#ifndef NDEBUG
    for (CurrentMode = 0;
         CurrentMode < SuitableModeCount;
         CurrentMode++)

@@ -35,11 +35,20 @@
 
 #include <sm/helper.h>
 
+VOID PrintWin32Error(PWCHAR,DWORD); /* win32err.c */
+
 #define SM_CMD(n) cmd_##n
 #define SM_CMD_DECL(n) int SM_CMD(n)(int argc, char * argv[])
 #define SM_CMD_CALL(n,c,v) SM_CMD(n)((c),(v))
 
 HANDLE hSmApiPort = (HANDLE) 0;
+
+VOID STDCALL PrintStatusError (NTSTATUS Status)
+{
+	DWORD Win32Error = RtlNtStatusToDosError (Status);
+			
+	PrintWin32Error (L"sm", Win32Error);
+}
 
 typedef struct _SM_CMD_DESCRIPTOR
 {
@@ -117,9 +126,7 @@ SM_CMD_DECL(boot)
 #endif
 		if (STATUS_SUCCESS != Status)
 		{
-			LoadString( GetModuleHandle(NULL), IDS_Status, (LPTSTR) UsageMessage,RC_STRING_MAX_SIZE);
-
-			_tprintf(UsageMessage, Status);
+			PrintStatusError (Status);
 		}
 
 	}
@@ -197,8 +204,7 @@ SM_CMD_DECL(info)
 				     & ReturnDataLength);
 	if (STATUS_SUCCESS != Status)
 	{
-		LoadString( GetModuleHandle(NULL), IDS_Status, (LPTSTR) UsageMessage,RC_STRING_MAX_SIZE);
-		_tprintf(UsageMessage, Status);
+		PrintStatusError (Status);
 		return EXIT_FAILURE;
 	}
 	switch (argc)

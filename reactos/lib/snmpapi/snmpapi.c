@@ -9,13 +9,8 @@
  */
 //#include "snmpapi.h"
 
-
-#ifdef __GNUC__
-#include <wsahelp.h>
-#else
-#include <winsock2.h>
-#endif
 #include <windows.h>
+#include <winsock2.h>
 
 #ifdef __GNUC__
 #define SNMP_FUNC_TYPE STDCALL

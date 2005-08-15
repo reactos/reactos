@@ -9,6 +9,8 @@
  */
 
 #include <user32.h>
+#define NDEBUG
+#include <debug.h>
 
 /* DDE message exchange
  *

@@ -90,14 +90,14 @@ EiConnectPort(IN PEPORT* ConnectedPort,
   /*
    * Initialize the request message.
    */
-  RequestMessage->MessageHeader.DataSize =
+  RequestMessage->MessageHeader.u1.s1.DataLength =
     sizeof(EPORT_CONNECT_REQUEST_MESSAGE) + RequestConnectDataLength -
-    sizeof(LPC_MESSAGE);
-  RequestMessage->MessageHeader.MessageSize =
+    sizeof(PORT_MESSAGE);
+  RequestMessage->MessageHeader.u1.s1.TotalLength =
     sizeof(EPORT_CONNECT_REQUEST_MESSAGE) + RequestConnectDataLength;
   DPRINT("RequestMessageSize %d\n",
-	 RequestMessage->MessageHeader.MessageSize);
-  RequestMessage->MessageHeader.SectionSize = 0;
+	 RequestMessage->MessageHeader.u1.s1.TotalLength);
+  RequestMessage->MessageHeader.ClientViewSize = 0;
   RequestMessage->ConnectingProcess = PsGetCurrentProcess();
   ObReferenceObjectByPointer(RequestMessage->ConnectingProcess,
 			     PROCESS_VM_OPERATION,
@@ -148,7 +148,7 @@ EiConnectPort(IN PEPORT* ConnectedPort,
   /*
    * Check for connection refusal.
    */
-  if (CReply->MessageHeader.MessageType == LPC_CONNECTION_REFUSED)
+  if (CReply->MessageHeader.u2.s2.Type == LPC_CONNECTION_REFUSED)
     {
       ObDereferenceObject(OurPort);
       ExFreePool(Reply);
@@ -240,37 +240,88 @@ NTSTATUS STDCALL
 NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
 	       PUNICODE_STRING			PortName,
 	       PSECURITY_QUALITY_OF_SERVICE	Qos,
-	       PLPC_SECTION_WRITE		UnsafeWriteMap,
-	       PLPC_SECTION_READ		UnsafeReadMap,
+	       PPORT_VIEW		UnsafeWriteMap,
+	       PREMOTE_PORT_VIEW		UnsafeReadMap,
 	       PULONG				UnsafeMaximumMessageSize,
 	       PVOID				UnsafeConnectData,
 	       PULONG				UnsafeConnectDataLength)
 {
   HANDLE ConnectedPortHandle;
-  LPC_SECTION_WRITE WriteMap;
-  LPC_SECTION_READ ReadMap;
+  PORT_VIEW WriteMap;
+  REMOTE_PORT_VIEW ReadMap;
   ULONG MaximumMessageSize;
-  PVOID ConnectData;
-  ULONG ConnectDataLength;
+  PVOID ConnectData = NULL;
+  ULONG ConnectDataLength = 0;
   PSECTION_OBJECT SectionObject;
   LARGE_INTEGER SectionOffset;
   PEPORT ConnectedPort;
-  NTSTATUS Status;
+  KPROCESSOR_MODE PreviousMode;
+  NTSTATUS Status = STATUS_SUCCESS;
   PEPORT NamedPort;
+  
+  PreviousMode = ExGetPreviousMode();
+  
+  if (PreviousMode != KernelMode)
+    {
+      _SEH_TRY
+        {
+          ProbeForWrite(UnsafeConnectedPortHandle,
+                        sizeof(HANDLE),
+                        sizeof(ULONG));
+          if (UnsafeMaximumMessageSize != NULL)
+            {
+              ProbeForWrite(UnsafeMaximumMessageSize,
+                            sizeof(ULONG),
+                            sizeof(ULONG));
+            }
+        }
+      _SEH_HANDLE
+        {
+          Status = _SEH_GetExceptionCode();
+        }
+      _SEH_END;
+      
+      if (!NT_SUCCESS(Status))
+        {
+          return Status;
+        }
+    }
 
   /*
    * Copy in write map and partially validate.
    */
   if (UnsafeWriteMap != NULL)
     {
-      Status = MmCopyFromCaller(&WriteMap,
-				UnsafeWriteMap,
-				sizeof(LPC_SECTION_WRITE));
-      if (!NT_SUCCESS(Status))
-	{
-	  return(Status);
-	}
-      if (WriteMap.Length != sizeof(LPC_SECTION_WRITE))
+      if (PreviousMode != KernelMode)
+        {
+          _SEH_TRY
+            {
+              ProbeForWrite(UnsafeWriteMap,
+                            sizeof(PORT_VIEW),
+                            1);
+              RtlCopyMemory(&WriteMap,
+                            UnsafeWriteMap,
+                            sizeof(PORT_VIEW));
+            }
+          _SEH_HANDLE
+            {
+              Status = _SEH_GetExceptionCode();
+            }
+          _SEH_END;
+
+          if (!NT_SUCCESS(Status))
+            {
+              return Status;
+            }
+        }
+      else
+        {
+          RtlCopyMemory(&WriteMap,
+                        UnsafeWriteMap,
+                        sizeof(PORT_VIEW));
+        }
+
+      if (WriteMap.Length != sizeof(PORT_VIEW))
 	{
 	  return(STATUS_INVALID_PARAMETER_4);
 	}
@@ -284,41 +335,71 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
   /*
    * Handle connection data.
    */
-  if (UnsafeConnectData == NULL)
+  if (UnsafeConnectData)
     {
-      ConnectDataLength = 0;
-      ConnectData = NULL;
-    }
-  else
-    {
-      if (ExGetPreviousMode() == KernelMode)
-	{
-	  ConnectDataLength = *UnsafeConnectDataLength;
-	  ConnectData = UnsafeConnectData;
-	}
+      if (PreviousMode != KernelMode)
+        {
+          _SEH_TRY
+            {
+              ProbeForRead(UnsafeConnectDataLength,
+                           sizeof(ULONG),
+                           1);
+              ConnectDataLength = *UnsafeConnectDataLength;
+            }
+          _SEH_HANDLE
+            {
+              Status = _SEH_GetExceptionCode();
+            }
+          _SEH_END;
+
+          if (!NT_SUCCESS(Status))
+            {
+              return Status;
+            }
+        }
       else
-	{
-	  Status = MmCopyFromCaller(&ConnectDataLength,
-				    UnsafeConnectDataLength,
-				    sizeof(ULONG));
-	  if (!NT_SUCCESS(Status))
-	    {
-	      return(Status);
-	    }
-	  ConnectData = ExAllocatePool(NonPagedPool, ConnectDataLength);
-	  if (ConnectData == NULL && ConnectDataLength != 0)
-	    {
-	      return(STATUS_NO_MEMORY);
-	    }
-	  Status = MmCopyFromCaller(ConnectData,
-				    UnsafeConnectData,
-				    ConnectDataLength);
-	  if (!NT_SUCCESS(Status))
-	    {
-	      ExFreePool(ConnectData);
-	      return(Status);
-	    }
-	}
+        {
+          ConnectDataLength = *UnsafeConnectDataLength;
+        }
+
+      if (ConnectDataLength != 0)
+        {
+          ConnectData = ExAllocatePool(NonPagedPool, ConnectDataLength);
+          if (ConnectData == NULL)
+            {
+              return(STATUS_NO_MEMORY);
+            }
+
+          if (PreviousMode != KernelMode)
+            {
+              _SEH_TRY
+                {
+                  ProbeForWrite(UnsafeConnectData,
+                                ConnectDataLength,
+                                1);
+                  RtlCopyMemory(ConnectData,
+                                UnsafeConnectData,
+                                ConnectDataLength);
+                }
+              _SEH_HANDLE
+                {
+                  Status = _SEH_GetExceptionCode();
+                }
+              _SEH_END;
+
+              if (!NT_SUCCESS(Status))
+                {
+                  ExFreePool(ConnectData);
+                  return Status;
+                }
+            }
+          else
+            {
+              RtlCopyMemory(ConnectData,
+                            UnsafeConnectData,
+                            ConnectDataLength);
+            }
+        }
     }
 
   /*
@@ -329,7 +410,7 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
                                     NULL,
                                     PORT_ALL_ACCESS,  /* DesiredAccess */
                                     LpcPortObjectType,
-                                    UserMode,
+                                    PreviousMode,
                                     NULL,
                                     (PVOID*)&NamedPort);
   if (!NT_SUCCESS(Status))
@@ -349,7 +430,7 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
       Status = ObReferenceObjectByHandle(WriteMap.SectionHandle,
 					 SECTION_MAP_READ | SECTION_MAP_WRITE,
 					 MmSectionObjectType,
-					 UserMode,
+					 PreviousMode,
 					 (PVOID*)&SectionObject,
 					 NULL);
       if (!NT_SUCCESS(Status))
@@ -376,7 +457,7 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
 			 SectionOffset,
 			 WriteMap.ViewSize,
 			 &WriteMap.ViewBase,
-			 &WriteMap.TargetViewBase,
+			 &WriteMap.ViewRemoteBase,
 			 &ReadMap.ViewSize,
 			 &ReadMap.ViewBase,
 			 &MaximumMessageSize,
@@ -387,16 +468,30 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
       /* FIXME: Again, check what NT does here. */
       if (UnsafeConnectDataLength != NULL)
 	{
-	  if (ExGetPreviousMode() != KernelMode)
+	  if (PreviousMode != KernelMode)
 	    {
-	      MmCopyToCaller(UnsafeConnectData,
-			     ConnectData,
-			     ConnectDataLength);
-	      ExFreePool(ConnectData);
+              _SEH_TRY
+                {
+                  RtlCopyMemory(UnsafeConnectData,
+                                ConnectData,
+                                ConnectDataLength);
+                  *UnsafeConnectDataLength = ConnectDataLength;
+                }
+              _SEH_HANDLE
+                {
+                  Status = _SEH_GetExceptionCode();
+                }
+              _SEH_END;
 	    }
-	  MmCopyToCaller(UnsafeConnectDataLength,
-			 &ConnectDataLength,
-			 sizeof(ULONG));
+	  else
+	    {
+               RtlCopyMemory(UnsafeConnectData,
+                             ConnectData,
+                             ConnectDataLength);
+               *UnsafeConnectDataLength = ConnectDataLength;
+	    }
+
+          ExFreePool(ConnectData);
 	}
       return(Status);
     }
@@ -415,28 +510,52 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
   /*
    * Copy the data back to the caller.
    */
-  if (ExGetPreviousMode() != KernelMode)
+
+  if (UnsafeConnectDataLength != NULL)
     {
-      if (UnsafeConnectDataLength != NULL)
+      if (PreviousMode != KernelMode)
 	{
-	  Status = MmCopyToCaller(UnsafeConnectDataLength,
-				  &ConnectDataLength,
-				  sizeof(ULONG));
+          _SEH_TRY
+            {
+              *UnsafeConnectDataLength = ConnectDataLength;
+              
+              if (ConnectData != NULL)
+                {
+                  RtlCopyMemory(UnsafeConnectData,
+                                ConnectData,
+                                ConnectDataLength);
+                }
+            }
+          _SEH_HANDLE
+            {
+              Status = _SEH_GetExceptionCode();
+            }
+          _SEH_END;
+
 	  if (!NT_SUCCESS(Status))
 	    {
-	      return(Status);
+              if (ConnectData != NULL)
+                {
+                  ExFreePool(ConnectData);
+                }
+              return(Status);
 	    }
 	}
-      if (UnsafeConnectData != NULL && ConnectData != NULL)
+      else
+        {
+          *UnsafeConnectDataLength = ConnectDataLength;
+          
+          if (ConnectData != NULL)
+            {
+              RtlCopyMemory(UnsafeConnectData,
+                            ConnectData,
+                            ConnectDataLength);
+            }
+        }
+
+      if (ConnectData != NULL)
 	{
-	  Status = MmCopyToCaller(UnsafeConnectData,
-				      ConnectData,
-				      ConnectDataLength);
 	  ExFreePool(ConnectData);
-	  if (!NT_SUCCESS(Status))
-	    {
-	      return(Status);
-	    }
 	}
     }
   Status = ObInsertObject(ConnectedPort,
@@ -449,42 +568,65 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
     {
       return(Status);
     }
-  Status = MmCopyToCaller(UnsafeConnectedPortHandle,
-			  &ConnectedPortHandle,
-			  sizeof(HANDLE));
-  if (!NT_SUCCESS(Status))
+
+  if (PreviousMode != KernelMode)
     {
-      return(Status);
-    }
-  if (UnsafeWriteMap != NULL)
-    {
-      Status = MmCopyToCaller(UnsafeWriteMap,
-			      &WriteMap,
-			      sizeof(LPC_SECTION_WRITE));
+      _SEH_TRY
+        {
+          *UnsafeConnectedPortHandle = ConnectedPortHandle;
+          
+          if (UnsafeWriteMap != NULL)
+            {
+              RtlCopyMemory(UnsafeWriteMap,
+                            &WriteMap,
+                            sizeof(PORT_VIEW));
+            }
+
+          if (UnsafeReadMap != NULL)
+            {
+              RtlCopyMemory(UnsafeReadMap,
+                            &ReadMap,
+                            sizeof(REMOTE_PORT_VIEW));
+            }
+
+          if (UnsafeMaximumMessageSize != NULL)
+            {
+              *UnsafeMaximumMessageSize = MaximumMessageSize;
+            }
+        }
+      _SEH_HANDLE
+        {
+          Status = _SEH_GetExceptionCode();
+        }
+      _SEH_END;
+      
       if (!NT_SUCCESS(Status))
-	{
-	  return(Status);
-	}
+        {
+          return Status;
+        }
     }
-  if (UnsafeReadMap != NULL)
+  else
     {
-      Status = MmCopyToCaller(UnsafeReadMap,
-			      &ReadMap,
-			      sizeof(LPC_SECTION_READ));
-      if (!NT_SUCCESS(Status))
-	{
-	  return(Status);
-	}
-    }
-  if (UnsafeMaximumMessageSize != NULL)
-    {
-      Status = MmCopyToCaller(UnsafeMaximumMessageSize,
-			      &MaximumMessageSize,
-			      sizeof(ULONG));
-      if (!NT_SUCCESS(Status))
-	{
-	  return(Status);
-	}
+      *UnsafeConnectedPortHandle = ConnectedPortHandle;
+      
+      if (UnsafeWriteMap != NULL)
+        {
+          RtlCopyMemory(UnsafeWriteMap,
+                        &WriteMap,
+                        sizeof(PORT_VIEW));
+        }
+
+      if (UnsafeReadMap != NULL)
+        {
+          RtlCopyMemory(UnsafeReadMap,
+                        &ReadMap,
+                        sizeof(REMOTE_PORT_VIEW));
+        }
+
+      if (UnsafeMaximumMessageSize != NULL)
+        {
+          *UnsafeMaximumMessageSize = MaximumMessageSize;
+        }
     }
 
   /*
@@ -514,10 +656,10 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
 /*EXPORTED*/ NTSTATUS STDCALL
 NtAcceptConnectPort (PHANDLE			ServerPortHandle,
 		     HANDLE			NamedPortHandle,
-		     PLPC_MESSAGE		LpcMessage,
+		     PPORT_MESSAGE		LpcMessage,
 		     BOOLEAN			AcceptIt,
-		     PLPC_SECTION_WRITE	WriteMap,
-		     PLPC_SECTION_READ	ReadMap)
+		     PPORT_VIEW	WriteMap,
+		     PREMOTE_PORT_VIEW	ReadMap)
 {
   NTSTATUS	Status;
   PEPORT		NamedPort;
@@ -527,11 +669,12 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
   PEPORT_CONNECT_REQUEST_MESSAGE CRequest;
   PEPORT_CONNECT_REPLY_MESSAGE CReply;
   ULONG Size;
+  KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
 
   Size = sizeof(EPORT_CONNECT_REPLY_MESSAGE);
   if (LpcMessage)
   {
-     Size += LpcMessage->DataSize;
+     Size += LpcMessage->u1.s1.DataLength;
   }
 
   CReply = ExAllocatePool(NonPagedPool, Size);
@@ -543,7 +686,7 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
   Status = ObReferenceObjectByHandle(NamedPortHandle,
 				     PORT_ALL_ACCESS,
 				     LpcPortObjectType,
-				     UserMode,
+				     PreviousMode,
 				     (PVOID*)&NamedPort,
 				     NULL);
   if (!NT_SUCCESS(Status))
@@ -557,10 +700,10 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
    */
   if (AcceptIt)
     {
-      Status = ObCreateObject(ExGetPreviousMode(),
+      Status = ObCreateObject(PreviousMode,
 			      LpcPortObjectType,
 			      NULL,
-			      ExGetPreviousMode(),
+			      PreviousMode,
 			      NULL,
 			      sizeof(EPORT),
 			      0,
@@ -603,20 +746,20 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
    */
   if (LpcMessage != NULL)
     {
-      memcpy(&CReply->MessageHeader, LpcMessage, sizeof(LPC_MESSAGE));
+      memcpy(&CReply->MessageHeader, LpcMessage, sizeof(PORT_MESSAGE));
       memcpy(&CReply->ConnectData, (PVOID)(LpcMessage + 1),
-	     LpcMessage->DataSize);
-      CReply->MessageHeader.MessageSize =
-	sizeof(EPORT_CONNECT_REPLY_MESSAGE) + LpcMessage->DataSize;
-      CReply->MessageHeader.DataSize = CReply->MessageHeader.MessageSize -
-	sizeof(LPC_MESSAGE);
-      CReply->ConnectDataLength = LpcMessage->DataSize;
+	     LpcMessage->u1.s1.DataLength);
+      CReply->MessageHeader.u1.s1.TotalLength =
+	sizeof(EPORT_CONNECT_REPLY_MESSAGE) + LpcMessage->u1.s1.DataLength;
+      CReply->MessageHeader.u1.s1.DataLength = CReply->MessageHeader.u1.s1.TotalLength -
+	sizeof(PORT_MESSAGE);
+      CReply->ConnectDataLength = LpcMessage->u1.s1.DataLength;
     }
   else
     {
-      CReply->MessageHeader.MessageSize = sizeof(EPORT_CONNECT_REPLY_MESSAGE);
-      CReply->MessageHeader.DataSize = sizeof(EPORT_CONNECT_REPLY_MESSAGE) -
-	sizeof(LPC_MESSAGE);
+      CReply->MessageHeader.u1.s1.TotalLength = sizeof(EPORT_CONNECT_REPLY_MESSAGE);
+      CReply->MessageHeader.u1.s1.DataLength = sizeof(EPORT_CONNECT_REPLY_MESSAGE) -
+	sizeof(PORT_MESSAGE);
       CReply->ConnectDataLength = 0;
     }
   if (!AcceptIt)
@@ -647,7 +790,7 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
       Status = ObReferenceObjectByHandle(WriteMap->SectionHandle,
 					 SECTION_MAP_READ | SECTION_MAP_WRITE,
 					 MmSectionObjectType,
-					 UserMode,
+					 PreviousMode,
 					 (PVOID*)&SectionObject,
 					 NULL);
       if (!NT_SUCCESS(Status))
@@ -656,11 +799,11 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
 	}
 
       SectionOffset.QuadPart = WriteMap->SectionOffset;
-      WriteMap->TargetViewBase = 0;
+      WriteMap->ViewRemoteBase = 0;
       CReply->ReceiveClientViewSize = WriteMap->ViewSize;
       Status = MmMapViewOfSection(SectionObject,
 				  CRequest->ConnectingProcess,
-				  &WriteMap->TargetViewBase,
+				  &WriteMap->ViewRemoteBase,
 				  0,
 				  CReply->ReceiveClientViewSize,
 				  &SectionOffset,
@@ -727,9 +870,9 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
     }
   if (WriteMap != NULL)
     {
-      CReply->ReceiveClientViewBase = WriteMap->TargetViewBase;
+      CReply->ReceiveClientViewBase = WriteMap->ViewRemoteBase;
     }
-  CReply->MaximumMessageSize = PORT_MAX_MESSAGE_LENGTH;
+  CReply->MaximumMessageSize = LPC_MAX_MESSAGE_LENGTH;
 
 
   /*
@@ -738,7 +881,7 @@ NtAcceptConnectPort (PHANDLE			ServerPortHandle,
   OurPort->OtherPort = ConnectionRequest->Sender;
   OurPort->OtherPort->OtherPort = OurPort;
   EiReplyOrRequestPort(ConnectionRequest->Sender,
-		       (PLPC_MESSAGE)CReply,
+		       (PPORT_MESSAGE)CReply,
 		       LPC_REPLY,
 		       OurPort);
   ExFreePool(ConnectionRequest);
@@ -777,9 +920,9 @@ NTSTATUS STDCALL
 NtSecureConnectPort (OUT    PHANDLE				ConnectedPort,
 		     IN     PUNICODE_STRING			PortName,
 		     IN     PSECURITY_QUALITY_OF_SERVICE	Qos,
-		     IN OUT PLPC_SECTION_WRITE			WriteMap		OPTIONAL,
+		     IN OUT PPORT_VIEW			WriteMap		OPTIONAL,
 		     IN     PSID				ServerSid		OPTIONAL,
-		     IN OUT PLPC_SECTION_READ			ReadMap			OPTIONAL,
+		     IN OUT PREMOTE_PORT_VIEW			ReadMap			OPTIONAL,
 		     OUT    PULONG				MaxMessageSize		OPTIONAL,
 		     IN OUT PVOID				ConnectInfo		OPTIONAL,
 		     IN OUT PULONG				UserConnectInfoLength	OPTIONAL)

@@ -33,6 +33,7 @@ IoAllocateAdapterChannel (PADAPTER_OBJECT	AdapterObject,
 {
   DeviceObject->Queue.Wcb.DeviceObject = DeviceObject;
   DeviceObject->Queue.Wcb.DeviceContext = Context;
+  DeviceObject->Queue.Wcb.CurrentIrp = DeviceObject->CurrentIrp;
 
   return HalAllocateAdapterChannel( AdapterObject,
 				    &DeviceObject->Queue.Wcb,

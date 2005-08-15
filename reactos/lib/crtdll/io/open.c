@@ -13,7 +13,7 @@
 
 // possibly store extra information at the handle
 
-#include "precomp.h"
+#include <precomp.h>
 #include <stdarg.h>
 #include <msvcrt/io.h>
 #include <msvcrt/fcntl.h>

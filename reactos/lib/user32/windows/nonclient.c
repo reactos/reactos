@@ -31,6 +31,8 @@ Already defined in makefile now.
 */
 
 #include <user32.h>
+#define NDEBUG
+#include <debug.h>
 
 #define HAS_DLGFRAME(Style, ExStyle) \
             (((ExStyle) & WS_EX_DLGMODALFRAME) || \

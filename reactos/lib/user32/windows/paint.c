@@ -29,6 +29,8 @@
 /* INCLUDES ******************************************************************/
 
 #include <user32.h>
+#define NDEBUG
+#include <debug.h>
 
 static HBRUSH FrameBrushes[13];
 static HBITMAP hHatch;
@@ -215,7 +217,7 @@ SetWindowRgn(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -227,7 +229,7 @@ UpdateWindow(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -235,8 +237,7 @@ ValidateRect(
   HWND hWnd,
   CONST RECT *lpRect)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return RedrawWindow(hWnd, lpRect, 0, RDW_VALIDATE);
 }
 
 

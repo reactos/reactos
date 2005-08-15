@@ -20,7 +20,7 @@
 20 pascal CLSIDFromString(str ptr) CLSIDFromString16
 21 stub ISVALIDPTRIN
 22 stub ISVALIDPTROUT
-23 stub ISVALIDINTERFACE
+23 pascal IsValidInterface(segptr) IsValidInterface16
 24 stub ISVALIDIID
 25 stub RESULTFROMSCODE
 26 stub GETSCODE
@@ -147,7 +147,7 @@
 148 stub MKVDEFAULTHASHKEY
 149 stub DELETE16
 150 stub COMEMCTXOF
-151 stub COMEMALLOC
+151 pascal CoMemAlloc(long long long)
 152 stub COMEMFREE
 153 stub SHRREALLOC
 154 stub ___EXPORTEDSTUB

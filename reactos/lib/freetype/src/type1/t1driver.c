@@ -160,10 +160,20 @@
   }
 
 
+  static FT_Error
+  t1_ps_get_font_private( FT_Face         face,
+                          PS_PrivateRec*  afont_private )
+  {
+    *afont_private = ((T1_Face)face)->type1.private_dict;
+    return 0;
+  }
+
+
   static const FT_Service_PsInfoRec  t1_service_ps_info =
   {
-    (PS_GetFontInfoFunc)  t1_ps_get_font_info,
-    (PS_HasGlyphNamesFunc)t1_ps_has_glyph_names
+    (PS_GetFontInfoFunc)   t1_ps_get_font_info,
+    (PS_HasGlyphNamesFunc) t1_ps_has_glyph_names,
+    (PS_GetFontPrivateFunc)t1_ps_get_font_private,
   };
 
 
@@ -294,7 +304,7 @@
     (FT_Face_AttachFunc)      0,
 #else
     (FT_Face_GetKerningFunc)  Get_Kerning,
-    (FT_Face_AttachFunc)      T1_Read_AFM,
+    (FT_Face_AttachFunc)      T1_Read_Metrics,
 #endif
     (FT_Face_GetAdvancesFunc) 0
   };

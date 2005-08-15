@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType API for accessing BDF-specific strings (specification).     */
 /*                                                                         */
-/*  Copyright 2002, 2003 by                                                */
+/*  Copyright 2002, 2003, 2004 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -38,13 +38,13 @@ FT_BEGIN_HEADER
   /*    bdf_fonts                                                          */
   /*                                                                       */
   /* <Title>                                                               */
-  /*    BDF Fonts                                                          */
+  /*    BDF Files                                                          */
   /*                                                                       */
   /* <Abstract>                                                            */
-  /*    BDF-specific APIs                                                  */
+  /*    BDF specific API.                                                  */
   /*                                                                       */
   /* <Description>                                                         */
-  /*    This section contains the declaration of BDF-specific functions.   */
+  /*    This section contains the declaration of BDF specific functions.   */
   /*                                                                       */
   /*************************************************************************/
 

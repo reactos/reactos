@@ -143,12 +143,20 @@ typedef struct
 
 BOOL16  WINAPI ChooseColor16(LPCHOOSECOLOR16 lpChCol);
 HWND16  WINAPI FindText16( SEGPTR find);
-INT16   WINAPI GetFileTitle16(LPCSTR lpFile, LPSTR lpTitle, UINT16 cbBuf);
 BOOL16  WINAPI GetOpenFileName16(SEGPTR ofn);
 BOOL16  WINAPI GetSaveFileName16(SEGPTR ofn);
 BOOL16  WINAPI PrintDlg16( LPPRINTDLG16 print);
 HWND16  WINAPI ReplaceText16( SEGPTR find);
 BOOL16  WINAPI ChooseFont16(LPCHOOSEFONT16);
+BOOL16 CALLBACK ColorDlgProc16( HWND16 hDlg16, UINT16 message, WPARAM16 wParam, LONG lParam );
+BOOL16 CALLBACK FileSaveDlgProc16(HWND16 hWnd16, UINT16 wMsg, WPARAM16 wParam, LPARAM lParam);
+BOOL16 CALLBACK FileOpenDlgProc16(HWND16 hWnd16, UINT16 wMsg, WPARAM16 wParam, LPARAM lParam);
+INT16 WINAPI FontFamilyEnumProc16( SEGPTR logfont, SEGPTR metrics, UINT16 nFontType, LPARAM lParam );
+INT16 WINAPI FontStyleEnumProc16( SEGPTR logfont, SEGPTR metrics, UINT16 nFontType, LPARAM lParam);
+BOOL16 CALLBACK FormatCharDlgProc16(HWND16 hDlg16, UINT16 message, WPARAM16 wParam, LPARAM lParam);
+short WINAPI GetFileTitle16(LPCSTR lpFile, LPSTR lpTitle, UINT16 cbBuf);
+BOOL16 CALLBACK PrintDlgProc16(HWND16 hDlg16, UINT16 uMsg, WPARAM16 wParam, LPARAM lParam);
+BOOL16 CALLBACK PrintSetupDlgProc16(HWND16 hWnd16, UINT16 wMsg, WPARAM16 wParam, LPARAM lParam);
 
 #include "poppack.h"
 

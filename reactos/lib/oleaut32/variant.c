@@ -82,7 +82,6 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
 {
   HRESULT res = DISP_E_TYPEMISMATCH;
   VARTYPE vtFrom =  V_TYPE(ps);
-  BOOL bIgnoreOverflow = FALSE;
   DWORD dwFlags = 0;
 
   TRACE("(%p->(%s%s),0x%08lx,0x%04x,%p->(%s%s),%s%s)\n", pd, debugstr_VT(pd),
@@ -117,11 +116,7 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
   if (vtFrom == VT_INT)
     vtFrom = VT_I4;
   else if (vtFrom == VT_UINT)
-  {
     vtFrom = VT_UI4;
-    if (vt == VT_I4)
-      bIgnoreOverflow = TRUE;
-  }
 
   if (vt == vtFrom)
      return VariantCopy(pd, ps);
@@ -155,7 +150,7 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_EMPTY:    V_I1(pd) = 0; return S_OK;
     case VT_I2:       return VarI1FromI2(V_I2(ps), &V_I1(pd));
     case VT_I4:       return VarI1FromI4(V_I4(ps), &V_I1(pd));
-    case VT_UI1:      return VarI1FromUI1(V_UI1(ps), &V_I1(pd));
+    case VT_UI1:      V_I1(pd) = V_UI1(ps); return S_OK;
     case VT_UI2:      return VarI1FromUI2(V_UI2(ps), &V_I1(pd));
     case VT_UI4:      return VarI1FromUI4(V_UI4(ps), &V_I1(pd));
     case VT_I8:       return VarI1FromI8(V_I8(ps), &V_I1(pd));
@@ -178,7 +173,7 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_I1:       return VarI2FromI1(V_I1(ps), &V_I2(pd));
     case VT_I4:       return VarI2FromI4(V_I4(ps), &V_I2(pd));
     case VT_UI1:      return VarI2FromUI1(V_UI1(ps), &V_I2(pd));
-    case VT_UI2:      return VarI2FromUI2(V_UI2(ps), &V_I2(pd));
+    case VT_UI2:      V_I2(pd) = V_UI2(ps); return S_OK;
     case VT_UI4:      return VarI2FromUI4(V_UI4(ps), &V_I2(pd));
     case VT_I8:       return VarI2FromI8(V_I8(ps), &V_I2(pd));
     case VT_UI8:      return VarI2FromUI8(V_UI8(ps), &V_I2(pd));
@@ -201,14 +196,7 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_I2:       return VarI4FromI2(V_I2(ps), &V_I4(pd));
     case VT_UI1:      return VarI4FromUI1(V_UI1(ps), &V_I4(pd));
     case VT_UI2:      return VarI4FromUI2(V_UI2(ps), &V_I4(pd));
-    case VT_UI4:      
-          if (bIgnoreOverflow)
-          {
-            V_VT(pd) = VT_I4;
-            V_I4(pd) = V_I4(ps);
-            return S_OK;
-          }
-          return VarI4FromUI4(V_UI4(ps), &V_I4(pd));
+    case VT_UI4:      V_I4(pd) = V_UI4(ps); return S_OK;
     case VT_I8:       return VarI4FromI8(V_I8(ps), &V_I4(pd));
     case VT_UI8:      return VarI4FromUI8(V_UI8(ps), &V_I4(pd));
     case VT_R4:       return VarI4FromR4(V_R4(ps), &V_I4(pd));
@@ -226,7 +214,7 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     switch (vtFrom)
     {
     case VT_EMPTY:    V_UI1(pd) = 0; return S_OK;
-    case VT_I1:       return VarUI1FromI1(V_I1(ps), &V_UI1(pd));
+    case VT_I1:       V_UI1(pd) = V_I1(ps); return S_OK;
     case VT_I2:       return VarUI1FromI2(V_I2(ps), &V_UI1(pd));
     case VT_I4:       return VarUI1FromI4(V_I4(ps), &V_UI1(pd));
     case VT_UI2:      return VarUI1FromUI2(V_UI2(ps), &V_UI1(pd));
@@ -249,7 +237,7 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     {
     case VT_EMPTY:    V_UI2(pd) = 0; return S_OK;
     case VT_I1:       return VarUI2FromI1(V_I1(ps), &V_UI2(pd));
-    case VT_I2:       return VarUI2FromI2(V_I2(ps), &V_UI2(pd));
+    case VT_I2:       V_UI2(pd) = V_I2(ps); return S_OK;
     case VT_I4:       return VarUI2FromI4(V_I4(ps), &V_UI2(pd));
     case VT_UI1:      return VarUI2FromUI1(V_UI1(ps), &V_UI2(pd));
     case VT_UI4:      return VarUI2FromUI4(V_UI4(ps), &V_UI2(pd));
@@ -272,7 +260,7 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_EMPTY:    V_UI4(pd) = 0; return S_OK;
     case VT_I1:       return VarUI4FromI1(V_I1(ps), &V_UI4(pd));
     case VT_I2:       return VarUI4FromI2(V_I2(ps), &V_UI4(pd));
-    case VT_I4:       return VarUI4FromI4(V_I4(ps), &V_UI4(pd));
+    case VT_I4:       V_UI4(pd) = V_I4(ps); return S_OK;
     case VT_UI1:      return VarUI4FromUI1(V_UI1(ps), &V_UI4(pd));
     case VT_UI2:      return VarUI4FromUI2(V_UI2(ps), &V_UI4(pd));
     case VT_I8:       return VarUI4FromI8(V_I8(ps), &V_UI4(pd));
@@ -298,7 +286,7 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_UI1:      return VarUI8FromUI1(V_UI1(ps), &V_UI8(pd));
     case VT_UI2:      return VarUI8FromUI2(V_UI2(ps), &V_UI8(pd));
     case VT_UI4:      return VarUI8FromUI4(V_UI4(ps), &V_UI8(pd));
-    case VT_I8:       return VarUI8FromI8(V_I8(ps), &V_UI8(pd));
+    case VT_I8:       V_UI8(pd) = V_I8(ps); return S_OK;
     case VT_R4:       return VarUI8FromR4(V_R4(ps), &V_UI8(pd));
     case VT_R8:       return VarUI8FromR8(V_R8(ps), &V_UI8(pd));
     case VT_DATE:     return VarUI8FromDate(V_DATE(ps), &V_UI8(pd));
@@ -320,7 +308,7 @@ static inline HRESULT VARIANT_Coerce(VARIANTARG* pd, LCID lcid, USHORT wFlags,
     case VT_UI1:      return VarI8FromUI1(V_UI1(ps), &V_I8(pd));
     case VT_UI2:      return VarI8FromUI2(V_UI2(ps), &V_I8(pd));
     case VT_UI4:      return VarI8FromUI4(V_UI4(ps), &V_I8(pd));
-    case VT_UI8:      return VarI8FromUI8(V_I8(ps), &V_I8(pd));
+    case VT_UI8:      V_I8(pd) = V_UI8(ps); return S_OK;
     case VT_R4:       return VarI8FromR4(V_R4(ps), &V_I8(pd));
     case VT_R8:       return VarI8FromR8(V_R8(ps), &V_I8(pd));
     case VT_DATE:     return VarI8FromDate(V_DATE(ps), &V_I8(pd));
@@ -2443,6 +2431,17 @@ VarNumFromParseNum_DecOverflow:
 
 /**********************************************************************
  *              VarCat [OLEAUT32.318]
+ *
+ * Concatenates one variant onto another.
+ *
+ * PARAMS
+ *  left    [I] First variant
+ *  right   [I] Second variant
+ *  result  [O] Result variant
+ *
+ * RETURNS
+ *  Success: S_OK.
+ *  Failure: An HRESULT error code indicating the error.
  */
 HRESULT WINAPI VarCat(LPVARIANT left, LPVARIANT right, LPVARIANT out)
 {
@@ -2569,6 +2568,7 @@ HRESULT WINAPI VarCmp(LPVARIANT left, LPVARIANT right, LCID lcid, DWORD flags)
     case VT_UI4  :
     case VT_UINT : lVal = V_UI4(left); break;
     case VT_BOOL : lVal = V_BOOL(left); break;
+    case VT_EMPTY : lVal = 0; break;
     default: lOk = FALSE;
     }
 
@@ -2583,6 +2583,7 @@ HRESULT WINAPI VarCmp(LPVARIANT left, LPVARIANT right, LCID lcid, DWORD flags)
     case VT_UI4  :
     case VT_UINT : rVal = V_UI4(right); break;
     case VT_BOOL : rVal = V_BOOL(right); break;
+    case VT_EMPTY : rVal = 0; break;
     default: rOk = FALSE;
     }
 
@@ -2596,7 +2597,7 @@ HRESULT WINAPI VarCmp(LPVARIANT left, LPVARIANT right, LCID lcid, DWORD flags)
         }
     }
 
-    /* Strings - use VarBstrCmp */
+    /* Dates */
     if ((V_VT(left)&VT_TYPEMASK) == VT_DATE &&
         (V_VT(right)&VT_TYPEMASK) == VT_DATE) {
 
@@ -2636,6 +2637,16 @@ HRESULT WINAPI VarCmp(LPVARIANT left, LPVARIANT right, LCID lcid, DWORD flags)
 /**********************************************************************
  *              VarAnd [OLEAUT32.142]
  *
+ * Computes the logical AND of two variants.
+ *
+ * PARAMS
+ *  left    [I] First variant
+ *  right   [I] Second variant
+ *  result  [O] Result variant
+ *
+ * RETURNS
+ *  Success: S_OK.
+ *  Failure: An HRESULT error code indicating the error.
  */
 HRESULT WINAPI VarAnd(LPVARIANT left, LPVARIANT right, LPVARIANT result)
 {
@@ -2717,198 +2728,188 @@ HRESULT WINAPI VarAnd(LPVARIANT left, LPVARIANT right, LPVARIANT result)
 
 /**********************************************************************
  *              VarAdd [OLEAUT32.141]
- * FIXME: From MSDN: If ... Then
- * Both expressions are of the string type Concatenated.
- * One expression is a string type and the other a character Addition.
- * One expression is numeric and the other is a string Addition.
- * Both expressions are numeric Addition.
- * Either expression is NULL NULL is returned.
- * Both expressions are empty  Integer subtype is returned.
  *
+ * Add two variants.
+ *
+ * PARAMS
+ *  left    [I] First variant
+ *  right   [I] Second variant
+ *  result  [O] Result variant
+ *
+ * RETURNS
+ *  Success: S_OK.
+ *  Failure: An HRESULT error code indicating the error.
+ *
+ * NOTES
+ *  Native VarAdd up to and including WinXP dosn't like as input variants
+ *  I1, UI2, UI4, UI8, INT and UINT.
+ *
+ *  Native VarAdd dosn't check for NULL in/out pointers and crashes. We do the
+ *  same here.
+ *
+ * FIXME
+ *  Overflow checking for R8 (double) overflow. Return DISP_E_OVERFLOW in that
+ *  case.
  */
 HRESULT WINAPI VarAdd(LPVARIANT left, LPVARIANT right, LPVARIANT result)
 {
-    HRESULT rc = E_FAIL;
+    HRESULT hres;
+    VARTYPE lvt, rvt, resvt, tvt;
+    VARIANT lv, rv, tv;
+    double r8res;
+
+    /* Variant priority for coercion. Sorted from lowest to highest.
+       VT_ERROR shows an invalid input variant type. */
+    enum coerceprio { vt_EMPTY, vt_UI1, vt_I2, vt_I4, vt_I8, vt_BSTR,vt_R4,
+                      vt_R8, vt_CY, vt_DATE, vt_DECIMAL, vt_DISPATCH, vt_NULL,
+                      vt_ERROR };
+    /* Mapping from priority to variant type. Keep in sync with coerceprio! */
+    VARTYPE prio2vt[] = { VT_EMPTY, VT_UI1, VT_I2, VT_I4, VT_I8, VT_BSTR, VT_R4,
+                          VT_R8, VT_CY, VT_DATE, VT_DECIMAL, VT_DISPATCH,
+                          VT_NULL, VT_ERROR };
+
+    /* Mapping for coercion from input variant to priority of result variant. */
+    static VARTYPE coerce[] = {
+        /* VT_EMPTY, VT_NULL, VT_I2, VT_I4, VT_R4 */
+        vt_EMPTY, vt_NULL, vt_I2, vt_I4, vt_R4,
+        /* VT_R8, VT_CY, VT_DATE, VT_BSTR, VT_DISPATCH */
+        vt_R8, vt_CY, vt_DATE, vt_BSTR, vt_DISPATCH,
+        /* VT_ERROR, VT_BOOL, VT_VARIANT, VT_UNKNOWN, VT_DECIMAL */
+        vt_ERROR, vt_I2, vt_ERROR, vt_ERROR, vt_DECIMAL,
+        /* 15, VT_I1, VT_UI1, VT_UI2, VT_UI4 VT_I8 */
+        vt_ERROR, vt_ERROR, vt_UI1, vt_ERROR, vt_ERROR, vt_I8
+    };
 
     TRACE("(%p->(%s%s),%p->(%s%s),%p)\n", left, debugstr_VT(left),
-          debugstr_VF(left), right, debugstr_VT(right), debugstr_VF(right), result);
+          debugstr_VF(left), right, debugstr_VT(right), debugstr_VF(right),
+          result);
 
-    if ((V_VT(left)&VT_TYPEMASK) == VT_EMPTY)
-    	return VariantCopy(result,right);
+    VariantInit(&lv);
+    VariantInit(&rv);
+    VariantInit(&tv);
+    lvt = V_VT(left)&VT_TYPEMASK;
+    rvt = V_VT(right)&VT_TYPEMASK;
 
-    if ((V_VT(right)&VT_TYPEMASK) == VT_EMPTY)
-    	return VariantCopy(result,left);
-
-    /* check if we add doubles */
-    if (((V_VT(left)&VT_TYPEMASK) == VT_R8) || ((V_VT(right)&VT_TYPEMASK) == VT_R8)) {
-        BOOL         lOk        = TRUE;
-        BOOL         rOk        = TRUE;
-        double       lVal = -1;
-        double       rVal = -1;
-        double       res  = -1;
-
-        lOk = TRUE;
-        switch (V_VT(left)&VT_TYPEMASK) {
-        case VT_I1   : lVal = V_I1(left);   break;
-        case VT_I2   : lVal = V_I2(left);   break;
-        case VT_I4   :
-        case VT_INT  : lVal = V_I4(left);   break;
-        case VT_UI1  : lVal = V_UI1(left);   break;
-        case VT_UI2  : lVal = V_UI2(left);  break;
-        case VT_UI4  :
-        case VT_UINT : lVal = V_UI4(left);  break;
-        case VT_R4   : lVal = V_R4(left);  break;
-        case VT_R8   : lVal = V_R8(left);  break;
-	case VT_NULL : lVal = 0.0;  break;
-        default: lOk = FALSE;
-        }
-
-        rOk = TRUE;
-        switch (V_VT(right)&VT_TYPEMASK) {
-        case VT_I1   : rVal = V_I1(right);  break;
-        case VT_I2   : rVal = V_I2(right);  break;
-        case VT_I4   :
-        case VT_INT  : rVal = V_I4(right);  break;
-        case VT_UI1  : rVal = V_UI1(right);  break;
-        case VT_UI2  : rVal = V_UI2(right); break;
-        case VT_UI4  :
-        case VT_UINT : rVal = V_UI4(right); break;
-        case VT_R4   : rVal = V_R4(right);break;
-        case VT_R8   : rVal = V_R8(right);break;
-	case VT_NULL : rVal = 0.0; break;
-        default: rOk = FALSE;
-        }
-
-        if (lOk && rOk) {
-            res = (lVal + rVal);
-            V_VT(result) = VT_R8;
-            V_R8(result)  = res;
-            rc = S_OK;
-        } else {
-	    FIXME("Unhandled type pair %d / %d in double addition.\n",
-        	(V_VT(left)&VT_TYPEMASK),
-        	(V_VT(right)&VT_TYPEMASK)
-	    );
-	}
-	return rc;
+    /* If we have any flag set (VT_ARRAY, VT_VECTOR, etc.) bail out.
+       Same for any input variant type > VT_I8 */
+    if (V_VT(left) & ~VT_TYPEMASK || V_VT(right) & ~VT_TYPEMASK ||
+        lvt > VT_I8 || rvt > VT_I8) {
+        hres = DISP_E_BADVARTYPE;
+        goto end;
     }
 
-    /* now check if we add floats. VT_R8 can no longer happen here! */
-    if (((V_VT(left)&VT_TYPEMASK) == VT_R4) || ((V_VT(right)&VT_TYPEMASK) == VT_R4)) {
-        BOOL         lOk        = TRUE;
-        BOOL         rOk        = TRUE;
-        float        lVal = -1;
-        float        rVal = -1;
-        float        res  = -1;
-
-        lOk = TRUE;
-        switch (V_VT(left)&VT_TYPEMASK) {
-        case VT_I1   : lVal = V_I1(left);   break;
-        case VT_I2   : lVal = V_I2(left);   break;
-        case VT_I4   :
-        case VT_INT  : lVal = V_I4(left);   break;
-        case VT_UI1  : lVal = V_UI1(left);   break;
-        case VT_UI2  : lVal = V_UI2(left);  break;
-        case VT_UI4  :
-        case VT_UINT : lVal = V_UI4(left);  break;
-        case VT_R4   : lVal = V_R4(left);  break;
-	case VT_NULL : lVal = 0.0;  break;
-        default: lOk = FALSE;
-        }
-
-        rOk = TRUE;
-        switch (V_VT(right)&VT_TYPEMASK) {
-        case VT_I1   : rVal = V_I1(right);  break;
-        case VT_I2   : rVal = V_I2(right);  break;
-        case VT_I4   :
-        case VT_INT  : rVal = V_I4(right);  break;
-        case VT_UI1  : rVal = V_UI1(right);  break;
-        case VT_UI2  : rVal = V_UI2(right); break;
-        case VT_UI4  :
-        case VT_UINT : rVal = V_UI4(right); break;
-        case VT_R4   : rVal = V_R4(right);break;
-	case VT_NULL : rVal = 0.0; break;
-        default: rOk = FALSE;
-        }
-
-        if (lOk && rOk) {
-            res = (lVal + rVal);
-            V_VT(result) = VT_R4;
-            V_R4(result)  = res;
-            rc = S_OK;
-        } else {
-	    FIXME("Unhandled type pair %d / %d in float addition.\n",
-        	(V_VT(left)&VT_TYPEMASK),
-        	(V_VT(right)&VT_TYPEMASK)
-	    );
-	}
-	return rc;
-    }
-
-    /* Handle strings as concat */
-    if ((V_VT(left)&VT_TYPEMASK) == VT_BSTR &&
-        (V_VT(right)&VT_TYPEMASK) == VT_BSTR) {
-        V_VT(result) = VT_BSTR;
-        return VarBstrCat(V_BSTR(left), V_BSTR(right), &V_BSTR(result));
+    /* Determine the variant type to coerce to. */
+    if (coerce[lvt] > coerce[rvt]) {
+        resvt = prio2vt[coerce[lvt]];
+        tvt = prio2vt[coerce[rvt]];
     } else {
-
-        /* Integers */
-        BOOL         lOk        = TRUE;
-        BOOL         rOk        = TRUE;
-        LONGLONG     lVal = -1;
-        LONGLONG     rVal = -1;
-        LONGLONG     res  = -1;
-        int          resT = 0; /* Testing has shown I2 + I2 == I2, all else
-                                  becomes I4                                */
-
-        lOk = TRUE;
-        switch (V_VT(left)&VT_TYPEMASK) {
-        case VT_I1   : lVal = V_I1(left);  resT=VT_I4; break;
-        case VT_I2   : lVal = V_I2(left);  resT=VT_I2; break;
-        case VT_I4   :
-        case VT_INT  : lVal = V_I4(left);  resT=VT_I4; break;
-        case VT_UI1  : lVal = V_UI1(left);  resT=VT_I4; break;
-        case VT_UI2  : lVal = V_UI2(left); resT=VT_I4; break;
-        case VT_UI4  :
-        case VT_UINT : lVal = V_UI4(left); resT=VT_I4; break;
-	case VT_NULL : lVal = 0; resT = VT_I4; break;
-        default: lOk = FALSE;
-        }
-
-        rOk = TRUE;
-        switch (V_VT(right)&VT_TYPEMASK) {
-        case VT_I1   : rVal = V_I1(right);  resT=VT_I4; break;
-        case VT_I2   : rVal = V_I2(right);  resT=max(VT_I2, resT); break;
-        case VT_I4   :
-        case VT_INT  : rVal = V_I4(right);  resT=VT_I4; break;
-        case VT_UI1  : rVal = V_UI1(right);  resT=VT_I4; break;
-        case VT_UI2  : rVal = V_UI2(right); resT=VT_I4; break;
-        case VT_UI4  :
-        case VT_UINT : rVal = V_UI4(right); resT=VT_I4; break;
-	case VT_NULL : rVal = 0; resT=VT_I4; break;
-        default: rOk = FALSE;
-        }
-
-        if (lOk && rOk) {
-            res = (lVal + rVal);
-            V_VT(result) = resT;
-            switch (resT) {
-            case VT_I2   : V_I2(result)  = res; break;
-            case VT_I4   : V_I4(result)  = res; break;
-            default:
-                FIXME("Unexpected result variant type %x\n", resT);
-                V_I4(result)  = res;
-            }
-            rc = S_OK;
-
-        } else {
-            FIXME("unimplemented part (0x%x + 0x%x)\n",V_VT(left), V_VT(right));
-        }
+        resvt = prio2vt[coerce[rvt]];
+        tvt = prio2vt[coerce[lvt]];
     }
 
-    TRACE("returning 0x%8lx (%s%s),%ld\n", rc, debugstr_VT(result),
-          debugstr_VF(result), V_VT(result) == VT_I4 ? V_I4(result) : V_I2(result));
-    return rc;
+    /* Special cases where the result variant type is defined by both
+       input variants and not only that with the highest priority */
+    if (resvt == VT_BSTR) {
+        if (tvt == VT_EMPTY || tvt == VT_BSTR)
+            resvt = VT_BSTR;
+        else
+            resvt = VT_R8;
+    }
+    if (resvt == VT_R4 && (tvt == VT_BSTR || tvt == VT_I8 || tvt == VT_I4))
+        resvt = VT_R8;
+
+    /* For overflow detection use the biggest compatible type for the
+       addition */
+    switch (resvt) {
+        case VT_ERROR:
+            hres = DISP_E_BADVARTYPE;
+            goto end;
+        case VT_NULL:
+            hres = S_OK;
+            V_VT(result) = VT_NULL;
+            goto end;
+        case VT_DISPATCH:
+            FIXME("cannot handle variant type VT_DISPATCH\n");
+            hres = DISP_E_TYPEMISMATCH;
+            goto end;
+        case VT_EMPTY:
+            resvt = VT_I2;
+            /* Fall through */
+        case VT_UI1:
+        case VT_I2:
+        case VT_I4:
+        case VT_I8:
+            tvt = VT_I8;
+            break;
+        case VT_DATE:
+        case VT_R4:
+            tvt = VT_R8;
+            break;
+        default:
+            tvt = resvt;
+    }
+
+    /* Now coerce the variants */
+    hres = VariantChangeType(&lv, left, 0, tvt);
+    if (FAILED(hres))
+        goto end;
+    hres = VariantChangeType(&rv, right, 0, tvt);
+    if (FAILED(hres))
+        goto end;
+
+    /* Do the math */
+    hres = S_OK;
+    V_VT(&tv) = tvt;
+    V_VT(result) = resvt;
+    switch (tvt) {
+        case VT_DECIMAL:
+            hres = VarDecAdd(&V_DECIMAL(&lv), &V_DECIMAL(&rv),
+                             &V_DECIMAL(result));
+            goto end;
+        case VT_CY:
+            hres = VarCyAdd(V_CY(&lv), V_CY(&rv), &V_CY(result));
+            goto end;
+        case VT_BSTR:
+            /* We do not add those, we concatenate them. */
+            hres = VarBstrCat(V_BSTR(&lv), V_BSTR(&rv), &V_BSTR(result));
+            goto end;
+        case VT_I8:
+            /* Overflow detection */
+            r8res = (double)V_I8(&lv) + (double)V_I8(&rv);
+            if (r8res > (double)I8_MAX || r8res < (double)I8_MIN) {
+                V_VT(result) = VT_R8;
+                V_R8(result) = r8res;
+                goto end;
+            } else
+                V_I8(&tv) = V_I8(&lv) + V_I8(&rv);
+            break;
+        case VT_R8:
+            /* FIXME: overflow detection */
+            V_R8(&tv) = V_R8(&lv) + V_R8(&rv);
+            break;
+        default:
+            ERR("We shouldn't get here! tvt = %d!\n", tvt);
+            break;
+    }
+    if (resvt != tvt) {
+        if ((hres = VariantChangeType(result, &tv, 0, resvt)) != S_OK) {
+            /* Overflow! Change to the vartype with the next higher priority */
+            resvt = prio2vt[coerce[resvt] + 1];
+            hres = VariantChangeType(result, &tv, 0, resvt);
+        }
+    } else
+        hres = VariantCopy(result, &tv);
+
+end:
+    if (hres != S_OK) {
+        V_VT(result) = VT_EMPTY;
+        V_I4(result) = 0;       /* No V_EMPTY */
+    }
+    VariantClear(&lv);
+    VariantClear(&rv);
+    VariantClear(&tv);
+    TRACE("returning 0x%8lx (variant type %s)\n", hres, debugstr_VT(result));
+    return hres;
 }
 
 /**********************************************************************
@@ -3058,7 +3059,7 @@ HRESULT WINAPI VarMul(LPVARIANT left, LPVARIANT right, LPVARIANT result)
             ERR("We shouldn't get here! tvt = %d!\n", tvt);
             break;
     }
-    if (rvt != tvt) {
+    if (resvt != tvt) {
         while ((hres = VariantChangeType(result, &tv, 0, resvt)) != S_OK) {
             /* Overflow! Change to the vartype with the next higher priority */
             resvt = prio2vt[coerce[resvt] + 1];
@@ -3081,6 +3082,16 @@ end:
 /**********************************************************************
  *              VarDiv [OLEAUT32.143]
  *
+ * Divides one variant with another.
+ *
+ * PARAMS
+ *  left    [I] First variant
+ *  right   [I] Second variant
+ *  result  [O] Result variant
+ *
+ * RETURNS
+ *  Success: S_OK.
+ *  Failure: An HRESULT error code indicating the error.
  */
 HRESULT WINAPI VarDiv(LPVARIANT left, LPVARIANT right, LPVARIANT result)
 {
@@ -3140,6 +3151,16 @@ HRESULT WINAPI VarDiv(LPVARIANT left, LPVARIANT right, LPVARIANT result)
 /**********************************************************************
  *              VarSub [OLEAUT32.159]
  *
+ * Subtract two variants.
+ *
+ * PARAMS
+ *  left    [I] First variant
+ *  right   [I] Second variant
+ *  result  [O] Result variant
+ *
+ * RETURNS
+ *  Success: S_OK.
+ *  Failure: An HRESULT error code indicating the error.
  */
 HRESULT WINAPI VarSub(LPVARIANT left, LPVARIANT right, LPVARIANT result)
 {
@@ -4536,6 +4557,16 @@ HRESULT WINAPI VarMod(LPVARIANT left, LPVARIANT right, LPVARIANT result)
 /**********************************************************************
  *              VarPow [OLEAUT32.158]
  *
+ * Computes the power of one variant to another variant.
+ *
+ * PARAMS
+ *  left    [I] First variant
+ *  right   [I] Second variant
+ *  result  [O] Result variant
+ *
+ * RETURNS
+ *  Success: S_OK.
+ *  Failure: An HRESULT error code indicating the error.
  */
 HRESULT WINAPI VarPow(LPVARIANT left, LPVARIANT right, LPVARIANT result)
 {

@@ -42,8 +42,11 @@ WINE_DEFAULT_DEBUG_CHANNEL(ole);
 /* The OLE Automation ProxyStub Interface Class (aka Typelib Marshaler) */
 extern const GUID CLSID_PSOAInterface;
 
-/* IDispatch marshaler */
 extern const GUID CLSID_PSDispatch;
+extern const GUID CLSID_PSEnumVariant;
+extern const GUID CLSID_PSTypeInfo;
+extern const GUID CLSID_PSTypeLib;
+extern const GUID CLSID_PSTypeComp;
 
 static BOOL BSTR_bCache = TRUE; /* Cache allocations to minimise alloc calls? */
 
@@ -449,6 +452,18 @@ static WCHAR	*pdelimiter = &_delimiter[0];
 
 /***********************************************************************
  *		RegisterActiveObject (OLEAUT32.33)
+ *
+ * Registers an object in the global item table.
+ *
+ * PARAMS
+ *  punk        [I] Object to register.
+ *  rcid        [I] CLSID of the object.
+ *  dwFlags     [I] Flags.
+ *  pdwRegister [O] Address to store cookie of object registration in.
+ *
+ * RETURNS
+ *  Success: S_OK.
+ *  Failure: HRESULT code.
  */
 HRESULT WINAPI RegisterActiveObject(
 	LPUNKNOWN punk,REFCLSID rcid,DWORD dwFlags,LPDWORD pdwRegister
@@ -475,6 +490,16 @@ HRESULT WINAPI RegisterActiveObject(
 
 /***********************************************************************
  *		RevokeActiveObject (OLEAUT32.34)
+ *
+ * Revokes an object from the global item table.
+ *
+ * PARAMS
+ *  xregister [I] Registration cookie.
+ *  reserved  [I] Reserved. Set to NULL.
+ *
+ * RETURNS
+ *  Success: S_OK.
+ *  Failure: HRESULT code.
  */
 HRESULT WINAPI RevokeActiveObject(DWORD xregister,LPVOID reserved)
 {
@@ -491,6 +516,17 @@ HRESULT WINAPI RevokeActiveObject(DWORD xregister,LPVOID reserved)
 
 /***********************************************************************
  *		GetActiveObject (OLEAUT32.35)
+ *
+ * Gets an object from the global item table.
+ *
+ * PARAMS
+ *  rcid        [I] CLSID of the object.
+ *  preserved   [I] Reserved. Set to NULL.
+ *  ppunk       [O] Address to store object into.
+ *
+ * RETURNS
+ *  Success: S_OK.
+ *  Failure: HRESULT code.
  */
 HRESULT WINAPI GetActiveObject(REFCLSID rcid,LPVOID preserved,LPUNKNOWN *ppunk)
 {
@@ -667,7 +703,7 @@ extern void _get_STDPIC_CF(LPVOID);
 /***********************************************************************
  *		DllGetClassObject (OLEAUT32.1)
  */
-HRESULT WINAPI OLEAUT32_DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
+HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
 {
     *ppv = NULL;
     if (IsEqualGUID(rclsid,&CLSID_StdFont)) {
@@ -684,8 +720,11 @@ HRESULT WINAPI OLEAUT32_DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *p
 	    return S_OK;
 	}
     }
-    if (IsEqualGUID(rclsid,&CLSID_PSDispatch)) {
-	return OLEAUTPS_DllGetClassObject(rclsid,iid,ppv);
+    if (IsEqualCLSID(rclsid, &CLSID_PSDispatch) ||
+        IsEqualCLSID(rclsid, &CLSID_PSTypeInfo) ||
+        IsEqualCLSID(rclsid, &CLSID_PSTypeLib) ||
+        IsEqualCLSID(rclsid, &CLSID_PSEnumVariant)) {
+        return OLEAUTPS_DllGetClassObject(&CLSID_PSDispatch, iid, ppv);
     }
     if (IsEqualGUID(rclsid,&CLSID_PSOAInterface)) {
 	if (S_OK==TypeLibFac_DllGetClassObject(rclsid,iid,ppv))
@@ -707,7 +746,7 @@ HRESULT WINAPI OLEAUT32_DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *p
  * RETURNS
  *  Always returns S_FALSE. This dll cannot be unloaded.
  */
-HRESULT WINAPI OLEAUT32_DllCanUnloadNow(void)
+HRESULT WINAPI DllCanUnloadNow(void)
 {
     return S_FALSE;
 }

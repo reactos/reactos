@@ -135,6 +135,7 @@ ChangeAttribute (LPTSTR pszPath, LPTSTR pszFile, DWORD dwMask,
 		if (hFind == INVALID_HANDLE_VALUE)
 		{
 			ErrorMessage (GetLastError (), pszFile);
+      nErrorLevel = 1;
 			return;
 		}
 
@@ -164,6 +165,7 @@ ChangeAttribute (LPTSTR pszPath, LPTSTR pszFile, DWORD dwMask,
 	if (hFind == INVALID_HANDLE_VALUE)
 	{
 		ErrorMessage (GetLastError (), pszFile);
+    nErrorLevel = 1;
 		return;
 	}
 
@@ -208,6 +210,8 @@ INT CommandAttrib (LPTSTR cmd, LPTSTR param)
 		ConOutResPaging(TRUE,STRING_ATTRIB_HELP);
 		return 0;
 	}
+
+  nErrorLevel = 0;
 
 	/* build parameter array */
 	arg = split (param, &argc, FALSE);

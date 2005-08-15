@@ -8,7 +8,6 @@
 	<library>ip</library>
 	<library>oskittcp</library>
 	<library>ndis</library>
-	<library>rosrtl</library>
 	<library>pseh</library>
 	<library>ntoskrnl</library>
 	<library>hal</library>
@@ -17,6 +16,9 @@
 	</directory>
 	<directory name="datalink">
 		<file>lan.c</file>
+	</directory>
+	<directory name="recmutex">
+		<file>recmutex.c</file>
 	</directory>
 	<directory name="tcpip">
 		<file>buffer.c</file>

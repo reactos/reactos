@@ -523,7 +523,7 @@ int __fileno_dup2(int handle1, int handle2)
                 hProcess,
                 &fdinfo(handle2)->hFile,
                 0,
-                TRUE,
+                fdinfo(handle1)->fdflags & FNOINHERIT ? FALSE : TRUE,
                 DUPLICATE_SAME_ACCESS);
    if (result) {
 //      _pioinfo[handle2]->fd = handle2;

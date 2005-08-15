@@ -686,26 +686,27 @@ KeV86Exception(ULONG ExceptionNr, PKTRAP_FRAME Tf, ULONG address)
   PUCHAR Ip;
   PKV86M_TRAP_FRAME VTf;
 
+  ASSERT (ExceptionNr != 14);
+
   VTf = (PKV86M_TRAP_FRAME)Tf;
 
   /* FIXME: This should use ->VdmObjects */
   if(KeGetCurrentProcess()->Unused)
   {
     VTf->regs->PStatus = (PNTSTATUS) ExceptionNr;
-    if(ExceptionNr != 14) return 1;
+    return 1;
   }
 
   /*
    * Check if we have reached the recovery instruction
    */
   Ip = (PUCHAR)((Tf->Cs & 0xFFFF) * 16 + (Tf->Eip & 0xFFFF));
-  if (ExceptionNr != 14)
-    {
-      DPRINT("ExceptionNr %d Ip[0] %x Ip[1] %x Ip[2] %x Ip[3] %x Tf->Cs %x "
-	     "Tf->Eip %x\n", ExceptionNr, Ip[0], Ip[1], Ip[2], Ip[3], Tf->Cs,
-	     Tf->Eip);
-      DPRINT("VTf %x VTf->regs %x\n", VTf, VTf->regs);
-    }
+  
+  DPRINT("ExceptionNr %d Ip[0] %x Ip[1] %x Ip[2] %x Ip[3] %x Tf->Cs %x "
+	 "Tf->Eip %x\n", ExceptionNr, Ip[0], Ip[1], Ip[2], Ip[3], Tf->Cs,
+	 Tf->Eip);
+  DPRINT("VTf %x VTf->regs %x\n", VTf, VTf->regs);
+
   if (ExceptionNr == 6 &&
       memcmp(Ip, VTf->regs->RecoveryInstruction, 4) == 0 &&
       (Tf->Cs * 16 + Tf->Eip) == VTf->regs->RecoveryAddress)
@@ -787,32 +788,6 @@ KeV86Exception(ULONG ExceptionNr, PKTRAP_FRAME Tf, ULONG address)
       /* General protection fault */
     case 13:
       return(KeV86GPF(VTf, Tf));
-
-      /* Page fault */
-    case 14:
-      {
-	NTSTATUS Status;
-
-	Status = MmPageFault(USER_CS,
-			     &Tf->Eip,
-			     NULL,
-			     address,
-			     Tf->ErrorCode);
-	if (!NT_SUCCESS(Status))
-	  {
-            /* FIXME: This should use ->VdmObjects */
-            if(KeGetCurrentProcess()->Unused)
-            {
-              VTf->regs->PStatus = (PNTSTATUS) STATUS_NONCONTINUABLE_EXCEPTION;
-              return 1;
-            }
-
-            DPRINT("V86Exception, halting due to page fault\n");
-	    *VTf->regs->PStatus = STATUS_NONCONTINUABLE_EXCEPTION;
-	    return(1);
-	  }
-	return(0);
-      }
 
       /* Intel reserved */
     case 15:

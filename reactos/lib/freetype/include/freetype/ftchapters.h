@@ -1,5 +1,13 @@
 /***************************************************************************/
 /*                                                                         */
+/* This file defines the structure of the FreeType reference.              */
+/* It is used by the python script which generates the HTML files.         */
+/*                                                                         */
+/***************************************************************************/
+
+
+/***************************************************************************/
+/*                                                                         */
 /* <Chapter>                                                               */
 /*    core_api                                                             */
 /*                                                                         */
@@ -31,6 +39,8 @@
 /*    sfnt_names                                                           */
 /*    bdf_fonts                                                            */
 /*    pfr_fonts                                                            */
+/*    winfnt_fonts                                                         */
+/*    ot_validation                                                        */
 /*                                                                         */
 /***************************************************************************/
 
@@ -61,9 +71,12 @@
 /*    computations                                                         */
 /*    list_processing                                                      */
 /*    outline_processing                                                   */
+/*    bitmap_handling                                                      */
 /*    raster                                                               */
+/*    glyph_stroker                                                        */
 /*    system_interface                                                     */
 /*    module_management                                                    */
+/*    gzip                                                                 */
+/*    lzw                                                                  */
 /*                                                                         */
 /***************************************************************************/
-

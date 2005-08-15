@@ -499,13 +499,19 @@ IntSetMenu(
 {
   PMENU_OBJECT OldMenuObject, NewMenuObject = NULL;
 
+  if ((WindowObject->Style & (WS_CHILD | WS_POPUP)) == WS_CHILD)
+    {
+      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+      return FALSE;
+    }
+
   *Changed = (WindowObject->IDMenu != (UINT) Menu);
   if (! *Changed)
     {
       return TRUE;
     }
 
-  if (0 != WindowObject->IDMenu)
+  if (WindowObject->IDMenu)
     {
       OldMenuObject = IntGetMenuObject((HMENU) WindowObject->IDMenu);
       ASSERT(NULL == OldMenuObject || OldMenuObject->MenuInfo.Wnd == WindowObject->Self);
@@ -1577,6 +1583,7 @@ IntCreateWindowEx(DWORD dwExStyle,
       IntSetMenu(WindowObject, hMenu, &MenuChanged);
     }
   WindowObject->MessageQueue = PsGetWin32Thread()->MessageQueue;
+  IntReferenceMessageQueue(WindowObject->MessageQueue);
   WindowObject->Parent = (ParentWindow ? ParentWindow->Self : NULL);
   if((OwnerWindow = IntGetWindowObject(OwnerWindowHandle)))
   {
@@ -2180,7 +2187,7 @@ NtUserDestroyWindow(HWND Wnd)
   if (Window->MessageQueue->CaptureWindow == Window->Self)
     Window->MessageQueue->CaptureWindow = NULL;
   IntUnLockMessageQueue(Window->MessageQueue);
-
+  IntDereferenceMessageQueue(Window->MessageQueue);
   /* Call hooks */
 #if 0 /* FIXME */
   if (HOOK_CallHooks(WH_CBT, HCBT_DESTROYWND, (WPARAM) hwnd, 0, TRUE))
@@ -4313,5 +4320,66 @@ IntRemoveProcessWndProcHandles(HANDLE ProcessID)
 	}
 	return TRUE;
 }
+
+#define WIN_NEEDS_SHOW_OWNEDPOPUP (0x00000040)
+
+BOOL
+FASTCALL
+IntShowOwnedPopups( HWND owner, BOOL fShow )
+{
+  int count = 0;
+  PWINDOW_OBJECT Window, pWnd;
+  HWND *win_array;
+
+  if(!(Window = IntGetWindowObject(owner)))
+  {
+    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+    return FALSE;
+  }
+
+  win_array = IntWinListChildren( Window);
+  IntReleaseWindowObject(Window);
+
+  if (!win_array) return TRUE;
+
+  while (win_array[count]) count++;
+  while (--count >= 0)
+    {
+        if (NtUserGetWindow( win_array[count], GW_OWNER ) != owner) continue;
+        if (!(pWnd = IntGetWindowObject( win_array[count] ))) continue;
+//        if (pWnd == WND_OTHER_PROCESS) continue;
+
+        if (fShow)
+        {
+            if (pWnd->Flags & WIN_NEEDS_SHOW_OWNEDPOPUP)
+             {
+                IntReleaseWindowObject( pWnd );
+                /* In Windows, ShowOwnedPopups(TRUE) generates
+                 * WM_SHOWWINDOW messages with SW_PARENTOPENING,
+                 * regardless of the state of the owner
+                 */
+                IntSendMessage(win_array[count], WM_SHOWWINDOW, SW_SHOWNORMAL, SW_PARENTOPENING);
+                continue;
+            }
+        }
+        else
+        {
+            if (pWnd->Style & WS_VISIBLE)
+            {
+                IntReleaseWindowObject( pWnd );
+                /* In Windows, ShowOwnedPopups(FALSE) generates
+                 * WM_SHOWWINDOW messages with SW_PARENTCLOSING,
+                 * regardless of the state of the owner
+                 */
+                IntSendMessage(win_array[count], WM_SHOWWINDOW, SW_HIDE, SW_PARENTCLOSING);
+                continue;
+            }
+        }
+        IntReleaseWindowObject( pWnd );
+    }
+    ExFreePool( win_array );
+    return TRUE;
+}
+
 
 /* EOF */

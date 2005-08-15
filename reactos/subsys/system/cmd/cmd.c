@@ -164,10 +164,10 @@ HANDLE hIn;
 HANDLE hOut;
 HANDLE hConsole;
 HANDLE CMD_ModuleHandle;
+HMODULE NtDllModule;
 
-static NtQueryInformationProcessProc NtQueryInformationProcessPtr;
-static NtReadVirtualMemoryProc       NtReadVirtualMemoryPtr;
-static BOOL NtDllChecked = FALSE;
+static NtQueryInformationProcessProc NtQueryInformationProcessPtr = NULL;
+static NtReadVirtualMemoryProc       NtReadVirtualMemoryPtr = NULL;
 
 #ifdef INCLUDE_CMD_COLOR
 WORD wColor;              /* current color */
@@ -193,28 +193,6 @@ static BOOL IsConsoleProcess(HANDLE Process)
 	PROCESS_BASIC_INFORMATION Info;
 	PEB ProcessPeb;
 	ULONG BytesRead;
-	HMODULE NtDllModule;
-
-	/* Some people like to run ReactOS cmd.exe on Win98, it helps in the
-           build process. So don't link implicitly against ntdll.dll, load it
-           dynamically instead */
-	if (! NtDllChecked)
-	{
-		NtDllChecked = TRUE;
-		NtDllModule = LoadLibrary(_T("ntdll.dll"));
-		if (NULL == NtDllModule)
-		{
-			/* Probably non-WinNT system. Just wait for the commands
-                           to finish. */
-			NtQueryInformationProcessPtr = NULL;
-			NtReadVirtualMemoryPtr = NULL;
-			return TRUE;
-		}
-		NtQueryInformationProcessPtr = (NtQueryInformationProcessProc)
-                                               GetProcAddress(NtDllModule, "NtQueryInformationProcess");
-		NtReadVirtualMemoryPtr = (NtReadVirtualMemoryProc)
-		                         GetProcAddress(NtDllModule, "NtReadVirtualMemory");
-	}
 
 	if (NULL == NtQueryInformationProcessPtr || NULL == NtReadVirtualMemoryPtr)
 	{
@@ -309,14 +287,18 @@ static BOOL RunFile(LPTSTR filename)
 /*
  * This command (in first) was not found in the command table
  *
- * first - first word on command line
- * rest  - rest of command line
+ * Full  - whole command line
+ * First - first word on command line
+ * Rest  - rest of command line
  */
 
 static VOID
-Execute (LPTSTR full, LPTSTR first, LPTSTR rest)
+Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 {
 	TCHAR szFullName[MAX_PATH];
+	TCHAR first[CMDLINE_LENGTH];
+	TCHAR rest[CMDLINE_LENGTH];
+	TCHAR full[CMDLINE_LENGTH];
 #ifndef __REACTOS__
 	TCHAR szWindowTitle[MAX_PATH];
 #endif
@@ -325,6 +307,51 @@ Execute (LPTSTR full, LPTSTR first, LPTSTR rest)
 #ifdef _DEBUG
 	DebugPrintf (_T("Execute: \'%s\' \'%s\'\n"), first, rest);
 #endif
+
+	/* Though it was already parsed once, we have a different set of rules
+	   for parsing before we pass to CreateProccess */
+	if(!_tcschr(Full,_T('\"')))
+	{
+		_tcscpy(first,First);
+		_tcscpy(rest,Rest);
+		_tcscpy(full,Full);
+	}
+	else
+	{
+		INT i = 0;		
+		BOOL bInside = FALSE;
+		rest[0] = _T('\0');
+		full[0] = _T('\0');
+		first[0] = _T('\0');
+		_tcscpy(first,Full);
+		/* find the end of the command and start of the args */
+		for(i = 0; i < _tcslen(first); i++)
+		{
+			if(!_tcsncmp(&first[i], _T("\""), 1))
+				bInside = !bInside;
+			if(!_tcsncmp(&first[i], _T(" "), 1) && !bInside)
+			{
+				_tcscpy(rest,&first[i]);
+				first[i] = _T('\0');
+				break;
+			}
+
+		}
+		i = 0;
+		/* remove any slashes */
+		while(i < _tcslen(first))
+		{
+			if(!_tcsncmp (&first[i], _T("\""), 1))
+				memcpy(&first[i],&first[i + 1], _tcslen(&first[i]));
+			else
+				i++;
+		}
+		/* Drop quotes around it just in case there is a space */
+		_tcscpy(full,_T("\""));
+		_tcscat(full,first);
+		_tcscat(full,_T("\" "));
+		_tcscat(full,rest);
+	}
 
 	/* check for a drive change */
 	if ((_istalpha (first[0])) && (!_tcscmp (first + 1, _T(":"))))
@@ -1035,8 +1062,11 @@ ProcessInput (BOOL bFlag)
               /* %TIME% */
               else if (_tcsicmp(ip,_T("time")) ==0)
               {
-                TCHAR szTime[40];                                                               
-                GetTimeFormat(LOCALE_USER_DEFAULT, 0, NULL, NULL, szTime, sizeof(szTime));              
+                TCHAR szTime[40];                                                                               
+                SYSTEMTIME t;
+                GetSystemTime(&t); 
+
+                _sntprintf(szTime ,40,_T("%02d%c%02d%c%02d%c%02d"), t.wHour, cTimeSeparator,t.wMinute , cTimeSeparator,t.wSecond , cDecimalSeparator, t.wMilliseconds );
                 cp = _stpcpy (cp, szTime);                 	              
               }
               
@@ -1255,6 +1285,31 @@ Initialize (int argc, TCHAR* argv[])
 
 	//INT len;
 	//TCHAR *ptr, *cmdLine;
+	
+	/* get version information */
+	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+	GetVersionEx (&osvi);
+
+	/* Some people like to run ReactOS cmd.exe on Win98, it helps in the
+           build process. So don't link implicitly against ntdll.dll, load it
+           dynamically instead */
+
+	if (osvi.dwPlatformId == VER_PLATFORM_WIN32_NT)
+	{
+		/* ntdll is always present on NT */
+		NtDllModule = GetModuleHandle(TEXT("ntdll.dll"));
+	}
+	else
+	{
+		/* not all 9x versions have a ntdll.dll, try to load it */
+		NtDllModule = LoadLibrary(TEXT("ntdll.dll"));
+	}
+
+	if (NtDllModule != NULL)
+	{
+		NtQueryInformationProcessPtr = (NtQueryInformationProcessProc)GetProcAddress(NtDllModule, "NtQueryInformationProcess");
+		NtReadVirtualMemoryPtr = (NtReadVirtualMemoryProc)GetProcAddress(NtDllModule, "NtReadVirtualMemory");
+	}
 
 
 #ifdef _DEBUG
@@ -1267,10 +1322,6 @@ Initialize (int argc, TCHAR* argv[])
 	}
 	DebugPrintf (_T("]\n"));
 #endif
-
-	/* get version information */
-	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-	GetVersionEx (&osvi);
 
 	InitLocale ();
 
@@ -1475,6 +1526,11 @@ static VOID Cleanup (int argc, TCHAR *argv[])
 	RemoveBreakHandler ();
 	SetConsoleMode( GetStdHandle( STD_INPUT_HANDLE ),
 			ENABLE_LINE_INPUT | ENABLE_PROCESSED_INPUT | ENABLE_ECHO_INPUT );
+
+	if (NtDllModule != NULL)
+	{
+		FreeLibrary(NtDllModule);
+	}
 }
 
 #ifdef __REACTOS__
@@ -1528,11 +1584,12 @@ PWCHAR * _CommandLineToArgvW(PWCHAR lpCmdLine, int *pNumArgs)
  * main function
  */
 #ifdef _UNICODE
-int main(void)
+int _main(void)
 #else
-int main (int argc, char *argv[])
+int _main (int argc, char *argv[])
 #endif
 {
+  TCHAR startPath[MAX_PATH];
   CONSOLE_SCREEN_BUFFER_INFO Info;
   INT nExitCode;
 #ifdef _UNICODE
@@ -1544,7 +1601,9 @@ int main (int argc, char *argv[])
   argv = CommandLineToArgvW(GetCommandLineW(), &argc);
 #endif
 #endif
-     
+      
+  GetCurrentDirectory(MAX_PATH,startPath);
+  _tchdir(startPath);
 
   SetFileApisToOEM();
   InputCodePage= 0;
@@ -1555,7 +1614,7 @@ int main (int argc, char *argv[])
 			OPEN_EXISTING, 0, NULL);
   if (GetConsoleScreenBufferInfo(hConsole, &Info) == FALSE)
     {
-      ConOutFormatMessage(GetLastError());
+      ConErrFormatMessage(GetLastError());
       return(1);
     }
   wColor = Info.wAttributes;

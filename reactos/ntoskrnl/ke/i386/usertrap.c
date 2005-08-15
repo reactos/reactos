@@ -25,7 +25,7 @@ print_user_address(PVOID address)
    PPEB Peb = NULL;
    ULONG_PTR RelativeAddress;
    PPEB_LDR_DATA Ldr;
-   NTSTATUS Status;
+   NTSTATUS Status = STATUS_SUCCESS;
 
    CurrentProcess = PsGetCurrentProcess();
    if (NULL != CurrentProcess)
@@ -39,7 +39,17 @@ print_user_address(PVOID address)
        return(TRUE);
      }
 
-   Status = MmSafeCopyFromUser(&Ldr, &Peb->Ldr, sizeof(PPEB_LDR_DATA));
+   _SEH_TRY
+     {
+       RtlCopyMemory(&Ldr,
+                     &Peb->Ldr,
+                     sizeof(PPEB_LDR_DATA));
+     }
+   _SEH_HANDLE
+     {
+       Status = _SEH_GetExceptionCode();
+     }
+   _SEH_END;
    if (!NT_SUCCESS(Status))
      {
        DbgPrint("<%x>", address);

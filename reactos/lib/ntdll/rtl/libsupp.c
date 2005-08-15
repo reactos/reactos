@@ -23,50 +23,26 @@ RtlpGetMode()
 
 
 PVOID
-STDCALL
-ExAllocatePool(
-   IN POOL_TYPE   PoolType,
-   IN SIZE_T      Bytes
-)
+RtlpAllocateMemory(UINT Bytes,
+                   ULONG Tag)
 {
-   return RtlAllocateHeap (
-      RtlGetProcessHeap (),
-      0,
-      Bytes);
+    UNREFERENCED_PARAMETER(Tag);
+    
+    return RtlAllocateHeap(RtlGetProcessHeap(),
+                           0,
+                           Bytes);
 }
 
-PVOID
-STDCALL
-ExAllocatePoolWithTag(
-   IN POOL_TYPE   PoolType,
-   IN SIZE_T      Bytes,
-   IN ULONG       Tag
-)
-{
-   return RtlAllocateHeap (
-      RtlGetProcessHeap (),
-      0,
-      Bytes);
-}
 
 VOID
-STDCALL
-ExFreePool(IN PVOID Mem)
+RtlpFreeMemory(PVOID Mem,
+               ULONG Tag)
 {
-   RtlFreeHeap (
-      RtlGetProcessHeap (),
-      0,
-      Mem);
-}
-
-VOID
-STDCALL
-ExFreePoolWithTag(IN PVOID Mem, IN ULONG Tag)
-{
-   RtlFreeHeap (
-      RtlGetProcessHeap (),
-      0,
-      Mem);
+    UNREFERENCED_PARAMETER(Tag);
+    
+    RtlFreeHeap(RtlGetProcessHeap(),
+                0,
+                Mem);
 }
 
 
@@ -172,8 +148,8 @@ RtlpFreeAtomHandle(PRTL_ATOM_TABLE AtomTable, PRTL_ATOM_TABLE_ENTRY Entry)
    PRTL_HANDLE_TABLE_ENTRY RtlHandleEntry;
    
    if (RtlIsValidIndexHandle(&AtomTable->RtlHandleTable,
-                             &RtlHandleEntry,
-                             (ULONG)Entry->HandleIndex))
+                             (ULONG)Entry->HandleIndex,
+                             &RtlHandleEntry))
    {
       RtlFreeHandle(&AtomTable->RtlHandleTable,
                     RtlHandleEntry);
@@ -222,8 +198,8 @@ RtlpGetAtomEntry(PRTL_ATOM_TABLE AtomTable, ULONG Index)
    PRTL_HANDLE_TABLE_ENTRY RtlHandle;
    
    if (RtlIsValidIndexHandle(&AtomTable->RtlHandleTable,
-                             &RtlHandle,
-                             Index))
+                             Index,
+                             &RtlHandle))
    {
       PRTL_ATOM_HANDLE AtomHandle = (PRTL_ATOM_HANDLE)RtlHandle;
 

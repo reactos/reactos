@@ -352,6 +352,26 @@ typedef struct _FN_OBJECT_MGR_FUNCTIONS
     ULONG Placeholder;
 } FN_OBJECT_MGR_FUNCTS, *PFN_OBJECT_MGR_FUNCTS;
 
+typedef enum _PROG_INVOKE_SETTING
+{
+    ProgressInvokeNever = 1,
+    ProgressInvokeEveryObject,
+    ProgressInvokeOnError,
+    ProgressCancelOperation,
+    ProgressRetryOperation
+} PROG_INVOKE_SETTING, *PPROG_INVOKE_SETTING;
+
+typedef VOID (STDCALL *FN_PROGRESSW)(LPWSTR pObjectName,
+                                     DWORD Status,
+                                     PPROG_INVOKE_SETTING pInvokeSetting,
+                                     PVOID Args,
+                                     BOOL SecuritySet);
+typedef VOID (STDCALL *FN_PROGRESSA)(LPSTR pObjectName,
+                                     DWORD Status,
+                                     PPROG_INVOKE_SETTING pInvokeSetting,
+                                     PVOID Args,
+                                     BOOL SecuritySet);
+
 #ifdef UNICODE
 #define ACCCTRL_DEFAULT_PROVIDER ACCCTRL_DEFAULT_PROVIDERW
 typedef TRUSTEE_W TRUSTEE_, *PTRUSTEE_;
@@ -368,6 +388,8 @@ typedef TRUSTEE_ACCESSW TRUSTEE_ACCESS, *PTRUSTEE_ACCESS;
 typedef OBJECTS_AND_NAME_W OBJECTS_AND_NAME_, *POBJECTS_AND_NAME_;
 #if (_WIN32_WINNT >= 0x0501)
 typedef INHERITED_FROMW INHERITED_FROM, *PINHERITED_FROM;
+typedef FN_PROGRESSW FN_PROGRESS;
+#define HAS_FN_PROGRESSW
 #endif
 #else
 #define ACCCTRL_DEFAULT_PROVIDER ACCCTRL_DEFAULT_PROVIDERA
@@ -385,6 +407,8 @@ typedef TRUSTEE_ACCESSA TRUSTEE_ACCESS, *PTRUSTEE_ACCESS;
 typedef OBJECTS_AND_NAME_A OBJECTS_AND_NAME_, *POBJECTS_AND_NAME_;
 #if (_WIN32_WINNT >= 0x0501)
 typedef INHERITED_FROMA INHERITED_FROM, *PINHERITED_FROM;
+typedef FN_PROGRESSA FN_PROGRESS;
+#define HAS_FN_PROGRESSA
 #endif
 #endif /* UNICODE */
 

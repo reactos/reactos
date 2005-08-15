@@ -34,13 +34,6 @@ DEFINE_GUID(IID_ISecurityInformation2, 0xc3ccfdb4, 0x6f88, 0x11d2, 0x00a3, 0xce,
 DEFINE_GUID(IID_IEffectivePermission, 0x3853dc76, 0x9f35, 0x407c, 0x0088, 0xa1,0xd1,0x93,0x44,0x36,0x5f,0xbc);
 DEFINE_GUID(IID_ISecurityObjectTypeInfo, 0xfc3066eb, 0x79ef, 0x444b, 0x0091, 0x11,0xd1,0x8a,0x75,0xeb,0xf2,0xfa);
 
-/* FIXME - defined in structs.h already!? avoid conflicts! */
-typedef struct _OBJECT_TYPE_LIST {
-  WORD Level;
-  WORD Sbz;
-  GUID *ObjectType;
-} OBJECT_TYPE_LIST, *POBJECT_TYPE_LIST;
-
 typedef interface ISecurityInformation *LPSECURITYINFO;
 typedef interface ISecurityInformation2 *LPSECURITYINFO2;
 typedef interface IEffectivePermission *LPEFFECTIVEPERMISSION;

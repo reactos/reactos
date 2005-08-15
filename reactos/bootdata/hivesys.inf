@@ -4,17 +4,6 @@ Signature = "$ReactOS$"
 [AddReg]
 
 ; Device classes (this list is incomplete... and should be generated from .inf files during installation)
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{36FC9E60-C465-11CF-8056-444553540000}",,0x00000000,"USB Controllers"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{36FC9E60-C465-11CF-8056-444553540000}","Class",0x00000000,"USB"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{36FC9E60-C465-11CF-8056-444553540000}","Icon",0x00000000,"-20"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{36FC9E60-C465-11CF-8056-444553540000}","NoInstallClass",0x00000000,"1"
-
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E965-E325-11CE-BFC1-08002BE10318}",,0x00000000,"DVD/CD-ROM drives"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E965-E325-11CE-BFC1-08002BE10318}","Class",0x00000000,"CDROM"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E965-E325-11CE-BFC1-08002BE10318}","EnumPropPages32",0x00000000,"MmSys.Cpl,MediaPropPageProvider"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E965-E325-11CE-BFC1-08002BE10318}","Icon",0x00000000,"-20"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E965-E325-11CE-BFC1-08002BE10318}","NoInstallClass",0x00000000,"1"
-
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E973-E325-11CE-BFC1-08002BE10318}",,0x00000000,"Network Client"
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E973-E325-11CE-BFC1-08002BE10318}","Class",0x00000000,"NetClient"
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E973-E325-11CE-BFC1-08002BE10318}","Icon",0x00000000,"-7"
@@ -362,40 +351,15 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management","Pagin
 ; Subsystems
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Debug",0x00020000,""
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Kmode",0x00020000,"%SystemRoot%\system32\win32k.sys"
-HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Optional",0x00010000,"Posix","Os2"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Optional",0x00010000,"Posix","Os2","Vms"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Os2",0x00020000,"%SystemRoot%\system32\os2ss.exe"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Posix",0x00020000,"%SystemRoot%\system32\psxss.exe"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Required",0x00010000,"Debug","Windows"
+HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Vms",0x00020000,"%SystemRoot%\system32\csr.exe ObjectDirectory=\VMS SharedSection=128 Windows=Off SubSystemType=Text ServerDll=vmssrv,1 ProfileControl=Off RequestThreads=2 MaxRequestThreads=2 Sessions=Off"
 HKLM,"SYSTEM\CurrentControlSet\Control\Session Manager\Subsystems","Windows",0x00020000,"%SystemRoot%\system32\csrss.exe"
 
-; 3Com 3c905 Driver
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x","Group",0x00000000,"NDIS"
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x","ImagePath",0x00020000,"system32\drivers\el90Xbc5.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x","Start",0x00010001,0x00000004
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x\Linkage","Bind",0x00010000,"\Device\3c90x1"
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x\Linkage","Export",0x00010000,"\Device\3c90x1"
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x\Linkage","Route",0x00010000,"3c90x1"
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x\Enum","0",0x00000000,"PCI\VEN_1022&DEV_2000\0000"
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x\Enum","Count",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x\Enum","NextInstance",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_1022&DEV_2000&SUBSYS_20001022&REV_10\0000","Service",0x00000000,"3c90x"
-HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_1022&DEV_2000&SUBSYS_20001022&REV_10\0000","Class",0x00000000,"Net"
-HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_1022&DEV_2000&SUBSYS_20001022&REV_10\0000","ClassGUID",0x00000000,"{4D36E972-E325-11CE-BFC1-08002BE10318}"
-
-; 3Com Adapter 1
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1","Type",0x00010001,0x00000004
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1\Linkage","Bind",0x00010000,"\Device\3c90x1"
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1\Linkage","Export",0x00010000,"\Device\3c90x1"
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1\Linkage","Route",0x00010000,"3c90x1"
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1\Parameters","SlotNumber",0x00000000,"10"
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1\Parameters","BusNumber",0x00000000,"0"
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1\Parameters\Tcpip","DefaultGateway",0x00010000,"0.0.0.0"
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1\Parameters\Tcpip","IPAddress",0x00010000,"0.0.0.0"
-HKLM,"SYSTEM\CurrentControlSet\Services\3c90x1\Parameters\Tcpip","SubnetMask",0x00010000,"0.0.0.0"
+; PNP Root device
+HKLM,"SYSTEM\CurrentControlSet\Enum\HTREE\ROOT\0","",0x00000000,""
 
 ; Afd driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Afd","ErrorControl",0x00010001,0x00000001
@@ -411,70 +375,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Atapi","ImagePath",0x00020000,"system32\
 HKLM,"SYSTEM\CurrentControlSet\Services\Atapi","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Atapi","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Atapi","Tag",0x00010001,0x00000010
-
-; Promise Ultra100TX miniport driver
-HKLM,"SYSTEM\CurrentControlSet\Services\ultra","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\ultra","Group",0x00000000,"SCSI Miniport"
-HKLM,"SYSTEM\CurrentControlSet\Services\ultra","ImagePath",0x00020000,"system32\drivers\ultra.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\ultra","Start",0x00010001,0x00000004
-HKLM,"SYSTEM\CurrentControlSet\Services\ultra","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\ultra","Tag",0x00010001,0x00000020
-
-; Initio A100 U2W Controller
-HKLM,"SYSTEM\CurrentControlSet\Services\inia100","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\inia100","Group",0x00000000,"SCSI Miniport"
-HKLM,"SYSTEM\CurrentControlSet\Services\inia100","ImagePath",0x00020000,"system32\drivers\inia100.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\inia100","Start",0x00010001,0x0000004
-HKLM,"SYSTEM\CurrentControlSet\Services\inia100","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\inia100","Tag",0x00010001,0x00000030
-
-; Initio INI 910
-HKLM,"SYSTEM\CurrentControlSet\Services\ini910U","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\ini910U","Group",0x00000000,"SCSI Miniport"
-HKLM,"SYSTEM\CurrentControlSet\Services\ini910U","ImagePath",0x00020000,"system32\drivers\ini910u.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\ini910U","Start",0x00010001,0x0000004
-HKLM,"SYSTEM\CurrentControlSet\Services\ini910U","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\ini910U","Tag",0x00010001,0x00000040
-
-; Adaptec SCSI Controller 2940UW miniport driver
-HKLM,"SYSTEM\CurrentControlSet\Services\aic78xx","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\aic78xx","Group",0x00000000,"SCSI Miniport"
-HKLM,"SYSTEM\CurrentControlSet\Services\aic78xx","ImagePath",0x00020000,"system32\drivers\aic78xx.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\aic78xx","Start",0x00010001,0x00000004
-HKLM,"SYSTEM\CurrentControlSet\Services\aic78xx","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\aic78xx","Tag",0x00010001,0x00000050
-
-; LSI Logic SCSI Controller 53C8xx miniport driver
-HKLM,"SYSTEM\CurrentControlSet\Services\symc8xx","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\symc8xx","Group",0x00000000,"SCSI Miniport"
-HKLM,"SYSTEM\CurrentControlSet\Services\symc8xx","ImagePath",0x00020000,"system32\drivers\symc8xx.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\symc8xx","Start",0x00010001,0x00000004
-HKLM,"SYSTEM\CurrentControlSet\Services\symc8xx","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\symc8xx","Tag",0x00010001,0x00000060
-
-; Diamond Multimedia Fireport 40
-HKLM,"SYSTEM\CurrentControlSet\Services\fireport","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\fireport","Group",0x00000000,"SCSI Miniport"
-HKLM,"SYSTEM\CurrentControlSet\Services\fireport","ImagePath",0x00020000,"system32\drivers\fireport.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\fireport","Start",0x00010001,0x00000004
-HKLM,"SYSTEM\CurrentControlSet\Services\fireport","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\fireport","Tag",0x00010001,0x00000070
-
-; Tekram DC-390F SCSI Controller miniport driver (based on 53C857)
-HKLM,"SYSTEM\CurrentControlSet\Services\trm390w","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\trm390w","Group",0x00000000,"SCSI Miniport"
-HKLM,"SYSTEM\CurrentControlSet\Services\trm390w","ImagePath",0x00020000,"system32\drivers\trm390w.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\trm390w","Start",0x00010001,0x0000004
-HKLM,"SYSTEM\CurrentControlSet\Services\trm390w","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\trm390w","Tag",0x00010001,0x00000080
-
-; HighPoint HPT3xx miniport driver
-HKLM,"SYSTEM\CurrentControlSet\Services\hpt3xxPCI","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\hpt3xxPCI","Group",0x00000000,"SCSI Miniport"
-HKLM,"SYSTEM\CurrentControlSet\Services\hpt3xxPCI","ImagePath",0x00020000,"system32\drivers\hpt3xx.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\hpt3xxPCI","Start",0x00010001,0x00000004
-HKLM,"SYSTEM\CurrentControlSet\Services\hpt3xxPCI","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\hpt3xxPCI","Tag",0x00010001,0x00000090
 
 ; ACPI driver
 HKLM,"SYSTEM\CurrentControlSet\Services\ACPI","ErrorControl",0x00010001,0x00000001
@@ -575,15 +475,13 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","Type",0x00010001,0x00000008
 ;HKLM,"SYSTEM\CurrentControlSet\Services\Ide","Type",0x00010001,0x00000001
 
 ; i8042 port driver
-HKLM,"SYSTEM\CurrentControlSet\Services\i8042Prt","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\i8042Prt","Group",0x00000000,"Keyboard Port"
-HKLM,"SYSTEM\CurrentControlSet\Services\i8042Prt","ImagePath",0x00020000,"system32\drivers\i8042prt.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\i8042Prt","Start",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\i8042Prt","Type",0x00010001,0x00000001
-
-HKLM,"SYSTEM\CurrentControlSet\Services\i8042Prt\Parameters","SampleRate",0x00010001,0x0000003c
-HKLM,"SYSTEM\CurrentControlSet\Services\i8042Prt\Parameters","BreakOnSysRq",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\i8042Prt\Parameters","MouseResolution",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt","Type",0x00010001,0x00000001
+;HKLM,"SYSTEM\CurrentControlSet\Enum\ACPI\PNP0303\0000","Service",0x00000000,"i8042prt"
+;HKLM,"SYSTEM\CurrentControlSet\Enum\ACPI\PNP0303\0000","ClassGUID",0x00000000,"{4D36E96B-E325-11CE-BFC1-08002BE10318}"
+;HKLM,"SYSTEM\CurrentControlSet\Enum\ACPI\PNP0F13\0000","Service",0x00000000,"i8042prt"
+;HKLM,"SYSTEM\CurrentControlSet\Enum\ACPI\PNP0F13\0000","ClassGUID",0x00000000,"{4D36E96F-E325-11CE-BFC1-08002BE10318}"
 
 ; Keyboard class driver
 HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass","ErrorControl",0x00010001,0x00000000
@@ -592,19 +490,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass","ImagePath",0x00020000,"system
 HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\kbdclass","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96B-E325-11CE-BFC1-08002BE10318}","UpperFilters",0x00010000,"kbdclass"
-
-; Serial port enumerator
-HKLM,"SYSTEM\CurrentControlSet\Services\serenum","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\serenum","Group",0x00000000,"PNP Filter"
-HKLM,"SYSTEM\CurrentControlSet\Services\serenum","ImagePath",0x00020000,"system32\drivers\serenum.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\serenum","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\serenum","Type",0x00010001,0x00000001
-;hard coded values
-HKLM,"SYSTEM\CurrentControlSet\Services\serenum\Enum","0",0x00000000,"ACPI\PNP0501"
-HKLM,"SYSTEM\CurrentControlSet\Services\serenum\Enum","Count",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\serenum\Enum","NextInstance",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Enum\ACPI\PNP0501\1","UpperFilters",0x00010000,"serenum"
-HKLM,"SYSTEM\CurrentControlSet\Enum\ACPI\PNP0501\2","UpperFilters",0x00010000,"serenum"
 
 ; SB16 driver
 HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","Group",0x00000000,"Base"
@@ -620,26 +505,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\sndblst","ImagePath",0x00020000,"system3
 ;HKLM,"SYSTEM\CurrentControlSet\Services\sndblst\Parameters\Device0","DSP Version",0x00010001,0x00000401
 HKLM,"SYSTEM\CurrentControlSet\Services\sndblst\Parameters\Device0\Devices","SBWaveIn0",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\sndblst\Parameters\Device0\Devices","SBWaveOut0",0x00010001,0x00000002
-
-HKLM,"SYSTEM\CurrentControlSet\Services\es137140","Group",0x00000000,"Base"
-HKLM,"SYSTEM\CurrentControlSet\Services\es137140","ServiceType",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\es137140","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\es137140","Start",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\es137140","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\es137140","ImagePath",0x00020000,"system32\drivers\es137140.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\es137140","DisplayName",0x00020000,"ENSONIQ AudioPCI"
-HKLM,"SYSTEM\CurrentControlSet\Services\es137140\Parameters\Device0","Configuration Error",0x00010001,0xffffffff
-HKLM,"SYSTEM\CurrentControlSet\Services\es137140\Parameters\Device0","Joystick",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\es137140\Parameters\Device0","Port",0x00010001,0x00001080
-HKLM,"SYSTEM\CurrentControlSet\Services\es137140\Parameters\Device0","Interrupt",0x00010001,0x00000044
-HKLM,"SYSTEM\CurrentControlSet\Services\es137140\Parameters\Device0","RequestedSystemResources",0x00000001,88,00,00,00,05,00,00,00,00,00,00,00,11,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,01,00,00,00,01,00,01,00,03,00,00,00,00,02,03,00,00,00,00,00,44,00,00,00,44,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,01,01,01,00,01,00,00,00,40,00,00,00,40,00,00,00,80,10,00,00,00,00,00,00,bf,10,00,00,00,00,00,00,08,01,01,00,01,00,00,00,40,00,00,00,40,00,00,00,80,10,00,00,00,00,00,00,bf,10,00,00,00,00,00,00
-HKLM,"SYSTEM\CurrentControlSet\Services\es137140\Parameters\Device0\Devices","EAPWaveIn0",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\es137140\Parameters\Device0\Devices","EAPWaveOut0",0x00010001,0x00000002
-HKLM,"SYSTEM\CurrentControlSet\Services\es137140\Parameters\Device0\Devices","EAPMidiIn0",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\es137140\Parameters\Device0\Devices","EAPMidiOut0",0x00010001,0x00000004
-HKLM,"SYSTEM\CurrentControlSet\Services\es137140\Parameters\Device0\Devices","EAPMidiOut1",0x00010001,0x00000004
-HKLM,"SYSTEM\CurrentControlSet\Services\es137140\Parameters\Device0\Devices","EAPMixer0",0x00010001,0x00000006
-HKLM,"SYSTEM\CurrentControlSet\Services\es137140\Parameters\Device0\Devices","EAPAux0",0x00010001,0x00000005
 
 ; MPU-401 MIDI driver
 HKLM,"SYSTEM\CurrentControlSet\Services\mpu401","Group",0x00000000,"Base"
@@ -822,19 +687,12 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Null","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Null","Type",0x00010001,0x00000001
 
 ; Serial device driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Serial","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Serial","Group",0x00000000,"Extended Base"
-HKLM,"SYSTEM\CurrentControlSet\Services\Serial","ImagePath",0x00020000,"system32\drivers\serial.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Serial","Start",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Serial","Type",0x00010001,0x00000001
-;hard coded values
-HKLM,"SYSTEM\CurrentControlSet\Services\Serial\Enum","0",0x00000000,"ACPI\PNP0501"
-HKLM,"SYSTEM\CurrentControlSet\Services\Serial\Enum","Count",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Serial\Enum","NextInstance",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Enum\ACPI\PNP0501\1","ClassGUID",0x00000000,"{4D36E978-E325-11CE-BFC1-08002BE10318}"
 HKLM,"SYSTEM\CurrentControlSet\Enum\ACPI\PNP0501\1","Service",0x00000000,"serial"
+HKLM,"SYSTEM\CurrentControlSet\Enum\ACPI\PNP0501\1","UpperFilters",0x00010000,"serenum"
 HKLM,"SYSTEM\CurrentControlSet\Enum\ACPI\PNP0501\2","ClassGUID",0x00000000,"{4D36E978-E325-11CE-BFC1-08002BE10318}"
 HKLM,"SYSTEM\CurrentControlSet\Enum\ACPI\PNP0501\2","Service",0x00000000,"serial"
+HKLM,"SYSTEM\CurrentControlSet\Enum\ACPI\PNP0501\2","UpperFilters",0x00010000,"serenum"
 
 ; Packet driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Packet","ErrorControl",0x00010001,0x00000001
@@ -845,20 +703,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Packet","Type",0x00010001,0x00000001
 ; NOTE: These settings should be added by the network setup
 HKLM,"SYSTEM\CurrentControlSet\Services\Packet\Linkage","Bind",0x00010000,"\Device\Ne20001"
 HKLM,"SYSTEM\CurrentControlSet\Services\Packet\Linkage","Export",0x00010000,"\Device\packet"
-
-; Private ICE driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Pice","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Pice","Group",0x00000000,"Debug"
-HKLM,"SYSTEM\CurrentControlSet\Services\Pice","ImagePath",0x00020000,"system32\drivers\pice.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Pice","Start",0x00010001,0x00000004
-HKLM,"SYSTEM\CurrentControlSet\Services\Pice","Type",0x00010001,0x00000001
-
-; SoftICE
-;HKLM,"SYSTEM\CurrentControlSet\Services\ntice","ErrorControl",0x00010001,0x00000000
-;HKLM,"SYSTEM\CurrentControlSet\Services\ntice","Group",0x00000000,"Debug"
-;HKLM,"SYSTEM\CurrentControlSet\Services\ntice","ImagePath",0x00020000,"system32\drivers\ntice.sys"
-;HKLM,"SYSTEM\CurrentControlSet\Services\ntice","Start",0x00010001,0x00000000
-;HKLM,"SYSTEM\CurrentControlSet\Services\ntice","Type",0x00010001,0x00000001
 
 ; Plug and Play manager
 HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","ErrorControl",0x00010001,0x00000000
@@ -951,23 +795,6 @@ HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSe
 HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\VBE\Device0","DefaultSettings.XResolution",0x00010001,640
 HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\VBE\Device0","DefaultSettings.YResolution",0x00010001,480
 
-; QEMU SVGA Driver
-
-HKLM,"SYSTEM\CurrentControlSet\Services\CL54XX","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\CL54XX","Group",0x00000000,"Video Save SVGA"
-HKLM,"SYSTEM\CurrentControlSet\Services\CL54XX","ImagePath",0x00020000,"system32\drivers\cl54xx.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\CL54XX","Start",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\CL54XX","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\CL54XX","Tag",0x00010001,0x0000000C
-HKLM,"SYSTEM\CurrentControlSet\Services\CL54XX\Device0","InstalledDisplayDrivers",0x00010000,"CL54XX"
-
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\CL54XX\Device0","DefaultSettings.VgaCompatible",0x00010001,1
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\CL54XX\Device0","DefaultSettings.VRefresh",0x00010001,60
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\CL54XX\Device0","DefaultSettings.BitsPerPel",0x00010001,16
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\CL54XX\Device0","DefaultSettings.Interlaced",0x00010001,0
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\CL54XX\Device0","DefaultSettings.XResolution",0x00010001,800
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\CL54XX\Device0","DefaultSettings.YResolution",0x00010001,600
-
 ; VGA miniport driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Group",0x00000000,"Video Save"
@@ -975,38 +802,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Vga","ImagePath",0x00020000,"system32\dr
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Vga\Device0","InstalledDisplayDrivers",0x00010000,"vgaddi"
-
-
-; VMware SVGA driver
-HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga","Group",0x00000000,"Video"
-HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga","ImagePath",0x00020000,"system32\drivers\vmx_svga.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga","Start",0x00010001,0x00000004
-HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga\Device0","InstalledDisplayDrivers",0x00010000,"vmx_fb"
-HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga\Device0","Resolution.0",0x00000001,36,34,30,78,34,38,30,00
-HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga\Device0","Resolution.1",0x00000001,38,30,30,78,36,30,30,00
-HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga\Device0","Resolution.2",0x00000001,31,30,32,34,78,37,36,38,00
-HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga\Device0","Resolution.3",0x00000001,31,31,35,32,78,38,36,34,00
-HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga\Device0","Resolution.4",0x00000001,31,32,38,30,78,39,36,30,00
-HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga\Device0","Resolution.5",0x00000001,31,32,38,30,78,31,30,32,34,00
-HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga\Device0","Resolution.6",0x00000001,31,34,30,30,78,31,30,35,30,00
-HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga\Device0","Resolution.7",0x00000001,31,36,30,30,78,31,32,30,30,00
-HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga\Device0","Resolution.8",0x00000001,31,37,39,32,78,31,33,34,34,00
-HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga\Device0","Resolution.9",0x00000001,31,38,35,36,78,31,33,39,32,00
-HKLM,"SYSTEM\CurrentControlSet\Services\vmx_svga\Device0","Resolution.10",0x00000001,31,39,32,30,78,31,34,34,30,00
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\vmx_svga\Device0","DefaultSettings.Flags",0x00010001,0
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\vmx_svga\Device0","DefaultSettings.VRefresh",0x00010001,85
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\vmx_svga\Device0","DefaultSettings.XPanning",0x00010001,0
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\vmx_svga\Device0","DefaultSettings.YPanning",0x00010001,0
-; Select the resolution and depth below
-; Available resolutions (Resolution.0 - Resolution.10 above):
-; 640x480, 800x600, 1024x768, 1152x864, 1280x960, 1280x1024, 1400x1050, 1600x1200,
-; 1792x1344, 1856x1392, 1920x1440, with 8, 16 or 32 bits per pixel
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\vmx_svga\Device0","DefaultSettings.BitsPerPel",0x00010001,16
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\vmx_svga\Device0","DefaultSettings.XResolution",0x00010001,800
-HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\vmx_svga\Device0","DefaultSettings.YResolution",0x00010001,600
-HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_15AD&DEV_0405&SUBSYS_040515AD&REV_00\0000","Service",0x00000000,"vmx_svga"
 
 ; ControlSet selection settings
 HKLM,"SYSTEM\Select","Current",0x00010001,0x00000001

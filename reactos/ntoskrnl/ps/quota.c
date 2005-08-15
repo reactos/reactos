@@ -15,6 +15,37 @@
 
 /* FUNCTIONS ***************************************************************/
 
+VOID
+STDCALL
+PspInheritQuota(PEPROCESS Process, PEPROCESS ParentProcess)
+{
+    if (ParentProcess != NULL)
+    {
+        PEPROCESS_QUOTA_BLOCK QuotaBlock = ParentProcess->QuotaBlock;
+        
+        ASSERT(QuotaBlock != NULL);
+
+        InterlockedIncrementUL(&QuotaBlock->ReferenceCount);
+        
+        Process->QuotaBlock = QuotaBlock;
+    }
+    else
+        Process->QuotaBlock = &PspDefaultQuotaBlock;
+}
+
+VOID
+STDCALL
+PspDestroyQuotaBlock(PEPROCESS Process)
+{
+    PEPROCESS_QUOTA_BLOCK QuotaBlock = Process->QuotaBlock;
+
+    if (QuotaBlock != &PspDefaultQuotaBlock &&
+        InterlockedDecrementUL(&QuotaBlock->ReferenceCount) == 0)
+    {
+        ExFreePool(QuotaBlock);
+    }
+}
+
 /*
  * @implemented
  */

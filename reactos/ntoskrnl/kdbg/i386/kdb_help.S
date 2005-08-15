@@ -1,4 +1,4 @@
-#include <internal/asm.h>
+#include <ndk/asm.h>
 #include <ndk/i386/segment.h>
 
 .text

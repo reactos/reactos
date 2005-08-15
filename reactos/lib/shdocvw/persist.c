@@ -92,7 +92,7 @@ static HRESULT WINAPI WBPS_SaveCompleted(LPPERSISTSTORAGE iface, LPSTORAGE pStgN
  * IPersistStorage virtual function table for IE Web Browser component
  */
 
-static IPersistStorageVtbl WBPS_Vtbl =
+static const IPersistStorageVtbl WBPS_Vtbl =
 {
     WBPS_QueryInterface,
     WBPS_AddRef,
@@ -178,7 +178,7 @@ static HRESULT WINAPI WBPSI_InitNew(LPPERSISTSTREAMINIT iface)
  * IPersistStreamInit virtual function table for IE Web Browser component
  */
 
-static IPersistStreamInitVtbl WBPSI_Vtbl =
+static const IPersistStreamInitVtbl WBPSI_Vtbl =
 {
     WBPSI_QueryInterface,
     WBPSI_AddRef,

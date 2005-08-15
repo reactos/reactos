@@ -185,14 +185,22 @@ typedef struct tagDDEML_MSG_HOOK_DATA {
 	DWORD	cbData;
 	DWORD	Data[8];
 } DDEML_MSG_HOOK_DATA;
-typedef struct tagMONHSZSTRUCT {
+typedef struct tagMONHSZSTRUCTA {
 	UINT	cb;
 	BOOL	fsAction;
 	DWORD	dwTime;
 	HSZ	hsz;
 	HANDLE	hTask;
-	TCHAR	str[1];
-} MONHSZSTRUCT, *PMONHSZSTRUCT;
+	CHAR	str[1];
+} MONHSZSTRUCTA, *PMONHSZSTRUCTA;
+typedef struct tagMONHSZSTRUCTW {
+	UINT	cb;
+	BOOL	fsAction;
+	DWORD	dwTime;
+	HSZ	hsz;
+	HANDLE	hTask;
+	WCHAR	str[1];
+} MONHSZSTRUCTW, *PMONHSZSTRUCTW;
 typedef struct tagMONLINKSTRUCT {
 	UINT	cb;
 	DWORD	dwTime;
@@ -292,6 +300,8 @@ BOOL WINAPI DdeUninitialize(DWORD);
 #define SZDDESYS_ITEM_FORMATS	L"Formats"
 #define SZDDESYS_ITEM_HELP	L"Help"
 #define SZDDE_ITEM_ITEMLIST	L"TopicItemList"
+#define MONHSZSTRUCT MONHSZSTRUCTA
+#define PMONHSZSTRUCT PMONHSZSTRUCTA
 #define DdeCreateStringHandle DdeCreateStringHandleW
 #define DdeInitialize DdeInitializeW
 #define DdeQueryString DdeQueryStringW
@@ -304,6 +314,8 @@ BOOL WINAPI DdeUninitialize(DWORD);
 #define SZDDESYS_ITEM_FORMATS	"Formats"
 #define SZDDESYS_ITEM_HELP	"Help"
 #define SZDDE_ITEM_ITEMLIST	"TopicItemList"
+#define MONHSZSTRUCT MONHSZSTRUCTW
+#define PMONHSZSTRUCT PMONHSZSTRUCTW
 #define DdeCreateStringHandle DdeCreateStringHandleA
 #define DdeInitialize DdeInitializeA
 #define DdeQueryString DdeQueryStringA

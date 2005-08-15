@@ -124,8 +124,7 @@ static void WINAPI EXCEPTION_ctor(exception *_this, const char** name)
   if (*name)
   {
     size_t name_len = strlen(*name) + 1;
-//    _this->name = MSVCRT_malloc(name_len);
-    _this->name = malloc(name_len);
+    _this->name = MSVCRT_malloc(name_len);
 	memcpy(_this->name, *name, name_len);
     _this->do_free = TRUE;
   }
@@ -188,8 +187,7 @@ void __stdcall MSVCRT_exception_dtor(exception * _this)
 {
   TRACE("(%p)\n", _this);
   _this->vtable = &MSVCRT_exception_vtable;
-//  if (_this->do_free) MSVCRT_free(_this->name);
-  if (_this->do_free) free(_this->name);
+  if (_this->do_free) MSVCRT_free(_this->name);
 }
 
 /******************************************************************
@@ -537,10 +535,9 @@ void __stdcall MSVCRT_type_info_dtor(type_info * _this)
 {
   TRACE("(%p)\n", _this);
   if (_this->name)
-//    MSVCRT_free(_this->name);
-    free(_this->name);
+    MSVCRT_free(_this->name);
 }
-#if 0 /* __REACTOS__ */
+
 /******************************************************************
  *		?name@type_info@@QBEPBDXZ (MSVCRT.@)
  */
@@ -550,16 +547,19 @@ const char * __stdcall MSVCRT_type_info_name(type_info * _this)
   if (!_this->name)
   {
     /* Create and set the demangled name */
-    char* name = MSVCRT___unDName(0, _this->mangled, 0,
-                                  (MSVCRT_malloc_func)malloc,
-                                  (MSVCRT_free_func)free, 0x2800);
+    /* Nota: mangled name in type_info struct always start with a '.', while
+     * it isn't valid for mangled name.
+     * Is this '.' really part of the mangled name, or has it some other meaning ?
+     */
+    char* name = __unDName(0, _this->mangled + 1, 0,
+                           MSVCRT_malloc, MSVCRT_free, 0x2800);
 
     if (name)
     {
       unsigned int len = strlen(name);
 
       /* It seems _unDName may leave blanks at the end of the demangled name */
-      if (name[len] == ' ')
+      while (len && name[--len] == ' ')
         name[len] = '\0';
 
       _mlock(_EXIT_LOCK2);
@@ -567,9 +567,8 @@ const char * __stdcall MSVCRT_type_info_name(type_info * _this)
       if (_this->name)
       {
         /* Another thread set this member since we checked above - use it */
-//        MSVCRT_free(name);
-        free(name);
-	  }
+        MSVCRT_free(name);
+      }
       else
         _this->name = name;
 
@@ -579,7 +578,7 @@ const char * __stdcall MSVCRT_type_info_name(type_info * _this)
   TRACE("(%p) returning %s\n", _this, _this->name);
   return _this->name;
 }
-#endif
+
 /******************************************************************
  *		?raw_name@type_info@@QBEPBDXZ (MSVCRT.@)
  */

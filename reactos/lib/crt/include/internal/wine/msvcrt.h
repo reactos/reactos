@@ -125,4 +125,11 @@ extern void msvcrt_free_args(void);
 #define _RT_CRNL        252
 #define _RT_BANNER      255
 
+typedef void* (*malloc_func_t)(size_t);
+typedef void  (*free_func_t)(void*);
+#define MSVCRT_malloc malloc
+#define MSVCRT_free free
+VOID STDCALL RtlAssert(PVOID FailedAssertion,PVOID FileName,ULONG LineNumber,PCHAR Message);
+extern char* __unDName(char *,const char*,int,malloc_func_t,free_func_t,unsigned short int);
+
 #endif /* __WINE_MSVCRT_H */

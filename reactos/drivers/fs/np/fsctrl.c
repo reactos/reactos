@@ -187,6 +187,7 @@ NpfsDisconnectPipe(PNPFS_FCB Fcb)
       Server = (Fcb->PipeEnd == FILE_PIPE_SERVER_END);
       OtherSide = Fcb->OtherSide;
       Fcb->OtherSide = NULL;
+      Fcb->PipeState = FILE_PIPE_DISCONNECTED_STATE;
       /* Lock the server first */
       if (Server)
       {
@@ -464,7 +465,7 @@ NpfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 	break;
 
       default:
-	DPRINT("IoControlCode: %x\n", IoStack->Parameters.FileSystemControl.FsControlCode)
+	DPRINT("IoControlCode: %x\n", IoStack->Parameters.FileSystemControl.FsControlCode);
 	Status = STATUS_UNSUCCESSFUL;
     }
 

@@ -138,10 +138,11 @@ VOID PrintPrompt(VOID)
 					break;
 
 				case _T('T'):					
-          {
-          TCHAR szTime[32];          
-	        GetTimeFormat(LOCALE_USER_DEFAULT, 0, NULL, NULL,szTime, sizeof(szTime));
-          ConOutPrintf("%s",szTime);
+          {          
+          SYSTEMTIME t;
+          GetSystemTime(&t); 
+          ConOutPrintf(_T("%02d%c%02d%c%02d%c%02d\n"),t.wHour, cTimeSeparator,t.wMinute , cTimeSeparator,
+		      t.wSecond , cDecimalSeparator, t.wMilliseconds );
           }
 					break;
           

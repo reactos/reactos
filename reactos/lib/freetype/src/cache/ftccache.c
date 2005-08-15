@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType internal cache interface (body).                        */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002, 2003, 2004 by                               */
+/*  Copyright 2000-2001, 2002, 2003, 2004, 2005 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -424,65 +424,31 @@
     FT_Error  error;
     FTC_Node  node;
 
+
     /*
-     *  Try to allocate a new cache node.  Note that in case of
-     *  out-of-memory error (OOM), we'll flush the cache a bit,
-     *  then try again.
-     *
-     *  On each try, the `tries' variable gives the number
-     *  of old nodes we want to flush from the manager's global list
-     *  before the next allocation attempt.  It barely doubles on
-     *  each iteration.
-     *
+     * We use the FTC_CACHE_TRYLOOP macros to support out-of-memory
+     * errors (OOM) correctly, i.e., by flushing the cache progressively
+     * in order to make more room.
      */
-    error = cache->clazz.node_new( &node, query, cache );
+
+    FTC_CACHE_TRYLOOP( cache )
+    {
+      error = cache->clazz.node_new( &node, query, cache );
+    }
+    FTC_CACHE_TRYLOOP_END();
+
     if ( error )
-      goto FlushCache;
+      node = NULL;
+    else
+    {
+     /* don't assume that the cache has the same number of buckets, since
+      * our allocation request might have triggered global cache flushing
+      */
+      ftc_cache_add( cache, hash, node );
+    }
 
-  AddNode:
-    /* don't assume that the cache has the same number of buckets, since
-     * our allocation request might have triggered global cache flushing
-     */
-    ftc_cache_add( cache, hash, node );
-
-  Exit:
     *anode = node;
     return error;
-
-  FlushCache:
-    node = NULL;
-    if ( error != FT_Err_Out_Of_Memory )
-      goto Exit;
-
-    {
-      FTC_Manager  manager = cache->manager;
-      FT_UInt      count, tries = 1;
-
-
-      for (;;)
-      {
-        error = cache->clazz.node_new( &node, query, cache );
-        if ( !error )
-          break;
-
-        node = NULL;
-        if ( error != FT_Err_Out_Of_Memory )
-          goto Exit;
-
-        count = FTC_Manager_FlushN( manager, tries );
-        if ( count == 0 )
-          goto Exit;
-
-        if ( count == tries )
-        {
-          count = tries * 2;
-          if ( count < tries || count > manager->num_nodes )
-            count = manager->num_nodes;
-        }
-        tries = count;
-      }
-    }
-    goto AddNode;
   }
 
 

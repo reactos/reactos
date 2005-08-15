@@ -23,6 +23,24 @@ RtlpGetMode()
    return KernelMode;
 }
 
+PVOID
+RtlpAllocateMemory(UINT Bytes,
+                   ULONG Tag)
+{
+    return ExAllocatePoolWithTag(PagedPool,
+                                 (SIZE_T)Bytes,
+                                 Tag);
+}
+
+
+VOID
+RtlpFreeMemory(PVOID Mem,
+               ULONG Tag)
+{
+    ExFreePoolWithTag(Mem,
+                      Tag);
+}
+
 /*
  * @implemented
  */
@@ -228,33 +246,35 @@ VOID
 RtlpFreeAtomHandle(PRTL_ATOM_TABLE AtomTable, PRTL_ATOM_TABLE_ENTRY Entry)
 {
    ExDestroyHandle(AtomTable->ExHandleTable,
-                   (LONG)Entry->HandleIndex);
+                   (HANDLE)((ULONG_PTR)Entry->HandleIndex << 2));
 }
 
 BOOLEAN
 RtlpCreateAtomHandle(PRTL_ATOM_TABLE AtomTable, PRTL_ATOM_TABLE_ENTRY Entry)
 {
    HANDLE_TABLE_ENTRY ExEntry;
-   LONG HandleIndex;
+   HANDLE Handle;
+   USHORT HandleIndex;
    
    ExEntry.u1.Object = Entry;
    ExEntry.u2.GrantedAccess = 0x1; /* FIXME - valid handle */
    
-   HandleIndex = ExCreateHandle(AtomTable->ExHandleTable,
+   Handle = ExCreateHandle(AtomTable->ExHandleTable,
                                 &ExEntry);
-   if (HandleIndex != 0)
+   if (Handle != NULL)
    {
+      HandleIndex = (USHORT)((ULONG_PTR)Handle >> 2);
       /* FIXME - Handle Indexes >= 0xC000 ?! */
-      if (HandleIndex < 0xC000)
+      if ((ULONG_PTR)HandleIndex >> 2 < 0xC000)
       {
-         Entry->HandleIndex = (USHORT)HandleIndex;
-         Entry->Atom = 0xC000 + (USHORT)HandleIndex;
+         Entry->HandleIndex = HandleIndex;
+         Entry->Atom = 0xC000 + HandleIndex;
          
          return TRUE;
       }
       else
          ExDestroyHandle(AtomTable->ExHandleTable,
-                         HandleIndex);
+                         Handle);
    }
    
    return FALSE;
@@ -264,21 +284,47 @@ PRTL_ATOM_TABLE_ENTRY
 RtlpGetAtomEntry(PRTL_ATOM_TABLE AtomTable, ULONG Index)
 {
    PHANDLE_TABLE_ENTRY ExEntry;
+   PRTL_ATOM_TABLE_ENTRY Entry = NULL;
+   
+   /* NOTE: There's no need to explicitly enter a critical region because it's
+            guaranteed that we're in a critical region right now (as we hold
+            the atom table lock) */
    
    ExEntry = ExMapHandleToPointer(AtomTable->ExHandleTable,
-                                  (LONG)Index);
+                                  (HANDLE)((ULONG_PTR)Index << 2));
    if (ExEntry != NULL)
    {
-      PRTL_ATOM_TABLE_ENTRY Entry;
-      
       Entry = ExEntry->u1.Object;
       
       ExUnlockHandleTableEntry(AtomTable->ExHandleTable,
                                ExEntry);
-      return Entry;
    }
    
-   return NULL;
+   return Entry;
+}
+
+/* FIXME - RtlpCreateUnicodeString is obsolete and should be removed ASAP! */
+BOOLEAN FASTCALL
+RtlpCreateUnicodeString(
+   IN OUT PUNICODE_STRING UniDest,
+   IN PCWSTR  Source,
+   IN POOL_TYPE PoolType)
+{
+   ULONG Length;
+
+   Length = (wcslen (Source) + 1) * sizeof(WCHAR);
+   UniDest->Buffer = ExAllocatePoolWithTag(PoolType, Length, TAG('U', 'S', 'T', 'R'));
+   if (UniDest->Buffer == NULL)
+      return FALSE;
+
+   RtlCopyMemory (UniDest->Buffer,
+                  Source,
+                  Length);
+
+   UniDest->MaximumLength = Length;
+   UniDest->Length = Length - sizeof (WCHAR);
+
+   return TRUE;
 }
 
 /* EOF */

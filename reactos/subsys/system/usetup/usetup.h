@@ -27,6 +27,10 @@
 #ifndef __USETUP_H__
 #define __USETUP_H__
 
+/* C Headers */
+#include <ctype.h>
+#include <stdio.h>
+
 /* PSDK/NDK */
 #include <windows.h>
 #include <fmifs/fmifs.h>
@@ -39,8 +43,8 @@
 /* DDK Disk Headers */
 #include <ddk/ntddscsi.h>
 
-/* FIXME: Put outside of DDK */
-#include <ddk/ntddblue.h>
+/* Blue Driver Header */
+#include <blue/ntddblue.h>
 
 /* Helper Header */
 #include <reactos/helper.h>

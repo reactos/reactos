@@ -59,7 +59,7 @@ typedef long RPC_STATUS;
 #define RpcExcept(x) } else {
 #define RpcEndExcept }
 #define RpcTryFinally if (1) {
-#define RpcFinally } else {
+#define RpcFinally } if (1) {
 #define RpcEndFinally }
 #define RpcExceptionCode() 0
 #define RpcAbnormalTermination() AbnormalTermination()

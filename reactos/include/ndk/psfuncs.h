@@ -14,6 +14,12 @@
 
 /* PROTOTYPES ****************************************************************/
 
+struct _W32THREAD* STDCALL
+PsGetWin32Thread(VOID);
+
+struct _W32PROCESS* STDCALL
+PsGetWin32Process(VOID);
+
 PVOID
 STDCALL
 PsGetProcessWin32Process(PEPROCESS Process);

@@ -18,9 +18,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "user32.h"
-#include "controls.h"
-#include "wine/unicode.h"
+#include <user32.h>
 
 #ifdef __REACTOS__
 #define MAKEINTATOMW(atom)  ((LPCWSTR)((ULONG_PTR)((WORD)(atom))))

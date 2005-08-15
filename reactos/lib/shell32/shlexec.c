@@ -296,7 +296,7 @@ static HRESULT SHELL_ResolveShortCutW(LPWSTR wcmd, LPWSTR wargs, LPWSTR wdir, HW
 
 			    if (SUCCEEDED(hr) && *ppidl) {
 				/* We got a PIDL instead of a file system path - try to translate it. */
-				if (SUCCEEDED(SHELL_GetPathFromIDListW(*ppidl, wcmd, MAX_PATH))) {
+				if (SHGetPathFromIDListW(*ppidl, wcmd)) {
 				    SHFree(*ppidl);
 				    *ppidl = NULL;
 				}
@@ -743,7 +743,7 @@ UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOperation,
 /******************************************************************
  *		dde_cb
  *
- * callback for the DDE connection. not really usefull
+ * callback for the DDE connection. not really useful
  */
 static HDDEDATA CALLBACK dde_cb(UINT uType, UINT uFmt, HCONV hConv,
                                 HSZ hsz1, HSZ hsz2, HDDEDATA hData,

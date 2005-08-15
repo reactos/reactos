@@ -210,7 +210,10 @@ static unsigned wire_extra(unsigned long *pFlags, VARIANT *pvar)
     /* find the buffer size of the marshalled dispatch interface */
     hr = CoGetMarshalSizeMax(&size, &IID_IDispatch, (IUnknown*)V_DISPATCH(pvar), LOWORD(*pFlags), NULL, MSHLFLAGS_NORMAL);
     if (FAILED(hr)) {
-      ERR("Dispatch variant buffer size calculation failed, HRESULT=0x%lx\n", hr);
+      if (!V_DISPATCH(pvar))
+        WARN("NULL dispatch pointer\n");
+      else
+        ERR("Dispatch variant buffer size calculation failed, HRESULT=0x%lx\n", hr);
       return 0;
     }
     size += sizeof(ULONG); /* we have to store the buffersize in the stream */
@@ -515,6 +518,7 @@ HRESULT CALLBACK IDispatch_Invoke_Proxy(
   UINT* rgVarRefIdx = NULL;
   VARIANTARG* rgVarRef = NULL;
   UINT u, cVarRef;
+  UINT uArgErr;
 
   TRACE("(%p)->(%ld,%s,%lx,%x,%p,%p,%p,%p)\n", This,
         dispIdMember, debugstr_guid(riid),
@@ -523,6 +527,7 @@ HRESULT CALLBACK IDispatch_Invoke_Proxy(
 
   /* [out] args can't be null, use dummy vars if needed */
   if (!pVarResult) pVarResult = &VarResult;
+  if (!puArgErr) puArgErr = &uArgErr;
 
   /* count by-ref args */
   for (cVarRef=0,u=0; u<pDispParams->cArgs; u++) {
@@ -590,19 +595,9 @@ HRESULT __RPC_STUB IDispatch_Invoke_Stub(
     UINT* rgVarRefIdx,
     VARIANTARG* rgVarRef)
 {
-  HRESULT hr;
+  HRESULT hr = S_OK;
   VARIANTARG *rgvarg, *arg;
   UINT u;
-
-  /* let the real Invoke operate on a copy of the in parameters,
-   * so we don't risk losing pointers to allocated memory */
-  rgvarg = pDispParams->rgvarg;
-  arg = CoTaskMemAlloc(sizeof(VARIANTARG)*pDispParams->cArgs);
-  for (u=0; u<pDispParams->cArgs; u++) {
-    VariantInit(&arg[u]);
-    VariantCopy(&arg[u], &rgvarg[u]);
-  }
-  pDispParams->rgvarg = arg;
 
   /* initialize out parameters, so that they can be marshalled
    * in case the real Invoke doesn't initialize them */
@@ -610,29 +605,51 @@ HRESULT __RPC_STUB IDispatch_Invoke_Stub(
   memset(pExcepInfo, 0, sizeof(*pExcepInfo));
   *pArgErr = 0;
 
-  hr = IDispatch_Invoke(This,
-			dispIdMember,
-			riid,
-			lcid,
-			dwFlags,
-			pDispParams,
-			pVarResult,
-			pExcepInfo,
-			pArgErr);
+  /* let the real Invoke operate on a copy of the in parameters,
+   * so we don't risk losing pointers to allocated memory */
+  rgvarg = pDispParams->rgvarg;
+  arg = CoTaskMemAlloc(sizeof(VARIANTARG)*pDispParams->cArgs);
+  if (!arg) return E_OUTOFMEMORY;
 
-  /* copy ref args to out list */
-  for (u=0; u<cVarRef; u++) {
-    unsigned i = rgVarRefIdx[u];
-    VariantInit(&rgVarRef[u]);
-    VariantCopy(&rgVarRef[u], &arg[i]);
-    /* clear original if equal, to avoid double-free */
-    if (V_BYREF(&rgVarRef[u]) == V_BYREF(&rgvarg[i]))
-      VariantClear(&rgvarg[i]);
+  /* init all args so we can call VariantClear on all the args if the copy
+   * below fails */
+  for (u = 0; u < pDispParams->cArgs; u++)
+    VariantInit(&arg[u]);
+
+  for (u = 0; u < pDispParams->cArgs; u++) {
+    hr = VariantCopy(&arg[u], &rgvarg[u]);
+    if (FAILED(hr))
+        break;
   }
+
+  if (SUCCEEDED(hr)) {
+    pDispParams->rgvarg = arg;
+
+    hr = IDispatch_Invoke(This,
+			  dispIdMember,
+			  riid,
+			  lcid,
+			  dwFlags,
+			  pDispParams,
+			  pVarResult,
+			  pExcepInfo,
+			  pArgErr);
+
+    /* copy ref args to out list */
+    for (u=0; u<cVarRef; u++) {
+      unsigned i = rgVarRefIdx[u];
+      VariantInit(&rgVarRef[u]);
+      VariantCopy(&rgVarRef[u], &arg[i]);
+      /* clear original if equal, to avoid double-free */
+      if (V_BYREF(&rgVarRef[u]) == V_BYREF(&rgvarg[i]))
+        VariantClear(&rgvarg[i]);
+    }
+  }
+
   /* clear the duplicate argument list */
-  for (u=0; u<pDispParams->cArgs; u++) {
+  for (u=0; u<pDispParams->cArgs; u++)
     VariantClear(&arg[u]);
-  }
+
   pDispParams->rgvarg = rgvarg;
   CoTaskMemFree(arg);
 

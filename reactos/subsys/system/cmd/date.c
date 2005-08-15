@@ -243,13 +243,25 @@ INT cmd_date (LPTSTR cmd, LPTSTR param)
 	}
 	else
 	{
-		if (ParseDate (arg[nDateString]))
-		{
-			freep (arg);
-			return 0;
-		}
-
-		ConErrResPuts(STRING_DATE_ERROR);
+    if (!ParseDate (arg[nDateString]))
+    {
+      while (TRUE)  /* forever loop */
+		  {
+			  TCHAR s[40];        
+        ConErrResPuts(STRING_DATE_ERROR);
+        
+			  PrintDateString ();      
+			  ConInString (s, 40);
+        
+        while (*s && s[_tcslen (s) - 1] < _T(' '))
+				  s[_tcslen (s) - 1] = _T('\0');
+			  if (ParseDate (s))
+			  {
+				  freep (arg);
+				  return 0;
+			  }        
+      }
+    }		
 	}
 
 	freep (arg);

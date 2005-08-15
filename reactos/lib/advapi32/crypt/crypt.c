@@ -25,7 +25,7 @@
  *  - Signature checking
  */
 
-#include "advapi32.h"
+#include <advapi32.h>
 #include "crypt.h"
 
 #define NDEBUG

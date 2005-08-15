@@ -275,8 +275,8 @@ typedef struct tagFMT_DATE_HEADER
 #define FMT_NUM_COPY_SKIP   0x35 /* Copy 1 digit or skip if no digit */
 #define FMT_NUM_DECIMAL     0x36 /* Decimal separator */
 #define FMT_NUM_EXP_POS_U   0x37 /* Scientific notation, uppercase, + sign */
-#define FMT_NUM_EXP_NEG_U   0x38 /* Scientific notation, lowercase, - sign */
-#define FMT_NUM_EXP_POS_L   0x39 /* Scientific notation, uppercase, + sign */
+#define FMT_NUM_EXP_NEG_U   0x38 /* Scientific notation, uppercase, - sign */
+#define FMT_NUM_EXP_POS_L   0x39 /* Scientific notation, lowercase, + sign */
 #define FMT_NUM_EXP_NEG_L   0x3A /* Scientific notation, lowercase, - sign */
 #define FMT_NUM_CURRENCY    0x3B /* Currency symbol */
 #define FMT_NUM_TRUE_FALSE  0x3D /* Convert to "True" or "False" */
@@ -708,7 +708,35 @@ HRESULT WINAPI VarTokenizeFormatString(LPOLESTR lpszFormat, LPBYTE rgbTok,
       pFormat++;
       TRACE("decimal sep\n");
     }
-    /* FIXME: E+ E- e+ e- => Exponent */
+    else if ((*pFormat == 'e' || *pFormat == 'E') && (pFormat[1] == '-' ||
+              pFormat[1] == '+') && header->type == FMT_TYPE_NUMBER)
+    {
+      /* Number formats: Exponent specifier
+       * Other formats: Literal
+       */
+      num_header->flags |= FMT_FLAG_EXPONENT;
+      NEED_SPACE(2 * sizeof(BYTE));
+      if (*pFormat == 'e') {
+        if (pFormat[1] == '+')
+          *pOut = FMT_NUM_EXP_POS_L;
+        else
+          *pOut = FMT_NUM_EXP_NEG_L;
+      } else {
+        if (pFormat[1] == '+')
+          *pOut = FMT_NUM_EXP_POS_U;
+        else
+          *pOut = FMT_NUM_EXP_NEG_U;
+      }
+      pFormat += 2;
+      *++pOut = 0x0;
+      while (*pFormat == '0')
+      {
+        *pOut = *pOut + 1;
+        pFormat++;
+      }
+      pOut++;
+      TRACE("exponent\n");
+    }
     /* FIXME: %% => Divide by 1000 */
     else if (*pFormat == ',' && header->type == FMT_TYPE_NUMBER)
     {
@@ -1155,15 +1183,16 @@ HRESULT WINAPI VarTokenizeFormatString(LPOLESTR lpszFormat, LPBYTE rgbTok,
 
 /* Number formatting state flags */
 #define NUM_WROTE_DEC  0x01 /* Written the decimal separator */
+#define NUM_WRITE_ON   0x02 /* Started to write the number */
 
 /* Format a variant using a number format */
 static HRESULT VARIANT_FormatNumber(LPVARIANT pVarIn, LPOLESTR lpszFormat,
                                     LPBYTE rgbTok, ULONG dwFlags,
                                     BSTR *pbstrOut, LCID lcid)
 {
-  BYTE rgbDig[256];
+  BYTE rgbDig[256], *prgbDig;
   NUMPARSE np;
-  int wholeNumberDigits, fractionalDigits, divisor10 = 0, multiplier10 = 0;
+  int have_int, need_int = 0, have_frac, need_frac, exponent = 0, pad = 0;
   WCHAR buff[256], *pBuff = buff;
   VARIANT vString, vBool;
   DWORD dwState = 0;
@@ -1181,7 +1210,7 @@ static HRESULT VARIANT_FormatNumber(LPVARIANT pVarIn, LPOLESTR lpszFormat,
 
   if (V_TYPE(pVarIn) == VT_EMPTY || V_TYPE(pVarIn) == VT_NULL)
   {
-    wholeNumberDigits = fractionalDigits = 0;
+    have_int = have_frac = 0;
     numHeader = (FMT_NUMBER_HEADER*)(rgbTok + FmtGetNull(header));
     V_BOOL(&vBool) = VARIANT_FALSE;
   }
@@ -1198,36 +1227,9 @@ static HRESULT VARIANT_FormatNumber(LPVARIANT pVarIn, LPOLESTR lpszFormat,
     if (FAILED(hRes))
       return hRes;
 
-    if (np.nPwr10 < 0)
-    {
-      if (-np.nPwr10 >= np.cDig)
-      {
-        /* A real number < +/- 1.0 e.g. 0.1024 or 0.01024 */
-        wholeNumberDigits = 0;
-        fractionalDigits = np.cDig;
-        divisor10 = -np.nPwr10;
-      }
-      else
-      {
-        /* An exactly represented real number e.g. 1.024 */
-        wholeNumberDigits = np.cDig + np.nPwr10;
-        fractionalDigits = np.cDig - wholeNumberDigits;
-        divisor10 = np.cDig - wholeNumberDigits;
-      }
-    }
-    else if (np.nPwr10 == 0)
-    {
-      /* An exactly represented whole number e.g. 1024 */
-      wholeNumberDigits = np.cDig;
-      fractionalDigits = 0;
-    }
-    else /* np.nPwr10 > 0 */
-    {
-      /* A whole number followed by nPwr10 0's e.g. 102400 */
-      wholeNumberDigits = np.cDig;
-      fractionalDigits = 0;
-      multiplier10 = np.nPwr10;
-    }
+    have_int = np.cDig;
+    have_frac = 0;
+    exponent = np.nPwr10;
 
     /* Figure out which format to use */
     if (np.dwOutFlags & NUMPRS_NEG)
@@ -1235,8 +1237,7 @@ static HRESULT VARIANT_FormatNumber(LPVARIANT pVarIn, LPOLESTR lpszFormat,
       numHeader = (FMT_NUMBER_HEADER*)(rgbTok + FmtGetNegative(header));
       V_BOOL(&vBool) = VARIANT_TRUE;
     }
-    else if (wholeNumberDigits == 1 && !fractionalDigits && !multiplier10 &&
-              !divisor10 && rgbDig[0] == 0)
+    else if (have_int == 1 && !exponent && rgbDig[0] == 0)
     {
       numHeader = (FMT_NUMBER_HEADER*)(rgbTok + FmtGetZero(header));
       V_BOOL(&vBool) = VARIANT_FALSE;
@@ -1251,33 +1252,72 @@ static HRESULT VARIANT_FormatNumber(LPVARIANT pVarIn, LPOLESTR lpszFormat,
           numHeader->flags, numHeader->multiplier, numHeader->divisor,
           numHeader->whole, numHeader->fractional);
 
+    need_int = numHeader->whole;
+    need_frac = numHeader->fractional;
+
     if (numHeader->flags & FMT_FLAG_PERCENT &&
-        !(wholeNumberDigits == 1 && !fractionalDigits && !multiplier10 &&
-        !divisor10 && rgbDig[0] == 0))
+        !(have_int == 1 && !exponent && rgbDig[0] == 0))
+      exponent += 2;
+
+    if (numHeader->flags & FMT_FLAG_EXPONENT)
     {
-       /* *100 for %'s. Try to 'steal' fractional digits if we can */
-      TRACE("Fraction - multiply by 100\n");
-      if (!fractionalDigits)
-         multiplier10 += 2;
+      /* Exponent format: length of the integral number part is fixed and
+         specified by the format. */
+      pad = need_int - have_int;
+      if (pad >= 0)
+        exponent -= pad;
       else
       {
-        fractionalDigits--;
-        wholeNumberDigits++;
-        if (!fractionalDigits)
-          multiplier10++;
-        else
-        {
-          fractionalDigits--;
-          wholeNumberDigits++;
-        }
+        have_int = need_int;
+        have_frac -= pad;
+        exponent -= pad;
+        pad = 0;
       }
     }
-    TRACE("cDig %d; nPwr10 %d, whole %d, frac %d ", np.cDig,
-          np.nPwr10, wholeNumberDigits, fractionalDigits);
-    TRACE("mult %d; div %d\n", multiplier10, divisor10);
+    else
+    {
+      /* Convert the exponent */
+      pad = max(exponent, -have_int);
+      exponent -= pad;
+      if (pad < 0)
+      {
+        have_int += pad;
+        have_frac = -pad;
+        pad = 0;
+      }
+    }
 
+    /* Rounding the number */
+    if (have_frac > need_frac)
+    {
+      prgbDig = &rgbDig[have_int + need_frac];
+      have_frac = need_frac;
+      if (*prgbDig >= 5)
+      {
+        while (prgbDig-- > rgbDig && *prgbDig == 9)
+          *prgbDig = 0;
+        if (prgbDig < rgbDig)
+        {
+          /* We reached the first digit and that was also a 9 */
+          rgbDig[0] = 1;
+          if (numHeader->flags & FMT_FLAG_EXPONENT)
+            exponent++;
+          else
+          {
+            rgbDig[have_int + need_frac] = 0;
+            have_int++;
+          }
+        }
+        else
+          (*prgbDig)++;
+      }
+    }
+    TRACE("have_int=%d,need_int=%d,have_frac=%d,need_frac=%d,pad=%d,exp=%d\n",
+          have_int, need_int, have_frac, need_frac, pad, exponent);
   }
+
   pToken = (const BYTE*)numHeader + sizeof(FMT_NUMBER_HEADER);
+  prgbDig = rgbDig;
 
   while (SUCCEEDED(hRes) && *pToken != FMT_GEN_END)
   {
@@ -1360,88 +1400,88 @@ VARIANT_FormatNumber_Bool:
         *pBuff++ = 'e';
       else
         *pBuff++ = 'E';
-      if (divisor10)
+      if (exponent < 0)
       {
         *pBuff++ = '-';
-        sprintfW(pBuff, szPercentZeroStar_d, pToken[1], divisor10);
+        sprintfW(pBuff, szPercentZeroStar_d, pToken[1], -exponent);
       }
       else
       {
         if (*pToken == FMT_NUM_EXP_POS_L || *pToken == FMT_NUM_EXP_POS_U)
           *pBuff++ = '+';
-        sprintfW(pBuff, szPercentZeroStar_d, pToken[1], multiplier10);
+        sprintfW(pBuff, szPercentZeroStar_d, pToken[1], exponent);
       }
       while (*pBuff)
         pBuff++;
       pToken++;
       break;
 
-    case FMT_NUM_COPY_SKIP:
-      if (dwState & NUM_WROTE_DEC)
-      {
-        int count;
-
-        TRACE("write %d fractional digits or skip\n", pToken[1]);
-
-        for (count = 0; count < fractionalDigits; count++)
-          pBuff[count] = '0' + rgbDig[wholeNumberDigits + count];
-        pBuff += fractionalDigits;
-      }
-      else
-      {
-        int count;
-
-        TRACE("write %d digits or skip\n", pToken[1]);
-
-        if (wholeNumberDigits > 1 || rgbDig[0] > 0)
-        {
-          TRACE("write %d whole number digits\n", wholeNumberDigits);
-          for (count = 0; count < wholeNumberDigits; count++)
-            *pBuff++ = '0' + rgbDig[count];
-          TRACE("write %d whole trailing 0's\n", multiplier10);
-          for (count = 0; count < multiplier10; count++)
-            *pBuff++ = '0'; /* Write trailing zeros for multiplied values */
-        }
-      }
-      pToken++;
-      break;
-
     case FMT_NUM_COPY_ZERO:
+      dwState |= NUM_WRITE_ON;
+      /* Fall through */
+
+    case FMT_NUM_COPY_SKIP:
+      TRACE("write %d %sdigits or %s\n", pToken[1],
+            dwState & NUM_WROTE_DEC ? "fractional " : "",
+            *pToken == FMT_NUM_COPY_ZERO ? "0" : "skip");
+
       if (dwState & NUM_WROTE_DEC)
       {
-        int count;
+        int count, i;
 
-        TRACE("write %d fractional digits or 0's\n", pToken[1]);
-
-        for (count = 0; count < fractionalDigits; count++)
-          pBuff[count] = '0' + rgbDig[wholeNumberDigits + count];
-        pBuff += fractionalDigits;
-        if (pToken[1] > fractionalDigits)
+        if (!(numHeader->flags & FMT_FLAG_EXPONENT) && exponent < 0)
         {
-          count = pToken[1] - fractionalDigits;
-          while (count--)
-            *pBuff++ = '0'; /* Write trailing zeros for missing digits */
+          /* Pad with 0 before writing the fractional digits */
+          pad = max(exponent, -pToken[1]);
+          exponent -= pad;
+          count = min(have_frac, pToken[1] + pad);
+          for (i = 0; i > pad; i--)
+            *pBuff++ = '0';
+        }
+        else
+          count = min(have_frac, pToken[1]);
+
+        pad += pToken[1] - count;
+        have_frac -= count;
+        while (count--)
+          *pBuff++ = '0' + *prgbDig++;
+        if (*pToken == FMT_NUM_COPY_ZERO)
+        {
+          for (; pad > 0; pad--)
+            *pBuff++ = '0'; /* Write zeros for missing trailing digits */
         }
       }
       else
       {
-        int count;
+        int count, count_max;
 
-        TRACE("write %d digits or 0's\n", pToken[1]);
-
-        if (pToken[1] > (wholeNumberDigits + multiplier10))
+        need_int -= pToken[1];
+        count_max = have_int + pad - need_int;
+        if (count_max < 0)
+            count_max = 0;
+        if (dwState & NUM_WRITE_ON)
         {
-          count = pToken[1] - (wholeNumberDigits + multiplier10);
+          count = pToken[1] - count_max;
           TRACE("write %d leading zeros\n", count);
-          while(count--)
-            *pBuff++ = '0'; /* Write leading zeros for missing digits */
+          while (count-- > 0)
+            *pBuff++ = '0';
         }
-        TRACE("write %d whole number digits\n", wholeNumberDigits);
-        for (count = 0; count < wholeNumberDigits; count++)
-          *pBuff++ = '0' + rgbDig[count];
-        TRACE("write %d whole trailing 0's\n", multiplier10);
-        for (count = 0; count < multiplier10; count++)
-          *pBuff++ = '0'; /* Write trailing zeros for multiplied values */
+        if (*pToken == FMT_NUM_COPY_ZERO || have_int > 1 || *prgbDig > 0)
+        {
+          dwState |= NUM_WRITE_ON;
+          count = min(count_max, have_int);
+          count_max -= count;
+          have_int -= count;
+          TRACE("write %d whole number digits\n", count);
+          while (count--)
+            *pBuff++ = '0' + *prgbDig++;
+        }
+        count = min(count_max, pad);
+        count_max -= count;
+        pad -= count;
+        TRACE("write %d whole trailing 0's\n", count);
+        while (count--)
+          *pBuff++ = '0';
       }
       pToken++;
       break;
@@ -2404,4 +2444,58 @@ HRESULT WINAPI VarFormatCurrency(LPVARIANT pVarIn, INT nDigits, INT nLeading,
     SysFreeString(V_BSTR(&vStr));
   }
   return hRet;
+}
+
+/**********************************************************************
+ *              VarMonthName [OLEAUT32.129]
+ *
+ * Print the specified month as localized name.
+ *
+ * PARAMS
+ *  iMonth    [I] month number 1..12
+ *  fAbbrev   [I] 0 - full name, !0 - abbreviated name
+ *  dwFlags   [I] flag stuff. only VAR_CALENDAR_HIJRI possible.
+ *  pbstrOut  [O] Destination for month name
+ *
+ * RETURNS
+ *  Success: S_OK. pbstrOut contains the name.
+ *  Failure: E_INVALIDARG, if any parameter is invalid.
+ *           E_OUTOFMEMORY, if enough memory cannot be allocated.
+ */
+HRESULT WINAPI VarMonthName(INT iMonth, INT fAbbrev, ULONG dwFlags, BSTR *pbstrOut)
+{
+  DWORD localeValue;
+  INT size;
+  WCHAR *str;
+
+  if ((iMonth < 1)  || (iMonth > 12))
+    return E_INVALIDARG;
+
+  if (dwFlags)
+    FIXME("Does not support dwFlags 0x%lx, ignoring.\n", dwFlags);
+
+  if (fAbbrev)
+	localeValue = LOCALE_SABBREVMONTHNAME1 + iMonth - 1;
+  else
+	localeValue = LOCALE_SMONTHNAME1 + iMonth - 1;
+
+  size = GetLocaleInfoW(LOCALE_USER_DEFAULT,localeValue, NULL, 0);
+  if (!size) {
+    FIXME("GetLocaleInfo 0x%lx failed.\n", localeValue);
+    return E_INVALIDARG;
+  }
+  str = HeapAlloc(GetProcessHeap(),0,sizeof(WCHAR)*size);
+  if (!str)
+    return E_OUTOFMEMORY;
+  size = GetLocaleInfoW(LOCALE_USER_DEFAULT,localeValue, str, size);
+  if (!size) {
+    FIXME("GetLocaleInfo of 0x%lx failed in 2nd stage?!\n", localeValue);
+    HeapFree(GetProcessHeap(),0,str);
+    return E_INVALIDARG;
+  }
+  *pbstrOut = SysAllocString(str);
+  HeapFree(GetProcessHeap(),0,str);
+  if (!*pbstrOut)
+    return E_OUTOFMEMORY;
+  return S_OK;
 }

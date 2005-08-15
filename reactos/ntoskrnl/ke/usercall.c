@@ -207,7 +207,7 @@ KeUserModeCallback(IN ULONG RoutineIndex,
   NewFrame = (PKTRAP_FRAME)((char*)NewStack + StackSize - sizeof(KTRAP_FRAME) - sizeof(FX_SAVE_AREA));
   /* We need the stack pointer to remain 4-byte aligned */
   NewFrame->Esp -= (((ArgumentLength + 3) & (~ 0x3)) + (4 * sizeof(ULONG)));
-  NewFrame->Eip = (ULONG)LdrpGetSystemDllCallbackDispatcher();
+  NewFrame->Eip = (ULONG)KeUserCallbackDispatcher;
   UserEsp = (PULONG)NewFrame->Esp;
   UserEsp[0] = 0;     /* Return address. */
   UserEsp[1] = RoutineIndex;

@@ -11,11 +11,9 @@
 
 #ifdef _NTOSKRNL_
 
-#include "asm.h"
 #include "ke.h"
 #include "i386/mm.h"
 #include "i386/fpu.h"
-#include "module.h"
 #include "ob.h"
 #include "mm.h"
 #include "ps.h"
@@ -71,8 +69,8 @@ BOOLEAN CmImportSystemHive(PCHAR ChunkBase, ULONG ChunkSize);
 BOOLEAN CmImportHardwareHive(PCHAR ChunkBase, ULONG ChunkSize);
 VOID KdInitSystem(ULONG Reserved, PLOADER_PARAMETER_BLOCK LoaderBlock);
 
-BOOLEAN
-FASTCALL
+/* FIXME - RtlpCreateUnicodeString is obsolete and should be removed ASAP! */
+BOOLEAN FASTCALL
 RtlpCreateUnicodeString(
    IN OUT PUNICODE_STRING UniDest,
    IN PCWSTR  Source,

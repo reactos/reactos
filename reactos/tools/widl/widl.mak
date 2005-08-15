@@ -53,12 +53,12 @@ WIDL_SOURCES = $(addprefix $(WIDL_BASE_), \
 WIDL_OBJECTS = \
   $(addprefix $(INTERMEDIATE_), $(WIDL_SOURCES:.c=.o))
 
-WIDL_HOST_CFLAGS = -g -Werror -Wall \
+WIDL_HOST_CFLAGS = $(TOOLS_CFLAGS) \
 	-DINT16=SHORT -D__USE_W32API -DYYDEBUG=1 \
 	-I$(WIDL_BASE) -I$(WPP_BASE) \
 	-Iinclude/wine -Iinclude -Iw32api/include
 
-WIDL_HOST_LFLAGS = -g
+WIDL_HOST_LFLAGS = $(TOOLS_LFLAGS)
 
 WIDL_LIBS = $(WPP_TARGET)
 

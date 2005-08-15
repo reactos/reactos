@@ -1,6 +1,7 @@
 #ifndef _SMSS_H_INCLUDED_
 #define _SMSS_H_INCLUDED_
 
+#include <stdio.h>
 #include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>

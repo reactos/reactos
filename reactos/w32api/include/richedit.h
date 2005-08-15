@@ -139,6 +139,9 @@ extern "C" {
 #define SFF_PERSISTVIEWSCALE	0x2000
 #define SFF_PLAINRTF	0x4000
 #define SFF_SELECTION	0x8000
+#define ST_DEFAULT	0x00000000
+#define ST_KEEPUNDO	0x00000001
+#define ST_SELECTION	0x00000002
 #define WB_CLASSIFY	3
 #define WB_MOVEWORDLEFT	4
 #define WB_MOVEWORDRIGHT	5
@@ -225,6 +228,8 @@ extern "C" {
 #define EM_FINDTEXTW	(WM_USER + 123)
 #define EM_FINDTEXTEXW	(WM_USER + 124)
 #define EM_RECONVERSION	(WM_USER + 125)
+#define EM_SETIMEMODEBIAS	(WM_USER + 126)
+#define EM_GETIMEMODEBIAS	(WM_USER + 127)
 #define EM_SETBIDIOPTIONS	(WM_USER + 200)
 #define EM_GETBIDIOPTIONS	(WM_USER + 201)
 #define EM_SETTYPOGRAPHYOPTIONS	(WM_USER+202)
@@ -510,6 +515,10 @@ typedef struct _gettextex {
 	LPCSTR lpDefaultChar;
 	LPBOOL lpUsedDefaultChar;
 } GETTEXTEX;
+typedef struct _settextex {
+    DWORD       flags;
+    UINT        codepage;
+} SETTEXTEX;
 typedef LONG (*EDITWORDBREAKPROCEX)(char*,LONG,BYTE,INT);
 /* Defines for EM_SETTYPOGRAPHYOPTIONS */
 #define	TO_ADVANCEDTYPOGRAPHY	1

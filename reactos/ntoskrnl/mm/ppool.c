@@ -30,7 +30,6 @@
 #define R_PRINT_ADDRESS(addr) KeRosPrintAddress(addr)
 #define R_PANIC() KeBugCheck(0)
 #define R_DEBUG DbgPrint
-#define R_EXTRA_STACK_UP 2
 #define R_GET_STACK_FRAMES(ptr,cnt) KeRosGetStackFrames(ptr,cnt)
 
 #include "rpoolmgr.h"
@@ -81,7 +80,7 @@ ExAllocatePagedPoolWithTag (IN POOL_TYPE PoolType,
 
 	if ( NumberOfBytes >= PAGE_SIZE )
 		align = 2;
-	else if ( PoolType == PagedPoolCacheAligned )
+	else if ( PoolType & CACHE_ALIGNED_POOL_MASK )
 		align = 1;
 	else
 		align = 0;
@@ -98,19 +97,6 @@ ExFreePagedPool(IN PVOID Block)
 	RPoolFree ( MmPagedPool, Block );
 }
 
-VOID STDCALL
-ExRosDumpPagedPoolByTag ( ULONG Tag )
-{
-	// TODO FIXME - should we ASSERT_IRQL?
-	RPoolDumpByTag ( MmPagedPool, Tag );
-}
-
-ULONG STDCALL
-ExRosQueryPagedPoolTag ( PVOID Addr )
-{
-	// TODO FIXME - should we ASSERT_IRQL?
-	return RPoolQueryTag ( Addr );
-}
 
 #ifdef PPOOL_UMODE_TEST
 

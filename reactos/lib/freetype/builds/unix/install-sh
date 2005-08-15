@@ -1,7 +1,7 @@
 #!/bin/sh
 # install - install a program, script, or datafile
 
-scriptversion=2004-02-15.20
+scriptversion=2005-02-02.21
 
 # This originates from X11R5 (mit/util/scripts/install.sh), which was
 # later released in X11R6 (xc/config/util/install.sh) with the
@@ -58,9 +58,6 @@ stripprog="${STRIPPROG-strip}"
 rmprog="${RMPROG-rm}"
 mkdirprog="${MKDIRPROG-mkdir}"
 
-transformbasename=
-transform_arg=
-instcmd="$mvprog"
 chmodcmd="$chmodprog 0755"
 chowncmd=
 chgrpcmd=
@@ -70,23 +67,27 @@ mvcmd="$mvprog"
 src=
 dst=
 dir_arg=
+dstarg=
+no_target_directory=
 
-usage="Usage: $0 [OPTION]... SRCFILE DSTFILE
+usage="Usage: $0 [OPTION]... [-T] SRCFILE DSTFILE
    or: $0 [OPTION]... SRCFILES... DIRECTORY
-   or: $0 -d DIRECTORIES...
+   or: $0 [OPTION]... -t DIRECTORY SRCFILES...
+   or: $0 [OPTION]... -d DIRECTORIES...
 
-In the first form, install SRCFILE to DSTFILE, removing SRCFILE by default.
-In the second, create the directory path DIR.
+In the 1st form, copy SRCFILE to DSTFILE.
+In the 2nd and 3rd, copy all SRCFILES to DIRECTORY.
+In the 4th, create DIRECTORIES.
 
 Options:
--b=TRANSFORMBASENAME
--c         copy source (using $cpprog) instead of moving (using $mvprog).
+-c         (ignored)
 -d         create directories instead of installing files.
--g GROUP   $chgrp installed files to GROUP.
--m MODE    $chmod installed files to MODE.
--o USER    $chown installed files to USER.
--s         strip installed files (using $stripprog).
--t=TRANSFORM
+-g GROUP   $chgrpprog installed files to GROUP.
+-m MODE    $chmodprog installed files to MODE.
+-o USER    $chownprog installed files to USER.
+-s         $stripprog installed files.
+-t DIRECTORY  install into DIRECTORY.
+-T         report an error if DSTFILE is a directory.
 --help     display this help and exit.
 --version  display version info and exit.
 
@@ -96,12 +97,7 @@ Environment variables override the default commands:
 
 while test -n "$1"; do
   case $1 in
-    -b=*) transformbasename=`echo $1 | sed 's/-b=//'`
-        shift
-        continue;;
-
-    -c) instcmd=$cpprog
-        shift
+    -c) shift
         continue;;
 
     -d) dir_arg=true
@@ -113,7 +109,7 @@ while test -n "$1"; do
         shift
         continue;;
 
-    --help) echo "$usage"; exit 0;;
+    --help) echo "$usage"; exit $?;;
 
     -m) chmodcmd="$chmodprog $2"
         shift
@@ -129,14 +125,20 @@ while test -n "$1"; do
         shift
         continue;;
 
-    -t=*) transformarg=`echo $1 | sed 's/-t=//'`
-        shift
-        continue;;
+    -t) dstarg=$2
+	shift
+	shift
+	continue;;
 
-    --version) echo "$0 $scriptversion"; exit 0;;
+    -T) no_target_directory=true
+	shift
+	continue;;
+
+    --version) echo "$0 $scriptversion"; exit $?;;
 
     *)  # When -d is used, all remaining arguments are directories to create.
-	test -n "$dir_arg" && break
+	# When -t is used, the destination is already specified.
+	test -n "$dir_arg$dstarg" && break
         # Otherwise, the last argument is the destination.  Remove it from $@.
 	for arg
 	do
@@ -174,13 +176,13 @@ do
     src=
 
     if test -d "$dst"; then
-      instcmd=:
+      mkdircmd=:
       chmodcmd=
     else
-      instcmd=$mkdirprog
+      mkdircmd=$mkdirprog
     fi
   else
-    # Waiting for this to be detected by the "$instcmd $src $dsttmp" command
+    # Waiting for this to be detected by the "$cpprog $src $dsttmp" command
     # might cause directories to be created, which would be especially bad
     # if $src (and thus $dsttmp) contains '*'.
     if test ! -f "$src" && test ! -d "$src"; then
@@ -202,12 +204,16 @@ do
     # If destination is a directory, append the input filename; won't work
     # if double slashes aren't ignored.
     if test -d "$dst"; then
+      if test -n "$no_target_directory"; then
+	echo "$0: $dstarg: Is a directory" >&2
+	exit 1
+      fi
       dst=$dst/`basename "$src"`
     fi
   fi
 
   # This sed command emulates the dirname command.
-  dstdir=`echo "$dst" | sed -e 's,[^/]*$,,;s,/$,,;s,^$,.,'`
+  dstdir=`echo "$dst" | sed -e 's,/*$,,;s,[^/]*$,,;s,/*$,,;s,^$,.,'`
 
   # Make sure that the destination directory exists.
 
@@ -220,7 +226,8 @@ do
     oIFS=$IFS
     # Some sh's can't handle IFS=/ for some reason.
     IFS='%'
-    set - `echo "$dstdir" | sed -e 's@/@%@g' -e 's@^%@/@'`
+    set x `echo "$dstdir" | sed -e 's@/@%@g' -e 's@^%@/@'`
+    shift
     IFS=$oIFS
 
     pathcomp=
@@ -229,83 +236,83 @@ do
       pathcomp=$pathcomp$1
       shift
       if test ! -d "$pathcomp"; then
-        $mkdirprog "$pathcomp" || lasterr=$?
+        $mkdirprog "$pathcomp"
 	# mkdir can fail with a `File exist' error in case several
 	# install-sh are creating the directory concurrently.  This
 	# is OK.
-	test ! -d "$pathcomp" && { (exit ${lasterr-1}); exit; }
+	test -d "$pathcomp" || exit
       fi
       pathcomp=$pathcomp/
     done
   fi
 
   if test -n "$dir_arg"; then
-    $doit $instcmd "$dst" \
+    $doit $mkdircmd "$dst" \
       && { test -z "$chowncmd" || $doit $chowncmd "$dst"; } \
       && { test -z "$chgrpcmd" || $doit $chgrpcmd "$dst"; } \
       && { test -z "$stripcmd" || $doit $stripcmd "$dst"; } \
       && { test -z "$chmodcmd" || $doit $chmodcmd "$dst"; }
 
   else
-    # If we're going to rename the final executable, determine the name now.
-    if test -z "$transformarg"; then
-      dstfile=`basename "$dst"`
-    else
-      dstfile=`basename "$dst" $transformbasename \
-               | sed $transformarg`$transformbasename
-    fi
-
-    # don't allow the sed command to completely eliminate the filename.
-    test -z "$dstfile" && dstfile=`basename "$dst"`
+    dstfile=`basename "$dst"`
 
     # Make a couple of temp file names in the proper directory.
     dsttmp=$dstdir/_inst.$$_
     rmtmp=$dstdir/_rm.$$_
 
     # Trap to clean up those temp files at exit.
-    trap 'status=$?; rm -f "$dsttmp" "$rmtmp" && exit $status' 0
+    trap 'ret=$?; rm -f "$dsttmp" "$rmtmp" && exit $ret' 0
     trap '(exit $?); exit' 1 2 13 15
 
-    # Move or copy the file name to the temp name
-    $doit $instcmd "$src" "$dsttmp" &&
+    # Copy the file name to the temp name.
+    $doit $cpprog "$src" "$dsttmp" &&
 
     # and set any options; do chmod last to preserve setuid bits.
     #
     # If any of these fail, we abort the whole thing.  If we want to
     # ignore errors from any of these, just make sure not to ignore
-    # errors from the above "$doit $instcmd $src $dsttmp" command.
+    # errors from the above "$doit $cpprog $src $dsttmp" command.
     #
     { test -z "$chowncmd" || $doit $chowncmd "$dsttmp"; } \
       && { test -z "$chgrpcmd" || $doit $chgrpcmd "$dsttmp"; } \
       && { test -z "$stripcmd" || $doit $stripcmd "$dsttmp"; } \
       && { test -z "$chmodcmd" || $doit $chmodcmd "$dsttmp"; } &&
 
-    # Now remove or move aside any old file at destination location.  We
-    # try this two ways since rm can't unlink itself on some systems and
-    # the destination file might be busy for other reasons.  In this case,
-    # the final cleanup might fail but the new file should still install
-    # successfully.
-    {
-      if test -f "$dstdir/$dstfile"; then
-        $doit $rmcmd -f "$dstdir/$dstfile" 2>/dev/null \
-        || $doit $mvcmd -f "$dstdir/$dstfile" "$rmtmp" 2>/dev/null \
-        || {
-	  echo "$0: cannot unlink or rename $dstdir/$dstfile" >&2
-	  (exit 1); exit
-        }
-      else
-        :
-      fi
-    } &&
-
     # Now rename the file to the real destination.
-    $doit $mvcmd "$dsttmp" "$dstdir/$dstfile"
-  fi || { (exit 1); exit; }
+    { $doit $mvcmd -f "$dsttmp" "$dstdir/$dstfile" 2>/dev/null \
+      || {
+	   # The rename failed, perhaps because mv can't rename something else
+	   # to itself, or perhaps because mv is so ancient that it does not
+	   # support -f.
+
+	   # Now remove or move aside any old file at destination location.
+	   # We try this two ways since rm can't unlink itself on some
+	   # systems and the destination file might be busy for other
+	   # reasons.  In this case, the final cleanup might fail but the new
+	   # file should still install successfully.
+	   {
+	     if test -f "$dstdir/$dstfile"; then
+	       $doit $rmcmd -f "$dstdir/$dstfile" 2>/dev/null \
+	       || $doit $mvcmd -f "$dstdir/$dstfile" "$rmtmp" 2>/dev/null \
+	       || {
+		 echo "$0: cannot unlink or rename $dstdir/$dstfile" >&2
+		 (exit 1); exit 1
+	       }
+	     else
+	       :
+	     fi
+	   } &&
+
+	   # Now rename the file to the real destination.
+	   $doit $mvcmd "$dsttmp" "$dstdir/$dstfile"
+	 }
+    }
+  fi || { (exit 1); exit 1; }
 done
 
 # The final little trick to "correctly" pass the exit status to the exit trap.
 {
-  (exit 0); exit
+  (exit 0); exit 0
 }
 
 # Local variables:

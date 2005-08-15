@@ -745,7 +745,8 @@ MultiByteToWideChar(UINT CodePage, DWORD Flags,
 {
    /* Check the parameters. */
    if (MultiByteString == NULL ||
-       (WideCharString == NULL && WideCharCount > 0))
+       (WideCharString == NULL && WideCharCount > 0) ||
+       (PVOID)MultiByteString == (PVOID)WideCharString)
    {
       SetLastError(ERROR_INVALID_PARAMETER);
       return 0;
@@ -823,7 +824,8 @@ WideCharToMultiByte(UINT CodePage, DWORD Flags,
 {
    /* Check the parameters. */
    if (WideCharString == NULL ||
-       (MultiByteString == NULL && MultiByteCount > 0))
+       (MultiByteString == NULL && MultiByteCount > 0) ||
+       (PVOID)WideCharString == (PVOID)MultiByteString)
    {
       SetLastError(ERROR_INVALID_PARAMETER);
       return 0;
@@ -879,7 +881,7 @@ GetOEMCP (VOID)
     return OemCodePage.CodePageTable.CodePage;
 }
 
-static inline BOOL
+static __inline BOOL
 IntIsLeadByte(PCPTABLEINFO TableInfo, UCHAR Ch)
 {
   if(TableInfo->MaximumCharacterSize == 2)

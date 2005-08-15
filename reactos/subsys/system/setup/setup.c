@@ -26,8 +26,11 @@
 
 #include <windows.h>
 #include <tchar.h>
-#include <syssetup.h>
+#include <syssetup/syssetup.h>
 #include <userenv.h>
+
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 
 #define NDEBUG
 #include <debug.h>

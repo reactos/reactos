@@ -9,6 +9,11 @@ HKCR,".exe","",0x00000000,"exefile"
 HKCR,"exefile\Defaulticon","",0x00000000,"%1"
 HKCR,"exefile\shell\open\command","",0x00000000,"""%1"" %*"
 
+; Show icons for inf (installation) files
+HKCR,".inf","",0x00000000,"inffile"
+HKCR,"inffile\DefaultIcon","",0x00000000,"%SystemRoot%\System32\shell32.dll,-151"
+HKCR,"inffile\shell\Install\command","",0x00020000,"%SystemRoot%\System32\rundll32.exe setupapi,InstallHinfSection DefaultInstall 132 %1"
+
 ; Show icons for shortcuts in shell views (lnkfile is handled specially in shell32)
 ; Don't display extension for shortcuts
 HKCR,".lnk","",0x00000000,"lnkfile"

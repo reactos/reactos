@@ -30,3 +30,4 @@ usb_put_dev@4
 usb_disabled@0
 usb_hcd_pci_probe@8
 usb_hcd_pci_remove@4
+RegisterPortDriver@8

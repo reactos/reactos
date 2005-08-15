@@ -391,20 +391,34 @@ static int ohci_get_frame (struct usb_hcd *hcd)
 static int hc_reset (struct ohci_hcd *ohci)
 {
 	u32 temp;
-	u32 ints;
-	u32 control;
-	
+
+	/* SMM owns the HC?  not for long!
+	 * On PA-RISC, PDC can leave IR set incorrectly; ignore it there.
+	 */
+#ifndef __hppa__
+	if (readl (&ohci->regs->control) & OHCI_CTRL_IR) {
+		ohci_dbg (ohci, "USB HC TakeOver from BIOS/SMM\n");
+
+		/* this timeout is arbitrary.  we make it long, so systems
+		 * depending on usb keyboards may be usable even if the
+		 * BIOS/SMM code seems pretty broken.
+		 */
+		temp = 500;	/* arbitrary: five seconds */
+
+		writel (OHCI_INTR_OC, &ohci->regs->intrenable);
+		writel (OHCI_OCR, &ohci->regs->cmdstatus);
+		while (readl (&ohci->regs->control) & OHCI_CTRL_IR) {
+			wait_ms (10);
+			if (--temp == 0) {
+				ohci_err (ohci, "USB HC TakeOver failed!\n");
+				return -1;
+			}
+		}
+	}
+#endif
+
 	/* Disable HC interrupts */
 	writel (OHCI_INTR_MIE, &ohci->regs->intrdisable);
-	// acknowledge all pending interrupts
-	ints = readl(&ohci->regs->intrstatus);
-	writel (ints, &ohci->regs->intrstatus);
-
-	if (readl (&ohci->regs->control) & OHCI_CTRL_IR) {
-		// takeover without negotiation - there is noone to negotiate with
-		control = readl (&ohci->regs->control) & ~OHCI_CTRL_IR;
-		writel (control, &ohci->regs->control);
-	}
 
 	ohci_dbg (ohci, "USB HC reset_hc %s: ctrl = 0x%x ;\n",
 		hcd_to_bus (&ohci->hcd)->bus_name,
@@ -615,27 +629,17 @@ int ohci_irq (struct usb_hcd *hcd, struct pt_regs *ptregs)
 static void ohci_stop (struct usb_hcd *hcd)
 {	
 	struct ohci_hcd		*ohci = hcd_to_ohci (hcd);
-	struct ohci_regs	*regs = ohci->regs;
-	int ints;
 
 	ohci_dbg (ohci, "stop %s controller%s\n",
 		hcfs2string (ohci->hc_control & OHCI_CTRL_HCFS),
 		ohci->disabled ? " (disabled)" : ""
 		);
-	ohci_dump (ohci, 1);
+	//ohci_dump (ohci, 1);
 
 	if (!ohci->disabled)
 		hc_reset (ohci);
-
-	// Disable all interrupts
-	writel (OHCI_INTR_MIE, &regs->intrdisable);	
-	// acknowledge all pending interrupts
-	ints = readl(&regs->intrstatus);
-	writel (ints, &regs->intrstatus);
-	// flush register writes
-	(void) readl (&ohci->regs->control);
 	
-	remove_debug_files (ohci);
+	//remove_debug_files (ohci);
 	ohci_mem_cleanup (ohci);
 	if (ohci->hcca) {
 		pci_free_consistent (ohci->hcd.pdev, sizeof *ohci->hcca,

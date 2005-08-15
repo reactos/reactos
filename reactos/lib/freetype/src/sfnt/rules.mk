@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000, 2002, 2003 by
+# Copyright 1996-2000, 2002, 2003, 2004, 2005 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -26,9 +26,10 @@ SFNT_COMPILE := $(FT_COMPILE) $I$(subst /,$(COMPILER_SEP),$(SFNT_DIR))
 # SFNT driver sources (i.e., C files)
 #
 SFNT_DRV_SRC := $(SFNT_DIR)/ttload.c   \
-                $(SFNT_DIR)/ttcmap0.c  \
+                $(SFNT_DIR)/ttcmap.c   \
                 $(SFNT_DIR)/ttsbit.c   \
                 $(SFNT_DIR)/ttpost.c   \
+                $(SFNT_DIR)/ttkern.c   \
                 $(SFNT_DIR)/sfobjs.c   \
                 $(SFNT_DIR)/sfdriver.c
 

@@ -95,7 +95,7 @@ typedef enum _PNP_DEVNODE_STATE
 
 /* TYPES *********************************************************************/
 
-typedef struct _MAILSLOT_CREATE_PARAMETERS 
+typedef struct _MAILSLOT_CREATE_PARAMETERS
 {
     ULONG           MailslotQuota;
     ULONG           MaximumMessageSize;
@@ -103,7 +103,7 @@ typedef struct _MAILSLOT_CREATE_PARAMETERS
     BOOLEAN         TimeoutSpecified;
 } MAILSLOT_CREATE_PARAMETERS, *PMAILSLOT_CREATE_PARAMETERS;
 
-typedef struct _NAMED_PIPE_CREATE_PARAMETERS 
+typedef struct _NAMED_PIPE_CREATE_PARAMETERS
 {
     ULONG           NamedPipeType;
     ULONG           ReadMode;
@@ -115,7 +115,7 @@ typedef struct _NAMED_PIPE_CREATE_PARAMETERS
     BOOLEAN         TimeoutSpecified;
 } NAMED_PIPE_CREATE_PARAMETERS, *PNAMED_PIPE_CREATE_PARAMETERS;
 
-typedef struct _IO_TIMER 
+typedef struct _IO_TIMER
 {
     USHORT Type;
     USHORT TimerEnabled;
@@ -207,12 +207,22 @@ typedef struct _DEVICE_NODE
     ULONG DriverUnloadRetryCount;
     struct _DEVICE_NODE *PreviousParent;
     ULONG DeletedChidren;
-
-    /* FIXME: Not NT's */
-    GUID BusTypeGuid;
-    ULONG Address;
 } DEVICE_NODE, *PDEVICE_NODE;
 
+typedef struct _PI_RESOURCE_ARBITER_ENTRY
+{
+    LIST_ENTRY DeviceArbiterList;
+    UCHAR ResourceType;
+    PARBITER_INTERFACE ArbiterInterface;
+    ULONG Level;
+    LIST_ENTRY ResourceList;
+    LIST_ENTRY BestResourceList;
+    LIST_ENTRY BestConfig;
+    LIST_ENTRY ActiveArbiterList;
+    UCHAR State;
+    UCHAR ResourcesChanged;
+} PI_RESOURCE_ARBITER_ENTRY, *PPI_RESOURCE_ARBITER_ENTRY;
+  
 typedef struct _DEVOBJ_EXTENSION
 {
     CSHORT Type;

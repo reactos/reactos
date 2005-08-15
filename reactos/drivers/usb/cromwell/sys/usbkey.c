@@ -1,9 +1,9 @@
 #include "../usb_wrapper.h"
 
-#define keyboarddebug  0
+#define keyboarddebug  1
 
 #if keyboarddebug
-extern int printe(const char *szFormat, ...);
+//extern int printk(const char *szFormat, ...);
 int ycoffset = 0;
 #endif
 
@@ -28,7 +28,7 @@ struct usb_kbd_info {
 static void usb_kbd_irq(struct urb *urb, struct pt_regs *regs)
 {
 	struct usb_kbd_info *kbd = urb->context;
-	int i;
+	//int i;
 
 	if (urb->status) return;
 	
@@ -38,11 +38,11 @@ static void usb_kbd_irq(struct urb *urb, struct pt_regs *regs)
 	
 	
 	#if keyboarddebug
-	ycoffset += 15;
-	ycoffset = ycoffset % 600;
-	VIDEO_CURSOR_POSX=20;
-	VIDEO_CURSOR_POSY=ycoffset;	
-	printe(" -%02x %02x %02x %02x %02x %02x\n",kbd->kbd_pkt[0],kbd->kbd_pkt[1],kbd->kbd_pkt[2],kbd->kbd_pkt[3],kbd->kbd_pkt[4],kbd->kbd_pkt[5]);
+	//ycoffset += 15;
+	//ycoffset = ycoffset % 600;
+	//VIDEO_CURSOR_POSX=20;
+	//VIDEO_CURSOR_POSY=ycoffset;	
+	printk(" -%02x %02x %02x %02x %02x %02x\n",kbd->kbd_pkt[0],kbd->kbd_pkt[1],kbd->kbd_pkt[2],kbd->kbd_pkt[3],kbd->kbd_pkt[4],kbd->kbd_pkt[5]);
 	#endif
 	
 	usb_submit_urb(urb,GFP_ATOMIC);
@@ -54,11 +54,11 @@ static int usb_kbd_probe(struct usb_interface *intf, const struct usb_device_id 
 	struct urb *urb;
 	struct usb_device *udev = interface_to_usbdev (intf);
 	struct usb_endpoint_descriptor *ep_irq_in;
-	struct usb_endpoint_descriptor *ep_irq_out;
+	//struct usb_endpoint_descriptor *ep_irq_out;
 	struct usb_kbd_info *usbk;
 
-	int i, pipe, maxp;
-	char *buf;
+	//int i, pipe, maxp;
+	//char *buf;
 
 	usbk=(struct usb_kbd_info *)kmalloc(sizeof(struct usb_kbd_info),0);
 	if (!usbk) return -1;
@@ -77,8 +77,10 @@ static int usb_kbd_probe(struct usb_interface *intf, const struct usb_device_id 
 	usb_submit_urb(urb,GFP_ATOMIC);
 	usb_set_intfdata(intf,usbk);
 	#if keyboarddebug
-	printe("USB Keyboard Connected\n");	
+	printk("USB Keyboard Connected\n");	
 	#endif
+
+	return 0;
 }
 
 
@@ -107,12 +109,11 @@ static struct usb_driver usb_kbd_driver = {
 
 void UsbKeyBoardInit(void)
 {
-
 	//current_remote_key=0;
 	//sbprintk("Keyboard probe %p ",xremote_probe);
 	if (usb_register(&usb_kbd_driver) < 0) {
 		#if keyboarddebug
-		printe("Unable to register Keyboard driver");
+		printk("Unable to register Keyboard driver");
 		#endif
 		return;
 	}       

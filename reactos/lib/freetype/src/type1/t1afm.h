@@ -44,12 +44,12 @@ FT_BEGIN_HEADER
 
 
   FT_LOCAL( FT_Error )
-  T1_Read_AFM( FT_Face    face,
-               FT_Stream  stream );
+  T1_Read_Metrics( FT_Face    face,
+                   FT_Stream  stream );
 
   FT_LOCAL( void )
-  T1_Done_AFM( FT_Memory  memory,
-               T1_AFM*    afm );
+  T1_Done_Metrics( FT_Memory  memory,
+                   T1_AFM*    afm );
 
   FT_LOCAL( void )
   T1_Get_Kerning( T1_AFM*     afm,

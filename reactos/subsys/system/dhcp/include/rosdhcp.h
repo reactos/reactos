@@ -12,6 +12,7 @@
 #include <setjmp.h>
 #include "stdint.h"
 #include "predec.h"
+#include <dhcp/rosdhcp_public.h>
 #include "debug.h"
 #define IFNAMSIZ MAX_INTERFACE_NAME_LEN
 #undef interface /* wine/objbase.h -- Grrr */
@@ -49,8 +50,6 @@ typedef struct _DHCP_ADAPTER {
     unsigned int BindStatus;
     unsigned char recv_buf[1];
 } DHCP_ADAPTER, *PDHCP_ADAPTER;
-
-#include <rosdhcp_public.h>
 
 typedef DWORD (*PipeSendFunc)( COMM_DHCP_REPLY *Reply );
 

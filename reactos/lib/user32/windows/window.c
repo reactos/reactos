@@ -12,6 +12,8 @@
 /* INCLUDES ******************************************************************/
 
 #include <user32.h>
+#define NDEBUG
+#include <debug.h>
 
 BOOL ControlsInitialized = FALSE;
 
@@ -45,17 +47,6 @@ AllowSetForegroundWindow(DWORD dwProcessId)
 {
   UNIMPLEMENTED;
   return(FALSE);
-}
-
-
-/*
- * @unimplemented
- */
-UINT STDCALL
-ArrangeIconicWindows(HWND hWnd)
-{
-  UNIMPLEMENTED;
-  return 0;
 }
 
 
@@ -394,7 +385,7 @@ STATIC
 User32EnumWindows (
 	HDESK hDesktop,
 	HWND hWndparent,
-	ENUMWINDOWSPROC lpfn,
+	WNDENUMPROC lpfn,
 	LPARAM lParam,
 	DWORD dwThreadId,
 	BOOL bChildren )
@@ -468,7 +459,7 @@ BOOL
 STDCALL
 EnumChildWindows(
 	HWND hWndParent,
-	ENUMWINDOWSPROC lpEnumFunc,
+	WNDENUMPROC lpEnumFunc,
 	LPARAM lParam)
 {
   if ( !hWndParent )
@@ -483,7 +474,7 @@ EnumChildWindows(
 BOOL
 STDCALL
 EnumThreadWindows(DWORD dwThreadId,
-		  ENUMWINDOWSPROC lpfn,
+		  WNDENUMPROC lpfn,
 		  LPARAM lParam)
 {
   if ( !dwThreadId )
@@ -496,7 +487,7 @@ EnumThreadWindows(DWORD dwThreadId,
  * @implemented
  */
 BOOL STDCALL
-EnumWindows(ENUMWINDOWSPROC lpEnumFunc,
+EnumWindows(WNDENUMPROC lpEnumFunc,
 	    LPARAM lParam)
 {
   return User32EnumWindows ( NULL, NULL, lpEnumFunc, lParam, 0, FALSE );
@@ -510,7 +501,7 @@ BOOL
 STDCALL
 EnumDesktopWindows(
 	HDESK hDesktop,
-	ENUMWINDOWSPROC lpfn,
+	WNDENUMPROC lpfn,
 	LPARAM lParam)
 {
   return User32EnumWindows ( hDesktop, NULL, lpfn, lParam, 0, FALSE );
@@ -1084,15 +1075,15 @@ AnimateWindow(HWND hwnd,
 
   BOOL visible;
   visible = IsWindowVisible(hwnd);
-//  if(!IsWindow(hwnd) ||
-//    (visible && !(dwFlags & AW_HIDE)) ||
-//    (!visible && (dwFlags & AW_HIDE)))
+  if(!IsWindow(hwnd) ||
+    (visible && !(dwFlags & AW_HIDE)) ||
+    (!visible && (dwFlags & AW_HIDE)))
   {
     SetLastError(ERROR_INVALID_PARAMETER);
     return FALSE;
   }
 
-//  ShowWindow(hwnd, (dwFlags & AW_HIDE) ? SW_HIDE : ((dwFlags & AW_ACTIVATE) ? SW_SHOW : SW_SHOWNA));
+  ShowWindow(hwnd, (dwFlags & AW_HIDE) ? SW_HIDE : ((dwFlags & AW_ACTIVATE) ? SW_SHOW : SW_SHOWNA));
 
   return TRUE;
 }
@@ -1150,7 +1141,7 @@ SetLayeredWindowAttributes(HWND hwnd,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 HWND STDCALL
 SetParent(HWND hWndChild,
@@ -1273,14 +1264,13 @@ SetWindowTextW(HWND hWnd,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 ShowOwnedPopups(HWND hWnd,
 		BOOL fShow)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return (BOOL)NtUserCallTwoParam((DWORD)hWnd, fShow, TWOPARAM_ROUTINE_SHOWOWNEDPOPUPS);
 }
 
 
@@ -1477,25 +1467,23 @@ GetFocus(VOID)
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HWND
 STDCALL
-SetTaskmanWindow(HWND x)
+SetTaskmanWindow(HWND hWnd)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+    return NtUserCallHwndOpt(hWnd, HWNDOPT_ROUTINE_SETTASKMANWINDOW);
 }
 
 /*
- * @unimplemented
+ * @implemented
  */
 HWND
 STDCALL
-SetProgmanWindow(HWND x)
+SetProgmanWindow(HWND hWnd)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+    return NtUserCallHwndOpt(hWnd, HWNDOPT_ROUTINE_SETTASKMANWINDOW);
 }
 
 /*

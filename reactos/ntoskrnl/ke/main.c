@@ -25,7 +25,7 @@ ULONG NtOSCSDVersion = BUILD_OSCSDVERSION(6, 0);
 EXPORTED ULONG NtBuildNumber = KERNEL_VERSION_BUILD;
 EXPORTED ULONG NtGlobalFlag = 0;
 EXPORTED CHAR  KeNumberProcessors;
-EXPORTED KAFFINITY KeActiveProcessors;
+EXPORTED KAFFINITY KeActiveProcessors = 1;
 EXPORTED LOADER_PARAMETER_BLOCK KeLoaderBlock;
 EXPORTED ULONG KeDcacheFlushCount = 0;
 EXPORTED ULONG KeIcacheFlushCount = 0;
@@ -40,6 +40,11 @@ ULONG KeMemoryMapRangeCount;
 ULONG_PTR FirstKrnlPhysAddr;
 ULONG_PTR LastKrnlPhysAddr;
 ULONG_PTR LastKernelAddress;
+
+PVOID KeUserApcDispatcher = NULL;
+PVOID KeUserCallbackDispatcher = NULL;
+PVOID KeUserExceptionDispatcher = NULL;
+PVOID KeRaiseUserExceptionDispatcher = NULL;
 
 ULONG KeLargestCacheLine = 0x40; /* FIXME: Arch-specific */
 

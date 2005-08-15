@@ -27,7 +27,8 @@ PspProcessNotifyRoutine[MAX_PROCESS_NOTIFY_ROUTINE_COUNT];
 static PLOAD_IMAGE_NOTIFY_ROUTINE
 PspLoadImageNotifyRoutine[MAX_LOAD_IMAGE_NOTIFY_ROUTINE_COUNT];
 
-static PVOID PspLegoNotifyRoutine;
+typedef VOID (STDCALL *PLEGO_NOTIFY_ROUTINE)(IN PKTHREAD Thread);
+static PLEGO_NOTIFY_ROUTINE PspLegoNotifyRoutine;
 
 /* FUNCTIONS ***************************************************************/
 
@@ -229,6 +230,14 @@ PspRunLoadImageNotifyRoutines(PUNICODE_STRING FullImageName,
             PspLoadImageNotifyRoutine[i](FullImageName, ProcessId, ImageInfo);
         }
     }
+}
+
+VOID
+STDCALL
+PspRunLegoRoutine(IN PKTHREAD Thread)
+{
+    /* Call it */
+    if (PspLegoNotifyRoutine) (PspLegoNotifyRoutine)(Thread);
 }
 
 /* EOF */

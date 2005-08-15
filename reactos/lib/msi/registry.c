@@ -141,6 +141,20 @@ static const WCHAR szInstaller_UpgradeCodes_fmt[] = {
 'U','p','g','r','a','d','e','C','o','d','e','s','\\',
 '%','s',0};
 
+static const WCHAR szInstaller_UserUpgradeCodes[] = {
+'S','o','f','t','w','a','r','e','\\',
+'M','i','c','r','o','s','o','f','t','\\',
+'I','n','s','t','a','l','l','e','r','\\',
+'U','p','g','r','a','d','e','C','o','d','e','s',0};
+
+static const WCHAR szInstaller_UserUpgradeCodes_fmt[] = {
+'S','o','f','t','w','a','r','e','\\',
+'M','i','c','r','o','s','o','f','t','\\',
+'I','n','s','t','a','l','l','e','r','\\',
+'U','p','g','r','a','d','e','C','o','d','e','s','\\',
+'%','s',0};
+
+
 #define SQUISH_GUID_SIZE 33
 
 BOOL unsquash_guid(LPCWSTR in, LPWSTR out)
@@ -454,6 +468,27 @@ UINT MSIREG_OpenUpgradeCodesKey(LPCWSTR szUpgradeCode, HKEY* key, BOOL create)
 
     return rc;
 }
+
+UINT MSIREG_OpenUserUpgradeCodesKey(LPCWSTR szUpgradeCode, HKEY* key, BOOL create)
+{
+    UINT rc;
+    WCHAR squished_pc[GUID_SIZE];
+    WCHAR keypath[0x200];
+
+    TRACE("%s\n",debugstr_w(szUpgradeCode));
+    squash_guid(szUpgradeCode,squished_pc);
+    TRACE("squished (%s)\n", debugstr_w(squished_pc));
+
+    sprintfW(keypath,szInstaller_UserUpgradeCodes_fmt,squished_pc);
+
+    if (create)
+        rc = RegCreateKeyW(HKEY_CURRENT_USER,keypath,key);
+    else
+        rc = RegOpenKeyW(HKEY_CURRENT_USER,keypath,key);
+
+    return rc;
+}
+
 
 /*************************************************************************
  *  MsiDecomposeDescriptorW   [MSI.@]
@@ -838,9 +873,18 @@ UINT WINAPI MsiEnumComponentQualifiersW( LPWSTR szComponent, DWORD iIndex,
     rc = RegEnumValueW(key, iIndex, lpQualifierBuf, pcchQualifierBuf, NULL, 
                     NULL, (LPBYTE)full_buffer, &full_buffer_size);
 
+    if (rc == ERROR_MORE_DATA)
+    {
+        HeapFree(GetProcessHeap(),0,full_buffer);
+        full_buffer_size+=sizeof(WCHAR);
+        full_buffer = HeapAlloc(GetProcessHeap(),0,full_buffer_size);
+        rc = RegEnumValueW(key, iIndex, lpQualifierBuf, pcchQualifierBuf, NULL, 
+                    NULL, (LPBYTE)full_buffer, &full_buffer_size);
+    }
+    
     RegCloseKey(key);
 
-    if (rc == ERROR_SUCCESS || rc == ERROR_MORE_DATA)
+    if (rc == ERROR_SUCCESS)
     {
         if (lpApplicationDataBuf && pcchApplicationDataBuf)
         {
@@ -862,6 +906,8 @@ UINT WINAPI MsiEnumComponentQualifiersW( LPWSTR szComponent, DWORD iIndex,
         TRACE("Providing %s and %s\n", debugstr_w(lpQualifierBuf), 
                         debugstr_w(lpApplicationDataBuf));
     }
+
+    HeapFree(GetProcessHeap(),0,full_buffer);
 
     return rc;
 }

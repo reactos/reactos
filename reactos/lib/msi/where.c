@@ -24,7 +24,6 @@
 #include "winbase.h"
 #include "winerror.h"
 #include "wine/debug.h"
-#include "wine/unicode.h"
 #include "msi.h"
 #include "msiquery.h"
 #include "objbase.h"
@@ -171,7 +170,7 @@ static UINT STRCMP_Evaluate( string_table *st, MSIVIEW *table, UINT row,
     else if( r_str && ! l_str )
         sr = -1;
     else
-        sr = strcmpW( l_str, r_str );
+        sr = lstrcmpW( l_str, r_str );
 
     *val = ( cond->u.expr.op == OP_EQ && ( sr == 0 ) ) ||
            ( cond->u.expr.op == OP_LT && ( sr < 0 ) ) ||

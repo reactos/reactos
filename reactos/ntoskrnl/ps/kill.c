@@ -21,6 +21,7 @@ WORK_QUEUE_ITEM PspReaperWorkItem;
 BOOLEAN PspReaping = FALSE;
 extern LIST_ENTRY PsActiveProcessHead;
 extern FAST_MUTEX PspActiveProcessMutex;
+extern PHANDLE_TABLE PspCidTable;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -84,6 +85,8 @@ PspKillMostProcesses(VOID)
     PLIST_ENTRY current_entry;
     PEPROCESS current;
 
+    ASSERT(PsGetCurrentProcessId() == PsInitialSystemProcess->UniqueProcessId);
+
     /* Acquire the Active Process Lock */
     ExAcquireFastMutex(&PspActiveProcessMutex);
 
@@ -94,8 +97,7 @@ PspKillMostProcesses(VOID)
         current = CONTAINING_RECORD(current_entry, EPROCESS, ActiveProcessLinks);
         current_entry = current_entry->Flink;
 
-        if (current->UniqueProcessId != PsInitialSystemProcess->UniqueProcessId &&
-            current->UniqueProcessId != PsGetCurrentProcessId())
+        if (current->UniqueProcessId != PsInitialSystemProcess->UniqueProcessId)
         {
             /* Terminate all the Threads in this Process */
             PspTerminateProcessThreads(current, STATUS_SUCCESS);
@@ -152,9 +154,9 @@ PspDeleteProcess(PVOID ObjectBody)
     ExReleaseFastMutex(&PspActiveProcessMutex);
 
     /* Delete the CID Handle */
-    if(Process->UniqueProcessId != NULL) {
-
-        PsDeleteCidHandle(Process->UniqueProcessId, PsProcessType);
+    if(Process->UniqueProcessId)
+    {
+        ExDestroyHandle(PspCidTable, Process->UniqueProcessId);
     }
 
     /* KDB hook */
@@ -183,9 +185,9 @@ PspDeleteThread(PVOID ObjectBody)
     Thread->ThreadsProcess = NULL;
 
     /* Delete the CID Handle */
-    if(Thread->Cid.UniqueThread != NULL) {
-
-        PsDeleteCidHandle(Thread->Cid.UniqueThread, PsThreadType);
+    if(Thread->Cid.UniqueThread)
+    {
+        ExDestroyHandle(PspCidTable, Thread->Cid.UniqueThread);
     }
 
     /* Free the W32THREAD structure if present */
@@ -211,6 +213,9 @@ PspExitThread(NTSTATUS ExitStatus)
     PEPROCESS CurrentProcess;
     PTERMINATION_PORT TerminationPort;
     PTEB Teb;
+    KIRQL oldIrql;
+    PLIST_ENTRY ApcEntry;
+    PKAPC Apc;
 
     DPRINT("PspExitThread(ExitStatus %x), Current: 0x%x\n", ExitStatus, PsGetCurrentThread());
 
@@ -256,6 +261,7 @@ PspExitThread(NTSTATUS ExitStatus)
           happens when the last thread just terminates without explicitly
           terminating the process. */
        CurrentProcess->ExitTime = CurrentThread->ExitTime;
+       CurrentProcess->ExitStatus = ExitStatus;
     }
 
     /* Check if the process has a debug port */
@@ -321,12 +327,54 @@ PspExitThread(NTSTATUS ExitStatus)
     /* If the Processor Control Block's NpxThread points to the current thread
      * unset it.
      */
+    KeRaiseIrql(DISPATCH_LEVEL, &oldIrql);
     InterlockedCompareExchangePointer(&KeGetCurrentPrcb()->NpxThread,
                                       NULL,
                                       (PKPROCESS)CurrentThread);
+    KeLowerIrql(oldIrql);
 
     /* Rundown Mutexes */
     KeRundownThread();
+
+    /* Disable new APC Queuing, this is as far as we'll let them go */
+    KeDisableThreadApcQueueing(&CurrentThread->Tcb);
+
+    /* Flush the User APCs */
+    ApcEntry = KeFlushQueueApc(&CurrentThread->Tcb, UserMode);
+    while(ApcEntry)
+    {
+       /* Get the APC */
+       Apc = CONTAINING_RECORD(ApcEntry, KAPC, ApcListEntry);
+
+       /* Move to the next one */
+       ApcEntry = ApcEntry->Flink;
+
+       /* Rundown the APC or de-allocate it */
+       if (Apc->RundownRoutine)
+       {
+          /* Call its own routine */
+          (Apc->RundownRoutine)(Apc);
+       }
+       else
+       {
+          /* Do it ourselves */
+          ExFreePool(Apc);
+       }
+    }
+
+    /* Call the Lego routine */
+    if (CurrentThread->Tcb.LegoData) PspRunLegoRoutine(&CurrentThread->Tcb);
+
+    /* Flush the APC queue, which should be empty */
+    if ((ApcEntry = KeFlushQueueApc(&CurrentThread->Tcb, KernelMode)))
+    {
+        /* Bugcheck time */
+        KEBUGCHECKEX(KERNEL_APC_PENDING_DURING_EXIT,
+                     (ULONG_PTR)ApcEntry,
+                     CurrentThread->Tcb.KernelApcDisable,
+                     oldIrql,
+                     0);
+    }
 
     /* Terminate the Thread from the Scheduler */
     KeTerminateThread(0);
@@ -342,18 +390,23 @@ PsExitSpecialApc(PKAPC Apc,
                  PVOID* SystemArgument1,
                  PVOID* SystemArguemnt2)
 {
-    NTSTATUS ExitStatus = (NTSTATUS)Apc->NormalContext;
+    DPRINT1("PsExitSpecialApc called: 0x%x (proc: 0x%x, '%.16s')\n", 
+            PsGetCurrentThread(), PsGetCurrentProcess(), PsGetCurrentProcess()->ImageFileName);
 
-    DPRINT("PsExitSpecialApc called: 0x%x (proc: 0x%x)\n", PsGetCurrentThread(), PsGetCurrentProcess());
+    /* Don't do anything unless we are in User-Mode */
+    if (Apc->SystemArgument2)
+    {
+        NTSTATUS ExitStatus = (NTSTATUS)Apc->NormalContext;
 
-    /* Free the APC */
-    ExFreePool(Apc);
+        /* Free the APC */
+        ExFreePool(Apc);
 
-    /* Terminate the Thread */
-    PspExitThread(ExitStatus);
+        /* Terminate the Thread */
+        PspExitThread(ExitStatus);
 
-    /* we should never reach this point! */
-    KEBUGCHECK(0);
+        /* we should never reach this point! */
+        KEBUGCHECK(0);
+    }
 }
 
 VOID
@@ -362,14 +415,46 @@ PspExitNormalApc(PVOID NormalContext,
                  PVOID SystemArgument1,
                  PVOID SystemArgument2)
 {
-    /* Not fully supported yet... must work out some issues that
-     * I don't understand yet -- Alex
-     */
-    DPRINT1("APC2\n");
-    PspExitThread((NTSTATUS)NormalContext);
+    PKAPC Apc = (PKAPC)SystemArgument1;
+    PETHREAD Thread = PsGetCurrentThread();
+    NTSTATUS ExitStatus;
+        
+    DPRINT1("PspExitNormalApc called: 0x%x (proc: 0x%x, '%.16s')\n", 
+            PsGetCurrentThread(), PsGetCurrentProcess(), PsGetCurrentProcess()->ImageFileName);
 
-    /* we should never reach this point! */
-    KEBUGCHECK(0);
+    /* This should never happen */
+    ASSERT(!SystemArgument2);
+
+    /* If this is a system thread, we can safely kill it from Kernel-Mode */
+    if (PsIsSystemThread(Thread))
+    {
+        /* Get the Exit Status */
+        DPRINT1("Killing System Thread\n");
+        ExitStatus = (NTSTATUS)Apc->NormalContext;
+
+        /* Free the APC */
+        ExFreePool(Apc);
+
+        /* Exit the Thread */
+        PspExitThread(ExitStatus);
+    }
+
+    /* If we're here, this is not a System Thread, so kill it from User-Mode */
+    DPRINT1("Initializing User-Mode APC\n");
+    KeInitializeApc(Apc,
+                    &Thread->Tcb,
+                    OriginalApcEnvironment,
+                    PsExitSpecialApc,
+                    NULL,
+                    PspExitNormalApc,
+                    UserMode,
+                    NormalContext);
+
+    /* Now insert the APC with the User-Mode Flag */
+    KeInsertQueueApc(Apc, Apc, (PVOID)UserMode, 2);
+
+    /* Forcefully resume the thread */
+    KeForceResumeThread(&Thread->Tcb);
 }
 
 /*
@@ -425,6 +510,8 @@ PspExitProcess(PEPROCESS Process)
     DPRINT("PspExitProcess 0x%x\n", Process);
 
     PspRunCreateProcessNotifyRoutines(Process, FALSE);
+
+    PspDestroyQuotaBlock(Process);
 
     /* close all handles associated with our process, this needs to be done
        when the last thread still runs */
@@ -487,6 +574,7 @@ NtTerminateProcess(IN HANDLE ProcessHandle  OPTIONAL,
            we kill ourselves to prevent threads outside of our process trying
            to kill us */
         KeQuerySystemTime(&Process->ExitTime);
+        Process->ExitStatus = ExitStatus;
 
         /* Only master thread remains... kill it off */
         if (CurrentThread->ThreadsProcess == Process) {

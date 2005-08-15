@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType PFR data structures (specification only).                   */
 /*                                                                         */
-/*  Copyright 2002, 2003 by                                                */
+/*  Copyright 2002, 2003, 2005 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -196,21 +196,26 @@ FT_BEGIN_HEADER
   typedef struct  PFR_KernItemRec_
   {
     PFR_KernItem  next;
-    FT_UInt       pair_count;
+    FT_Byte       pair_count;
+    FT_Byte       flags;
+    FT_Short      base_adj;
     FT_UInt       pair_size;
-    FT_Int        base_adj;
-    FT_UInt       flags;
     FT_UInt32     offset;
     FT_UInt32     pair1;
     FT_UInt32     pair2;
 
   } PFR_KernItemRec;
 
-#define PFR_KERN_INDEX( g1, g2 ) \
-  ( ( (FT_UInt32)(g1) << 16 ) | (FT_UInt16)(g2) )
 
-#define PFR_KERN_PAIR_INDEX( pair )  \
+#define PFR_KERN_INDEX( g1, g2 )                          \
+          ( ( (FT_UInt32)(g1) << 16 ) | (FT_UInt16)(g2) )
+
+#define PFR_KERN_PAIR_INDEX( pair )                        \
           PFR_KERN_INDEX( (pair)->glyph1, (pair)->glyph2 )
+
+#define PFR_NEXT_KPAIR( p )  ( p += 2,                              \
+                               ( (FT_UInt32)p[-2] << 16 ) | p[-1] )
+
 
   typedef struct  PFR_KernPairRec_
   {
@@ -261,7 +266,9 @@ FT_BEGIN_HEADER
     FT_UInt            num_kern_pairs;
     PFR_KernItem       kern_items;
     PFR_KernItem*      kern_items_tail;
+#ifndef FT_OPTIMIZE_MEMORY
     PFR_KernPair       kern_pairs;
+#endif
 
     /* not part of the spec, but used during load */
     FT_UInt32          bct_offset;

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Objects manager (body).                                              */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -190,8 +190,11 @@
     if ( error )
       goto Exit;
 
-    /* We must also be able to accept Mac/GX fonts, as well as OT ones */
+    /* We must also be able to accept Mac/GX fonts, as well as OT ones. */
+    /* The 0x00020000 tag is completely undocumented; some fonts from   */
+    /* Arphic made for Chinese Windows 3.1 have this.                   */
     if ( face->format_tag != 0x00010000L &&    /* MS fonts  */
+         face->format_tag != 0x00020000L &&    /* CJK fonts for Win 3.1 */
          face->format_tag != TTAG_true   )     /* Mac fonts */
     {
       FT_TRACE2(( "[not a valid TTF font]\n" ));
@@ -215,8 +218,11 @@
       if ( !face->root.internal->incremental_interface )
         error = tt_face_load_loca( face, stream );
       if ( !error )
-        error = tt_face_load_cvt( face, stream ) ||
-                tt_face_load_fpgm( face, stream );
+      {
+        error = tt_face_load_cvt( face, stream );
+        if ( !error )
+          error = tt_face_load_fpgm( face, stream );
+      }
 
 #else
 
@@ -287,8 +293,7 @@
       sfnt->done_face( face );
 
     /* freeing the locations table */
-    FT_FREE( face->glyph_locations );
-    face->num_locations = 0;
+    tt_face_done_loca( face );
 
     /* freeing the CVT */
     FT_FREE( face->cvt );
@@ -744,33 +749,42 @@
 
     if ( !error )
     {
+      /* XXX: TODO: move this code to the SFNT module where it belongs */
+
+#ifdef FT_OPTIMIZE_MEMORY
+      FT_Byte*    strike = face->sbit_table + 8 + strike_index*48;
+
+      sbit_metrics->ascender  = (FT_Char)strike[16] << 6;  /* hori.ascender  */
+      sbit_metrics->descender = (FT_Char)strike[17] << 6;  /* hori.descender */
+
+      /* XXX: Is this correct? */
+      sbit_metrics->max_advance = ( (FT_Char)strike[22] + /* min_origin_SB  */
+                                             strike[18] + /* max_width      */
+                                    (FT_Char)strike[23]   /* min_advance_SB */
+                                                        ) << 6;
+
+#else /* !FT_OPTIMIZE_MEMORY */
+
       TT_SBit_Strike  strike = face->sbit_strikes + strike_index;
 
 
-      sbit_metrics->x_ppem = metrics->x_ppem;
-      sbit_metrics->y_ppem = metrics->y_ppem;
-#if 0
-      /*
-       * sbit_metrics->?_scale
-       * are not used now.
-       */
-      sbit_metrics->x_scale = 1 << 16;
-      sbit_metrics->y_scale = 1 << 16;
-#endif
-
       sbit_metrics->ascender  = strike->hori.ascender << 6;
       sbit_metrics->descender = strike->hori.descender << 6;
-
-      /* XXX: Is this correct? */
-      sbit_metrics->height = sbit_metrics->ascender -
-                             sbit_metrics->descender;
 
       /* XXX: Is this correct? */
       sbit_metrics->max_advance = ( strike->hori.min_origin_SB  +
                                     strike->hori.max_width      +
                                     strike->hori.min_advance_SB ) << 6;
 
-      size->strike_index = (FT_UInt)strike_index;
+#endif /* !FT_OPTIMIZE_MEMORY */
+
+      /* XXX: Is this correct? */
+      sbit_metrics->height = sbit_metrics->ascender -
+                             sbit_metrics->descender;
+
+      sbit_metrics->x_ppem = metrics->x_ppem;
+      sbit_metrics->y_ppem = metrics->y_ppem;
+      size->strike_index   = (FT_UInt)strike_index;
     }
     else
     {

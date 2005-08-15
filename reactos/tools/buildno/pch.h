@@ -26,12 +26,15 @@
 #include <wctype.h>
 #include <math.h>
 
-inline char* strlwr ( char* str )
+inline char * strlwr(char *x)
 {
-  char* p = str;
-  while ( *p )
-    *p++ = tolower(*p);
-  return str;
+        char  *y=x;
+
+        while (*y) {
+                *y=tolower(*y);
+                y++;
+        }
+        return x;
 }
 
 #define _finite __finite

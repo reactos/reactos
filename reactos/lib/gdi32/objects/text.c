@@ -309,3 +309,5 @@ GetTextFaceA( HDC hdc, INT count, LPSTR name )
     HeapFree( GetProcessHeap(), 0, nameW );
     return res;
 }
+
+

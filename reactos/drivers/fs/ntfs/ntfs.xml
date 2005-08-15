@@ -17,4 +17,5 @@
 	<file>rw.c</file>
 	<file>volinfo.c</file>
 	<file>ntfs.rc</file>
+	<pch>ntfs.h</pch>
 </module>

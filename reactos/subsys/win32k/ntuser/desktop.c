@@ -248,7 +248,7 @@ IntParseDesktopPath(PEPROCESS Process,
     Status = ObOpenObjectByName(&ObjectAttributes,
                                 ExWindowStationObjectType,
                                 NULL,
-                                UserMode,
+                                KernelMode,
                                 0,
                                 NULL,
                                 (HANDLE*)hWinSta);
@@ -282,7 +282,7 @@ IntParseDesktopPath(PEPROCESS Process,
      Status = ObOpenObjectByName(&ObjectAttributes,
                                  ExDesktopObjectType,
                                  NULL,
-                                 UserMode,
+                                 KernelMode,
                                  0,
                                  NULL,
                                  (HANDLE*)hDesktop);
@@ -766,7 +766,7 @@ NtUserCreateDesktop(
    * Try to open already existing desktop
    */
 
-  DPRINT("Trying to open desktop (%wZ)\n", &DesktopName);
+  DPRINT1("Trying to open desktop (%wZ)\n", &DesktopName);
 
   /* Initialize ObjectAttributes for the desktop object */
   InitializeObjectAttributes(
@@ -780,7 +780,7 @@ NtUserCreateDesktop(
     &ObjectAttributes,
     ExDesktopObjectType,
     NULL,
-    UserMode,
+    KernelMode,
     dwDesiredAccess,
     NULL,
     (HANDLE*)&Desktop);

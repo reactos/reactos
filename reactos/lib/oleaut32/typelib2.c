@@ -145,10 +145,10 @@ typedef struct tagMSFT_ImpFile {
 
 typedef struct tagICreateTypeLib2Impl
 {
-    ICreateTypeLib2Vtbl *lpVtbl;
-    ITypeLib2Vtbl       *lpVtblTypeLib2;
+    const ICreateTypeLib2Vtbl *lpVtbl;
+    const ITypeLib2Vtbl       *lpVtblTypeLib2;
 
-    ULONG ref;
+    LONG ref;
 
     WCHAR *filename;
 
@@ -171,10 +171,10 @@ typedef struct tagICreateTypeLib2Impl
 
 typedef struct tagICreateTypeInfo2Impl
 {
-    ICreateTypeInfo2Vtbl *lpVtbl;
-    ITypeInfo2Vtbl       *lpVtblTypeInfo2;
+    const ICreateTypeInfo2Vtbl *lpVtbl;
+    const ITypeInfo2Vtbl       *lpVtblTypeInfo2;
 
-    ULONG ref;
+    LONG ref;
 
     ICreateTypeLib2Impl *typelib;
     MSFT_TypeInfoBase *typeinfo;
@@ -1242,7 +1242,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnSetTypeFlags(ICreateTypeInfo2 *iface, U
 	guidoffset = ctl2_alloc_guid(This->typelib, &foo);
 	if (guidoffset == -1) return E_OUTOFMEMORY;
 
-	impinfo.res0 = 0x03010000;
+	impinfo.flags = TKIND_INTERFACE << 24 | MSFT_IMPINFO_OFFSET_IS_GUID;
 	impinfo.oImpFile = fileoffset;
 	impinfo.oGuid = guidoffset;
 	ctl2_alloc_importinfo(This->typelib, &impinfo);
@@ -2803,7 +2803,7 @@ static HRESULT WINAPI ITypeInfo2_fnGetAllImplTypeCustData(
 
 /*================== ICreateTypeInfo2 & ITypeInfo2 VTABLEs And Creation ===================================*/
 
-static ICreateTypeInfo2Vtbl ctypeinfo2vt =
+static const ICreateTypeInfo2Vtbl ctypeinfo2vt =
 {
 
     ICreateTypeInfo2_fnQueryInterface,
@@ -2851,7 +2851,7 @@ static ICreateTypeInfo2Vtbl ctypeinfo2vt =
     ICreateTypeInfo2_fnSetName
 };
 
-static ITypeInfo2Vtbl typeinfo2vt =
+static const ITypeInfo2Vtbl typeinfo2vt =
 {
 
     ITypeInfo2_fnQueryInterface,
@@ -3761,7 +3761,7 @@ static HRESULT WINAPI ITypeLib2_fnGetAllCustData(
 
 /*================== ICreateTypeLib2 & ITypeLib2 VTABLEs And Creation ===================================*/
 
-static ICreateTypeLib2Vtbl ctypelib2vt =
+static const ICreateTypeLib2Vtbl ctypelib2vt =
 {
 
     ICreateTypeLib2_fnQueryInterface,
@@ -3785,7 +3785,7 @@ static ICreateTypeLib2Vtbl ctypelib2vt =
     ICreateTypeLib2_fnSetHelpStringDll
 };
 
-static ITypeLib2Vtbl typelib2vt =
+static const ITypeLib2Vtbl typelib2vt =
 {
 
     ITypeLib2_fnQueryInterface,

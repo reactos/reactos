@@ -35,8 +35,8 @@ typedef struct _ADMIN_OTHER_INFO {
 }ADMIN_OTHER_INFO,*PADMIN_OTHER_INFO,*LPADMIN_OTHER_INFO;
 typedef struct _STD_ALERT {
 	DWORD alrt_timestamp;
-	TCHAR alrt_eventname[EVLEN+1];
-	TCHAR alrt_servicename[SNLEN+1];
+	WCHAR alrt_eventname[EVLEN+1];
+	WCHAR alrt_servicename[SNLEN+1];
 }STD_ALERT,*PSTD_ALERT,*LPSTD_ALERT;
 typedef struct _ERRLOG_OTHER_INFO {
 	DWORD alrter_errcode;

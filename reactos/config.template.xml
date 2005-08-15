@@ -18,7 +18,7 @@
 
 <!--
   Which CPU ReactOS should be optimized for. Specify one of:
-    i486, i586, pentium, pentium2, pentum3, pentium4, athlon-xp, athlon-mp,
+    i486, i586, pentium, pentium2, pentium3, pentium4, athlon-xp, athlon-mp,
     k6-2
 
   See GCC manual for more CPU names and which CPUs GCC can optimize for.

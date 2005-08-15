@@ -184,6 +184,8 @@ extern unsigned int get_page_size(void);
 extern const char *asm_name( const char *func );
 extern const char *func_declaration( const char *func );
 extern const char *func_size( const char *func );
+extern const char *get_asm_string_keyword(void);
+extern const char *get_asm_short_keyword(void);
 
 extern void add_import_dll( const char *name, const char *filename );
 extern void add_delayed_import( const char *name );
@@ -220,7 +222,6 @@ extern int parse_debug_channels( const char *srcdir, const char *filename );
 
 extern int current_line;
 extern int UsePIC;
-extern int debugging;
 extern int nb_debug_channels;
 extern int nb_lib_paths;
 extern int nb_errors;

@@ -101,7 +101,7 @@ IntSetTimer(HWND Wnd, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, BOOL S
           return 0;
         }
       IntReleaseWindowObject(WindowObject);
-      Ret = 1;
+      Ret = IDEvent;
     }
 
   #if 1

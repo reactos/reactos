@@ -17,13 +17,14 @@
 
 /* INCLUDES *****************************************************************/
 
+#define NDEBUG
+
 #include <ddk/ntddk.h>
 #include <hal.h>
 #include <bus.h>
 #include "halxbox.h"
 
 #include <internal/debug.h>
-#define NDEBUG
 #include <debug.h>
 
 /* VARIABLES ***************************************************************/

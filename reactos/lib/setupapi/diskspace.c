@@ -100,7 +100,7 @@ HDSKSPC WINAPI SetupCreateDiskSpaceListA(PVOID Reserved1, DWORD Reserved2, UINT 
  */
 BOOL WINAPI SetupAddInstallSectionToDiskSpaceListA(HDSKSPC DiskSpace, 
                         HINF InfHandle, HINF LayoutInfHandle, 
-                        LPSTR SectionName, PVOID Reserved1, UINT Reserved2)
+                        LPCSTR SectionName, PVOID Reserved1, UINT Reserved2)
 {
     FIXME ("Stub\n");
     return TRUE;
@@ -110,7 +110,7 @@ BOOL WINAPI SetupAddInstallSectionToDiskSpaceListA(HDSKSPC DiskSpace,
 *		SetupQuerySpaceRequiredOnDriveA  (SETUPAPI.@)
 */
 BOOL WINAPI SetupQuerySpaceRequiredOnDriveA(HDSKSPC DiskSpace, 
-                        LPSTR DriveSpec, LONGLONG* SpaceRequired, 
+                        LPCSTR DriveSpec, LONGLONG* SpaceRequired, 
                         PVOID Reserved1, UINT Reserved2)
 {
     WCHAR driveW[20];

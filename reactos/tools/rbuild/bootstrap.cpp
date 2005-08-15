@@ -23,8 +23,8 @@
 using std::string;
 
 Bootstrap::Bootstrap ( const Project& project_,
-	                   const Module* module_,
-	                   const XMLElement& bootstrapNode )
+                       const Module* module_,
+                       const XMLElement& bootstrapNode )
 	: project(project_),
 	  module(module_),
 	  node(bootstrapNode)
@@ -60,6 +60,7 @@ Bootstrap::IsSupportedModuleType ( ModuleType type )
 		case Test:
 		case RpcServer:
 		case RpcClient:
+		case Alias:
 			return false;
 	}
 	throw InvalidOperationException ( __FILE__,

@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType bytecode interpreter (specification).                       */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003 by                                     */
+/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -27,7 +27,7 @@
 FT_BEGIN_HEADER
 
 
-#ifndef TT_CONFIG_OPTION_STATIC_INTEPRETER  /* indirect implementation */
+#ifndef TT_CONFIG_OPTION_STATIC_INTERPRETER /* indirect implementation */
 
 #define EXEC_OP_   TT_ExecContext  exc,
 #define EXEC_OP    TT_ExecContext  exc
@@ -218,6 +218,8 @@ FT_BEGIN_HEADER
 
     FT_ULong           loadSize;
     TT_SubGlyph_Stack  loadStack;      /* loading subglyph stack */
+
+    FT_Bool            grayscale;      /* are we hinting for grayscale? */
 
   } TT_ExecContextRec;
 

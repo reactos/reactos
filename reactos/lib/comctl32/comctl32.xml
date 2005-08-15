@@ -2,8 +2,6 @@
 	<importlibrary definition="comctl32.spec.def" />
 	<include base="comctl32">.</include>
 	<include base="ReactOS">include/wine</include>
-	<define name="UNICODE" />
-	<define name="_UNICODE" />
 	<define name="__REACTOS__" />
 	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x600</define>
@@ -15,13 +13,16 @@
 	<library>advapi32</library>
 	<library>gdi32</library>
 	<library>user32</library>
+	<library>uxtheme</library>
 	<library>winmm</library>
 	<file>animate.c</file>
 	<file>comboex.c</file>
 	<file>comctl32undoc.c</file>
 	<file>commctrl.c</file>
 	<file>datetime.c</file>
+	<file>dpa.c</file>
 	<file>draglist.c</file>
+	<file>dsa.c</file>
 	<file>flatsb.c</file>
 	<file>header.c</file>
 	<file>hotkey.c</file>

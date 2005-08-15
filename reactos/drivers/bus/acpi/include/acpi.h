@@ -50,6 +50,7 @@
 #include "acglobal.h"           /* All global variables */
 #include "achware.h"            /* Hardware defines and interfaces */
 #include "accommon.h"           /* Common interfaces */
+#include "acresrc.h"            /* Resource Manager function prototypes */
 
 
 #endif /* __ACPI_H__ */

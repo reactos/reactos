@@ -5258,6 +5258,19 @@ static HRESULT VARIANT_BstrFromReal(DOUBLE dblIn, LCID lcid, ULONG dwFlags,
     return E_INVALIDARG;
 
   sprintfW( buff, lpszFormat, dblIn );
+
+  /* Negative zeroes are disallowed (some applications depend on this).
+     If buff starts with a minus, and then nothing follows but zeroes
+     and/or a period, it is a negative zero and is replaced with a
+     canonical zero. This duplicates native oleaut32 behavior.
+   */
+  if (buff[0] == '-')
+  {
+    const WCHAR szAccept[] = {'0', '.', '\0'};
+    if (strlenW(buff + 1) == strspnW(buff + 1, szAccept))
+    { buff[0] = '0'; buff[1] = '\0'; }
+  }
+
   TRACE("created string %s\n", debugstr_w(buff));
   if (dwFlags & LOCALE_USE_NLS)
   {

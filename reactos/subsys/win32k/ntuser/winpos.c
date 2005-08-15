@@ -107,63 +107,117 @@ VOID FASTCALL
 WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
 {
   PWINDOW_OBJECT Wnd, Old;
-  int TryTopmost;
+  HWND Fg;
 
   if (!Window || IntIsDesktopWindow(Window))
   {
     IntSetFocusMessageQueue(NULL);
     return;
   }
-  Wnd = Window;
-  for(;;)
-  {
-    HWND *List, *phWnd;
 
-    Old = Wnd;
-    Wnd = IntGetParentObject(Wnd);
-    if(Old != Window)
+  /* If this is popup window, try to activate the owner first. */
+  if ((Window->Style & WS_POPUP) && (Wnd = IntGetOwner(Window)))
+  {
+    for(;;)
     {
+      Old = Wnd;
+      Wnd = IntGetParentObject(Wnd);
+      if(IntIsDesktopWindow(Wnd))
+      {
+        IntReleaseWindowObject(Wnd);
+        Wnd = Old;
+        break;
+      }
       IntReleaseWindowObject(Old);
     }
-    if(!Wnd)
+
+    if ((Wnd->Style & (WS_DISABLED | WS_VISIBLE)) == WS_VISIBLE &&
+        (Wnd->Style & (WS_POPUP | WS_CHILD)) != WS_CHILD)
+      goto done;
+
+    IntReleaseWindowObject(Wnd);
+  }
+
+  /* Pick a next top-level window. */
+  /* FIXME: Search for non-tooltip windows first. */
+  Wnd = Window;
+  while (Wnd != NULL)
+  {
+    Old = Wnd;
+    IntLockRelatives(Old);
+    if (Old->NextSibling == NULL)
     {
-      IntSetFocusMessageQueue(NULL);
+      Wnd = NULL;
+      IntUnLockRelatives(Old);
+      if (Old != Window)
+        IntReleaseWindowObject(Old);
+      break;
+    }
+    Wnd = IntGetWindowObject(Old->NextSibling->Self);
+    IntUnLockRelatives(Old);
+    if (Old != Window)
+      IntReleaseWindowObject(Old);
+    if ((Wnd->Style & (WS_DISABLED | WS_VISIBLE)) == WS_VISIBLE &&
+        (Wnd->Style & (WS_POPUP | WS_CHILD)) != WS_CHILD)
+      break;
+  }
+
+done:
+  Fg = NtUserGetForegroundWindow();
+  if (Wnd && (!Fg || Window->Self == Fg))
+  {
+    if (IntSetForegroundWindow(Wnd))
+    {
+      IntReleaseWindowObject(Wnd);
       return;
     }
-
-    if((List = IntWinListChildren(Wnd)))
-    {
-      for(TryTopmost = 0; TryTopmost <= 1; TryTopmost++)
-      {
-        for(phWnd = List; *phWnd; phWnd++)
-        {
-          PWINDOW_OBJECT Child;
-
-          if((*phWnd) == Window->Self)
-          {
-            continue;
-          }
-
-          if((Child = IntGetWindowObject(*phWnd)))
-          {
-            if(((! TryTopmost && (0 == (Child->ExStyle & WS_EX_TOPMOST)))
-                || (TryTopmost && (0 != (Child->ExStyle & WS_EX_TOPMOST))))
-               && IntSetForegroundWindow(Child))
-            {
-              ExFreePool(List);
-              IntReleaseWindowObject(Wnd);
-              IntReleaseWindowObject(Child);
-              return;
-            }
-            IntReleaseWindowObject(Child);
-          }
-        }
-      }
-      ExFreePool(List);
-    }
   }
-  IntReleaseWindowObject(Wnd);
+  if (!IntSetActiveWindow(Wnd))
+    IntSetActiveWindow(0);
+  if (Wnd)
+    IntReleaseWindowObject(Wnd);
 }
+
+
+UINT
+FASTCALL
+WinPosArrangeIconicWindows(PWINDOW_OBJECT parent)
+{
+    RECT rectParent;
+    HWND hwndChild;
+    INT i, x, y, xspacing, yspacing;
+    HWND *List = IntWinListChildren(parent);
+    
+    IntGetClientRect( parent, &rectParent );
+    x = rectParent.left;
+    y = rectParent.bottom;
+    
+    xspacing = NtUserGetSystemMetrics(SM_CXMINSPACING);
+    yspacing = NtUserGetSystemMetrics(SM_CYMINSPACING);
+
+    DPRINT("X:%d Y:%d XS:%d YS:%d\n",x,y,xspacing,yspacing);
+
+    for( i = 0; List[i]; i++)
+    {
+       hwndChild = List[i];
+        
+      if((NtUserGetWindowLong( hwndChild, GWL_STYLE, FALSE) & WS_MINIMIZE) != 0 )
+      {
+         WinPosSetWindowPos( hwndChild, 0, x + NtUserGetSystemMetrics(SM_CXBORDER),
+                      y - yspacing - NtUserGetSystemMetrics(SM_CYBORDER)
+                     , 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE );
+         if (x <= rectParent.right - xspacing) x += xspacing;
+         else
+         {
+            x = rectParent.left;
+            y -= yspacing;
+         }
+      }
+    }
+    ExFreePool(List);
+    return yspacing;
+}
+
 
 VOID STATIC FASTCALL
 WinPosFindIconPos(PWINDOW_OBJECT Window, POINT *Pos)
@@ -1210,8 +1264,9 @@ WinPosShowWindow(HWND Wnd, INT Cmd)
 	    ObmDereferenceObject(Window);
 	    return(FALSE);
 	  }
-	Swp |= SWP_HIDEWINDOW | SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE |
-	  SWP_NOZORDER;
+	Swp |= SWP_HIDEWINDOW | SWP_NOSIZE | SWP_NOMOVE;
+	if (Window->Self != NtUserGetActiveWindow())
+	    Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
 	break;
       }
 

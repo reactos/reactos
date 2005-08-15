@@ -2052,6 +2052,7 @@ NtCreateToken(OUT PHANDLE TokenHandle,
   PVOID EndMem;
   ULONG uLength;
   ULONG i;
+  ULONG nTokenPrivileges = 0;
   KPROCESSOR_MODE PreviousMode;
   NTSTATUS Status = STATUS_SUCCESS;
 
@@ -2093,6 +2094,7 @@ NtCreateToken(OUT PHANDLE TokenHandle,
       ProbeForRead(TokenSource,
                    sizeof(TOKEN_SOURCE),
                    sizeof(ULONG));
+      nTokenPrivileges = TokenPrivileges->PrivilegeCount;
     }
     _SEH_HANDLE
     {
@@ -2104,6 +2106,10 @@ NtCreateToken(OUT PHANDLE TokenHandle,
     {
       return Status;
     }
+  }
+  else
+  {
+    nTokenPrivileges = TokenPrivileges->PrivilegeCount;
   }
 
   Status = ZwAllocateLocallyUniqueId(&TokenId);
@@ -2203,14 +2209,26 @@ NtCreateToken(OUT PHANDLE TokenHandle,
 						    uLength,
 						    TAG('T', 'O', 'K', 'p'));
 
-      for (i = 0; i < TokenPrivileges->PrivilegeCount; i++)
-	{
-	  Status = MmCopyFromCaller(&AccessToken->Privileges[i],
-				    &TokenPrivileges->Privileges[i],
-				    sizeof(LUID_AND_ATTRIBUTES));
-	  if (!NT_SUCCESS(Status))
-	    break;
-	}
+      if (PreviousMode != KernelMode)
+        {
+          _SEH_TRY
+            {
+              RtlCopyMemory(AccessToken->Privileges,
+                            TokenPrivileges->Privileges,
+                            nTokenPrivileges * sizeof(LUID_AND_ATTRIBUTES));
+            }
+          _SEH_HANDLE
+            {
+              Status = _SEH_GetExceptionCode();
+            }
+          _SEH_END;
+        }
+      else
+        {
+          RtlCopyMemory(AccessToken->Privileges,
+                        TokenPrivileges->Privileges,
+                        nTokenPrivileges * sizeof(LUID_AND_ATTRIBUTES));
+        }
     }
 
   if (NT_SUCCESS(Status))

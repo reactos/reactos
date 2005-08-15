@@ -189,6 +189,7 @@ typedef struct _MEMORY_AREA
   } Data;
 } MEMORY_AREA, *PMEMORY_AREA;
 
+#ifndef _MMTYPES_H
 typedef struct _MADDRESS_SPACE
 {
   PMEMORY_AREA MemoryAreaRoot;
@@ -198,6 +199,7 @@ typedef struct _MADDRESS_SPACE
   PUSHORT PageTableRefCountTable;
   ULONG PageTableRefCountTableSize;
 } MADDRESS_SPACE, *PMADDRESS_SPACE;
+#endif
 
 typedef struct
 {
@@ -317,6 +319,13 @@ MiAllocateSpecialPool  (IN POOL_TYPE PoolType,
 
 extern PVOID MmPagedPoolBase;
 extern ULONG MmPagedPoolSize;
+
+#define PAGED_POOL_MASK         1
+#define MUST_SUCCEED_POOL_MASK  2
+#define CACHE_ALIGNED_POOL_MASK 4
+#define QUOTA_POOL_MASK         8
+#define SESSION_POOL_MASK       32
+#define VERIFIER_POOL_MASK      64
 
 #define MM_PAGED_POOL_SIZE	(100*1024*1024)
 #define MM_NONPAGED_POOL_SIZE	(100*1024*1024)
@@ -579,10 +588,6 @@ NTSTATUS MiZeroPage(PFN_TYPE Page);
 
 /* memsafe.s *****************************************************************/
 
-NTSTATUS MmSafeCopyFromUser(PVOID Dest, const VOID *Src, ULONG Count);
-
-NTSTATUS MmSafeCopyToUser(PVOID Dest, const VOID *Src, ULONG Count);
-
 PVOID FASTCALL MmSafeReadPtr(PVOID Source);
 
 /* pageop.c ******************************************************************/
@@ -675,7 +680,7 @@ PVOID MmInitializePageList(ULONG_PTR FirstPhysKernelAddress,
 PFN_TYPE MmGetContinuousPages(ULONG NumberOfBytes,
 			      PHYSICAL_ADDRESS LowestAcceptableAddress,
 			      PHYSICAL_ADDRESS HighestAcceptableAddress,
-			      ULONG Alignment);
+			      PHYSICAL_ADDRESS BoundaryAddressMultiple);
 
 NTSTATUS MmInitZeroPageThread(VOID);
 
@@ -778,14 +783,6 @@ NTSTATUS MmReleaseMmInfo(struct _EPROCESS* Process);
 
 NTSTATUS Mmi386ReleaseMmInfo(struct _EPROCESS* Process);
 
-NTSTATUS MmSafeCopyFromUser(PVOID Dest, const VOID *Src, ULONG NumberOfBytes);
-NTSTATUS MmSafeCopyToUser(PVOID Dest, const VOID *Src, ULONG NumberOfBytes);
-
-NTSTATUS STDCALL
-MmCopyFromCaller(PVOID Dest, const VOID *Src, ULONG NumberOfBytes);
-NTSTATUS STDCALL
-MmCopyToCaller(PVOID Dest, const VOID *Src, ULONG NumberOfBytes);
-
 VOID MmDeleteVirtualMapping(struct _EPROCESS* Process,
 			    PVOID Address,
 			    BOOL FreePage,
@@ -811,12 +808,11 @@ NTSTATUS MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages);
 /* cont.c ********************************************************************/
 
 PVOID STDCALL
-MmAllocateContiguousAlignedMemory(IN ULONG NumberOfBytes,
-					  IN PHYSICAL_ADDRESS LowestAcceptableAddress,
-			          IN PHYSICAL_ADDRESS HighestAcceptableAddress,
-			          IN PHYSICAL_ADDRESS BoundaryAddressMultiple OPTIONAL,
-			          IN MEMORY_CACHING_TYPE CacheType OPTIONAL,
-					  IN ULONG Alignment);
+MmAllocateContiguousMemorySpecifyCache(IN SIZE_T NumberOfBytes,
+				       IN PHYSICAL_ADDRESS LowestAcceptableAddress,
+			               IN PHYSICAL_ADDRESS HighestAcceptableAddress,
+			               IN PHYSICAL_ADDRESS BoundaryAddressMultiple OPTIONAL,
+			               IN MEMORY_CACHING_TYPE CacheType OPTIONAL);
                       
 /* region.c ************************************************************/
 

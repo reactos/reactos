@@ -98,7 +98,7 @@ DllMain(HINSTANCE hInstance,
 /*
  * @implemented
  */
-BOOL WINAPI drvCommConfigDialogW(LPCWSTR lpszDevice,
+DWORD WINAPI drvCommConfigDialogW(LPCWSTR lpszDevice,
 	HWND hWnd,
 	LPCOMMCONFIG lpCommConfig)
 {
@@ -106,7 +106,7 @@ BOOL WINAPI drvCommConfigDialogW(LPCWSTR lpszDevice,
 
 	if(!lpszDevice || !lpCommConfig)
 	{
-		return FALSE;
+		return ERROR_INVALID_PARAMETER;
 	}
 
 	DialogInfo.lpszDevice = lpszDevice;
@@ -119,7 +119,7 @@ BOOL WINAPI drvCommConfigDialogW(LPCWSTR lpszDevice,
 /*
  * @implemented
  */
-BOOL WINAPI drvCommConfigDialogA(LPCSTR lpszDevice,
+DWORD WINAPI drvCommConfigDialogA(LPCSTR lpszDevice,
 	HWND hWnd,
 	LPCOMMCONFIG lpCommConfig)
 {
@@ -136,13 +136,13 @@ BOOL WINAPI drvCommConfigDialogA(LPCSTR lpszDevice,
 		return result;
 	}
 	else
-		return FALSE;
+		return ERROR_NOT_ENOUGH_MEMORY;
 }
 
 /*
  * @unimplemented
  */
-BOOL WINAPI drvSetDefaultCommConfigW(LPCWSTR lpszDevice,
+DWORD WINAPI drvSetDefaultCommConfigW(LPCWSTR lpszDevice,
 	LPCOMMCONFIG lpCommConfig,
 	DWORD dwSize)
 {
@@ -152,7 +152,7 @@ BOOL WINAPI drvSetDefaultCommConfigW(LPCWSTR lpszDevice,
 /*
  * @unimplemented
  */
-BOOL WINAPI drvSetDefaultCommConfigA(LPCSTR lpszDevice,
+DWORD WINAPI drvSetDefaultCommConfigA(LPCSTR lpszDevice,
 	LPCOMMCONFIG lpCommConfig,
 	DWORD dwSize)
 {
@@ -162,7 +162,7 @@ BOOL WINAPI drvSetDefaultCommConfigA(LPCSTR lpszDevice,
 /*
  * @unimplemented
  */
-BOOL WINAPI drvGetDefaultCommConfigW(LPCWSTR lpszDevice,
+DWORD WINAPI drvGetDefaultCommConfigW(LPCWSTR lpszDevice,
 	LPCOMMCONFIG lpCommConfig,
 	LPDWORD lpdwSize)
 {
@@ -172,7 +172,7 @@ BOOL WINAPI drvGetDefaultCommConfigW(LPCWSTR lpszDevice,
 /*
  * @unimplemented
  */
-BOOL WINAPI drvGetDefaultCommConfigA(LPCSTR lpszDevice,
+DWORD WINAPI drvGetDefaultCommConfigA(LPCSTR lpszDevice,
 	LPCOMMCONFIG lpCommConfig,
 	LPDWORD lpdwSize)
 {
@@ -231,7 +231,7 @@ LRESULT CommDlgProc(HWND hDlg,
 
 			/* Initialize baud rate combo */
 			if(!(hBox = GetDlgItem(hDlg, IDC_BAUDRATE)))
-				EndDialog(hDlg, 0);
+				EndDialog(hDlg, ERROR_CANCELLED);
 
 			for(i = 0; Bauds[i]; i++)
 			{
@@ -246,7 +246,7 @@ LRESULT CommDlgProc(HWND hDlg,
 
 			/* Initialize byte size combo */
 			if(!(hBox = GetDlgItem(hDlg, IDC_BYTESIZE)))
-				EndDialog(hDlg, 0);
+				EndDialog(hDlg, ERROR_CANCELLED);
 
 			for(i = 0; ByteSizes[i]; i++)
 			{
@@ -261,7 +261,7 @@ LRESULT CommDlgProc(HWND hDlg,
 
 			/* Initialize parity combo */
 			if(!(hBox = GetDlgItem(hDlg, IDC_PARITY)))
-				EndDialog(hDlg, 0);
+				EndDialog(hDlg, ERROR_CANCELLED);
 
 			for(i = 0; Parities[i].StrId; i++)
 			{
@@ -278,7 +278,7 @@ LRESULT CommDlgProc(HWND hDlg,
 
 			/* Initialize stop bits combo */
 			if(!(hBox = GetDlgItem(hDlg, IDC_STOPBITS)))
-				EndDialog(hDlg, 0);
+				EndDialog(hDlg, ERROR_CANCELLED);
 
 			for(i = 0; StopBits[i].StrId; i++)
 			{
@@ -295,7 +295,7 @@ LRESULT CommDlgProc(HWND hDlg,
 
 			/* Initialize flow control combo */
 			if(!(hBox = GetDlgItem(hDlg, IDC_FLOW)))
-				EndDialog(hDlg, 0);
+				EndDialog(hDlg, ERROR_CANCELLED);
 
 			if(LoadStringW(hDllInstance, IDS_FC_NO, wstr, sizeof(wstr) / sizeof(wstr[0])))
 			{
@@ -337,11 +337,11 @@ LRESULT CommDlgProc(HWND hDlg,
 			switch(wParam)
 			{
 				case IDC_CANCELBTN:
-					EndDialog(hDlg, FALSE);
+					EndDialog(hDlg, ERROR_CANCELLED);
 					break;
 				case IDC_OKBTN:
 					OkButton(hDlg);
-					EndDialog(hDlg, TRUE);
+					EndDialog(hDlg, ERROR_SUCCESS);
 					break;
 			}
 			return TRUE;
@@ -349,11 +349,11 @@ LRESULT CommDlgProc(HWND hDlg,
 
 		case WM_CLOSE:
 		{
-			EndDialog(hDlg, FALSE);
+			EndDialog(hDlg, ERROR_CANCELLED);
 			return TRUE;
 		} /* WM_CLOSE */
 
-			default:
+		default:
 			return FALSE;
 	}
 

@@ -6,7 +6,7 @@
  * PURPOSE:         ACL/ACE functions
  */
 
-#include "advapi32.h"
+#include <advapi32.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -166,6 +166,25 @@ AddAccessAllowedAceEx(PACL pAcl,
 
 
 /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+AddAccessAllowedObjectAce(
+	PACL	pAcl,
+	DWORD	dwAceRevision,
+	DWORD	AceFlags,
+	DWORD	AccessMask,
+	GUID*	ObjectTypeGuid,
+	GUID*	InheritedObjectTypeGuid,
+	PSID	pSid)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/*
  * @implemented
  */
 BOOL
@@ -217,6 +236,22 @@ AddAccessDeniedAceEx(PACL pAcl,
   }
 
   return TRUE;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+AddAccessDeniedObjectAce(
+	PACL	pAcl,
+	DWORD	dwAceRevision,
+	DWORD	AccessMask,
+	PSID	pSid)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
@@ -314,6 +349,27 @@ AddAuditAccessAceEx(PACL pAcl,
 
 
 /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+AddAuditAccessObjectAce(
+	PACL	pAcl,
+	DWORD	dwAceRevision,
+	DWORD	AceFlags,
+	DWORD	AccessMask,
+	GUID*	ObjectTypeGuid,
+	GUID*	InheritedObjectTypeGuid,
+	PSID	pSid,
+	BOOL	bAuditSuccess,
+	BOOL	bAuditFailure)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/*
  * @implemented
  */
 BOOL
@@ -379,7 +435,7 @@ GetAce (
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD
 STDCALL
@@ -396,8 +452,25 @@ GetInheritanceSourceW (
 	PINHERITED_FROMW	pInheritArray
 	)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
-	return ERROR_CALL_NOT_IMPLEMENTED;
+    DWORD ErrorCode;
+
+    ErrorCode = CheckNtMartaPresent();
+    if (ErrorCode == ERROR_SUCCESS)
+    {
+        /* call the MARTA provider */
+        ErrorCode = AccGetInheritanceSource(pObjectName,
+                                            ObjectType,
+                                            SecurityInfo,
+                                            Container,
+                                            pObjectClassGuids,
+                                            GuidCount,
+                                            pAcl,
+                                            pfnArray,
+                                            pGenericMapping,
+                                            pInheritArray);
+    }
+
+    return ErrorCode;
 }
 
 
@@ -419,24 +492,205 @@ GetInheritanceSourceA (
 	PINHERITED_FROM		pInheritArray
 	)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
-	return ERROR_CALL_NOT_IMPLEMENTED;
+    /* That's all this function does, at least up to w2k3... Even MS was too
+       lazy to implement it... */
+    return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 DWORD
 STDCALL
 FreeInheritedFromArray (
-	PINHERITED_FROM		pInheritArray,
+	PINHERITED_FROMW	pInheritArray,
 	USHORT			AceCnt,
 	PFN_OBJECT_MGR_FUNCTS	pfnArray  OPTIONAL
 	)
 {
-	DPRINT1("%s() not implemented!\n", __FUNCTION__);
-	return ERROR_CALL_NOT_IMPLEMENTED;
+    DWORD ErrorCode;
+    
+    /* pfnArray is not yet used */
+    UNREFERENCED_PARAMETER(pfnArray);
+
+    ErrorCode = CheckNtMartaPresent();
+    if (ErrorCode == ERROR_SUCCESS)
+    {
+        /* call the MARTA provider */
+        ErrorCode = AccFreeIndexArray(pInheritArray,
+                                      AceCnt,
+                                      NULL);
+    }
+
+    return ErrorCode;
 }
+
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+SetEntriesInAclW(
+	ULONG			cCountOfExplicitEntries,
+	PEXPLICIT_ACCESS_W	pListOfExplicitEntries,
+	PACL			OldAcl,
+	PACL*			NewAcl)
+{
+    DWORD ErrorCode;
+
+    ErrorCode = CheckNtMartaPresent();
+    if (ErrorCode == ERROR_SUCCESS)
+    {
+        /* call the MARTA provider */
+        ErrorCode = AccRewriteSetEntriesInAcl(cCountOfExplicitEntries,
+                                              pListOfExplicitEntries,
+                                              OldAcl,
+                                              NewAcl);
+    }
+
+    return ErrorCode;
+}
+
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+SetEntriesInAclA(
+	ULONG			cCountOfExplicitEntries,
+	PEXPLICIT_ACCESS_A	pListOfExplicitEntries,
+	PACL			OldAcl,
+	PACL*			NewAcl)
+{
+    PEXPLICIT_ACCESS_W ListOfExplicitEntriesW;
+    ULONG i;
+    DWORD ErrorCode;
+
+    if (cCountOfExplicitEntries != 0)
+    {
+        ListOfExplicitEntriesW = HeapAlloc(GetProcessHeap(),
+                                           0,
+                                           cCountOfExplicitEntries * sizeof(EXPLICIT_ACCESS_W));
+        if (ListOfExplicitEntriesW != NULL)
+        {
+            /* directly copy the array, this works as the size of the EXPLICIT_ACCESS_A
+               structure matches the size of the EXPLICIT_ACCESS_W version */
+            ASSERT(sizeof(EXPLICIT_ACCESS_A) == sizeof(EXPLICIT_ACCESS_W));
+
+            RtlCopyMemory(ListOfExplicitEntriesW,
+                          pListOfExplicitEntries,
+                          cCountOfExplicitEntries * sizeof(EXPLICIT_ACCESS_W));
+
+            /* convert the trustee names if required */
+            for (i = 0; i != cCountOfExplicitEntries; i++)
+            {
+                if (pListOfExplicitEntries[i].Trustee.TrusteeForm == TRUSTEE_IS_NAME)
+                {
+                    UINT BufCount = strlen(pListOfExplicitEntries[i].Trustee.ptstrName) + 1;
+                    ListOfExplicitEntriesW[i].Trustee.ptstrName =
+                        (LPWSTR)HeapAlloc(GetProcessHeap(),
+                                          0,
+                                          BufCount * sizeof(WCHAR));
+
+                    if (ListOfExplicitEntriesW[i].Trustee.ptstrName == NULL ||
+                        MultiByteToWideChar(CP_ACP,
+                                            0,
+                                            pListOfExplicitEntries[i].Trustee.ptstrName,
+                                            -1,
+                                            ListOfExplicitEntriesW[i].Trustee.ptstrName,
+                                            BufCount) == 0)
+                    {
+                        /* failed to allocate enough momory for the strings or failed to
+                           convert the ansi string to unicode, then fail and free all
+                           allocated memory */
+
+                        ErrorCode = GetLastError();
+
+                        do
+                        {
+                            if (ListOfExplicitEntriesW[i].Trustee.TrusteeForm == TRUSTEE_IS_NAME &&
+                                ListOfExplicitEntriesW[i].Trustee.ptstrName != NULL)
+                            {
+                                HeapFree(GetProcessHeap(),
+                                         0,
+                                         ListOfExplicitEntriesW[i].Trustee.ptstrName);
+                            }
+                        } while (i-- != 0);
+
+                        /* free the allocated array */
+                        HeapFree(GetProcessHeap(),
+                                 0,
+                                 ListOfExplicitEntriesW);
+
+                        return ErrorCode;
+                    }
+                }
+            }
+        }
+        else
+        {
+            return GetLastError();
+        }
+    }
+    else
+        ListOfExplicitEntriesW = NULL;
+
+    ErrorCode = SetEntriesInAclW(cCountOfExplicitEntries,
+                                 ListOfExplicitEntriesW,
+                                 OldAcl,
+                                 NewAcl);
+
+    /* free the strings */
+    if (ListOfExplicitEntriesW != NULL)
+    {
+        /* free the converted strings */
+        for (i = 0; i != cCountOfExplicitEntries; i++)
+        {
+            if (ListOfExplicitEntriesW[i].Trustee.TrusteeForm == TRUSTEE_IS_NAME)
+            {
+                HeapFree(GetProcessHeap(),
+                         0,
+                         ListOfExplicitEntriesW[i].Trustee.ptstrName);
+            }
+        }
+
+        /* free the allocated array */
+        HeapFree(GetProcessHeap(),
+                 0,
+                 ListOfExplicitEntriesW);
+    }
+
+    return ErrorCode;
+}
+
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+GetExplicitEntriesFromAclW(
+	PACL			pacl,
+	PULONG			pcCountOfExplicitEntries,
+	PEXPLICIT_ACCESS_W*	pListOfExplicitEntries
+	)
+{
+    DWORD ErrorCode;
+
+    ErrorCode = CheckNtMartaPresent();
+    if (ErrorCode == ERROR_SUCCESS)
+    {
+        /* call the MARTA provider */
+        ErrorCode = AccRewriteGetExplicitEntriesFromAcl(pacl,
+                                                        pcCountOfExplicitEntries,
+                                                        pListOfExplicitEntries);
+    }
+
+    return ErrorCode;
+}
+
 
 /* EOF */

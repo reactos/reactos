@@ -12,7 +12,7 @@
 
 #include <roscfg.h>
 #include <internal/i386/ke.h>
-#include <internal/asm.h>
+#include <ndk/asm.h>
 #include <ndk/i386/segment.h>
 
 #define UserMode  (1)

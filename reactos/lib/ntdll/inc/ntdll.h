@@ -8,10 +8,20 @@
 
 /* INCLUDES ******************************************************************/
 
+/* C Headers */
+#define _CTYPE_DISABLE_MACROS
+#define _INC_SWPRINTF_INL_
+#include <limits.h>
+#include <stdio.h>
+#include <ctype.h>
+
 /* SDK/DDK/NDK Headers. */
 #include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
+
+/* ELF Support */
+#include <elf/elf.h>
 
 /* Internal NTDLL */
 #include "ntdllp.h"

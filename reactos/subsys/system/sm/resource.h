@@ -14,14 +14,13 @@
 #define IDS_shutdown_msg                   209
 
 #define IDS_Unknown                        300
-#define IDS_Not_Imp						   301
+#define IDS_Not_Imp			   301
 #define IDS_ID                             302
 #define IDS_SM2                            303
 #define IDS_SM1                            304
-#define IDS_Status                         305
-#define IDS_Mangers                        306
-#define IDS_USING                          307
-#define IDS_FAILS_MNG                      308
+#define IDS_Mangers                        305
+#define IDS_USING                          306
+#define IDS_FAILS_MNG                      307
 
 
 /* EOF */

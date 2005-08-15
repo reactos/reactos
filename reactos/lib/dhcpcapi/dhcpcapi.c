@@ -12,7 +12,7 @@
 #include <roscfg.h>
 #include <winsock2.h>
 #include <dhcpcsdk.h>
-#include <rosdhcp_public.h>
+#include <dhcp/rosdhcp_public.h>
 
 #define DHCP_TIMEOUT 1000
 

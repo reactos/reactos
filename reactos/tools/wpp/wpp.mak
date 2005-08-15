@@ -28,7 +28,7 @@ WPP_SOURCES = $(addprefix $(WPP_BASE_), \
 WPP_OBJECTS = \
     $(addprefix $(INTERMEDIATE_), $(WPP_SOURCES:.c=.o))
 
-WPP_HOST_CFLAGS = -D__USE_W32API -I$(WPP_BASE) -Iinclude -Iinclude/wine -g
+WPP_HOST_CFLAGS = -D__USE_W32API -I$(WPP_BASE) -Iinclude -Iinclude/wine $(TOOLS_CFLAGS)
 
 .PHONY: wpp
 wpp: $(WPP_TARGET)

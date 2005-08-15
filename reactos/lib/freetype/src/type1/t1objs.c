@@ -233,7 +233,7 @@
 #ifndef T1_CONFIG_OPTION_NO_AFM
       /* release afm data if present */
       if ( face->afm_data )
-        T1_Done_AFM( memory, (T1_AFM*)face->afm_data );
+        T1_Done_Metrics( memory, (T1_AFM*)face->afm_data );
 #endif
 
       /* release unicode map, if any */

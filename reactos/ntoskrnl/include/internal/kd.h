@@ -17,19 +17,19 @@ KdbSymFreeProcessSymbols(IN PEPROCESS Process);
 VOID
 KdbSymLoadDriverSymbols(
     IN PUNICODE_STRING Filename,
-    IN PMODULE_OBJECT Module
+    IN PLDR_DATA_TABLE_ENTRY Module
 );
 
 VOID
-KdbSymUnloadDriverSymbols(IN PMODULE_OBJECT ModuleObject);
+KdbSymUnloadDriverSymbols(IN PLDR_DATA_TABLE_ENTRY ModuleObject);
 
 VOID
 KdbSymProcessBootSymbols(IN PCHAR FileName);
 
 VOID
 KdbSymInit(
-    IN PMODULE_TEXT_SECTION NtoskrnlTextSection,
-    IN PMODULE_TEXT_SECTION LdrHalTextSection
+    IN PLDR_DATA_TABLE_ENTRY NtoskrnlTextSection,
+    IN PLDR_DATA_TABLE_ENTRY LdrHalTextSection
 );
 
 BOOLEAN

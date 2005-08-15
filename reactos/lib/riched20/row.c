@@ -82,3 +82,49 @@ ME_DisplayItem *ME_RowEnd(ME_DisplayItem *item) {
   if (!item2) return NULL;
   return ME_FindItemBack(item, diRun);
 }
+
+
+ME_DisplayItem *
+ME_FindRowWithNumber(ME_TextEditor *editor, int nRow)
+{
+  ME_DisplayItem *item = ME_FindItemFwd(editor->pBuffer->pFirst, diParagraph);
+  int nCount = 0;
+  
+  while (item && nCount + item->member.para.nRows <= nRow)
+  {
+    nCount += item->member.para.nRows;
+    item = ME_FindItemFwd(item, diParagraph);
+  }
+  if (!item)
+    return item;
+  for (item = ME_FindItemFwd(item, diStartRow); item && nCount < nRow; nCount++)
+    item = ME_FindItemFwd(item, diStartRow);
+  return item;
+}
+
+
+int
+ME_RowNumberFromCharOfs(ME_TextEditor *editor, int nOfs)
+{
+  ME_DisplayItem *item = editor->pBuffer->pFirst->next;
+  int nRow = 0;
+
+  while (item && item->member.para.next_para->member.para.nCharOfs <= nOfs)
+  {
+    nRow += item->member.para.nRows;
+    item = ME_FindItemFwd(item, diParagraph);
+  }
+  if (item)
+  {
+    nOfs -= item->member.para.nCharOfs;
+    item = ME_FindItemFwd(item, diRun);
+    while ((item = ME_FindItemFwd(item, diStartRowOrParagraph)) != NULL)
+    {
+      item = ME_FindItemFwd(item, diRun);
+      if (item->member.run.nCharOfs > nOfs)
+        break;
+      nRow++;
+    }
+  }
+  return nRow;
+}

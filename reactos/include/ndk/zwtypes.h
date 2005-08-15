@@ -11,7 +11,7 @@
 
 /* DEPENDENCIES **************************************************************/
 #include "rtltypes.h"
-#include <ddk/cfg.h>
+#include <cfg.h>
 
 /* EXPORTED DATA *************************************************************/
 
@@ -820,6 +820,7 @@ typedef struct _SYSTEM_RESOURCE_LOCK_INFO
 /* Class 13 */
 typedef struct _SYSTEM_BACKTRACE_INFORMATION_ENTRY
 {
+    ULONG Dummy;
     /* FIXME */
 } SYSTEM_BACKTRACE_INFORMATION_ENTRY, *PSYSTEM_BACKTRACE_INFORMATION_ENTRY;
 

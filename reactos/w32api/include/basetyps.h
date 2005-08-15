@@ -10,23 +10,25 @@
 # else
 #  define EXTERN_C extern
 # endif  /* __cplusplus */
-# ifndef __int64
-#  define __int64 long long
-# endif
-# ifndef __int32
-#  define __int32 long
-# endif
-# ifndef __int16
-#  define __int16 int
-# endif
-# ifndef __int8
-#  define __int8 char
+# ifndef _MSC_VER
+#  ifndef __int64
+#   define __int64 long long
+#  endif
+#  ifndef __int32
+#   define __int32 long
+#  endif
+#  ifndef __int16
+#   define __int16 int
+#  endif
+#  ifndef __int8
+#   define __int8 char
+#  endif
 # endif
 # ifndef __small
 #  define __small char
 # endif
 # ifndef __hyper
-#  define __hyper long long
+#  define __hyper __int64
 # endif
 # define STDMETHODCALLTYPE	__stdcall
 # define STDMETHODVCALLTYPE	__cdecl

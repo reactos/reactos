@@ -5,7 +5,7 @@
  * PURPOSE:         Miscellaneous security functions
  */
 
-#include "advapi32.h"
+#include <advapi32.h>
 #include <accctrl.h>
 #include <malloc.h>
 #include <ntsecapi.h>
@@ -13,6 +13,109 @@
 #define NDEBUG
 #include <debug.h>
 
+/* Interface to ntmarta.dll ***************************************************/
+
+NTMARTA NtMartaStatic = { 0 };
+static PNTMARTA NtMarta = NULL;
+
+#define FindNtMartaProc(Name)                                                  \
+    NtMartaStatic.Name = (PVOID)GetProcAddress(NtMartaStatic.hDllInstance,     \
+                                               "Acc" # Name );                 \
+    if (NtMartaStatic.Name == NULL)                                            \
+    {                                                                          \
+        return GetLastError();                                                 \
+    }
+
+static DWORD
+LoadAndInitializeNtMarta(VOID)
+{
+    /* this code may be executed simultaneously by multiple threads in case they're
+       trying to initialize the interface at the same time, but that's no problem
+       because the pointers returned by GetProcAddress will be the same. However,
+       only one of the threads will change the NtMarta pointer to the NtMartaStatic
+       structure, the others threads will detect that there were other threads
+       initializing the structure faster and will release the reference to the
+       DLL */
+
+    NtMartaStatic.hDllInstance = LoadLibraryW(L"ntmarta.dll");
+    if (NtMartaStatic.hDllInstance == NULL)
+    {
+        return GetLastError();
+    }
+
+#if 0
+    FindNtMartaProc(LookupAccountTrustee);
+    FindNtMartaProc(LookupAccountName);
+    FindNtMartaProc(LookupAccountSid);
+    FindNtMartaProc(SetEntriesInAList);
+    FindNtMartaProc(ConvertAccessToSecurityDescriptor);
+    FindNtMartaProc(ConvertSDToAccess);
+    FindNtMartaProc(ConvertAclToAccess);
+    FindNtMartaProc(GetAccessForTrustee);
+    FindNtMartaProc(GetExplicitEntries);
+#endif
+    FindNtMartaProc(RewriteGetNamedRights);
+    FindNtMartaProc(RewriteSetNamedRights);
+    FindNtMartaProc(RewriteGetHandleRights);
+    FindNtMartaProc(RewriteSetHandleRights);
+    FindNtMartaProc(RewriteSetEntriesInAcl);
+    FindNtMartaProc(RewriteGetExplicitEntriesFromAcl);
+    FindNtMartaProc(TreeResetNamedSecurityInfo);
+    FindNtMartaProc(GetInheritanceSource);
+    FindNtMartaProc(FreeIndexArray);
+    
+    return ERROR_SUCCESS;
+}
+
+DWORD
+CheckNtMartaPresent(VOID)
+{
+    DWORD ErrorCode;
+    
+    if (NtMarta == NULL)
+    {
+        /* we're the first one trying to use ntmarta, initialize it and change
+           the pointer after initialization */
+        ErrorCode = LoadAndInitializeNtMarta();
+        
+        if (ErrorCode == ERROR_SUCCESS)
+        {
+            /* try change the NtMarta pointer */
+            if (InterlockedCompareExchangePointer(&NtMarta,
+                                                  &NtMartaStatic,
+                                                  NULL) != NULL)
+            {
+                /* another thread initialized ntmarta in the meanwhile, release
+                   the reference of the dll loaded. */
+                FreeLibrary(NtMartaStatic.hDllInstance);
+            }
+        }
+#if DBG
+        else
+        {
+            DPRINT1("Failed to initialize ntmarta.dll! Error: 0x%x", ErrorCode);
+        }
+#endif
+    }
+    else
+    {
+        /* ntmarta was already initialized */
+        ErrorCode = ERROR_SUCCESS;
+    }
+    
+    return ErrorCode;
+}
+
+VOID UnloadNtMarta(VOID)
+{
+    if (InterlockedExchangePointer(&NtMarta,
+                                   NULL) != NULL)
+    {
+        FreeLibrary(NtMartaStatic.hDllInstance);
+    }
+}
+
+/******************************************************************************/
 
 /*
  * @implemented
@@ -1073,10 +1176,186 @@ LookupPrivilegeNameW (LPCWSTR lpSystemName,
 }
 
 
+static DWORD
+pGetSecurityInfoCheck(SECURITY_INFORMATION SecurityInfo,
+                      PSID* ppsidOwner,
+                      PSID* ppsidGroup,
+                      PACL* ppDacl,
+                      PACL* ppSacl,
+                      PSECURITY_DESCRIPTOR* ppSecurityDescriptor)
+{
+    if ((SecurityInfo & (OWNER_SECURITY_INFORMATION |
+                         GROUP_SECURITY_INFORMATION |
+                         DACL_SECURITY_INFORMATION |
+                         SACL_SECURITY_INFORMATION)) &&
+        ppSecurityDescriptor == NULL)
+    {
+        /* if one of the SIDs or ACLs are present, the security descriptor
+           most not be NULL */
+        return ERROR_INVALID_PARAMETER;
+    }
+    else
+    {
+        /* reset the pointers unless they're ignored */
+        if ((SecurityInfo & OWNER_SECURITY_INFORMATION) &&
+            ppsidOwner != NULL)
+        {
+            ppsidOwner = NULL;
+        }
+        if ((SecurityInfo & GROUP_SECURITY_INFORMATION) &&
+            *ppsidGroup != NULL)
+        {
+            *ppsidGroup = NULL;
+        }
+        if ((SecurityInfo & DACL_SECURITY_INFORMATION) &&
+            ppDacl != NULL)
+        {
+            *ppDacl = NULL;
+        }
+        if ((SecurityInfo & SACL_SECURITY_INFORMATION) &&
+            ppSacl != NULL)
+        {
+            *ppSacl = NULL;
+        }
+
+        if (SecurityInfo & (OWNER_SECURITY_INFORMATION |
+                            GROUP_SECURITY_INFORMATION |
+                            DACL_SECURITY_INFORMATION |
+                            SACL_SECURITY_INFORMATION))
+        {
+            *ppSecurityDescriptor = NULL;
+        }
+
+        return ERROR_SUCCESS;
+    }
+}
+
+
+static DWORD
+pSetSecurityInfoCheck(PSECURITY_DESCRIPTOR pSecurityDescriptor,
+                      SECURITY_INFORMATION SecurityInfo,
+                      PSID psidOwner,
+                      PSID psidGroup,
+                      PACL pDacl,
+                      PACL pSacl)
+{
+    /* initialize a security descriptor on the stack */
+    if (!InitializeSecurityDescriptor(pSecurityDescriptor,
+                                      SECURITY_DESCRIPTOR_REVISION))
+    {
+        return GetLastError();
+    }
+
+    if (SecurityInfo & OWNER_SECURITY_INFORMATION)
+    {
+        if (RtlValidSid(psidOwner))
+        {
+            if (!SetSecurityDescriptorOwner(pSecurityDescriptor,
+                                            psidOwner,
+                                            FALSE))
+            {
+                return GetLastError();
+            }
+        }
+        else
+        {
+            return ERROR_INVALID_PARAMETER;
+        }
+    }
+
+    if (SecurityInfo & GROUP_SECURITY_INFORMATION)
+    {
+        if (RtlValidSid(psidGroup))
+        {
+            if (!SetSecurityDescriptorGroup(pSecurityDescriptor,
+                                            psidGroup,
+                                            FALSE))
+            {
+                return GetLastError();
+            }
+        }
+        else
+        {
+            return ERROR_INVALID_PARAMETER;
+        }
+    }
+
+    if (SecurityInfo & DACL_SECURITY_INFORMATION)
+    {
+        if (pDacl != NULL)
+        {
+            if (SetSecurityDescriptorDacl(pSecurityDescriptor,
+                                          TRUE,
+                                          pDacl,
+                                          FALSE))
+            {
+                /* check if the DACL needs to be protected from being
+                   modified by inheritable ACEs */
+                if (SecurityInfo & PROTECTED_DACL_SECURITY_INFORMATION)
+                {
+                    goto ProtectDacl;
+                }
+            }
+            else
+            {
+                return GetLastError();
+            }
+        }
+        else
+        {
+ProtectDacl:
+            /* protect the DACL from being modified by inheritable ACEs */
+            if (!SetSecurityDescriptorControl(pSecurityDescriptor,
+                                              SE_DACL_PROTECTED,
+                                              SE_DACL_PROTECTED))
+            {
+                return GetLastError();
+            }
+        }
+    }
+
+    if (SecurityInfo & SACL_SECURITY_INFORMATION)
+    {
+        if (pSacl != NULL)
+        {
+            if (SetSecurityDescriptorSacl(pSecurityDescriptor,
+                                          TRUE,
+                                          pSacl,
+                                          FALSE))
+            {
+                /* check if the SACL needs to be protected from being
+                   modified by inheritable ACEs */
+                if (SecurityInfo & PROTECTED_SACL_SECURITY_INFORMATION)
+                {
+                    goto ProtectSacl;
+                }
+            }
+            else
+            {
+                return GetLastError();
+            }
+        }
+        else
+        {
+ProtectSacl:
+            /* protect the SACL from being modified by inheritable ACEs */
+            if (!SetSecurityDescriptorControl(pSecurityDescriptor,
+                                              SE_SACL_PROTECTED,
+                                              SE_SACL_PROTECTED))
+            {
+                return GetLastError();
+            }
+        }
+    }
+    
+    return ERROR_SUCCESS;
+}
+
+
 /**********************************************************************
  * GetNamedSecurityInfoW			EXPORTED
  *
- * @unimplemented
+ * @implemented
  */
 DWORD STDCALL
 GetNamedSecurityInfoW(LPWSTR pObjectName,
@@ -1088,15 +1367,45 @@ GetNamedSecurityInfoW(LPWSTR pObjectName,
                       PACL *ppSacl,
                       PSECURITY_DESCRIPTOR *ppSecurityDescriptor)
 {
-  DPRINT1("GetNamedSecurityInfoW: stub\n");
-  return ERROR_CALL_NOT_IMPLEMENTED;
+    DWORD ErrorCode;
+
+    if (pObjectName != NULL)
+    {
+        ErrorCode = CheckNtMartaPresent();
+        if (ErrorCode == ERROR_SUCCESS)
+        {
+            ErrorCode = pGetSecurityInfoCheck(SecurityInfo,
+                                              ppsidOwner,
+                                              ppsidGroup,
+                                              ppDacl,
+                                              ppSacl,
+                                              ppSecurityDescriptor);
+
+            if (ErrorCode == ERROR_SUCCESS)
+            {
+                /* call the MARTA provider */
+                ErrorCode = AccRewriteGetNamedRights(pObjectName,
+                                                     ObjectType,
+                                                     SecurityInfo,
+                                                     ppsidOwner,
+                                                     ppsidGroup,
+                                                     ppDacl,
+                                                     ppSacl,
+                                                     ppSecurityDescriptor);
+            }
+        }
+    }
+    else
+        ErrorCode = ERROR_INVALID_PARAMETER;
+
+    return ErrorCode;
 }
 
 
 /**********************************************************************
  * GetNamedSecurityInfoA			EXPORTED
  *
- * @unimplemented
+ * @implemented
  */
 DWORD STDCALL
 GetNamedSecurityInfoA(LPSTR pObjectName,
@@ -1108,15 +1417,36 @@ GetNamedSecurityInfoA(LPSTR pObjectName,
                       PACL *ppSacl,
                       PSECURITY_DESCRIPTOR *ppSecurityDescriptor)
 {
-  DPRINT1("GetNamedSecurityInfoA: stub\n");
-  return ERROR_CALL_NOT_IMPLEMENTED;
+    UNICODE_STRING ObjectName;
+    NTSTATUS Status;
+    DWORD Ret;
+
+    Status = RtlCreateUnicodeStringFromAsciiz(&ObjectName,
+                                              pObjectName);
+    if (!NT_SUCCESS(Status))
+    {
+        return RtlNtStatusToDosError(Status);
+    }
+
+    Ret = GetNamedSecurityInfoW(ObjectName.Buffer,
+                                ObjectType,
+                                SecurityInfo,
+                                ppsidOwner,
+                                ppsidGroup,
+                                ppDacl,
+                                ppSacl,
+                                ppSecurityDescriptor);
+
+    RtlFreeUnicodeString(&ObjectName);
+
+    return Ret;
 }
 
 
 /**********************************************************************
  * SetNamedSecurityInfoW			EXPORTED
  *
- * @unimplemented
+ * @implemented
  */
 DWORD STDCALL
 SetNamedSecurityInfoW(LPWSTR pObjectName,
@@ -1127,15 +1457,43 @@ SetNamedSecurityInfoW(LPWSTR pObjectName,
                       PACL pDacl,
                       PACL pSacl)
 {
-  DPRINT1("SetNamedSecurityInfoW: stub\n");
-  return ERROR_CALL_NOT_IMPLEMENTED;
+    DWORD ErrorCode;
+    
+    if (pObjectName != NULL)
+    {
+        ErrorCode = CheckNtMartaPresent();
+        if (ErrorCode == ERROR_SUCCESS)
+        {
+            SECURITY_DESCRIPTOR SecurityDescriptor;
+
+            ErrorCode = pSetSecurityInfoCheck(&SecurityDescriptor,
+                                              SecurityInfo,
+                                              psidOwner,
+                                              psidGroup,
+                                              pDacl,
+                                              pSacl);
+
+            if (ErrorCode == ERROR_SUCCESS)
+            {
+                /* call the MARTA provider */
+                ErrorCode = AccRewriteSetNamedRights(pObjectName,
+                                                     ObjectType,
+                                                     SecurityInfo,
+                                                     &SecurityDescriptor);
+            }
+        }
+    }
+    else
+        ErrorCode = ERROR_INVALID_PARAMETER;
+
+    return ErrorCode;
 }
 
 
 /**********************************************************************
  * SetNamedSecurityInfoA			EXPORTED
  *
- * @unimplemented
+ * @implemented
  */
 DWORD STDCALL
 SetNamedSecurityInfoA(LPSTR pObjectName,
@@ -1146,15 +1504,35 @@ SetNamedSecurityInfoA(LPSTR pObjectName,
                       PACL pDacl,
                       PACL pSacl)
 {
-  DPRINT1("SetNamedSecurityInfoA: stub\n");
-  return ERROR_CALL_NOT_IMPLEMENTED;
+    UNICODE_STRING ObjectName;
+    NTSTATUS Status;
+    DWORD Ret;
+    
+    Status = RtlCreateUnicodeStringFromAsciiz(&ObjectName,
+                                              pObjectName);
+    if (!NT_SUCCESS(Status))
+    {
+        return RtlNtStatusToDosError(Status);
+    }
+    
+    Ret = SetNamedSecurityInfoW(ObjectName.Buffer,
+                                ObjectType,
+                                SecurityInfo,
+                                psidOwner,
+                                psidGroup,
+                                pDacl,
+                                pSacl);
+
+    RtlFreeUnicodeString(&ObjectName);
+
+    return Ret;
 }
 
 
 /**********************************************************************
  * GetSecurityInfo				EXPORTED
  *
- * @unimplemented
+ * @implemented
  */
 DWORD STDCALL
 GetSecurityInfo(HANDLE handle,
@@ -1166,15 +1544,45 @@ GetSecurityInfo(HANDLE handle,
                 PACL* ppSacl,
                 PSECURITY_DESCRIPTOR* ppSecurityDescriptor)
 {
-  DPRINT1("GetSecurityInfo: stub\n");
-  return ERROR_CALL_NOT_IMPLEMENTED;
+    DWORD ErrorCode;
+    
+    if (handle != NULL)
+    {
+        ErrorCode = CheckNtMartaPresent();
+        if (ErrorCode == ERROR_SUCCESS)
+        {
+            ErrorCode = pGetSecurityInfoCheck(SecurityInfo,
+                                              ppsidOwner,
+                                              ppsidGroup,
+                                              ppDacl,
+                                              ppSacl,
+                                              ppSecurityDescriptor);
+
+            if (ErrorCode == ERROR_SUCCESS)
+            {
+                /* call the MARTA provider */
+                ErrorCode = AccRewriteGetHandleRights(handle,
+                                                      ObjectType,
+                                                      SecurityInfo,
+                                                      ppsidOwner,
+                                                      ppsidGroup,
+                                                      ppDacl,
+                                                      ppSacl,
+                                                      ppSecurityDescriptor);
+            }
+        }
+    }
+    else
+        ErrorCode = ERROR_INVALID_HANDLE;
+
+    return ErrorCode;
 }
 
 
 /**********************************************************************
  * SetSecurityInfo				EXPORTED
  *
- * @unimplemented
+ * @implemented
  */
 DWORD
 WINAPI
@@ -1186,8 +1594,36 @@ SetSecurityInfo(HANDLE handle,
                 PACL pDacl,
                 PACL pSacl)
 {
-  DPRINT1("SetSecurityInfo: stub\n");
-  return ERROR_CALL_NOT_IMPLEMENTED;
+    DWORD ErrorCode;
+
+    if (handle != NULL)
+    {
+        ErrorCode = CheckNtMartaPresent();
+        if (ErrorCode == ERROR_SUCCESS)
+        {
+            SECURITY_DESCRIPTOR SecurityDescriptor;
+            
+            ErrorCode = pSetSecurityInfoCheck(&SecurityDescriptor,
+                                              SecurityInfo,
+                                              psidOwner,
+                                              psidGroup,
+                                              pDacl,
+                                              pSacl);
+            
+            if (ErrorCode == ERROR_SUCCESS)
+            {
+                /* call the MARTA provider */
+                ErrorCode = AccRewriteSetHandleRights(handle,
+                                                      ObjectType,
+                                                      SecurityInfo,
+                                                      &SecurityDescriptor);
+            }
+        }
+    }
+    else
+        ErrorCode = ERROR_INVALID_HANDLE;
+
+    return ErrorCode;
 }
 
 
@@ -1294,6 +1730,43 @@ CreatePrivateObjectSecurity(PSECURITY_DESCRIPTOR ParentDescriptor,
 
 
 /*
+ * @unimplemented
+ */
+BOOL STDCALL
+CreatePrivateObjectSecurityEx(PSECURITY_DESCRIPTOR ParentDescriptor,
+                              PSECURITY_DESCRIPTOR CreatorDescriptor,
+                              PSECURITY_DESCRIPTOR* NewDescriptor,
+                              GUID* ObjectType,
+                              BOOL IsContainerObject,
+                              ULONG AutoInheritFlags,
+                              HANDLE Token,
+                              PGENERIC_MAPPING GenericMapping)
+{
+    DPRINT1("%s() not implemented!\n", __FUNCTION__);
+    return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+CreatePrivateObjectSecurityWithMultipleInheritance(PSECURITY_DESCRIPTOR ParentDescriptor,
+                                                   PSECURITY_DESCRIPTOR CreatorDescriptor,
+                                                   PSECURITY_DESCRIPTOR* NewDescriptor,
+                                                   GUID** ObjectTypes,
+                                                   ULONG GuidCount,
+                                                   BOOL IsContainerObject,
+                                                   ULONG AutoInheritFlags,
+                                                   HANDLE Token,
+                                                   PGENERIC_MAPPING GenericMapping)
+{
+    DPRINT1("%s() not implemented!\n", __FUNCTION__);
+    return FALSE;
+}
+
+
+/*
  * @implemented
  */
 BOOL STDCALL
@@ -1363,6 +1836,101 @@ SetPrivateObjectSecurity(SECURITY_INFORMATION SecurityInformation,
     }
 
     return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+DWORD STDCALL
+TreeResetNamedSecurityInfoW(LPWSTR pObjectName,
+                            SE_OBJECT_TYPE ObjectType,
+                            SECURITY_INFORMATION SecurityInfo,
+                            PSID pOwner,
+                            PSID pGroup,
+                            PACL pDacl,
+                            PACL pSacl,
+                            BOOL KeepExplicit,
+                            FN_PROGRESSW fnProgress,
+                            PROG_INVOKE_SETTING ProgressInvokeSetting,
+                            PVOID Args)
+{
+    DWORD ErrorCode;
+
+    if (pObjectName != NULL)
+    {
+        ErrorCode = CheckNtMartaPresent();
+        if (ErrorCode == ERROR_SUCCESS)
+        {
+            switch (ObjectType)
+            {
+                case SE_FILE_OBJECT:
+                case SE_REGISTRY_KEY:
+                {
+                    /* check the SecurityInfo flags for sanity (both, the protected
+                       and unprotected dacl/sacl flag must not be passed together) */
+                    if (((SecurityInfo & DACL_SECURITY_INFORMATION) &&
+                         (SecurityInfo & (PROTECTED_DACL_SECURITY_INFORMATION | UNPROTECTED_DACL_SECURITY_INFORMATION)) ==
+                             (PROTECTED_DACL_SECURITY_INFORMATION | UNPROTECTED_DACL_SECURITY_INFORMATION))
+
+                        ||
+
+                        ((SecurityInfo & SACL_SECURITY_INFORMATION) &&
+                         (SecurityInfo & (PROTECTED_SACL_SECURITY_INFORMATION | UNPROTECTED_SACL_SECURITY_INFORMATION)) ==
+                             (PROTECTED_SACL_SECURITY_INFORMATION | UNPROTECTED_SACL_SECURITY_INFORMATION)))
+                    {
+                        ErrorCode = ERROR_INVALID_PARAMETER;
+                        break;
+                    }
+
+                    /* call the MARTA provider */
+                    ErrorCode = AccTreeResetNamedSecurityInfo(pObjectName,
+                                                              ObjectType,
+                                                              SecurityInfo,
+                                                              pOwner,
+                                                              pGroup,
+                                                              pDacl,
+                                                              pSacl,
+                                                              KeepExplicit,
+                                                              fnProgress,
+                                                              ProgressInvokeSetting,
+                                                              Args);
+                    break;
+                }
+
+                default:
+                    /* object type not supported */
+                    ErrorCode = ERROR_INVALID_PARAMETER;
+                    break;
+            }
+        }
+    }
+    else
+        ErrorCode = ERROR_INVALID_PARAMETER;
+
+    return ErrorCode;
+}
+
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL
+TreeResetNamedSecurityInfoA(LPSTR pObjectName,
+                            SE_OBJECT_TYPE ObjectType,
+                            SECURITY_INFORMATION SecurityInfo,
+                            PSID pOwner,
+                            PSID pGroup,
+                            PACL pDacl,
+                            PACL pSacl,
+                            BOOL KeepExplicit,
+                            FN_PROGRESSA fnProgress,
+                            PROG_INVOKE_SETTING ProgressInvokeSetting,
+                            PVOID Args)
+{
+    /* That's all this function does, at least up to w2k3... Even MS was too
+       lazy to implement it... */
+    return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 /* EOF */

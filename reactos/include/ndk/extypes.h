@@ -20,10 +20,10 @@ extern NTOSAPI POBJECT_TYPE ExTimerType;
 
 /* CONSTANTS *****************************************************************/
 
-/* FIXME: Win32k uses windows.h! */
-#ifndef __WIN32K__
 #define INVALID_HANDLE_VALUE (HANDLE)-1
-#endif
+
+/* Increments */
+#define MUTANT_INCREMENT 1
 
 /* Callback Object Access Rights */
 #define CALLBACK_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|0x0001)
@@ -38,10 +38,9 @@ extern NTOSAPI POBJECT_TYPE ExTimerType;
 /* You'll need the IFS for this, so use an equivalent version */
 #ifndef _NTIFS_
 typedef PVOID EX_RUNDOWN_REF;
+typedef PVOID EX_PUSH_LOCK;
 #endif
 
-/* You'll need the IFS for these, so let's not force everyone to have it */
-#ifdef _NTIFS_
 typedef struct _EX_QUEUE_WORKER_INFO
 {
     UCHAR QueueDisabled:1;
@@ -59,7 +58,6 @@ typedef struct _EX_WORK_QUEUE
     ULONG QueueDepthLastPass;
     EX_QUEUE_WORKER_INFO Info;
 } EX_WORK_QUEUE, *PEX_WORK_QUEUE;
-#endif
 
 typedef struct _EX_FAST_REF
 {
@@ -70,21 +68,6 @@ typedef struct _EX_FAST_REF
         ULONG Value;
     };
 } EX_FAST_REF, *PEX_FAST_REF;
-
-typedef struct _EX_PUSH_LOCK
-{
-    union
-    {
-        struct
-        {
-            ULONG Waiting:1;
-            ULONG Exclusive:1;
-            ULONG Shared:30;
-        };
-        ULONG Value;
-        PVOID Ptr;
-    };
-} EX_PUSH_LOCK, *PEX_PUSH_LOCK;
 
 typedef struct _HANDLE_TABLE_ENTRY_INFO
 {

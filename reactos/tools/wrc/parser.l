@@ -204,6 +204,7 @@ static struct keyword keywords[] = {
 	{ "GRAYED",		tGRAYED,		0, 0, 0},
 	{ "GROUPBOX",		tGROUPBOX,		0, 0, 0},
 	{ "HELP",		tHELP,			0, 0, 0},
+	{ "HTML",		tHTML,			0, 0, 0},
 	{ "ICON",		tICON,			0, 0, 0},
 	{ "IMPURE",		tIMPURE,		0, 0, 0},
 	{ "INACTIVE",		tINACTIVE,		0, 0, 0},
@@ -405,7 +406,7 @@ static struct keyword *iskeyword(char *kw)
 	 * and *only* in a filename. In this case, the second
 	 * rule will be reduced because it is longer.
 	 */
-[A-Za-z_0-9]+		{
+[A-Za-z_0-9.]+		{
 				struct keyword *tok = iskeyword(yytext);
 
 				if(tok)

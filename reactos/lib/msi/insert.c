@@ -44,7 +44,7 @@ typedef struct tagMSIINSERTVIEW
     MSIDATABASE     *db;
     BOOL             bIsTemp;
     MSIVIEW         *sv;
-    value_list      *vals;
+    column_info     *vals;
 } MSIINSERTVIEW;
 
 static UINT INSERT_fetch_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT *val )
@@ -62,7 +62,7 @@ static UINT INSERT_fetch_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT 
  * Merge a value_list and a record to create a second record.
  * Replace wildcard entries in the valuelist with values from the record
  */
-static MSIRECORD *INSERT_merge_record( UINT fields, value_list *vl, MSIRECORD *rec )
+static MSIRECORD *INSERT_merge_record( UINT fields, column_info *vl, MSIRECORD *rec )
 {
     MSIRECORD *merged;
     DWORD wildcard_count = 1, i;
@@ -255,7 +255,7 @@ MSIVIEWOPS insert_ops =
 };
 
 UINT INSERT_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR table,
-                        string_list *columns, value_list *values, BOOL temp )
+                        column_info *columns, column_info *values, BOOL temp )
 {
     MSIINSERTVIEW *iv = NULL;
     UINT r;

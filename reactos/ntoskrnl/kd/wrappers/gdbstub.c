@@ -1458,7 +1458,7 @@ VOID
 KdGdbListModules()
 {
   PLIST_ENTRY CurrentEntry;
-  PMODULE_OBJECT Current;
+  PLDR_DATA_TABLE_ENTRY Current;
   ULONG ModuleCount;
 
   DPRINT1("\n");
@@ -1468,10 +1468,10 @@ KdGdbListModules()
   CurrentEntry = ModuleListHead.Flink;
   while (CurrentEntry != (&ModuleListHead))
     {
-	    Current = CONTAINING_RECORD (CurrentEntry, MODULE_OBJECT, ListEntry);
+      Current = CONTAINING_RECORD (CurrentEntry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
 
-      DbgPrint ("Module %S  Base 0x%.08x  Length 0x%.08x\n",
-        Current->BaseName.Buffer, Current->Base, Current->Length);
+      DbgPrint ("Module %wZ  Base 0x%.08x  Length 0x%.08x\n",
+        &Current->BaseDllName, Current->DllBase, Current->SizeOfImage);
 
       ModuleCount++;
       CurrentEntry = CurrentEntry->Flink;

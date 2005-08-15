@@ -27,13 +27,10 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ddk/ntddk.h>
+#include "ntfs.h"
 
 #define NDEBUG
 #include <debug.h>
-
-#include "ntfs.h"
-
 
 /* GLOBALS *****************************************************************/
 

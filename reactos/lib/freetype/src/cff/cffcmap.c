@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CFF character mapping table (cmap) support (body).                   */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004 by                                          */
+/*  Copyright 2002, 2003, 2004, 2005 by                                    */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -149,6 +149,13 @@
     FT_Service_PsCMaps  psnames = (FT_Service_PsCMaps)cff->psnames;
 
 
+    /* can't build Unicode map for CID-keyed font */
+    if ( !charset->sids )
+    {
+      error = CFF_Err_Invalid_Argument;
+      goto Exit;
+    }
+
     cmap->num_pairs = 0;
     cmap->pairs     = NULL;
 
@@ -213,6 +220,7 @@
       }
     }
 
+  Exit:
     return error;
   }
 

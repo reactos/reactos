@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000, 2003 by
+# Copyright 1996-2000, 2003, 2005 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -62,7 +62,7 @@ T := -o$(space)
 #   ANSI compliance.
 #
 ifndef CFLAGS
-  CFLAGS := -c -g -O6 -Wall -fno-strict-aliasing
+  CFLAGS := -c -g -O6 -Wall
 endif
 
 # ANSIFLAGS: Put there the flags used to make your compiler ANSI-compliant.

@@ -1,6 +1,26 @@
+/***************************************************************************/
+/*                                                                         */
+/*  afmodule.c                                                             */
+/*                                                                         */
+/*    Auto-fitter module implementation (body).                            */
+/*                                                                         */
+/*  Copyright 2003, 2004, 2005 by                                          */
+/*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
+/*                                                                         */
+/*  This file is part of the FreeType project, and may only be used,       */
+/*  modified, and distributed under the terms of the FreeType project      */
+/*  license, LICENSE.TXT.  By continuing to use, modify, or distribute     */
+/*  this file you indicate that you have read the license and              */
+/*  understand and accept it fully.                                        */
+/*                                                                         */
+/***************************************************************************/
+
+
 #include "afmodule.h"
 #include "afloader.h"
+
 #include FT_INTERNAL_OBJECTS_H
+
 
   typedef struct  FT_AutofitterRec_
   {
@@ -38,14 +58,13 @@
   }
 
 
-
   FT_CALLBACK_TABLE_DEF
   const FT_AutoHinter_ServiceRec  af_autofitter_service =
   {
     NULL,
     NULL,
     NULL,
-    (FT_AutoHinter_GlyphLoadFunc) af_autofitter_load_glyph
+    (FT_AutoHinter_GlyphLoadFunc)af_autofitter_load_glyph
   };
 
 
@@ -59,11 +78,11 @@
     0x10000L,   /* version 1.0 of the autofitter  */
     0x20000L,   /* requires FreeType 2.0 or above */
 
-    (const void*) &af_autofitter_service,
+    (const void*)&af_autofitter_service,
 
-    (FT_Module_Constructor) af_autofitter_init,
-    (FT_Module_Destructor)  af_autofitter_done,
-    (FT_Module_Requester)   0
+    (FT_Module_Constructor)af_autofitter_init,
+    (FT_Module_Destructor) af_autofitter_done,
+    (FT_Module_Requester)  NULL
   };
 
 

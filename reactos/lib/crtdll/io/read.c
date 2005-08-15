@@ -9,7 +9,7 @@
  *              28/12/1998: Created
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include <msvcrt/io.h>
 #include <msvcrt/internal/file.h>
 

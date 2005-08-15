@@ -80,23 +80,10 @@
  *
  */
 
-#define __WINE__
+#include <user32.h>
+#define NDEBUG
+#include <debug.h>
 
-#include <stdlib.h>
-#include <stdarg.h>
-#include <stdio.h>
-#include <string.h>
-#include <math.h>
-
-#include "windef.h"
-#include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "wine/unicode.h"
-#include "user32.h"
-#include <winnls.h>
-#include "wine/debug.h"
-#include "dlgs.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(mdi);
 
@@ -208,7 +195,7 @@ static HWND MDI_GetChildByID(HWND hwnd, UINT id)
 {
 #ifdef __REACTOS__
     DWORD Control = id;
-    if (hwnd && !EnumChildWindows(hwnd, (ENUMWINDOWSPROC)&MDI_GetChildByID_EnumProc, (LPARAM)&Control))
+    if (hwnd && !EnumChildWindows(hwnd, (WNDENUMPROC)&MDI_GetChildByID_EnumProc, (LPARAM)&Control))
     {
         return (HWND)Control;
     }
@@ -275,6 +262,20 @@ static MDICLIENTINFO *get_client_info( HWND client )
     }
     return ret;
 #endif
+}
+
+static BOOL is_close_enabled(HWND hwnd, HMENU hSysMenu)
+{
+    if (GetClassLongW(hwnd, GCL_STYLE) & CS_NOCLOSE) return FALSE;
+
+    if (!hSysMenu) hSysMenu = GetSystemMenu(hwnd, FALSE);
+    if (hSysMenu)
+    {
+        UINT state = GetMenuState(hSysMenu, SC_CLOSE, MF_BYCOMMAND);
+        if (state == 0xFFFFFFFF || (state & (MF_DISABLED | MF_GRAYED)))
+            return FALSE;
+    }
+    return TRUE;
 }
 
 /**********************************************************************
@@ -362,10 +363,6 @@ static BOOL MDI_MenuDeleteItem( HWND client, HWND hWndChild )
 static HWND MDI_GetWindow(MDICLIENTINFO *clientInfo, HWND hWnd, BOOL bNext,
                             DWORD dwStyleMask )
 {
-#ifdef __REACTOS__
-    /* FIXME */
-    return 0;
-#else
     int i;
     HWND *list;
     HWND last = 0;
@@ -397,7 +394,6 @@ static HWND MDI_GetWindow(MDICLIENTINFO *clientInfo, HWND hWnd, BOOL bNext,
  found:
     HeapFree( GetProcessHeap(), 0, list );
     return last;
-#endif
 }
 
 /**********************************************************************
@@ -1126,13 +1122,13 @@ static BOOL MDI_AugmentFrameMenu( HWND frame, HWND hChild )
     if (!(hSysPopup = GetSystemMenu(hChild, FALSE)))
 	return 0;
 
-    AppendMenuA(menu,MF_HELP | MF_BITMAP,
-                   SC_MINIMIZE, (LPSTR)(DWORD)HBMMENU_MBAR_MINIMIZE ) ;
-    AppendMenuA(menu,MF_HELP | MF_BITMAP,
-                   SC_RESTORE, (LPSTR)(DWORD)HBMMENU_MBAR_RESTORE );
-
-    AppendMenuA(menu,MF_HELP | MF_BITMAP,
-                   SC_CLOSE, (LPSTR)(DWORD)HBMMENU_MBAR_CLOSE );
+    AppendMenuW(menu, MF_HELP | MF_BITMAP,
+                SC_MINIMIZE, (LPCWSTR)HBMMENU_MBAR_MINIMIZE ) ;
+    AppendMenuW(menu, MF_HELP | MF_BITMAP,
+                SC_RESTORE, (LPCWSTR)HBMMENU_MBAR_RESTORE );
+    AppendMenuW(menu, MF_HELP | MF_BITMAP,
+                SC_CLOSE, is_close_enabled(hChild, hSysPopup) ?
+                (LPCWSTR)HBMMENU_MBAR_CLOSE : (LPCWSTR)HBMMENU_MBAR_CLOSE_D );
 
     /* The system menu is replaced by the child icon */
     hIcon = (HICON)GetClassLongW(hChild, GCL_HICONSM);
@@ -1630,13 +1626,14 @@ LRESULT WINAPI DefFrameProcW( HWND hwnd, HWND hwndMDIClient,
                     if( !ci->hwndChildMaximized ) break;
                     switch( id )
                     {
+                    case SC_CLOSE:
+                        if (!is_close_enabled(ci->hwndActiveChild, 0)) break;
                     case SC_SIZE:
                     case SC_MOVE:
                     case SC_MINIMIZE:
                     case SC_MAXIMIZE:
                     case SC_NEXTWINDOW:
                     case SC_PREVWINDOW:
-                    case SC_CLOSE:
                     case SC_RESTORE:
                         return SendMessageW( ci->hwndChildMaximized, WM_SYSCOMMAND,
                                              wParam, lParam);
@@ -1777,10 +1774,10 @@ LRESULT WINAPI DefMDIChildProcA( HWND hwnd, UINT message,
     case WM_SETFOCUS:
     case WM_CHILDACTIVATE:
     case WM_SYSCOMMAND:
-/* FIXME */
 #ifndef __REACTOS__
     case WM_SETVISIBLE:
 #endif
+    case WM_SHOWWINDOW:
     case WM_SIZE:
     case WM_NEXTMENU:
     case WM_SYSCHAR:
@@ -1858,13 +1855,13 @@ LRESULT WINAPI DefMDIChildProcW( HWND hwnd, UINT message,
         }
         break;
 
-/* FIXME */
 #ifndef __REACTOS__
     case WM_SETVISIBLE:
+#endif
+    case WM_SHOWWINDOW:
         if( ci->hwndChildMaximized) ci->mdiFlags &= ~MDIF_NEEDUPDATE;
         else MDI_PostUpdate(client, ci, SB_BOTH+1);
         break;
-#endif
 
     case WM_SIZE:
         if( ci->hwndActiveChild == hwnd && wParam != SIZE_MAXIMIZED )
@@ -2051,8 +2048,12 @@ BOOL WINAPI TranslateMDISysAccel( HWND hwndClient, LPMSG msg )
                 break;
             case VK_F4:
             case VK_RBUTTON:
-                wParam = SC_CLOSE;
-                break;
+                if (is_close_enabled(ci->hwndActiveChild, 0))
+                {
+                    wParam = SC_CLOSE;
+                    break;
+                }
+                /* fall through */
             default:
                 return 0;
             }
@@ -2304,10 +2305,6 @@ static INT_PTR WINAPI MDI_MoreWindowsDlgProc (HWND hDlg, UINT iMsg, WPARAM wPara
     {
        case WM_INITDIALOG:
        {
-#ifdef __REACTOS__
-           /* FIXME */
-           return FALSE;
-#else
            UINT widest       = 0;
            UINT length;
            UINT i;
@@ -2349,7 +2346,6 @@ static INT_PTR WINAPI MDI_MoreWindowsDlgProc (HWND hDlg, UINT iMsg, WPARAM wPara
            /* Set the current selection */
            SendMessageW(hListBox, LB_SETCURSEL, MDI_MOREWINDOWSLIMIT, 0);
            return TRUE;
-#endif
        }
 
        case WM_COMMAND:
@@ -2427,8 +2423,6 @@ static HWND MDI_MoreWindowsDialog(HWND hwnd)
 
 static void MDI_SwapMenuItems(HWND parent, UINT pos1, UINT pos2)
 {
-/* FIXME */
-#ifndef __REACTOS__
     HWND *list;
     int i;
 
@@ -2440,5 +2434,4 @@ static void MDI_SwapMenuItems(HWND parent, UINT pos1, UINT pos2)
         else if (id == pos2) SetWindowLongW( list[i], GWL_ID, pos1 );
     }
     HeapFree( GetProcessHeap(), 0, list );
-#endif
 }

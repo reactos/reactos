@@ -24,9 +24,9 @@ NCI_SOURCES = \
 NCI_OBJECTS = \
     $(addprefix $(INTERMEDIATE_), $(NCI_SOURCES:.c=.o))
 
-NCI_HOST_CFLAGS = -Iinclude -g -Werror -Wall
+NCI_HOST_CFLAGS = -Iinclude $(TOOLS_CFLAGS)
 
-NCI_HOST_LFLAGS = -g
+NCI_HOST_LFLAGS = $(TOOLS_LFLAGS)
 
 $(NCI_TARGET): $(NCI_OBJECTS) | $(NCI_OUT)
 	$(ECHO_LD)

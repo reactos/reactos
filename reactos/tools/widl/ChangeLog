@@ -1,5 +1,41 @@
 ChangeLog
 
+2005-08-07 ekohl
+
+   tools/widl/server.c
+
+- Support size_is(*Length) attributes for strings.
+
+2005-07-30 ekohl
+
+   tools/widl/client.c
+   tools/widl/server.c
+
+- Support conformant arrays as in and out parameters.
+- Fix message buffer size calculation for client and server.
+
+2005-07-25 ekohl
+
+   tools/widl/client.c
+   tools/widl/lex.yy.c
+   tools/widl/parser.y
+   tools/widl/proxy.c
+   tools/widl/server.c
+   tools/widl/y.tab.c
+   tools/widl/y.tab.h
+
+- Fix grammar of the size_is attribute so that size_is(*Length) gets accepted.
+
+2005-07-23 ekohl
+
+   tools/widl/client.c
+   tools/widl/server.c
+
+- Fix offset calculation bug in the ProcFormatString.
+- Fix offset calculation bug in the marshalling and unmarshalling code.
+- Fix typos in the TypeFormatString.
+This makes the [string, out, size_is()] parameters work properly.
+
 2005-07-17 ekohl
 
    tools/widl/client.c

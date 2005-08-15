@@ -6,27 +6,22 @@
 #include <windows.h>
 #include <wchar.h>
 
+/* Add ROS Master debug functions if not added yet */
+#ifndef __INTERNAL_DEBUG
+#ifdef YDEBUG
+#undef NDEBUG
+#else
+#define NDEBUG
+#endif
+#include <reactos/debug.h>
+#endif
+
 #ifndef __GNUC__
 #define	__FUNCTION__ ""
 #define	inline __inline
 #endif
 
 unsigned long DbgPrint(char *Format,...);
-
-#ifdef DBG
-#define DPRINT1 DbgPrint("(%s:%d:%s) ",__FILE__,__LINE__,__FUNCTION__), DbgPrint
-#else
-#define DPRINT1(args...)
-#endif
-
-#if !defined(DBG) || !defined(YDEBUG)
-#define DPRINT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
-#else
-#define DPRINT DbgPrint("(%s:%d:%s) ",__FILE__,__LINE__,__FUNCTION__), DbgPrint
-#endif
-
-#define UNIMPLEMENTED   DbgPrint("WARNING:  %s at %s:%d is UNIMPLEMENTED!\n",__FUNCTION__,__FILE__,__LINE__);
-
 
 struct _GUID;
 
@@ -35,6 +30,7 @@ struct _GUID;
 /* These function return a printable version of a string, including
    quotes.  The string will be valid for some time, but not indefinitely
    as strings are re-used.  */
+extern const char *wine_dbgstr_w( const WCHAR *s );
 extern const char *wine_dbgstr_an( const char * s, int n );
 extern const char *wine_dbgstr_wn( const wchar_t *s, int n );
 extern const char *wine_dbgstr_guid( const struct _GUID *id );

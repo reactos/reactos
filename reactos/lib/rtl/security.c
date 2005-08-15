@@ -9,7 +9,7 @@
  *                  21/11/2001 Created
  */
 
-#include "rtl.h"
+#include <rtl.h>
 
 #define NDEBUG
 #include <debug.h>

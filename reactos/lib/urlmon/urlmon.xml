@@ -2,8 +2,6 @@
 	<importlibrary definition="urlmon.spec.def" />
 	<include base="urlmon">.</include>
 	<include base="ReactOS">include/wine</include>
-	<define name="UNICODE" />
-	<define name="_UNICODE" />
 	<define name="__REACTOS__" />
 	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x600</define>
@@ -25,5 +23,6 @@
 	<file>umon.c</file>
 	<file>umstream.c</file>
 	<file>urlmon_main.c</file>
+	<file>rsrc.rc</file>
 	<file>urlmon.spec</file>
 </module>

@@ -1107,7 +1107,7 @@ ScaleWindowExtEx(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
@@ -1115,7 +1115,6 @@ UnrealizeObject(
 	HGDIOBJ	a0
 	)
 {
-	UNIMPLEMENTED;
 	return NtGdiUnrealizeObject(a0);
 }
 
@@ -1201,7 +1200,7 @@ CheckColorsInGamut(
 /*
  * @unimplemented
  */
-HANDLE
+HCOLORSPACE
 STDCALL
 GetColorSpace(
 	HDC	hDc
@@ -1216,7 +1215,7 @@ GetColorSpace(
 /*
  * @unimplemented
  */
-BOOL
+HCOLORSPACE
 STDCALL
 SetColorSpace(
 	HDC		a0,
@@ -2772,17 +2771,6 @@ GdiCreateLocalMetaFilePict(HENHMETAFILE hmo)
 	return 0;
 }
 
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-GdiGetCharDimensions(HDC hdc,LPTEXTMETRICW lptm,BOOL unk)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
 /*
  * @unimplemented
@@ -3874,18 +3862,6 @@ XLATEOBJ_piVector(XLATEOBJ *XlateObj)
 	return 0;
 }
 
-/*
- * @unimplemented
- */
-BOOL STDCALL DdCreateDirectDrawObject( 
-LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
-HDC hdc
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
 /*
  * @unimplemented
@@ -3909,80 +3885,7 @@ LPVIDMEM pvmList
 	return 0;
 }
 
-/*
- * @unimplemented
- */
-BOOL STDCALL DdDeleteDirectDrawObject( 
-LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
-/*
- * @unimplemented
- */
-BOOL STDCALL DdCreateSurfaceObject( 
-LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
-BOOL bPrimarySurface
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL STDCALL DdDeleteSurfaceObject( 
-LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL STDCALL DdResetVisrgn( 
-LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
-HWND hWnd
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL STDCALL DdGetDC( 
-LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
-LPPALETTEENTRY pColorTable
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL STDCALL DdReleaseDC( 
-LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
 /*
  * @unimplemented
@@ -4001,95 +3904,6 @@ DWORD dwOffset
 	return 0;
 }
 
-/*
- * @unimplemented
- */
-BOOL STDCALL DdReenableDirectDrawObject( 
-LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
-BOOL *pbNewMode
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL STDCALL DdAttachSurface( 
-LPDDRAWI_DDRAWSURFACE_LCL pSurfaceFrom,
-LPDDRAWI_DDRAWSURFACE_LCL pSurfaceTo
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-VOID STDCALL DdUnattachSurface( 
-LPDDRAWI_DDRAWSURFACE_LCL pSurface,
-LPDDRAWI_DDRAWSURFACE_LCL pSurfaceAttached
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-}
-
-/*
- * @unimplemented
- */
-ULONG STDCALL DdQueryDisplaySettingsUniqueness(VOID)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-HANDLE STDCALL DdGetDxHandle( 
-LPDDRAWI_DIRECTDRAW_LCL pDDraw,
-LPDDRAWI_DDRAWSURFACE_LCL pSurface,
-BOOL bRelease
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL STDCALL DdSetGammaRamp( 
-LPDDRAWI_DIRECTDRAW_LCL pDDraw,
-HDC hdc,
-LPVOID lpGammaRamp
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-DWORD STDCALL DdSwapTextureHandles( 
-LPDDRAWI_DIRECTDRAW_LCL pDDraw,
-LPDDRAWI_DDRAWSURFACE_LCL pDDSLcl1,
-LPDDRAWI_DDRAWSURFACE_LCL pDDSLcl2
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
 
 /*
  * @unimplemented

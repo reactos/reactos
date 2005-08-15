@@ -9,16 +9,23 @@
 /* INCLUDES ******************************************************************/
 
 /* SDK/DDK/NDK Headers. */
+#define NTOS_MODE_USER
+#define __GDI32__
 #include <windows.h>
 #include <ddraw.h>
-#include <ddk/winddi.h>
-#include <ddk/prntfont.h>
+#include <ddrawi.h>
+#include <winddi.h>
+#include <prntfont.h>
 #include <ddrawgdi.h>
-#define NTOS_MODE_USER
 #include <ndk/ntndk.h>
+#include <tchar.h>
 
 /* Win32K External Headers */
 #include <win32k/kapi.h>
+
+/* directdraw syscall */
+#include <win32k/ntddraw.h>
+
 
 #define NtUserGetDCBrushColor(hbr) \
   (COLORREF)NtUserCallTwoParam((DWORD)(hbr), OBJ_BRUSH, TWOPARAM_ROUTINE_GETDCCOLOR)
@@ -81,4 +88,8 @@ LogFontA2W(LPLOGFONTW pW, CONST LOGFONTA *pA);
 VOID
 STDCALL
 LogFontW2A(LPLOGFONTA pA, CONST LOGFONTW *pW);
+
+/* == Directx FUNCTIONS ================================================== */
+BOOL
+intDDCreateSurface ( LPDDRAWI_DDRAWSURFACE_LCL pSurface, BOOL bComplete);
 /* EOF */

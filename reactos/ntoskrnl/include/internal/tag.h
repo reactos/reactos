@@ -87,7 +87,6 @@
 #define TAG_DRIVER_MEM  TAG('D', 'R', 'V', 'M') /* drvm */
 #define TAG_MODULE_OBJECT TAG('k', 'l', 'm', 'o') /* klmo - kernel ldr module object */
 #define TAG_LDR_WSTR TAG('k', 'l', 'w', 's') /* klws - kernel ldr wide string */
-#define TAG_MODULE_TEXT_SECTION TAG('k', 'l', 'm', 't') /* klmt - kernel ldr module text */
 
 /* formerly located in lpc/connect */
 #define TAG_LPC_CONNECT_MESSAGE   TAG('L', 'P', 'C', 'C')

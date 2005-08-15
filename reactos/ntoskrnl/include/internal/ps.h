@@ -117,6 +117,7 @@ extern PEPROCESS PsIdleProcess;
 extern LIST_ENTRY PsActiveProcessHead;
 extern FAST_MUTEX PspActiveProcessMutex;
 extern LARGE_INTEGER ShortPsLockDelay, PsLockTimeout;
+extern EPROCESS_QUOTA_BLOCK PspDefaultQuotaBlock;
 
 VOID
 STDCALL
@@ -184,14 +185,37 @@ VOID
 STDCALL
 PspRunCreateProcessNotifyRoutines(PEPROCESS, BOOLEAN);
 
+VOID
+STDCALL
+PspRunLegoRoutine(IN PKTHREAD Thread);
+
 VOID INIT_FUNCTION PsInitJobManagment(VOID);
+
+VOID
+STDCALL
+PspInheritQuota(PEPROCESS Process, PEPROCESS ParentProcess);
+
+VOID
+STDCALL
+PspDestroyQuotaBlock(PEPROCESS Process);
+
+NTSTATUS
+STDCALL
+PspMapSystemDll(
+    PEPROCESS Process,
+    PVOID *DllBase
+);
+
+NTSTATUS
+STDCALL
+PsLocateSystemDll(VOID);
+
+NTSTATUS
+STDCALL
+PspGetSystemDllEntryPoints(VOID);
 
 /* CLIENT ID */
 
-NTSTATUS PsCreateCidHandle(PVOID Object, POBJECT_TYPE ObjectType, PHANDLE Handle);
-NTSTATUS PsDeleteCidHandle(HANDLE CidHandle, POBJECT_TYPE ObjectType);
-PHANDLE_TABLE_ENTRY PsLookupCidHandle(HANDLE CidHandle, POBJECT_TYPE ObjectType, PVOID *Object);
-VOID PsUnlockCidHandle(PHANDLE_TABLE_ENTRY CidEntry);
 NTSTATUS PsLockProcess(PEPROCESS Process, BOOLEAN Timeout);
 VOID PsUnlockProcess(PEPROCESS Process);
 

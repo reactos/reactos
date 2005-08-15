@@ -38,6 +38,7 @@ extern const GUID IID_IShellPropSheetExt;
 extern const GUID IID_IPersistFolder;
 extern const GUID IID_IExtractIconA;
 extern const GUID IID_IShellLinkA;
+extern const GUID IID_IShellLinkDataList;
 extern const GUID IID_IShellCopyHookA;
 extern const GUID IID_IFileViewerA;
 extern const GUID IID_ICommDlgBrowser;

@@ -28,13 +28,13 @@
 	<file>control.c</file>
 	<file>cpanelfolder.c</file>
 	<file>dataobject.c</file>
+	<file>dde.c</file>
 	<file>debughlp.c</file>
 	<file>dialogs.c</file>
 	<file>dragdrophelper.c</file>
 	<file>enumidlist.c</file>
 	<file>folders.c</file>
 	<file>iconcache.c</file>
-	<file>memorystream.c</file>
 	<file>pidl.c</file>
 	<file>regsvr.c</file>
 	<file>shell32_main.c</file>

@@ -225,22 +225,6 @@ KeWaitForSingleObject(PVOID Object,
         /* Get the Current Object */
         CurrentObject = (PDISPATCHER_HEADER)Object;
 
-        /* FIXME:
-         * Temporary hack until my Object Manager re-write. Basically some objects, like
-         * the File Object, but also LPCs and others, are actually waitable on their event.
-         * The Object Manager sets this up in The ObjectTypeInformation->DefaultObject member,
-         * by using pretty much the same kind of hack as us. Normal objects point to themselves
-         * in that pointer. Then, NtWaitForXXX will populate the WaitList that gets sent to us by
-         * using ->DefaultObject, so the proper actual objects will be sent to us. Until then however,
-         * I will keep this hack here, since there's no need to make an interim hack until the rewrite
-         * -- Alex Ionescu 24/02/05
-         */
-        if (CurrentObject->Type == IO_TYPE_FILE) {
-
-            DPRINT1("Hack used: %x\n", &((PFILE_OBJECT)CurrentObject)->Event);
-            CurrentObject = (PDISPATCHER_HEADER)(&((PFILE_OBJECT)CurrentObject)->Event);
-        }
-
         /* Check if the Object is Signaled */
         if (KiIsObjectSignaled(CurrentObject, CurrentThread)) {
 
@@ -250,7 +234,7 @@ KeWaitForSingleObject(PVOID Object,
                 /* It has a normal signal state, so unwait it and return */
                 KiSatisfyObjectWait(CurrentObject, CurrentThread);
                 Status = STATUS_WAIT_0;
-                goto WaitDone;
+                goto DontWait;
 
             } else {
 
@@ -285,7 +269,7 @@ KeWaitForSingleObject(PVOID Object,
 
                 /* Return a timeout */
                 Status = STATUS_TIMEOUT;
-                goto WaitDone;
+                goto DontWait;
             }
 
             /* Point to Timer Wait Block and Thread Timer */
@@ -311,7 +295,7 @@ KeWaitForSingleObject(PVOID Object,
 
                 /* Return a timeout if we couldn't insert the timer for some reason */
                 Status = STATUS_TIMEOUT;
-                goto WaitDone;
+                goto DontWait;
             }
         }
 
@@ -344,9 +328,17 @@ KeWaitForSingleObject(PVOID Object,
 
     } while (TRUE);
 
-WaitDone:
     /* Release the Lock, we are done */
     DPRINT("Returning from KeWaitForMultipleObjects(), %x. Status: %d\n", KeGetCurrentThread(), Status);
+    KeReleaseDispatcherDatabaseLock(CurrentThread->WaitIrql);
+    return Status;
+
+DontWait:
+    /* Adjust the Quantum */
+    KiAdjustQuantumThread(CurrentThread);
+
+    /* Release & Return */
+    DPRINT("Returning from KeWaitForMultipleObjects(), %x. Status: %d\n. We did not wait.", KeGetCurrentThread(), Status);
     KeReleaseDispatcherDatabaseLock(CurrentThread->WaitIrql);
     return Status;
 }
@@ -433,21 +425,6 @@ KeWaitForMultipleObjects(ULONG Count,
             /* Get the Current Object */
             CurrentObject = (PDISPATCHER_HEADER)Object[WaitIndex];
 
-            /* FIXME:
-             * Temporary hack until my Object Manager re-write. Basically some objects, like
-             * the File Object, but also LPCs and others, are actually waitable on their event.
-             * The Object Manager sets this up in The ObjectTypeInformation->DefaultObject member,
-             * by using pretty much the same kind of hack as us. Normal objects point to themselves
-             * in that pointer. Then, NtWaitForXXX will populate the WaitList that gets sent to us by
-             * using ->DefaultObject, so the proper actual objects will be sent to us. Until then however,
-             * I will keep this hack here, since there's no need to make an interim hack until the rewrite
-             * -- Alex Ionescu 24/02/05
-             */
-            if (CurrentObject->Type == IO_TYPE_FILE) {
-
-                CurrentObject = (PDISPATCHER_HEADER)(&((PFILE_OBJECT)CurrentObject)->Event);
-            }
-
             /* Check if the Object is Signaled */
             if (KiIsObjectSignaled(CurrentObject, CurrentThread)) {
 
@@ -460,7 +437,7 @@ KeWaitForMultipleObjects(ULONG Count,
                         /* It has a normal signal state, so unwait it and return */
                         KiSatisfyObjectWait(CurrentObject, CurrentThread);
                         Status = STATUS_WAIT_0 | WaitIndex;
-                        goto WaitDone;
+                        goto DontWait;
 
                     } else {
 
@@ -504,7 +481,7 @@ KeWaitForMultipleObjects(ULONG Count,
             /* Satisfy their Waits and return to the caller */
             KiSatisifyMultipleObjectWaits(WaitBlock);
             Status = STATUS_WAIT_0;
-            goto WaitDone;
+            goto DontWait;
         }
 
         /* Make sure we can satisfy the Alertable request */
@@ -521,7 +498,7 @@ KeWaitForMultipleObjects(ULONG Count,
 
                 /* Return a timeout */
                 Status = STATUS_TIMEOUT;
-                goto WaitDone;
+                goto DontWait;
             }
 
             /* Point to Timer Wait Block and Thread Timer */
@@ -546,7 +523,7 @@ KeWaitForMultipleObjects(ULONG Count,
 
                 /* Return a timeout if we couldn't insert the timer for some reason */
                 Status = STATUS_TIMEOUT;
-                goto WaitDone;
+                goto DontWait;
             }
         }
 
@@ -572,13 +549,15 @@ KeWaitForMultipleObjects(ULONG Count,
         }
 
         /* Block the Thread */
-        DPRINT("Blocking the Thread: %d, %d, %d, %x\n", Alertable, WaitMode, WaitReason, KeGetCurrentThread());
+        DPRINT("Blocking the Thread: %d, %d, %d, %x\n", Alertable, WaitMode, 
+                WaitReason, KeGetCurrentThread());
         KiBlockThread(&Status,
                       Alertable,
                       WaitMode,
                       (UCHAR)WaitReason);
 
         /* Check if we were executing an APC */
+        DPRINT("Thread is back\n");
         if (Status != STATUS_KERNEL_APC) {
 
             /* Return Status */
@@ -590,9 +569,18 @@ KeWaitForMultipleObjects(ULONG Count,
 
     } while (TRUE);
 
-WaitDone:
     /* Release the Lock, we are done */
-    DPRINT("Returning from KeWaitForMultipleObjects(), %x. Status: %d\n", KeGetCurrentThread(), Status);
+    DPRINT("Returning, %x. Status: %d\n",  KeGetCurrentThread(), Status);
+    KeReleaseDispatcherDatabaseLock(CurrentThread->WaitIrql);
+    return Status;
+
+DontWait:
+    /* Adjust the Quantum */
+    KiAdjustQuantumThread(CurrentThread);
+
+    /* Release & Return */
+    DPRINT("Returning, %x. Status: %d\n. We did not wait.", 
+            KeGetCurrentThread(), Status);
     KeReleaseDispatcherDatabaseLock(CurrentThread->WaitIrql);
     return Status;
 }
@@ -789,31 +777,6 @@ KiIsObjectSignaled(PDISPATCHER_HEADER Object,
 
     /* Any other object is not a mutated freak, so let's use logic */
    return (!Object->SignalState <= 0);
-}
-
-BOOL
-inline
-FASTCALL
-KiIsObjectWaitable(PVOID Object)
-{
-    POBJECT_HEADER Header;
-    Header = BODY_TO_HEADER(Object);
-
-    if (Header->Type == ExEventObjectType ||
-        Header->Type == IoCompletionType ||
-        Header->Type == ExMutantObjectType ||
-        Header->Type == ExSemaphoreObjectType ||
-        Header->Type == ExTimerType ||
-        Header->Type == PsProcessType ||
-        Header->Type == PsThreadType ||
-        Header->Type == IoFileObjectType) {
-
-        return TRUE;
-
-    } else {
-
-        return FALSE;
-    }
 }
 
 VOID

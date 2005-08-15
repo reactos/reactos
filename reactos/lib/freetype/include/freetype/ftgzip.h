@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Gzip-compressed stream support.                                      */
 /*                                                                         */
-/*  Copyright 2002, 2003 by                                                */
+/*  Copyright 2002, 2003, 2004 by                                          */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -40,7 +40,7 @@ FT_BEGIN_HEADER
   /*    GZIP Streams                                                       */
   /*                                                                       */
   /* <Abstract>                                                            */
-  /*    Using gzip-compressed font files                                   */
+  /*    Using gzip-compressed font files.                                  */
   /*                                                                       */
   /* <Description>                                                         */
   /*    This section contains the declaration of Gzip-specific functions.  */

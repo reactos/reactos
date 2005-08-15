@@ -5,6 +5,17 @@
 
 #include <ddk/ntddk.h>
 #include <debug.h>
+#include "../usb_wrapper.h"
+
+USBPORT_INTERFACE UsbPortInterface;
+
+void STDCALL RegisterPortDriver(PDRIVER_OBJECT pDrvObj, PUSBPORT_INTERFACE pUsbPortIntf)
+{
+	// copy struct to global var
+	DPRINT("Miniport 0x%08X registered\n", (ULONG)pDrvObj);
+	memcpy(&UsbPortInterface.KbdConnectData, &pUsbPortIntf->KbdConnectData, sizeof(CONNECT_DATA));
+	memcpy(&UsbPortInterface.MouseConnectData, &pUsbPortIntf->MouseConnectData, sizeof(CONNECT_DATA));
+}
 
 NTSTATUS STDCALL
 AddDevice(PDRIVER_OBJECT DriverObject, PDEVICE_OBJECT pdo)

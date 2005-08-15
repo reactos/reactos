@@ -1,0 +1,142 @@
+
+              Correction / addition to Prasad's "Undocumented NT"
+                                       
+   From: dan_ps@my-deja.com
+   Reply to: dan_ps@my-deja.com
+   Date: Sun, 23 Apr 2000 10:03:30 GMT
+   Organization: Deja.com - Before you buy.
+   Newsgroups:
+          comp.os.ms-windows.programmer.nt.kernel-mode
+   Followup to: newsgroup
+
+
+  Recently , I had a chanche to borrow "Undocumented NT" by Mr Prasad
+Dabak from one of my friends and read it. While reading the chapters
+regarding builidng your own interrupt handlers or callgates under NT ,
+I found that the book glosses over very important topics such as IDT
+in SMP enviroments , and a complete wrong presentation of what structure
+a interrupt handler is supposed to build on the stack to ensure shamless
+OS functionality. Mr's Prasad  choice is a straigtforward pushad ,
+folowed by setting the FS segment to the ring0 PCR selector. This way
+to build a trap frame for a interrupt is still used in Windows 95 ,
+but in Windows NT , the layout of a correct Trap Frame is a little bit
+more complex.
+        The correct layout for a Trap Frame is the folowing: (note that
+it consitis from two parts , a stack frame wich is built by the CPU
+according to mode in wich was the CPU when the exception or software
+interrupt was generated , and a Context Capure frame who has to be built
+by the exception handler itself )
+
+struc   KeTrapFrame
+
+.DebugEBP       resd    1       ; 00
+.DebugEIP       resd    1       ; 04
+.DebugArgMark   resd    1       ; 08
+.DebugPointer   resd    1       ; 0C
+.TempCS         resd    1       ; 10
+.TempEsp        resd    1       ; 14
+
+.DR0            resd    1       ; 18
+.DR1            resd    1       ; 1C
+.DR2            resd    1       ; 20
+.DR3            resd    1       ; 24
+.DR6            resd    1       ; 28
+.DR7            resd    1       ; 2C
+.GS             resw    1       ; 30
+                resw    1       ; 32
+.ES             resw    1       ; 34
+                resw    1       ; 36
+.DS             resw    1       ; 38
+                resw    1       ; 3A
+.EDX            resd    1       ; 3C
+.ECX            resd    1       ; 40
+.EAX            resd    1       ; 44
+.PreviousMode   resd    1       ; 48
+.ExceptionList  resd    1       ; 4C
+.FS             resw    1       ; 50
+                resw    1       ; 52
+.EDI            resd    1       ; 54
+.ESI            resd    1       ; 58
+.EBX            resd    1       ; 5C
+.EBP            resd    1       ; 60
+.Error          resd    1       ; 64
+.EIP            resd    1       ; 68
+.CS             resw    1       ; 6C
+                resw    1       ; 6E
+.EFLAGS         resd    1       ; 70
+.ESP            resd    1       ; 74
+.SS             resw    1       ; 78
+                resw    1       ; 7A
+.ES_V86         resw    1       ; 7C
+                resw    1       ; 7E
+.DS_V86         resw    1       ; 80
+                resw    1       ; 82
+.FS_V86         resw    1       ; 84
+                resw    1       ; 86
+.GS_V86         resw    1       ; 88
+endstruc
+
+        Note that this is the complete layout of a TrapFrame structure.
+Depending in what mode the CPU was when the exception occured , it may
+break earlier than .GS_V86. Also , it seems that fields above .DR0 are
+required only to debug builds. The declaration is for NASM , a free X86
+assembler  , but this shouldnt have  any kind of importance.
+
+       Now why one should build the correct layout for this stack
+frame ? The  answer is that for shamlees operation of OS , a interrupt
+handler HAS to poke into interrupted thread's KTHREAD strucure a
+pointer to current TrapFrame existing on stack. This pointer will be
+later used by several ntoskrnl API's to gain access to interrupted
+thread;s acccess registers , or to gain information about the
+interrupted thread's ring3 stack location , or simply to capture all
+this information and package it into the form of a CONTEXT structure.
+Since ntoskrnl assumes the above layout for a stack frame , using any
+other  structure size or layout can lead to unforeseen consequences.
+
+        Other things wich one may want to do when building a stack
+frame are : (assumes that the handler already set the FS register to
+kernel PCR selector )
+
+        1. Save old Exception List head , and patch -1 to FS:0 ( thus
+overriding any potentialy pre-existing SEH handlers.
+
+        2. Determine whatever the interrupted thread was runing in
+ring0 or in ring3 and save this information in PreviousMode field of
+The Trap frame. This is also important , since many internal API's will
+check the Provious mode , acting  differently in each case. (check CS
+image on stack for this )
+
+        3. Get a pointer to the top of KeTrapFrame , and patch it into
+KTHREAD structure, at KTHREAD->TrapFrame. if ya want the layout of
+TrapFrame , there are multiple places where one can get it , but Im
+willing to post it here on request.
+
+        4. In the case that the hardware stack built by CPU does not
+contain an error code , fake one ( generaly , aborts always push an
+error code on stack , some exceptions do , and traps never push an
+error code by deafult. Suplimentary information can be found in intel
+arch. reference manual .
+
+        5. Optionaly enable the interrupts trough a STI . NT uses
+usualy interrupt gates , so the CPU will clear IF upon entering an
+exception handler. Note that in the case handling the interrupt or
+exception trough a trap gate , IF will not be automaticly cleared.
+
+        If you are interesting in the code wich can actualy build such
+a structure on  the stack , use a kernel debugger and Break on Int
+0x2E , and single step the code .
+
+        As last words , I want to ensure Mr Prasad  of my respect , and
+the thing that the only reason for this posting is my feeling that all
+holes must be covered , for the sake of all NT driver writing comunity.
+
+        Later , Dan
+
+
+
+
+
+
+
+Sent via Deja.com http://www.deja.com/
+Before you buy.

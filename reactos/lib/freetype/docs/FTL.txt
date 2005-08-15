@@ -171,4 +171,4 @@ Legal Terms
     Werner Lemberg    <werner.lemberg@freetype.org>
 
 
---- end of LICENSE.TXT ---
+--- end of FTL.TXT ---

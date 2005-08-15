@@ -285,7 +285,7 @@
       FT_ERROR(( "FT_Stream_Open:" ));
       FT_ERROR(( " could not `mmap' file `%s'\n", filepathname ));
       
-      stream->base = ft_alloc( NULL, stream->size );
+      stream->base = (unsigned char*)ft_alloc( NULL, stream->size );
       
       if ( !stream->base )
       {
@@ -315,7 +315,7 @@
 
         total_read_count += read_count;
 
-      } while ( total_read_count != stream->size );
+      } while ( (unsigned long)total_read_count != stream->size );
 
       stream->close = ft_close_stream_by_free;
     }

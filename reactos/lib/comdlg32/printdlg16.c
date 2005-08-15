@@ -192,7 +192,7 @@ static LRESULT PRINTDLG_WMInitDialog16(HWND hDlg, WPARAM wParam, PRINT_PTRA16* p
 	if(pdn)
 	    name = (char*)pdn + pdn->wDeviceOffset;
 	else if(pdm)
-	    name = pdm->dmDeviceName;
+	    name = (char*)pdm->dmDeviceName;
 	PRINTDLG_SetUpPrinterListComboA(hDlg, comboID, name);
 	if(pdm) GlobalUnlock16(lppd->hDevMode);
 	if(pdn) GlobalUnlock16(lppd->hDevNames);

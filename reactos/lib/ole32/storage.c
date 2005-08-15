@@ -91,9 +91,9 @@ static const BYTE STORAGE_magic[8]   ={0xd0,0xcf,0x11,0xe0,0xa1,0xb1,0x1a,0xe1};
 
 #define READ_HEADER	STORAGE_get_big_block(hf,-1,(LPBYTE)&sth);assert(!memcmp(STORAGE_magic,sth.magic,sizeof(STORAGE_magic)));
 static IStorage16Vtbl stvt16;
-static IStorage16Vtbl *segstvt16 = NULL;
+static const IStorage16Vtbl *segstvt16 = NULL;
 static IStream16Vtbl strvt16;
-static IStream16Vtbl *segstrvt16 = NULL;
+static const IStream16Vtbl *segstrvt16 = NULL;
 
 /*ULONG WINAPI IStorage16_AddRef(LPSTORAGE16 this);*/
 static void _create_istorage16(LPSTORAGE16 *stg);
@@ -955,8 +955,8 @@ STORAGE_get_free_pps_entry(HANDLE hf) {
 typedef struct
 {
         /* IUnknown fields */
-        IStream16Vtbl                  *lpVtbl;
-        DWORD                           ref;
+        const IStream16Vtbl            *lpVtbl;
+        LONG                            ref;
         /* IStream16 fields */
         SEGPTR                          thisptr; /* pointer to this struct as segmented */
         struct storage_pps_entry        stde;
@@ -968,7 +968,7 @@ typedef struct
 /******************************************************************************
  *		IStream16_QueryInterface	[STORAGE.518]
  */
-HRESULT WINAPI IStream16_fnQueryInterface(
+HRESULT IStream16_fnQueryInterface(
 	IStream16* iface,REFIID refiid,LPVOID *obj
 ) {
 	IStream16Impl *This = (IStream16Impl *)iface;
@@ -984,7 +984,7 @@ HRESULT WINAPI IStream16_fnQueryInterface(
 /******************************************************************************
  * IStream16_AddRef [STORAGE.519]
  */
-ULONG WINAPI IStream16_fnAddRef(IStream16* iface) {
+ULONG IStream16_fnAddRef(IStream16* iface) {
 	IStream16Impl *This = (IStream16Impl *)iface;
 	return InterlockedIncrement(&This->ref);
 }
@@ -992,7 +992,7 @@ ULONG WINAPI IStream16_fnAddRef(IStream16* iface) {
 /******************************************************************************
  * IStream16_Release [STORAGE.520]
  */
-ULONG WINAPI IStream16_fnRelease(IStream16* iface) {
+ULONG IStream16_fnRelease(IStream16* iface) {
 	IStream16Impl *This = (IStream16Impl *)iface;
         ULONG ref;
 	FlushFileBuffers(This->hf);
@@ -1011,7 +1011,7 @@ ULONG WINAPI IStream16_fnRelease(IStream16* iface) {
  * FIXME
  *    Does not handle 64 bits
  */
-HRESULT WINAPI IStream16_fnSeek(
+HRESULT IStream16_fnSeek(
 	IStream16* iface,LARGE_INTEGER offset,DWORD whence,ULARGE_INTEGER *newpos
 ) {
 	IStream16Impl *This = (IStream16Impl *)iface;
@@ -1055,7 +1055,7 @@ HRESULT WINAPI IStream16_fnSeek(
 /******************************************************************************
  *		IStream16_Read	[STORAGE.521]
  */
-HRESULT WINAPI IStream16_fnRead(
+HRESULT IStream16_fnRead(
         IStream16* iface,void  *pv,ULONG cb,ULONG  *pcbRead
 ) {
 	IStream16Impl *This = (IStream16Impl *)iface;
@@ -1117,7 +1117,7 @@ HRESULT WINAPI IStream16_fnRead(
 /******************************************************************************
  *		IStream16_Write	[STORAGE.522]
  */
-HRESULT WINAPI IStream16_fnWrite(
+HRESULT IStream16_fnWrite(
         IStream16* iface,const void *pv,ULONG cb,ULONG *pcbWrite
 ) {
 	IStream16Impl *This = (IStream16Impl *)iface;
@@ -1413,7 +1413,7 @@ static void _create_istream16(LPSTREAM16 *str) {
 			VTENT(Stat);
 			VTENT(Clone);
 #undef VTENT
-			segstrvt16 = (IStream16Vtbl*)MapLS( &strvt16 );
+			segstrvt16 = (const IStream16Vtbl*)MapLS( &strvt16 );
 		} else {
 #define VTENT(xfn) strvt16.xfn = IStream16_fn##xfn;
 			VTENT(QueryInterface);
@@ -1449,8 +1449,8 @@ static void _create_istream16(LPSTREAM16 *str) {
 typedef struct
 {
         /* IUnknown fields */
-        IStreamVtbl                    *lpVtbl;
-        DWORD                           ref;
+        const IStreamVtbl              *lpVtbl;
+        LONG                            ref;
         /* IStream32 fields */
         struct storage_pps_entry        stde;
         int                             ppsent;
@@ -1503,8 +1503,8 @@ ULONG WINAPI IStream_fnRelease(IStream* iface) {
 typedef struct
 {
         /* IUnknown fields */
-        IStorage16Vtbl                 *lpVtbl;
-        DWORD                           ref;
+        const IStorage16Vtbl           *lpVtbl;
+        LONG                            ref;
         /* IStorage16 fields */
         SEGPTR                          thisptr; /* pointer to this struct as segmented */
         struct storage_pps_entry        stde;
@@ -1515,7 +1515,7 @@ typedef struct
 /******************************************************************************
  *		IStorage16_QueryInterface	[STORAGE.500]
  */
-HRESULT WINAPI IStorage16_fnQueryInterface(
+HRESULT IStorage16_fnQueryInterface(
 	IStorage16* iface,REFIID refiid,LPVOID *obj
 ) {
 	IStorage16Impl *This = (IStorage16Impl *)iface;
@@ -1532,7 +1532,7 @@ HRESULT WINAPI IStorage16_fnQueryInterface(
 /******************************************************************************
  * IStorage16_AddRef [STORAGE.501]
  */
-ULONG WINAPI IStorage16_fnAddRef(IStorage16* iface) {
+ULONG IStorage16_fnAddRef(IStorage16* iface) {
 	IStorage16Impl *This = (IStorage16Impl *)iface;
 	return InterlockedIncrement(&This->ref);
 }
@@ -1540,7 +1540,7 @@ ULONG WINAPI IStorage16_fnAddRef(IStorage16* iface) {
 /******************************************************************************
  * IStorage16_Release [STORAGE.502]
  */
-ULONG WINAPI IStorage16_fnRelease(IStorage16* iface) {
+ULONG IStorage16_fnRelease(IStorage16* iface) {
 	IStorage16Impl *This = (IStorage16Impl *)iface;
         ULONG ref;
         ref = InterlockedDecrement(&This->ref);
@@ -1555,7 +1555,7 @@ ULONG WINAPI IStorage16_fnRelease(IStorage16* iface) {
 /******************************************************************************
  * IStorage16_Stat [STORAGE.517]
  */
-HRESULT WINAPI IStorage16_fnStat(
+HRESULT IStorage16_fnStat(
         LPSTORAGE16 iface,STATSTG16 *pstatstg, DWORD grfStatFlag
 ) {
 	IStorage16Impl *This = (IStorage16Impl *)iface;
@@ -1583,7 +1583,7 @@ HRESULT WINAPI IStorage16_fnStat(
 /******************************************************************************
  *		IStorage16_Commit	[STORAGE.509]
  */
-HRESULT WINAPI IStorage16_fnCommit(
+HRESULT IStorage16_fnCommit(
         LPSTORAGE16 iface,DWORD commitflags
 ) {
 	IStorage16Impl *This = (IStorage16Impl *)iface;
@@ -1596,7 +1596,7 @@ HRESULT WINAPI IStorage16_fnCommit(
 /******************************************************************************
  * IStorage16_CopyTo [STORAGE.507]
  */
-HRESULT WINAPI IStorage16_fnCopyTo(LPSTORAGE16 iface,DWORD ciidExclude,const IID *rgiidExclude,SNB16 SNB16Exclude,IStorage16 *pstgDest) {
+HRESULT IStorage16_fnCopyTo(LPSTORAGE16 iface,DWORD ciidExclude,const IID *rgiidExclude,SNB16 SNB16Exclude,IStorage16 *pstgDest) {
 	IStorage16Impl *This = (IStorage16Impl *)iface;
 	FIXME("IStorage16(%p)->(0x%08lx,%s,%p,%p),stub!\n",
 		This,ciidExclude,debugstr_guid(rgiidExclude),SNB16Exclude,pstgDest
@@ -1608,7 +1608,7 @@ HRESULT WINAPI IStorage16_fnCopyTo(LPSTORAGE16 iface,DWORD ciidExclude,const IID
 /******************************************************************************
  * IStorage16_CreateStorage [STORAGE.505]
  */
-HRESULT WINAPI IStorage16_fnCreateStorage(
+HRESULT IStorage16_fnCreateStorage(
 	LPSTORAGE16 iface,LPCOLESTR16 pwcsName,DWORD grfMode,DWORD dwStgFormat,DWORD reserved2, IStorage16 **ppstg
 ) {
 	IStorage16Impl *This = (IStorage16Impl *)iface;
@@ -1673,7 +1673,7 @@ HRESULT WINAPI IStorage16_fnCreateStorage(
 /******************************************************************************
  *		IStorage16_CreateStream	[STORAGE.503]
  */
-HRESULT WINAPI IStorage16_fnCreateStream(
+HRESULT IStorage16_fnCreateStream(
 	LPSTORAGE16 iface,LPCOLESTR16 pwcsName,DWORD grfMode,DWORD reserved1,DWORD reserved2, IStream16 **ppstm
 ) {
 	IStorage16Impl *This = (IStorage16Impl *)iface;
@@ -1731,7 +1731,7 @@ HRESULT WINAPI IStorage16_fnCreateStream(
 /******************************************************************************
  *		IStorage16_OpenStorage	[STORAGE.506]
  */
-HRESULT WINAPI IStorage16_fnOpenStorage(
+HRESULT IStorage16_fnOpenStorage(
 	LPSTORAGE16 iface,LPCOLESTR16 pwcsName, IStorage16 *pstgPrio, DWORD grfMode, SNB16 snbExclude, DWORD reserved, IStorage16 **ppstg
 ) {
 	IStorage16Impl *This = (IStorage16Impl *)iface;
@@ -1766,7 +1766,7 @@ HRESULT WINAPI IStorage16_fnOpenStorage(
 /******************************************************************************
  * IStorage16_OpenStream [STORAGE.504]
  */
-HRESULT WINAPI IStorage16_fnOpenStream(
+HRESULT IStorage16_fnOpenStream(
 	LPSTORAGE16 iface,LPCOLESTR16 pwcsName, void *reserved1, DWORD grfMode, DWORD reserved2, IStream16 **ppstm
 ) {
 	IStorage16Impl *This = (IStorage16Impl *)iface;
@@ -1829,7 +1829,7 @@ static void _create_istorage16(LPSTORAGE16 *stg) {
 			VTENT(SetStateBits)
 			VTENT(Stat)
 #undef VTENT
-			segstvt16 = (IStorage16Vtbl*)MapLS( &stvt16 );
+			segstvt16 = (const IStorage16Vtbl*)MapLS( &stvt16 );
 		} else {
 #define VTENT(xfn) stvt16.xfn = IStorage16_fn##xfn;
 			VTENT(QueryInterface)
@@ -1985,7 +1985,7 @@ HRESULT WINAPI StgIsStorageILockBytes16(SEGPTR plkbyt)
   args[5] = 0;
 
   if (!K32WOWCallback16Ex(
-      (DWORD)((ILockBytes16Vtbl*)MapSL(
+      (DWORD)((const ILockBytes16Vtbl*)MapSL(
                   (SEGPTR)((LPLOCKBYTES16)MapSL(plkbyt))->lpVtbl)
       )->ReadAt,
       WCB16_PASCAL,

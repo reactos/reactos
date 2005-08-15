@@ -12,7 +12,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include "advapi32.h"
+#include <advapi32.h>
 #include "svcctl_c.h"
 
 #define NDEBUG
@@ -928,7 +928,9 @@ UnlockServiceDatabase(SC_LOCK ScLock)
 {
   DWORD dwError;
 
+#if 0
   DPRINT("UnlockServiceDatabase(%x)\n", hSCManager);
+#endif
 
   HandleBind();
 

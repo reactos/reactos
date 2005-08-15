@@ -564,7 +564,12 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
           vfatReleaseFCB (DeviceExt, ParentFcb);
 	  if (NT_SUCCESS (Status))
 	    {
-              vfatAttachFCBToFileObject (DeviceExt, pFcb, FileObject);
+              Status = vfatAttachFCBToFileObject (DeviceExt, pFcb, FileObject);
+              if ( !NT_SUCCESS(Status) )
+              {
+                 vfatReleaseFCB (DeviceExt, pFcb);
+                 return Status;
+              }
 
 	      Irp->IoStatus.Information = FILE_CREATED;
 

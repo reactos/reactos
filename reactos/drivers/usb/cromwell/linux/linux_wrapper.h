@@ -34,7 +34,12 @@ typedef short s16;
 
 typedef u32 dma_addr_t;
 
-typedef  int spinlock_t;
+typedef struct
+{
+	KSPIN_LOCK SpinLock;
+	KIRQL  OldIrql;
+} spinlock_t;
+
 typedef int atomic_t;
 #ifndef STANDALONE
 #ifndef _MODE_T_
@@ -123,6 +128,8 @@ struct device {
 	struct device *parent;
 	struct list_head driver_list;
 	void    (*release)(struct device * dev);
+
+	void *dev_ext; // ReactOS-specific: pointer to windows device extension
 };
 struct class_device{int a;};
 struct semaphore{int a;};
@@ -154,7 +161,8 @@ struct pt_regs
 };
 struct completion {
         unsigned int done;
-        wait_queue_head_t wait;
+		KEVENT wait;
+        //wait_queue_head_t wait;
 };
 
 // windows lookaside list head
@@ -165,8 +173,20 @@ struct dma_pool
 	int dummy;
 };
 
-/* from mod_devicetable.h */
+/* These definitions mirror those in pci.h, so they can be used
+ * interchangeably with their PCI_ counterparts */
+enum dma_data_direction {
+	DMA_BIDIRECTIONAL = 0,
+	DMA_TO_DEVICE = 1,
+	DMA_FROM_DEVICE = 2,
+	DMA_NONE = 3,
+};
 
+/* compatibility */
+#define PCI_DMA_TODEVICE DMA_TO_DEVICE
+#define PCI_DMA_FROMDEVICE DMA_FROM_DEVICE
+
+/* from mod_devicetable.h */
 struct usb_device_id {
         /* which fields to match against? */
         __u16           match_flags;
@@ -369,12 +389,19 @@ struct usbdevfs_hub_portinfo
 #define init_MUTEX(x)
 
 #define SPIN_LOCK_UNLOCKED 0
-#define spin_lock_init(a)  do {} while(0)
-#define spin_lock(a) *(int*)a=1
-#define spin_unlock(a) do {} while(0)
 
-#define spin_lock_irqsave(a,b) b=0
-#define spin_unlock_irqrestore(a,b)
+#define spin_lock_init(a)  my_spin_lock_init(a)
+void my_spin_lock_init(spinlock_t *sl);
+
+#define spin_lock(a) my_spin_lock(a)
+void my_spin_lock(spinlock_t *sl);
+
+#define spin_unlock(a) my_spin_unlock(a)
+void my_spin_unlock(spinlock_t *sl);
+
+#define spin_lock_irqsave(a,b) my_spin_lock_irqsave(a,b)
+void my_spin_lock_irqsave(spinlock_t *sl, int flags);
+#define spin_unlock_irqrestore(a,b) my_spin_unlock(a)
 
 #if 0
 #define local_irq_save(x) __asm__ __volatile__("pushfl ; popl %0 ; cli":"=g" (x): /* no input */ :"memory")
@@ -409,43 +436,49 @@ struct usbdevfs_hub_portinfo
 
 
 /* PCI */
+#define MAX_POOL_PAGES 2
+#define BITS_PER_LONG 32
+
+struct pci_page
+{
+	PHYSICAL_ADDRESS dmaAddress;
+	PVOID	virtualAddress;
+
+	unsigned long bitmap[128]; // 128 == 32bits*4096 blocks
+};
+
+struct pci_pool
+{
+	char name[32];
+	size_t size;
+	size_t allocation;
+	size_t blocks_per_page;
+	struct pci_dev *pdev;
+
+	// internal stuff
+	int pages_allocated;
+	int blocks_allocated;
+
+	struct pci_page pages[MAX_POOL_PAGES];
+};
+
 #define	to_pci_dev(n) container_of(n, struct pci_dev, dev)
 
-#define pci_pool_create(a,b,c,d,e) (void*)1
+#define pci_pool_create(a,b,c,d,e) my_pci_pool_create(a,b,c,d,e)
+struct pci_pool *my_pci_pool_create(const char * name, struct pci_dev * pdev, size_t size, size_t align, size_t allocation);
 
-#define pci_pool_alloc(a,b,c)  my_pci_pool_alloc(a,b,c) 
+#define pci_pool_alloc(a,b,c)  my_pci_pool_alloc(a,b,c)
+void *my_pci_pool_alloc(struct pci_pool * pool, int mem_flags, dma_addr_t *dma_handle);
 
-static void __inline__ *my_pci_pool_alloc(void* pool, size_t size,
-						dma_addr_t *dma_handle)
-{
-	void* a;
-	a=kmalloc(size,0); //FIXME
-#ifdef MODULE
-	*dma_handle=((u32)a)&0xfffffff;
-#else
-	*dma_handle=(u32)a;
-#endif
-	return a;
-}
+#define pci_pool_free(a,b,c)    my_pci_pool_free(a,b,c)
+void my_pci_pool_free(struct pci_pool * pool, void * vaddr, dma_addr_t dma);
 
-
-#define pci_pool_free(a,b,c)    kfree(b)
 #define pci_alloc_consistent(a,b,c) my_pci_alloc_consistent(a,b,c)
-
-static void  __inline__ *my_pci_alloc_consistent(struct pci_dev *hwdev, size_t size,
-						dma_addr_t *dma_handle)
-{
-	void* a;
-
-	a=kmalloc(size+256,0); //FIXME
-	a=(void*)(((int)a+255)&~255); // 256 alignment
-	*dma_handle=((u32)a)&0xfffffff;
-
-	return a;
-}
+void  *my_pci_alloc_consistent(struct pci_dev *hwdev, size_t size, dma_addr_t *dma_handle);
 
 #define pci_free_consistent(a,b,c,d)  kfree(c)
-#define pci_pool_destroy(a)           do {} while(0)
+#define pci_pool_destroy(a)           my_pci_pool_destroy(a)
+void my_pci_pool_destroy (struct pci_pool * pool);
 
 #define pci_module_init(x) my_pci_module_init(x)
 int my_pci_module_init(struct pci_driver *x);
@@ -464,16 +497,28 @@ int my_pci_module_init(struct pci_driver *x);
 #define dma_pool_free(a,b,c) pci_pool_free(a,b,c)
 #define dma_pool_destroy(a) pci_pool_destroy(a)
 
-#define dma_alloc_coherent(a,b,c,d) NULL
-#define dma_free_coherent(a,b,c,d) do {} while(0)
+//#define dma_alloc_coherent(a,b,c,d) NULL
+//#define dma_free_coherent(a,b,c,d) do {} while(0)
+#define dma_map_single(a,b,c,d)		my_dma_map_single(a,b,c,d)
+dma_addr_t my_dma_map_single(struct device *hwdev, void *ptr, size_t size, enum dma_data_direction direction);
 
-#define dma_map_single(a,b,c,d) ((u32)(b)&0xfffffff)
-#define dma_unmap_single(a,b,c,d)     do {} while(0)
-#define pci_unmap_single(a,b,c,d)     do {} while(0)
-#define dma_sync_single(a,b,c,d)      do {} while(0)
-#define dma_sync_sg(a,b,c,d)          do {} while(0)
-#define dma_map_sg(a,b,c,d)           0
-#define dma_unmap_sg(a,b,c,d)         do {} while(0)
+#define dma_unmap_single(a,b,c,d)	my_dma_unmap_single(a,b,c,d)
+void my_dma_unmap_single(struct device *dev, dma_addr_t dma_addr, size_t size, enum dma_data_direction direction);
+
+#define pci_unmap_single(a,b,c,d)	my_pci_unmap_single(a,b,c,d)
+void my_pci_unmap_single(struct pci_dev *hwdev, dma_addr_t dma_addr, size_t size, int direction);
+
+#define dma_sync_single(a,b,c,d)	my_dma_sync_single(a,b,c,d)
+void my_dma_sync_single(struct device *hwdev, dma_addr_t dma_handle, size_t size, int direction);
+
+#define dma_sync_sg(a,b,c,d)		my_dma_sync_sg(a,b,c,d)
+void my_dma_sync_sg(struct device *hwdev,  struct scatterlist *sg, int nelems, int direction);
+
+#define dma_map_sg(a,b,c,d)			my_dma_map_sg(a,b,c,d)
+int my_dma_map_sg(struct device *hwdev, struct scatterlist *sg, int nents, enum dma_data_direction direction);
+
+#define dma_unmap_sg(a,b,c,d)		my_dma_unmap_sg(a,b,c,d)
+void my_dma_unmap_sg(struct device *hwdev, struct scatterlist *sg, int nents, enum dma_data_direction direction);
 
 #define usb_create_driverfs_dev_files(a) do {} while(0)
 #define usb_create_driverfs_intf_files(a) do {} while(0)
@@ -481,12 +526,6 @@ int my_pci_module_init(struct pci_driver *x);
 #define sg_dma_len(x) ((x)->length) 
 
 #define page_address(x) ((void*)(x/4096))
-
-#define DMA_TO_DEVICE 0
-#define DMA_FROM_DEVICE 0
-#define PCI_DMA_TODEVICE
-#define PCI_DMA_FROMDEVICE
-#define PCI_DMA_TODEVICE
 
 #define PCI_ROM_RESOURCE 1
 #define IORESOURCE_IO CM_RESOURCE_PORT_IO
@@ -500,12 +539,15 @@ void my_init_waitqueue_head(PKEVENT a);
 VOID KeMemoryBarrier(VOID);
 
 #define mb() KeMemoryBarrier()
-#define wmb() __asm__ __volatile__ ("": : :"memory")
-#define rmb() __asm__ __volatile__ ("lock; addl $0,0(%%esp)": : :"memory")
+#define wmb() do {} while (0)
+#define rmb() do {} while (0)
+/*#define wmb() __asm__ __volatile__ ("": : :"memory")
+#define rmb() __asm__ __volatile__ ("lock; addl $0,0(%%esp)": : :"memory")*/
 
 #define in_interrupt() 0
 
-#define init_completion(x) (x)->done=0
+#define init_completion(x) my_init_completion(x)
+void my_init_completion(struct completion *);
 #define wait_for_completion(x) my_wait_for_completion(x)
 void my_wait_for_completion(struct completion*);
 
@@ -661,13 +703,12 @@ extern struct list_head interrupt_list;
 /*------------------------------------------------------------------------*/ 
 void STDCALL usb_hcd_pci_remove (struct pci_dev *dev);
 
-#define my_wait_ms(x) wait_ms(x)
+#define my_wait_ms(x) wait_ms(x) // milliseconds
 
-#define my_udelay(x) wait_ms(x)
-#define udelay(x) my_udelay(x)
+#define udelay(x) my_udelay(x) // microseconds
 
 #define my_mdelay(x) wait_ms(1+x/1000);
-#define mdelay(x) my_mdelay(x);
+#define mdelay(x) my_mdelay(x); // milliseconds = udelay(1000*x)
 
 #define pci_find_slot(a,b) my_pci_find_slot(a,b)
 struct pci_dev *my_pci_find_slot(int a,int b);
@@ -764,9 +805,10 @@ void my_wake_up(PKEVENT);
 // cannot be mapped via macro due to collision with urb->complete
 static void __inline__ complete(struct completion *p)
 {
+	printk("completing event 0x%08x\n", (ULONG)p);
 	/* Wake up x->wait */
 	p->done++;
-	wake_up((PKEVENT)&p->wait);
+	wake_up((PKEVENT)&p->wait); 
 }
 
 #define kernel_thread(a,b,c) my_kernel_thread(a,b,c)
@@ -806,7 +848,9 @@ void inc_jiffies(int);
 void init_wrapper(struct pci_dev *pci_dev);
 void do_all_timers(void);
 
-#define __KERNEL_DS   0x18
-
 int my_pci_write_config_word(struct pci_dev *, int, u16);
 
+void UsbKeyBoardInit(void);
+void UsbKeyBoardRemove(void);
+void UsbMouseInit(void);
+void UsbMouseRemove(void);

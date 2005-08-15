@@ -33,9 +33,6 @@ void *	memmove(void *dest, const void *src, size_t count);
 void *	memset(void *src, int val, size_t count);
 
 #define RtlCompareMemory(Source1, Source2, Length)	memcmp(Source1, Source2, Length)
-#define RtlCopyMemory(Destination, Source, Length)	memcpy(Destination, Source, Length)
-#define RtlFillMemory(Destination, Length, Fill)	memset(Destination, Fill, Length)
-#define RtlZeroMemory(Destination, Length)			memset(Destination, 0, Length)
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //

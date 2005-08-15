@@ -1,3 +1,4 @@
+<group>
 <directory name="drivers">
 	<xi:include href="drivers/directory.xml" />
 </directory>
@@ -10,3 +11,4 @@
 <directory name="nls">
 	<xi:include href="nls/nls.xml" />
 </directory>
+</group>

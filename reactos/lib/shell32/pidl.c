@@ -1113,7 +1113,7 @@ HRESULT WINAPI SHGetDataFromIDListA(LPSHELLFOLDER psf, LPCITEMIDLIST pidl,
     case SHGDFIL_FINDDATA:
         pfd = dest;
 
-        if (_ILIsDrive(pidl))
+        if (_ILIsDrive(pidl) || _ILIsSpecialFolder(pidl))
             return E_INVALIDARG;
 
         if (len < sizeof(WIN32_FIND_DATAA))
@@ -1488,7 +1488,7 @@ HRESULT WINAPI SHBindToParent(LPCITEMIDLIST pidl, REFIID riid, LPVOID *ppv, LPCI
  *
  *************************************************************************
  */
-LPITEMIDLIST _ILAlloc(PIDLTYPE type, size_t size)
+LPITEMIDLIST _ILAlloc(PIDLTYPE type, unsigned int size)
 {
     LPITEMIDLIST pidlOut = NULL;
 

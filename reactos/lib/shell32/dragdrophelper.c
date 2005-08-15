@@ -48,11 +48,11 @@ WINE_DEFAULT_DEBUG_CHANNEL (shell);
 */
 
 typedef struct {
-    IDropTargetHelperVtbl *lpVtbl;
-    DWORD ref;
+    const IDropTargetHelperVtbl *lpVtbl;
+    LONG ref;
 } IDropTargetHelperImpl;
 
-static struct IDropTargetHelperVtbl vt_IDropTargetHelper;
+static const IDropTargetHelperVtbl vt_IDropTargetHelper;
 
 #define _IUnknown_(This) (IUnknown*)&(This->lpVtbl)
 #define _IDropTargetHelper_(This) (IDropTargetHelper*)&(This->lpVtbl)
@@ -175,7 +175,7 @@ static HRESULT WINAPI IDropTargetHelper_fnShow (IDropTargetHelper * iface, BOOL 
     return E_NOTIMPL;
 }
 
-static IDropTargetHelperVtbl vt_IDropTargetHelper =
+static const IDropTargetHelperVtbl vt_IDropTargetHelper =
 {
 	IDropTargetHelper_fnQueryInterface,
 	IDropTargetHelper_fnAddRef,

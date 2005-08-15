@@ -169,8 +169,8 @@ FindNextChangeNotification (
 }
 
 
-extern VOID STDCALL
-(ApcRoutine)(PVOID ApcContext,
+extern VOID
+(STDCALL ApcRoutine)(PVOID ApcContext,
       struct _IO_STATUS_BLOCK* IoStatusBlock,
       ULONG Reserved);
 

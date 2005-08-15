@@ -59,7 +59,7 @@ HRESULT WINAPI DllCanUnloadNow(void)
 }
 
 /***********************************************************************
- *		DllGetClassObject (OLEPRO32.256)
+ *		DllGetClassObject (OLEPRO32.@)
  */
 HRESULT WINAPI DllGetClassObject( REFCLSID rclsid, REFIID riid, LPVOID* ppv )
 {

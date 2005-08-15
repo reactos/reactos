@@ -136,5 +136,16 @@ the file INSTALL.UNX instead.
     a  IDE-specific   project  file,  or  follow   the  instructions  in
     "INSTALL.ANY" to create your own Makefiles.
 
+------------------------------------------------------------------------
+
+Copyright 2003, 2004 by
+David Turner, Robert Wilhelm, and Werner Lemberg.
+
+This  file  is  part  of the  FreeType  project, and may  only be  used,
+modified,  and  distributed  under  the  terms of  the FreeType  project
+license, LICENSE.TXT.   By continuing to use, modify, or distribute this
+file you  indicate that  you have  read the  license and understand  and
+accept it fully.
+
 
 --- end of INSTALL.GNU ---

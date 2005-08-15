@@ -25,6 +25,9 @@ typedef struct _BCB
   PCACHE_VIEW CacheView[2048];
   PVOID LargeCacheView;
   PSECTION_OBJECT Section;
+#if defined(DBG) || defined(KDBG)
+	BOOLEAN Trace; /* enable extra trace output for this BCB and it's cache segments */
+#endif
 } BCB, *PBCB;
 
 
@@ -60,7 +63,7 @@ CcInitCacheZeroPage(VOID);
 
 NTSTATUS
 CcRosFlushDirtyPages(
-    ULONG Target, 
+    ULONG Target,
     PULONG Count
 );
 

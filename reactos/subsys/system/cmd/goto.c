@@ -67,37 +67,60 @@ INT cmd_goto (LPTSTR cmd, LPTSTR param)
 	}
 
 	/* terminate label at first space char */
-	tmp = param;
-	while (*tmp && !_istspace (*tmp))
-		tmp++;
-	*tmp = _T('\0');
-
+	tmp = param+1;
+  while (!_istcntrl (*tmp) && !_istspace (*tmp) &&  (*tmp != _T(':')))  
+  tmp++;
+	*(tmp) = _T('\0');
+     
 	/* set file pointer to the beginning of the batch file */
 	lNewPosHigh = 0;
-	SetFilePointer (bc->hBatchFile, 0, &lNewPosHigh, FILE_BEGIN);
+	   
+  /* jump to end of the file */
+  if ( _tcsicmp( param, _T(":eof"))==0) 
+  {      
+    SetFilePointer (bc->hBatchFile, 0, &lNewPosHigh, FILE_END);
+    return 0;
+  } 
+
+  /* jump to begin of the file */
+  SetFilePointer (bc->hBatchFile, 0, &lNewPosHigh, FILE_BEGIN);
 
 	while (FileGetString (bc->hBatchFile, textline, sizeof(textline)))
 	{
+     int pos;
+     int size;     
+
 		/* Strip out any trailing spaces or control chars */
 		tmp = textline + _tcslen (textline) - 1;
-		while (_istcntrl (*tmp) || _istspace (*tmp))
+		
+    
+    while (_istcntrl (*tmp) || _istspace (*tmp) ||  (*tmp == _T(':')))
 			tmp--;
 		*(tmp + 1) = _T('\0');
-
+                
 		/* Then leading spaces... */
-		tmp = textline;
+		tmp = textline;   
 		while (_istspace (*tmp))
 			tmp++;
 
-		/* use only 1st 8 chars of label */
-		if ((*tmp == _T(':')) && (_tcsncmp (++tmp, param, 8) == 0))
+    /* All space after leading space terminate the string */
+    size = _tcslen(tmp) -1;
+    pos=0;
+    while (tmp+pos < tmp+size)
+    {
+     if (_istspace(tmp[pos])) 
+         tmp[pos]=_T('\0');
+     pos++;
+    }          
+           
+		/* use whole label name */
+		if ((*tmp == _T(':')) && (_tcsicmp (++tmp, param) == 0))
 			return 0;
 	}
-
+  
 	LoadString(CMD_ModuleHandle, STRING_GOTO_ERROR2, szMsg, RC_STRING_MAX_SIZE);
 	ConErrPrintf(szMsg, param);
 	ExitBatch(NULL);
-
 	return 1;
 }
 

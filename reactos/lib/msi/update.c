@@ -43,7 +43,7 @@ typedef struct tagMSIUPDATEVIEW
     MSIVIEW          view;
     MSIDATABASE     *db;
     MSIVIEW         *wv;
-    value_list      *vals;
+    column_info     *vals;
 } MSIUPDATEVIEW;
 
 static UINT UPDATE_fetch_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT *val )
@@ -193,7 +193,7 @@ static MSIVIEWOPS update_ops =
 };
 
 UINT UPDATE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR table,
-                        column_assignment *list, struct expr *expr )
+                        column_info *columns, struct expr *expr )
 {
     MSIUPDATEVIEW *uv = NULL;
     UINT r;
@@ -215,7 +215,7 @@ UINT UPDATE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR table,
     }
     
     /* then select the columns we want */
-    r = SELECT_CreateView( db, &sv, wv, list->col_list );
+    r = SELECT_CreateView( db, &sv, wv, columns );
     if( r != ERROR_SUCCESS )
     {
         if( tv )
@@ -231,7 +231,7 @@ UINT UPDATE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR table,
     uv->view.ops = &update_ops;
     msiobj_addref( &db->hdr );
     uv->db = db;
-    uv->vals = list->val_list;
+    uv->vals = columns;
     uv->wv = sv;
     *view = (MSIVIEW*) uv;
 

@@ -78,13 +78,13 @@ const char *get_typename(const resource_t* r)
  * Remarks	: No codepage translation is done.
  *****************************************************************************
 */
-static char *strncpyWtoA(char *cs, WCHAR *ws, int maxlen)
+static char *strncpyWtoA(char *cs, const WCHAR *ws, int maxlen)
 {
 	char *cptr = cs;
-	WCHAR *wsMax = ws + maxlen - 1;
+	const WCHAR *wsMax = ws + maxlen - 1;
 	while(*ws && ws < wsMax)
 	{
-		if((short)*ws < -128 || (short)*ws > 127)
+		if(*ws > 255)
 			fprintf(stderr, "***Warning: Unicode string contains non-printable chars***\n");
 		*cptr++ = (char)*ws++;
 	}

@@ -33,6 +33,7 @@ ME_StreamOutInit(ME_TextEditor *editor, EDITSTREAM *stream)
 {
   editor->pStream = ALLOC_OBJ(ME_OutStream);
   editor->pStream->stream = stream;
+  editor->pStream->stream->dwError = 0;
   editor->pStream->pos = 0;
   editor->pStream->written = 0;
   editor->pStream->nFontTblLen = 0;
@@ -45,11 +46,23 @@ ME_StreamOutFlush(ME_TextEditor *editor)
 {
   LONG nStart = 0;
   LONG nWritten = 0;
+  LONG nRemaining = 0;
   EDITSTREAM *stream = editor->pStream->stream;
 
   do {
+    TRACE("sending %lu bytes\n", editor->pStream->pos - nStart);
+    /* Some apps seem not to set *pcb unless a problem arises, relying
+      on initial random nWritten value, which is usually >STREAMOUT_BUFFER_SIZE */
+    nRemaining = editor->pStream->pos - nStart;
+    nWritten = 0xDEADBEEF;
     stream->dwError = stream->pfnCallback(stream->dwCookie, editor->pStream->buffer + nStart,
                                           editor->pStream->pos - nStart, &nWritten);
+    TRACE("error=%lu written=%lu\n", stream->dwError, nWritten);
+    if (nWritten > (editor->pStream->pos - nStart) || nWritten<0) {
+      FIXME("Invalid returned written size *pcb: 0x%x (%ld) instead of %ld\n", 
+            (unsigned)nWritten, nWritten, nRemaining);
+      nWritten = nRemaining;
+    }
     if (nWritten == 0 || stream->dwError)
       return FALSE;
     editor->pStream->written += nWritten;
@@ -64,6 +77,7 @@ static LONG
 ME_StreamOutFree(ME_TextEditor *editor)
 {
   LONG written = editor->pStream->written;
+  TRACE("total length = %lu\n", written);
 
   FREE_OBJ(editor->pStream);
   editor->pStream = NULL;
@@ -95,7 +109,7 @@ ME_StreamOutMove(ME_TextEditor *editor, BYTE *buffer, int len)
 
 
 static BOOL
-ME_StreamOutPrint(ME_TextEditor *editor, char *format, ...)
+ME_StreamOutPrint(ME_TextEditor *editor, const char *format, ...)
 {
   char string[STREAMOUT_BUFFER_SIZE]; /* This is going to be enough */
   int len;
@@ -112,7 +126,7 @@ ME_StreamOutPrint(ME_TextEditor *editor, char *format, ...)
 static BOOL
 ME_StreamOutRTFHeader(ME_TextEditor *editor, int dwFormat)
 {
-  char *cCharSet = NULL;
+  const char *cCharSet = NULL;
   UINT nCodePage;
   LANGID language;
   BOOL success;
@@ -379,6 +393,7 @@ ME_StreamOutRTFParaProps(ME_TextEditor *editor, ME_DisplayItem *para)
       }
       if (fmt->rgxTabs[i] >> 28 <= 5)
         strcat(props, leader[fmt->rgxTabs[i] >> 28]);
+      sprintf(props+strlen(props), "\\tx%ld", fmt->rgxTabs[i]&0x00FFFFFF);
     }
   }
     
@@ -553,7 +568,7 @@ ME_StreamOutRTFText(ME_TextEditor *editor, WCHAR *text, LONG nChars)
 {
   char buffer[STREAMOUT_BUFFER_SIZE];
   int pos = 0;
-  int fit, i;
+  int fit, nBytes, i;
 
   if (nChars == -1)
     nChars = lstrlenW(text);
@@ -563,18 +578,18 @@ ME_StreamOutRTFText(ME_TextEditor *editor, WCHAR *text, LONG nChars)
     if (editor->pStream->nDefaultCodePage == CP_UTF8) {
       /* 6 is the maximum character length in UTF-8 */
       fit = min(nChars, STREAMOUT_BUFFER_SIZE / 6);
-      WideCharToMultiByte(CP_UTF8, 0, text, fit, buffer, STREAMOUT_BUFFER_SIZE,
-                          NULL, NULL);
+      nBytes = WideCharToMultiByte(CP_UTF8, 0, text, fit, buffer,
+                                   STREAMOUT_BUFFER_SIZE, NULL, NULL);
       nChars -= fit;
       text += fit;
-      for (i = 0; buffer[i]; i++)
+      for (i = 0; i < nBytes; i++)
         if (buffer[i] == '{' || buffer[i] == '}' || buffer[i] == '\\') {
           if (!ME_StreamOutPrint(editor, "%.*s\\", i - pos, buffer + pos))
             return FALSE;
           pos = i;
         }
       if (!pos)
-        if (!ME_StreamOutPrint(editor, "%s", buffer + pos))
+        if (!ME_StreamOutMove(editor, buffer + pos, nBytes - pos))
           return FALSE;
       pos = 0;
     } else if (*text < 128) {
@@ -585,7 +600,6 @@ ME_StreamOutRTFText(ME_TextEditor *editor, WCHAR *text, LONG nChars)
     } else {
       BOOL unknown = FALSE;
       BYTE letter[3];
-      int nBytes, i;
       
       /* FIXME: In the MS docs for WideCharToMultiByte there is a big list of
        * codepages including CP_SYMBOL for which the last parameter must be set
@@ -745,11 +759,13 @@ ME_StreamOutText(ME_TextEditor *editor, int nStart, int nChars, DWORD dwFormat)
         }
         WideCharToMultiByte(nCodePage, 0, item->member.run.strText->szData + nStart,
                             nLen, buffer, nSize, NULL, NULL);
-        success = ME_StreamOutMove(editor, buffer, nSize - 1);
+        success = ME_StreamOutMove(editor, buffer, nSize);
       }
     }
     
     nChars -= nLen;
+    if (editor->bEmulateVersion10 && nChars && item->member.run.nFlags & MERF_ENDPARA)
+      nChars--;
     nStart = 0;
     item = ME_FindItemFwd(item, diRun);
   }
@@ -777,11 +793,11 @@ ME_StreamOut(ME_TextEditor *editor, DWORD dwFormat, EDITSTREAM *stream)
     nTo = ME_GetTextLength(editor);
   TRACE("from %d to %d\n", nStart, nTo);
   
-  if (dwFormat & SF_RTF || dwFormat & SF_RTFNOOBJS)
+  if (dwFormat & SF_RTF)
     ME_StreamOutRTF(editor, nStart, nTo - nStart, dwFormat);
   else if (dwFormat & SF_TEXT || dwFormat & SF_TEXTIZED)
     ME_StreamOutText(editor, nStart, nTo - nStart, dwFormat);
-  
-  ME_StreamOutFlush(editor);
+  if (!editor->pStream->stream->dwError)
+    ME_StreamOutFlush(editor);
   return ME_StreamOutFree(editor);
 }

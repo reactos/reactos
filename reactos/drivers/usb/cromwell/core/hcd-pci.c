@@ -33,7 +33,7 @@
 #include <linux/usb.h>
 #include "hcd.h"
 #else
-#define DEBUG
+
 #include "../usb_wrapper.h"
 #include "hcd.h"
 #endif
@@ -192,6 +192,10 @@ clean_3:
 
 	if ((retval = driver->start (hcd)) < 0)
 		usb_hcd_pci_remove (dev);
+
+	//ReactOS-specific: Init core drivers here
+	UsbKeyBoardInit();
+	UsbMouseInit();
 
 	return retval;
 } 

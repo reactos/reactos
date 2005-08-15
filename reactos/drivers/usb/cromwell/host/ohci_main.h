@@ -38,6 +38,20 @@ typedef struct _OHCI_DEVICE_EXTENSTION
    ULONG SystemIoBusNumber;
    ULONG SystemIoSlotNumber;
    LIST_ENTRY AddressMappingListHead;
+   
+   // DMA stuff, and buffers
+   PDMA_ADAPTER pDmaAdapter;
+   PVOID MapRegisterBase;
+   ULONG mapRegisterCount;
+#ifdef USB_DMA_SINGLE_SUPPORT
+   PHYSICAL_ADDRESS Buffer;
+   PVOID VirtualBuffer;
+   ULONG BufferSize;
+
+   // Mdl used for single DMA transfers
+   PMDL Mdl;
+#endif
+
    //KDPC DpcObject;
    OHCI_DRIVER_EXTENSION *DriverExtension;
    ULONG DeviceOpened;
@@ -48,5 +62,7 @@ typedef struct _OHCI_DEVICE_EXTENSTION
    PDEVICE_OBJECT RootHubPdo;
 } OHCI_DEVICE_EXTENSION, *POHCI_DEVICE_EXTENSION;
 
+#define IOCTL_INTERNAL_KEYBOARD_CONNECT \
+   CTL_CODE(FILE_DEVICE_KEYBOARD, 0x0080, METHOD_NEITHER, FILE_ANY_ACCESS)
 
 #endif

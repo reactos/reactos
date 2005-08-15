@@ -21,9 +21,10 @@ IDC_FLAGS ICON "resources/flags.ico"
  * a neutral version. This is to get localized bitmaps for example.
  */
 
-#include "cz.rc"
 #include "en.rc"
+#include "cz.rc"
 #include "de.rc"
+#include "nl.rc"
 #include "sv.rc"
 
 

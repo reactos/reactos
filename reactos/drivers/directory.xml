@@ -1,3 +1,4 @@
+<group>
 <directory name="bus">
 	<xi:include href="bus/directory.xml" />
 </directory>
@@ -25,3 +26,4 @@
 <directory name="usb">
 	<xi:include href="usb/directory.xml" />
 </directory>
+</group>

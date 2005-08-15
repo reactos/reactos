@@ -82,11 +82,12 @@ UINT WINAPI MsiEnableUIPreview( MSIHANDLE hdb, MSIHANDLE* phPreview )
     return r;
 }
 
-static VOID preview_event_handler( MSIPACKAGE *package, LPCWSTR event,
+static UINT preview_event_handler( MSIPACKAGE *package, LPCWSTR event,
                                    LPCWSTR argument, msi_dialog *dialog )
 {
     MESSAGE("Preview dialog event '%s' (arg='%s')\n",
             debugstr_w( event ), debugstr_w( argument ));
+    return ERROR_SUCCESS;
 }
 
 UINT MSI_PreviewDialogW( MSIPREVIEW *preview, LPCWSTR szDialogName )

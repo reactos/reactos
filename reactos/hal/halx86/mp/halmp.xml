@@ -1,5 +1,6 @@
-<module if="${MP}" name="halmp" type="kernelmodedll" installbase="system32" installname="hal.dll">
+<module name="halmp" type="kernelmodedll">
 	<importlibrary definition="../../hal/hal.def" />
+	<bootstrap base="reactos" />
 	<include base="hal_generic">../include</include>
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />

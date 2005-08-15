@@ -29,6 +29,11 @@ typedef CHAR OLECHAR16;
 typedef LPSTR LPOLESTR16;
 typedef LPCSTR LPCOLESTR16;
 
+#define STDMETHOD16CALLTYPE __cdecl
+#define STDMETHOD16(m) HRESULT (STDMETHOD16CALLTYPE *m)
+#define STDMETHOD16_(t,m) t (STDMETHOD16CALLTYPE *m)
+
+
 /***********************************************************************
  * IMalloc16 interface
  */
@@ -38,16 +43,16 @@ typedef LPCSTR LPCOLESTR16;
 DECLARE_INTERFACE_(IMalloc16,IUnknown)
 {
     /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    STDMETHOD16_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD16_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD16_(ULONG,Release)(THIS) PURE;
     /*** IMalloc16 methods ***/
-    STDMETHOD_(LPVOID,Alloc)(THIS_ DWORD   cb) PURE;
-    STDMETHOD_(LPVOID,Realloc)(THIS_ LPVOID  pv, DWORD  cb) PURE;
-    STDMETHOD_(void,Free)(THIS_ LPVOID  pv) PURE;
-    STDMETHOD_(DWORD,GetSize)(THIS_ LPVOID  pv) PURE;
-    STDMETHOD_(INT16,DidAlloc)(THIS_ LPVOID  pv) PURE;
-    STDMETHOD_(LPVOID,HeapMinimize)(THIS) PURE;
+    STDMETHOD16_(LPVOID,Alloc)(THIS_ DWORD   cb) PURE;
+    STDMETHOD16_(LPVOID,Realloc)(THIS_ LPVOID  pv, DWORD  cb) PURE;
+    STDMETHOD16_(void,Free)(THIS_ LPVOID  pv) PURE;
+    STDMETHOD16_(DWORD,GetSize)(THIS_ LPVOID  pv) PURE;
+    STDMETHOD16_(INT16,DidAlloc)(THIS_ LPVOID  pv) PURE;
+    STDMETHOD16_(LPVOID,HeapMinimize)(THIS) PURE;
 };
 #undef INTERFACE
 
@@ -63,17 +68,17 @@ extern LPMALLOC16 IMalloc16_Constructor(void);
 DECLARE_INTERFACE_(ILockBytes16,IUnknown)
 {
     /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    STDMETHOD16_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD16_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD16_(ULONG,Release)(THIS) PURE;
     /*** ILockBytes16 methods ***/
-    STDMETHOD(ReadAt)(THIS_ ULARGE_INTEGER ulOffset, void *pv, ULONG  cb, ULONG *pcbRead) PURE;
-    STDMETHOD(WriteAt)(THIS_ ULARGE_INTEGER ulOffset, const void *pv, ULONG cb, ULONG *pcbWritten) PURE;
-    STDMETHOD(Flush)(THIS) PURE;
-    STDMETHOD(SetSize)(THIS_ ULARGE_INTEGER cb) PURE;
-    STDMETHOD(LockRegion)(THIS_ ULARGE_INTEGER libOffset, ULARGE_INTEGER  cb, DWORD dwLockType) PURE;
-    STDMETHOD(UnlockRegion)(THIS_ ULARGE_INTEGER libOffset, ULARGE_INTEGER  cb, DWORD dwLockType) PURE;
-    STDMETHOD(Stat)(THIS_ STATSTG *pstatstg, DWORD grfStatFlag) PURE;
+    STDMETHOD16(ReadAt)(THIS_ ULARGE_INTEGER ulOffset, void *pv, ULONG  cb, ULONG *pcbRead) PURE;
+    STDMETHOD16(WriteAt)(THIS_ ULARGE_INTEGER ulOffset, const void *pv, ULONG cb, ULONG *pcbWritten) PURE;
+    STDMETHOD16(Flush)(THIS) PURE;
+    STDMETHOD16(SetSize)(THIS_ ULARGE_INTEGER cb) PURE;
+    STDMETHOD16(LockRegion)(THIS_ ULARGE_INTEGER libOffset, ULARGE_INTEGER  cb, DWORD dwLockType) PURE;
+    STDMETHOD16(UnlockRegion)(THIS_ ULARGE_INTEGER libOffset, ULARGE_INTEGER  cb, DWORD dwLockType) PURE;
+    STDMETHOD16(Stat)(THIS_ STATSTG *pstatstg, DWORD grfStatFlag) PURE;
 };
 #undef INTERFACE
 
@@ -98,22 +103,22 @@ typedef struct tagSTATSTG16
 DECLARE_INTERFACE_(IStream16,ISequentialStream)
 {
     /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    STDMETHOD16_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD16_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD16_(ULONG,Release)(THIS) PURE;
     /*** ISequentialStream methods ***/
-    STDMETHOD_(HRESULT,Read)(THIS_ void* pv, ULONG cb, ULONG* pcbRead) PURE;
-    STDMETHOD_(HRESULT,Write)(THIS_ const void* pv, ULONG cb, ULONG* pcbWritten) PURE;
+    STDMETHOD16_(HRESULT,Read)(THIS_ void* pv, ULONG cb, ULONG* pcbRead) PURE;
+    STDMETHOD16_(HRESULT,Write)(THIS_ const void* pv, ULONG cb, ULONG* pcbWritten) PURE;
     /*** IStream16 methods ***/
-    STDMETHOD(Seek)(THIS_ LARGE_INTEGER dlibMove, DWORD dwOrigin, ULARGE_INTEGER* plibNewPosition) PURE;
-    STDMETHOD(SetSize)(THIS_ ULARGE_INTEGER libNewSize) PURE;
-    STDMETHOD(CopyTo)(THIS_ IStream16* pstm, ULARGE_INTEGER cb, ULARGE_INTEGER* pcbRead, ULARGE_INTEGER* pcbWritten) PURE;
-    STDMETHOD(Commit)(THIS_ DWORD grfCommitFlags) PURE;
-    STDMETHOD(Revert)(THIS) PURE;
-    STDMETHOD(LockRegion)(THIS_ ULARGE_INTEGER libOffset, ULARGE_INTEGER cb, DWORD dwLockType) PURE;
-    STDMETHOD(UnlockRegion)(THIS_ ULARGE_INTEGER libOffset, ULARGE_INTEGER cb, DWORD dwLockType) PURE;
-    STDMETHOD(Stat)(THIS_ STATSTG* pstatstg, DWORD grfStatFlag) PURE;
-    STDMETHOD(Clone)(THIS_ IStream16** ppstm) PURE;
+    STDMETHOD16(Seek)(THIS_ LARGE_INTEGER dlibMove, DWORD dwOrigin, ULARGE_INTEGER* plibNewPosition) PURE;
+    STDMETHOD16(SetSize)(THIS_ ULARGE_INTEGER libNewSize) PURE;
+    STDMETHOD16(CopyTo)(THIS_ IStream16* pstm, ULARGE_INTEGER cb, ULARGE_INTEGER* pcbRead, ULARGE_INTEGER* pcbWritten) PURE;
+    STDMETHOD16(Commit)(THIS_ DWORD grfCommitFlags) PURE;
+    STDMETHOD16(Revert)(THIS) PURE;
+    STDMETHOD16(LockRegion)(THIS_ ULARGE_INTEGER libOffset, ULARGE_INTEGER cb, DWORD dwLockType) PURE;
+    STDMETHOD16(UnlockRegion)(THIS_ ULARGE_INTEGER libOffset, ULARGE_INTEGER cb, DWORD dwLockType) PURE;
+    STDMETHOD16(Stat)(THIS_ STATSTG* pstatstg, DWORD grfStatFlag) PURE;
+    STDMETHOD16(Clone)(THIS_ IStream16** ppstm) PURE;
 };
 #undef INTERFACE
 
@@ -125,25 +130,25 @@ typedef OLECHAR16 **SNB16;
 DECLARE_INTERFACE_(IStorage16,IUnknown)
 {
     /*** IUnknown methods ***/
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    STDMETHOD16_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD16_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD16_(ULONG,Release)(THIS) PURE;
     /*** IStorage16 methods ***/
-    STDMETHOD_(HRESULT,CreateStream)(THIS_ LPCOLESTR16 pwcsName, DWORD grfMode, DWORD reserved1, DWORD reserved2, IStream16** ppstm) PURE;
-    STDMETHOD_(HRESULT,OpenStream)(THIS_ LPCOLESTR16 pwcsName, void* reserved1, DWORD grfMode, DWORD reserved2, IStream16** ppstm) PURE;
-    STDMETHOD_(HRESULT,CreateStorage)(THIS_ LPCOLESTR16 pwcsName, DWORD grfMode, DWORD dwStgFmt, DWORD reserved2, IStorage16** ppstg) PURE;
-    STDMETHOD_(HRESULT,OpenStorage)(THIS_ LPCOLESTR16 pwcsName, IStorage16* pstgPriority, DWORD grfMode, SNB16 snbExclude, DWORD reserved, IStorage16** ppstg) PURE;
-    STDMETHOD_(HRESULT,CopyTo)(THIS_ DWORD ciidExclude, const IID* rgiidExclude, SNB16 snbExclude, IStorage16* pstgDest) PURE;
-    STDMETHOD_(HRESULT,MoveElementTo)(THIS_ LPCOLESTR16 pwcsName, IStorage16* pstgDest, LPCOLESTR16 pwcsNewName, DWORD grfFlags) PURE;
-    STDMETHOD_(HRESULT,Commit)(THIS_ DWORD grfCommitFlags) PURE;
-    STDMETHOD_(HRESULT,Revert)(THIS) PURE;
-    STDMETHOD_(HRESULT,EnumElements)(THIS_ DWORD reserved1, void* reserved2, DWORD reserved3, IEnumSTATSTG** ppenum) PURE;
-    STDMETHOD_(HRESULT,DestroyElement)(THIS_ LPCOLESTR16 pwcsName) PURE;
-    STDMETHOD_(HRESULT,RenameElement)(THIS_ LPCOLESTR16 pwcsOldName, LPCOLESTR16 pwcsNewName) PURE;
-    STDMETHOD_(HRESULT,SetElementTimes)(THIS_ LPCOLESTR16 pwcsName, const FILETIME* pctime, const FILETIME* patime, const FILETIME* pmtime) PURE;
-    STDMETHOD_(HRESULT,SetClass)(THIS_ REFCLSID clsid) PURE;
-    STDMETHOD_(HRESULT,SetStateBits)(THIS_ DWORD grfStateBits, DWORD grfMask) PURE;
-    STDMETHOD_(HRESULT,Stat)(THIS_ STATSTG* pstatstg, DWORD grfStatFlag) PURE;
+    STDMETHOD16_(HRESULT,CreateStream)(THIS_ LPCOLESTR16 pwcsName, DWORD grfMode, DWORD reserved1, DWORD reserved2, IStream16** ppstm) PURE;
+    STDMETHOD16_(HRESULT,OpenStream)(THIS_ LPCOLESTR16 pwcsName, void* reserved1, DWORD grfMode, DWORD reserved2, IStream16** ppstm) PURE;
+    STDMETHOD16_(HRESULT,CreateStorage)(THIS_ LPCOLESTR16 pwcsName, DWORD grfMode, DWORD dwStgFmt, DWORD reserved2, IStorage16** ppstg) PURE;
+    STDMETHOD16_(HRESULT,OpenStorage)(THIS_ LPCOLESTR16 pwcsName, IStorage16* pstgPriority, DWORD grfMode, SNB16 snbExclude, DWORD reserved, IStorage16** ppstg) PURE;
+    STDMETHOD16_(HRESULT,CopyTo)(THIS_ DWORD ciidExclude, const IID* rgiidExclude, SNB16 snbExclude, IStorage16* pstgDest) PURE;
+    STDMETHOD16_(HRESULT,MoveElementTo)(THIS_ LPCOLESTR16 pwcsName, IStorage16* pstgDest, LPCOLESTR16 pwcsNewName, DWORD grfFlags) PURE;
+    STDMETHOD16_(HRESULT,Commit)(THIS_ DWORD grfCommitFlags) PURE;
+    STDMETHOD16_(HRESULT,Revert)(THIS) PURE;
+    STDMETHOD16_(HRESULT,EnumElements)(THIS_ DWORD reserved1, void* reserved2, DWORD reserved3, IEnumSTATSTG** ppenum) PURE;
+    STDMETHOD16_(HRESULT,DestroyElement)(THIS_ LPCOLESTR16 pwcsName) PURE;
+    STDMETHOD16_(HRESULT,RenameElement)(THIS_ LPCOLESTR16 pwcsOldName, LPCOLESTR16 pwcsNewName) PURE;
+    STDMETHOD16_(HRESULT,SetElementTimes)(THIS_ LPCOLESTR16 pwcsName, const FILETIME* pctime, const FILETIME* patime, const FILETIME* pmtime) PURE;
+    STDMETHOD16_(HRESULT,SetClass)(THIS_ REFCLSID clsid) PURE;
+    STDMETHOD16_(HRESULT,SetStateBits)(THIS_ DWORD grfStateBits, DWORD grfMask) PURE;
+    STDMETHOD16_(HRESULT,Stat)(THIS_ STATSTG* pstatstg, DWORD grfStatFlag) PURE;
 };
 #undef INTERFACE
 

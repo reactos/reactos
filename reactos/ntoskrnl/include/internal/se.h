@@ -37,6 +37,9 @@ extern PSID SeAliasAccountOpsSid;
 extern PSID SeAliasSystemOpsSid;
 extern PSID SeAliasPrintOpsSid;
 extern PSID SeAliasBackupOpsSid;
+extern PSID SeAuthenticatedUsersSid;
+extern PSID SeRestrictedSid;
+extern PSID SeAnonymousLogonSid;
 
 /* Privileges */
 extern LUID SeCreateTokenPrivilege;
@@ -62,6 +65,9 @@ extern LUID SeAuditPrivilege;
 extern LUID SeSystemEnvironmentPrivilege;
 extern LUID SeChangeNotifyPrivilege;
 extern LUID SeRemoteShutdownPrivilege;
+extern LUID SeUndockPrivilege;
+extern LUID SeSyncAgentPrivilege;
+extern LUID SeEnableDelegationPrivilege;
 
 /* DACLs */
 extern PACL SePublicDefaultUnrestrictedDacl;
@@ -174,6 +180,17 @@ VOID
 SepReleaseAcl(IN PACL CapturedAcl,
               IN KPROCESSOR_MODE AccessMode,
               IN BOOLEAN CaptureIfKernel);
+
+NTSTATUS
+STDCALL
+SeDefaultObjectMethod(PVOID Object,
+                      SECURITY_OPERATION_CODE OperationType,                         
+                      SECURITY_INFORMATION SecurityInformation,
+                      PSECURITY_DESCRIPTOR NewSecurityDescriptor,
+                      PULONG ReturnLength,
+                      PSECURITY_DESCRIPTOR *OldSecurityDescriptor,
+                      POOL_TYPE PoolType,
+                      PGENERIC_MAPPING GenericMapping);
 
 #define SepAcquireTokenLockExclusive(Token)                                    \
   do {                                                                         \

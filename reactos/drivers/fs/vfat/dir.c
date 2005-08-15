@@ -298,13 +298,12 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
   long BufferLength = 0;
   PUNICODE_STRING pSearchPattern = NULL;
   FILE_INFORMATION_CLASS FileInformationClass;
-  unsigned long FileIndex = 0;
   unsigned char *Buffer = NULL;
   PFILE_NAMES_INFORMATION Buffer0 = NULL;
   PVFATFCB pFcb;
   PVFATCCB pCcb;
-  BOOLEAN First = FALSE;
-  BOOLEAN FirstCall;
+  BOOLEAN FirstQuery = FALSE;
+  BOOLEAN FirstCall = TRUE;
   VFAT_DIRENTRY_CONTEXT DirContext;
   WCHAR LongNameBuffer[LONGNAME_MAX_LENGTH + 1];
   WCHAR ShortNameBuffer[13];
@@ -348,12 +347,11 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
 #endif
   FileInformationClass =
     Stack->Parameters.QueryDirectory.FileInformationClass;
-  FileIndex = Stack->Parameters.QueryDirectory.FileIndex;
   if (pSearchPattern)
     {
       if (!pCcb->SearchPattern.Buffer)
         {
-          First = TRUE;
+          FirstQuery = TRUE;
           pCcb->SearchPattern.MaximumLength = pSearchPattern->Length + sizeof(WCHAR);
           pCcb->SearchPattern.Buffer = ExAllocatePool(NonPagedPool, pCcb->SearchPattern.MaximumLength);
           if (!pCcb->SearchPattern.Buffer)
@@ -367,7 +365,7 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
     }
   else if (!pCcb->SearchPattern.Buffer)
     {
-      First = TRUE;
+      FirstQuery = TRUE;
       pCcb->SearchPattern.MaximumLength = 2 * sizeof(WCHAR);
       pCcb->SearchPattern.Buffer = ExAllocatePool(NonPagedPool, 2 * sizeof(WCHAR));
       if (!pCcb->SearchPattern.Buffer)
@@ -382,18 +380,15 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
 
   if (IrpContext->Stack->Flags & SL_INDEX_SPECIFIED)
     {
-      DirContext.DirIndex = pCcb->Entry = pCcb->CurrentByteOffset.u.LowPart;
-      FirstCall = TRUE;
+      DirContext.DirIndex = pCcb->Entry = Stack->Parameters.QueryDirectory.FileIndex;
     }
-  else if (First || (IrpContext->Stack->Flags & SL_RESTART_SCAN))
+  else if (FirstQuery || (IrpContext->Stack->Flags & SL_RESTART_SCAN))
     {
       DirContext.DirIndex = pCcb->Entry = 0;
-      FirstCall = TRUE;
     }
   else
     {
       DirContext.DirIndex = pCcb->Entry;
-      FirstCall = FALSE;
     }
 
   DPRINT ("Buffer=%x tofind=%wZ\n", Buffer, &pCcb->SearchPattern);
@@ -442,20 +437,12 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
 	    }
           if (RC == STATUS_BUFFER_OVERFLOW)
             {
-              if (Buffer0)
-                {
-                  Buffer0->NextEntryOffset = 0;
-                }
               break;
             }
 	}
       else
         {
-          if (Buffer0)
-            {
-              Buffer0->NextEntryOffset = 0;
-            }
-          if (First)
+          if (FirstQuery)
             {
               RC = STATUS_NO_SUCH_FILE;
             }
@@ -466,21 +453,18 @@ NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
           break;
 	}
       Buffer0 = (PFILE_NAMES_INFORMATION) Buffer;
-      Buffer0->FileIndex = FileIndex++;
+      Buffer0->FileIndex = DirContext.DirIndex;
       pCcb->Entry = ++DirContext.DirIndex;
+      BufferLength -= Buffer0->NextEntryOffset;
       if (IrpContext->Stack->Flags & SL_RETURN_SINGLE_ENTRY)
         {
           break;
         }
-      BufferLength -= Buffer0->NextEntryOffset;
       Buffer += Buffer0->NextEntryOffset;
     }
   if (Buffer0)
     {
       Buffer0->NextEntryOffset = 0;
-    }
-  if (FileIndex > 0)
-    {
       RC = STATUS_SUCCESS;
       IrpContext->Irp->IoStatus.Information = Stack->Parameters.QueryDirectory.Length - BufferLength;
 

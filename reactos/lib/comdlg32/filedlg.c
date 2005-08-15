@@ -67,6 +67,7 @@
 #include "wine/unicode.h"
 #include "wingdi.h"
 #include "winuser.h"
+#include "winreg.h"
 #include "commdlg.h"
 #include "dlgs.h"
 #include "cdlg.h"
@@ -712,7 +713,7 @@ static void ArrangeCtrlPositions(HWND hwndChildDlg, HWND hwndParentDlg, BOOL hid
                  0, 0, rectChild.right, rectChild.bottom, SWP_NOACTIVATE);
 }
 
-INT_PTR CALLBACK FileOpenDlgProcUserTemplate(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+static INT_PTR CALLBACK FileOpenDlgProcUserTemplate(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     switch(uMsg) {
     case WM_INITDIALOG:
@@ -721,7 +722,7 @@ INT_PTR CALLBACK FileOpenDlgProcUserTemplate(HWND hwnd, UINT uMsg, WPARAM wParam
     return FALSE;
 }
 
-HWND CreateTemplateDialog(FileOpenDlgInfos *fodInfos, HWND hwnd)
+static HWND CreateTemplateDialog(FileOpenDlgInfos *fodInfos, HWND hwnd)
 {
     LPCVOID template;
     HRSRC hRes;
@@ -849,7 +850,7 @@ void SendCustomDlgNotificationMessage(HWND hwndParentDlg, UINT uCode)
 
 static INT_PTR FILEDLG95_Handle_GetFilePath(HWND hwnd, DWORD size, LPVOID buffer)
 {
-    INT_PTR sizeUsed = 0, n, total;
+    UINT sizeUsed = 0, n, total;
     LPWSTR lpstrFileList = NULL;
     WCHAR lpstrCurrentDir[MAX_PATH];
     FileOpenDlgInfos *fodInfos = (FileOpenDlgInfos *) GetPropA(hwnd,FileOpenDlgInfosStr);
@@ -911,7 +912,7 @@ static INT_PTR FILEDLG95_Handle_GetFilePath(HWND hwnd, DWORD size, LPVOID buffer
 
 static INT_PTR FILEDLG95_Handle_GetFileSpec(HWND hwnd, DWORD size, LPVOID buffer)
 {
-    INT_PTR sizeUsed = 0;
+    UINT sizeUsed = 0;
     LPWSTR lpstrFileList = NULL;
     FileOpenDlgInfos *fodInfos = (FileOpenDlgInfos *) GetPropA(hwnd,FileOpenDlgInfosStr);
 
@@ -2486,6 +2487,27 @@ static void FILEDLG95_FILETYPE_Clean(HWND hwnd)
  *
  * Initialisation of the look in combo box
  */
+
+/* Small helper function, to determine if the unixfs shell extension is rooted 
+ * at the desktop. Copied from dlls/shell32/shfldr_unixfs.c. 
+ */
+static inline BOOL FILEDLG95_unixfs_is_rooted_at_desktop(void) {
+    HKEY hKey;
+    const static WCHAR wszRootedAtDesktop[] = { 'S','o','f','t','w','a','r','e','\\',
+        'M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\',
+        'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
+        'E','x','p','l','o','r','e','r','\\','D','e','s','k','t','o','p','\\',
+        'N','a','m','e','S','p','a','c','e','\\','{','9','D','2','0','A','A','E','8',
+        '-','0','6','2','5','-','4','4','B','0','-','9','C','A','7','-',
+        '7','1','8','8','9','C','2','2','5','4','D','9','}',0 };
+    
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, wszRootedAtDesktop, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
+        return FALSE;
+        
+    RegCloseKey(hKey);
+    return TRUE;
+}
+
 static void FILEDLG95_LOOKIN_Init(HWND hwndCombo)
 {
   IShellFolder	*psfRoot, *psfDrives;
@@ -2525,26 +2547,31 @@ static void FILEDLG95_LOOKIN_Init(HWND hwndCombo)
       {
 	FILEDLG95_LOOKIN_AddItem(hwndCombo, pidlTmp,LISTEND);
 
-	/* special handling for CSIDL_DRIVES */
-	if (COMDLG32_PIDL_ILIsEqual(pidlTmp, pidlDrives))
+	/* If the unixfs extension is rooted, we don't expand the drives by default */
+	if (!FILEDLG95_unixfs_is_rooted_at_desktop()) 
 	{
-	  if(SUCCEEDED(IShellFolder_BindToObject(psfRoot, pidlTmp, NULL, &IID_IShellFolder, (LPVOID*)&psfDrives)))
+	  /* special handling for CSIDL_DRIVES */
+	  if (COMDLG32_PIDL_ILIsEqual(pidlTmp, pidlDrives))
 	  {
-	    /* enumerate the drives */
-	    if(SUCCEEDED(IShellFolder_EnumObjects(psfDrives, hwndCombo,SHCONTF_FOLDERS, &lpeDrives)))
+	    if(SUCCEEDED(IShellFolder_BindToObject(psfRoot, pidlTmp, NULL, &IID_IShellFolder, (LPVOID*)&psfDrives)))
 	    {
-	      while (S_OK == IEnumIDList_Next(lpeDrives, 1, &pidlTmp1, NULL))
+	      /* enumerate the drives */
+	      if(SUCCEEDED(IShellFolder_EnumObjects(psfDrives, hwndCombo,SHCONTF_FOLDERS, &lpeDrives)))
 	      {
-	        pidlAbsTmp = COMDLG32_PIDL_ILCombine(pidlTmp, pidlTmp1);
-	        FILEDLG95_LOOKIN_AddItem(hwndCombo, pidlAbsTmp,LISTEND);
-	        COMDLG32_SHFree(pidlAbsTmp);
-	        COMDLG32_SHFree(pidlTmp1);
+	        while (S_OK == IEnumIDList_Next(lpeDrives, 1, &pidlTmp1, NULL))
+	        {
+	          pidlAbsTmp = COMDLG32_PIDL_ILCombine(pidlTmp, pidlTmp1);
+	          FILEDLG95_LOOKIN_AddItem(hwndCombo, pidlAbsTmp,LISTEND);
+	          COMDLG32_SHFree(pidlAbsTmp);
+	          COMDLG32_SHFree(pidlTmp1);
+	        }
+	        IEnumIDList_Release(lpeDrives);
 	      }
-	      IEnumIDList_Release(lpeDrives);
+	      IShellFolder_Release(psfDrives);
 	    }
-	    IShellFolder_Release(psfDrives);
 	  }
 	}
+
         COMDLG32_SHFree(pidlTmp);
       }
       IEnumIDList_Release(lpeRoot);
@@ -3500,7 +3527,7 @@ static BOOL CALLBACK FD32_Init(LPARAM lParam, PFD31_DATA lfs, DWORD data)
  *
  *      called from the common 16/32 code to call the appropriate hook
  */
-BOOL CALLBACK FD32_CallWindowProc(PFD31_DATA lfs, UINT wMsg, WPARAM wParam,
+static BOOL CALLBACK FD32_CallWindowProc(PFD31_DATA lfs, UINT wMsg, WPARAM wParam,
                                  LPARAM lParam)
 {
     BOOL ret;

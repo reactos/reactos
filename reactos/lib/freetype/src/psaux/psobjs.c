@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Auxiliary functions for PostScript fonts (body).                     */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -429,7 +429,10 @@
     }
 
     if ( cur < limit && *cur != '>' )
+    {
+      FT_ERROR(( "skip_string: missing closing delimiter `>'\n" ));
       parser->error = PSaux_Err_Invalid_File_Format;
+    }
     else
       cur++;
 
@@ -492,6 +495,8 @@
       cur++;
       if ( cur >= limit || *cur != '>' )             /* >> */
       {
+        FT_ERROR(( "ps_parser_skip_PS_token: "
+                   "unexpected closing delimiter `>'\n" ));
         parser->error = PSaux_Err_Invalid_File_Format;
         goto Exit;
       }
@@ -516,6 +521,8 @@
 
       if ( *cur == ')' )
       {
+        FT_ERROR(( "ps_parser_skip_PS_token: "
+                   "unexpected closing delimiter `)'\n" ));
         parser->error = PSaux_Err_Invalid_File_Format;
         goto Exit;
       }
@@ -795,6 +802,7 @@
     {
       if ( *cur != '<' )
       {
+        FT_ERROR(( "ps_tobytes: Missing starting delimiter `<'\n" ));
         error = PSaux_Err_Invalid_File_Format;
         goto Exit;
       }
@@ -834,6 +842,7 @@
     {
       if ( cur < limit && *cur != '>' )
       {
+        FT_ERROR(( "ps_tobytes: Missing closing delimiter `>'\n" ));
         error = PSaux_Err_Invalid_File_Format;
         goto Exit;
       }

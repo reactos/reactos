@@ -5,9 +5,9 @@
 
 typedef unsigned short UINT;
 typedef unsigned int DWORD;
-typedef const unsigned char* LPCSTR;
+typedef char* LPCSTR;
 typedef wchar_t* LPWSTR;
-typedef unsigned char* LPSTR;
+typedef char* LPSTR;
 typedef const wchar_t* LPCWSTR;
 typedef unsigned int* LPBOOL;
 

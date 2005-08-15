@@ -32,6 +32,8 @@
 /* INCLUDES ******************************************************************/
 
 #include <user32.h>
+#define NDEBUG
+#include <debug.h>
 
 /* MACROS/DEFINITIONS ********************************************************/
 
@@ -692,11 +694,14 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
         if (dlgInfo->hUserFont)
         {
             SIZE charSize;
-            if (DIALOG_GetCharSize( dc, dlgInfo->hUserFont, &charSize ))
+            HFONT hOldFont = SelectObject( dc, dlgInfo->hUserFont );
+            charSize.cx = GdiGetCharDimensions( dc, NULL, &charSize.cy );
+            if (charSize.cx)
             {
                 dlgInfo->xBaseUnit = charSize.cx;
                 dlgInfo->yBaseUnit = charSize.cy;
             }
+            SelectObject( dc, hOldFont );
         }
         ReleaseDC(0, dc);
     }
@@ -1828,7 +1833,8 @@ GetDialogBaseUnits(VOID)
 
         if ((hdc = GetDC(0)))
         {
-            if (DIALOG_GetCharSize( hdc, 0, &size )) units = MAKELONG( size.cx, size.cy );
+            size.cx = GdiGetCharDimensions( hdc, NULL, &size.cy );
+            if (size.cx) units = MAKELONG( size.cx, size.cy );
             ReleaseDC( 0, hdc );
         }
     }
@@ -1860,7 +1866,7 @@ GetDlgItem(
     GETDLGITEMINFO info;
     info.nIDDlgItem = nIDDlgItem;
     info.control = 0;
-    if(hDlg && !EnumChildWindows(hDlg, (ENUMWINDOWSPROC)&GetDlgItemEnumProc, (LPARAM)&info))
+    if(hDlg && !EnumChildWindows(hDlg, (WNDENUMPROC)&GetDlgItemEnumProc, (LPARAM)&info))
         return info.control;
     else
         return 0;

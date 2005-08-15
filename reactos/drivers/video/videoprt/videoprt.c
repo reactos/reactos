@@ -1221,3 +1221,13 @@ VideoPortReleaseDeviceLock(
    ASSERT(Status == 0);
 }
 
+/*
+ * @unimplemented
+ */
+
+VOID STDCALL
+VpNotifyEaData(
+   IN PDEVICE_OBJECT DeviceObject,
+   IN PVOID Data)
+{
+}

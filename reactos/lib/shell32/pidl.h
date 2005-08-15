@@ -206,7 +206,7 @@ BOOL	_ILIsCPanelStruct	(LPCITEMIDLIST pidl);
  * - two bytes are the NULL PIDL terminator
  * Sets type of the returned PIDL to type.
  */
-LPITEMIDLIST	_ILAlloc(PIDLTYPE type, size_t size);
+LPITEMIDLIST	_ILAlloc(PIDLTYPE type, unsigned int size);
 
 /* Creates a PIDL with guid format and type type, which must be one of PT_GUID,
  * PT_SHELLEXT, or PT_YAGUID.
@@ -256,8 +256,5 @@ LPITEMIDLIST * _ILCopyCidaToaPidl(LPITEMIDLIST* pidl, LPIDA cida);
 
 BOOL WINAPI ILGetDisplayNameExA(LPSHELLFOLDER psf, LPCITEMIDLIST pidl, LPSTR path, DWORD type);
 BOOL WINAPI ILGetDisplayNameExW(LPSHELLFOLDER psf, LPCITEMIDLIST pidl, LPWSTR path, DWORD type);
-
-HRESULT SHELL_GetPathFromIDListA(LPCITEMIDLIST pidl, LPSTR pszPath, UINT uOutSize);
-HRESULT SHELL_GetPathFromIDListW(LPCITEMIDLIST pidl, LPWSTR pszPath, UINT uOutSize);
 
 #endif

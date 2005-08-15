@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    TrueType and OpenType embedded bitmap support (body).                */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -15,6 +15,14 @@
 /*                                                                         */
 /***************************************************************************/
 
+#include <ft2build.h>
+#include FT_INTERNAL_DEBUG_H
+#include FT_INTERNAL_STREAM_H
+#include FT_TRUETYPE_TAGS_H
+
+#ifdef FT_OPTIMIZE_MEMORY
+#include "ttsbit0.c"
+#else /* !OPTIMIZE_MEMORY */
 
 #include <ft2build.h>
 #include FT_INTERNAL_DEBUG_H
@@ -185,7 +193,7 @@
   }
 
 
-  const FT_Frame_Field  sbit_metrics_fields[] =
+  static const FT_Frame_Field  sbit_metrics_fields[] =
   {
 #undef  FT_STRUCTURE
 #define FT_STRUCTURE  TT_SBit_MetricsRec
@@ -334,6 +342,13 @@
         FT_Bool   large = FT_BOOL( range->index_format == 1 );
 
 
+
+        if ( range->last_glyph < range->first_glyph )
+        {
+          error = SFNT_Err_Invalid_File_Format;
+          goto Exit;
+        }
+
         num_glyphs        = range->last_glyph - range->first_glyph + 1L;
         range->num_glyphs = num_glyphs;
         num_glyphs++;                       /* XXX: BEWARE - see spec */
@@ -400,7 +415,7 @@
     FT_ULong   num_strikes;
     FT_ULong   table_base;
 
-    const FT_Frame_Field  sbit_line_metrics_fields[] =
+    static const FT_Frame_Field  sbit_line_metrics_fields[] =
     {
 #undef  FT_STRUCTURE
 #define FT_STRUCTURE  TT_SBit_LineMetricsRec
@@ -423,7 +438,7 @@
       FT_FRAME_END
     };
 
-    const FT_Frame_Field  strike_start_fields[] =
+    static const FT_Frame_Field  strike_start_fields[] =
     {
 #undef  FT_STRUCTURE
 #define FT_STRUCTURE  TT_SBit_StrikeRec
@@ -436,7 +451,7 @@
       FT_FRAME_END
     };
 
-    const FT_Frame_Field  strike_end_fields[] =
+    static const FT_Frame_Field  strike_end_fields[] =
     {
       /* no FT_FRAME_START */
         FT_FRAME_USHORT( start_glyph ),
@@ -519,12 +534,12 @@
         FT_ULong       count2 = strike->num_ranges;
 
 
-        if ( FT_NEW_ARRAY( strike->sbit_ranges, strike->num_ranges ) )
-          goto Exit;
-
         /* read each range */
         if ( FT_STREAM_SEEK( table_base + strike->ranges_offset ) ||
              FT_FRAME_ENTER( strike->num_ranges * 8L )            )
+          goto Exit;
+
+        if ( FT_NEW_ARRAY( strike->sbit_ranges, strike->num_ranges ) )
           goto Exit;
 
         range = strike->sbit_ranges;
@@ -567,6 +582,41 @@
         count--;
         strike++;
       }
+    }
+
+    /* now set up the root fields to indicate the strikes */
+    if ( face->num_sbit_strikes )
+    {
+      FT_ULong  n;
+      FT_Face   root = FT_FACE( face );
+
+
+      if ( FT_NEW_ARRAY( root->available_sizes, face->num_sbit_strikes ) )
+        goto Exit;
+
+      for ( n = 0 ; n < face->num_sbit_strikes ; n++ )
+      {
+        FT_Bitmap_Size*  bsize  = root->available_sizes + n;
+        TT_SBit_Strike   strike = face->sbit_strikes + n;
+        FT_UShort        fupem  = face->header.Units_Per_EM;
+        FT_Short         height = (FT_Short)( face->horizontal.Ascender -
+                                              face->horizontal.Descender +
+                                              face->horizontal.Line_Gap );
+        FT_Short         avg    = face->os2.xAvgCharWidth;
+
+
+        /* assume 72dpi */
+        bsize->height =
+          (FT_Short)( ( height * strike->y_ppem + fupem / 2 ) / fupem );
+        bsize->width  =
+          (FT_Short)( ( avg * strike->y_ppem + fupem / 2 ) / fupem );
+        bsize->size   = strike->y_ppem << 6;
+        bsize->x_ppem = strike->x_ppem << 6;
+        bsize->y_ppem = strike->y_ppem << 6;
+      }
+
+      root->face_flags     |= FT_FACE_FLAG_FIXED_SIZES;
+      root->num_fixed_sizes = (FT_Int)face->num_sbit_strikes;
     }
 
   Exit:
@@ -1429,7 +1479,7 @@
     error = face->goto_table( face, TTAG_EBDT, stream, 0 );
     if ( error )
       error = face->goto_table( face, TTAG_bdat, stream, 0 );
-    if (error)
+    if ( error )
       goto Exit;
 
     ebdt_pos = FT_STREAM_POS();
@@ -1462,6 +1512,8 @@
   Exit:
     return error;
   }
+
+#endif /* !OPTIMIZE_MEMORY */
 
 
 /* END */

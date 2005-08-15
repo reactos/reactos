@@ -36,7 +36,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 
 typedef struct IRichEditOleImpl {
-    IRichEditOleVtbl *lpVtbl;
+    const IRichEditOleVtbl *lpVtbl;
     DWORD ref;
 } IRichEditOleImpl;
 
@@ -228,7 +228,7 @@ IRichEditOle_fnSetLinkAvailable(IRichEditOle *me, LONG iob, BOOL fAvailable)
     return E_NOTIMPL;
 }
 
-static IRichEditOleVtbl revt = {
+static const IRichEditOleVtbl revt = {
     IRichEditOle_fnQueryInterface,
     IRichEditOle_fnAddRef,
     IRichEditOle_fnRelease,

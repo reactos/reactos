@@ -19,6 +19,7 @@
  */
 
 #include_next <ole2.h>
+#include <unknwn.h>  /* for LPUNKNOWN  */
 
 #ifndef __WINE_OLE2_H
 #define __WINE_OLE2_H

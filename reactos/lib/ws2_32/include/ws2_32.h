@@ -12,9 +12,10 @@
 #include <ws2spi.h>
 #include <ws2tcpip.h>
 #include <windows.h>
-#include <wsahelp.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
+
+#include <wsahelp.h>
 
 #undef assert
 #include <debug.h>

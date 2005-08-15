@@ -27,7 +27,7 @@
  */
 NTSTATUS STDCALL
 NtReadRequestData (HANDLE		PortHandle,
-		   PLPC_MESSAGE	Message,
+		   PPORT_MESSAGE	Message,
 		   ULONG		Index,
 		   PVOID		Buffer,
 		   ULONG		BufferLength,

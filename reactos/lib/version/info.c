@@ -305,7 +305,7 @@ VERSION_GetFileVersionInfo_PE (
 	hMem = LoadResource(hModule, hRsrc);
 	if(!hMem)
 	{
-		WARN("Could not load VS_VERSION_INFO from %s\n", debugstr_a(filename));
+		WARN("Could not load VS_VERSION_INFO from %s\n", debugstr_w(filename));
 		FreeLibrary(hModule);
 		return 0xFFFFFFFF;
 	}
@@ -487,7 +487,7 @@ VerQueryValueW (
 	VS_VERSION_INFO_STRUCT32 *info = (VS_VERSION_INFO_STRUCT32 *)pBlock;
 
 	TRACE("(%p,%s,%p,%p)\n",
-		pBlock, debugstr_a(lpSubBlock), lplpBuffer, puLen );
+		pBlock, debugstr_w(lpSubBlock), lplpBuffer, puLen );
 
 	info = VERSION_VerQueryValue ( info, lpSubBlock );
 	if ( !info )

@@ -11,7 +11,7 @@
  *                  Created 01/11/98
  */
 
-#include "advapi32.h"
+#include <advapi32.h>
 #include <debug.h>
 
 /*
@@ -245,7 +245,7 @@ MakeAbsoluteSD (
 {
 	NTSTATUS Status;
 
-	Status = RtlSelfRelativeToAbsoluteSD ((PSECURITY_DESCRIPTOR_RELATIVE)pSelfRelativeSecurityDescriptor,
+	Status = RtlSelfRelativeToAbsoluteSD ((PISECURITY_DESCRIPTOR_RELATIVE)pSelfRelativeSecurityDescriptor,
 	                                      pAbsoluteSecurityDescriptor,
 	                                      lpdwAbsoluteSecurityDescriptorSize,
 	                                      pDacl,
@@ -280,7 +280,7 @@ MakeSelfRelativeSD (
 	NTSTATUS Status;
 
 	Status = RtlAbsoluteToSelfRelativeSD (pAbsoluteSecurityDescriptor,
-	                                      (PSECURITY_DESCRIPTOR_RELATIVE)pSelfRelativeSecurityDescriptor,
+	                                      (PISECURITY_DESCRIPTOR_RELATIVE)pSelfRelativeSecurityDescriptor,
 	                                      (PULONG)lpdwBufferLength);
 	if (!NT_SUCCESS(Status))
 	{
@@ -438,6 +438,23 @@ SetSecurityDescriptorSacl (
 	}
 
 	return TRUE;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+ConvertToAutoInheritPrivateObjectSecurity(IN PSECURITY_DESCRIPTOR ParentDescriptor,
+                                          IN PSECURITY_DESCRIPTOR CurrentSecurityDescriptor,
+                                          OUT PSECURITY_DESCRIPTOR* NewSecurityDescriptor,
+                                          IN GUID* ObjectType,
+                                          IN BOOLEAN IsDirectoryObject,
+                                          IN PGENERIC_MAPPING GenericMapping)
+{
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
 /* EOF */

@@ -37,11 +37,16 @@
 #define LARGE	64		/* use 'ABCDEF' instead of 'abcdef' */
 
 
-#define do_div(n,base) ({ \
-int __res; \
-__res = ((unsigned long long) n) % (unsigned) base; \
-n = ((unsigned long long) n) / (unsigned) base; \
-__res; })
+static
+__inline
+int
+do_div(long long *n, int base)
+{
+    int a;
+    a = ((unsigned long long) *n) % (unsigned) base;
+    *n = ((unsigned long long) *n) / (unsigned) base;
+    return a;
+}
 
 
 static int skip_atoi(const wchar_t **s)
@@ -93,7 +98,7 @@ number(wchar_t * buf, wchar_t * end, long long num, int base, int size, int prec
 	if (num == 0)
 		tmp[i++] = L'0';
 	else while (num != 0)
-		tmp[i++] = digits[do_div(num,base)];
+		tmp[i++] = digits[do_div(&num,base)];
 	if (i > precision)
 		precision = i;
 	size -= precision;

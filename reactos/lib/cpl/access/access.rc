@@ -6,4 +6,6 @@
 #define REACTOS_STR_INTERNAL_NAME	"access\0"
 #define REACTOS_STR_ORIGINAL_FILENAME	"access.cpl\0"
 #include <reactos/version.rc>
+
 #include "En.rc"
+#include "Nl.rc"

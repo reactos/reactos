@@ -819,7 +819,7 @@ static HRESULT WINAPI StgStreamImpl_Clone(
 /*
  * Virtual function table for the StgStreamImpl class.
  */
-static IStreamVtbl StgStreamImpl_Vtbl =
+static const IStreamVtbl StgStreamImpl_Vtbl =
 {
     StgStreamImpl_QueryInterface,
     StgStreamImpl_AddRef,

@@ -404,7 +404,7 @@ SeCaptureSecurityDescriptor(
                      sizeof(ULONG));
         if(DescriptorCopy.Control & SE_SELF_RELATIVE)
         {
-          PSECURITY_DESCRIPTOR_RELATIVE RelSD = (PSECURITY_DESCRIPTOR_RELATIVE)OriginalSecurityDescriptor;
+          PISECURITY_DESCRIPTOR_RELATIVE RelSD = (PISECURITY_DESCRIPTOR_RELATIVE)OriginalSecurityDescriptor;
 
           DescriptorCopy.Owner = (PSID)RelSD->Owner;
           DescriptorCopy.Group = (PSID)RelSD->Group;
@@ -455,7 +455,7 @@ SeCaptureSecurityDescriptor(
                         sizeof(SECURITY_DESCRIPTOR_RELATIVE) : sizeof(SECURITY_DESCRIPTOR));
       if(DescriptorCopy.Control & SE_SELF_RELATIVE)
       {
-        PSECURITY_DESCRIPTOR_RELATIVE RelSD = (PSECURITY_DESCRIPTOR_RELATIVE)OriginalSecurityDescriptor;
+        PISECURITY_DESCRIPTOR_RELATIVE RelSD = (PISECURITY_DESCRIPTOR_RELATIVE)OriginalSecurityDescriptor;
 
         DescriptorCopy.Owner = (PSID)RelSD->Owner;
         DescriptorCopy.Group = (PSID)RelSD->Group;
@@ -675,7 +675,7 @@ SeQuerySecurityDescriptorInfo(IN PSECURITY_INFORMATION SecurityInformation,
 			      IN PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor OPTIONAL)
 {
   PSECURITY_DESCRIPTOR ObjectSd;
-  PSECURITY_DESCRIPTOR_RELATIVE RelSD;
+  PISECURITY_DESCRIPTOR_RELATIVE RelSD;
   PSID Owner = NULL;
   PSID Group = NULL;
   PACL Dacl = NULL;
@@ -688,7 +688,7 @@ SeQuerySecurityDescriptorInfo(IN PSECURITY_INFORMATION SecurityInformation,
   ULONG_PTR Current;
   ULONG SdLength;
 
-  RelSD = (PSECURITY_DESCRIPTOR_RELATIVE)SecurityDescriptor;
+  RelSD = (PISECURITY_DESCRIPTOR_RELATIVE)SecurityDescriptor;
 
   if (*ObjectsSecurityDescriptor == NULL)
     {

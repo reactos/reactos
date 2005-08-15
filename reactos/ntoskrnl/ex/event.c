@@ -34,6 +34,7 @@ static const INFORMATION_CLASS_INFO ExEventInfoClass[] = {
 
 VOID
 INIT_FUNCTION
+STDCALL
 ExpInitializeEventImplementation(VOID)
 {
   OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
@@ -49,7 +50,6 @@ ExpInitializeEventImplementation(VOID)
   ObjectTypeInitializer.GenericMapping = ExpEventMapping;
   ObjectTypeInitializer.PoolType = NonPagedPool;
   ObjectTypeInitializer.ValidAccessMask = EVENT_ALL_ACCESS;
-  ObjectTypeInitializer.UseDefaultObject = TRUE;
   ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &ExEventObjectType);
 }
 

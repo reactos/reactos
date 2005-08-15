@@ -24,7 +24,7 @@
  *
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include <stdarg.h>
 #include <msvcrt/stdio.h>
 #include <string.h>

@@ -101,6 +101,8 @@ struct _SECTION_OBJECT;
 struct _IO_STATUS_BLOCK;
 struct _DEVICE_DESCRIPTION;
 struct _SCATTER_GATHER_LIST;
+struct _DRIVE_LAYOUT_INFORMATION;
+struct _DRIVE_LAYOUT_INFORMATION_EX;
 
 DECLARE_INTERNAL_OBJECT(ADAPTER_OBJECT)
 DECLARE_INTERNAL_OBJECT(DMA_ADAPTER)
@@ -4742,8 +4744,8 @@ KfReleaseSpinLock(
  *   IN PCHAR  Field);
  */
 #ifndef CONTAINING_RECORD
-#define CONTAINING_RECORD(Address, Type, Field) \
-  ((Type *) (((ULONG_PTR) Address) - FIELD_OFFSET(Type, Field)))
+#define CONTAINING_RECORD(address, type, field) \
+  ((type *)(((ULONG_PTR)address) - (ULONG_PTR)(&(((type *)0)->field))))
 #endif
 
 /* LONG
@@ -5640,7 +5642,7 @@ NTOSAPI
 BOOLEAN
 DDKAPI
 RtlValidRelativeSecurityDescriptor(
-  IN PSECURITY_DESCRIPTOR_RELATIVE  SecurityDescriptorInput,
+  IN PISECURITY_DESCRIPTOR_RELATIVE  SecurityDescriptorInput,
   IN ULONG  SecurityDescriptorLength,
   IN SECURITY_INFORMATION  RequiredInformation);
 
@@ -9822,7 +9824,7 @@ DbgPrintReturnControlC(
   IN ...);
 
 NTOSAPI
-NTSTATUS
+BOOLEAN
 DDKAPI
 DbgQueryDebugFilterState(
   IN ULONG  ComponentId,
@@ -9835,16 +9837,6 @@ DbgSetDebugFilterState(
   IN ULONG  ComponentId,
   IN ULONG  Level,
   IN BOOLEAN  State);
-
-NTOSAPI
-BOOLEAN
-DDKAPI
-KeRosPrintAddress ( PVOID address );
-
-NTOSAPI
-VOID
-DDKAPI
-KeRosDumpStackFrames ( PULONG Frame, ULONG FrameCount );
 
 #ifdef DBG
 

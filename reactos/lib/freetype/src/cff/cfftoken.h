@@ -49,7 +49,7 @@
   CFF_FIELD_STRING  ( 0x116, base_font_name )
   CFF_FIELD_DELTA   ( 0x117, base_font_blend, 16 )
   CFF_FIELD_CALLBACK( 0x118, multiple_master )
-  CFF_FIELD_CALLBACK( 0x119, blend_axit_types )
+  CFF_FIELD_CALLBACK( 0x119, blend_axis_types )
 #endif
 
   CFF_FIELD_CALLBACK( 0x11E, cid_ros )

@@ -8,15 +8,7 @@
  * PROGRAMMERS:     No programmer listed.
  */
 
-.global _DbgBreakPoint@0
-_DbgBreakPoint@0:
 .global _DbgBreakPointNoBugCheck@0
 _DbgBreakPointNoBugCheck@0:
 	int $3
 	ret
-
-.global _DbgBreakPointWithStatus@4
-_DbgBreakPointWithStatus@4:
-	mov 0x4(%esp), %eax
-	int $3
-	ret $4

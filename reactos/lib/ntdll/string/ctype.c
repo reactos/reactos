@@ -10,8 +10,7 @@
  *                  29/12/1999: Added missing functions and changed
  *                              all functions to use ctype table
  */
-#undef __MSVCRT__
-#include <ctype.h>
+#include <ntdll.h>
 
 #undef _pctype
 

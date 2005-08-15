@@ -103,10 +103,6 @@ UsbhubFdoQueryBusRelations(
 		PdoExtension->IsFDO = FALSE;
 		PdoExtension->dev = dev->children[i];
 		
-		RtlInitUnicodeString(
-			&PdoExtension->DeviceDescription,
-			L"USB device"); /* FIXME */
-		
 		sprintf(Buffer[0], "%lu", i + 1);
 		Status = UsbhubInitMultiSzString(
 			&PdoExtension->InstanceId,
@@ -114,7 +110,7 @@ UsbhubFdoQueryBusRelations(
 		if (!NT_SUCCESS(Status))
 			goto ByeBye;
 		
-		/* FIXME: what if it is a multiple-interface usb device? */
+
 		sprintf(Buffer[0], "USB\\Vid_%04x&Pid_%04x&Rev_%04x",
 			PdoExtension->dev->descriptor.idVendor,
 			PdoExtension->dev->descriptor.idProduct,
@@ -134,19 +130,39 @@ UsbhubFdoQueryBusRelations(
 		if (!NT_SUCCESS(Status))
 			goto ByeBye;
 		
-		/* FIXME: what if it is a multiple-interface usb device? */
-		sprintf(Buffer[0], "USB\\Class_%02x&SubClass_%02x&Prot_%02x",
-			PdoExtension->dev->descriptor.bDeviceClass,
-			PdoExtension->dev->descriptor.bDeviceSubClass,
-			PdoExtension->dev->descriptor.bDeviceProtocol);
-		sprintf(Buffer[1], "USB\\Class_%02x&SubClass_%02x",
-			PdoExtension->dev->descriptor.bDeviceClass,
-			PdoExtension->dev->descriptor.bDeviceSubClass);
-		sprintf(Buffer[2], "USB\\Class_%02x",
-			PdoExtension->dev->descriptor.bDeviceClass);
-		Status = UsbhubInitMultiSzString(
-			&PdoExtension->CompatibleIds,
-			Buffer[0], Buffer[1], Buffer[2], NULL);
+		if (PdoExtension->dev->actconfig->desc.bNumInterfaces == 1)
+		{
+			/* Single-interface USB device */
+			sprintf(Buffer[0], "USB\\Class_%02x&SubClass_%02x&Prot_%02x",
+				PdoExtension->dev->descriptor.bDeviceClass,
+				PdoExtension->dev->descriptor.bDeviceSubClass,
+				PdoExtension->dev->descriptor.bDeviceProtocol);
+			sprintf(Buffer[1], "USB\\Class_%02x&SubClass_%02x",
+				PdoExtension->dev->descriptor.bDeviceClass,
+				PdoExtension->dev->descriptor.bDeviceSubClass);
+			sprintf(Buffer[2], "USB\\Class_%02x",
+				PdoExtension->dev->descriptor.bDeviceClass);
+			Status = UsbhubInitMultiSzString(
+				&PdoExtension->CompatibleIds,
+				Buffer[0], Buffer[1], Buffer[2], NULL);
+		}
+		else
+		{
+			/* Multiple-interface USB device */
+			sprintf(Buffer[0], "USB\\DevClass_%02x&SubClass_%02x&Prot_%02x",
+				PdoExtension->dev->descriptor.bDeviceClass,
+				PdoExtension->dev->descriptor.bDeviceSubClass,
+				PdoExtension->dev->descriptor.bDeviceProtocol);
+			sprintf(Buffer[1], "USB\\DevClass_%02x&SubClass_%02x",
+				PdoExtension->dev->descriptor.bDeviceClass,
+				PdoExtension->dev->descriptor.bDeviceSubClass);
+			sprintf(Buffer[2], "USB\\DevClass_%02x",
+				PdoExtension->dev->descriptor.bDeviceClass);
+			Status = UsbhubInitMultiSzString(
+				&PdoExtension->CompatibleIds,
+				Buffer[0], Buffer[1], Buffer[2], "USB\\COMPOSITE", NULL);
+		}
+		
 		if (!NT_SUCCESS(Status))
 			goto ByeBye;
 		
@@ -178,7 +194,6 @@ UsbhubFdoQueryBusRelations(
 	return STATUS_SUCCESS;
 
 ByeBye:
-	RtlFreeUnicodeString(&PdoExtension->DeviceDescription);
 	RtlFreeUnicodeString(&PdoExtension->DeviceId);
 	RtlFreeUnicodeString(&PdoExtension->InstanceId);
 	RtlFreeUnicodeString(&PdoExtension->HardwareIds);
@@ -286,7 +301,7 @@ UsbhubDeviceControlFdo(
 					&NodeInformation->u.HubInformation.HubDescriptor,
 					((struct usb_hub *)usb_get_intfdata(to_usb_interface(&dev->actconfig->interface[0].dev)))->descriptor,
 					sizeof(USB_HUB_DESCRIPTOR));
-				NodeInformation->u.HubInformation.HubIsBusPowered = TRUE; /* FIXME */
+				NodeInformation->u.HubInformation.HubIsBusPowered = dev->actconfig->desc.bmAttributes & 0x80;
 				Information = sizeof(USB_NODE_INFORMATION);
 				Status = STATUS_SUCCESS;
 			}
@@ -341,7 +356,10 @@ UsbhubDeviceControlFdo(
 		case IOCTL_USB_GET_NODE_CONNECTION_INFORMATION:
 		{
 			PUSB_NODE_CONNECTION_INFORMATION ConnectionInformation;
+			ULONG i, j, k;
 			struct usb_device* dev;
+			ULONG NumberOfOpenPipes = 0;
+			ULONG SizeOfOpenPipesArray;
 			ConnectionInformation = (PUSB_NODE_CONNECTION_INFORMATION)BufferOut;
 			
 			DPRINT("Usbhub: IOCTL_USB_GET_NODE_CONNECTION_INFORMATION\n");
@@ -354,7 +372,6 @@ UsbhubDeviceControlFdo(
 				Status = STATUS_INVALID_PARAMETER;
 			else
 			{
-				DPRINT1("Usbhub: IOCTL_USB_GET_NODE_CONNECTION_INFORMATION partially implemented\n");
 				dev = ((PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->dev;
 				dev = dev->children[ConnectionInformation->ConnectionIndex - 1];
 				if (dev == NULL)
@@ -368,27 +385,40 @@ UsbhubDeviceControlFdo(
 					Status = STATUS_SUCCESS;
 					break;
 				}
+				SizeOfOpenPipesArray = (LengthOut - FIELD_OFFSET(USB_NODE_CONNECTION_INFORMATION, PipeList)) / sizeof(USB_PIPE_INFO);
 				RtlCopyMemory(
 					&ConnectionInformation->DeviceDescriptor,
 					&dev->descriptor,
 					sizeof(USB_DEVICE_DESCRIPTOR));
-				ConnectionInformation->CurrentConfigurationValue = 0; /* FIXME */
+				ConnectionInformation->CurrentConfigurationValue = dev->actconfig->desc.bConfigurationValue;
 				ConnectionInformation->LowSpeed = dev->speed == USB_SPEED_LOW || dev->speed == USB_SPEED_FULL;
 				ConnectionInformation->DeviceIsHub = dev->descriptor.bDeviceClass == USB_CLASS_HUB;
 				ConnectionInformation->DeviceAddress = dev->devnum;
-				RtlZeroMemory(&ConnectionInformation->NumberOfOpenPipes, sizeof(ConnectionInformation->NumberOfOpenPipes)); /* FIXME */
 				ConnectionInformation->ConnectionStatus = DeviceConnected;
-				RtlZeroMemory(&ConnectionInformation->PipeList, sizeof(ConnectionInformation->PipeList)); /* FIXME */
-				/*for (i = 0; i < 32; i++)
-				{
-					RtlCopyMemory(
-						&ConnectionInformation->PipeList[i].EndpointDescriptor,
-						xxx, // FIXME
-						sizeof(USB_ENDPOINT_DESCRIPTOR));
-					ConnectionInformation->PipeList[i].ScheduleOffset = 0; // FIXME
-				}*/
+				
+				for (i = 0; i < dev->actconfig->desc.bNumInterfaces; i++)
+					for (j = 0; j < dev->actconfig->interface[i].num_altsetting; j++)
+						for (k = 0; k < dev->actconfig->interface[i].altsetting[j].desc.bNumEndpoints; k++)
+						{
+							if (NumberOfOpenPipes < SizeOfOpenPipesArray)
+							{
+								PUSB_PIPE_INFO Pipe = &ConnectionInformation->PipeList[NumberOfOpenPipes];
+								struct usb_host_endpoint* endpoint = &dev->actconfig->interface[i].altsetting[j].endpoint[k];
+								RtlCopyMemory(
+									&Pipe->EndpointDescriptor,
+									&endpoint->desc,
+									endpoint->desc.bLength);
+								Pipe->ScheduleOffset = 0; /* FIXME */
+							}
+							NumberOfOpenPipes++;
+						}
+				ConnectionInformation->NumberOfOpenPipes = NumberOfOpenPipes;
+				
 				Information = sizeof(USB_NODE_CONNECTION_INFORMATION);
-				Status = STATUS_SUCCESS;
+				if (NumberOfOpenPipes <= SizeOfOpenPipesArray)
+					Status = STATUS_SUCCESS;
+				else
+					Status = STATUS_BUFFER_OVERFLOW;
 			}
 			break;
 		}
@@ -428,7 +458,6 @@ UsbhubDeviceControlFdo(
 					&StringSize);
 				if (NT_SUCCESS(Status) || Status == STATUS_BUFFER_TOO_SMALL)
 				{
-					DPRINT("Usbhub: IOCTL_GET_HCD_DRIVERKEY_NAME returns '%S'\n", StringDescriptor->DriverKeyName);
 					StringDescriptor->ActualLength = StringSize + FIELD_OFFSET(USB_NODE_CONNECTION_DRIVERKEY_NAME, DriverKeyName);
 					Information = LengthOut;
 					Status = STATUS_SUCCESS;

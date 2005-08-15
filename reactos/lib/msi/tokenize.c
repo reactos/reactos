@@ -158,7 +158,7 @@ static const Keyword aKeywordTable[] = {
 ** keyword.  If it is a keyword, the token code of that keyword is 
 ** returned.  If the input is not a keyword, TK_ID is returned.
 */
-int sqliteKeywordCode(const WCHAR *z, int n){
+static int sqliteKeywordCode(const WCHAR *z, int n){
   UINT i, len;
   char buffer[0x10];
 

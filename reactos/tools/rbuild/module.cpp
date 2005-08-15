@@ -282,6 +282,12 @@ Module::Module ( const Project& project,
 		enableWarnings = att->value == "true";
 	else
 		enableWarnings = false;
+
+	att = moduleNode.GetAttribute ( "aliasof", false );
+	if ( type == Alias && att != NULL )
+		aliasedModuleName = att->value;
+	else
+		aliasedModuleName = "";
 }
 
 Module::~Module ()
@@ -304,6 +310,22 @@ Module::~Module ()
 void
 Module::ProcessXML()
 {
+	if ( type == Alias )
+	{
+		if ( aliasedModuleName == name )
+			throw InvalidBuildFileException (
+				node.location,
+				"module '%s' cannot link against itself",
+				name.c_str() );
+	  	const Module* m = project.LocateModule ( aliasedModuleName );
+		if ( !m )
+			throw InvalidBuildFileException (
+				node.location,
+				"module '%s' trying to alias non-existant module '%s'",
+				name.c_str(),
+				aliasedModuleName.c_str() );
+	}
+
 	size_t i;
 	for ( i = 0; i < node.subElements.size(); i++ )
 		ProcessXMLSubElement ( *node.subElements[i], path );
@@ -543,6 +565,8 @@ Module::GetModuleType ( const string& location, const XMLAttribute& attribute )
 		return RpcServer;
 	if ( attribute.value == "rpcclient" )
 		return RpcClient;
+	if ( attribute.value == "alias" )
+		return Alias;
 	throw InvalidAttributeValueException ( location,
 	                                       attribute.name,
 	                                       attribute.value );
@@ -582,6 +606,8 @@ Module::GetDefaultModuleExtension () const
 			return ".o";
 		case RpcClient:
 			return ".o";
+		case Alias:
+			return "";
 	}
 	throw InvalidOperationException ( __FILE__,
 	                                  __LINE__ );
@@ -618,6 +644,7 @@ Module::GetDefaultModuleEntrypoint () const
 		case LiveIso:
 		case RpcServer:
 		case RpcClient:
+		case Alias:
 			return "";
 	}
 	throw InvalidOperationException ( __FILE__,
@@ -652,6 +679,7 @@ Module::GetDefaultModuleBaseaddress () const
 		case LiveIso:
 		case RpcServer:
 		case RpcClient:
+		case Alias:
 			return "";
 	}
 	throw InvalidOperationException ( __FILE__,
@@ -688,6 +716,7 @@ Module::IsDLL () const
 		case LiveIso:
 		case RpcServer:
 		case RpcClient:
+		case Alias:
 			return false;
 	}
 	throw InvalidOperationException ( __FILE__,
@@ -718,6 +747,7 @@ Module::GenerateInOutputTree () const
 		case ObjectLibrary:
 		case RpcServer:
 		case RpcClient:
+		case Alias:
 			return false;
 	}
 	throw InvalidOperationException ( __FILE__,

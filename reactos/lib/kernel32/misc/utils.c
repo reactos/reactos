@@ -11,7 +11,11 @@
 #include <k32.h>
 
 #define NDEBUG
-#include <debug.h>
+#include "../include/debug.h"
+
+/* GLOBALS ******************************************************************/
+
+PRTL_CONVERT_STRING Basep8BitStringToUnicodeString = RtlAnsiStringToUnicodeString;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -73,13 +77,38 @@ Basep8BitStringToCachedUnicodeString(IN LPCSTR String)
     return StaticString;
 }
 
+NTSTATUS
+STDCALL
+Basep8BitStringToHeapUnicodeString(OUT PUNICODE_STRING UnicodeString,
+                                   IN LPCSTR String)
+{
+    ANSI_STRING AnsiString;
+    NTSTATUS Status;
+    
+    DPRINT("Basep8BitStringToCachedUnicodeString\n");
+    
+    /* Initialize an ANSI String */
+    RtlInitAnsiString(&AnsiString, String);
+    
+    /* Convert it */
+    Status = Basep8BitStringToUnicodeString(UnicodeString, &AnsiString, TRUE);
+    
+    /* Handle failure */
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastErrorByStatus(Status);
+    }
+    /* Return Status */
+    return Status;
+}
+
 /*
  * Allocates space from the Heap and converts an Ansi String into it
  */
 VOID
 STDCALL
 BasepAnsiStringToHeapUnicodeString(IN LPCSTR AnsiString,
-                                   IN PVOID UnicodeString)
+                                   OUT LPWSTR* UnicodeString)
 {
     ANSI_STRING AnsiTemp;
     UNICODE_STRING UnicodeTemp;
@@ -89,17 +118,16 @@ BasepAnsiStringToHeapUnicodeString(IN LPCSTR AnsiString,
     /* First create the ANSI_STRING */
     RtlInitAnsiString(&AnsiTemp, AnsiString);
     
-    /* Now get the size needed */
-    UnicodeTemp.MaximumLength = RtlAnsiStringToUnicodeSize(&AnsiTemp);
-    
-    /* Allocate space from the Heap for the string */
-    UnicodeString = RtlAllocateHeap(GetProcessHeap(),
-                                    0,
-                                    UnicodeTemp.MaximumLength);
-                                    
-    /* Save the buffer and convert */
-    UnicodeTemp.Buffer = UnicodeString;
-    RtlAnsiStringToUnicodeString(&UnicodeTemp, &AnsiTemp, FALSE);
+    if (NT_SUCCESS(RtlAnsiStringToUnicodeString(&UnicodeTemp,
+                                                &AnsiTemp,
+                                                TRUE)))
+    {
+        *UnicodeString = UnicodeTemp.Buffer;
+    }
+    else
+    {
+        *UnicodeString = NULL;
+    }
 }
 
 /*

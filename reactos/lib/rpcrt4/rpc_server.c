@@ -117,7 +117,7 @@ static RpcPacket* spacket_head;
 static RpcPacket* spacket_tail;
 static HANDLE server_sem;
 
-static DWORD worker_count, worker_free, worker_tls;
+static LONG worker_count, worker_free, worker_tls;
 
 static UUID uuid_nil;
 
@@ -858,8 +858,11 @@ RPC_STATUS WINAPI RpcServerRegisterIf2( RPC_IF_HANDLE IfSpec, UUID* MgrTypeUuid,
   LeaveCriticalSection(&server_cs);
 
   if (sif->Flags & RPC_IF_AUTOLISTEN) {
-    /* well, start listening, I think... */
     RPCRT4_start_listen(TRUE);
+
+    /* make sure server is actually listening on the interface before
+     * returning */
+    RPCRT4_sync_with_server_thread();
   }
 
   return RPC_S_OK;

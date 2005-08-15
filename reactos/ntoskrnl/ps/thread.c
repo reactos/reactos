@@ -18,6 +18,8 @@
 
 extern LIST_ENTRY PsActiveProcessHead;
 extern PEPROCESS PsIdleProcess;
+extern PVOID PspSystemDllEntryPoint;
+extern PHANDLE_TABLE PspCidTable;
 
 POBJECT_TYPE EXPORTED PsThreadType = NULL;
 
@@ -57,7 +59,7 @@ PspUserThreadStartup(PKSTART_ROUTINE StartRoutine,
                         OriginalApcEnvironment,
                         PspThreadSpecialApc,
                         NULL,
-                        LdrpGetSystemDllEntryPoint(),
+                        PspSystemDllEntryPoint,
                         UserMode,
                         NULL);
 
@@ -113,6 +115,7 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
     KIRQL OldIrql;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status;
+    HANDLE_TABLE_ENTRY CidEntry;
     PVOID KernelStack;
 
     /* Reference the Process by handle or pointer, depending on what we got */
@@ -179,12 +182,15 @@ PspCreateThread(OUT PHANDLE ThreadHandle,
 
     /* Create Cid Handle */
     DPRINT("Creating Thread Handle (CID)\n");
-    if (!(NT_SUCCESS(PsCreateCidHandle(Thread, PsThreadType, &Thread->Cid.UniqueThread)))) {
+    CidEntry.u1.Object = Thread;
+    CidEntry.u2.GrantedAccess = 0;
+    Thread->Cid.UniqueThread = ExCreateHandle(PspCidTable, &CidEntry);
+    if (!Thread->Cid.UniqueThread) {
 
         DPRINT1("Failed to create Thread Handle (CID)\n");
         ObDereferenceObject(Process);
         ObDereferenceObject(Thread);
-        return Status;
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     /* Initialize Lists */
@@ -354,6 +360,47 @@ PsCreateSystemThread(PHANDLE ThreadHandle,
                            FALSE,
                            StartRoutine,
                            StartContext);
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+STDCALL
+PsLookupThreadByThreadId(IN HANDLE ThreadId,
+                         OUT PETHREAD *Thread)
+{
+    PHANDLE_TABLE_ENTRY CidEntry;
+    PETHREAD FoundThread;
+    NTSTATUS Status = STATUS_INVALID_PARAMETER;
+    PAGED_CODE();
+    
+    KeEnterCriticalRegion();
+
+    /* Get the CID Handle Entry */
+    if ((CidEntry = ExMapHandleToPointer(PspCidTable,
+                                         ThreadId)))
+    {
+        /* Get the Process */
+        FoundThread = CidEntry->u1.Object;
+
+        /* Make sure it's really a process */
+        if (FoundThread->Tcb.DispatcherHeader.Type == ThreadObject)
+        {
+            /* Reference and return it */
+            ObReferenceObject(FoundThread);
+            *Thread = FoundThread;
+            Status = STATUS_SUCCESS;
+        }
+
+        /* Unlock the Entry */
+        ExUnlockHandleTableEntry(PspCidTable, CidEntry);
+    }
+    
+    KeLeaveCriticalRegion();
+
+    /* Return to caller */
+    return Status;
 }
 
 /*
@@ -658,7 +705,7 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
                                     PreviousMode,
                                     DesiredAccess,
                                     NULL,
-                                    hThread);
+                                    &hThread);
 
         if (Status != STATUS_SUCCESS)
         {
@@ -674,7 +721,6 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
         if (ClientId->UniqueProcess)
         {
             /* Get the Process */
-            if (ClientId->UniqueProcess == (HANDLE)-1) KEBUGCHECK(0);
             DPRINT("Opening by Process ID: %x\n", ClientId->UniqueProcess);
             Status = PsLookupProcessThreadByCid(ClientId,
                                                 NULL,
@@ -701,7 +747,7 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
                                        DesiredAccess,
                                        PsThreadType,
                                        PreviousMode,
-                                       hThread);
+                                       &hThread);
         if(!NT_SUCCESS(Status))
         {
             DPRINT1("Failure to open Thread\n");

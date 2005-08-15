@@ -14,10 +14,9 @@
 /* Private User32 Headers */
 #include "accel.h"
 #include "cursor.h"
-#ifndef __WINE__
-#include "debug.h"
-#endif
+#include "controls.h"
 #include "draw.h"
+#include "dde_private.h"
 #include "menu.h"
 #include "message.h"
 #include "regcontrol.h"

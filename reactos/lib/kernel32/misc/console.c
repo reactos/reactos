@@ -516,13 +516,14 @@ GetConsoleFontInfo (DWORD	Unknown0,
 /*
  * @unimplemented
  */
-DWORD STDCALL
+COORD STDCALL
 GetConsoleFontSize(HANDLE hConsoleOutput,
 		   DWORD nFont)
 {
+  COORD Empty = {0, 0};
   DPRINT1("GetConsoleFontSize(0x%x, 0x%x) UNIMPLEMENTED!\n", hConsoleOutput, nFont);
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return 0;
+  return Empty ;
 }
 
 
@@ -1340,6 +1341,7 @@ BOOL STDCALL AllocConsole(VOID)
    }
 
    Request.Data.AllocConsoleRequest.CtrlDispatcher = ConsoleControlDispatcher;
+   Request.Data.AllocConsoleRequest.ConsoleNeeded = TRUE;
 
    CsrRequest = MAKE_CSR_API(ALLOC_CONSOLE, CSR_CONSOLE);
    Status = CsrClientCallServer( &Request, NULL, CsrRequest, sizeof( CSR_API_MESSAGE ) );

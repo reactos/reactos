@@ -136,8 +136,6 @@ ExReleaseResourceForThreadLite@8
 @ExReleaseResourceLite@4
 @ExReleaseRundownProtection@4
 @ExReleaseRundownProtectionEx@8
-ExRosDumpPagedPoolByTag@4
-ExRosQueryPoolTag@4
 @ExRundownCompleted@4
 ExSemaphoreObjectType DATA
 ExSetResourceOwnerPointer@8
@@ -680,7 +678,6 @@ MmAddPhysicalMemory@8
 MmAddVerifierThunks@8
 MmAdjustWorkingSetSize@12
 MmAdvanceMdl@8
-MmAllocateContiguousAlignedMemory@36
 MmAllocateContiguousMemory@12
 MmAllocateContiguousMemorySpecifyCache@32
 MmAllocateMappingAddress@8
@@ -688,8 +685,6 @@ MmAllocateNonCachedMemory@4
 MmAllocatePagesForMdl@28
 MmBuildMdlForNonPagedPool@4
 MmCanFileBeTruncated@8
-;MmCopyFromCaller@12
-;MmCopyToCaller@12
 MmCreateMdl@12
 MmCreateSection@32
 MmDbgTranslatePhysicalAddress@8
@@ -759,6 +754,7 @@ NlsAnsiCodePage DATA
 NlsLeadByteInfo DATA
 NlsMbCodePageTag DATA
 NlsMbOemCodePageTag DATA
+NlsOemCodePage DATA
 NlsOemLeadByteInfo DATA
 NtAddAtom@12
 NtAdjustPrivilegesToken@24
@@ -873,8 +869,10 @@ PsDereferenceImpersonationToken@4=PsDereferencePrimaryToken@4
 PsDereferencePrimaryToken@4
 PsDisableImpersonation@8
 PsEstablishWin32Callouts@4
+PsGetCurrentProcess@0=KeGetCurrentProcess@0
 PsGetCurrentProcessId@0
 PsGetCurrentProcessSessionId@0
+PsGetCurrentThread@0=KeGetCurrentThread@0
 PsGetCurrentThreadId@0
 PsGetCurrentThreadPreviousMode@0
 PsGetCurrentThreadStackBase@0
@@ -935,9 +933,10 @@ PsSetCreateThreadNotifyRoutine@4
 PsSetJobUIRestrictionsClass@8
 PsSetLegoNotifyRoutine@4
 PsSetProcessPriorityClass@8
+PsSetProcessPriorityByClass@8
 PsSetProcessSecurityPort@8
 PsSetProcessWin32Process@8
-PsSetProcessWin32WindowStation@8
+PsSetProcessWindowStation@8
 PsSetThreadHardErrorsAreDisabled@8
 PsSetThreadWin32Thread@8
 PsSetLoadImageNotifyRoutine@4

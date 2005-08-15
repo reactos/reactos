@@ -9,8 +9,12 @@
 #ifndef _NTNDK_
 #define _NTNDK_
 
+/* C Standard Headers */
+#include <stdarg.h>
+#include <excpt.h>
+
+/* Kernel-Mode NDK */
 #ifndef NTOS_MODE_USER
-    /* Kernel-Mode NDK */
     #include "kdtypes.h"    /* Kernel Debugger Types */
     #include "kdfuncs.h"    /* Kernel Debugger Functions */
     #include "cctypes.h"    /* Cache Manager Types */

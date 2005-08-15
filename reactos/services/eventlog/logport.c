@@ -146,18 +146,18 @@ ProcessPortMessage(VOID)
 
       DPRINT("Received message\n");
 
-      if (Request.Header.MessageType == LPC_PORT_CLOSED)
+      if (Request.Header.u2.s2.Type == LPC_PORT_CLOSED)
 	{
 	  DPRINT("Port closed\n");
 
 	  return STATUS_SUCCESS;
 	}
-      if (Request.Header.MessageType == LPC_REQUEST)
+      if (Request.Header.u2.s2.Type == LPC_REQUEST)
 	{
 	  DPRINT("Received request\n");
 
 	}
-      else if (Request.Header.MessageType == LPC_DATAGRAM)
+      else if (Request.Header.u2.s2.Type == LPC_DATAGRAM)
 	{
 	  DPRINT("Received datagram\n");
 

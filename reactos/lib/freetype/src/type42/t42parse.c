@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    Type 42 font parser (body).                                          */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004 by Roberto Alameda.                         */
+/*  Copyright 2002, 2003, 2004, 2005 by Roberto Alameda.                   */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
 /*  modified, and distributed under the terms of the FreeType project      */
@@ -159,7 +159,19 @@
     /*   parser->in_memory is set if we have a memory stream.          */
     /*                                                                 */
 
-    if ( FT_STREAM_SEEK( 0L ) )
+    if ( FT_STREAM_SEEK( 0L ) ||
+         FT_FRAME_ENTER( 17 ) )
+      goto Exit;
+
+    if ( ft_memcmp( stream->cursor, "%!PS-TrueTypeFont", 17 ) != 0 )
+    {
+      FT_TRACE2(( "not a Type42 font\n" ));
+      error = T42_Err_Unknown_File_Format;
+    }
+
+    FT_FRAME_EXIT();
+
+    if ( error || FT_STREAM_SEEK( 0 ) )
       goto Exit;
 
     size = stream->size;
@@ -188,17 +200,9 @@
       parser->base_len = size;
     }
 
-    /* Now check font format; we must see `%!PS-TrueTypeFont' */
-    if ( size <= 17                                    ||
-         ( ft_strncmp( (const char*)parser->base_dict,
-                       "%!PS-TrueTypeFont", 17 ) )     )
-      error = T42_Err_Unknown_File_Format;
-    else
-    {
-      parser->root.base   = parser->base_dict;
-      parser->root.cursor = parser->base_dict;
-      parser->root.limit  = parser->root.cursor + parser->base_len;
-    }
+    parser->root.base   = parser->base_dict;
+    parser->root.cursor = parser->base_dict;
+    parser->root.limit  = parser->root.cursor + parser->base_len;
 
   Exit:
     if ( error && !parser->in_memory )
@@ -412,14 +416,16 @@
 
             parser->root.cursor = cur;
             T1_Skip_PS_Token( parser );
+            if ( parser->root.error )
+              return;
 
             len = parser->root.cursor - cur;
 
             parser->root.error = T1_Add_Table( char_table, charcode,
                                                cur, len + 1 );
-            char_table->elements[charcode][len] = '\0';
             if ( parser->root.error )
               return;
+            char_table->elements[charcode][len] = '\0';
 
             n++;
           }
@@ -550,6 +556,8 @@
         string_size = T1_ToInt( parser );
 
         T1_Skip_PS_Token( parser );             /* `RD' */
+        if ( parser->root.error )
+          return;
 
         string_buf = parser->root.cursor + 1;   /* one space after `RD' */
 
@@ -691,6 +699,8 @@
 
 
       T1_Skip_PS_Token( parser );
+      if ( parser->root.error )
+        return;
       T1_Skip_Spaces( parser );
       cur = parser->root.cursor;
 
@@ -705,6 +715,8 @@
           break;
         }
         T1_Skip_PS_Token( parser );
+        if ( parser->root.error )
+          return;
         T1_Skip_Spaces( parser );
       }
     }
@@ -767,6 +779,8 @@
         break;
 
       T1_Skip_PS_Token( parser );
+      if ( parser->root.error )
+        return;
 
       if ( *cur == '/' )
       {
@@ -1003,6 +1017,8 @@
             break;
 
           T1_Skip_PS_Token( parser );
+          if ( parser->root.error )
+            goto Exit;
           T1_Skip_Spaces  ( parser );
           cur = parser->root.cursor;
         }
@@ -1033,6 +1049,8 @@
 
         parser->root.cursor = cur;
         T1_Skip_PS_Token( parser );
+        if ( parser->root.error )
+          goto Exit;
 
         len = parser->root.cursor - cur;
 
@@ -1053,9 +1071,9 @@
             if ( !name )
               continue;
 
-            if ( cur[0] == name[0]                      && 
-                 len == ft_strlen( (const char *)name ) &&
-                 ft_memcmp( cur, name, len ) == 0       )
+            if ( cur[0] == name[0]                                  && 
+                 len == (FT_PtrDist)ft_strlen( (const char *)name ) &&
+                 ft_memcmp( cur, name, len ) == 0                   )
             {
               /* we found it -- run the parsing callback! */
               parser->root.error = t42_load_keyword( face,
@@ -1069,11 +1087,16 @@
         }
       }
       else
+      {
         T1_Skip_PS_Token( parser );
+        if ( parser->root.error )
+          goto Exit;
+      }
 
       T1_Skip_Spaces( parser );
     }
 
+  Exit:
     return parser->root.error;
   }
 

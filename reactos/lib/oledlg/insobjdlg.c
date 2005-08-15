@@ -333,7 +333,8 @@ static void UIINSERTOBJECTDLG_SelectCreateFromFile(InsertObjectDlgInfo* pdlgInfo
  */
 static BOOL UIINSERTOBJECTDLG_PopulateObjectTypes(InsertObjectDlgInfo* pdlgInfo)
 {
-  DWORD i, len;
+  DWORD i;
+  LONG len;
   HKEY hkclsids;
   HKEY hkey;
   CLSID clsid;

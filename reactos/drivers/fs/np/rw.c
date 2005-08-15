@@ -27,7 +27,7 @@ VOID HexDump(PUCHAR Buffer, ULONG Length)
 
   DbgPrint("---------------\n");
 
-  for (i = 0; i < ROUND_UP(Length, 16); i+= 16)
+  for (i = 0; i < Length; i+= 16)
     {
       memset(Line, ' ', 64);
       Line[64] = 0;
@@ -184,6 +184,7 @@ NpfsWaiterThread(PVOID InitContext)
 		      ThreadContext->Count++;
                       ThreadContext->DeviceExt->EmptyWaiterCount--;
 		   }
+		   KeUnlockMutex(&ThreadContext->DeviceExt->PipeListLock);
 		   break;
 		default:
 		   KEBUGCHECK(0);
@@ -204,7 +205,6 @@ NpfsWaiterThread(PVOID InitContext)
 	  Terminate = TRUE;
         }
      }
-   KeUnlockMutex(&ThreadContext->DeviceExt->PipeListLock);
    ExFreePool(ThreadContext);
 }
 
@@ -400,6 +400,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
         {
 	   if (Fcb->PipeState == FILE_PIPE_CONNECTED_STATE)
 	   {
+	      ASSERT(Fcb->OtherSide != NULL);
 	      KeSetEvent(&Fcb->OtherSide->WriteEvent, IO_NO_INCREMENT, FALSE);
 	   }
 	   if (Information > 0 &&

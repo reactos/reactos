@@ -116,7 +116,7 @@ static HRESULT WINAPI CStdPSFactory_CreateStub(LPPSFACTORYBUFFER iface,
                                   ProxyInfo->pStubVtblList[Index], iface, ppStub);
 }
 
-static IPSFactoryBufferVtbl CStdPSFactory_Vtbl =
+static const IPSFactoryBufferVtbl CStdPSFactory_Vtbl =
 {
   CStdPSFactory_QueryInterface,
   CStdPSFactory_AddRef,

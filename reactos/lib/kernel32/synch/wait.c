@@ -91,15 +91,19 @@ WaitForSingleObjectEx(HANDLE hHandle,
       TimePtr = &Time;
     }
 
-  Status = NtWaitForSingleObject(hHandle,
-				 (BOOLEAN) bAlertable,
-				 TimePtr);
-
-  if (HIWORD(Status))
+  do
     {
-      SetLastErrorByStatus (Status);
-      return WAIT_FAILED;
-    }
+      Status = NtWaitForSingleObject(hHandle,
+				     (BOOLEAN) bAlertable,
+				     TimePtr);
+
+      if (HIWORD(Status))
+        {
+          SetLastErrorByStatus (Status);
+          return WAIT_FAILED;
+        }
+
+    } while (Status == STATUS_ALERTED && bAlertable);
 
   return Status;
 }
@@ -210,21 +214,25 @@ WaitForMultipleObjectsEx(DWORD nCount,
       TimePtr = &Time;
     }
 
-  Status = NtWaitForMultipleObjects (nCount,
-				     HandleBuffer,
-				     bWaitAll  ? WaitAll : WaitAny,
-				     (BOOLEAN)bAlertable,
-				     TimePtr);
-  if (HandleBuffer != Handle)
+  do
     {
-      RtlFreeHeap(RtlGetProcessHeap(), 0, HandleBuffer);
-    }
+      Status = NtWaitForMultipleObjects (nCount,
+				         HandleBuffer,
+				         bWaitAll  ? WaitAll : WaitAny,
+				         (BOOLEAN)bAlertable,
+				         TimePtr);
+      if (HIWORD(Status))
+        {
+          SetLastErrorByStatus (Status);
+          Status = WAIT_FAILED;
+        }
 
-  if (HIWORD(Status))
-    {
-      SetLastErrorByStatus (Status);
-      return WAIT_FAILED;
-    }
+    } while (Status == STATUS_ALERTED && bAlertable);
+
+  if (HandleBuffer != Handle)
+  {
+      RtlFreeHeap(RtlGetProcessHeap(), 0, HandleBuffer);
+  }
 
   return Status;
 }
@@ -266,7 +274,7 @@ SignalObjectAndWait(HANDLE hObjectToSignal,
 	{
 	  DPRINT1("Console handles are not supported yet!\n");
 	  SetLastError(ERROR_INVALID_HANDLE);
-	  return FALSE;
+	  return WAIT_FAILED;
 	}
     }
 
@@ -280,17 +288,22 @@ SignalObjectAndWait(HANDLE hObjectToSignal,
       TimePtr = &Time;
     }
 
-  Status = NtSignalAndWaitForSingleObject (hObjectToSignal,
-					   hObjectToWaitOn,
-					   (BOOLEAN)bAlertable,
-					   TimePtr);
-  if (!NT_SUCCESS(Status))
+  do
     {
-      SetLastErrorByStatus (Status);
-      return FALSE;
-    }
+      Status = NtSignalAndWaitForSingleObject (hObjectToSignal,
+					       hObjectToWaitOn,
+					       (BOOLEAN)bAlertable,
+					       TimePtr);
+      if (!NT_SUCCESS(Status))
+        {
+          SetLastErrorByStatus (Status);
+          return WAIT_FAILED;
+        }
 
-  return TRUE;
+    } while (Status == STATUS_ALERTED && bAlertable);
+
+  /* STATUS_SUCCESS maps to WAIT_OBJECT_0 */
+  return Status;
 }
 
 /* EOF */

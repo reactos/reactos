@@ -74,6 +74,7 @@ ExpDeleteProfile(PVOID ObjectBody)
 
 VOID
 INIT_FUNCTION
+STDCALL
 ExpInitializeProfileImplementation(VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
@@ -93,7 +94,6 @@ ExpInitializeProfileImplementation(VOID)
     ObjectTypeInitializer.PoolType = NonPagedPool;
     ObjectTypeInitializer.DeleteProcedure = ExpDeleteProfile;
     ObjectTypeInitializer.ValidAccessMask = STANDARD_RIGHTS_ALL;
-    ObjectTypeInitializer.UseDefaultObject = TRUE;
     ObpCreateTypeObject(&ObjectTypeInitializer, &Name, &ExProfileObjectType);
 }
 

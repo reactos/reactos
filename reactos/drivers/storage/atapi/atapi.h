@@ -161,64 +161,64 @@ extern "C" {
 
 typedef struct _IDE_DRIVE_IDENTIFY
 {
-  WORD  ConfigBits;          /*00*/
-  WORD  LogicalCyls;         /*01*/
-  WORD  Reserved02;          /*02*/
-  WORD  LogicalHeads;        /*03*/
-  WORD  BytesPerTrack;       /*04*/
-  WORD  BytesPerSector;      /*05*/
-  WORD  SectorsPerTrack;     /*06*/
-  BYTE   InterSectorGap;      /*07*/
-  BYTE   InterSectorGapSize;
-  BYTE   Reserved08H;         /*08*/
-  BYTE   BytesInPLO;
-  WORD  VendorUniqueCnt;     /*09*/
-  char   SerialNumber[20];    /*10*/
-  WORD  ControllerType;      /*20*/
-  WORD  BufferSize;          /*21*/
-  WORD  ECCByteCnt;          /*22*/
-  char   FirmwareRev[8];      /*23*/
-  char   ModelNumber[40];     /*27*/
-  WORD  RWMultImplemented;   /*47*/
-  WORD  DWordIo;	     /*48*/
-  WORD  Capabilities;        /*49*/
+  USHORT ConfigBits;          /*00*/
+  USHORT LogicalCyls;         /*01*/
+  USHORT Reserved02;          /*02*/
+  USHORT LogicalHeads;        /*03*/
+  USHORT BytesPerTrack;       /*04*/
+  USHORT BytesPerSector;      /*05*/
+  USHORT SectorsPerTrack;     /*06*/
+  UCHAR  InterSectorGap;      /*07*/
+  UCHAR  InterSectorGapSize;
+  UCHAR  Reserved08H;         /*08*/
+  UCHAR  BytesInPLO;
+  USHORT VendorUniqueCnt;     /*09*/
+  UCHAR  SerialNumber[20];    /*10*/
+  USHORT ControllerType;      /*20*/
+  USHORT BufferSize;          /*21*/
+  USHORT ECCByteCnt;          /*22*/
+  UCHAR  FirmwareRev[8];      /*23*/
+  UCHAR  ModelNumber[40];     /*27*/
+  USHORT RWMultImplemented;   /*47*/
+  USHORT DWordIo;             /*48*/
+  USHORT Capabilities;        /*49*/
 #define IDE_DRID_STBY_SUPPORTED   0x2000
 #define IDE_DRID_IORDY_SUPPORTED  0x0800
 #define IDE_DRID_IORDY_DISABLE    0x0400
 #define IDE_DRID_LBA_SUPPORTED    0x0200
 #define IDE_DRID_DMA_SUPPORTED    0x0100
-  WORD  Reserved50;          /*50*/
-  WORD  MinPIOTransTime;     /*51*/
-  WORD  MinDMATransTime;     /*52*/
-  WORD  TMFieldsValid;       /*53*/
-  WORD  TMCylinders;         /*54*/
-  WORD  TMHeads;             /*55*/
-  WORD  TMSectorsPerTrk;     /*56*/
-  WORD  TMCapacityLo;        /*57*/
-  WORD  TMCapacityHi;        /*58*/
-  WORD  RWMultCurrent;       /*59*/
-  WORD  TMSectorCountLo;     /*60*/
-  WORD  TMSectorCountHi;     /*61*/
-  WORD  DmaModes;            /*62*/
-  WORD  MultiDmaModes;       /*63*/
-  WORD  Reserved64[5];       /*64*/
-  WORD  Reserved69[2];       /*69*/
-  WORD  Reserved71[4];       /*71*/
-  WORD  MaxQueueDepth;       /*75*/
-  WORD  Reserved76[4];       /*76*/
-  WORD  MajorRevision;       /*80*/
-  WORD  MinorRevision;       /*81*/
-  WORD  SupportedFeatures82; /*82*/
-  WORD  SupportedFeatures83; /*83*/
-  WORD  SupportedFeatures84; /*84*/
-  WORD  EnabledFeatures85;   /*85*/
-  WORD  EnabledFeatures86;   /*86*/
-  WORD  EnabledFeatures87;   /*87*/
-  WORD  UltraDmaModes;       /*88*/
-  WORD  Reserved89[11];      /*89*/
-  WORD  Max48BitAddress[4];  /*100*/
-  WORD  Reserved104[151];    /*104*/
-  WORD  Checksum;            /*255*/
+  USHORT Reserved50;          /*50*/
+  USHORT MinPIOTransTime;     /*51*/
+  USHORT MinDMATransTime;     /*52*/
+  USHORT TMFieldsValid;       /*53*/
+  USHORT TMCylinders;         /*54*/
+  USHORT TMHeads;             /*55*/
+  USHORT TMSectorsPerTrk;     /*56*/
+  USHORT TMCapacityLo;        /*57*/
+  USHORT TMCapacityHi;        /*58*/
+  USHORT RWMultCurrent;       /*59*/
+  USHORT TMSectorCountLo;     /*60*/
+  USHORT TMSectorCountHi;     /*61*/
+  USHORT DmaModes;            /*62*/
+  USHORT MultiDmaModes;       /*63*/
+  USHORT Reserved64[5];       /*64*/
+  USHORT Reserved69[2];       /*69*/
+  USHORT Reserved71[4];       /*71*/
+  USHORT MaxQueueDepth;       /*75*/
+  USHORT Reserved76[4];       /*76*/
+  USHORT MajorRevision;       /*80*/
+  USHORT MinorRevision;       /*81*/
+  USHORT SupportedFeatures82; /*82*/
+  USHORT SupportedFeatures83; /*83*/
+  USHORT SupportedFeatures84; /*84*/
+  USHORT EnabledFeatures85;   /*85*/
+  USHORT EnabledFeatures86;   /*86*/
+  USHORT EnabledFeatures87;   /*87*/
+  USHORT UltraDmaModes;       /*88*/
+  USHORT Reserved89[11];      /*89*/
+  USHORT Max48BitAddress[4];  /*100*/
+  USHORT Reserved104[151];    /*104*/
+  USHORT Checksum;            /*255*/
 } IDE_DRIVE_IDENTIFY, *PIDE_DRIVE_IDENTIFY;
 
 

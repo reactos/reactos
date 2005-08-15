@@ -321,8 +321,8 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
    }
 
    /* Set memory limits */
-   MmUserProbeAddress = 0x7fff0000;
-   MmHighestUserAddress = (PVOID)0x7ffeffff;
+   MmUserProbeAddress = (ULONG_PTR)MmSystemRangeStart - 0x10000;
+   MmHighestUserAddress = (PVOID)(MmUserProbeAddress - 1);
 
    /*
     * Initialize memory managment statistics

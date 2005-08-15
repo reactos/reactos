@@ -47,15 +47,11 @@ int system(const char *command)
 
   if (szComSpec == NULL)
   {
-    szComSpec = _strdup("cmd.exe");
-    if (szComSpec == NULL)
-    {
-       __set_errno(ENOMEM);
-       return -1;
-    }
+    szComSpec = "cmd.exe";
   }
 
-  s = max(strchr(szComSpec, '\\'), strchr(szComSpec, '/'));
+  /* split the path from shell command */
+  s = max(strrchr(szComSpec, '\\'), strrchr(szComSpec, '/'));
   if (s == NULL)
     s = szComSpec;
   else
@@ -64,7 +60,6 @@ int system(const char *command)
   szCmdLine = malloc(strlen(s) + 4 + strlen(command) + 1);
   if (szCmdLine == NULL)
   {
-     free (szComSpec);
      __set_errno(ENOMEM);
      return -1;
   }
@@ -81,7 +76,7 @@ int system(const char *command)
   memset (&StartupInfo, 0, sizeof(StartupInfo));
   StartupInfo.cb = sizeof(StartupInfo);
   StartupInfo.lpReserved= NULL;
-  StartupInfo.dwFlags = 0;
+  StartupInfo.dwFlags = STARTF_USESHOWWINDOW;
   StartupInfo.wShowWindow = SW_SHOWDEFAULT;
   StartupInfo.lpReserved2 = NULL;
   StartupInfo.cbReserved2 = 0;
@@ -98,13 +93,12 @@ int system(const char *command)
 			  NULL,
 			  NULL,
 			  TRUE,
-			  0,
+			  CREATE_NEW_PROCESS_GROUP,
 			  NULL,
 			  NULL,
 			  &StartupInfo,
 			  &ProcessInformation);
   free(szCmdLine);
-  free(szComSpec);
 
   if (result == FALSE)
   {

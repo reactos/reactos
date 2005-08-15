@@ -313,6 +313,7 @@ IntEngCreateMonoXlate(
    XlateGDI->SourcePal = PaletteSource;
 
    XlateObj->flXlate = XO_TO_MONO;
+   XlateObj->pulXlate = &XlateGDI->BackgroundColor;
    switch (SourcePalType)
    {
       case PAL_INDEXED:
@@ -478,10 +479,10 @@ XLATEOBJ_iXlate(XLATEOBJ *XlateObj, ULONG Color)
    if (XlateObj->flXlate & XO_TABLE)
       return XlateObj->pulXlate[Color];
 
-   XlateGDI = ObjToGDI(XlateObj, XLATE);
-
    if (XlateObj->flXlate & XO_TO_MONO)
-      return Color == XlateGDI->BackgroundColor;
+      return Color == XlateObj->pulXlate[0];
+
+   XlateGDI = ObjToGDI(XlateObj, XLATE);
 
    if (XlateGDI->UseShiftAndMask)
       return ShiftAndMask(XlateGDI, Color);

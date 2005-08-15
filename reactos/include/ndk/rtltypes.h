@@ -11,6 +11,7 @@
 
 /* DEPENDENCIES **************************************************************/
 #include "zwtypes.h"
+#include "excpt.h"
 
 /* EXPORTED DATA *************************************************************/
 
@@ -39,11 +40,11 @@
 #define EXCEPTION_TARGET_UNWIND 0x20
 #define EXCEPTION_COLLIDED_UNWIND 0x20
 
-#define  EH_NONCONTINUABLE   0x01
-#define  EH_UNWINDING        0x02
-#define  EH_EXIT_UNWIND      0x04
-#define  EH_STACK_INVALID    0x08
-#define  EH_NESTED_CALL      0x10
+#define EH_NONCONTINUABLE   0x01
+#define EH_UNWINDING        0x02
+#define EH_EXIT_UNWIND      0x04
+#define EH_STACK_INVALID    0x08
+#define EH_NESTED_CALL      0x10
 
 #define RTL_RANGE_LIST_ADD_IF_CONFLICT  0x00000001
 #define RTL_RANGE_LIST_ADD_SHARED       0x00000002
@@ -66,14 +67,6 @@
 #define RTL_ATOM_IS_PINNED      0x1
 
 /* ENUMERATIONS **************************************************************/
-
-typedef enum
-{
-    ExceptionContinueExecution,
-    ExceptionContinueSearch,
-    ExceptionNestedException,
-    ExceptionCollidedUnwind
-} EXCEPTION_DISPOSITION;
 
 typedef enum
 {
@@ -102,16 +95,16 @@ typedef EXCEPTION_DISPOSITION
     PVOID
 );
 
-typedef LONG (STDCALL *PVECTORED_EXCEPTION_HANDLER)(
+typedef LONG (NTAPI *PVECTORED_EXCEPTION_HANDLER)(
     PEXCEPTION_POINTERS ExceptionPointers
 );
 
-typedef DWORD (STDCALL *PTHREAD_START_ROUTINE)(
+typedef DWORD (NTAPI *PTHREAD_START_ROUTINE)(
     LPVOID Parameter
 );
 
 typedef VOID
-(STDCALL *PRTL_BASE_PROCESS_START_ROUTINE)(
+(NTAPI *PRTL_BASE_PROCESS_START_ROUTINE)(
     PTHREAD_START_ROUTINE StartAddress,
     PVOID Parameter
 );
@@ -120,6 +113,11 @@ typedef VOID
 
 typedef unsigned short RTL_ATOM;
 typedef unsigned short *PRTL_ATOM;
+
+/* Once again, we don't want to force NTIFS for something like this */
+#if !defined(_NTIFS_) && !defined(NTOS_MODE_USER)
+typedef PVOID PRTL_HEAP_PARAMETERS;
+#endif
 
 typedef ACL_REVISION_INFORMATION *PACL_REVISION_INFORMATION;
 typedef ACL_SIZE_INFORMATION *PACL_SIZE_INFORMATION;
@@ -194,19 +192,19 @@ typedef struct _DEBUG_LOCK_INFORMATION
 
 typedef struct _RTL_HANDLE_TABLE_ENTRY
 {
-     ULONG Flags;
-     struct _RTL_HANDLE_TABLE_ENTRY *NextFree;
+    ULONG Flags;
+    struct _RTL_HANDLE_TABLE_ENTRY *NextFree;
 } RTL_HANDLE_TABLE_ENTRY, *PRTL_HANDLE_TABLE_ENTRY;
 
 typedef struct _RTL_HANDLE_TABLE
 {
-     ULONG MaximumNumberOfHandles;
-     ULONG SizeOfHandleTableEntry;
-     ULONG Reserved[2];
-     PRTL_HANDLE_TABLE_ENTRY FreeHandles;
-     PRTL_HANDLE_TABLE_ENTRY CommittedHandles;
-     PRTL_HANDLE_TABLE_ENTRY UnCommittedHandles;
-     PRTL_HANDLE_TABLE_ENTRY MaxReservedHandles;
+    ULONG MaximumNumberOfHandles;
+    ULONG SizeOfHandleTableEntry;
+    ULONG Reserved[2];
+    PRTL_HANDLE_TABLE_ENTRY FreeHandles;
+    PRTL_HANDLE_TABLE_ENTRY CommittedHandles;
+    PRTL_HANDLE_TABLE_ENTRY UnCommittedHandles;
+    PRTL_HANDLE_TABLE_ENTRY MaxReservedHandles;
 } RTL_HANDLE_TABLE, *PRTL_HANDLE_TABLE;
 
 typedef struct _LOCK_INFORMATION
@@ -226,19 +224,15 @@ typedef struct _MODULE_INFORMATION
     ULONG ModuleCount;
     DEBUG_MODULE_INFORMATION ModuleEntry[1];
 } MODULE_INFORMATION, *PMODULE_INFORMATION;
-
-typedef struct _RTL_HEAP_DEFINITION
-{
-    ULONG Length;
-    ULONG Unknown[11];
-} RTL_HEAP_DEFINITION, *PRTL_HEAP_DEFINITION;
 /* END REVIEW AREA */
 
+#ifdef _INC_EXCPT
 typedef struct _EXCEPTION_REGISTRATION
 {
-    struct _EXCEPTION_REGISTRATION*    prev;
-    PEXCEPTION_HANDLER        handler;
+    struct _EXCEPTION_REGISTRATION *prev;
+    PEXCEPTION_HANDLER handler;
 } EXCEPTION_REGISTRATION, *PEXCEPTION_REGISTRATION;
+#endif
 
 typedef EXCEPTION_REGISTRATION EXCEPTION_REGISTRATION_RECORD;
 typedef PEXCEPTION_REGISTRATION PEXCEPTION_REGISTRATION_RECORD;
@@ -276,7 +270,7 @@ typedef struct _RTL_RANGE
 } RTL_RANGE, *PRTL_RANGE;
 
 typedef BOOLEAN
-(STDCALL *PRTL_CONFLICT_RANGE_CALLBACK) (
+(NTAPI *PRTL_CONFLICT_RANGE_CALLBACK) (
     PVOID Context,
     PRTL_RANGE Range
 );
@@ -296,10 +290,10 @@ typedef struct _RTL_RESOURCE
 
 typedef struct _RANGE_LIST_ITERATOR
 {
-  PLIST_ENTRY RangeListHead;
-  PLIST_ENTRY MergedHead;
-  PVOID Current;
-  ULONG Stamp;
+    PLIST_ENTRY RangeListHead;
+    PLIST_ENTRY MergedHead;
+    PVOID Current;
+    ULONG Stamp;
 } RTL_RANGE_LIST_ITERATOR, *PRTL_RANGE_LIST_ITERATOR;
 
 typedef struct _RTL_MESSAGE_RESOURCE_ENTRY
@@ -324,15 +318,15 @@ typedef struct _RTL_MESSAGE_RESOURCE_DATA
 
 typedef struct _NLS_FILE_HEADER
 {
-    USHORT  HeaderSize;
-    USHORT  CodePage;
-    USHORT  MaximumCharacterSize;  /* SBCS = 1, DBCS = 2 */
-    USHORT  DefaultChar;
-    USHORT  UniDefaultChar;
-    USHORT  TransDefaultChar;
-    USHORT  TransUniDefaultChar;
-    USHORT  DBCSCodePage;
-    UCHAR   LeadByte[MAXIMUM_LEADBYTES];
+    USHORT HeaderSize;
+    USHORT CodePage;
+    USHORT MaximumCharacterSize;  /* SBCS = 1, DBCS = 2 */
+    USHORT DefaultChar;
+    USHORT UniDefaultChar;
+    USHORT TransDefaultChar;
+    USHORT TransUniDefaultChar;
+    USHORT DBCSCodePage;
+    UCHAR LeadByte[MAXIMUM_LEADBYTES];
 } NLS_FILE_HEADER, *PNLS_FILE_HEADER;
 
 typedef struct _RTL_USER_PROCESS_PARAMETERS
@@ -357,7 +351,7 @@ typedef struct _RTL_USER_PROCESS_PARAMETERS
     ULONG CountY;
     ULONG CountCharsX;
     ULONG CountCharsY;
-    ULONG FillAttribute;;
+    ULONG FillAttribute;
     ULONG WindowFlags;
     ULONG ShowWindowFlags;
     UNICODE_STRING WindowTitle;
@@ -405,7 +399,7 @@ typedef struct _RTL_ATOM_TABLE
 } RTL_ATOM_TABLE, *PRTL_ATOM_TABLE;
 
 /* Let Kernel Drivers use this */
-#ifndef _WINBASE_H
+#if !defined(_WINBASE_H) && !defined(_WINBASE_)
     typedef struct _SYSTEMTIME
     {
         WORD wYear;

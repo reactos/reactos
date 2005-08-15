@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    AFM support for Type 1 fonts (body).                                 */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003 by                                     */
+/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -18,6 +18,7 @@
 
 #include <ft2build.h>
 #include "t1afm.h"
+#include "t1errors.h"
 #include FT_INTERNAL_STREAM_H
 #include FT_INTERNAL_TYPE1_TYPES_H
 
@@ -33,8 +34,8 @@
 
 
   FT_LOCAL_DEF( void )
-  T1_Done_AFM( FT_Memory  memory,
-               T1_AFM*    afm )
+  T1_Done_Metrics( FT_Memory  memory,
+                   T1_AFM*    afm )
   {
     FT_FREE( afm->kern_pairs );
     afm->num_pairs = 0;
@@ -63,13 +64,13 @@
 
 
     /* skip whitespace */
-    while ( ( *p == ' ' || *p == '\t' || *p == ':' || *p == ';' ) &&
-            p < limit                                             )
+    while ( p < limit                                             &&
+            ( *p == ' ' || *p == '\t' || *p == ':' || *p == ';' ) )
       p++;
     *start = p;
 
     /* now, read glyph name */
-    while ( IS_ALPHANUM( *p ) && p < limit )
+    while ( p < limit && IS_ALPHANUM( *p ) )
       p++;
 
     len = p - *start;
@@ -153,11 +154,11 @@
 
 
   /* parse an AFM file -- for now, only read the kerning pairs */
-  FT_LOCAL_DEF( FT_Error )
+  static FT_Error
   T1_Read_AFM( FT_Face    t1_face,
                FT_Stream  stream )
   {
-    FT_Error       error;
+    FT_Error       error = T1_Err_Ok;
     FT_Memory      memory = stream->memory;
     FT_Byte*       start;
     FT_Byte*       limit;
@@ -167,9 +168,6 @@
     T1_Font        type1 = &((T1_Face)t1_face)->type1;
     T1_AFM*        afm   = 0;
 
-
-    if ( FT_FRAME_ENTER( stream->size ) )
-      return error;
 
     start = (FT_Byte*)stream->cursor;
     limit = (FT_Byte*)stream->limit;
@@ -232,6 +230,173 @@
   Exit:
     if ( error )
       FT_FREE( afm );
+
+    return error;
+  }
+
+
+#define LITTLE_ENDIAN_USHORT( p )  (FT_UShort)( ( (p)[0]       ) | \
+                                                ( (p)[1] <<  8 ) )
+
+#define LITTLE_ENDIAN_UINT( p )  (FT_UInt)( ( (p)[0]       ) | \
+                                            ( (p)[1] <<  8 ) | \
+                                            ( (p)[2] << 16 ) | \
+                                            ( (p)[3] << 24 ) )
+
+
+  /* parse a PFM file -- for now, only read the kerning pairs */
+  static FT_Error
+  T1_Read_PFM( FT_Face    t1_face,
+               FT_Stream  stream )
+  {
+    FT_Error       error = T1_Err_Ok;
+    FT_Memory      memory = stream->memory;
+    FT_Byte*       start;
+    FT_Byte*       limit;
+    FT_Byte*       p;
+    FT_Int         kern_count = 0;
+    T1_Kern_Pair*  pair;
+    T1_AFM*        afm = 0;
+    FT_Int         width_table_length;
+    FT_CharMap     oldcharmap;
+    FT_CharMap     charmap;
+    FT_Int         n;
+
+
+    start = (FT_Byte*)stream->cursor;
+    limit = (FT_Byte*)stream->limit;
+    p     = start;
+
+    /* Figure out how long the width table is.          */
+    /* This info is a little-endian short at offset 99. */
+    p = start + 99;
+    if ( p + 2 > limit )
+    {
+      error = T1_Err_Unknown_File_Format;
+      goto Exit;
+    }
+    width_table_length = LITTLE_ENDIAN_USHORT( p );
+
+    p += 18 + width_table_length;
+    if ( p + 0x12 > limit || LITTLE_ENDIAN_USHORT( p ) < 0x12 )
+      /* extension table is probably optional */
+      goto Exit;
+
+    /* Kerning offset is 14 bytes from start of extensions table. */
+    p += 14;
+    p = start + LITTLE_ENDIAN_UINT( p );
+    if ( p + 2 > limit )
+    {
+      error = T1_Err_Unknown_File_Format;
+      goto Exit;
+    }
+
+    kern_count = LITTLE_ENDIAN_USHORT( p );
+    p += 2;
+    if ( p + 4 * kern_count > limit )
+    {
+      error = T1_Err_Unknown_File_Format;
+      goto Exit;
+    }
+
+    /* Actually, kerning pairs are simply optional! */
+    if ( kern_count == 0 )
+      goto Exit;
+
+    /* allocate the pairs */
+    if ( FT_NEW( afm ) || FT_NEW_ARRAY( afm->kern_pairs, kern_count ) )
+      goto Exit;
+
+    /* save in face object */
+    ((T1_Face)t1_face)->afm_data = afm;
+
+    t1_face->face_flags |= FT_FACE_FLAG_KERNING;
+
+    /* now, read each kern pair */
+    pair           = afm->kern_pairs;
+    afm->num_pairs = kern_count;
+    limit          = p + 4 * kern_count;
+
+    /* PFM kerning data are stored by encoding rather than glyph index, */
+    /* so find the PostScript charmap of this font and install it       */
+    /* temporarily.  If we find no PostScript charmap, then just use    */
+    /* the default and hope it is the right one.                        */
+    oldcharmap = t1_face->charmap;
+    charmap    = NULL;
+
+    for ( n = 0; n < t1_face->num_charmaps; n++ )
+    {
+      charmap = t1_face->charmaps[n];
+      /* check against PostScript pseudo platform */
+      if ( charmap->platform_id == 7 )
+      {
+        error = FT_Set_Charmap( t1_face, charmap );
+        if ( error )
+          goto Exit;
+        break;
+      }
+    }
+
+    /* Kerning info is stored as:             */
+    /*                                        */
+    /*   encoding of first glyph (1 byte)     */
+    /*   encoding of second glyph (1 byte)    */
+    /*   offset (little-endian short)         */
+    for ( ; p < limit ; p+=4 )
+    {
+      pair->glyph1 = FT_Get_Char_Index( t1_face, p[0] );
+      pair->glyph2 = FT_Get_Char_Index( t1_face, p[1] );
+
+      pair->kerning.x = (FT_Short)LITTLE_ENDIAN_USHORT(p + 2);
+      pair->kerning.y = 0;
+
+      pair++;
+    }
+
+    if ( oldcharmap != NULL )
+      error = FT_Set_Charmap( t1_face, oldcharmap );
+    if ( error )
+      goto Exit;
+
+    /* now, sort the kern pairs according to their glyph indices */
+    ft_qsort( afm->kern_pairs, kern_count, sizeof ( T1_Kern_Pair ),
+              compare_kern_pairs );
+
+  Exit:
+    if ( error )
+      FT_FREE( afm );
+
+    return error;
+  }
+
+
+  /* parse a metrics file -- either AFM or PFM depending on what */
+  /* it turns out to be                                          */
+  FT_LOCAL_DEF( FT_Error )
+  T1_Read_Metrics( FT_Face    t1_face,
+                   FT_Stream  stream )
+  {
+    FT_Error  error;
+    FT_Byte*  start;
+
+
+    if ( FT_FRAME_ENTER( stream->size ) )
+      return error;
+
+    start = (FT_Byte*)stream->cursor;
+
+    if ( stream->size >= ft_strlen( "StartFontMetrics" )    &&
+         ft_strncmp( (const char*)start, "StartFontMetrics",
+                     ft_strlen( "StartFontMetrics" ) ) == 0 )
+      error = T1_Read_AFM( t1_face, stream );
+
+    else if ( stream->size > 6                                &&
+              start[0] == 0x00 && start[1] == 0x01            &&
+              LITTLE_ENDIAN_UINT( start + 2 ) == stream->size )
+      error = T1_Read_PFM( t1_face, stream );
+
+    else
+      error = T1_Err_Unknown_File_Format;
 
     FT_FRAME_EXIT();
 

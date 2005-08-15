@@ -9,12 +9,13 @@
  *                  Created ???
  */
 
-#include "advapi32.h"
+#include <advapi32.h>
 #define NDEBUG
 #include <debug.h>
 
 extern BOOL RegInitialize(VOID);
 extern BOOL RegCleanup(VOID);
+extern VOID UnloadNtMarta(VOID);
 
 INT STDCALL
 DllMain(PVOID hinstDll,
@@ -30,6 +31,7 @@ DllMain(PVOID hinstDll,
 
      case DLL_PROCESS_DETACH:
 	RegCleanup();
+	UnloadNtMarta();
 	break;
      }
 

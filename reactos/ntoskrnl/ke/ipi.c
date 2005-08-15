@@ -22,14 +22,15 @@ KSPIN_LOCK KiIpiLock;
 /* FUNCTIONS *****************************************************************/
 
 VOID
-KiIpiSendRequest(ULONG TargetSet, ULONG IpiRequest)
+KiIpiSendRequest(KAFFINITY TargetSet, ULONG IpiRequest)
 {
    LONG i;
    PKPCR Pcr;
+   KAFFINITY Current;
 
-   for (i = 0; i < KeNumberProcessors; i++)
+   for (i = 0, Current = 1; i < KeNumberProcessors; i++, Current <<= 1)
    {
-      if (TargetSet & (1 << i))
+      if (TargetSet & Current)
       {
          Pcr = (PKPCR)(KPCR_BASE + i * PAGE_SIZE);
 	 Ke386TestAndSetBit(IpiRequest, &Pcr->Prcb->IpiFrozen);
@@ -116,9 +117,9 @@ KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame,
 
 VOID
 STDCALL
-KiIpiSendPacket(ULONG TargetSet, VOID (STDCALL*WorkerRoutine)(PVOID), PVOID Argument, ULONG Count, BOOLEAN Synchronize)
+KiIpiSendPacket(KAFFINITY TargetSet, VOID (STDCALL*WorkerRoutine)(PVOID), PVOID Argument, ULONG Count, BOOLEAN Synchronize)
 {
-    ULONG Processor, CurrentProcessor;
+    KAFFINITY Processor;
     LONG i;
     PKPRCB Prcb, CurrentPrcb;
     KIRQL oldIrql;
@@ -133,8 +134,6 @@ KiIpiSendPacket(ULONG TargetSet, VOID (STDCALL*WorkerRoutine)(PVOID), PVOID Argu
     InterlockedExchangeUL(&CurrentPrcb->CurrentPacket[1], Count);
     InterlockedExchangeUL(&CurrentPrcb->CurrentPacket[2], Synchronize ? 1 : 0);
 
-    CurrentProcessor = 1 << KeGetCurrentProcessorNumber();
-
     for (i = 0, Processor = 1; i < KeNumberProcessors; i++, Processor <<= 1)
     {
        if (TargetSet & Processor)
@@ -142,13 +141,13 @@ KiIpiSendPacket(ULONG TargetSet, VOID (STDCALL*WorkerRoutine)(PVOID), PVOID Argu
 	  Prcb = ((PKPCR)(KPCR_BASE + i * PAGE_SIZE))->Prcb;
 	  while(0 != InterlockedCompareExchangeUL(&Prcb->SignalDone, (LONG)CurrentPrcb, 0));
 	  Ke386TestAndSetBit(IPI_REQUEST_FUNCTIONCALL, &Prcb->IpiFrozen);
-	  if (Processor != CurrentProcessor)
+	  if (Processor != CurrentPrcb->SetMember)
 	  {
 	     HalRequestIpi(i);
 	  }
        }
     }
-    if (TargetSet & CurrentProcessor)
+    if (TargetSet & CurrentPrcb->SetMember)
     {
        KeRaiseIrql(IPI_LEVEL, &oldIrql);
        KiIpiServiceRoutine(NULL, NULL);
@@ -160,7 +159,7 @@ VOID
 KeIpiGenericCall(VOID (STDCALL *Function)(PVOID), PVOID Argument)
 {
    KIRQL oldIrql;
-   ULONG TargetSet;
+   KAFFINITY TargetSet;
 
    DPRINT("KeIpiGenericCall on CPU%d\n", KeGetCurrentProcessorNumber());
 

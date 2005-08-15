@@ -8,30 +8,41 @@ extern LARGE_INTEGER ExpTimeZoneBias;
 extern ULONG ExpTimeZoneId;
 extern POBJECT_TYPE ExEventPairObjectType;
 
+#define EX_OBJ_TO_HDR(eob) ((POBJECT_HEADER)((ULONG_PTR)(eob) &                \
+  ~(EX_HANDLE_ENTRY_PROTECTFROMCLOSE | EX_HANDLE_ENTRY_INHERITABLE |           \
+  EX_HANDLE_ENTRY_AUDITONCLOSE)))
+#define EX_HTE_TO_HDR(hte) ((POBJECT_HEADER)((ULONG_PTR)((hte)->u1.Object) &   \
+  ~(EX_HANDLE_ENTRY_PROTECTFROMCLOSE | EX_HANDLE_ENTRY_INHERITABLE |           \
+  EX_HANDLE_ENTRY_AUDITONCLOSE)))
+
 /* INITIALIZATION FUNCTIONS *************************************************/
 
 VOID
+STDCALL
 ExpWin32kInit(VOID);
 
 VOID
+STDCALL
 ExInit2(VOID);
 
 VOID
-ExInit3(VOID);
-
-VOID
+STDCALL
 ExpInitTimeZoneInfo(VOID);
 
 VOID
+STDCALL
 ExpInitializeWorkerThreads(VOID);
 
 VOID
+STDCALL
 ExpInitLookasideLists(VOID);
 
 VOID
+STDCALL
 ExpInitializeCallbacks(VOID);
 
 VOID
+STDCALL
 ExpInitUuids(VOID);
 
 VOID
@@ -39,24 +50,31 @@ STDCALL
 ExpInitializeExecutive(VOID);
 
 VOID
+STDCALL
 ExpInitializeEventImplementation(VOID);
 
 VOID
+STDCALL
 ExpInitializeEventImplementation(VOID);
 
 VOID
+STDCALL
 ExpInitializeEventPairImplementation(VOID);
 
 VOID
+STDCALL
 ExpInitializeSemaphoreImplementation(VOID);
 
 VOID
+STDCALL
 ExpInitializeMutantImplementation(VOID);
 
 VOID
+STDCALL
 ExpInitializeTimerImplementation(VOID);
 
 VOID
+STDCALL
 ExpInitializeProfileImplementation(VOID);
 
 /* HANDLE TABLE FUNCTIONS ***************************************************/
@@ -67,8 +85,6 @@ ExpInitializeProfileImplementation(VOID);
 #define EX_HANDLE_ENTRY_AUDITONCLOSE (1 << 2)
 
 #define EX_HANDLE_TABLE_CLOSING 0x1
-
-#define EX_INVALID_HANDLE (~0)
 
 #define EX_HANDLE_ENTRY_FLAGSMASK (EX_HANDLE_ENTRY_LOCKED |                    \
                                    EX_HANDLE_ENTRY_PROTECTFROMCLOSE |          \
@@ -127,7 +143,7 @@ ExUnlockHandleTableEntry(
     IN PHANDLE_TABLE_ENTRY Entry
 );
 
-LONG
+HANDLE
 ExCreateHandle(
     IN PHANDLE_TABLE HandleTable,
     IN PHANDLE_TABLE_ENTRY Entry
@@ -136,26 +152,26 @@ ExCreateHandle(
 BOOLEAN
 ExDestroyHandle(
     IN PHANDLE_TABLE HandleTable,
-    IN LONG Handle
+    IN HANDLE Handle
 );
 
 VOID
 ExDestroyHandleByEntry(
     IN PHANDLE_TABLE HandleTable,
     IN PHANDLE_TABLE_ENTRY Entry,
-    IN LONG Handle
+    IN HANDLE Handle
 );
 
 PHANDLE_TABLE_ENTRY
 ExMapHandleToPointer(
     IN PHANDLE_TABLE HandleTable,
-    IN LONG Handle
+    IN HANDLE Handle
 );
 
 BOOLEAN
 ExChangeHandle(
     IN PHANDLE_TABLE HandleTable,
-    IN LONG Handle,
+    IN HANDLE Handle,
     IN PEX_CHANGE_HANDLE_CALLBACK ChangeHandleCallback,
     IN PVOID Context
 );

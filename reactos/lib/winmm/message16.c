@@ -2522,7 +2522,7 @@ static  WINMM_MapType	MCI_UnMapMsg32ATo16(WORD uDevType, WORD wMsg, DWORD dwFlag
 /**************************************************************************
  * 			MCI_MapMsg16To32W			[internal]
  */
-static WINMM_MapType	MCI_MapMsg16To32W(WORD uDevType, WORD wMsg, DWORD* lParam)
+static WINMM_MapType	MCI_MapMsg16To32W(WORD uDevType, WORD wMsg, DWORD dwFlags, DWORD* lParam)
 {
     if (*lParam == 0)
 	return WINMM_MAP_OK;
@@ -2632,9 +2632,18 @@ static WINMM_MapType	MCI_MapMsg16To32W(WORD uDevType, WORD wMsg, DWORD* lParam)
 		mop32w = (LPMCI_OPEN_PARMSW)((char*)mop32w + sizeof(LPMCI_OPEN_PARMS16));
 		mop32w->dwCallback       = mop16->dwCallback;
 		mop32w->wDeviceID        = mop16->wDeviceID;
-		mop32w->lpstrDeviceType  = MCI_strdupAtoW(MapSL(mop16->lpstrDeviceType));
-                mop32w->lpstrElementName = MCI_strdupAtoW(MapSL(mop16->lpstrElementName));
-                mop32w->lpstrAlias       = MCI_strdupAtoW(MapSL(mop16->lpstrAlias));
+                if( ( dwFlags & ( MCI_OPEN_TYPE | MCI_OPEN_TYPE_ID)) == MCI_OPEN_TYPE)
+                    mop32w->lpstrDeviceType  = MCI_strdupAtoW(MapSL(mop16->lpstrDeviceType));
+                else
+                    mop32w->lpstrDeviceType  = (LPWSTR) mop16->lpstrDeviceType;
+                if( ( dwFlags & ( MCI_OPEN_ELEMENT | MCI_OPEN_ELEMENT_ID)) == MCI_OPEN_ELEMENT)
+                    mop32w->lpstrElementName = MCI_strdupAtoW(MapSL(mop16->lpstrElementName));
+                else
+                    mop32w->lpstrElementName = (LPWSTR) mop16->lpstrElementName;
+                if( ( dwFlags &  MCI_OPEN_ALIAS))
+                    mop32w->lpstrAlias = MCI_strdupAtoW(MapSL(mop16->lpstrAlias));
+                else
+                    mop32w->lpstrAlias = (LPWSTR) mop16->lpstrAlias;
 		/* copy extended information if any...
 		 * FIXME: this may seg fault if initial structure does not contain them and
 		 * the reads after msip16 fail under LDT limits...
@@ -2707,7 +2716,7 @@ static WINMM_MapType	MCI_MapMsg16To32W(WORD uDevType, WORD wMsg, DWORD* lParam)
 /**************************************************************************
  * 			MCI_UnMapMsg16To32W			[internal]
  */
-static  WINMM_MapType	MCI_UnMapMsg16To32W(WORD uDevType, WORD wMsg, DWORD lParam)
+static  WINMM_MapType	MCI_UnMapMsg16To32W(WORD uDevType, WORD wMsg, DWORD dwFlags, DWORD lParam)
 {
     switch (wMsg) {
 	/* case MCI_CAPTURE */
@@ -2798,9 +2807,12 @@ static  WINMM_MapType	MCI_UnMapMsg16To32W(WORD uDevType, WORD wMsg, DWORD lParam
 	    LPMCI_OPEN_PARMS16	mop16  = *(LPMCI_OPEN_PARMS16*)((char*)mop32w - sizeof(LPMCI_OPEN_PARMS16));
 
 	    mop16->wDeviceID = mop32w->wDeviceID;
-            HeapFree(GetProcessHeap(), 0, mop32w->lpstrDeviceType);
-            HeapFree(GetProcessHeap(), 0, mop32w->lpstrElementName);
-            HeapFree(GetProcessHeap(), 0, mop32w->lpstrAlias);
+            if( ( dwFlags & ( MCI_OPEN_TYPE | MCI_OPEN_TYPE_ID)) == MCI_OPEN_TYPE)
+                HeapFree(GetProcessHeap(), 0, mop32w->lpstrDeviceType);
+            if( ( dwFlags & ( MCI_OPEN_ELEMENT | MCI_OPEN_ELEMENT_ID)) == MCI_OPEN_ELEMENT)
+                HeapFree(GetProcessHeap(), 0, mop32w->lpstrElementName);
+            if( ( dwFlags &  MCI_OPEN_ALIAS))
+                HeapFree(GetProcessHeap(), 0, mop32w->lpstrAlias);
 	    if (!HeapFree(GetProcessHeap(), 0, (LPVOID)(lParam - sizeof(LPMCI_OPEN_PARMS16))))
 		FIXME("bad free line=%d\n", __LINE__);
 	}

@@ -2049,13 +2049,6 @@ typedef struct tagLVBKIMAGEW {
 	int yOffsetPercent;
 } LVBKIMAGEW, *LPLVBKIMAGEW;
 #endif /* _WIN32_IE >= 0x400 */
-typedef struct {
-	NMHDR hdr;
-	int iItem;
-	TBBUTTON tbButton;
-	int cchText;
-	LPTSTR pszText;
-} TBNOTIFY,*LPTBNOTIFY;
 typedef struct _IMAGEINFO {
 	HBITMAP hbmImage;
 	HBITMAP hbmMask;

@@ -586,7 +586,7 @@
 #endif /* FT_LONG64 */
 
 
-  /* a not-so-fast but working 16.16 fixed point square root function */
+  /* documentation is in ftcalc.h */
 
   FT_EXPORT_DEF( FT_Int32 )
   FT_SqrtFixed( FT_Int32  x )

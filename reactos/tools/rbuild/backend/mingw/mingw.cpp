@@ -566,6 +566,8 @@ MingwBackend::IncludeInAllTarget ( const Module& module ) const
 		return false;
 	if ( module.type == Test )
 		return false;
+	if ( module.type == Alias )
+		return false;
 	return true;
 }
 
@@ -977,6 +979,19 @@ MingwBackend::OutputNonModuleInstallTargets ()
 	}
 }
 
+const Module&
+MingwBackend::GetAliasedModuleOrModule ( const Module& module ) const
+{
+	if ( module.aliasedModuleName.size () > 0 )
+	{
+		const Module* aliasedModule = ProjectNode.LocateModule ( module.aliasedModuleName );
+		assert ( aliasedModule );
+		return *aliasedModule;
+	}
+	else
+		return module;
+}
+
 void
 MingwBackend::OutputModuleInstallTargets ()
 {
@@ -987,8 +1002,9 @@ MingwBackend::OutputModuleInstallTargets ()
 			continue;
 		if ( module.installName.length () > 0 )
 		{
+			const Module& aliasedModule = GetAliasedModuleOrModule ( module );
 			string sourceFilename = MingwModuleHandler::PassThruCacheDirectory (
-				NormalizeFilename ( module.GetPath () ),
+				NormalizeFilename ( aliasedModule.GetPath () ),
 				outputDirectory );
 			OutputInstallTarget ( sourceFilename,
 			                      module.installName,

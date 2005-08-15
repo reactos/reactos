@@ -299,19 +299,17 @@ do_spawnT(int mode, const _TCHAR* cmdname, const _TCHAR* args, const _TCHAR* env
    {
       case _P_NOWAIT:
       case _P_NOWAITO:
-         CloseHandle(ProcessInformation.hThread);
          return((int)ProcessInformation.hProcess);
       case _P_OVERLAY:
+         CloseHandle(ProcessInformation.hProcess);
          _exit(0);
       case _P_WAIT:
          WaitForSingleObject(ProcessInformation.hProcess, INFINITE);
          GetExitCodeProcess(ProcessInformation.hProcess, &dwExitCode);
          CloseHandle(ProcessInformation.hProcess);
-         CloseHandle(ProcessInformation.hThread);
          return( (int)dwExitCode); //CORRECT?
       case _P_DETACH:
          CloseHandle(ProcessInformation.hProcess);
-         CloseHandle(ProcessInformation.hThread);
          return( 0);
    }
    return( (int)ProcessInformation.hProcess);

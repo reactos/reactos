@@ -110,26 +110,25 @@ BOOLEAN STDCALL
 KiRosPrintAddress(PVOID address)
 {
    PLIST_ENTRY current_entry;
-   MODULE_TEXT_SECTION* current;
-   extern LIST_ENTRY ModuleTextListHead;
+   PLDR_DATA_TABLE_ENTRY current;
+   extern LIST_ENTRY ModuleListHead;
    ULONG_PTR RelativeAddress;
    ULONG i = 0;
 
    do
    {
-     current_entry = ModuleTextListHead.Flink;
+     current_entry = ModuleListHead.Flink;
 
-     while (current_entry != &ModuleTextListHead &&
-            current_entry != NULL)
+     while (current_entry != &ModuleListHead)
        {
           current =
-            CONTAINING_RECORD(current_entry, MODULE_TEXT_SECTION, ListEntry);
+            CONTAINING_RECORD(current_entry, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList);
 
-          if (address >= (PVOID)current->Base &&
-              address < (PVOID)(current->Base + current->Length))
+          if (address >= (PVOID)current->DllBase &&
+              address < (PVOID)((ULONG_PTR)current->DllBase + current->SizeOfImage))
             {
-              RelativeAddress = (ULONG_PTR) address - current->Base;
-              DbgPrint("<%ws: %x>", current->Name, RelativeAddress);
+              RelativeAddress = (ULONG_PTR) address - (ULONG_PTR) current->DllBase;
+              DbgPrint("<%wZ: %x>", &current->FullDllName, RelativeAddress);
               return(TRUE);
             }
           current_entry = current_entry->Flink;
@@ -473,6 +472,8 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
    NTSTATUS Status;
    ULONG Esp0;
 
+   ASSERT(ExceptionNr != 14);
+
    /* Store the exception number in an unused field in the trap frame. */
    Tf->DebugArgMark = (PVOID)ExceptionNr;
 
@@ -482,11 +483,6 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
    /* Get CR2 */
    cr2 = Ke386GetCr2();
    Tf->DebugPointer = (PVOID)cr2;
-
-   if (ExceptionNr == 14 && Tf->Eflags & FLAG_IF)
-   {
-     Ke386EnableInterrupts();
-   }
 
    /*
     * If this was a V86 mode exception then handle it specially
@@ -521,26 +517,6 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
         */
        DPRINT1("Ignoring P6 Local APIC Spurious Interrupt Bug...\n");
        return(0);
-     }
-
-   /*
-    * Maybe handle the page fault and return
-    */
-   if (ExceptionNr == 14)
-     {
-        if (Ke386NoExecute && Tf->ErrorCode & 0x10 && cr2 >= (ULONG_PTR)MmSystemRangeStart)
-	{
-           KEBUGCHECKWITHTF(ATTEMPTED_EXECUTE_OF_NOEXECUTE_MEMORY, 0, 0, 0, 0, Tf);
-	}
-	Status = MmPageFault(Tf->Cs&0xffff,
-			     &Tf->Eip,
-			     &Tf->Eax,
-			     cr2,
-			     Tf->ErrorCode);
-	if (NT_SUCCESS(Status))
-	  {
-	     return(0);
-	  }
      }
 
    /*
@@ -947,7 +923,7 @@ KeRaiseUserException(IN NTSTATUS ExceptionCode)
     } _SEH_END;
 
    OldEip = Thread->TrapFrame->Eip;
-   Thread->TrapFrame->Eip = (ULONG_PTR)LdrpGetSystemDllRaiseExceptionDispatcher();
+   Thread->TrapFrame->Eip = (ULONG_PTR)KeRaiseUserExceptionDispatcher;
    return((NTSTATUS)OldEip);
 }
 

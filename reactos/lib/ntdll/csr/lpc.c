@@ -81,12 +81,12 @@ CsrClientCallServer(PCSR_API_MESSAGE Request,
 
     /* Fill out the header */
     Request->Type = ApiNumber;
-    Request->Header.DataSize = RequestLength - LPC_MESSAGE_BASE_SIZE;
-    Request->Header.MessageSize = RequestLength;
-    DPRINT("CSR: API: %x, DataSize: %x, MessageSize: %x\n", 
+    Request->Header.u1.s1.DataLength = RequestLength - LPC_MESSAGE_BASE_SIZE;
+    Request->Header.u1.s1.TotalLength = RequestLength;
+    DPRINT("CSR: API: %x, u1.s1.DataLength: %x, u1.s1.TotalLength: %x\n", 
             ApiNumber,
-            Request->Header.DataSize,
-            Request->Header.MessageSize);
+            Request->Header.u1.s1.DataLength,
+            Request->Header.u1.s1.TotalLength);
                 
     /* Send the LPC Message */
     Status = NtRequestWaitReplyPort(WindowsApiPort,
@@ -107,13 +107,13 @@ CsrClientConnectToServer(PWSTR ObjectDirectory,
                          PVOID Unknown,
                          PVOID Context,
                          ULONG ContextLength,
-                         PULONG Unknown2)
+                         PBOOLEAN ServerToServerCall)
 {
    NTSTATUS Status;
    UNICODE_STRING PortName = RTL_CONSTANT_STRING(L"\\Windows\\ApiPort");
    ULONG ConnectInfoLength;
    CSR_API_MESSAGE Request;
-   LPC_SECTION_WRITE LpcWrite;
+   PORT_VIEW LpcWrite;
    HANDLE CsrSectionHandle;
    LARGE_INTEGER CsrSectionViewSize;
 
@@ -135,7 +135,7 @@ CsrClientConnectToServer(PWSTR ObjectDirectory,
        return(Status);
      }
    ConnectInfoLength = 0;
-   LpcWrite.Length = sizeof(LPC_SECTION_WRITE);
+   LpcWrite.Length = sizeof(PORT_VIEW);
    LpcWrite.SectionHandle = CsrSectionHandle;
    LpcWrite.SectionOffset = 0;
    LpcWrite.ViewSize = CsrSectionViewSize.u.LowPart;
@@ -155,7 +155,7 @@ CsrClientConnectToServer(PWSTR ObjectDirectory,
 
    NtClose(CsrSectionHandle);
    CsrSectionMapBase = LpcWrite.ViewBase;
-   CsrSectionMapServerBase = LpcWrite.TargetViewBase;
+   CsrSectionMapServerBase = LpcWrite.ViewRemoteBase;
 
    /* Create the heap for communication for csrss. */
    CsrCommHeap = RtlCreateHeap(0,

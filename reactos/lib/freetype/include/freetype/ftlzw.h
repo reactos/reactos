@@ -40,7 +40,7 @@ FT_BEGIN_HEADER
   /*    LZW Streams                                                        */
   /*                                                                       */
   /* <Abstract>                                                            */
-  /*    Using LZW-compressed font files                                    */
+  /*    Using LZW-compressed font files.                                   */
   /*                                                                       */
   /* <Description>                                                         */
   /*    This section contains the declaration of LZW-specific functions.   */

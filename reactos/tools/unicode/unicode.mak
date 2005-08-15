@@ -97,7 +97,8 @@ UNICODE_OBJECTS = \
 UNICODE_HOST_CFLAGS = \
 	-D__USE_W32API -DWINVER=0x501 -DWINE_UNICODE_API= \
 	-Dwchar_t="unsigned short" -D_WCHAR_T_DEFINED \
-	-I$(UNICODE_BASE) -Iinclude/wine -Iw32api/include
+	-I$(UNICODE_BASE) -Iinclude/wine -Iw32api/include \
+	$(TOOLS_CFLAGS)
 
 .PHONY: unicode
 unicode: $(UNICODE_TARGET)

@@ -1,6 +1,6 @@
 <module name="services" type="win32cui" installbase="system32" installname="services.exe">
 	<include base="services">.</include>
-	<include base="ReactOS">include/idl</include>
+	<include base="scm_server">.</include>
 	<define name="__USE_W32API" />
 	<define name="UNICODE" />
 	<define name="_UNICODE" />

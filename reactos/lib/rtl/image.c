@@ -9,7 +9,7 @@
  *                  17/03/2000 Created
  */
 
-#include "rtl.h"
+#include <rtl.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -49,13 +49,21 @@ PVOID
 STDCALL
 RtlImageDirectoryEntryToData (
 	PVOID	BaseAddress,
-	BOOLEAN	bFlag,
+	BOOLEAN	bMappedAsImage,
 	ULONG	Directory,
 	PULONG	Size
 	)
 {
 	PIMAGE_NT_HEADERS NtHeader;
 	ULONG Va;
+
+	/* Magic flag for non-mapped images. */
+	if ((ULONG_PTR)BaseAddress & 1)
+	{
+		BaseAddress = (PVOID)((ULONG_PTR)BaseAddress & ~1);
+		bMappedAsImage = FALSE;
+        }
+
 
 	NtHeader = RtlImageNtHeader (BaseAddress);
 	if (NtHeader == NULL)
@@ -68,10 +76,9 @@ RtlImageDirectoryEntryToData (
 	if (Va == 0)
 		return NULL;
 
-	if (Size)
-		*Size = NtHeader->OptionalHeader.DataDirectory[Directory].Size;
+	*Size = NtHeader->OptionalHeader.DataDirectory[Directory].Size;
 
-	if (bFlag)
+	if (bMappedAsImage || Va < NtHeader->OptionalHeader.SizeOfHeaders)
 		return (PVOID)((ULONG_PTR)BaseAddress + Va);
 
 	/* image mapped as ordinary file, we must find raw pointer */

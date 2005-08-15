@@ -8,7 +8,7 @@
  *              04/03/99: Created
  */
 
-#include "precomp.h"
+#include <precomp.h>
 #include <msvcrt/process.h>
 #include <msvcrt/errno.h>
 #include <msvcrt/internal/file.h>

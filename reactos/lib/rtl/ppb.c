@@ -11,7 +11,7 @@
 
 /* INCLUDES ****************************************************************/
 
-#include "rtl.h"
+#include <rtl.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -21,11 +21,6 @@
 #define NORMALIZE(x,addr)   {if(x) x=(PVOID)((ULONG_PTR)(x)+(ULONG_PTR)(addr));}
 #define DENORMALIZE(x,addr) {if(x) x=(PVOID)((ULONG_PTR)(x)-(ULONG_PTR)(addr));}
 #define ALIGN(x,align)      (((ULONG)(x)+(align)-1UL)&(~((align)-1UL)))
-
-
-KPROCESSOR_MODE
-RtlpGetMode();
-
 
 /* FUNCTIONS ****************************************************************/
 

@@ -43,10 +43,10 @@ LdrAccessResource(IN  PVOID BaseAddress,
    if (Data == 0)
 	return STATUS_RESOURCE_DATA_NOT_FOUND;
 
-   if ((ULONG)BaseAddress & 1)
+   if ((ULONG_PTR)BaseAddress & 1)
      {
 	/* loaded as ordinary file */
-	NtHeader = RtlImageNtHeader((PVOID)((ULONG)BaseAddress & ~1UL));
+	NtHeader = RtlImageNtHeader((PVOID)((ULONG_PTR)BaseAddress & ~1));
 	Offset = (ULONG)BaseAddress - Data + NtHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].VirtualAddress;
 	Section = RtlImageRvaToSection (NtHeader, BaseAddress, NtHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE].VirtualAddress);
 	if (Section == NULL)
@@ -64,7 +64,7 @@ LdrAccessResource(IN  PVOID BaseAddress,
 
    if (Resource)
      {
-	*Resource = (PVOID)(ResourceDataEntry->OffsetToData - Offset + (ULONG)BaseAddress);
+	*Resource = (PVOID)(ResourceDataEntry->OffsetToData - Offset + ((ULONG_PTR)BaseAddress & ~1));
      }
 
    if (Size)

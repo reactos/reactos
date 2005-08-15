@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType high-level API and common types (specification only).       */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -44,7 +44,7 @@
   /*                                                                       */
 #define FREETYPE_MAJOR 2
 #define FREETYPE_MINOR 1
-#define FREETYPE_PATCH 9
+#define FREETYPE_PATCH 10
 
 
 #include <ft2build.h>
@@ -1912,8 +1912,8 @@ FT_BEGIN_HEADER
   /*    @FT_Open_Face can be used to determine and/or check the font       */
   /*    format of a given font resource.  If the `face_index' field is     */
   /*    negative, the function will _not_ return any face handle in        */
-  /*    `*face'; the return value is 0 if the font format is recognized,   */
-  /*    or non-zero otherwise.                                             */
+  /*    `*aface'; the function's return value is 0 if the font format is   */
+  /*    recognized, or non-zero otherwise.                                 */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Open_Face( FT_Library           library,
@@ -2041,8 +2041,9 @@ FT_BEGIN_HEADER
   /*    FreeType error code.  0 means success.                             */
   /*                                                                       */
   /* <Note>                                                                */
-  /*    When dealing with fixed-size faces (i.e., non-scalable formats),   */
-  /*    @FT_Set_Pixel_Sizes provides a more convenient interface.          */
+  /*    For BDF and PCF formats, this function uses the `PIXEL_SIZE'       */
+  /*    property of the bitmap font; the `char_width' parameter is         */
+  /*    ignored.                                                           */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Set_Char_Size( FT_Face     face,
@@ -2094,6 +2095,9 @@ FT_BEGIN_HEADER
   /*    the height of the bitmap cell.  Drivers for bitmap font formats    */
   /*    which contain a single bitmap strike only (BDF, PCF, FNT) ignore   */
   /*    `pixel_width'.                                                     */
+  /*                                                                       */
+  /*    For BDF and PCF formats, this function uses the sum of the         */
+  /*    `FONT_ASCENT' and `FONT_DESCENT' properties of the bitmap font.    */
   /*                                                                       */
   FT_EXPORT( FT_Error )
   FT_Set_Pixel_Sizes( FT_Face  face,
@@ -2272,9 +2276,11 @@ FT_BEGIN_HEADER
   *
   *   FT_LOAD_IGNORE_GLOBAL_ADVANCE_WIDTH ::
   *     Indicates that the glyph loader should ignore the global advance
-  *     width defined in the font.  As far as we know, this is only used by
-  *     the X-TrueType font server, in order to deal correctly with the
-  *     incorrect metrics contained in DynaLab's TrueType CJK fonts.
+  *     width defined in the font.  For historical reasons (to support
+  *     buggy CJK fonts), FreeType uses the value of the `advanceWidthMax'
+  *     field in the `htmx' table for all glyphs if the font is monospaced.
+  *     Activating this flags makes FreeType use the metric values given in
+  *     the `htmx' table.
   *
   *   FT_LOAD_NO_RECURSE ::
   *     This flag is only used internally.  It merely indicates that the
@@ -2364,8 +2370,8 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Description>                                                         */
   /*    A function used to set the transformation that is applied to glyph */
-  /*    images just before they are converted to bitmaps in a glyph slot   */
-  /*    when @FT_Render_Glyph is called.                                   */
+  /*    images when they are loaded into a glyph slot through              */
+  /*    @FT_Load_Glyph.                                                    */
   /*                                                                       */
   /* <InOut>                                                               */
   /*    face   :: A handle to the source face object.                      */
@@ -2579,9 +2585,9 @@ FT_BEGIN_HEADER
   /*                   kerning vector.                                     */
   /*                                                                       */
   /* <Output>                                                              */
-  /*    akerning    :: The kerning vector.  This is in font units for      */
-  /*                   scalable formats, and in pixels for fixed-sizes     */
-  /*                   formats.                                            */
+  /*    akerning    :: The kerning vector.  This is either in font units   */
+  /*                   or in pixels (26.6 format) for scalable formats,    */
+  /*                   and in pixels for fixed-sizes formats.              */
   /*                                                                       */
   /* <Return>                                                              */
   /*    FreeType error code.  0 means success.                             */
@@ -2650,13 +2656,13 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Description>                                                         */
   /*    Retrieves the ASCII Postscript name of a given face, if available. */
-  /*    This should only work with Postscript and TrueType fonts.          */
+  /*    This only works with Postscript and TrueType fonts.                */
   /*                                                                       */
   /* <Input>                                                               */
   /*    face :: A handle to the source face object.                        */
   /*                                                                       */
   /* <Return>                                                              */
-  /*    A pointer to the face's Postscript name.  NULL if un-available.    */
+  /*    A pointer to the face's Postscript name.  NULL if unavailable.     */
   /*                                                                       */
   /* <Note>                                                                */
   /*    The returned pointer is owned by the face and will be destroyed    */
@@ -2883,7 +2889,7 @@ FT_BEGIN_HEADER
   /*    Computations                                                       */
   /*                                                                       */
   /* <Abstract>                                                            */
-  /*    Crunching fixed numbers and vectors                                */
+  /*    Crunching fixed numbers and vectors.                               */
   /*                                                                       */
   /* <Description>                                                         */
   /*    This section contains various functions used to perform            */
@@ -3068,8 +3074,8 @@ FT_BEGIN_HEADER
   /*    The result is undefined if either `vector' or `matrix' is invalid. */
   /*                                                                       */
   FT_EXPORT( void )
-  FT_Vector_Transform( FT_Vector*  vec,
-                       FT_Matrix*  matrix );
+  FT_Vector_Transform( FT_Vector*        vec,
+                       const FT_Matrix*  matrix );
 
 
   /* */

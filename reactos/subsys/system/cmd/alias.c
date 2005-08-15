@@ -113,7 +113,7 @@ AddAlias (LPTSTR name, LPTSTR subst)
 		{
 			s = (LPTSTR)malloc ((_tcslen (subst) + 1)*sizeof(TCHAR));
 			if (!s)
-			{
+			{        
 				error_out_of_memory ();
 				return;
 			}
@@ -311,6 +311,8 @@ INT CommandAlias (LPTSTR cmd, LPTSTR param)
 		ConOutResPaging(TRUE,STRING_ALIAS_HELP);
 		return 0;
 	}
+
+   nErrorLevel = 0;
 
 	if (param[0] == _T('\0'))
 	{

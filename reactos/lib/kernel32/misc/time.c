@@ -50,7 +50,7 @@ FileTimeToDosDateTime(
 {
    PDOSTIME  pdtime=(PDOSTIME) lpFatTime;
    PDOSDATE  pddate=(PDOSDATE) lpFatDate;
-   SYSTEMTIME SystemTime;
+   SYSTEMTIME SystemTime = { 0 };
 
    if ( lpFileTime == NULL )
 		return FALSE;

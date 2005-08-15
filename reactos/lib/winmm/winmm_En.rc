@@ -57,7 +57,7 @@ MCIERR_OUT_OF_MEMORY, 		"Not enough memory available for this task. \nQuit one o
 MCIERR_DEVICE_OPEN, 		"The device name is already being used as an alias by this application. Use a unique alias."
 MCIERR_CANNOT_LOAD_DRIVER, 	"There is an undetectable problem in loading the specified device driver."
 MCIERR_MISSING_COMMAND_STRING, 	"No command was specified."
-MCIERR_PARAM_OVERFLOW, 		"The output string was to large to fit in the return buffer. Increase the size of the buffer."
+MCIERR_PARAM_OVERFLOW, 		"The output string was too large to fit in the return buffer. Increase the size of the buffer."
 MCIERR_MISSING_STRING_ARGUMENT, "The specified command requires a character-string parameter. Please provide one."
 MCIERR_BAD_INTEGER, 		"The specified integer is invalid for this command."
 MCIERR_PARSER_INTERNAL, 	"The device driver returned an invalid return type. Check with the device manufacturer about obtaining a new driver."

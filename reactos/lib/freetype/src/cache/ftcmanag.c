@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType Cache Manager (body).                                       */
 /*                                                                         */
-/*  Copyright 2000-2001, 2002, 2003, 2004 by                               */
+/*  Copyright 2000-2001, 2002, 2003, 2004, 2005 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -164,7 +164,7 @@
     FTC_FaceID    face_id = (FTC_FaceID)ftcface_id;
 
 
-    return node->scaler.face_id == face_id;
+    return FT_BOOL( node->scaler.face_id == face_id );
   }
 
 
@@ -639,7 +639,7 @@
         result++;
       }
 
-      if ( prev == manager->nodes_list )
+      if ( node == first )
         break;
 
       node = prev;

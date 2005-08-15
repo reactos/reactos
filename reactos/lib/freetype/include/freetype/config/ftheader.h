@@ -18,6 +18,7 @@
 #ifndef __FT_HEADER_H__
 #define __FT_HEADER_H__
 
+
   /*@***********************************************************************/
   /*                                                                       */
   /* <Macro>                                                               */
@@ -91,6 +92,7 @@
   /*    way FreeType 2 is installed on a given system.                     */
   /*                                                                       */
   /*************************************************************************/
+
 
   /* configuration files */
 
@@ -362,6 +364,7 @@
   /*                                                                       */
 #define FT_BDF_H  <freetype/ftbdf.h>
 
+
   /*************************************************************************/
   /*                                                                       */
   /* @macro:                                                               */
@@ -408,6 +411,18 @@
   /*    the API of the optional glyph management component.                */
   /*                                                                       */
 #define FT_GLYPH_H  <freetype/ftglyph.h>
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* @macro:                                                               */
+  /*    FT_BITMAP_H                                                        */
+  /*                                                                       */
+  /* @description:                                                         */
+  /*    A macro used in #include statements to name the file containing    */
+  /*    the API of the optional bitmap conversion component.               */
+  /*                                                                       */
+#define FT_BITMAP_H  <freetype/ftbitmap.h>
 
 
   /*************************************************************************/
@@ -528,6 +543,20 @@
   /*    in SFNT-based font formats (i.e. TrueType and OpenType).           */
   /*                                                                       */
 #define FT_SFNT_NAMES_H  <freetype/ftsnames.h>
+
+
+  /*************************************************************************/
+  /*                                                                       */
+  /* @macro:                                                               */
+  /*    FT_OPENTYPE_VALIDATE_H                                             */
+  /*                                                                       */
+  /* @description:                                                         */
+  /*    A macro used in #include statements to name the file containing    */
+  /*    the optional FreeType 2 API used to validate OpenType tables       */
+  /*    (BASE, GDEF, GPOS, GSUB, JSTF).                                    */
+  /*                                                                       */
+#define FT_OPENTYPE_VALIDATE_H  <freetype/ftotval.h>
+
 
   /* */
 

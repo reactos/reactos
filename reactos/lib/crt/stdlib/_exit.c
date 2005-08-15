@@ -12,13 +12,7 @@ struct __atexit *__atexit_ptr = 0;
 void exit(int status)
 {
   //int i;
-  struct __atexit *a = __atexit_ptr;
-  __atexit_ptr = 0; /* to prevent infinite loops */
-  while (a)
-  {
-    (a->__function)();
-    a = a->__next;
-  }
+
 /*
   if (__stdio_cleanup_hook)
     __stdio_cleanup_hook();

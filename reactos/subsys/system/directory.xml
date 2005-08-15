@@ -73,6 +73,9 @@
 <directory name="winlogon">
 	<xi:include href="winlogon/winlogon.xml" />
 </directory>
+<directory name="hostname">
+	<xi:include href="hostname/hostname.xml" />
+</directory>
 <directory name="welcome">
 	<xi:include href="welcome/welcome.xml" />
 </directory>

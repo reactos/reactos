@@ -11,8 +11,7 @@
 #include "resource.h"
 
 #define UNIMPLEMENTED \
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED); \
-  return FALSE;
+  return ERROR_CALL_NOT_IMPLEMENTED ;
 
 #define DEFAULT_BAUD_INDEX 6
 #define DEFAULT_BYTESIZE_INDEX 3
@@ -45,27 +44,27 @@ typedef struct _STOPBIT_INFO
  *
  ************************************/
 
-BOOL WINAPI drvCommConfigDialogW(LPCWSTR lpszDevice,
+DWORD WINAPI drvCommConfigDialogW(LPCWSTR lpszDevice,
 	HWND hWnd,
 	LPCOMMCONFIG lpCommConfig);
 
-BOOL WINAPI drvCommConfigDialogA(LPCSTR lpszDevice,
+DWORD WINAPI drvCommConfigDialogA(LPCSTR lpszDevice,
 	HWND hWnd,
 	LPCOMMCONFIG lpCommConfig);
 
-BOOL WINAPI drvSetDefaultCommConfigW(LPCWSTR lpszDevice,
+DWORD WINAPI drvSetDefaultCommConfigW(LPCWSTR lpszDevice,
 	LPCOMMCONFIG lpCommConfig,
 	DWORD dwSize);
 
-BOOL WINAPI drvSetDefaultCommConfigA(LPCSTR lpszDevice,
+DWORD WINAPI drvSetDefaultCommConfigA(LPCSTR lpszDevice,
 	LPCOMMCONFIG lpCommConfig,
 	DWORD dwSize);
 
-BOOL WINAPI drvGetDefaultCommConfigW(LPCWSTR lpszDevice,
+DWORD WINAPI drvGetDefaultCommConfigW(LPCWSTR lpszDevice,
 	LPCOMMCONFIG lpCommConfig,
 	LPDWORD lpdwSize);
 
-BOOL WINAPI drvGetDefaultCommConfigA(LPCSTR lpszDevice,
+DWORD WINAPI drvGetDefaultCommConfigA(LPCSTR lpszDevice,
 	LPCOMMCONFIG lpCommConfig,
 	LPDWORD lpdwSize);
 

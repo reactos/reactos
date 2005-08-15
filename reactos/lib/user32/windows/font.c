@@ -29,6 +29,8 @@
 /* INCLUDES ******************************************************************/
 
 #include <user32.h>
+#define NDEBUG
+#include <debug.h>
 
 /* FUNCTIONS *****************************************************************/
 
@@ -1154,7 +1156,7 @@ DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
  * 4 extra characters.  We take great care about just how much modified
  * string we return.
  *
- * @unimplemented
+ * @implemented
  */
 int STDCALL
 DrawTextExA( HDC hdc, LPSTR str, INT count,

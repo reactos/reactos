@@ -16,7 +16,7 @@ SnmpTfxQuery@8
 SnmpUtilAnsiToUnicode@8
 SnmpUtilAsnAnyCpy@8
 SnmpUtilAsnAnyFree@4
-SnmpUtilDbgPrint@0
+SnmpUtilDbgPrint
 SnmpUtilIdsToA@8
 SnmpUtilMemAlloc@4
 SnmpUtilMemFree@4

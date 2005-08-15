@@ -6,9 +6,7 @@
  * PURPOSE:         converts an ascii string to 64 bit integer
  */
 
-#include <stdlib.h>
-#define __NO_CTYPE_INLINES
-#include <ctype.h>
+#include <ntdll.h>
 
 /*
  * @implemented

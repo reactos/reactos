@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType memory management macros (specification).               */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2004 by                                     */
+/*  Copyright 1996-2001, 2002, 2004, 2005 by                               */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg                       */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -41,6 +41,7 @@ FT_BEGIN_HEADER
 #undef  FT_SET_ERROR
 #define FT_SET_ERROR( expression ) \
           ( ( error = (expression) ) != 0 )
+
 
 
   /*************************************************************************/
@@ -124,6 +125,28 @@ FT_BEGIN_HEADER
             void*     *P );
 
 
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Function>                                                            */
+  /*    FT_QAlloc                                                          */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    Allocates a new block of memory.  The returned area is *not*       */
+  /*    zero-filled, making allocation quicker.                            */
+  /*                                                                       */
+  /* <Input>                                                               */
+  /*    memory :: A handle to a given `memory object' which handles        */
+  /*              allocation.                                              */
+  /*                                                                       */
+  /*    size   :: The size in bytes of the block to allocate.              */
+  /*                                                                       */
+  /* <Output>                                                              */
+  /*    P      :: A pointer to the fresh new block.  It should be set to   */
+  /*              NULL if `size' is 0, or in case of error.                */
+  /*                                                                       */
+  /* <Return>                                                              */
+  /*    FreeType error code.  0 means success.                             */
+  /*                                                                       */
   FT_BASE( FT_Error )
   FT_QAlloc( FT_Memory  memory,
              FT_Long    size,
@@ -137,7 +160,8 @@ FT_BEGIN_HEADER
   /*                                                                       */
   /* <Description>                                                         */
   /*    Reallocates a block of memory pointed to by `*P' to `Size' bytes   */
-  /*    from the heap, possibly changing `*P'.                             */
+  /*    from the heap, possibly changing `*P'.  The returned area is       */
+  /*    zero-filled.                                                       */
   /*                                                                       */
   /* <Input>                                                               */
   /*    memory  :: A handle to a given `memory object' which handles       */
@@ -165,6 +189,35 @@ FT_BEGIN_HEADER
               void*     *P );
 
 
+  /*************************************************************************/
+  /*                                                                       */
+  /* <Function>                                                            */
+  /*    FT_QRealloc                                                        */
+  /*                                                                       */
+  /* <Description>                                                         */
+  /*    Reallocates a block of memory pointed to by `*P' to `Size' bytes   */
+  /*    from the heap, possibly changing `*P'.  The returned area is *not* */
+  /*    zero-filled, making reallocation quicker.                          */
+  /*                                                                       */
+  /* <Input>                                                               */
+  /*    memory  :: A handle to a given `memory object' which handles       */
+  /*               reallocation.                                           */
+  /*                                                                       */
+  /*    current :: The current block size in bytes.                        */
+  /*                                                                       */
+  /*    size    :: The new block size in bytes.                            */
+  /*                                                                       */
+  /* <InOut>                                                               */
+  /*    P       :: A pointer to the fresh new block.  It should be set to  */
+  /*               NULL if `size' is 0, or in case of error.               */
+  /*                                                                       */
+  /* <Return>                                                              */
+  /*    FreeType error code.  0 means success.                             */
+  /*                                                                       */
+  /* <Note>                                                                */
+  /*    All callers of FT_Realloc() _must_ provide the current block size  */
+  /*    as well as the new one.                                            */
+  /*                                                                       */
   FT_BASE( FT_Error )
   FT_QRealloc( FT_Memory  memory,
                FT_Long    current,
@@ -208,11 +261,24 @@ FT_BEGIN_HEADER
 
 #define FT_ZERO( p )                FT_MEM_ZERO( p, sizeof ( *(p) ) )
 
-#define FT_ARRAY_COPY( dest, source, count )                       \
-          FT_MEM_COPY( dest, source, (count) * sizeof( *(dest) ) )
+#define FT_ARRAY_ZERO( dest, count )                        \
+          FT_MEM_ZERO( dest, (count) * sizeof ( *(dest) ) )
 
-#define FT_ARRAY_MOVE( dest, source, count )                       \
-          FT_MEM_MOVE( dest, source, (count) * sizeof( *(dest) ) )
+#define FT_ARRAY_COPY( dest, source, count )                        \
+          FT_MEM_COPY( dest, source, (count) * sizeof ( *(dest) ) )
+
+#define FT_ARRAY_MOVE( dest, source, count )                        \
+          FT_MEM_MOVE( dest, source, (count) * sizeof ( *(dest) ) )
+
+
+  /*
+   *  Return the maximum number of adressable elements in an array.
+   *  We limit ourselves to INT_MAX, rather than UINT_MAX, to avoid
+   *  any problems.
+   */
+#define FT_ARRAY_MAX( ptr )           ( FT_INT_MAX / sizeof ( *(ptr) ) )
+
+#define FT_ARRAY_CHECK( ptr, count )  ( (count) <= FT_ARRAY_MAX( ptr ) )
 
 
   /*************************************************************************/
@@ -224,43 +290,53 @@ FT_BEGIN_HEADER
 
 #ifdef FT_DEBUG_MEMORY
 
-#define FT_MEM_ALLOC( _pointer_, _size_ )                            \
-          FT_Alloc_Debug( memory, _size_,                            \
-                          (void**)&(_pointer_), __FILE__, __LINE__ )
+#define FT_MEM_ALLOC( _pointer_, _size_ )              \
+          FT_Alloc_Debug( memory, _size_,              \
+                          (void**)(void*)&(_pointer_), \
+                          __FILE__, __LINE__ )
 
-#define FT_MEM_REALLOC( _pointer_, _current_, _size_ )                 \
-          FT_Realloc_Debug( memory, _current_, _size_,                 \
-                            (void**)&(_pointer_), __FILE__, __LINE__ )
+#define FT_MEM_REALLOC( _pointer_, _current_, _size_ )   \
+          FT_Realloc_Debug( memory, _current_, _size_,   \
+                            (void**)(void*)&(_pointer_), \
+                            __FILE__, __LINE__ )
 
-#define FT_MEM_QALLOC( _pointer_, _size_ )                            \
-          FT_QAlloc_Debug( memory, _size_,                            \
-                           (void**)&(_pointer_), __FILE__, __LINE__ )
+#define FT_MEM_QALLOC( _pointer_, _size_ )              \
+          FT_QAlloc_Debug( memory, _size_,              \
+                           (void**)(void*)&(_pointer_), \
+                           __FILE__, __LINE__ )
 
-#define FT_MEM_QREALLOC( _pointer_, _current_, _size_ )                 \
-          FT_QRealloc_Debug( memory, _current_, _size_,                 \
-                             (void**)&(_pointer_), __FILE__, __LINE__ )
+#define FT_MEM_QREALLOC( _pointer_, _current_, _size_ )   \
+          FT_QRealloc_Debug( memory, _current_, _size_,   \
+                             (void**)(void*)&(_pointer_), \
+                             __FILE__, __LINE__ )
 
-#define FT_MEM_FREE( _pointer_ )                                            \
-          FT_Free_Debug( memory, (void**)&(_pointer_), __FILE__, __LINE__ )
+#define FT_MEM_FREE( _pointer_ )                              \
+          FT_Free_Debug( memory, (void**)(void*)&(_pointer_), \
+                         __FILE__, __LINE__ )
 
 
 #else  /* !FT_DEBUG_MEMORY */
 
 
-#define FT_MEM_ALLOC( _pointer_, _size_ )                  \
-          FT_Alloc( memory, _size_, (void**)&(_pointer_) )
+#define FT_MEM_ALLOC( _pointer_, _size_ )         \
+          FT_Alloc( memory, _size_,               \
+                    (void**)(void*)&(_pointer_) )
 
-#define FT_MEM_FREE( _pointer_ )                  \
-          FT_Free( memory, (void**)&(_pointer_) )
+#define FT_MEM_FREE( _pointer_ )                 \
+          FT_Free( memory,                       \
+                   (void**)(void*)&(_pointer_) )
 
-#define FT_MEM_REALLOC( _pointer_, _current_, _size_ )                  \
-          FT_Realloc( memory, _current_, _size_, (void**)&(_pointer_) )
+#define FT_MEM_REALLOC( _pointer_, _current_, _size_ ) \
+          FT_Realloc( memory, _current_, _size_,       \
+                      (void**)(void*)&(_pointer_) )
 
-#define FT_MEM_QALLOC( _pointer_, _size_ )                  \
-          FT_QAlloc( memory, _size_, (void**)&(_pointer_) )
+#define FT_MEM_QALLOC( _pointer_, _size_ )         \
+          FT_QAlloc( memory, _size_,               \
+                     (void**)(void*)&(_pointer_) )
 
-#define FT_MEM_QREALLOC( _pointer_, _current_, _size_ )                  \
-          FT_QRealloc( memory, _current_, _size_, (void**)&(_pointer_) )
+#define FT_MEM_QREALLOC( _pointer_, _current_, _size_ ) \
+          FT_QRealloc( memory, _current_, _size_,       \
+          (void**)(void*)&(_pointer_) )
 
 #endif /* !FT_DEBUG_MEMORY */
 
@@ -271,7 +347,7 @@ FT_BEGIN_HEADER
   /* _typed_ in order to automatically compute array element sizes.        */
   /*                                                                       */
 
-#define FT_MEM_NEW( _pointer_ )                               \
+#define FT_MEM_NEW( _pointer_ )                              \
           FT_MEM_ALLOC( _pointer_, sizeof ( *(_pointer_) ) )
 
 #define FT_MEM_NEW_ARRAY( _pointer_, _count_ )                           \
@@ -281,7 +357,7 @@ FT_BEGIN_HEADER
           FT_MEM_REALLOC( _pointer_, (_old_) * sizeof ( *(_pointer_) ),  \
                                      (_new_) * sizeof ( *(_pointer_) ) )
 
-#define FT_MEM_QNEW( _pointer_ )                               \
+#define FT_MEM_QNEW( _pointer_ )                              \
           FT_MEM_QALLOC( _pointer_, sizeof ( *(_pointer_) ) )
 
 #define FT_MEM_QNEW_ARRAY( _pointer_, _count_ )                           \
@@ -318,9 +394,6 @@ FT_BEGIN_HEADER
 #define FT_REALLOC( _pointer_, _current_, _size_ )                       \
           FT_SET_ERROR( FT_MEM_REALLOC( _pointer_, _current_, _size_ ) )
 
-#define FT_FREE( _pointer_ )       \
-          FT_MEM_FREE( _pointer_ )
-
 #define FT_QALLOC( _pointer_, _size_ )                       \
           FT_SET_ERROR( FT_MEM_QALLOC( _pointer_, _size_ ) )
 
@@ -328,33 +401,38 @@ FT_BEGIN_HEADER
           FT_SET_ERROR( FT_MEM_QREALLOC( _pointer_, _current_, _size_ ) )
 
 
-#define FT_NEW( _pointer_ )  \
-          FT_SET_ERROR( FT_MEM_NEW( _pointer_ ) )
-
-#define FT_NEW_ARRAY( _pointer_, _count_ )  \
-          FT_SET_ERROR( FT_MEM_NEW_ARRAY( _pointer_, _count_ ) )
-
-#define FT_RENEW_ARRAY( _pointer_, _old_, _new_ )   \
-          FT_SET_ERROR( FT_MEM_RENEW_ARRAY( _pointer_, _old_, _new_ ) )
-
-#define FT_QNEW( _pointer_ )  \
-          FT_SET_ERROR( FT_MEM_QNEW( _pointer_ ) )
-
-#define FT_QNEW_ARRAY( _pointer_, _count_ )  \
-          FT_SET_ERROR( FT_MEM_QNEW_ARRAY( _pointer_, _count_ ) )
-
-#define FT_QRENEW_ARRAY( _pointer_, _old_, _new_ )   \
-          FT_SET_ERROR( FT_MEM_QRENEW_ARRAY( _pointer_, _old_, _new_ ) )
+#define FT_FREE( _pointer_ )       \
+          FT_MEM_FREE( _pointer_ )
 
 
-#define FT_ALLOC_ARRAY( _pointer_, _count_, _type_ )                    \
-          FT_SET_ERROR( FT_MEM_ALLOC( _pointer_,                        \
-                                      (_count_) * sizeof ( _type_ ) ) )
+#define FT_NEW( _pointer_ )                              \
+          FT_ALLOC( _pointer_, sizeof ( *(_pointer_) ) )
 
-#define FT_REALLOC_ARRAY( _pointer_, _old_, _new_, _type_ )             \
-          FT_SET_ERROR( FT_MEM_REALLOC( _pointer_,                      \
-                                        (_old_) * sizeof ( _type_ ),    \
-                                        (_new_) * sizeof ( _type_ ) ) )
+#define FT_NEW_ARRAY( _pointer_, _count_ )                           \
+          FT_ALLOC( _pointer_, sizeof ( *(_pointer_) ) * (_count_) )
+
+#define FT_RENEW_ARRAY( _pointer_, _old_, _new_ )                    \
+          FT_REALLOC( _pointer_, sizeof ( *(_pointer_) ) * (_old_),  \
+                                 sizeof ( *(_pointer_) ) * (_new_) )
+
+#define FT_QNEW( _pointer_ )                              \
+          FT_QALLOC( _pointer_, sizeof ( *(_pointer_) ) )
+
+#define FT_QNEW_ARRAY( _pointer_, _count_ )                           \
+          FT_QALLOC( _pointer_, sizeof ( *(_pointer_) ) * (_count_) )
+
+#define FT_QRENEW_ARRAY( _pointer_, _old_, _new_ )                    \
+          FT_QREALLOC( _pointer_, sizeof ( *(_pointer_) ) * (_old_),  \
+                                  sizeof ( *(_pointer_) ) * (_new_) )
+
+
+#define FT_ALLOC_ARRAY( _pointer_, _count_, _type_ )           \
+          FT_ALLOC( _pointer_, (_count_) * sizeof ( _type_ ) )
+
+#define FT_REALLOC_ARRAY( _pointer_, _old_, _new_, _type_ )   \
+          FT_REALLOC( _pointer, (_old_) * sizeof ( _type_ ),  \
+                                (_new_) * sizeof ( _type_ ) )
+
 
  /* */
 

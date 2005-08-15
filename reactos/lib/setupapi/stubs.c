@@ -109,7 +109,7 @@ BOOL WINAPI SetupGetInfInformationA( LPCVOID InfSpec, DWORD SearchControl,
 /***********************************************************************
  *		SetupInitializeFileLogW(SETUPAPI.@)
  */
-HANDLE WINAPI SetupInitializeFileLogW(LPWSTR LogFileName, DWORD Flags)
+HANDLE WINAPI SetupInitializeFileLogW(LPCWSTR LogFileName, DWORD Flags)
 {
     FIXME("Stub %s, 0x%lx\n",debugstr_w(LogFileName),Flags);
     return INVALID_HANDLE_VALUE;
@@ -118,7 +118,7 @@ HANDLE WINAPI SetupInitializeFileLogW(LPWSTR LogFileName, DWORD Flags)
 /***********************************************************************
  *		SetupInitializeFileLogA(SETUPAPI.@)
  */
-HANDLE WINAPI SetupInitializeFileLogA(LPSTR LogFileName, DWORD Flags)
+HANDLE WINAPI SetupInitializeFileLogA(LPCSTR LogFileName, DWORD Flags)
 {
     FIXME("Stub %s, 0x%lx\n",debugstr_a(LogFileName),Flags);
     return INVALID_HANDLE_VALUE;

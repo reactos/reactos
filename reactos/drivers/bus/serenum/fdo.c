@@ -187,7 +187,7 @@ SerenumFdoPnp(
 			{
 				case BusRelations:
 				{
-					PDEVICE_RELATIONS DeviceRelations;
+					PDEVICE_RELATIONS DeviceRelations = NULL;
 					DPRINT("Serenum: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n");
 					Status = SerenumFdoQueryBusRelations(DeviceObject, &DeviceRelations);
 					Information = (ULONG_PTR)DeviceRelations;

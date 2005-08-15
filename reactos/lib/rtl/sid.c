@@ -11,10 +11,12 @@
 
 /* INCLUDES *****************************************************************/
 #define __NTDRIVER__
-#include "rtl.h"
+#include <rtl.h>
 
 #define NDEBUG
 #include <debug.h>
+
+#define TAG_SID TAG('p', 'S', 'i', 'd')
 
 /* FUNCTIONS ***************************************************************/
 
@@ -244,8 +246,8 @@ RtlAllocateAndInitializeSid(PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
   if (Sid == NULL)
     return STATUS_INVALID_PARAMETER;
 
-  pSid = (PSID)ExAllocatePool(PagedPool,
-			      sizeof(SID) + (SubAuthorityCount - 1) * sizeof(ULONG));
+  pSid = RtlpAllocateMemory(sizeof(SID) + (SubAuthorityCount - 1) * sizeof(ULONG),
+                            TAG_SID);
   if (pSid == NULL)
     return STATUS_NO_MEMORY;
 
@@ -294,7 +296,7 @@ RtlFreeSid(IN PSID Sid)
 {
    PAGED_CODE_RTL();
 
-   ExFreePool(Sid);
+   RtlpFreeMemory(Sid, TAG_SID);
    return NULL;
 }
 
@@ -370,7 +372,8 @@ RtlConvertSidToUnicodeString(PUNICODE_STRING String,
    Length = (wcs - Buffer) * sizeof(WCHAR);
    if (AllocateBuffer)
    {
-      String->Buffer = ExAllocatePool(PagedPool,Length + sizeof(WCHAR));
+      String->Buffer = RtlpAllocateMemory(Length + sizeof(WCHAR),
+                                          TAG_SID);
       if (String->Buffer == NULL)
          return STATUS_NO_MEMORY;
       String->MaximumLength = Length + sizeof(WCHAR);

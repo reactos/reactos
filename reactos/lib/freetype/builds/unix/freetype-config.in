@@ -1,4 +1,13 @@
 #! /bin/sh
+#
+# Copyright 2000, 2001, 2002, 2003, 2004, 2005 by
+# David Turner, Robert Wilhelm, and Werner Lemberg.
+#
+# This file is part of the FreeType project, and may only be used, modified,
+# and distributed under the terms of the FreeType project license,
+# LICENSE.TXT.  By continuing to use, modify, or distribute this file you
+# indicate that you have read the license and understand and accept it
+# fully.
 
 prefix=@prefix@
 exec_prefix=@exec_prefix@
@@ -23,6 +32,7 @@ Options:
                          the FreeType library
   --exec-prefix=EPREFIX  override \`--exec-prefix' value with EPREFIX
   --version              display libtool version of the FreeType library
+  --ftversion            display FreeType version number
   --libs                 display flags for linking with the FreeType library
   --libtool              display library name for linking with libtool
   --cflags               display flags for compiling with the FreeType
@@ -63,6 +73,19 @@ while test $# -gt 0 ; do
     ;;
   --version)
     echo @ft_version@
+    exit 0
+    ;;
+  --ftversion)
+    major=`grep define @prefix@/include/freetype2/freetype/freetype.h \
+           | grep FREETYPE_MAJOR \
+           | sed 's/.*[ 	]\([0-9][0-9]*\).*/\1/'`
+    minor=`grep define @prefix@/include/freetype2/freetype/freetype.h \
+           | grep FREETYPE_MINOR \
+           | sed 's/.*[ 	]\([0-9][0-9]*\).*/\1/'`
+    patch=`grep define @prefix@/include/freetype2/freetype/freetype.h \
+           | grep FREETYPE_PATCH \
+           | sed 's/.*[ 	]\([0-9][0-9]*\).*/\1/'`
+    echo $major.$minor.$patch
     exit 0
     ;;
   --cflags)
@@ -119,7 +142,7 @@ if test "$echo_libs" = "yes" ; then
     eval "rpath=\"$hardcode_libdir_flag_spec\""
   fi
   libs="-lfreetype @LIBZ@"
-  if test "$libdir" != "/usr/lib" ; then
+  if test "$libdir" != "/usr/lib" && test "$libdir" != "/usr/lib64"; then
     echo -L$libdir $rpath $libs
   else
     echo $libs

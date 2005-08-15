@@ -60,7 +60,7 @@
 60 stdcall MsiGetFeatureUsageW(wstr wstr ptr ptr)
 61 stub MsiGetFeatureValidStatesA
 62 stub MsiGetFeatureValidStatesW
-63 stub MsiGetLanguage
+63 stdcall MsiGetLanguage(long)
 64 stdcall MsiGetMode(long long)
 65 stdcall MsiGetProductCodeA(str str)
 66 stdcall MsiGetProductCodeW(wstr wstr)
@@ -158,8 +158,8 @@
 158 stdcall MsiViewClose(long)
 159 stdcall MsiViewExecute(long long)
 160 stdcall MsiViewFetch(long ptr)
-161 stub MsiViewGetErrorA
-162 stub MsiViewGetErrorW
+161 stdcall MsiViewGetErrorA(long ptr ptr)
+162 stdcall MsiViewGetErrorW(long ptr ptr)
 163 stdcall MsiViewModify(long long long)
 164 stdcall MsiDatabaseIsTablePersistentA(long str)
 165 stdcall MsiDatabaseIsTablePersistentW(long wstr)

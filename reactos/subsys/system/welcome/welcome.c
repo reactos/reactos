@@ -176,7 +176,7 @@ WinMain(HINSTANCE hInst,
   rcRightPanel.right = ulInnerWidth - 1;
 
   if (!LoadString(hInstance, (UINT)MAKEINTRESOURCE(IDS_APPTITLE), szAppTitle, 80))
-    lstrcpy(szAppTitle, TEXT("ReactOS Welcome"));
+    _tcscpy(szAppTitle, TEXT("ReactOS Welcome"));
 
   /* Create main window */
   hwndMain = CreateWindow(szFrameClass,
@@ -248,13 +248,13 @@ RunApplication(int nTopic)
   if (nLength == 0)
     return TRUE;
 
-  if (!lstrcmpi(AppName, TEXT("<exit>")))
+  if (!_tcsicmp(AppName, TEXT("<exit>")))
     return FALSE;
 
-  if (lstrcmpi(AppName, TEXT("explorer.exe")) == 0)
+  if (_tcsicmp(AppName, TEXT("explorer.exe")) == 0)
     {
-      lstrcat(AppName, TEXT(" "));
-      lstrcat(AppName, CurrentDir);
+      _tcscat(AppName, TEXT(" "));
+      _tcscat(AppName, CurrentDir);
     }
 
   memset(&StartupInfo, 0, sizeof(STARTUPINFO));
@@ -285,7 +285,7 @@ SubclassButton(HWND hWnd)
 static DWORD
 GetButtonHeight(HDC hDC,
 		HFONT hFont,
-		PSZ szText,
+		LPCTSTR szText,
 		DWORD dwWidth)
 {
   HFONT hOldFont;
@@ -324,7 +324,7 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 			       CLIP_DEFAULT_PRECIS,
 			       DEFAULT_QUALITY,
 			       FF_DONTCARE,
-			       "Arial");
+			       TEXT("Arial"));
 
   /* Topic description font */
   hfontTopicDescription = CreateFont(-11,0,0,0,FW_THIN,
@@ -333,7 +333,7 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 				     CLIP_DEFAULT_PRECIS,
 				     DEFAULT_QUALITY,
 				     FF_DONTCARE,
-				     "Arial");
+				     TEXT("Arial"));
 
   /* Topic button font */
   hfontTopicButton = CreateFont(-11,0,0,0,FW_BOLD,
@@ -342,7 +342,7 @@ OnCreate(HWND hWnd, WPARAM wParam, LPARAM lParam)
 				CLIP_DEFAULT_PRECIS,
 				DEFAULT_QUALITY,
 				FF_DONTCARE,
-				"Arial");
+				TEXT("Arial"));
 
   /* Load title bitmap */
   if (hTitleBitmap != 0)

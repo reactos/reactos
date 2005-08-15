@@ -25,7 +25,7 @@
  *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
-#include "usetup.h"
+#include <usetup.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -1445,7 +1445,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 
 	  return SELECT_FILE_SYSTEM_PAGE;
 	}
-      else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'c') /* C */
+      else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'C') /* C */
 	{
 	  if (PartitionList->CurrentPartition->Unpartitioned == FALSE)
 	    {
@@ -1461,7 +1461,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 
 	  return CREATE_PARTITION_PAGE;
 	}
-      else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'd') /* D */
+      else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'D') /* D */
 	{
 	  if (PartitionList->CurrentPartition->Unpartitioned == TRUE)
 	    {
@@ -1971,7 +1971,7 @@ DeletePartitionPage (PINPUT_RECORD Ir)
 	{
 	  return SELECT_PARTITION_PAGE;
 	}
-      else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'd') /* D */
+      else if (Ir->Event.KeyEvent.wVirtualKeyCode == 'D') /* D */
 	{
 	  DeleteCurrentPartition (PartitionList);
 
@@ -3606,7 +3606,7 @@ SignalInitEvent()
 
   InitializeObjectAttributes(&ObjectAttributes,
     &UnicodeString,
-    EVENT_ALL_ACCESS,
+    0,
     0,
     NULL);
   Status = NtOpenEvent(&ReactOSInitEvent,

@@ -46,6 +46,8 @@ typedef struct _CONNECT_DATA {
 #define KEYBOARD_NUM_LOCK_ON 0x02
 #define KEYBOARD_CAPS_LOCK_ON 0x04
 
+#define WHEEL_DELTA 120
+
 /*-----------------------------------------------------
  *  DeviceExtension
  * --------------------------------------------------*/

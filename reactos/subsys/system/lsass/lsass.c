@@ -26,7 +26,6 @@
  * 		Compiled successfully with egcs 1.1.2
  */
 #include <windows.h>
-#include <ntsecapi.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 

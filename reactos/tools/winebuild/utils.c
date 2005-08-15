@@ -387,26 +387,74 @@ unsigned int get_page_size(void)
 const char *asm_name( const char *sym )
 {
     static char buffer[256];
-    sprintf( buffer, __ASM_NAME("%s"), sym );
-    return buffer;
+
+    switch (target_platform)
+    {
+    case PLATFORM_APPLE:
+    case PLATFORM_WINDOWS:
+        buffer[0] = '_';
+        strcpy( buffer + 1, sym );
+        return buffer;
+    default:
+        return sym;
+    }
 }
 
 /* return an assembly function declaration for a C function name */
 const char *func_declaration( const char *func )
 {
     static char buffer[256];
-    sprintf( buffer, __ASM_FUNC("%s"), func );
+
+    switch (target_platform)
+    {
+    case PLATFORM_APPLE:
+        return "";
+    case PLATFORM_WINDOWS:
+        sprintf( buffer, ".def _%s; .scl 2; .type 32; .endef", func );
+        break;
+    case PLATFORM_SVR4:
+        sprintf( buffer, ".type %s,2", func );
+        break;
+    default:
+        sprintf( buffer, ".type %s,@function", func );
+        break;
+    }
     return buffer;
 }
 
 /* return a size declaration for an assembly function */
 const char *func_size( const char *func )
 {
-#ifdef HAVE_ASM_DOT_SIZE
     static char buffer[256];
-    sprintf( buffer, ".size " __ASM_NAME("%s") ", .-" __ASM_NAME("%s"), func, func );
-    return buffer;
-#else
-    return "";
-#endif
+
+    switch (target_platform)
+    {
+    case PLATFORM_APPLE:
+    case PLATFORM_WINDOWS:
+        return "";
+    default:
+        sprintf( buffer, ".size %s, .-%s", func, func );
+        return buffer;
+    }
+}
+
+const char *get_asm_string_keyword(void)
+{
+    switch (target_platform)
+    {
+    case PLATFORM_APPLE:
+    case PLATFORM_SVR4:
+        return ".asciz";
+    default:
+        return ".string";
+    }
+}
+
+const char *get_asm_short_keyword(void)
+{
+    switch (target_platform)
+    {
+    case PLATFORM_SVR4: return ".half";
+    default:            return ".short";
+    }
 }

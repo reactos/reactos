@@ -39,20 +39,26 @@
 #include <wctype.h>
 #include <math.h>
 
-inline char* strlwr ( char* str )
+inline char * strlwr(char *x)
 {
-  char* p = str;
-  while ( *p )
-    *p++ = tolower(*p);
-  return str;
-}
+        char  *y=x;
 
-inline char* strupr ( char* str )
+        while (*y) {
+                *y=tolower(*y);
+                y++;
+        }
+        return x;
+}
+              
+inline char *strupr(char *x)
 {
-  char *c = str;
-  while ( *str++ )
-    toupper( *str );
-  return c;
+        char  *y=x;
+
+        while (*y) {
+                *y=toupper(*y);
+                y++;
+        }
+        return x;
 }
 
 #define _finite __finite

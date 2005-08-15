@@ -31,10 +31,6 @@
 
 #include <w32k.h>
 
-#ifdef __USE_W32API
-#include <oleacc.h>
-#endif
-
 #define NDEBUG
 #include <debug.h>
 

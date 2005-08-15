@@ -10,7 +10,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include "csrss.h"
+#include <csrss.h>
 
 #define NDEBUG
 #include <debug.h>

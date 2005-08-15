@@ -9,6 +9,8 @@
 #ifndef _LPCTYPES_H
 #define _LPCTYPES_H
 
+#define LPC_MESSAGE_TYPE(m) ((m).Header.u2.s2.Type)
+
 /* DEPENDENCIES **************************************************************/
 
 /* EXPORTED DATA *************************************************************/
@@ -16,8 +18,8 @@
 /* CONSTANTS *****************************************************************/
 #define LPC_MESSAGE_BASE_SIZE 24
 #define MAX_MESSAGE_DATA      (0x130)
-#define PORT_MAX_DATA_LENGTH 0x104
-#define PORT_MAX_MESSAGE_LENGTH 0x148
+#define LPC_MAX_DATA_LENGTH 0x104
+#define LPC_MAX_MESSAGE_LENGTH 0x148
 
 /* ENUMERATIONS **************************************************************/
 
@@ -40,41 +42,72 @@ typedef enum _LPC_TYPE
 
 /* TYPES *********************************************************************/
 
-/* FIXME: USE REAL DEFINITION */
-typedef struct _LPC_MESSAGE
-{
-    USHORT  DataSize;
-    USHORT  MessageSize;
-    USHORT  MessageType;
-    USHORT  VirtualRangesOffset;
-    CLIENT_ID  ClientId;
-    ULONG  MessageId;
-    ULONG  SectionSize;
-} LPC_MESSAGE, *PLPC_MESSAGE;
+#if defined(USE_LPC6432)
+#define LPC_CLIENT_ID CLIENT_ID64
+#define LPC_SIZE_T ULONGLONG
+#define LPC_PVOID ULONGLONG
+#define LPC_HANDLE ULONGLONG
+#else
+#define LPC_CLIENT_ID CLIENT_ID
+#define LPC_SIZE_T SIZE_T
+#define LPC_PVOID PVOID
+#define LPC_HANDLE HANDLE
+#endif
 
-/* FIXME: USE REAL DEFINITION */
-typedef struct _LPC_SECTION_WRITE
+typedef struct _PORT_MESSAGE
 {
-    ULONG  Length;
-    HANDLE  SectionHandle;
-    ULONG  SectionOffset;
-    ULONG  ViewSize;
-    PVOID  ViewBase;
-    PVOID  TargetViewBase;
-} LPC_SECTION_WRITE, *PLPC_SECTION_WRITE;
+    union
+    {
+        struct
+        {
+            CSHORT DataLength;
+            CSHORT TotalLength;
+        } s1;
+        ULONG Length;
+    } u1;
+    union
+    {
+        struct
+        {
+            CSHORT Type;
+            CSHORT DataInfoOffset;
+        } s2;
+        ULONG ZeroInit;
+    } u2;
+    union
+    {
+        LPC_CLIENT_ID ClientId;
+        double DoNotUseThisField;
+    };
+    ULONG MessageId;
+    union
+    {
+        LPC_SIZE_T ClientViewSize;
+        ULONG CallbackId;
+    };
+} PORT_MESSAGE, *PPORT_MESSAGE;
 
-/* FIXME: USE REAL DEFINITION */
-typedef struct _LPC_SECTION_READ
+typedef struct _PORT_VIEW
 {
-    ULONG  Length;
-    ULONG  ViewSize;
-    PVOID  ViewBase;
-} LPC_SECTION_READ, *PLPC_SECTION_READ;
+    ULONG Length;
+    LPC_HANDLE SectionHandle;
+    ULONG SectionOffset;
+    LPC_SIZE_T ViewSize;
+    LPC_PVOID ViewBase;
+    LPC_PVOID ViewRemoteBase;
+} PORT_VIEW, *PPORT_VIEW;
+
+typedef struct _REMOTE_PORT_VIEW
+{
+    ULONG Length;
+    LPC_SIZE_T ViewSize;
+    LPC_PVOID ViewBase;
+} REMOTE_PORT_VIEW, *PREMOTE_PORT_VIEW;
 
 /* FIXME: USE REAL DEFINITION */
 typedef struct _LPC_MAX_MESSAGE
 {
-    LPC_MESSAGE Header;
+    PORT_MESSAGE Header;
     BYTE Data[MAX_MESSAGE_DATA];
 } LPC_MAX_MESSAGE, *PLPC_MAX_MESSAGE;
 

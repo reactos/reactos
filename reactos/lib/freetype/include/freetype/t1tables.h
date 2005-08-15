@@ -387,6 +387,38 @@ FT_BEGIN_HEADER
   FT_Get_PS_Font_Info( FT_Face          face,
                        PS_FontInfoRec  *afont_info );
 
+
+ /************************************************************************
+  *
+  * @function:
+  *    FT_Get_PS_Font_Private
+  *
+  * @description:
+  *    Retrieve the @PS_PrivateRec structure corresponding to a given
+  *    Postscript font.
+  *
+  * @input:
+  *    face ::
+  *       Postscript face handle.
+  *
+  * @output:
+  *    afont_private ::
+  *       Output private dictionary structure pointer.
+  *
+  * @return:
+  *    FreeType error code.  0 means success.
+  *
+  * @note:
+  *    The string pointers within the font info structure are owned by
+  *    the face and don't need to be freed by the caller.
+  *
+  *    If the font's format is not Postscript-based, this function will
+  *    return the FT_Err_Invalid_Argument error code.
+  */
+  FT_EXPORT( FT_Error )
+  FT_Get_PS_Font_Private( FT_Face         face,
+                          PS_PrivateRec  *afont_private );
+
  /* */
 
 

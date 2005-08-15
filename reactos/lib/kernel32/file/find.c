@@ -28,12 +28,89 @@
 typedef struct _KERNEL32_FIND_FILE_DATA
 {
    HANDLE DirectoryHandle;
+   BOOLEAN DirectoryOnly;
    PFILE_BOTH_DIR_INFORMATION pFileInfo;
 } KERNEL32_FIND_FILE_DATA, *PKERNEL32_FIND_FILE_DATA;
 
 
 /* FUNCTIONS ****************************************************************/
 
+VOID
+InternalCopyFindDataW(LPWIN32_FIND_DATAW            lpFindFileData,
+                      PFILE_BOTH_DIR_INFORMATION    lpFileInfo)
+{
+    lpFindFileData->dwFileAttributes = lpFileInfo->FileAttributes;
+
+    lpFindFileData->ftCreationTime.dwHighDateTime = lpFileInfo->CreationTime.u.HighPart;
+    lpFindFileData->ftCreationTime.dwLowDateTime = lpFileInfo->CreationTime.u.LowPart;
+
+    lpFindFileData->ftLastAccessTime.dwHighDateTime = lpFileInfo->LastAccessTime.u.HighPart;
+    lpFindFileData->ftLastAccessTime.dwLowDateTime = lpFileInfo->LastAccessTime.u.LowPart;
+
+    lpFindFileData->ftLastWriteTime.dwHighDateTime = lpFileInfo->LastWriteTime.u.HighPart;
+    lpFindFileData->ftLastWriteTime.dwLowDateTime = lpFileInfo->LastWriteTime.u.LowPart;
+
+    lpFindFileData->nFileSizeHigh = lpFileInfo->EndOfFile.u.HighPart;
+    lpFindFileData->nFileSizeLow = lpFileInfo->EndOfFile.u.LowPart;
+
+    memcpy (lpFindFileData->cFileName, lpFileInfo->FileName, lpFileInfo->FileNameLength);
+    lpFindFileData->cFileName[lpFileInfo->FileNameLength / sizeof(WCHAR)] = 0;
+
+    memcpy (lpFindFileData->cAlternateFileName, lpFileInfo->ShortName, lpFileInfo->ShortNameLength);
+    lpFindFileData->cAlternateFileName[lpFileInfo->ShortNameLength / sizeof(WCHAR)] = 0;
+}
+
+VOID
+InternalCopyFindDataA(LPWIN32_FIND_DATAA            lpFindFileData,
+                      PFILE_BOTH_DIR_INFORMATION    lpFileInfo)
+{
+    UNICODE_STRING FileNameU;
+    ANSI_STRING FileNameA;
+
+    lpFindFileData->dwFileAttributes = lpFileInfo->FileAttributes;
+
+    lpFindFileData->ftCreationTime.dwHighDateTime = lpFileInfo->CreationTime.u.HighPart;
+    lpFindFileData->ftCreationTime.dwLowDateTime = lpFileInfo->CreationTime.u.LowPart;
+
+    lpFindFileData->ftLastAccessTime.dwHighDateTime = lpFileInfo->LastAccessTime.u.HighPart;
+    lpFindFileData->ftLastAccessTime.dwLowDateTime = lpFileInfo->LastAccessTime.u.LowPart;
+
+    lpFindFileData->ftLastWriteTime.dwHighDateTime = lpFileInfo->LastWriteTime.u.HighPart;
+    lpFindFileData->ftLastWriteTime.dwLowDateTime = lpFileInfo->LastWriteTime.u.LowPart;
+
+    lpFindFileData->nFileSizeHigh = lpFileInfo->EndOfFile.u.HighPart;
+    lpFindFileData->nFileSizeLow = lpFileInfo->EndOfFile.u.LowPart;
+
+    FileNameU.Length = FileNameU.MaximumLength = lpFileInfo->FileNameLength;
+    FileNameU.Buffer = lpFileInfo->FileName;
+
+    FileNameA.MaximumLength = sizeof(lpFindFileData->cFileName) - sizeof(CHAR);
+    FileNameA.Buffer = lpFindFileData->cFileName;
+
+    /* convert unicode string to ansi (or oem) */
+    if (bIsFileApiAnsi)
+    	RtlUnicodeStringToAnsiString (&FileNameA, &FileNameU, FALSE);
+    else
+        RtlUnicodeStringToOemString (&FileNameA, &FileNameU, FALSE);
+
+    FileNameA.Buffer[FileNameA.Length] = 0;
+
+    DPRINT("lpFileInfo->ShortNameLength %d\n", lpFileInfo->ShortNameLength);
+
+    FileNameU.Length = FileNameU.MaximumLength = lpFileInfo->ShortNameLength;
+    FileNameU.Buffer = lpFileInfo->ShortName;
+
+    FileNameA.MaximumLength = sizeof(lpFindFileData->cAlternateFileName) - sizeof(CHAR);
+    FileNameA.Buffer = lpFindFileData->cAlternateFileName;
+
+    /* convert unicode string to ansi (or oem) */
+    if (bIsFileApiAnsi)
+	RtlUnicodeStringToAnsiString (&FileNameA, &FileNameU, FALSE);
+    else
+    	RtlUnicodeStringToOemString (&FileNameA, &FileNameU, FALSE);
+
+    FileNameA.Buffer[FileNameA.Length] = 0;
+}
 
 /*
  * @implemented
@@ -41,7 +118,8 @@ typedef struct _KERNEL32_FIND_FILE_DATA
 BOOL
 STDCALL
 InternalFindNextFile (
-	HANDLE	hFindFile
+	HANDLE	hFindFile,
+        PUNICODE_STRING SearchPattern
 	)
 {
 	PKERNEL32_FIND_FILE_DATA IData;
@@ -52,32 +130,40 @@ InternalFindNextFile (
 
 	IData = (PKERNEL32_FIND_FILE_DATA)hFindFile;
 
-	if (IData->pFileInfo->NextEntryOffset != 0)
-	{
-	   IData->pFileInfo = (PVOID)((ULONG_PTR)IData->pFileInfo + IData->pFileInfo->NextEntryOffset);
-	   DPRINT("Found %.*S\n",IData->pFileInfo->FileNameLength/sizeof(WCHAR), IData->pFileInfo->FileName);
-	   return TRUE;
-	}
-	IData->pFileInfo = (PVOID)((ULONG_PTR)IData + sizeof(KERNEL32_FIND_FILE_DATA));
-	IData->pFileInfo->FileIndex = 0;
-	Status = NtQueryDirectoryFile (IData->DirectoryHandle,
-	                               NULL,
-	                               NULL,
-	                               NULL,
-	                               &IoStatusBlock,
-	                               (PVOID)IData->pFileInfo,
-	                               FIND_DATA_SIZE,
-	                               FileBothDirectoryInformation,
-	                               FALSE,
-	                               NULL,
-	                               FALSE);
-	if (!NT_SUCCESS(Status))
-	{
-		SetLastErrorByStatus (Status);
-		return FALSE;
-	}
-	DPRINT("Found %.*S\n",IData->pFileInfo->FileNameLength/sizeof(WCHAR), IData->pFileInfo->FileName);
-	return TRUE;
+        while (1)
+        {
+            if (IData->pFileInfo->NextEntryOffset != 0)
+	    {
+	        IData->pFileInfo = (PVOID)((ULONG_PTR)IData->pFileInfo + IData->pFileInfo->NextEntryOffset);
+            }
+            else
+            {
+                IData->pFileInfo = (PVOID)((ULONG_PTR)IData + sizeof(KERNEL32_FIND_FILE_DATA));
+	        IData->pFileInfo->FileIndex = 0;
+	        Status = NtQueryDirectoryFile (IData->DirectoryHandle,
+	                                       NULL,
+                                               NULL,
+                                               NULL,
+                                               &IoStatusBlock,
+                                               (PVOID)IData->pFileInfo,
+                                               FIND_DATA_SIZE,
+                                               FileBothDirectoryInformation,
+                                               SearchPattern ? TRUE : FALSE,
+                                               SearchPattern,
+                                               SearchPattern ? TRUE : FALSE);
+                SearchPattern = NULL;
+                if (!NT_SUCCESS(Status))
+                {
+                    SetLastErrorByStatus (Status);
+                    return FALSE;
+	        }
+            }
+            if (!IData->DirectoryOnly || IData->pFileInfo->FileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+            {
+	        DPRINT("Found %.*S\n",IData->pFileInfo->FileNameLength/sizeof(WCHAR), IData->pFileInfo->FileName);
+	        return TRUE;
+            }
+        }
 }
 
 
@@ -87,7 +173,8 @@ InternalFindNextFile (
 HANDLE
 STDCALL
 InternalFindFirstFile (
-	LPCWSTR	lpFileName
+	LPCWSTR	lpFileName,
+        BOOLEAN DirectoryOnly
 	)
 {
 	OBJECT_ATTRIBUTES ObjectAttributes;
@@ -273,33 +360,21 @@ InternalFindFirstFile (
 	}
 	IData->pFileInfo = (PVOID)((ULONG_PTR)IData + sizeof(KERNEL32_FIND_FILE_DATA));
 	IData->pFileInfo->FileIndex = 0;
+        IData->DirectoryOnly = DirectoryOnly;
 
-	Status = NtQueryDirectoryFile (IData->DirectoryHandle,
-	                               NULL,
-	                               NULL,
-	                               NULL,
-	                               &IoStatusBlock,
-	                               (PVOID)IData->pFileInfo,
-	                               FIND_DATA_SIZE,
-	                               FileBothDirectoryInformation,
-	                               TRUE,
-	                               &PatternStr,
-	                               TRUE);
+        bResult = InternalFindNextFile((HANDLE)IData, &PatternStr);
 	if (NULL != SlashlessFileName)
 	{
 	   RtlFreeHeap(hProcessHeap,
 	               0,
 	               SlashlessFileName);
 	}
-	if (!NT_SUCCESS(Status))
-	{
-	   DPRINT("Status %lx\n", Status);
-	   CloseHandle (IData->DirectoryHandle);
-	   RtlFreeHeap (hProcessHeap, 0, IData);
-	   SetLastErrorByStatus (Status);
-	   return NULL;
-	}
-	DPRINT("Found %.*S\n",IData->pFileInfo->FileNameLength/sizeof(WCHAR), IData->pFileInfo->FileName);
+
+        if (!bResult)
+        {
+            FindClose((HANDLE)IData);
+            return NULL;
+        }
 
 	return IData;
 }
@@ -332,7 +407,7 @@ FindFirstFileA (
 		                             &FileName,
 		                             TRUE);
 
-	IData = InternalFindFirstFile (FileNameU.Buffer);
+	IData = InternalFindFirstFile (FileNameU.Buffer, FALSE);
 
 	RtlFreeUnicodeString (&FileNameU);
 
@@ -346,58 +421,8 @@ FindFirstFileA (
 	       IData->pFileInfo->FileNameLength);
 
 	/* copy data into WIN32_FIND_DATA structure */
-	lpFindFileData->dwFileAttributes = IData->pFileInfo->FileAttributes;
+        InternalCopyFindDataA(lpFindFileData, IData->pFileInfo);
 
-	lpFindFileData->ftCreationTime.dwHighDateTime = IData->pFileInfo->CreationTime.u.HighPart;
-	lpFindFileData->ftCreationTime.dwLowDateTime = IData->pFileInfo->CreationTime.u.LowPart;
-
-	lpFindFileData->ftLastAccessTime.dwHighDateTime = IData->pFileInfo->LastAccessTime.u.HighPart;
-	lpFindFileData->ftLastAccessTime.dwLowDateTime = IData->pFileInfo->LastAccessTime.u.LowPart;
-
-	lpFindFileData->ftLastWriteTime.dwHighDateTime = IData->pFileInfo->LastWriteTime.u.HighPart;
-	lpFindFileData->ftLastWriteTime.dwLowDateTime = IData->pFileInfo->LastWriteTime.u.LowPart;
-
-	lpFindFileData->nFileSizeHigh = IData->pFileInfo->EndOfFile.u.HighPart;
-	lpFindFileData->nFileSizeLow = IData->pFileInfo->EndOfFile.u.LowPart;
-
-	FileNameU.Length = IData->pFileInfo->FileNameLength;
-	FileNameU.MaximumLength = FileNameU.Length + sizeof(WCHAR);
-	FileNameU.Buffer = IData->pFileInfo->FileName;
-
-	FileName.Length = 0;
-	FileName.MaximumLength = MAX_PATH;
-	FileName.Buffer = lpFindFileData->cFileName;
-
-	/* convert unicode string to ansi (or oem) */
-	if (bIsFileApiAnsi)
-		RtlUnicodeStringToAnsiString (&FileName,
-		                              &FileNameU,
-		                              FALSE);
-	else
-		RtlUnicodeStringToOemString (&FileName,
-		                             &FileNameU,
-		                             FALSE);
-
-	DPRINT("IData->pFileInfo->ShortNameLength %d\n",
-	       IData->pFileInfo->ShortNameLength);
-
-	FileNameU.Length = IData->pFileInfo->ShortNameLength;
-	FileNameU.MaximumLength = FileNameU.Length + sizeof(WCHAR);
-	FileNameU.Buffer = IData->pFileInfo->ShortName;
-
-	FileName.Length = 0;
-	FileName.MaximumLength = 14;
-	FileName.Buffer = lpFindFileData->cAlternateFileName;
-
-	/* convert unicode string to ansi (or oem) */
-	if (bIsFileApiAnsi)
-		RtlUnicodeStringToAnsiString (&FileName,
-		                              &FileNameU,
-		                              FALSE);
-	else
-		RtlUnicodeStringToOemString (&FileName,
-		                             &FileNameU,
-		                             FALSE);
 
 	return (HANDLE)IData;
 }
@@ -413,8 +438,6 @@ FindNextFileA (
 	LPWIN32_FIND_DATAA lpFindFileData)
 {
 	PKERNEL32_FIND_FILE_DATA IData;
-	UNICODE_STRING FileNameU;
-	ANSI_STRING FileName;
 
 	if (hFindFile == INVALID_HANDLE_VALUE)
 	{
@@ -424,7 +447,7 @@ FindNextFileA (
 	}
 
 	IData = (PKERNEL32_FIND_FILE_DATA)hFindFile;
-	if (!InternalFindNextFile (hFindFile))
+	if (!InternalFindNextFile (hFindFile, NULL))
 	{
 		DPRINT("InternalFindNextFile() failed\n");
 		return FALSE;
@@ -434,58 +457,7 @@ FindNextFileA (
 	       IData->pFileInfo->FileNameLength);
 
 	/* copy data into WIN32_FIND_DATA structure */
-	lpFindFileData->dwFileAttributes = IData->pFileInfo->FileAttributes;
-
-	lpFindFileData->ftCreationTime.dwHighDateTime = IData->pFileInfo->CreationTime.u.HighPart;
-	lpFindFileData->ftCreationTime.dwLowDateTime = IData->pFileInfo->CreationTime.u.LowPart;
-
-	lpFindFileData->ftLastAccessTime.dwHighDateTime = IData->pFileInfo->LastAccessTime.u.HighPart;
-	lpFindFileData->ftLastAccessTime.dwLowDateTime = IData->pFileInfo->LastAccessTime.u.LowPart;
-
-	lpFindFileData->ftLastWriteTime.dwHighDateTime = IData->pFileInfo->LastWriteTime.u.HighPart;
-	lpFindFileData->ftLastWriteTime.dwLowDateTime = IData->pFileInfo->LastWriteTime.u.LowPart;
-
-	lpFindFileData->nFileSizeHigh = IData->pFileInfo->EndOfFile.u.HighPart;
-	lpFindFileData->nFileSizeLow = IData->pFileInfo->EndOfFile.u.LowPart;
-
-	FileNameU.Length = IData->pFileInfo->FileNameLength;
-	FileNameU.MaximumLength = FileNameU.Length + sizeof(WCHAR);
-	FileNameU.Buffer = IData->pFileInfo->FileName;
-
-	FileName.Length = 0;
-	FileName.MaximumLength = MAX_PATH;
-	FileName.Buffer = lpFindFileData->cFileName;
-
-	/* convert unicode string to ansi (or oem) */
-	if (bIsFileApiAnsi)
-		RtlUnicodeStringToAnsiString (&FileName,
-		                              &FileNameU,
-		                              FALSE);
-	else
-		RtlUnicodeStringToOemString (&FileName,
-		                             &FileNameU,
-		                             FALSE);
-
-	DPRINT("IData->pFileInfo->ShortNameLength %d\n",
-	       IData->pFileInfo->ShortNameLength);
-
-	FileNameU.Length = IData->pFileInfo->ShortNameLength;
-	FileNameU.MaximumLength = FileNameU.Length + sizeof(WCHAR);
-	FileNameU.Buffer = IData->pFileInfo->ShortName;
-
-	FileName.Length = 0;
-	FileName.MaximumLength = 14;
-	FileName.Buffer = lpFindFileData->cAlternateFileName;
-
-	/* convert unicode string to ansi (or oem) */
-	if (bIsFileApiAnsi)
-		RtlUnicodeStringToAnsiString (&FileName,
-		                              &FileNameU,
-		                              FALSE);
-	else
-		RtlUnicodeStringToOemString (&FileName,
-		                             &FileNameU,
-		                             FALSE);
+        InternalCopyFindDataA(lpFindFileData, IData->pFileInfo);
 
 	return TRUE;
 }
@@ -529,41 +501,14 @@ FindFirstFileW (
 	LPWIN32_FIND_DATAW	lpFindFileData
 	)
 {
-	PKERNEL32_FIND_FILE_DATA IData;
 
-	IData = InternalFindFirstFile (lpFileName);
-	if (IData == NULL)
-	{
-		DPRINT("Failing request\n");
-		return INVALID_HANDLE_VALUE;
-	}
-
-	/* copy data into WIN32_FIND_DATA structure */
-	lpFindFileData->dwFileAttributes = IData->pFileInfo->FileAttributes;
-
-	lpFindFileData->ftCreationTime.dwHighDateTime = IData->pFileInfo->CreationTime.u.HighPart;
-	lpFindFileData->ftCreationTime.dwLowDateTime = IData->pFileInfo->CreationTime.u.LowPart;
-
-	lpFindFileData->ftLastAccessTime.dwHighDateTime = IData->pFileInfo->LastAccessTime.u.HighPart;
-	lpFindFileData->ftLastAccessTime.dwLowDateTime = IData->pFileInfo->LastAccessTime.u.LowPart;
-
-	lpFindFileData->ftLastWriteTime.dwHighDateTime = IData->pFileInfo->LastWriteTime.u.HighPart;
-	lpFindFileData->ftLastWriteTime.dwLowDateTime = IData->pFileInfo->LastWriteTime.u.LowPart;
-
-	lpFindFileData->nFileSizeHigh = IData->pFileInfo->EndOfFile.u.HighPart;
-	lpFindFileData->nFileSizeLow = IData->pFileInfo->EndOfFile.u.LowPart;
-
-	memcpy (lpFindFileData->cFileName,
-	        IData->pFileInfo->FileName,
-	        IData->pFileInfo->FileNameLength);
-	lpFindFileData->cFileName[IData->pFileInfo->FileNameLength / sizeof(WCHAR)] = 0;
-	memcpy (lpFindFileData->cAlternateFileName,
-	        IData->pFileInfo->ShortName,
-	        IData->pFileInfo->ShortNameLength);
-	lpFindFileData->cAlternateFileName[IData->pFileInfo->ShortNameLength / sizeof(WCHAR)] = 0;
-	return IData;
+        return FindFirstFileExW (lpFileName,
+                                 FindExInfoStandard,
+                                 (LPVOID)lpFindFileData,
+                                 FindExSearchNameMatch,
+                                 NULL,
+                                 0);
 }
-
 
 /*
  * @implemented
@@ -585,38 +530,15 @@ FindNextFileW (
 	}
 
 	IData = (PKERNEL32_FIND_FILE_DATA)hFindFile;
-	if (!InternalFindNextFile(hFindFile))
+	if (!InternalFindNextFile(hFindFile, NULL))
 	{
 		DPRINT("Failing request\n");
 		return FALSE;
 	}
 
 	/* copy data into WIN32_FIND_DATA structure */
-	lpFindFileData->dwFileAttributes = IData->pFileInfo->FileAttributes;
+        InternalCopyFindDataW(lpFindFileData, IData->pFileInfo);
 
-	lpFindFileData->ftCreationTime.dwHighDateTime = IData->pFileInfo->CreationTime.u.HighPart;
-	lpFindFileData->ftCreationTime.dwLowDateTime = IData->pFileInfo->CreationTime.u.LowPart;
-
-	lpFindFileData->ftLastAccessTime.dwHighDateTime = IData->pFileInfo->LastAccessTime.u.HighPart;
-	lpFindFileData->ftLastAccessTime.dwLowDateTime = IData->pFileInfo->LastAccessTime.u.LowPart;
-
-	lpFindFileData->ftLastWriteTime.dwHighDateTime = IData->pFileInfo->LastWriteTime.u.HighPart;
-	lpFindFileData->ftLastWriteTime.dwLowDateTime = IData->pFileInfo->LastWriteTime.u.LowPart;
-
-	lpFindFileData->nFileSizeHigh = IData->pFileInfo->EndOfFile.u.HighPart;
-	lpFindFileData->nFileSizeLow = IData->pFileInfo->EndOfFile.u.LowPart;
-
-	lpFindFileData->nFileSizeHigh = IData->pFileInfo->EndOfFile.u.HighPart;
-	lpFindFileData->nFileSizeLow = IData->pFileInfo->EndOfFile.u.LowPart;
-
-        memcpy (lpFindFileData->cFileName,
-	        IData->pFileInfo->FileName,
-	        IData->pFileInfo->FileNameLength);
-	lpFindFileData->cFileName[IData->pFileInfo->FileNameLength / sizeof(WCHAR)] = 0;
-	memcpy (lpFindFileData->cAlternateFileName,
-	        IData->pFileInfo->ShortName,
-	        IData->pFileInfo->ShortNameLength);
-	lpFindFileData->cAlternateFileName[IData->pFileInfo->ShortNameLength / sizeof(WCHAR)] = 0;
 	return TRUE;
 }
 
@@ -626,19 +548,43 @@ FindNextFileW (
  */
 HANDLE
 STDCALL
-FindFirstFileExW (
-	LPCWSTR			lpFileName,
-	FINDEX_INFO_LEVELS	fInfoLevelId,
-	LPVOID			lpFindFileData,
-	FINDEX_SEARCH_OPS	fSearchOp,
-	LPVOID			lpSearchFilter,
-	DWORD			dwAdditionalFlags
-	)
+FindFirstFileExW (LPCWSTR               lpFileName,
+                  FINDEX_INFO_LEVELS    fInfoLevelId,
+                  LPVOID                lpFindFileData,
+                  FINDEX_SEARCH_OPS     fSearchOp,
+                  LPVOID                lpSearchFilter,
+                  DWORD                 dwAdditionalFlags)
 {
-	/* FIXME */
-	return (HANDLE) 0;
-}
+    PKERNEL32_FIND_FILE_DATA IData;
 
+    if (fInfoLevelId != FindExInfoStandard)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return INVALID_HANDLE_VALUE;
+    }
+    if (fSearchOp == FindExSearchNameMatch || fSearchOp == FindExSearchLimitToDirectories)
+    {
+        if (lpSearchFilter)
+        {
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return INVALID_HANDLE_VALUE;
+        }
+
+        IData = InternalFindFirstFile (lpFileName, fSearchOp == FindExSearchLimitToDirectories ? TRUE : FALSE);
+	if (IData == NULL)
+	{
+		DPRINT("Failing request\n");
+		return INVALID_HANDLE_VALUE;
+	}
+
+	/* copy data into WIN32_FIND_DATA structure */
+        InternalCopyFindDataW((LPWIN32_FIND_DATAW)lpFindFileData, IData->pFileInfo);
+
+	return (HANDLE)IData;
+    }
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return INVALID_HANDLE_VALUE;
+}
 
 /*
  * @unimplemented
@@ -654,8 +600,46 @@ FindFirstFileExA (
 	DWORD			dwAdditionalFlags
 	)
 {
-	/* FIXME */
-	return (HANDLE) 0;
+    PKERNEL32_FIND_FILE_DATA IData;
+    UNICODE_STRING FileNameU;
+    ANSI_STRING FileNameA;
+
+    if (fInfoLevelId != FindExInfoStandard)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return INVALID_HANDLE_VALUE;
+    }
+    if (fSearchOp == FindExSearchNameMatch || fSearchOp == FindExSearchLimitToDirectories)
+    {
+        if (lpSearchFilter)
+        {
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return INVALID_HANDLE_VALUE;
+        }
+	
+        RtlInitAnsiString (&FileNameA, (LPSTR)lpFileName);
+
+	/* convert ansi (or oem) string to unicode */
+	if (bIsFileApiAnsi)
+            RtlAnsiStringToUnicodeString (&FileNameU, &FileNameA, TRUE);
+	else
+            RtlOemStringToUnicodeString (&FileNameU, &FileNameA, TRUE);
+
+	IData = InternalFindFirstFile (FileNameU.Buffer, FALSE);
+
+	RtlFreeUnicodeString (&FileNameU);
+
+	if (IData == NULL)
+	{
+		DPRINT("Failing request\n");
+		return INVALID_HANDLE_VALUE;
+	}
+
+	/* copy data into WIN32_FIND_DATA structure */
+        InternalCopyFindDataA(lpFindFileData, IData->pFileInfo);
+    }
+    SetLastError(ERROR_INVALID_PARAMETER);
+    return INVALID_HANDLE_VALUE;
 }
 
 

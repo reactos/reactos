@@ -142,7 +142,7 @@ static void st_mark_entry_used( string_table *st, UINT n )
     st->freeslot = n + 1;
 }
 
-int msi_addstring( string_table *st, int n, const CHAR *data, int len, UINT refcount )
+int msi_addstring( string_table *st, UINT n, const CHAR *data, int len, UINT refcount )
 {
     int sz;
 
@@ -190,7 +190,7 @@ int msi_addstring( string_table *st, int n, const CHAR *data, int len, UINT refc
     return n;
 }
 
-int msi_addstringW( string_table *st, int n, const WCHAR *data, int len, UINT refcount )
+int msi_addstringW( string_table *st, UINT n, const WCHAR *data, int len, UINT refcount )
 {
     /* TRACE("[%2d] = %s\n", string_no, debugstr_an(data,len) ); */
 

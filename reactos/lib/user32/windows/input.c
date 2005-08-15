@@ -29,6 +29,8 @@
 /* INCLUDES ******************************************************************/
 
 #include <user32.h>
+#define NDEBUG
+#include <debug.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -868,8 +870,7 @@ TrackMouseEvent(
     pos.y = 0;
     SetRectEmpty(&client);
 
-    DbgPrint("%lx, %lx, %p, %lx\n", ptme->cbSize, ptme->dwFlags, ptme->hwndTrack, ptme->dwHoverTime);
-  UNIMPLEMENTED;
+    DPRINT("%lx, %lx, %p, %lx\n", ptme->cbSize, ptme->dwFlags, ptme->hwndTrack, ptme->dwHoverTime);
 
     if (ptme->cbSize != sizeof(TRACKMOUSEEVENT)) {
         DPRINT("wrong TRACKMOUSEEVENT size from app\n");

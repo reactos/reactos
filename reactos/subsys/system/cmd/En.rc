@@ -41,12 +41,13 @@ CALL [drive:][path]filename [batch-parameter]\n\n\
                    batch program."
 
 STRING_CD_HELP,      "Changes the current directory or displays it's name\n\n\
-CHDIR [drive:][path]\n\
+CHDIR [/D][drive:][path]\n\
 CHDIR[..|.]\n\
-CD [drive:][path]\n\
+CD [/D][drive:][path]\n\
 CD[..|.]\n\n\
   ..   parent directory\n\
-  .    previous directory\n\n\
+  .    previous directory\n\
+  /D   Will change current drive and current directory.\n\n\
 Type CD drive: to display the current directory on the specified drive.\n\
 Type CD without a parameter to display the current drive and directory.\n"
 
@@ -137,9 +138,9 @@ Type DATE without parameters to display the current date setting and\n\
 a prompt for a new one.  Press ENTER to keep the same date.\n"
 				
 STRING_DEL_HELP1,  "Deletes one or more files.\n\n\
-DEL [/N /P /T /Q /W /Y /Z /A[[:]attributes]] file ...\n\
-DELETE [/N /P /T /Q /W /Y /Z /A[[:]attributes]] file ...\n\
-ERASE [/N /P /T /Q /W /Y /Z /A[[:]attributes]] file ...\n\n\
+DEL [/N /P /T /Q /S /W /Y /Z /A[[:]attributes]] file ...\n\
+DELETE [/N /P /T /Q /S /W /Y /Z /A[[:]attributes]] file ...\n\
+ERASE [/N /P /T /Q /S /W /Y /Z /A[[:]attributes]] file ...\n\n\
       file  Specifies the file(s) to delete.\n\n\
   /N    Nothing.\n\
   /P    Prompt. Ask before deleting each file.\n\
@@ -147,7 +148,8 @@ ERASE [/N /P /T /Q /W /Y /Z /A[[:]attributes]] file ...\n\n\
   /Q    Quiet.\n\
   /W    Wipe. Overwrite the file with random numbers before deleting it.\n\
   /Y    Yes. Kill even *.* without asking.\n\
-  /Z    Zap. Delete hidden, read-only and system files.\n\
+  /F    Force Delete hidden, read-only and system files.\n\
+  /S    Delete file from all sub directory\n\
   /A    Select files to be deleted based on attributes.\n\
         attributes\n\
         R     Read Only files\n\
@@ -432,7 +434,8 @@ TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
 if none of ON, OFF or /S is specified the command\n\
 will toggle stopwach state\n\n"
 
-STRING_TYPE_HELP1, "Displays the contents of text files.\n\nTYPE [drive:][path]filename"
+STRING_TYPE_HELP1, "Displays the contents of text files.\n\nTYPE [drive:][path]filename \n\
+  /P 		  Shows one screen of output at a time.\n"
 
 STRING_VERIFY_HELP1, "This command is just a dummy!!\n\
 Sets whether to verify that your files are written correctly to a\n\

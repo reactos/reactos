@@ -32,6 +32,9 @@
 
 	<include>include</include>
 	<include>include/reactos</include>
+	<include>include/libs</include>
+	<include>include/drivers</include>
+	<include>include/subsys</include>
 	<include>w32api/include</include>
 	<include>w32api/include/ddk</include>
 

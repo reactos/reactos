@@ -88,9 +88,8 @@ static CRITICAL_SECTION_DEBUG critsect_debug =
 };
 static CRITICAL_SECTION keyboard_crit = { &critsect_debug, -1, 0, 0, 0, 0 };
 
-static DWORD keyboard_users;
-
 #ifndef __REACTOS__
+static DWORD keyboard_users;
 static HHOOK keyboard_hook;
 #endif
 

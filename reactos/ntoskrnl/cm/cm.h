@@ -497,7 +497,10 @@ CmiObjectSecurity(PVOID ObjectBody,
 		  SECURITY_OPERATION_CODE OperationCode,
 		  SECURITY_INFORMATION SecurityInformation,
 		  PSECURITY_DESCRIPTOR SecurityDescriptor,
-		  PULONG BufferLength);
+		  PULONG BufferLength,
+		  PSECURITY_DESCRIPTOR *OldSecurityDescriptor,
+		  POOL_TYPE PoolType,
+		  PGENERIC_MAPPING GenericMapping);
 
 NTSTATUS STDCALL
 CmiObjectQueryName (PVOID ObjectBody,
@@ -743,12 +746,5 @@ CmiCopyKey (PREGISTRY_HIVE DstHive,
 NTSTATUS
 CmiSaveTempHive (PREGISTRY_HIVE Hive,
 		 HANDLE FileHandle);
-
-/* TEMPORARY HACK UNTIL PROPER PARSE ROUTINES SOON. DO NOT REMOVE -- Alex */         
-NTSTATUS
-CmpFindObject(POBJECT_ATTRIBUTES ObjectAttributes,
-	     PVOID* ReturnedObject,
-	     PUNICODE_STRING RemainingPath,
-	     POBJECT_TYPE ObjectType);
 
 #endif /*__INCLUDE_CM_H*/

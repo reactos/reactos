@@ -35,7 +35,7 @@
 
 /*-
  *
- * Copyright (c) 2004
+ * Copyright (c) 2004, 2005
  *	Albert Chin-A-Young.
  *
  * Modified to work with FreeType's PCF driver.
@@ -250,7 +250,7 @@ zread(s_zstate_t *zs)
 
 		/* Special case for KwKwK string. */
 		if (code >= free_ent) {
-			*stackp++ = finchar;
+			*stackp++ = (unsigned char)finchar;
 			code = oldcode;
 		}
 
@@ -259,7 +259,7 @@ zread(s_zstate_t *zs)
 			*stackp++ = tab_suffixof(code);
 			code = tab_prefixof(code);
 		}
-		*stackp++ = finchar = tab_suffixof(code);
+		*stackp++ = (unsigned char)(finchar = tab_suffixof(code));
 
 		/* And put them out in forward order.  */
 middle:
@@ -276,8 +276,8 @@ middle:
 
 		/* Generate the new entry. */
 		if ((code = free_ent) < maxmaxcode) {
-			tab_prefixof(code) = (unsigned short) oldcode;
-			tab_suffixof(code) = finchar;
+			tab_prefixof(code) = (unsigned short)oldcode;
+			tab_suffixof(code) = (unsigned char)finchar;
 			free_ent = code + 1;
 		}
 
@@ -322,7 +322,7 @@ getcode(s_zstate_t *zs)
 		}
 		if ( zs->avail_in < (unsigned int)n_bits && in_count > (long)n_bits ) {
 			memcpy (buf, zs->next_in, zs->avail_in);
-			buf_len = zs->avail_in;
+			buf_len = (unsigned char)zs->avail_in;
 			zs->avail_in = 0;
 			return -1;
 		}

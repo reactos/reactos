@@ -19,16 +19,19 @@
 			<file>ftbase.c</file>
 			<file>ftbbox.c</file>
 			<file>ftbdf.c</file>
+			<file>ftbitmap.c</file>
 			<file>ftglyph.c</file>
 			<file>ftmm.c</file>
+			<file>ftotval.c</file>
 			<file>ftpfr.c</file>
 			<file>ftstroke.c</file>
+			<file>ftsynth.c</file>
 			<file>fttype1.c</file>
 			<file>ftwinfnt.c</file>
 			<file>ftxf86.c</file>
 		</directory>
-		<directory name="autohint">
-			<file>autohint.c</file>
+		<directory name="autofit">
+			<file>autofit.c</file>
 		</directory>
 		<directory name="bdf">
 			<file>bdf.c</file>
@@ -47,6 +50,15 @@
 		</directory>
 		<directory name="lzw">
 			<file>ftlzw.c</file>
+		</directory>
+		<directory name="otvalid">
+			<file>otvbase.c</file>
+			<file>otvcommn.c</file>
+			<file>otvgpos.c</file>
+			<file>otvgsub.c</file>
+			<file>otvgdef.c</file>
+			<file>otvjstf.c</file>
+			<file>otvmod.c</file>
 		</directory>
 		<directory name="pcf">
 			<file>pcf.c</file>

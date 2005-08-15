@@ -2043,6 +2043,13 @@ struct IInternetZoneManagerVtbl {
         DWORD cbPolicy,
         URLZONEREG urlZoneReg);
 
+    HRESULT (STDMETHODCALLTYPE *PromptAction)(
+        IInternetZoneManager* This,
+        DWORD dwAction,
+        LPCWSTR pwszUrl,
+        LPCWSTR pwszText,
+        DWORD dwPromptFlags);
+
     HRESULT (STDMETHODCALLTYPE *LogAction)(
         IInternetZoneManager* This,
         DWORD dwAction,
@@ -2213,6 +2220,22 @@ void __RPC_STUB IInternetZoneManager_CopyTemplatePoliciesToZone_Stub(
     DWORD* pdwStubPhase);
 
 #endif  /* __IInternetZoneManager_INTERFACE_DEFINED__ */
+
+typedef struct _tagSOFTDISTINFO {
+    ULONG cbSize;
+    DWORD dwFlags;
+    DWORD dwAdState;
+    LPWSTR szTitle;
+    LPWSTR szAbstract;
+    LPWSTR szHREF;
+    DWORD dwInstalledVersionMS;
+    DWORD dwInstalledVersionLS;
+    DWORD dwUpdateVersionMS;
+    DWORD dwUpdateVersionLS;
+    DWORD dwAdvertisedVersionMS;
+    DWORD dwAdvertisedVersionLS;
+    DWORD dwReserved;
+} SOFTDISTINFO, *LPSOFTDISTINFO;
 
 DEFINE_GUID(CLSID_InternetSecurityManager, 0x7b8a2d94, 0x0ac9, 0x11d1, 0x89, 0x6c, 0x00, 0xc0, 0x4f, 0xB6, 0xbf, 0xc4);
 DEFINE_GUID(CLSID_InternetZoneManager, 0x7B8A2D95, 0x0AC9, 0x11D1, 0x89, 0x6C, 0x00, 0xC0, 0x4F, 0xB6, 0xBF, 0xC4);

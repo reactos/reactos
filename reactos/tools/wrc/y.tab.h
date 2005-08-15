@@ -50,67 +50,68 @@
      tFONT = 276,
      tFONTDIR = 277,
      tICON = 278,
-     tAUTO3STATE = 279,
-     tAUTOCHECKBOX = 280,
-     tAUTORADIOBUTTON = 281,
-     tCHECKBOX = 282,
-     tDEFPUSHBUTTON = 283,
-     tPUSHBUTTON = 284,
-     tRADIOBUTTON = 285,
-     tSTATE3 = 286,
-     tGROUPBOX = 287,
-     tCOMBOBOX = 288,
-     tLISTBOX = 289,
-     tSCROLLBAR = 290,
-     tCONTROL = 291,
-     tEDITTEXT = 292,
-     tRTEXT = 293,
-     tCTEXT = 294,
-     tLTEXT = 295,
-     tBLOCK = 296,
-     tVALUE = 297,
-     tSHIFT = 298,
-     tALT = 299,
-     tASCII = 300,
-     tVIRTKEY = 301,
-     tGRAYED = 302,
-     tCHECKED = 303,
-     tINACTIVE = 304,
-     tNOINVERT = 305,
-     tPURE = 306,
-     tIMPURE = 307,
-     tDISCARDABLE = 308,
-     tLOADONCALL = 309,
-     tPRELOAD = 310,
-     tFIXED = 311,
-     tMOVEABLE = 312,
-     tCLASS = 313,
-     tCAPTION = 314,
-     tCHARACTERISTICS = 315,
-     tEXSTYLE = 316,
-     tSTYLE = 317,
-     tVERSION = 318,
-     tLANGUAGE = 319,
-     tFILEVERSION = 320,
-     tPRODUCTVERSION = 321,
-     tFILEFLAGSMASK = 322,
-     tFILEOS = 323,
-     tFILETYPE = 324,
-     tFILEFLAGS = 325,
-     tFILESUBTYPE = 326,
-     tMENUBARBREAK = 327,
-     tMENUBREAK = 328,
-     tMENUITEM = 329,
-     tPOPUP = 330,
-     tSEPARATOR = 331,
-     tHELP = 332,
-     tTOOLBAR = 333,
-     tBUTTON = 334,
-     tBEGIN = 335,
-     tEND = 336,
-     tDLGINIT = 337,
-     tNOT = 338,
-     pUPM = 339
+     tHTML = 279,
+     tAUTO3STATE = 280,
+     tAUTOCHECKBOX = 281,
+     tAUTORADIOBUTTON = 282,
+     tCHECKBOX = 283,
+     tDEFPUSHBUTTON = 284,
+     tPUSHBUTTON = 285,
+     tRADIOBUTTON = 286,
+     tSTATE3 = 287,
+     tGROUPBOX = 288,
+     tCOMBOBOX = 289,
+     tLISTBOX = 290,
+     tSCROLLBAR = 291,
+     tCONTROL = 292,
+     tEDITTEXT = 293,
+     tRTEXT = 294,
+     tCTEXT = 295,
+     tLTEXT = 296,
+     tBLOCK = 297,
+     tVALUE = 298,
+     tSHIFT = 299,
+     tALT = 300,
+     tASCII = 301,
+     tVIRTKEY = 302,
+     tGRAYED = 303,
+     tCHECKED = 304,
+     tINACTIVE = 305,
+     tNOINVERT = 306,
+     tPURE = 307,
+     tIMPURE = 308,
+     tDISCARDABLE = 309,
+     tLOADONCALL = 310,
+     tPRELOAD = 311,
+     tFIXED = 312,
+     tMOVEABLE = 313,
+     tCLASS = 314,
+     tCAPTION = 315,
+     tCHARACTERISTICS = 316,
+     tEXSTYLE = 317,
+     tSTYLE = 318,
+     tVERSION = 319,
+     tLANGUAGE = 320,
+     tFILEVERSION = 321,
+     tPRODUCTVERSION = 322,
+     tFILEFLAGSMASK = 323,
+     tFILEOS = 324,
+     tFILETYPE = 325,
+     tFILEFLAGS = 326,
+     tFILESUBTYPE = 327,
+     tMENUBARBREAK = 328,
+     tMENUBREAK = 329,
+     tMENUITEM = 330,
+     tPOPUP = 331,
+     tSEPARATOR = 332,
+     tHELP = 333,
+     tTOOLBAR = 334,
+     tBUTTON = 335,
+     tBEGIN = 336,
+     tEND = 337,
+     tDLGINIT = 338,
+     tNOT = 339,
+     pUPM = 340
    };
 #endif
 #define tNL 258
@@ -134,73 +135,74 @@
 #define tFONT 276
 #define tFONTDIR 277
 #define tICON 278
-#define tAUTO3STATE 279
-#define tAUTOCHECKBOX 280
-#define tAUTORADIOBUTTON 281
-#define tCHECKBOX 282
-#define tDEFPUSHBUTTON 283
-#define tPUSHBUTTON 284
-#define tRADIOBUTTON 285
-#define tSTATE3 286
-#define tGROUPBOX 287
-#define tCOMBOBOX 288
-#define tLISTBOX 289
-#define tSCROLLBAR 290
-#define tCONTROL 291
-#define tEDITTEXT 292
-#define tRTEXT 293
-#define tCTEXT 294
-#define tLTEXT 295
-#define tBLOCK 296
-#define tVALUE 297
-#define tSHIFT 298
-#define tALT 299
-#define tASCII 300
-#define tVIRTKEY 301
-#define tGRAYED 302
-#define tCHECKED 303
-#define tINACTIVE 304
-#define tNOINVERT 305
-#define tPURE 306
-#define tIMPURE 307
-#define tDISCARDABLE 308
-#define tLOADONCALL 309
-#define tPRELOAD 310
-#define tFIXED 311
-#define tMOVEABLE 312
-#define tCLASS 313
-#define tCAPTION 314
-#define tCHARACTERISTICS 315
-#define tEXSTYLE 316
-#define tSTYLE 317
-#define tVERSION 318
-#define tLANGUAGE 319
-#define tFILEVERSION 320
-#define tPRODUCTVERSION 321
-#define tFILEFLAGSMASK 322
-#define tFILEOS 323
-#define tFILETYPE 324
-#define tFILEFLAGS 325
-#define tFILESUBTYPE 326
-#define tMENUBARBREAK 327
-#define tMENUBREAK 328
-#define tMENUITEM 329
-#define tPOPUP 330
-#define tSEPARATOR 331
-#define tHELP 332
-#define tTOOLBAR 333
-#define tBUTTON 334
-#define tBEGIN 335
-#define tEND 336
-#define tDLGINIT 337
-#define tNOT 338
-#define pUPM 339
+#define tHTML 279
+#define tAUTO3STATE 280
+#define tAUTOCHECKBOX 281
+#define tAUTORADIOBUTTON 282
+#define tCHECKBOX 283
+#define tDEFPUSHBUTTON 284
+#define tPUSHBUTTON 285
+#define tRADIOBUTTON 286
+#define tSTATE3 287
+#define tGROUPBOX 288
+#define tCOMBOBOX 289
+#define tLISTBOX 290
+#define tSCROLLBAR 291
+#define tCONTROL 292
+#define tEDITTEXT 293
+#define tRTEXT 294
+#define tCTEXT 295
+#define tLTEXT 296
+#define tBLOCK 297
+#define tVALUE 298
+#define tSHIFT 299
+#define tALT 300
+#define tASCII 301
+#define tVIRTKEY 302
+#define tGRAYED 303
+#define tCHECKED 304
+#define tINACTIVE 305
+#define tNOINVERT 306
+#define tPURE 307
+#define tIMPURE 308
+#define tDISCARDABLE 309
+#define tLOADONCALL 310
+#define tPRELOAD 311
+#define tFIXED 312
+#define tMOVEABLE 313
+#define tCLASS 314
+#define tCAPTION 315
+#define tCHARACTERISTICS 316
+#define tEXSTYLE 317
+#define tSTYLE 318
+#define tVERSION 319
+#define tLANGUAGE 320
+#define tFILEVERSION 321
+#define tPRODUCTVERSION 322
+#define tFILEFLAGSMASK 323
+#define tFILEOS 324
+#define tFILETYPE 325
+#define tFILEFLAGS 326
+#define tFILESUBTYPE 327
+#define tMENUBARBREAK 328
+#define tMENUBREAK 329
+#define tMENUITEM 330
+#define tPOPUP 331
+#define tSEPARATOR 332
+#define tHELP 333
+#define tTOOLBAR 334
+#define tBUTTON 335
+#define tBEGIN 336
+#define tEND 337
+#define tDLGINIT 338
+#define tNOT 339
+#define pUPM 340
 
 
 
 
 #if ! defined (YYSTYPE) && ! defined (YYSTYPE_IS_DECLARED)
-#line 240 "parser.y"
+#line 240 "./parser.y"
 typedef union YYSTYPE {
 	string_t	*str;
 	int		num;
@@ -215,6 +217,7 @@ typedef union YYSTYPE {
 	fontdir_t	*fnd;
 	menu_t		*men;
 	menuex_t	*menex;
+	html_t		*html;
 	rcdata_t	*rdt;
 	stringtable_t	*stt;
 	stt_entry_t	*stte;
@@ -244,7 +247,7 @@ typedef union YYSTYPE {
 	ani_any_t	*ani;
 } YYSTYPE;
 /* Line 1275 of yacc.c.  */
-#line 248 "parser.tab.h"
+#line 251 "y.tab.h"
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
 # define YYSTYPE_IS_TRIVIAL 1

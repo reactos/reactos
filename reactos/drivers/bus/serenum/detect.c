@@ -472,7 +472,7 @@ SerenumDetectLegacyDevice(
 	ULONG Command;
 	SERIAL_TIMEOUTS Timeouts;
 	SERIAL_LINE_CONTROL LCR;
-	ULONG i, Count;
+	ULONG i, Count = 0;
 	UCHAR Buffer[16];
 	UNICODE_STRING DeviceDescription;
 	UNICODE_STRING DeviceId;

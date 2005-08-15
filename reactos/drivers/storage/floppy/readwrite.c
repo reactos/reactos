@@ -82,7 +82,7 @@ static IO_ALLOCATION_ACTION NTAPI MapRegisterCallback(PDEVICE_OBJECT DeviceObjec
   UNREFERENCED_PARAMETER(DeviceObject);
   UNREFERENCED_PARAMETER(Irp);
 
-  DPRINT(("floppy: MapRegisterCallback Called\n"));
+  DPRINT("floppy: MapRegisterCallback Called\n");
 
   ControllerInfo->MapRegisterBase = MapRegisterBase;
   KeSetEvent(&ControllerInfo->SynchEvent, 0, FALSE);
@@ -108,14 +108,14 @@ NTSTATUS NTAPI ReadWrite(PDEVICE_OBJECT DeviceObject,
  *       it onto the irp queue
  */
 {
-  DPRINT(("floppy: ReadWrite called\n"));
+  DPRINT("floppy: ReadWrite called\n");
 
   ASSERT(DeviceObject);
   ASSERT(Irp);
 
   if(!Irp->MdlAddress)
     {
-      DPRINT(("floppy: ReadWrite(): MDL not found in IRP - Completing with STATUS_INVALID_PARAMETER\n"));
+      DPRINT("floppy: ReadWrite(): MDL not found in IRP - Completing with STATUS_INVALID_PARAMETER\n");
       Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
       Irp->IoStatus.Information = 0;
       IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -176,7 +176,7 @@ static NTSTATUS NTAPI RWDetermineMediaType(PDRIVE_INFO DriveInfo)
 
   PAGED_CODE();
 
-  DPRINT(("floppy: RWDetermineMediaType called\n"));
+  DPRINT("floppy: RWDetermineMediaType called\n");
 
   /*
    * This algorithm assumes that a 1.44MB floppy is in the drive.  If it's not,
@@ -191,7 +191,7 @@ static NTSTATUS NTAPI RWDetermineMediaType(PDRIVE_INFO DriveInfo)
       /* Program data rate */
       if(HwSetDataRate(DriveInfo->ControllerInfo, DRSR_DSEL_500KBPS) != STATUS_SUCCESS)
 	{
-	  DPRINT(("floppy: RWDetermineMediaType(): unable to set data rate\n"));
+	  DPRINT("floppy: RWDetermineMediaType(): unable to set data rate\n");
 	  return STATUS_UNSUCCESSFUL;
 	}
 
@@ -203,7 +203,7 @@ static NTSTATUS NTAPI RWDetermineMediaType(PDRIVE_INFO DriveInfo)
       /* Don't disable DMA --> enable dma (dumb & confusing) */
       if(HwSpecify(DriveInfo->ControllerInfo, HeadLoadTime, HeadUnloadTime, StepRateTime, FALSE) != STATUS_SUCCESS)
 	{
-	  DPRINT(("floppy: RWDetermineMediaType(): specify failed\n"));
+	  DPRINT("floppy: RWDetermineMediaType(): specify failed\n");
 	  return STATUS_UNSUCCESSFUL;
 	}
 
@@ -217,7 +217,7 @@ static NTSTATUS NTAPI RWDetermineMediaType(PDRIVE_INFO DriveInfo)
 
 	  if(HwRecalibrate(DriveInfo) != STATUS_SUCCESS)
 	    {
-	      DPRINT(("floppy: RWDetermineMediaType(): Recalibrate failed\n"));
+	      DPRINT("floppy: RWDetermineMediaType(): Recalibrate failed\n");
 	      return STATUS_UNSUCCESSFUL;
 	    }
 
@@ -231,7 +231,7 @@ static NTSTATUS NTAPI RWDetermineMediaType(PDRIVE_INFO DriveInfo)
 
 	  if(i == 1) /* failed for 2nd time */
 	    {
-	      DPRINT(("floppy: RWDetermineMediaType(): RecalibrateResult failed\n"));
+	      DPRINT("floppy: RWDetermineMediaType(): RecalibrateResult failed\n");
 	      return STATUS_UNSUCCESSFUL;
 	    }
 	}
@@ -242,7 +242,7 @@ static NTSTATUS NTAPI RWDetermineMediaType(PDRIVE_INFO DriveInfo)
       /* Try to read an ID */
       if(HwReadId(DriveInfo, 0) != STATUS_SUCCESS) /* read the first ID we find, from head 0 */
 	{
-	  DPRINT(("floppy: RWDetermineMediaType(): ReadId failed\n"));
+	  DPRINT("floppy: RWDetermineMediaType(): ReadId failed\n");
 	  return STATUS_UNSUCCESSFUL; /* if we can't even write to the controller, it's hopeless */
 	}
 
@@ -251,13 +251,13 @@ static NTSTATUS NTAPI RWDetermineMediaType(PDRIVE_INFO DriveInfo)
 
       if(HwReadIdResult(DriveInfo->ControllerInfo, NULL, NULL) != STATUS_SUCCESS)
 	{
-	  DPRINT(("floppy: RWDetermineMediaType(): ReadIdResult failed; continuing\n"));
+	  DPRINT("floppy: RWDetermineMediaType(): ReadIdResult failed; continuing\n");
 	  continue;
 	}
 
       /* Found the media; populate the geometry now */
-      DPRINT(("FIXME: Hardcoded media type!\n"));
-      DPRINT(("floppy: RWDetermineMediaType(): Found 1.44 media; returning success\n"));
+      DPRINT("FIXME: Hardcoded media type!\n");
+      DPRINT("floppy: RWDetermineMediaType(): Found 1.44 media; returning success\n");
       DriveInfo->DiskGeometry.MediaType = GEOMETRY_144_MEDIATYPE;
       DriveInfo->DiskGeometry.Cylinders.QuadPart = GEOMETRY_144_CYLINDERS;
       DriveInfo->DiskGeometry.TracksPerCylinder = GEOMETRY_144_TRACKSPERCYLINDER;
@@ -268,7 +268,7 @@ static NTSTATUS NTAPI RWDetermineMediaType(PDRIVE_INFO DriveInfo)
     }
   while(FALSE);
 
-  DPRINT(("floppy: RWDetermineMediaType(): failed to find media\n"));
+  DPRINT("floppy: RWDetermineMediaType(): failed to find media\n");
   return STATUS_UNRECOGNIZED_MEDIA;
 }
 
@@ -291,7 +291,7 @@ static NTSTATUS NTAPI RWSeekToCylinder(PDRIVE_INFO DriveInfo,
 
   PAGED_CODE();
 
-  DPRINT(("floppy: RWSeekToCylinder called drive 0x%x cylinder %d\n", DriveInfo, Cylinder));
+  DPRINT("floppy: RWSeekToCylinder called drive 0x%x cylinder %d\n", DriveInfo, Cylinder);
 
   /* Clear any spurious interrupts */
   KeClearEvent(&DriveInfo->ControllerInfo->SynchEvent);
@@ -299,7 +299,7 @@ static NTSTATUS NTAPI RWSeekToCylinder(PDRIVE_INFO DriveInfo,
   /* queue seek command */
   if(HwSeek(DriveInfo, Cylinder) != STATUS_SUCCESS)
     {
-      DPRINT(("floppy: RWSeekToTrack(): unable to seek\n"));
+      DPRINT("floppy: RWSeekToTrack(): unable to seek\n");
       return STATUS_UNSUCCESSFUL;
     }
 
@@ -307,14 +307,14 @@ static NTSTATUS NTAPI RWSeekToCylinder(PDRIVE_INFO DriveInfo,
 
   if(HwSenseInterruptStatus(DriveInfo->ControllerInfo) != STATUS_SUCCESS)
     {
-      DPRINT(("floppy: RWSeekToTrack(): unable to get seek results\n"));
+      DPRINT("floppy: RWSeekToTrack(): unable to get seek results\n");
       return STATUS_UNSUCCESSFUL;
     }
 
   /* read ID mark from head 0 to verify */
   if(HwReadId(DriveInfo, 0) != STATUS_SUCCESS)
     {
-      DPRINT(("floppy: RWSeekToTrack(): unable to queue ReadId\n"));
+      DPRINT("floppy: RWSeekToTrack(): unable to queue ReadId\n");
       return STATUS_UNSUCCESSFUL;
     }
 
@@ -322,17 +322,17 @@ static NTSTATUS NTAPI RWSeekToCylinder(PDRIVE_INFO DriveInfo,
 
   if(HwReadIdResult(DriveInfo->ControllerInfo, &CurCylinder, NULL) != STATUS_SUCCESS)
     {
-      DPRINT(("floppy: RWSeekToTrack(): unable to get ReadId result\n"));
+      DPRINT("floppy: RWSeekToTrack(): unable to get ReadId result\n");
       return STATUS_UNSUCCESSFUL;
     }
 
   if(CurCylinder != Cylinder)
     {
-      DPRINT(("floppy: RWSeekToTrack(): Seeek to track failed; current cylinder is 0x%x\n", CurCylinder));
+      DPRINT("floppy: RWSeekToTrack(): Seeek to track failed; current cylinder is 0x%x\n", CurCylinder);
       return STATUS_UNSUCCESSFUL;
     }
 
-  DPRINT(("floppy: RWSeekToCylinder: returning successfully, now on cyl %d\n", Cylinder));
+  DPRINT("floppy: RWSeekToCylinder: returning successfully, now on cyl %d\n", Cylinder);
 
   return STATUS_SUCCESS;
 }
@@ -363,7 +363,7 @@ static NTSTATUS NTAPI RWComputeCHS(PDRIVE_INFO IN  DriveInfo,
   ULONG AbsoluteSector;
   UCHAR SectorsPerCylinder = (UCHAR)DriveInfo->DiskGeometry.SectorsPerTrack * (UCHAR)DriveInfo->DiskGeometry.TracksPerCylinder;
 
-  DPRINT(("floppy: RWComputeCHS: Called with offset 0x%x\n", DiskByteOffset));
+  DPRINT("floppy: RWComputeCHS: Called with offset 0x%x\n", DiskByteOffset);
 
   /* First calculate the 1-based "absolute sector" based on the byte offset */
   ASSERT(!(DiskByteOffset % DriveInfo->DiskGeometry.BytesPerSector));         /* FIXME: Only handle full sector transfers atm */
@@ -383,7 +383,7 @@ static NTSTATUS NTAPI RWComputeCHS(PDRIVE_INFO IN  DriveInfo,
    */
   *Sector =  ((UCHAR)(AbsoluteSector % SectorsPerCylinder) + 1) - ((*Head) * (UCHAR)DriveInfo->DiskGeometry.SectorsPerTrack);
 
-  DPRINT(("floppy: RWComputeCHS: offset 0x%x is c:0x%x h:0x%x s:0x%x\n", DiskByteOffset, *Cylinder, *Head, *Sector));
+  DPRINT("floppy: RWComputeCHS: offset 0x%x is c:0x%x h:0x%x s:0x%x\n", DiskByteOffset, *Cylinder, *Head, *Sector);
 
   /* Sanity checking */
   ASSERT(*Cylinder <= DriveInfo->DiskGeometry.Cylinders.QuadPart);
@@ -437,11 +437,11 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
 
   PAGED_CODE();
 
-  DPRINT(("floppy: ReadWritePassive called to %s 0x%x bytes from offset 0x%x\n",
+  DPRINT("floppy: ReadWritePassive called to %s 0x%x bytes from offset 0x%x\n",
 	   (Stack->MajorFunction == IRP_MJ_READ ? "read" : "write"),
 	   (Stack->MajorFunction == IRP_MJ_READ ? Stack->Parameters.Read.Length : Stack->Parameters.Write.Length),
 	   (Stack->MajorFunction == IRP_MJ_READ ? Stack->Parameters.Read.ByteOffset.u.LowPart :
-	    Stack->Parameters.Write.ByteOffset.u.LowPart)));
+	    Stack->Parameters.Write.ByteOffset.u.LowPart));
 
   /* Default return codes */
   Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
@@ -453,7 +453,7 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
    */
   if(DeviceObject->Flags & DO_VERIFY_VOLUME && !(DeviceObject->Flags & SL_OVERRIDE_VERIFY_VOLUME))
     {
-      DPRINT(("floppy: ReadWritePassive(): DO_VERIFY_VOLUME set; Completing with  STATUS_VERIFY_REQUIRED\n"));
+      DPRINT("floppy: ReadWritePassive(): DO_VERIFY_VOLUME set; Completing with  STATUS_VERIFY_REQUIRED\n");
       Irp->IoStatus.Status = STATUS_VERIFY_REQUIRED;
       IoCompleteRequest(Irp, IO_NO_INCREMENT);
       return;
@@ -465,7 +465,7 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
   StartMotor(DriveInfo);
   if(HwDiskChanged(DeviceObject->DeviceExtension, &DiskChanged) != STATUS_SUCCESS)
     {
-      DPRINT(("floppy: ReadWritePassive(): unable to detect disk change; Completing with STATUS_UNSUCCESSFUL\n"));
+      DPRINT("floppy: ReadWritePassive(): unable to detect disk change; Completing with STATUS_UNSUCCESSFUL\n");
       IoCompleteRequest(Irp, IO_NO_INCREMENT);
       StopMotor(DriveInfo->ControllerInfo);
       return;
@@ -473,7 +473,7 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
 
   if(DiskChanged)
     {
-      DPRINT(("floppy: ReadWritePhase1(): signalling media changed; Completing with STATUS_MEDIA_CHANGED\n"));
+      DPRINT("floppy: ReadWritePhase1(): signalling media changed; Completing with STATUS_MEDIA_CHANGED\n");
 
       /* The following call sets IoStatus.Status and IoStatus.Information */
       SignalMediaChanged(DeviceObject, Irp);
@@ -496,7 +496,7 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
     {
       if(RWDetermineMediaType(DriveInfo) != STATUS_SUCCESS)
 	{
-	  DPRINT(("floppy: ReadWritePassive(): unable to determine media type; completing with STATUS_UNSUCCESSFUL\n"));
+	  DPRINT("floppy: ReadWritePassive(): unable to determine media type; completing with STATUS_UNSUCCESSFUL\n");
 	  IoCompleteRequest(Irp, IO_NO_INCREMENT);
 	  StopMotor(DriveInfo->ControllerInfo);
 	  return;
@@ -504,7 +504,7 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
 
       if(DriveInfo->DiskGeometry.MediaType == Unknown)
 	{
-	  DPRINT(("floppy: ReadWritePassive(): Unknown media in drive; completing with STATUS_UNRECOGNIZED_MEDIA\n"));
+	  DPRINT("floppy: ReadWritePassive(): Unknown media in drive; completing with STATUS_UNRECOGNIZED_MEDIA\n");
 	  Irp->IoStatus.Status = STATUS_UNRECOGNIZED_MEDIA;
 	  IoCompleteRequest(Irp, IO_NO_INCREMENT);
 	  StopMotor(DriveInfo->ControllerInfo);
@@ -604,7 +604,7 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
 
   if(Status != STATUS_SUCCESS)
     {
-      DPRINT(("floppy: ReadWritePassive(): unable allocate an adapter channel; completing with STATUS_UNSUCCESSFUL\n"));
+      DPRINT("floppy: ReadWritePassive(): unable allocate an adapter channel; completing with STATUS_UNSUCCESSFUL\n");
       IoCompleteRequest(Irp, IO_NO_INCREMENT);
       StopMotor(DriveInfo->ControllerInfo);
       return ;
@@ -626,8 +626,8 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
       ULONG CurrentTransferBytes;
       UCHAR CurrentTransferSectors;
 
-      DPRINT(("floppy: ReadWritePassive(): iterating in while (TransferByteOffset = 0x%x of 0x%x total) - allocating %d registers\n",
-	       TransferByteOffset, Length, DriveInfo->ControllerInfo->MapRegisters));
+      DPRINT("floppy: ReadWritePassive(): iterating in while (TransferByteOffset = 0x%x of 0x%x total) - allocating %d registers\n",
+	       TransferByteOffset, Length, DriveInfo->ControllerInfo->MapRegisters);
 
       KeClearEvent(&DriveInfo->ControllerInfo->SynchEvent);
 
@@ -636,7 +636,7 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
        */
       if(RWComputeCHS(DriveInfo, DiskByteOffset+TransferByteOffset, &Cylinder, &Head, &StartSector) != STATUS_SUCCESS)
 	{
-	  DPRINT(("floppy: ReadWritePassive(): unable to compute CHS; completing with STATUS_UNSUCCESSFUL\n"));
+	  DPRINT("floppy: ReadWritePassive(): unable to compute CHS; completing with STATUS_UNSUCCESSFUL\n");
 	  RWFreeAdapterChannel(DriveInfo->ControllerInfo->AdapterObject);
 	  IoCompleteRequest(Irp, IO_NO_INCREMENT);
           StopMotor(DriveInfo->ControllerInfo);
@@ -650,7 +650,7 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
         {
 	  if(RWSeekToCylinder(DriveInfo, Cylinder) != STATUS_SUCCESS)
             {
-	      DPRINT(("floppy: ReadWritePassive(): unable to seek; completing with STATUS_UNSUCCESSFUL\n"));
+	      DPRINT("floppy: ReadWritePassive(): unable to seek; completing with STATUS_UNSUCCESSFUL\n");
 	      RWFreeAdapterChannel(DriveInfo->ControllerInfo->AdapterObject);
 	      IoCompleteRequest(Irp, IO_NO_INCREMENT);
               StopMotor(DriveInfo->ControllerInfo);
@@ -664,7 +664,7 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
        * We can only ask for a transfer up to the end of the track.  Then we have to re-seek and do more.
        * TODO: Support the MT bit
        */
-      DPRINT(("floppy: ReadWritePassive(): computing number of sectors to transfer (StartSector 0x%x): ", StartSector));
+      DPRINT("floppy: ReadWritePassive(): computing number of sectors to transfer (StartSector 0x%x): ", StartSector);
 
       /* 1-based sector number */
       if( (((DriveInfo->DiskGeometry.TracksPerCylinder - Head) * DriveInfo->DiskGeometry.SectorsPerTrack - StartSector) + 1 ) <
@@ -677,7 +677,7 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
 	  CurrentTransferSectors = (UCHAR)((Length - TransferByteOffset) / DriveInfo->DiskGeometry.BytesPerSector);
 	}
 
-      DPRINT(("0x%x\n", CurrentTransferSectors));
+      DPRINT("0x%x\n", CurrentTransferSectors);
 
       CurrentTransferBytes = CurrentTransferSectors * DriveInfo->DiskGeometry.BytesPerSector;
 
@@ -685,7 +685,7 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
        * Adjust to map registers
        * BUG: Does this take into account page crossings?
        */
-      DPRINT(("floppy: ReadWritePassive(): Trying to transfer 0x%x bytes\n", CurrentTransferBytes));
+      DPRINT("floppy: ReadWritePassive(): Trying to transfer 0x%x bytes\n", CurrentTransferBytes);
 
       ASSERT(CurrentTransferBytes);
 
@@ -696,8 +696,8 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
 
           CurrentTransferBytes = CurrentTransferSectors * DriveInfo->DiskGeometry.BytesPerSector;
 
-	  DPRINT(("floppy: ReadWritePassive: limiting transfer to 0x%x bytes (0x%x sectors) due to map registers\n",
-		   CurrentTransferBytes, CurrentTransferSectors));
+	  DPRINT("floppy: ReadWritePassive: limiting transfer to 0x%x bytes (0x%x sectors) due to map registers\n",
+		   CurrentTransferBytes, CurrentTransferSectors);
         }
 
       /* set up this round's dma operation */
@@ -718,14 +718,14 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
       if(HwReadWriteData(DriveInfo->ControllerInfo, !WriteToDevice, DriveInfo->UnitNumber, Cylinder, Head, StartSector,
 			 DriveInfo->BytesPerSectorCode, DriveInfo->DiskGeometry.SectorsPerTrack, Gap, 0xff) != STATUS_SUCCESS)
 	{
-	  DPRINT(("floppy: ReadWritePassive(): HwReadWriteData returned failure; unable to read; completing with STATUS_UNSUCCESSFUL\n"));
+	  DPRINT("floppy: ReadWritePassive(): HwReadWriteData returned failure; unable to read; completing with STATUS_UNSUCCESSFUL\n");
 	  RWFreeAdapterChannel(DriveInfo->ControllerInfo->AdapterObject);
 	  IoCompleteRequest(Irp, IO_NO_INCREMENT);
           StopMotor(DriveInfo->ControllerInfo);
 	  return ;
 	}
 
-      DPRINT(("floppy: ReadWritePassive(): HwReadWriteData returned -- waiting on event\n"));
+      DPRINT("floppy: ReadWritePassive(): HwReadWriteData returned -- waiting on event\n");
 
       /*
        * At this point, we block and wait for an interrupt
@@ -742,7 +742,7 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
       /* Read the results from the drive */
       if(HwReadWriteResult(DriveInfo->ControllerInfo) != STATUS_SUCCESS)
 	{
-	  DPRINT(("floppy: ReadWritePassive(): HwReadWriteResult returned failure; unable to read; completing with STATUS_UNSUCCESSFUL\n"));
+	  DPRINT("floppy: ReadWritePassive(): HwReadWriteResult returned failure; unable to read; completing with STATUS_UNSUCCESSFUL\n");
 	  HwDumpRegisters(DriveInfo->ControllerInfo);
 	  RWFreeAdapterChannel(DriveInfo->ControllerInfo->AdapterObject);
 	  IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -756,7 +756,7 @@ VOID NTAPI ReadWritePassive(PDRIVE_INFO DriveInfo,
   RWFreeAdapterChannel(DriveInfo->ControllerInfo->AdapterObject);
 
   /* That's all folks! */
-  DPRINT(("floppy: ReadWritePassive(): success; Completing with STATUS_SUCCESS\n"));
+  DPRINT("floppy: ReadWritePassive(): success; Completing with STATUS_SUCCESS\n");
   Irp->IoStatus.Status = STATUS_SUCCESS;
   Irp->IoStatus.Information = Length;
   IoCompleteRequest(Irp, IO_NO_INCREMENT);

@@ -42,8 +42,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 typedef struct
 {
     /* IUnknown fields */
-    IEnumFORMATETCVtbl *lpVtbl;
-    DWORD                        ref;
+    const IEnumFORMATETCVtbl *lpVtbl;
+    LONG                      ref;
     /* IEnumFORMATETC fields */
     UINT        posFmt;
     UINT        countFmt;
@@ -159,7 +159,7 @@ static HRESULT WINAPI IEnumFORMATETC_fnClone(LPENUMFORMATETC iface, LPENUMFORMAT
 	return S_OK;
 }
 
-static struct IEnumFORMATETCVtbl efvt =
+static const IEnumFORMATETCVtbl efvt =
 {
     IEnumFORMATETC_fnQueryInterface,
     IEnumFORMATETC_fnAddRef,
@@ -204,8 +204,8 @@ LPENUMFORMATETC IEnumFORMATETC_Constructor(UINT cfmt, const FORMATETC afmt[])
 typedef struct
 {
 	/* IUnknown fields */
-	IDataObjectVtbl *lpVtbl;
-	DWORD		ref;
+	const IDataObjectVtbl *lpVtbl;
+	LONG		ref;
 
 	/* IDataObject fields */
 	LPITEMIDLIST	pidl;
@@ -408,7 +408,7 @@ static HRESULT WINAPI IDataObject_fnEnumDAdvise(LPDATAOBJECT iface, IEnumSTATDAT
 	return E_NOTIMPL;
 }
 
-static struct IDataObjectVtbl dtovt =
+static const IDataObjectVtbl dtovt =
 {
 	IDataObject_fnQueryInterface,
 	IDataObject_fnAddRef,

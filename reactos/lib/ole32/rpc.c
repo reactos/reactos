@@ -88,7 +88,7 @@ static inline void get_rpc_endpoint(LPWSTR endpoint, const OXID *oxid)
 typedef struct
 {
     const IRpcChannelBufferVtbl *lpVtbl;
-    DWORD                  refs;
+    LONG                  refs;
 } RpcChannelBuffer;
 
 typedef struct
@@ -212,11 +212,15 @@ static DWORD WINAPI rpc_sendreceive_thread(LPVOID param)
 static HRESULT WINAPI RpcChannelBuffer_SendReceive(LPRPCCHANNELBUFFER iface, RPCOLEMESSAGE *olemsg, ULONG *pstatus)
 {
     HRESULT hr = S_OK;
+    RPC_MESSAGE *msg = (RPC_MESSAGE *)olemsg;
     RPC_STATUS status;
     DWORD index;
     struct dispatch_params *params;
     DWORD tid;
-    
+    IRpcStubBuffer *stub;
+    APARTMENT *apt;
+    IPID ipid;
+
     TRACE("(%p) iMethod=%ld\n", olemsg, olemsg->iMethod);
 
     params = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*params));
@@ -225,18 +229,43 @@ static HRESULT WINAPI RpcChannelBuffer_SendReceive(LPRPCCHANNELBUFFER iface, RPC
     params->msg = olemsg;
     params->status = RPC_S_OK;
 
-    /* we use a separate thread here because we need to be able to
-     * pump the message loop in the application thread: if we do not,
-     * any windows created by this thread will hang and RPCs that try
-     * and re-enter this STA from an incoming server thread will
-     * deadlock. InstallShield is an example of that.
-     */
-    params->handle = CreateThread(NULL, 0, rpc_sendreceive_thread, params, 0, &tid);
-    if (!params->handle)
+    /* Note: this is an optimization in the Microsoft OLE runtime that we need
+     * to copy, as shown by the test_no_couninitialize_client test. without
+     * short-circuiting the RPC runtime in the case below, the test will
+     * deadlock on the loader lock due to the RPC runtime needing to create
+     * a thread to process the RPC when this function is called indirectly
+     * from DllMain */
+
+    RpcBindingInqObject(msg->Handle, &ipid);
+    stub = ipid_to_apt_and_stubbuffer(&ipid, &apt);
+    if (apt && (apt->model & COINIT_APARTMENTTHREADED))
     {
-        ERR("Could not create RpcSendReceive thread, error %lx\n", GetLastError());
-        hr = E_UNEXPECTED;
+        params->stub = stub;
+        params->chan = NULL; /* FIXME: pass server channel */
+        params->handle = CreateEventW(NULL, FALSE, FALSE, NULL);
+
+        TRACE("Calling apartment thread 0x%08lx...\n", apt->tid);
+
+        PostMessageW(apt->win, DM_EXECUTERPC, 0, (LPARAM)params);
     }
+    else
+    {
+        if (stub) IRpcStubBuffer_Release(stub);
+
+        /* we use a separate thread here because we need to be able to
+         * pump the message loop in the application thread: if we do not,
+         * any windows created by this thread will hang and RPCs that try
+         * and re-enter this STA from an incoming server thread will
+         * deadlock. InstallShield is an example of that.
+         */
+        params->handle = CreateThread(NULL, 0, rpc_sendreceive_thread, params, 0, &tid);
+        if (!params->handle)
+        {
+            ERR("Could not create RpcSendReceive thread, error %lx\n", GetLastError());
+            hr = E_UNEXPECTED;
+        }
+    }
+    if (apt) apartment_release(apt);
 
     if (hr == S_OK)
         hr = CoWaitForMultipleHandles(0, INFINITE, 1, &params->handle, &index);
@@ -431,7 +460,7 @@ static void __RPC_STUB dispatch_rpc(RPC_MESSAGE *msg)
     if (!apt || !stub)
     {
         if (apt) apartment_release(apt);
-        /* ipid_to_apt_and_stubbuffer will already have logged the error */
+        ERR("no apartment found for ipid %s\n", debugstr_guid(&ipid));
         return RpcRaiseException(RPC_E_DISCONNECTED);
     }
 
@@ -569,24 +598,27 @@ void RPC_StartRemoting(struct apartment *apt)
 
 static HRESULT create_server(REFCLSID rclsid)
 {
+    static const WCHAR  wszLocalServer32[] = { 'L','o','c','a','l','S','e','r','v','e','r','3','2',0 };
     static const WCHAR  embedding[] = { ' ', '-','E','m','b','e','d','d','i','n','g',0 };
+    HKEY                hkeyclsid;
     HKEY                key;
-    char                buf[200];
     HRESULT             hres = E_UNEXPECTED;
-    char                xclsid[80];
     WCHAR               exe[MAX_PATH+1];
     DWORD               exelen = sizeof(exe);
     WCHAR               command[MAX_PATH+sizeof(embedding)/sizeof(WCHAR)];
     STARTUPINFOW        sinfo;
     PROCESS_INFORMATION pinfo;
 
-    WINE_StringFromCLSID((LPCLSID)rclsid,xclsid);
+    hres = HRESULT_FROM_WIN32(COM_OpenKeyForCLSID(rclsid, KEY_READ, &hkeyclsid));
+    if (hres != S_OK) {
+        ERR("class %s not registered\n", debugstr_guid(rclsid));
+        return REGDB_E_READREGDB;
+    }
 
-    sprintf(buf,"CLSID\\%s\\LocalServer32",xclsid);
-    hres = RegOpenKeyExA(HKEY_CLASSES_ROOT, buf, 0, KEY_READ, &key);
+    hres = RegOpenKeyExW(hkeyclsid, wszLocalServer32, 0, KEY_READ, &key);
 
     if (hres != ERROR_SUCCESS) {
-        WARN("CLSID %s not registered as LocalServer32\n", xclsid);
+        WARN("class %s not registered as LocalServer32\n", debugstr_guid(rclsid));
         return REGDB_E_READREGDB; /* Probably */
     }
 
@@ -608,7 +640,7 @@ static HRESULT create_server(REFCLSID rclsid)
     strcpyW(command, exe);
     strcatW(command, embedding);
 
-    TRACE("activating local server '%s' for %s\n", debugstr_w(command), xclsid);
+    TRACE("activating local server %s for %s\n", debugstr_w(command), debugstr_guid(rclsid));
 
     if (!CreateProcessW(exe, command, NULL, NULL, FALSE, 0, NULL, NULL, &sinfo, &pinfo)) {
         WARN("failed to run local server %s\n", debugstr_w(exe));
@@ -663,8 +695,7 @@ static DWORD start_local_service(LPCWSTR name, DWORD num, LPWSTR *params)
 static HRESULT create_local_service(REFCLSID rclsid)
 {
     HRESULT hres = REGDB_E_READREGDB;
-    WCHAR buf[40], keyname[50];
-    static const WCHAR szClsId[] = { 'C','L','S','I','D','\\',0 };
+    WCHAR buf[CHARS_IN_GUID], keyname[50];
     static const WCHAR szAppId[] = { 'A','p','p','I','d',0 };
     static const WCHAR szAppIdKey[] = { 'A','p','p','I','d','\\',0 };
     static const WCHAR szLocalService[] = { 'L','o','c','a','l','S','e','r','v','i','c','e',0 };
@@ -676,9 +707,7 @@ static HRESULT create_local_service(REFCLSID rclsid)
     TRACE("Attempting to start Local service for %s\n", debugstr_guid(rclsid));
 
     /* read the AppID value under the class's key */
-    strcpyW(keyname,szClsId);
-    StringFromGUID2(rclsid,&keyname[6],39);
-    r = RegOpenKeyExW(HKEY_CLASSES_ROOT, keyname, 0, KEY_READ, &hkey);
+    r = COM_OpenKeyForCLSID(rclsid, KEY_READ, &hkey);
     if (r!=ERROR_SUCCESS)
         return hres;
     sz = sizeof buf;
@@ -725,14 +754,20 @@ static HRESULT create_local_service(REFCLSID rclsid)
     return hres;
 }
 
-#define PIPEPREF "\\\\.\\pipe\\"
+
+static void get_localserver_pipe_name(WCHAR *pipefn, REFCLSID rclsid)
+{
+    static const WCHAR wszPipeRef[] = {'\\','\\','.','\\','p','i','p','e','\\',0};
+    strcpyW(pipefn, wszPipeRef);
+    StringFromGUID2(rclsid, pipefn + sizeof(wszPipeRef)/sizeof(wszPipeRef[0]) - 1, CHARS_IN_GUID);
+}
 
 /* FIXME: should call to rpcss instead */
 HRESULT RPC_GetLocalClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
 {
     HRESULT        hres;
     HANDLE         hPipe;
-    char           pipefn[200];
+    WCHAR          pipefn[100];
     DWORD          res, bufferlen;
     char           marshalbuffer[200];
     IStream       *pStm;
@@ -744,14 +779,13 @@ HRESULT RPC_GetLocalClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
 
     TRACE("rclsid=%s, iid=%s\n", debugstr_guid(rclsid), debugstr_guid(iid));
 
-    strcpy(pipefn,PIPEPREF);
-    WINE_StringFromCLSID(rclsid,pipefn+strlen(PIPEPREF));
+    get_localserver_pipe_name(pipefn, rclsid);
 
     while (tries++ < MAXTRIES) {
-        TRACE("waiting for %s\n", pipefn);
+        TRACE("waiting for %s\n", debugstr_w(pipefn));
       
-        WaitNamedPipeA( pipefn, NMPWAIT_WAIT_FOREVER );
-        hPipe = CreateFileA(pipefn, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0);
+        WaitNamedPipeW( pipefn, NMPWAIT_WAIT_FOREVER );
+        hPipe = CreateFileW(pipefn, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0);
         if (hPipe == INVALID_HANDLE_VALUE) {
             if (tries == 1) {
                 if ( (hres = create_server(rclsid)) &&
@@ -759,7 +793,7 @@ HRESULT RPC_GetLocalClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
                     return hres;
                 Sleep(1000);
             } else {
-                WARN("Connecting to %s, no response yet, retrying: le is %lx\n",pipefn,GetLastError());
+                WARN("Connecting to %s, no response yet, retrying: le is %lx\n", debugstr_w(pipefn), GetLastError());
                 Sleep(1000);
             }
             continue;
@@ -804,7 +838,7 @@ static DWORD WINAPI local_server_thread(LPVOID param)
 {
     struct local_server_params * lsp = (struct local_server_params *)param;
     HANDLE		hPipe;
-    char 		pipefn[200];
+    WCHAR 		pipefn[100];
     HRESULT		hres;
     IStream		*pStm = lsp->stream;
     STATSTG		ststg;
@@ -816,18 +850,17 @@ static DWORD WINAPI local_server_thread(LPVOID param)
 
     TRACE("Starting threader for %s.\n",debugstr_guid(&lsp->clsid));
 
-    strcpy(pipefn,PIPEPREF);
-    WINE_StringFromCLSID(&lsp->clsid,pipefn+strlen(PIPEPREF));
+    get_localserver_pipe_name(pipefn, &lsp->clsid);
 
     HeapFree(GetProcessHeap(), 0, lsp);
 
-    hPipe = CreateNamedPipeA( pipefn, PIPE_ACCESS_DUPLEX,
+    hPipe = CreateNamedPipeW( pipefn, PIPE_ACCESS_DUPLEX,
                               PIPE_TYPE_BYTE|PIPE_WAIT, PIPE_UNLIMITED_INSTANCES,
                               4096, 4096, 500 /* 0.5 second timeout */, NULL );
     
     if (hPipe == INVALID_HANDLE_VALUE)
     {
-        FIXME("pipe creation failed for %s, le is %ld\n",pipefn,GetLastError());
+        FIXME("pipe creation failed for %s, le is %ld\n", debugstr_w(pipefn), GetLastError());
         return 1;
     }
     

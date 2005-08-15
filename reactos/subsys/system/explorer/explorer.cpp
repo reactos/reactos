@@ -28,7 +28,7 @@
  //
 
 
-#include "precomp.h"
+#include <precomp.h>	// <precomp.h> instead of "precomp.h" because the ROS build system needs this to find the precompiled header file (*.gch) in the output directory tree
 
 #include "resource.h"
 
@@ -519,10 +519,10 @@ ResIconEx::ResIconEx(UINT nid, int w, int h)
 void SetWindowIcon(HWND hwnd, UINT nid)
 {
 	HICON hIcon = ResIcon(nid);
-	Window_SetIcon(hwnd, ICON_BIG, hIcon);
+	(void)Window_SetIcon(hwnd, ICON_BIG, hIcon);
 
 	HICON hIconSmall = SmallIcon(nid);
-	Window_SetIcon(hwnd, ICON_SMALL, hIconSmall);
+	(void)Window_SetIcon(hwnd, ICON_SMALL, hIconSmall);
 }
 
 

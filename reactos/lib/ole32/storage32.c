@@ -23,6 +23,14 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ * NOTES
+ *  The compound file implementation of IStorage used for create
+ *  and manage substorages and streams within a storage object
+ *  residing in a compound file object.
+ *
+ * MSDN
+ *  http://msdn.microsoft.com/library/default.asp?url=/library/en-us/stg/stg/istorage_compound_file_implementation.asp
  */
 
 #include <assert.h>
@@ -157,7 +165,7 @@ static DWORD GetShareModeFromSTGM(DWORD stgm);
 static DWORD GetAccessModeFromSTGM(DWORD stgm);
 static DWORD GetCreationModeFromSTGM(DWORD stgm);
 
-extern IPropertySetStorageVtbl IPropertySetStorage_Vtbl;
+extern const IPropertySetStorageVtbl IPropertySetStorage_Vtbl;
 
 
 
@@ -1583,6 +1591,13 @@ HRESULT WINAPI StorageImpl_MoveElementTo(
 
 /*************************************************************************
  * Commit (IStorage)
+ *
+ * Ensures that any changes made to a storage object open in transacted mode
+ * are reflected in the parent storage
+ *
+ * NOTES
+ *  Wine doesn't implement transacted mode, which seems to be a basic
+ *  optimization, so we can ignore this stub for now.
  */
 HRESULT WINAPI StorageImpl_Commit(
   IStorage*   iface,
@@ -1594,6 +1609,8 @@ HRESULT WINAPI StorageImpl_Commit(
 
 /*************************************************************************
  * Revert (IStorage)
+ *
+ * Discard all changes that have been made since the last commit operation
  */
 HRESULT WINAPI StorageImpl_Revert(
   IStorage* iface)
@@ -2178,7 +2195,7 @@ HRESULT WINAPI StorageImpl_SetStateBits(
 /*
  * Virtual function table for the IStorage32Impl class.
  */
-static IStorageVtbl Storage32Impl_Vtbl =
+static const IStorageVtbl Storage32Impl_Vtbl =
 {
     StorageBaseImpl_QueryInterface,
     StorageBaseImpl_AddRef,
@@ -3965,7 +3982,7 @@ ULONG IEnumSTATSTGImpl_PopSearchNode(
 /*
  * Virtual function table for the IEnumSTATSTGImpl class.
  */
-static IEnumSTATSTGVtbl IEnumSTATSTGImpl_Vtbl =
+static const IEnumSTATSTGVtbl IEnumSTATSTGImpl_Vtbl =
 {
     IEnumSTATSTGImpl_QueryInterface,
     IEnumSTATSTGImpl_AddRef,
@@ -4025,7 +4042,7 @@ IEnumSTATSTGImpl* IEnumSTATSTGImpl_Construct(
 /*
  * Virtual function table for the Storage32InternalImpl class.
  */
-static IStorageVtbl Storage32InternalImpl_Vtbl =
+static const IStorageVtbl Storage32InternalImpl_Vtbl =
 {
     StorageBaseImpl_QueryInterface,
     StorageBaseImpl_AddRef,
@@ -6387,7 +6404,7 @@ static DWORD GetCreationModeFromSTGM(DWORD stgm)
  *
  *     Memory allocated for pData must be freed by the caller
  */
-HRESULT OLECONVERT_LoadOLE10(LPOLESTREAM pOleStream, OLECONVERT_OLESTREAM_DATA *pData, BOOL bStrem1)
+static HRESULT OLECONVERT_LoadOLE10(LPOLESTREAM pOleStream, OLECONVERT_OLESTREAM_DATA *pData, BOOL bStrem1)
 {
 	DWORD dwSize;
 	HRESULT hRes = S_OK;
@@ -6555,7 +6572,7 @@ HRESULT OLECONVERT_LoadOLE10(LPOLESTREAM pOleStream, OLECONVERT_OLESTREAM_DATA *
  *     This function is used by OleConvertIStorageToOLESTREAM only.
  *
  */
-HRESULT OLECONVERT_SaveOLE10(OLECONVERT_OLESTREAM_DATA *pData, LPOLESTREAM pOleStream)
+static HRESULT OLECONVERT_SaveOLE10(OLECONVERT_OLESTREAM_DATA *pData, LPOLESTREAM pOleStream)
 {
     DWORD dwSize;
     HRESULT hRes = S_OK;
@@ -6666,7 +6683,7 @@ HRESULT OLECONVERT_SaveOLE10(OLECONVERT_OLESTREAM_DATA *pData, LPOLESTREAM pOleS
  *
  *
  */
-void OLECONVERT_GetOLE20FromOLE10(LPSTORAGE pDestStorage, BYTE *pBuffer, DWORD nBufferLength)
+static void OLECONVERT_GetOLE20FromOLE10(LPSTORAGE pDestStorage, BYTE *pBuffer, DWORD nBufferLength)
 {
     HRESULT hRes;
     HANDLE hFile;
@@ -6716,7 +6733,7 @@ void OLECONVERT_GetOLE20FromOLE10(LPSTORAGE pDestStorage, BYTE *pBuffer, DWORD n
  *     Used by OleConvertIStorageToOLESTREAM only.
  *
  */
-DWORD OLECONVERT_WriteOLE20ToBuffer(LPSTORAGE pStorage, BYTE **pData)
+static DWORD OLECONVERT_WriteOLE20ToBuffer(LPSTORAGE pStorage, BYTE **pData)
 {
     HANDLE hFile;
     HRESULT hRes;
@@ -7132,7 +7149,7 @@ HRESULT OLECONVERT_CreateCompObjStream(LPSTORAGE pStorage, LPCSTR strOleTypeName
  *     This function is used by OleConvertOLESTREAMToIStorage only.
  *
  */
-void OLECONVERT_CreateOlePresStream(LPSTORAGE pStorage, DWORD dwExtentX, DWORD dwExtentY , BYTE *pData, DWORD dwDataLength)
+static void OLECONVERT_CreateOlePresStream(LPSTORAGE pStorage, DWORD dwExtentX, DWORD dwExtentY , BYTE *pData, DWORD dwDataLength)
 {
     HRESULT hRes;
     IStream *pStream;
@@ -7216,7 +7233,7 @@ void OLECONVERT_CreateOlePresStream(LPSTORAGE pStorage, DWORD dwExtentX, DWORD d
  *     Might need to verify the data and return appropriate error message
  *
  */
-void OLECONVERT_CreateOle10NativeStream(LPSTORAGE pStorage, BYTE *pData, DWORD dwDataLength)
+static void OLECONVERT_CreateOle10NativeStream(LPSTORAGE pStorage, BYTE *pData, DWORD dwDataLength)
 {
     HRESULT hRes;
     IStream *pStream;
@@ -7255,7 +7272,7 @@ void OLECONVERT_CreateOle10NativeStream(LPSTORAGE pStorage, BYTE *pData, DWORD d
  *
  *
  */
-HRESULT OLECONVERT_GetOLE10ProgID(LPSTORAGE pStorage, char *strProgID, DWORD *dwSize)
+static HRESULT OLECONVERT_GetOLE10ProgID(LPSTORAGE pStorage, char *strProgID, DWORD *dwSize)
 {
     HRESULT hRes;
     IStream *pStream;
@@ -7325,7 +7342,7 @@ HRESULT OLECONVERT_GetOLE10ProgID(LPSTORAGE pStorage, char *strProgID, DWORD *dw
  *
  *
  */
-void OLECONVERT_GetOle10PresData(LPSTORAGE pStorage, OLECONVERT_OLESTREAM_DATA *pOleStreamData)
+static void OLECONVERT_GetOle10PresData(LPSTORAGE pStorage, OLECONVERT_OLESTREAM_DATA *pOleStreamData)
 {
 
     HRESULT hRes;
@@ -7378,7 +7395,7 @@ void OLECONVERT_GetOle10PresData(LPSTORAGE pStorage, OLECONVERT_OLESTREAM_DATA *
  *
  *     Memory allocated for pData must be freed by the caller
  */
-void OLECONVERT_GetOle20PresData(LPSTORAGE pStorage, OLECONVERT_OLESTREAM_DATA *pOleStreamData)
+static void OLECONVERT_GetOle20PresData(LPSTORAGE pStorage, OLECONVERT_OLESTREAM_DATA *pOleStreamData)
 {
     HRESULT hRes;
     IStream *pStream;

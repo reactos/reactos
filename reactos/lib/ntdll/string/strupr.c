@@ -9,8 +9,7 @@
  */
 
 
-#include <string.h>
-#include <ctype.h>
+#include <ntdll.h>
 
 /*
  * @implemented

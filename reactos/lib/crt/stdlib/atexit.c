@@ -2,6 +2,19 @@
 #include <stdlib.h>
 #include <internal/atexit.h>
 
+void _atexit_cleanup(void)
+{
+  struct __atexit *next, *a = __atexit_ptr;
+  __atexit_ptr = 0; /* to prevent infinite loops */
+  while (a)
+  {
+    (a->__function)();
+    next = a->__next;
+    free(a);
+    a = next;
+  }
+}
+
 /*
  * @implemented
  *

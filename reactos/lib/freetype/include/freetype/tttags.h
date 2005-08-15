@@ -2,7 +2,7 @@
 /*                                                                         */
 /*  tttags.h                                                               */
 /*                                                                         */
-/*    Tags for TrueType tables (specification only).                       */
+/*    Tags for TrueType and OpenType tables (specification only).          */
 /*                                                                         */
 /*  Copyright 1996-2001, 2004 by                                           */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
@@ -34,6 +34,7 @@ FT_BEGIN_HEADER
 
 
 #define TTAG_avar  FT_MAKE_TAG( 'a', 'v', 'a', 'r' )
+#define TTAG_BASE  FT_MAKE_TAG( 'B', 'A', 'S', 'E' )
 #define TTAG_bdat  FT_MAKE_TAG( 'b', 'd', 'a', 't' )
 #define TTAG_bhed  FT_MAKE_TAG( 'b', 'h', 'e', 'd' )
 #define TTAG_bloc  FT_MAKE_TAG( 'b', 'l', 'o', 'c' )
@@ -48,13 +49,16 @@ FT_BEGIN_HEADER
 #define TTAG_fpgm  FT_MAKE_TAG( 'f', 'p', 'g', 'm' )
 #define TTAG_fvar  FT_MAKE_TAG( 'f', 'v', 'a', 'r' )
 #define TTAG_gasp  FT_MAKE_TAG( 'g', 'a', 's', 'p' )
+#define TTAG_GDEF  FT_MAKE_TAG( 'G', 'D', 'E', 'F' )
 #define TTAG_glyf  FT_MAKE_TAG( 'g', 'l', 'y', 'f' )
+#define TTAG_GPOS  FT_MAKE_TAG( 'G', 'P', 'O', 'S' )
 #define TTAG_GSUB  FT_MAKE_TAG( 'G', 'S', 'U', 'B' )
 #define TTAG_gvar  FT_MAKE_TAG( 'g', 'v', 'a', 'r' )
 #define TTAG_hdmx  FT_MAKE_TAG( 'h', 'd', 'm', 'x' )
 #define TTAG_head  FT_MAKE_TAG( 'h', 'e', 'a', 'd' )
 #define TTAG_hhea  FT_MAKE_TAG( 'h', 'h', 'e', 'a' )
 #define TTAG_hmtx  FT_MAKE_TAG( 'h', 'm', 't', 'x' )
+#define TTAG_JSTF  FT_MAKE_TAG( 'J', 'S', 'T', 'F' )
 #define TTAG_kern  FT_MAKE_TAG( 'k', 'e', 'r', 'n' )
 #define TTAG_loca  FT_MAKE_TAG( 'l', 'o', 'c', 'a' )
 #define TTAG_LTSH  FT_MAKE_TAG( 'L', 'T', 'S', 'H' )

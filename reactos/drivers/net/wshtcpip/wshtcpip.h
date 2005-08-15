@@ -9,8 +9,6 @@
 
 #include <ddk/ntddk.h>
 #include <wsahelp.h>
-#include <windows.h>
-#include <debug.h>
 
 #define EXPORT STDCALL
 

@@ -42,7 +42,7 @@ ME_DisplayItem *ME_MakeRow(int height, int baseline, int width)
   return item;
 }
 
-void ME_BeginRow(ME_WrapContext *wc)
+static void ME_BeginRow(ME_WrapContext *wc)
 {
   wc->pRowStart = NULL;
   wc->bOverflown = FALSE;
@@ -91,7 +91,7 @@ void ME_InsertRowStart(ME_WrapContext *wc, ME_DisplayItem *pEnd)
   ME_BeginRow(wc);
 }
 
-void ME_WrapEndParagraph(ME_WrapContext *wc, ME_DisplayItem *p)
+static void ME_WrapEndParagraph(ME_WrapContext *wc, ME_DisplayItem *p)
 {
   if (wc->pRowStart)
     ME_InsertRowStart(wc, p->next);
@@ -111,7 +111,7 @@ void ME_WrapEndParagraph(ME_WrapContext *wc, ME_DisplayItem *p)
   */
 }
 
-void ME_WrapSizeRun(ME_WrapContext *wc, ME_DisplayItem *p)
+static void ME_WrapSizeRun(ME_WrapContext *wc, ME_DisplayItem *p)
 {
   /* FIXME compose style (out of character and paragraph styles) here */
 
@@ -120,7 +120,7 @@ void ME_WrapSizeRun(ME_WrapContext *wc, ME_DisplayItem *p)
   ME_CalcRunExtent(wc->context, &ME_GetParagraph(p)->member.para, &p->member.run);
 }
 
-ME_DisplayItem *ME_MaximizeSplit(ME_WrapContext *wc, ME_DisplayItem *p, int i)
+static ME_DisplayItem *ME_MaximizeSplit(ME_WrapContext *wc, ME_DisplayItem *p, int i)
 {
   ME_DisplayItem *pp, *piter = p;
   int j;
@@ -162,7 +162,7 @@ ME_DisplayItem *ME_MaximizeSplit(ME_WrapContext *wc, ME_DisplayItem *p, int i)
   }
 }
 
-ME_DisplayItem *ME_SplitByBacktracking(ME_WrapContext *wc, ME_DisplayItem *p, int loc)
+static ME_DisplayItem *ME_SplitByBacktracking(ME_WrapContext *wc, ME_DisplayItem *p, int loc)
 {
   ME_DisplayItem *piter = p, *pp;
   int i, idesp, len;
@@ -242,7 +242,7 @@ ME_DisplayItem *ME_SplitByBacktracking(ME_WrapContext *wc, ME_DisplayItem *p, in
   }
 }
 
-ME_DisplayItem *ME_WrapHandleRun(ME_WrapContext *wc, ME_DisplayItem *p)
+static ME_DisplayItem *ME_WrapHandleRun(ME_WrapContext *wc, ME_DisplayItem *p)
 {
   ME_DisplayItem *pp;
   ME_Run *run;
@@ -375,12 +375,15 @@ void ME_WrapTextParagraph(ME_Context *c, ME_DisplayItem *tp) {
   ME_WrapEndParagraph(&wc, p);
   tp->member.para.nFlags &= ~MEPF_REWRAP;
   tp->member.para.nHeight = wc.pt.y;
+  tp->member.para.nRows = wc.nRow;
 }
 
 
 void ME_PrepareParagraphForWrapping(ME_Context *c, ME_DisplayItem *tp) {
   ME_DisplayItem *p;
+
   /* remove all items that will be reinserted by paragraph wrapper anyway */
+  tp->member.para.nRows = 0;
   for (p = tp->next; p!=tp->member.para.next_para; p = p->next) {
     switch(p->type) {
       case diStartRow:

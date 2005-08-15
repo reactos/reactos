@@ -51,7 +51,7 @@ install: $(PROJECT_LIBRARY)
         done
 	$(INSTALL_DATA) $(BUILD_DIR)/ft2unix.h \
           $(DESTDIR)$(includedir)/ft2build.h
-	$(INSTALL_DATA) $(BUILD_DIR)/ftconfig.h \
+	$(INSTALL_DATA) $(OBJ_BUILD)/ftconfig.h \
           $(DESTDIR)$(includedir)/freetype2/freetype/config/ftconfig.h
 	$(INSTALL_SCRIPT) -m 755 $(OBJ_BUILD)/freetype-config \
           $(DESTDIR)$(bindir)/freetype-config

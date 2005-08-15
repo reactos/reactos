@@ -14,7 +14,6 @@
 	<library>kjs</library>
 	<library>pseh</library>
 	<library>rtl</library>
-	<library>rosrtl</library>
 	<library>rossym</library>
 	<library>string</library>
 	<library>wdmguid</library>
@@ -143,7 +142,6 @@
 		<file>sysinfo.c</file>
 		<file>time.c</file>
 		<file>timer.c</file>
-		<file>util.c</file>
 		<file>uuid.c</file>
 		<file>win32k.c</file>
 		<file>work.c</file>
@@ -213,12 +211,9 @@
 		<file>kdmain.c</file>
 	</directory>
 	<directory name="ldr">
-		<file>init.c</file>
 		<file>loader.c</file>
 		<file>resource.c</file>
 		<file>rtl.c</file>
-		<file>sysdll.c</file>
-		<file>userldr.c</file>
 	</directory>
 	<directory name="lpc">
 		<file>close.c</file>
@@ -295,7 +290,6 @@
 				<file>continue.c</file>
 			</directory>
 		</if>
-		<file>cid.c</file>
 		<file>debug.c</file>
 		<file>idle.c</file>
 		<file>job.c</file>

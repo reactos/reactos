@@ -42,7 +42,7 @@ I. Standard procedure
 
     -- other components (optional)
 
-      src/autohint/autohint.c -- auto hinting module
+      src/autofit/autofit.c   -- auto hinting module
       src/cache/ftcache.c     -- cache sub-system (in beta)
       src/sfnt/sfnt.c         -- SFNT files support
                                  (TrueType & OpenType)
@@ -94,6 +94,17 @@ II. Support for flat-directory compilation
 
     You don't need to define  the FT_FLAT_COMPILATION macro (as this was
     required in previous releases of FreeType 2).
+
+------------------------------------------------------------------------
+
+Copyright 2003, 2005 by
+David Turner, Robert Wilhelm, and Werner Lemberg.
+
+This  file  is  part  of the  FreeType  project, and may  only be  used,
+modified,  and  distributed  under  the  terms of  the FreeType  project
+license, LICENSE.TXT.   By continuing to use, modify, or distribute this
+file you  indicate that  you have  read the  license and understand  and
+accept it fully.
 
 
 --- end of INSTALL.ANY ---

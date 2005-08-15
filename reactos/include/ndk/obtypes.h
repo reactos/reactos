@@ -95,13 +95,17 @@ typedef PVOID
     ULONG  Attributes
 );
 
+
 typedef NTSTATUS
 (STDCALL *OB_SECURITY_METHOD)(
-    PVOID  ObjectBody,
-    SECURITY_OPERATION_CODE  OperationCode,
-    SECURITY_INFORMATION  SecurityInformation,
-    PSECURITY_DESCRIPTOR  SecurityDescriptor,
-    PULONG  BufferLength
+    PVOID Object,
+    SECURITY_OPERATION_CODE OperationType,                         
+    SECURITY_INFORMATION SecurityInformation,
+    PSECURITY_DESCRIPTOR NewSecurityDescriptor,
+    PULONG ReturnLength,
+    PSECURITY_DESCRIPTOR *OldSecurityDescriptor,
+    POOL_TYPE PoolType,
+    PGENERIC_MAPPING GenericMapping
 );
 
 /* FIXME: TEMPORARY HACK */

@@ -60,12 +60,12 @@ WINE_DEFAULT_DEBUG_CHANNEL (shell);
 */
 
 typedef struct {
-    IUnknownVtbl        *lpVtbl;
-    DWORD                ref;
-    IShellFolder2Vtbl   *lpvtblShellFolder;
-    IPersistFolder3Vtbl *lpvtblPersistFolder3;
-    IDropTargetVtbl     *lpvtblDropTarget;
-    ISFHelperVtbl       *lpvtblSFHelper;
+    const IUnknownVtbl        *lpVtbl;
+    LONG                ref;
+    const IShellFolder2Vtbl   *lpvtblShellFolder;
+    const IPersistFolder3Vtbl *lpvtblPersistFolder3;
+    const IDropTargetVtbl     *lpvtblDropTarget;
+    const ISFHelperVtbl       *lpvtblSFHelper;
 
     IUnknown *pUnkOuter; /* used for aggregation */
 
@@ -76,17 +76,15 @@ typedef struct {
 
     LPITEMIDLIST pidlRoot; /* absolute pidl */
 
-    int dwAttributes;      /* attributes returned by GetAttributesOf FIXME: use it */
-
     UINT cfShellIDList;    /* clipboardformat for IDropTarget */
     BOOL fAcceptFmt;       /* flag for pending Drop */
 } IGenericSFImpl;
 
-static struct IUnknownVtbl unkvt;
-static struct IShellFolder2Vtbl sfvt;
-static struct IPersistFolder3Vtbl vt_FSFldr_PersistFolder3; /* IPersistFolder3 for a FS_Folder */
-static struct IDropTargetVtbl dtvt;
-static struct ISFHelperVtbl shvt;
+static const IUnknownVtbl unkvt;
+static const IShellFolder2Vtbl sfvt;
+static const IPersistFolder3Vtbl vt_FSFldr_PersistFolder3; /* IPersistFolder3 for a FS_Folder */
+static const IDropTargetVtbl dtvt;
+static const ISFHelperVtbl shvt;
 
 #define _IShellFolder2_Offset ((int)(&(((IGenericSFImpl*)0)->lpvtblShellFolder)))
 #define _ICOM_THIS_From_IShellFolder2(class, name) class* This = (class*)(((char*)name)-_IShellFolder2_Offset);
@@ -199,7 +197,7 @@ static ULONG WINAPI IUnknown_fnRelease (IUnknown * iface)
     return refCount;
 }
 
-static IUnknownVtbl unkvt =
+static const IUnknownVtbl unkvt =
 {
       IUnknown_fnQueryInterface,
       IUnknown_fnAddRef,
@@ -587,11 +585,23 @@ IShellFolder_fnGetAttributesOf (IShellFolder2 * iface, UINT cidl,
     if (*rgfInOut == 0)
         *rgfInOut = ~0;
 
-    while (cidl > 0 && *apidl) {
-        pdump (*apidl);
-        SHELL32_GetItemAttributes (_IShellFolder_ (This), *apidl, rgfInOut);
-        apidl++;
-        cidl--;
+    if(cidl == 0){
+        IShellFolder *psfParent = NULL;
+        LPCITEMIDLIST rpidl = NULL;
+
+        hr = SHBindToParent(This->pidlRoot, &IID_IShellFolder, (LPVOID*)&psfParent, (LPCITEMIDLIST*)&rpidl);
+        if(SUCCEEDED(hr)) {
+            SHELL32_GetItemAttributes (psfParent, rpidl, rgfInOut);
+            IShellFolder_Release(psfParent);
+        }
+    }
+    else {
+        while (cidl > 0 && *apidl) {
+            pdump (*apidl);
+            SHELL32_GetItemAttributes (_IShellFolder_ (This), *apidl, rgfInOut);
+            apidl++;
+            cidl--;
+        }
     }
     /* make sure SFGAO_VALIDATE is cleared, some apps depend on that */
     *rgfInOut &= ~SFGAO_VALIDATE;
@@ -690,7 +700,20 @@ static const WCHAR HideFileExtW[] = { 'H','i','d','e','F','i','l','e','E','x',
 static const WCHAR NeverShowExtW[] = { 'N','e','v','e','r','S','h','o','w','E',
  'x','t',0 };
 
-static BOOL hide_extension(LPWSTR szPath)
+/******************************************************************************
+ * SHELL_FS_HideExtension [Internal]
+ *
+ * Query the registry if the filename extension of a given path should be 
+ * hidden.
+ *
+ * PARAMS
+ *  szPath [I] Relative or absolute path of a file
+ *  
+ * RETURNS
+ *  TRUE, if the filename's extension should be hidden
+ *  FALSE, otherwise.
+ */
+BOOL SHELL_FS_HideExtension(LPWSTR szPath)
 {
     HKEY hKey;
     DWORD dwData;
@@ -729,7 +752,7 @@ void SHELL_FS_ProcessDisplayFilename(LPSTR szPath, DWORD dwFlags)
     if (!(dwFlags & SHGDN_FORPARSING) &&
         ((dwFlags & SHGDN_INFOLDER) || (dwFlags == SHGDN_NORMAL))) {
         MultiByteToWideChar(CP_ACP, 0, szPath, -1, pathW, MAX_PATH);
-        if (hide_extension(pathW) && szPath[0] != '.')
+        if (SHELL_FS_HideExtension(pathW) && szPath[0] != '.')
             PathRemoveExtensionA (szPath);
     }
 }
@@ -834,7 +857,7 @@ static HRESULT WINAPI IShellFolder_fnSetNameOf (IShellFolder2 * iface,
     } else
         lstrcpynW(szDest, lpName, MAX_PATH);
 
-    if(!(dwFlags & SHGDN_FORPARSING) && hide_extension(szSrc)) {
+    if(!(dwFlags & SHGDN_FORPARSING) && SHELL_FS_HideExtension(szSrc)) {
         WCHAR *ext = PathFindExtensionW(szSrc);
         if(*ext != '\0') {
             INT len = strlenW(szDest);
@@ -972,7 +995,7 @@ IShellFolder_fnMapColumnToSCID (IShellFolder2 * iface, UINT column,
     return E_NOTIMPL;
 }
 
-static IShellFolder2Vtbl sfvt =
+static const IShellFolder2Vtbl sfvt =
 {
     IShellFolder_fnQueryInterface,
     IShellFolder_fnAddRef,
@@ -1042,7 +1065,7 @@ ISFHelper_fnGetUniqueName (ISFHelper * iface, LPSTR lpName, UINT uLen)
     IEnumIDList *penum;
     HRESULT hr;
     char szText[MAX_PATH];
-    char *szNewFolder = "New Folder";
+    const char *szNewFolder = "New Folder";
 
     TRACE ("(%p)(%s %u)\n", This, lpName, uLen);
 
@@ -1224,7 +1247,7 @@ ISFHelper_fnCopyItems (ISFHelper * iface, IShellFolder * pSFFrom, UINT cidl,
     return S_OK;
 }
 
-static ISFHelperVtbl shvt =
+static const ISFHelperVtbl shvt =
 {
     ISFHelper_fnQueryInterface,
     ISFHelper_fnAddRef,
@@ -1412,7 +1435,7 @@ IFSFldr_PersistFolder3_GetFolderTargetInfo (IPersistFolder3 * iface,
     return E_NOTIMPL;
 }
 
-static IPersistFolder3Vtbl vt_FSFldr_PersistFolder3 =
+static const IPersistFolder3Vtbl vt_FSFldr_PersistFolder3 =
 {
     IFSFldr_PersistFolder3_QueryInterface,
     IFSFldr_PersistFolder3_AddRef,
@@ -1534,7 +1557,7 @@ ISFDropTarget_Drop (IDropTarget * iface, IDataObject * pDataObject,
     return E_NOTIMPL;
 }
 
-static struct IDropTargetVtbl dtvt = {
+static const IDropTargetVtbl dtvt = {
     ISFDropTarget_QueryInterface,
     ISFDropTarget_AddRef,
     ISFDropTarget_Release,

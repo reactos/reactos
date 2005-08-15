@@ -605,7 +605,7 @@ BOOLEAN STDCALL I8042KeyboardEnableInterrupt(PDEVICE_EXTENSION DevExt)
 	}
 
 	Status = I8042ReadDataWait(DevExt, &Value);
-	if (Status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(Status)) {
 		DPRINT1("No response after read i8042 mode\n");
 		return FALSE;
 	}
@@ -640,13 +640,13 @@ BOOLEAN STDCALL I8042DetectKeyboard(PDEVICE_EXTENSION DevExt)
 		Status = I8042SynchWritePort(DevExt, 0, KBD_GET_ID, TRUE);
 	} while (STATUS_TIMEOUT == Status && RetryCount--);
 
-	if (Status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(Status)) {
 		DPRINT1("Can't write GET_ID (%x)\n", Status);
 		return FALSE;
 	}
 
 	Status = I8042ReadDataWait(DevExt, &Value);
-	if (Status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(Status)) {
 		DPRINT1("No response after GET_ID\n");
 		/* Could be an AT keyboard */
 		DevExt->KeyboardIsAT = TRUE;
@@ -663,7 +663,7 @@ BOOLEAN STDCALL I8042DetectKeyboard(PDEVICE_EXTENSION DevExt)
 	DPRINT("Keyboard ID: %x", Value);
 
 	Status = I8042ReadDataWait(DevExt, &Value);
-	if (Status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(Status)) {
 		DPRINT("Partial ID\n");
 		return FALSE;
 	}
@@ -672,12 +672,12 @@ BOOLEAN STDCALL I8042DetectKeyboard(PDEVICE_EXTENSION DevExt)
 
 detectsetleds:
 	Status = I8042SynchWritePort(DevExt, 0, KBD_SET_LEDS, TRUE);
-	if (Status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(Status)) {
 		DPRINT("Can't write SET_LEDS (%x)\n", Status);
 		return FALSE;
 	}
 	Status = I8042SynchWritePort(DevExt, 0, 0, TRUE);
-	if (Status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(Status)) {
 		DPRINT("Can't finish SET_LEDS (%x)\n", Status);
 		return FALSE;
 	}
@@ -690,7 +690,7 @@ detectsetleds:
 	}
 
 	Status = I8042ReadDataWait(DevExt, &Value);
-	if (Status != STATUS_SUCCESS) {
+	if (!NT_SUCCESS(Status)) {
 		DPRINT1("No response after read i8042 mode\n");
 		return FALSE;
 	}

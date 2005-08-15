@@ -188,7 +188,7 @@ typedef struct _IP_INTERFACE_INFO {
  */
     result = GetInterfaceInfo(pIfTable, &dwOutBufLen);
     if (result == NO_ERROR) {
-        UINT i;
+        INT i;
         _tprintf(_T("GetInterfaceInfo() returned with %ld adaptor entries\n"), pIfTable->NumAdapters);
         for (i = 0; i < pIfTable->NumAdapters; i++) {
            wprintf(L"[%d] %s\n", i + 1, pIfTable->Adapter[i].Name);

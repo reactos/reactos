@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType private base classes (body).                            */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002, 2003, 2004 by                               */
+/*  Copyright 1996-2001, 2002, 2003, 2004, 2005 by                         */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -19,6 +19,7 @@
 #include <ft2build.h>
 #include FT_LIST_H
 #include FT_OUTLINE_H
+#include FT_INTERNAL_VALIDATE_H
 #include FT_INTERNAL_OBJECTS_H
 #include FT_INTERNAL_DEBUG_H
 #include FT_INTERNAL_RFORK_H
@@ -67,7 +68,7 @@
     valid->base  = base;
     valid->limit = limit;
     valid->level = level;
-    valid->error = 0;
+    valid->error = FT_Err_Ok;
   }
 
 
@@ -287,11 +288,11 @@
     FT_ZERO( &slot->metrics );
     FT_ZERO( &slot->outline );
 
-    slot->bitmap.width = 0;
-    slot->bitmap.rows  = 0;
-    slot->bitmap.pitch = 0;
+    slot->bitmap.width      = 0;
+    slot->bitmap.rows       = 0;
+    slot->bitmap.pitch      = 0;
     slot->bitmap.pixel_mode = 0;
-    /* don't touch 'slot->bitmap.buffer'! */
+    /* `slot->bitmap.buffer' has been handled by ft_glyphslot_free_bitmap */
 
     slot->bitmap_left   = 0;
     slot->bitmap_top    = 0;
@@ -304,6 +305,8 @@
 
     slot->linearHoriAdvance = 0;
     slot->linearVertAdvance = 0;
+    slot->lsb_delta         = 0;
+    slot->rsb_delta         = 0;
   }
 
 
@@ -345,10 +348,8 @@
     FT_GlyphSlot      slot;
 
 
-    if ( !face || !aslot || !face->driver )
+    if ( !face || !face->driver )
       return FT_Err_Invalid_Argument;
-
-    *aslot = 0;
 
     driver = face->driver;
     clazz  = driver->clazz;
@@ -367,8 +368,15 @@
         goto Exit;
       }
 
-      *aslot = slot;
+      slot->next  = face->glyph;
+      face->glyph = slot;
+
+      if ( aslot )
+        *aslot = slot;
     }
+    else if ( aslot )
+      *aslot = 0;
+
 
   Exit:
     FT_TRACE4(( "FT_New_GlyphSlot: Return %d\n", error ));
@@ -383,26 +391,31 @@
   {
     if ( slot )
     {
-      FT_Driver      driver = slot->face->driver;
-      FT_Memory      memory = driver->root.memory;
-      FT_GlyphSlot*  parent;
-      FT_GlyphSlot   cur;
+      FT_Driver     driver = slot->face->driver;
+      FT_Memory     memory = driver->root.memory;
+      FT_GlyphSlot  prev;
+      FT_GlyphSlot  cur;
 
 
       /* Remove slot from its parent face's list */
-      parent = &slot->face->glyph;
-      cur    = *parent;
+      prev = NULL;
+      cur  = slot->face->glyph;
 
       while ( cur )
       {
         if ( cur == slot )
         {
-          *parent = cur->next;
+          if ( !prev )
+            slot->face->glyph = cur->next;
+          else
+            prev->next = cur->next;
+
           ft_glyphslot_done( slot );
           FT_FREE( slot );
           break;
         }
-        cur = cur->next;
+        prev = cur;
+        cur  = cur->next;
       }
     }
   }
@@ -674,6 +687,10 @@
 
 
   static void
+  ft_cmap_done_internal( FT_CMap  cmap );
+
+
+  static void
   destroy_charmaps( FT_Face    face,
                     FT_Memory  memory )
   {
@@ -685,7 +702,7 @@
       FT_CMap  cmap = FT_CMAP( face->charmaps[n] );
 
 
-      FT_CMap_Done( cmap );
+      ft_cmap_done_internal( cmap );
 
       face->charmaps[n] = NULL;
     }
@@ -814,10 +831,10 @@
      *  when found.  Otherwise, a 16-bit one is returned when found.
      */
 
-    /* since the `interesting' table, with id's 3,10, is normally the */
-    /* last one, we loop backwards. This looses with type1 fonts with */
-    /* non-BMP characters (<.0001%), this wins with .ttf with non-BMP */
-    /* chars (.01% ?), and this is the same about 99.99% of the time! */
+    /* Since the `interesting' table, with IDs (3,10), is normally the */
+    /* last one, we loop backwards.  This looses with type1 fonts with */
+    /* non-BMP characters (<.0001%), this wins with .ttf with non-BMP  */
+    /* chars (.01% ?), and this is the same about 99.99% of the time!  */
 
     cur = first + face->num_charmaps;  /* points after the last one */
 
@@ -834,7 +851,7 @@
              ( cur[0]->platform_id == TT_PLATFORM_APPLE_UNICODE &&
                cur[0]->encoding_id == TT_APPLE_ID_UNICODE_32    )      )
 
-        /* Hurray! We found a UCS-4 charmap. We can stop the scan! */
+        /* Hurray!  We found a UCS-4 charmap.  We can stop the scan! */
         {
           face->charmap = cur[0];
           return 0;
@@ -842,8 +859,8 @@
       }
     }
 
-    /* We do not have any UCS-4 charmap. Sigh.                           */
-    /* Let's see if we have  some other kind of Unicode charmap, though. */
+    /* We do not have any UCS-4 charmap.  Sigh.                         */
+    /* Let's see if we have some other kind of Unicode charmap, though. */
     if ( unicmap != NULL )
     {
       face->charmap = unicmap[0];
@@ -1547,10 +1564,8 @@
     /* test for valid `library' delayed to */
     /* FT_Stream_New()                     */
 
-    if ( !aface || !args )
+    if ( ( !aface && face_index >= 0 ) || !args )
       return FT_Err_Invalid_Argument;
-
-    *aface = 0;
 
     external_stream = FT_BOOL( ( args->flags & FT_OPEN_STREAM ) &&
                                args->stream                     );
@@ -1676,18 +1691,11 @@
     FT_List_Add( &face->driver->faces_list, node );
 
     /* now allocate a glyph slot object for the face */
-    {
-      FT_GlyphSlot  slot;
+    FT_TRACE4(( "FT_Open_Face: Creating glyph slot\n" ));
 
-
-      FT_TRACE4(( "FT_Open_Face: Creating glyph slot\n" ));
-
-      error = FT_New_GlyphSlot( face, &slot );
-      if ( error )
-        goto Fail;
-
-      face->glyph = slot;
-    }
+    error = FT_New_GlyphSlot( face, NULL );
+    if ( error )
+      goto Fail;
 
     /* finally, allocate a size object for the face */
     {
@@ -1717,7 +1725,8 @@
       internal->transform_delta.y = 0;
     }
 
-    *aface = face;
+    if ( aface )
+      *aface = face;
     goto Exit;
 
   Fail:
@@ -1744,6 +1753,7 @@
     if ( !filepathname )
       return FT_Err_Invalid_Argument;
 
+    open.stream   = NULL;
     open.flags    = FT_OPEN_PATHNAME;
     open.pathname = (char*)filepathname;
 
@@ -2007,8 +2017,15 @@
       FT_UShort  x_ppem = (FT_UShort)( ( dim_x + 32 ) >> 6 );
       FT_UShort  y_ppem = (FT_UShort)( ( dim_y + 32 ) >> 6 );
 
+
+      /* Don't take, say, 12.5x12.5 equal to 13x13.  If working with */
+      /* fractional font sizes this would hide slightly different    */
+      /* font metrics.  Consequently, the next two lines are         */
+      /* disabled.                                                   */
+#if 0
       if ( x_ppem == metrics->x_ppem && y_ppem == metrics->y_ppem )
         return FT_Err_Ok;
+#endif
 
       metrics->x_ppem = x_ppem;
       metrics->y_ppem = y_ppem;
@@ -2133,6 +2150,16 @@
 
           if ( kern_mode != FT_KERNING_UNFITTED )
           {
+            /* we scale down kerning values for small ppem values */
+            /* to avoid that rounding makes them too big.         */
+            /* `25' has been determined heuristically.            */
+            if ( face->size->metrics.x_ppem < 25 )
+              akerning->x = FT_MulDiv( akerning->x,
+                                       face->size->metrics.x_ppem, 25 );
+            if ( face->size->metrics.y_ppem < 25 )
+              akerning->y = FT_MulDiv( akerning->y,
+                                       face->size->metrics.y_ppem, 25 );
+
             akerning->x = FT_PIX_ROUND( akerning->x );
             akerning->y = FT_PIX_ROUND( akerning->y );
           }
@@ -2232,20 +2259,63 @@
   }
 
 
+  static void
+  ft_cmap_done_internal( FT_CMap  cmap )
+  {
+    FT_CMap_Class  clazz  = cmap->clazz;
+    FT_Face        face   = cmap->charmap.face;
+    FT_Memory      memory = FT_FACE_MEMORY(face);
+
+
+    if ( clazz->done )
+      clazz->done( cmap );
+
+    FT_FREE( cmap );
+  }
+
+
   FT_BASE_DEF( void )
   FT_CMap_Done( FT_CMap  cmap )
   {
     if ( cmap )
     {
-      FT_CMap_Class  clazz  = cmap->clazz;
-      FT_Face        face   = cmap->charmap.face;
-      FT_Memory      memory = FT_FACE_MEMORY(face);
+      FT_Face    face   = cmap->charmap.face;
+      FT_Memory  memory = FT_FACE_MEMORY( face );
+      FT_Error   error;
+      FT_Int     i, j;
 
 
-      if ( clazz->done )
-        clazz->done( cmap );
+      for ( i = 0; i < face->num_charmaps; i++ )
+      {
+        if ( (FT_CMap)face->charmaps[i] == cmap )
+        {
+          FT_CharMap  last_charmap = face->charmaps[face->num_charmaps - 1];
 
-      FT_FREE( cmap );
+
+          if ( FT_RENEW_ARRAY( face->charmaps,
+                               face->num_charmaps,
+                               face->num_charmaps - 1 ) )
+            return;
+
+          /* remove it from our list of charmaps */
+          for ( j = i + 1; j < face->num_charmaps; j++ )
+          {
+            if ( j == face->num_charmaps - 1 )
+              face->charmaps[j - 1] = last_charmap;
+            else
+              face->charmaps[j - 1] = face->charmaps[j];
+          }
+
+          face->num_charmaps--;
+
+          if ( (FT_CMap)face->charmap == cmap )
+            face->charmap = NULL;
+
+          ft_cmap_done_internal( cmap );
+
+          break;
+        }
+      }
     }
   }
 
@@ -2256,7 +2326,7 @@
                FT_CharMap      charmap,
                FT_CMap        *acmap )
   {
-    FT_Error   error = 0;
+    FT_Error   error = FT_Err_Ok;
     FT_Face    face;
     FT_Memory  memory;
     FT_CMap    cmap;
@@ -2283,7 +2353,7 @@
       /* add it to our list of charmaps */
       if ( FT_RENEW_ARRAY( face->charmaps,
                            face->num_charmaps,
-                           face->num_charmaps+1 ) )
+                           face->num_charmaps + 1 ) )
         goto Fail;
 
       face->charmaps[face->num_charmaps++] = (FT_CharMap)cmap;
@@ -2296,7 +2366,7 @@
     return error;
 
   Fail:
-    FT_CMap_Done( cmap );
+    ft_cmap_done_internal( cmap );
     cmap = NULL;
     goto Exit;
   }
@@ -2507,6 +2577,30 @@
   }
 
 
+  /* documentation is in tttables.h */
+
+  FT_EXPORT_DEF( FT_Error )
+  FT_Sfnt_Table_Info( FT_Face    face,
+                      FT_UInt    table_index,
+                      FT_ULong  *tag,
+                      FT_ULong  *length )
+  {
+    FT_Service_SFNT_Table  service;
+
+
+    if ( !face || !FT_IS_SFNT( face ) )
+      return FT_Err_Invalid_Face_Handle;
+
+    FT_FACE_FIND_SERVICE( face, service, SFNT_TABLE );
+    if ( service == NULL )
+      return FT_Err_Unimplemented_Feature;
+
+    return service->table_info( face, table_index, tag, length );
+  }
+
+
+  /* documentation is in tttables.h */
+
   FT_EXPORT_DEF( FT_ULong )
   FT_Get_CMap_Language_ID( FT_CharMap  charmap )
   {
@@ -2528,6 +2622,8 @@
     return cmap_info.language;
   }
 
+
+  /* documentation is in ftsizes.h */
 
   FT_EXPORT_DEF( FT_Error )
   FT_Activate_Size( FT_Size  size )

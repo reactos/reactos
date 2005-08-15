@@ -20,6 +20,7 @@
 #define strcmpiW(s1,s2) _wcsicmp((const wchar_t *)(s1),(const wchar_t *)(s2))
 #define strncmpiW(s1,s2,n) _wcsnicmp((const wchar_t *)(s1),(const wchar_t *)(s2),(n))
 #define strtoulW(s1,s2,b) wcstoul((const wchar_t *)(s1),(wchar_t **)(s2),(b))
+#define strspnW(str, accept) wcsspn((const wchar_t *)(str), (const wchar_t *)(accept))
 #define tolowerW(n) towlower((n))
 #define toupperW(n) towupper((n))
 #define islowerW(n) iswlower((n))
@@ -41,20 +42,20 @@
 #define WINE_UNICODE_API __attribute__((dllimport))
 #endif
 
-static inline WCHAR *strpbrkW( const WCHAR *str, const WCHAR *accept )
+static __inline WCHAR *strpbrkW( const WCHAR *str, const WCHAR *accept )
 {
     for ( ; *str; str++) if (strchrW( accept, *str )) return (WCHAR *)str;
     return NULL;
 }
 
-static inline WCHAR *memchrW( const WCHAR *ptr, WCHAR ch, size_t n )
+static __inline WCHAR *memchrW( const WCHAR *ptr, WCHAR ch, size_t n )
 {
     const WCHAR *end;
     for (end = ptr + n; ptr < end; ptr++) if (*ptr == ch) return (WCHAR *)ptr;
     return NULL;
 }
 
-static inline WCHAR *memrchrW( const WCHAR *ptr, WCHAR ch, size_t n )
+static __inline WCHAR *memrchrW( const WCHAR *ptr, WCHAR ch, size_t n )
 {
     const WCHAR *end, *ret = NULL;
     for (end = ptr + n; ptr < end; ptr++) if (*ptr == ch) ret = ptr;

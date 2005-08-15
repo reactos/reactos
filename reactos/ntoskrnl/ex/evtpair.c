@@ -31,6 +31,7 @@ static GENERIC_MAPPING ExEventPairMapping = {
 
 VOID
 INIT_FUNCTION
+STDCALL
 ExpInitializeEventPairImplementation(VOID)
 {
   OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;

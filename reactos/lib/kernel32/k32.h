@@ -9,20 +9,22 @@
 /* INCLUDES ******************************************************************/
 
 /* PSDK/NDK Headers */
-#include <windows.h>
 #define NTOS_MODE_USER
+#define _KERNEL32_
+#include <windows.h>
 #include <ndk/ntndk.h>
 
 /* CSRSS Header */
 #include <csrss/csrss.h>
 
 /* C Headers */
+#include <ctype.h>
+#include <stdio.h>
 #include <wchar.h>
 
 /* DDK Driver Headers */
-#include <ddk/ntddbeep.h>
-#include <ddk/ntddser.h>
-#include <ddk/ntddtape.h>
+#include <ntddbeep.h>
+#include <ntddser.h>
 
 /* Internal Kernel32 Header */
 #include "include/kernel32.h"

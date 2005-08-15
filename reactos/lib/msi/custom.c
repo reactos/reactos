@@ -36,6 +36,7 @@ http://msdn.microsoft.com/library/default.asp?url=/library/en-us/msi/setup/summa
 #include "wine/debug.h"
 #include "fdi.h"
 #include "msi.h"
+#include "msidefs.h"
 #include "msiquery.h"
 #include "fcntl.h"
 #include "objbase.h"
@@ -74,10 +75,48 @@ static UINT HANDLE_CustomType50(MSIPACKAGE *package, LPCWSTR source,
 static UINT HANDLE_CustomType34(MSIPACKAGE *package, LPCWSTR source,
                                 LPCWSTR target, const INT type, LPCWSTR action);
 
+
+static BOOL check_execution_scheduling_options(MSIPACKAGE *package, LPCWSTR action, UINT options)
+{
+    if (!package->script)
+        return TRUE;
+
+    if ((options & msidbCustomActionTypeClientRepeat) == 
+            msidbCustomActionTypeClientRepeat)
+    {
+        if (!(package->script->InWhatSequence & SEQUENCE_UI &&
+            package->script->InWhatSequence & SEQUENCE_EXEC))
+        {
+            TRACE("Skipping action due to dbCustomActionTypeClientRepeat option.\n");
+            return FALSE;
+        }
+    }
+    else if (options & msidbCustomActionTypeFirstSequence)
+    {
+        if (package->script->InWhatSequence & SEQUENCE_UI &&
+            package->script->InWhatSequence & SEQUENCE_EXEC )
+        {
+            TRACE("Skipping action due to msidbCustomActionTypeFirstSequence option.\n");
+            return FALSE;
+        }
+    }
+    else if (options & msidbCustomActionTypeOncePerProcess)
+    {
+        if (check_unique_action(package,action))
+        {
+            TRACE("Skipping action due to msidbCustomActionTypeOncePerProcess option.\n");
+            return FALSE;
+        }
+        else
+            register_unique_action(package,action);
+    }
+
+    return TRUE;
+}
+
 UINT ACTION_CustomAction(MSIPACKAGE *package,LPCWSTR action, BOOL execute)
 {
     UINT rc = ERROR_SUCCESS;
-    MSIQUERY * view;
     MSIRECORD * row = 0;
     static const WCHAR ExecSeqQuery[] =
     {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
@@ -89,25 +128,9 @@ UINT ACTION_CustomAction(MSIPACKAGE *package,LPCWSTR action, BOOL execute)
     LPWSTR target;
     WCHAR *deformated=NULL;
 
-    rc = MSI_OpenQuery(package->db, &view, ExecSeqQuery, action);
-    if (rc != ERROR_SUCCESS)
-        return rc;
-
-    rc = MSI_ViewExecute(view, 0);
-    if (rc != ERROR_SUCCESS)
-    {
-        MSI_ViewClose(view);
-        msiobj_release(&view->hdr);
-        return rc;
-    }
-
-    rc = MSI_ViewFetch(view,&row);
-    if (rc != ERROR_SUCCESS)
-    {
-        MSI_ViewClose(view);
-        msiobj_release(&view->hdr);
+    row = MSI_QueryGetRecord( package->db, ExecSeqQuery, action );
+    if (!row)
         return ERROR_CALL_NOT_IMPLEMENTED;
-    }
 
     type = MSI_RecordGetInteger(row,2);
 
@@ -118,58 +141,39 @@ UINT ACTION_CustomAction(MSIPACKAGE *package,LPCWSTR action, BOOL execute)
           debugstr_w(source), debugstr_w(target));
 
     /* handle some of the deferred actions */
-    if (type & 0x400)
+    if (type & msidbCustomActionTypeTSAware)
+        FIXME("msidbCustomActionTypeTSAware not handled\n");
+
+    if (type & msidbCustomActionTypeInScript)
     {
-        if (type & 0x100)
+        if (type & msidbCustomActionTypeNoImpersonate)
+            FIXME("msidbCustomActionTypeNoImpersonate not handled\n");
+
+        if (type & msidbCustomActionTypeRollback)
         {
             FIXME("Rollback only action... rollbacks not supported yet\n");
+            schedule_action(package, ROLLBACK_SCRIPT, action);
             HeapFree(GetProcessHeap(),0,source);
             HeapFree(GetProcessHeap(),0,target);
             msiobj_release(&row->hdr);
-            MSI_ViewClose(view);
-            msiobj_release(&view->hdr);
             return ERROR_SUCCESS;
         }
         if (!execute)
         {
-            LPWSTR *newbuf = NULL;
-            INT count;
-            if (type & 0x200)
+            if (type & msidbCustomActionTypeCommit)
             {
                 TRACE("Deferring Commit Action!\n");
-                count = package->CommitActionCount;
-                package->CommitActionCount++;
-                if (count != 0)
-                    newbuf = HeapReAlloc(GetProcessHeap(),0,
-                        package->CommitAction,
-                        package->CommitActionCount * sizeof(LPWSTR));
-                else
-                    newbuf = HeapAlloc(GetProcessHeap(),0, sizeof(LPWSTR));
-
-                newbuf[count] = strdupW(action);
-                package->CommitAction = newbuf;
+                schedule_action(package, COMMIT_SCRIPT, action);
             }
             else
             {
                 TRACE("Deferring Action!\n");
-                count = package->DeferredActionCount;
-                package->DeferredActionCount++;
-                if (count != 0)
-                    newbuf = HeapReAlloc(GetProcessHeap(),0,
-                        package->DeferredAction,
-                        package->DeferredActionCount * sizeof(LPWSTR));
-                else
-                    newbuf = HeapAlloc(GetProcessHeap(),0, sizeof(LPWSTR));
-
-                newbuf[count] = strdupW(action);
-                package->DeferredAction = newbuf;
+                schedule_action(package, INSTALL_SCRIPT, action);
             }
 
             HeapFree(GetProcessHeap(),0,source);
             HeapFree(GetProcessHeap(),0,target);
             msiobj_release(&row->hdr);
-            MSI_ViewClose(view);
-            msiobj_release(&view->hdr);
             return ERROR_SUCCESS;
         }
         else
@@ -178,11 +182,16 @@ UINT ACTION_CustomAction(MSIPACKAGE *package,LPCWSTR action, BOOL execute)
 
             static const WCHAR szActionData[] = {
             'C','u','s','t','o','m','A','c','t','i','o','n','D','a','t','a',0};
+            static const WCHAR szBlank[] = {0};
             LPWSTR actiondata = load_dynamic_property(package,action,NULL);
             if (actiondata)
                 MSI_SetPropertyW(package,szActionData,actiondata);
+            else
+                MSI_SetPropertyW(package,szActionData,szBlank);
         }
     }
+    else if (!check_execution_scheduling_options(package,action,type))
+        return ERROR_SUCCESS;
 
     switch (type & CUSTOM_ACTION_TYPE_MASK)
     {
@@ -223,8 +232,6 @@ UINT ACTION_CustomAction(MSIPACKAGE *package,LPCWSTR action, BOOL execute)
     HeapFree(GetProcessHeap(),0,source);
     HeapFree(GetProcessHeap(),0,target);
     msiobj_release(&row->hdr);
-    MSI_ViewClose(view);
-    msiobj_release(&view->hdr);
     return rc;
 }
 
@@ -249,7 +256,6 @@ static UINT store_binary_to_temp(MSIPACKAGE *package, LPCWSTR source,
     {
         /* write out the file */
         UINT rc;
-        MSIQUERY * view;
         MSIRECORD * row = 0;
         static const WCHAR fmt[] =
         {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
@@ -258,34 +264,15 @@ static UINT store_binary_to_temp(MSIPACKAGE *package, LPCWSTR source,
         HANDLE the_file;
         CHAR buffer[1024];
 
-        if (track_tempfile(package, tmp_file, tmp_file)!=0)
-            FIXME("File Name in temp tracking collision\n");
-
         the_file = CreateFileW(tmp_file, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
                            FILE_ATTRIBUTE_NORMAL, NULL);
     
         if (the_file == INVALID_HANDLE_VALUE)
             return ERROR_FUNCTION_FAILED;
 
-        rc = MSI_OpenQuery(package->db, &view, fmt, source);
-        if (rc != ERROR_SUCCESS)
-            return rc;
-
-        rc = MSI_ViewExecute(view, 0);
-        if (rc != ERROR_SUCCESS)
-        {
-            MSI_ViewClose(view);
-            msiobj_release(&view->hdr);
-            return rc;
-        }
-
-        rc = MSI_ViewFetch(view,&row);
-        if (rc != ERROR_SUCCESS)
-        {
-            MSI_ViewClose(view);
-            msiobj_release(&view->hdr);
-            return rc;
-        }
+        row = MSI_QueryGetRecord(package->db, fmt, source);
+        if (!row)
+            return ERROR_FUNCTION_FAILED;
 
         do 
         {
@@ -305,8 +292,6 @@ static UINT store_binary_to_temp(MSIPACKAGE *package, LPCWSTR source,
         CloseHandle(the_file);
 
         msiobj_release(&row->hdr);
-        MSI_ViewClose(view);
-        msiobj_release(&view->hdr);
     }
 
     return ERROR_SUCCESS;
@@ -366,11 +351,11 @@ static UINT process_action_return_value(UINT type, HANDLE ThreadHandle)
 
 static UINT process_handle(MSIPACKAGE* package, UINT type, 
                            HANDLE ThreadHandle, HANDLE ProcessHandle,
-                           LPCWSTR Name)
+                           LPCWSTR Name, BOOL *finished)
 {
     UINT rc = ERROR_SUCCESS;
 
-    if (!(type & 0x80))
+    if (!(type & msidbCustomActionTypeAsync))
     {
         /* synchronous */
         TRACE("Synchronous Execution of action %s\n",debugstr_w(Name));
@@ -379,7 +364,7 @@ static UINT process_handle(MSIPACKAGE* package, UINT type,
         else
             msi_dialog_check_messages(ThreadHandle);
 
-        if (!(type & 0x40))
+        if (!(type & msidbCustomActionTypeContinue))
         {
             if (ProcessHandle)
                 rc = process_action_return_value(2,ProcessHandle);
@@ -390,12 +375,14 @@ static UINT process_handle(MSIPACKAGE* package, UINT type,
         CloseHandle(ThreadHandle);
         if (ProcessHandle);
             CloseHandle(ProcessHandle);
+        if (finished)
+            *finished = TRUE;
     }
     else 
     {
         TRACE("Asynchronous Execution of action %s\n",debugstr_w(Name));
         /* asynchronous */
-        if (type & 0x40)
+        if (type & msidbCustomActionTypeContinue)
         {
             if (ProcessHandle)
             {
@@ -411,6 +398,8 @@ static UINT process_handle(MSIPACKAGE* package, UINT type,
             if (ProcessHandle);
                 CloseHandle(ProcessHandle);
         }
+        if (finished)
+            *finished = FALSE;
     }
 
     return rc;
@@ -496,6 +485,7 @@ static UINT HANDLE_CustomType1(MSIPACKAGE *package, LPCWSTR source,
     DWORD ThreadId;
     HANDLE ThreadHandle;
     UINT rc = ERROR_SUCCESS;
+    BOOL finished = FALSE;
 
     store_binary_to_temp(package, source, tmp_file);
 
@@ -516,7 +506,12 @@ static UINT HANDLE_CustomType1(MSIPACKAGE *package, LPCWSTR source,
 
     ThreadHandle = CreateThread(NULL,0,DllThread,(LPVOID)info,0,&ThreadId);
 
-    rc = process_handle(package, type, ThreadHandle, NULL, action);
+    rc = process_handle(package, type, ThreadHandle, NULL, action, &finished );
+
+    if (!finished)
+        track_tempfile(package, tmp_file, tmp_file);
+    else
+        DeleteFileW(tmp_file);
  
     return rc;
 }
@@ -533,6 +528,7 @@ static UINT HANDLE_CustomType2(MSIPACKAGE *package, LPCWSTR source,
     WCHAR *cmd;
     static const WCHAR spc[] = {' ',0};
     UINT prc = ERROR_SUCCESS;
+    BOOL finished = FALSE;
 
     memset(&si,0,sizeof(STARTUPINFOW));
 
@@ -569,8 +565,14 @@ static UINT HANDLE_CustomType2(MSIPACKAGE *package, LPCWSTR source,
         return ERROR_SUCCESS;
     }
 
-    prc = process_handle(package, type, info.hThread, info.hProcess, action);
+    prc = process_handle(package, type, info.hThread, info.hProcess, action, 
+                          &finished);
 
+    if (!finished)
+        track_tempfile(package, tmp_file, tmp_file);
+    else
+        DeleteFileW(tmp_file);
+    
     return prc;
 }
 
@@ -622,7 +624,8 @@ static UINT HANDLE_CustomType18(MSIPACKAGE *package, LPCWSTR source,
         return ERROR_SUCCESS;
     }
 
-    prc = process_handle(package, type, info.hThread, info.hProcess, action);
+    prc = process_handle(package, type, info.hThread, info.hProcess, action, 
+                         NULL);
 
     return prc;
 }
@@ -636,37 +639,23 @@ static UINT HANDLE_CustomType19(MSIPACKAGE *package, LPCWSTR source,
       'W','H','E','R','E',' ','`','E','r','r','o','r','`',' ','=',' ',
       '\'','%','s','\'',0
     };
-    MSIQUERY *view = NULL;
     MSIRECORD *row = 0;
-    UINT r;
     LPWSTR deformated = NULL;
 
     deformat_string( package, target, &deformated );
 
     /* first try treat the error as a number */
-    r = MSI_OpenQuery( package->db, &view, query, deformated );
-    if( r == ERROR_SUCCESS )
+    row = MSI_QueryGetRecord( package->db, query, deformated );
+    if( row )
     {
-        r = MSI_ViewExecute( view, 0 );
-        if( r == ERROR_SUCCESS )
-        {
-            r = MSI_ViewFetch( view, &row );
-            if( r == ERROR_SUCCESS )
-            {
-                LPCWSTR error = MSI_RecordGetString( row, 1 );
-                MessageBoxW( NULL, error, NULL, MB_OK );
-                msiobj_release( &row->hdr );
-            }
-        }
-        MSI_ViewClose( view );
-        msiobj_release( &view->hdr );
+        LPCWSTR error = MSI_RecordGetString( row, 1 );
+        MessageBoxW( NULL, error, NULL, MB_OK );
+        msiobj_release( &row->hdr );
     }
-
-    if (r != ERROR_SUCCESS )
-    {
+    else
         MessageBoxW( NULL, deformated, NULL, MB_OK );
-        HeapFree( GetProcessHeap(), 0, deformated );
-    }
+
+    HeapFree( GetProcessHeap(), 0, deformated );
 
     return ERROR_FUNCTION_FAILED;
 }
@@ -720,7 +709,8 @@ static UINT HANDLE_CustomType50(MSIPACKAGE *package, LPCWSTR source,
         return ERROR_SUCCESS;
     }
 
-    prc = process_handle(package, type, info.hThread, info.hProcess, action);
+    prc = process_handle(package, type, info.hThread, info.hProcess, action, 
+                         NULL);
 
     return prc;
 }
@@ -761,7 +751,8 @@ static UINT HANDLE_CustomType34(MSIPACKAGE *package, LPCWSTR source,
         return ERROR_SUCCESS;
     }
 
-    prc = process_handle(package, type, info.hThread, info.hProcess, action);
+    prc = process_handle(package, type, info.hThread, info.hProcess, action,
+                         NULL);
 
     return prc;
 }

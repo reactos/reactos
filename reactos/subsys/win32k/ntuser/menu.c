@@ -1558,7 +1558,7 @@ NtUserGetMenuIndex(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 NtUserGetMenuItemRect(
@@ -1567,9 +1567,50 @@ NtUserGetMenuItemRect(
   UINT uItem,
   LPRECT lprcItem)
 {
-  UNIMPLEMENTED
+     ROSMENUINFO mi;
+     ROSMENUITEMINFO mii;
+     HWND referenceHwnd;
+     LPPOINT lpPoints;
+     LPRECT lpRect;
+     POINT FromOffset;
+     LONG XMove, YMove;
+     ULONG i;
+     NTSTATUS Status;
+          
+     if(!NtUserMenuItemInfo(hMenu, uItem, MF_BYPOSITION, &mii, FALSE))
+     	return FALSE;
+     	
+     referenceHwnd = hWnd;
 
-  return 0;
+     if(!hWnd)
+     {
+	if(!NtUserMenuInfo(hMenu, &mi, FALSE)) return FALSE;
+	 if(mi.Wnd == 0) return FALSE;
+	 referenceHwnd = mi.Wnd;
+     }
+
+     if (lprcItem == NULL) return FALSE;
+     *lpRect = mii.Rect;
+     lpPoints = (LPPOINT)lpRect;
+      
+    if(!NtUserGetClientOrigin(referenceHwnd, &FromOffset)) return FALSE;
+
+    XMove = FromOffset.x;
+    YMove = FromOffset.y;
+
+    for (i = 0; i < 2; i++)
+      {
+        lpPoints[i].x += XMove;
+        lpPoints[i].y += YMove;
+      }
+      
+    Status = MmCopyToCaller(lprcItem, lpPoints, sizeof(POINT));
+    if (! NT_SUCCESS(Status))
+      {
+        SetLastNtError(Status);
+        return FALSE;
+      }                                                              
+    return TRUE;
 }
 
 

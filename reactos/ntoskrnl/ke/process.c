@@ -89,6 +89,7 @@ KeInitializeProcess(PKPROCESS Process,
 
     /* Initialize the Thread List */
     InitializeListHead(&Process->ThreadListHead);
+    KeInitializeSpinLock(&Process->ProcessLock);
     DPRINT("The Process has now been initalized with the Kernel\n");
 }
 
@@ -138,6 +139,7 @@ KeAttachProcess(PKPROCESS Process)
 
     /* Lock Dispatcher */
     OldIrql = KeAcquireDispatcherDatabaseLock();
+    KeAcquireSpinLockAtDpcLevel(&Thread->ApcQueueLock);
 
     /* Crash system if DPC is being executed! */
     if (KeIsExecutingDpc()) {
@@ -150,6 +152,7 @@ KeAttachProcess(PKPROCESS Process)
     if (Thread->ApcState.Process == Process || Thread->ApcStateIndex != OriginalApcEnvironment) {
 
         DPRINT("Process already Attached. Exitting\n");
+        KeReleaseSpinLockFromDpcLevel(&Thread->ApcQueueLock);
         KeReleaseDispatcherDatabaseLock(OldIrql);
     } else {
 
@@ -191,6 +194,7 @@ KiAttachProcess(PKTHREAD Thread, PKPROCESS Process, KIRQL ApcLock, PRKAPC_STATE 
     KiSwapProcess(Process, SavedApcState->Process);
 
     /* Return to old IRQL*/
+    KeReleaseSpinLockFromDpcLevel(&Thread->ApcQueueLock);
     KeReleaseDispatcherDatabaseLock(ApcLock);
 
     DPRINT("KiAttachProcess Completed Sucesfully\n");
@@ -232,6 +236,7 @@ KeStackAttachProcess(IN PKPROCESS Process,
     UpdatePageDirs(Thread, Process);
 
     OldIrql = KeAcquireDispatcherDatabaseLock();
+    KeAcquireSpinLockAtDpcLevel(&Thread->ApcQueueLock);
 
     /* Crash system if DPC is being executed! */
     if (KeIsExecutingDpc()) {
@@ -273,6 +278,7 @@ KeDetachProcess (VOID)
     /* Get Current Thread and Lock */
     Thread = KeGetCurrentThread();
     OldIrql = KeAcquireDispatcherDatabaseLock();
+    KeAcquireSpinLockAtDpcLevel(&Thread->ApcQueueLock);
 
     /* Check if it's attached */
     DPRINT("Current ApcStateIndex: %x\n", Thread->ApcStateIndex);
@@ -297,6 +303,7 @@ KeDetachProcess (VOID)
     KiSwapProcess(Thread->ApcState.Process, Thread->ApcState.Process);
 
     /* Unlock Dispatcher */
+    KeReleaseSpinLockFromDpcLevel(&Thread->ApcQueueLock);
     KeReleaseDispatcherDatabaseLock(OldIrql);
 }
 
@@ -320,6 +327,7 @@ KeUnstackDetachProcess (
 
     Thread = KeGetCurrentThread();
     OldIrql = KeAcquireDispatcherDatabaseLock();
+    KeAcquireSpinLockAtDpcLevel(&Thread->ApcQueueLock);
 
     /* Sorry Buddy, can't help you if you've got APCs or just aren't attached */
     if ((Thread->ApcStateIndex == OriginalApcEnvironment) || (Thread->ApcState.KernelApcInProgress)) {
@@ -347,6 +355,7 @@ KeUnstackDetachProcess (
     KiSwapProcess(Thread->ApcState.Process, Thread->ApcState.Process);
 
     /* Return to old IRQL*/
+    KeReleaseSpinLockFromDpcLevel(&Thread->ApcQueueLock);
     KeReleaseDispatcherDatabaseLock(OldIrql);
 }
 
