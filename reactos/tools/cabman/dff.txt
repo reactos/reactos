@@ -8,7 +8,7 @@ case insensitive.
 Syntax                             Description
 -------------------------------------------------------------------------------
 ;                                  Anything on a line after this is a comment
-<filename> [destination]           File copy command
+<filename> [destination] [options] File copy command (options: o=optional)
 .Define variable=[value]           Define variable to be equal to value (*)
 .Delete variable                   Delete a variable definition (*)
 .New Disk|Cabinet|Folder           Start a new disk, cabinet or folder (* -- new disk will work)
