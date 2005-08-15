@@ -3,15 +3,7 @@
 
 #define IDCARETTIMER (0xffff)
 
-BOOL FASTCALL
-UserDestroyCaret(PW32THREAD Win32Thread);
 
-BOOL FASTCALL
-UserSetCaretBlinkTime(UINT uMSeconds);
-
-
-VOID FASTCALL
-UserDrawCaret(HWND hWnd);
 
 #endif /* _WIN32K_CARET_H */
 

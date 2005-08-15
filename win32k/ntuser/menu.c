@@ -1196,12 +1196,12 @@ IntInitTracking(PWINDOW_OBJECT WindowObject, PMENU_OBJECT MenuObject, BOOL Popup
   /* FIXME - hide caret */
 
   if(!(Flags & TPM_NONOTIFY))
-    IntSendMessage(WindowObject->Self, WM_SETCURSOR, (WPARAM)WindowObject->Self, HTCAPTION);
+    IntSendMessage(WindowObject->hSelf, WM_SETCURSOR, (WPARAM)WindowObject->hSelf, HTCAPTION);
 
   /* FIXME - send WM_SETCURSOR message */
 
   if(!(Flags & TPM_NONOTIFY))
-    IntSendMessage(WindowObject->Self, WM_INITMENU, (WPARAM)MenuObject->MenuInfo.Self, 0);
+    IntSendMessage(WindowObject->hSelf, WM_INITMENU, (WPARAM)MenuObject->MenuInfo.Self, 0);
 }
 
 VOID FASTCALL
@@ -1209,7 +1209,7 @@ IntExitTracking(PWINDOW_OBJECT WindowObject, PMENU_OBJECT MenuObject, BOOL Popup
                 UINT Flags)
 {
   if(!(Flags & TPM_NONOTIFY))
-    IntSendMessage(WindowObject->Self, WM_EXITMENULOOP, 0 /* FIXME */, 0);
+    IntSendMessage(WindowObject->hSelf, WM_EXITMENULOOP, 0 /* FIXME */, 0);
 
   /* FIXME - Show caret again */
 }

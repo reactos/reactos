@@ -5,8 +5,7 @@
 
 typedef struct _W32THREAD
 {
-  struct _USER_MESSAGE_QUEUE* Queue;
-  struct _USER_THREAD_INPUT* Input;
+  USER_MESSAGE_QUEUE Queue;
   LIST_ENTRY WindowListHead;
   LIST_ENTRY W32CallbackListHead;
   struct _KBDTABLES* KeyboardLayout;

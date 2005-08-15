@@ -1,7 +1,6 @@
 #ifndef _WIN32K_MSGQUEUE_H
 #define _WIN32K_MSGQUEUE_H
 
-#include "caret.h"
 #include "hook.h"
 
 #define MSQ_HUNG        5000
@@ -54,26 +53,40 @@ typedef struct _USER_THREAD_INPUT
        int                    caret_state;   /* caret on/off state */
        struct list            msg_list;      /* list of hardware messages */
        unsigned char          keystate[256]; /* state of each key */
+       
+       typedef struct _THRDCARETINFO
+       {
+         HWND hWnd;
+         HBITMAP Bitmap;
+         POINT Pos;
+         SIZE Size;
+         BYTE Visible;
+         BYTE Showing;
+} THRDCARETINFO, *PTHRDCARETINFO;
 #endif
 
+  LONG RefCount;
   /* Current window with focus (ie. receives keyboard input) for this queue. */
-  HWND FocusWindow;
+  HWND hFocusWindow;
   /* Current capture window for this queue. */
-  HWND CaptureWindow;
+  HWND hCaptureWindow;
   /* Current active window for this queue. */
-  HWND ActiveWindow;
+  HWND hActiveWindow;
   /* Current menu owner window for this queue */
-  HWND MenuOwner;
+  HWND hMenuOwner;
   /* Current move/size window for this queue */
-  HWND MoveSize;
+  HWND hMoveSize;
  /* Caret information for this queue */
   THRDCARETINFO CaretInfo;
+  /* Desktop that the message queue is attached to */
+  struct _DESKTOP_OBJECT* Desktop;
    
 } USER_THREAD_INPUT, *PUSER_THREAD_INPUT;
 
 
 typedef struct _USER_MESSAGE_QUEUE
 {
+  PUSER_THREAD_INPUT Input;
   /* Queue of messages sent to the queue. */
   LIST_ENTRY SentMessagesListHead;
   /* Queue of messages posted to the queue. */
@@ -109,11 +122,12 @@ typedef struct _USER_MESSAGE_QUEUE
   PHOOKTABLE Hooks;
 
   /* queue state tracking */
-  WORD WakeMask;
-  WORD WakeBits;
-//  WORD QueueBits;
-  WORD ChangedBits;
-  WORD ChangedMask;
+  /* wake mask for current queue content */
+  WORD QueueMask;
+  WORD QueueBits;
+  /* wake mask for queue content changes */ 
+  WORD ChangesMask;
+  WORD ChangesBits;  
 
   /* extra message information */
   LPARAM ExtraInfo;
@@ -121,8 +135,6 @@ typedef struct _USER_MESSAGE_QUEUE
   LIST_ENTRY DispatchingMessagesHead;
   /* messages that are currently dispatched by this message queue, required for cleanup */
   LIST_ENTRY LocalDispatchingMessagesHead;
-  /* Desktop that the message queue is attached to */
-  struct _DESKTOP_OBJECT *Desktop;
   
   
 } USER_MESSAGE_QUEUE, *PUSER_MESSAGE_QUEUE;

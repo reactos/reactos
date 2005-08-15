@@ -136,7 +136,7 @@ UnregisterWindowHotKeys(PWINDOW_OBJECT Window)
 						      HOT_KEY_ITEM,
 						      ListEntry);
       Entry = Entry->Flink;
-      if (HotKeyItem->hWnd == Window->Self)
+      if (HotKeyItem->hWnd == Window->hSelf)
 	{
 	  RemoveEntryList (&HotKeyItem->ListEntry);
 	  ExFreePool (HotKeyItem);
@@ -234,7 +234,7 @@ NtUserRegisterHotKey(HWND hWnd,
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       RETURN( FALSE);
     }
-    HotKeyThread = Window->WThread->Thread;
+    HotKeyThread = QUEUE_2_WTHREAD(Window->Queue)->Thread;
   }
 
 

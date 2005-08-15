@@ -430,7 +430,7 @@ NtUserRegisterClassExWOW(
 
    DPRINT("Enter NtUserRegisterClassExWOW\n");
    UserEnterExclusive();
-   CHECKPOINT;
+
    if (!lpwcx)
    {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
@@ -507,7 +507,7 @@ UserGetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, BOOL Ansi)
 
    if ((int)Offset >= 0)
    {
-      DPRINT("GetClassLong(%x, %d)\n", WindowObject->Self, Offset);
+      DPRINT("GetClassLong(%x, %d)\n", WindowObject->hSelf, Offset);
       if ((Offset + sizeof(LONG)) > WindowObject->Class->cbClsExtra)
       {
          SetLastWin32Error(ERROR_INVALID_PARAMETER);
@@ -594,7 +594,7 @@ IntSetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, LONG dwNewLong, BOOL 
 
    if ((int)Offset >= 0)
    {
-      DPRINT("SetClassLong(%x, %d, %x)\n", WindowObject->Self, Offset, dwNewLong);
+      DPRINT("SetClassLong(%x, %d, %x)\n", WindowObject->hSelf, Offset, dwNewLong);
       if ((Offset + sizeof(LONG)) > WindowObject->Class->cbClsExtra)
       {
          SetLastWin32Error(ERROR_INVALID_PARAMETER);
@@ -625,7 +625,7 @@ IntSetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, LONG dwNewLong, BOOL 
 
          if ((!Owner) && (!Parent))
          {
-            IntShellHookNotify(HSHELL_REDRAW, (LPARAM) WindowObject->Self);
+            IntShellHookNotify(HSHELL_REDRAW, (LPARAM) WindowObject->hSelf);
          }
 
          break;

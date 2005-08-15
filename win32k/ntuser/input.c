@@ -47,7 +47,7 @@ static CLIENT_ID KeyboardThreadId;
 static HANDLE KeyboardDeviceHandle;
 static KEVENT InputThreadsStart;
 static BOOLEAN InputThreadsRunning = FALSE;
-PW32THREAD pmPrimitiveQueueW32Thread = NULL;
+PUSER_MESSAGE_QUEUE pmPrimitiveQueue = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -395,7 +395,7 @@ IntKeyboardSendWinKeyMsg()
   Mesg.lParam = 0;
 
   /* The QS_HOTKEY is just a guess */
-  MsqPostMessage(Window->WThread->Queue, &Mesg, FALSE, QS_HOTKEY);
+  MsqPostMessage(Window->Queue, &Mesg, FALSE, QS_HOTKEY);
 }
 
 STATIC VOID STDCALL
@@ -412,8 +412,8 @@ KeyboardThreadMain(PVOID StartContext)
   IO_STATUS_BLOCK Iosb;
   NTSTATUS Status;
   MSG msg;
-  PW32THREAD FocusWThread;
-  //struct _ETHREAD *FocusThread;
+  PUSER_MESSAGE_QUEUE FocusQueue;
+
   extern NTSTATUS Win32kInitWin32Thread(PETHREAD Thread);
 
 
@@ -652,31 +652,27 @@ KeyboardThreadMain(PVOID StartContext)
 
 	      /* Find the target thread whose locale is in effect */
 	      if (!IntGetScreenDC())
-           FocusWThread = W32kGetPrimitiveWThread();
+           FocusQueue = W32kGetPrimitiveQueue();
 	      else
-           FocusWThread = UserGetFocusThread();
+           FocusQueue = UserGetFocusQueue();
 
 	      /* This might cause us to lose hot keys, which are important
 	       * (ctrl-alt-del secure attention sequence). Not sure if it
 	       * can happen though.
 	       */
-         if (!FocusWThread) continue;
+         if (!FocusQueue) continue;
 
 	      msg.lParam = lParam;
-         msg.hwnd = FocusWThread->Input->FocusWindow;
+         msg.hwnd = FocusQueue->Input->hFocusWindow;
 
-//	      FocusThread = FocusQueue->Thread;
-
-//	      if (!(FocusThread && FocusThread->Tcb.Win32Thread &&
-//	            FocusThread->Tcb.Win32Thread->KeyboardLayout))
-         if (!FocusWThread->KeyboardLayout)
+         if (!QUEUE_2_WTHREAD(FocusQueue)->KeyboardLayout)
 	        continue;
 
 	      /* This function uses lParam to fill wParam according to the
 	       * keyboard layout in use.
 	       */
 	      W32kKeyProcessMessage(&msg,
-                FocusWThread->KeyboardLayout,
+                QUEUE_2_WTHREAD(FocusQueue)->KeyboardLayout,
 				    KeyInput.Flags & KEY_E0 ? 0xE0 :
 				    (KeyInput.Flags & KEY_E1 ? 0xE1 : 0));
 
@@ -732,9 +728,9 @@ CLEANUP:
 NTSTATUS FASTCALL
 UserAcquireOrReleaseInputOwnership(BOOLEAN Release)
 {
-  if (Release && InputThreadsRunning && !pmPrimitiveQueueW32Thread)
+  if (Release && InputThreadsRunning && !pmPrimitiveQueue)
     {
-      DPRINT( "Releasing input: PM = %08x\n", pmPrimitiveQueueW32Thread );
+      DPRINT( "Releasing input: PM = %08x\n", pmPrimitiveQueue );
       KeClearEvent(&InputThreadsStart);
       InputThreadsRunning = FALSE;
       NtAlertThread(KeyboardThreadHandle);
@@ -1223,4 +1219,262 @@ CLEANUP:
   END_CLEANUP;
 }
 
+
+inline PW32THREAD FASTCALL
+UserWThreadFromTid(DWORD tid)
+{
+   PETHREAD Thread;
+   
+   if (NT_SUCCESS(PsLookupThreadByThreadId((HANDLE)tid, &Thread)))
+      return Thread->Tcb.Win32Thread;//FIXME: PsGetThreadWin32Thread
+      
+   return NULL;      
+}
+
+
+inline VOID FASTCALL UserDereferenceInput(PUSER_THREAD_INPUT Input)
+{
+   if (--Input->RefCount == 0)
+   {
+      DPRINT1("free thread input 0x%x\n", Input);
+      UserFree(Input);
+   }
+}
+
+inline void UserReferenceInput(PUSER_THREAD_INPUT Input)
+{
+   Input->RefCount++;
+}
+
+
+/* create a thread input object */
+PUSER_THREAD_INPUT create_thread_input( PW32THREAD thread )
+{
+    PUSER_THREAD_INPUT Input;
+
+    //if ((input = alloc_object( &thread_input_ops )))
+    if ((Input = UserAllocZero(sizeof(USER_THREAD_INPUT))))      
+    {
+        //if (!(Input->Desktop = get_thread_desktop( thread, 0 /* FIXME: access rights */ )))
+        
+        //FIXME: hack!
+        Input->Desktop = thread->Desktop;
+#if 0        
+      //FIXME: this often fail bcause often thread->desktop is NULL
+ 
+        //FIXME: dont alloc in first place is this check is not satisfied
+        if (!(Input->Desktop = thread->Desktop))
+        {
+            UserFree( Input );
+            return NULL;
+        }
+#endif        
+        Input->RefCount=1;
+        
+//        input->focus       = 0;
+//        input->capture     = 0;
+//        input->active      = 0;
+//        input->menu_owner  = 0;
+//        input->move_size   = 0;
+//        list_init( &input->msg_list );
+//        set_caret_window( input, 0 );
+//        memset( input->keystate, 0, sizeof(input->keystate) );
+    }
+    return Input;
+}
+
+/* release the thread input data of a given thread */
+static inline void release_thread_input( PW32THREAD WThread )
+{
+    if (!WThread->Queue.Input) return;
+    UserDereferenceInput(WThread->Queue.Input);
+    WThread->Queue.Input = NULL;
+}
+
+/* attach two thread input data structures */
+BOOLEAN attach_thread_input( PW32THREAD thread_from, PW32THREAD thread_to )
+{
+    PDESKTOP_OBJECT Desktop;
+    //struct thread_input *input;
+    PUSER_THREAD_INPUT Input;
+
+   ASSERT(thread_from);
+   ASSERT(thread_to);
+
+    //if (!thread_to->queue && !(thread_to->queue = create_msg_queue( thread_to, NULL ))) return 0;
+    
+    //if (!(desktop = get_thread_desktop( thread_from, 0 ))) return 0;
+    Desktop = thread_from->Desktop;
+    
+    //input = (struct thread_input *)grab_object( thread_to->queue->input );
+    
+    if (Input->Desktop != Desktop)
+    {
+        SetLastWin32Error( STATUS_ACCESS_DENIED );
+//        UserDereferenceInput( input );
+//        ObDereferenceObject( Desktop );
+        return FALSE;
+    }
+    
+//    ObDereferenceObject( desktop );
+
+   
+//    if (thread_from->queue)
+//    {
+   release_thread_input( thread_from );
+   thread_from->Queue.Input = Input;
+   UserReferenceInput(Input);
+//    }
+//    else
+//    {
+//        if (!(thread_from->queue = create_msg_queue( thread_from, input ))) return 0;
+//    }
+    
+//    memset( input->keystate, 0, sizeof(input->keystate) );
+    return TRUE;
+}
+
+/* detach two thread input data structures */
+void detach_thread_input( PW32THREAD thread_from )
+{
+    PUSER_THREAD_INPUT Input;
+
+    if ((Input = create_thread_input( thread_from )))
+    {
+        release_thread_input( thread_from );
+        thread_from->Queue.Input = Input;
+    }
+}
+
+
+
+/*
+Because this function synchronizes input processing, you cannot use AttachThreadInput 
+to attach to the Task Manager. The Task Manager must remain unsynchronized at all times 
+in order to allow the user to bring an application to the foreground and to kill an application. 
+In addition to the Task Manager, shell and system threads cannot be attached.
+*/
+BOOLEAN
+STDCALL
+NtUserAttachThreadInput(
+  DWORD tidFrom,
+  DWORD tidTo,
+  BOOLEAN attach)
+{
+   PW32THREAD WThreadFrom, WThreadTo;
+   DECLARE_RETURN(BOOLEAN);  
+
+   DPRINT("Enter NtUserAttachThreadInput\n");
+   UserEnterExclusive();
+   
+   #if 0
+
+
+
+   /* attach two thread input data structures */
+   int attach_thread_input( struct thread *thread_from, struct thread *thread_to )
+   {
+       struct desktop *desktop;
+       struct thread_input *input;
+   
+       if (!thread_to->queue && !(thread_to->queue = create_msg_queue( thread_to, NULL ))) return 0;
+       if (!(desktop = get_thread_desktop( thread_from, 0 ))) return 0;
+       input = (struct thread_input *)grab_object( thread_to->queue->input );
+       if (input->desktop != desktop)
+       {
+           set_error( STATUS_ACCESS_DENIED );
+           release_object( input );
+           release_object( desktop );
+           return 0;
+       }
+       release_object( desktop );
+   
+       if (thread_from->queue)
+       {
+           release_thread_input( thread_from );
+           thread_from->queue->input = input;
+       }
+       else
+       {
+           if (!(thread_from->queue = create_msg_queue( thread_from, input ))) return 0;
+       }
+       memset( input->keystate, 0, sizeof(input->keystate) );
+       return 1;
+       
+       
+              struct thread *thread_from = get_thread_from_id( req->tid_from );
+              struct thread *thread_to = get_thread_from_id( req->tid_to );
+          
+              if (!thread_from || !thread_to)
+              {
+                  if (thread_from) release_object( thread_from );
+                  if (thread_to) release_object( thread_to );
+                  return;
+              }
+              if (thread_from != thread_to)
+              {
+                  if (req->attach) attach_thread_input( thread_from, thread_to );
+                  else
+                  {
+                      if (thread_from->queue && thread_to->queue &&
+                          thread_from->queue->input == thread_to->queue->input)
+                          detach_thread_input( thread_from );
+                      else
+                          set_error( STATUS_ACCESS_DENIED );
+                  }
+              }
+              else set_error( STATUS_ACCESS_DENIED );
+              release_object( thread_from );
+              release_object( thread_to );
+
+}
+#endif
+   
+   
+   
+   WThreadFrom = UserWThreadFromTid(tidFrom);
+   WThreadTo = UserWThreadFromTid(tidTo);
+
+   if (!WThreadFrom || !WThreadTo)
+   {
+      if (WThreadFrom) ObDereferenceObject( WThreadFrom->Thread );
+      if (WThreadTo) ObDereferenceObject( WThreadTo->Thread );
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      RETURN(FALSE);
+   }
+   
+   if (WThreadFrom != WThreadTo)
+   {
+      if (attach)
+      {
+         attach_thread_input( WThreadFrom, WThreadTo );
+      }
+      else
+      {
+         /* detach */
+         if (WThreadFrom->Queue.Input == WThreadTo->Queue.Input)
+         {
+            detach_thread_input( WThreadFrom );
+         }
+         else
+         {
+            SetLastWin32Error( STATUS_ACCESS_DENIED );
+         }
+      }
+   }
+   else
+   {
+      SetLastWin32Error( STATUS_ACCESS_DENIED );
+   }
+   
+   ObDereferenceObject( WThreadFrom->Thread );
+   ObDereferenceObject( WThreadTo->Thread );
+   
+   RETURN(TRUE);
+
+CLEANUP:
+   DPRINT("Leave NtUserAttachThreadInput, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;
+}
 /* EOF */

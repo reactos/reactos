@@ -53,7 +53,7 @@ typedef struct _WINDOW_OBJECT
   /* Position of the window's client area. */
   RECT ClientRect;
   /* Handle for the window. */
-  HANDLE Self;
+  HWND hSelf;
   /* Window flags. */
   ULONG Flags;
   /* Window menu handle or window id */
@@ -74,7 +74,7 @@ typedef struct _WINDOW_OBJECT
   /* Handle to the parent window. */
   struct _WINDOW_OBJECT* ParentWnd;
   /* Handle to the owner window. */
-  HANDLE Owner;
+  HWND hOwner;
   /* DC Entries (DCE) */
   PDCE Dce;
   /* Property list head.*/
@@ -86,8 +86,11 @@ typedef struct _WINDOW_OBJECT
   BOOL Unicode;
   WNDPROC WndProcA;
   WNDPROC WndProcW;
-  /* owner thread */
+  /* owner queue/thread */
+  union {
+  PUSER_MESSAGE_QUEUE Queue;
   PW32THREAD WThread;
+   };
   HWND hWndLastPopup; /* handle to last active popup window (wine doesn't use pointer, for unk. reason)*/
   PINTERNALPOS InternalPos;
   ULONG Status;
@@ -130,7 +133,7 @@ typedef struct _WINDOW_OBJECT
    (WndObj->W32Thread->Thread->Tcb.Win32Thread == W32Thread))
 #endif
 
-#define IntWndBelongsToThread(WndObj, _W32Thread) ((WndObj)->WThread == (_W32Thread))
+#define IntWndBelongsToThread(WndObj, _W32Thread) (QUEUE_2_WTHREAD((WndObj)->Queue) == (_W32Thread))
 
 
 #define IntGetWndThreadId(WndObj) \

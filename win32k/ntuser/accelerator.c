@@ -273,11 +273,11 @@ IntTranslateAccelerator(HWND hWnd,
          DPRINT("found accel for virt_key %04x (scan %04x)\n",
                 wParam, 0xff & HIWORD(lParam));
 
-         DPRINT("NtUserGetKeyState(VK_SHIFT) = 0x%x\n",
+         DPRINT("UserGetKeyState(VK_SHIFT) = 0x%x\n",
                 UserGetKeyState(VK_SHIFT));
-         DPRINT("NtUserGetKeyState(VK_CONTROL) = 0x%x\n",
+         DPRINT("UserGetKeyState(VK_CONTROL) = 0x%x\n",
                 UserGetKeyState(VK_CONTROL));
-         DPRINT("NtUserGetKeyState(VK_MENU) = 0x%x\n",
+         DPRINT("UserGetKeyState(VK_MENU) = 0x%x\n",
                 UserGetKeyState(VK_MENU));
 
          if (UserGetKeyState(VK_SHIFT) & 0x8000)

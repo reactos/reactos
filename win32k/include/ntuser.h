@@ -41,9 +41,13 @@ VOID FASTCALL UserStackTrace();
 #define UserEnterExclusive() \
 { \
   /* DPRINT1("try lock, %s, %i (%i)\n",__FILE__,__LINE__, _locked);*/ \
-   ASSERT(UserLock.Owner != KeGetCurrentThread()); \
+   if (UserLock.Owner == KeGetCurrentThread()){ \
+      DPRINT1("file %s, line %i\n",_file, _line); \
+      ASSERT(FALSE); \
+   }  \
    UUserEnterExclusive(); \
    ASSERT(InterlockedIncrement(&_locked) == 1 /*> 0*/); \
+   _file = __FILE__; _line = __LINE__; \
   /* DPRINT("got lock, %s, %i (%i)\n",__FILE__,__LINE__, _locked);*/ \
 }
 
@@ -51,7 +55,11 @@ VOID FASTCALL UserStackTrace();
 { \
    ASSERT(InterlockedDecrement(&_locked) == 0/*>= 0*/); \
    /*DPRINT("unlock, %s, %i (%i)\n",__FILE__,__LINE__, _locked);*/ \
-   ASSERT(UserLock.Owner == KeGetCurrentThread()); \
+   if (UserLock.Owner != KeGetCurrentThread()) { \
+     DPRINT1("file %s, line %i\n",_file, _line); \
+     ASSERT(FALSE); \
+   } \
+   _file = __FILE__; _line = __LINE__; \
    UUserLeave(); \
 }
  

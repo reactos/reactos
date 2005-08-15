@@ -17,16 +17,15 @@
 /* registered Logon process */
 PW32PROCESS LogonProcess = NULL;
 
-extern PW32THREAD pmPrimitiveQueueW32Thread;
+extern PUSER_MESSAGE_QUEUE pmPrimitiveQueue;
 
-VOID W32kRegisterPrimitiveWThread(VOID)
+VOID W32kRegisterPrimitiveQueue(VOID)
 {
-  if( !pmPrimitiveQueueW32Thread ) {
-    PW32THREAD pThread;
-    pThread = PsGetWin32Thread();
-    if( pThread /*&& pThread->Queue*/ ) {
-      pmPrimitiveQueueW32Thread = pThread;//->Queue;
-      ObReferenceObject(pThread->Thread);
+  if( !pmPrimitiveQueue ) {
+    PW32THREAD WThread = PsGetWin32Thread();
+    if( WThread ) {
+      pmPrimitiveQueue = &WThread->Queue;
+      ObReferenceObject(WThread->Thread);
       DPRINT( "Installed primitive input queue.\n" );
     }
   } else {
@@ -34,15 +33,15 @@ VOID W32kRegisterPrimitiveWThread(VOID)
   }
 }
 
-VOID W32kUnregisterPrimitiveWThread(VOID)
+VOID W32kUnregisterPrimitiveQueue(VOID)
 {
-  ObDereferenceObject(pmPrimitiveQueueW32Thread->Thread);
-  pmPrimitiveQueueW32Thread = NULL;
+  ObDereferenceObject(QUEUE_2_WTHREAD(pmPrimitiveQueue)->Thread);
+  pmPrimitiveQueue = NULL;
 }
 
-PW32THREAD W32kGetPrimitiveWThread()
+PUSER_MESSAGE_QUEUE W32kGetPrimitiveQueue()
 {
-  return pmPrimitiveQueueW32Thread;
+  return pmPrimitiveQueue;
 }
 
 BOOL FASTCALL
@@ -120,7 +119,7 @@ NtUserCallNoParam(DWORD Routine)
   switch(Routine)
   {
     case NOPARAM_ROUTINE_REGISTER_PRIMITIVE:
-      W32kRegisterPrimitiveWThread();
+      W32kRegisterPrimitiveQueue();
       Result = (DWORD)TRUE;
       break;
 
@@ -149,7 +148,7 @@ NtUserCallNoParam(DWORD Routine)
       break;
 
     case NOPARAM_ROUTINE_MSQCLEARWAKEMASK:
-      return (DWORD)IntMsqClearWakeMask();
+      RETURN( (DWORD)IntMsqClearWakeMask() );
 
     default:
       DPRINT1("Calling invalid routine number 0x%x in NtUserCallNoParam\n", Routine);
@@ -462,7 +461,7 @@ NtUserCallTwoParam(
 
     case TWOPARAM_ROUTINE_SETGUITHRDHANDLE:
     {
-      PUSER_THREAD_INPUT Input = UserGetCurrentInput();
+      PUSER_THREAD_INPUT Input = UserGetCurrentQueue()->Input;
 
       //ASSERT(MsgQueue);
       RETURN( (DWORD)MsqSetStateWindow(Input, (ULONG)Param1, (HWND)Param2));
@@ -1273,7 +1272,7 @@ CLEANUP:
 BOOL
 STDCALL
 NtUserGetGUIThreadInfo(
-  DWORD idThread,
+  DWORD idThread, /* if NULL use foreground thread */
   LPGUITHREADINFO lpgui)
 {
   NTSTATUS Status;
@@ -1320,11 +1319,8 @@ NtUserGetGUIThreadInfo(
     if(W32Thread)
     {
       Desktop = W32Thread->Desktop; 
-      MsgQueue = Desktop->ActiveWThread->Queue;//huh???
-      //if(MsgQueue)
-      //{
-      Thread = W32Thread->Thread;
-      //}
+      MsgQueue = Desktop->ActiveQueue;//huh???
+      Thread = QUEUE_2_WTHREAD(MsgQueue)->Thread;
     }
   }
 
@@ -1336,23 +1332,23 @@ NtUserGetGUIThreadInfo(
     RETURN( FALSE);
   }
 
-  MsgQueue = Desktop->ActiveWThread->Queue;
-  Input = Desktop->ActiveWThread->Input;
-  CaretInfo = &Desktop->ActiveWThread->Input->CaretInfo;
+  MsgQueue = Desktop->ActiveQueue;
+  Input = MsgQueue->Input;
+  CaretInfo = &Input->CaretInfo;
 
   SafeGui.flags = (CaretInfo->Visible ? GUI_CARETBLINKING : 0);
-  if(Input->MenuOwner)
+  if(Input->hMenuOwner)
     SafeGui.flags |= GUI_INMENUMODE | MsgQueue->MenuState;
-  if(Input->MoveSize)
+  if(Input->hMoveSize)
     SafeGui.flags |= GUI_INMOVESIZE;
 
   /* FIXME add flag GUI_16BITTASK */
 
-  SafeGui.hwndActive = Input->ActiveWindow;
-  SafeGui.hwndFocus = Input->FocusWindow;
-  SafeGui.hwndCapture = Input->CaptureWindow;
-  SafeGui.hwndMenuOwner = Input->MenuOwner;
-  SafeGui.hwndMoveSize = Input->MoveSize;
+  SafeGui.hwndActive = Input->hActiveWindow;
+  SafeGui.hwndFocus = Input->hFocusWindow;
+  SafeGui.hwndCapture = Input->hCaptureWindow;
+  SafeGui.hwndMenuOwner = Input->hMenuOwner;
+  SafeGui.hwndMoveSize = Input->hMoveSize;
   SafeGui.hwndCaret = CaretInfo->hWnd;
 
   SafeGui.rcCaret.left = CaretInfo->Pos.x;
@@ -1588,6 +1584,36 @@ CLEANUP:
   DPRINT("Leave NtUserUpdatePerUserSystemParameters, ret=%i\n",_ret_);
   UserLeave();
   END_CLEANUP;
+}
+
+
+
+BOOL
+STDCALL
+NtUserEnumDisplayDevices (
+  PUNICODE_STRING lpDevice, /* device name */
+  DWORD iDevNum, /* display device */
+  PDISPLAY_DEVICE lpDisplayDevice, /* device information */
+  DWORD dwFlags ) /* reserved */
+{
+  DPRINT1("NtUserEnumDisplayDevices() is UNIMPLEMENTED!\n");
+  if (lpDevice->Length == 0 && iDevNum > 0)
+  {
+    /* Only one display device present */
+    return FALSE;
+  }
+  if (lpDisplayDevice->cb < sizeof(DISPLAY_DEVICE))
+    return FALSE;
+
+  swprintf(lpDisplayDevice->DeviceName, L"\\\\.\\DISPLAY1");
+  swprintf(lpDisplayDevice->DeviceString, L"<Unknown>");
+  lpDisplayDevice->StateFlags = DISPLAY_DEVICE_ATTACHED_TO_DESKTOP
+                              | DISPLAY_DEVICE_MODESPRUNED
+                              | DISPLAY_DEVICE_PRIMARY_DEVICE
+                              | DISPLAY_DEVICE_VGA_COMPATIBLE;
+  lpDisplayDevice->DeviceID[0] = L'0';
+  lpDisplayDevice->DeviceKey[0] = L'0';
+  return TRUE;
 }
 
 /* EOF */

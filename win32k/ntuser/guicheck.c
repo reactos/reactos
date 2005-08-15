@@ -49,15 +49,15 @@ static BOOL FASTCALL
 UserAddGuiApp(PW32PROCESS W32Data)
 {
   W32Data->Flags |= W32PF_CREATEDWINORDC;
-  CHECKPOINT1;
+
   if (InterlockedIncrement(&NrGuiAppsRunning) == 1)
     {
       BOOL Initialized;
 
       ExAcquireFastMutex(&GuiSwitchLock);
-CHECKPOINT1;
+
       Initialized = UserInitializeDesktopGraphics();
-      CHECKPOINT1;
+
       ExReleaseFastMutex(&GuiSwitchLock);
 
       if (!Initialized)
@@ -89,7 +89,6 @@ UserGraphicsCheck(BOOL Create)
 {
   PW32PROCESS W32Data;
 
-CHECKPOINT1;
   W32Data = PsGetWin32Process();
   if (Create)
     {

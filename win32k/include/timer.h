@@ -7,7 +7,7 @@ typedef struct _TIMER_ENTRY{
    LIST_ENTRY     ListEntry;
    LARGE_INTEGER  ExpiryTime;
    PWINDOW_OBJECT  Wnd;
-   PW32THREAD      WThread;
+   PUSER_MESSAGE_QUEUE Queue;
    UINT_PTR       IDEvent;
    UINT           Period;
    TIMERPROC      TimerFunc;

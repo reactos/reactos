@@ -1,6 +1,9 @@
 #ifndef _WIN32K_USERFUNCS_H
 #define _WIN32K_USERFUNCS_H
 
+
+#define QUEUE_2_WTHREAD(queue) CONTAINING_RECORD(queue, W32THREAD, Queue)
+
 /*************** KEYBOARD.C ******************/
 
 DWORD FASTCALL 
@@ -31,6 +34,77 @@ IntGetProp(PWINDOW_OBJECT WindowObject, ATOM Atom);
 
 inline PDESKTOP_OBJECT FASTCALL UserGetCurrentDesktop();
 
+NTSTATUS FASTCALL
+InitDesktopImpl(VOID);
+
+NTSTATUS FASTCALL
+CleanupDesktopImpl(VOID);
+                       
+NTSTATUS STDCALL
+IntDesktopObjectCreate(PVOID ObjectBody,
+             PVOID Parent,
+             PWSTR RemainingPath,
+             struct _OBJECT_ATTRIBUTES* ObjectAttributes);
+
+VOID STDCALL
+IntDesktopObjectDelete(PVOID DeletedObject);
+
+VOID FASTCALL
+IntGetDesktopWorkArea(PDESKTOP_OBJECT Desktop, PRECT Rect);
+
+LRESULT CALLBACK
+IntDesktopWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
+HDC FASTCALL
+IntGetScreenDC(VOID);
+
+PWINDOW_OBJECT FASTCALL
+UserGetDesktopWindow (VOID);
+
+HWND FASTCALL
+IntGetCurrentThreadDesktopWindow(VOID);
+
+PUSER_MESSAGE_QUEUE FASTCALL
+UserGetFocusQueue(VOID);
+
+VOID FASTCALL
+IntSetFocusQueue(PUSER_MESSAGE_QUEUE Thread);
+
+PDESKTOP_OBJECT FASTCALL
+UserGetActiveDesktop(VOID);
+
+NTSTATUS FASTCALL
+UserShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width, ULONG Height);
+
+NTSTATUS FASTCALL
+IntHideDesktop(PDESKTOP_OBJECT Desktop);
+
+HDESK FASTCALL
+IntGetDesktopObjectHandle(PDESKTOP_OBJECT DesktopObject);
+
+NTSTATUS FASTCALL
+IntValidateDesktopHandle(
+   HDESK Desktop,
+   KPROCESSOR_MODE AccessMode,
+   ACCESS_MASK DesiredAccess,
+   PDESKTOP_OBJECT *Object);
+
+NTSTATUS FASTCALL
+IntParseDesktopPath(PEPROCESS Process,
+                    PUNICODE_STRING DesktopPath,
+                    HWINSTA *hWinSta,
+                    HDESK *hDesktop);
+
+BOOL FASTCALL
+IntDesktopUpdatePerUserSettings(BOOL bEnable);
+
+BOOL IntRegisterShellHookWindow(HWND hWnd);
+BOOL IntDeRegisterShellHookWindow(HWND hWnd);
+
+VOID IntShellHookNotify(WPARAM Message, LPARAM lParam);
+
+#define IntIsActiveDesktop(Desktop) \
+  ((Desktop)->WindowStation->ActiveDesktop == (Desktop))
 
 
 
@@ -46,11 +120,54 @@ PACCELERATOR_TABLE FASTCALL UserCreateAccelObject(HACCEL* h);
 ULONG FASTCALL 
 UserGetSystemMetrics(ULONG Index);
 
-/* input.h */
+/******************** INPUT.C ********************************/
+
+#include <internal/kbd.h>
+
+BOOLEAN attach_thread_input( PW32THREAD thread_from, PW32THREAD thread_to );
+PUSER_THREAD_INPUT create_thread_input( PW32THREAD thread );
+inline VOID FASTCALL UserDereferenceInput(PUSER_THREAD_INPUT Input);
+
+NTSTATUS FASTCALL
+InitInputImpl(VOID);
+NTSTATUS FASTCALL
+InitKeyboardImpl(VOID);
+PUSER_MESSAGE_QUEUE W32kGetPrimitiveQueue(VOID);
+VOID W32kUnregisterPrimitiveQueue(VOID);
+PKBDTABLES W32kGetDefaultKeyLayout(VOID);
+VOID FASTCALL W32kKeyProcessMessage(LPMSG Msg, PKBDTABLES KeyLayout, BYTE Prefix);
+BOOL FASTCALL IntBlockInput(PW32THREAD W32Thread, BOOL BlockIt);
+BOOL FASTCALL IntMouseInput(MOUSEINPUT *mi);
+BOOL FASTCALL IntKeyboardInput(KEYBDINPUT *ki);
+
+#define ThreadHasInputAccess(W32Thread) \
+  (TRUE)
+
 NTSTATUS FASTCALL 
 UserAcquireOrReleaseInputOwnership(BOOLEAN Release);
 
 /******************** FOCUS.C ********************************/
+
+/*
+ * These functions take the window handles from current message queue.
+ */
+PWINDOW_OBJECT FASTCALL
+UserGetCaptureWindow();
+PWINDOW_OBJECT FASTCALL
+UserGetFocusWindow();
+
+/*
+ * These functions take the window handles from current thread queue.
+ */
+PWINDOW_OBJECT FASTCALL
+UserGetThreadFocusWindow();
+
+BOOL FASTCALL
+IntMouseActivateWindow(PWINDOW_OBJECT Window);
+BOOL FASTCALL
+IntSetForegroundWindow(PWINDOW_OBJECT Window);
+PWINDOW_OBJECT FASTCALL
+IntSetActiveWindow(PWINDOW_OBJECT Window);
 
 PWINDOW_OBJECT FASTCALL
 UserGetForegroundWindow(VOID);
@@ -171,6 +288,14 @@ UserHideCaret(PWINDOW_OBJECT Wnd);
 BOOL FASTCALL
 UserSwitchCaretShowing(PTHRDCARETINFO Info);
 
+BOOL FASTCALL
+UserDestroyCaret(PW32THREAD Win32Thread);
+
+BOOL FASTCALL
+UserSetCaretBlinkTime(UINT uMSeconds);
+
+VOID FASTCALL
+UserDrawCaret(HWND hWnd);
 
 /************************* WINPOS.C ****************************/
 
@@ -265,7 +390,6 @@ MsqDestroyMessageQueue(PW32THREAD WThread);
 HWND FASTCALL
 MsqSetStateWindow(PUSER_THREAD_INPUT Input, ULONG Type, HWND hWnd);
 
-inline PUSER_THREAD_INPUT FASTCALL UserGetCurrentInput();
 
 VOID FASTCALL 
 MsqCleanupWindow(PWINDOW_OBJECT pWindow);
@@ -281,7 +405,7 @@ MsqInsertExpiredTimer(PTIMER_ENTRY Timer);
 
 PTIMER_ENTRY FASTCALL
 UserFindExpiredTimer(   
-   PW32THREAD W32Thread,
+   PUSER_MESSAGE_QUEUE MessageQueue,
    PWINDOW_OBJECT Wnd OPTIONAL, 
    UINT MsgFilterMin, 
    UINT MsgFilterMax,
@@ -407,7 +531,7 @@ BOOLEAN FASTCALL
 MsqKillTimer(PUSER_MESSAGE_QUEUE MessageQueue, HWND Wnd,
              UINT_PTR IDEvent, UINT Msg);
 BOOLEAN FASTCALL
-MsqGetTimerMessage(PW32THREAD W32Thread,
+MsqGetTimerMessage(PUSER_MESSAGE_QUEUE Queue,
                    HWND WndFilter, UINT MsgFilterMin, UINT MsgFilterMax,
                    MSG *Msg, BOOLEAN Restart);
 BOOLEAN FASTCALL
@@ -451,8 +575,7 @@ DWORD FASTCALL
 UserGetWindowDC(PWINDOW_OBJECT Wnd);
 
 /* div */
-#define UserGetCurrentQueue() \
-((PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->Queue)
+#define UserGetCurrentQueue() (&PsGetWin32Thread()->Queue)
 
 
 

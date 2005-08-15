@@ -77,7 +77,7 @@ IntMsqSetWakeMask(DWORD WakeMask) //FIXME: take queue as param?
 
    MessageQueue = UserGetCurrentQueue();
 
-   MessageQueue->WakeMask = WakeMask;
+   MessageQueue->QueueMask = WakeMask;
    MessageEventHandle = MessageQueue->NewMessagesHandle;
 
    return MessageEventHandle;
@@ -89,7 +89,7 @@ IntMsqClearWakeMask(VOID) //FIXME: take queue as param?
    PUSER_MESSAGE_QUEUE MessageQueue;
 
    MessageQueue = UserGetCurrentQueue();
-   MessageQueue->WakeMask = ~0;
+   MessageQueue->QueueMask = ~0;
 
    return TRUE;
 }
@@ -98,7 +98,7 @@ IntMsqClearWakeMask(VOID) //FIXME: take queue as param?
 inline BOOL
 MsqIsQueueSignaled(PUSER_MESSAGE_QUEUE Queue)
 {
-   return ((Queue->WakeBits & Queue->WakeMask) || (Queue->ChangedBits & Queue->ChangedMask));
+   return ((Queue->QueueBits & Queue->QueueMask) || (Queue->ChangesBits & Queue->ChangesMask));
 }
 
 /* set some queue bits */
@@ -108,10 +108,10 @@ MsqSetQueueBits(PUSER_MESSAGE_QUEUE Queue, WORD Bits )
    ASSERT(Queue);
    ASSERT(Queue->NewMessages);
    
-   DPRINT1("MsqSetQueueBits, queue %x\n", Queue);
+   DPRINT("MsqSetQueueBits, queue %x\n", Queue);
    
-   Queue->WakeBits |= Bits;
-   Queue->ChangedBits |= Bits;
+   Queue->QueueBits |= Bits;
+   Queue->ChangesBits |= Bits;
    
    if (MsqIsQueueSignaled(Queue))
       KeSetEvent(Queue->NewMessages, IO_NO_INCREMENT, FALSE);
@@ -121,8 +121,8 @@ MsqSetQueueBits(PUSER_MESSAGE_QUEUE Queue, WORD Bits )
 inline VOID
 MsqClearQueueBits(PUSER_MESSAGE_QUEUE Queue, WORD Bits )
 {
-   Queue->WakeBits &= ~Bits;
-   Queue->ChangedBits &= ~Bits;
+   Queue->QueueBits &= ~Bits;
+   Queue->ChangesBits &= ~Bits;
 }
 
 VOID FASTCALL
@@ -303,7 +303,7 @@ MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Filte
       return(FALSE);
    }
 
-   if (Window->WThread->Queue != MessageQueue)
+   if (Window->Queue != MessageQueue)
    {
       if (! FromGlobalQueue)
       {
@@ -326,28 +326,28 @@ MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Filte
 
       /* lock the destination message queue, so we don't get in trouble with other
          threads, messing with it at the same time */
-      IntLockHardwareMessageQueue(Window->WThread->Queue);
-      InsertTailList(&Window->WThread->Queue->HardwareMessagesListHead,
+      IntLockHardwareMessageQueue(Window->Queue);
+      InsertTailList(&Window->Queue->HardwareMessagesListHead,
                      &Message->ListEntry);
       if(Message->Msg.message == WM_MOUSEMOVE)
       {
-         if(Window->WThread->Queue->MouseMoveMsg)
+         if(Window->Queue->MouseMoveMsg)
          {
             /* remove the old WM_MOUSEMOVE message, we're processing a more recent
                one */
-            RemoveEntryList(&Window->WThread->Queue->MouseMoveMsg->ListEntry);
-            ExFreePool(Window->WThread->Queue->MouseMoveMsg);
+            RemoveEntryList(&Window->Queue->MouseMoveMsg->ListEntry);
+            ExFreePool(Window->Queue->MouseMoveMsg);
          }
          /* save the pointer to the WM_MOUSEMOVE message in the new queue */
-         Window->WThread->Queue->MouseMoveMsg = Message;
+         Window->Queue->MouseMoveMsg = Message;
 
-         MsqSetQueueBits(Window->WThread->Queue, QS_MOUSEMOVE);
+         MsqSetQueueBits(Window->Queue, QS_MOUSEMOVE);
       }
       else
       {
-         MsqSetQueueBits(Window->WThread->Queue, QS_MOUSEBUTTON);
+         MsqSetQueueBits(Window->Queue, QS_MOUSEBUTTON);
       }
-      IntUnLockHardwareMessageQueue(Window->WThread->Queue);
+      IntUnLockHardwareMessageQueue(Window->Queue);
 
       *Freed = FALSE;
       return(FALSE);
@@ -357,7 +357,7 @@ MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Filte
 
    *ScreenPoint = Message->Msg.pt;
 
-   if((hWnd != NULL && Window->Self != hWnd) ||
+   if((hWnd != NULL && Window->hSelf != hWnd) ||
          ((FilterLow != 0 || FilterLow != 0) && (Msg < FilterLow || Msg > FilterHigh)))
    {
       /* Reject the message because it doesn't match the filter */
@@ -367,29 +367,29 @@ MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Filte
          /* Lock the message queue so no other thread can mess with it.
             Our own message queue is not locked while fetching from the global
             queue, so we have to make sure nothing interferes! */
-         IntLockHardwareMessageQueue(Window->WThread->Queue);
+         IntLockHardwareMessageQueue(Window->Queue);
          /* if we're from the global queue, we need to add our message to our
             private queue so we don't loose it! */
-         InsertTailList(&Window->WThread->Queue->HardwareMessagesListHead,
+         InsertTailList(&Window->Queue->HardwareMessagesListHead,
                         &Message->ListEntry);
       }
 
       if (Message->Msg.message == WM_MOUSEMOVE)
       {
-         if(Window->WThread->Queue->MouseMoveMsg &&
-               (Window->WThread->Queue->MouseMoveMsg != Message))
+         if(Window->Queue->MouseMoveMsg &&
+               (Window->Queue->MouseMoveMsg != Message))
          {
             /* delete the old message */
-            RemoveEntryList(&Window->WThread->Queue->MouseMoveMsg->ListEntry);
-            ExFreePool(Window->WThread->Queue->MouseMoveMsg);
+            RemoveEntryList(&Window->Queue->MouseMoveMsg->ListEntry);
+            ExFreePool(Window->Queue->MouseMoveMsg);
          }
          /* always save a pointer to this WM_MOUSEMOVE message here because we're
             sure that the message is in the private queue */
-         Window->WThread->Queue->MouseMoveMsg = Message;
+         Window->Queue->MouseMoveMsg = Message;
       }
       if(FromGlobalQueue)
       {
-         IntUnLockHardwareMessageQueue(Window->WThread->Queue);
+         IntUnLockHardwareMessageQueue(Window->Queue);
       }
 
       *Freed = FALSE;
@@ -397,7 +397,7 @@ MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Filte
    }
 
    /* FIXME - only assign if removing? */
-   Message->Msg.hwnd = Window->Self;
+   Message->Msg.hwnd = Window->hSelf;
    Message->Msg.message = Msg;
    Message->Msg.lParam = MAKELONG(Message->Msg.pt.x, Message->Msg.pt.y);
 
@@ -411,22 +411,22 @@ MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Filte
          /* Lock the message queue so no other thread can mess with it.
             Our own message queue is not locked while fetching from the global
             queue, so we have to make sure nothing interferes! */
-         IntLockHardwareMessageQueue(Window->WThread->Queue);
-         if(Window->WThread->Queue->MouseMoveMsg)
+         IntLockHardwareMessageQueue(Window->Queue);
+         if(Window->Queue->MouseMoveMsg)
          {
             /* delete the WM_(NC)MOUSEMOVE message in the private queue, we're dealing
                with one that's been sent later */
-            RemoveEntryList(&Window->WThread->Queue->MouseMoveMsg->ListEntry);
-            ExFreePool(Window->WThread->Queue->MouseMoveMsg);
+            RemoveEntryList(&Window->Queue->MouseMoveMsg->ListEntry);
+            ExFreePool(Window->Queue->MouseMoveMsg);
             /* our message is not in the private queue so we can remove the pointer
                instead of setting it to the current message we're processing */
-            Window->WThread->Queue->MouseMoveMsg = NULL;
+            Window->Queue->MouseMoveMsg = NULL;
          }
-         IntUnLockHardwareMessageQueue(Window->WThread->Queue);
+         IntUnLockHardwareMessageQueue(Window->Queue);
       }
-      else if(Window->WThread->Queue->MouseMoveMsg == Message)
+      else if(Window->Queue->MouseMoveMsg == Message)
       {
-         Window->WThread->Queue->MouseMoveMsg = NULL;
+         Window->Queue->MouseMoveMsg = NULL;
       }
    }
 
@@ -457,7 +457,7 @@ MsqPeekHardwareMessage(
    ASSERT(Message);
 
 
-   if( !IntGetScreenDC() || PsGetWin32Thread() == W32kGetPrimitiveWThread() )
+   if( !IntGetScreenDC() || UserGetCurrentQueue() == W32kGetPrimitiveQueue() )
    {
       return FALSE;
    }
@@ -654,7 +654,7 @@ MsqPeekHardwareMessage(
 VOID FASTCALL
 MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-   PW32THREAD FocusWThread;
+   PUSER_MESSAGE_QUEUE FocusQueue;
    MSG Msg;
    LARGE_INTEGER LargeTickCount;
    KBDLLHOOKSTRUCT KbdHookData;
@@ -686,7 +686,7 @@ MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
       return;
    }
 
-   FocusWThread = UserGetFocusThread();
+   FocusQueue = UserGetFocusQueue();
 
    /*
     * FIXME: whats the point of this call???? -- Gunnar
@@ -703,29 +703,29 @@ MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
    if( !IntGetScreenDC() )
    {
       /* FIXME: What to do about Msg.pt here? */
-      if( W32kGetPrimitiveWThread() )
+      if( W32kGetPrimitiveQueue() )
       {
-         MsqPostMessage(W32kGetPrimitiveWThread()->Queue, &Msg, FALSE, QS_KEY);
+         MsqPostMessage(W32kGetPrimitiveQueue(), &Msg, FALSE, QS_KEY);
       }
    }
    else
    {
-      if (FocusWThread == NULL)
+      if (FocusQueue == NULL)
       {
          DPRINT("No focus message queue\n");
          return;
       }
 
-      if (FocusWThread->Input->FocusWindow != (HWND)0)
+      if (FocusQueue->Input->hFocusWindow != (HWND)0)
       {
-         Msg.hwnd = FocusWThread->Input->FocusWindow;
+         Msg.hwnd = FocusQueue->Input->hFocusWindow;
 //         DPRINT("Msg.hwnd = %x\n", Msg.hwnd);
 //         DPRINT("FocusMessageQueue %x\n", FocusMessageQueue);
 //         DPRINT("FocusMessageQueue->Desktop %x\n", FocusMessageQueue->Desktop);
 //         DPRINT("FocusMessageQueue->Desktop->WindowStation %x\n", FocusMessageQueue->Desktop->WindowStation);
          //FIXME: fikk crash her , inval mem 0x0000001c
-         UserGetCursorLocation(FocusWThread->Queue->Desktop->WindowStation, &Msg.pt);
-         MsqPostMessage(FocusWThread->Queue, &Msg, FALSE, QS_KEY);
+         UserGetCursorLocation(FocusQueue->Input->Desktop->WindowStation, &Msg.pt);
+         MsqPostMessage(FocusQueue, &Msg, FALSE, QS_KEY);
       }
       else
       {
@@ -752,7 +752,7 @@ MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
       return;
 
    Win32Thread = ((PETHREAD)Thread)->Tcb.Win32Thread;
-   if (Win32Thread == NULL || Win32Thread->Queue == NULL)
+   if (Win32Thread == NULL)
    {
       ObDereferenceObject ((PETHREAD)Thread);
       return;
@@ -783,7 +783,7 @@ MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
    Mesg.time = LargeTickCount.u.LowPart;
    UserGetCursorLocation(WinSta, &Mesg.pt);
    
-   MsqPostMessage(Window->WThread->Queue, &Mesg, FALSE, QS_HOTKEY);
+   MsqPostMessage(Window->Queue, &Mesg, FALSE, QS_HOTKEY);
 
    ObDereferenceObject (Thread);
 
@@ -856,7 +856,7 @@ MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
       return(FALSE);
    }
    
-   DPRINT1("Queue 0x%x\n",MessageQueue);
+   DPRINT("Queue 0x%x\n",MessageQueue);
 
    /* remove it from the list of pending messages */
    Entry = RemoveHeadList(&MessageQueue->SentMessagesListHead);
@@ -950,7 +950,7 @@ MsqCleanupWindow(PWINDOW_OBJECT Window)
 
    ASSERT(Window);
 
-   MessageQueue = Window->WThread->Queue;
+   MessageQueue = Window->Queue;
    ASSERT(MessageQueue);
    
    
@@ -961,7 +961,7 @@ MsqCleanupWindow(PWINDOW_OBJECT Window)
    /* remove the posted messages for this window */
    LIST_FOR_EACH_SAFE(TmpEntry, &MessageQueue->PostedMessagesListHead, PostedMessage, USER_MESSAGE, ListEntry)
    {
-      if (PostedMessage->Msg.hwnd == Window->Self)
+      if (PostedMessage->Msg.hwnd == Window->hSelf)
       {
          RemoveEntryList(&PostedMessage->ListEntry);
          MsqDestroyMessage(PostedMessage);
@@ -971,7 +971,7 @@ MsqCleanupWindow(PWINDOW_OBJECT Window)
    /* remove the sent messages for this window */
    LIST_FOR_EACH_SAFE(TmpEntry, &MessageQueue->SentMessagesListHead, SentMessage, USER_SENT_MESSAGE, ListEntry)
    {
-      if(SentMessage->Msg.hwnd == Window->Self)
+      if(SentMessage->Msg.hwnd == Window->hSelf)
       {
          DPRINT("Notify the sender and remove a message from the queue that had not been dispatched\n");
 
@@ -1287,7 +1287,7 @@ MsqWaitForNewMessages(
                                      FALSE,
                                      NULL,//Timeout,
                                      NULL);
-   DPRINT1("MsqWaitForNewMessages woke, ret=%i\n", Status);
+   DPRINT("MsqWaitForNewMessages woke, ret=%i\n", Status);
    UserEnterExclusive();
 
    return Status;
@@ -1321,7 +1321,7 @@ MsqInitializeMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
 //   MessageQueue->FocusWindow = NULL;
    MessageQueue->PaintPosted = FALSE;
    MessageQueue->PaintCount = 0;
-   MessageQueue->WakeMask = ~0; //FIXME!
+   MessageQueue->QueueMask = ~0; //FIXME!
    MessageQueue->NewMessagesHandle = NULL;
 
    Status = ZwCreateEvent(&MessageQueue->NewMessagesHandle, EVENT_ALL_ACCESS,
@@ -1353,6 +1353,7 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
    PUSER_MESSAGE CurrentMessage;
 //   PTIMER_ENTRY CurrentTimer;
    PUSER_SENT_MESSAGE CurrentSentMessage;
+
 
    /* cleanup posted messages */
    while (!IsListEmpty(&MessageQueue->PostedMessagesListHead))
@@ -1451,25 +1452,32 @@ MsqCreateMessageQueue(PW32THREAD WThread)
 {
    //PUSER_MESSAGE_QUEUE Queue;
 
-   WThread->Queue = UserAllocZeroTag(sizeof(USER_MESSAGE_QUEUE), TAG_MSGQ);
+   //WThread->Queue = UserAllocZeroTag(sizeof(USER_MESSAGE_QUEUE), TAG_MSGQ);
 
-   if (!WThread->Queue)
-      return FALSE;
+   //if (!WThread->Queue)
+   //   return FALSE;
+   
+   ASSERT((char*)WThread == (char*)&WThread->Queue);
    
    /* initialize the queue */
-   if (!MsqInitializeMessageQueue(WThread->Queue))
+   if (!MsqInitializeMessageQueue(&WThread->Queue))
    {
-      UserFree(WThread->Queue);
+      //UserFree(WThread->Queue);
       return FALSE;
    }
    
-   WThread->Input = UserAllocZeroTag(sizeof(USER_THREAD_INPUT), TAG_MSGQ);
-   if (!WThread->Input)
+   
+//   WThread->Queue.Input = UserAllocZeroTag(sizeof(USER_THREAD_INPUT), TAG_MSGQ);
+   if (!(WThread->Queue.Input = create_thread_input(WThread)))
    {
-      UserFree(WThread->Queue);
-      WThread->Queue = NULL;
+      DPRINT1("Failed creating input\n");
+      //UserFree(WThread->Queue);
+      //WThread->Queue = NULL;
       return FALSE;
    }
+   
+   //init input
+//   WThread->Queue.Input->RefCount = 1;
 
    return TRUE;
 }
@@ -1502,18 +1510,18 @@ MsqCreateMessageQueue(PW32THREAD WThread)
 
 /* called when the thread is destroyed */
 VOID FASTCALL
-MsqDestroyMessageQueue(PW32THREAD W32Thread)
+MsqDestroyMessageQueue(PW32THREAD WThread)
 {
-   PUSER_MESSAGE_QUEUE Queue = W32Thread->Queue;
-
+   PUSER_MESSAGE_QUEUE Queue = &WThread->Queue;
+   
    DPRINT1("Free message queue 0x%x\n", Queue);
 
    /* remove the message queue from any desktops */
    //FIXME: queue->desktop? what about thread->hDesktop?? why both?
-   if (Queue->Desktop)
+   if (Queue->Input->Desktop)
    {
-      Queue->Desktop->ActiveWThread = NULL;
-      Queue->Desktop = NULL;
+      Queue->Input->Desktop->ActiveQueue = NULL;
+      Queue->Input->Desktop = NULL;
    }
 
 
@@ -1527,11 +1535,11 @@ MsqDestroyMessageQueue(PW32THREAD W32Thread)
    //   }
 
    /* if this is the primitive message queue, deregister it */
-   if (W32Thread == W32kGetPrimitiveWThread())
-   W32kUnregisterPrimitiveWThread();
+   if (Queue == W32kGetPrimitiveQueue())
+      W32kUnregisterPrimitiveQueue();
 
    /* cleanup timers */
-   UserRemoveTimersThread(W32Thread);
+   UserRemoveTimersThread(WThread);
 
    /* clean it up */
    MsqCleanupMessageQueue(Queue);
@@ -1544,10 +1552,8 @@ MsqDestroyMessageQueue(PW32THREAD W32Thread)
    if (Queue->NewMessagesHandle != NULL)
       ZwClose(Queue->NewMessagesHandle);
 
-   ExFreePool(Queue);
-
-   W32Thread->Queue = NULL;
-   
+  
+   UserDereferenceInput(Queue->Input);
 #if 0
 
       cleanup_results( queue );
@@ -1573,11 +1579,6 @@ MsqDestroyMessageQueue(PW32THREAD W32Thread)
    
 }
 
-
-inline PUSER_THREAD_INPUT FASTCALL UserGetCurrentInput()
-{
-   return PsGetWin32Thread()->Input;
-}
 
 PHOOKTABLE FASTCALL
 MsqGetHooks(PUSER_MESSAGE_QUEUE Queue)
@@ -1631,24 +1632,24 @@ MsqSetStateWindow(PUSER_THREAD_INPUT Input, ULONG Type, HWND hWnd)
    switch(Type)
    {
       case MSQ_STATE_CAPTURE:
-         Prev = Input->CaptureWindow;
-         Input->CaptureWindow = hWnd;
+         Prev = Input->hCaptureWindow;
+         Input->hCaptureWindow = hWnd;
          return Prev;
       case MSQ_STATE_ACTIVE:
-         Prev = Input->ActiveWindow;
-         Input->ActiveWindow = hWnd;
+         Prev = Input->hActiveWindow;
+         Input->hActiveWindow = hWnd;
          return Prev;
       case MSQ_STATE_FOCUS:
-         Prev = Input->FocusWindow;
-         Input->FocusWindow = hWnd;
+         Prev = Input->hFocusWindow;
+         Input->hFocusWindow = hWnd;
          return Prev;
       case MSQ_STATE_MENUOWNER:
-         Prev = Input->MenuOwner;
-         Input->MenuOwner = hWnd;
+         Prev = Input->hMenuOwner;
+         Input->hMenuOwner = hWnd;
          return Prev;
       case MSQ_STATE_MOVESIZE:
-         Prev = Input->MoveSize;
-         Input->MoveSize = hWnd;
+         Prev = Input->hMoveSize;
+         Input->hMoveSize = hWnd;
          return Prev;
       case MSQ_STATE_CARET:
          //ASSERT(Input->CaretInfo);
@@ -1672,7 +1673,7 @@ UserMessageFilter(UINT Message, UINT FilterMin, UINT FilterMax)
 
 BOOLEAN FASTCALL
 MsqGetTimerMessage(
-   PW32THREAD W32Thread,
+   PUSER_MESSAGE_QUEUE Queue,
    HWND hWndFilter, //FIXME: NULL, INVALID_HANDLE_VALUE
    UINT MsgFilterMin, 
    UINT MsgFilterMax,
@@ -1683,7 +1684,7 @@ MsqGetTimerMessage(
    PTIMER_ENTRY Timer;
    
    Timer = UserFindExpiredTimer(
-      W32Thread, 
+      Queue, 
       GetWnd(hWndFilter), 
       MsgFilterMin, 
       MsgFilterMax,

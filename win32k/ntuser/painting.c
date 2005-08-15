@@ -82,7 +82,7 @@ STATIC VOID FASTCALL
 IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
 {
   HDC hDC;
-  HWND hWnd = Window->Self;
+  HWND hWnd = Window->hSelf;
   HRGN TempRegion;
 
   if (Flags & (RDW_ERASENOW | RDW_UPDATENOW))
@@ -101,7 +101,7 @@ IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
             }
           Window->NCUpdateRegion = NULL;
           Window->Flags &= ~WINDOWOBJECT_NEED_NCPAINT;
-          MsqDecPaintCountQueue(Window->WThread->Queue);
+          MsqDecPaintCountQueue(Window->Queue);
 //          IntUnLockWindowUpdate(Window);
           IntSendMessage(hWnd, WM_NCPAINT, (WPARAM)TempRegion, 0);
           if ((HANDLE) 1 != TempRegion && NULL != TempRegion)
@@ -386,17 +386,17 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
    if (HasPaintMessage != HadPaintMessage)
    {
       if (HadPaintMessage)
-         MsqDecPaintCountQueue(Window->WThread->Queue);
+         MsqDecPaintCountQueue(Window->Queue);
       else
-         MsqIncPaintCountQueue(Window->WThread->Queue);
+         MsqIncPaintCountQueue(Window->Queue);
    }
 
    if (HasNCPaintMessage != HadNCPaintMessage)
    {
       if (HadNCPaintMessage)
-         MsqDecPaintCountQueue(Window->WThread->Queue);
+         MsqDecPaintCountQueue(Window->Queue);
       else
-         MsqIncPaintCountQueue(Window->WThread->Queue);
+         MsqIncPaintCountQueue(Window->Queue);
    }
 
 //   IntUnLockWindowUpdate(Window);
@@ -559,7 +559,7 @@ IntFindWindowToRepaint(HWND hWnd, PW32THREAD Thread)
       if (IntIsWindowDirty(Child) &&
           IntWndBelongsToThread(Child, Thread))
       {
-         hFoundWnd = Child->Self;
+         hFoundWnd = Child->hSelf;
          break;
       }
    }
@@ -590,7 +590,7 @@ IntGetPaintMessage(HWND hWnd, UINT MsgFilterMin, UINT MsgFilterMax,
                    PW32THREAD Thread, MSG *Message, BOOL Remove)
 {
    PWINDOW_OBJECT Window;
-   PUSER_MESSAGE_QUEUE MessageQueue = Thread->Queue;
+   PUSER_MESSAGE_QUEUE MessageQueue = &Thread->Queue;
 
    if (!MessageQueue->PaintPosted)
       return FALSE;
@@ -635,7 +635,7 @@ IntFixCaret(HWND hWnd, LPRECT lprc, UINT flags)
    HWND hWndCaret;
 
    Desktop = PsGetWin32Thread()->Desktop;
-   CaretInfo = &Desktop->ActiveWThread->Input->CaretInfo;
+   CaretInfo = &Desktop->ActiveQueue->Input->CaretInfo;
    hWndCaret = CaretInfo->hWnd;
    if (hWndCaret == hWnd ||
        ((flags & SW_SCROLLCHILDREN) && UserIsChildWindow(GetWnd(hWnd), GetWnd(hWndCaret))))
@@ -683,7 +683,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
    NTSTATUS Status;
    DECLARE_RETURN(HDC);  
 
-   DPRINT1("Enter NtUserBeginPaint\n");
+   DPRINT("Enter NtUserBeginPaint\n");
    UserEnterExclusive();
   
    if (!(Window = IntGetWindowObject(hWnd)))
@@ -707,7 +707,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
       IntValidateParent(Window, Window->NCUpdateRegion);
       Window->NCUpdateRegion = NULL;
       Window->Flags &= ~WINDOWOBJECT_NEED_NCPAINT;
-      MsqDecPaintCountQueue(Window->WThread->Queue);
+      MsqDecPaintCountQueue(Window->Queue);
       IntSendMessage(hWnd, WM_NCPAINT, (WPARAM)hRgn, 0);
       if (hRgn != (HANDLE)1 && hRgn != NULL)
       {
@@ -729,7 +729,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
 //   IntLockWindowUpdate(Window);
    if (Window->UpdateRegion != NULL)
    {
-      MsqDecPaintCountQueue(Window->WThread->Queue);
+      MsqDecPaintCountQueue(Window->Queue);
       IntValidateParent(Window, Window->UpdateRegion);
       Rgn = RGNDATA_LockRgn(Window->UpdateRegion);
       if (NULL != Rgn)
@@ -751,7 +751,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
    else
    {
       if (Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
-         MsqDecPaintCountQueue(Window->WThread->Queue);
+         MsqDecPaintCountQueue(Window->Queue);
       IntGetClientRect(Window, &Ps.rcPaint);
    }
    Window->Flags &= ~WINDOWOBJECT_NEED_INTERNALPAINT;
@@ -1032,7 +1032,7 @@ NtUserRedrawWindow(HWND hWnd, CONST RECT *lprcUpdate, HRGN hrgnUpdate,
    PWINDOW_OBJECT Wnd;
    DECLARE_RETURN(BOOL);  
 
-   DPRINT1("Enter NtUserRedrawWindow\n");
+   DPRINT("Enter NtUserRedrawWindow\n");
    UserEnterExclusive();
   
    if (!hWnd)
@@ -1070,7 +1070,7 @@ NtUserRedrawWindow(HWND hWnd, CONST RECT *lprcUpdate, HRGN hrgnUpdate,
    RETURN( TRUE);
    
 CLEANUP:
-  DPRINT1("Leave NtUserRedrawWindow, ret=%i\n",_ret_);
+  DPRINT("Leave NtUserRedrawWindow, ret=%i\n",_ret_);
   UserLeave();
   END_CLEANUP;
 }

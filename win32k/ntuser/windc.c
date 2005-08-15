@@ -301,7 +301,7 @@ DceUpdateVisRgn(DCE *Dce, PWINDOW_OBJECT Window, ULONG Flags)
       {
          DcxFlags = Flags & ~(DCX_CLIPSIBLINGS | DCX_CLIPCHILDREN | DCX_WINDOW);
       }
-      hRgnVisible = DceGetVisRgn(Parent->Self, DcxFlags, Window->Self, Flags);
+      hRgnVisible = DceGetVisRgn(Parent->hSelf, DcxFlags, Window->hSelf, Flags);
       if (hRgnVisible == NULL)
       {
          hRgnVisible = NtGdiCreateRectRgn(0, 0, 0, 0);
@@ -338,7 +338,7 @@ DceUpdateVisRgn(DCE *Dce, PWINDOW_OBJECT Window, ULONG Flags)
    }
    else
    {
-      hRgnVisible = DceGetVisRgn(Window->Self, Flags, 0, 0);
+      hRgnVisible = DceGetVisRgn(Window->hSelf, Flags, 0, 0);
    }
 
 noparent:
@@ -399,7 +399,7 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
   RETURN(UserGetDCEx(Wnd, ClipRegion, Flags) );
   
 CLEANUP:
-  DPRINT1("Leave NtUserGetDCEx, ret=%i\n",_ret_);
+  DPRINT("Leave NtUserGetDCEx, ret=%i\n",_ret_);
   UserLeave();
   END_CLEANUP;
 }
@@ -802,7 +802,7 @@ DceFreeWindowDCE(PWINDOW_OBJECT Window)
   pDCE = FirstDce;
   while (pDCE)
     {
-      if (pDCE->hwndCurrent == Window->Self)
+      if (pDCE->hwndCurrent == Window->hSelf)
         {
           if (pDCE == Window->Dce) /* owned or Class DCE*/
             {
@@ -829,7 +829,7 @@ DceFreeWindowDCE(PWINDOW_OBJECT Window)
                    * We should change this to DPRINT when ReactOS is more stable
                    * (for 1.0?).
                    */
-                  DPRINT1("[%p] GetDC() without ReleaseDC()!\n", Window->Self);
+                  DPRINT1("[%p] GetDC() without ReleaseDC()!\n", Window->hSelf);
                   DceReleaseDC(pDCE);
                 }
 
@@ -875,7 +875,7 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window)
     {
       if (0 == (pDCE->DCXFlags & DCX_DCEEMPTY))
         {
-          if (Window->Self == pDCE->hwndCurrent)
+          if (Window->hSelf == pDCE->hwndCurrent)
             {
               CurrentWindow = Window;
             }
@@ -924,7 +924,7 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window)
 
           DceUpdateVisRgn(pDCE, CurrentWindow, pDCE->DCXFlags);
 
-          if (Window->Self != pDCE->hwndCurrent)
+          if (Window->hSelf != pDCE->hwndCurrent)
             {
 //              IntEngWindowChanged(CurrentWindow, WOC_RGN_CLIENT);
             }

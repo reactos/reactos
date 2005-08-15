@@ -43,12 +43,13 @@ UserDestroyCaret(PW32THREAD Win32Thread /* unused param!!!*/)
    if(!W32Thread)
       return FALSE;
 
-   IntHideCaret(&W32Thread->Input->CaretInfo);
-   W32Thread->Input->CaretInfo.Bitmap = (HBITMAP)0;
-   W32Thread->Input->CaretInfo.hWnd = (HWND)0;
-   W32Thread->Input->CaretInfo.Size.cx = W32Thread->Input->CaretInfo.Size.cy = 0;
-   W32Thread->Input->CaretInfo.Showing = 0;
-   W32Thread->Input->CaretInfo.Visible = 0;
+   IntHideCaret(&W32Thread->Queue.Input->CaretInfo);
+   RtlZeroMemory(&W32Thread->Queue.Input->CaretInfo, sizeof(THRDCARETINFO));
+//   W32Thread->Queue.Input->CaretInfo.Bitmap = (HBITMAP)0;
+//   W32Thread->Queue.Input->CaretInfo.hWnd = (HWND)0;
+//   W32Thread->Queue.Input->CaretInfo.Size.cx = W32Thread->Queue.Input->CaretInfo.Size.cy = 0;
+//   W32Thread->Queue.Input->CaretInfo.Showing = 0;
+//   W32Thread->Queue.Input->CaretInfo.Visible = 0;
    return TRUE;
 }
 
@@ -165,7 +166,7 @@ UserSetCaretPos(int X, int Y)
 {
    PUSER_THREAD_INPUT Input;
    
-   Input = UserGetCurrentInput();
+   Input = UserGetCurrentQueue()->Input;
 
    if(Input->CaretInfo.hWnd)
    {
@@ -189,7 +190,7 @@ UserSwitchCaretShowing(PTHRDCARETINFO Info)
 {
    PUSER_THREAD_INPUT Input;
 
-   Input = UserGetCurrentInput();
+   Input = UserGetCurrentQueue()->Input;
 
    if(Input->CaretInfo.hWnd)
    {
@@ -208,7 +209,7 @@ UserDrawCaret(HWND hWnd /* FIXME: Unused param?!?! */)
 {
    PUSER_THREAD_INPUT Input;
 
-   Input = UserGetCurrentInput();
+   Input = UserGetCurrentQueue()->Input;
 
    if(Input->CaretInfo.hWnd && Input->CaretInfo.Visible &&
          Input->CaretInfo.Showing)
@@ -242,13 +243,13 @@ NtUserCreateCaret(
       RETURN(FALSE);
    }
 
-   if(WindowObject->WThread != PsGetWin32Thread())
+   if(WindowObject->Queue != UserGetCurrentQueue())
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       RETURN(FALSE);
    }
 
-   Input = UserGetCurrentInput();
+   Input = UserGetCurrentQueue()->Input;
 
    if (Input->CaretInfo.Visible)
    {
@@ -309,7 +310,7 @@ NtUserGetCaretPos(
    DPRINT("Enter NtUserGetCaretPos\n");
    UserEnterExclusive();
 
-   Input = UserGetCurrentInput();
+   Input = UserGetCurrentQueue()->Input;
 
    Status = MmCopyToCaller(lpPoint, &(Input->CaretInfo.Pos), sizeof(POINT));
    if(!NT_SUCCESS(Status))
@@ -333,10 +334,10 @@ NtUserHideCaret(
    HWND hWnd)
 {
    PWINDOW_OBJECT WindowObject;
-   PUSER_THREAD_INPUT Input;
+   PUSER_MESSAGE_QUEUE Queue;
    DECLARE_RETURN(BOOL);
 
-   DPRINT1("Enter NtUserHideCaret\n");
+   DPRINT("Enter NtUserHideCaret\n");
    UserEnterExclusive();
 
    WindowObject = IntGetWindowObject(hWnd);
@@ -346,33 +347,33 @@ NtUserHideCaret(
       RETURN(FALSE);
    }
 
-   if(WindowObject->WThread != PsGetWin32Thread())
+   Queue = UserGetCurrentQueue();
+
+   if(WindowObject->Queue != Queue)
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       RETURN(FALSE);
    }
 
-   Input = UserGetCurrentInput();
-
-   if(Input->CaretInfo.hWnd != hWnd)
+   if(Queue->Input->CaretInfo.hWnd != hWnd)
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       RETURN(FALSE);
    }
 
-   if(Input->CaretInfo.Visible)
+   if(Queue->Input->CaretInfo.Visible)
    {
       UserKillTimer(WindowObject, IDCARETTIMER, TRUE);
 
-      IntHideCaret(&Input->CaretInfo);
-      Input->CaretInfo.Visible = 0;
-      Input->CaretInfo.Showing = 0;
+      IntHideCaret(&Queue->Input->CaretInfo);
+      Queue->Input->CaretInfo.Visible = 0;
+      Queue->Input->CaretInfo.Showing = 0;
    }
 
    RETURN(TRUE);
 
 CLEANUP:
-   DPRINT1("Leave NtUserHideCaret, ret=%i\n",_ret_);
+   DPRINT("Leave NtUserHideCaret, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
 }
@@ -382,32 +383,32 @@ CLEANUP:
 BOOL FASTCALL
 UserHideCaret(PWINDOW_OBJECT Wnd)
 {
-   PUSER_THREAD_INPUT Input;
-
+   PUSER_MESSAGE_QUEUE Queue;
+   
    ASSERT(Wnd);
 
-   if(Wnd->WThread != PsGetWin32Thread())
+   Queue = UserGetCurrentQueue();
+   
+   if(Wnd->Queue != Queue)
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       return(FALSE);
    }
 
-   Input = UserGetCurrentInput();
-
-   if(Input->CaretInfo.hWnd != GetHwnd(Wnd))
+   if(Queue->Input->CaretInfo.hWnd != GetHwnd(Wnd))
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       return(FALSE);
    }
 
-   if(Input->CaretInfo.Visible)
+   if(Queue->Input->CaretInfo.Visible)
    {
       UserKillTimer(Wnd, IDCARETTIMER, TRUE);
 
       //FIXME: fix IntHideCaret vs. NtHideCaret vs. UserHideCaret mess
-      IntHideCaret(&Input->CaretInfo);
-      Input->CaretInfo.Visible = 0;
-      Input->CaretInfo.Showing = 0;
+      IntHideCaret(&Queue->Input->CaretInfo);
+      Queue->Input->CaretInfo.Visible = 0;
+      Queue->Input->CaretInfo.Showing = 0;
    }
 
    return(TRUE);
@@ -445,30 +446,30 @@ CLEANUP:
 BOOL FASTCALL
 UserShowCaret(PWINDOW_OBJECT Wnd)
 {
-   PUSER_THREAD_INPUT Input;
+   PUSER_MESSAGE_QUEUE Queue;
 
    ASSERT(Wnd);
 
-   if(Wnd->WThread != PsGetWin32Thread())
+   Queue = UserGetCurrentQueue();
+
+   if(Wnd->Queue != Queue)
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       return(FALSE);
    }
 
-   Input = UserGetCurrentInput();
-
-   if(Input->CaretInfo.hWnd != GetHwnd(Wnd))
+   if(Queue->Input->CaretInfo.hWnd != GetHwnd(Wnd))
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       return(FALSE);
    }
 
-   if(!Input->CaretInfo.Visible)
+   if(!Queue->Input->CaretInfo.Visible)
    {
-      Input->CaretInfo.Visible = 1;
-      if(!Input->CaretInfo.Showing)
+      Queue->Input->CaretInfo.Visible = 1;
+      if(!Queue->Input->CaretInfo.Showing)
       {
-         IntSendMessage(Input->CaretInfo.hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
+         IntSendMessage(Queue->Input->CaretInfo.hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
       }
       UserSetTimer(Wnd, IDCARETTIMER, UserGetCaretBlinkTime(), NULL, TRUE);
    }

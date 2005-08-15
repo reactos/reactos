@@ -32,7 +32,7 @@
 
 #include <w32k.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* GLOBALS *******************************************************************/
@@ -56,6 +56,9 @@ The Windows behaviour sounds really wrong, but the Wine behaviour may
 be too restrictive. As a comprimise, i choose to bind windowless timers to the 
 process. Lets hope no app rely on killing windowless timers from a different
 process:-P
+The "system" wide bitmap is keep in place, bcause allocating a bitmap per
+process will take to much mem. CONSIDER: maybe we could have a small bitmap per
+process and grow it as we need more bits?
 
 ----------------
 
@@ -72,7 +75,6 @@ static RTL_BITMAP     WindowLessTimersBitMap;
 static PVOID          WindowLessTimersBitMapBuffer;
 static ULONG          HintIndex = 0;
 static LIST_ENTRY     gPendingTimersList;
-//static LIST_ENTRY     gExpiredTimersList;
 static KTIMER         gTimer;
 static HANDLE        MsgTimerThreadHandle;
 static CLIENT_ID     MsgTimerThreadId;
@@ -117,7 +119,7 @@ UserRemoveTimersWindow(PWINDOW_OBJECT Wnd)
 
 
    /* remove expired timers */
-   LIST_FOR_EACH_SAFE(EnumEntry, &Wnd->WThread->WProcess->ExpiredTimersList, Timer, TIMER_ENTRY, ListEntry)
+   LIST_FOR_EACH_SAFE(EnumEntry, &QUEUE_2_WTHREAD(Wnd->Queue)->WProcess->ExpiredTimersList, Timer, TIMER_ENTRY, ListEntry)
    {
       if (Timer->Wnd == Wnd)
       {
@@ -126,9 +128,9 @@ UserRemoveTimersWindow(PWINDOW_OBJECT Wnd)
          RemoveEntryList(&Timer->ListEntry);
          
          //FIXME: MsqIncTimerCount() ?
-         Timer->WThread->Queue->TimerCount--;
-         if (Timer->WThread->Queue->TimerCount == 0)
-            MsqClearQueueBits(Timer->WThread->Queue, QS_TIMER);
+         Timer->Queue->TimerCount--;
+         if (Timer->Queue->TimerCount == 0)
+            MsqClearQueueBits(Timer->Queue, QS_TIMER);
          
          UserFreeTimer(Timer);
       }
@@ -149,7 +151,7 @@ UserRemoveTimersThread(PW32THREAD WThread)
    /* remove pending timers */
    LIST_FOR_EACH_SAFE(EnumEntry, &gPendingTimersList, Timer, TIMER_ENTRY, ListEntry)
    {
-      if (Timer->WThread == WThread)
+      if (Timer->Queue == &WThread->Queue)
       {
          DPRINT("Removing timer %p because its w32thread is going away\n", Timer);
          RemoveEntryList(&Timer->ListEntry);
@@ -166,20 +168,20 @@ UserRemoveTimersThread(PW32THREAD WThread)
    /* remove expired timers */
    LIST_FOR_EACH_SAFE(EnumEntry, &WThread->WProcess->ExpiredTimersList, Timer, TIMER_ENTRY, ListEntry)
    {
-      if (Timer->WThread == WThread)
+      if (Timer->Queue == &WThread->Queue)
       {
          DPRINT("Removing timer %p because its w32thread is going away\n", Timer);
          RemoveEntryList(&Timer->ListEntry);
          
          //FIXME: MsqDecTimerCount() ?
-         Timer->WThread->Queue->TimerCount--;
+         Timer->Queue->TimerCount--;
         
          UserFreeTimer(Timer);
       }
    }
 
-   ASSERT(WThread->Queue->TimerCount == 0);
-   MsqClearQueueBits(WThread->Queue, QS_TIMER);
+   ASSERT(WThread->Queue.TimerCount == 0);
+   MsqClearQueueBits(&WThread->Queue, QS_TIMER);
 }
 
 
@@ -229,9 +231,9 @@ UserRestartTimer(PTIMER_ENTRY Timer )
 
    RemoveEntryList(&Timer->ListEntry);
    
-   Timer->WThread->Queue->TimerCount--;
-   if (Timer->WThread->Queue->TimerCount == 0)
-      MsqSetQueueBits(Timer->WThread->Queue, QS_TIMER);
+   Timer->Queue->TimerCount--;
+   if (Timer->Queue->TimerCount == 0)
+      MsqSetQueueBits(Timer->Queue, QS_TIMER);
    
    KeQuerySystemTime(&CurrentTime);
    
@@ -249,7 +251,7 @@ UserRestartTimer(PTIMER_ENTRY Timer )
  
 PTIMER_ENTRY FASTCALL
 UserFindExpiredTimer(   
-   PW32THREAD WThread,
+   PUSER_MESSAGE_QUEUE Queue,
    PWINDOW_OBJECT Wnd OPTIONAL, 
    UINT MsgFilterMin, 
    UINT MsgFilterMax,
@@ -259,11 +261,11 @@ UserFindExpiredTimer(
    PTIMER_ENTRY Timer;
    PLIST_ENTRY EnumEntry;
    
-   LIST_FOR_EACH_SAFE(EnumEntry, &WThread->WProcess->ExpiredTimersList, Timer, TIMER_ENTRY, ListEntry)
+   LIST_FOR_EACH_SAFE(EnumEntry, &QUEUE_2_WTHREAD(Queue)->WProcess->ExpiredTimersList, Timer, TIMER_ENTRY, ListEntry)
    {
       if (Wnd && Timer->Wnd != Wnd) continue;
 
-      if (Timer->WThread != WThread) continue;
+      if (Timer->Queue != Queue) continue;
       
       if (UserMessageFilter(Timer->Message, MsgFilterMin, MsgFilterMax))
       {
@@ -322,9 +324,9 @@ UserRemoveTimer(
       {
          RemoveEntryList(&Timer->ListEntry);
          
-         Timer->WThread->Queue->TimerCount--;
-         if (Timer->WThread->Queue->TimerCount == 0)
-            MsqClearQueueBits(Timer->WThread->Queue, QS_TIMER);
+         Timer->Queue->TimerCount--;
+         if (Timer->Queue->TimerCount == 0)
+            MsqClearQueueBits(Timer->Queue, QS_TIMER);
 
          return Timer;
       }
@@ -347,7 +349,7 @@ UserSetTimer(
 {
    LARGE_INTEGER CurrentTime;
    PTIMER_ENTRY MsgTimer = NULL;
-   PW32THREAD WThread;
+   PUSER_MESSAGE_QUEUE Queue;
 
    DPRINT("IntSetTimer wnd %x id %p elapse %u timerproc %p systemtimer %s\n",
           Wnd, IDEvent, Elapse, TimerFunc, SystemTimer ? "TRUE" : "FALSE");
@@ -363,7 +365,11 @@ UserSetTimer(
 
       if (IDEvent == (UINT_PTR) -1)
       {
-         //FIXME: loop to find a free id for this process
+         /* FIXME: do one of following:
+         -loop to find a free id for this process?
+         -alloc and use a standby process bitmap?
+         -grow the systemwide bitmap?
+         */
          DPRINT1("Unable to find a free window-less timer id\n");
          SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
          return 0;
@@ -371,7 +377,7 @@ UserSetTimer(
 
       HintIndex = ++IDEvent;
 
-      WThread = PsGetWin32Thread();
+      Queue = UserGetCurrentQueue();
    }
    else
    {
@@ -383,7 +389,7 @@ UserSetTimer(
       /* docs: window must be owned by current thread. but wine (and ros) check that it belongs to
       owner process.... docs are wrong? should test this...
       */
-      if (Wnd->WThread->WProcess != PsGetWin32Process())
+      if (QUEUE_2_WTHREAD(Wnd->Queue)->WProcess != PsGetWin32Process())
       {
          DPRINT1("Trying to set timer for window in another process (shatter attack?)\n");
          /* Wrong! Shatter attack has nothing to do with SetTimer. Shatter attach is posting/sending
@@ -396,7 +402,7 @@ UserSetTimer(
       
       MsgTimer = UserRemoveTimer(Wnd, IDEvent, SystemTimer?WM_SYSTIMER:WM_TIMER);
       
-      WThread = Wnd->WThread;
+      Queue = Wnd->Queue;
    }
 
 #if 1
@@ -442,7 +448,7 @@ UserSetTimer(
    MsgTimer->Message = SystemTimer ? WM_SYSTIMER : WM_TIMER;
    MsgTimer->Period = Elapse;
    MsgTimer->ExpiryTime.QuadPart = CurrentTime.QuadPart + (Elapse * 10000);
-   MsgTimer->WThread = WThread;
+   MsgTimer->Queue = Queue;
    MsgTimer->TimerFunc = TimerFunc;
    MsgTimer->IDEvent = IDEvent;
 
@@ -475,21 +481,25 @@ UserKillTimer(
 
    if (!Wnd)
    {
-      BOOL killedOne;
+      BOOL removedOne;
       
-      killedOne = UserRemoveTimer(NULL, IDEvent, SystemTimer ? WM_SYSTIMER : WM_TIMER) != NULL;  
+      removedOne = UserRemoveTimer(NULL, IDEvent, SystemTimer ? WM_SYSTIMER : WM_TIMER) != NULL;  
       
-      if (killedOne)
+      if (removedOne)
       {
          ASSERT(RtlAreBitsSet(&WindowLessTimersBitMap, IDEvent - 1, 1));
          RtlClearBits(&WindowLessTimersBitMap, IDEvent - 1, 1);
       }
+      else if (RtlAreBitsSet(&WindowLessTimersBitMap, IDEvent - 1, 1))
+      {
+         DPRINT1("windowless timer with id %i exist, but we couldnt kill it (probably bcause we have windowless timers per process and not per winsta/Session)\n",IDEvent);
+      }
       
-      return killedOne;
+      return removedOne;
    }
    else
    {
-      if (Wnd->WThread->WProcess != PsGetWin32Process())
+      if (QUEUE_2_WTHREAD(Wnd->Queue)->WProcess != PsGetWin32Process())
       {
          SetLastWin32Error(ERROR_ACCESS_DENIED);
          return FALSE;
@@ -715,15 +725,15 @@ TimerThreadMain(PVOID StartContext)
          if (CurrentTime.QuadPart >= Timer->ExpiryTime.QuadPart)
          {
             
-            DPRINT1("Timer expired: id=%i, elapse=%i, wnd=0x%x, wthread=0x%x\n",Timer->IDEvent, Timer->Period, 
-               Timer->Wnd, Timer->WThread);
+            DPRINT("Timer expired: id=%i, elapse=%i, wnd=0x%x, Queue=0x%x\n",Timer->IDEvent, Timer->Period, 
+               Timer->Wnd, Timer->Queue);
             
             RemoveEntryList(&Timer->ListEntry);
             
-            InsertTailList(&Timer->WThread->WProcess->ExpiredTimersList, &Timer->ListEntry);
+            InsertTailList(&QUEUE_2_WTHREAD(Timer->Queue)->WProcess->ExpiredTimersList, &Timer->ListEntry);
             
-            Timer->WThread->Queue->TimerCount++;
-            MsqSetQueueBits(Timer->WThread->Queue, QS_TIMER);
+            Timer->Queue->TimerCount++;
+            MsqSetQueueBits(Timer->Queue, QS_TIMER);
 
             continue;
          }

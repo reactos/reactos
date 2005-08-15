@@ -342,12 +342,12 @@ BOOL FASTCALL
 UserInitializeDesktopGraphics(VOID)
 {
   UNICODE_STRING DriverName;
-CHECKPOINT1;
+
   if (! IntCreatePrimarySurface())
     {
       return FALSE;
     }
-    CHECKPOINT1;
+
   RtlInitUnicodeString(&DriverName, L"DISPLAY");
   ScreenDeviceContext = IntGdiCreateDC(&DriverName, NULL, NULL, NULL, FALSE, TRUE);
   if (NULL == ScreenDeviceContext)
@@ -355,14 +355,13 @@ CHECKPOINT1;
       IntDestroyPrimarySurface();
       return FALSE;
     }
-    CHECKPOINT1;
+
   DC_SetOwnership(ScreenDeviceContext, NULL);
-  CHECKPOINT1;
+
   UserAcquireOrReleaseInputOwnership(FALSE);
   /* Setup the cursor */
-  CHECKPOINT1;
   IntLoadDefaultCursors();
-CHECKPOINT1;
+
   return TRUE;
 }
 

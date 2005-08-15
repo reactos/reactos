@@ -118,7 +118,7 @@ WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
 
   if (!Window || IntIsDesktopWindow(Window))
   {
-    IntSetFocusThread(NULL);
+    IntSetFocusQueue(NULL);
     return;
   }
 
@@ -155,7 +155,7 @@ WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
 //((        IntReleaseWindowObject(Old);
       break;
     }
-    Wnd = IntGetWindowObject(Old->NextSibling->Self);
+    Wnd = IntGetWindowObject(Old->NextSibling->hSelf);
 //    IntUnLockRelatives(Old);
 //    if (Old != Window)
 //      IntReleaseWindowObject(Old);
@@ -167,7 +167,7 @@ WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
 done:
 //  Fg = NtUserGetForegroundWindow();
   Fg = GetHwnd(UserGetForegroundWindow());
-  if (Wnd && (!Fg || Window->Self == Fg))
+  if (Wnd && (!Fg || Window->hSelf == Fg))
   {
     if (IntSetForegroundWindow(Wnd))
     {
@@ -254,7 +254,7 @@ WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, POINT *pt, PRECT RestoreRect)
       WindowObject->InternalPos = ExAllocatePoolWithTag(PagedPool, sizeof(INTERNALPOS), TAG_WININTLIST);
       if(!WindowObject->InternalPos)
       {
-        DPRINT1("Failed to allocate INTERNALPOS structure for window 0x%x\n", WindowObject->Self);
+        DPRINT1("Failed to allocate INTERNALPOS structure for window 0x%x\n", WindowObject->hSelf);
         return NULL;
       }
       WindowObject->InternalPos->NormalRect = WindowObject->WindowRect;
@@ -295,7 +295,7 @@ WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos)
     {
       if (WindowObject->Style & WS_MINIMIZE)
 	{
-	  if (!IntSendMessage(WindowObject->Self, WM_QUERYOPEN, 0, 0))
+	  if (!IntSendMessage(WindowObject->hSelf, WM_QUERYOPEN, 0, 0))
 	    {
 	      return(SWP_NOSIZE | SWP_NOMOVE);
 	    }
@@ -391,7 +391,7 @@ WinPosFillMinMaxInfoStruct(PWINDOW_OBJECT Window, MINMAXINFO *Info)
   UINT XInc, YInc;
   RECT WorkArea;
   PDESKTOP_OBJECT Desktop = PsGetWin32Thread()->Desktop; /* Or rather get it from the window? */
-CHECKPOINT1;
+
   IntGetDesktopWorkArea(Desktop, &WorkArea);
 
   DPRINT1("WinPosFillMinMaxInfoStruct, wnd=0x%x, Info=0x%x\n", Window,Info);
@@ -405,11 +405,11 @@ CHECKPOINT1;
   Info->ptMinTrackSize.y = UserGetSystemMetrics(SM_CYMINTRACK);
   Info->ptMaxTrackSize.x = Info->ptMaxSize.x;
   Info->ptMaxTrackSize.y = Info->ptMaxSize.y;
-CHECKPOINT1;
+
   IntGetWindowBorderMeasures(Window, &XInc, &YInc);
   Info->ptMaxSize.x += 2 * XInc;
   Info->ptMaxSize.y += 2 * YInc;
-CHECKPOINT1;
+
   if (Window->InternalPos != NULL)
     {
       Info->ptMaxPosition = Window->InternalPos->MaxPos;
@@ -429,11 +429,11 @@ WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
    ASSERT(Window);
    
   MINMAXINFO MinMax;
-CHECKPOINT1;
+
   WinPosFillMinMaxInfoStruct(Window, &MinMax);
-CHECKPOINT1;
-  IntSendMessage(Window->Self, WM_GETMINMAXINFO, 0, (LPARAM)&MinMax);
-CHECKPOINT1;
+
+  IntSendMessage(Window->hSelf, WM_GETMINMAXINFO, 0, (LPARAM)&MinMax);
+
   MinMax.ptMaxTrackSize.x = max(MinMax.ptMaxTrackSize.x,
 				MinMax.ptMinTrackSize.x);
   MinMax.ptMaxTrackSize.y = max(MinMax.ptMaxTrackSize.y,
@@ -513,7 +513,7 @@ WinPosDoNCCALCSize(PWINDOW_OBJECT Window, PWINDOWPOS WinPos,
       params.lppos = &winposCopy;
       winposCopy = *WinPos;
 
-      wvrFlags = IntSendMessage(Window->Self, WM_NCCALCSIZE, TRUE, (LPARAM) &params);
+      wvrFlags = IntSendMessage(Window->hSelf, WM_NCCALCSIZE, TRUE, (LPARAM) &params);
 
       /* If the application send back garbage, ignore it */
       if (params.rgrc[0].left <= params.rgrc[0].right &&
@@ -567,7 +567,7 @@ WinPosDoWinPosChanging(PWINDOW_OBJECT WindowObject,
 
   if (!(WinPos->flags & SWP_NOSENDCHANGING))
     {
-      IntSendMessage(WindowObject->Self, WM_WINDOWPOSCHANGING, 0, (LPARAM) WinPos);
+      IntSendMessage(WindowObject->hSelf, WM_WINDOWPOSCHANGING, 0, (LPARAM) WinPos);
     }
 
   *WindowRect = WindowObject->WindowRect;
@@ -749,7 +749,7 @@ WinPosFixupFlags(WINDOWPOS *WinPos, PWINDOW_OBJECT Window)
 
    //FIXME
    tmp = UserGetForegroundWindow();
-   if (WinPos->hwnd == (tmp ? tmp->Self : 0))
+   if (WinPos->hwnd == (tmp ? tmp->hSelf : 0))
    {
       WinPos->flags |= SWP_NOACTIVATE;   /* Already active */
    }
@@ -1443,9 +1443,9 @@ WinPosSearchChildren(
             break;
          }
 
-         if (OnlyHitTests && (Current->WThread->Queue == OnlyHitTests))
+         if (OnlyHitTests && (Current->Queue == OnlyHitTests))
          {
-            *HitTest = IntSendMessage(Current->Self, WM_NCHITTEST, 0,
+            *HitTest = IntSendMessage(Current->hSelf, WM_NCHITTEST, 0,
                                       MAKELONG(Point->x, Point->y));
             if ((*HitTest) == (USHORT)HTTRANSPARENT)
                continue;

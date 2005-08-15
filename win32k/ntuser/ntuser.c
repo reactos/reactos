@@ -37,8 +37,8 @@
 //ERESOURCE UserLock;
 FAST_MUTEX UserLock;
 
-//char* _file;
-//DWORD _line;
+char* _file;
+DWORD _line;
 DWORD _locked=0;
 
 /* FUNCTIONS **********************************************************/

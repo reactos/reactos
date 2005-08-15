@@ -427,8 +427,8 @@ IntGetDesktopObjectHandle(PDESKTOP_OBJECT DesktopObject)
    return Ret;
 }
 
-PW32THREAD FASTCALL
-UserGetFocusThread(VOID)
+PUSER_MESSAGE_QUEUE FASTCALL
+UserGetFocusQueue(VOID)
 {
    PDESKTOP_OBJECT pdo = UserGetActiveDesktop();
    if (!pdo)
@@ -436,43 +436,41 @@ UserGetFocusThread(VOID)
       DPRINT("No active desktop\n");
       return(NULL);
    }
-   return pdo->ActiveWThread;
+   return pdo->ActiveQueue;
 }
 
 VOID FASTCALL
-IntSetFocusThread(PW32THREAD NewThread)
+IntSetFocusQueue(PUSER_MESSAGE_QUEUE NewQueue)
 {
-   PW32THREAD Old;
+   PUSER_MESSAGE_QUEUE OldQueue;
    PDESKTOP_OBJECT pdo = UserGetActiveDesktop();
    if (!pdo)
    {
       DPRINT("No active desktop\n");
       return;
    }
-   if(NewThread)
+   if(NewQueue)
    {
       //FIXME: move to thread?
-      if(NewThread->Queue->Desktop != NULL)
+      if(NewQueue->Input->Desktop != NULL)
       {
          DPRINT("Message Queue already attached to another desktop!\n");
          return;
       }
       
       //IntReferenceMessageQueue(NewQueue);
-      //InterlockedExchange((LONG*)&NewQueue->Desktop, (LONG)pdo);
       
       //FIXME: move to thread?
-      NewThread->Queue->Desktop = pdo;
+      NewQueue->Input->Desktop = pdo;
       
    }
    
-//   Old = (PUSER_MESSAGE_QUEUE)InterlockedExchange((LONG*)&pdo->ActiveMessageQueue, (LONG)NewQueue);
-   Old = pdo->ActiveWThread;
+   OldQueue = pdo->ActiveQueue;
    
-   if (Old)
-      Old->Queue->Desktop = NULL;
+   if (OldQueue)
+      OldQueue->Input->Desktop = NULL;
    
-   pdo->ActiveWThread = NewThread;
+   pdo->ActiveQueue = NewQueue;
    
 //   if(Old != NULL)
 //   {
@@ -870,7 +868,7 @@ NtUserCreateDesktop(
    IntGetDesktopWorkArea(DesktopObject, NULL);
 
    /* Initialize some local (to win32k) desktop state. */
-   DesktopObject->ActiveWThread = NULL;
+   DesktopObject->ActiveQueue = NULL;
 
    Status = ObInsertObject(
                (PVOID)DesktopObject,

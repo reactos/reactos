@@ -451,7 +451,7 @@ IntCreateScrollBars(PWINDOW_OBJECT Window)
   Size = 3 * (sizeof(WINDOW_SCROLLINFO));
   if(!(Window->Scroll = ExAllocatePoolWithTag(PagedPool, Size, TAG_SBARINFO)))
   {
-    DPRINT1("Unable to allocate memory for scrollbar information for window 0x%x\n", Window->Self);
+    DPRINT1("Unable to allocate memory for scrollbar information for window 0x%x\n", Window->hSelf);
     return FALSE;
   }
 

@@ -24,17 +24,7 @@ NtUserActivateKeyboardLayout(
   return 0;
 }
 
-DWORD
-STDCALL
-NtUserAttachThreadInput(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2)
-{
-  UNIMPLEMENTED
 
-  return 0;
-}
 
 DWORD
 STDCALL
@@ -219,33 +209,6 @@ NtUserDrawCaptionTemp(
   return 0;
 }
 
-BOOL
-STDCALL
-NtUserEnumDisplayDevices (
-  PUNICODE_STRING lpDevice, /* device name */
-  DWORD iDevNum, /* display device */
-  PDISPLAY_DEVICE lpDisplayDevice, /* device information */
-  DWORD dwFlags ) /* reserved */
-{
-  DPRINT1("NtUserEnumDisplayDevices() is UNIMPLEMENTED!\n");
-  if (lpDevice->Length == 0 && iDevNum > 0)
-  {
-  	 /* Only one display device present */
-    return FALSE;
-  }
-  if (lpDisplayDevice->cb < sizeof(DISPLAY_DEVICE))
-    return FALSE;
-
-  swprintf(lpDisplayDevice->DeviceName, L"\\\\.\\DISPLAY1");
-  swprintf(lpDisplayDevice->DeviceString, L"<Unknown>");
-  lpDisplayDevice->StateFlags = DISPLAY_DEVICE_ATTACHED_TO_DESKTOP
-                              | DISPLAY_DEVICE_MODESPRUNED
-                              | DISPLAY_DEVICE_PRIMARY_DEVICE
-                              | DISPLAY_DEVICE_VGA_COMPATIBLE;
-  lpDisplayDevice->DeviceID[0] = L'0';
-  lpDisplayDevice->DeviceKey[0] = L'0';
-  return TRUE;
-}
 
 DWORD
 STDCALL
