@@ -815,7 +815,7 @@ IoRegisterDeviceInterface(
       RtlAppendUnicodeToString(SymbolicLinkName, L"\\");
       RtlAppendUnicodeStringToString(SymbolicLinkName, ReferenceString);
    }
-   SymbolicLinkName->Buffer[SymbolicLinkName->Length] = '\0';
+   SymbolicLinkName->Buffer[SymbolicLinkName->Length/sizeof(WCHAR)] = L'\0';
 
    /* Create symbolic link */
    DPRINT("IoRegisterDeviceInterface(): creating symbolic link %wZ -> %wZ\n", SymbolicLinkName, &PdoNameInfo->Name);
