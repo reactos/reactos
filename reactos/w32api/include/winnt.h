@@ -190,6 +190,7 @@ typedef DWORD FLONG;
 #define CONTAINER_INHERIT_ACE	2
 #define NO_PROPAGATE_INHERIT_ACE	4
 #define INHERIT_ONLY_ACE	8
+#define INHERITED_ACE	10
 #define VALID_INHERIT_FLAGS	16
 #define SUCCESSFUL_ACCESS_ACE_FLAG	64
 #define FAILED_ACCESS_ACE_FLAG	128
@@ -3491,6 +3492,12 @@ RtlCompareMemory (
 #define RtlCopyMemory memcpy
 #define RtlFillMemory(d,l,f) memset((d), (f), (l))
 #define RtlZeroMemory(d,l) RtlFillMemory((d),(l),0)
+
+typedef struct _OBJECT_TYPE_LIST {
+    WORD   Level;
+    WORD   Sbz;
+    GUID *ObjectType;
+} OBJECT_TYPE_LIST, *POBJECT_TYPE_LIST;
 
 #if defined(__GNUC__)
 

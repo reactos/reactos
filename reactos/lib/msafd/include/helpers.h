@@ -7,7 +7,7 @@
 #ifndef __HELPERS_H
 #define __HELPERS_H
 
-#include <msafd.h>
+//#include <msafd.h>
 
 typedef struct _HELPER_DATA {
     LIST_ENTRY						Helpers;

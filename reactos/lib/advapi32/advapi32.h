@@ -13,10 +13,12 @@
 
 /* PSDK/NDK Headers */
 #include <windows.h>
-#include <ntsecapi.h>
 #include <accctrl.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
+
+/* this has to go after the NDK when being used with the NDK */
+#include <ntsecapi.h>
 
 #ifndef HAS_FN_PROGRESSW
 #define FN_PROGRESSW FN_PROGRESS

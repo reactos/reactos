@@ -28,7 +28,6 @@
 #define __WINLOGON_MAIN_H__
 
 #include <windows.h>
-#include <ntsecapi.h>
 #include <userenv.h>
 #include <winwlx.h>
 #define NTOS_MODE_USER

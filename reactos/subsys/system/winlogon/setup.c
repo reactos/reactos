@@ -28,7 +28,6 @@
 
 #include <windows.h>
 #include <stdio.h>
-#include <ntsecapi.h>
 #include <wchar.h>
 
 #include "setup.h"

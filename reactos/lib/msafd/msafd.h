@@ -7,18 +7,20 @@
 #ifndef __MSAFD_H
 #define __MSAFD_H
 
-#include <roscfg.h>
+#include <stdio.h>
+
 #include <stdlib.h>
 #include <windows.h>
-#include <wsahelp.h>
 #include <winsock2.h>
 #include <ws2spi.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
+
+/* This includes ntsecapi.h so it needs to come after the NDK */
+#include <wsahelp.h>
 #include <ddk/tdi.h>
 #include <afd/shared.h>
 #include <helpers.h>
-#define NTOS_MODE_USER
-#include <ndk/ntndk.h>
-#include <debug.h>
 
 extern HANDLE GlobalHeap;
 extern WSPUPCALLTABLE Upcalls;

@@ -35,6 +35,7 @@
 #include "winerror.h"
 #include "ntstatus.h"
 #include "winreg.h"
+#include "winternl.h"
 #include "ntsecapi.h"
 #include "netbios.h"
 #include "wine/debug.h"
