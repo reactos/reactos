@@ -46,12 +46,12 @@ NtUserAlterWindowStyle(
   DWORD Unknown1,
   DWORD Unknown2);
 
-DWORD
+BOOLEAN
 STDCALL
 NtUserAttachThreadInput(
-  DWORD Unknown0,
-  DWORD Unknown1,
-  DWORD Unknown2);
+  DWORD tidFrom,
+  DWORD tidTo,
+  BOOLEAN attach);
 
 HDC STDCALL
 NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* lPs);
