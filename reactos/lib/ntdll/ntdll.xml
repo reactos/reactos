@@ -17,6 +17,7 @@
 		<file>capture.c</file>
 		<file>lpc.c</file>
 		<file>probe.c</file>
+		<file>srv.c</file>
 		<file>thread.c</file>
 	</directory>
 	<directory name="dbg">

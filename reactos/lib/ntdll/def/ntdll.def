@@ -16,6 +16,7 @@ CsrCaptureTimeout@8
 CsrClientCallServer@16
 CsrClientConnectToServer@24
 CsrFreeCaptureBuffer@4
+CsrGetProcessId@0
 CsrIdentifyAlertableThread@0
 CsrNewThread@0
 CsrProbeForRead@12
