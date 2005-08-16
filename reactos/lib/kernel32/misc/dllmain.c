@@ -26,6 +26,7 @@ HMODULE hCurrentModule = NULL;
 HANDLE hBaseDir = NULL;
 
 static BOOL DllInitialized = FALSE;
+static BOOL ConsoleInitialized = FALSE;
 
 BOOL STDCALL
 DllMain(HANDLE hInst,
@@ -141,6 +142,7 @@ BasepInitConsole(VOID)
     }
 
     /* Initialize Console Ctrl Handler */
+    ConsoleInitialized = TRUE;
     RtlInitializeCriticalSection(&ConsoleLock);
     SetConsoleCtrlHandler(DefaultConsoleCtrlHandler, TRUE);
 
@@ -289,7 +291,10 @@ DllMain(HANDLE hDll,
             NlsUninit();
 
 	    /* Delete DLL critical section */
-	    RtlDeleteCriticalSection (&ConsoleLock);
+	    if (ConsoleInitialized == TRUE)
+	      {
+	        RtlDeleteCriticalSection (&ConsoleLock);
+	      }
 	    RtlDeleteCriticalSection (&DllLock);
 
 	    /* Close object base directory */
