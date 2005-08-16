@@ -109,8 +109,8 @@ CsrClientConnectToServer(PWSTR ObjectDirectory,
                          ULONG ContextLength,
                          PBOOLEAN ServerToServerCall)
 {
-   NTSTATUS Status;
-   UNICODE_STRING PortName = RTL_CONSTANT_STRING(L"\\Windows\\ApiPort");
+   NTSTATUS Status = STATUS_SUCCESS;
+   UNICODE_STRING PortName;
    ULONG ConnectInfoLength;
    CSR_API_MESSAGE Request;
    PORT_VIEW LpcWrite;
@@ -121,6 +121,13 @@ CsrClientConnectToServer(PWSTR ObjectDirectory,
      {
        return STATUS_SUCCESS;
      }
+
+   if (NULL == ObjectDirectory)
+   {
+	   return STATUS_INVALID_PARAMETER;
+   }
+
+   RtlInitUnicodeString (& PortName, ObjectDirectory);
 
    CsrSectionViewSize.QuadPart = CSR_CSRSS_SECTION_SIZE;
    Status = NtCreateSection(&CsrSectionHandle,

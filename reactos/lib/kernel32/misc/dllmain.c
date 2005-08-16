@@ -218,7 +218,7 @@ DllMain(HANDLE hDll,
 	/*
 	 * Connect to the csrss server
 	 */
-	Status = CsrClientConnectToServer(NULL,
+	Status = CsrClientConnectToServer(L"\\Windows\\ApiPort",
                                       0,
                                       NULL,
                                       NULL,

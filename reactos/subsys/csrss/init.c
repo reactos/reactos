@@ -458,7 +458,8 @@ CsrpApiRegisterDef (ULONG argc, PWSTR* argv)
 static NTSTATUS
 CsrpCCTS (ULONG argc, PWSTR* argv)
 {
-	return CsrClientConnectToServer(NULL, 0, NULL, NULL, 0, NULL);
+	return CsrClientConnectToServer(L"\\Windows\\ApiPort",
+			0, NULL, NULL, 0, NULL);
 }
 
 /**********************************************************************
