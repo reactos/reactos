@@ -23,11 +23,6 @@
 #ifndef __PRNTFONT_H
 #define __PRNTFONT_H
 
-#ifndef TAG
-#define TAG(_a, _b, _c, _d) (ULONG) \
-	(((_a) << 0) + ((_b) << 8) + ((_c) << 16) + ((_d) << 24))
-#endif
-
 #define UNIFM_VERSION_1_0		0x10000
 #define UNI_GLYPHSETDATA_VERSION_1_0	0x10000
 

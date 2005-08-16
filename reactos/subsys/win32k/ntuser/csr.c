@@ -54,7 +54,7 @@ CsrNotify(PCSR_API_MESSAGE Request)
       return STATUS_INVALID_PORT_HANDLE;
     }
 
-  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
 
   /* Switch to the process in which the WindowsApiPort handle is valid */

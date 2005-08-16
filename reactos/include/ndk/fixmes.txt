@@ -33,8 +33,45 @@ List:
 	Priority 4:
 	- FIXED: Kernel and Memory Types are not architecture-specific (Eric) [ketypes.h, mmtypes.h]
 	- FIXED: Win32K Builds with windows.h (Filip) [extypes.h, ketypes.h]
+	- Move out stuff from umtypes.h into the actual header where they should go. Use ifdeffing
+	  directly in that file to protect user-mode versus kernel-mode types. umtypes.h will only
+	  end up containing the misc types that are needed for compatibility. This would create a
+	  significant cleanup.
 
 	Priority 5:
-	- LPC Types are totally wrong. [lpctypes.h]
+	- FIXED: LPC Types are totally wrong. (Alex) [lpctypes.h]
 	- Missing System Info Classes [zwtypes.h]
 	- FIXED: Process Priority Classes are messed up (Alex) [pstypes.h]
+	
+Generic Note:
+	One of the most difficult things is when certain structures require the IFS for some of their
+	members. Up until some time ago, the IFS was 1000$, so it was senseless to require it in order
+	to allow people to use the NDK. Recently, however, the IFS price went down to 100$. This is 
+	still way too much. Even though the GNU NTIFS.H exists, I don't want to fallback on it. The
+	good news is that the WDK (Windows Driver Kit), which will supplant the DDK in about a year,
+	includes the IFS. At that point we can remove all the #ifndef/ifdef NTIFS hacks, since it'll
+	be OK to "force" IFS usage.
+	
+	UPDATE:
+	However, I'm giving serious consideration of making the IFS a requirement, and suggesting
+	usage of the GNU IFS for anyone that needs it. The problem, however, is that the official
+	GNU IFS is outdated and quite invalid in many ways, compared to the ReactOS IFS (which still
+	isn't perfect yet). Also, this would include many more definitions then needed. A third
+	option that I'm considering is creating a new header, until the WDK is out, which will be 
+	called ifstypes. It would be the brother of umtypes, but for kernel mode. Only a small
+	number of types will need to be included, and hence they will be easy to locate in case
+	the official ones change (by the time they do, the WDK will be out however, so no worries).
+	It would reduce all the ifdeffing to a single file.
+	
+	UPDATE2:
+	No. This is a bad idea. I've just added a note to purge out large parts of umtypes.h into the
+	actual xxtypes.h files, and then use iffdefing. This is a direct contradiction to my idea of
+	generalizing all the IFS stuff together.
+	
+	UPDATE3:
+	No. This is different...the user-mode types will always be unavailable in kernel-mode, and 
+	dissipating them into the real files is a good thing, because they will never move out and
+	they are much easier to maintain. However, once the WDK comes out, all #ifdef ntifs will
+	become obsolete, and they will have to be hunted down and removed. Having a single file that
+	is automatically added if the IFS is not detected is much easier to remove once the time
+	comes.

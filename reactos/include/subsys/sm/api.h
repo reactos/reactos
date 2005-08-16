@@ -112,7 +112,7 @@ typedef union _SM_PORT_MESSAGE
   /*** LPC common header ***/
   PORT_MESSAGE Header;
   struct {
-    UCHAR LpcHeader[LPC_MESSAGE_BASE_SIZE];
+    UCHAR LpcHeader[sizeof(PORT_MESSAGE)];
     /*** SM common header ***/
     struct {
       DWORD       ApiIndex;

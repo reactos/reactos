@@ -88,7 +88,6 @@ typedef struct _QUEUEDMESSAGE
   PEPORT		Sender;
   LIST_ENTRY	QueueListEntry;
   PORT_MESSAGE	Message;
-  UCHAR		MessageData [MAX_MESSAGE_DATA];
 } QUEUEDMESSAGE,  *PQUEUEDMESSAGE;
 
 typedef struct _LPC_DBG_MESSAGE

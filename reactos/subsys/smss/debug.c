@@ -40,12 +40,12 @@ static VOID STDCALL
 DbgSsApiPortThread (PVOID dummy)
 {
 	NTSTATUS Status = STATUS_SUCCESS;
-	LPC_MAX_MESSAGE	Request ;
+	PORT_MESSAGE	Request ;
     
-    RtlZeroMemory(&Request, sizeof(LPC_MAX_MESSAGE));
+    RtlZeroMemory(&Request, sizeof(PORT_MESSAGE));
 	while (TRUE)
 	{
-		Status = NtListenPort (DbgSsApiPort, & Request.Header);
+		Status = NtListenPort (DbgSsApiPort, & Request);
 		if (!NT_SUCCESS(Status))
 		{
 			DPRINT1("SM: %s: NtListenPort() failed! (Status==x%08lx)\n", __FUNCTION__, Status);
@@ -60,12 +60,12 @@ static VOID STDCALL
 DbgUiApiPortThread (PVOID dummy)
 {
 	NTSTATUS Status = STATUS_SUCCESS;
-	LPC_MAX_MESSAGE	Request;
+	PORT_MESSAGE	Request;
     
-    RtlZeroMemory(&Request, sizeof(LPC_MAX_MESSAGE));
+    RtlZeroMemory(&Request, sizeof(PORT_MESSAGE));
 	while (TRUE)
 	{
-		Status = NtListenPort (DbgUiApiPort, & Request.Header);
+		Status = NtListenPort (DbgUiApiPort, & Request);
 		if (!NT_SUCCESS(Status))
 		{
 			DPRINT1("SM: %s: NtListenPort() failed! (Status==x%08lx)\n", __FUNCTION__, Status);

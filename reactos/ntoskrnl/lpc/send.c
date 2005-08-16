@@ -292,7 +292,7 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
        KeDetachProcess();
      }
 
-   if (LpcRequestMessageSize > (sizeof(PORT_MESSAGE) + MAX_MESSAGE_DATA))
+   if (LpcRequestMessageSize > LPC_MAX_MESSAGE_LENGTH)
      {
        if (NULL != AttachedProcess)
          {
@@ -347,7 +347,7 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
        LpcRequestDataSize = LpcRequest->u1.s1.DataLength;
      }
 
-   if (LpcRequestMessageSize > (sizeof(PORT_MESSAGE) + MAX_MESSAGE_DATA))
+   if (LpcRequestMessageSize > LPC_MAX_MESSAGE_LENGTH)
      {
        ExFreePool(LpcRequest);
        if (NULL != AttachedProcess)

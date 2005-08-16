@@ -97,7 +97,7 @@ CsrApiCallHandler(PCSRSS_PROCESS_DATA ProcessData,
     {
       DPRINT1("CSR: Unknown request type 0x%x\n", Request->Type);
       Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-      Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+      Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
       Request->Status = STATUS_INVALID_SYSTEM_SERVICE;
     }
 }
@@ -108,8 +108,7 @@ STDCALL
 ClientConnectionThread(HANDLE ServerPort)
 {
     NTSTATUS Status;
-    LPC_MAX_MESSAGE LpcRequest;
-    PCSR_API_MESSAGE Request;
+    CSR_API_MESSAGE Request;
     PCSR_API_MESSAGE Reply;
     PCSRSS_PROCESS_DATA ProcessData;
   
@@ -125,7 +124,7 @@ ClientConnectionThread(HANDLE ServerPort)
         Status = NtReplyWaitReceivePort(ServerPort,
                                         0,
                                         &Reply->Header,
-                                        &LpcRequest.Header);
+                                        &Request.Header);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("CSR: NtReplyWaitReceivePort failed\n");
@@ -133,34 +132,31 @@ ClientConnectionThread(HANDLE ServerPort)
         }
         
         /* If the connection was closed, handle that */
-        if (LpcRequest.Header.u2.s2.Type == LPC_PORT_CLOSED)
+        if (Request.Header.u2.s2.Type == LPC_PORT_CLOSED)
         {
-            CsrFreeProcessData( LpcRequest.Header.ClientId.UniqueProcess );
+            CsrFreeProcessData( Request.Header.ClientId.UniqueProcess );
             break;
         }
-        
-        /* Get the CSR Message */
-        Request = (PCSR_API_MESSAGE)&LpcRequest;
-      
+
         DPRINT("CSR: Got CSR API: %x [Message Origin: %x]\n", 
-                Request->Type, 
-                Request->Header.ClientId.UniqueProcess);
+                Request.Type, 
+                Request.Header.ClientId.UniqueProcess);
 
         /* Get the Process Data */
-        ProcessData = CsrGetProcessData(LpcRequest.Header.ClientId.UniqueProcess);
+        ProcessData = CsrGetProcessData(Request.Header.ClientId.UniqueProcess);
         if (ProcessData == NULL)
         {
             DPRINT1("CSR: Message %d: Unable to find data for process 0x%x\n",
-                    LpcRequest.Header.u2.s2.Type,
-                    LpcRequest.Header.ClientId.UniqueProcess);
+                    Request.Header.u2.s2.Type,
+                    Request.Header.ClientId.UniqueProcess);
             break;
         }
 
         /* Call the Handler */
-        CsrApiCallHandler(ProcessData, Request);
+        CsrApiCallHandler(ProcessData, &Request);
         
         /* Send back the reply */
-        Reply = Request;
+        Reply = &Request;
     }
     
     /* Close the port and exit the thread */
@@ -180,7 +176,7 @@ DWORD STDCALL
 ServerApiPortThread (PVOID PortHandle)
 {
    NTSTATUS Status = STATUS_SUCCESS;
-   LPC_MAX_MESSAGE Request;
+   PORT_MESSAGE Request;
    HANDLE hApiListenPort = * (PHANDLE) PortHandle;
    HANDLE ServerPort = (HANDLE) 0;
    HANDLE ServerThread = (HANDLE) 0;
@@ -195,7 +191,7 @@ ServerApiPortThread (PVOID PortHandle)
         REMOTE_PORT_VIEW LpcRead;
         ServerPort = NULL;
 
-	Status = NtListenPort (hApiListenPort, & Request.Header);
+	Status = NtListenPort (hApiListenPort, &Request);
 	if (!NT_SUCCESS(Status))
 	  {
 	     DPRINT1("CSR: NtListenPort() failed\n");
@@ -213,11 +209,11 @@ ServerApiPortThread (PVOID PortHandle)
 	     break;
 	  }
 
-	ProcessData = CsrCreateProcessData(Request.Header.ClientId.UniqueProcess);
+	ProcessData = CsrCreateProcessData(Request.ClientId.UniqueProcess);
 	if (ProcessData == NULL)
 	  {
 	     DPRINT1("Unable to allocate or find data for process 0x%x\n",
-	             Request.Header.ClientId.UniqueProcess);
+	             Request.ClientId.UniqueProcess);
 	     Status = STATUS_UNSUCCESSFUL;
 	     break;
 	  }
@@ -273,14 +269,14 @@ ServerSbApiPortThread (PVOID PortHandle)
 {
 	HANDLE          hSbApiPortListen = * (PHANDLE) PortHandle;
 	HANDLE          hConnectedPort = (HANDLE) 0;
-	LPC_MAX_MESSAGE Request;
+	PORT_MESSAGE    Request;
 	PVOID           Context = NULL;
 	NTSTATUS        Status = STATUS_SUCCESS;
 
 	DPRINT("CSR: %s called\n", __FUNCTION__);
 
-    RtlZeroMemory(&Request, sizeof(LPC_MAX_MESSAGE));
-	Status = NtListenPort (hSbApiPortListen, & Request.Header);
+    RtlZeroMemory(&Request, sizeof(PORT_MESSAGE));
+	Status = NtListenPort (hSbApiPortListen, & Request);
 	if (!NT_SUCCESS(Status))
 	{
 		DPRINT1("CSR: %s: NtListenPort(SB) failed (Status=0x%08lx)\n",
@@ -324,19 +320,19 @@ DPRINT("-- 4\n");
 					Status = NtReplyWaitReceivePort(hConnectedPort,
                                       					Context,
 									Reply,
-									& Request.Header);
+									& Request);
 					if(!NT_SUCCESS(Status))
 					{
 						DPRINT1("CSR: %s: NtReplyWaitReceivePort failed (Status=0x%08lx)\n",
 							__FUNCTION__, Status);
 						break;
 					}
-					switch (Request.Header.u2.s2.Type)//fix .h PORT_MESSAGE_TYPE(Request))
+					switch (Request.u2.s2.Type)//fix .h PORT_MESSAGE_TYPE(Request))
 					{
 						/* TODO */
 					default:
 						DPRINT1("CSR: %s received message (type=%d)\n",
-							__FUNCTION__, Request.Header.u2.s2.Type);
+							__FUNCTION__, Request.u2.s2.Type);
 					}
 DPRINT("-- 5\n");
 				}

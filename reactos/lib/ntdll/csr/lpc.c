@@ -81,7 +81,7 @@ CsrClientCallServer(PCSR_API_MESSAGE Request,
 
     /* Fill out the header */
     Request->Type = ApiNumber;
-    Request->Header.u1.s1.DataLength = RequestLength - LPC_MESSAGE_BASE_SIZE;
+    Request->Header.u1.s1.DataLength = RequestLength - sizeof(PORT_MESSAGE);
     Request->Header.u1.s1.TotalLength = RequestLength;
     DPRINT("CSR: API: %x, u1.s1.DataLength: %x, u1.s1.TotalLength: %x\n", 
             ApiNumber,

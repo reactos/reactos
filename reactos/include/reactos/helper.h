@@ -1,6 +1,7 @@
 #ifndef _HELPER_H
 #define _HELPER_H
- 
+
+/* FIXME: clean this mess up and move to NDK */
 #define ROUNDUP(a,b)	((((a)+(b)-1)/(b))*(b))
 #define ROUNDDOWN(a,b)	(((a)/(b))*(b))
 #define ROUND_UP ROUNDUP

@@ -411,19 +411,19 @@ typedef struct
 } CSRSS_GET_INPUT_WAIT_HANDLE, *PCSRSS_GET_INPUT_WAIT_HANDLE;
 
 #define CSRSS_MAX_WRITE_CONSOLE       \
-      (MAX_MESSAGE_DATA - sizeof(ULONG) - sizeof(CSRSS_WRITE_CONSOLE))
+      (LPC_MAX_DATA_LENGTH - sizeof(ULONG) - sizeof(CSRSS_WRITE_CONSOLE))
 
-#define CSRSS_MAX_SET_TITLE           (MAX_MESSAGE_DATA - sizeof( HANDLE ) - sizeof( DWORD ) - sizeof( ULONG ) - LPC_MESSAGE_BASE_SIZE)
+#define CSRSS_MAX_SET_TITLE           (LPC_MAX_DATA_LENGTH - sizeof( HANDLE ) - sizeof( DWORD ) - sizeof( ULONG ) - sizeof(PORT_MESSAGE))
 
-#define CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR   (MAX_MESSAGE_DATA - sizeof( ULONG ) - sizeof( CSRSS_WRITE_CONSOLE_OUTPUT_CHAR ))
+#define CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR   (LPC_MAX_DATA_LENGTH - sizeof( ULONG ) - sizeof( CSRSS_WRITE_CONSOLE_OUTPUT_CHAR ))
 
-#define CSRSS_MAX_WRITE_CONSOLE_OUTPUT_ATTRIB   ((MAX_MESSAGE_DATA - sizeof( ULONG ) - sizeof( CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB )) / 2)
+#define CSRSS_MAX_WRITE_CONSOLE_OUTPUT_ATTRIB   ((LPC_MAX_DATA_LENGTH - sizeof( ULONG ) - sizeof( CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB )) / 2)
 
-#define CSRSS_MAX_READ_CONSOLE        (MAX_MESSAGE_DATA - sizeof( ULONG ) - sizeof( CSRSS_READ_CONSOLE ))
+#define CSRSS_MAX_READ_CONSOLE        (LPC_MAX_DATA_LENGTH - sizeof( ULONG ) - sizeof( CSRSS_READ_CONSOLE ))
 
-#define CSRSS_MAX_READ_CONSOLE_OUTPUT_CHAR    (MAX_MESSAGE_DATA - sizeof(ULONG) - sizeof(HANDLE) - sizeof(DWORD) - sizeof(CSRSS_READ_CONSOLE_OUTPUT_CHAR))
+#define CSRSS_MAX_READ_CONSOLE_OUTPUT_CHAR    (LPC_MAX_DATA_LENGTH - sizeof(ULONG) - sizeof(HANDLE) - sizeof(DWORD) - sizeof(CSRSS_READ_CONSOLE_OUTPUT_CHAR))
 
-#define CSRSS_MAX_READ_CONSOLE_OUTPUT_ATTRIB  (MAX_MESSAGE_DATA - sizeof(ULONG) - sizeof(HANDLE) - sizeof(DWORD) - sizeof(CSRSS_READ_CONSOLE_OUTPUT_ATTRIB))
+#define CSRSS_MAX_READ_CONSOLE_OUTPUT_ATTRIB  (LPC_MAX_DATA_LENGTH - sizeof(ULONG) - sizeof(HANDLE) - sizeof(DWORD) - sizeof(CSRSS_READ_CONSOLE_OUTPUT_ATTRIB))
 
 /* WCHARs, not bytes! */
 #define CSRSS_MAX_TITLE_LENGTH          80
@@ -485,7 +485,7 @@ typedef struct
 #define GET_PROCESS_LIST              (0x36)
 
 /* Keep in sync with definition below. */
-#define CSRSS_HEADER_SIZE (LPC_MESSAGE_BASE_SIZE + sizeof(ULONG) + sizeof(NTSTATUS))
+#define CSRSS_HEADER_SIZE (sizeof(PORT_MESSAGE) + sizeof(ULONG) + sizeof(NTSTATUS))
 
 typedef struct _CSR_API_MESSAGE
 {
@@ -494,7 +494,7 @@ typedef struct _CSR_API_MESSAGE
     PORT_MESSAGE Header;
     struct
     {
-      BYTE HeaderReserved[LPC_MESSAGE_BASE_SIZE];
+      BYTE HeaderReserved[sizeof(PORT_MESSAGE)];
       ULONG Type;
       NTSTATUS Status;
       union

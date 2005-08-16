@@ -9,17 +9,9 @@
 #ifndef _LPCTYPES_H
 #define _LPCTYPES_H
 
-#define LPC_MESSAGE_TYPE(m) ((m).Header.u2.s2.Type)
-
 /* DEPENDENCIES **************************************************************/
 
 /* EXPORTED DATA *************************************************************/
-
-/* CONSTANTS *****************************************************************/
-#define LPC_MESSAGE_BASE_SIZE 24
-#define MAX_MESSAGE_DATA      (0x130)
-#define LPC_MAX_DATA_LENGTH 0x104
-#define LPC_MAX_MESSAGE_LENGTH 0x148
 
 /* ENUMERATIONS **************************************************************/
 
@@ -41,6 +33,13 @@ typedef enum _LPC_TYPE
 } LPC_TYPE;
 
 /* TYPES *********************************************************************/
+
+/* 
+ * Native Structures in IFS. Duplicated here for user-mode.
+ * Also duplicated if the IFS is not present. Until the WDK is
+ * released, we should not force the usage of a 100$ kit.
+ */
+#if defined(NTOS_MODE_USER) || !(defined(_NTIFS_))
 
 #if defined(USE_LPC6432)
 #define LPC_CLIENT_ID CLIENT_ID64
@@ -104,11 +103,98 @@ typedef struct _REMOTE_PORT_VIEW
     LPC_PVOID ViewBase;
 } REMOTE_PORT_VIEW, *PREMOTE_PORT_VIEW;
 
-/* FIXME: USE REAL DEFINITION */
-typedef struct _LPC_MAX_MESSAGE
+typedef struct _LPCP_MESSAGE
 {
-    PORT_MESSAGE Header;
-    BYTE Data[MAX_MESSAGE_DATA];
-} LPC_MAX_MESSAGE, *PLPC_MAX_MESSAGE;
+    UCHAR Data[0x14];
+    PORT_MESSAGE Request;
+} LPCP_MESSAGE;
+
+typedef struct _LPCP_CONNECTION_MESSAGE
+{
+    UCHAR Data[0x2C];
+} LPCP_CONNECTION_MESSAGE;
+
+/* Kernel-Mode Structures */
+#else
+
+typedef struct _LPCP_NONPAGED_PORT_QUEUE
+{
+    KSEMAPHORE Semaphore;
+    struct _LPCP_PORT_OBJECT *BackPointer;
+} LPCP_NONPAGED_PORT_QUEUE, *PLPCP_NONPAGED_PORT_QUEUE;
+
+typedef struct _LPCP_PORT_QUEUE
+{
+    PLPCP_NONPAGED_PORT_QUEUE NonPagedPortQueue;
+    KSEMAPHORE Semaphore;
+    LIST_ENTRY ReceiveHead;
+} LPCP_PORT_QUEUE, *PLPCP_PORT_QUEUE;
+
+#ifdef _NTIFS_
+typedef struct _LPCP_PORT_OBJECT
+{
+    ULONG Length;
+    ULONG Flags;
+    struct _LPCP_PORT_OBJECT *ConnectionPort;
+    struct _LPCP_PORT_OBJECT *ConnectedPort;
+    LPCP_PORT_QUEUE MsgQueue;
+    CLIENT_ID Creator;
+    PVOID ClientSectionBase;
+    PVOID ServerSectionBase;
+    PVOID PortContext;
+    ULONG MaxMessageLength;
+    ULONG MaxConnectionInfoLength;
+    PETHREAD ClientThread;
+    SECURITY_QUALITY_OF_SERVICE SecurityQos;
+    SECURITY_CLIENT_CONTEXT StaticSecurity;
+    LIST_ENTRY LpcReplyChainHead;
+    LIST_ENTRY LpcDataInfoChainHead;
+} LPCP_PORT_OBJECT, *PLPCP_PORT_OBJECT;
+
+typedef struct _LPCP_MESSAGE
+{
+    union
+    {
+        LIST_ENTRY Entry;
+        struct
+        {
+            SINGLE_LIST_ENTRY FreeEntry;
+            ULONG Reserved0;
+        };
+    };
+    PLPCP_PORT_OBJECT SenderPort;
+    PETHREAD RepliedToThread;
+    PVOID PortContext;
+    PORT_MESSAGE Request;
+} LPCP_MESSAGE, *PLPCP_MESSAGE;
+
+typedef struct _LPCP_CONNECTION_MESSAGE
+{
+    PORT_VIEW ClientView;
+    PLPCP_PORT_OBJECT ClientPort;
+    PVOID SectionToMap;
+    REMOTE_PORT_VIEW ServerView;
+} LPCP_CONNECTION_MESSAGE, *PLPCP_CONNECTION_MESSAGE;
+#endif
+
+#endif
+
+/* CONSTANTS *****************************************************************/
+
+#define PORT_MAXIMUM_MESSAGE_LENGTH 256
+
+#define LPCP_MAX_MESSAGE_SIZE \
+    ROUND_UP(PORT_MAXIMUM_MESSAGE_LENGTH + \
+    sizeof(LPCP_MESSAGE) + \
+    sizeof(LPCP_CONNECTION_MESSAGE), 16)
+
+#define LPC_MAX_MESSAGE_LENGTH \
+    (LPCP_MAX_MESSAGE_SIZE - \
+    FIELD_OFFSET(LPCP_MESSAGE, Request))
+
+#define LPC_MAX_DATA_LENGTH \
+    (LPC_MAX_MESSAGE_LENGTH - \
+    sizeof(PORT_MESSAGE) - \
+    sizeof(LPCP_CONNECTION_MESSAGE))
 
 #endif

@@ -1323,6 +1323,68 @@ typedef struct _RTL_SPLAY_LINKS {
     struct _RTL_SPLAY_LINKS *RightChild;
 } RTL_SPLAY_LINKS, *PRTL_SPLAY_LINKS;
 
+#if defined(USE_LPC6432)
+#define LPC_CLIENT_ID CLIENT_ID64
+#define LPC_SIZE_T ULONGLONG
+#define LPC_PVOID ULONGLONG
+#define LPC_HANDLE ULONGLONG
+#else
+#define LPC_CLIENT_ID CLIENT_ID
+#define LPC_SIZE_T SIZE_T
+#define LPC_PVOID PVOID
+#define LPC_HANDLE HANDLE
+#endif
+
+typedef struct _PORT_MESSAGE
+{
+    union
+    {
+        struct
+        {
+            CSHORT DataLength;
+            CSHORT TotalLength;
+        } s1;
+        ULONG Length;
+    } u1;
+    union
+    {
+        struct
+        {
+            CSHORT Type;
+            CSHORT DataInfoOffset;
+        } s2;
+        ULONG ZeroInit;
+    } u2;
+    union
+    {
+        LPC_CLIENT_ID ClientId;
+        double DoNotUseThisField;
+    };
+    ULONG MessageId;
+    union
+    {
+        LPC_SIZE_T ClientViewSize;
+        ULONG CallbackId;
+    };
+} PORT_MESSAGE, *PPORT_MESSAGE;
+
+typedef struct _PORT_VIEW
+{
+    ULONG Length;
+    LPC_HANDLE SectionHandle;
+    ULONG SectionOffset;
+    LPC_SIZE_T ViewSize;
+    LPC_PVOID ViewBase;
+    LPC_PVOID ViewRemoteBase;
+} PORT_VIEW, *PPORT_VIEW;
+
+typedef struct _REMOTE_PORT_VIEW
+{
+    ULONG Length;
+    LPC_SIZE_T ViewSize;
+    LPC_PVOID ViewBase;
+} REMOTE_PORT_VIEW, *PREMOTE_PORT_VIEW;
+
 typedef struct _SE_EXPORTS {
 
     LUID    SeCreateTokenPrivilege;

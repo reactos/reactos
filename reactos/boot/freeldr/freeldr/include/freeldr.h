@@ -35,8 +35,6 @@
 #include <portio.h>
 #include <reactos.h>
 
-#define ROUND_UP(N, S) (((N) + (S) - 1) & ~((S) - 1))
-#define ROUND_DOWN(N, S) ((N) & ~((S) - 1))
 #define Ke386EraseFlags(x)     __asm__ __volatile__("pushl $0 ; popfl\n")
 
 extern BOOL UserInterfaceUp;	/* Tells us if the user interface is displayed */
