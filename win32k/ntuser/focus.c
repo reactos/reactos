@@ -19,22 +19,50 @@
  * $Id$
  */
 
+/* INCLUDES ******************************************************************/
+
 #include <w32k.h>
 
 #define NDEBUG
 #include <debug.h>
 
+
+/* GLOBALS *******************************************************************/
+
+/*
+Only the interactive WinSta can recieve input. This means
+there can exist only one foreground window/queue/thread per
+session. But its possibly that this variable should be in
+the WinSta anyways. -Gunnar
+*/
+PUSER_MESSAGE_QUEUE gForegroundQueue = NULL;
+
+
+/* FUNCTIONS *****************************************************************/
+
+
+inline PUSER_MESSAGE_QUEUE FASTCALL UserGetForegroundQueue()
+{
+   return gForegroundQueue;
+}
+
+inline VOID FASTCALL UserSetForegroundQueue(PUSER_MESSAGE_QUEUE Queue)
+{
+   gForegroundQueue = Queue;
+}
+
+
 PWINDOW_OBJECT FASTCALL
 UserGetCaptureWindow()
 {
-   PUSER_MESSAGE_QUEUE ForegroundQueue = UserGetFocusQueue();
+   PUSER_MESSAGE_QUEUE ForegroundQueue = UserGetForegroundQueue();
    return ForegroundQueue ? GetWnd(ForegroundQueue->Input->hCaptureWindow) : 0;
 }
 
 PWINDOW_OBJECT FASTCALL
 UserGetFocusWindow()
 {
-   PUSER_MESSAGE_QUEUE ForegroundQueue = UserGetFocusQueue();
+   PUSER_MESSAGE_QUEUE ForegroundQueue = UserGetForegroundQueue();
    return ForegroundQueue ? GetWnd(ForegroundQueue->Input->hFocusWindow) : 0;
 }
 
@@ -164,7 +192,7 @@ IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWindow
       return FALSE;
    }
 
-   PrevForegroundQueue = UserGetFocusQueue();
+   PrevForegroundQueue = UserGetForegroundQueue();
    if (PrevForegroundQueue != 0)
    {
       //FIXME uhm... focus er ikke samme som active window... er UserGetFocusMessageQueue riktig?
@@ -185,7 +213,8 @@ IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWindow
    IntSendDeactivateMessages(hWndPrev, hWnd);
    IntSendKillFocusMessages(GetWnd(hWndFocusPrev), GetWnd(hWndFocus));
 
-   IntSetFocusQueue(Window->Queue);
+   UserSetForegroundQueue(Window->Queue);
+   
    if (Window->Queue->Input)
    {
       Window->Queue->Input->hActiveWindow = hWnd;
@@ -344,8 +373,7 @@ CLEANUP:
 PWINDOW_OBJECT FASTCALL
 UserGetForegroundWindow(VOID)
 {
-   PUSER_MESSAGE_QUEUE ForegroundQueue = UserGetFocusQueue();
-
+   PUSER_MESSAGE_QUEUE ForegroundQueue = UserGetForegroundQueue();
    if (ForegroundQueue && ForegroundQueue->Input->hActiveWindow)
       return IntGetWindowObject(ForegroundQueue->Input->hActiveWindow);
 
@@ -422,7 +450,7 @@ NtUserSetActiveWindow(HWND hWnd)
 
       Queue = UserGetCurrentQueue();
       
-      /* window must be attached to queue input */
+      /* window must be attached to input queue */
       if (Window->Queue->Input != Queue->Input)
       {
          SetLastWin32Error(ERROR_ACCESS_DENIED);

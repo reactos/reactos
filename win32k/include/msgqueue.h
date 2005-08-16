@@ -79,7 +79,7 @@ typedef struct _USER_THREAD_INPUT
  /* Caret information for this queue */
   THRDCARETINFO CaretInfo;
   /* Desktop that the message queue is attached to */
-  struct _DESKTOP_OBJECT* Desktop;
+//  struct _DESKTOP_OBJECT* Desktop;
    
 } USER_THREAD_INPUT, *PUSER_THREAD_INPUT;
 

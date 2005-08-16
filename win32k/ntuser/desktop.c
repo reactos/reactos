@@ -250,13 +250,13 @@ IntParseDesktopPath(PEPROCESS Process,
                                  NULL,
                                  NULL);
 
-      Status = ObOpenObjectByName(&ObjectAttributes,
-                                  ExWindowStationObjectType,
-                                  NULL,
-                                  UserMode,
-                                  0,
-                                  NULL,
-                                  (HANDLE*)hWinSta);
+    Status = ObOpenObjectByName(&ObjectAttributes,
+                                ExWindowStationObjectType,
+                                NULL,
+                                KernelMode,
+                                0,
+                                NULL,
+                                (HANDLE*)hWinSta);
 
       RtlFreeUnicodeString(&FullName);
 
@@ -287,7 +287,7 @@ IntParseDesktopPath(PEPROCESS Process,
       Status = ObOpenObjectByName(&ObjectAttributes,
                                   ExDesktopObjectType,
                                   NULL,
-                                  UserMode,
+                                  KernelMode,
                                   0,
                                   NULL,
                                   (HANDLE*)hDesktop);
@@ -427,13 +427,14 @@ IntGetDesktopObjectHandle(PDESKTOP_OBJECT DesktopObject)
    return Ret;
 }
 
+#if 0
 PUSER_MESSAGE_QUEUE FASTCALL
 UserGetFocusQueue(VOID)
 {
    PDESKTOP_OBJECT pdo = UserGetActiveDesktop();
    if (!pdo)
    {
-      DPRINT("No active desktop\n");
+      DPRINT1("No active desktop\n");
       return(NULL);
    }
    return pdo->ActiveQueue;
@@ -446,7 +447,7 @@ IntSetFocusQueue(PUSER_MESSAGE_QUEUE NewQueue)
    PDESKTOP_OBJECT pdo = UserGetActiveDesktop();
    if (!pdo)
    {
-      DPRINT("No active desktop\n");
+      DPRINT1("No active desktop\n");
       return;
    }
    if(NewQueue)
@@ -478,6 +479,8 @@ IntSetFocusQueue(PUSER_MESSAGE_QUEUE NewQueue)
 //      IntDereferenceMessageQueue(Old);
 //   }
 }
+
+#endif
 
 PWINDOW_OBJECT FASTCALL UserGetDesktopWindow(VOID)
 {
@@ -811,7 +814,7 @@ NtUserCreateDesktop(
     * Try to open already existing desktop
     */
 
-   DPRINT("Trying to open desktop (%wZ)\n", &DesktopName);
+  DPRINT1("Trying to open desktop (%wZ)\n", &DesktopName);
 
    /* Initialize ObjectAttributes for the desktop object */
    InitializeObjectAttributes(
@@ -821,14 +824,14 @@ NtUserCreateDesktop(
       NULL,
       NULL);
 
-   Status = ObOpenObjectByName(
-               &ObjectAttributes,
-               ExDesktopObjectType,
-               NULL,
-               UserMode,
-               dwDesiredAccess,
-               NULL,
-               (HANDLE*)&Desktop);
+  Status = ObOpenObjectByName(
+    &ObjectAttributes,
+    ExDesktopObjectType,
+    NULL,
+    KernelMode,
+    dwDesiredAccess,
+    NULL,
+    (HANDLE*)&Desktop);
 
    if (NT_SUCCESS(Status))
    {
@@ -868,7 +871,7 @@ NtUserCreateDesktop(
    IntGetDesktopWorkArea(DesktopObject, NULL);
 
    /* Initialize some local (to win32k) desktop state. */
-   DesktopObject->ActiveQueue = NULL;
+//   DesktopObject->ActiveQueue = NULL;
 
    Status = ObInsertObject(
                (PVOID)DesktopObject,

@@ -187,7 +187,7 @@ int STDCALL NtGdiGetClipBox(HDC  hDC,
 			   LPRECT  rc)
 {
   int Ret;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
   RECT Saferect;
 
   Ret = IntGdiGetClipBox(hDC, &Saferect);
@@ -327,8 +327,28 @@ int STDCALL NtGdiOffsetClipRgn(HDC  hDC,
                        int  XOffset,
                        int  YOffset)
 {
-  UNIMPLEMENTED;
-  return 0;
+  INT Result;
+  DC *dc;
+
+  if(!(dc = DC_LockDc(hDC)))
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return ERROR;
+  }
+
+  if(dc->w.hClipRgn != NULL)
+  {
+    Result = NtGdiOffsetRgn(dc->w.hClipRgn,
+                            XOffset,
+                            YOffset);
+  }
+  else
+  {
+    Result = NULLREGION;
+  }
+  
+  DC_UnlockDc(dc);
+  return Result;
 }
 
 BOOL STDCALL NtGdiPtVisible(HDC  hDC,

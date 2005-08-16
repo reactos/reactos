@@ -26,11 +26,9 @@
 #include <include/dib.h>
 #include <include/eng.h>
 #include <include/error.h>
-#include <include/focus.h>
 #include <include/guicheck.h>
 #include <include/hook.h>
 #include <include/hotkey.h>
-#include <include/input.h>
 #include <include/inteng.h>
 #include <include/intgdi.h>
 #include <include/intddraw.h>
@@ -53,7 +51,6 @@
 #include <include/winpos.h>
 #include <include/winsta.h>
 #include <include/mmcopy.h>
-#include <include/keyboard.h>
 #include <eng/objects.h>
 #include <eng/misc.h>
 #include <dib/dib.h>

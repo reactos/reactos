@@ -37,6 +37,7 @@
 
 extern BYTE QueueKeyStateTable[];
 
+
 /* GLOBALS *******************************************************************/
 
 static HANDLE MouseDeviceHandle;
@@ -48,6 +49,7 @@ static HANDLE KeyboardDeviceHandle;
 static KEVENT InputThreadsStart;
 static BOOLEAN InputThreadsRunning = FALSE;
 PUSER_MESSAGE_QUEUE pmPrimitiveQueue = NULL;
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -498,19 +500,19 @@ KeyboardThreadMain(PVOID StartContext)
 	  DPRINT("KeyRaw: %s %04x\n",
 		 (KeyInput.Flags & KEY_BREAK) ? "up" : "down",
 		 KeyInput.MakeCode );
-
+CHECKPOINT1;
 	  if (Status == STATUS_ALERTED && !InputThreadsRunning)
 	    break;
-
+CHECKPOINT1;
 	  if (!NT_SUCCESS(Status))
 	    {
 	      DPRINT1("Win32K: Failed to read from keyboard.\n");
 	      return; //(Status);
 	    }
-
+CHECKPOINT1;
 	  /* Update modifier state */
 	  fsModifiers = IntKeyboardGetModifiers(&KeyInput);
-
+CHECKPOINT1;
 	  if (fsModifiers)
 	    {
 	      if (KeyInput.Flags & KEY_BREAK)
@@ -544,7 +546,7 @@ KeyboardThreadMain(PVOID StartContext)
 		          DPRINT("KeyRaw: %s %04x\n",
 		 	         (NextKeyInput.Flags & KEY_BREAK) ? "up":"down",
 		 	         NextKeyInput.MakeCode );
-
+CHECKPOINT1;
 		          if (Status == STATUS_ALERTED && !InputThreadsRunning)
 	    		    goto KeyboardEscape;
 
@@ -554,7 +556,7 @@ KeyboardThreadMain(PVOID StartContext)
 		       *   code. I'm not caring about the counting, not sure
 		       *   if that matters. I think not.
 		       */
-
+CHECKPOINT1;
 		      /* If the ModifierState is now empty again, send a
 		       * special notification and eat both keypresses
 		       */
@@ -572,17 +574,17 @@ KeyboardThreadMain(PVOID StartContext)
 			    IntKeyboardSendAltKeyMsg();
 			  continue;
 			}
-
+CHECKPOINT1;
 		      NumKeys = 2;
 		    }
 		}
 	    }
-
+CHECKPOINT1;
 	  for (;NumKeys;memcpy(&KeyInput, &NextKeyInput, sizeof(KeyInput)),
 			NumKeys--)
 	    {
 	      lParam = 0;
-
+CHECKPOINT1;
 	      IntKeyboardUpdateLeds(KeyboardDeviceHandle,
 			            &KeyInput,
 				    IndicatorTrans);
@@ -649,25 +651,29 @@ KeyboardThreadMain(PVOID StartContext)
 	          else
 		    msg.message = WM_KEYUP;
 	        }
-
+CHECKPOINT1;
 	      /* Find the target thread whose locale is in effect */
-	      if (!IntGetScreenDC())
+	      if (!IntGetScreenDC()){
+            CHECKPOINT1;
            FocusQueue = W32kGetPrimitiveQueue();
-	      else
-           FocusQueue = UserGetFocusQueue();
-
+        }
+	      else{
+            CHECKPOINT1;
+           FocusQueue = UserGetForegroundQueue();
+        }
+CHECKPOINT1;
 	      /* This might cause us to lose hot keys, which are important
 	       * (ctrl-alt-del secure attention sequence). Not sure if it
 	       * can happen though.
 	       */
          if (!FocusQueue) continue;
-
+CHECKPOINT1;
 	      msg.lParam = lParam;
          msg.hwnd = FocusQueue->Input->hFocusWindow;
-
+CHECKPOINT1;
          if (!QUEUE_2_WTHREAD(FocusQueue)->KeyboardLayout)
 	        continue;
-
+CHECKPOINT1;
 	      /* This function uses lParam to fill wParam according to the
 	       * keyboard layout in use.
 	       */
@@ -675,14 +681,14 @@ KeyboardThreadMain(PVOID StartContext)
                 QUEUE_2_WTHREAD(FocusQueue)->KeyboardLayout,
 				    KeyInput.Flags & KEY_E0 ? 0xE0 :
 				    (KeyInput.Flags & KEY_E1 ? 0xE1 : 0));
-
+CHECKPOINT1;
 	      if (GetHotKey(InputWindowStation,
 			    ModifierState,
 			    msg.wParam,
 			    &Thread,
 			    &hWnd,
 			    &id))
-	        {
+           {CHECKPOINT1;
 	          if (!(KeyInput.Flags & KEY_BREAK))
 		    {
 		      DPRINT("Hot key pressed (hWnd %lx, id %d)\n", hWnd, id);
@@ -694,7 +700,7 @@ KeyboardThreadMain(PVOID StartContext)
 		    }
 	          continue;	/* Eat key up motion too */
 	        }
-
+CHECKPOINT1;
 	      /*
 	       * Post a keyboard message.
 	       */
@@ -1258,7 +1264,8 @@ PUSER_THREAD_INPUT create_thread_input( PW32THREAD thread )
         //if (!(Input->Desktop = get_thread_desktop( thread, 0 /* FIXME: access rights */ )))
         
         //FIXME: hack!
-        Input->Desktop = thread->Desktop;
+        //FIXME: ros use this for focus queue stuff! WRONG!!
+//FIXME        Input->Desktop = thread->Desktop;
 #if 0        
       //FIXME: this often fail bcause often thread->desktop is NULL
  
@@ -1307,7 +1314,7 @@ BOOLEAN attach_thread_input( PW32THREAD thread_from, PW32THREAD thread_to )
     Desktop = thread_from->Desktop;
     
     //input = (struct thread_input *)grab_object( thread_to->queue->input );
-    
+#if 0    
     if (Input->Desktop != Desktop)
     {
         SetLastWin32Error( STATUS_ACCESS_DENIED );
@@ -1315,7 +1322,7 @@ BOOLEAN attach_thread_input( PW32THREAD thread_from, PW32THREAD thread_to )
 //        ObDereferenceObject( Desktop );
         return FALSE;
     }
-    
+#endif    
 //    ObDereferenceObject( desktop );
 
    

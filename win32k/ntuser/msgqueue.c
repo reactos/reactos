@@ -654,7 +654,7 @@ MsqPeekHardwareMessage(
 VOID FASTCALL
 MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-   PUSER_MESSAGE_QUEUE FocusQueue;
+   PUSER_MESSAGE_QUEUE ForegroundQueue;
    MSG Msg;
    LARGE_INTEGER LargeTickCount;
    KBDLLHOOKSTRUCT KbdHookData;
@@ -686,7 +686,7 @@ MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
       return;
    }
 
-   FocusQueue = UserGetFocusQueue();
+   ForegroundQueue = UserGetForegroundQueue();
 
    /*
     * FIXME: whats the point of this call???? -- Gunnar
@@ -710,22 +710,19 @@ MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
    }
    else
    {
-      if (FocusQueue == NULL)
+      if (ForegroundQueue == NULL)
       {
-         DPRINT("No focus message queue\n");
+         DPRINT("No foreground message queue\n");
          return;
       }
 
-      if (FocusQueue->Input->hFocusWindow != (HWND)0)
+      if (ForegroundQueue->Input->hFocusWindow)
       {
-         Msg.hwnd = FocusQueue->Input->hFocusWindow;
-//         DPRINT("Msg.hwnd = %x\n", Msg.hwnd);
-//         DPRINT("FocusMessageQueue %x\n", FocusMessageQueue);
-//         DPRINT("FocusMessageQueue->Desktop %x\n", FocusMessageQueue->Desktop);
-//         DPRINT("FocusMessageQueue->Desktop->WindowStation %x\n", FocusMessageQueue->Desktop->WindowStation);
-         //FIXME: fikk crash her , inval mem 0x0000001c
-         UserGetCursorLocation(FocusQueue->Input->Desktop->WindowStation, &Msg.pt);
-         MsqPostMessage(FocusQueue, &Msg, FALSE, QS_KEY);
+         Msg.hwnd = ForegroundQueue->Input->hFocusWindow;
+
+         //FIXME: what does this do???
+         UserGetCursorLocation(NULL, &Msg.pt);
+         MsqPostMessage(ForegroundQueue, &Msg, FALSE, QS_KEY);
       }
       else
       {
@@ -1508,7 +1505,7 @@ MsqCreateMessageQueue(PW32THREAD WThread)
 #endif
 
 
-/* called when the thread is destroyed */
+/* called when the wthread is destroyed */
 VOID FASTCALL
 MsqDestroyMessageQueue(PW32THREAD WThread)
 {
@@ -1518,10 +1515,14 @@ MsqDestroyMessageQueue(PW32THREAD WThread)
 
    /* remove the message queue from any desktops */
    //FIXME: queue->desktop? what about thread->hDesktop?? why both?
-   if (Queue->Input->Desktop)
+//   if (Queue->Input->Desktop)
+//   {
+//      Queue->Input->Desktop->ActiveQueue = NULL;
+//      Queue->Input->Desktop = NULL;
+//   }
+   if (Queue == UserGetForegroundQueue())
    {
-      Queue->Input->Desktop->ActiveQueue = NULL;
-      Queue->Input->Desktop = NULL;
+      UserSetForegroundQueue(NULL);
    }
 
 

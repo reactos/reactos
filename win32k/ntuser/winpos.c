@@ -118,7 +118,7 @@ WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
 
   if (!Window || IntIsDesktopWindow(Window))
   {
-    IntSetFocusQueue(NULL);
+    UserSetForegroundQueue(NULL);
     return;
   }
 

@@ -148,6 +148,8 @@
 	<symbol>PsGetThreadWin32Thread@4</symbol>
 	<symbol>PsEstablishWin32Callouts@4</symbol>
 	<symbol>PsSetThreadWin32Thread@8</symbol>
+	<symbol>ProbeForRead@12</symbol>
+	<symbol>ProbeForWrite@12</symbol>
 </component>
 <component name="freetype.dll">
 	<symbol>FT_Init_FreeType</symbol>

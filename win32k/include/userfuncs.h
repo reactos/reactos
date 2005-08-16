@@ -64,11 +64,11 @@ UserGetDesktopWindow (VOID);
 HWND FASTCALL
 IntGetCurrentThreadDesktopWindow(VOID);
 
-PUSER_MESSAGE_QUEUE FASTCALL
-UserGetFocusQueue(VOID);
+//PUSER_MESSAGE_QUEUE FASTCALL
+//UserGetFocusQueue(VOID);
 
-VOID FASTCALL
-IntSetFocusQueue(PUSER_MESSAGE_QUEUE Thread);
+//VOID FASTCALL
+//IntSetFocusQueue(PUSER_MESSAGE_QUEUE Thread);
 
 PDESKTOP_OBJECT FASTCALL
 UserGetActiveDesktop(VOID);
@@ -128,6 +128,8 @@ BOOLEAN attach_thread_input( PW32THREAD thread_from, PW32THREAD thread_to );
 PUSER_THREAD_INPUT create_thread_input( PW32THREAD thread );
 inline VOID FASTCALL UserDereferenceInput(PUSER_THREAD_INPUT Input);
 
+inline PW32THREAD FASTCALL UserWThreadFromTid(DWORD tid);
+
 NTSTATUS FASTCALL
 InitInputImpl(VOID);
 NTSTATUS FASTCALL
@@ -147,6 +149,11 @@ NTSTATUS FASTCALL
 UserAcquireOrReleaseInputOwnership(BOOLEAN Release);
 
 /******************** FOCUS.C ********************************/
+
+inline PUSER_MESSAGE_QUEUE FASTCALL UserGetForegroundQueue();
+
+inline VOID FASTCALL UserSetForegroundQueue(PUSER_MESSAGE_QUEUE Queue);
+
 
 /*
  * These functions take the window handles from current message queue.

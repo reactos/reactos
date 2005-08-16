@@ -925,7 +925,7 @@ NtGdiPolyPolygon(HDC           hDC,
   DC *dc;
   LPPOINT Safept;
   LPINT SafePolyPoints;
-  NTSTATUS Status;
+  NTSTATUS Status = STATUS_SUCCESS;
   BOOL Ret;
 
   dc = DC_LockDc(hDC);

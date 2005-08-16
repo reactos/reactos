@@ -9,7 +9,7 @@ static void SetupSurface(SURFOBJ* surface, RECTL* rect)
   UINT size;
   UINT depth;
 
-  ZeroMemory(surface, sizeof(SURFOBJ));
+  RtlZeroMemory(surface, sizeof(SURFOBJ));
   depth = BitsPerFormat(BMF_24BPP);
   sizex = rect->right - rect->left;
   sizey = rect->bottom - rect->top;

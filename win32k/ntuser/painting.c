@@ -628,17 +628,22 @@ IntGetPaintMessage(HWND hWnd, UINT MsgFilterMin, UINT MsgFilterMax,
 }
 
 HWND FASTCALL
-IntFixCaret(HWND hWnd, LPRECT lprc, UINT flags)
+IntFixCaret(PWINDOW_OBJECT Wnd, LPRECT lprc, UINT flags)
 {
-   PDESKTOP_OBJECT Desktop;
    PTHRDCARETINFO CaretInfo;
+   PUSER_THREAD_INPUT Input;
    HWND hWndCaret;
 
-   Desktop = PsGetWin32Thread()->Desktop;
-   CaretInfo = &Desktop->ActiveQueue->Input->CaretInfo;
-   hWndCaret = CaretInfo->hWnd;
-   if (hWndCaret == hWnd ||
-       ((flags & SW_SCROLLCHILDREN) && UserIsChildWindow(GetWnd(hWnd), GetWnd(hWndCaret))))
+   ASSERT(Wnd);
+
+   Input = UserGetCurrentQueue()->Input;
+   if (!Input) return 0; //FIXME: can it be NULL??
+   if (!Input->CaretInfo.hWnd) return 0;
+   
+   hWndCaret = Input->CaretInfo.hWnd;
+   
+   if (hWndCaret == Wnd->hSelf ||
+       ((flags & SW_SCROLLCHILDREN) && UserIsChildWindow(Wnd, GetWnd(hWndCaret))))
    {
       POINT pt, FromOffset, ToOffset, Offset;
       RECT rcCaret;
@@ -646,7 +651,7 @@ IntFixCaret(HWND hWnd, LPRECT lprc, UINT flags)
       pt.x = CaretInfo->Pos.x;
       pt.y = CaretInfo->Pos.y;
       UserGetClientOrigin(GetWnd(hWndCaret), &FromOffset);
-      UserGetClientOrigin(GetWnd(hWnd), &ToOffset);
+      UserGetClientOrigin(Wnd, &ToOffset);
       Offset.x = FromOffset.x - ToOffset.x;
       Offset.y = FromOffset.y - ToOffset.y;
       rcCaret.left = pt.x;
@@ -1271,7 +1276,7 @@ NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *UnsafeRect,
    }
 
    caretrc = rc;
-   hwndCaret = IntFixCaret(hWnd, &caretrc, flags);
+   hwndCaret = IntFixCaret(Window, &caretrc, flags);
 
    if (hrgnUpdate)
       bOwnRgn = FALSE;

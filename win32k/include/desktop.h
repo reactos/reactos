@@ -16,7 +16,7 @@ typedef struct _DESKTOP_OBJECT
     /* Pointer to the associated window station. */
     struct _WINSTATION_OBJECT *WindowStation;
     /* Pointer to the active queue. */
-    PUSER_MESSAGE_QUEUE ActiveQueue;
+//    PUSER_MESSAGE_QUEUE ActiveQueue;
     /* Rectangle of the work area */
     RECT WorkArea;
     /* Handle of the desktop window. */

@@ -754,6 +754,9 @@ CLEANUP:
 }
 
 
+/*
+ * @unimplemented
+ */
 HWND
 STDCALL
 NtUserCallHwndOpt(
@@ -763,15 +766,23 @@ NtUserCallHwndOpt(
    switch (Routine)
    {
       case HWNDOPT_ROUTINE_SETPROGMANWINDOW:
-         /* FIXME */
+         /* 
+          * FIXME 
+          * Nothing too hard...validate the hWnd and save it in the Desktop Info
+          */
+         DPRINT1("HWNDOPT_ROUTINE_SETPROGMANWINDOW UNIMPLEMENTED\n");
          break;
 
       case HWNDOPT_ROUTINE_SETTASKMANWINDOW:
-         /* FIXME */
+         /* 
+          * FIXME 
+          * Nothing too hard...validate the hWnd and save it in the Desktop Info
+          */
+         DPRINT1("HWNDOPT_ROUTINE_SETTASKMANWINDOW UNIMPLEMENTED\n");
          break;
    }
 
-   return 0;
+   return Param;
 }
 
 /*
@@ -1272,17 +1283,15 @@ CLEANUP:
 BOOL
 STDCALL
 NtUserGetGUIThreadInfo(
-  DWORD idThread, /* if NULL use foreground thread */
+  DWORD tid, /* if NULL use foreground thread */
   LPGUITHREADINFO lpgui)
 {
   NTSTATUS Status;
-  PTHRDCARETINFO CaretInfo;
   GUITHREADINFO SafeGui;
-  PDESKTOP_OBJECT Desktop;
-  PUSER_MESSAGE_QUEUE MsgQueue;
-  PUSER_THREAD_INPUT Input;
-  PETHREAD Thread = NULL;
+  
+  PUSER_MESSAGE_QUEUE Queue;
   DECLARE_RETURN(BOOLEAN);  
+  PW32THREAD WThread = NULL;
 
   DPRINT("Enter NtUserGetGUIThreadInfo\n");
   UserEnterExclusive();
@@ -1300,64 +1309,52 @@ NtUserGetGUIThreadInfo(
     RETURN( FALSE);
   }
 
-  if(idThread)
+  if(tid)
   {
-    Status = PsLookupThreadByThreadId((HANDLE)idThread, &Thread);
-    if(!NT_SUCCESS(Status))
+    WThread = UserWThreadFromTid(tid);
+    if(!WThread)
     {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       RETURN( FALSE);
     }
-    Desktop = Thread->Tcb.Win32Thread->Desktop;
+    Queue = &WThread->Queue;
   }
   else
   {
     /* get the foreground thread */
-    //FIXME: interactive_Winsta->Active_desktop->active_thread
-    PW32THREAD W32Thread = PsGetWin32Thread();
-    
-    if(W32Thread)
-    {
-      Desktop = W32Thread->Desktop; 
-      MsgQueue = Desktop->ActiveQueue;//huh???
-      Thread = QUEUE_2_WTHREAD(MsgQueue)->Thread;
-    }
+    Queue = UserGetForegroundQueue();
   }
 
-  if(!Thread || !Desktop)
+  if (Queue && Queue->Input)
   {
-    if(idThread && Thread)
-      ObDereferenceObject(Thread);
-    SetLastWin32Error(ERROR_ACCESS_DENIED);
-    RETURN( FALSE);
+     SafeGui.flags = (Queue->Input->CaretInfo.Visible ? GUI_CARETBLINKING : 0);
+     if(Queue->Input->hMenuOwner)
+       SafeGui.flags |= GUI_INMENUMODE | Queue->MenuState;
+     if(Queue->Input->hMoveSize)
+       SafeGui.flags |= GUI_INMOVESIZE;
+
+     /* FIXME add flag GUI_16BITTASK */
+
+     SafeGui.hwndActive = Queue->Input->hActiveWindow;
+     SafeGui.hwndFocus = Queue->Input->hFocusWindow;
+     SafeGui.hwndCapture = Queue->Input->hCaptureWindow;
+     SafeGui.hwndMenuOwner = Queue->Input->hMenuOwner;
+     SafeGui.hwndMoveSize = Queue->Input->hMoveSize;
+     SafeGui.hwndCaret = Queue->Input->CaretInfo.hWnd;
+
+     SafeGui.rcCaret.left = Queue->Input->CaretInfo.Pos.x;
+     SafeGui.rcCaret.top = Queue->Input->CaretInfo.Pos.y;
+     SafeGui.rcCaret.right = SafeGui.rcCaret.left + Queue->Input->CaretInfo.Size.cx;
+     SafeGui.rcCaret.bottom = SafeGui.rcCaret.top + Queue->Input->CaretInfo.Size.cy;
   }
-
-  MsgQueue = Desktop->ActiveQueue;
-  Input = MsgQueue->Input;
-  CaretInfo = &Input->CaretInfo;
-
-  SafeGui.flags = (CaretInfo->Visible ? GUI_CARETBLINKING : 0);
-  if(Input->hMenuOwner)
-    SafeGui.flags |= GUI_INMENUMODE | MsgQueue->MenuState;
-  if(Input->hMoveSize)
-    SafeGui.flags |= GUI_INMOVESIZE;
-
-  /* FIXME add flag GUI_16BITTASK */
-
-  SafeGui.hwndActive = Input->hActiveWindow;
-  SafeGui.hwndFocus = Input->hFocusWindow;
-  SafeGui.hwndCapture = Input->hCaptureWindow;
-  SafeGui.hwndMenuOwner = Input->hMenuOwner;
-  SafeGui.hwndMoveSize = Input->hMoveSize;
-  SafeGui.hwndCaret = CaretInfo->hWnd;
-
-  SafeGui.rcCaret.left = CaretInfo->Pos.x;
-  SafeGui.rcCaret.top = CaretInfo->Pos.y;
-  SafeGui.rcCaret.right = SafeGui.rcCaret.left + CaretInfo->Size.cx;
-  SafeGui.rcCaret.bottom = SafeGui.rcCaret.top + CaretInfo->Size.cy;
-
-  if(idThread)
-    ObDereferenceObject(Thread);
+  else
+  {
+     //FIXME: maybe we should just fail in case no Input exist? */
+     RtlZeroMemory(&SafeGui, sizeof(GUITHREADINFO));
+  }
+  
+  if(WThread)
+    ObDereferenceObject(WThread->Thread);
 
   Status = MmCopyToCaller(lpgui, &SafeGui, sizeof(GUITHREADINFO));
   if(!NT_SUCCESS(Status))
