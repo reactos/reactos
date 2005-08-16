@@ -15,7 +15,7 @@
 
 #include <advapi32.h>
 #define NDEBUG
-#include <debug.h>
+#include <wine/debug.h>
 
 /* DEFINES ******************************************************************/
 
@@ -56,7 +56,7 @@ inline static int is_string( DWORD type )
 BOOL
 RegInitialize (VOID)
 {
-  DPRINT("RegInitialize()\n");
+  TRACE("RegInitialize()\n");
 
   ProcessHeap = RtlGetProcessHeap();
   RtlZeroMemory (DefaultHandleTable,
@@ -73,7 +73,7 @@ RegInitialize (VOID)
 BOOL
 RegCleanup (VOID)
 {
-  DPRINT("RegCleanup()\n");
+  TRACE("RegCleanup()\n");
 
   CloseDefaultKeys ();
   RtlDeleteCriticalSection (&HandleTableCS);
@@ -90,7 +90,7 @@ MapDefaultKey (PHANDLE RealKey,
   ULONG Index;
   NTSTATUS Status = STATUS_SUCCESS;
 
-  DPRINT("MapDefaultKey (Key %x)\n", Key);
+  TRACE("MapDefaultKey (Key %x)\n", Key);
 
   if (((ULONG)Key & 0xF0000000) != 0x80000000)
     {
@@ -142,7 +142,7 @@ MapDefaultKey (PHANDLE RealKey,
 	    break;
 
 	  default:
-	    DPRINT("MapDefaultHandle() no handle creator\n");
+	    WARN("MapDefaultHandle() no handle creator\n");
 	    Status = STATUS_INVALID_PARAMETER;
 	}
     }
@@ -181,7 +181,7 @@ OpenClassesRootKey (PHANDLE KeyHandle)
   OBJECT_ATTRIBUTES Attributes;
   UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\Software\\CLASSES");
 
-  DPRINT("OpenClassesRootKey()\n");
+  TRACE("OpenClassesRootKey()\n");
 
   InitializeObjectAttributes (&Attributes,
 			      &KeyName,
@@ -201,7 +201,7 @@ OpenLocalMachineKey (PHANDLE KeyHandle)
   UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine");
   NTSTATUS Status;
 
-  DPRINT("OpenLocalMachineKey()\n");
+  TRACE("OpenLocalMachineKey()\n");
 
   InitializeObjectAttributes (&Attributes,
 			      &KeyName,
@@ -212,7 +212,7 @@ OpenLocalMachineKey (PHANDLE KeyHandle)
 		      MAXIMUM_ALLOWED,
 		      &Attributes);
 
-  DPRINT("NtOpenKey(%wZ) => %08x\n", &KeyName, Status);
+  TRACE("NtOpenKey(%wZ) => %08x\n", &KeyName, Status);
   return Status;
 }
 
@@ -223,7 +223,7 @@ OpenUsersKey (PHANDLE KeyHandle)
   OBJECT_ATTRIBUTES Attributes;
   UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\User");
 
-  DPRINT("OpenUsersKey()\n");
+  TRACE("OpenUsersKey()\n");
 
   InitializeObjectAttributes (&Attributes,
 			      &KeyName,
@@ -243,7 +243,7 @@ OpenCurrentConfigKey (PHANDLE KeyHandle)
   UNICODE_STRING KeyName =
   RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Hardware Profiles\\Current");
 
-  DPRINT("OpenCurrentConfigKey()\n");
+  TRACE("OpenCurrentConfigKey()\n");
 
   InitializeObjectAttributes (&Attributes,
 			      &KeyName,
@@ -341,7 +341,7 @@ CreateNestedKey(PHKEY KeyHandle,
                        ClassString,
                        dwOptions,
                        (PULONG)lpdwDisposition);
-  DPRINT("NtCreateKey(%wZ) called (Status %lx)\n", ObjectAttributes->ObjectName, Status);
+  TRACE("NtCreateKey(%wZ) called (Status %lx)\n", ObjectAttributes->ObjectName, Status);
   if (Status != STATUS_OBJECT_NAME_NOT_FOUND)
     return Status;
 
@@ -373,7 +373,7 @@ CreateNestedKey(PHKEY KeyHandle,
 			    NULL,
 			    0,
 			    &Disposition);
-      DPRINT("NtCreateKey(%wZ) called (Status %lx)\n", &LocalKeyName, Status);
+      TRACE("NtCreateKey(%wZ) called (Status %lx)\n", &LocalKeyName, Status);
     }
 
   if (!NT_SUCCESS(Status))
@@ -410,7 +410,7 @@ CreateNestedKey(PHKEY KeyHandle,
 			    NULL,
 			    0,
 			    &Disposition);
-      DPRINT("NtCreateKey(%wZ) called (Status %lx)\n", &LocalKeyName, Status);
+      TRACE("NtCreateKey(%wZ) called (Status %lx)\n", &LocalKeyName, Status);
       if (!NT_SUCCESS(Status))
 	break;
     }
@@ -443,7 +443,7 @@ RegCreateKeyExA (HKEY hKey,
   HANDLE ParentKey;
   NTSTATUS Status;
 
-  DPRINT("RegCreateKeyExA() called\n");
+  TRACE("RegCreateKeyExA() called\n");
 
   /* get the real parent key */
   Status = MapDefaultKey (&ParentKey,
@@ -452,7 +452,7 @@ RegCreateKeyExA (HKEY hKey,
     {
       return RtlNtStatusToDosError (Status);
     }
-  DPRINT("ParentKey %x\n", (ULONG)ParentKey);
+  TRACE("ParentKey %x\n", (ULONG)ParentKey);
 
   if (lpClass != NULL)
     {
@@ -479,7 +479,7 @@ RegCreateKeyExA (HKEY hKey,
       RtlFreeUnicodeString (&ClassString);
     }
 
-  DPRINT("Status %x\n", Status);
+  TRACE("Status %x\n", Status);
   if (!NT_SUCCESS(Status))
     {
       return RtlNtStatusToDosError (Status);
@@ -511,7 +511,7 @@ RegCreateKeyExW (HKEY hKey,
   HANDLE ParentKey;
   NTSTATUS Status;
 
-  DPRINT("RegCreateKeyExW() called\n");
+  TRACE("RegCreateKeyExW() called\n");
 
   /* get the real parent key */
   Status = MapDefaultKey (&ParentKey,
@@ -520,7 +520,7 @@ RegCreateKeyExW (HKEY hKey,
     {
       return RtlNtStatusToDosError(Status);
     }
-  DPRINT("ParentKey %x\n", (ULONG)ParentKey);
+  TRACE("ParentKey %x\n", (ULONG)ParentKey);
 
   RtlInitUnicodeString (&ClassString,
 			lpClass);
@@ -537,7 +537,7 @@ RegCreateKeyExW (HKEY hKey,
                            dwOptions,
                            samDesired,
                            lpdwDisposition);
-  DPRINT("Status %x\n", Status);
+  TRACE("Status %x\n", Status);
   if (!NT_SUCCESS(Status))
     {
       return RtlNtStatusToDosError (Status);
@@ -838,7 +838,7 @@ RegEnumKeyExA (HKEY hKey,
 	HANDLE KeyHandle;
 	NTSTATUS Status;
 
-	DPRINT("RegEnumKeyExA(hKey 0x%x, dwIndex %d, lpName 0x%x, *lpcbName %d, lpClass 0x%x, lpcbClass %d)\n",
+	TRACE("RegEnumKeyExA(hKey 0x%x, dwIndex %d, lpName 0x%x, *lpcbName %d, lpClass 0x%x, lpcbClass %d)\n",
 		hKey, dwIndex, lpName, *lpcbName, lpClass, lpcbClass ? *lpcbClass : 0);
 
 	if ((lpClass) && (!lpcbClass))
@@ -892,7 +892,7 @@ RegEnumKeyExA (HKEY hKey,
 								KeyInfo,
 								BufferSize,
 								&ResultSize);
-	DPRINT("NtEnumerateKey() returned status 0x%X\n", Status);
+	TRACE("NtEnumerateKey() returned status 0x%X\n", Status);
 	if (!NT_SUCCESS(Status))
 	{
 		ErrorCode = RtlNtStatusToDosError (Status);
@@ -960,10 +960,10 @@ RegEnumKeyExA (HKEY hKey,
 		}
 	}
 
-	DPRINT("Key Namea0 Length %d\n", StringU.Length);
-	DPRINT("Key Namea1 Length %d\n", NameLength);
-	DPRINT("Key Namea Length %d\n", *lpcbName);
-	DPRINT("Key Namea %s\n", lpName);
+	TRACE("Key Namea0 Length %d\n", StringU.Length);
+	TRACE("Key Namea1 Length %d\n", NameLength);
+	TRACE("Key Namea Length %d\n", *lpcbName);
+	TRACE("Key Namea %s\n", lpName);
 
 	RtlFreeHeap (ProcessHeap,
 		0,
@@ -1050,7 +1050,7 @@ RegEnumKeyExW (HKEY hKey,
 			   KeyInfo,
 			   BufferSize,
 			   &ResultSize);
-  DPRINT("NtEnumerateKey() returned status 0x%X\n", Status);
+  TRACE("NtEnumerateKey() returned status 0x%X\n", Status);
   if (!NT_SUCCESS(Status))
     {
       ErrorCode = RtlNtStatusToDosError (Status);
@@ -1386,7 +1386,7 @@ RegGetKeySecurity(HKEY hKey,
 			 hKey);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("MapDefaultKey() failed (Status %lx)\n", Status);
+      TRACE("MapDefaultKey() failed (Status %lx)\n", Status);
       return RtlNtStatusToDosError (Status);
     }
 
@@ -1397,7 +1397,7 @@ RegGetKeySecurity(HKEY hKey,
 				 lpcbSecurityDescriptor);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("NtQuerySecurityObject() failed (Status %lx)\n", Status);
+      WARN("NtQuerySecurityObject() failed (Status %lx)\n", Status);
       return RtlNtStatusToDosError (Status);
     }
 
@@ -1590,7 +1590,7 @@ RegOpenKeyA (HKEY hKey,
 	     LPCSTR lpSubKey,
 	     PHKEY phkResult)
 {
-	DPRINT("RegOpenKeyA hKey 0x%x lpSubKey %s phkResult %p\n", hKey, lpSubKey, phkResult);
+	TRACE("RegOpenKeyA hKey 0x%x lpSubKey %s phkResult %p\n", hKey, lpSubKey, phkResult);
 
 	if (!lpSubKey || !*lpSubKey)
 	{
@@ -1616,7 +1616,7 @@ RegOpenKeyW (HKEY hKey,
 	     LPCWSTR lpSubKey,
 	     PHKEY phkResult)
 {
-	DPRINT("RegOpenKeyW hKey 0x%x lpSubKey %S phkResult %p\n", hKey, lpSubKey, phkResult);
+	TRACE("RegOpenKeyW hKey 0x%x lpSubKey %S phkResult %p\n", hKey, lpSubKey, phkResult);
 
 	if (!lpSubKey || !*lpSubKey)
 	{
@@ -1644,7 +1644,7 @@ RegOpenKeyExA (HKEY hKey,
 	HANDLE KeyHandle;
 	NTSTATUS Status;
 
-	DPRINT("RegOpenKeyExA hKey 0x%x lpSubKey %s ulOptions 0x%x samDesired 0x%x phkResult %p\n",
+	TRACE("RegOpenKeyExA hKey 0x%x lpSubKey %s ulOptions 0x%x samDesired 0x%x phkResult %p\n",
 		hKey, lpSubKey, ulOptions, samDesired, phkResult);
 
 	Status = MapDefaultKey (&KeyHandle, hKey);
@@ -1688,7 +1688,7 @@ RegOpenKeyExW (HKEY hKey,
 	HANDLE KeyHandle;
 	NTSTATUS Status;
 
-	DPRINT("RegOpenKeyExW hKey 0x%x lpSubKey %S ulOptions 0x%x samDesired 0x%x phkResult %p\n",
+	TRACE("RegOpenKeyExW hKey 0x%x lpSubKey %S ulOptions 0x%x samDesired 0x%x phkResult %p\n",
 		hKey, lpSubKey, ulOptions, samDesired, phkResult);
 
 	Status = MapDefaultKey (&KeyHandle, hKey);
@@ -1837,7 +1837,7 @@ ReadTokenSid:
   RtlAppendUnicodeToString(&UserClassesKeyRoot,
                            UserClassesKeySuffix);
 
-  DPRINT("RegOpenUserClassesRoot: Absolute path: %wZ\n", &UserClassesKeyRoot);
+  TRACE("RegOpenUserClassesRoot: Absolute path: %wZ\n", &UserClassesKeyRoot);
 
   /*
    * Open the key
@@ -2001,7 +2001,7 @@ RegQueryInfoKeyW (HKEY hKey,
 		       FullInfo,
 		       FullInfoSize,
 		       &Length);
-  DPRINT("NtQueryKey() returned status 0x%X\n", Status);
+  TRACE("NtQueryKey() returned status 0x%X\n", Status);
   if (!NT_SUCCESS(Status))
     {
       if (lpClass != NULL)
@@ -2014,37 +2014,37 @@ RegQueryInfoKeyW (HKEY hKey,
       return RtlNtStatusToDosError (Status);
     }
 
-  DPRINT("SubKeys %d\n", FullInfo->SubKeys);
+  TRACE("SubKeys %d\n", FullInfo->SubKeys);
   if (lpcSubKeys != NULL)
     {
       *lpcSubKeys = FullInfo->SubKeys;
     }
 
-  DPRINT("MaxNameLen %lu\n", FullInfo->MaxNameLen);
+  TRACE("MaxNameLen %lu\n", FullInfo->MaxNameLen);
   if (lpcbMaxSubKeyLen != NULL)
     {
       *lpcbMaxSubKeyLen = FullInfo->MaxNameLen / sizeof(WCHAR) + 1;
     }
 
-  DPRINT("MaxClassLen %lu\n", FullInfo->MaxClassLen);
+  TRACE("MaxClassLen %lu\n", FullInfo->MaxClassLen);
   if (lpcbMaxClassLen != NULL)
     {
       *lpcbMaxClassLen = FullInfo->MaxClassLen / sizeof(WCHAR) + 1;
     }
 
-  DPRINT("Values %lu\n", FullInfo->Values);
+  TRACE("Values %lu\n", FullInfo->Values);
   if (lpcValues != NULL)
     {
       *lpcValues = FullInfo->Values;
     }
 
-  DPRINT("MaxValueNameLen %lu\n", FullInfo->MaxValueNameLen);
+  TRACE("MaxValueNameLen %lu\n", FullInfo->MaxValueNameLen);
   if (lpcbMaxValueNameLen != NULL)
     {
       *lpcbMaxValueNameLen = FullInfo->MaxValueNameLen / sizeof(WCHAR) + 1;
     }
 
-  DPRINT("MaxValueDataLen %lu\n", FullInfo->MaxValueDataLen);
+  TRACE("MaxValueDataLen %lu\n", FullInfo->MaxValueDataLen);
   if (lpcbMaxValueLen != NULL)
     {
       *lpcbMaxValueLen = FullInfo->MaxValueDataLen;
@@ -2124,7 +2124,7 @@ RegQueryMultipleValuesA (HKEY hKey,
 
   *ldwTotsize = 0;
 
-  DPRINT ("RegQueryMultipleValuesA(%p,%p,%ld,%p,%p=%ld)\n",
+  TRACE("RegQueryMultipleValuesA(%p,%p,%ld,%p,%p=%ld)\n",
 	  hKey, val_list, num_vals, lpValueBuf, ldwTotsize, *ldwTotsize);
 
   for (i = 0; i < num_vals; i++)
@@ -2188,7 +2188,7 @@ RegQueryMultipleValuesW (HKEY hKey,
 
   *ldwTotsize = 0;
 
-  DPRINT ("RegQueryMultipleValuesW(%p,%p,%ld,%p,%p=%ld)\n",
+  TRACE ("RegQueryMultipleValuesW(%p,%p,%ld,%p,%p=%ld)\n",
 	  hKey, val_list, num_vals, lpValueBuf, ldwTotsize, *ldwTotsize);
 
   for (i = 0; i < num_vals; i++)
@@ -2252,7 +2252,7 @@ RegQueryValueExW (HKEY hKey,
   LONG ErrorCode = ERROR_SUCCESS;
   ULONG MaxCopy = lpcbData != NULL && lpData != NULL ? *lpcbData : 0;
 
-  DPRINT("hKey 0x%X  lpValueName %S  lpData 0x%X  lpcbData %d\n",
+  TRACE("hKey 0x%X  lpValueName %S  lpData 0x%X  lpcbData %d\n",
 	 hKey, lpValueName, lpData, lpcbData ? *lpcbData : 0);
 
   Status = MapDefaultKey (&KeyHandle,
@@ -2284,7 +2284,7 @@ RegQueryValueExW (HKEY hKey,
 			    ValueInfo,
 			    BufferSize,
 			    &ResultSize);
-  DPRINT("Status 0x%X\n", Status);
+  TRACE("Status 0x%X\n", Status);
   if (Status == STATUS_BUFFER_OVERFLOW)
     {
       /* Return ERROR_SUCCESS and the buffer space needed for a successful call */
@@ -2325,7 +2325,7 @@ RegQueryValueExW (HKEY hKey,
       if (lpcbData != NULL)
 	{
 	  *lpcbData = (ResultSize - FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]));
-	  DPRINT("(string) Returning Size: %lu\n", *lpcbData);
+	  TRACE("(string) Returning Size: %lu\n", *lpcbData);
 	}
     }
   else
@@ -2333,11 +2333,11 @@ RegQueryValueExW (HKEY hKey,
       if (lpcbData != NULL)
 	{
 	  *lpcbData = ResultSize - FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]);
-	  DPRINT("(other) Returning Size: %lu\n", *lpcbData);
+	  TRACE("(other) Returning Size: %lu\n", *lpcbData);
 	}
     }
 
-  DPRINT("Type %d  Size %d\n", ValueInfo->Type, ValueInfo->DataLength);
+  TRACE("Type %d  Size %d\n", ValueInfo->Type, ValueInfo->DataLength);
 
   RtlFreeHeap (ProcessHeap,
 	       0,
@@ -2367,7 +2367,7 @@ RegQueryValueExA (HKEY hKey,
   DWORD Length;
   DWORD Type;
 
-  DPRINT("hKey 0x%X  lpValueName %s  lpData 0x%X  lpcbData %d\n",
+  TRACE("hKey 0x%X  lpValueName %s  lpData 0x%X  lpcbData %d\n",
 	 hKey, lpValueName, lpData, lpcbData ? *lpcbData : 0);
 
   if (lpData != NULL && lpcbData == NULL)
@@ -2404,7 +2404,7 @@ RegQueryValueExA (HKEY hKey,
 				&Type,
 				(lpData == NULL) ? NULL : (LPBYTE)ValueData.Buffer,
 				&Length);
-  DPRINT("ErrorCode %lu\n", ErrorCode);
+  TRACE("ErrorCode %lu\n", ErrorCode);
   RtlFreeUnicodeString(&ValueName);
 
   if (ErrorCode == ERROR_SUCCESS ||
@@ -2473,7 +2473,7 @@ RegQueryValueA (HKEY hKey,
   LONG ValueSize;
   LONG ErrorCode;
 
-  DPRINT("hKey 0x%X lpSubKey %s lpValue %p lpcbValue %d\n",
+  TRACE("hKey 0x%X lpSubKey %s lpValue %p lpcbValue %d\n",
 	 hKey, lpSubKey, lpValue, lpcbValue ? *lpcbValue : 0);
 
   if (lpValue != NULL &&
@@ -2562,7 +2562,7 @@ RegQueryValueW (HKEY hKey,
   BOOL CloseRealKey;
   NTSTATUS Status;
 
-  DPRINT("hKey 0x%X lpSubKey %S lpValue %p lpcbValue %d\n",
+  TRACE("hKey 0x%X lpSubKey %S lpValue %p lpcbValue %d\n",
 	 hKey, lpSubKey, lpValue, lpcbValue ? *lpcbValue : 0);
 
   Status = MapDefaultKey (&KeyHandle,

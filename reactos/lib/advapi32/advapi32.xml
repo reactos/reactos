@@ -10,6 +10,7 @@
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<library>rpcrt4</library>
+	<library>wine</library>
 	<pch>advapi32.h</pch>
 	<directory name="crypt">
 		<file>crypt.c</file>

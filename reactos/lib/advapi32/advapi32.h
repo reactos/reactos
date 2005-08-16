@@ -14,6 +14,7 @@
 /* PSDK/NDK Headers */
 #include <windows.h>
 #include <accctrl.h>
+#include <sddl.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 

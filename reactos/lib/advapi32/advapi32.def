@@ -91,8 +91,8 @@ ConvertSidToStringSidW@8
 ;ConvertStringSDToSDDomainW@24
 ;ConvertStringSDToSDRootDomainA@20
 ;ConvertStringSDToSDRootDomainW@20
-;ConvertStringSecurityDescriptorToSecurityDescriptorA@20
-;ConvertStringSecurityDescriptorToSecurityDescriptorW@20
+ConvertStringSecurityDescriptorToSecurityDescriptorA@16
+ConvertStringSecurityDescriptorToSecurityDescriptorW@16
 ;ConvertStringSidToSidA@8
 ;ConvertStringSidToSidW@8
 ConvertToAutoInheritPrivateObjectSecurity@24
@@ -315,7 +315,7 @@ InitializeSecurityDescriptor@8
 InitializeSid@12
 InitiateSystemShutdownA@20
 ;InitiateSystemShutdownExA@24
-;InitiateSystemShutdownExW@24
+InitiateSystemShutdownExW@24
 InitiateSystemShutdownW@20
 ;InstallApplication
 IsTextUnicode@12=NTDLL.RtlIsTextUnicode
