@@ -287,8 +287,8 @@ modules\os2\server\os2srv.dll           1	optional
 modules\os2\lib\doscalls\doscalls.dll   1	optional
 modules\posix\server\psxsrv.dll         1	optional
 modules\posix\lib\psxdll\psxdll.dll     1	optional
-modules\rosky\lib\libsky\libsky.dll     1       o
-modules\rosky\lib\libskygi\libskygi.dll 1       o
+modules\rosky\lib\libsky\libsky.dll     1       optional
+modules\rosky\lib\libskygi\libskygi.dll 1       optional
 modules\vms\server\vmssrv.dll           1	optional
 modules\vms\lib\vmsdll\vmsdll.dll       1	optional
 modules\rosapps\cmdutils\find.exe	1	optional
