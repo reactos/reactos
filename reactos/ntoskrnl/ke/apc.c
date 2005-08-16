@@ -469,29 +469,23 @@ KeFlushQueueApc(IN PKTHREAD Thread,
 {
     KIRQL OldIrql;
     PKAPC Apc;
-    PLIST_ENTRY ApcEntry, CurrentEntry;
+    PLIST_ENTRY FirstEntry, CurrentEntry;
 
     /* Lock the Dispatcher Database and APC Queue */
     OldIrql = KeAcquireDispatcherDatabaseLock();
     KeAcquireSpinLockAtDpcLevel(&Thread->ApcQueueLock);
 
-    ApcEntry = CurrentEntry = NULL;
-    while (!IsListEmpty(&Thread->ApcState.ApcListHead[PreviousMode]))
-    {
-       if (ApcEntry == NULL)
-       {
-          ApcEntry = CurrentEntry = RemoveHeadList(&Thread->ApcState.ApcListHead[PreviousMode]);
-       }
-       else
-       {
-          CurrentEntry->Flink = RemoveHeadList(&Thread->ApcState.ApcListHead[PreviousMode]);
-          CurrentEntry = CurrentEntry->Flink;
-       }
-       CurrentEntry->Flink = NULL;
-
-       /* Get the APC */
-       Apc = CONTAINING_RECORD(CurrentEntry, KAPC, ApcListEntry);
-       Apc->Inserted = FALSE;
+    if (IsListEmpty(&Thread->ApcState.ApcListHead[PreviousMode])) {
+        FirstEntry = NULL;
+    } else {
+        FirstEntry = Thread->ApcState.ApcListHead[PreviousMode].Flink;
+        RemoveEntryList(&Thread->ApcState.ApcListHead[PreviousMode]);
+        CurrentEntry = FirstEntry;
+        do {
+            Apc = CONTAINING_RECORD(CurrentEntry, KAPC, ApcListEntry);
+            Apc->Inserted = FALSE;
+            CurrentEntry = CurrentEntry->Flink;
+        } while (CurrentEntry != FirstEntry);
     }
 
     /* Release the locks */
@@ -499,7 +493,7 @@ KeFlushQueueApc(IN PKTHREAD Thread,
     KeReleaseDispatcherDatabaseLock(OldIrql);
 
     /* Return the first entry */
-    return ApcEntry;
+    return FirstEntry;
 }
 
 /*++
