@@ -218,10 +218,10 @@ VOID ExitBatch (LPTSTR msg)
 BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 {
 	HANDLE hFile;
-
+	SetLastError(0);
 	hFile = CreateFile (fullname, GENERIC_READ, FILE_SHARE_READ, NULL,
 			    OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL |
-			    FILE_FLAG_SEQUENTIAL_SCAN, NULL);
+				 FILE_FLAG_SEQUENTIAL_SCAN, NULL);	
 
 #ifdef _DEBUG
 	DebugPrintf (_T("Batch: (\'%s\', \'%s\', \'%s\')  hFile = %x\n"),
@@ -251,6 +251,9 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 
 		n->prev = bc;
 		bc = n;
+		bc->In[0] = _T('\0');
+		bc->Out[0] = _T('\0');
+		bc->Err[0] = _T('\0');
 	}
 	else if (bc->hBatchFile != INVALID_HANDLE_VALUE)
 	{
@@ -261,6 +264,7 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 	}
 
 	bc->hBatchFile = hFile;
+	SetFilePointer (bc->hBatchFile, 0, NULL, FILE_BEGIN); 
 	bc->bEcho = bEcho; /* Preserve echo across batch calls */
 	bc->shiftlevel = 0;
 
@@ -276,6 +280,18 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 	return TRUE;
 }
 
+VOID AddBatchRedirection(TCHAR * ifn, TCHAR * ofn, TCHAR * efn)
+{
+	if(!bc)
+		return;
+	if(_tcslen(ifn))
+		_tcscpy(bc->In,ifn);
+	if(_tcslen(ofn))
+		_tcscpy(bc->Out,ofn);
+	if(_tcslen(efn))
+		_tcscpy(bc->Err,efn);
+
+}
 
 /*
  * Read and return the next executable line form the current batch file
@@ -405,7 +421,6 @@ LPTSTR ReadBatchLine (LPBOOL bLocalEcho)
 
 			continue;
 		}
-
 #ifdef _DEBUG
 		DebugPrintf (_T("ReadBatchLine(): textline: \'%s\'\n"), textline);
 #endif

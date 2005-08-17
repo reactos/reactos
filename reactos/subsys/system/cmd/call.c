@@ -72,8 +72,20 @@ INT cmd_call (LPTSTR cmd, LPTSTR param)
 	bc->shiftlevel = 0;
 	bc->forvar = 0;        /* HBP004 */
 	bc->forproto = NULL;   /* HBP004 */
-
 	ParseCommandLine (param);
+	if (bc->prev)
+	{
+		_tcscpy(bc->In, bc->prev->In);
+		_tcscpy(bc->Out, bc->prev->Out);
+		_tcscpy(bc->Err, bc->prev->Err);
+	}
+	else
+	{
+		bc->In[0] = _T('\0');
+		bc->Out[0] = _T('\0');
+		bc->Err[0] = _T('\0');
+	}
+	
 
 	/* Wasn't a batch file so remove conext */
 	if (bc->hBatchFile == INVALID_HANDLE_VALUE)

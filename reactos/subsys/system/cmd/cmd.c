@@ -603,7 +603,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 	INT  nRedirFlags = 0;
 	INT  Length;
 	UINT Attributes;
-
+	BOOL bNewBatch = TRUE;
 	HANDLE hOldConIn;
 	HANDLE hOldConOut;
 	HANDLE hOldConErr;
@@ -656,6 +656,20 @@ VOID ParseCommandLine (LPTSTR cmd)
 		;
 	_tcscpy (err, t);
 
+	if(bc && !_tcslen (in) && _tcslen (bc->In))
+		_tcscpy(in, bc->In);
+	if(bc && !out[0] && _tcslen(bc->Out))
+	{
+		nRedirFlags |= OUTPUT_APPEND;
+		_tcscpy(out, bc->Out);
+	}
+	if(bc && !_tcslen (err) && _tcslen (bc->Err))
+	{
+		nRedirFlags |= ERROR_APPEND;
+		_tcscpy(err, bc->Err);
+	}
+		
+
 	/* Set up the initial conditions ... */
 	/* preserve STDIN, STDOUT and STDERR handles */
 	hOldConIn  = GetStdHandle (STD_INPUT_HANDLE);
@@ -675,7 +689,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 		hFile = CreateFile (in, GENERIC_READ, FILE_SHARE_READ, &sa, OPEN_EXISTING,
 		                    FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hFile == INVALID_HANDLE_VALUE)
-		{      
+		{
 			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 			ConErrPrintf(szMsg, in);
 			return;
@@ -766,7 +780,7 @@ VOID ParseCommandLine (LPTSTR cmd)
     /* we need make sure the LastError msg is zero before calling CreateFile */
 		SetLastError(0); 
 
-    hFile = CreateFile (out, GENERIC_WRITE, FILE_SHARE_READ, &sa,
+    hFile = CreateFile (out, GENERIC_WRITE, FILE_SHARE_WRITE, &sa,
 		                    (nRedirFlags & OUTPUT_APPEND) ? OPEN_ALWAYS : CREATE_ALWAYS,
 		                    FILE_ATTRIBUTE_NORMAL, NULL);
 		
@@ -782,7 +796,7 @@ VOID ParseCommandLine (LPTSTR cmd)
       }
       
       out[size]=_T('\0');
-      hFile = CreateFile (out, GENERIC_WRITE, FILE_SHARE_READ, &sa,
+      hFile = CreateFile (out, GENERIC_WRITE, FILE_SHARE_WRITE, &sa,
 		                    (nRedirFlags & OUTPUT_APPEND) ? OPEN_ALWAYS : CREATE_ALWAYS,
 		                    FILE_ATTRIBUTE_NORMAL, NULL);
 
@@ -884,12 +898,17 @@ VOID ParseCommandLine (LPTSTR cmd)
 			CloseHandle (hErr);
 		hOldConErr = INVALID_HANDLE_VALUE;
 	}
+
+	if(bc)
+		bNewBatch = FALSE;
 #endif
 
 	/* process final command */
 	DoCommand (s);
 
 #ifdef FEATURE_REDIRECTION
+	if(bNewBatch && bc)
+		AddBatchRedirection(in, out, err);
 	/* close old stdin file */
 #if 0  /* buggy implementation */
 	SetStdHandle (STD_INPUT_HANDLE, hOldConIn);
