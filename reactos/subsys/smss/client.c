@@ -250,7 +250,7 @@ SmCompleteClientInitialization (ULONG ProcessId)
 	NTSTATUS        Status = STATUS_NOT_FOUND;
 	PSM_CLIENT_DATA Client = NULL;
 
-	DPRINT("SM: %s called\n", __FUNCTION__);
+	DPRINT("SM: %s(%lu) called\n", __FUNCTION__, ProcessId);
 
 	RtlEnterCriticalSection (& SmpClientDirectory.Lock);
 	if (SmpClientDirectory.Count > 0)
@@ -284,6 +284,11 @@ SmCompleteClientInitialization (ULONG ProcessId)
  *
  * RETURN VALUE
  * 	NTSTATUS:
+ * 		STATUS_SUCCESS if all OK;
+ * 		STATUS_DEVICE_BUSY if another SS is still booting;
+ * 		STATUS_NO_MEMORY if client descriptor allocation failed;
+ * 		
+ * 		
  */
 NTSTATUS STDCALL
 SmCreateClient (PRTL_USER_PROCESS_INFORMATION ProcessInfo, PWSTR ProgramName)
@@ -292,46 +297,49 @@ SmCreateClient (PRTL_USER_PROCESS_INFORMATION ProcessInfo, PWSTR ProgramName)
 
 	
 	DPRINT("SM: %s(%lx) called\n", __FUNCTION__, ProcessInfo->ProcessHandle);
+
 	RtlEnterCriticalSection (& SmpClientDirectory.Lock);
 	/*
 	 * Check if the candidate client slot is empty.
 	 */
-	if (NULL != SmpClientDirectory.CandidateClient)
-	{
-		DPRINT1("SM: %s: CandidateClient pending!\n", __FUNCTION__);
-		RtlLeaveCriticalSection (& SmpClientDirectory.Lock);
-		return STATUS_UNSUCCESSFUL;
-	}
-	/*
-	 * Allocate the storage for client data
-	 */
-	SmpClientDirectory.CandidateClient =
-		RtlAllocateHeap (SmpHeap,
-				 HEAP_ZERO_MEMORY,
-				 sizeof (SM_CLIENT_DATA));
 	if (NULL == SmpClientDirectory.CandidateClient)
 	{
-		DPRINT("SM: %s(%lx): out of memory!\n",
-			__FUNCTION__, ProcessInfo->ProcessHandle);
-		Status = STATUS_NO_MEMORY;
-	}
-	else
-	{
-		/* Initialize the candidate client. */
-		RtlInitializeCriticalSection(& SmpClientDirectory.CandidateClient->Lock);
-		SmpClientDirectory.CandidateClient->ServerProcess =
-			(HANDLE) ProcessInfo->ProcessHandle;
-		SmpClientDirectory.CandidateClient->ServerProcessId = 
-			(ULONG) ProcessInfo->ClientId.UniqueProcess;
 		/*
-		 * Copy the program name
+		 * Allocate the storage for client data
 		 */
-		RtlCopyMemory (SmpClientDirectory.CandidateClient->ProgramName,
-			       ProgramName,
-			       SM_SB_NAME_MAX_LENGTH);
+		SmpClientDirectory.CandidateClient =
+			RtlAllocateHeap (SmpHeap,
+					 HEAP_ZERO_MEMORY,
+					 sizeof (SM_CLIENT_DATA));
+		if (NULL == SmpClientDirectory.CandidateClient)
+		{
+			DPRINT("SM: %s(%lx): out of memory!\n",
+				__FUNCTION__, ProcessInfo->ProcessHandle);
+			Status = STATUS_NO_MEMORY;
+		}
+		else
+		{
+			/* Initialize the candidate client. */
+			RtlInitializeCriticalSection(& SmpClientDirectory.CandidateClient->Lock);
+			SmpClientDirectory.CandidateClient->ServerProcess =
+				(HANDLE) ProcessInfo->ProcessHandle;
+			SmpClientDirectory.CandidateClient->ServerProcessId = 
+				(ULONG) ProcessInfo->ClientId.UniqueProcess;
+			/*
+			 * Copy the program name
+			 */
+			RtlCopyMemory (SmpClientDirectory.CandidateClient->ProgramName,
+				       ProgramName,
+				       SM_SB_NAME_MAX_LENGTH);
+		}
+	} else {
+		DPRINT1("SM: %s: CandidateClient pending!\n", __FUNCTION__);
+		RtlLeaveCriticalSection (& SmpClientDirectory.Lock);
+		Status = STATUS_DEVICE_BUSY;
 	}
 
 	RtlLeaveCriticalSection (& SmpClientDirectory.Lock);
+
 	return Status;
 }
 
