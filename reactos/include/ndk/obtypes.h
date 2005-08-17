@@ -13,6 +13,35 @@
 
 /* CONSTANTS *****************************************************************/
 
+#ifdef NTOS_MODE_USER
+/* Definitions for Object Creation */
+#define OBJ_INHERIT 2L
+#define OBJ_PERMANENT 16L
+#define OBJ_EXCLUSIVE 32L
+#define OBJ_CASE_INSENSITIVE 64L
+#define OBJ_OPENIF 128L
+#define OBJ_OPENLINK 256L
+#define OBJ_VALID_ATTRIBUTES 498L
+#define InitializeObjectAttributes(p,n,a,r,s) { \
+    (p)->Length = sizeof(OBJECT_ATTRIBUTES); \
+    (p)->RootDirectory = (r); \
+    (p)->Attributes = (a); \
+    (p)->ObjectName = (n); \
+    (p)->SecurityDescriptor = (s); \
+    (p)->SecurityQualityOfService = NULL; \
+}
+
+/* Directory Object Access Rights */
+#define DIRECTORY_QUERY                 0x0001
+#define DIRECTORY_TRAVERSE              0x0002
+#define DIRECTORY_CREATE_OBJECT         0x0004
+#define DIRECTORY_CREATE_SUBDIRECTORY   0x0008
+#define DIRECTORY_ALL_ACCESS            STANDARD_RIGHTS_REQUIRED | 0xF
+#endif
+
+/* Duplication Flags */
+#define DUPLICATE_SAME_ATTRIBUTES       0x00000004
+
 /* Values for DosDeviceDriveType */
 #define DOSDEVICE_DRIVE_UNKNOWN		0
 #define DOSDEVICE_DRIVE_CALCULATE	1
@@ -22,6 +51,7 @@
 #define DOSDEVICE_DRIVE_CDROM		5
 #define DOSDEVICE_DRIVE_RAMDISK		6
 
+#ifndef NTOS_MODE_USER
 /* Object Flags */
 #define OB_FLAG_CREATE_INFO    0x01
 #define OB_FLAG_KERNEL_MODE    0x02
@@ -95,11 +125,10 @@ typedef PVOID
     ULONG  Attributes
 );
 
-
 typedef NTSTATUS
 (STDCALL *OB_SECURITY_METHOD)(
     PVOID Object,
-    SECURITY_OPERATION_CODE OperationType,                         
+    SECURITY_OPERATION_CODE OperationType,
     SECURITY_INFORMATION SecurityInformation,
     PSECURITY_DESCRIPTOR NewSecurityDescriptor,
     PULONG ReturnLength,
@@ -116,9 +145,18 @@ typedef NTSTATUS
     PWSTR  RemainingPath,
     struct _OBJECT_ATTRIBUTES*  ObjectAttributes
 );
+#endif
 
 /* TYPES *********************************************************************/
 
+#ifdef NTOS_MODE_USER
+typedef struct _OBJECT_NAME_INFORMATION
+{
+    UNICODE_STRING Name;
+} OBJECT_NAME_INFORMATION, *POBJECT_NAME_INFORMATION;
+#endif
+
+#ifndef NTOS_MODE_USER
 typedef struct _OBJECT_BASIC_INFORMATION
 {
     ULONG Attributes;
@@ -292,5 +330,6 @@ typedef struct _DEVICE_MAP
 
 extern NTOSAPI POBJECT_TYPE ObDirectoryType;
 extern NTOSAPI PDEVICE_MAP ObSystemDeviceMap;
+#endif
 
 #endif

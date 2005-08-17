@@ -11,36 +11,37 @@
 #define _EXTYPES_H
 
 /* DEPENDENCIES **************************************************************/
-#include "ketypes.h"
 
 /* EXPORTED DATA *************************************************************/
+#ifndef NTOS_MODE_USER
 extern POBJECT_TYPE NTOSAPI ExIoCompletionType;
 extern NTOSAPI POBJECT_TYPE ExMutantObjectType;
 extern NTOSAPI POBJECT_TYPE ExTimerType;
+#endif
 
 /* CONSTANTS *****************************************************************/
-
+#ifndef NTOS_MODE_USER
 #define INVALID_HANDLE_VALUE (HANDLE)-1
+#endif
 
 /* Increments */
 #define MUTANT_INCREMENT 1
 
-/* Callback Object Access Rights */
-#define CALLBACK_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|0x0001)
-#define CALLBACK_EXECUTE    (STANDARD_RIGHTS_EXECUTE|SYNCHRONIZE|0x0001)
-#define CALLBACK_WRITE      (STANDARD_RIGHTS_WRITE|SYNCHRONIZE|0x0001)
-#define CALLBACK_READ       (STANDARD_RIGHTS_READ|SYNCHRONIZE|0x0001)
+/* Executive Object Access Rights */
+#define CALLBACK_ALL_ACCESS     (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|0x0001)
+#define CALLBACK_EXECUTE        (STANDARD_RIGHTS_EXECUTE|SYNCHRONIZE|0x0001)
+#define CALLBACK_WRITE          (STANDARD_RIGHTS_WRITE|SYNCHRONIZE|0x0001)
+#define CALLBACK_READ           (STANDARD_RIGHTS_READ|SYNCHRONIZE|0x0001)
+#ifdef NTOS_MODE_USER
+#define EVENT_QUERY_STATE       0x0001
+#define SEMAPHORE_QUERY_STATE   0x0001
+#endif
 
 /* ENUMERATIONS **************************************************************/
 
 /* TYPES *********************************************************************/
 
-/* You'll need the IFS for this, so use an equivalent version */
-#ifndef _NTIFS_
-typedef PVOID EX_RUNDOWN_REF;
-typedef PVOID EX_PUSH_LOCK;
-#endif
-
+#ifndef NTOS_MODE_USER
 typedef struct _EX_QUEUE_WORKER_INFO
 {
     UCHAR QueueDisabled:1;
@@ -119,5 +120,6 @@ typedef struct _HANDLE_TABLE
     KEVENT HandleContentionEvent;
 } HANDLE_TABLE, *PHANDLE_TABLE;
 
+#endif
 #endif
 

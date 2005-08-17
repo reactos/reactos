@@ -10,7 +10,6 @@
 #define _MMTYPES_H
 
 /* DEPENDENCIES **************************************************************/
-
 #include "arch/mmtypes.h"
 
 /* EXPORTED DATA *************************************************************/
@@ -18,6 +17,34 @@
 /* CONSTANTS *****************************************************************/
 
 /* ENUMERATIONS **************************************************************/
+
+#ifdef NTOS_MODE_USER
+typedef enum _SECTION_INHERIT
+{
+    ViewShare = 1,
+    ViewUnmap = 2
+} SECTION_INHERIT;
+
+typedef enum _POOL_TYPE
+{
+    NonPagedPool,
+    PagedPool,
+    NonPagedPoolMustSucceed,
+    DontUseThisType,
+    NonPagedPoolCacheAligned,
+    PagedPoolCacheAligned,
+    NonPagedPoolCacheAlignedMustS,
+    MaxPoolType,
+    NonPagedPoolSession = 32,
+    PagedPoolSession,
+    NonPagedPoolMustSucceedSession,
+    DontUseThisTypeSession,
+    NonPagedPoolCacheAlignedSession,
+    PagedPoolCacheAlignedSession,
+    NonPagedPoolCacheAlignedMustSSession
+} POOL_TYPE;
+#endif
+
 typedef enum _PP_NPAGED_LOOKASIDE_NUMBER
 {
     LookasideSmallIrpList = 0,
@@ -32,6 +59,40 @@ typedef enum _PP_NPAGED_LOOKASIDE_NUMBER
 
 /* TYPES *********************************************************************/
 
+#ifdef NTOS_MODE_USER
+typedef struct _VM_COUNTERS
+{
+    SIZE_T PeakVirtualSize;
+    SIZE_T VirtualSize;
+    ULONG PageFaultCount;
+    SIZE_T PeakWorkingSetSize;
+    SIZE_T WorkingSetSize;
+    SIZE_T QuotaPeakPagedPoolUsage;
+    SIZE_T QuotaPagedPoolUsage;
+    SIZE_T QuotaPeakNonPagedPoolUsage;
+    SIZE_T QuotaNonPagedPoolUsage;
+    SIZE_T PagefileUsage;
+    SIZE_T PeakPagefileUsage;
+} VM_COUNTERS, *PVM_COUNTERS;
+
+typedef struct _VM_COUNTERS_EX
+{
+    SIZE_T PeakVirtualSize;
+    SIZE_T VirtualSize;
+    ULONG PageFaultCount;
+    SIZE_T PeakWorkingSetSize;
+    SIZE_T WorkingSetSize;
+    SIZE_T QuotaPeakPagedPoolUsage;
+    SIZE_T QuotaPagedPoolUsage;
+    SIZE_T QuotaPeakNonPagedPoolUsage;
+    SIZE_T QuotaNonPagedPoolUsage;
+    SIZE_T PagefileUsage;
+    SIZE_T PeakPagefileUsage;
+    SIZE_T PrivateUsage;
+} VM_COUNTERS_EX, *PVM_COUNTERS_EX;
+#endif
+
+#ifndef NTOS_MODE_USER
 /* FIXME: Forced to do this for now, because of EPROCESS, will go away before 0.3.0 */
 typedef struct _MADDRESS_SPACE
 {
@@ -42,12 +103,6 @@ typedef struct _MADDRESS_SPACE
     PUSHORT PageTableRefCountTable;
     ULONG PageTableRefCountTableSize;
 } MADDRESS_SPACE, *PMADDRESS_SPACE;
-
-typedef struct _PP_LOOKASIDE_LIST
-{
-    struct _GENERAL_LOOKASIDE *P;
-    struct _GENERAL_LOOKASIDE *L;
-} PP_LOOKASIDE_LIST, *PPP_LOOKASIDE_LIST;
 
 typedef struct _ADDRESS_RANGE
 {
@@ -160,4 +215,5 @@ typedef struct _MMSUPPORT
     ULONG GrowthSinceLastEstimate;
 } MMSUPPORT, *PMMSUPPORT;
 
+#endif
 #endif

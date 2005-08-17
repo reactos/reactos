@@ -8,9 +8,6 @@
 #define _UMFUNCS_H
 
 /* DEPENDENCIES **************************************************************/
-#include "ldrtypes.h"
-#include "lpctypes.h"
-#include "rtltypes.h"
 
 /* PROTOTYPES ****************************************************************/
 
@@ -28,6 +25,7 @@ CsrClientConnectToServer(
     PBOOLEAN ServerToServerCall
 );
 
+struct _CSR_API_MESSAGE;
 NTSTATUS
 STDCALL
 CsrClientCallServer(

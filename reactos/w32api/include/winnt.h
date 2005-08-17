@@ -3338,6 +3338,7 @@ typedef struct _SYSTEM_BATTERY_STATE {
 	ULONG  DefaultAlert2;
 } SYSTEM_BATTERY_STATE, *PSYSTEM_BATTERY_STATE;
 
+typedef DWORD EXECUTION_STATE;
 typedef enum _POWER_INFORMATION_LEVEL {
 	SystemPowerPolicyAc,
 	SystemPowerPolicyDc,

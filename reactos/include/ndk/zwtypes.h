@@ -10,7 +10,6 @@
 #define _ZWTYPES_H
 
 /* DEPENDENCIES **************************************************************/
-#include "rtltypes.h"
 #include <cfg.h>
 
 /* EXPORTED DATA *************************************************************/
@@ -285,8 +284,8 @@ typedef enum _PLUGPLAY_CONTROL_CLASS
 
 /* TYPES *********************************************************************/
 
-typedef unsigned short LANGID;
-typedef LANGID *PLANGID;
+typedef USHORT LANGID, *PLANGID;
+typedef USHORT RTL_ATOM, *PRTL_ATOM;
 
 typedef struct _PLUGPLAY_EVENT_BLOCK
 {

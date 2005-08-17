@@ -115,6 +115,9 @@ typedef unsigned __int64 UINT64,  *PUINT64;
 typedef signed short INT16, *PINT16;
 typedef unsigned short UINT16, *PUINT16;
 
+typedef ULONG_PTR KAFFINITY;
+typedef KAFFINITY *PKAFFINITY;
+
 #ifdef __cplusplus
 }
 #endif

@@ -11,13 +11,20 @@
 
 /* DEPENDENCIES **************************************************************/
 #include "ldrtypes.h"
-#include "rtltypes.h"
+#include "mmtypes.h"
+#include "obtypes.h"
+#include "extypes.h"
+#ifndef NTOS_MODE_USER
+#include "setypes.h"
+#endif
 
 /* EXPORTED DATA *************************************************************/
 
+#ifndef NTOS_MODE_USER
 extern NTOSAPI struct _EPROCESS* PsInitialSystemProcess;
 extern NTOSAPI POBJECT_TYPE PsProcessType;
 extern NTOSAPI POBJECT_TYPE PsThreadType;
+#endif
 
 /* CONSTANTS *****************************************************************/
 
@@ -31,9 +38,15 @@ extern NTOSAPI POBJECT_TYPE PsThreadType;
     #define JOB_OBJECT_ALL_ACCESS               (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|31)
 #endif
 
-#define THREAD_ALERT 0x4
-
 #define USER_SHARED_DATA (0x7FFE0000)
+
+#ifdef NTOS_MODE_USER
+/* Macros for current Process/Thread built-in 'special' ID */
+#define NtCurrentProcess()                      ((HANDLE)(LONG_PTR)-1)
+#define ZwCurrentProcess()                      NtCurrentProcess()
+#define NtCurrentThread()                       ((HANDLE)(LONG_PTR)-2)
+#define ZwCurrentThread()                       NtCurrentThread()
+#endif
 
 /* Process priority classes */
 #define PROCESS_PRIORITY_CLASS_INVALID          0
@@ -75,9 +88,74 @@ extern NTOSAPI POBJECT_TYPE PsThreadType;
 
 /* ENUMERATIONS **************************************************************/
 
+#ifdef NTOS_MODE_USER
+typedef enum _PROCESSINFOCLASS
+{
+    ProcessBasicInformation,
+    ProcessQuotaLimits,
+    ProcessIoCounters,
+    ProcessVmCounters,
+    ProcessTimes,
+    ProcessBasePriority,
+    ProcessRaisePriority,
+    ProcessDebugPort,
+    ProcessExceptionPort,
+    ProcessAccessToken,
+    ProcessLdtInformation,
+    ProcessLdtSize,
+    ProcessDefaultHardErrorMode,
+    ProcessIoPortHandlers,
+    ProcessPooledUsageAndLimits,
+    ProcessWorkingSetWatch,
+    ProcessUserModeIOPL,
+    ProcessEnableAlignmentFaultFixup,
+    ProcessPriorityClass,
+    ProcessWx86Information,
+    ProcessHandleCount,
+    ProcessAffinityMask,
+    ProcessPriorityBoost,
+    ProcessDeviceMap,
+    ProcessSessionInformation,
+    ProcessForegroundInformation,
+    ProcessWow64Information,
+    ProcessImageFileName,
+    ProcessLUIDDeviceMapsEnabled,
+    ProcessBreakOnTermination,
+    ProcessDebugObjectHandle,
+    ProcessDebugFlags,
+    ProcessHandleTracing,
+    MaxProcessInfoClass
+} PROCESSINFOCLASS;
+
+typedef enum _THREADINFOCLASS
+{
+    ThreadBasicInformation,
+    ThreadTimes,
+    ThreadPriority,
+    ThreadBasePriority,
+    ThreadAffinityMask,
+    ThreadImpersonationToken,
+    ThreadDescriptorTableEntry,
+    ThreadEnableAlignmentFaultFixup,
+    ThreadEventPair_Reusable,
+    ThreadQuerySetWin32StartAddress,
+    ThreadZeroTlsCell,
+    ThreadPerformanceCount,
+    ThreadAmILastThread,
+    ThreadIdealProcessor,
+    ThreadPriorityBoost,
+    ThreadSetTlsArrayAddress,
+    ThreadIsIoPending,
+    ThreadHideFromDebugger,
+    ThreadBreakOnTermination,
+    MaxThreadInfoClass
+} THREADINFOCLASS;
+#endif
+
 /* FUNCTION TYPES ************************************************************/
 typedef VOID (NTAPI *PPEBLOCKROUTINE)(PVOID);
 
+#ifndef NTOS_MODE_USER
 typedef NTSTATUS
 (NTAPI *PW32_PROCESS_CALLBACK)(
     struct _EPROCESS *Process,
@@ -89,8 +167,17 @@ typedef NTSTATUS
     struct _ETHREAD *Thread,
     BOOLEAN Create
 );
+#endif
 
 /* TYPES *********************************************************************/
+
+#ifdef NTOS_MODE_USER
+typedef struct _CLIENT_ID
+{
+    HANDLE UniqueProcess;
+    HANDLE UniqueThread;
+} CLIENT_ID, *PCLIENT_ID;
+#endif
 
 struct _W32THREAD;
 struct _W32PROCESS;
@@ -118,7 +205,7 @@ typedef struct _PEB
     HANDLE Mutant;                                   /* 04h */
     PVOID ImageBaseAddress;                          /* 08h */
     PPEB_LDR_DATA Ldr;                               /* 0Ch */
-    PRTL_USER_PROCESS_PARAMETERS ProcessParameters;  /* 10h */
+    struct _RTL_USER_PROCESS_PARAMETERS *ProcessParameters;  /* 10h */
     PVOID SubSystemData;                             /* 14h */
     PVOID ProcessHeap;                               /* 18h */
     PVOID FastPebLock;                               /* 1Ch */
@@ -168,7 +255,7 @@ typedef struct _PEB
     ULONG SessionId;                                 /* 1D4h */
     PVOID AppCompatInfo;                             /* 1D8h */
     UNICODE_STRING CSDVersion;                       /* 1DCh */
-} PEB;
+} PEB, *PPEB;
 
 typedef struct _GDI_TEB_BATCH
 {
@@ -276,14 +363,7 @@ typedef struct _TEB
     PVOID WineDebugInfo;                    /* FBCh */    
 } TEB, *PTEB;
 
-/* KERNEL MODE ONLY **********************************************************/
 #ifndef NTOS_MODE_USER
-
-#include "mmtypes.h"
-#include "obtypes.h"
-#include "extypes.h"
-#include "setypes.h"
-
 /* FIXME: see note in mmtypes.h */
 #ifdef _NTOSKRNL_
 #include <internal/mm.h>
@@ -323,13 +403,6 @@ typedef struct _PS_IMPERSONATION_INFORMATION
 } PS_IMPERSONATION_INFORMATION, *PPS_IMPERSONATION_INFORMATION;
 
 #include <pshpack4.h>
-/*
- * NAME:           ETHREAD
- * DESCRIPTION:    Internal Executive Thread Structure.
- * PORTABILITY:    Architecture Independent.
- * KERNEL VERSION: 5.2
- * DOCUMENTATION:  http://reactos.com/wiki/index.php/ETHREAD
- */
 typedef struct _ETHREAD
 {
     KTHREAD                        Tcb;                         /* 1C0 */
@@ -373,7 +446,7 @@ typedef struct _ETHREAD
     PKSTART_ROUTINE                StartAddress;                /* 21C */
     union
     {
-        PTHREAD_START_ROUTINE      Win32StartAddress;           /* 220 */
+        PVOID                      Win32StartAddress;           /* 220 */
         ULONG                      LpcReceivedMessageId;        /* 220 */
     };
     LIST_ENTRY                     ThreadListEntry;             /* 224 */
@@ -431,13 +504,6 @@ typedef struct _ETHREAD
     UCHAR                          ActiveFaultCount;            /* 24E */
 } ETHREAD;
 
-/*
- * NAME:           EPROCESS
- * DESCRIPTION:    Internal Executive Process Structure.
- * PORTABILITY:    Architecture Independent.
- * KERNEL VERSION: 5.2
- * DOCUMENTATION:  http://reactos.com/wiki/index.php/EPROCESS
- */
 typedef struct _EPROCESS
 {
     KPROCESS              Pcb;                          /* 000 */

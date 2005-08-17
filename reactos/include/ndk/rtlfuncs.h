@@ -10,8 +10,6 @@
 #define _RTLFUNCS_H
 
 /* DEPENDENCIES **************************************************************/
-#include "rtltypes.h"
-#include "pstypes.h"
 #include <ntnls.h>
 
 /* PROTOTYPES ****************************************************************/

@@ -34,12 +34,7 @@ typedef enum _LPC_TYPE
 
 /* TYPES *********************************************************************/
 
-/* 
- * Native Structures in IFS. Duplicated here for user-mode.
- * Also duplicated if the IFS is not present. Until the WDK is
- * released, we should not force the usage of a 100$ kit.
- */
-#if defined(NTOS_MODE_USER) || !(defined(_NTIFS_))
+#ifdef NTOS_MODE_USER
 
 #if defined(USE_LPC6432)
 #define LPC_CLIENT_ID CLIENT_ID64
@@ -130,7 +125,6 @@ typedef struct _LPCP_PORT_QUEUE
     LIST_ENTRY ReceiveHead;
 } LPCP_PORT_QUEUE, *PLPCP_PORT_QUEUE;
 
-#ifdef _NTIFS_
 typedef struct _LPCP_PORT_OBJECT
 {
     ULONG Length;
@@ -175,8 +169,6 @@ typedef struct _LPCP_CONNECTION_MESSAGE
     PVOID SectionToMap;
     REMOTE_PORT_VIEW ServerView;
 } LPCP_CONNECTION_MESSAGE, *PLPCP_CONNECTION_MESSAGE;
-#endif
-
 #endif
 
 /* CONSTANTS *****************************************************************/

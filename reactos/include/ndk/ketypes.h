@@ -10,28 +10,24 @@
 #define _KETYPES_H
 
 /* DEPENDENCIES **************************************************************/
-#include "haltypes.h"
-#include "potypes.h"
-#include "mmtypes.h"
+#ifndef NTOS_MODE_USER
 #include <arc/arc.h>
-
-/* 
- * Architecture-specific types 
- * NB: Although KPROCESS is Arch-Specific,
- * only some members are different and we will use #ifdef
- * directly in the structure to avoid dependency-hell
- */
 #include "arch/ketypes.h"
+#endif
 
 /* CONSTANTS *****************************************************************/
 #define SSDT_MAX_ENTRIES 4
 #define PROCESSOR_FEATURE_MAX 64
-
 #define CONTEXT_DEBUGGER (CONTEXT_FULL | CONTEXT_FLOATING_POINT)
-
 #define THREAD_WAIT_OBJECTS 4
+#define THREAD_ALERT 0x4
+
+#ifdef NTOS_MODE_USER
+#define SharedUserData ((KUSER_SHARED_DATA * CONST) USER_SHARED_DATA)
+#endif
 
 /* EXPORTED DATA *************************************************************/
+#ifndef NTOS_MODE_USER
 extern CHAR NTOSAPI KeNumberProcessors;
 extern LOADER_PARAMETER_BLOCK NTOSAPI KeLoaderBlock;
 extern ULONG NTOSAPI KeDcacheFlushCount;
@@ -43,11 +39,203 @@ extern ULONG NTOSAPI KeMinimumIncrement;
 extern ULONG NTOSAPI NtBuildNumber;
 extern SSDT_ENTRY NTOSAPI KeServiceDescriptorTable[SSDT_MAX_ENTRIES];
 extern SSDT_ENTRY NTOSAPI KeServiceDescriptorTableShadow[SSDT_MAX_ENTRIES];
+#endif
 
 /* ENUMERATIONS **************************************************************/
 
+#ifdef NTOS_MODE_USER
+typedef enum _EVENT_TYPE
+{
+    NotificationEvent,
+    SynchronizationEvent
+} EVENT_TYPE;
+
+typedef enum _TIMER_TYPE
+{
+    NotificationTimer,
+    SynchronizationTimer
+} TIMER_TYPE;
+
+typedef enum _WAIT_TYPE
+{
+    WaitAll,
+    WaitAny
+} WAIT_TYPE;
+
+typedef enum _MODE
+{
+    KernelMode,
+    UserMode,
+    MaximumMode
+} MODE;
+
+typedef enum _KWAIT_REASON
+{
+    Executive,
+    FreePage,
+    PageIn,
+    PoolAllocation,
+    DelayExecution,
+    Suspended,
+    UserRequest,
+    WrExecutive,
+    WrFreePage,
+    WrPageIn,
+    WrPoolAllocation,
+    WrDelayExecution,
+    WrSuspended,
+    WrUserRequest,
+    WrEventPair,
+    WrQueue,
+    WrLpcReceive,
+    WrLpcReply,
+    WrVirtualMemory,
+    WrPageOut,
+    WrRendezvous,
+    Spare2,
+    WrGuardedMutex,
+    Spare4,
+    Spare5,
+    Spare6,
+    WrKernel,
+    WrResource,
+    WrPushLock,
+    WrMutex,
+    WrQuantumEnd,
+    WrDispatchInt,
+    WrPreempted,
+    WrYieldExecution,
+    MaximumWaitReason
+} KWAIT_REASON;
+
+typedef enum _KPROFILE_SOURCE
+{
+    ProfileTime,
+    ProfileAlignmentFixup,
+    ProfileTotalIssues,
+    ProfilePipelineDry,
+    ProfileLoadInstructions,
+    ProfilePipelineFrozen,
+    ProfileBranchInstructions,
+    ProfileTotalNonissues,
+    ProfileDcacheMisses,
+    ProfileIcacheMisses,
+    ProfileCacheMisses,
+    ProfileBranchMispredictions,
+    ProfileStoreInstructions,
+    ProfileFpInstructions,
+    ProfileIntegerInstructions,
+    Profile2Issue,
+    Profile3Issue,
+    Profile4Issue,
+    ProfileSpecialInstructions,
+    ProfileTotalCycles,
+    ProfileIcacheIssues,
+    ProfileDcacheAccesses,
+    ProfileMemoryBarrierCycles,
+    ProfileLoadLinkedIssues,
+    ProfileMaximum
+} KPROFILE_SOURCE;
+
+typedef enum _NT_PRODUCT_TYPE
+{
+    NtProductWinNt = 1,
+    NtProductLanManNt,
+    NtProductServer
+} NT_PRODUCT_TYPE, *PNT_PRODUCT_TYPE;
+
+typedef enum _ALTERNATIVE_ARCHITECTURE_TYPE
+{
+    StandardDesign,
+    NEC98x86,
+    EndAlternatives
+} ALTERNATIVE_ARCHITECTURE_TYPE;
+#endif
+
+typedef enum _KTHREAD_STATE
+{
+    Initialized,
+    Ready,
+    Running,
+    Standby,
+    Terminated,
+    Waiting,
+    Transition,
+    DeferredReady,
+} KTHREAD_STATE, *PKTHREAD_STATE;
+
+/* FUNCTION TYPES ************************************************************/
+
+typedef VOID
+(NTAPI *PKNORMAL_ROUTINE)(
+    IN PVOID  NormalContext,
+    IN PVOID  SystemArgument1,
+    IN PVOID  SystemArgument2);
+
+typedef VOID
+(NTAPI *PTIMER_APC_ROUTINE)(
+    IN PVOID  TimerContext,
+    IN ULONG  TimerLowValue,
+    IN LONG  TimerHighValue);
+
 /* TYPES *********************************************************************/
 
+typedef LONG KPRIORITY;
+
+#ifdef NTOS_MODE_USER
+typedef CCHAR KPROCESSOR_MODE;
+
+typedef struct _KSYSTEM_TIME
+{
+    ULONG LowPart;
+    LONG High1Time;
+    LONG High2Time;
+} KSYSTEM_TIME, *PKSYSTEM_TIME;
+
+typedef struct _KUSER_SHARED_DATA
+{
+    ULONG TickCountLowDeprecated;
+    ULONG TickCountMultiplier;
+    volatile KSYSTEM_TIME InterruptTime;
+    volatile KSYSTEM_TIME SystemTime;
+    volatile KSYSTEM_TIME TimeZoneBias;
+    USHORT ImageNumberLow;
+    USHORT ImageNumberHigh;
+    WCHAR NtSystemRoot[260];
+    ULONG MaxStackTraceDepth;
+    ULONG CryptoExponent;
+    ULONG TimeZoneId;
+    ULONG LargePageMinimum;
+    ULONG Reserved2[7];
+    NT_PRODUCT_TYPE NtProductType;
+    BOOLEAN ProductTypeIsValid;
+    ULONG NtMajorVersion;
+    ULONG NtMinorVersion;
+    BOOLEAN ProcessorFeatures[PROCESSOR_FEATURE_MAX];
+    ULONG Reserved1;
+    ULONG Reserved3;
+    volatile ULONG TimeSlip;
+    ALTERNATIVE_ARCHITECTURE_TYPE AlternativeArchitecture;
+    LARGE_INTEGER SystemExpirationDate;
+    ULONG SuiteMask;
+    BOOLEAN KdDebuggerEnabled;
+    volatile ULONG ActiveConsoleId;
+    volatile ULONG DismountCount;
+    ULONG ComPlusPackage;
+    ULONG LastSystemRITEventTickCount;
+    ULONG NumberOfPhysicalPages;
+    BOOLEAN SafeBootMode;
+    ULONG TraceLogging;
+    ULONGLONG Fill0;
+    ULONGLONG SystemCall[4];
+    union {
+        volatile KSYSTEM_TIME TickCount;
+        volatile ULONG64 TickCountQuad;
+    };
+} KUSER_SHARED_DATA, *PKUSER_SHARED_DATA;
+#endif
+
+#ifndef NTOS_MODE_USER
 typedef struct _CONFIGURATION_COMPONENT_DATA
 {
     struct _CONFIGURATION_COMPONENT_DATA *Parent;
@@ -62,27 +250,6 @@ typedef enum _KAPC_ENVIRONMENT
     AttachedApcEnvironment,
     CurrentApcEnvironment
 } KAPC_ENVIRONMENT;
-
-/* We don't want to force NTIFS usage only for two structures */
-#ifndef _NTIFS_
-typedef struct _KAPC_STATE
-{
-    LIST_ENTRY ApcListHead[2];
-    PKPROCESS Process;
-    BOOLEAN KernelApcInProgress;
-    BOOLEAN KernelApcPending;
-    BOOLEAN UserApcPending;
-} KAPC_STATE, *PKAPC_STATE, *RESTRICTED_POINTER PRKAPC_STATE;
-
-typedef struct _KQUEUE
-{
-    DISPATCHER_HEADER Header;
-    LIST_ENTRY EntryListHead;
-    ULONG CurrentCount;
-    ULONG MaximumCount;
-    LIST_ENTRY ThreadListHead;
-} KQUEUE, *PKQUEUE, *RESTRICTED_POINTER PRKQUEUE;
-#endif
 
 typedef struct _KNODE
 {
@@ -319,17 +486,6 @@ typedef struct _KPROCESS
     ULONG                 StackCount;                /* 06C */
     LIST_ENTRY            ProcessListEntry;          /* 070 */
 } KPROCESS;
-
-typedef enum _KTHREAD_STATE
-{
-    Initialized,
-    Ready,
-    Running,
-    Standby,
-    Terminated,
-    Waiting,
-    Transition,
-    DeferredReady,
-} KTHREAD_STATE, *PKTHREAD_STATE;
+#endif /* !NTOS_MODE_USER */
 
 #endif
