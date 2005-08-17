@@ -242,6 +242,7 @@ GspGetPacket()
 	    {
 	      GdbPutChar ('+');	/* successful transfer */
 
+#if 0
 	      /* if a sequence char is present, reply the sequence ID */
 	      if (Buffer[2] == ':')
 		{
@@ -250,6 +251,7 @@ GspGetPacket()
 
 		  return &Buffer[3];
 		}
+#endif
 
 	      return &Buffer[0];
 	    }
@@ -860,10 +862,12 @@ GspQuery(PCHAR Request)
     GspMem2Hex ((PCHAR) &ThreadCount, &GspOutBuffer[2], 1, TRUE);
   }
 #endif
+#if 0
   else if (strncmp (Command, "Offsets", 7) == 0)
   {
     strcpy (GspOutBuffer, "Text=0;Data=0;Bss=0");
   }
+#endif
 }
 
 VOID
@@ -1064,6 +1068,7 @@ GspSetHwBreakpoint(ULONG BreakpointNumber,
 }
 
 
+static BOOL gdb_attached_yet = TRUE;
 /*
  * This function does all command procesing for interfacing to gdb.
  */
@@ -1079,7 +1084,6 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
   LONG SigVal;
   LONG NewPC;
   PCHAR ptr;
-  LONG Esp;
 
   /* FIXME: Stop on other CPUs too */
   /* Disable hardware debugging while we are inside the stub */
@@ -1098,7 +1102,7 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
     {
       GspAccessLocation = NULL;
       GspMemoryError = TRUE;
-      TrapFrame->Eip += 2;
+      TrapFrame->Eip += 3;
     }
   else
     {
@@ -1111,36 +1115,45 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
           GspDbgThread = NULL;
         }
 
-      /* reply to host that an exception has occurred */
-      SigVal = GspComputeSignal (ExceptionRecord->ExceptionCode);
+      /* ugly hack to avoid attempting to send status at the very
+       * beginning, right when GDB is trying to query the stub */
+      if (gdb_attached_yet) {
+	  LONG Esp;
+	  
+	stop_reply:
+	  /* reply to host that an exception has occurred */
+	  SigVal = GspComputeSignal (ExceptionRecord->ExceptionCode);
+	  
+	  ptr = &GspOutBuffer[0];
 
-      ptr = &GspOutBuffer[0];
+	  *ptr++ = 'T';			/* notify gdb with signo, PC, FP and SP */
+	  *ptr++ = HexChars[(SigVal >> 4) & 0xf];
+	  *ptr++ = HexChars[SigVal & 0xf];
 
-      *ptr++ = 'T';			/* notify gdb with signo, PC, FP and SP */
-      *ptr++ = HexChars[(SigVal >> 4) & 0xf];
-      *ptr++ = HexChars[SigVal & 0xf];
+	  *ptr++ = HexChars[ESP];
+	  *ptr++ = ':';
+	  
+	  Esp = GspGetEspFromTrapFrame (TrapFrame);		       /* SP */
+	  ptr = GspMem2Hex ((PCHAR) &Esp, ptr, 4, 0);
+	  *ptr++ = ';';
+	  
+	  *ptr++ = HexChars[EBP];
+	  *ptr++ = ':';
+	  ptr = GspMem2Hex ((PCHAR) &TrapFrame->Ebp, ptr, 4, 0);       /* FP */
+	  *ptr++ = ';';
+	  
+	  *ptr++ = HexChars[PC];
+	  *ptr++ = ':';
+	  ptr = GspMem2Hex((PCHAR) &TrapFrame->Eip, ptr, 4, 0);        /* PC */
+	  *ptr++ = ';';
 
-      *ptr++ = HexChars[ESP];
-      *ptr++ = ':';
+	  *ptr = '\0';
 
-      Esp = GspGetEspFromTrapFrame (TrapFrame);			/* SP */
-      ptr = GspMem2Hex ((PCHAR) &Esp, ptr, 4, 0);
-      *ptr++ = ';';
-
-      *ptr++ = HexChars[EBP];
-      *ptr++ = ':';
-      ptr = GspMem2Hex ((PCHAR) &TrapFrame->Ebp, ptr, 4, 0); 	/* FP */
-      *ptr++ = ';';
-
-      *ptr++ = HexChars[PC];
-      *ptr++ = ':';
-      ptr = GspMem2Hex((PCHAR) &TrapFrame->Eip, ptr, 4, 0); 	/* PC */
-      *ptr++ = ';';
-
-      *ptr = '\0';
-
-      GspPutPacket (&GspOutBuffer[0]);
-
+	  GspPutPacket (&GspOutBuffer[0]);
+      } else {
+	  gdb_attached_yet = 1;
+      }
+      
       Stepping = FALSE;
 
       while (TRUE)
@@ -1152,6 +1165,8 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
           switch (*ptr++)
             {
             case '?':
+		/* a little hack to send more complete status information */
+		goto stop_reply;
               GspOutBuffer[0] = 'S';
               GspOutBuffer[1] = HexChars[SigVal >> 4];
               GspOutBuffer[2] = HexChars[SigVal % 16];
