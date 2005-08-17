@@ -88,6 +88,7 @@ typedef struct _QUEUEDMESSAGE
   PEPORT		Sender;
   LIST_ENTRY	QueueListEntry;
   PORT_MESSAGE	Message;
+  UCHAR         MessageData[0x130]; /* FIXME: HACK */
 } QUEUEDMESSAGE,  *PQUEUEDMESSAGE;
 
 typedef struct _LPC_DBG_MESSAGE

@@ -192,7 +192,7 @@ RtlCreateUserThread(HANDLE ProcessHandle,
     OBJECT_ATTRIBUTES ObjectAttributes;
     CONTEXT Context;
     
-    DPRINT1("RtlCreateUserThread: (hProcess: %lx, Suspended: %lx,"
+    DPRINT("RtlCreateUserThread: (hProcess: %lx, Suspended: %lx,"
             "ZeroBits: %lx, StackReserve: %lx, StackCommit: %lx,"
             "StartAddress: %p, Parameter: %lx)\n", ProcessHandle,
             CreateSuspended, StackZeroBits, StackReserve, StackCommit,
