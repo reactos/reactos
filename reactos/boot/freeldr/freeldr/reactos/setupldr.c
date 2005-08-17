@@ -19,6 +19,7 @@
  */
 
 #include <freeldr.h>
+#include <reactos/rossym.h>
 #include <debug.h>
 #include <arch.h>
 #include <disk.h>
@@ -42,6 +43,21 @@ memory_map_t			reactos_memory_map[32];		// Memory map
 
 #define USE_UI
 
+static BOOLEAN
+FreeldrReadFile(PVOID FileContext, PVOID Buffer, ULONG Size)
+{
+  ULONG BytesRead;
+
+  return FsReadFile((PFILE) FileContext, (ULONG) Size, &BytesRead, Buffer)
+         && Size == BytesRead;
+}
+
+static BOOLEAN
+FreeldrSeekFile(PVOID FileContext, ULONG_PTR Position)
+{
+  FsSetFilePointer((PFILE) FileContext, (ULONG) Position);
+    return TRUE;
+}
 
 static BOOL
 LoadKernel(PCHAR szSourcePath, PCHAR szFileName)
@@ -108,6 +124,60 @@ LoadKernel(PCHAR szSourcePath, PCHAR szFileName)
   return(TRUE);
 }
 
+static BOOL
+LoadKernelSymbols(PCHAR szSourcePath, PCHAR szFileName)
+{
+  static ROSSYM_CALLBACKS FreeldrCallbacks =
+    {
+      MmAllocateMemory,
+      MmFreeMemory,
+      FreeldrReadFile,
+      FreeldrSeekFile
+    };
+  CHAR szFullName[256];
+  PFILE FilePointer;
+  PROSSYM_INFO RosSymInfo;
+  ULONG Size;
+  ULONG_PTR Base;
+
+  if (szSourcePath[0] != '\\')
+    {
+      strcpy(szFullName, "\\");
+      strcat(szFullName, szSourcePath);
+    }
+  else
+    {
+      strcpy(szFullName, szSourcePath);
+    }
+
+  if (szFullName[strlen(szFullName)] != '\\')
+    {
+      strcat(szFullName, "\\");
+    }
+
+  if (szFileName[0] != '\\')
+    {
+      strcat(szFullName, szFileName);
+    }
+  else
+    {
+      strcat(szFullName, szFileName + 1);
+    }
+
+  RosSymInit(&FreeldrCallbacks);
+
+  FilePointer = FsOpenFile(szFullName);
+  if (FilePointer  && RosSymCreateFromFile(FilePointer, &RosSymInfo))
+    {
+      Base = FrLdrCreateModule("NTOSKRNL.SYM");
+      Size = RosSymGetRawDataLength(RosSymInfo);
+      RosSymGetRawData(RosSymInfo, (PVOID)Base);
+      FrLdrCloseModule(Base, Size);
+      RosSymDelete(RosSymInfo);
+      return TRUE;
+    }
+  return FALSE;
+}
 
 static BOOL
 LoadDriver(PCHAR szSourcePath, PCHAR szFileName)
@@ -388,6 +458,8 @@ VOID RunLoader(VOID)
   if (!LoadDriver(SourcePath, "hal.dll"))
     return;
 
+  /* Create ntoskrnl.sym */
+  LoadKernelSymbols(SourcePath, "ntoskrnl.exe");
 
   /* Export the hardware hive */
   Base = FrLdrCreateModule ("HARDWARE");
