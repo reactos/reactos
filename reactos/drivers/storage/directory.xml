@@ -1,6 +1,9 @@
 <directory name="atapi">
 	<xi:include href="atapi/atapi.xml" />
 </directory>
+<directory name="buslogic">
+	<xi:include href="buslogic/buslogic.xml" />
+</directory>
 <directory name="cdrom">
 	<xi:include href="cdrom/cdrom.xml" />
 </directory>

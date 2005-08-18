@@ -376,6 +376,14 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Atapi","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Atapi","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Atapi","Tag",0x00010001,0x00000010
 
+; BusLogic 958 miniport driver
+HKLM,"SYSTEM\CurrentControlSet\Services\BusLogic","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\BusLogic","Group",0x00000000,"SCSI Miniport"
+HKLM,"SYSTEM\CurrentControlSet\Services\BusLogic","ImagePath",0x00020000,"system32\drivers\buslogic.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\BusLogic","Start",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\BusLogic","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\BusLogic","Tag",0x00010001,0x00000020
+
 ; ACPI driver
 HKLM,"SYSTEM\CurrentControlSet\Services\ACPI","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\ACPI","Group",0x00000000,"Boot Bus Extender"
