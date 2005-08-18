@@ -2007,6 +2007,7 @@ INT CommandDir(LPTSTR first, LPTSTR rest)
 		&nLine,
 		&stFlags);
 
+	nErrorLevel = 0;
 	return 0;
 }
 
