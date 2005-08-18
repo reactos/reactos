@@ -489,72 +489,76 @@ typedef struct
 
 typedef struct _CSR_API_MESSAGE
 {
-  union
-  {
-    PORT_MESSAGE Header;
-    struct
+    union
     {
-      BYTE HeaderReserved[sizeof(PORT_MESSAGE)];
-      ULONG Type;
-      NTSTATUS Status;
-      union
-      {
-        CSRSS_CREATE_PROCESS CreateProcessRequest;
-        CSRSS_CONNECT_PROCESS ConnectRequest;
-        CSRSS_WRITE_CONSOLE WriteConsoleRequest;
-        CSRSS_READ_CONSOLE ReadConsoleRequest;
-        CSRSS_ALLOC_CONSOLE AllocConsoleRequest;
-        CSRSS_SCREEN_BUFFER_INFO ScreenBufferInfoRequest;
-        CSRSS_SET_CURSOR SetCursorRequest;
-        CSRSS_FILL_OUTPUT FillOutputRequest;
-        CSRSS_READ_INPUT ReadInputRequest;
-        CSRSS_WRITE_CONSOLE_OUTPUT_CHAR WriteConsoleOutputCharRequest;
-        CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB WriteConsoleOutputAttribRequest;
-        CSRSS_FILL_OUTPUT_ATTRIB FillOutputAttribRequest;
-        CSRSS_SET_CURSOR_INFO SetCursorInfoRequest;
-        CSRSS_GET_CURSOR_INFO GetCursorInfoRequest;
-        CSRSS_SET_ATTRIB SetAttribRequest;
-        CSRSS_SET_CONSOLE_MODE SetConsoleModeRequest;
-        CSRSS_GET_CONSOLE_MODE GetConsoleModeRequest;
-        CSRSS_CREATE_SCREEN_BUFFER CreateScreenBufferRequest;
-        CSRSS_SET_SCREEN_BUFFER SetScreenBufferRequest;
-        CSRSS_SET_TITLE SetTitleRequest;
-        CSRSS_GET_TITLE GetTitleRequest;
-        CSRSS_WRITE_CONSOLE_OUTPUT WriteConsoleOutputRequest;
-        CSRSS_FLUSH_INPUT_BUFFER FlushInputBufferRequest;
-        CSRSS_SCROLL_CONSOLE_SCREEN_BUFFER ScrollConsoleScreenBufferRequest;
-        CSRSS_READ_CONSOLE_OUTPUT_CHAR ReadConsoleOutputCharRequest;
-        CSRSS_READ_CONSOLE_OUTPUT_ATTRIB ReadConsoleOutputAttribRequest;
-        CSRSS_GET_NUM_INPUT_EVENTS GetNumInputEventsRequest;
-        CSRSS_REGISTER_SERVICES_PROCESS RegisterServicesProcessRequest;
-        CSRSS_EXIT_REACTOS ExitReactosRequest;
-        CSRSS_SET_SHUTDOWN_PARAMETERS SetShutdownParametersRequest;
-        CSRSS_GET_SHUTDOWN_PARAMETERS GetShutdownParametersRequest;
-        CSRSS_PEEK_CONSOLE_INPUT PeekConsoleInputRequest;
-        CSRSS_READ_CONSOLE_OUTPUT ReadConsoleOutputRequest;
-        CSRSS_WRITE_CONSOLE_INPUT WriteConsoleInputRequest;
-        CSRSS_GET_INPUT_HANDLE GetInputHandleRequest;
-        CSRSS_GET_OUTPUT_HANDLE GetOutputHandleRequest;
-        CSRSS_CLOSE_HANDLE CloseHandleRequest;
-        CSRSS_VERIFY_HANDLE VerifyHandleRequest;
-        CSRSS_DUPLICATE_HANDLE DuplicateHandleRequest;
-        CSRSS_SETGET_CONSOLE_HW_STATE ConsoleHardwareStateRequest;
-        CSRSS_GET_CONSOLE_WINDOW GetConsoleWindowRequest;
-        CSRSS_CREATE_DESKTOP CreateDesktopRequest;
-        CSRSS_SHOW_DESKTOP ShowDesktopRequest;
-        CSRSS_HIDE_DESKTOP HideDesktopRequest;
-        CSRSS_SET_CONSOLE_ICON SetConsoleIconRequest;
-        CSRSS_SET_LOGON_NOTIFY_WINDOW SetLogonNotifyWindowRequest;
-        CSRSS_REGISTER_LOGON_PROCESS RegisterLogonProcessRequest;
-        CSRSS_GET_CONSOLE_CP GetConsoleCodePage;
-        CSRSS_SET_CONSOLE_CP SetConsoleCodePage;
-        CSRSS_GET_CONSOLE_OUTPUT_CP GetConsoleOutputCodePage;
-        CSRSS_SET_CONSOLE_OUTPUT_CP SetConsoleOutputCodePage;
-        CSRSS_GET_INPUT_WAIT_HANDLE GetConsoleInputWaitHandle;
-        CSRSS_GET_PROCESS_LIST GetProcessListRequest;
-      } Data;
+        PORT_MESSAGE Header;
+        union
+        {
+            struct
+            {
+                BYTE HeaderReserved[sizeof(PORT_MESSAGE)];
+                ULONG Type;
+                NTSTATUS Status;
+                union
+                {
+                    CSRSS_CREATE_PROCESS CreateProcessRequest;
+                    CSRSS_CONNECT_PROCESS ConnectRequest;
+                    CSRSS_WRITE_CONSOLE WriteConsoleRequest;
+                    CSRSS_READ_CONSOLE ReadConsoleRequest;
+                    CSRSS_ALLOC_CONSOLE AllocConsoleRequest;
+                    CSRSS_SCREEN_BUFFER_INFO ScreenBufferInfoRequest;
+                    CSRSS_SET_CURSOR SetCursorRequest;
+                    CSRSS_FILL_OUTPUT FillOutputRequest;
+                    CSRSS_READ_INPUT ReadInputRequest;
+                    CSRSS_WRITE_CONSOLE_OUTPUT_CHAR WriteConsoleOutputCharRequest;
+                    CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB WriteConsoleOutputAttribRequest;
+                    CSRSS_FILL_OUTPUT_ATTRIB FillOutputAttribRequest;
+                    CSRSS_SET_CURSOR_INFO SetCursorInfoRequest;
+                    CSRSS_GET_CURSOR_INFO GetCursorInfoRequest;
+                    CSRSS_SET_ATTRIB SetAttribRequest;
+                    CSRSS_SET_CONSOLE_MODE SetConsoleModeRequest;
+                    CSRSS_GET_CONSOLE_MODE GetConsoleModeRequest;
+                    CSRSS_CREATE_SCREEN_BUFFER CreateScreenBufferRequest;
+                    CSRSS_SET_SCREEN_BUFFER SetScreenBufferRequest;
+                    CSRSS_SET_TITLE SetTitleRequest;
+                    CSRSS_GET_TITLE GetTitleRequest;
+                    CSRSS_WRITE_CONSOLE_OUTPUT WriteConsoleOutputRequest;
+                    CSRSS_FLUSH_INPUT_BUFFER FlushInputBufferRequest;
+                    CSRSS_SCROLL_CONSOLE_SCREEN_BUFFER ScrollConsoleScreenBufferRequest;
+                    CSRSS_READ_CONSOLE_OUTPUT_CHAR ReadConsoleOutputCharRequest;
+                    CSRSS_READ_CONSOLE_OUTPUT_ATTRIB ReadConsoleOutputAttribRequest;
+                    CSRSS_GET_NUM_INPUT_EVENTS GetNumInputEventsRequest;
+                    CSRSS_REGISTER_SERVICES_PROCESS RegisterServicesProcessRequest;
+                    CSRSS_EXIT_REACTOS ExitReactosRequest;
+                    CSRSS_SET_SHUTDOWN_PARAMETERS SetShutdownParametersRequest;
+                    CSRSS_GET_SHUTDOWN_PARAMETERS GetShutdownParametersRequest;
+                    CSRSS_PEEK_CONSOLE_INPUT PeekConsoleInputRequest;
+                    CSRSS_READ_CONSOLE_OUTPUT ReadConsoleOutputRequest;
+                    CSRSS_WRITE_CONSOLE_INPUT WriteConsoleInputRequest;
+                    CSRSS_GET_INPUT_HANDLE GetInputHandleRequest;
+                    CSRSS_GET_OUTPUT_HANDLE GetOutputHandleRequest;
+                    CSRSS_CLOSE_HANDLE CloseHandleRequest;
+                    CSRSS_VERIFY_HANDLE VerifyHandleRequest;
+                    CSRSS_DUPLICATE_HANDLE DuplicateHandleRequest;
+                    CSRSS_SETGET_CONSOLE_HW_STATE ConsoleHardwareStateRequest;
+                    CSRSS_GET_CONSOLE_WINDOW GetConsoleWindowRequest;
+                    CSRSS_CREATE_DESKTOP CreateDesktopRequest;
+                    CSRSS_SHOW_DESKTOP ShowDesktopRequest;
+                    CSRSS_HIDE_DESKTOP HideDesktopRequest;
+                    CSRSS_SET_CONSOLE_ICON SetConsoleIconRequest;
+                    CSRSS_SET_LOGON_NOTIFY_WINDOW SetLogonNotifyWindowRequest;
+                    CSRSS_REGISTER_LOGON_PROCESS RegisterLogonProcessRequest;
+                    CSRSS_GET_CONSOLE_CP GetConsoleCodePage;
+                    CSRSS_SET_CONSOLE_CP SetConsoleCodePage;
+                    CSRSS_GET_CONSOLE_OUTPUT_CP GetConsoleOutputCodePage;
+                    CSRSS_SET_CONSOLE_OUTPUT_CP SetConsoleOutputCodePage;
+                    CSRSS_GET_INPUT_WAIT_HANDLE GetConsoleInputWaitHandle;
+                    CSRSS_GET_PROCESS_LIST GetProcessListRequest;
+                } Data;
+            };
+            UCHAR PadBuffer[PORT_MAXIMUM_MESSAGE_LENGTH];
+        };
     };
-  };
 } CSR_API_MESSAGE, *PCSR_API_MESSAGE;
 
 #endif /* __INCLUDE_CSRSS_CSRSS_H */

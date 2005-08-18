@@ -357,7 +357,7 @@ NtRequestWaitReplyPort (IN HANDLE PortHandle,
        ObDereferenceObject(Port);
        return(STATUS_PORT_MESSAGE_TOO_LONG);
      }
-   if (LpcRequestDataSize != (LpcRequestMessageSize - sizeof(PORT_MESSAGE)))
+   if (LpcRequestDataSize > LPC_MAX_DATA_LENGTH)
      {
        ExFreePool(LpcRequest);
        if (NULL != AttachedProcess)

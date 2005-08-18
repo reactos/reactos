@@ -109,29 +109,38 @@ typedef struct _SM_PORT_MESSAGE_QRYINFO
 
 typedef union _SM_PORT_MESSAGE
 {
-  /*** LPC common header ***/
-  PORT_MESSAGE Header;
-  struct {
-    UCHAR LpcHeader[sizeof(PORT_MESSAGE)];
-    /*** SM common header ***/
-    struct {
-      DWORD       ApiIndex;
-      NTSTATUS    Status;
-    } SmHeader;
-    /*** SM per API arguments ***/
-    union {
-      union {
-        SM_PORT_MESSAGE_COMPSES      CompSes;
-        SM_PORT_MESSAGE_EXECPGM      ExecPgm;
-        SM_PORT_MESSAGE_QRYINFO      QryInfo;
-      } Request;
-      union {
-        SM_PORT_MESSAGE_COMPSES      CompSes;
-        SM_PORT_MESSAGE_EXECPGM      ExecPgm;
-        SM_PORT_MESSAGE_QRYINFO      QryInfo;
-      } Reply;
+    /*** LPC common header ***/
+    PORT_MESSAGE Header;
+    union
+    {
+        struct
+        {
+            UCHAR LpcHeader[sizeof(PORT_MESSAGE)];
+            /*** SM common header ***/
+            struct
+            {
+                DWORD       ApiIndex;
+                NTSTATUS    Status;
+            } SmHeader;
+            /*** SM per API arguments ***/
+            union
+            {
+                union
+                {
+                    SM_PORT_MESSAGE_COMPSES      CompSes;
+                    SM_PORT_MESSAGE_EXECPGM      ExecPgm;
+                    SM_PORT_MESSAGE_QRYINFO      QryInfo;
+                } Request;
+                union
+                {
+                    SM_PORT_MESSAGE_COMPSES      CompSes;
+                    SM_PORT_MESSAGE_EXECPGM      ExecPgm;
+                    SM_PORT_MESSAGE_QRYINFO      QryInfo;
+                } Reply;
+            };
+        };
+        UCHAR PadBuffer[PORT_MAXIMUM_MESSAGE_LENGTH];
     };
-  };
 } SM_PORT_MESSAGE, * PSM_PORT_MESSAGE;
 
 #include <poppack.h>
