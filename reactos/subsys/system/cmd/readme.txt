@@ -54,6 +54,7 @@ ReactOS developers:
    Eric Kohl <ekohl@rz-online.de>
    Emanuele Aliberti <ea@iol.it>
    Paolo Pantaleo <paolopan@freemail.it>
+   Brandon Turner <turnerb7@msu.edu>
 
 
 Bugs
