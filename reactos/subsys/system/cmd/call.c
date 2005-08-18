@@ -54,7 +54,7 @@ INT cmd_call (LPTSTR cmd, LPTSTR param)
 		return 0;
 	}
 
-  nErrorLevel = 1;
+    nErrorLevel = 0;
 
 	n = (LPBATCH_CONTEXT)malloc (sizeof (BATCH_CONTEXT));
 

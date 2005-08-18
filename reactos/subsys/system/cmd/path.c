@@ -43,6 +43,8 @@ INT cmd_path (LPTSTR cmd, LPTSTR param)
 		return 0;
 	}
 
+	nErrorLevel = 0;
+
 	/* if param is empty, display the PATH environment variable */
 	if (!param || !*param)
 	{
@@ -76,7 +78,10 @@ INT cmd_path (LPTSTR cmd, LPTSTR param)
 
 	/* set PATH environment variable */
 	if (!SetEnvironmentVariable (_T("PATH"), param))
+	{
+		nErrorLevel = 1;
 		return 1;
+	}
 
 	return 0;
 }

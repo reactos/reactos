@@ -140,6 +140,7 @@ INT cmd_move (LPTSTR cmd, LPTSTR param)
 		return 0;
 	}
 
+	nErrorLevel = 0;
 	arg = split (param, &argc, FALSE);
 	nFiles = argc;
 

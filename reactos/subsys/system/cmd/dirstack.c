@@ -37,6 +37,8 @@ PushDirectory (LPTSTR pszPath)
 {
 	LPDIRENTRY lpDir;
 
+	nErrorLevel = 0;
+
 	lpDir = (LPDIRENTRY)malloc (sizeof (DIRENTRY));
 	if (!lpDir)
 	{
@@ -78,6 +80,8 @@ PopDirectory (VOID)
 {
 	LPDIRENTRY lpDir;
 
+    nErrorLevel = 0;
+
 	if (nStackDepth == 0)
 		return;
 
@@ -98,6 +102,8 @@ PopDirectory (VOID)
 static VOID
 GetDirectoryStackTop (LPTSTR pszPath)
 {
+	nErrorLevel = 0;
+
 	if (lpStackTop)
 		_tcsncpy (pszPath, lpStackTop->pszPath, MAX_PATH);
 	else
@@ -147,6 +153,8 @@ INT CommandPushd (LPTSTR first, LPTSTR rest)
 		return 0;
 	}
 
+	nErrorLevel = 0;
+
 	if (rest[0] != _T('\0'))
 	{
 		GetFullPathName (rest, MAX_PATH, newPath, NULL);
@@ -177,6 +185,8 @@ INT CommandPopd (LPTSTR first, LPTSTR rest)
 		return 0;
 	}
 
+	nErrorLevel = 0;
+
 	if (GetDirectoryStackDepth () == 0)
 		return 0;
 
@@ -202,6 +212,7 @@ INT CommandDirs (LPTSTR first, LPTSTR rest)
 		return 0;
 	}
 
+    nErrorLevel = 0;
 
 	lpDir = lpStackBottom;
 

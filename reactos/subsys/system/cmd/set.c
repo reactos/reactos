@@ -55,6 +55,7 @@ INT cmd_set (LPTSTR cmd, LPTSTR param)
 		return 0;
 	}
 
+
 	/* if no parameters, show the environment */
 	if (param[0] == _T('\0'))
 	{

@@ -74,6 +74,8 @@ INT CommandColor (LPTSTR first, LPTSTR rest)
 		return 0;
 	}
 
+	nErrorLevel = 0;
+
 	if (rest[0] == _T('\0'))
 	{
 		/* set default color */
@@ -101,12 +103,14 @@ INT CommandColor (LPTSTR first, LPTSTR rest)
 	   return 0;
 	  }
 	  ConErrResPuts(STRING_COLOR_ERROR2);
+	  nErrorLevel = 1;
 	  return 1;
 	}
 
 	if (StringToColor(&wColor, &rest) == FALSE)
 	{	
 		ConErrResPuts(STRING_COLOR_ERROR2);
+		nErrorLevel = 1;
 		return 1;
 	}
 
@@ -117,6 +121,7 @@ INT CommandColor (LPTSTR first, LPTSTR rest)
 	{
 		LoadString(CMD_ModuleHandle, STRING_COLOR_ERROR4, szMsg, RC_STRING_MAX_SIZE);
 		ConErrPrintf(szMsg, wColor);
+		nErrorLevel = 1;
 		return 1;
 	}
 

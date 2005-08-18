@@ -29,6 +29,8 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 		return 0;
 	}
 
+	nErrorLevel = 0;
+
 	/* check for a drive change */
 	if (!_tcscmp (first + 1, _T(":")) && _istalpha (*first))
 	{

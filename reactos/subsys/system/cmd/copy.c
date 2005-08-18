@@ -80,7 +80,7 @@ int copy (TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], INT append, DWORD lpdwFl
 	{
 		LoadString(CMD_ModuleHandle, STRING_COPY_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 		ConOutPrintf(szMsg, source);
-    nErrorLevel = 1;
+        nErrorLevel = 1;
 		return 0;
 	}
 
@@ -92,6 +92,7 @@ int copy (TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], INT append, DWORD lpdwFl
 		if(SetFileTime(hFileSrc,(LPFILETIME) NULL, (LPFILETIME) NULL, &NewFileTime))
 		{
 			CloseHandle(hFileSrc);
+			nErrorLevel = 1;
 			return 1;
 
 		}
@@ -110,7 +111,7 @@ int copy (TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], INT append, DWORD lpdwFl
 	{
 		LoadString(CMD_ModuleHandle, STRING_COPY_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 		ConOutPrintf(szMsg, source);
-    nErrorLevel = 1;
+        nErrorLevel = 1;
 		return 0;
 	}
 
@@ -178,7 +179,7 @@ int copy (TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], INT append, DWORD lpdwFl
 			ConOutPrintf(szMsg, source);
  
 			CloseHandle (hFileSrc);
-      nErrorLevel = 1;
+            nErrorLevel = 1;
 			return 0;
 		}
  
@@ -221,7 +222,7 @@ int copy (TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], INT append, DWORD lpdwFl
 	{
 		CloseHandle (hFileSrc);
 		ConOutResPuts(STRING_ERROR_PATH_NOT_FOUND);
-    nErrorLevel = 1;
+        nErrorLevel = 1;
 		return 0;
 	}
 	buffer = (LPBYTE)malloc (BUFF_SIZE);
@@ -230,7 +231,7 @@ int copy (TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], INT append, DWORD lpdwFl
 		CloseHandle (hFileDest);
 		CloseHandle (hFileSrc);
 		ConOutResPuts(STRING_ERROR_OUT_OF_MEMORY);
-    nErrorLevel = 1;
+        nErrorLevel = 1;
 		return 0;
 	}
  
@@ -504,9 +505,9 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
  
 				default:
 					/* invaild switch */
-          LoadString(CMD_ModuleHandle, STRING_ERROR_INVALID_SWITCH, szMsg, RC_STRING_MAX_SIZE);
-	        ConOutPrintf(szMsg, _totupper(arg[i][1]));
-					
+                    LoadString(CMD_ModuleHandle, STRING_ERROR_INVALID_SWITCH, szMsg, RC_STRING_MAX_SIZE);
+	                ConOutPrintf(szMsg, _totupper(arg[i][1]));					
+					nErrorLevel = 1;
 					return 1;
 					break;
 				}
@@ -555,9 +556,9 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 	if(nFiles > 2)
 	{
 		/* there is too many file names in command */
-      LoadString(CMD_ModuleHandle, STRING_ERROR_TOO_MANY_PARAMETERS, szMsg, RC_STRING_MAX_SIZE);
-	   ConErrPrintf(szMsg,_T(""));		
-      nErrorLevel = 1;
+        LoadString(CMD_ModuleHandle, STRING_ERROR_TOO_MANY_PARAMETERS, szMsg, RC_STRING_MAX_SIZE);
+	    ConErrPrintf(szMsg,_T(""));		
+        nErrorLevel = 1;
 		freep (arg);
 		return 1;
 	}

@@ -31,6 +31,8 @@ INT CommandChcp (LPTSTR cmd, LPTSTR param)
 		ConOutResPaging(TRUE,STRING_CHCP_HELP);
 		return 0;
 	}
+    
+	nErrorLevel = 0;
 
 	/* get parameters */
 	arg = split (param, &args, FALSE);
@@ -48,6 +50,7 @@ INT CommandChcp (LPTSTR cmd, LPTSTR param)
 		/* too many parameters */
 		LoadString(CMD_ModuleHandle, STRING_ERROR_INVALID_PARAM_FORMAT, szMsg, RC_STRING_MAX_SIZE);
 		ConErrPrintf(szMsg, param);
+		nErrorLevel = 1;
 		return 1;
 	}
 
@@ -58,6 +61,7 @@ INT CommandChcp (LPTSTR cmd, LPTSTR param)
 		LoadString(CMD_ModuleHandle, STRING_ERROR_INVALID_PARAM_FORMAT, szMsg, RC_STRING_MAX_SIZE);
 		ConErrPrintf(szMsg, arg[0]);
 		freep (arg);
+		nErrorLevel = 1;
 		return 1;
 	}
 

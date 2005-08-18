@@ -1823,7 +1823,7 @@ TCHAR szMsg[RC_STRING_MAX_SIZE];
 			free(ptrStartNode);
 			ptrStartNode = ptrNextNode;
 			dwCount --;
-		}
+		}		
 		return 1;
 	}
 
@@ -1951,14 +1951,22 @@ INT CommandDir(LPTSTR first, LPTSTR rest)
 	stFlags.stOrderBy.sCriteriaCount = 0;
 	stFlags.stOrderBy.bUnSet = FALSE;
 
+	nErrorLevel = 0;
+
 	/* read the parameters from the DIRCMD environment variable */
 	if (GetEnvironmentVariable (_T("DIRCMD"), dircmd, 256))
 		if (!DirReadParam(dircmd, &param, &stFlags))
+		{
+			nErrorLevel = 1;
 			return 1;
+		}
 
 	/* read the parameters */
 	if (!DirReadParam(rest, &param, &stFlags))
+	{
+		nErrorLevel = 1;
 		return 1;
+	}
 
 	/* default to current directory */
 	if (!param)
@@ -1966,7 +1974,10 @@ INT CommandDir(LPTSTR first, LPTSTR rest)
 
 	/* parse the directory info */
 	if (DirParsePathspec (param, szPath, szFilespec))
+	{
+		nErrorLevel = 1;
 		return 1;
+	}
 
 /* <Debug :>
    Uncomment this to show the final state of switch flags*/
@@ -1993,11 +2004,17 @@ INT CommandDir(LPTSTR first, LPTSTR rest)
 	/* print the header  */
 	if (!stFlags.bBareFormat)
 		if (!PrintDirectoryHeader (szPath, &nLine, &stFlags))
+		{
+			nErrorLevel = 1;
 			return 1;
+		}
 
 	/* do the actual dir */
 	if (DirList (szPath, szFilespec, &nLine, &stFlags))
+	{
+		nErrorLevel = 1;
 		return 1;
+	}
 
 	/* print the footer */
 	PrintSummary(szPath,
@@ -2006,8 +2023,7 @@ INT CommandDir(LPTSTR first, LPTSTR rest)
 		recurse_bytes,
 		&nLine,
 		&stFlags);
-
-	nErrorLevel = 0;
+	
 	return 0;
 }
 

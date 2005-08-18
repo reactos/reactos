@@ -66,6 +66,8 @@ INT cmd_rename (LPTSTR cmd, LPTSTR param)
     return 0;
   }
 
+  nErrorLevel = 0;
+
   /* split the argument list */
   arg = split(param, &args, FALSE);
 
