@@ -18,6 +18,7 @@
 		<file>dib16gen.c</file>
 		<file>dib24bpp.c</file>
 		<file>dib32bpp.c</file>
+		<file>dib32gen.c</file>
 		<file>dib.c</file>
 	</directory>
 	<directory name="eng">

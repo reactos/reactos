@@ -41,11 +41,12 @@ gendib_clean:
 	-@$(rm) $(GENDIB_TARGET) $(GENDIB_OBJECTS) 2>$(NUL)
 clean: gendib_clean
 
-GENDIB_16BPP_FILE = subsys$(SEP)win32k$(SEP)dib$(SEP)dib16gen.c
+GENDIB_DIB_DIR = subsys$(SEP)win32k$(SEP)dib
 
 GENDIB_DIB_FILES = \
-        $(GENDIB_16BPP_FILE)
+	$(GENDIB_DIB_DIR)$(SEP)dib16gen.c \
+	$(GENDIB_DIB_DIR)$(SEP)dib32gen.c
 
 $(GENDIB_DIB_FILES): $(GENDIB_TARGET)
 	$(ECHO_GENDIB)
-	$(Q)$(GENDIB_TARGET) $(GENDIB_DIB_FILES)
+	$(Q)$(GENDIB_TARGET) $(GENDIB_DIB_DIR)
