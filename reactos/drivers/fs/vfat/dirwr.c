@@ -530,6 +530,7 @@ FATXAddEntry (PDEVICE_EXTENSION DeviceExt,
    OEM_STRING NameA;
    VFAT_DIRENTRY_CONTEXT DirContext;
    PFATX_DIR_ENTRY pFatXDirEntry;
+   ULONG Index;
 
    DPRINT ("addEntry: Name='%wZ', Dir='%wZ'\n", NameU, &ParentFcb->PathNameU);
 
@@ -547,7 +548,7 @@ FATXAddEntry (PDEVICE_EXTENSION DeviceExt,
    {
       return STATUS_DISK_FULL;
    }
-   DirContext.DirIndex = DirContext.StartIndex;
+   Index = DirContext.DirIndex = DirContext.StartIndex;
    if (!vfatFCBIsRoot(ParentFcb))
    {
       DirContext.DirIndex += 2;
@@ -578,6 +579,18 @@ FATXAddEntry (PDEVICE_EXTENSION DeviceExt,
 
    /* set dates and times */
    KeQuerySystemTime (&SystemTime);
+#if 0
+  {
+    TIME_FIELDS tf;
+    RtlTimeToTimeFields (&SystemTime, &tf);
+    DPRINT1("%d.%d.%d %02d:%02d:%02d.%03d '%wZ'\n",
+	    tf.Day, tf.Month, tf.Year, tf.Hour,
+	    tf.Minute, tf.Second, tf.Milliseconds,
+	    NameU);
+  }
+#endif
+
+
    FsdSystemTimeToDosDateTime(DeviceExt, &SystemTime, &DirContext.DirEntry.FatX.CreationDate,
                               &DirContext.DirEntry.FatX.CreationTime);
    DirContext.DirEntry.FatX.UpdateDate = DirContext.DirEntry.FatX.CreationDate;
@@ -587,7 +600,7 @@ FATXAddEntry (PDEVICE_EXTENSION DeviceExt,
 
    /* add entry into parent directory */
    FileOffset.u.HighPart = 0;
-   FileOffset.u.LowPart = DirContext.StartIndex * sizeof(FATX_DIR_ENTRY);
+   FileOffset.u.LowPart = Index * sizeof(FATX_DIR_ENTRY);
    CcPinRead(ParentFcb->FileObject, &FileOffset, sizeof(FATX_DIR_ENTRY),
              TRUE, &Context, (PVOID*)&pFatXDirEntry);
    RtlCopyMemory(pFatXDirEntry, &DirContext.DirEntry.FatX, sizeof(FATX_DIR_ENTRY));
