@@ -10,7 +10,7 @@
 #include <sstream>
 
 #include "IRCClient.h"
-#include "md5.h"
+#include "MD5.h"
 #include "cram_md5.h"
 #include "trim.h"
 #include "chomp.h"
