@@ -551,7 +551,7 @@ static bool numberfl(std::string& f, long double __n, char exp_sign,  int size, 
 	return true;
 }
 
-static int string(std::string& f, const char* s, int len, int field_width, int precision, int flags)
+static int stringa(std::string& f, const char* s, int len, int field_width, int precision, int flags)
 {
 	int i, done = 0;
 	if (s == NULL)
@@ -654,7 +654,7 @@ std::string ssvprintf ( const char *fmt, va_list args )
 	long double _ldouble;
 	double _double;
 	const char *s;
-	const unsigned short* sw;
+	const wchar_t* sw;
 	int result;
 	std::string f;
 
@@ -793,12 +793,12 @@ std::string ssvprintf ( const char *fmt, va_list args )
 		case 's':
 			if (qualifier == 'l' || qualifier == 'w') {
 				/* print unicode string */
-				sw = va_arg(args, wchar_t *);
+				sw = (const wchar_t*)va_arg(args, wchar_t *);
 				result = stringw(f, sw, -1, field_width, precision, flags);
 			} else {
 				/* print ascii string */
 				s = va_arg(args, char *);
-				result = string(f, s, -1, field_width, precision, flags);
+				result = stringa(f, s, -1, field_width, precision, flags);
 			}
 			if (result < 0)
 			{
@@ -811,10 +811,10 @@ std::string ssvprintf ( const char *fmt, va_list args )
 			if (qualifier == 'h') {
 				/* print ascii string */
 				s = va_arg(args, char *);
-				result = string(f, s, -1, field_width, precision, flags);
+				result = stringa(f, s, -1, field_width, precision, flags);
 			} else {
 				/* print unicode string */
-				sw = va_arg(args, wchar_t *);
+				sw = (const wchar_t*)va_arg(args, wchar_t *);
 				result = stringw(f, sw, -1, field_width, precision, flags);
 			}
 			if (result < 0)
@@ -846,7 +846,7 @@ std::string ssvprintf ( const char *fmt, va_list args )
 					s = pas->Buffer;
 					len = pas->Length;
 				}
-				result = string(f, s, -1, field_width, precision, flags);
+				result = stringa(f, s, -1, field_width, precision, flags);
 			}
 			if (result < 0)
 				return -1;

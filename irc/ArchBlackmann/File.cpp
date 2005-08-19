@@ -14,8 +14,8 @@
 #define nelem(x) (  sizeof(x) / sizeof(x[0])  )
 #endif//nelem
 
-using File::filesize_t;
-using File::fileoff_t;
+typedef File::filesize_t filesize_t;
+typedef File::fileoff_t fileoff_t;
 
 
 fileoff_t File::seek ( fileoff_t offset )
