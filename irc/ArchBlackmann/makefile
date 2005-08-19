@@ -4,6 +4,7 @@ TARGET := ArchBlackmann.exe
 
 all: $(TARGET)
 
+CPP=mingw32-g++
 CFLAGS := -DWIN32 -D_DEBUG -D_CONSOLE -D_MBCS
 LFLAGS :=
 LIBS := -lstdc++ -lws2_32
@@ -26,7 +27,7 @@ SRCS := ArchBlackmann.cpp \
 OBJS := $(SRCS:.cpp=.o)
 
 $(TARGET): $(OBJS)
-	g++ $(LFLAGS) -o $@ $(OBJS) $(LIBS)
+	$(CPP) $(LFLAGS) -o $@ $(OBJS) $(LIBS)
 
 .cpp.o: $<
-	g++ $(CFLAGS) -c $< -o $@
+	$(CPP) $(CFLAGS) -c $< -o $@
