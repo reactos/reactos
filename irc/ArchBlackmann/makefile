@@ -31,3 +31,8 @@ $(TARGET): $(OBJS)
 
 .cpp.o: $<
 	$(CPP) $(CFLAGS) -c $< -o $@
+
+.PHONY: clean
+clean:
+	-@del $(TARGET)
+	-@del $(OBJS)
