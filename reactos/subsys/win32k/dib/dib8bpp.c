@@ -252,114 +252,17 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
   return TRUE;
 }
 
-BOOLEAN
-DIB_8BPP_BitBlt(PBLTINFO BltInfo)
-{
-   ULONG DestX, DestY;
-   ULONG SourceX, SourceY;
-   ULONG PatternY = 0;
-   ULONG Dest, Source = 0, Pattern = 0;
-   BOOL UsesSource;
-   BOOL UsesPattern;
-   PULONG DestBits;
-   LONG RoundedRight;
-
-   UsesSource = ROP4_USES_SOURCE(BltInfo->Rop4);
-   UsesPattern = ROP4_USES_PATTERN(BltInfo->Rop4);
-
-   SourceY = BltInfo->SourcePoint.y;
-   RoundedRight = BltInfo->DestRect.right -
-                  ((BltInfo->DestRect.right - BltInfo->DestRect.left) & 0x7);
-
-   if (UsesPattern)
-   {
-      if (BltInfo->PatternSurface)
-      {
-         PatternY = (BltInfo->DestRect.top + BltInfo->BrushOrigin.y) %
-                    BltInfo->PatternSurface->sizlBitmap.cy;
-      }
-      else
-      {
-         Pattern = BltInfo->Brush->iSolidColor |
-                   (BltInfo->Brush->iSolidColor << 8) |
-                   (BltInfo->Brush->iSolidColor << 16) |
-                   (BltInfo->Brush->iSolidColor << 24);
-      }
-   }
-
-   for (DestY = BltInfo->DestRect.top; DestY < BltInfo->DestRect.bottom; DestY++)
-   {
-      SourceX = BltInfo->SourcePoint.x;
-      DestBits = (PULONG)(
-         (PBYTE)BltInfo->DestSurface->pvScan0 +
-         BltInfo->DestRect.left +
-         DestY * BltInfo->DestSurface->lDelta);
-
-      for (DestX = BltInfo->DestRect.left; DestX < RoundedRight; DestX += 4, DestBits++)
-      {
-         Dest = *DestBits;
-
-         if (UsesSource)
-         {
-            Source = DIB_GetSource(BltInfo->SourceSurface, SourceX + (DestX - BltInfo->DestRect.left), SourceY, BltInfo->XlateSourceToDest);
-            Source |= DIB_GetSource(BltInfo->SourceSurface, SourceX + (DestX - BltInfo->DestRect.left) + 1, SourceY, BltInfo->XlateSourceToDest) << 8;
-            Source |= DIB_GetSource(BltInfo->SourceSurface, SourceX + (DestX - BltInfo->DestRect.left) + 2, SourceY, BltInfo->XlateSourceToDest) << 16;
-            Source |= DIB_GetSource(BltInfo->SourceSurface, SourceX + (DestX - BltInfo->DestRect.left) + 3, SourceY, BltInfo->XlateSourceToDest) << 24;
-         }
-
-         if (BltInfo->PatternSurface)
-         {
-            Pattern = DIB_GetSource(BltInfo->PatternSurface, (DestX + BltInfo->BrushOrigin.x) % BltInfo->PatternSurface->sizlBitmap.cx, PatternY, BltInfo->XlatePatternToDest);
-            Pattern |= DIB_GetSource(BltInfo->PatternSurface, (DestX + BltInfo->BrushOrigin.x + 1) % BltInfo->PatternSurface->sizlBitmap.cx, PatternY, BltInfo->XlatePatternToDest) << 8;
-            Pattern |= DIB_GetSource(BltInfo->PatternSurface, (DestX + BltInfo->BrushOrigin.x + 2) % BltInfo->PatternSurface->sizlBitmap.cx, PatternY, BltInfo->XlatePatternToDest) << 16;
-            Pattern |= DIB_GetSource(BltInfo->PatternSurface, (DestX + BltInfo->BrushOrigin.x + 3) % BltInfo->PatternSurface->sizlBitmap.cx, PatternY, BltInfo->XlatePatternToDest) << 24;
-         }
-
-         *DestBits = DIB_DoRop(BltInfo->Rop4, Dest, Source, Pattern);
-      }
-
-      if (DestX < BltInfo->DestRect.right)
-      {
-         for (; DestX < BltInfo->DestRect.right; DestX++)
-         {
-            Dest = DIB_8BPP_GetPixel(BltInfo->DestSurface, DestX, DestY);
-
-            if (UsesSource)
-	    {
-               Source = DIB_GetSource(BltInfo->SourceSurface, SourceX + (DestX - BltInfo->DestRect.left), SourceY, BltInfo->XlateSourceToDest);
-            }
-
-            if (BltInfo->PatternSurface)
-            {
-               Pattern = DIB_GetSource(BltInfo->PatternSurface, (DestX + BltInfo->BrushOrigin.x) % BltInfo->PatternSurface->sizlBitmap.cx, PatternY, BltInfo->XlatePatternToDest);
-            }
-
-            DIB_8BPP_PutPixel(BltInfo->DestSurface, DestX, DestY, DIB_DoRop(BltInfo->Rop4, Dest, Source, Pattern) & 0xFFFF);
-         }
-      }
-
-      SourceY++;
-      if (BltInfo->PatternSurface)
-      {
-         PatternY++;
-         PatternY %= BltInfo->PatternSurface->sizlBitmap.cy;
-      }
-   }
-
-   return TRUE;
-}
-
 /* BitBlt Optimize */
 BOOLEAN 
 DIB_8BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
 {			 
   ULONG DestY;			
-	for (DestY = DestRect->top; DestY< DestRect->bottom; DestY++)
-  {
-    DIB_8BPP_HLine (DestSurface, DestRect->left, DestRect->right, DestY, color);
-  }
+  for (DestY = DestRect->top; DestY< DestRect->bottom; DestY++)
+    {
+      DIB_8BPP_HLine(DestSurface, DestRect->left, DestRect->right, DestY, color);
+    }
 	
-	return TRUE;
+  return TRUE;
 }
 /*
 =======================================

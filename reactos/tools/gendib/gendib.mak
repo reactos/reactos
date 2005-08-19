@@ -44,8 +44,9 @@ clean: gendib_clean
 GENDIB_DIB_DIR = subsys$(SEP)win32k$(SEP)dib
 
 GENDIB_DIB_FILES = \
+	$(GENDIB_DIB_DIR)$(SEP)dib32gen.c \
 	$(GENDIB_DIB_DIR)$(SEP)dib16gen.c \
-	$(GENDIB_DIB_DIR)$(SEP)dib32gen.c
+	$(GENDIB_DIB_DIR)$(SEP)dib8gen.c
 
 $(GENDIB_DIB_FILES): $(GENDIB_TARGET)
 	$(ECHO_GENDIB)
