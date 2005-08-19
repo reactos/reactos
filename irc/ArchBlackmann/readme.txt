@@ -21,10 +21,10 @@ ArchBlackmann know what he should say from some text files. They can be found on
 
 List that are used directly to create responses are:
   
-  - tech - here are the sentces ArchBlackmann sais when he finds his name 
+  - tech - here are the sentences ArchBlackmann says when he finds his name 
   - curse - this are the curses he looks for 
   - cursecop - this the responces to them
-  - grovel - this is said when a op does the grovel command
+  - grovel - this is said when an op does the grovel command
   - nogrovel - this when someone else does it
 
 The remaining lists are not used directly, but by the other lists.
