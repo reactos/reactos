@@ -2,7 +2,7 @@
 // This file is (C) 2004 Royce Mitchell III
 // and released under the BSD & LGPL licenses
 
-#include "md5.h"
+#include "MD5.h"
 #include "cram_md5.h"
 #include "base64.h"
 
