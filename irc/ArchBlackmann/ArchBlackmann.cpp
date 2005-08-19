@@ -203,12 +203,13 @@ public:
 	}
 	bool OnPart ( const std::string& user, const std::string& channel )
 	{
-		for ( int i = 0; i < ops.size(); i++ )
+		std::vector<std::string>::iterator it = ops.begin();
+		for ( ; it != ops.end(); it++ )
 		{
-			if ( ops[i] == user )
+			if ( *it == user )
 			{
 				printf ( "remove '%s' to ops list\n", user.c_str() );
-				ops.erase ( &ops[i] );
+				ops.erase ( it );
 			}
 		}
 		return true;
@@ -394,15 +395,17 @@ public:
 						return PrivMsg ( channel, ssprintf("%s: Couldn't add, unmatched quotes",from.c_str()) );
 					s = string ( p, p2-p );
 				}
-				for ( i = 0; i < list.list.size(); i++ )
+				std::vector<std::string>::iterator it = list.list.begin();
+				for ( ; it != list.list.end(); it++ )
 				{
-					if ( list.list[i] == s )
+					if ( *it == s )
 					{
-						list.list.erase ( &list.list[i] );
+						list.list.erase ( it );
 						{
-								File f ( ssprintf("%s.txt",list.name.c_str()), "w" );
-							for ( i = 0; i < list.list.size(); i++ )
-								f.printf ( "%s\n", list.list[i].c_str() );
+							File f ( ssprintf("%s.txt",list.name.c_str()), "w" );
+							it = list.list.begin();
+							for ( ; it < list.list.end(); it++ )
+								f.printf ( "%s\n", it->c_str() );
 						}
 						return PrivMsg ( channel, ssprintf("%s: entry removed from list '%s'",from.c_str(),listname.c_str()) );
 					}
@@ -480,12 +483,13 @@ public:
 				{
 					if ( *p == 'o' )
 					{
-						for ( int i = 0; i < ops.size(); i++ )
+						std::vector<std::string>::iterator it = ops.begin();
+						for ( ; it != ops.end(); it++ )
 						{
-							if ( ops[i] == target )
+							if ( *it == target )
 							{
 								printf ( "remove '%s' to ops list\n", target.c_str() );
-								ops.erase ( &ops[i] );
+								ops.erase ( it );
 							}
 						}
 						break;
