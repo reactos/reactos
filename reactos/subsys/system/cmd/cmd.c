@@ -341,8 +341,8 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 		/* remove any slashes */
 		while(i < _tcslen(first))
 		{
-			if(!_tcsncmp (&first[i], _T("\""), 1))
-				memcpy(&first[i],&first[i + 1], _tcslen(&first[i]));
+			if(first[i] == _T('\"'))
+				memmove(&first[i],&first[i + 1], _tcslen(&first[i]) * sizeof(TCHAR));
 			else
 				i++;
 		}
