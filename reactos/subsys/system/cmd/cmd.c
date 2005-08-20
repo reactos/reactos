@@ -780,9 +780,9 @@ VOID ParseCommandLine (LPTSTR cmd)
     /* we need make sure the LastError msg is zero before calling CreateFile */
 		SetLastError(0); 
 
-    hFile = CreateFile (out, GENERIC_WRITE, FILE_SHARE_WRITE, &sa,
+    hFile = CreateFile (out, GENERIC_WRITE, FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE, &sa,
 		                    (nRedirFlags & OUTPUT_APPEND) ? OPEN_ALWAYS : CREATE_ALWAYS,
-		                    FILE_ATTRIBUTE_NORMAL, NULL);
+		                    FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, NULL);
 		
     if (hFile == INVALID_HANDLE_VALUE)
 		{

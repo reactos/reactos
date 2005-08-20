@@ -219,9 +219,9 @@ BOOL Batch (LPTSTR fullname, LPTSTR firstword, LPTSTR param)
 {
 	HANDLE hFile;
 	SetLastError(0);
-	hFile = CreateFile (fullname, GENERIC_READ, FILE_SHARE_READ, NULL,
+	hFile = CreateFile (fullname, GENERIC_READ, FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE, NULL,
 			    OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL |
-				 FILE_FLAG_SEQUENTIAL_SCAN, NULL);	
+				 FILE_FLAG_SEQUENTIAL_SCAN | FILE_FLAG_WRITE_THROUGH, NULL);	
 
 #ifdef _DEBUG
 	DebugPrintf (_T("Batch: (\'%s\', \'%s\', \'%s\')  hFile = %x\n"),
