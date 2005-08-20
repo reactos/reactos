@@ -796,9 +796,9 @@ VOID ParseCommandLine (LPTSTR cmd)
       }
       
       out[size]=_T('\0');
-      hFile = CreateFile (out, GENERIC_WRITE, FILE_SHARE_WRITE, &sa,
+      hFile = CreateFile (out, GENERIC_WRITE, FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE, &sa,
 		                    (nRedirFlags & OUTPUT_APPEND) ? OPEN_ALWAYS : CREATE_ALWAYS,
-		                    FILE_ATTRIBUTE_NORMAL, NULL);
+		                    FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, NULL);
 
      if (hFile == INVALID_HANDLE_VALUE)
      {
@@ -858,10 +858,10 @@ VOID ParseCommandLine (LPTSTR cmd)
 		{
 			hFile = CreateFile (err,
 			                    GENERIC_WRITE,
-			                    0,
+			                    FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE,
 			                    &sa,
 			                    (nRedirFlags & ERROR_APPEND) ? OPEN_ALWAYS : CREATE_ALWAYS,
-			                    FILE_ATTRIBUTE_NORMAL,
+			                    FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH,
 			                    NULL);
 			if (hFile == INVALID_HANDLE_VALUE)
 			{
