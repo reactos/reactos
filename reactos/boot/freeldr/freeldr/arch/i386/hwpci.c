@@ -293,7 +293,7 @@ DetectPciBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
 
       /* Initialize resource descriptor */
       memset(FullResourceDescriptor, 0, Size);
-      FullResourceDescriptor->InterfaceType = Internal;
+      FullResourceDescriptor->InterfaceType = PCIBus;
       FullResourceDescriptor->BusNumber = 0;
       FullResourceDescriptor->PartialResourceList.Count = 0;
 
