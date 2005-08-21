@@ -315,17 +315,14 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 	/* Get Current Directory */
 	GetRootPath(_T("."),szCurrent,MAX_PATH);
  
-	/* Remove " */
-	if(szPath[0] == _T('\"'))
+   /* Remove " */
+	i = 0;
+	while(i < _tcslen(szPath))
 	{
-		tmpPath = _tcsstr(szPath,_T("\""));
-		tmpPath++;
-		_tcscpy(szPath,tmpPath);
-	}
- 
-	if(szPath[_tcslen(szPath) - 1] == _T('\"'))
-	{
-		szPath[_tcslen(szPath) - 1] = _T('\0');
+		if(szPath[i] == _T('\"'))
+			memmove(&szPath[i],&szPath[i + 1], _tcslen(&szPath[i]) * sizeof(TCHAR));
+		else
+			i++;
 	}
  
 	tmpPath = szPath;
@@ -339,7 +336,7 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 		return 0;
 	}
 	 
- 
+
 	/* change to full path if relative path was given */
 	GetFullPathName(szPath,MAX_PATH,szFinalPath,NULL);
  
