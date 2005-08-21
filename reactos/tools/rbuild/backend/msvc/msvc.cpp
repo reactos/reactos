@@ -82,39 +82,6 @@ void MSVCBackend::Process()
 	m_devFile << "	EndGlobalSection" << endl;
 	m_devFile << "EndGlobal" << endl;
 
-#if 0
-	m_devFile << "[Project]" << endl;
-	
-	m_devFile	<< "FileName="				<< filename 		<< endl
-				<< "Name="					<< ProjectNode.name	<< endl
-				<< "UnitCount="				<< m_unitCount		<< endl
-				<< "Type=1"					<< endl
-				<< "Ver=1"					<< endl
-				<< "ObjFiles="				<< endl
-				<< "Includes="				<< endl
-				<< "Libs="					<< endl
-				<< "PrivateResource="		<< endl
-				<< "ResourceIncludes="		<< endl
-				<< "MakeIncludes="			<< endl
-				<< "Compiler="				<< endl
-				<< "CppCompiler="			<< endl
-				<< "Linker="				<< endl
-				<< "IsCpp=1"				<< endl
-				<< "Icon="					<< endl
-				<< "ExeOutput="				<< endl
-				<< "ObjectOutput="			<< endl
-				<< "OverrideOutput=0"		<< endl
-				<< "OverrideOutputName="	<< endl
-				<< "HostApplication="		<< endl
-				<< "CommandLine="			<< endl
-				<< "UseCustomMakefile=1"	<< endl
-				<< "CustomMakefile="		<< ProjectNode.makefile << endl
-				<< "IncludeVersionInto=0"	<< endl
-				<< "SupportXPThemes=0"		<< endl
-				<< "CompilerSet=0"			<< endl	
-				<< "CompilerSettings=0000000000000000000000" << endl;
-#endif			
-
 	OutputFolders();
 
 	m_devFile << endl << endl;
@@ -123,23 +90,11 @@ void MSVCBackend::Process()
 
 	m_devFile.close();
 	
-	// Dev-C++ needs a makefile, so use the MinGW backend to create one.
+	// The MSVC build still needs the mingw backend.
 	
-	cout << "Creating Makefile: " << ProjectNode.makefile << endl;
-	
-	Backend *backend = Backend::Factory::Create("mingw",
-	                                            ProjectNode,
-	                                            configuration );
-	backend->Process();
-	delete backend;
-
 	cout << "Done." << endl << endl;
 
-	cout	<< "You may want to disable Class browsing (see below) before you open this project in Dev-C++, as the "
-			<< "parsing required for large projects can take quite awhile."
-			<< endl << endl
-			<< "(Tools->Editor Options->Class browsing->Enable class browsing check box)"
-			<< endl << endl;
+	cout << "Don't expect the MSVC backend to work yet. "<< endl << endl;
 }
 
 void MSVCBackend::ProcessModules()
