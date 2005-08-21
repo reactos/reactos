@@ -29,6 +29,8 @@
 
 using namespace std;
 
+void gen_guid();
+
 static class MSVCFactory : public Backend::Factory
 {
 	public:
@@ -95,6 +97,8 @@ void MSVCBackend::Process()
 	cout << "Done." << endl << endl;
 
 	cout << "Don't expect the MSVC backend to work yet. "<< endl << endl;
+
+	gen_guid();
 }
 
 void MSVCBackend::ProcessModules()
