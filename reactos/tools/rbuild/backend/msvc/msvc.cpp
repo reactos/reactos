@@ -25,7 +25,7 @@
 #include <fstream>
 #include <string>
 
-#include "MSVC.h"
+#include "msvc.h"
 
 using namespace std;
 
