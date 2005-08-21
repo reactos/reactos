@@ -1081,7 +1081,7 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
   BOOLEAN Stepping;
   LONG Address;
   LONG Length;
-  LONG SigVal;
+  LONG SigVal = 0;
   LONG NewPC;
   PCHAR ptr;
 
