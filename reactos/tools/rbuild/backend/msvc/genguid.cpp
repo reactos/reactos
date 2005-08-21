@@ -20,6 +20,7 @@
  *
  */
 
+#ifdef _WIN32
 #include <objbase.h>
 #include <stdio.h>
 
@@ -59,3 +60,9 @@ void gen_guid()
 	m_guid.Data4[6],m_guid.Data4[7]);
 	pCoUninitialize();
 }
+
+#else /* Linux, etc */
+void gen_guid()
+{
+}
+#endif /* WIN32/Linux */
