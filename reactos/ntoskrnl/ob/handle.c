@@ -388,9 +388,7 @@ NtDuplicateObject (IN	HANDLE		SourceProcessHandle,
    {
      _SEH_TRY
      {
-       ProbeForWrite(TargetHandle,
-                     sizeof(HANDLE),
-                     sizeof(ULONG));
+       ProbeForWriteHandle(TargetHandle);
      }
      _SEH_HANDLE
      {

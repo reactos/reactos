@@ -1541,7 +1541,7 @@ NtQuerySystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
   
   _SEH_TRY
     {
-      if (PreviousMode == UserMode)
+      if (PreviousMode != KernelMode)
         {
           /* SystemKernelDebuggerInformation needs only BOOLEAN alignment */
           ProbeForWrite(SystemInformation, Length, 1); 

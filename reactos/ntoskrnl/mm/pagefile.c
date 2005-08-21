@@ -801,18 +801,12 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
    {
       return(Status);
    }
-   if (PreviousMode == UserMode)
+   if (PreviousMode != KernelMode)
    {
       _SEH_TRY
       {
-         ProbeForRead(InitialSize,
-                      sizeof(LARGE_INTEGER),
-                      sizeof(ULONG));
-         SafeInitialSize = *InitialSize;
-         ProbeForRead(MaximumSize,
-                      sizeof(LARGE_INTEGER),
-                      sizeof(ULONG));
-         SafeMaximumSize = *MaximumSize;
+         SafeInitialSize = ProbeForReadLargeInteger(InitialSize);
+         SafeMaximumSize = ProbeForReadLargeInteger(MaximumSize);
       }
       _SEH_HANDLE
       {

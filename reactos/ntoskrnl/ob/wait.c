@@ -75,12 +75,8 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
             
             if(TimeOut)
             {
-                ProbeForRead(TimeOut,
-                             sizeof(LARGE_INTEGER),
-                             sizeof(ULONG));
-
                 /* Make a local copy of the timeout on the stack */
-                SafeTimeOut = *TimeOut;
+                SafeTimeOut = ProbeForReadLargeInteger(TimeOut);
                 TimeOut = &SafeTimeOut;
             }
         }
@@ -273,11 +269,8 @@ NtWaitForSingleObject(IN HANDLE ObjectHandle,
     {
         _SEH_TRY
         {
-            ProbeForRead(TimeOut,
-                         sizeof(LARGE_INTEGER),
-                         sizeof(ULONG));
             /* Make a copy on the stack */
-            SafeTimeOut = *TimeOut;
+            SafeTimeOut = ProbeForReadLargeInteger(TimeOut);
             TimeOut = &SafeTimeOut;
         }
         _SEH_HANDLE
@@ -354,11 +347,8 @@ NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
     {
         _SEH_TRY
         {
-            ProbeForRead(TimeOut,
-                         sizeof(LARGE_INTEGER),
-                         sizeof(ULONG));
             /* Make a copy on the stack */
-            SafeTimeOut = *TimeOut;
+            SafeTimeOut = ProbeForReadLargeInteger(TimeOut);
             TimeOut = &SafeTimeOut;
         }
         _SEH_HANDLE

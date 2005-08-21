@@ -242,7 +242,7 @@ NtPulseEvent(IN HANDLE EventHandle,
             EventHandle, PreviousState);
 
     /* Check buffer validity */
-    if(PreviousState && PreviousMode == UserMode) {
+    if(PreviousState && PreviousMode != KernelMode) {
 
         _SEH_TRY {
 
@@ -376,7 +376,7 @@ NtResetEvent(IN HANDLE EventHandle,
             EventHandle, PreviousState);
 
     /* Check buffer validity */
-    if(PreviousState && PreviousMode == UserMode) {
+    if(PreviousState && PreviousMode != KernelMode) {
 
         _SEH_TRY {
 
@@ -441,7 +441,7 @@ NtSetEvent(IN HANDLE EventHandle,
            EventHandle, PreviousState);
 
     /* Check buffer validity */
-    if(PreviousState != NULL && PreviousMode == UserMode) {
+    if(PreviousState != NULL && PreviousMode != KernelMode) {
 
         _SEH_TRY {
 

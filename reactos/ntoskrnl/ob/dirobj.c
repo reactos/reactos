@@ -58,9 +58,7 @@ NtOpenDirectoryObject (OUT PHANDLE DirectoryHandle,
    {
      _SEH_TRY
      {
-       ProbeForWrite(DirectoryHandle,
-                     sizeof(HANDLE),
-                     sizeof(ULONG));
+       ProbeForWriteHandle(DirectoryHandle);
      }
      _SEH_HANDLE
      {
@@ -186,18 +184,14 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
       ProbeForWrite(Buffer,
                     BufferLength,
                     sizeof(WCHAR));
-      ProbeForWrite(Context,
-                    sizeof(ULONG),
-                    sizeof(ULONG));
+      ProbeForWriteUlong(Context);
       if(!RestartScan)
       {
         SkipEntries = *Context;
       }
       if(ReturnLength != NULL)
       {
-        ProbeForWrite(ReturnLength,
-                      sizeof(ULONG),
-                      sizeof(ULONG));
+        ProbeForWriteUlong(ReturnLength);
       }
     }
     _SEH_HANDLE
@@ -449,9 +443,7 @@ NtCreateDirectoryObject (OUT PHANDLE DirectoryHandle,
   {
     _SEH_TRY
     {
-      ProbeForWrite(DirectoryHandle,
-                    sizeof(HANDLE),
-                    sizeof(ULONG));
+      ProbeForWriteHandle(DirectoryHandle);
     }
     _SEH_HANDLE
     {

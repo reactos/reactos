@@ -1435,7 +1435,7 @@ KeTestAlertThread(IN KPROCESSOR_MODE AlertMode)
 
         Thread->Alerted[AlertMode] = FALSE;
 
-    } else if ((AlertMode == UserMode) && (!IsListEmpty(&Thread->ApcState.ApcListHead[UserMode]))) {
+    } else if ((AlertMode != KernelMode) && (!IsListEmpty(&Thread->ApcState.ApcListHead[UserMode]))) {
 
         /* If the mode is User and the Queue isn't empty, set Pending */
         Thread->ApcState.UserApcPending = TRUE;
@@ -1480,9 +1480,7 @@ NtAlertResumeThread(IN  HANDLE ThreadHandle,
 
         _SEH_TRY {
 
-            ProbeForWrite(SuspendCount,
-                          sizeof(HANDLE),
-                          sizeof(ULONG));
+            ProbeForWriteUlong(SuspendCount);
 
         } _SEH_HANDLE {
 
@@ -1578,26 +1576,30 @@ NtDelayExecution(IN BOOLEAN Alertable,
     /* Check if parameters are valid */
     if(PreviousMode != KernelMode) {
 
+        Status = STATUS_SUCCESS;
+        
         _SEH_TRY {
-
-            ProbeForRead(DelayInterval,
-                         sizeof(LARGE_INTEGER),
-                         sizeof(ULONG));
 
             /* make a copy on the kernel stack and let DelayInterval point to it so
                we don't need to wrap KeDelayExecutionThread in SEH! */
-            SafeInterval = *DelayInterval;
+            SafeInterval = ProbeForReadLargeInteger(DelayInterval);
+            DelayInterval = &SafeInterval;
 
         } _SEH_HANDLE {
 
             Status = _SEH_GetExceptionCode();
         } _SEH_END;
+        
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
    }
 
    /* Call the Kernel Function */
    Status = KeDelayExecutionThread(PreviousMode,
                                    Alertable,
-                                   &SafeInterval);
+                                   DelayInterval);
 
    /* Return Status */
    return Status;

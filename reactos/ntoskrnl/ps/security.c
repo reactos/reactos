@@ -75,7 +75,7 @@ NtOpenProcessTokenEx(IN HANDLE ProcessHandle,
 
    PreviousMode = ExGetPreviousMode();
 
-   if(PreviousMode == UserMode)
+   if(PreviousMode != KernelMode)
    {
      _SEH_TRY
      {

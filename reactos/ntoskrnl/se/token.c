@@ -1440,9 +1440,7 @@ NtDuplicateToken(IN HANDLE ExistingTokenHandle,
   {
     _SEH_TRY
     {
-      ProbeForWrite(NewTokenHandle,
-                    sizeof(HANDLE),
-                    sizeof(ULONG));
+      ProbeForWriteHandle(NewTokenHandle);
     }
     _SEH_HANDLE
     {
@@ -2053,6 +2051,7 @@ NtCreateToken(OUT PHANDLE TokenHandle,
   ULONG uLength;
   ULONG i;
   ULONG nTokenPrivileges = 0;
+  LARGE_INTEGER LocalExpirationTime = {};
   KPROCESSOR_MODE PreviousMode;
   NTSTATUS Status = STATUS_SUCCESS;
 
@@ -2064,15 +2063,11 @@ NtCreateToken(OUT PHANDLE TokenHandle,
   {
     _SEH_TRY
     {
-      ProbeForWrite(TokenHandle,
-                    sizeof(HANDLE),
-                    sizeof(ULONG));
+      ProbeForWriteHandle(TokenHandle);
       ProbeForRead(AuthenticationId,
                    sizeof(LUID),
                    sizeof(ULONG));
-      ProbeForRead(ExpirationTime,
-                   sizeof(LARGE_INTEGER),
-                   sizeof(ULONG));
+      LocalExpirationTime = ProbeForReadLargeInteger(ExpirationTime);
       ProbeForRead(TokenUser,
                    sizeof(TOKEN_USER),
                    sizeof(ULONG));
@@ -2110,6 +2105,7 @@ NtCreateToken(OUT PHANDLE TokenHandle,
   else
   {
     nTokenPrivileges = TokenPrivileges->PrivilegeCount;
+    LocalExpirationTime = *ExpirationTime;
   }
 
   Status = ZwAllocateLocallyUniqueId(&TokenId);
@@ -2383,9 +2379,7 @@ NtOpenThreadTokenEx(IN HANDLE ThreadHandle,
   {
     _SEH_TRY
     {
-      ProbeForWrite(TokenHandle,
-                    sizeof(HANDLE),
-                    sizeof(ULONG));
+      ProbeForWriteHandle(TokenHandle);
     }
     _SEH_HANDLE
     {

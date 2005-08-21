@@ -186,9 +186,7 @@ NtCreateSymbolicLinkObject(OUT PHANDLE LinkHandle,
   {
     _SEH_TRY
     {
-      ProbeForWrite(LinkHandle,
-                    sizeof(HANDLE),
-                    sizeof(ULONG));
+      ProbeForWriteHandle(LinkHandle);
     }
     _SEH_HANDLE
     {
@@ -303,9 +301,7 @@ NtOpenSymbolicLinkObject(OUT PHANDLE LinkHandle,
   {
     _SEH_TRY
     {
-      ProbeForWrite(LinkHandle,
-                    sizeof(HANDLE),
-                    sizeof(ULONG));
+      ProbeForWriteHandle(LinkHandle);
     }
     _SEH_HANDLE
     {
@@ -388,9 +384,7 @@ NtQuerySymbolicLinkObject(IN HANDLE LinkHandle,
 
       if(ResultLength != NULL)
       {
-        ProbeForWrite(ResultLength,
-                      sizeof(ULONG),
-                      sizeof(ULONG));
+        ProbeForWriteUlong(ResultLength);
       }
     }
     _SEH_HANDLE

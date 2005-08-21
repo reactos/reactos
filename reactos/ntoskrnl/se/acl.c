@@ -354,7 +354,7 @@ SepReleaseAcl(IN PACL CapturedAcl,
   PAGED_CODE();
 
   if(CapturedAcl != NULL &&
-     (AccessMode == UserMode ||
+     (AccessMode != KernelMode ||
       (AccessMode == KernelMode && CaptureIfKernel)))
   {
     ExFreePool(CapturedAcl);

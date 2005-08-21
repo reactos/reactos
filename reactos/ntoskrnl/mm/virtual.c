@@ -303,9 +303,7 @@ NtQueryVirtualMemory (IN HANDLE ProcessHandle,
      {
        _SEH_TRY
          {
-           ProbeForWrite(UnsafeResultLength,
-                         sizeof(ULONG),
-                         sizeof(ULONG));
+           ProbeForWriteUlong(UnsafeResultLength);
          }
        _SEH_HANDLE
          {
@@ -458,15 +456,9 @@ NtProtectVirtualMemory(IN HANDLE ProcessHandle,
      {
        _SEH_TRY
          {
-           ProbeForWrite(UnsafeBaseAddress,
-                         sizeof(PVOID),
-                         sizeof(ULONG));
-           ProbeForWrite(UnsafeBaseAddress,
-                         sizeof(ULONG),
-                         sizeof(ULONG));
-           ProbeForWrite(UnsafeOldAccessProtection,
-                         sizeof(ULONG),
-                         sizeof(ULONG));
+           ProbeForWritePointer(UnsafeBaseAddress);
+           ProbeForWriteUlong(UnsafeNumberOfBytesToProtect);
+           ProbeForWriteUlong(UnsafeOldAccessProtection);
 
            BaseAddress = *UnsafeBaseAddress;
            NumberOfBytesToProtect = *UnsafeNumberOfBytesToProtect;
@@ -573,9 +565,7 @@ NtReadVirtualMemory(IN HANDLE ProcessHandle,
                      1);
        if(NumberOfBytesRead != NULL)
        {
-         ProbeForWrite(NumberOfBytesRead,
-                       sizeof(ULONG),
-                       sizeof(ULONG));
+         ProbeForWriteUlong(NumberOfBytesRead);
        }
      }
      _SEH_HANDLE
@@ -776,9 +766,7 @@ NtWriteVirtualMemory(IN HANDLE ProcessHandle,
      {
        _SEH_TRY
          {
-           ProbeForWrite(NumberOfBytesWritten,
-                         sizeof(ULONG),
-                         sizeof(ULONG));
+           ProbeForWriteUlong(NumberOfBytesWritten);
          }
        _SEH_HANDLE
          {

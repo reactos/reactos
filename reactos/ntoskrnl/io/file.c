@@ -781,18 +781,13 @@ IoCreateFile(OUT PHANDLE  FileHandle,
    {
      _SEH_TRY
      {
-       ProbeForWrite(FileHandle,
-                     sizeof(HANDLE),
-                     sizeof(ULONG));
+       ProbeForWriteHandle(FileHandle);
        ProbeForWrite(IoStatusBlock,
                      sizeof(IO_STATUS_BLOCK),
                      sizeof(ULONG));
        if(AllocationSize != NULL)
        {
-         ProbeForRead(AllocationSize,
-                      sizeof(LARGE_INTEGER),
-                      sizeof(ULONG));
-         SafeAllocationSize = *AllocationSize;
+         SafeAllocationSize = ProbeForReadLargeInteger(AllocationSize);
        }
        else
          SafeAllocationSize.QuadPart = 0;
@@ -1395,7 +1390,7 @@ NtCancelIoFile(IN HANDLE FileHandle,
    LARGE_INTEGER Interval;
 
    if ((ULONG_PTR)IoStatusBlock >= (ULONG_PTR)MmUserProbeAddress &&
-       KeGetPreviousMode() == UserMode)
+       KeGetPreviousMode() != KernelMode)
       return STATUS_ACCESS_VIOLATION;
 
    Status = ObReferenceObjectByHandle(FileHandle, 0, IoFileObjectType,

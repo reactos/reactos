@@ -63,7 +63,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
         TContext.ContextFlags = CONTEXT_FULL;
 
         /* Check the mode */
-        if (PreviousMode == UserMode)
+        if (PreviousMode != KernelMode)
         {
             /* Add Debugger Registers if this is User Mode */
             TContext.ContextFlags = TContext.ContextFlags | CONTEXT_DEBUGGER;
@@ -91,7 +91,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
     if (Action != kdDoNotHandleException)
     {
         /* See what kind of Exception this is */
-        if (PreviousMode == UserMode)
+        if (PreviousMode != KernelMode)
         {
             /* User mode exception, search the frames if we have to */
             if (SearchFrames)

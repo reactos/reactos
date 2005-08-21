@@ -360,7 +360,7 @@ KiInsertQueueApc(PKAPC Apc,
         }
 
    } else if ((Thread->State == Waiting) &&
-              (Thread->WaitMode == UserMode) &&
+              (Thread->WaitMode != KernelMode) &&
               (Thread->Alertable)) {
 
         DPRINT("Waking up Thread for User-Mode APC Delivery \n");
@@ -703,7 +703,7 @@ KiDeliverApc(KPROCESSOR_MODE DeliveryMode,
 
     /* Now we do the User APCs */
     if ((!IsListEmpty(&Thread->ApcState.ApcListHead[UserMode])) &&
-        (DeliveryMode == UserMode) && (Thread->ApcState.UserApcPending == TRUE)) {
+        (DeliveryMode != KernelMode) && (Thread->ApcState.UserApcPending == TRUE)) {
 
         /* It's not pending anymore */
         Thread->ApcState.UserApcPending = FALSE;

@@ -261,7 +261,7 @@ typedef struct _INFORMATION_CLASS_INFO
 
 #define ProbeQueryInfoBuffer(Buffer, BufferLen, Alignment, RetLen, PrevMode, StatusVar) \
   do {                                                                         \
-  if(PrevMode == UserMode)                                                     \
+  if(PrevMode != KernelMode)                                                     \
   {                                                                            \
     _SEH_TRY                                                                   \
     {                                                                          \
@@ -291,7 +291,7 @@ typedef struct _INFORMATION_CLASS_INFO
 
 #define ProbeSetInfoBuffer(Buffer, BufferLen, Alignment, PrevMode, StatusVar) \
   do {                                                                         \
-  if(PrevMode == UserMode)                                                     \
+  if(PrevMode != KernelMode)                                                     \
   {                                                                            \
     _SEH_TRY                                                                   \
     {                                                                          \

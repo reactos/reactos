@@ -45,7 +45,7 @@ NtResumeThread(IN HANDLE ThreadHandle,
            ThreadHandle, SuspendCount);
 
     /* Check buffer validity */
-    if(SuspendCount && PreviousMode == UserMode) {
+    if(SuspendCount && PreviousMode != KernelMode) {
 
         _SEH_TRY {
 

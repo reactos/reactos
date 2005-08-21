@@ -173,7 +173,7 @@ NtGetPlugPlayEvent(IN ULONG Reserved1,
   DPRINT("NtGetPlugPlayEvent() called\n");
 
   /* Function can only be called from user-mode */
-  if (KeGetPreviousMode() != UserMode)
+  if (KeGetPreviousMode() == KernelMode)
   {
     DPRINT1("NtGetPlugPlayEvent cannot be called from kernel mode!\n");
     return STATUS_ACCESS_DENIED;
@@ -636,7 +636,7 @@ NtPlugPlayControl(IN PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
            PlugPlayControlClass, Buffer, BufferLength);
 
     /* Function can only be called from user-mode */
-    if (KeGetPreviousMode() != UserMode)
+    if (KeGetPreviousMode() == KernelMode)
     {
         DPRINT1("NtGetPlugPlayEvent cannot be called from kernel mode!\n");
         return STATUS_ACCESS_DENIED;

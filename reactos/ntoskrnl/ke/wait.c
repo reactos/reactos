@@ -47,7 +47,7 @@ KiCheckAlertability(BOOLEAN Alertable,
 
         /* If there are User APCs Pending, then we can't really be alertable */
         } else if ((!IsListEmpty(&CurrentThread->ApcState.ApcListHead[UserMode])) &&
-                    (WaitMode == UserMode)) {
+                    (WaitMode != KernelMode)) {
 
             DPRINT("APCs are Pending\n");
             CurrentThread->ApcState.UserApcPending = TRUE;
@@ -55,7 +55,7 @@ KiCheckAlertability(BOOLEAN Alertable,
         }
 
     /* If there are User APCs Pending and we are waiting in usermode, then we must notify the caller */
-    } else if ((CurrentThread->ApcState.UserApcPending) && (WaitMode == UserMode)) {
+    } else if ((CurrentThread->ApcState.UserApcPending) && (WaitMode != KernelMode)) {
             DPRINT("APCs are Pending\n");
             *Status = STATUS_USER_APC;
     }

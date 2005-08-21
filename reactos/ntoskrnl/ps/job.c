@@ -212,7 +212,7 @@ NtCreateJobObject (
     CurrentProcess = PsGetCurrentProcess();
 
     /* check for valid buffers */
-    if(PreviousMode == UserMode)
+    if(PreviousMode != KernelMode)
     {
         _SEH_TRY
         {
@@ -382,7 +382,7 @@ NtOpenJobObject (
     PreviousMode = ExGetPreviousMode();
 
     /* check for valid buffers */
-    if(PreviousMode == UserMode)
+    if(PreviousMode != KernelMode)
     {
         _SEH_TRY
         {
