@@ -79,9 +79,7 @@ NtOpenProcessTokenEx(IN HANDLE ProcessHandle,
    {
      _SEH_TRY
      {
-       ProbeForWrite(TokenHandle,
-                     sizeof(HANDLE),
-                     sizeof(ULONG));
+       ProbeForWriteHandle(TokenHandle);
      }
      _SEH_HANDLE
      {

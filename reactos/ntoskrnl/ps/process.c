@@ -870,6 +870,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
                 IN HANDLE DebugPort  OPTIONAL,
                 IN HANDLE ExceptionPort  OPTIONAL)
 {
+    HANDLE hProcess;
     KPROCESSOR_MODE PreviousMode  = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
 
@@ -880,9 +881,7 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
     {
         _SEH_TRY
         {
-            ProbeForWrite(ProcessHandle,
-                          sizeof(HANDLE),
-                          sizeof(ULONG));
+            ProbeForWriteHandle(ProcessHandle);
         }
         _SEH_HANDLE
         {
@@ -901,8 +900,9 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
     }
     else
     {
-        /* Create a user Process */
-        Status = PspCreateProcess(ProcessHandle,
+        /* Create a user Process, do NOT pass the pointer to the handle supplied
+           by the caller directly!!! */
+        Status = PspCreateProcess(&hProcess,
                                   DesiredAccess,
                                   ObjectAttributes,
                                   ParentProcess,
@@ -910,6 +910,18 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
                                   SectionHandle,
                                   DebugPort,
                                   ExceptionPort);
+        if (NT_SUCCESS(Status))
+        {
+            _SEH_TRY
+            {
+                *ProcessHandle = hProcess;
+            }
+            _SEH_HANDLE
+            {
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
+        }
     }
 
     /* Return Status */
@@ -940,7 +952,7 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
 
     /* Open by name if one was given */
     DPRINT("Checking type\n");
-    if (ObjectAttributes->ObjectName)
+    if (ObjectAttributes->ObjectName) /* FIXME - neither probed nor protected! */
     {
         /* Open it */
         DPRINT("Opening by name\n");
@@ -964,11 +976,11 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
     else if (ClientId)
     {
         /* Open by Thread ID */
-        if (ClientId->UniqueThread)
+        if (ClientId->UniqueThread) /* FIXME - neither probed nor protected! */
         {
             /* Get the Process */
-            DPRINT("Opening by Thread ID: %x\n", ClientId->UniqueThread);
-            Status = PsLookupProcessThreadByCid(ClientId,
+            DPRINT("Opening by Thread ID: %x\n", ClientId->UniqueThread); /* FIXME - neither probed nor protected! */
+            Status = PsLookupProcessThreadByCid(ClientId, /* FIXME - neither probed nor protected! */
                                                 &Process,
                                                 &Thread);
             DPRINT("Found: %x\n", Process);
@@ -976,8 +988,8 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
         else
         {
             /* Get the Process */
-            DPRINT("Opening by Process ID: %x\n", ClientId->UniqueProcess);
-            Status = PsLookupProcessByProcessId(ClientId->UniqueProcess,
+            DPRINT("Opening by Process ID: %x\n", ClientId->UniqueProcess); /* FIXME - neither probed nor protected! */
+            Status = PsLookupProcessByProcessId(ClientId->UniqueProcess, /* FIXME - neither probed nor protected! */
                                                 &Process);
             DPRINT("Found: %x\n", Process);
         }
@@ -990,12 +1002,12 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
 
         /* Open the Process Object */
         Status = ObOpenObjectByPointer(Process,
-                                       ObjectAttributes->Attributes,
+                                       ObjectAttributes->Attributes, /* FIXME - neither probed nor protected! */
                                        NULL,
                                        DesiredAccess,
                                        PsProcessType,
                                        PreviousMode,
-                                       ProcessHandle);
+                                       ProcessHandle); /* FIXME - neither probed nor protected! */
         if(!NT_SUCCESS(Status))
         {
             DPRINT1("Failure to open process\n");

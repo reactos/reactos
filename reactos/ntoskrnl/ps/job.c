@@ -216,10 +216,7 @@ NtCreateJobObject (
     {
         _SEH_TRY
         {
-            /* probe with 32bit alignment */
-            ProbeForWrite(JobHandle,
-                sizeof(HANDLE),
-                sizeof(ULONG));
+            ProbeForWriteHandle(JobHandle);
         }
         _SEH_HANDLE
         {
@@ -389,10 +386,7 @@ NtOpenJobObject (
     {
         _SEH_TRY
         {
-            /* probe with 32bit alignment */
-            ProbeForWrite(JobHandle,
-                sizeof(HANDLE),
-                sizeof(ULONG));
+            ProbeForWriteHandle(JobHandle);
         }
         _SEH_HANDLE
         {

@@ -49,9 +49,7 @@ NtResumeThread(IN HANDLE ThreadHandle,
 
         _SEH_TRY {
 
-            ProbeForWrite(SuspendCount,
-                          sizeof(ULONG),
-                          sizeof(ULONG));
+            ProbeForWriteUlong(SuspendCount);
          } _SEH_HANDLE {
 
             Status = _SEH_GetExceptionCode();
@@ -124,9 +122,7 @@ NtSuspendThread(IN HANDLE ThreadHandle,
     {
         _SEH_TRY
         {
-            ProbeForWrite(PreviousSuspendCount,
-                          sizeof(ULONG),
-                          sizeof(ULONG));
+            ProbeForWriteUlong(PreviousSuspendCount);
          }
         _SEH_HANDLE
         {
