@@ -106,6 +106,7 @@ RtlReleaseCapturedUnicodeString(
         *(volatile Type *)(Ptr) = *(volatile Type *)(Ptr);                     \
     } while (0)
 
+#define ProbeForWriteBoolean(Ptr) ProbeForWriteGenericType(Ptr, BOOLEAN)
 #define ProbeForWriteUchar(Ptr) ProbeForWriteGenericType(Ptr, UCHAR)
 #define ProbeForWriteChar(Ptr) ProbeForWriteGenericType(Ptr, Char)
 #define ProbeForWriteUshort(Ptr) ProbeForWriteGenericType(Ptr, USHORT)
@@ -120,13 +121,16 @@ RtlReleaseCapturedUnicodeString(
 #define ProbeForWritePointer(Ptr) ProbeForWriteGenericType(Ptr, PVOID)
 #define ProbeForWriteHandle(Ptr) ProbeForWriteGenericType(Ptr, HANDLE)
 #define ProbeForWriteLangid(Ptr) ProbeForWriteGenericType(Ptr, LANGID)
+#define ProbeForWriteLargeInteger(Ptr) ProbeForWriteGenericType(&(Ptr)->QuadPart, LONGLONG)
+#define ProbeForWriteUlargeInteger(Ptr) ProbeForWriteGenericType(&(Ptr)->QuadPart, ULONGLONG)
 
 #define ProbeForReadGenericType(Ptr, Type, Default)                            \
     (((ULONG_PTR)(Ptr) + sizeof(Type) - 1 < (ULONG_PTR)(Ptr) ||                \
 	 (ULONG_PTR)(Ptr) + sizeof(Type) - 1 >= (ULONG_PTR)MmUserProbeAddress) ?   \
 	     ExRaiseStatus (STATUS_ACCESS_VIOLATION), Default :                    \
-	     *(volatile Type *)(Ptr))
+	     *(Type *)(Ptr))
 
+#define ProbeForReadBoolean(Ptr) ProbeForReadGenericType(Ptr, BOOLEAN, FALSE)
 #define ProbeForReadUchar(Ptr) ProbeForReadGenericType(Ptr, UCHAR, 0)
 #define ProbeForReadChar(Ptr) ProbeForReadGenericType(Ptr, CHAR, 0)
 #define ProbeForReadUshort(Ptr) ProbeForReadGenericType(Ptr, USHORT, 0)
@@ -140,6 +144,8 @@ RtlReleaseCapturedUnicodeString(
 #define ProbeForReadPointer(Ptr) ProbeForReadGenericType(Ptr, PVOID, NULL)
 #define ProbeForReadHandle(Ptr) ProbeForReadGenericType(Ptr, HANDLE, NULL)
 #define ProbeForReadLangid(Ptr) ProbeForReadGenericType(Ptr, LANGID, 0)
+#define ProbeForReadLargeInteger(Ptr) ((LARGE_INTEGER)ProbeForReadGenericType(&(Ptr)->QuadPart, LONGLONG, 0))
+#define ProbeForReadUlargeInteger(Ptr) ((ULARGE_INTEGER)ProbeForReadGenericType(&(Ptr)->QuadPart, ULONGLONG, 0))
 
 
 #endif

@@ -76,9 +76,7 @@ NtCreateSemaphore(OUT PHANDLE SemaphoreHandle,
     {
         _SEH_TRY 
         {
-            ProbeForWrite(SemaphoreHandle,
-                          sizeof(HANDLE),
-                          sizeof(ULONG));
+            ProbeForWriteHandle(SemaphoreHandle);
         }
         _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
         {
@@ -162,9 +160,7 @@ NtOpenSemaphore(OUT PHANDLE SemaphoreHandle,
     {
         _SEH_TRY
         {
-            ProbeForWrite(SemaphoreHandle,
-                          sizeof(HANDLE),
-                          sizeof(ULONG));
+            ProbeForWriteHandle(SemaphoreHandle);
         }
         _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
         {
@@ -289,9 +285,7 @@ NtReleaseSemaphore(IN HANDLE SemaphoreHandle,
     {
         _SEH_TRY
         {
-            ProbeForWrite(PreviousCount,
-                          sizeof(LONG),
-                          sizeof(ULONG));
+            ProbeForWriteLong(PreviousCount);
          }
         _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
         {

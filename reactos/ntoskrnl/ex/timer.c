@@ -271,9 +271,7 @@ NtCancelTimer(IN HANDLE TimerHandle,
     {
         _SEH_TRY
         {
-            ProbeForWrite(CurrentState,
-                          sizeof(BOOLEAN),
-                          sizeof(BOOLEAN));
+            ProbeForWriteBoolean(CurrentState);
         }
         _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
         {
@@ -403,9 +401,7 @@ NtCreateTimer(OUT PHANDLE TimerHandle,
     {
         _SEH_TRY
         {
-            ProbeForWrite(TimerHandle,
-                          sizeof(HANDLE),
-                          sizeof(ULONG));
+            ProbeForWriteHandle(TimerHandle);
         }
         _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
         {
@@ -493,9 +489,7 @@ NtOpenTimer(OUT PHANDLE TimerHandle,
     {
         _SEH_TRY
         {
-            ProbeForWrite(TimerHandle,
-                          sizeof(HANDLE),
-                          sizeof(ULONG));
+            ProbeForWriteHandle(TimerHandle);
         }
         _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
         {
@@ -633,16 +627,11 @@ NtSetTimer(IN HANDLE TimerHandle,
     {
         _SEH_TRY
         {
-            ProbeForRead(DueTime,
-                         sizeof(LARGE_INTEGER),
-                         sizeof(ULONG));
-            TimerDueTime = *DueTime;
+            TimerDueTime = ProbeForReadLargeInteger(DueTime);
 
             if(PreviousState)
             {
-                ProbeForWrite(PreviousState,
-                              sizeof(BOOLEAN),
-                              sizeof(BOOLEAN));
+                ProbeForWriteBoolean(PreviousState);
             }
         }
         _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)

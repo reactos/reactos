@@ -161,15 +161,10 @@ NtSetSystemTime(IN PLARGE_INTEGER SystemTime,
   {
     _SEH_TRY
     {
-      ProbeForRead(SystemTime,
-                   sizeof(LARGE_INTEGER),
-                   sizeof(ULONG));
-      NewSystemTime = *SystemTime;
+      NewSystemTime = ProbeForReadLargeInteger(SystemTime);
       if(PreviousTime != NULL)
       {
-        ProbeForWrite(PreviousTime,
-                      sizeof(LARGE_INTEGER),
-                      sizeof(ULONG));
+        ProbeForWriteLargeInteger(PreviousTime);
       }
     }
     _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
@@ -246,9 +241,7 @@ NtQuerySystemTime(OUT PLARGE_INTEGER SystemTime)
   {
     _SEH_TRY
     {
-      ProbeForRead(SystemTime,
-                   sizeof(LARGE_INTEGER),
-                   sizeof(ULONG));
+      ProbeForWriteLargeInteger(SystemTime);
 
       /* it's safe to pass the pointer directly to KeQuerySystemTime as it's just
          a basic copy to these pointer, if it raises an exception nothing dangerous

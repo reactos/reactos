@@ -137,9 +137,7 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
                     sizeof(WCHAR));
       if(ReturnLength != NULL)
       {
-        ProbeForWrite(ReturnLength,
-                      sizeof(ULONG),
-                      sizeof(ULONG));
+        ProbeForWriteUlong(ReturnLength);
       }
     }
     _SEH_EXCEPT(_SEH_ExSystemExceptionFilter)
@@ -1548,7 +1546,7 @@ NtQuerySystemInformation (IN SYSTEM_INFORMATION_CLASS SystemInformationClass,
           /* SystemKernelDebuggerInformation needs only BOOLEAN alignment */
           ProbeForWrite(SystemInformation, Length, 1); 
           if (UnsafeResultLength != NULL)
-            ProbeForWrite(UnsafeResultLength, sizeof(ULONG), sizeof(ULONG));
+            ProbeForWriteUlong(UnsafeResultLength);
         }
 
       /* Clear user buffer. */
