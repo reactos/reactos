@@ -24,7 +24,6 @@
 #define NDEBUG
 #include "../include/debug.h"
 
-
 static const char bom_utf8[] = {0xEF,0xBB,0xBF};
 
 typedef enum
@@ -122,9 +121,7 @@ static void PROFILE_CopyEntry( LPWSTR buffer, LPCWSTR value, int len,
             quote = *value++;
     }
 
-    wcsncpy( buffer, value, len );
-    if (quote && ((size_t)len >= wcslen(value)))
-        buffer[wcslen(buffer) - 1] = '\0';
+    lstrcpynW( buffer, value, len );
 }
 
 
@@ -963,7 +960,7 @@ static INT PROFILE_GetSectionNames( LPWSTR buffer, UINT len )
             {
                 if (f > 0)
                 {
-                    wcsncpy(buf, section->name, f - 1);
+                    memcpy(buf, section->name, (f - 1) * sizeof(WCHAR));
                     buf += f - 1;
                     *buf++ = '\0';
                 }
@@ -1158,13 +1155,13 @@ static int PROFILE_GetPrivateProfileString( LPCWSTR section, LPCWSTR entry,
                 break;
         }
 
-       if (*p == ' ') /* ouch, contained trailing ' ' */
-       {
+        if (*p == ' ') /* ouch, contained trailing ' ' */
+        {
            int len = (int)(p - def_val);
            LPWSTR p;
 
            p = HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR));
-           wcsncpy(p, def_val, len);
+           memcpy(p, def_val, len * sizeof(WCHAR));
            p[len] = '\0';
            pDefVal = p;
         }
@@ -1185,7 +1182,7 @@ static int PROFILE_GetPrivateProfileString( LPCWSTR section, LPCWSTR entry,
     }
     else
     {
-       wcsncpy( buffer, pDefVal, len );
+       lstrcpynW( buffer, pDefVal, len );
        ret = wcslen( buffer );
     }
 
