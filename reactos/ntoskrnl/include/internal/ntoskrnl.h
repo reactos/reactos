@@ -92,8 +92,57 @@ RtlReleaseCapturedUnicodeString(
     IN BOOLEAN CaptureIfKernel
 );
 
-#endif
+/*
+ * Inlined Probing Macros
+ *
+ * NOTE: Alignment of the pointers is not verified!
+ */
+#define ProbeForWriteGenericType(Ptr, Type)                                    \
+    do {                                                                       \
+        if ((ULONG_PTR)(Ptr) + sizeof(Type) - 1 < (ULONG_PTR)(Ptr) ||          \
+            (ULONG_PTR)(Ptr) + sizeof(Type) - 1 >= (ULONG_PTR)MmUserProbeAddress) { \
+            ExRaiseStatus (STATUS_ACCESS_VIOLATION);                           \
+        }                                                                      \
+        *(volatile Type *)(Ptr) = *(volatile Type *)(Ptr);                     \
+    } while (0)
 
+#define ProbeForWriteUchar(Ptr) ProbeForWriteGenericType(Ptr, UCHAR)
+#define ProbeForWriteChar(Ptr) ProbeForWriteGenericType(Ptr, Char)
+#define ProbeForWriteUshort(Ptr) ProbeForWriteGenericType(Ptr, USHORT)
+#define ProbeForWriteShort(Ptr) ProbeForWriteGenericType(Ptr, SHORT)
+#define ProbeForWriteUlong(Ptr) ProbeForWriteGenericType(Ptr, ULONG)
+#define ProbeForWriteLong(Ptr) ProbeForWriteGenericType(Ptr, LONG)
+#define ProbeForWriteUint(Ptr) ProbeForWriteGenericType(Ptr, UINT)
+#define ProbeForWriteInt(Ptr) ProbeForWriteGenericType(Ptr, INT)
+#define ProbeForWriteUlonglong(Ptr) ProbeForWriteGenericType(Ptr, ULONGLONG)
+#define ProbeForWriteLonglong(Ptr) ProbeForWriteGenericType(Ptr, LONGLONG)
+#define ProbeForWriteLonglong(Ptr) ProbeForWriteGenericType(Ptr, LONGLONG)
+#define ProbeForWritePointer(Ptr) ProbeForWriteGenericType(Ptr, PVOID)
+#define ProbeForWriteHandle(Ptr) ProbeForWriteGenericType(Ptr, HANDLE)
+#define ProbeForWriteLangid(Ptr) ProbeForWriteGenericType(Ptr, LANGID)
+
+#define ProbeForReadGenericType(Ptr, Type, Default)                            \
+    (((ULONG_PTR)(Ptr) + sizeof(Type) - 1 < (ULONG_PTR)(Ptr) ||                \
+	 (ULONG_PTR)(Ptr) + sizeof(Type) - 1 >= (ULONG_PTR)MmUserProbeAddress) ?   \
+	     ExRaiseStatus (STATUS_ACCESS_VIOLATION), Default :                    \
+	     *(volatile Type *)(Ptr))
+
+#define ProbeForReadUchar(Ptr) ProbeForReadGenericType(Ptr, UCHAR, 0)
+#define ProbeForReadChar(Ptr) ProbeForReadGenericType(Ptr, CHAR, 0)
+#define ProbeForReadUshort(Ptr) ProbeForReadGenericType(Ptr, USHORT, 0)
+#define ProbeForReadShort(Ptr) ProbeForReadGenericType(Ptr, SHORT, 0)
+#define ProbeForReadUlong(Ptr) ProbeForReadGenericType(Ptr, ULONG, 0)
+#define ProbeForReadLong(Ptr) ProbeForReadGenericType(Ptr, LONG, 0)
+#define ProbeForReadUint(Ptr) ProbeForReadGenericType(Ptr, UINT, 0)
+#define ProbeForReadInt(Ptr) ProbeForReadGenericType(Ptr, INT, 0)
+#define ProbeForReadUlonglong(Ptr) ProbeForReadGenericType(Ptr, ULONGLONG, 0)
+#define ProbeForReadLonglong(Ptr) ProbeForReadGenericType(Ptr, LONGLONG, 0)
+#define ProbeForReadPointer(Ptr) ProbeForReadGenericType(Ptr, PVOID, NULL)
+#define ProbeForReadHandle(Ptr) ProbeForReadGenericType(Ptr, HANDLE, NULL)
+#define ProbeForReadLangid(Ptr) ProbeForReadGenericType(Ptr, LANGID, 0)
+
+
+#endif
 /*
  *
  */
