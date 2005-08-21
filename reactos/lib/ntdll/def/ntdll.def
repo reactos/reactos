@@ -393,6 +393,7 @@ RtlDestroyQueryDebugBuffer@4
 RtlDetermineDosPathNameType_U@4
 RtlDoesFileExists_U@4
 RtlDosPathNameToNtPathName_U@16
+RtlDosPathNameToRelativeNtPathName_U@16
 RtlDosSearchPath_U@24
 RtlDowncaseUnicodeChar@4
 RtlDowncaseUnicodeString@12
@@ -596,6 +597,7 @@ RtlReAllocateHeap@16
 RtlRealPredecessor@4
 RtlRealSuccessor@4
 RtlReleasePebLock@0
+RtlReleaseRelativeName@4
 RtlReleaseResource@4
 ;RtlRemoteCall
 RtlRemoveVectoredExceptionHandler@4

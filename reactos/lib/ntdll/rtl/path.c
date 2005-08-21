@@ -975,6 +975,31 @@ RtlDoesFileExists_U(IN PWSTR FileName)
 	return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
+BOOLEAN STDCALL
+RtlDosPathNameToRelativeNtPathName_U(PVOID Unknown1,
+                                     PVOID Unknown2,
+                                     PVOID Unknown3,
+                                     PVOID Unknown4)
+{
+    DPRINT1("RtlDosPathNameToRelativeNtPathName_U(0x%p, 0x%p, 0x%p, 0x%p) UNIMPLEMENTED!\n",
+            Unknown1, Unknown2, Unknown3, Unknown4);
+    return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+VOID STDCALL
+RtlReleaseRelativeName(PVOID Unknown)
+{
+    DPRINT1("RtlReleaseRelativeName(0x%p) UNIMPLEMENTED\n", Unknown);
+}
+
 NTSTATUS STDCALL
 RtlpEnsureBufferSize(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3)
 {
