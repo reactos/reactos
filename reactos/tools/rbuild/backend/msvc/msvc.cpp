@@ -26,9 +26,12 @@
 #include <string>
 
 #include "msvc.h"
+#include "../mingw/mingw.h"
 
 using namespace std;
 
+char get_key(char *valid,char *prompt); //FIXME
+bool spawn_new(const string& cmd); //FIXME
 void gen_guid();
 
 static class MSVCFactory : public Backend::Factory
@@ -53,6 +56,9 @@ MSVCBackend::MSVCBackend(Project &project,
 
 void MSVCBackend::Process()
 {
+	bool exec = false;
+    const char rbuild_mingw[] = "output-i386\\tools\\rbuild\\rbuild.exe mingw"; 
+
 	string filename = ProjectNode.name + ".sln";
 	
 	cout << "Creating MSVC project: " << filename << endl;
@@ -84,21 +90,25 @@ void MSVCBackend::Process()
 	m_devFile << "	EndGlobalSection" << endl;
 	m_devFile << "EndGlobal" << endl;
 
-	OutputFolders();
-
 	m_devFile << endl << endl;
 
-	OutputFileUnits();
-
 	m_devFile.close();
-	
+
+	gen_guid();
+
 	// The MSVC build still needs the mingw backend.
-	
+	ProcessModules();
+
 	cout << "Done." << endl << endl;
 
 	cout << "Don't expect the MSVC backend to work yet. "<< endl << endl;
 
-	gen_guid();
+	if(get_key("yn","Would you like to configure for a Mingw build as well? (y/n)") == 'y')
+	{
+		exec = spawn_new(rbuild_mingw);
+			if (!exec)
+				printf("\nError invoking rbuild\n");
+	}
 }
 
 void MSVCBackend::ProcessModules()
@@ -206,20 +216,31 @@ void MSVCBackend::OutputFolders()
 	}
 }
 
-void MSVCBackend::OutputFileUnits()
-{
-	for(size_t i = 0; i < m_fileUnits.size(); i++)
-	{
-		m_devFile << "[Unit" << i + 1 << "]" << endl;
-		
 
-		m_devFile << "FileName="			<< m_fileUnits[i].filename << endl;
-		m_devFile << "CompileCpp=1" 		<< endl;
-		m_devFile << "Folder=" 				<< m_fileUnits[i].folder << endl;
-		m_devFile << "Compile=1"			<< endl;
-		m_devFile << "Link=1" 				<< endl;
-		m_devFile << "Priority=1000"		<< endl;
-		m_devFile << "OverrideBuildCmd=0"	<< endl;
-		m_devFile << "BuildCmd="			<< endl << endl;;
-	}
+char get_key(char *valid,char *prompt)
+{
+    int ch,okay;
+
+    while (1) {
+	if (prompt) printf("%s ",prompt);
+	fflush(stdout);
+	while (ch = getchar(), ch == ' ' || ch == '\t');
+	if (ch == EOF) exit(1);
+	if (!strchr(valid,okay = ch)) okay = 0;
+	while (ch = getchar(), ch != '\n' && ch != EOF);
+	if (ch == EOF) exit(1);
+	if (okay) return okay;
+	printf("Invalid input.\n");
+    }
+}
+
+bool spawn_new( const string& cmd )
+{
+	string command = ssprintf (
+		"%s",
+		cmd.c_str (),
+		NUL,
+		NUL );
+	int exitcode = system ( command.c_str () );
+	return (exitcode == 0);
 }
