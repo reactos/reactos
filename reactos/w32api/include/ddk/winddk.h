@@ -2470,6 +2470,15 @@ extern DECL_EXPORT HAL_DISPATCH HalDispatchTable;
 #define HalReferenceHandlerForBus       HALDISPATCH->HalReferenceHandlerForBus
 #define HalReferenceBusHandler          HALDISPATCH->HalReferenceBusHandler
 #define HalDereferenceBusHandler        HALDISPATCH->HalDereferenceBusHandler
+#define HalInitPnpDriver                HALDISPATCH->HalInitPnpDriver
+#define HalInitPowerManagement          HALDISPATCH->HalInitPowerManagement
+#define HalGetDmaAdapter                HALDISPATCH->HalGetDmaAdapter
+#define HalGetInterruptTranslator       HALDISPATCH->HalGetInterruptTranslator
+#define HalStartMirroring               HALDISPATCH->HalStartMirroring
+#define HalEndMirroring                 HALDISPATCH->HalEndMirroring
+#define HalMirrorPhysicalMemory         HALDISPATCH->HalMirrorPhysicalMemory
+#define HalEndOfBoot                    HALDISPATCH->HalEndOfBoot
+#define HalMirrorVerify                 HALDISPATCH->HalMirrorVerify
 
 typedef enum _FILE_INFORMATION_CLASS {
   FileDirectoryInformation = 1,
