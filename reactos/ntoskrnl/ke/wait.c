@@ -111,7 +111,7 @@ KeDelayExecutionThread(KPROCESSOR_MODE WaitMode,
     do {
 
         /* We are going to wait no matter what (that's the point), so test Alertability */
-        if (KiCheckAlertability(Alertable, CurrentThread, KernelMode, &Status))
+        if (KiCheckAlertability(Alertable, CurrentThread, WaitMode, &Status))
             break;
 
         /* Set Timer */
