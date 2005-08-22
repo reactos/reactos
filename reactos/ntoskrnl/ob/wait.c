@@ -149,7 +149,7 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
         DefaultObject = ObjectHeader->Type->DefaultObject;
 
         /* Check if it's the internal offset */
-        if (!IsKernelPointer(DefaultObject))
+        if (IsPointerOffset(DefaultObject))
         {
             /* Increase reference count */
             InterlockedIncrement(&ObjectHeader->PointerCount);
@@ -295,7 +295,7 @@ NtWaitForSingleObject(IN HANDLE ObjectHandle,
         WaitableObject = BODY_TO_HEADER(Object)->Type->DefaultObject;
 
         /* Is it an offset for internal objects? */
-        if (!IsKernelPointer(WaitableObject))
+        if (IsPointerOffset(WaitableObject))
         {
             /* Turn it into a pointer */
             WaitableObject = (PVOID)((ULONG_PTR)Object +
@@ -389,7 +389,7 @@ NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
     WaitableObject = BODY_TO_HEADER(WaitObj)->Type->DefaultObject;
 
     /* Handle internal offset */
-    if (!IsKernelPointer(WaitableObject))
+    if (IsPointerOffset(WaitableObject))
     {
         /* Get real pointer */
         WaitableObject = (PVOID)((ULONG_PTR)WaitObj +
