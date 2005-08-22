@@ -139,6 +139,13 @@ HalpInitDma(VOID)
    KeInitializeEvent(&HalpDmaLock, NotificationEvent, TRUE);
 
    HalpMasterAdapter = HalpDmaAllocateMasterAdapter();
+
+   /*
+    * Setup the HalDispatchTable callback for creating PnP DMA adapters. It's
+    * used by IoGetDmaAdapter in the kernel.
+    */
+
+   HalGetDmaAdapter = HalpGetDmaAdapter;
 }
 
 /**
@@ -758,6 +765,24 @@ HalGetAdapter(
    }
 
    return AdapterObject;
+}
+
+/**
+ * @name HalpGetDmaAdapter
+ *
+ * Internal routine to allocate PnP DMA adapter object. It's exported through
+ * HalDispatchTable and used by IoGetDmaAdapter.
+ *
+ * @see HalGetAdapter
+ */
+
+PDMA_ADAPTER STDCALL
+HalpGetDmaAdapter(
+   IN PVOID Context,
+   IN PDEVICE_DESCRIPTION DeviceDescription,
+   OUT PULONG NumberOfMapRegisters)
+{
+   return &HalGetAdapter(DeviceDescription, NumberOfMapRegisters)->DmaHeader;
 }
 
 /**
@@ -1431,7 +1456,7 @@ HalpCopyBufferMap(
 {
    ULONG CurrentLength;
    ULONG_PTR CurrentAddress;
-   ULONG PageOffset;
+   ULONG ByteOffset;
    PVOID VirtualAddress;
 
    VirtualAddress = MmGetSystemAddressForMdlSafe(Mdl, HighPagePriority);
@@ -1446,20 +1471,20 @@ HalpCopyBufferMap(
       KEBUGCHECK(0);
    }
 
-   CurrentAddress = (ULONG_PTR)CurrentVa - (ULONG_PTR)Mdl->StartVa -
-                    Mdl->ByteOffset;
+   CurrentAddress = (ULONG_PTR)CurrentVa -
+                    (ULONG_PTR)MmGetMdlVirtualAddress(Mdl);
 
    while (Length > 0)
    {
-      PageOffset = CurrentAddress & (PAGE_SIZE - 1);
-      CurrentLength = PAGE_SIZE - PageOffset;
+      ByteOffset = BYTE_OFFSET(CurrentAddress);
+      CurrentLength = PAGE_SIZE - ByteOffset;
       if (CurrentLength > Length)
          CurrentLength = Length;
 
       if (WriteToDevice)
       {
          RtlCopyMemory(
-            (PVOID)((ULONG_PTR)MapRegisterBase->VirtualAddress + PageOffset),
+            (PVOID)((ULONG_PTR)MapRegisterBase->VirtualAddress + ByteOffset),
             (PVOID)CurrentAddress,
             CurrentLength);
       }
@@ -1467,7 +1492,7 @@ HalpCopyBufferMap(
       {
          RtlCopyMemory(
             (PVOID)CurrentAddress,
-            (PVOID)((ULONG_PTR)MapRegisterBase->VirtualAddress + PageOffset),
+            (PVOID)((ULONG_PTR)MapRegisterBase->VirtualAddress + ByteOffset),
             CurrentLength);
       }
 
@@ -1613,9 +1638,9 @@ IoMapTransfer(
    IN OUT PULONG Length,
    IN BOOLEAN WriteToDevice)
 {
-   PPFN_TYPE MdlPagesPtr;
-   PFN_TYPE MdlPage1, MdlPage2;
-   ULONG PageOffset;
+   PPFN_NUMBER MdlPagesPtr;
+   PFN_NUMBER MdlPage1, MdlPage2;
+   ULONG ByteOffset;
    ULONG TransferOffset;
    ULONG TransferLength;
    BOOLEAN UseMapRegisters;
@@ -1629,7 +1654,7 @@ IoMapTransfer(
    /*
     * Precalculate some values that are used in all cases.
     *
-    * PageOffset is offset inside the page at which the transfer starts.
+    * ByteOffset is offset inside the page at which the transfer starts.
     * MdlPagesPtr is pointer inside the MDL page chain at the page where the
     *             transfer start.
     * PhysicalAddress is physical address corresponding to the transfer
@@ -1641,15 +1666,15 @@ IoMapTransfer(
     * takes place below. These are just initial values.
     */
 
-   PageOffset = (ULONG_PTR)CurrentVa & (PAGE_SIZE - 1);
+   ByteOffset = BYTE_OFFSET(CurrentVa);
 
-   MdlPagesPtr = (PPFN_TYPE)(Mdl + 1);
+   MdlPagesPtr = MmGetMdlPfnArray(Mdl);
    MdlPagesPtr += ((ULONG_PTR)CurrentVa - (ULONG_PTR)Mdl->StartVa) >> PAGE_SHIFT;
 
    PhysicalAddress.QuadPart = *MdlPagesPtr << PAGE_SHIFT;
-   PhysicalAddress.QuadPart += PageOffset;
+   PhysicalAddress.QuadPart += ByteOffset;
 
-   TransferLength = PAGE_SIZE - PageOffset;
+   TransferLength = PAGE_SIZE - ByteOffset;
 
    /*
     * Special case for bus master adapters with S/G support. We can directly
@@ -1720,7 +1745,7 @@ IoMapTransfer(
    {
       UseMapRegisters = TRUE;
       PhysicalAddress = RealMapRegisterBase->PhysicalAddress;
-      PhysicalAddress.QuadPart += PageOffset;
+      PhysicalAddress.QuadPart += ByteOffset;
       TransferLength = *Length;
       RealMapRegisterBase->Counter = ~0;
       Counter = 0;
@@ -1735,8 +1760,7 @@ IoMapTransfer(
 
       UseMapRegisters = FALSE;
       Counter = RealMapRegisterBase->Counter;
-      RealMapRegisterBase->Counter +=
-         (PageOffset + TransferLength + (PAGE_SIZE - 1)) >> PAGE_SHIFT;
+      RealMapRegisterBase->Counter += BYTES_TO_PAGES(ByteOffset + TransferLength);
 
       /*
        * Check if the buffer doesn't exceed the highest phisical address
@@ -1750,7 +1774,7 @@ IoMapTransfer(
       {
          UseMapRegisters = TRUE;
          PhysicalAddress = RealMapRegisterBase->PhysicalAddress;
-         PhysicalAddress.QuadPart += PageOffset;
+         PhysicalAddress.QuadPart += ByteOffset;
       }
    }
 
@@ -1791,7 +1815,7 @@ IoMapTransfer(
          if (AdapterObject->IgnoreCount)
          {
             RtlZeroMemory((PUCHAR)RealMapRegisterBase[Counter].VirtualAddress +
-                          PageOffset, TransferLength);
+                          ByteOffset, TransferLength);
          }
       }
 

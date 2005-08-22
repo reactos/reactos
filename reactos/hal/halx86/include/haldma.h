@@ -370,6 +370,12 @@ typedef struct _GROW_WORK_ITEM {
 PADAPTER_OBJECT STDCALL
 HalpDmaAllocateMasterAdapter(VOID);
 
+PDMA_ADAPTER STDCALL
+HalpGetDmaAdapter(
+   IN PVOID Context,
+   IN PDEVICE_DESCRIPTION DeviceDescription,
+   OUT PULONG NumberOfMapRegisters);
+
 VOID STDCALL
 HalPutDmaAdapter(
    PADAPTER_OBJECT AdapterObject);
