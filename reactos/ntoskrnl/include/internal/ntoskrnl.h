@@ -147,6 +147,24 @@ RtlReleaseCapturedUnicodeString(
 #define ProbeForReadLargeInteger(Ptr) ((LARGE_INTEGER)ProbeForReadGenericType(&(Ptr)->QuadPart, LONGLONG, 0))
 #define ProbeForReadUlargeInteger(Ptr) ((ULARGE_INTEGER)ProbeForReadGenericType(&(Ptr)->QuadPart, ULONGLONG, 0))
 
+/*
+ * Use IsKernelPointer to test whether a pointer points to the kernel address
+ * space
+ */
+#if defined(_X86_) || defined(_M_AMD64)
+
+/* for x86 and x86-64 the MSB is 1 so we can simply test on that */
+#define IsKernelPointer(Ptr) ((LONG_PTR)(Ptr) < 0)
+
+#elif defined(_IA64_)
+
+/* on Itanium if the 24 most significant bits are set, we're not dealing with
+   user mode pointers. */
+#define IsKernelPointer(Ptr)  (((ULONG_PTR)(Ptr) & 0xFFFFFF0000000000ULL) != 0)
+
+#else
+#error IsKernelPointer() needs to be defined for this architecture
+#endif
 
 #endif
 /*
