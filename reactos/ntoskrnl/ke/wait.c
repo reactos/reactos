@@ -27,7 +27,7 @@ static KSPIN_LOCK DispatcherDatabaseLock;
 
 /* FUNCTIONS *****************************************************************/
 
-VOID
+BOOLEAN
 inline
 FASTCALL
 KiCheckAlertability(BOOLEAN Alertable,
@@ -44,6 +44,7 @@ KiCheckAlertability(BOOLEAN Alertable,
             CurrentThread->Alerted[(int)WaitMode] = FALSE;
             DPRINT("Thread was Alerted\n");
             *Status = STATUS_ALERTED;
+            return TRUE;
 
         /* If there are User APCs Pending, then we can't really be alertable */
         } else if ((!IsListEmpty(&CurrentThread->ApcState.ApcListHead[UserMode])) &&
@@ -52,13 +53,17 @@ KiCheckAlertability(BOOLEAN Alertable,
             DPRINT("APCs are Pending\n");
             CurrentThread->ApcState.UserApcPending = TRUE;
             *Status = STATUS_USER_APC;
+            return TRUE;
         }
 
     /* If there are User APCs Pending and we are waiting in usermode, then we must notify the caller */
     } else if ((CurrentThread->ApcState.UserApcPending) && (WaitMode != KernelMode)) {
             DPRINT("APCs are Pending\n");
             *Status = STATUS_USER_APC;
+            return TRUE;
     }
+
+    return FALSE;
 }
 
 /*
@@ -106,7 +111,8 @@ KeDelayExecutionThread(KPROCESSOR_MODE WaitMode,
     do {
 
         /* We are going to wait no matter what (that's the point), so test Alertability */
-        KiCheckAlertability(Alertable, CurrentThread, KernelMode, &Status);
+        if (KiCheckAlertability(Alertable, CurrentThread, KernelMode, &Status))
+            break;
 
         /* Set Timer */
         ThreadTimer = &CurrentThread->Timer;
@@ -256,7 +262,8 @@ KeWaitForSingleObject(PVOID Object,
         WaitBlock->NextWaitBlock = WaitBlock;
 
         /* Make sure we can satisfy the Alertable request */
-        KiCheckAlertability(Alertable, CurrentThread, WaitMode, &Status);
+        if (KiCheckAlertability(Alertable, CurrentThread, WaitMode, &Status))
+            break;
 
         /* Set the Wait Status */
         CurrentThread->WaitStatus = Status;
@@ -485,7 +492,8 @@ KeWaitForMultipleObjects(ULONG Count,
         }
 
         /* Make sure we can satisfy the Alertable request */
-        KiCheckAlertability(Alertable, CurrentThread, WaitMode, &Status);
+        if (KiCheckAlertability(Alertable, CurrentThread, WaitMode, &Status))
+            break;
 
         /* Set the Wait Status */
         CurrentThread->WaitStatus = Status;
