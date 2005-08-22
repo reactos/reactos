@@ -4,7 +4,6 @@
 	<define name="_DISABLE_TIDENTS" />
 	<define name="__USE_W32API" />
 	<define name="_NTHAL_" />
-	<file>adapter.c</file>
 	<file>beep.c</file>
 	<file>bus.c</file>
 	<file>dma.c</file>

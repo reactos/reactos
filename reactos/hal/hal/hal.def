@@ -20,7 +20,7 @@ HalDisableSystemInterrupt@8
 HalDisplayString@4
 HalEnableSystemInterrupt@12
 HalEndSystemInterrupt@8
-HalFlushCommonBuffer@32
+HalFlushCommonBuffer@20
 HalFreeCommonBuffer@24
 HalGetAdapter@8
 HalGetBusData@20
