@@ -108,7 +108,7 @@ ProxyMakefile::GenerateProxyMakefileForModule ( Module& module,
 		base = module.GetBasePath ();
 		pathToTopDirectory = GetPathToTopDirectory ( module );
 	}
-	string proxyMakefile = NormalizeFilename ( base + SSEP "makefile" );
+	string proxyMakefile = NormalizeFilename ( base + SSEP "GNUmakefile" );
 	string defaultTarget = module.name;
 
 	buf = (char*) malloc ( 10*1024 );
