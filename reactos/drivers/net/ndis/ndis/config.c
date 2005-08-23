@@ -508,7 +508,6 @@ NdisReadConfiguration(
         case NdisParameterString:
         case NdisParameterMultiString:
         {
-            PMINIPORT_RESOURCE MiniportResource = 0;
             PWCHAR RegData = 0;
 
             if(KeyInformation->Type != REG_SZ && KeyInformation->Type != REG_MULTI_SZ)
@@ -571,8 +570,6 @@ NdisReadConfiguration(
 
         case NdisParameterBinary:
         {
-            PMINIPORT_RESOURCE MiniportResource;
-
             if(KeyInformation->Type != REG_BINARY)
             {
                 NDIS_DbgPrint(MIN_TRACE,("requested type does not match actual value type\n"));
