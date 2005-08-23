@@ -3564,8 +3564,9 @@ SetupDiBuildDriverInfoList(
                         0, /* Field index */
                         NULL, 0,
                         &RequiredSize);
-                    if (!Result && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+                    if (Result)
                     {
+                        /* We got the needed size for the buffer */
                         ManufacturerName = HeapAlloc(GetProcessHeap(), 0, RequiredSize * sizeof(WCHAR));
                         if (!ManufacturerName)
                         {
@@ -3583,8 +3584,9 @@ SetupDiBuildDriverInfoList(
                         1, /* Field index */
                         NULL, 0,
                         &RequiredSize);
-                    if (!Result && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+                    if (Result)
                     {
+                        /* We got the needed size for the buffer */
                         ManufacturerSection = HeapAlloc(GetProcessHeap(), 0, RequiredSize * sizeof(WCHAR));
                         if (!ManufacturerSection)
                         {
