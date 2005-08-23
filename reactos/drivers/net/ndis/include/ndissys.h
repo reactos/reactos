@@ -17,8 +17,7 @@ typedef unsigned long NDIS_STATS;
 
 #if _MSC_VER
 /* FIXME: These were removed and are no longer used! */
-#define NdisWorkItemHalt NdisMaxWorkItems
-#define NdisWorkItemSendLoopback (NdisMaxWorkItems + 1)
+#define NdisWorkItemSendLoopback NdisWorkItemReserved
 #else /* _MSC_VER */
 /* FIXME: We miss the ATM headers. */
 typedef struct _ATM_ADDRESS *PATM_ADDRESS;

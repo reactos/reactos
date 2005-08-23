@@ -893,9 +893,6 @@ VOID NTAPI MiniportDpc(
           case NdisWorkItemResetInProgress:
             break;
 
-          case NdisWorkItemHalt:
-            break;
-
           case NdisWorkItemMiniportCallback:
             break;
 
