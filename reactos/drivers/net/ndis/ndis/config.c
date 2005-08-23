@@ -31,7 +31,6 @@
  *     - All the routines in this file are PASSIVE_LEVEL only, and all memory is PagedPool
  */
 
-#include <roscfg.h>
 #include "ndissys.h"
 
 #define NDIS_VERSION 0x00040000          /* the version of NDIS we claim to be to miniport drivers */
@@ -236,12 +235,13 @@ NdisOpenProtocolConfiguration(
 {
     OBJECT_ATTRIBUTES KeyAttributes;
     UNICODE_STRING KeyNameU;
-    WCHAR *KeyName;
     HANDLE KeyHandle;
     PMINIPORT_CONFIGURATION_CONTEXT ConfigurationContext;
 
-    KeyName = ExAllocatePool(PagedPool, ProtocolSection->Length + sizeof(PARAMETERS_KEY) + sizeof(WCHAR));
-    if(!KeyName)
+    KeyNameU.Length = 0;
+    KeyNameU.MaximumLength = ProtocolSection->Length + sizeof(PARAMETERS_KEY) + sizeof(UNICODE_NULL);
+    KeyNameU.Buffer = ExAllocatePool(PagedPool, KeyNameU.MaximumLength);
+    if(!KeyNameU.Buffer)
     {
         NDIS_DbgPrint(MIN_TRACE,("Insufficient resources.\n"));
         *ConfigurationHandle = NULL;
@@ -249,14 +249,13 @@ NdisOpenProtocolConfiguration(
         return;
     }
 
-    wcsncpy(KeyName, ProtocolSection->Buffer, ProtocolSection->Length/sizeof(WCHAR));
-    wcscpy(KeyName + ProtocolSection->Length, PARAMETERS_KEY);
-    RtlInitUnicodeString(&KeyNameU, KeyName);
+    RtlCopyUnicodeString(&KeyNameU, ProtocolSection);
+    RtlAppendUnicodeToString(&KeyNameU, PARAMETERS_KEY);
     InitializeObjectAttributes(&KeyAttributes, &KeyNameU, OBJ_CASE_INSENSITIVE, NULL, NULL);
 
     *Status = ZwOpenKey(&KeyHandle, KEY_ALL_ACCESS, &KeyAttributes);
 
-    ExFreePool(KeyName);
+    ExFreePool(KeyNameU.Buffer);
 
     if(*Status != NDIS_STATUS_SUCCESS)
     {
@@ -490,7 +489,7 @@ NdisReadConfiguration(
                 return;
             }
 
-            str.Length = str.MaximumLength = KeyInformation->DataLength;
+            str.Length = str.MaximumLength = (USHORT)KeyInformation->DataLength;
             str.Buffer = (PWCHAR)KeyInformation->Data;
 
             (*ParameterValue)->ParameterType = ParameterType;
@@ -560,7 +559,7 @@ NdisReadConfiguration(
             memcpy(RegData, KeyInformation->Data, KeyInformation->DataLength);
 
             (*ParameterValue)->ParameterType = ParameterType;
-            (*ParameterValue)->ParameterData.StringData.Length = KeyInformation->DataLength;
+            (*ParameterValue)->ParameterData.StringData.Length = (USHORT)KeyInformation->DataLength;
             (*ParameterValue)->ParameterData.StringData.Buffer = RegData;
 
             ExFreePool(KeyInformation);
@@ -805,7 +804,7 @@ NdisOpenConfigurationKeyByIndex(
 
     /* should i fail instead if the passed-in string isn't long enough? */
     wcsncpy(KeyName->Buffer, KeyInformation->Name, KeyName->MaximumLength/sizeof(WCHAR));
-    KeyName->Length = KeyInformation->NameLength;
+    KeyName->Length = (USHORT)KeyInformation->NameLength;
 
     InitializeObjectAttributes(&KeyAttributes, KeyName, OBJ_CASE_INSENSITIVE, ConfigurationHandle, NULL);
 
