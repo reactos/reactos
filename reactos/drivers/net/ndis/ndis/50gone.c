@@ -385,7 +385,7 @@ NdisSetupDmaTransfer(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 #undef NdisUpdateSharedMemory
 VOID
@@ -402,7 +402,7 @@ NdisUpdateSharedMemory(
  *    NDIS 4.0
  */
 {
-    UNIMPLEMENTED
+    /* No-op. */
 }
 
 /* EOF */

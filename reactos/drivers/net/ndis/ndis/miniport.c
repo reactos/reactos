@@ -789,10 +789,10 @@ MiniDoRequest(
 }
 
 
-#undef NdisMQueryInformationComplete
 /*
  * @implemented
  */
+#undef NdisMQueryInformationComplete
 VOID
 EXPORT
 NdisMQueryInformationComplete(
