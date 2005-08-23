@@ -16,6 +16,7 @@
 /*
  * @implemented
  */
+#undef NdisAnsiStringToUnicodeString
 NDIS_STATUS
 EXPORT
 NdisAnsiStringToUnicodeString(
@@ -74,6 +75,7 @@ NdisEqualString(
 /*
  * @implemented
  */
+#undef NdisInitAnsiString
 VOID
 EXPORT
 NdisInitAnsiString(
@@ -127,6 +129,7 @@ NdisInitializeString(
 /*
  * @implemented
  */
+#undef NdisInitUnicodeString
 VOID
 EXPORT
 NdisInitUnicodeString(
@@ -151,6 +154,7 @@ NdisInitUnicodeString(
 /*
  * @implemented
  */
+#undef NdisUnicodeStringToAnsiString
 NDIS_STATUS
 EXPORT
 NdisUnicodeStringToAnsiString(
@@ -179,6 +183,7 @@ NdisUnicodeStringToAnsiString(
 /*
  * @implemented
  */
+#undef NdisUpcaseUnicodeString
 NTSTATUS
 EXPORT
 NdisUpcaseUnicodeString(

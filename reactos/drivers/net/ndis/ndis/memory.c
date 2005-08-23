@@ -51,6 +51,7 @@ NdisAllocateMemoryWithTag(
 /*
  * @unimplemented
  */
+#undef NdisCreateLookaheadBufferFromSharedMemory
 VOID
 EXPORT
 NdisCreateLookaheadBufferFromSharedMemory(
@@ -65,6 +66,7 @@ NdisCreateLookaheadBufferFromSharedMemory(
 /*
  * @unimplemented
  */
+#undef NdisDestroyLookaheadBufferFromSharedMemory
 VOID
 EXPORT
 NdisDestroyLookaheadBufferFromSharedMemory(
@@ -241,11 +243,8 @@ NdisMAllocateSharedMemoryAsync(
 }
 
 
-/*
- * @implemented
- */
 VOID
-STDCALL
+NTAPI
 NdisMFreeSharedMemoryPassive(
     PVOID Context)
 /*

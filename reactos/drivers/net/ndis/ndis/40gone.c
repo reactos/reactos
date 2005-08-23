@@ -105,6 +105,7 @@ NdisAllocateSharedMemory(
 /*
  * @unimplemented
  */
+#undef NdisCompleteBufferPhysicalMapping
 VOID
 EXPORT
 NdisCompleteBufferPhysicalMapping(
@@ -119,6 +120,7 @@ NdisCompleteBufferPhysicalMapping(
 /*
  * @unimplemented
  */
+#undef NdisCompleteRequest
 VOID
 EXPORT
 NdisCompleteRequest(
@@ -133,6 +135,7 @@ NdisCompleteRequest(
 /*
  * @unimplemented
  */
+#undef NdisCompleteReset
 VOID
 EXPORT
 NdisCompleteReset(
@@ -146,6 +149,7 @@ NdisCompleteReset(
 /*
  * @unimplemented
  */
+#undef NdisCompleteSend
 VOID
 EXPORT
 NdisCompleteSend(
@@ -160,6 +164,7 @@ NdisCompleteSend(
 /*
  * @unimplemented
  */
+#undef NdisCompleteTransferData
 VOID
 EXPORT
 NdisCompleteTransferData(
@@ -175,6 +180,7 @@ NdisCompleteTransferData(
 /*
  * @unimplemented
  */
+#undef NdisIndicateReceive
 VOID
 EXPORT
 NdisIndicateReceive(
@@ -194,6 +200,7 @@ NdisIndicateReceive(
 /*
  * @unimplemented
  */
+#undef NdisIndicateReceiveComplete
 VOID
 EXPORT
 NdisIndicateReceiveComplete(
@@ -206,6 +213,7 @@ NdisIndicateReceiveComplete(
 /*
  * @unimplemented
  */
+#undef NdisIndicateStatus
 VOID
 EXPORT
 NdisIndicateStatus(
@@ -221,6 +229,7 @@ NdisIndicateStatus(
 /*
  * @unimplemented
  */
+#undef NdisIndicateStatusComplete
 VOID
 EXPORT
 NdisIndicateStatusComplete(
@@ -265,6 +274,7 @@ NdisReadBindingInformation (
 /*
  * @unimplemented
  */
+#undef NdisReadDmaCounter
 ULONG
 EXPORT
 NdisReadDmaCounter(
@@ -279,6 +289,7 @@ NdisReadDmaCounter(
 /*
  * @unimplemented
  */
+#undef NdisStartBufferPhysicalMapping
 VOID
 EXPORT
 NdisStartBufferPhysicalMapping(
@@ -296,22 +307,7 @@ NdisStartBufferPhysicalMapping(
 /*
  * @unimplemented
  */
-BOOLEAN
-EXPORT
-NdisSynchronizeWithInterrupt(
-    IN  PNDIS_INTERRUPT Interrupt,
-    IN  PVOID           SynchronizeFunction,
-    IN  PVOID           SynchronizeContext)
-{
-    UNIMPLEMENTED
-
-    return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
+#undef NdisUnmapIoSpace
 VOID
 EXPORT
 NdisUnmapIoSpace(

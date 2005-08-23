@@ -117,19 +117,19 @@ NdisMapFile(
 typedef struct _NDIS_HANDLE_OBJECT
 {
   HANDLE FileHandle;
-  BOOL Mapped;
+  BOOLEAN Mapped;
   ULONG FileLength;
   PVOID MapBuffer;
 } NDIS_HANDLE_OBJECT, *PNDIS_HANDLE_OBJECT;
 
-inline
+__inline
 PNDIS_HANDLE_OBJECT
 NDIS_HANDLE_TO_POBJECT ( NDIS_HANDLE handle )
 {
   return (PNDIS_HANDLE_OBJECT)handle;
 }
 
-inline
+__inline
 NDIS_HANDLE
 NDIS_POBJECT_TO_HANDLE ( PNDIS_HANDLE_OBJECT obj )
 {
@@ -220,6 +220,7 @@ NdisIMRegisterLayeredMiniport(
 /*
  * @unimplemented
  */
+#undef NdisMWanIndicateReceive
 VOID
 EXPORT
 NdisMWanIndicateReceive(
@@ -236,6 +237,7 @@ NdisMWanIndicateReceive(
 /*
  * @unimplemented
  */
+#undef NdisMWanIndicateReceiveComplete
 VOID
 EXPORT
 NdisMWanIndicateReceiveComplete(
@@ -248,6 +250,7 @@ NdisMWanIndicateReceiveComplete(
 /*
  * @unimplemented
  */
+#undef NdisMWanSendComplete
 VOID
 EXPORT
 NdisMWanSendComplete(
@@ -584,6 +587,7 @@ NdisInterlockedIncrement(
 /*
  * @implemented
  */
+#undef NdisInterlockedPopEntrySList
 PSINGLE_LIST_ENTRY
 EXPORT
 NdisInterlockedPopEntrySList(
@@ -603,6 +607,7 @@ NdisInterlockedPopEntrySList(
 /*
  * @implemented
  */
+#undef NdisInterlockedPushEntrySList
 PSINGLE_LIST_ENTRY
 EXPORT
 NdisInterlockedPushEntrySList(

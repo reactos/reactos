@@ -10,7 +10,7 @@
  *   20 Aug 2003 vizzini - DMA support
  *   3  Oct 2003 vizzini - SendPackets support
  */
-#include <roscfg.h>
+
 #include "ndissys.h"
 #include "efilter.h"
 
@@ -228,7 +228,7 @@ MiniIndicateData(
 	      (MID_TRACE,
 	       ("XXX (%x) %x %x %x %x %x %x %x XXX\n",
 		*AdapterBinding->ProtocolBinding->Chars.ReceiveHandler,
-		AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.ProtocolBindingContext,
+		AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
 		MacReceiveContext,
 		HeaderBuffer,
 		HeaderBufferSize,
@@ -238,7 +238,7 @@ MiniIndicateData(
 
           /* call the receive handler */
           (*AdapterBinding->ProtocolBinding->Chars.ReceiveHandler)(
-              AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.ProtocolBindingContext,
+              AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
               MacReceiveContext,
               HeaderBuffer,
               HeaderBufferSize,
@@ -258,7 +258,7 @@ MiniIndicateData(
 }
 
 
-VOID STDCALL
+VOID NTAPI
 MiniIndicateReceivePacket(
     IN  NDIS_HANDLE    Miniport,
     IN  PPNDIS_PACKET  PacketArray,
@@ -317,7 +317,7 @@ MiniIndicateReceivePacket(
 }
 
 
-VOID STDCALL
+VOID NTAPI
 MiniResetComplete(
     IN  NDIS_HANDLE MiniportAdapterHandle,
     IN  NDIS_STATUS Status,
@@ -328,7 +328,7 @@ MiniResetComplete(
 
 
 
-VOID STDCALL
+VOID NTAPI
 MiniRequestComplete(
     IN PADAPTER_BINDING AdapterBinding,
     IN PNDIS_REQUEST Request,
@@ -338,13 +338,13 @@ MiniRequestComplete(
 
     if( AdapterBinding->ProtocolBinding->Chars.RequestCompleteHandler ) {
         (*AdapterBinding->ProtocolBinding->Chars.RequestCompleteHandler)(
-            AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.ProtocolBindingContext,
+            AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
             Request,
             Status);
     }
 }
 
-VOID STDCALL
+VOID NTAPI
 MiniSendComplete(
     IN  NDIS_HANDLE     MiniportAdapterHandle,
     IN  PNDIS_PACKET    Packet,
@@ -365,13 +365,13 @@ MiniSendComplete(
     AdapterBinding = (PADAPTER_BINDING)Packet->Reserved[0];
 
     (*AdapterBinding->ProtocolBinding->Chars.SendCompleteHandler)(
-        AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.ProtocolBindingContext,
+        AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
         Packet,
         Status);
 }
 
 
-VOID STDCALL
+VOID NTAPI
 MiniSendResourcesAvailable(
     IN  NDIS_HANDLE MiniportAdapterHandle)
 {
@@ -379,7 +379,7 @@ MiniSendResourcesAvailable(
 }
 
 
-VOID STDCALL
+VOID NTAPI
 MiniTransferDataComplete(
     IN  NDIS_HANDLE     MiniportAdapterHandle,
     IN  PNDIS_PACKET    Packet,
@@ -393,7 +393,7 @@ MiniTransferDataComplete(
     AdapterBinding = (PADAPTER_BINDING)Packet->Reserved[0];
 
     (*AdapterBinding->ProtocolBinding->Chars.SendCompleteHandler)(
-        AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.ProtocolBindingContext,
+        AdapterBinding->NdisOpenBlock.ProtocolBindingContext,
         Packet,
         Status);
 }
@@ -807,7 +807,7 @@ NdisMQueryInformationComplete(
 }
 
 
-VOID STDCALL MiniportDpc(
+VOID NTAPI MiniportDpc(
     IN PKDPC Dpc,
     IN PVOID DeferredContext,
     IN PVOID SystemArgument1,
@@ -971,8 +971,9 @@ NdisMDeregisterAdapterShutdownHandler(
  * ARGUMENTS:  MiniportHandle:  Handle passed into MiniportInitialize
  */
 {
-  NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
   PLOGICAL_ADAPTER  Adapter = (PLOGICAL_ADAPTER)MiniportHandle;
+
+  NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
   if(Adapter->BugcheckContext->ShutdownHandler)
     KeDeregisterBugCheckCallback(Adapter->BugcheckContext->CallbackRecord);
@@ -1104,7 +1105,7 @@ NdisInitializeWrapper(
 }
 
 
-VOID STDCALL NdisIBugcheckCallback(
+VOID NTAPI NdisIBugcheckCallback(
     IN PVOID   Buffer,
     IN ULONG   Length)
 /*
@@ -1261,7 +1262,7 @@ DoQueries(
 
 
 NTSTATUS
-STDCALL
+NTAPI
 NdisIForwardIrpAndWaitCompletionRoutine(
     PDEVICE_OBJECT Fdo,
     PIRP Irp,
@@ -1277,7 +1278,7 @@ NdisIForwardIrpAndWaitCompletionRoutine(
 
 
 NTSTATUS
-STDCALL
+NTAPI
 NdisIForwardIrpAndWait(PLOGICAL_ADAPTER Adapter, PIRP Irp)
 {
   KEVENT Event;
@@ -1298,7 +1299,7 @@ NdisIForwardIrpAndWait(PLOGICAL_ADAPTER Adapter, PIRP Irp)
 
 
 NTSTATUS
-STDCALL
+NTAPI
 NdisIPnPStartDevice(
     IN PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
@@ -1478,9 +1479,9 @@ NdisIPnPStartDevice(
           {
             Success = EthCreateFilter(32, /* FIXME: Query this from miniport. */
                                       Adapter->Address.Type.Medium802_3,
-                                      &Adapter->NdisMiniportBlock.FilterDbs.EthDB);
+                                      &Adapter->NdisMiniportBlock.EthDB);
             if (Success)
-              Adapter->NdisMiniportBlock.FilterDbs.EthDB->Miniport = (PNDIS_MINIPORT_BLOCK)Adapter;
+              ((PETHI_FILTER)Adapter->NdisMiniportBlock.EthDB)->Miniport = (PNDIS_MINIPORT_BLOCK)Adapter;
             else
               NdisStatus = NDIS_STATUS_RESOURCES;
           }
@@ -1519,7 +1520,7 @@ NdisIPnPStartDevice(
 
 
 NTSTATUS
-STDCALL
+NTAPI
 NdisIPnPStopDevice(
     IN PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
@@ -1571,7 +1572,7 @@ NdisIPnPStopDevice(
 
 
 NTSTATUS
-STDCALL
+NTAPI
 NdisIDispatchPnp(
     IN PDEVICE_OBJECT DeviceObject,
     PIRP Irp)
@@ -1616,7 +1617,7 @@ NdisIDispatchPnp(
 
 
 NTSTATUS
-STDCALL
+NTAPI
 NdisIAddDevice(
     IN PDRIVER_OBJECT DriverObject,
     IN PDEVICE_OBJECT PhysicalDeviceObject)
@@ -1868,6 +1869,7 @@ NdisMRegisterMiniport(
 /*
  * @implemented
  */
+#undef NdisMResetComplete
 VOID
 EXPORT
 NdisMResetComplete(
@@ -1882,6 +1884,7 @@ NdisMResetComplete(
 /*
  * @implemented
  */
+#undef NdisMSendComplete
 VOID
 EXPORT
 NdisMSendComplete(
@@ -1904,6 +1907,7 @@ NdisMSendComplete(
 /*
  * @implemented
  */
+#undef NdisMSendResourcesAvailable
 VOID
 EXPORT
 NdisMSendResourcesAvailable(
@@ -1916,6 +1920,7 @@ NdisMSendResourcesAvailable(
 /*
  * @implemented
  */
+#undef NdisMTransferDataComplete
 VOID
 EXPORT
 NdisMTransferDataComplete(

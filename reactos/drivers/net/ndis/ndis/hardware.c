@@ -12,7 +12,6 @@
  *
  */
 
-#include <roscfg.h>
 #include "ndissys.h"
 
 

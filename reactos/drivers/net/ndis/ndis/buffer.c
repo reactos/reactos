@@ -12,10 +12,10 @@
 
 
 __inline ULONG SkipToOffset(
-    PNDIS_BUFFER Buffer,
-    UINT Offset,
-    PUCHAR *Data,
-    PUINT Size)
+    IN PNDIS_BUFFER Buffer,
+    IN UINT Offset,
+    IN OUT PUCHAR *Data,
+    IN OUT PUINT Size)
 /*
  * FUNCTION: Skips Offset bytes into a buffer chain
  * ARGUMENTS:
@@ -237,7 +237,7 @@ UINT CopyPacketToBufferChain(
     if (SkipToOffset(DstBuffer, DstOffset, &DstData, &DstSize) == 0xFFFFFFFF)
         return 0;
     /* Skip SrcOffset bytes in the source packet */
-    NdisGetFirstBufferFromPacket(SrcPacket, &SrcBuffer, (PVOID)&SrcData, &SrcSize, &Total);
+    NdisGetFirstBufferFromPacket(SrcPacket, &SrcBuffer, (PVOID*)&SrcData, &SrcSize, &Total);
     if (SkipToOffset(SrcBuffer, SrcOffset, &SrcData, &SrcSize) == 0xFFFFFFFF)
         return 0;
     /* Copy the data */
@@ -287,6 +287,7 @@ UINT CopyPacketToBufferChain(
 /*
  * @implemented
  */
+#undef NdisAdjustBufferLength
 VOID
 EXPORT
 NdisAdjustBufferLength(
@@ -306,6 +307,7 @@ NdisAdjustBufferLength(
 /*
  * @implemented
  */
+#undef NDIS_BUFFER_TO_SPAN_PAGES
 ULONG
 EXPORT
 NDIS_BUFFER_TO_SPAN_PAGES(
@@ -464,7 +466,7 @@ NdisAllocatePacket(
 {
     KIRQL OldIrql;
     PNDIS_PACKET Temp;
-    PNDIS_PACKET_POOL Pool = (PNDIS_PACKET_POOL)PoolHandle;
+    PNDISI_PACKET_POOL Pool = (PNDISI_PACKET_POOL)PoolHandle;
 
     NDIS_DbgPrint(MAX_TRACE, ("Status (0x%X)  Packet (0x%X)  PoolHandle (0x%X).\n",
         Status, Packet, PoolHandle));
@@ -541,7 +543,7 @@ NdisAllocatePacketPoolEx(
  *    NDIS 5.0
  */
 {
-    PNDIS_PACKET_POOL Pool;
+    PNDISI_PACKET_POOL Pool;
     UINT Size, Length, i;
     PNDIS_PACKET Packet, NextPacket;
 
@@ -562,7 +564,7 @@ NdisAllocatePacketPoolEx(
         }
 
         Length = sizeof(NDIS_PACKET) + ProtocolReservedLength;
-        Size   = sizeof(NDIS_PACKET_POOL) + Length * NumberOfDescriptors;
+        Size   = sizeof(NDISI_PACKET_POOL) + Length * NumberOfDescriptors;
 
         Pool   = ExAllocatePool(NonPagedPool, Size);
         if (Pool) 
@@ -598,6 +600,7 @@ NdisAllocatePacketPoolEx(
 /*
  * @implemented
  */
+#undef NdisBufferLength
 ULONG
 EXPORT
 NdisBufferLength(
@@ -620,6 +623,7 @@ NdisBufferLength(
 /*
  * @unimplemented
  */
+#undef NdisBufferVirtualAddress
 PVOID
 EXPORT
 NdisBufferVirtualAddress(
@@ -696,12 +700,12 @@ NdisCopyFromPacketToPacket(
     *BytesCopied = 0;
 
     /* Skip DestinationOffset bytes in the destination packet */
-    NdisGetFirstBufferFromPacket(Destination, &DstBuffer, (PVOID)&DstData, &DstSize, &Total);
+    NdisGetFirstBufferFromPacket(Destination, &DstBuffer, (PVOID*)&DstData, &DstSize, &Total);
     if (SkipToOffset(DstBuffer, DestinationOffset, &DstData, &DstSize) == 0xFFFFFFFF)
         return;
 
     /* Skip SourceOffset bytes in the source packet */
-    NdisGetFirstBufferFromPacket(Source, &SrcBuffer, (PVOID)&SrcData, &SrcSize, &Total);
+    NdisGetFirstBufferFromPacket(Source, &SrcBuffer, (PVOID*)&SrcData, &SrcSize, &Total);
     if (SkipToOffset(SrcBuffer, SourceOffset, &SrcData, &SrcSize) == 0xFFFFFFFF)
         return;
 
@@ -859,6 +863,7 @@ NdisFreePacketPool(
 /*
  * @implemented
  */
+#undef NdisFreeBuffer
 VOID
 EXPORT
 NdisFreeBuffer(
@@ -901,16 +906,17 @@ NdisFreePacket(
 
     NDIS_DbgPrint(MAX_TRACE, ("Packet (0x%X).\n", Packet));
 
-    KeAcquireSpinLock(&Packet->Private.Pool->SpinLock.SpinLock, &OldIrql);
-    Packet->Private.Head           = (PNDIS_BUFFER)Packet->Private.Pool->FreeList;
-    Packet->Private.Pool->FreeList = Packet;
-    KeReleaseSpinLock(&Packet->Private.Pool->SpinLock.SpinLock, OldIrql);
+    KeAcquireSpinLock(&((NDISI_PACKET_POOL*)Packet->Private.Pool)->SpinLock.SpinLock, &OldIrql);
+    Packet->Private.Head           = (PNDIS_BUFFER)((NDISI_PACKET_POOL*)Packet->Private.Pool)->FreeList;
+    ((NDISI_PACKET_POOL*)Packet->Private.Pool)->FreeList = Packet;
+    KeReleaseSpinLock(&((NDISI_PACKET_POOL*)Packet->Private.Pool)->SpinLock.SpinLock, OldIrql);
 }
 
 
 /*
  * @implemented
  */
+#undef NdisGetBufferPhysicalArraySize
 VOID
 EXPORT
 NdisGetBufferPhysicalArraySize(
@@ -933,6 +939,7 @@ NdisGetBufferPhysicalArraySize(
 /*
  * @implemented
  */
+#undef NdisGetFirstBufferFromPacket
 VOID
 EXPORT
 NdisGetFirstBufferFromPacket(
@@ -1014,6 +1021,7 @@ NdisPacketPoolUsage(
 /*
  * @implemented
  */
+#undef NdisQueryBuffer
 VOID
 EXPORT
 NdisQueryBuffer(
@@ -1039,6 +1047,7 @@ NdisQueryBuffer(
 /*
  * @implemented
  */
+#undef NdisQueryBufferSafe
 VOID
 EXPORT
 NdisQueryBufferSafe(
@@ -1062,6 +1071,7 @@ NdisQueryBufferSafe(
 /*
  * @implemented
  */
+#undef NdisQueryBufferOffset
 VOID
 EXPORT
 NdisQueryBufferOffset(

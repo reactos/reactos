@@ -9,16 +9,9 @@
  *   CSH 01/08-2000 Created
  *   09-13-2003 Vizzini Updates for SendPackets support
  */
-#include <roscfg.h>
+
 #include "ndissys.h"
 #include <buffer.h>
-
-VOID
-EXPORT
-NdisMSendComplete(
-    IN  NDIS_HANDLE     MiniportAdapterHandle,
-    IN  PNDIS_PACKET    Packet,
-    IN  NDIS_STATUS     Status);
 
 #define SERVICES_KEY L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\"
 #define LINKAGE_KEY  L"\\Linkage"
@@ -113,7 +106,7 @@ ProIndicatePacket(
 }
 
 
-NDIS_STATUS STDCALL
+NDIS_STATUS NTAPI
 ProRequest(
     IN  NDIS_HANDLE     MacBindingHandle,
     IN  PNDIS_REQUEST   NdisRequest)
@@ -188,7 +181,7 @@ ProRequest(
 }
 
 
-NDIS_STATUS STDCALL
+NDIS_STATUS NTAPI
 ProReset(
     IN  NDIS_HANDLE MacBindingHandle)
 {
@@ -198,7 +191,7 @@ ProReset(
 }
 
 
-NDIS_STATUS STDCALL
+NDIS_STATUS NTAPI
 ProSend(
     IN  NDIS_HANDLE     MacBindingHandle,
     IN  PNDIS_PACKET    Packet)
@@ -391,7 +384,7 @@ ProSend(
 }
 
 
-VOID STDCALL
+VOID NTAPI
 ProSendPackets(
     IN  NDIS_HANDLE     NdisBindingHandle,
     IN  PPNDIS_PACKET   PacketArray,
@@ -401,7 +394,7 @@ ProSendPackets(
 }
 
 
-NDIS_STATUS STDCALL
+NDIS_STATUS NTAPI
 ProTransferData(
     IN  NDIS_HANDLE         MacBindingHandle,
     IN  NDIS_HANDLE         MacReceiveContext,
@@ -610,18 +603,18 @@ NdisOpenAdapter(
 
   AdapterBinding->ProtocolBinding        = Protocol;
   AdapterBinding->Adapter                = Adapter;
-  AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.ProtocolBindingContext = ProtocolBindingContext;
+  AdapterBinding->NdisOpenBlock.ProtocolBindingContext = ProtocolBindingContext;
 
   /* Set fields required by some NDIS macros */
-  AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.BindingHandle = (NDIS_HANDLE)AdapterBinding;
+  AdapterBinding->NdisOpenBlock.BindingHandle = (NDIS_HANDLE)AdapterBinding;
 
   /* Set handlers (some NDIS macros require these) */
 
-  AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.RequestHandler      = ProRequest;
-  AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.ResetHandler        = ProReset;
-  AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.SendHandler         = ProSend;
-  AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.SendPacketsHandler  = ProSendPackets;
-  AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.TransferDataHandler = ProTransferData;
+  AdapterBinding->NdisOpenBlock.RequestHandler      = ProRequest;
+  AdapterBinding->NdisOpenBlock.ResetHandler        = ProReset;
+  AdapterBinding->NdisOpenBlock.SendHandler         = ProSend;
+  AdapterBinding->NdisOpenBlock.SendPacketsHandler  = ProSendPackets;
+  AdapterBinding->NdisOpenBlock.TransferDataHandler = ProTransferData;
 
 #if 0
   /* XXX this looks fishy */
@@ -937,6 +930,7 @@ NdisReset(
 /*
  * @implemented
  */
+#undef NdisSend
 VOID
 EXPORT
 NdisSend(
@@ -958,6 +952,7 @@ NdisSend(
 /*
  * @implemented
  */
+#undef NdisSendPackets
 VOID
 EXPORT
 NdisSendPackets(
@@ -972,6 +967,7 @@ NdisSendPackets(
 /*
  * @implemented
  */
+#undef NdisTransferData
 VOID
 EXPORT
 NdisTransferData(

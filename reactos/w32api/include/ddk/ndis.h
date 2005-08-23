@@ -387,13 +387,7 @@ typedef struct _NDIS_GUID {
 #define	NDIS_GUID_UNICODE_STRING          0x00000008
 #define	NDIS_GUID_ARRAY	                  0x00000010
 
-
-typedef struct _NDIS_PACKET_POOL {
-  NDIS_SPIN_LOCK  SpinLock;
-  struct _NDIS_PACKET *FreeList;
-  UINT  PacketLength;
-  UCHAR  Buffer[1];
-} NDIS_PACKET_POOL, * PNDIS_PACKET_POOL;
+typedef HANDLE PNDIS_PACKET_POOL;
 
 /* NDIS_PACKET_PRIVATE.Flags constants */
 #define fPACKET_CONTAINS_MEDIA_SPECIFIC_INFO    0x40
@@ -4349,8 +4343,6 @@ typedef struct _NDIS_ARC_BUF {
 
 #endif /* ARCNET */
 
-#define NDIS_MINIPORT_WORK_QUEUE_SIZE 10
-
 typedef struct _NDIS_LOG {
   PNDIS_MINIPORT_BLOCK  Miniport;
   KSPIN_LOCK  LogLock;
@@ -4362,18 +4354,25 @@ typedef struct _NDIS_LOG {
   UCHAR  LogBuf[1];
 } NDIS_LOG, *PNDIS_LOG;
 
-typedef struct _FILTERDBS {
-  _ANONYMOUS_UNION union {
-    PETH_FILTER  EthDB;
-    PNULL_FILTER  NullDB;
-  } DUMMYUNIONNAME;
-  PTR_FILTER  TrDB;
-  PFDDI_FILTER  FddiDB;
 #if ARCNET
+#define FILTERDBS_ARCNET_S \
   PARC_FILTER  ArcDB;
 #else /* !ARCNET */
+#define FILTERDBS_ARCNET_S \
   PVOID  XXXDB;
 #endif /* !ARCNET */
+
+#define FILTERDBS_S \
+  _ANONYMOUS_UNION union { \
+    PETH_FILTER  EthDB; \
+    PNULL_FILTER  NullDB; \
+  } DUMMYUNIONNAME; \
+  PTR_FILTER  TrDB; \
+  PFDDI_FILTER  FddiDB; \
+  FILTERDBS_ARCNET_S
+
+typedef struct _FILTERDBS {
+  FILTERDBS_S
 } FILTERDBS, *PFILTERDBS;
 
 
@@ -4414,7 +4413,11 @@ struct _NDIS_MINIPORT_BLOCK {
   USHORT  CFHangCurrentTick;
   NDIS_STATUS  ResetStatus;
   NDIS_HANDLE  ResetOpen;
+#ifdef __cplusplus
   FILTERDBS  FilterDbs;
+#else
+  FILTERDBS_S
+#endif
   FILTER_PACKET_INDICATION_HANDLER  PacketIndicateHandler;
   NDIS_M_SEND_COMPLETE_HANDLER  SendCompleteHandler;
   NDIS_M_SEND_RESOURCES_HANDLER  SendResourcesHandler;
@@ -4576,81 +4579,92 @@ typedef VOID (DDKAPI *SEND_PACKETS_HANDLER)(
   IN PPNDIS_PACKET  PacketArray,
   IN UINT  NumberOfPackets);
 
+#if defined(NDIS_WRAPPER)
+#define NDIS_COMMON_OPEN_BLOCK_WRAPPER_S \
+  ULONG  Flags; \
+  ULONG  References; \
+  KSPIN_LOCK  SpinLock; \
+  NDIS_HANDLE  FilterHandle; \
+  ULONG  ProtocolOptions; \
+  USHORT  CurrentLookahead; \
+  USHORT  ConnectDampTicks; \
+  USHORT  DisconnectDampTicks; \
+  W_SEND_HANDLER  WSendHandler; \
+  W_TRANSFER_DATA_HANDLER  WTransferDataHandler; \
+  W_SEND_PACKETS_HANDLER  WSendPacketsHandler; \
+  W_CANCEL_SEND_PACKETS_HANDLER  CancelSendPacketsHandler; \
+  ULONG  WakeUpEnable; \
+  PKEVENT  CloseCompleteEvent; \
+  QUEUED_CLOSE  QC; \
+  ULONG  AfReferences; \
+  PNDIS_OPEN_BLOCK  NextGlobalOpen;
+#else
+#define NDIS_COMMON_OPEN_BLOCK_WRAPPER_S
+#endif
+
+#define NDIS_COMMON_OPEN_BLOCK_S \
+  PVOID  MacHandle; \
+  NDIS_HANDLE  BindingHandle; \
+  PNDIS_MINIPORT_BLOCK  MiniportHandle; \
+  PNDIS_PROTOCOL_BLOCK  ProtocolHandle; \ 
+  NDIS_HANDLE  ProtocolBindingContext; \
+  PNDIS_OPEN_BLOCK  MiniportNextOpen; \
+  PNDIS_OPEN_BLOCK  ProtocolNextOpen; \
+  NDIS_HANDLE  MiniportAdapterContext; \
+  BOOLEAN  Reserved1; \
+  BOOLEAN  Reserved2; \
+  BOOLEAN  Reserved3; \
+  BOOLEAN  Reserved4; \
+  PNDIS_STRING  BindDeviceName; \
+  KSPIN_LOCK  Reserved5; \
+  PNDIS_STRING  RootDeviceName; \
+  _ANONYMOUS_UNION union { \
+    SEND_HANDLER  SendHandler; \
+    WAN_SEND_HANDLER  WanSendHandler; \
+  } DUMMYUNIONNAME; \
+  TRANSFER_DATA_HANDLER  TransferDataHandler; \
+  SEND_COMPLETE_HANDLER  SendCompleteHandler; \
+  TRANSFER_DATA_COMPLETE_HANDLER  TransferDataCompleteHandler; \
+  RECEIVE_HANDLER  ReceiveHandler; \
+  RECEIVE_COMPLETE_HANDLER  ReceiveCompleteHandler; \
+  WAN_RECEIVE_HANDLER  WanReceiveHandler; \
+  REQUEST_COMPLETE_HANDLER  RequestCompleteHandler; \
+  RECEIVE_PACKET_HANDLER  ReceivePacketHandler; \
+  SEND_PACKETS_HANDLER  SendPacketsHandler; \
+  RESET_HANDLER  ResetHandler; \
+  REQUEST_HANDLER  RequestHandler; \
+  RESET_COMPLETE_HANDLER  ResetCompleteHandler; \
+  STATUS_HANDLER  StatusHandler; \
+  STATUS_COMPLETE_HANDLER  StatusCompleteHandler; \
+  NDIS_COMMON_OPEN_BLOCK_WRAPPER_S
 
 typedef struct _NDIS_COMMON_OPEN_BLOCK {
-  PVOID  MacHandle;
-  NDIS_HANDLE  BindingHandle;
-  PNDIS_MINIPORT_BLOCK  MiniportHandle;
-  PNDIS_PROTOCOL_BLOCK  ProtocolHandle;
-  NDIS_HANDLE  ProtocolBindingContext;
-  PNDIS_OPEN_BLOCK  MiniportNextOpen;
-  PNDIS_OPEN_BLOCK  ProtocolNextOpen;
-  NDIS_HANDLE  MiniportAdapterContext;
-  BOOLEAN  Reserved1;
-  BOOLEAN  Reserved2;
-  BOOLEAN  Reserved3;
-  BOOLEAN  Reserved4;
-  PNDIS_STRING  BindDeviceName;
-  KSPIN_LOCK  Reserved5;
-  PNDIS_STRING  RootDeviceName;
-  _ANONYMOUS_UNION union {
-    SEND_HANDLER  SendHandler;
-    WAN_SEND_HANDLER  WanSendHandler;
-  } DUMMYUNIONNAME;
-  TRANSFER_DATA_HANDLER  TransferDataHandler;
-  SEND_COMPLETE_HANDLER  SendCompleteHandler;
-  TRANSFER_DATA_COMPLETE_HANDLER  TransferDataCompleteHandler;
-  RECEIVE_HANDLER  ReceiveHandler;
-  RECEIVE_COMPLETE_HANDLER  ReceiveCompleteHandler;
-  WAN_RECEIVE_HANDLER  WanReceiveHandler;
-  REQUEST_COMPLETE_HANDLER  RequestCompleteHandler;
-  RECEIVE_PACKET_HANDLER  ReceivePacketHandler;
-  SEND_PACKETS_HANDLER  SendPacketsHandler;
-  RESET_HANDLER  ResetHandler;
-  REQUEST_HANDLER  RequestHandler;
-  RESET_COMPLETE_HANDLER  ResetCompleteHandler;
-  STATUS_HANDLER  StatusHandler;
-  STATUS_COMPLETE_HANDLER  StatusCompleteHandler;
-#if defined(NDIS_WRAPPER)
-  ULONG  Flags;
-  ULONG  References;
-  KSPIN_LOCK  SpinLock;
-  NDIS_HANDLE  FilterHandle;
-  ULONG  ProtocolOptions;
-  USHORT  CurrentLookahead;
-  USHORT  ConnectDampTicks;
-  USHORT  DisconnectDampTicks;
-  W_SEND_HANDLER  WSendHandler;
-  W_TRANSFER_DATA_HANDLER  WTransferDataHandler;
-  W_SEND_PACKETS_HANDLER  WSendPacketsHandler;
-  W_CANCEL_SEND_PACKETS_HANDLER  CancelSendPacketsHandler;
-  ULONG  WakeUpEnable;
-  PKEVENT  CloseCompleteEvent;
-  QUEUED_CLOSE  QC;
-  ULONG  AfReferences;
-  PNDIS_OPEN_BLOCK  NextGlobalOpen;
-#endif /* _NDIS_ */
+  NDIS_COMMON_OPEN_BLOCK_S
 } NDIS_COMMON_OPEN_BLOCK;
 
 struct _NDIS_OPEN_BLOCK
 {
-    NDIS_COMMON_OPEN_BLOCK NdisCommonOpenBlock;
+#ifdef __cplusplus
+  NDIS_COMMON_OPEN_BLOCK NdisCommonOpenBlock;
+#else
+  NDIS_COMMON_OPEN_BLOCK_S
+#endif
 #if defined(NDIS_WRAPPER)
-    struct _NDIS_OPEN_CO
-    {
-        struct _NDIS_CO_AF_BLOCK *  NextAf;
-        W_CO_CREATE_VC_HANDLER      MiniportCoCreateVcHandler;
-        W_CO_REQUEST_HANDLER        MiniportCoRequestHandler;
-        CO_CREATE_VC_HANDLER        CoCreateVcHandler;
-        CO_DELETE_VC_HANDLER        CoDeleteVcHandler;
-        PVOID                       CmActivateVcCompleteHandler;
-        PVOID                       CmDeactivateVcCompleteHandler;
-        PVOID                       CoRequestCompleteHandler;
-        LIST_ENTRY                  ActiveVcHead;
-        LIST_ENTRY                  InactiveVcHead;
-        LONG                        PendingAfNotifications;
-        PKEVENT                     AfNotifyCompleteEvent;
-    };
+  struct _NDIS_OPEN_CO
+  {
+    struct _NDIS_CO_AF_BLOCK *  NextAf;
+    W_CO_CREATE_VC_HANDLER      MiniportCoCreateVcHandler;
+    W_CO_REQUEST_HANDLER        MiniportCoRequestHandler;
+    CO_CREATE_VC_HANDLER        CoCreateVcHandler;
+    CO_DELETE_VC_HANDLER        CoDeleteVcHandler;
+    PVOID                       CmActivateVcCompleteHandler;
+    PVOID                       CmDeactivateVcCompleteHandler;
+    PVOID                       CoRequestCompleteHandler;
+    LIST_ENTRY                  ActiveVcHead;
+    LIST_ENTRY                  InactiveVcHead;
+    LONG                        PendingAfNotifications;
+    PKEVENT                     AfNotifyCompleteEvent;
+  };
 #endif /* _NDIS_ */
 };
 

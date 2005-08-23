@@ -11,20 +11,19 @@
  *   3  Oct 2003 Vizzini - formatting and minor bugfixing
  */
 
-#include <roscfg.h>
 #include "ndissys.h"
 
 
 #ifdef DBG
 
 /* See debug.h for debug/trace constants */
-DWORD DebugTraceLevel = MIN_TRACE;
-//DWORD DebugTraceLevel = DEBUG_ULTRA;
+ULONG DebugTraceLevel = MIN_TRACE;
+//ULONG DebugTraceLevel = DEBUG_ULTRA;
 
 #endif /* DBG */
 
 
-VOID STDCALL MainUnload(
+VOID NTAPI MainUnload(
     PDRIVER_OBJECT DriverObject)
 /*
  * FUNCTION: Unloads the driver
@@ -37,7 +36,7 @@ VOID STDCALL MainUnload(
 
 
 NTSTATUS
-STDCALL
+NTAPI
 DriverEntry(
     PDRIVER_OBJECT DriverObject,
     PUNICODE_STRING RegistryPath)
@@ -71,7 +70,7 @@ DriverEntry(
  * @implemented
  */
 VOID
-CDECL
+_cdecl
 NdisWriteErrorLogEntry(
     IN  NDIS_HANDLE     NdisAdapterHandle,
     IN  NDIS_ERROR_CODE ErrorCode,

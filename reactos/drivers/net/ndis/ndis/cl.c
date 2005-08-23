@@ -15,7 +15,7 @@
  * @unimplemented
  */
 NDIS_STATUS
-DDKAPI
+EXPORT
 NdisClAddParty(
     IN      NDIS_HANDLE         NdisVcHandle,
     IN      NDIS_HANDLE         ProtocolPartyContext,
@@ -38,7 +38,7 @@ NdisClAddParty(
  * @unimplemented
  */
 NDIS_STATUS
-DDKAPI
+EXPORT
 NdisClCloseAddressFamily(
     IN  NDIS_HANDLE NdisAfHandle)
 /*
@@ -58,7 +58,7 @@ NdisClCloseAddressFamily(
  * @unimplemented
  */
 NDIS_STATUS
-DDKAPI
+EXPORT
 NdisClCloseCall(
     IN  NDIS_HANDLE NdisVcHandle,
     IN  NDIS_HANDLE NdisPartyHandle OPTIONAL,
@@ -81,7 +81,7 @@ NdisClCloseCall(
  * @unimplemented
  */
 NDIS_STATUS
-DDKAPI
+EXPORT
 NdisClDeregisterSap(
     IN  NDIS_HANDLE NdisSapHandle)
 /*
@@ -101,7 +101,7 @@ NdisClDeregisterSap(
  * @unimplemented
  */
 NDIS_STATUS
-DDKAPI
+EXPORT
 NdisClDropParty(
     IN  NDIS_HANDLE NdisPartyHandle,
     IN  PVOID       Buffer  OPTIONAL,
@@ -123,7 +123,7 @@ NdisClDropParty(
  * @unimplemented
  */
 VOID
-DDKAPI
+EXPORT
 NdisClIncomingCallComplete(
     IN  NDIS_STATUS         Status,
     IN  NDIS_HANDLE         NdisVcHandle,
@@ -143,7 +143,7 @@ NdisClIncomingCallComplete(
  * @unimplemented
  */
 NDIS_STATUS
-DDKAPI
+EXPORT
 NdisClMakeCall(
     IN      NDIS_HANDLE         NdisVcHandle,
     IN OUT  PCO_CALL_PARAMETERS CallParameters,
@@ -166,7 +166,7 @@ NdisClMakeCall(
  * @unimplemented
  */
 NDIS_STATUS
-DDKAPI
+EXPORT
 NdisClModifyCallQoS(
     IN  NDIS_HANDLE         NdisVcHandle,
     IN  PCO_CALL_PARAMETERS CallParameters)
@@ -187,7 +187,7 @@ NdisClModifyCallQoS(
  * @unimplemented
  */
 NDIS_STATUS
-DDKAPI
+EXPORT
 NdisClOpenAddressFamily(
     IN  NDIS_HANDLE                     NdisBindingHandle,
     IN  PCO_ADDRESS_FAMILY              AddressFamily,
@@ -212,7 +212,7 @@ NdisClOpenAddressFamily(
  * @unimplemented
  */
 NDIS_STATUS
-DDKAPI
+EXPORT
 NdisClRegisterSap(
     IN  NDIS_HANDLE     NdisAfHandle,
     IN  NDIS_HANDLE     ProtocolSapContext,

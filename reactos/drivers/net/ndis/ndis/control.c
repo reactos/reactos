@@ -16,6 +16,7 @@
 /*
  * @implemented
  */
+#undef NdisReinitializePacket
 VOID
 EXPORT
 NdisReinitializePacket(
@@ -49,6 +50,7 @@ NdisAcquireReadWriteLock(
 /*
  * @implemented
  */
+#undef NdisAcquireSpinLock
 VOID
 EXPORT
 NdisAcquireSpinLock(
@@ -66,6 +68,7 @@ NdisAcquireSpinLock(
 /*
  * @implemented
  */
+#undef NdisAllocateSpinLock
 VOID
 EXPORT
 NdisAllocateSpinLock(
@@ -83,6 +86,7 @@ NdisAllocateSpinLock(
 /*
  * @implemented
  */
+#undef NdisDprAcquireSpinLock
 VOID
 EXPORT
 NdisDprAcquireSpinLock(
@@ -101,6 +105,7 @@ NdisDprAcquireSpinLock(
 /*
  * @implemented
  */
+#undef NdisDprReleaseSpinLock
 VOID
 EXPORT
 NdisDprReleaseSpinLock(
@@ -118,6 +123,7 @@ NdisDprReleaseSpinLock(
 /*
  * @implemented
  */
+#undef NdisFreeSpinLock
 VOID
 EXPORT
 NdisFreeSpinLock(
@@ -169,6 +175,7 @@ NdisInitializeEvent(
 /*
  * @implemented
  */
+#undef NdisReleaseSpinLock
 VOID
 EXPORT
 NdisReleaseSpinLock(

@@ -10,21 +10,28 @@
 #ifndef __NDISSYS_H
 #define __NDISSYS_H
 
-#define NDIS50 1    /* Use NDIS 5.0 structures by default */
-
-#ifdef _MSC_VER
-#include <basetsd.h>
-#include <ntddk.h>
-#include <windef.h>
+typedef unsigned long NDIS_STATS;
 #include <ndis.h>
+#include <xfilter.h>
+#include <afilter.h>
+
+#if _MSC_VER
+/* FIXME: These were removed and are no longer used! */
+#define NdisWorkItemHalt NdisMaxWorkItems
+#define NdisWorkItemSendLoopback (NdisMaxWorkItems + 1)
 #else /* _MSC_VER */
-#include <ddk/ntddk.h>
-#include <ddk/ntifs.h>
-#include <ddk/ndis.h>
-#include <ddk/xfilter.h>
-#include <ddk/afilter.h>
+/* FIXME: We miss the ATM headers. */
 typedef struct _ATM_ADDRESS *PATM_ADDRESS;
 #endif /* _MSC_VER */
+
+/* FIXME: This should go away once NDK will be compatible with MS DDK headers. */
+#if _MSC_VER
+NTSTATUS NTAPI ZwDuplicateObject(IN HANDLE, IN HANDLE, IN HANDLE, OUT PHANDLE, IN ACCESS_MASK, IN ULONG, IN ULONG);
+#else
+#include <ndk/ntndk.h>
+#endif
+
+#define NDIS_MINIPORT_WORK_QUEUE_SIZE 10
 
 struct _ADAPTER_BINDING;
 
@@ -34,16 +41,21 @@ typedef struct _INTERNAL_NDIS_MINIPORT_WORK_ITEM {
     NDIS_MINIPORT_WORK_ITEM RealWorkItem;
 } INTERNAL_NDIS_MINIPORT_WORK_ITEM, *PINTERNAL_NDIS_MINIPORT_WORK_ITEM;
 
+typedef struct _NDISI_PACKET_POOL {
+  NDIS_SPIN_LOCK  SpinLock;
+  struct _NDIS_PACKET *FreeList;
+  UINT  PacketLength;
+  UCHAR  Buffer[1];
+} NDISI_PACKET_POOL, * PNDISI_PACKET_POOL;
+
 #include "miniport.h"
 #include "protocol.h"
 
 #include <debug.h>
 
 /* Exported functions */
-#ifdef _MSC_VER
-#define EXPORT __declspec(dllexport)
-#else
-#define EXPORT STDCALL
+#ifndef EXPORT
+#define EXPORT NTAPI
 #endif
 
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))

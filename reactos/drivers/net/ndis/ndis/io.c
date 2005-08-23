@@ -11,11 +11,10 @@
  *   3  Oct 2003 Vizzini - Formatting and minor bugfixes
  */
 
-#include <roscfg.h>
 #include "ndissys.h"
 
 
-VOID STDCALL HandleDeferredProcessing(
+VOID NTAPI HandleDeferredProcessing(
     IN  PKDPC   Dpc,
     IN  PVOID   DeferredContext,
     IN  PVOID   SystemArgument1,
@@ -71,7 +70,7 @@ VOID STDCALL HandleDeferredProcessing(
 }
 
 
-BOOLEAN STDCALL ServiceRoutine(
+BOOLEAN NTAPI ServiceRoutine(
     IN  PKINTERRUPT Interrupt,
     IN  PVOID       ServiceContext)
 /*
@@ -125,6 +124,7 @@ NdisCompleteDmaTransfer(
 /*
  * @unimplemented
  */
+#undef NdisFlushBuffer
 VOID
 EXPORT
 NdisFlushBuffer(
@@ -138,6 +138,7 @@ NdisFlushBuffer(
 /*
  * @unimplemented
  */
+#undef NdisGetCacheFillSize
 ULONG
 EXPORT
 NdisGetCacheFillSize(
@@ -239,7 +240,7 @@ NdisImmediateWritePortUshort(
 }
 
 
-IO_ALLOCATION_ACTION STDCALL NdisMapRegisterCallback (
+IO_ALLOCATION_ACTION NTAPI NdisMapRegisterCallback (
     IN PDEVICE_OBJECT  DeviceObject,
     IN PIRP            Irp,
     IN PVOID           MapRegisterBase,
@@ -415,14 +416,14 @@ NdisMAllocateMapRegisters(
     }
 
   memset(Adapter->NdisMiniportBlock.MapRegisters, 0, BaseMapRegistersNeeded * sizeof(MAP_REGISTER_ENTRY));
-  Adapter->NdisMiniportBlock.BaseMapRegistersNeeded = BaseMapRegistersNeeded;
+  Adapter->NdisMiniportBlock.BaseMapRegistersNeeded = (USHORT)BaseMapRegistersNeeded;
 
   while(BaseMapRegistersNeeded)
     {
       NDIS_DbgPrint(MAX_TRACE, ("iterating, basemapregistersneeded = %d\n", BaseMapRegistersNeeded));
 
       BaseMapRegistersNeeded--;
-      Adapter->NdisMiniportBlock.CurrentMapRegister = BaseMapRegistersNeeded;
+      Adapter->NdisMiniportBlock.CurrentMapRegister = (USHORT)BaseMapRegistersNeeded;
       KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
         {
           NtStatus = AdapterObject->DmaOperations->AllocateAdapterChannel(
@@ -565,6 +566,7 @@ NdisMCompleteBufferPhysicalMapping(
 /*
  * @unimplemented
  */
+#undef NdisMCompleteDmaTransfer
 VOID
 EXPORT
 NdisMCompleteDmaTransfer(
@@ -938,6 +940,7 @@ NdisMRegisterIoPortRange(
 /*
  * @unimplemented
  */
+#undef NdisMSetupDmaTransfer
 VOID
 EXPORT
 NdisMSetupDmaTransfer(
