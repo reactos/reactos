@@ -376,11 +376,12 @@ AutomaticDependency::GetIncludeDirectories ( vector<Include*>& includes,
                                              Include& currentDirectory,
                                              bool searchCurrentDirectory )
 {
+	size_t i;
 	if ( searchCurrentDirectory )
 		includes.push_back( &currentDirectory );
-	for ( size_t i = 0; i < module.non_if_data.includes.size (); i++ )
+	for ( i = 0; i < module.non_if_data.includes.size (); i++ )
 		includes.push_back( module.non_if_data.includes[i] );
-	for ( size_t i = 0; i < module.project.non_if_data.includes.size (); i++ )
+	for ( i = 0; i < module.project.non_if_data.includes.size (); i++ )
 		includes.push_back( module.project.non_if_data.includes[i] );
 }
 
@@ -469,11 +470,12 @@ void
 AutomaticDependency::CheckAutomaticDependenciesForModule ( Module& module,
                                                            bool verbose )
 {
+	size_t mi;
 	vector<const Module*> modules;
 	GetModulesToCheck ( module, modules );
-	for ( size_t mi = 0; mi < modules.size (); mi++ )
+	for ( mi = 0; mi < modules.size (); mi++ )
 		ParseFiles ( *modules[mi] );
-	for ( size_t mi = 0; mi < modules.size (); mi++ )
+	for ( mi = 0; mi < modules.size (); mi++ )
 		CheckAutomaticDependencies ( *modules[mi], verbose );
 }
 

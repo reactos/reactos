@@ -19,7 +19,9 @@
 
 #include "mingw.h"
 #include <assert.h>
+#ifndef _MSC_VER
 #include <dirent.h>
+#endif//_MSC_VER
 #include "modulehandler.h"
 
 #ifdef WIN32
@@ -88,6 +90,7 @@ Directory::Add ( const char* subdir )
 bool
 Directory::mkdir_p ( const char* path )
 {
+#ifndef _MSC_VER
 	DIR *directory;
 	directory = opendir ( path );
 	if ( directory != NULL )
@@ -95,9 +98,16 @@ Directory::mkdir_p ( const char* path )
 		closedir ( directory );
 		return false;
 	}
+#endif//_MSC_VER
 
 	if ( MKDIR ( path ) != 0 )
+	{
+#ifdef _MSC_VER
+		if ( errno == EEXIST )
+			return false;
+#endif//_MSC_VER
 		throw AccessDeniedException ( string ( path ) );
+	}
 	return true;
 }
 

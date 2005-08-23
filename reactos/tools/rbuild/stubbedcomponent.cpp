@@ -107,7 +107,7 @@ StubbedSymbol::StripSymbol ( string symbol )
 	size_t end = symbol.length () - 1;
 	while ( end > 0 && isdigit ( symbol[end] ) )
 		end--;
-	if ( end > 0 and symbol[end] == '@' )
+	if ( end > 0 && symbol[end] == '@' )
 		end--;
 	if ( end > 0 )
 		return symbol.substr ( start, end - start + 1 );
