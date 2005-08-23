@@ -2532,7 +2532,6 @@ FsRtlIsNtstatusExpected (
 
 #define NLS_MB_CODE_PAGE_TAG NlsMbCodePageTag
 #define NLS_MB_OEM_CODE_PAGE_TAG NlsMbOemCodePageTag
-#define NLS_MB_CODE_PAGE_TAG NlsMbOemCodePageTag
 #define NLS_OEM_LEAD_BYTE_INFO NlsOemLeadByteInfo
 
 extern BOOLEAN NlsMbCodePageTag;
