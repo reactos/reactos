@@ -484,6 +484,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Fs_Rec","Type",0x00010001,0x00000008
 
 ; i8042 port driver
 HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt","Group",0x00000000,"Keyboard Port"
 HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt","Type",0x00010001,0x00000001
 ;HKLM,"SYSTEM\CurrentControlSet\Enum\ACPI\PNP0303\0000","Service",0x00000000,"i8042prt"
