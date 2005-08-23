@@ -38,11 +38,10 @@ NdisCompleteUnbindAdapter(
 }
 
 
-#undef NdisInterlockedAddUlong
-
 /*
  * @implemented
  */
+#undef NdisInterlockedAddUlong
 VOID
 EXPORT
 NdisInterlockedAddUlong (
@@ -54,11 +53,10 @@ NdisInterlockedAddUlong (
 }
 
 
-#undef NdisInterlockedInsertHeadList
-
 /*
  * @implemented
  */
+#undef NdisInterlockedInsertHeadList
 PLIST_ENTRY
 EXPORT
 NdisInterlockedInsertHeadList(
@@ -70,11 +68,10 @@ NdisInterlockedInsertHeadList(
 }
 
 
-#undef NdisInterlockedInsertTailList
-
 /*
  * @implemented
  */
+#undef NdisInterlockedInsertTailList
 PLIST_ENTRY
 EXPORT
 NdisInterlockedInsertTailList(
@@ -86,11 +83,10 @@ NdisInterlockedInsertTailList(
 }
 
 
-#undef NdisInterlockedRemoveHeadList
-
 /*
  * @implemented
  */
+#undef NdisInterlockedRemoveHeadList
 PLIST_ENTRY
 EXPORT
 NdisInterlockedRemoveHeadList(
@@ -183,11 +179,10 @@ NdisIMDeInitializeDeviceInstance(
 }
 
 
-#undef NdisIMInitializeDeviceInstance
-
 /*
  * @unimplemented
  */
+#undef NdisIMInitializeDeviceInstance
 NDIS_STATUS
 EXPORT
 NdisIMInitializeDeviceInstance(
@@ -544,11 +539,10 @@ NdisGetSystemUptime(
 }
 
 
-#undef NdisInterlockedDecrement
-
 /*
  * @implemented
  */
+#undef NdisInterlockedDecrement
 LONG
 EXPORT
 NdisInterlockedDecrement(
@@ -564,11 +558,10 @@ NdisInterlockedDecrement(
 }
 
 
-#undef NdisInterlockedIncrement
-
 /*
  * @implemented
  */
+#undef NdisInterlockedIncrement
 LONG
 EXPORT
 NdisInterlockedIncrement(

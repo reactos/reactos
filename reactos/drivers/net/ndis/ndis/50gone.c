@@ -384,11 +384,10 @@ NdisSetupDmaTransfer(
 }
 
 
-#undef NdisUpdateSharedMemory
-
 /*
  * @unimplemented
  */
+#undef NdisUpdateSharedMemory
 VOID
 EXPORT
 NdisUpdateSharedMemory(

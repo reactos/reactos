@@ -14,20 +14,6 @@
 
 
 /*
- * @implemented
- */
-#undef NdisReinitializePacket
-VOID
-EXPORT
-NdisReinitializePacket(
-     IN OUT  PNDIS_PACKET    Packet)
-{
-  (Packet)->Private.Head = (PNDIS_BUFFER)NULL;
-  (Packet)->Private.ValidCounts = FALSE;
-}
-
-
-/*
  * @unimplemented
  */
 VOID

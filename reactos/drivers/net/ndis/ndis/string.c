@@ -40,12 +40,12 @@ NdisAnsiStringToUnicodeString(
       (PANSI_STRING)SourceString, FALSE);
 }
 
-#undef NdisEqualString
 
 
 /*
  * @implemented
  */
+#undef NdisEqualString
 BOOLEAN
 EXPORT
 NdisEqualString(

@@ -85,7 +85,6 @@ NdisDprFreePacket@4
 NdisDprFreePacketNonInterlocked@4
 NdisDprReleaseSpinLock@4
 NdisEqualString@12
-NdisFlushBuffer@8
 NdisFreeBuffer@4
 NdisFreeBufferPool@4
 NdisFreeDmaChannel@4
@@ -235,7 +234,6 @@ NdisReadNetworkAddress@16
 NdisReadPciSlotInformation@20
 NdisReadPcmciaAttributeMemory@16
 ;NdisReEnumerateProtocolBindings ?
-NdisReinitializePacket@4
 NdisRegisterAdapter@24
 NdisRegisterAdapterShutdownHandler@12
 NdisRegisterProtocol@16

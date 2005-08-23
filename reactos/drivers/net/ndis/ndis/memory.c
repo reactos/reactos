@@ -47,33 +47,6 @@ NdisAllocateMemoryWithTag(
   return NDIS_STATUS_SUCCESS;
 }
 
-
-/*
- * @unimplemented
- */
-#undef NdisCreateLookaheadBufferFromSharedMemory
-VOID
-EXPORT
-NdisCreateLookaheadBufferFromSharedMemory(
-    IN  PVOID   pSharedMemory,
-    IN  UINT    LookaheadLength,
-    OUT PVOID   *pLookaheadBuffer)
-{
-    UNIMPLEMENTED
-}
-
-
-/*
- * @unimplemented
- */
-#undef NdisDestroyLookaheadBufferFromSharedMemory
-VOID
-EXPORT
-NdisDestroyLookaheadBufferFromSharedMemory(
-    IN  PVOID   pLookaheadBuffer)
-{
-    UNIMPLEMENTED
-}
 
 
 /*

@@ -991,11 +991,10 @@ NdisMFlushLog(
     UNIMPLEMENTED
 }
 
-#undef NdisMIndicateStatus
-
 /*
  * @unimplemented
  */
+#undef NdisMIndicateStatus
 VOID
 EXPORT
 NdisMIndicateStatus(
@@ -1007,11 +1006,10 @@ NdisMIndicateStatus(
     UNIMPLEMENTED
 }
 
-#undef NdisMIndicateStatusComplete
-
 /*
  * @unimplemented
  */
+#undef NdisMIndicateStatusComplete
 VOID
 EXPORT
 NdisMIndicateStatusComplete(
@@ -1932,12 +1930,11 @@ NdisMTransferDataComplete(
   MiniTransferDataComplete(MiniportAdapterHandle, Packet, Status, BytesTransferred);
 }
 
-#undef NdisMSetInformationComplete
-
 
 /*
  * @implemented
  */
+#undef NdisMSetInformationComplete
 VOID
 EXPORT
 NdisMSetInformationComplete(
@@ -1947,12 +1944,11 @@ NdisMSetInformationComplete(
   (*((PNDIS_MINIPORT_BLOCK)(MiniportAdapterHandle))->SetCompleteHandler)(MiniportAdapterHandle, Status);
 }
 
-#undef NdisMSetAttributes
-
 
 /*
  * @implemented
  */
+#undef NdisMSetAttributes
 VOID
 EXPORT
 NdisMSetAttributes(

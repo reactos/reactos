@@ -122,35 +122,6 @@ NdisCompleteDmaTransfer(
 
 
 /*
- * @unimplemented
- */
-#undef NdisFlushBuffer
-VOID
-EXPORT
-NdisFlushBuffer(
-    IN  PNDIS_BUFFER    Buffer,
-    IN  BOOLEAN         WriteToDevice)
-{
-    UNIMPLEMENTED
-}
-
-
-/*
- * @unimplemented
- */
-#undef NdisGetCacheFillSize
-ULONG
-EXPORT
-NdisGetCacheFillSize(
-    VOID)
-{
-    UNIMPLEMENTED
-
-  return 0;
-}
-
-
-/*
  * @implemented
  */
 VOID
@@ -561,25 +532,6 @@ NdisMCompleteBufferPhysicalMapping(
       Adapter->NdisMiniportBlock.MapRegisters[PhysicalMapRegister].WriteToDevice);
 }
 
-
-
-/*
- * @unimplemented
- */
-#undef NdisMCompleteDmaTransfer
-VOID
-EXPORT
-NdisMCompleteDmaTransfer(
-    OUT PNDIS_STATUS    Status,
-    IN  PNDIS_HANDLE    MiniportDmaHandle,
-    IN  PNDIS_BUFFER    Buffer,
-    IN  ULONG           Offset,
-    IN  ULONG           Length,
-    IN  BOOLEAN         WriteToDevice)
-{
-    UNIMPLEMENTED
-}
-
 
 /*
  * @unimplemented
@@ -935,23 +887,6 @@ NdisMRegisterIoPortRange(
     return NDIS_STATUS_RESOURCES;
 
   return NDIS_STATUS_SUCCESS;
-}
-
-/*
- * @unimplemented
- */
-#undef NdisMSetupDmaTransfer
-VOID
-EXPORT
-NdisMSetupDmaTransfer(
-    OUT	PNDIS_STATUS    Status,
-    IN	PNDIS_HANDLE    MiniportDmaHandle,
-    IN	PNDIS_BUFFER    Buffer,
-    IN	ULONG           Offset,
-    IN	ULONG           Length,
-    IN	BOOLEAN         WriteToDevice)
-{
-    UNIMPLEMENTED
 }
 
 
