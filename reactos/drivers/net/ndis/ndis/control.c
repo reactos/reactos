@@ -50,7 +50,7 @@ NdisAcquireReadWriteLock(
 {
   ULONG RefCount;
   UCHAR ProcessorNumber;
-  UCHAR BusyLoop;
+  volatile UCHAR BusyLoop;
 
   ASSERT_IRQL(DISPATCH_LEVEL);
 
