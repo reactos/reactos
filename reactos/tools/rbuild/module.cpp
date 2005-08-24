@@ -24,6 +24,25 @@ using std::string;
 using std::vector;
 
 string
+Replace ( const string& s, const string& find, const string& with )
+{
+	string ret;
+	const char* p = s.c_str();
+	while ( p )
+	{
+		const char* p2 = strstr ( p, find.c_str() );
+		if ( !p2 )
+			break;
+		if ( p2 > p )
+			ret += string ( p, p2-p );
+		p = p2 + find.size();
+	}
+	if ( *p )
+		ret += *p;
+	return ret;
+}
+
+string
 FixSeparator ( const string& s )
 {
 	string s2(s);

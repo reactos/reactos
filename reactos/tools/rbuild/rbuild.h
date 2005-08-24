@@ -739,6 +739,8 @@ private:
 	std::string StripSymbol ( std::string symbol );
 };
 
+extern std::string
+Replace ( const std::string& s, const std::string& find, const std::string& with );
 
 extern std::string
 FixSeparator ( const std::string& s );
