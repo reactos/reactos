@@ -251,9 +251,9 @@ typedef struct _NDIS_RW_LOCK {
     struct {
       KSPIN_LOCK  SpinLock;
       PVOID  Context;
-    } s;
+    };
     UCHAR  Reserved[16];
-  } u;
+  };
 
   NDIS_RW_LOCK_REFCOUNT  RefCount[MAXIMUM_PROCESSORS];
 } NDIS_RW_LOCK, *PNDIS_RW_LOCK;
