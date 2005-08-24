@@ -24,6 +24,12 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 	TCHAR rest[CMDLINE_LENGTH];
 	TCHAR param[CMDLINE_LENGTH];
 	BOOL bWait = FALSE;
+	BOOL bBat  = FALSE;
+	BOOL bCreate = FALSE;
+	TCHAR szFullCmdLine [CMDLINE_LENGTH];
+	PROCESS_INFORMATION prci;
+	STARTUPINFO stui;
+
 	param[0] = _T('\0');
 	
 	if (_tcsncmp (Rest, _T("/?"), 2) == 0)
@@ -115,38 +121,60 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 	if (!_tcsicmp (_tcsrchr (szFullName, _T('.')), _T(".bat")) ||
 	    !_tcsicmp (_tcsrchr (szFullName, _T('.')), _T(".cmd")))
 	{
+		bBat = TRUE;				
+		memset(szFullCmdLine,0,CMDLINE_LENGTH * sizeof(TCHAR));
+
+		/* FIXME : use comspec instead */
+		if (!SearchForExecutable (_T("CMD"), szFullCmdLine))
+	    {
+		    error_bad_command ();
+		    return 1;
+	    }
+       		
+		memcpy(&szFullCmdLine[_tcslen(szFullCmdLine)],_T("\" /K "), 5 * sizeof(TCHAR));		
+		memcpy(&szFullCmdLine[_tcslen(szFullCmdLine)], szFullName, _tcslen(szFullName) * sizeof(TCHAR));
+		memcpy(&szFullCmdLine[1], &szFullCmdLine[2], _tcslen(szFullCmdLine) * sizeof(TCHAR)); 
+        szFullCmdLine[0] = _T('\"');			
+	}
+
 #ifdef _DEBUG
 		DebugPrintf (_T("[BATCH: %s %s]\n"), szFullName, rest);
 #endif
-
-		ConErrResPuts(STRING_START_ERROR1);
-	}
-	else
-	{
-		/* exec the program */
-		TCHAR szFullCmdLine [CMDLINE_LENGTH];
-		PROCESS_INFORMATION prci;
-		STARTUPINFO stui;
+		
 
 #ifdef _DEBUG
 		DebugPrintf (_T("[EXEC: %s %s]\n"), szFullName, rest);
 #endif
 		/* build command line for CreateProcess() */
-		_tcscpy (szFullCmdLine, first);
-		if( param )
+		if (bBat == FALSE)
+		{
+		  _tcscpy (szFullCmdLine, first);
+		  if( param )
 		  {
 		    _tcscat(szFullCmdLine, _T(" ") );
 		    _tcscat (szFullCmdLine, param);
 		  }
+		}
 
 		/* fill startup info */
 		memset (&stui, 0, sizeof (STARTUPINFO));
 		stui.cb = sizeof (STARTUPINFO);
 		stui.dwFlags = STARTF_USESHOWWINDOW;
 		stui.wShowWindow = SW_SHOWDEFAULT;
-
-		if (CreateProcess (szFullName, szFullCmdLine, NULL, NULL, FALSE,
-		                   CREATE_NEW_CONSOLE, NULL, NULL, &stui, &prci))
+		        
+		if (bBat == TRUE)
+		{
+		 bCreate = CreateProcess (NULL, szFullCmdLine, NULL, NULL, FALSE,
+			 CREATE_NEW_CONSOLE, NULL, NULL, &stui, &prci);
+		}
+		else
+		{
+		 bCreate = CreateProcess (szFullName, szFullCmdLine, NULL, NULL, FALSE,
+			DETACHED_PROCESS, NULL, NULL, &stui, &prci);
+		
+		}
+		
+		if (bCreate)
 		{
 			if (bWait)
 			{
@@ -166,7 +194,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 			ErrorMessage(GetLastError (),
 			              _T("Error executing CreateProcess()!!\n"));
 		}
-	}
+//	}
 
 	return 0;
 }
