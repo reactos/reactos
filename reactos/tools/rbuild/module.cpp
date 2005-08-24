@@ -35,6 +35,7 @@ Replace ( const string& s, const string& find, const string& with )
 			break;
 		if ( p2 > p )
 			ret += string ( p, p2-p );
+		ret += with;
 		p = p2 + find.size();
 	}
 	if ( *p )
