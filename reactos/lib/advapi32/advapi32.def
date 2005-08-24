@@ -513,6 +513,8 @@ RegSaveKeyA@12
 ;RegSaveKeyExW
 RegSaveKeyW@12
 RegSetKeySecurity@12
+RegSetKeyValueA@24
+RegSetKeyValueW@24
 RegSetValueA@20
 RegSetValueExA@24
 RegSetValueExW@24

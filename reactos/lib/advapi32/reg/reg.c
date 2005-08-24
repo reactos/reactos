@@ -803,6 +803,138 @@ RegDeleteKeyValueA(IN HKEY hKey,
 
 
 /************************************************************************
+ *  RegSetKeyValueW
+ *
+ * @implemented
+ */
+LONG STDCALL
+RegSetKeyValueW(IN HKEY hKey,
+                IN LPCWSTR lpSubKey  OPTIONAL,
+                IN LPCWSTR lpValueName  OPTIONAL,
+                IN DWORD dwType,
+                IN LPCVOID lpData  OPTIONAL,
+                IN DWORD cbData)
+{
+    HANDLE KeyHandle, SubKeyHandle = NULL;
+    NTSTATUS Status;
+    LONG Ret;
+
+    Status = MapDefaultKey(&KeyHandle,
+                           hKey);
+    if (!NT_SUCCESS(Status))
+    {
+        return RtlNtStatusToDosError(Status);
+    }
+    
+    if (lpSubKey != NULL)
+    {
+        OBJECT_ATTRIBUTES ObjectAttributes;
+        UNICODE_STRING SubKeyName;
+
+        RtlInitUnicodeString(&SubKeyName,
+                             (LPWSTR)lpSubKey);
+
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &SubKeyName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   KeyHandle,
+                                   NULL);
+
+        Status = NtOpenKey(&SubKeyHandle,
+                           KEY_SET_VALUE,
+                           &ObjectAttributes);
+        if (!NT_SUCCESS(Status))
+        {
+            return RtlNtStatusToDosError(Status);
+        }
+    }
+    
+    Ret = RegSetValueExW((SubKeyHandle != NULL) ? SubKeyHandle : KeyHandle,
+                         lpValueName,
+                         0,
+                         dwType,
+                         lpData,
+                         cbData);
+
+    if (SubKeyHandle != NULL)
+    {
+        NtClose(SubKeyHandle);
+    }
+
+    return Ret;
+}
+
+
+/************************************************************************
+ *  RegSetKeyValueA
+ *
+ * @implemented
+ */
+LONG STDCALL
+RegSetKeyValueA(IN HKEY hKey,
+                IN LPCSTR lpSubKey  OPTIONAL,
+                IN LPCSTR lpValueName  OPTIONAL,
+                IN DWORD dwType,
+                IN LPCVOID lpData  OPTIONAL,
+                IN DWORD cbData)
+{
+    HANDLE KeyHandle, SubKeyHandle = NULL;
+    NTSTATUS Status;
+    LONG Ret;
+
+    Status = MapDefaultKey(&KeyHandle,
+                           hKey);
+    if (!NT_SUCCESS(Status))
+    {
+        return RtlNtStatusToDosError(Status);
+    }
+
+    if (lpSubKey != NULL)
+    {
+        OBJECT_ATTRIBUTES ObjectAttributes;
+        UNICODE_STRING SubKeyName;
+
+        if (!RtlCreateUnicodeStringFromAsciiz(&SubKeyName,
+                                              (LPSTR)lpSubKey))
+        {
+            return RtlNtStatusToDosError(Status);
+        }
+
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &SubKeyName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   KeyHandle,
+                                   NULL);
+
+        Status = NtOpenKey(&SubKeyHandle,
+                           KEY_SET_VALUE,
+                           &ObjectAttributes);
+
+        RtlFreeUnicodeString(&SubKeyName);
+
+        if (!NT_SUCCESS(Status))
+        {
+            return RtlNtStatusToDosError(Status);
+        }
+    }
+
+    Ret = RegSetValueExA((SubKeyHandle != NULL) ? SubKeyHandle : KeyHandle,
+                         lpValueName,
+                         0,
+                         dwType,
+                         lpData,
+                         cbData);
+
+    if (SubKeyHandle != NULL)
+    {
+        NtClose(SubKeyHandle);
+    }
+
+    return Ret;
+}
+
+
+/************************************************************************
  *  RegDeleteValueA
  *
  * @implemented
