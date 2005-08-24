@@ -9,17 +9,15 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ddk/ntddkbd.h>
-#include <ddk/ntdd8042.h>
-
+#ifndef NDEBUG
 #define NDEBUG
+#endif
 #include <debug.h>
 
 #include "i8042prt.h"
 
 
-VOID I8042MouseHandlePs2pp(PDEVICE_EXTENSION DevExt, BYTE Input)
+VOID I8042MouseHandlePs2pp(PDEVICE_EXTENSION DevExt, UCHAR Input)
 {
 	UCHAR PktType;
 	PMOUSE_INPUT_DATA MouseInput = DevExt->MouseBuffer +

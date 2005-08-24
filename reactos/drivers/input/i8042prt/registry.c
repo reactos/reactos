@@ -11,11 +11,9 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ddk/ntddkbd.h>
-#include <ddk/ntdd8042.h>
-
+#ifndef NDEBUG
 #define NDEBUG
+#endif
 #include <debug.h>
 
 #include "i8042prt.h"
@@ -38,24 +36,24 @@ VOID STDCALL I8042ReadRegistry(PDRIVER_OBJECT DriverObject,
 
 	NTSTATUS Status;
 
-	DWORD DefaultHeadless = 0;
-	DWORD DefaultCrashScroll = 0;
-	DWORD DefaultCrashSysRq = 0;
-	DWORD DefaultReportResetErrors = 0;
-	DWORD DefaultPollStatusIterations = 1;
-	DWORD DefaultResendIterations = 3;
-	DWORD DefaultPollingIterations = 12000;
-	DWORD DefaultPollingIterationsMaximum = 12000;
-	DWORD DefaultKeyboardDataQueueSize = 100;
-	DWORD DefaultOverrideKeyboardType = 0;
-	DWORD DefaultOverrideKeyboardSubtype = 0;
-	DWORD DefaultMouseDataQueueSize = 100;
-	DWORD DefaultMouseResendStallTime = 1000;
-	DWORD DefaultMouseSynchIn100ns = 20000000;
-	DWORD DefaultMouseResolution = 3;
-	DWORD DefaultSampleRate = 60;
-	DWORD DefaultNumberOfButtons = 2;
-	DWORD DefaultEnableWheelDetection = 1;
+	ULONG DefaultHeadless = 0;
+	ULONG DefaultCrashScroll = 0;
+	ULONG DefaultCrashSysRq = 0;
+	ULONG DefaultReportResetErrors = 0;
+	ULONG DefaultPollStatusIterations = 1;
+	ULONG DefaultResendIterations = 3;
+	ULONG DefaultPollingIterations = 12000;
+	ULONG DefaultPollingIterationsMaximum = 12000;
+	ULONG DefaultKeyboardDataQueueSize = 100;
+	ULONG DefaultOverrideKeyboardType = 0;
+	ULONG DefaultOverrideKeyboardSubtype = 0;
+	ULONG DefaultMouseDataQueueSize = 100;
+	ULONG DefaultMouseResendStallTime = 1000;
+	ULONG DefaultMouseSynchIn100ns = 20000000;
+	ULONG DefaultMouseResolution = 3;
+	ULONG DefaultSampleRate = 60;
+	ULONG DefaultNumberOfButtons = 2;
+	ULONG DefaultEnableWheelDetection = 1;
 
 	RtlInitUnicodeString(&ParametersPath, NULL);
 	ParametersPath.MaximumLength = (wcslen(RegistryPath) *
@@ -212,15 +210,15 @@ VOID STDCALL I8042ReadRegistry(PDRIVER_OBJECT DriverObject,
 	                                NULL);
 
 	if (!NT_SUCCESS(Status)) {
-		DPRINT1 ("Can't read registry: %x\n", Status);
 		/* Actually, the defaults are not set when the function
 		 * fails, as would happen during setup, so you have to
 		 * set them manually anyway...
 		 */
 		RTL_QUERY_REGISTRY_TABLE *Current = Parameters;
+		DPRINT1 ("Can't read registry: %x\n", Status);
 		while (Current->Name) {
-			*((DWORD *)Current->EntryContext) =
-			                       *((DWORD *)Current->DefaultData);
+			*((PULONG)Current->EntryContext) =
+			                       *((PULONG)Current->DefaultData);
 			Current++;
 		}
 		DPRINT1 ("Manually set defaults\n");

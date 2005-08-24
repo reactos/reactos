@@ -1,50 +1,18 @@
 #ifndef _I8042DRV_H
 #define _I8042DRV_H
-#include <ddk/ntddk.h>
-#include <ddk/ntddkbd.h>
-#include <ddk/ntdd8042.h>
+
+#include <ntddk.h>
+#include <kbdmou.h>
+#include <ntdd8042.h>
+
+#ifdef _MSC_VER
+  #define STDCALL
+  #define DDKAPI
+#endif
 
 #define KEYBOARD_IRQ       1
 #define MOUSE_IRQ          12
 #define KBD_BUFFER_SIZE    32
-
-// should be in ntdd8042.h
-
-typedef VOID DDKAPI
-(*KEYBOARD_CLASS_SERVICE_CALLBACK) (
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PKEYBOARD_INPUT_DATA InputDataStart,
-	IN PKEYBOARD_INPUT_DATA InputDataEnd,
-	IN OUT PULONG InputDataConsumed
-);
-
-/* I'm not actually sure if this is in the ddk, would seem logical */
-typedef VOID DDKAPI
-(*MOUSE_CLASS_SERVICE_CALLBACK) (
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PMOUSE_INPUT_DATA InputDataStart,
-	IN PMOUSE_INPUT_DATA InputDataEnd,
-	IN OUT PULONG InputDataConsumed
-);
-
-typedef struct _CONNECT_DATA {
-	PDEVICE_OBJECT ClassDeviceObject;
-	PVOID ClassService;
-} CONNECT_DATA, *PCONNECT_DATA;
-
-#define IOCTL_INTERNAL_KEYBOARD_CONNECT \
-   CTL_CODE(FILE_DEVICE_KEYBOARD, 0x0080, METHOD_NEITHER, FILE_ANY_ACCESS)
-
-#define IOCTL_INTERNAL_MOUSE_CONNECT \
-   CTL_CODE(FILE_DEVICE_MOUSE, 0x0080, METHOD_NEITHER, FILE_ANY_ACCESS)
-
-/* For some bizarre reason, these are different from the defines in
- * w32api. I'm quite sure these are correct though, needs to be checked
- * against the ddk
- */
-#define KEYBOARD_SCROLL_LOCK_ON 0x01
-#define KEYBOARD_NUM_LOCK_ON 0x02
-#define KEYBOARD_CAPS_LOCK_ON 0x04
 
 #define WHEEL_DELTA 120
 
@@ -77,21 +45,21 @@ typedef enum _MOUSE_TIMEOUT_STATE
 /* TODO: part of this should be in the _ATTRIBUTES structs instead */
 typedef struct _I8042_SETTINGS
 {
-	DWORD Headless;               /* done */
-	DWORD CrashScroll;
-	DWORD CrashSysRq;             /* done */
-	DWORD ReportResetErrors;
-	DWORD PollStatusIterations;   /* done */
-	DWORD ResendIterations;       /* done */
-	DWORD PollingIterations;
-	DWORD PollingIterationsMaximum;
-	DWORD OverrideKeyboardType;
-	DWORD OverrideKeyboardSubtype;
-	DWORD MouseResendStallTime;
-	DWORD MouseSynchIn100ns;      /* done */
-	DWORD MouseResolution;        /* done */
-	DWORD NumberOfButtons;
-	DWORD EnableWheelDetection;
+	ULONG Headless;               /* done */
+	ULONG CrashScroll;
+	ULONG CrashSysRq;             /* done */
+	ULONG ReportResetErrors;
+	ULONG PollStatusIterations;   /* done */
+	ULONG ResendIterations;       /* done */
+	ULONG PollingIterations;
+	ULONG PollingIterationsMaximum;
+	ULONG OverrideKeyboardType;
+	ULONG OverrideKeyboardSubtype;
+	ULONG MouseResendStallTime;
+	ULONG MouseSynchIn100ns;      /* done */
+	ULONG MouseResolution;        /* done */
+	ULONG NumberOfButtons;
+	ULONG EnableWheelDetection;
 } I8042_SETTINGS, *PI8042_SETTINGS;
 
 typedef enum _I8042_MOUSE_TYPE
@@ -178,7 +146,7 @@ typedef struct _DEVICE_EXTENSION
 	I8042_MOUSE_TYPE MouseType;
 
 	OUTPUT_PACKET Packet;
-	UINT PacketResends;
+	ULONG PacketResends;
 	BOOLEAN PacketComplete;
 	NTSTATUS PacketResult;
 	UCHAR PacketBuffer[16];
@@ -228,8 +196,8 @@ typedef struct _I8042_HOOK_WORKITEM
  * Keyboard controller ports
  */
 
-#define I8042_DATA_PORT      0x60
-#define I8042_CTRL_PORT      0x64
+#define I8042_DATA_PORT      ((PUCHAR)0x60)
+#define I8042_CTRL_PORT      ((PUCHAR)0x64)
 
 
 /*
@@ -295,11 +263,11 @@ typedef struct _I8042_HOOK_WORKITEM
 #define MOUSE_NACK         0xFE
 
 /* i8042prt.c */
-NTSTATUS I8042ReadData(BYTE *Data);
+NTSTATUS I8042ReadData(UCHAR *Data);
 
-NTSTATUS I8042ReadStatus(BYTE *Status);
+NTSTATUS I8042ReadStatus(UCHAR *Status);
 
-NTSTATUS I8042ReadDataWait(PDEVICE_EXTENSION DevExt, BYTE *Data);
+NTSTATUS I8042ReadDataWait(PDEVICE_EXTENSION DevExt, UCHAR *Data);
 
 VOID I8042Flush();
 
@@ -326,7 +294,7 @@ VOID I8042PacketDpc(PDEVICE_EXTENSION DevExt);
 VOID STDCALL I8042SendHookWorkItem(PDEVICE_OBJECT DeviceObject,
                                    PVOID Context);
 
-BOOLEAN I8042Write(PDEVICE_EXTENSION DevExt, int addr, BYTE data);
+BOOLEAN I8042Write(PDEVICE_EXTENSION DevExt, PUCHAR addr, UCHAR data);
 
 /* keyboard.c */
 VOID STDCALL I8042IsrWritePortKbd(PVOID Context,
@@ -382,12 +350,12 @@ VOID STDCALL I8042MouseHandleButtons(PDEVICE_EXTENSION DevExt,
                                      USHORT Mask);
 
 VOID STDCALL I8042MouseHandle(PDEVICE_EXTENSION DevExt,
-                              BYTE Output);
+                              UCHAR Output);
 
 BOOLEAN STDCALL I8042MouseEnable(PDEVICE_EXTENSION DevExt);
 BOOLEAN STDCALL I8042MouseDisable(PDEVICE_EXTENSION DevExt);
 
 /* ps2pp.c */
-VOID I8042MouseHandlePs2pp(PDEVICE_EXTENSION DevExt, BYTE Input);
+VOID I8042MouseHandlePs2pp(PDEVICE_EXTENSION DevExt, UCHAR Input);
 
 #endif // _KEYBOARD_H_

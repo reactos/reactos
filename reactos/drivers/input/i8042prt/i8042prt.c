@@ -10,11 +10,9 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ddk/ntddkbd.h>
-#include <ddk/ntdd8042.h>
-
+#ifndef NDEBUG
 #define NDEBUG
+#endif
 #include <debug.h>
 
 #include "i8042prt.h"
@@ -34,18 +32,18 @@
 /*
  * FUNCTION: Write data to a port, waiting first for it to become ready
  */
-BOOLEAN I8042Write(PDEVICE_EXTENSION DevExt, int addr, BYTE data)
+BOOLEAN I8042Write(PDEVICE_EXTENSION DevExt, PUCHAR addr, UCHAR data)
 {
 	ULONG ResendIterations = DevExt->Settings.PollingIterations;
 
-	while ((KBD_IBF & READ_PORT_UCHAR((PUCHAR)I8042_CTRL_PORT)) &&
+	while ((KBD_IBF & READ_PORT_UCHAR(I8042_CTRL_PORT)) &&
 	       (ResendIterations--))
 	{
 		KeStallExecutionProcessor(50);
 	}
 
 	if (ResendIterations) {
-		WRITE_PORT_UCHAR((PUCHAR)addr,data);
+		WRITE_PORT_UCHAR(addr,data);
 		DPRINT("Sent %x to %x\n", data, addr);
 		return TRUE;
 	}
@@ -56,7 +54,7 @@ BOOLEAN I8042Write(PDEVICE_EXTENSION DevExt, int addr, BYTE data)
 /*
  * FUNCTION: Write data to a port, without waiting first
  */
-static BOOLEAN I8042WriteNoWait(PDEVICE_EXTENSION DevExt, int addr, BYTE data)
+static BOOLEAN I8042WriteNoWait(PDEVICE_EXTENSION DevExt, int addr, UCHAR data)
 {
 	WRITE_PORT_UCHAR((PUCHAR)addr,data);
 	DPRINT("Sent %x to %x\n", data, addr);
@@ -67,10 +65,10 @@ static BOOLEAN I8042WriteNoWait(PDEVICE_EXTENSION DevExt, int addr, BYTE data)
 /*
  * FUNCTION: Read data from port 0x60
  */
-NTSTATUS I8042ReadData(BYTE *Data)
+NTSTATUS I8042ReadData(UCHAR *Data)
 {
-	BYTE Status;
-	Status=READ_PORT_UCHAR((PUCHAR)I8042_CTRL_PORT);
+	UCHAR Status;
+	Status=READ_PORT_UCHAR(I8042_CTRL_PORT);
 
 	// If data is available
 	if ((Status & KBD_OBF)) {
@@ -84,16 +82,16 @@ NTSTATUS I8042ReadData(BYTE *Data)
 	return STATUS_UNSUCCESSFUL;
 }
 
-NTSTATUS I8042ReadStatus(BYTE *Status)
+NTSTATUS I8042ReadStatus(UCHAR *Status)
 {
-	Status[0]=READ_PORT_UCHAR((PUCHAR)I8042_CTRL_PORT);
+	Status[0]=READ_PORT_UCHAR(I8042_CTRL_PORT);
 	return STATUS_SUCCESS;
 }
 
 /*
  * FUNCTION: Read data from port 0x60
  */
-NTSTATUS I8042ReadDataWait(PDEVICE_EXTENSION DevExt, BYTE *Data)
+NTSTATUS I8042ReadDataWait(PDEVICE_EXTENSION DevExt, UCHAR *Data)
 {
 	ULONG Counter = DevExt->Settings.PollingIterations;
 	NTSTATUS Status;
@@ -112,7 +110,7 @@ NTSTATUS I8042ReadDataWait(PDEVICE_EXTENSION DevExt, BYTE *Data)
 
 VOID I8042Flush()
 {
-	BYTE Ignore;
+	UCHAR Ignore;
 
 	while (STATUS_SUCCESS == I8042ReadData(&Ignore)) {
 		; /* drop */
@@ -141,7 +139,7 @@ NTSTATUS STDCALL I8042SynchWritePort(PDEVICE_EXTENSION DevExt,
 {
 	NTSTATUS Status;
 	UCHAR Ack;
-	UINT ResendIterations = DevExt->Settings.ResendIterations + 1;
+	ULONG ResendIterations = DevExt->Settings.ResendIterations + 1;
 
 	do {
 		if (Port)
@@ -311,7 +309,7 @@ BOOLEAN STDCALL I8042PacketIsr(PDEVICE_EXTENSION DevExt,
 
 VOID I8042PacketDpc(PDEVICE_EXTENSION DevExt)
 {
-	BOOL FinishIrp = FALSE;
+	BOOLEAN FinishIrp = FALSE;
 	NTSTATUS Result = STATUS_INTERNAL_ERROR; /* Shouldn't happen */
 	KIRQL Irql;
 
@@ -512,7 +510,7 @@ static NTSTATUS STDCALL I8042BasicDetect(PDEVICE_EXTENSION DevExt)
 {
 	NTSTATUS Status;
 	UCHAR Value = 0;
-	UINT Counter;
+	ULONG Counter;
 
 	DevExt->MouseExists = FALSE;
 	DevExt->KeyboardExists = FALSE;

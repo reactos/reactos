@@ -11,11 +11,9 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ddk/ntddkbd.h>
-#include <ddk/ntdd8042.h>
-
+#ifndef NDEBUG
 #define NDEBUG
+#endif
 #include <debug.h>
 
 #include "i8042prt.h"
@@ -147,7 +145,7 @@ BOOLEAN STDCALL I8042MouseResetIsr(PDEVICE_EXTENSION DevExt,
 			DevExt->MouseExists = FALSE;
 			DevExt->MouseState = MouseIdle;
 			DPRINT1("Mouse returned bad reset reply part two: "
-			        "%x (expected 0)\n", Value);
+			        "%x (expected 0)\n", *Value);
 		}
 		return TRUE;
 	case ExpectingGetDeviceIdACK:
@@ -312,7 +310,7 @@ BOOLEAN STDCALL I8042MouseResetIsr(PDEVICE_EXTENSION DevExt,
 		return TRUE;
 	case ExpectingSetSamplingRateACK:
 		I8042IsrWritePortMouse(DevExt,
-		                       DevExt->MouseAttributes.SampleRate);
+		                       (UCHAR)DevExt->MouseAttributes.SampleRate);
 		DevExt->MouseResetState++;
 		return TRUE;
 	case ExpectingSetSamplingRateValueACK:
@@ -328,7 +326,7 @@ BOOLEAN STDCALL I8042MouseResetIsr(PDEVICE_EXTENSION DevExt,
 		return TRUE;
 	case ExpectingFinalResolutionACK:
 		I8042IsrWritePortMouse(DevExt,
-		                       DevExt->Settings.MouseResolution & 0xff);
+		                       (UCHAR)(DevExt->Settings.MouseResolution & 0xff));
 		DPRINT("%x\n", DevExt->Settings.MouseResolution);
 		DevExt->MouseResetState = ExpectingFinalResolutionValueACK;
 		return TRUE;
@@ -383,7 +381,7 @@ VOID STDCALL I8042MouseHandleButtons(PDEVICE_EXTENSION DevExt,
 {
 	PMOUSE_INPUT_DATA MouseInput = DevExt->MouseBuffer +
 	                                         DevExt->MouseInBuffer;
-	USHORT NewButtonData = MouseInput->RawButtons & Mask;
+	USHORT NewButtonData = (USHORT)(MouseInput->RawButtons & Mask);
 	USHORT ButtonDiff = (NewButtonData ^ DevExt->MouseButtonState) & Mask;
 
 	/* Note that the defines are such:
@@ -404,7 +402,7 @@ VOID STDCALL I8042MouseHandleButtons(PDEVICE_EXTENSION DevExt,
 }
 
 VOID STDCALL I8042MouseHandle(PDEVICE_EXTENSION DevExt,
-                              BYTE Output)
+                              UCHAR Output)
 {
 	PMOUSE_INPUT_DATA MouseInput = DevExt->MouseBuffer +
 	                                         DevExt->MouseInBuffer;
@@ -515,10 +513,10 @@ VOID STDCALL I8042MouseHandle(PDEVICE_EXTENSION DevExt,
 BOOLEAN STDCALL I8042InterruptServiceMouse(struct _KINTERRUPT *Interrupt,
                                            VOID *Context)
 {
-	BYTE Output, PortStatus;
+	UCHAR Output, PortStatus;
 	NTSTATUS Status;
 	PDEVICE_EXTENSION DevExt = (PDEVICE_EXTENSION) Context;
-	UINT Iterations = 0;
+	ULONG Iterations = 0;
 
 	do {
 		Status = I8042ReadStatus(&PortStatus);
@@ -616,7 +614,7 @@ VOID STDCALL I8042DpcRoutineMouse(PKDPC Dpc,
 	if (!DevExt->MouseData.ClassService)
 		return;
 
-	((MOUSE_CLASS_SERVICE_CALLBACK) DevExt->MouseData.ClassService)(
+	((PSERVICE_CALLBACK_ROUTINE) DevExt->MouseData.ClassService)(
 	                         DevExt->MouseData.ClassDeviceObject,
 	                         DevExt->MouseBuffer,
 	                         DevExt->MouseBuffer + MouseInBufferCopy,
