@@ -964,6 +964,80 @@ GetFileAttributesW(LPCWSTR lpFileName)
   return Result ? FileAttributeData.dwFileAttributes : INVALID_FILE_ATTRIBUTES;
 }
 
+
+/*
+ * @implemented
+ */
+BOOL STDCALL
+GetFileAttributesByHandle(IN HANDLE hFile,
+                          OUT LPDWORD dwFileAttributes,
+                          IN DWORD dwFlags)
+{
+    FILE_BASIC_INFORMATION FileBasic;
+    IO_STATUS_BLOCK IoStatusBlock;
+    NTSTATUS Status;
+    
+    UNREFERENCED_PARAMETER(dwFlags);
+    
+    Status = NtQueryInformationFile(hFile,
+                                    &IoStatusBlock,
+                                    &FileBasic,
+                                    sizeof(FileBasic),
+                                    FileBasicInformation);
+    if (NT_SUCCESS(Status))
+    {
+        *dwFileAttributes = FileBasic.FileAttributes;
+        return TRUE;
+    }
+    
+    SetLastErrorByStatus(Status);
+    return FALSE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL STDCALL
+SetFileAttributesByHandle(IN HANDLE hFile,
+                          IN DWORD dwFileAttributes,
+                          IN DWORD dwFlags)
+{
+    FILE_BASIC_INFORMATION FileBasic;
+    IO_STATUS_BLOCK IoStatusBlock;
+    NTSTATUS Status;
+
+    UNREFERENCED_PARAMETER(dwFlags);
+
+    Status = NtQueryInformationFile(hFile,
+                                    &IoStatusBlock,
+                                    &FileBasic,
+                                    sizeof(FileBasic),
+                                    FileBasicInformation);
+    if (NT_SUCCESS(Status))
+    {
+        FileBasic.FileAttributes = dwFileAttributes;
+        
+        Status = NtSetInformationFile(hFile,
+                                      &IoStatusBlock,
+                                      &FileBasic,
+                                      sizeof(FileBasic),
+                                      FileBasicInformation);
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastErrorByStatus(Status);
+        return FALSE;
+    }
+    
+    return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
 BOOL STDCALL
 SetFileAttributesA(
    LPCSTR lpFileName,

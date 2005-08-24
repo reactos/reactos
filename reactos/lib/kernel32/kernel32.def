@@ -372,6 +372,7 @@ GetExpandedNameA@8
 GetExpandedNameW@8
 GetFileAttributesA@4
 GetFileAttributesW@4
+GetFileAttributesByHandle@12
 GetFileAttributesExA@12
 GetFileAttributesExW@12
 GetFileInformationByHandle@8
@@ -805,6 +806,7 @@ SetFileApisToANSI@0
 SetFileApisToOEM@0
 SetFileAttributesA@8
 SetFileAttributesW@8
+SetFileAttributesByHandle@12
 SetFilePointer@16
 SetFilePointerEx@20
 SetFileShortNameA@8
