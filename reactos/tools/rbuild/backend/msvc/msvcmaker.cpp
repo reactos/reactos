@@ -20,6 +20,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 	const bool wine = false;
 
 	string dsp_file = DspFileName(module);
+	printf ( "Creating MSVC project: '%s'\n", dsp_file.c_str() );
 	FILE* OUT = fopen ( dsp_file.c_str(), "w" );
 
 	vector<string> imports;
@@ -553,9 +554,9 @@ MSVCBackend::_generate_dsp ( const Module& module )
 	fprintf ( OUT, "\n" );
 	fprintf ( OUT, "# PROP Default_Filter \"cpp;c;cxx;rc;def;r;odl;idl;hpj;bat\"\n" );
 
-	for ( i = 0; i < source_files.size(); i++ )
+	for ( size_t isrcfile = 0; isrcfile < source_files.size(); isrcfile++ )
 	{
-		string source_file = DosSeparator(source_files[i]);
+		string source_file = DosSeparator(source_files[isrcfile]);
 
 		if ( strncmp ( source_file.c_str(), ".\\", 2 ) )
 		{

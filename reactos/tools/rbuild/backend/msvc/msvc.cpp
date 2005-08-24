@@ -61,7 +61,7 @@ void MSVCBackend::Process()
 
 	string filename = ProjectNode.name + ".dsw";
 	
-	cout << "Creating MSVC project: " << filename << endl;
+	printf ( "Creating MSVC workspace: %s\n", filename.c_str() );
 
 	ProcessModules();
 
@@ -69,7 +69,7 @@ void MSVCBackend::Process()
 
 	if ( !m_dswFile )
 	{
-		cout << "Could not open file." << endl;
+		printf ( "Could not create file '%s'.\n", filename.c_str() );
 		return;
 	}
 	_generate_wine_dsw ( m_dswFile );
@@ -101,7 +101,7 @@ void MSVCBackend::Process()
 	// The MSVC build still needs the mingw backend.
 	//ProcessModules();
 
-	cout << "Done." << endl << endl;
+	printf ( "Done.\n" );
 
 	/*cout << "Don't expect the MSVC backend to work yet. "<< endl << endl;
 
