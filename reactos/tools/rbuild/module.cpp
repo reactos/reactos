@@ -38,7 +38,7 @@ Replace ( const string& s, const string& find, const string& with )
 		p = p2 + find.size();
 	}
 	if ( *p )
-		ret += *p;
+		ret += p;
 	return ret;
 }
 
