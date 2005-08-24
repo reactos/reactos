@@ -4413,11 +4413,7 @@ struct _NDIS_MINIPORT_BLOCK {
   USHORT  CFHangCurrentTick;
   NDIS_STATUS  ResetStatus;
   NDIS_HANDLE  ResetOpen;
-#ifdef __cplusplus
-  FILTERDBS  FilterDbs;
-#else
   FILTERDBS_S
-#endif
   FILTER_PACKET_INDICATION_HANDLER  PacketIndicateHandler;
   NDIS_M_SEND_COMPLETE_HANDLER  SendCompleteHandler;
   NDIS_M_SEND_RESOURCES_HANDLER  SendResourcesHandler;
@@ -4705,7 +4701,7 @@ NdisMAllocateMapRegisters(
                                 Length)                \
 {                                                      \
     ArcFilterDprIndicateReceive(                       \
-        (((PNDIS_MINIPORT_BLOCK)(MiniportAdapterHandle))->FilterDbs.ArcDB), \
+        (((PNDIS_MINIPORT_BLOCK)(MiniportAdapterHandle))->ArcDB), \
         (HeaderBuffer), \
         (DataBuffer),   \
         (Length));      \
@@ -4782,7 +4778,7 @@ NdisMDeregisterIoPortRange(
                                 PacketSize)             \
 {                                                       \
     (*((PNDIS_MINIPORT_BLOCK)(MiniportAdapterHandle))->EthRxIndicateHandler)( \
-		((PNDIS_MINIPORT_BLOCK)(MiniportAdapterHandle))->FilterDbs.EthDB,  \
+		((PNDIS_MINIPORT_BLOCK)(MiniportAdapterHandle))->EthDB,  \
 		(MiniportReceiveContext), \
 		(HeaderBuffer),           \
 		(HeaderBuffer),           \
@@ -4800,7 +4796,7 @@ NdisMDeregisterIoPortRange(
 #define NdisMEthIndicateReceiveComplete(MiniportAdapterHandle) \
 {                                                              \
     (*((PNDIS_MINIPORT_BLOCK)(MiniportAdapterHandle))->EthRxCompleteHandler)( \
-        ((PNDIS_MINIPORT_BLOCK)MiniportAdapterHandle)->FilterDbs.EthDB);    \
+        ((PNDIS_MINIPORT_BLOCK)MiniportAdapterHandle)->EthDB);    \
 }
 
 /*
@@ -4823,7 +4819,7 @@ NdisMDeregisterIoPortRange(
                                  PacketSize)             \
 {                                                        \
     (*((PNDIS_MINIPORT_BLOCK)(MiniportAdapterHandle))->FddiRxIndicateHandler)( \
-        (((PNDIS_MINIPORT_BLOCK)(MiniportAdapterHandle))->FilterDbs.FddiDB),   \
+        (((PNDIS_MINIPORT_BLOCK)(MiniportAdapterHandle))->FddiDB),   \
         (MiniportReceiveContext),              \
         (PUCHAR)(HeaderBuffer) + 1,            \
         (((*(PUCHAR*)(HeaderBuffer)) & 0x40) ? \
@@ -4846,7 +4842,7 @@ NdisMDeregisterIoPortRange(
 #define NdisMFddiIndicateReceiveComplete(MiniportAdapterHandle) \
 {                                                               \
     (*((PNDIS_MINIPORT_BLOCK)(MiniportAdapterHandle))->FddiRxCompleteHandler)( \
-        ((PNDIS_MINIPORT_BLOCK)MiniportAdapterHandle)->FilterDbs.FddiDB);      \
+        ((PNDIS_MINIPORT_BLOCK)MiniportAdapterHandle)->FddiDB);      \
 }
 
 NDISAPI
@@ -5122,7 +5118,7 @@ NdisMSynchronizeWithInterrupt(
                                PacketSize)             \
 {                                                      \
     (*((PNDIS_MINIPORT_BLOCK)(MiniportAdapterHandle))->TrRxIndicateHandler)( \
-      (((PNDIS_MINIPORT_BLOCK)(MiniportAdapterHandle))->FilterDbs.TrDB),     \
+      (((PNDIS_MINIPORT_BLOCK)(MiniportAdapterHandle))->TrDB),     \
 		(MiniportReceiveContext), \
 		(HeaderBuffer),           \
 		(HeaderBuffer),           \
@@ -5140,7 +5136,7 @@ NdisMSynchronizeWithInterrupt(
 #define NdisMTrIndicateReceiveComplete(MiniportAdapterHandle) \
 {                                                             \
 	(*((PNDIS_MINIPORT_BLOCK)(MiniportAdapterHandle))->TrRxCompleteHandler)( \
-    ((PNDIS_MINIPORT_BLOCK)MiniportAdapterHandle)->FilterDbs.TrDB);    \
+    ((PNDIS_MINIPORT_BLOCK)MiniportAdapterHandle)->TrDB);    \
 }
 
 NDISAPI
