@@ -586,6 +586,7 @@ IsDebuggerPresent@0
 IsProcessInJob@12
 IsProcessorFeaturePresent@4
 IsSystemResumeAutomatic@0
+IsThreadAFiber@0
 IsValidCodePage@4
 IsValidLanguageGroup@8
 IsValidLocale@8

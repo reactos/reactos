@@ -235,6 +235,17 @@ DeleteFiber(LPVOID lpFiber)
                         MEM_RELEASE);
 }
 
+/*
+ * @implemented
+ */
+BOOL
+WINAPI
+IsThreadAFiber(VOID)
+{
+    return NtCurrentTeb()->HasFiberData;
+}
+
+
 __declspec(noreturn)
 VOID
 WINAPI
