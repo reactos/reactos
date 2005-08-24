@@ -97,25 +97,6 @@ NdisWriteErrorLogEntry(
 /*
  * @implemented
  */
-VOID
-EXPORT
-NdisInitializeReadWriteLock(
-    IN  PNDIS_RW_LOCK   Lock)
-/*
- * FUNCTION: Initialize a NDIS_RW_LOCK
- * ARGUMENTS:
- *     Lock: pointer to the lock to initialize
- * NOTES:
- *    NDIS 5.0
- */
-{
-  memset(Lock,0,sizeof(NDIS_RW_LOCK));
-}
-
-
-/*
- * @implemented
- */
 NDIS_STATUS
 EXPORT
 NdisWriteEventLogEntry(

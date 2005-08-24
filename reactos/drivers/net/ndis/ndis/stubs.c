@@ -857,24 +857,6 @@ NdisReadPcmciaAttributeMemory(
 /*
  * @unimplemented
  */
-VOID
-EXPORT
-NdisReleaseReadWriteLock(
-    IN  PNDIS_RW_LOCK   Lock,
-    IN  PLOCK_STATE     LockState)
-/*
- * FUNCTION:
- * ARGUMENTS:
- * NOTES:
- *    NDIS 5.0
- */
-{
-    UNIMPLEMENTED
-}
-
-/*
- * @unimplemented
- */
 ULONG
 EXPORT
 NdisWritePcmciaAttributeMemory(

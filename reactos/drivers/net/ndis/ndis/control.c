@@ -14,7 +14,26 @@
 
 
 /*
- * @unimplemented
+ * @implemented
+ */
+VOID
+EXPORT
+NdisInitializeReadWriteLock(
+    IN  PNDIS_RW_LOCK   Lock)
+/*
+ * FUNCTION: Initialize a NDIS_RW_LOCK
+ * ARGUMENTS:
+ *     Lock: pointer to the lock to initialize
+ * NOTES:
+ *    NDIS 5.0
+ */
+{
+  RtlZeroMemory(Lock, sizeof(NDIS_RW_LOCK));
+}
+
+
+/*
+ * @implemented
  */
 VOID
 EXPORT
@@ -29,7 +48,82 @@ NdisAcquireReadWriteLock(
  *    NDIS 5.0
  */
 {
-    UNIMPLEMENTED
+  ULONG RefCount;
+  UCHAR ProcessorNumber;
+  UCHAR BusyLoop;
+
+  ASSERT_IRQL(DISPATCH_LEVEL);
+
+  if (fWrite) {
+    if (Lock->Context == PsGetCurrentThread()) {
+      LockState->LockState = 2;
+    } else {
+      KeAcquireSpinLock(&Lock->SpinLock, &LockState->OldIrql);
+      /* Check if any other processor helds a shared lock. */
+      for (ProcessorNumber = KeNumberProcessors; ProcessorNumber--; ) {
+        if (ProcessorNumber != KeGetCurrentProcessorNumber()) {
+          /* Wait till the shared lock is released. */
+          while (Lock->RefCount[ProcessorNumber].RefCount != 0) {
+            for (BusyLoop = 32; BusyLoop--; )
+              ;
+          }
+        }
+      }
+      Lock->Context = PsGetCurrentThread();
+      LockState->LockState = 4;
+    }
+  } else {
+    KeRaiseIrql(DISPATCH_LEVEL, &LockState->OldIrql);
+    RefCount = InterlockedIncrement((PLONG)&Lock->RefCount[KeGetCurrentProcessorNumber()].RefCount);
+    /* Racing with a exclusive write lock case. */
+    if (Lock->SpinLock != 0) {
+      if (RefCount == 1) {
+        if (Lock->Context != PsGetCurrentThread()) {
+          /* Wait for the exclusive lock to be released. */
+          Lock->RefCount[KeGetCurrentProcessorNumber()].RefCount--;
+          KefAcquireSpinLockAtDpcLevel(&Lock->SpinLock);
+          Lock->RefCount[KeGetCurrentProcessorNumber()].RefCount++;
+          KefReleaseSpinLockFromDpcLevel(&Lock->SpinLock);
+        }
+      }
+    }
+    LockState->LockState = 3;
+  }
+}
+
+
+/*
+ * @implemented
+ */
+VOID
+EXPORT
+NdisReleaseReadWriteLock(
+    IN  PNDIS_RW_LOCK   Lock,
+    IN  PLOCK_STATE     LockState)
+/*
+ * FUNCTION:
+ * ARGUMENTS:
+ * NOTES:
+ *    NDIS 5.0
+ */
+{
+  switch (LockState->LockState) {
+    case 2: /* Exclusive write lock, recursive */
+      return;
+
+    case 3: /* Shared read lock */
+      Lock->RefCount[KeGetCurrentProcessorNumber()].RefCount--;
+      LockState->LockState = -1;
+      if (LockState->OldIrql < DISPATCH_LEVEL)
+        KeLowerIrql(LockState->OldIrql);
+      return;
+
+    case 4: /* Exclusive write lock */
+      Lock->Context = NULL;
+      LockState->LockState = -1;
+      KfReleaseSpinLock(&Lock->SpinLock, LockState->OldIrql);
+      return;
+  }  
 }
 
 
