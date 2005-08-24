@@ -25,7 +25,7 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 IntVideoPortMapPhysicalMemory(
    IN HANDLE Process,
    IN PHYSICAL_ADDRESS PhysicalAddress,
@@ -76,7 +76,7 @@ IntVideoPortMapPhysicalMemory(
 }
 
 
-PVOID STDCALL
+PVOID NTAPI
 IntVideoPortMapMemory(
    IN PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension,
    IN PHYSICAL_ADDRESS IoAddress,
@@ -231,7 +231,7 @@ IntVideoPortMapMemory(
    return NULL;
 }
 
-VOID STDCALL
+VOID NTAPI
 IntVideoPortUnmapMemory(
    IN PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension,
    IN PVOID MappedAddress)
@@ -283,7 +283,7 @@ IntVideoPortUnmapMemory(
  * @implemented
  */
 
-PVOID STDCALL
+PVOID NTAPI
 VideoPortGetDeviceBase(
    IN PVOID HwDeviceExtension,
    IN PHYSICAL_ADDRESS IoAddress,
@@ -304,7 +304,7 @@ VideoPortGetDeviceBase(
  * @implemented
  */
 
-VOID STDCALL
+VOID NTAPI
 VideoPortFreeDeviceBase(
    IN PVOID HwDeviceExtension,
    IN PVOID MappedAddress)
@@ -319,7 +319,7 @@ VideoPortFreeDeviceBase(
  * @unimplemented
  */
 
-VP_STATUS STDCALL
+VP_STATUS NTAPI
 VideoPortMapBankedMemory(
    IN PVOID HwDeviceExtension,
    IN PHYSICAL_ADDRESS PhysicalAddress,
@@ -341,7 +341,7 @@ VideoPortMapBankedMemory(
  * @implemented
  */
 
-VP_STATUS STDCALL
+VP_STATUS NTAPI
 VideoPortMapMemory(
    IN PVOID HwDeviceExtension,
    IN PHYSICAL_ADDRESS PhysicalAddress,
@@ -371,7 +371,7 @@ VideoPortMapMemory(
  * @implemented
  */
 
-VP_STATUS STDCALL
+VP_STATUS NTAPI
 VideoPortUnmapMemory(
    IN PVOID HwDeviceExtension,
    IN PVOID VirtualAddress,
@@ -390,7 +390,7 @@ VideoPortUnmapMemory(
  * @implemented
  */
 
-VP_STATUS STDCALL
+VP_STATUS NTAPI
 VideoPortGetAccessRanges(
    IN PVOID HwDeviceExtension,
    IN ULONG NumRequestedResources,
@@ -579,7 +579,7 @@ VideoPortGetAccessRanges(
  * @implemented
  */
 
-VP_STATUS STDCALL
+VP_STATUS NTAPI
 VideoPortVerifyAccessRanges(
    IN PVOID HwDeviceExtension,
    IN ULONG NumAccessRanges,
@@ -659,7 +659,7 @@ VideoPortVerifyAccessRanges(
  * @unimplemented
  */
 
-VP_STATUS STDCALL
+VP_STATUS NTAPI
 VideoPortGetDeviceData(
    IN PVOID HwDeviceExtension,
    IN VIDEO_DEVICE_DATA_TYPE DeviceDataType,
@@ -675,7 +675,7 @@ VideoPortGetDeviceData(
  * @implemented
  */
 
-PVOID STDCALL
+PVOID NTAPI
 VideoPortAllocatePool(
    IN PVOID HwDeviceExtension,
    IN VP_POOL_TYPE PoolType,
@@ -690,7 +690,7 @@ VideoPortAllocatePool(
  * @implemented
  */
 
-VOID STDCALL
+VOID NTAPI
 VideoPortFreePool(
    IN PVOID HwDeviceExtension,
    IN PVOID Ptr)
@@ -702,7 +702,7 @@ VideoPortFreePool(
  * @implemented
  */
 
-VP_STATUS STDCALL
+VP_STATUS NTAPI
 VideoPortAllocateBuffer(
    IN PVOID HwDeviceExtension,
    IN ULONG Size,
@@ -717,7 +717,7 @@ VideoPortAllocateBuffer(
  * @implemented
  */
 
-VOID STDCALL
+VOID NTAPI
 VideoPortReleaseBuffer(
    IN PVOID HwDeviceExtension,
    IN PVOID Ptr)
@@ -730,7 +730,7 @@ VideoPortReleaseBuffer(
  * @unimplemented
  */
 
-PVOID STDCALL
+PVOID NTAPI
 VideoPortLockBuffer(
    IN PVOID HwDeviceExtension,
    IN PVOID BaseAddress,
@@ -745,7 +745,7 @@ VideoPortLockBuffer(
  * @unimplemented
  */
 
-VOID STDCALL
+VOID NTAPI
 VideoPortUnlockBuffer(
    IN PVOID HwDeviceExtension,
    IN PVOID Mdl)
@@ -757,7 +757,7 @@ VideoPortUnlockBuffer(
  * @unimplemented
  */
 
-VP_STATUS STDCALL
+VP_STATUS NTAPI
 VideoPortSetTrappedEmulatorPorts(
    IN PVOID HwDeviceExtension,
    IN ULONG NumAccessRanges,
@@ -772,7 +772,7 @@ VideoPortSetTrappedEmulatorPorts(
  * @implemented
  */
 
-ULONG STDCALL
+ULONG NTAPI
 VideoPortGetBusData(
    IN PVOID HwDeviceExtension,
    IN BUS_DATA_TYPE BusDataType,
@@ -807,7 +807,7 @@ VideoPortGetBusData(
  * @implemented
  */
 
-ULONG STDCALL
+ULONG NTAPI
 VideoPortSetBusData(
    IN PVOID HwDeviceExtension,
    IN BUS_DATA_TYPE BusDataType,

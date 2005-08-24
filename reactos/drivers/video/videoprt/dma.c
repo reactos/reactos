@@ -29,7 +29,7 @@
  * @implemented
  */
 
-PVOID STDCALL
+PVOID NTAPI
 VideoPortAllocateCommonBuffer(
    IN PVOID HwDeviceExtension,
    IN PVP_DMA_ADAPTER VpDmaAdapter,
@@ -49,7 +49,7 @@ VideoPortAllocateCommonBuffer(
  * @implemented
  */
 
-VOID STDCALL
+VOID NTAPI
 VideoPortReleaseCommonBuffer(
    IN PVOID HwDeviceExtension,
    IN PVP_DMA_ADAPTER VpDmaAdapter,
@@ -70,7 +70,7 @@ VideoPortReleaseCommonBuffer(
  * @unimplemented
  */
 
-VOID STDCALL
+VOID NTAPI
 VideoPortPutDmaAdapter(
    IN PVOID HwDeviceExtension,
    IN PVP_DMA_ADAPTER VpDmaAdapter)
@@ -82,7 +82,7 @@ VideoPortPutDmaAdapter(
  * @unimplemented
  */
 
-PVP_DMA_ADAPTER STDCALL
+PVP_DMA_ADAPTER NTAPI
 VideoPortGetDmaAdapter(
    IN PVOID HwDeviceExtension,
    IN PVP_DEVICE_DESCRIPTION VpDeviceExtension)

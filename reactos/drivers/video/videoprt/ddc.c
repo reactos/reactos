@@ -168,7 +168,7 @@ I2CRepStart(PVOID HwDeviceExtension, PI2C_CALLBACKS i2c, UCHAR Address)
  * @implemented
  */
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 VideoPortDDCMonitorHelper(
    PVOID HwDeviceExtension,
    PVOID I2CFunctions,
