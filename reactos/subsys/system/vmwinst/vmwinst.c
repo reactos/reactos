@@ -503,14 +503,7 @@ PageWelcomeProc(
         {
           if(DriverFilesFound)
           {
-            if(!AddVmwareRegistryEntries())
-            {
-              WCHAR Msg[1024];
-              LoadString(hAppInstance, IDS_FAILEDTOADDREGENTRIES, Msg, sizeof(Msg) / sizeof(WCHAR));
-              MessageBox(GetParent(hwndDlg), Msg, NULL, MB_ICONWARNING);
-              SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_WELCOMEPAGE);
-              return TRUE;
-            }
+            /* FIXME - check for existing registry entries! */
             if(!EnableVmwareDriver(TRUE, TRUE, TRUE))
             {
 
@@ -633,6 +626,11 @@ InstInstallationThread(LPVOID lpParameter)
 
   if(AbortInstall != 0) goto done;
   PostMessage(hInstallationNotifyWnd, WM_INSTSTATUSUPDATE, IDS_ENABLINGDRIVER, 0);
+  if(!AddVmwareRegistryEntries())
+  {
+    PostMessage(hInstallationNotifyWnd, WM_INSTABORT, IDS_FAILEDTOADDREGENTRIES, 0);
+    goto cleanup;
+  }
   if(!EnableVmwareDriver(TRUE, TRUE, TRUE))
   {
     PostMessage(hInstallationNotifyWnd, WM_INSTABORT, IDS_FAILEDTOACTIVATEDRIVER, 0);
