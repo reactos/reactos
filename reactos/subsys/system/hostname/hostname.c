@@ -35,7 +35,7 @@ int main (int argc, char ** argv)
 		TCHAR ComputerName [MAX_COMPUTERNAME_LENGTH + 1];
 		DWORD ComputerNameSize = sizeof ComputerName / sizeof ComputerName[0];
 
-		ZeroMemory (ComputerName, ComputerNameSize);
+		ZeroMemory (ComputerName, sizeof ComputerName );
 		if (GetComputerName(ComputerName, & ComputerNameSize))
 		{
 			printf ("%s\n", ComputerName);
