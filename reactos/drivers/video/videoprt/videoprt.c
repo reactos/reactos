@@ -539,7 +539,7 @@ VideoPortInitialize(
 
    if (HwInitializationData->HwInitDataSize > sizeof(VIDEO_HW_INITIALIZATION_DATA))
    {
-      return STATUS_REVISON_MISMATCH;
+      return STATUS_REVISION_MISMATCH;
    }
 
    if (HwInitializationData->HwFindAdapter == NULL ||
