@@ -13,15 +13,15 @@ using std::string;
 using std::vector;
 
 void
-MSVCBackend::_generate_dsp ( FILE* OUT, const std::string& moduleName )
+MSVCBackend::_generate_dsp ( const Module& module )
 {
 	size_t i;
 	// TODO FIXME wine hack?
 	const bool wine = false;
 
-	Module& module = *ProjectNode.LocateModule ( moduleName );
-
 	string dsp_file = DspFileName(module);
+	FILE* OUT = fopen ( dsp_file.c_str(), "w" );
+
 	vector<string> imports;
 	for ( i = 0; i < module.non_if_data.libraries.size(); i++ )
 	{
@@ -32,19 +32,20 @@ MSVCBackend::_generate_dsp ( FILE* OUT, const std::string& moduleName )
 	bool lib = (module_type == "lib");
 	bool dll = (module_type == "dll");
 	bool exe = (module_type == "exe");
+	// TODO FIXME - need more checks here for 'sys' and possibly 'drv'?
 
 	bool console = exe; // FIXME: Not always correct
 
 	// TODO FIXME - not sure if the count here is right...
-	int parts = 1;
-	const char* p = strchr ( dsp_file.c_str(), '/' );
+	int parts = 0;
+	const char* p = strpbrk ( dsp_file.c_str(), "/\\" );
 	while ( p )
 	{
 		++parts;
-		p = strchr ( p+1, '/' );
+		p = strpbrk ( p+1, "/\\" );
 	}
 	string msvc_wine_dir = "..";
-	while ( parts-- )
+	while ( --parts )
 		msvc_wine_dir += "\\..";
 
 	string wine_include_dir = msvc_wine_dir + "\\include";
@@ -54,16 +55,16 @@ MSVCBackend::_generate_dsp ( FILE* OUT, const std::string& moduleName )
 
 	// TODO FIXME - what's diff. betw. 'c_srcs' and 'source_files'?
 	vector<string> c_srcs, source_files, resource_files;
-	vector<IfableData*> ifs_list;
+	vector<const IfableData*> ifs_list;
 	ifs_list.push_back ( &module.non_if_data );
 	while ( ifs_list.size() )
 	{
-		IfableData& data = *ifs_list.back();
+		const IfableData& data = *ifs_list.back();
 		ifs_list.pop_back();
 		// TODO FIXME - refactor needed - we're discarding if conditions
 		for ( i = 0; i < data.ifs.size(); i++ )
 			ifs_list.push_back ( &data.ifs[i]->data );
-		vector<File*>& files = data.files;
+		const vector<File*>& files = data.files;
 		for ( i = 0; i < files.size(); i++ )
 		{
 			// TODO FIXME - do we want the full path of the file here?

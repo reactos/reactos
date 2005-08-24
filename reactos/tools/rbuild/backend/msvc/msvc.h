@@ -64,7 +64,7 @@ class MSVCBackend : public Backend
 
 		// functions in msvcmaker.cpp:
 
-		void _generate_dsp ( FILE* OUT, const std::string& moduleName );
+		void _generate_dsp ( const Module& module );
 
 		void _generate_dsw_header ( FILE* OUT );
 

@@ -119,12 +119,14 @@ void MSVCBackend::ProcessModules()
 	{
 		Module &module = *ProjectNode.modules[i];
 
-		for(size_t k = 0; k < module.non_if_data.files.size(); k++)
+		this->_generate_dsp ( module );
+
+		/*for(size_t k = 0; k < module.non_if_data.files.size(); k++)
 		{
 			File &file = *module.non_if_data.files[k];
 			
 			ProcessFile(file.name);
-		}
+		}*/
 	}
 }
 
