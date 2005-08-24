@@ -740,6 +740,9 @@ private:
 };
 
 extern std::string
+Right ( const std::string& s, size_t n );
+
+extern std::string
 Replace ( const std::string& s, const std::string& find, const std::string& with );
 
 extern std::string

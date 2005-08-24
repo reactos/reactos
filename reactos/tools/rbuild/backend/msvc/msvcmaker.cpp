@@ -12,22 +12,28 @@
 using std::string;
 using std::vector;
 
-#if 0
 void
 MSVCBackend::_generate_dsp ( FILE* OUT, const std::string& moduleName )
 {
 	size_t i;
+	// TODO FIXME wine hack?
+	const bool wine = false;
 
 	Module& module = *ProjectNode.LocateModule ( moduleName );
 
-	std::string dsp_file = DspFileName(module);
-	my @imports = @{module->{imports}};
+	string dsp_file = DspFileName(module);
+	vector<string> imports;
+	for ( i = 0; i < module.non_if_data.libraries.size(); i++ )
+	{
+		imports.push_back ( module.non_if_data.libraries[i]->name );
+	}
 
-	bool lib = (module->{type} eq "lib");
-	my $dll = (module->{type} eq "dll");
-	my $exe = (module->{type} eq "exe");
+	string module_type = Right(module.GetTargetName(),3);
+	bool lib = (module_type == "lib");
+	bool dll = (module_type == "dll");
+	bool exe = (module_type == "exe");
 
-	my $console = $exe; # FIXME: Not always correct
+	bool console = exe; // FIXME: Not always correct
 
 	// TODO FIXME - not sure if the count here is right...
 	int parts = 1;
@@ -37,37 +43,59 @@ MSVCBackend::_generate_dsp ( FILE* OUT, const std::string& moduleName )
 		++parts;
 		p = strchr ( p+1, '/' );
 	}
-	std::string msvc_wine_dir = "..";
+	string msvc_wine_dir = "..";
 	while ( parts-- )
 		msvc_wine_dir += "\\..";
 
-	std::string wine_include_dir = msvc_wine_dir + "\\include";
+	string wine_include_dir = msvc_wine_dir + "\\include";
 
 	//$progress_current++;
 	//$output->progress("$dsp_file (file $progress_current of $progress_max)");
 
-	my @c_srcs = @{module->{c_srcs}};
-	my @source_files = @{module->{source_files}};
+	// TODO FIXME - what's diff. betw. 'c_srcs' and 'source_files'?
+	vector<string> c_srcs, source_files, resource_files;
+	vector<IfableData*> ifs_list;
+	ifs_list.push_back ( &module.non_if_data );
+	while ( ifs_list.size() )
+	{
+		IfableData& data = *ifs_list.back();
+		ifs_list.pop_back();
+		// TODO FIXME - refactor needed - we're discarding if conditions
+		for ( i = 0; i < data.ifs.size(); i++ )
+			ifs_list.push_back ( &data.ifs[i]->data );
+		vector<File*>& files = data.files;
+		for ( i = 0; i < files.size(); i++ )
+		{
+			// TODO FIXME - do we want the full path of the file here?
+			const string& file = files[i]->name;
+			source_files.push_back ( file );
+			if ( !stricmp ( Right(file,2).c_str(), ".c" ) )
+				c_srcs.push_back ( file );
+			if ( !stricmp ( Right(file,3).c_str(), ".rc" ) )
+				resource_files.push_back ( file );
+		}
+	}
 	// TODO FIXME - we don't include header files in our build system
 	//my @header_files = @{module->{header_files}};
 	vector<string> header_files;
-	my @resource_files = @{module->{resource_files}};
 
-	if (module.name !~ /^wine(?:_unicode|build|runtests|test)?$/ &&
+	// TODO FIXME - wine hack?
+	/*if (module.name !~ /^wine(?:_unicode|build|runtests|test)?$/ &&
 		module.name !~ /^(?:gdi32)_.+?$/ &&
 		module.name !~ /_test$/)
 	{
 		push @source_files, "$project.spec" );
 		@source_files = sort(@source_files);
-	}
+	}*/
 
 	bool no_cpp = true;
 	bool no_msvc_headers = true;
-	if (module.name =~ /^wine(?:runtests|test)$/
+	// TODO FIXME - wine hack?
+	/*if (module.name =~ /^wine(?:runtests|test)$/
 		|| module.name =~ /_test$/)
 	{
 		no_msvc_headers = false;
-	}
+	}*/
 
 	std::vector<std::string> cfgs;
 
@@ -85,7 +113,8 @@ MSVCBackend::_generate_dsp ( FILE* OUT, const std::string& moduleName )
 		cfgs = _cfgs;
 	}
 
-	if (!no_release)
+	// TODO FIXME - wine hack?
+	/*if (!no_release)
 	{
 		std::vector<std::string> _cfgs;
 		for ( i = 0; i < cfgs.size(); i++ )
@@ -95,7 +124,7 @@ MSVCBackend::_generate_dsp ( FILE* OUT, const std::string& moduleName )
 		}
 		cfgs.resize(0);
 		cfgs = _cfgs;
-	}
+	}*/
 
 	if (!no_msvc_headers)
 	{
@@ -145,7 +174,7 @@ MSVCBackend::_generate_dsp ( FILE* OUT, const std::string& moduleName )
 	fprintf ( OUT, "!MESSAGE \n" );
 	for ( i = 0; i < cfgs.size(); i++ )
 	{
-		string& cfg = cfgs[i];
+		const string& cfg = cfgs[i];
 		if ( lib )
 		{
 			fprintf ( OUT, "!MESSAGE \"%s\" (based on \"Win32 (x86) Static Library\")\n", cfg.c_str() );
@@ -180,13 +209,13 @@ MSVCBackend::_generate_dsp ( FILE* OUT, const std::string& moduleName )
 		{
 			if ( n == 0 )
 			{
-				fprintf ( OUT, "!IF  \"\$(CFG)\" == \"%s\"\n", cfg.c_str() );
+				fprintf ( OUT, "!IF  \"$(CFG)\" == \"%s\"\n", cfg.c_str() );
 				fprintf ( OUT, "\n" );
 			}
 			else
 			{
 				fprintf ( OUT, "\n" );
-				fprintf ( OUT, "!ELSEIF  \"\$(CFG)\" == \"%s\"\n", cfg.c_str() );
+				fprintf ( OUT, "!ELSEIF  \"$(CFG)\" == \"%s\"\n", cfg.c_str() );
 				fprintf ( OUT, "\n" );
 			}
 		}
@@ -208,8 +237,9 @@ MSVCBackend::_generate_dsp ( FILE* OUT, const std::string& moduleName )
 		output_dir = Replace(cfg,module.name + " - ","");
 		output_dir = Replace(output_dir," ","_");
 		output_dir = Replace(output_dir,"C++","Cxx");
-		if ( output_prefix_dir.size() )
-			output_dir = output_prefix_dir + "\\" + output_dir;
+		// TODO FIXME - wine hack?
+		//if ( output_prefix_dir.size() )
+		//	output_dir = output_prefix_dir + "\\" + output_dir;
 
 		fprintf ( OUT, "# PROP BASE Output_Dir \"%s\"\n", output_dir.c_str() );
 		fprintf ( OUT, "# PROP BASE Intermediate_Dir \"%s\"\n", output_dir.c_str() );
@@ -228,7 +258,7 @@ MSVCBackend::_generate_dsp ( FILE* OUT, const std::string& moduleName )
 		fprintf ( OUT, "# PROP Output_Dir \"%s\"\n", output_dir.c_str() );
 		fprintf ( OUT, "# PROP Intermediate_Dir \"%s\"\n", output_dir.c_str() );
 
-		fprintf ( OUT, "# PROP Ignore_Export_Lib 0\n" if $dll;
+		if ( dll ) fprintf ( OUT, "# PROP Ignore_Export_Lib 0\n" );
 		fprintf ( OUT, "# PROP Target_Dir \"\"\n" );
 
 		vector<string> defines;
@@ -252,7 +282,8 @@ MSVCBackend::_generate_dsp ( FILE* OUT, const std::string& moduleName )
 				fprintf ( OUT, "# ADD BASE CPP /nologo /MTd /W3 /Gm /GX /Zi /Od" );
 				defines.push_back ( "_WINDOWS" );
 				defines.push_back ( "_USRDLL" );
-				defines.push_back ( string("\U") + module.name + "\E_EXPORTS" );
+				// TODO FIXME - wine hack?
+				//defines.push_back ( string("\U") + module.name + "\E_EXPORTS" );
 			}
 		}
 		else
@@ -268,7 +299,8 @@ MSVCBackend::_generate_dsp ( FILE* OUT, const std::string& moduleName )
 				fprintf ( OUT, "# ADD BASE CPP /nologo /MT /W3 /GX /O2" );
 				defines.push_back ( "_WINDOWS" );
 				defines.push_back ( "_USRDLL" );
-				defines.push_back ( string("\U") + module.name + "\E_EXPORTS" );
+				// TODO FIXME - wine hack?
+				//defines.push_back ( string("\U") + module.name + "\E_EXPORTS" );
 			}
 		}
 
@@ -293,7 +325,7 @@ MSVCBackend::_generate_dsp ( FILE* OUT, const std::string& moduleName )
 		defines2.push_back ( "WIN32" );
 		defines2.push_back ( "_WINDOWS" );
 		defines2.push_back ( "_MBCS" );
-		if(debug)
+		if ( debug )
 		{
 			defines2.push_back ( "_DEBUG" );
 			if(lib)
@@ -323,11 +355,14 @@ MSVCBackend::_generate_dsp ( FILE* OUT, const std::string& moduleName )
 		}
 
 		std::vector<std::string> includes;
+		// TODO FIXME - wine hack?
 		if ( wine )
 		{
-			defines2.push_back ( string("_\U") + module.name + "\E_" );
-			if ( module.name !~ /^(?:wine(?:build|test)|.*?_test)$/ )
-				defines2.push_back ( "__WINESRC__" );
+			// TODO FIXME - wine hack?
+			//defines2.push_back ( string("_\U") + module.name + "\E_" );
+			// TODO FIXME - wine hack?
+			/*if ( module.name !~ /^(?:wine(?:build|test)|.*?_test)$/ )
+				defines2.push_back ( "__WINESRC__" );*/
 			if ( msvc_headers )
 				defines2.push_back ( "__WINE_USE_NATIVE_HEADERS" );
 			string output_dir2 = Replace(output_dir,"\\","\\\\");
@@ -353,7 +388,7 @@ MSVCBackend::_generate_dsp ( FILE* OUT, const std::string& moduleName )
 		{
 			for ( i = 0; i < includes.size(); i++ );
 			{
-				string& include = includes[i];
+				const string& include = includes[i];
 				if ( strpbrk ( include.c_str(), "[\\\"]" ) )
 				{
 					fprintf ( OUT, " /I \"%s\"", include.c_str() );
@@ -367,7 +402,7 @@ MSVCBackend::_generate_dsp ( FILE* OUT, const std::string& moduleName )
 
 		for ( i = 0; i < defines2.size(); i++ )
 		{
-			string& define = defines2[i];
+			const string& define = defines2[i];
 			if ( strpbrk ( define.c_str(), "[\\\"]" ) )
 			{
 				fprintf ( OUT, " /D \"%s\"", define.c_str() );
@@ -390,9 +425,12 @@ MSVCBackend::_generate_dsp ( FILE* OUT, const std::string& moduleName )
 
 		if ( debug )
 		{
-			fprintf ( OUT, "# SUBTRACT CPP /X /YX\n" if $dll;
-			fprintf ( OUT, "# ADD BASE MTL /nologo /D \"_DEBUG\" /mktyplib203 /win32\n" if $dll;
-			fprintf ( OUT, "# ADD MTL /nologo /D \"_DEBUG\" /mktyplib203 /win32\n" if $dll;
+			if ( dll )
+			{
+				fprintf ( OUT, "# SUBTRACT CPP /X /YX\n" );
+				fprintf ( OUT, "# ADD BASE MTL /nologo /D \"_DEBUG\" /mktyplib203 /win32\n" );
+				fprintf ( OUT, "# ADD MTL /nologo /D \"_DEBUG\" /mktyplib203 /win32\n" );
+			}
 			fprintf ( OUT, "# ADD BASE RSC /l 0x41d /d \"_DEBUG\"\n" );
 			fprintf ( OUT, "# ADD RSC /l 0x41d" );
 			if ( wine )
@@ -418,7 +456,6 @@ MSVCBackend::_generate_dsp ( FILE* OUT, const std::string& moduleName )
 			{
 				for ( i = 0; i < includes.size(); i++ )
 					fprintf ( OUT, " /i \"%s\"", includes[i].c_str() );
-				}
 			}
 			fprintf ( OUT, "/d \"NDEBUG\"\n" );
 		}
@@ -430,9 +467,19 @@ MSVCBackend::_generate_dsp ( FILE* OUT, const std::string& moduleName )
 		{
 			fprintf ( OUT, "LINK32=link.exe\n" );
 			fprintf ( OUT, "# ADD BASE LINK32 " );
-			my @libraries = qw(kernel32.lib user32.lib gdi32.lib winspool.lib
-						   comdlg32.lib advapi32.lib shell32.lib ole32.lib
-						   oleaut32.lib uuid.lib odbc32.lib odbccp32.lib);
+			vector<string> libraries;
+			libraries.push_back ( "kernel32.lib" );
+			libraries.push_back ( "user32.lib" );
+			libraries.push_back ( "gdi32.lib" );
+			libraries.push_back ( "winspool.lib" );
+			libraries.push_back ( "comdlg32.lib" );
+			libraries.push_back ( "advapi32.lib" );
+			libraries.push_back ( "shell32.lib" );
+			libraries.push_back ( "ole32.lib" );
+			libraries.push_back ( "oleaut32.lib" );
+			libraries.push_back ( "uuid.lib" );
+			libraries.push_back ( "odbc32.lib" );
+			libraries.push_back ( "odbccp32.lib" );
 			for ( i = 0; i < libraries.size(); i++ )
 			{
 				fprintf ( OUT, "%s ", libraries[i].c_str() );
@@ -461,7 +508,7 @@ MSVCBackend::_generate_dsp ( FILE* OUT, const std::string& moduleName )
 			fprintf ( OUT, " /machine:I386" );
 			// TODO FIXME - do we need their kludge?
 			//fprintf ( OUT, " /nodefaultlib" if $project =~ /^ntdll$/; # FIXME: Kludge
-			if ( dll ) fprintf ( OUT, " /def:\"%s.def\"", module.name.c_str() )
+			if ( dll ) fprintf ( OUT, " /def:\"%s.def\"", module.name.c_str() );
 			if ( debug ) fprintf ( OUT, " /pdbtype:sept" );
 			fprintf ( OUT, "\n" );
 		}
@@ -485,11 +532,13 @@ MSVCBackend::_generate_dsp ( FILE* OUT, const std::string& moduleName )
 	if ( module.name == "winebuild" )
 	{
 		fprintf ( OUT, "# Begin Special Build Tool\n" );
-		fprintf ( OUT, "SOURCE=\"\$(InputPath)\"\n" );
+		fprintf ( OUT, "SOURCE=\"$(InputPath)\"\n" );
 		fprintf ( OUT, "PostBuild_Desc=Copying wine.dll and wine_unicode.dll ...\n" );
 		fprintf ( OUT, "PostBuild_Cmds=" );
-		fprintf ( OUT, "copy ..\\..\\library\\$output_dir\\wine.dll \$(OutDir)\t" );
-		fprintf ( OUT, "copy ..\\..\\unicode\\$output_dir\\wine_unicode.dll \$(OutDir)\n" );
+		fprintf ( OUT, "copy ..\\..\\library\\%s\\wine.dll $(OutDir)\t",
+			output_dir.c_str() );
+		fprintf ( OUT, "copy ..\\..\\unicode\\%s\\wine_unicode.dll $(OutDir)\n",
+			output_dir.c_str() );
 		fprintf ( OUT, "# End Special Build Tool\n" );
 	}
 	fprintf ( OUT, "# Begin Target\n" );
@@ -505,18 +554,19 @@ MSVCBackend::_generate_dsp ( FILE* OUT, const std::string& moduleName )
 
 	for ( i = 0; i < source_files.size(); i++ )
 	{
-		string source_file = DosSeparators(source_files[i]);
+		string source_file = DosSeparator(source_files[i]);
 
 		if ( strncmp ( source_file.c_str(), ".\\", 2 ) )
 		{
-			source_file = string(".\\") + source_file );
+			source_file = string(".\\") + source_file;
 		}
 
 		if ( !strcmp ( &source_file[source_file.size()-5], ".spec" ) )
 		{
-			string basename = string ( source_file, source_file.size() - 5 );
+			string basename = string ( source_file.c_str(), source_file.size() - 5 );
 
-			if ( $basename !~ /\..{1,3}$/; ) basename += string(".dll");
+			// TODO FIXME - not sure what this is doing? wine hack maybe?
+			//if ( $basename !~ /\..{1,3}$/; ) basename += string(".dll");
 			string dbg_c_file = basename + ".dbg.c";
 
 			fprintf ( OUT, "# Begin Source File\n" );
@@ -532,12 +582,13 @@ MSVCBackend::_generate_dsp ( FILE* OUT, const std::string& moduleName )
 
 		if ( !strcmp ( &source_file[source_file.size()-5], ".spec" ) )
 		{
-			string basename = string ( source_file, source_file.size() - 5 );
+			string basename = string ( source_file.c_str(), source_file.size() - 5 );
 
 			string spec_file = source_file;
 			string def_file = basename + ".def";
 
-			if ( $basename !~ /\..{1,3}$/; ) basename += ".dll";
+			// TODO FIXME - not sure what this is doing? wine hack maybe?
+			//if ( $basename !~ /\..{1,3}$/; ) basename += ".dll";
 			string dbg_file = basename + ".dbg";
 			string dbg_c_file = basename + ".dbg.c";
 
@@ -552,7 +603,7 @@ MSVCBackend::_generate_dsp ( FILE* OUT, const std::string& moduleName )
 				spec_file.c_str(),
 				def_file.c_str() );
 			
-			if ( module.name =~ /^ntdll$/ )
+			if ( module.name == "ntdll" )
 			{
 				int n = 0;
 				for ( i = 0; i < c_srcs.size(); i++ )
@@ -598,11 +649,11 @@ MSVCBackend::_generate_dsp ( FILE* OUT, const std::string& moduleName )
 
 			fprintf ( OUT, "\t\n" );
 			fprintf ( OUT, "\n" );
-			fprintf ( OUT, "\"%s\" : \$(SOURCE) \"\$(INTDIR)\" \"\$(OUTDIR)\"\n", def_file.c_str() );
-			fprintf ( OUT, "   \$(BuildCmds)\n" );
+			fprintf ( OUT, "\"%s\" : $(SOURCE) \"$(INTDIR)\" \"$(OUTDIR)\"\n", def_file.c_str() );
+			fprintf ( OUT, "   $(BuildCmds)\n" );
 			fprintf ( OUT, "\n" );
-			fprintf ( OUT, "\"%s\" : \$(SOURCE) \"\$(INTDIR)\" \"\$(OUTDIR)\"\n", dbg_c_file.c_str() );
-			fprintf ( OUT, "   \$(BuildCmds)\n" );
+			fprintf ( OUT, "\"%s\" : $(SOURCE) \"$(INTDIR)\" \"$(OUTDIR)\"\n", dbg_c_file.c_str() );
+			fprintf ( OUT, "   $(BuildCmds)\n" );
 			fprintf ( OUT, "# End Custom Build\n" );
 		}
 		/*else if ( source_file =~ /([^\\]*?\.h)$/ )
@@ -613,11 +664,11 @@ MSVCBackend::_generate_dsp ( FILE* OUT, const std::string& moduleName )
 				if($#cfgs == 0) {
 					# Nothing
 				} elsif($n == 0) {
-					fprintf ( OUT, "!IF  \"\$(CFG)\" == \"$cfg\"\n" );
+					fprintf ( OUT, "!IF  \"$(CFG)\" == \"$cfg\"\n" );
 					fprintf ( OUT, "\n" );
 				} else {
 					fprintf ( OUT, "\n" );
-					fprintf ( OUT, "!ELSEIF  \"\$(CFG)\" == \"$cfg\"\n" );
+					fprintf ( OUT, "!ELSEIF  \"$(CFG)\" == \"$cfg\"\n" );
 					fprintf ( OUT, "\n" );
 				}
 
@@ -633,8 +684,8 @@ MSVCBackend::_generate_dsp ( FILE* OUT, const std::string& moduleName )
 				fprintf ( OUT, "OutDir=%s\n", output_dir.c_str() );
 				fprintf ( OUT, "InputPath=%s\n", source_file.c_str() );
 				fprintf ( OUT, "\n" );
-				fprintf ( OUT, "\"\$(OutDir)\\wine\\%s\" : \$(SOURCE) \"\$(INTDIR)\" \"\$(OUTDIR)\"\n", h_file.c_str() );
-				fprintf ( OUT, "\tcopy \"\$(InputPath)\" \"\$(OutDir)\\wine\"\n" );
+				fprintf ( OUT, "\"$(OutDir)\\wine\\%s\" : $(SOURCE) \"$(INTDIR)\" \"$(OUTDIR)\"\n", h_file.c_str() );
+				fprintf ( OUT, "\tcopy \"$(InputPath)\" \"$(OutDir)\\wine\"\n" );
 				fprintf ( OUT, "\n" );
 				fprintf ( OUT, "# End Custom Build\n" );
 			}
@@ -684,7 +735,7 @@ MSVCBackend::_generate_dsp ( FILE* OUT, const std::string& moduleName )
 
 	fclose(OUT);
 }
-#endif
+
 void
 MSVCBackend::_generate_dsw_header ( FILE* OUT )
 {

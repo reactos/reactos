@@ -24,6 +24,14 @@ using std::string;
 using std::vector;
 
 string
+Right ( const string& s, size_t n )
+{
+	if ( n > s.size() )
+		return s;
+	return string ( &s[s.size()-n] );
+}
+
+string
 Replace ( const string& s, const string& find, const string& with )
 {
 	string ret;
