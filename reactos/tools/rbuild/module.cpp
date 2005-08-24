@@ -37,6 +37,19 @@ FixSeparator ( const string& s )
 }
 
 string
+DosSeparator ( const string& s )
+{
+	string s2(s);
+	char* p = strchr ( &s2[0], '/' );
+	while ( p )
+	{
+		*p++ = '\\';
+		p = strchr ( p, '/' );
+	}
+	return s2;
+}
+
+string
 ReplaceExtension (
 	const string& filename,
 	const string& newExtension )

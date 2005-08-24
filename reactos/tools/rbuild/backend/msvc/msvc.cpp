@@ -56,22 +56,24 @@ MSVCBackend::MSVCBackend(Project &project,
 
 void MSVCBackend::Process()
 {
-	bool exec = false;
-    const char rbuild_mingw[] = "output-i386\\tools\\rbuild\\rbuild.exe mingw"; 
+	//bool exec = false;
+	//const char rbuild_mingw[] = "output-i386\\tools\\rbuild\\rbuild.exe mingw"; 
 
-	string filename = ProjectNode.name + ".sln";
+	string filename = ProjectNode.name + ".dsw";
 	
 	cout << "Creating MSVC project: " << filename << endl;
 
 	ProcessModules();
 
-	m_devFile.open(filename.c_str());
+	m_dswFile = fopen ( filename.c_str(), "w" );
 
-	if(!m_devFile.is_open())
+	if ( !m_dswFile )
 	{
 		cout << "Could not open file." << endl;
 		return;
 	}
+	_generate_wine_dsw ( m_dswFile );
+#if 0
 	m_devFile << "Microsoft Visual Studio Solution File, Format Version 9.00" << endl;
 	m_devFile << "# Visual C++ Express 2005" << endl;
 
@@ -91,24 +93,24 @@ void MSVCBackend::Process()
 	m_devFile << "EndGlobal" << endl;
 
 	m_devFile << endl << endl;
-
-	m_devFile.close();
+#endif
+	fclose ( m_dswFile );
 
 	gen_guid();
 
 	// The MSVC build still needs the mingw backend.
-	ProcessModules();
+	//ProcessModules();
 
 	cout << "Done." << endl << endl;
 
-	cout << "Don't expect the MSVC backend to work yet. "<< endl << endl;
+	/*cout << "Don't expect the MSVC backend to work yet. "<< endl << endl;
 
 	if(get_key("yn","Would you like to configure for a Mingw build as well? (y/n)") == 'y')
 	{
 		exec = spawn_new(rbuild_mingw);
 			if (!exec)
 				printf("\nError invoking rbuild\n");
-	}
+	}*/
 }
 
 void MSVCBackend::ProcessModules()
@@ -140,7 +142,8 @@ static bool FileExists(string &filename)
 void MSVCBackend::ProcessFile(string &filepath)
 {
 	// Remove the .\ at the start of the filenames
-	filepath.erase(0, 2);
+	if ( filepath[0] == '.' && strchr ( "/\\", filepath[1] ) )
+		filepath.erase(0, 2);
 
 	if(!FileExists(filepath))
 		return;
@@ -205,6 +208,7 @@ void MSVCBackend::AddFolders(string &folder)
 
 void MSVCBackend::OutputFolders()
 {
+#if 0
 	m_devFile << "Folders=";
 
 	for(size_t i = 0; i < m_folders.size(); i++)
@@ -214,6 +218,7 @@ void MSVCBackend::OutputFolders()
 
 		m_devFile << m_folders[i];
 	}
+#endif
 }
 
 
@@ -243,4 +248,12 @@ bool spawn_new( const string& cmd )
 		NUL );
 	int exitcode = system ( command.c_str () );
 	return (exitcode == 0);
+}
+
+std::string
+MSVCBackend::DspFileName ( const Module& module ) const
+{
+	return DosSeparator(
+		ReplaceExtension ( module.GetPath(), ".dsp" )
+		);
 }

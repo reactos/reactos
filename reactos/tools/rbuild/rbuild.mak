@@ -139,6 +139,7 @@ RBUILD_BACKEND_DEVCPP_BASE_SOURCES = $(addprefix $(RBUILD_DEVCPP_BASE_), \
 RBUILD_BACKEND_MSVC_BASE_SOURCES = $(addprefix $(RBUILD_MSVC_BASE_), \
 	genguid.cpp \
 	msvc.cpp \
+	msvcmaker.cpp \
 	)
 
 RBUILD_BACKEND_SOURCES = \
@@ -354,6 +355,10 @@ $(RBUILD_MSVC_INT_)genguid.o: $(RBUILD_MSVC_BASE_)genguid.cpp $(RBUILD_HEADERS) 
 	${host_gpp} $(RBUILD_HOST_CFLAGS) -c $< -o $@
 
 $(RBUILD_MSVC_INT_)msvc.o: $(RBUILD_MSVC_BASE_)msvc.cpp $(RBUILD_HEADERS) | $(RBUILD_MSVC_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_MSVC_INT_)msvcmaker.o: $(RBUILD_MSVC_BASE_)msvcmaker.cpp $(RBUILD_HEADERS) | $(RBUILD_MSVC_INT)
 	$(ECHO_CC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 

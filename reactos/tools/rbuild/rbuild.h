@@ -744,6 +744,9 @@ extern std::string
 FixSeparator ( const std::string& s );
 
 extern std::string
+DosSeparator ( const std::string& s );
+
+extern std::string
 ReplaceExtension (
 	const std::string& filename,
 	const std::string& newExtension );

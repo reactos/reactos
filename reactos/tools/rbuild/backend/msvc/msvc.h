@@ -52,13 +52,29 @@ class MSVCBackend : public Backend
 
 		void OutputFolders();
 		void OutputFileUnits();
+
+		std::string DspFileName ( const Module& module ) const;
 		
 		std::vector<FileUnit> m_fileUnits;
 		std::vector<std::string> m_folders;
 
 		int m_unitCount;
 
-		std::ofstream m_devFile;
+		FILE* m_dswFile;
+
+		// functions in msvcmaker.cpp:
+
+		void _generate_dsw_header ( FILE* OUT );
+
+		void _generate_dsw_project (
+			FILE* OUT,
+			const Module& module,
+			std::string dsp_file,
+			const std::vector<Dependency*>& dependencies );
+
+		void _generate_dsw_footer ( FILE* OUT );
+
+		void _generate_wine_dsw ( FILE* OUT );
 };
 
 #endif // __DEVCPP_H__
