@@ -473,6 +473,8 @@ RegCreateKeyExW@36
 RegCreateKeyW@12
 RegDeleteKeyA@8
 RegDeleteKeyW@8
+RegDeleteKeyValueA@12
+RegDeleteKeyValueW@12
 RegDeleteValueA@8
 RegDeleteValueW@8
 ;RegDisablePredefinedCache

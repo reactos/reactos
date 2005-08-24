@@ -690,6 +690,119 @@ RegDeleteKeyW (HKEY hKey,
 
 
 /************************************************************************
+ *  RegDeleteKeyValueW
+ *
+ * @implemented
+ */
+LONG STDCALL
+RegDeleteKeyValueW(IN HKEY hKey,
+                   IN LPCWSTR lpSubKey  OPTIONAL,
+                   IN LPCWSTR lpValueName  OPTIONAL)
+{
+    UNICODE_STRING ValueName;
+    HANDLE KeyHandle, SubKeyHandle = NULL;
+    NTSTATUS Status;
+
+    Status = MapDefaultKey(&KeyHandle,
+                           hKey);
+    if (!NT_SUCCESS(Status))
+    {
+        return RtlNtStatusToDosError(Status);
+    }
+
+    if (lpSubKey != NULL)
+    {
+        OBJECT_ATTRIBUTES ObjectAttributes;
+        UNICODE_STRING SubKeyName;
+
+        RtlInitUnicodeString(&SubKeyName,
+                             (LPWSTR)lpSubKey);
+
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &SubKeyName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   KeyHandle,
+                                   NULL);
+
+        Status = NtOpenKey(&SubKeyHandle,
+                           KEY_SET_VALUE,
+                           &ObjectAttributes);
+        if (!NT_SUCCESS(Status))
+        {
+            return RtlNtStatusToDosError(Status);
+        }
+    }
+
+    RtlInitUnicodeString(&ValueName,
+                         (LPWSTR)lpValueName);
+
+    Status = NtDeleteValueKey((SubKeyHandle != NULL) ? SubKeyHandle : KeyHandle,
+                              &ValueName);
+
+    if (SubKeyHandle != NULL)
+    {
+        NtClose(SubKeyHandle);
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        return RtlNtStatusToDosError(Status);
+    }
+
+    return ERROR_SUCCESS;
+}
+
+
+/************************************************************************
+ *  RegDeleteKeyValueA
+ *
+ * @implemented
+ */
+LONG STDCALL
+RegDeleteKeyValueA(IN HKEY hKey,
+                   IN LPCSTR lpSubKey  OPTIONAL,
+                   IN LPCSTR lpValueName  OPTIONAL)
+{
+    UNICODE_STRING SubKey, ValueName;
+    LONG Ret;
+    
+    if (lpSubKey != NULL)
+    {
+        if (!RtlCreateUnicodeStringFromAsciiz(&SubKey,
+                                              (LPSTR)lpSubKey))
+        {
+            return ERROR_NOT_ENOUGH_MEMORY;
+        }
+    }
+    else
+        RtlInitUnicodeString(&SubKey,
+                             NULL);
+
+    if (lpValueName != NULL)
+    {
+        if (!RtlCreateUnicodeStringFromAsciiz(&ValueName,
+                                              (LPSTR)lpValueName))
+        {
+            RtlFreeUnicodeString(&SubKey);
+            return ERROR_NOT_ENOUGH_MEMORY;
+        }
+    }
+    else
+        RtlInitUnicodeString(&ValueName,
+                             NULL);
+
+    Ret = RegDeleteKeyValueW(hKey,
+                             SubKey.Buffer,
+                             SubKey.Buffer);
+
+    RtlFreeUnicodeString(&SubKey);
+    RtlFreeUnicodeString(&ValueName);
+    
+    return Ret;
+}
+
+
+/************************************************************************
  *  RegDeleteValueA
  *
  * @implemented
