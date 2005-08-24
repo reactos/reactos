@@ -599,23 +599,8 @@ MSVCBackend::_generate_wine_dsw ( FILE* OUT )
 	{
 		Module& module = *ProjectNode.modules[i];
 
-		// TODO FIXME - convert next line - I'm no perl/regex expert...
-		//next if $module =~ /(?:winetest\.lib|wineruntests\.exe|_test\.exe)$/;
-
 		//my $project = modules[module]->{project};
 		std::string dsp_file = DspFileName ( module );
-
-		// TODO FIXME - the following look like wine-specific hacks
-		/*my @dependencies;
-		if($project =~ /^wine(?:_unicode)?$/) {
-			@dependencies = ();
-		} elsif($project =~ /^winebuild$/) {
-			@dependencies = ("wine", "wine_unicode");
-		} elsif($project =~ /^(?:gdi32)_.+?$/) {
-			@dependencies = ();
-		} else {
-			@dependencies = ("wine", "wine_unicode", "winebuild");
-		}*/
 
 		// TODO FIXME - more wine hacks?
         /*if($project =~ /^gdi32$/) {
