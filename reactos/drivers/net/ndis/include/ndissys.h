@@ -30,15 +30,7 @@ NTSTATUS NTAPI ZwDuplicateObject(IN HANDLE, IN HANDLE, IN HANDLE, OUT PHANDLE, I
 #include <ndk/ntndk.h>
 #endif
 
-#define NDIS_MINIPORT_WORK_QUEUE_SIZE 10
-
 struct _ADAPTER_BINDING;
-
-typedef struct _INTERNAL_NDIS_MINIPORT_WORK_ITEM {
-    SINGLE_LIST_ENTRY Link;
-    struct _ADAPTER_BINDING *AdapterBinding;
-    NDIS_MINIPORT_WORK_ITEM RealWorkItem;
-} INTERNAL_NDIS_MINIPORT_WORK_ITEM, *PINTERNAL_NDIS_MINIPORT_WORK_ITEM;
 
 typedef struct _NDISI_PACKET_POOL {
   NDIS_SPIN_LOCK  SpinLock;
@@ -59,50 +51,6 @@ typedef struct _NDISI_PACKET_POOL {
 
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 #define NDIS_TAG  0x4e4d4953
-
-#ifdef DBG
-
-#define DEBUG_REFCHECK(Object) {            \
-    if ((Object)->RefCount <= 0) {          \
-        NDIS_DbgPrint(MIN_TRACE, ("Object at (0x%X) has invalid reference count (%d).\n", \
-            (Object), (Object)->RefCount)); \
-        }                                   \
-}
-
-#else
-
-#define DEBUG_REFCHECK(Object)
-
-#endif
-
-
-/*
- * VOID ReferenceObject(
- *     PVOID Object)
- */
-#define ReferenceObject(Object)                         \
-{                                                       \
-    DEBUG_REFCHECK(Object);                             \
-    NDIS_DbgPrint(DEBUG_REFCOUNT, ("Referencing object at (0x%X). RefCount (%d).\n", \
-        (Object), (Object)->RefCount));                 \
-                                                        \
-    InterlockedIncrement((PLONG)&((Object)->RefCount)); \
-}
-
-/*
- * VOID DereferenceObject(
- *     PVOID Object)
- */
-#define DereferenceObject(Object)                                \
-{                                                                \
-    DEBUG_REFCHECK(Object);                                      \
-    NDIS_DbgPrint(DEBUG_REFCOUNT, ("Dereferencing object at (0x%X). RefCount (%d).\n", \
-        (Object), (Object)->RefCount));                          \
-                                                                 \
-    if (InterlockedDecrement((PLONG)&((Object)->RefCount)) == 0) \
-        PoolFreeBuffer(Object);                                  \
-}
-
 
 #define MIN(value1, value2) \
     ((value1 < value2)? value1 : value2)
