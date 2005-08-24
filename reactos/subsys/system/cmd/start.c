@@ -17,13 +17,16 @@
 #ifdef INCLUDE_CMD_START
 
 
-INT cmd_start (LPTSTR first, LPTSTR rest)
+INT cmd_start (LPTSTR First, LPTSTR Rest)
 {
 	TCHAR szFullName[MAX_PATH];
+	TCHAR first[CMDLINE_LENGTH];
+	TCHAR rest[CMDLINE_LENGTH];
+	TCHAR param[CMDLINE_LENGTH];
 	BOOL bWait = FALSE;
-	TCHAR *param;
-
-	if (_tcsncmp (rest, _T("/?"), 2) == 0)
+	param[0] = _T('\0');
+	
+	if (_tcsncmp (Rest, _T("/?"), 2) == 0)
 	{
 		ConOutResPaging(TRUE,STRING_START_HELP1);
 		return 0;
@@ -31,6 +34,60 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 
 	nErrorLevel = 0;
 
+	if( !*Rest )
+	{
+		// FIXME: use comspec instead
+		Rest = _T("cmd");
+	}
+	
+	_tcscpy(rest,Rest);
+	
+	/* Parsing the command that gets called by start, and it's parameters */
+	if(!_tcschr(rest,_T('\"')))
+	{
+		INT i = 0;
+		INT count = _tcslen(rest);
+		
+		/* find the end of the command and start of the args */
+		for(i = 0; i < count; i++)
+		{
+			if(rest[i] == _T(' '))
+			{
+				_tcscpy(param,&rest[i]);
+				rest[i] = _T('\0');
+				break;
+			}
+		}
+	}
+	else
+	{
+		INT i = 0;	
+		INT count = _tcslen(rest);		
+		BOOL bInside = FALSE;
+
+		/* find the end of the command and put the arguments in param */
+		for(i = 0; i < count; i++)
+		{
+			if(rest[i] == _T('\"')) 
+				bInside = !bInside;
+			if((rest[i] == _T(' ')) && !bInside)
+			{
+				_tcscpy(param,&rest[i]);
+				rest[i] = _T('\0');
+				break;
+			}
+		}
+		i = 0;
+		/* remove any slashes */
+		while(i < count)
+		{
+			if(rest[i] == _T('\"'))
+				memmove(&rest[i],&rest[i + 1], _tcslen(&rest[i]) * sizeof(TCHAR));
+			else
+				i++;
+		}
+	}
+	
 	/* check for a drive change */
 	if (!_tcscmp (first + 1, _T(":")) && _istalpha (*first))
 	{
@@ -45,22 +102,9 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 
 		return 0;
 	}
-
-	if( !*rest )
-	  {
-	    // FIXME: use comspec instead
-	    rest = _T("cmd");
-	  }
-
+	  
 	/* get the PATH environment variable and parse it */
 	/* search the PATH environment variable for the binary */
-	param = _tcschr( rest, _T(' ') );  // skip program name to reach parameters
-	if( param )
-	  {
-	    *param = 0;
-	    param++;
-	  }
-
 	if (!SearchForExecutable (rest, szFullName))
 	{
 		error_bad_command ();
