@@ -38,6 +38,7 @@ SerialQueryInformation(
 				Status = STATUS_BUFFER_OVERFLOW;
 			else if (!StandardInfo)
 				Status = STATUS_INVALID_PARAMETER;
+			else
 			{
 				StandardInfo->AllocationSize.QuadPart = 0;
 				StandardInfo->EndOfFile.QuadPart = 0;
