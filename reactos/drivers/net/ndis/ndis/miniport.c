@@ -548,13 +548,15 @@ MiniQueryInformation(
     PLOGICAL_ADAPTER    Adapter,
     NDIS_OID            Oid,
     ULONG               Size,
+    PVOID               Buffer,
     PULONG              BytesWritten)
 /*
  * FUNCTION: Queries a logical adapter for properties
  * ARGUMENTS:
  *     Adapter      = Pointer to the logical adapter object to query
  *     Oid          = Specifies the Object ID to query for
- *     Size         = If non-zero overrides the length in the adapter object
+ *     Size         = Size of the passed buffer
+ *     Buffer       = Buffer for the output
  *     BytesWritten = Address of buffer to place number of bytes written
  * NOTES:
  *     If the specified buffer is too small, a new buffer is allocated,
@@ -570,60 +572,22 @@ MiniQueryInformation(
 
   NDIS_DbgPrint(DEBUG_MINIPORT, ("Called.\n"));
 
-  if (Adapter->QueryBufferLength == 0)
-    {
-      /* XXX is 32 the right number? */
-      Adapter->QueryBuffer = ExAllocatePool(NonPagedPool, (Size == 0)? 32 : Size);
-
-      if (!Adapter->QueryBuffer)
-        {
-          NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-          return NDIS_STATUS_RESOURCES;
-        }
-
-      /* ditto */
-      Adapter->QueryBufferLength = (Size == 0)? 32 : Size;
-    }
-
-  /* this is the third time i've seen this conditional */
-  BytesNeeded = (Size == 0)? Adapter->QueryBufferLength : Size;
-
   /* call the miniport's queryinfo handler */
   NdisStatus = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.QueryInformationHandler)(
       Adapter->NdisMiniportBlock.MiniportAdapterContext,
       Oid,
-      Adapter->QueryBuffer,
-      BytesNeeded,
+      Buffer,
+      Size,
       BytesWritten,
       &BytesNeeded);
+
+  /* FIXME: Wait in pending case! */
 
   /* XXX is status_pending part of success macro? */
   if ((NT_SUCCESS(NdisStatus)) || (NdisStatus == NDIS_STATUS_PENDING))
     {
       NDIS_DbgPrint(DEBUG_MINIPORT, ("Miniport returned status (0x%X).\n", NdisStatus));
       return NdisStatus;
-    }
-
-  if (NdisStatus == NDIS_STATUS_INVALID_LENGTH)
-    {
-      ExFreePool(Adapter->QueryBuffer);
-
-      Adapter->QueryBufferLength += BytesNeeded;
-      Adapter->QueryBuffer = ExAllocatePool(NonPagedPool, Adapter->QueryBufferLength);
-
-      if (!Adapter->QueryBuffer)
-        {
-          NDIS_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-          return NDIS_STATUS_RESOURCES;
-        }
-
-      NdisStatus = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.QueryInformationHandler)(
-          Adapter->NdisMiniportBlock.MiniportAdapterContext,
-          Oid,
-          Adapter->QueryBuffer,
-          Adapter->QueryBufferLength,
-          BytesWritten,
-          &BytesNeeded);
     }
 
   return NdisStatus;
@@ -1167,7 +1131,9 @@ DoQueries(
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
   /* Get MAC options for adapter */
-  NdisStatus = MiniQueryInformation(Adapter, OID_GEN_MAC_OPTIONS, 0, &BytesWritten);
+  NdisStatus = MiniQueryInformation(Adapter, OID_GEN_MAC_OPTIONS, sizeof(UINT), 
+                                    &Adapter->NdisMiniportBlock.MacOptions,
+                                    &BytesWritten);
 
   if (NdisStatus != NDIS_STATUS_SUCCESS)
     {
@@ -1175,12 +1141,11 @@ DoQueries(
       return NdisStatus;
     }
 
-  RtlCopyMemory(&Adapter->NdisMiniportBlock.MacOptions, Adapter->QueryBuffer, sizeof(UINT));
-
   NDIS_DbgPrint(DEBUG_MINIPORT, ("MacOptions (0x%X).\n", Adapter->NdisMiniportBlock.MacOptions));
 
   /* Get current hardware address of adapter */
-  NdisStatus = MiniQueryInformation(Adapter, AddressOID, 0, &BytesWritten);
+  NdisStatus = MiniQueryInformation(Adapter, AddressOID, Adapter->AddressLength,
+                                    &Adapter->Address, &BytesWritten);
 
   if (NdisStatus != NDIS_STATUS_SUCCESS)
     {
@@ -1188,7 +1153,6 @@ DoQueries(
       return NdisStatus;
     }
 
-  RtlCopyMemory(&Adapter->Address, Adapter->QueryBuffer, Adapter->AddressLength);
 #ifdef DBG
     {
       /* 802.3 only */
@@ -1200,7 +1164,8 @@ DoQueries(
 #endif /* DBG */
 
   /* Get maximum lookahead buffer size of adapter */
-  NdisStatus = MiniQueryInformation(Adapter, OID_GEN_MAXIMUM_LOOKAHEAD, 0, &BytesWritten);
+  NdisStatus = MiniQueryInformation(Adapter, OID_GEN_MAXIMUM_LOOKAHEAD, sizeof(ULONG),
+                                    &Adapter->NdisMiniportBlock.MaximumLookahead, &BytesWritten);
 
   if (NdisStatus != NDIS_STATUS_SUCCESS)
     {
@@ -1208,20 +1173,17 @@ DoQueries(
       return NdisStatus;
     }
 
-  Adapter->NdisMiniportBlock.MaximumLookahead = *((PULONG)Adapter->QueryBuffer);
-
   NDIS_DbgPrint(DEBUG_MINIPORT, ("MaxLookaheadLength (0x%X).\n", Adapter->NdisMiniportBlock.MaximumLookahead));
 
   /* Get current lookahead buffer size of adapter */
-  NdisStatus = MiniQueryInformation(Adapter, OID_GEN_CURRENT_LOOKAHEAD, 0, &BytesWritten);
+  NdisStatus = MiniQueryInformation(Adapter, OID_GEN_CURRENT_LOOKAHEAD, sizeof(ULONG),
+                                    &Adapter->NdisMiniportBlock.CurrentLookahead, &BytesWritten);
 
   if (NdisStatus != NDIS_STATUS_SUCCESS)
     {
       NDIS_DbgPrint(MIN_TRACE, ("OID_GEN_CURRENT_LOOKAHEAD failed. NdisStatus (0x%X).\n", NdisStatus));
       return NdisStatus;
     }
-
-  Adapter->NdisMiniportBlock.CurrentLookahead = *((PULONG)Adapter->QueryBuffer);
 
   NDIS_DbgPrint(DEBUG_MINIPORT, ("CurLookaheadLength (0x%X).\n", Adapter->NdisMiniportBlock.CurrentLookahead));
 

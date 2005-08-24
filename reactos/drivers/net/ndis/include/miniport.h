@@ -80,8 +80,6 @@ typedef struct _LOGICAL_ADAPTER
     LIST_ENTRY                  ListEntry;              /* Entry on global list */
     LIST_ENTRY                  MiniportListEntry;      /* Entry on miniport driver list */
     LIST_ENTRY                  ProtocolListHead;       /* List of bound protocols */
-    PVOID                       QueryBuffer;            /* Buffer to use for queries */
-    ULONG                       QueryBufferLength;      /* Length of QueryBuffer */
     ULONG                       MediumHeaderSize;       /* Size of medium header */
     HARDWARE_ADDRESS            Address;                /* Hardware address of adapter */
     ULONG                       AddressLength;          /* Length of hardware address */
@@ -128,6 +126,7 @@ MiniQueryInformation(
     PLOGICAL_ADAPTER    Adapter,
     NDIS_OID            Oid,
     ULONG               Size,
+    PVOID               Buffer,
     PULONG              BytesWritten);
 
 NDIS_STATUS
