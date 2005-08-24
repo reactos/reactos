@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/fs/vfat/create.c
  * PURPOSE:          VFAT Filesystem
@@ -38,7 +37,7 @@ void  vfat8Dot3ToString (PFAT_DIR_ENTRY pEntry, PUNICODE_STRING NameU)
   USHORT Length;
   CHAR  cString[12];
 
-  RtlCopyMemory(cString, pEntry->Filename, 11);
+  RtlCopyMemory(cString, pEntry->ShortName, 11);
   cString[11] = 0;
   if (cString[0] == 0x05)
     {
@@ -695,8 +694,7 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
       /* Supersede the file */
       if (RequestedDisposition == FILE_SUPERSEDE)
 	{
-	  LARGE_INTEGER AllocationSize;
-	  AllocationSize.QuadPart = 0LL;
+	  AllocationSize.QuadPart = 0;
           VfatSetAllocationSizeInformation(FileObject, pFcb, DeviceExt, &AllocationSize);
 	  Irp->IoStatus.Information = FILE_SUPERSEDED;
 	}

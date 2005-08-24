@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/fs/vfat/iface.c
  * PURPOSE:          VFAT Filesystem
@@ -83,7 +82,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
    VfatGlobalData->DriverObject = DriverObject;
    VfatGlobalData->DeviceObject = DeviceObject;
 
-   DeviceObject->Flags = DO_DIRECT_IO;
+   DeviceObject->Flags |= DO_DIRECT_IO;
    DriverObject->MajorFunction[IRP_MJ_CLOSE] = VfatBuildRequest;
    DriverObject->MajorFunction[IRP_MJ_CREATE] = VfatBuildRequest;
    DriverObject->MajorFunction[IRP_MJ_READ] = VfatBuildRequest;

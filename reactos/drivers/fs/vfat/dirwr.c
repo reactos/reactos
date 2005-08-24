@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/fs/vfat/dirwr.c
@@ -320,7 +319,7 @@ FATAddEntry (PDEVICE_EXTENSION DeviceExt,
     }
   DPRINT ("'%s', '%wZ', needTilde=%d, needLong=%d\n",
           aName, &DirContext.LongNameU, needTilde, needLong);
-  memset(DirContext.DirEntry.Fat.Filename, ' ', 11);
+  memset(DirContext.DirEntry.Fat.ShortName, ' ', 11);
   for (i = 0; i < 8 && aName[i] && aName[i] != '.'; i++)
     {
       DirContext.DirEntry.Fat.Filename[i] = aName[i];
@@ -496,9 +495,9 @@ FATAddEntry (PDEVICE_EXTENSION DeviceExt,
       RtlZeroMemory (pFatEntry, DeviceExt->FatInfo.BytesPerCluster);
       /* create '.' and '..' */
       RtlCopyMemory (&pFatEntry[0].Attrib, &DirContext.DirEntry.Fat.Attrib, sizeof(FAT_DIR_ENTRY) - 11);
-      RtlCopyMemory (pFatEntry[0].Filename, ".          ", 11);
+      RtlCopyMemory (pFatEntry[0].ShortName, ".          ", 11);
       RtlCopyMemory (&pFatEntry[1].Attrib, &DirContext.DirEntry.Fat.Attrib, sizeof(FAT_DIR_ENTRY) - 11);
-      RtlCopyMemory (pFatEntry[1].Filename, "..         ", 11);
+      RtlCopyMemory (pFatEntry[1].ShortName, "..         ", 11);
       pFatEntry[1].FirstCluster = ParentFcb->entry.Fat.FirstCluster;
       pFatEntry[1].FirstClusterHigh = ParentFcb->entry.Fat.FirstClusterHigh;
       if (vfatFCBIsRoot(ParentFcb))
