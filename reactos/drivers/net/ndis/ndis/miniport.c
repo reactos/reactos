@@ -80,7 +80,7 @@ MiniDisplayPacket(
     UCHAR Buffer[64];
     if ((DebugTraceLevel & DEBUG_PACKET) > 0) {
         Length = CopyPacketToBuffer(
-            (PUCHAR)&Buffer,
+            Buffer,
             Packet,
             0,
             64);
