@@ -25,73 +25,70 @@ HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIREC
 		return DDERR_INVALIDPARAMS;
 
 	This->owner = (IDirectDrawImpl*)pDD;
+   
+	/* can the driver create the surface */
+	DDHAL_CANCREATESURFACEDATA CanCreateData;
+	memset(&CanCreateData, 0, sizeof(DD_CANCREATESURFACEDATA));
+	CanCreateData.lpDD = &This->owner->DirectDrawGlobal; 
+	CanCreateData.lpDDSurfaceDesc = (DDSURFACEDESC*)pDDSD;
+	CanCreateData.CanCreateSurface = This->owner->HalInfo.lpDDCallbacks->CanCreateSurface;
+	
+	if (CanCreateData.CanCreateSurface(&CanCreateData) == DDHAL_DRIVER_NOTHANDLED)
+        return DDERR_INVALIDPARAMS;
+	
+	if(CanCreateData.ddRVal != DD_OK)
+		return CanCreateData.ddRVal;
 
-	// Surface Global Struct
+	/* surface global struct */
 	DDRAWI_DDRAWSURFACE_GBL Global;
 	memset(&Global, 0, sizeof(DDRAWI_DDRAWSURFACE_GBL));
-	
-	if(pDDSD->ddsCaps.dwCaps == DDSCAPS_PRIMARYSURFACE)
-		Global.dwGlobalFlags |= DDRAWISURFGBL_ISGDISURFACE;
-	
 	Global.lpDD = &This->owner->DirectDrawGlobal;	
 	Global.wHeight = This->owner->Height;
 	Global.wWidth = This->owner->Width;
 	Global.dwLinearSize =  Global.wWidth * This->owner->Bpp/8;
 	
-	// Surface More Struct
+	/* surface more struct */
 	DDRAWI_DDRAWSURFACE_MORE More;
 	memset(&More, 0, sizeof(DDRAWI_DDRAWSURFACE_MORE));
 	More.dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
 
-	// Surface Local Struct
+	/* surface local struct */
 	DDRAWI_DDRAWSURFACE_LCL Local;
 	memset(&Local, 0, sizeof(DDRAWI_DDRAWSURFACE_LCL));
 	Local.lpGbl = &Global;
 	Local.lpSurfMore = &More;
 	Local.ddsCaps = *(DDSCAPS*)&pDDSD->ddsCaps;
-	
-	// BitDepth = DDSurf_BitDepth(psurf); ?
 
-
+	/* we need to set some flags if we create the primary surface */
 	if(pDDSD->ddsCaps.dwCaps == DDSCAPS_PRIMARYSURFACE)
+	{
 		Local.dwFlags |= DDRAWISURF_FRONTBUFFER;
+		Global.dwGlobalFlags |= DDRAWISURFGBL_ISGDISURFACE;
+	}
 
-	DDRAWI_DDRAWSURFACE_LCL *pLocal[2]; // for stupid double pointer below
+	/* for the double pointer below */
+	DDRAWI_DDRAWSURFACE_LCL *pLocal[2]; 
+	pLocal[0] = &Local; 
+    pLocal[1] = NULL;  // we need this one for bad written drivers
 
-	pLocal[0] = &Local;
-    pLocal[1] = NULL;
-
-	// The Parameter Struct
+	/* the parameter struct */
 	DDHAL_CREATESURFACEDATA CreateData;
 	memset(&CreateData, 0, sizeof(DDHAL_CREATESURFACEDATA));
 	CreateData.lpDD = &This->owner->DirectDrawGlobal; 
 	CreateData.lpDDSurfaceDesc = (DDSURFACEDESC*)pDDSD;
 	CreateData.dwSCnt = 1;
 	CreateData.lplpSList = pLocal;
-   
+	CreateData.CreateSurface = This->owner->HalInfo.lpDDCallbacks->CreateSurface;
 	
-
-	DDHAL_CANCREATESURFACEDATA CanCreateData;
-	memset(&CanCreateData, 0, sizeof(DD_CANCREATESURFACEDATA));
-	CanCreateData.lpDD = &This->owner->DirectDrawGlobal; 
-	CanCreateData.lpDDSurfaceDesc = (DDSURFACEDESC*)pDDSD;
-
-	
-	if (This->owner->DriverCallbacks.DdMain.CanCreateSurface (&CanCreateData) == DDHAL_DRIVER_NOTHANDLED)
-        return DDERR_INVALIDPARAMS;
-	
-	if(CanCreateData.ddRVal != DD_OK)
-		return CanCreateData.ddRVal;
-	
-
-	if(This->owner->DriverCallbacks.DdMain.CreateSurface (&CreateData) == DDHAL_DRIVER_NOTHANDLED)
+	/* this is the call we were waiting for */
+	if(CreateData.CreateSurface(&CreateData) == DDHAL_DRIVER_NOTHANDLED)
 		return DDERR_INVALIDPARAMS;
 	
 	if(CreateData.ddRVal != DD_OK)
 		return CreateData.ddRVal;
 
-
-	OutputDebugString(L"This does not get hit.");
+	OutputDebugString(L"This does not get hit :( ");
+	OutputDebugString(L"Yet ;)");
 
    	return DD_OK;
 }
@@ -122,7 +119,7 @@ ULONG WINAPI Main_DDrawSurface_AddRef(LPDIRECTDRAWSURFACE7 iface)
 
 ULONG WINAPI Main_DDrawSurface_Release(LPDIRECTDRAWSURFACE7 iface)
 {
-    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+    IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
     ULONG ref = InterlockedDecrement(&This->ref);
     
     if (ref == 0)

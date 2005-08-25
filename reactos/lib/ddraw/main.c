@@ -24,7 +24,7 @@ HRESULT WINAPI Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
 	ZeroMemory(This,sizeof(IDirectDrawImpl));
 
 	This->lpVtbl = &DirectDraw_VTable;
-	This->ref = 1;
+	This->DirectDrawGlobal.dwRefCnt = 1;
 	*pIface = (LPDIRECTDRAW)This;
 
 	return This->lpVtbl->Initialize ((LPDIRECTDRAW7)This, pGUID);
@@ -38,7 +38,6 @@ HRESULT WINAPI DirectDrawCreate (LPGUID lpGUID, LPDIRECTDRAW* lplpDD, LPUNKNOWN 
 		/* we do not use same error code as MS, ms use 0x8004110 */
 		return DDERR_INVALIDPARAMS; 
 	}
-	
 	
 	return Create_DirectDraw (lpGUID, lplpDD, pUnkOuter, FALSE);
 }
