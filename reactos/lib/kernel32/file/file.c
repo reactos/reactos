@@ -979,6 +979,12 @@ GetFileAttributesByHandle(IN HANDLE hFile,
     
     UNREFERENCED_PARAMETER(dwFlags);
     
+    if (IsConsoleHandle(hFile))
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+    
     Status = NtQueryInformationFile(hFile,
                                     &IoStatusBlock,
                                     &FileBasic,
@@ -1008,6 +1014,12 @@ SetFileAttributesByHandle(IN HANDLE hFile,
     NTSTATUS Status;
 
     UNREFERENCED_PARAMETER(dwFlags);
+    
+    if (IsConsoleHandle(hFile))
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
 
     Status = NtQueryInformationFile(hFile,
                                     &IoStatusBlock,
