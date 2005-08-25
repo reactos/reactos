@@ -131,10 +131,13 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 		    return 1;
 	    }
 
-		memcpy(&szFullCmdLine[_tcslen(szFullCmdLine)],_T("\" /K "), 5 * sizeof(TCHAR));				
+		memcpy(&szFullCmdLine[_tcslen(szFullCmdLine)],_T("\" /K \""), 6 * sizeof(TCHAR));				
 		memcpy(&szFullCmdLine[_tcslen(szFullCmdLine)], szFullName, _tcslen(szFullName) * sizeof(TCHAR));		
 		memcpy(&szFullCmdLine[1], &szFullCmdLine[0], _tcslen(szFullCmdLine) * sizeof(TCHAR)); 
         szFullCmdLine[0] = _T('\"');					
+        szFullCmdLine[_tcslen(szFullCmdLine)] = _T('\"');
+		
+
 
 	}
 
