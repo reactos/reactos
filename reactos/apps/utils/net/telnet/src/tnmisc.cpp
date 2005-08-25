@@ -110,7 +110,7 @@ int GetWin32Version(void) {
 // Paul Brannan 8/7/98
 // This code is from Michael 'Hacker' Krelin (author of KINSole)
 // (slightly modified)
-HWND GetConsoleWindow() {
+HWND TelnetGetConsoleWindow() {
 	DWORD pid = GetCurrentProcessId(), wpid;
 	char title[512], *t = title;
 	HWND hrv = NULL;
