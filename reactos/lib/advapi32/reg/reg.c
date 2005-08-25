@@ -833,12 +833,14 @@ RegDeleteKeyValueW(IN HKEY hKey,
         {
             return RtlNtStatusToDosError(Status);
         }
+        
+        KeyHandle = SubKeyHandle;
     }
 
     RtlInitUnicodeString(&ValueName,
                          (LPWSTR)lpValueName);
 
-    Status = NtDeleteValueKey((SubKeyHandle != NULL) ? SubKeyHandle : KeyHandle,
+    Status = NtDeleteValueKey(KeyHandle,
                               &ValueName);
 
     if (SubKeyHandle != NULL)
@@ -944,6 +946,8 @@ RegDeleteTreeW(IN HKEY hKey,
         {
             return RtlNtStatusToDosError(Status);
         }
+        
+        KeyHandle = SubKeyHandle;
     }
 
     /* FIXME - delete all keys recursively */
@@ -1041,9 +1045,11 @@ RegSetKeyValueW(IN HKEY hKey,
         {
             return RtlNtStatusToDosError(Status);
         }
+        
+        KeyHandle = SubKeyHandle;
     }
     
-    Ret = RegSetValueExW((SubKeyHandle != NULL) ? SubKeyHandle : KeyHandle,
+    Ret = RegSetValueExW(KeyHandle,
                          lpValueName,
                          0,
                          dwType,
@@ -1110,9 +1116,11 @@ RegSetKeyValueA(IN HKEY hKey,
         {
             return RtlNtStatusToDosError(Status);
         }
+        
+        KeyHandle = SubKeyHandle;
     }
 
-    Ret = RegSetValueExA((SubKeyHandle != NULL) ? SubKeyHandle : KeyHandle,
+    Ret = RegSetValueExA(KeyHandle,
                          lpValueName,
                          0,
                          dwType,
