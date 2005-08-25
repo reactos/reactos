@@ -96,8 +96,6 @@ void MSVCBackend::Process()
 #endif
 	fclose ( m_dswFile );
 
-	gen_guid();
-
 	// The MSVC build still needs the mingw backend.
 	//ProcessModules();
 
@@ -120,6 +118,7 @@ void MSVCBackend::ProcessModules()
 		Module &module = *ProjectNode.modules[i];
 
 		this->_generate_dsp ( module );
+		gen_guid();
 
 		/*for(size_t k = 0; k < module.non_if_data.files.size(); k++)
 		{
