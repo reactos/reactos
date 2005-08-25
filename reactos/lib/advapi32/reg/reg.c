@@ -298,6 +298,108 @@ RegConnectRegistryA (LPCSTR lpMachineName,
 
 
 /************************************************************************
+ *  RegCopyTreeW
+ *
+ * @unimplemented
+ */
+LONG STDCALL
+RegCopyTreeW(IN HKEY hKeySrc,
+             IN LPCWSTR lpSubKey  OPTIONAL,
+             IN HKEY hKeyDest)
+{
+    HANDLE DestKeyHandle, KeyHandle, SubKeyHandle = NULL;
+    NTSTATUS Status;
+    
+    Status = MapDefaultKey(&KeyHandle,
+                           hKeySrc);
+    if (!NT_SUCCESS(Status))
+    {
+        return RtlNtStatusToDosError(Status);
+    }
+    
+    Status = MapDefaultKey(&DestKeyHandle,
+                           hKeyDest);
+    if (!NT_SUCCESS(Status))
+    {
+        return RtlNtStatusToDosError(Status);
+    }
+
+    if (lpSubKey != NULL)
+    {
+        OBJECT_ATTRIBUTES ObjectAttributes;
+        UNICODE_STRING SubKeyName;
+
+        RtlInitUnicodeString(&SubKeyName,
+                             (LPWSTR)lpSubKey);
+
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &SubKeyName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   KeyHandle,
+                                   NULL);
+
+        Status = NtOpenKey(&SubKeyHandle,
+                           KEY_READ,
+                           &ObjectAttributes);
+        if (!NT_SUCCESS(Status))
+        {
+            return RtlNtStatusToDosError(Status);
+        }
+    }
+    
+    /* FIXME - copy all keys and values recursively */
+    Status = STATUS_NOT_IMPLEMENTED;
+    
+    if (SubKeyHandle != NULL)
+    {
+        NtClose(SubKeyHandle);
+    }
+    
+    if (!NT_SUCCESS(Status))
+    {
+        return RtlNtStatusToDosError(Status);
+    }
+    
+    return ERROR_SUCCESS;
+}
+
+
+/************************************************************************
+ *  RegCopyTreeA
+ *
+ * @implemented
+ */
+LONG STDCALL
+RegCopyTreeA(IN HKEY hKeySrc,
+             IN LPCSTR lpSubKey  OPTIONAL,
+             IN HKEY hKeyDest)
+{
+    UNICODE_STRING SubKeyName;
+    LONG Ret;
+    
+    if (lpSubKey != NULL)
+    {
+        if (!RtlCreateUnicodeStringFromAsciiz(&SubKeyName,
+                                              (LPSTR)lpSubKey))
+        {
+            return ERROR_NOT_ENOUGH_MEMORY;
+        }
+    }
+    else
+        RtlInitUnicodeString(&SubKeyName,
+                             NULL);
+
+    Ret = RegCopyTreeW(hKeySrc,
+                       SubKeyName.Buffer,
+                       hKeyDest);
+
+    RtlFreeUnicodeString(&SubKeyName);
+    
+    return Ret;
+}
+
+
+/************************************************************************
  *  RegConnectRegistryW
  *
  * @unimplemented
@@ -803,6 +905,98 @@ RegDeleteKeyValueA(IN HKEY hKey,
 
 
 /************************************************************************
+ *  RegDeleteTreeW
+ *
+ * @unimplemented
+ */
+LONG STDCALL
+RegDeleteTreeW(IN HKEY hKey,
+               IN LPCWSTR lpSubKey  OPTIONAL)
+{
+    HANDLE KeyHandle, SubKeyHandle = NULL;
+    NTSTATUS Status;
+
+    Status = MapDefaultKey(&KeyHandle,
+                           hKey);
+    if (!NT_SUCCESS(Status))
+    {
+        return RtlNtStatusToDosError(Status);
+    }
+
+    if (lpSubKey != NULL)
+    {
+        OBJECT_ATTRIBUTES ObjectAttributes;
+        UNICODE_STRING SubKeyName;
+
+        RtlInitUnicodeString(&SubKeyName,
+                             (LPWSTR)lpSubKey);
+
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &SubKeyName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   KeyHandle,
+                                   NULL);
+
+        Status = NtOpenKey(&SubKeyHandle,
+                           KEY_READ,
+                           &ObjectAttributes);
+        if (!NT_SUCCESS(Status))
+        {
+            return RtlNtStatusToDosError(Status);
+        }
+    }
+
+    /* FIXME - delete all keys recursively */
+    Status = STATUS_NOT_IMPLEMENTED;
+
+    if (SubKeyHandle != NULL)
+    {
+        NtClose(SubKeyHandle);
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        return RtlNtStatusToDosError(Status);
+    }
+
+    return ERROR_SUCCESS;
+}
+
+
+/************************************************************************
+ *  RegDeleteTreeA
+ *
+ * @implemented
+ */
+LONG STDCALL
+RegDeleteTreeA(IN HKEY hKey,
+               IN LPCSTR lpSubKey  OPTIONAL)
+{
+    UNICODE_STRING SubKeyName;
+    LONG Ret;
+
+    if (lpSubKey != NULL)
+    {
+        if (!RtlCreateUnicodeStringFromAsciiz(&SubKeyName,
+                                              (LPSTR)lpSubKey))
+        {
+            return ERROR_NOT_ENOUGH_MEMORY;
+        }
+    }
+    else
+        RtlInitUnicodeString(&SubKeyName,
+                             NULL);
+
+    Ret = RegDeleteTreeW(hKey,
+                         SubKeyName.Buffer);
+
+    RtlFreeUnicodeString(&SubKeyName);
+
+    return Ret;
+}
+
+
+/************************************************************************
  *  RegSetKeyValueW
  *
  * @implemented
@@ -897,7 +1091,7 @@ RegSetKeyValueA(IN HKEY hKey,
         if (!RtlCreateUnicodeStringFromAsciiz(&SubKeyName,
                                               (LPSTR)lpSubKey))
         {
-            return RtlNtStatusToDosError(Status);
+            return ERROR_NOT_ENOUGH_MEMORY;
         }
 
         InitializeObjectAttributes(&ObjectAttributes,

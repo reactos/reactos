@@ -467,6 +467,8 @@ ReadEventLogW@28
 RegCloseKey@4
 RegConnectRegistryA@12
 RegConnectRegistryW@12
+RegCopyTreeA@12
+RegCopyTreeW@12
 RegCreateKeyA@12
 RegCreateKeyExA@36
 RegCreateKeyExW@36
@@ -475,6 +477,8 @@ RegDeleteKeyA@8
 RegDeleteKeyW@8
 RegDeleteKeyValueA@12
 RegDeleteKeyValueW@12
+RegDeleteTreeA@8
+RegDeleteTreeW@8
 RegDeleteValueA@8
 RegDeleteValueW@8
 ;RegDisablePredefinedCache
