@@ -329,10 +329,11 @@ RtlLeaveCriticalSection(
         CriticalSection->OwningThread = 0;
 
         /* Was someone wanting us? This needs to be done atomically. */
-        InterlockedDecrement(&CriticalSection->LockCount);
+        if (-1 != InterlockedDecrement(&CriticalSection->LockCount)) {
 
-        /* Let him have us */
-        RtlpUnWaitCriticalSection(CriticalSection);
+            /* Let him have us */
+            RtlpUnWaitCriticalSection(CriticalSection);
+        }
     }
 
     /* Sucessful! */
