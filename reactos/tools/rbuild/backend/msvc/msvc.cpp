@@ -65,7 +65,7 @@ void MSVCBackend::Process()
 
 	ProcessModules();
 
-	m_dswFile = fopen ( filename.c_str(), "w" );
+	m_dswFile = fopen ( filename.c_str(), "wb" );
 
 	if ( !m_dswFile )
 	{

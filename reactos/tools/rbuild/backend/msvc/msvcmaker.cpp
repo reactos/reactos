@@ -20,8 +20,8 @@ MSVCBackend::_generate_dsp ( const Module& module )
 	const bool wine = false;
 
 	string dsp_file = DspFileName(module);
-	printf ( "Creating MSVC project: '%s'\n", dsp_file.c_str() );
-	FILE* OUT = fopen ( dsp_file.c_str(), "w" );
+	printf ( "Creating MSVC project: '%s'\r\n", dsp_file.c_str() );
+	FILE* OUT = fopen ( dsp_file.c_str(), "wb" );
 
 	vector<string> imports;
 	for ( i = 0; i < module.non_if_data.libraries.size(); i++ )
@@ -84,9 +84,9 @@ MSVCBackend::_generate_dsp ( const Module& module )
 	// TODO FIXME - wine hack?
 	/*if (module.name !~ /^wine(?:_unicode|build|runtests|test)?$/ &&
 		module.name !~ /^(?:gdi32)_.+?$/ &&
-		module.name !~ /_test$/)
+		Right ( module.name, 5 ) == "_test" )
 	{
-		push @source_files, "$project.spec" );
+		source_files.push_back ( module.name + ".spec" );
 		@source_files = sort(@source_files);
 	}*/
 
@@ -94,7 +94,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 	bool no_msvc_headers = true;
 	// TODO FIXME - wine hack?
 	/*if (module.name =~ /^wine(?:runtests|test)$/
-		|| module.name =~ /_test$/)
+		|| Right ( module.name, 5 ) == "_test" )
 	{
 		no_msvc_headers = false;
 	}*/
@@ -142,64 +142,64 @@ MSVCBackend::_generate_dsp ( const Module& module )
 
 	string default_cfg = cfgs.back();
 
-	fprintf ( OUT, "# Microsoft Developer Studio Project File - Name=\"%s\" - Package Owner=<4>\n", module.name.c_str() );
-	fprintf ( OUT, "# Microsoft Developer Studio Generated Build File, Format Version 6.00\n" );
-	fprintf ( OUT, "# ** DO NOT EDIT **\n" );
-	fprintf ( OUT, "\n" );
+	fprintf ( OUT, "# Microsoft Developer Studio Project File - Name=\"%s\" - Package Owner=<4>\r\n", module.name.c_str() );
+	fprintf ( OUT, "# Microsoft Developer Studio Generated Build File, Format Version 6.00\r\n" );
+	fprintf ( OUT, "# ** DO NOT EDIT **\r\n" );
+	fprintf ( OUT, "\r\n" );
 
 	if ( lib )
 	{
-		fprintf ( OUT, "# TARGTYPE \"Win32 (x86) Static Library\" 0x0104\n" );
+		fprintf ( OUT, "# TARGTYPE \"Win32 (x86) Static Library\" 0x0104\r\n" );
 	}
 	else if ( dll )
 	{
-		fprintf ( OUT, "# TARGTYPE \"Win32 (x86) Dynamic-Link Library\" 0x0102\n" );
+		fprintf ( OUT, "# TARGTYPE \"Win32 (x86) Dynamic-Link Library\" 0x0102\r\n" );
 	}
 	else
 	{
-		fprintf ( OUT, "# TARGTYPE \"Win32 (x86) Console Application\" 0x0103\n" );
+		fprintf ( OUT, "# TARGTYPE \"Win32 (x86) Console Application\" 0x0103\r\n" );
 	}
-	fprintf ( OUT, "\n" );
+	fprintf ( OUT, "\r\n" );
 
-	fprintf ( OUT, "CFG=$default_cfg\n" );
-	fprintf ( OUT, "!MESSAGE This is not a valid makefile. To build this project using NMAKE,\n" );
-	fprintf ( OUT, "!MESSAGE use the Export Makefile command and run\n" );
-	fprintf ( OUT, "!MESSAGE \n" );
-	fprintf ( OUT, "!MESSAGE NMAKE /f \"%s.mak\".\n", module.name.c_str() );
-	fprintf ( OUT, "!MESSAGE \n" );
-	fprintf ( OUT, "!MESSAGE You can specify a configuration when running NMAKE\n" );
-	fprintf ( OUT, "!MESSAGE by defining the macro CFG on the command line. For example:\n" );
-	fprintf ( OUT, "!MESSAGE \n" );
-	fprintf ( OUT, "!MESSAGE NMAKE /f \"%s.mak\" CFG=\"%s\"\n", module.name.c_str(), default_cfg.c_str() );
-	fprintf ( OUT, "!MESSAGE \n" );
-	fprintf ( OUT, "!MESSAGE Possible choices for configuration are:\n" );
-	fprintf ( OUT, "!MESSAGE \n" );
+	fprintf ( OUT, "CFG=%s\r\n", default_cfg.c_str() );
+	fprintf ( OUT, "!MESSAGE This is not a valid makefile. To build this project using NMAKE,\r\n" );
+	fprintf ( OUT, "!MESSAGE use the Export Makefile command and run\r\n" );
+	fprintf ( OUT, "!MESSAGE \r\n" );
+	fprintf ( OUT, "!MESSAGE NMAKE /f \"%s.mak\".\r\n", module.name.c_str() );
+	fprintf ( OUT, "!MESSAGE \r\n" );
+	fprintf ( OUT, "!MESSAGE You can specify a configuration when running NMAKE\r\n" );
+	fprintf ( OUT, "!MESSAGE by defining the macro CFG on the command line. For example:\r\n" );
+	fprintf ( OUT, "!MESSAGE \r\n" );
+	fprintf ( OUT, "!MESSAGE NMAKE /f \"%s.mak\" CFG=\"%s\"\r\n", module.name.c_str(), default_cfg.c_str() );
+	fprintf ( OUT, "!MESSAGE \r\n" );
+	fprintf ( OUT, "!MESSAGE Possible choices for configuration are:\r\n" );
+	fprintf ( OUT, "!MESSAGE \r\n" );
 	for ( i = 0; i < cfgs.size(); i++ )
 	{
 		const string& cfg = cfgs[i];
 		if ( lib )
 		{
-			fprintf ( OUT, "!MESSAGE \"%s\" (based on \"Win32 (x86) Static Library\")\n", cfg.c_str() );
+			fprintf ( OUT, "!MESSAGE \"%s\" (based on \"Win32 (x86) Static Library\")\r\n", cfg.c_str() );
 		}
 		else if ( dll )
 		{
-			fprintf ( OUT, "!MESSAGE \"%s\" (based on \"Win32 (x86) Dynamic-Link Library\")\n", cfg.c_str() );
+			fprintf ( OUT, "!MESSAGE \"%s\" (based on \"Win32 (x86) Dynamic-Link Library\")\r\n", cfg.c_str() );
 		}
 		else
 		{
-			fprintf ( OUT, "!MESSAGE \"%s\" (based on \"Win32 (x86) Console Application\")\n", cfg.c_str() );
+			fprintf ( OUT, "!MESSAGE \"%s\" (based on \"Win32 (x86) Console Application\")\r\n", cfg.c_str() );
 		}
 	}
-	fprintf ( OUT, "!MESSAGE \n" );
-	fprintf ( OUT, "\n" );
+	fprintf ( OUT, "!MESSAGE \r\n" );
+	fprintf ( OUT, "\r\n" );
 
-	fprintf ( OUT, "# Begin Project\n" );
-	fprintf ( OUT, "# PROP AllowPerConfigDependencies 0\n" );
-	fprintf ( OUT, "# PROP Scc_ProjName \"\"\n" );
-	fprintf ( OUT, "# PROP Scc_LocalPath \"\"\n" );
-	fprintf ( OUT, "CPP=cl.exe\n" );
-	if ( !lib && !exe ) fprintf ( OUT, "MTL=midl.exe\n" );
-	fprintf ( OUT, "RSC=rc.exe\n" );
+	fprintf ( OUT, "# Begin Project\r\n" );
+	fprintf ( OUT, "# PROP AllowPerConfigDependencies 0\r\n" );
+	fprintf ( OUT, "# PROP Scc_ProjName \"\"\r\n" );
+	fprintf ( OUT, "# PROP Scc_LocalPath \"\"\r\n" );
+	fprintf ( OUT, "CPP=cl.exe\r\n" );
+	if ( !lib && !exe ) fprintf ( OUT, "MTL=midl.exe\r\n" );
+	fprintf ( OUT, "RSC=rc.exe\r\n" );
 
 	int n = 0;
 
@@ -211,29 +211,29 @@ MSVCBackend::_generate_dsp ( const Module& module )
 		{
 			if ( n == 0 )
 			{
-				fprintf ( OUT, "!IF  \"$(CFG)\" == \"%s\"\n", cfg.c_str() );
-				fprintf ( OUT, "\n" );
+				fprintf ( OUT, "!IF  \"$(CFG)\" == \"%s\"\r\n", cfg.c_str() );
+				fprintf ( OUT, "\r\n" );
 			}
 			else
 			{
-				fprintf ( OUT, "\n" );
-				fprintf ( OUT, "!ELSEIF  \"$(CFG)\" == \"%s\"\n", cfg.c_str() );
-				fprintf ( OUT, "\n" );
+				fprintf ( OUT, "\r\n" );
+				fprintf ( OUT, "!ELSEIF  \"$(CFG)\" == \"%s\"\r\n", cfg.c_str() );
+				fprintf ( OUT, "\r\n" );
 			}
 		}
 
 		bool debug = !strstr ( cfg.c_str(), "Release" );
 		bool msvc_headers = ( 0 != strstr ( cfg.c_str(), "MSVC Headers" ) );
 
-		fprintf ( OUT, "# PROP BASE Use_MFC 0\n" );
+		fprintf ( OUT, "# PROP BASE Use_MFC 0\r\n" );
 
 		if ( debug )
 		{
-			fprintf ( OUT, "# PROP BASE Use_Debug_Libraries 1\n" );
+			fprintf ( OUT, "# PROP BASE Use_Debug_Libraries 1\r\n" );
 		}
 		else
 		{
-			fprintf ( OUT, "# PROP BASE Use_Debug_Libraries 0\n" );
+			fprintf ( OUT, "# PROP BASE Use_Debug_Libraries 0\r\n" );
 		}
 
 		output_dir = Replace(cfg,module.name + " - ","");
@@ -243,25 +243,25 @@ MSVCBackend::_generate_dsp ( const Module& module )
 		//if ( output_prefix_dir.size() )
 		//	output_dir = output_prefix_dir + "\\" + output_dir;
 
-		fprintf ( OUT, "# PROP BASE Output_Dir \"%s\"\n", output_dir.c_str() );
-		fprintf ( OUT, "# PROP BASE Intermediate_Dir \"%s\"\n", output_dir.c_str() );
+		fprintf ( OUT, "# PROP BASE Output_Dir \"%s\"\r\n", output_dir.c_str() );
+		fprintf ( OUT, "# PROP BASE Intermediate_Dir \"%s\"\r\n", output_dir.c_str() );
 
-		fprintf ( OUT, "# PROP BASE Target_Dir \"\"\n" );
+		fprintf ( OUT, "# PROP BASE Target_Dir \"\"\r\n" );
 
-		fprintf ( OUT, "# PROP Use_MFC 0\n" );
+		fprintf ( OUT, "# PROP Use_MFC 0\r\n" );
 		if ( debug )
 		{
-			fprintf ( OUT, "# PROP Use_Debug_Libraries 1\n" );
+			fprintf ( OUT, "# PROP Use_Debug_Libraries 1\r\n" );
 		}
 		else
 		{
-			fprintf ( OUT, "# PROP Use_Debug_Libraries 0\n" );
+			fprintf ( OUT, "# PROP Use_Debug_Libraries 0\r\n" );
 		}
-		fprintf ( OUT, "# PROP Output_Dir \"%s\"\n", output_dir.c_str() );
-		fprintf ( OUT, "# PROP Intermediate_Dir \"%s\"\n", output_dir.c_str() );
+		fprintf ( OUT, "# PROP Output_Dir \"%s\"\r\n", output_dir.c_str() );
+		fprintf ( OUT, "# PROP Intermediate_Dir \"%s\"\r\n", output_dir.c_str() );
 
-		if ( dll ) fprintf ( OUT, "# PROP Ignore_Export_Lib 0\n" );
-		fprintf ( OUT, "# PROP Target_Dir \"\"\n" );
+		if ( dll ) fprintf ( OUT, "# PROP Ignore_Export_Lib 0\r\n" );
+		fprintf ( OUT, "# PROP Target_Dir \"\"\r\n" );
 
 		vector<string> defines;
 		defines.push_back ( "WINVER=0x0501" );
@@ -318,7 +318,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 			if ( lib || exe ) fprintf ( OUT, " " );
 		}
 		fprintf ( OUT, " /c" );
-		fprintf ( OUT, "\n" );
+		fprintf ( OUT, "\r\n" );
 
 		vector<string> defines2;
 		defines2.push_back ( "WINVER=0x0501" );
@@ -373,16 +373,18 @@ MSVCBackend::_generate_dsp ( const Module& module )
 			defines2.push_back ( "_X86_" );
 
 			// TODO FIXME - wine hacks?
-			/*if($project =~ /^gdi32_(?:enhmfdrv|mfdrv)$/) {
+			/*if(module.name =~ /^gdi32_(?:enhmfdrv|mfdrv)$/) {
 				push @includes, ".." );
 			}
 
-			if ($project =~ /_test$/) {
-				push @includes, "$msvc_wine_dir\\$output_dir" );
+			if ( strstr ( module.name.c_str(), "_test" )
+			{
+				include.push_back ( msvc_wine_dir + "\\" + output_dir );
 			}
 
-			if (!$msvc_headers || $project eq "winetest") {
-				push @includes, $wine_include_dir;
+			if (!msvc_headers || module.name == "winetest")
+			{
+				includes.push_back ( wine_include_dir );
 			}*/
 		}
 
@@ -415,7 +417,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 			}
 		}
 		if ( wine ) fprintf ( OUT, " /D inline=__inline" );
-		//fprintf ( OUT, " /D \"__STDC__\"" if 0 && $wine;
+		if ( 0 && wine ) fprintf ( OUT, " /D \"__STDC__\"" );
 
 		fprintf ( OUT, lib ? " /YX" : " /FR" );
 		fprintf ( OUT, " /FD" );
@@ -423,17 +425,17 @@ MSVCBackend::_generate_dsp ( const Module& module )
 		if ( debug && lib ) fprintf ( OUT, " " );
 		fprintf ( OUT, " /c" );
 		if ( !no_cpp ) fprintf ( OUT, " /TP" );
-		fprintf ( OUT, "\n" );
+		fprintf ( OUT, "\r\n" );
 
 		if ( debug )
 		{
 			if ( dll )
 			{
-				fprintf ( OUT, "# SUBTRACT CPP /X /YX\n" );
-				fprintf ( OUT, "# ADD BASE MTL /nologo /D \"_DEBUG\" /mktyplib203 /win32\n" );
-				fprintf ( OUT, "# ADD MTL /nologo /D \"_DEBUG\" /mktyplib203 /win32\n" );
+				fprintf ( OUT, "# SUBTRACT CPP /X /YX\r\n" );
+				fprintf ( OUT, "# ADD BASE MTL /nologo /D \"_DEBUG\" /mktyplib203 /win32\r\n" );
+				fprintf ( OUT, "# ADD MTL /nologo /D \"_DEBUG\" /mktyplib203 /win32\r\n" );
 			}
-			fprintf ( OUT, "# ADD BASE RSC /l 0x41d /d \"_DEBUG\"\n" );
+			fprintf ( OUT, "# ADD BASE RSC /l 0x41d /d \"_DEBUG\"\r\n" );
 			fprintf ( OUT, "# ADD RSC /l 0x41d" );
 			if ( wine )
 			{
@@ -442,32 +444,32 @@ MSVCBackend::_generate_dsp ( const Module& module )
 					fprintf ( OUT, " /i \"%s\"", includes[i].c_str() );
 				}
 			}
-			fprintf ( OUT, " /d \"_DEBUG\"\n" );
+			fprintf ( OUT, " /d \"_DEBUG\"\r\n" );
 		}
 		else
 		{
 			if ( dll )
 			{
-				fprintf ( OUT, "# SUBTRACT CPP /YX\n" );
-				fprintf ( OUT, "# ADD BASE MTL /nologo /D \"NDEBUG\" /mktyplib203 /win32\n" );
-				fprintf ( OUT, "# ADD MTL /nologo /D \"NDEBUG\" /mktyplib203 /win32\n" );
+				fprintf ( OUT, "# SUBTRACT CPP /YX\r\n" );
+				fprintf ( OUT, "# ADD BASE MTL /nologo /D \"NDEBUG\" /mktyplib203 /win32\r\n" );
+				fprintf ( OUT, "# ADD MTL /nologo /D \"NDEBUG\" /mktyplib203 /win32\r\n" );
 			}
-			fprintf ( OUT, "# ADD BASE RSC /l 0x41d /d \"NDEBUG\"\n" );
+			fprintf ( OUT, "# ADD BASE RSC /l 0x41d /d \"NDEBUG\"\r\n" );
 			fprintf ( OUT, "# ADD RSC /l 0x41d" );
 			if ( wine )
 			{
 				for ( i = 0; i < includes.size(); i++ )
 					fprintf ( OUT, " /i \"%s\"", includes[i].c_str() );
 			}
-			fprintf ( OUT, "/d \"NDEBUG\"\n" );
+			fprintf ( OUT, "/d \"NDEBUG\"\r\n" );
 		}
-		fprintf ( OUT, "BSC32=bscmake.exe\n" );
-		fprintf ( OUT, "# ADD BASE BSC32 /nologo\n" );
-		fprintf ( OUT, "# ADD BSC32 /nologo\n" );
+		fprintf ( OUT, "BSC32=bscmake.exe\r\n" );
+		fprintf ( OUT, "# ADD BASE BSC32 /nologo\r\n" );
+		fprintf ( OUT, "# ADD BSC32 /nologo\r\n" );
 
 		if ( exe || dll )
 		{
-			fprintf ( OUT, "LINK32=link.exe\n" );
+			fprintf ( OUT, "LINK32=link.exe\r\n" );
 			fprintf ( OUT, "# ADD BASE LINK32 " );
 			vector<string> libraries;
 			libraries.push_back ( "kernel32.lib" );
@@ -492,12 +494,12 @@ MSVCBackend::_generate_dsp ( const Module& module )
 			if ( debug ) fprintf ( OUT, " /debug" );
 			fprintf ( OUT, " /machine:I386" );
 			if ( debug ) fprintf ( OUT, " /pdbtype:sept" );
-			fprintf ( OUT, "\n" );
+			fprintf ( OUT, "\r\n" );
 
 			fprintf ( OUT, "# ADD LINK32" );
 			fprintf ( OUT, " /nologo" );
 			// TODO FIXME - do we need their kludge?
-			//fprintf ( OUT, " libcmt.lib" if $project =~ /^ntdll$/; # FIXME: Kludge
+			//if ( module.name == "ntdll" ) fprintf ( OUT, " libcmt.lib" ); // FIXME: Kludge
 			for ( i = 0; i < imports.size(); i++ )
 			{
 				const string& import = imports[i];
@@ -509,16 +511,16 @@ MSVCBackend::_generate_dsp ( const Module& module )
 			if ( debug ) fprintf ( OUT, " /debug" );
 			fprintf ( OUT, " /machine:I386" );
 			// TODO FIXME - do we need their kludge?
-			//fprintf ( OUT, " /nodefaultlib" if $project =~ /^ntdll$/; # FIXME: Kludge
+			//if ( module.name == "ntdll" ) fprintf ( OUT, " /nodefaultlib" ); // FIXME: Kludge
 			if ( dll ) fprintf ( OUT, " /def:\"%s.def\"", module.name.c_str() );
 			if ( debug ) fprintf ( OUT, " /pdbtype:sept" );
-			fprintf ( OUT, "\n" );
+			fprintf ( OUT, "\r\n" );
 		}
 		else
 		{
-			fprintf ( OUT, "LIB32=link.exe -lib\n" );
-			fprintf ( OUT, "# ADD BASE LIB32 /nologo\n" );
-			fprintf ( OUT, "# ADD LIB32 /nologo\n" );
+			fprintf ( OUT, "LIB32=link.exe -lib\r\n" );
+			fprintf ( OUT, "# ADD BASE LIB32 /nologo\r\n" );
+			fprintf ( OUT, "# ADD LIB32 /nologo\r\n" );
 		}
 
 		n++;
@@ -526,33 +528,33 @@ MSVCBackend::_generate_dsp ( const Module& module )
 
 	if ( cfgs.size() != 0 )
 	{
-		fprintf ( OUT, "\n" );
-		fprintf ( OUT, "!ENDIF \n" );
-		fprintf ( OUT, "\n" );
+		fprintf ( OUT, "\r\n" );
+		fprintf ( OUT, "!ENDIF \r\n" );
+		fprintf ( OUT, "\r\n" );
 	}
 
 	if ( module.name == "winebuild" )
 	{
-		fprintf ( OUT, "# Begin Special Build Tool\n" );
-		fprintf ( OUT, "SOURCE=\"$(InputPath)\"\n" );
-		fprintf ( OUT, "PostBuild_Desc=Copying wine.dll and wine_unicode.dll ...\n" );
+		fprintf ( OUT, "# Begin Special Build Tool\r\n" );
+		fprintf ( OUT, "SOURCE=\"$(InputPath)\"\r\n" );
+		fprintf ( OUT, "PostBuild_Desc=Copying wine.dll and wine_unicode.dll ...\r\n" );
 		fprintf ( OUT, "PostBuild_Cmds=" );
 		fprintf ( OUT, "copy ..\\..\\library\\%s\\wine.dll $(OutDir)\t",
 			output_dir.c_str() );
-		fprintf ( OUT, "copy ..\\..\\unicode\\%s\\wine_unicode.dll $(OutDir)\n",
+		fprintf ( OUT, "copy ..\\..\\unicode\\%s\\wine_unicode.dll $(OutDir)\r\n",
 			output_dir.c_str() );
-		fprintf ( OUT, "# End Special Build Tool\n" );
+		fprintf ( OUT, "# End Special Build Tool\r\n" );
 	}
-	fprintf ( OUT, "# Begin Target\n" );
-	fprintf ( OUT, "\n" );
+	fprintf ( OUT, "# Begin Target\r\n" );
+	fprintf ( OUT, "\r\n" );
 	for ( i = 0; i < cfgs.size(); i++ )
 	{
-		fprintf ( OUT, "# Name \"%s\"\n", cfgs[i].c_str() );
+		fprintf ( OUT, "# Name \"%s\"\r\n", cfgs[i].c_str() );
 	}
 
-	fprintf ( OUT, "# Begin Group \"Source Files\"\n" );
-	fprintf ( OUT, "\n" );
-	fprintf ( OUT, "# PROP Default_Filter \"cpp;c;cxx;rc;def;r;odl;idl;hpj;bat\"\n" );
+	fprintf ( OUT, "# Begin Group \"Source Files\"\r\n" );
+	fprintf ( OUT, "\r\n" );
+	fprintf ( OUT, "# PROP Default_Filter \"cpp;c;cxx;rc;def;r;odl;idl;hpj;bat\"\r\n" );
 
 	for ( size_t isrcfile = 0; isrcfile < source_files.size(); isrcfile++ )
 	{
@@ -568,19 +570,19 @@ MSVCBackend::_generate_dsp ( const Module& module )
 			string basename = string ( source_file.c_str(), source_file.size() - 5 );
 
 			// TODO FIXME - not sure what this is doing? wine hack maybe?
-			//if ( $basename !~ /\..{1,3}$/; ) basename += string(".dll");
+			//if ( basename !~ /\..{1,3}$/; ) basename += string(".dll");
 			string dbg_c_file = basename + ".dbg.c";
 
-			fprintf ( OUT, "# Begin Source File\n" );
-			fprintf ( OUT, "\n" );
-			fprintf ( OUT, "SOURCE=%s\n", dbg_c_file.c_str() );
-			fprintf ( OUT, "# End Source File\n" );
+			fprintf ( OUT, "# Begin Source File\r\n" );
+			fprintf ( OUT, "\r\n" );
+			fprintf ( OUT, "SOURCE=%s\r\n", dbg_c_file.c_str() );
+			fprintf ( OUT, "# End Source File\r\n" );
 		}
 
-		fprintf ( OUT, "# Begin Source File\n" );
-		fprintf ( OUT, "\n" );
+		fprintf ( OUT, "# Begin Source File\r\n" );
+		fprintf ( OUT, "\r\n" );
 
-		fprintf ( OUT, "SOURCE=%s\n", source_file.c_str() );
+		fprintf ( OUT, "SOURCE=%s\r\n", source_file.c_str() );
 
 		if ( !strcmp ( &source_file[source_file.size()-5], ".spec" ) )
 		{
@@ -590,17 +592,17 @@ MSVCBackend::_generate_dsp ( const Module& module )
 			string def_file = basename + ".def";
 
 			// TODO FIXME - not sure what this is doing? wine hack maybe?
-			//if ( $basename !~ /\..{1,3}$/; ) basename += ".dll";
+			//if ( basename !~ /\..{1,3}$/; ) basename += ".dll";
 			string dbg_file = basename + ".dbg";
 			string dbg_c_file = basename + ".dbg.c";
 
 			string srcdir = "."; // FIXME: Is this really always correct?
 
-			fprintf ( OUT, "# Begin Custom Build\n" );
-			fprintf ( OUT, "InputPath=%s\n", spec_file.c_str() );
-			fprintf ( OUT, "\n" );
-			fprintf ( OUT, "BuildCmds= \\\n" );
-			fprintf ( OUT, "\t..\\..\\tools\\winebuild\\%s\\winebuild.exe --def %s > %s \\\n",
+			fprintf ( OUT, "# Begin Custom Build\r\n" );
+			fprintf ( OUT, "InputPath=%s\r\n", spec_file.c_str() );
+			fprintf ( OUT, "\r\n" );
+			fprintf ( OUT, "BuildCmds= \\\r\n" );
+			fprintf ( OUT, "\t..\\..\\tools\\winebuild\\%s\\winebuild.exe --def %s > %s \\\r\n",
 				output_dir.c_str(),
 				spec_file.c_str(),
 				def_file.c_str() );
@@ -613,16 +615,16 @@ MSVCBackend::_generate_dsp ( const Module& module )
 					const string& c_src = c_srcs[i];
 					if(n++ > 0)
 					{
-						fprintf ( OUT, "\techo %s >> %s \\\n", c_src.c_str(), dbg_file.c_str() );
+						fprintf ( OUT, "\techo %s >> %s \\\r\n", c_src.c_str(), dbg_file.c_str() );
 					}
 					else
 					{
-						fprintf ( OUT, "\techo %s > %s \\\n", c_src.c_str(), dbg_file.c_str() );
+						fprintf ( OUT, "\techo %s > %s \\\r\n", c_src.c_str(), dbg_file.c_str() );
 					}
 				}
 				fprintf ( OUT, "\t..\\..\\tools\\winebuild\\%s\\winebuild.exe",
 					output_dir.c_str() );
-				fprintf ( OUT, " -o %s --debug -C%s %s \\\n",
+				fprintf ( OUT, " -o %s --debug -C%s %s \\\r\n",
 					dbg_c_file.c_str(),
 					srcdir.c_str(),
 					dbg_file.c_str() );
@@ -643,20 +645,20 @@ MSVCBackend::_generate_dsp ( const Module& module )
 
 				fprintf ( OUT, "\t..\\..\\tools\\winebuild\\%s\\winebuild.exe",
 					output_dir.c_str() );
-				fprintf ( OUT, " -o %s --debug -C%s %s \\\n",
+				fprintf ( OUT, " -o %s --debug -C%s %s \\\r\n",
 					dbg_c_file.c_str(),
 					srcdir.c_str(),
 					sc_srcs.c_str() );
 			}
 
-			fprintf ( OUT, "\t\n" );
-			fprintf ( OUT, "\n" );
-			fprintf ( OUT, "\"%s\" : $(SOURCE) \"$(INTDIR)\" \"$(OUTDIR)\"\n", def_file.c_str() );
-			fprintf ( OUT, "   $(BuildCmds)\n" );
-			fprintf ( OUT, "\n" );
-			fprintf ( OUT, "\"%s\" : $(SOURCE) \"$(INTDIR)\" \"$(OUTDIR)\"\n", dbg_c_file.c_str() );
-			fprintf ( OUT, "   $(BuildCmds)\n" );
-			fprintf ( OUT, "# End Custom Build\n" );
+			fprintf ( OUT, "\t\r\n" );
+			fprintf ( OUT, "\r\n" );
+			fprintf ( OUT, "\"%s\" : $(SOURCE) \"$(INTDIR)\" \"$(OUTDIR)\"\r\n", def_file.c_str() );
+			fprintf ( OUT, "   $(BuildCmds)\r\n" );
+			fprintf ( OUT, "\r\n" );
+			fprintf ( OUT, "\"%s\" : $(SOURCE) \"$(INTDIR)\" \"$(OUTDIR)\"\r\n", dbg_c_file.c_str() );
+			fprintf ( OUT, "   $(BuildCmds)\r\n" );
+			fprintf ( OUT, "# End Custom Build\r\n" );
 		}
 		/*else if ( source_file =~ /([^\\]*?\.h)$/ )
 		{
@@ -666,12 +668,12 @@ MSVCBackend::_generate_dsp ( const Module& module )
 				if($#cfgs == 0) {
 					# Nothing
 				} elsif($n == 0) {
-					fprintf ( OUT, "!IF  \"$(CFG)\" == \"$cfg\"\n" );
-					fprintf ( OUT, "\n" );
+					fprintf ( OUT, "!IF  \"$(CFG)\" == \"$cfg\"\r\n" );
+					fprintf ( OUT, "\r\n" );
 				} else {
-					fprintf ( OUT, "\n" );
-					fprintf ( OUT, "!ELSEIF  \"$(CFG)\" == \"$cfg\"\n" );
-					fprintf ( OUT, "\n" );
+					fprintf ( OUT, "\r\n" );
+					fprintf ( OUT, "!ELSEIF  \"$(CFG)\" == \"$cfg\"\r\n" );
+					fprintf ( OUT, "\r\n" );
 				}
 
 				$output_dir = $cfg;
@@ -682,58 +684,58 @@ MSVCBackend::_generate_dsp ( const Module& module )
 					$output_dir = "$output_prefix_dir\\$output_dir" );
 				}
 
-				fprintf ( OUT, "# Begin Custom Build\n" );
-				fprintf ( OUT, "OutDir=%s\n", output_dir.c_str() );
-				fprintf ( OUT, "InputPath=%s\n", source_file.c_str() );
-				fprintf ( OUT, "\n" );
-				fprintf ( OUT, "\"$(OutDir)\\wine\\%s\" : $(SOURCE) \"$(INTDIR)\" \"$(OUTDIR)\"\n", h_file.c_str() );
-				fprintf ( OUT, "\tcopy \"$(InputPath)\" \"$(OutDir)\\wine\"\n" );
-				fprintf ( OUT, "\n" );
-				fprintf ( OUT, "# End Custom Build\n" );
+				fprintf ( OUT, "# Begin Custom Build\r\n" );
+				fprintf ( OUT, "OutDir=%s\r\n", output_dir.c_str() );
+				fprintf ( OUT, "InputPath=%s\r\n", source_file.c_str() );
+				fprintf ( OUT, "\r\n" );
+				fprintf ( OUT, "\"$(OutDir)\\wine\\%s\" : $(SOURCE) \"$(INTDIR)\" \"$(OUTDIR)\"\r\n", h_file.c_str() );
+				fprintf ( OUT, "\tcopy \"$(InputPath)\" \"$(OutDir)\\wine\"\r\n" );
+				fprintf ( OUT, "\r\n" );
+				fprintf ( OUT, "# End Custom Build\r\n" );
 			}
 
 			if ( cfgs.size() != 0)
 			{
-				fprintf ( OUT, "\n" );
-				fprintf ( OUT, "!ENDIF \n" );
-				fprintf ( OUT, "\n" );
+				fprintf ( OUT, "\r\n" );
+				fprintf ( OUT, "!ENDIF \r\n" );
+				fprintf ( OUT, "\r\n" );
 			}
 		}*/
 
-		fprintf ( OUT, "# End Source File\n" );
+		fprintf ( OUT, "# End Source File\r\n" );
 	}
-	fprintf ( OUT, "# End Group\n" );
+	fprintf ( OUT, "# End Group\r\n" );
 
-	fprintf ( OUT, "# Begin Group \"Header Files\"\n" );
-	fprintf ( OUT, "\n" );
-	fprintf ( OUT, "# PROP Default_Filter \"h;hpp;hxx;hm;inl\"\n" );
+	fprintf ( OUT, "# Begin Group \"Header Files\"\r\n" );
+	fprintf ( OUT, "\r\n" );
+	fprintf ( OUT, "# PROP Default_Filter \"h;hpp;hxx;hm;inl\"\r\n" );
 	for ( i = 0; i < header_files.size(); i++ )
 	{
 		const string& header_file = header_files[i];
-		fprintf ( OUT, "# Begin Source File\n" );
-		fprintf ( OUT, "\n" );
-		fprintf ( OUT, "SOURCE=.\\%s\n", header_file.c_str() );
-		fprintf ( OUT, "# End Source File\n" );
+		fprintf ( OUT, "# Begin Source File\r\n" );
+		fprintf ( OUT, "\r\n" );
+		fprintf ( OUT, "SOURCE=.\\%s\r\n", header_file.c_str() );
+		fprintf ( OUT, "# End Source File\r\n" );
 	}
-	fprintf ( OUT, "# End Group\n" );
+	fprintf ( OUT, "# End Group\r\n" );
 
 
 
-	fprintf ( OUT, "# Begin Group \"Resource Files\"\n" );
-	fprintf ( OUT, "\n" );
-	fprintf ( OUT, "# PROP Default_Filter \"ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe\"\n" );
+	fprintf ( OUT, "# Begin Group \"Resource Files\"\r\n" );
+	fprintf ( OUT, "\r\n" );
+	fprintf ( OUT, "# PROP Default_Filter \"ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe\"\r\n" );
 	for ( i = 0; i < resource_files.size(); i++ )
 	{
 		const string& resource_file = resource_files[i];
-		fprintf ( OUT, "# Begin Source File\n" );
-		fprintf ( OUT, "\n" );
-		fprintf ( OUT, "SOURCE=.\\%s\n", resource_file.c_str() );
-		fprintf ( OUT, "# End Source File\n" );
+		fprintf ( OUT, "# Begin Source File\r\n" );
+		fprintf ( OUT, "\r\n" );
+		fprintf ( OUT, "SOURCE=.\\%s\r\n", resource_file.c_str() );
+		fprintf ( OUT, "# End Source File\r\n" );
 	}
-	fprintf ( OUT, "# End Group\n" );
+	fprintf ( OUT, "# End Group\r\n" );
 
-	fprintf ( OUT, "# End Target\n" );
-	fprintf ( OUT, "# End Project\n" );
+	fprintf ( OUT, "# End Target\r\n" );
+	fprintf ( OUT, "# End Project\r\n" );
 
 	fclose(OUT);
 }
@@ -741,9 +743,9 @@ MSVCBackend::_generate_dsp ( const Module& module )
 void
 MSVCBackend::_generate_dsw_header ( FILE* OUT )
 {
-    fprintf ( OUT, "Microsoft Developer Studio Workspace File, Format Version 6.00\n" );
-    fprintf ( OUT, "# WARNING: DO NOT EDIT OR DELETE THIS WORKSPACE FILE!\n" );
-    fprintf ( OUT, "\n" );
+    fprintf ( OUT, "Microsoft Developer Studio Workspace File, Format Version 6.00\r\n" );
+    fprintf ( OUT, "# WARNING: DO NOT EDIT OR DELETE THIS WORKSPACE FILE!\r\n" );
+    fprintf ( OUT, "\r\n" );
 }
 
 void
@@ -753,51 +755,49 @@ MSVCBackend::_generate_dsw_project (
 	std::string dsp_file,
 	const std::vector<Dependency*>& dependencies )
 {
-    dsp_file = std::string(".\\") + dsp_file;
-	// TODO FIXME - what does next line do?
-    //$dsp_file =~ y%/%\\%;
+    dsp_file = DosSeparator ( std::string(".\\") + dsp_file );
     
 	// TODO FIXME - must they be sorted?
     //@dependencies = sort(@dependencies);
 
-    fprintf ( OUT, "###############################################################################\n" );
-    fprintf ( OUT, "\n" );
-    fprintf ( OUT, "Project: \"%s\"=%s - Package Owner=<4>\n", module.name.c_str(), dsp_file.c_str() );
-    fprintf ( OUT, "\n" );
-    fprintf ( OUT, "Package=<5>\n" );
-    fprintf ( OUT, "{{{\n" );
-    fprintf ( OUT, "}}}\n" );
-    fprintf ( OUT, "\n" );
-    fprintf ( OUT, "Package=<4>\n" );
-    fprintf ( OUT, "{{{\n" );
+    fprintf ( OUT, "###############################################################################\r\n" );
+    fprintf ( OUT, "\r\n" );
+    fprintf ( OUT, "Project: \"%s\"=%s - Package Owner=<4>\r\n", module.name.c_str(), dsp_file.c_str() );
+    fprintf ( OUT, "\r\n" );
+    fprintf ( OUT, "Package=<5>\r\n" );
+    fprintf ( OUT, "{{{\r\n" );
+    fprintf ( OUT, "}}}\r\n" );
+    fprintf ( OUT, "\r\n" );
+    fprintf ( OUT, "Package=<4>\r\n" );
+    fprintf ( OUT, "{{{\r\n" );
 	for ( size_t i = 0; i < dependencies.size(); i++ )
 	{
 		Dependency& dependency = *dependencies[i];
-		fprintf ( OUT, "    Begin Project Dependency\n" );
-		fprintf ( OUT, "    Project_Dep_Name %s\n", dependency.module.name.c_str() );
-		fprintf ( OUT, "    End Project Dependency\n" );
+		fprintf ( OUT, "    Begin Project Dependency\r\n" );
+		fprintf ( OUT, "    Project_Dep_Name %s\r\n", dependency.module.name.c_str() );
+		fprintf ( OUT, "    End Project Dependency\r\n" );
 	}
-	fprintf ( OUT, "}}}\n" );
-	fprintf ( OUT, "\n" );
+	fprintf ( OUT, "}}}\r\n" );
+	fprintf ( OUT, "\r\n" );
 }
 
 void
 MSVCBackend::_generate_dsw_footer ( FILE* OUT )
 {
-	fprintf ( OUT, "###############################################################################\n" );
-	fprintf ( OUT, "\n" );
-	fprintf ( OUT, "Global:\n" );
-	fprintf ( OUT, "\n" );
-	fprintf ( OUT, "Package=<5>\n" );
-	fprintf ( OUT, "{{{\n" );
-	fprintf ( OUT, "}}}\n" );
-	fprintf ( OUT, "\n" );
-	fprintf ( OUT, "Package=<3>\n" );
-	fprintf ( OUT, "{{{\n" );
-	fprintf ( OUT, "}}}\n" );
-	fprintf ( OUT, "\n" );
-	fprintf ( OUT, "###############################################################################\n" );
-	fprintf ( OUT, "\n" );
+	fprintf ( OUT, "###############################################################################\r\n" );
+	fprintf ( OUT, "\r\n" );
+	fprintf ( OUT, "Global:\r\n" );
+	fprintf ( OUT, "\r\n" );
+	fprintf ( OUT, "Package=<5>\r\n" );
+	fprintf ( OUT, "{{{\r\n" );
+	fprintf ( OUT, "}}}\r\n" );
+	fprintf ( OUT, "\r\n" );
+	fprintf ( OUT, "Package=<3>\r\n" );
+	fprintf ( OUT, "{{{\r\n" );
+	fprintf ( OUT, "}}}\r\n" );
+	fprintf ( OUT, "\r\n" );
+	fprintf ( OUT, "###############################################################################\r\n" );
+	fprintf ( OUT, "\r\n" );
 }
 
 void
@@ -806,22 +806,20 @@ MSVCBackend::_generate_wine_dsw ( FILE* OUT )
 	_generate_dsw_header(OUT);
 	// TODO FIXME - is it necessary to sort them?
 	for ( size_t i = 0; i < ProjectNode.modules.size(); i++ )
-	//foreach my $module (sort(keys(%modules)))
 	{
 		Module& module = *ProjectNode.modules[i];
 
-		//my $project = module->{project};
 		std::string dsp_file = DspFileName ( module );
 
 		// TODO FIXME - more wine hacks?
-        /*if($project =~ /^gdi32$/) {
-			foreach my $dir (@gdi32_dirs) {
-				my $dir2 = $dir;
+        /*if ( module.name == "gdi32" )
+		{
+			for ( size_t idir = 0; idir < gdi32_dirs.size(); idir++ )
+			{
+				string dir2 = gdi32_dirs[idir];
 				$dir2 =~ s%^.*?/([^/]+)$%$1%;
 
-				my $module = "gdi32_$dir2";
-				$module =~ s%/%_%g;
-				push @dependencies, $module;
+				dependencies.push_back ( Replace ( "gdi32_" + dir2, "/", "_" ) );
 			}
         }*/
 
