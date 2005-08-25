@@ -73,6 +73,7 @@ CloseServiceHandle@4
 ;CommandLineFromMsiDescriptor@12
 ;ComputeAccessTokenFromCodeAuthzLevel@20
 ControlService@12
+ControlServiceEx@16
 ;ControlTraceA@12
 ;ControlTraceW@12
 ;ConvertAccessToSecurityDescriptorA@20
