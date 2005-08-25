@@ -20,7 +20,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 	const bool wine = false;
 
 	string dsp_file = DspFileName(module);
-	printf ( "Creating MSVC project: '%s'\r\n", dsp_file.c_str() );
+	printf ( "Creating MSVC project: '%s'\n", dsp_file.c_str() );
 	FILE* OUT = fopen ( dsp_file.c_str(), "wb" );
 
 	vector<string> imports;
@@ -55,6 +55,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 	//$output->progress("$dsp_file (file $progress_current of $progress_max)");
 
 	// TODO FIXME - what's diff. betw. 'c_srcs' and 'source_files'?
+	string dsp_path = module.GetBasePath();
 	vector<string> c_srcs, source_files, resource_files;
 	vector<const IfableData*> ifs_list;
 	ifs_list.push_back ( &module.non_if_data );
@@ -69,7 +70,8 @@ MSVCBackend::_generate_dsp ( const Module& module )
 		for ( i = 0; i < files.size(); i++ )
 		{
 			// TODO FIXME - do we want the full path of the file here?
-			const string& file = files[i]->name;
+			string file = string(".") + &files[i]->name[dsp_path.size()];
+
 			source_files.push_back ( file );
 			if ( !stricmp ( Right(file,2).c_str(), ".c" ) )
 				c_srcs.push_back ( file );
