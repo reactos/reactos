@@ -135,6 +135,8 @@ CreateRemoteThread@28
 CreateSemaphoreA@16
 CreateSemaphoreW@16
 CreateSocketHandle@0
+CreateSymbolicLinkA@12
+CreateSymbolicLinkW@12
 CreateTapePartition@16
 CreateThread@24
 CreateTimerQueue@0

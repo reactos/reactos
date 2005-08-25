@@ -357,4 +357,51 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
   return FileHandle;
 }
 
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+CreateSymbolicLinkW(IN LPCWSTR lpSymlinkFileName,
+                    IN LPCWSTR lpTargetFileName,
+                    IN DWORD dwFlags)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL STDCALL
+CreateSymbolicLinkA(IN LPCSTR lpSymlinkFileName,
+                    IN LPCSTR lpTargetFileName,
+                    IN DWORD dwFlags)
+{
+    PWCHAR SymlinkW, TargetW;
+    BOOL Ret;
+    
+    if(!lpSymlinkFileName || !lpTargetFileName)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    
+    if (!(SymlinkW = FilenameA2W(lpSymlinkFileName, FALSE)))
+        return FALSE;
+
+    if (!(TargetW = FilenameA2W(lpTargetFileName, TRUE)))
+        return FALSE;
+    
+    Ret = CreateSymbolicLinkW(SymlinkW,
+                              TargetW,
+                              dwFlags);
+
+    RtlFreeHeap(RtlGetProcessHeap(), 0, TargetW);
+
+    return Ret;
+}
+
+
 /* EOF */
