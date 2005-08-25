@@ -773,6 +773,7 @@ SetConsoleCursorPosition@8
 SetConsoleDisplayMode@12
 SetConsoleFont@8
 SetConsoleHardwareState@12
+SetConsoleHistoryInfo@4
 SetConsoleIcon@4
 SetConsoleInputExeNameA@4
 SetConsoleInputExeNameW@4
@@ -787,6 +788,7 @@ SetConsoleNumberOfCommandsW@8
 ;SetConsoleOS2OemFormat
 SetConsoleOutputCP@4
 SetConsolePalette@12
+SetConsoleScreenBufferInfoEx@8
 SetConsoleScreenBufferSize@8
 SetConsoleTextAttribute@8
 SetConsoleTitleA@4

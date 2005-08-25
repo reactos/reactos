@@ -3622,4 +3622,108 @@ GetConsoleInputExeNameA(DWORD nBufferLength, LPSTR lpBuffer)
   return Ret;
 }
 
+
+/*--------------------------------------------------------------
+ *  GetConsoleHistoryInfo
+ *
+ * @unimplemented
+ */
+BOOL STDCALL
+GetConsoleHistoryInfo(PCONSOLE_HISTORY_INFO lpConsoleHistoryInfo)
+{
+    DPRINT1("GetConsoleHistoryInfo(0x%p) UNIMPLEMENTED!\n", lpConsoleHistoryInfo);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+
+/*--------------------------------------------------------------
+ *  SetConsoleHistoryInfo
+ *
+ * @unimplemented
+ */
+BOOL STDCALL
+SetConsoleHistoryInfo(IN PCONSOLE_HISTORY_INFO lpConsoleHistoryInfo)
+{
+    DPRINT1("SetConsoleHistoryInfo(0x%p) UNIMPLEMENTED!\n", lpConsoleHistoryInfo);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+
+/*--------------------------------------------------------------
+ *  GetConsoleOriginalTitleW
+ *
+ * @unimplemented
+ */
+DWORD STDCALL
+GetConsoleOriginalTitleW(OUT LPWSTR lpConsoleTitle,
+                         IN DWORD nSize)
+{
+    DPRINT1("GetConsoleOriginalTitleW(0x%p, 0x%x) UNIMPLEMENTED!\n", lpConsoleTitle, nSize);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+
+/*--------------------------------------------------------------
+ *  GetConsoleOriginalTitleA
+ *
+ * @unimplemented
+ */
+DWORD STDCALL
+GetConsoleOriginalTitleA(OUT LPSTR lpConsoleTitle,
+                         IN DWORD nSize)
+{
+    DPRINT1("GetConsoleOriginalTitleA(0x%p, 0x%x) UNIMPLEMENTED!\n", lpConsoleTitle, nSize);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
+
+
+/*--------------------------------------------------------------
+ *  GetConsoleScreenBufferInfoEx
+ *
+ * @unimplemented
+ */
+BOOL STDCALL
+GetConsoleScreenBufferInfoEx(IN HANDLE hConsoleOutput,
+                             OUT PCONSOLE_SCREEN_BUFFER_INFOEX lpConsoleScreenBufferInfoEx)
+{
+    DPRINT1("GetConsoleScreenBufferInfoEx(0x%p, 0x%p) UNIMPLEMENTED!\n", hConsoleOutput, lpConsoleScreenBufferInfoEx);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+
+/*--------------------------------------------------------------
+ *  SetConsoleScreenBufferInfoEx
+ *
+ * @unimplemented
+ */
+BOOL STDCALL
+SetConsoleScreenBufferInfoEx(IN HANDLE hConsoleOutput,
+                             IN PCONSOLE_SCREEN_BUFFER_INFOEX lpConsoleScreenBufferInfoEx)
+{
+    DPRINT1("SetConsoleScreenBufferInfoEx(0x%p, 0x%p) UNIMPLEMENTED!\n", hConsoleOutput, lpConsoleScreenBufferInfoEx);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+
+/*--------------------------------------------------------------
+ *  GetCurrentConsoleFontEx
+ *
+ * @unimplemented
+ */
+BOOL STDCALL
+GetCurrentConsoleFontEx(IN HANDLE hConsoleOutput,
+                        IN BOOL bMaximumWindow,
+                        OUT PCONSOLE_FONT_INFOEX lpConsoleCurrentFontEx)
+{
+    DPRINT1("GetCurrentConsoleFontEx(0x%p, 0x%x, 0x%p) UNIMPLEMENTED!\n", hConsoleOutput, bMaximumWindow, lpConsoleCurrentFontEx);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
 /* EOF */
