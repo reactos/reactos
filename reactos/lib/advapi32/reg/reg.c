@@ -938,7 +938,7 @@ RegDeleteTreeW(IN HKEY hKey,
                                    NULL);
 
         Status = NtOpenKey(&SubKeyHandle,
-                           KEY_READ,
+                           DELETE | KEY_ENUMERATE_SUB_KEYS | KEY_QUERY_VALUE,
                            &ObjectAttributes);
         if (!NT_SUCCESS(Status))
         {
