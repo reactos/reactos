@@ -33,6 +33,7 @@
 INT CommandEcho (LPTSTR cmd, LPTSTR param)
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
+	INT i = 0;
 
 #ifdef _DEBUG
 	DebugPrintf (_T("CommandEcho '%s' : '%s'\n"), cmd, param);
@@ -58,7 +59,20 @@ INT CommandEcho (LPTSTR cmd, LPTSTR param)
 		else if (_tcsicmp (param, D_ON) == 0)
 			bEcho = TRUE;
 		else if (*param)
+		{
+			while(i < _tcslen(param))
+			{
+				if(param[i] == _T('^'))
+				{
+					memmove(&param[i],&param[i + 1], _tcslen(&param[i]) * sizeof(TCHAR));
+					//skip past the char being escaped
+					i++;
+				}
+				else
+					i++;
+			}
 			ConOutPuts (param);
+		}
 		else
 		{
 			LoadString(CMD_ModuleHandle, STRING_ECHO_HELP5, szMsg, RC_STRING_MAX_SIZE);

@@ -1027,7 +1027,7 @@ ProcessInput (BOOL bFlag)
 		cp = commandline;
 		while (*ip)
 		{
-			if (*ip == _T('%'))
+         if (*ip == _T('%'))
 			{
 				switch (*++ip)
 				{
@@ -1077,7 +1077,6 @@ ProcessInput (BOOL bFlag)
 		            GetCurrentDirectory (MAX_PATH, szPath);
                 cp = _stpcpy (cp, szPath);                 
               }
-
               /* %TIME% */
               else if (_tcsicmp(ip,_T("time")) ==0)
               {
@@ -1146,8 +1145,18 @@ ProcessInput (BOOL bFlag)
                 evar = malloc ( 512 * sizeof(TCHAR));
                 if (evar==NULL) 
                     return 1; 
-
+					 SetLastError(0);
                 size = GetEnvironmentVariable (ip, evar, 512);
+					 if(GetLastError() == ERROR_ENVVAR_NOT_FOUND)
+					 {
+						 /* if no env var is found you must 
+						    continue with what was input*/
+					   cp = _stpcpy (cp, _T("%"));
+						cp = _stpcpy (cp, ip);
+						cp = _stpcpy (cp, _T("%"));
+					 }
+					 else
+					 {
                 if (size > 512)
                 {
                     evar = realloc(evar,size * sizeof(TCHAR) );
@@ -1162,6 +1171,7 @@ ProcessInput (BOOL bFlag)
                 {
 								 cp = _stpcpy (cp, evar);
                 }
+					 }
 
                 free(evar);
               }

@@ -78,6 +78,12 @@ INT GetRedirection (LPTSTR s, LPTSTR ifn, LPTSTR ofn, LPTSTR efn, LPINT lpnFlags
 	/* find and remove all the redirections first */
 	while (*sp)
 	{
+		if (*sp == _T('^'))
+		{
+			*dp++ = *sp++;
+			*dp++ = *sp++;
+			continue;
+		}
 		if ((*sp == _T('"')) || (*sp == _T('\'')))
 		{
 			/* No redirects inside quotes */
@@ -242,7 +248,13 @@ INT GetRedirection (LPTSTR s, LPTSTR ifn, LPTSTR ofn, LPTSTR efn, LPINT lpnFlags
 	sp = s;
 	while (*sp)
 	{
-		if ((*sp == _T('"')) || (*sp == _T('\'')))
+		if (*sp == _T('^'))
+		{
+			*sp++;
+			*sp++;
+			continue;
+		}
+		else if ((*sp == _T('"')) || (*sp == _T('\'')))
 		{
 			TCHAR qc = *sp;
 
