@@ -54,7 +54,7 @@ enum
 int copy (TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], INT append, DWORD lpdwFlags, BOOL bTouch)
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
-	FILETIME srctime;
+	FILETIME srctime,NewFileTime;
 	HANDLE hFileSrc;
 	HANDLE hFileDest;
 	LPBYTE buffer;
@@ -66,6 +66,7 @@ int copy (TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], INT append, DWORD lpdwFl
 	TCHAR TrueDest[MAX_PATH];
 	TCHAR TempSrc[MAX_PATH];
 	TCHAR * FileName;
+	SYSTEMTIME CurrentTime;
  
 
 #ifdef _DEBUG
@@ -83,9 +84,6 @@ int copy (TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], INT append, DWORD lpdwFl
         nErrorLevel = 1;
 		return 0;
 	}
-
-		FILETIME NewFileTime;
-		SYSTEMTIME CurrentTime;
 
 		GetSystemTime(&CurrentTime);
 		SystemTimeToFileTime(&CurrentTime, &NewFileTime);

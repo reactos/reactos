@@ -1990,7 +1990,6 @@ INT CommandDir(LPTSTR first, LPTSTR rest)
 	ConOutPrintf("(L) Lowercase : %i\n", stFlags.bLowerCase );
 	ConOutPrintf("(N) New : %i\n", stFlags.bNewLongList );
 	ConOutPrintf("(O) Order : %i\n", stFlags.stOrderBy.sCriteriaCount );
-	int i;
 	for (i =0;i<stFlags.stOrderBy.sCriteriaCount;i++)
 		ConOutPrintf(" Order Criteria [%i]: %i (Reversed: %i)\n",i, stFlags.stOrderBy.eCriteria[i], stFlags.stOrderBy.bCriteriaRev[i] );
 	ConOutPrintf("(P) Pause : %i\n", stFlags.bPause  );

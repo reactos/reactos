@@ -541,7 +541,6 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, INT cusor)
 	/* Keeps track of what element was last selected */
 	static INT Sel;
 	BOOL NeededQuote = FALSE;
-	
 	strOut[0] = _T('\0');
 
 	/* Copy the string, str can be edited and orginal should not be */
@@ -677,10 +676,12 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, INT cusor)
 	/* space in the name */
 	if(_tcschr(FileList[Sel].Name, _T(' ')))
 	{
+		INT LastSpace;
+		BOOL bInside;
 		/* It needs a " at the end */
 		NeededQuote = TRUE;
-		INT LastSpace = -1;
-		BOOL bInside = FALSE;
+		LastSpace = -1;
+		bInside = FALSE;
 		/* Find the place to put the " at the start */
 		for(i = 0; i < _tcslen(szPrefix); i++)
 		{
