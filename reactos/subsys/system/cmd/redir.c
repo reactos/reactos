@@ -250,8 +250,8 @@ INT GetRedirection (LPTSTR s, LPTSTR ifn, LPTSTR ofn, LPTSTR efn, LPINT lpnFlags
 	{
 		if (*sp == _T('^'))
 		{
-			*sp++;
-			*sp++;
+			sp++;
+			sp++;
 			continue;
 		}
 		else if ((*sp == _T('"')) || (*sp == _T('\'')))
