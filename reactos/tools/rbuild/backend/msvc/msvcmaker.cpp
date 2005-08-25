@@ -534,7 +534,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 		fprintf ( OUT, "!ENDIF \r\n" );
 		fprintf ( OUT, "\r\n" );
 	}
-
+#if 0
 	if ( module.name == "winebuild" )
 	{
 		fprintf ( OUT, "# Begin Special Build Tool\r\n" );
@@ -547,6 +547,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 			output_dir.c_str() );
 		fprintf ( OUT, "# End Special Build Tool\r\n" );
 	}
+#endif
 	fprintf ( OUT, "# Begin Target\r\n" );
 	fprintf ( OUT, "\r\n" );
 	for ( i = 0; i < cfgs.size(); i++ )
@@ -566,7 +567,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 		{
 			source_file = string(".\\") + source_file;
 		}
-
+#if 0
 		if ( !strcmp ( &source_file[source_file.size()-5], ".spec" ) )
 		{
 			string basename = string ( source_file.c_str(), source_file.size() - 5 );
@@ -580,7 +581,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 			fprintf ( OUT, "SOURCE=%s\r\n", dbg_c_file.c_str() );
 			fprintf ( OUT, "# End Source File\r\n" );
 		}
-
+#endif
 		fprintf ( OUT, "# Begin Source File\r\n" );
 		fprintf ( OUT, "\r\n" );
 
@@ -588,6 +589,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 
 		if ( !strcmp ( &source_file[source_file.size()-5], ".spec" ) )
 		{
+#if 0
 			string basename = string ( source_file.c_str(), source_file.size() - 5 );
 
 			string spec_file = source_file;
@@ -661,6 +663,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 			fprintf ( OUT, "\"%s\" : $(SOURCE) \"$(INTDIR)\" \"$(OUTDIR)\"\r\n", dbg_c_file.c_str() );
 			fprintf ( OUT, "   $(BuildCmds)\r\n" );
 			fprintf ( OUT, "# End Custom Build\r\n" );
+#endif
 		}
 		/*else if ( source_file =~ /([^\\]*?\.h)$/ )
 		{
@@ -707,7 +710,6 @@ MSVCBackend::_generate_dsp ( const Module& module )
 		fprintf ( OUT, "# End Source File\r\n" );
 	}
 	fprintf ( OUT, "# End Group\r\n" );
-
 	fprintf ( OUT, "# Begin Group \"Header Files\"\r\n" );
 	fprintf ( OUT, "\r\n" );
 	fprintf ( OUT, "# PROP Default_Filter \"h;hpp;hxx;hm;inl\"\r\n" );
