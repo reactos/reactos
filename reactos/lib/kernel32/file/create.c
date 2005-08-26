@@ -359,15 +359,109 @@ HANDLE STDCALL CreateFileW (LPCWSTR			lpFileName,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 CreateSymbolicLinkW(IN LPCWSTR lpSymlinkFileName,
                     IN LPCWSTR lpTargetFileName,
                     IN DWORD dwFlags)
 {
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    UNICODE_STRING NtSymLink, NtTargetName;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    HANDLE hTarget, hSymbolicLink;
+    NTSTATUS Status;
+    BOOL Ret = FALSE;
+    
+    if(!lpSymlinkFileName || !lpTargetFileName)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    
+    if (!RtlDosPathNameToNtPathName_U((LPWSTR)lpSymlinkFileName,
+                                      &NtSymLink,
+                                      NULL,
+                                      NULL))
+    {
+        /* FIXME - right error code? */
+        SetLastError(ERROR_PATH_NOT_FOUND);
+        return FALSE;
+    }
+    
+    if (!RtlDosPathNameToNtPathName_U((LPWSTR)lpTargetFileName,
+                                      &NtTargetName,
+                                      NULL,
+                                      NULL))
+    {
+        /* FIXME - right error code? */
+        SetLastError(ERROR_PATH_NOT_FOUND);
+        goto Cleanup2;
+    }
+    
+    /*
+     * Try to open the target
+     */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &NtTargetName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    
+    if (dwFlags == SYMLINK_FLAG_DIRECTORY)
+    {
+        Status = NtOpenDirectoryObject(&hTarget,
+                                       SYNCHRONIZE,
+                                       &ObjectAttributes);
+    }
+    else
+    {
+        IO_STATUS_BLOCK IoStatusBlock;
+        
+        Status = NtOpenFile(&hTarget,
+                            SYNCHRONIZE,
+                            &ObjectAttributes,
+                            &IoStatusBlock,
+                            FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                            FILE_SYNCHRONOUS_IO_NONALERT | FILE_OPEN_REPARSE_POINT);
+    }
+    
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastErrorByStatus(Status);
+        goto Cleanup;
+    }
+
+    NtClose(hTarget);
+    
+    /*
+     * Create the symbolic link
+     */
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &NtSymLink,
+                               OBJ_PERMANENT,
+                               NULL,
+                               NULL);
+
+    Status = NtCreateSymbolicLinkObject(&hSymbolicLink,
+                                        SYMBOLIC_LINK_ALL_ACCESS,
+                                        &ObjectAttributes,
+                                        &NtTargetName);
+    if (NT_SUCCESS(Status))
+    {
+        NtClose(hSymbolicLink);
+        Ret = TRUE;
+    }
+    else
+    {
+        SetLastErrorByStatus(Status);
+    }
+
+Cleanup:
+    RtlFreeUnicodeString(&NtTargetName);
+Cleanup2:
+    RtlFreeUnicodeString(&NtSymLink);
+
+    return Ret;
 }
 
 
