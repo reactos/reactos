@@ -346,7 +346,9 @@ CSR_API(CsrAllocConsole)
     DPRINT("CSRSS:CtrlDispatcher address: %x\n", ProcessData->CtrlDispatcher);
 
     /* Insert into the list */
+////////////////////////////
     InsertHeadList(&ProcessData->Console->ProcessList, &ProcessData->ProcessEntry);
+///////////////////////////
     return STATUS_SUCCESS;
 }
 
@@ -922,7 +924,7 @@ CSR_API(CsrWriteConsole)
   DPRINT("CsrWriteConsole\n");
 
   if (Request->Header.u1.s1.DataLength
-      < sizeof(CSRSS_WRITE_CONSOLE) - 1
+      < sizeof(CSRSS_WRITE_CONSOLE) 
         + (Request->Data.WriteConsoleRequest.NrCharactersToWrite * CharSize))
     {
       DPRINT1("Invalid request size\n");
@@ -1557,7 +1559,7 @@ CSR_API(CsrWriteConsoleOutputChar)
   CharSize = (Request->Data.WriteConsoleOutputCharRequest.Unicode ? sizeof(WCHAR) : sizeof(CHAR));
 
   if (Request->Header.u1.s1.DataLength
-      < sizeof(CSRSS_WRITE_CONSOLE_OUTPUT_CHAR) - 1
+      < sizeof(CSRSS_WRITE_CONSOLE_OUTPUT_CHAR) 
         + (Request->Data.WriteConsoleOutputCharRequest.Length * CharSize))
     {
       DPRINT1("Invalid request size\n");
@@ -1714,7 +1716,8 @@ CSR_API(CsrFillOutputChar)
     {
       ConioUnlockConsole(Console);
     }
-
+  Length = Request->Data.FillOutputRequest.Length;
+  Request->Data.FillOutputRequest.NrCharactersWritten = Length;
   return Request->Status;
 }
 
@@ -1801,7 +1804,8 @@ CSR_API(CsrWriteConsoleOutputAttrib)
 {
   PCSRSS_CONSOLE Console;
   PCSRSS_SCREEN_BUFFER Buff;
-  PUCHAR Buffer, Attribute;
+  PUCHAR Buffer;
+  PWORD Attribute;
   int X, Y, Length;
   NTSTATUS Status;
   RECT UpdateRect;
@@ -1809,7 +1813,7 @@ CSR_API(CsrWriteConsoleOutputAttrib)
   DPRINT("CsrWriteConsoleOutputAttrib\n");
 
   if (Request->Header.u1.s1.DataLength
-      < sizeof(CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB) - 1
+      < sizeof(CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB)
         + Request->Data.WriteConsoleOutputAttribRequest.Length)
     {
       DPRINT1("Invalid request size\n");
@@ -1842,10 +1846,10 @@ CSR_API(CsrWriteConsoleOutputAttrib)
   Y = (Request->Data.WriteConsoleOutputAttribRequest.Coord.Y + Buff->ShowY) % Buff->MaxY;
   Length = Request->Data.WriteConsoleOutputAttribRequest.Length;
   Buffer = &Buff->Buffer[2 * (Y * Buff->MaxX + X) + 1];
-  Attribute = (PUCHAR)Request->Data.WriteConsoleOutputAttribRequest.String;
+  Attribute = Request->Data.WriteConsoleOutputAttribRequest.Attribute;
   while (Length--)
     {
-      *Buffer = *Attribute++;
+      *Buffer = (UCHAR)(*Attribute++);
       Buffer += 2;
       if (++X == Buff->MaxX)
         {
@@ -2256,7 +2260,7 @@ CSR_API(CsrSetTitle)
   DPRINT("CsrSetTitle\n");
 
   if (Request->Header.u1.s1.DataLength
-      < sizeof(CSRSS_SET_TITLE) - 1
+      < sizeof(CSRSS_SET_TITLE) 
         + Request->Data.SetTitleRequest.Length)
     {
       DPRINT1("Invalid request size\n");
@@ -2662,14 +2666,14 @@ CSR_API(CsrReadConsoleOutputAttrib)
   NTSTATUS Status;
   PCSRSS_SCREEN_BUFFER Buff;
   DWORD Xpos, Ypos;
-  CHAR* ReadBuffer;
+  PWORD ReadBuffer;
   DWORD i;
 
   DPRINT("CsrReadConsoleOutputAttrib\n");
 
   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
   Request->Header.u1.s1.DataLength = Request->Header.u1.s1.TotalLength - sizeof(PORT_MESSAGE);
-  ReadBuffer = Request->Data.ReadConsoleOutputAttribRequest.String;
+  ReadBuffer = Request->Data.ReadConsoleOutputAttribRequest.Attribute;
 
   Status = ConioLockScreenBuffer(ProcessData, Request->Data.ReadConsoleOutputAttribRequest.ConsoleHandle, &Buff);
   if (! NT_SUCCESS(Status))

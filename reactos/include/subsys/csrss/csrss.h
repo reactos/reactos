@@ -46,7 +46,7 @@ typedef struct
   ULONG nMaxIds;
    ULONG nProcessIdsCopied;
    ULONG nProcessIdsTotal;
-   HANDLE ProcessId[1];
+   HANDLE ProcessId[0];
 } CSRSS_GET_PROCESS_LIST, *PCSRSS_GET_PROCESS_LIST;
 
 typedef struct
@@ -54,8 +54,8 @@ typedef struct
    HANDLE ConsoleHandle;
    BOOL Unicode;
    ULONG NrCharactersToWrite;
-   BYTE Buffer[1];
    ULONG NrCharactersWritten;
+   BYTE Buffer[0];
 } CSRSS_WRITE_CONSOLE, *PCSRSS_WRITE_CONSOLE;
 
 typedef struct
@@ -66,7 +66,7 @@ typedef struct
    WORD nCharsCanBeDeleted;     /* number of chars already in buffer that can be backspaced */
    HANDLE EventHandle;
    ULONG NrCharactersRead;
-   BYTE Buffer[1];
+   BYTE Buffer[0];
 } CSRSS_READ_CONSOLE, *PCSRSS_READ_CONSOLE;
 
 typedef struct
@@ -132,9 +132,9 @@ typedef struct
    BOOL Unicode;
    WORD Length;
    COORD Coord;
-   CHAR String[1];
    COORD EndCoord;
    ULONG NrCharactersWritten;
+   CHAR String[0];
 } CSRSS_WRITE_CONSOLE_OUTPUT_CHAR, *PCSRSS_WRITE_CONSOLE_OUTPUT_CHAR;
 
 typedef struct
@@ -142,8 +142,8 @@ typedef struct
    HANDLE ConsoleHandle;
    WORD Length;
    COORD Coord;
-   CHAR String[1];
    COORD EndCoord;
+   WORD Attribute[0];
 } CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB, *PCSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB;
 
 typedef struct
@@ -197,14 +197,14 @@ typedef struct
 {
   HANDLE Console;
   DWORD Length;
-  WCHAR Title[1];
+  WCHAR Title[0];
 } CSRSS_SET_TITLE, *PCSRSS_SET_TITLE;
 
 typedef struct
 {
-   HANDLE ConsoleHandle;
+  HANDLE ConsoleHandle;
   DWORD Length;
-  WCHAR Title[1];
+  WCHAR Title[0];
 } CSRSS_GET_TITLE, *PCSRSS_GET_TITLE;
 
 typedef struct
@@ -241,7 +241,7 @@ typedef struct
   COORD ReadCoord;
   COORD EndCoord;
   DWORD CharsRead;
-  CHAR String[1];
+  CHAR String[0];
 }CSRSS_READ_CONSOLE_OUTPUT_CHAR, *PCSRSS_READ_CONSOLE_OUTPUT_CHAR;
 
 typedef struct
@@ -250,13 +250,13 @@ typedef struct
   DWORD NumAttrsToRead;
   COORD ReadCoord;
   COORD EndCoord;
-  CHAR String[1];
+  WORD Attribute[0];
 }CSRSS_READ_CONSOLE_OUTPUT_ATTRIB, *PCSRSS_READ_CONSOLE_OUTPUT_ATTRIB;
 
 typedef struct
 {
   HANDLE ConsoleHandle;
-   DWORD NumInputEvents;
+  DWORD NumInputEvents;
 }CSRSS_GET_NUM_INPUT_EVENTS, *PCSRSS_GET_NUM_INPUT_EVENTS;
 
 typedef struct
@@ -410,20 +410,14 @@ typedef struct
   HANDLE InputWaitHandle;
 } CSRSS_GET_INPUT_WAIT_HANDLE, *PCSRSS_GET_INPUT_WAIT_HANDLE;
 
-#define CSRSS_MAX_WRITE_CONSOLE       \
-      (LPC_MAX_DATA_LENGTH - sizeof(ULONG) - sizeof(CSRSS_WRITE_CONSOLE))
-
-#define CSRSS_MAX_SET_TITLE           (LPC_MAX_DATA_LENGTH - sizeof( HANDLE ) - sizeof( DWORD ) - sizeof( ULONG ) - sizeof(PORT_MESSAGE))
-
-#define CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR   (LPC_MAX_DATA_LENGTH - sizeof( ULONG ) - sizeof( CSRSS_WRITE_CONSOLE_OUTPUT_CHAR ))
-
-#define CSRSS_MAX_WRITE_CONSOLE_OUTPUT_ATTRIB   ((LPC_MAX_DATA_LENGTH - sizeof( ULONG ) - sizeof( CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB )) / 2)
-
-#define CSRSS_MAX_READ_CONSOLE        (LPC_MAX_DATA_LENGTH - sizeof( ULONG ) - sizeof( CSRSS_READ_CONSOLE ))
-
-#define CSRSS_MAX_READ_CONSOLE_OUTPUT_CHAR    (LPC_MAX_DATA_LENGTH - sizeof(ULONG) - sizeof(HANDLE) - sizeof(DWORD) - sizeof(CSRSS_READ_CONSOLE_OUTPUT_CHAR))
-
-#define CSRSS_MAX_READ_CONSOLE_OUTPUT_ATTRIB  (LPC_MAX_DATA_LENGTH - sizeof(ULONG) - sizeof(HANDLE) - sizeof(DWORD) - sizeof(CSRSS_READ_CONSOLE_OUTPUT_ATTRIB))
+#define CSR_API_MESSAGE_HEADER_SIZE(Type)       (FIELD_OFFSET(CSR_API_MESSAGE, Data) + sizeof(Type))
+#define CSRSS_MAX_WRITE_CONSOLE                 (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE))
+#define CSRSS_MAX_SET_TITLE                     (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_SET_TITLE))
+#define CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR     (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE_OUTPUT_CHAR))
+#define CSRSS_MAX_WRITE_CONSOLE_OUTPUT_ATTRIB   (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB))
+#define CSRSS_MAX_READ_CONSOLE                  (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_READ_CONSOLE))
+#define CSRSS_MAX_READ_CONSOLE_OUTPUT_CHAR      (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_READ_CONSOLE_OUTPUT_CHAR))
+#define CSRSS_MAX_READ_CONSOLE_OUTPUT_ATTRIB    (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_READ_CONSOLE_OUTPUT_ATTRIB))
 
 /* WCHARs, not bytes! */
 #define CSRSS_MAX_TITLE_LENGTH          80
