@@ -31,11 +31,16 @@
 static RTL_CRITICAL_SECTION HandleTableCS;
 static HANDLE DefaultHandleTable[MAX_DEFAULT_HANDLES];
 static HANDLE ProcessHeap;
+static BOOLEAN DefaultHandlesDisabled = FALSE;
 
 /* PROTOTYPES ***************************************************************/
 
 static NTSTATUS MapDefaultKey (PHANDLE ParentKey, HKEY Key);
 static VOID CloseDefaultKeys(VOID);
+#define CloseDefaultKey(Handle)                                                \
+    if ((ULONG_PTR)Handle & 0x1) {                                             \
+        NtClose(Handle);                                                       \
+    }
 
 static NTSTATUS OpenClassesRootKey(PHANDLE KeyHandle);
 static NTSTATUS OpenLocalMachineKey (PHANDLE KeyHandle);
@@ -83,18 +88,19 @@ RegCleanup (VOID)
 
 
 static NTSTATUS
-MapDefaultKey (PHANDLE RealKey,
-	       HKEY Key)
+MapDefaultKey (OUT PHANDLE RealKey,
+               IN HKEY Key)
 {
   PHANDLE Handle;
   ULONG Index;
+  BOOLEAN DoOpen;
   NTSTATUS Status = STATUS_SUCCESS;
 
   TRACE("MapDefaultKey (Key %x)\n", Key);
 
   if (((ULONG)Key & 0xF0000000) != 0x80000000)
     {
-      *RealKey = (HANDLE)Key;
+      *RealKey = (HANDLE)((ULONG_PTR)Key & ~0x1);
       return STATUS_SUCCESS;
     }
 
@@ -106,8 +112,19 @@ MapDefaultKey (PHANDLE RealKey,
     }
 
   RtlEnterCriticalSection (&HandleTableCS);
-  Handle = &DefaultHandleTable[Index];
-  if (*Handle == NULL)
+  
+  if (!DefaultHandlesDisabled)
+    {
+      Handle = &DefaultHandleTable[Index];
+      DoOpen = (*Handle == NULL);
+    }
+  else
+    {
+      Handle = RealKey;
+      DoOpen = TRUE;
+    }
+  
+  if (DoOpen)
     {
       /* create/open the default handle */
       switch (Index)
@@ -144,14 +161,19 @@ MapDefaultKey (PHANDLE RealKey,
 	  default:
 	    WARN("MapDefaultHandle() no handle creator\n");
 	    Status = STATUS_INVALID_PARAMETER;
+	    break;
 	}
     }
-  RtlLeaveCriticalSection (&HandleTableCS);
 
-  if (NT_SUCCESS(Status))
-    {
-      *RealKey = *Handle;
-    }
+   if (NT_SUCCESS(Status))
+     {
+       if (!DefaultHandlesDisabled)
+          *RealKey = *Handle;
+       else
+          *(PULONG_PTR)Handle |= 0x1;
+     }
+  
+   RtlLeaveCriticalSection (&HandleTableCS);
 
    return Status;
 }
@@ -257,6 +279,21 @@ OpenCurrentConfigKey (PHANDLE KeyHandle)
 
 
 /************************************************************************
+ *  RegDisablePredefinedCacheEx
+ *
+ * @implemented
+ */
+LONG STDCALL
+RegDisablePredefinedCacheEx(VOID)
+{
+    RtlEnterCriticalSection (&HandleTableCS);
+    DefaultHandlesDisabled = TRUE;
+    RtlLeaveCriticalSection (&HandleTableCS);
+    return ERROR_SUCCESS;
+}
+
+
+/************************************************************************
  *  RegCloseKey
  *
  * @implemented
@@ -307,7 +344,7 @@ RegCopyTreeW(IN HKEY hKeySrc,
              IN LPCWSTR lpSubKey  OPTIONAL,
              IN HKEY hKeyDest)
 {
-    HANDLE DestKeyHandle, KeyHandle, SubKeyHandle = NULL;
+    HANDLE DestKeyHandle, KeyHandle, CurKey, SubKeyHandle = NULL;
     NTSTATUS Status;
     
     Status = MapDefaultKey(&KeyHandle,
@@ -321,7 +358,7 @@ RegCopyTreeW(IN HKEY hKeySrc,
                            hKeyDest);
     if (!NT_SUCCESS(Status))
     {
-        return RtlNtStatusToDosError(Status);
+        goto Cleanup2;
     }
 
     if (lpSubKey != NULL)
@@ -343,9 +380,13 @@ RegCopyTreeW(IN HKEY hKeySrc,
                            &ObjectAttributes);
         if (!NT_SUCCESS(Status))
         {
-            return RtlNtStatusToDosError(Status);
+            goto Cleanup;
         }
+        
+        CurKey = SubKeyHandle;
     }
+    else
+        CurKey = KeyHandle;
     
     /* FIXME - copy all keys and values recursively */
     Status = STATUS_NOT_IMPLEMENTED;
@@ -354,6 +395,11 @@ RegCopyTreeW(IN HKEY hKeySrc,
     {
         NtClose(SubKeyHandle);
     }
+    
+Cleanup:
+    CloseDefaultKey(DestKeyHandle);
+Cleanup2:
+    CloseDefaultKey(KeyHandle);
     
     if (!NT_SUCCESS(Status))
     {
@@ -549,7 +595,7 @@ RegCreateKeyExA (HKEY hKey,
 
   /* get the real parent key */
   Status = MapDefaultKey (&ParentKey,
-			  hKey);
+                          hKey);
   if (!NT_SUCCESS(Status))
     {
       return RtlNtStatusToDosError (Status);
@@ -580,6 +626,8 @@ RegCreateKeyExA (HKEY hKey,
     {
       RtlFreeUnicodeString (&ClassString);
     }
+
+  CloseDefaultKey(ParentKey);
 
   TRACE("Status %x\n", Status);
   if (!NT_SUCCESS(Status))
@@ -617,7 +665,7 @@ RegCreateKeyExW (HKEY hKey,
 
   /* get the real parent key */
   Status = MapDefaultKey (&ParentKey,
-			  hKey);
+                          hKey);
   if (!NT_SUCCESS(Status))
     {
       return RtlNtStatusToDosError(Status);
@@ -639,6 +687,9 @@ RegCreateKeyExW (HKEY hKey,
                            dwOptions,
                            samDesired,
                            lpdwDisposition);
+
+  CloseDefaultKey(ParentKey);
+
   TRACE("Status %x\n", Status);
   if (!NT_SUCCESS(Status))
     {
@@ -709,7 +760,7 @@ RegDeleteKeyA (HKEY hKey,
   NTSTATUS Status;
 
   Status = MapDefaultKey (&ParentKey,
-			  hKey);
+                          hKey);
   if (!NT_SUCCESS(Status))
     {
       return RtlNtStatusToDosError (Status);
@@ -729,11 +780,15 @@ RegDeleteKeyA (HKEY hKey,
   RtlFreeUnicodeString (&SubKeyName);
   if (!NT_SUCCESS(Status))
     {
-      return RtlNtStatusToDosError (Status);
+      goto Cleanup;
     }
 
   Status = NtDeleteKey (TargetKey);
   NtClose (TargetKey);
+  
+Cleanup:
+  CloseDefaultKey(ParentKey);
+
   if (!NT_SUCCESS(Status))
     {
       return RtlNtStatusToDosError(Status);
@@ -759,7 +814,7 @@ RegDeleteKeyW (HKEY hKey,
   NTSTATUS Status;
 
   Status = MapDefaultKey (&ParentKey,
-			  hKey);
+                          hKey);
   if (!NT_SUCCESS(Status))
     {
       return RtlNtStatusToDosError (Status);
@@ -777,11 +832,15 @@ RegDeleteKeyW (HKEY hKey,
 		      &ObjectAttributes);
   if (!NT_SUCCESS(Status))
     {
-      return RtlNtStatusToDosError (Status);
+      goto Cleanup;
     }
 
   Status = NtDeleteKey (TargetKey);
   NtClose (TargetKey);
+  
+Cleanup:
+  CloseDefaultKey(ParentKey);
+
   if (!NT_SUCCESS(Status))
     {
       return RtlNtStatusToDosError (Status);
@@ -802,7 +861,7 @@ RegDeleteKeyValueW(IN HKEY hKey,
                    IN LPCWSTR lpValueName  OPTIONAL)
 {
     UNICODE_STRING ValueName;
-    HANDLE KeyHandle, SubKeyHandle = NULL;
+    HANDLE KeyHandle, CurKey, SubKeyHandle = NULL;
     NTSTATUS Status;
 
     Status = MapDefaultKey(&KeyHandle,
@@ -831,22 +890,27 @@ RegDeleteKeyValueW(IN HKEY hKey,
                            &ObjectAttributes);
         if (!NT_SUCCESS(Status))
         {
-            return RtlNtStatusToDosError(Status);
+            goto Cleanup;
         }
         
-        KeyHandle = SubKeyHandle;
+        CurKey = SubKeyHandle;
     }
+    else
+        CurKey = KeyHandle;
 
     RtlInitUnicodeString(&ValueName,
                          (LPWSTR)lpValueName);
 
-    Status = NtDeleteValueKey(KeyHandle,
+    Status = NtDeleteValueKey(CurKey,
                               &ValueName);
 
     if (SubKeyHandle != NULL)
     {
         NtClose(SubKeyHandle);
     }
+    
+Cleanup:
+    CloseDefaultKey(KeyHandle);
 
     if (!NT_SUCCESS(Status))
     {
@@ -915,7 +979,7 @@ LONG STDCALL
 RegDeleteTreeW(IN HKEY hKey,
                IN LPCWSTR lpSubKey  OPTIONAL)
 {
-    HANDLE KeyHandle, SubKeyHandle = NULL;
+    HANDLE KeyHandle, CurKey, SubKeyHandle = NULL;
     NTSTATUS Status;
 
     Status = MapDefaultKey(&KeyHandle,
@@ -944,11 +1008,13 @@ RegDeleteTreeW(IN HKEY hKey,
                            &ObjectAttributes);
         if (!NT_SUCCESS(Status))
         {
-            return RtlNtStatusToDosError(Status);
+            goto Cleanup;
         }
         
-        KeyHandle = SubKeyHandle;
+        CurKey = SubKeyHandle;
     }
+    else
+        CurKey = KeyHandle;
 
     /* FIXME - delete all keys recursively */
     Status = STATUS_NOT_IMPLEMENTED;
@@ -957,6 +1023,9 @@ RegDeleteTreeW(IN HKEY hKey,
     {
         NtClose(SubKeyHandle);
     }
+
+Cleanup:
+    CloseDefaultKey(KeyHandle);
 
     if (!NT_SUCCESS(Status))
     {
@@ -1013,7 +1082,7 @@ RegSetKeyValueW(IN HKEY hKey,
                 IN LPCVOID lpData  OPTIONAL,
                 IN DWORD cbData)
 {
-    HANDLE KeyHandle, SubKeyHandle = NULL;
+    HANDLE KeyHandle, CurKey, SubKeyHandle = NULL;
     NTSTATUS Status;
     LONG Ret;
 
@@ -1043,13 +1112,16 @@ RegSetKeyValueW(IN HKEY hKey,
                            &ObjectAttributes);
         if (!NT_SUCCESS(Status))
         {
-            return RtlNtStatusToDosError(Status);
+            Ret = RtlNtStatusToDosError(Status);
+            goto Cleanup;
         }
         
-        KeyHandle = SubKeyHandle;
+        CurKey = SubKeyHandle;
     }
+    else
+        CurKey = KeyHandle;
     
-    Ret = RegSetValueExW(KeyHandle,
+    Ret = RegSetValueExW(CurKey,
                          lpValueName,
                          0,
                          dwType,
@@ -1060,6 +1132,9 @@ RegSetKeyValueW(IN HKEY hKey,
     {
         NtClose(SubKeyHandle);
     }
+    
+Cleanup:
+    CloseDefaultKey(KeyHandle);
 
     return Ret;
 }
@@ -1078,7 +1153,7 @@ RegSetKeyValueA(IN HKEY hKey,
                 IN LPCVOID lpData  OPTIONAL,
                 IN DWORD cbData)
 {
-    HANDLE KeyHandle, SubKeyHandle = NULL;
+    HANDLE KeyHandle, CurKey, SubKeyHandle = NULL;
     NTSTATUS Status;
     LONG Ret;
 
@@ -1097,7 +1172,8 @@ RegSetKeyValueA(IN HKEY hKey,
         if (!RtlCreateUnicodeStringFromAsciiz(&SubKeyName,
                                               (LPSTR)lpSubKey))
         {
-            return ERROR_NOT_ENOUGH_MEMORY;
+            Ret = ERROR_NOT_ENOUGH_MEMORY;
+            goto Cleanup;
         }
 
         InitializeObjectAttributes(&ObjectAttributes,
@@ -1114,13 +1190,16 @@ RegSetKeyValueA(IN HKEY hKey,
 
         if (!NT_SUCCESS(Status))
         {
-            return RtlNtStatusToDosError(Status);
+            Ret = RtlNtStatusToDosError(Status);
+            goto Cleanup;
         }
         
-        KeyHandle = SubKeyHandle;
+        CurKey = SubKeyHandle;
     }
+    else
+        CurKey = KeyHandle;
 
-    Ret = RegSetValueExA(KeyHandle,
+    Ret = RegSetValueExA(CurKey,
                          lpValueName,
                          0,
                          dwType,
@@ -1131,6 +1210,9 @@ RegSetKeyValueA(IN HKEY hKey,
     {
         NtClose(SubKeyHandle);
     }
+    
+Cleanup:
+    CloseDefaultKey(KeyHandle);
 
     return Ret;
 }
@@ -1150,7 +1232,7 @@ RegDeleteValueA (HKEY hKey,
   NTSTATUS Status;
 
   Status = MapDefaultKey (&KeyHandle,
-			  hKey);
+                          hKey);
   if (!NT_SUCCESS(Status))
     {
       return RtlNtStatusToDosError (Status);
@@ -1161,6 +1243,9 @@ RegDeleteValueA (HKEY hKey,
   Status = NtDeleteValueKey (KeyHandle,
 			     &ValueName);
   RtlFreeUnicodeString (&ValueName);
+  
+  CloseDefaultKey(KeyHandle);
+  
   if (!NT_SUCCESS(Status))
     {
       return RtlNtStatusToDosError (Status);
@@ -1184,7 +1269,7 @@ RegDeleteValueW (HKEY hKey,
   HANDLE KeyHandle;
 
   Status = MapDefaultKey (&KeyHandle,
-			  hKey);
+                          hKey);
   if (!NT_SUCCESS(Status))
     {
       return RtlNtStatusToDosError (Status);
@@ -1195,6 +1280,9 @@ RegDeleteValueW (HKEY hKey,
 
   Status = NtDeleteValueKey (KeyHandle,
 			     &ValueName);
+
+  CloseDefaultKey(KeyHandle);
+
   if (!NT_SUCCESS(Status))
     {
       return RtlNtStatusToDosError (Status);
@@ -1330,7 +1418,8 @@ RegEnumKeyExA (HKEY hKey,
 	KeyInfo = RtlAllocateHeap (ProcessHeap, 0, BufferSize);
 	if (KeyInfo == NULL)
 	{
-		return ERROR_OUTOFMEMORY;
+		ErrorCode = ERROR_OUTOFMEMORY;
+		goto Cleanup;
 	}
 
 	Status = NtEnumerateKey (KeyHandle,
@@ -1416,7 +1505,10 @@ RegEnumKeyExA (HKEY hKey,
 		0,
 		KeyInfo);
 
-	return ErrorCode;
+Cleanup:
+    CloseDefaultKey(KeyHandle);
+
+    return ErrorCode;
 }
 
 
@@ -1450,7 +1542,7 @@ RegEnumKeyExW (HKEY hKey,
   NTSTATUS Status;
 
   Status = MapDefaultKey(&KeyHandle,
-			 hKey);
+                         hKey);
   if (!NT_SUCCESS(Status))
     {
       return RtlNtStatusToDosError (Status);
@@ -1488,7 +1580,8 @@ RegEnumKeyExW (HKEY hKey,
 			     BufferSize);
   if (KeyInfo == NULL)
     {
-      return ERROR_OUTOFMEMORY;
+      ErrorCode = ERROR_OUTOFMEMORY;
+      goto Cleanup;
     }
 
   Status = NtEnumerateKey (KeyHandle,
@@ -1560,6 +1653,9 @@ RegEnumKeyExW (HKEY hKey,
 	       0,
 	       KeyInfo);
 
+Cleanup:
+  CloseDefaultKey(KeyHandle);
+
   return ErrorCode;
 }
 
@@ -1607,7 +1703,10 @@ RegEnumValueA( HKEY hKey, DWORD index, LPSTR value, LPDWORD val_count,
         {
             if (buf_ptr != buffer) HeapFree( GetProcessHeap(), 0, buf_ptr );
             if (!(buf_ptr = HeapAlloc( GetProcessHeap(), 0, total_size )))
-                return ERROR_NOT_ENOUGH_MEMORY;
+            {
+                status = STATUS_INSUFFICIENT_RESOURCES;
+                goto done;
+            }
             info = (KEY_VALUE_FULL_INFORMATION *)buf_ptr;
             status = NtEnumerateValueKey( KeyHandle, index, KeyValueFullInformation,
                                           buf_ptr, total_size, &total_size );
@@ -1670,6 +1769,7 @@ RegEnumValueA( HKEY hKey, DWORD index, LPSTR value, LPDWORD val_count,
 
  done:
     if (buf_ptr != buffer) HeapFree( GetProcessHeap(), 0, buf_ptr );
+    CloseDefaultKey(KeyHandle);
     return RtlNtStatusToDosError(status);
 }
 
@@ -1729,7 +1829,10 @@ RegEnumValueW( HKEY hKey, DWORD index, LPWSTR value, PDWORD val_count,
         {
             if (buf_ptr != buffer) HeapFree( GetProcessHeap(), 0, buf_ptr );
             if (!(buf_ptr = HeapAlloc( GetProcessHeap(), 0, total_size )))
-                return ERROR_NOT_ENOUGH_MEMORY;
+            {
+                status = ERROR_NOT_ENOUGH_MEMORY;
+                goto done;
+            }
             info = (KEY_VALUE_FULL_INFORMATION *)buf_ptr;
             status = NtEnumerateValueKey( KeyHandle, index, KeyValueFullInformation,
                                           buf_ptr, total_size, &total_size );
@@ -1774,6 +1877,7 @@ RegEnumValueW( HKEY hKey, DWORD index, LPWSTR value, PDWORD val_count,
 
  done:
     if (buf_ptr != buffer) HeapFree( GetProcessHeap(), 0, buf_ptr );
+    CloseDefaultKey(KeyHandle);
     return RtlNtStatusToDosError(status);
 }
 
@@ -1794,13 +1898,16 @@ RegFlushKey(HKEY hKey)
     }
 
   Status = MapDefaultKey (&KeyHandle,
-			  hKey);
+                          hKey);
   if (!NT_SUCCESS(Status))
     {
       return RtlNtStatusToDosError (Status);
     }
 
   Status = NtFlushKey (KeyHandle);
+  
+  CloseDefaultKey(KeyHandle);
+  
   if (!NT_SUCCESS(Status))
     {
       return RtlNtStatusToDosError (Status);
@@ -1830,7 +1937,7 @@ RegGetKeySecurity(HKEY hKey,
     }
 
   Status = MapDefaultKey(&KeyHandle,
-			 hKey);
+                         hKey);
   if (!NT_SUCCESS(Status))
     {
       TRACE("MapDefaultKey() failed (Status %lx)\n", Status);
@@ -1842,6 +1949,9 @@ RegGetKeySecurity(HKEY hKey,
 				 pSecurityDescriptor,
 				 *lpcbSecurityDescriptor,
 				 lpcbSecurityDescriptor);
+
+  CloseDefaultKey(KeyHandle);
+
   if (!NT_SUCCESS(Status))
     {
       WARN("NtQuerySecurityObject() failed (Status %lx)\n", Status);
@@ -1898,6 +2008,7 @@ RegLoadKeyW (HKEY hKey,
   UNICODE_STRING KeyName;
   HANDLE KeyHandle;
   NTSTATUS Status;
+  LONG ErrorCode = ERROR_SUCCESS;
 
   if (hKey == HKEY_PERFORMANCE_DATA)
     {
@@ -1905,7 +2016,7 @@ RegLoadKeyW (HKEY hKey,
     }
 
   Status = MapDefaultKey (&KeyHandle,
-			  hKey);
+                          hKey);
   if (!NT_SUCCESS(Status))
     {
       return RtlNtStatusToDosError (Status);
@@ -1916,7 +2027,8 @@ RegLoadKeyW (HKEY hKey,
 				     NULL,
 				     NULL))
     {
-      return ERROR_BAD_PATHNAME;
+      ErrorCode = ERROR_BAD_PATHNAME;
+      goto Cleanup;
     }
 
   InitializeObjectAttributes (&FileObjectAttributes,
@@ -1941,10 +2053,14 @@ RegLoadKeyW (HKEY hKey,
 
   if (!NT_SUCCESS(Status))
     {
-      return RtlNtStatusToDosError (Status);
+      ErrorCode = RtlNtStatusToDosError (Status);
+      goto Cleanup;
     }
 
-  return ERROR_SUCCESS;
+Cleanup:
+  CloseDefaultKey(KeyHandle);
+
+  return ErrorCode;
 }
 
 
@@ -1963,6 +2079,7 @@ RegNotifyChangeKeyValue (HKEY hKey,
   IO_STATUS_BLOCK IoStatusBlock;
   HANDLE KeyHandle;
   NTSTATUS Status;
+  LONG ErrorCode = ERROR_SUCCESS;
 
   if (hKey == HKEY_PERFORMANCE_DATA)
     {
@@ -1975,7 +2092,7 @@ RegNotifyChangeKeyValue (HKEY hKey,
     }
 
   Status = MapDefaultKey (&KeyHandle,
-			  hKey);
+                          hKey);
   if (!NT_SUCCESS(Status))
     {
       return RtlNtStatusToDosError (Status);
@@ -1995,10 +2112,12 @@ RegNotifyChangeKeyValue (HKEY hKey,
 			      fAsynchronous);
   if (!NT_SUCCESS(Status) && Status != STATUS_TIMEOUT)
     {
-      return RtlNtStatusToDosError (Status);
+      ErrorCode = RtlNtStatusToDosError (Status);
     }
 
-  return ERROR_SUCCESS;
+  CloseDefaultKey(KeyHandle);
+
+  return ErrorCode;
 }
 
 
@@ -2090,6 +2209,7 @@ RegOpenKeyExA (HKEY hKey,
 	UNICODE_STRING SubKeyString;
 	HANDLE KeyHandle;
 	NTSTATUS Status;
+	LONG ErrorCode = ERROR_SUCCESS;
 
 	TRACE("RegOpenKeyExA hKey 0x%x lpSubKey %s ulOptions 0x%x samDesired 0x%x phkResult %p\n",
 		hKey, lpSubKey, ulOptions, samDesired, phkResult);
@@ -2111,10 +2231,12 @@ RegOpenKeyExA (HKEY hKey,
 	RtlFreeUnicodeString (&SubKeyString);
 	if (!NT_SUCCESS(Status))
 	{
-		return RtlNtStatusToDosError (Status);
+		ErrorCode = RtlNtStatusToDosError (Status);
 	}
+	
+	CloseDefaultKey(KeyHandle);
 
-	return ERROR_SUCCESS;
+	return ErrorCode;
 }
 
 
@@ -2134,6 +2256,7 @@ RegOpenKeyExW (HKEY hKey,
 	UNICODE_STRING SubKeyString;
 	HANDLE KeyHandle;
 	NTSTATUS Status;
+	LONG ErrorCode = ERROR_SUCCESS;
 
 	TRACE("RegOpenKeyExW hKey 0x%x lpSubKey %S ulOptions 0x%x samDesired 0x%x phkResult %p\n",
 		hKey, lpSubKey, ulOptions, samDesired, phkResult);
@@ -2159,10 +2282,12 @@ RegOpenKeyExW (HKEY hKey,
 
 	if (!NT_SUCCESS(Status))
 	{
-		return RtlNtStatusToDosError (Status);
+		ErrorCode = RtlNtStatusToDosError (Status);
 	}
+	
+	CloseDefaultKey(KeyHandle);
 
-	return ERROR_SUCCESS;
+	return ErrorCode;
 }
 
 
@@ -2430,7 +2555,8 @@ RegQueryInfoKeyW (HKEY hKey,
 				  FullInfoSize);
       if (FullInfo == NULL)
 	{
-	  return ERROR_OUTOFMEMORY;
+	  ErrorCode = ERROR_OUTOFMEMORY;
+	  goto Cleanup;
 	}
 
       FullInfo->ClassLength = ClassLength;
@@ -2458,7 +2584,8 @@ RegQueryInfoKeyW (HKEY hKey,
 		       FullInfo);
 	}
 
-      return RtlNtStatusToDosError (Status);
+      ErrorCode = RtlNtStatusToDosError (Status);
+      goto Cleanup;
     }
 
   TRACE("SubKeys %d\n", FullInfo->SubKeys);
@@ -2515,7 +2642,8 @@ RegQueryInfoKeyW (HKEY hKey,
 			  FullInfo);
 	    }
 
-	  return RtlNtStatusToDosError (Status);
+	  ErrorCode = RtlNtStatusToDosError (Status);
+	  goto Cleanup;
 	}
     }
 
@@ -2545,6 +2673,9 @@ RegQueryInfoKeyW (HKEY hKey,
 		   FullInfo);
     }
 
+Cleanup:
+  CloseDefaultKey(KeyHandle);
+  
   return ErrorCode;
 }
 
@@ -2711,7 +2842,8 @@ RegQueryValueExW (HKEY hKey,
 
   if (lpData != NULL && lpcbData == NULL)
     {
-      return ERROR_INVALID_PARAMETER;
+      ErrorCode = ERROR_INVALID_PARAMETER;
+      goto Cleanup;
     }
 
   RtlInitUnicodeString (&ValueName,
@@ -2722,7 +2854,8 @@ RegQueryValueExW (HKEY hKey,
 			       BufferSize);
   if (ValueInfo == NULL)
     {
-      return ERROR_OUTOFMEMORY;
+      ErrorCode = ERROR_OUTOFMEMORY;
+      goto Cleanup;
     }
 
   Status = NtQueryValueKey (KeyHandle,
@@ -2789,6 +2922,9 @@ RegQueryValueExW (HKEY hKey,
   RtlFreeHeap (ProcessHeap,
 	       0,
 	       ValueInfo);
+
+Cleanup:
+  CloseDefaultKey(KeyHandle);
 
   return ErrorCode;
 }
@@ -3013,7 +3149,7 @@ RegQueryValueW (HKEY hKey,
 	 hKey, lpSubKey, lpValue, lpcbValue ? *lpcbValue : 0);
 
   Status = MapDefaultKey (&KeyHandle,
-			  hKey);
+                          hKey);
   if (!NT_SUCCESS(Status))
     {
       return RtlNtStatusToDosError (Status);
@@ -3034,7 +3170,8 @@ RegQueryValueW (HKEY hKey,
 			  &ObjectAttributes);
       if (!NT_SUCCESS(Status))
 	{
-	  return RtlNtStatusToDosError (Status);
+	  ErrorCode = RtlNtStatusToDosError (Status);
+	  goto Cleanup;
 	}
       CloseRealKey = TRUE;
     }
@@ -3054,6 +3191,9 @@ RegQueryValueW (HKEY hKey,
     {
       NtClose (RealKey);
     }
+
+Cleanup:
+  CloseDefaultKey(KeyHandle);
 
   return ErrorCode;
 }
@@ -3116,6 +3256,7 @@ RegReplaceKeyW (HKEY hKey,
   HANDLE RealKeyHandle;
   HANDLE KeyHandle;
   NTSTATUS Status;
+  LONG ErrorCode = ERROR_SUCCESS;
 
   if (hKey == HKEY_PERFORMANCE_DATA)
     {
@@ -3123,7 +3264,7 @@ RegReplaceKeyW (HKEY hKey,
     }
 
   Status = MapDefaultKey (&KeyHandle,
-			  hKey);
+                          hKey);
   if (!NT_SUCCESS(Status))
     {
       return RtlNtStatusToDosError (Status);
@@ -3144,7 +3285,8 @@ RegReplaceKeyW (HKEY hKey,
 			  &KeyObjectAttributes);
       if (!NT_SUCCESS(Status))
 	{
-	  return RtlNtStatusToDosError (Status);
+	  ErrorCode = RtlNtStatusToDosError (Status);
+	  goto Cleanup;
 	}
       CloseRealKey = TRUE;
     }
@@ -3164,7 +3306,8 @@ RegReplaceKeyW (HKEY hKey,
 	{
 	  NtClose (RealKeyHandle);
 	}
-      return ERROR_INVALID_PARAMETER;
+      ErrorCode = ERROR_INVALID_PARAMETER;
+      goto Cleanup;
     }
 
   InitializeObjectAttributes (&NewObjectAttributes,
@@ -3184,7 +3327,8 @@ RegReplaceKeyW (HKEY hKey,
 	{
 	  NtClose (RealKeyHandle);
 	}
-      return ERROR_INVALID_PARAMETER;
+      ErrorCode = ERROR_INVALID_PARAMETER;
+      goto Cleanup;
     }
 
   InitializeObjectAttributes (&OldObjectAttributes,
@@ -3210,7 +3354,10 @@ RegReplaceKeyW (HKEY hKey,
       return RtlNtStatusToDosError (Status);
     }
 
-  return ERROR_SUCCESS;
+Cleanup:
+  CloseDefaultKey(KeyHandle);
+
+  return ErrorCode;
 }
 
 
@@ -3263,7 +3410,7 @@ RegRestoreKeyW (HKEY hKey,
     }
 
   Status = MapDefaultKey (&KeyHandle,
-			  hKey);
+                          hKey);
   if (!NT_SUCCESS(Status))
     {
       return RtlNtStatusToDosError (Status);
@@ -3274,7 +3421,8 @@ RegRestoreKeyW (HKEY hKey,
 				     NULL,
 				     NULL))
     {
-      return ERROR_INVALID_PARAMETER;
+      Status = STATUS_INVALID_PARAMETER;
+      goto Cleanup;
     }
 
   InitializeObjectAttributes (&ObjectAttributes,
@@ -3292,13 +3440,17 @@ RegRestoreKeyW (HKEY hKey,
   RtlFreeUnicodeString (&FileName);
   if (!NT_SUCCESS(Status))
     {
-      return RtlNtStatusToDosError (Status);
+      goto Cleanup;
     }
 
   Status = NtRestoreKey (KeyHandle,
 			 FileHandle,
 			 (ULONG)dwFlags);
   NtClose (FileHandle);
+  
+Cleanup:
+  CloseDefaultKey(KeyHandle);
+
   if (!NT_SUCCESS(Status))
     {
       return RtlNtStatusToDosError (Status);
@@ -3351,7 +3503,7 @@ RegSaveKeyW (HKEY hKey,
   NTSTATUS Status;
 
   Status = MapDefaultKey (&KeyHandle,
-			  hKey);
+                          hKey);
   if (!NT_SUCCESS(Status))
     {
       return RtlNtStatusToDosError (Status);
@@ -3362,7 +3514,8 @@ RegSaveKeyW (HKEY hKey,
 				     NULL,
 				     NULL))
     {
-      return ERROR_INVALID_PARAMETER;
+      Status = STATUS_INVALID_PARAMETER;
+      goto Cleanup;
     }
 
   if (lpSecurityAttributes != NULL)
@@ -3389,12 +3542,16 @@ RegSaveKeyW (HKEY hKey,
   RtlFreeUnicodeString (&FileName);
   if (!NT_SUCCESS(Status))
     {
-      return RtlNtStatusToDosError (Status);
+      goto Cleanup;
     }
 
   Status = NtSaveKey (KeyHandle,
 		      FileHandle);
   NtClose (FileHandle);
+
+Cleanup:
+  CloseDefaultKey(KeyHandle);
+
   if (!NT_SUCCESS(Status))
     {
       return RtlNtStatusToDosError (Status);
@@ -3423,7 +3580,7 @@ RegSetKeySecurity (HKEY hKey,
     }
 
   Status = MapDefaultKey (&KeyHandle,
-			  hKey);
+                          hKey);
   if (!NT_SUCCESS(Status))
     {
       return RtlNtStatusToDosError (Status);
@@ -3432,6 +3589,9 @@ RegSetKeySecurity (HKEY hKey,
   Status = NtSetSecurityObject (KeyHandle,
 				SecurityInformation,
 				pSecurityDescriptor);
+
+  CloseDefaultKey(KeyHandle);
+  
   if (!NT_SUCCESS(Status))
     {
       return RtlNtStatusToDosError (Status);
@@ -3547,7 +3707,7 @@ RegSetValueExW (HKEY hKey,
   NTSTATUS Status;
 
   Status = MapDefaultKey (&KeyHandle,
-			  hKey);
+                          hKey);
   if (!NT_SUCCESS(Status))
     {
       return RtlNtStatusToDosError (Status);
@@ -3579,6 +3739,9 @@ RegSetValueExW (HKEY hKey,
 			  dwType,
 			  (PVOID)lpData,
 			  (ULONG)cbData);
+
+  CloseDefaultKey(KeyHandle);
+
   if (!NT_SUCCESS(Status))
     {
       return RtlNtStatusToDosError (Status);
@@ -3659,7 +3822,7 @@ RegSetValueW (HKEY hKey,
   LONG ErrorCode;
 
   Status = MapDefaultKey (&KeyHandle,
-			  hKey);
+                          hKey);
   if (!NT_SUCCESS(Status))
     {
       return RtlNtStatusToDosError (Status);
@@ -3679,7 +3842,8 @@ RegSetValueW (HKEY hKey,
 			  &ObjectAttributes);
       if (!NT_SUCCESS(Status))
 	{
-	  return RtlNtStatusToDosError (Status);
+	  ErrorCode = RtlNtStatusToDosError (Status);
+	  goto Cleanup;
 	}
       CloseRealKey = TRUE;
     }
@@ -3699,6 +3863,9 @@ RegSetValueW (HKEY hKey,
     {
       NtClose (RealKey);
     }
+
+Cleanup:
+  CloseDefaultKey(KeyHandle);
 
   return ErrorCode;
 }
@@ -3763,6 +3930,8 @@ RegUnLoadKeyW (HKEY hKey,
 			      NULL);
 
   Status = NtUnloadKey (&ObjectAttributes);
+  
+  CloseDefaultKey(KeyHandle);
 
   if (!NT_SUCCESS(Status))
     {

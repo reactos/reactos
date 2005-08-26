@@ -483,6 +483,7 @@ RegDeleteTreeW@8
 RegDeleteValueA@8
 RegDeleteValueW@8
 ;RegDisablePredefinedCache
+RegDisablePredefinedCacheEx@0
 RegEnumKeyA@16
 RegEnumKeyExA@32
 RegEnumKeyExW@32
