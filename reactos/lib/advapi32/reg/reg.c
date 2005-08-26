@@ -3945,7 +3945,7 @@ RegUnLoadKeyW (HKEY hKey,
 /************************************************************************
  *  RegLoadMUIStringW
  *
- * @implemented
+ * @unimplemented
  */
 LONG STDCALL
 RegLoadMUIStringW(IN HKEY hKey,
@@ -3964,7 +3964,7 @@ RegLoadMUIStringW(IN HKEY hKey,
 /************************************************************************
  *  RegLoadMUIStringA
  *
- * @implemented
+ * @unimplemented
  */
 LONG STDCALL
 RegLoadMUIStringA(IN HKEY hKey,
