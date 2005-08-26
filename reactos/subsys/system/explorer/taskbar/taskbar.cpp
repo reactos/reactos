@@ -118,12 +118,15 @@ HWND TaskBar::Create(HWND hwndParent)
 
 LRESULT TaskBar::Init(LPCREATESTRUCT pcs)
 {
+        TBMETRICS metrics;
+	
 	if (super::Init(pcs))
 		return 1;
 
+	/* FIXME: There's an internal padding for non-flat toolbar. Get rid of it somehow. */
 	_htoolbar = CreateToolbarEx(_hwnd,
 								WS_CHILD|WS_VISIBLE|WS_CLIPSIBLINGS|WS_CLIPCHILDREN|
-								CCS_TOP|CCS_NODIVIDER | TBSTYLE_LIST|TBSTYLE_TOOLTIPS|TBSTYLE_WRAPABLE,//|TBSTYLE_AUTOSIZE
+								CCS_TOP|CCS_NODIVIDER|TBSTYLE_LIST|TBSTYLE_TOOLTIPS|TBSTYLE_WRAPABLE,//|TBSTYLE_AUTOSIZE
 								IDW_TASKTOOLBAR, 0, 0, 0, NULL, 0, 0, 0, 16, 16, sizeof(TBBUTTON));
 
 	SendMessage(_htoolbar, TB_SETBUTTONWIDTH, 0, MAKELONG(TASKBUTTONWIDTH_MAX,TASKBUTTONWIDTH_MAX));
@@ -131,6 +134,14 @@ LRESULT TaskBar::Init(LPCREATESTRUCT pcs)
 	//SendMessage(_htoolbar, TB_SETDRAWTEXTFLAGS, DT_CENTER|DT_VCENTER, DT_CENTER|DT_VCENTER);
 	//SetWindowFont(_htoolbar, GetStockFont(ANSI_VAR_FONT), FALSE);
 	//SendMessage(_htoolbar, TB_SETPADDING, 0, MAKELPARAM(8,8));
+
+	metrics.cbSize = sizeof(TBMETRICS);
+	metrics.dwMask = TBMF_BARPAD | TBMF_BUTTONSPACING;
+	metrics.cxBarPad = 0;
+	metrics.cyBarPad = 0;
+	metrics.cxButtonSpacing = 3;
+	metrics.cyButtonSpacing = 3;
+	SendMessage(_htoolbar, TB_SETMETRICS, 0, (LPARAM)&metrics);
 
 	_next_id = IDC_FIRST_APP;
 
