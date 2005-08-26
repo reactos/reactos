@@ -23,8 +23,8 @@
 // numerics are defined here for easier porting
 
 typedef double calcfloat;
-#define FMT_DESC_FLOAT "%.32g"
-#define FMT_DESC_EXP "%.32e"
+#define FMT_DESC_FLOAT TEXT("%.32g")
+#define FMT_DESC_EXP TEXT("%.32e")
 
 #define CALC_ATOF(x) atof(x)
 
@@ -283,7 +283,7 @@ typedef double calcfloat;
 typedef struct tagCalcBtn {
 	int id;            // private id
 	HWND hBtn;         // button child window handle
-	char label[80];    // text on buttonface
+	TCHAR label[80];    // text on buttonface
 	int color;         // text color
 	RECT r;            // location
 	int enable;        // 1 = control enbabled, 0 = disabled
@@ -303,8 +303,8 @@ typedef struct tagCalc {
 	POS pos;
 	int numButtons;    // standard = 28, scientific = more
 
-	char buffer [CALC_BUF_SIZE];  // current keyboard buffer
-	char display[CALC_BUF_SIZE]; // display buffer before output
+	TCHAR buffer [CALC_BUF_SIZE];  // current keyboard buffer
+	TCHAR display[CALC_BUF_SIZE]; // display buffer before output
 
 	calcfloat value;   // most recent computer value
 	calcfloat memory;  // most recent stored memory value from display buffer
@@ -313,7 +313,7 @@ typedef struct tagCalc {
 	int sciMode;       // standard = 1, scientific = 0
 	int displayMode;   // 0 = float, 1 = scientific exponential notation like 1.0e+10
 
-	char oper;         // most recent operator pushed
+	TCHAR oper;         // most recent operator pushed
 	calcfloat operand; // most recent operand pushed
 	int newenter;      // track multiple =
 	int next;          // binary operation flag
@@ -344,19 +344,19 @@ void DestroyCalc (CALC *calc);
 
 void calc_buffer_format(CALC *calc);
 void calc_buffer_display(CALC *calc);
-char *calc_sep(char *s);
+TCHAR *calc_sep(TCHAR *s);
 
-void DrawCalcText (HDC hdc, HDC hMemDC, PAINTSTRUCT *ps, CALC *calc, int object, char *s);
+void DrawCalcText (HDC hdc, HDC hMemDC, PAINTSTRUCT *ps, CALC *calc, int object, TCHAR *s);
 void CalcRect (HDC hdc, HDC hMemDC, PAINTSTRUCT *ps, CALC *calc, int object);
 void DrawCalcRectSci(HDC hdc, HDC hMemDC, PAINTSTRUCT  *ps, CALC *calc, RECT *r);
 void DrawCalc (HDC hdc, HDC hMemDC, PAINTSTRUCT  *ps, CALC *calc);
 
 void calc_setmenuitem_radio(HMENU hMenu, UINT id);
 
-void show_debug(CALC *calc, char *title, long wParam, long lParam);
+void show_debug(CALC *calc, TCHAR *title, long wParam, long lParam);
 
-calcfloat calc_atof(char *s, int base);
-void calc_ftoa(CALC *calc, calcfloat r, char *buf);
+calcfloat calc_atof(TCHAR *s, int base);
+void calc_ftoa(CALC *calc, calcfloat r, TCHAR *buf);
 long factorial(long n);
 
 calcfloat calc_convert_to_radians(CALC *calc);
