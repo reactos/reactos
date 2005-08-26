@@ -2308,7 +2308,6 @@ RegOpenUserClassesRoot (IN HANDLE hToken,
   ULONG RequiredLength;
   UNICODE_STRING UserSidString, UserClassesKeyRoot;
   OBJECT_ATTRIBUTES ObjectAttributes;
-  LONG ErrorCode;
   NTSTATUS Status;
 
   /* check parameters */
@@ -2333,8 +2332,7 @@ ReadTokenSid:
     /* NOTE - as opposed to all other registry functions windows does indeed
               change the last error code in case the caller supplied a invalid
               handle for example! */
-    ErrorCode = RtlNtStatusToDosError (Status);
-    return ErrorCode;
+    return RtlNtStatusToDosError (Status);
   }
 
   TokenUserData = RtlAllocateHeap(ProcessHeap,
@@ -2365,8 +2363,7 @@ ReadTokenSid:
     /* NOTE - as opposed to all other registry functions windows does indeed
               change the last error code in case the caller supplied a invalid
               handle for example! */
-    ErrorCode = RtlNtStatusToDosError (Status);
-    return ErrorCode;
+    return RtlNtStatusToDosError (Status);
   }
 
   /*
@@ -3974,7 +3971,7 @@ RegLoadMUIStringA(IN HKEY hKey,
                   IN ULONG Reserved,
                   IN LPCSTR pszDirectory  OPTIONAL)
 {
-    DPRINT1("RegLoadMUIStringW(0x%p, 0x%p, 0x%p, 0x%x, 0x%x, 0x%p) UNIMPLEMENTED!\n",
+    DPRINT1("RegLoadMUIStringA(0x%p, 0x%p, 0x%p, 0x%x, 0x%x, 0x%p) UNIMPLEMENTED!\n",
             hKey, pszValue, pszOutBuf, cbOutBuf, Reserved, pszDirectory);
     return ERROR_CALL_NOT_IMPLEMENTED;
 }
