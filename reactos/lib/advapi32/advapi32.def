@@ -494,6 +494,8 @@ RegFlushKey@4
 RegGetKeySecurity@16
 RegLoadKeyA@12
 RegLoadKeyW@12
+RegLoadMUIStringA@24
+RegLoadMUIStringW@24
 RegNotifyChangeKeyValue@20
 RegOpenCurrentUser@8
 RegOpenKeyA@12

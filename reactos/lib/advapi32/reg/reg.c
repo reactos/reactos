@@ -3941,4 +3941,43 @@ RegUnLoadKeyW (HKEY hKey,
   return ERROR_SUCCESS;
 }
 
+
+/************************************************************************
+ *  RegLoadMUIStringW
+ *
+ * @implemented
+ */
+LONG STDCALL
+RegLoadMUIStringW(IN HKEY hKey,
+                  IN LPCWSTR pszValue  OPTIONAL,
+                  OUT LPWSTR pszOutBuf,
+                  IN ULONG cbOutBuf,
+                  IN ULONG Reserved,
+                  IN LPCWSTR pszDirectory  OPTIONAL)
+{
+    DPRINT1("RegLoadMUIStringW(0x%p, 0x%p, 0x%p, 0x%x, 0x%x, 0x%p) UNIMPLEMENTED!\n",
+            hKey, pszValue, pszOutBuf, cbOutBuf, Reserved, pszDirectory);
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/************************************************************************
+ *  RegLoadMUIStringA
+ *
+ * @implemented
+ */
+LONG STDCALL
+RegLoadMUIStringA(IN HKEY hKey,
+                  IN LPCSTR pszValue  OPTIONAL,
+                  OUT LPSTR pszOutBuf,
+                  IN ULONG cbOutBuf,
+                  IN ULONG Reserved,
+                  IN LPCSTR pszDirectory  OPTIONAL)
+{
+    DPRINT1("RegLoadMUIStringW(0x%p, 0x%p, 0x%p, 0x%x, 0x%x, 0x%p) UNIMPLEMENTED!\n",
+            hKey, pszValue, pszOutBuf, cbOutBuf, Reserved, pszDirectory);
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
 /* EOF */
