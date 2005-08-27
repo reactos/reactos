@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
  * FILE:        lib/advapi32/misc/logon.c
@@ -131,17 +130,70 @@ CreateProcessAsUserW (HANDLE hToken,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
-LogonUserA (LPSTR lpszUsername,
-	    LPSTR lpszDomain,
-	    LPSTR lpszPassword,
-	    DWORD dwLogonType,
-	    DWORD dwLogonProvider,
-	    PHANDLE phToken)
+LogonUserA(LPSTR lpszUsername,
+           LPSTR lpszDomain,
+           LPSTR lpszPassword,
+           DWORD dwLogonType,
+           DWORD dwLogonProvider,
+           PHANDLE phToken)
 {
-  return FALSE;
+    UNICODE_STRING UserName;
+    UNICODE_STRING Domain;
+    UNICODE_STRING Password;
+    NTSTATUS Status;
+    BOOL ret = FALSE;
+
+    UserName.Buffer = NULL;
+    Domain.Buffer = NULL;
+    Password.Buffer = NULL;
+
+    Status = RtlCreateUnicodeStringFromAsciiz(&UserName,
+                                              lpszUsername);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        goto UsernameDone;
+    }
+
+    Status = RtlCreateUnicodeStringFromAsciiz(&Domain,
+                                              lpszDomain);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        goto DomainDone;
+    }
+
+    Status = RtlCreateUnicodeStringFromAsciiz(&Password,
+                                              lpszPassword);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        goto PasswordDone;
+    }
+
+    ret = LogonUserW(UserName.Buffer,
+                     Domain.Buffer,
+                     Password.Buffer,
+                     dwLogonType,
+                     dwLogonProvider,
+                     phToken);
+
+    if (Password.Buffer != NULL)
+        RtlFreeUnicodeString(&Password);
+
+PasswordDone:
+    if (Domain.Buffer != NULL)
+        RtlFreeUnicodeString(&Domain);
+
+DomainDone:
+    if (UserName.Buffer != NULL)
+        RtlFreeUnicodeString(&UserName);
+
+UsernameDone:
+    return ret;
 }
 
 
