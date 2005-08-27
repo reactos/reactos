@@ -71,7 +71,7 @@ SmpCallbackServer (PSM_PORT_MESSAGE Request,
 
 	DPRINT("SM: %s called\n", __FUNCTION__);
 
-	if (	(IMAGE_SUBSYSTEM_UNKNOWN == ConnectData->SubSystemId) ||
+	if (	((USHORT)-1 == ConnectData->SubSystemId) ||
 		(IMAGE_SUBSYSTEM_NATIVE  == ConnectData->SubSystemId))
 	{
 		DPRINT("SM: %s: we do not need calling back SM!\n",

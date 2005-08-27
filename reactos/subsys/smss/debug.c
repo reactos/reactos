@@ -33,6 +33,7 @@
 
 HANDLE DbgSsApiPort = (HANDLE) 0;
 HANDLE DbgUiApiPort = (HANDLE) 0;
+HANDLE hSmDbgApiPort = (HANDLE) 0;
 
 /* FUNCTIONS *********************************************************/
 
@@ -135,8 +136,21 @@ SmInitializeDbgSs (VOID)
 	NTSTATUS  Status = STATUS_SUCCESS;
 	HANDLE    hDbgSsApiPortThread = (HANDLE) 0;
 
+
 	DPRINT("SM: %s called\n", __FUNCTION__);
 
+	/* Self register */
+#if 0
+	Status = SmRegisterInternalSubsystem (L"Debug",
+						(USHORT)-1,
+						& hSmDbgApiPort);
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT1("DBG:%s: SmRegisterInternalSubsystem failed with Status=%08lx\n",
+			__FUNCTION__, Status);
+		return Status;
+	}
+#endif	
 	/* Create the \DbgSsApiPort object (LPC) */
 	Status = SmpCreatePT(& DbgSsApiPort,
 			     SM_DBGSS_PORT_NAME,

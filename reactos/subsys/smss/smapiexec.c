@@ -34,7 +34,7 @@
  * DESCRIPTION
  *
  * ARGUMENTS
- *	ImagePath: bsolute path of the image to run;
+ *	ImagePath: absolute path of the image to run;
  *	CommandLine: arguments and options for ImagePath;
  *	WaitForIt: TRUE for boot time processes and FALSE for
  *		subsystems bootstrapping;
@@ -215,6 +215,8 @@ SMAPI(SmExecPgm)
 						Status = NtResumeThread (ProcessInfo.ThreadHandle, NULL);
 						if (!NT_SUCCESS(Status))
 						{
+							DPRINT1("SM: %s: NtResumeThread failed (Status=0x%08lx)\n",
+								__FUNCTION__, Status);
 							//Status = SmDestroyClient TODO
 						}
 					} else {
