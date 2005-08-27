@@ -127,6 +127,7 @@ struct DriverInfoElement /* Element of DeviceInfoSet.DriverListHead and DeviceIn
 {
     LIST_ENTRY ListEntry;
 
+    DWORD DriverRank;
     SP_DRVINFO_DATA_V2_W Info;
 };
 
@@ -3258,6 +3259,7 @@ AddDriverToList(
     struct DriverInfoElement *driverInfo;
     DWORD RequiredSize = 128; /* Initial buffer size */
     BOOL Result = FALSE;
+    PLIST_ENTRY PreviousEntry;
     LPWSTR DeviceDescription = NULL;
     LPWSTR InfInstallSection = NULL;
 
@@ -3318,6 +3320,7 @@ AddDriverToList(
     TRACE("Adding driver '%S' [%S/%S] (Rank 0x%lx)\n",
         DeviceDescription, InfFile, InfInstallSection, Rank);
 
+    driverInfo->DriverRank = Rank;
     driverInfo->Info.DriverType = DriverType;
     driverInfo->Info.Reserved = (ULONG_PTR)driverInfo;
     wcsncpy(driverInfo->Info.Description, DeviceDescription, LINE_LEN - 1);
@@ -3333,7 +3336,23 @@ AddDriverToList(
         driverInfo->Info.ProviderName[0] = '\0';
     driverInfo->Info.DriverDate = DriverDate;
     driverInfo->Info.DriverVersion = DriverVersion;
-    InsertTailList(DriverListHead, &driverInfo->ListEntry);
+
+    /* Insert current driver in driver list, according to its rank */
+    PreviousEntry = DriverListHead->Flink;
+    while (PreviousEntry != DriverListHead)
+    {
+        if (((struct DriverInfoElement *)PreviousEntry)->DriverRank >= Rank)
+        {
+            /* Insert before the current item */
+            InsertHeadList(PreviousEntry, &driverInfo->ListEntry);
+            break;
+        }
+    }
+    if (PreviousEntry == DriverListHead)
+    {
+        /* Insert at the end of the list */
+        InsertTailList(DriverListHead, &driverInfo->ListEntry);
+    }
 
     HeapFree(GetProcessHeap(), 0, DeviceDescription);
     HeapFree(GetProcessHeap(), 0, InfInstallSection);
@@ -4165,6 +4184,8 @@ SetupDiSetSelectedDriverW(
                 *pDriverInfo = (struct DriverInfoElement *)ItemList;
                 DriverInfoData->Reserved = (ULONG_PTR)ItemList;
                 ret = TRUE;
+                TRACE("Choosing driver whose rank is 0x%lx\n",
+                    ((struct DriverInfoElement *)ItemList)->DriverRank);
             }
         }
     }
@@ -4186,8 +4207,9 @@ SetupDiSelectBestCompatDrv(
 
     TRACE("%p %p\n", DeviceInfoSet, DeviceInfoData);
 
-    FIXME("SetupDiSelectBestCompatDrv() is selecting the 1st driver...\n");
-
+    /* Drivers are sorted by rank in the driver list, so
+     * the first driver in the list is the best one.
+     */
     drvInfoData.cbSize = sizeof(SP_DRVINFO_DATA_W);
     ret = SetupDiEnumDriverInfoW(
         DeviceInfoSet,
