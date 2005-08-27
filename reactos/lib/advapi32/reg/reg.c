@@ -970,10 +970,182 @@ RegDeleteKeyValueA(IN HKEY hKey,
 }
 
 
+static NTSTATUS
+RegpDeleteTree(IN HKEY hKey)
+{
+    typedef struct
+    {
+        LIST_ENTRY ListEntry;
+        HANDLE KeyHandle;
+    } REGP_DEL_KEYS, *PREG_DEL_KEYS;
+
+    LIST_ENTRY delQueueHead;
+    PREG_DEL_KEYS delKeys = NULL, newDelKeys;
+    HANDLE ProcessHeap;
+    ULONG BufferSize;
+    PKEY_BASIC_INFORMATION BasicInfo;
+    PREG_DEL_KEYS KeyDelRoot;
+    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status2 = STATUS_SUCCESS;
+    
+    InitializeListHead(&delQueueHead);
+    
+    ProcessHeap = RtlGetProcessHeap();
+    
+    /* NOTE: no need to allocate enough memory for an additional KEY_BASIC_INFORMATION
+             structure for the root key, we only do that for subkeys as we need to
+             allocate REGP_DEL_KEYS structures anyway! */
+    KeyDelRoot = RtlAllocateHeap(ProcessHeap,
+                                 0,
+                                 sizeof(REGP_DEL_KEYS));
+    if (KeyDelRoot != NULL)
+    {
+        KeyDelRoot->KeyHandle = hKey;
+        InsertTailList(&delQueueHead,
+                       &KeyDelRoot->ListEntry);
+
+        do
+        {
+            delKeys = CONTAINING_RECORD(delQueueHead.Flink,
+                                        REGP_DEL_KEYS,
+                                        ListEntry);
+
+            BufferSize = 0;
+            BasicInfo = NULL;
+            newDelKeys = NULL;
+
+ReadFirstSubKey:
+            /* check if this key contains subkeys and delete them first by queuing
+               them at the head of the list */
+            Status2 = NtEnumerateKey(delKeys->KeyHandle,
+                                     0,
+                                     KeyBasicInformation,
+                                     BasicInfo,
+                                     BufferSize,
+                                     &BufferSize);
+
+            if (NT_SUCCESS(Status2))
+            {
+                OBJECT_ATTRIBUTES ObjectAttributes;
+                UNICODE_STRING SubKeyName;
+                
+                ASSERT(newDelKeys != NULL);
+                ASSERT(BasicInfo != NULL);
+
+                /* don't use RtlInitUnicodeString as the string is not NULL-terminated! */
+                SubKeyName.Length = BasicInfo->NameLength;
+                SubKeyName.MaximumLength = BasicInfo->NameLength;
+                SubKeyName.Buffer = BasicInfo->Name;
+
+                InitializeObjectAttributes(&ObjectAttributes,
+                                           &SubKeyName,
+                                           OBJ_CASE_INSENSITIVE,
+                                           delKeys->KeyHandle,
+                                           NULL);
+
+                /* open the subkey */
+                Status2 = NtOpenKey(&newDelKeys->KeyHandle,
+                                    DELETE | KEY_ENUMERATE_SUB_KEYS | KEY_QUERY_VALUE,
+                                    &ObjectAttributes);
+                if (!NT_SUCCESS(Status2))
+                {
+                    goto SubKeyFailure;
+                }
+
+                /* enqueue this key to the head of the deletion queue */
+                InsertHeadList(&delQueueHead,
+                               &newDelKeys->ListEntry);
+
+                /* try again from the head of the list */
+                continue;
+            }
+            else
+            {
+                if (Status2 == STATUS_BUFFER_TOO_SMALL)
+                {
+                    newDelKeys = RtlAllocateHeap(ProcessHeap,
+                                                 0,
+                                                 BufferSize + sizeof(REGP_DEL_KEYS));
+                    if (newDelKeys != NULL)
+                    {
+                        BasicInfo = (PKEY_BASIC_INFORMATION)(newDelKeys + 1);
+
+                        /* try again */
+                        goto ReadFirstSubKey;
+                    }
+                    else
+                    {
+                        /* don't break, let's try to delete as many keys as possible */
+                        Status2 = STATUS_INSUFFICIENT_RESOURCES;
+                        goto SubKeyFailureNoFree;
+                    }
+                }
+                else if (Status2 == STATUS_BUFFER_OVERFLOW)
+                {
+                    PREG_DEL_KEYS newDelKeys2;
+
+                    ASSERT(newDelKeys != NULL);
+
+                    /* we need more memory to query the key name */
+                    newDelKeys2 = RtlReAllocateHeap(ProcessHeap,
+                                                    0,
+                                                    newDelKeys,
+                                                    BufferSize + sizeof(REGP_DEL_KEYS));
+                    if (newDelKeys2 != NULL)
+                    {
+                        newDelKeys = newDelKeys2;
+                        BasicInfo = (PKEY_BASIC_INFORMATION)(newDelKeys + 1);
+
+                        /* try again */
+                        goto ReadFirstSubKey;
+                    }
+                    else
+                    {
+                        /* don't break, let's try to delete as many keys as possible */
+                        Status2 = STATUS_INSUFFICIENT_RESOURCES;
+                    }
+                }
+SubKeyFailure:
+                RtlFreeHeap(ProcessHeap,
+                            0,
+                            newDelKeys);
+SubKeyFailureNoFree:
+                /* don't break, let's try to delete as many keys as possible */
+                if (Status2 != STATUS_NO_MORE_ENTRIES && NT_SUCCESS(Status))
+                {
+                    Status = Status2;
+                }
+            }
+
+            Status2 = NtDeleteKey(delKeys->KeyHandle);
+            
+            /* NOTE: do NOT close the handle anymore, it's invalid already! */
+
+            if (!NT_SUCCESS(Status2) && NT_SUCCESS(Status))
+            {
+                /* don't break, let's try to delete as many keys as possible */
+                Status = Status2;
+            }
+            
+            /* remove the entry from the list */
+            RemoveEntryList(&delKeys->ListEntry);
+
+            RtlFreeHeap(ProcessHeap,
+                        0,
+                        delKeys);
+        } while (!IsListEmpty(&delQueueHead));
+    }
+    else
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+    
+    return Status;
+}
+
+
 /************************************************************************
  *  RegDeleteTreeW
  *
- * @unimplemented
+ * @implemented
  */
 LONG STDCALL
 RegDeleteTreeW(IN HKEY hKey,
@@ -1016,8 +1188,7 @@ RegDeleteTreeW(IN HKEY hKey,
     else
         CurKey = KeyHandle;
 
-    /* FIXME - delete all keys recursively */
-    Status = STATUS_NOT_IMPLEMENTED;
+    Status = RegpDeleteTree(CurKey);
 
     if (SubKeyHandle != NULL)
     {
