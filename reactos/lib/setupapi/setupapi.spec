@@ -8,7 +8,7 @@
 @ stub CMP_Report_LogOn
 @ stub CMP_UnregisterNotification
 @ stub CMP_WaitNoPendingInstallEvents
-@ stub CMP_WaitServices
+@ stub CMP_WaitServicesAvailable
 @ stub CM_Add_Empty_Log_Conf
 @ stub CM_Add_Empty_Log_Conf_Ex
 @ stub CM_Add_IDA
@@ -516,16 +516,16 @@
 @ stub ShouldDeviceBeExcluded
 @ stdcall StampFileSecurity(wstr ptr)
 @ stdcall StringTableAddString(ptr wstr long)
-@ stub StringTableAddStringEx
+@ stdcall StringTableAddStringEx(ptr wstr long ptr long)
 @ stdcall StringTableDestroy(ptr)
 @ stdcall StringTableDuplicate(ptr)
 @ stub StringTableEnum
-@ stub StringTableGetExtraData
+@ stdcall StringTableGetExtraData(ptr long ptr long)
 @ stdcall StringTableInitialize()
-@ stub StringTableInitializeEx
+@ stdcall StringTableInitializeEx(long long)
 @ stdcall StringTableLookUpString(ptr wstr long)
-@ stub StringTableLookUpStringEx
-@ stub StringTableSetExtraData
+@ stdcall StringTableLookUpStringEx(ptr wstr long ptr ptr)
+@ stdcall StringTableSetExtraData(ptr long ptr long)
 @ stdcall StringTableStringFromId(ptr long)
 @ stdcall StringTableStringFromIdEx(ptr long ptr ptr)
 @ stdcall StringTableTrim(ptr)
