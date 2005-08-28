@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * ReactOS Project
  * TList
  *
@@ -213,7 +212,6 @@ int STDCALL PrintProcessList (BOOL DisplayTree)
 {
   PSYSTEM_PROCESS_INFORMATION pInfo = NULL;
   PSYSTEM_PROCESS_INFORMATION pInfoBase = NULL;
-  LONG                        Length = 0;
   LPWSTR                      Module = L"";
   LPWSTR                      Title = L"";
 
@@ -378,7 +376,6 @@ int STDCALL PrintProcess (char * PidStr)
     VM_COUNTERS                 PsVm;
     PSYSTEM_PROCESS_INFORMATION pInfo = NULL;
     PSYSTEM_PROCESS_INFORMATION pInfoBase = NULL;
-    LONG                        pInfoBaseLength = 0;
     LPWSTR                      Module = L"";
     LPWSTR                      Title = L"";
 
