@@ -140,7 +140,6 @@ SmInitializeDbgSs (VOID)
 	DPRINT("SM: %s called\n", __FUNCTION__);
 
 	/* Self register */
-#if 0
 	Status = SmRegisterInternalSubsystem (L"Debug",
 						(USHORT)-1,
 						& hSmDbgApiPort);
@@ -150,7 +149,6 @@ SmInitializeDbgSs (VOID)
 			__FUNCTION__, Status);
 		return Status;
 	}
-#endif	
 	/* Create the \DbgSsApiPort object (LPC) */
 	Status = SmpCreatePT(& DbgSsApiPort,
 			     SM_DBGSS_PORT_NAME,
