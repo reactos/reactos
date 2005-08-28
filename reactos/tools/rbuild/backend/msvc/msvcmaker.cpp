@@ -84,8 +84,6 @@ MSVCBackend::_generate_dsp ( const Module& module )
 			string path = Path::RelativeFromDirectory (
 				incs[i]->directory,
 				module.GetBasePath() );
-			if ( !path.size() )
-				i = i;
 			includes.push_back ( path );
 		}
 	}
