@@ -37,19 +37,30 @@ EiReplyOrRequestPort (IN	PEPORT		Port,
 {
    KIRQL oldIrql;
    PQUEUEDMESSAGE MessageReply;
+   ULONG Size;
 
    if (Port == NULL)
      {
        KEBUGCHECK(0);
      }
 
-   MessageReply = ExAllocatePoolWithTag(NonPagedPool, sizeof(QUEUEDMESSAGE),
+   Size = sizeof(QUEUEDMESSAGE);
+   if (LpcReply && LpcReply->u1.s1.TotalLength > sizeof(PORT_MESSAGE))
+     {
+       Size += LpcReply->u1.s1.TotalLength - sizeof(PORT_MESSAGE);
+     }
+   MessageReply = ExAllocatePoolWithTag(NonPagedPool, Size, 
 					TAG_LPC_MESSAGE);
    MessageReply->Sender = Sender;
 
    if (LpcReply != NULL)
      {
-	memcpy(&MessageReply->Message, LpcReply, LpcReply->u1.s1.TotalLength);
+       memcpy(&MessageReply->Message, LpcReply, LpcReply->u1.s1.TotalLength);
+     }
+   else
+     {
+       MessageReply->Message.u1.s1.TotalLength = sizeof(PORT_MESSAGE);
+       MessageReply->Message.u1.s1.DataLength = 0;
      }
 
    MessageReply->Message.ClientId.UniqueProcess = PsGetCurrentProcessId();
