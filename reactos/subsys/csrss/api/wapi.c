@@ -108,7 +108,8 @@ STDCALL
 ClientConnectionThread(HANDLE ServerPort)
 {
     NTSTATUS Status;
-    CSR_API_MESSAGE Request;
+    BYTE RawRequest[LPC_MAX_DATA_LENGTH];
+    PCSR_API_MESSAGE Request = (PCSR_API_MESSAGE)RawRequest;
     PCSR_API_MESSAGE Reply;
     PCSRSS_PROCESS_DATA ProcessData;
   
@@ -124,7 +125,7 @@ ClientConnectionThread(HANDLE ServerPort)
         Status = NtReplyWaitReceivePort(ServerPort,
                                         0,
                                         &Reply->Header,
-                                        &Request.Header);
+                                        &Request->Header);
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("CSR: NtReplyWaitReceivePort failed\n");
@@ -132,31 +133,31 @@ ClientConnectionThread(HANDLE ServerPort)
         }
         
         /* If the connection was closed, handle that */
-        if (Request.Header.u2.s2.Type == LPC_PORT_CLOSED)
+        if (Request->Header.u2.s2.Type == LPC_PORT_CLOSED)
         {
-            CsrFreeProcessData( Request.Header.ClientId.UniqueProcess );
+            CsrFreeProcessData( Request->Header.ClientId.UniqueProcess );
             break;
         }
 
         DPRINT("CSR: Got CSR API: %x [Message Origin: %x]\n", 
-                Request.Type, 
-                Request.Header.ClientId.UniqueProcess);
+               Request->Type, 
+               Request->Header.ClientId.UniqueProcess);
 
         /* Get the Process Data */
-        ProcessData = CsrGetProcessData(Request.Header.ClientId.UniqueProcess);
+        ProcessData = CsrGetProcessData(Request->Header.ClientId.UniqueProcess);
         if (ProcessData == NULL)
         {
             DPRINT1("CSR: Message %d: Unable to find data for process 0x%x\n",
-                    Request.Header.u2.s2.Type,
-                    Request.Header.ClientId.UniqueProcess);
+                    Request->Header.u2.s2.Type,
+                    Request->Header.ClientId.UniqueProcess);
             break;
         }
 
         /* Call the Handler */
-        CsrApiCallHandler(ProcessData, &Request);
+        CsrApiCallHandler(ProcessData, Request);
         
         /* Send back the reply */
-        Reply = &Request;
+        Reply = Request;
     }
     
     /* Close the port and exit the thread */
