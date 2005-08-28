@@ -1,4 +1,4 @@
-<module name="mode" type="win32cui" installbase="system32" installname="mode.exe" warnings="true">
+<module name="mode" type="win32cui" installbase="system32" installname="mode.exe">
 	<include base="mode">.</include>
 	<include base="mode">.</include>
 	<define name="__USE_W32API" />

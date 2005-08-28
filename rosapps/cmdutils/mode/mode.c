@@ -137,10 +137,10 @@ int ShowConsoleStatus()
         _tprintf(_T("    Columns:        %d\n"), ConsoleScreenBufferInfo.dwSize.X);
     }
     if (SystemParametersInfo(SPI_GETKEYBOARDDELAY, 0, &dwKbdDelay, 0)) {
-        _tprintf(_T("    Keyboard delay: %d\n"), dwKbdDelay);
+        _tprintf(_T("    Keyboard delay: %ld\n"), dwKbdDelay);
     }
     if (SystemParametersInfo(SPI_GETKEYBOARDSPEED, 0, &dwKbdSpeed, 0)) {
-        _tprintf(_T("    Keyboard rate:  %d\n"), dwKbdSpeed);
+        _tprintf(_T("    Keyboard rate:  %ld\n"), dwKbdSpeed);
     }
     _tprintf(_T("    Code page:      %d\n"), GetConsoleOutputCP());
     return 0;
@@ -165,7 +165,7 @@ BOOL SerialPortQuery(int nPortNum, LPDCB pDCB, LPCOMMTIMEOUTS pCommTimeouts, BOO
                        0,     // no attributes
                        NULL); // no template
 
-    if (hPort == (HANDLE)-1) {
+    if (hPort == INVALID_HANDLE_VALUE) {
         _tprintf(_T("Illegal device name - %s\n"), szPortName);
         _tprintf(_T("Last error = 0x%lx\n"), GetLastError());
         return FALSE;
@@ -197,10 +197,8 @@ BOOL SerialPortQuery(int nPortNum, LPDCB pDCB, LPCOMMTIMEOUTS pCommTimeouts, BOO
 
 int ShowSerialStatus(int nPortNum)
 {
-    HANDLE hPort;
     DCB dcb;
     COMMTIMEOUTS CommTimeouts;
-    TCHAR szPortName[MAX_PORTNAME_LEN];
 
     if (!SerialPortQuery(nPortNum, &dcb, &CommTimeouts, FALSE)) {
         return 1;
@@ -215,7 +213,7 @@ int ShowSerialStatus(int nPortNum)
     }
     _tprintf(_T("\nStatus for device COM%d:\n"), nPortNum);
     _tprintf(_T("-----------------------\n"));
-    _tprintf(_T("    Baud:            %d\n"), dcb.BaudRate);
+    _tprintf(_T("    Baud:            %ld\n"), dcb.BaudRate);
     _tprintf(_T("    Parity:          %s\n"), parity_strings[dcb.Parity]);
     _tprintf(_T("    Data Bits:       %d\n"), dcb.ByteSize);
     _tprintf(_T("    Stop Bits:       %s\n"), stopbit_strings[dcb.StopBits]);
@@ -239,9 +237,9 @@ int SetParallelState(int nPortNum)
     if (!DefineDosDevice(DDD_REMOVE_DEFINITION, szPortName, szTargetPath)) {
         DWORD error = GetLastError();
 
-        _tprintf(_T("SetParallelState(%d) - DefineDosDevice(%s) failed: %x\n"), nPortNum, error);
+        _tprintf(_T("SetParallelState(%d) - DefineDosDevice(%s) failed: 0x%lx\n"), nPortNum, szPortName, error);
     }
-	return 0;
+    return 0;
 }
 
 /*
