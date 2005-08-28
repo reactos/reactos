@@ -56,7 +56,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 
 	// TODO FIXME - what's diff. betw. 'c_srcs' and 'source_files'?
 	string dsp_path = module.GetBasePath();
-	vector<string> c_srcs, source_files, resource_files;
+	vector<string> c_srcs, source_files, resource_files, includes;
 	vector<const IfableData*> ifs_list;
 	ifs_list.push_back ( &module.non_if_data );
 	while ( ifs_list.size() )
@@ -77,6 +77,16 @@ MSVCBackend::_generate_dsp ( const Module& module )
 				c_srcs.push_back ( file );
 			if ( !stricmp ( Right(file,3).c_str(), ".rc" ) )
 				resource_files.push_back ( file );
+		}
+		const vector<Include*>& incs = data.includes;
+		for ( i = 0; i < incs.size(); i++ )
+		{
+			string path = Path::RelativeFromDirectory (
+				incs[i]->directory,
+				module.GetBasePath() );
+			if ( !path.size() )
+				i = i;
+			includes.push_back ( path );
 		}
 	}
 	// TODO FIXME - we don't include header files in our build system
@@ -308,7 +318,6 @@ MSVCBackend::_generate_dsp ( const Module& module )
 			}
 		}
 
-		fprintf ( OUT, " /I \".\"" );
 		for ( i = 0; i < defines.size(); i++ )
 		{
 			fprintf ( OUT, " /D \"%s\"", defines[i].c_str() );
@@ -359,7 +368,6 @@ MSVCBackend::_generate_dsp ( const Module& module )
 			}
 		}
 
-		std::vector<std::string> includes;
 		// TODO FIXME - wine hack?
 		if ( wine )
 		{
@@ -391,9 +399,9 @@ MSVCBackend::_generate_dsp ( const Module& module )
 			}*/
 		}
 
-		if ( wine )
+		//if ( wine )
 		{
-			for ( i = 0; i < includes.size(); i++ );
+			for ( i = 0; i < includes.size(); i++ )
 			{
 				const string& include = includes[i];
 				if ( strpbrk ( include.c_str(), "[\\\"]" ) )
