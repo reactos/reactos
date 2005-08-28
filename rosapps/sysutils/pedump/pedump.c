@@ -880,7 +880,7 @@ int WINAPI GetStringLength (char *);
 void WINAPI GetPreviousParamString (char *, char *);
 void WINAPI TranslateParameters (char **, char **, char **);
 BOOL WINAPI StringExpands (char **, char **, char **, Str_P *);
-LPVOID WINAPI TranslateFunctionName (char *);
+char * WINAPI TranslateFunctionName (char *);
 
 /* export section info */
 int WINAPI GetExportFunctionNames (LPVOID, char **);
@@ -1949,7 +1949,7 @@ StringExpands (
 //                                                         October 5, 1997
 //
 /* translate condesed import function name */
-LPVOID WINAPI
+char * WINAPI
 TranslateFunctionName (
 			char *psz)
 {
@@ -2688,7 +2688,7 @@ GetListOfResourceTypes (
 	}
       else
 	{
-	  sprintf (buff, "RT_UNKNOWN:%08X", prdeName);
+	  sprintf (buff, "RT_UNKNOWN:%08lX", prdeName);
 	  strcpy (pMem, buff);
 	  pMem += 20;
 	}
@@ -3143,7 +3143,7 @@ GetContentsOfMenu (
   for (i = 0; i < prdName->NumberOfIdEntries; i++)
     {
 
-      sprintf (buff, "MenuId_%04X", (prde->Name));
+      sprintf (buff, "MenuId_%04lX", (prde->Name));
       strcpy (pMem, buff);
       pMem += strlen (buff) + 1;
 
@@ -3537,7 +3537,7 @@ GetContentsOfDialog (
   for (i = 0; i < prdName->NumberOfIdEntries; i++)
     {
 
-      sprintf (buff, "DialogId_%04X", (prde->Name));
+      sprintf (buff, "DialogId_%04lX", (prde->Name));
       strcpy (pMem, buff);
       pMem += strlen (buff) + 1;
 
@@ -4061,7 +4061,7 @@ main (
   if (fileType != IMAGE_NT_SIGNATURE)
     {
       printf (
-	       "%s: This file is not in PE format (magic = 0x%08x).\n",
+	       "%s: This file is not in PE format (magic = 0x%08lx).\n",
 	       argv[0],
 	       fileType
 	);
@@ -4108,7 +4108,7 @@ main (
       if (poh->BaseOfCode == shdr[i].VirtualAddress)
 	{
 	  printf (
-		   "Code Offset = %08X, Code Size = %08X \n",
+		   "Code Offset = %08lX, Code Size = %08lX \n",
 		   shdr[i].PointerToRawData,
 		   shdr[i].SizeOfRawData
 	    );
@@ -4116,7 +4116,7 @@ main (
       if (((shdr[i].Characteristics) & 0xC0000040) == 0xC0000040)
 	{
 	  printf (
-		   "Data Offset = %08X, Data Size = %08X \n",
+		   "Data Offset = %08lX, Data Size = %08lX \n",
 		   shdr[i].PointerToRawData,
 		   shdr[i].SizeOfRawData
 	    );
@@ -4152,7 +4152,7 @@ main (
       shdr[i].Name[7] = 0;
     }
   for (i = 0; i < nSections; i++)
-    printf ("\n   Object%02d: %8s RVA: %08X Offset: %08X Size: %08X Flags: %08X ",
+    printf ("\n   Object%02d: %8s RVA: %08lX Offset: %08lX Size: %08lX Flags: %08lX ",
       i + 1, shdr[i].Name, shdr[i].VirtualAddress, shdr[i].PointerToRawData,
 	    shdr[i].SizeOfRawData, shdr[i].Characteristics);
   /*
