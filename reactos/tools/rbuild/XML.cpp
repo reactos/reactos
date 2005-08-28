@@ -176,7 +176,9 @@ Path::RelativeFromWorkingDirectory ( const string& path )
 }
 
 string
-Path::RelativeFromDirectory ( const string& path, const string& base_directory )
+Path::RelativeFromDirectory (
+	const string& path,
+	const string& base_directory )
 {
 	vector<string> vbase, vpath, vout;
 	Path::Split ( vbase, base_directory, true );
@@ -190,6 +192,8 @@ Path::RelativeFromDirectory ( const string& path, const string& base_directory )
 	size_t i = 0;
 	while ( i < vbase.size() && i < vpath.size() && vbase[i] == vpath[i] )
 		++i;
+	if ( vbase.size() == vpath.size() && i == vpath.size() )
+		return ".";
 	if ( i < vbase.size() )
 	{
 		// path goes above our base directory, we will need some ..'s
