@@ -172,21 +172,27 @@ Path::RelativeFromWorkingDirectory ()
 string
 Path::RelativeFromWorkingDirectory ( const string& path )
 {
-	vector<string> vwork, vpath, vout;
-	Path::Split ( vwork, working_directory, true );
+	return Path::RelativeFromDirectory ( path, working_directory );
+}
+
+string
+Path::RelativeFromDirectory ( const string& path, const string& base_directory )
+{
+	vector<string> vbase, vpath, vout;
+	Path::Split ( vbase, base_directory, true );
 	Path::Split ( vpath, path, true );
 #ifdef WIN32
 	// this squirreliness is b/c win32 has drive letters and *nix doesn't...
 	// not possible to do relative across different drive letters
-	if ( vwork[0] != vpath[0] )
+	if ( vbase[0] != vpath[0] )
 		return path;
 #endif
 	size_t i = 0;
-	while ( i < vwork.size() && i < vpath.size() && vwork[i] == vpath[i] )
+	while ( i < vbase.size() && i < vpath.size() && vbase[i] == vpath[i] )
 		++i;
-	if ( i < vwork.size() )
+	if ( i < vbase.size() )
 	{
-		// path goes above our working directory, we will need some ..'s
+		// path goes above our base directory, we will need some ..'s
 		for ( size_t j = 0; j < i; j++ )
 			vout.push_back ( ".." );
 	}
