@@ -223,12 +223,15 @@ Path::Split ( vector<string>& out,
 	out.resize ( 0 );
 	while ( p )
 	{
-		out.push_back ( prev );
+		if ( strcmp ( prev, "." ) )
+			out.push_back ( prev );
 		prev = p;
 		p = strtok ( NULL, "/\\" );
 	}
 	if ( include_last )
 		out.push_back ( prev );
+	if ( out.back() == "." )
+		out.pop_back();
 }
 
 XMLFile::XMLFile()
