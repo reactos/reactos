@@ -7,7 +7,7 @@
    Most of the code dealing with getting system parameters is taken from
    ReactOS Task Manager written by Brian Palmer (brianp@reactos.org)
 
-   Localization features added by Hervé Poussineau (hpoussineau@fr.st)
+   Localization features added by Hervé Poussineau (hpoussin@reactos.org)
 
    History:
    24 October 2004 - added localization features
@@ -138,10 +138,9 @@ void DisplayScreen()
 {
 	COORD pos;
 	TCHAR lpStr[80];
-	int posStr;
 	DWORD numChars;
 	int lines;
-	int idx, i;
+	int idx;
 
 	if (first == 0)
 	{
@@ -170,14 +169,13 @@ void DisplayScreen()
 		first = 1;
 	}
 
-    	// Processess
+	// Processess
 	lines = ProcessCount;
 	if (lines > MAX_PROC)
 		lines = MAX_PROC;
 	for (idx=0; idx<MAX_PROC; idx++)
 	{
 		int len, i;
-		TCHAR imgName[MAX_PATH];
 		TCHAR lpPid[8];
 		TCHAR lpCpu[6];
 		TCHAR lpMemUsg[12];
@@ -351,14 +349,15 @@ void PerfDataRefresh()
 	LONG							status;
 	ULONG							ulSize;
 	LPBYTE							pBuffer;
-	ULONG							BufferSize;
 	ULONG							Idx, Idx2;
-	HANDLE							hProcess;
-	HANDLE							hProcessToken;
 	PSYSTEM_PROCESS_INFORMATION		pSPI;
 	PPERFDATA						pPDOld;
+#ifdef EXTRA_INFO
+	HANDLE							hProcess;
+	HANDLE							hProcessToken;
 	TCHAR							szTemp[MAX_PATH];
 	DWORD							dwSize;
+#endif
 #ifdef TIMES
 	LARGE_INTEGER 						liCurrentKernelTime;
 	LARGE_INTEGER						liCurrentIdleTime;
@@ -501,7 +500,7 @@ void PerfDataRefresh()
 		//pPerfData[Idx].SessionId = pSPI->SessionId;
 
 #ifdef EXTRA_INFO
-		hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, pSPI->UniqueProcessId);
+		hProcess = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, (DWORD)pSPI->UniqueProcessId);
 		if (hProcess) {
 			if (OpenProcessToken(hProcess, TOKEN_QUERY|TOKEN_DUPLICATE|TOKEN_IMPERSONATE, &hProcessToken)) {
 				ImpersonateLoggedOnUser(hProcessToken);
@@ -510,16 +509,6 @@ void PerfDataRefresh()
 				GetUserName(szTemp, &dwSize);
 #ifndef UNICODE
 				MultiByteToWideChar(CP_ACP, MB_PRECOMPOSED, szTemp, -1, pPerfData[Idx].UserName, MAX_PATH);
-/*
-int MultiByteToWideChar(
-  UINT CodePage,         // code page
-  DWORD dwFlags,         // character-type options
-  LPCSTR lpMultiByteStr, // string to map
-  int cbMultiByte,       // number of bytes in string
-  LPWSTR lpWideCharStr,  // wide-character buffer
-  int cchWideChar        // size of buffer
-);
- */
 #endif
 				RevertToSelf();
 				CloseHandle(hProcessToken);
@@ -541,7 +530,6 @@ int MultiByteToWideChar(
 // Code partly taken from slw32tty.c from mc/slang
 unsigned int GetKeyPressed(int events)
 {
-	long key;
 	DWORD bytesRead;
 	INPUT_RECORD record;
 	int i;
