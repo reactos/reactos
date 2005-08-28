@@ -787,7 +787,7 @@ CM_Enumerate_EnumeratorsW(
 #define CM_Enumerate_Enumerators_Ex CM_Enumerate_Enumerators_ExW
 #else
 #define CM_Enumerate_Enumerators CM_Enumerate_EnumeratorsA
-#define CM_Enumerate_Enumerators_Ex CM_Enumerate_Enumerators_ExW
+#define CM_Enumerate_Enumerators_Ex CM_Enumerate_Enumerators_ExA
 #endif /* UNICODE */
 
 /* FIXME: Obsolete CM_Find_Range */
@@ -864,8 +864,53 @@ CM_Get_Child_Ex(
 
 /* FIXME: Obsolete CM_Get_Class_Name */
 /* FIXME: Obsolete CM_Get_Class_Name_Ex */
-/* FIXME: Obsolete CM_Get_Class_Key_Name */
-/* FIXME: Obsolete CM_Get_Class_Key_Name_Ex */
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Get_Class_Key_NameA(
+  IN LPGUID  ClassGuid,
+  OUT LPSTR  pszKeyName,
+  IN OUT PULONG  pulLength,
+  IN ULONG  ulFlags);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Get_Class_Key_NameW(
+  IN LPGUID  ClassGuid,
+  OUT LPWSTR  pszKeyName,
+  IN OUT PULONG  pulLength,
+  IN ULONG  ulFlags);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Get_Class_Key_Name_ExA(
+  IN LPGUID  ClassGuid,
+  OUT LPSTR  pszKeyName,
+  IN OUT PULONG  pulLength,
+  IN ULONG  ulFlags,
+  IN HMACHINE  hMachine);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Get_Class_Key_Name_ExW(
+  IN LPGUID  ClassGuid,
+  OUT LPWSTR  pszKeyName,
+  IN OUT PULONG  pulLength,
+  IN ULONG  ulFlags,
+  IN HMACHINE  hMachine);
+
+#ifdef UNICODE
+#define CM_Get_Class_Key_Name CM_Get_Class_Key_NameW
+#define CM_Get_Class_Key_Name_Ex CM_Get_Class_Key_Name_ExW
+#else
+#define CM_Get_Class_Key_Name CM_Get_Class_Key_NameA
+#define CM_Get_Class_Key_Name_Ex CM_Get_Class_Key_Name_ExA
+#endif /* UNICODE */
+
 /* FIXME: Obsolete CM_Get_Class_Registry_Property */
 
 CMAPI
@@ -928,7 +973,7 @@ CM_Get_Device_IDW(
 #define CM_Get_Device_ID_Ex CM_Get_Device_ID_ExW
 #else
 #define CM_Get_Device_ID CM_Get_Device_IDA
-#define CM_Get_Device_ID_Ex CM_Get_Device_ID_ExW
+#define CM_Get_Device_ID_Ex CM_Get_Device_ID_ExA
 #endif /* UNICODE */
 
 CMAPI
@@ -1440,8 +1485,61 @@ CM_Modify_Res_Des_Ex(
 /* FIXME: Obsolete CM_Move_DevNode */
 /* FIXME: Obsolete CM_Move_DevNode_Ex */
 /* FIXME: Obsolete CM_Next_Range */
-/* FIXME: Obsolete CM_Open_Class_Key */
-/* FIXME: Obsolete CM_Open_Class_Key_Ex */
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Open_Class_KeyA(
+  IN LPGUID  ClassGuid, OPTIONAL
+  IN LPCSTR  pszClassName, OPTIONAL
+  IN REGSAM  samDesired,
+  IN REGDISPOSITION  Disposition,
+  OUT PHKEY  phkClass,
+  IN ULONG  ulFlags);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Open_Class_KeyW(
+  IN LPGUID  ClassGuid, OPTIONAL
+  IN LPCWSTR  pszClassName, OPTIONAL
+  IN REGSAM  samDesired,
+  IN REGDISPOSITION  Disposition,
+  OUT PHKEY  phkClass,
+  IN ULONG  ulFlags);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Open_Class_Key_ExA(
+  IN LPGUID  pszClassGuid, OPTIONAL
+  IN LPCSTR  pszClassName, OPTIONAL
+  IN REGSAM  samDesired,
+  IN REGDISPOSITION  Disposition,
+  OUT PHKEY  phkClass,
+  IN ULONG  ulFlags,
+  IN HMACHINE  hMachine);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Open_Class_Key_ExW(
+  IN LPGUID  pszClassGuid, OPTIONAL
+  IN LPCWSTR  pszClassName, OPTIONAL
+  IN REGSAM  samDesired,
+  IN REGDISPOSITION Disposition,
+  OUT PHKEY  phkClass,
+  IN ULONG  ulFlags,
+  IN HMACHINE  hMachine);
+
+#ifdef UNICODE
+#define CM_Open_Class_Key CM_Open_Class_KeyW
+#define CM_Open_Class_Key_Ex CM_Open_Class_Key_ExW
+#else
+#define CM_Open_Class_Key CM_Open_Class_KeyA
+#define CM_Open_Class_Key_Ex CM_Open_Class_Key_ExA
+#endif /* UNICODE */
+
 /* FIXME: Obsolete CM_Open_DevNode_Key */
 /* FIXME: Obsolete CM_Open_DevNode_Key_Ex */
 

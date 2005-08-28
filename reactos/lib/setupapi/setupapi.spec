@@ -55,10 +55,10 @@
 @ stub CM_Free_Res_Des_Handle
 @ stdcall CM_Get_Child(ptr long long)
 @ stdcall CM_Get_Child_Ex(ptr long long long)
-@ stub CM_Get_Class_Key_NameA
-@ stub CM_Get_Class_Key_NameW
-@ stub CM_Get_Class_Key_Name_ExA
-@ stub CM_Get_Class_Key_Name_ExW
+@ stdcall CM_Get_Class_Key_NameA(ptr str ptr long)
+@ stdcall CM_Get_Class_Key_NameW(ptr wstr ptr long)
+@ stdcall CM_Get_Class_Key_Name_ExA(ptr str ptr long long)
+@ stdcall CM_Get_Class_Key_Name_ExW(ptr wstr ptr long long)
 @ stub CM_Get_Class_NameA
 @ stub CM_Get_Class_NameW
 @ stub CM_Get_Class_Name_ExA
@@ -139,10 +139,10 @@
 @ stub CM_Move_DevNode
 @ stub CM_Move_DevNode_Ex
 @ stub CM_Next_Range
-@ stub CM_Open_Class_KeyA
-@ stub CM_Open_Class_KeyW
-@ stub CM_Open_Class_Key_ExA
-@ stub CM_Open_Class_Key_ExW
+@ stdcall CM_Open_Class_KeyA(ptr str long long ptr long)
+@ stdcall CM_Open_Class_KeyW(ptr wstr long long ptr long)
+@ stdcall CM_Open_Class_Key_ExA(ptr str long long ptr long long)
+@ stdcall CM_Open_Class_Key_ExW(ptr wstr long long ptr long long)
 @ stub CM_Open_DevNode_Key
 @ stub CM_Open_DevNode_Key_Ex
 @ stub CM_Query_Arbitrator_Free_Data

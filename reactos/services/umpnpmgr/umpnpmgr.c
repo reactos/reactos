@@ -635,6 +635,55 @@ PNP_GetDeviceRegProp(handle_t BindingHandle,
 
 
 CONFIGRET
+PNP_GetClassName(handle_t BindingHandle,
+                 wchar_t *ClassGuid,    /* in */
+                 wchar_t *Buffer,       /* out */
+                 unsigned long *Length, /* in out */
+                 unsigned long Flags)
+{
+    WCHAR szKeyName[MAX_PATH];
+    CONFIGRET ret = CR_SUCCESS;
+    HKEY hKey = NULL;
+    ULONG ulSize;
+
+    DPRINT1("PNP_GetClassName() called\n");
+
+    lstrcpyW(szKeyName, L"System\\CurrentControlSet\\Control\\Class");
+    lstrcatW(szKeyName, L"\\");
+    lstrcatW(szKeyName, ClassGuid);
+
+    if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                      szKeyName,
+                      0,
+                      KEY_QUERY_VALUE,
+                      &hKey))
+        return CR_REGISTRY_ERROR;
+
+    ulSize = *Length * sizeof(WCHAR);
+    if (RegQueryValueExW(hKey,
+                         L"Class",
+                         NULL,
+                         NULL,
+                         (LPBYTE)Buffer,
+                         &ulSize))
+    {
+        *Length = 0;
+        ret = CR_REGISTRY_ERROR;
+    }
+    else
+    {
+        *Length = ulSize / sizeof(WCHAR);
+    }
+
+    RegCloseKey(hKey);
+
+    DPRINT1("PNP_GetClassName() done (returns %lx)\n", ret);
+
+    return ret;
+}
+
+
+CONFIGRET
 PNP_GetDeviceStatus(handle_t BindingHandle,
                     wchar_t *DeviceInstance,
                     unsigned long *pStatus,

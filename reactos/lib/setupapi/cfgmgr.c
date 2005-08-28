@@ -41,11 +41,18 @@
 WINE_DEFAULT_DEBUG_CHANNEL(setupapi);
 
 /* Registry key and value names */
+static const WCHAR Backslash[] = {'\\', 0};
+static const WCHAR Class[]  = {'C','l','a','s','s',0};
+
 static const WCHAR ControlClass[] = {'S','y','s','t','e','m','\\',
                                      'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
                                      'C','o','n','t','r','o','l','\\',
                                      'C','l','a','s','s',0};
 
+static const WCHAR DeviceClasses[] = {'S','y','s','t','e','m','\\',
+                                      'C','u','r','r','e','n','t','C','o','n','t','r','o','l','S','e','t','\\',
+                                      'C','o','n','t','r','o','l','\\',
+                                      'D','e','v','i','c','e','C','l','a','s','s','e','s',0};
 
 typedef struct _MACHINE_INFO
 {
@@ -312,6 +319,76 @@ CONFIGRET WINAPI CM_Get_Child_Ex(
         return CR_FAILURE;
 
     *pdnDevInst = dwIndex;
+
+    return CR_SUCCESS;
+}
+
+
+/***********************************************************************
+ * CM_Get_Class_Key_NameA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Class_Key_NameA(
+    LPGUID ClassGuid, LPSTR pszKeyName, PULONG pulLength, ULONG ulFlags)
+{
+    TRACE("%p %p %p %lx\n",
+          ClassGuid, pszKeyName, pulLength, ulFlags);
+    return CM_Get_Class_Key_Name_ExA(ClassGuid, pszKeyName, pulLength,
+                                     ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Get_Class_Key_NameW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Class_Key_NameW(
+    LPGUID ClassGuid, LPWSTR pszKeyName, PULONG pulLength, ULONG ulFlags)
+{
+    TRACE("%p %p %p %lx\n",
+          ClassGuid, pszKeyName, pulLength, ulFlags);
+    return CM_Get_Class_Key_Name_ExW(ClassGuid, pszKeyName, pulLength,
+                                     ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Get_Class_Key_Name_ExA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Class_Key_Name_ExA(
+    LPGUID ClassGuid, LPSTR pszKeyName, PULONG pulLength, ULONG ulFlags,
+    HMACHINE hMachine)
+{
+    FIXME("%p %p %p %lx %lx\n",
+          ClassGuid, pszKeyName, pulLength, ulFlags, hMachine);
+    return CR_FAILURE;
+}
+
+
+/***********************************************************************
+ * CM_Get_Class_Key_Name_ExW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Class_Key_Name_ExW(
+    LPGUID ClassGuid, LPWSTR pszKeyName, PULONG pulLength, ULONG ulFlags,
+    HMACHINE hMachine)
+{
+    FIXME("%p %p %p %lx %lx\n",
+          ClassGuid, pszKeyName, pulLength, ulFlags, hMachine);
+
+    if (ClassGuid == NULL || pszKeyName == NULL || pulLength == NULL)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (*pulLength < MAX_GUID_STRING_LEN)
+    {
+        *pulLength = 0;
+        return CR_BUFFER_SMALL;
+    }
+
+    if (UuidToStringW(ClassGuid, &pszKeyName) != RPC_S_OK)
+        return CR_INVALID_DATA;
+
+    *pulLength = MAX_GUID_STRING_LEN;
 
     return CR_SUCCESS;
 }
@@ -1242,6 +1319,165 @@ CONFIGRET WINAPI CM_Locate_DevNode_ExW(
     }
 
     return ret;
+}
+
+
+/***********************************************************************
+ * CM_Open_Class_KeyA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Open_Class_KeyA(
+    LPGUID pClassGuid, LPCSTR pszClassName, REGSAM samDesired,
+    REGDISPOSITION Disposition, PHKEY phkClass, ULONG ulFlags)
+{
+    TRACE("%p %s %lx %lx %p %lx\n",
+          debugstr_guid(pClassGuid), pszClassName,
+          samDesired, Disposition, phkClass, ulFlags);
+
+    return CM_Open_Class_Key_ExA(pClassGuid, pszClassName, samDesired,
+                                 Disposition, phkClass, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Open_Class_KeyW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Open_Class_KeyW(
+    LPGUID pClassGuid, LPCWSTR pszClassName, REGSAM samDesired,
+    REGDISPOSITION Disposition, PHKEY phkClass, ULONG ulFlags)
+{
+    TRACE("%p %s %lx %lx %p %lx\n",
+          debugstr_guid(pClassGuid), debugstr_w(pszClassName),
+          samDesired, Disposition, phkClass, ulFlags);
+
+    return CM_Open_Class_Key_ExW(pClassGuid, pszClassName, samDesired,
+                                 Disposition, phkClass, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Open_Class_Key_ExA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Open_Class_Key_ExA(
+    LPGUID pClassGuid, LPCSTR pszClassName, REGSAM samDesired,
+    REGDISPOSITION Disposition, PHKEY phkClass, ULONG ulFlags,
+    HMACHINE hMachine)
+{
+    CONFIGRET rc = CR_SUCCESS;
+    LPWSTR pszClassNameW = NULL;
+
+    TRACE("%p %s %lx %lx %p %lx %lx\n",
+          debugstr_guid(pClassGuid), pszClassName,
+          samDesired, Disposition, phkClass, ulFlags, hMachine);
+
+    if (pszClassName != NULL)
+    {
+       if (CaptureAndConvertAnsiArg(pszClassName, &pszClassNameW))
+         return CR_INVALID_DATA;
+    }
+
+    rc = CM_Open_Class_Key_ExW(pClassGuid, pszClassNameW, samDesired,
+                               Disposition, phkClass, ulFlags, hMachine);
+
+    if (pszClassNameW != NULL)
+        MyFree(pszClassNameW);
+
+    return CR_SUCCESS;
+}
+
+
+/***********************************************************************
+ * CM_Open_Class_Key_ExW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Open_Class_Key_ExW(
+    LPGUID pClassGuid, LPCWSTR pszClassName, REGSAM samDesired,
+    REGDISPOSITION Disposition, PHKEY phkClass, ULONG ulFlags,
+    HMACHINE hMachine)
+{
+    WCHAR szKeyName[MAX_PATH];
+    LPWSTR lpGuidString;
+    DWORD dwDisposition;
+    DWORD dwError;
+    HKEY hKey;
+
+    TRACE("%p %s %lx %lx %p %lx %lx\n",
+          debugstr_guid(pClassGuid), debugstr_w(pszClassName),
+          samDesired, Disposition, phkClass, ulFlags, hMachine);
+
+    /* Check Disposition and ulFlags */
+    if ((Disposition & ~RegDisposition_Bits) ||
+        (ulFlags & ~CM_OPEN_CLASS_KEY_BITS))
+        return CR_INVALID_FLAG;
+
+    /* Check phkClass */
+    if (phkClass == NULL)
+        return CR_INVALID_POINTER;
+
+    *phkClass = NULL;
+
+    if (ulFlags == CM_OPEN_CLASS_KEY_INTERFACE &&
+        pszClassName != NULL)
+        return CR_INVALID_DATA;
+
+    if (hMachine == NULL)
+    {
+        hKey = HKEY_LOCAL_MACHINE;
+    }
+    else
+    {
+       if (RegConnectRegistryW(((PMACHINE_INFO)hMachine)->szMachineName,
+                               HKEY_LOCAL_MACHINE, &hKey))
+           return CR_REGISTRY_ERROR;
+    }
+
+    if (ulFlags & CM_OPEN_CLASS_KEY_INTERFACE)
+    {
+        lstrcpyW(szKeyName, DeviceClasses);
+    }
+    else
+    {
+        lstrcpyW(szKeyName, ControlClass);
+    }
+
+    if (pClassGuid != NULL)
+    {
+        if (UuidToStringW((UUID*)pClassGuid, &lpGuidString) != RPC_S_OK)
+        {
+            RegCloseKey(hKey);
+            return CR_INVALID_DATA;
+        }
+
+        lstrcatW(szKeyName, Backslash);
+        lstrcatW(szKeyName, lpGuidString);
+    }
+
+    if (Disposition == RegDisposition_OpenAlways)
+    {
+        dwError = RegCreateKeyExW(hKey, szKeyName, 0, NULL, 0, samDesired,
+                                  NULL, phkClass, &dwDisposition);
+    }
+    else
+    {
+        dwError = RegOpenKeyExW(hKey, szKeyName, 0, samDesired, phkClass);
+    }
+
+    RegCloseKey(hKey);
+
+    if (pClassGuid != NULL)
+        RpcStringFreeW(&lpGuidString);
+
+    if (dwError != ERROR_SUCCESS)
+    {
+        *phkClass = NULL;
+        return CR_NO_SUCH_REGISTRY_KEY;
+    }
+
+    if (pszClassName != NULL)
+    {
+        RegSetValueExW(*phkClass, Class, 0, REG_SZ, (LPBYTE)pszClassName,
+                       (lstrlenW(pszClassName) + 1) * sizeof(WCHAR));
+    }
+
+    return CR_SUCCESS;
 }
 
 
