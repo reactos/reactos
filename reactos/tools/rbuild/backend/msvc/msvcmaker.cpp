@@ -308,6 +308,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 			}
 		}
 
+		fprintf ( OUT, " /I \".\"" );
 		for ( i = 0; i < defines.size(); i++ )
 		{
 			fprintf ( OUT, " /D \"%s\"", defines[i].c_str() );
@@ -406,6 +407,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 			}
 		}
 
+		fprintf ( OUT, " /I \".\"" );
 		for ( i = 0; i < defines2.size(); i++ )
 		{
 			const string& define = defines2[i];
