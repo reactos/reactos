@@ -94,7 +94,7 @@ UserSetCursor(PCURICON_OBJECT NewCursor, BOOL ForceChange)
    OldCursor = CurInfo->CurrentCursorObject;
    if (OldCursor)
    {
-      Ret = (HCURSOR)OldCursor->Self;
+      Ret = (HCURSOR)OldCursor->hSelf;
    }
 
    if (!ForceChange && OldCursor == NewCursor)
@@ -537,7 +537,7 @@ PCURICON_OBJECT FASTCALL UserCreateCursorObject(HCURSOR* hCursor, ULONG extraByt
    
    WinSta = UserGetCurrentWinSta();
    
-   *hCursor = UserAllocHandle(&WinSta->HandleTable, mem, USER_CURSOR_ICON);
+   *hCursor = UserAllocHandle(&gHandleTable, mem, otCursor);
    if (!*hCursor){
       ExFreePool(mem);
       return NULL;
@@ -565,7 +565,7 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo, BOOL Indirect)
    if (!Cursor)
       RETURN(NULL);
       
-   Cursor->Self = hCursor;
+   Cursor->hSelf = hCursor;
    InitializeListHead(&Cursor->ProcessList);
 
    if (! UserReferenceCurIconByProcess(Cursor))
@@ -626,8 +626,7 @@ CLEANUP:
 
 inline PCURICON_OBJECT FASTCALL UserGetCursorObject(HCURSOR hCursor)
 {
-   PWINSTATION_OBJECT WinSta = UserGetCurrentWinSta();
-   return (PCURICON_OBJECT)UserGetObject(&WinSta->HandleTable, hCursor, USER_CURSOR_ICON );   
+   return (PCURICON_OBJECT)UserGetObject(&gHandleTable, hCursor, otCursor );   
 }
 
 
@@ -806,7 +805,7 @@ NtUserGetCursorInfo(PCURSORINFO pci)
    CursorObject = (PCURICON_OBJECT)CurInfo->CurrentCursorObject;
 
    SafeCi.flags = ((CurInfo->ShowingCursor && CursorObject) ? CURSOR_SHOWING : 0);
-   SafeCi.hCursor = (CursorObject ? (HCURSOR)CursorObject->Self : (HCURSOR)0);
+   SafeCi.hCursor = (CursorObject ? CursorObject->hSelf : 0);
 
    UserGetCursorLocation(UserGetCurrentWinSta(), &SafeCi.ptScreenPos);
 
@@ -967,7 +966,7 @@ NtUserFindExistingCursorIcon(
    CurIconObject = UserFindExistingCurIconObject(WinStaObject, hModule, hRsrc, cx, cy);
    if(CurIconObject)
    {
-      Ret = CurIconObject->Self;
+      Ret = CurIconObject->hSelf;
 
       //    IntReleaseCurIconObject(CurIconObject);
       ObDereferenceObject(WinStaObject);

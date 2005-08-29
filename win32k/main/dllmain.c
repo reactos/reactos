@@ -104,7 +104,7 @@ CHECKPOINT1;
     {
       DPRINT("Destroying W32 process PID:%d at IRQ level: %lu\n", Process->UniqueProcessId, KeGetCurrentIrql());
       IntRemoveProcessWndProcHandles((HANDLE)Process->UniqueProcessId);
-      IntCleanupMenus(Process, Win32Process);
+      IntCleanupMenus(Win32Process);
       //FIXME: call separate user and gdi cleanups
       UserCleanupCurIcons(Process, Win32Process);
       IntEngCleanupDriverObjs(Process, Win32Process);

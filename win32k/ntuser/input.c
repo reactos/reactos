@@ -380,10 +380,9 @@ IntKeyboardSendWinKeyMsg()
   MSG Mesg;
   NTSTATUS Status;
 
-  Window = UserGetObject(
-      &InputWindowStation->HandleTable, 
-      InputWindowStation->ShellWindow, 
-      USER_WINDOW);
+  Window = UserGetObject(&gHandleTable, 
+      gInteractiveWinSta->ShellWindow, 
+      otWindow);
       
   if (!NT_SUCCESS(Status))
     {
@@ -391,7 +390,7 @@ IntKeyboardSendWinKeyMsg()
       return;
     }
 
-  Mesg.hwnd = InputWindowStation->ShellWindow;
+  Mesg.hwnd = gInteractiveWinSta->ShellWindow;
   Mesg.message = WM_SYSCOMMAND;
   Mesg.wParam = SC_TASKLIST;
   Mesg.lParam = 0;
@@ -401,9 +400,9 @@ IntKeyboardSendWinKeyMsg()
 }
 
 STATIC VOID STDCALL
-IntKeyboardSendAltKeyMsg()
+coIntKeyboardSendAltKeyMsg()
 {
-  MsqPostKeyboardMessage(WM_SYSCOMMAND,SC_KEYMENU,0);
+  coMsqPostKeyboardMessage(WM_SYSCOMMAND,SC_KEYMENU,0);
 }
 
 STATIC VOID STDCALL
@@ -500,19 +499,19 @@ KeyboardThreadMain(PVOID StartContext)
 	  DPRINT("KeyRaw: %s %04x\n",
 		 (KeyInput.Flags & KEY_BREAK) ? "up" : "down",
 		 KeyInput.MakeCode );
-CHECKPOINT1;
+
 	  if (Status == STATUS_ALERTED && !InputThreadsRunning)
 	    break;
-CHECKPOINT1;
+
 	  if (!NT_SUCCESS(Status))
 	    {
 	      DPRINT1("Win32K: Failed to read from keyboard.\n");
 	      return; //(Status);
 	    }
-CHECKPOINT1;
+
 	  /* Update modifier state */
 	  fsModifiers = IntKeyboardGetModifiers(&KeyInput);
-CHECKPOINT1;
+
 	  if (fsModifiers)
 	    {
 	      if (KeyInput.Flags & KEY_BREAK)
@@ -546,7 +545,7 @@ CHECKPOINT1;
 		          DPRINT("KeyRaw: %s %04x\n",
 		 	         (NextKeyInput.Flags & KEY_BREAK) ? "up":"down",
 		 	         NextKeyInput.MakeCode );
-CHECKPOINT1;
+
 		          if (Status == STATUS_ALERTED && !InputThreadsRunning)
 	    		    goto KeyboardEscape;
 
@@ -556,7 +555,7 @@ CHECKPOINT1;
 		       *   code. I'm not caring about the counting, not sure
 		       *   if that matters. I think not.
 		       */
-CHECKPOINT1;
+
 		      /* If the ModifierState is now empty again, send a
 		       * special notification and eat both keypresses
 		       */
@@ -571,20 +570,20 @@ CHECKPOINT1;
 			  if (fsModifiers == MOD_WIN)
 			    IntKeyboardSendWinKeyMsg();
 			  else if (fsModifiers == MOD_ALT)
-			    IntKeyboardSendAltKeyMsg();
+			    coIntKeyboardSendAltKeyMsg();
 			  continue;
 			}
-CHECKPOINT1;
+
 		      NumKeys = 2;
 		    }
 		}
 	    }
-CHECKPOINT1;
+
 	  for (;NumKeys;memcpy(&KeyInput, &NextKeyInput, sizeof(KeyInput)),
 			NumKeys--)
 	    {
 	      lParam = 0;
-CHECKPOINT1;
+
 	      IntKeyboardUpdateLeds(KeyboardDeviceHandle,
 			            &KeyInput,
 				    IndicatorTrans);
@@ -651,29 +650,27 @@ CHECKPOINT1;
 	          else
 		    msg.message = WM_KEYUP;
 	        }
-CHECKPOINT1;
+
 	      /* Find the target thread whose locale is in effect */
 	      if (!IntGetScreenDC()){
-            CHECKPOINT1;
            FocusQueue = W32kGetPrimitiveQueue();
         }
 	      else{
-            CHECKPOINT1;
            FocusQueue = UserGetForegroundQueue();
         }
-CHECKPOINT1;
+
 	      /* This might cause us to lose hot keys, which are important
 	       * (ctrl-alt-del secure attention sequence). Not sure if it
 	       * can happen though.
 	       */
          if (!FocusQueue) continue;
-CHECKPOINT1;
+
 	      msg.lParam = lParam;
          msg.hwnd = FocusQueue->Input->hFocusWindow;
-CHECKPOINT1;
+
          if (!QUEUE_2_WTHREAD(FocusQueue)->KeyboardLayout)
 	        continue;
-CHECKPOINT1;
+
 	      /* This function uses lParam to fill wParam according to the
 	       * keyboard layout in use.
 	       */
@@ -681,14 +678,14 @@ CHECKPOINT1;
                 QUEUE_2_WTHREAD(FocusQueue)->KeyboardLayout,
 				    KeyInput.Flags & KEY_E0 ? 0xE0 :
 				    (KeyInput.Flags & KEY_E1 ? 0xE1 : 0));
-CHECKPOINT1;
-	      if (GetHotKey(InputWindowStation,
+
+         if (GetHotKey(gInteractiveWinSta,
 			    ModifierState,
 			    msg.wParam,
 			    &Thread,
 			    &hWnd,
 			    &id))
-           {CHECKPOINT1;
+           {
 	          if (!(KeyInput.Flags & KEY_BREAK))
 		    {
 		      DPRINT("Hot key pressed (hWnd %lx, id %d)\n", hWnd, id);
@@ -700,11 +697,11 @@ CHECKPOINT1;
 		    }
 	          continue;	/* Eat key up motion too */
 	        }
-CHECKPOINT1;
+
 	      /*
 	       * Post a keyboard message.
 	       */
-	      MsqPostKeyboardMessage(msg.message,msg.wParam,msg.lParam);
+	      coMsqPostKeyboardMessage(msg.message,msg.wParam,msg.lParam);
 	    }
 	}
 
@@ -914,7 +911,7 @@ IntMouseInput(MOUSEINPUT *mi)
   /* FIXME - ugly hack but as long as we're using this dumb callback from the
              mouse class driver, we can't access the window station from the calling
              process */
-  WinSta = InputWindowStation;
+  WinSta = gInteractiveWinSta;
 #endif
   ASSERT(WinSta);
 
@@ -949,9 +946,9 @@ IntMouseInput(MOUSEINPUT *mi)
 
    //FIXME: make typename like HACCEL, HWND -> USER_WND, USER_ACCEL
    DesktopWindow = UserGetObject(
-      &WinSta->HandleTable, 
-      WinSta->ActiveDesktop->DesktopWindow, 
-      USER_WINDOW);
+      &gHandleTable, 
+      gInputDesktop->DesktopWindow, 
+      otWindow);
    
     if (DesktopWindow)
     {
@@ -1141,7 +1138,7 @@ calling thread is running on the current input desktop. The next check is
 made to determine if the calling thread has DESKTOP_JOURNALPLAYBACK access
 to the input desktop.
 
-(current) input desktop = interactive desktop = active desktop on interactive WinSta
+input desktop = active desktop in the interactive winsta (WinSta0)
 
 */
 UINT

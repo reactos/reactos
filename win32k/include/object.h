@@ -6,6 +6,8 @@
 #include <win32k/pen.h>
 
 
+#define USER_OBJ_DESTROYING         (0x1)
+#define USER_OBJ_DESTROYED          (0x2)
 
 VOID  INTERNAL_CALL InitGdiObjectHandleTable (VOID);
 VOID  FASTCALL CreateStockObjects (VOID);

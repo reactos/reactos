@@ -691,8 +691,15 @@ IntCreatePrimarySurface()
    }
 
    PrimarySurface.DriverFunctions.AssertMode(PrimarySurface.PDev, TRUE);
+
+
+   inUser = UserIsEntered();
+   if (!inUser){
+      UserEnterExclusive();
+   }
+   
    /* attach monitor */
-   IntAttachMonitor(&PrimarySurface, PrimarySurface.DisplayNumber);
+   UserAttachMonitor(&PrimarySurface, PrimarySurface.DisplayNumber);
 
   SurfObj = EngLockSurface((HSURF)PrimarySurface.Handle);
    SurfObj->dhpdev = PrimarySurface.PDev;
@@ -708,12 +715,7 @@ IntCreatePrimarySurface()
 
    EngUnlockSurface(SurfObj);
 
-
-   inUser = UserIsEntered();
-   if (!inUser){
-      UserEnterExclusive();
-   }
-   UserShowDesktop(UserGetActiveDesktop(), SurfSize.cx, SurfSize.cy);
+   coUserShowDesktop(UserGetActiveDesktop(), SurfSize.cx, SurfSize.cy);
 
    if (!inUser){
       UserLeave();
@@ -725,10 +727,21 @@ IntCreatePrimarySurface()
 VOID FASTCALL
 IntDestroyPrimarySurface()
   {
+   BOOL inUser;
+     
     DRIVER_UnreferenceDriver(L"DISPLAY");
 
+   inUser = UserIsEntered();
+   if (!inUser){
+      UserEnterExclusive();
+   }
+
     /* detach monitor */
-    IntDetachMonitor(&PrimarySurface);
+    UserDetachMonitor(&PrimarySurface);
+
+   if (!inUser){
+      UserLeave();
+   }
 
     /*
      * FIXME: Hide a mouse pointer there. Also because we have to prevent

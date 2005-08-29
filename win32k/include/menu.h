@@ -31,6 +31,13 @@ typedef struct _MENU_ITEM
 
 typedef struct _MENU_OBJECT
 {
+/*---------- USER_OBJECT_HDR --------------*/
+  HMENU hSelf;
+  LONG refs;
+  BYTE flags;
+  
+/*---------- USER_OBJECT_HDR --------------*/
+   
   PEPROCESS Process;
   LIST_ENTRY ListEntry;
   PMENU_ITEM MenuItemList;
@@ -39,78 +46,6 @@ typedef struct _MENU_OBJECT
 } MENU_OBJECT, *PMENU_OBJECT;
 
 
-BOOL FASTCALL
-IntFreeMenuItem(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem,
-    BOOL RemoveFromList, BOOL bRecurse);
 
-BOOL FASTCALL
-IntRemoveMenuItem(PMENU_OBJECT MenuObject, UINT uPosition, UINT uFlags,
-                   BOOL bRecurse);
-
-UINT FASTCALL
-IntDeleteMenuItems(PMENU_OBJECT MenuObject, BOOL bRecurse);
-
-BOOL FASTCALL
-IntDestroyMenuObject(PMENU_OBJECT MenuObject, BOOL bRecurse, BOOL RemoveFromProcess);
-
-PMENU_OBJECT FASTCALL
-IntCreateMenu(PHANDLE Handle, BOOL IsMenuBar);
-
-PMENU_OBJECT FASTCALL
-IntCloneMenu(PMENU_OBJECT Source);
-
-BOOL FASTCALL
-UserSetMenuFlagRtoL(PMENU_OBJECT MenuObject);
-
-BOOL FASTCALL
-IntSetMenuContextHelpId(PMENU_OBJECT MenuObject, DWORD dwContextHelpId);
-
-BOOL FASTCALL
-UserGetMenuInfo(PMENU_OBJECT MenuObject, PROSMENUINFO lpmi);
-
-BOOL FASTCALL
-IntIsMenu(HMENU hMenu);
-
-BOOL FASTCALL
-UserSetMenuInfo(PMENU_OBJECT MenuObject, PROSMENUINFO lpmi);
-
-BOOL FASTCALL
-UserMenuItemInfo(
-   PMENU_OBJECT Menu,
-   UINT Item,
-   BOOL ByPosition,
-   PROSMENUITEMINFO ItemInfo,
-   BOOL Set
-   );
-
-int FASTCALL
-UserGetMenuItemByFlag(PMENU_OBJECT MenuObject, UINT uSearchBy, UINT fFlag,
-                      PMENU_ITEM *MenuItem, PMENU_ITEM *PrevMenuItem);
-
-UINT FASTCALL
-IntEnableMenuItem(PMENU_OBJECT MenuObject, UINT uIDEnableItem, UINT uEnable);
-
-DWORD FASTCALL
-IntCheckMenuItem(PMENU_OBJECT MenuObject, UINT uIDCheckItem, UINT uCheck);
-
-BOOL FASTCALL
-IntSetMenuDefaultItem(PMENU_OBJECT MenuObject, UINT uItem, UINT fByPos);
-
-BOOL FASTCALL
-IntSetMenuItemRect(PMENU_OBJECT MenuObject, UINT Item, BOOL fByPos, RECT *rcRect);
-
-BOOL FASTCALL
-IntCleanupMenus(struct _EPROCESS *Process, PW32PROCESS Win32Process);
-
-BOOL FASTCALL
-IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, BOOL fByPosition,
-                  PROSMENUITEMINFO ItemInfo);
-
-
-NTSTATUS FASTCALL
-InitMenuImpl(VOID);
-
-NTSTATUS FASTCALL
-CleanupMenuImpl(VOID);
 
 #endif /* _WIN32K_MENU_H */

@@ -19,6 +19,7 @@
  */
 
 
+
 /* INCLUDES ******************************************************************/
 
 #include <w32k.h>
@@ -27,10 +28,10 @@
 #include <debug.h>
 
 
+USER_HANDLE_TABLE gHandleTable;
 
 
-
-static PUSER_HANDLE_ENTRY handle_to_entry(PUSER_HANDLE_TABLE ht, HANDLE handle )
+PUSER_HANDLE_ENTRY handle_to_entry(PUSER_HANDLE_TABLE ht, HANDLE handle )
 {
     unsigned short generation;
     int index = (((unsigned int)handle & 0xffff) - FIRST_USER_HANDLE) >> 1;
@@ -120,7 +121,11 @@ PVOID UserGetObject(PUSER_HANDLE_TABLE ht, HANDLE handle, USER_OBJECT_TYPE type 
 
     ASSERT(ht);
 
-    if (!(entry = handle_to_entry(ht, handle )) || entry->type != type) return NULL;
+    if (!(entry = handle_to_entry(ht, handle )) || entry->type != type)
+    {
+       SetLastWin32Error(ERROR_INVALID_HANDLE);
+       return NULL;
+    }
     return entry->ptr;
 }
 

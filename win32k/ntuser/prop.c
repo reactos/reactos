@@ -42,13 +42,13 @@ typedef struct _PROPLISTITEM
 /* FUNCTIONS *****************************************************************/
 
 PPROPERTY FASTCALL
-IntGetProp(PWINDOW_OBJECT WindowObject, ATOM Atom)
+UserGetProp(PWINDOW_OBJECT Wnd, ATOM Atom)
 {
   PLIST_ENTRY ListEntry;
   PPROPERTY Property;
 
-  ListEntry = WindowObject->PropListHead.Flink;
-  while (ListEntry != &WindowObject->PropListHead)
+  ListEntry = Wnd->PropListHead.Flink;
+  while (ListEntry != &Wnd->PropListHead)
     {
       Property = CONTAINING_RECORD(ListEntry, PROPERTY, PropListEntry);
       if (Property->Atom == Atom)
@@ -151,7 +151,7 @@ NtUserRemoveProp(HWND hWnd, ATOM Atom)
     RETURN(NULL);
   }
 
-  Prop = IntGetProp(WindowObject, Atom);
+  Prop = UserGetProp(WindowObject, Atom);
 
   if (Prop == NULL)
     {
@@ -187,7 +187,7 @@ NtUserGetProp(HWND hWnd, ATOM Atom)
     RETURN(FALSE);
   }
 
-  Prop = IntGetProp(WindowObject, Atom);
+  Prop = UserGetProp(WindowObject, Atom);
   if (Prop != NULL)
   {
     Data = Prop->Data;
@@ -202,11 +202,11 @@ CLEANUP:
 }
 
 BOOL FASTCALL
-IntSetProp(PWINDOW_OBJECT Wnd, ATOM Atom, HANDLE Data)
+UserSetProp(PWINDOW_OBJECT Wnd, ATOM Atom, HANDLE Data)
 {
   PPROPERTY Prop;
 
-  Prop = IntGetProp(Wnd, Atom);
+  Prop = UserGetProp(Wnd, Atom);
 
   if (Prop == NULL)
   {
@@ -240,7 +240,7 @@ NtUserSetProp(HWND hWnd, ATOM Atom, HANDLE Data)
     RETURN(FALSE);
   }
 
-  RETURN(IntSetProp(WindowObject, Atom, Data));
+  RETURN(UserSetProp(WindowObject, Atom, Data));
 
 CLEANUP:
   DPRINT("Leave NtUserSetProp, ret=%i\n",_ret_);

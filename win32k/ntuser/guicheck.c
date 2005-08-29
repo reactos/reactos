@@ -46,7 +46,7 @@ static FAST_MUTEX GuiSwitchLock;
 /* FUNCTIONS *****************************************************************/
 
 static BOOL FASTCALL
-UserAddGuiApp(PW32PROCESS W32Data)
+coUserAddGuiApp(PW32PROCESS W32Data)
 {
   W32Data->Flags |= W32PF_CREATEDWINORDC;
 
@@ -56,7 +56,7 @@ UserAddGuiApp(PW32PROCESS W32Data)
 
       ExAcquireFastMutex(&GuiSwitchLock);
 
-      Initialized = UserInitializeDesktopGraphics();
+      Initialized = coUserInitializeDesktopGraphics();
 
       ExReleaseFastMutex(&GuiSwitchLock);
 
@@ -94,7 +94,7 @@ UserGraphicsCheck(BOOL Create)
     {
       if (! (W32Data->Flags & W32PF_CREATEDWINORDC) && ! (W32Data->Flags & W32PF_MANUALGUICHECK))
         {
-          return UserAddGuiApp(W32Data);
+          return coUserAddGuiApp(W32Data);
 
         }
     }
@@ -126,7 +126,7 @@ NtUserManualGuiCheck(LONG Check)
     {
       if (! (W32Data->Flags & W32PF_CREATEDWINORDC))
         {
-          UserAddGuiApp(W32Data);
+          coUserAddGuiApp(W32Data);
         }
     }
   else

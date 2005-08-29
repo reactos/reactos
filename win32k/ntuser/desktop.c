@@ -42,8 +42,10 @@
  FIXME: this is not global data. this belongs in the (inter)active window station
  (current input desktop = interactive desktop = InputDesktop = active desktop on interactive winsta)
 */
-PDESKTOP_OBJECT InputDesktop = NULL;
-HDESK InputDesktopHandle = NULL;
+extern PDESKTOP_OBJECT gInputDesktop;
+
+PDESKTOP_OBJECT gInputDesktop = NULL;
+
 HDC ScreenDeviceContext = NULL;
 
 BOOL g_PaintDesktopVersion = FALSE;
@@ -106,13 +108,13 @@ IntDesktopObjectCreate(PVOID ObjectBody,
    KeInitializeSpinLock(&Desktop->Lock);
    InitializeListHead(&Desktop->ShellHookWindows);
 
-   Desktop->WindowStation = (PWINSTATION_OBJECT)Parent;
+   Desktop->WinSta = (PWINSTATION_OBJECT)Parent;
 
    /* Put the desktop on the window station's list of associcated desktops */
    ExInterlockedInsertTailList(
-      &Desktop->WindowStation->DesktopListHead,
+      &Desktop->WinSta->DesktopListHead,
       &Desktop->ListEntry,
-      &Desktop->WindowStation->Lock);
+      &Desktop->WinSta->Lock);
 
    return RtlCreateUnicodeString(&Desktop->Name, UnicodeString.Buffer);
 }
@@ -126,9 +128,9 @@ IntDesktopObjectDelete(PVOID DeletedObject)
    DPRINT("Deleting desktop (0x%X)\n", Desktop);
 
    /* Remove the desktop from the window station's list of associcated desktops */
-   KeAcquireSpinLock(&Desktop->WindowStation->Lock, &OldIrql);
+   KeAcquireSpinLock(&Desktop->WinSta->Lock, &OldIrql);
    RemoveEntryList(&Desktop->ListEntry);
-   KeReleaseSpinLock(&Desktop->WindowStation->Lock, OldIrql);
+   KeReleaseSpinLock(&Desktop->WinSta->Lock, OldIrql);
 
    RtlFreeUnicodeString(&Desktop->Name);
 }
@@ -380,7 +382,7 @@ PDESKTOP_OBJECT FASTCALL
 UserGetActiveDesktop(VOID)
 {
    /* fixme: avtive desktop ON active winsta!! */
-   return InputDesktop;
+   return gInputDesktop;
 }
 
 
@@ -543,7 +545,7 @@ BOOL FASTCALL IntDesktopUpdatePerUserSettings(BOOL bEnable)
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 NTSTATUS FASTCALL
-UserShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width, ULONG Height)
+coUserShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width, ULONG Height)
 {
    CSR_API_MESSAGE Request;
    NTSTATUS Status;
@@ -635,7 +637,7 @@ VOID IntShellHookNotify(WPARAM Message, LPARAM lParam)
       KeReleaseSpinLock(&Desktop->Lock, OldLevel);
 
       DPRINT("Sending notify\n");
-      IntPostOrSendMessage(Current->hWnd,
+      coUserSendMessage(Current->hWnd,
                            MsgType,
                            Message,
                            lParam);
@@ -1052,41 +1054,41 @@ NtUserOpenInputDesktop(
 {
    PDESKTOP_OBJECT Object;
    NTSTATUS Status;
-   HDESK Desktop;
+   HDESK hDesktop;
 
    DPRINT("About to open input desktop\n");
 
    /* Get a pointer to the desktop object */
 
-   Status = IntValidateDesktopHandle(
-               InputDesktopHandle,
-               UserMode,
-               0,
-               &Object);
+//   Status = IntValidateDesktopHandle(
+//               gInputDesktopHandle,
+//               UserMode,
+//               0,
+//               &Object);
 
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("Validation of input desktop handle (0x%X) failed\n", InputDesktop);
-      return (HDESK)0;
-   }
+//   if (!NT_SUCCESS(Status))
+//   {
+//      DPRINT("Validation of input desktop handle (0x%X) failed\n", gInputDesktop);
+//      return (HDESK)0;
+//   }
 
    /* Create a new handle to the object */
 
    Status = ObOpenObjectByPointer(
-               Object,
+               gInputDesktop,//Object,
                0,
                NULL,
                dwDesiredAccess,
                ExDesktopObjectType,
                UserMode,
-               (HANDLE*)&Desktop);
+               (HANDLE*)&hDesktop);
 
-   ObDereferenceObject(Object);
+   ObDereferenceObject(Object);//FIXME: correct?
 
    if (NT_SUCCESS(Status))
    {
       DPRINT("Successfully opened input desktop\n");
-      return (HDESK)Desktop;
+      return hDesktop;
    }
 
    SetLastNtError(Status);
@@ -1312,7 +1314,7 @@ NtUserPaintDesktop(HDC hDC)
 BOOL STDCALL
 NtUserSwitchDesktop(HDESK hDesktop)
 {
-   PDESKTOP_OBJECT DesktopObject;
+   PDESKTOP_OBJECT Desktop;
    NTSTATUS Status;
 
    DPRINT("About to switch desktop (0x%X)\n", hDesktop);
@@ -1321,7 +1323,7 @@ NtUserSwitchDesktop(HDESK hDesktop)
                hDesktop,
                UserMode,
                0,
-               &DesktopObject);
+               &Desktop);
 
    if (!NT_SUCCESS(Status))
    {
@@ -1333,28 +1335,29 @@ NtUserSwitchDesktop(HDESK hDesktop)
     * Don't allow applications switch the desktop if it's locked, unless the caller
     * is the logon application itself
     */
-   if((DesktopObject->WindowStation->Flags & WSS_LOCKED) &&
+   if((Desktop->WinSta->Flags & WSS_LOCKED) &&
          LogonProcess != NULL && LogonProcess != PsGetWin32Process())
    {
-      ObDereferenceObject(DesktopObject);
+      ObDereferenceObject(Desktop);
       DPRINT1("Switching desktop 0x%x denied because the work station is locked!\n", hDesktop);
       return FALSE;
    }
 
-   /* FIXME: Fail if the desktop belong to an invisible window station */
+   /* FIXME: Fail if the desktop belong to an invisible window station, meaning,
+     fail if the desktop is not on "WinSta0" */
    /* FIXME: Fail if the process is associated with a secured
              desktop such as Winlogon or Screen-Saver */
    /* FIXME: Connect to input device */
 
-   /* Set the active desktop in the desktop's window station. */
-   DesktopObject->WindowStation->ActiveDesktop = DesktopObject;
 
-   /* Set the global state. */
-   InputDesktop = DesktopObject;
-   InputDesktopHandle = hDesktop;
-   InputWindowStation = DesktopObject->WindowStation;
 
-   ObDereferenceObject(DesktopObject);
+   /* dereference previous input desktop */
+   if (gInputDesktop)
+      ObDereferenceObject(gInputDesktop);
+
+   /* Set the global state. */   
+   gInputDesktop = Desktop;
+   gInteractiveWinSta = Desktop->WinSta;
 
    return TRUE;
 }

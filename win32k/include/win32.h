@@ -9,11 +9,17 @@ typedef struct _W32THREAD
   LIST_ENTRY WindowListHead;
   LIST_ENTRY W32CallbackListHead;
   struct _KBDTABLES* KeyboardLayout;
+  
   struct _DESKTOP_OBJECT* Desktop;
   HANDLE hDesktop;
+  SINGLE_LIST_ENTRY UserObjReferencesStack;
   DWORD MessagePumpHookValue;
   BOOLEAN IsExiting;
   PETHREAD Thread;
+  
+  //obj_handle_t           desktop;       /* desktop handle */
+  //int                    desktop_users; /* number of objects using the thread desktop */
+    
   struct _W32PROCESS* WProcess;
 } W32THREAD, *PW32THREAD;
 
@@ -36,6 +42,10 @@ typedef struct _W32PROCESS
   ULONG Flags;
   LONG GDIObjects;
   LONG UserObjects;
+  
+  //obj_handle_t         winstation;      /* main handle to process window station */
+  //obj_handle_t         desktop;         /* handle to desktop to use for new threads */
+
 } W32PROCESS, *PW32PROCESS;
 
 

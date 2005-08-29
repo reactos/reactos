@@ -26,9 +26,10 @@ typedef struct _WINSTATION_OBJECT
     CSHORT Size;
     KSPIN_LOCK Lock;
     UNICODE_STRING Name;
+    /* list of desktops of this winstation */
     LIST_ENTRY DesktopListHead;
     PRTL_ATOM_TABLE AtomTable;
-    USER_HANDLE_TABLE HandleTable;
+ 
     HANDLE SystemMenuTemplate;
     PVOID SystemCursor;
     UINT CaretBlinkRate;
@@ -41,68 +42,12 @@ typedef struct _WINSTATION_OBJECT
     WALLPAPER_MODE WallpaperMode;
 
     ULONG Flags;
-    struct _DESKTOP_OBJECT* ActiveDesktop;
     /* FIXME: Clipboard */
     LIST_ENTRY HotKeyListHead;
     FAST_MUTEX HotKeyListLock;
 } WINSTATION_OBJECT, *PWINSTATION_OBJECT;
 
-extern WINSTATION_OBJECT *InputWindowStation;
-extern PW32PROCESS LogonProcess;
 
-NTSTATUS FASTCALL
-InitWindowStationImpl(VOID);
-
-NTSTATUS FASTCALL
-CleanupWindowStationImpl(VOID);
-
-NTSTATUS
-STDCALL
-IntWinStaObjectOpen(OB_OPEN_REASON Reason,
-                    PVOID ObjectBody,
-                    PEPROCESS Process,
-                    ULONG HandleCount,
-                    ACCESS_MASK GrantedAccess);
-
-VOID STDCALL
-IntWinStaObjectDelete(PVOID DeletedObject);
-
-PVOID STDCALL
-IntWinStaObjectFind(PVOID Object,
-                    PWSTR Name,
-                    ULONG Attributes);
-
-NTSTATUS
-STDCALL
-IntWinStaObjectParse(PVOID Object,
-                     PVOID *NextObject,
-                     PUNICODE_STRING FullPath,
-                     PWSTR *Path,
-                     ULONG Attributes);
-
-NTSTATUS FASTCALL
-IntValidateWindowStationHandle(
-   HWINSTA WindowStation,
-   KPROCESSOR_MODE AccessMode,
-   ACCESS_MASK DesiredAccess,
-   PWINSTATION_OBJECT *Object);
-
-BOOL FASTCALL
-IntGetWindowStationObject(PWINSTATION_OBJECT Object);
-
-BOOL FASTCALL
-UserInitializeDesktopGraphics(VOID);
-
-VOID FASTCALL
-IntEndDesktopGraphics(VOID);
-
-BOOL FASTCALL
-IntGetFullWindowStationName(
-   OUT PUNICODE_STRING FullName,
-   IN PUNICODE_STRING WinStaName,
-   IN OPTIONAL PUNICODE_STRING DesktopName);
-
-PWINSTATION_OBJECT FASTCALL IntGetWinStaObj(VOID);
 
 #endif /* _WIN32K_WINSTA_H */
 

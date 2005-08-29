@@ -29,27 +29,44 @@
 
 /* GLOBALS *******************************************************************/
 
-/*
-Only the interactive WinSta can recieve input. This means
-there can exist only one foreground window/queue/thread per
-session. But its possibly that this variable should be in
-the WinSta anyways. -Gunnar
-*/
-PUSER_MESSAGE_QUEUE gForegroundQueue = NULL;
+/* This is knows as the Foreground Input Queue or just Foreground Queue in MS docs.
+ * This is somewhat confusing since its not really a queue...
+ *
+ * Why have this global var u say? Why not use gForegroundQueue->Input?
+ * This is bcause gForegroundQueue may be NULL (the foreground thread exited) while
+ * its refcounted Input might still be around (someone attached to it). We need a way
+ * to get to the Input after the thread is gone (when gForegroundQueue is NULL).
+ *
+ * But...why not drop gForegroundQueue, add a thread
+ * backpointer in the input struct and only use gForegroundInput u might think?
+ * That wont work! Remeber that no single thread owns the Input. The Input can be
+ * owned by many threads.
+ * -Gunnar
+ */
+//PUSER_THREAD_INPUT gForegroundInput = NULL;
+
+
+/* This is knows as the Foreground Thread in MS docs.
+ * Since the message queue and the w32thread has 1:1 relship, its just a
+ * matter of taste if we want this named gForegroundQueue or gForegroundWThread.
+ * They point to the same thing anyways.
+ * -Gunnar
+ */
+//PUSER_MESSAGE_QUEUE gForegroundQueue = NULL;
 
 
 /* FUNCTIONS *****************************************************************/
 
 
-inline PUSER_MESSAGE_QUEUE FASTCALL UserGetForegroundQueue()
-{
-   return gForegroundQueue;
-}
+//inline PUSER_MESSAGE_QUEUE FASTCALL UserGetForegroundQueue()
+//{
+//   return gInputDesktop->ActiveQueue;
+//}
 
-inline VOID FASTCALL UserSetForegroundQueue(PUSER_MESSAGE_QUEUE Queue)
-{
-   gForegroundQueue = Queue;
-}
+//inline VOID FASTCALL UserSetForegroundQueue(PUSER_MESSAGE_QUEUE Queue)
+//{
+//   gInputDesktop->ActiveQueue = Queue;
+//}
 
 
 PWINDOW_OBJECT FASTCALL
@@ -74,33 +91,33 @@ UserGetThreadFocusWindow()
 }
 
 VOID FASTCALL
-IntSendDeactivateMessages(HWND hWndPrev, HWND hWnd)
+coUserSendDeactivateMessages(HWND hWndPrev, HWND hWnd)
 {
    if (hWndPrev)
    {
-      IntPostOrSendMessage(hWndPrev, WM_NCACTIVATE, FALSE, 0);
-      IntPostOrSendMessage(hWndPrev, WM_ACTIVATE,
+      coUserSendMessage(hWndPrev, WM_NCACTIVATE, FALSE, 0);
+      coUserSendMessage(hWndPrev, WM_ACTIVATE,
                            MAKEWPARAM(WA_INACTIVE, UserGetWindowLong(GetWnd(hWndPrev), GWL_STYLE, FALSE) & WS_MINIMIZE),
                            (LPARAM)hWnd);
    }
 }
 
 VOID FASTCALL
-IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
+coUserSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
 {
    PWINDOW_OBJECT Window, Owner, Parent;
 
    if (hWnd)
    {
       /* Send palette messages */
-      if (IntPostOrSendMessage(hWnd, WM_QUERYNEWPALETTE, 0, 0))
+      if (coUserSendMessage(hWnd, WM_QUERYNEWPALETTE, 0, 0))
       {
-         IntPostOrSendMessage(HWND_BROADCAST, WM_PALETTEISCHANGING,
+         coUserSendMessage(HWND_BROADCAST, WM_PALETTEISCHANGING,
                               (WPARAM)hWnd, 0);
       }
 
       if (UserGetWindow(GetWnd(hWnd), GW_HWNDPREV) != NULL)
-         WinPosSetWindowPos(hWnd, HWND_TOP, 0, 0, 0, 0,
+         coWinPosSetWindowPos(hWnd, HWND_TOP, 0, 0, 0, 0,
                             SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOSENDCHANGING);
 
       Window = IntGetWindowObject(hWnd);
@@ -118,21 +135,22 @@ IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
 
       /* FIXME: IntIsWindow */
 
-      IntPostOrSendMessage(hWnd, WM_NCACTIVATE, (WPARAM)(Window == UserGetForegroundWindow()), 0);
+      coUserSendMessage(hWnd, WM_NCACTIVATE, (WPARAM)(Window == UserGetForegroundWindow()), 0);
       /* FIXME: WA_CLICKACTIVE */
-      IntPostOrSendMessage(hWnd, WM_ACTIVATE,
+      coUserSendMessage(hWnd, WM_ACTIVATE,
                            MAKEWPARAM(MouseActivate ? WA_CLICKACTIVE : WA_ACTIVE,
                                       UserGetWindowLong(GetWnd(hWnd), GWL_STYLE, FALSE) & WS_MINIMIZE),
                            (LPARAM)hWndPrev);
    }
 }
 
+#if 0
 VOID FASTCALL
 IntSendKillFocusMessages(PWINDOW_OBJECT WndPrev, PWINDOW_OBJECT Wnd)
 {
    if (WndPrev)
    {
-      IntPostOrSendMessage(GetHwnd(WndPrev), WM_KILLFOCUS, (WPARAM)GetHwnd(Wnd), 0);
+      coUserPostOrSendMessage(GetHwnd(WndPrev), WM_KILLFOCUS, (WPARAM)GetHwnd(Wnd), 0);
    }
 }
 
@@ -141,9 +159,10 @@ IntSendSetFocusMessages(PWINDOW_OBJECT WndPrev, PWINDOW_OBJECT Wnd)
 {
    if (Wnd)
    {
-      IntPostOrSendMessage(GetHwnd(Wnd), WM_SETFOCUS, (WPARAM)GetHwnd(WndPrev), 0);
+      coUserPostOrSendMessage(GetHwnd(Wnd), WM_SETFOCUS, (WPARAM)GetHwnd(WndPrev), 0);
    }
 }
+#endif
 
 HWND FASTCALL
 IntFindChildWindowToOwner(PWINDOW_OBJECT Root, PWINDOW_OBJECT Owner)
@@ -169,7 +188,7 @@ IntFindChildWindowToOwner(PWINDOW_OBJECT Root, PWINDOW_OBJECT Owner)
 }
 
 STATIC BOOL FASTCALL
-IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWindow, BOOL MouseActivate)
+coUserSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWindow, BOOL MouseActivate)
 {
    HWND hWnd = Window->hSelf;
    HWND hWndPrev = NULL;
@@ -193,7 +212,7 @@ IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWindow
    }
 
    PrevForegroundQueue = UserGetForegroundQueue();
-   if (PrevForegroundQueue != 0)
+   if (PrevForegroundQueue)
    {
       //FIXME uhm... focus er ikke samme som active window... er UserGetFocusMessageQueue riktig?
       hWndPrev = PrevForegroundQueue->Input->hActiveWindow;
@@ -210,8 +229,10 @@ IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWindow
 
    /* FIXME: Call hooks. */
 
-   IntSendDeactivateMessages(hWndPrev, hWnd);
-   IntSendKillFocusMessages(GetWnd(hWndFocusPrev), GetWnd(hWndFocus));
+   coUserSendDeactivateMessages(hWndPrev, hWnd);
+   //IntSendKillFocusMessages(GetWnd(hWndFocusPrev), GetWnd(hWndFocus));
+   if (hWndFocusPrev)
+      coUserSendMessage(hWndFocusPrev, WM_KILLFOCUS, (WPARAM)hWndFocus, 0);
 
    UserSetForegroundQueue(Window->Queue);
    
@@ -229,20 +250,23 @@ IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWindow
       /* FIXME: Send WM_ACTIVATEAPP to all thread windows. */
    }
 
-   IntSendSetFocusMessages(GetWnd(hWndFocusPrev), GetWnd(hWndFocus));
-   IntSendActivateMessages(hWndPrev, hWnd, MouseActivate);
+   //IntSendSetFocusMessages(GetWnd(hWndFocusPrev), GetWnd(hWndFocus));
+   if (hWndFocus)
+      coUserSendMessage(hWndFocus, WM_SETFOCUS, (WPARAM)hWndFocusPrev, 0);
+   
+   coUserSendActivateMessages(hWndPrev, hWnd, MouseActivate);
 
    return TRUE;
 }
 
 BOOL FASTCALL
-IntSetForegroundWindow(PWINDOW_OBJECT Window)
+coUserSetForegroundWindow(PWINDOW_OBJECT Window)
 {
-   return IntSetForegroundAndFocusWindow(Window, Window, FALSE);
+   return coUserSetForegroundAndFocusWindow(Window, Window, FALSE);
 }
 
 BOOL FASTCALL
-IntMouseActivateWindow(PWINDOW_OBJECT Window)
+coUserMouseActivateWindow(PWINDOW_OBJECT Window)
 {
    PWINDOW_OBJECT TopWnd;
 
@@ -257,7 +281,7 @@ IntMouseActivateWindow(PWINDOW_OBJECT Window)
          if(TopWnd)//(TopWnd = IntGetWindowObject(Top)))
          {
             //FIXME: recursion in kmode is baaad. Please find another way...
-            return IntMouseActivateWindow(TopWnd);
+            return coUserMouseActivateWindow(TopWnd);
          }
       }
       return FALSE;
@@ -268,13 +292,13 @@ IntMouseActivateWindow(PWINDOW_OBJECT Window)
       TopWnd = UserGetDesktopWindow();
 
    /* TMN: Check return value from this function? */
-   IntSetForegroundAndFocusWindow(TopWnd, Window, TRUE);
+   coUserSetForegroundAndFocusWindow(TopWnd, Window, TRUE);
 
    return TRUE;
 }
 
 PWINDOW_OBJECT FASTCALL
-IntSetActiveWindow(PWINDOW_OBJECT Wnd)
+coUserSetActiveWindow(PWINDOW_OBJECT Wnd /* can be NULL */)
 {
    PUSER_MESSAGE_QUEUE Queue;
    PWINDOW_OBJECT WndPrev;
@@ -285,19 +309,12 @@ IntSetActiveWindow(PWINDOW_OBJECT Wnd)
 
    if (Wnd)
    {
+      /* window must be attached to the calling thread input queue (callers of this func must verify )*/ 
+      ASSERT(Wnd->Queue->Input == Queue->Input);
+      
       if (!(Wnd->Style & WS_VISIBLE) || (Wnd->Style & (WS_POPUP | WS_CHILD)) == WS_CHILD)
       {
-         //FIXME: commented out meaningless check.  ASSERT(ThreadQueue != 0) above.
-         //return ThreadQueue ? 0 : ThreadQueue->ActiveWindow;
-         //         if (ThreadQueue)
-         //            return 0;
-         //         else
-         //         {
-         //WndPrev = IntGetWindowObject(Queue->Input->hActiveWindow);
-         //return( WndPrev ? WndPrev->hSelf : NULL );
          return IntGetWindowObject(Queue->Input->hActiveWindow);
-
-         //         }
       }
    }
 
@@ -315,8 +332,8 @@ IntSetActiveWindow(PWINDOW_OBJECT Wnd)
 
    //FIXME!!! hva hvis prev active var invalid dvs. NULL?
    //FIXME!!! hva hvis Wnd er NULL?
-   IntSendDeactivateMessages(GetHwnd(WndPrev), GetHwnd(Wnd));
-   IntSendActivateMessages(GetHwnd(WndPrev), GetHwnd(Wnd), FALSE);
+   coUserSendDeactivateMessages(GetHwnd(WndPrev), GetHwnd(Wnd));
+   coUserSendActivateMessages(GetHwnd(WndPrev), GetHwnd(Wnd), FALSE);
 
    /* FIXME */
    /*   return IntIsWindow(hWndPrev) ? hWndPrev : 0;*/
@@ -324,7 +341,7 @@ IntSetActiveWindow(PWINDOW_OBJECT Wnd)
 }
 
 PWINDOW_OBJECT FASTCALL
-UserSetFocusWindow(PWINDOW_OBJECT Wnd)
+coUserSetFocusWindow(PWINDOW_OBJECT Wnd)
 {
    HWND hWndPrev = 0;
    PUSER_MESSAGE_QUEUE Queue;
@@ -341,8 +358,14 @@ UserSetFocusWindow(PWINDOW_OBJECT Wnd)
 
    Queue->Input->hFocusWindow = GetHwnd(Wnd);
 
-   IntSendKillFocusMessages(GetWnd(hWndPrev), Wnd);
-   IntSendSetFocusMessages(GetWnd(hWndPrev), Wnd);
+   //IntSendKillFocusMessages(GetWnd(hWndPrev), Wnd);
+   if (hWndPrev)
+      coUserSendMessage(hWndPrev, WM_KILLFOCUS, (WPARAM)GetHwnd(Wnd), 0);
+
+
+//   IntSendSetFocusMessages(GetWnd(hWndPrev), Wnd);
+   if (Wnd)
+      coUserSendMessage(GetHwnd(Wnd), WM_SETFOCUS, (WPARAM)hWndPrev, 0);   
 
    return GetWnd(hWndPrev);
 }
@@ -457,11 +480,11 @@ NtUserSetActiveWindow(HWND hWnd)
          RETURN(0);
       }
 
-      PrevWnd = IntSetActiveWindow(Window);
+      PrevWnd = coUserSetActiveWindow(Window);
    }
    else
    {
-      PrevWnd = IntSetActiveWindow(0);
+      PrevWnd = coUserSetActiveWindow(0);
    }
 
    RETURN(PrevWnd ? PrevWnd->hSelf : 0);
@@ -526,7 +549,7 @@ NtUserSetCapture(HWND hWnd)//FIXME: can be NULL?
       MsqSetStateWindow(Queue->Input, MSQ_STATE_MOVESIZE, NULL);
    }
 
-   IntPostOrSendMessage(hWndPrev, WM_CAPTURECHANGED, 0, (LPARAM)hWnd);
+   coUserSendMessage(hWndPrev, WM_CAPTURECHANGED, 0, (LPARAM)hWnd);
    Queue->Input->hCaptureWindow = hWnd;
 
    RETURN(hWndPrev);
@@ -578,14 +601,14 @@ NtUserSetFocus(HWND hWnd)
       WndTop = UserGetAncestor(Wnd, GA_ROOT);
       if (WndTop != UserGetActiveWindow())
       {
-         IntSetActiveWindow(WndTop);
+         coUserSetActiveWindow(WndTop);
       }
 
-      PrevWnd = UserSetFocusWindow(Wnd);
+      PrevWnd = coUserSetFocusWindow(Wnd);
    }
    else
    {
-      PrevWnd = UserSetFocusWindow(NULL);
+      PrevWnd = coUserSetFocusWindow(NULL);
    }
 
    RETURN(PrevWnd ? PrevWnd->hSelf : NULL);
@@ -601,7 +624,7 @@ CLEANUP:
  * NOTE: Wnd can be NULL
  */
 PWINDOW_OBJECT FASTCALL
-UserSetFocus(PWINDOW_OBJECT Wnd OPTIONAL)
+coUserSetFocus(PWINDOW_OBJECT Wnd OPTIONAL)
 {
    if (Wnd)
    {
@@ -625,13 +648,13 @@ UserSetFocus(PWINDOW_OBJECT Wnd OPTIONAL)
       WndTop = UserGetAncestor(Wnd, GA_ROOT);
       if (WndTop != UserGetActiveWindow())
       {
-         IntSetActiveWindow(WndTop);
+         coUserSetActiveWindow(WndTop);
       }
 
-      return UserSetFocusWindow(Wnd);
+      return coUserSetFocusWindow(Wnd);
    }
 
-   return UserSetFocusWindow(NULL);
+   return coUserSetFocusWindow(NULL);
 }
 
 /* EOF */

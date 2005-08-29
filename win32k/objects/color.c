@@ -656,7 +656,7 @@ NtGdiUpdateColors(HDC hDC)
       return FALSE;
    }
    //FIXME
-   ret = UserRedrawWindow(Wnd, NULL, 0, RDW_INVALIDATE);
+   ret = coUserRedrawWindow(Wnd, NULL, 0, RDW_INVALIDATE);
    
    if (!inUser){
       UserLeave();

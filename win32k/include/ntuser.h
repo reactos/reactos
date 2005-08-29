@@ -1,6 +1,22 @@
 #ifndef _WIN32K_NTUSER_H
 #define _WIN32K_NTUSER_H
 
+
+typedef struct _USER_OBJECT_HDR
+{
+   HANDLE hSelf;
+   LONG refs;
+   BYTE flags;
+} USER_OBJECT_HDR, *PUSER_OBJECT_HDR;
+
+
+typedef struct _USER_REFERENCE_ENTRY
+{
+   SINGLE_LIST_ENTRY Entry;
+   PUSER_OBJECT_HDR hdr;
+} USER_REFERENCE_ENTRY, *PUSER_REFERENCE_ENTRY;
+
+
 extern char* _file;
 extern DWORD _line;
 extern DWORD _locked;
@@ -97,53 +113,6 @@ BOOL FASTCALL UserIsEntered();
 
 
 
-
-#define FIRST_USER_HANDLE 0x0020  /* first possible value for low word of user handle */
-#define LAST_USER_HANDLE  0xffef  /* last possible value for low word of user handle */
-
-
-typedef struct _USER_HANDLE_ENTRY
-{
-    void          *ptr;          /* pointer to object */
-    unsigned short type;         /* object type (0 if free) */
-    unsigned short generation;   /* generation counter */
-} USER_HANDLE_ENTRY, * PUSER_HANDLE_ENTRY;
-
-
-
-typedef struct _USER_HANDLE_TABLE
-{
-   PUSER_HANDLE_ENTRY handles;
-   PUSER_HANDLE_ENTRY freelist;
-   int nb_handles;
-   int allocated_handles;
-} USER_HANDLE_TABLE, * PUSER_HANDLE_TABLE;
-
-/*
-typedef enum {
-  otFree = 0,
-  otClass,
-  otWnd,
-  otMenu,
-  otAccel,
-  otCursor,
-  otHook,
-  otMonitor
-} USER_OBJECT_TYPE;
-*/
-
-typedef enum _USER_OBJECT_TYPE
-{
-  /* 0 = free */
-  USER_CLASS = 1,
-  USER_WINDOW,
-  USER_MENU,
-  USER_ACCELERATOR_TABLE,
-  USER_CURSOR_ICON,
-  USER_HOOK_PROC,
-  USER_MONITOR
-  
-} USER_OBJECT_TYPE;
 
 
 

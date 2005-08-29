@@ -304,10 +304,10 @@ NtUserCallMsgFilter(
 
    UserEnterExclusive();
 
-   if (HOOK_CallHooks( WH_SYSMSGFILTER, code, 0, (LPARAM)msg))
+   if (coHOOK_CallHooks( WH_SYSMSGFILTER, code, 0, (LPARAM)msg))
       RETURN(TRUE);
 
-   RETURN(HOOK_CallHooks( WH_MSGFILTER, code, 0, (LPARAM)msg));
+   RETURN(coHOOK_CallHooks( WH_MSGFILTER, code, 0, (LPARAM)msg));
 
 CLEANUP:
    DPRINT("Leave NtUserCallMsgFilter. ret=%i\n", _ret_);
@@ -445,7 +445,7 @@ CLEANUP:
 
 
 VOID FASTCALL
-UserSendHitTestMessages(PUSER_MESSAGE_QUEUE Queue, LPMSG Msg)
+coUserSendHitTestMessages(PUSER_MESSAGE_QUEUE Queue, LPMSG Msg)
 {
    if(!Msg->hwnd || Queue->Input->hCaptureWindow)
    {
@@ -456,12 +456,12 @@ UserSendHitTestMessages(PUSER_MESSAGE_QUEUE Queue, LPMSG Msg)
    {
       case WM_MOUSEMOVE:
          {
-            IntSendMessage(Msg->hwnd, WM_SETCURSOR, (WPARAM)Msg->hwnd, MAKELPARAM(HTCLIENT, Msg->message));
+            coUserSendMessage(Msg->hwnd, WM_SETCURSOR, (WPARAM)Msg->hwnd, MAKELPARAM(HTCLIENT, Msg->message));
             break;
          }
       case WM_NCMOUSEMOVE:
          {
-            IntSendMessage(Msg->hwnd, WM_SETCURSOR, (WPARAM)Msg->hwnd, MAKELPARAM(Msg->wParam, Msg->message));
+            coUserSendMessage(Msg->hwnd, WM_SETCURSOR, (WPARAM)Msg->hwnd, MAKELPARAM(Msg->wParam, Msg->message));
             break;
          }
       case WM_LBUTTONDOWN:
@@ -476,16 +476,16 @@ UserSendHitTestMessages(PUSER_MESSAGE_QUEUE Queue, LPMSG Msg)
             WPARAM wParam;
             PSYSTEM_CURSORINFO CurInfo;
 
-            if(!IntGetWindowStationObject(InputWindowStation))
+            if(!IntGetWindowStationObject(gInteractiveWinSta))
             {
                break;
             }
-            CurInfo = UserGetSysCursorInfo(InputWindowStation);
+            CurInfo = UserGetSysCursorInfo(gInteractiveWinSta);
             wParam = (WPARAM)(CurInfo->ButtonsDown);
-            ObDereferenceObject(InputWindowStation);
+            ObDereferenceObject(gInteractiveWinSta);
 
-            IntSendMessage(Msg->hwnd, WM_MOUSEMOVE, wParam, Msg->lParam);
-            IntSendMessage(Msg->hwnd, WM_SETCURSOR, (WPARAM)Msg->hwnd, MAKELPARAM(HTCLIENT, Msg->message));
+            coUserSendMessage(Msg->hwnd, WM_MOUSEMOVE, wParam, Msg->lParam);
+            coUserSendMessage(Msg->hwnd, WM_SETCURSOR, (WPARAM)Msg->hwnd, MAKELPARAM(HTCLIENT, Msg->message));
             break;
          }
       case WM_NCLBUTTONDOWN:
@@ -497,15 +497,15 @@ UserSendHitTestMessages(PUSER_MESSAGE_QUEUE Queue, LPMSG Msg)
       case WM_NCRBUTTONDBLCLK:
       case WM_NCXBUTTONDBLCLK:
          {
-            IntSendMessage(Msg->hwnd, WM_NCMOUSEMOVE, (WPARAM)Msg->wParam, Msg->lParam);
-            IntSendMessage(Msg->hwnd, WM_SETCURSOR, (WPARAM)Msg->hwnd, MAKELPARAM(Msg->wParam, Msg->message));
+            coUserSendMessage(Msg->hwnd, WM_NCMOUSEMOVE, (WPARAM)Msg->wParam, Msg->lParam);
+            coUserSendMessage(Msg->hwnd, WM_SETCURSOR, (WPARAM)Msg->hwnd, MAKELPARAM(Msg->wParam, Msg->message));
             break;
          }
    }
 }
 
 BOOL FASTCALL
-IntActivateWindowMouse(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, PWINDOW_OBJECT MsgWindow,
+coUserActivateWindowMouse(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, PWINDOW_OBJECT MsgWindow,
                        USHORT *HitTest)
 {
    ULONG Result;
@@ -516,7 +516,7 @@ IntActivateWindowMouse(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, PWINDOW_OBJEC
       return TRUE;
    }
 
-   Result = IntSendMessage(MsgWindow->hSelf, WM_MOUSEACTIVATE, (WPARAM)UserGetParent(MsgWindow), (LPARAM)MAKELONG(*HitTest, Msg->message));
+   Result = coUserSendMessage(MsgWindow->hSelf, WM_MOUSEACTIVATE, (WPARAM)UserGetParent(MsgWindow), (LPARAM)MAKELONG(*HitTest, Msg->message));
    switch (Result)
    {
       case MA_NOACTIVATEANDEAT:
@@ -524,11 +524,11 @@ IntActivateWindowMouse(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, PWINDOW_OBJEC
       case MA_NOACTIVATE:
          break;
       case MA_ACTIVATEANDEAT:
-         IntMouseActivateWindow(MsgWindow);
+         coUserMouseActivateWindow(MsgWindow);
          return TRUE;
       default:
          /* MA_ACTIVATE */
-         IntMouseActivateWindow(MsgWindow);
+         coUserMouseActivateWindow(MsgWindow);
          break;
    }
 
@@ -536,7 +536,7 @@ IntActivateWindowMouse(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, PWINDOW_OBJEC
 }
 
 static BOOL FASTCALL
-UserTranslateMouseMessage(PUSER_MESSAGE_QUEUE Queue, LPMSG Msg, USHORT *HitTest, BOOL Remove)
+coUserTranslateMouseMessage(PUSER_MESSAGE_QUEUE Queue, LPMSG Msg, USHORT *HitTest, BOOL Remove)
 {
    PWINDOW_OBJECT Window;
 
@@ -549,7 +549,7 @@ UserTranslateMouseMessage(PUSER_MESSAGE_QUEUE Queue, LPMSG Msg, USHORT *HitTest,
    if(Queue == Window->Queue && Queue->Input->hCaptureWindow != Window->hSelf)
    {
       /* only send WM_NCHITTEST messages if we're not capturing the window! */
-      *HitTest = IntSendMessage(Window->hSelf, WM_NCHITTEST, 0,
+      *HitTest = coUserSendMessage(Window->hSelf, WM_NCHITTEST, 0,
                                 MAKELONG(Msg->pt.x, Msg->pt.y));
 
       if(*HitTest == (USHORT)HTTRANSPARENT)
@@ -561,14 +561,14 @@ UserTranslateMouseMessage(PUSER_MESSAGE_QUEUE Queue, LPMSG Msg, USHORT *HitTest,
          {
             PWINDOW_OBJECT Wnd;
 
-            WinPosWindowFromPoint(DesktopWindow, Window->Queue, &Msg->pt, &Wnd);
+            coWinPosWindowFromPoint(DesktopWindow, Window->Queue, &Msg->pt, &Wnd);
             if(Wnd)
             {
                if(Wnd != Window)
                {
                   /* post the message to the other window */
                   Msg->hwnd = Wnd->hSelf;
-                  if(!(Wnd->Status & WINDOWSTATUS_DESTROYING))
+                  if(!(Wnd->hdr.flags & USER_OBJ_DESTROYING))
                   {
                      MsqPostMessage(Wnd->Queue, Msg, FALSE,
                                     Msg->message == WM_MOUSEMOVE ? QS_MOUSEMOVE :
@@ -634,7 +634,7 @@ UserTranslateMouseMessage(PUSER_MESSAGE_QUEUE Queue, LPMSG Msg, USHORT *HitTest,
  * Internal version of PeekMessage() doing all the work
  */
 BOOL FASTCALL
-IntPeekMessage(PUSER_MESSAGE Msg,
+coUserPeekMessage(PUSER_MESSAGE Msg,
                HWND hWnd,
                UINT MsgFilterMin,
                UINT MsgFilterMax,
@@ -667,7 +667,7 @@ CheckMessages:
    Queue->LastMsgRead = LargeTickCount.u.LowPart;
 
    /* Dispatch sent messages here. */
-   while ( MsqDispatchOneSentMessage(Queue))      ;
+   while ( coMsqDispatchOneSentMessage(Queue))      ;
 
    /* clear changed bits so we can wait on them if we don't find a message */
    Queue->ChangesBits = 0;
@@ -691,7 +691,7 @@ CheckMessages:
    }
 
    /* Now check for normal messages. */
-   Present = MsqFindMessage(Queue,
+   Present = coMsqFindMessage(Queue,
                             FALSE,
                             RemoveMessages,
                             hWnd,
@@ -717,7 +717,7 @@ CheckMessages:
    }
 
    /* Check for hardware events. */
-   Present = MsqFindMessage(Queue,
+   Present = coMsqFindMessage(Queue,
                             TRUE,
                             RemoveMessages,
                             hWnd,
@@ -743,7 +743,7 @@ CheckMessages:
    }
 
    /* Check for sent messages again. */
-   while (MsqDispatchOneSentMessage(Queue));
+   while (coMsqDispatchOneSentMessage(Queue));
 
    /* Check for paint messages. */
    if (IntGetPaintMessage(hWnd, MsgFilterMin, MsgFilterMax, QUEUE_2_WTHREAD(Queue), &Msg->Msg, RemoveMessages))
@@ -779,7 +779,7 @@ MessageFound:
 
             MsgWindow = IntGetWindowObject(Msg->Msg.hwnd);
             ASSERT(MsgWindow != NULL);
-            if(UserTranslateMouseMessage(Queue, &Msg->Msg, &HitTest, TRUE))
+            if(coUserTranslateMouseMessage(Queue, &Msg->Msg, &HitTest, TRUE))
                /* FIXME - check message filter again, if the message doesn't match anymore,
                           search again */
             {
@@ -789,10 +789,10 @@ MessageFound:
             if(Queue->Input->hCaptureWindow == NULL)
             {
 
-               UserSendHitTestMessages(Queue, &Msg->Msg);
+               coUserSendHitTestMessages(Queue, &Msg->Msg);
                if((Msg->Msg.message != WM_MOUSEMOVE && Msg->Msg.message != WM_NCMOUSEMOVE) &&
                      IS_BTN_MESSAGE(Msg->Msg.message, DOWN) &&
-                     IntActivateWindowMouse(Queue, &Msg->Msg, MsgWindow, &HitTest))
+                     coUserActivateWindowMouse(Queue, &Msg->Msg, MsgWindow, &HitTest))
                {
 
                   /* eat the message, search again */
@@ -802,7 +802,7 @@ MessageFound:
          }
          else
          {
-            UserSendHitTestMessages(Queue, &Msg->Msg);
+            coUserSendHitTestMessages(Queue, &Msg->Msg);
          }
 
          return TRUE;
@@ -810,7 +810,7 @@ MessageFound:
 
       USHORT HitTest;
       if((Msg->Msg.hwnd && Msg->Msg.message >= WM_MOUSEFIRST && Msg->Msg.message <= WM_MOUSELAST) &&
-            UserTranslateMouseMessage(Queue, &Msg->Msg, &HitTest, FALSE))
+            coUserTranslateMouseMessage(Queue, &Msg->Msg, &HitTest, FALSE))
          /* FIXME - check message filter again, if the message doesn't match anymore,
                     search again */
       {
@@ -866,7 +866,7 @@ NtUserPeekMessage(
       MsgFilterMax = 0;
    }
 
-   Present = IntPeekMessage(&Msg, Wnd, MsgFilterMin, MsgFilterMax, RemoveMsg);
+   Present = coUserPeekMessage(&Msg, Wnd, MsgFilterMin, MsgFilterMax, RemoveMsg);
 
    if (Present)
    {
@@ -929,7 +929,7 @@ CLEANUP:
 }
 
 static BOOL FASTCALL
-IntWaitMessage(HWND Wnd,
+coUserWaitMessage(HWND Wnd,
                UINT MsgFilterMin,
                UINT MsgFilterMax)
 {
@@ -955,13 +955,13 @@ IntWaitMessage(HWND Wnd,
 
    do
    {
-      if (IntPeekMessage(&Msg, Wnd, MsgFilterMin, MsgFilterMax, PM_NOREMOVE))
+      if (coUserPeekMessage(&Msg, Wnd, MsgFilterMin, MsgFilterMax, PM_NOREMOVE))
       {
          return TRUE;
       }
 
       /* Nothing found. Wait for new messages. */
-      Status = MsqWaitForNewMessages(ThreadQueue, Wnd, MsgFilterMin, MsgFilterMax);
+      Status = coMsqWaitForNewMessages(ThreadQueue, Wnd, MsgFilterMin, MsgFilterMax);
    }
    while ((STATUS_WAIT_0 <= Status && Status <= STATUS_WAIT_63) || STATUS_TIMEOUT == Status);
 
@@ -1017,7 +1017,7 @@ NtUserGetMessage(
 
    do
    {
-      GotMessage = IntPeekMessage(&Msg, Wnd, MsgFilterMin, MsgFilterMax, PM_REMOVE);
+      GotMessage = coUserPeekMessage(&Msg, Wnd, MsgFilterMin, MsgFilterMax, PM_REMOVE);
       if (GotMessage)
       {
          Info.Msg = Msg.Msg;
@@ -1068,7 +1068,7 @@ NtUserGetMessage(
             RETURN((BOOL) -1);
          }
       }
-      else if (! IntWaitMessage(Wnd, MsgFilterMin, MsgFilterMax))
+      else if (! coUserWaitMessage(Wnd, MsgFilterMin, MsgFilterMax))
       {
          RETURN((BOOL) -1);
       }
@@ -1245,8 +1245,10 @@ UserPostMessage(HWND Wnd,
 
       if (List != NULL)
       {
-         for (i = 0; List[i]; i++)
+         for (i = 0; List[i]; i++){
+            //FIXME: ops! recursion!
             UserPostMessage(List[i], Msg, wParam, lParam);
+         }
          ExFreePool(List);
       }
    }
@@ -1258,7 +1260,7 @@ UserPostMessage(HWND Wnd,
          SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
          return(FALSE);
       }
-      if(Window->Status & WINDOWSTATUS_DESTROYING)
+      if(Window->hdr.flags & USER_OBJ_DESTROYING)
       {
          DPRINT1("Attempted to post message to window 0x%x that is being destroyed!\n", Wnd);
          /* FIXME - last error code? */
@@ -1356,14 +1358,14 @@ NtUserQuerySendMessage(DWORD Unknown0)
 }
 
 LRESULT FASTCALL
-IntSendMessage(HWND hWnd,
+coUserSendMessage(HWND hWnd,
                UINT Msg,
                WPARAM wParam,
                LPARAM lParam)
 {
    ULONG_PTR Result = 0;
 
-   if(IntSendMessageTimeout(hWnd, Msg, wParam, lParam, SMTO_NORMAL, 0, &Result))
+   if(coUserSendMessageTimeout(hWnd, Msg, wParam, lParam, SMTO_NORMAL, 0, &Result))
    {
       return (LRESULT)Result;
    }
@@ -1372,7 +1374,7 @@ IntSendMessage(HWND hWnd,
 }
 
 static LRESULT FASTCALL
-IntSendMessageTimeoutSingle(HWND hWnd,
+coUserSendMessageTimeoutSingle(HWND hWnd,
                             UINT Msg,
                             WPARAM wParam,
                             LPARAM lParam,
@@ -1424,12 +1426,12 @@ IntSendMessageTimeoutSingle(HWND hWnd,
       }
       if (0xFFFF0000 != ((DWORD) Window->WndProcW & 0xFFFF0000))
       {
-         Result = (ULONG_PTR)IntCallWindowProc(Window->WndProcW, FALSE, hWnd, Msg, wParam,
+         Result = (ULONG_PTR)coUserCallWindowProc(Window->WndProcW, FALSE, hWnd, Msg, wParam,
                                                lParamPacked,lParamBufferSize);
       }
       else
       {
-         Result = (ULONG_PTR)IntCallWindowProc(Window->WndProcA, TRUE, hWnd, Msg, wParam,
+         Result = (ULONG_PTR)coUserCallWindowProc(Window->WndProcA, TRUE, hWnd, Msg, wParam,
                                                lParamPacked,lParamBufferSize);
       }
 
@@ -1453,14 +1455,14 @@ IntSendMessageTimeoutSingle(HWND hWnd,
       return FALSE;
    }
 
-   if(Window->Status & WINDOWSTATUS_DESTROYING)
+   if(Window->hdr.flags & USER_OBJ_DESTROYING)
    {
       /* FIXME - last error? */
       DPRINT1("Attempted to send message to window 0x%x that is being destroyed!\n", hWnd);
       return FALSE;
    }
 
-   Status = MsqSendMessage(Window->Queue, hWnd, Msg, wParam, lParam,
+   Status = coMsqSendMessage(Window->Queue, hWnd, Msg, wParam, lParam,
                            uTimeout, (uFlags & SMTO_BLOCK), FALSE, uResult);
 
    if (STATUS_TIMEOUT == Status)
@@ -1479,7 +1481,7 @@ IntSendMessageTimeoutSingle(HWND hWnd,
 }
 
 LRESULT FASTCALL
-IntSendMessageTimeout(HWND hWnd,
+coUserSendMessageTimeout(HWND hWnd,
                       UINT Msg,
                       WPARAM wParam,
                       LPARAM lParam,
@@ -1495,7 +1497,7 @@ IntSendMessageTimeout(HWND hWnd,
 
    if (HWND_BROADCAST != hWnd)
    {
-      return IntSendMessageTimeoutSingle(hWnd, Msg, wParam, lParam, uFlags, uTimeout, uResult);
+      return coUserSendMessageTimeoutSingle(hWnd, Msg, wParam, lParam, uFlags, uTimeout, uResult);
    }
 
    DesktopWindow = UserGetDesktopWindow();
@@ -1513,7 +1515,7 @@ IntSendMessageTimeout(HWND hWnd,
 
    for (Child = Children; NULL != *Child; Child++)
    {
-      IntSendMessageTimeoutSingle(*Child, Msg, wParam, lParam, uFlags, uTimeout, uResult);
+      coUserSendMessageTimeoutSingle(*Child, Msg, wParam, lParam, uFlags, uTimeout, uResult);
    }
 
    ExFreePool(Children);
@@ -1522,50 +1524,10 @@ IntSendMessageTimeout(HWND hWnd,
 }
 
 
-/* This function posts a message if the destination's message queue belongs to
-   another thread, otherwise it sends the message. It does not support broadcast
-   messages! */
-LRESULT FASTCALL
-IntPostOrSendMessage(HWND hWnd,
-                     UINT Msg,
-                     WPARAM wParam,
-                     LPARAM lParam)
-{
-   ULONG_PTR Result;
-   PWINDOW_OBJECT Window;
 
-
-
-   if(hWnd == HWND_BROADCAST)
-   {
-      return 0;
-   }
-
-   Window = IntGetWindowObject(hWnd);
-   if(!Window)
-   {
-      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-      return 0;
-   }
-
-   if(Window->Queue != UserGetCurrentQueue())
-   {
-      //FIXME!!
-      Result = UserPostMessage(hWnd, Msg, wParam, lParam);
-   }
-   else
-   {
-      if(!IntSendMessageTimeoutSingle(hWnd, Msg, wParam, lParam, SMTO_NORMAL, 0, &Result))
-      {
-         Result = 0;
-      }
-   }
-
-   return (LRESULT)Result;
-}
 
 LRESULT FASTCALL
-IntDoSendMessage(HWND Wnd,
+coUserDoSendMessage(HWND Wnd,
                  UINT Msg,
                  WPARAM wParam,
                  LPARAM lParam,
@@ -1651,12 +1613,12 @@ IntDoSendMessage(HWND Wnd,
       }
       if(!dsm)
       {
-         Result = IntSendMessage(KernelModeMsg.hwnd, KernelModeMsg.message,
+         Result = coUserSendMessage(KernelModeMsg.hwnd, KernelModeMsg.message,
                                  KernelModeMsg.wParam, KernelModeMsg.lParam);
       }
       else
       {
-         Result = IntSendMessageTimeout(KernelModeMsg.hwnd, KernelModeMsg.message,
+         Result = coUserSendMessageTimeout(KernelModeMsg.hwnd, KernelModeMsg.message,
                                         KernelModeMsg.wParam, KernelModeMsg.lParam,
                                         dsm->uFlags, dsm->uTimeout, &dsm->Result);
       }
@@ -1697,7 +1659,7 @@ NtUserSendMessageTimeout(HWND hWnd,
 
    dsm.uFlags = uFlags;
    dsm.uTimeout = uTimeout;
-   Result = IntDoSendMessage(hWnd, Msg, wParam, lParam, &dsm, UnsafeInfo);
+   Result = coUserDoSendMessage(hWnd, Msg, wParam, lParam, &dsm, UnsafeInfo);
    if(uResult != NULL && Result != 0)
    {
       NTSTATUS Status;
@@ -1729,7 +1691,7 @@ NtUserSendMessage(HWND Wnd,
    DPRINT("Enter NtUserSendMessage\n");
    UserEnterExclusive();
 
-   RETURN(IntDoSendMessage(Wnd, Msg, wParam, lParam, NULL, UnsafeInfo));
+   RETURN(coUserDoSendMessage(Wnd, Msg, wParam, lParam, NULL, UnsafeInfo));
 
 CLEANUP:
    DPRINT("Leave NtUserSendMessage, ret=%i\n",_ret_);
@@ -1786,7 +1748,7 @@ NtUserWaitMessage(VOID)
    DPRINT("EnterNtUserWaitMessage\n");
    UserEnterExclusive();
 
-   RETURN(IntWaitMessage(NULL, 0, 0));
+   RETURN(coUserWaitMessage(NULL, 0, 0));
 
 CLEANUP:
    DPRINT("Leave NtUserWaitMessage, ret=%i\n",_ret_);

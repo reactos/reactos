@@ -111,26 +111,17 @@ UnregisterWindowHotKeys(PWINDOW_OBJECT Window)
 {
   PLIST_ENTRY Entry;
   PHOT_KEY_ITEM HotKeyItem;
-  PWINSTATION_OBJECT WinStaObject = NULL;
+  PWINSTATION_OBJECT WinSta = NULL;
 
-  /* FIXME: these checks are VOID! 
-  A windows MUST have a thread and the thread MUST have a proc.
-  */
-//  if(Window->OwnerThread && Window->OwnerThread->ThreadsProcess){
-     
      //FIXME: hmm...this winsta path look fishy
-    WinStaObject = Window->WThread->Desktop->WindowStation;
-// }
+  WinSta = Window->WThread->Desktop->WinSta;
 
-  //FIXME: a desktop MUST have a WinSta!
-//  if(!WinStaObject)
-//    return;
-   ASSERT(WinStaObject);
+  ASSERT(WinSta);
 
-  IntLockHotKeys(WinStaObject);
+  IntLockHotKeys(WinSta);
 
-  Entry = WinStaObject->HotKeyListHead.Flink;
-  while (Entry != &WinStaObject->HotKeyListHead)
+  Entry = WinSta->HotKeyListHead.Flink;
+  while (Entry != &WinSta->HotKeyListHead)
     {
       HotKeyItem = (PHOT_KEY_ITEM) CONTAINING_RECORD (Entry,
 						      HOT_KEY_ITEM,
@@ -143,7 +134,7 @@ UnregisterWindowHotKeys(PWINDOW_OBJECT Window)
 	}
     }
 
-  IntUnLockHotKeys(WinStaObject);
+  IntUnLockHotKeys(WinSta);
 }
 
 
@@ -155,7 +146,7 @@ UnregisterThreadHotKeys(struct _ETHREAD *Thread)
   PWINSTATION_OBJECT WinStaObject = NULL;
 
   if(Thread->Tcb.Win32Thread && Thread->Tcb.Win32Thread->Desktop)
-    WinStaObject = Thread->Tcb.Win32Thread->Desktop->WindowStation;
+    WinStaObject = Thread->Tcb.Win32Thread->Desktop->WinSta;
 
   if(!WinStaObject)
     return;
@@ -239,7 +230,7 @@ NtUserRegisterHotKey(HWND hWnd,
 
 
   if(HotKeyThread->ThreadsProcess && HotKeyThread->ThreadsProcess->Win32Process)
-    WinStaObject = HotKeyThread->Tcb.Win32Thread->Desktop->WindowStation;
+    WinStaObject = HotKeyThread->Tcb.Win32Thread->Desktop->WinSta;
 
   if(!WinStaObject)
   {
@@ -299,7 +290,7 @@ NtUserUnregisterHotKey(HWND hWnd, int id)
    a windows must have a thread etc.
 */
 //  if(Window->W32Thread->Thread->ThreadsProcess && Window->W32Thread->Thread->ThreadsProcess->Win32Process)
-    WinStaObject = Window->WThread->Desktop->WindowStation;
+    WinStaObject = Window->WThread->Desktop->WinSta;
 
   if(!WinStaObject)
   {

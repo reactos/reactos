@@ -21,11 +21,11 @@
 #define CARET_VALUENAME L"CursorBlinkRate"
 
 BOOL FASTCALL
-IntHideCaret(PTHRDCARETINFO CaretInfo)
+coIntHideCaret(PTHRDCARETINFO CaretInfo)
 {
    if(CaretInfo->hWnd && CaretInfo->Visible && CaretInfo->Showing)
    {
-      IntSendMessage(CaretInfo->hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
+      coUserSendMessage(CaretInfo->hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
       CaretInfo->Showing = 0;
       return TRUE;
    }
@@ -33,7 +33,7 @@ IntHideCaret(PTHRDCARETINFO CaretInfo)
 }
 
 BOOL FASTCALL
-UserDestroyCaret(PW32THREAD Win32Thread /* unused param!!!*/)
+coUserDestroyCaret(PW32THREAD Win32Thread /* unused param!!!*/)
 {
    PW32THREAD W32Thread;
 
@@ -43,7 +43,7 @@ UserDestroyCaret(PW32THREAD Win32Thread /* unused param!!!*/)
    if(!W32Thread)
       return FALSE;
 
-   IntHideCaret(&W32Thread->Queue.Input->CaretInfo);
+   coIntHideCaret(&W32Thread->Queue.Input->CaretInfo);
    RtlZeroMemory(&W32Thread->Queue.Input->CaretInfo, sizeof(THRDCARETINFO));
 //   W32Thread->Queue.Input->CaretInfo.Bitmap = (HBITMAP)0;
 //   W32Thread->Queue.Input->CaretInfo.hWnd = (HWND)0;
@@ -162,7 +162,7 @@ UserGetCaretBlinkTime(VOID)
 }
 
 BOOL FASTCALL
-UserSetCaretPos(int X, int Y)
+coUserSetCaretPos(int X, int Y)
 {
    PUSER_THREAD_INPUT Input;
    
@@ -172,11 +172,11 @@ UserSetCaretPos(int X, int Y)
    {
       if(Input->CaretInfo.Pos.x != X || Input->CaretInfo.Pos.y != Y)
       {
-         IntHideCaret(&Input->CaretInfo);
+         coIntHideCaret(&Input->CaretInfo);
          Input->CaretInfo.Showing = 0;
          Input->CaretInfo.Pos.x = X;
          Input->CaretInfo.Pos.y = Y;
-         IntSendMessage(Input->CaretInfo.hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
+         coUserSendMessage(Input->CaretInfo.hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
          UserSetTimer(GetWnd(Input->CaretInfo.hWnd), IDCARETTIMER, UserGetCaretBlinkTime(), NULL, TRUE);
       }
       return TRUE;
@@ -205,7 +205,7 @@ UserSwitchCaretShowing(PTHRDCARETINFO Info)
 }
 
 VOID FASTCALL
-UserDrawCaret(HWND hWnd /* FIXME: Unused param?!?! */)
+coUserDrawCaret(HWND hWnd /* FIXME: Unused param?!?! */)
 {
    PUSER_THREAD_INPUT Input;
 
@@ -214,7 +214,7 @@ UserDrawCaret(HWND hWnd /* FIXME: Unused param?!?! */)
    if(Input->CaretInfo.hWnd && Input->CaretInfo.Visible &&
          Input->CaretInfo.Showing)
    {
-      IntSendMessage(Input->CaretInfo.hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
+      coUserSendMessage(Input->CaretInfo.hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
       Input->CaretInfo.Showing = 1;
    }
 }
@@ -254,7 +254,7 @@ NtUserCreateCaret(
    if (Input->CaretInfo.Visible)
    {
       UserKillTimer(WindowObject, IDCARETTIMER, TRUE);
-      IntHideCaret(&Input->CaretInfo);
+      coIntHideCaret(&Input->CaretInfo);
    }
 
    Input->CaretInfo.hWnd = hWnd;
@@ -365,7 +365,7 @@ NtUserHideCaret(
    {
       UserKillTimer(WindowObject, IDCARETTIMER, TRUE);
 
-      IntHideCaret(&Queue->Input->CaretInfo);
+      coIntHideCaret(&Queue->Input->CaretInfo);
       Queue->Input->CaretInfo.Visible = 0;
       Queue->Input->CaretInfo.Showing = 0;
    }
@@ -381,7 +381,7 @@ CLEANUP:
 
 
 BOOL FASTCALL
-UserHideCaret(PWINDOW_OBJECT Wnd)
+coUserHideCaret(PWINDOW_OBJECT Wnd)
 {
    PUSER_MESSAGE_QUEUE Queue;
    
@@ -406,7 +406,7 @@ UserHideCaret(PWINDOW_OBJECT Wnd)
       UserKillTimer(Wnd, IDCARETTIMER, TRUE);
 
       //FIXME: fix IntHideCaret vs. NtHideCaret vs. UserHideCaret mess
-      IntHideCaret(&Queue->Input->CaretInfo);
+      coIntHideCaret(&Queue->Input->CaretInfo);
       Queue->Input->CaretInfo.Visible = 0;
       Queue->Input->CaretInfo.Showing = 0;
    }
@@ -433,7 +433,7 @@ NtUserShowCaret(HWND hWnd)
       RETURN(FALSE);
    }
 
-   RETURN(UserShowCaret(Wnd));
+   RETURN(coUserShowCaret(Wnd));
 
 CLEANUP:
    DPRINT1("Leave NtUserShowCaret, ret=%i\n",_ret_);
@@ -444,7 +444,7 @@ CLEANUP:
 
 
 BOOL FASTCALL
-UserShowCaret(PWINDOW_OBJECT Wnd)
+coUserShowCaret(PWINDOW_OBJECT Wnd)
 {
    PUSER_MESSAGE_QUEUE Queue;
 
@@ -469,7 +469,7 @@ UserShowCaret(PWINDOW_OBJECT Wnd)
       Queue->Input->CaretInfo.Visible = 1;
       if(!Queue->Input->CaretInfo.Showing)
       {
-         IntSendMessage(Queue->Input->CaretInfo.hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
+         coUserSendMessage(Queue->Input->CaretInfo.hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
       }
       UserSetTimer(Wnd, IDCARETTIMER, UserGetCaretBlinkTime(), NULL, TRUE);
    }

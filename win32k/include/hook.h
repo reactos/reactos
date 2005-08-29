@@ -5,8 +5,13 @@
 
 typedef struct tagHOOK
 {
+/*---------- USER_OBJECT_HDR --------------*/
+  HHOOK hSelf;
+  LONG refs;
+  BYTE hdrFlags;
+/*---------- USER_OBJECT_HDR --------------*/
+   
   LIST_ENTRY Chain;          /* Hook chain entry */
-  HHOOK      Self;           /* user handle for this hook */
   PETHREAD   Thread;         /* Thread owning the hook */
   int        HookId;         /* Hook table index */
   HOOKPROC   Proc;           /* Hook function */
@@ -23,8 +28,6 @@ typedef struct tagHOOKTABLE
   UINT       Counts[NB_HOOKS]; /* use counts for each hook chain */
 } HOOKTABLE, *PHOOKTABLE;
 
-LRESULT FASTCALL HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam);
-VOID FASTCALL HOOK_DestroyThreadHooks(PETHREAD Thread);
 
 #endif /* _WIN32K_HOOK_H */
 

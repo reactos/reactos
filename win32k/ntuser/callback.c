@@ -109,7 +109,7 @@ IntCleanupThreadCallbacks(PW32THREAD W32Thread)
 /* FUNCTIONS *****************************************************************/
 
 VOID STDCALL
-IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
+coUserCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
                            HWND hWnd,
                            UINT Msg,
                            ULONG_PTR CompletionCallbackContext,
@@ -144,7 +144,7 @@ IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
 }
 
 LRESULT STDCALL
-IntCallWindowProc(WNDPROC Proc,
+coUserCallWindowProc(WNDPROC Proc,
                   BOOLEAN IsAnsiProc,
                   HWND Wnd,
                   UINT Message,
@@ -219,7 +219,7 @@ IntCallWindowProc(WNDPROC Proc,
 }
 
 HMENU STDCALL
-IntLoadSysMenuTemplate()
+coUserLoadSysMenuTemplate()
 {
    LRESULT Result;
    NTSTATUS Status;
@@ -247,7 +247,7 @@ IntLoadSysMenuTemplate()
 }
 
 BOOL STDCALL
-IntLoadDefaultCursors(VOID)
+coUserLoadDefaultCursors(VOID)
 {
    LRESULT Result;
    NTSTATUS Status;
@@ -276,7 +276,7 @@ IntLoadDefaultCursors(VOID)
 }
 
 LRESULT STDCALL
-IntCallHookProc(INT HookId,
+coUserCallHookProc(INT HookId,
                 INT Code,
                 WPARAM wParam,
                 LPARAM lParam,

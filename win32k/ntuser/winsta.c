@@ -42,8 +42,10 @@
 
 /* GLOBALS *******************************************************************/
 
-/* Currently active window station */
-PWINSTATION_OBJECT InputWindowStation = NULL;
+/* 
+ * Only WinSta "WinSta0" can be interactive, so this will always be "WinSta0". -Gunnar
+ */
+PWINSTATION_OBJECT gInteractiveWinSta = NULL;
 
 /* INITALIZATION FUNCTIONS ****************************************************/
 
@@ -339,7 +341,7 @@ IntGetWindowStationObject(PWINSTATION_OBJECT Object)
 }
 
 BOOL FASTCALL
-UserInitializeDesktopGraphics(VOID)
+coUserInitializeDesktopGraphics(VOID)
 {
   UNICODE_STRING DriverName;
 
@@ -360,7 +362,7 @@ UserInitializeDesktopGraphics(VOID)
 
   UserAcquireOrReleaseInputOwnership(FALSE);
   /* Setup the cursor */
-  IntLoadDefaultCursors();
+  coUserLoadDefaultCursors();
 
   return TRUE;
 }
@@ -438,7 +440,6 @@ NtUserCreateWindowStation(
    HWINSTA WindowStation;
    OBJECT_ATTRIBUTES ObjectAttributes;
    NTSTATUS Status;
-   PVOID mem;
 
    /*
     * Generate full window station name
@@ -538,39 +539,8 @@ NtUserCreateWindowStation(
      return 0;
    }
 
-   //FIXME: alloc all at once? in must be mapped into umode also...
-   mem = ExAllocatePool(PagedPool, sizeof(USER_HANDLE_ENTRY) * 65000);
-   if (!mem)
-   {
-      DPRINT("Failed creating handle table\n");
-      ExFreePool(CurInfo);
-      ExFreePool(WindowStationName.Buffer);
-      /* FIXME - Delete window station object */
-      ObDereferenceObject(WindowStationObject);
-      SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
-      return 0;
-   }
-   
-   UserInitHandleTable(&WindowStationObject->HandleTable, mem, sizeof(USER_HANDLE_ENTRY) * 65000);
-   //WindowStationObject->HandleTable = HandleTable;
-   
-#if 0
-   WindowStationObject->HandleTable = ObmCreateHandleTable();
-   if (!WindowStationObject->HandleTable)
-   {
-      DPRINT("Failed creating handle table\n");
-      ExFreePool(CurInfo);
-      ExFreePool(WindowStationName.Buffer);
-      /* FIXME - Delete window station object */
-      ObDereferenceObject(WindowStationObject);
-      SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
-      return 0;
-   }
-#endif
-
    InitHotKeys(WindowStationObject);
 
-//   ExInitializeFastMutex(&CurInfo->CursorMutex);
    CurInfo->Enabled = FALSE;
    CurInfo->ButtonsDown = 0;
    CurInfo->CursorClipInfo.IsClipped = FALSE;
@@ -1004,7 +974,7 @@ IntGetWinStaObj(VOID)
 
   if(PsGetWin32Thread() != NULL && PsGetWin32Thread()->Desktop != NULL)
   {
-    WinStaObj = PsGetWin32Thread()->Desktop->WindowStation;
+    WinStaObj = PsGetWin32Thread()->Desktop->WinSta;
     ASSERT(WinStaObj);
     ObReferenceObjectByPointer(WinStaObj, KernelMode, ExWindowStationObjectType, 0);
   }

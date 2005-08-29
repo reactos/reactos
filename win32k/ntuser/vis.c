@@ -151,7 +151,7 @@ VIS_ComputeVisibleRegion(
 }
 
 VOID FASTCALL
-VIS_WindowLayoutChanged(
+coVIS_WindowLayoutChanged(
    PWINDOW_OBJECT Window,
    HRGN NewlyExposed)
 {
@@ -169,7 +169,7 @@ VIS_WindowLayoutChanged(
                      Window->WindowRect.left - Parent->ClientRect.left,
                      Window->WindowRect.top - Parent->ClientRect.top);
 
-     UserRedrawWindow(Parent, NULL, Temp,
+     coUserRedrawWindow(Parent, NULL, Temp,
                      RDW_FRAME | RDW_ERASE | RDW_INVALIDATE |
                      RDW_ALLCHILDREN);
    }

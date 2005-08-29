@@ -6,17 +6,22 @@
 
 typedef struct _ACCELERATOR_TABLE
 {
-  int Count;
-  LPACCEL Table;
+   union
+   {
+      USER_OBJECT_HDR hdr;
+      struct
+      {
+         /*---------- USER_OBJECT_HDR --------------*/
+         HACCEL hSelf; /* want typesafe handle */
+         LONG refs_placeholder;
+         BYTE flags_placeholder;
+         /*---------- USER_OBJECT_HDR --------------*/
+
+         int Count;
+         LPACCEL Table;
+      };
+
+   };
 } ACCELERATOR_TABLE, *PACCELERATOR_TABLE;
-
-NTSTATUS FASTCALL
-InitAcceleratorImpl();
-
-NTSTATUS FASTCALL
-CleanupAcceleratorImpl();
-
-VOID
-RegisterThreadAcceleratorTable(struct _ETHREAD *Thread);
 
 #endif /* _WIN32K_ACCELERATOR_H */

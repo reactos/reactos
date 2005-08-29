@@ -10,18 +10,22 @@ typedef struct _DESKTOP_OBJECT
 
     CSHORT Type;
     CSHORT Size;
+    /* entry in WinSta's list of desktops */
     LIST_ENTRY ListEntry;
     KSPIN_LOCK Lock;
+    
+//FIXME: add desktop heap ptr/struct
+    
     UNICODE_STRING Name;
     /* Pointer to the associated window station. */
-    struct _WINSTATION_OBJECT *WindowStation;
+    struct _WINSTATION_OBJECT *WinSta;
     /* Pointer to the active queue. */
-//    PUSER_MESSAGE_QUEUE ActiveQueue;
+    PUSER_MESSAGE_QUEUE ActiveQueue;
     /* Rectangle of the work area */
     RECT WorkArea;
     /* Handle of the desktop window. */
-    HANDLE DesktopWindow;
-    HANDLE PrevActiveWindow;
+    HWND DesktopWindow;
+    HWND PrevActiveWindow;
     /* Thread blocking input */
     PVOID BlockInputThread;
 

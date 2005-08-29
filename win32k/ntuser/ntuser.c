@@ -89,9 +89,22 @@ VOID FASTCALL UserStackTrace()
 
 NTSTATUS FASTCALL InitUserImpl(VOID)
 {
+   PVOID mem;
+   
 //   DPRINT("Enter InitUserImpl\n");
 //   ExInitializeResourceLite(&UserLock);
    ExInitializeFastMutex(&UserLock);
+   
+   //FIXME: alloc all at once? in must be mapped into umode also...
+   mem = ExAllocatePool(PagedPool, sizeof(USER_HANDLE_ENTRY) * 65000);
+   if (!mem)
+   {
+      DPRINT("Failed creating handle table\n");
+      return STATUS_INSUFFICIENT_RESOURCES;
+   }
+   //FIXME: make auto growable
+   UserInitHandleTable(&gHandleTable, mem, sizeof(USER_HANDLE_ENTRY) * 65000);
+   
    return STATUS_SUCCESS;
 }
 
@@ -106,6 +119,10 @@ BOOL FASTCALL UserIsEntered()
    return (UserLock.Owner == KeGetCurrentThread());
    
 }
+
+
+
+
 
 VOID FASTCALL CleanupUser(VOID)
 {

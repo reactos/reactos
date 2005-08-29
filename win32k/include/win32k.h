@@ -12,12 +12,11 @@
 #include <include/msgqueue.h>
 #include <include/win32.h>
 #include <include/ssec.h>
+#include <include/handle.h>
 #include <include/accelerator.h>
-#include <include/callback.h>
 #include <include/caret.h>
 #include <include/class.h>
 #include <include/cleanup.h>
-#include <include/clipboard.h>
 #include <include/color.h>
 #include <include/csr.h>
 #include <include/cursoricon.h>
@@ -26,7 +25,6 @@
 #include <include/dib.h>
 #include <include/eng.h>
 #include <include/error.h>
-#include <include/guicheck.h>
 #include <include/hook.h>
 #include <include/hotkey.h>
 #include <include/inteng.h>
@@ -46,7 +44,6 @@
 #include <include/tags.h>
 #include <include/text.h>
 #include <include/timer.h>
-#include <include/useratom.h>
 #include <include/window.h>
 #include <include/winpos.h>
 #include <include/winsta.h>

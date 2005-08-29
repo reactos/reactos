@@ -45,7 +45,7 @@ PUSER_MESSAGE_QUEUE W32kGetPrimitiveQueue()
 }
 
 BOOL FASTCALL
-UserRegisterLogonProcess(HANDLE ProcessId, BOOL Register)
+coUserRegisterLogonProcess(HANDLE ProcessId, BOOL Register)
 {
   PEPROCESS Process;
   NTSTATUS Status;
@@ -124,7 +124,7 @@ NtUserCallNoParam(DWORD Routine)
       break;
 
     case NOPARAM_ROUTINE_DESTROY_CARET:
-      Result = (DWORD)UserDestroyCaret(PsGetWin32Thread());
+      Result = (DWORD)coUserDestroyCaret(PsGetWin32Thread());
       break;
 
     case NOPARAM_ROUTINE_INIT_MESSAGE_PUMP:
@@ -476,7 +476,7 @@ NtUserCallTwoParam(
      RETURN( 0);
 
     case TWOPARAM_ROUTINE_SHOWOWNEDPOPUPS:
-	  RETURN( (DWORD)IntShowOwnedPopups((HWND) Param1, (BOOL) Param2));
+     RETURN( (DWORD)coUserShowOwnedPopups((HWND) Param1, (BOOL) Param2));
 
     case TWOPARAM_ROUTINE_ROS_SHOWWINDOW:
     {
@@ -512,7 +512,7 @@ NtUserCallTwoParam(
          RETURN( (DWORD)FALSE);
       }
 
-      RETURN( (DWORD)UserValidateRgn((PWINDOW_OBJECT) WindowObject, (HRGN) Param2));
+      RETURN( (DWORD)coUserValidateRgn((PWINDOW_OBJECT) WindowObject, (HRGN) Param2));
 
     case TWOPARAM_ROUTINE_SETWNDCONTEXTHLPID:
       WindowObject = IntGetWindowObject((HWND)Param1);
@@ -527,7 +527,7 @@ NtUserCallTwoParam(
       RETURN( (DWORD)TRUE);
 
     case TWOPARAM_ROUTINE_SETCARETPOS:
-      RETURN( (DWORD)UserSetCaretPos((int)Param1, (int)Param2));
+      RETURN( (DWORD)coUserSetCaretPos((int)Param1, (int)Param2));
 
     case TWOPARAM_ROUTINE_GETWINDOWINFO:
     {
@@ -575,7 +575,7 @@ NtUserCallTwoParam(
     }
 
     case TWOPARAM_ROUTINE_REGISTERLOGONPROC:
-      RETURN( (DWORD)UserRegisterLogonProcess((HANDLE)Param1, (BOOL)Param2));
+      RETURN( (DWORD)coUserRegisterLogonProcess((HANDLE)Param1, (BOOL)Param2));
 
     case TWOPARAM_ROUTINE_SETSYSCOLORS:
     {
@@ -711,7 +711,7 @@ NtUserCallHwndLock(
    switch (Routine)
    {
       case HWNDLOCK_ROUTINE_ARRANGEICONICWINDOWS:
-         WinPosArrangeIconicWindows(Window);
+         coWinPosArrangeIconicWindows(Window);
          break;
 
       case HWNDLOCK_ROUTINE_DRAWMENUBAR:
@@ -725,7 +725,7 @@ NtUserCallHwndLock(
               MenuObject->MenuInfo.WndOwner = hWnd;
               MenuObject->MenuInfo.Height = 0;
 
-              WinPosSetWindowPos(hWnd, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
+              coWinPosSetWindowPos(hWnd, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
                            SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED );
               Ret = TRUE;
               break;
@@ -736,7 +736,7 @@ NtUserCallHwndLock(
          break;
 
       case HWNDLOCK_ROUTINE_SETFOREGROUNDWINDOW:
-         Ret = IntSetForegroundWindow(Window);
+         Ret = coUserSetForegroundWindow(Window);
          break;
 
       case HWNDLOCK_ROUTINE_UPDATEWINDOW:

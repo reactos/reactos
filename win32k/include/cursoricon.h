@@ -11,15 +11,27 @@ typedef struct tagCURICON_PROCESS
 
 typedef struct _CURICON_OBJECT
 {
-  LIST_ENTRY ListEntry;
-  HANDLE Self;
-  LIST_ENTRY ProcessList;
-  HMODULE hModule;
-  HRSRC hRsrc;
-  HRSRC hGroupRsrc;
-  SIZE Size;
-  BYTE Shadow;
-  ICONINFO IconInfo;
+   union
+   {
+      USER_OBJECT_HDR hdr;
+      struct
+      {
+         /*---------- USER_OBJECT_HDR --------------*/
+         HCURSOR hSelf; /* want typesafe handle */
+         LONG refs_placeholder;
+         BYTE flags_placeholder;
+         /*---------- USER_OBJECT_HDR --------------*/
+
+         LIST_ENTRY ListEntry;
+         LIST_ENTRY ProcessList;
+         HMODULE hModule;
+         HRSRC hRsrc;
+         HRSRC hGroupRsrc;
+         SIZE Size;
+         BYTE Shadow;
+         ICONINFO IconInfo;
+      };
+   };
 } CURICON_OBJECT, *PCURICON_OBJECT;
 
 typedef struct _CURSORCLIP_INFO
@@ -45,19 +57,9 @@ typedef struct _SYSTEM_CURSORINFO
   DWORD LastBtnDown;
   LONG LastBtnDownX;
   LONG LastBtnDownY;
-  HANDLE LastClkWnd;
+  HANDLE LastClkWnd; //FIXME
 } SYSTEM_CURSORINFO, *PSYSTEM_CURSORINFO;
 
-HCURSOR FASTCALL UserSetCursor(PCURICON_OBJECT NewCursor, BOOL ForceChange);
-BOOL FASTCALL UserSetupCurIconHandles(PWINSTATION_OBJECT WinStaObject);
-PCURICON_OBJECT FASTCALL UserCreateCurIconHandle(PWINSTATION_OBJECT WinStaObject);
-VOID FASTCALL UserCleanupCurIcons(struct _EPROCESS *Process, PW32PROCESS Win32Process);
-
-BOOL FASTCALL 
-UserGetCursorLocation(PWINSTATION_OBJECT WinStaObject, POINT *loc);
-
-#define UserGetSysCursorInfo(WinStaObj) \
-  (PSYSTEM_CURSORINFO)((WinStaObj)->SystemCursor)
 
 #endif /* _WIN32K_CURSORICON_H */
 
