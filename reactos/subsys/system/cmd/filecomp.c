@@ -396,7 +396,7 @@ VOID FindPrefixAndSuffix(LPTSTR strIN, LPTSTR szPrefix, LPTSTR szSuffix)
 			nQuotes++;
 
 	/* Find the prefix and suffix */
-	if(nQuotes % 2 && nQuotes)
+	if(nQuotes % 2 && nQuotes > 1)
 	{
 		/* Odd number of quotes.  Just start from the last " */
 		/* THis is the way MS does it, and is an easy way out */
@@ -468,7 +468,7 @@ VOID FindPrefixAndSuffix(LPTSTR strIN, LPTSTR szPrefix, LPTSTR szSuffix)
 			bInside = !bInside;
 		if(str[i] == _T(' ') && !bInside)
 			SBreak = i;
-		if((!_tcsncmp(&str[i], _T(" "),1) || !_tcsncmp(&str[i], _T("\\"),1)) && !bInside)
+		if((str[i] == _T(' ') || str[i] == _T('\\')) && !bInside)
 			PBreak = i;
 
 	}
@@ -477,7 +477,7 @@ VOID FindPrefixAndSuffix(LPTSTR strIN, LPTSTR szPrefix, LPTSTR szSuffix)
 	_tcscpy(szSuffix,&strIN[SBreak]);	
   strIN[PBreak] = _T('\0');
 	_tcscpy(szPrefix,strIN);
-	if(!_tcsncmp(&szPrefix[_tcslen(szPrefix) - 2],_T("\""),1))
+	if(szPrefix[_tcslen(szPrefix) - 2] == _T('\"'))
 	{
 		/* need to remove the " right before a \ at the end to
 		   allow the next stuff to stay inside one set of quotes
@@ -535,7 +535,6 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, INT cusor)
 	INT FileListSize = 0;
 	/* Used for loops */
 	INT i;
-	INT ii;
 	/* Editable string of what was passed in */
 	TCHAR str[MAX_PATH];
 	/* Keeps track of what element was last selected */
@@ -573,13 +572,12 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, INT cusor)
 			no quote at the END of the full name */
 		FindPrefixAndSuffix(str,szPrefix,szBaseWord);
 		/* Strip quotes */
-		for(i = 0; i < _tcslen(szBaseWord); i++)
+		while(i < _tcslen(szBaseWord)+1)
 		{
-			if(!_tcsncmp(&szBaseWord[i], _T("\""),1))
-			{
-				for(ii = i; ii < (_tcslen(szBaseWord)); ii++)
-					szBaseWord[ii] = szBaseWord[ii + 1];
-			}
+			if(szBaseWord[i] == _T('\"'))
+				memmove(&szBaseWord[i],&szBaseWord[i + 1], _tcslen(&szBaseWord[i]) * sizeof(TCHAR));
+			else
+				i++;
 		}
 
 		/* clear it out */
@@ -691,8 +689,8 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, INT cusor)
 				LastSpace = i;
 
 		}
-		/* insert the space and move things around */
-		if(_tcsncmp(&szPrefix[LastSpace + 1],_T("\""),1) && LastSpace != -1)
+		/* insert the quoation and move things around */
+		if(szPrefix[LastSpace + 1] == _T('\"') && LastSpace != -1)
 		{
 			/* add another char or you will lose a null char ending */
 			_tcsncat(szPrefix,&szPrefix[_tcslen(szPrefix) - 1],1);
