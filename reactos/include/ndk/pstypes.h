@@ -250,7 +250,7 @@ typedef struct _PEB
     ULONG ImageProcessAffinityMask;                  /* C0h */
     ULONG GdiHandleBuffer[0x22];                     /* C4h */
     PVOID PostProcessInitRoutine;                    /* 14Ch */
-    PVOID *TlsExpansionBitmap;                       /* 150h */
+    struct _RTL_BITMAP *TlsExpansionBitmap;          /* 150h */
     ULONG TlsExpansionBitmapBits[0x20];              /* 154h */
     ULONG SessionId;                                 /* 1D4h */
     PVOID AppCompatInfo;                             /* 1D8h */
@@ -359,8 +359,6 @@ typedef struct _TEB
     PVOID FlsData;                          /* FB4h */
     UCHAR SafeThunkCall;                    /* FB8h */
     UCHAR BooleanSpare[3];                  /* FB9h */
-    /* FIXME: Needed for WINE DLL's */
-    PVOID WineDebugInfo;                    /* FBCh */    
 } TEB, *PTEB;
 
 #ifndef NTOS_MODE_USER
