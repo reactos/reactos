@@ -572,7 +572,7 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, INT cusor)
 			no quote at the END of the full name */
 		FindPrefixAndSuffix(str,szPrefix,szBaseWord);
 		/* Strip quotes */
-		while(i < _tcslen(szBaseWord)+1)
+		for(i = 0; i < _tcslen(szBaseWord); )
 		{
 			if(szBaseWord[i] == _T('\"'))
 				memmove(&szBaseWord[i],&szBaseWord[i + 1], _tcslen(&szBaseWord[i]) * sizeof(TCHAR));
