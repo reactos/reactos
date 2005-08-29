@@ -320,21 +320,6 @@ RegCloseKey (HKEY hKey)
 
 
 /************************************************************************
- *  RegConnectRegistryA
- *
- * @unimplemented
- */
-LONG STDCALL
-RegConnectRegistryA (LPCSTR lpMachineName,
-		     HKEY hKey,
-		     PHKEY phkResult)
-{
-  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-  return ERROR_CALL_NOT_IMPLEMENTED;
-}
-
-
-/************************************************************************
  *  RegCopyTreeW
  *
  * @unimplemented
@@ -440,6 +425,41 @@ RegCopyTreeA(IN HKEY hKeySrc,
                        hKeyDest);
 
     RtlFreeUnicodeString(&SubKeyName);
+    
+    return Ret;
+}
+
+
+/************************************************************************
+ *  RegConnectRegistryA
+ *
+ * @implemented
+ */
+LONG STDCALL
+RegConnectRegistryA (IN LPCSTR lpMachineName,
+                     IN HKEY hKey,
+                     OUT PHKEY phkResult)
+{
+    UNICODE_STRING MachineName;
+    LONG Ret;
+    
+    if (lpMachineName != NULL)
+    {
+        if (!RtlCreateUnicodeStringFromAsciiz(&MachineName,
+                                              (LPSTR)lpMachineName))
+        {
+            return ERROR_NOT_ENOUGH_MEMORY;
+        }
+    }
+    else
+        RtlInitUnicodeString(&MachineName,
+                             NULL);
+
+    Ret = RegConnectRegistryW(MachineName.Buffer,
+                              hKey,
+                              phkResult);
+
+    RtlFreeUnicodeString(&MachineName);
     
     return Ret;
 }
@@ -971,7 +991,8 @@ RegDeleteKeyValueA(IN HKEY hKey,
 
 
 static NTSTATUS
-RegpDeleteTree(IN HKEY hKey)
+RegpDeleteTree(IN HKEY hKey,
+               OUT PBOOLEAN KeysDeleted)
 {
     typedef struct
     {
@@ -980,13 +1001,15 @@ RegpDeleteTree(IN HKEY hKey)
     } REGP_DEL_KEYS, *PREG_DEL_KEYS;
 
     LIST_ENTRY delQueueHead;
-    PREG_DEL_KEYS delKeys = NULL, newDelKeys;
+    PREG_DEL_KEYS delKeys, newDelKeys;
     HANDLE ProcessHeap;
     ULONG BufferSize;
     PKEY_BASIC_INFORMATION BasicInfo;
     PREG_DEL_KEYS KeyDelRoot;
     NTSTATUS Status = STATUS_SUCCESS;
     NTSTATUS Status2 = STATUS_SUCCESS;
+    
+    *KeysDeleted = FALSE;
     
     InitializeListHead(&delQueueHead);
     
@@ -1105,10 +1128,13 @@ ReadFirstSubKey:
                         Status2 = STATUS_INSUFFICIENT_RESOURCES;
                     }
                 }
+
 SubKeyFailure:
+                ASSERT(newDelKeys != NULL);
                 RtlFreeHeap(ProcessHeap,
                             0,
                             newDelKeys);
+
 SubKeyFailureNoFree:
                 /* don't break, let's try to delete as many keys as possible */
                 if (Status2 != STATUS_NO_MORE_ENTRIES && NT_SUCCESS(Status))
@@ -1134,6 +1160,8 @@ SubKeyFailureNoFree:
                         0,
                         delKeys);
         } while (!IsListEmpty(&delQueueHead));
+        
+        *KeysDeleted = TRUE;
     }
     else
         Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1151,6 +1179,7 @@ LONG STDCALL
 RegDeleteTreeW(IN HKEY hKey,
                IN LPCWSTR lpSubKey  OPTIONAL)
 {
+    BOOLEAN KeysDeleted;
     HANDLE KeyHandle, CurKey, SubKeyHandle = NULL;
     NTSTATUS Status;
 
@@ -1188,15 +1217,20 @@ RegDeleteTreeW(IN HKEY hKey,
     else
         CurKey = KeyHandle;
 
-    Status = RegpDeleteTree(CurKey);
+    Status = RegpDeleteTree(CurKey,
+                            &KeysDeleted);
 
-    if (SubKeyHandle != NULL)
+    if (!KeysDeleted)
     {
-        NtClose(SubKeyHandle);
-    }
+        /* only close handles of keys that weren't deleted! */
+        if (SubKeyHandle != NULL)
+        {
+            NtClose(SubKeyHandle);
+        }
 
 Cleanup:
-    CloseDefaultKey(KeyHandle);
+        CloseDefaultKey(KeyHandle);
+    }
 
     if (!NT_SUCCESS(Status))
     {
