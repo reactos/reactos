@@ -690,7 +690,7 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, INT cusor)
 
 		}
 		/* insert the quoation and move things around */
-		if(szPrefix[LastSpace + 1] == _T('\"') && LastSpace != -1)
+		if(szPrefix[LastSpace + 1] != _T('\"') && LastSpace != -1)
 		{
 			/* add another char or you will lose a null char ending */
 			_tcsncat(szPrefix,&szPrefix[_tcslen(szPrefix) - 1],1);
