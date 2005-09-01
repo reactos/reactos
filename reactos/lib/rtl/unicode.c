@@ -237,47 +237,28 @@ RtlCharToInteger(
 LONG
 STDCALL
 RtlCompareString(
-   IN PSTRING String1,
-   IN PSTRING String2,
+   IN PSTRING s1,
+   IN PSTRING s2,
    IN BOOLEAN CaseInsensitive)
 {
-   ULONG len1, len2;
-   PCHAR s1, s2;
-   CHAR  c1, c2;
+   unsigned int len;
+   LONG ret = 0;
+   LPCSTR p1, p2;
 
-   if (String1 && String2)
+   len = min(s1->Length, s2->Length);
+   p1 = s1->Buffer;
+   p2 = s2->Buffer;
+
+   if (CaseInsensitive)
    {
-      len1 = String1->Length;
-      len2 = String2->Length;
-      s1 = String1->Buffer;
-      s2 = String2->Buffer;
-
-      if (s1 && s2)
-      {
-         if (CaseInsensitive)
-         {
-            for(;;)
-            {
-               c1 = len1-- ? RtlUpperChar (*s1++) : 0;
-               c2 = len2-- ? RtlUpperChar (*s2++) : 0;
-               if (!c1 || !c2 || c1 != c2)
-                  return c1 - c2;
-            }
-         }
-         else
-         {
-            for(;;)
-            {
-               c1 = len1-- ? *s1++ : 0;
-               c2 = len2-- ? *s2++ : 0;
-               if (!c1 || !c2 || c1 != c2)
-                  return c1 - c2;
-            }
-         }
-      }
+     while (!ret && len--) ret = RtlUpperChar(*p1++) - RtlUpperChar(*p2++);
    }
-
-   return 0;
+   else
+   {
+     while (!ret && len--) ret = *p1++ - *p2++;
+   }
+   if (!ret) ret = s1->Length - s2->Length;
+   return ret;
 }
 
 
@@ -290,40 +271,12 @@ RtlCompareString(
 BOOLEAN
 STDCALL
 RtlEqualString(
-   IN PSTRING String1,
-   IN PSTRING String2,
+   IN PSTRING s1,
+   IN PSTRING s2,
    IN BOOLEAN CaseInsensitive)
 {
-   ULONG i;
-   CHAR c1, c2;
-   PCHAR p1, p2;
-
-   if (String1->Length != String2->Length)
-      return FALSE;
-
-   p1 = String1->Buffer;
-   p2 = String2->Buffer;
-   for (i = 0; i < String1->Length; i++)
-   {
-      if (CaseInsensitive == TRUE)
-      {
-         c1 = RtlUpperChar (*p1);
-         c2 = RtlUpperChar (*p2);
-      }
-      else
-      {
-         c1 = *p1;
-         c2 = *p2;
-      }
-
-      if (c1 != c2)
-         return FALSE;
-
-      p1++;
-      p2++;
-   }
-
-   return TRUE;
+   if (s1->Length != s2->Length) return FALSE;
+   return !RtlCompareString(s1, s2, CaseInsensitive );
 }
 
 
@@ -336,41 +289,12 @@ RtlEqualString(
 BOOLEAN
 STDCALL
 RtlEqualUnicodeString(
-   IN CONST UNICODE_STRING *String1,
-   IN CONST UNICODE_STRING *String2,
+   IN CONST UNICODE_STRING *s1,
+   IN CONST UNICODE_STRING *s2,
    IN BOOLEAN  CaseInsensitive)
 {
-   ULONG i;
-   WCHAR wc1, wc2;
-   PWCHAR pw1, pw2;
-
-   if (String1->Length != String2->Length)
-      return FALSE;
-
-   pw1 = String1->Buffer;
-   pw2 = String2->Buffer;
-
-   for (i = 0; i < String1->Length / sizeof(WCHAR); i++)
-   {
-      if (CaseInsensitive == TRUE)
-      {
-         wc1 = RtlUpcaseUnicodeChar (*pw1);
-         wc2 = RtlUpcaseUnicodeChar (*pw2);
-      }
-      else
-      {
-         wc1 = *pw1;
-         wc2 = *pw2;
-      }
-
-      if (wc1 != wc2)
-         return FALSE;
-
-      pw1++;
-      pw2++;
-   }
-
-   return TRUE;
+   if (s1->Length != s2->Length) return FALSE;
+   return !RtlCompareUnicodeString((PUNICODE_STRING)s1, (PUNICODE_STRING)s2, CaseInsensitive );
 }
 
 
@@ -1983,56 +1907,36 @@ RtlUnicodeStringToAnsiSize(
 }
 
 
-
-
 /*
  * @implemented
  */
 LONG
 STDCALL
 RtlCompareUnicodeString(
-   IN PUNICODE_STRING String1,
-   IN PUNICODE_STRING String2,
+   IN PUNICODE_STRING s1,
+   IN PUNICODE_STRING s2,
    IN BOOLEAN  CaseInsensitive)
 {
-   ULONG len1, len2;
-   PWCHAR s1, s2;
-   WCHAR  c1, c2;
+   unsigned int len;
+   LONG ret = 0;
+   LPCWSTR p1, p2;
 
-   if (String1 && String2)
+   len = min(s1->Length, s2->Length) / sizeof(WCHAR);
+   p1 = s1->Buffer;
+   p2 = s2->Buffer;
+
+   if (CaseInsensitive)
    {
-      len1 = String1->Length / sizeof(WCHAR);
-      len2 = String2->Length / sizeof(WCHAR);
-      s1 = String1->Buffer;
-      s2 = String2->Buffer;
-
-      if (s1 && s2)
-      {
-         if (CaseInsensitive)
-         {
-            while (1)
-            {
-               c1 = len1-- ? RtlUpcaseUnicodeChar (*s1++) : 0;
-               c2 = len2-- ? RtlUpcaseUnicodeChar (*s2++) : 0;
-               if (!c1 || !c2 || c1 != c2)
-                  return c1 - c2;
-            }
-         }
-         else
-         {
-            while (1)
-            {
-               c1 = len1-- ? *s1++ : 0;
-               c2 = len2-- ? *s2++ : 0;
-               if (!c1 || !c2 || c1 != c2)
-                  return c1 - c2;
-            }
-         }
-      }
+     while (!ret && len--) ret = RtlUpcaseUnicodeChar(*p1++) - RtlUpcaseUnicodeChar(*p2++);
    }
-
-   return 0;
+   else
+   {
+     while (!ret && len--) ret = *p1++ - *p2++;
+   }
+   if (!ret) ret = s1->Length - s2->Length;
+   return ret;
 }
+
 
 
 /*
