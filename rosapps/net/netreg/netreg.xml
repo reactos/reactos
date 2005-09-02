@@ -1,4 +1,4 @@
-<module name="netreg" type="win32cui" installbase="system32" installname="netreg.exe" warnings="true">
+<module name="netreg" type="win32cui" installbase="system32" installname="netreg.exe">
 	<include base="netreg">.</include>
 	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x0501</define>

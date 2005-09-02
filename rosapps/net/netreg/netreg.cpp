@@ -403,8 +403,8 @@ private:
 
   string full_input;
   string remaining_output;
-  RHState state;
   SOCKET socket;
+  RHState state;
 };
 
 SOCKET make_listening_socket( int port ) {
@@ -440,7 +440,7 @@ int main( int argc, char **argv ) {
   SOCKET listen_socket;
   int i;
   int port_to_listen = 80;
-  int active_fds = 0;
+  unsigned int active_fds = 0;
 
   for( i = 1; i < argc; i++ ) {
     if( string( "-p" ) == argv[i] ) {
@@ -479,8 +479,6 @@ int main( int argc, char **argv ) {
     }
 
     FD_SET(listen_socket,&pollin);
-
-    struct timeval tv;
 
     active_fds = select( active_fds, &pollin, &pollout, &pollerr, NULL );
     
