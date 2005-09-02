@@ -3466,7 +3466,7 @@ SetupDiBuildDriverInfoList(
             while (!Result && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
             {
                 HeapFree(GetProcessHeap(), 0, HardwareIDs);
-                HardwareIDs = HeapAlloc(GetProcessHeap(), 0, RequiredSize * sizeof(WCHAR));
+                HardwareIDs = HeapAlloc(GetProcessHeap(), 0, RequiredSize);
                 if (!HardwareIDs)
                 {
                     SetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -3491,7 +3491,7 @@ SetupDiBuildDriverInfoList(
             while (!Result && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
             {
                 HeapFree(GetProcessHeap(), 0, CompatibleIDs);
-                CompatibleIDs = HeapAlloc(GetProcessHeap(), 0, RequiredSize * sizeof(WCHAR));
+                CompatibleIDs = HeapAlloc(GetProcessHeap(), 0, RequiredSize);
                 if (!CompatibleIDs)
                 {
                     SetLastError(ERROR_NOT_ENOUGH_MEMORY);
