@@ -143,7 +143,7 @@ static VOID DoSaveFile(VOID)
     DWORD size;
 
     hFile = CreateFile(Globals.szFileName, GENERIC_WRITE, FILE_SHARE_WRITE,
-                       NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+                       NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if(hFile == INVALID_HANDLE_VALUE)
     {
         ShowLastError();
