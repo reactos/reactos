@@ -260,7 +260,6 @@ static void OpenPadWindow(DFWINDOW wnd, char *FileName,char *NewFileName)
 	DFWINDOW wwnd;
 	struct stat sb;
 	char *Fname = FileName;
-	char *Fnewname = NewFileName;
 	char *ermsg;
 
 	if (strcmp(FileName, Untitled))

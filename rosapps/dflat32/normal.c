@@ -21,7 +21,7 @@ static void sizeborder(DFWINDOW, int, int);
 static int px = -1, py = -1;
 static int diff;
 static struct DfWindow dwnd = {DF_DUMMY, NULL, DfNormalProc,
-                                {-1,-1,-1,-1}};
+                                {{-1},{-1},{-1},{-1}}};
 static PCHAR_INFO Bsave;
 static int Bht, Bwd;
 BOOL DfWindowMoving;

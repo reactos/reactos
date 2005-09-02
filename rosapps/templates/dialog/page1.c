@@ -42,12 +42,6 @@ HBITMAP hbmpOld;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void AddItem(HWND hListBox, LPCTSTR lpstr, HBITMAP hbmp)
-{
-    int nItem = SendMessage(hListBox, LB_ADDSTRING, 0, (LPARAM)lpstr);
-    SendMessage(hListBox, LB_SETITEMDATA, nItem, (LPARAM)hbmp);
-}
-
 static TCHAR* items[] = {
     _T("services"),
     _T("event log"),

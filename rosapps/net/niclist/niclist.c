@@ -82,7 +82,7 @@ int main(int argc, char **argv)
     strDesc = (LPSTR)++wstrName;
 
 	if (!nAdapterCount) {
-		printf("No Packet Adaptors found (%d)\n", AdapterLength);
+		printf("No Packet Adaptors found (%lu)\n", AdapterLength);
 	} else {
 	    printf("Adaptor count: %d\n", nAdapterCount);
 	}

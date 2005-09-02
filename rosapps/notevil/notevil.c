@@ -254,7 +254,7 @@ main(
 	lint.QuadPart = -2000000;
 	if( SetWaitableTimer( WaitableTimer, &lint, 200, NULL, NULL, FALSE ) == FALSE )
 	  {
-	    printf( "SetWaitableTimer() failed: %x\n", GetLastError() );
+	    printf( "SetWaitableTimer() failed: 0x%lx\n", GetLastError() );
 	    return 2;
 	  }
 	SetConsoleActiveScreenBuffer(ScreenBuffer);
