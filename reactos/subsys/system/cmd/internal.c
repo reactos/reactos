@@ -296,9 +296,16 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 	{
 		bChangeDrive = TRUE;
 		tmpPath = _tcsstr(param,_T(" "));
+		if(!tmpPath)
+		{
+			/* Didnt find an directories */
+			LoadString(CMD_ModuleHandle, STRING_ERROR_PATH_NOT_FOUND, szMsg, RC_STRING_MAX_SIZE);
+			ConErrPrintf(szMsg);
+			nErrorLevel = 1;
+			return 1;
+		}
 		tmpPath++;
 		_tcscpy(szPath,tmpPath);
- 
 	}
 	else
 	{
