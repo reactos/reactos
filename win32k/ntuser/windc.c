@@ -81,7 +81,7 @@ DceGetVisRgn(HWND hWnd, ULONG Flags, HWND hWndChild, ULONG CFlags)
   PWINDOW_OBJECT Window;
   HRGN VisRgn;
 
-  Window = IntGetWindowObject(hWnd);
+  Window = UserGetWindowObject(hWnd);
 
   if (NULL == Window)
     {
@@ -168,7 +168,7 @@ UserDceAllocDCE(HWND hWnd, DCE_TYPE Type)
 	{
 	  PWINDOW_OBJECT WindowObject;
 
-	  WindowObject = IntGetWindowObject(hWnd);
+	  WindowObject = UserGetWindowObject(hWnd);
 	  if (WindowObject->Style & WS_CLIPCHILDREN)
 	    {
 	      Dce->DCXFlags |= DCX_CLIPCHILDREN;
@@ -388,10 +388,9 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
 
   if (hWnd)
   {
-     Wnd = IntGetWindowObject(hWnd);
-     if (!Wnd)
+     if (!(Wnd = UserGetWindowObject(hWnd)))
      {
-        //FIXME: last error
+        SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
         RETURN(NULL);
      }
   }
@@ -514,7 +513,7 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
       {
         DceEmpty = Dce;
       }
-         else if (Dce->hwndCurrent == GetHwnd(Window)/*hWnd*/ &&
+         else if (Dce->hwndCurrent == GetHwndSafe(Window) &&
              ((Dce->DCXFlags & DCX_CACHECOMPAREMASK) == DcxFlags))
       {
 #if 0 /* FIXME */
@@ -541,7 +540,7 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
   else
     {
       Dce = Window->Dce;
-      if (NULL != Dce && Dce->hwndCurrent == GetHwnd(Window)/*hWnd*/)
+      if (NULL != Dce && Dce->hwndCurrent == GetHwndSafe(Window))
         {
           UpdateVisRgn = FALSE; /* updated automatically, via DCHook() */
         }
@@ -555,7 +554,7 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
       return(NULL);
     }
 
-  Dce->hwndCurrent = GetHwnd(Window);//hWnd;
+  Dce->hwndCurrent = GetHwndSafe(Window);
   Dce->DCXFlags = DcxFlags | (Flags & DCX_WINDOWPAINT) | DCX_DCEBUSY;
 
   if (0 == (Flags & (DCX_EXCLUDERGN | DCX_INTERSECTRGN)) && NULL != ClipRegion)
@@ -881,7 +880,7 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window)
             }
           else
             {
-              CurrentWindow = IntGetWindowObject(pDCE->hwndCurrent);
+              CurrentWindow = UserGetWindowObject(pDCE->hwndCurrent);
               if (NULL == CurrentWindow)
                 {
                   pDCE = pDCE->next;

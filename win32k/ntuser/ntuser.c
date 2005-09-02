@@ -95,7 +95,7 @@ NTSTATUS FASTCALL InitUserImpl(VOID)
 //   ExInitializeResourceLite(&UserLock);
    ExInitializeFastMutex(&UserLock);
    
-   //FIXME: alloc all at once? in must be mapped into umode also...
+   //FIXME: dont alloc all at once! must be mapped into umode also...
    mem = ExAllocatePool(PagedPool, sizeof(USER_HANDLE_ENTRY) * 65000);
    if (!mem)
    {

@@ -715,7 +715,7 @@ IntCreatePrimarySurface()
 
    EngUnlockSurface(SurfObj);
 
-   coUserShowDesktop(UserGetActiveDesktop(), SurfSize.cx, SurfSize.cy);
+   co_UserShowDesktop(UserGetActiveDesktop(), SurfSize.cx, SurfSize.cy);
 
    if (!inUser){
       UserLeave();

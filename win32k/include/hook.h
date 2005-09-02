@@ -7,7 +7,6 @@ typedef struct tagHOOK
 {
 /*---------- USER_OBJECT_HDR --------------*/
   HHOOK hSelf;
-  LONG refs;
   BYTE hdrFlags;
 /*---------- USER_OBJECT_HDR --------------*/
    

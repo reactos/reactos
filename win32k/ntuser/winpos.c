@@ -52,57 +52,58 @@
 BOOL FASTCALL
 UserGetClientOrigin(PWINDOW_OBJECT Wnd, LPPOINT Point)
 {
-  if (!Wnd) Wnd = UserGetDesktopWindow();
-  if (Wnd == NULL)
-    {
+   if (!Wnd)
+      Wnd = UserGetDesktopWindow();
+   if (Wnd == NULL)
+   {
       Point->x = Point->y = 0;
       return FALSE;
-    }
-  Point->x = Wnd->ClientRect.left;
-  Point->y = Wnd->ClientRect.top;
+   }
+   Point->x = Wnd->ClientRect.left;
+   Point->y = Wnd->ClientRect.top;
 
-  return TRUE;
+   return TRUE;
 }
 
 BOOL STDCALL
 NtUserGetClientOrigin(HWND hWnd, LPPOINT Point)
 {
-  BOOL Ret;
-  POINT pt;
-  NTSTATUS Status;
-  DECLARE_RETURN(BOOL);  
+   BOOL Ret;
+   POINT pt;
+   NTSTATUS Status;
+   DECLARE_RETURN(BOOL);
 
-  DPRINT("Enter NtUserGetClientOrigin\n");
-  UserEnterExclusive();
-  
-  if(!Point)
-  {
-    SetLastWin32Error(ERROR_INVALID_PARAMETER);
-    RETURN(  FALSE);
-  }
+   DPRINT("Enter NtUserGetClientOrigin\n");
+   UserEnterExclusive();
 
-  Ret = UserGetClientOrigin(GetWnd(hWnd), &pt);
+   if(!Point)
+   {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      RETURN(  FALSE);
+   }
 
-  if(!Ret)
-  {
-    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-    RETURN(  FALSE);
-  }
+   Ret = UserGetClientOrigin(GetWnd(hWnd), &pt);
 
-  Status = MmCopyToCaller(Point, &pt, sizeof(POINT));
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastNtError(Status);
-    RETURN( FALSE);
-  }
+   if(!Ret)
+   {
+      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+      RETURN(  FALSE);
+   }
 
-  RETURN(  Ret);
-  
+   Status = MmCopyToCaller(Point, &pt, sizeof(POINT));
+   if(!NT_SUCCESS(Status))
+   {
+      SetLastNtError(Status);
+      RETURN( FALSE);
+   }
+
+   RETURN(  Ret);
+
 CLEANUP:
-  DPRINT("Leave NtUserGetClientOrigin, ret=%i\n",_ret_);
-  UserLeave();
-  END_CLEANUP;
-  
+   DPRINT("Leave NtUserGetClientOrigin, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;
+
 }
 
 /*******************************************************************
@@ -111,151 +112,146 @@ CLEANUP:
  *  Activates window other than pWnd.
  */
 VOID FASTCALL
-coWinPosActivateOtherWindow(PWINDOW_OBJECT Window)
+co_WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
 {
-  PWINDOW_OBJECT Wnd, Old;
-  HWND Fg;
+   PWINDOW_OBJECT Wnd, Old, Fg;
 
-  if (!Window || IntIsDesktopWindow(Window))
-  {
-    UserSetForegroundQueue(NULL);
-    return;
-  }
+   if (!Window || IntIsDesktopWindow(Window))
+   {
+      UserSetForegroundQueue(NULL);
+      return;
+   }
 
-  /* If this is popup window, try to activate the owner first. */
-  if ((Window->Style & WS_POPUP) && (Wnd = IntGetOwner(Window)))
-  {
-    for(;;)
-    {
-      Old = Wnd;
-      Wnd = Wnd->ParentWnd;//IntGetParentObject(Wnd);
-      if(IntIsDesktopWindow(Wnd))
+   /* If this is popup window, try to activate the owner first. */
+   if ((Window->Style & WS_POPUP) && (Wnd = UserGetOwner(Window)))
+   {
+      for(;;)
       {
-        Wnd = Old;
-        break;
+         Old = Wnd;
+         Wnd = Wnd->ParentWnd;
+         if(IntIsDesktopWindow(Wnd))
+         {
+            Wnd = Old;
+            break;
+         }
       }
-    }
 
-    if ((Wnd->Style & (WS_DISABLED | WS_VISIBLE)) == WS_VISIBLE &&
-        (Wnd->Style & (WS_POPUP | WS_CHILD)) != WS_CHILD)
-      goto done;
+      if ((Wnd->Style & (WS_DISABLED | WS_VISIBLE)) == WS_VISIBLE &&
+            (Wnd->Style & (WS_POPUP | WS_CHILD)) != WS_CHILD)
+         goto done;
 
-  }
+   }
 
-  /* Pick a next top-level window. */
-  /* FIXME: Search for non-tooltip windows first. */
-  Wnd = Window;
-  while (Wnd != NULL)
-  {
-    Old = Wnd;
-    if (Old->NextSibling == NULL)
-    {
-      Wnd = NULL;
-//((      if (Old != Window)
-//((        IntReleaseWindowObject(Old);
-      break;
-    }
-    Wnd = IntGetWindowObject(Old->NextSibling->hSelf);
-//    IntUnLockRelatives(Old);
-//    if (Old != Window)
-//      IntReleaseWindowObject(Old);
-    if ((Wnd->Style & (WS_DISABLED | WS_VISIBLE)) == WS_VISIBLE &&
-        (Wnd->Style & (WS_POPUP | WS_CHILD)) != WS_CHILD)
-      break;
-  }
+   /* Pick a next top-level window. */
+   /* FIXME: Search for non-tooltip windows first. */
+   Wnd = Window;
+   while (Wnd != NULL)
+   {
+      Old = Wnd;
+      if (Old->NextSibling == NULL)
+      {
+         Wnd = NULL;
+         break;
+      }
+
+      Wnd = Old->NextSibling;
+
+      if ((Wnd->Style & (WS_DISABLED | WS_VISIBLE)) == WS_VISIBLE &&
+            (Wnd->Style & (WS_POPUP | WS_CHILD)) != WS_CHILD)
+         break;
+   }
 
 done:
-//  Fg = NtUserGetForegroundWindow();
-  Fg = GetHwnd(UserGetForegroundWindow());
-  if (Wnd && (!Fg || Window->hSelf == Fg))
-  {
-    if (coUserSetForegroundWindow(Wnd))
-    {
-//      IntReleaseWindowObject(Wnd);
-      return;
-    }
-  }
-  if (!coUserSetActiveWindow(Wnd))
-    coUserSetActiveWindow(0);
-//  if (Wnd)
-//    IntReleaseWindowObject(Wnd);
+
+   Fg = UserGetForegroundWindow();
+   if (Wnd && (!Fg || Window == Fg))
+   {
+      if (co_UserSetForegroundWindow(Wnd))
+      {
+         return;
+      }
+   }
+
+   if (!co_UserSetActiveWindow(Wnd))//FIXME: huh???
+      co_UserSetActiveWindow(0);
 }
 
 
 UINT
 FASTCALL
-coWinPosArrangeIconicWindows(PWINDOW_OBJECT parent)
+co_WinPosArrangeIconicWindows(PWINDOW_OBJECT parent)
 {
-    RECT rectParent;
-    HWND hwndChild;
-    INT i, x, y, xspacing, yspacing;
-    HWND *List = IntWinListChildren(parent);
-    
-    IntGetClientRect( parent, &rectParent );
-    x = rectParent.left;
-    y = rectParent.bottom;
-    
-    xspacing = UserGetSystemMetrics(SM_CXMINSPACING);
-    yspacing = UserGetSystemMetrics(SM_CYMINSPACING);
+   RECT rectParent;
+   HWND hwndChild;
+   INT i, x, y, xspacing, yspacing;
+   HWND *List = IntWinListChildren(parent);
 
-    DPRINT("X:%d Y:%d XS:%d YS:%d\n",x,y,xspacing,yspacing);
+   IntGetClientRect( parent, &rectParent );
+   x = rectParent.left;
+   y = rectParent.bottom;
 
-    for( i = 0; List[i]; i++)
-    {
-       hwndChild = List[i];
-        
+   xspacing = UserGetSystemMetrics(SM_CXMINSPACING);
+   yspacing = UserGetSystemMetrics(SM_CYMINSPACING);
+
+   DPRINT("X:%d Y:%d XS:%d YS:%d\n",x,y,xspacing,yspacing);
+
+   for( i = 0; List[i]; i++)
+   {
+      hwndChild = List[i];
+
       if((UserGetWindowLong( GetWnd(List[i]), GWL_STYLE, FALSE) & WS_MINIMIZE) != 0 )
       {
-         coWinPosSetWindowPos( hwndChild, 0, x + UserGetSystemMetrics(SM_CXBORDER),
-                      y - yspacing - UserGetSystemMetrics(SM_CYBORDER)
-                     , 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE );
-         if (x <= rectParent.right - xspacing) x += xspacing;
+         co_WinPosSetWindowPos( hwndChild, 0, x + UserGetSystemMetrics(SM_CXBORDER),
+                                y - yspacing - UserGetSystemMetrics(SM_CYBORDER)
+                                , 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE );
+         if (x <= rectParent.right - xspacing)
+            x += xspacing;
          else
          {
             x = rectParent.left;
             y -= yspacing;
          }
       }
-    }
-    ExFreePool(List);
-    return yspacing;
+   }
+   ExFreePool(List);
+   return yspacing;
 }
 
 
 VOID STATIC FASTCALL
 WinPosFindIconPos(PWINDOW_OBJECT Window, POINT *Pos)
 {
-  /* FIXME */
+   /* FIXME */
 }
 
 PINTERNALPOS FASTCALL
 WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, POINT *pt, PRECT RestoreRect)
 {
-  PWINDOW_OBJECT Parent;
-  UINT XInc, YInc;
+   PWINDOW_OBJECT Parent;
+   UINT XInc, YInc;
 
-  if (WindowObject->InternalPos == NULL)
-    {
+   if (WindowObject->InternalPos == NULL)
+   {
       RECT WorkArea;
       PDESKTOP_OBJECT Desktop = PsGetWin32Thread()->Desktop; /* Or rather get it from the window? */
 
       Parent = WindowObject->ParentWnd;
       if(Parent)
       {
-        if(IntIsDesktopWindow(Parent))
-          IntGetDesktopWorkArea(Desktop, &WorkArea);
-        else
-          WorkArea = Parent->ClientRect;
+         if(IntIsDesktopWindow(Parent))
+            IntGetDesktopWorkArea(Desktop, &WorkArea);
+         else
+            WorkArea = Parent->ClientRect;
 
       }
       else
-        IntGetDesktopWorkArea(Desktop, &WorkArea);
+         IntGetDesktopWorkArea(Desktop, &WorkArea);
 
       WindowObject->InternalPos = ExAllocatePoolWithTag(PagedPool, sizeof(INTERNALPOS), TAG_WININTLIST);
       if(!WindowObject->InternalPos)
       {
-        DPRINT1("Failed to allocate INTERNALPOS structure for window 0x%x\n", WindowObject->hSelf);
-        return NULL;
+         DPRINT1("Failed to allocate INTERNALPOS structure for window 0x%x\n", WindowObject->hSelf);
+         return NULL;
       }
       WindowObject->InternalPos->NormalRect = WindowObject->WindowRect;
       IntGetWindowBorderMeasures(WindowObject, &XInc, &YInc);
@@ -263,237 +259,238 @@ WinPosInitInternalPos(PWINDOW_OBJECT WindowObject, POINT *pt, PRECT RestoreRect)
       WindowObject->InternalPos->MaxPos.y = WorkArea.top - YInc;
       WindowObject->InternalPos->IconPos.x = WorkArea.left;
       WindowObject->InternalPos->IconPos.y = WorkArea.bottom - UserGetSystemMetrics(SM_CYMINIMIZED);
-    }
-  if (WindowObject->Style & WS_MINIMIZE)
-    {
+   }
+   if (WindowObject->Style & WS_MINIMIZE)
+   {
       WindowObject->InternalPos->IconPos = *pt;
-    }
-  else if (WindowObject->Style & WS_MAXIMIZE)
-    {
+   }
+   else if (WindowObject->Style & WS_MAXIMIZE)
+   {
       WindowObject->InternalPos->MaxPos = *pt;
-    }
-  else if (RestoreRect != NULL)
-    {
+   }
+   else if (RestoreRect != NULL)
+   {
       WindowObject->InternalPos->NormalRect = *RestoreRect;
-    }
-  return(WindowObject->InternalPos);
+   }
+   return(WindowObject->InternalPos);
 }
 
 UINT FASTCALL
-coWinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos)
+co_WinPosMinMaximize(PWINDOW_OBJECT Window, UINT ShowFlag, RECT* NewPos)
 {
-  POINT Size;
-  PINTERNALPOS InternalPos;
-  UINT SwpFlags = 0;
+   POINT Size;
+   PINTERNALPOS InternalPos;
+   UINT SwpFlags = 0;
 
-  Size.x = WindowObject->WindowRect.left;
-  Size.y = WindowObject->WindowRect.top;
-  InternalPos = WinPosInitInternalPos(WindowObject, &Size,
-				      &WindowObject->WindowRect);
+   Size.x = Window->WindowRect.left;
+   Size.y = Window->WindowRect.top;
+   InternalPos = WinPosInitInternalPos(Window, &Size, &Window->WindowRect);
 
-  if (InternalPos)
-    {
-      if (WindowObject->Style & WS_MINIMIZE)
-	{
-	  if (!coUserSendMessage(WindowObject->hSelf, WM_QUERYOPEN, 0, 0))
-	    {
-	      return(SWP_NOSIZE | SWP_NOMOVE);
-	    }
-	  SwpFlags |= SWP_NOCOPYBITS;
-	}
+   if (InternalPos)
+   {
+      if (Window->Style & WS_MINIMIZE)
+      {
+         if (!co_UserSendMessage(Window->hSelf, WM_QUERYOPEN, 0, 0))
+         {
+            return(SWP_NOSIZE | SWP_NOMOVE);
+         }
+         SwpFlags |= SWP_NOCOPYBITS;
+      }
+      
       switch (ShowFlag)
-	{
-	case SW_MINIMIZE:
-	  {
-	    if (WindowObject->Style & WS_MAXIMIZE)
-	      {
-		WindowObject->Flags |= WINDOWOBJECT_RESTOREMAX;
-		WindowObject->Style &= ~WS_MAXIMIZE;
-	      }
-	    else
-	      {
-		WindowObject->Flags &= ~WINDOWOBJECT_RESTOREMAX;
-	      }
-       coUserRedrawWindow(WindowObject, NULL, 0, RDW_VALIDATE | RDW_NOERASE |
-	       RDW_NOINTERNALPAINT);
-	    WindowObject->Style |= WS_MINIMIZE;
-	    WinPosFindIconPos(WindowObject, &InternalPos->IconPos);
-	    IntGdiSetRect(NewPos, InternalPos->IconPos.x, InternalPos->IconPos.y,
-			  UserGetSystemMetrics(SM_CXMINIMIZED),
-			  UserGetSystemMetrics(SM_CYMINIMIZED));
-	    SwpFlags |= SWP_NOCOPYBITS;
-	    break;
-	  }
+      {
+         case SW_MINIMIZE:
+            {
+               if (Window->Style & WS_MAXIMIZE)
+               {
+                  Window->Flags |= WINDOWOBJECT_RESTOREMAX;
+                  Window->Style &= ~WS_MAXIMIZE;
+               }
+               else
+               {
+                  Window->Flags &= ~WINDOWOBJECT_RESTOREMAX;
+               }
+               co_UserRedrawWindow(Window, NULL, 0, RDW_VALIDATE | RDW_NOERASE |
+                                   RDW_NOINTERNALPAINT);
+               Window->Style |= WS_MINIMIZE;
+               WinPosFindIconPos(Window, &InternalPos->IconPos);
+               IntGdiSetRect(NewPos, InternalPos->IconPos.x, InternalPos->IconPos.y,
+                             UserGetSystemMetrics(SM_CXMINIMIZED),
+                             UserGetSystemMetrics(SM_CYMINIMIZED));
+               SwpFlags |= SWP_NOCOPYBITS;
+               break;
+            }
 
-	case SW_MAXIMIZE:
-	  {
-	    coWinPosGetMinMaxInfo(WindowObject, &Size, &InternalPos->MaxPos,
-				NULL, NULL);
-	    DPRINT("Maximize: %d,%d %dx%d\n",
-	       InternalPos->MaxPos.x, InternalPos->MaxPos.y, Size.x, Size.y);
-	    if (WindowObject->Style & WS_MINIMIZE)
-	      {
-		WindowObject->Style &= ~WS_MINIMIZE;
-	      }
-	    WindowObject->Style |= WS_MAXIMIZE;
-	    IntGdiSetRect(NewPos, InternalPos->MaxPos.x, InternalPos->MaxPos.y,
-			  Size.x, Size.y);
-	    break;
-	  }
+         case SW_MAXIMIZE:
+            {
+               co_WinPosGetMinMaxInfo(Window, &Size, &InternalPos->MaxPos,
+                                      NULL, NULL);
+               DPRINT("Maximize: %d,%d %dx%d\n",
+                      InternalPos->MaxPos.x, InternalPos->MaxPos.y, Size.x, Size.y);
+               if (Window->Style & WS_MINIMIZE)
+               {
+                  Window->Style &= ~WS_MINIMIZE;
+               }
+               Window->Style |= WS_MAXIMIZE;
+               IntGdiSetRect(NewPos, InternalPos->MaxPos.x, InternalPos->MaxPos.y,
+                             Size.x, Size.y);
+               break;
+            }
 
-	case SW_RESTORE:
-	  {
-	    if (WindowObject->Style & WS_MINIMIZE)
-	      {
-		WindowObject->Style &= ~WS_MINIMIZE;
-		if (WindowObject->Flags & WINDOWOBJECT_RESTOREMAX)
-		  {
-		    coWinPosGetMinMaxInfo(WindowObject, &Size,
-					&InternalPos->MaxPos, NULL, NULL);
-		    WindowObject->Style |= WS_MAXIMIZE;
-		    IntGdiSetRect(NewPos, InternalPos->MaxPos.x,
-				  InternalPos->MaxPos.y, Size.x, Size.y);
-		    break;
-		  }
-		else
-		  {
-		    *NewPos = InternalPos->NormalRect;
-		    NewPos->right -= NewPos->left;
-		    NewPos->bottom -= NewPos->top;
-		    break;
-		  }
-	      }
-	    else
-	      {
-		if (!(WindowObject->Style & WS_MAXIMIZE))
-		  {
-		    return 0;
-		  }
-		WindowObject->Style &= ~WS_MAXIMIZE;
-		*NewPos = InternalPos->NormalRect;
-		NewPos->right -= NewPos->left;
-		NewPos->bottom -= NewPos->top;
-		break;
-	      }
-	  }
-	}
-    }
-  else
-    {
+         case SW_RESTORE:
+            {
+               if (Window->Style & WS_MINIMIZE)
+               {
+                  Window->Style &= ~WS_MINIMIZE;
+                  if (Window->Flags & WINDOWOBJECT_RESTOREMAX)
+                  {
+                     co_WinPosGetMinMaxInfo(Window, &Size, &InternalPos->MaxPos, NULL, NULL);
+                     Window->Style |= WS_MAXIMIZE;
+                     IntGdiSetRect(NewPos, InternalPos->MaxPos.x, InternalPos->MaxPos.y, Size.x, Size.y);
+                     break;
+                  }
+                  else
+                  {
+                     *NewPos = InternalPos->NormalRect;
+                     NewPos->right -= NewPos->left;
+                     NewPos->bottom -= NewPos->top;
+                     break;
+                  }
+               }
+               else
+               {
+                  if (!(Window->Style & WS_MAXIMIZE))
+                  {
+                     return 0;
+                  }
+                  Window->Style &= ~WS_MAXIMIZE;
+                  *NewPos = InternalPos->NormalRect;
+                  NewPos->right -= NewPos->left;
+                  NewPos->bottom -= NewPos->top;
+                  break;
+               }
+            }
+      }
+   }
+   else
+   {
       SwpFlags |= SWP_NOSIZE | SWP_NOMOVE;
-    }
-  return(SwpFlags);
+   }
+   return(SwpFlags);
 }
 
 VOID FASTCALL
 WinPosFillMinMaxInfoStruct(PWINDOW_OBJECT Window, MINMAXINFO *Info)
 {
-  UINT XInc, YInc;
-  RECT WorkArea;
-  PDESKTOP_OBJECT Desktop = PsGetWin32Thread()->Desktop; /* Or rather get it from the window? */
+   UINT XInc, YInc;
+   RECT WorkArea;
+   PDESKTOP_OBJECT Desktop = PsGetWin32Thread()->Desktop; /* Or rather get it from the window? */
 
-  IntGetDesktopWorkArea(Desktop, &WorkArea);
+   IntGetDesktopWorkArea(Desktop, &WorkArea);
 
-  DPRINT1("WinPosFillMinMaxInfoStruct, wnd=0x%x, Info=0x%x\n", Window,Info);
+   DPRINT1("WinPosFillMinMaxInfoStruct, wnd=0x%x, Info=0x%x\n", Window,Info);
 
-  ASSERT(Window);
+   ASSERT(Window);
 
-  /* Get default values. */
-  Info->ptMaxSize.x = WorkArea.right - WorkArea.left;
-  Info->ptMaxSize.y = WorkArea.bottom - WorkArea.top;
-  Info->ptMinTrackSize.x = UserGetSystemMetrics(SM_CXMINTRACK);
-  Info->ptMinTrackSize.y = UserGetSystemMetrics(SM_CYMINTRACK);
-  Info->ptMaxTrackSize.x = Info->ptMaxSize.x;
-  Info->ptMaxTrackSize.y = Info->ptMaxSize.y;
+   /* Get default values. */
+   Info->ptMaxSize.x = WorkArea.right - WorkArea.left;
+   Info->ptMaxSize.y = WorkArea.bottom - WorkArea.top;
+   Info->ptMinTrackSize.x = UserGetSystemMetrics(SM_CXMINTRACK);
+   Info->ptMinTrackSize.y = UserGetSystemMetrics(SM_CYMINTRACK);
+   Info->ptMaxTrackSize.x = Info->ptMaxSize.x;
+   Info->ptMaxTrackSize.y = Info->ptMaxSize.y;
 
-  IntGetWindowBorderMeasures(Window, &XInc, &YInc);
-  Info->ptMaxSize.x += 2 * XInc;
-  Info->ptMaxSize.y += 2 * YInc;
+   IntGetWindowBorderMeasures(Window, &XInc, &YInc);
+   Info->ptMaxSize.x += 2 * XInc;
+   Info->ptMaxSize.y += 2 * YInc;
 
-  if (Window->InternalPos != NULL)
-    {
+   if (Window->InternalPos != NULL)
+   {
       Info->ptMaxPosition = Window->InternalPos->MaxPos;
-    }
-  else
-    {
+   }
+   else
+   {
       Info->ptMaxPosition.x -= WorkArea.left + XInc;
       Info->ptMaxPosition.y -= WorkArea.top + YInc;
-    }
+   }
 }
 
 UINT FASTCALL
-coWinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
-		    POINT* MinTrack, POINT* MaxTrack)
+co_WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
+                       POINT* MinTrack, POINT* MaxTrack)
 {
-   
    ASSERT(Window);
-   
-  MINMAXINFO MinMax;
 
-  WinPosFillMinMaxInfoStruct(Window, &MinMax);
+   MINMAXINFO MinMax;
 
-  coUserSendMessage(Window->hSelf, WM_GETMINMAXINFO, 0, (LPARAM)&MinMax);
+   WinPosFillMinMaxInfoStruct(Window, &MinMax);
 
-  MinMax.ptMaxTrackSize.x = max(MinMax.ptMaxTrackSize.x,
-				MinMax.ptMinTrackSize.x);
-  MinMax.ptMaxTrackSize.y = max(MinMax.ptMaxTrackSize.y,
-				MinMax.ptMinTrackSize.y);
+   co_UserSendMessage(Window->hSelf, WM_GETMINMAXINFO, 0, (LPARAM)&MinMax);
 
-  if (MaxSize) *MaxSize = MinMax.ptMaxSize;
-  if (MaxPos) *MaxPos = MinMax.ptMaxPosition;
-  if (MinTrack) *MinTrack = MinMax.ptMinTrackSize;
-  if (MaxTrack) *MaxTrack = MinMax.ptMaxTrackSize;
+   MinMax.ptMaxTrackSize.x = max(MinMax.ptMaxTrackSize.x,
+                                 MinMax.ptMinTrackSize.x);
+   MinMax.ptMaxTrackSize.y = max(MinMax.ptMaxTrackSize.y,
+                                 MinMax.ptMinTrackSize.y);
 
-  return 0; //FIXME: what does it return?
+   if (MaxSize)
+      *MaxSize = MinMax.ptMaxSize;
+   if (MaxPos)
+      *MaxPos = MinMax.ptMaxPosition;
+   if (MinTrack)
+      *MinTrack = MinMax.ptMinTrackSize;
+   if (MaxTrack)
+      *MaxTrack = MinMax.ptMaxTrackSize;
+
+   return 0; //FIXME: what does it return?
 }
 
 STATIC VOID FASTCALL
 FixClientRect(PRECT ClientRect, PRECT WindowRect)
 {
-  if (ClientRect->left < WindowRect->left)
-    {
+   if (ClientRect->left < WindowRect->left)
+   {
       ClientRect->left = WindowRect->left;
-    }
-  else if (WindowRect->right < ClientRect->left)
-    {
+   }
+   else if (WindowRect->right < ClientRect->left)
+   {
       ClientRect->left = WindowRect->right;
-    }
-  if (ClientRect->right < WindowRect->left)
-    {
+   }
+   if (ClientRect->right < WindowRect->left)
+   {
       ClientRect->right = WindowRect->left;
-    }
-  else if (WindowRect->right < ClientRect->right)
-    {
+   }
+   else if (WindowRect->right < ClientRect->right)
+   {
       ClientRect->right = WindowRect->right;
-    }
-  if (ClientRect->top < WindowRect->top)
-    {
+   }
+   if (ClientRect->top < WindowRect->top)
+   {
       ClientRect->top = WindowRect->top;
-    }
-  else if (WindowRect->bottom < ClientRect->top)
-    {
+   }
+   else if (WindowRect->bottom < ClientRect->top)
+   {
       ClientRect->top = WindowRect->bottom;
-    }
-  if (ClientRect->bottom < WindowRect->top)
-    {
+   }
+   if (ClientRect->bottom < WindowRect->top)
+   {
       ClientRect->bottom = WindowRect->top;
-    }
-  else if (WindowRect->bottom < ClientRect->bottom)
-    {
+   }
+   else if (WindowRect->bottom < ClientRect->bottom)
+   {
       ClientRect->bottom = WindowRect->bottom;
-    }
+   }
 }
 
 LONG STATIC FASTCALL
-coWinPosDoNCCALCSize(PWINDOW_OBJECT Window, PWINDOWPOS WinPos,
-		   RECT* WindowRect, RECT* ClientRect)
+co_WinPosDoNCCALCSize(PWINDOW_OBJECT Window, PWINDOWPOS WinPos,
+                      RECT* WindowRect, RECT* ClientRect)
 {
-  PWINDOW_OBJECT Parent;
-  UINT wvrFlags = 0;
+   PWINDOW_OBJECT Parent;
+   UINT wvrFlags = 0;
 
-  /* Send WM_NCCALCSIZE message to get new client area */
-  if ((WinPos->flags & (SWP_FRAMECHANGED | SWP_NOSIZE)) != SWP_NOSIZE)
-    {
+   /* Send WM_NCCALCSIZE message to get new client area */
+   if ((WinPos->flags & (SWP_FRAMECHANGED | SWP_NOSIZE)) != SWP_NOSIZE)
+   {
       NCCALCSIZE_PARAMS params;
       WINDOWPOS winposCopy;
 
@@ -502,106 +499,107 @@ coWinPosDoNCCALCSize(PWINDOW_OBJECT Window, PWINDOWPOS WinPos,
       params.rgrc[2] = Window->ClientRect;
       Parent = Window->ParentWnd;
       if (0 != (Window->Style & WS_CHILD) && Parent)
-	{
-	  IntGdiOffsetRect(&(params.rgrc[0]), - Parent->ClientRect.left,
-	                      - Parent->ClientRect.top);
-	  IntGdiOffsetRect(&(params.rgrc[1]), - Parent->ClientRect.left,
-	                      - Parent->ClientRect.top);
-	  IntGdiOffsetRect(&(params.rgrc[2]), - Parent->ClientRect.left,
-	                      - Parent->ClientRect.top);
-	}
+      {
+         IntGdiOffsetRect(&(params.rgrc[0]), - Parent->ClientRect.left,
+                          - Parent->ClientRect.top);
+         IntGdiOffsetRect(&(params.rgrc[1]), - Parent->ClientRect.left,
+                          - Parent->ClientRect.top);
+         IntGdiOffsetRect(&(params.rgrc[2]), - Parent->ClientRect.left,
+                          - Parent->ClientRect.top);
+      }
       params.lppos = &winposCopy;
       winposCopy = *WinPos;
 
-      wvrFlags = coUserSendMessage(Window->hSelf, WM_NCCALCSIZE, TRUE, (LPARAM) &params);
+      wvrFlags = co_UserSendMessage(Window->hSelf, WM_NCCALCSIZE, TRUE, (LPARAM) &params);
 
       /* If the application send back garbage, ignore it */
       if (params.rgrc[0].left <= params.rgrc[0].right &&
-          params.rgrc[0].top <= params.rgrc[0].bottom)
-	{
-          *ClientRect = params.rgrc[0];
-	  if ((Window->Style & WS_CHILD) && Parent)
-	    {
-	      IntGdiOffsetRect(ClientRect, Parent->ClientRect.left,
-	                      Parent->ClientRect.top);
-	    }
-          FixClientRect(ClientRect, WindowRect);
-	}
+            params.rgrc[0].top <= params.rgrc[0].bottom)
+      {
+         *ClientRect = params.rgrc[0];
+         if ((Window->Style & WS_CHILD) && Parent)
+         {
+            IntGdiOffsetRect(ClientRect, Parent->ClientRect.left,
+                             Parent->ClientRect.top);
+         }
+         FixClientRect(ClientRect, WindowRect);
+      }
 
-       /* FIXME: WVR_ALIGNxxx */
+
+      /* FIXME: WVR_ALIGNxxx */
 
       if (ClientRect->left != Window->ClientRect.left ||
-          ClientRect->top != Window->ClientRect.top)
-	{
-          WinPos->flags &= ~SWP_NOCLIENTMOVE;
-	}
+            ClientRect->top != Window->ClientRect.top)
+      {
+         WinPos->flags &= ~SWP_NOCLIENTMOVE;
+      }
 
       if ((ClientRect->right - ClientRect->left !=
-           Window->ClientRect.right - Window->ClientRect.left) ||
-          (ClientRect->bottom - ClientRect->top !=
-           Window->ClientRect.bottom - Window->ClientRect.top))
-	{
-          WinPos->flags &= ~SWP_NOCLIENTSIZE;
-	}
-    }
-  else
-    {
+            Window->ClientRect.right - Window->ClientRect.left) ||
+            (ClientRect->bottom - ClientRect->top !=
+             Window->ClientRect.bottom - Window->ClientRect.top))
+      {
+         WinPos->flags &= ~SWP_NOCLIENTSIZE;
+      }
+   }
+   else
+   {
       if (! (WinPos->flags & SWP_NOMOVE)
-          && (ClientRect->left != Window->ClientRect.left ||
-              ClientRect->top != Window->ClientRect.top))
-	{
-          WinPos->flags &= ~SWP_NOCLIENTMOVE;
-	}
-    }
+            && (ClientRect->left != Window->ClientRect.left ||
+                ClientRect->top != Window->ClientRect.top))
+      {
+         WinPos->flags &= ~SWP_NOCLIENTMOVE;
+      }
+   }
 
-  return wvrFlags;
+   return wvrFlags;
 }
 
 BOOL FASTCALL
-coWinPosDoWinPosChanging(PWINDOW_OBJECT WindowObject,
-		       PWINDOWPOS WinPos,
-		       PRECT WindowRect,
-		       PRECT ClientRect)
+co_WinPosDoWinPosChanging(PWINDOW_OBJECT Wnd,
+                          PWINDOWPOS WinPos,
+                          PRECT WindowRect,
+                          PRECT ClientRect)
 {
-  INT X, Y;
+   INT X, Y;
 
-  if (!(WinPos->flags & SWP_NOSENDCHANGING))
-    {
-      coUserSendMessage(WindowObject->hSelf, WM_WINDOWPOSCHANGING, 0, (LPARAM) WinPos);
-    }
+   if (!(WinPos->flags & SWP_NOSENDCHANGING))
+   {
+      co_UserSendMessage(Wnd->hSelf, WM_WINDOWPOSCHANGING, 0, (LPARAM) WinPos);
+   }
 
-  *WindowRect = WindowObject->WindowRect;
-  *ClientRect = WindowObject->ClientRect;
+   *WindowRect = Wnd->WindowRect;
+   *ClientRect = Wnd->ClientRect;
 
-  if (!(WinPos->flags & SWP_NOSIZE))
-    {
+   if (!(WinPos->flags & SWP_NOSIZE))
+   {
       WindowRect->right = WindowRect->left + WinPos->cx;
       WindowRect->bottom = WindowRect->top + WinPos->cy;
-    }
+   }
 
-  if (!(WinPos->flags & SWP_NOMOVE))
-    {
+   if (!(WinPos->flags & SWP_NOMOVE))
+   {
       PWINDOW_OBJECT Parent;
       X = WinPos->x;
       Y = WinPos->y;
-      Parent = WindowObject->ParentWnd;
-      if ((0 != (WindowObject->Style & WS_CHILD)) && Parent)
-	{
-	  X += Parent->ClientRect.left;
-	  Y += Parent->ClientRect.top;
-	}
+      Parent = Wnd->ParentWnd;
+      if ((0 != (Wnd->Style & WS_CHILD)) && Parent)
+      {
+         X += Parent->ClientRect.left;
+         Y += Parent->ClientRect.top;
+      }
       WindowRect->left = X;
       WindowRect->top = Y;
-      WindowRect->right += X - WindowObject->WindowRect.left;
-      WindowRect->bottom += Y - WindowObject->WindowRect.top;
+      WindowRect->right += X - Wnd->WindowRect.left;
+      WindowRect->bottom += Y - Wnd->WindowRect.top;
       IntGdiOffsetRect(ClientRect,
-        X - WindowObject->WindowRect.left,
-        Y - WindowObject->WindowRect.top);
-    }
+                       X - Wnd->WindowRect.left,
+                       Y - Wnd->WindowRect.top);
+   }
 
-  WinPos->flags |= SWP_NOCLIENTMOVE | SWP_NOCLIENTSIZE;
+   WinPos->flags |= SWP_NOCLIENTMOVE | SWP_NOCLIENTSIZE;
 
-  return TRUE;
+   return TRUE;
 }
 
 /*
@@ -609,10 +607,10 @@ coWinPosDoWinPosChanging(PWINDOW_OBJECT WindowObject,
  * basically we need to maintain them above the window that owns them
  */
 HWND FASTCALL
-coWinPosDoOwnedPopups(HWND hWnd, HWND hWndInsertAfter)
+co_WinPosDoOwnedPopups(HWND hWnd, HWND hWndInsertAfter)
 {
    HWND *List = NULL;
-   HWND Owner = GetHwnd(UserGetWindow(GetWnd(hWnd), GW_OWNER));
+   HWND Owner = GetHwndSafe(UserGetWindow(GetWnd(hWnd), GW_OWNER));
    LONG Style = UserGetWindowLong(GetWnd(hWnd), GWL_STYLE, FALSE);
    PWINDOW_OBJECT DesktopWindow, ChildObject;
    int i;
@@ -631,20 +629,23 @@ coWinPosDoOwnedPopups(HWND hWnd, HWND hWndInsertAfter)
          {
             for (i = 0; List[i]; i++)
             {
-               if (List[i] == Owner) break;
+               if (List[i] == Owner)
+                  break;
                if (HWND_TOP == hWndInsertAfter)
                {
-                 ChildObject = IntGetWindowObject(List[i]);
-                 if (NULL != ChildObject)
-                 {
-                   if (0 == (ChildObject->ExStyle & WS_EX_TOPMOST))
-                   {
-                     break;
-                   }
-                 }
+                  ChildObject = UserGetWindowObject(List[i]);
+                  if (NULL != ChildObject)
+                  {
+                     if (0 == (ChildObject->ExStyle & WS_EX_TOPMOST))
+                     {
+                        break;
+                     }
+                  }
                }
-               if (List[i] != hWnd) hWndLocalPrev = List[i];
-               if (hWndLocalPrev == hWndInsertAfter) break;
+               if (List[i] != hWnd)
+                  hWndLocalPrev = List[i];
+               if (hWndLocalPrev == hWndInsertAfter)
+                  break;
             }
             hWndInsertAfter = hWndLocalPrev;
          }
@@ -660,17 +661,21 @@ coWinPosDoOwnedPopups(HWND hWnd, HWND hWndInsertAfter)
       DesktopWindow = UserGetDesktopWindow();
       List = IntWinListChildren(DesktopWindow);
    }
+   
    if (List != NULL)
    {
+      PWINDOW_OBJECT Win;
+      
       for (i = 0; List[i]; i++)
       {
          if (List[i] == hWnd)
             break;
-         if ((UserGetWindowLong(GetWnd(List[i]), GWL_STYLE, FALSE) & WS_POPUP) &&
-             GetHwnd(UserGetWindow(GetWnd(List[i]), GW_OWNER)) == hWnd)
+         
+         Win = UserGetWindowObject(List[i]);
+         if (Win && (Win->Style & WS_POPUP) && GetHwndSafe(UserGetWindow(Win, GW_OWNER)) == hWnd)
          {
-            coWinPosSetWindowPos(List[i], hWndInsertAfter, 0, 0, 0, 0,
-               SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING);
+            co_WinPosSetWindowPos(List[i], hWndInsertAfter, 0, 0, 0, 0,
+                                  SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING);
             hWndInsertAfter = List[i];
          }
       }
@@ -681,7 +686,7 @@ coWinPosDoOwnedPopups(HWND hWnd, HWND hWndInsertAfter)
 }
 
 /***********************************************************************
- *	     WinPosInternalMoveWindow
+ *      WinPosInternalMoveWindow
  *
  * Update WindowRect and ClientRect of Window and all of its children
  * We keep both WindowRect and ClientRect in screen coordinates internally
@@ -703,7 +708,7 @@ WinPosInternalMoveWindow(PWINDOW_OBJECT Window, INT MoveX, INT MoveY)
 
    for(Child = Window->FirstChild; Child; Child = Child->NextSibling)
    {
-     WinPosInternalMoveWindow(Child, MoveX, MoveY);
+      WinPosInternalMoveWindow(Child, MoveX, MoveY);
    }
 }
 
@@ -717,7 +722,7 @@ BOOL FASTCALL
 WinPosFixupFlags(WINDOWPOS *WinPos, PWINDOW_OBJECT Window)
 {
    PWINDOW_OBJECT tmp;
-   
+
    if (Window->Style & WS_VISIBLE)
    {
       WinPos->flags &= ~SWP_SHOWWINDOW;
@@ -734,14 +739,14 @@ WinPosFixupFlags(WINDOWPOS *WinPos, PWINDOW_OBJECT Window)
 
    /* Check for right size */
    if (Window->WindowRect.right - Window->WindowRect.left == WinPos->cx &&
-       Window->WindowRect.bottom - Window->WindowRect.top == WinPos->cy)
+         Window->WindowRect.bottom - Window->WindowRect.top == WinPos->cy)
    {
       WinPos->flags |= SWP_NOSIZE;
    }
 
    /* Check for right position */
    if (Window->WindowRect.left == WinPos->x &&
-       Window->WindowRect.top == WinPos->y)
+         Window->WindowRect.top == WinPos->y)
    {
       WinPos->flags |= SWP_NOMOVE;
    }
@@ -749,22 +754,22 @@ WinPosFixupFlags(WINDOWPOS *WinPos, PWINDOW_OBJECT Window)
 
    //FIXME
    tmp = UserGetForegroundWindow();
-   if (WinPos->hwnd == (tmp ? tmp->hSelf : 0))
+   if (WinPos->hwnd == GetHwndSafe(tmp))
    {
       WinPos->flags |= SWP_NOACTIVATE;   /* Already active */
    }
    else
-   if ((Window->Style & (WS_POPUP | WS_CHILD)) != WS_CHILD)
-   {
-      /* Bring to the top when activating */
-      if (!(WinPos->flags & SWP_NOACTIVATE))
+      if ((Window->Style & (WS_POPUP | WS_CHILD)) != WS_CHILD)
       {
-         WinPos->flags &= ~SWP_NOZORDER;
-         WinPos->hwndInsertAfter = (0 != (Window->ExStyle & WS_EX_TOPMOST) ?
-                                    HWND_TOPMOST : HWND_TOP);
-         return TRUE;
+         /* Bring to the top when activating */
+         if (!(WinPos->flags & SWP_NOACTIVATE))
+         {
+            WinPos->flags &= ~SWP_NOZORDER;
+            WinPos->hwndInsertAfter = (0 != (Window->ExStyle & WS_EX_TOPMOST) ?
+                                       HWND_TOPMOST : HWND_TOP);
+            return TRUE;
+         }
       }
-   }
 
    /* Check hwndInsertAfter */
    if (!(WinPos->flags & SWP_NOZORDER))
@@ -792,13 +797,13 @@ WinPosFixupFlags(WINDOWPOS *WinPos, PWINDOW_OBJECT Window)
 
       /* hwndInsertAfter must be a sibling of the window */
       if (HWND_TOPMOST != WinPos->hwndInsertAfter
-          && HWND_TOP != WinPos->hwndInsertAfter
-          && HWND_NOTOPMOST != WinPos->hwndInsertAfter
-          && HWND_BOTTOM != WinPos->hwndInsertAfter)
+            && HWND_TOP != WinPos->hwndInsertAfter
+            && HWND_NOTOPMOST != WinPos->hwndInsertAfter
+            && HWND_BOTTOM != WinPos->hwndInsertAfter)
       {
          PWINDOW_OBJECT Parent = Window->ParentWnd;
          if (UserGetAncestor(GetWnd(WinPos->hwndInsertAfter), GA_PARENT) !=
-             Parent)
+               Parent)
          {
             return FALSE;
          }
@@ -810,7 +815,7 @@ WinPosFixupFlags(WINDOWPOS *WinPos, PWINDOW_OBJECT Window)
              * itself.
              */
             if ((WinPos->hwnd == WinPos->hwndInsertAfter) ||
-                (WinPos->hwnd == GetHwnd(UserGetWindow(GetWnd(WinPos->hwndInsertAfter), GW_HWNDNEXT))))
+                  (WinPos->hwnd == GetHwndSafe(UserGetWindow(GetWnd(WinPos->hwndInsertAfter), GW_HWNDNEXT))))
             {
                WinPos->flags |= SWP_NOZORDER;
             }
@@ -823,8 +828,8 @@ WinPosFixupFlags(WINDOWPOS *WinPos, PWINDOW_OBJECT Window)
 
 /* x and y are always screen relative */
 BOOLEAN FASTCALL
-coWinPosSetWindowPos(HWND hWnd, HWND WndInsertAfter, INT x, INT y, INT cx,
-		   INT cy, UINT flags)
+co_WinPosSetWindowPos(HWND hWnd, HWND WndInsertAfter, INT x, INT y, INT cx,
+                      INT cy, UINT flags)
 {
    PWINDOW_OBJECT Window;
    WINDOWPOS WinPos;
@@ -846,8 +851,7 @@ coWinPosSetWindowPos(HWND hWnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 
    /* FIXME: Get current active window from active queue. */
 
-   Window = IntGetWindowObject(hWnd);
-   if (!Window)
+   if (!(Window = UserGetWindowObject(hWnd)))
    {
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       return FALSE;
@@ -856,8 +860,8 @@ coWinPosSetWindowPos(HWND hWnd, HWND WndInsertAfter, INT x, INT y, INT cx,
    /*
     * Only allow CSRSS to mess with the desktop window
     */
-   if (Window == UserGetDesktopWindow() &&
-       Window->WThread->WProcess != PsGetWin32Process())
+   if (IntIsDesktopWindow(Window) &&
+         Window->WThread->WProcess != PsGetWin32Process())
    {
       return FALSE;
    }
@@ -870,7 +874,7 @@ coWinPosSetWindowPos(HWND hWnd, HWND WndInsertAfter, INT x, INT y, INT cx,
    WinPos.cy = cy;
    WinPos.flags = flags;
 
-   coWinPosDoWinPosChanging(Window, &WinPos, &NewWindowRect, &NewClientRect);
+   co_WinPosDoWinPosChanging(Window, &WinPos, &NewWindowRect, &NewClientRect);      
 
    /* Fix up the flags. */
    if (!WinPosFixupFlags(&WinPos, Window))
@@ -887,25 +891,25 @@ coWinPosSetWindowPos(HWND hWnd, HWND WndInsertAfter, INT x, INT y, INT cx,
    }
 
    if ((WinPos.flags & (SWP_NOZORDER | SWP_HIDEWINDOW | SWP_SHOWWINDOW)) !=
-       SWP_NOZORDER &&
-       UserGetAncestor(GetWnd(WinPos.hwnd), GA_PARENT) == UserGetDesktopWindow())
+         SWP_NOZORDER &&
+         UserGetAncestor(GetWnd(WinPos.hwnd), GA_PARENT) == UserGetDesktopWindow())
    {
-      WinPos.hwndInsertAfter = coWinPosDoOwnedPopups(WinPos.hwnd, WinPos.hwndInsertAfter);
+      WinPos.hwndInsertAfter = co_WinPosDoOwnedPopups(WinPos.hwnd, WinPos.hwndInsertAfter);
    }
 
    if (!(WinPos.flags & SWP_NOREDRAW))
    {
       /* Compute the visible region before the window position is changed */
       if (!(WinPos.flags & (SWP_NOREDRAW | SWP_SHOWWINDOW)) &&
-          (WinPos.flags & (SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
-                           SWP_HIDEWINDOW | SWP_FRAMECHANGED)) !=
-          (SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER))
+            (WinPos.flags & (SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER |
+                             SWP_HIDEWINDOW | SWP_FRAMECHANGED)) !=
+            (SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER))
       {
          VisBefore = VIS_ComputeVisibleRegion(Window, FALSE, FALSE, TRUE);
          VisRgn = NULL;
 
          if (VisBefore != NULL && (VisRgn = (PROSRGNDATA)RGNDATA_LockRgn(VisBefore)) &&
-             UnsafeIntGetRgnBox(VisRgn, &TempRect) == NULLREGION)
+               UnsafeIntGetRgnBox(VisRgn, &TempRect) == NULLREGION)
          {
             RGNDATA_UnlockRgn(VisRgn);
             NtGdiDeleteObject(VisBefore);
@@ -918,10 +922,10 @@ coWinPosSetWindowPos(HWND hWnd, HWND WndInsertAfter, INT x, INT y, INT cx,
       }
    }
 
-   WvrFlags = coWinPosDoNCCALCSize(Window, &WinPos, &NewWindowRect, &NewClientRect);
+   WvrFlags = co_WinPosDoNCCALCSize(Window, &WinPos, &NewWindowRect, &NewClientRect);
 
    /* Relink windows. (also take into account shell window in hwndShellWindow) */
-   if (!(WinPos.flags & SWP_NOZORDER) && WinPos.hwnd != GetHwnd(UserGetShellWindow()))
+   if (!(WinPos.flags & SWP_NOZORDER) && WinPos.hwnd != GetHwndSafe(UserGetShellWindow()))
    {
       PWINDOW_OBJECT ParentWindow;
       PWINDOW_OBJECT Sibling;
@@ -951,23 +955,23 @@ coWinPosSetWindowPos(HWND hWnd, HWND WndInsertAfter, INT x, INT y, INT cx,
                InsertAfterWindow = ParentWindow->LastChild;
             }
             else
-              InsertAfterWindow = NULL;
+               InsertAfterWindow = NULL;
          }
          else
-            InsertAfterWindow = IntGetWindowObject(WinPos.hwndInsertAfter);
+            InsertAfterWindow = UserGetWindowObject(WinPos.hwndInsertAfter);
          /* Do nothing if hwndInsertAfter is HWND_BOTTOM and Window is already
             the last window */
          if (InsertAfterWindow != Window)
          {
-             IntUnlinkWindow(Window);
-             IntLinkWindow(Window, ParentWindow, InsertAfterWindow);
+            IntUnlinkWindow(Window);
+            IntLinkWindow(Window, ParentWindow, InsertAfterWindow);
          }
          if ((HWND_TOPMOST == WinPos.hwndInsertAfter)
-             || (0 != (Window->ExStyle & WS_EX_TOPMOST)
-                 && NULL != Window->PrevSibling
-                 && 0 != (Window->PrevSibling->ExStyle & WS_EX_TOPMOST))
-             || (NULL != Window->NextSibling
-                 && 0 != (Window->NextSibling->ExStyle & WS_EX_TOPMOST)))
+               || (0 != (Window->ExStyle & WS_EX_TOPMOST)
+                   && NULL != Window->PrevSibling
+                   && 0 != (Window->PrevSibling->ExStyle & WS_EX_TOPMOST))
+               || (NULL != Window->NextSibling
+                   && 0 != (Window->NextSibling->ExStyle & WS_EX_TOPMOST)))
          {
             Window->ExStyle |= WS_EX_TOPMOST;
          }
@@ -983,13 +987,13 @@ coWinPosSetWindowPos(HWND hWnd, HWND WndInsertAfter, INT x, INT y, INT cx,
    OldClientRect = Window->ClientRect;
 
    if (OldClientRect.bottom - OldClientRect.top ==
-       NewClientRect.bottom - NewClientRect.top)
+         NewClientRect.bottom - NewClientRect.top)
    {
       WvrFlags &= ~WVR_VREDRAW;
    }
 
    if (OldClientRect.right - OldClientRect.left ==
-       NewClientRect.right - NewClientRect.left)
+         NewClientRect.right - NewClientRect.left)
    {
       WvrFlags &= ~WVR_HREDRAW;
    }
@@ -997,7 +1001,7 @@ coWinPosSetWindowPos(HWND hWnd, HWND WndInsertAfter, INT x, INT y, INT cx,
    /* FIXME: Actually do something with WVR_VALIDRECTS */
 
    if (NewClientRect.left != OldClientRect.left ||
-       NewClientRect.top != OldClientRect.top)
+         NewClientRect.top != OldClientRect.top)
    {
       WinPosInternalMoveWindow(Window,
                                NewClientRect.left - OldClientRect.left,
@@ -1010,8 +1014,8 @@ coWinPosSetWindowPos(HWND hWnd, HWND WndInsertAfter, INT x, INT y, INT cx,
    if (!(WinPos.flags & SWP_SHOWWINDOW) && (WinPos.flags & SWP_HIDEWINDOW))
    {
       /* Clear the update region */
-      coUserRedrawWindow(Window, NULL, 0, RDW_VALIDATE | RDW_NOFRAME |
-                      RDW_NOERASE | RDW_NOINTERNALPAINT | RDW_ALLCHILDREN);
+      co_UserRedrawWindow(Window, NULL, 0, RDW_VALIDATE | RDW_NOFRAME |
+                          RDW_NOERASE | RDW_NOINTERNALPAINT | RDW_ALLCHILDREN);
       Window->Style &= ~WS_VISIBLE;
    }
    else if (WinPos.flags & SWP_SHOWWINDOW)
@@ -1028,7 +1032,7 @@ coWinPosSetWindowPos(HWND hWnd, HWND WndInsertAfter, INT x, INT y, INT cx,
       VisRgn = NULL;
 
       if (VisAfter != NULL && (VisRgn = (PROSRGNDATA)RGNDATA_LockRgn(VisAfter)) &&
-          UnsafeIntGetRgnBox(VisRgn, &TempRect) == NULLREGION)
+            UnsafeIntGetRgnBox(VisRgn, &TempRect) == NULLREGION)
       {
          RGNDATA_UnlockRgn(VisRgn);
          NtGdiDeleteObject(VisAfter);
@@ -1047,7 +1051,7 @@ coWinPosSetWindowPos(HWND hWnd, HWND WndInsertAfter, INT x, INT y, INT cx,
        * change.
        */
       if (VisBefore != NULL && VisAfter != NULL && !(WinPos.flags & SWP_NOCOPYBITS) &&
-          ((WinPos.flags & SWP_NOSIZE) || !(WvrFlags & WVR_REDRAW)))
+            ((WinPos.flags & SWP_NOSIZE) || !(WvrFlags & WVR_REDRAW)))
       {
          CopyRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
          RgnType = NtGdiCombineRgn(CopyRgn, VisAfter, VisBefore, RGN_AND);
@@ -1061,7 +1065,7 @@ coWinPosSetWindowPos(HWND hWnd, HWND WndInsertAfter, INT x, INT y, INT cx,
           * region...)
           */
          if (!(WinPos.flags & SWP_NOSIZE) && RgnType != ERROR &&
-             RgnType != NULLREGION)
+               RgnType != NULLREGION)
          {
             RECT ORect = OldClientRect;
             RECT NRect = NewClientRect;
@@ -1087,7 +1091,7 @@ coWinPosSetWindowPos(HWND hWnd, HWND WndInsertAfter, INT x, INT y, INT cx,
           * themselves.
           */
          if ((VisRgn = (PROSRGNDATA)RGNDATA_LockRgn(CopyRgn)) &&
-             UnsafeIntGetRgnBox(VisRgn, &CopyRect) == NULLREGION)
+               UnsafeIntGetRgnBox(VisRgn, &CopyRect) == NULLREGION)
          {
             /* Nothing to copy, clean up */
             RGNDATA_UnlockRgn(VisRgn);
@@ -1114,12 +1118,12 @@ coWinPosSetWindowPos(HWND hWnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 
             NtGdiCombineRgn(ClipRgn, CopyRgn, NULL, RGN_COPY);
             Dc = UserGetDCEx(Window, ClipRgn, DCX_WINDOW | DCX_CACHE |
-               DCX_INTERSECTRGN | DCX_CLIPSIBLINGS);
+                             DCX_INTERSECTRGN | DCX_CLIPSIBLINGS);
             NtGdiBitBlt(Dc,
-               CopyRect.left, CopyRect.top, CopyRect.right - CopyRect.left,
-               CopyRect.bottom - CopyRect.top, Dc,
-               CopyRect.left + (OldWindowRect.left - NewWindowRect.left),
-               CopyRect.top + (OldWindowRect.top - NewWindowRect.top), SRCCOPY);
+                        CopyRect.left, CopyRect.top, CopyRect.right - CopyRect.left,
+                        CopyRect.bottom - CopyRect.top, Dc,
+                        CopyRect.left + (OldWindowRect.left - NewWindowRect.left),
+                        CopyRect.top + (OldWindowRect.top - NewWindowRect.top), SRCCOPY);
             UserReleaseDC(Window, Dc);
             IntValidateParent(Window, CopyRgn);
          }
@@ -1148,10 +1152,10 @@ coWinPosSetWindowPos(HWND hWnd, HWND WndInsertAfter, INT x, INT y, INT cx,
          if (RgnType != ERROR && RgnType != NULLREGION)
          {
             NtGdiOffsetRgn(DirtyRgn,
-               Window->WindowRect.left - Window->ClientRect.left,
-               Window->WindowRect.top - Window->ClientRect.top);
-            coUserRedrawWindow(Window, NULL, DirtyRgn,
-               RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
+                           Window->WindowRect.left - Window->ClientRect.left,
+                           Window->WindowRect.top - Window->ClientRect.top);
+            co_UserRedrawWindow(Window, NULL, DirtyRgn,
+                                RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
          }
          NtGdiDeleteObject(DirtyRgn);
       }
@@ -1175,7 +1179,7 @@ coWinPosSetWindowPos(HWND hWnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 
          if (RgnType != ERROR && RgnType != NULLREGION)
          {
-            coVIS_WindowLayoutChanged(Window, ExposedRgn);
+            co_VIS_WindowLayoutChanged(Window, ExposedRgn);
          }
          NtGdiDeleteObject(ExposedRgn);
          NtGdiDeleteObject(VisBefore);
@@ -1190,215 +1194,214 @@ coWinPosSetWindowPos(HWND hWnd, HWND WndInsertAfter, INT x, INT y, INT cx,
       {
          if ((Window->Style & (WS_CHILD | WS_POPUP)) == WS_CHILD)
          {
-            coUserSendMessage(WinPos.hwnd, WM_CHILDACTIVATE, 0, 0);
+            co_UserSendMessage(WinPos.hwnd, WM_CHILDACTIVATE, 0, 0);
          }
          else
          {
-            coUserSetForegroundWindow(Window);
+            co_UserSetForegroundWindow(Window);
          }
       }
    }
 
    if ((WinPos.flags & SWP_AGG_STATUSFLAGS) != SWP_AGG_NOPOSCHANGE)
-      coUserSendMessage(WinPos.hwnd, WM_WINDOWPOSCHANGED, 0, (LPARAM) &WinPos);
-
+      co_UserSendMessage(WinPos.hwnd, WM_WINDOWPOSCHANGED, 0, (LPARAM) &WinPos);
 
    return TRUE;
 }
 
 LRESULT FASTCALL
-coWinPosGetNonClientSize(PWINDOW_OBJECT Wnd, RECT* WindowRect, RECT* ClientRect)
+co_WinPosGetNonClientSize(PWINDOW_OBJECT Wnd, RECT* WindowRect, RECT* ClientRect)
 {
-  LRESULT Result;
+   LRESULT Result;
 
-  *ClientRect = *WindowRect;
-  Result = coUserSendMessage(GetHwnd(Wnd), WM_NCCALCSIZE, FALSE, (LPARAM) ClientRect);
+   ASSERT(Wnd);
 
-  FixClientRect(ClientRect, WindowRect);
+   *ClientRect = *WindowRect;
+   Result = co_UserSendMessage(Wnd->hSelf, WM_NCCALCSIZE, FALSE, (LPARAM) ClientRect);
 
-  return Result;
+   FixClientRect(ClientRect, WindowRect);
+
+   return Result;
 }
 
 BOOLEAN FASTCALL
-coWinPosShowWindow(PWINDOW_OBJECT Wnd, INT Cmd)
+co_WinPosShowWindow(PWINDOW_OBJECT Wnd, INT Cmd)
 {
-  BOOLEAN WasVisible;
-  UINT Swp = 0;
-  RECT NewPos;
-  BOOLEAN ShowFlag;
-  
-  ASSERT(Wnd);
-  
-//  HRGN VisibleRgn;
+   BOOLEAN WasVisible;
+   UINT Swp = 0;
+   RECT NewPos;
+   BOOLEAN ShowFlag;
 
-  WasVisible = (Wnd->Style & WS_VISIBLE) != 0;
+   ASSERT(Wnd);
+   //  HRGN VisibleRgn;
 
-  switch (Cmd)
-    {
-    case SW_HIDE:
-      {
-	if (!WasVisible)
-	  {
-	    return(FALSE);
-	  }
-	Swp |= SWP_HIDEWINDOW | SWP_NOSIZE | SWP_NOMOVE;
-   if (Wnd != UserGetActiveWindow())
-	    Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
-	break;
-      }
+   WasVisible = (Wnd->Style & WS_VISIBLE) != 0;
 
-    case SW_SHOWMINNOACTIVE:
-      Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
-      /* Fall through. */
-    case SW_SHOWMINIMIZED:
-      Swp |= SWP_SHOWWINDOW;
-      /* Fall through. */
-    case SW_MINIMIZE:
-      {
-	Swp |= SWP_FRAMECHANGED | SWP_NOACTIVATE;
-   if (!(Wnd->Style & WS_MINIMIZE))
-	  {
-       Swp |= coWinPosMinMaximize(Wnd, SW_MINIMIZE, &NewPos);
-	  }
-	else
-	  {
-	    Swp |= SWP_NOSIZE | SWP_NOMOVE;
-	  }
-	break;
-      }
+   switch (Cmd)
+   {
+      case SW_HIDE:
+         {
+            if (!WasVisible)
+            {
+               return(FALSE);
+            }
+            Swp |= SWP_HIDEWINDOW | SWP_NOSIZE | SWP_NOMOVE;
+            if (Wnd != UserGetActiveWindow())
+               Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
+            break;
+         }
 
-    case SW_SHOWMAXIMIZED:
-      {
-	Swp |= SWP_SHOWWINDOW | SWP_FRAMECHANGED;
-   if (!(Wnd->Style & WS_MAXIMIZE))
-	  {
-       Swp |= coWinPosMinMaximize(Wnd, SW_MAXIMIZE, &NewPos);
-	  }
-	else
-	  {
-	    Swp |= SWP_NOSIZE | SWP_NOMOVE;
-	  }
-	break;
-      }
+      case SW_SHOWMINNOACTIVE:
+         Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
+         /* Fall through. */
+      case SW_SHOWMINIMIZED:
+         Swp |= SWP_SHOWWINDOW;
+         /* Fall through. */
+      case SW_MINIMIZE:
+         {
+            Swp |= SWP_FRAMECHANGED | SWP_NOACTIVATE;
+            if (!(Wnd->Style & WS_MINIMIZE))
+            {
+               Swp |= co_WinPosMinMaximize(Wnd, SW_MINIMIZE, &NewPos);
+            }
+            else
+            {
+               Swp |= SWP_NOSIZE | SWP_NOMOVE;
+            }
+            break;
+         }
 
-    case SW_SHOWNA:
-      Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
-      /* Fall through. */
-    case SW_SHOW:
-      Swp |= SWP_SHOWWINDOW | SWP_NOSIZE | SWP_NOMOVE;
-      /* Don't activate the topmost window. */
-      break;
+      case SW_SHOWMAXIMIZED:
+         {
+            Swp |= SWP_SHOWWINDOW | SWP_FRAMECHANGED;
+            if (!(Wnd->Style & WS_MAXIMIZE))
+            {
+               Swp |= co_WinPosMinMaximize(Wnd, SW_MAXIMIZE, &NewPos);
+            }
+            else
+            {
+               Swp |= SWP_NOSIZE | SWP_NOMOVE;
+            }
+            break;
+         }
 
-    case SW_SHOWNOACTIVATE:
-      Swp |= SWP_NOZORDER;
-      /* Fall through. */
-    case SW_SHOWNORMAL:
-    case SW_SHOWDEFAULT:
-    case SW_RESTORE:
-      Swp |= SWP_SHOWWINDOW | SWP_FRAMECHANGED;
-      if (Wnd->Style & (WS_MINIMIZE | WS_MAXIMIZE))
-	{
-     Swp |= coWinPosMinMaximize(Wnd, SW_RESTORE, &NewPos);
-	}
-      else
-	{
-	  Swp |= SWP_NOSIZE | SWP_NOMOVE;
-	}
-      break;
-    }
+      case SW_SHOWNA:
+         Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
+         /* Fall through. */
+      case SW_SHOW:
+         Swp |= SWP_SHOWWINDOW | SWP_NOSIZE | SWP_NOMOVE;
+         /* Don't activate the topmost window. */
+         break;
 
-  ShowFlag = (Cmd != SW_HIDE);
-  if (ShowFlag != WasVisible)
-    {
-      coUserSendMessage(GetHwnd(Wnd), WM_SHOWWINDOW, ShowFlag, 0);
+      case SW_SHOWNOACTIVATE:
+         Swp |= SWP_NOZORDER;
+         /* Fall through. */
+      case SW_SHOWNORMAL:
+      case SW_SHOWDEFAULT:
+      case SW_RESTORE:
+         Swp |= SWP_SHOWWINDOW | SWP_FRAMECHANGED;
+         if (Wnd->Style & (WS_MINIMIZE | WS_MAXIMIZE))
+         {
+            Swp |= co_WinPosMinMaximize(Wnd, SW_RESTORE, &NewPos);
+         }
+         else
+         {
+            Swp |= SWP_NOSIZE | SWP_NOMOVE;
+         }
+         break;
+   }
+
+   ShowFlag = (Cmd != SW_HIDE);
+   if (ShowFlag != WasVisible)
+   {
+      co_UserSendMessage(Wnd->hSelf, WM_SHOWWINDOW, ShowFlag, 0);
       /*
        * FIXME: Need to check the window wasn't destroyed during the
        * window procedure.
        */
       if (!Wnd->ParentWnd)
-        {
-          IntShellHookNotify(HSHELL_WINDOWCREATED, (LPARAM)GetHwnd(Wnd));
-        }
-    }
+      {
+         co_UserShellHookNotify(HSHELL_WINDOWCREATED, (LPARAM) Wnd->hSelf);
+      }
+   }
 
-  /* We can't activate a child window */
-  if ((Wnd->Style & WS_CHILD) &&
-      !(Wnd->ExStyle & WS_EX_MDICHILD))
-    {
+   /* We can't activate a child window */
+   if ((Wnd->Style & WS_CHILD) &&
+         !(Wnd->ExStyle & WS_EX_MDICHILD))
+   {
       Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
-    }
+   }
 
-  coWinPosSetWindowPos(GetHwnd(Wnd), 0 != (Wnd->ExStyle & WS_EX_TOPMOST)
-                                   ? HWND_TOPMOST : HWND_TOP,
-                     NewPos.left, NewPos.top, NewPos.right, NewPos.bottom, LOWORD(Swp));
+   co_WinPosSetWindowPos(Wnd->hSelf, 0 != (Wnd->ExStyle & WS_EX_TOPMOST)
+                         ? HWND_TOPMOST : HWND_TOP,
+                         NewPos.left, NewPos.top, NewPos.right, NewPos.bottom, LOWORD(Swp));
 
-  if (Cmd == SW_HIDE)
-    {
+   if (Cmd == SW_HIDE)
+   {
       /* FIXME: This will cause the window to be activated irrespective
        * of whether it is owned by the same thread. Has to be done
        * asynchronously.
        */
 
       if (Wnd == UserGetActiveWindow())
-        {
-          coWinPosActivateOtherWindow(Wnd);
-        }
+      {
+         co_WinPosActivateOtherWindow(Wnd);
+      }
 
       /* Revert focus to parent */
       if (Wnd == UserGetThreadFocusWindow() ||
-          UserIsChildWindow(Wnd, UserGetThreadFocusWindow()))
-        {
-          coUserSetFocus(Wnd->ParentWnd);
-        }
+            UserIsChildWindow(Wnd, UserGetThreadFocusWindow()))
+      {
+         co_UserSetFocus(Wnd->ParentWnd);
+      }
 
       if (!Wnd->ParentWnd)
-        {
-          IntShellHookNotify(HSHELL_WINDOWDESTROYED, (LPARAM)GetHwnd(Wnd));
-        }
-    }
+      {
+         co_UserShellHookNotify(HSHELL_WINDOWDESTROYED, (LPARAM) Wnd->hSelf);
+      }
+   }
 
-  /* FIXME: Check for window destruction. */
+   /* FIXME: Check for window destruction. */
 
-  if ((Wnd->Flags & WINDOWOBJECT_NEED_SIZE) &&
-      !(Wnd->hdr.flags & USER_OBJ_DESTROYING))
-    {
+   if ((Wnd->Flags & WINDOWOBJECT_NEED_SIZE) &&
+         !(Wnd->hdr.flags & USER_OBJ_DESTROYING))
+   {
       WPARAM wParam = SIZE_RESTORED;
 
       Wnd->Flags &= ~WINDOWOBJECT_NEED_SIZE;
       if (Wnd->Style & WS_MAXIMIZE)
-	{
-	  wParam = SIZE_MAXIMIZED;
-	}
+      {
+         wParam = SIZE_MAXIMIZED;
+      }
       else if (Wnd->Style & WS_MINIMIZE)
-	{
-	  wParam = SIZE_MINIMIZED;
-	}
+      {
+         wParam = SIZE_MINIMIZED;
+      }
 
-      coUserSendMessage(GetHwnd(Wnd), WM_SIZE, wParam,
-                     MAKELONG(Wnd->ClientRect.right -
-                              Wnd->ClientRect.left,
-                              Wnd->ClientRect.bottom -
-                              Wnd->ClientRect.top));
-      coUserSendMessage(GetHwnd(Wnd), WM_MOVE, 0,
-                     MAKELONG(Wnd->ClientRect.left,
-                              Wnd->ClientRect.top));
+      co_UserSendMessage(Wnd->hSelf, WM_SIZE, wParam,
+                         MAKELONG(Wnd->ClientRect.right -
+                                  Wnd->ClientRect.left,
+                                  Wnd->ClientRect.bottom -
+                                  Wnd->ClientRect.top));
+      co_UserSendMessage(Wnd->hSelf, WM_MOVE, 0,
+                         MAKELONG(Wnd->ClientRect.left,
+                                  Wnd->ClientRect.top));
       IntEngWindowChanged(Wnd, WOC_RGN_CLIENT);
-    }
+   }
 
-  /* Activate the window if activation is not requested and the window is not minimized */
-/*
-  if (!(Swp & (SWP_NOACTIVATE | SWP_HIDEWINDOW)) && !(Window->Style & WS_MINIMIZE))
-    {
-      WinPosChangeActiveWindow(Wnd, FALSE);
-    }
-*/
+   /* Activate the window if activation is not requested and the window is not minimized */
+   /*
+     if (!(Swp & (SWP_NOACTIVATE | SWP_HIDEWINDOW)) && !(Window->Style & WS_MINIMIZE))
+       {
+         WinPosChangeActiveWindow(Wnd, FALSE);
+       }
+   */
 
-//  ObmDereferenceObject(Window);
-  return(WasVisible);
+   return(WasVisible);
 }
 
 STATIC VOID FASTCALL
-coWinPosSearchChildren(
+co_WinPosSearchChildren(
    PWINDOW_OBJECT ScopeWin, PUSER_MESSAGE_QUEUE OnlyHitTests, POINT *Point,
    PWINDOW_OBJECT* Window, USHORT *HitTest)
 {
@@ -1409,17 +1412,17 @@ coWinPosSearchChildren(
    {
       for (phWnd = List; *phWnd; ++phWnd)
       {
-         if (!(Current = IntGetWindowObject(*phWnd)))
+         if (!(Current = UserGetWindowObject(*phWnd)))
             continue;
-//         Current = *phWnd;
+         //         Current = *phWnd;
 
          if (!(Current->Style & WS_VISIBLE))
          {
-	    continue;
+            continue;
          }
 
          if ((Current->Style & (WS_POPUP | WS_CHILD | WS_DISABLED)) ==
-             (WS_CHILD | WS_DISABLED))
+               (WS_CHILD | WS_DISABLED))
          {
             continue;
          }
@@ -1443,24 +1446,26 @@ coWinPosSearchChildren(
             break;
          }
 
+
          if (OnlyHitTests && (Current->Queue == OnlyHitTests))
          {
-            *HitTest = coUserSendMessage(Current->hSelf, WM_NCHITTEST, 0,
-                                      MAKELONG(Point->x, Point->y));
+            *HitTest = co_UserSendMessage(Current->hSelf, WM_NCHITTEST, 0,
+                                          MAKELONG(Point->x, Point->y));
             if ((*HitTest) == (USHORT)HTTRANSPARENT)
+            {
                continue;
+            }
          }
          else
             *HitTest = HTCLIENT;
 
          if (Point->x >= Current->ClientRect.left &&
-             Point->x < Current->ClientRect.right &&
-             Point->y >= Current->ClientRect.top &&
-             Point->y < Current->ClientRect.bottom)
+               Point->x < Current->ClientRect.right &&
+               Point->y >= Current->ClientRect.top &&
+               Point->y < Current->ClientRect.bottom)
          {
-            coWinPosSearchChildren(Current, OnlyHitTests, Point, Window, HitTest);
+            co_WinPosSearchChildren(Current, OnlyHitTests, Point, Window, HitTest);
          }
-
          break;
       }
       ExFreePool(List);
@@ -1468,97 +1473,94 @@ coWinPosSearchChildren(
 }
 
 USHORT FASTCALL
-coWinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, PUSER_MESSAGE_QUEUE OnlyHitTests, POINT *WinPoint,
-		      PWINDOW_OBJECT* Window)
+co_WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, PUSER_MESSAGE_QUEUE OnlyHitTests, POINT *WinPoint,
+                         PWINDOW_OBJECT* Window)
 {
-//  HWND DesktopWindowHandle;
-  PWINDOW_OBJECT Desktop;
-  POINT Point = *WinPoint;
-  USHORT HitTest;
+   PWINDOW_OBJECT Desktop;
+   POINT Point = *WinPoint;
+   USHORT HitTest;
 
-  *Window = NULL;
+   *Window = NULL;
 
-  if(!ScopeWin)
-  {
-    DPRINT1("WinPosWindowFromPoint(): ScopeWin == NULL!\n");
-    return(HTERROR);
-  }
-
-  if (ScopeWin->Style & WS_DISABLED)
-    {
+   if(!ScopeWin)
+   {
+      DPRINT1("WinPosWindowFromPoint(): ScopeWin == NULL!\n");
       return(HTERROR);
-    }
+   }
 
-  /* Translate the point to the space of the scope window. */
-  Desktop = UserGetDesktopWindow();
-  if(Desktop != ScopeWin)// &&
-//     (DesktopWindow = IntGetWindowObject(DesktopWindowHandle)))
-  {
-    Point.x += ScopeWin->ClientRect.left - Desktop->ClientRect.left;
-    Point.y += ScopeWin->ClientRect.top - Desktop->ClientRect.top;
-  }
+   if (ScopeWin->Style & WS_DISABLED)
+   {
+      return(HTERROR);
+   }
 
-  HitTest = HTNOWHERE;
+   /* Translate the point to the space of the scope window. */
+   Desktop = UserGetDesktopWindow();
+   if(Desktop != ScopeWin)// &&
+   {
+      Point.x += ScopeWin->ClientRect.left - Desktop->ClientRect.left;
+      Point.y += ScopeWin->ClientRect.top - Desktop->ClientRect.top;
+   }
 
-  coWinPosSearchChildren(ScopeWin, OnlyHitTests, &Point, Window, &HitTest);
+   HitTest = HTNOWHERE;
 
-  return ((*Window) ? HitTest : HTNOWHERE);
+   co_WinPosSearchChildren(ScopeWin, OnlyHitTests, &Point, Window, &HitTest);
+
+   return ((*Window) ? HitTest : HTNOWHERE);
 }
 
 BOOL
 STDCALL
 NtUserGetMinMaxInfo(
-  HWND hwnd,
-  MINMAXINFO *MinMaxInfo,
-  BOOL SendMessage)
+   HWND hWnd,
+   MINMAXINFO *MinMaxInfo,
+   BOOL SendMessage)
 {
-  POINT Size;
-  PINTERNALPOS InternalPos;
-  PWINDOW_OBJECT Window;
-  MINMAXINFO SafeMinMax;
-  NTSTATUS Status;
-  DECLARE_RETURN(BOOL);  
+   POINT Size;
+   PINTERNALPOS InternalPos;
+   PWINDOW_OBJECT Window;
+   MINMAXINFO SafeMinMax;
+   NTSTATUS Status;
+   DECLARE_RETURN(BOOL);
 
-  DPRINT("Enter NtUserGetMinMaxInfo\n");
-  UserEnterExclusive();
-  
-  Window = IntGetWindowObject(hwnd);
-  if(!Window)
-  {
-    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-    RETURN( FALSE);
-  }
+   DPRINT("Enter NtUserGetMinMaxInfo\n");
+   UserEnterExclusive();
 
-  Size.x = Window->WindowRect.left;
-  Size.y = Window->WindowRect.top;
-  InternalPos = WinPosInitInternalPos(Window, &Size,
-				      &Window->WindowRect);
-  if(InternalPos)
-  {
-    if(SendMessage)
-    {
-      coWinPosGetMinMaxInfo(Window, &SafeMinMax.ptMaxSize, &SafeMinMax.ptMaxPosition,
-                          &SafeMinMax.ptMinTrackSize, &SafeMinMax.ptMaxTrackSize);
-    }
-    else
-    {
-      WinPosFillMinMaxInfoStruct(Window, &SafeMinMax);
-    }
-    Status = MmCopyToCaller(MinMaxInfo, &SafeMinMax, sizeof(MINMAXINFO));
-    if(!NT_SUCCESS(Status))
-    {
-      SetLastNtError(Status);
+   if(!(Window = UserGetWindowObject(hWnd)))
+   {
+      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       RETURN( FALSE);
-    }
-    RETURN( TRUE);
-  }
+   }
 
-  RETURN( FALSE);
-  
+   Size.x = Window->WindowRect.left;
+   Size.y = Window->WindowRect.top;
+   InternalPos = WinPosInitInternalPos(Window, &Size,
+                                       &Window->WindowRect);
+   if(InternalPos)
+   {
+      if(SendMessage)
+      {
+         co_WinPosGetMinMaxInfo(Window, &SafeMinMax.ptMaxSize, &SafeMinMax.ptMaxPosition,
+                                &SafeMinMax.ptMinTrackSize, &SafeMinMax.ptMaxTrackSize);
+      }
+      else
+      {
+         WinPosFillMinMaxInfoStruct(Window, &SafeMinMax);
+      }
+      Status = MmCopyToCaller(MinMaxInfo, &SafeMinMax, sizeof(MINMAXINFO));
+      if(!NT_SUCCESS(Status))
+      {
+         SetLastNtError(Status);
+         RETURN( FALSE);
+      }
+      RETURN( TRUE);
+   }
+
+   RETURN( FALSE);
+
 CLEANUP:
-  DPRINT("Leave NtUserGetMinMaxInfo, ret=%i\n",_ret_);
-  UserLeave();
-  END_CLEANUP;
+   DPRINT("Leave NtUserGetMinMaxInfo, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;
 }
 
 /* EOF */

@@ -44,8 +44,6 @@ VOID FASTCALL
 UserDestroyHookObject(IN PHOOK Hook)
 {
    Hook->hdrFlags |= USER_OBJ_DESTROYED;
-   if (Hook->refs)
-      return;
 
    UserFreeHandle(&gHandleTable, Hook->hSelf);
    UserFree(Hook);
@@ -260,14 +258,14 @@ UserCallLowLevelHook(INT HookId, INT Code, WPARAM wParam, LPARAM lParam, PHOOK H
 
    /* FIXME should get timeout from
     * HKEY_CURRENT_USER\Control Panel\Desktop\LowLevelHooksTimeout */
-   Status = coMsqSendMessage(&Hook->Thread->Tcb.Win32Thread->Queue, (HWND) Code, HookId,
+   Status = co_MsqSendMessage(&Hook->Thread->Tcb.Win32Thread->Queue, (HWND) Code, HookId,
                              wParam, lParam, 5000, TRUE, TRUE, &uResult);
 
    return NT_SUCCESS(Status) ? uResult : 0;
 }
 
 LRESULT FASTCALL
-coHOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam)
+co_HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam)
 {
    PHOOK Hook;
    PW32THREAD Win32Thread;
@@ -315,7 +313,7 @@ coHOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam)
       GlobalHooks->Counts[HOOKID_TO_INDEX(HookId)]++;
    }
 
-   Result = coUserCallHookProc(HookId, Code, wParam, lParam, Hook->Proc,
+   Result = co_UserCallHookProc(HookId, Code, wParam, lParam, Hook->Proc,
                                Hook->Ansi, &Hook->ModuleName);
 
    UserReleaseHookChain(MsqGetHooks(&PsGetWin32Thread()->Queue), HookId);
@@ -402,8 +400,7 @@ NtUserCallNextHookEx(
    DPRINT("Enter NtUserCallNextHookEx\n");
    UserEnterExclusive();
 
-   Hook = UserGetHookObject(hHook);
-   if (!Hook)
+   if (!(Hook = UserGetHookObject(hHook)))
    {
       DPRINT1("Invalid handle passed to NtUserCallNextHookEx\n");
       RETURN( 0);
@@ -655,10 +652,10 @@ NtUserUnhookWindowsHookEx(HHOOK hHook)
    DPRINT("Enter NtUserUnhookWindowsHookEx\n");
    UserEnterExclusive();
 
-   Hook = UserGetHookObject(hHook);
-   if (! Hook)
+   if (!(Hook = UserGetHookObject(hHook)))
    {
       DPRINT1("Invalid handle passed to NtUserUnhookWindowsHookEx\n");
+      SetLastWin32Error(ERROR_INVALID_HOOK_HANDLE);
       RETURN( FALSE);
    }
 

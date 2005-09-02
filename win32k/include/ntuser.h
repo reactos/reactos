@@ -5,17 +5,24 @@
 typedef struct _USER_OBJECT_HDR
 {
    HANDLE hSelf;
-   LONG refs;
    BYTE flags;
+
 } USER_OBJECT_HDR, *PUSER_OBJECT_HDR;
 
 
 typedef struct _USER_REFERENCE_ENTRY
 {
    SINGLE_LIST_ENTRY Entry;
-   PUSER_OBJECT_HDR hdr;
+   PUSER_OBJECT_HDR* ppHdr;
 } USER_REFERENCE_ENTRY, *PUSER_REFERENCE_ENTRY;
 
+/* ul = user lock */
+#define ulShared 1
+#define ulExclusive 2
+
+/* unused for now... */
+//#define ASSERT_LOCK(type) ASSERT(PsGetWin32Thread()->LockType >= type)
+#define ASSERT_LOCK(type)
 
 extern char* _file;
 extern DWORD _line;
@@ -28,35 +35,14 @@ extern FAST_MUTEX UserLock;
 #define CLEANUP /*unreachable*/ ASSERT(FALSE); _cleanup_
 #define END_CLEANUP return _ret_;
 
-#if 0
-
-#define UserEnterShared() { \
- UUserEnterShared(); ASSERT(InterlockedIncrement(&_locked) > 0); \
- }
- #define UserEnterExclusive() {\
-  UUserEnterExclusive(); ASSERT(InterlockedIncrement(&_locked) > 0); \
-  }
-
-#define UserLeave() { ASSERT(InterlockedDecrement(&_locked) >= 0);  \
- UUserLeave(); }
-
-#endif
-
 
 VOID FASTCALL UserStackTrace();
 
-#define UserEnterShared() \
-{ \
-   DPRINT1("try lock, %s, %i (%i)\n",__FILE__,__LINE__, _locked); \
-   ASSERT(UserLock.Owner != KeGetCurrentThread()); \
-   UUserEnterShared(); \
-   ASSERT(InterlockedIncrement(&_locked) == 1 /*> 0*/); \
-   DPRINT("got lock, %s, %i (%i)\n",__FILE__,__LINE__, _locked); \
-}
+#define UserEnterShared() UserEnterExclusive()
 
 #define UserEnterExclusive() \
 { \
-  /* DPRINT1("try lock, %s, %i (%i)\n",__FILE__,__LINE__, _locked);*/ \
+  /* DPRINT1("try xlock, %s, %i (%i)\n",__FILE__,__LINE__, _locked);*/ \
    if (UserLock.Owner == KeGetCurrentThread()){ \
       DPRINT1("file %s, line %i\n",_file, _line); \
       ASSERT(FALSE); \
@@ -83,26 +69,10 @@ VOID FASTCALL UserStackTrace();
 
 
 
-#define GetWnd(hwnd) IntGetWindowObject(hwnd)
+#define GetWnd(hwnd) UserGetWindowObject(hwnd)
 
 
 
-
-#if 0
-#define IntLockUserShared() {if(_locked){ DPRINT1("last %s, %i\n",_file,_line);} \
- IIntLockUserShared(); \
-  _locked++; _file = __FILE__; _line = __LINE__; \
-  }
-  
- #define IntUserEnterExclusive() {if(_locked){ DPRINT1("last %s, %i\n",_file,_line);} \
-  IIntUserEnterExclusive(); \
-  _locked++; _file = __FILE__; _line = __LINE__; \
-  }
-
-
-#define IntUserLeave() { if(!_locked){ DPRINT1("not locked %s, %i\n",__FILE__,__LINE__);} \
- _locked--; IIntUserLeave(); }
-#endif
 
 NTSTATUS FASTCALL InitUserImpl(VOID);
 VOID FASTCALL UninitUser(VOID);

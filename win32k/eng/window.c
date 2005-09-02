@@ -210,7 +210,8 @@ EngCreateWnd(
          pso, hwnd, pfn, fl, iPixelFormat);
 
   /* Get window object */
-  Window = IntGetWindowObject(hwnd);
+  //FIXME: user lock?????
+  Window = UserGetWindowObject(hwnd);
   if (Window == NULL)
     {
       return NULL;
@@ -262,11 +263,16 @@ EngDeleteWnd(
 {
   WNDGDI *WndObjInt = ObjToGDI(pwo, WND);
   PWINDOW_OBJECT Window;
+  BOOL inUser;
 
   DPRINT("EngDeleteWnd: pwo = 0x%x\n", pwo);
 
   /* Get window object */
-  Window = IntGetWindowObject(WndObjInt->Hwnd);
+  inUser = UserIsEntered();
+  if (!inUser){
+     UserEnterShared();
+  }
+  Window = UserGetWindowObject(WndObjInt->Hwnd);
   if (Window == NULL)
     {
       DPRINT1("Warning: Couldnt get window object for WndObjInt->Hwnd!!!\n");
@@ -277,6 +283,9 @@ EngDeleteWnd(
       /* Remove object from window */
       RemoveEntryList(&WndObjInt->ListEntry);
     }
+  if (!inUser){
+     UserLeave();
+  }
 
   /* Free resources */
   IntEngDeleteClipRegion(WndObjInt->ClientClipObj);

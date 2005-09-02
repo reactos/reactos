@@ -869,8 +869,7 @@ NtUserMonitorFromWindow(
    DPRINT("Enter NtUserMonitorFromWindow\n");
    UserEnterExclusive();
    
-   Window = IntGetWindowObject(hWnd);
-	if (Window == NULL)
+   if (!(Window = UserGetWindowObject(hWnd)))
 	{
 		SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       RETURN( (HMONITOR)NULL);

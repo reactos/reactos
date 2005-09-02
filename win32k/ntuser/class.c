@@ -263,7 +263,7 @@ NtUserGetClassName (
    DPRINT("Enter NtUserGetClassName\n");
    UserEnterExclusive();
 
-   WindowObject = IntGetWindowObject(hWnd);
+   WindowObject = UserGetWindowObject(hWnd);
    if (WindowObject == NULL)
    {
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
@@ -573,7 +573,7 @@ NtUserGetClassLong(HWND hWnd, DWORD Offset, BOOL Ansi)
    DPRINT("Enter NtUserGetClassLong\n");
    UserEnterExclusive();
 
-   WindowObject = IntGetWindowObject(hWnd);
+   WindowObject = UserGetWindowObject(hWnd);
    if (WindowObject == NULL)
    {
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
@@ -588,7 +588,7 @@ CLEANUP:
 }
 
 void FASTCALL
-IntSetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, LONG dwNewLong, BOOL Ansi)
+co_UserSetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, LONG dwNewLong, BOOL Ansi)
 {
    PWINDOW_OBJECT Parent, Owner;
 
@@ -620,12 +620,12 @@ IntSetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, LONG dwNewLong, BOOL 
          break;
       case GCL_HICON:
          WindowObject->Class->hIcon = (HICON)dwNewLong;
-         Owner = IntGetOwner(WindowObject);
+         Owner = UserGetOwner(WindowObject);
          Parent = UserGetParent(WindowObject);
 
          if ((!Owner) && (!Parent))
          {
-            IntShellHookNotify(HSHELL_REDRAW, (LPARAM) WindowObject->hSelf);
+            co_UserShellHookNotify(HSHELL_REDRAW, (LPARAM) WindowObject->hSelf);
          }
 
          break;
@@ -678,21 +678,21 @@ NtUserSetClassLong(HWND hWnd,
                    LONG dwNewLong,
                    BOOL Ansi)
 {
-   PWINDOW_OBJECT WindowObject;
+   PWINDOW_OBJECT Wnd;
    LONG Ret;
    DECLARE_RETURN(DWORD);
 
    DPRINT("Enter NtUserSetClassLong\n");
    UserEnterExclusive();
 
-   WindowObject = IntGetWindowObject(hWnd);
-   if (WindowObject == NULL)
+   if (!(Wnd = UserGetWindowObject(hWnd)))
    {
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       RETURN( 0);
    }
-   Ret = UserGetClassLong(WindowObject, Offset, Ansi);
-   IntSetClassLong(WindowObject, Offset, dwNewLong, Ansi);
+   
+   Ret = UserGetClassLong(Wnd, Offset, Ansi); //FIXME: can fail?
+   co_UserSetClassLong(Wnd, Offset, dwNewLong, Ansi);//FIXME: ret??
    RETURN(Ret);
 
 CLEANUP:

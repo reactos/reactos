@@ -33,60 +33,62 @@
 #define NDEBUG
 #include <debug.h>
 
-/* return TRUE if its ok to destroy the object */
-BOOLEAN FASTCALL UserSetCheckDestroy(PUSER_OBJECT_HDR hdr)
+#if 0
+VOID FASTCALL UserLinkVolatileObject2(PUSER_OBJECT_HDR hdr, PSINGLE_LIST_ENTRY list, PVOLATILE_OBJECT_ENTRY e)
 {
-   if (hdr->flags & USER_OBJ_DESTROYED)
+//   if (obj){
+
+   e->hdr = hdr;
+   e->recycle_count = HIWORD(hdr->hSelf);
+   e->objType = hdr->handle_entry->type;
+   e->handle_entry = hdr->handle_entry;
+   PushEntryList(list, &e->link);
+}
+
+BOOLEAN FASTCALL UserValidateVolatileObjects2(PSINGLE_LIST_ENTRY list)
+{
+   PSINGLE_LIST_ENTRY p = list->Next;
+   while (p)
    {
-      ASSERT(hdr->flags & USER_OBJ_DESTROYING);
-      /* already destroyed */
-      return FALSE;
+      PVOLATILE_OBJECT_ENTRY e = CONTAINING_RECORD(p, VOLATILE_OBJECT_ENTRY, link);
+
+      if 
+      (
+         (PUSER_OBJECT_HDR)e->handle_entry->ptr != e->hdr || 
+         e->recycle_count != HIWORD(e->hdr->hSelf) || 
+         e->objType != e->hdr->handle_entry->type
+      )
+         return FALSE;
+
+      p = p->Next;
    }
    
-   hdr->flags |= USER_OBJ_DESTROYING;   
-   if (hdr->refs)
-   {
-      /* will be destroyed when refcount reach zero */
-      return FALSE;
-   }
-      
-   hdr->flags |= USER_OBJ_DESTROYED;
-   /* go ahead and destroy */
    return TRUE;
 }
 
-
-VOID FASTCALL UserDestroyObject(PUSER_OBJECT_HDR hdr)
+inline OBJECT_ENTRY FASTCALL UserGetEntry2(PUSER_OBJECT_HDR hdr)
 {
-   PUSER_HANDLE_ENTRY entry = handle_to_entry(&gHandleTable, hdr->hSelf);
+   OBJECT_ENTRY e;
    
-   switch (entry->type)
-   {
-      case otWindow:
-         //UserDestroyWindow(hdr);
-         break;
-         
-      case otMenu:
-         //UserDestroyMenuObject(hdr);
-         break;
-         
-      case otAccel:
-         //UserDestroyAccelObject(hdr);
-         break;         
-         
-      case otCursor:
-         //UserDestroyCursorObject(hdr);
-         break;         
-         
-      case otHook:
-         //UserDestroyHookObject(hdr);
-         break;         
-         
-      case otMonitor:
-         //UserDestroyMonitorObject(hdr);
-         break;         
-         
-      default:
-         ASSERT(FALSE);
-   }
+   e.generation = hdr->handle_entry->generation;
+   e.handle_entry = hdr->handle_entry;
+   e.type = hdr->handle_entry->type;
+   e.hdr = hdr;
+   
+   return e;
 }
+
+
+inline BOOLEAN FASTCALL UserValidateEntry2(POBJECT_ENTRY e)
+{
+   if 
+   (
+      (PUSER_OBJECT_HDR)e->handle_entry->ptr != e->hdr || 
+         e->generation != HIWORD(e->hdr->hSelf) || 
+         e->type != e->hdr->handle_entry->type
+   )
+      return FALSE;
+      
+   return TRUE;
+}
+#endif

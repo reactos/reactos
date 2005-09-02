@@ -33,7 +33,6 @@ typedef struct _WINDOW_OBJECT
       {
       /*---------- USER_OBJECT_HDR --------------*/
         HWND hSelf; /* typesafe handle */
-        LONG refs_placeholder;
         BYTE hdrFlags_placeholder;
       /*---------- USER_OBJECT_HDR --------------*/
 
@@ -82,8 +81,8 @@ typedef struct _WINDOW_OBJECT
         LIST_ENTRY ThreadListEntry;
         /* Handle to the parent window. */
         PWINDOW_OBJECT ParentWnd;
-        /* Handle to the owner window. */
-        HWND hOwner;
+        /* the owner window. */
+        HWND hOwnerWnd;
         /* DC Entries (DCE) */
         PDCE Dce;
 
@@ -103,7 +102,7 @@ typedef struct _WINDOW_OBJECT
         PUSER_MESSAGE_QUEUE Queue;
         PW32THREAD WThread;
          };
-        HWND hWndLastPopup; /* handle to last active popup window (wine doesn't use pointer, for unk. reason)*/
+        HWND hLastActiveWnd; /* handle to last active popup window (wine doesn't use pointer, for unk. reason)*/
         PINTERNALPOS InternalPos;
       //  ULONG Status;
         /* counter for tiled child windows */
@@ -122,110 +121,7 @@ typedef struct _WINDOW_OBJECT
 #define WINDOWOBJECT_RESTOREMAX           (0x00000020)
 
 
-#define HAS_DLGFRAME(Style, ExStyle) \
-            (((ExStyle) & WS_EX_DLGMODALFRAME) || \
-            (((Style) & WS_DLGFRAME) && (!((Style) & WS_THICKFRAME))))
 
-#define HAS_THICKFRAME(Style, ExStyle) \
-            (((Style) & WS_THICKFRAME) && \
-            (!(((Style) & (WS_DLGFRAME | WS_BORDER)) == WS_DLGFRAME)))
-
-#define HAS_THINFRAME(Style, ExStyle) \
-            (((Style) & WS_BORDER) || (!((Style) & (WS_CHILD | WS_POPUP))))
-
-#define IntIsDesktopWindow(WndObj) \
-  (WndObj->ParentWnd == NULL)
-
-#define IntIsBroadcastHwnd(hWnd) \
-  (hWnd == HWND_BROADCAST || hWnd == HWND_TOPMOST)
-
-#if 0
-#define IntWndBelongsToThread(WndObj, W32Thread) \
-  (((WndObj->W32Thread->Thread && WndObj->W32Thread->Thread->Tcb.Win32Thread)) && \
-   (WndObj->W32Thread->Thread->Tcb.Win32Thread == W32Thread))
-#endif
-
-#define IntWndBelongsToThread(WndObj, _W32Thread) (QUEUE_2_WTHREAD((WndObj)->Queue) == (_W32Thread))
-
-
-#define IntGetWndThreadId(WndObj) \
-  WndObj->WThread->Thread->Cid.UniqueThread
-
-#define IntGetWndProcessId(WndObj) \
-  WndObj->WThread->Thread->ThreadsProcess->UniqueProcessId
-
-PWINDOW_OBJECT FASTCALL
-IntGetProcessWindowObject(PW32THREAD Thread, HWND hWnd);
-
-BOOL FASTCALL
-IntIsWindow(HWND hWnd);
-
-PWINDOW_OBJECT* FASTCALL
-UserListChildWnd(PWINDOW_OBJECT Window);
-
-HWND* FASTCALL 
-IntWinListChildren(PWINDOW_OBJECT Window);
-
-NTSTATUS FASTCALL
-InitWindowImpl (VOID);
-
-NTSTATUS FASTCALL
-CleanupWindowImpl (VOID);
-
-VOID FASTCALL
-IntGetClientRect (PWINDOW_OBJECT WindowObject, PRECT Rect);
-
-PWINDOW_OBJECT FASTCALL 
-UserGetActiveWindow(VOID);
-
-BOOL FASTCALL
-UserIsWindowVisible (PWINDOW_OBJECT hWnd);
-
-BOOL FASTCALL
-UserIsChildWindow (PWINDOW_OBJECT Parent, PWINDOW_OBJECT Child);
-
-VOID FASTCALL
-IntUnlinkWindow(PWINDOW_OBJECT Wnd);
-
-VOID FASTCALL
-IntLinkWindow(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndParent, PWINDOW_OBJECT WndPrevSibling);
-
-PWINDOW_OBJECT FASTCALL
-UserGetAncestor(PWINDOW_OBJECT Wnd, UINT Type);
-
-PWINDOW_OBJECT FASTCALL
-UserGetParent(PWINDOW_OBJECT Wnd);
-
-PWINDOW_OBJECT FASTCALL
-IntGetOwner(PWINDOW_OBJECT Wnd);
-
-INT FASTCALL
-IntGetWindowRgn(HWND hWnd, HRGN hRgn);
-
-INT FASTCALL
-IntGetWindowRgnBox(HWND hWnd, RECT *Rect);
-
-PWINDOW_OBJECT FASTCALL
-UserGetShellWindow();
-
-BOOL FASTCALL
-IntGetWindowInfo(PWINDOW_OBJECT WindowObject, PWINDOWINFO pwi);
-
-VOID FASTCALL
-IntGetWindowBorderMeasures(PWINDOW_OBJECT WindowObject, UINT *cx, UINT *cy);
-
-BOOL FASTCALL
-IntAnyPopup(VOID);
-
-BOOL FASTCALL
-IntIsWindowInDestroy(PWINDOW_OBJECT Window);
-
-DWORD IntRemoveWndProcHandle(WNDPROC Handle);
-DWORD IntRemoveProcessWndProcHandles(HANDLE ProcessID);
-DWORD IntAddWndProcHandle(WNDPROC WindowProc, BOOL IsUnicode);
-
-BOOL FASTCALL
-coUserShowOwnedPopups( HWND owner, BOOL fShow );
 
 #endif /* _WIN32K_WINDOW_H */
 

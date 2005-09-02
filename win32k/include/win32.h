@@ -28,11 +28,9 @@ typedef struct _W32THREAD
 
 typedef struct _W32PROCESS
 {
-//  FAST_MUTEX ClassListLock;
   PEPROCESS Process;
   LIST_ENTRY ClassListHead;
   LIST_ENTRY ExpiredTimersList;
-//  FAST_MUTEX MenuListLock;
   LIST_ENTRY MenuListHead;
   FAST_MUTEX PrivateFontListLock;
   LIST_ENTRY PrivateFontListHead;

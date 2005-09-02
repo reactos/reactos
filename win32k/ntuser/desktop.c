@@ -545,7 +545,7 @@ BOOL FASTCALL IntDesktopUpdatePerUserSettings(BOOL bEnable)
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 NTSTATUS FASTCALL
-coUserShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width, ULONG Height)
+co_UserShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width, ULONG Height)
 {
    CSR_API_MESSAGE Request;
    NTSTATUS Status;
@@ -577,7 +577,7 @@ IntHideDesktop(PDESKTOP_OBJECT Desktop)
 
    PWINDOW_OBJECT DesktopWindow;
 
-   DesktopWindow = IntGetWindowObject(Desktop->DesktopWindow);
+   DesktopWindow = UserGetWindowObject(Desktop->DesktopWindow);
    if (! DesktopWindow)
    {
       return ERROR_INVALID_WINDOW_HANDLE;
@@ -593,7 +593,7 @@ IntHideDesktop(PDESKTOP_OBJECT Desktop)
  * notifications. The lParam contents depend on the Message. See
  * MSDN for more details (RegisterShellHookWindow)
  */
-VOID IntShellHookNotify(WPARAM Message, LPARAM lParam)
+VOID co_UserShellHookNotify(WPARAM Message, LPARAM lParam)
 {
    PDESKTOP_OBJECT Desktop = UserGetActiveDesktop();
    PLIST_ENTRY Entry, Entry2;
@@ -621,7 +621,7 @@ VOID IntShellHookNotify(WPARAM Message, LPARAM lParam)
 
    if (!Desktop)
    {
-      DPRINT1("IntShellHookNotify: No desktop!\n");
+      DPRINT1("co_UserShellHookNotify: No desktop!\n");
       return;
    }
 
@@ -637,7 +637,7 @@ VOID IntShellHookNotify(WPARAM Message, LPARAM lParam)
       KeReleaseSpinLock(&Desktop->Lock, OldLevel);
 
       DPRINT("Sending notify\n");
-      coUserSendMessage(Current->hWnd,
+      co_UserSendMessage(Current->hWnd,
                            MsgType,
                            Message,
                            lParam);

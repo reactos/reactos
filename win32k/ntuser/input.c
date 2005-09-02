@@ -400,9 +400,9 @@ IntKeyboardSendWinKeyMsg()
 }
 
 STATIC VOID STDCALL
-coIntKeyboardSendAltKeyMsg()
+co_IntKeyboardSendAltKeyMsg()
 {
-  coMsqPostKeyboardMessage(WM_SYSCOMMAND,SC_KEYMENU,0);
+  co_MsqPostKeyboardMessage(WM_SYSCOMMAND,SC_KEYMENU,0);
 }
 
 STATIC VOID STDCALL
@@ -570,7 +570,7 @@ KeyboardThreadMain(PVOID StartContext)
 			  if (fsModifiers == MOD_WIN)
 			    IntKeyboardSendWinKeyMsg();
 			  else if (fsModifiers == MOD_ALT)
-			    coIntKeyboardSendAltKeyMsg();
+			    co_IntKeyboardSendAltKeyMsg();
 			  continue;
 			}
 
@@ -701,7 +701,7 @@ KeyboardThreadMain(PVOID StartContext)
 	      /*
 	       * Post a keyboard message.
 	       */
-	      coMsqPostKeyboardMessage(msg.message,msg.wParam,msg.lParam);
+	      co_MsqPostKeyboardMessage(msg.message,msg.wParam,msg.lParam);
 	    }
 	}
 

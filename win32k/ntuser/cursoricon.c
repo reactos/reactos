@@ -379,17 +379,13 @@ UserFindExistingCurIconObject(
             }
             if (! UserReferenceCurIconByProcess(Object))
             {
-               //          ExReleaseFastMutex(&CurIconListLock);
                return NULL;
             }
-            //        ExReleaseFastMutex(&CurIconListLock);
             return Object;
          }
 //      }
       UserDereferenceCurIcon(Object);
    }
-
-   //  ExReleaseFastMutex(&CurIconListLock);
 
    return NULL;
 }
@@ -857,7 +853,7 @@ NtUserClipCursor(RECT *UnsafeRect)
 
    CurrentDesktop = UserGetCurrentDesktop();
    ASSERT(CurrentDesktop);
-   DesktopWindow = IntGetWindowObject(CurrentDesktop->DesktopWindow/*hWndDesktop*/);
+   DesktopWindow = UserGetWindowObject(CurrentDesktop->DesktopWindow/*hWndDesktop*/);
    
    if((Rect.right > Rect.left) && (Rect.bottom > Rect.top)
          && DesktopWindow && UnsafeRect != NULL)

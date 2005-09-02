@@ -13,7 +13,6 @@ typedef struct _ACCELERATOR_TABLE
       {
          /*---------- USER_OBJECT_HDR --------------*/
          HACCEL hSelf; /* want typesafe handle */
-         LONG refs_placeholder;
          BYTE flags_placeholder;
          /*---------- USER_OBJECT_HDR --------------*/
 

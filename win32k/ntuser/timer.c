@@ -579,9 +579,9 @@ NtUserSetTimer
 
    if (hWnd)
    {
-      if (!(Wnd = IntGetWindowObject(hWnd)))
+      if (!(Wnd = UserGetWindowObject(hWnd)))
       {
-         //SetLast
+         SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
          RETURN( 0);
       }
    }
@@ -611,9 +611,9 @@ NtUserKillTimer
 
    if (hWnd)
    {
-      if (!(Wnd = IntGetWindowObject(hWnd)))
+      if (!(Wnd = UserGetWindowObject(hWnd)))
       {
-         //SetLast
+         SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
          RETURN( FALSE);
       }
    }
@@ -644,9 +644,9 @@ NtUserSetSystemTimer(
 
    if (hWnd)
    {
-      if (!(Wnd = IntGetWindowObject(hWnd)))
+      if (!(Wnd = UserGetWindowObject(hWnd)))
       {
-         //SetLast
+         SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
          RETURN( 0);
       }
    }
@@ -675,9 +675,9 @@ NtUserKillSystemTimer(
 
    if (hWnd)
    {
-      if (!(Wnd = IntGetWindowObject(hWnd)))
+      if (!(Wnd = UserGetWindowObject(hWnd)))
       {
-         //SetLast
+         SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
          RETURN( FALSE);
       }
    }

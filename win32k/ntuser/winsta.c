@@ -362,7 +362,7 @@ coUserInitializeDesktopGraphics(VOID)
 
   UserAcquireOrReleaseInputOwnership(FALSE);
   /* Setup the cursor */
-  coUserLoadDefaultCursors();
+  co_UserLoadDefaultCursors();
 
   return TRUE;
 }

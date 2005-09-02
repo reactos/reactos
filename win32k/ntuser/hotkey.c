@@ -219,8 +219,8 @@ NtUserRegisterHotKey(HWND hWnd,
   }
   else
   {
-    Window = IntGetWindowObject(hWnd);
-    if(!Window)
+    
+    if(!(Window = UserGetWindowObject(hWnd)))
     {
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       RETURN( FALSE);
@@ -279,8 +279,8 @@ NtUserUnregisterHotKey(HWND hWnd, int id)
   DPRINT("Enter NtUserUnregisterHotKey\n");
   UserEnterExclusive();
    
-  Window = IntGetWindowObject(hWnd);
-  if(!Window)
+  
+  if(!(Window = UserGetWindowObject(hWnd)))
   {
     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
     RETURN( FALSE);

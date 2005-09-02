@@ -151,7 +151,7 @@ VIS_ComputeVisibleRegion(
 }
 
 VOID FASTCALL
-coVIS_WindowLayoutChanged(
+co_VIS_WindowLayoutChanged(
    PWINDOW_OBJECT Window,
    HRGN NewlyExposed)
 {
@@ -162,16 +162,17 @@ coVIS_WindowLayoutChanged(
    NtGdiCombineRgn(Temp, NewlyExposed, NULL, RGN_COPY);
 
    Parent = Window->ParentWnd;
-   DPRINT1("Parent wnd=0x%x, queue=0x%x\n",Parent,Parent->Queue);
+   DPRINT("Parent wnd=0x%x, queue=0x%x\n",Parent,Parent->Queue);
    if(Parent)
    {
       NtGdiOffsetRgn(Temp,
                      Window->WindowRect.left - Parent->ClientRect.left,
                      Window->WindowRect.top - Parent->ClientRect.top);
 
-     coUserRedrawWindow(Parent, NULL, Temp,
+      co_UserRedrawWindow(Parent, NULL, Temp,
                      RDW_FRAME | RDW_ERASE | RDW_INVALIDATE |
                      RDW_ALLCHILDREN);
+
    }
    NtGdiDeleteObject(Temp);
 }

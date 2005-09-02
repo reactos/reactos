@@ -18,7 +18,6 @@ typedef struct _CURICON_OBJECT
       {
          /*---------- USER_OBJECT_HDR --------------*/
          HCURSOR hSelf; /* want typesafe handle */
-         LONG refs_placeholder;
          BYTE flags_placeholder;
          /*---------- USER_OBJECT_HDR --------------*/
 

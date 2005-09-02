@@ -641,11 +641,10 @@ NtGdiUpdateColors(HDC hDC)
    
    inUser = UserIsEntered();
    
-   //FIXME
    if (!inUser){
       UserEnterExclusive();
    }
-   //hWnd = (HWND)NtUserCallOneParam((DWORD)hDC, ONEPARAM_ROUTINE_WINDOWFROMDC);
+
    Wnd = GetWnd(IntWindowFromDC(hDC));
    if (Wnd == NULL)
    {
@@ -655,8 +654,8 @@ NtGdiUpdateColors(HDC hDC)
       }
       return FALSE;
    }
-   //FIXME
-   ret = coUserRedrawWindow(Wnd, NULL, 0, RDW_INVALIDATE);
+
+   ret = co_UserRedrawWindow(Wnd, NULL, 0, RDW_INVALIDATE);
    
    if (!inUser){
       UserLeave();

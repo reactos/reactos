@@ -12,7 +12,7 @@ extern PWINSTATION_OBJECT gInteractiveWinSta;
 #define UserGetCurrentQueue() (&PsGetWin32Thread()->Queue)
 
 #define UserGetForegroundWThread() (QUEUE_2_WTHREAD(gInputDesktop->ActiveQueue))
-#define UserGetForegroundQueue() (gInputDesktop->ActiveQueue)
+#define UserGetForegroundQueue() (gInputDesktop ? gInputDesktop->ActiveQueue : NULL)
 #define UserSetForegroundQueue(q) (gInputDesktop->ActiveQueue = (q))
 
 
@@ -33,44 +33,28 @@ IntTranslateKbdMessage(LPMSG lpMsg, HKL dwhkl);
 
 /******************** OBJECT.C ***************/
 
-BOOLEAN FASTCALL UserSetCheckDestroy(PUSER_OBJECT_HDR hdr);
-
-VOID FASTCALL UserDestroyObject(PUSER_OBJECT_HDR obj);
-
 /******************** HANDLE.C ***************/
 
 extern USER_HANDLE_TABLE gHandleTable;
 
 PUSER_HANDLE_ENTRY handle_to_entry(PUSER_HANDLE_TABLE ht, HANDLE handle );
 
+#define VOLATILE_OBJECTS_LIST SINGLE_LIST_ENTRY __object_list__ = {NULL};
+   
+   
+#define UserLinkVolatileObject(obj) UserLinkVolatileObject2(&obj->hdr, &__object_list__, (PVOLATILE_OBJECT_ENTRY)_alloca(sizeof(VOLATILE_OBJECT_ENTRY)))
+#define UserValidateVolatileObjects()  UserValidateVolatileObjects2(&__object_list__)
 
-#include <malloc.h>
+VOID FASTCALL UserLinkVolatileObject2(PUSER_OBJECT_HDR hdr, PSINGLE_LIST_ENTRY list, PVOLATILE_OBJECT_ENTRY e);
+BOOLEAN FASTCALL UserValidateVolatileObjects2(PSINGLE_LIST_ENTRY list);
+
+#define UserGetEntry(obj) UserGetEntry2(&(obj)->hdr)
+#define UserValidateEntry(obj) UserValidateEntry2(&(obj))
 
 
-#define UserReferenceObject(obj) (obj->hdr.refs++)
+inline OBJECT_ENTRY FASTCALL UserGetEntry2(PUSER_OBJECT_HDR hdr);
+inline BOOLEAN FASTCALL UserValidateEntry2(POBJECT_ENTRY e);
 
-#define UserDereferenceObject(obj){ \
-   if (--obj->hdr.refs == 0 && obj->hdr.flags & USER_OBJ_DESTROYING && !(obj->hdr.flags & USER_OBJ_DESTROYED)){ \
-      UserDestroyObject(&obj->hdr); \
-   } \
-}
-
-
-#define UserReferenceObjectCo(obj){ \
-   PUSER_REFERENCE_ENTRY ref = (PUSER_REFERENCE_ENTRY)_alloca(sizeof(USER_REFERENCE_ENTRY)); \
-   obj->hdr.refs++; \
-   ref->hdr = &obj->hdr; \
-   PushEntryList(&PsGetWin32Thread()->UserObjReferencesStack, &ref->Entry); \
-}
-
-#define UserDereferenceObjectCo(obj){ \
-   PSINGLE_LIST_ENTRY entry = PopEntryList(&PsGetWin32Thread()->UserObjReferencesStack); \
-   PUSER_REFERENCE_ENTRY ref = CONTAINING_RECORD(entry, USER_REFERENCE_ENTRY, Entry); \
-   ASSERT(&obj->hdr == ref->hdr); \
-   if (--ref->hdr->refs == 0 && obj->hdr.flags & USER_OBJ_DESTROYING && !(obj->hdr.flags & USER_OBJ_DESTROYED)) { \
-      UserDestroyObject(ref->hdr); \
-   } \
-}
    
 VOID UserInitHandleTable(PUSER_HANDLE_TABLE ht, PVOID mem, ULONG bytes);
 HANDLE UserAllocHandle(PUSER_HANDLE_TABLE ht, PVOID object, USER_OBJECT_TYPE type );
@@ -90,7 +74,7 @@ UserGetProp(PWINDOW_OBJECT WindowObject, ATOM Atom);
 /************* CALLBACK.C *****************/
 
 LRESULT STDCALL
-coUserCallWindowProc(WNDPROC Proc,
+co_UserCallWindowProc(WNDPROC Proc,
                   BOOLEAN IsAnsiProc,
                   HWND Wnd,
                   UINT Message,
@@ -99,7 +83,7 @@ coUserCallWindowProc(WNDPROC Proc,
                   INT lParamBufferSize);
 
 VOID STDCALL
-coUserCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
+co_UserCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
              HWND hWnd,
              UINT Msg,
              ULONG_PTR CompletionCallbackContext,
@@ -107,13 +91,13 @@ coUserCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
 
 
 HMENU STDCALL
-coUserLoadSysMenuTemplate();
+co_UserLoadSysMenuTemplate();
 
 BOOL STDCALL
-coUserLoadDefaultCursors(VOID);
+co_UserLoadDefaultCursors(VOID);
 
 LRESULT STDCALL
-coUserCallHookProc(INT HookId,
+co_UserCallHookProc(INT HookId,
                 INT Code,
                 WPARAM wParam,
                 LPARAM lParam,
@@ -176,7 +160,7 @@ PDESKTOP_OBJECT FASTCALL
 UserGetActiveDesktop(VOID);
 
 NTSTATUS FASTCALL
-coUserShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width, ULONG Height);
+co_UserShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width, ULONG Height);
 
 NTSTATUS FASTCALL
 IntHideDesktop(PDESKTOP_OBJECT Desktop);
@@ -203,7 +187,7 @@ IntDesktopUpdatePerUserSettings(BOOL bEnable);
 BOOL IntRegisterShellHookWindow(HWND hWnd);
 BOOL IntDeRegisterShellHookWindow(HWND hWnd);
 
-VOID IntShellHookNotify(WPARAM Message, LPARAM lParam);
+VOID co_UserShellHookNotify(WPARAM Message, LPARAM lParam);
 
 #define IntIsActiveDesktop(Desktop) ((Desktop) == (gInputDesktop))
 
@@ -281,17 +265,17 @@ PWINDOW_OBJECT FASTCALL
 UserGetThreadFocusWindow();
 
 BOOL FASTCALL
-coUserMouseActivateWindow(PWINDOW_OBJECT Window);
+co_UserMouseActivateWindow(PWINDOW_OBJECT Window);
 BOOL FASTCALL
-coUserSetForegroundWindow(PWINDOW_OBJECT Window);
+co_UserSetForegroundWindow(PWINDOW_OBJECT Window);
 PWINDOW_OBJECT FASTCALL
-coUserSetActiveWindow(PWINDOW_OBJECT Window);
+co_UserSetActiveWindow(PWINDOW_OBJECT Window);
 
 PWINDOW_OBJECT FASTCALL
 UserGetForegroundWindow(VOID);
 
 PWINDOW_OBJECT FASTCALL
-coUserSetFocus(PWINDOW_OBJECT Wnd OPTIONAL);
+co_UserSetFocus(PWINDOW_OBJECT Wnd OPTIONAL);
 
 
 /******************** PAINTING.C ********************************/
@@ -299,12 +283,12 @@ coUserSetFocus(PWINDOW_OBJECT Wnd OPTIONAL);
 VOID FASTCALL
 IntValidateParent(PWINDOW_OBJECT Child, HRGN ValidRegion);
 BOOL FASTCALL
-coUserRedrawWindow(PWINDOW_OBJECT Wnd, const RECT* UpdateRect, HRGN UpdateRgn, ULONG Flags);
+co_UserRedrawWindow(PWINDOW_OBJECT Wnd, const RECT* UpdateRect, HRGN UpdateRgn, ULONG Flags);
 BOOL FASTCALL
 IntGetPaintMessage(HWND hWnd, UINT MsgFilterMin, UINT MsgFilterMax, PW32THREAD Thread,
                    MSG *Message, BOOL Remove);
 
-BOOL FASTCALL coUserValidateRgn(PWINDOW_OBJECT hWnd, HRGN hRgn);
+BOOL FASTCALL co_UserValidateRgn(PWINDOW_OBJECT hWnd, HRGN hRgn);
 
 
 #define IntLockWindowUpdate(Window) \
@@ -321,7 +305,7 @@ UserScrollDC(HDC hDC, INT dx, INT dy, const RECT *lprcScroll,
    const RECT *lprcClip, HRGN hrgnUpdate, LPRECT lprcUpdate);
 
 INT FASTCALL
-coUserGetUpdateRgn(PWINDOW_OBJECT Window, HRGN hRgn, BOOL bErase);
+co_UserGetUpdateRgn(PWINDOW_OBJECT Window, HRGN hRgn, BOOL bErase);
 
 /******************** MESSAGE.C ********************************/
 
@@ -329,7 +313,7 @@ BOOL FASTCALL
 UserPostMessage(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 
 LRESULT FASTCALL
-coUserSendMessage(HWND hWnd,
+co_UserSendMessage(HWND hWnd,
       UINT Msg,
       WPARAM wParam,
       LPARAM lParam);
@@ -337,7 +321,7 @@ coUserSendMessage(HWND hWnd,
 
            
 LRESULT FASTCALL
-coUserSendMessageTimeout(HWND hWnd,
+co_UserSendMessageTimeout(HWND hWnd,
                       UINT Msg,
                       WPARAM wParam,
                       LPARAM lParam,
@@ -352,12 +336,15 @@ IntDispatchMessage(MSG* Msg);
 
 /************************ WINDOW.C *****************************/
 
+PWINDOW_OBJECT FASTCALL UserGetWindowObject_UpdateHandle2(HWND* h);
+#define UserGetWindowObject_UpdateHandle(handle) UserGetWindowObject_UpdateHandle2(&(handle))
+
 BOOL FASTCALL
 UserSetSystemMenu(PWINDOW_OBJECT WindowObject, PMENU_OBJECT MenuObject);
 
 inline VOID FASTCALL UserFreeWindowObject(PWINDOW_OBJECT Wnd);
 
-PWINDOW_OBJECT FASTCALL IntGetWindowObject(HWND hWnd);
+inline PWINDOW_OBJECT FASTCALL UserGetWindowObject(HWND hWnd);
 
 PWINDOW_OBJECT FASTCALL UserCreateWindowObject(ULONG bytes);
 
@@ -368,13 +355,118 @@ LONG FASTCALL
 UserGetWindowLong(PWINDOW_OBJECT Wnd, DWORD Index, BOOL Ansi);
 
 LONG FASTCALL
-coUserSetWindowLong(PWINDOW_OBJECT Wnd, DWORD Index, LONG NewValue, BOOL Ansi);
+co_UserSetWindowLong(PWINDOW_OBJECT Wnd, DWORD Index, LONG NewValue, BOOL Ansi);
 
 BOOLEAN FASTCALL
-coUserDestroyWindow(PWINDOW_OBJECT Wnd);
+co_UserDestroyWindow(PWINDOW_OBJECT Wnd);
 
 HWND FASTCALL
-GetHwnd(PWINDOW_OBJECT Wnd);
+GetHwndSafe(PWINDOW_OBJECT Wnd);
+
+#define HAS_DLGFRAME(Style, ExStyle) \
+            (((ExStyle) & WS_EX_DLGMODALFRAME) || \
+            (((Style) & WS_DLGFRAME) && (!((Style) & WS_THICKFRAME))))
+
+#define HAS_THICKFRAME(Style, ExStyle) \
+            (((Style) & WS_THICKFRAME) && \
+            (!(((Style) & (WS_DLGFRAME | WS_BORDER)) == WS_DLGFRAME)))
+
+#define HAS_THINFRAME(Style, ExStyle) \
+            (((Style) & WS_BORDER) || (!((Style) & (WS_CHILD | WS_POPUP))))
+
+#define IntIsDesktopWindow(WndObj) \
+  (WndObj->ParentWnd == NULL)
+
+#define IntIsBroadcastHwnd(hWnd) \
+  (hWnd == HWND_BROADCAST || hWnd == HWND_TOPMOST)
+
+#if 0
+#define IntWndBelongsToThread(WndObj, W32Thread) \
+  (((WndObj->W32Thread->Thread && WndObj->W32Thread->Thread->Tcb.Win32Thread)) && \
+   (WndObj->W32Thread->Thread->Tcb.Win32Thread == W32Thread))
+#endif
+
+#define IntWndBelongsToThread(WndObj, _W32Thread) (QUEUE_2_WTHREAD((WndObj)->Queue) == (_W32Thread))
+
+
+#define IntGetWndThreadId(WndObj) \
+  WndObj->WThread->Thread->Cid.UniqueThread
+
+#define IntGetWndProcessId(WndObj) \
+  WndObj->WThread->Thread->ThreadsProcess->UniqueProcessId
+
+PWINDOW_OBJECT FASTCALL
+IntGetProcessWindowObject(PW32THREAD Thread, HWND hWnd);
+
+BOOL FASTCALL
+IntIsWindow(HWND hWnd);
+
+PWINDOW_OBJECT* FASTCALL
+UserListChildWnd(PWINDOW_OBJECT Window);
+
+HWND* FASTCALL 
+IntWinListChildren(PWINDOW_OBJECT Window);
+
+NTSTATUS FASTCALL
+InitWindowImpl (VOID);
+
+NTSTATUS FASTCALL
+CleanupWindowImpl (VOID);
+
+VOID FASTCALL
+IntGetClientRect (PWINDOW_OBJECT WindowObject, PRECT Rect);
+
+PWINDOW_OBJECT FASTCALL 
+UserGetActiveWindow(VOID);
+
+BOOL FASTCALL
+UserIsWindowVisible (PWINDOW_OBJECT hWnd);
+
+BOOL FASTCALL
+UserIsChildWindow (PWINDOW_OBJECT Parent, PWINDOW_OBJECT Child);
+
+VOID FASTCALL
+IntUnlinkWindow(PWINDOW_OBJECT Wnd);
+
+VOID FASTCALL
+IntLinkWindow(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndParent, PWINDOW_OBJECT WndPrevSibling);
+
+PWINDOW_OBJECT FASTCALL
+UserGetAncestor(PWINDOW_OBJECT Wnd, UINT Type);
+
+PWINDOW_OBJECT FASTCALL
+UserGetParent(PWINDOW_OBJECT Wnd);
+
+inline PWINDOW_OBJECT FASTCALL
+UserGetOwner(PWINDOW_OBJECT Wnd);
+
+INT FASTCALL
+IntGetWindowRgn(HWND hWnd, HRGN hRgn);
+
+INT FASTCALL
+IntGetWindowRgnBox(HWND hWnd, RECT *Rect);
+
+PWINDOW_OBJECT FASTCALL
+UserGetShellWindow();
+
+BOOL FASTCALL
+IntGetWindowInfo(PWINDOW_OBJECT WindowObject, PWINDOWINFO pwi);
+
+VOID FASTCALL
+IntGetWindowBorderMeasures(PWINDOW_OBJECT WindowObject, UINT *cx, UINT *cy);
+
+BOOL FASTCALL
+IntAnyPopup(VOID);
+
+BOOL FASTCALL
+IntIsWindowInDestroy(PWINDOW_OBJECT Window);
+
+DWORD IntRemoveWndProcHandle(WNDPROC Handle);
+DWORD IntRemoveProcessWndProcHandles(HANDLE ProcessID);
+DWORD IntAddWndProcHandle(WNDPROC WindowProc, BOOL IsUnicode);
+
+BOOL FASTCALL
+co_UserShowOwnedPopups( HWND owner, BOOL fShow );
 
 /************************* WINSTA.C ****************************/
 
@@ -441,47 +533,16 @@ PWINSTATION_OBJECT FASTCALL IntGetWinStaObj(VOID);
 /************************* MENU.C ****************************/
 
 PMENU_OBJECT FASTCALL
-coUserGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert, BOOL RetMenu);
-
-PMENU_OBJECT FASTCALL UserAllocMenuObject(HMENU* h);
+co_UserGetSystemMenu(PWINDOW_OBJECT WindowObject, BOOL bRevert, BOOL RetMenu);
 
 inline PMENU_OBJECT FASTCALL UserGetMenuObject(HMENU hMenu);
-
-PMENU_OBJECT FASTCALL
-UserCreateMenu(BOOL PopupMenu);
-
-
-BOOL FASTCALL
-IntFreeMenuItem(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem,
-    BOOL RemoveFromList, BOOL bRecurse);
-
-BOOL FASTCALL
-IntRemoveMenuItem(PMENU_OBJECT MenuObject, UINT uPosition, UINT uFlags,
-                   BOOL bRecurse);
-
-UINT FASTCALL
-IntDeleteMenuItems(PMENU_OBJECT MenuObject, BOOL bRecurse);
 
 VOID FASTCALL
 UserDestroyMenu(PMENU_OBJECT MenuObject, BOOL bRecurse);
 
-PMENU_OBJECT FASTCALL
-IntCloneMenu(PMENU_OBJECT Source);
-
-BOOL FASTCALL
-UserSetMenuFlagRtoL(PMENU_OBJECT MenuObject);
-
-BOOL FASTCALL
-IntSetMenuContextHelpId(PMENU_OBJECT MenuObject, DWORD dwContextHelpId);
-
-BOOL FASTCALL
-UserGetMenuInfo(PMENU_OBJECT MenuObject, PROSMENUINFO lpmi);
-
 BOOL FASTCALL
 IntIsMenu(HMENU hMenu);
 
-BOOL FASTCALL
-UserSetMenuInfo(PMENU_OBJECT MenuObject, PROSMENUINFO lpmi);
 
 BOOL FASTCALL
 UserMenuItemInfo(
@@ -491,19 +552,6 @@ UserMenuItemInfo(
    PROSMENUITEMINFO ItemInfo,
    BOOL Set
    );
-
-int FASTCALL
-UserGetMenuItemByFlag(PMENU_OBJECT MenuObject, UINT uSearchBy, UINT fFlag,
-                      PMENU_ITEM *MenuItem, PMENU_ITEM *PrevMenuItem);
-
-UINT FASTCALL
-IntEnableMenuItem(PMENU_OBJECT MenuObject, UINT uIDEnableItem, UINT uEnable);
-
-DWORD FASTCALL
-IntCheckMenuItem(PMENU_OBJECT MenuObject, UINT uIDCheckItem, UINT uCheck);
-
-BOOL FASTCALL
-IntSetMenuDefaultItem(PMENU_OBJECT MenuObject, UINT uItem, UINT fByPos);
 
 
 BOOL FASTCALL
@@ -518,11 +566,6 @@ IntSetMenuItemRect(PMENU_OBJECT MenuObject, UINT Item, BOOL fByPos, RECT *rcRect
 BOOL FASTCALL
 IntCleanupMenus(PW32PROCESS Win32Process);
 
-BOOL FASTCALL
-IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, BOOL fByPosition,
-                  PROSMENUITEMINFO ItemInfo);
-
-
 NTSTATUS FASTCALL
 InitMenuImpl(VOID);
 
@@ -532,19 +575,19 @@ CleanupMenuImpl(VOID);
 /************************* CARET.C ****************************/
 
 BOOL FASTCALL
-coUserShowCaret(PWINDOW_OBJECT Wnd);
+co_UserShowCaret(PWINDOW_OBJECT Wnd);
 
 BOOL FASTCALL
-coUserSetCaretPos(int X, int Y);
+co_UserSetCaretPos(int X, int Y);
 
 BOOL FASTCALL
-coUserHideCaret(PWINDOW_OBJECT Wnd);
+co_UserHideCaret(PWINDOW_OBJECT Wnd);
 
 BOOL FASTCALL
 UserSwitchCaretShowing(PTHRDCARETINFO Info);
 
 BOOL FASTCALL
-coUserDestroyCaret(PW32THREAD Win32Thread);
+co_UserDestroyCaret(PW32THREAD Win32Thread);
 
 BOOL FASTCALL
 UserSetCaretBlinkTime(UINT uMSeconds);
@@ -554,6 +597,27 @@ UserDrawCaret(HWND hWnd);
 
 /************************* WINPOS.C ****************************/
 
+UINT
+FASTCALL co_WinPosArrangeIconicWindows(PWINDOW_OBJECT parent);
+LRESULT FASTCALL
+co_WinPosGetNonClientSize(PWINDOW_OBJECT Wnd, RECT* WindowRect, RECT* ClientRect);
+UINT FASTCALL
+co_WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
+          POINT* MinTrack, POINT* MaxTrack);
+UINT FASTCALL
+co_WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos);
+BOOLEAN FASTCALL
+co_WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
+         INT cy, UINT flags);
+BOOLEAN FASTCALL
+co_WinPosShowWindow(PWINDOW_OBJECT Wnd, INT Cmd);
+USHORT FASTCALL
+co_WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, PUSER_MESSAGE_QUEUE OnlyHitTests, POINT *WinPoint,
+            PWINDOW_OBJECT* Window);
+VOID FASTCALL co_WinPosActivateOtherWindow(PWINDOW_OBJECT Window);
+
+PINTERNALPOS FASTCALL WinPosInitInternalPos(PWINDOW_OBJECT WindowObject,
+                                            POINT *pt, PRECT RestoreRect);
 
 BOOL FASTCALL
 UserGetClientOrigin(PWINDOW_OBJECT hWnd, LPPOINT Point);
@@ -561,7 +625,7 @@ UserGetClientOrigin(PWINDOW_OBJECT hWnd, LPPOINT Point);
 /************************* SCROLLBAR.C ****************************/
 
 DWORD FASTCALL
-coUserShowScrollBar(PWINDOW_OBJECT Wnd, int wBar, DWORD bShow);
+co_UserShowScrollBar(PWINDOW_OBJECT Wnd, int wBar, DWORD bShow);
 
 #define IntGetScrollbarInfoFromWindow(Window, i) \
   ((PSCROLLBARINFO)(&((Window)->Scroll + i)->ScrollBarInfo))
@@ -572,7 +636,7 @@ coUserShowScrollBar(PWINDOW_OBJECT Wnd, int wBar, DWORD bShow);
 #define SBOBJ_TO_SBID(Obj) ((Obj) - OBJID_HSCROLL)
 #define SBID_IS_VALID(id)  (id == SB_HORZ || id == SB_VERT || id == SB_CTL)
 
-BOOL FASTCALL coIntCreateScrollBars(PWINDOW_OBJECT Window);
+BOOL FASTCALL co_IntCreateScrollBars(PWINDOW_OBJECT Window);
 BOOL FASTCALL IntDestroyScrollBars(PWINDOW_OBJECT Window);
 
 
@@ -603,7 +667,7 @@ UserRemoveTimersThread(PW32THREAD W32Thread);
 PHOOK FASTCALL UserCreateHookObject();
 
 PHOOK FASTCALL UserGetHookObject(HHOOK hHook);
-LRESULT FASTCALL coHOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam);
+LRESULT FASTCALL co_HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam);
 VOID FASTCALL HOOK_DestroyThreadHooks(PETHREAD Thread);
 
 
@@ -724,7 +788,7 @@ MsqRemoveTimer(
 BOOL FASTCALL
 MsqIsHung(PUSER_MESSAGE_QUEUE MessageQueue);
 NTSTATUS FASTCALL
-coMsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
+co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
           HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam,
                UINT uTimeout, BOOL Block, BOOL HookMessage,
                ULONG_PTR *uResult);
@@ -738,7 +802,7 @@ MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 VOID FASTCALL
 MsqPostQuitMessage(PUSER_MESSAGE_QUEUE MessageQueue, ULONG ExitCode);
 BOOLEAN STDCALL
-coMsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
+co_MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
           IN BOOLEAN Hardware,
           IN BOOLEAN Remove,
           IN HWND Wnd,
@@ -756,9 +820,9 @@ MsqGetHardwareMessageQueue(VOID);
 NTSTATUS FASTCALL
 MsqInitializeImpl(VOID);
 BOOLEAN FASTCALL
-coMsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue);
+co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue);
 NTSTATUS FASTCALL
-coMsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue, HWND WndFilter,
+co_MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue, HWND WndFilter,
                       UINT MsgFilterMin, UINT MsgFilterMax);
 VOID FASTCALL
 MsqSendNotifyMessage(PUSER_MESSAGE_QUEUE MessageQueue,
@@ -774,7 +838,7 @@ void cp(char* f, int l);
 
 
 VOID FASTCALL
-coMsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
+co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 VOID FASTCALL
 MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam);
 VOID FASTCALL
@@ -854,7 +918,7 @@ VIS_ComputeVisibleRegion(PWINDOW_OBJECT Window, BOOLEAN ClientArea,
    BOOLEAN ClipChildren, BOOLEAN ClipSiblings);
 
 VOID FASTCALL
-coVIS_WindowLayoutChanged(PWINDOW_OBJECT Window, HRGN UncoveredRgn);
+co_VIS_WindowLayoutChanged(PWINDOW_OBJECT Window, HRGN UncoveredRgn);
 
 
 /**************************** NTUSER.C ************************/

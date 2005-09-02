@@ -45,7 +45,7 @@ PUSER_MESSAGE_QUEUE W32kGetPrimitiveQueue()
 }
 
 BOOL FASTCALL
-coUserRegisterLogonProcess(HANDLE ProcessId, BOOL Register)
+co_UserRegisterLogonProcess(HANDLE ProcessId, BOOL Register)
 {
   PEPROCESS Process;
   NTSTATUS Status;
@@ -124,7 +124,7 @@ NtUserCallNoParam(DWORD Routine)
       break;
 
     case NOPARAM_ROUTINE_DESTROY_CARET:
-      Result = (DWORD)coUserDestroyCaret(PsGetWin32Thread());
+      Result = (DWORD)co_UserDestroyCaret(PsGetWin32Thread());
       break;
 
     case NOPARAM_ROUTINE_INIT_MESSAGE_PUMP:
@@ -185,7 +185,7 @@ NtUserCallOneParam(
       PWINDOW_OBJECT WindowObject;
       DWORD Result;
 
-      WindowObject = IntGetWindowObject((HWND)Param);
+      WindowObject = UserGetWindowObject((HWND)Param);
       if(!WindowObject)
       {
         SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
@@ -202,7 +202,7 @@ NtUserCallOneParam(
       PWINDOW_OBJECT WindowObject;
       DWORD Result;
 
-      WindowObject = IntGetWindowObject((HWND)Param);
+      WindowObject = UserGetWindowObject((HWND)Param);
       if(!WindowObject)
       {
         SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
@@ -220,7 +220,7 @@ NtUserCallOneParam(
       PWINDOW_OBJECT WindowObject;
       DWORD Result;
 
-      WindowObject = IntGetWindowObject((HWND)Param);
+      WindowObject = UserGetWindowObject((HWND)Param);
       if(!WindowObject)
       {
         SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
@@ -267,7 +267,7 @@ NtUserCallOneParam(
       PWINDOW_OBJECT WindowObject;
       DWORD Result;
 
-      if(!(WindowObject = IntGetWindowObject((HWND)Param)))
+      if(!(WindowObject = UserGetWindowObject((HWND)Param)))
       {
         SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
         RETURN( FALSE);
@@ -316,7 +316,7 @@ NtUserCallOneParam(
       PWINDOW_OBJECT WindowObject;
       DWORD Result;
 
-      WindowObject = IntGetWindowObject((HWND)Param);
+      WindowObject = UserGetWindowObject((HWND)Param);
       if(!WindowObject)
       {
         SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
@@ -476,12 +476,12 @@ NtUserCallTwoParam(
      RETURN( 0);
 
     case TWOPARAM_ROUTINE_SHOWOWNEDPOPUPS:
-     RETURN( (DWORD)coUserShowOwnedPopups((HWND) Param1, (BOOL) Param2));
+     RETURN( (DWORD)co_UserShowOwnedPopups((HWND) Param1, (BOOL) Param2));
 
     case TWOPARAM_ROUTINE_ROS_SHOWWINDOW:
     {
 #define WIN_NEEDS_SHOW_OWNEDPOPUP (0x00000040)
-          PWINDOW_OBJECT Window = IntGetWindowObject((HWND)Param1);
+          PWINDOW_OBJECT Window = UserGetWindowObject((HWND)Param1);
 	  DPRINT1("ROS_SHOWWINDOW\n");
           if (Window == 0)
            {
@@ -505,17 +505,17 @@ NtUserCallTwoParam(
      RETURN( 0);
 
     case TWOPARAM_ROUTINE_VALIDATERGN:
-      WindowObject = IntGetWindowObject((HWND)Param1);
+      WindowObject = UserGetWindowObject((HWND)Param1);
       if(!WindowObject)
       {
          SetLastWin32Error(ERROR_INVALID_HANDLE);
          RETURN( (DWORD)FALSE);
       }
 
-      RETURN( (DWORD)coUserValidateRgn((PWINDOW_OBJECT) WindowObject, (HRGN) Param2));
+      RETURN( (DWORD)co_UserValidateRgn((PWINDOW_OBJECT) WindowObject, (HRGN) Param2));
 
     case TWOPARAM_ROUTINE_SETWNDCONTEXTHLPID:
-      WindowObject = IntGetWindowObject((HWND)Param1);
+      WindowObject = UserGetWindowObject((HWND)Param1);
       if(!WindowObject)
       {
         SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -527,14 +527,14 @@ NtUserCallTwoParam(
       RETURN( (DWORD)TRUE);
 
     case TWOPARAM_ROUTINE_SETCARETPOS:
-      RETURN( (DWORD)coUserSetCaretPos((int)Param1, (int)Param2));
+      RETURN( (DWORD)co_UserSetCaretPos((int)Param1, (int)Param2));
 
     case TWOPARAM_ROUTINE_GETWINDOWINFO:
     {
       WINDOWINFO wi;
       DWORD Ret;
 
-      if(!(WindowObject = IntGetWindowObject((HWND)Param1)))
+      if(!(WindowObject = UserGetWindowObject((HWND)Param1)))
       {
         SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
         RETURN( FALSE);
@@ -575,7 +575,7 @@ NtUserCallTwoParam(
     }
 
     case TWOPARAM_ROUTINE_REGISTERLOGONPROC:
-      RETURN( (DWORD)coUserRegisterLogonProcess((HANDLE)Param1, (BOOL)Param2));
+      RETURN( (DWORD)co_UserRegisterLogonProcess((HANDLE)Param1, (BOOL)Param2));
 
     case TWOPARAM_ROUTINE_SETSYSCOLORS:
     {
@@ -700,8 +700,7 @@ NtUserCallHwndLock(
   DPRINT("Enter NtUserCallHwndLock\n");
   UserEnterExclusive();
 
-   Window = IntGetWindowObject(hWnd);
-   if (Window == 0)
+   if (!(Window = UserGetWindowObject(hWnd)))
    {
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       RETURN( FALSE);
@@ -711,7 +710,7 @@ NtUserCallHwndLock(
    switch (Routine)
    {
       case HWNDLOCK_ROUTINE_ARRANGEICONICWINDOWS:
-         coWinPosArrangeIconicWindows(Window);
+         co_WinPosArrangeIconicWindows(Window);
          break;
 
       case HWNDLOCK_ROUTINE_DRAWMENUBAR:
@@ -725,7 +724,7 @@ NtUserCallHwndLock(
               MenuObject->MenuInfo.WndOwner = hWnd;
               MenuObject->MenuInfo.Height = 0;
 
-              coWinPosSetWindowPos(hWnd, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
+              co_WinPosSetWindowPos(hWnd, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
                            SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED );
               Ret = TRUE;
               break;
@@ -736,7 +735,7 @@ NtUserCallHwndLock(
          break;
 
       case HWNDLOCK_ROUTINE_SETFOREGROUNDWINDOW:
-         Ret = coUserSetForegroundWindow(Window);
+         Ret = co_UserSetForegroundWindow(Window);
          break;
 
       case HWNDLOCK_ROUTINE_UPDATEWINDOW:
@@ -802,7 +801,7 @@ NtUserGetThreadState(
    switch (Routine)
    {
       case 0:
-         RETURN( (DWORD)GetHwnd(UserGetThreadFocusWindow()));
+         RETURN( (DWORD)GetHwndSafe(UserGetThreadFocusWindow()));
    }
    RETURN( 0);
    
