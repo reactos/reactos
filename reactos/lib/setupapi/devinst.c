@@ -3873,12 +3873,6 @@ SetupDiOpenDeviceInfoW(
         if (deviceInfo)
         {
             /* good one found */
-            if (DeviceInfoData)
-            {
-                memcpy(&DeviceInfoData->ClassGuid, &deviceInfo->ClassGuid, sizeof(GUID));
-                DeviceInfoData->DevInst = 0; /* FIXME */
-                DeviceInfoData->Reserved = (ULONG_PTR)deviceInfo;
-            }
             ret = TRUE;
         }
         else
