@@ -263,6 +263,12 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
    Request = EiDequeueMessagePort(Port);
    KeReleaseSpinLock(&Port->Lock, oldIrql);
 
+   if (Request == NULL)
+     {
+       ObDereferenceObject(Port);
+       return STATUS_UNSUCCESSFUL;
+     }
+
    if (Request->Message.u2.s2.Type == LPC_CONNECTION_REQUEST)
      {
        PORT_MESSAGE Header;
