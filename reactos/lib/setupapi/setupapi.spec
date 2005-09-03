@@ -59,10 +59,10 @@
 @ stdcall CM_Get_Class_Key_NameW(ptr wstr ptr long)
 @ stdcall CM_Get_Class_Key_Name_ExA(ptr str ptr long long)
 @ stdcall CM_Get_Class_Key_Name_ExW(ptr wstr ptr long long)
-@ stub CM_Get_Class_NameA
-@ stub CM_Get_Class_NameW
-@ stub CM_Get_Class_Name_ExA
-@ stub CM_Get_Class_Name_ExW
+@ stdcall CM_Get_Class_NameA(ptr str ptr long)
+@ stdcall CM_Get_Class_NameW(ptr wstr ptr long)
+@ stdcall CM_Get_Class_Name_ExA(ptr str ptr long long)
+@ stdcall CM_Get_Class_Name_ExW(ptr wstr ptr long long)
 @ stdcall CM_Get_Depth(ptr long long)
 @ stdcall CM_Get_Depth_Ex(ptr long long long)
 @ stdcall CM_Get_DevNode_Registry_PropertyA(long long ptr ptr ptr long)
@@ -166,6 +166,7 @@
 @ stub CM_Request_Device_EjectA
 @ stub CM_Request_Device_EjectW
 @ stub CM_Request_Eject_PC
+@ stub CM_Request_Eject_PC_Ex
 @ stub CM_Reset_Children_Marks
 @ stub CM_Reset_Children_Marks_Ex
 @ stub CM_Run_Detection

@@ -363,6 +363,21 @@ CONFIGRET WINAPI CM_Get_Class_Key_Name_ExA(
 }
 
 
+static BOOL GuidToString(LPGUID Guid, LPWSTR String)
+{
+    LPWSTR lpString;
+
+    if (UuidToStringW(Guid, &lpString) != RPC_S_OK)
+        return FALSE;
+
+    lstrcpyW(String, lpString);
+
+    RpcStringFree(&lpString);
+
+    return TRUE;
+}
+
+
 /***********************************************************************
  * CM_Get_Class_Key_Name_ExW [SETUPAPI.@]
  */
@@ -370,7 +385,7 @@ CONFIGRET WINAPI CM_Get_Class_Key_Name_ExW(
     LPGUID ClassGuid, LPWSTR pszKeyName, PULONG pulLength, ULONG ulFlags,
     HMACHINE hMachine)
 {
-    FIXME("%p %p %p %lx %lx\n",
+    TRACE("%p %p %p %lx %lx\n",
           ClassGuid, pszKeyName, pulLength, ulFlags, hMachine);
 
     if (ClassGuid == NULL || pszKeyName == NULL || pulLength == NULL)
@@ -385,12 +400,94 @@ CONFIGRET WINAPI CM_Get_Class_Key_Name_ExW(
         return CR_BUFFER_SMALL;
     }
 
-    if (UuidToStringW(ClassGuid, &pszKeyName) != RPC_S_OK)
+   if (!GuidToString(ClassGuid, pszKeyName))
         return CR_INVALID_DATA;
 
     *pulLength = MAX_GUID_STRING_LEN;
 
     return CR_SUCCESS;
+}
+
+
+/***********************************************************************
+ * CM_Get_Class_NameA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Class_NameA(
+    LPGUID ClassGuid, PCHAR Buffer, PULONG pulLength, ULONG ulFlags)
+{
+    TRACE("%p %p %p %lx\n", ClassGuid, Buffer, pulLength, ulFlags);
+    return CM_Get_Class_Name_ExA(ClassGuid, Buffer, pulLength, ulFlags,
+                                 NULL);
+}
+
+
+/***********************************************************************
+ * CM_Get_Class_NameW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Class_NameW(
+    LPGUID ClassGuid, PWCHAR Buffer, PULONG pulLength, ULONG ulFlags)
+{
+    TRACE("%p %p %p %lx\n", ClassGuid, Buffer, pulLength, ulFlags);
+    return CM_Get_Class_Name_ExW(ClassGuid, Buffer, pulLength, ulFlags,
+                                 NULL);
+}
+
+
+/***********************************************************************
+ * CM_Get_Class_Name_ExA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Get_Class_Name_ExA(
+    LPGUID ClassGuid, PCHAR Buffer, PULONG pulLength, ULONG ulFlags,
+    HMACHINE hMachine)
+{
+    FIXME("%p %p %p %lx %lx\n",
+          ClassGuid, Buffer, pulLength, ulFlags, hMachine);
+    return CR_FAILURE;
+}
+
+
+/***********************************************************************
+ * CM_Get_Class_Name_ExW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI
+CM_Get_Class_Name_ExW(
+    LPGUID ClassGuid, PWCHAR Buffer, PULONG pulLength, ULONG ulFlags,
+    HMACHINE hMachine)
+{
+    WCHAR szGuidString[MAX_GUID_STRING_LEN];
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+
+    TRACE("%p %p %p %lx %lx\n",
+          ClassGuid, Buffer, pulLength, ulFlags, hMachine);
+
+    if (ClassGuid == NULL || Buffer == NULL || pulLength == NULL)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    if (!GuidToString(ClassGuid, szGuidString))
+        return CR_INVALID_DATA;
+
+    TRACE("Guid %s\n", debugstr_w(szGuidString));
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, NULL))
+            return CR_FAILURE;
+    }
+
+    return PNP_GetClassName(BindingHandle,
+                            szGuidString,
+                            Buffer,
+                            pulLength,
+                            ulFlags);
 }
 
 

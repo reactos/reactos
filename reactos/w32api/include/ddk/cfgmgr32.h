@@ -862,8 +862,51 @@ CM_Get_Child_Ex(
   IN ULONG  ulFlags,
   IN HMACHINE  hMachine);
 
-/* FIXME: Obsolete CM_Get_Class_Name */
-/* FIXME: Obsolete CM_Get_Class_Name_Ex */
+CMAPI
+CONFIGRET
+WINAPI
+CM_Get_Class_NameA(
+  IN LPGUID  ClassGuid,
+  OUT PCHAR  Buffer,
+  IN OUT PULONG  pulLength,
+  IN ULONG  ulFlags);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Get_Class_NameW(
+  IN LPGUID  ClassGuid,
+  OUT PWCHAR  Buffer,
+  IN OUT PULONG  pulLength,
+  IN ULONG  ulFlags);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Get_Class_Name_ExA(
+  IN LPGUID  ClassGuid,
+  OUT PCHAR  Buffer,
+  IN OUT PULONG  pulLength,
+  IN ULONG  ulFlags,
+  IN HMACHINE  hMachine);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Get_Class_Name_ExW(
+  IN LPGUID  ClassGuid,
+  OUT PWCHAR  Buffer,
+  IN OUT PULONG  pulLength,
+  IN ULONG  ulFlags,
+  IN HMACHINE  hMachine);
+
+#ifdef UNICODE
+#define CM_Get_Class_Name CM_Get_Class_NameW
+#define CM_Get_Class_Name_Ex CM_Get_Class_Name_ExW
+#else
+#define CM_Get_Class_Name CM_Get_Class_NameA
+#define CM_Get_Class_Name_Ex CM_Get_Class_Name_ExA
+#endif /* UNICODE */
 
 CMAPI
 CONFIGRET
