@@ -228,10 +228,8 @@ Path::Split ( vector<string>& out,
 		prev = p;
 		p = strtok ( NULL, "/\\" );
 	}
-	if ( include_last )
+	if ( include_last && strcmp ( prev, "." ) )
 		out.push_back ( prev );
-	if ( out.back() == "." )
-		out.pop_back();
 }
 
 XMLFile::XMLFile()
