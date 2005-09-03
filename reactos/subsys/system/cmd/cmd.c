@@ -1358,6 +1358,8 @@ Initialize (int argc, TCHAR* argv[])
 	hOut = GetStdHandle (STD_OUTPUT_HANDLE);
 	hIn  = GetStdHandle (STD_INPUT_HANDLE);
 
+	SetEnvironmentVariable (_T("PROMPT"), _T("$P$G"));
+
 
 	if (argc >= 2 && !_tcsncmp (argv[1], _T("/?"), 2))
 	{
