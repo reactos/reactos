@@ -394,6 +394,8 @@ EngCreateDeviceSurface(IN DHSURF dhsurf,
   if (NewSurface == NULL)
 	return 0;
 
+  GDIOBJ_SetOwnership(NewSurface, NULL);
+
   BitmapObj = BITMAPOBJ_LockBitmap(NewSurface);
   if (! BITMAPOBJ_InitBitsLock(BitmapObj))
     {
@@ -402,8 +404,6 @@ EngCreateDeviceSurface(IN DHSURF dhsurf,
       return 0;
     }
   SurfObj = &BitmapObj->SurfObj;
-
-  GDIOBJ_SetOwnership(NewSurface, NULL);
 
   SurfObj->dhsurf = dhsurf;
   SurfObj->hsurf = NewSurface;
