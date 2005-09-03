@@ -204,12 +204,20 @@ INT cmd_prompt (LPTSTR cmd, LPTSTR param)
 		return 0;
 	}
 
-	/* set PROMPT environment variable */
+	/* if it is null, then it needs to set to default,
+	   because that means the user entered "prompt" only.
+		so even if param is null you _must_ still set prompt
+		to the default.  There seems to be some kinda difference 
+		between winxp and 2k in this matter and this way will 
+		cover both. */
 	if (param[0] != _T('\0'))
-	{
-		if (!SetEnvironmentVariable (_T("PROMPT"), param))
-		    return 1;		
-	}
+		_tcscpy(szParam,param);
+	else
+		_tcscpy(szParam,_T("$P$G"));
+
+	/* set PROMPT environment variable */
+	if (!SetEnvironmentVariable (_T("PROMPT"), szParam))
+		return 1;
 			
 	return 0;
 }
