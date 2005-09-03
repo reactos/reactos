@@ -21,14 +21,17 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 {
 	TCHAR szFullName[MAX_PATH];
 	TCHAR first[CMDLINE_LENGTH];
-	TCHAR rest[CMDLINE_LENGTH];
-	TCHAR param[CMDLINE_LENGTH];
+	TCHAR *rest; 
+	TCHAR *param; 
 	BOOL bWait = FALSE;
 	BOOL bBat  = FALSE;
 	BOOL bCreate = FALSE;
 	TCHAR szFullCmdLine [CMDLINE_LENGTH];
 	PROCESS_INFORMATION prci;
 	STARTUPINFO stui;
+
+	
+
 
 	param[0] = _T('\0');
 	
@@ -46,6 +49,8 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 		Rest = _T("cmd");
 	}
 	
+	rest = malloc ( _tcslen(Rest) + 1 * sizeof(TCHAR)); 
+
 	_tcscpy(rest,Rest);
 	
 	/* Parsing the command that gets called by start, and it's parameters */
@@ -59,6 +64,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 		{
 			if(rest[i] == _T(' '))
 			{
+				param = malloc ( _tcslen(&rest[i]) + 1 * sizeof(TCHAR)); 
 				_tcscpy(param,&rest[i]);
 				rest[i] = _T('\0');
 				break;
@@ -95,6 +101,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 	}
 	
 	/* check for a drive change */
+	
 	if (!_tcscmp (first + 1, _T(":")) && _istalpha (*first))
 	{
 		TCHAR szPath[MAX_PATH];
@@ -106,14 +113,27 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 		if (szPath[0] != (TCHAR)_totupper (*first))
 			ConErrResPuts (STRING_FREE_ERROR1);
 
+		if (rest != NULL) 
+		    free(rest);
+
+	    if (param != NULL) 
+		    free(param);
+
 		return 0;
 	}
+	
 	  
 	/* get the PATH environment variable and parse it */
 	/* search the PATH environment variable for the binary */
 	if (!SearchForExecutable (rest, szFullName))
 	{
 		error_bad_command ();
+
+		if (rest != NULL) 
+		    free(rest);
+
+	    if (param != NULL) 
+		    free(param);
 		return 1;
 	}
 
@@ -128,6 +148,12 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 		if (!SearchForExecutable (_T("CMD"), szFullCmdLine))
 	    {
 		    error_bad_command ();
+		    if (rest != NULL) 
+		        free(rest);
+
+	        if (param != NULL) 
+		        free(param);
+
 		    return 1;
 	    }
 
@@ -199,6 +225,12 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 			              _T("Error executing CreateProcess()!!\n"));
 		}
 //	}
+
+	if (rest != NULL) 
+	    free(rest);
+
+    if (param != NULL) 
+	    free(param);
 
 	return 0;
 }
