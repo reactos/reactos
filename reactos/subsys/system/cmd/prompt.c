@@ -192,8 +192,7 @@ VOID PrintPrompt(VOID)
 #ifdef INCLUDE_CMD_PROMPT
 
 INT cmd_prompt (LPTSTR cmd, LPTSTR param)
-{
-	TCHAR szParam[512];
+{	
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
 		ConOutResPaging(TRUE,STRING_PROMPT_HELP1);
@@ -204,15 +203,14 @@ INT cmd_prompt (LPTSTR cmd, LPTSTR param)
 		ConOutResPaging(FALSE,STRING_PROMPT_HELP3);
 		return 0;
 	}
-	if (param[0] != _T('\0'))
-		_tcscpy(szParam,param);
-	else
-		_tcscpy(szParam,_T("$P$G"));
 
 	/* set PROMPT environment variable */
-	if (!SetEnvironmentVariable (_T("PROMPT"), szParam))
-		return 1;
-
+	if (param[0] != _T('\0'))
+	{
+		if (!SetEnvironmentVariable (_T("PROMPT"), param))
+		    return 1;		
+	}
+			
 	return 0;
 }
 #endif
