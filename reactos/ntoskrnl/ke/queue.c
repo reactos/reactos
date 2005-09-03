@@ -344,7 +344,7 @@ KeRundownQueue(IN PKQUEUE Queue)
     if (FirstEntry == &Queue->EntryListHead) {
 
         /* It is, so don't return anything */
-        EnumEntry = NULL;
+        FirstEntry = NULL;
 
     } else {
 
