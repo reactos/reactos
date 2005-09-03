@@ -192,8 +192,7 @@ VOID PrintPrompt(VOID)
 #ifdef INCLUDE_CMD_PROMPT
 
 INT cmd_prompt (LPTSTR cmd, LPTSTR param)
-{	
-	LPTSTR szParam;
+{		
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
 		ConOutResPaging(TRUE,STRING_PROMPT_HELP1);
@@ -210,15 +209,24 @@ INT cmd_prompt (LPTSTR cmd, LPTSTR param)
 		so even if param is null you _must_ still set prompt
 		to the default.  There seems to be some kinda difference 
 		between winxp and 2k in this matter and this way will 
-		cover both. */
-	if (param[0] != _T('\0'))
-		_tcscpy(szParam,param);
-	else
-		_tcscpy(szParam,_T("$P$G"));
+		cover both. Do not use fixed size of szParam for param the buffer are 8192bytes
+		and will later change to dymatic buffer */
 
 	/* set PROMPT environment variable */
-	if (!SetEnvironmentVariable (_T("PROMPT"), szParam))
+	if (param[0] != _T('\0'))
+	{
+		if (!SetEnvironmentVariable (_T("PROMPT"), param))
 		return 1;
+	}
+	else
+	{
+		TCHAR szParam[5];
+		_tcscpy(szParam,_T("$P$G"));
+		if (!SetEnvironmentVariable (_T("PROMPT"),szParam))
+		return 1;	
+	}
+
+	
 			
 	return 0;
 }
