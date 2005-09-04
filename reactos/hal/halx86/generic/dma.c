@@ -977,6 +977,7 @@ HalReadDmaCounter(
    KeReleaseSpinLock(&AdapterObject->MasterAdapter->SpinLock, OldIrql);
 	
    Count++;
+   Count &= 0xffff;
    if (AdapterObject->Width16Bits)
       Count *= 2;
 
