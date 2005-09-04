@@ -474,9 +474,39 @@ CONFIGRET WINAPI CM_Get_Class_Name_ExA(
     LPGUID ClassGuid, PCHAR Buffer, PULONG pulLength, ULONG ulFlags,
     HMACHINE hMachine)
 {
-    FIXME("%p %p %p %lx %lx\n",
+    WCHAR szBuffer[MAX_CLASS_NAME_LEN];
+    CONFIGRET ret = CR_SUCCESS;
+    ULONG ulLength;
+    ULONG ulOrigLength;
+
+    TRACE("%p %p %p %lx %lx\n",
           ClassGuid, Buffer, pulLength, ulFlags, hMachine);
-    return CR_FAILURE;
+
+    if (ClassGuid == NULL || Buffer == NULL || pulLength == NULL)
+        return CR_INVALID_POINTER;
+
+    ulOrigLength = *pulLength;
+    *pulLength = 0;
+
+    ulLength = MAX_CLASS_NAME_LEN;
+    ret = CM_Get_Class_Name_ExW(ClassGuid, szBuffer, &ulLength,
+                                ulFlags, hMachine);
+    if (ret == CR_SUCCESS)
+    {
+        if (WideCharToMultiByte(CP_ACP,
+                                0,
+                                szBuffer,
+                                ulLength,
+                                Buffer,
+                                ulOrigLength,
+                                NULL,
+                                NULL) == 0)
+            ret = CR_FAILURE;
+        else
+            *pulLength = lstrlenA(Buffer) + 1;
+    }
+
+    return ret;
 }
 
 
