@@ -29,7 +29,7 @@
 #include <ntddcdrm.h>
 
 #ifdef _MSC_VER
-#define STDCALL
+#define STDCALL __stdcall
 #endif
 
 /* Filesystem types (add new filesystems here)*/
