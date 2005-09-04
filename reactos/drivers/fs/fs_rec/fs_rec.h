@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/fs/fs_rec/fs_rec.h
@@ -25,6 +24,13 @@
  * PROGRAMMER:       Eric Kohl
  */
 
+#include <ntifs.h>
+#include <ntdddisk.h>
+#include <ntddcdrm.h>
+
+#ifdef _MSC_VER
+#define STDCALL
+#endif
 
 /* Filesystem types (add new filesystems here)*/
 
@@ -40,6 +46,7 @@ typedef struct _DEVICE_EXTENSION
   ULONG FsType;
 } DEVICE_EXTENSION, *PDEVICE_EXTENSION;
 
+#include <pshpack1.h>
 struct _BootSector
 {
   unsigned char  magic0, res0, magic1;
@@ -57,7 +64,8 @@ struct _BootSector
   unsigned char  VolumeLabel[11], SysType[8];
   unsigned char  Res2[448];
   unsigned short Signatur1;
-} __attribute__((packed));
+};
+#include <poppack.h>
 
 /* blockdev.c */
 
