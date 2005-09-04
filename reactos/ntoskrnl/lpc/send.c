@@ -30,16 +30,16 @@
  */
 NTSTATUS STDCALL
 LpcSendTerminationPort (IN PEPORT Port,
-			IN LARGE_INTEGER CreationTime)
+			IN LARGE_INTEGER CreateTime)
 {
   NTSTATUS Status;
-  LPC_TERMINATION_MESSAGE Msg;
+  CLIENT_DIED_MSG Msg;
 
 #ifdef __USE_NT_LPC__
-  Msg.Header.u2.s2.Type = LPC_NEW_MESSAGE;
+  Msg.h.u2.s2.Type = LPC_CLIENT_DIED;
 #endif
-  Msg.CreationTime = CreationTime;
-  Status = LpcRequestPort (Port, &Msg.Header);
+  Msg.CreateTime = CreateTime;
+  Status = LpcRequestPort (Port, &Msg.h);
   return(Status);
 }
 
@@ -58,15 +58,15 @@ LpcSendTerminationPort (IN PEPORT Port,
  */
 NTSTATUS STDCALL
 LpcSendDebugMessagePort (IN PEPORT Port,
-			 IN PLPC_DBG_MESSAGE Message,
-			 OUT PLPC_DBG_MESSAGE Reply)
+			 IN PDBGKM_MSG Message,
+			 OUT PDBGKM_MSG Reply)
 {
    NTSTATUS Status;
    KIRQL oldIrql;
    PQUEUEDMESSAGE ReplyMessage;
 
    Status = EiReplyOrRequestPort(Port,
-				 &Message->Header,
+				 &Message->h,
 				 LPC_REQUEST,
 				 Port);
    if (!NT_SUCCESS(Status))

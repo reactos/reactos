@@ -53,6 +53,10 @@ VOID
 STDCALL
 RtlRaiseStatus(NTSTATUS Status);
 
+LONG
+STDCALL
+RtlUnhandledExceptionFilter(struct _EXCEPTION_POINTERS* ExceptionInfo);
+
 VOID
 STDCALL
 RtlUnwind(
@@ -227,6 +231,15 @@ RtlAddAuditAccessAce(
     PSID Sid,
     BOOLEAN Success,
     BOOLEAN Failure
+);
+
+NTSTATUS
+STDCALL
+RtlAdjustPrivilege(
+    IN ULONG Privilege,
+    IN BOOLEAN NewValue,
+    IN BOOLEAN ForThread,
+    OUT PBOOLEAN OldValue
 );
 
 NTSTATUS

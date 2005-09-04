@@ -2285,33 +2285,34 @@ LdrDisableThreadCalloutsForDll(IN PVOID BaseAddress)
  * @implemented
  */
 NTSTATUS STDCALL
-LdrGetDllHandle(IN PWCHAR Path OPTIONAL,
-                IN ULONG Unknown2,
+LdrGetDllHandle(IN PWSTR DllPath OPTIONAL,
+                IN PULONG DllCharacteristics,
                 IN PUNICODE_STRING DllName,
-                OUT PVOID* BaseAddress)
+                OUT PVOID *DllHandle)
 {
     PLDR_DATA_TABLE_ENTRY Module;
     NTSTATUS Status;
 
-    TRACE_LDR("LdrGetDllHandle, searching for %wZ from %S\n", DllName, Path ? Path : L"");
+    TRACE_LDR("LdrGetDllHandle, searching for %wZ from %S\n",
+               DllName, DllPath ? DllPath : L"");
 
     /* NULL is the current executable */
     if (DllName == NULL)
       {
-        *BaseAddress = ExeModule->DllBase;
-        DPRINT("BaseAddress %x\n", *BaseAddress);
+        *DllHandle = ExeModule->DllBase;
+        DPRINT("BaseAddress %x\n", *DllHandle);
         return STATUS_SUCCESS;
       }
 
     Status = LdrFindEntryForName(DllName, &Module, FALSE);
     if (NT_SUCCESS(Status))
       {
-        *BaseAddress = Module->DllBase;
+        *DllHandle = Module->DllBase;
         return STATUS_SUCCESS;
       }
 
     DPRINT("Failed to find dll %wZ\n", DllName);
-    *BaseAddress = NULL;
+    *DllHandle = NULL;
     return STATUS_DLL_NOT_FOUND;
 }
 

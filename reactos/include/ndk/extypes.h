@@ -37,6 +37,8 @@ extern NTOSAPI POBJECT_TYPE ExTimerType;
 #define SEMAPHORE_QUERY_STATE   0x0001
 #endif
 
+#define MAXIMUM_HARDERROR_PARAMETERS 4
+
 /* ENUMERATIONS **************************************************************/
 
 /* TYPES *********************************************************************/

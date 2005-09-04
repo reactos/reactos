@@ -171,6 +171,24 @@ typedef struct _LPCP_CONNECTION_MESSAGE
 } LPCP_CONNECTION_MESSAGE, *PLPCP_CONNECTION_MESSAGE;
 #endif
 
+typedef struct _HARDERROR_MSG
+{
+    PORT_MESSAGE h;
+    NTSTATUS Status;
+    LARGE_INTEGER ErrorTime;
+    ULONG ValidResponseOptions;
+    ULONG Response;
+    ULONG NumberOfParameters;
+    ULONG UnicodeStringParameterMask;
+    ULONG Parameters[MAXIMUM_HARDERROR_PARAMETERS];
+} HARDERROR_MSG, *PHARDERROR_MSG;
+
+typedef struct _CLIENT_DIED_MSG
+{
+    PORT_MESSAGE h;
+    LARGE_INTEGER CreateTime;
+} CLIENT_DIED_MSG, *PCLIENT_DIED_MSG;
+
 /* CONSTANTS *****************************************************************/
 
 #define PORT_MAXIMUM_MESSAGE_LENGTH 256

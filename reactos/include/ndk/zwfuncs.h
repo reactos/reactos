@@ -21,11 +21,22 @@ NTSTATUS
 STDCALL
 NtAcceptConnectPort(
     PHANDLE PortHandle,
-    HANDLE NamedPortHandle,
-    PPORT_MESSAGE ServerReply,
-    BOOLEAN AcceptIt,
-    PPORT_VIEW WriteMap,
-    PREMOTE_PORT_VIEW ReadMap
+    PVOID PortContext OPTIONAL,
+    PPORT_MESSAGE ConnectionRequest,
+    BOOLEAN AcceptConnection,
+    PPORT_VIEW ServerView OPTIONAL,
+    PREMOTE_PORT_VIEW ClientView OPTIONAL
+);
+
+NTSTATUS
+STDCALL
+ZwAcceptConnectPort(
+    PHANDLE PortHandle,
+    PVOID PortContext OPTIONAL,
+    PPORT_MESSAGE ConnectionRequest,
+    BOOLEAN AcceptConnection,
+    PPORT_VIEW ServerView OPTIONAL,
+    PREMOTE_PORT_VIEW ClientView OPTIONAL
 );
 
 NTSTATUS
@@ -347,11 +358,11 @@ NtConnectPort(
     PHANDLE PortHandle,
     PUNICODE_STRING PortName,
     PSECURITY_QUALITY_OF_SERVICE SecurityQos,
-    PPORT_VIEW SectionInfo,
-    PREMOTE_PORT_VIEW MapInfo,
-    PULONG MaxMessageSize,
-    PVOID ConnectInfo,
-    PULONG ConnectInfoLength
+    PPORT_VIEW ClientView OPTIONAL,
+    PREMOTE_PORT_VIEW ServerView OPTIONAL,
+    PULONG MaxMessageLength OPTIONAL,
+    PVOID ConnectionInformation OPTIONAL,
+    PULONG ConnectionInformationLength OPTIONAL
 );
 
 NTSTATUS
@@ -360,11 +371,11 @@ ZwConnectPort(
     PHANDLE PortHandle,
     PUNICODE_STRING PortName,
     PSECURITY_QUALITY_OF_SERVICE SecurityQos,
-    PPORT_VIEW SectionInfo,
-    PREMOTE_PORT_VIEW MapInfo,
-    PULONG MaxMessageSize,
-    PVOID ConnectInfo,
-    PULONG ConnectInfoLength
+    PPORT_VIEW ClientView OPTIONAL,
+    PREMOTE_PORT_VIEW ServerView OPTIONAL,
+    PULONG MaxMessageLength OPTIONAL,
+    PVOID ConnectionInformation OPTIONAL,
+    PULONG ConnectionInformationLength OPTIONAL
 );
 
 NTSTATUS
@@ -612,19 +623,19 @@ STDCALL
 NtCreatePort(
     PHANDLE PortHandle,
     POBJECT_ATTRIBUTES ObjectAttributes,
-    ULONG MaxConnectInfoLength,
-    ULONG MaxDataLength,
-    ULONG NPMessageQueueSize OPTIONAL
+    ULONG MaxConnectionInfoLength,
+    ULONG MaxMessageLength,
+    ULONG MaxPoolUsage
 );
 
 NTSTATUS
 STDCALL
-NtCreatePort(
+ZwCreatePort(
     PHANDLE PortHandle,
     POBJECT_ATTRIBUTES ObjectAttributes,
-    ULONG MaxConnectInfoLength,
-    ULONG MaxDataLength,
-    ULONG NPMessageQueueSize OPTIONAL
+    ULONG MaxConnectionInfoLength,
+    ULONG MaxMessageLength,
+    ULONG MaxPoolUsage
 );
 
 NTSTATUS
@@ -1313,13 +1324,13 @@ ZwIsProcessInJob(
 NTSTATUS
 STDCALL
 NtListenPort(HANDLE PortHandle,
-             PPORT_MESSAGE LpcMessage
+             PPORT_MESSAGE ConnectionRequest
 );
 
 NTSTATUS
 STDCALL
 ZwListenPort(HANDLE PortHandle,
-             PPORT_MESSAGE LpcMessage
+             PPORT_MESSAGE ConnectionRequest
 );
 
 NTSTATUS
@@ -2745,11 +2756,11 @@ STDCALL
 NtRaiseHardError(
     IN NTSTATUS ErrorStatus,
     IN ULONG NumberOfParameters,
-    IN PUNICODE_STRING UnicodeStringParameterMask OPTIONAL,
-    IN PVOID *Parameters,
-    IN HARDERROR_RESPONSE_OPTION ResponseOption,
-    OUT PHARDERROR_RESPONSE Response
-);
+    IN ULONG UnicodeStringParameterMask,
+    IN PULONG_PTR Parameters,
+    IN ULONG ValidResponseOptions,
+    OUT PULONG Response
+); 
 
 NTSTATUS
 STDCALL
@@ -2955,18 +2966,18 @@ NTSTATUS
 STDCALL
 NtReplyWaitReceivePort(
     HANDLE PortHandle,
-    PULONG PortId,
-    PPORT_MESSAGE MessageReply,
-    PPORT_MESSAGE MessageRequest
+    PVOID *PortContext OPTIONAL,
+    PPORT_MESSAGE ReplyMessage OPTIONAL,
+    PPORT_MESSAGE ReceiveMessage
 );
 
 NTSTATUS
 STDCALL
 ZwReplyWaitReceivePort(
     HANDLE PortHandle,
-    PULONG PortId,
-    PPORT_MESSAGE MessageReply,
-    PPORT_MESSAGE MessageRequest
+    PVOID *PortContext OPTIONAL,
+    PPORT_MESSAGE ReplyMessage,
+    PPORT_MESSAGE ReceiveMessage
 );
 
 NTSTATUS

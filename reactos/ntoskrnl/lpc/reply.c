@@ -146,11 +146,11 @@ NtReplyPort (IN	HANDLE		PortHandle,
  * REVISIONS
  */
 NTSTATUS STDCALL
-NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
-			 OUT PULONG		PortId,
-			 IN  PPORT_MESSAGE	LpcReply,
-			 OUT PPORT_MESSAGE	LpcMessage,
-			 IN  PLARGE_INTEGER	Timeout)
+NtReplyWaitReceivePortEx(IN HANDLE PortHandle,
+                         OUT PVOID *PortContext OPTIONAL,
+                         IN PPORT_MESSAGE ReplyMessage OPTIONAL,
+                         OUT PPORT_MESSAGE ReceiveMessage,
+			             IN PLARGE_INTEGER Timeout OPTIONAL)
 {
    PEPORT Port;
    KIRQL oldIrql;
@@ -169,7 +169,7 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
      {
        _SEH_TRY
          {
-           ProbeForWrite(LpcMessage,
+           ProbeForWrite(ReceiveMessage,
                          sizeof(PORT_MESSAGE),
                          1);
          }
@@ -211,10 +211,10 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
    /*
     * Send the reply, only if port is connected
     */
-   if (LpcReply != NULL && !Disconnected)
+   if (ReplyMessage != NULL && !Disconnected)
      {
 	Status = EiReplyOrRequestPort(Port->OtherPort,
-				      LpcReply,
+				      ReplyMessage,
 				      LPC_REPLY,
 				      Port);
 	KeReleaseSemaphore(&Port->OtherPort->Semaphore, IO_NO_INCREMENT, 1,
@@ -283,14 +283,14 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
          {
            _SEH_TRY
              {
-               ProbeForWrite((PVOID)(LpcMessage + 1),
+               ProbeForWrite((PVOID)(ReceiveMessage + 1),
                              CRequest->ConnectDataLength,
                              1);
 
-               RtlCopyMemory(LpcMessage,
+               RtlCopyMemory(ReceiveMessage,
                              &Header,
                              sizeof(PORT_MESSAGE));
-               RtlCopyMemory((PVOID)(LpcMessage + 1),
+               RtlCopyMemory((PVOID)(ReceiveMessage + 1),
                              CRequest->ConnectData,
                              CRequest->ConnectDataLength);
              }
@@ -302,10 +302,10 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
          }
        else
          {
-           RtlCopyMemory(LpcMessage,
+           RtlCopyMemory(ReceiveMessage,
                          &Header,
                          sizeof(PORT_MESSAGE));
-           RtlCopyMemory((PVOID)(LpcMessage + 1),
+           RtlCopyMemory((PVOID)(ReceiveMessage + 1),
                          CRequest->ConnectData,
                          CRequest->ConnectDataLength);
          }
@@ -316,11 +316,11 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
          {
            _SEH_TRY
              {
-               ProbeForWrite(LpcMessage,
+               ProbeForWrite(ReceiveMessage,
                              Request->Message.u1.s1.TotalLength,
                              1);
 
-               RtlCopyMemory(LpcMessage,
+               RtlCopyMemory(ReceiveMessage,
                              &Request->Message,
                              Request->Message.u1.s1.TotalLength);
              }
@@ -332,7 +332,7 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
          }
        else
          {
-           RtlCopyMemory(LpcMessage,
+           RtlCopyMemory(ReceiveMessage,
                          &Request->Message,
                          Request->Message.u1.s1.TotalLength);
          }
@@ -387,16 +387,16 @@ NtReplyWaitReceivePortEx(IN  HANDLE		PortHandle,
  * REVISIONS
  */
 NTSTATUS STDCALL
-NtReplyWaitReceivePort (IN  HANDLE		PortHandle,
-			OUT PULONG		PortId,
-			IN  PPORT_MESSAGE	LpcReply,
-			OUT PPORT_MESSAGE	LpcMessage)
+NtReplyWaitReceivePort(IN HANDLE PortHandle,
+                       OUT PVOID *PortContext OPTIONAL,
+                       IN PPORT_MESSAGE ReplyMessage OPTIONAL,
+                       OUT PPORT_MESSAGE ReceiveMessage)
 {
-  return(NtReplyWaitReceivePortEx (PortHandle,
-				   PortId,
-				   LpcReply,
-				   LpcMessage,
-				   NULL));
+    return NtReplyWaitReceivePortEx(PortHandle,
+				                    PortContext,
+				                    ReplyMessage,
+				                    ReceiveMessage,
+				                    NULL);
 }
 
 /**********************************************************************

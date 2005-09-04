@@ -210,6 +210,9 @@ RemoveTailList(
     sizeof(__SOURCE_STRING__), \
     (__SOURCE_STRING__) \
 }
+
+#define RtlEqualLuid(L1, L2) (((L1)->HighPart == (L2)->HighPart) && \
+                              ((L1)->LowPart  == (L2)->LowPart))
 #endif
 
 /* FIXME: Rename these */

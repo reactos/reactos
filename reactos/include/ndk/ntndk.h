@@ -25,7 +25,6 @@
 #include "kdfuncs.h"        /* Kernel Debugger Functions */
 #include "cctypes.h"        /* Cache Manager Types */
 #include "potypes.h"        /* Power Manager Types */
-#include "dbgktypes.h"      /* User-Mode Kernel Debugging Types */
 #include "haltypes.h"       /* Hardware Abstraction Layer Types */
 #include "halfuncs.h"       /* Hardware Abstraction Layer Functions */
 #include "inbvfuncs.h"      /* Initialization Boot Video Functions */
@@ -34,7 +33,6 @@
 #include "mmfuncs.h"        /* Memory Manager Functions */
 #include "obfuncs.h"        /* Object Manager Functions */
 #include "psfuncs.h"        /* Process Manager Functions */
-#include "setypes.h"        /* Security Subsystem Types */
 #include "sefuncs.h"        /* Security Subsystem Functions */
 #endif /* !NTOS_MODE_USER */
 
@@ -50,10 +48,12 @@
 #include "obtypes.h"        /* Object Manager Types */
 #include "pstypes.h"        /* Process Manager Types */
 #include "lpctypes.h"       /* Local Procedure Call Types */
+#include "dbgktypes.h"      /* User-Mode Kernel Debugging Types */
 #include "zwtypes.h"        /* Native Types */
 #include "zwfuncs.h"        /* Native Functions (System Calls) */
 #include "rtltypes.h"       /* Runtime Library Types */
 #include "rtlfuncs.h"       /* Runtime Library Functions */
+#include "setypes.h"        /* Security Subsystem Types */
 #include "umfuncs.h"        /* User-Mode NT Library Functions */
 #include "i386/floatsave.h" /* Floating Point Save Area Definitions for i386 */
 #include "i386/segment.h"   /* Kernel CPU Segment Definitions for i386 */

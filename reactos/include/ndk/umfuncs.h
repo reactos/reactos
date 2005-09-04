@@ -138,10 +138,10 @@ LdrDisableThreadCalloutsForDll(IN PVOID BaseAddress);
 NTSTATUS
 STDCALL
 LdrGetDllHandle(
-    IN PWCHAR Path OPTIONAL,
-    IN ULONG Unknown2,
+    IN PWSTR DllPath OPTIONAL,
+    IN PULONG DllCharacteristics,
     IN PUNICODE_STRING DllName,
-    OUT PVOID *BaseAddress
+    OUT PVOID *DllHandle
 );
 
 NTSTATUS

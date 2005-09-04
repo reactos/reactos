@@ -107,7 +107,6 @@ VOID STDCALL
 SmpApiConnectedThread(PVOID pConnectedPort)
 {
 	NTSTATUS	Status = STATUS_SUCCESS;
-	PVOID		Unknown = NULL;
 	PPORT_MESSAGE	Reply = NULL;
 	SM_PORT_MESSAGE	Request;
 	HANDLE          ConnectedPort = * (PHANDLE) pConnectedPort;
@@ -120,7 +119,7 @@ SmpApiConnectedThread(PVOID pConnectedPort)
 		DPRINT("SM: %s: waiting for message\n",__FUNCTION__);
 
 		Status = NtReplyWaitReceivePort(ConnectedPort,
-						(PULONG) & Unknown,
+						NULL,
 						Reply,
 						(PPORT_MESSAGE) & Request);
 		if (NT_SUCCESS(Status))
