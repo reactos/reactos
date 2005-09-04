@@ -11,5 +11,12 @@ o  command.com ignores control-c and control-break, which makes it difficult
 
 o  "alias v = dir" doesn't work because of the spaces.
 
+o  Dymatic commandline buffer need to be implement, current set to 8192bytes  
+
+o  Batchfile read row size need to be implement as dymatic not set to 2000bytes
+
+  
+
+
 
          ****  Please report bugs to ekohl@rz-online.de!  ****

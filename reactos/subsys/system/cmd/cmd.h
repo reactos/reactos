@@ -106,7 +106,7 @@ extern HANDLE CMD_ModuleHandle;
 
 
 /* Prototypes for CMDINPUT.C */
-VOID ReadCommand (LPTSTR, INT);
+TCHAR * ReadCommand (LPTSTR, INT);
 
 
 /* Prototypes for CMDTABLE.C */

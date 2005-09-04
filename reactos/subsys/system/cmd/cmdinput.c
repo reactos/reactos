@@ -124,7 +124,7 @@ ClearCommandLine (LPTSTR str, INT maxlen, SHORT orgx, SHORT orgy)
 
 
 /* read in a command line */
-VOID ReadCommand (LPTSTR str, INT maxlen)
+TCHAR * ReadCommand (LPTSTR str, INT maxlen)
 {
 	SHORT orgx;			/* origin x/y */
 	SHORT orgy;
@@ -508,10 +508,15 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 			default:
 #ifdef _UNICODE
 				ch = ir.Event.KeyEvent.uChar.UnicodeChar;
-				if ((ch >= 32 && ch <= 255) && (charcount != (maxlen - 2)))
+				charcount ++;
+				str = realloc(str, charcount);
+
+				if ((ch >= 32 && ch <= 255))
 #else
-				ch = ir.Event.KeyEvent.uChar.AsciiChar;
-				if ((UCHAR)ch >= 32 && (charcount != (maxlen - 2)))
+				ch = ir.Event.KeyEvent.uChar.AsciiChar;				
+				str = realloc(str, 2 + current * sizeof(TCHAR));				
+
+				if ((UCHAR)ch >= 32 )
 #endif /* _UNICODE */
 				{
 					/* insert character into string... */
@@ -520,12 +525,16 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 					        /* If this character insertion will cause screen scrolling,
 					         * adjust the saved origin of the command prompt. */
 					        tempscreen = _tcslen(str + current) + curx;
+						    str = realloc(str, tempscreen * sizeof(TCHAR));
+
 						if ((tempscreen % maxx) == (maxx - 1) &&
 						    (tempscreen / maxx) + cury == (maxy - 1))
 						{
 							orgy--;
 							cury--;
 						}
+
+						
 
 						for (count = charcount; count > current; count--)
 							str[count] = str[count - 1];
@@ -570,4 +579,6 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 	while (ir.Event.KeyEvent.wVirtualKeyCode != VK_RETURN);
 
 	SetCursorType (bInsert, TRUE);
+
+	return str;
 }

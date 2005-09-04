@@ -1037,12 +1037,13 @@ static INT
 ProcessInput (BOOL bFlag)
 {
 	TCHAR commandline[CMDLINE_LENGTH];
-	TCHAR readline[CMDLINE_LENGTH];
+	TCHAR *readline = NULL;
 	LPTSTR tp = NULL;
 	LPTSTR ip;
 	LPTSTR cp;
 	BOOL bEchoThisLine;
-
+   
+    readline = malloc(CMDLINE_LENGTH * sizeof(TCHAR));
 
 	do
 	{
@@ -1052,7 +1053,7 @@ ProcessInput (BOOL bFlag)
 			if (bFlag)
 				return 0;
 
-			ReadCommand (readline, CMDLINE_LENGTH);
+			readline = ReadCommand (readline, CMDLINE_LENGTH);
 			ip = readline;
 			bEchoThisLine = FALSE;
 		}
