@@ -107,7 +107,7 @@ NTSTATUS STDCALL
 NpfsCreate(PDEVICE_OBJECT DeviceObject,
 	   PIRP Irp)
 {
-  PEXTENDED_IO_STACK_LOCATION IoStack;
+  PIO_STACK_LOCATION IoStack;
   PFILE_OBJECT FileObject;
   PNPFS_PIPE Pipe;
   PNPFS_FCB ClientFcb;
@@ -118,7 +118,7 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
   DPRINT("NpfsCreate(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
   DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-  IoStack = (PEXTENDED_IO_STACK_LOCATION)IoGetCurrentIrpStackLocation(Irp);
+  IoStack = IoGetCurrentIrpStackLocation(Irp);
   FileObject = IoStack->FileObject;
   DPRINT("FileObject %p\n", FileObject);
   DPRINT("FileName %wZ\n", &FileObject->FileName);
@@ -307,7 +307,7 @@ NTSTATUS STDCALL
 NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
 		    PIRP Irp)
 {
-   PEXTENDED_IO_STACK_LOCATION IoStack;
+   PIO_STACK_LOCATION IoStack;
    PFILE_OBJECT FileObject;
    PNPFS_DEVICE_EXTENSION DeviceExt;
    PNPFS_PIPE Pipe;
@@ -318,7 +318,7 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
    DPRINT("NpfsCreateNamedPipe(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
    DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-   IoStack = (PEXTENDED_IO_STACK_LOCATION)IoGetCurrentIrpStackLocation(Irp);
+   IoStack = IoGetCurrentIrpStackLocation(Irp);
    FileObject = IoStack->FileObject;
    DPRINT("FileObject %p\n", FileObject);
    DPRINT("Pipe name %wZ\n", &FileObject->FileName);
