@@ -357,9 +357,39 @@ CONFIGRET WINAPI CM_Get_Class_Key_Name_ExA(
     LPGUID ClassGuid, LPSTR pszKeyName, PULONG pulLength, ULONG ulFlags,
     HMACHINE hMachine)
 {
-    FIXME("%p %p %p %lx %lx\n",
+    WCHAR szBuffer[MAX_GUID_STRING_LEN];
+    CONFIGRET ret = CR_SUCCESS;
+    ULONG ulLength;
+    ULONG ulOrigLength;
+
+    TRACE("%p %p %p %lx %lx\n",
           ClassGuid, pszKeyName, pulLength, ulFlags, hMachine);
-    return CR_FAILURE;
+
+    if (ClassGuid == NULL || pszKeyName == NULL || pulLength == NULL)
+        return CR_INVALID_POINTER;
+
+    ulOrigLength = *pulLength;
+    *pulLength = 0;
+
+    ulLength = MAX_GUID_STRING_LEN;
+    ret = CM_Get_Class_Key_Name_ExW(ClassGuid, szBuffer, &ulLength,
+                                    ulFlags, hMachine);
+    if (ret == CR_SUCCESS)
+    {
+        if (WideCharToMultiByte(CP_ACP,
+                                0,
+                                szBuffer,
+                                ulLength,
+                                pszKeyName,
+                                ulOrigLength,
+                                NULL,
+                                NULL) == 0)
+            ret = CR_FAILURE;
+        else
+            *pulLength = lstrlenA(pszKeyName) + 1;
+    }
+
+    return CR_SUCCESS;
 }
 
 
@@ -370,7 +400,11 @@ static BOOL GuidToString(LPGUID Guid, LPWSTR String)
     if (UuidToStringW(Guid, &lpString) != RPC_S_OK)
         return FALSE;
 
-    lstrcpyW(String, lpString);
+    lstrcpyW(&String[1], lpString);
+
+    String[0] = L'{';
+    String[MAX_GUID_STRING_LEN - 2] = L'}';
+    String[MAX_GUID_STRING_LEN - 1] = 0;
 
     RpcStringFree(&lpString);
 
@@ -400,7 +434,7 @@ CONFIGRET WINAPI CM_Get_Class_Key_Name_ExW(
         return CR_BUFFER_SMALL;
     }
 
-   if (!GuidToString(ClassGuid, pszKeyName))
+    if (!GuidToString(ClassGuid, pszKeyName))
         return CR_INVALID_DATA;
 
     *pulLength = MAX_GUID_STRING_LEN;
