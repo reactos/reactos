@@ -216,7 +216,7 @@ void DoOpenFile(LPCWSTR szFileName)
 	return;
 
     hFile = CreateFile(szFileName, GENERIC_READ, FILE_SHARE_READ, NULL,
-	OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if(hFile == INVALID_HANDLE_VALUE)
     {
 	ShowLastError();
