@@ -336,17 +336,17 @@ IoAttachDeviceToDeviceStackSafe(IN PDEVICE_OBJECT SourceDevice,
                                 OUT PDEVICE_OBJECT *AttachedToDeviceObject)
 {
     PDEVICE_OBJECT AttachedDevice;
-    PDEVOBJ_EXTENSION SourceDeviceExtension;
+    PEXTENDED_DEVOBJ_EXTENSION SourceDeviceExtension;
 
     DPRINT("IoAttachDeviceToDeviceStack(SourceDevice 0x%p, TargetDevice 0x%p)\n",
             SourceDevice, TargetDevice);
 
     /* Get the Attached Device and source extension */
     AttachedDevice = IoGetAttachedDevice(TargetDevice);
-    SourceDeviceExtension = SourceDevice->DeviceObjectExtension;
+    SourceDeviceExtension = (PEXTENDED_DEVOBJ_EXTENSION)SourceDevice->DeviceObjectExtension;
 
     /* Make sure that it's in a correct state */
-    if (!(AttachedDevice->DeviceObjectExtension->ExtensionFlags &
+    if (!(((PEXTENDED_DEVOBJ_EXTENSION)AttachedDevice->DeviceObjectExtension)->ExtensionFlags &
         (DOE_UNLOAD_PENDING | DOE_DELETE_PENDING |
          DOE_REMOVE_PENDING | DOE_REMOVE_PROCESSED)))
     {
@@ -624,7 +624,7 @@ IoDeleteDevice(PDEVICE_OBJECT DeviceObject)
    }
 
    /* I guess this should be removed later... but it shouldn't cause problems */
-   DeviceObject->DeviceObjectExtension->ExtensionFlags |= DOE_DELETE_PENDING;
+   ((PEXTENDED_DEVOBJ_EXTENSION)DeviceObject->DeviceObjectExtension)->ExtensionFlags |= DOE_DELETE_PENDING;
 
    /* Make the object temporary. This should automatically remove the device
       from the namespace */
@@ -650,7 +650,7 @@ IoDetachDevice(PDEVICE_OBJECT TargetDevice)
     DPRINT("IoDetachDevice(TargetDevice 0x%p)\n", TargetDevice);
 
     /* Remove the attachment */
-    TargetDevice->AttachedDevice->DeviceObjectExtension->AttachedTo = NULL;
+    ((PEXTENDED_DEVOBJ_EXTENSION)TargetDevice->AttachedDevice->DeviceObjectExtension)->AttachedTo = NULL;
     TargetDevice->AttachedDevice = NULL;
 }
 
@@ -758,7 +758,7 @@ STDCALL
 IoGetDeviceAttachmentBaseRef(IN PDEVICE_OBJECT DeviceObject)
 {
     /* Return the attached Device */
-    return (DeviceObject->DeviceObjectExtension->AttachedTo);
+    return (((PEXTENDED_DEVOBJ_EXTENSION)DeviceObject->DeviceObjectExtension)->AttachedTo);
 }
 
 /*
@@ -790,7 +790,7 @@ STDCALL
 IoGetDiskDeviceObject(IN  PDEVICE_OBJECT FileSystemDeviceObject,
                       OUT PDEVICE_OBJECT *DiskDeviceObject)
 {
-    PDEVOBJ_EXTENSION DeviceExtension;
+    PEXTENDED_DEVOBJ_EXTENSION DeviceExtension;
     PVPB Vpb;
     KIRQL OldIrql;
 
@@ -801,7 +801,7 @@ IoGetDiskDeviceObject(IN  PDEVICE_OBJECT FileSystemDeviceObject,
     IoAcquireVpbSpinLock(&OldIrql);
 
     /* Get the Device Extension */
-    DeviceExtension = FileSystemDeviceObject->DeviceObjectExtension;
+    DeviceExtension = (PEXTENDED_DEVOBJ_EXTENSION)FileSystemDeviceObject->DeviceObjectExtension;
 
     /* Make sure this one has a VPB too */
     Vpb = DeviceExtension->Vpb;
@@ -825,7 +825,7 @@ PDEVICE_OBJECT
 STDCALL
 IoGetLowerDeviceObject(IN PDEVICE_OBJECT DeviceObject)
 {
-    PDEVOBJ_EXTENSION DeviceExtension = DeviceObject->DeviceObjectExtension;
+    PEXTENDED_DEVOBJ_EXTENSION DeviceExtension = (PEXTENDED_DEVOBJ_EXTENSION)DeviceObject->DeviceObjectExtension;
     PDEVICE_OBJECT LowerDeviceObject = NULL;
 
     /* Make sure it's not getting deleted */

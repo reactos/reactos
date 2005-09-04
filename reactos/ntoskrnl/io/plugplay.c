@@ -439,7 +439,7 @@ IopGetRelatedDevice(PPLUGPLAY_CONTROL_RELATED_DEVICE_DATA RelatedDeviceData)
         if (DeviceObject == NULL)
             return STATUS_NO_SUCH_DEVICE;
 
-        DeviceNode = DeviceObject->DeviceObjectExtension->DeviceNode;
+        DeviceNode = ((PEXTENDED_DEVOBJ_EXTENSION)DeviceObject->DeviceObjectExtension)->DeviceNode;
     }
 
     switch (RelatedDeviceData->Relation)
@@ -518,7 +518,7 @@ IopDeviceStatus(PPLUGPLAY_CONTROL_STATUS_DATA StatusData)
     if (DeviceObject == NULL)
         return STATUS_NO_SUCH_DEVICE;
 
-    DeviceNode = DeviceObject->DeviceObjectExtension->DeviceNode;
+    DeviceNode = ((PEXTENDED_DEVOBJ_EXTENSION)DeviceObject->DeviceObjectExtension)->DeviceNode;
 
     switch (StatusData->Operation)
     {
@@ -559,7 +559,7 @@ IopGetDeviceDepth(PPLUGPLAY_CONTROL_DEPTH_DATA DepthData)
     if (DeviceObject == NULL)
         return STATUS_NO_SUCH_DEVICE;
 
-    DeviceNode = DeviceObject->DeviceObjectExtension->DeviceNode;
+    DeviceNode = ((PEXTENDED_DEVOBJ_EXTENSION)DeviceObject->DeviceObjectExtension)->DeviceNode;
 
     DepthData->Depth = DeviceNode->Level;
 

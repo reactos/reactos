@@ -2668,6 +2668,13 @@ typedef struct _ERESOURCE {
   KSPIN_LOCK  SpinLock;
 } ERESOURCE, *PERESOURCE;
 
+typedef struct _DEVOBJ_EXTENSION
+{
+    CSHORT Type;
+    USHORT Size;
+    PDEVICE_OBJECT DeviceObject;
+} DEVOBJ_EXTENSION, *PDEVOBJ_EXTENSION;
+
 typedef struct _DRIVER_EXTENSION {
   struct _DRIVER_OBJECT  *DriverObject;
   PDRIVER_ADD_DEVICE  AddDevice;

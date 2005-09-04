@@ -751,7 +751,7 @@ IoCreateFile(OUT PHANDLE  FileHandle,
    PFILE_OBJECT  FileObject = NULL;
    PDEVICE_OBJECT DeviceObject;
    PIRP   Irp;
-   PIO_STACK_LOCATION StackLoc;
+   PEXTENDED_IO_STACK_LOCATION StackLoc;
    IO_SECURITY_CONTEXT  SecurityContext;
    KPROCESSOR_MODE      AccessMode;
    HANDLE               LocalHandle;
@@ -999,7 +999,7 @@ IoCreateFile(OUT PHANDLE  FileHandle,
     * Get the stack location for the new
     * IRP and prepare it.
     */
-   StackLoc = IoGetNextIrpStackLocation(Irp);
+   StackLoc = (PEXTENDED_IO_STACK_LOCATION)IoGetNextIrpStackLocation(Irp);
    StackLoc->MinorFunction = 0;
    StackLoc->Flags = (UCHAR)Options;
    StackLoc->Control = 0;
