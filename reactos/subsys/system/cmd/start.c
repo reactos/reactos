@@ -21,8 +21,8 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 {
 	TCHAR szFullName[MAX_PATH];
 	TCHAR first[CMDLINE_LENGTH];
-	TCHAR *rest; 
-	TCHAR *param; 
+	TCHAR *rest = NULL; 
+	TCHAR *param = NULL;
 	BOOL bWait = FALSE;
 	BOOL bBat  = FALSE;
 	BOOL bCreate = FALSE;
@@ -30,10 +30,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 	PROCESS_INFORMATION prci;
 	STARTUPINFO stui;
 
-	
-
-
-	param[0] = _T('\0');
+		
 	
 	if (_tcsncmp (Rest, _T("/?"), 2) == 0)
 	{
@@ -50,6 +47,22 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 	}
 	
 	rest = malloc ( _tcslen(Rest) + 1 * sizeof(TCHAR)); 
+	if (rest == NULL)
+	{
+	 error_out_of_memory();
+	 return 1;
+	}
+
+	param =malloc ( _tcslen(Rest) + 1 * sizeof(TCHAR)); 
+	if (rest == NULL)
+	{
+	 free(rest);
+	 error_out_of_memory();
+	 return 1;
+	}
+
+	param[0] = _T('\0');
+
 
 	_tcscpy(rest,Rest);
 	
@@ -63,8 +76,8 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 		for(i = 0; i < count; i++)
 		{
 			if(rest[i] == _T(' '))
-			{
-				param = malloc ( _tcslen(&rest[i]) + 1 * sizeof(TCHAR)); 
+			{	
+				
 				_tcscpy(param,&rest[i]);
 				rest[i] = _T('\0');
 				break;
@@ -83,7 +96,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 			if(rest[i] == _T('\"')) 
 				bInside = !bInside;
 			if((rest[i] == _T(' ')) && !bInside)
-			{
+			{					
 				_tcscpy(param,&rest[i]);
 				rest[i] = _T('\0');
 				break;
@@ -134,6 +147,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 
 	    if (param != NULL) 
 		    free(param);
+
 		return 1;
 	}
 
@@ -148,6 +162,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 		if (!SearchForExecutable (_T("CMD"), szFullCmdLine))
 	    {
 		    error_bad_command ();
+
 		    if (rest != NULL) 
 		        free(rest);
 
@@ -179,8 +194,9 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 		if (bBat == FALSE)
 		{
 		  _tcscpy (szFullCmdLine, first);
-		  if( param )
+		  if( param != NULL )
 		  {
+			 
 		    _tcscat(szFullCmdLine, _T(" ") );
 		    _tcscat (szFullCmdLine, param);
 		  }
@@ -224,7 +240,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 			ErrorMessage(GetLastError (),
 			              _T("Error executing CreateProcess()!!\n"));
 		}
-//	}
+
 
 	if (rest != NULL) 
 	    free(rest);
