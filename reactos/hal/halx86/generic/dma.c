@@ -235,6 +235,8 @@ HalpGrowMapBuffers(
    if (VirtualAddress == NULL)
       return FALSE;
 
+   PhysicalAddress = MmGetPhysicalAddress(VirtualAddress);
+
    /*
     * All the following must be done with the master adapter lock held
     * to prevent corruption.
