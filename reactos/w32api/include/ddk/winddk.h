@@ -3180,22 +3180,6 @@ typedef struct _IO_STACK_LOCATION {
       USHORT  ShareAccess;
       ULONG POINTER_ALIGNMENT  EaLength;
     } Create;
-    /* FIXME: CreatePipe and CreateMailslot aren't defined in official
-     * DDK/IFS headers. */
-    struct {
-      PIO_SECURITY_CONTEXT  SecurityContext;
-      ULONG  Options;
-      USHORT  Reserved;
-      USHORT  ShareAccess;
-      struct _NAMED_PIPE_CREATE_PARAMETERS  *Parameters;
-    } CreatePipe;
-    struct {
-      PIO_SECURITY_CONTEXT  SecurityContext;
-      ULONG  Options;
-      USHORT  Reserved;
-      USHORT  ShareAccess;
-      struct _MAILSLOT_CREATE_PARAMETERS  *Parameters;
-    } CreateMailslot;
     struct {
       ULONG  Length;
       ULONG POINTER_ALIGNMENT  Key;
