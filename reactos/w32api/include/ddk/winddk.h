@@ -38,6 +38,7 @@ extern "C" {
 #define DDKFASTAPI __fastcall
 #define DDKCDECLAPI __cdecl
 
+/* FIXME: REMOVE THIS UNCOMPATIBLE CRUFT!!! */
 #if defined(_NTOSKRNL_)
 #ifndef NTOSAPI
 #define NTOSAPI DECL_EXPORT
@@ -80,6 +81,18 @@ extern "C" {
 #else
 # define _DDK_DUMMYUNION_MEMBER(name) name
 # define _DDK_DUMMYUNION_N_MEMBER(n, name) name
+#endif
+
+#if !defined(_NTSYSTEM_)
+#define NTSYSAPI     DECLSPEC_IMPORT
+#define NTSYSCALLAPI DECLSPEC_IMPORT
+#else
+#define NTSYSAPI
+#if defined(_NTDLLBUILD_)
+#define NTSYSCALLAPI
+#else
+#define NTSYSCALLAPI DECLSPEC_ADDRSAFE
+#endif
 #endif
 
 /*
