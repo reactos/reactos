@@ -384,7 +384,7 @@ static BOOL SetComputerNameToRegistry(
 BOOL STDCALL
 SetComputerNameA (LPCSTR lpComputerName)
 {
-    return SetComputerNameExA( ComputerNameNetBIOS, lpComputerName );
+    return SetComputerNameExA( ComputerNamePhysicalNetBIOS, lpComputerName );
 }
 
 
@@ -394,7 +394,7 @@ SetComputerNameA (LPCSTR lpComputerName)
 BOOL STDCALL
 SetComputerNameW (LPCWSTR lpComputerName)
 {
-    return SetComputerNameExW( ComputerNameNetBIOS, lpComputerName );
+    return SetComputerNameExW( ComputerNamePhysicalNetBIOS, lpComputerName );
 }
 
 
