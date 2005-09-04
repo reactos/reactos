@@ -1,7 +1,57 @@
-/* $Id$ */
-
 #ifndef __DRIVERS_FS_NP_NPFS_H
 #define __DRIVERS_FS_NP_NPFS_H
+
+#include <ntifs.h>
+
+#if defined(__GNUC__)
+#include <ndk/iotypes.h>
+#define EXTENDED_IO_STACK_LOCATION IO_STACK_LOCATION
+#define PEXTENDED_IO_STACK_LOCATION PIO_STACK_LOCATION
+
+#elif defined(_MSC_VER)
+#define STDCALL
+#define KEBUGCHECK KeBugCheck
+typedef struct _NAMED_PIPE_CREATE_PARAMETERS
+{
+  ULONG           NamedPipeType;
+  ULONG           ReadMode;
+  ULONG           CompletionMode;
+  ULONG           MaximumInstances;
+  ULONG           InboundQuota;
+  ULONG           OutboundQuota;
+  LARGE_INTEGER   DefaultTimeout;
+  BOOLEAN         TimeoutSpecified;
+} NAMED_PIPE_CREATE_PARAMETERS, *PNAMED_PIPE_CREATE_PARAMETERS;
+typedef struct _EXTENDED_IO_STACK_LOCATION {
+
+    /* Included for padding */
+    UCHAR MajorFunction;
+    UCHAR MinorFunction;
+    UCHAR Flags;
+    UCHAR Control;
+
+    union {
+
+        struct {
+            PIO_SECURITY_CONTEXT            SecurityContext;
+            ULONG                           Options;
+            USHORT                          Reserved;
+            USHORT                          ShareAccess;
+            PNAMED_PIPE_CREATE_PARAMETERS   Parameters;
+        } CreatePipe;
+
+    } Parameters;
+    PDEVICE_OBJECT  DeviceObject;
+    PFILE_OBJECT  FileObject;
+    PIO_COMPLETION_ROUTINE  CompletionRoutine;
+    PVOID  Context;
+
+} EXTENDED_IO_STACK_LOCATION, *PEXTENDED_IO_STACK_LOCATION;
+
+
+#else
+#error Unknown compiler
+#endif
 
 typedef struct _NPFS_DEVICE_EXTENSION
 {

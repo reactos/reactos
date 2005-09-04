@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
  * FILE:       drivers/fs/np/fsctrl.c
@@ -10,11 +9,10 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ntifs.h>
-#include "npfs.h"
-
 #define NDEBUG
 #include <debug.h>
+
+#include "npfs.h"
 
 /* FUNCTIONS *****************************************************************/
 
@@ -170,7 +168,7 @@ NpfsDisconnectPipe(PNPFS_FCB Fcb)
    NTSTATUS Status;
    PNPFS_FCB OtherSide;
    PNPFS_PIPE Pipe;
-   BOOL Server;
+   BOOLEAN Server;
 
    DPRINT("NpfsDisconnectPipe()\n");
 
