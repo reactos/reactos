@@ -1402,6 +1402,13 @@ IoFreeMapRegisters(
 
       AdapterObject->MapRegisterBase =
          MasterAdapter->MapRegisterBase + Index;
+      if (!AdapterObject->ScatterGather)
+      {
+         AdapterObject->MapRegisterBase =
+            (PMAP_REGISTER_ENTRY)(
+               (ULONG_PTR)AdapterObject->MapRegisterBase |
+               MAP_BASE_SW_SG);
+      }
 
       Result = ((PDRIVER_CONTROL)AdapterObject->CurrentWcb->DeviceRoutine)(
          AdapterObject->CurrentWcb->DeviceObject,
@@ -1471,7 +1478,8 @@ HalpCopyBufferMap(
       KEBUGCHECK(0);
    }
 
-   CurrentAddress = (ULONG_PTR)CurrentVa -
+   CurrentAddress = (ULONG_PTR)VirtualAddress +
+                    (ULONG_PTR)CurrentVa -
                     (ULONG_PTR)MmGetMdlVirtualAddress(Mdl);
 
    while (Length > 0)
@@ -1583,7 +1591,7 @@ IoFlushAdapterBuffers(
                Length -= HalReadDmaCounter(AdapterObject);
          }
 
-         HalpCopyBufferMap(Mdl, RealMapRegisterBase, CurrentVa, Length, 0);
+         HalpCopyBufferMap(Mdl, RealMapRegisterBase, CurrentVa, Length, FALSE);
       }
       else
       {
@@ -1763,7 +1771,7 @@ IoMapTransfer(
       RealMapRegisterBase->Counter += BYTES_TO_PAGES(ByteOffset + TransferLength);
 
       /*
-       * Check if the buffer doesn't exceed the highest phisical address
+       * Check if the buffer doesn't exceed the highest physical address
        * limit of the device. In that case we must use the map registers to
        * store the data.
        */
@@ -1775,6 +1783,10 @@ IoMapTransfer(
          UseMapRegisters = TRUE;
          PhysicalAddress = RealMapRegisterBase->PhysicalAddress;
          PhysicalAddress.QuadPart += ByteOffset;
+         if ((ULONG_PTR)MapRegisterBase & MAP_BASE_SW_SG)
+         {
+            RealMapRegisterBase->Counter = ~0;
+         }
       }
    }
 
