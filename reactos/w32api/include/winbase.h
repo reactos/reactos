@@ -2093,6 +2093,7 @@ typedef PCACTCTXW PCACTCTX;
 #define ReportEvent ReportEventW
 #define SearchPath SearchPathW
 #define SetComputerName SetComputerNameW
+#define SetComputerNameEx SetComputerNameExW
 #define SetCurrentDirectory SetCurrentDirectoryW
 #define SetDefaultCommConfig SetDefaultCommConfigW
 #if (_WIN32_WINNT >= 0x0502)
@@ -2291,6 +2292,7 @@ typedef ENUMRESTYPEPROCA ENUMRESTYPEPROC;
 #define ReportEvent ReportEventA
 #define SearchPath SearchPathA
 #define SetComputerName SetComputerNameA
+#define SetComputerNameEx SetComputerNameExA
 #define SetCurrentDirectory SetCurrentDirectoryA
 #define SetDefaultCommConfig SetDefaultCommConfigA
 #if (_WIN32_WINNT >= 0x0502)

@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * KERNEL32.DLL stubs (STUB functions)
  * Remove from this file, if you implement them.
  */
@@ -1239,20 +1238,6 @@ ReplaceFileW(
  */
 BOOL
 STDCALL
-SetComputerNameExW (
-    COMPUTER_NAME_FORMAT NameType,
-    LPCWSTR lpBuffer
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
 SetFirmwareEnvironmentVariableW(
     LPCWSTR lpName,
     LPCWSTR lpGuid,
@@ -1487,20 +1472,6 @@ ReplaceFileA(
     DWORD   dwReplaceFlags,
     LPVOID  lpExclude,
     LPVOID  lpReserved
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-SetComputerNameExA (
-    COMPUTER_NAME_FORMAT NameType,
-    LPCSTR lpBuffer
     )
 {
     STUB;

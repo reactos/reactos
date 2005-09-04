@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * PURPOSE:         Computer name functions
@@ -285,31 +284,15 @@ GetComputerNameW (LPWSTR lpBuffer,
 /*
  * @implemented
  */
-BOOL STDCALL
-SetComputerNameA (LPCSTR lpComputerName)
-{
-  UNICODE_STRING ComputerName;
-  BOOL bResult;
-
-  RtlCreateUnicodeStringFromAsciiz (&ComputerName,
-				    (LPSTR)lpComputerName);
-
-  bResult = SetComputerNameW (ComputerName.Buffer);
-
-  RtlFreeUnicodeString (&ComputerName);
-
-  return bResult;
-}
-
-
-/*
- * @implemented
- */
 static BOOL
-IsValidComputerName (LPCWSTR lpComputerName)
+IsValidComputerName (
+    COMPUTER_NAME_FORMAT NameType,
+    LPCWSTR lpComputerName)
 {
   PWCHAR p;
   ULONG Length;
+
+  /* FIXME: do verification according to NameType */
 
   Length = 0;
   p = (PWCHAR)lpComputerName;
@@ -346,60 +329,137 @@ IsValidComputerName (LPCWSTR lpComputerName)
 }
 
 
+static BOOL SetComputerNameToRegistry(
+    LPCWSTR RegistryKey,
+    LPCWSTR ValueNameStr,
+    LPCWSTR lpBuffer)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING KeyName;
+    UNICODE_STRING ValueName;
+    HANDLE KeyHandle;
+    NTSTATUS Status;
+
+    RtlInitUnicodeString (&KeyName, RegistryKey);
+    InitializeObjectAttributes (&ObjectAttributes,
+        &KeyName,
+        OBJ_CASE_INSENSITIVE,
+        NULL,
+        NULL );
+
+    Status = NtOpenKey (&KeyHandle,
+        KEY_WRITE,
+        &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastErrorByStatus (Status);
+        return FALSE;
+    }
+
+    RtlInitUnicodeString (&ValueName, ValueNameStr);
+
+    Status = NtSetValueKey (KeyHandle,
+        &ValueName,
+        0,
+        REG_SZ,
+        (PVOID)lpBuffer,
+        (wcslen (lpBuffer) + 1) * sizeof(WCHAR));
+    if (!NT_SUCCESS(Status))
+    {
+        ZwClose (KeyHandle);
+        SetLastErrorByStatus (Status);
+        return FALSE;
+    }
+
+    NtFlushKey (KeyHandle);
+    ZwClose (KeyHandle);
+
+    return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL STDCALL
+SetComputerNameA (LPCSTR lpComputerName)
+{
+    return SetComputerNameExA( ComputerNameNetBIOS, lpComputerName );
+}
+
+
 /*
  * @implemented
  */
 BOOL STDCALL
 SetComputerNameW (LPCWSTR lpComputerName)
 {
-  OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING KeyName;
-  UNICODE_STRING ValueName;
-  HANDLE KeyHandle;
-  NTSTATUS Status;
+    return SetComputerNameExW( ComputerNameNetBIOS, lpComputerName );
+}
 
-  if (!IsValidComputerName (lpComputerName))
+
+/*
+ * @implemented
+ */
+BOOL STDCALL
+SetComputerNameExA (
+    COMPUTER_NAME_FORMAT NameType,
+    LPCSTR lpBuffer)
+{
+    UNICODE_STRING Buffer;
+    BOOL bResult;
+
+    RtlCreateUnicodeStringFromAsciiz (&Buffer,
+				    (LPSTR)lpBuffer);
+
+    bResult = SetComputerNameExW (NameType, Buffer.Buffer);
+
+    RtlFreeUnicodeString (&Buffer);
+
+    return bResult;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL STDCALL
+SetComputerNameExW (
+    COMPUTER_NAME_FORMAT NameType,
+    LPCWSTR lpBuffer)
+{
+  if (!IsValidComputerName (NameType, lpBuffer))
     {
       SetLastError (ERROR_INVALID_PARAMETER);
       return FALSE;
     }
 
-  RtlInitUnicodeString (&KeyName,
-			L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\ComputerName\\ComputerName");
-  InitializeObjectAttributes (&ObjectAttributes,
-			      &KeyName,
-			      OBJ_CASE_INSENSITIVE,
-			      NULL,
-			      NULL);
-  Status = NtOpenKey (&KeyHandle,
-		      KEY_WRITE,
-		      &ObjectAttributes);
-  if (!NT_SUCCESS(Status))
-    {
-      SetLastErrorByStatus (Status);
-      return FALSE;
-    }
+  switch( NameType ) {
+    case ComputerNamePhysicalDnsDomain:
+      return SetComputerNameToRegistry
+        ( L"\\Registry\\Machine\\System\\CurrentControlSet"
+          L"\\Services\\Tcpip\\Parameters",
+          L"Domain",
+          lpBuffer );
 
-  RtlInitUnicodeString (&ValueName,
-			L"ComputerName");
+    case ComputerNamePhysicalDnsHostname:
+      return SetComputerNameToRegistry
+        ( L"\\Registry\\Machine\\System\\CurrentControlSet"
+          L"\\Services\\Tcpip\\Parameters",
+          L"Hostname",
+          lpBuffer );
 
-  Status = NtSetValueKey (KeyHandle,
-			  &ValueName,
-			  0,
-			  REG_SZ,
-			  (PVOID)lpComputerName,
-			  (wcslen (lpComputerName) + 1) * sizeof(WCHAR));
-  if (!NT_SUCCESS(Status))
-    {
-      ZwClose (KeyHandle);
-      SetLastErrorByStatus (Status);
-      return FALSE;
-    }
+    case ComputerNamePhysicalNetBIOS:
+      return SetComputerNameToRegistry
+        ( L"\\Registry\\Machine\\System\\CurrentControlSet"
+          L"\\Control\\ComputerName\\ComputerName",
+          L"ComputerName",
+          lpBuffer );
 
-  NtFlushKey (KeyHandle);
-  ZwClose (KeyHandle);
-
-  return TRUE;
+    default:
+        SetLastError (ERROR_INVALID_PARAMETER);
+        return FALSE;
+  }
 }
 
 /* EOF */
