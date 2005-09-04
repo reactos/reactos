@@ -10,4 +10,5 @@
 	<file>rw.c</file>
 	<file>volume.c</file>
 	<file>npfs.rc</file>
+	<pch>npfs.h</pch>
 </module>

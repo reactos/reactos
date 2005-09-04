@@ -9,10 +9,9 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ntifs.h>
 #include "msfs.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 

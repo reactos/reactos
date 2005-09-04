@@ -889,7 +889,7 @@ typedef struct _EXTENDED_IO_STACK_LOCATION
     PFILE_OBJECT FileObject;
     PIO_COMPLETION_ROUTINE CompletionRoutine;
     PVOID Context;
-} IO_STACK_LOCATION, *PIO_STACK_LOCATION;
+} EXTENDED_IO_STACK_LOCATION, *PEXTENDED_IO_STACK_LOCATION;
 #if !defined(_ALPHA_)
 #include <poppack.h>
 #endif

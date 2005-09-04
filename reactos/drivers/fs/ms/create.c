@@ -9,8 +9,6 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ntifs.h>
-#include <ndk/iotypes.h>
 #include "msfs.h"
 
 #define NDEBUG
@@ -107,7 +105,7 @@ NTSTATUS STDCALL
 MsfsCreateMailslot(PDEVICE_OBJECT DeviceObject,
 		   PIRP Irp)
 {
-   PIO_STACK_LOCATION IoStack;
+   PEXTENDED_IO_STACK_LOCATION IoStack;
    PFILE_OBJECT FileObject;
    PMSFS_DEVICE_EXTENSION DeviceExtension;
    PMSFS_MAILSLOT Mailslot;
@@ -119,7 +117,7 @@ MsfsCreateMailslot(PDEVICE_OBJECT DeviceObject,
 
    DPRINT("MsfsCreateMailslot(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
-   IoStack = IoGetCurrentIrpStackLocation(Irp);
+   IoStack = (PEXTENDED_IO_STACK_LOCATION)IoGetCurrentIrpStackLocation(Irp);
    DeviceExtension = DeviceObject->DeviceExtension;
    FileObject = IoStack->FileObject;
    Buffer = IoStack->Parameters.CreateMailslot.Parameters;
