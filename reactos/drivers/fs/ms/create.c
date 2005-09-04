@@ -17,7 +17,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS STDCALL
+NTSTATUS DEFAULTAPI
 MsfsCreate(PDEVICE_OBJECT DeviceObject,
 	   PIRP Irp)
 {
@@ -101,7 +101,7 @@ MsfsCreate(PDEVICE_OBJECT DeviceObject,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS DEFAULTAPI
 MsfsCreateMailslot(PDEVICE_OBJECT DeviceObject,
 		   PIRP Irp)
 {
@@ -229,7 +229,7 @@ MsfsCreateMailslot(PDEVICE_OBJECT DeviceObject,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS DEFAULTAPI
 MsfsClose(PDEVICE_OBJECT DeviceObject,
 	  PIRP Irp)
 {

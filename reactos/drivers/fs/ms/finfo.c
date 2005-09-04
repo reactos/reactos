@@ -60,13 +60,13 @@ MsfsSetMailslotInformation(PMSFS_FCB Fcb,
    if (*BufferLength < sizeof(FILE_MAILSLOT_SET_INFORMATION))
      return(STATUS_BUFFER_OVERFLOW);
 
-   Fcb->Mailslot->TimeOut = Buffer->ReadTimeout;
+   Fcb->Mailslot->TimeOut = *Buffer->ReadTimeout;
 
    return(STATUS_SUCCESS);
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS DEFAULTAPI
 MsfsQueryInformation(PDEVICE_OBJECT DeviceObject,
 		     PIRP Irp)
 {
@@ -132,7 +132,7 @@ MsfsQueryInformation(PDEVICE_OBJECT DeviceObject,
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS DEFAULTAPI
 MsfsSetInformation(PDEVICE_OBJECT DeviceObject,
 		   PIRP Irp)
 {

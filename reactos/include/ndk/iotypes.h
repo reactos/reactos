@@ -14,11 +14,10 @@
 
 /* EXPORTED DATA *************************************************************/
 #ifndef NTOS_MODE_USER
-extern POBJECT_TYPE NTOSAPI IoAdapterObjectType;
-extern POBJECT_TYPE NTOSAPI IoDeviceHandlerObjectType;
-extern POBJECT_TYPE NTOSAPI IoDeviceObjectType;
-extern POBJECT_TYPE NTOSAPI IoDriverObjectType;
-extern POBJECT_TYPE NTOSAPI IoFileObjectType;
+extern POBJECT_TYPE NTSYSAPI IoAdapterObjectType;
+extern POBJECT_TYPE NTSYSAPI IoDeviceHandlerObjectType;
+extern POBJECT_TYPE NTSYSAPI IoDeviceObjectType;
+extern POBJECT_TYPE NTSYSAPI IoDriverObjectType;
 #endif
 
 /* CONSTANTS *****************************************************************/
@@ -369,7 +368,7 @@ typedef struct _FILE_MAILSLOT_QUERY_INFORMATION
 
 typedef struct _FILE_MAILSLOT_SET_INFORMATION
 {
-    LARGE_INTEGER ReadTimeout;
+    PLARGE_INTEGER ReadTimeout;
 } FILE_MAILSLOT_SET_INFORMATION, *PFILE_MAILSLOT_SET_INFORMATION;
 
 typedef struct _FILE_BOTH_DIR_INFORMATION
@@ -554,12 +553,12 @@ typedef struct _DEVICE_NODE
     struct _DEVICE_NODE *PrevSibling;
     struct _DEVICE_NODE *NextSibling;
     struct _DEVICE_NODE *Child;
-    UINT Level;
+    ULONG Level;
     struct _PO_DEVICE_NOTIFY *Notify;
     PNP_DEVNODE_STATE State;
     PNP_DEVNODE_STATE PreviousState;
     PNP_DEVNODE_STATE StateHistory[20];
-    UINT StateHistoryEntry;
+    ULONG StateHistoryEntry;
     INT CompletionStatus;
     PIRP PendingIrp;
     ULONG Flags;
@@ -625,7 +624,7 @@ typedef struct _PI_RESOURCE_ARBITER_ENTRY
     UCHAR ResourcesChanged;
 } PI_RESOURCE_ARBITER_ENTRY, *PPI_RESOURCE_ARBITER_ENTRY;
   
-typedef struct _DEVOBJ_EXTENSION
+typedef struct _EXTENDED_DEVOBJ_EXTENSION
 {
     CSHORT Type;
     USHORT Size;
@@ -639,7 +638,7 @@ typedef struct _DEVOBJ_EXTENSION
     LONG StartIoKey;
     ULONG StartIoFlags;
     struct _VPB *Vpb;
-} DEVOBJ_EXTENSION, *PDEVOBJ_EXTENSION;
+} EXTENDED_DEVOBJ_EXTENSION, *PEXTENDED_DEVOBJ_EXTENSION;
 
 typedef struct _PRIVATE_DRIVER_EXTENSIONS
 {

@@ -17,7 +17,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
-NTSTATUS STDCALL
+NTSTATUS DEFAULTAPI
 MsfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
 		      PIRP Irp)
 {

@@ -4,6 +4,22 @@
 #include <ntifs.h>
 #include <ndk/iotypes.h>
 
+/* 
+ * FIXME: GCC doesn't have a working option for defaulting to a calling
+ * convention. It will always default to cdecl. The MS DDK was designed
+ * for compilers which support this option, and thus some of their headers
+ * do not specify STDCALL or NTAPI everywhere. As such, callbacks will be
+ * interpreted as cdecl on gcc, while they should be stdcall. Defining
+ * NTAPI manually won't work either, since msvc will realize that the
+ * two definitions are different. So we have to use something to close
+ * the compatibility gap, until someone fixes gcc.
+ */
+#ifdef _MSC_VER
+#define DEFAULTAPI
+#else
+#define DEFAULTAPI __stdcall
+#endif
+
 typedef struct _MSFS_DEVICE_EXTENSION
 {
    LIST_ENTRY MailslotListHead;
@@ -48,16 +64,16 @@ typedef struct _MSFS_MESSAGE
 
 #define KeUnlockMutex(x) KeReleaseMutex(x, FALSE);
 
-NTSTATUS STDCALL MsfsCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS STDCALL MsfsCreateMailslot(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS STDCALL MsfsClose(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS DEFAULTAPI MsfsCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS DEFAULTAPI MsfsCreateMailslot(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS DEFAULTAPI MsfsClose(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
-NTSTATUS STDCALL MsfsQueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS STDCALL MsfsSetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS DEFAULTAPI MsfsQueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS DEFAULTAPI MsfsSetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
-NTSTATUS STDCALL MsfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp);
-NTSTATUS STDCALL MsfsWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS DEFAULTAPI MsfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS DEFAULTAPI MsfsWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
-NTSTATUS STDCALL MsfsFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+NTSTATUS DEFAULTAPI MsfsFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 #endif /* __SERVICES_FS_NP_NPFS_H */
