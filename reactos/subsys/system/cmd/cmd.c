@@ -296,9 +296,9 @@ static VOID
 Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 {
 	TCHAR szFullName[MAX_PATH];
-	TCHAR first[CMDLINE_LENGTH];
-	TCHAR rest[CMDLINE_LENGTH];
-	TCHAR full[CMDLINE_LENGTH];
+	TCHAR *first = NULL;
+	TCHAR *rest = NULL; 
+	TCHAR *full = NULL; 
 #ifndef __REACTOS__
 	TCHAR szWindowTitle[MAX_PATH];
 #endif
@@ -308,10 +308,39 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 	DebugPrintf (_T("Execute: \'%s\' \'%s\'\n"), first, rest);
 #endif
 
+	/* we need biger buffer that First, Rest, Full are already 
+	   need rewrite some code to use realloc when it need instead 
+	   of add 512bytes extra */
+
+	first = malloc ( _tcslen(First) + 512 * sizeof(TCHAR)); 
+	if (first == NULL)
+	{
+	 error_out_of_memory();
+	 return ;
+	}
+
+	rest =	malloc ( _tcslen(Rest) + 512 * sizeof(TCHAR)); 
+	if (rest == NULL)
+	{
+	 free (full);
+	 error_out_of_memory();
+	 return ;
+	}
+
+	full =	malloc ( _tcslen(Full) + 512 * sizeof(TCHAR));
+	if (full == NULL)
+	{
+	 free (full);
+	 free (rest);
+	 error_out_of_memory();
+	 return ;
+	}
+
+
 	/* Though it was already parsed once, we have a different set of rules
 	   for parsing before we pass to CreateProccess */
 	if(!_tcschr(Full,_T('\"')))
-	{
+	{		 
 		_tcscpy(first,First);
 		_tcscpy(rest,Rest);
 		_tcscpy(full,Full);
@@ -468,6 +497,10 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 #ifndef __REACTOS__
 	SetConsoleTitle (szWindowTitle);
 #endif
+
+ free(first);
+ free(rest);
+ free(full);
 }
 
 
