@@ -1049,8 +1049,8 @@ static void check_duplicates(HDR* blk)
          DbgPrint("intersecting blocks on list\n");
          KEBUGCHECK(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
       }
-      if  ( (ULONG_PTR)current < base &&
-            ((ULONG_PTR)current + current->hdr.Size) > base )
+      if  ( (ULONG_PTR)used < base &&
+            ((ULONG_PTR)used + used->hdr.Size) > base )
       {
          DbgPrint("intersecting blocks on list\n");
          KEBUGCHECK(/*KBUG_POOL_FREE_LIST_CORRUPT*/0);
@@ -1077,7 +1077,7 @@ static void validate_kernel_pool(void)
    p = avl_get_first(FreeBlockListRoot);
    while (p)
    {
-      freet = CONTAINING_RECORD(p, HDR_FREE, Node);
+      free = CONTAINING_RECORD(p, HDR_FREE, Node);
       check_duplicates(&free->hdr);
       p = avl_get_next(FreeBlockListRoot, p);
    }
