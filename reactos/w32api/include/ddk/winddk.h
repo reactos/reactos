@@ -74,6 +74,7 @@ extern "C" {
 
 #define RESTRICTED_POINTER
 #define POINTER_ALIGNMENT
+#define DECLSPEC_ADDRSAFE
 
 #ifdef NONAMELESSUNION
 # define _DDK_DUMMYUNION_MEMBER(name) DUMMYUNIONNAME.name
@@ -349,6 +350,9 @@ typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
    FILE_APPEND_DATA | \
    SYNCHRONIZE)
 /* end winnt.h */
+
+#define OBJECT_TYPE_CREATE (0x0001)
+#define OBJECT_TYPE_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0x1)
 
 #define DIRECTORY_QUERY (0x0001)
 #define DIRECTORY_TRAVERSE (0x0002)
@@ -3836,6 +3840,38 @@ typedef struct _RTL_BITMAP_RUN {
     ULONG  NumberOfBits;
 } RTL_BITMAP_RUN, *PRTL_BITMAP_RUN;
 
+typedef struct _RTL_RANGE_LIST
+{
+    LIST_ENTRY ListHead;
+    ULONG Flags;  /* RTL_RANGE_LIST_... flags */
+    ULONG Count;
+    ULONG Stamp;
+} RTL_RANGE_LIST, *PRTL_RANGE_LIST;
+
+typedef struct _RTL_RANGE
+{
+    ULONGLONG Start;
+    ULONGLONG End;
+    PVOID UserData;
+    PVOID Owner;
+    UCHAR Attributes;
+    UCHAR Flags;  /* RTL_RANGE_... flags */
+} RTL_RANGE, *PRTL_RANGE;
+
+typedef struct _RANGE_LIST_ITERATOR
+{
+    PLIST_ENTRY RangeListHead;
+    PLIST_ENTRY MergedHead;
+    PVOID Current;
+    ULONG Stamp;
+} RTL_RANGE_LIST_ITERATOR, *PRTL_RANGE_LIST_ITERATOR;
+
+typedef BOOLEAN
+(NTAPI *PRTL_CONFLICT_RANGE_CALLBACK) (
+    PVOID Context,
+    struct _RTL_RANGE *Range
+);
+
 typedef NTSTATUS
 (DDKAPI *PRTL_QUERY_REGISTRY_ROUTINE)(
   IN PWSTR  ValueName,
@@ -4358,6 +4394,14 @@ typedef enum _PROCESSINFOCLASS {
   ProcessDebugObjectHandle,
   ProcessDebugFlags,
   ProcessHandleTracing,
+  ProcessIoPriority,
+  ProcessExecuteFlags,
+  ProcessTlsInformation,
+  ProcessCookie,
+  ProcessImageInformation,
+  ProcessCycleTime,
+  ProcessPagePriority,
+  ProcessInstrumentationCallback,
   MaxProcessInfoClass
 } PROCESSINFOCLASS;
 
@@ -4381,14 +4425,66 @@ typedef enum _THREADINFOCLASS {
   ThreadIsIoPending,
   ThreadHideFromDebugger,
   ThreadBreakOnTermination,
+  ThreadSwitchLegacyState,
+  ThreadIsTerminated,
+  ThreadLastSystemCall,
+  ThreadIoPriority,
+  ThreadCycleTime,
+  ThreadPagePriority,
+  ThreadActualBasePriority,
   MaxThreadInfoClass
 } THREADINFOCLASS;
+
+typedef struct _PROCESS_BASIC_INFORMATION
+{
+    NTSTATUS ExitStatus;
+    PPEB PebBaseAddress;
+    ULONG_PTR AffinityMask;
+    KPRIORITY BasePriority;
+    ULONG_PTR UniqueProcessId;
+    ULONG_PTR InheritedFromUniqueProcessId;
+} PROCESS_BASIC_INFORMATION,*PPROCESS_BASIC_INFORMATION;
 
 typedef struct _PROCESS_WS_WATCH_INFORMATION
 {
     PVOID FaultingPc;
     PVOID FaultingVa;
 } PROCESS_WS_WATCH_INFORMATION, *PPROCESS_WS_WATCH_INFORMATION;
+
+typedef struct _PROCESS_DEVICEMAP_INFORMATION
+{
+    union
+    {
+        struct
+        {
+            HANDLE DirectoryHandle;
+        } Set;
+        struct
+        {
+            ULONG DriveMap;
+            UCHAR DriveType[32];
+        } Query;
+    };
+} PROCESS_DEVICEMAP_INFORMATION, *PPROCESS_DEVICEMAP_INFORMATION;
+
+typedef struct _KERNEL_USER_TIMES
+{
+    LARGE_INTEGER CreateTime;
+    LARGE_INTEGER ExitTime;
+    LARGE_INTEGER KernelTime;
+    LARGE_INTEGER UserTime;
+} KERNEL_USER_TIMES, *PKERNEL_USER_TIMES;
+
+typedef struct _PROCESS_ACCESS_TOKEN
+{
+    HANDLE Token;
+    HANDLE Thread;
+} PROCESS_ACCESS_TOKEN, *PPROCESS_ACCESS_TOKEN;
+
+typedef struct _PROCESS_SESSION_INFORMATION
+{
+    ULONG SessionId;
+} PROCESS_SESSION_INFORMATION, *PPROCESS_SESSION_INFORMATION;
 
 #define ES_SYSTEM_REQUIRED                0x00000001
 #define ES_DISPLAY_REQUIRED               0x00000002

@@ -93,7 +93,7 @@ DWORD
 STDCALL
 RtlCompactHeap(
     HANDLE heap,
-    DWORD flags
+    ULONG flags
 );
 
 HANDLE

@@ -46,13 +46,6 @@ SeReleaseSecurityDescriptor(
     IN BOOLEAN CaptureIfKernelMode
 );
 
-VOID
-NTAPI
-SeSetAccessStateGenericMapping(
-    IN PACCESS_STATE AccessState,
-    IN PGENERIC_MAPPING GenericMapping
-);
-
 SECURITY_IMPERSONATION_LEVEL
 NTAPI
 SeTokenImpersonationLevel(

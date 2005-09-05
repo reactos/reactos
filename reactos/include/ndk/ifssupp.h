@@ -112,5 +112,12 @@ typedef struct _SECURITY_CLIENT_CONTEXT
     TOKEN_CONTROL ClientTokenControl;
 } SECURITY_CLIENT_CONTEXT, *PSECURITY_CLIENT_CONTEXT;
 
+typedef enum _RTL_GENERIC_COMPARE_RESULTS
+{
+    GenericLessThan,
+    GenericGreaterThan,
+    GenericEqual
+} RTL_GENERIC_COMPARE_RESULTS;
+
 #endif
 

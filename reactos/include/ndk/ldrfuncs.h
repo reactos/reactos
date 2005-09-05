@@ -11,6 +11,8 @@
 
 /* DEPENDENCIES **************************************************************/
 #include "ldrtypes.h"
+/* FIXME: this needs be implemented in the w32api ddk */
+//#include "ntimage.h"
 
 /* FUNCTION TYPES ************************************************************/
 

@@ -8,6 +8,10 @@
 
 /* INCLUDES ******************************************************************/
 
+/* We're a core NT DLL, we don't import syscalls */
+#define _NTSYSTEM_
+#define _NTDLLBUILD_
+
 /* C Headers */
 #include <stdio.h>
 

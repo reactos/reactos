@@ -123,6 +123,14 @@ typedef enum _PROCESSINFOCLASS
     ProcessDebugObjectHandle,
     ProcessDebugFlags,
     ProcessHandleTracing,
+    ProcessIoPriority,
+    ProcessExecuteFlags,
+    ProcessTlsInformation,
+    ProcessCookie,
+    ProcessImageInformation,
+    ProcessCycleTime,
+    ProcessPagePriority,
+    ProcessInstrumentationCallback,
     MaxProcessInfoClass
 } PROCESSINFOCLASS;
 
@@ -147,8 +155,32 @@ typedef enum _THREADINFOCLASS
     ThreadIsIoPending,
     ThreadHideFromDebugger,
     ThreadBreakOnTermination,
+    ThreadSwitchLegacyState,
+    ThreadIsTerminated,
+    ThreadLastSystemCall,
+    ThreadIoPriority,
+    ThreadCycleTime,
+    ThreadPagePriority,
+    ThreadActualBasePriority,
     MaxThreadInfoClass
 } THREADINFOCLASS;
+#endif
+
+#ifndef NTOS_MODE_USER
+typedef enum _JOBOBJECTINFOCLASS
+{
+    JobObjectBasicAccountingInformation = 1,
+    JobObjectBasicLimitInformation,
+    JobObjectBasicProcessIdList,
+    JobObjectBasicUIRestrictions,
+    JobObjectSecurityLimitInformation,
+    JobObjectEndOfJobTimeInformation,
+    JobObjectAssociateCompletionPortInformation,
+    JobObjectBasicAndIoAccountingInformation,
+    JobObjectExtendedLimitInformation,
+    JobObjectJobSetInformation,
+    MaxJobObjectInfoClass
+} JOBOBJECTINFOCLASS;
 #endif
 
 /* FUNCTION TYPES ************************************************************/
@@ -359,6 +391,53 @@ typedef struct _TEB
     UCHAR SafeThunkCall;                    /* FB8h */
     UCHAR BooleanSpare[3];                  /* FB9h */
 } TEB, *PTEB;
+
+#ifdef NTOS_MODE_USER
+typedef struct _PROCESS_BASIC_INFORMATION
+{
+    NTSTATUS ExitStatus;
+    PPEB PebBaseAddress;
+    ULONG_PTR AffinityMask;
+    KPRIORITY BasePriority;
+    ULONG_PTR UniqueProcessId;
+    ULONG_PTR InheritedFromUniqueProcessId;
+} PROCESS_BASIC_INFORMATION,*PPROCESS_BASIC_INFORMATION;
+
+typedef struct _PROCESS_ACCESS_TOKEN
+{
+    HANDLE Token;
+    HANDLE Thread;
+} PROCESS_ACCESS_TOKEN, *PPROCESS_ACCESS_TOKEN;
+
+typedef struct _PROCESS_DEVICEMAP_INFORMATION
+{
+    union
+    {
+        struct
+        {
+            HANDLE DirectoryHandle;
+        } Set;
+        struct
+        {
+            ULONG DriveMap;
+            UCHAR DriveType[32];
+        } Query;
+    };
+} PROCESS_DEVICEMAP_INFORMATION, *PPROCESS_DEVICEMAP_INFORMATION;
+
+typedef struct _KERNEL_USER_TIMES
+{
+    LARGE_INTEGER CreateTime;
+    LARGE_INTEGER ExitTime;
+    LARGE_INTEGER KernelTime;
+    LARGE_INTEGER UserTime;
+} KERNEL_USER_TIMES, *PKERNEL_USER_TIMES;
+
+typedef struct _PROCESS_SESSION_INFORMATION
+{
+    ULONG SessionId;
+} PROCESS_SESSION_INFORMATION, *PPROCESS_SESSION_INFORMATION;
+#endif
 
 #ifndef NTOS_MODE_USER
 /* FIXME: see note in mmtypes.h */

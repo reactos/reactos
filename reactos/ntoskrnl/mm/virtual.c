@@ -277,7 +277,7 @@ MiQueryVirtualMemory (IN HANDLE ProcessHandle,
 NTSTATUS STDCALL
 NtQueryVirtualMemory (IN HANDLE ProcessHandle,
                       IN PVOID Address,
-                      IN CINT VirtualMemoryInformationClass,
+                      IN MEMORY_INFORMATION_CLASS VirtualMemoryInformationClass,
                       OUT PVOID VirtualMemoryInformation,
                       IN ULONG Length,
                       OUT PULONG UnsafeResultLength)

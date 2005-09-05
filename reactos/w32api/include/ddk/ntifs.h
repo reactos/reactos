@@ -1323,6 +1323,13 @@ typedef struct _RTL_SPLAY_LINKS {
     struct _RTL_SPLAY_LINKS *RightChild;
 } RTL_SPLAY_LINKS, *PRTL_SPLAY_LINKS;
 
+typedef enum _RTL_GENERIC_COMPARE_RESULTS
+{
+    GenericLessThan,
+    GenericGreaterThan,
+    GenericEqual
+} RTL_GENERIC_COMPARE_RESULTS;
+
 #if defined(USE_LPC6432)
 #define LPC_CLIENT_ID CLIENT_ID64
 #define LPC_SIZE_T ULONGLONG

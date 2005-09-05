@@ -61,15 +61,24 @@
 #undef STATUS_SXS_INVALID_DEACTIVATION
 
 #include <ntstatus.h>
-#define STATIC static
 
 /* CONSTANTS *****************************************************************/
 
 /* NTAPI/NTOSAPI Define */
+#define DECLSPEC_ADDRSAFE
 #define NTAPI __stdcall
-#define NTOSAPI
 #define FASTCALL __fastcall
-#define STDCALL __stdcall
+#if !defined(_NTSYSTEM_)
+#define NTSYSAPI     DECLSPEC_IMPORT
+#define NTSYSCALLAPI DECLSPEC_IMPORT
+#else
+#define NTSYSAPI
+#if defined(_NTDLLBUILD_)
+#define NTSYSCALLAPI
+#else
+#define NTSYSCALLAPI DECLSPEC_ADDRSAFE
+#endif
+#endif
 
 /* Native API Return Value Macros */
 #define NT_SUCCESS(x) ((x)>=0)
@@ -81,10 +90,12 @@
 /* Basic Types that aren't defined in User-Mode Headers */
 typedef CONST int CINT;
 typedef CONST char *PCSZ;
+typedef ULONG CLONG;
 typedef short CSHORT;
 typedef CSHORT *PCSHORT;
 typedef LARGE_INTEGER PHYSICAL_ADDRESS, *PPHYSICAL_ADDRESS;
 typedef LONG NTSTATUS, *PNTSTATUS;
+#define STATIC static
 
 /* Basic NT Types */
 #if !defined(_NTSECAPI_H) && !defined(_SUBAUTH_H)

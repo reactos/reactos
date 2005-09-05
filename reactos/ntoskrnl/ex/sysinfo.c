@@ -1654,7 +1654,7 @@ STDCALL
 NtFlushInstructionCache (
 	IN	HANDLE	ProcessHandle,
 	IN	PVOID	BaseAddress,
-	IN	UINT	NumberOfBytesToFlush
+	IN	ULONG	NumberOfBytesToFlush
 	)
 {
         PAGED_CODE();

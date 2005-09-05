@@ -91,12 +91,15 @@
 #define VER_CONDITION_MASK              7
 #define VER_NUM_BITS_PER_CONDITION_MASK 3
 
+#define RTL_CRITSECT_TYPE               0
+#define RTL_RESOURCE_TYPE               1
+
+#ifdef NTOS_MODE_USER
 /* RTL String Hash Algorithms */
 #define HASH_STRING_ALGORITHM_DEFAULT   0
 #define HASH_STRING_ALGORITHM_X65599    1
 #define HASH_STRING_ALGORITHM_INVALID   0xffffffff
 
-#ifdef NTOS_MODE_USER
 /* List Macros */
 static __inline
 VOID
@@ -231,6 +234,7 @@ RemoveTailList(
 
 /* ENUMERATIONS **************************************************************/
 
+#ifdef NTOS_MODE_USER
 typedef enum _TABLE_SEARCH_RESULT
 {
     TableEmptyTree,
@@ -245,6 +249,7 @@ typedef enum _RTL_GENERIC_COMPARE_RESULTS
     GenericGreaterThan,
     GenericEqual
 } RTL_GENERIC_COMPARE_RESULTS;
+#endif
 
 typedef enum
 {
@@ -281,8 +286,8 @@ typedef LONG (NTAPI *PVECTORED_EXCEPTION_HANDLER)(
     PEXCEPTION_POINTERS ExceptionPointers
 );
 
-typedef DWORD (NTAPI *PTHREAD_START_ROUTINE)(
-    LPVOID Parameter
+typedef ULONG (NTAPI *PTHREAD_START_ROUTINE)(
+    PVOID Parameter
 );
 
 typedef VOID
@@ -315,7 +320,7 @@ typedef RTL_GENERIC_COMPARE_RESULTS
 typedef PVOID
 (NTAPI *PRTL_GENERIC_ALLOCATE_ROUTINE) (
     struct _RTL_GENERIC_TABLE *Table,
-    LONG ByteSize
+    CLONG ByteSize
 );
 
 typedef VOID
@@ -324,10 +329,10 @@ typedef VOID
     PVOID Buffer
 );
 
-typedef VOID
+typedef PVOID
 (NTAPI *PRTL_AVL_ALLOCATE_ROUTINE) (
     struct _RTL_AVL_TABLE *Table,
-    LONG ByteSize
+    CLONG ByteSize
 );
 
 typedef VOID
@@ -353,11 +358,14 @@ typedef NTSTATUS
     IN OUT PSIZE_T CommitSize
 );
 
+#ifdef NTOS_MODE_USER
 typedef BOOLEAN
 (NTAPI *PRTL_CONFLICT_RANGE_CALLBACK) (
     PVOID Context,
     struct _RTL_RANGE *Range
 );
+#endif
+
 /* TYPES *********************************************************************/
 
 #ifdef NTOS_MODE_USER
@@ -634,6 +642,30 @@ typedef struct RTL_DRIVE_LETTER_CURDIR
     UNICODE_STRING DosPath;
 } RTL_DRIVE_LETTER_CURDIR, *PRTL_DRIVE_LETTER_CURDIR;
 
+#ifndef NTOS_MODE_USER
+typedef struct _RTL_CRITICAL_SECTION_DEBUG
+{
+    USHORT Type;
+    USHORT CreatorBackTraceIndex;
+    struct _RTL_CRITICAL_SECTION *CriticalSection;
+    LIST_ENTRY ProcessLocksList;
+    ULONG EntryCount;
+    ULONG ContentionCount;
+    ULONG Spare[2];
+} RTL_CRITICAL_SECTION_DEBUG, *PRTL_CRITICAL_SECTION_DEBUG, RTL_RESOURCE_DEBUG, *PRTL_RESOURCE_DEBUG;
+
+typedef struct _RTL_CRITICAL_SECTION
+{
+    PRTL_CRITICAL_SECTION_DEBUG DebugInfo;
+    LONG LockCount;
+    LONG RecursionCount;
+    HANDLE OwningThread;
+    HANDLE LockSemaphore;
+    ULONG_PTR SpinCount;
+} RTL_CRITICAL_SECTION, *PRTL_CRITICAL_SECTION;
+#endif
+
+#ifdef NTOS_MODE_USER
 typedef struct _RTL_RANGE_LIST
 {
     LIST_ENTRY ListHead;
@@ -652,6 +684,16 @@ typedef struct _RTL_RANGE
     UCHAR Flags;  /* RTL_RANGE_... flags */
 } RTL_RANGE, *PRTL_RANGE;
 
+typedef struct _RANGE_LIST_ITERATOR
+{
+    PLIST_ENTRY RangeListHead;
+    PLIST_ENTRY MergedHead;
+    PVOID Current;
+    ULONG Stamp;
+} RTL_RANGE_LIST_ITERATOR, *PRTL_RANGE_LIST_ITERATOR;
+
+#endif
+
 typedef struct _RTL_RESOURCE
 {
     RTL_CRITICAL_SECTION Lock;
@@ -664,14 +706,6 @@ typedef struct _RTL_RESOURCE
     ULONG TimeoutBoost; /* ?? */
     PVOID DebugInfo; /* ?? */
 } RTL_RESOURCE, *PRTL_RESOURCE;
-
-typedef struct _RANGE_LIST_ITERATOR
-{
-    PLIST_ENTRY RangeListHead;
-    PLIST_ENTRY MergedHead;
-    PVOID Current;
-    ULONG Stamp;
-} RTL_RANGE_LIST_ITERATOR, *PRTL_RANGE_LIST_ITERATOR;
 
 typedef struct _RTL_MESSAGE_RESOURCE_ENTRY
 {
@@ -779,41 +813,41 @@ typedef struct _RTL_ATOM_TABLE
     PRTL_ATOM_TABLE_ENTRY Buckets[1];
 } RTL_ATOM_TABLE, *PRTL_ATOM_TABLE;
 
-/* Let Kernel Drivers use this */
-#if !defined(_WINBASE_H) && !defined(_WINBASE_)
-    typedef struct _SYSTEMTIME
-    {
-        WORD wYear;
-        WORD wMonth;
-        WORD wDayOfWeek;
-        WORD wDay;
-        WORD wHour;
-        WORD wMinute;
-        WORD wSecond;
-        WORD wMilliseconds;
-    } SYSTEMTIME, *PSYSTEMTIME, *LPSYSTEMTIME;
+#ifndef NTOS_MODE_USER
+    
+typedef struct _SYSTEMTIME
+{
+    USHORT wYear;
+    USHORT wMonth;
+    USHORT wDayOfWeek;
+    USHORT wDay;
+    USHORT wHour;
+    USHORT wMinute;
+    USHORT wSecond;
+    USHORT wMilliseconds;
+} SYSTEMTIME, *PSYSTEMTIME, *LPSYSTEMTIME;
 
-    typedef struct _TIME_ZONE_INFORMATION
-    {
-        LONG Bias;
-        WCHAR StandardName[32];
-        SYSTEMTIME StandardDate;
-        LONG StandardBias;
-        WCHAR DaylightName[32];
-        SYSTEMTIME DaylightDate;
-        LONG DaylightBias;
-    } TIME_ZONE_INFORMATION, *PTIME_ZONE_INFORMATION, *LPTIME_ZONE_INFORMATION;
+typedef struct _TIME_ZONE_INFORMATION
+{
+    LONG Bias;
+    WCHAR StandardName[32];
+    SYSTEMTIME StandardDate;
+    LONG StandardBias;
+    WCHAR DaylightName[32];
+    SYSTEMTIME DaylightDate;
+    LONG DaylightBias;
+} TIME_ZONE_INFORMATION, *PTIME_ZONE_INFORMATION, *LPTIME_ZONE_INFORMATION;
 
-    typedef enum _ACL_INFORMATION_CLASS
-    {
-        AclRevisionInformation = 1,
-        AclSizeInformation
-    } ACL_INFORMATION_CLASS;
+typedef enum _ACL_INFORMATION_CLASS
+{
+    AclRevisionInformation = 1,
+    AclSizeInformation
+} ACL_INFORMATION_CLASS;
 
-    #define TIME_ZONE_ID_UNKNOWN 0
-    #define TIME_ZONE_ID_STANDARD 1
-    #define TIME_ZONE_ID_DAYLIGHT 2
-    #define TIME_ZONE_ID_INVALID 0xFFFFFFFF
+#define TIME_ZONE_ID_UNKNOWN 0
+#define TIME_ZONE_ID_STANDARD 1
+#define TIME_ZONE_ID_DAYLIGHT 2
+#define TIME_ZONE_ID_INVALID 0xFFFFFFFF
 #endif
 
 #endif
