@@ -82,6 +82,7 @@ struct res_tree
     unsigned int     nb_types;             /* total number of types */
 };
 
+static int byte_swapped;  /* whether the current resource file is byte-swapped */
 static const unsigned char *file_pos;   /* current position in resource file */
 static const unsigned char *file_end;   /* end of resource file */
 static const char *file_name;  /* current resource file name */
@@ -137,6 +138,7 @@ static struct res_type *add_type( struct res_tree *tree, const struct resource *
 static WORD get_word(void)
 {
     WORD ret = *(const WORD *)file_pos;
+    if (byte_swapped) ret = (ret << 8) | (ret >> 8);
     file_pos += sizeof(WORD);
     if (file_pos > file_end) fatal_error( "%s is a truncated file\n", file_name );
     return ret;
@@ -146,6 +148,8 @@ static WORD get_word(void)
 static DWORD get_dword(void)
 {
     DWORD ret = *(const DWORD *)file_pos;
+    if (byte_swapped)
+        ret = ((ret << 24) | ((ret << 8) & 0x00ff0000) | ((ret >> 8) & 0x0000ff00) | (ret >> 24));
     file_pos += sizeof(DWORD);
     if (file_pos > file_end) fatal_error( "%s is a truncated file\n", file_name );
     return ret;
@@ -173,8 +177,12 @@ static void get_string( struct string_id *str )
 /* all values must be zero except header size */
 static int check_header(void)
 {
+    DWORD size;
+
     if (get_dword()) return 0;        /* data size */
-    if (get_dword() != 32) return 0;  /* header size */
+    size = get_dword();               /* header size */
+    if (size == 0x20000000) byte_swapped = 1;
+    else if (size != 0x20) return 0;
     if (get_word() != 0xffff || get_word()) return 0;  /* type, must be id 0 */
     if (get_word() != 0xffff || get_word()) return 0;  /* name, must be id 0 */
     if (get_dword()) return 0;        /* data version */
@@ -228,6 +236,7 @@ int load_res32_file( const char *name, DLLSPEC *spec )
             fatal_error( "Cannot read %s\n", name );
     }
 
+    byte_swapped = 0;
     file_name = name;
     file_pos  = base;
     file_end  = file_pos + st.st_size;

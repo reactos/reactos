@@ -362,15 +362,10 @@ static void output_stub_funcs( FILE *outfile, const DLLSPEC *spec )
         ORDDEF *odp = spec->ordinals[i];
         if (!odp || odp->type != TYPE_STUB) continue;
         fprintf( outfile, "#ifdef __GNUC__\n" );
-        fprintf( outfile, "static void __wine_unimplemented( const char *func ) __attribute__((noreturn));\n" );
-        fprintf( outfile, "#endif\n" );
-        fprintf( outfile, "static void __wine_unimplemented( const char *func )\n{\n" );
-        fprintf( outfile, "  extern void __stdcall RaiseException( unsigned int, unsigned int, unsigned int, const void ** );\n" );
-        fprintf( outfile, "  const void *args[2];\n" );
-        fprintf( outfile, "  args[0] = \"%s\";\n", spec->file_name );
-        fprintf( outfile, "  args[1] = func;\n" );
-        fprintf( outfile, "  for (;;) RaiseException( 0x%08x, %d, 2, args );\n}\n\n",
-                 EXCEPTION_WINE_STUB, EH_NONCONTINUABLE );
+        fprintf( outfile, "extern void __wine_spec_unimplemented_stub( const char *module, const char *func ) __attribute__((noreturn));\n" );
+        fprintf( outfile, "#else\n" );
+        fprintf( outfile, "extern void __wine_spec_unimplemented_stub( const char *module, const char *func );\n" );
+        fprintf( outfile, "#endif\n\n" );
         break;
     }
     for (i = 0; i <= spec->limit; i++)
@@ -381,7 +376,7 @@ static void output_stub_funcs( FILE *outfile, const DLLSPEC *spec )
         strcpy( odp->link_name, "__wine_stub_" );
         strcat( odp->link_name, odp->name );
         for (p = odp->link_name; *p; p++) if (!isalnum(*p)) *p = '_';
-        fprintf( outfile, "static void %s(void) { __wine_unimplemented(\"%s\"); }\n",
+        fprintf( outfile, "static void %s(void) { __wine_spec_unimplemented_stub(__wine_spec16_file_name, \"%s\"); }\n",
                  odp->link_name, odp->name );
     }
 }
@@ -413,6 +408,7 @@ void BuildSpec16File( FILE *outfile, DLLSPEC *spec )
     /* File header */
 
     output_file_header( outfile );
+    fprintf( outfile, "static const char __wine_spec16_file_name[] = \"%s\";\n", spec->file_name );
     fprintf( outfile, "extern unsigned short __wine_call_from_16_word();\n" );
     fprintf( outfile, "extern unsigned int __wine_call_from_16_long();\n" );
     fprintf( outfile, "extern void __wine_call_from_16_regs();\n" );

@@ -66,30 +66,6 @@ static const char *make_internal_name( const ORDDEF *odp, DLLSPEC *spec, const c
     return buffer;
 }
 
-/*******************************************************************
- *         declare_weak_function
- *
- * Output a prototype for a weak function.
- */
-static void declare_weak_function( FILE *outfile, const char *ret_type, const char *name, const char *params)
-{
-    fprintf( outfile, "#ifdef __GNUC__\n" );
-    if (target_platform == PLATFORM_APPLE)
-    {
-        fprintf( outfile, "extern %s %s(%s) __attribute__((weak_import));\n", ret_type, name, params );
-        fprintf( outfile, "static %s (*__wine_spec_weak_%s)(%s) = %s;\n", ret_type, name, params, name );
-        fprintf( outfile, "#define %s __wine_spec_weak_%s\n", name, name );
-        fprintf( outfile, "asm(\".weak_reference %s\");\n", asm_name(name) );
-    }
-    else fprintf( outfile, "extern %s %s(%s) __attribute__((weak));\n", ret_type, name, params );
-
-    fprintf( outfile, "#else\n" );
-    fprintf( outfile, "extern %s %s(%s);\n", ret_type, name, params );
-    fprintf( outfile, "static void __asm__dummy_%s(void)", name );
-    fprintf( outfile, " { asm(\".weak %s\"); }\n", asm_name(name) );
-    fprintf( outfile, "#endif\n\n" );
-}
-
 
 /*******************************************************************
  *         output_debug
@@ -128,7 +104,7 @@ static int output_debug( FILE *outfile )
 static int get_exports_size( DLLSPEC *spec )
 {
     int nr_exports = spec->base <= spec->limit ? spec->limit - spec->base + 1 : 0;
-    int i, fwd_size = 0, total_size;
+    int i, strings_size, total_size;
 
     if (!nr_exports) return 0;
 
@@ -145,34 +121,20 @@ static int get_exports_size( DLLSPEC *spec )
     total_size += spec->nb_names * sizeof(short);
     if (spec->nb_names % 2) total_size += sizeof(short);
 
+    /* export name strings */
+    strings_size = strlen(spec->file_name) + 1;
+    for (i = 0; i < spec->nb_names; i++)
+        strings_size += strlen(spec->names[i]->name) + 1;
+
     /* forward strings */
     for (i = spec->base; i <= spec->limit; i++)
     {
         ORDDEF *odp = spec->ordinals[i];
-        if (odp && odp->flags & FLAG_FORWARD) fwd_size += strlen(odp->link_name) + 1;
+        if (odp && odp->flags & FLAG_FORWARD) strings_size += strlen(odp->link_name) + 1;
     }
-    total_size += (fwd_size + 3) & ~3;
+    total_size += (strings_size + 3) & ~3;
 
     return total_size;
-}
-
-
-/*******************************************************************
- *         output_export_names
- *
- * Output all the exported names for a Win32 module.
- */
-static void output_export_names( FILE *outfile, DLLSPEC *spec )
-{
-    int i, nr_exports = spec->base <= spec->limit ? spec->limit - spec->base + 1 : 0;
-
-    if (!nr_exports) return;
-
-    fprintf( outfile, "\nconst char __wine_spec_exp_names[] =" );
-    fprintf( outfile, "\n    \"%s\\0\"", spec->file_name );
-    for (i = 0; i < spec->nb_names; i++)
-        fprintf( outfile, "\n    \"%s\\0\"", spec->names[i]->name );
-    fprintf( outfile, ";\n" );
 }
 
 
@@ -198,7 +160,7 @@ static void output_exports( FILE *outfile, DLLSPEC *spec )
     fprintf( outfile, "    \"\\t.long 0\\n\"\n" );                 /* Characteristics */
     fprintf( outfile, "    \"\\t.long 0\\n\"\n" );                 /* TimeDateStamp */
     fprintf( outfile, "    \"\\t.long 0\\n\"\n" );                 /* MajorVersion/MinorVersion */
-    fprintf( outfile, "    \"\\t.long %s\\n\"\n", asm_name("__wine_spec_exp_names") ); /* Name */
+    fprintf( outfile, "    \"\\t.long __wine_spec_exp_names\\n\"\n" ); /* Name */
     fprintf( outfile, "    \"\\t.long %d\\n\"\n", spec->base );        /* Base */
     fprintf( outfile, "    \"\\t.long %d\\n\"\n", nr_exports );        /* NumberOfFunctions */
     fprintf( outfile, "    \"\\t.long %d\\n\"\n", spec->nb_names );    /* NumberOfNames */
@@ -255,13 +217,10 @@ static void output_exports( FILE *outfile, DLLSPEC *spec )
         fprintf( outfile, "    \"__wine_spec_exp_name_ptrs:\\n\"\n" );
         for (i = 0; i < spec->nb_names; i++)
         {
-            fprintf( outfile, "    \"\\t.long %s+%d\\n\"\n", asm_name("__wine_spec_exp_names"), namepos );
+            fprintf( outfile, "    \"\\t.long __wine_spec_exp_names+%d\\n\"\n", namepos );
             namepos += strlen(spec->names[i]->name) + 1;
         }
-    }
 
-    if (spec->nb_names)
-    {
         /* output the function ordinals */
 
         fprintf( outfile, "    \"__wine_spec_exp_ordinals:\\n\"\n" );
@@ -276,6 +235,14 @@ static void output_exports( FILE *outfile, DLLSPEC *spec )
         }
     }
 
+    /* output the export name strings */
+
+    fprintf( outfile, "    \"__wine_spec_exp_names:\\n\"\n" );
+    fprintf( outfile, "    \"\\t%s \\\"%s\\\"\\n\"\n", get_asm_string_keyword(), spec->file_name );
+    for (i = 0; i < spec->nb_names; i++)
+        fprintf( outfile, "    \"\\t%s \\\"%s\\\"\\n\"\n",
+                 get_asm_string_keyword(), spec->names[i]->name );
+
     /* output forward strings */
 
     if (fwd_size)
@@ -287,8 +254,8 @@ static void output_exports( FILE *outfile, DLLSPEC *spec )
             if (odp && (odp->flags & FLAG_FORWARD))
                 fprintf( outfile, "    \"\\t%s \\\"%s\\\"\\n\"\n", get_asm_string_keyword(), odp->link_name );
         }
-        fprintf( outfile, "    \"\\t.align %d\\n\"\n", get_alignment(4) );
     }
+    fprintf( outfile, "    \"\\t.align %d\\n\"\n", get_alignment(4) );
 
     /* output relays */
 
@@ -356,29 +323,10 @@ static void output_stub_funcs( FILE *outfile, DLLSPEC *spec )
         ORDDEF *odp = &spec->entry_points[i];
         if (odp->type != TYPE_STUB) continue;
         fprintf( outfile, "#ifdef __GNUC__\n" );
-        fprintf( outfile, "static void __wine_unimplemented( const char *func ) __attribute__((noreturn));\n" );
-        fprintf( outfile, "#endif\n\n" );
-        fprintf( outfile, "struct exc_record {\n" );
-        fprintf( outfile, "  unsigned int code, flags;\n" );
-        fprintf( outfile, "  void *rec, *addr;\n" );
-        fprintf( outfile, "  unsigned int params;\n" );
-        fprintf( outfile, "  const void *info[15];\n" );
-        fprintf( outfile, "};\n\n" );
-        fprintf( outfile, "extern void __stdcall RtlRaiseException( struct exc_record * );\n\n" );
-        fprintf( outfile, "static void __wine_unimplemented( const char *func )\n{\n" );
-        fprintf( outfile, "  struct exc_record rec;\n" );
-        fprintf( outfile, "  rec.code    = 0x%08x;\n", EXCEPTION_WINE_STUB );
-        fprintf( outfile, "  rec.flags   = %d;\n", EH_NONCONTINUABLE );
-        fprintf( outfile, "  rec.rec     = 0;\n" );
-        fprintf( outfile, "  rec.params  = 2;\n" );
-        fprintf( outfile, "  rec.info[0] = \"%s\";\n", spec->file_name );
-        fprintf( outfile, "  rec.info[1] = func;\n" );
-        fprintf( outfile, "#ifdef __GNUC__\n" );
-        fprintf( outfile, "  rec.addr = __builtin_return_address(1);\n" );
+        fprintf( outfile, "extern void __wine_spec_unimplemented_stub( const char *module, const char *func ) __attribute__((noreturn));\n" );
         fprintf( outfile, "#else\n" );
-        fprintf( outfile, "  rec.addr = 0;\n" );
-        fprintf( outfile, "#endif\n" );
-        fprintf( outfile, "  for (;;) RtlRaiseException( &rec );\n}\n\n" );
+        fprintf( outfile, "extern void __wine_spec_unimplemented_stub( const char *module, const char *func );\n" );
+        fprintf( outfile, "#endif\n\n" );
         break;
     }
 
@@ -388,11 +336,11 @@ static void output_stub_funcs( FILE *outfile, DLLSPEC *spec )
         if (odp->type != TYPE_STUB) continue;
         fprintf( outfile, "void %s(void) ", make_internal_name( odp, spec, "stub" ) );
         if (odp->name)
-            fprintf( outfile, "{ __wine_unimplemented(\"%s\"); }\n", odp->name );
+            fprintf( outfile, "{ __wine_spec_unimplemented_stub(__wine_spec_file_name, \"%s\"); }\n", odp->name );
         else if (odp->export_name)
-            fprintf( outfile, "{ __wine_unimplemented(\"%s\"); }\n", odp->export_name );
+            fprintf( outfile, "{ __wine_spec_unimplemented_stub(__wine_spec_file_name, \"%s\"); }\n", odp->export_name );
         else
-            fprintf( outfile, "{ __wine_unimplemented(\"%d\"); }\n", odp->ordinal );
+            fprintf( outfile, "{ __wine_spec_unimplemented_stub(__wine_spec_file_name, \"%d\"); }\n", odp->ordinal );
     }
 }
 
@@ -496,7 +444,6 @@ void BuildSpec32File( FILE *outfile, DLLSPEC *spec )
     int exports_size = 0;
     int nr_exports, nr_imports, nr_delayed;
     unsigned int page_size = get_page_size();
-    const char *init_func = spec->init_func;
 
     nr_exports = spec->base <= spec->limit ? spec->limit - spec->base + 1 : 0;
     resolve_imports( spec );
@@ -528,15 +475,10 @@ void BuildSpec32File( FILE *outfile, DLLSPEC *spec )
     else
         fprintf( outfile, "extern char _end[];\n" );
 
+    fprintf( outfile, "static const char __wine_spec_file_name[] = \"%s\";\n", spec->file_name );
     fprintf( outfile, "extern int __wine_spec_data_start[], __wine_spec_exports[];\n\n" );
 
-    if (target_cpu == CPU_x86)
-        fprintf( outfile, "#define __stdcall __attribute__((__stdcall__))\n\n" );
-    else
-        fprintf( outfile, "#define __stdcall\n\n" );
-
     output_stub_funcs( outfile, spec );
-    output_export_names( outfile, spec );
 
     /* Output the DLL imports */
 
@@ -548,152 +490,8 @@ void BuildSpec32File( FILE *outfile, DLLSPEC *spec )
 
     /* Output the entry point function */
 
-    fprintf( outfile, "static int __wine_spec_init_state;\n" );
-    fprintf( outfile, "extern int __wine_main_argc;\n" );
-    fprintf( outfile, "extern char **__wine_main_argv;\n" );
-    fprintf( outfile, "extern char **__wine_main_environ;\n" );
-    fprintf( outfile, "extern unsigned short **__wine_main_wargv;\n" );
-    if (target_platform == PLATFORM_APPLE)
-    {
-        fprintf( outfile, "extern _dyld_func_lookup(char *, void *);" );
-        fprintf( outfile, "static void __wine_spec_hidden_init(int argc, char** argv, char** envp)\n" );
-        fprintf( outfile, "{\n" );
-        fprintf( outfile, "    void (*init)(void);\n" );
-        fprintf( outfile, "    _dyld_func_lookup(\"__dyld_make_delayed_module_initializer_calls\", (unsigned long *)&init);\n" );
-        fprintf( outfile, "    init();\n" );
-        fprintf( outfile, "}\n" );
-        fprintf( outfile, "static void __wine_spec_hidden_fini()\n" );
-        fprintf( outfile, "{\n" );
-        fprintf( outfile, "    void (*fini)(void);\n" );
-        fprintf( outfile, "    _dyld_func_lookup(\"__dyld_mod_term_funcs\", (unsigned long *)&fini);\n" );
-        fprintf( outfile, "    fini();\n" );
-        fprintf( outfile, "}\n" );
-        fprintf( outfile, "#define _init __wine_spec_hidden_init\n" );
-        fprintf( outfile, "#define _fini __wine_spec_hidden_fini\n" );
-    }
-    else
-    {
-        fprintf( outfile, "extern void _init(int, char**, char**);\n" );
-        fprintf( outfile, "extern void _fini();\n" );
-    }
-
-    if (spec->characteristics & IMAGE_FILE_DLL)
-    {
-        if (init_func)
-            fprintf( outfile, "extern int __stdcall %s( void*, unsigned int, void* );\n\n", init_func );
-        else
-        {
-            declare_weak_function( outfile, "int __stdcall", "DllMain", "void*, unsigned int, void*" );
-            init_func = "DllMain";
-        }
-        fprintf( outfile,
-                 "static int __stdcall __wine_dll_main( void *inst, unsigned int reason, void *reserved )\n"
-                 "{\n"
-                 "    int ret;\n"
-                 "    if (reason == %d && __wine_spec_init_state == 1)\n"
-                 "        _init( __wine_main_argc, __wine_main_argv, __wine_main_environ );\n"
-                 "    ret = %s ? %s( inst, reason, reserved ) : 1;\n"
-                 "    if (reason == %d && __wine_spec_init_state == 1)\n",
-                 DLL_PROCESS_ATTACH, init_func, init_func, DLL_PROCESS_DETACH );
-        if (!nr_delayed)
-            fprintf( outfile, "        _fini();\n" );
-        else
-            fprintf( outfile,
-                     "    {\n"
-                     "        extern int __stdcall FreeLibrary(void *);\n"
-                     "        unsigned int i;\n"
-                     "        _fini();\n"
-                     "        for (i = 0; i < sizeof(__wine_delay_imp_hmod)/sizeof(__wine_delay_imp_hmod[0]); i++)\n"
-                     "            if (__wine_delay_imp_hmod[i]) FreeLibrary( __wine_delay_imp_hmod[i] );\n"
-                     "    }\n" );
-        fprintf( outfile, "    return ret;\n}\n" );
-        init_func = "__wine_dll_main";
-    }
-    else switch(spec->subsystem)
-    {
-    case IMAGE_SUBSYSTEM_NATIVE:
-        if (init_func)
-            fprintf( outfile, "extern int __stdcall %s( void*, void* );\n\n", init_func );
-        else
-        {
-            declare_weak_function( outfile, "int __stdcall", "DriverEntry", "void*, void*");
-            init_func = "DriverEntry";
-        }
-        fprintf( outfile,
-                 "static int __stdcall __wine_driver_entry( void *obj, void *path )\n"
-                 "{\n"
-                 "    int ret;\n"
-                 "    if (__wine_spec_init_state == 1)\n"
-                 "        _init( __wine_main_argc, __wine_main_argv, __wine_main_environ );\n"
-                 "    ret = %s ? %s( obj, path ) : 0;\n"
-                 "    if (__wine_spec_init_state == 1) _fini();\n"
-                 "    return ret;\n"
-                 "}\n",
-                 init_func, init_func );
-        init_func = "__wine_driver_entry";
-        break;
-    case IMAGE_SUBSYSTEM_WINDOWS_GUI:
-    case IMAGE_SUBSYSTEM_WINDOWS_CUI:
-        if (init_func)
-            fprintf( outfile, "extern int %s( int argc, char *argv[] );\n", init_func );
-        else
-        {
-            declare_weak_function( outfile, "int", "main", "int argc, char *argv[]" );
-            declare_weak_function( outfile, "int", "wmain", "int argc, unsigned short *argv[]" );
-            declare_weak_function( outfile, "int __stdcall", "WinMain", "void *,void *,char *,int" );
-        }
-        fprintf( outfile,
-                 "\ntypedef struct {\n"
-                 "    unsigned int cb;\n"
-                 "    char *lpReserved, *lpDesktop, *lpTitle;\n"
-                 "    unsigned int dwX, dwY, dwXSize, dwYSize;\n"
-                 "    unsigned int dwXCountChars, dwYCountChars, dwFillAttribute, dwFlags;\n"
-                 "    unsigned short wShowWindow, cbReserved2;\n"
-                 "    char *lpReserved2;\n"
-                 "    void *hStdInput, *hStdOutput, *hStdError;\n"
-                 "} STARTUPINFOA;\n"
-                 "extern char * __stdcall GetCommandLineA(void);\n"
-                 "extern void * __stdcall GetModuleHandleA(char *);\n"
-                 "extern void __stdcall GetStartupInfoA(STARTUPINFOA *);\n"
-                 "extern void __stdcall ExitProcess(unsigned int);\n"
-                 "static void __wine_exe_main(void)\n"
-                 "{\n"
-                 "    int ret;\n"
-                 "    if (__wine_spec_init_state == 1)\n"
-                 "        _init( __wine_main_argc, __wine_main_argv, __wine_main_environ );\n" );
-        if (init_func)
-            fprintf( outfile,
-                     "    ret = %s( __wine_main_argc, __wine_main_argv );\n", init_func );
-        else
-            fprintf( outfile,
-                     "    if (WinMain) {\n"
-                     "        STARTUPINFOA info;\n"
-                     "        char *cmdline = GetCommandLineA();\n"
-                     "        int bcount=0, in_quotes=0;\n"
-                     "        while (*cmdline) {\n"
-                     "            if ((*cmdline=='\\t' || *cmdline==' ') && !in_quotes) break;\n"
-                     "            else if (*cmdline=='\\\\') bcount++;\n"
-                     "            else if (*cmdline=='\\\"') {\n"
-                     "                if ((bcount & 1)==0) in_quotes=!in_quotes;\n"
-                     "                bcount=0;\n"
-                     "            }\n"
-                     "            else bcount=0;\n"
-                     "            cmdline++;\n"
-                     "        }\n"
-                     "        while (*cmdline=='\\t' || *cmdline==' ') cmdline++;\n"
-                     "        GetStartupInfoA( &info );\n"
-                     "        if (!(info.dwFlags & 1)) info.wShowWindow = 1;\n"
-                     "        ret = WinMain( GetModuleHandleA(0), 0, cmdline, info.wShowWindow );\n"
-                     "    }\n"
-                     "    else if (wmain) ret = wmain( __wine_main_argc, __wine_main_wargv );\n"
-                     "    else ret = main( __wine_main_argc, __wine_main_argv );\n" );
-        fprintf( outfile,
-                 "    if (__wine_spec_init_state == 1) _fini();\n"
-                 "    ExitProcess( ret );\n"
-                 "}\n\n" );
-        init_func = "__wine_exe_main";
-        break;
-    }
+    fprintf( outfile, "int __wine_spec_init_state = 0;\n" );
+    fprintf( outfile, "extern void %s();\n\n", spec->init_func );
 
     /* Output the NT header */
 
@@ -766,7 +564,7 @@ void BuildSpec32File( FILE *outfile, DLLSPEC *spec )
     fprintf( outfile, "  { 0x%04x,\n", IMAGE_NT_OPTIONAL_HDR_MAGIC );  /* Magic */
     fprintf( outfile, "    0, 0,\n" );                   /* Major/MinorLinkerVersion */
     fprintf( outfile, "    0, 0, 0,\n" );                /* SizeOfCode/Data */
-    fprintf( outfile, "    %s,\n", init_func );          /* AddressOfEntryPoint */
+    fprintf( outfile, "    %s,\n", spec->init_func );    /* AddressOfEntryPoint */
     fprintf( outfile, "    0, __wine_spec_data_start,\n" );              /* BaseOfCode/Data */
     fprintf( outfile, "    __wine_spec_pe_header,\n" );  /* ImageBase */
     fprintf( outfile, "    %u,\n", page_size );          /* SectionAlignment */
@@ -804,9 +602,8 @@ void BuildSpec32File( FILE *outfile, DLLSPEC *spec )
              "{\n"
              "    extern void __wine_dll_register( const struct image_nt_headers *, const char * );\n"
              "    __wine_spec_init_state = 1;\n"
-             "    __wine_dll_register( &nt_header, \"%s\" );\n"
-             "}\n\n",
-             spec->file_name );
+             "    __wine_dll_register( &nt_header, __wine_spec_file_name );\n"
+             "}\n\n" );
 
     fprintf( outfile,
              "void __wine_spec_init_ctor(void)\n"
@@ -838,7 +635,7 @@ void BuildSpec32File( FILE *outfile, DLLSPEC *spec )
 void BuildDef32File( FILE *outfile, DLLSPEC *spec )
 {
     const char *name;
-    int i;
+    int i, total;
 
     if (spec_file_name)
         fprintf( outfile, "; File generated automatically from %s; do not edit!\n\n",
@@ -852,16 +649,19 @@ void BuildDef32File( FILE *outfile, DLLSPEC *spec )
 
     /* Output the exports and relay entry points */
 
-    for(i = 0; i < spec->nb_entry_points; i++)
+    for (i = total = 0; i < spec->nb_entry_points; i++)
     {
         const ORDDEF *odp = &spec->entry_points[i];
         int is_data = 0;
 
         if (!odp) continue;
+
         if (odp->name) name = odp->name;
         else if (odp->type == TYPE_STUB) name = make_internal_name( odp, spec, "stub" );
         else if (odp->export_name) name = odp->export_name;
         else name = make_internal_name( odp, spec, "noname_export" );
+
+        if (!(odp->flags & FLAG_PRIVATE)) total++;
 
         fprintf(outfile, "  %s", name);
 
@@ -929,6 +729,7 @@ void BuildDef32File( FILE *outfile, DLLSPEC *spec )
 #endif
         fprintf( outfile, "\n" );
     }
+    if (!total) warning( "%s: Import library doesn't export anything\n", spec->file_name );
 }
 
 
@@ -1010,6 +811,23 @@ void BuildPedllFile( FILE *outfile, DLLSPEC *spec )
 
     nr_exports = spec->base <= spec->limit ? spec->limit - spec->base + 1 : 0;
     output_standard_file_header( outfile );
+
+    fprintf( outfile, "#include <stdarg.h>\n");
+    fprintf( outfile, "#include \"windef.h\"\n");
+    fprintf( outfile, "#include \"winbase.h\"\n");
+    fprintf( outfile, "#include \"wine/config.h\"\n");
+    fprintf( outfile, "#include \"wine/exception.h\"\n\n");
+
+    fprintf( outfile, "void __wine_spec_unimplemented_stub( const char *module, const char *function )\n");
+    fprintf( outfile, "{\n");
+    fprintf( outfile, "    ULONG_PTR args[2];\n");
+    fprintf( outfile, "\n");
+    fprintf( outfile, "    args[0] = (ULONG_PTR)module;\n");
+    fprintf( outfile, "    args[1] = (ULONG_PTR)function;\n");
+    fprintf( outfile, "    RaiseException( EXCEPTION_WINE_STUB, EH_NONCONTINUABLE, 2, args );\n");
+    fprintf( outfile, "}\n\n");
+
+    fprintf( outfile, "static const char __wine_spec_file_name[] = \"%s\";\n\n", spec->file_name );
 
     if (nr_exports)
     {
