@@ -549,7 +549,6 @@ NtUserCreateWindowStation(
 
    InitHotKeys(WindowStationObject);
 
-   ExInitializeFastMutex(&CurInfo->CursorMutex);
    CurInfo->Enabled = FALSE;
    CurInfo->ButtonsDown = 0;
    CurInfo->CursorClipInfo.IsClipped = FALSE;

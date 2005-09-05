@@ -13,7 +13,6 @@ typedef struct _CURICON_OBJECT
 {
   LIST_ENTRY ListEntry;
   HANDLE Self;
-  FAST_MUTEX Lock;
   LIST_ENTRY ProcessList;
   HMODULE hModule;
   HRSRC hRsrc;
@@ -37,7 +36,6 @@ typedef struct _SYSTEM_CURSORINFO
   BOOL Enabled;
   BOOL SwapButtons;
   UINT ButtonsDown;
-  FAST_MUTEX CursorMutex;
   CURSORCLIP_INFO CursorClipInfo;
   PCURICON_OBJECT CurrentCursorObject;
   BYTE ShowingCursor;
@@ -63,12 +61,6 @@ BOOL FASTCALL IntGetCursorLocation(PWINSTATION_OBJECT WinStaObject, POINT *loc);
 
 #define IntReleaseCurIconObject(CurIconObj) \
   ObmDereferenceObject(CurIconObj)
-
-#define IntLockProcessCursorIcons(W32Process) \
-  ExAcquireFastMutex(&W32Process->CursorIconListLock)
-
-#define IntUnLockProcessCursorIcons(W32Process) \
-  ExReleaseFastMutex(&W32Process->CursorIconListLock)
 
 #endif /* _WIN32K_CURSORICON_H */
 

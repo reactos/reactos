@@ -1745,15 +1745,11 @@ NtUserGetQueueStatus(BOOL ClearChanges)
 
    Queue = PsGetWin32Thread()->MessageQueue;
 
-   IntLockMessageQueue(Queue);
-
    Result = MAKELONG(Queue->QueueBits, Queue->ChangedBits);
    if (ClearChanges)
    {
       Queue->ChangedBits = 0;
    }
-
-   IntUnLockMessageQueue(Queue);
 
    RETURN( Result);
    

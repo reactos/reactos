@@ -190,18 +190,15 @@ co_IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWin
    co_IntSendKillFocusMessages(hWndFocusPrev, hWndFocus);
 
    IntSetFocusMessageQueue(Window->MessageQueue);
-   IntLockMessageQueue(Window->MessageQueue);
    if (Window->MessageQueue)
    {
       Window->MessageQueue->ActiveWindow = hWnd;
    }
-   IntUnLockMessageQueue(Window->MessageQueue);
-   IntLockMessageQueue(FocusWindow->MessageQueue);
+
    if (FocusWindow->MessageQueue)
    {
       FocusWindow->MessageQueue->FocusWindow = hWndFocus;
    }
-   IntUnLockMessageQueue(FocusWindow->MessageQueue);
 
    if (PrevForegroundQueue != Window->MessageQueue)
    {
@@ -299,9 +296,7 @@ co_IntSetActiveWindow(PWINDOW_OBJECT Window)
 
    /* FIXME: Call hooks. */
 
-   IntLockMessageQueue(ThreadQueue);
    ThreadQueue->ActiveWindow = hWnd;
-   IntUnLockMessageQueue(ThreadQueue);
 
    co_IntSendDeactivateMessages(hWndPrev, hWnd);
    co_IntSendActivateMessages(hWndPrev, hWnd, FALSE);
@@ -326,9 +321,7 @@ co_IntSetFocusWindow(HWND hWnd)
       return hWndPrev;
    }
 
-   IntLockMessageQueue(ThreadQueue);
    ThreadQueue->FocusWindow = hWnd;
-   IntUnLockMessageQueue(ThreadQueue);
 
    co_IntSendKillFocusMessages(hWndPrev, hWnd);
    co_IntSendSetFocusMessages(hWndPrev, hWnd);
@@ -499,9 +492,7 @@ NtUserSetCapture(HWND hWnd)
    }
 
    co_IntPostOrSendMessage(hWndPrev, WM_CAPTURECHANGED, 0, (LPARAM)hWnd);
-   IntLockMessageQueue(ThreadQueue);
    ThreadQueue->CaptureWindow = hWnd;
-   IntUnLockMessageQueue(ThreadQueue);
 
    RETURN( hWndPrev);
    

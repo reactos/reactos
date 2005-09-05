@@ -930,7 +930,6 @@ IntMouseInput(MOUSEINPUT *mi)
   SwapButtons = CurInfo->SwapButtons;
   DoMove = FALSE;
 
-  ExAcquireFastMutex(&CurInfo->CursorMutex);
   IntGetCursorLocation(WinSta, &MousePos);
   OrgPos.x = MousePos.x;
   OrgPos.y = MousePos.y;
@@ -980,8 +979,6 @@ IntMouseInput(MOUSEINPUT *mi)
 
     DoMove = (MousePos.x != OrgPos.x || MousePos.y != OrgPos.y);
   }
-
-  ExReleaseFastMutex(&CurInfo->CursorMutex);
 
   if (DoMove)
   {

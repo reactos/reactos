@@ -48,7 +48,6 @@ IntAllocHookTable(void)
   Table = ExAllocatePoolWithTag(PagedPool, sizeof(HOOKTABLE), TAG_HOOK);
   if (NULL != Table)
     {
-      ExInitializeFastMutex(&Table->Lock);
       for (i = 0; i < NB_HOOKS; i++)
         {
           InitializeListHead(&Table->Hooks[i]);
@@ -96,9 +95,7 @@ IntAddHook(PETHREAD Thread, int HookId, BOOLEAN Global, PWINSTATION_OBJECT WinSt
   Hook->HookId = HookId;
   RtlInitUnicodeString(&Hook->ModuleName, NULL);
 
-  IntLockHookTable(Table);
   InsertHeadList(&Table->Hooks[HOOKID_TO_INDEX(HookId)], &Hook->Chain);
-  IntUnLockHookTable(Table);
 
   return Hook;
 }
@@ -132,7 +129,6 @@ IntGetFirstValidHook(PHOOKTABLE Table, int HookId)
   PHOOK Hook;
   PLIST_ENTRY Elem;
 
-  IntLockHookTable(Table);
   Hook = IntGetFirstHook(Table, HookId);
   while (NULL != Hook && NULL == Hook->Proc)
     {
@@ -140,7 +136,6 @@ IntGetFirstValidHook(PHOOKTABLE Table, int HookId)
       Hook = (Elem == &Table->Hooks[HOOKID_TO_INDEX(HookId)]
               ? NULL : CONTAINING_RECORD(Elem, HOOK, Chain));
     }
-  IntUnLockHookTable(Table);
 
   return Hook;
 }
@@ -153,18 +148,15 @@ IntGetNextHook(PHOOK Hook)
   int HookId = Hook->HookId;
   PLIST_ENTRY Elem;
 
-  IntLockHookTable(Table);
   Elem = Hook->Chain.Flink;
   while (Elem != &Table->Hooks[HOOKID_TO_INDEX(HookId)])
     {
       Hook = CONTAINING_RECORD(Elem, HOOK, Chain);
       if (NULL != Hook->Proc)
         {
-          IntUnLockHookTable(Table);
           return Hook;
         }
     }
-  IntUnLockHookTable(Table);
 
   if (NULL != GlobalHooks && Table != GlobalHooks)  /* now search through the global table */
     {
@@ -203,10 +195,6 @@ IntRemoveHook(PHOOK Hook, PWINSTATION_OBJECT WinStaObj, BOOL TableAlreadyLocked)
       return;
     }
 
-  if (! TableAlreadyLocked)
-    {
-      IntLockHookTable(Table);
-    }
   if (0 != Table->Counts[HOOKID_TO_INDEX(Hook->HookId)])
     {
       Hook->Proc = NULL; /* chain is in use, just mark it and return */
@@ -214,10 +202,6 @@ IntRemoveHook(PHOOK Hook, PWINSTATION_OBJECT WinStaObj, BOOL TableAlreadyLocked)
   else
     {
       IntFreeHook(Table, Hook, WinStaObj);
-    }
-  if (! TableAlreadyLocked)
-    {
-      IntUnLockHookTable(Table);
     }
 }
 
@@ -233,12 +217,10 @@ IntReleaseHookChain(PHOOKTABLE Table, int HookId, PWINSTATION_OBJECT WinStaObj)
       return;
     }
 
-  IntLockHookTable(Table);
   /* use count shouldn't already be 0 */
   ASSERT(0 != Table->Counts[HOOKID_TO_INDEX(HookId)]);
   if (0 == Table->Counts[HOOKID_TO_INDEX(HookId)])
     {
-      IntUnLockHookTable(Table);
       return;
     }
   if (0 == --Table->Counts[HOOKID_TO_INDEX(HookId)])
@@ -254,7 +236,6 @@ IntReleaseHookChain(PHOOKTABLE Table, int HookId, PWINSTATION_OBJECT WinStaObj)
             }
         }
     }
-  IntUnLockHookTable(Table);
 }
 
 static LRESULT FASTCALL
@@ -316,14 +297,10 @@ co_HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam)
       return 0;
     }
 
-  IntLockHookTable(Table);
   Table->Counts[HOOKID_TO_INDEX(HookId)]++;
-  IntUnLockHookTable(Table);
   if (Table != GlobalHooks && GlobalHooks != NULL)
     {
-      IntLockHookTable(GlobalHooks);
       GlobalHooks->Counts[HOOKID_TO_INDEX(HookId)]++;
-      IntUnLockHookTable(GlobalHooks);
     }
 
   Result = co_IntCallHookProc(HookId, Code, wParam, lParam, Hook->Proc,
@@ -369,7 +346,7 @@ HOOK_DestroyThreadHooks(PETHREAD Thread)
           DPRINT1("Invalid window station????\n");
           return;
         }
-      IntLockHookTable(GlobalHooks);
+
       for (HookId = WH_MINHOOK; HookId <= WH_MAXHOOK; HookId++)
         {
           /* only low-level keyboard/mouse global hooks can be owned by a thread */
@@ -390,7 +367,7 @@ HOOK_DestroyThreadHooks(PETHREAD Thread)
               break;
             }
         }
-      IntUnLockHookTable(GlobalHooks);
+
       ObDereferenceObject(WinStaObj);
     }
 }

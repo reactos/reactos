@@ -67,8 +67,6 @@ typedef struct _USER_MESSAGE_QUEUE
   LIST_ENTRY TimerListHead;
   /* Lock for the hardware message list. */
   KMUTEX HardwareLock;
-  /* Lock for the queue. */
-  FAST_MUTEX Lock;
   /* Pointer to the current WM_MOUSEMOVE message */
   PUSER_MESSAGE MouseMoveMsg;
   /* True if a WM_QUIT message is pending. */
@@ -215,12 +213,6 @@ VOID FASTCALL MsqSetHooks(PUSER_MESSAGE_QUEUE Queue, PHOOKTABLE Hooks);
 LPARAM FASTCALL MsqSetMessageExtraInfo(LPARAM lParam);
 LPARAM FASTCALL MsqGetMessageExtraInfo(VOID);
 VOID STDCALL MsqRemoveWindowMessagesFromQueue(PVOID pWindow); /* F*(&$ headers, will be gone in the rewrite! */
-
-#define IntLockMessageQueue(MsgQueue) \
-  ExAcquireFastMutex(&(MsgQueue)->Lock)
-
-#define IntUnLockMessageQueue(MsgQueue) \
-  ExReleaseFastMutex(&(MsgQueue)->Lock)
 
 #define IntLockHardwareMessageQueue(MsgQueue) \
   KeWaitForMutexObject(&(MsgQueue)->HardwareLock, UserRequest, KernelMode, FALSE, NULL)

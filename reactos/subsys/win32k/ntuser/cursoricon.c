@@ -43,7 +43,6 @@
 
 static PAGED_LOOKASIDE_LIST ProcessLookasideList;
 static LIST_ENTRY CurIconList;
-static FAST_MUTEX CurIconListLock;
 
 /* Look up the location of the cursor in the GDIDEVICE structure
  * when all we know is the window station object
@@ -305,7 +304,6 @@ IntSetupCurIconHandles(PWINSTATION_OBJECT WinStaObject)
 				 0,
 				 128);
   InitializeListHead(&CurIconList);
-  ExInitializeFastMutex(&CurIconListLock);
 
   return TRUE;
 }
@@ -328,7 +326,6 @@ ReferenceCurIconByProcess(PCURICON_OBJECT Object)
 
   Win32Process = PsGetWin32Process();
 
-  ExAcquireFastMutex(&Object->Lock);
   Search = Object->ProcessList.Flink;
   while (Search != &Object->ProcessList)
     {
@@ -336,7 +333,6 @@ ReferenceCurIconByProcess(PCURICON_OBJECT Object)
       if (Current->Process == Win32Process)
         {
           /* Already registered for this process */
-          ExReleaseFastMutex(&Object->Lock);
           return TRUE;
         }
       Search = Search->Flink;
@@ -351,7 +347,6 @@ ReferenceCurIconByProcess(PCURICON_OBJECT Object)
   InsertHeadList(&Object->ProcessList, &Current->ListEntry);
   Current->Process = Win32Process;
 
-  ExReleaseFastMutex(&Object->Lock);
   return TRUE;
 }
 
@@ -361,8 +356,6 @@ IntFindExistingCurIconObject(PWINSTATION_OBJECT WinStaObject, HMODULE hModule,
 {
   PLIST_ENTRY CurrentEntry;
   PCURICON_OBJECT Object;
-
-  ExAcquireFastMutex(&CurIconListLock);
 
   CurrentEntry = CurIconList.Flink;
   while (CurrentEntry != &CurIconList)
@@ -380,17 +373,14 @@ IntFindExistingCurIconObject(PWINSTATION_OBJECT WinStaObject, HMODULE hModule,
         }
         if (! ReferenceCurIconByProcess(Object))
         {
-          ExReleaseFastMutex(&CurIconListLock);
           return NULL;
         }
-        ExReleaseFastMutex(&CurIconListLock);
+
         return Object;
       }
     }
     ObmDereferenceObject(Object);
   }
-
-  ExReleaseFastMutex(&CurIconListLock);
 
   return NULL;
 }
@@ -410,7 +400,6 @@ IntCreateCurIconHandle(PWINSTATION_OBJECT WinStaObject)
   }
 
   Object->Self = Handle;
-  ExInitializeFastMutex(&Object->Lock);
   InitializeListHead(&Object->ProcessList);
 
   if (! ReferenceCurIconByProcess(Object))
@@ -421,9 +410,7 @@ IntCreateCurIconHandle(PWINSTATION_OBJECT WinStaObject)
     return NULL;
   }
 
-  ExAcquireFastMutex(&CurIconListLock);
   InsertHeadList(&CurIconList, &Object->ListEntry);
-  ExReleaseFastMutex(&CurIconListLock);
 
   ObmDereferenceObject(Object);
 
@@ -440,8 +427,6 @@ IntDestroyCurIconObject(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT Object,
   PCURICON_PROCESS Current = NULL;
   PW32PROCESS W32Process = PsGetWin32Process();
 
-  ExAcquireFastMutex(&Object->Lock);
-
   /* Private objects can only be destroyed by their own process */
   if (NULL == Object->hModule)
     {
@@ -449,14 +434,12 @@ IntDestroyCurIconObject(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT Object,
     Current = CONTAINING_RECORD(Object->ProcessList.Flink, CURICON_PROCESS, ListEntry);
     if (Current->Process != W32Process)
       {
-        ExReleaseFastMutex(&Object->Lock);
         DPRINT1("Trying to destroy private icon/cursor of another process\n");
         return FALSE;
       }
     }
   else if (! ProcessCleanup)
     {
-      ExReleaseFastMutex(&Object->Lock);
       DPRINT("Trying to destroy shared icon/cursor\n");
       return FALSE;
     }
@@ -480,17 +463,13 @@ IntDestroyCurIconObject(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT Object,
   /* If there are still processes referencing this object we can't destroy it yet */
   if (! IsListEmpty(&Object->ProcessList))
     {
-    ExReleaseFastMutex(&Object->Lock);
     return TRUE;
     }
 
-  ExReleaseFastMutex(&Object->Lock);
 
   if (! ProcessCleanup)
     {
-    ExAcquireFastMutex(&CurIconListLock);
     RemoveEntryList(&Object->ListEntry);
-    ExReleaseFastMutex(&CurIconListLock);
     }
 
   CurInfo = IntGetSysCursorInfo(WinStaObject);
@@ -536,8 +515,6 @@ IntCleanupCurIcons(struct _EPROCESS *Process, PW32PROCESS Win32Process)
     return;
   }
 
-  ExAcquireFastMutex(&CurIconListLock);
-
   CurrentEntry = CurIconList.Flink;
   while (CurrentEntry != &CurIconList)
   {
@@ -545,29 +522,23 @@ IntCleanupCurIcons(struct _EPROCESS *Process, PW32PROCESS Win32Process)
     CurrentEntry = CurrentEntry->Flink;
     if(NT_SUCCESS(ObmReferenceObjectByPointer(Object, otCursorIcon)))
       {
-      ExAcquireFastMutex(&Object->Lock);
       ProcessEntry = Object->ProcessList.Flink;
       while (ProcessEntry != &Object->ProcessList)
       {
         ProcessData = CONTAINING_RECORD(ProcessEntry, CURICON_PROCESS, ListEntry);
         if (Win32Process == ProcessData->Process)
         {
-          ExReleaseFastMutex(&Object->Lock);
           RemoveEntryList(&Object->ListEntry);
           IntDestroyCurIconObject(WinStaObject, Object, TRUE);
           break;
         }
         ProcessEntry = ProcessEntry->Flink;
       }
-      if (ProcessEntry == &Object->ProcessList)
-      {
-        ExReleaseFastMutex(&Object->Lock);
-      }
+
       ObmDereferenceObject(Object);
     }
   }
 
-  ExReleaseFastMutex(&CurIconListLock);
   ObDereferenceObject(WinStaObject);
 }
 

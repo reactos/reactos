@@ -77,10 +77,8 @@ IntMsqSetWakeMask(DWORD WakeMask)
     return 0;
 
   MessageQueue = Win32Thread->MessageQueue;
-  IntLockMessageQueue(MessageQueue);
   MessageQueue->WakeMask = WakeMask;
   MessageEventHandle = MessageQueue->NewMessagesHandle;
-  IntUnLockMessageQueue(MessageQueue);
 
   return MessageEventHandle;
 }
@@ -96,9 +94,7 @@ IntMsqClearWakeMask(VOID)
     return FALSE;
 
   MessageQueue = Win32Thread->MessageQueue;
-  IntLockMessageQueue(MessageQueue);
   MessageQueue->WakeMask = ~0;
-  IntUnLockMessageQueue(MessageQueue);
 
   return TRUE;
 }
@@ -106,26 +102,22 @@ IntMsqClearWakeMask(VOID)
 VOID FASTCALL
 MsqIncPaintCountQueue(PUSER_MESSAGE_QUEUE Queue)
 {
-  IntLockMessageQueue(Queue);
   Queue->PaintCount++;
   Queue->PaintPosted = TRUE;
   Queue->QueueBits |= QS_PAINT;
   Queue->ChangedBits |= QS_PAINT;
   if (Queue->WakeMask & QS_PAINT)
     KeSetEvent(Queue->NewMessages, IO_NO_INCREMENT, FALSE);
-  IntUnLockMessageQueue(Queue);
 }
 
 VOID FASTCALL
 MsqDecPaintCountQueue(PUSER_MESSAGE_QUEUE Queue)
 {
-  IntLockMessageQueue(Queue);
   Queue->PaintCount--;
   if (Queue->PaintCount == 0)
     {
       Queue->PaintPosted = FALSE;
     }
-  IntUnLockMessageQueue(Queue);
 }
 
 
@@ -760,12 +752,9 @@ MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
   ObmDereferenceObject(Window);
   ObDereferenceObject (Thread);
 
-//  IntLockMessageQueue(pThread->MessageQueue);
 //  InsertHeadList(&pThread->MessageQueue->PostedMessagesListHead,
 //		 &Message->ListEntry);
 //  KeSetEvent(pThread->MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
-//  IntUnLockMessageQueue(pThread->MessageQueue);
-
 }
 
 PUSER_MESSAGE FASTCALL
@@ -797,13 +786,11 @@ co_MsqDispatchSentNotifyMessages(PUSER_MESSAGE_QUEUE MessageQueue)
   PLIST_ENTRY ListEntry;
   PUSER_SENT_MESSAGE_NOTIFY Message;
 
-  IntLockMessageQueue(MessageQueue);
   while (!IsListEmpty(&MessageQueue->SentMessagesListHead))
   {
     ListEntry = RemoveHeadList(&MessageQueue->SentMessagesListHead);
     Message = CONTAINING_RECORD(ListEntry, USER_SENT_MESSAGE_NOTIFY,
 				ListEntry);
-    IntUnLockMessageQueue(MessageQueue);
 
     co_IntCallSentMessageCallback(Message->CompletionCallback,
 				Message->hWnd,
@@ -811,9 +798,8 @@ co_MsqDispatchSentNotifyMessages(PUSER_MESSAGE_QUEUE MessageQueue)
 				Message->CompletionCallbackContext,
 				Message->Result);
 
-    IntLockMessageQueue(MessageQueue);
   }
-  IntUnLockMessageQueue(MessageQueue);
+
 }
 
 BOOLEAN FASTCALL
@@ -831,10 +817,8 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
   BOOL SenderReturned;
   PUSER_SENT_MESSAGE_NOTIFY NotifyMessage;
 
-  IntLockMessageQueue(MessageQueue);
   if (IsListEmpty(&MessageQueue->SentMessagesListHead))
     {
-      IntUnLockMessageQueue(MessageQueue);
       return(FALSE);
     }
 
@@ -846,8 +830,6 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
      message queue */
   InsertTailList(&MessageQueue->LocalDispatchingMessagesHead,
 		 &Message->ListEntry);
-
-  IntUnLockMessageQueue(MessageQueue);
 
   if (Message->HookMessage)
     {
@@ -867,13 +849,9 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
 
   /* remove the message from the local dispatching list, because it doesn't need
      to be cleaned up on thread termination anymore */
-  IntLockMessageQueue(MessageQueue);
   RemoveEntryList(&Message->ListEntry);
-  IntUnLockMessageQueue(MessageQueue);
 
   /* remove the message from the dispatching list, so lock the sender's message queue */
-  IntLockMessageQueue(Message->SenderQueue);
-
   SenderReturned = (Message->DispatchingListEntry.Flink == NULL);
   if(!SenderReturned)
   {
@@ -894,9 +872,6 @@ co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
     {
       KeSetEvent(Message->CompletionEvent, IO_NO_INCREMENT, FALSE);
     }
-
-  /* unlock the sender's message queue, the safe operation is done */
-  IntUnLockMessageQueue(Message->SenderQueue);
 
   /* Notify the sender if they specified a callback. */
   if (!SenderReturned && Message->CompletionCallback != NULL)
@@ -942,8 +917,6 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
   MessageQueue = Window->MessageQueue;
   ASSERT(MessageQueue);
 
-  IntLockMessageQueue(MessageQueue);
-
   /* remove the posted messages for this window */
   CurrentEntry = MessageQueue->PostedMessagesListHead.Flink;
   ListHead = &MessageQueue->PostedMessagesListHead;
@@ -973,7 +946,6 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
                                       ListEntry);
       if(SentMessage->Msg.hwnd == Window->Self)
       {
-        IntLockMessageQueue(SentMessage->SenderQueue);
         DPRINT("Notify the sender and remove a message from the queue that had not been dispatched\n");
 
         /* remove the message from the dispatching list */
@@ -987,7 +959,6 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
         {
           KeSetEvent(SentMessage->CompletionEvent, IO_NO_INCREMENT, FALSE);
         }
-        IntUnLockMessageQueue(SentMessage->SenderQueue);
 
         /* dereference our and the sender's message queue */
         IntDereferenceMessageQueue(MessageQueue);
@@ -1003,21 +974,18 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
         CurrentEntry = CurrentEntry->Flink;
       }
     }
-  IntUnLockMessageQueue(MessageQueue);
 }
 
 VOID FASTCALL
 MsqSendNotifyMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 		     PUSER_SENT_MESSAGE_NOTIFY NotifyMessage)
 {
-  IntLockMessageQueue(MessageQueue);
   InsertTailList(&MessageQueue->NotifyMessagesListHead,
 		 &NotifyMessage->ListEntry);
   MessageQueue->QueueBits |= QS_SENDMESSAGE;
   MessageQueue->ChangedBits |= QS_SENDMESSAGE;
   if (MessageQueue->WakeMask & QS_SENDMESSAGE)
     KeSetEvent(MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
-  IntUnLockMessageQueue(MessageQueue);
 }
 
 NTSTATUS FASTCALL
@@ -1064,14 +1032,10 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
   IntReferenceMessageQueue(MessageQueue);
 
   /* add it to the list of pending messages */
-  IntLockMessageQueue(ThreadQueue);
   InsertTailList(&ThreadQueue->DispatchingMessagesHead, &Message->DispatchingListEntry);
-  IntUnLockMessageQueue(ThreadQueue);
 
   /* queue it in the destination's message queue */
-  IntLockMessageQueue(MessageQueue);
   InsertTailList(&MessageQueue->SentMessagesListHead, &Message->ListEntry);
-  IntUnLockMessageQueue(MessageQueue);
 
   MessageQueue->QueueBits |= QS_SENDMESSAGE;
   MessageQueue->ChangedBits |= QS_SENDMESSAGE;
@@ -1095,7 +1059,6 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
       {
         /* look up if the message has not yet dispatched, if so
            make sure it can't pass a result and it must not set the completion event anymore */
-	IntLockMessageQueue(MessageQueue);
         Entry = MessageQueue->SentMessagesListHead.Flink;
         while (Entry != &MessageQueue->SentMessagesListHead)
           {
@@ -1110,11 +1073,9 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
               }
             Entry = Entry->Flink;
           }
-        IntUnLockMessageQueue(MessageQueue);
 
 	/* remove from the local dispatching list so the other thread knows,
 	   it can't pass a result and it must not set the completion event anymore */
-	IntLockMessageQueue(ThreadQueue);
         Entry = ThreadQueue->DispatchingMessagesHead.Flink;
         while (Entry != &ThreadQueue->DispatchingMessagesHead)
           {
@@ -1133,7 +1094,6 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
               }
             Entry = Entry->Flink;
           }
-	IntUnLockMessageQueue(ThreadQueue);
 
 	DPRINT("MsqSendMessage (blocked) timed out\n");
       }
@@ -1159,7 +1119,6 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
           {
             /* look up if the message has not yet been dispatched, if so
                make sure it can't pass a result and it must not set the completion event anymore */
-	    IntLockMessageQueue(MessageQueue);
             Entry = MessageQueue->SentMessagesListHead.Flink;
             while (Entry != &MessageQueue->SentMessagesListHead)
               {
@@ -1174,11 +1133,9 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
                   }
                 Entry = Entry->Flink;
               }
-	    IntUnLockMessageQueue(MessageQueue);
 
 	    /* remove from the local dispatching list so the other thread knows,
 	       it can't pass a result and it must not set the completion event anymore */
-	    IntLockMessageQueue(ThreadQueue);
             Entry = ThreadQueue->DispatchingMessagesHead.Flink;
             while (Entry != &ThreadQueue->DispatchingMessagesHead)
               {
@@ -1197,7 +1154,6 @@ co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
                   }
                 Entry = Entry->Flink;
               }
-	    IntUnLockMessageQueue(ThreadQueue);
 
 	    DPRINT("MsqSendMessage timed out\n");
             break;
@@ -1223,27 +1179,23 @@ MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue, MSG* Msg, BOOLEAN FreeLParam,
   {
     return;
   }
-  IntLockMessageQueue(MessageQueue);
   InsertTailList(&MessageQueue->PostedMessagesListHead,
 		 &Message->ListEntry);
   MessageQueue->QueueBits |= MessageBits;
   MessageQueue->ChangedBits |= MessageBits;
   if (MessageQueue->WakeMask & MessageBits)
     KeSetEvent(MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
-  IntUnLockMessageQueue(MessageQueue);
 }
 
 VOID FASTCALL
 MsqPostQuitMessage(PUSER_MESSAGE_QUEUE MessageQueue, ULONG ExitCode)
 {
-  IntLockMessageQueue(MessageQueue);
   MessageQueue->QuitPosted = TRUE;
   MessageQueue->QuitExitCode = ExitCode;
   MessageQueue->QueueBits |= QS_POSTMESSAGE;
   MessageQueue->ChangedBits |= QS_POSTMESSAGE;
   if (MessageQueue->WakeMask & QS_POSTMESSAGE)
     KeSetEvent(MessageQueue->NewMessages, IO_NO_INCREMENT, FALSE);
-  IntUnLockMessageQueue(MessageQueue);
 }
 
 BOOLEAN STDCALL
@@ -1266,7 +1218,6 @@ co_MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 				    Remove, Message));
     }
 
-  IntLockMessageQueue(MessageQueue);
   CurrentEntry = MessageQueue->PostedMessagesListHead.Flink;
   ListHead = &MessageQueue->PostedMessagesListHead;
   while (CurrentEntry != ListHead)
@@ -1282,13 +1233,13 @@ co_MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 	    {
 	      RemoveEntryList(&CurrentMessage->ListEntry);
 	    }
-	  IntUnLockMessageQueue(MessageQueue);
+
 	  *Message = CurrentMessage;
 	  return(TRUE);
 	}
       CurrentEntry = CurrentEntry->Flink;
     }
-  IntUnLockMessageQueue(MessageQueue);
+
   return(FALSE);
 }
 
@@ -1350,7 +1301,6 @@ MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQu
   InitializeListHead(&MessageQueue->DispatchingMessagesHead);
   InitializeListHead(&MessageQueue->LocalDispatchingMessagesHead);
   KeInitializeMutex(&MessageQueue->HardwareLock, 0);
-  ExInitializeFastMutex(&MessageQueue->Lock);
   MessageQueue->QuitPosted = FALSE;
   MessageQueue->QuitExitCode = 0;
   KeQueryTickCount(&LargeTickCount);
@@ -1389,8 +1339,6 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
   PTIMER_ENTRY CurrentTimer;
   PUSER_SENT_MESSAGE CurrentSentMessage;
 
-  IntLockMessageQueue(MessageQueue);
-
   /* cleanup posted messages */
   while (!IsListEmpty(&MessageQueue->PostedMessagesListHead))
     {
@@ -1407,7 +1355,6 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
       CurrentSentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE,
                                              ListEntry);
 
-      IntLockMessageQueue(CurrentSentMessage->SenderQueue);
       DPRINT("Notify the sender and remove a message from the queue that had not been dispatched\n");
 
       /* remove the message from the dispatching list */
@@ -1421,7 +1368,6 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
       {
         KeSetEvent(CurrentSentMessage->CompletionEvent, IO_NO_INCREMENT, FALSE);
       }
-      IntUnLockMessageQueue(CurrentSentMessage->SenderQueue);
 
       /* dereference our and the sender's message queue */
       IntDereferenceMessageQueue(MessageQueue);
@@ -1447,7 +1393,6 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
       CurrentSentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE,
                                              ListEntry);
 
-      IntLockMessageQueue(CurrentSentMessage->SenderQueue);
       /* remove the message from the dispatching list */
       if(CurrentSentMessage->DispatchingListEntry.Flink != NULL)
       {
@@ -1461,7 +1406,6 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
       {
         KeSetEvent(CurrentSentMessage->CompletionEvent, IO_NO_INCREMENT, FALSE);
       }
-      IntUnLockMessageQueue(CurrentSentMessage->SenderQueue);
       
       /* dereference our and the sender's message queue */
       IntDereferenceMessageQueue(MessageQueue);
@@ -1484,7 +1428,6 @@ MsqCleanupMessageQueue(PUSER_MESSAGE_QUEUE MessageQueue)
          locked later */
     }
 
-  IntUnLockMessageQueue(MessageQueue);
 }
 
 PUSER_MESSAGE_QUEUE FASTCALL
@@ -1698,14 +1641,12 @@ MsqSetTimer(PUSER_MESSAGE_QUEUE MessageQueue, HWND Wnd,
   DPRINT("MsqSetTimer queue %p wnd %x id %p period %u timerproc %p msg %d\n",
          MessageQueue, Wnd, IDEvent, Period, TimerFunc, Msg);
 
-  IntLockMessageQueue(MessageQueue);
   Timer = RemoveTimer(MessageQueue, Wnd, IDEvent, Msg);
   if (NULL == Timer)
     {
       Timer = ExAllocateFromPagedLookasideList(&TimerLookasideList);
       if (NULL == Timer)
         {
-          IntUnLockMessageQueue(MessageQueue);
           DPRINT1("Failed to allocate timer entry\n");
           return FALSE;
         }
@@ -1733,8 +1674,6 @@ MsqSetTimer(PUSER_MESSAGE_QUEUE MessageQueue, HWND Wnd,
   DumpTimerList(MessageQueue);
 #endif /* ! defined(NDEBUG) */
 
-  IntUnLockMessageQueue(MessageQueue);
-
   return TRUE;
 }
 
@@ -1747,7 +1686,6 @@ MsqKillTimer(PUSER_MESSAGE_QUEUE MessageQueue, HWND Wnd,
   DPRINT("MsqKillTimer queue %p wnd %x id %p msg %d\n",
          MessageQueue, Wnd, IDEvent, Msg);
 
-  IntLockMessageQueue(MessageQueue);
   Timer = RemoveTimer(MessageQueue, Wnd, IDEvent, Msg);
 
   if (NULL == Timer)
@@ -1762,8 +1700,6 @@ MsqKillTimer(PUSER_MESSAGE_QUEUE MessageQueue, HWND Wnd,
 #ifndef NDEBUG
   DumpTimerList(MessageQueue);
 #endif /* ! defined(NDEBUG) */
-
-  IntUnLockMessageQueue(MessageQueue);
 
   return NULL != Timer;
 }
@@ -1781,7 +1717,6 @@ MsqGetTimerMessage(PUSER_MESSAGE_QUEUE MessageQueue,
   DPRINT("MsqGetTimerMessage queue %p msg %p restart %s\n",
          MessageQueue, Msg, Restart ? "TRUE" : "FALSE");
 
-  IntLockMessageQueue(MessageQueue);
   KeQuerySystemTime(&CurrentTime);
   DPRINT("Current time %I64d\n", CurrentTime.QuadPart);
   EnumEntry = MessageQueue->TimerListHead.Flink;
@@ -1820,7 +1755,6 @@ MsqGetTimerMessage(PUSER_MESSAGE_QUEUE MessageQueue,
   if (! GotMessage)
     {
       DPRINT("No timer pending\n");
-      IntUnLockMessageQueue(MessageQueue);
       return FALSE;
     }
 
@@ -1842,8 +1776,6 @@ MsqGetTimerMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 #endif /* ! defined(NDEBUG) */
     }
 
-  IntUnLockMessageQueue(MessageQueue);
-
   DPRINT("Created message wnd %x msg %d wParam %u lParam %u\n", Msg->hwnd, Msg->message,
          Msg->wParam, Msg->lParam);
 
@@ -1858,7 +1790,6 @@ MsqRemoveTimersWindow(PUSER_MESSAGE_QUEUE MessageQueue, HWND Wnd)
 
   DPRINT("MsqRemoveTimersWindow queue %p wnd %x\n", MessageQueue, Wnd);
 
-  IntLockMessageQueue(MessageQueue);
   EnumEntry = MessageQueue->TimerListHead.Flink;
   while (EnumEntry != &MessageQueue->TimerListHead)
     {
@@ -1876,7 +1807,6 @@ MsqRemoveTimersWindow(PUSER_MESSAGE_QUEUE MessageQueue, HWND Wnd)
   DumpTimerList(MessageQueue);
 #endif /* ! defined(NDEBUG) */
 
-  IntUnLockMessageQueue(MessageQueue);
 }
 
 BOOLEAN FASTCALL
@@ -1890,7 +1820,6 @@ MsqGetFirstTimerExpiry(PUSER_MESSAGE_QUEUE MessageQueue,
   DPRINT("MsqGetFirstTimerExpiry queue %p wndfilter %x msgfiltermin %d msgfiltermax %d expiry %p\n",
          MessageQueue, WndFilter, MsgFilterMin, MsgFilterMax, FirstTimerExpiry);
 
-  IntLockMessageQueue(MessageQueue);
   EnumEntry = MessageQueue->TimerListHead.Flink;
   while (EnumEntry != &MessageQueue->TimerListHead)
     {
@@ -1904,12 +1833,9 @@ MsqGetFirstTimerExpiry(PUSER_MESSAGE_QUEUE MessageQueue,
         {
           *FirstTimerExpiry = Timer->ExpiryTime;
           DPRINT("First timer expires %I64d\n", Timer->ExpiryTime);
-          IntUnLockMessageQueue(MessageQueue);
           return TRUE;
         }
     }
-
-  IntUnLockMessageQueue(MessageQueue);
 
   return FALSE;
 }

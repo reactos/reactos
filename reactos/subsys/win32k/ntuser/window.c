@@ -2123,14 +2123,14 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
           co_WinPosActivateOtherWindow(Window);
         }
     }
-  IntLockMessageQueue(Window->MessageQueue);
+
   if (Window->MessageQueue->ActiveWindow == Window->Self)
     Window->MessageQueue->ActiveWindow = NULL;
   if (Window->MessageQueue->FocusWindow == Window->Self)
     Window->MessageQueue->FocusWindow = NULL;
   if (Window->MessageQueue->CaptureWindow == Window->Self)
     Window->MessageQueue->CaptureWindow = NULL;
-  IntUnLockMessageQueue(Window->MessageQueue);
+
   IntDereferenceMessageQueue(Window->MessageQueue);
   /* Call hooks */
 #if 0 /* FIXME */

@@ -43,15 +43,8 @@ typedef struct _USER_HANDLE_BLOCK
 typedef struct _USER_HANDLE_TABLE
 {
    LIST_ENTRY ListHead;
-   FAST_MUTEX ListLock;
 } USER_HANDLE_TABLE, *PUSER_HANDLE_TABLE;
 
-
-#define ObmpLockHandleTable(HandleTable) \
-  ExAcquireFastMutex(&HandleTable->ListLock)
-
-#define ObmpUnlockHandleTable(HandleTable) \
-  ExReleaseFastMutex(&HandleTable->ListLock)
 
 ULONG FASTCALL
 ObmGetReferenceCount(
