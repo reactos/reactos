@@ -52,7 +52,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(cabinet);
  * NOTES
  *     Supposedly returns version from IE6SP1RP1
  */
-HRESULT WINAPI CABINET_DllGetVersion (DLLVERSIONINFO *pdvi)
+HRESULT WINAPI DllGetVersion (DLLVERSIONINFO *pdvi)
 {
   WARN("hmmm... not right version number \"5.1.1106.1\"?\n");
 
