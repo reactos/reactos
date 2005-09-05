@@ -43,7 +43,7 @@ HRESULT WINAPI DirectInput8Create(
 /***********************************************************************
  *		DllCanUnloadNow (DINPUT8.@)
  */
-HRESULT WINAPI DINPUT8_DllCanUnloadNow(void)
+HRESULT WINAPI DllCanUnloadNow(void)
 {
     FIXME("(void): stub\n");
 
@@ -53,8 +53,7 @@ HRESULT WINAPI DINPUT8_DllCanUnloadNow(void)
 /***********************************************************************
  *		DllGetClassObject (DINPUT8.@)
  */
-HRESULT WINAPI DINPUT8_DllGetClassObject(REFCLSID rclsid, REFIID riid,
-					 LPVOID *ppv)
+HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
     FIXME("(%p, %p, %p): stub\n", debugstr_guid(rclsid),
 	  debugstr_guid(riid), ppv);
@@ -65,7 +64,7 @@ HRESULT WINAPI DINPUT8_DllGetClassObject(REFCLSID rclsid, REFIID riid,
 /***********************************************************************
  *		DllRegisterServer (DINPUT8.@)
  */
-HRESULT WINAPI DINPUT8_DllRegisterServer(void)
+HRESULT WINAPI DllRegisterServer(void)
 {
     FIXME("(void): stub\n");
 
@@ -75,7 +74,7 @@ HRESULT WINAPI DINPUT8_DllRegisterServer(void)
 /***********************************************************************
  *		DllUnregisterServer (DINPUT8.@)
  */
-HRESULT WINAPI DINPUT8_DllUnregisterServer(void)
+HRESULT WINAPI DllUnregisterServer(void)
 {
     FIXME("(void): stub\n");
 
