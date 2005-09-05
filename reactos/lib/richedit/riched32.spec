@@ -1,1 +1,1 @@
-2 stdcall DllGetVersion (ptr) RICHED32_DllGetVersion
+2 stdcall -private DllGetVersion (ptr)
