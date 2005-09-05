@@ -285,10 +285,6 @@ HRESULT WINAPI CLSIDFromString16(
   return __CLSIDFromStringA(idstr,id);
 }
 
-extern BOOL WINAPI K32WOWCallback16Ex(	DWORD vpfn16, DWORD dwFlags,
-					DWORD cbArgs, LPVOID pArgs,
-					LPDWORD pdwRetCode );
-
 /******************************************************************************
  *		_xmalloc16	[internal]
  * Allocates size bytes from the standard ole16 allocator.
@@ -309,7 +305,7 @@ _xmalloc16(DWORD size, SEGPTR *ptr) {
   /* No need for a Callback entry, we have WOWCallback16Ex which does
    * everything we need.
    */
-  if (!K32WOWCallback16Ex(
+  if (!WOWCallback16Ex(
       (DWORD)((const IMalloc16Vtbl*)MapSL(
 	  (SEGPTR)((LPMALLOC16)MapSL((SEGPTR)mllc))->lpVtbl  )
       )->Alloc,

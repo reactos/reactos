@@ -60,6 +60,11 @@ typedef struct FileMonikerImpl{
     IUnknown *pMarshal; /* custom marshaler */
 } FileMonikerImpl;
 
+static inline IMoniker *impl_from_IROTData( IROTData *iface )
+{
+    return (IMoniker *)((char*)iface - FIELD_OFFSET(FileMonikerImpl, lpvtbl2));
+}
+
 /* Local function used by filemoniker implementation */
 static HRESULT WINAPI FileMonikerImpl_Construct(FileMonikerImpl* iface, LPCOLESTR lpszPathName);
 static HRESULT WINAPI FileMonikerImpl_Destroy(FileMonikerImpl* iface);
@@ -1198,7 +1203,7 @@ static HRESULT WINAPI
 FileMonikerROTDataImpl_QueryInterface(IROTData *iface,REFIID riid,VOID** ppvObject)
 {
 
-    ICOM_THIS_From_IROTData(IMoniker, iface);
+    IMoniker *This = impl_from_IROTData(iface);
 
     TRACE("(%p,%s,%p)\n",This,debugstr_guid(riid),ppvObject);
 
@@ -1211,7 +1216,7 @@ FileMonikerROTDataImpl_QueryInterface(IROTData *iface,REFIID riid,VOID** ppvObje
 static ULONG WINAPI
 FileMonikerROTDataImpl_AddRef(IROTData *iface)
 {
-    ICOM_THIS_From_IROTData(IMoniker, iface);
+    IMoniker *This = impl_from_IROTData(iface);
 
     TRACE("(%p)\n",This);
 
@@ -1224,7 +1229,7 @@ FileMonikerROTDataImpl_AddRef(IROTData *iface)
 static ULONG WINAPI
 FileMonikerROTDataImpl_Release(IROTData* iface)
 {
-    ICOM_THIS_From_IROTData(IMoniker, iface);
+    IMoniker *This = impl_from_IROTData(iface);
 
     TRACE("(%p)\n",This);
 
@@ -1238,7 +1243,7 @@ static HRESULT WINAPI
 FileMonikerROTDataImpl_GetComparisonData(IROTData* iface, BYTE* pbData,
                                           ULONG cbMax, ULONG* pcbData)
 {
-    ICOM_THIS_From_IROTData(IMoniker, iface);
+    IMoniker *This = impl_from_IROTData(iface);
     FileMonikerImpl *This1 = (FileMonikerImpl *)This;
     int len = (strlenW(This1->filePathName)+1);
     int i;

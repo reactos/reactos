@@ -89,7 +89,7 @@ static const BYTE STORAGE_magic[8]   ={0xd0,0xcf,0x11,0xe0,0xa1,0xb1,0x1a,0xe1};
 
 #define SMALLBLOCKS_PER_BIGBLOCK	(BIGSIZE/SMALLSIZE)
 
-#define READ_HEADER	STORAGE_get_big_block(hf,-1,(LPBYTE)&sth);assert(!memcmp(STORAGE_magic,sth.magic,sizeof(STORAGE_magic)));
+#define READ_HEADER(str)	STORAGE_get_big_block(str,-1,(LPBYTE)&sth);assert(!memcmp(STORAGE_magic,sth.magic,sizeof(STORAGE_magic)));
 static IStorage16Vtbl stvt16;
 static const IStorage16Vtbl *segstvt16 = NULL;
 static IStream16Vtbl strvt16;
@@ -319,6 +319,24 @@ static void _create_istream16(LPSTREAM16 *str);
  * deeper (but never shallower) tree.
  */
 
+typedef struct {
+	HANDLE		hf;
+	SEGPTR		lockbytes;
+} stream_access16;
+/* --- IStorage16 implementation struct */
+
+typedef struct
+{
+        /* IUnknown fields */
+        const IStorage16Vtbl           *lpVtbl;
+        LONG                            ref;
+        /* IStorage16 fields */
+        SEGPTR                          thisptr; /* pointer to this struct as segmented */
+        struct storage_pps_entry        stde;
+        int                             ppsent;
+	stream_access16			str;
+} IStorage16Impl;
+
 
 /******************************************************************************
  *		STORAGE_get_big_block	[Internal]
@@ -326,22 +344,80 @@ static void _create_istream16(LPSTREAM16 *str);
  * Reading OLE compound storage
  */
 static BOOL
-STORAGE_get_big_block(HANDLE hf,int n,BYTE *block)
+STORAGE_get_big_block(stream_access16 *str,int n,BYTE *block)
 {
     DWORD result;
 
     assert(n>=-1);
-    if ((SetFilePointer( hf, (n+1)*BIGSIZE, NULL,
-                         SEEK_SET ) == INVALID_SET_FILE_POINTER) && GetLastError())
-    {
-        WARN(" seek failed (%ld)\n",GetLastError());
-        return FALSE;
+    if (str->hf) {
+	if ((SetFilePointer( str->hf, (n+1)*BIGSIZE, NULL,
+			     SEEK_SET ) == INVALID_SET_FILE_POINTER) && GetLastError())
+	{
+	    WARN("(%p,%d,%p), seek failed (%ld)\n",str->hf, n, block, GetLastError());
+	    return FALSE;
+	}
+	if (!ReadFile( str->hf, block, BIGSIZE, &result, NULL ) || result != BIGSIZE)
+	{
+	    WARN("(hf=%p, block size %d): read didn't read (%ld)\n",str->hf,n,GetLastError());
+	    return FALSE;
+	}
+    } else {
+	DWORD args[6];
+	HRESULT hres;
+	HANDLE16 hsig;
+	
+	args[0] = (DWORD)str->lockbytes;	/* iface */
+	args[1] = (n+1)*BIGSIZE;
+	args[2] = 0;	/* ULARGE_INTEGER offset */
+	args[3] = WOWGlobalAllocLock16( 0, BIGSIZE, &hsig ); /* sig */
+	args[4] = BIGSIZE;
+	args[5] = 0;
+
+	if (!WOWCallback16Ex(
+	    (DWORD)((const ILockBytes16Vtbl*)MapSL(
+			(SEGPTR)((LPLOCKBYTES16)MapSL(str->lockbytes))->lpVtbl)
+	    )->ReadAt,
+	    WCB16_PASCAL,
+	    6*sizeof(DWORD),
+	    (LPVOID)args,
+	    (LPDWORD)&hres
+	)) {
+	    ERR("CallTo16 ILockBytes16::ReadAt() failed, hres %lx\n",hres);
+	    return FALSE;
+	}
+	memcpy(block, MapSL(args[3]), BIGSIZE);
+	WOWGlobalUnlockFree16(args[3]);
     }
-    if (!ReadFile( hf, block, BIGSIZE, &result, NULL ) || result != BIGSIZE)
-    {
-        WARN("(block size %d): read didn't read (%ld)\n",n,GetLastError());
-        return FALSE;
+    return TRUE;
+}
+
+static BOOL
+_ilockbytes16_writeat(SEGPTR lockbytes, DWORD offset, DWORD length, void *buffer) {
+    DWORD args[6];
+    HRESULT hres;
+
+    args[0] = (DWORD)lockbytes;	/* iface */
+    args[1] = offset;
+    args[2] = 0;	/* ULARGE_INTEGER offset */
+    args[3] = (DWORD)MapLS( buffer );
+    args[4] = length;
+    args[5] = 0;
+
+    /* THIS_ ULARGE_INTEGER ulOffset, const void *pv, ULONG cb, ULONG *pcbWritten); */
+
+    if (!WOWCallback16Ex(
+	(DWORD)((const ILockBytes16Vtbl*)MapSL(
+		    (SEGPTR)((LPLOCKBYTES16)MapSL(lockbytes))->lpVtbl)
+	)->WriteAt,
+	WCB16_PASCAL,
+	6*sizeof(DWORD),
+	(LPVOID)args,
+	(LPDWORD)&hres
+    )) {
+	ERR("CallTo16 ILockBytes16::WriteAt() failed, hres %lx\n",hres);
+	return FALSE;
     }
+    UnMapLS(args[3]);
     return TRUE;
 }
 
@@ -349,39 +425,44 @@ STORAGE_get_big_block(HANDLE hf,int n,BYTE *block)
  * STORAGE_put_big_block [INTERNAL]
  */
 static BOOL
-STORAGE_put_big_block(HANDLE hf,int n,BYTE *block)
+STORAGE_put_big_block(stream_access16 *str,int n,BYTE *block)
 {
     DWORD result;
 
     assert(n>=-1);
-    if ((SetFilePointer( hf, (n+1)*BIGSIZE, NULL,
-                         SEEK_SET ) == INVALID_SET_FILE_POINTER) && GetLastError())
-    {
-        WARN("seek failed (%ld)\n",GetLastError());
-        return FALSE;
+    if (str->hf) {
+	if ((SetFilePointer( str->hf, (n+1)*BIGSIZE, NULL,
+			     SEEK_SET ) == INVALID_SET_FILE_POINTER) && GetLastError())
+	{
+	    WARN("seek failed (%ld)\n",GetLastError());
+	    return FALSE;
+	}
+	if (!WriteFile( str->hf, block, BIGSIZE, &result, NULL ) || result != BIGSIZE)
+	{
+	    WARN(" write failed (%ld)\n",GetLastError());
+	    return FALSE;
+	}
+	return TRUE;
+    } else {
+	_ilockbytes16_writeat(str->lockbytes, (n+1)*BIGSIZE, BIGSIZE, block);
+	return TRUE;
     }
-    if (!WriteFile( hf, block, BIGSIZE, &result, NULL ) || result != BIGSIZE)
-    {
-        WARN(" write failed (%ld)\n",GetLastError());
-        return FALSE;
-    }
-    return TRUE;
 }
 
 /******************************************************************************
  * STORAGE_get_next_big_blocknr [INTERNAL]
  */
 static int
-STORAGE_get_next_big_blocknr(HANDLE hf,int blocknr) {
+STORAGE_get_next_big_blocknr(stream_access16 *str,int blocknr) {
 	INT	bbs[BIGSIZE/sizeof(INT)];
 	struct	storage_header	sth;
 
-	READ_HEADER;
+	READ_HEADER(str);
 
 	assert(blocknr>>7<sth.num_of_bbd_blocks);
 	if (sth.bbd_list[blocknr>>7]==0xffffffff)
 		return -5;
-	if (!STORAGE_get_big_block(hf,sth.bbd_list[blocknr>>7],(LPBYTE)bbs))
+	if (!STORAGE_get_big_block(str,sth.bbd_list[blocknr>>7],(LPBYTE)bbs))
 		return -5;
 	assert(bbs[blocknr&0x7f]!=STORAGE_CHAINENTRY_FREE);
 	return bbs[blocknr&0x7f];
@@ -391,12 +472,13 @@ STORAGE_get_next_big_blocknr(HANDLE hf,int blocknr) {
  * STORAGE_get_nth_next_big_blocknr [INTERNAL]
  */
 static int
-STORAGE_get_nth_next_big_blocknr(HANDLE hf,int blocknr,int nr) {
+STORAGE_get_nth_next_big_blocknr(stream_access16 *str,int blocknr,int nr) {
 	INT	bbs[BIGSIZE/sizeof(INT)];
 	int	lastblock = -1;
 	struct storage_header sth;
 
-	READ_HEADER;
+	TRACE("(blocknr=%d, nr=%d)\n", blocknr, nr);
+	READ_HEADER(str);
 
 	assert(blocknr>=0);
 	while (nr--) {
@@ -405,7 +487,7 @@ STORAGE_get_nth_next_big_blocknr(HANDLE hf,int blocknr,int nr) {
 
 		/* simple caching... */
 		if (lastblock!=sth.bbd_list[blocknr>>7]) {
-			BOOL ret = STORAGE_get_big_block(hf,sth.bbd_list[blocknr>>7],(LPBYTE)bbs);
+			BOOL ret = STORAGE_get_big_block(str,sth.bbd_list[blocknr>>7],(LPBYTE)bbs);
 			assert(ret);
 			lastblock = sth.bbd_list[blocknr>>7];
 		}
@@ -418,16 +500,17 @@ STORAGE_get_nth_next_big_blocknr(HANDLE hf,int blocknr,int nr) {
  *		STORAGE_get_root_pps_entry	[Internal]
  */
 static BOOL
-STORAGE_get_root_pps_entry(HANDLE hf,struct storage_pps_entry *pstde) {
+STORAGE_get_root_pps_entry(stream_access16* str,struct storage_pps_entry *pstde) {
 	int	blocknr,i;
 	BYTE	block[BIGSIZE];
 	struct storage_pps_entry	*stde=(struct storage_pps_entry*)block;
 	struct storage_header sth;
 
-	READ_HEADER;
+	READ_HEADER(str);
 	blocknr = sth.root_startblock;
+	TRACE("startblock is %d\n", blocknr);
 	while (blocknr>=0) {
-		BOOL ret = STORAGE_get_big_block(hf,blocknr,block);
+		BOOL ret = STORAGE_get_big_block(str,blocknr,block);
 		assert(ret);
 		for (i=0;i<4;i++) {
 			if (!stde[i].pps_sizeofname)
@@ -437,7 +520,8 @@ STORAGE_get_root_pps_entry(HANDLE hf,struct storage_pps_entry *pstde) {
 				return TRUE;
 			}
 		}
-		blocknr=STORAGE_get_next_big_blocknr(hf,blocknr);
+		blocknr=STORAGE_get_next_big_blocknr(str,blocknr);
+		TRACE("next block is %d\n", blocknr);
 	}
 	return FALSE;
 }
@@ -446,18 +530,19 @@ STORAGE_get_root_pps_entry(HANDLE hf,struct storage_pps_entry *pstde) {
  * STORAGE_get_small_block [INTERNAL]
  */
 static BOOL
-STORAGE_get_small_block(HANDLE hf,int blocknr,BYTE *sblock) {
+STORAGE_get_small_block(stream_access16 *str,int blocknr,BYTE *sblock) {
 	BYTE				block[BIGSIZE];
 	int				bigblocknr;
 	struct storage_pps_entry	root;
 	BOOL ret;
 
+	TRACE("(blocknr=%d)\n", blocknr);
 	assert(blocknr>=0);
-	ret = STORAGE_get_root_pps_entry(hf,&root);
+	ret = STORAGE_get_root_pps_entry(str,&root);
 	assert(ret);
-	bigblocknr = STORAGE_get_nth_next_big_blocknr(hf,root.pps_sb,blocknr/SMALLBLOCKS_PER_BIGBLOCK);
+	bigblocknr = STORAGE_get_nth_next_big_blocknr(str,root.pps_sb,blocknr/SMALLBLOCKS_PER_BIGBLOCK);
 	assert(bigblocknr>=0);
-	ret = STORAGE_get_big_block(hf,bigblocknr,block);
+	ret = STORAGE_get_big_block(str,bigblocknr,block);
 	assert(ret);
 
 	memcpy(sblock,((LPBYTE)block)+SMALLSIZE*(blocknr&(SMALLBLOCKS_PER_BIGBLOCK-1)),SMALLSIZE);
@@ -468,23 +553,24 @@ STORAGE_get_small_block(HANDLE hf,int blocknr,BYTE *sblock) {
  * STORAGE_put_small_block [INTERNAL]
  */
 static BOOL
-STORAGE_put_small_block(HANDLE hf,int blocknr,BYTE *sblock) {
+STORAGE_put_small_block(stream_access16 *str,int blocknr,BYTE *sblock) {
 	BYTE				block[BIGSIZE];
 	int				bigblocknr;
 	struct storage_pps_entry	root;
 	BOOL ret;
 
 	assert(blocknr>=0);
+	TRACE("(blocknr=%d)\n", blocknr);
 
-	ret = STORAGE_get_root_pps_entry(hf,&root);
+	ret = STORAGE_get_root_pps_entry(str,&root);
 	assert(ret);
-	bigblocknr = STORAGE_get_nth_next_big_blocknr(hf,root.pps_sb,blocknr/SMALLBLOCKS_PER_BIGBLOCK);
+	bigblocknr = STORAGE_get_nth_next_big_blocknr(str,root.pps_sb,blocknr/SMALLBLOCKS_PER_BIGBLOCK);
 	assert(bigblocknr>=0);
-	ret = STORAGE_get_big_block(hf,bigblocknr,block);
+	ret = STORAGE_get_big_block(str,bigblocknr,block);
 	assert(ret);
 
 	memcpy(((LPBYTE)block)+SMALLSIZE*(blocknr&(SMALLBLOCKS_PER_BIGBLOCK-1)),sblock,SMALLSIZE);
-	ret = STORAGE_put_big_block(hf,bigblocknr,block);
+	ret = STORAGE_put_big_block(str,bigblocknr,block);
 	assert(ret);
 	return TRUE;
 }
@@ -493,18 +579,19 @@ STORAGE_put_small_block(HANDLE hf,int blocknr,BYTE *sblock) {
  * STORAGE_get_next_small_blocknr [INTERNAL]
  */
 static int
-STORAGE_get_next_small_blocknr(HANDLE hf,int blocknr) {
+STORAGE_get_next_small_blocknr(stream_access16 *str,int blocknr) {
 	BYTE				block[BIGSIZE];
 	LPINT				sbd = (LPINT)block;
 	int				bigblocknr;
 	struct storage_header		sth;
 	BOOL ret;
 
-	READ_HEADER;
+	TRACE("(blocknr=%d)\n", blocknr);
+	READ_HEADER(str);
 	assert(blocknr>=0);
-	bigblocknr = STORAGE_get_nth_next_big_blocknr(hf,sth.sbd_startblock,blocknr/128);
+	bigblocknr = STORAGE_get_nth_next_big_blocknr(str,sth.sbd_startblock,blocknr/128);
 	assert(bigblocknr>=0);
-	ret = STORAGE_get_big_block(hf,bigblocknr,block);
+	ret = STORAGE_get_big_block(str,bigblocknr,block);
 	assert(ret);
 	assert(sbd[blocknr & 127]!=STORAGE_CHAINENTRY_FREE);
 	return sbd[blocknr & (128-1)];
@@ -514,21 +601,22 @@ STORAGE_get_next_small_blocknr(HANDLE hf,int blocknr) {
  * STORAGE_get_nth_next_small_blocknr [INTERNAL]
  */
 static int
-STORAGE_get_nth_next_small_blocknr(HANDLE hf,int blocknr,int nr) {
+STORAGE_get_nth_next_small_blocknr(stream_access16*str,int blocknr,int nr) {
 	int	lastblocknr=-1;
 	BYTE	block[BIGSIZE];
 	LPINT	sbd = (LPINT)block;
 	struct storage_header sth;
 	BOOL ret;
 
-	READ_HEADER;
+	TRACE("(blocknr=%d, nr=%d)\n", blocknr, nr);
+	READ_HEADER(str);
 	assert(blocknr>=0);
 	while ((nr--) && (blocknr>=0)) {
 		if (lastblocknr/128!=blocknr/128) {
 			int	bigblocknr;
-			bigblocknr = STORAGE_get_nth_next_big_blocknr(hf,sth.sbd_startblock,blocknr/128);
+			bigblocknr = STORAGE_get_nth_next_big_blocknr(str,sth.sbd_startblock,blocknr/128);
 			assert(bigblocknr>=0);
-			ret = STORAGE_get_big_block(hf,bigblocknr,block);
+			ret = STORAGE_get_big_block(str,bigblocknr,block);
 			assert(ret);
 			lastblocknr = blocknr;
 		}
@@ -544,18 +632,19 @@ STORAGE_get_nth_next_small_blocknr(HANDLE hf,int blocknr,int nr) {
  * STORAGE_get_pps_entry [INTERNAL]
  */
 static int
-STORAGE_get_pps_entry(HANDLE hf,int n,struct storage_pps_entry *pstde) {
+STORAGE_get_pps_entry(stream_access16*str,int n,struct storage_pps_entry *pstde) {
 	int	blocknr;
 	BYTE	block[BIGSIZE];
 	struct storage_pps_entry *stde = (struct storage_pps_entry*)(((LPBYTE)block)+128*(n&3));
 	struct storage_header sth;
 	BOOL ret;
 
-	READ_HEADER;
+	TRACE("(n=%d)\n", n);
+	READ_HEADER(str);
 	/* we have 4 pps entries per big block */
-	blocknr = STORAGE_get_nth_next_big_blocknr(hf,sth.root_startblock,n/4);
+	blocknr = STORAGE_get_nth_next_big_blocknr(str,sth.root_startblock,n/4);
 	assert(blocknr>=0);
-	ret = STORAGE_get_big_block(hf,blocknr,block);
+	ret = STORAGE_get_big_block(str,blocknr,block);
 	assert(ret);
 
 	*pstde=*stde;
@@ -566,22 +655,22 @@ STORAGE_get_pps_entry(HANDLE hf,int n,struct storage_pps_entry *pstde) {
  *		STORAGE_put_pps_entry	[Internal]
  */
 static int
-STORAGE_put_pps_entry(HANDLE hf,int n,struct storage_pps_entry *pstde) {
+STORAGE_put_pps_entry(stream_access16*str,int n,struct storage_pps_entry *pstde) {
 	int	blocknr;
 	BYTE	block[BIGSIZE];
 	struct storage_pps_entry *stde = (struct storage_pps_entry*)(((LPBYTE)block)+128*(n&3));
 	struct storage_header sth;
 	BOOL ret;
 
-	READ_HEADER;
-
+	TRACE("(n=%d)\n", n);
+	READ_HEADER(str);
 	/* we have 4 pps entries per big block */
-	blocknr = STORAGE_get_nth_next_big_blocknr(hf,sth.root_startblock,n/4);
+	blocknr = STORAGE_get_nth_next_big_blocknr(str,sth.root_startblock,n/4);
 	assert(blocknr>=0);
-	ret = STORAGE_get_big_block(hf,blocknr,block);
+	ret = STORAGE_get_big_block(str,blocknr,block);
 	assert(ret);
 	*stde=*pstde;
-	ret = STORAGE_put_big_block(hf,blocknr,block);
+	ret = STORAGE_put_big_block(str,blocknr,block);
 	assert(ret);
 	return 1;
 }
@@ -590,24 +679,25 @@ STORAGE_put_pps_entry(HANDLE hf,int n,struct storage_pps_entry *pstde) {
  *		STORAGE_look_for_named_pps	[Internal]
  */
 static int
-STORAGE_look_for_named_pps(HANDLE hf,int n,LPOLESTR name) {
+STORAGE_look_for_named_pps(stream_access16*str,int n,LPOLESTR name) {
 	struct storage_pps_entry	stde;
 	int				ret;
 
+	TRACE("(n=%d,name=%s)\n", n, debugstr_w(name));
 	if (n==-1)
 		return -1;
-	if (1!=STORAGE_get_pps_entry(hf,n,&stde))
+	if (1!=STORAGE_get_pps_entry(str,n,&stde))
 		return -1;
 
 	if (!lstrcmpW(name,stde.pps_rawname))
 		return n;
 	if (stde.pps_prev != -1) {
-		ret=STORAGE_look_for_named_pps(hf,stde.pps_prev,name);
+		ret=STORAGE_look_for_named_pps(str,stde.pps_prev,name);
 		if (ret!=-1)
 			return ret;
 	}
 	if (stde.pps_next != -1) {
-		ret=STORAGE_look_for_named_pps(hf,stde.pps_next,name);
+		ret=STORAGE_look_for_named_pps(str,stde.pps_next,name);
 		if (ret!=-1)
 			return ret;
 	}
@@ -651,14 +741,15 @@ STORAGE_dump_pps_entry(struct storage_pps_entry *stde) {
  * STORAGE_init_storage [INTERNAL]
  */
 static BOOL
-STORAGE_init_storage(HANDLE hf) {
+STORAGE_init_storage(stream_access16 *str) {
 	BYTE	block[BIGSIZE];
 	LPDWORD	bbs;
 	struct storage_header *sth;
 	struct storage_pps_entry *stde;
         DWORD result;
 
-        SetFilePointer( hf, 0, NULL, SEEK_SET );
+	if (str->hf)
+	    SetFilePointer( str->hf, 0, NULL, SEEK_SET );
 	/* block -1 is the storage header */
 	sth = (struct storage_header*)block;
 	memcpy(sth->magic,STORAGE_magic,8);
@@ -670,13 +761,21 @@ STORAGE_init_storage(HANDLE hf) {
 	sth->sbd_startblock	= 0xffffffff;
 	memset(sth->bbd_list,0xff,sizeof(sth->bbd_list));
 	sth->bbd_list[0]	= 0;
-        if (!WriteFile( hf, block, BIGSIZE, &result, NULL ) || result != BIGSIZE) return FALSE;
+	if (str->hf) {
+	    if (!WriteFile( str->hf, block, BIGSIZE, &result, NULL ) || result != BIGSIZE) return FALSE;
+	} else {
+	    if (!_ilockbytes16_writeat(str->lockbytes, 0, BIGSIZE, block)) return FALSE;
+	}
 	/* block 0 is the big block directory */
 	bbs=(LPDWORD)block;
 	memset(block,0xff,sizeof(block)); /* mark all blocks as free */
 	bbs[0]=STORAGE_CHAINENTRY_ENDOFCHAIN; /* for this block */
 	bbs[1]=STORAGE_CHAINENTRY_ENDOFCHAIN; /* for directory entry */
-        if (!WriteFile( hf, block, BIGSIZE, &result, NULL ) || result != BIGSIZE) return FALSE;
+	if (str->hf) {
+	    if (!WriteFile( str->hf, block, BIGSIZE, &result, NULL ) || result != BIGSIZE) return FALSE;
+	} else {
+	    if (!_ilockbytes16_writeat(str->lockbytes, BIGSIZE, BIGSIZE, block)) return FALSE;
+	}
 	/* block 1 is the root directory entry */
 	memset(block,0x00,sizeof(block));
 	stde = (struct storage_pps_entry*)block;
@@ -689,33 +788,37 @@ STORAGE_init_storage(HANDLE hf) {
 	stde->pps_prev		= -1;
 	stde->pps_sb		= 0xffffffff;
 	stde->pps_size		= 0;
-        return (WriteFile( hf, block, BIGSIZE, &result, NULL ) && result == BIGSIZE);
+	if (str->hf) {
+	    return (WriteFile( str->hf, block, BIGSIZE, &result, NULL ) && result == BIGSIZE);
+	} else {
+	    return _ilockbytes16_writeat(str->lockbytes, BIGSIZE, BIGSIZE, block);
+	}
 }
 
 /******************************************************************************
  *		STORAGE_set_big_chain	[Internal]
  */
 static BOOL
-STORAGE_set_big_chain(HANDLE hf,int blocknr,INT type) {
+STORAGE_set_big_chain(stream_access16*str,int blocknr,INT type) {
 	BYTE	block[BIGSIZE];
 	LPINT	bbd = (LPINT)block;
 	int	nextblocknr,bigblocknr;
 	struct storage_header sth;
 	BOOL ret;
 
-	READ_HEADER;
+	READ_HEADER(str);
 	assert(blocknr!=type);
 	while (blocknr>=0) {
 		bigblocknr = sth.bbd_list[blocknr/128];
 		assert(bigblocknr>=0);
-		ret = STORAGE_get_big_block(hf,bigblocknr,block);
+		ret = STORAGE_get_big_block(str,bigblocknr,block);
 		assert(ret);
 
 		nextblocknr = bbd[blocknr&(128-1)];
 		bbd[blocknr&(128-1)] = type;
 		if (type>=0)
 			return TRUE;
-		ret = STORAGE_put_big_block(hf,bigblocknr,block);
+		ret = STORAGE_put_big_block(str,bigblocknr,block);
 		assert(ret);
 		type = STORAGE_CHAINENTRY_FREE;
 		blocknr = nextblocknr;
@@ -727,29 +830,29 @@ STORAGE_set_big_chain(HANDLE hf,int blocknr,INT type) {
  * STORAGE_set_small_chain [Internal]
  */
 static BOOL
-STORAGE_set_small_chain(HANDLE hf,int blocknr,INT type) {
+STORAGE_set_small_chain(stream_access16*str,int blocknr,INT type) {
 	BYTE	block[BIGSIZE];
 	LPINT	sbd = (LPINT)block;
 	int	lastblocknr,nextsmallblocknr,bigblocknr;
 	struct storage_header sth;
 	BOOL ret;
 
-	READ_HEADER;
+	READ_HEADER(str);
 
 	assert(blocknr!=type);
 	lastblocknr=-129;bigblocknr=-2;
 	while (blocknr>=0) {
 		/* cache block ... */
 		if (lastblocknr/128!=blocknr/128) {
-			bigblocknr = STORAGE_get_nth_next_big_blocknr(hf,sth.sbd_startblock,blocknr/128);
+			bigblocknr = STORAGE_get_nth_next_big_blocknr(str,sth.sbd_startblock,blocknr/128);
 			assert(bigblocknr>=0);
-			ret = STORAGE_get_big_block(hf,bigblocknr,block);
+			ret = STORAGE_get_big_block(str,bigblocknr,block);
 			assert(ret);
 		}
 		lastblocknr = blocknr;
 		nextsmallblocknr = sbd[blocknr&(128-1)];
 		sbd[blocknr&(128-1)] = type;
-		ret = STORAGE_put_big_block(hf,bigblocknr,block);
+		ret = STORAGE_put_big_block(str,bigblocknr,block);
 		assert(ret);
 		if (type>=0)
 			return TRUE;
@@ -763,7 +866,7 @@ STORAGE_set_small_chain(HANDLE hf,int blocknr,INT type) {
  *		STORAGE_get_free_big_blocknr	[Internal]
  */
 static int
-STORAGE_get_free_big_blocknr(HANDLE hf) {
+STORAGE_get_free_big_blocknr(stream_access16 *str) {
 	BYTE	block[BIGSIZE];
 	LPINT	sbd = (LPINT)block;
 	int	lastbigblocknr,i,bigblocknr;
@@ -771,21 +874,21 @@ STORAGE_get_free_big_blocknr(HANDLE hf) {
 	struct storage_header sth;
 	BOOL ret;
 
-	READ_HEADER;
+	READ_HEADER(str);
 	curblock	= 0;
 	lastbigblocknr	= -1;
 	bigblocknr	= sth.bbd_list[curblock];
 	while (curblock<sth.num_of_bbd_blocks) {
 		assert(bigblocknr>=0);
-		ret = STORAGE_get_big_block(hf,bigblocknr,block);
+		ret = STORAGE_get_big_block(str,bigblocknr,block);
 		assert(ret);
 		for (i=0;i<128;i++)
 			if (sbd[i]==STORAGE_CHAINENTRY_FREE) {
 				sbd[i] = STORAGE_CHAINENTRY_ENDOFCHAIN;
-				ret = STORAGE_put_big_block(hf,bigblocknr,block);
+				ret = STORAGE_put_big_block(str,bigblocknr,block);
 				assert(ret);
 				memset(block,0x42,sizeof(block));
-				ret = STORAGE_put_big_block(hf,i+curblock*128,block);
+				ret = STORAGE_put_big_block(str,i+curblock*128,block);
 				assert(ret);
 				return i+curblock*128;
 			}
@@ -800,30 +903,30 @@ STORAGE_get_free_big_blocknr(HANDLE hf) {
 	memset(block,0xff,sizeof(block));
 	/* mark the block allocated and returned by this function */
 	sbd[1] = STORAGE_CHAINENTRY_ENDOFCHAIN;
-	ret = STORAGE_put_big_block(hf,bigblocknr,block);
+	ret = STORAGE_put_big_block(str,bigblocknr,block);
 	assert(ret);
 
 	/* if we had a bbd block already (mostlikely) we need
 	 * to link the new one into the chain
 	 */
 	if (lastbigblocknr!=-1) {
-		ret = STORAGE_set_big_chain(hf,lastbigblocknr,bigblocknr);
+		ret = STORAGE_set_big_chain(str,lastbigblocknr,bigblocknr);
 		assert(ret);
 	}
 	sth.bbd_list[curblock]=bigblocknr;
 	sth.num_of_bbd_blocks++;
 	assert(sth.num_of_bbd_blocks==curblock+1);
-	ret = STORAGE_put_big_block(hf,-1,(LPBYTE)&sth);
+	ret = STORAGE_put_big_block(str,-1,(LPBYTE)&sth);
 	assert(ret);
 
 	/* Set the end of the chain for the bigblockdepots */
-	ret = STORAGE_set_big_chain(hf,bigblocknr,STORAGE_CHAINENTRY_ENDOFCHAIN);
+	ret = STORAGE_set_big_chain(str,bigblocknr,STORAGE_CHAINENTRY_ENDOFCHAIN);
 	assert(ret);
 	/* add 1, for the first entry is used for the additional big block
 	 * depot. (means we already used bigblocknr) */
 	memset(block,0x42,sizeof(block));
 	/* allocate this block (filled with 0x42) */
-	ret = STORAGE_put_big_block(hf,bigblocknr+1,block);
+	ret = STORAGE_put_big_block(str,bigblocknr+1,block);
 	assert(ret);
 	return bigblocknr+1;
 }
@@ -833,20 +936,20 @@ STORAGE_get_free_big_blocknr(HANDLE hf) {
  *		STORAGE_get_free_small_blocknr	[Internal]
  */
 static int
-STORAGE_get_free_small_blocknr(HANDLE hf) {
+STORAGE_get_free_small_blocknr(stream_access16 *str) {
 	BYTE	block[BIGSIZE];
 	LPINT	sbd = (LPINT)block;
 	int	lastbigblocknr,newblocknr,i,curblock,bigblocknr;
 	struct storage_pps_entry	root;
 	struct storage_header sth;
 
-	READ_HEADER;
+	READ_HEADER(str);
 	bigblocknr	= sth.sbd_startblock;
 	curblock	= 0;
 	lastbigblocknr	= -1;
 	newblocknr	= -1;
 	while (bigblocknr>=0) {
-		if (!STORAGE_get_big_block(hf,bigblocknr,block))
+		if (!STORAGE_get_big_block(str,bigblocknr,block))
 			return -1;
 		for (i=0;i<128;i++)
 			if (sbd[i]==STORAGE_CHAINENTRY_FREE) {
@@ -857,56 +960,56 @@ STORAGE_get_free_small_blocknr(HANDLE hf) {
 		if (i!=128)
 			break;
 		lastbigblocknr = bigblocknr;
-		bigblocknr = STORAGE_get_next_big_blocknr(hf,bigblocknr);
+		bigblocknr = STORAGE_get_next_big_blocknr(str,bigblocknr);
 		curblock++;
 	}
 	if (newblocknr==-1) {
-		bigblocknr = STORAGE_get_free_big_blocknr(hf);
+		bigblocknr = STORAGE_get_free_big_blocknr(str);
 		if (bigblocknr<0)
 			return -1;
-		READ_HEADER;
+		READ_HEADER(str);
 		memset(block,0xff,sizeof(block));
 		sbd[0]=STORAGE_CHAINENTRY_ENDOFCHAIN;
-		if (!STORAGE_put_big_block(hf,bigblocknr,block))
+		if (!STORAGE_put_big_block(str,bigblocknr,block))
 			return -1;
 		if (lastbigblocknr==-1) {
 			sth.sbd_startblock = bigblocknr;
-			if (!STORAGE_put_big_block(hf,-1,(LPBYTE)&sth)) /* need to write it */
+			if (!STORAGE_put_big_block(str,-1,(LPBYTE)&sth)) /* need to write it */
 				return -1;
 		} else {
-			if (!STORAGE_set_big_chain(hf,lastbigblocknr,bigblocknr))
+			if (!STORAGE_set_big_chain(str,lastbigblocknr,bigblocknr))
 				return -1;
 		}
-		if (!STORAGE_set_big_chain(hf,bigblocknr,STORAGE_CHAINENTRY_ENDOFCHAIN))
+		if (!STORAGE_set_big_chain(str,bigblocknr,STORAGE_CHAINENTRY_ENDOFCHAIN))
 			return -1;
 		newblocknr = curblock*128;
 	}
 	/* allocate enough big blocks for storing the allocated small block */
-	if (!STORAGE_get_root_pps_entry(hf,&root))
+	if (!STORAGE_get_root_pps_entry(str,&root))
 		return -1;
 	if (root.pps_sb==-1)
 		lastbigblocknr	= -1;
 	else
-		lastbigblocknr	= STORAGE_get_nth_next_big_blocknr(hf,root.pps_sb,(root.pps_size-1)/BIGSIZE);
+		lastbigblocknr	= STORAGE_get_nth_next_big_blocknr(str,root.pps_sb,(root.pps_size-1)/BIGSIZE);
 	while (root.pps_size < (newblocknr*SMALLSIZE+SMALLSIZE-1)) {
 		/* we need to allocate more stuff */
-		bigblocknr = STORAGE_get_free_big_blocknr(hf);
+		bigblocknr = STORAGE_get_free_big_blocknr(str);
 		if (bigblocknr<0)
 			return -1;
-		READ_HEADER;
+		READ_HEADER(str);
 		if (root.pps_sb==-1) {
 			root.pps_sb	 = bigblocknr;
 			root.pps_size	+= BIGSIZE;
 		} else {
-			if (!STORAGE_set_big_chain(hf,lastbigblocknr,bigblocknr))
+			if (!STORAGE_set_big_chain(str,lastbigblocknr,bigblocknr))
 				return -1;
 			root.pps_size	+= BIGSIZE;
 		}
 		lastbigblocknr = bigblocknr;
 	}
-	if (!STORAGE_set_big_chain(hf,lastbigblocknr,STORAGE_CHAINENTRY_ENDOFCHAIN))
+	if (!STORAGE_set_big_chain(str,lastbigblocknr,STORAGE_CHAINENTRY_ENDOFCHAIN))
 		return -1;
-	if (!STORAGE_put_pps_entry(hf,0,&root))
+	if (!STORAGE_put_pps_entry(str,0,&root))
 		return -1;
 	return newblocknr;
 }
@@ -915,38 +1018,38 @@ STORAGE_get_free_small_blocknr(HANDLE hf) {
  *		STORAGE_get_free_pps_entry	[Internal]
  */
 static int
-STORAGE_get_free_pps_entry(HANDLE hf) {
+STORAGE_get_free_pps_entry(stream_access16*str) {
 	int	blocknr, i, curblock, lastblocknr=-1;
 	BYTE	block[BIGSIZE];
 	struct storage_pps_entry *stde = (struct storage_pps_entry*)block;
 	struct storage_header sth;
 
-	READ_HEADER;
+	READ_HEADER(str);
 	blocknr = sth.root_startblock;
 	assert(blocknr>=0);
 	curblock=0;
 	while (blocknr>=0) {
-		if (!STORAGE_get_big_block(hf,blocknr,block))
+		if (!STORAGE_get_big_block(str,blocknr,block))
 			return -1;
 		for (i=0;i<4;i++)
 			if (stde[i].pps_sizeofname==0) /* free */
 				return curblock*4+i;
 		lastblocknr = blocknr;
-		blocknr = STORAGE_get_next_big_blocknr(hf,blocknr);
+		blocknr = STORAGE_get_next_big_blocknr(str,blocknr);
 		curblock++;
 	}
 	assert(blocknr==STORAGE_CHAINENTRY_ENDOFCHAIN);
-	blocknr = STORAGE_get_free_big_blocknr(hf);
+	blocknr = STORAGE_get_free_big_blocknr(str);
 	/* sth invalidated */
 	if (blocknr<0)
 		return -1;
 
-	if (!STORAGE_set_big_chain(hf,lastblocknr,blocknr))
+	if (!STORAGE_set_big_chain(str,lastblocknr,blocknr))
 		return -1;
-	if (!STORAGE_set_big_chain(hf,blocknr,STORAGE_CHAINENTRY_ENDOFCHAIN))
+	if (!STORAGE_set_big_chain(str,blocknr,STORAGE_CHAINENTRY_ENDOFCHAIN))
 		return -1;
 	memset(block,0,sizeof(block));
-	STORAGE_put_big_block(hf,blocknr,block);
+	STORAGE_put_big_block(str,blocknr,block);
 	return curblock*4;
 }
 
@@ -961,8 +1064,8 @@ typedef struct
         SEGPTR                          thisptr; /* pointer to this struct as segmented */
         struct storage_pps_entry        stde;
         int                             ppsent;
-        HANDLE                         hf;
         ULARGE_INTEGER                  offset;
+	stream_access16			str;
 } IStream16Impl;
 
 /******************************************************************************
@@ -989,20 +1092,82 @@ ULONG IStream16_fnAddRef(IStream16* iface) {
 	return InterlockedIncrement(&This->ref);
 }
 
+static void
+_ilockbytes16_addref(SEGPTR lockbytes) {
+    DWORD args[1];
+    HRESULT hres;
+    
+    args[0] = (DWORD)lockbytes;	/* iface */
+    if (!WOWCallback16Ex(
+	(DWORD)((const ILockBytes16Vtbl*)MapSL(
+		    (SEGPTR)((LPLOCKBYTES16)MapSL(lockbytes))->lpVtbl)
+	)->AddRef,
+	WCB16_PASCAL,
+	1*sizeof(DWORD),
+	(LPVOID)args,
+	(LPDWORD)&hres
+    ))
+	ERR("CallTo16 ILockBytes16::AddRef() failed, hres %lx\n",hres);
+}
+
+static void
+_ilockbytes16_release(SEGPTR lockbytes) {
+    DWORD args[1];
+    HRESULT hres;
+    
+    args[0] = (DWORD)lockbytes;	/* iface */
+    if (!WOWCallback16Ex(
+	(DWORD)((const ILockBytes16Vtbl*)MapSL(
+		    (SEGPTR)((LPLOCKBYTES16)MapSL(lockbytes))->lpVtbl)
+	)->Release,
+	WCB16_PASCAL,
+	1*sizeof(DWORD),
+	(LPVOID)args,
+	(LPDWORD)&hres
+    ))
+	ERR("CallTo16 ILockBytes16::Release() failed, hres %lx\n",hres);
+}
+
+static void
+_ilockbytes16_flush(SEGPTR lockbytes) {
+    DWORD args[1];
+    HRESULT hres;
+    
+    args[0] = (DWORD)lockbytes;	/* iface */
+    if (!WOWCallback16Ex(
+	(DWORD)((const ILockBytes16Vtbl*)MapSL(
+		    (SEGPTR)((LPLOCKBYTES16)MapSL(lockbytes))->lpVtbl)
+	)->Flush,
+	WCB16_PASCAL,
+	1*sizeof(DWORD),
+	(LPVOID)args,
+	(LPDWORD)&hres
+    ))
+	ERR("CallTo16 ILockBytes16::Flush() failed, hres %lx\n",hres);
+}
+
 /******************************************************************************
  * IStream16_Release [STORAGE.520]
  */
 ULONG IStream16_fnRelease(IStream16* iface) {
 	IStream16Impl *This = (IStream16Impl *)iface;
         ULONG ref;
-	FlushFileBuffers(This->hf);
+
+	if (This->str.hf)
+	    FlushFileBuffers(This->str.hf);
+	else
+	    _ilockbytes16_flush(This->str.lockbytes);
         ref = InterlockedDecrement(&This->ref);
-	if (!ref) {
-		CloseHandle(This->hf);
-                UnMapLS( This->thisptr );
-		HeapFree( GetProcessHeap(), 0, This );
-	}
-	return ref;
+	if (ref)
+	    return ref;
+
+	if (This->str.hf)
+	    CloseHandle(This->str.hf);
+	else
+	    _ilockbytes16_release(This->str.lockbytes);
+        UnMapLS( This->thisptr );
+	HeapFree( GetProcessHeap(), 0, This );
+	return 0;
 }
 
 /******************************************************************************
@@ -1072,11 +1237,11 @@ HRESULT IStream16_fnRead(
 		cb=This->stde.pps_size-This->offset.u.LowPart;
 	if (This->stde.pps_size < 0x1000) {
 		/* use small block reader */
-		blocknr = STORAGE_get_nth_next_small_blocknr(This->hf,This->stde.pps_sb,This->offset.u.LowPart/SMALLSIZE);
+		blocknr = STORAGE_get_nth_next_small_blocknr(&This->str,This->stde.pps_sb,This->offset.u.LowPart/SMALLSIZE);
 		while (cb) {
 			unsigned int cc;
 
-			if (!STORAGE_get_small_block(This->hf,blocknr,block)) {
+			if (!STORAGE_get_small_block(&This->str,blocknr,block)) {
 			   WARN("small block read failed!!!\n");
 				return E_FAIL;
 			}
@@ -1088,15 +1253,15 @@ HRESULT IStream16_fnRead(
 			pbv+=cc;
 			*bytesread+=cc;
 			cb-=cc;
-			blocknr = STORAGE_get_next_small_blocknr(This->hf,blocknr);
+			blocknr = STORAGE_get_next_small_blocknr(&This->str,blocknr);
 		}
 	} else {
 		/* use big block reader */
-		blocknr = STORAGE_get_nth_next_big_blocknr(This->hf,This->stde.pps_sb,This->offset.u.LowPart/BIGSIZE);
+		blocknr = STORAGE_get_nth_next_big_blocknr(&This->str,This->stde.pps_sb,This->offset.u.LowPart/BIGSIZE);
 		while (cb) {
 			unsigned int cc;
 
-			if (!STORAGE_get_big_block(This->hf,blocknr,block)) {
+			if (!STORAGE_get_big_block(&This->str,blocknr,block)) {
 				WARN("big block read failed!!!\n");
 				return E_FAIL;
 			}
@@ -1108,7 +1273,7 @@ HRESULT IStream16_fnRead(
 			pbv+=cc;
 			*bytesread+=cc;
 			cb-=cc;
-			blocknr=STORAGE_get_next_big_blocknr(This->hf,blocknr);
+			blocknr=STORAGE_get_next_big_blocknr(&This->str,blocknr);
 		}
 	}
 	return S_OK;
@@ -1124,7 +1289,6 @@ HRESULT IStream16_fnWrite(
 	BYTE	block[BIGSIZE];
 	ULONG	*byteswritten=pcbWrite,xxwritten;
 	int	oldsize,newsize,i,curoffset=0,lastblocknr,blocknr,cc;
-	HANDLE	hf = This->hf;
 	const BYTE*     pbv = (const BYTE*)pv;
 
 	if (!pcbWrite) byteswritten=&xxwritten;
@@ -1137,20 +1301,20 @@ HRESULT IStream16_fnWrite(
 	if (newsize < oldsize) {
 		if (oldsize < 0x1000) {
 			/* only small blocks */
-			blocknr=STORAGE_get_nth_next_small_blocknr(hf,This->stde.pps_sb,newsize/SMALLSIZE);
+			blocknr=STORAGE_get_nth_next_small_blocknr(&This->str,This->stde.pps_sb,newsize/SMALLSIZE);
 
 			assert(blocknr>=0);
 
 			/* will set the rest of the chain to 'free' */
-			if (!STORAGE_set_small_chain(hf,blocknr,STORAGE_CHAINENTRY_ENDOFCHAIN))
+			if (!STORAGE_set_small_chain(&This->str,blocknr,STORAGE_CHAINENTRY_ENDOFCHAIN))
 				return E_FAIL;
 		} else {
 			if (newsize >= 0x1000) {
-				blocknr=STORAGE_get_nth_next_big_blocknr(hf,This->stde.pps_sb,newsize/BIGSIZE);
+				blocknr=STORAGE_get_nth_next_big_blocknr(&This->str,This->stde.pps_sb,newsize/BIGSIZE);
 				assert(blocknr>=0);
 
 				/* will set the rest of the chain to 'free' */
-				if (!STORAGE_set_big_chain(hf,blocknr,STORAGE_CHAINENTRY_ENDOFCHAIN))
+				if (!STORAGE_set_big_chain(&This->str,blocknr,STORAGE_CHAINENTRY_ENDOFCHAIN))
 					return E_FAIL;
 			} else {
 				/* Migrate large blocks to small blocks
@@ -1163,35 +1327,35 @@ HRESULT IStream16_fnWrite(
 				blocknr = This->stde.pps_sb;
 				curdata = data;
 				while (cc>0) {
-					if (!STORAGE_get_big_block(hf,blocknr,curdata)) {
+					if (!STORAGE_get_big_block(&This->str,blocknr,curdata)) {
 						HeapFree(GetProcessHeap(),0,data);
 						return E_FAIL;
 					}
 					curdata	+= BIGSIZE;
 					cc	-= BIGSIZE;
-					blocknr	 = STORAGE_get_next_big_blocknr(hf,blocknr);
+					blocknr	 = STORAGE_get_next_big_blocknr(&This->str,blocknr);
 				}
 				/* frees complete chain for this stream */
-				if (!STORAGE_set_big_chain(hf,This->stde.pps_sb,STORAGE_CHAINENTRY_FREE))
+				if (!STORAGE_set_big_chain(&This->str,This->stde.pps_sb,STORAGE_CHAINENTRY_FREE))
 					goto err;
 				curdata	= data;
-				blocknr = This->stde.pps_sb = STORAGE_get_free_small_blocknr(hf);
+				blocknr = This->stde.pps_sb = STORAGE_get_free_small_blocknr(&This->str);
 				if (blocknr<0)
 					goto err;
 				cc	= newsize;
 				while (cc>0) {
-					if (!STORAGE_put_small_block(hf,blocknr,curdata))
+					if (!STORAGE_put_small_block(&This->str,blocknr,curdata))
 						goto err;
 					cc	-= SMALLSIZE;
 					if (cc<=0) {
-						if (!STORAGE_set_small_chain(hf,blocknr,STORAGE_CHAINENTRY_ENDOFCHAIN))
+						if (!STORAGE_set_small_chain(&This->str,blocknr,STORAGE_CHAINENTRY_ENDOFCHAIN))
 							goto err;
 						break;
 					} else {
-						int newblocknr = STORAGE_get_free_small_blocknr(hf);
+						int newblocknr = STORAGE_get_free_small_blocknr(&This->str);
 						if (newblocknr<0)
 							goto err;
-						if (!STORAGE_set_small_chain(hf,blocknr,newblocknr))
+						if (!STORAGE_set_small_chain(&This->str,blocknr,newblocknr))
 							goto err;
 						blocknr = newblocknr;
 					}
@@ -1210,46 +1374,46 @@ HRESULT IStream16_fnWrite(
 	if (newsize > oldsize) {
 		if (oldsize >= 0x1000) {
 			/* should return the block right before the 'endofchain' */
-			blocknr = STORAGE_get_nth_next_big_blocknr(hf,This->stde.pps_sb,This->stde.pps_size/BIGSIZE);
+			blocknr = STORAGE_get_nth_next_big_blocknr(&This->str,This->stde.pps_sb,This->stde.pps_size/BIGSIZE);
 			assert(blocknr>=0);
 			lastblocknr	= blocknr;
 			for (i=oldsize/BIGSIZE;i<newsize/BIGSIZE;i++) {
-				blocknr = STORAGE_get_free_big_blocknr(hf);
+				blocknr = STORAGE_get_free_big_blocknr(&This->str);
 				if (blocknr<0)
 					return E_FAIL;
-				if (!STORAGE_set_big_chain(hf,lastblocknr,blocknr))
+				if (!STORAGE_set_big_chain(&This->str,lastblocknr,blocknr))
 					return E_FAIL;
 				lastblocknr = blocknr;
 			}
-			if (!STORAGE_set_big_chain(hf,blocknr,STORAGE_CHAINENTRY_ENDOFCHAIN))
+			if (!STORAGE_set_big_chain(&This->str,blocknr,STORAGE_CHAINENTRY_ENDOFCHAIN))
 				return E_FAIL;
 		} else {
 			if (newsize < 0x1000) {
 				/* find startblock */
 				if (!oldsize)
-					This->stde.pps_sb = blocknr = STORAGE_get_free_small_blocknr(hf);
+					This->stde.pps_sb = blocknr = STORAGE_get_free_small_blocknr(&This->str);
 				else
-					blocknr = STORAGE_get_nth_next_small_blocknr(hf,This->stde.pps_sb,This->stde.pps_size/SMALLSIZE);
+					blocknr = STORAGE_get_nth_next_small_blocknr(&This->str,This->stde.pps_sb,This->stde.pps_size/SMALLSIZE);
 				if (blocknr<0)
 					return E_FAIL;
 
 				/* allocate required new small blocks */
 				lastblocknr = blocknr;
 				for (i=oldsize/SMALLSIZE;i<newsize/SMALLSIZE;i++) {
-					blocknr = STORAGE_get_free_small_blocknr(hf);
+					blocknr = STORAGE_get_free_small_blocknr(&This->str);
 					if (blocknr<0)
 						return E_FAIL;
-					if (!STORAGE_set_small_chain(hf,lastblocknr,blocknr))
+					if (!STORAGE_set_small_chain(&This->str,lastblocknr,blocknr))
 						return E_FAIL;
 					lastblocknr = blocknr;
 				}
 				/* and terminate the chain */
-				if (!STORAGE_set_small_chain(hf,lastblocknr,STORAGE_CHAINENTRY_ENDOFCHAIN))
+				if (!STORAGE_set_small_chain(&This->str,lastblocknr,STORAGE_CHAINENTRY_ENDOFCHAIN))
 					return E_FAIL;
 			} else {
 				if (!oldsize) {
 					/* no single block allocated yet */
-					blocknr=STORAGE_get_free_big_blocknr(hf);
+					blocknr=STORAGE_get_free_big_blocknr(&This->str);
 					if (blocknr<0)
 						return E_FAIL;
 					This->stde.pps_sb = blocknr;
@@ -1263,34 +1427,34 @@ HRESULT IStream16_fnWrite(
 					curdata = data;
 					/* slurp in */
 					while (cc>0) {
-						if (!STORAGE_get_small_block(hf,blocknr,curdata))
+						if (!STORAGE_get_small_block(&This->str,blocknr,curdata))
 							goto err2;
 						curdata	+= SMALLSIZE;
 						cc	-= SMALLSIZE;
-						blocknr	 = STORAGE_get_next_small_blocknr(hf,blocknr);
+						blocknr	 = STORAGE_get_next_small_blocknr(&This->str,blocknr);
 					}
 					/* free small block chain */
-					if (!STORAGE_set_small_chain(hf,This->stde.pps_sb,STORAGE_CHAINENTRY_FREE))
+					if (!STORAGE_set_small_chain(&This->str,This->stde.pps_sb,STORAGE_CHAINENTRY_FREE))
 						goto err2;
 					curdata	= data;
-					blocknr = This->stde.pps_sb = STORAGE_get_free_big_blocknr(hf);
+					blocknr = This->stde.pps_sb = STORAGE_get_free_big_blocknr(&This->str);
 					if (blocknr<0)
 						goto err2;
 					/* put the data into the big blocks */
 					cc	= This->stde.pps_size;
 					while (cc>0) {
-						if (!STORAGE_put_big_block(hf,blocknr,curdata))
+						if (!STORAGE_put_big_block(&This->str,blocknr,curdata))
 							goto err2;
 						cc	-= BIGSIZE;
 						if (cc<=0) {
-							if (!STORAGE_set_big_chain(hf,blocknr,STORAGE_CHAINENTRY_ENDOFCHAIN))
+							if (!STORAGE_set_big_chain(&This->str,blocknr,STORAGE_CHAINENTRY_ENDOFCHAIN))
 								goto err2;
 							break;
 						} else {
-							int newblocknr = STORAGE_get_free_big_blocknr(hf);
+							int newblocknr = STORAGE_get_free_big_blocknr(&This->str);
 							if (newblocknr<0)
 								goto err2;
-							if (!STORAGE_set_big_chain(hf,blocknr,newblocknr))
+							if (!STORAGE_set_big_chain(&This->str,blocknr,newblocknr))
 								goto err2;
 							blocknr = newblocknr;
 						}
@@ -1305,15 +1469,15 @@ HRESULT IStream16_fnWrite(
 				/* generate big blocks to fit the new data */
 				lastblocknr	= blocknr;
 				for (i=oldsize/BIGSIZE;i<newsize/BIGSIZE;i++) {
-					blocknr = STORAGE_get_free_big_blocknr(hf);
+					blocknr = STORAGE_get_free_big_blocknr(&This->str);
 					if (blocknr<0)
 						return E_FAIL;
-					if (!STORAGE_set_big_chain(hf,lastblocknr,blocknr))
+					if (!STORAGE_set_big_chain(&This->str,lastblocknr,blocknr))
 						return E_FAIL;
 					lastblocknr = blocknr;
 				}
 				/* terminate chain */
-				if (!STORAGE_set_big_chain(hf,lastblocknr,STORAGE_CHAINENTRY_ENDOFCHAIN))
+				if (!STORAGE_set_big_chain(&This->str,lastblocknr,STORAGE_CHAINENTRY_ENDOFCHAIN))
 					return E_FAIL;
 			}
 		}
@@ -1323,12 +1487,12 @@ HRESULT IStream16_fnWrite(
 	/* There are just some cases where we didn't modify it, we write it out
 	 * everytime
 	 */
-	if (!STORAGE_put_pps_entry(hf,This->ppsent,&(This->stde)))
+	if (!STORAGE_put_pps_entry(&This->str,This->ppsent,&(This->stde)))
 		return E_FAIL;
 
 	/* finally the write pass */
 	if (This->stde.pps_size < 0x1000) {
-		blocknr = STORAGE_get_nth_next_small_blocknr(hf,This->stde.pps_sb,This->offset.u.LowPart/SMALLSIZE);
+		blocknr = STORAGE_get_nth_next_small_blocknr(&This->str,This->stde.pps_sb,This->offset.u.LowPart/SMALLSIZE);
 		assert(blocknr>=0);
 		while (cb>0) {
 			/* we ensured that it is allocated above */
@@ -1336,7 +1500,7 @@ HRESULT IStream16_fnWrite(
 			/* Read old block everytime, since we can have
 			 * overlapping data at START and END of the write
 			 */
-			if (!STORAGE_get_small_block(hf,blocknr,block))
+			if (!STORAGE_get_small_block(&This->str,blocknr,block))
 				return E_FAIL;
 
 			cc = SMALLSIZE-(This->offset.u.LowPart&(SMALLSIZE-1));
@@ -1346,17 +1510,17 @@ HRESULT IStream16_fnWrite(
 				pbv+curoffset,
 				cc
 			);
-			if (!STORAGE_put_small_block(hf,blocknr,block))
+			if (!STORAGE_put_small_block(&This->str,blocknr,block))
 				return E_FAIL;
 			cb			-= cc;
 			curoffset		+= cc;
 			pbv			+= cc;
 			This->offset.u.LowPart	+= cc;
 			*byteswritten		+= cc;
-			blocknr = STORAGE_get_next_small_blocknr(hf,blocknr);
+			blocknr = STORAGE_get_next_small_blocknr(&This->str,blocknr);
 		}
 	} else {
-		blocknr = STORAGE_get_nth_next_big_blocknr(hf,This->stde.pps_sb,This->offset.u.LowPart/BIGSIZE);
+		blocknr = STORAGE_get_nth_next_big_blocknr(&This->str,This->stde.pps_sb,This->offset.u.LowPart/BIGSIZE);
 		assert(blocknr>=0);
 		while (cb>0) {
 			/* we ensured that it is allocated above, so it better is */
@@ -1364,7 +1528,7 @@ HRESULT IStream16_fnWrite(
 			/* read old block everytime, since we can have
 			 * overlapping data at START and END of the write
 			 */
-			if (!STORAGE_get_big_block(hf,blocknr,block))
+			if (!STORAGE_get_big_block(&This->str,blocknr,block))
 				return E_FAIL;
 
 			cc = BIGSIZE-(This->offset.u.LowPart&(BIGSIZE-1));
@@ -1374,14 +1538,14 @@ HRESULT IStream16_fnWrite(
 				pbv+curoffset,
 				cc
 			);
-			if (!STORAGE_put_big_block(hf,blocknr,block))
+			if (!STORAGE_put_big_block(&This->str,blocknr,block))
 				return E_FAIL;
 			cb			-= cc;
 			curoffset		+= cc;
 			pbv			+= cc;
 			This->offset.u.LowPart	+= cc;
 			*byteswritten		+= cc;
-			blocknr = STORAGE_get_next_big_blocknr(hf,blocknr);
+			blocknr = STORAGE_get_next_big_blocknr(&This->str,blocknr);
 		}
 	}
 	return S_OK;
@@ -1440,6 +1604,8 @@ static void _create_istream16(LPSTREAM16 *str) {
 	lpst->lpVtbl	= segstrvt16;
 	lpst->ref	= 1;
 	lpst->thisptr	= MapLS( lpst );
+	lpst->str.hf	= NULL;
+	lpst->str.lockbytes	= 0;
 	*str = (void*)lpst->thisptr;
 }
 
@@ -1454,7 +1620,7 @@ typedef struct
         /* IStream32 fields */
         struct storage_pps_entry        stde;
         int                             ppsent;
-        HANDLE                         hf;
+        HANDLE                          hf;
         ULARGE_INTEGER                  offset;
 } IStream32Impl;
 
@@ -1497,20 +1663,6 @@ ULONG WINAPI IStream_fnRelease(IStream* iface) {
 	}
 	return ref;
 }
-
-/* --- IStorage16 implementation */
-
-typedef struct
-{
-        /* IUnknown fields */
-        const IStorage16Vtbl           *lpVtbl;
-        LONG                            ref;
-        /* IStorage16 fields */
-        SEGPTR                          thisptr; /* pointer to this struct as segmented */
-        struct storage_pps_entry        stde;
-        int                             ppsent;
-        HANDLE                         hf;
-} IStorage16Impl;
 
 /******************************************************************************
  *		IStorage16_QueryInterface	[STORAGE.500]
@@ -1616,12 +1768,10 @@ HRESULT IStorage16_fnCreateStorage(
 	int		ppsent,x;
 	struct storage_pps_entry	stde;
 	struct storage_header sth;
-	HANDLE		hf=This->hf;
 	BOOL ret;
 	int	 nPPSEntries;
 
-	READ_HEADER;
-
+	READ_HEADER(&This->str);
 	TRACE("(%p)->(%s,0x%08lx,0x%08lx,0x%08lx,%p)\n",
 		This,pwcsName,grfMode,dwStgFormat,reserved2,ppstg
 	);
@@ -1629,9 +1779,15 @@ HRESULT IStorage16_fnCreateStorage(
 		FIXME("We do not support transacted Compound Storage. Using direct mode.\n");
 	_create_istorage16(ppstg);
 	lpstg = MapSL((SEGPTR)*ppstg);
-	lpstg->hf		= This->hf;
+	if (This->str.hf) {
+	    DuplicateHandle( GetCurrentProcess(), This->str.hf, GetCurrentProcess(),
+			     &lpstg->str.hf, 0, TRUE, DUPLICATE_SAME_ACCESS );
+	} else {
+	    lpstg->str.lockbytes = This->str.lockbytes;
+	    _ilockbytes16_addref(This->str.lockbytes);
+	}
 
-	ppsent=STORAGE_get_free_pps_entry(lpstg->hf);
+	ppsent=STORAGE_get_free_pps_entry(&lpstg->str);
 	if (ppsent<0)
 		return E_FAIL;
 	stde=This->stde;
@@ -1641,18 +1797,18 @@ HRESULT IStorage16_fnCreateStorage(
 	} else {
 		FIXME(" use prev chain too ?\n");
 		x=stde.pps_dir;
-		if (1!=STORAGE_get_pps_entry(lpstg->hf,x,&stde))
+		if (1!=STORAGE_get_pps_entry(&lpstg->str,x,&stde))
 			return E_FAIL;
 		while (stde.pps_next!=-1) {
 			x=stde.pps_next;
-			if (1!=STORAGE_get_pps_entry(lpstg->hf,x,&stde))
+			if (1!=STORAGE_get_pps_entry(&lpstg->str,x,&stde))
 				return E_FAIL;
 		}
 		stde.pps_next = ppsent;
 	}
-	ret = STORAGE_put_pps_entry(lpstg->hf,x,&stde);
+	ret = STORAGE_put_pps_entry(&lpstg->str,x,&stde);
 	assert(ret);
-	nPPSEntries = STORAGE_get_pps_entry(lpstg->hf,ppsent,&(lpstg->stde));
+	nPPSEntries = STORAGE_get_pps_entry(&lpstg->str,ppsent,&(lpstg->stde));
 	assert(nPPSEntries == 1);
         MultiByteToWideChar( CP_ACP, 0, pwcsName, -1, lpstg->stde.pps_rawname,
                              sizeof(lpstg->stde.pps_rawname)/sizeof(WCHAR));
@@ -1665,7 +1821,7 @@ HRESULT IStorage16_fnCreateStorage(
 	lpstg->stde.pps_type	=  1;
 	lpstg->ppsent		= ppsent;
 	/* FIXME: timestamps? */
-	if (!STORAGE_put_pps_entry(lpstg->hf,ppsent,&(lpstg->stde)))
+	if (!STORAGE_put_pps_entry(&lpstg->str,ppsent,&(lpstg->stde)))
 		return E_FAIL;
 	return S_OK;
 }
@@ -1690,12 +1846,17 @@ HRESULT IStorage16_fnCreateStream(
 		FIXME("We do not support transacted Compound Storage. Using direct mode.\n");
 	_create_istream16(ppstm);
 	lpstr = MapSL((SEGPTR)*ppstm);
-        DuplicateHandle( GetCurrentProcess(), This->hf, GetCurrentProcess(),
-                         &lpstr->hf, 0, TRUE, DUPLICATE_SAME_ACCESS );
+	if (This->str.hf) {
+	    DuplicateHandle( GetCurrentProcess(), This->str.hf, GetCurrentProcess(),
+			     &lpstr->str.hf, 0, TRUE, DUPLICATE_SAME_ACCESS );
+	} else {
+	    lpstr->str.lockbytes = This->str.lockbytes;
+	    _ilockbytes16_addref(This->str.lockbytes);
+	}
 	lpstr->offset.u.LowPart	= 0;
-	lpstr->offset.u.HighPart	= 0;
+	lpstr->offset.u.HighPart= 0;
 
-	ppsent=STORAGE_get_free_pps_entry(lpstr->hf);
+	ppsent=STORAGE_get_free_pps_entry(&lpstr->str);
 	if (ppsent<0)
 		return E_FAIL;
 	stde=This->stde;
@@ -1704,13 +1865,13 @@ HRESULT IStorage16_fnCreateStream(
 	else
 		while (stde.pps_next!=-1) {
 			x=stde.pps_next;
-			if (1!=STORAGE_get_pps_entry(lpstr->hf,x,&stde))
+			if (1!=STORAGE_get_pps_entry(&lpstr->str,x,&stde))
 				return E_FAIL;
 		}
 	stde.pps_next = ppsent;
-	ret = STORAGE_put_pps_entry(lpstr->hf,x,&stde);
+	ret = STORAGE_put_pps_entry(&lpstr->str,x,&stde);
 	assert(ret);
-	nPPSEntries = STORAGE_get_pps_entry(lpstr->hf,ppsent,&(lpstr->stde));
+	nPPSEntries = STORAGE_get_pps_entry(&lpstr->str,ppsent,&(lpstr->stde));
 	assert(nPPSEntries == 1);
         MultiByteToWideChar( CP_ACP, 0, pwcsName, -1, lpstr->stde.pps_rawname,
                              sizeof(lpstr->stde.pps_rawname)/sizeof(WCHAR));
@@ -1722,8 +1883,9 @@ HRESULT IStorage16_fnCreateStream(
 	lpstr->stde.pps_size	=  0;
 	lpstr->stde.pps_type	=  2;
 	lpstr->ppsent		= ppsent;
+
 	/* FIXME: timestamps? */
-	if (!STORAGE_put_pps_entry(lpstr->hf,ppsent,&(lpstr->stde)))
+	if (!STORAGE_put_pps_entry(&lpstr->str,ppsent,&(lpstr->stde)))
 		return E_FAIL;
 	return S_OK;
 }
@@ -1739,23 +1901,28 @@ HRESULT IStorage16_fnOpenStorage(
 	WCHAR		name[33];
 	int		newpps;
 
-	TRACE_(relay)("(%p)->(%s,%p,0x%08lx,%p,0x%08lx,%p)\n",
+	TRACE("(%p)->(%s,%p,0x%08lx,%p,0x%08lx,%p)\n",
 		This,pwcsName,pstgPrio,grfMode,snbExclude,reserved,ppstg
 	);
 	if (grfMode & STGM_TRANSACTED)
 		FIXME("We do not support transacted Compound Storage. Using direct mode.\n");
 	_create_istorage16(ppstg);
 	lpstg = MapSL((SEGPTR)*ppstg);
-        DuplicateHandle( GetCurrentProcess(), This->hf, GetCurrentProcess(),
-                         &lpstg->hf, 0, TRUE, DUPLICATE_SAME_ACCESS );
+	if (This->str.hf) {
+	    DuplicateHandle( GetCurrentProcess(), This->str.hf, GetCurrentProcess(),
+			     &lpstg->str.hf, 0, TRUE, DUPLICATE_SAME_ACCESS );
+	} else {
+	    lpstg->str.lockbytes = This->str.lockbytes;
+	    _ilockbytes16_addref(This->str.lockbytes);
+	}
         MultiByteToWideChar( CP_ACP, 0, pwcsName, -1, name, sizeof(name)/sizeof(WCHAR));
-	newpps = STORAGE_look_for_named_pps(lpstg->hf,This->stde.pps_dir,name);
+	newpps = STORAGE_look_for_named_pps(&lpstg->str,This->stde.pps_dir,name);
 	if (newpps==-1) {
 		IStream16_fnRelease((IStream16*)lpstg);
 		return E_FAIL;
 	}
 
-	if (1!=STORAGE_get_pps_entry(lpstg->hf,newpps,&(lpstg->stde))) {
+	if (1!=STORAGE_get_pps_entry(&lpstg->str,newpps,&(lpstg->stde))) {
 		IStream16_fnRelease((IStream16*)lpstg);
 		return E_FAIL;
 	}
@@ -1774,29 +1941,34 @@ HRESULT IStorage16_fnOpenStream(
 	WCHAR		name[33];
 	int		newpps;
 
-	TRACE_(relay)("(%p)->(%s,%p,0x%08lx,0x%08lx,%p)\n",
+	TRACE("(%p)->(%s,%p,0x%08lx,0x%08lx,%p)\n",
 		This,pwcsName,reserved1,grfMode,reserved2,ppstm
 	);
 	if (grfMode & STGM_TRANSACTED)
 		FIXME("We do not support transacted Compound Storage. Using direct mode.\n");
 	_create_istream16(ppstm);
 	lpstr = MapSL((SEGPTR)*ppstm);
-        DuplicateHandle( GetCurrentProcess(), This->hf, GetCurrentProcess(),
-                         &lpstr->hf, 0, TRUE, DUPLICATE_SAME_ACCESS );
+	if (This->str.hf) {
+	    DuplicateHandle( GetCurrentProcess(), This->str.hf, GetCurrentProcess(),
+			     &lpstr->str.hf, 0, TRUE, DUPLICATE_SAME_ACCESS );
+	} else {
+	    lpstr->str.lockbytes = This->str.lockbytes;
+	    _ilockbytes16_addref(This->str.lockbytes);
+	}
         MultiByteToWideChar( CP_ACP, 0, pwcsName, -1, name, sizeof(name)/sizeof(WCHAR));
-	newpps = STORAGE_look_for_named_pps(lpstr->hf,This->stde.pps_dir,name);
+	newpps = STORAGE_look_for_named_pps(&lpstr->str,This->stde.pps_dir,name);
 	if (newpps==-1) {
 		IStream16_fnRelease((IStream16*)lpstr);
 		return E_FAIL;
 	}
 
-	if (1!=STORAGE_get_pps_entry(lpstr->hf,newpps,&(lpstr->stde))) {
+	if (1!=STORAGE_get_pps_entry(&lpstr->str,newpps,&(lpstr->stde))) {
 		IStream16_fnRelease((IStream16*)lpstr);
 		return E_FAIL;
 	}
-	lpstr->offset.u.LowPart	= 0;
+	lpstr->offset.u.LowPart		= 0;
 	lpstr->offset.u.HighPart	= 0;
-	lpstr->ppsent		= newpps;
+	lpstr->ppsent			= newpps;
 	return S_OK;
 }
 
@@ -1858,6 +2030,8 @@ static void _create_istorage16(LPSTORAGE16 *stg) {
 	}
 	lpst = HeapAlloc( GetProcessHeap(), 0, sizeof(*lpst) );
 	lpst->lpVtbl	= segstvt16;
+	lpst->str.hf	= NULL;
+	lpst->str.lockbytes	= 0;
 	lpst->ref	= 1;
 	lpst->thisptr	= MapLS(lpst);
 	*stg = (void*)lpst->thisptr;
@@ -1888,15 +2062,16 @@ HRESULT WINAPI StgCreateDocFile16(
 		return E_FAIL;
 	}
 	lpstg = MapSL((SEGPTR)*ppstgOpen);
-	lpstg->hf = hf;
+	lpstg->str.hf = hf;
+	lpstg->str.lockbytes = 0;
 	/* FIXME: check for existence before overwriting? */
-	if (!STORAGE_init_storage(hf)) {
+	if (!STORAGE_init_storage(&lpstg->str)) {
 		CloseHandle(hf);
 		return E_FAIL;
 	}
 	i=0;ret=0;
 	while (!ret) { /* neither 1 nor <0 */
-		ret=STORAGE_get_pps_entry(hf,i,&stde);
+		ret=STORAGE_get_pps_entry(&lpstg->str,i,&stde);
 		if ((ret==1) && (stde.pps_type==5)) {
 			lpstg->stde	= stde;
 			lpstg->ppsent	= i;
@@ -1948,11 +2123,11 @@ HRESULT WINAPI StgOpenStorage16(
 		return E_FAIL;
 	}
 	lpstg = MapSL((SEGPTR)*ppstgOpen);
-	lpstg->hf = hf;
+	lpstg->str.hf = hf;
 
 	i=0;ret=0;
 	while (!ret) { /* neither 1 nor <0 */
-		ret=STORAGE_get_pps_entry(hf,i,&stde);
+		ret=STORAGE_get_pps_entry(&lpstg->str,i,&stde);
 		if ((ret==1) && (stde.pps_type==5)) {
 			lpstg->stde=stde;
 			break;
@@ -1980,11 +2155,11 @@ HRESULT WINAPI StgIsStorageILockBytes16(SEGPTR plkbyt)
   
   args[0] = (DWORD)plkbyt;	/* iface */
   args[1] = args[2] = 0;	/* ULARGE_INTEGER offset */
-  args[3] = (DWORD)K32WOWGlobalAllocLock16( 0, 8, &hsig ); /* sig */
+  args[3] = WOWGlobalAllocLock16( 0, 8, &hsig ); /* sig */
   args[4] = 8;
   args[5] = 0;
 
-  if (!K32WOWCallback16Ex(
+  if (!WOWCallback16Ex(
       (DWORD)((const ILockBytes16Vtbl*)MapSL(
                   (SEGPTR)((LPLOCKBYTES16)MapSL(plkbyt))->lpVtbl)
       )->ReadAt,
@@ -1997,10 +2172,10 @@ HRESULT WINAPI StgIsStorageILockBytes16(SEGPTR plkbyt)
       return hres;
   }
   if (memcmp(MapSL(args[3]), STORAGE_magic, sizeof(STORAGE_magic)) == 0) {
-    K32WOWGlobalUnlockFree16(args[3]);
+    WOWGlobalUnlockFree16(args[3]);
     return S_OK;
   }
-  K32WOWGlobalUnlockFree16(args[3]);
+  WOWGlobalUnlockFree16(args[3]);
   return S_FALSE;
 }
 
@@ -2008,24 +2183,97 @@ HRESULT WINAPI StgIsStorageILockBytes16(SEGPTR plkbyt)
  *    StgOpenStorageOnILockBytes    [STORAGE.4]
  */
 HRESULT WINAPI StgOpenStorageOnILockBytes16(
-      ILockBytes16 *plkbyt,
-      IStorage16 *pstgPriority,
-      DWORD grfMode,
-      SNB16 snbExclude,
-      DWORD reserved,
-      IStorage16 **ppstgOpen)
+	SEGPTR /*ILockBytes16 **/plkbyt,
+	IStorage16 *pstgPriority,
+	DWORD grfMode,
+	SNB16 snbExclude,
+	DWORD reserved,
+	IStorage16 **ppstgOpen)
 {
-  IStorage16Impl*	lpstg;
+	IStorage16Impl*	lpstg;
+	int i,ret;
+	struct storage_pps_entry	stde;
 
-  if ((plkbyt == 0) || (ppstgOpen == 0))
-    return STG_E_INVALIDPOINTER;
+	FIXME("(%lx, %p, 0x%08lx, %d, %lx, %p)\n", plkbyt, pstgPriority, grfMode, (int)snbExclude, reserved, ppstgOpen);
+	if ((plkbyt == 0) || (ppstgOpen == 0))
+		return STG_E_INVALIDPOINTER;
 
-  *ppstgOpen = 0;
+	*ppstgOpen = 0;
 
-  _create_istorage16(ppstgOpen);
-  lpstg = MapSL((SEGPTR)*ppstgOpen);
+	_create_istorage16(ppstgOpen);
+	lpstg = MapSL((SEGPTR)*ppstgOpen);
+	lpstg->str.hf = NULL;
+	lpstg->str.lockbytes = plkbyt;
+	i=0;ret=0;
+	while (!ret) { /* neither 1 nor <0 */
+		ret=STORAGE_get_pps_entry(&lpstg->str,i,&stde);
+		if ((ret==1) && (stde.pps_type==5)) {
+			lpstg->stde=stde;
+			break;
+		}
+		i++;
+	}
+	if (ret!=1) {
+		IStorage16_fnRelease((IStorage16*)lpstg); /* will remove it */
+		return E_FAIL;
+	}
+	return S_OK;
+}
 
-  /* just teach it to use HANDLE instead of ilockbytes :/ */
+/***********************************************************************
+ *    ReadClassStg (OLE2.18)
+ *
+ * This method reads the CLSID previously written to a storage object with
+ * the WriteClassStg.
+ *
+ * PARAMS
+ *  pstg Segmented LPSTORAGE pointer.
+ */
+HRESULT WINAPI ReadClassStg16(SEGPTR pstg, CLSID *pclsid)
+{
+	STATSTG16 statstg;
+	HANDLE16 hstatstg;
+	HRESULT	hres;
+	DWORD args[3];
 
-  return S_OK;
+	TRACE("(%lx, %p)\n", pstg, pclsid);
+
+	if(pclsid==NULL)
+		return E_POINTER;
+	/*
+	 * read a STATSTG structure (contains the clsid) from the storage
+	 */
+	args[0] = (DWORD)pstg;	/* iface */
+	args[1] = WOWGlobalAllocLock16( 0, sizeof(STATSTG16), &hstatstg );
+	args[2] = STATFLAG_DEFAULT;
+
+	if (!WOWCallback16Ex(
+	    (DWORD)((const IStorage16Vtbl*)MapSL(
+			(SEGPTR)((LPSTORAGE16)MapSL(pstg))->lpVtbl)
+	    )->Stat,
+	    WCB16_PASCAL,
+	    3*sizeof(DWORD),
+	    (LPVOID)args,
+	    (LPDWORD)&hres
+	)) {
+	    WOWGlobalUnlockFree16(args[1]);
+	    ERR("CallTo16 IStorage16::Stat() failed, hres %lx\n",hres);
+	    return hres;
+	}
+	memcpy(&statstg, MapSL(args[1]), sizeof(STATSTG16));
+	WOWGlobalUnlockFree16(args[1]);
+
+	if(SUCCEEDED(hres)) {
+		*pclsid=statstg.clsid;
+		TRACE("clsid is %s\n", debugstr_guid(&statstg.clsid));
+	}
+	return hres;
+}
+
+/***********************************************************************
+ *              GetConvertStg (OLE2.82)
+ */
+HRESULT WINAPI GetConvertStg16(LPSTORAGE stg) {
+    FIXME("unimplemented stub!\n");
+    return E_FAIL;
 }

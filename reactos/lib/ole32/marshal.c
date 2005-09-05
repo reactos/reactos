@@ -269,7 +269,7 @@ static HRESULT WINAPI ClientIdentity_QueryMultipleInterfaces(IMultiQI *iface, UL
         /* get the ipid of the first entry */
         /* FIXME: should we implement ClientIdentity on the ifproxies instead
          * of the proxy_manager so we use the correct ipid here? */
-        ipid = &LIST_ENTRY(list_head(&This->interfaces), struct ifproxy, entry)->ipid;
+        ipid = &LIST_ENTRY(list_head(&This->interfaces), struct ifproxy, entry)->stdobjref.ipid;
 
         /* get IRemUnknown proxy so we can communicate with the remote object */
         hr = proxy_manager_get_remunknown(This, &remunk);
@@ -329,6 +329,72 @@ static const IMultiQIVtbl ClientIdentity_Vtbl =
     ClientIdentity_QueryMultipleInterfaces
 };
 
+static HRESULT WINAPI Proxy_QueryInterface(IMarshal *iface, REFIID riid, void **ppvObject)
+{
+    ICOM_THIS_MULTI(struct proxy_manager, lpVtblMarshal, iface);
+    return IMultiQI_QueryInterface((IMultiQI *)&This->lpVtbl, riid, ppvObject);
+}
+
+static ULONG WINAPI Proxy_AddRef(IMarshal *iface)
+{
+    ICOM_THIS_MULTI(struct proxy_manager, lpVtblMarshal, iface);
+    return IMultiQI_AddRef((IMultiQI *)&This->lpVtbl);
+}
+
+/* FIXME: remove these */
+static HRESULT WINAPI StdMarshalImpl_GetUnmarshalClass(LPMARSHAL iface, REFIID riid, void* pv, DWORD dwDestContext, void* pvDestContext, DWORD mshlflags, CLSID* pCid);
+static HRESULT WINAPI StdMarshalImpl_GetMarshalSizeMax(LPMARSHAL iface, REFIID riid, void* pv, DWORD dwDestContext, void* pvDestContext, DWORD mshlflags, DWORD* pSize);
+static HRESULT WINAPI StdMarshalImpl_UnmarshalInterface(LPMARSHAL iface, IStream *pStm, REFIID riid, void **ppv);
+static HRESULT WINAPI StdMarshalImpl_ReleaseMarshalData(LPMARSHAL iface, IStream *pStm);
+static HRESULT WINAPI StdMarshalImpl_DisconnectObject(LPMARSHAL iface, DWORD dwReserved);
+
+static ULONG WINAPI Proxy_Release(IMarshal *iface)
+{
+    ICOM_THIS_MULTI(struct proxy_manager, lpVtblMarshal, iface);
+    return IMultiQI_Release((IMultiQI *)&This->lpVtbl);
+}
+
+static HRESULT WINAPI Proxy_MarshalInterface(
+    LPMARSHAL iface, IStream *pStm, REFIID riid, void* pv, DWORD dwDestContext,
+    void* pvDestContext, DWORD mshlflags)
+{
+    ICOM_THIS_MULTI(struct proxy_manager, lpVtblMarshal, iface);
+    ULONG res;
+    HRESULT hr;
+    STDOBJREF stdobjref;
+    struct ifproxy *ifproxy;
+
+    TRACE("(...,%s,...)\n", debugstr_guid(riid));
+
+    hr = proxy_manager_find_ifproxy(This, riid, &ifproxy);
+    if (FAILED(hr))
+    {
+        ERR("couldn't find proxy for interface %s, error 0x%08lx\n", debugstr_guid(riid), hr);
+        return hr;
+    }
+
+    stdobjref = ifproxy->stdobjref;
+    /* FIXME: optimization - share out proxy's public references if possible
+     * instead of making new proxy do a roundtrip through the server */
+    stdobjref.cPublicRefs = 0; /* InterlockedDecrement(&This->stdobjref.cPublicRefs) >= 0 ? 1 : 0 */
+    hr = IStream_Write(pStm, &stdobjref, sizeof(stdobjref), &res);
+
+    return hr;
+}
+
+static const IMarshalVtbl ProxyMarshal_Vtbl =
+{
+    Proxy_QueryInterface,
+    Proxy_AddRef,
+    Proxy_Release,
+    StdMarshalImpl_GetUnmarshalClass,
+    StdMarshalImpl_GetMarshalSizeMax,
+    Proxy_MarshalInterface,
+    StdMarshalImpl_UnmarshalInterface,
+    StdMarshalImpl_ReleaseMarshalData,
+    StdMarshalImpl_DisconnectObject
+};
+
 static HRESULT ifproxy_get_public_ref(struct ifproxy * This)
 {
     HRESULT hr = S_OK;
@@ -350,7 +416,7 @@ static HRESULT ifproxy_get_public_ref(struct ifproxy * This)
         {
             HRESULT hrref;
             REMINTERFACEREF rif;
-            rif.ipid = This->ipid;
+            rif.ipid = This->stdobjref.ipid;
             rif.cPublicRefs = NORMALEXTREFS;
             rif.cPrivateRefs = 0;
             hr = IRemUnknown_RemAddRef(remunk, 1, &rif, &hrref);
@@ -385,7 +451,7 @@ static HRESULT ifproxy_release_public_refs(struct ifproxy * This)
         if (hr == S_OK)
         {
             REMINTERFACEREF rif;
-            rif.ipid = This->ipid;
+            rif.ipid = This->stdobjref.ipid;
             rif.cPublicRefs = This->refs;
             rif.cPrivateRefs = 0;
             hr = IRemUnknown_RemRelease(remunk, 1, &rif);
@@ -454,6 +520,7 @@ static HRESULT proxy_manager_construct(
     }
 
     This->lpVtbl = &ClientIdentity_Vtbl;
+    This->lpVtblMarshal = &ProxyMarshal_Vtbl;
 
     list_init(&This->entry);
     list_init(&This->interfaces);
@@ -505,8 +572,20 @@ static HRESULT proxy_manager_query_local_interface(struct proxy_manager * This, 
         IsEqualIID(riid, &IID_IMultiQI))
     {
         *ppv = (void *)&This->lpVtbl;
-        IMultiQI_AddRef((IMultiQI *)&This->lpVtbl);
+        IUnknown_AddRef((IUnknown *)*ppv);
         return S_OK;
+    }
+    if (IsEqualIID(riid, &IID_IMarshal))
+    {
+        *ppv = (void *)&This->lpVtblMarshal;
+        IUnknown_AddRef((IUnknown *)*ppv);
+        return S_OK;
+    }
+    if (IsEqualIID(riid, &IID_IClientSecurity))
+    {
+        FIXME("requesting IClientSecurity, but it is unimplemented\n");
+        *ppv = NULL;
+        return E_NOINTERFACE;
     }
 
     hr = proxy_manager_find_ifproxy(This, riid, &ifproxy);
@@ -522,7 +601,7 @@ static HRESULT proxy_manager_query_local_interface(struct proxy_manager * This, 
 }
 
 static HRESULT proxy_manager_create_ifproxy(
-    struct proxy_manager * This, const IPID *ipid, REFIID riid, ULONG cPublicRefs,
+    struct proxy_manager * This, const STDOBJREF *stdobjref, REFIID riid,
     IRpcChannelBuffer * channel, struct ifproxy ** iif_out)
 {
     HRESULT hr;
@@ -533,9 +612,9 @@ static HRESULT proxy_manager_create_ifproxy(
     list_init(&ifproxy->entry);
 
     ifproxy->parent = This;
-    ifproxy->ipid = *ipid;
+    ifproxy->stdobjref = *stdobjref;
     ifproxy->iid = *riid;
-    ifproxy->refs = cPublicRefs;
+    ifproxy->refs = stdobjref->cPublicRefs;
     ifproxy->proxy = NULL;
 
     assert(channel);
@@ -584,7 +663,7 @@ static HRESULT proxy_manager_create_ifproxy(
 
         *iif_out = ifproxy;
         TRACE("ifproxy %p created for IPID %s, interface %s with %lu public refs\n",
-              ifproxy, debugstr_guid(ipid), debugstr_guid(riid), cPublicRefs);
+              ifproxy, debugstr_guid(&stdobjref->ipid), debugstr_guid(riid), stdobjref->cPublicRefs);
     }
     else
         ifproxy_destroy(ifproxy);
@@ -901,14 +980,12 @@ static HRESULT unmarshal_object(const STDOBJREF *stdobjref, APARTMENT *apt, REFI
             IRpcChannelBuffer *chanbuf;
             hr = RPC_CreateClientChannel(&stdobjref->oxid, &stdobjref->ipid, &chanbuf);
             if (hr == S_OK)
-                hr = proxy_manager_create_ifproxy(proxy_manager, &stdobjref->ipid,
-                                                  riid, stdobjref->cPublicRefs,
-                                                  chanbuf, &ifproxy);
+                hr = proxy_manager_create_ifproxy(proxy_manager, stdobjref,
+                                                  riid, chanbuf, &ifproxy);
         }
 
         if (hr == S_OK)
         {
-            /* FIXME: push this AddRef inside proxy_manager_find_ifproxy/create_ifproxy? */
             ClientIdentity_AddRef((IMultiQI*)&proxy_manager->lpVtbl);
             *object = ifproxy->iface;
         }
@@ -958,7 +1035,7 @@ StdMarshalImpl_UnmarshalInterface(LPMARSHAL iface, IStream *pStm, REFIID riid, v
       
         /* unref the ifstub. FIXME: only do this on success? */
         if (!stub_manager_is_table_marshaled(stubmgr))
-            stub_manager_ext_release(stubmgr, 1);
+            stub_manager_ext_release(stubmgr, stdobjref.cPublicRefs);
 
         stub_manager_int_release(stubmgr);
         return hres;

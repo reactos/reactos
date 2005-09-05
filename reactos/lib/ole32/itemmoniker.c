@@ -61,6 +61,11 @@ typedef struct ItemMonikerImpl{
     IUnknown *pMarshal; /* custom marshaler */
 } ItemMonikerImpl;
 
+static inline IMoniker *impl_from_IROTData( IROTData *iface )
+{
+    return (IMoniker *)((char*)iface - FIELD_OFFSET(ItemMonikerImpl, lpvtbl2));
+}
+
 /********************************************************************************/
 /* ItemMoniker prototype functions :                                            */
 
@@ -929,7 +934,7 @@ HRESULT WINAPI ItemMonikerImpl_IsSystemMoniker(IMoniker* iface,DWORD* pwdMksys)
 HRESULT WINAPI ItemMonikerROTDataImpl_QueryInterface(IROTData *iface,REFIID riid,VOID** ppvObject)
 {
 
-    ICOM_THIS_From_IROTData(IMoniker, iface);
+    IMoniker *This = impl_from_IROTData(iface);
 
     TRACE("(%p,%p,%p)\n",iface,riid,ppvObject);
 
@@ -941,7 +946,7 @@ HRESULT WINAPI ItemMonikerROTDataImpl_QueryInterface(IROTData *iface,REFIID riid
  */
 ULONG   WINAPI ItemMonikerROTDataImpl_AddRef(IROTData *iface)
 {
-    ICOM_THIS_From_IROTData(IMoniker, iface);
+    IMoniker *This = impl_from_IROTData(iface);
 
     TRACE("(%p)\n",iface);
 
@@ -953,7 +958,7 @@ ULONG   WINAPI ItemMonikerROTDataImpl_AddRef(IROTData *iface)
  */
 ULONG   WINAPI ItemMonikerROTDataImpl_Release(IROTData* iface)
 {
-    ICOM_THIS_From_IROTData(IMoniker, iface);
+    IMoniker *This = impl_from_IROTData(iface);
 
     TRACE("(%p)\n",iface);
 
@@ -968,7 +973,7 @@ HRESULT WINAPI ItemMonikerROTDataImpl_GetComparisonData(IROTData* iface,
                                                          ULONG cbMax,
                                                          ULONG* pcbData)
 {
-    ICOM_THIS_From_IROTData(IMoniker, iface);
+    IMoniker *This = impl_from_IROTData(iface);
     ItemMonikerImpl *This1 = (ItemMonikerImpl *)This;
     int len = (strlenW(This1->itemName)+1);
     int i;

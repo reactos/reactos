@@ -80,6 +80,10 @@ typedef struct EnumMonikerImpl{
 
 } EnumMonikerImpl;
 
+static inline IMoniker *impl_from_IROTData( IROTData *iface )
+{
+    return (IMoniker *)((char*)iface - FIELD_OFFSET(CompositeMonikerImpl, lpvtbl2));
+}
 
 static HRESULT EnumMonikerImpl_CreateEnumMoniker(IMoniker** tabMoniker,ULONG tabSize,ULONG currentPos,BOOL leftToRigth,IEnumMoniker ** ppmk);
 
@@ -1208,7 +1212,7 @@ CompositeMonikerROTDataImpl_QueryInterface(IROTData *iface,REFIID riid,
                VOID** ppvObject)
 {
 
-    ICOM_THIS_From_IROTData(IMoniker, iface);
+    IMoniker *This = impl_from_IROTData(iface);
 
     TRACE("(%p,%p,%p)\n",iface,riid,ppvObject);
 
@@ -1221,7 +1225,7 @@ CompositeMonikerROTDataImpl_QueryInterface(IROTData *iface,REFIID riid,
 static ULONG WINAPI
 CompositeMonikerROTDataImpl_AddRef(IROTData *iface)
 {
-    ICOM_THIS_From_IROTData(IMoniker, iface);
+    IMoniker *This = impl_from_IROTData(iface);
 
     TRACE("(%p)\n",iface);
 
@@ -1233,7 +1237,7 @@ CompositeMonikerROTDataImpl_AddRef(IROTData *iface)
  */
 static ULONG WINAPI CompositeMonikerROTDataImpl_Release(IROTData* iface)
 {
-    ICOM_THIS_From_IROTData(IMoniker, iface);
+    IMoniker *This = impl_from_IROTData(iface);
 
     TRACE("(%p)\n",iface);
 

@@ -96,8 +96,8 @@ struct ifproxy
   struct list entry;       /* entry in proxy_manager list (CS parent->cs) */
   struct proxy_manager *parent; /* owning proxy_manager (RO) */
   LPVOID iface;            /* interface pointer (RO) */
+  STDOBJREF stdobjref;     /* marshal data that represents this object (RO) */
   IID iid;                 /* interface ID (RO) */
-  IPID ipid;               /* imported interface ID (RO) */
   LPRPCPROXYBUFFER proxy;  /* interface proxy (RO) */
   DWORD refs;              /* imported (public) references (MUTEX parent->remoting_mutex) */
   IRpcChannelBuffer *chan; /* channel to object (CS parent->cs) */
@@ -107,6 +107,7 @@ struct ifproxy
 struct proxy_manager
 {
   const IMultiQIVtbl *lpVtbl;
+  const IMarshalVtbl *lpVtblMarshal;
   struct apartment *parent; /* owning apartment (RO) */
   struct list entry;        /* entry in apartment (CS parent->cs) */
   OXID oxid;                /* object exported ID (RO) */
@@ -127,7 +128,6 @@ struct apartment
   LONG  refs;              /* refcount of the apartment (LOCK) */
   DWORD model;             /* threading model (RO) */
   DWORD tid;               /* thread id (RO) */
-  HANDLE thread;           /* thread handle (RO) */
   OXID oxid;               /* object exporter ID (RO) */
   LONG ipidc;              /* interface pointer ID counter, starts at 1 (LOCK) */
   HWND win;                /* message window (RO) */

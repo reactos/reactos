@@ -6,7 +6,7 @@
 2 stub StgCreateDocFileOnILockBytes
 # 2 pascal StgCreateDocFileOnILockBytes(ptr long long ptr) StgCreateDocFileOnILockBytes16
 3 pascal StgOpenStorage(str ptr long ptr long ptr) StgOpenStorage16
-4 pascal StgOpenStorageOnILockBytes(ptr ptr long long long ptr) StgOpenStorageOnILockBytes16
+4 pascal StgOpenStorageOnILockBytes(segptr ptr long long long ptr) StgOpenStorageOnILockBytes16
 5 pascal StgIsStorageFile(str) StgIsStorageFile16
 6 pascal StgIsStorageILockBytes(segptr) StgIsStorageILockBytes16
 7 stub StgSetTimes
