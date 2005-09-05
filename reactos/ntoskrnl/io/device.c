@@ -455,7 +455,7 @@ IoCreateDevice(PDRIVER_OBJECT DriverObject,
 
     /* Total Size */
     TotalSize = AlignedDeviceExtensionSize +
-                sizeof(DEVICE_OBJECT) + sizeof(DEVOBJ_EXTENSION);
+                sizeof(DEVICE_OBJECT) + sizeof(EXTENDED_DEVOBJ_EXTENSION);
     DPRINT("TotalSize %x\n", TotalSize);
 
     /* Create the Device Object */
