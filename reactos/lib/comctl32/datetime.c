@@ -1164,6 +1164,15 @@ DATETIME_StyleChanged(DATETIME_INFO *infoPtr, WPARAM wStyleType, LPSTYLESTRUCT l
 
 
 static LRESULT
+DATETIME_SetFont (DATETIME_INFO *infoPtr, HFONT font, BOOL repaint)
+{
+    infoPtr->hFont = font;
+    if (repaint) InvalidateRect(infoPtr->hwndSelf, NULL, TRUE);
+    return 0;
+}
+
+
+static LRESULT
 DATETIME_Create (HWND hwnd, LPCREATESTRUCTW lpcs)
 {
     static const WCHAR SysMonthCal32W[] = { 'S', 'y', 's', 'M', 'o', 'n', 't', 'h', 'C', 'a', 'l', '3', '2', 0 };
@@ -1313,6 +1322,12 @@ DATETIME_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     case WM_STYLECHANGED:
         return DATETIME_StyleChanged(infoPtr, wParam, (LPSTYLESTRUCT)lParam);
+
+    case WM_SETFONT:
+        return DATETIME_SetFont(infoPtr, (HFONT)wParam, (BOOL)lParam);
+
+    case WM_GETFONT:
+        return (LRESULT) infoPtr->hFont;
 
     default:
 	if ((uMsg >= WM_USER) && (uMsg < WM_APP))

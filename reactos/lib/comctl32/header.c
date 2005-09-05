@@ -87,6 +87,7 @@ typedef struct
 
     HIMAGELIST  himl;		/* handle to an image list (may be 0) */
     HEADER_ITEM *items;		/* pointer to array of HEADER_ITEM's */
+    INT         *order;         /* array of item IDs indexed by order */
     BOOL	bRectsValid;	/* validity flag for bounding rectangles */
 } HEADER_INFO;
 
@@ -113,14 +114,10 @@ HEADER_OrderToIndex(HWND hwnd, WPARAM wParam)
 {
     HEADER_INFO *infoPtr = HEADER_GetInfoPtr (hwnd);
     INT iorder = (INT)wParam;
-    UINT i;
 
-    if ((iorder <0) || iorder >infoPtr->uNumItem)
+    if ((iorder <0) || iorder >= infoPtr->uNumItem)
       return iorder;
-    for (i=0; i<infoPtr->uNumItem; i++)
-      if (HEADER_IndexToOrder(hwnd,i) == iorder)
-	return i;
-    return iorder;
+    return infoPtr->order[iorder];
 }
 
 static void
@@ -385,7 +382,7 @@ HEADER_Refresh (HWND hwnd, HDC hdc)
     }
 
     x = rect.left;
-    for (i = 0; i < infoPtr->uNumItem; i++) {
+    for (i = 0; x <= rect.right && i < infoPtr->uNumItem; i++) {
         x = HEADER_DrawItem (hwnd, hdc, HEADER_OrderToIndex(hwnd,i), 
             infoPtr->iHotItem == i);
     }
@@ -416,7 +413,7 @@ HEADER_RefreshItem (HWND hwnd, HDC hdc, INT iItem)
 
     hFont = infoPtr->hFont ? infoPtr->hFont : GetStockObject (SYSTEM_FONT);
     hOldFont = SelectObject (hdc, hFont);
-    HEADER_DrawItem (hwnd, hdc, iItem, FALSE);
+    HEADER_DrawItem (hwnd, hdc, iItem, infoPtr->iHotItem == iItem);
     SelectObject (hdc, hOldFont);
 }
 
@@ -647,16 +644,19 @@ HEADER_DeleteItem (HWND hwnd, WPARAM wParam)
         if (infoPtr->items[0].pszText)
             Free (infoPtr->items[0].pszText);
         Free (infoPtr->items);
+        Free(infoPtr->order);
         infoPtr->items = 0;
+        infoPtr->order = 0;
         infoPtr->uNumItem = 0;
     }
     else {
         HEADER_ITEM *oldItems = infoPtr->items;
-        HEADER_ITEM *pItem;
         INT i;
         INT iOrder;
         TRACE("Complex delete! [iItem=%d]\n", iItem);
 
+        for (i = 0; i < infoPtr->uNumItem; i++)
+           TRACE("%d: order=%d, iOrder=%d, ->iOrder=%d\n", i, infoPtr->order[i], infoPtr->items[i].iOrder, infoPtr->items[infoPtr->order[i]].iOrder);
         if (infoPtr->items[iItem].pszText)
             Free (infoPtr->items[iItem].pszText);
         iOrder = infoPtr->items[iItem].iOrder;
@@ -676,11 +676,21 @@ HEADER_DeleteItem (HWND hwnd, WPARAM wParam)
         }
 
         /* Correct the orders */
-        for (i=infoPtr->uNumItem, pItem = infoPtr->items; i; i--, pItem++)
+        if (iOrder < infoPtr->uNumItem)
         {
-            if (pItem->iOrder > iOrder)
-            pItem->iOrder--;
+            memmove(&infoPtr->order[iOrder], &infoPtr->order[iOrder + 1],
+                   (infoPtr->uNumItem - iOrder) * sizeof(INT));
+            for (i = 0; i < infoPtr->uNumItem; i++)
+            {
+                if (infoPtr->order[i] > iItem)
+                    infoPtr->order[i]--;
+                if (i >= iOrder)
+                    infoPtr->items[infoPtr->order[i]].iOrder = infoPtr->order[i];
+            }
         }
+
+        for (i = 0; i < infoPtr->uNumItem; i++)
+           TRACE("%d: order=%d, iOrder=%d, ->iOrder=%d\n", i, infoPtr->order[i], infoPtr->items[i].iOrder, infoPtr->items[infoPtr->order[i]].iOrder);
         Free (oldItems);
     }
 
@@ -850,14 +860,13 @@ HEADER_GetItemRect (HWND hwnd, WPARAM wParam, LPARAM lParam)
 static LRESULT
 HEADER_GetOrderArray(HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
-    int i;
     LPINT order = (LPINT) lParam;
     HEADER_INFO *infoPtr = HEADER_GetInfoPtr (hwnd);
 
     if ((unsigned int)wParam <infoPtr->uNumItem)
       return FALSE;
-    for (i=0; i<(int)wParam; i++)
-      *order++=HEADER_OrderToIndex(hwnd,i);
+
+    memcpy(order, infoPtr->order, infoPtr->uNumItem * sizeof(INT));
     return TRUE;
 }
 
@@ -871,6 +880,7 @@ HEADER_SetOrderArray(HWND hwnd, WPARAM wParam, LPARAM lParam)
 
     if ((unsigned int)wParam <infoPtr->uNumItem)
       return FALSE;
+    memcpy(infoPtr->order, order, infoPtr->uNumItem * sizeof(INT));
     for (i=0; i<(int)wParam; i++)
       {
         lpItem = &infoPtr->items[*order++];
@@ -923,10 +933,12 @@ HEADER_InsertItemA (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
     if (infoPtr->uNumItem == 0) {
         infoPtr->items = Alloc (sizeof (HEADER_ITEM));
+        infoPtr->order = Alloc(sizeof(INT));
         infoPtr->uNumItem++;
     }
     else {
         HEADER_ITEM *oldItems = infoPtr->items;
+        INT *oldOrder = infoPtr->order;
 
         infoPtr->uNumItem++;
         infoPtr->items = Alloc (sizeof (HEADER_ITEM) * infoPtr->uNumItem);
@@ -949,13 +961,21 @@ HEADER_InsertItemA (HWND hwnd, WPARAM wParam, LPARAM lParam)
             }
         }
 
+        infoPtr->order = Alloc(sizeof(INT) * infoPtr->uNumItem);
+        memcpy(infoPtr->order, oldOrder, iOrder * sizeof(INT));
+        infoPtr->order[iOrder] = nItem;
+        memcpy(&infoPtr->order[iOrder + 1], &oldOrder[iOrder],
+               (infoPtr->uNumItem - iOrder - 1) * sizeof(INT));
+
         Free (oldItems);
+        Free(oldOrder);
     }
 
-    for (i=0; i < infoPtr->uNumItem; i++)
+    for (i = 0; i < infoPtr->uNumItem; i++)
     {
-        if (infoPtr->items[i].iOrder >= iOrder)
-            infoPtr->items[i].iOrder++;
+        if (i != iOrder && infoPtr->order[i] >= nItem)
+            infoPtr->order[i]++;
+        infoPtr->items[infoPtr->order[i]].iOrder = infoPtr->order[i];
     }
 
     lpItem = &infoPtr->items[nItem];
@@ -1025,10 +1045,12 @@ HEADER_InsertItemW (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
     if (infoPtr->uNumItem == 0) {
         infoPtr->items = Alloc (sizeof (HEADER_ITEM));
+        infoPtr->order = Alloc(sizeof(INT));
         infoPtr->uNumItem++;
     }
     else {
         HEADER_ITEM *oldItems = infoPtr->items;
+        INT *oldOrder = infoPtr->order;
 
         infoPtr->uNumItem++;
         infoPtr->items = Alloc (sizeof (HEADER_ITEM) * infoPtr->uNumItem);
@@ -1051,13 +1073,21 @@ HEADER_InsertItemW (HWND hwnd, WPARAM wParam, LPARAM lParam)
             }
         }
 
+        infoPtr->order = Alloc(infoPtr->uNumItem * sizeof(INT));
+        memcpy(infoPtr->order, oldOrder, iOrder * sizeof(INT));
+        infoPtr->order[iOrder] = nItem;
+        memcpy(&infoPtr->order[iOrder + 1], &oldOrder[iOrder],
+               (infoPtr->uNumItem - iOrder - 1) * sizeof(INT));
+
         Free (oldItems);
+        Free(oldOrder);
     }
 
-    for (i=0; i < infoPtr->uNumItem; i++)
+    for (i = 0; i < infoPtr->uNumItem; i++)
     {
-        if (infoPtr->items[i].iOrder >= iOrder)
-            infoPtr->items[i].iOrder++;
+        if (i != iOrder && infoPtr->order[i] >= nItem)
+            infoPtr->order[i]++;
+        infoPtr->items[infoPtr->order[i]].iOrder = infoPtr->order[i];
     }
 
     lpItem = &infoPtr->items[nItem];
@@ -1143,7 +1173,7 @@ HEADER_SetImageList (HWND hwnd, HIMAGELIST himl)
     HEADER_INFO *infoPtr = HEADER_GetInfoPtr (hwnd);
     HIMAGELIST himlOld;
 
-    TRACE("(himl 0x%x)\n", (int)himl);
+    TRACE("(himl %p)\n", himl);
     himlOld = infoPtr->himl;
     infoPtr->himl = himl;
 
@@ -1224,7 +1254,27 @@ HEADER_SetItemA (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
     if (phdi->mask & HDI_ORDER)
       {
-	lpItem->iOrder = phdi->iOrder;
+        INT i, nMin, nMax;
+        
+        if (lpItem->iOrder < phdi->iOrder)
+        {
+            memmove(&infoPtr->order[lpItem->iOrder],
+                   &infoPtr->order[lpItem->iOrder + 1],
+                   (phdi->iOrder - lpItem->iOrder) * sizeof(INT));
+        }
+        if (phdi->iOrder < lpItem->iOrder)
+        {
+            memmove(&infoPtr->order[phdi->iOrder + 1],
+                    &infoPtr->order[phdi->iOrder],
+                    (lpItem->iOrder - phdi->iOrder) * sizeof(INT));
+        }
+        infoPtr->order[phdi->iOrder] = nItem;
+        nMin = min(lpItem->iOrder, phdi->iOrder);
+        nMax = max(lpItem->iOrder, phdi->iOrder);
+        for (i = nMin; i <= nMax; i++)
+        {
+            infoPtr->items[infoPtr->order[i]].iOrder = infoPtr->order[i];
+        }
       }
 
     HEADER_SendHeaderNotify (hwnd, HDN_ITEMCHANGEDA, nItem, phdi->mask);
@@ -1289,7 +1339,27 @@ HEADER_SetItemW (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
     if (phdi->mask & HDI_ORDER)
       {
-	lpItem->iOrder = phdi->iOrder;
+        INT i, nMin, nMax;
+        
+        if (lpItem->iOrder < phdi->iOrder)
+        {
+            memmove(&infoPtr->order[lpItem->iOrder],
+                   &infoPtr->order[lpItem->iOrder + 1],
+                   (phdi->iOrder - lpItem->iOrder) * sizeof(INT));
+        }
+        if (phdi->iOrder < lpItem->iOrder)
+        {
+            memmove(&infoPtr->order[phdi->iOrder + 1],
+                    &infoPtr->order[phdi->iOrder],
+                    (lpItem->iOrder - phdi->iOrder) * sizeof(INT));
+        }
+        infoPtr->order[phdi->iOrder] = nItem;
+        nMin = min(lpItem->iOrder, phdi->iOrder);
+        nMax = max(lpItem->iOrder, phdi->iOrder);
+        for (i = nMin; i <= nMax; i++)
+        {
+            infoPtr->items[infoPtr->order[i]].iOrder = infoPtr->order[i];
+        }
       }
 
     HEADER_SendHeaderNotify(hwnd, HDN_ITEMCHANGEDW, nItem, phdi->mask);
@@ -1320,7 +1390,6 @@ HEADER_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
     TEXTMETRICW tm;
     HFONT hOldFont;
     HDC   hdc;
-    BOOL themingActive = IsAppThemed() && IsThemeActive();
 
     infoPtr = (HEADER_INFO *)Alloc (sizeof(HEADER_INFO));
     SetWindowLongPtrW (hwnd, 0, (DWORD_PTR)infoPtr);
@@ -1329,6 +1398,7 @@ HEADER_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
     infoPtr->uNumItem = 0;
     infoPtr->hFont = 0;
     infoPtr->items = 0;
+    infoPtr->order = 0;
     infoPtr->bRectsValid = FALSE;
     infoPtr->hcurArrow = LoadCursorW (0, (LPWSTR)IDC_ARROW);
     infoPtr->hcurDivider = LoadCursorW (COMCTL32_hModule, MAKEINTRESOURCEW(IDC_DIVIDER));
@@ -1350,7 +1420,7 @@ HEADER_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
     SelectObject (hdc, hOldFont);
     ReleaseDC (0, hdc);
 
-    if (themingActive) OpenThemeData(hwnd, themeClass);
+    OpenThemeData(hwnd, themeClass);
 
     return 0;
 }
@@ -1372,6 +1442,9 @@ HEADER_Destroy (HWND hwnd, WPARAM wParam, LPARAM lParam)
         }
         Free (infoPtr->items);
     }
+
+    if (infoPtr->order)
+        Free(infoPtr->order);
 
     if (infoPtr->himl)
 	ImageList_Destroy (infoPtr->himl);
@@ -1506,6 +1579,9 @@ HEADER_LButtonUp (HWND hwnd, WPARAM wParam, LPARAM lParam)
             lpItem= &infoPtr->items[infoPtr->iMoveItem];
 	    lpItem->iOrder = newindex;
 
+            infoPtr->order[oldindex] = nItem;
+            infoPtr->order[newindex] = infoPtr->iMoveItem;
+
 	    infoPtr->bRectsValid = FALSE;
 	    InvalidateRect(hwnd, NULL, FALSE);
 	    /* FIXME: Should some WM_NOTIFY be sent */
@@ -1581,6 +1657,22 @@ HEADER_NotifyFormat (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
 
 static LRESULT
+HEADER_MouseLeave (HWND hwnd, WPARAM wParam, LPARAM lParam)
+{
+    HEADER_INFO *infoPtr = HEADER_GetInfoPtr (hwnd);
+    /* Reset hot-tracked item when mouse leaves control. */
+    INT oldHotItem = infoPtr->iHotItem;
+    HDC hdc = GetDC (hwnd);
+
+    infoPtr->iHotItem = -1;
+    if (oldHotItem != -1) HEADER_RefreshItem (hwnd, hdc, oldHotItem);
+    ReleaseDC (hwnd, hdc);
+
+    return 0;
+}
+
+
+static LRESULT
 HEADER_MouseMove (HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
     HEADER_INFO *infoPtr = HEADER_GetInfoPtr (hwnd);
@@ -1589,28 +1681,35 @@ HEADER_MouseMove (HWND hwnd, WPARAM wParam, LPARAM lParam)
     UINT  flags;
     INT   nItem, nWidth;
     HDC   hdc;
+    /* With theming, hottracking is always enabled */
+    BOOL  hotTrackEnabled =
+        ((dwStyle & HDS_BUTTONS) && (dwStyle & HDS_HOTTRACK))
+        || (GetWindowTheme (hwnd) != NULL);
+    INT oldHotItem = infoPtr->iHotItem;
 
     pt.x = (INT)(SHORT)LOWORD(lParam);
     pt.y = (INT)(SHORT)HIWORD(lParam);
     HEADER_InternalHitTest (hwnd, &pt, &flags, &nItem);
 
-    if ((dwStyle & HDS_BUTTONS) && (dwStyle & HDS_HOTTRACK)) {
+    if (hotTrackEnabled) {
 	if (flags & (HHT_ONHEADER | HHT_ONDIVIDER | HHT_ONDIVOPEN))
 	    infoPtr->iHotItem = nItem;
 	else
 	    infoPtr->iHotItem = -1;
-	InvalidateRect(hwnd, NULL, FALSE);
     }
 
     if (infoPtr->bCaptured) {
 	if (infoPtr->bPressed) {
+            BOOL oldState = infoPtr->items[infoPtr->iMoveItem].bDown;
 	    if ((nItem == infoPtr->iMoveItem) && (flags == HHT_ONHEADER))
 		infoPtr->items[infoPtr->iMoveItem].bDown = TRUE;
 	    else
 		infoPtr->items[infoPtr->iMoveItem].bDown = FALSE;
-	    hdc = GetDC (hwnd);
-	    HEADER_RefreshItem (hwnd, hdc, infoPtr->iMoveItem);
-	    ReleaseDC (hwnd, hdc);
+            if (oldState != infoPtr->items[infoPtr->iMoveItem].bDown) {
+                hdc = GetDC (hwnd);
+	        HEADER_RefreshItem (hwnd, hdc, infoPtr->iMoveItem);
+	        ReleaseDC (hwnd, hdc);
+            }
 
 	    TRACE("Moving pressed item %d!\n", infoPtr->iMoveItem);
 	}
@@ -1643,8 +1742,18 @@ HEADER_MouseMove (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	}
     }
 
-    if ((dwStyle & HDS_BUTTONS) && (dwStyle & HDS_HOTTRACK)) {
-	FIXME("hot track support!\n");
+    if (hotTrackEnabled) {
+        TRACKMOUSEEVENT tme;
+        if (oldHotItem != infoPtr->iHotItem) {
+	    hdc = GetDC (hwnd);
+	    if (oldHotItem != -1) HEADER_RefreshItem (hwnd, hdc, oldHotItem);
+	    if (infoPtr->iHotItem != -1) HEADER_RefreshItem (hwnd, hdc, infoPtr->iHotItem);
+	    ReleaseDC (hwnd, hdc);
+        }
+        tme.cbSize = sizeof( tme );
+        tme.dwFlags = TME_LEAVE;
+        tme.hwndTrack = hwnd;
+        TrackMouseEvent( &tme );
     }
 
     return 0;
@@ -1853,6 +1962,9 @@ HEADER_WindowProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         case WM_LBUTTONUP:
             return HEADER_LButtonUp (hwnd, wParam, lParam);
+
+        case WM_MOUSELEAVE:
+            return HEADER_MouseLeave (hwnd, wParam, lParam);
 
         case WM_MOUSEMOVE:
             return HEADER_MouseMove (hwnd, wParam, lParam);

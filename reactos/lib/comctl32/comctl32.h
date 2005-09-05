@@ -249,4 +249,8 @@ static inline void MONTHCAL_CopyTime(const SYSTEMTIME *from, SYSTEMTIME *to)
   to->wMilliseconds = from->wMilliseconds;
 }
 
+extern void THEMING_Initialize(void);
+extern LRESULT THEMING_CallOriginalClass(HWND, UINT, WPARAM, LPARAM);
+extern void THEMING_SetSubclassData(HWND, ULONG_PTR);
+
 #endif  /* __WINE_COMCTL32_H */

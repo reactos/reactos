@@ -113,7 +113,7 @@ typedef struct
     UINT      uFlags;
     HWND      hwnd;
     BOOL      bNotifyUnicode;
-    UINT      uId;
+    UINT_PTR  uId;
     RECT      rect;
     HINSTANCE hinst;
     LPWSTR      lpszText;
@@ -323,8 +323,8 @@ static void TOOLTIPS_GetDispInfoA(HWND hwnd, TOOLTIPS_INFO *infoPtr, TTTOOL_INFO
     SendMessageW(toolPtr->hwnd, WM_NOTIFY,
                  (WPARAM)toolPtr->uId, (LPARAM)&ttnmdi);
 
-    if (HIWORD((UINT)ttnmdi.lpszText) == 0) {
-        LoadStringW(ttnmdi.hinst, (UINT)ttnmdi.lpszText,
+    if (IS_INTRESOURCE(ttnmdi.lpszText)) {
+        LoadStringW(ttnmdi.hinst, LOWORD(ttnmdi.lpszText),
                infoPtr->szTipText, INFOTIPSIZE);
         if (ttnmdi.uFlags & TTF_DI_SETITEM) {
             toolPtr->hinst = ttnmdi.hinst;
@@ -372,8 +372,8 @@ static void TOOLTIPS_GetDispInfoW(HWND hwnd, TOOLTIPS_INFO *infoPtr, TTTOOL_INFO
     SendMessageW(toolPtr->hwnd, WM_NOTIFY,
                  (WPARAM)toolPtr->uId, (LPARAM)&ttnmdi);
 
-    if (HIWORD((UINT)ttnmdi.lpszText) == 0) {
-        LoadStringW(ttnmdi.hinst, (UINT)ttnmdi.lpszText,
+    if (IS_INTRESOURCE(ttnmdi.lpszText)) {
+        LoadStringW(ttnmdi.hinst, LOWORD(ttnmdi.lpszText),
                infoPtr->szTipText, INFOTIPSIZE);
         if (ttnmdi.uFlags & TTF_DI_SETITEM) {
             toolPtr->hinst = ttnmdi.hinst;
@@ -406,11 +406,11 @@ TOOLTIPS_GetTipText (HWND hwnd, TOOLTIPS_INFO *infoPtr, INT nTool)
 {
     TTTOOL_INFO *toolPtr = &infoPtr->tools[nTool];
 
-    if (HIWORD((UINT)toolPtr->lpszText) == 0 && toolPtr->hinst) {
+    if (IS_INTRESOURCE(toolPtr->lpszText) && toolPtr->hinst) {
 	/* load a resource */
 	TRACE("load res string %p %x\n",
-	       toolPtr->hinst, (int)toolPtr->lpszText);
-	LoadStringW (toolPtr->hinst, (UINT)toolPtr->lpszText,
+	       toolPtr->hinst, LOWORD(toolPtr->lpszText));
+	LoadStringW (toolPtr->hinst, LOWORD(toolPtr->lpszText),
 		       infoPtr->szTipText, INFOTIPSIZE);
     }
     else if (toolPtr->lpszText) {
@@ -1015,8 +1015,8 @@ TOOLTIPS_AddToolA (HWND hwnd, WPARAM wParam, LPARAM lParam)
     toolPtr->rect   = lpToolInfo->rect;
     toolPtr->hinst  = lpToolInfo->hinst;
 
-    if (HIWORD(lpToolInfo->lpszText) == 0) {
-	TRACE("add string id %x!\n", (int)lpToolInfo->lpszText);
+    if (IS_INTRESOURCE(lpToolInfo->lpszText)) {
+	TRACE("add string id %x!\n", LOWORD(lpToolInfo->lpszText));
 	toolPtr->lpszText = (LPWSTR)lpToolInfo->lpszText;
     }
     else if (lpToolInfo->lpszText) {
@@ -1106,8 +1106,8 @@ TOOLTIPS_AddToolW (HWND hwnd, WPARAM wParam, LPARAM lParam)
     toolPtr->rect   = lpToolInfo->rect;
     toolPtr->hinst  = lpToolInfo->hinst;
 
-    if (HIWORD(lpToolInfo->lpszText) == 0) {
-	TRACE("add string id %x!\n", (int)lpToolInfo->lpszText);
+    if (IS_INTRESOURCE(lpToolInfo->lpszText)) {
+	TRACE("add string id %x\n", LOWORD(lpToolInfo->lpszText));
 	toolPtr->lpszText = (LPWSTR)lpToolInfo->lpszText;
     }
     else if (lpToolInfo->lpszText) {
@@ -1173,7 +1173,7 @@ TOOLTIPS_DelToolCommon (HWND hwnd, TOOLTIPS_INFO *infoPtr, INT nTool)
     toolPtr = &infoPtr->tools[nTool];
     if (toolPtr->lpszText) {
 	if ( (toolPtr->lpszText != LPSTR_TEXTCALLBACKW) &&
-	     (HIWORD((INT)toolPtr->lpszText) != 0) )
+	     !IS_INTRESOURCE(toolPtr->lpszText) )
 	    Free (toolPtr->lpszText);
     }
 
@@ -2015,8 +2015,8 @@ TOOLTIPS_SetToolInfoA (HWND hwnd, WPARAM wParam, LPARAM lParam)
     toolPtr->rect   = lpToolInfo->rect;
     toolPtr->hinst  = lpToolInfo->hinst;
 
-    if (HIWORD(lpToolInfo->lpszText) == 0) {
-	TRACE("set string id %x!\n", (INT)lpToolInfo->lpszText);
+    if (IS_INTRESOURCE(lpToolInfo->lpszText)) {
+	TRACE("set string id %x\n", LOWORD(lpToolInfo->lpszText));
 	toolPtr->lpszText = (LPWSTR)lpToolInfo->lpszText;
     }
     else if (lpToolInfo->lpszText) {
@@ -2024,7 +2024,7 @@ TOOLTIPS_SetToolInfoA (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	    toolPtr->lpszText = LPSTR_TEXTCALLBACKW;
 	else {
 	    if ( (toolPtr->lpszText) &&
-		 (HIWORD((INT)toolPtr->lpszText) != 0) ) {
+		 !IS_INTRESOURCE(toolPtr->lpszText) ) {
 		Free (toolPtr->lpszText);
 		toolPtr->lpszText = NULL;
 	    }
@@ -2072,8 +2072,8 @@ TOOLTIPS_SetToolInfoW (HWND hwnd, WPARAM wParam, LPARAM lParam)
     toolPtr->rect   = lpToolInfo->rect;
     toolPtr->hinst  = lpToolInfo->hinst;
 
-    if (HIWORD(lpToolInfo->lpszText) == 0) {
-	TRACE("set string id %x!\n", (INT)lpToolInfo->lpszText);
+    if (IS_INTRESOURCE(lpToolInfo->lpszText)) {
+	TRACE("set string id %x!\n", LOWORD(lpToolInfo->lpszText));
 	toolPtr->lpszText = lpToolInfo->lpszText;
     }
     else {
@@ -2081,7 +2081,7 @@ TOOLTIPS_SetToolInfoW (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	    toolPtr->lpszText = LPSTR_TEXTCALLBACKW;
 	else {
 	    if ( (toolPtr->lpszText) &&
-		 (HIWORD((INT)toolPtr->lpszText) != 0) ) {
+		 !IS_INTRESOURCE(toolPtr->lpszText) ) {
 		Free (toolPtr->lpszText);
 		toolPtr->lpszText = NULL;
 	    }
@@ -2199,7 +2199,7 @@ TOOLTIPS_UpdateTipTextA (HWND hwnd, WPARAM wParam, LPARAM lParam)
     /* copy tool text */
     toolPtr->hinst  = lpToolInfo->hinst;
 
-    if (HIWORD(lpToolInfo->lpszText) == 0){
+    if (IS_INTRESOURCE(lpToolInfo->lpszText)){
 	toolPtr->lpszText = (LPWSTR)lpToolInfo->lpszText;
     }
     else if (lpToolInfo->lpszText) {
@@ -2207,7 +2207,7 @@ TOOLTIPS_UpdateTipTextA (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	    toolPtr->lpszText = LPSTR_TEXTCALLBACKW;
 	else {
 	    if ( (toolPtr->lpszText) &&
-		 (HIWORD((INT)toolPtr->lpszText) != 0) ) {
+		 !IS_INTRESOURCE(toolPtr->lpszText) ) {
 		Free (toolPtr->lpszText);
 		toolPtr->lpszText = NULL;
 	    }
@@ -2256,7 +2256,7 @@ TOOLTIPS_UpdateTipTextW (HWND hwnd, WPARAM wParam, LPARAM lParam)
     /* copy tool text */
     toolPtr->hinst  = lpToolInfo->hinst;
 
-    if (HIWORD(lpToolInfo->lpszText) == 0){
+    if (IS_INTRESOURCE(lpToolInfo->lpszText)){
 	toolPtr->lpszText = lpToolInfo->lpszText;
     }
     else if (lpToolInfo->lpszText) {
@@ -2264,7 +2264,7 @@ TOOLTIPS_UpdateTipTextW (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	    toolPtr->lpszText = LPSTR_TEXTCALLBACKW;
 	else {
 	    if ( (toolPtr->lpszText)  &&
-		 (HIWORD((INT)toolPtr->lpszText) != 0) ) {
+		 !IS_INTRESOURCE(toolPtr->lpszText) ) {
 		Free (toolPtr->lpszText);
 		toolPtr->lpszText = NULL;
 	    }
@@ -2337,7 +2337,7 @@ TOOLTIPS_Destroy (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	    toolPtr = &infoPtr->tools[i];
 	    if (toolPtr->lpszText) {
 		if ( (toolPtr->lpszText != LPSTR_TEXTCALLBACKW) &&
-		     (HIWORD((INT)toolPtr->lpszText) != 0) )
+		     !IS_INTRESOURCE(toolPtr->lpszText) )
 		{
 		    Free (toolPtr->lpszText);
 		    toolPtr->lpszText = NULL;

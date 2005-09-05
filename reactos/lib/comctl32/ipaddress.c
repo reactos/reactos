@@ -143,7 +143,7 @@ static LRESULT IPADDRESS_Draw (IPADDRESS_INFO *infoPtr, HDC hdc)
         fgCol = COLOR_GRAYTEXT;
     }
     
-    FillRect (hdc, &rect, (HBRUSH) (bgCol+1));
+    FillRect (hdc, &rect, (HBRUSH)(DWORD_PTR)(bgCol+1));
     DrawEdge (hdc, &rect, EDGE_SUNKEN, BF_RECT | BF_ADJUST);
     
     SetBkColor  (hdc, GetSysColor(bgCol));

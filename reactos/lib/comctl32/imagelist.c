@@ -1084,8 +1084,8 @@ ImageList_DrawIndirect (IMAGELISTDRAWPARAMS *pimldp)
     bMask = (himl->flags & ILC_MASK) && (fStyle & ILD_MASK) ;
     bBlend = (fStyle & (ILD_BLEND25 | ILD_BLEND50) ) && !bMask;
 
-    TRACE("himl(0x%lx) hbmMask(%p) iImage(%d) x(%d) y(%d) cx(%d) cy(%d)\n",
-          (DWORD)himl, himl->hbmMask, pimldp->i, pimldp->x, pimldp->y, cx, cy);
+    TRACE("himl(%p) hbmMask(%p) iImage(%d) x(%d) y(%d) cx(%d) cy(%d)\n",
+          himl, himl->hbmMask, pimldp->i, pimldp->x, pimldp->y, cx, cy);
 
     /* we will use these DCs to access the images and masks in the ImageList */
     hImageListDC = himl->hdcImage;

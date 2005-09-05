@@ -123,8 +123,8 @@
 @ stdcall CreateStatusWindowW(long wstr long long)
 @ stdcall CreateToolbarEx(long long long long long long ptr long long long long long long)
 @ stdcall DestroyPropertySheetPage(long)
-@ stdcall DllGetVersion(ptr) COMCTL32_DllGetVersion
-@ stdcall DllInstall(long ptr) COMCTL32_DllInstall
+@ stdcall -private DllGetVersion(ptr)
+@ stdcall -private DllInstall(long wstr)
 @ stdcall DrawStatusText(long ptr ptr long) DrawStatusTextA
 @ stdcall DrawStatusTextW(long ptr wstr long)
 @ stdcall FlatSB_EnableScrollBar (long long long)

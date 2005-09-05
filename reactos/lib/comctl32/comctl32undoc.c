@@ -274,7 +274,6 @@ static void MRU_SaveChanged ( LPWINEMRULIST mp )
     HKEY newkey;
     WCHAR realname[2];
     LPWINEMRUITEM witem;
-    static const WCHAR emptyW[] = {'\0'};
 
     /* or should we do the following instead of RegOpenKeyEx:
      */
@@ -287,7 +286,7 @@ static void MRU_SaveChanged ( LPWINEMRULIST mp )
 	    err);
 	if ((err = RegCreateKeyExW( mp->extview.hKey, mp->extview.lpszSubKey,
 				    0,
-				    (LPWSTR)emptyW,
+				    NULL,
 				    REG_OPTION_NON_VOLATILE,
 				    KEY_READ | KEY_WRITE,
 				    0,
@@ -653,7 +652,6 @@ static HANDLE CreateMRUListLazy_common(LPWINEMRULIST mp)
     WCHAR realname[2];
     LPWINEMRUITEM witem;
     DWORD type;
-    static const WCHAR emptyW[] = {'\0'};
 
     /* get space to save indices that will turn into names
      * but in order of most to least recently used
@@ -668,16 +666,16 @@ static HANDLE CreateMRUListLazy_common(LPWINEMRULIST mp)
     /* open the sub key */
     if ((err = RegCreateKeyExW( mp->extview.hKey, mp->extview.lpszSubKey,
 			        0,
-				(LPWSTR)emptyW,
+				NULL,
 				REG_OPTION_NON_VOLATILE,
 				KEY_READ | KEY_WRITE,
                                 0,
 				&newkey,
 				&dwdisp))) {
 	/* error - what to do ??? */
-	ERR("(%lu %lu %lx %lx \"%s\" %p): Could not open key, error=%d\n",
+	ERR("(%lu %lu %lx %p %s %p): Could not open key, error=%d\n",
 	    mp->extview.cbSize, mp->extview.nMaxItems, mp->extview.dwFlags,
-	    (DWORD)mp->extview.hKey, debugstr_w(mp->extview.lpszSubKey),
+	    mp->extview.hKey, debugstr_w(mp->extview.lpszSubKey),
 				 mp->extview.lpfnCompare, err);
 	return 0;
     }
@@ -718,9 +716,9 @@ static HANDLE CreateMRUListLazy_common(LPWINEMRULIST mp)
     else
 	mp->cursize = 0;
 
-    TRACE("(%lu %lu %lx %lx \"%s\" %p): Current Size = %ld\n",
+    TRACE("(%lu %lu %lx %p %s %p): Current Size = %ld\n",
 	  mp->extview.cbSize, mp->extview.nMaxItems, mp->extview.dwFlags,
-	  (DWORD)mp->extview.hKey, debugstr_w(mp->extview.lpszSubKey),
+	  mp->extview.hKey, debugstr_w(mp->extview.lpszSubKey),
 	  mp->extview.lpfnCompare, mp->cursize);
     return (HANDLE)mp;
 }

@@ -53,7 +53,7 @@ static struct {
     HMODULE	hModule;
     HIC         (WINAPI *fnICOpen)(DWORD, DWORD, UINT);
     LRESULT     (WINAPI *fnICClose)(HIC);
-    LRESULT     (WINAPI *fnICSendMessage)(HIC, UINT, DWORD, DWORD);
+    LRESULT     (WINAPI *fnICSendMessage)(HIC, UINT, DWORD_PTR, DWORD_PTR);
     DWORD       (WINAPIV *fnICDecompress)(HIC,DWORD,LPBITMAPINFOHEADER,LPVOID,LPBITMAPINFOHEADER,LPVOID);
 } fnIC;
 
@@ -139,7 +139,8 @@ static BOOL ANIMATE_LoadFileW(ANIMATE_INFO *infoPtr, LPWSTR lpName)
 {
     infoPtr->hMMio = mmioOpenW(lpName, 0, MMIO_ALLOCBUF | MMIO_READ | MMIO_DENYWRITE);
 
-    return (BOOL)infoPtr->hMMio;
+    if(!infoPtr->hMMio) return FALSE;
+    return TRUE;
 }
 
 
@@ -655,14 +656,14 @@ static BOOL ANIMATE_GetAviCodec(ANIMATE_INFO *infoPtr)
     }
 
     outSize = fnIC.fnICSendMessage(infoPtr->hic, ICM_DECOMPRESS_GET_FORMAT,
-			    (DWORD)infoPtr->inbih, 0L);
+			    (DWORD_PTR)infoPtr->inbih, 0L);
 
     infoPtr->outbih = Alloc(outSize);
     if (!infoPtr->outbih)
 	return FALSE;
 
     if (fnIC.fnICSendMessage(infoPtr->hic, ICM_DECOMPRESS_GET_FORMAT,
-		      (DWORD)infoPtr->inbih, (DWORD)infoPtr->outbih) != outSize) 
+		      (DWORD_PTR)infoPtr->inbih, (DWORD_PTR)infoPtr->outbih) != outSize) 
     {
 	WARN("Can't get output BIH\n");
 	return FALSE;
@@ -673,7 +674,7 @@ static BOOL ANIMATE_GetAviCodec(ANIMATE_INFO *infoPtr)
 	return FALSE;
 
     if (fnIC.fnICSendMessage(infoPtr->hic, ICM_DECOMPRESS_BEGIN,
-		      (DWORD)infoPtr->inbih, (DWORD)infoPtr->outbih) != ICERR_OK) {
+		      (DWORD_PTR)infoPtr->inbih, (DWORD_PTR)infoPtr->outbih) != ICERR_OK) {
 	WARN("Can't begin decompression\n");
 	return FALSE;
     }
@@ -696,10 +697,10 @@ static BOOL ANIMATE_OpenW(ANIMATE_INFO *infoPtr, HINSTANCE hInstance, LPWSTR lps
     if (!hInstance)
         hInstance = (HINSTANCE)GetWindowLongPtrW(infoPtr->hwndSelf, GWLP_HINSTANCE);
 
-    if (HIWORD(lpszName)) 
-    {
-	TRACE("(\"%s\");\n", debugstr_w(lpszName));
+    TRACE("(%s)\n", debugstr_w(lpszName));
 
+    if (HIWORD(lpszName))
+    {
 	if (!ANIMATE_LoadResW(infoPtr, hInstance, lpszName)) 
         {
 	    TRACE("No AVI resource found!\n");
@@ -712,9 +713,7 @@ static BOOL ANIMATE_OpenW(ANIMATE_INFO *infoPtr, HINSTANCE hInstance, LPWSTR lps
     } 
     else 
     {
-	TRACE("(%u);\n", (WORD)(DWORD)lpszName);
-
-	if (!ANIMATE_LoadResW(infoPtr, hInstance, MAKEINTRESOURCEW((INT)lpszName))) 
+	if (!ANIMATE_LoadResW(infoPtr, hInstance, lpszName))
         {
 	    WARN("No AVI resource found!\n");
 	    return FALSE;

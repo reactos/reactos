@@ -787,11 +787,6 @@ BOOL WINAPI DPA_Sort (const HDPA hdpa, PFNDPACOMPARE pfnCompare, LPARAM lParam)
  * RETURNS
  *     Success: index of the pointer in the array.
  *     Failure: -1
- *
- * NOTES
- *     Binary search taken from R.Sedgewick "Algorithms in C"!
- *     Function is NOT tested!
- *     If something goes wrong, blame HIM not ME! (Eric Kohl)
  */
 INT WINAPI DPA_Search (const HDPA hdpa, LPVOID pFind, INT nStart,
                        PFNDPACOMPARE pfnCompare, LPARAM lParam, UINT uOptions)
@@ -807,47 +802,34 @@ INT WINAPI DPA_Search (const HDPA hdpa, LPVOID pFind, INT nStart,
         INT l, r, x, n;
         LPVOID *lpPtr;
 
-        TRACE("binary search\n");
-
         l = (nStart == -1) ? 0 : nStart;
         r = hdpa->nItemCount - 1;
         lpPtr = hdpa->ptrs;
         while (r >= l) {
             x = (l + r) / 2;
             n = (pfnCompare)(pFind, lpPtr[x], lParam);
-            if (n < 0)
+            if (n == 0)
+                return x;
+            else if (n < 0)
                 r = x - 1;
-            else
+            else /* (n > 0) */
                 l = x + 1;
-            if (n == 0) {
-                TRACE("-- ret=%d\n", n);
-                return n;
-            }
         }
-
-        if (uOptions & (DPAS_INSERTBEFORE | DPAS_INSERTAFTER)) {
-            TRACE("-- ret=%d\n", l);
-            return l;
-        }
+        if (uOptions & (DPAS_INSERTBEFORE|DPAS_INSERTAFTER)) return l;
     }
     else {
         /* array is not sorted --> use linear search */
         LPVOID *lpPtr;
         INT  nIndex;
 
-        TRACE("linear search\n");
-
         nIndex = (nStart == -1)? 0 : nStart;
         lpPtr = hdpa->ptrs;
         for (; nIndex < hdpa->nItemCount; nIndex++) {
-            if ((pfnCompare)(pFind, lpPtr[nIndex], lParam) == 0) {
-                TRACE("-- ret=%d\n", nIndex);
+            if ((pfnCompare)(pFind, lpPtr[nIndex], lParam) == 0)
                 return nIndex;
-            }
         }
     }
 
-    TRACE("-- not found: ret=-1\n");
     return -1;
 }
 
