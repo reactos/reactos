@@ -646,12 +646,7 @@ HalGetAdapter(
    }
    else
    {
-      /*
-       * In the equation below the additional map register added by
-       * the "+1" accounts for the case when a transfer does not start
-       * at a page-aligned address.
-       */
-      MapRegisters = BYTES_TO_PAGES(MaximumLength) + 1;
+      MapRegisters = BYTES_TO_PAGES(MaximumLength);
       if (MapRegisters > 16)
          MapRegisters = 16;
    }
@@ -1466,7 +1461,6 @@ HalpCopyBufferMap(
 {
    ULONG CurrentLength;
    ULONG_PTR CurrentAddress;
-   ULONG ByteOffset;
    PVOID VirtualAddress;
 
    VirtualAddress = MmGetSystemAddressForMdlSafe(Mdl, HighPagePriority);
@@ -1487,15 +1481,11 @@ HalpCopyBufferMap(
 
    while (Length > 0)
    {
-      ByteOffset = BYTE_OFFSET(CurrentAddress);
-      CurrentLength = PAGE_SIZE - ByteOffset;
-      if (CurrentLength > Length)
-         CurrentLength = Length;
-
+      CurrentLength = min(PAGE_SIZE, Length);
       if (WriteToDevice)
       {
          RtlCopyMemory(
-            (PVOID)((ULONG_PTR)MapRegisterBase->VirtualAddress + ByteOffset),
+            MapRegisterBase->VirtualAddress,
             (PVOID)CurrentAddress,
             CurrentLength);
       }
@@ -1503,7 +1493,7 @@ HalpCopyBufferMap(
       {
          RtlCopyMemory(
             (PVOID)CurrentAddress,
-            (PVOID)((ULONG_PTR)MapRegisterBase->VirtualAddress + ByteOffset),
+            MapRegisterBase->VirtualAddress,
             CurrentLength);
       }
 
@@ -1584,7 +1574,7 @@ IoFlushAdapterBuffers(
    RealMapRegisterBase =
       (PMAP_REGISTER_ENTRY)((ULONG_PTR)MapRegisterBase & ~MAP_BASE_SW_SG);
 
-   if (!WriteToDevice)
+   if (!WriteToDevice && RealMapRegisterBase->UseMapRegisters)
    {
       if ((ULONG_PTR)MapRegisterBase & MAP_BASE_SW_SG)
       {
@@ -1654,7 +1644,6 @@ IoMapTransfer(
    ULONG ByteOffset;
    ULONG TransferOffset;
    ULONG TransferLength;
-   BOOLEAN UseMapRegisters;
    PMAP_REGISTER_ENTRY RealMapRegisterBase;
    PHYSICAL_ADDRESS PhysicalAddress;
    PHYSICAL_ADDRESS HighestAcceptableAddress;
@@ -1754,9 +1743,8 @@ IoMapTransfer(
    if ((ULONG_PTR)MapRegisterBase & MAP_BASE_SW_SG &&
        TransferLength < *Length)
    {
-      UseMapRegisters = TRUE;
+      RealMapRegisterBase->UseMapRegisters = TRUE;
       PhysicalAddress = RealMapRegisterBase->PhysicalAddress;
-      PhysicalAddress.QuadPart += ByteOffset;
       TransferLength = *Length;
       RealMapRegisterBase->Counter = ~0;
       Counter = 0;
@@ -1769,7 +1757,7 @@ IoMapTransfer(
        * the transfer progress.
        */
 
-      UseMapRegisters = FALSE;
+      RealMapRegisterBase->UseMapRegisters = FALSE;
       Counter = RealMapRegisterBase->Counter;
       RealMapRegisterBase->Counter += BYTES_TO_PAGES(ByteOffset + TransferLength);
 
@@ -1783,9 +1771,8 @@ IoMapTransfer(
       if (PhysicalAddress.QuadPart + TransferLength >
           HighestAcceptableAddress.QuadPart)
       {
-         UseMapRegisters = TRUE;
+         RealMapRegisterBase->UseMapRegisters = TRUE;
          PhysicalAddress = RealMapRegisterBase->PhysicalAddress;
-         PhysicalAddress.QuadPart += ByteOffset;
          if ((ULONG_PTR)MapRegisterBase & MAP_BASE_SW_SG)
          {
             RealMapRegisterBase->Counter = ~0;
@@ -1799,7 +1786,7 @@ IoMapTransfer(
     * register memory.
     */
 
-   if (UseMapRegisters && WriteToDevice)
+   if (RealMapRegisterBase->UseMapRegisters && WriteToDevice)
    {
       HalpCopyBufferMap(Mdl, RealMapRegisterBase + Counter,
                         CurrentVa, TransferLength, WriteToDevice);
