@@ -213,7 +213,7 @@ DWORD WINAPI IcmpSendEcho(
     struct timeval timeout;
     DWORD send_time,recv_time;
     struct sockaddr_in addr;
-    int addrlen;
+    unsigned int addrlen;
     unsigned short id,seq,cksum;
     int res;
 
@@ -256,7 +256,7 @@ DWORD WINAPI IcmpSendEcho(
     if (RequestOptions!=NULL) {
         int val;
         if (icp->default_opts.OptionsSize==IP_OPTS_UNKNOWN) {
-            int len;
+            unsigned int len;
             /* Before we mess with the options, get the default values */
             len=sizeof(val);
             getsockopt(icp->sid,IPPROTO_IP,IP_TTL,(char *)&val,&len);
@@ -455,7 +455,7 @@ DWORD WINAPI IcmpSendEcho(
                 ier->Options.OptionsData=(unsigned char *) ier->Data-ier->Options.OptionsSize;
                 /* FIXME: We are supposed to rearrange the option's 'source route' data */
                 memmove(ier->Options.OptionsData,((char*)ip_header)+ip_header_len,ier->Options.OptionsSize);
-                endbuf=ier->Options.OptionsData;
+                endbuf=(char*)ier->Options.OptionsData;
             } else {
                 ier->Options.OptionsData=NULL;
                 endbuf=ier->Data;
