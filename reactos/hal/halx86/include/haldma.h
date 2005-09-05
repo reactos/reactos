@@ -315,7 +315,6 @@ typedef struct _MAP_REGISTER_ENTRY
    PVOID VirtualAddress;
    PHYSICAL_ADDRESS PhysicalAddress;
    ULONG Counter;
-   BOOLEAN UseMapRegisters;
 } MAP_REGISTER_ENTRY, *PMAP_REGISTER_ENTRY;
 
 struct _ADAPTER_OBJECT {
