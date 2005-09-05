@@ -423,7 +423,7 @@ GetAce (
 
 	Status = RtlGetAce (pAcl,
 	                    dwAceIndex,
-	                    (PACE*)pAce);
+	                    pAce);
 	if (!NT_SUCCESS(Status))
 	{
 		SetLastError (RtlNtStatusToDosError (Status));

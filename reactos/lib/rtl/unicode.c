@@ -125,7 +125,7 @@ NTSTATUS
 STDCALL
 RtlAppendUnicodeStringToString(
    IN OUT PUNICODE_STRING Destination,
-   IN PUNICODE_STRING Source)
+   IN PCUNICODE_STRING Source)
 {
 
    if ((Source->Length + Destination->Length) > Destination->MaximumLength)
@@ -724,8 +724,8 @@ RtlPrefixString(
 BOOLEAN
 STDCALL
 RtlPrefixUnicodeString(
-   PUNICODE_STRING String1,
-   PUNICODE_STRING String2,
+   PCUNICODE_STRING String1,
+   PCUNICODE_STRING String2,
    BOOLEAN  CaseInsensitive)
 {
    PWCHAR pc1;
@@ -792,7 +792,7 @@ RtlPrefixUnicodeString(
 NTSTATUS
 STDCALL
 RtlUnicodeStringToInteger(
-    PUNICODE_STRING str, /* [I] Unicode string to be converted */
+    PCUNICODE_STRING str, /* [I] Unicode string to be converted */
     ULONG base,                /* [I] Number base for conversion (allowed 0, 2, 8, 10 or 16) */
     PULONG value)              /* [O] Destination for the converted value */
 {
@@ -907,7 +907,7 @@ NTSTATUS
 STDCALL
 RtlUnicodeStringToAnsiString(
    IN OUT PANSI_STRING AnsiDest,
-   IN PUNICODE_STRING UniSource,
+   IN PCUNICODE_STRING UniSource,
    IN BOOLEAN AllocateDestinationString)
 {
    NTSTATUS Status = STATUS_SUCCESS;
@@ -915,7 +915,7 @@ RtlUnicodeStringToAnsiString(
 
    if (NlsMbCodePageTag == TRUE)
    {
-      Length = RtlUnicodeStringToAnsiSize(UniSource);
+      Length = RtlUnicodeStringToAnsiSize((PUNICODE_STRING)UniSource);
    }
    else
       Length = (UniSource->Length / sizeof(WCHAR)) + sizeof(CHAR);
@@ -968,14 +968,14 @@ NTSTATUS
 STDCALL
 RtlOemStringToUnicodeString(
    IN OUT PUNICODE_STRING UniDest,
-   IN POEM_STRING OemSource,
+   IN PCOEM_STRING OemSource,
    IN BOOLEAN AllocateDestinationString)
 {
    NTSTATUS Status;
    ULONG Length; /* including nullterm */
 
    if (NlsMbOemCodePageTag == TRUE)
-      Length = RtlOemStringToUnicodeSize(OemSource);
+      Length = RtlOemStringToUnicodeSize((POEM_STRING)OemSource);
    else
       Length = (OemSource->Length * sizeof(WCHAR)) + sizeof(WCHAR);
 
@@ -1029,14 +1029,14 @@ NTSTATUS
 STDCALL
 RtlUnicodeStringToOemString(
    IN OUT POEM_STRING OemDest,
-   IN PUNICODE_STRING UniSource,
+   IN PCUNICODE_STRING UniSource,
    IN BOOLEAN  AllocateDestinationString)
 {
    NTSTATUS Status = STATUS_SUCCESS;
    ULONG Length; //including nullterm
 
    if (NlsMbOemCodePageTag == TRUE)
-      Length = RtlUnicodeStringToAnsiSize (UniSource);
+      Length = RtlUnicodeStringToAnsiSize ((PUNICODE_STRING)UniSource);
    else
       Length = (UniSource->Length / sizeof(WCHAR)) + sizeof(CHAR);
 
@@ -1152,14 +1152,14 @@ NTSTATUS
 STDCALL
 RtlOemStringToCountedUnicodeString(
    IN OUT PUNICODE_STRING UniDest,
-   IN POEM_STRING OemSource,
+   IN PCOEM_STRING OemSource,
    IN BOOLEAN AllocateDestinationString)
 {
    NTSTATUS Status;
    ULONG Length; /* excluding nullterm */
 
    if (NlsMbCodePageTag == TRUE)
-      Length = RtlOemStringToUnicodeSize(OemSource) - sizeof(WCHAR);
+      Length = RtlOemStringToUnicodeSize((POEM_STRING)OemSource) - sizeof(WCHAR);
    else
       Length = OemSource->Length * sizeof(WCHAR);
 
@@ -1707,14 +1707,14 @@ NTSTATUS
 STDCALL
 RtlUpcaseUnicodeStringToCountedOemString(
    IN OUT POEM_STRING OemDest,
-   IN PUNICODE_STRING UniSource,
+   IN PCUNICODE_STRING UniSource,
    IN BOOLEAN AllocateDestinationString)
 {
    NTSTATUS Status;
    ULONG Length; /* excluding nullterm */
 
    if (NlsMbCodePageTag == TRUE)
-      Length = RtlUnicodeStringToAnsiSize(UniSource) - sizeof(CHAR);
+      Length = RtlUnicodeStringToAnsiSize((PUNICODE_STRING)UniSource) - sizeof(CHAR);
    else
       Length = UniSource->Length / sizeof(WCHAR);
 
@@ -1768,7 +1768,7 @@ NTSTATUS
 STDCALL
 RtlUpcaseUnicodeStringToOemString (
    IN OUT POEM_STRING OemDest,
-   IN PUNICODE_STRING UniSource,
+   IN PCUNICODE_STRING UniSource,
    IN BOOLEAN  AllocateDestinationString
 )
 {
@@ -1776,7 +1776,7 @@ RtlUpcaseUnicodeStringToOemString (
    ULONG Length; /* including nullterm */
 
    if (NlsMbOemCodePageTag == TRUE)
-      Length = RtlUnicodeStringToAnsiSize(UniSource);
+      Length = RtlUnicodeStringToAnsiSize((PUNICODE_STRING)UniSource);
    else
       Length = (UniSource->Length / sizeof(WCHAR)) + sizeof(CHAR);
 
@@ -1913,8 +1913,8 @@ RtlUnicodeStringToAnsiSize(
 LONG
 STDCALL
 RtlCompareUnicodeString(
-   IN PUNICODE_STRING s1,
-   IN PUNICODE_STRING s2,
+   IN PCUNICODE_STRING s1,
+   IN PCUNICODE_STRING s2,
    IN BOOLEAN  CaseInsensitive)
 {
    unsigned int len;
@@ -1976,7 +1976,7 @@ VOID
 STDCALL
 RtlCopyUnicodeString(
    IN OUT PUNICODE_STRING DestinationString,
-   IN PUNICODE_STRING SourceString)
+   IN PCUNICODE_STRING SourceString)
 {
    ULONG copylen;
 
@@ -2058,7 +2058,7 @@ RtlCreateUnicodeStringFromAsciiz(
 NTSTATUS STDCALL
 RtlDowncaseUnicodeString(
    IN OUT PUNICODE_STRING UniDest,
-   IN PUNICODE_STRING UniSource,
+   IN PCUNICODE_STRING UniSource,
    IN BOOLEAN AllocateDestinationString)
 {
    ULONG i;
@@ -2303,17 +2303,20 @@ RtlxUnicodeStringToOemSize(IN PUNICODE_STRING UnicodeString)
  * NOTES
  *  See RtlpDuplicateUnicodeString
  */
-NTSTATUS STDCALL
+NTSTATUS
+STDCALL
 RtlDuplicateUnicodeString(
-   INT AddNull,
-   IN PUNICODE_STRING SourceString,
-   PUNICODE_STRING DestinationString)
+   IN ULONG Flags,
+   IN PCUNICODE_STRING SourceString,
+   OUT PUNICODE_STRING DestinationString)
 {
    if (SourceString == NULL || DestinationString == NULL)
       return STATUS_INVALID_PARAMETER;
 
 
-   if (SourceString->Length == 0 && AddNull != 3)
+   if ((SourceString->Length == 0) && 
+       (Flags != (RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE | 
+                  RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING)))
    {
       DestinationString->Length = 0;
       DestinationString->MaximumLength = 0;
@@ -2323,7 +2326,7 @@ RtlDuplicateUnicodeString(
    {
       UINT DestMaxLength = SourceString->Length;
 
-      if (AddNull)
+      if (Flags & RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE)
          DestMaxLength += sizeof(UNICODE_NULL);
 
       DestinationString->Buffer = RtlpAllocateStringMemory(DestMaxLength, TAG_USTR);
@@ -2334,7 +2337,7 @@ RtlDuplicateUnicodeString(
       DestinationString->Length = SourceString->Length;
       DestinationString->MaximumLength = DestMaxLength;
 
-      if (AddNull)
+      if (Flags & RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE)
          DestinationString->Buffer[DestinationString->Length / sizeof(WCHAR)] = 0;
    }
 

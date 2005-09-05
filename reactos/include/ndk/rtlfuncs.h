@@ -17,15 +17,17 @@
 /*
  * Error and Exception Functions
  */
+NTSYSAPI
 PVOID
-STDCALL
+NTAPI
 RtlAddVectoredExceptionHandler(
     IN ULONG FirstHandler,
     IN PVECTORED_EXCEPTION_HANDLER VectoredHandler
 );
 
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlAssert(
     PVOID FailedAssertion,
     PVOID FileName,
@@ -33,53 +35,62 @@ RtlAssert(
     PCHAR Message
 );
 
+NTSYSAPI
 PVOID
-STDCALL
+NTAPI
 RtlEncodePointer(IN PVOID Pointer);
 
+NTSYSAPI
 PVOID
-STDCALL
+NTAPI
 RtlDecodePointer(IN PVOID Pointer);
 
+NTSYSAPI
 ULONG
-STDCALL
+NTAPI
 RtlNtStatusToDosError(IN NTSTATUS Status);
 
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlRaiseException(IN PEXCEPTION_RECORD ExceptionRecord);
 
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlRaiseStatus(NTSTATUS Status);
 
+NTSYSAPI
 LONG
-STDCALL
+NTAPI
 RtlUnhandledExceptionFilter(struct _EXCEPTION_POINTERS* ExceptionInfo);
 
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlUnwind(
     PEXCEPTION_REGISTRATION RegistrationFrame,
     PVOID ReturnAddress,
     PEXCEPTION_RECORD ExceptionRecord,
-    DWORD EaxValue
+    ULONG EaxValue
 );
 
 /*
  * Heap Functions
  */
 
+NTSYSAPI
 PVOID
-STDCALL
+NTAPI
 RtlAllocateHeap(
     IN HANDLE HeapHandle,
     IN ULONG Flags,
     IN ULONG Size
 );
 
+NTSYSAPI
 PVOID
-STDCALL
+NTAPI
 RtlCreateHeap(
     IN ULONG Flags,
     IN PVOID BaseAddress OPTIONAL,
@@ -89,19 +100,21 @@ RtlCreateHeap(
     IN PRTL_HEAP_PARAMETERS Parameters OPTIONAL
 );
 
-DWORD
-STDCALL
+ULONG
+NTAPI
 RtlCompactHeap(
     HANDLE heap,
     ULONG flags
 );
 
+NTSYSAPI
 HANDLE
-STDCALL
+NTAPI
 RtlDestroyHeap(HANDLE hheap);
 
+NTSYSAPI
 BOOLEAN
-STDCALL
+NTAPI
 RtlFreeHeap(
     IN HANDLE HeapHandle,
     IN ULONG Flags,
@@ -109,14 +122,14 @@ RtlFreeHeap(
 );
 
 ULONG
-STDCALL
+NTAPI
 RtlGetProcessHeaps(
     ULONG HeapCount,
     HANDLE *HeapArray
 );
 
 PVOID
-STDCALL
+NTAPI
 RtlReAllocateHeap(
     HANDLE Heap,
     ULONG Flags,
@@ -125,15 +138,15 @@ RtlReAllocateHeap(
 );
 
 BOOLEAN
-STDCALL
+NTAPI
 RtlLockHeap(IN HANDLE Heap);
 
 BOOLEAN
-STDCALL
+NTAPI
 RtlUnlockHeap(IN HANDLE Heap);
 
 ULONG
-STDCALL
+NTAPI
 RtlSizeHeap(
     IN PVOID HeapHandle,
     IN ULONG Flags,
@@ -141,7 +154,7 @@ RtlSizeHeap(
 );
 
 BOOLEAN
-STDCALL
+NTAPI
 RtlValidateHeap(
     HANDLE Heap,
     ULONG Flags,
@@ -154,16 +167,18 @@ RtlValidateHeap(
 /*
  * Security Functions
  */
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlAbsoluteToSelfRelativeSD(
     IN PSECURITY_DESCRIPTOR AbsoluteSecurityDescriptor,
-    IN OUT PISECURITY_DESCRIPTOR_RELATIVE SelfRelativeSecurityDescriptor,
+    IN OUT PSECURITY_DESCRIPTOR SelfRelativeSecurityDescriptor,
     IN PULONG BufferLength
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlAddAccessAllowedAce(
     PACL Acl,
     ULONG Revision,
@@ -172,17 +187,17 @@ RtlAddAccessAllowedAce(
 );
 
 NTSTATUS
-STDCALL
+NTAPI
 RtlAddAccessAllowedAceEx(
     IN OUT PACL pAcl,
-    IN DWORD dwAceRevision,
-    IN DWORD AceFlags,
-    IN DWORD AccessMask,
+    IN ULONG dwAceRevision,
+    IN ULONG AceFlags,
+    IN ULONG AccessMask,
     IN PSID pSid
 );
 
 NTSTATUS
-STDCALL
+NTAPI
 RtlAddAccessDeniedAce(
     PACL Acl,
     ULONG Revision,
@@ -191,7 +206,7 @@ RtlAddAccessDeniedAce(
 );
 
 NTSTATUS
-STDCALL
+NTAPI
 RtlAddAccessDeniedAceEx(
     IN OUT PACL Acl,
     IN ULONG Revision,
@@ -201,7 +216,7 @@ RtlAddAccessDeniedAceEx(
 );
 
 NTSTATUS
-STDCALL
+NTAPI
 RtlAddAuditAccessAceEx(
     IN OUT PACL Acl,
     IN ULONG Revision,
@@ -212,18 +227,19 @@ RtlAddAuditAccessAceEx(
     IN BOOLEAN Failure
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlAddAce(
     PACL Acl,
-    ULONG Revision,
-    ULONG StartingIndex,
-    PACE AceList,
+    ULONG AceRevision,
+    ULONG StartingAceIndex,
+    PVOID AceList,
     ULONG AceListLength
 );
 
 NTSTATUS
-STDCALL
+NTAPI
 RtlAddAuditAccessAce(
     PACL Acl,
     ULONG Revision,
@@ -234,7 +250,7 @@ RtlAddAuditAccessAce(
 );
 
 NTSTATUS
-STDCALL
+NTAPI
 RtlAdjustPrivilege(
     IN ULONG Privilege,
     IN BOOLEAN NewValue,
@@ -242,8 +258,9 @@ RtlAdjustPrivilege(
     OUT PBOOLEAN OldValue
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlAllocateAndInitializeSid(
     IN PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
     IN UCHAR SubAuthorityCount,
@@ -259,28 +276,29 @@ RtlAllocateAndInitializeSid(
 );
 
 BOOLEAN
-STDCALL
+NTAPI
 RtlAreAllAccessesGranted(
     ACCESS_MASK GrantedAccess,
     ACCESS_MASK DesiredAccess
 );
 
 BOOLEAN
-STDCALL
+NTAPI
 RtlAreAnyAccessesGranted(
     ACCESS_MASK GrantedAccess,
     ACCESS_MASK DesiredAccess
 );
 
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlCopyLuid(
     IN PLUID LuidDest,
     IN PLUID LuidSrc
 );
 
 VOID
-STDCALL
+NTAPI
 RtlCopyLuidAndAttributesArray(
     ULONG Count,
     PLUID_AND_ATTRIBUTES Src,
@@ -288,7 +306,7 @@ RtlCopyLuidAndAttributesArray(
 );
 
 NTSTATUS
-STDCALL
+NTAPI
 RtlCopySidAndAttributesArray(
     ULONG Count,
     PSID_AND_ATTRIBUTES Src,
@@ -300,95 +318,105 @@ RtlCopySidAndAttributesArray(
 );
 
 NTSTATUS
-STDCALL
+NTAPI
 RtlConvertSidToUnicodeString(
     OUT PUNICODE_STRING DestinationString,
     IN PSID Sid,
     IN BOOLEAN AllocateDestinationString
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlCopySid(
     IN ULONG Length,
     IN PSID Destination,
     IN PSID Source
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlCreateAcl(
     PACL Acl,
     ULONG AclSize,
     ULONG AclRevision
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlCreateSecurityDescriptor(
     PSECURITY_DESCRIPTOR SecurityDescriptor,
     ULONG Revision
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlCreateSecurityDescriptorRelative(
     PISECURITY_DESCRIPTOR_RELATIVE SecurityDescriptor,
     ULONG Revision
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlDeleteAce(
     PACL Acl,
     ULONG AceIndex
 );
 
+NTSYSAPI
 BOOLEAN
-STDCALL
+NTAPI
 RtlEqualPrefixSid(
     PSID Sid1,
     PSID Sid2
 );
 
+NTSYSAPI
 BOOLEAN
-STDCALL
+NTAPI
 RtlEqualSid (
     IN PSID Sid1,
     IN PSID Sid2
 );
 
 BOOLEAN
-STDCALL
+NTAPI
 RtlFirstFreeAce(
     PACL Acl,
     PACE* Ace
 );
 
+NTSYSAPI
 PVOID
-STDCALL
+NTAPI
 RtlFreeSid (
     IN PSID Sid
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlGetAce(
     PACL Acl,
     ULONG AceIndex,
-    PACE *Ace
+    PVOID *Ace
 );
 
 NTSTATUS
-STDCALL
+NTAPI
 RtlGetControlSecurityDescriptor(
     PSECURITY_DESCRIPTOR SecurityDescriptor,
     PSECURITY_DESCRIPTOR_CONTROL Control,
     PULONG Revision
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlGetDaclSecurityDescriptor(
     IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     OUT PBOOLEAN DaclPresent,
@@ -396,8 +424,9 @@ RtlGetDaclSecurityDescriptor(
     OUT PBOOLEAN DaclDefaulted
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlGetSaclSecurityDescriptor(
     PSECURITY_DESCRIPTOR SecurityDescriptor,
     PBOOLEAN SaclPresent,
@@ -405,62 +434,72 @@ RtlGetSaclSecurityDescriptor(
     PBOOLEAN SaclDefaulted
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlGetGroupSecurityDescriptor(
     IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     OUT PSID *Group,
     OUT PBOOLEAN GroupDefaulted
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlGetOwnerSecurityDescriptor(
     IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     OUT PSID *Owner,
     OUT PBOOLEAN OwnerDefaulted
 );
 
+NTSYSAPI
 BOOLEAN
-STDCALL
+NTAPI
 RtlGetSecurityDescriptorRMControl(
     PSECURITY_DESCRIPTOR SecurityDescriptor,
     PUCHAR RMControl
 );
 
+NTSYSAPI
 PSID_IDENTIFIER_AUTHORITY
-STDCALL
+NTAPI
 RtlIdentifierAuthoritySid(PSID Sid);
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlImpersonateSelf(IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel);
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlInitializeSid(
     IN OUT PSID Sid,
     IN PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
     IN UCHAR SubAuthorityCount
 );
 
+NTSYSAPI
 ULONG
-STDCALL
-RtlLengthRequiredSid(IN UCHAR SubAuthorityCount);
+NTAPI
+RtlLengthRequiredSid(IN ULONG SubAuthorityCount);
 
+NTSYSAPI
 ULONG
-STDCALL
+NTAPI
 RtlLengthSid(IN PSID Sid);
 
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlMapGenericMask(
     PACCESS_MASK AccessMask,
     PGENERIC_MAPPING GenericMapping
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlQueryInformationAcl(
     PACL Acl,
     PVOID Information,
@@ -468,10 +507,11 @@ RtlQueryInformationAcl(
     ACL_INFORMATION_CLASS InformationClass
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlSelfRelativeToAbsoluteSD(
-    IN PISECURITY_DESCRIPTOR_RELATIVE SelfRelativeSD,
+    IN PSECURITY_DESCRIPTOR SelfRelativeSD,
     OUT PSECURITY_DESCRIPTOR AbsoluteSD,
     IN PULONG AbsoluteSDSize,
     IN PACL Dacl,
@@ -484,16 +524,18 @@ RtlSelfRelativeToAbsoluteSD(
     IN PULONG PrimaryGroupSize
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlSetControlSecurityDescriptor(
     IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     IN SECURITY_DESCRIPTOR_CONTROL ControlBitsOfInterest,
     IN SECURITY_DESCRIPTOR_CONTROL ControlBitsToSet
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlSetDaclSecurityDescriptor (
     PSECURITY_DESCRIPTOR SecurityDescriptor,
     BOOLEAN DaclPresent,
@@ -501,16 +543,18 @@ RtlSetDaclSecurityDescriptor (
     BOOLEAN DaclDefaulted
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlSetGroupSecurityDescriptor(
     IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
     IN PSID Group,
     IN BOOLEAN GroupDefaulted
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlSetInformationAcl(
     PACL Acl,
     PVOID Information,
@@ -518,16 +562,18 @@ RtlSetInformationAcl(
     ACL_INFORMATION_CLASS InformationClass
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlSetOwnerSecurityDescriptor(
     IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
     IN PSID Owner,
     IN BOOLEAN OwnerDefaulted
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlSetSaclSecurityDescriptor(
     IN OUT PSECURITY_DESCRIPTOR SecurityDescriptor,
     IN BOOLEAN SaclPresent,
@@ -535,54 +581,63 @@ RtlSetSaclSecurityDescriptor(
     IN BOOLEAN SaclDefaulted
 );
 
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlSetSecurityDescriptorRMControl(
     PSECURITY_DESCRIPTOR SecurityDescriptor,
     PUCHAR RMControl
 );
 
+NTSYSAPI
 PUCHAR
-STDCALL
+NTAPI
 RtlSubAuthorityCountSid(
     IN PSID Sid
 );
 
+NTSYSAPI
 PULONG
-STDCALL
+NTAPI
 RtlSubAuthoritySid(
     IN PSID Sid,
     IN ULONG SubAuthority
 );
 
+NTSYSAPI
 BOOLEAN
-STDCALL
+NTAPI
 RtlValidRelativeSecurityDescriptor(
-    IN PISECURITY_DESCRIPTOR_RELATIVE SecurityDescriptorInput,
+    IN PSECURITY_DESCRIPTOR SecurityDescriptorInput,
     IN ULONG SecurityDescriptorLength,
     IN SECURITY_INFORMATION RequiredInformation
 );
 
+NTSYSAPI
 BOOLEAN
-STDCALL
+NTAPI
 RtlValidSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor);
 
+NTSYSAPI
 BOOLEAN
-STDCALL
+NTAPI
 RtlValidSid(IN PSID Sid);
 
+NTSYSAPI
 BOOLEAN
-STDCALL
+NTAPI
 RtlValidAcl(PACL Acl);
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlDeleteSecurityObject(
     IN PSECURITY_DESCRIPTOR *ObjectDescriptor
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlNewSecurityObject(
     IN PSECURITY_DESCRIPTOR ParentDescriptor,
     IN PSECURITY_DESCRIPTOR CreatorDescriptor,
@@ -592,8 +647,9 @@ RtlNewSecurityObject(
     IN PGENERIC_MAPPING GenericMapping
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlQuerySecurityObject(
     IN PSECURITY_DESCRIPTOR ObjectDescriptor,
     IN SECURITY_INFORMATION SecurityInformation,
@@ -602,8 +658,9 @@ RtlQuerySecurityObject(
     OUT PULONG ReturnLength
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlSetSecurityObject(
     IN SECURITY_INFORMATION SecurityInformation,
     IN PSECURITY_DESCRIPTOR ModificationDescriptor,
@@ -615,8 +672,9 @@ RtlSetSecurityObject(
 /*
  * Single-Character Functions
  */
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlLargeIntegerToChar(
     IN PLARGE_INTEGER Value,
     IN ULONG Base,
@@ -624,20 +682,24 @@ RtlLargeIntegerToChar(
     IN OUT PCHAR String
 );
 
+NTSYSAPI
 CHAR
-STDCALL
+NTAPI
 RtlUpperChar(CHAR Source);
 
+NTSYSAPI
 WCHAR
-STDCALL
+NTAPI
 RtlUpcaseUnicodeChar(WCHAR Source);
 
+NTSYSAPI
 WCHAR
-STDCALL
+NTAPI
 RtlDowncaseUnicodeChar(IN WCHAR Source);
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlIntegerToChar(
     IN ULONG Value,
     IN ULONG Base,
@@ -645,8 +707,9 @@ RtlIntegerToChar(
     IN OUT PCHAR String
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlIntegerToUnicode(
     IN ULONG Value,
     IN ULONG Base  OPTIONAL,
@@ -654,70 +717,102 @@ RtlIntegerToUnicode(
     IN OUT LPWSTR String
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlIntegerToUnicodeString(
     IN ULONG Value,
     IN ULONG Base,
     IN OUT PUNICODE_STRING String
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlCharToInteger(
     PCSZ String,
     ULONG Base,
     PULONG Value
 );
 
+#if (defined(_M_IX86) && (_MSC_FULL_VER > 13009037)) || ((defined(_M_AMD64) || defined(_M_IA64)) && (_MSC_FULL_VER > 13009175))
+unsigned short __cdecl _byteswap_ushort(unsigned short);
+unsigned long  __cdecl _byteswap_ulong (unsigned long);
+unsigned __int64 __cdecl _byteswap_uint64(unsigned __int64);
+#pragma intrinsic(_byteswap_ushort)
+#pragma intrinsic(_byteswap_ulong)
+#pragma intrinsic(_byteswap_uint64)
+#define RtlUshortByteSwap(_x) _byteswap_ushort((USHORT)(_x))
+#define RtlUlongByteSwap(_x) _byteswap_ulong((_x))
+#define RtlUlonglongByteSwap(_x) _byteswap_uint64((_x))
+#else
+
 USHORT
 FASTCALL
 RtlUshortByteSwap(IN USHORT Source);
 
+ULONG
+FASTCALL
+RtlUlongByteSwap(IN ULONG Source);
+
+ULONGLONG
+FASTCALL
+RtlUlonglongByteSwap(IN ULONGLONG Source);
+
+#endif
+
 /*
  * Unicode->Ansi String Functions
  */
+/* FIXME: Use macro */
+#undef RtlUnicodeStringToAnsiSize
+NTSYSAPI
 ULONG
-STDCALL
+NTAPI
 RtlUnicodeStringToAnsiSize(IN PUNICODE_STRING UnicodeString);
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlUnicodeStringToAnsiString(
     PANSI_STRING DestinationString,
-    PUNICODE_STRING SourceString,
+    PCUNICODE_STRING SourceString,
     BOOLEAN AllocateDestinationString
 );
 
 /*
  * Unicode->OEM String Functions
  */
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlUpcaseUnicodeStringToOemString(
     POEM_STRING DestinationString,
-    PUNICODE_STRING SourceString,
+    PCUNICODE_STRING SourceString,
     BOOLEAN AllocateDestinationString
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlUpcaseUnicodeStringToCountedOemString(
     IN OUT POEM_STRING DestinationString,
-    IN PUNICODE_STRING SourceString,
+    IN PCUNICODE_STRING SourceString,
     IN BOOLEAN AllocateDestinationString
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlUnicodeStringToOemString(
     POEM_STRING DestinationString,
-    PUNICODE_STRING SourceString,
+    PCUNICODE_STRING SourceString,
     BOOLEAN AllocateDestinationString
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlUpcaseUnicodeToOemN(
     PCHAR OemString,
     ULONG OemSize,
@@ -726,12 +821,16 @@ RtlUpcaseUnicodeToOemN(
     ULONG UnicodeSize
 );
 
+/* FIXME: Use macro */
+#undef RtlUnicodeStringToOemSize
+NTSYSAPI
 ULONG
-STDCALL
+NTAPI
 RtlUnicodeStringToOemSize(IN PUNICODE_STRING UnicodeString);
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlUnicodeToOemN(
     PCHAR OemString,
     ULONG OemSize,
@@ -743,8 +842,9 @@ RtlUnicodeToOemN(
 /*
  * Unicode->MultiByte String Functions
  */
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlUnicodeToMultiByteN(
     PCHAR MbString,
     ULONG MbSize,
@@ -753,8 +853,9 @@ RtlUnicodeToMultiByteN(
     ULONG UnicodeSize
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlUpcaseUnicodeToMultiByteN(
     PCHAR MbString,
     ULONG MbSize,
@@ -763,8 +864,9 @@ RtlUpcaseUnicodeToMultiByteN(
     ULONG UnicodeSize
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlUnicodeToMultiByteSize(
     PULONG MbSize,
     PWCHAR UnicodeString,
@@ -774,20 +876,25 @@ RtlUnicodeToMultiByteSize(
 /*
  * OEM to Unicode Functions
  */
+/* FIXME: Use macro */
+#undef RtlOemStringToUnicodeSize
+NTSYSAPI
 ULONG
-STDCALL
+NTAPI
 RtlOemStringToUnicodeSize(POEM_STRING AnsiString);
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlOemStringToUnicodeString(
     PUNICODE_STRING DestinationString,
-    POEM_STRING SourceString,
+    PCOEM_STRING SourceString,
     BOOLEAN AllocateDestinationString
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlOemToUnicodeN(
     PWSTR UnicodeString,
     ULONG MaxBytesInUnicodeString,
@@ -800,21 +907,25 @@ RtlOemToUnicodeN(
  * Ansi->Unicode String Functions
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlAnsiStringToUnicodeString(
     PUNICODE_STRING DestinationString,
-    PANSI_STRING SourceString,
+    PCANSI_STRING SourceString,
     BOOLEAN AllocateDestinationString
 );
 
+/* FIXME: Use macro */
+#undef RtlAnsiStringToUnicodeSize
+NTSYSAPI
 ULONG
-STDCALL
+NTAPI
 RtlAnsiStringToUnicodeSize(
     PANSI_STRING AnsiString
 );
 
+NTSYSAPI
 BOOLEAN
-STDCALL
+NTAPI
 RtlCreateUnicodeStringFromAsciiz(
     OUT PUNICODE_STRING Destination,
     IN PCSZ Source
@@ -823,72 +934,82 @@ RtlCreateUnicodeStringFromAsciiz(
 /*
  * Unicode String Functions
  */
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlAppendUnicodeToString(
     PUNICODE_STRING Destination,
     PCWSTR Source
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlAppendUnicodeStringToString(
     PUNICODE_STRING Destination,
-    PUNICODE_STRING Source
+    PCUNICODE_STRING Source
 );
 
+NTSYSAPI
 LONG
-STDCALL
+NTAPI
 RtlCompareUnicodeString(
-    PUNICODE_STRING String1,
-    PUNICODE_STRING String2,
+    PCUNICODE_STRING String1,
+    PCUNICODE_STRING String2,
     BOOLEAN CaseInsensitive
 );
 
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlCopyUnicodeString(
     PUNICODE_STRING DestinationString,
-    PUNICODE_STRING SourceString
+    PCUNICODE_STRING SourceString
 );
 
+NTSYSAPI
 BOOLEAN
-STDCALL
+NTAPI
 RtlCreateUnicodeString(
     PUNICODE_STRING DestinationString,
     PCWSTR SourceString
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlDowncaseUnicodeString(
     IN OUT PUNICODE_STRING UniDest,
-    IN PUNICODE_STRING UniSource,
+    IN PCUNICODE_STRING UniSource,
     IN BOOLEAN AllocateDestinationString
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlDuplicateUnicodeString(
-    IN INT AddNull,
-    IN PUNICODE_STRING SourceString,
+    IN ULONG Flags,
+    IN PCUNICODE_STRING SourceString,
     OUT PUNICODE_STRING DestinationString
 );
 
+NTSYSAPI
 BOOLEAN
-STDCALL
+NTAPI
 RtlEqualUnicodeString(
     PCUNICODE_STRING String1,
     PCUNICODE_STRING String2,
     BOOLEAN CaseInsensitive
 );
 
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlFreeUnicodeString(IN PUNICODE_STRING UnicodeString);
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlHashUnicodeString(
     IN CONST UNICODE_STRING *String,
     IN BOOLEAN CaseInSensitive,
@@ -896,40 +1017,45 @@ RtlHashUnicodeString(
     OUT PULONG HashValue
 );
 
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlInitUnicodeString(
   IN OUT PUNICODE_STRING DestinationString,
   IN PCWSTR SourceString);
 
+NTSYSAPI
 ULONG
-STDCALL
+NTAPI
 RtlIsTextUnicode(
     PVOID Buffer,
     ULONG Length,
     ULONG *Flags
 );
 
+NTSYSAPI
 BOOLEAN
-STDCALL
+NTAPI
 RtlPrefixUnicodeString(
-    PUNICODE_STRING String1,
-    PUNICODE_STRING String2,
+    PCUNICODE_STRING String1,
+    PCUNICODE_STRING String2,
     BOOLEAN CaseInsensitive
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlUpcaseUnicodeString(
     PUNICODE_STRING DestinationString,
     PCUNICODE_STRING SourceString,
     BOOLEAN AllocateDestinationString
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlUnicodeStringToInteger(
-    PUNICODE_STRING String,
+    PCUNICODE_STRING String,
     ULONG Base,
     PULONG Value
 );
@@ -937,12 +1063,14 @@ RtlUnicodeStringToInteger(
 /*
  * Ansi String Functions
  */
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlFreeAnsiString(IN PANSI_STRING AnsiString);
 
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlInitAnsiString(
     PANSI_STRING DestinationString,
     PCSZ SourceString
@@ -951,62 +1079,70 @@ RtlInitAnsiString(
 /*
  * OEM String Functions
  */
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlFreeOemString(IN POEM_STRING OemString);
 
 /*
  * MultiByte->Unicode String Functions
  */
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlMultiByteToUnicodeN(
     PWCHAR UnicodeString,
     ULONG UnicodeSize,
     PULONG ResultSize,
-    const PCHAR MbString,
+    PCSTR MbString,
     ULONG MbSize
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlMultiByteToUnicodeSize(
     PULONG UnicodeSize,
-    PCHAR MbString,
+    PCSTR MbString,
     ULONG MbSize
 );
 
 /*
  * Atom Functions
  */
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlAddAtomToAtomTable(
     IN PRTL_ATOM_TABLE AtomTable,
     IN PWSTR AtomName,
     OUT PRTL_ATOM Atom
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlCreateAtomTable(
     IN ULONG TableSize,
     IN OUT PRTL_ATOM_TABLE *AtomTable
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlDeleteAtomFromAtomTable(
     IN PRTL_ATOM_TABLE AtomTable,
     IN RTL_ATOM Atom
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlDestroyAtomTable(IN PRTL_ATOM_TABLE AtomTable);
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlQueryAtomInAtomTable(
     IN PRTL_ATOM_TABLE AtomTable,
     IN RTL_ATOM Atom,
@@ -1016,8 +1152,9 @@ RtlQueryAtomInAtomTable(
     IN OUT PULONG NameLength OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlLookupAtomInAtomTable(
     IN PRTL_ATOM_TABLE AtomTable,
     IN PWSTR AtomName,
@@ -1027,8 +1164,9 @@ RtlLookupAtomInAtomTable(
 /*
  * Memory Functions
  */
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlFillMemoryUlong(
     IN PVOID Destination,
     IN ULONG Length,
@@ -1038,12 +1176,14 @@ RtlFillMemoryUlong(
 /*
  * Process Management Functions
  */
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlAcquirePebLock(VOID);
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlCreateProcessParameters (
     OUT PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
     IN PUNICODE_STRING ImagePathName OPTIONAL,
@@ -1057,8 +1197,9 @@ RtlCreateProcessParameters (
     IN PUNICODE_STRING RuntimeInfo OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlCreateUserProcess(
     IN PUNICODE_STRING ImageFileName,
     IN ULONG Attributes,
@@ -1072,8 +1213,9 @@ RtlCreateUserProcess(
     OUT PRTL_USER_PROCESS_INFORMATION ProcessInfo
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlCreateUserThread(
     IN HANDLE ProcessHandle,
     IN PSECURITY_DESCRIPTOR SecurityDescriptor,
@@ -1087,20 +1229,24 @@ RtlCreateUserThread(
     IN OUT PCLIENT_ID ClientId
 );
 
+NTSYSAPI
 PRTL_USER_PROCESS_PARAMETERS
-STDCALL
+NTAPI
 RtlDeNormalizeProcessParams(IN PRTL_USER_PROCESS_PARAMETERS ProcessParameters);
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlDestroyProcessParameters(IN PRTL_USER_PROCESS_PARAMETERS ProcessParameters);
 
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlExitUserThread(NTSTATUS Status);
 
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlInitializeContext(
     IN HANDLE ProcessHandle,
     OUT PCONTEXT ThreadContext,
@@ -1109,38 +1255,45 @@ RtlInitializeContext(
     IN PINITIAL_TEB InitialTeb
 );
 
+NTSYSAPI
 PRTL_USER_PROCESS_PARAMETERS
-STDCALL
+NTAPI
 RtlNormalizeProcessParams(IN PRTL_USER_PROCESS_PARAMETERS ProcessParameters);
 
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlReleasePebLock(VOID);
 
 /*
  * Environment/Path Functions
  */
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlCreateEnvironment(
     BOOLEAN Inherit,
     PWSTR *Environment
 );
 
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlDestroyEnvironment(PWSTR Environment);
 
+NTSYSAPI
 BOOLEAN
-STDCALL
+NTAPI
 RtlDoesFileExists_U(PWSTR FileName);
 
+NTSYSAPI
 ULONG
-STDCALL
+NTAPI
 RtlDetermineDosPathNameType_U(PCWSTR Path);
 
+NTSYSAPI
 ULONG
-STDCALL
+NTAPI
 RtlDosSearchPath_U(
     WCHAR *sp,
     WCHAR *name,
@@ -1150,8 +1303,9 @@ RtlDosSearchPath_U(
     WCHAR **shortname
 );
 
+NTSYSAPI
 BOOLEAN
-STDCALL
+NTAPI
 RtlDosPathNameToNtPathName_U(
     PWSTR DosName,
     PUNICODE_STRING NtName,
@@ -1159,8 +1313,9 @@ RtlDosPathNameToNtPathName_U(
     PCURDIR CurrentDirectory
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlExpandEnvironmentStrings_U(
     PWSTR Environment,
     PUNICODE_STRING Source,
@@ -1168,15 +1323,17 @@ RtlExpandEnvironmentStrings_U(
     PULONG Length
 );
 
+NTSYSAPI
 ULONG
-STDCALL
+NTAPI
 RtlGetCurrentDirectory_U(
     ULONG MaximumLength,
     PWSTR Buffer
 );
 
+NTSYSAPI
 ULONG
-STDCALL
+NTAPI
 RtlGetFullPathName_U(
     const WCHAR *dosname,
     ULONG size,
@@ -1184,28 +1341,32 @@ RtlGetFullPathName_U(
     WCHAR **shortname
 );
 
+NTSYSAPI
 BOOLEAN
-STDCALL
+NTAPI
 RtlIsNameLegalDOS8Dot3(
     IN PUNICODE_STRING UnicodeName,
     IN PANSI_STRING AnsiName,
     PBOOLEAN Unknown
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlQueryEnvironmentVariable_U(
     PWSTR Environment,
     PUNICODE_STRING Name,
     PUNICODE_STRING Value
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlSetCurrentDirectory_U(PUNICODE_STRING name);
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlSetEnvironmentVariable(
     PWSTR *Environment,
     PUNICODE_STRING Name,
@@ -1215,95 +1376,110 @@ RtlSetEnvironmentVariable(
 /*
  * Critical Section/Resource Functions
  */
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlDeleteCriticalSection (
     IN PRTL_CRITICAL_SECTION CriticalSection
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlEnterCriticalSection(
     IN PRTL_CRITICAL_SECTION CriticalSection
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlInitializeCriticalSection(
     IN PRTL_CRITICAL_SECTION CriticalSection
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlInitializeCriticalSectionAndSpinCount(
     IN PRTL_CRITICAL_SECTION CriticalSection,
     IN ULONG SpinCount
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlLeaveCriticalSection(
     IN PRTL_CRITICAL_SECTION CriticalSection
 );
 
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlpUnWaitCriticalSection(
     IN PRTL_CRITICAL_SECTION CriticalSection
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlpWaitForCriticalSection(
     IN PRTL_CRITICAL_SECTION CriticalSection
 );
 
+NTSYSAPI
 BOOLEAN
-STDCALL
+NTAPI
 RtlAcquireResourceExclusive(
     IN PRTL_RESOURCE Resource,
     IN BOOLEAN Wait
 );
 
+NTSYSAPI
 BOOLEAN
-STDCALL
+NTAPI
 RtlAcquireResourceShared(
     IN PRTL_RESOURCE Resource,
     IN BOOLEAN Wait
 );
 
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlConvertExclusiveToShared(
     IN PRTL_RESOURCE Resource
 );
 
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlConvertSharedToExclusive(
     IN PRTL_RESOURCE Resource
 );
 
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlDeleteResource(
     IN PRTL_RESOURCE Resource
 );
 
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlDumpResource(
     IN PRTL_RESOURCE Resource
 );
 
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlInitializeResource(
     IN PRTL_RESOURCE Resource
 );
 
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlReleaseResource(
     IN PRTL_RESOURCE Resource
 );
@@ -1311,8 +1487,9 @@ RtlReleaseResource(
 /*
  * Compression Functions
  */
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlCompressBuffer(
     IN USHORT CompressionFormatAndEngine,
     IN PUCHAR UncompressedBuffer,
@@ -1324,8 +1501,9 @@ RtlCompressBuffer(
     IN PVOID WorkSpace
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlDecompressBuffer(
     IN USHORT CompressionFormat,
     OUT PUCHAR UncompressedBuffer,
@@ -1335,8 +1513,9 @@ RtlDecompressBuffer(
     OUT PULONG FinalUncompressedSize
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlGetCompressionWorkSpaceSize(
     IN USHORT CompressionFormatAndEngine,
     OUT PULONG CompressBufferWorkSpaceSize,
@@ -1346,19 +1525,22 @@ RtlGetCompressionWorkSpaceSize(
 /*
  * Debug Info Functions
  */
+NTSYSAPI
 PDEBUG_BUFFER
-STDCALL
+NTAPI
 RtlCreateQueryDebugBuffer(
     IN ULONG Size,
     IN BOOLEAN EventPair
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlDestroyQueryDebugBuffer(IN PDEBUG_BUFFER DebugBuffer);
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlQueryProcessDebugInformation(
     IN ULONG ProcessId,
     IN ULONG DebugInfoClassMask,
@@ -1368,56 +1550,63 @@ RtlQueryProcessDebugInformation(
 /*
  * Bitmap Functions
  */
+NTSYSAPI
 BOOLEAN
-STDCALL
+NTAPI
 RtlAreBitsClear(
     IN PRTL_BITMAP BitMapHeader,
     IN ULONG StartingIndex,
     IN ULONG Length
 );
 
+NTSYSAPI
 BOOLEAN
-STDCALL
+NTAPI
 RtlAreBitsSet(
     IN PRTL_BITMAP BitMapHeader,
     IN ULONG StartingIndex,
     IN ULONG Length
 );
 
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlClearBits(
     IN PRTL_BITMAP BitMapHeader,
     IN ULONG StartingIndex,
     IN ULONG NumberToClear
 );
 
+NTSYSAPI
 ULONG
-STDCALL
+NTAPI
 RtlFindClearBits(
     IN PRTL_BITMAP BitMapHeader,
     IN ULONG NumberToFind,
     IN ULONG HintIndex
 );
 
+NTSYSAPI
 ULONG
-STDCALL
+NTAPI
 RtlFindClearBitsAndSet(
     IN PRTL_BITMAP BitMapHeader,
     IN ULONG NumberToFind,
     IN ULONG HintIndex
 );
 
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlInitializeBitMap(
     IN PRTL_BITMAP BitMapHeader,
     IN PULONG BitMapBuffer,
     IN ULONG SizeOfBitMap
 );
 
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlSetBits (
     IN PRTL_BITMAP BitMapHeader,
     IN ULONG StartingIndex,
@@ -1427,32 +1616,36 @@ RtlSetBits (
 /*
  * Timer Functions
  */
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlCreateTimer(
     HANDLE TimerQueue,
     PHANDLE phNewTimer,
     WAITORTIMERCALLBACKFUNC Callback,
     PVOID Parameter,
-    DWORD DueTime,
-    DWORD Period,
+    ULONG DueTime,
+    ULONG Period,
     ULONG Flags
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlCreateTimerQueue(PHANDLE TimerQueue);
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlDeleteTimer(
     HANDLE TimerQueue,
     HANDLE Timer,
     HANDLE CompletionEvent
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlUpdateTimer(
     HANDLE TimerQueue,
     HANDLE Timer,
@@ -1460,69 +1653,77 @@ RtlUpdateTimer(
     ULONG Period
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlDeleteTimerQueueEx(
     HANDLE TimerQueue,
     HANDLE CompletionEvent
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlDeleteTimerQueue(HANDLE TimerQueue);
 
 /*
  * Debug Functions
  */
 ULONG
-CDECL
+__cdecl
 DbgPrint(
     IN PCH  Format,
     IN ...
 );
 
 VOID
-STDCALL
+NTAPI
 DbgBreakPoint(VOID);
 
 /*
  * Handle Table Functions
  */
+NTSYSAPI
 PRTL_HANDLE_TABLE_ENTRY
-STDCALL
+NTAPI
 RtlAllocateHandle(
     IN PRTL_HANDLE_TABLE HandleTable,
     IN OUT PULONG Index
 );
 
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlDestroyHandleTable(IN PRTL_HANDLE_TABLE HandleTable);
 
+NTSYSAPI
 BOOLEAN
-STDCALL
+NTAPI
 RtlFreeHandle(
     IN PRTL_HANDLE_TABLE HandleTable,
     IN PRTL_HANDLE_TABLE_ENTRY Handle
 );
 
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlInitializeHandleTable(
     IN ULONG TableSize,
     IN ULONG HandleSize,
     IN PRTL_HANDLE_TABLE HandleTable
 );
 
+NTSYSAPI
 BOOLEAN
-STDCALL
+NTAPI
 RtlIsValidHandle(
     IN PRTL_HANDLE_TABLE HandleTable,
     IN PRTL_HANDLE_TABLE_ENTRY Handle
 );
 
+NTSYSAPI
 BOOLEAN
-STDCALL
+NTAPI
 RtlIsValidIndexHandle(
     IN PRTL_HANDLE_TABLE HandleTable,
     IN ULONG Index,
@@ -1532,8 +1733,9 @@ RtlIsValidIndexHandle(
 /*
  * PE Functions
  */
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlFindMessage(
     IN PVOID BaseAddress,
     IN ULONG Type,
@@ -1542,12 +1744,14 @@ RtlFindMessage(
     OUT PRTL_MESSAGE_RESOURCE_ENTRY *MessageResourceEntry
 );
 
+NTSYSAPI
 ULONG
-STDCALL
+NTAPI
 RtlGetNtGlobalFlags(VOID);
 
+NTSYSAPI
 PVOID
-STDCALL
+NTAPI
 RtlImageDirectoryEntryToData(
     PVOID  BaseAddress,
     BOOLEAN bFlag,
@@ -1555,8 +1759,9 @@ RtlImageDirectoryEntryToData(
     PULONG Size
 );
 
+NTSYSAPI
 ULONG
-STDCALL
+NTAPI
 RtlImageRvaToVa(
     PIMAGE_NT_HEADERS NtHeader,
     PVOID BaseAddress,
@@ -1564,12 +1769,14 @@ RtlImageRvaToVa(
     PIMAGE_SECTION_HEADER *SectionHeader
 );
 
+NTSYSAPI
 PIMAGE_NT_HEADERS
-STDCALL
+NTAPI
 RtlImageNtHeader(IN PVOID BaseAddress);
 
+NTSYSAPI
 PIMAGE_SECTION_HEADER
-STDCALL
+NTAPI
 RtlImageRvaToSection(
     PIMAGE_NT_HEADERS NtHeader,
     PVOID BaseAddress,
@@ -1579,19 +1786,22 @@ RtlImageRvaToSection(
 /*
  * Registry Functions
  */
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlCheckRegistryKey(
     ULONG RelativeTo,
     PWSTR Path
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlFormatCurrentUserKeyPath(IN OUT PUNICODE_STRING KeyPath);
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlpNtOpenKey(
     OUT HANDLE KeyHandle,
     IN ACCESS_MASK DesiredAccess,
@@ -1599,15 +1809,17 @@ RtlpNtOpenKey(
     IN ULONG Unused
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlOpenCurrentUser(
     IN ACCESS_MASK DesiredAccess,
     OUT PHANDLE KeyHandle
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlQueryRegistryValues(
     IN ULONG RelativeTo,
     IN PCWSTR Path,
@@ -1616,8 +1828,9 @@ RtlQueryRegistryValues(
     IN PVOID Environment
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlWriteRegistryValue(
     ULONG RelativeTo,
     PCWSTR Path,
@@ -1630,8 +1843,9 @@ RtlWriteRegistryValue(
 /*
  * NLS Functions
  */
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlInitNlsTables(
     IN PUSHORT AnsiTableBase,
     IN PUSHORT OemTableBase,
@@ -1639,77 +1853,93 @@ RtlInitNlsTables(
     OUT PNLSTABLEINFO NlsTable
 );
 
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlInitCodePageTable(
     IN PUSHORT TableBase,
     OUT PCPTABLEINFO CodePageTable
 );
 
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlResetRtlTranslations(IN PNLSTABLEINFO NlsTable);
 
 /*
  * Misc conversion functions
  */
+/* FIXME: Use inline */
+NTSYSAPI
 LARGE_INTEGER
-STDCALL
+NTAPI
 RtlConvertLongToLargeInteger(IN LONG SignedInteger);
 
+/* FIXME: Use inline */
+NTSYSAPI
 LARGE_INTEGER
-STDCALL
+NTAPI
 RtlEnlargedIntegerMultiply(
     LONG Multiplicand,
     LONG Multiplier
 );
 
+/* FIXME: Use inline */
+NTSYSAPI
 ULONG
-STDCALL
+NTAPI
 RtlEnlargedUnsignedDivide(
     ULARGE_INTEGER Dividend,
     ULONG Divisor,
     PULONG Remainder
 );
 
+/* FIXME: Use inline */
+NTSYSAPI
 LARGE_INTEGER
-STDCALL
+NTAPI
 RtlEnlargedUnsignedMultiply(
     ULONG Multiplicand,
     ULONG Multiplier
 );
 
+NTSYSAPI
 ULONG
-STDCALL
+NTAPI
 RtlUniform(PULONG Seed);
 
 /*
  * Time Functions
  */
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlQueryTimeZoneInformation(LPTIME_ZONE_INFORMATION TimeZoneInformation);
 
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlSecondsSince1970ToTime(
     IN ULONG SecondsSince1970,
     OUT PLARGE_INTEGER Time
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlSetTimeZoneInformation(LPTIME_ZONE_INFORMATION TimeZoneInformation);
 
+NTSYSAPI
 BOOLEAN
-STDCALL
+NTAPI
 RtlTimeFieldsToTime(
     PTIME_FIELDS TimeFields,
     PLARGE_INTEGER Time
 );
 
+NTSYSAPI
 VOID
-STDCALL
+NTAPI
 RtlTimeToTimeFields(
     PLARGE_INTEGER Time,
     PTIME_FIELDS TimeFields
@@ -1718,16 +1948,18 @@ RtlTimeToTimeFields(
 /*
  * Version Functions
  */
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlVerifyVersionInfo(
     IN PRTL_OSVERSIONINFOEXW VersionInfo,
     IN ULONG TypeMask,
     IN ULONGLONG ConditionMask
 );
 
+NTSYSAPI
 NTSTATUS
-STDCALL
+NTAPI
 RtlGetVersion(IN OUT PRTL_OSVERSIONINFOW lpVersionInformation);
 
 #endif

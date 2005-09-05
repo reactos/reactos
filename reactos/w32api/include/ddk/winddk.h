@@ -5105,7 +5105,7 @@ NTSTATUS
 DDKAPI
 RtlAppendUnicodeStringToString(
   IN OUT PUNICODE_STRING  Destination,
-  IN PUNICODE_STRING  Source);
+  IN PCUNICODE_STRING  Source);
 
 NTOSAPI
 NTSTATUS
@@ -5193,8 +5193,8 @@ NTOSAPI
 LONG
 DDKAPI
 RtlCompareUnicodeString(
-  IN PUNICODE_STRING  String1,
-  IN PUNICODE_STRING  String2,
+  IN PCUNICODE_STRING  String1,
+  IN PCUNICODE_STRING  String2,
   IN BOOLEAN  CaseInSensitive);
 
 NTOSAPI
@@ -5257,7 +5257,7 @@ VOID
 DDKAPI
 RtlCopyUnicodeString(
   IN OUT PUNICODE_STRING  DestinationString,
-  IN PUNICODE_STRING  SourceString);
+  IN PCUNICODE_STRING  SourceString);
 
 NTOSAPI
 NTSTATUS
@@ -5562,8 +5562,8 @@ NTOSAPI
 BOOLEAN
 DDKAPI
 RtlPrefixUnicodeString(
-  IN PUNICODE_STRING  String1,
-  IN PUNICODE_STRING  String2,
+  IN PCUNICODE_STRING  String1,
+  IN PCUNICODE_STRING  String2,
   IN BOOLEAN  CaseInSensitive);
 
 NTOSAPI
@@ -5716,14 +5716,14 @@ NTSTATUS
 DDKAPI
 RtlUnicodeStringToAnsiString(
   IN OUT PANSI_STRING  DestinationString,
-  IN PUNICODE_STRING  SourceString,
+  IN PCUNICODE_STRING  SourceString,
   IN BOOLEAN  AllocateDestinationString);
 
 NTOSAPI
 NTSTATUS
 DDKAPI
 RtlUnicodeStringToInteger(
-  IN PUNICODE_STRING  String,
+  IN PCUNICODE_STRING  String,
   IN ULONG  Base  OPTIONAL,
   OUT PULONG  Value);
 
@@ -5764,7 +5764,7 @@ NTOSAPI
 BOOLEAN
 DDKAPI
 RtlValidRelativeSecurityDescriptor(
-  IN PISECURITY_DESCRIPTOR_RELATIVE  SecurityDescriptorInput,
+  IN PSECURITY_DESCRIPTOR SecurityDescriptorInput,
   IN ULONG  SecurityDescriptorLength,
   IN SECURITY_INFORMATION  RequiredInformation);
 

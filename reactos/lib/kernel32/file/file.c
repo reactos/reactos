@@ -182,7 +182,7 @@ STDCALL
 SetFileApisToOEM(VOID)
 {
     /* Set the correct Base Api */
-    Basep8BitStringToUnicodeString = RtlOemStringToUnicodeString;
+    Basep8BitStringToUnicodeString = (PRTL_CONVERT_STRING)RtlOemStringToUnicodeString;
 
     /* FIXME: Old, deprecated way */
     bIsFileApiAnsi = FALSE;

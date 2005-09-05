@@ -41,7 +41,7 @@ RtlValidSid(IN PSID Sid_)
  * @implemented
  */
 ULONG STDCALL
-RtlLengthRequiredSid(IN UCHAR SubAuthorityCount)
+RtlLengthRequiredSid(IN ULONG SubAuthorityCount)
 {
   PAGED_CODE_RTL();
 

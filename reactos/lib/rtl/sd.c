@@ -514,7 +514,7 @@ RtlMakeSelfRelativeSD(PSECURITY_DESCRIPTOR AbsSD,
  */
 NTSTATUS STDCALL
 RtlAbsoluteToSelfRelativeSD(PSECURITY_DESCRIPTOR AbsSD,
-                            PISECURITY_DESCRIPTOR_RELATIVE RelSD,
+                            PSECURITY_DESCRIPTOR RelSD,
                             PULONG BufferLength)
 {
    PAGED_CODE_RTL();
@@ -524,7 +524,7 @@ RtlAbsoluteToSelfRelativeSD(PSECURITY_DESCRIPTOR AbsSD,
       return STATUS_BAD_DESCRIPTOR_FORMAT;
    }
 
-   return RtlMakeSelfRelativeSD(AbsSD, RelSD, BufferLength);
+   return RtlMakeSelfRelativeSD(AbsSD, (PISECURITY_DESCRIPTOR_RELATIVE)RelSD, BufferLength);
 }
 
 
@@ -655,7 +655,7 @@ RtlSetSaclSecurityDescriptor(PSECURITY_DESCRIPTOR SecurityDescriptor,
  * @implemented
  */
 NTSTATUS STDCALL
-RtlSelfRelativeToAbsoluteSD(PISECURITY_DESCRIPTOR_RELATIVE RelSD,
+RtlSelfRelativeToAbsoluteSD(PSECURITY_DESCRIPTOR RelSD,
                             PSECURITY_DESCRIPTOR AbsSD,
                             PDWORD AbsSDSize,
                             PACL Dacl,
@@ -688,7 +688,7 @@ RtlSelfRelativeToAbsoluteSD(PISECURITY_DESCRIPTOR_RELATIVE RelSD,
       return STATUS_BAD_DESCRIPTOR_FORMAT;
    }
 
-   RtlpQuerySecurityDescriptor ((PSECURITY_DESCRIPTOR)RelSD,
+   RtlpQuerySecurityDescriptor (RelSD,
                                 &pOwner,
                                 &OwnerLength,
                                 &pGroup,
@@ -744,7 +744,7 @@ RtlSelfRelativeToAbsoluteSD2(PISECURITY_DESCRIPTOR_RELATIVE SelfRelativeSecurity
  * @implemented
  */
 BOOLEAN STDCALL
-RtlValidRelativeSecurityDescriptor(IN PISECURITY_DESCRIPTOR_RELATIVE SecurityDescriptorInput,
+RtlValidRelativeSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptorInput,
                                    IN ULONG SecurityDescriptorLength,
                                    IN SECURITY_INFORMATION RequiredInformation)
 {

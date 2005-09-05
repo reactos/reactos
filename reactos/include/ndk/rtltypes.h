@@ -100,6 +100,10 @@
 #define HASH_STRING_ALGORITHM_X65599    1
 #define HASH_STRING_ALGORITHM_INVALID   0xffffffff
 
+/* RtlDuplicateString settings */
+#define RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE 1
+#define RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING 2
+
 /* List Macros */
 static __inline
 VOID
@@ -264,6 +268,10 @@ typedef enum
 } DOS_PATHNAME_TYPE;
 
 /* FUNCTION TYPES ************************************************************/
+#ifndef NTOS_MODE_USER
+typedef VOID (NTAPI *WAITORTIMERCALLBACKFUNC)(PVOID, BOOLEAN);
+#endif
+
 struct _RTL_AVL_TABLE;
 struct _RTL_GENERIC_TABLE;
 struct _RTL_RANGE;

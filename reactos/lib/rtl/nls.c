@@ -243,7 +243,7 @@ RtlMultiByteToUnicodeN(
    IN PWCHAR UnicodeString,
    IN ULONG UnicodeSize,
    IN PULONG ResultSize,
-   IN PCHAR MbString,
+   IN PCSTR MbString,
    IN ULONG MbSize)
 {
    ULONG Size = 0;
@@ -280,7 +280,7 @@ RtlMultiByteToUnicodeN(
  */
 NTSTATUS STDCALL
 RtlMultiByteToUnicodeSize(PULONG UnicodeSize,
-                          PCHAR MbString,
+                          PCSTR MbString,
                           ULONG MbSize)
 {
    ULONG Length;

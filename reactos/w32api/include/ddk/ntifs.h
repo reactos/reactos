@@ -329,6 +329,9 @@ extern LARGE_INTEGER                IoOtherTransferCount;
 #define PIN_NO_READ                     (4)
 #define PIN_IF_BCB                      (8)
 
+#define RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE 1
+#define RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING 2
+
 /* also in winnt.h */
 #define SEC_BASED	0x00200000
 #define SEC_NO_CHANGE	0x00400000
@@ -3585,7 +3588,7 @@ NTSTATUS
 NTAPI
 RtlAbsoluteToSelfRelativeSD (
     IN PSECURITY_DESCRIPTOR              AbsoluteSecurityDescriptor,
-    IN OUT PISECURITY_DESCRIPTOR_RELATIVE SelfRelativeSecurityDescriptor,
+    IN OUT PSECURITY_DESCRIPTOR SelfRelativeSecurityDescriptor,
     IN PULONG                            BufferLength
 );
 
@@ -3788,7 +3791,7 @@ NTSYSAPI
 ULONG
 NTAPI
 RtlLengthRequiredSid (
-    IN UCHAR SubAuthorityCount
+    IN ULONG SubAuthorityCount
 );
 
 NTSYSAPI
