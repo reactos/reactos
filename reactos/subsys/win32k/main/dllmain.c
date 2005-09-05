@@ -30,8 +30,8 @@
 
 BOOL INTERNAL_CALL GDI_CleanupForProcess (struct _EPROCESS *Process);
 
-extern SSDT Win32kSSDT[];
-extern SSPT Win32kSSPT[];
+extern ULONG_PTR Win32kSSDT[];
+extern UCHAR Win32kSSPT[];
 extern ULONG Win32kNumberOfSysCalls;
 
 PSHARED_SECTION_POOL SessionSharedSectionPool = NULL;

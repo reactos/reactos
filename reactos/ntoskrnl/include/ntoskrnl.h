@@ -10,6 +10,7 @@
 
 /* We are the Kernel */
 #define NTKERNELAPI
+#define _NTSYSTEM_
 
 /* DDK/IFS/NDK Headers */
 #include <ddk/ntddk.h>

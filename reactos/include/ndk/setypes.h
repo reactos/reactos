@@ -77,7 +77,6 @@ typedef struct _SEP_AUDIT_POLICY
     };
 } SEP_AUDIT_POLICY, *PSEP_AUDIT_POLICY;
 
-#define TOKEN_HAS_TRAVERSE_PRIVILEGE    0x01
 typedef struct _TOKEN
 {
     TOKEN_SOURCE TokenSource;                         /* 0x00 */

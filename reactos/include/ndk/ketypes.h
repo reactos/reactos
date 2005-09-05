@@ -19,26 +19,9 @@
 #define SSDT_MAX_ENTRIES 4
 #define PROCESSOR_FEATURE_MAX 64
 #define CONTEXT_DEBUGGER (CONTEXT_FULL | CONTEXT_FLOATING_POINT)
-#define THREAD_WAIT_OBJECTS 4
-#define THREAD_ALERT 0x4
 
 #ifdef NTOS_MODE_USER
 #define SharedUserData ((KUSER_SHARED_DATA * CONST) USER_SHARED_DATA)
-#endif
-
-/* EXPORTED DATA *************************************************************/
-#ifndef NTOS_MODE_USER
-extern CHAR NTOSAPI KeNumberProcessors;
-extern LOADER_PARAMETER_BLOCK NTOSAPI KeLoaderBlock;
-extern ULONG NTOSAPI KeDcacheFlushCount;
-extern ULONG NTOSAPI KeIcacheFlushCount;
-extern KAFFINITY NTOSAPI KeActiveProcessors;
-extern ULONG NTOSAPI KiDmaIoCoherency; /* RISC Architectures only */
-extern ULONG NTOSAPI KeMaximumIncrement;
-extern ULONG NTOSAPI KeMinimumIncrement;
-extern ULONG NTOSAPI NtBuildNumber;
-extern SSDT_ENTRY NTOSAPI KeServiceDescriptorTable[SSDT_MAX_ENTRIES];
-extern SSDT_ENTRY NTOSAPI KeServiceDescriptorTableShadow[SSDT_MAX_ENTRIES];
 #endif
 
 /* ENUMERATIONS **************************************************************/
@@ -166,6 +149,7 @@ typedef enum _KTHREAD_STATE
 
 /* FUNCTION TYPES ************************************************************/
 
+#ifdef NTOS_MODE_USER
 typedef VOID
 (NTAPI *PKNORMAL_ROUTINE)(
     IN PVOID  NormalContext,
@@ -177,6 +161,7 @@ typedef VOID
     IN PVOID  TimerContext,
     IN ULONG  TimerLowValue,
     IN LONG  TimerHighValue);
+#endif
 
 /* TYPES *********************************************************************/
 
@@ -486,6 +471,32 @@ typedef struct _KPROCESS
     ULONG                 StackCount;                /* 06C */
     LIST_ENTRY            ProcessListEntry;          /* 070 */
 } KPROCESS;
+
+typedef struct _KSERVICE_TABLE_DESCRIPTOR
+{
+    PULONG_PTR Base;
+    PULONG Count;
+    ULONG Limit;
+#if defined(_IA64_)
+    LONG TableBaseGpOffset;
+#endif
+    PUCHAR Number;
+} KSERVICE_TABLE_DESCRIPTOR, *PKSERVICE_TABLE_DESCRIPTOR;
 #endif /* !NTOS_MODE_USER */
+
+/* EXPORTED DATA *************************************************************/
+#ifndef NTOS_MODE_USER
+extern CHAR NTSYSAPI KeNumberProcessors;
+extern LOADER_PARAMETER_BLOCK NTSYSAPI KeLoaderBlock;
+extern ULONG NTSYSAPI KeDcacheFlushCount;
+extern ULONG NTSYSAPI KeIcacheFlushCount;
+extern KAFFINITY NTSYSAPI KeActiveProcessors;
+extern ULONG NTSYSAPI KiDmaIoCoherency; /* RISC Architectures only */
+extern ULONG NTSYSAPI KeMaximumIncrement;
+extern ULONG NTSYSAPI KeMinimumIncrement;
+extern ULONG NTSYSAPI NtBuildNumber;
+extern KSERVICE_TABLE_DESCRIPTOR NTSYSAPI KeServiceDescriptorTable[SSDT_MAX_ENTRIES];
+extern KSERVICE_TABLE_DESCRIPTOR NTSYSAPI KeServiceDescriptorTableShadow[SSDT_MAX_ENTRIES];
+#endif
 
 #endif

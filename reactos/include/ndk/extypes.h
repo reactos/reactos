@@ -14,9 +14,9 @@
 
 /* EXPORTED DATA *************************************************************/
 #ifndef NTOS_MODE_USER
-extern POBJECT_TYPE NTOSAPI ExIoCompletionType;
-extern NTOSAPI POBJECT_TYPE ExMutantObjectType;
-extern NTOSAPI POBJECT_TYPE ExTimerType;
+extern POBJECT_TYPE NTSYSAPI ExIoCompletionType;
+extern POBJECT_TYPE NTSYSAPI ExMutantObjectType;
+extern POBJECT_TYPE NTSYSAPI ExTimerType;
 #endif
 
 /* CONSTANTS *****************************************************************/
@@ -46,9 +46,9 @@ extern NTOSAPI POBJECT_TYPE ExTimerType;
 #ifndef NTOS_MODE_USER
 typedef struct _EX_QUEUE_WORKER_INFO
 {
-    UCHAR QueueDisabled:1;
-    UCHAR MakeThreadsAsNecessary:1;
-    UCHAR WaitMode:1;
+    ULONG QueueDisabled:1;
+    ULONG MakeThreadsAsNecessary:1;
+    ULONG WaitMode:1;
     ULONG WorkerCount:29;
 } EX_QUEUE_WORKER_INFO, *PEX_QUEUE_WORKER_INFO;
 

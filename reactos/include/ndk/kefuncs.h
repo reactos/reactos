@@ -14,8 +14,18 @@
 
 /* PROTOTYPES ****************************************************************/
 
+BOOLEAN
+NTAPI
+KeAddSystemServiceTable(
+    PULONG_PTR Base,
+    PULONG Count OPTIONAL,
+    ULONG Limit,
+    PUCHAR Number,
+    ULONG Index
+);
+
 VOID
-STDCALL
+NTAPI
 KeInitializeApc(
     IN PKAPC  Apc,
     IN PKTHREAD  Thread,
@@ -28,7 +38,7 @@ KeInitializeApc(
 );
 
 VOID
-STDCALL
+NTAPI
 KeEnterKernelDebugger(VOID);
 
 VOID
@@ -44,7 +54,7 @@ KiReleaseSpinLock(
 );
 
 VOID
-STDCALL
+NTAPI
 KiDeliverApc(
     IN KPROCESSOR_MODE PreviousMode,
     IN PVOID Reserved,
@@ -52,81 +62,34 @@ KiDeliverApc(
 );
 
 VOID
-STDCALL
+NTAPI
 KiDispatchInterrupt(VOID);
 
-
-BOOLEAN
-STDCALL
-KeAreApcsDisabled(
-    VOID
-    );
-
 VOID
-STDCALL
-KeFlushQueuedDpcs(
-    VOID
-    );
-
-ULONG
-STDCALL
-KeGetRecommendedSharedDataAlignment(
-    VOID
-    );
-
-ULONG
-STDCALL
-KeQueryRuntimeThread(
-    IN PKTHREAD Thread,
-    OUT PULONG UserTime
-    );
-
-BOOLEAN
-STDCALL
-KeSetKernelStackSwapEnable(
-    IN BOOLEAN Enable
-    );
-
-BOOLEAN
-STDCALL
-KeDeregisterBugCheckReasonCallback(
-    IN PKBUGCHECK_REASON_CALLBACK_RECORD CallbackRecord
-    );
-
-BOOLEAN
-STDCALL
-KeRegisterBugCheckReasonCallback(
-    IN PKBUGCHECK_REASON_CALLBACK_RECORD CallbackRecord,
-    IN PKBUGCHECK_REASON_CALLBACK_ROUTINE CallbackRoutine,
-    IN KBUGCHECK_CALLBACK_REASON Reason,
-    IN PUCHAR Component
-    );
-
-VOID
-STDCALL
+NTAPI
 KeTerminateThread(
     IN KPRIORITY        Increment
 );
 
 BOOLEAN
-STDCALL
+NTAPI
 KeIsAttachedProcess(VOID);
 
 BOOLEAN
-STDCALL
+NTAPI
 KeIsExecutingDpc(
     VOID
 );
 
 VOID
-STDCALL
+NTAPI
 KeSetEventBoostPriority(
     IN PKEVENT Event,
     IN PKTHREAD *Thread OPTIONAL
 );
 
 PCONFIGURATION_COMPONENT_DATA
-STDCALL
+NTAPI
 KeFindConfigurationNextEntry(
     IN PCONFIGURATION_COMPONENT_DATA Child,
     IN CONFIGURATION_CLASS Class,
@@ -136,7 +99,7 @@ KeFindConfigurationNextEntry(
 );
 
 PCONFIGURATION_COMPONENT_DATA
-STDCALL
+NTAPI
 KeFindConfigurationEntry(
     IN PCONFIGURATION_COMPONENT_DATA Child,
     IN CONFIGURATION_CLASS Class,
@@ -145,57 +108,45 @@ KeFindConfigurationEntry(
 );
 
 VOID
-STDCALL
+NTAPI
 KeFlushEntireTb(
     IN BOOLEAN Unknown,
     IN BOOLEAN CurrentCpuOnly
 );
 
 VOID
-STDCALL
-KeRevertToUserAffinityThread(
-    VOID
-);
-
-VOID
-STDCALL
+NTAPI
 KiCoprocessorError(
     VOID
 );
 
 VOID
-STDCALL
+NTAPI
 KiUnexpectedInterrupt(
     VOID
 );
 
 VOID
-STDCALL
+NTAPI
 KeSetDmaIoCoherency(
     IN ULONG Coherency
 );
 
 VOID
-STDCALL
+NTAPI
 KeSetProfileIrql(
     IN KIRQL ProfileIrql
 );
 
 NTSTATUS
-STDCALL
+NTAPI
 KeSetAffinityThread(
     PKTHREAD Thread,
     KAFFINITY Affinity
 );
 
-VOID
-STDCALL
-KeSetSystemAffinityThread(
-    IN KAFFINITY Affinity
-);
-
 NTSTATUS
-STDCALL
+NTAPI
 KeUserModeCallback(
     IN ULONG FunctionID,
     IN PVOID InputBuffer,
@@ -205,14 +156,14 @@ KeUserModeCallback(
 );
 
 VOID
-STDCALL
+NTAPI
 KeSetTimeIncrement(
     IN ULONG MaxIncrement,
     IN ULONG MinIncrement
 );
 
 VOID
-STDCALL
+NTAPI
 KeInitializeInterrupt(
     PKINTERRUPT InterruptObject,
     PKSERVICE_ROUTINE ServiceRoutine,
@@ -228,19 +179,19 @@ KeInitializeInterrupt(
 );
 
 BOOLEAN
-STDCALL
+NTAPI
 KeConnectInterrupt(
     PKINTERRUPT InterruptObject
 );
 
 BOOLEAN
-STDCALL
+NTAPI
 KeDisconnectInterrupt(
     PKINTERRUPT InterruptObject
 );
 
 PKPROCESS
-STDCALL
+NTAPI
 KeGetCurrentProcess(
     VOID
 );
@@ -252,36 +203,10 @@ KeSetGdtSelector(
     ULONG Value2
 );
 
-LONG
-STDCALL
-KeReadStateMutant(
-    IN PKMUTANT Mutant
-);
-
-VOID
-STDCALL
-KeInitializeMutant(
-    IN PKMUTANT Mutant,
-    IN BOOLEAN InitialOwner
-);
-
-LONG
-STDCALL
-KeReleaseMutant(
-    IN PKMUTANT Mutant,
-    IN KPRIORITY Increment,
-    IN BOOLEAN Abandon,
-    IN BOOLEAN Wait
-);
-
 NTSTATUS
-STDCALL
+NTAPI
 KeRaiseUserException(
     IN NTSTATUS ExceptionCode
     );
-
-VOID
-STDCALL
-KeFlushWriteBuffer(VOID);
 
 #endif

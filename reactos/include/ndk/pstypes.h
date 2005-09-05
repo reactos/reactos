@@ -21,9 +21,8 @@
 /* EXPORTED DATA *************************************************************/
 
 #ifndef NTOS_MODE_USER
-extern NTOSAPI struct _EPROCESS* PsInitialSystemProcess;
-extern NTOSAPI POBJECT_TYPE PsProcessType;
-extern NTOSAPI POBJECT_TYPE PsThreadType;
+extern NTSYSAPI struct _EPROCESS* PsInitialSystemProcess;
+extern NTSYSAPI POBJECT_TYPE PsProcessType;
 #endif
 
 /* CONSTANTS *****************************************************************/
@@ -643,15 +642,15 @@ typedef struct _EPROCESS
 #include <pshpack1.h>
 typedef struct _PS_JOB_TOKEN_FILTER
 {
-    UINT CapturedSidCount;
+    ULONG CapturedSidCount;
     PSID_AND_ATTRIBUTES CapturedSids;
-    UINT CapturedSidsLength;
-    UINT CapturedGroupCount;
+    ULONG CapturedSidsLength;
+    ULONG CapturedGroupCount;
     PSID_AND_ATTRIBUTES CapturedGroups;
-    UINT CapturedGroupsLength;
-    UINT CapturedPrivilegeCount;
+    ULONG CapturedGroupsLength;
+    ULONG CapturedPrivilegeCount;
     PLUID_AND_ATTRIBUTES CapturedPrivileges;
-    UINT CapturedPrivilegesLength;
+    ULONG CapturedPrivilegesLength;
 } PS_JOB_TOKEN_FILTER, *PPS_JOB_TOKEN_FILTER;
 
 typedef struct _EJOB
@@ -664,27 +663,27 @@ typedef struct _EJOB
     LARGE_INTEGER TotalKernelTime;
     LARGE_INTEGER ThisPeriodTotalUserTime;
     LARGE_INTEGER ThisPeriodTotalKernelTime;
-    UINT TotalPageFaultCount;
-    UINT TotalProcesses;
-    UINT ActiveProcesses;
-    UINT TotalTerminatedProcesses;
+    ULONG TotalPageFaultCount;
+    ULONG TotalProcesses;
+    ULONG ActiveProcesses;
+    ULONG TotalTerminatedProcesses;
     LARGE_INTEGER PerProcessUserTimeLimit;
     LARGE_INTEGER PerJobUserTimeLimit;
-    UINT LimitFlags;
-    UINT MinimumWorkingSetSize;
-    UINT MaximumWorkingSetSize;
-    UINT ActiveProcessLimit;
-    UINT Affinity;
-    BYTE PriorityClass;
-    UINT UIRestrictionsClass;
-    UINT SecurityLimitFlags;
+    ULONG LimitFlags;
+    ULONG MinimumWorkingSetSize;
+    ULONG MaximumWorkingSetSize;
+    ULONG ActiveProcessLimit;
+    ULONG Affinity;
+    UCHAR PriorityClass;
+    ULONG UIRestrictionsClass;
+    ULONG SecurityLimitFlags;
     PVOID Token;
     PPS_JOB_TOKEN_FILTER Filter;
-    UINT EndOfJobTimeAction;
+    ULONG EndOfJobTimeAction;
     PVOID CompletionPort;
     PVOID CompletionKey;
-    UINT SessionId;
-    UINT SchedulingClass;
+    ULONG SessionId;
+    ULONG SchedulingClass;
     ULONGLONG ReadOperationCount;
     ULONGLONG WriteOperationCount;
     ULONGLONG OtherOperationCount;
@@ -692,11 +691,11 @@ typedef struct _EJOB
     ULONGLONG WriteTransferCount;
     ULONGLONG OtherTransferCount;
     IO_COUNTERS IoInfo;
-    UINT ProcessMemoryLimit;
-    UINT JobMemoryLimit;
-    UINT PeakProcessMemoryUsed;
-    UINT PeakJobMemoryUsed;
-    UINT CurrentJobMemoryUsed;
+    ULONG ProcessMemoryLimit;
+    ULONG JobMemoryLimit;
+    ULONG PeakProcessMemoryUsed;
+    ULONG PeakJobMemoryUsed;
+    ULONG CurrentJobMemoryUsed;
     KGUARDED_MUTEX MemoryLimitsLock;
     ULONG MemberLevel;
     ULONG JobFlags;

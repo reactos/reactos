@@ -187,6 +187,14 @@ typedef enum _MODE {
   MaximumMode
 } MODE;
 
+typedef struct _QUAD
+{
+    union
+    {
+        LONGLONG UseThisFieldToCopy;
+        float DoNotUseThisField;
+    };
+} QUAD, *PQUAD;
 
 /* Structures not exposed to drivers */
 typedef struct _IO_TIMER *PIO_TIMER;
@@ -356,6 +364,8 @@ typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
 #define SEMAPHORE_MODIFY_STATE (0x0002)
 #define SEMAPHORE_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x3)
 
+#define THREAD_ALERT (0x0004)
+
 /* Exported object types */
 extern NTOSAPI POBJECT_TYPE ExDesktopObjectType;
 extern NTOSAPI POBJECT_TYPE ExEventObjectType;
@@ -366,6 +376,7 @@ extern NTOSAPI POBJECT_TYPE IoDeviceHandlerObjectType;
 extern NTOSAPI POBJECT_TYPE IoDeviceObjectType;
 extern NTOSAPI POBJECT_TYPE IoDriverObjectType;
 extern NTOSAPI POBJECT_TYPE IoFileObjectType;
+extern NTOSAPI POBJECT_TYPE PsThreadType;
 extern NTOSAPI POBJECT_TYPE LpcPortObjectType;
 extern NTOSAPI POBJECT_TYPE MmSectionObjectType;
 extern NTOSAPI POBJECT_TYPE SeTokenObjectType;
@@ -4031,6 +4042,8 @@ typedef enum _KINTERRUPT_MODE {
   LevelSensitive,
   Latched
 } KINTERRUPT_MODE;
+
+#define THREAD_WAIT_OBJECTS 3
 
 typedef VOID
 (DDKAPI *PKINTERRUPT_ROUTINE)(
@@ -7886,31 +7899,6 @@ DDKAPI
 KeAcquireInterruptSpinLock(
   IN PKINTERRUPT  Interrupt);
 
-
-/* System Service Dispatch Table */
-typedef PVOID (NTAPI * SSDT)(VOID);
-typedef SSDT * PSSDT;
-
-/* System Service Parameters Table */
-typedef UCHAR SSPT, * PSSPT;
-
-typedef struct _SSDT_ENTRY {
-	PSSDT  SSDT;
-	PULONG  ServiceCounterTable;
-	ULONG  NumberOfServices;
-	PSSPT  SSPT;
-} SSDT_ENTRY, *PSSDT_ENTRY;
-
-NTOSAPI
-BOOLEAN
-DDKAPI
-KeAddSystemServiceTable(
-  IN PSSDT  SSDT,
-  IN PULONG  ServiceCounterTable,
-  IN ULONG  NumberOfServices,
-  IN PSSPT  SSPT,
-  IN ULONG  TableIndex);
-
 NTOSAPI
 BOOLEAN
 DDKAPI
@@ -7973,6 +7961,11 @@ KeEnterCriticalRegion(
  *   IN BOOLEAN  DmaOperation)
  */
 #define KeFlushIoBuffers(_Mdl, _ReadOperation, _DmaOperation)
+
+NTHALAPI
+VOID
+DDKAPI
+KeFlushWriteBuffer(VOID);
 
 NTOSAPI
 PRKTHREAD
@@ -8130,6 +8123,7 @@ DDKAPI
 KeReadStateMutex(
   IN PRKMUTEX  Mutex);
 
+
 NTOSAPI
 LONG
 DDKAPI
@@ -8226,6 +8220,11 @@ KeRestoreFloatingPointState(
   IN PKFLOATING_SAVE  FloatSave);
 
 NTOSAPI
+VOID
+DDKAPI
+KeRevertToUserAffinityThread(VOID);
+
+NTOSAPI
 NTSTATUS
 DDKAPI
 KeSaveFloatingPointState(
@@ -8259,6 +8258,12 @@ DDKAPI
 KeSetPriorityThread(
   IN PKTHREAD  Thread,
   IN KPRIORITY  Priority);
+
+NTOSAPI
+VOID
+DDKAPI
+KeSetSystemAffinityThread(
+    IN KAFFINITY Affinity);
 
 NTOSAPI
 VOID

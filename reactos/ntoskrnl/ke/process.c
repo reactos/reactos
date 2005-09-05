@@ -17,7 +17,7 @@
 
 /* GLOBALS   *****************************************************************/
 
-SSDT_ENTRY
+KSERVICE_TABLE_DESCRIPTOR
 __declspec(dllexport)
 KeServiceDescriptorTable[SSDT_MAX_ENTRIES] = {
     { MainSSDT, NULL, NUMBER_OF_SYSCALLS, MainSSPT },
@@ -26,7 +26,7 @@ KeServiceDescriptorTable[SSDT_MAX_ENTRIES] = {
     { NULL,     NULL,   0,   NULL   }
 };
 
-SSDT_ENTRY
+KSERVICE_TABLE_DESCRIPTOR
 KeServiceDescriptorTableShadow[SSDT_MAX_ENTRIES] = {
     { MainSSDT, NULL, NUMBER_OF_SYSCALLS, MainSSPT },
     { NULL,     NULL,   0,   NULL   },
@@ -362,24 +362,27 @@ KeUnstackDetachProcess (
 /*
  * @implemented
  */
-BOOLEAN STDCALL
-KeAddSystemServiceTable(PSSDT SSDT,
-                        PULONG ServiceCounterTable,
-                        ULONG NumberOfServices,
-                        PSSPT SSPT,
-                        ULONG TableIndex)
+BOOLEAN
+STDCALL
+KeAddSystemServiceTable(PULONG_PTR Base,
+                        PULONG Count OPTIONAL,
+                        ULONG Limit,
+                        PUCHAR Number,
+                        ULONG Index)
 {
-    /* check if descriptor table entry is free */
-    if ((TableIndex > SSDT_MAX_ENTRIES - 1) ||
-        (KeServiceDescriptorTable[TableIndex].SSDT != NULL) ||
-        (KeServiceDescriptorTableShadow[TableIndex].SSDT != NULL))
+    /* Check if descriptor table entry is free */
+    if ((Index > SSDT_MAX_ENTRIES - 1) ||
+        (KeServiceDescriptorTable[Index].Base) ||
+        (KeServiceDescriptorTableShadow[Index].Base))
+    {
         return FALSE;
+    }
 
-    /* initialize the shadow service descriptor table */
-    KeServiceDescriptorTableShadow[TableIndex].SSDT = SSDT;
-    KeServiceDescriptorTableShadow[TableIndex].SSPT = SSPT;
-    KeServiceDescriptorTableShadow[TableIndex].NumberOfServices = NumberOfServices;
-    KeServiceDescriptorTableShadow[TableIndex].ServiceCounterTable = ServiceCounterTable;
+    /* Initialize the shadow service descriptor table */
+    KeServiceDescriptorTableShadow[Index].Base = Base;
+    KeServiceDescriptorTableShadow[Index].Limit = Limit;
+    KeServiceDescriptorTableShadow[Index].Number = Number;
+    KeServiceDescriptorTableShadow[Index].Count = Count;
 
     return TRUE;
 }
@@ -389,31 +392,31 @@ KeAddSystemServiceTable(PSSDT SSDT,
  */
 BOOLEAN
 STDCALL
-KeRemoveSystemServiceTable(IN ULONG TableIndex)
+KeRemoveSystemServiceTable(IN ULONG Index)
 {
     /* Make sure the Index is valid */
-    if (TableIndex > SSDT_MAX_ENTRIES - 1) return FALSE;
+    if (Index > SSDT_MAX_ENTRIES - 1) return FALSE;
 
     /* Is there a Normal Descriptor Table? */
-    if (!KeServiceDescriptorTable[TableIndex].SSDT) {
-
+    if (!KeServiceDescriptorTable[Index].Base)
+    {
         /* Not with the index, is there a shadow at least? */
-        if (!KeServiceDescriptorTableShadow[TableIndex].SSDT) return FALSE;
+        if (!KeServiceDescriptorTableShadow[Index].Base) return FALSE;
     }
 
     /* Now clear from the Shadow Table. */
-    KeServiceDescriptorTableShadow[TableIndex].SSDT = NULL;
-    KeServiceDescriptorTableShadow[TableIndex].SSPT = NULL;
-    KeServiceDescriptorTableShadow[TableIndex].NumberOfServices = 0;
-    KeServiceDescriptorTableShadow[TableIndex].ServiceCounterTable = NULL;
+    KeServiceDescriptorTableShadow[Index].Base = NULL;
+    KeServiceDescriptorTableShadow[Index].Number = NULL;
+    KeServiceDescriptorTableShadow[Index].Limit = 0;
+    KeServiceDescriptorTableShadow[Index].Count = NULL;
 
     /* Check if we should clean from the Master one too */
-    if (TableIndex == 1) {
-
-        KeServiceDescriptorTable[TableIndex].SSDT = NULL;
-        KeServiceDescriptorTable[TableIndex].SSPT = NULL;
-        KeServiceDescriptorTable[TableIndex].NumberOfServices = 0;
-        KeServiceDescriptorTable[TableIndex].ServiceCounterTable = NULL;
+    if (Index == 1)
+    {
+        KeServiceDescriptorTable[Index].Base = NULL;
+        KeServiceDescriptorTable[Index].Number = NULL;
+        KeServiceDescriptorTable[Index].Limit = 0;
+        KeServiceDescriptorTable[Index].Count = NULL;
     }
 
     return TRUE;

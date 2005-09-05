@@ -14,79 +14,79 @@
 
 /* PROTOTYPES ****************************************************************/
 
-BYTE
-STDCALL
+UCHAR
+NTAPI
 KdPollBreakIn(VOID);
 
 BOOLEAN
-STDCALL
+NTAPI
 KdPortInitialize(
     PKD_PORT_INFORMATION PortInformation,
-    DWORD Unknown1,
-    DWORD Unknown2
+    ULONG Unknown1,
+    ULONG Unknown2
 );
 
 BOOLEAN
-STDCALL
+NTAPI
 KdPortInitializeEx(
     PKD_PORT_INFORMATION PortInformation,
-    DWORD Unknown1,
-    DWORD Unknown2
+    ULONG Unknown1,
+    ULONG Unknown2
 );
 
 BOOLEAN
-STDCALL
+NTAPI
 KdPortGetByte(
     PUCHAR ByteRecieved
 );
 
 BOOLEAN
-STDCALL
+NTAPI
 KdPortGetByteEx(
     PKD_PORT_INFORMATION PortInformation,
     PUCHAR ByteRecieved
 );
 
 BOOLEAN
-STDCALL
+NTAPI
 KdPortPollByte(
     PUCHAR ByteRecieved
 );
 
 BOOLEAN
-STDCALL
+NTAPI
 KdPortPollByteEx(
     PKD_PORT_INFORMATION PortInformation,
     PUCHAR ByteRecieved
 );
 
 VOID
-STDCALL
+NTAPI
 KdPortPutByte(
     UCHAR ByteToSend
 );
 
 VOID
-STDCALL
+NTAPI
 KdPortPutByteEx(
     PKD_PORT_INFORMATION PortInformation,
     UCHAR ByteToSend
 );
 
 VOID
-STDCALL
+NTAPI
 KdPortRestore(VOID);
 
 VOID
-STDCALL
+NTAPI
 KdPortSave (VOID);
 
 BOOLEAN
-STDCALL
+NTAPI
 KdPortDisableInterrupts(VOID);
 
 BOOLEAN
-STDCALL
+NTAPI
 KdPortEnableInterrupts(VOID);
 
 #endif

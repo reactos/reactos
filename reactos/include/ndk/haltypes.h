@@ -12,7 +12,7 @@
 /* DEPENDENCIES **************************************************************/
 
 /* EXPORTED DATA *************************************************************/
-extern ULONG NTOSAPI KdComPortInUse;
+extern ULONG NTSYSAPI KdComPortInUse;
 
 /* CONSTANTS *****************************************************************/
 
@@ -50,9 +50,9 @@ typedef struct _HAL_PRIVATE_DISPATCH
 } HAL_PRIVATE_DISPATCH, *PHAL_PRIVATE_DISPATCH;
 
 #ifdef __NTOSKRNL__
-extern NTOSAPI HAL_PRIVATE_DISPATCH HalPrivateDispatchTable;
+extern HAL_PRIVATE_DISPATCH NTSYSAPI HalPrivateDispatchTable;
 #else
-extern NTOSAPI PHAL_PRIVATE_DISPATCH HalPrivateDispatchTable;
+extern PHAL_PRIVATE_DISPATCH NTSYSAPI HalPrivateDispatchTable;
 #endif
 
 #define HAL_PRIVATE_DISPATCH_VERSION    1

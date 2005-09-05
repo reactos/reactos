@@ -76,7 +76,7 @@ typedef enum _OB_OPEN_REASON
 
 /* Object Callbacks FIXME: Update these soon */
 typedef NTSTATUS
-(STDCALL *OB_OPEN_METHOD)(
+(NTAPI *OB_OPEN_METHOD)(
     OB_OPEN_REASON  Reason,
     PVOID  ObjectBody,
     PEPROCESS  Process,
@@ -85,7 +85,7 @@ typedef NTSTATUS
 );
 
 typedef NTSTATUS
-(STDCALL *OB_PARSE_METHOD)(
+(NTAPI *OB_PARSE_METHOD)(
     PVOID  Object,
     PVOID  *NextObject,
     PUNICODE_STRING  FullPath,
@@ -94,24 +94,24 @@ typedef NTSTATUS
 );
 
 typedef VOID
-(STDCALL *OB_DELETE_METHOD)(
+(NTAPI *OB_DELETE_METHOD)(
     PVOID  DeletedObject
 );
 
 typedef VOID
-(STDCALL *OB_CLOSE_METHOD)(
+(NTAPI *OB_CLOSE_METHOD)(
     PVOID  ClosedObject,
     ULONG  HandleCount
 );
 
 typedef VOID
-(STDCALL *OB_DUMP_METHOD)(VOID);
+(NTAPI *OB_DUMP_METHOD)(VOID);
 
 typedef NTSTATUS
-(STDCALL *OB_OKAYTOCLOSE_METHOD)(VOID);
+(NTAPI *OB_OKAYTOCLOSE_METHOD)(VOID);
 
 typedef NTSTATUS
-(STDCALL *OB_QUERYNAME_METHOD)(
+(NTAPI *OB_QUERYNAME_METHOD)(
     PVOID  ObjectBody,
     POBJECT_NAME_INFORMATION  ObjectNameInfo,
     ULONG  Length,
@@ -119,14 +119,14 @@ typedef NTSTATUS
 );
 
 typedef PVOID
-(STDCALL *OB_FIND_METHOD)(
+(NTAPI *OB_FIND_METHOD)(
     PVOID  WinStaObject,
     PWSTR  Name,
     ULONG  Attributes
 );
 
 typedef NTSTATUS
-(STDCALL *OB_SECURITY_METHOD)(
+(NTAPI *OB_SECURITY_METHOD)(
     PVOID Object,
     SECURITY_OPERATION_CODE OperationType,
     SECURITY_INFORMATION SecurityInformation,
@@ -139,7 +139,7 @@ typedef NTSTATUS
 
 /* FIXME: TEMPORARY HACK */
 typedef NTSTATUS
-(STDCALL *OB_CREATE_METHOD)(
+(NTAPI *OB_CREATE_METHOD)(
     PVOID  ObjectBody,
     PVOID  Parent,
     PWSTR  RemainingPath,
@@ -197,7 +197,7 @@ typedef struct _OBJECT_CREATE_INFORMATION
 
 typedef struct _OBJECT_TYPE_INITIALIZER
 {
-    WORD Length;
+    USHORT Length;
     UCHAR UseDefaultObject;
     UCHAR CaseInsensitive;
     ULONG InvalidAttributes;
@@ -264,15 +264,6 @@ typedef struct _OBJECT_HEADER_CREATOR_INFO
     USHORT Reserved;
 } OBJECT_HEADER_CREATOR_INFO, *POBJECT_HEADER_CREATOR_INFO;
 
-typedef struct _QUAD
-{
-    union
-    {
-        LONGLONG UseThisFieldToCopy;
-        float DoNotUseThisField;
-    };
-} QUAD, *PQUAD;
-
 typedef struct _OBJECT_HEADER
 {
     LIST_ENTRY Entry; /* FIXME: REMOVE THIS SOON */
@@ -328,8 +319,8 @@ typedef struct _DEVICE_MAP
 
 /* EXPORTED DATA *************************************************************/
 
-extern NTOSAPI POBJECT_TYPE ObDirectoryType;
-extern NTOSAPI PDEVICE_MAP ObSystemDeviceMap;
+extern POBJECT_TYPE NTSYSAPI ObDirectoryType;
+extern PDEVICE_MAP NTSYSAPI ObSystemDeviceMap;
 #endif
 
 #endif

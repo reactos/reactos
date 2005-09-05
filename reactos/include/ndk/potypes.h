@@ -10,7 +10,7 @@
 #define _POTYPES_H
 
 /* DEPENDENCIES **************************************************************/
-#include <ddk/ntpoapi.h>
+#include <ntpoapi.h>
 
 /* EXPORTED DATA *************************************************************/
 

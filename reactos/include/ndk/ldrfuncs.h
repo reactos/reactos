@@ -17,7 +17,7 @@
 /* PROTOTYPES ****************************************************************/
 
 NTSTATUS
-STDCALL
+NTAPI
 LdrAccessResource(
     IN  PVOID BaseAddress,
     IN  PIMAGE_RESOURCE_DATA_ENTRY ResourceDataEntry,
@@ -26,7 +26,7 @@ LdrAccessResource(
 );
 
 NTSTATUS
-STDCALL
+NTAPI
 LdrFindResource_U(
     IN  PVOID BaseAddress,
     IN  PLDR_RESOURCE_INFO ResourceInfo,
@@ -35,7 +35,7 @@ LdrFindResource_U(
 );
 
 NTSTATUS
-STDCALL 
+NTAPI 
 LdrFindResourceDirectory_U(
     IN PVOID BaseAddress,
     IN PLDR_RESOURCE_INFO ResourceInfo,
@@ -44,7 +44,7 @@ LdrFindResourceDirectory_U(
 );
 
 NTSTATUS
-STDCALL
+NTAPI
 LdrGetProcedureAddress(
     IN PVOID BaseAddress,
     IN PANSI_STRING Name,

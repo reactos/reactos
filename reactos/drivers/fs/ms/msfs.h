@@ -2,7 +2,7 @@
 #define __SERVICES_FS_MS_MSFS_H
 
 #include <ntifs.h>
-#include <ndk/iotypes.h>
+#include <ndk/ntndk.h>
 
 /* 
  * FIXME: GCC doesn't have a working option for defaulting to a calling
