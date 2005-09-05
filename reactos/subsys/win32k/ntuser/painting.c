@@ -559,7 +559,6 @@ IntFindWindowToRepaint(HWND hWnd, PW32THREAD Thread)
       return hWnd;
    }
 
-   IntLockRelatives(Window);
    for (Child = Window->FirstChild; Child; Child = Child->NextSibling)
    {
       if (IntIsWindowDirty(Child) &&
@@ -569,7 +568,6 @@ IntFindWindowToRepaint(HWND hWnd, PW32THREAD Thread)
          break;
       }
    }
-   IntUnLockRelatives(Window);
 
    if (hFoundWnd == NULL)
    {

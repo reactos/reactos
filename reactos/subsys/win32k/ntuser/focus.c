@@ -126,19 +126,15 @@ IntFindChildWindowToOwner(PWINDOW_OBJECT Root, PWINDOW_OBJECT Owner)
 {
   HWND Ret;
   PWINDOW_OBJECT Child, OwnerWnd;
-  IntLockRelatives(Root);
 
   for(Child = Root->FirstChild; Child; Child = Child->NextSibling)
   {
-    IntLockRelatives(Child);
     OwnerWnd = IntGetWindowObject(Child->Owner);
-    IntUnLockRelatives(Child);
     if(!OwnerWnd)
       continue;
 
     if(OwnerWnd == Owner)
     {
-      IntUnLockRelatives(Root);
       Ret = Child->Self;
       IntReleaseWindowObject(OwnerWnd);
       return Ret;
@@ -146,7 +142,6 @@ IntFindChildWindowToOwner(PWINDOW_OBJECT Root, PWINDOW_OBJECT Owner)
     IntReleaseWindowObject(OwnerWnd);
   }
 
-  IntUnLockRelatives(Root);
   return NULL;
 }
 

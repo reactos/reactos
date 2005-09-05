@@ -165,17 +165,14 @@ co_WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
   while (Wnd != NULL)
   {
     Old = Wnd;
-    IntLockRelatives(Old);
     if (Old->NextSibling == NULL)
     {
       Wnd = NULL;
-      IntUnLockRelatives(Old);
       if (Old != Window)
         IntReleaseWindowObject(Old);
       break;
     }
     Wnd = IntGetWindowObject(Old->NextSibling->Self);
-    IntUnLockRelatives(Old);
     if (Old != Window)
       IntReleaseWindowObject(Old);
     if ((Wnd->Style & (WS_DISABLED | WS_VISIBLE)) == WS_VISIBLE &&
@@ -719,12 +716,10 @@ WinPosInternalMoveWindow(PWINDOW_OBJECT Window, INT MoveX, INT MoveY)
    Window->ClientRect.top += MoveY;
    Window->ClientRect.bottom += MoveY;
 
-   IntLockRelatives(Window);
    for(Child = Window->FirstChild; Child; Child = Child->NextSibling)
    {
      WinPosInternalMoveWindow(Child, MoveX, MoveY);
    }
-   IntUnLockRelatives(Window);
 }
 
 /*
@@ -958,7 +953,6 @@ co_WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
                   || HWND_NOTOPMOST == WinPos.hwndInsertAfter)
          {
             InsertAfterWindow = NULL;
-            IntLockRelatives(ParentWindow);
             Sibling = ParentWindow->FirstChild;
             while (NULL != Sibling && 0 != (Sibling->ExStyle & WS_EX_TOPMOST))
             {
@@ -969,11 +963,9 @@ co_WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
             {
               IntReferenceWindowObject(InsertAfterWindow);
             }
-            IntUnLockRelatives(ParentWindow);
          }
          else if (WinPos.hwndInsertAfter == HWND_BOTTOM)
          {
-            IntLockRelatives(ParentWindow);
             if(ParentWindow->LastChild)
             {
                IntReferenceWindowObject(ParentWindow->LastChild);
@@ -981,7 +973,6 @@ co_WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
             }
             else
               InsertAfterWindow = NULL;
-            IntUnLockRelatives(ParentWindow);
          }
          else
             InsertAfterWindow = IntGetWindowObject(WinPos.hwndInsertAfter);

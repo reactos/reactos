@@ -57,7 +57,6 @@ ClassReferenceClassByAtom(
    PLIST_ENTRY CurrentEntry;
    PW32PROCESS Process = PsGetWin32Process();
 
-   IntLockProcessClasses(Process);
    CurrentEntry = Process->ClassListHead.Flink;
    while (CurrentEntry != &Process->ClassListHead)
    {
@@ -67,7 +66,6 @@ ClassReferenceClassByAtom(
       {
          *Class = Current;
          ObmReferenceObject(Current);
-         IntUnLockProcessClasses(Process);
          return TRUE;
       }
 
@@ -76,7 +74,6 @@ ClassReferenceClassByAtom(
 
       CurrentEntry = CurrentEntry->Flink;
    }
-   IntUnLockProcessClasses(Process);
 
    if (BestMatch != NULL)
    {
@@ -369,7 +366,6 @@ IntCreateClass(
 	}
 
 	InitializeListHead(&ClassObject->ClassWindowsListHead);
-	ExInitializeFastMutex(&ClassObject->ClassWindowsListLock);
 
 	return(ClassObject);
 }
@@ -463,9 +459,8 @@ NtUserRegisterClassExWOW(
     DPRINT("Failed creating window class object\n");
     RETURN((RTL_ATOM)0);
   }
-  IntLockProcessClasses(PsGetWin32Process());
+
   InsertTailList(&PsGetWin32Process()->ClassListHead, &ClassObject->ListEntry);
-  IntUnLockProcessClasses(PsGetWin32Process());
 
   RETURN(Atom);
 
@@ -734,16 +729,13 @@ NtUserUnregisterClass(
       RETURN( FALSE);
    }
 
-  IntLockClassWindows(Class);
    if (!IsListEmpty(&Class->ClassWindowsListHead))
    {
-      IntUnLockClassWindows(Class);
       /* Dereference the ClassReferenceClassByNameOrAtom() call */
       ObmDereferenceObject(Class);
       SetLastWin32Error(ERROR_CLASS_HAS_WINDOWS);
       RETURN( FALSE);
    }
-   IntUnLockClassWindows(Class);
 
    /* Dereference the ClassReferenceClassByNameOrAtom() call */
    ClassDereferenceObject(Class);

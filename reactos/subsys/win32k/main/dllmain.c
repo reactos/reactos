@@ -71,10 +71,8 @@ Win32kProcessCallback(struct _EPROCESS *Process,
       DPRINT("Creating W32 process PID:%d at IRQ level: %lu\n", Process->UniqueProcessId, KeGetCurrentIrql());
 
       InitializeListHead(&Win32Process->ClassListHead);
-      ExInitializeFastMutex(&Win32Process->ClassListLock);
 
       InitializeListHead(&Win32Process->MenuListHead);
-      ExInitializeFastMutex(&Win32Process->MenuListLock);
 
       InitializeListHead(&Win32Process->PrivateFontListHead);
       ExInitializeFastMutex(&Win32Process->PrivateFontListLock);
@@ -217,7 +215,6 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
       Win32Thread->KeyboardLayout = W32kGetDefaultKeyLayout();
       Win32Thread->MessagePumpHookValue = 0;
       InitializeListHead(&Win32Thread->WindowListHead);
-      ExInitializeFastMutex(&Win32Thread->WindowListLock);
       InitializeListHead(&Win32Thread->W32CallbackListHead);
     }
   else

@@ -92,7 +92,6 @@ VIS_ComputeVisibleRegion(
       if ((PreviousWindow->Style & WS_CLIPSIBLINGS) ||
           (PreviousWindow == Window && ClipSiblings))
       {
-         IntLockRelatives(CurrentWindow);
          CurrentSibling = CurrentWindow->FirstChild;
          while (CurrentSibling != NULL && CurrentSibling != PreviousWindow)
          {
@@ -111,7 +110,6 @@ VIS_ComputeVisibleRegion(
             }
             CurrentSibling = CurrentSibling->NextSibling;
          }
-         IntUnLockRelatives(CurrentWindow);
       }
 
       PreviousWindow = CurrentWindow;
@@ -121,7 +119,6 @@ VIS_ComputeVisibleRegion(
 
    if (ClipChildren)
    {
-      IntLockRelatives(Window);
       CurrentWindow = Window->FirstChild;
       while (CurrentWindow)
       {
@@ -140,7 +137,6 @@ VIS_ComputeVisibleRegion(
          }
          CurrentWindow = CurrentWindow->NextSibling;
       }
-      IntUnLockRelatives(Window);
    }
 
    if(Window->WindowRegion && !(Window->Style & WS_MINIMIZE))

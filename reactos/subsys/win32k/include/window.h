@@ -67,8 +67,6 @@ typedef struct _WINDOW_OBJECT
   FAST_MUTEX UpdateLock;
   /* Pointer to the owning thread's message queue. */
   PUSER_MESSAGE_QUEUE MessageQueue;
-  /* Lock for the list of child windows. */
-  FAST_MUTEX RelativesLock;
   struct _WINDOW_OBJECT* FirstChild;
   struct _WINDOW_OBJECT* LastChild;
   struct _WINDOW_OBJECT* NextSibling;
@@ -83,7 +81,6 @@ typedef struct _WINDOW_OBJECT
   PDCE Dce;
   /* Property list head.*/
   LIST_ENTRY PropListHead;
-  FAST_MUTEX PropListLock;
   ULONG PropListItems;
   /* Scrollbar info */
   PWINDOW_SCROLLINFO Scroll;
@@ -147,18 +144,6 @@ typedef struct _WINDOW_OBJECT
 
 #define IntGetWndProcessId(WndObj) \
   WndObj->OwnerThread->ThreadsProcess->UniqueProcessId
-
-#define IntLockRelatives(WndObj) \
-  ExAcquireFastMutex(&WndObj->RelativesLock)
-
-#define IntUnLockRelatives(WndObj) \
-  ExReleaseFastMutex(&WndObj->RelativesLock)
-
-#define IntLockThreadWindows(Thread) \
-  ExAcquireFastMutex(&Thread->WindowListLock)
-
-#define IntUnLockThreadWindows(Thread) \
-  ExReleaseFastMutex(&Thread->WindowListLock)
 
 
 PWINDOW_OBJECT FASTCALL

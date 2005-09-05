@@ -91,8 +91,6 @@ NtUserBuildPropList(HWND hWnd,
     }
 
     /* copy list */
-    IntLockWindowProperties(WindowObject);
-
     li = (PROPLISTITEM *)Buffer;
     ListEntry = WindowObject->PropListHead.Flink;
     while((BufferSize >= sizeof(PROPLISTITEM)) && (ListEntry != &WindowObject->PropListHead))
@@ -104,7 +102,6 @@ NtUserBuildPropList(HWND hWnd,
       Status = MmCopyToCaller(li, &listitem, sizeof(PROPLISTITEM));
       if(!NT_SUCCESS(Status))
       {
-        IntUnLockWindowProperties(WindowObject);
         IntReleaseWindowObject(WindowObject);
         RETURN( Status);
       }
@@ -115,13 +112,10 @@ NtUserBuildPropList(HWND hWnd,
       ListEntry = ListEntry->Flink;
     }
 
-    IntUnLockWindowProperties(WindowObject);
   }
   else
   {
-    IntLockWindowProperties(WindowObject);
     Cnt = WindowObject->PropListItems * sizeof(PROPLISTITEM);
-    IntUnLockWindowProperties(WindowObject);
   }
 
   IntReleaseWindowObject(WindowObject);
@@ -160,12 +154,10 @@ NtUserRemoveProp(HWND hWnd, ATOM Atom)
     RETURN( NULL);
   }
 
-  IntLockWindowProperties(WindowObject);
   Prop = IntGetProp(WindowObject, Atom);
 
   if (Prop == NULL)
     {
-      IntUnLockWindowProperties(WindowObject);
       IntReleaseWindowObject(WindowObject);
       RETURN(NULL);
     }
@@ -173,7 +165,6 @@ NtUserRemoveProp(HWND hWnd, ATOM Atom)
   RemoveEntryList(&Prop->PropListEntry);
   ExFreePool(Prop);
   WindowObject->PropListItems--;
-  IntUnLockWindowProperties(WindowObject);
   IntReleaseWindowObject(WindowObject);
   RETURN(Data);
   
@@ -200,13 +191,11 @@ NtUserGetProp(HWND hWnd, ATOM Atom)
     RETURN( FALSE);
   }
 
-  IntLockWindowProperties(WindowObject);
   Prop = IntGetProp(WindowObject, Atom);
   if (Prop != NULL)
   {
     Data = Prop->Data;
   }
-  IntUnLockWindowProperties(WindowObject);
   IntReleaseWindowObject(WindowObject);
   RETURN(Data);
   
@@ -256,9 +245,7 @@ NtUserSetProp(HWND hWnd, ATOM Atom, HANDLE Data)
     RETURN( FALSE);
   }
 
-  IntLockWindowProperties(WindowObject);
   ret = IntSetProp(WindowObject, Atom, Data);
-  IntUnLockWindowProperties(WindowObject);
 
   IntReleaseWindowObject(WindowObject);
   RETURN( ret);
