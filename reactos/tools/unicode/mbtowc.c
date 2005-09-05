@@ -251,9 +251,11 @@ static int mbstowcs_dbcs_decompose( const struct dbcs_table *table,
 
 /* return -1 on dst buffer overflow, -2 on invalid input char */
 int wine_cp_mbstowcs( const union cptable *table, int flags,
-                      const char *src, int srclen,
+                      const char *s, int srclen,
                       WCHAR *dst, int dstlen )
 {
+    const unsigned char *src = (const unsigned char*) s;
+
     if (table->info.char_size == 1)
     {
         if (flags & MB_ERR_INVALID_CHARS)

@@ -198,12 +198,16 @@ static int wcstombs_sbcs_slow( const struct sbcs_table *table, int flags,
 {
     const unsigned char  * const uni2cp_low = table->uni2cp_low;
     const unsigned short * const uni2cp_high = table->uni2cp_high;
-    const unsigned char table_default = table->info.def_char & 0xff;
+    unsigned char def;
     unsigned int len;
     int tmp;
     WCHAR composed;
 
-    if (!defchar) defchar = (const char*)&table_default;
+    if (!defchar)
+        def = table->info.def_char & 0xff;
+    else
+        def = *defchar;
+
     if (!used) used = &tmp;  /* avoid checking on every char */
     *used = 0;
 
@@ -225,7 +229,7 @@ static int wcstombs_sbcs_slow( const struct sbcs_table *table, int flags,
             /* no mapping for the composed char, check the other flags */
             if (flags & WC_DEFAULTCHAR) /* use the default char instead */
             {
-                *dst = *defchar;
+                *dst = def;
                 *used = 1;
                 src++;  /* skip the non-spacing char */
                 srclen--;
@@ -242,7 +246,7 @@ static int wcstombs_sbcs_slow( const struct sbcs_table *table, int flags,
         *dst = uni2cp_low[uni2cp_high[wch >> 8] + (wch & 0xff)];
         if (!is_valid_sbcs_mapping( table, flags, wch, *dst ))
         {
-            *dst = *defchar;
+            *dst = def;
             *used = 1;
         }
     }
