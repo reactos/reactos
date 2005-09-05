@@ -154,12 +154,15 @@ void ME_Repaint(ME_TextEditor *editor)
   if (ME_WrapMarkedParagraphs(editor)) {
     ME_UpdateScrollBar(editor);
   }
-  hDC = GetDC(editor->hWnd);
-  ME_HideCaret(editor);
-  ME_PaintContent(editor, hDC, TRUE, NULL);
-  ReleaseDC(editor->hWnd, hDC);
-  ME_ShowCaret(editor);
-  ME_EnsureVisible(editor, pCursor->pRun);
+  if (editor->bRedraw)
+  {
+    hDC = GetDC(editor->hWnd);
+    ME_HideCaret(editor);
+    ME_PaintContent(editor, hDC, TRUE, NULL);
+    ReleaseDC(editor->hWnd, hDC);
+    ME_ShowCaret(editor);
+    ME_EnsureVisible(editor, pCursor->pRun);
+  }
 }
 
 void ME_UpdateRepaint(ME_TextEditor *editor)
@@ -415,10 +418,13 @@ void ME_Scroll(ME_TextEditor *editor, int cx, int cy)
   GetScrollInfo(hWnd, SB_VERT, &si);
   si.nPos = editor->nScrollPosY -= cy;
   SetScrollInfo(hWnd, SB_VERT, &si, TRUE);
-  if (abs(cy) > editor->sizeWindow.cy)
-    InvalidateRect(editor->hWnd, NULL, TRUE);
-  else
-    ScrollWindowEx(hWnd, cx, cy, NULL, NULL, NULL, NULL, SW_ERASE|SW_INVALIDATE);
+  if (editor->bRedraw)
+  {
+    if (abs(cy) > editor->sizeWindow.cy)
+      InvalidateRect(editor->hWnd, NULL, TRUE);
+    else
+      ScrollWindowEx(hWnd, cx, cy, NULL, NULL, NULL, NULL, SW_ERASE|SW_INVALIDATE);
+  }
 }
 
 void ME_UpdateScrollBar(ME_TextEditor *editor)
@@ -495,14 +501,20 @@ void ME_EnsureVisible(ME_TextEditor *editor, ME_DisplayItem *pRun)
   if (yrel < 0) {
     editor->nScrollPosY = y;
     SetScrollPos(hWnd, SB_VERT, y, TRUE);
-    ScrollWindow(hWnd, 0, -yrel, NULL, NULL);
-    UpdateWindow(hWnd);
+    if (editor->bRedraw)
+    {
+      ScrollWindow(hWnd, 0, -yrel, NULL, NULL);
+      UpdateWindow(hWnd);
+    }
   } else if (yrel + yheight > editor->sizeWindow.cy) {
     int newy = y+yheight-editor->sizeWindow.cy;
     editor->nScrollPosY = newy;
     SetScrollPos(hWnd, SB_VERT, newy, TRUE);
-    ScrollWindow(hWnd, 0, -(newy-yold), NULL, NULL);
-    UpdateWindow(hWnd);
+    if (editor->bRedraw)
+    {
+      ScrollWindow(hWnd, 0, -(newy-yold), NULL, NULL);
+      UpdateWindow(hWnd);
+    }
   }
 }
         

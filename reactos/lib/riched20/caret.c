@@ -325,6 +325,28 @@ void ME_InsertGraphicsFromCursor(ME_TextEditor *editor, int nCursor)
   ME_SendSelChange(editor);
 }
 
+
+static void
+ME_InternalInsertTextFromCursor(ME_TextEditor *editor, int nCursor,
+                                const WCHAR *str, int len, ME_Style *style,
+                                int flags)
+{
+  ME_DisplayItem *pNewRun = NULL;
+  ME_Cursor *p = &editor->pCursors[nCursor];
+
+  editor->bCaretAtEnd = FALSE;
+  
+  assert(p->pRun->type == diRun);
+  
+  ME_AddRefStyle(style);
+  
+  pNewRun = ME_MakeRun(style, ME_MakeStringN(str, len), flags); /* addrefs style */
+  ME_InsertRun(editor, ME_CharOfsFromRunOfs(editor, p->pRun, p->nOffset), pNewRun);
+  ME_DestroyDisplayItem(pNewRun);
+  ME_ReleaseStyle(style);
+}
+
+
 void ME_InsertTextFromCursor(ME_TextEditor *editor, int nCursor, 
   const WCHAR *str, int len, ME_Style *style)
 {
@@ -332,10 +354,7 @@ void ME_InsertTextFromCursor(ME_TextEditor *editor, int nCursor,
   ME_Cursor *p = NULL;
 
   assert(style);
-  editor->bCaretAtEnd = FALSE;
 
-  ME_AddRefStyle(style);
-  
   /* FIXME really HERE ? */
   if (ME_IsSelection(editor))
     ME_DeleteSelection(editor);
@@ -343,75 +362,61 @@ void ME_InsertTextFromCursor(ME_TextEditor *editor, int nCursor,
   assert(nCursor>=0 && nCursor<editor->nCursors);
   if (len == -1)
     len = lstrlenW(str);
-  pos = str;
-  /* FIXME this sucks - no respect for unicode (what else can be a line separator in unicode?) */
-  while(pos-str < len && *pos != '\r' && *pos != '\n' && *pos != '\t')
-    pos++;
-  if (pos-str < len && *pos == '\t') { /* handle tabs */
-    ME_DisplayItem *pNewRun = NULL;
-    WCHAR tab = '\t';
+  while (len)
+  {
+    pos = str;
+    /* FIXME this sucks - no respect for unicode (what else can be a line separator in unicode?) */
+    while(pos-str < len && *pos != '\r' && *pos != '\n' && *pos != '\t')
+      pos++;
+    if (pos-str < len && *pos == '\t') { /* handle tabs */
+      WCHAR tab = '\t';
 
-    if (pos!=str)
-      ME_InsertTextFromCursor(editor, nCursor, str, pos-str, style);
+      if (pos!=str)
+        ME_InternalInsertTextFromCursor(editor, nCursor, str, pos-str, style, 0);
     
-    p = &editor->pCursors[nCursor];
-    assert(style);
-    assert(p->pRun->type == diRun);
-    pNewRun = ME_MakeRun(style, ME_MakeStringN(&tab, 1), MERF_TAB); /* addrefs style */
-    ME_InsertRun(editor, ME_CharOfsFromRunOfs(editor, p->pRun, p->nOffset), pNewRun);
-    ME_DestroyDisplayItem(pNewRun);
-    ME_ReleaseStyle(style);
-
-    pos++;
-    if(pos-str < len) {
-      ME_InsertTextFromCursor(editor, nCursor, pos, len-(pos-str), style);
+      ME_InternalInsertTextFromCursor(editor, nCursor, &tab, 1, style, MERF_TAB);
+ 
+      pos++;
+      if(pos-str <= len) {
+        len -= pos - str;
+        str = pos;
+        continue;
+      }
     }
-    return;
-  }
-  if (pos-str < len) {   /* handle EOLs */
-    ME_DisplayItem *tp, *end_run;
-    ME_Paragraph *para;
-    ME_Style *tmp_style;
-    if (pos!=str)
-      ME_InsertTextFromCursor(editor, nCursor, str, pos-str, style);
-    p = &editor->pCursors[nCursor];
-    tp = ME_FindItemBack(p->pRun, diParagraph);
-    para = &tp->member.para;
-    assert(tp);
-    if (p->nOffset) {
-      ME_SplitRunSimple(editor, p->pRun, p->nOffset);
+    if (pos-str < len) {   /* handle EOLs */
+      ME_DisplayItem *tp, *end_run;
+      ME_Paragraph *para;
+      ME_Style *tmp_style;
+      if (pos!=str)
+        ME_InternalInsertTextFromCursor(editor, nCursor, str, pos-str, style, 0);
       p = &editor->pCursors[nCursor];
+      tp = ME_FindItemBack(p->pRun, diParagraph);
+      para = &tp->member.para;
+      assert(tp);
+      if (p->nOffset) {
+        ME_SplitRunSimple(editor, p->pRun, p->nOffset);
+        p = &editor->pCursors[nCursor];
+      }
+      tmp_style = ME_GetInsertStyle(editor, nCursor);
+      /* ME_SplitParagraph increases style refcount */
+      tp = ME_SplitParagraph(editor, p->pRun, p->pRun->member.run.style);
+      p->pRun = ME_FindItemFwd(tp, diRun);
+      end_run = ME_FindItemBack(tp, diRun);
+      ME_ReleaseStyle(end_run->member.run.style);
+      end_run->member.run.style = tmp_style;
+      p->nOffset = 0;
+      if(pos-str < len && *pos =='\r')
+        pos++;
+      if(pos-str < len && *pos =='\n')
+        pos++;
+      if(pos-str <= len) {
+        len -= pos - str;
+        str = pos;
+        continue;
+      }
     }
-    tmp_style = ME_GetInsertStyle(editor, nCursor);
-    /* ME_SplitParagraph increases style refcount */
-    tp = ME_SplitParagraph(editor, p->pRun, p->pRun->member.run.style);
-    p->pRun = ME_FindItemFwd(tp, diRun);
-    end_run = ME_FindItemBack(tp, diRun);
-    ME_ReleaseStyle(end_run->member.run.style);
-    end_run->member.run.style = tmp_style;
-    p->nOffset = 0;
-    if(pos-str < len && *pos =='\r')
-      pos++;
-    if(pos-str < len && *pos =='\n')
-      pos++;
-    if(pos-str < len) {
-      ME_InsertTextFromCursor(editor, nCursor, pos, len-(pos-str), style);
-    }
-    ME_ReleaseStyle(style);
-    return;
-  }
-  p = &editor->pCursors[nCursor];
-  if (style) {
-    ME_DisplayItem *pNewRun = NULL;
-
-    assert(p->pRun->type == diRun);
-    pNewRun = ME_MakeRun(style, ME_MakeStringN(str, len), 0); /* addrefs style */
-    ME_InsertRun(editor, ME_CharOfsFromRunOfs(editor, p->pRun, p->nOffset), pNewRun);
-    ME_DestroyDisplayItem(pNewRun);
-    ME_ReleaseStyle(style);
-    return;
-  } else {
-    assert(0);
+    ME_InternalInsertTextFromCursor(editor, nCursor, str, len, style, 0);
+    len = 0;
   }
 }
 
@@ -583,6 +588,22 @@ int ME_FindPixelPos(ME_TextEditor *editor, int x, int y, ME_Cursor *result, BOOL
   assert(result->pRun->member.run.nFlags & MERF_ENDPARA);
   return 0;
 }
+
+
+int
+ME_CharFromPos(ME_TextEditor *editor, int x, int y)
+{
+  ME_Cursor cursor;
+  RECT rc;
+
+  GetClientRect(editor->hWnd, &rc);
+  if (x < 0 || y < 0 || x >= rc.right || y >= rc.bottom)
+    return -1;
+  ME_FindPixelPos(editor, x, y, &cursor, NULL);
+  return (ME_GetParagraph(cursor.pRun)->member.para.nCharOfs
+          + cursor.pRun->member.run.nCharOfs + cursor.nOffset);
+}
+
 
 void ME_LButtonDown(ME_TextEditor *editor, int x, int y)
 {

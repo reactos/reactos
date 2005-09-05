@@ -296,6 +296,7 @@ extern "C" {
 #define TM_MULTICODEPAGE	32
 #define GT_DEFAULT	0
 #define GT_USECRLF	1
+#define GT_SELECTION	2
 #define yHeightCharPtsMost 1638
 #define lDefaultTab 720
 

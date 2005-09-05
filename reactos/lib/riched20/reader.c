@@ -257,6 +257,7 @@ void RTFInit(RTF_Info *info)
         info->ansiCodePage = 1252; /* Latin-1; actually unused */
 	info->unicodeLength = 1; /* \uc1 is the default */
 	info->codePage = info->ansiCodePage;
+        info->defFont = 0;
 
 	info->rtfClass = -1;
 	info->pushedClass = -1;
@@ -1005,6 +1006,14 @@ static void ReadFontTbl(RTF_Info *info)
 			if (!RTFCheckCM (info, rtfGroup, rtfEndGroup))
 				RTFPanic (info, "%s: missing \"}\"", fn);
 		}
+
+                /* Apply the real properties of the default font */
+                if (fp->rtfFNum == info->defFont)
+                {
+                        if (info->ansiCodePage != CP_UTF8)
+                                info->codePage = fp->rtfFCodePage;
+                        TRACE("default font codepage %d\n", info->codePage);
+                }
 	}
 	if (fp->rtfFNum == -1)
 		RTFPanic (info,"%s: missing font number", fn);
@@ -1012,6 +1021,14 @@ static void ReadFontTbl(RTF_Info *info)
  * Could check other pieces of structure here, too, I suppose.
  */
 	RTFRouteToken (info);	/* feed "}" back to router */
+
+        /* Set default font */
+	info->rtfClass = rtfControl;
+	info->rtfMajor = rtfCharAttr;
+	info->rtfMinor = rtfFontNum;
+	info->rtfParam = info->defFont;
+	lstrcpyA(info->rtfTextBuf, "f");
+        RTFUngetToken(info);
 }
 
 
@@ -2467,6 +2484,7 @@ void RTFPanic(RTF_Info *info, const char *fmt, ...)
 
 static void	TextClass (RTF_Info *info);
 static void	ControlClass (RTF_Info *info);
+static void     DefFont(RTF_Info *info);
 static void	Destination (RTF_Info *info);
 static void	SpecialChar (RTF_Info *info);
 static void	RTFPutUnicodeChar (RTF_Info *info, int c);
@@ -2516,6 +2534,9 @@ ControlClass (RTF_Info *info)
         case rtfCharSet:
                 CharSet(info);
                 break;
+        case rtfDefFont:
+                DefFont(info);
+                break;
 	case rtfDestination:
 		Destination (info);
 		break;
@@ -2542,6 +2563,7 @@ CharAttr(RTF_Info *info)
                 {
                         if (info->ansiCodePage != CP_UTF8)
                                 info->codePage = font->rtfFCodePage;
+                        TRACE("font %d codepage %d\n", info->rtfParam, info->codePage);
                 }
                 else
                         RTFMsg(info, "unknown font %d\n", info->rtfParam);
@@ -2556,6 +2578,9 @@ CharAttr(RTF_Info *info)
 static void
 CharSet(RTF_Info *info)
 {
+	if (info->ansiCodePage == CP_UTF8)
+		return;
+ 
         switch (info->rtfMinor)
         {
         case rtfAnsiCharSet:
@@ -2589,15 +2614,25 @@ Destination (RTF_Info *info)
 
 
 static void
+DefFont(RTF_Info *info)
+{
+        TRACE("%d\n", info->rtfParam);
+        info->defFont = info->rtfParam;
+}
+
+
+static void
 DocAttr(RTF_Info *info)
 {
+        TRACE("minor %d, param %d\n", info->rtfMinor, info->rtfParam);
+
         switch (info->rtfMinor)
         {
         case rtfAnsiCodePage:
-                info->ansiCodePage = info->rtfParam;
+                info->codePage = info->ansiCodePage = info->rtfParam;
                 break;
         case rtfUTF8RTF:
-                info->ansiCodePage = CP_UTF8;
+                info->codePage = info->ansiCodePage = CP_UTF8;
                 break;
         }
 }
@@ -2704,10 +2739,9 @@ RTFPutUnicodeString(RTF_Info *info, WCHAR *string, int length)
                 int fit = min(length, sizeof(info->OutputBuffer) / sizeof(WCHAR) - info->dwOutputCount);
 
                 memmove(info->OutputBuffer + info->dwOutputCount, string, fit * sizeof(WCHAR));
+                info->dwOutputCount += fit;
                 if (fit == sizeof(info->OutputBuffer) / sizeof(WCHAR) - info->dwOutputCount)
                         RTFFlushUnicodeOutputBuffer(info);
-                else
-                        info->dwOutputCount += fit;
                 length -= fit;
                 string += fit;
         }

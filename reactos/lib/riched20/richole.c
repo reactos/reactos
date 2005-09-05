@@ -37,7 +37,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 
 typedef struct IRichEditOleImpl {
     const IRichEditOleVtbl *lpVtbl;
-    DWORD ref;
+    LONG ref;
 } IRichEditOleImpl;
 
 /* there is no way to be consistent across different sets of headers - mingw, Wine, Win32 SDK*/
