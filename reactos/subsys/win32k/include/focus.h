@@ -16,10 +16,10 @@ HWND FASTCALL
 IntGetThreadFocusWindow();
 
 BOOL FASTCALL
-IntMouseActivateWindow(PWINDOW_OBJECT Window);
+co_IntMouseActivateWindow(PWINDOW_OBJECT Window);
 BOOL FASTCALL
-IntSetForegroundWindow(PWINDOW_OBJECT Window);
+co_IntSetForegroundWindow(PWINDOW_OBJECT Window);
 HWND FASTCALL
-IntSetActiveWindow(PWINDOW_OBJECT Window);
+co_IntSetActiveWindow(PWINDOW_OBJECT Window);
 
 #endif /* _WIN32K_FOCUS_H */

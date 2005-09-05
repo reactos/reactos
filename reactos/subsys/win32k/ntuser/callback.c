@@ -108,7 +108,7 @@ IntCleanupThreadCallbacks(PW32THREAD W32Thread)
 /* FUNCTIONS *****************************************************************/
 
 VOID STDCALL
-IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
+co_IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
 			    HWND hWnd,
 			    UINT Msg,
 			    ULONG_PTR CompletionCallbackContext,
@@ -122,11 +122,17 @@ IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
   Arguments.Msg = Msg;
   Arguments.Context = CompletionCallbackContext;
   Arguments.Result = Result;
+  
+  UserLeaveCo();
+  
   Status = NtW32Call(USER32_CALLBACK_SENDASYNCPROC,
 		     &Arguments,
 		     sizeof(SENDASYNCPROC_CALLBACK_ARGUMENTS),
 		     NULL,
 		     NULL);
+           
+  UserEnterCo();           
+           
   if (!NT_SUCCESS(Status))
     {
       return;
@@ -135,7 +141,7 @@ IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
 }
 
 LRESULT STDCALL
-IntCallWindowProc(WNDPROC Proc,
+co_IntCallWindowProc(WNDPROC Proc,
                    BOOLEAN IsAnsiProc,
 		   HWND Wnd,
 		   UINT Message,
@@ -177,11 +183,17 @@ IntCallWindowProc(WNDPROC Proc,
   Arguments->lParamBufferSize = lParamBufferSize;
   ResultPointer = Arguments;
   ResultLength = ArgumentLength;
+
+  UserLeaveCo();
+
   Status = NtW32Call(USER32_CALLBACK_WINDOWPROC,
 		     Arguments,
 		     ArgumentLength,
 		     &ResultPointer,
 		     &ResultLength);
+
+  UserEnterCo();
+           
   if (!NT_SUCCESS(Status))
     {
       if (0 < lParamBufferSize)
@@ -204,7 +216,7 @@ IntCallWindowProc(WNDPROC Proc,
 }
 
 HMENU STDCALL
-IntLoadSysMenuTemplate()
+co_IntLoadSysMenuTemplate()
 {
   LRESULT Result;
   NTSTATUS Status;
@@ -213,11 +225,17 @@ IntLoadSysMenuTemplate()
 
   ResultPointer = &Result;
   ResultLength = sizeof(LRESULT);
+  
+  UserLeaveCo();
+  
   Status = NtW32Call(USER32_CALLBACK_LOADSYSMENUTEMPLATE,
 		     NULL,
 		     0,
 		     &ResultPointer,
 		     &ResultLength);
+           
+  UserEnterCo();
+  
   if (!NT_SUCCESS(Status))
     {
       return(0);
@@ -226,7 +244,7 @@ IntLoadSysMenuTemplate()
 }
 
 BOOL STDCALL
-IntLoadDefaultCursors(VOID)
+co_IntLoadDefaultCursors(VOID)
 {
   LRESULT Result;
   NTSTATUS Status;
@@ -236,11 +254,17 @@ IntLoadDefaultCursors(VOID)
 
   ResultPointer = &Result;
   ResultLength = sizeof(LRESULT);
+  
+  UserLeaveCo();
+  
   Status = NtW32Call(USER32_CALLBACK_LOADDEFAULTCURSORS,
 		     &DefaultCursor,
 		     sizeof(BOOL),
 		     &ResultPointer,
 		     &ResultLength);
+           
+  UserEnterCo();
+  
   if (!NT_SUCCESS(Status))
     {
       return FALSE;
@@ -249,7 +273,7 @@ IntLoadDefaultCursors(VOID)
 }
 
 LRESULT STDCALL
-IntCallHookProc(INT HookId,
+co_IntCallHookProc(INT HookId,
                 INT Code,
                 WPARAM wParam,
                 LPARAM lParam,
@@ -361,11 +385,16 @@ IntCallHookProc(INT HookId,
 
   ResultPointer = &Result;
   ResultLength = sizeof(LRESULT);
+
+  UserLeaveCo();
+
   Status = NtW32Call(USER32_CALLBACK_HOOKPROC,
 		     Argument,
 		     ArgumentLength,
 		     &ResultPointer,
 		     &ResultLength);
+
+  UserEnterCo();
 
   IntCbFreeMemory(Argument);
 

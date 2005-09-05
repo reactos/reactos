@@ -209,6 +209,10 @@ NtUserRegisterHotKey(HWND hWnd,
   PWINDOW_OBJECT Window;
   PWINSTATION_OBJECT WinStaObject = NULL;
   PETHREAD HotKeyThread;
+  DECLARE_RETURN(BOOL);
+
+  DPRINT("Enter NtUserRegisterHotKey\n");
+  UserEnterExclusive();
 
   if (hWnd == NULL)
   {
@@ -220,7 +224,7 @@ NtUserRegisterHotKey(HWND hWnd,
     if(!Window)
     {
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-      return FALSE;
+      RETURN( FALSE);
     }
     HotKeyThread = Window->OwnerThread;
     IntReleaseWindowObject(Window);
@@ -232,7 +236,7 @@ NtUserRegisterHotKey(HWND hWnd,
 
   if(!WinStaObject)
   {
-    return FALSE;
+    RETURN( FALSE);
   }
 
   IntLockHotKeys(WinStaObject);
@@ -241,14 +245,14 @@ NtUserRegisterHotKey(HWND hWnd,
   if (IsHotKey (WinStaObject, fsModifiers, vk))
   {
     IntUnLockHotKeys(WinStaObject);
-    return FALSE;
+    RETURN( FALSE);
   }
 
   HotKeyItem = ExAllocatePoolWithTag (PagedPool, sizeof(HOT_KEY_ITEM), TAG_HOTKEY);
   if (HotKeyItem == NULL)
     {
       IntUnLockHotKeys(WinStaObject);
-      return FALSE;
+      RETURN( FALSE);
     }
 
   HotKeyItem->Thread = HotKeyThread;
@@ -262,7 +266,12 @@ NtUserRegisterHotKey(HWND hWnd,
 
   IntUnLockHotKeys(WinStaObject);
 
-  return TRUE;
+  RETURN( TRUE);
+  
+CLEANUP:
+  DPRINT("Leave NtUserRegisterHotKey, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;  
 }
 
 
@@ -274,12 +283,16 @@ NtUserUnregisterHotKey(HWND hWnd,
   PHOT_KEY_ITEM HotKeyItem;
   PWINDOW_OBJECT Window;
   PWINSTATION_OBJECT WinStaObject = NULL;
+  DECLARE_RETURN(BOOL);
+
+  DPRINT("Enter NtUserUnregisterHotKey\n");
+  UserEnterExclusive();
 
   Window = IntGetWindowObject(hWnd);
   if(!Window)
   {
     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-    return FALSE;
+    RETURN( FALSE);
   }
 
   if(Window->OwnerThread->ThreadsProcess && Window->OwnerThread->ThreadsProcess->Win32Process)
@@ -288,7 +301,7 @@ NtUserUnregisterHotKey(HWND hWnd,
   if(!WinStaObject)
   {
     IntReleaseWindowObject(Window);
-    return FALSE;
+    RETURN( FALSE);
   }
 
   IntLockHotKeys(WinStaObject);
@@ -307,7 +320,7 @@ NtUserUnregisterHotKey(HWND hWnd,
 	  IntUnLockHotKeys(WinStaObject);
 
 	  IntReleaseWindowObject(Window);
-	  return TRUE;
+     RETURN( TRUE);
 	}
 
       Entry = Entry->Flink;
@@ -316,7 +329,12 @@ NtUserUnregisterHotKey(HWND hWnd,
   IntUnLockHotKeys(WinStaObject);
 
   IntReleaseWindowObject(Window);
-  return FALSE;
+  RETURN( FALSE);
+  
+CLEANUP:
+  DPRINT("Leave NtUserUnregisterHotKey, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;  
 }
 
 /* EOF */

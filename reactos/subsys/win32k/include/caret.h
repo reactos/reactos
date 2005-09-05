@@ -4,19 +4,24 @@
 #define IDCARETTIMER (0xffff)
 
 BOOL FASTCALL
-IntDestroyCaret(PW32THREAD Win32Thread);
+co_IntDestroyCaret(PW32THREAD Win32Thread);
 
 BOOL FASTCALL
 IntSetCaretBlinkTime(UINT uMSeconds);
 
 BOOL FASTCALL
-IntSetCaretPos(int X, int Y);
+co_IntSetCaretPos(int X, int Y);
 
 BOOL FASTCALL
 IntSwitchCaretShowing(PVOID Info);
 
 VOID FASTCALL
 IntDrawCaret(HWND hWnd);
+
+BOOL FASTCALL co_UserShowCaret(PWINDOW_OBJECT WindowObject);
+
+BOOL FASTCALL co_UserHideCaret(PWINDOW_OBJECT WindowObject);
+
 
 #endif /* _WIN32K_CARET_H */
 

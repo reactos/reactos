@@ -72,10 +72,14 @@ NtUserBuildPropList(HWND hWnd,
   PROPLISTITEM listitem, *li;
   NTSTATUS Status;
   DWORD Cnt = 0;
+  DECLARE_RETURN(NTSTATUS);
+  
+  DPRINT("Enter NtUserBuildPropList\n");
+  UserEnterShared();
 
   if (!(WindowObject = IntGetWindowObject(hWnd)))
   {
-    return STATUS_INVALID_HANDLE;
+    RETURN( STATUS_INVALID_HANDLE);
   }
 
   if(Buffer)
@@ -83,7 +87,7 @@ NtUserBuildPropList(HWND hWnd,
     if(!BufferSize || (BufferSize % sizeof(PROPLISTITEM) != 0))
     {
       IntReleaseWindowObject(WindowObject);
-      return STATUS_INVALID_PARAMETER;
+      RETURN( STATUS_INVALID_PARAMETER);
     }
 
     /* copy list */
@@ -102,7 +106,7 @@ NtUserBuildPropList(HWND hWnd,
       {
         IntUnLockWindowProperties(WindowObject);
         IntReleaseWindowObject(WindowObject);
-        return Status;
+        RETURN( Status);
       }
 
       BufferSize -= sizeof(PROPLISTITEM);
@@ -127,11 +131,16 @@ NtUserBuildPropList(HWND hWnd,
     Status = MmCopyToCaller(Count, &Cnt, sizeof(DWORD));
     if(!NT_SUCCESS(Status))
     {
-      return Status;
+      RETURN( Status);
     }
   }
 
-  return STATUS_SUCCESS;
+  RETURN( STATUS_SUCCESS);
+  
+CLEANUP:
+  DPRINT("Leave NtUserBuildPropList, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
 }
 
 HANDLE STDCALL
@@ -140,11 +149,15 @@ NtUserRemoveProp(HWND hWnd, ATOM Atom)
   PWINDOW_OBJECT WindowObject;
   PPROPERTY Prop;
   HANDLE Data;
+  DECLARE_RETURN(HANDLE);
+  
+  DPRINT("Enter NtUserRemoveProp\n");
+  UserEnterExclusive();
 
   if (!(WindowObject = IntGetWindowObject(hWnd)))
   {
     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-    return NULL;
+    RETURN( NULL);
   }
 
   IntLockWindowProperties(WindowObject);
@@ -154,7 +167,7 @@ NtUserRemoveProp(HWND hWnd, ATOM Atom)
     {
       IntUnLockWindowProperties(WindowObject);
       IntReleaseWindowObject(WindowObject);
-      return(NULL);
+      RETURN(NULL);
     }
   Data = Prop->Data;
   RemoveEntryList(&Prop->PropListEntry);
@@ -162,7 +175,12 @@ NtUserRemoveProp(HWND hWnd, ATOM Atom)
   WindowObject->PropListItems--;
   IntUnLockWindowProperties(WindowObject);
   IntReleaseWindowObject(WindowObject);
-  return(Data);
+  RETURN(Data);
+  
+CLEANUP:
+  DPRINT("Leave NtUserRemoveProp, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;  
 }
 
 HANDLE STDCALL
@@ -171,11 +189,15 @@ NtUserGetProp(HWND hWnd, ATOM Atom)
   PWINDOW_OBJECT WindowObject;
   PPROPERTY Prop;
   HANDLE Data = NULL;
+  DECLARE_RETURN(HANDLE);
+  
+  DPRINT("Enter NtUserGetProp\n");
+  UserEnterShared();
 
   if (!(WindowObject = IntGetWindowObject(hWnd)))
   {
     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-    return FALSE;
+    RETURN( FALSE);
   }
 
   IntLockWindowProperties(WindowObject);
@@ -186,7 +208,12 @@ NtUserGetProp(HWND hWnd, ATOM Atom)
   }
   IntUnLockWindowProperties(WindowObject);
   IntReleaseWindowObject(WindowObject);
-  return(Data);
+  RETURN(Data);
+  
+CLEANUP:
+  DPRINT("Leave NtUserGetProp, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
 }
 
 BOOL FASTCALL
@@ -218,11 +245,15 @@ NtUserSetProp(HWND hWnd, ATOM Atom, HANDLE Data)
 {
   PWINDOW_OBJECT WindowObject;
   BOOL ret;
+  DECLARE_RETURN(BOOL);
+  
+  DPRINT("Enter NtUserSetProp\n");
+  UserEnterExclusive();
 
   if (!(WindowObject = IntGetWindowObject(hWnd)))
   {
     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-    return FALSE;
+    RETURN( FALSE);
   }
 
   IntLockWindowProperties(WindowObject);
@@ -230,7 +261,12 @@ NtUserSetProp(HWND hWnd, ATOM Atom, HANDLE Data)
   IntUnLockWindowProperties(WindowObject);
 
   IntReleaseWindowObject(WindowObject);
-  return ret;
+  RETURN( ret);
+  
+CLEANUP:
+  DPRINT("Leave NtUserSetProp, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
 }
 
 /* EOF */

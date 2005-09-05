@@ -44,7 +44,7 @@ CsrInit(void)
 
 
 NTSTATUS FASTCALL
-CsrNotify(PCSR_API_MESSAGE Request)
+co_CsrNotify(PCSR_API_MESSAGE Request)
 {
   NTSTATUS Status;
   PEPROCESS OldProcess;
@@ -63,9 +63,15 @@ CsrNotify(PCSR_API_MESSAGE Request)
     {
       KeAttachProcess(&CsrProcess->Pcb);
     }
+   
+  UserLeaveCo();
+
   Status = ZwRequestWaitReplyPort(WindowsApiPort,
                                   &Request->Header,
                                   &Request->Header);
+                                  
+  UserEnterCo();
+  
   if (CsrProcess != OldProcess)
     {
       KeDetachProcess();

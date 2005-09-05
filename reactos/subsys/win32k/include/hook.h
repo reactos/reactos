@@ -24,7 +24,7 @@ typedef struct tagHOOKTABLE
   UINT       Counts[NB_HOOKS]; /* use counts for each hook chain */
 } HOOKTABLE, *PHOOKTABLE;
 
-LRESULT FASTCALL HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam);
+LRESULT FASTCALL co_HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam);
 VOID FASTCALL HOOK_DestroyThreadHooks(PETHREAD Thread);
 
 #define IntLockHookTable(HookTable) \

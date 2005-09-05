@@ -42,6 +42,10 @@ Win32kProcessCallback(struct _EPROCESS *Process,
                       BOOLEAN Create)
 {
     PW32PROCESS Win32Process;
+    DECLARE_RETURN(NTSTATUS);
+    
+    DPRINT("Enter Win32kProcessCallback\n");
+    UserEnterExclusive();
     
     /* Get the Win32 Process */
     Win32Process = PsGetProcessWin32Process(Process);
@@ -54,7 +58,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
                                              sizeof(W32PROCESS),
                                              TAG('W', '3', '2', 'p'));
 
-        if (Win32Process == NULL) return STATUS_NO_MEMORY;
+        if (Win32Process == NULL) RETURN( STATUS_NO_MEMORY);
 
         RtlZeroMemory(Win32Process, sizeof(W32PROCESS));
         
@@ -101,7 +105,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
 
       GDI_CleanupForProcess(Process);
 
-      IntGraphicsCheck(FALSE);
+      co_IntGraphicsCheck(FALSE);
 
       /*
        * Deregister logon application automatically
@@ -112,7 +116,12 @@ Win32kProcessCallback(struct _EPROCESS *Process,
       }
     }
 
-  return STATUS_SUCCESS;
+  RETURN( STATUS_SUCCESS);
+  
+CLEANUP:
+  UserLeave();
+  DPRINT("Leave Win32kProcessCallback, ret=%i\n",_ret_);
+  END_CLEANUP;
 }
 
 
@@ -123,6 +132,10 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
 {
     struct _EPROCESS *Process;
     PW32THREAD Win32Thread;
+    DECLARE_RETURN(NTSTATUS);
+    
+    DPRINT("Enter Win32kThreadCallback\n");
+    UserEnterExclusive();
 
     Process = Thread->ThreadsProcess;
     
@@ -137,7 +150,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
                                             sizeof(W32THREAD),
                                             TAG('W', '3', '2', 't'));
 
-        if (Win32Thread == NULL) return STATUS_NO_MEMORY;
+        if (Win32Thread == NULL) RETURN( STATUS_NO_MEMORY);
 
         RtlZeroMemory(Win32Thread, sizeof(W32THREAD));
         
@@ -199,7 +212,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
         }
       }
       Win32Thread->IsExiting = FALSE;
-      IntDestroyCaret(Win32Thread);
+      co_IntDestroyCaret(Win32Thread);
       Win32Thread->MessageQueue = MsqCreateMessageQueue(Thread);
       Win32Thread->KeyboardLayout = W32kGetDefaultKeyLayout();
       Win32Thread->MessagePumpHookValue = 0;
@@ -214,7 +227,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
       Win32Thread->IsExiting = TRUE;
       HOOK_DestroyThreadHooks(Thread);
       UnregisterThreadHotKeys(Thread);
-      DestroyThreadWindows(Thread);
+      co_DestroyThreadWindows(Thread);
       IntBlockInput(Win32Thread, FALSE);
       MsqDestroyMessageQueue(Win32Thread->MessageQueue);
       IntCleanupThreadCallbacks(Win32Thread);
@@ -224,7 +237,12 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
       }
     }
 
-  return STATUS_SUCCESS;
+  RETURN( STATUS_SUCCESS);
+  
+CLEANUP:
+  UserLeave();
+  DPRINT("Leave Win32kThreadCallback, ret=%i\n",_ret_);
+  END_CLEANUP;
 }
 
 /* Only used in ntuser/input.c KeyboardThreadMain(). If it's
@@ -314,6 +332,13 @@ DriverEntry (
   if (!NT_SUCCESS(Status))
   {
     DPRINT1("Failed to initialize the shared section pool: Status 0x%x\n", Status);
+  }
+
+  Status = InitUserImpl();
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT1("Failed to initialize user implementation!\n");
+    return STATUS_UNSUCCESSFUL;
   }
 
   Status = InitWindowStationImpl();

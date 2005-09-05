@@ -1182,26 +1182,26 @@ IntGetMenuDefaultItem(PMENU_OBJECT MenuObject, UINT fByPos, UINT gmdiFlags,
 }
 
 VOID FASTCALL
-IntInitTracking(PWINDOW_OBJECT WindowObject, PMENU_OBJECT MenuObject, BOOL Popup,
+co_IntInitTracking(PWINDOW_OBJECT WindowObject, PMENU_OBJECT MenuObject, BOOL Popup,
                 UINT Flags)
 {
   /* FIXME - hide caret */
 
   if(!(Flags & TPM_NONOTIFY))
-    IntSendMessage(WindowObject->Self, WM_SETCURSOR, (WPARAM)WindowObject->Self, HTCAPTION);
+    co_IntSendMessage(WindowObject->Self, WM_SETCURSOR, (WPARAM)WindowObject->Self, HTCAPTION);
 
   /* FIXME - send WM_SETCURSOR message */
 
   if(!(Flags & TPM_NONOTIFY))
-    IntSendMessage(WindowObject->Self, WM_INITMENU, (WPARAM)MenuObject->MenuInfo.Self, 0);
+    co_IntSendMessage(WindowObject->Self, WM_INITMENU, (WPARAM)MenuObject->MenuInfo.Self, 0);
 }
 
 VOID FASTCALL
-IntExitTracking(PWINDOW_OBJECT WindowObject, PMENU_OBJECT MenuObject, BOOL Popup,
+co_IntExitTracking(PWINDOW_OBJECT WindowObject, PMENU_OBJECT MenuObject, BOOL Popup,
                 UINT Flags)
 {
   if(!(Flags & TPM_NONOTIFY))
-    IntSendMessage(WindowObject->Self, WM_EXITMENULOOP, 0 /* FIXME */, 0);
+    co_IntSendMessage(WindowObject->Self, WM_EXITMENULOOP, 0 /* FIXME */, 0);
 
   /* FIXME - Show caret again */
 }
@@ -1214,12 +1214,12 @@ IntTrackMenu(PMENU_OBJECT MenuObject, PWINDOW_OBJECT WindowObject, INT x, INT y,
 }
 
 BOOL FASTCALL
-IntTrackPopupMenu(PMENU_OBJECT MenuObject, PWINDOW_OBJECT WindowObject,
+co_IntTrackPopupMenu(PMENU_OBJECT MenuObject, PWINDOW_OBJECT WindowObject,
                   UINT Flags, POINT *Pos, UINT MenuPos, RECT *ExcludeRect)
 {
-  IntInitTracking(WindowObject, MenuObject, TRUE, Flags);
+  co_IntInitTracking(WindowObject, MenuObject, TRUE, Flags);
 
-  IntExitTracking(WindowObject, MenuObject, TRUE, Flags);
+  co_IntExitTracking(WindowObject, MenuObject, TRUE, Flags);
   return FALSE;
 }
 
@@ -1288,11 +1288,17 @@ NtUserBuildMenuItemList(
  DWORD Reserved)
 {
   DWORD res = -1;
-  PMENU_OBJECT MenuObject = IntGetMenuObject(hMenu);
+  PMENU_OBJECT MenuObject;
+  DECLARE_RETURN(DWORD);  
+  
+  DPRINT("Enter NtUserBuildMenuItemList\n");
+  UserEnterExclusive();
+  
+  MenuObject = IntGetMenuObject(hMenu);
   if(!MenuObject)
   {
     SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
-    return (DWORD)-1;
+    RETURN( (DWORD)-1);
   }
 
   if(Buffer)
@@ -1308,7 +1314,12 @@ NtUserBuildMenuItemList(
 
   IntReleaseMenuObject(MenuObject);
 
-  return res;
+  RETURN( res);
+  
+CLEANUP:
+  DPRINT("Leave NtUserBuildMenuItemList, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;  
 }
 
 
@@ -1322,25 +1333,32 @@ NtUserCheckMenuItem(
   UINT uCheck)
 {
   DWORD res = 0;
-  PMENU_OBJECT MenuObject = IntGetMenuObject(hmenu);
+  PMENU_OBJECT MenuObject;
+  DECLARE_RETURN(DWORD); 
+  
+  DPRINT("Enter NtUserCheckMenuItem\n");
+  UserEnterExclusive();
+  
+  MenuObject = IntGetMenuObject(hmenu);
   if(!MenuObject)
   {
     SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
-    return (DWORD)-1;
+    RETURN( (DWORD)-1);
   }
   IntLockMenuItems(MenuObject);
   res = IntCheckMenuItem(MenuObject, uIDCheckItem, uCheck);
   IntUnLockMenuItems(MenuObject);
   IntReleaseMenuObject(MenuObject);
-  return res;
+  RETURN( res);
+  
+CLEANUP:
+  DPRINT("Leave NtUserCheckMenuItem, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;  
 }
 
 
-/*
- * @unimplemented
- */
-HMENU STDCALL
-NtUserCreateMenu(BOOL PopupMenu)
+HMENU FASTCALL UserCreateMenu(BOOL PopupMenu)
 {
   PWINSTATION_OBJECT WinStaObject;
   HANDLE Handle;
@@ -1365,6 +1383,25 @@ NtUserCreateMenu(BOOL PopupMenu)
 }
 
 
+
+HMENU STDCALL
+NtUserCreateMenu(BOOL PopupMenu)
+{
+  DECLARE_RETURN(HMENU);  
+  
+  DPRINT("Enter NtUserCreateMenu\n");
+  UserEnterExclusive();
+  
+  RETURN(UserCreateMenu(PopupMenu));
+   
+CLEANUP:
+  DPRINT("Leave NtUserCreateMenu, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
+}
+
+
+
 /*
  * @implemented
  */
@@ -1375,26 +1412,36 @@ NtUserDeleteMenu(
   UINT uFlags)
 {
   BOOL res;
-  PMENU_OBJECT MenuObject = IntGetMenuObject(hMenu);
+  PMENU_OBJECT MenuObject;
+  DECLARE_RETURN(BOOL);  
+
+  DPRINT("Enter NtUserDeleteMenu\n");
+  UserEnterExclusive();
+  
+  MenuObject = IntGetMenuObject(hMenu);
   if(!MenuObject)
   {
     SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
-    return FALSE;
+    RETURN( FALSE);
   }
 
   res = IntRemoveMenuItem(MenuObject, uPosition, uFlags, TRUE);
   IntReleaseMenuObject(MenuObject);
 
-  return res;
+  RETURN( res);
+  
+CLEANUP:
+  DPRINT("Leave NtUserDeleteMenu, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
 }
+
 
 
 /*
  * @implemented
  */
-BOOL STDCALL
-NtUserDestroyMenu(
-  HMENU hMenu)
+BOOL FASTCALL UserDestroyMenu(HMENU hMenu)
 {
   BOOL Ret;
 
@@ -1417,6 +1464,43 @@ NtUserDestroyMenu(
   return Ret;
 }
 
+/*
+ * @implemented
+ */
+BOOL STDCALL
+NtUserDestroyMenu(
+  HMENU hMenu)
+{
+  BOOL Ret;
+  DECLARE_RETURN(BOOL);  
+
+  DPRINT("Enter NtUserDestroyMenu\n");
+  UserEnterExclusive();
+
+  PMENU_OBJECT MenuObject = IntGetMenuObject(hMenu);
+  if(!MenuObject)
+  {
+    SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
+    RETURN( FALSE);
+  }
+  if(MenuObject->Process != PsGetCurrentProcess())
+  {
+    IntReleaseMenuObject(MenuObject);
+    SetLastWin32Error(ERROR_ACCESS_DENIED);
+    RETURN( FALSE);
+  }
+
+  Ret = IntDestroyMenuObject(MenuObject, FALSE, TRUE);
+
+  IntReleaseMenuObject(MenuObject);
+  RETURN( Ret);
+  
+CLEANUP:
+  DPRINT("Leave NtUserDestroyMenu, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
+}
+
 
 /*
  * @implemented
@@ -1429,18 +1513,28 @@ NtUserEnableMenuItem(
 {
   UINT res = (UINT)-1;
   PMENU_OBJECT MenuObject;
+  DECLARE_RETURN(UINT);  
+
+  DPRINT("Enter NtUserEnableMenuItem\n");
+  UserEnterExclusive();
+  
   MenuObject = IntGetMenuObject(hMenu);
   if(!MenuObject)
   {
     SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
-    return res;
+    RETURN( res);
   }
   IntLockMenuItems(MenuObject);
   res = IntEnableMenuItem(MenuObject, uIDEnableItem, uEnable);
   IntUnLockMenuItems(MenuObject);
   IntReleaseMenuObject(MenuObject);
 
-  return res;
+  RETURN( res);
+  
+CLEANUP:
+  DPRINT("Leave NtUserEnableMenuItem, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
 }
 
 
@@ -1458,12 +1552,16 @@ NtUserInsertMenuItem(
   PMENU_OBJECT MenuObject;
   NTSTATUS Status;
   ROSMENUITEMINFO ItemInfo;
+  DECLARE_RETURN(DWORD);  
+
+  DPRINT("Enter NtUserInsertMenuItem\n");
+  UserEnterExclusive();
 
   MenuObject = IntGetMenuObject(hMenu);
   if(!MenuObject)
     {
       SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
-      return 0;
+      RETURN( 0);
     }
 
   Status = MmCopyFromCaller(&ItemInfo, UnsafeItemInfo, sizeof(MENUITEMINFOW));
@@ -1471,13 +1569,13 @@ NtUserInsertMenuItem(
     {
       IntReleaseMenuObject(MenuObject);
       SetLastNtError(Status);
-      return FALSE;
+      RETURN( FALSE);
     }
   if (ItemInfo.cbSize != sizeof(MENUITEMINFOW))
     {
       IntReleaseMenuObject(MenuObject);
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      return FALSE;
+      RETURN( FALSE);
     }
 
   IntLockMenuItems(MenuObject);
@@ -1485,7 +1583,12 @@ NtUserInsertMenuItem(
   IntUnLockMenuItems(MenuObject);
   IntReleaseMenuObject(MenuObject);
 
-  return Res;
+  RETURN( Res);
+  
+CLEANUP:
+  DPRINT("Leave NtUserInsertMenuItem, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
 }
 
 
@@ -1513,17 +1616,27 @@ NtUserGetMenuDefaultItem(
   PMENU_OBJECT MenuObject;
   UINT res = -1;
   DWORD gismc = 0;
+  DECLARE_RETURN(UINT);  
+
+  DPRINT("Enter NtUserGetMenuDefaultItem\n");
+  UserEnterExclusive();
+
   MenuObject = IntGetMenuObject(hMenu);
   if(!MenuObject)
   {
     SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
-    return res;
+    RETURN( res);
   }
   IntLockMenuItems(MenuObject);
   res = IntGetMenuDefaultItem(MenuObject, fByPos, gmdiFlags, &gismc);
   IntUnLockMenuItems(MenuObject);
   IntReleaseMenuObject(MenuObject);
-  return res;
+  RETURN(res);
+  
+CLEANUP:
+  DPRINT("Leave NtUserGetMenuDefaultItem, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
 }
 
 
@@ -1576,24 +1689,28 @@ NtUserGetMenuItemRect(
      LONG XMove, YMove;
      ULONG i;
      NTSTATUS Status;
+     DECLARE_RETURN(BOOL);  
+
+     DPRINT("Enter NtUserGetMenuItemRect\n");
+     UserEnterShared();
           
-     if(!NtUserMenuItemInfo(hMenu, uItem, MF_BYPOSITION, &mii, FALSE))
-     	return FALSE;
+     if(!UserMenuItemInfo(hMenu, uItem, MF_BYPOSITION, &mii, FALSE))
+      RETURN( FALSE);
      	
      referenceHwnd = hWnd;
 
      if(!hWnd)
      {
-	if(!NtUserMenuInfo(hMenu, &mi, FALSE)) return FALSE;
-	 if(mi.Wnd == 0) return FALSE;
+   if(!UserMenuInfo(hMenu, &mi, FALSE)) RETURN( FALSE);
+    if(mi.Wnd == 0) RETURN( FALSE);
 	 referenceHwnd = mi.Wnd;
      }
 
-     if (lprcItem == NULL) return FALSE;
+     if (lprcItem == NULL) RETURN( FALSE);
      *lpRect = mii.Rect;
      lpPoints = (LPPOINT)lpRect;
       
-    if(!NtUserGetClientOrigin(referenceHwnd, &FromOffset)) return FALSE;
+    if(!UserGetClientOrigin(referenceHwnd, &FromOffset)) RETURN( FALSE);
 
     XMove = FromOffset.x;
     YMove = FromOffset.y;
@@ -1608,9 +1725,14 @@ NtUserGetMenuItemRect(
     if (! NT_SUCCESS(Status))
       {
         SetLastNtError(Status);
-        return FALSE;
+        RETURN( FALSE);
       }                                                              
-    return TRUE;
+    RETURN( TRUE);
+    
+CLEANUP:
+  DPRINT("Leave NtUserGetMenuItemRect, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
 }
 
 
@@ -1626,18 +1748,24 @@ NtUserHiliteMenuItem(
 {
   BOOL res = FALSE;
   PMENU_OBJECT MenuObject;
-  PWINDOW_OBJECT WindowObject = IntGetWindowObject(hwnd);
+  PWINDOW_OBJECT WindowObject;
+  DECLARE_RETURN(BOOLEAN);  
+
+  DPRINT("Enter NtUserHiliteMenuItem\n");
+  UserEnterExclusive();
+  
+  WindowObject = IntGetWindowObject(hwnd);
   if(!WindowObject)
   {
     SetLastWin32Error(ERROR_INVALID_HANDLE);
-    return res;
+    RETURN( res);
   }
   MenuObject = IntGetMenuObject(hmenu);
   if(!MenuObject)
   {
     IntReleaseWindowObject(WindowObject);
     SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
-    return res;
+    RETURN( res);
   }
   if(WindowObject->IDMenu == (UINT)hmenu)
   {
@@ -1647,16 +1775,20 @@ NtUserHiliteMenuItem(
   }
   IntReleaseMenuObject(MenuObject);
   IntReleaseWindowObject(WindowObject);
-  return res;
+  RETURN( res);
+  
+CLEANUP:
+  DPRINT("Leave NtUserHiliteMenuItem, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
 }
 
 
 /*
  * @implemented
  */
-BOOL
-STDCALL
-NtUserMenuInfo(
+BOOL FASTCALL
+UserMenuInfo(
  HMENU Menu,
  PROSMENUINFO UnsafeMenuInfo,
  BOOL SetOrGet)
@@ -1671,25 +1803,25 @@ NtUserMenuInfo(
   if (! NT_SUCCESS(Status))
     {
       SetLastNtError(Status);
-      return FALSE;
+      return( FALSE);
     }
   if(Size < sizeof(MENUINFO) || sizeof(ROSMENUINFO) < Size)
     {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      return FALSE;
+      return( FALSE);
     }
   Status = MmCopyFromCaller(&MenuInfo, UnsafeMenuInfo, Size);
   if (! NT_SUCCESS(Status))
     {
       SetLastNtError(Status);
-      return FALSE;
+      return( FALSE);
     }
 
   MenuObject = IntGetMenuObject(Menu);
   if (NULL == MenuObject)
     {
       SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
-      return FALSE;
+      return( FALSE);
     }
 
   if(SetOrGet)
@@ -1707,15 +1839,43 @@ NtUserMenuInfo(
           if (! NT_SUCCESS(Status))
             {
               SetLastNtError(Status);
-              return FALSE;
+              return( FALSE);
             }
         }
     }
 
   IntReleaseMenuObject(MenuObject);
 
-  return Res;
+  return( Res);
 }
+
+
+
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+NtUserMenuInfo(
+ HMENU Menu,
+ PROSMENUINFO UnsafeMenuInfo,
+ BOOL SetOrGet)
+{
+  DECLARE_RETURN(BOOL);  
+
+  DPRINT("Enter NtUserMenuInfo\n");
+  UserEnterShared();
+
+  RETURN(UserMenuInfo(Menu, UnsafeMenuInfo, SetOrGet));
+  
+CLEANUP:
+  DPRINT("Leave NtUserMenuInfo, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
+}
+
 
 
 /*
@@ -1732,19 +1892,23 @@ NtUserMenuItemFromPoint(
   PWINDOW_OBJECT WindowObject = NULL;
   PMENU_ITEM mi;
   int i;
+  DECLARE_RETURN(int);  
+
+  DPRINT("Enter NtUserMenuItemFromPoint\n");
+  UserEnterExclusive();
 
   MenuObject = IntGetMenuObject(Menu);
   if (NULL == MenuObject)
     {
       SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
-      return -1;
+      RETURN( -1);
     }
 
   WindowObject = IntGetWindowObject(MenuObject->MenuInfo.Wnd);
   if (NULL == WindowObject)
     {
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-      return -1;
+      RETURN( -1);
     }
   X -= WindowObject->WindowRect.left;
   Y -= WindowObject->WindowRect.top;
@@ -1764,16 +1928,20 @@ NtUserMenuItemFromPoint(
 
   IntReleaseMenuObject(MenuObject);
 
-  return (mi ? i : NO_SELECTED_ITEM);
+  RETURN( (mi ? i : NO_SELECTED_ITEM));
+  
+CLEANUP:
+  DPRINT("Leave NtUserMenuItemFromPoint, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
 }
 
 
-/*
- * @implemented
- */
-BOOL
-STDCALL
-NtUserMenuItemInfo(
+
+
+
+BOOL FASTCALL
+UserMenuItemInfo(
  HMENU Menu,
  UINT Item,
  BOOL ByPosition,
@@ -1791,14 +1959,14 @@ NtUserMenuItemInfo(
   if (NULL == MenuObject)
     {
       SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
-      return FALSE;
+      return( FALSE);
     }
   Status = MmCopyFromCaller(&Size, &UnsafeItemInfo->cbSize, sizeof(UINT));
   if (! NT_SUCCESS(Status))
     {
       IntReleaseMenuObject(MenuObject);
       SetLastNtError(Status);
-      return FALSE;
+      return( FALSE);
     }
   if (sizeof(MENUITEMINFOW) != Size
       && sizeof(MENUITEMINFOW) - sizeof(HBITMAP) != Size
@@ -1806,14 +1974,14 @@ NtUserMenuItemInfo(
     {
       IntReleaseMenuObject(MenuObject);
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      return FALSE;
+      return( FALSE);
     }
   Status = MmCopyFromCaller(&ItemInfo, UnsafeItemInfo, Size);
   if (! NT_SUCCESS(Status))
     {
       IntReleaseMenuObject(MenuObject);
       SetLastNtError(Status);
-      return FALSE;
+      return( FALSE);
     }
   /* If this is a pre-0x0500 _WIN32_WINNT MENUITEMINFOW, you can't
      set/get hbmpItem */
@@ -1822,7 +1990,7 @@ NtUserMenuItemInfo(
     {
       IntReleaseMenuObject(MenuObject);
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      return FALSE;
+      return( FALSE);
     }
 
   if (IntGetMenuItemByFlag(MenuObject, Item,
@@ -1831,7 +1999,7 @@ NtUserMenuItemInfo(
     {
       IntReleaseMenuObject(MenuObject);
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      return FALSE;
+      return( FALSE);
     }
 
   if (SetOrGet)
@@ -1848,14 +2016,43 @@ NtUserMenuItemInfo(
             {
               IntReleaseMenuObject(MenuObject);
               SetLastNtError(Status);
-              return FALSE;
+              return( FALSE);
             }
         }
     }
 
   IntReleaseMenuObject(MenuObject);
 
-  return Ret;
+  return( Ret);
+
+}
+
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+NtUserMenuItemInfo(
+ HMENU Menu,
+ UINT Item,
+ BOOL ByPosition,
+ PROSMENUITEMINFO UnsafeItemInfo,
+ BOOL SetOrGet)
+{
+  DECLARE_RETURN(BOOL);  
+
+  DPRINT("Enter NtUserMenuItemInfo\n");
+  UserEnterExclusive();
+
+  RETURN( UserMenuItemInfo(Menu, Item, ByPosition, UnsafeItemInfo, SetOrGet));
+  
+CLEANUP:
+  DPRINT("Leave NtUserMenuItemInfo, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
+  
 }
 
 
@@ -1869,17 +2066,29 @@ NtUserRemoveMenu(
   UINT uFlags)
 {
   BOOL res;
-  PMENU_OBJECT MenuObject = IntGetMenuObject(hMenu);
+  PMENU_OBJECT MenuObject;
+  DECLARE_RETURN(BOOL);  
+
+  DPRINT("Enter NtUserRemoveMenu\n");
+  UserEnterExclusive();
+  
+  MenuObject = IntGetMenuObject(hMenu);
   if(!MenuObject)
   {
     SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
-    return FALSE;
+    RETURN( FALSE);
   }
 
   res = IntRemoveMenuItem(MenuObject, uPosition, uFlags, FALSE);
   IntReleaseMenuObject(MenuObject);
 
-  return res;
+  RETURN( res);
+  
+CLEANUP:
+  DPRINT("Leave NtUserRemoveMenu, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
+  
 }
 
 
@@ -1892,16 +2101,56 @@ NtUserSetMenuContextHelpId(
   DWORD dwContextHelpId)
 {
   BOOL res;
-  PMENU_OBJECT MenuObject = IntGetMenuObject(hmenu);
+  PMENU_OBJECT MenuObject;
+  DECLARE_RETURN(BOOL);  
+
+  DPRINT("Enter NtUserSetMenuContextHelpId\n");
+  UserEnterExclusive();
+  
+  MenuObject = IntGetMenuObject(hmenu);
   if(!MenuObject)
   {
     SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
-    return FALSE;
+    RETURN( FALSE);
   }
 
   res = IntSetMenuContextHelpId(MenuObject, dwContextHelpId);
   IntReleaseMenuObject(MenuObject);
-  return res;
+  RETURN( res);
+  
+CLEANUP:
+  DPRINT("Leave NtUserSetMenuContextHelpId, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
+}
+
+
+
+
+/*
+ * @implemented
+ */
+BOOL FASTCALL
+UserSetMenuDefaultItem(
+  HMENU hMenu,
+  UINT uItem,
+  UINT fByPos)
+{
+  BOOL res = FALSE;
+  PMENU_OBJECT MenuObject;
+
+  MenuObject = IntGetMenuObject(hMenu);
+  if(!MenuObject)
+  {
+    SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
+    return( FALSE);
+  }
+  IntLockMenuItems(MenuObject);
+  res = IntSetMenuDefaultItem(MenuObject, uItem, fByPos);
+  IntUnLockMenuItems(MenuObject);
+  IntReleaseMenuObject(MenuObject);
+
+  return( res);
 }
 
 
@@ -1916,18 +2165,28 @@ NtUserSetMenuDefaultItem(
 {
   BOOL res = FALSE;
   PMENU_OBJECT MenuObject;
+  DECLARE_RETURN(BOOL);  
+
+  DPRINT("Enter NtUserSetMenuDefaultItem\n");
+  UserEnterExclusive();
+
   MenuObject = IntGetMenuObject(hMenu);
   if(!MenuObject)
   {
     SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
-    return FALSE;
+    RETURN( FALSE);
   }
   IntLockMenuItems(MenuObject);
   res = IntSetMenuDefaultItem(MenuObject, uItem, fByPos);
   IntUnLockMenuItems(MenuObject);
   IntReleaseMenuObject(MenuObject);
 
-  return res;
+  RETURN( res);
+  
+CLEANUP:
+  DPRINT("Leave NtUserSetMenuDefaultItem, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
 }
 
 
@@ -1939,16 +2198,27 @@ NtUserSetMenuFlagRtoL(
   HMENU hMenu)
 {
   BOOL res;
-  PMENU_OBJECT MenuObject = IntGetMenuObject(hMenu);
+  PMENU_OBJECT MenuObject;
+  DECLARE_RETURN(BOOL);  
+
+  DPRINT("Enter NtUserSetMenuFlagRtoL\n");
+  UserEnterExclusive();
+  
+  MenuObject = IntGetMenuObject(hMenu);
   if(!MenuObject)
   {
     SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
-    return FALSE;
+    RETURN( FALSE);
   }
 
   res = IntSetMenuFlagRtoL(MenuObject);
   IntReleaseMenuObject(MenuObject);
-  return res;
+  RETURN( res);
+
+CLEANUP:
+  DPRINT("Leave NtUserSetMenuFlagRtoL, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
 }
 
 
@@ -1989,6 +2259,7 @@ NtUserThunkedMenuItemInfo(
 /*
  * @implemented
  */
+ /* NOTE: unused function */
 BOOL STDCALL
 NtUserTrackPopupMenuEx(
   HMENU hmenu,
@@ -2042,7 +2313,7 @@ NtUserTrackPopupMenuEx(
   Pos.x = x;
   Pos.y = y;
 
-  Ret = IntTrackPopupMenu(MenuObject, WindowObject, fuFlags, &Pos, 0,
+  Ret = co_IntTrackPopupMenu(MenuObject, WindowObject, fuFlags, &Pos, 0,
                           (lptpm ? &Safetpm.rcExclude : NULL));
 
   IntReleaseWindowObject(WindowObject);

@@ -217,7 +217,11 @@ MouseThreadMain(PVOID StartContext)
       }
       DPRINT("MouseEvent\n");
 
+      UserEnterExclusive();
+
       ProcessMouseInputData(&MouseInput, Iosb.Information / sizeof(MOUSE_INPUT_DATA));
+      
+      UserLeave();
     }
     DPRINT("Mouse Input Thread Stopped...\n");
   }
@@ -397,9 +401,9 @@ IntKeyboardSendWinKeyMsg()
 }
 
 STATIC VOID STDCALL
-IntKeyboardSendAltKeyMsg()
+co_IntKeyboardSendAltKeyMsg()
 {
-  MsqPostKeyboardMessage(WM_SYSCOMMAND,SC_KEYMENU,0);
+  co_MsqPostKeyboardMessage(WM_SYSCOMMAND,SC_KEYMENU,0);
 }
 
 STATIC VOID STDCALL
@@ -567,7 +571,7 @@ KeyboardThreadMain(PVOID StartContext)
 			  if (fsModifiers == MOD_WIN)
 			    IntKeyboardSendWinKeyMsg();
 			  else if (fsModifiers == MOD_ALT)
-			    IntKeyboardSendAltKeyMsg();
+			    co_IntKeyboardSendAltKeyMsg();
 			  continue;
 			}
 
@@ -699,7 +703,7 @@ KeyboardThreadMain(PVOID StartContext)
 	      /*
 	       * Post a keyboard message.
 	       */
-	      MsqPostKeyboardMessage(msg.message,msg.wParam,msg.lParam);
+	      co_MsqPostKeyboardMessage(msg.message,msg.wParam,msg.lParam);
 	    }
 	}
 
@@ -708,8 +712,9 @@ KeyboardEscape:
     }
 }
 
-NTSTATUS STDCALL
-NtUserAcquireOrReleaseInputOwnership(BOOLEAN Release)
+
+NTSTATUS FASTCALL
+UserAcquireOrReleaseInputOwnership(BOOLEAN Release)
 {
   if (Release && InputThreadsRunning && !pmPrimitiveMessageQueue)
     {
@@ -727,6 +732,24 @@ NtUserAcquireOrReleaseInputOwnership(BOOLEAN Release)
 
   return(STATUS_SUCCESS);
 }
+
+
+NTSTATUS STDCALL
+NtUserAcquireOrReleaseInputOwnership(BOOLEAN Release)
+{
+  DECLARE_RETURN(NTSTATUS);  
+
+  DPRINT("Enter NtUserAcquireOrReleaseInputOwnership\n");
+  UserEnterExclusive();
+  
+  RETURN(UserAcquireOrReleaseInputOwnership(Release));
+  
+CLEANUP:
+  DPRINT("Leave NtUserAcquireOrReleaseInputOwnership, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
+}
+
 
 NTSTATUS FASTCALL
 InitInputImpl(VOID)
@@ -831,7 +854,17 @@ STDCALL
 NtUserBlockInput(
   BOOL BlockIt)
 {
-  return IntBlockInput(PsGetWin32Thread(), BlockIt);
+  DECLARE_RETURN(BOOLEAN);  
+
+  DPRINT("Enter NtUserBlockInput\n");
+  UserEnterExclusive();
+   
+  RETURN( IntBlockInput(PsGetWin32Thread(), BlockIt));
+  
+CLEANUP:
+  DPRINT("Leave NtUserBlockInput, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
 }
 
 BOOL FASTCALL
@@ -1099,19 +1132,23 @@ NtUserSendInput(
 {
   PW32THREAD W32Thread;
   UINT cnt;
+  DECLARE_RETURN(UINT);  
+
+  DPRINT("Enter NtUserSendInput\n");
+  UserEnterExclusive();
 
   W32Thread = PsGetWin32Thread();
   ASSERT(W32Thread);
 
   if(!W32Thread->Desktop)
   {
-    return 0;
+    RETURN( 0);
   }
 
   if(!nInputs || !pInput || (cbSize != sizeof(INPUT)))
   {
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
-    return 0;
+    RETURN( 0);
   }
 
   /*
@@ -1122,7 +1159,7 @@ NtUserSendInput(
      !IntIsActiveDesktop(W32Thread->Desktop))
   {
     SetLastWin32Error(ERROR_ACCESS_DENIED);
-    return 0;
+    RETURN( 0);
   }
 
   cnt = 0;
@@ -1135,7 +1172,7 @@ NtUserSendInput(
     if(!NT_SUCCESS(Status))
     {
       SetLastNtError(Status);
-      return cnt;
+      RETURN( cnt);
     }
 
     switch(SafeInput.type)
@@ -1162,7 +1199,12 @@ NtUserSendInput(
     }
   }
 
-  return cnt;
+  RETURN( cnt);
+
+CLEANUP:
+  DPRINT("Leave NtUserSendInput, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
 }
 
 /* EOF */

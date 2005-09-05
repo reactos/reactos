@@ -146,16 +146,19 @@ NtUserGetClassInfo(
 {
    PWNDCLASS_OBJECT Class;
    RTL_ATOM Atom;
-
+   DECLARE_RETURN(DWORD);
+   
    if (IS_ATOM(lpClassName))
       DPRINT("NtUserGetClassInfo - %x (%lx)\n", lpClassName, hInstance);
    else
       DPRINT("NtUserGetClassInfo - %S (%lx)\n", lpClassName, hInstance);
 
+   UserEnterExclusive();
+   
    if (!ClassReferenceClassByNameOrAtom(&Class, lpClassName, hInstance))
    {
       SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
-      return 0;
+      RETURN(0);
    }
 
    lpWndClassEx->cbSize = sizeof(WNDCLASSEXW);
@@ -181,7 +184,12 @@ NtUserGetClassInfo(
 
    ObmDereferenceObject(Class);
 
-   return Atom;
+   RETURN(Atom);
+   
+CLEANUP:
+   DPRINT("Leave NtUserGetClassInfo, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;
 }
 
 ULONG FASTCALL
@@ -232,16 +240,24 @@ NtUserGetClassName (
 {
    PWINDOW_OBJECT WindowObject;
    LONG Length;
-
+   DECLARE_RETURN(DWORD);
+   
+   UserEnterShared();
+   
    WindowObject = IntGetWindowObject(hWnd);
    if (WindowObject == NULL)
    {
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-      return 0;
+      RETURN(0);
    }
    Length = IntGetClassName(WindowObject, lpClassName, nMaxCount);
    IntReleaseWindowObject(WindowObject);
-   return Length;
+   RETURN(Length);
+   
+CLEANUP:
+   DPRINT("Leave NtUserGetClassName, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;
 }
 
 DWORD STDCALL
@@ -385,31 +401,35 @@ NtUserRegisterClassExWOW(
    PWNDCLASS_OBJECT ClassObject;
    NTSTATUS Status;
    RTL_ATOM Atom;
+   DECLARE_RETURN(RTL_ATOM);
+
+   DPRINT("Enter NtUserRegisterClassExWOW\n");
+   UserEnterExclusive();
 
    if (!lpwcx)
    {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      return (RTL_ATOM)0;
+      RETURN( (RTL_ATOM)0);
    }
 
    if (Flags & ~REGISTERCLASS_ALL)
    {
       SetLastWin32Error(ERROR_INVALID_FLAGS);
-      return (RTL_ATOM)0;
+      RETURN( (RTL_ATOM)0);
    }
 
    Status = MmCopyFromCaller(&SafeClass, lpwcx, sizeof(WNDCLASSEXW));
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      return (RTL_ATOM)0;
+      RETURN( (RTL_ATOM)0);
    }
 
    /* Deny negative sizes */
    if (lpwcx->cbClsExtra < 0 || lpwcx->cbWndExtra < 0)
    {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      return (RTL_ATOM)0;
+      RETURN( (RTL_ATOM)0);
    }
 
   WinStaObject = PsGetWin32Thread()->Desktop->WindowStation;
@@ -426,7 +446,7 @@ NtUserRegisterClassExWOW(
       DPRINT1("Failed adding class name (%S) to atom table\n",
 	ClassName->Buffer);
       SetLastNtError(Status);
-      return((RTL_ATOM)0);
+      RETURN((RTL_ATOM)0);
     }
   }
   else
@@ -441,13 +461,18 @@ NtUserRegisterClassExWOW(
       RtlDeleteAtomFromAtomTable(WinStaObject->AtomTable, Atom);
     }
     DPRINT("Failed creating window class object\n");
-    return((RTL_ATOM)0);
+    RETURN((RTL_ATOM)0);
   }
   IntLockProcessClasses(PsGetWin32Process());
   InsertTailList(&PsGetWin32Process()->ClassListHead, &ClassObject->ListEntry);
   IntUnLockProcessClasses(PsGetWin32Process());
 
-  return(Atom);
+  RETURN(Atom);
+
+CLEANUP:
+  DPRINT("Leave NtUserRegisterClassExWOW, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
 }
 
 ULONG FASTCALL
@@ -519,20 +544,29 @@ NtUserGetClassLong(HWND hWnd, DWORD Offset, BOOL Ansi)
 {
   PWINDOW_OBJECT WindowObject;
   LONG Ret;
+  DECLARE_RETURN(DWORD);
+
+  DPRINT("Enter NtUserGetClassLong\n");
+  UserEnterExclusive();
 
   WindowObject = IntGetWindowObject(hWnd);
   if (WindowObject == NULL)
   {
     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-    return 0;
+    RETURN(0);
   }
   Ret = IntGetClassLong(WindowObject, Offset, Ansi);
   IntReleaseWindowObject(WindowObject);
-  return(Ret);
+  RETURN(Ret);
+  
+CLEANUP:
+  DPRINT("Leave NtUserGetClassLong, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
 }
 
 void FASTCALL
-IntSetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, LONG dwNewLong, BOOL Ansi)
+co_IntSetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, LONG dwNewLong, BOOL Ansi)
 {
   PWINDOW_OBJECT Parent, Owner;
 
@@ -569,7 +603,7 @@ IntSetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, LONG dwNewLong, BOOL 
 
       if ((!Owner) && (!Parent))
         {
-          IntShellHookNotify(HSHELL_REDRAW, (LPARAM) WindowObject->Self);
+          co_IntShellHookNotify(HSHELL_REDRAW, (LPARAM) WindowObject->Self);
         }
 
       if (Parent)
@@ -635,17 +669,26 @@ NtUserSetClassLong(HWND hWnd,
 {
   PWINDOW_OBJECT WindowObject;
   LONG Ret;
+  DECLARE_RETURN(DWORD);
+
+  DPRINT("Enter NtUserSetClassLong\n");
+  UserEnterExclusive();
 
   WindowObject = IntGetWindowObject(hWnd);
   if (WindowObject == NULL)
   {
     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-    return 0;
+    RETURN(0);
   }
   Ret = IntGetClassLong(WindowObject, Offset, Ansi);
-  IntSetClassLong(WindowObject, Offset, dwNewLong, Ansi);
+  co_IntSetClassLong(WindowObject, Offset, dwNewLong, Ansi);
   IntReleaseWindowObject(WindowObject);
-  return(Ret);
+  RETURN(Ret);
+  
+CLEANUP:
+  DPRINT("Leave NtUserSetClassLong, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
 }
 
 DWORD STDCALL
@@ -665,13 +708,15 @@ NtUserUnregisterClass(
 {
    PWNDCLASS_OBJECT Class;
    PWINSTATION_OBJECT WinStaObject;
+   DECLARE_RETURN(BOOL);
 
-   DPRINT("NtUserUnregisterClass(%S)\n", ClassNameOrAtom);
+   DPRINT("Enter NtUserUnregisterClass(%S)\n", ClassNameOrAtom);
+   UserEnterExclusive();
 
    if (!ClassNameOrAtom || !PsGetWin32Thread()->Desktop)
    {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      return FALSE;
+      RETURN( FALSE);
    }
 
    WinStaObject = PsGetWin32Thread()->Desktop->WindowStation;
@@ -679,14 +724,14 @@ NtUserUnregisterClass(
    if (!ClassReferenceClassByNameOrAtom(&Class, ClassNameOrAtom, hInstance))
    {
       SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
-      return FALSE;
+      RETURN( FALSE);
    }
 
    if (Class->hInstance && Class->hInstance != hInstance)
    {
       ClassDereferenceObject(Class);
       SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
-      return FALSE;
+      RETURN( FALSE);
    }
 
   IntLockClassWindows(Class);
@@ -696,7 +741,7 @@ NtUserUnregisterClass(
       /* Dereference the ClassReferenceClassByNameOrAtom() call */
       ObmDereferenceObject(Class);
       SetLastWin32Error(ERROR_CLASS_HAS_WINDOWS);
-      return FALSE;
+      RETURN( FALSE);
    }
    IntUnLockClassWindows(Class);
 
@@ -710,7 +755,12 @@ NtUserUnregisterClass(
    /* Free the object */
    ClassDereferenceObject(Class);
 
-   return TRUE;
+   RETURN( TRUE);
+   
+CLEANUP:
+   DPRINT("Leave NtUserUnregisterClass, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;
 }
 
 /* EOF */

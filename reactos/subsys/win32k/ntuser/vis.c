@@ -156,7 +156,7 @@ VIS_ComputeVisibleRegion(
 }
 
 VOID FASTCALL
-VIS_WindowLayoutChanged(
+co_VIS_WindowLayoutChanged(
    PWINDOW_OBJECT Window,
    HRGN NewlyExposed)
 {
@@ -172,7 +172,7 @@ VIS_WindowLayoutChanged(
       NtGdiOffsetRgn(Temp,
                      Window->WindowRect.left - Parent->ClientRect.left,
                      Window->WindowRect.top - Parent->ClientRect.top);
-     IntRedrawWindow(Parent, NULL, Temp,
+     co_UserRedrawWindow(Parent, NULL, Temp,
                      RDW_FRAME | RDW_ERASE | RDW_INVALIDATE |
                      RDW_ALLCHILDREN);
      IntReleaseWindowObject(Parent);

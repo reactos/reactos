@@ -265,14 +265,14 @@ IntCallLowLevelHook(INT HookId, INT Code, WPARAM wParam, LPARAM lParam, PHOOK Ho
 
   /* FIXME should get timeout from
    * HKEY_CURRENT_USER\Control Panel\Desktop\LowLevelHooksTimeout */
-  Status = MsqSendMessage(Hook->Thread->Tcb.Win32Thread->MessageQueue, (HWND) Code, HookId,
+  Status = co_MsqSendMessage(Hook->Thread->Tcb.Win32Thread->MessageQueue, (HWND) Code, HookId,
                           wParam, lParam, 5000, TRUE, TRUE, &uResult);
 
   return NT_SUCCESS(Status) ? uResult : 0;
 }
 
 LRESULT FASTCALL
-HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam)
+co_HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam)
 {
   PHOOK Hook;
   PW32THREAD Win32Thread;
@@ -326,7 +326,7 @@ HOOK_CallHooks(INT HookId, INT Code, WPARAM wParam, LPARAM lParam)
       IntUnLockHookTable(GlobalHooks);
     }
 
-  Result = IntCallHookProc(HookId, Code, wParam, lParam, Hook->Proc,
+  Result = co_IntCallHookProc(HookId, Code, wParam, lParam, Hook->Proc,
                            Hook->Ansi, &Hook->ModuleName);
 
   Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
@@ -406,6 +406,10 @@ NtUserCallNextHookEx(
   PHOOK HookObj, NextObj;
   PWINSTATION_OBJECT WinStaObj;
   NTSTATUS Status;
+  DECLARE_RETURN(LRESULT);
+
+  DPRINT("Enter NtUserCallNextHookEx\n");
+  UserEnterExclusive();
 
   Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
 				          KernelMode,
@@ -415,7 +419,7 @@ NtUserCallNextHookEx(
   if (! NT_SUCCESS(Status))
     {
       SetLastNtError(Status);
-      return FALSE;
+      RETURN( FALSE);
     }
 
   Status = ObmReferenceObjectByHandle(WinStaObj->HandleTable, Hook,
@@ -425,7 +429,7 @@ NtUserCallNextHookEx(
     {
       DPRINT1("Invalid handle passed to NtUserCallNextHookEx\n");
       SetLastNtError(Status);
-      return 0;
+      RETURN( 0);
     }
   ASSERT(Hook == HookObj->Self);
 
@@ -434,7 +438,7 @@ NtUserCallNextHookEx(
       DPRINT1("Thread mismatch\n");
       ObmDereferenceObject(HookObj);
       SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return 0;
+      RETURN( 0);
     }
 
   NextObj = IntGetNextHook(HookObj);
@@ -444,10 +448,15 @@ NtUserCallNextHookEx(
       DPRINT1("Calling next hook not implemented\n");
       UNIMPLEMENTED
       SetLastWin32Error(ERROR_NOT_SUPPORTED);
-      return 0;
+      RETURN( 0);
     }
 
-  return 0;
+  RETURN( 0);
+  
+CLEANUP:
+  DPRINT("Leave NtUserCallNextHookEx, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
 }
 
 DWORD
@@ -479,11 +488,15 @@ NtUserSetWindowsHookEx(
   UNICODE_STRING ModuleName;
   NTSTATUS Status;
   HHOOK Handle;
+  DECLARE_RETURN(HHOOK);
+
+  DPRINT("Enter NtUserSetWindowsHookEx\n");
+  UserEnterExclusive();
 
   if (HookId < WH_MINHOOK || WH_MAXHOOK < HookId || NULL == HookProc)
     {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      return NULL;
+      RETURN( NULL);
     }
 
   if (ThreadId)  /* thread-local hook */
@@ -496,7 +509,7 @@ NtUserSetWindowsHookEx(
         {
           /* these can only be global */
           SetLastWin32Error(ERROR_INVALID_PARAMETER);
-          return NULL;
+          RETURN( NULL);
         }
       Mod = NULL;
       Global = FALSE;
@@ -504,14 +517,14 @@ NtUserSetWindowsHookEx(
         {
           DPRINT1("Invalid thread id 0x%x\n", ThreadId);
           SetLastWin32Error(ERROR_INVALID_PARAMETER);
-          return NULL;
+          RETURN( NULL);
         }
       if (Thread->ThreadsProcess != PsGetCurrentProcess())
         {
           ObDereferenceObject(Thread);
           DPRINT1("Can't specify thread belonging to another process\n");
           SetLastWin32Error(ERROR_INVALID_PARAMETER);
-          return NULL;
+          RETURN( NULL);
         }
     }
   else  /* system-global hook */
@@ -528,13 +541,13 @@ NtUserSetWindowsHookEx(
           if (! NT_SUCCESS(Status))
             {
               SetLastNtError(Status);
-              return (HANDLE) NULL;
+              RETURN( (HANDLE) NULL);
             }
         }
       else if (NULL ==  Mod)
         {
           SetLastWin32Error(ERROR_INVALID_PARAMETER);
-          return NULL;
+          RETURN( NULL);
         }
       else
         {
@@ -558,7 +571,7 @@ NtUserSetWindowsHookEx(
           ObDereferenceObject(Thread);
         }
       SetLastWin32Error(ERROR_NOT_SUPPORTED);
-      return NULL;
+      RETURN( NULL);
     }
 
   Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
@@ -573,7 +586,7 @@ NtUserSetWindowsHookEx(
           ObDereferenceObject(Thread);
         }
       SetLastNtError(Status);
-      return (HANDLE) NULL;
+      RETURN( (HANDLE) NULL);
     }
 
   Hook = IntAddHook(Thread, HookId, Global, WinStaObj);
@@ -584,7 +597,7 @@ NtUserSetWindowsHookEx(
           ObDereferenceObject(Thread);
         }
       ObDereferenceObject(WinStaObj);
-      return NULL;
+      RETURN( NULL);
     }
 
   if (NULL != Thread)
@@ -605,7 +618,7 @@ NtUserSetWindowsHookEx(
             }
           ObDereferenceObject(WinStaObj);
           SetLastNtError(Status);
-          return NULL;
+          RETURN( NULL);
         }
       Hook->ModuleName.Buffer = ExAllocatePoolWithTag(PagedPool,
                                                       ModuleName.MaximumLength,
@@ -620,7 +633,7 @@ NtUserSetWindowsHookEx(
             }
           ObDereferenceObject(WinStaObj);
           SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-          return NULL;
+          RETURN( NULL);
         }
       Hook->ModuleName.MaximumLength = ModuleName.MaximumLength;
       Status = MmCopyFromCaller(Hook->ModuleName.Buffer,
@@ -636,7 +649,7 @@ NtUserSetWindowsHookEx(
             }
           ObDereferenceObject(WinStaObj);
           SetLastNtError(Status);
-          return NULL;
+          RETURN( NULL);
         }
       Hook->ModuleName.Length = ModuleName.Length;
     }
@@ -648,7 +661,12 @@ NtUserSetWindowsHookEx(
   ObmDereferenceObject(Hook);
   ObDereferenceObject(WinStaObj);
 
-  return Handle;
+  RETURN( Handle);
+  
+CLEANUP:
+  DPRINT("Leave NtUserSetWindowsHookEx, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
 }
 
 DWORD
@@ -676,6 +694,10 @@ NtUserUnhookWindowsHookEx(
   PWINSTATION_OBJECT WinStaObj;
   PHOOK HookObj;
   NTSTATUS Status;
+  DECLARE_RETURN(BOOL);
+
+  DPRINT("Enter NtUserUnhookWindowsHookEx\n");
+  UserEnterExclusive();
 
   Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
 				          KernelMode,
@@ -685,7 +707,7 @@ NtUserUnhookWindowsHookEx(
   if (! NT_SUCCESS(Status))
     {
       SetLastNtError(Status);
-      return FALSE;
+      RETURN( FALSE);
     }
 
   Status = ObmReferenceObjectByHandle(WinStaObj->HandleTable, Hook,
@@ -695,7 +717,7 @@ NtUserUnhookWindowsHookEx(
       DPRINT1("Invalid handle passed to NtUserUnhookWindowsHookEx\n");
       ObDereferenceObject(WinStaObj);
       SetLastNtError(Status);
-      return FALSE;
+      RETURN( FALSE);
     }
   ASSERT(Hook == HookObj->Self);
 
@@ -704,7 +726,12 @@ NtUserUnhookWindowsHookEx(
   ObmDereferenceObject(HookObj);
   ObDereferenceObject(WinStaObj);
 
-  return TRUE;
+  RETURN( TRUE);
+  
+CLEANUP:
+  DPRINT("Leave NtUserUnhookWindowsHookEx, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
 }
 
 DWORD

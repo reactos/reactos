@@ -47,7 +47,7 @@ PUSER_MESSAGE_QUEUE W32kGetPrimitiveMessageQueue()
 }
 
 BOOL FASTCALL
-IntRegisterLogonProcess(HANDLE ProcessId, BOOL Register)
+co_IntRegisterLogonProcess(HANDLE ProcessId, BOOL Register)
 {
   PEPROCESS Process;
   NTSTATUS Status;
@@ -90,7 +90,7 @@ IntRegisterLogonProcess(HANDLE ProcessId, BOOL Register)
   Request.Data.RegisterLogonProcessRequest.ProcessId = ProcessId;
   Request.Data.RegisterLogonProcessRequest.Register = Register;
 
-  Status = CsrNotify(&Request);
+  Status = co_CsrNotify(&Request);
   if (! NT_SUCCESS(Status))
   {
     DPRINT1("Failed to register logon process with CSRSS\n");
@@ -108,6 +108,10 @@ STDCALL
 NtUserCallNoParam(DWORD Routine)
 {
   DWORD Result = 0;
+  DECLARE_RETURN(DWORD);
+  
+  DPRINT("Enter NtUserCallNoParam\n");
+  UserEnterExclusive();
 
   switch(Routine)
   {
@@ -117,7 +121,7 @@ NtUserCallNoParam(DWORD Routine)
       break;
 
     case NOPARAM_ROUTINE_DESTROY_CARET:
-      Result = (DWORD)IntDestroyCaret(PsGetCurrentThread()->Tcb.Win32Thread);
+      Result = (DWORD)co_IntDestroyCaret(PsGetCurrentThread()->Tcb.Win32Thread);
       break;
 
     case NOPARAM_ROUTINE_INIT_MESSAGE_PUMP:
@@ -141,14 +145,19 @@ NtUserCallNoParam(DWORD Routine)
       break;
 
     case NOPARAM_ROUTINE_MSQCLEARWAKEMASK:
-      return (DWORD)IntMsqClearWakeMask();
+      RETURN( (DWORD)IntMsqClearWakeMask());
 
     default:
       DPRINT1("Calling invalid routine number 0x%x in NtUserCallNoParam\n", Routine);
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       break;
   }
-  return Result;
+  RETURN(Result);
+  
+CLEANUP:
+  DPRINT("Leave NtUserCallNoParam, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
 }
 
 /*
@@ -160,6 +169,11 @@ NtUserCallOneParam(
   DWORD Param,
   DWORD Routine)
 {
+  DECLARE_RETURN(DWORD);  
+
+  DPRINT("Enter NtUserCallOneParam\n");
+  UserEnterExclusive();
+   
   switch(Routine)
   {
     case ONEPARAM_ROUTINE_GETMENU:
@@ -171,13 +185,13 @@ NtUserCallOneParam(
       if(!WindowObject)
       {
         SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-        return FALSE;
+        RETURN( FALSE);
       }
 
       Result = (DWORD)WindowObject->IDMenu;
 
       IntReleaseWindowObject(WindowObject);
-      return Result;
+      RETURN( Result);
     }
 
     case ONEPARAM_ROUTINE_ISWINDOWUNICODE:
@@ -189,15 +203,15 @@ NtUserCallOneParam(
       if(!WindowObject)
       {
         SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-        return FALSE;
+        RETURN( FALSE);
       }
       Result = WindowObject->Unicode;
       IntReleaseWindowObject(WindowObject);
-      return Result;
+      RETURN( Result);
     }
 
     case ONEPARAM_ROUTINE_WINDOWFROMDC:
-      return (DWORD)IntWindowFromDC((HDC)Param);
+      RETURN( (DWORD)IntWindowFromDC((HDC)Param));
 
     case ONEPARAM_ROUTINE_GETWNDCONTEXTHLPID:
     {
@@ -208,13 +222,13 @@ NtUserCallOneParam(
       if(!WindowObject)
       {
         SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-        return FALSE;
+        RETURN( FALSE);
       }
 
       Result = WindowObject->ContextHelpId;
 
       IntReleaseWindowObject(WindowObject);
-      return Result;
+      RETURN( Result);
     }
 
     case ONEPARAM_ROUTINE_SWAPMOUSEBUTTON:
@@ -228,24 +242,24 @@ NtUserCallOneParam(
                                               0,
                                               &WinStaObject);
       if (!NT_SUCCESS(Status))
-        return (DWORD)FALSE;
+        RETURN( (DWORD)FALSE);
 
       /* FIXME
       Result = (DWORD)IntSwapMouseButton(WinStaObject, (BOOL)Param); */
       Result = 0;
 
       ObDereferenceObject(WinStaObject);
-      return Result;
+      RETURN( Result);
     }
 
     case ONEPARAM_ROUTINE_SWITCHCARETSHOWING:
-      return (DWORD)IntSwitchCaretShowing((PVOID)Param);
+      RETURN( (DWORD)IntSwitchCaretShowing((PVOID)Param));
 
     case ONEPARAM_ROUTINE_SETCARETBLINKTIME:
-      return (DWORD)IntSetCaretBlinkTime((UINT)Param);
+      RETURN( (DWORD)IntSetCaretBlinkTime((UINT)Param));
 
     case ONEPARAM_ROUTINE_ENUMCLIPBOARDFORMATS:
-      return (DWORD)IntEnumClipboardFormats((UINT)Param);
+      RETURN( (DWORD)IntEnumClipboardFormats((UINT)Param));
 
     case ONEPARAM_ROUTINE_GETWINDOWINSTANCE:
     {
@@ -255,16 +269,16 @@ NtUserCallOneParam(
       if(!(WindowObject = IntGetWindowObject((HWND)Param)))
       {
         SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-        return FALSE;
+        RETURN( FALSE);
       }
 
       Result = (DWORD)WindowObject->Instance;
       IntReleaseWindowObject(WindowObject);
-      return Result;
+      RETURN( Result);
     }
 
     case ONEPARAM_ROUTINE_SETMESSAGEEXTRAINFO:
-      return (DWORD)MsqSetMessageExtraInfo((LPARAM)Param);
+      RETURN( (DWORD)MsqSetMessageExtraInfo((LPARAM)Param));
 
     case ONEPARAM_ROUTINE_GETCURSORPOSITION:
     {
@@ -273,13 +287,13 @@ NtUserCallOneParam(
       POINT Pos;
 
       if(!Param)
-        return (DWORD)FALSE;
+        RETURN( (DWORD)FALSE);
       Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
                                               KernelMode,
                                               0,
                                               &WinStaObject);
       if (!NT_SUCCESS(Status))
-        return (DWORD)FALSE;
+        RETURN( (DWORD)FALSE);
 
       /* FIXME - check if process has WINSTA_READATTRIBUTES */
       IntGetCursorLocation(WinStaObject, &Pos);
@@ -289,12 +303,12 @@ NtUserCallOneParam(
       {
         ObDereferenceObject(WinStaObject);
         SetLastNtError(Status);
-        return FALSE;
+        RETURN( FALSE);
       }
 
       ObDereferenceObject(WinStaObject);
 
-      return (DWORD)TRUE;
+      RETURN( (DWORD)TRUE);
     }
 
     case ONEPARAM_ROUTINE_ISWINDOWINDESTROY:
@@ -306,13 +320,13 @@ NtUserCallOneParam(
       if(!WindowObject)
       {
         SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-        return FALSE;
+        RETURN( FALSE);
       }
 
       Result = (DWORD)IntIsWindowInDestroy(WindowObject);
 
       IntReleaseWindowObject(WindowObject);
-      return Result;
+      RETURN( Result);
     }
 
     case ONEPARAM_ROUTINE_ENABLEPROCWNDGHSTING:
@@ -333,25 +347,30 @@ NtUserCallOneParam(
           Process->Flags |= W32PF_NOWINDOWGHOSTING;
         }
 
-        return TRUE;
+        RETURN( TRUE);
       }
 
-      return FALSE;
+      RETURN( FALSE);
     }
 
     case ONEPARAM_ROUTINE_MSQSETWAKEMASK:
-      return (DWORD)IntMsqSetWakeMask(Param);
+      RETURN( (DWORD)IntMsqSetWakeMask(Param));
 
     case ONEPARAM_ROUTINE_GETKEYBOARDTYPE:
-      return NtUserGetKeyboardType(Param);
+      RETURN( UserGetKeyboardType(Param));
       
     case ONEPARAM_ROUTINE_GETKEYBOARDLAYOUT:
-      return (DWORD)NtUserGetKeyboardLayout(Param);
+      RETURN( (DWORD)UserGetKeyboardLayout(Param));
   }
   DPRINT1("Calling invalid routine number 0x%x in NtUserCallOneParam(), Param=0x%x\n",
           Routine, Param);
   SetLastWin32Error(ERROR_INVALID_PARAMETER);
-  return 0;
+  RETURN( 0);
+  
+CLEANUP:
+  DPRINT("Leave NtUserCallOneParam, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
 }
 
 
@@ -367,20 +386,24 @@ NtUserCallTwoParam(
 {
   NTSTATUS Status;
   PWINDOW_OBJECT WindowObject;
+  DECLARE_RETURN(DWORD);  
+
+  DPRINT("Enter NtUserCallTwoParam\n");
+  UserEnterExclusive();
 
   switch(Routine)
   {
     case TWOPARAM_ROUTINE_SETDCPENCOLOR:
     {
-      return (DWORD)IntSetDCColor((HDC)Param1, OBJ_PEN, (COLORREF)Param2);
+      RETURN( (DWORD)IntSetDCColor((HDC)Param1, OBJ_PEN, (COLORREF)Param2));
     }
     case TWOPARAM_ROUTINE_SETDCBRUSHCOLOR:
     {
-      return (DWORD)IntSetDCColor((HDC)Param1, OBJ_BRUSH, (COLORREF)Param2);
+      RETURN( (DWORD)IntSetDCColor((HDC)Param1, OBJ_BRUSH, (COLORREF)Param2));
     }
     case TWOPARAM_ROUTINE_GETDCCOLOR:
     {
-      return (DWORD)IntGetDCColor((HDC)Param1, (ULONG)Param2);
+      RETURN( (DWORD)IntGetDCColor((HDC)Param1, (ULONG)Param2));
     }
     case TWOPARAM_ROUTINE_GETWINDOWRGNBOX:
     {
@@ -391,20 +414,20 @@ NtUserCallTwoParam(
       if(!NT_SUCCESS(Status))
       {
         SetLastNtError(Status);
-        return ERROR;
+        RETURN( ERROR);
       }
-      return Ret;
+      RETURN( Ret);
     }
     case TWOPARAM_ROUTINE_GETWINDOWRGN:
     {
-      return (DWORD)IntGetWindowRgn((HWND)Param1, (HRGN)Param2);
+      RETURN( (DWORD)IntGetWindowRgn((HWND)Param1, (HRGN)Param2));
     }
     case TWOPARAM_ROUTINE_SETMENUBARHEIGHT:
     {
       DWORD Ret;
       PMENU_OBJECT MenuObject = IntGetMenuObject((HMENU)Param1);
       if(!MenuObject)
-        return 0;
+        RETURN( 0);
 
       if(Param2 > 0)
       {
@@ -414,7 +437,7 @@ NtUserCallTwoParam(
       else
         Ret = (DWORD)MenuObject->MenuInfo.Height;
       IntReleaseMenuObject(MenuObject);
-      return Ret;
+      RETURN( Ret);
     }
     case TWOPARAM_ROUTINE_SETMENUITEMRECT:
     {
@@ -422,18 +445,18 @@ NtUserCallTwoParam(
       SETMENUITEMRECT smir;
       PMENU_OBJECT MenuObject = IntGetMenuObject((HMENU)Param1);
       if(!MenuObject)
-        return 0;
+        RETURN( 0);
 
       if(!NT_SUCCESS(MmCopyFromCaller(&smir, (PVOID)Param2, sizeof(SETMENUITEMRECT))))
       {
         IntReleaseMenuObject(MenuObject);
-        return 0;
+        RETURN( 0);
       }
 
       Ret = IntSetMenuItemRect(MenuObject, smir.uItem, smir.fByPosition, &smir.rcRect);
 
       IntReleaseMenuObject(MenuObject);
-      return (DWORD)Ret;
+      RETURN( (DWORD)Ret);
     }
 
     case TWOPARAM_ROUTINE_SETGUITHRDHANDLE:
@@ -441,19 +464,19 @@ NtUserCallTwoParam(
       PUSER_MESSAGE_QUEUE MsgQueue = PsGetCurrentThread()->Tcb.Win32Thread->MessageQueue;
 
       ASSERT(MsgQueue);
-      return (DWORD)MsqSetStateWindow(MsgQueue, (ULONG)Param1, (HWND)Param2);
+      RETURN( (DWORD)MsqSetStateWindow(MsgQueue, (ULONG)Param1, (HWND)Param2));
     }
 
     case TWOPARAM_ROUTINE_ENABLEWINDOW:
 	  UNIMPLEMENTED
-      return 0;
+      RETURN( 0);
 
     case TWOPARAM_ROUTINE_UNKNOWN:
 	  UNIMPLEMENTED
-	  return 0;
+     RETURN( 0);
 
     case TWOPARAM_ROUTINE_SHOWOWNEDPOPUPS:
-	  return (DWORD)IntShowOwnedPopups((HWND) Param1, (BOOL) Param2);
+     RETURN( (DWORD)IntShowOwnedPopups((HWND) Param1, (BOOL) Param2));
 
     case TWOPARAM_ROUTINE_ROS_SHOWWINDOW:
     {
@@ -463,44 +486,44 @@ NtUserCallTwoParam(
           if (Window == 0)
            {
                  SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-                 return FALSE;
+                 RETURN( FALSE);
            }
           if (Param2)
            {
                if (!(Window->Flags & WIN_NEEDS_SHOW_OWNEDPOPUP))
                 {
                     IntReleaseWindowObject(Window);
-                    return TRUE;
+                    RETURN( TRUE);
                 }
                 Window->Flags &= ~WIN_NEEDS_SHOW_OWNEDPOPUP;
            }
           else Window->Flags |= WIN_NEEDS_SHOW_OWNEDPOPUP;
           DPRINT1("ROS_SHOWWINDOW ---> 0x%x\n",Window->Flags);
           IntReleaseWindowObject(Window);
-          return TRUE;
+          RETURN( TRUE);
     }
     case TWOPARAM_ROUTINE_SWITCHTOTHISWINDOW:
 	  UNIMPLEMENTED
-	  return 0;
+     RETURN( 0);
 
     case TWOPARAM_ROUTINE_VALIDATERGN:
-      return (DWORD)NtUserValidateRgn((HWND) Param1, (HRGN) Param2);
+      RETURN( (DWORD)UserValidateRgn((HWND) Param1, (HRGN) Param2));
 
     case TWOPARAM_ROUTINE_SETWNDCONTEXTHLPID:
       WindowObject = IntGetWindowObject((HWND)Param1);
       if(!WindowObject)
       {
         SetLastWin32Error(ERROR_INVALID_HANDLE);
-        return (DWORD)FALSE;
+        RETURN( (DWORD)FALSE);
       }
 
       WindowObject->ContextHelpId = Param2;
 
       IntReleaseWindowObject(WindowObject);
-      return (DWORD)TRUE;
+      RETURN( (DWORD)TRUE);
 
     case TWOPARAM_ROUTINE_SETCARETPOS:
-      return (DWORD)IntSetCaretPos((int)Param1, (int)Param2);
+      RETURN( (DWORD)co_IntSetCaretPos((int)Param1, (int)Param2));
 
     case TWOPARAM_ROUTINE_GETWINDOWINFO:
     {
@@ -510,7 +533,7 @@ NtUserCallTwoParam(
       if(!(WindowObject = IntGetWindowObject((HWND)Param1)))
       {
         SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-        return FALSE;
+        RETURN( FALSE);
       }
 
 #if 0
@@ -523,14 +546,14 @@ NtUserCallTwoParam(
       {
         IntReleaseWindowObject(WindowObject);
         SetLastNtError(Status);
-        return FALSE;
+        RETURN( FALSE);
       }
 
       if(wi.cbSize != sizeof(WINDOWINFO))
       {
         IntReleaseWindowObject(WindowObject);
         SetLastWin32Error(ERROR_INVALID_PARAMETER);
-        return FALSE;
+        RETURN( FALSE);
       }
 #endif
 
@@ -541,16 +564,16 @@ NtUserCallTwoParam(
         {
           IntReleaseWindowObject(WindowObject);
           SetLastNtError(Status);
-          return FALSE;
+          RETURN( FALSE);
         }
       }
 
       IntReleaseWindowObject(WindowObject);
-      return Ret;
+      RETURN( Ret);
     }
 
     case TWOPARAM_ROUTINE_REGISTERLOGONPROC:
-      return (DWORD)IntRegisterLogonProcess((HANDLE)Param1, (BOOL)Param2);
+      RETURN( (DWORD)co_IntRegisterLogonProcess((HANDLE)Param1, (BOOL)Param2));
 
     case TWOPARAM_ROUTINE_SETSYSCOLORS:
     {
@@ -568,7 +591,7 @@ NtUserCallTwoParam(
       if(!NT_SUCCESS(Status))
       {
         SetLastNtError(Status);
-        return 0;
+        RETURN( 0);
       }
 
       Buffer = ExAllocatePool(PagedPool, (Param2 * sizeof(INT)) + (Param2 * sizeof(COLORREF)));
@@ -595,7 +618,7 @@ NtUserCallTwoParam(
       }
 
 
-      return Ret;
+      RETURN( Ret);
     }
 
     case TWOPARAM_ROUTINE_GETSYSCOLORBRUSHES:
@@ -644,14 +667,19 @@ NtUserCallTwoParam(
 
         ExFreePool(Buffer.Pointer);
       }
-      return Ret;
+      RETURN( Ret);
     }
 
   }
   DPRINT1("Calling invalid routine number 0x%x in NtUserCallTwoParam(), Param1=0x%x Parm2=0x%x\n",
           Routine, Param1, Param2);
   SetLastWin32Error(ERROR_INVALID_PARAMETER);
-  return 0;
+  RETURN( 0);
+  
+CLEANUP:
+  DPRINT("Leave NtUserCallTwoParam, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
 }
 
 
@@ -666,19 +694,23 @@ NtUserCallHwndLock(
 {
    BOOL Ret = 0;
    PWINDOW_OBJECT Window;
+   DECLARE_RETURN(BOOLEAN);  
+
+   DPRINT("Enter NtUserCallHwndLock\n");
+   UserEnterExclusive();
 
    Window = IntGetWindowObject(hWnd);
    if (Window == 0)
    {
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-      return FALSE;
+      RETURN( FALSE);
    }
 
    /* FIXME: Routine can be 0x53 - 0x5E */
    switch (Routine)
    {
       case HWNDLOCK_ROUTINE_ARRANGEICONICWINDOWS:
-         WinPosArrangeIconicWindows(Window);
+         co_WinPosArrangeIconicWindows(Window);
          break;
 
       case HWNDLOCK_ROUTINE_DRAWMENUBAR:
@@ -692,7 +724,7 @@ NtUserCallHwndLock(
               MenuObject->MenuInfo.WndOwner = hWnd;
               MenuObject->MenuInfo.Height = 0;
               IntReleaseMenuObject(MenuObject);
-              WinPosSetWindowPos(hWnd, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
+              co_WinPosSetWindowPos(hWnd, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
                            SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED );
               Ret = TRUE;
               break;
@@ -703,7 +735,7 @@ NtUserCallHwndLock(
          break;
 
       case HWNDLOCK_ROUTINE_SETFOREGROUNDWINDOW:
-         Ret = IntSetForegroundWindow(Window);
+         Ret = co_IntSetForegroundWindow(Window);
          break;
 
       case HWNDLOCK_ROUTINE_UPDATEWINDOW:
@@ -713,7 +745,12 @@ NtUserCallHwndLock(
 
    IntReleaseWindowObject(Window);
 
-   return Ret;
+   RETURN( Ret);
+   
+CLEANUP:
+   DPRINT("Leave NtUserCallHwndLock, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;   
 }
 
 /*
@@ -754,12 +791,22 @@ DWORD STDCALL
 NtUserGetThreadState(
   DWORD Routine)
 {
+   DECLARE_RETURN(DWORD);  
+
+   DPRINT("Enter NtUserGetThreadState\n");
+   UserEnterShared();
+   
    switch (Routine)
    {
       case 0:
-         return (DWORD)IntGetThreadFocusWindow();
+         RETURN( (DWORD)IntGetThreadFocusWindow());
    }
-   return 0;
+   RETURN( 0);
+   
+CLEANUP:
+   DPRINT("Leave NtUserGetThreadState, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;   
 }
 
 VOID FASTCALL
@@ -822,14 +869,14 @@ IntSystemParametersInfo(
     IntGetFontMetricSetting(L"IconFont", &IconFont);
 
     pMetrics.iBorderWidth = 1;
-    pMetrics.iScrollWidth = NtUserGetSystemMetrics(SM_CXVSCROLL);
-    pMetrics.iScrollHeight = NtUserGetSystemMetrics(SM_CYHSCROLL);
-    pMetrics.iCaptionWidth = NtUserGetSystemMetrics(SM_CXSIZE);
-    pMetrics.iCaptionHeight = NtUserGetSystemMetrics(SM_CYSIZE);
-    pMetrics.iSmCaptionWidth = NtUserGetSystemMetrics(SM_CXSMSIZE);
-    pMetrics.iSmCaptionHeight = NtUserGetSystemMetrics(SM_CYSMSIZE);
-    pMetrics.iMenuWidth = NtUserGetSystemMetrics(SM_CXMENUSIZE);
-    pMetrics.iMenuHeight = NtUserGetSystemMetrics(SM_CYMENUSIZE);
+    pMetrics.iScrollWidth = UserGetSystemMetrics(SM_CXVSCROLL);
+    pMetrics.iScrollHeight = UserGetSystemMetrics(SM_CYHSCROLL);
+    pMetrics.iCaptionWidth = UserGetSystemMetrics(SM_CXSIZE);
+    pMetrics.iCaptionHeight = UserGetSystemMetrics(SM_CYSIZE);
+    pMetrics.iSmCaptionWidth = UserGetSystemMetrics(SM_CXSMSIZE);
+    pMetrics.iSmCaptionHeight = UserGetSystemMetrics(SM_CYSMSIZE);
+    pMetrics.iMenuWidth = UserGetSystemMetrics(SM_CXMENUSIZE);
+    pMetrics.iMenuHeight = UserGetSystemMetrics(SM_CYMENUSIZE);
     pMetrics.cbSize = sizeof(NONCLIENTMETRICSW);
 
     bInitialized = TRUE;
@@ -1037,9 +1084,8 @@ IntSystemParametersInfo(
 /*
  * @implemented
  */
-BOOL
-STDCALL
-NtUserSystemParametersInfo(
+BOOL FASTCALL
+UserSystemParametersInfo(
   UINT uiAction,
   UINT uiParam,
   PVOID pvParam,
@@ -1066,9 +1112,9 @@ NtUserSystemParametersInfo(
       if(!NT_SUCCESS(Status))
       {
         SetLastNtError(Status);
-        return FALSE;
+        return( FALSE);
       }
-      return (DWORD)IntSystemParametersInfo(uiAction, uiParam, &rc, fWinIni);
+      return( (DWORD)IntSystemParametersInfo(uiAction, uiParam, &rc, fWinIni));
     }
     case SPI_GETWORKAREA:
     {
@@ -1076,16 +1122,16 @@ NtUserSystemParametersInfo(
 
       if(!IntSystemParametersInfo(uiAction, uiParam, &rc, fWinIni))
       {
-        return FALSE;
+        return( FALSE);
       }
 
       Status = MmCopyToCaller((PRECT)pvParam, &rc, sizeof(RECT));
       if(!NT_SUCCESS(Status))
       {
         SetLastNtError(Status);
-        return FALSE;
+        return( FALSE);
       }
-      return TRUE;
+      return( TRUE);
     }
     case SPI_GETFONTSMOOTHING:
     case SPI_GETGRADIENTCAPTIONS:
@@ -1096,16 +1142,16 @@ NtUserSystemParametersInfo(
 
       if(!IntSystemParametersInfo(uiAction, uiParam, &Ret, fWinIni))
       {
-        return FALSE;
+        return( FALSE);
       }
 
       Status = MmCopyToCaller(pvParam, &Ret, sizeof(BOOL));
       if(!NT_SUCCESS(Status))
       {
         SetLastNtError(Status);
-        return FALSE;
+        return( FALSE);
       }
-      return TRUE;
+      return( TRUE);
     }
     case SPI_SETDESKWALLPAPER:
     {
@@ -1117,9 +1163,9 @@ NtUserSystemParametersInfo(
       if(!NT_SUCCESS(Status))
       {
         SetLastNtError(Status);
-        return FALSE;
+        return( FALSE);
       }
-      return IntSystemParametersInfo(SPI_SETDESKWALLPAPER, 0, &hbmWallpaper, fWinIni);
+      return( IntSystemParametersInfo(SPI_SETDESKWALLPAPER, 0, &hbmWallpaper, fWinIni));
     }
     case SPI_GETDESKWALLPAPER:
     {
@@ -1134,9 +1180,9 @@ NtUserSystemParametersInfo(
       if(!NT_SUCCESS(Status))
       {
         SetLastNtError(Status);
-        return FALSE;
+        return( FALSE);
       }
-      return Ret;
+      return( Ret);
     }
     case SPI_GETICONTITLELOGFONT:
     {
@@ -1144,16 +1190,16 @@ NtUserSystemParametersInfo(
 
       if(!IntSystemParametersInfo(uiAction, uiParam, &IconFont, fWinIni))
       {
-        return FALSE;
+        return( FALSE);
       }
 
       Status = MmCopyToCaller(pvParam, &IconFont, sizeof(LOGFONTW));
       if(!NT_SUCCESS(Status))
       {
         SetLastNtError(Status);
-        return FALSE;
+        return( FALSE);
       }
-      return TRUE;
+      return( TRUE);
     }
     case SPI_GETNONCLIENTMETRICS:
     {
@@ -1163,30 +1209,59 @@ NtUserSystemParametersInfo(
       if(!NT_SUCCESS(Status))
       {
         SetLastNtError(Status);
-        return FALSE;
+        return( FALSE);
       }
       if(metrics.cbSize != sizeof(NONCLIENTMETRICSW))
       {
         SetLastWin32Error(ERROR_INVALID_PARAMETER);
-        return FALSE;
+        return( FALSE);
       }
 
       if(!IntSystemParametersInfo(uiAction, uiParam, &metrics, fWinIni))
       {
-        return FALSE;
+        return( FALSE);
       }
 
       Status = MmCopyToCaller(pvParam, &metrics.cbSize, sizeof(NONCLIENTMETRICSW));
       if(!NT_SUCCESS(Status))
       {
         SetLastNtError(Status);
-        return FALSE;
+        return( FALSE);
       }
-      return TRUE;
+      return( TRUE);
     }
   }
-  return FALSE;
+  return( FALSE);
 }
+
+
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+NtUserSystemParametersInfo(
+  UINT uiAction,
+  UINT uiParam,
+  PVOID pvParam,
+  UINT fWinIni)
+{
+  DECLARE_RETURN(BOOLEAN);  
+
+  DPRINT("Enter NtUserSystemParametersInfo\n");
+  UserEnterExclusive();
+
+  RETURN( UserSystemParametersInfo(uiAction, uiParam, pvParam, fWinIni));
+  
+CLEANUP:
+  DPRINT("Leave NtUserSystemParametersInfo, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
+}
+
+
 
 UINT
 STDCALL
@@ -1196,25 +1271,34 @@ NtUserGetDoubleClickTime(VOID)
   NTSTATUS Status;
   PWINSTATION_OBJECT WinStaObject;
   PSYSTEM_CURSORINFO CurInfo;
+  DECLARE_RETURN(UINT);  
+
+  DPRINT("Enter NtUserGetDoubleClickTime\n");
+  UserEnterShared();
 
   Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
                                           KernelMode,
                                           0,
                                           &WinStaObject);
   if (!NT_SUCCESS(Status))
-    return (DWORD)FALSE;
+    RETURN( (DWORD)FALSE);
 
   CurInfo = IntGetSysCursorInfo(WinStaObject);
   Result = CurInfo->DblClickSpeed;
 
   ObDereferenceObject(WinStaObject);
-  return Result;
+  RETURN( Result);
+  
+CLEANUP:
+  DPRINT("Leave NtUserGetDoubleClickTime, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;  
 }
 
 BOOL
 STDCALL
 NtUserGetGUIThreadInfo(
-  DWORD idThread,
+  DWORD idThread, /* if NULL use foreground thread */
   LPGUITHREADINFO lpgui)
 {
   NTSTATUS Status;
@@ -1223,18 +1307,22 @@ NtUserGetGUIThreadInfo(
   PDESKTOP_OBJECT Desktop;
   PUSER_MESSAGE_QUEUE MsgQueue;
   PETHREAD Thread = NULL;
+  DECLARE_RETURN(BOOLEAN);  
+
+  DPRINT("Enter NtUserGetGUIThreadInfo\n");
+  UserEnterShared();
 
   Status = MmCopyFromCaller(&SafeGui, lpgui, sizeof(DWORD));
   if(!NT_SUCCESS(Status))
   {
     SetLastNtError(Status);
-    return FALSE;
+    RETURN( FALSE);
   }
 
   if(SafeGui.cbSize != sizeof(GUITHREADINFO))
   {
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
-    return FALSE;
+    RETURN( FALSE);
   }
 
   if(idThread)
@@ -1243,7 +1331,7 @@ NtUserGetGUIThreadInfo(
     if(!NT_SUCCESS(Status))
     {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
-      return FALSE;
+      RETURN( FALSE);
     }
     Desktop = Thread->Tcb.Win32Thread->Desktop;
   }
@@ -1267,7 +1355,7 @@ NtUserGetGUIThreadInfo(
     if(idThread && Thread)
       ObDereferenceObject(Thread);
     SetLastWin32Error(ERROR_ACCESS_DENIED);
-    return FALSE;
+    RETURN( FALSE);
   }
 
   MsgQueue = (PUSER_MESSAGE_QUEUE)Desktop->ActiveMessageQueue;
@@ -1300,10 +1388,15 @@ NtUserGetGUIThreadInfo(
   if(!NT_SUCCESS(Status))
   {
     SetLastNtError(Status);
-    return FALSE;
+    RETURN( FALSE);
   }
 
-  return TRUE;
+  RETURN( TRUE);
+  
+CLEANUP:
+  DPRINT("Leave NtUserGetGUIThreadInfo, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP; 
 }
 
 
@@ -1317,6 +1410,10 @@ NtUserGetGuiResources(
   PW32PROCESS W32Process;
   NTSTATUS Status;
   DWORD Ret = 0;
+  DECLARE_RETURN(DWORD);  
+
+  DPRINT("Enter NtUserGetGuiResources\n");
+  UserEnterShared();
 
   Status = ObReferenceObjectByHandle(hProcess,
                                      PROCESS_QUERY_INFORMATION,
@@ -1328,7 +1425,7 @@ NtUserGetGuiResources(
   if(!NT_SUCCESS(Status))
   {
     SetLastNtError(Status);
-    return 0;
+    RETURN( 0);
   }
 
   W32Process = (PW32PROCESS)Process->Win32Process;
@@ -1336,7 +1433,7 @@ NtUserGetGuiResources(
   {
     ObDereferenceObject(Process);
     SetLastWin32Error(ERROR_INVALID_PARAMETER);
-    return 0;
+    RETURN( 0);
   }
 
   switch(uiFlags)
@@ -1360,7 +1457,12 @@ NtUserGetGuiResources(
 
   ObDereferenceObject(Process);
 
-  return Ret;
+  RETURN( Ret);
+  
+CLEANUP:
+  DPRINT("Leave NtUserGetGuiResources, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
 }
 
 NTSTATUS FASTCALL
@@ -1495,8 +1597,18 @@ NtUserUpdatePerUserSystemParameters(
    BOOL bEnable)
 {
    BOOL Result = TRUE;
+   DECLARE_RETURN(BOOLEAN);  
+
+   DPRINT("Enter NtUserUpdatePerUserSystemParameters\n");
+   UserEnterExclusive();
+   
    Result &= IntDesktopUpdatePerUserSettings(bEnable);
-   return Result;
+   RETURN( Result);
+   
+CLEANUP:
+   DPRINT("Leave NtUserUpdatePerUserSystemParameters, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;
 }
 
 /* EOF */

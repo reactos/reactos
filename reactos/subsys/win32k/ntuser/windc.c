@@ -109,6 +109,12 @@ NtUserGetWindowDC(HWND hWnd)
    return (DWORD)NtUserGetDCEx(hWnd, 0, DCX_USESTYLE | DCX_WINDOW);
 }
 
+DWORD FASTCALL
+UserGetWindowDC(PWINDOW_OBJECT Wnd)
+{
+   return (DWORD)UserGetDCEx(Wnd, 0, DCX_USESTYLE | DCX_WINDOW);
+}
+
 HDC STDCALL
 NtUserGetDC(HWND hWnd)
 {
@@ -365,23 +371,18 @@ noparent:
    }
 }
 
-HDC STDCALL
-NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
+HDC FASTCALL
+UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
 {
-  PWINDOW_OBJECT Window, Parent;
+  PWINDOW_OBJECT Parent;
   ULONG DcxFlags;
   DCE* Dce;
   BOOL UpdateVisRgn = TRUE;
   BOOL UpdateClipOrigin = FALSE;
 
-  if (NULL == hWnd)
+  if (NULL == Window)
     {
       Flags &= ~DCX_USESTYLE;
-      Window = NULL;
-    }
-  else if (NULL == (Window = IntGetWindowObject(hWnd)))
-    {
-      return(0);
     }
 
   if (NULL == Window || NULL == Window->Dce)
@@ -470,7 +471,7 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
 		{
 		  DceEmpty = Dce;
 		}
-	      else if (Dce->hwndCurrent == hWnd &&
+         else if (Dce->hwndCurrent == (Window ? Window->Self : NULL) &&
 		       ((Dce->DCXFlags & DCX_CACHECOMPAREMASK) == DcxFlags))
 		{
 #if 0 /* FIXME */
@@ -497,7 +498,7 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
   else
     {
       Dce = Window->Dce;
-      if (NULL != Dce && Dce->hwndCurrent == hWnd)
+      if (NULL != Dce && Dce->hwndCurrent == (Window ? Window->Self : NULL))
         {
           UpdateVisRgn = FALSE; /* updated automatically, via DCHook() */
         }
@@ -508,12 +509,10 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
 
   if (NULL == Dce)
     {
-      if(NULL != Window)
-        IntReleaseWindowObject(Window);
       return(NULL);
     }
 
-  Dce->hwndCurrent = hWnd;
+  Dce->hwndCurrent = (Window ? Window->Self : NULL);
   Dce->DCXFlags = DcxFlags | (Flags & DCX_WINDOWPAINT) | DCX_DCEBUSY;
 
   if (0 == (Flags & (DCX_EXCLUDERGN | DCX_INTERSECTRGN)) && NULL != ClipRegion)
@@ -596,13 +595,43 @@ NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
       DceUpdateVisRgn(Dce, Window, Flags);
     }
 
-  if (NULL != Window)
-    {
-      IntReleaseWindowObject(Window);
-    }
-
   return(Dce->hDC);
 }
+
+
+
+HDC STDCALL
+NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
+{
+  PWINDOW_OBJECT Wnd=NULL;
+  DECLARE_RETURN(HDC);
+  HDC ret;
+  
+  DPRINT("Enter NtUserGetDCEx\n");
+  UserEnterExclusive();
+
+  if (hWnd)
+  {
+     if (!(Wnd = IntGetWindowObject(hWnd)))
+     {
+        SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+        RETURN(NULL);
+     }
+  }
+
+  ret = UserGetDCEx(Wnd, ClipRegion, Flags);
+  
+  if (Wnd) IntReleaseWindowObject(Wnd);
+  
+  RETURN(ret);
+  
+CLEANUP:
+  DPRINT("Leave NtUserGetDCEx, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
+}
+
+
 
 BOOL INTERNAL_CALL
 DCE_Cleanup(PVOID ObjectBody)
@@ -653,8 +682,9 @@ IntWindowFromDC(HDC hDc)
   return 0;
 }
 
-INT STDCALL
-NtUserReleaseDC(HWND hWnd, HDC hDc)
+
+INT FASTCALL
+UserReleaseDC(PWINDOW_OBJECT Window, HDC hDc)
 {
   DCE *dce;
   INT nRet = 0;
@@ -663,7 +693,7 @@ NtUserReleaseDC(HWND hWnd, HDC hDc)
 
   dce = FirstDce;
 
-  DPRINT("%p %p\n", hWnd, hDc);
+  DPRINT("%p %p\n", Window, hDc);
 
   while (dce && (dce->hDC != hDc))
     {
@@ -678,6 +708,24 @@ NtUserReleaseDC(HWND hWnd, HDC hDc)
   DCE_UnlockList();
 
   return nRet;
+}
+
+
+
+INT STDCALL
+NtUserReleaseDC(HWND hWnd, HDC hDc)
+{
+  DECLARE_RETURN(INT);
+  
+  DPRINT("Enter NtUserReleaseDC\n");
+  UserEnterExclusive();
+  
+  RETURN(UserReleaseDC(NULL, hDc));
+  
+CLEANUP:
+  DPRINT("Leave NtUserReleaseDC, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
 }
 
 /***********************************************************************

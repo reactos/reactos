@@ -315,10 +315,8 @@ ToUnicodeInner(UINT wVirtKey,
   return 0;
 }
 
-DWORD
-STDCALL
-NtUserGetKeyState(
-  DWORD key)
+
+DWORD FASTCALL UserGetKeyState(DWORD key)
 {
   DWORD ret = 0;
 
@@ -331,10 +329,28 @@ NtUserGetKeyState(
   return ret;
 }
 
+
 DWORD
 STDCALL
-NtUserGetAsyncKeyState(
+NtUserGetKeyState(
   DWORD key)
+{
+  DECLARE_RETURN(DWORD);  
+
+  DPRINT("Enter NtUserGetKeyState\n");
+  UserEnterExclusive();
+  
+  RETURN(UserGetKeyState(key));
+  
+CLEANUP:
+  DPRINT("Leave NtUserGetKeyState, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
+}
+
+
+
+DWORD FASTCALL UserGetAsyncKeyState(DWORD key)
 {
   DWORD ret = 0;
 
@@ -345,6 +361,26 @@ NtUserGetAsyncKeyState(
   }
   IntUnLockQueueState;
   return ret;
+}
+
+
+
+DWORD
+STDCALL
+NtUserGetAsyncKeyState(
+  DWORD key)
+{
+  DECLARE_RETURN(DWORD);  
+
+  DPRINT("Enter NtUserGetAsyncKeyState\n");
+  UserEnterExclusive();
+  
+  RETURN(UserGetAsyncKeyState(key));
+  
+CLEANUP:
+  DPRINT("Leave NtUserGetAsyncKeyState, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
 }
 
 
@@ -1107,9 +1143,10 @@ NtUserGetKeyboardLayoutName(
   return 0;
 }
 
-HKL
-STDCALL
-NtUserGetKeyboardLayout(
+
+
+HKL FASTCALL
+UserGetKeyboardLayout(
   DWORD dwThreadId)
 {
   NTSTATUS Status;
@@ -1121,7 +1158,7 @@ NtUserGetKeyboardLayout(
      W32Thread = PsGetWin32Thread();
   else 
   {
-     Status = PsLookupThreadByThreadId((HANDLE)dwThreadId, &Thread);
+     Status = PsLookupThreadByThreadId((HANDLE)dwThreadId, &Thread);//fixme: deref thread
      if(!NT_SUCCESS(Status))
        {
          SetLastWin32Error(ERROR_INVALID_PARAMETER);
@@ -1133,11 +1170,29 @@ NtUserGetKeyboardLayout(
   if(!layout) return 0;
   return (HKL)layout;
 }
+
+
+HKL
+STDCALL
+NtUserGetKeyboardLayout(
+  DWORD dwThreadId)
+{
+   DECLARE_RETURN(HKL);
+   
+   UserEnterShared();
+   DPRINT("Enter NtUserGetKeyboardLayout\n");
+   
+   RETURN( UserGetKeyboardLayout(dwThreadId));
+   
+CLEANUP:
+   DPRINT("Leave NtUserGetKeyboardLayout, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;
+}
     
   
-DWORD
-STDCALL
-NtUserGetKeyboardType(
+DWORD FASTCALL
+UserGetKeyboardType(
   DWORD TypeFlag)
 {
   switch(TypeFlag)
@@ -1152,6 +1207,14 @@ NtUserGetKeyboardType(
     DPRINT1("Unknown type!\n");
       return 0;    /* The book says 0 here, so 0 */
   }
+}  
+  
+DWORD
+STDCALL
+NtUserGetKeyboardType(
+  DWORD TypeFlag)
+{
+   return UserGetKeyboardType(TypeFlag);
 }
 
 

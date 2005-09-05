@@ -90,7 +90,7 @@ BOOL FASTCALL
 IntGetWindowStationObject(PWINSTATION_OBJECT Object);
 
 BOOL FASTCALL
-IntInitializeDesktopGraphics(VOID);
+co_IntInitializeDesktopGraphics(VOID);
 
 VOID FASTCALL
 IntEndDesktopGraphics(VOID);

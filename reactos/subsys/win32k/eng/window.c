@@ -207,15 +207,22 @@ EngCreateWnd(
   WNDGDI *WndObjInt = NULL;
   WNDOBJ *WndObjUser = NULL;
   PWINDOW_OBJECT Window;
+  BOOL calledFromUser;
+  DECLARE_RETURN(WNDOBJ*);
 
   DPRINT("EngCreateWnd: pso = 0x%x, hwnd = 0x%x, pfn = 0x%x, fl = 0x%x, pixfmt = %d\n",
          pso, hwnd, pfn, fl, iPixelFormat);
+
+  calledFromUser = UserIsEntered();
+  if (!calledFromUser){
+     UserEnterShared();
+  }
 
   /* Get window object */
   Window = IntGetWindowObject(hwnd);
   if (Window == NULL)
     {
-      return NULL;
+      RETURN( NULL);
     }
 
   /* Create WNDOBJ */
@@ -224,7 +231,7 @@ EngCreateWnd(
     {
       IntReleaseWindowObject(Window);
       DPRINT1("Failed to allocate memory for a WND structure!\n");
-      return NULL;
+      RETURN( NULL);
     }
 
   /* Fill the clipobj */
@@ -233,7 +240,7 @@ EngCreateWnd(
     {
       IntReleaseWindowObject(Window);
       EngFreeMem(WndObjInt);
-      return NULL;
+      RETURN( NULL);
     }
 
   /* Fill user object */
@@ -257,7 +264,15 @@ EngCreateWnd(
 
   DPRINT("EngCreateWnd: SUCCESS!\n");
   
-  return WndObjUser;
+  RETURN( WndObjUser);
+  
+CLEANUP:
+
+  if (!calledFromUser){
+    UserLeave();
+  }
+
+  END_CLEANUP;
 }
 
 
@@ -271,8 +286,14 @@ EngDeleteWnd(
 {
   WNDGDI *WndObjInt = ObjToGDI(pwo, WND);
   PWINDOW_OBJECT Window;
+  BOOL calledFromUser; 
 
   DPRINT("EngDeleteWnd: pwo = 0x%x\n", pwo);
+
+  calledFromUser = UserIsEntered();
+  if (!calledFromUser){
+     UserEnterExclusive();
+  }
 
   /* Get window object */
   Window = IntGetWindowObject(WndObjInt->Hwnd);
@@ -289,6 +310,10 @@ EngDeleteWnd(
       ExReleaseFastMutex(&Window->WndObjListLock);
       IntReleaseWindowObject(Window);
     }
+
+  if (!calledFromUser){
+     UserLeave();
+  }
 
   /* Free resources */
   IntEngDeleteClipRegion(WndObjInt->ClientClipObj);

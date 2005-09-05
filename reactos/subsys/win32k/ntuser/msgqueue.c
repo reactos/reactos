@@ -254,7 +254,7 @@ MsqIsDblClk(LPMSG Msg, BOOL Remove)
 }
 
 BOOL STATIC STDCALL
-MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT FilterLow, UINT FilterHigh,
+co_MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT FilterLow, UINT FilterHigh,
 			 PUSER_MESSAGE Message, BOOL Remove, PBOOL Freed,
 			 PWINDOW_OBJECT ScopeWin, PPOINT ScreenPoint, BOOL FromGlobalQueue)
 {
@@ -271,7 +271,7 @@ MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Filte
     }
     else
     {
-      WinPosWindowFromPoint(ScopeWin, NULL, &Message->Msg.pt, &Window);
+      co_WinPosWindowFromPoint(ScopeWin, NULL, &Message->Msg.pt, &Window);
       if(Window == NULL)
       {
         Window = ScopeWin;
@@ -442,7 +442,7 @@ MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Filte
 }
 
 BOOL STDCALL
-MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
+co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 		       UINT FilterLow, UINT FilterHigh, BOOL Remove,
 		       PUSER_MESSAGE* Message)
 {
@@ -464,9 +464,14 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
   WaitObjects[0] = &HardwareMessageQueueLock;
   do
     {
+      UserLeaveCo();
+      
       WaitStatus = KeWaitForMultipleObjects(2, WaitObjects, WaitAny, UserRequest,
                                             UserMode, FALSE, NULL, NULL);
-      while (MsqDispatchOneSentMessage(MessageQueue))
+                                            
+      UserEnterCo();
+      
+      while (co_MsqDispatchOneSentMessage(MessageQueue))
         {
           ;
         }
@@ -486,7 +491,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
       if (Current->Msg.message >= WM_MOUSEFIRST &&
 	  Current->Msg.message <= WM_MOUSELAST)
 	{
-	  Accept = MsqTranslateMouseMessage(MessageQueue, hWnd, FilterLow, FilterHigh,
+	  Accept = co_MsqTranslateMouseMessage(MessageQueue, hWnd, FilterLow, FilterHigh,
 					    Current, Remove, &Freed,
 					    DesktopWindow, &ScreenPoint, FALSE);
 	  if (Accept)
@@ -548,7 +553,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
           MouseHookData.flags = 0;
           MouseHookData.time = Msg.time;
           MouseHookData.dwExtraInfo = 0;
-          ProcessMessage = (0 == HOOK_CallHooks(WH_MOUSE_LL, HC_ACTION,
+          ProcessMessage = (0 == co_HOOK_CallHooks(WH_MOUSE_LL, HC_ACTION,
                                                 Msg.message, (LPARAM) &MouseHookData));
         }
       else
@@ -588,7 +593,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 	{
 	  const ULONG ActiveStamp = HardwareMessageQueueStamp;
 	  /* Translate the message. */
-	  Accept = MsqTranslateMouseMessage(MessageQueue, hWnd, FilterLow, FilterHigh,
+	  Accept = co_MsqTranslateMouseMessage(MessageQueue, hWnd, FilterLow, FilterHigh,
 					    Current, Remove, &Freed,
 					    DesktopWindow, &ScreenPoint, TRUE);
 	  if (Accept)
@@ -649,7 +654,7 @@ MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 }
 
 VOID FASTCALL
-MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
+co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
   PUSER_MESSAGE_QUEUE FocusMessageQueue;
   MSG Msg;
@@ -676,7 +681,7 @@ MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
                       (0 == (Msg.lParam & 0x80000000) ? 0 : LLKHF_UP);
   KbdHookData.time = Msg.time;
   KbdHookData.dwExtraInfo = 0;
-  if (HOOK_CallHooks(WH_KEYBOARD_LL, HC_ACTION, Msg.message, (LPARAM) &KbdHookData))
+  if (co_HOOK_CallHooks(WH_KEYBOARD_LL, HC_ACTION, Msg.message, (LPARAM) &KbdHookData))
     {
       DPRINT("Kbd msg %d wParam %d lParam 0x%08x dropped by WH_KEYBOARD_LL hook\n",
              Msg.message, Msg.wParam, Msg.lParam);
@@ -787,7 +792,7 @@ MsqDestroyMessage(PUSER_MESSAGE Message)
 }
 
 VOID FASTCALL
-MsqDispatchSentNotifyMessages(PUSER_MESSAGE_QUEUE MessageQueue)
+co_MsqDispatchSentNotifyMessages(PUSER_MESSAGE_QUEUE MessageQueue)
 {
   PLIST_ENTRY ListEntry;
   PUSER_SENT_MESSAGE_NOTIFY Message;
@@ -800,7 +805,7 @@ MsqDispatchSentNotifyMessages(PUSER_MESSAGE_QUEUE MessageQueue)
 				ListEntry);
     IntUnLockMessageQueue(MessageQueue);
 
-    IntCallSentMessageCallback(Message->CompletionCallback,
+    co_IntCallSentMessageCallback(Message->CompletionCallback,
 				Message->hWnd,
 				Message->Msg,
 				Message->CompletionCallbackContext,
@@ -818,7 +823,7 @@ MsqPeekSentMessages(PUSER_MESSAGE_QUEUE MessageQueue)
 }
 
 BOOLEAN FASTCALL
-MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
+co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
 {
   PUSER_SENT_MESSAGE Message;
   PLIST_ENTRY Entry;
@@ -846,7 +851,7 @@ MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
 
   if (Message->HookMessage)
     {
-      Result = HOOK_CallHooks(Message->Msg.message,
+      Result = co_HOOK_CallHooks(Message->Msg.message,
                               (INT) Message->Msg.hwnd,
                               Message->Msg.wParam,
                               Message->Msg.lParam);
@@ -854,7 +859,7 @@ MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue)
   else
     {
       /* Call the window procedure. */
-      Result = IntSendMessage(Message->Msg.hwnd,
+      Result = co_IntSendMessage(Message->Msg.hwnd,
                               Message->Msg.message,
                               Message->Msg.wParam,
                               Message->Msg.lParam);
@@ -1016,7 +1021,7 @@ MsqSendNotifyMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 }
 
 NTSTATUS FASTCALL
-MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
+co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 	       HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam,
                UINT uTimeout, BOOL Block, BOOL HookMessage,
                ULONG_PTR *uResult)
@@ -1077,9 +1082,15 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 
   if(Block)
   {
+    
+    UserLeaveCo();
+    
     /* don't process messages sent to the thread */
     WaitStatus = KeWaitForSingleObject(&CompletionEvent, UserRequest, UserMode,
                                        FALSE, (uTimeout ? &Timeout : NULL));
+                                       
+    UserEnterCo();
+    
     if(WaitStatus == STATUS_TIMEOUT)
       {
         /* look up if the message has not yet dispatched, if so
@@ -1126,7 +1137,7 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 
 	DPRINT("MsqSendMessage (blocked) timed out\n");
       }
-    while (MsqDispatchOneSentMessage(ThreadQueue));
+    while (co_MsqDispatchOneSentMessage(ThreadQueue));
   }
   else
   {
@@ -1136,8 +1147,14 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
     WaitObjects[1] = ThreadQueue->NewMessages;
     do
       {
+        
+        UserLeaveCo();
+        
         WaitStatus = KeWaitForMultipleObjects(2, WaitObjects, WaitAny, UserRequest,
                                               UserMode, FALSE, (uTimeout ? &Timeout : NULL), NULL);
+                                              
+        UserEnterCo();
+        
         if(WaitStatus == STATUS_TIMEOUT)
           {
             /* look up if the message has not yet been dispatched, if so
@@ -1185,7 +1202,7 @@ MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 	    DPRINT("MsqSendMessage timed out\n");
             break;
           }
-        while (MsqDispatchOneSentMessage(ThreadQueue));
+        while (co_MsqDispatchOneSentMessage(ThreadQueue));
       }
     while (NT_SUCCESS(WaitStatus) && STATUS_WAIT_0 != WaitStatus);
   }
@@ -1230,7 +1247,7 @@ MsqPostQuitMessage(PUSER_MESSAGE_QUEUE MessageQueue, ULONG ExitCode)
 }
 
 BOOLEAN STDCALL
-MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
+co_MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 	       IN BOOLEAN Hardware,
 	       IN BOOLEAN Remove,
 	       IN HWND Wnd,
@@ -1244,7 +1261,7 @@ MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 
   if (Hardware)
     {
-      return(MsqPeekHardwareMessage(MessageQueue, Wnd,
+      return(co_MsqPeekHardwareMessage(MessageQueue, Wnd,
 				    MsgFilterLow, MsgFilterHigh,
 				    Remove, Message));
     }
@@ -1276,12 +1293,13 @@ MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 }
 
 NTSTATUS FASTCALL
-MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue, HWND WndFilter,
+co_MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue, HWND WndFilter,
                       UINT MsgFilterMin, UINT MsgFilterMax)
 {
   PVOID WaitObjects[2] = {MessageQueue->NewMessages, &HardwareMessageEvent};
   LARGE_INTEGER TimerExpiry;
   PLARGE_INTEGER Timeout;
+  NTSTATUS ret;
 
   if (MsqGetFirstTimerExpiry(MessageQueue, WndFilter, MsgFilterMin, MsgFilterMax, &TimerExpiry))
     {
@@ -1292,14 +1310,20 @@ MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue, HWND WndFilter,
       Timeout = NULL;
     }
 
-  return(KeWaitForMultipleObjects(2,
+   UserLeaveCo(); 
+
+  ret = KeWaitForMultipleObjects(2,
 				  WaitObjects,
 				  WaitAny,
 				  Executive,
 				  UserMode,
 				  FALSE,
 				  Timeout,
-				  NULL));
+				  NULL);
+
+   UserEnterCo();              
+              
+   return ret;              
 }
 
 BOOL FASTCALL

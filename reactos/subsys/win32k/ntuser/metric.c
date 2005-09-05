@@ -37,8 +37,8 @@
 /* FUNCTIONS *****************************************************************/
 
 /* FIXME:  Alot of thse values should NOT be hardcoded but they are */
-ULONG STDCALL
-NtUserGetSystemMetrics(ULONG Index)
+ULONG FASTCALL
+UserGetSystemMetrics(ULONG Index)
 {
   NTSTATUS Status;
   PWINSTATION_OBJECT WinStaObject;
@@ -103,9 +103,9 @@ NtUserGetSystemMetrics(ULONG Index)
       return(4);
     case SM_CXFULLSCREEN:
       /* FIXME: shouldn't we take borders etc into account??? */
-      return NtUserGetSystemMetrics(SM_CXSCREEN);
+      return UserGetSystemMetrics(SM_CXSCREEN);
     case SM_CYFULLSCREEN:
-      return NtUserGetSystemMetrics(SM_CYSCREEN);
+      return UserGetSystemMetrics(SM_CYSCREEN);
     case SM_CXHSCROLL:
     case SM_CYHSCROLL:
       return(16);
@@ -119,18 +119,18 @@ NtUserGetSystemMetrics(ULONG Index)
     case SM_CYICONSPACING:
       return(64);
     case SM_CXMAXIMIZED:
-      return(NtUserGetSystemMetrics(SM_CXSCREEN) + 8); /* This seems to be 8
+      return(UserGetSystemMetrics(SM_CXSCREEN) + 8); /* This seems to be 8
                                                           pixels greater than
                                                           the screen width */
     case SM_CYMAXIMIZED:
-      return(NtUserGetSystemMetrics(SM_CYSCREEN) - 20); /* This seems to be 20
+      return(UserGetSystemMetrics(SM_CYSCREEN) - 20); /* This seems to be 20
                                                            pixels less than
                                                            the screen height,
                                                            taskbar maybe? */
     case SM_CXMAXTRACK:
-      return(NtUserGetSystemMetrics(SM_CYSCREEN) + 12);
+      return(UserGetSystemMetrics(SM_CYSCREEN) + 12);
     case SM_CYMAXTRACK:
-      return(NtUserGetSystemMetrics(SM_CYSCREEN) + 12);
+      return(UserGetSystemMetrics(SM_CYSCREEN) + 12);
     case SM_CXMENUCHECK:
     case SM_CYMENUCHECK:
       return(13);
@@ -218,4 +218,22 @@ NtUserGetSystemMetrics(ULONG Index)
     }
 }
 
+
+
+/* FIXME:  Alot of thse values should NOT be hardcoded but they are */
+ULONG STDCALL
+NtUserGetSystemMetrics(ULONG Index)
+{
+  DECLARE_RETURN(ULONG);  
+
+  DPRINT("Enter NtUserGetSystemMetrics\n");
+  UserEnterExclusive();
+
+  RETURN(UserGetSystemMetrics(Index));
+
+CLEANUP:
+  DPRINT("Leave NtUserGetSystemMetrics, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
+}
 /* EOF */

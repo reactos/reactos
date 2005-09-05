@@ -460,6 +460,24 @@ HWND FASTCALL IntGetDesktopWindow(VOID)
   return pdo->DesktopWindow;
 }
 
+PWINDOW_OBJECT FASTCALL UserGetDesktopWindow(VOID)
+{
+   PDESKTOP_OBJECT pdo = IntGetActiveDesktop();
+   PWINDOW_OBJECT DeskWnd;
+   
+   if (!pdo)
+   {
+      DPRINT("No active desktop\n");
+      return NULL;
+   }
+   
+   //temp hack
+   DeskWnd = IntGetWindowObject(pdo->DesktopWindow);
+   if (DeskWnd) IntReleaseWindowObject(DeskWnd);
+   return DeskWnd;
+}
+
+
 HWND FASTCALL IntGetCurrentThreadDesktopWindow(VOID)
 {
   PDESKTOP_OBJECT pdo = PsGetWin32Thread()->Desktop;
@@ -510,7 +528,7 @@ BOOL FASTCALL IntDesktopUpdatePerUserSettings(BOOL bEnable)
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 NTSTATUS FASTCALL
-IntShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width, ULONG Height)
+co_IntShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width, ULONG Height)
 {
   CSR_API_MESSAGE Request;
 
@@ -519,7 +537,7 @@ IntShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width, ULONG Height)
   Request.Data.ShowDesktopRequest.Width = Width;
   Request.Data.ShowDesktopRequest.Height = Height;
 
-  return CsrNotify(&Request);
+  return co_CsrNotify(&Request);
 }
 
 NTSTATUS FASTCALL
@@ -552,7 +570,7 @@ IntHideDesktop(PDESKTOP_OBJECT Desktop)
  * notifications. The lParam contents depend on the Message. See
  * MSDN for more details (RegisterShellHookWindow)
  */
-VOID IntShellHookNotify(WPARAM Message, LPARAM lParam)
+VOID co_IntShellHookNotify(WPARAM Message, LPARAM lParam)
 {
   PDESKTOP_OBJECT Desktop = IntGetActiveDesktop();
   PLIST_ENTRY Entry, Entry2;
@@ -567,7 +585,7 @@ VOID IntShellHookNotify(WPARAM Message, LPARAM lParam)
 #if 0
     UNICODE_STRING Str;
     RtlInitUnicodeString(&Str, L"SHELLHOOK");
-    MsgType = NtUserRegisterWindowMessage(&Str);
+    MsgType = UserRegisterWindowMessage(&Str);
 #endif
     MsgType = IntAddAtom(L"SHELLHOOK");
 
@@ -592,7 +610,7 @@ VOID IntShellHookNotify(WPARAM Message, LPARAM lParam)
     KeReleaseSpinLock(&Desktop->Lock, OldLevel);
 
     DPRINT("Sending notify\n");
-    IntPostOrSendMessage(Current->hWnd,
+    co_IntPostOrSendMessage(Current->hWnd,
                          MsgType,
                          Message,
                          lParam);
@@ -735,8 +753,10 @@ NtUserCreateDesktop(
   NTSTATUS Status;
   HDESK Desktop;
   CSR_API_MESSAGE Request;
+  DECLARE_RETURN(HDESK);
 
-  DPRINT("CreateDesktop: %wZ\n", lpszDesktopName);
+  DPRINT("Enter CreateDesktop: %wZ\n", lpszDesktopName);
+  UserEnterExclusive();
 
   Status = IntValidateWindowStationHandle(
     hWindowStation,
@@ -749,7 +769,7 @@ NtUserCreateDesktop(
       DPRINT1("Failed validation of window station handle (0x%X), cannot create desktop %wZ\n",
         hWindowStation, lpszDesktopName);
       SetLastNtError(Status);
-      return NULL;
+      RETURN( NULL);
     }
 
   if (! IntGetFullWindowStationName(&DesktopName, &WinStaObject->Name,
@@ -757,7 +777,7 @@ NtUserCreateDesktop(
     {
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
       ObDereferenceObject(WinStaObject);
-      return NULL;
+      RETURN( NULL);
     }
 
   ObDereferenceObject(WinStaObject);
@@ -789,7 +809,7 @@ NtUserCreateDesktop(
     {
       DPRINT("Successfully opened desktop (%wZ)\n", &DesktopName);
       ExFreePool(DesktopName.Buffer);
-      return Desktop;
+      RETURN( Desktop);
     }
 
   /*
@@ -812,7 +832,7 @@ NtUserCreateDesktop(
       DPRINT1("Failed creating desktop (%wZ)\n", &DesktopName);
       ExFreePool(DesktopName.Buffer);
       SetLastNtError(STATUS_UNSUCCESSFUL);
-      return NULL;
+      RETURN( NULL);
     }
 
   // init desktop area
@@ -840,7 +860,7 @@ NtUserCreateDesktop(
     {
       DPRINT1("Failed to create desktop handle\n");
       SetLastNtError(Status);
-      return NULL;
+      RETURN( NULL);
     }
 
   /*
@@ -855,20 +875,25 @@ NtUserCreateDesktop(
     DPRINT1("Failed to create desktop handle for CSRSS\n");
     ZwClose(Desktop);
     SetLastNtError(Status);
-    return NULL;
+    RETURN( NULL);
   }
 
-  Status = CsrNotify(&Request);
+  Status = co_CsrNotify(&Request);
   if (! NT_SUCCESS(Status))
     {
       CsrCloseHandle(Request.Data.CreateDesktopRequest.DesktopHandle);
       DPRINT1("Failed to notify CSRSS about new desktop\n");
       ZwClose(Desktop);
       SetLastNtError(Status);
-      return NULL;
+      RETURN( NULL);
     }
 
-  return Desktop;
+  RETURN( Desktop);
+  
+CLEANUP:
+  DPRINT("Leave NtUserCreateDesktop, ret=%i\n",_ret_);
+  UserLeave();
+  END_CLEANUP;
 }
 
 /*
@@ -904,7 +929,11 @@ NtUserOpenDesktop(
    UNICODE_STRING DesktopName;
    NTSTATUS Status;
    HDESK Desktop;
-
+   DECLARE_RETURN(HDESK);
+   
+   DPRINT("Enter NtUserOpenDesktop: %wZ\n", lpszDesktopName);
+   UserEnterExclusive();
+   
    /*
     * Validate the window station handle and compose the fully
     * qualified desktop name
@@ -921,7 +950,7 @@ NtUserOpenDesktop(
       DPRINT1("Failed validation of window station handle (0x%X)\n",
               PsGetCurrentProcess()->Win32WindowStation);
       SetLastNtError(Status);
-      return 0;
+      RETURN( 0);
    }
 
    if (!IntGetFullWindowStationName(&DesktopName, &WinStaObject->Name,
@@ -929,7 +958,7 @@ NtUserOpenDesktop(
    {
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
       ObDereferenceObject(WinStaObject);
-      return 0;
+      RETURN( 0);
    }
 
    ObDereferenceObject(WinStaObject);
@@ -957,13 +986,18 @@ NtUserOpenDesktop(
    {
       SetLastNtError(Status);
       ExFreePool(DesktopName.Buffer);
-      return 0;
+      RETURN( 0);
    }
 
    DPRINT("Successfully opened desktop (%wZ)\n", &DesktopName);
    ExFreePool(DesktopName.Buffer);
 
-   return Desktop;
+   RETURN( Desktop);
+   
+CLEANUP:
+   DPRINT("Leave NtUserOpenDesktop, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;
 }
 
 /*
@@ -1064,7 +1098,7 @@ NtUserCloseDesktop(HDESK hDesktop)
 {
    PDESKTOP_OBJECT Object;
    NTSTATUS Status;
-
+   
    DPRINT("About to close desktop handle (0x%X)\n", hDesktop);
 
    Status = IntValidateDesktopHandle(
@@ -1139,6 +1173,7 @@ NtUserPaintDesktop(HDC hDC)
   HBRUSH DesktopBrush, PreviousBrush;
   HWND hWndDesktop;
   BOOL doPatBlt = TRUE;
+  PWINDOW_OBJECT WndDesktop;
   int len;
 
   PWINSTATION_OBJECT WinSta = PsGetWin32Thread()->Desktop->WindowStation;
@@ -1146,8 +1181,15 @@ NtUserPaintDesktop(HDC hDC)
   IntGdiGetClipBox(hDC, &Rect);
 
   hWndDesktop = IntGetDesktopWindow();
-  DesktopBrush = (HBRUSH)NtUserGetClassLong(hWndDesktop, GCL_HBRBACKGROUND, FALSE);
+  if (!(WndDesktop = IntGetWindowObject(hWndDesktop)))
+     return FALSE;
+     
+  DesktopBrush = (HBRUSH)IntGetClassLong(WndDesktop, GCL_HBRBACKGROUND, FALSE); //fixme: verify retval
 
+  //temp hack
+  IntReleaseWindowObject(WndDesktop);
+  
+  
   /*
    * Paint desktop background
    */
@@ -1213,9 +1255,9 @@ NtUserPaintDesktop(HDC hDC)
 	  len = GetSystemVersionString(s_wszVersion);
 
 	if (len) {
-	  if (!NtUserSystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0)) {
-		rect.right = NtUserGetSystemMetrics(SM_CXSCREEN);
-		rect.bottom = NtUserGetSystemMetrics(SM_CYSCREEN);
+     if (!UserSystemParametersInfo(SPI_GETWORKAREA, 0, &rect, 0)) {
+		rect.right = UserGetSystemMetrics(SM_CXSCREEN);
+      rect.bottom = UserGetSystemMetrics(SM_CYSCREEN);
 	  }
 
 	  COLORREF color_old = NtGdiSetTextColor(hDC, RGB(255,255,255));

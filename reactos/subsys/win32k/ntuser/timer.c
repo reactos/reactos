@@ -204,7 +204,17 @@ NtUserSetTimer
  TIMERPROC lpTimerFunc
 )
 {
-  return IntSetTimer(hWnd, nIDEvent, uElapse, lpTimerFunc, FALSE);
+   DECLARE_RETURN(UINT_PTR);
+
+   DPRINT("Enter NtUserSetTimer\n");
+   UserEnterExclusive();
+   
+   RETURN(IntSetTimer(hWnd, nIDEvent, uElapse, lpTimerFunc, FALSE));
+   
+CLEANUP:
+   DPRINT("Leave NtUserSetTimer, ret=%i\n", _ret_);
+   UserLeave();
+   END_CLEANUP;
 }
 
 
@@ -216,7 +226,17 @@ NtUserKillTimer
  UINT_PTR uIDEvent
 )
 {
-  return IntKillTimer(hWnd, uIDEvent, FALSE);
+   DECLARE_RETURN(BOOL);
+
+   DPRINT("Enter NtUserKillTimer\n");
+   UserEnterExclusive();
+   
+   RETURN(IntKillTimer(hWnd, uIDEvent, FALSE));
+   
+CLEANUP:
+   DPRINT("Leave NtUserKillTimer, ret=%i\n", _ret_);
+   UserLeave();
+   END_CLEANUP;
 }
 
 
@@ -229,7 +249,17 @@ NtUserSetSystemTimer(
  TIMERPROC lpTimerFunc
 )
 {
-  return IntSetTimer(hWnd, nIDEvent, uElapse, lpTimerFunc, TRUE);
+   DECLARE_RETURN(UINT_PTR);
+
+   DPRINT("Enter NtUserSetSystemTimer\n");
+   UserEnterExclusive();
+   
+   RETURN(IntSetTimer(hWnd, nIDEvent, uElapse, lpTimerFunc, TRUE));
+   
+CLEANUP:
+   DPRINT("Leave NtUserSetSystemTimer, ret=%i\n", _ret_);
+   UserLeave();
+   END_CLEANUP;
 }
 
 
@@ -240,7 +270,17 @@ NtUserKillSystemTimer(
  UINT_PTR uIDEvent
 )
 {
-  return IntKillTimer(hWnd, uIDEvent, TRUE);
+   DECLARE_RETURN(BOOL);
+
+   DPRINT("Enter NtUserKillSystemTimer\n");
+   UserEnterExclusive();
+   
+   RETURN(IntKillTimer(hWnd, uIDEvent, TRUE));
+   
+CLEANUP:
+   DPRINT("Leave NtUserKillSystemTimer, ret=%i\n", _ret_);
+   UserLeave();
+   END_CLEANUP;
 }
 
 /* EOF */

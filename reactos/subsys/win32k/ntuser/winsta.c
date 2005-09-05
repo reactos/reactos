@@ -339,7 +339,7 @@ IntGetWindowStationObject(PWINSTATION_OBJECT Object)
 }
 
 BOOL FASTCALL
-IntInitializeDesktopGraphics(VOID)
+co_IntInitializeDesktopGraphics(VOID)
 {
   UNICODE_STRING DriverName;
   if (! IntCreatePrimarySurface())
@@ -355,10 +355,10 @@ IntInitializeDesktopGraphics(VOID)
     }
   DC_SetOwnership(ScreenDeviceContext, NULL);
 
-  NtUserAcquireOrReleaseInputOwnership(FALSE);
+  UserAcquireOrReleaseInputOwnership(FALSE);
 
   /* Setup the cursor */
-  IntLoadDefaultCursors();
+  co_IntLoadDefaultCursors();
 
   return TRUE;
 }
@@ -366,7 +366,7 @@ IntInitializeDesktopGraphics(VOID)
 VOID FASTCALL
 IntEndDesktopGraphics(VOID)
 {
-  NtUserAcquireOrReleaseInputOwnership(TRUE);
+  UserAcquireOrReleaseInputOwnership(TRUE);
   if (NULL != ScreenDeviceContext)
     {
       DC_SetOwnership(ScreenDeviceContext, PsGetCurrentProcess());
@@ -921,6 +921,27 @@ NtUserSetObjectInformation(
    return FALSE;
 }
 
+
+
+
+HWINSTA FASTCALL
+UserGetProcessWindowStation(VOID)
+{
+   if(PsGetCurrentProcess() != CsrProcess)
+   {
+     return PsGetCurrentProcess()->Win32WindowStation;
+   }
+   else
+   {
+     /* FIXME - get the pointer to the window station by querying the parent of
+                the desktop of the calling thread (which is a window station),
+                then use ObFindHandleForObject() to find a suitable handle */
+     DPRINT1("CSRSS called NtUserGetProcessWindowStation()!!! returned NULL!\n");
+     return NULL;
+   }
+}
+
+
 /*
  * NtUserGetProcessWindowStation
  *
@@ -938,18 +959,7 @@ NtUserSetObjectInformation(
 HWINSTA STDCALL
 NtUserGetProcessWindowStation(VOID)
 {
-   if(PsGetCurrentProcess() != CsrProcess)
-   {
-     return PsGetCurrentProcess()->Win32WindowStation;
-   }
-   else
-   {
-     /* FIXME - get the pointer to the window station by querying the parent of
-                the desktop of the calling thread (which is a window station),
-                then use ObFindHandleForObject() to find a suitable handle */
-     DPRINT1("CSRSS called NtUserGetProcessWindowStation()!!! returned NULL!\n");
-     return NULL;
-   }
+   return UserGetProcessWindowStation();
 }
 
 PWINSTATION_OBJECT FASTCALL
