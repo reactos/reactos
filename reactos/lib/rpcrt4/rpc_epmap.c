@@ -76,7 +76,7 @@ RPC_STATUS WINAPI RpcEpRegisterA( RPC_IF_HANDLE IfSpec, RPC_BINDING_VECTOR *Bind
   unsigned long c;
   RPC_STATUS rslt = RPC_S_OK;
 
-  TRACE("(%p,%p,%p,%s)\n", IfSpec, BindingVector, UuidVector, debugstr_a(Annotation));
+  TRACE("(%p,%p,%p,%s)\n", IfSpec, BindingVector, UuidVector, debugstr_a((char*)Annotation));
   TRACE(" ifid=%s\n", debugstr_guid(&If->InterfaceId.SyntaxGUID));
   for (c=0; c<BindingVector->Count; c++) {
     RpcBinding* bind = (RpcBinding*)(BindingVector->BindingH[c]);

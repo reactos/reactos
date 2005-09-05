@@ -483,19 +483,10 @@ fail:
  */
 RPC_STATUS WINAPI I_RpcGetBuffer(PRPC_MESSAGE pMsg)
 {
-  RpcBinding* bind = (RpcBinding*)pMsg->Handle;
-
   TRACE("(%p): BufferLength=%d\n", pMsg, pMsg->BufferLength);
   /* FIXME: pfnAllocate? */
-  if (bind->server) {
-    /* it turns out that the original buffer data must still be available
-     * while the RPC server is marshalling a reply, so we should not deallocate
-     * it, we'll leave deallocating the original buffer to the RPC server */
-    pMsg->Buffer = HeapAlloc(GetProcessHeap(), 0, pMsg->BufferLength);
-  } else {
-    HeapFree(GetProcessHeap(), 0, pMsg->Buffer);
-    pMsg->Buffer = HeapAlloc(GetProcessHeap(), 0, pMsg->BufferLength);
-  }
+  pMsg->Buffer = HeapAlloc(GetProcessHeap(), 0, pMsg->BufferLength);
+
   TRACE("Buffer=%p\n", pMsg->Buffer);
   /* FIXME: which errors to return? */
   return pMsg->Buffer ? S_OK : E_OUTOFMEMORY;
