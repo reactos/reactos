@@ -2968,7 +2968,7 @@ PRINTDLG_PagePaintProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     HDC hdc;
     HBRUSH hbrush, holdbrush;
     PageSetupDataA *pda;
-    int papersize=0, orientation=0; /* FIXME: set this values */
+    int papersize=0, orientation=0; /* FIXME: set this values for user paint hook */
     double scalx, scaly;
 #define CALLPAINTHOOK(msg,lprc) PRINTDLG_DefaultPagePaintHook( hWnd, msg, (WPARAM)hdc, (LPARAM)lprc, pda)
 
@@ -3085,11 +3085,8 @@ PRINTDLG_PageDlgProcA(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	/* FIXME: Paint hook. Must it be at begin of initializtion or at end? */
 	res = TRUE;
 	if (pda->dlga->Flags & PSD_ENABLEPAGESETUPHOOK) {
-	    res = pda->dlga->lpfnPageSetupHook(hDlg,uMsg,wParam,(LPARAM)pda->dlga);
-	    if (!res) {
+            if (!pda->dlga->lpfnPageSetupHook(hDlg,uMsg,wParam,(LPARAM)pda->dlga))
 		FIXME("Setup page hook failed?\n");
-		res = TRUE;
-	    }
 	}
 
 	/* if printer button disabled */
@@ -3102,11 +3099,14 @@ PRINTDLG_PageDlgProcA(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             EnableWindow(GetDlgItem(hDlg, edt6), FALSE);
             EnableWindow(GetDlgItem(hDlg, edt7), FALSE);
 	}
-	/* width larger as height -> landscape */
-	if (pda->dlga->ptPaperSize.x > pda->dlga->ptPaperSize.y)
+        /* Set orientation radiobutton properly */
+        dm = GlobalLock(pda->dlga->hDevMode);
+        if (dm->u.s.dmOrientation == DMORIENT_LANDSCAPE)
             CheckRadioButton(hDlg, rad1, rad2, rad2);
 	else /* this is default if papersize is not set */
             CheckRadioButton(hDlg, rad1, rad2, rad1);
+        GlobalUnlock(pda->dlga->hDevMode);
+
 	/* if orientation disabled */
 	if (pda->dlga->Flags & PSD_DISABLEORIENTATION) {
 	    EnableWindow(GetDlgItem(hDlg,rad1),FALSE);
@@ -3151,6 +3151,11 @@ PRINTDLG_PageDlgProcA(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             GlobalUnlock(pda->pdlg.hDevMode);
 	    pda->curdlg.ptPaperSize.x = _c_10mm2size(pda->dlga, pda->curdlg.ptPaperSize.x);
 	    pda->curdlg.ptPaperSize.y = _c_10mm2size(pda->dlga, pda->curdlg.ptPaperSize.y);
+            if (IsDlgButtonChecked(hDlg, rad2) == BST_CHECKED) { /* Landscape orientation */
+                DWORD tmp = pda->curdlg.ptPaperSize.y;
+                pda->curdlg.ptPaperSize.y = pda->curdlg.ptPaperSize.x;
+                pda->curdlg.ptPaperSize.x = tmp;
+            }
 	} else 
 	    WARN("GlobalLock(pda->pdlg.hDevMode) fail? hDevMode=%ld", (DWORD)pda->pdlg.hDevMode);
 	/* Drawing paper prev */

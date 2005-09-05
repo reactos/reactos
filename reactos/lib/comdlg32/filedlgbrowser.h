@@ -37,11 +37,6 @@
 /***********************************************************************
  * Defines and global variables
  */
-#define _ICommDlgBrowser_Offset ((int)(&(((IShellBrowserImpl*)0)->lpVtblCommDlgBrowser)))
-#define _ICOM_THIS_FromICommDlgBrowser(class, name) class* This = (class*)(((char*)name)-_ICommDlgBrowser_Offset);
-
-#define _IServiceProvider_Offset ((int)(&(((IShellBrowserImpl*)0)->lpVtblServiceProvider)))
-#define _ICOM_THIS_FromIServiceProvider(class, name) class* This = (class*)(((char*)name)-_IServiceProvider_Offset);
 
 /* dialog internal property */
 
