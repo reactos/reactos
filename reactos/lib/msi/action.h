@@ -18,10 +18,16 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#ifndef __MSI_ACTION_H__
+#define __MSI_ACTION_H__
+
+#include "wine/list.h"
+
 #define IDENTIFIER_SIZE 96
 
 typedef struct tagMSIFEATURE
 {
+    struct list entry;
     WCHAR Feature[IDENTIFIER_SIZE];
     WCHAR Feature_Parent[IDENTIFIER_SIZE];
     WCHAR Title[0x100];
@@ -35,13 +41,15 @@ typedef struct tagMSIFEATURE
     INSTALLSTATE ActionRequest;
     INSTALLSTATE Action;
 
-    INT ComponentCount;
-    INT Components[1024]; /* yes hardcoded limit.... I am bad */
+    struct list Components;
+    
     INT Cost;
 } MSIFEATURE;
 
 typedef struct tagMSICOMPONENT
 {
+    struct list entry;
+    DWORD magic;
     WCHAR Component[IDENTIFIER_SIZE];
     WCHAR ComponentId[IDENTIFIER_SIZE];
     WCHAR Directory[IDENTIFIER_SIZE];
@@ -61,8 +69,15 @@ typedef struct tagMSICOMPONENT
     LPWSTR AdvertiseString;
 } MSICOMPONENT;
 
+typedef struct tagComponentList
+{
+    struct list entry;
+    MSICOMPONENT *component;
+} ComponentList;
+
 typedef struct tagMSIFOLDER
 {
+    struct list entry;
     LPWSTR Directory;
     LPWSTR TargetDefault;
     LPWSTR SourceDefault;
@@ -70,7 +85,7 @@ typedef struct tagMSIFOLDER
     LPWSTR ResolvedTarget;
     LPWSTR ResolvedSource;
     LPWSTR Property;   /* initially set property */
-    INT   ParentIndex;
+    struct tagMSIFOLDER *Parent;
     INT   State;
         /* 0 = uninitialized */
         /* 1 = existing */
@@ -78,12 +93,13 @@ typedef struct tagMSIFOLDER
         /* 3 = created persist if empty */
     INT   Cost;
     INT   Space;
-}MSIFOLDER;
+} MSIFOLDER;
 
 typedef struct tagMSIFILE
 {
+    struct list entry;
     LPWSTR File;
-    INT ComponentIndex;
+    MSICOMPONENT *Component;
     LPWSTR FileName;
     LPWSTR ShortName;
     INT FileSize;
@@ -101,36 +117,52 @@ typedef struct tagMSIFILE
     LPWSTR  SourcePath;
     LPWSTR  TargetPath;
     BOOL    Temporary; 
-}MSIFILE;
+} MSIFILE;
+
+typedef struct tagMSIAPPID
+{
+    struct list entry;
+    WCHAR AppID[IDENTIFIER_SIZE]; /* Primary key */
+    LPWSTR RemoteServerName;
+    LPWSTR LocalServer;
+    LPWSTR ServiceParameters;
+    LPWSTR DllSurrogate;
+    BOOL ActivateAtStorage;
+    BOOL RunAsInteractiveUser;
+} MSIAPPID;
 
 typedef struct tagMSICLASS
 {
+    struct list entry;
     WCHAR CLSID[IDENTIFIER_SIZE];     /* Primary Key */
     WCHAR Context[IDENTIFIER_SIZE];   /* Primary Key */
-    INT ComponentIndex;               /* Primary Key */
+    MSICOMPONENT *Component;
     INT ProgIDIndex;
     LPWSTR ProgIDText;
     LPWSTR Description;
-    INT AppIDIndex;
+    MSIAPPID *AppID;
     LPWSTR FileTypeMask;
     LPWSTR IconPath;
     LPWSTR DefInprocHandler;
     LPWSTR DefInprocHandler32;
     LPWSTR Argument;
-    INT FeatureIndex;
+    MSIFEATURE *Feature;
     INT Attributes;
     /* not in the table, set during installation */
     BOOL Installed;
 } MSICLASS;
 
+typedef struct tagMSIMIME MSIMIME;
+
 typedef struct tagMSIEXTENSION
 {
+    struct list entry;
     WCHAR Extension[256];  /* Primary Key */
-    INT ComponentIndex;    /* Primary Key */
+    MSICOMPONENT *Component;
     INT ProgIDIndex;
     LPWSTR ProgIDText;
-    INT MIMEIndex;
-    INT FeatureIndex;
+    MSIMIME *Mime;
+    MSIFEATURE *Feature;
     /* not in the table, set during installation */
     BOOL Installed;
     INT VerbCount;
@@ -141,7 +173,7 @@ typedef struct tagMSIPROGID
 {
     LPWSTR ProgID;  /* Primary Key */
     INT ParentIndex;
-    INT ClassIndex;
+    MSICLASS *Class;
     LPWSTR Description;
     LPWSTR IconPath;
     /* not in the table, set during installation */
@@ -152,33 +184,23 @@ typedef struct tagMSIPROGID
 
 typedef struct tagMSIVERB
 {
-    INT ExtensionIndex;
+    MSIEXTENSION *Extension;
     LPWSTR Verb;
     INT Sequence;
     LPWSTR Command;
     LPWSTR Argument;
 } MSIVERB;
 
-typedef struct tagMSIMIME
+struct tagMSIMIME
 {
+    struct list entry;
     LPWSTR ContentType;  /* Primary Key */
-    INT ExtensionIndex;
+    MSIEXTENSION *Extension;
     WCHAR CLSID[IDENTIFIER_SIZE];
-    INT ClassIndex;
+    MSICLASS *Class;
     /* not in the table, set during installation */
     BOOL InstallMe;
-} MSIMIME;
-
-typedef struct tagMSIAPPID
-{
-    WCHAR AppID[IDENTIFIER_SIZE]; /* Primary key */
-    LPWSTR RemoteServerName;
-    LPWSTR LocalServer;
-    LPWSTR ServiceParameters;
-    LPWSTR DllSurrogate;
-    BOOL ActivateAtStorage;
-    BOOL RunAsInteractiveUser;
-} MSIAPPID;
+};
 
 enum SCRIPTS {
         INSTALL_SCRIPT = 0,
@@ -200,63 +222,64 @@ typedef struct tagMSISCRIPT
     UINT    InWhatSequence;
     LPWSTR  *UniqueActions;
     UINT    UniqueActionsCount;
-}MSISCRIPT;
+} MSISCRIPT;
 
 
-UINT ACTION_PerformAction(MSIPACKAGE *package, const WCHAR *action, BOOL force);
-UINT ACTION_PerformUIAction(MSIPACKAGE *package, const WCHAR *action);
-void ACTION_FinishCustomActions( MSIPACKAGE* package);
-UINT ACTION_CustomAction(MSIPACKAGE *package,const WCHAR *action, BOOL execute);
+extern UINT ACTION_PerformAction(MSIPACKAGE *package, const WCHAR *action, BOOL force);
+extern UINT ACTION_PerformUIAction(MSIPACKAGE *package, const WCHAR *action);
+extern void ACTION_FinishCustomActions( MSIPACKAGE* package);
+extern UINT ACTION_CustomAction(MSIPACKAGE *package,const WCHAR *action, BOOL execute);
 
 /* actions in other modules */
-UINT ACTION_AppSearch(MSIPACKAGE *package);
-UINT ACTION_FindRelatedProducts(MSIPACKAGE *package);
-UINT ACTION_InstallFiles(MSIPACKAGE *package);
-UINT ACTION_DuplicateFiles(MSIPACKAGE *package);
-UINT ACTION_RegisterClassInfo(MSIPACKAGE *package);
-UINT ACTION_RegisterProgIdInfo(MSIPACKAGE *package);
-UINT ACTION_RegisterExtensionInfo(MSIPACKAGE *package);
-UINT ACTION_RegisterMIMEInfo(MSIPACKAGE *package);
+extern UINT ACTION_AppSearch(MSIPACKAGE *package);
+extern UINT ACTION_FindRelatedProducts(MSIPACKAGE *package);
+extern UINT ACTION_InstallFiles(MSIPACKAGE *package);
+extern UINT ACTION_DuplicateFiles(MSIPACKAGE *package);
+extern UINT ACTION_RegisterClassInfo(MSIPACKAGE *package);
+extern UINT ACTION_RegisterProgIdInfo(MSIPACKAGE *package);
+extern UINT ACTION_RegisterExtensionInfo(MSIPACKAGE *package);
+extern UINT ACTION_RegisterMIMEInfo(MSIPACKAGE *package);
 
 
 /* Helpers */
-DWORD deformat_string(MSIPACKAGE *package, LPCWSTR ptr, WCHAR** data );
-WCHAR *load_dynamic_stringW(MSIRECORD *row, INT index);
-LPWSTR load_dynamic_property(MSIPACKAGE *package, LPCWSTR prop, UINT* rc);
-LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source, 
+extern DWORD deformat_string(MSIPACKAGE *package, LPCWSTR ptr, WCHAR** data );
+extern WCHAR *load_dynamic_stringW(MSIRECORD *row, INT index);
+extern LPWSTR load_dynamic_property(MSIPACKAGE *package, LPCWSTR prop, UINT* rc);
+extern LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source, 
                       BOOL set_prop, MSIFOLDER **folder);
-int get_loaded_component(MSIPACKAGE* package, LPCWSTR Component );
-int get_loaded_feature(MSIPACKAGE* package, LPCWSTR Feature );
-int get_loaded_file(MSIPACKAGE* package, LPCWSTR file);
-int track_tempfile(MSIPACKAGE *package, LPCWSTR name, LPCWSTR path);
-UINT schedule_action(MSIPACKAGE *package, UINT script, LPCWSTR action);
-UINT build_icon_path(MSIPACKAGE *, LPCWSTR, LPWSTR *);
-DWORD build_version_dword(LPCWSTR);
-LPWSTR build_directory_name(DWORD , ...);
-BOOL create_full_pathW(const WCHAR *path);
-BOOL ACTION_VerifyComponentForAction(MSIPACKAGE*, INT, INSTALLSTATE);
-BOOL ACTION_VerifyFeatureForAction(MSIPACKAGE*, INT, INSTALLSTATE);
-void reduce_to_longfilename(WCHAR*);
-void reduce_to_shortfilename(WCHAR*);
-LPWSTR create_component_advertise_string(MSIPACKAGE*, MSICOMPONENT*, LPCWSTR);
-void ACTION_UpdateComponentStates(MSIPACKAGE *package, LPCWSTR szFeature);
-UINT register_unique_action(MSIPACKAGE *, LPCWSTR);
-BOOL check_unique_action(MSIPACKAGE *, LPCWSTR);
-WCHAR* generate_error_string(MSIPACKAGE *, UINT, DWORD, ... );
+extern MSICOMPONENT *get_loaded_component( MSIPACKAGE* package, LPCWSTR Component );
+extern MSIFEATURE *get_loaded_feature( MSIPACKAGE* package, LPCWSTR Feature );
+extern MSIFILE *get_loaded_file( MSIPACKAGE* package, LPCWSTR file );
+extern MSIFOLDER *get_loaded_folder( MSIPACKAGE *package, LPCWSTR dir );
+extern int track_tempfile(MSIPACKAGE *package, LPCWSTR name, LPCWSTR path);
+extern UINT schedule_action(MSIPACKAGE *package, UINT script, LPCWSTR action);
+extern UINT build_icon_path(MSIPACKAGE *, LPCWSTR, LPWSTR *);
+extern DWORD build_version_dword(LPCWSTR);
+extern LPWSTR build_directory_name(DWORD , ...);
+extern BOOL create_full_pathW(const WCHAR *path);
+extern BOOL ACTION_VerifyComponentForAction(MSIPACKAGE*, MSICOMPONENT*, INSTALLSTATE);
+extern BOOL ACTION_VerifyFeatureForAction(MSIFEATURE*, INSTALLSTATE);
+extern void reduce_to_longfilename(WCHAR*);
+extern void reduce_to_shortfilename(WCHAR*);
+extern LPWSTR create_component_advertise_string(MSIPACKAGE*, MSICOMPONENT*, LPCWSTR);
+extern void ACTION_UpdateComponentStates(MSIPACKAGE *package, LPCWSTR szFeature);
+extern UINT register_unique_action(MSIPACKAGE *, LPCWSTR);
+extern BOOL check_unique_action(MSIPACKAGE *, LPCWSTR);
+extern WCHAR* generate_error_string(MSIPACKAGE *, UINT, DWORD, ... );
 
 
 /* control event stuff */
-VOID ControlEvent_FireSubscribedEvent(MSIPACKAGE *package, LPCWSTR event,
+extern VOID ControlEvent_FireSubscribedEvent(MSIPACKAGE *package, LPCWSTR event,
                                       MSIRECORD *data);
-VOID ControlEvent_CleanupSubscriptions(MSIPACKAGE *package);
-VOID ControlEvent_SubscribeToEvent(MSIPACKAGE *package, LPCWSTR event,
+extern VOID ControlEvent_CleanupSubscriptions(MSIPACKAGE *package);
+extern VOID ControlEvent_SubscribeToEvent(MSIPACKAGE *package, LPCWSTR event,
                                    LPCWSTR control, LPCWSTR attribute);
-VOID ControlEvent_UnSubscribeToEvent( MSIPACKAGE *package, LPCWSTR event,
+extern VOID ControlEvent_UnSubscribeToEvent( MSIPACKAGE *package, LPCWSTR event,
                                       LPCWSTR control, LPCWSTR attribute );
 
 /* User Interface messages from the actions */
-void ui_progress(MSIPACKAGE *, int, int, int, int);
-void ui_actiondata(MSIPACKAGE *, LPCWSTR, MSIRECORD *);
+extern void ui_progress(MSIPACKAGE *, int, int, int, int);
+extern void ui_actiondata(MSIPACKAGE *, LPCWSTR, MSIRECORD *);
 
 
 /* string consts use a number of places  and defined in helpers.c*/
@@ -264,3 +287,5 @@ extern const WCHAR cszSourceDir[];
 extern const WCHAR szProductCode[];
 extern const WCHAR cszRootDrive[];
 extern const WCHAR cszbs[];
+
+#endif /* __MSI_ACTION_H__ */

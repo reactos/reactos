@@ -24,7 +24,7 @@ extern "C" {
 #endif
 
 #ifndef _MSI_NO_CRYPTO
-#include "wincrypt.h"
+#include <wincrypt.h>
 #endif
 
 typedef unsigned long MSIHANDLE;

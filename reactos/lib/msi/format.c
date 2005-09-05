@@ -79,18 +79,17 @@ static const WCHAR* scanW(LPCWSTR buf, WCHAR token, DWORD len)
 static LPWSTR deformat_component(MSIPACKAGE* package, LPCWSTR key, DWORD* sz)
 {
     LPWSTR value = NULL;
-    INT index;
+    MSICOMPONENT *comp;
 
     *sz = 0;
     if (!package)
         return NULL;
 
     ERR("POORLY HANDLED DEFORMAT.. [$componentkey] \n");
-    index = get_loaded_component(package,key);
-    if (index >= 0)
+    comp = get_loaded_component(package,key);
+    if (comp)
     {
-        value = resolve_folder(package, package->components[index].Directory, 
-                                       FALSE, FALSE, NULL);
+        value = resolve_folder(package, comp->Directory, FALSE, FALSE, NULL);
         *sz = (strlenW(value)) * sizeof(WCHAR);
     }
 
@@ -101,38 +100,37 @@ static LPWSTR deformat_file(MSIPACKAGE* package, LPCWSTR key, DWORD* sz,
                             BOOL shortname)
 {
     LPWSTR value = NULL;
-    INT index;
+    MSIFILE *file;
 
     *sz = 0;
 
     if (!package)
         return NULL;
 
-    index = get_loaded_file(package,key);
-    if (index >=0)
+    file = get_loaded_file( package, key );
+    if (file)
     {
         if (!shortname)
         {
-            value = strdupW(package->files[index].TargetPath);
+            value = strdupW( file->TargetPath );
             *sz = (strlenW(value)) * sizeof(WCHAR);
         }
         else
         {
             DWORD size = 0;
-            size = GetShortPathNameW(package->files[index].TargetPath, NULL, 0);
+            size = GetShortPathNameW( file->TargetPath, NULL, 0 );
 
             if (size > 0)
             {
                 *sz = (size-1) * sizeof (WCHAR);
                 size ++;
                 value = HeapAlloc(GetProcessHeap(),0,size * sizeof(WCHAR));
-                GetShortPathNameW(package->files[index].TargetPath, value, 
-                                  size);
+                GetShortPathNameW( file->TargetPath, value, size );
             }
             else
             {
-                ERR("Unable to get ShortPath size (%s)\n", 
-                                debugstr_w(package->files[index].TargetPath));
+                ERR("Unable to get ShortPath size (%s)\n",
+                    debugstr_w( file->TargetPath) );
                 value = NULL;
                 *sz = 0;
             }

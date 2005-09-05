@@ -586,14 +586,16 @@ static UINT HANDLE_CustomType18(MSIPACKAGE *package, LPCWSTR source,
     WCHAR *cmd;
     INT len;
     static const WCHAR spc[] = {' ',0};
-    int index;
+    MSIFILE *file;
     UINT prc;
 
     memset(&si,0,sizeof(STARTUPINFOW));
 
-    index = get_loaded_file(package,source);
+    file = get_loaded_file(package,source);
+    if( !file )
+        return ERROR_FUNCTION_FAILED;
 
-    len = strlenW(package->files[index].TargetPath);
+    len = lstrlenW( file->TargetPath );
 
     deformat_string(package,target,&deformated);
     if (deformated)
@@ -602,7 +604,7 @@ static UINT HANDLE_CustomType18(MSIPACKAGE *package, LPCWSTR source,
 
     cmd = HeapAlloc(GetProcessHeap(),0,len * sizeof(WCHAR));
 
-    strcpyW(cmd, package->files[index].TargetPath);
+    lstrcpyW( cmd, file->TargetPath);
     if (deformated)
     {
         strcatW(cmd, spc);

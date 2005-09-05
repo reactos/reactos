@@ -129,10 +129,9 @@ typedef struct tagMSIVIEWOPS
     UINT (*set_int)( struct tagMSIVIEW *, UINT row, UINT col, UINT val );
 
     /*
-     * Inserts a new, blank row into the database
-     *  *row receives the number of the new row
+     * Inserts a new row into the database from the records contents
      */
-    UINT (*insert_row)( struct tagMSIVIEW *, UINT *row );
+    UINT (*insert_row)( struct tagMSIVIEW *, MSIRECORD * );
 
     /*
      * execute - loads the underlying data into memory so it can be read
@@ -186,29 +185,21 @@ typedef struct tagMSIPACKAGE
 {
     MSIOBJECTHDR hdr;
     MSIDATABASE *db;
-    struct tagMSIFEATURE *features;
-    UINT loaded_features;
-    struct tagMSIFOLDER  *folders;
-    UINT loaded_folders;
-    struct tagMSICOMPONENT *components;
-    UINT loaded_components;
-    struct tagMSIFILE *files;
-    UINT loaded_files;
+    struct list components;
+    struct list features;
+    struct list files;
+    struct list folders;
     LPWSTR ActionFormat;
     LPWSTR LastAction;
 
-    struct tagMSICLASS *classes;
-    UINT loaded_classes;
-    struct tagMSIEXTENSION *extensions;
-    UINT loaded_extensions;
+    struct list classes;
+    struct list extensions;
     struct tagMSIPROGID *progids;
     UINT loaded_progids;
     struct tagMSIVERB *verbs;
     UINT loaded_verbs;
-    struct tagMSIMIME *mimes;
-    UINT loaded_mimes;
-    struct tagMSIAPPID *appids;
-    UINT loaded_appids;
+    struct list mimes;
+    struct list appids;
     
     struct tagMSISCRIPT *script;
 
@@ -362,7 +353,6 @@ extern INT MSI_ProcessMessage( MSIPACKAGE *, INSTALLMESSAGE, MSIRECORD * );
 extern UINT MSI_GetPropertyW( MSIPACKAGE *, LPCWSTR, LPWSTR, DWORD * );
 extern UINT MSI_GetPropertyA(MSIPACKAGE *, LPCSTR, LPSTR, DWORD* );
 extern MSICONDITION MSI_EvaluateConditionW( MSIPACKAGE *, LPCWSTR );
-extern UINT MSI_SetPropertyW( MSIPACKAGE *, LPCWSTR, LPCWSTR );
 extern UINT MSI_GetComponentStateW( MSIPACKAGE *, LPWSTR, INSTALLSTATE *, INSTALLSTATE * );
 extern UINT MSI_GetFeatureStateW( MSIPACKAGE *, LPWSTR, INSTALLSTATE *, INSTALLSTATE * );
 extern UINT WINAPI MSI_SetFeatureStateW(MSIPACKAGE*, LPCWSTR, INSTALLSTATE );
@@ -411,11 +401,6 @@ UINT WINAPI MsiDecomposeDescriptorW( LPCWSTR, LPWSTR, LPWSTR, LPWSTR, DWORD * );
 UINT WINAPI MsiDecomposeDescriptorA( LPCSTR, LPSTR, LPSTR, LPSTR, DWORD * );
 LANGID WINAPI MsiLoadStringW( MSIHANDLE, UINT, LPWSTR, int, LANGID );
 LANGID WINAPI MsiLoadStringA( MSIHANDLE, UINT, LPSTR, int, LANGID );
-
-HRESULT WINAPI MSI_DllGetClassObject( REFCLSID, REFIID, LPVOID * );
-HRESULT WINAPI MSI_DllRegisterServer( void );
-HRESULT WINAPI MSI_DllUnregisterServer( void );
-BOOL WINAPI MSI_DllCanUnloadNow( void );
 
 /* UI globals */
 extern INSTALLUILEVEL gUILevel;

@@ -170,7 +170,7 @@ static UINT ControlEvent_AddLocal(MSIPACKAGE* package, LPCWSTR argument,
                                   msi_dialog* dialog)
 {
     static const WCHAR szAll[] = {'A','L','L',0};
-    int i;
+    MSIFEATURE *feature = NULL;
 
     if (lstrcmpW(szAll,argument))
     {
@@ -178,10 +178,10 @@ static UINT ControlEvent_AddLocal(MSIPACKAGE* package, LPCWSTR argument,
     }
     else
     {
-        for (i = 0; i < package->loaded_features; i++)
+        LIST_FOR_EACH_ENTRY( feature, &package->features, MSIFEATURE, entry )
         {
-            package->features[i].ActionRequest = INSTALLSTATE_LOCAL;
-            package->features[i].Action = INSTALLSTATE_LOCAL;
+            feature->ActionRequest = INSTALLSTATE_LOCAL;
+            feature->Action = INSTALLSTATE_LOCAL;
         }
         ACTION_UpdateComponentStates(package,argument);
     }
@@ -192,7 +192,7 @@ static UINT ControlEvent_Remove(MSIPACKAGE* package, LPCWSTR argument,
                                 msi_dialog* dialog)
 {
     static const WCHAR szAll[] = {'A','L','L',0};
-    int i;
+    MSIFEATURE *feature = NULL;
 
     if (lstrcmpW(szAll,argument))
     {
@@ -200,10 +200,10 @@ static UINT ControlEvent_Remove(MSIPACKAGE* package, LPCWSTR argument,
     }
     else
     {
-        for (i = 0; i < package->loaded_features; i++)
+        LIST_FOR_EACH_ENTRY( feature, &package->features, MSIFEATURE, entry )
         {
-            package->features[i].ActionRequest = INSTALLSTATE_ABSENT;
-            package->features[i].Action= INSTALLSTATE_ABSENT;
+            feature->ActionRequest = INSTALLSTATE_ABSENT;
+            feature->Action= INSTALLSTATE_ABSENT;
         }
         ACTION_UpdateComponentStates(package,argument);
     }
@@ -214,7 +214,7 @@ static UINT ControlEvent_AddSource(MSIPACKAGE* package, LPCWSTR argument,
                                    msi_dialog* dialog)
 {
     static const WCHAR szAll[] = {'A','L','L',0};
-    int i;
+    MSIFEATURE *feature = NULL;
 
     if (lstrcmpW(szAll,argument))
     {
@@ -222,10 +222,10 @@ static UINT ControlEvent_AddSource(MSIPACKAGE* package, LPCWSTR argument,
     }
     else
     {
-        for (i = 0; i < package->loaded_features; i++)
+        LIST_FOR_EACH_ENTRY( feature, &package->features, MSIFEATURE, entry )
         {
-            package->features[i].ActionRequest = INSTALLSTATE_SOURCE;
-            package->features[i].Action = INSTALLSTATE_SOURCE;
+            feature->ActionRequest = INSTALLSTATE_SOURCE;
+            feature->Action = INSTALLSTATE_SOURCE;
         }
         ACTION_UpdateComponentStates(package,argument);
     }

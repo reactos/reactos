@@ -377,19 +377,19 @@ MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db )
         msiobj_addref( &db->hdr );
 
         package->db = db;
-        package->features = NULL;
-        package->folders = NULL;
-        package->components = NULL;
-        package->files = NULL;
-        package->loaded_features = 0;
-        package->loaded_folders = 0;
-        package->loaded_components= 0;
-        package->loaded_files = 0;
+        list_init( &package->components );
+        list_init( &package->features );
+        list_init( &package->files );
+        list_init( &package->folders );
         package->ActionFormat = NULL;
         package->LastAction = NULL;
         package->dialog = NULL;
         package->next_dialog = NULL;
         list_init( &package->subscriptions );
+        list_init( &package->appids );
+        list_init( &package->classes );
+        list_init( &package->mimes );
+        list_init( &package->extensions );
 
         /* OK, here is where we do a slew of things to the database to 
          * prep for all that is to come as a package */
@@ -884,7 +884,7 @@ UINT WINAPI MsiGetPropertyA(MSIHANDLE hInstall, LPCSTR szName, LPSTR szValueBuf,
     MSIPACKAGE *package;
     UINT ret;
 
-    TRACE("%lu %s %lu\n", hInstall, debugstr_a(szName), *pchValueBuf);
+    TRACE("%lu %s %p\n", hInstall, debugstr_a(szName), pchValueBuf);
 
     if (0 == hInstall)
         return ERROR_INVALID_HANDLE;
@@ -904,10 +904,10 @@ UINT WINAPI MsiGetPropertyA(MSIHANDLE hInstall, LPCSTR szName, LPSTR szValueBuf,
     msiobj_release( &package->hdr );
 
     /* MsiGetProperty does not return error codes on missing properties */
-    if (ret!= ERROR_MORE_DATA)
-        return ERROR_SUCCESS;
-    else
-        return ret;
+    if (ret != ERROR_MORE_DATA)
+        ret = ERROR_SUCCESS;
+
+    return ret;
 }
 
   
@@ -916,6 +916,8 @@ UINT WINAPI MsiGetPropertyW(MSIHANDLE hInstall, LPCWSTR szName,
 {
     MSIPACKAGE *package;
     UINT ret;
+
+    TRACE("%lu %s %p\n", hInstall, debugstr_w(szName), pchValueBuf);
 
     if (0 == hInstall)
         return ERROR_INVALID_HANDLE;
@@ -935,8 +937,8 @@ UINT WINAPI MsiGetPropertyW(MSIHANDLE hInstall, LPCWSTR szName,
     msiobj_release( &package->hdr );
 
     /* MsiGetProperty does not return error codes on missing properties */
-    if (ret!= ERROR_MORE_DATA)
-        return ERROR_SUCCESS;
-    else
-        return ret;
+    if (ret != ERROR_MORE_DATA)
+        ret = ERROR_SUCCESS;
+
+    return ret;
 }
