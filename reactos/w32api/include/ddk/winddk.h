@@ -5099,8 +5099,14 @@ InterlockedPushEntrySList(
 NTOSAPI
 ULONG
 DDKAPI
-RtlAnsiStringToUnicodeSize(
-  IN PANSI_STRING  AnsiString);
+RtlxAnsiStringToUnicodeSize(
+  IN PCANSI_STRING  AnsiString);
+
+#define RtlAnsiStringToUnicodeSize(STRING) (               \
+  NLS_MB_CODE_PAGE_TAG ?                                   \
+  RtlxAnsiStringToUnicodeSize(STRING) :                    \
+  ((STRING)->Length + sizeof(ANSI_NULL)) * sizeof(WCHAR)   \
+)
 
 NTOSAPI
 NTSTATUS
@@ -5720,11 +5726,11 @@ DDKFASTAPI
 RtlUlonglongByteSwap(
   IN ULONGLONG  Source);
 
-NTOSAPI
-ULONG
-DDKAPI
-RtlUnicodeStringToAnsiSize(
-  IN PUNICODE_STRING  UnicodeString);
+#define RtlUnicodeStringToAnsiSize(STRING) (                  \
+    NLS_MB_CODE_PAGE_TAG ?                                    \
+    RtlxUnicodeStringToAnsiSize(STRING) :                     \
+    ((STRING)->Length + sizeof(UNICODE_NULL)) / sizeof(WCHAR) \
+)
 
 NTOSAPI
 NTSTATUS

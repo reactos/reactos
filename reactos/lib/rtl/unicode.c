@@ -66,7 +66,7 @@ RtlAnsiCharToUnicodeChar (IN CHAR AnsiChar)
  */
 ULONG
 STDCALL
-RtlxAnsiStringToUnicodeSize(IN PANSI_STRING AnsiString)
+RtlxAnsiStringToUnicodeSize(IN PCANSI_STRING AnsiString)
 {
    ULONG Size;
 
@@ -884,7 +884,7 @@ RtlUnicodeStringToInteger(
 ULONG
 STDCALL
 RtlxUnicodeStringToOemSize(
-   IN PUNICODE_STRING UnicodeString)
+   IN PCUNICODE_STRING UnicodeString)
 {
    ULONG Size;
 
@@ -1830,7 +1830,7 @@ RtlUpcaseUnicodeStringToOemString (
  */
 ULONG
 STDCALL
-RtlxOemStringToUnicodeSize(IN POEM_STRING OemString)
+RtlxOemStringToUnicodeSize(IN PCOEM_STRING OemString)
 {
    ULONG Size;
 
@@ -1894,7 +1894,7 @@ RtlStringFromGUID (IN REFGUID Guid,
 ULONG
 STDCALL
 RtlxUnicodeStringToAnsiSize(
-   IN PUNICODE_STRING UnicodeString)
+   IN PCUNICODE_STRING UnicodeString)
 {
    ULONG Size;
 
@@ -2254,47 +2254,6 @@ RtlUpperString(PSTRING DestinationString,
    *Dest = 0;
 
    DestinationString->Length = SourceString->Length;
-}
-
-
-/*
- * @implemented
- */
-ULONG STDCALL
-RtlAnsiStringToUnicodeSize(IN PANSI_STRING AnsiString)
-{
-   return RtlxAnsiStringToUnicodeSize(AnsiString);
-}
-
-
-/*
- * @implemented
- */
-ULONG STDCALL
-RtlOemStringToUnicodeSize(IN POEM_STRING OemString)
-{
-   return RtlxOemStringToUnicodeSize(OemString);
-}
-
-
-
-/*
- * @implemented
- */
-ULONG STDCALL
-RtlUnicodeStringToAnsiSize(IN PUNICODE_STRING UnicodeString)
-{
-   return RtlxUnicodeStringToAnsiSize(UnicodeString);
-}
-
-
-/*
- * @implemented
- */
-ULONG STDCALL
-RtlUnicodeStringToOemSize(IN PUNICODE_STRING UnicodeString)
-{
-   return RtlxUnicodeStringToOemSize(UnicodeString);
 }
 
 /*

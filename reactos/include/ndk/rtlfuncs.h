@@ -764,12 +764,18 @@ RtlUlonglongByteSwap(IN ULONGLONG Source);
 /*
  * Unicode->Ansi String Functions
  */
-/* FIXME: Use macro */
-#undef RtlUnicodeStringToAnsiSize
 NTSYSAPI
 ULONG
 NTAPI
-RtlUnicodeStringToAnsiSize(IN PUNICODE_STRING UnicodeString);
+RtlxUnicodeStringToAnsiSize(IN PCUNICODE_STRING UnicodeString);
+
+#ifdef NTOS_MODE_USER
+#define RtlUnicodeStringToAnsiSize(STRING) (                  \
+    NLS_MB_CODE_PAGE_TAG ?                                    \
+    RtlxUnicodeStringToAnsiSize(STRING) :                     \
+    ((STRING)->Length + sizeof(UNICODE_NULL)) / sizeof(WCHAR) \
+)
+#endif
 
 NTSYSAPI
 NTSTATUS
@@ -821,12 +827,21 @@ RtlUpcaseUnicodeToOemN(
     ULONG UnicodeSize
 );
 
-/* FIXME: Use macro */
-#undef RtlUnicodeStringToOemSize
 NTSYSAPI
 ULONG
 NTAPI
-RtlUnicodeStringToOemSize(IN PUNICODE_STRING UnicodeString);
+RtlxUnicodeStringToOemSize(IN PCUNICODE_STRING UnicodeString);
+
+#ifdef NTOS_MODE_USER
+#define RtlUnicodeStringToOemSize(STRING) (                   \
+    NLS_MB_OEM_CODE_PAGE_TAG ?                                \
+    RtlxUnicodeStringToOemSize(STRING) :                      \
+    ((STRING)->Length + sizeof(UNICODE_NULL)) / sizeof(WCHAR) \
+)
+#define RtlUnicodeStringToCountedOemSize(STRING) (                    \
+    (ULONG)(RtlUnicodeStringToOemSize(STRING) - sizeof(UNICODE_NULL)) \
+)
+#endif
 
 NTSYSAPI
 NTSTATUS
@@ -873,15 +888,24 @@ RtlUnicodeToMultiByteSize(
     ULONG UnicodeSize
 );
 
-/*
- * OEM to Unicode Functions
- */
-/* FIXME: Use macro */
-#undef RtlOemStringToUnicodeSize
 NTSYSAPI
 ULONG
 NTAPI
-RtlOemStringToUnicodeSize(POEM_STRING AnsiString);
+RtlxOemStringToUnicodeSize(IN PCOEM_STRING OemString);
+
+/*
+ * OEM to Unicode Functions
+ */
+#ifdef NTOS_MODE_USER
+#define RtlOemStringToUnicodeSize(STRING) (                  \
+    NLS_MB_OEM_CODE_PAGE_TAG ?                               \
+    RtlxOemStringToUnicodeSize(STRING) :                     \
+    ((STRING)->Length + sizeof(ANSI_NULL)) * sizeof(WCHAR)   \
+)
+#define RtlOemStringToCountedUnicodeSize(STRING) (                    \
+    (ULONG)(RtlOemStringToUnicodeSize(STRING) - sizeof(UNICODE_NULL)) \
+)
+#endif
 
 NTSYSAPI
 NTSTATUS
@@ -915,14 +939,13 @@ RtlAnsiStringToUnicodeString(
     BOOLEAN AllocateDestinationString
 );
 
-/* FIXME: Use macro */
-#undef RtlAnsiStringToUnicodeSize
-NTSYSAPI
-ULONG
-NTAPI
-RtlAnsiStringToUnicodeSize(
-    PANSI_STRING AnsiString
-);
+#ifdef NTOS_MODE_USER
+#define RtlAnsiStringToUnicodeSize(STRING) (                 \
+    NLS_MB_CODE_PAGE_TAG ?                                   \
+    RtlxAnsiStringToUnicodeSize(STRING) :                    \
+    ((STRING)->Length + sizeof(ANSI_NULL)) * sizeof(WCHAR)   \
+)
+#endif
 
 NTSYSAPI
 BOOLEAN
