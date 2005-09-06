@@ -439,6 +439,22 @@ typedef struct _PROCESS_SESSION_INFORMATION
 } PROCESS_SESSION_INFORMATION, *PPROCESS_SESSION_INFORMATION;
 #endif
 
+typedef struct _PROCESS_PRIORITY_CLASS
+{
+    BOOLEAN Foreground;
+    UCHAR   PriorityClass;
+} PROCESS_PRIORITY_CLASS, *PPROCESS_PRIORITY_CLASS;
+
+typedef struct _THREAD_BASIC_INFORMATION
+{
+    NTSTATUS ExitStatus;
+    PVOID TebBaseAddress;
+    CLIENT_ID ClientId;
+    KAFFINITY AffinityMask;
+    KPRIORITY Priority;
+    KPRIORITY BasePriority;
+} THREAD_BASIC_INFORMATION, *PTHREAD_BASIC_INFORMATION;
+
 #ifndef NTOS_MODE_USER
 /* FIXME: see note in mmtypes.h */
 #ifdef _NTOSKRNL_

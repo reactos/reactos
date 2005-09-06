@@ -71,9 +71,20 @@ typedef enum _OB_OPEN_REASON
     ObInheritHandle,
     ObMaxOpenReason
 } OB_OPEN_REASON;
+#endif
+
+typedef enum _OBJECT_INFORMATION_CLASS
+{
+    ObjectBasicInformation,
+    ObjectNameInformation,
+    ObjectTypeInformation,
+    ObjectAllTypesInformation,
+    ObjectHandleInformation
+} OBJECT_INFORMATION_CLASS;
 
 /* FUNCTION TYPES ************************************************************/
 
+#ifndef NTOS_MODE_USER
 /* Object Callbacks FIXME: Update these soon */
 typedef NTSTATUS
 (NTAPI *OB_OPEN_METHOD)(
@@ -155,6 +166,18 @@ typedef struct _OBJECT_NAME_INFORMATION
     UNICODE_STRING Name;
 } OBJECT_NAME_INFORMATION, *POBJECT_NAME_INFORMATION;
 #endif
+
+typedef struct _OBJECT_HANDLE_ATTRIBUTE_INFORMATION
+{
+    BOOLEAN Inherit;
+    BOOLEAN ProtectFromClose;
+} OBJECT_HANDLE_ATTRIBUTE_INFORMATION, *POBJECT_HANDLE_ATTRIBUTE_INFORMATION;
+
+typedef struct _OBJECT_DIRECTORY_INFORMATION
+{
+    UNICODE_STRING ObjectName;
+    UNICODE_STRING ObjectTypeName;
+} OBJECT_DIRECTORY_INFORMATION, *POBJECT_DIRECTORY_INFORMATION;
 
 #ifndef NTOS_MODE_USER
 typedef struct _OBJECT_BASIC_INFORMATION

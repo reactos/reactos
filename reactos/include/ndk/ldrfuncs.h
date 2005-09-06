@@ -13,7 +13,7 @@
 #include "ldrtypes.h"
 /* FIXME: this needs be implemented in the w32api ddk */
 #ifdef _MSC_VER
-#include "ntimage.h"
+#include <ntimage.h>
 #endif
 
 /* FUNCTION TYPES ************************************************************/

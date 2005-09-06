@@ -32,6 +32,11 @@ typedef enum _LPC_TYPE
     LPC_MAXIMUM
 } LPC_TYPE;
 
+typedef enum _PORT_INFORMATION_CLASS
+{
+    PortNoInformation
+} PORT_INFORMATION_CLASS;
+
 /* TYPES *********************************************************************/
 
 #ifdef NTOS_MODE_USER

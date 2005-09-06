@@ -49,7 +49,6 @@
 #include "pstypes.h"        /* Process Manager Types */
 #include "lpctypes.h"       /* Local Procedure Call Types */
 #include "dbgktypes.h"      /* User-Mode Kernel Debugging Types */
-#include "zwtypes.h"        /* Native Types */
 #include "zwfuncs.h"        /* Native Functions (System Calls) */
 #include "rtltypes.h"       /* Runtime Library Types */
 #include "rtlfuncs.h"       /* Runtime Library Functions */

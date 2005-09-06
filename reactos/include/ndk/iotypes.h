@@ -82,6 +82,15 @@ extern POBJECT_TYPE NTSYSAPI IoDriverObjectType;
 #define FILE_OPEN_NO_RECALL                 0x00400000
 #define FILE_OPEN_FOR_FREE_SPACE_QUERY      0x00800000
 
+/* For DeviceMap DosDevice Type */
+#define DOSDEVICE_DRIVE_UNKNOWN             0
+#define DOSDEVICE_DRIVE_CALCULATE           1
+#define DOSDEVICE_DRIVE_REMOVABLE           2
+#define DOSDEVICE_DRIVE_FIXED               3
+#define DOSDEVICE_DRIVE_REMOTE              4
+#define DOSDEVICE_DRIVE_CDROM               5
+#define DOSDEVICE_DRIVE_RAMDISK             6
+
 /* Device Charactertics */
 #define FILE_REMOVABLE_MEDIA                0x00000001
 #define FILE_REMOTE_DEVICE                  0x00000010
@@ -131,6 +140,11 @@ extern POBJECT_TYPE NTSYSAPI IoDriverObjectType;
 #define DNUF_NOT_DISABLEABLE    0x0008
 
 /* ENUMERATIONS **************************************************************/
+
+typedef enum _IO_COMPLETION_INFORMATION_CLASS
+{
+    IoCompletionBasicInformation
+} IO_COMPLETION_INFORMATION_CLASS;
 
 #ifdef NTOS_MODE_USER
 typedef enum _INTERFACE_TYPE

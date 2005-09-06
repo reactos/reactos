@@ -61,6 +61,20 @@ typedef enum _PP_NPAGED_LOOKASIDE_NUMBER
     LookasideMaximumList = 7
 } PP_NPAGED_LOOKASIDE_NUMBER;
 
+typedef enum _MEMORY_INFORMATION_CLASS
+{
+    MemoryBasicInformation,
+    MemoryWorkingSetList,
+    MemorySectionName,
+    MemoryBasicVlmInformation
+} MEMORY_INFORMATION_CLASS;
+
+typedef enum _SECTION_INFORMATION_CLASS
+{
+    SectionBasicInformation,
+    SectionImageInformation,
+} SECTION_INFORMATION_CLASS;
+
 /* TYPES *********************************************************************/
 
 #ifdef NTOS_MODE_USER
@@ -95,6 +109,45 @@ typedef struct _VM_COUNTERS_EX
     SIZE_T PrivateUsage;
 } VM_COUNTERS_EX, *PVM_COUNTERS_EX;
 #endif
+
+typedef struct _MEMORY_WORKING_SET_LIST
+{
+    ULONG NumberOfPages;
+    ULONG WorkingSetList[1];
+} MEMORY_WORKING_SET_LIST, *PMEMORY_WORKING_SET_LIST;
+
+typedef struct
+{
+    UNICODE_STRING SectionFileName;
+    WCHAR          NameBuffer[ANYSIZE_ARRAY];
+} MEMORY_SECTION_NAME, *PMEMORY_SECTION_NAME;
+
+typedef struct _SECTION_BASIC_INFORMATION
+{
+    PVOID           BaseAddress;
+    ULONG           Attributes;
+    LARGE_INTEGER   Size;
+} SECTION_BASIC_INFORMATION, *PSECTION_BASIC_INFORMATION;
+
+typedef struct _SECTION_IMAGE_INFORMATION
+{
+    PVOID TransferAddress;
+    ULONG ZeroBits;
+    ULONG MaximumStackSize;
+    ULONG CommittedStackSize;
+    ULONG SubsystemType;
+    USHORT SubSystemMinorVersion;
+    USHORT SubSystemMajorVersion;
+    ULONG GpValue;
+    USHORT ImageCharacteristics;
+    USHORT DllChracteristics;
+    USHORT Machine;
+    UCHAR ImageContainsCode;
+    UCHAR Spare1;
+    ULONG LoaderFlags;
+    ULONG ImageFileSIze;
+    ULONG Reserved[1];
+} SECTION_IMAGE_INFORMATION, *PSECTION_IMAGE_INFORMATION;
 
 #ifndef NTOS_MODE_USER
 /* FIXME: Forced to do this for now, because of EPROCESS, will go away before 0.3.0 */
