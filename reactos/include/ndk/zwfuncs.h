@@ -28,6 +28,7 @@ NtAcceptConnectPort(
     PREMOTE_PORT_VIEW ClientView OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAcceptConnectPort(
@@ -52,6 +53,7 @@ NtAccessCheck(
     OUT PNTSTATUS AccessStatus
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAccessCheck(
@@ -90,6 +92,7 @@ NtAddAtom(
     IN OUT PRTL_ATOM  Atom
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAddAtom(
@@ -105,6 +108,7 @@ NtAddBootEntry(
     IN PUNICODE_STRING EntryValue
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAddBootEntry(
@@ -124,6 +128,7 @@ NtAdjustGroupsToken(
     OUT PULONG  ReturnLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAdjustGroupsToken(
@@ -147,6 +152,7 @@ NtAdjustPrivilegesToken(
     OUT PULONG ReturnLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAdjustPrivilegesToken(
@@ -165,6 +171,7 @@ NtAlertResumeThread(
     OUT PULONG SuspendCount
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAlertResumeThread(
@@ -178,6 +185,7 @@ NtAlertThread(
     IN HANDLE ThreadHandle
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAlertThread(
@@ -190,6 +198,7 @@ NtAllocateLocallyUniqueId(
     OUT LUID *LocallyUniqueId
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAllocateLocallyUniqueId(
@@ -205,6 +214,7 @@ NtAllocateUuids(
     PUCHAR Seed
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAllocateUuids(
@@ -245,6 +255,7 @@ NtAssignProcessToJobObject(
     HANDLE ProcessHandle
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwAssignProcessToJobObject(
@@ -260,6 +271,7 @@ NtCallbackReturn(
     NTSTATUS Status
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCallbackReturn(
@@ -275,6 +287,7 @@ NtCancelIoFile(
     OUT PIO_STATUS_BLOCK IoStatusBlock
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCancelIoFile(
@@ -295,6 +308,7 @@ NtClearEvent(
     IN HANDLE EventHandle
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwClearEvent(
@@ -309,6 +323,7 @@ NtCreateJobObject(
     POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateJobObject(
@@ -340,6 +355,7 @@ NtCloseObjectAuditAlarm(
     IN BOOLEAN GenerateOnClose
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCloseObjectAuditAlarm(
@@ -354,6 +370,7 @@ NtCompleteConnectPort(
     HANDLE PortHandle
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCompleteConnectPort(
@@ -395,6 +412,7 @@ NtContinue(
     IN BOOLEAN TestAlert
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwContinue(
@@ -448,6 +466,7 @@ NtCreateEventPair(
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateEventPair(
@@ -499,6 +518,7 @@ NtCreateIoCompletion(
     IN  ULONG               NumberOfConcurrentThreads
     );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateIoCompletion(
@@ -546,6 +566,7 @@ NtCreateMailslotFile(
     IN PLARGE_INTEGER TimeOut
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateMailslotFile(
@@ -568,6 +589,7 @@ NtCreateMutant(
     IN BOOLEAN InitialOwner
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateMutant(
@@ -596,6 +618,7 @@ NtCreateNamedPipeFile(
     IN PLARGE_INTEGER DefaultTimeOut
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateNamedPipeFile(
@@ -624,6 +647,7 @@ NtCreatePagingFile(
     IN ULONG Reserved
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreatePagingFile(
@@ -643,6 +667,7 @@ NtCreatePort(
     ULONG MaxPoolUsage
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreatePort(
@@ -666,6 +691,7 @@ NtCreateProcess(
     IN HANDLE ExceptionPort OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateProcess(
@@ -693,6 +719,7 @@ NtCreateProfile(
     IN KAFFINITY ProcessorMask
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateProfile(
@@ -743,6 +770,7 @@ NtCreateSemaphore(
     IN LONG MaximumCount
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateSemaphore(
@@ -762,6 +790,7 @@ NtCreateSymbolicLinkObject(
     IN PUNICODE_STRING Name
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateSymbolicLinkObject(
@@ -784,6 +813,7 @@ NtCreateThread(
     IN  BOOLEAN CreateSuspended
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateThread(
@@ -807,6 +837,7 @@ NtCreateTimer(
 );
 
 #ifdef NTOS_MODE_USER
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateTimer(
@@ -835,6 +866,7 @@ NtCreateToken(
     IN PTOKEN_SOURCE TokenSource
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateToken(
@@ -863,6 +895,7 @@ NtCreateWaitablePort(
     ULONG NPMessageQueueSize OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwCreateWaitablePort(
@@ -880,6 +913,7 @@ NtDelayExecution(
     IN LARGE_INTEGER *Interval
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDelayExecution(
@@ -893,6 +927,7 @@ NtDeleteAtom(
     IN RTL_ATOM Atom
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDeleteAtom(
@@ -906,6 +941,7 @@ NtDeleteBootEntry(
     IN PUNICODE_STRING EntryValue
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDeleteBootEntry(
@@ -948,6 +984,7 @@ NtDeleteObjectAuditAlarm(
     IN BOOLEAN GenerateOnClose
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDeleteObjectAuditAlarm(
@@ -1009,6 +1046,7 @@ NtDisplayString(
     IN PUNICODE_STRING DisplayString
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDisplayString(
@@ -1059,6 +1097,7 @@ NtEnumerateBootEntries(
     IN ULONG Unknown2
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwEnumerateBootEntries(
@@ -1119,6 +1158,7 @@ NtExtendSection(
     IN PLARGE_INTEGER NewMaximumSize
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwExtendSection(
@@ -1134,6 +1174,7 @@ NtFindAtom(
     OUT PRTL_ATOM Atom OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwFindAtom(
@@ -1193,6 +1234,7 @@ NTSTATUS
 NTAPI
 NtFlushWriteBuffer(VOID);
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwFlushWriteBuffer(VOID);
@@ -1256,6 +1298,7 @@ NtGetContextThread(
     OUT PCONTEXT Context
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwGetContextThread(
@@ -1278,6 +1321,7 @@ NtGetTickCount(
     VOID
 );
 
+NTSYSAPI
 ULONG
 NTAPI
 ZwGetTickCount(
@@ -1291,6 +1335,7 @@ NtImpersonateClientOfPort(
     PPORT_MESSAGE ClientMessage
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwImpersonateClientOfPort(
@@ -1306,6 +1351,7 @@ NtImpersonateThread(
     IN PSECURITY_QUALITY_OF_SERVICE SecurityQualityOfService
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwImpersonateThread(
@@ -1324,6 +1370,7 @@ NtInitiatePowerAction(
     BOOLEAN Asynchronous
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwInitiatePowerAction(
@@ -1339,6 +1386,7 @@ NtInitializeRegistry(
     BOOLEAN SetUpBoot
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwInitializeRegistry(
@@ -1352,6 +1400,7 @@ NtIsProcessInJob(
     IN HANDLE JobHandle OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwIsProcessInJob(
@@ -1365,6 +1414,7 @@ NtListenPort(HANDLE PortHandle,
              PPORT_MESSAGE ConnectionRequest
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwListenPort(HANDLE PortHandle,
@@ -1391,6 +1441,7 @@ NtLoadKey(
     IN POBJECT_ATTRIBUTES FileObjectAttributes
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwLoadKey(
@@ -1406,6 +1457,7 @@ NtLoadKey2(
     IN ULONG Flags
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwLoadKey2(
@@ -1456,6 +1508,7 @@ NtLockVirtualMemory(
     PULONG NumberOfBytesLocked
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwLockVirtualMemory(
@@ -1471,6 +1524,7 @@ NtMakePermanentObject(
     IN HANDLE Object
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwMakePermanentObject(
@@ -1535,6 +1589,7 @@ NtNotifyChangeDirectoryFile(
     IN BOOLEAN WatchTree
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwNotifyChangeDirectoryFile(
@@ -1605,6 +1660,7 @@ NtOpenEvent(
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenEvent(
@@ -1621,6 +1677,7 @@ NtOpenEventPair(
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenEventPair(
@@ -1661,6 +1718,7 @@ NtOpenIoCompletion(
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenIoCompletion(
@@ -1677,6 +1735,7 @@ NtOpenJobObject(
     POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenJobObject(
@@ -1710,6 +1769,7 @@ NtOpenMutant(
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenMutant(
@@ -1736,6 +1796,7 @@ NtOpenObjectAuditAlarm(
     OUT PBOOLEAN GenerateOnClose
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenObjectAuditAlarm(
@@ -1763,6 +1824,7 @@ NtOpenProcess(
     IN PCLIENT_ID ClientId
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenProcess(
@@ -1781,6 +1843,7 @@ NtOpenProcessToken(
     OUT PHANDLE TokenHandle
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenProcessToken(
@@ -1834,6 +1897,7 @@ NtOpenSemaphore(
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenSemaphore(
@@ -1868,6 +1932,7 @@ NtOpenThread(
     IN PCLIENT_ID ClientId
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenThread(
@@ -1887,6 +1952,7 @@ NtOpenThreadToken(
     OUT PHANDLE TokenHandle
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenThreadToken(
@@ -1927,6 +1993,7 @@ NtOpenTimer(
 );
 
 #ifdef NTOS_MODE_USER
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwOpenTimer(
@@ -1955,6 +2022,7 @@ NtPowerInformation(
     ULONG OutputBufferLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwPowerInformation(
@@ -1974,6 +2042,7 @@ NtPrivilegeCheck(
     IN PBOOLEAN Result
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwPrivilegeCheck(
@@ -1993,6 +2062,7 @@ NtPrivilegedServiceAuditAlarm(
     IN BOOLEAN AccessGranted
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwPrivilegedServiceAuditAlarm(
@@ -2015,6 +2085,7 @@ NtPrivilegeObjectAuditAlarm(
     IN BOOLEAN AccessGranted
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwPrivilegeObjectAuditAlarm(
@@ -2036,6 +2107,7 @@ NtProtectVirtualMemory(
     OUT PULONG OldAccessProtection
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwProtectVirtualMemory(
@@ -2053,6 +2125,7 @@ NtPulseEvent(
     IN PLONG PulseCount OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwPulseEvent(
@@ -2067,6 +2140,7 @@ NtQueryAttributesFile(
     OUT PFILE_BASIC_INFORMATION FileInformation
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryAttributesFile(
@@ -2082,6 +2156,7 @@ NtQueryBootEntryOrder(
     IN ULONG Unknown2
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryBootEntryOrder(
@@ -2096,12 +2171,14 @@ NtQueryBootOptions(
     IN ULONG Unknown2
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryBootOptions(
     IN ULONG Unknown1,
     IN ULONG Unknown2
 );
+
 NTSTATUS
 NTAPI
 NtQueryDefaultLocale(
@@ -2109,6 +2186,7 @@ NtQueryDefaultLocale(
     OUT PLCID DefaultLocaleId
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryDefaultLocale(
@@ -2122,6 +2200,7 @@ NtQueryDefaultUILanguage(
     PLANGID LanguageId
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryDefaultUILanguage(
@@ -2174,6 +2253,7 @@ NtQueryDirectoryObject(
     OUT    PULONG ReturnLength OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryDirectoryObject(
@@ -2201,6 +2281,7 @@ NtQueryEaFile(
 );
 
 #ifdef NTOS_MODE_USER
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryEaFile(
@@ -2225,6 +2306,8 @@ NtQueryEvent(
     IN ULONG EventInformationLength,
     OUT PULONG ReturnLength
 );
+
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryEvent(
@@ -2242,6 +2325,7 @@ NtQueryFullAttributesFile(
     OUT PFILE_NETWORK_OPEN_INFORMATION FileInformation
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryFullAttributesFile(
@@ -2259,6 +2343,7 @@ NtQueryInformationAtom(
     OUT PULONG ReturnLength OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryInformationAtom(
@@ -2301,6 +2386,7 @@ NtQueryInformationJobObject(
     PULONG ReturnLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryInformationJobObject(
@@ -2321,6 +2407,7 @@ NtQueryInformationPort(
     PULONG ReturnLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryInformationPort(
@@ -2342,6 +2429,7 @@ NtQueryInformationProcess(
     OUT PULONG  ReturnLength OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryInformationProcess(
@@ -2363,6 +2451,7 @@ NtQueryInformationThread(
     OUT PULONG ReturnLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryInformationThread(
@@ -2401,6 +2490,7 @@ NtQueryInstallUILanguage(
     PLANGID LanguageId
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryInstallUILanguage(
@@ -2414,6 +2504,7 @@ NtQueryIntervalProfile(
     OUT PULONG Interval
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryIntervalProfile(
@@ -2431,6 +2522,7 @@ NtQueryIoCompletion(
     OUT PULONG ResultLength OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryIoCompletion(
@@ -2503,6 +2595,7 @@ NtQueryMultipleValueKey(
     OUT PULONG ReturnLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryMultipleValueKey(
@@ -2524,6 +2617,7 @@ NtQueryMutant(
     OUT PULONG ResultLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryMutant(
@@ -2544,6 +2638,7 @@ NtQueryObject(
     OUT PULONG ResultLength OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryObject(
@@ -2561,6 +2656,7 @@ NtQueryPerformanceCounter(
     IN PLARGE_INTEGER Frequency
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryPerformanceCounter(
@@ -2578,6 +2674,7 @@ NtQuerySection(
     OUT PULONG ResultLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQuerySection(
@@ -2620,6 +2717,7 @@ NtQuerySemaphore(
     OUT PULONG ReturnLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQuerySemaphore(
@@ -2656,6 +2754,7 @@ NtQuerySystemEnvironmentValue(
     PULONG ReturnLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQuerySystemEnvironmentValue(
@@ -2674,6 +2773,7 @@ NtQuerySystemInformation(
     OUT PULONG ResultLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQuerySystemInformation(
@@ -2689,6 +2789,7 @@ NtQuerySystemTime(
     OUT PLARGE_INTEGER CurrentTime
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQuerySystemTime(
@@ -2705,6 +2806,7 @@ NtQueryTimer(
     OUT PULONG ResultLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryTimer(
@@ -2723,6 +2825,7 @@ NtQueryTimerResolution(
     OUT PULONG ActualResolution
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryTimerResolution(
@@ -2765,6 +2868,7 @@ NtQueryVirtualMemory(
     OUT PULONG ResultLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueryVirtualMemory(
@@ -2808,6 +2912,7 @@ NtQueueApcThread(
     PVOID SystemArgument2
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQueueApcThread(
@@ -2826,6 +2931,7 @@ NtRaiseException(
     IN BOOLEAN SearchFrames
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwRaiseException(
@@ -2845,6 +2951,7 @@ NtRaiseHardError(
     OUT PULONG Response
 ); 
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwRaiseHardError(
@@ -2900,6 +3007,7 @@ NtReadFileScatter(
     IN PULONG Key OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReadFileScatter(
@@ -2925,6 +3033,7 @@ NtReadRequestData(
     PULONG ReturnLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReadRequestData(
@@ -2945,6 +3054,8 @@ NtReadVirtualMemory(
     IN ULONG  NumberOfBytesToRead,
     OUT PULONG NumberOfBytesRead
 );
+
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReadVirtualMemory(
@@ -2961,6 +3072,7 @@ NtRegisterThreadTerminatePort(
     HANDLE TerminationPort
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwRegisterThreadTerminatePort(
@@ -2974,6 +3086,7 @@ NtReleaseMutant(
     IN PLONG ReleaseCount OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReleaseMutant(
@@ -2989,6 +3102,7 @@ NtReleaseSemaphore(
     OUT PLONG PreviousCount
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReleaseSemaphore(
@@ -3007,6 +3121,7 @@ NtRemoveIoCompletion(
     IN  PLARGE_INTEGER Timeout OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwRemoveIoCompletion(
@@ -3025,6 +3140,7 @@ NtReplaceKey(
     IN POBJECT_ATTRIBUTES ReplacedObjectAttributes
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReplaceKey(
@@ -3040,6 +3156,7 @@ NtReplyPort(
     PPORT_MESSAGE LpcReply
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReplyPort(
@@ -3056,6 +3173,7 @@ NtReplyWaitReceivePort(
     PPORT_MESSAGE ReceiveMessage
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReplyWaitReceivePort(
@@ -3072,6 +3190,7 @@ NtReplyWaitReplyPort(
     PPORT_MESSAGE ReplyMessage
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwReplyWaitReplyPort(
@@ -3085,6 +3204,7 @@ NtRequestPort(
     HANDLE PortHandle,
     PPORT_MESSAGE LpcMessage);
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwRequestPort(
@@ -3117,6 +3237,7 @@ NtResetEvent(
     PLONG NumberOfWaitingThreads OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwResetEvent(
@@ -3132,6 +3253,7 @@ NtRestoreKey(
     ULONG RestoreFlags
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwRestoreKey(
@@ -3147,6 +3269,7 @@ NtResumeThread(
     OUT PULONG SuspendCount
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwResumeThread(
@@ -3160,6 +3283,7 @@ NtResumeProcess(
     IN HANDLE ProcessHandle
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwResumeProcess(
@@ -3172,6 +3296,8 @@ NtSaveKey(
     IN HANDLE KeyHandle,
     IN HANDLE FileHandle
 );
+
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSaveKey(
@@ -3187,6 +3313,7 @@ NtSaveKeyEx(
     IN ULONG Flags
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSaveKeyEx(
@@ -3202,6 +3329,7 @@ NtSetBootEntryOrder(
     IN ULONG Unknown2
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetBootEntryOrder(
@@ -3216,6 +3344,7 @@ NtSetBootOptions(
     ULONG Unknown2
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetBootOptions(
@@ -3229,6 +3358,8 @@ NtSetContextThread(
     IN HANDLE ThreadHandle,
     IN PCONTEXT Context
 );
+
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetContextThread(
@@ -3243,6 +3374,7 @@ NtSetDefaultLocale(
     IN LCID DefaultLocaleId
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetDefaultLocale(
@@ -3256,16 +3388,20 @@ NtSetDefaultUILanguage(
     LANGID LanguageId
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetDefaultUILanguage(
     LANGID LanguageId
 );
+
 NTSTATUS
 NTAPI
 NtSetDefaultHardErrorPort(
     IN HANDLE PortHandle
 );
+
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetDefaultHardErrorPort(
@@ -3282,6 +3418,7 @@ NtSetEaFile(
 );
 
 #ifdef NTOS_MODE_USER
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetEaFile(
@@ -3313,6 +3450,7 @@ NtSetHighEventPair(
     IN HANDLE EventPairHandle
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetHighEventPair(
@@ -3323,6 +3461,8 @@ NTAPI
 NtSetHighWaitLowEventPair(
     IN HANDLE EventPairHandle
 );
+
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetHighWaitLowEventPair(
@@ -3360,6 +3500,7 @@ NtSetInformationJobObject(
     ULONG JobInformationLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetInformationJobObject(
@@ -3378,6 +3519,7 @@ NtSetInformationKey(
     IN ULONG KeyInformationLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetInformationKey(
@@ -3396,6 +3538,7 @@ NtSetInformationObject(
     IN ULONG Length
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetInformationObject(
@@ -3464,6 +3607,7 @@ NtSetIoCompletion(
     IN ULONG CompletionInformation
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetIoCompletion(
@@ -3481,6 +3625,7 @@ NtSetIntervalProfile(
     KPROFILE_SOURCE ClockSource
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetIntervalProfile(
@@ -3503,6 +3648,7 @@ NtSetLowEventPair(
     HANDLE EventPair
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetLowEventPair(
@@ -3515,6 +3661,7 @@ NtSetLowWaitHighEventPair(
     HANDLE EventPair
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetLowWaitHighEventPair(
@@ -3565,6 +3712,8 @@ NtSetSystemEnvironmentValue(
     IN PUNICODE_STRING VariableName,
     IN PUNICODE_STRING Value
 );
+
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetSystemEnvironmentValue(
@@ -3580,6 +3729,7 @@ NtSetSystemInformation(
     IN ULONG SystemInformationLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetSystemInformation(
@@ -3604,6 +3754,7 @@ NtSetSystemTime(
     IN PLARGE_INTEGER NewSystemTime OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetSystemTime(
@@ -3631,6 +3782,7 @@ NtSetTimerResolution(
     OUT PULONG ActualResolution
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetTimerResolution(
@@ -3645,6 +3797,7 @@ NtSetUuidSeed(
     IN PUCHAR UuidSeed
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSetUuidSeed(
@@ -3702,6 +3855,7 @@ NtShutdownSystem(
     IN SHUTDOWN_ACTION Action
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwShutdownSystem(
@@ -3717,6 +3871,7 @@ NtSignalAndWaitForSingleObject(
     IN PLARGE_INTEGER Time
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSignalAndWaitForSingleObject(
@@ -3732,6 +3887,7 @@ NtStartProfile(
     HANDLE ProfileHandle
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwStartProfile(
@@ -3744,6 +3900,7 @@ NtStopProfile(
     HANDLE ProfileHandle
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwStopProfile(
@@ -3756,6 +3913,7 @@ NtSuspendProcess(
     IN HANDLE ProcessHandle
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSuspendProcess(
@@ -3769,6 +3927,7 @@ NtSuspendThread(
     IN PULONG PreviousSuspendCount
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwSuspendThread(
@@ -3794,6 +3953,7 @@ NtTerminateProcess(
     IN NTSTATUS ExitStatus
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwTerminateProcess(
@@ -3808,6 +3968,7 @@ NtTerminateThread(
     IN NTSTATUS ExitStatus
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwTerminateThread(
@@ -3822,6 +3983,7 @@ NtTerminateJobObject(
     NTSTATUS ExitStatus
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwTerminateJobObject(
@@ -3835,6 +3997,7 @@ NtTestAlert(
     VOID
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwTestAlert(
@@ -3850,6 +4013,7 @@ NtTraceEvent(
     IN struct _EVENT_TRACE_HEADER* TraceHeader
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwTraceEvent(
@@ -3867,6 +4031,7 @@ NtTranslateFilePath(
     ULONG Unknown3
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwTranslateFilePath(
@@ -3894,6 +4059,7 @@ NtUnloadKey(
     IN POBJECT_ATTRIBUTES KeyObjectAttributes
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwUnloadKey(
@@ -3931,6 +4097,7 @@ NtUnlockVirtualMemory(
     OUT PULONG NumberOfBytesUnlocked OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwUnlockVirtualMemory(
@@ -3982,6 +4149,7 @@ NtWaitForMultipleObjects(
     IN PLARGE_INTEGER Time
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwWaitForMultipleObjects(
@@ -4015,6 +4183,7 @@ NtWaitHighEventPair(
     IN HANDLE EventPairHandle
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwWaitHighEventPair(
@@ -4027,6 +4196,7 @@ NtWaitLowEventPair(
     IN HANDLE EventPairHandle
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwWaitLowEventPair(
@@ -4077,6 +4247,7 @@ NtWriteFileGather(
     IN PULONG Key OPTIONAL
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwWriteFileGather(
@@ -4102,6 +4273,7 @@ NtWriteRequestData(
     PULONG ReturnLength
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwWriteRequestData(
@@ -4123,6 +4295,7 @@ NtWriteVirtualMemory(
     OUT PULONG NumberOfBytesWritten
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwWriteVirtualMemory(
@@ -4139,6 +4312,7 @@ NtYieldExecution(
     VOID
 );
 
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwYieldExecution(
