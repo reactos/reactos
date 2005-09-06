@@ -906,6 +906,7 @@ RtlOemToUnicodeN(
 /*
  * Ansi->Unicode String Functions
  */
+NTSYSAPI
 NTSTATUS
 NTAPI
 RtlAnsiStringToUnicodeString(
@@ -975,6 +976,7 @@ RtlCreateUnicodeString(
     PCWSTR SourceString
 );
 
+#ifdef NTOS_MODE_USER
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -983,6 +985,7 @@ RtlDowncaseUnicodeString(
     IN PCUNICODE_STRING UniSource,
     IN BOOLEAN AllocateDestinationString
 );
+#endif
 
 NTSYSAPI
 NTSTATUS
@@ -1869,39 +1872,62 @@ RtlResetRtlTranslations(IN PNLSTABLEINFO NlsTable);
 /*
  * Misc conversion functions
  */
-/* FIXME: Use inline */
-NTSYSAPI
+#if defined(NTOS_MODE_USER) && !defined(NO_RTL_INLINES)
+static __inline
 LARGE_INTEGER
-NTAPI
-RtlConvertLongToLargeInteger(IN LONG SignedInteger);
+NTAPI_INLINE
+RtlConvertLongToLargeInteger(LONG SignedInteger)
+{
+    LARGE_INTEGER Result;
 
-/* FIXME: Use inline */
-NTSYSAPI
+    Result.QuadPart = SignedInteger;
+    return Result;
+}
+
+static __inline
 LARGE_INTEGER
-NTAPI
+NTAPI_INLINE
 RtlEnlargedIntegerMultiply(
     LONG Multiplicand,
-    LONG Multiplier
-);
+    LONG Multiplier)
+{
+    LARGE_INTEGER Product;
 
-/* FIXME: Use inline */
-NTSYSAPI
+    Product.QuadPart = (LONGLONG)Multiplicand * (ULONGLONG)Multiplier;
+    return Product;
+}
+
+static __inline
 ULONG
-NTAPI
+NTAPI_INLINE
 RtlEnlargedUnsignedDivide(
-    ULARGE_INTEGER Dividend,
-    ULONG Divisor,
-    PULONG Remainder
-);
+    IN ULARGE_INTEGER Dividend,
+    IN ULONG Divisor,
+    IN PULONG Remainder OPTIONAL)
+{
+    ULONG Quotient;
 
-/* FIXME: Use inline */
-NTSYSAPI
+    Quotient = (ULONG)(Dividend.QuadPart / Divisor);
+    if (Remainder) {
+        *Remainder = (ULONG)(Dividend.QuadPart % Divisor);
+    }
+
+    return Quotient;
+}
+
+static __inline
 LARGE_INTEGER
-NTAPI
+NTAPI_INLINE
 RtlEnlargedUnsignedMultiply(
     ULONG Multiplicand,
-    ULONG Multiplier
-);
+    ULONG Multiplier)
+{
+    LARGE_INTEGER Product;
+
+    Product.QuadPart = (ULONGLONG)Multiplicand * (ULONGLONG)Multiplier;
+    return Product;
+}
+#endif
 
 NTSYSAPI
 ULONG
