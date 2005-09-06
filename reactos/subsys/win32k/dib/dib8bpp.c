@@ -480,11 +480,11 @@ BOOLEAN DIB_8BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
      BitsPerFormat(SourceSurf->iBitmapFormat), SourceRect->left, SourceRect->top, SourceRect->right, SourceRect->bottom,
      DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
 
-   SrcSizeY = SourceRect->bottom;
-   SrcSizeX = SourceRect->right;
-  
-   DesSizeY = DestRect->bottom;
-   DesSizeX = DestRect->right;
+   SrcSizeY = SourceRect->bottom - SourceRect->top;
+   SrcSizeX = SourceRect->right - SourceRect->left;
+
+   DesSizeY = DestRect->bottom - DestRect->top;
+   DesSizeX = DestRect->right - DestRect->left;
 
    zoomX = DesSizeX / SrcSizeX;
    if (zoomX==0) zoomX=1;
