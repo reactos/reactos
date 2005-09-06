@@ -77,7 +77,7 @@ VIS_ComputeVisibleRegion(
     */
 
    PreviousWindow = Window;
-   CurrentWindow = IntGetParentObject(Window);
+   CurrentWindow = Window->Parent;
    while (CurrentWindow)
    {
       if (!(CurrentWindow->Style & WS_VISIBLE))
@@ -113,8 +113,7 @@ VIS_ComputeVisibleRegion(
       }
 
       PreviousWindow = CurrentWindow;
-      CurrentWindow = IntGetParentObject(CurrentWindow);
-      IntReleaseWindowObject(PreviousWindow);
+      CurrentWindow = CurrentWindow->Parent;
    }
 
    if (ClipChildren)
@@ -159,19 +158,23 @@ co_VIS_WindowLayoutChanged(
    HRGN Temp;
    PWINDOW_OBJECT Parent;
 
+   ASSERT_REFS(Window);
+
    Temp = NtGdiCreateRectRgn(0, 0, 0, 0);
    NtGdiCombineRgn(Temp, NewlyExposed, NULL, RGN_COPY);
 
-   Parent = IntGetParentObject(Window);
+   Parent = Window->Parent;
    if(Parent)
    {
       NtGdiOffsetRgn(Temp,
                      Window->WindowRect.left - Parent->ClientRect.left,
                      Window->WindowRect.top - Parent->ClientRect.top);
-     co_UserRedrawWindow(Parent, NULL, Temp,
+                     
+      UserReferenceWindowObjectCo(Parent);
+      co_UserRedrawWindow(Parent, NULL, Temp,
                      RDW_FRAME | RDW_ERASE | RDW_INVALIDATE |
                      RDW_ALLCHILDREN);
-     IntReleaseWindowObject(Parent);
+      UserDereferenceWindowObjectCo(Parent);
    }
    NtGdiDeleteObject(Temp);
 }

@@ -278,7 +278,7 @@ DceUpdateVisRgn(DCE *Dce, PWINDOW_OBJECT Window, ULONG Flags)
    {
       PWINDOW_OBJECT Parent;
 
-      Parent = IntGetParentObject(Window);
+      Parent = Window->Parent;
       if(!Parent)
       {
         hRgnVisible = NULL;
@@ -430,7 +430,7 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
       Flags = (Flags & ~DCX_CLIPCHILDREN) | DCX_CACHE;
     }
 
-  Parent = (Window ? IntGetParentObject(Window) : NULL);
+  Parent = (Window ? Window->Parent : NULL);
 
   if (NULL == Window || !(Window->Style & WS_CHILD) || NULL == Parent)
     {
@@ -449,9 +449,6 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
             }
         }
     }
-
-  if(Parent)
-    IntReleaseWindowObject(Parent);
 
   DcxFlags = Flags & DCX_CACHECOMPAREMASK;
 

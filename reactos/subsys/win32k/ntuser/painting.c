@@ -405,20 +405,18 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
 BOOL FASTCALL
 IntIsWindowDrawable(PWINDOW_OBJECT Window)
 {
-   PWINDOW_OBJECT Old, Wnd = Window;
+   PWINDOW_OBJECT Wnd = Window;
 
-   IntReferenceWindowObject(Wnd);
    do
    {
       if (!(Wnd->Style & WS_VISIBLE) ||
           ((Wnd->Style & WS_MINIMIZE) && (Wnd != Window)))
       {
-         IntReleaseWindowObject(Wnd);
          return FALSE;
       }
-      Old = Wnd;
-      Wnd = IntGetParentObject(Wnd);
-      IntReleaseWindowObject(Old);
+
+      Wnd = Wnd->Parent;
+      
    } while(Wnd);
 
    return TRUE;
