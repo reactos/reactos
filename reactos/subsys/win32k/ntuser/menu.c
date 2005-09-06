@@ -1656,7 +1656,7 @@ NtUserGetMenuItemRect(
      ROSMENUITEMINFO mii;
      HWND referenceHwnd;
      LPPOINT lpPoints;
-     LPRECT lpRect;
+     LPRECT lpRect = NULL;
      POINT FromOffset;
      LONG XMove, YMove;
      ULONG i;

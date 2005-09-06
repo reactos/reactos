@@ -1441,7 +1441,7 @@ NtGdiSetDCState ( HDC hDC, HDC hDCSave )
 INT FASTCALL
 IntGdiGetDeviceCaps(PDC dc, INT Index)
 {
-  INT ret;
+  INT ret = 0;
   POINT  pt;
 
   /* Retrieve capability */

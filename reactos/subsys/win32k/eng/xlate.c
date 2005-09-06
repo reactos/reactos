@@ -528,7 +528,10 @@ XLATEOBJ_cGetPalette(XLATEOBJ *XlateObj, ULONG PalOutType, ULONG cPal,
    else if (PalOutType == XO_DESTPALETTE)
       hPalette = XlateGDI->DestPal;
    else
+   {
       UNIMPLEMENTED;
+      return 0;
+    }
 
    PalGDI = PALETTE_LockPalette(hPalette);
    if(PalGDI != NULL)

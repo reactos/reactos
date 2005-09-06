@@ -1024,7 +1024,7 @@ W32kKeyProcessMessage(LPMSG Msg,
       { VK_UP,     VK_NUMPAD8 },
       { VK_PRIOR,  VK_NUMPAD9 },
       { 0,0 } };
-  PVSC_VK VscVkTable;
+  PVSC_VK VscVkTable = NULL;
 
   if( !KeyboardLayout || !Msg ||
       (Msg->message != WM_KEYDOWN && Msg->message != WM_SYSKEYDOWN &&
