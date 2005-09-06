@@ -806,6 +806,7 @@ NtCreateTimer(
     IN TIMER_TYPE TimerType
 );
 
+#ifdef NTOS_MODE_USER
 NTSTATUS
 NTAPI
 ZwCreateTimer(
@@ -814,6 +815,7 @@ ZwCreateTimer(
     IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
     IN TIMER_TYPE TimerType
 );
+#endif
 
 NTSTATUS
 NTAPI
@@ -1147,6 +1149,7 @@ NtFlushBuffersFile(
     OUT PIO_STATUS_BLOCK IoStatusBlock
 );
 
+#ifdef NTOS_MODE_USER
 NTSYSAPI
 NTSTATUS
 NTAPI
@@ -1154,6 +1157,7 @@ ZwFlushBuffersFile(
     IN HANDLE FileHandle,
     OUT PIO_STATUS_BLOCK IoStatusBlock
 );
+#endif
 
 NTSTATUS
 NTAPI
@@ -1922,7 +1926,7 @@ NtOpenTimer(
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
 
-NTSYSAPI
+#ifdef NTOS_MODE_USER
 NTSTATUS
 NTAPI
 ZwOpenTimer(
@@ -1930,6 +1934,7 @@ ZwOpenTimer(
     IN ACCESS_MASK DesiredAccess,
     IN POBJECT_ATTRIBUTES ObjectAttributes
 );
+#endif
 
 NTSTATUS
 NTAPI
@@ -2195,7 +2200,7 @@ NtQueryEaFile(
     IN BOOLEAN RestartScan
 );
 
-NTSYSAPI
+#ifdef NTOS_MODE_USER
 NTSTATUS
 NTAPI
 ZwQueryEaFile(
@@ -2209,6 +2214,7 @@ ZwQueryEaFile(
     IN PULONG EaIndex OPTIONAL,
     IN BOOLEAN RestartScan
 );
+#endif
 
 NTSTATUS
 NTAPI
@@ -3275,7 +3281,7 @@ NtSetEaFile(
     ULONG EaBufferSize
 );
 
-NTSYSAPI
+#ifdef NTOS_MODE_USER
 NTSTATUS
 NTAPI
 ZwSetEaFile(
@@ -3284,6 +3290,7 @@ ZwSetEaFile(
     PVOID EaBuffer,
     ULONG EaBufferSize
 );
+#endif
 
 NTSTATUS
 NTAPI

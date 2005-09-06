@@ -2540,12 +2540,8 @@ FsRtlIsNtstatusExpected (
     IN NTSTATUS Ntstatus
 );
 
-#define NLS_MB_CODE_PAGE_TAG NlsMbCodePageTag
-#define NLS_MB_OEM_CODE_PAGE_TAG NlsMbOemCodePageTag
 #define NLS_OEM_LEAD_BYTE_INFO NlsOemLeadByteInfo
 
-extern BOOLEAN NlsMbCodePageTag;
-extern BOOLEAN NlsMbOemCodePageTag;
 extern PUSHORT NlsOemLeadByteInfo;
 
 #define FsRtlIsLeadDbcsCharacter(DBCS_CHAR) (                               \
@@ -3697,6 +3693,15 @@ RtlDescribeChunk (
 );
 
 NTSYSAPI
+NTSTATUS
+NTAPI
+RtlDowncaseUnicodeString(
+    IN OUT PUNICODE_STRING UniDest,
+    IN PCUNICODE_STRING UniSource,
+    IN BOOLEAN AllocateDestinationString
+);
+
+NTSYSAPI
 BOOLEAN
 NTAPI
 RtlEqualSid (
@@ -4344,6 +4349,14 @@ ZwFlushInstructionCache (
     IN HANDLE   ProcessHandle,
     IN PVOID    BaseAddress OPTIONAL,
     IN ULONG    FlushSize
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwFlushBuffersFile(
+    IN HANDLE FileHandle,
+    OUT PIO_STATUS_BLOCK IoStatusBlock
 );
 
 #if (VER_PRODUCTBUILD >= 2195)

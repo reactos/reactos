@@ -4945,6 +4945,16 @@ RtlAssert(
 
 #endif /* DBG */
 
+#ifdef _NTSYSTEM_
+#define NLS_MB_CODE_PAGE_TAG NlsMbCodePageTag
+#define NLS_MB_OEM_CODE_PAGE_TAG NlsMbOemCodePageTag
+#else
+#define NLS_MB_CODE_PAGE_TAG (*NlsMbCodePageTag)
+#define NLS_MB_OEM_CODE_PAGE_TAG (*NlsMbOemCodePageTag)
+#endif /* _NT_SYSTEM */
+ 
+extern BOOLEAN NTSYSAPI NLS_MB_CODE_PAGE_TAG;
+extern BOOLEAN NTSYSAPI NLS_MB_OEM_CODE_PAGE_TAG;
 
 /*
 ** Driver support routines

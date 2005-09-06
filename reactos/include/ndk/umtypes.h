@@ -79,6 +79,11 @@
 #define NTSYSCALLAPI DECLSPEC_ADDRSAFE
 #endif
 #endif
+#if !defined(_M_CEE_PURE)
+#define NTAPI_INLINE    NTAPI
+#else
+#define NTAPI_INLINE
+#endif
 
 /* Native API Return Value Macros */
 #define NT_SUCCESS(x) ((x)>=0)

@@ -12,8 +12,6 @@
 /* DEPENDENCIES **************************************************************/
 #include "excpt.h"
 
-/* EXPORTED DATA *************************************************************/
-
 /* CONSTANTS *****************************************************************/
 #define MAXIMUM_LEADBYTES 12
 
@@ -103,6 +101,11 @@
 /* RtlDuplicateString settings */
 #define RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE 1
 #define RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING 2
+
+/* For Size conversion macros */
+#define NLS_MB_CODE_PAGE_TAG NlsMbCodePageTag
+#define NLS_MB_OEM_CODE_PAGE_TAG NlsMbOemCodePageTag
+#define NLS_OEM_LEAD_BYTE_INFO NlsOemLeadByteInfo
 
 /* List Macros */
 static __inline
@@ -235,6 +238,10 @@ RemoveTailList(
 
 /* RTL Atom Flags */
 #define RTL_ATOM_IS_PINNED      0x1
+
+/* EXPORTED DATA *************************************************************/
+extern BOOLEAN NTSYSAPI NLS_MB_CODE_PAGE_TAG;
+extern BOOLEAN NTSYSAPI NLS_MB_OEM_CODE_PAGE_TAG;
 
 /* ENUMERATIONS **************************************************************/
 

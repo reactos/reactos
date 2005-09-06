@@ -8,6 +8,11 @@
 #define RESTRICTED_POINTER
 
 #define NTAPI __stdcall
+#if !defined(_M_CEE_PURE)
+#define NTAPI_INLINE    NTAPI
+#else
+#define NTAPI_INLINE
+#endif
 
 #define OBJ_INHERIT          0x00000002
 #define OBJ_PERMANENT        0x00000010
