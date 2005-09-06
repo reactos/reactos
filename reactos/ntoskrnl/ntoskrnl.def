@@ -962,7 +962,7 @@ RtlAddRange@36
 ;RtlAllocateAndInitializeSid
 RtlAllocateHeap@12
 RtlAnsiCharToUnicodeChar@4
-RtlAnsiStringToUnicodeSize@4
+RtlAnsiStringToUnicodeSize@4=RtlxAnsiStringToUnicodeSize@4
 RtlAnsiStringToUnicodeString@12
 RtlAppendAsciizToString@8
 RtlAppendStringToString@8
@@ -1149,7 +1149,7 @@ RtlNumberGenericTableElementsAvl@4
 RtlNumberOfClearBits@4
 RtlNumberOfSetBits@4
 RtlOemStringToCountedUnicodeString@12
-RtlOemStringToUnicodeSize@4
+RtlOemStringToUnicodeSize@4=RtlxOemStringToUnicodeSize@4
 RtlOemStringToUnicodeString@12
 RtlOemToUnicodeN@20
 RtlPinAtomInAtomTable@8
@@ -1193,11 +1193,11 @@ RtlTimeToSecondsSince1980@8
 RtlTimeToTimeFields@8
 @RtlUlongByteSwap@4
 @RtlUlonglongByteSwap@8
-RtlUnicodeStringToAnsiSize@4
+RtlUnicodeStringToAnsiSize@4=RtlxUnicodeStringToAnsiSize@4
 RtlUnicodeStringToAnsiString@12
 RtlUnicodeStringToCountedOemString@12
 RtlUnicodeStringToInteger@12
-RtlUnicodeStringToOemSize@4
+RtlUnicodeStringToOemSize@4=RtlxUnicodeStringToOemSize@4
 RtlUnicodeStringToOemString@12
 RtlUnicodeToCustomCPN@24
 RtlUnicodeToMultiByteN@20

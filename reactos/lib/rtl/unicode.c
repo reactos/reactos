@@ -66,7 +66,7 @@ RtlAnsiCharToUnicodeChar (IN CHAR AnsiChar)
  */
 ULONG
 STDCALL
-RtlAnsiStringToUnicodeSize(IN PANSI_STRING AnsiString)
+RtlxAnsiStringToUnicodeSize(IN PANSI_STRING AnsiString)
 {
    ULONG Size;
 
@@ -883,7 +883,7 @@ RtlUnicodeStringToInteger(
  */
 ULONG
 STDCALL
-RtlUnicodeStringToOemSize(
+RtlxUnicodeStringToOemSize(
    IN PUNICODE_STRING UnicodeString)
 {
    ULONG Size;
@@ -1830,7 +1830,7 @@ RtlUpcaseUnicodeStringToOemString (
  */
 ULONG
 STDCALL
-RtlOemStringToUnicodeSize(IN POEM_STRING OemString)
+RtlxOemStringToUnicodeSize(IN POEM_STRING OemString)
 {
    ULONG Size;
 
@@ -1893,7 +1893,7 @@ RtlStringFromGUID (IN REFGUID Guid,
  */
 ULONG
 STDCALL
-RtlUnicodeStringToAnsiSize(
+RtlxUnicodeStringToAnsiSize(
    IN PUNICODE_STRING UnicodeString)
 {
    ULONG Size;
@@ -2261,9 +2261,9 @@ RtlUpperString(PSTRING DestinationString,
  * @implemented
  */
 ULONG STDCALL
-RtlxAnsiStringToUnicodeSize(IN PANSI_STRING AnsiString)
+RtlAnsiStringToUnicodeSize(IN PANSI_STRING AnsiString)
 {
-   return RtlAnsiStringToUnicodeSize(AnsiString);
+   return RtlxAnsiStringToUnicodeSize(AnsiString);
 }
 
 
@@ -2271,9 +2271,9 @@ RtlxAnsiStringToUnicodeSize(IN PANSI_STRING AnsiString)
  * @implemented
  */
 ULONG STDCALL
-RtlxOemStringToUnicodeSize(IN POEM_STRING OemString)
+RtlOemStringToUnicodeSize(IN POEM_STRING OemString)
 {
-   return RtlOemStringToUnicodeSize(OemString);
+   return RtlxOemStringToUnicodeSize(OemString);
 }
 
 
@@ -2282,9 +2282,9 @@ RtlxOemStringToUnicodeSize(IN POEM_STRING OemString)
  * @implemented
  */
 ULONG STDCALL
-RtlxUnicodeStringToAnsiSize(IN PCUNICODE_STRING UnicodeString)
+RtlUnicodeStringToAnsiSize(IN PUNICODE_STRING UnicodeString)
 {
-   return RtlUnicodeStringToAnsiSize((PUNICODE_STRING)UnicodeString);
+   return RtlxUnicodeStringToAnsiSize(UnicodeString);
 }
 
 
@@ -2292,9 +2292,9 @@ RtlxUnicodeStringToAnsiSize(IN PCUNICODE_STRING UnicodeString)
  * @implemented
  */
 ULONG STDCALL
-RtlxUnicodeStringToOemSize(IN PUNICODE_STRING UnicodeString)
+RtlUnicodeStringToOemSize(IN PUNICODE_STRING UnicodeString)
 {
-   return RtlUnicodeStringToOemSize(UnicodeString);
+   return RtlxUnicodeStringToOemSize(UnicodeString);
 }
 
 /*
