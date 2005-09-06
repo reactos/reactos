@@ -75,6 +75,18 @@ CleanupWindowImpl(VOID)
 
 /* HELPER FUNCTIONS ***********************************************************/
 
+
+
+/* temp hack */
+PWINDOW_OBJECT FASTCALL UserGetWindowObjectNoRef(HWND hWnd)
+{
+   
+   PWINDOW_OBJECT w = IntGetWindowObject(hWnd);
+   if (w) IntReleaseWindowObject(w);
+   return w;
+}
+
+
 /*
  * IntIsWindow
  *

@@ -74,6 +74,8 @@ BOOL FASTCALL UserValidateRgn(HWND hWnd, HRGN hRgn);
 
 /*************** WINDOW.C ***************/
 
+PWINDOW_OBJECT FASTCALL UserGetWindowObjectNoRef(HWND hWnd);
+
 VOID FASTCALL
 co_DestroyThreadWindows(struct _ETHREAD *Thread);
 

@@ -58,8 +58,6 @@
 		<file>driver.c</file>
 		<file>error.c</file>
 		<file>math.c</file>
-		<file>object.c</file>
-		<file>ssec.c</file>
 		<file>copy.c</file>
 	</directory>
 	<directory name="ntddraw">
@@ -99,6 +97,8 @@
 		<file>window.c</file>
 		<file>winpos.c</file>
 		<file>winsta.c</file>
+		<file>object.c</file>
+		<file>ssec.c</file>
 	</directory>
 	<directory name="objects">
 		<file>bezier.c</file>
