@@ -156,8 +156,8 @@ typedef LONGLONG USN;
 #define Int64ShraMod32(a,b) ((LONGLONG)(a)>>(b))
 #define Int64ShrlMod32(a,b) ((DWORDLONG)(a)>>(b))
 #endif
-#define ANSI_NULL '\0'
-#define UNICODE_NULL L'\0'
+#define ANSI_NULL ((CHAR)0)
+#define UNICODE_NULL ((WCHAR)0)
 typedef BYTE BOOLEAN,*PBOOLEAN;
 #endif
 typedef BYTE FCHAR;
