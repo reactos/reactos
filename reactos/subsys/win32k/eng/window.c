@@ -155,7 +155,6 @@ IntEngWindowChanged(
 
   ASSERT_IRQL(PASSIVE_LEVEL);
 
-  ExAcquireFastMutex(&Window->WndObjListLock);
   CurrentEntry = Window->WndObjListHead.Flink;
   while (CurrentEntry != &Window->WndObjListHead)
     {
@@ -189,7 +188,6 @@ IntEngWindowChanged(
         }
     }
 
-  ExReleaseFastMutex(&Window->WndObjListLock);
 }
 
 /*
@@ -255,9 +253,7 @@ EngCreateWnd(
   WndObjInt->PixelFormat = iPixelFormat;
 
   /* associate object with window */
-  ExAcquireFastMutex(&Window->WndObjListLock);
   InsertTailList(&Window->WndObjListHead, &WndObjInt->ListEntry);
-  ExReleaseFastMutex(&Window->WndObjListLock);
 
   /* release resources */
   IntReleaseWindowObject(Window);
@@ -305,9 +301,7 @@ EngDeleteWnd(
   else
     {
       /* Remove object from window */
-      ExAcquireFastMutex(&Window->WndObjListLock);
       RemoveEntryList(&WndObjInt->ListEntry);
-      ExReleaseFastMutex(&Window->WndObjListLock);
       IntReleaseWindowObject(Window);
     }
 

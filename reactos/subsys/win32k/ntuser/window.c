@@ -1591,7 +1591,6 @@ co_IntCreateWindowEx(DWORD dwExStyle,
 
   InitializeListHead(&Window->PropListHead);
   InitializeListHead(&Window->WndObjListHead);
-  ExInitializeFastMutex(&Window->WndObjListLock);
 
   if (NULL != WindowName->Buffer)
     {
