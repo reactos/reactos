@@ -254,14 +254,13 @@ WinPosInitInternalPos(PWINDOW_OBJECT Window, POINT *pt, PRECT RestoreRect)
       RECT WorkArea;
       PDESKTOP_OBJECT Desktop = PsGetWin32Thread()->Desktop; /* Or rather get it from the window? */
 
-      Parent = IntGetParentObject(Window);
+      Parent = Window->Parent;
       if(Parent)
       {
         if(IntIsDesktopWindow(Parent))
           IntGetDesktopWorkArea(Desktop, &WorkArea);
         else
           WorkArea = Parent->ClientRect;
-        IntReleaseWindowObject(Parent);
       }
       else
         IntGetDesktopWorkArea(Desktop, &WorkArea);
@@ -507,7 +506,7 @@ co_WinPosDoNCCALCSize(PWINDOW_OBJECT Window, PWINDOWPOS WinPos,
       params.rgrc[0] = *WindowRect;
       params.rgrc[1] = Window->WindowRect;
       params.rgrc[2] = Window->ClientRect;
-      Parent = IntGetParentObject(Window);
+      Parent = Window->Parent;
       if (0 != (Window->Style & WS_CHILD) && Parent)
 	{
 	  IntGdiOffsetRect(&(params.rgrc[0]), - Parent->ClientRect.left,
@@ -550,8 +549,6 @@ co_WinPosDoNCCALCSize(PWINDOW_OBJECT Window, PWINDOWPOS WinPos,
 	{
           WinPos->flags &= ~SWP_NOCLIENTSIZE;
 	}
-	  if(Parent)
-	    IntReleaseWindowObject(Parent);
     }
   else
     {
@@ -593,14 +590,13 @@ co_WinPosDoWinPosChanging(PWINDOW_OBJECT Window,
       PWINDOW_OBJECT Parent;
       X = WinPos->x;
       Y = WinPos->y;
-      Parent = IntGetParentObject(Window);
+      Parent = Window->Parent;
       if ((0 != (Window->Style & WS_CHILD)) && Parent)
 	{
 	  X += Parent->ClientRect.left;
 	  Y += Parent->ClientRect.top;
 	}
-	  if(Parent)
-	    IntReleaseWindowObject(Parent);
+
       WindowRect->left = X;
       WindowRect->top = Y;
       WindowRect->right += X - Window->WindowRect.left;
@@ -805,18 +801,14 @@ WinPosFixupFlags(WINDOWPOS *WinPos, PWINDOW_OBJECT Window)
           && HWND_NOTOPMOST != WinPos->hwndInsertAfter
           && HWND_BOTTOM != WinPos->hwndInsertAfter)
       {
-         PWINDOW_OBJECT Parent = IntGetParentObject(Window);
+         PWINDOW_OBJECT Parent = Window->Parent;
          if (UserGetAncestor(WinPos->hwndInsertAfter, GA_PARENT) !=
              (Parent ? Parent->hSelf : NULL))
          {
-            if(Parent)
-              IntReleaseWindowObject(Parent);
             return FALSE;
          }
          else
          {
-            if(Parent)
-              IntReleaseWindowObject(Parent);
             /*
              * We don't need to change the Z order of hwnd if it's already
              * inserted after hwndInsertAfter or when inserting hwnd after
@@ -1382,7 +1374,7 @@ co_WinPosShowWindow(HWND Wnd, INT Cmd)
       if (Wnd == IntGetThreadFocusWindow() ||
           IntIsChildWindow(Wnd, IntGetThreadFocusWindow()))
         {
-          UserSetFocus(Window->Parent);
+          UserSetFocus(Window->Parent->hSelf);
         }
 
       if (!(Window->Parent))

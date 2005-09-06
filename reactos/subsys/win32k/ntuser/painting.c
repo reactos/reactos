@@ -42,7 +42,7 @@
 VOID FASTCALL
 IntValidateParent(PWINDOW_OBJECT Child, HRGN ValidRegion)
 {
-   PWINDOW_OBJECT ParentWindow = IntGetParentObject(Child), OldWindow;
+   PWINDOW_OBJECT ParentWindow = Child->Parent;
 
    while (ParentWindow)
    {
@@ -65,9 +65,8 @@ IntValidateParent(PWINDOW_OBJECT Child, HRGN ValidRegion)
             NtGdiOffsetRgn(ValidRegion, -OffsetX, -OffsetY);
          }
       }
-      OldWindow = ParentWindow;
-      ParentWindow = IntGetParentObject(ParentWindow);
-      IntReleaseWindowObject(OldWindow);
+
+      ParentWindow = ParentWindow->Parent;
    }
 }
 

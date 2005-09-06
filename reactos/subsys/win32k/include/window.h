@@ -72,9 +72,9 @@ typedef struct _WINDOW_OBJECT
   /* Entry in the list of thread windows. */
   LIST_ENTRY ThreadListEntry;
   /* Handle to the parent window. */
-  HANDLE Parent;
+  struct _WINDOW_OBJECT* Parent;
   /* Handle to the owner window. */
-  HANDLE Owner;
+  HWND hOwner;
   /* DC Entries (DCE) */
   PDCE Dce;
   /* Property list head.*/

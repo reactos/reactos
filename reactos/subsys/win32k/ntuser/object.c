@@ -52,6 +52,8 @@ ObmpPerformRetentionChecks(PUSER_OBJECT_HEADER ObjectHeader)
     {
       DPRINT1("ObjectHeader 0x%X has invalid reference count (%d)\n",
 	       ObjectHeader, ObjectHeader->RefCount);
+          
+          ASSERT(FALSE);
     }
 
   if (ObjectHeader->HandleCount < 0)
