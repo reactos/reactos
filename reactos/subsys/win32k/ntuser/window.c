@@ -652,7 +652,7 @@ IntGetFocusWindow(VOID)
 PMENU_OBJECT FASTCALL
 IntGetSystemMenu(PWINDOW_OBJECT Window, BOOL bRevert, BOOL RetMenu)
 {
-  PMENU_OBJECT Menu, NewMenu, SysMenu, ret = NULL;
+  PMENU_OBJECT Menu, NewMenu = NULL, SysMenu = NULL, ret = NULL;
   PW32THREAD W32Thread;
   HMENU hNewMenu, hSysMenu;
   ROSMENUITEMINFO ItemInfo;
