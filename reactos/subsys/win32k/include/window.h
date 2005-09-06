@@ -63,8 +63,6 @@ typedef struct _WINDOW_OBJECT
   HANDLE NCUpdateRegion;
   /* Handle of the window region. */
   HANDLE WindowRegion;
-  /* Lock to be held when manipulating (NC)UpdateRegion */
-  FAST_MUTEX UpdateLock;
   /* Pointer to the owning thread's message queue. */
   PUSER_MESSAGE_QUEUE MessageQueue;
   struct _WINDOW_OBJECT* FirstChild;

@@ -1578,7 +1578,6 @@ co_IntCreateWindowEx(DWORD dwExStyle,
     }
 
   InitializeListHead(&WindowObject->PropListHead);
-  ExInitializeFastMutex(&WindowObject->UpdateLock);
   InitializeListHead(&WindowObject->WndObjListHead);
   ExInitializeFastMutex(&WindowObject->WndObjListLock);
 

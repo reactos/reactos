@@ -48,7 +48,6 @@ IntValidateParent(PWINDOW_OBJECT Child, HRGN ValidRegion)
    {
       if (!(ParentWindow->Style & WS_CLIPCHILDREN))
       {
-         IntLockWindowUpdate(ParentWindow);
          if (ParentWindow->UpdateRegion != 0)
          {
             INT OffsetX, OffsetY;
@@ -65,7 +64,6 @@ IntValidateParent(PWINDOW_OBJECT Child, HRGN ValidRegion)
             /* FIXME: If the resulting region is empty, remove fake posted paint message */
             NtGdiOffsetRgn(ValidRegion, -OffsetX, -OffsetY);
          }
-         IntUnLockWindowUpdate(ParentWindow);
       }
       OldWindow = ParentWindow;
       ParentWindow = IntGetParentObject(ParentWindow);
@@ -90,7 +88,6 @@ co_IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
     {
       if (Window->Flags & WINDOWOBJECT_NEED_NCPAINT)
         {
-          IntLockWindowUpdate(Window);
           if (Window->NCUpdateRegion)
             {
               IntValidateParent(Window, Window->NCUpdateRegion);
@@ -103,7 +100,6 @@ co_IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
           Window->NCUpdateRegion = NULL;
           Window->Flags &= ~WINDOWOBJECT_NEED_NCPAINT;
           MsqDecPaintCountQueue(Window->MessageQueue);
-          IntUnLockWindowUpdate(Window);
           co_IntSendMessage(hWnd, WM_NCPAINT, (WPARAM)TempRegion, 0);
           if ((HANDLE) 1 != TempRegion && NULL != TempRegion)
             {
@@ -198,12 +194,10 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
     * Clip the given region with window rectangle (or region)
     */
 
-   IntLockWindowUpdate(Window);
    if (!Window->WindowRegion || (Window->Style & WS_MINIMIZE))
    {
       HRGN hRgnWindow;
 
-      IntUnLockWindowUpdate(Window);
       hRgnWindow = UnsafeIntCreateRectRgnIndirect(&Window->WindowRect);
       NtGdiOffsetRgn(hRgnWindow,
          -Window->WindowRect.left,
@@ -214,14 +208,12 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
    else
    {
       RgnType = NtGdiCombineRgn(hRgn, hRgn, Window->WindowRegion, RGN_AND);
-      IntUnLockWindowUpdate(Window);
    }
 
    /*
     * Save current state of pending updates
     */
 
-   IntLockWindowUpdate(Window);
    HadPaintMessage = Window->UpdateRegion != NULL ||
       Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT;
    HadNCPaintMessage = Window->Flags & WINDOWOBJECT_NEED_NCPAINT;
@@ -401,7 +393,6 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
          MsqIncPaintCountQueue(Window->MessageQueue);
    }
 
-   IntUnLockWindowUpdate(Window);
 }
 
 /*
@@ -735,7 +726,6 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
       RETURN( NULL);
    }
 
-   IntLockWindowUpdate(Window);
    if (Window->UpdateRegion != NULL)
    {
       MsqDecPaintCountQueue(Window->MessageQueue);
@@ -764,7 +754,6 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
       IntGetClientRect(Window, &Ps.rcPaint);
    }
    Window->Flags &= ~WINDOWOBJECT_NEED_INTERNALPAINT;
-   IntUnLockWindowUpdate(Window);
 
    if (Window->Flags & WINDOWOBJECT_NEED_ERASEBKGND)
    {
@@ -910,7 +899,6 @@ co_UserGetUpdateRgn(HWND hWnd, HRGN hRgn, BOOL bErase)
       return ERROR;
    }
 
-   IntLockWindowUpdate(Window);
    if (Window->UpdateRegion == NULL)
    {
       RegionType = (NtGdiSetRectRgn(hRgn, 0, 0, 0, 0) ? NULLREGION : ERROR);
@@ -923,7 +911,6 @@ co_UserGetUpdateRgn(HWND hWnd, HRGN hRgn, BOOL bErase)
          Window->WindowRect.left - Window->ClientRect.left,
          Window->WindowRect.top - Window->ClientRect.top);
    }
-   IntUnLockWindowUpdate(Window);
 
    if (bErase && RegionType != NULLREGION && RegionType != ERROR)
    {
@@ -984,7 +971,6 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
       RETURN( ERROR);
    }
 
-   IntLockWindowUpdate(Window);
    if (Window->UpdateRegion == NULL)
    {
       Rect.left = Rect.top = Rect.right = Rect.bottom = 0;
@@ -999,7 +985,6 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
    }
    AlwaysPaint = (Window->Flags & WINDOWOBJECT_NEED_NCPAINT) ||
                  (Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT);
-   IntUnLockWindowUpdate(Window);
 
    if (bErase && Rect.left < Rect.right && Rect.top < Rect.bottom)
    {
