@@ -33,6 +33,25 @@
 #define NDEBUG
 #include <debug.h>
 
+
+/* STATIC FUNCTION ***********************************************************/
+
+static
+BOOL FASTCALL
+UserMenuItemInfo(
+ PMENU_OBJECT Menu,
+ UINT Item,
+ BOOL ByPosition,
+ PROSMENUITEMINFO UnsafeItemInfo,
+ BOOL SetOrGet);
+
+static
+BOOL FASTCALL
+UserMenuInfo(
+ PMENU_OBJECT Menu,
+ PROSMENUINFO UnsafeMenuInfo,
+ BOOL SetOrGet);
+ 
 /* INTERNAL ******************************************************************/
 
 /* maximum number of menu items a menu can contain */
@@ -94,6 +113,23 @@ CleanupMenuImpl(VOID)
   return(STATUS_SUCCESS);
 }
 
+PMENU_OBJECT FASTCALL UserGetMenuObject(HMENU hMenu)
+{
+  PMENU_OBJECT Menu;
+  NTSTATUS Status;
+
+  Status = ObmReferenceObjectByHandle(gHandleTable,
+                             hMenu, otMenu, (PVOID*)&Menu);
+  if (!NT_SUCCESS(Status))
+  {
+    SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
+    return NULL;
+  }
+  ObmDereferenceObject(Menu);
+  return Menu;   
+}
+
+
 #if 0
 void FASTCALL
 DumpMenuItemList(PMENU_ITEM MenuItem)
@@ -152,23 +188,23 @@ IntGetMenuObject(HMENU hMenu)
 }
 
 BOOL FASTCALL
-IntFreeMenuItem(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem,
+IntFreeMenuItem(PMENU_OBJECT Menu, PMENU_ITEM MenuItem,
     BOOL RemoveFromList, BOOL bRecurse)
 {
   FreeMenuText(MenuItem);
   if(RemoveFromList)
   {
     /* FIXME - Remove from List */
-    MenuObject->MenuInfo.MenuItemCount--;
+    Menu->MenuInfo.MenuItemCount--;
   }
   if(bRecurse && MenuItem->hSubMenu)
   {
-    PMENU_OBJECT SubMenuObject;
-    SubMenuObject = IntGetMenuObject(MenuItem->hSubMenu );
-    if(SubMenuObject)
+    PMENU_OBJECT SubMenu;
+    SubMenu = IntGetMenuObject(MenuItem->hSubMenu );
+    if(SubMenu)
     {
-      IntDestroyMenuObject(SubMenuObject, bRecurse, TRUE);
-      IntReleaseMenuObject(SubMenuObject);
+      IntDestroyMenuObject(SubMenu, bRecurse, TRUE);
+      IntReleaseMenuObject(SubMenu);
     }
   }
 
@@ -179,11 +215,11 @@ IntFreeMenuItem(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem,
 }
 
 BOOL FASTCALL
-IntRemoveMenuItem(PMENU_OBJECT MenuObject, UINT uPosition, UINT uFlags,
+IntRemoveMenuItem(PMENU_OBJECT Menu, UINT uPosition, UINT uFlags,
                    BOOL bRecurse)
 {
   PMENU_ITEM PrevMenuItem, MenuItem;
-  if(IntGetMenuItemByFlag(MenuObject, uPosition, uFlags, &MenuItem,
+  if(IntGetMenuItemByFlag(Menu, uPosition, uFlags, &MenuItem,
                            &PrevMenuItem) > -1)
   {
     if(MenuItem)
@@ -192,50 +228,50 @@ IntRemoveMenuItem(PMENU_OBJECT MenuObject, UINT uPosition, UINT uFlags,
         PrevMenuItem->Next = MenuItem->Next;
       else
       {
-        MenuObject->MenuItemList = MenuItem->Next;
+        Menu->MenuItemList = MenuItem->Next;
       }
-      return IntFreeMenuItem(MenuObject, MenuItem, TRUE, bRecurse);
+      return IntFreeMenuItem(Menu, MenuItem, TRUE, bRecurse);
     }
   }
   return FALSE;
 }
 
 UINT FASTCALL
-IntDeleteMenuItems(PMENU_OBJECT MenuObject, BOOL bRecurse)
+IntDeleteMenuItems(PMENU_OBJECT Menu, BOOL bRecurse)
 {
   UINT res = 0;
   PMENU_ITEM NextItem;
-  PMENU_ITEM CurItem = MenuObject->MenuItemList;
+  PMENU_ITEM CurItem = Menu->MenuItemList;
   while(CurItem)
   {
     NextItem = CurItem->Next;
-    IntFreeMenuItem(MenuObject, CurItem, FALSE, bRecurse);
+    IntFreeMenuItem(Menu, CurItem, FALSE, bRecurse);
     CurItem = NextItem;
     res++;
   }
-  MenuObject->MenuInfo.MenuItemCount = 0;
-  MenuObject->MenuItemList = NULL;
+  Menu->MenuInfo.MenuItemCount = 0;
+  Menu->MenuItemList = NULL;
   return res;
 }
 
 BOOL FASTCALL
-IntDestroyMenuObject(PMENU_OBJECT MenuObject,
+IntDestroyMenuObject(PMENU_OBJECT Menu,
                      BOOL bRecurse, BOOL RemoveFromProcess)
 {
-  if(MenuObject)
+  if(Menu)
   {
     PWINSTATION_OBJECT WindowStation;
     NTSTATUS Status;
 
     /* remove all menu items */
-    IntDeleteMenuItems(MenuObject, bRecurse); /* do not destroy submenus */
+    IntDeleteMenuItems(Menu, bRecurse); /* do not destroy submenus */
 
     if(RemoveFromProcess)
     {
-      RemoveEntryList(&MenuObject->ListEntry);
+      RemoveEntryList(&Menu->ListEntry);
     }
 
-    Status = ObReferenceObjectByHandle(MenuObject->Process->Win32WindowStation,
+    Status = ObReferenceObjectByHandle(Menu->Process->Win32WindowStation,
                                        0,
                                        ExWindowStationObjectType,
                                        KernelMode,
@@ -243,7 +279,7 @@ IntDestroyMenuObject(PMENU_OBJECT MenuObject,
                                        NULL);
     if(NT_SUCCESS(Status))
     {
-      ObmCloseHandle(gHandleTable, MenuObject->MenuInfo.Self);
+      ObmCloseHandle(gHandleTable, Menu->MenuInfo.Self);
       ObDereferenceObject(WindowStation);
       return TRUE;
     }
@@ -254,44 +290,44 @@ IntDestroyMenuObject(PMENU_OBJECT MenuObject,
 PMENU_OBJECT FASTCALL
 IntCreateMenu(PHANDLE Handle, BOOL IsMenuBar)
 {
-  PMENU_OBJECT MenuObject;
+  PMENU_OBJECT Menu;
 
-  MenuObject = (PMENU_OBJECT)ObmCreateObject(
+  Menu = (PMENU_OBJECT)ObmCreateObject(
       gHandleTable, Handle,
       otMenu, sizeof(MENU_OBJECT));
 
-  if(!MenuObject)
+  if(!Menu)
   {
     *Handle = 0;
     return NULL;
   }
 
-  MenuObject->Process = PsGetCurrentProcess();
-  MenuObject->RtoL = FALSE; /* default */
-  MenuObject->MenuInfo.cbSize = sizeof(MENUINFO); /* not used */
-  MenuObject->MenuInfo.fMask = 0; /* not used */
-  MenuObject->MenuInfo.dwStyle = 0; /* FIXME */
-  MenuObject->MenuInfo.cyMax = 0; /* default */
-  MenuObject->MenuInfo.hbrBack =
+  Menu->Process = PsGetCurrentProcess();
+  Menu->RtoL = FALSE; /* default */
+  Menu->MenuInfo.cbSize = sizeof(MENUINFO); /* not used */
+  Menu->MenuInfo.fMask = 0; /* not used */
+  Menu->MenuInfo.dwStyle = 0; /* FIXME */
+  Menu->MenuInfo.cyMax = 0; /* default */
+  Menu->MenuInfo.hbrBack =
      NtGdiCreateSolidBrush(RGB(192, 192, 192)); /* FIXME: default background color */
-  MenuObject->MenuInfo.dwContextHelpID = 0; /* default */
-  MenuObject->MenuInfo.dwMenuData = 0; /* default */
-  MenuObject->MenuInfo.Self = *Handle;
-  MenuObject->MenuInfo.FocusedItem = NO_SELECTED_ITEM;
-  MenuObject->MenuInfo.Flags = (IsMenuBar ? 0 : MF_POPUP);
-  MenuObject->MenuInfo.Wnd = NULL;
-  MenuObject->MenuInfo.WndOwner = NULL;
-  MenuObject->MenuInfo.Height = 0;
-  MenuObject->MenuInfo.Width = 0;
-  MenuObject->MenuInfo.TimeToHide = FALSE;
+  Menu->MenuInfo.dwContextHelpID = 0; /* default */
+  Menu->MenuInfo.dwMenuData = 0; /* default */
+  Menu->MenuInfo.Self = *Handle;
+  Menu->MenuInfo.FocusedItem = NO_SELECTED_ITEM;
+  Menu->MenuInfo.Flags = (IsMenuBar ? 0 : MF_POPUP);
+  Menu->MenuInfo.Wnd = NULL;
+  Menu->MenuInfo.WndOwner = NULL;
+  Menu->MenuInfo.Height = 0;
+  Menu->MenuInfo.Width = 0;
+  Menu->MenuInfo.TimeToHide = FALSE;
 
-  MenuObject->MenuInfo.MenuItemCount = 0;
-  MenuObject->MenuItemList = NULL;
+  Menu->MenuInfo.MenuItemCount = 0;
+  Menu->MenuItemList = NULL;
 
   /* Insert menu item into process menu handle list */
-  InsertTailList(&PsGetWin32Process()->MenuListHead, &MenuObject->ListEntry);
+  InsertTailList(&PsGetWin32Process()->MenuListHead, &Menu->ListEntry);
 
-  return MenuObject;
+  return Menu;
 }
 
 BOOL FASTCALL
@@ -359,77 +395,78 @@ IntCloneMenuItems(PMENU_OBJECT Destination, PMENU_OBJECT Source)
 PMENU_OBJECT FASTCALL
 IntCloneMenu(PMENU_OBJECT Source)
 {
-  HANDLE Handle;
-  PMENU_OBJECT MenuObject;
+  HANDLE hMenu;
+  PMENU_OBJECT Menu;
 
   if(!Source)
     return NULL;
 
-  MenuObject = (PMENU_OBJECT)ObmCreateObject(
-    gHandleTable, &Handle,
+  Menu = (PMENU_OBJECT)ObmCreateObject(
+    gHandleTable, &hMenu,
     otMenu, sizeof(MENU_OBJECT));
-  if(!MenuObject)
+  
+  if(!Menu)
     return NULL;
 
-  MenuObject->Process = PsGetCurrentProcess();
-  MenuObject->RtoL = Source->RtoL;
-  MenuObject->MenuInfo.cbSize = sizeof(MENUINFO); /* not used */
-  MenuObject->MenuInfo.fMask = Source->MenuInfo.fMask;
-  MenuObject->MenuInfo.dwStyle = Source->MenuInfo.dwStyle;
-  MenuObject->MenuInfo.cyMax = Source->MenuInfo.cyMax;
-  MenuObject->MenuInfo.hbrBack = Source->MenuInfo.hbrBack;
-  MenuObject->MenuInfo.dwContextHelpID = Source->MenuInfo.dwContextHelpID;
-  MenuObject->MenuInfo.dwMenuData = Source->MenuInfo.dwMenuData;
-  MenuObject->MenuInfo.Self = Handle;
-  MenuObject->MenuInfo.FocusedItem = NO_SELECTED_ITEM;
-  MenuObject->MenuInfo.Wnd = NULL;
-  MenuObject->MenuInfo.WndOwner = NULL;
-  MenuObject->MenuInfo.Height = 0;
-  MenuObject->MenuInfo.Width = 0;
-  MenuObject->MenuInfo.TimeToHide = FALSE;
+  Menu->Process = PsGetCurrentProcess();
+  Menu->RtoL = Source->RtoL;
+  Menu->MenuInfo.cbSize = sizeof(MENUINFO); /* not used */
+  Menu->MenuInfo.fMask = Source->MenuInfo.fMask;
+  Menu->MenuInfo.dwStyle = Source->MenuInfo.dwStyle;
+  Menu->MenuInfo.cyMax = Source->MenuInfo.cyMax;
+  Menu->MenuInfo.hbrBack = Source->MenuInfo.hbrBack;
+  Menu->MenuInfo.dwContextHelpID = Source->MenuInfo.dwContextHelpID;
+  Menu->MenuInfo.dwMenuData = Source->MenuInfo.dwMenuData;
+  Menu->MenuInfo.Self = hMenu;
+  Menu->MenuInfo.FocusedItem = NO_SELECTED_ITEM;
+  Menu->MenuInfo.Wnd = NULL;
+  Menu->MenuInfo.WndOwner = NULL;
+  Menu->MenuInfo.Height = 0;
+  Menu->MenuInfo.Width = 0;
+  Menu->MenuInfo.TimeToHide = FALSE;
 
-  MenuObject->MenuInfo.MenuItemCount = 0;
-  MenuObject->MenuItemList = NULL;
+  Menu->MenuInfo.MenuItemCount = 0;
+  Menu->MenuItemList = NULL;
 
   /* Insert menu item into process menu handle list */
-  InsertTailList(&PsGetWin32Process()->MenuListHead, &MenuObject->ListEntry);
+  InsertTailList(&PsGetWin32Process()->MenuListHead, &Menu->ListEntry);
 
-  IntCloneMenuItems(MenuObject, Source);
+  IntCloneMenuItems(Menu, Source);
 
-  return MenuObject;
+  return Menu;
 }
 
 BOOL FASTCALL
-IntSetMenuFlagRtoL(PMENU_OBJECT MenuObject)
+IntSetMenuFlagRtoL(PMENU_OBJECT Menu)
 {
-  MenuObject->RtoL = TRUE;
+  Menu->RtoL = TRUE;
   return TRUE;
 }
 
 BOOL FASTCALL
-IntSetMenuContextHelpId(PMENU_OBJECT MenuObject, DWORD dwContextHelpId)
+IntSetMenuContextHelpId(PMENU_OBJECT Menu, DWORD dwContextHelpId)
 {
-  MenuObject->MenuInfo.dwContextHelpID = dwContextHelpId;
+  Menu->MenuInfo.dwContextHelpID = dwContextHelpId;
   return TRUE;
 }
 
 BOOL FASTCALL
-IntGetMenuInfo(PMENU_OBJECT MenuObject, PROSMENUINFO lpmi)
+IntGetMenuInfo(PMENU_OBJECT Menu, PROSMENUINFO lpmi)
 {
   if(lpmi->fMask & MIM_BACKGROUND)
-    lpmi->hbrBack = MenuObject->MenuInfo.hbrBack;
+    lpmi->hbrBack = Menu->MenuInfo.hbrBack;
   if(lpmi->fMask & MIM_HELPID)
-    lpmi->dwContextHelpID = MenuObject->MenuInfo.dwContextHelpID;
+    lpmi->dwContextHelpID = Menu->MenuInfo.dwContextHelpID;
   if(lpmi->fMask & MIM_MAXHEIGHT)
-    lpmi->cyMax = MenuObject->MenuInfo.cyMax;
+    lpmi->cyMax = Menu->MenuInfo.cyMax;
   if(lpmi->fMask & MIM_MENUDATA)
-    lpmi->dwMenuData = MenuObject->MenuInfo.dwMenuData;
+    lpmi->dwMenuData = Menu->MenuInfo.dwMenuData;
   if(lpmi->fMask & MIM_STYLE)
-    lpmi->dwStyle = MenuObject->MenuInfo.dwStyle;
+    lpmi->dwStyle = Menu->MenuInfo.dwStyle;
   if (sizeof(MENUINFO) < lpmi->cbSize)
     {
       RtlCopyMemory((char *) lpmi + sizeof(MENUINFO),
-                    (char *) &MenuObject->MenuInfo + sizeof(MENUINFO),
+                    (char *) &Menu->MenuInfo + sizeof(MENUINFO),
                     lpmi->cbSize - sizeof(MENUINFO));
     }
 
@@ -452,30 +489,30 @@ IntIsMenu(HMENU hMenu)
 
 
 BOOL FASTCALL
-IntSetMenuInfo(PMENU_OBJECT MenuObject, PROSMENUINFO lpmi)
+IntSetMenuInfo(PMENU_OBJECT Menu, PROSMENUINFO lpmi)
 {
   if(lpmi->fMask & MIM_BACKGROUND)
-    MenuObject->MenuInfo.hbrBack = lpmi->hbrBack;
+    Menu->MenuInfo.hbrBack = lpmi->hbrBack;
   if(lpmi->fMask & MIM_HELPID)
-    MenuObject->MenuInfo.dwContextHelpID = lpmi->dwContextHelpID;
+    Menu->MenuInfo.dwContextHelpID = lpmi->dwContextHelpID;
   if(lpmi->fMask & MIM_MAXHEIGHT)
-    MenuObject->MenuInfo.cyMax = lpmi->cyMax;
+    Menu->MenuInfo.cyMax = lpmi->cyMax;
   if(lpmi->fMask & MIM_MENUDATA)
-    MenuObject->MenuInfo.dwMenuData = lpmi->dwMenuData;
+    Menu->MenuInfo.dwMenuData = lpmi->dwMenuData;
   if(lpmi->fMask & MIM_STYLE)
-    MenuObject->MenuInfo.dwStyle = lpmi->dwStyle;
+    Menu->MenuInfo.dwStyle = lpmi->dwStyle;
   if(lpmi->fMask & MIM_APPLYTOSUBMENUS)
     {
     /* FIXME */
     }
   if (sizeof(MENUINFO) < lpmi->cbSize)
     {
-      MenuObject->MenuInfo.FocusedItem = lpmi->FocusedItem;
-      MenuObject->MenuInfo.Height = lpmi->Height;
-      MenuObject->MenuInfo.Width = lpmi->Width;
-      MenuObject->MenuInfo.Wnd = lpmi->Wnd;
-      MenuObject->MenuInfo.WndOwner = lpmi->WndOwner;
-      MenuObject->MenuInfo.TimeToHide = lpmi->TimeToHide;
+      Menu->MenuInfo.FocusedItem = lpmi->FocusedItem;
+      Menu->MenuInfo.Height = lpmi->Height;
+      Menu->MenuInfo.Width = lpmi->Width;
+      Menu->MenuInfo.Wnd = lpmi->Wnd;
+      Menu->MenuInfo.WndOwner = lpmi->WndOwner;
+      Menu->MenuInfo.TimeToHide = lpmi->TimeToHide;
     }
 
   return TRUE;
@@ -483,11 +520,11 @@ IntSetMenuInfo(PMENU_OBJECT MenuObject, PROSMENUINFO lpmi)
 
 
 int FASTCALL
-IntGetMenuItemByFlag(PMENU_OBJECT MenuObject, UINT uSearchBy, UINT fFlag,
+IntGetMenuItemByFlag(PMENU_OBJECT Menu, UINT uSearchBy, UINT fFlag,
                      PMENU_ITEM *MenuItem, PMENU_ITEM *PrevMenuItem)
 {
   PMENU_ITEM PrevItem = NULL;
-  PMENU_ITEM CurItem = MenuObject->MenuItemList;
+  PMENU_ITEM CurItem = Menu->MenuItemList;
   int p;
   int ret;
 
@@ -527,18 +564,16 @@ IntGetMenuItemByFlag(PMENU_OBJECT MenuObject, UINT uSearchBy, UINT fFlag,
       }
       else if (0 != (CurItem->fType & MF_POPUP))
       {
-        MenuObject = IntGetMenuObject(CurItem->hSubMenu);
-        if (NULL != MenuObject)
+        Menu = UserGetMenuObject(CurItem->hSubMenu);
+        if (NULL != Menu)
         {
-          ret = IntGetMenuItemByFlag(MenuObject, uSearchBy, fFlag,
+          ret = IntGetMenuItemByFlag(Menu, uSearchBy, fFlag,
                                      MenuItem, PrevMenuItem);
           if (-1 != ret)
           {
-            IntReleaseMenuObject(MenuObject);
             return ret;
           }
         }
-        IntReleaseMenuObject(MenuObject);
       }
       PrevItem = CurItem;
       CurItem = CurItem->Next;
@@ -550,13 +585,13 @@ IntGetMenuItemByFlag(PMENU_OBJECT MenuObject, UINT uSearchBy, UINT fFlag,
 
 
 int FASTCALL
-IntInsertMenuItemToList(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, int pos)
+IntInsertMenuItemToList(PMENU_OBJECT Menu, PMENU_ITEM MenuItem, int pos)
 {
   PMENU_ITEM CurItem;
   PMENU_ITEM LastItem = NULL;
   UINT npos = 0;
 
-  CurItem = MenuObject->MenuItemList;
+  CurItem = Menu->MenuItemList;
   if(pos <= -1)
   {
     while(CurItem)
@@ -588,7 +623,7 @@ IntInsertMenuItemToList(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, int pos)
     else
     {
       /* insert at the beginning */
-      MenuObject->MenuItemList = MenuItem;
+      Menu->MenuItemList = MenuItem;
       MenuItem->Next = CurItem;
     }
   }
@@ -603,17 +638,18 @@ IntInsertMenuItemToList(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, int pos)
     else
     {
       /* insert first item */
-      MenuObject->MenuItemList = MenuItem;
+      Menu->MenuItemList = MenuItem;
       MenuItem->Next = NULL;
     }
   }
-  MenuObject->MenuInfo.MenuItemCount++;
+  Menu->MenuInfo.MenuItemCount++;
 
   return npos;
 }
 
 BOOL FASTCALL
-IntGetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINFO lpmii)
+IntGetMenuItemInfo(PMENU_OBJECT Menu, /* UNUSED PARAM!! */
+   PMENU_ITEM MenuItem, PROSMENUITEMINFO lpmii)
 {
   NTSTATUS Status;
 
@@ -722,7 +758,7 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
     /* remove MFS_DEFAULT flag from all other menu items if this item
        has the MFS_DEFAULT state */
     if(lpmii->fState & MFS_DEFAULT)
-      IntSetMenuDefaultItem(MenuObject, -1, 0);
+      UserSetMenuDefaultItem(MenuObject, -1, 0);
     /* update the menu item state flags */
     UpdateMenuItemState(MenuItem->fState, lpmii->fState);
   }
@@ -1051,7 +1087,7 @@ IntHiliteMenuItem(PWINDOW_OBJECT WindowObject, PMENU_OBJECT MenuObject,
 }
 
 BOOL FASTCALL
-IntSetMenuDefaultItem(PMENU_OBJECT MenuObject, UINT uItem, UINT fByPos)
+UserSetMenuDefaultItem(PMENU_OBJECT MenuObject, UINT uItem, UINT fByPos)
 {
   BOOL ret = FALSE;
   PMENU_ITEM MenuItem = MenuObject->MenuItemList;
@@ -1585,25 +1621,19 @@ NtUserGetMenuDefaultItem(
   UINT fByPos,
   UINT gmdiFlags)
 {
-  PMENU_OBJECT MenuObject;
-  UINT res = -1;
+  PMENU_OBJECT Menu;
   DWORD gismc = 0;
   DECLARE_RETURN(UINT);  
 
   DPRINT("Enter NtUserGetMenuDefaultItem\n");
   UserEnterExclusive();
 
-  MenuObject = IntGetMenuObject(hMenu);
-  if(!MenuObject)
+  if(!(Menu = UserGetMenuObject(hMenu)))
   {
-    SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
-    RETURN( res);
+    RETURN(-1);
   }
 
-  res = IntGetMenuDefaultItem(MenuObject, fByPos, gmdiFlags, &gismc);
-
-  IntReleaseMenuObject(MenuObject);
-  RETURN(res);
+  RETURN( IntGetMenuDefaultItem(Menu, fByPos, gmdiFlags, &gismc));
   
 CLEANUP:
   DPRINT("Leave NtUserGetMenuDefaultItem, ret=%i\n",_ret_);
@@ -1661,19 +1691,25 @@ NtUserGetMenuItemRect(
      LONG XMove, YMove;
      ULONG i;
      NTSTATUS Status;
+     PMENU_OBJECT Menu;
      DECLARE_RETURN(BOOL);  
 
      DPRINT("Enter NtUserGetMenuItemRect\n");
      UserEnterShared();
+
+   if (!(Menu = UserGetMenuObject(hMenu)))
+   {
+      RETURN(FALSE);
+   }
           
-     if(!UserMenuItemInfo(hMenu, uItem, MF_BYPOSITION, &mii, FALSE))
+     if(!UserMenuItemInfo(Menu, uItem, MF_BYPOSITION, &mii, FALSE))
       RETURN( FALSE);
      	
      referenceHwnd = hWnd;
 
      if(!hWnd)
      {
-   if(!UserMenuInfo(hMenu, &mi, FALSE)) RETURN( FALSE);
+   if(!UserMenuInfo(Menu, &mi, FALSE)) RETURN( FALSE);
     if(mi.Wnd == 0) RETURN( FALSE);
 	 referenceHwnd = mi.Wnd;
      }
@@ -1754,17 +1790,14 @@ CLEANUP:
 }
 
 
-/*
- * @implemented
- */
+static
 BOOL FASTCALL
 UserMenuInfo(
- HMENU Menu,
+ PMENU_OBJECT Menu,
  PROSMENUINFO UnsafeMenuInfo,
  BOOL SetOrGet)
 {
   BOOL Res;
-  PMENU_OBJECT MenuObject;
   DWORD Size;
   NTSTATUS Status;
   ROSMENUINFO MenuInfo;
@@ -1787,22 +1820,15 @@ UserMenuInfo(
       return( FALSE);
     }
 
-  MenuObject = IntGetMenuObject(Menu);
-  if (NULL == MenuObject)
-    {
-      SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
-      return( FALSE);
-    }
-
   if(SetOrGet)
     {
       /* Set MenuInfo */
-      Res = IntSetMenuInfo(MenuObject, &MenuInfo);
+      Res = IntSetMenuInfo(Menu, &MenuInfo);
     }
   else
     {
       /* Get MenuInfo */
-      Res = IntGetMenuInfo(MenuObject, &MenuInfo);
+      Res = IntGetMenuInfo(Menu, &MenuInfo);
       if (Res)
         {
           Status = MmCopyToCaller(UnsafeMenuInfo, &MenuInfo, Size);
@@ -1813,8 +1839,6 @@ UserMenuInfo(
             }
         }
     }
-
-  IntReleaseMenuObject(MenuObject);
 
   return( Res);
 }
@@ -1829,14 +1853,20 @@ UserMenuInfo(
 BOOL
 STDCALL
 NtUserMenuInfo(
- HMENU Menu,
+ HMENU hMenu,
  PROSMENUINFO UnsafeMenuInfo,
  BOOL SetOrGet)
 {
+  PMENU_OBJECT Menu; 
   DECLARE_RETURN(BOOL);  
 
   DPRINT("Enter NtUserMenuInfo\n");
   UserEnterShared();
+
+  if (!(Menu = UserGetMenuObject(hMenu)))
+  {
+     RETURN(FALSE);
+  }
 
   RETURN(UserMenuInfo(Menu, UnsafeMenuInfo, SetOrGet));
   
@@ -1853,13 +1883,13 @@ CLEANUP:
  */
 int STDCALL
 NtUserMenuItemFromPoint(
-  HWND Wnd,
-  HMENU Menu,
+  HWND hWnd,
+  HMENU hMenu,
   DWORD X,
   DWORD Y)
 {
-  PMENU_OBJECT MenuObject;
-  PWINDOW_OBJECT WindowObject = NULL;
+  PMENU_OBJECT Menu;
+  PWINDOW_OBJECT Window = NULL;
   PMENU_ITEM mi;
   int i;
   DECLARE_RETURN(int);  
@@ -1867,24 +1897,20 @@ NtUserMenuItemFromPoint(
   DPRINT("Enter NtUserMenuItemFromPoint\n");
   UserEnterExclusive();
 
-  MenuObject = IntGetMenuObject(Menu);
-  if (NULL == MenuObject)
+  if (!(Menu = UserGetMenuObject(hMenu)))
     {
-      SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
       RETURN( -1);
     }
 
-  WindowObject = IntGetWindowObject(MenuObject->MenuInfo.Wnd);
-  if (NULL == WindowObject)
+  if (!(Window = UserGetWindowObject(Menu->MenuInfo.Wnd)))
     {
-      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       RETURN( -1);
     }
-  X -= WindowObject->WindowRect.left;
-  Y -= WindowObject->WindowRect.top;
-  IntReleaseWindowObject(WindowObject);
+    
+  X -= Window->WindowRect.left;
+  Y -= Window->WindowRect.top;
 
-  mi = MenuObject->MenuItemList;
+  mi = Menu->MenuItemList;
   for (i = 0; NULL != mi; i++)
     {
       if (InRect(mi->Rect, X, Y))
@@ -1893,8 +1919,6 @@ NtUserMenuItemFromPoint(
         }
       mi = mi->Next;
     }
-
-  IntReleaseMenuObject(MenuObject);
 
   RETURN( (mi ? i : NO_SELECTED_ITEM));
   
@@ -1906,33 +1930,24 @@ CLEANUP:
 
 
 
-
-
+static
 BOOL FASTCALL
 UserMenuItemInfo(
- HMENU Menu,
+ PMENU_OBJECT Menu,
  UINT Item,
  BOOL ByPosition,
  PROSMENUITEMINFO UnsafeItemInfo,
  BOOL SetOrGet)
 {
-  PMENU_OBJECT MenuObject;
   PMENU_ITEM MenuItem;
   ROSMENUITEMINFO ItemInfo;
   NTSTATUS Status;
   UINT Size;
   BOOL Ret;
 
-  MenuObject = IntGetMenuObject(Menu);
-  if (NULL == MenuObject)
-    {
-      SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
-      return( FALSE);
-    }
   Status = MmCopyFromCaller(&Size, &UnsafeItemInfo->cbSize, sizeof(UINT));
   if (! NT_SUCCESS(Status))
     {
-      IntReleaseMenuObject(MenuObject);
       SetLastNtError(Status);
       return( FALSE);
     }
@@ -1940,14 +1955,12 @@ UserMenuItemInfo(
       && sizeof(MENUITEMINFOW) - sizeof(HBITMAP) != Size
       && sizeof(ROSMENUITEMINFO) != Size)
     {
-      IntReleaseMenuObject(MenuObject);
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return( FALSE);
     }
   Status = MmCopyFromCaller(&ItemInfo, UnsafeItemInfo, Size);
   if (! NT_SUCCESS(Status))
     {
-      IntReleaseMenuObject(MenuObject);
       SetLastNtError(Status);
       return( FALSE);
     }
@@ -1956,43 +1969,37 @@ UserMenuItemInfo(
   if (sizeof(MENUITEMINFOW) - sizeof(HBITMAP) == Size
       && 0 != (ItemInfo.fMask & MIIM_BITMAP))
     {
-      IntReleaseMenuObject(MenuObject);
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return( FALSE);
     }
 
-  if (IntGetMenuItemByFlag(MenuObject, Item,
+  if (IntGetMenuItemByFlag(Menu, Item,
                            (ByPosition ? MF_BYPOSITION : MF_BYCOMMAND),
                            &MenuItem, NULL) < 0)
     {
-      IntReleaseMenuObject(MenuObject);
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return( FALSE);
     }
 
   if (SetOrGet)
     {
-      Ret = IntSetMenuItemInfo(MenuObject, MenuItem, &ItemInfo);
+      Ret = IntSetMenuItemInfo(Menu, MenuItem, &ItemInfo);
     }
   else
     {
-      Ret = IntGetMenuItemInfo(MenuObject, MenuItem, &ItemInfo);
+      Ret = IntGetMenuItemInfo(Menu, MenuItem, &ItemInfo);
       if (Ret)
         {
           Status = MmCopyToCaller(UnsafeItemInfo, &ItemInfo, Size);
           if (! NT_SUCCESS(Status))
             {
-              IntReleaseMenuObject(MenuObject);
               SetLastNtError(Status);
               return( FALSE);
             }
         }
     }
 
-  IntReleaseMenuObject(MenuObject);
-
   return( Ret);
-
 }
 
 
@@ -2003,16 +2010,22 @@ UserMenuItemInfo(
 BOOL
 STDCALL
 NtUserMenuItemInfo(
- HMENU Menu,
+ HMENU hMenu,
  UINT Item,
  BOOL ByPosition,
  PROSMENUITEMINFO UnsafeItemInfo,
  BOOL SetOrGet)
 {
+  PMENU_OBJECT Menu;
   DECLARE_RETURN(BOOL);  
 
   DPRINT("Enter NtUserMenuItemInfo\n");
   UserEnterExclusive();
+  
+  if (!(Menu = UserGetMenuObject(hMenu)))
+  {
+     RETURN(FALSE);
+  }
 
   RETURN( UserMenuItemInfo(Menu, Item, ByPosition, UnsafeItemInfo, SetOrGet));
   
@@ -2033,24 +2046,18 @@ NtUserRemoveMenu(
   UINT uPosition,
   UINT uFlags)
 {
-  BOOL res;
-  PMENU_OBJECT MenuObject;
+  PMENU_OBJECT Menu;
   DECLARE_RETURN(BOOL);  
 
   DPRINT("Enter NtUserRemoveMenu\n");
   UserEnterExclusive();
   
-  MenuObject = IntGetMenuObject(hMenu);
-  if(!MenuObject)
+  if(!(Menu = UserGetMenuObject(hMenu)))
   {
-    SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
     RETURN( FALSE);
   }
 
-  res = IntRemoveMenuItem(MenuObject, uPosition, uFlags, FALSE);
-  IntReleaseMenuObject(MenuObject);
-
-  RETURN( res);
+  RETURN(IntRemoveMenuItem(Menu, uPosition, uFlags, FALSE));
   
 CLEANUP:
   DPRINT("Leave NtUserRemoveMenu, ret=%i\n",_ret_);
@@ -2065,26 +2072,21 @@ CLEANUP:
  */
 BOOL STDCALL
 NtUserSetMenuContextHelpId(
-  HMENU hmenu,
+  HMENU hMenu,
   DWORD dwContextHelpId)
 {
-  BOOL res;
-  PMENU_OBJECT MenuObject;
+  PMENU_OBJECT Menu;
   DECLARE_RETURN(BOOL);  
 
   DPRINT("Enter NtUserSetMenuContextHelpId\n");
   UserEnterExclusive();
   
-  MenuObject = IntGetMenuObject(hmenu);
-  if(!MenuObject)
+  if(!(Menu = UserGetMenuObject(hMenu)))
   {
-    SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
     RETURN( FALSE);
   }
 
-  res = IntSetMenuContextHelpId(MenuObject, dwContextHelpId);
-  IntReleaseMenuObject(MenuObject);
-  RETURN( res);
+  RETURN(IntSetMenuContextHelpId(Menu, dwContextHelpId));
   
 CLEANUP:
   DPRINT("Leave NtUserSetMenuContextHelpId, ret=%i\n",_ret_);
@@ -2092,34 +2094,6 @@ CLEANUP:
   END_CLEANUP;
 }
 
-
-
-
-/*
- * @implemented
- */
-BOOL FASTCALL
-UserSetMenuDefaultItem(
-  HMENU hMenu,
-  UINT uItem,
-  UINT fByPos)
-{
-  BOOL res = FALSE;
-  PMENU_OBJECT MenuObject;
-
-  MenuObject = IntGetMenuObject(hMenu);
-  if(!MenuObject)
-  {
-    SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
-    return( FALSE);
-  }
-
-  res = IntSetMenuDefaultItem(MenuObject, uItem, fByPos);
-
-  IntReleaseMenuObject(MenuObject);
-
-  return( res);
-}
 
 
 /*
@@ -2131,25 +2105,18 @@ NtUserSetMenuDefaultItem(
   UINT uItem,
   UINT fByPos)
 {
-  BOOL res = FALSE;
-  PMENU_OBJECT MenuObject;
+  PMENU_OBJECT Menu;
   DECLARE_RETURN(BOOL);  
 
   DPRINT("Enter NtUserSetMenuDefaultItem\n");
   UserEnterExclusive();
 
-  MenuObject = IntGetMenuObject(hMenu);
-  if(!MenuObject)
+  if(!(Menu = UserGetMenuObject(hMenu)))
   {
-    SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
     RETURN( FALSE);
   }
 
-  res = IntSetMenuDefaultItem(MenuObject, uItem, fByPos);
-
-  IntReleaseMenuObject(MenuObject);
-
-  RETURN( res);
+  RETURN( UserSetMenuDefaultItem(Menu, uItem, fByPos));
   
 CLEANUP:
   DPRINT("Leave NtUserSetMenuDefaultItem, ret=%i\n",_ret_);
@@ -2165,23 +2132,18 @@ BOOL STDCALL
 NtUserSetMenuFlagRtoL(
   HMENU hMenu)
 {
-  BOOL res;
-  PMENU_OBJECT MenuObject;
+  PMENU_OBJECT Menu;
   DECLARE_RETURN(BOOL);  
 
   DPRINT("Enter NtUserSetMenuFlagRtoL\n");
   UserEnterExclusive();
   
-  MenuObject = IntGetMenuObject(hMenu);
-  if(!MenuObject)
+  if(!(Menu = UserGetMenuObject(hMenu)))
   {
-    SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
     RETURN( FALSE);
   }
 
-  res = IntSetMenuFlagRtoL(MenuObject);
-  IntReleaseMenuObject(MenuObject);
-  RETURN( res);
+  RETURN(IntSetMenuFlagRtoL(Menu));
 
 CLEANUP:
   DPRINT("Leave NtUserSetMenuFlagRtoL, ret=%i\n",_ret_);
@@ -2230,64 +2192,16 @@ NtUserThunkedMenuItemInfo(
  /* NOTE: unused function */
 BOOL STDCALL
 NtUserTrackPopupMenuEx(
-  HMENU hmenu,
+  HMENU hMenu,
   UINT fuFlags,
   int x,
   int y,
-  HWND hwnd,
+  HWND hWnd,
   LPTPMPARAMS lptpm)
 {
-  PMENU_OBJECT MenuObject;
-  PWINDOW_OBJECT WindowObject;
-  TPMPARAMS Safetpm;
-  NTSTATUS Status;
-  POINT Pos;
-  BOOL Ret;
-
-  MenuObject = IntGetMenuObject(hmenu);
-  if(!MenuObject)
-  {
-    SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
-    return FALSE;
-  }
-
-  WindowObject = IntGetWindowObject(hwnd);
-  if(!WindowObject)
-  {
-    IntReleaseMenuObject(MenuObject);
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
-    return FALSE;
-  }
-
-  if(lptpm)
-  {
-    Status = MmCopyFromCaller(&Safetpm, lptpm, sizeof(TPMPARAMS));
-    if(!NT_SUCCESS(Status))
-    {
-      IntReleaseWindowObject(WindowObject);
-      IntReleaseMenuObject(MenuObject);
-      SetLastNtError(Status);
-      return FALSE;
-    }
-    if(Safetpm.cbSize != sizeof(TPMPARAMS))
-    {
-      IntReleaseWindowObject(WindowObject);
-      IntReleaseMenuObject(MenuObject);
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      return FALSE;
-    }
-  }
-
-  Pos.x = x;
-  Pos.y = y;
-
-  Ret = co_IntTrackPopupMenu(MenuObject, WindowObject, fuFlags, &Pos, 0,
-                          (lptpm ? &Safetpm.rcExclude : NULL));
-
-  IntReleaseWindowObject(WindowObject);
-  IntReleaseMenuObject(MenuObject);
-
-  return Ret;
+   UNIMPLEMENTED
+   
+   return FALSE;
 }
 
 

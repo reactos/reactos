@@ -78,7 +78,7 @@ CleanupWindowImpl(VOID)
 
 
 /* temp hack */
-PWINDOW_OBJECT FASTCALL UserGetWindowObjectNoRef(HWND hWnd)
+PWINDOW_OBJECT FASTCALL UserGetWindowObject(HWND hWnd)
 {
    
    PWINDOW_OBJECT w = IntGetWindowObject(hWnd);
@@ -728,7 +728,7 @@ IntGetSystemMenu(PWINDOW_OBJECT Window, BOOL bRevert, BOOL RetMenu)
       {
         NewMenu->MenuInfo.Flags |= MF_SYSMENU | MF_POPUP;
         IntReleaseMenuObject(NewMenu);
-        UserSetMenuDefaultItem(NewMenu->MenuInfo.Self, SC_CLOSE, FALSE);
+        UserSetMenuDefaultItem(NewMenu, SC_CLOSE, FALSE);
 
         ItemInfo.cbSize = sizeof(MENUITEMINFOW);
         ItemInfo.fMask = MIIM_FTYPE | MIIM_STRING | MIIM_STATE | MIIM_SUBMENU;
@@ -766,7 +766,7 @@ IntIsChildWindow(HWND Parent, HWND Child)
 {
   PWINDOW_OBJECT BaseWindow, Window;
 
-  if(!(BaseWindow = UserGetWindowObjectNoRef(Child)))
+  if(!(BaseWindow = UserGetWindowObject(Child)))
   {
     return FALSE;
   }
@@ -3199,7 +3199,7 @@ UserGetWindow(HWND hWnd, UINT Relationship)
    PWINDOW_OBJECT Parent, Window;
    HWND hWndResult = NULL;
 
-   if (!(Window = UserGetWindowObjectNoRef(hWnd))) return NULL;
+   if (!(Window = UserGetWindowObject(hWnd))) return NULL;
 
    switch (Relationship)
    {

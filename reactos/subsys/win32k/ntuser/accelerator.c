@@ -516,7 +516,7 @@ NtUserTranslateAccelerator(
 
   UserReferenceAccelObjectCo(Accel); 
 
-  if (!(Window = UserGetWindowObjectNoRef(hWnd)))
+  if (!(Window = UserGetWindowObject(hWnd)))
   {
     RETURN( 0);
   }

@@ -86,7 +86,7 @@ BOOL FASTCALL UserValidateRgn(HWND hWnd, HRGN hRgn);
 
 /*************** WINDOW.C ***************/
 
-PWINDOW_OBJECT FASTCALL UserGetWindowObjectNoRef(HWND hWnd);
+PWINDOW_OBJECT FASTCALL UserGetWindowObject(HWND hWnd);
 
 VOID FASTCALL
 co_DestroyThreadWindows(struct _ETHREAD *Thread);
@@ -112,25 +112,14 @@ HMENU FASTCALL UserCreateMenu(BOOL PopupMenu);
 
 BOOL FASTCALL
 UserSetMenuDefaultItem(
-  HMENU hMenu,
+  PMENU_OBJECT Menu,
   UINT uItem,
   UINT fByPos);
 
 BOOL FASTCALL UserDestroyMenu(HMENU hMenu);
 
-BOOL FASTCALL
-UserMenuItemInfo(
- HMENU Menu,
- UINT Item,
- BOOL ByPosition,
- PROSMENUITEMINFO UnsafeItemInfo,
- BOOL SetOrGet);
 
-BOOL FASTCALL
-UserMenuInfo(
- HMENU Menu,
- PROSMENUINFO UnsafeMenuInfo,
- BOOL SetOrGet);
+
  
  
 /*************** SCROLLBAR.C ***************/
