@@ -776,7 +776,7 @@ PnpEventThread(LPVOID lpParameter)
         DPRINT("Received PnP Event\n");
         if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_ARRIVAL, &RpcStatus))
         {
-            DPRINT1("Device arrival event: %S\n", PnpEvent->TargetDevice.DeviceIds);
+            DPRINT("Device arrival event: %S\n", PnpEvent->TargetDevice.DeviceIds);
         }
         else
         {

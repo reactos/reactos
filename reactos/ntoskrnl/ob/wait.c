@@ -243,7 +243,7 @@ Quickie:
     if (LockInUse) KeLeaveCriticalRegion();
 
     /* Return status */
-    DPRINT1("Returning: %x\n", Status);
+    DPRINT("Returning: %x\n", Status);
     return Status;
 }
 
