@@ -913,13 +913,7 @@ RtlUnicodeStringToAnsiString(
    NTSTATUS Status = STATUS_SUCCESS;
    ULONG Length; /* including nullterm */
 
-   if (NlsMbCodePageTag == TRUE)
-   {
-      Length = RtlUnicodeStringToAnsiSize((PUNICODE_STRING)UniSource);
-   }
-   else
-      Length = (UniSource->Length / sizeof(WCHAR)) + sizeof(CHAR);
-
+   Length = RtlUnicodeStringToAnsiSize(UniSource);
    AnsiDest->Length = Length - sizeof(CHAR);
 
    if (AllocateDestinationString)
@@ -974,11 +968,7 @@ RtlOemStringToUnicodeString(
    NTSTATUS Status;
    ULONG Length; /* including nullterm */
 
-   if (NlsMbOemCodePageTag == TRUE)
-      Length = RtlOemStringToUnicodeSize((POEM_STRING)OemSource);
-   else
-      Length = (OemSource->Length * sizeof(WCHAR)) + sizeof(WCHAR);
-
+   Length = RtlOemStringToUnicodeSize(OemSource);
    if (Length > 0xffff)
       return STATUS_INVALID_PARAMETER_2;
 
@@ -1035,11 +1025,7 @@ RtlUnicodeStringToOemString(
    NTSTATUS Status = STATUS_SUCCESS;
    ULONG Length; //including nullterm
 
-   if (NlsMbOemCodePageTag == TRUE)
-      Length = RtlUnicodeStringToAnsiSize ((PUNICODE_STRING)UniSource);
-   else
-      Length = (UniSource->Length / sizeof(WCHAR)) + sizeof(CHAR);
-
+   Length = RtlUnicodeStringToAnsiSize(UniSource);
    if (Length > 0x0000FFFF)
       return STATUS_INVALID_PARAMETER_2;
 
@@ -1158,11 +1144,7 @@ RtlOemStringToCountedUnicodeString(
    NTSTATUS Status;
    ULONG Length; /* excluding nullterm */
 
-   if (NlsMbCodePageTag == TRUE)
-      Length = RtlOemStringToUnicodeSize((POEM_STRING)OemSource) - sizeof(WCHAR);
-   else
-      Length = OemSource->Length * sizeof(WCHAR);
-
+   Length = RtlOemStringToCountedUnicodeSize(OemSource);
    if (Length > 65535)
       return STATUS_INVALID_PARAMETER_2;
 
@@ -1498,11 +1480,7 @@ RtlUnicodeStringToCountedOemString(
    NTSTATUS Status;
    ULONG Length; //excluding nullterm
 
-   if (NlsMbOemCodePageTag == TRUE)
-      Length = RtlUnicodeStringToAnsiSize(UniSource) - sizeof(CHAR);
-   else
-      Length = (UniSource->Length / sizeof(WCHAR));
-
+   Length = RtlUnicodeStringToCountedOemSize(UniSource);
    if (Length > 0x0000FFFF)
       return STATUS_INVALID_PARAMETER_2;
 
@@ -1648,11 +1626,7 @@ RtlUpcaseUnicodeStringToAnsiString(
    NTSTATUS Status;
    ULONG Length; /* including nullterm */
 
-   if (NlsMbCodePageTag == TRUE)
-      Length = RtlUnicodeStringToAnsiSize(UniSource);
-   else
-      Length = (UniSource->Length / sizeof(WCHAR)) + sizeof(CHAR);
-
+   Length = RtlUnicodeStringToAnsiSize(UniSource);
    if (Length > 0x0000FFFF)
       return STATUS_INVALID_PARAMETER_2;
 
@@ -1713,11 +1687,7 @@ RtlUpcaseUnicodeStringToCountedOemString(
    NTSTATUS Status;
    ULONG Length; /* excluding nullterm */
 
-   if (NlsMbCodePageTag == TRUE)
-      Length = RtlUnicodeStringToAnsiSize((PUNICODE_STRING)UniSource) - sizeof(CHAR);
-   else
-      Length = UniSource->Length / sizeof(WCHAR);
-
+   Length = RtlUnicodeStringToCountedOemSize(UniSource);
    if (Length > 0x0000FFFF)
       return(STATUS_INVALID_PARAMETER_2);
 
@@ -1775,11 +1745,7 @@ RtlUpcaseUnicodeStringToOemString (
    NTSTATUS Status;
    ULONG Length; /* including nullterm */
 
-   if (NlsMbOemCodePageTag == TRUE)
-      Length = RtlUnicodeStringToAnsiSize((PUNICODE_STRING)UniSource);
-   else
-      Length = (UniSource->Length / sizeof(WCHAR)) + sizeof(CHAR);
-
+   Length = RtlUnicodeStringToAnsiSize(UniSource);
    if (Length > 0x0000FFFF)
       return STATUS_INVALID_PARAMETER_2;
 
@@ -2148,11 +2114,7 @@ RtlAnsiStringToUnicodeString(
    NTSTATUS Status;
    ULONG Length; //including nullterm
 
-   if (NlsMbCodePageTag == TRUE)
-      Length = RtlAnsiStringToUnicodeSize(AnsiSource);
-   else
-      Length = (AnsiSource->Length * sizeof(WCHAR)) + sizeof(WCHAR);
-
+   Length = RtlAnsiStringToUnicodeSize(AnsiSource);
    if (Length > 0xffff)
       return STATUS_INVALID_PARAMETER_2;
 
