@@ -354,7 +354,7 @@ co_MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Fi
 
   *ScreenPoint = Message->Msg.pt;
 
-  if((hWnd != NULL && Window->Self != hWnd) ||
+  if((hWnd != NULL && Window->hSelf != hWnd) ||
      ((FilterLow != 0 || FilterLow != 0) && (Msg < FilterLow || Msg > FilterHigh)))
   {
     /* Reject the message because it doesn't match the filter */
@@ -395,7 +395,7 @@ co_MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Fi
   }
 
   /* FIXME - only assign if removing? */
-  Message->Msg.hwnd = Window->Self;
+  Message->Msg.hwnd = Window->hSelf;
   Message->Msg.message = Msg;
   Message->Msg.lParam = MAKELONG(Message->Msg.pt.x, Message->Msg.pt.y);
 
@@ -924,7 +924,7 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
     {
       PostedMessage = CONTAINING_RECORD(CurrentEntry, USER_MESSAGE,
 				        ListEntry);
-      if (PostedMessage->Msg.hwnd == Window->Self)
+      if (PostedMessage->Msg.hwnd == Window->hSelf)
 	{
 	  RemoveEntryList(&PostedMessage->ListEntry);
 	  MsqDestroyMessage(PostedMessage);
@@ -944,7 +944,7 @@ MsqRemoveWindowMessagesFromQueue(PVOID pWindow)
       CurrentEntry = RemoveHeadList(&MessageQueue->SentMessagesListHead);
       SentMessage = CONTAINING_RECORD(CurrentEntry, USER_SENT_MESSAGE,
                                       ListEntry);
-      if(SentMessage->Msg.hwnd == Window->Self)
+      if(SentMessage->Msg.hwnd == Window->hSelf)
       {
         DPRINT("Notify the sender and remove a message from the queue that had not been dispatched\n");
 

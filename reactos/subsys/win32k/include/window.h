@@ -53,7 +53,7 @@ typedef struct _WINDOW_OBJECT
   /* Position of the window's client area. */
   RECT ClientRect;
   /* Handle for the window. */
-  HANDLE Self;
+  HWND hSelf;
   /* Window flags. */
   ULONG Flags;
   /* Window menu handle or window id */

@@ -1161,52 +1161,52 @@ IntGetMenuDefaultItem(PMENU_OBJECT MenuObject, UINT fByPos, UINT gmdiFlags,
 }
 
 VOID FASTCALL
-co_IntInitTracking(PWINDOW_OBJECT WindowObject, PMENU_OBJECT MenuObject, BOOL Popup,
+co_IntInitTracking(PWINDOW_OBJECT Window, PMENU_OBJECT Menu, BOOL Popup,
                 UINT Flags)
 {
   /* FIXME - hide caret */
 
   if(!(Flags & TPM_NONOTIFY))
-    co_IntSendMessage(WindowObject->Self, WM_SETCURSOR, (WPARAM)WindowObject->Self, HTCAPTION);
+    co_IntSendMessage(Window->hSelf, WM_SETCURSOR, (WPARAM)Window->hSelf, HTCAPTION);
 
   /* FIXME - send WM_SETCURSOR message */
 
   if(!(Flags & TPM_NONOTIFY))
-    co_IntSendMessage(WindowObject->Self, WM_INITMENU, (WPARAM)MenuObject->MenuInfo.Self, 0);
+    co_IntSendMessage(Window->hSelf, WM_INITMENU, (WPARAM)Menu->MenuInfo.Self, 0);
 }
 
 VOID FASTCALL
-co_IntExitTracking(PWINDOW_OBJECT WindowObject, PMENU_OBJECT MenuObject, BOOL Popup,
+co_IntExitTracking(PWINDOW_OBJECT Window, PMENU_OBJECT Menu, BOOL Popup,
                 UINT Flags)
 {
   if(!(Flags & TPM_NONOTIFY))
-    co_IntSendMessage(WindowObject->Self, WM_EXITMENULOOP, 0 /* FIXME */, 0);
+    co_IntSendMessage(Window->hSelf, WM_EXITMENULOOP, 0 /* FIXME */, 0);
 
   /* FIXME - Show caret again */
 }
 
 INT FASTCALL
-IntTrackMenu(PMENU_OBJECT MenuObject, PWINDOW_OBJECT WindowObject, INT x, INT y,
+IntTrackMenu(PMENU_OBJECT Menu, PWINDOW_OBJECT Window, INT x, INT y,
              RECT lprect)
 {
   return 0;
 }
 
 BOOL FASTCALL
-co_IntTrackPopupMenu(PMENU_OBJECT MenuObject, PWINDOW_OBJECT WindowObject,
+co_IntTrackPopupMenu(PMENU_OBJECT Menu, PWINDOW_OBJECT Window,
                   UINT Flags, POINT *Pos, UINT MenuPos, RECT *ExcludeRect)
 {
-  co_IntInitTracking(WindowObject, MenuObject, TRUE, Flags);
+  co_IntInitTracking(Window, Menu, TRUE, Flags);
 
-  co_IntExitTracking(WindowObject, MenuObject, TRUE, Flags);
+  co_IntExitTracking(Window, Menu, TRUE, Flags);
   return FALSE;
 }
 
 BOOL FASTCALL
-IntSetMenuItemRect(PMENU_OBJECT MenuObject, UINT Item, BOOL fByPos, RECT *rcRect)
+IntSetMenuItemRect(PMENU_OBJECT Menu, UINT Item, BOOL fByPos, RECT *rcRect)
 {
   PMENU_ITEM mi;
-  if(IntGetMenuItemByFlag(MenuObject, Item, (fByPos ? MF_BYPOSITION : MF_BYCOMMAND),
+  if(IntGetMenuItemByFlag(Menu, Item, (fByPos ? MF_BYPOSITION : MF_BYCOMMAND),
                           &mi, NULL) > -1)
   {
     mi->Rect = *rcRect;

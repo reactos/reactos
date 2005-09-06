@@ -513,7 +513,7 @@ co_IntActivateWindowMouse(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, PWINDOW_OB
     return TRUE;
   }
 
-  Result = co_IntSendMessage(MsgWindow->Self, WM_MOUSEACTIVATE, (WPARAM)IntGetParent(MsgWindow), (LPARAM)MAKELONG(*HitTest, Msg->message));
+  Result = co_IntSendMessage(MsgWindow->hSelf, WM_MOUSEACTIVATE, (WPARAM)IntGetParent(MsgWindow), (LPARAM)MAKELONG(*HitTest, Msg->message));
   switch (Result)
   {
     case MA_NOACTIVATEANDEAT:
@@ -544,10 +544,10 @@ co_IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *
   }
 
   if(ThreadQueue == Window->MessageQueue &&
-     ThreadQueue->CaptureWindow != Window->Self)
+     ThreadQueue->CaptureWindow != Window->hSelf)
   {
     /* only send WM_NCHITTEST messages if we're not capturing the window! */
-    *HitTest = co_IntSendMessage(Window->Self, WM_NCHITTEST, 0,
+    *HitTest = co_IntSendMessage(Window->hSelf, WM_NCHITTEST, 0,
                               MAKELONG(Msg->pt.x, Msg->pt.y));
 
     if(*HitTest == (USHORT)HTTRANSPARENT)
@@ -565,7 +565,7 @@ co_IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *
           if(Wnd != Window)
           {
             /* post the message to the other window */
-            Msg->hwnd = Wnd->Self;
+            Msg->hwnd = Wnd->hSelf;
             if(!(Wnd->Status & WINDOWSTATUS_DESTROYING))
             {
               MsqPostMessage(Wnd->MessageQueue, Msg, FALSE,
@@ -612,7 +612,7 @@ co_IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *
          (((*HitTest) == HTCAPTION) || ((*HitTest) == HTSYSMENU)))
       {
         Msg->message = WM_CONTEXTMENU;
-        Msg->wParam = (WPARAM)Window->Self;
+        Msg->wParam = (WPARAM)Window->hSelf;
       }
       else
       {

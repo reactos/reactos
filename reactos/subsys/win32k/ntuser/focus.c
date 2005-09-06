@@ -135,7 +135,7 @@ IntFindChildWindowToOwner(PWINDOW_OBJECT Root, PWINDOW_OBJECT Owner)
 
     if(OwnerWnd == Owner)
     {
-      Ret = Child->Self;
+      Ret = Child->hSelf;
       IntReleaseWindowObject(OwnerWnd);
       return Ret;
     }
@@ -148,9 +148,9 @@ IntFindChildWindowToOwner(PWINDOW_OBJECT Root, PWINDOW_OBJECT Owner)
 STATIC BOOL FASTCALL
 co_IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWindow, BOOL MouseActivate)
 {
-   HWND hWnd = Window->Self;
+   HWND hWnd = Window->hSelf;
    HWND hWndPrev = NULL;
-   HWND hWndFocus = FocusWindow->Self;
+   HWND hWndFocus = FocusWindow->hSelf;
    HWND hWndFocusPrev = NULL;
    PUSER_MESSAGE_QUEUE PrevForegroundQueue;
 
@@ -243,8 +243,8 @@ co_IntMouseActivateWindow(PWINDOW_OBJECT Window)
     return FALSE;
   }
 
-  Top = UserGetAncestor(Window->Self, GA_ROOT);
-  if (Top != Window->Self)
+  Top = UserGetAncestor(Window->hSelf, GA_ROOT);
+  if (Top != Window->hSelf)
     {
       TopWindow = IntGetWindowObject(Top);
       if (TopWindow == NULL)
@@ -261,7 +261,7 @@ co_IntMouseActivateWindow(PWINDOW_OBJECT Window)
   /* TMN: Check return valud from this function? */
   co_IntSetForegroundAndFocusWindow(TopWindow, Window, TRUE);
 
-  if (Top != Window->Self)
+  if (Top != Window->hSelf)
     {
       IntReleaseWindowObject(TopWindow);
     }
@@ -285,7 +285,7 @@ co_IntSetActiveWindow(PWINDOW_OBJECT Window)
       {
          return ThreadQueue ? 0 : ThreadQueue->ActiveWindow;
       }
-      hWnd = Window->Self;
+      hWnd = Window->hSelf;
    }
 
    hWndPrev = ThreadQueue->ActiveWindow;

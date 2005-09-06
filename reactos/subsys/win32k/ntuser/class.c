@@ -471,19 +471,19 @@ CLEANUP:
 }
 
 ULONG FASTCALL
-IntGetClassLong(struct _WINDOW_OBJECT *WindowObject, ULONG Offset, BOOL Ansi)
+IntGetClassLong(struct _WINDOW_OBJECT *Window, ULONG Offset, BOOL Ansi)
 {
   LONG Ret;
 
   if ((int)Offset >= 0)
     {
-      DPRINT("GetClassLong(%x, %d)\n", WindowObject->Self, Offset);
-      if ((Offset + sizeof(LONG)) > WindowObject->Class->cbClsExtra)
+      DPRINT("GetClassLong(%x, %d)\n", Window->hSelf, Offset);
+      if ((Offset + sizeof(LONG)) > Window->Class->cbClsExtra)
 	{
 	  SetLastWin32Error(ERROR_INVALID_PARAMETER);
 	  return 0;
 	}
-      Ret = *((LONG *)(WindowObject->Class->ExtraData + Offset));
+      Ret = *((LONG *)(Window->Class->ExtraData + Offset));
       DPRINT("Result: %x\n", Ret);
       return Ret;
     }
@@ -491,40 +491,40 @@ IntGetClassLong(struct _WINDOW_OBJECT *WindowObject, ULONG Offset, BOOL Ansi)
   switch (Offset)
     {
     case GCL_CBWNDEXTRA:
-      Ret = WindowObject->Class->cbWndExtra;
+      Ret = Window->Class->cbWndExtra;
       break;
     case GCL_CBCLSEXTRA:
-      Ret = WindowObject->Class->cbClsExtra;
+      Ret = Window->Class->cbClsExtra;
       break;
     case GCL_HBRBACKGROUND:
-      Ret = (ULONG)WindowObject->Class->hbrBackground;
+      Ret = (ULONG)Window->Class->hbrBackground;
       break;
     case GCL_HCURSOR:
-      Ret = (ULONG)WindowObject->Class->hCursor;
+      Ret = (ULONG)Window->Class->hCursor;
       break;
     case GCL_HICON:
-      Ret = (ULONG)WindowObject->Class->hIcon;
+      Ret = (ULONG)Window->Class->hIcon;
       break;
     case GCL_HICONSM:
-      Ret = (ULONG)WindowObject->Class->hIconSm;
+      Ret = (ULONG)Window->Class->hIconSm;
       break;
     case GCL_HMODULE:
-      Ret = (ULONG)WindowObject->Class->hInstance;
+      Ret = (ULONG)Window->Class->hInstance;
       break;
     case GCL_MENUNAME:
-      Ret = (ULONG)WindowObject->Class->lpszMenuName.Buffer;
+      Ret = (ULONG)Window->Class->lpszMenuName.Buffer;
       break;
     case GCL_STYLE:
-      Ret = WindowObject->Class->style;
+      Ret = Window->Class->style;
       break;
     case GCL_WNDPROC:
 	  if (Ansi)
 	  {
-		Ret = (ULONG)WindowObject->Class->lpfnWndProcA;
+		Ret = (ULONG)Window->Class->lpfnWndProcA;
 	  }
 	  else
 	  {
-		Ret = (ULONG)WindowObject->Class->lpfnWndProcW;
+		Ret = (ULONG)Window->Class->lpfnWndProcW;
 	  }
       break;
     default:
@@ -537,21 +537,21 @@ IntGetClassLong(struct _WINDOW_OBJECT *WindowObject, ULONG Offset, BOOL Ansi)
 DWORD STDCALL
 NtUserGetClassLong(HWND hWnd, DWORD Offset, BOOL Ansi)
 {
-  PWINDOW_OBJECT WindowObject;
+  PWINDOW_OBJECT Window;
   LONG Ret;
   DECLARE_RETURN(DWORD);
 
   DPRINT("Enter NtUserGetClassLong\n");
   UserEnterExclusive();
 
-  WindowObject = IntGetWindowObject(hWnd);
-  if (WindowObject == NULL)
+  Window = IntGetWindowObject(hWnd);
+  if (Window == NULL)
   {
     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
     RETURN(0);
   }
-  Ret = IntGetClassLong(WindowObject, Offset, Ansi);
-  IntReleaseWindowObject(WindowObject);
+  Ret = IntGetClassLong(Window, Offset, Ansi);
+  IntReleaseWindowObject(Window);
   RETURN(Ret);
   
 CLEANUP:
@@ -561,44 +561,44 @@ CLEANUP:
 }
 
 void FASTCALL
-co_IntSetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, LONG dwNewLong, BOOL Ansi)
+co_IntSetClassLong(PWINDOW_OBJECT Window, ULONG Offset, LONG dwNewLong, BOOL Ansi)
 {
   PWINDOW_OBJECT Parent, Owner;
 
   if ((int)Offset >= 0)
     {
-      DPRINT("SetClassLong(%x, %d, %x)\n", WindowObject->Self, Offset, dwNewLong);
-      if ((Offset + sizeof(LONG)) > WindowObject->Class->cbClsExtra)
+      DPRINT("SetClassLong(%x, %d, %x)\n", Window->hSelf, Offset, dwNewLong);
+      if ((Offset + sizeof(LONG)) > Window->Class->cbClsExtra)
 	{
 	  SetLastWin32Error(ERROR_INVALID_PARAMETER);
 	  return;
 	}
-      *((LONG *)(WindowObject->Class->ExtraData + Offset)) = dwNewLong;
+      *((LONG *)(Window->Class->ExtraData + Offset)) = dwNewLong;
       return;
     }
 
   switch (Offset)
     {
     case GCL_CBWNDEXTRA:
-      WindowObject->Class->cbWndExtra = dwNewLong;
+      Window->Class->cbWndExtra = dwNewLong;
       break;
     case GCL_CBCLSEXTRA:
-      WindowObject->Class->cbClsExtra = dwNewLong;
+      Window->Class->cbClsExtra = dwNewLong;
       break;
     case GCL_HBRBACKGROUND:
-      WindowObject->Class->hbrBackground = (HBRUSH)dwNewLong;
+      Window->Class->hbrBackground = (HBRUSH)dwNewLong;
       break;
     case GCL_HCURSOR:
-      WindowObject->Class->hCursor = (HCURSOR)dwNewLong;
+      Window->Class->hCursor = (HCURSOR)dwNewLong;
       break;
     case GCL_HICON:
-      WindowObject->Class->hIcon = (HICON)dwNewLong;
-      Owner = IntGetOwner(WindowObject);
-      Parent = IntGetParent(WindowObject);
+      Window->Class->hIcon = (HICON)dwNewLong;
+      Owner = IntGetOwner(Window);
+      Parent = IntGetParent(Window);
 
       if ((!Owner) && (!Parent))
         {
-          co_IntShellHookNotify(HSHELL_REDRAW, (LPARAM) WindowObject->Self);
+          co_IntShellHookNotify(HSHELL_REDRAW, (LPARAM) Window->hSelf);
         }
 
       if (Parent)
@@ -614,43 +614,43 @@ co_IntSetClassLong(PWINDOW_OBJECT WindowObject, ULONG Offset, LONG dwNewLong, BO
 
       break;
     case GCL_HICONSM:
-      WindowObject->Class->hIconSm = (HICON)dwNewLong;
+      Window->Class->hIconSm = (HICON)dwNewLong;
       break;
     case GCL_HMODULE:
-      WindowObject->Class->hInstance = (HINSTANCE)dwNewLong;
+      Window->Class->hInstance = (HINSTANCE)dwNewLong;
       break;
     case GCL_MENUNAME:
-      if (WindowObject->Class->lpszMenuName.MaximumLength)
-        RtlFreeUnicodeString(&WindowObject->Class->lpszMenuName);
+      if (Window->Class->lpszMenuName.MaximumLength)
+        RtlFreeUnicodeString(&Window->Class->lpszMenuName);
       if (!IS_INTRESOURCE(dwNewLong))
       {
-        WindowObject->Class->lpszMenuName.Length =
-        WindowObject->Class->lpszMenuName.MaximumLength = ((PUNICODE_STRING)dwNewLong)->MaximumLength;
-        WindowObject->Class->lpszMenuName.Buffer = ExAllocatePoolWithTag(PagedPool, WindowObject->Class->lpszMenuName.MaximumLength, TAG_STRING);
-        RtlCopyUnicodeString(&WindowObject->Class->lpszMenuName, (PUNICODE_STRING)dwNewLong);
+        Window->Class->lpszMenuName.Length =
+        Window->Class->lpszMenuName.MaximumLength = ((PUNICODE_STRING)dwNewLong)->MaximumLength;
+        Window->Class->lpszMenuName.Buffer = ExAllocatePoolWithTag(PagedPool, Window->Class->lpszMenuName.MaximumLength, TAG_STRING);
+        RtlCopyUnicodeString(&Window->Class->lpszMenuName, (PUNICODE_STRING)dwNewLong);
       }
       else
       {
-        WindowObject->Class->lpszMenuName.Length =
-        WindowObject->Class->lpszMenuName.MaximumLength = 0;
-        WindowObject->Class->lpszMenuName.Buffer = (LPWSTR)dwNewLong;
+        Window->Class->lpszMenuName.Length =
+        Window->Class->lpszMenuName.MaximumLength = 0;
+        Window->Class->lpszMenuName.Buffer = (LPWSTR)dwNewLong;
       }
       break;
     case GCL_STYLE:
-      WindowObject->Class->style = dwNewLong;
+      Window->Class->style = dwNewLong;
       break;
     case GCL_WNDPROC:
 	  if (Ansi)
 	  {
-		WindowObject->Class->lpfnWndProcA = (WNDPROC)dwNewLong;
-        WindowObject->Class->lpfnWndProcW = (WNDPROC) IntAddWndProcHandle((WNDPROC)dwNewLong,FALSE);
-		WindowObject->Class->Unicode = FALSE;
+		Window->Class->lpfnWndProcA = (WNDPROC)dwNewLong;
+      Window->Class->lpfnWndProcW = (WNDPROC) IntAddWndProcHandle((WNDPROC)dwNewLong,FALSE);
+		Window->Class->Unicode = FALSE;
 	  }
 	  else
 	  {
-		WindowObject->Class->lpfnWndProcW = (WNDPROC)dwNewLong;
-        WindowObject->Class->lpfnWndProcA = (WNDPROC) IntAddWndProcHandle((WNDPROC)dwNewLong,TRUE);
-		WindowObject->Class->Unicode = TRUE;
+		Window->Class->lpfnWndProcW = (WNDPROC)dwNewLong;
+      Window->Class->lpfnWndProcA = (WNDPROC) IntAddWndProcHandle((WNDPROC)dwNewLong,TRUE);
+		Window->Class->Unicode = TRUE;
 	  }
       break;
     }
@@ -662,22 +662,21 @@ NtUserSetClassLong(HWND hWnd,
 		   LONG dwNewLong,
 		   BOOL Ansi)
 {
-  PWINDOW_OBJECT WindowObject;
+  PWINDOW_OBJECT Window;
   LONG Ret;
   DECLARE_RETURN(DWORD);
 
   DPRINT("Enter NtUserSetClassLong\n");
   UserEnterExclusive();
 
-  WindowObject = IntGetWindowObject(hWnd);
-  if (WindowObject == NULL)
+  if (!(Window = IntGetWindowObject(hWnd)))
   {
     SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
     RETURN(0);
   }
-  Ret = IntGetClassLong(WindowObject, Offset, Ansi);
-  co_IntSetClassLong(WindowObject, Offset, dwNewLong, Ansi);
-  IntReleaseWindowObject(WindowObject);
+  Ret = IntGetClassLong(Window, Offset, Ansi);
+  co_IntSetClassLong(Window, Offset, dwNewLong, Ansi);
+  IntReleaseWindowObject(Window);
   RETURN(Ret);
   
 CLEANUP:
@@ -702,7 +701,7 @@ NtUserUnregisterClass(
 	 DWORD Unknown)
 {
    PWNDCLASS_OBJECT Class;
-   PWINSTATION_OBJECT WinStaObject;
+   PWINSTATION_OBJECT WinSta;
    DECLARE_RETURN(BOOL);
 
    DPRINT("Enter NtUserUnregisterClass(%S)\n", ClassNameOrAtom);
@@ -714,7 +713,7 @@ NtUserUnregisterClass(
       RETURN( FALSE);
    }
 
-   WinStaObject = PsGetWin32Thread()->Desktop->WindowStation;
+   WinSta = PsGetWin32Thread()->Desktop->WindowStation;
 
    if (!ClassReferenceClassByNameOrAtom(&Class, ClassNameOrAtom, hInstance))
    {
@@ -742,7 +741,7 @@ NtUserUnregisterClass(
 
    RemoveEntryList(&Class->ListEntry);
 
-   RtlDeleteAtomFromAtomTable(WinStaObject->AtomTable, Class->Atom);
+   RtlDeleteAtomFromAtomTable(WinSta->AtomTable, Class->Atom);
 
    /* Free the object */
    ClassDereferenceObject(Class);

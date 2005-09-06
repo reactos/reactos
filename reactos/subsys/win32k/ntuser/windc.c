@@ -294,7 +294,7 @@ DceUpdateVisRgn(DCE *Dce, PWINDOW_OBJECT Window, ULONG Flags)
       {
          DcxFlags = Flags & ~(DCX_CLIPSIBLINGS | DCX_CLIPCHILDREN | DCX_WINDOW);
       }
-      hRgnVisible = DceGetVisRgn(Parent->Self, DcxFlags, Window->Self, Flags);
+      hRgnVisible = DceGetVisRgn(Parent->hSelf, DcxFlags, Window->hSelf, Flags);
       if (hRgnVisible == NULL)
       {
          hRgnVisible = NtGdiCreateRectRgn(0, 0, 0, 0);
@@ -332,7 +332,7 @@ DceUpdateVisRgn(DCE *Dce, PWINDOW_OBJECT Window, ULONG Flags)
    }
    else
    {
-      hRgnVisible = DceGetVisRgn(Window->Self, Flags, 0, 0);
+      hRgnVisible = DceGetVisRgn(Window->hSelf, Flags, 0, 0);
    }
 
 noparent:
@@ -471,7 +471,7 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
 		{
 		  DceEmpty = Dce;
 		}
-         else if (Dce->hwndCurrent == (Window ? Window->Self : NULL) &&
+         else if (Dce->hwndCurrent == (Window ? Window->hSelf : NULL) &&
 		       ((Dce->DCXFlags & DCX_CACHECOMPAREMASK) == DcxFlags))
 		{
 #if 0 /* FIXME */
@@ -498,7 +498,7 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
   else
     {
       Dce = Window->Dce;
-      if (NULL != Dce && Dce->hwndCurrent == (Window ? Window->Self : NULL))
+      if (NULL != Dce && Dce->hwndCurrent == (Window ? Window->hSelf : NULL))
         {
           UpdateVisRgn = FALSE; /* updated automatically, via DCHook() */
         }
@@ -512,7 +512,7 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
       return(NULL);
     }
 
-  Dce->hwndCurrent = (Window ? Window->Self : NULL);
+  Dce->hwndCurrent = (Window ? Window->hSelf : NULL);
   Dce->DCXFlags = DcxFlags | (Flags & DCX_WINDOWPAINT) | DCX_DCEBUSY;
 
   if (0 == (Flags & (DCX_EXCLUDERGN | DCX_INTERSECTRGN)) && NULL != ClipRegion)
@@ -781,7 +781,7 @@ DceFreeWindowDCE(PWINDOW_OBJECT Window)
   pDCE = FirstDce;
   while (pDCE)
     {
-      if (pDCE->hwndCurrent == Window->Self)
+      if (pDCE->hwndCurrent == Window->hSelf)
         {
           if (pDCE == Window->Dce) /* owned or Class DCE*/
             {
@@ -808,7 +808,7 @@ DceFreeWindowDCE(PWINDOW_OBJECT Window)
                    * We should change this to DPRINT when ReactOS is more stable
                    * (for 1.0?).
                    */
-                  DPRINT1("[%p] GetDC() without ReleaseDC()!\n", Window->Self);
+                  DPRINT1("[%p] GetDC() without ReleaseDC()!\n", Window->hSelf);
                   DceReleaseDC(pDCE);
                 }
 
@@ -854,7 +854,7 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window)
     {
       if (0 == (pDCE->DCXFlags & DCX_DCEEMPTY))
         {
-          if (Window->Self == pDCE->hwndCurrent)
+          if (Window->hSelf == pDCE->hwndCurrent)
             {
               CurrentWindow = Window;
             }
@@ -871,14 +871,14 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window)
           dc = DC_LockDc(pDCE->hDC);
           if (dc == NULL)
             {
-              if (Window->Self != pDCE->hwndCurrent)
+              if (Window->hSelf != pDCE->hwndCurrent)
                 {
                   IntReleaseWindowObject(CurrentWindow);
                 }
               pDCE = pDCE->next;
               continue;
             }
-          if (Window == CurrentWindow || IntIsChildWindow(Window->Self, CurrentWindow->Self))
+          if (Window == CurrentWindow || IntIsChildWindow(Window->hSelf, CurrentWindow->hSelf))
             {
               if (pDCE->DCXFlags & DCX_WINDOW)
                 {
@@ -907,7 +907,7 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window)
 
           DceUpdateVisRgn(pDCE, CurrentWindow, pDCE->DCXFlags);
 
-          if (Window->Self != pDCE->hwndCurrent)
+          if (Window->hSelf != pDCE->hwndCurrent)
             {
 //              IntEngWindowChanged(CurrentWindow, WOC_RGN_CLIENT);
               IntReleaseWindowObject(CurrentWindow);

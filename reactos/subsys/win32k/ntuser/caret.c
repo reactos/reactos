@@ -334,7 +334,7 @@ BOOL FASTCALL co_UserHideCaret(PWINDOW_OBJECT WindowObject)
 
   ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
 
-  if(ThreadQueue->CaretInfo->hWnd != WindowObject->Self)
+  if(ThreadQueue->CaretInfo->hWnd != WindowObject->hSelf)
   {
     SetLastWin32Error(ERROR_ACCESS_DENIED);
     return FALSE;
@@ -342,7 +342,7 @@ BOOL FASTCALL co_UserHideCaret(PWINDOW_OBJECT WindowObject)
 
   if(ThreadQueue->CaretInfo->Visible)
   {
-    IntKillTimer(WindowObject->Self, IDCARETTIMER, TRUE);
+    IntKillTimer(WindowObject->hSelf, IDCARETTIMER, TRUE);
 
     co_IntHideCaret(ThreadQueue->CaretInfo);
     ThreadQueue->CaretInfo->Visible = 0;
@@ -384,11 +384,11 @@ CLEANUP:
 }
 
 
-BOOL FASTCALL co_UserShowCaret(PWINDOW_OBJECT WindowObject)
+BOOL FASTCALL co_UserShowCaret(PWINDOW_OBJECT Window)
 {
    PUSER_MESSAGE_QUEUE ThreadQueue;
    
-   if(WindowObject->OwnerThread != PsGetCurrentThread())
+   if(Window->OwnerThread != PsGetCurrentThread())
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       return FALSE;
@@ -396,7 +396,7 @@ BOOL FASTCALL co_UserShowCaret(PWINDOW_OBJECT WindowObject)
 
    ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
 
-   if(ThreadQueue->CaretInfo->hWnd != WindowObject->Self)
+   if(ThreadQueue->CaretInfo->hWnd != Window->hSelf)
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       return FALSE;
@@ -409,7 +409,7 @@ BOOL FASTCALL co_UserShowCaret(PWINDOW_OBJECT WindowObject)
       {
          co_IntSendMessage(ThreadQueue->CaretInfo->hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
       }
-      IntSetTimer(WindowObject->Self, IDCARETTIMER, IntGetCaretBlinkTime(), NULL, TRUE);
+      IntSetTimer(Window->hSelf, IDCARETTIMER, IntGetCaretBlinkTime(), NULL, TRUE);
    }
    
    return TRUE;

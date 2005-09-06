@@ -128,7 +128,7 @@ UnregisterWindowHotKeys(PWINDOW_OBJECT Window)
 						      HOT_KEY_ITEM,
 						      ListEntry);
       Entry = Entry->Flink;
-      if (HotKeyItem->hWnd == Window->Self)
+      if (HotKeyItem->hWnd == Window->hSelf)
 	{
 	  RemoveEntryList (&HotKeyItem->ListEntry);
 	  ExFreePool (HotKeyItem);

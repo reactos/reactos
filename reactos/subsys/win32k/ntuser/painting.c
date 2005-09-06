@@ -81,7 +81,7 @@ STATIC VOID FASTCALL
 co_IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
 {
   HDC hDC;
-  HWND hWnd = Window->Self;
+  HWND hWnd = Window->hSelf;
   HRGN TempRegion;
 
   if (Flags & (RDW_ERASENOW | RDW_UPDATENOW))
@@ -555,7 +555,7 @@ IntFindWindowToRepaint(HWND hWnd, PW32THREAD Thread)
       if (IntIsWindowDirty(Child) &&
           IntWndBelongsToThread(Child, Thread))
       {
-         hFoundWnd = Child->Self;
+         hFoundWnd = Child->hSelf;
          break;
       }
    }

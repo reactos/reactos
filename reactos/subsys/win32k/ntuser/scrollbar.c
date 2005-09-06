@@ -365,7 +365,7 @@ co_IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bR
             }
           else if ((nBar != SB_CTL) && bChangeParams)
             {
-              co_UserShowScrollBar(Window->Self, nBar, FALSE);
+              co_UserShowScrollBar(Window->hSelf, nBar, FALSE);
               return Info->nPos;
             }
         }
@@ -374,7 +374,7 @@ co_IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bR
 /*         new_flags = 0;*/
           if ((nBar != SB_CTL) && bChangeParams)
             {
-              co_UserShowScrollBar(Window->Self, nBar, TRUE);
+              co_UserShowScrollBar(Window->hSelf, nBar, TRUE);
             }
         }
 
@@ -452,13 +452,13 @@ co_IntCreateScrollBars(PWINDOW_OBJECT Window)
   Size = 3 * (sizeof(WINDOW_SCROLLINFO));
   if(!(Window->Scroll = ExAllocatePoolWithTag(PagedPool, Size, TAG_SBARINFO)))
   {
-    DPRINT1("Unable to allocate memory for scrollbar information for window 0x%x\n", Window->Self);
+    DPRINT1("Unable to allocate memory for scrollbar information for window 0x%x\n", Window->hSelf);
     return FALSE;
   }
 
   RtlZeroMemory(Window->Scroll, Size);
 
-  Result = co_WinPosGetNonClientSize(Window->Self,
+  Result = co_WinPosGetNonClientSize(Window->hSelf,
 				  &Window->WindowRect,
 				  &Window->ClientRect);
 
