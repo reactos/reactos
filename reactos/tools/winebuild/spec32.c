@@ -318,6 +318,7 @@ static void output_stub_funcs( FILE *outfile, DLLSPEC *spec )
 {
     int i;
 
+#if 0
     for (i = 0; i < spec->nb_entry_points; i++)
     {
         ORDDEF *odp = &spec->entry_points[i];
@@ -329,6 +330,7 @@ static void output_stub_funcs( FILE *outfile, DLLSPEC *spec )
         fprintf( outfile, "#endif\n\n" );
         break;
     }
+#endif
 
     for (i = 0; i < spec->nb_entry_points; i++)
     {
