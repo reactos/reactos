@@ -2,10 +2,13 @@
 #define _WIN32K_USERFUNCS_H
 
 //currently unused
-#define ASSERT_REFS(obj) 
+#define ASSERT_REFS(obj) ASSERT(ObmGetReferenceCount(obj) >= 2)
 
 #define UserReferenceWindowObjectCo(o) IntReferenceWindowObject(o)
 #define UserDereferenceWindowObjectCo(o) IntReleaseWindowObject(o)
+
+#define UserReferenceAccelObjectCo(o) IntReferenceWindowObject(o)
+#define UserDereferenceAccelObjectCo(o) IntReleaseWindowObject(o)
 
 extern PUSER_HANDLE_TABLE gHandleTable;
 
