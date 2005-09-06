@@ -378,7 +378,7 @@ IntKeyboardSendWinKeyMsg()
   MSG Mesg;
   NTSTATUS Status;
 
-  Status = ObmReferenceObjectByHandle(InputWindowStation->HandleTable,
+  Status = ObmReferenceObjectByHandle(gHandleTable,
                                       InputWindowStation->ShellWindow,
 				      otWindow,
 				      (PVOID *)&Window);
@@ -947,7 +947,7 @@ IntMouseInput(MOUSEINPUT *mi)
       MousePos.y += mi->dy;
     }
 
-    Status = ObmReferenceObjectByHandle(WinSta->HandleTable,
+    Status = ObmReferenceObjectByHandle(gHandleTable,
       WinSta->ActiveDesktop->DesktopWindow, otWindow, (PVOID*)&DesktopWindow);
     if (NT_SUCCESS(Status))
     {

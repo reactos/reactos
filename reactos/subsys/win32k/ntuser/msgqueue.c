@@ -733,7 +733,7 @@ MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam)
     }
 
   WinSta = Win32Thread->Desktop->WindowStation;
-  Status = ObmReferenceObjectByHandle(WinSta->HandleTable,
+  Status = ObmReferenceObjectByHandle(gHandleTable,
                                       hWnd, otWindow, (PVOID*)&Window);
   if (!NT_SUCCESS(Status))
     {

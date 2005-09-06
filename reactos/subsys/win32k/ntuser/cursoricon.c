@@ -77,7 +77,7 @@ IntGetCurIconObject(PWINSTATION_OBJECT WinStaObject, HANDLE Handle)
    PCURICON_OBJECT Object;
    NTSTATUS Status;
 
-   Status = ObmReferenceObjectByHandle(WinStaObject->HandleTable,
+   Status = ObmReferenceObjectByHandle(gHandleTable,
       Handle, otCursorIcon, (PVOID*)&Object);
    if (!NT_SUCCESS(Status))
    {
@@ -391,7 +391,7 @@ IntCreateCurIconHandle(PWINSTATION_OBJECT WinStaObject)
   PCURICON_OBJECT Object;
   HANDLE Handle;
 
-  Object = ObmCreateObject(WinStaObject->HandleTable, &Handle, otCursorIcon, sizeof(CURICON_OBJECT));
+  Object = ObmCreateObject(gHandleTable, &Handle, otCursorIcon, sizeof(CURICON_OBJECT));
 
   if(!Object)
   {
@@ -405,7 +405,7 @@ IntCreateCurIconHandle(PWINSTATION_OBJECT WinStaObject)
   if (! ReferenceCurIconByProcess(Object))
   {
     DPRINT1("Failed to add process\n");
-    ObmCloseHandle(WinStaObject->HandleTable, Handle);
+    ObmCloseHandle(gHandleTable, Handle);
     ObmDereferenceObject(Object);
     return NULL;
   }
@@ -483,7 +483,7 @@ IntDestroyCurIconObject(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT Object,
   bmpMask = Object->IconInfo.hbmMask;
   bmpColor = Object->IconInfo.hbmColor;
 
-  Ret = NT_SUCCESS(ObmCloseHandle(WinStaObject->HandleTable, Object->Self));
+  Ret = NT_SUCCESS(ObmCloseHandle(gHandleTable, Object->Self));
 
   /* delete bitmaps */
   if(bmpMask)
@@ -941,7 +941,7 @@ NtUserDestroyCursorIcon(
     RETURN( FALSE);
   }
 
-  Status = ObmReferenceObjectByHandle(WinStaObject->HandleTable, Handle, otCursorIcon, (PVOID*)&Object);
+  Status = ObmReferenceObjectByHandle(gHandleTable, Handle, otCursorIcon, (PVOID*)&Object);
   if(!NT_SUCCESS(Status))
   {
     ObDereferenceObject(WinStaObject);

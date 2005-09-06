@@ -142,7 +142,7 @@ IntGetMenuObject(HMENU hMenu)
     return NULL;
   }
 
-  NTSTATUS Status = ObmReferenceObjectByHandle(W32Thread->Desktop->WindowStation->HandleTable,
+  NTSTATUS Status = ObmReferenceObjectByHandle(gHandleTable,
                                                hMenu, otMenu, (PVOID*)&MenuObject);
   if (!NT_SUCCESS(Status))
   {
@@ -243,7 +243,7 @@ IntDestroyMenuObject(PMENU_OBJECT MenuObject,
                                        NULL);
     if(NT_SUCCESS(Status))
     {
-      ObmCloseHandle(WindowStation->HandleTable, MenuObject->MenuInfo.Self);
+      ObmCloseHandle(gHandleTable, MenuObject->MenuInfo.Self);
       ObDereferenceObject(WindowStation);
       return TRUE;
     }
@@ -255,10 +255,9 @@ PMENU_OBJECT FASTCALL
 IntCreateMenu(PHANDLE Handle, BOOL IsMenuBar)
 {
   PMENU_OBJECT MenuObject;
-  PW32THREAD Win32Thread = PsGetWin32Thread();
 
   MenuObject = (PMENU_OBJECT)ObmCreateObject(
-      Win32Thread->Desktop->WindowStation->HandleTable, Handle,
+      gHandleTable, Handle,
       otMenu, sizeof(MENU_OBJECT));
 
   if(!MenuObject)
@@ -367,7 +366,7 @@ IntCloneMenu(PMENU_OBJECT Source)
     return NULL;
 
   MenuObject = (PMENU_OBJECT)ObmCreateObject(
-    PsGetWin32Thread()->Desktop->WindowStation->HandleTable, &Handle,
+    gHandleTable, &Handle,
     otMenu, sizeof(MENU_OBJECT));
   if(!MenuObject)
     return NULL;

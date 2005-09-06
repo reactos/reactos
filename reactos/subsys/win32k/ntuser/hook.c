@@ -83,7 +83,7 @@ IntAddHook(PETHREAD Thread, int HookId, BOOLEAN Global, PWINSTATION_OBJECT WinSt
         }
     }
 
-  Hook = ObmCreateObject(WinStaObj->HandleTable, &Handle,
+  Hook = ObmCreateObject(gHandleTable, &Handle,
                          otHookProc, sizeof(HOOK));
   if (NULL == Hook)
     {
@@ -180,7 +180,7 @@ IntFreeHook(PHOOKTABLE Table, PHOOK Hook, PWINSTATION_OBJECT WinStaObj)
     }
 
   /* Close handle */
-  ObmCloseHandle(WinStaObj->HandleTable, Hook->Self);
+  ObmCloseHandle(gHandleTable, Hook->Self);
 }
 
 /* remove a hook, freeing it if the chain is not in use */
@@ -399,7 +399,7 @@ NtUserCallNextHookEx(
       RETURN( FALSE);
     }
 
-  Status = ObmReferenceObjectByHandle(WinStaObj->HandleTable, Hook,
+  Status = ObmReferenceObjectByHandle(gHandleTable, Hook,
                                       otHookProc, (PVOID *) &HookObj);
   ObDereferenceObject(WinStaObj);
   if (! NT_SUCCESS(Status))
@@ -687,7 +687,7 @@ NtUserUnhookWindowsHookEx(
       RETURN( FALSE);
     }
 
-  Status = ObmReferenceObjectByHandle(WinStaObj->HandleTable, Hook,
+  Status = ObmReferenceObjectByHandle(gHandleTable, Hook,
                                       otHookProc, (PVOID *) &HookObj);
   if (! NT_SUCCESS(Status))
     {

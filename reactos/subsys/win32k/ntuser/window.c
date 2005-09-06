@@ -129,7 +129,7 @@ IntGetProcessWindowObject(PW32THREAD Thread, HWND hWnd)
 
    if(Thread->Desktop != NULL)
    {
-     Status = ObmReferenceObjectByHandle(Thread->Desktop->WindowStation->HandleTable,
+     Status = ObmReferenceObjectByHandle(gHandleTable,
                                          hWnd, otWindow, (PVOID*)&WindowObject);
      if (NT_SUCCESS(Status))
      {
@@ -418,7 +418,7 @@ static LRESULT co_IntDestroyWindow(PWINDOW_OBJECT Window,
   IntUnlinkWindow(Window);
 
   IntReferenceWindowObject(Window);
-  ObmCloseHandle(ThreadData->Desktop->WindowStation->HandleTable, Window->Self);
+  ObmCloseHandle(gHandleTable, Window->Self);
 
   IntDestroyScrollBars(Window);
 
@@ -1498,7 +1498,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
 
   /* Create the window object. */
   WindowObject = (PWINDOW_OBJECT)
-    ObmCreateObject(PsGetWin32Thread()->Desktop->WindowStation->HandleTable, &Handle,
+    ObmCreateObject(gHandleTable, &Handle,
         otWindow, sizeof(WINDOW_OBJECT) + ClassObject->cbWndExtra
         );
 

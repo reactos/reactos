@@ -1,6 +1,10 @@
 #ifndef _WIN32K_USERFUNCS_H
 #define _WIN32K_USERFUNCS_H
 
+
+extern PUSER_HANDLE_TABLE gHandleTable;
+
+
 /*************** WINSTA.C ***************/
 
 HWINSTA FASTCALL UserGetProcessWindowStation(VOID);

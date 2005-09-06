@@ -1256,7 +1256,7 @@ co_WinPosShowWindow(HWND Wnd, INT Cmd)
 //  HRGN VisibleRgn;
 
   Status =
-    ObmReferenceObjectByHandle(PsGetWin32Thread()->Desktop->WindowStation->HandleTable,
+    ObmReferenceObjectByHandle(gHandleTable,
 			       Wnd,
 			       otWindow,
 			       (PVOID*)&Window);

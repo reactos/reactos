@@ -535,18 +535,6 @@ NtUserCreateWindowStation(
      return 0;
    }
 
-   WindowStationObject->HandleTable = ObmCreateHandleTable();
-   if (!WindowStationObject->HandleTable)
-   {
-      DPRINT("Failed creating handle table\n");
-      ExFreePool(CurInfo);
-      ExFreePool(WindowStationName.Buffer);
-      /* FIXME - Delete window station object */
-      ObDereferenceObject(WindowStationObject);
-      SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
-      return 0;
-   }
-
    InitHotKeys(WindowStationObject);
 
    CurInfo->Enabled = FALSE;

@@ -94,10 +94,11 @@ NtUserCopyAcceleratorTable(
     RETURN(0);
   }
 
-  Status = ObmReferenceObjectByHandle(WindowStation->HandleTable,
+  Status = ObmReferenceObjectByHandle(gHandleTable,
     Table,
     otAcceleratorTable,
     (PVOID*)&AcceleratorTable);
+  
   if (!NT_SUCCESS(Status))
   {
     SetLastWin32Error(ERROR_INVALID_ACCEL_HANDLE);
@@ -161,7 +162,7 @@ NtUserCreateAcceleratorTable(
   }
 
   AcceleratorTable = ObmCreateObject(
-    WindowStation->HandleTable,
+    gHandleTable,
     (PHANDLE)&Handle,
     otAcceleratorTable,
 	sizeof(ACCELERATOR_TABLE));
@@ -179,7 +180,7 @@ NtUserCreateAcceleratorTable(
 	AcceleratorTable->Table = ExAllocatePoolWithTag(PagedPool, EntriesCount * sizeof(ACCEL), TAG_ACCEL);
 	if (AcceleratorTable->Table == NULL)
 	{
-		ObmCloseHandle(WindowStation->HandleTable, Handle);
+		ObmCloseHandle(gHandleTable, Handle);
 		ObDereferenceObject(WindowStation);
 		SetLastNtError(Status);
 		DPRINT1("E3\n");
@@ -190,7 +191,7 @@ NtUserCreateAcceleratorTable(
     if (!NT_SUCCESS(Status))
     {
 	  ExFreePool(AcceleratorTable->Table);
-	  ObmCloseHandle(WindowStation->HandleTable, Handle);
+	  ObmCloseHandle(gHandleTable, Handle);
       ObDereferenceObject(WindowStation);
       SetLastNtError(Status);
       DPRINT1("E4\n");
@@ -240,7 +241,7 @@ NtUserDestroyAcceleratorTable(
     RETURN( FALSE);
   }
 
-  Status = ObmReferenceObjectByHandle(WindowStation->HandleTable,
+  Status = ObmReferenceObjectByHandle(gHandleTable,
     Table,
     otAcceleratorTable,
     (PVOID*)&AcceleratorTable);
@@ -252,7 +253,7 @@ NtUserDestroyAcceleratorTable(
     RETURN( FALSE);
   }
 
-  ObmCloseHandle(WindowStation->HandleTable, Table);
+  ObmCloseHandle(gHandleTable, Table);
 
   if (AcceleratorTable->Table != NULL)
   {
@@ -503,7 +504,7 @@ NtUserTranslateAccelerator(
     RETURN( 0);
   }
 
-  Status = ObmReferenceObjectByHandle(WindowStation->HandleTable,
+  Status = ObmReferenceObjectByHandle(gHandleTable,
     Table,
     otAcceleratorTable,
     (PVOID*)&AcceleratorTable);

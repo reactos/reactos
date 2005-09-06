@@ -40,6 +40,9 @@
 #define USER_BODY_TO_HEADER(ObjectBody) \
   ((PUSER_OBJECT_HEADER)(((PUSER_OBJECT_HEADER)ObjectBody) - 1))
 
+
+PUSER_HANDLE_TABLE gHandleTable = NULL;
+
 /* FUNCTIONS *****************************************************************/
 
 VOID FASTCALL
