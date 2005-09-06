@@ -2282,9 +2282,9 @@ RtlxOemStringToUnicodeSize(IN POEM_STRING OemString)
  * @implemented
  */
 ULONG STDCALL
-RtlxUnicodeStringToAnsiSize(IN PUNICODE_STRING UnicodeString)
+RtlxUnicodeStringToAnsiSize(IN PCUNICODE_STRING UnicodeString)
 {
-   return RtlUnicodeStringToAnsiSize(UnicodeString);
+   return RtlUnicodeStringToAnsiSize((PUNICODE_STRING)UnicodeString);
 }
 
 

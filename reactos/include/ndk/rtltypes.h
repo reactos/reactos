@@ -240,8 +240,10 @@ RemoveTailList(
 #define RTL_ATOM_IS_PINNED      0x1
 
 /* EXPORTED DATA *************************************************************/
+#ifdef NTOS_MODE_USER
 extern BOOLEAN NTSYSAPI NLS_MB_CODE_PAGE_TAG;
 extern BOOLEAN NTSYSAPI NLS_MB_OEM_CODE_PAGE_TAG;
+#endif
 
 /* ENUMERATIONS **************************************************************/
 

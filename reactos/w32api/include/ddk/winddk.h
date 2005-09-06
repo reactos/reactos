@@ -5207,11 +5207,16 @@ RtlCompareUnicodeString(
   IN PCUNICODE_STRING  String2,
   IN BOOLEAN  CaseInSensitive);
 
-NTOSAPI
+static __inline
 LARGE_INTEGER
-DDKAPI
-RtlConvertLongToLargeInteger(
-  IN LONG  SignedInteger);
+NTAPI_INLINE
+RtlConvertLongToLargeInteger(LONG SignedInteger)
+{
+    LARGE_INTEGER Result;
+
+    Result.QuadPart = SignedInteger;
+    return Result;
+}
 
 NTOSAPI
 LUID
@@ -5822,7 +5827,7 @@ NTOSAPI
 ULONG
 DDKAPI
 RtlxUnicodeStringToAnsiSize(
-  IN PUNICODE_STRING  UnicodeString);
+  IN PCUNICODE_STRING  UnicodeString);
 
 /*
  * VOID
