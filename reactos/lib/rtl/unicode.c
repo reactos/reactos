@@ -68,13 +68,15 @@ ULONG
 STDCALL
 RtlxAnsiStringToUnicodeSize(IN PCANSI_STRING AnsiString)
 {
-   ULONG Size;
+    ULONG Size;
 
-   RtlMultiByteToUnicodeSize(&Size,
-                             AnsiString->Buffer,
-                             AnsiString->Length);
+    /* Convert from Mb String to Unicode Size */
+    RtlMultiByteToUnicodeSize(&Size,
+                              AnsiString->Buffer,
+                              AnsiString->Length);
 
-   return(Size);
+    /* Return the size plus the null-char */
+    return(Size + sizeof(WCHAR));
 }
 
 
@@ -883,16 +885,17 @@ RtlUnicodeStringToInteger(
  */
 ULONG
 STDCALL
-RtlxUnicodeStringToOemSize(
-   IN PCUNICODE_STRING UnicodeString)
+RtlxUnicodeStringToOemSize(IN PCUNICODE_STRING UnicodeString)
 {
-   ULONG Size;
+    ULONG Size;
 
-   RtlUnicodeToMultiByteSize (&Size,
+    /* Convert the Unicode String to Mb Size */
+    RtlUnicodeToMultiByteSize(&Size,
                               UnicodeString->Buffer,
                               UnicodeString->Length);
 
-   return Size+1; //NB: incl. nullterm
+    /* Return the size + the null char */
+    return (Size + sizeof(CHAR));
 }
 
 /*
@@ -1798,14 +1801,15 @@ ULONG
 STDCALL
 RtlxOemStringToUnicodeSize(IN PCOEM_STRING OemString)
 {
-   ULONG Size;
+    ULONG Size;
 
-   //this function returns size including nullterm
-   RtlMultiByteToUnicodeSize(&Size,
-                             OemString->Buffer,
-                             OemString->Length);
+    /* Convert the Mb String to Unicode Size */
+    RtlMultiByteToUnicodeSize(&Size,
+                              OemString->Buffer,
+                              OemString->Length);
 
-   return(Size);
+    /* Return the size + null-char */
+    return (Size + sizeof(WCHAR));
 }
 
 
@@ -1859,17 +1863,17 @@ RtlStringFromGUID (IN REFGUID Guid,
  */
 ULONG
 STDCALL
-RtlxUnicodeStringToAnsiSize(
-   IN PCUNICODE_STRING UnicodeString)
+RtlxUnicodeStringToAnsiSize(IN PCUNICODE_STRING UnicodeString)
 {
-   ULONG Size;
+    ULONG Size;
 
-   //this function return size without nullterm!
-   RtlUnicodeToMultiByteSize (&Size,
+    /* Convert the Unicode String to Mb Size */
+    RtlUnicodeToMultiByteSize(&Size,
                               UnicodeString->Buffer,
                               UnicodeString->Length);
 
-   return Size + sizeof(CHAR); //NB: incl. nullterm
+    /* Return the size + null-char */
+    return (Size + sizeof(CHAR));
 }
 
 

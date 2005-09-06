@@ -278,35 +278,50 @@ RtlMultiByteToUnicodeN(
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS
+STDCALL
 RtlMultiByteToUnicodeSize(PULONG UnicodeSize,
                           PCSTR MbString,
                           ULONG MbSize)
 {
-   ULONG Length;
+    ULONG Length = 0;
 
-   if (NlsMbCodePageTag == FALSE)
-   {
-      /* single-byte code page */
-      *UnicodeSize = MbSize * sizeof (WCHAR);
-   }
-   else
-   {
-      /* multi-byte code page */
-      for (Length = 0; MbSize; MbSize--, MbString++, Length++)
-      {
-         if (NlsLeadByteInfo[(UCHAR)*MbString] != 0)
-         {
-            if (!--MbSize)
-               break;  /* partial char, ignore it */
-            MbString++;
-         }
-      }
+    if (!NlsMbCodePageTag)
+    {
+        /* single-byte code page */
+        *UnicodeSize = MbSize * sizeof (WCHAR);
+    }
+    else
+    {
+        /* multi-byte code page */
+        while (MbSize--)
+        {
+            if (NlsLeadByteInfo[*(PUCHAR)MbString++])
+            {
+                if (!MbSize)
+                {
+                    /* partial char, ignore it */
+                    Length++;
+                    break;
+                }
+            }
+            else
+            {
+                /* Move on */
+                MbSize--;
+                MbString++;
+            }
 
-      *UnicodeSize = Length * sizeof(WCHAR);
-   }
+            /* Increase returned size */
+            Length++;
+        }
 
-   return STATUS_SUCCESS;
+        /* Return final size */
+        *UnicodeSize = Length * sizeof(WCHAR);
+    }
+
+    /* Success */
+    return STATUS_SUCCESS;
 }
 
 
@@ -472,46 +487,44 @@ RtlUnicodeToMultiByteN (PCHAR MbString,
    return STATUS_SUCCESS;
 }
 
-
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS
+STDCALL
 RtlUnicodeToMultiByteSize(PULONG MbSize,
                           PWCHAR UnicodeString,
                           ULONG UnicodeSize)
 {
-   ULONG UnicodeLength;
-   ULONG MbLength;
+    ULONG UnicodeLength = UnicodeSize / sizeof(WCHAR);
+    ULONG MbLength = 0;
 
-   if (NlsMbCodePageTag == FALSE)
-   {
-      /* single-byte code page */
-      *MbSize = UnicodeSize / sizeof (WCHAR);
-   }
-   else
-   {
-      /* multi-byte code page */
-      UnicodeLength = UnicodeSize / sizeof(WCHAR);
-      MbLength = 0;
-      while (UnicodeLength > 0)
-      {
-         if (NlsLeadByteInfo[(USHORT)*UnicodeString] & 0xff00)
-            MbLength++;
+    if (!NlsMbCodePageTag)
+    {
+        /* single-byte code page */
+        *MbSize = UnicodeLength;
+    }
+    else
+    {
+        /* multi-byte code page */
+        while (UnicodeLength--)
+        {
+            if (HIBYTE(NlsUnicodeToAnsiTable[*UnicodeString++]))
+            {
+                MbLength += sizeof(WCHAR);
+            }
+            else
+            {
+                MbLength++;
+            }
+        }
+    
+        *MbSize = MbLength;
+    }
 
-         MbLength++;
-         UnicodeLength--;
-         UnicodeString++;
-      }
-
-      *MbSize = MbLength;
-   }
-
-   return(STATUS_SUCCESS);
+    /* Success */
+    return STATUS_SUCCESS;
 }
-
-
-
 
 /*
  * @unimplemented
