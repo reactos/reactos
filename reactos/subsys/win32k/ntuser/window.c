@@ -1973,15 +1973,18 @@ co_IntCreateWindowEx(DWORD dwExStyle,
       IntReleaseWindowObject(ParentWindow);
     }
 
+  //faxme:temp hack 
+  UserReferenceWindowObjectCo(Window); 
   /* Initialize and show the window's scrollbars */
   if (Window->Style & WS_VSCROLL)
   {
-     co_UserShowScrollBar(Window->hSelf, SB_VERT, TRUE);
+     co_UserShowScrollBar(Window, SB_VERT, TRUE);
   }
   if (Window->Style & WS_HSCROLL)
   {
-     co_UserShowScrollBar(Window->hSelf, SB_HORZ, TRUE);
+     co_UserShowScrollBar(Window, SB_HORZ, TRUE);
   }
+  UserDereferenceWindowObjectCo(Window);
 
   if (dwStyle & WS_VISIBLE)
     {
@@ -3109,7 +3112,6 @@ CLEANUP:
 HMENU STDCALL
 NtUserGetSystemMenu(HWND hWnd, BOOL bRevert)
 {
-   HMENU Result = 0;
    PWINDOW_OBJECT Window;
    PMENU_OBJECT Menu;
    DECLARE_RETURN(HMENU);
@@ -3117,20 +3119,17 @@ NtUserGetSystemMenu(HWND hWnd, BOOL bRevert)
    DPRINT("Enter NtUserGetSystemMenu\n");
    UserEnterShared();
 
-   if (!(Window = IntGetWindowObject(hWnd)))
+   if (!(Window = UserGetWindowObject(hWnd)))
    {
-      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-      RETURN( 0);
+      RETURN(NULL);
    }
 
    if (!(Menu = IntGetSystemMenu(Window, bRevert, FALSE)))
    {
-      Result = Menu->MenuInfo.Self;
-      IntReleaseMenuObject(Menu);
+      RETURN(NULL);
    }
 
-   IntReleaseWindowObject(Window);
-   RETURN( Result);
+   RETURN(Menu->MenuInfo.Self);
    
 CLEANUP:
    DPRINT("Leave NtUserGetSystemMenu, ret=%i\n",_ret_);
