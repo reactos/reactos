@@ -66,6 +66,15 @@ typedef BOOL (CALLBACK*ParseThemeIniFileProc)(DWORD dwType, LPWSTR pszParam1,
                                               LPWSTR pszParam2, LPWSTR pszParam3,
                                               DWORD dwParam, LPVOID lpData);
 
+/* Structure filled in by EnumThemeColors() and EnumeThemeSizes() with the
+ * various strings for a theme color or size. */
+typedef struct tagTHEMENAMES
+{
+    WCHAR szName[MAX_PATH+1];
+    WCHAR szDisplayName[MAX_PATH+1];
+    WCHAR szTooltip[MAX_PATH+1];
+} THEMENAMES, *PTHEMENAMES;
+
 /* Declarations for undocumented functions for use internally */
 DWORD WINAPI QueryThemeServices(void);
 HRESULT WINAPI OpenThemeFile(LPCWSTR pszThemeFileName, LPCWSTR pszColorName,
@@ -79,12 +88,19 @@ HRESULT WINAPI GetThemeDefaults(LPCWSTR pszThemeFileName, LPWSTR pszColorName,
 HRESULT WINAPI EnumThemes(LPCWSTR pszThemePath, EnumThemeProc callback,
                           LPVOID lpData);
 HRESULT WINAPI EnumThemeColors(LPWSTR pszThemeFileName, LPWSTR pszSizeName,
-                               DWORD dwColorNum, LPWSTR pszColorName);
+                               DWORD dwColorNum, PTHEMENAMES pszColorNames);
 HRESULT WINAPI EnumThemeSizes(LPWSTR pszThemeFileName, LPWSTR pszColorName,
-                              DWORD dwSizeNum, LPWSTR pszSizeName);
+                              DWORD dwSizeNum, PTHEMENAMES pszColorNames);
 HRESULT WINAPI ParseThemeIniFile(LPCWSTR pszIniFileName, LPWSTR pszUnknown,
                                  ParseThemeIniFileProc callback, LPVOID lpData);
 
 extern void UXTHEME_InitSystem(HINSTANCE hInst);
 
-#endif
+/* No alpha blending */
+#define ALPHABLEND_NONE             0
+/* "Cheap" binary alpha blending - but possibly faster */
+#define ALPHABLEND_BINARY           1
+/* Full alpha blending */
+#define ALPHABLEND_FULL             2
+
+#endif /* __WINE_UXTHEMEDLL_H */
