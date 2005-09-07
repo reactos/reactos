@@ -376,14 +376,8 @@ IntKeyboardSendWinKeyMsg()
 {
   PWINDOW_OBJECT Window;
   MSG Mesg;
-  NTSTATUS Status;
 
-  Status = ObmReferenceObjectByHandle(gHandleTable,
-                                      InputWindowStation->ShellWindow,
-				      otWindow,
-				      (PVOID *)&Window);
-
-  if (!NT_SUCCESS(Status))
+  if (!(Window = IntGetWindowObject(InputWindowStation->ShellWindow)))
     {
       DPRINT1("Couldn't find window to send Windows key message!\n");
       return;
@@ -895,7 +889,6 @@ IntMouseInput(MOUSEINPUT *mi)
   SURFOBJ *SurfObj;
   PDC dc;
   PWINDOW_OBJECT DesktopWindow;
-  NTSTATUS Status;
 
 #if 1
   HDC hDC;
@@ -947,9 +940,9 @@ IntMouseInput(MOUSEINPUT *mi)
       MousePos.y += mi->dy;
     }
 
-    Status = ObmReferenceObjectByHandle(gHandleTable,
-      WinSta->ActiveDesktop->DesktopWindow, otWindow, (PVOID*)&DesktopWindow);
-    if (NT_SUCCESS(Status))
+    DesktopWindow = IntGetWindowObject(WinSta->ActiveDesktop->DesktopWindow);
+    
+    if (DesktopWindow)
     {
       if(MousePos.x >= DesktopWindow->ClientRect.right)
         MousePos.x = DesktopWindow->ClientRect.right - 1;

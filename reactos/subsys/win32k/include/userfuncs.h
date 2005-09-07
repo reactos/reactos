@@ -1,17 +1,51 @@
 #ifndef _WIN32K_USERFUNCS_H
 #define _WIN32K_USERFUNCS_H
 
-//currently unused
-#define ASSERT_REFS(obj) ASSERT(ObmGetReferenceCount(obj) >= 2)
 
-#define UserReferenceWindowObjectCo(o) IntReferenceWindowObject(o)
-#define UserDereferenceWindowObjectCo(o) IntReleaseWindowObject(o)
+#define ASSERT_REFS_CO(obj) \
+{ \
+   LONG ref = USER_BODY_TO_HEADER(obj)->RefCount;\
+   if (!(ref >= 1)){ \
+      DPRINT1("obj 0x%x, refs %i\n", obj, ref); \
+      ASSERT(FALSE); \
+   } \
+}
 
-#define UserReferenceAccelObjectCo(o) IntReferenceWindowObject(o)
-#define UserDereferenceAccelObjectCo(o) IntReleaseWindowObject(o)
+#define DUMP_REFS(obj) DPRINT1("obj 0x%x, refs %i\n",obj, USER_BODY_TO_HEADER(obj)->RefCount)
 
-extern PUSER_HANDLE_TABLE gHandleTable;
 
+
+
+VOID FASTCALL ObmReferenceObject(PVOID obj);
+BOOL FASTCALL ObmDereferenceObject(PVOID obj);
+
+#define IntReferenceWindowObject(o) ObmReferenceObject(o)
+
+VOID FASTCALL IntReleaseWindowObject(PWINDOW_OBJECT Window);
+PWINDOW_OBJECT FASTCALL IntGetWindowObject(HWND hWnd);
+PVOID FASTCALL
+ObmCreateObject(PUSER_HANDLE_TABLE ht, HANDLE* h,USER_OBJECT_TYPE type , ULONG size);
+
+BOOL FASTCALL 
+ObmDeleteObject(HANDLE h, USER_OBJECT_TYPE type );
+
+//#define UserRefObjectCo(o) ObmReferenceObject(o)
+//#define UserDerefObjectCo(o) ObmDereferenceObject(o)
+BOOL FASTCALL ObmCreateHandleTable();
+
+
+extern USER_HANDLE_TABLE gHandleTable;
+
+
+/******************** HANDLE.C ***************/
+
+
+PUSER_HANDLE_ENTRY handle_to_entry(PUSER_HANDLE_TABLE ht, HANDLE handle );
+VOID UserInitHandleTable(PUSER_HANDLE_TABLE ht, PVOID mem, ULONG bytes);
+HANDLE UserAllocHandle(PUSER_HANDLE_TABLE ht, PVOID object, USER_OBJECT_TYPE type );
+PVOID UserGetObject(PUSER_HANDLE_TABLE ht, HANDLE handle, USER_OBJECT_TYPE type );
+PVOID UserFreeHandle(PUSER_HANDLE_TABLE ht, HANDLE handle );
+PVOID UserGetNextHandle(PUSER_HANDLE_TABLE ht, HANDLE* handle, USER_OBJECT_TYPE type );
 
 /*************** WINSTA.C ***************/
 
@@ -25,7 +59,7 @@ UserAcquireOrReleaseInputOwnership(BOOLEAN Release);
 /*************** WINPOS.C ***************/
 
 BOOL FASTCALL
-UserGetClientOrigin(HWND hWnd, LPPOINT Point);
+UserGetClientOrigin(PWINDOW_OBJECT Window, LPPOINT Point);
 
 /*************** FOCUS.C ***************/
 
@@ -81,7 +115,7 @@ UserPostMessage(HWND Wnd,
 
 /*************** PAINTING.C ***************/
 
-BOOL FASTCALL UserValidateRgn(HWND hWnd, HRGN hRgn);
+BOOL FASTCALL co_UserValidateRgn(PWINDOW_OBJECT Window, HRGN hRgn);
 
 
 /*************** WINDOW.C ***************/

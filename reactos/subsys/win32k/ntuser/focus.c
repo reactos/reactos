@@ -63,7 +63,7 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
 {
    PWINDOW_OBJECT Window, Owner, Parent;
 
-   if (hWnd)
+   if (hWnd && (Window = IntGetWindowObject(hWnd)))
    {
       /* Send palette messages */
       if (co_IntPostOrSendMessage(hWnd, WM_QUERYNEWPALETTE, 0, 0))
@@ -73,24 +73,25 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
       }
 
       if (UserGetWindow(hWnd, GW_HWNDPREV) != NULL)
-         co_WinPosSetWindowPos(hWnd, HWND_TOP, 0, 0, 0, 0,
+         co_WinPosSetWindowPos(Window, HWND_TOP, 0, 0, 0, 0,
             SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOSENDCHANGING);
 
-      Window = IntGetWindowObject(hWnd);
-      if (Window) {
-        Owner = IntGetOwner(Window);
-        if (!Owner) {
-          Parent = IntGetParent(Window);
-          if (!Parent)
+      
+      Owner = IntGetOwner(Window);
+      if (!Owner) 
+      {
+         Parent = IntGetParent(Window);
+         if (!Parent)
             co_IntShellHookNotify(HSHELL_WINDOWACTIVATED, (LPARAM) hWnd);
-          else
+         else
             IntReleaseWindowObject(Parent);
-        } else {
-          IntReleaseWindowObject(Owner);
-        }
-
-        IntReleaseWindowObject(Window);
+      } 
+      else 
+      {
+         IntReleaseWindowObject(Owner);
       }
+
+      IntReleaseWindowObject(Window);
 
       /* FIXME: IntIsWindow */
 
@@ -154,6 +155,8 @@ co_IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWin
    HWND hWndFocusPrev = NULL;
    PUSER_MESSAGE_QUEUE PrevForegroundQueue;
 
+   ASSERT_REFS_CO(Window);
+
    DPRINT("IntSetForegroundAndFocusWindow(%x, %x, %s)\n", hWnd, hWndFocus, MouseActivate ? "TRUE" : "FALSE");
    DPRINT("(%wZ)\n", &Window->WindowName);
 
@@ -214,6 +217,8 @@ co_IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWin
 BOOL FASTCALL
 co_IntSetForegroundWindow(PWINDOW_OBJECT Window)
 {
+   ASSERT_REFS_CO(Window);
+   
    return co_IntSetForegroundAndFocusWindow(Window, Window, FALSE);
 }
 
@@ -222,6 +227,8 @@ co_IntMouseActivateWindow(PWINDOW_OBJECT Window)
 {
   HWND Top;
   PWINDOW_OBJECT TopWindow;
+
+  ASSERT_REFS_CO(Window);
 
   if(Window->Style & WS_DISABLED)
   {
@@ -269,11 +276,13 @@ co_IntMouseActivateWindow(PWINDOW_OBJECT Window)
 }
 
 HWND FASTCALL
-co_IntSetActiveWindow(PWINDOW_OBJECT Window)
+co_IntSetActiveWindow(PWINDOW_OBJECT Window OPTIONAL)
 {
    PUSER_MESSAGE_QUEUE ThreadQueue;
    HWND hWndPrev;
    HWND hWnd = 0;
+
+   if (Window) ASSERT_REFS_CO(Window);
 
    ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
    ASSERT(ThreadQueue != 0);
@@ -404,10 +413,8 @@ NtUserSetActiveWindow(HWND hWnd)
       PUSER_MESSAGE_QUEUE ThreadQueue;
       HWND hWndPrev;
 
-      Window = IntGetWindowObject(hWnd);
-      if (Window == NULL)
+      if (!(Window = UserGetWindowObject(hWnd)))
       {
-         SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
          RETURN( 0);
       }
 
@@ -417,13 +424,13 @@ NtUserSetActiveWindow(HWND hWnd)
 
       if (Window->MessageQueue != ThreadQueue)
       {
-         IntReleaseWindowObject(Window);
          SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
          RETURN( 0);
       }
 
+      UserRefObjectCo(Window);
       hWndPrev = co_IntSetActiveWindow(Window);
-      IntReleaseWindowObject(Window);
+      UserDerefObjectCo(Window);
 
       RETURN( hWndPrev);
    }
@@ -474,14 +481,15 @@ NtUserSetCapture(HWND hWnd)
    UserEnterExclusive();
 
    ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
-   if((Window = IntGetWindowObject(hWnd)))
+   
+   if((Window = UserGetWindowObject(hWnd)))
    {
       if(Window->MessageQueue != ThreadQueue)
       {
-         IntReleaseWindowObject(Window);
-         RETURN( NULL);
+         RETURN(NULL);
       }
    }
+   
    hWndPrev = MsqSetStateWindow(ThreadQueue, MSQ_STATE_CAPTURE, hWnd);
 
    /* also remove other windows if not capturing anymore */
@@ -512,10 +520,8 @@ HWND FASTCALL UserSetFocus(HWND hWnd)
       PUSER_MESSAGE_QUEUE ThreadQueue;
       HWND hWndPrev, hWndTop;
 
-      Window = IntGetWindowObject(hWnd);
-      if (Window == NULL)
+      if (!(Window = UserGetWindowObject(hWnd)))
       {
-         SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
          return( 0);
       }
 
@@ -523,13 +529,11 @@ HWND FASTCALL UserSetFocus(HWND hWnd)
 
       if (Window->Style & (WS_MINIMIZE | WS_DISABLED))
       {
-         IntReleaseWindowObject(Window);
          return( (ThreadQueue ? ThreadQueue->FocusWindow : 0));
       }
 
       if (Window->MessageQueue != ThreadQueue)
       {
-         IntReleaseWindowObject(Window);
          SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
          return( 0);
       }
@@ -543,7 +547,6 @@ HWND FASTCALL UserSetFocus(HWND hWnd)
       }
 
       hWndPrev = co_IntSetFocusWindow(hWnd);
-      IntReleaseWindowObject(Window);
 
       return( hWndPrev);
    }

@@ -115,18 +115,15 @@ CleanupMenuImpl(VOID)
 
 PMENU_OBJECT FASTCALL UserGetMenuObject(HMENU hMenu)
 {
-  PMENU_OBJECT Menu;
-  NTSTATUS Status;
-
-  Status = ObmReferenceObjectByHandle(gHandleTable,
-                             hMenu, otMenu, (PVOID*)&Menu);
-  if (!NT_SUCCESS(Status))
-  {
-    SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
-    return NULL;
-  }
-  ObmDereferenceObject(Menu);
-  return Menu;   
+   PMENU_OBJECT Menu = (PMENU_OBJECT)UserGetObject(&gHandleTable, hMenu, otMenu);
+   if (!Menu)
+   {
+      SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
+      return NULL;
+   }
+   
+   ASSERT(USER_BODY_TO_HEADER(Menu)->RefCount >= 0);
+   return Menu;
 }
 
 
@@ -170,21 +167,14 @@ DumpMenuItemList(PMENU_ITEM MenuItem)
 PMENU_OBJECT FASTCALL
 IntGetMenuObject(HMENU hMenu)
 {
-  PMENU_OBJECT MenuObject;
-  PW32THREAD W32Thread = PsGetWin32Thread();
-
-  if(!W32Thread)
-  {
-    return NULL;
-  }
-
-  NTSTATUS Status = ObmReferenceObjectByHandle(gHandleTable,
-                                               hMenu, otMenu, (PVOID*)&MenuObject);
-  if (!NT_SUCCESS(Status))
-  {
-    return NULL;
-  }
-  return MenuObject;
+   PMENU_OBJECT Menu = UserGetMenuObject(hMenu);
+   if (Menu)
+   {
+      ASSERT(USER_BODY_TO_HEADER(Menu)->RefCount >= 0);
+      
+      USER_BODY_TO_HEADER(Menu)->RefCount++;
+   }
+   return Menu;
 }
 
 BOOL FASTCALL
@@ -279,7 +269,7 @@ IntDestroyMenuObject(PMENU_OBJECT Menu,
                                        NULL);
     if(NT_SUCCESS(Status))
     {
-      ObmCloseHandle(gHandleTable, Menu->MenuInfo.Self);
+      ObmDeleteObject(Menu->MenuInfo.Self, otMenu);
       ObDereferenceObject(WindowStation);
       return TRUE;
     }
@@ -293,7 +283,7 @@ IntCreateMenu(PHANDLE Handle, BOOL IsMenuBar)
   PMENU_OBJECT Menu;
 
   Menu = (PMENU_OBJECT)ObmCreateObject(
-      gHandleTable, Handle,
+      &gHandleTable, Handle,
       otMenu, sizeof(MENU_OBJECT));
 
   if(!Menu)
@@ -402,7 +392,7 @@ IntCloneMenu(PMENU_OBJECT Source)
     return NULL;
 
   Menu = (PMENU_OBJECT)ObmCreateObject(
-    gHandleTable, &hMenu,
+    &gHandleTable, &hMenu,
     otMenu, sizeof(MENU_OBJECT));
   
   if(!Menu)
@@ -1692,6 +1682,7 @@ NtUserGetMenuItemRect(
      ULONG i;
      NTSTATUS Status;
      PMENU_OBJECT Menu;
+     PWINDOW_OBJECT ReferenceWnd;
      DECLARE_RETURN(BOOL);  
 
      DPRINT("Enter NtUserGetMenuItemRect\n");
@@ -1718,7 +1709,11 @@ NtUserGetMenuItemRect(
      *lpRect = mii.Rect;
      lpPoints = (LPPOINT)lpRect;
       
-    if(!UserGetClientOrigin(referenceHwnd, &FromOffset)) RETURN( FALSE);
+    ReferenceWnd = UserGetWindowObject(referenceHwnd);
+    if (!ReferenceWnd || !UserGetClientOrigin(ReferenceWnd, &FromOffset))
+    {
+       RETURN( FALSE);
+    }
 
     XMove = FromOffset.x;
     YMove = FromOffset.y;

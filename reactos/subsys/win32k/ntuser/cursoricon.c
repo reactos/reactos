@@ -71,19 +71,34 @@ IntGetCursorLocation(PWINSTATION_OBJECT WinStaObject, POINT *loc)
   return TRUE;
 }
 
-PCURICON_OBJECT FASTCALL
-IntGetCurIconObject(PWINSTATION_OBJECT WinStaObject, HANDLE Handle)
-{
-   PCURICON_OBJECT Object;
-   NTSTATUS Status;
 
-   Status = ObmReferenceObjectByHandle(gHandleTable,
-      Handle, otCursorIcon, (PVOID*)&Object);
-   if (!NT_SUCCESS(Status))
+
+
+/* temp hack */
+PCURICON_OBJECT FASTCALL UserGetCurIconObject(HANDLE hWnd)
+{
+   PCURICON_OBJECT Window = (PCURICON_OBJECT)UserGetObject(&gHandleTable, hWnd, otCursor);
+   if (!Window)
    {
+      SetLastWin32Error(ERROR_INVALID_CURSOR_HANDLE);
       return NULL;
    }
-   return Object;
+   
+   ASSERT(USER_BODY_TO_HEADER(Window)->RefCount >= 0);
+   return Window;
+}
+
+PCURICON_OBJECT FASTCALL
+IntGetCurIconObject(HANDLE Handle)
+{
+   PCURICON_OBJECT ci = UserGetCurIconObject(Handle);
+   if (ci)
+   {
+      ASSERT(USER_BODY_TO_HEADER(ci)->RefCount >= 0);
+      
+      USER_BODY_TO_HEADER(ci)->RefCount++;
+   }
+   return ci;
 }
 
 #define COLORCURSORS_ALLOWED FALSE
@@ -362,7 +377,9 @@ IntFindExistingCurIconObject(PWINSTATION_OBJECT WinStaObject, HMODULE hModule,
   {
     Object = CONTAINING_RECORD(CurrentEntry, CURICON_OBJECT, ListEntry);
     CurrentEntry = CurrentEntry->Flink;
-    if(NT_SUCCESS(ObmReferenceObjectByPointer(Object, otCursorIcon)))
+
+//    if(NT_SUCCESS(ObmReferenceObjectByPointer(Object, otCursorIcon))) //<- huh????
+    ObmReferenceObject(  Object);
     {
       if((Object->hModule == hModule) && (Object->hRsrc == hRsrc))
       {
@@ -380,6 +397,7 @@ IntFindExistingCurIconObject(PWINSTATION_OBJECT WinStaObject, HMODULE hModule,
       }
     }
     ObmDereferenceObject(Object);
+
   }
 
   return NULL;
@@ -391,7 +409,7 @@ IntCreateCurIconHandle(PWINSTATION_OBJECT WinStaObject)
   PCURICON_OBJECT Object;
   HANDLE Handle;
 
-  Object = ObmCreateObject(gHandleTable, &Handle, otCursorIcon, sizeof(CURICON_OBJECT));
+  Object = ObmCreateObject(&gHandleTable, &Handle, otCursor, sizeof(CURICON_OBJECT));
 
   if(!Object)
   {
@@ -405,7 +423,7 @@ IntCreateCurIconHandle(PWINSTATION_OBJECT WinStaObject)
   if (! ReferenceCurIconByProcess(Object))
   {
     DPRINT1("Failed to add process\n");
-    ObmCloseHandle(gHandleTable, Handle);
+    ObmDeleteObject(Handle, otCursor);
     ObmDereferenceObject(Object);
     return NULL;
   }
@@ -483,7 +501,7 @@ IntDestroyCurIconObject(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT Object,
   bmpMask = Object->IconInfo.hbmMask;
   bmpColor = Object->IconInfo.hbmColor;
 
-  Ret = NT_SUCCESS(ObmCloseHandle(gHandleTable, Object->Self));
+  Ret = ObmDeleteObject(Object->Self, otCursor);
 
   /* delete bitmaps */
   if(bmpMask)
@@ -520,7 +538,10 @@ IntCleanupCurIcons(struct _EPROCESS *Process, PW32PROCESS Win32Process)
   {
     Object = CONTAINING_RECORD(CurrentEntry, CURICON_OBJECT, ListEntry);
     CurrentEntry = CurrentEntry->Flink;
-    if(NT_SUCCESS(ObmReferenceObjectByPointer(Object, otCursorIcon)))
+
+
+      ObmReferenceObject(Object);
+//    if(NT_SUCCESS(ObmReferenceObjectByPointer(Object, otCursorIcon)))
       {
       ProcessEntry = Object->ProcessList.Flink;
       while (ProcessEntry != &Object->ProcessList)
@@ -537,6 +558,8 @@ IntCleanupCurIcons(struct _EPROCESS *Process, PW32PROCESS Win32Process)
 
       ObmDereferenceObject(Object);
     }
+
+
   }
 
   ObDereferenceObject(WinStaObject);
@@ -646,7 +669,7 @@ NtUserGetCursorIconInfo(
     RETURN( FALSE);
   }
 
-  CurIconObject = IntGetCurIconObject(WinStaObject, Handle);
+  CurIconObject = IntGetCurIconObject(Handle);
   if(CurIconObject)
   {
     if(IconInfo)
@@ -712,7 +735,7 @@ NtUserGetCursorIconSize(
     RETURN( FALSE);
   }
 
-  CurIconObject = IntGetCurIconObject(WinStaObject, Handle);
+  CurIconObject = IntGetCurIconObject(Handle);
   if(CurIconObject)
   {
     /* Copy fields */
@@ -929,7 +952,6 @@ NtUserDestroyCursorIcon(
 {
   PWINSTATION_OBJECT WinStaObject;
   PCURICON_OBJECT Object;
-  NTSTATUS Status;
   DECLARE_RETURN(BOOL);
 
   DPRINT("Enter NtUserDestroyCursorIcon\n");
@@ -941,13 +963,18 @@ NtUserDestroyCursorIcon(
     RETURN( FALSE);
   }
 
-  Status = ObmReferenceObjectByHandle(gHandleTable, Handle, otCursorIcon, (PVOID*)&Object);
-  if(!NT_SUCCESS(Status))
+  if (!(Object = IntGetCurIconObject(Handle)))
   {
-    ObDereferenceObject(WinStaObject);
-    SetLastNtError(Status);
-    RETURN( FALSE);
+     ObDereferenceObject(WinStaObject);
+     RETURN(FALSE); 
   }
+//  Status = ObmReferenceObjectByHandle(gHandleTable, Handle, otCursorIcon, (PVOID*)&Object);
+//  if(!NT_SUCCESS(Status))
+//  {
+//    ObDereferenceObject(WinStaObject);
+//    SetLastNtError(Status);
+//    RETURN( FALSE);
+//  }
 
   if(IntDestroyCurIconObject(WinStaObject, Object, FALSE))
   {
@@ -1098,7 +1125,7 @@ NtUserSetCursor(
     RETURN( (HCURSOR)0);
   }
 
-  CurIconObject = IntGetCurIconObject(WinStaObject, hCursor);
+  CurIconObject = IntGetCurIconObject(hCursor);
   if(CurIconObject)
   {
     OldCursor = IntSetCursor(WinStaObject, CurIconObject, FALSE);
@@ -1142,7 +1169,7 @@ NtUserSetCursorIconContents(
     RETURN( FALSE);
   }
 
-  CurIconObject = IntGetCurIconObject(WinStaObject, Handle);
+  CurIconObject = IntGetCurIconObject(Handle);
   if(CurIconObject)
   {
     /* Copy fields */
@@ -1222,7 +1249,7 @@ NtUserSetCursorIconData(
     RETURN( FALSE);
   }
 
-  CurIconObject = IntGetCurIconObject(WinStaObject, Handle);
+  CurIconObject = IntGetCurIconObject(Handle);
   if(CurIconObject)
   {
     CurIconObject->hModule = hModule;
@@ -1338,7 +1365,7 @@ NtUserDrawIconEx(
     RETURN( FALSE);
   }
 
-  CurIconObject = IntGetCurIconObject(WinStaObject, hIcon);
+  CurIconObject = IntGetCurIconObject(hIcon);
   if(CurIconObject)
   {
     hbmMask = CurIconObject->IconInfo.hbmMask;

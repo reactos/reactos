@@ -219,11 +219,14 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
     }
   else
     {
+      PSINGLE_LIST_ENTRY e;
+      
       DPRINT("Destroying W32 thread TID:%d at IRQ level: %lu\n", Thread->Cid.UniqueThread, KeGetCurrentIrql());
 
       Win32Thread->IsExiting = TRUE;
       HOOK_DestroyThreadHooks(Thread);
       UnregisterThreadHotKeys(Thread);
+      /* what if this co_ func crash in umode? what will clean us up then? */
       co_DestroyThreadWindows(Thread);
       IntBlockInput(Win32Thread, FALSE);
       MsqDestroyMessageQueue(Win32Thread->MessageQueue);
@@ -231,6 +234,17 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
       if(Win32Thread->Desktop != NULL)
       {
         ObDereferenceObject(Win32Thread->Desktop);
+      }
+      
+      /* cleanup user object references stack */
+      e = PopEntryList(&Win32Thread->ReferencesList);
+      while (e)
+      {
+         PUSER_REFERENCE_ENTRY ref = CONTAINING_RECORD(e, USER_REFERENCE_ENTRY, Entry);
+         DPRINT1("thread clean: remove reference obj 0x%x\n",ref->obj);
+         ObmDereferenceObject(ref->obj);
+         
+         e = PopEntryList(&Win32Thread->ReferencesList);
       }
     }
 

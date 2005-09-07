@@ -197,7 +197,7 @@ WNDOBJ*
 STDCALL
 EngCreateWnd(
   SURFOBJ          *pso,
-  HWND              hwnd,
+  HWND              hWnd,
   WNDOBJCHANGEPROC  pfn,
   FLONG             fl,
   int               iPixelFormat)
@@ -209,7 +209,7 @@ EngCreateWnd(
   DECLARE_RETURN(WNDOBJ*);
 
   DPRINT("EngCreateWnd: pso = 0x%x, hwnd = 0x%x, pfn = 0x%x, fl = 0x%x, pixfmt = %d\n",
-         pso, hwnd, pfn, fl, iPixelFormat);
+         pso, hWnd, pfn, fl, iPixelFormat);
 
   calledFromUser = UserIsEntered();
   if (!calledFromUser){
@@ -217,7 +217,7 @@ EngCreateWnd(
   }
 
   /* Get window object */
-  Window = IntGetWindowObject(hwnd);
+  Window = UserGetWindowObject(hWnd);
   if (Window == NULL)
     {
       RETURN( NULL);
@@ -227,7 +227,6 @@ EngCreateWnd(
   WndObjInt = EngAllocMem(0, sizeof (WNDGDI), TAG_WNDOBJ);
   if (WndObjInt == NULL)
     {
-      IntReleaseWindowObject(Window);
       DPRINT1("Failed to allocate memory for a WND structure!\n");
       RETURN( NULL);
     }
@@ -236,7 +235,6 @@ EngCreateWnd(
   WndObjInt->ClientClipObj = NULL;
   if (!IntEngWndUpdateClipObj(WndObjInt, Window))
     {
-      IntReleaseWindowObject(Window);
       EngFreeMem(WndObjInt);
       RETURN( NULL);
     }
@@ -247,16 +245,13 @@ EngCreateWnd(
   WndObjUser->pvConsumer = NULL;
 
   /* Fill internal object */
-  WndObjInt->Hwnd = hwnd;
+  WndObjInt->Hwnd = hWnd;
   WndObjInt->ChangeProc = pfn;
   WndObjInt->Flags = fl;
   WndObjInt->PixelFormat = iPixelFormat;
 
   /* associate object with window */
   InsertTailList(&Window->WndObjListHead, &WndObjInt->ListEntry);
-
-  /* release resources */
-  IntReleaseWindowObject(Window);
 
   DPRINT("EngCreateWnd: SUCCESS!\n");
   

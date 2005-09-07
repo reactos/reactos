@@ -58,6 +58,26 @@ IntAllocHookTable(void)
   return Table;
 }
 
+
+PHOOK FASTCALL IntGetHookObject(HHOOK hWnd)
+{
+   
+   PHOOK Window = (PHOOK)UserGetObject(&gHandleTable, hWnd, otHook);
+   if (!Window)
+   {
+      SetLastWin32Error(ERROR_INVALID_HOOK_HANDLE);
+      return NULL;
+   }
+   
+   ASSERT(USER_BODY_TO_HEADER(Window)->RefCount >= 0);
+   
+   USER_BODY_TO_HEADER(Window)->RefCount++;
+   
+   return Window;
+}
+
+
+
 /* create a new hook and add it to the specified table */
 STATIC FASTCALL PHOOK
 IntAddHook(PETHREAD Thread, int HookId, BOOLEAN Global, PWINSTATION_OBJECT WinStaObj)
@@ -83,8 +103,7 @@ IntAddHook(PETHREAD Thread, int HookId, BOOLEAN Global, PWINSTATION_OBJECT WinSt
         }
     }
 
-  Hook = ObmCreateObject(gHandleTable, &Handle,
-                         otHookProc, sizeof(HOOK));
+  Hook = ObmCreateObject(&gHandleTable, &Handle, otHook, sizeof(HOOK));
   if (NULL == Hook)
     {
       return NULL;
@@ -180,7 +199,7 @@ IntFreeHook(PHOOKTABLE Table, PHOOK Hook, PWINSTATION_OBJECT WinStaObj)
     }
 
   /* Close handle */
-  ObmCloseHandle(gHandleTable, Hook->Self);
+  ObmDeleteObject(Hook->Self, otHook);
 }
 
 /* remove a hook, freeing it if the chain is not in use */
@@ -399,15 +418,22 @@ NtUserCallNextHookEx(
       RETURN( FALSE);
     }
 
-  Status = ObmReferenceObjectByHandle(gHandleTable, Hook,
-                                      otHookProc, (PVOID *) &HookObj);
+  //Status = ObmReferenceObjectByHandle(gHandleTable, Hook,
+        //                             otHookProc, (PVOID *) &HookObj);
   ObDereferenceObject(WinStaObj);
-  if (! NT_SUCCESS(Status))
-    {
-      DPRINT1("Invalid handle passed to NtUserCallNextHookEx\n");
-      SetLastNtError(Status);
-      RETURN( 0);
-    }
+  
+//  if (! NT_SUCCESS(Status))
+//    {
+//      DPRINT1("Invalid handle passed to NtUserCallNextHookEx\n");
+//      SetLastNtError(Status);
+//      RETURN( 0);
+//    }
+
+  if (!(HookObj = IntGetHookObject(Hook)))
+  {
+     RETURN(0);
+  }
+    
   ASSERT(Hook == HookObj->Self);
 
   if (NULL != HookObj->Thread && (HookObj->Thread != PsGetCurrentThread()))
@@ -670,7 +696,7 @@ NtUserUnhookWindowsHookEx(
 {
   PWINSTATION_OBJECT WinStaObj;
   PHOOK HookObj;
-  NTSTATUS Status;
+ NTSTATUS Status;
   DECLARE_RETURN(BOOL);
 
   DPRINT("Enter NtUserUnhookWindowsHookEx\n");
@@ -687,13 +713,13 @@ NtUserUnhookWindowsHookEx(
       RETURN( FALSE);
     }
 
-  Status = ObmReferenceObjectByHandle(gHandleTable, Hook,
-                                      otHookProc, (PVOID *) &HookObj);
-  if (! NT_SUCCESS(Status))
+//  Status = ObmReferenceObjectByHandle(gHandleTable, Hook,
+//                                      otHookProc, (PVOID *) &HookObj);
+  if (!(HookObj = IntGetHookObject(Hook)))
     {
       DPRINT1("Invalid handle passed to NtUserUnhookWindowsHookEx\n");
       ObDereferenceObject(WinStaObj);
-      SetLastNtError(Status);
+//      SetLastNtError(Status);
       RETURN( FALSE);
     }
   ASSERT(Hook == HookObj->Self);

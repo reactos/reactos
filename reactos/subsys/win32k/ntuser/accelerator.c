@@ -70,21 +70,19 @@ CleanupAcceleratorImpl(VOID)
 
 
 static
-PACCELERATOR_TABLE FASTCALL UserGetAccelObjectNoRef(HACCEL hAccel)
+PACCELERATOR_TABLE FASTCALL UserGetAccelObject(HACCEL hAccel)
 {
-   PACCELERATOR_TABLE Accel=NULL;
-   NTSTATUS Status = ObmReferenceObjectByHandle(gHandleTable,
-    hAccel,
-    otAcceleratorTable,
-    (PVOID*)&Accel);
-    
-  if (!NT_SUCCESS(Status))
-  {
-    SetLastWin32Error(ERROR_INVALID_ACCEL_HANDLE);
-    return NULL;
-  }
+   PACCELERATOR_TABLE Accel= UserGetObject(&gHandleTable, hAccel,  otAccel);
    
-   ObmDereferenceObject(Accel);
+   if (Accel)
+   {
+      ASSERT(USER_BODY_TO_HEADER(Accel)->RefCount >= 0);
+   }
+   else
+   {
+      SetLastWin32Error(ERROR_INVALID_ACCEL_HANDLE);
+   }
+
    return Accel;
 }
 
@@ -118,7 +116,7 @@ NtUserCopyAcceleratorTable(
     RETURN(0);
   }
 
-  if (!(Accel = UserGetAccelObjectNoRef(hAccel)))
+  if (!(Accel = UserGetAccelObject(hAccel)))
   {
     ObDereferenceObject(WindowStation);
     RETURN(0);
@@ -177,11 +175,7 @@ NtUserCreateAcceleratorTable(
     RETURN( FALSE );
   }
 
-  Accel = ObmCreateObject(
-    gHandleTable,
-    (PHANDLE)&hAccel,
-    otAcceleratorTable,
-	sizeof(ACCELERATOR_TABLE));
+  Accel = ObmCreateObject(&gHandleTable, (PHANDLE)&hAccel, otAccel, sizeof(ACCELERATOR_TABLE));
    
   if (Accel == NULL)
   {
@@ -196,7 +190,7 @@ NtUserCreateAcceleratorTable(
 	Accel->Table = ExAllocatePoolWithTag(PagedPool, EntriesCount * sizeof(ACCEL), TAG_ACCEL);
 	if (Accel->Table == NULL)
 	{
-      ObmCloseHandle(gHandleTable, hAccel);
+      ObmDeleteObject(hAccel, otAccel);
 		ObDereferenceObject(WindowStation);
 		SetLastNtError(Status);
       RETURN( (HACCEL) 0);
@@ -206,7 +200,7 @@ NtUserCreateAcceleratorTable(
     if (!NT_SUCCESS(Status))
     {
 	  ExFreePool(Accel->Table);
-     ObmCloseHandle(gHandleTable, hAccel);
+     ObmDeleteObject(hAccel, otAccel);
       ObDereferenceObject(WindowStation);
       SetLastNtError(Status);
       RETURN((HACCEL) 0);
@@ -258,13 +252,13 @@ NtUserDestroyAcceleratorTable(
     RETURN( FALSE);
   }
 
-  if (!(Accel = UserGetAccelObjectNoRef(hAccel)))
+  if (!(Accel = UserGetAccelObject(hAccel)))
   {
     ObDereferenceObject(WindowStation);
     RETURN( FALSE);
   }
 
-  ObmCloseHandle(gHandleTable, hAccel);
+  ObmDeleteObject(hAccel, otAccel);
 
   if (Accel->Table != NULL)
   {
@@ -294,7 +288,7 @@ co_IntTranslateAccelerator(
 {
   UINT mesg = 0;
 
-  ASSERT_REFS(Window); 
+  ASSERT_REFS_CO(Window); 
 
   DPRINT("IntTranslateAccelerator(hwnd %x, message %x, wParam %x, lParam %x, fVirt %d, key %x, cmd %x)\n",
     Window->hSelf, message, wParam, lParam, fVirt, key, cmd);
@@ -509,19 +503,19 @@ NtUserTranslateAccelerator(
     RETURN( 0);
   }
 
-  if (!(Accel = UserGetAccelObjectNoRef(hAccel)))
+  if (!(Accel = UserGetAccelObject(hAccel)))
   {
     RETURN( 0);
   }
 
-  UserReferenceAccelObjectCo(Accel); 
+  UserRefObjectCo(Accel); 
 
   if (!(Window = UserGetWindowObject(hWnd)))
   {
     RETURN( 0);
   }
 
-  UserReferenceWindowObjectCo(Window); 
+  UserRefObjectCo(Window); 
   
 
   /* FIXME: Associate AcceleratorTable with the current thread */
@@ -546,8 +540,8 @@ NtUserTranslateAccelerator(
   
 CLEANUP:
   
-  if (Window) UserReferenceWindowObjectCo(Window); 
-  if (Accel) UserReferenceAccelObjectCo(Accel); 
+  if (Window) UserDerefObjectCo(Window); 
+  if (Accel) UserDerefObjectCo(Accel); 
 
   if (WindowStation) ObDereferenceObject(WindowStation);
 

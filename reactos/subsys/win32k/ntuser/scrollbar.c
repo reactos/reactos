@@ -198,7 +198,7 @@ co_IntGetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPSCROLLINFO lpsi)
   UINT Mask;
   LPSCROLLINFO psi;
 
-  ASSERT_REFS(Window); 
+  ASSERT_REFS_CO(Window); 
 
   if(!SBID_IS_VALID(nBar))
   {
@@ -260,7 +260,7 @@ co_IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bR
 /*   UINT new_flags;*/
   BOOL bChangeParams = FALSE; /* don't show/hide scrollbar if params don't change */
 
-  ASSERT_REFS(Window); 
+  ASSERT_REFS_CO(Window); 
 
   if(!SBID_IS_VALID(nBar))
   {
@@ -411,7 +411,7 @@ co_IntGetScrollBarInfo(PWINDOW_OBJECT Window, LONG idObject, PSCROLLBARINFO psbi
   PSCROLLBARINFO sbi;
   LPSCROLLINFO psi;
 
-  ASSERT_REFS(Window); 
+  ASSERT_REFS_CO(Window); 
 
   Bar = SBOBJ_TO_SBID(idObject);
 
@@ -447,7 +447,7 @@ co_IntCreateScrollBars(PWINDOW_OBJECT Window)
   ULONG Size, s;
   INT i;
 
-  ASSERT_REFS(Window); 
+  ASSERT_REFS_CO(Window); 
 
   if(Window->Scroll)
   {
@@ -563,9 +563,9 @@ NtUserGetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
     RETURN(FALSE);
   }
 
-  UserReferenceWindowObjectCo(Window);
+  UserRefObjectCo(Window);
   Ret = co_IntGetScrollBarInfo(Window, idObject, &sbi);
-  UserDereferenceWindowObjectCo(Window);
+  UserDerefObjectCo(Window);
 
   Status = MmCopyToCaller(psbi, &sbi, sizeof(SCROLLBARINFO));
   if(!NT_SUCCESS(Status))
@@ -618,9 +618,9 @@ NtUserGetScrollInfo(HWND hWnd, int fnBar, LPSCROLLINFO lpsi)
     RETURN(FALSE);
   }
 
-  UserReferenceWindowObjectCo(Window);   
+  UserRefObjectCo(Window);   
   Ret = co_IntGetScrollInfo(Window, fnBar, &psi);
-  UserDereferenceWindowObjectCo(Window);
+  UserDerefObjectCo(Window);
 
   Status = MmCopyToCaller(lpsi, &psi, sz);
   if(!NT_SUCCESS(Status))
@@ -657,7 +657,7 @@ NtUserEnableScrollBar(
   {
     RETURN(FALSE);
   }
-  UserReferenceWindowObjectCo(Window);
+  UserRefObjectCo(Window);
 
   if(wSBflags == SB_CTL)
   {
@@ -709,7 +709,7 @@ NtUserEnableScrollBar(
   RETURN( TRUE);
   
 CLEANUP:
-  if (Window) UserDereferenceWindowObjectCo(Window);
+  if (Window) UserDerefObjectCo(Window);
 
   DPRINT("Leave NtUserEnableScrollBar, ret=%i\n",_ret_);
   UserLeave();
@@ -738,7 +738,7 @@ NtUserSetScrollBarInfo(
   {
     RETURN( FALSE);
   }
-  UserReferenceWindowObjectCo(Window);
+  UserRefObjectCo(Window);
 
   Obj = SBOBJ_TO_SBID(idObject);
   if(!SBID_IS_VALID(Obj))
@@ -770,7 +770,7 @@ NtUserSetScrollBarInfo(
   RETURN(TRUE);
   
 CLEANUP:
-  if (Window) UserDereferenceWindowObjectCo(Window);
+  if (Window) UserDerefObjectCo(Window);
 
   DPRINT("Leave NtUserSetScrollBarInfo, ret=%i\n",_ret_);
   UserLeave();
@@ -797,7 +797,7 @@ NtUserSetScrollInfo(
   {
     RETURN( 0);
   }
-  UserReferenceWindowObjectCo(Window);
+  UserRefObjectCo(Window);
 
   Status = MmCopyFromCaller(&ScrollInfo, lpsi, sizeof(SCROLLINFO) - sizeof(ScrollInfo.nTrackPos));
   if(!NT_SUCCESS(Status))
@@ -809,7 +809,7 @@ NtUserSetScrollInfo(
   RETURN(co_IntSetScrollInfo(Window, fnBar, &ScrollInfo, bRedraw));
 
 CLEANUP:
-  if (Window) UserDereferenceWindowObjectCo(Window); 
+  if (Window) UserDerefObjectCo(Window); 
    
   DPRINT("Leave NtUserSetScrollInfo, ret=%i\n",_ret_);
   UserLeave();
@@ -823,7 +823,7 @@ co_UserShowScrollBar(PWINDOW_OBJECT Window, int wBar, DWORD bShow)
 {
    DWORD Style, OldStyle;
 
-   ASSERT_REFS(Window);
+   ASSERT_REFS_CO(Window);
 
    switch(wBar)
    {
@@ -873,7 +873,7 @@ co_UserShowScrollBar(PWINDOW_OBJECT Window, int wBar, DWORD bShow)
      if(Window->Style & WS_VISIBLE)
      {
        /* Frame has been changed, let the window redraw itself */
-       co_WinPosSetWindowPos(Window->hSelf, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
+       co_WinPosSetWindowPos(Window, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
           SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED | SWP_NOSENDCHANGING);
      }
    }
@@ -897,9 +897,9 @@ NtUserShowScrollBar(HWND hWnd, int wBar, DWORD bShow)
       RETURN(0);
    }
    
-   UserReferenceWindowObjectCo(Window);
+   UserRefObjectCo(Window);
    ret = co_UserShowScrollBar(Window, wBar, bShow);
-   UserDereferenceWindowObjectCo(Window);
+   UserDerefObjectCo(Window);
    
    RETURN(ret);
    

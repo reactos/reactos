@@ -13,6 +13,8 @@ typedef struct _W32THREAD
   HANDLE hDesktop;
   DWORD MessagePumpHookValue;
   BOOLEAN IsExiting;
+  SINGLE_LIST_ENTRY  ReferencesList;
+
 } W32THREAD, *PW32THREAD;
 
 #include <poppack.h>

@@ -625,25 +625,31 @@ IntGetPaintMessage(HWND hWnd, UINT MsgFilterMin, UINT MsgFilterMax,
 
 static
 HWND FASTCALL
-co_IntFixCaret(HWND hWnd, LPRECT lprc, UINT flags)
+co_IntFixCaret(PWINDOW_OBJECT Window, LPRECT lprc, UINT flags)
 {
    PDESKTOP_OBJECT Desktop;
    PTHRDCARETINFO CaretInfo;
    HWND hWndCaret;
+   PWINDOW_OBJECT WndCaret;
+   
+   ASSERT_REFS_CO(Window);
 
    Desktop = PsGetCurrentThread()->Tcb.Win32Thread->Desktop;
    CaretInfo = ((PUSER_MESSAGE_QUEUE)Desktop->ActiveMessageQueue)->CaretInfo;
    hWndCaret = CaretInfo->hWnd;
-   if (hWndCaret == hWnd ||
-       ((flags & SW_SCROLLCHILDREN) && IntIsChildWindow(hWnd, hWndCaret)))
+   
+   WndCaret = UserGetWindowObject(hWndCaret);
+   
+   if (WndCaret == Window ||
+       ((flags & SW_SCROLLCHILDREN) && IntIsChildWindow(Window->hSelf, hWndCaret)))
    {
       POINT pt, FromOffset, ToOffset, Offset;
       RECT rcCaret;
 
       pt.x = CaretInfo->Pos.x;
       pt.y = CaretInfo->Pos.y;
-      IntGetClientOrigin(hWndCaret, &FromOffset);
-      IntGetClientOrigin(hWnd, &ToOffset);
+      IntGetClientOrigin(WndCaret, &FromOffset);
+      IntGetClientOrigin(Window, &ToOffset);
       Offset.x = FromOffset.x - ToOffset.x;
       Offset.y = FromOffset.y - ToOffset.y;
       rcCaret.left = pt.x;
@@ -843,15 +849,9 @@ NtUserInvalidateRgn(HWND hWnd, HRGN Rgn, BOOL Erase)
 
 
 BOOL FASTCALL
-UserValidateRgn(HWND hWnd, HRGN hRgn)
+co_UserValidateRgn(PWINDOW_OBJECT Window, HRGN hRgn)
 {
-   PWINDOW_OBJECT Window;
-   BOOL ret;
-   
-   if (!(Window = IntGetWindowObject(hWnd))) return FALSE;
-   ret = co_UserRedrawWindow(Window, NULL, hRgn, RDW_VALIDATE | RDW_NOCHILDREN);
-   IntReleaseWindowObject(Window);//temp hack
-   return ret;
+   return co_UserRedrawWindow(Window, NULL, hRgn, RDW_VALIDATE | RDW_NOCHILDREN);
 }
 
 /*
@@ -885,16 +885,11 @@ NtUserUpdateWindow(HWND hWnd)
 
 
 INT FASTCALL
-co_UserGetUpdateRgn(HWND hWnd, HRGN hRgn, BOOL bErase)
+co_UserGetUpdateRgn(PWINDOW_OBJECT Window, HRGN hRgn, BOOL bErase)
 {
-   PWINDOW_OBJECT Window;
    int RegionType;
 
-   if (!(Window = IntGetWindowObject(hWnd)))
-   {
-      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-      return ERROR;
-   }
+   ASSERT_REFS_CO(Window);
 
    if (Window->UpdateRegion == NULL)
    {
@@ -914,8 +909,6 @@ co_UserGetUpdateRgn(HWND hWnd, HRGN hRgn, BOOL bErase)
       co_UserRedrawWindow(Window, NULL, NULL, RDW_ERASENOW | RDW_NOCHILDREN);
    }
 
-   IntReleaseWindowObject(Window);
-   
    return RegionType;
 }
 /*
@@ -929,11 +922,22 @@ INT STDCALL
 NtUserGetUpdateRgn(HWND hWnd, HRGN hRgn, BOOL bErase)
 {
    DECLARE_RETURN(INT);
+   PWINDOW_OBJECT Window;
+   INT ret;
 
    DPRINT("Enter NtUserGetUpdateRgn\n");
    UserEnterExclusive();
    
-   RETURN(co_UserGetUpdateRgn(hWnd, hRgn, bErase));
+   if (!(Window = UserGetWindowObject(hWnd)))
+   {
+      RETURN(ERROR);
+   }
+   
+   UserRefObjectCo(Window);
+   ret = co_UserGetUpdateRgn(Window, hRgn, bErase);
+   UserDerefObjectCo(Window);
+   
+   RETURN(ret);
    
 CLEANUP:
    DPRINT("Leave NtUserGetUpdateRgn, ret=%i\n",_ret_);
@@ -962,9 +966,8 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
    DPRINT("Enter NtUserGetUpdateRect\n");
    UserEnterExclusive();
 
-   if (!(Window = IntGetWindowObject(hWnd)))
+   if (!(Window = UserGetWindowObject(hWnd)))
    {
-      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       RETURN( ERROR);
    }
 
@@ -985,10 +988,10 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
 
    if (bErase && Rect.left < Rect.right && Rect.top < Rect.bottom)
    {
+      UserRefObjectCo(Window);
       co_UserRedrawWindow(Window, NULL, NULL, RDW_ERASENOW | RDW_NOCHILDREN);
+      UserDerefObjectCo(Window);
    }
-
-   IntReleaseWindowObject(Window);
 
    if (UnsafeRect != NULL)
    {
@@ -1027,9 +1030,8 @@ NtUserRedrawWindow(HWND hWnd, CONST RECT *lprcUpdate, HRGN hrgnUpdate,
    DPRINT("Enter NtUserRedrawWindow\n");
    UserEnterExclusive();
 
-   if (!(Wnd = IntGetWindowObject(hWnd ? hWnd : IntGetDesktopWindow())))
+   if (!(Wnd = UserGetWindowObject(hWnd ? hWnd : IntGetDesktopWindow())))
    {
-      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       RETURN( FALSE);
    }
 
@@ -1041,23 +1043,24 @@ NtUserRedrawWindow(HWND hWnd, CONST RECT *lprcUpdate, HRGN hrgnUpdate,
       if (!NT_SUCCESS(Status))
       {
          SetLastWin32Error(ERROR_INVALID_PARAMETER);
-         IntReleaseWindowObject(Wnd);
          RETURN( FALSE);
       }
    }
 
+   UserRefObjectCo(Wnd);
+
    Status = co_UserRedrawWindow(Wnd, NULL == lprcUpdate ? NULL : &SafeUpdateRect,
       hrgnUpdate, flags);
+
+   UserDerefObjectCo(Wnd);
 
    if (!NT_SUCCESS(Status))
    {
       /* IntRedrawWindow fails only in case that flags are invalid */
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      IntReleaseWindowObject(Wnd);
       RETURN( FALSE);
    }
 
-   IntReleaseWindowObject(Wnd);
    RETURN( TRUE);
    
 CLEANUP:
@@ -1208,7 +1211,7 @@ NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *UnsafeRect,
 {
    RECT rc, cliprc, caretrc, rect, clipRect;
    INT Result;
-   PWINDOW_OBJECT Window, CaretWnd;
+   PWINDOW_OBJECT Window = NULL, CaretWnd;
    HDC hDC;
    HRGN hrgnTemp;
    HWND hwndCaret;
@@ -1220,14 +1223,16 @@ NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *UnsafeRect,
    DPRINT("Enter NtUserScrollWindowEx\n");
    UserEnterExclusive();
 
-   Window = IntGetWindowObject(hWnd);
+   Window = UserGetWindowObject(hWnd);
    if (!Window || !IntIsWindowDrawable(Window))
    {
-      IntReleaseWindowObject(Window);
+      Window = NULL; /* prevent deref at cleanup */
       RETURN( ERROR);
    }
-
+   UserRefObjectCo(Window);  
+   
    IntGetClientRect(Window, &rc);
+   
    if (NULL != UnsafeRect)
    {
       Status = MmCopyFromCaller(&rect, UnsafeRect, sizeof(RECT));
@@ -1259,7 +1264,7 @@ NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *UnsafeRect,
    }
 
    caretrc = rc;
-   hwndCaret = co_IntFixCaret(hWnd, &caretrc, flags);
+   hwndCaret = co_IntFixCaret(Window, &caretrc, flags);
 
    if (hrgnUpdate)
       bOwnRgn = FALSE;
@@ -1279,7 +1284,7 @@ NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *UnsafeRect,
     */
 
    hrgnTemp = NtGdiCreateRectRgn(0, 0, 0, 0);
-   Result = co_UserGetUpdateRgn(hWnd, hrgnTemp, FALSE);
+   Result = co_UserGetUpdateRgn(Window, hrgnTemp, FALSE);
    if (Result != NULLREGION)
    {
       HRGN hrgnClip = UnsafeIntCreateRectRgnIndirect(&cliprc);
@@ -1288,6 +1293,7 @@ NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *UnsafeRect,
       co_UserRedrawWindow(Window, NULL, hrgnTemp, RDW_INVALIDATE | RDW_ERASE);
       NtGdiDeleteObject(hrgnClip);
    }
+   
    NtGdiDeleteObject(hrgnTemp);
 
    if (flags & SW_SCROLLCHILDREN)
@@ -1298,23 +1304,28 @@ NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *UnsafeRect,
          int i;
          RECT r, dummy;
          POINT ClientOrigin;
-         PWINDOW_OBJECT WindowObject;
-
-         IntGetClientOrigin(hWnd, &ClientOrigin);
+         PWINDOW_OBJECT Wnd;
+         
+         IntGetClientOrigin(Window, &ClientOrigin);
          for (i = 0; List[i]; i++)
          {
-            WindowObject = IntGetWindowObject(List[i]);
-            if (!WindowObject) continue;
-            r = WindowObject->WindowRect;
+            if (!(Wnd = UserGetWindowObject(List[i]))) continue;
+
+            r = Wnd->WindowRect;
             r.left -= ClientOrigin.x;
             r.top -= ClientOrigin.y;
             r.right -= ClientOrigin.x;
             r.bottom -= ClientOrigin.y;
-            IntReleaseWindowObject(WindowObject);
+
             if (! UnsafeRect || IntGdiIntersectRect(&dummy, &r, &rc))
-               co_WinPosSetWindowPos(List[i], 0, r.left + dx, r.top + dy, 0, 0,
+            {
+               UserRefObjectCo(Wnd);
+               co_WinPosSetWindowPos(Wnd, 0, r.left + dx, r.top + dy, 0, 0,
                                   SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE |
                                   SWP_NOREDRAW);
+               UserDerefObjectCo(Wnd);                                  
+            }
+                                  
          }
          ExFreePool(List);
       }
@@ -1328,18 +1339,21 @@ NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *UnsafeRect,
    if (bOwnRgn && hrgnUpdate)
       NtGdiDeleteObject(hrgnUpdate);
 
-   if ((CaretWnd = IntGetWindowObject(hwndCaret)))
+   if ((CaretWnd = UserGetWindowObject(hwndCaret)))
    {
+      UserRefObjectCo(CaretWnd);
+      
       co_IntSetCaretPos(caretrc.left + dx, caretrc.top + dy);
       co_UserShowCaret(CaretWnd);
-      IntReleaseWindowObject(CaretWnd);
+      
+      UserDerefObjectCo(CaretWnd);
    }
-
-   IntReleaseWindowObject(Window);
 
    RETURN( Result);
    
 CLEANUP:
+   if (Window) UserDerefObjectCo(Window);
+
    DPRINT("Leave NtUserScrollWindowEx, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;

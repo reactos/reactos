@@ -123,14 +123,6 @@ typedef struct _WINDOW_OBJECT
 #define IntIsBroadcastHwnd(hWnd) \
   (hWnd == HWND_BROADCAST || hWnd == HWND_TOPMOST)
 
-#define IntGetWindowObject(hWnd) \
-  IntGetProcessWindowObject(PsGetWin32Thread(), hWnd)
-
-#define IntReferenceWindowObject(WndObj) \
-  ObmReferenceObjectByPointer(WndObj, otWindow)
-
-#define IntReleaseWindowObject(WndObj) \
-  ObmDereferenceObject(WndObj)
 
 #define IntWndBelongsToThread(WndObj, W32Thread) \
   (((WndObj->OwnerThread && WndObj->OwnerThread->Tcb.Win32Thread)) && \
@@ -142,9 +134,6 @@ typedef struct _WINDOW_OBJECT
 #define IntGetWndProcessId(WndObj) \
   WndObj->OwnerThread->ThreadsProcess->UniqueProcessId
 
-
-PWINDOW_OBJECT FASTCALL
-IntGetProcessWindowObject(PW32THREAD Thread, HWND hWnd);
 
 BOOL FASTCALL
 IntIsWindow(HWND hWnd);

@@ -507,8 +507,19 @@ NtUserCallTwoParam(
      RETURN( 0);
 
     case TWOPARAM_ROUTINE_VALIDATERGN:
-      RETURN( (DWORD)UserValidateRgn((HWND) Param1, (HRGN) Param2));
-
+    {
+      PWINDOW_OBJECT Window = UserGetWindowObject((HWND) Param1);
+      BOOL ret;
+      
+      if (!Window) RETURN(FALSE);
+      
+      UserRefObjectCo(Window);
+      ret = co_UserValidateRgn(Window, (HRGN) Param2);
+      UserDerefObjectCo(Window);
+      
+      RETURN((DWORD) ret);
+    }
+    
     case TWOPARAM_ROUTINE_SETWNDCONTEXTHLPID:
       WindowObject = IntGetWindowObject((HWND)Param1);
       if(!WindowObject)
@@ -724,7 +735,7 @@ NtUserCallHwndLock(
               MenuObject->MenuInfo.WndOwner = hWnd;
               MenuObject->MenuInfo.Height = 0;
               IntReleaseMenuObject(MenuObject);
-              co_WinPosSetWindowPos(hWnd, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
+              co_WinPosSetWindowPos(Window, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
                            SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED );
               Ret = TRUE;
               break;

@@ -50,15 +50,13 @@ NTSTATUS FASTCALL InitUserImpl(VOID)
 //   DPRINT("Enter InitUserImpl\n");
 //   ExInitializeResourceLite(&UserLock);
 
+   ExInitializeFastMutex(&UserLock);
 
-   gHandleTable = ObmCreateHandleTable();
-   if (!gHandleTable)
+   if (!ObmCreateHandleTable())
    {
-      DPRINT("Failed creating handle table\n");
+      DPRINT1("Failed creating handle table\n");
       return STATUS_INSUFFICIENT_RESOURCES;
    }
-
-   ExInitializeFastMutex(&UserLock);
   
    return STATUS_SUCCESS;
 }

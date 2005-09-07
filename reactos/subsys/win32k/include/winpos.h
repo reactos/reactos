@@ -17,7 +17,7 @@
 UINT
 FASTCALL co_WinPosArrangeIconicWindows(PWINDOW_OBJECT parent);
 BOOL FASTCALL
-IntGetClientOrigin(HWND hWnd, LPPOINT Point);
+IntGetClientOrigin(PWINDOW_OBJECT Window, LPPOINT Point);
 LRESULT FASTCALL
 co_WinPosGetNonClientSize(HWND Wnd, RECT* WindowRect, RECT* ClientRect);
 UINT FASTCALL
@@ -26,7 +26,7 @@ co_WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
 UINT FASTCALL
 co_WinPosMinMaximize(PWINDOW_OBJECT WindowObject, UINT ShowFlag, RECT* NewPos);
 BOOLEAN FASTCALL
-co_WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
+co_WinPosSetWindowPos(PWINDOW_OBJECT Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 		   INT cy, UINT flags);
 BOOLEAN FASTCALL
 co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd);

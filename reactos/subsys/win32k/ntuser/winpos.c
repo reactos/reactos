@@ -50,11 +50,9 @@
 /* FUNCTIONS *****************************************************************/
 
 BOOL FASTCALL
-IntGetClientOrigin(HWND hWnd, LPPOINT Point)
+IntGetClientOrigin(PWINDOW_OBJECT Window OPTIONAL, LPPOINT Point)
 {
-  PWINDOW_OBJECT Window;
-
-  Window = IntGetWindowObject((hWnd ? hWnd : IntGetDesktopWindow()));
+  Window = Window ? Window : UserGetWindowObject(IntGetDesktopWindow());
   if (Window == NULL)
     {
       Point->x = Point->y = 0;
@@ -63,7 +61,6 @@ IntGetClientOrigin(HWND hWnd, LPPOINT Point)
   Point->x = Window->ClientRect.left;
   Point->y = Window->ClientRect.top;
 
-  IntReleaseWindowObject(Window);
   return TRUE;
 }
 
@@ -71,7 +68,7 @@ IntGetClientOrigin(HWND hWnd, LPPOINT Point)
 
 
 BOOL FASTCALL
-UserGetClientOrigin(HWND hWnd, LPPOINT Point)
+UserGetClientOrigin(PWINDOW_OBJECT Window, LPPOINT Point)
 {
   BOOL Ret;
   POINT pt;
@@ -83,7 +80,7 @@ UserGetClientOrigin(HWND hWnd, LPPOINT Point)
     return FALSE;
   }
 
-  Ret = IntGetClientOrigin(hWnd, &pt);
+  Ret = IntGetClientOrigin(Window, &pt);
 
   if(!Ret)
   {
@@ -106,12 +103,15 @@ UserGetClientOrigin(HWND hWnd, LPPOINT Point)
 BOOL STDCALL
 NtUserGetClientOrigin(HWND hWnd, LPPOINT Point)
 {
-   DECLARE_RETURN(BOOL);  
+   DECLARE_RETURN(BOOL); 
+   PWINDOW_OBJECT Window;
 
    DPRINT("Enter NtUserGetClientOrigin\n");
    UserEnterShared();
    
-   RETURN(UserGetClientOrigin(hWnd, Point));
+   if (!(Window = UserGetWindowObject(hWnd))) RETURN(FALSE);
+   
+   RETURN(UserGetClientOrigin(Window, Point));
    
 CLEANUP:
    DPRINT("Leave NtUserGetClientOrigin, ret=%i\n",_ret_);
@@ -125,10 +125,12 @@ CLEANUP:
  *  Activates window other than pWnd.
  */
 VOID FASTCALL
-co_WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
+co_WinPosActivateOtherWindow(PWINDOW_OBJECT Window OPTIONAL)
 {
   PWINDOW_OBJECT Wnd, Old;
   HWND Fg;
+   
+  if (Window) ASSERT_REFS_CO(Window);
 
   if (!Window || IntIsDesktopWindow(Window))
   {
@@ -142,21 +144,17 @@ co_WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
     for(;;)
     {
       Old = Wnd;
-      Wnd = IntGetParentObject(Wnd);
+      Wnd = Wnd->Parent;
       if(IntIsDesktopWindow(Wnd))
       {
-        IntReleaseWindowObject(Wnd);
         Wnd = Old;
         break;
       }
-      IntReleaseWindowObject(Old);
     }
 
     if ((Wnd->Style & (WS_DISABLED | WS_VISIBLE)) == WS_VISIBLE &&
         (Wnd->Style & (WS_POPUP | WS_CHILD)) != WS_CHILD)
       goto done;
-
-    IntReleaseWindowObject(Wnd);
   }
 
   /* Pick a next top-level window. */
@@ -164,36 +162,37 @@ co_WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
   Wnd = Window;
   while (Wnd != NULL)
   {
-    Old = Wnd;
-    if (Old->NextSibling == NULL)
+    if (Wnd->NextSibling == NULL)
     {
       Wnd = NULL;
-      if (Old != Window)
-        IntReleaseWindowObject(Old);
       break;
     }
-    Wnd = IntGetWindowObject(Old->NextSibling->hSelf);
-    if (Old != Window)
-      IntReleaseWindowObject(Old);
+    
+    Wnd = Wnd->NextSibling;
+    
     if ((Wnd->Style & (WS_DISABLED | WS_VISIBLE)) == WS_VISIBLE &&
         (Wnd->Style & (WS_POPUP | WS_CHILD)) != WS_CHILD)
       break;
   }
 
 done:
+  
+  if (Wnd) UserRefObjectCo(Wnd);
+  
   Fg = UserGetForegroundWindow();
   if (Wnd && (!Fg || Window->hSelf == Fg))
   {
     if (co_IntSetForegroundWindow(Wnd))
     {
-      IntReleaseWindowObject(Wnd);
+      UserDerefObjectCo(Wnd); 
       return;
     }
   }
+
   if (!co_IntSetActiveWindow(Wnd))
     co_IntSetActiveWindow(0);
-  if (Wnd)
-    IntReleaseWindowObject(Wnd);
+   
+  if (Wnd) UserDerefObjectCo(Wnd); 
 }
 
 
@@ -206,6 +205,8 @@ co_WinPosArrangeIconicWindows(PWINDOW_OBJECT parent)
     INT i, x, y, xspacing, yspacing;
     HWND *List = IntWinListChildren(parent);
     
+    ASSERT_REFS_CO(parent);
+    
     IntGetClientRect( parent, &rectParent );
     x = rectParent.left;
     y = rectParent.bottom;
@@ -217,13 +218,22 @@ co_WinPosArrangeIconicWindows(PWINDOW_OBJECT parent)
 
     for( i = 0; List[i]; i++)
     {
+       PWINDOW_OBJECT WndChild;
+       
        hwndChild = List[i];
-        
+       
+       if (!(WndChild = UserGetWindowObject(List[i]))) continue;
+       
       if((UserGetWindowLong( hwndChild, GWL_STYLE, FALSE) & WS_MINIMIZE) != 0 )
       {
-         co_WinPosSetWindowPos( hwndChild, 0, x + UserGetSystemMetrics(SM_CXBORDER),
+         UserRefObjectCo(WndChild);
+         
+         co_WinPosSetWindowPos(WndChild, 0, x + UserGetSystemMetrics(SM_CXBORDER),
                       y - yspacing - UserGetSystemMetrics(SM_CYBORDER)
                      , 0, 0, SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE );
+                     
+         UserDerefObjectCo(WndChild);                     
+         
          if (x <= rectParent.right - xspacing) x += xspacing;
          else
          {
@@ -299,6 +309,8 @@ co_WinPosMinMaximize(PWINDOW_OBJECT Window, UINT ShowFlag, RECT* NewPos)
   POINT Size;
   PINTERNALPOS InternalPos;
   UINT SwpFlags = 0;
+
+  ASSERT_REFS_CO(Window);
 
   Size.x = Window->WindowRect.left;
   Size.y = Window->WindowRect.top;
@@ -674,13 +686,23 @@ WinPosDoOwnedPopups(HWND hWnd, HWND hWndInsertAfter)
    {
       for (i = 0; List[i]; i++)
       {
+         PWINDOW_OBJECT Wnd;
+         
          if (List[i] == hWnd)
             break;
+            
+         if (!(Wnd = UserGetWindowObject(List[i]))) continue;   
+            
          if ((UserGetWindowLong(List[i], GWL_STYLE, FALSE) & WS_POPUP) &&
              UserGetWindow(List[i], GW_OWNER) == hWnd)
          {
-            co_WinPosSetWindowPos(List[i], hWndInsertAfter, 0, 0, 0, 0,
+            UserRefObjectCo(Wnd);
+            
+            co_WinPosSetWindowPos(Wnd, hWndInsertAfter, 0, 0, 0, 0,
                SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING);
+               
+            UserDerefObjectCo(Wnd);
+            
             hWndInsertAfter = List[i];
          }
       }
@@ -828,10 +850,16 @@ WinPosFixupFlags(WINDOWPOS *WinPos, PWINDOW_OBJECT Window)
 
 /* x and y are always screen relative */
 BOOLEAN FASTCALL
-co_WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
-		   INT cy, UINT flags)
+co_WinPosSetWindowPos(
+   PWINDOW_OBJECT Window, 
+   HWND WndInsertAfter, 
+   INT x, 
+   INT y, 
+   INT cx,
+	INT cy, 
+   UINT flags
+   )
 {
-   PWINDOW_OBJECT Window;
    WINDOWPOS WinPos;
    RECT NewWindowRect;
    RECT NewClientRect;
@@ -848,26 +876,20 @@ co_WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
    RECT CopyRect;
    RECT TempRect;
 
-   /* FIXME: Get current active window from active queue. */
+   ASSERT_REFS_CO(Window);
 
-   Window = IntGetWindowObject(Wnd);
-   if (!Window)
-   {
-      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-      return FALSE;
-   }
+   /* FIXME: Get current active window from active queue. */
 
    /*
     * Only allow CSRSS to mess with the desktop window
     */
-   if (Wnd == IntGetDesktopWindow() &&
+   if (Window->hSelf == IntGetDesktopWindow() &&
        Window->OwnerThread->ThreadsProcess != PsGetCurrentProcess())
    {
-      IntReleaseWindowObject(Window);
       return FALSE;
    }
 
-   WinPos.hwnd = Wnd;
+   WinPos.hwnd = Window->hSelf;
    WinPos.hwndInsertAfter = WndInsertAfter;
    WinPos.x = x;
    WinPos.y = y;
@@ -880,7 +902,6 @@ co_WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
    /* Fix up the flags. */
    if (!WinPosFixupFlags(&WinPos, Window))
    {
-      IntReleaseWindowObject(Window);
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return FALSE;
    }
@@ -888,7 +909,6 @@ co_WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
    /* Does the window still exist? */
    if (!IntIsWindow(WinPos.hwnd))
    {
-      IntReleaseWindowObject(Window);
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       return FALSE;
    }
@@ -1217,8 +1237,6 @@ co_WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
    if ((WinPos.flags & SWP_AGG_STATUSFLAGS) != SWP_AGG_NOPOSCHANGE)
       co_IntSendMessage(WinPos.hwnd, WM_WINDOWPOSCHANGED, 0, (LPARAM) &WinPos);
 
-   IntReleaseWindowObject(Window);
-
    return TRUE;
 }
 
@@ -1244,7 +1262,7 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
   BOOLEAN ShowFlag;
 //  HRGN VisibleRgn;
 
-  ASSERT_REFS(Window); 
+  ASSERT_REFS_CO(Window); 
 
   WasVisible = (Window->Style & WS_VISIBLE) != 0;
 
@@ -1343,7 +1361,7 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
       Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
     }
 
-  co_WinPosSetWindowPos(Window->hSelf, 0 != (Window->ExStyle & WS_EX_TOPMOST)
+  co_WinPosSetWindowPos(Window, 0 != (Window->ExStyle & WS_EX_TOPMOST)
                                    ? HWND_TOPMOST : HWND_TOP,
                      NewPos.left, NewPos.top, NewPos.right, NewPos.bottom, LOWORD(Swp));
 
@@ -1418,7 +1436,7 @@ co_WinPosSearchChildren(
    PWINDOW_OBJECT Current;
    HWND *List, *phWnd;
 
-   ASSERT_REFS(ScopeWin);
+   ASSERT_REFS_CO(ScopeWin);
 
    if ((List = IntWinListChildren(ScopeWin)))
    {
@@ -1495,6 +1513,8 @@ co_WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, PUSER_MESSAGE_QUEUE OnlyHitTes
   POINT Point = *WinPoint;
   USHORT HitTest;
 
+  ASSERT_REFS_CO(ScopeWin); 
+
   *Window = NULL;
 
   if(!ScopeWin)
@@ -1528,13 +1548,13 @@ co_WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, PUSER_MESSAGE_QUEUE OnlyHitTes
 BOOL
 STDCALL
 NtUserGetMinMaxInfo(
-  HWND hwnd,
+  HWND hWnd,
   MINMAXINFO *MinMaxInfo,
   BOOL SendMessage)
 {
   POINT Size;
   PINTERNALPOS InternalPos;
-  PWINDOW_OBJECT Window;
+  PWINDOW_OBJECT Window = NULL;
   MINMAXINFO SafeMinMax;
   NTSTATUS Status;
   DECLARE_RETURN(BOOL);
@@ -1542,12 +1562,12 @@ NtUserGetMinMaxInfo(
   DPRINT("Enter NtUserGetMinMaxInfo\n");
   UserEnterExclusive();
 
-  Window = IntGetWindowObject(hwnd);
-  if(!Window)
+  if(!(Window = UserGetWindowObject(hWnd)))
   {
-    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
     RETURN( FALSE);
   }
+  
+  UserRefObjectCo(Window); 
 
   Size.x = Window->WindowRect.left;
   Size.y = Window->WindowRect.top;
@@ -1567,18 +1587,18 @@ NtUserGetMinMaxInfo(
     Status = MmCopyToCaller(MinMaxInfo, &SafeMinMax, sizeof(MINMAXINFO));
     if(!NT_SUCCESS(Status))
     {
-      IntReleaseWindowObject(Window);
       SetLastNtError(Status);
       RETURN( FALSE);
     }
-    IntReleaseWindowObject(Window);
+
     RETURN( TRUE);
   }
 
-  IntReleaseWindowObject(Window);
   RETURN( FALSE);
   
 CLEANUP:
+  if (Window) UserDerefObjectCo(Window); 
+
   DPRINT("Leave NtUserGetMinMaxInfo, ret=%i\n",_ret_);
   UserLeave();
   END_CLEANUP;

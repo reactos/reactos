@@ -299,7 +299,7 @@ IntCreateClass(
 	}
 
 	objectSize = sizeof(WNDCLASS_OBJECT) + lpwcx->cbClsExtra;
-	ClassObject = ObmCreateObject(NULL, NULL, otClass, objectSize);
+	ClassObject = ObmCreateObject(&gHandleTable, NULL, otClass, objectSize);
 	if (ClassObject == 0)
 	{
 		SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
@@ -538,21 +538,17 @@ DWORD STDCALL
 NtUserGetClassLong(HWND hWnd, DWORD Offset, BOOL Ansi)
 {
   PWINDOW_OBJECT Window;
-  LONG Ret;
   DECLARE_RETURN(DWORD);
 
   DPRINT("Enter NtUserGetClassLong\n");
   UserEnterExclusive();
 
-  Window = IntGetWindowObject(hWnd);
-  if (Window == NULL)
+  if (!(Window = UserGetWindowObject(hWnd)))
   {
-    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
     RETURN(0);
   }
-  Ret = IntGetClassLong(Window, Offset, Ansi);
-  IntReleaseWindowObject(Window);
-  RETURN(Ret);
+  
+  RETURN(IntGetClassLong(Window, Offset, Ansi));
   
 CLEANUP:
   DPRINT("Leave NtUserGetClassLong, ret=%i\n",_ret_);
@@ -564,6 +560,8 @@ void FASTCALL
 co_IntSetClassLong(PWINDOW_OBJECT Window, ULONG Offset, LONG dwNewLong, BOOL Ansi)
 {
   PWINDOW_OBJECT Parent, Owner;
+
+  ASSERT_REFS_CO(Window); 
 
   if ((int)Offset >= 0)
     {
@@ -669,14 +667,18 @@ NtUserSetClassLong(HWND hWnd,
   DPRINT("Enter NtUserSetClassLong\n");
   UserEnterExclusive();
 
-  if (!(Window = IntGetWindowObject(hWnd)))
+  if (!(Window = UserGetWindowObject(hWnd)))
   {
-    SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
     RETURN(0);
   }
+  
+  UserRefObjectCo(Window);
+  
   Ret = IntGetClassLong(Window, Offset, Ansi);
   co_IntSetClassLong(Window, Offset, dwNewLong, Ansi);
-  IntReleaseWindowObject(Window);
+  
+  UserDerefObjectCo(Window);
+  
   RETURN(Ret);
   
 CLEANUP:

@@ -158,7 +158,7 @@ co_VIS_WindowLayoutChanged(
    HRGN Temp;
    PWINDOW_OBJECT Parent;
 
-   ASSERT_REFS(Window);
+   ASSERT_REFS_CO(Window);
 
    Temp = NtGdiCreateRectRgn(0, 0, 0, 0);
    NtGdiCombineRgn(Temp, NewlyExposed, NULL, RGN_COPY);
@@ -170,11 +170,11 @@ co_VIS_WindowLayoutChanged(
                      Window->WindowRect.left - Parent->ClientRect.left,
                      Window->WindowRect.top - Parent->ClientRect.top);
                      
-      UserReferenceWindowObjectCo(Parent);
+      UserRefObjectCo(Parent);
       co_UserRedrawWindow(Parent, NULL, Temp,
                      RDW_FRAME | RDW_ERASE | RDW_INVALIDATE |
                      RDW_ALLCHILDREN);
-      UserDereferenceWindowObjectCo(Parent);
+      UserDerefObjectCo(Parent);
    }
    NtGdiDeleteObject(Temp);
 }

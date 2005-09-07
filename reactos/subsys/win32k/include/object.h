@@ -5,105 +5,127 @@
 #include <win32k/bitmaps.h>
 #include <win32k/pen.h>
 
-typedef enum {
-  otUnknown = 0,
-  otClass,
+#define FIRST_USER_HANDLE 0x0020  /* first possible value for low word of user handle */
+#define LAST_USER_HANDLE  0xffef  /* last possible value for low word of user handle */
+
+
+#define USER_HEADER_TO_BODY(ObjectHeader) \
+  ((PVOID)(((PUSER_OBJECT_HEADER)ObjectHeader) + 1))
+
+#define USER_BODY_TO_HEADER(ObjectBody) \
+  ((PUSER_OBJECT_HEADER)(((PUSER_OBJECT_HEADER)ObjectBody) - 1))
+
+
+
+typedef struct _USER_HANDLE_ENTRY
+{
+    void          *ptr;          /* pointer to object */
+    unsigned short type;         /* object type (0 if free) */
+    unsigned short generation;   /* generation counter */
+} USER_HANDLE_ENTRY, * PUSER_HANDLE_ENTRY;
+
+
+
+typedef struct _USER_HANDLE_TABLE
+{
+   PUSER_HANDLE_ENTRY handles;
+   PUSER_HANDLE_ENTRY freelist;
+   int nb_handles;
+   int allocated_handles;
+} USER_HANDLE_TABLE, * PUSER_HANDLE_TABLE;
+
+
+
+typedef enum _USER_OBJECT_TYPE
+{
+  otFree = 0,
   otWindow,
   otMenu,
-  otAcceleratorTable,
-  otCursorIcon,
-  otHookProc,
-  otMonitor
+  otAccel,
+  otCursor,
+  otHook,
+  otMonitor,
+  otClass //fixme: remove
+  
 } USER_OBJECT_TYPE;
+
 
 typedef struct _USER_OBJECT_HEADER
 /*
  * Header for user object
  */
 {
-  USER_OBJECT_TYPE Type;
-  LONG HandleCount;
+//  USER_OBJECT_TYPE Type;
   LONG RefCount;
-  CSHORT Size;
+  BOOL destroyed;
+  HANDLE hSelf;
+//  CSHORT Size;
 } USER_OBJECT_HEADER, *PUSER_OBJECT_HEADER;
 
-typedef struct _USER_HANDLE
+
+typedef struct _USER_REFERENCE_ENTRY
 {
-  PVOID ObjectBody;
-} USER_HANDLE, *PUSER_HANDLE;
-
-#define HANDLE_BLOCK_ENTRIES ((PAGE_SIZE-sizeof(LIST_ENTRY))/sizeof(USER_HANDLE))
-
-typedef struct _USER_HANDLE_BLOCK
-{
-  LIST_ENTRY ListEntry;
-  USER_HANDLE Handles[HANDLE_BLOCK_ENTRIES];
-} USER_HANDLE_BLOCK, *PUSER_HANDLE_BLOCK;
-
-typedef struct _USER_HANDLE_TABLE
-{
-   LIST_ENTRY ListHead;
-} USER_HANDLE_TABLE, *PUSER_HANDLE_TABLE;
+   SINGLE_LIST_ENTRY Entry;
+   PVOID obj;
+} USER_REFERENCE_ENTRY, *PUSER_REFERENCE_ENTRY;
 
 
-ULONG FASTCALL
-ObmGetReferenceCount(
-  PVOID ObjectBody);
 
-ULONG FASTCALL
-ObmGetHandleCount(
-  PVOID ObjectBody);
+#include <malloc.h>
 
-VOID FASTCALL
-ObmReferenceObject(
-  PVOID ObjectBody);
+#define ASSERT_LAST_REF(_obj_) \
+{ \
+   PW32THREAD t; \
+   PSINGLE_LIST_ENTRY e; \
+   PUSER_REFERENCE_ENTRY ref; \
+   \
+   ASSERT(_obj_); \
+   t = PsGetWin32Thread(); \
+   ASSERT(t); \
+   e = t->ReferencesList.Next; \
+   ASSERT(e); \
+   ref = CONTAINING_RECORD(e, USER_REFERENCE_ENTRY, Entry); \
+   ASSERT(ref); \
+   \
+   ASSERT(_obj_ == ref->obj); \
+   \
+}
+#define UserRefObjectCo(_obj_) \
+{ \
+   PW32THREAD t; \
+   PUSER_REFERENCE_ENTRY ref; \
+   \
+   ASSERT(_obj_); \
+   t = PsGetWin32Thread(); \
+   ASSERT(t); \
+   ref = (PUSER_REFERENCE_ENTRY)_alloca(sizeof(USER_REFERENCE_ENTRY)); \
+   ASSERT(ref); \
+   ref->obj = _obj_; \
+   ObmReferenceObject(_obj_); \
+ \
+   PushEntryList(&t->ReferencesList, &ref->Entry); \
+   \
+}
 
-VOID FASTCALL
-ObmDereferenceObject(
-  PVOID ObjectBody);
 
-NTSTATUS FASTCALL
-ObmReferenceObjectByPointer(
-  PVOID ObjectBody,
-  USER_OBJECT_TYPE ObjectType);
-
-PVOID FASTCALL
-ObmCreateObject(
-  PUSER_HANDLE_TABLE HandleTable,
-  PHANDLE Handle,
-	USER_OBJECT_TYPE ObjectType,
-  ULONG ObjectSize);
-
-NTSTATUS FASTCALL
-ObmCreateHandle(
-  PUSER_HANDLE_TABLE HandleTable,
-  PVOID ObjectBody,
-	PHANDLE HandleReturn);
-
-NTSTATUS FASTCALL
-ObmReferenceObjectByHandle(
-  PUSER_HANDLE_TABLE HandleTable,
-  HANDLE Handle,
-	USER_OBJECT_TYPE ObjectType,
-	PVOID* Object);
-
-NTSTATUS FASTCALL
-ObmCloseHandle(
-  PUSER_HANDLE_TABLE HandleTable,
-  HANDLE Handle);
-
-VOID FASTCALL
-ObmInitializeHandleTable(
-  PUSER_HANDLE_TABLE HandleTable);
-
-VOID FASTCALL
-ObmFreeHandleTable(
-  PUSER_HANDLE_TABLE HandleTable);
-
-PUSER_HANDLE_TABLE FASTCALL
-ObmCreateHandleTable(VOID);
-
-VOID  FASTCALL ObmDestroyHandleTable (PUSER_HANDLE_TABLE HandleTable);
+#define UserDerefObjectCo(_obj_) \
+{ \
+   PW32THREAD t; \
+   PSINGLE_LIST_ENTRY e; \
+   PUSER_REFERENCE_ENTRY ref; \
+   \
+   ASSERT(_obj_); \
+   t = PsGetWin32Thread(); \
+   ASSERT(t); \
+   e = PopEntryList(&t->ReferencesList); \
+   ASSERT(e); \
+   ref = CONTAINING_RECORD(e, USER_REFERENCE_ENTRY, Entry); \
+   ASSERT(ref); \
+   \
+   ASSERT(_obj_ == ref->obj); \
+   ObmDereferenceObject(_obj_); \
+   \
+}
 
 VOID  INTERNAL_CALL InitGdiObjectHandleTable (VOID);
 

@@ -91,7 +91,7 @@ IntCreateMonitorObject()
   HANDLE Handle;
   PMONITOR_OBJECT Monitor;
 
-  Monitor = ObmCreateObject(gHandleTable, &Handle, otMonitor, sizeof (MONITOR_OBJECT));
+  Monitor = ObmCreateObject(&gHandleTable, &Handle, otMonitor, sizeof (MONITOR_OBJECT));
   if (Monitor == NULL)
     {
       return NULL;
@@ -138,17 +138,19 @@ static
 PMONITOR_OBJECT
 IntGetMonitorObject(IN HMONITOR hMonitor)
 {
-  PMONITOR_OBJECT Monitor;
-  NTSTATUS Status;
 
-  Status = ObmReferenceObjectByHandle(gHandleTable, hMonitor, otMonitor, (PVOID *)&Monitor);
-  if (!NT_SUCCESS(Status) || Monitor == NULL)
-    {
-      /* FIXME: SetLastNtError( status ); ? */
+   PMONITOR_OBJECT Monitor = (PMONITOR_OBJECT)UserGetObject(&gHandleTable, hMonitor, otMonitor);
+   if (!Monitor)
+   {
+      SetLastWin32Error(ERROR_INVALID_MONITOR_HANDLE);
       return NULL;
-    }
-
-  return Monitor;
+   }
+   
+   ASSERT(USER_BODY_TO_HEADER(Monitor)->RefCount >= 0);
+   
+   USER_BODY_TO_HEADER(Monitor)->RefCount++;
+   
+   return Monitor;
 }
 
 /* IntReleaseMonitorObject
