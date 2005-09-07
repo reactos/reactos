@@ -57,6 +57,8 @@ static const WCHAR wszShell[] = {'\\','s','h','e','l','l','\\',0};
 static const WCHAR wszFolder[] = {'F','o','l','d','e','r',0};
 static const WCHAR wszEmpty[] = {0};
 
+#define SEE_MASK_CLASSALL (SEE_MASK_CLASSNAME | SEE_MASK_CLASSKEY)
+
 
 /***********************************************************************
  *	SHELL_ArgifyW [Internal]
@@ -80,6 +82,7 @@ static BOOL SHELL_ArgifyW(WCHAR* out, int len, const WCHAR* fmt, const WCHAR* lp
 {
     WCHAR   xlpFile[1024];
     BOOL    done = FALSE;
+    BOOL    found_p1 = FALSE;
     PWSTR   res = out;
     PCWSTR  cmd;
     LPVOID  pv;
@@ -153,6 +156,7 @@ static BOOL SHELL_ArgifyW(WCHAR* out, int len, const WCHAR* fmt, const WCHAR* lp
                         res += strlenW(cmd);
                     }
                 }
+                found_p1 = TRUE;
                 break;
 
             /*
@@ -166,6 +170,7 @@ static BOOL SHELL_ArgifyW(WCHAR* out, int len, const WCHAR* fmt, const WCHAR* lp
 		    strcpyW(res, lpFile);
 		    res += strlenW(lpFile);
 		}
+                found_p1 = TRUE;
                 break;
 
             case 'i':
@@ -176,6 +181,7 @@ static BOOL SHELL_ArgifyW(WCHAR* out, int len, const WCHAR* fmt, const WCHAR* lp
 		    res += sprintfW(res, wszILPtr, pv);
 		    SHUnlockShared(pv);
 		}
+                found_p1 = TRUE;
                 break;
 
 	    default:
@@ -219,7 +225,7 @@ static BOOL SHELL_ArgifyW(WCHAR* out, int len, const WCHAR* fmt, const WCHAR* lp
 
     *res = '\0';
 
-    return done;
+    return found_p1;
 }
 
 HRESULT SHELL_GetPathFromIDListForExecuteA(LPCITEMIDLIST pidl, LPSTR pszPath, UINT uOutSize)
@@ -996,15 +1002,25 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfun
             sei_tmp.fMask, sei_tmp.hwnd, debugstr_w(sei_tmp.lpVerb),
             debugstr_w(sei_tmp.lpFile), debugstr_w(sei_tmp.lpParameters),
             debugstr_w(sei_tmp.lpDirectory), sei_tmp.nShow,
-            (sei_tmp.fMask & SEE_MASK_CLASSNAME) ? debugstr_w(sei_tmp.lpClass) : "not used");
+            ((sei_tmp.fMask & SEE_MASK_CLASSALL) == SEE_MASK_CLASSNAME) ?
+                debugstr_w(sei_tmp.lpClass) : "not used");
 
     sei->hProcess = NULL;
 
     /* make copies of all path/command strings */
-    if (sei_tmp.lpFile)
-	strcpyW(wszApplicationName, sei_tmp.lpFile);
+    if (!sei_tmp.lpFile)
+        *wszApplicationName = '\0';
+    else if (*sei_tmp.lpFile == '\"')
+    {
+        UINT l;
+        strcpyW(wszApplicationName, sei_tmp.lpFile+1);
+        l=lstrlenW(wszApplicationName);
+        if (wszApplicationName[l-1] == '\"')
+            wszApplicationName[l-1] = '\0';
+        TRACE("wszApplicationName=%s\n",debugstr_w(wszApplicationName));
+    }
     else
-	*wszApplicationName = '\0';
+        strcpyW(wszApplicationName, sei_tmp.lpFile);
 
     if (sei_tmp.lpParameters)
 	strcpyW(wszParameters, sei_tmp.lpParameters);
@@ -1049,13 +1065,14 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfun
         TRACE("-- idlist=%p (%s)\n", sei_tmp.lpIDList, debugstr_w(wszApplicationName));
     }
 
-    if (sei_tmp.fMask & (SEE_MASK_CLASSNAME | SEE_MASK_CLASSKEY))
+    if (sei_tmp.fMask & SEE_MASK_CLASSALL)
     {
 	/* launch a document by fileclass like 'WordPad.Document.1' */
         /* the Commandline contains 'c:\Path\wordpad.exe "%1"' */
         /* FIXME: szCommandline should not be of a fixed size. Fixed to 1024, MAX_PATH is way too short! */
-        HCR_GetExecuteCommandW((sei_tmp.fMask & SEE_MASK_CLASSKEY) ? sei_tmp.hkeyClass : NULL,
-                               (sei_tmp.fMask & SEE_MASK_CLASSNAME) ? sei_tmp.lpClass: NULL,
+        ULONG cmask=(sei_tmp.fMask & SEE_MASK_CLASSALL);
+        HCR_GetExecuteCommandW((cmask == SEE_MASK_CLASSKEY) ? sei_tmp.hkeyClass : NULL,
+                               (cmask == SEE_MASK_CLASSNAME) ? sei_tmp.lpClass: NULL,
                                (sei_tmp.lpVerb) ? sei_tmp.lpVerb : wszOpen,
                                wszParameters, sizeof(wszParameters)/sizeof(WCHAR));
 
@@ -1345,7 +1362,8 @@ HINSTANCE WINAPI ShellExecuteA(HWND hWnd, LPCSTR lpOperation,LPCSTR lpFile,
     HANDLE hProcess = 0;
 
     TRACE("%p,%s,%s,%s,%s,%d\n",
-           hWnd, lpOperation, lpFile, lpParameters, lpDirectory, iShowCmd);
+          hWnd, debugstr_a(lpOperation), debugstr_a(lpFile),
+          debugstr_a(lpParameters), debugstr_a(lpDirectory), iShowCmd);
 
     sei.cbSize = sizeof(sei);
     sei.fMask = 0;
@@ -1391,7 +1409,7 @@ BOOL WINAPI ShellExecuteExA (LPSHELLEXECUTEINFOA sei)
     if (sei->lpDirectory)
         seiW.lpDirectory = __SHCloneStrAtoW(&wDirectory, sei->lpDirectory);
 
-    if ((sei->fMask & SEE_MASK_CLASSNAME) && sei->lpClass)
+    if ((sei->fMask & SEE_MASK_CLASSALL) == SEE_MASK_CLASSNAME && sei->lpClass)
         seiW.lpClass = __SHCloneStrAtoW(&wClass, sei->lpClass);
     else
         seiW.lpClass = NULL;

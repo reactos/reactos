@@ -260,12 +260,12 @@
 @ stdcall Control_RunDLLA(ptr ptr str long)
 @ stub Control_RunDLLAsUserW
 @ stdcall Control_RunDLLW(ptr ptr wstr long)
-@ stdcall -private DllCanUnloadNow() SHELL32_DllCanUnloadNow
-@ stdcall -private DllGetClassObject(long long ptr) SHELL32_DllGetClassObject
-@ stdcall DllGetVersion(ptr)SHELL32_DllGetVersion
-@ stdcall DllInstall(long wstr)SHELL32_DllInstall
-@ stdcall -private DllRegisterServer() SHELL32_DllRegisterServer
-@ stdcall -private DllUnregisterServer() SHELL32_DllUnregisterServer
+@ stdcall -private DllCanUnloadNow()
+@ stdcall -private DllGetClassObject(ptr ptr ptr)
+@ stdcall -private DllGetVersion(ptr)
+@ stdcall -private DllInstall(long wstr)
+@ stdcall -private DllRegisterServer()
+@ stdcall -private DllUnregisterServer()
 @ stdcall DoEnvironmentSubstA(str str)
 @ stdcall DoEnvironmentSubstW(wstr wstr)
 @ stdcall DragAcceptFiles(long long)

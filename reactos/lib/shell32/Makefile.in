@@ -5,7 +5,7 @@ SRCDIR    = @srcdir@
 VPATH     = @srcdir@
 MODULE    = shell32.dll
 IMPORTLIB = libshell32.$(IMPLIBEXT)
-IMPORTS   = shlwapi comctl32 user32 gdi32 advapi32 kernel32
+IMPORTS   = shlwapi comctl32 user32 gdi32 advapi32 kernel32 ntdll
 DELAYIMPORTS = ole32
 EXTRALIBS = -luuid $(LIBUNICODE)
 
@@ -61,6 +61,7 @@ RC_BINARIES = \
 	folder.ico \
 	folder_open.ico \
 	mycomputer.ico \
+	mydocs.ico \
 	netdrive.ico \
 	netdrive2.ico \
 	printer.ico \

@@ -66,8 +66,11 @@ typedef struct {
 static const IShellFolder2Vtbl vt_ShellFolder2;
 static const IPersistFolder2Vtbl vt_PersistFolder2;
 
-#define _IPersistFolder2_Offset ((int)(&(((IGenericSFImpl*)0)->lpVtblPersistFolder2)))
-#define _ICOM_THIS_From_IPersistFolder2(class, name) class* This = (class*)(((char*)name)-_IPersistFolder2_Offset);
+static inline IGenericSFImpl *impl_from_IPersistFolder2( IPersistFolder2 *iface )
+{
+    return (IGenericSFImpl *)((char*)iface - FIELD_OFFSET(IGenericSFImpl, lpVtblPersistFolder2));
+}
+
 
 /*
   converts This to an interface pointer
@@ -855,7 +858,7 @@ static const IShellFolder2Vtbl vt_ShellFolder2 =
 static HRESULT WINAPI IMCFldr_PersistFolder2_QueryInterface (
                IPersistFolder2 * iface, REFIID iid, LPVOID * ppvObj)
 {
-    _ICOM_THIS_From_IPersistFolder2 (IGenericSFImpl, iface);
+    IGenericSFImpl *This = impl_from_IPersistFolder2(iface);
 
     TRACE ("(%p)\n", This);
 
@@ -867,7 +870,7 @@ static HRESULT WINAPI IMCFldr_PersistFolder2_QueryInterface (
  */
 static ULONG WINAPI IMCFldr_PersistFolder2_AddRef (IPersistFolder2 * iface)
 {
-    _ICOM_THIS_From_IPersistFolder2 (IGenericSFImpl, iface);
+    IGenericSFImpl *This = impl_from_IPersistFolder2(iface);
 
     TRACE ("(%p)->(count=%lu)\n", This, This->ref);
 
@@ -879,7 +882,7 @@ static ULONG WINAPI IMCFldr_PersistFolder2_AddRef (IPersistFolder2 * iface)
  */
 static ULONG WINAPI IMCFldr_PersistFolder2_Release (IPersistFolder2 * iface)
 {
-    _ICOM_THIS_From_IPersistFolder2 (IGenericSFImpl, iface);
+    IGenericSFImpl *This = impl_from_IPersistFolder2(iface);
 
     TRACE ("(%p)->(count=%lu)\n", This, This->ref);
 
@@ -892,7 +895,7 @@ static ULONG WINAPI IMCFldr_PersistFolder2_Release (IPersistFolder2 * iface)
 static HRESULT WINAPI IMCFldr_PersistFolder2_GetClassID (
                IPersistFolder2 * iface, CLSID * lpClassId)
 {
-    _ICOM_THIS_From_IPersistFolder2 (IGenericSFImpl, iface);
+    IGenericSFImpl *This = impl_from_IPersistFolder2(iface);
 
     TRACE ("(%p)\n", This);
 
@@ -911,7 +914,7 @@ static HRESULT WINAPI IMCFldr_PersistFolder2_GetClassID (
 static HRESULT WINAPI IMCFldr_PersistFolder2_Initialize (
                IPersistFolder2 * iface, LPCITEMIDLIST pidl)
 {
-    _ICOM_THIS_From_IPersistFolder2 (IGenericSFImpl, iface);
+    IGenericSFImpl *This = impl_from_IPersistFolder2(iface);
     TRACE ("(%p)->(%p)\n", This, pidl);
     return E_NOTIMPL;
 }
@@ -922,7 +925,7 @@ static HRESULT WINAPI IMCFldr_PersistFolder2_Initialize (
 static HRESULT WINAPI IMCFldr_PersistFolder2_GetCurFolder (
                IPersistFolder2 * iface, LPITEMIDLIST * pidl)
 {
-    _ICOM_THIS_From_IPersistFolder2 (IGenericSFImpl, iface);
+    IGenericSFImpl *This = impl_from_IPersistFolder2(iface);
 
     TRACE ("(%p)->(%p)\n", This, pidl);
 

@@ -407,24 +407,27 @@ BOOL SIC_Initialize(void)
 	  return(FALSE);
 	}
 
-       ShellSmallIconList = ImageList_Create(16,16,ILC_COLOR32|ILC_MASK,0,0x20);
-       ShellBigIconList = ImageList_Create(32,32,ILC_COLOR32|ILC_MASK,0,0x20);
+	ShellSmallIconList = ImageList_Create(16,16,ILC_COLOR32|ILC_MASK,0,0x20);
+	ShellBigIconList = ImageList_Create(32,32,ILC_COLOR32|ILC_MASK,0,0x20);
 
-       ImageList_SetBkColor(ShellSmallIconList, CLR_NONE);
-       ImageList_SetBkColor(ShellBigIconList, CLR_NONE);
+	ImageList_SetBkColor(ShellSmallIconList, CLR_NONE);
+	ImageList_SetBkColor(ShellBigIconList, CLR_NONE);
 
-	for (index=1; index<39; index++)
+	/*
+	 * Wine will extract and cache all shell32 icons here. That's because
+	 * they are unable to extract resources from their built-in DLLs.
+	 * We don't need that, but we still want to make sure that the very
+	 * first icon in the image lists is icon 1 from shell32.dll, since
+	 * that's the default icon.
+	 */
+	index = 1;
+	hSm = (HICON)LoadImageA(shell32_hInstance, MAKEINTRESOURCEA(index), IMAGE_ICON, cx_small, cy_small, LR_SHARED);
+	hLg = (HICON)LoadImageA(shell32_hInstance, MAKEINTRESOURCEA(index), IMAGE_ICON, cx_large, cy_large, LR_SHARED);
+
+	if(hSm)
 	{
-	  hSm = (HICON)LoadImageA(shell32_hInstance, MAKEINTRESOURCEA(index), IMAGE_ICON, cx_small, cy_small, LR_SHARED);
-	  hLg = (HICON)LoadImageA(shell32_hInstance, MAKEINTRESOURCEA(index), IMAGE_ICON, cx_large, cy_large, LR_SHARED);
-
-	  if(!hSm)
-	  {
-	    hSm = LoadImageA(shell32_hInstance, MAKEINTRESOURCEA(1), IMAGE_ICON, cx_small, cy_small, LR_SHARED);
-	    hLg = LoadImageA(shell32_hInstance, MAKEINTRESOURCEA(1), IMAGE_ICON, cx_large, cy_large, LR_SHARED);
-	  }
-         SIC_IconAppend (swShell32Name, index - 1, hSm, hLg, 0);
-         SIC_IconAppend (swShell32Name, -index, hSm, hLg, 0);
+          SIC_IconAppend (swShell32Name, index - 1, hSm, hLg, 0);
+          SIC_IconAppend (swShell32Name, -index, hSm, hLg, 0);
 	}
 
 	TRACE("hIconSmall=%p hIconBig=%p\n",ShellSmallIconList, ShellBigIconList);

@@ -104,20 +104,30 @@ typedef struct
 
 static const IShellViewVtbl svvt;
 static const IOleCommandTargetVtbl ctvt;
-#define _IOleCommandTarget_Offset ((int)(&(((IShellViewImpl*)0)->lpvtblOleCommandTarget)))
-#define _ICOM_THIS_From_IOleCommandTarget(class, name) class* This = (class*)(((char*)name)-_IOleCommandTarget_Offset);
-
 static const IDropTargetVtbl dtvt;
-#define _IDropTarget_Offset ((int)(&(((IShellViewImpl*)0)->lpvtblDropTarget)))
-#define _ICOM_THIS_From_IDropTarget(class, name) class* This = (class*)(((char*)name)-_IDropTarget_Offset);
-
 static const IDropSourceVtbl dsvt;
-#define _IDropSource_Offset ((int)(&(((IShellViewImpl*)0)->lpvtblDropSource)))
-#define _ICOM_THIS_From_IDropSource(class, name) class* This = (class*)(((char*)name)-_IDropSource_Offset);
-
 static const IViewObjectVtbl vovt;
-#define _IViewObject_Offset ((int)(&(((IShellViewImpl*)0)->lpvtblViewObject)))
-#define _ICOM_THIS_From_IViewObject(class, name) class* This = (class*)(((char*)name)-_IViewObject_Offset);
+
+
+static inline IShellViewImpl *impl_from_IOleCommandTarget( IOleCommandTarget *iface )
+{
+    return (IShellViewImpl *)((char*)iface - FIELD_OFFSET(IShellViewImpl, lpvtblOleCommandTarget));
+}
+
+static inline IShellViewImpl *impl_from_IDropTarget( IDropTarget *iface )
+{
+    return (IShellViewImpl *)((char*)iface - FIELD_OFFSET(IShellViewImpl, lpvtblDropTarget));
+}
+
+static inline IShellViewImpl *impl_from_IDropSource( IDropSource *iface )
+{
+    return (IShellViewImpl *)((char*)iface - FIELD_OFFSET(IShellViewImpl, lpvtblDropSource));
+}
+
+static inline IShellViewImpl *impl_from_IViewObject( IViewObject *iface )
+{
+    return (IShellViewImpl *)((char*)iface - FIELD_OFFSET(IShellViewImpl, lpvtblViewObject));
+}
 
 /* ListView Header ID's */
 #define LISTVIEW_COLUMN_NAME 0
@@ -1255,6 +1265,16 @@ static LRESULT ShellView_OnNotify(IShellViewImpl * This, UINT CtlID, LPNMHDR lpn
 	    TRACE("-- NM_RCLICK %p\n",This);
 	    break;	    
 
+          case NM_DBLCLK:
+            TRACE("-- NM_DBLCLK %p\n",This);
+            if (OnDefaultCommand(This) != S_OK) ShellView_OpenSelectedItems(This);
+            break;
+
+          case NM_RETURN:
+            TRACE("-- NM_DBLCLK %p\n",This);
+            if (OnDefaultCommand(This) != S_OK) ShellView_OpenSelectedItems(This);
+            break;
+
 	  case HDN_ENDTRACKA:
 	    TRACE("-- HDN_ENDTRACKA %p\n",This);
 	    /*nColumn1 = ListView_GetColumnWidth(This->hWndList, 0);
@@ -1277,7 +1297,6 @@ static LRESULT ShellView_OnNotify(IShellViewImpl * This, UINT CtlID, LPNMHDR lpn
 	  case LVN_ITEMACTIVATE:
 	    TRACE("-- LVN_ITEMACTIVATE %p\n",This);
 	    OnStateChange(This, CDBOSC_SELCHANGE);  /* the browser will get the IDataObject now */
-	    ShellView_DoContextMenu(This, 0, 0, TRUE);
 	    break;
 
 	  case LVN_COLUMNCLICK:
@@ -1487,6 +1506,13 @@ static LRESULT ShellView_OnNotify(IShellViewImpl * This, UINT CtlID, LPNMHDR lpn
 		/* free pidl array memory */
 		HeapFree(GetProcessHeap(), 0, pItems);
               }
+
+              /* Initiate a refresh */
+              else if(plvKeyDown->wVKey == VK_F5)
+              {
+		IShellView_Refresh((IShellView*)This);
+              }
+
               else
 		FIXME("LVN_KEYDOWN key=0x%08x\n",plvKeyDown->wVKey);
 	    }
@@ -2017,7 +2043,7 @@ static HRESULT WINAPI ISVOleCmdTarget_QueryInterface(
 	REFIID			iid,
 	LPVOID*			ppvObj)
 {
-	_ICOM_THIS_From_IOleCommandTarget(IShellViewImpl, iface);
+	IShellViewImpl *This = impl_from_IOleCommandTarget(iface);
 
 	return IShellFolder_QueryInterface((IShellFolder*)This, iid, ppvObj);
 }
@@ -2028,7 +2054,7 @@ static HRESULT WINAPI ISVOleCmdTarget_QueryInterface(
 static ULONG WINAPI ISVOleCmdTarget_AddRef(
 	IOleCommandTarget *	iface)
 {
-	_ICOM_THIS_From_IOleCommandTarget(IShellFolder, iface);
+	IShellViewImpl *This = impl_from_IOleCommandTarget(iface);
 
 	return IShellFolder_AddRef((IShellFolder*)This);
 }
@@ -2039,7 +2065,7 @@ static ULONG WINAPI ISVOleCmdTarget_AddRef(
 static ULONG WINAPI ISVOleCmdTarget_Release(
 	IOleCommandTarget *	iface)
 {
-	_ICOM_THIS_From_IOleCommandTarget(IShellViewImpl, iface);
+	IShellViewImpl *This = impl_from_IOleCommandTarget(iface);
 
 	return IShellFolder_Release((IShellFolder*)This);
 }
@@ -2055,7 +2081,7 @@ static HRESULT WINAPI ISVOleCmdTarget_QueryStatus(
 	OLECMDTEXT* pCmdText)
 {
     UINT i;
-    _ICOM_THIS_From_IOleCommandTarget(IShellViewImpl, iface);
+    IShellViewImpl *This = impl_from_IOleCommandTarget(iface);
 
     FIXME("(%p)->(%p(%s) 0x%08lx %p %p\n",
               This, pguidCmdGroup, debugstr_guid(pguidCmdGroup), cCmds, prgCmds, pCmdText);
@@ -2083,7 +2109,7 @@ static HRESULT WINAPI ISVOleCmdTarget_Exec(
 	VARIANT* pvaIn,
 	VARIANT* pvaOut)
 {
-	_ICOM_THIS_From_IOleCommandTarget(IShellViewImpl, iface);
+	IShellViewImpl *This = impl_from_IOleCommandTarget(iface);
 
 	FIXME("(%p)->(\n\tTarget GUID:%s Command:0x%08lx Opt:0x%08lx %p %p)\n",
               This, debugstr_guid(pguidCmdGroup), nCmdID, nCmdexecopt, pvaIn, pvaOut);
@@ -2118,7 +2144,7 @@ static HRESULT WINAPI ISVDropTarget_QueryInterface(
 	REFIID riid,
 	LPVOID *ppvObj)
 {
-	_ICOM_THIS_From_IDropTarget(IShellViewImpl, iface);
+	IShellViewImpl *This = impl_from_IDropTarget(iface);
 
 	TRACE("(%p)->(\n\tIID:\t%s,%p)\n",This,debugstr_guid(riid),ppvObj);
 
@@ -2127,7 +2153,7 @@ static HRESULT WINAPI ISVDropTarget_QueryInterface(
 
 static ULONG WINAPI ISVDropTarget_AddRef( IDropTarget *iface)
 {
-	_ICOM_THIS_From_IDropTarget(IShellViewImpl, iface);
+	IShellViewImpl *This = impl_from_IDropTarget(iface);
 
 	TRACE("(%p)->(count=%lu)\n",This,This->ref);
 
@@ -2136,7 +2162,7 @@ static ULONG WINAPI ISVDropTarget_AddRef( IDropTarget *iface)
 
 static ULONG WINAPI ISVDropTarget_Release( IDropTarget *iface)
 {
-	_ICOM_THIS_From_IDropTarget(IShellViewImpl, iface);
+	IShellViewImpl *This = impl_from_IDropTarget(iface);
 
 	TRACE("(%p)->(count=%lu)\n",This,This->ref);
 
@@ -2151,7 +2177,7 @@ static HRESULT WINAPI ISVDropTarget_DragEnter(
 	DWORD		*pdwEffect)
 {
 
-	_ICOM_THIS_From_IDropTarget(IShellViewImpl, iface);
+	IShellViewImpl *This = impl_from_IDropTarget(iface);
 
 	FIXME("Stub: This=%p, DataObject=%p\n",This,pDataObject);
 
@@ -2164,7 +2190,7 @@ static HRESULT WINAPI ISVDropTarget_DragOver(
 	POINTL		pt,
 	DWORD		*pdwEffect)
 {
-	_ICOM_THIS_From_IDropTarget(IShellViewImpl, iface);
+	IShellViewImpl *This = impl_from_IDropTarget(iface);
 
 	FIXME("Stub: This=%p\n",This);
 
@@ -2174,7 +2200,7 @@ static HRESULT WINAPI ISVDropTarget_DragOver(
 static HRESULT WINAPI ISVDropTarget_DragLeave(
 	IDropTarget	*iface)
 {
-	_ICOM_THIS_From_IDropTarget(IShellViewImpl, iface);
+	IShellViewImpl *This = impl_from_IDropTarget(iface);
 
 	FIXME("Stub: This=%p\n",This);
 
@@ -2188,7 +2214,7 @@ static HRESULT WINAPI ISVDropTarget_Drop(
 	POINTL		pt,
 	DWORD		*pdwEffect)
 {
-	_ICOM_THIS_From_IDropTarget(IShellViewImpl, iface);
+	IShellViewImpl *This = impl_from_IDropTarget(iface);
 
 	FIXME("Stub: This=%p\n",This);
 
@@ -2215,7 +2241,7 @@ static HRESULT WINAPI ISVDropSource_QueryInterface(
 	REFIID riid,
 	LPVOID *ppvObj)
 {
-	_ICOM_THIS_From_IDropSource(IShellViewImpl, iface);
+	IShellViewImpl *This = impl_from_IDropSource(iface);
 
 	TRACE("(%p)->(\n\tIID:\t%s,%p)\n",This,debugstr_guid(riid),ppvObj);
 
@@ -2224,7 +2250,7 @@ static HRESULT WINAPI ISVDropSource_QueryInterface(
 
 static ULONG WINAPI ISVDropSource_AddRef( IDropSource *iface)
 {
-	_ICOM_THIS_From_IDropSource(IShellViewImpl, iface);
+	IShellViewImpl *This = impl_from_IDropSource(iface);
 
 	TRACE("(%p)->(count=%lu)\n",This,This->ref);
 
@@ -2233,7 +2259,7 @@ static ULONG WINAPI ISVDropSource_AddRef( IDropSource *iface)
 
 static ULONG WINAPI ISVDropSource_Release( IDropSource *iface)
 {
-	_ICOM_THIS_From_IDropSource(IShellViewImpl, iface);
+	IShellViewImpl *This = impl_from_IDropSource(iface);
 
 	TRACE("(%p)->(count=%lu)\n",This,This->ref);
 
@@ -2244,7 +2270,7 @@ static HRESULT WINAPI ISVDropSource_QueryContinueDrag(
 	BOOL fEscapePressed,
 	DWORD grfKeyState)
 {
-	_ICOM_THIS_From_IDropSource(IShellViewImpl, iface);
+	IShellViewImpl *This = impl_from_IDropSource(iface);
 	TRACE("(%p)\n",This);
 
 	if (fEscapePressed)
@@ -2259,7 +2285,7 @@ static HRESULT WINAPI ISVDropSource_GiveFeedback(
 	IDropSource *iface,
 	DWORD dwEffect)
 {
-	_ICOM_THIS_From_IDropSource(IShellViewImpl, iface);
+	IShellViewImpl *This = impl_from_IDropSource(iface);
 	TRACE("(%p)\n",This);
 
 	return DRAGDROP_S_USEDEFAULTCURSORS;
@@ -2282,7 +2308,7 @@ static HRESULT WINAPI ISVViewObject_QueryInterface(
 	REFIID riid,
 	LPVOID *ppvObj)
 {
-	_ICOM_THIS_From_IViewObject(IShellViewImpl, iface);
+	IShellViewImpl *This = impl_from_IViewObject(iface);
 
 	TRACE("(%p)->(\n\tIID:\t%s,%p)\n",This,debugstr_guid(riid),ppvObj);
 
@@ -2291,7 +2317,7 @@ static HRESULT WINAPI ISVViewObject_QueryInterface(
 
 static ULONG WINAPI ISVViewObject_AddRef( IViewObject *iface)
 {
-	_ICOM_THIS_From_IViewObject(IShellViewImpl, iface);
+	IShellViewImpl *This = impl_from_IViewObject(iface);
 
 	TRACE("(%p)->(count=%lu)\n",This,This->ref);
 
@@ -2300,7 +2326,7 @@ static ULONG WINAPI ISVViewObject_AddRef( IViewObject *iface)
 
 static ULONG WINAPI ISVViewObject_Release( IViewObject *iface)
 {
-	_ICOM_THIS_From_IViewObject(IShellViewImpl, iface);
+	IShellViewImpl *This = impl_from_IViewObject(iface);
 
 	TRACE("(%p)->(count=%lu)\n",This,This->ref);
 
@@ -2321,7 +2347,7 @@ static HRESULT WINAPI ISVViewObject_Draw(
 	ULONG_PTR dwContinue)
 {
 
-	_ICOM_THIS_From_IViewObject(IShellViewImpl, iface);
+	IShellViewImpl *This = impl_from_IViewObject(iface);
 
 	FIXME("Stub: This=%p\n",This);
 
@@ -2337,7 +2363,7 @@ static HRESULT WINAPI ISVViewObject_GetColorSet(
 	LOGPALETTE** ppColorSet)
 {
 
-	_ICOM_THIS_From_IViewObject(IShellViewImpl, iface);
+	IShellViewImpl *This = impl_from_IViewObject(iface);
 
 	FIXME("Stub: This=%p\n",This);
 
@@ -2351,7 +2377,7 @@ static HRESULT WINAPI ISVViewObject_Freeze(
 	DWORD* pdwFreeze)
 {
 
-	_ICOM_THIS_From_IViewObject(IShellViewImpl, iface);
+	IShellViewImpl *This = impl_from_IViewObject(iface);
 
 	FIXME("Stub: This=%p\n",This);
 
@@ -2362,7 +2388,7 @@ static HRESULT WINAPI ISVViewObject_Unfreeze(
 	DWORD dwFreeze)
 {
 
-	_ICOM_THIS_From_IViewObject(IShellViewImpl, iface);
+	IShellViewImpl *This = impl_from_IViewObject(iface);
 
 	FIXME("Stub: This=%p\n",This);
 
@@ -2375,7 +2401,7 @@ static HRESULT WINAPI ISVViewObject_SetAdvise(
 	IAdviseSink* pAdvSink)
 {
 
-	_ICOM_THIS_From_IViewObject(IShellViewImpl, iface);
+	IShellViewImpl *This = impl_from_IViewObject(iface);
 
 	FIXME("partial stub: %p %08lx %08lx %p\n",
               This, aspects, advf, pAdvSink);
@@ -2395,7 +2421,7 @@ static HRESULT WINAPI ISVViewObject_GetAdvise(
 	IAdviseSink** ppAdvSink)
 {
 
-	_ICOM_THIS_From_IViewObject(IShellViewImpl, iface);
+	IShellViewImpl *This = impl_from_IViewObject(iface);
 
 	TRACE("This=%p pAspects=%p pAdvf=%p ppAdvSink=%p\n",
               This, pAspects, pAdvf, ppAdvSink);
