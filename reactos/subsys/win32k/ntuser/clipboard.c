@@ -47,7 +47,7 @@ IntGetClipboardFormatName(UINT format, PUNICODE_STRING FormatName)
 {
 
    return IntGetAtomName((RTL_ATOM)format, FormatName->Buffer,
-      FormatName->MaximumLength);
+                         FormatName->MaximumLength);
 }
 
 UINT FASTCALL
@@ -57,7 +57,7 @@ IntEnumClipboardFormats(UINT format)
    CHECK_LOCK
 
    if (!hCBData)
-       return FALSE;
+      return FALSE;
    //UNIMPLEMENTED;
    return 1;
 }
@@ -114,12 +114,12 @@ NtUserEmptyClipboard(VOID)
 {
    CHECK_LOCK
 
-//   if (!hCBData)
-//       return FALSE;
+   //   if (!hCBData)
+   //       return FALSE;
 
-//   FIXME!
-//   GlobalUnlock(hCBData);
-//   GlobalFree(hCBData);
+   //   FIXME!
+   //   GlobalUnlock(hCBData);
+   //   GlobalFree(hCBData);
    hCBData = NULL;
    uCBFormat = 0;
    ClipboardWindow = tempClipboardWindow;
@@ -133,90 +133,90 @@ NtUserGetClipboardData(UINT uFormat, DWORD Unknown1)
    CHECK_LOCK
 
    if ((uFormat==1 && uCBFormat==13) || (uFormat==13 && uCBFormat==1))
-       uCBFormat = uFormat;
+      uCBFormat = uFormat;
 
    if (uFormat != uCBFormat)
-       return FALSE;
+      return FALSE;
 
    return hCBData;
 }
 
 INT STDCALL
 NtUserGetClipboardFormatName(UINT format, PUNICODE_STRING FormatName,
-   INT cchMaxCount)
+                             INT cchMaxCount)
 {
-  NTSTATUS Status;
-  PWSTR Buf;
-  UNICODE_STRING SafeFormatName, BufFormatName;
-  ULONG Ret;
+   NTSTATUS Status;
+   PWSTR Buf;
+   UNICODE_STRING SafeFormatName, BufFormatName;
+   ULONG Ret;
 
-  if((cchMaxCount < 1) || !FormatName)
-  {
-    SetLastWin32Error(ERROR_INVALID_PARAMETER);
-    return 0;
-  }
+   if((cchMaxCount < 1) || !FormatName)
+   {
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return 0;
+   }
 
-  /* copy the FormatName UNICODE_STRING structure */
-  Status = MmCopyFromCaller(&SafeFormatName, FormatName, sizeof(UNICODE_STRING));
-  if(!NT_SUCCESS(Status))
-  {
-    SetLastNtError(Status);
-    return 0;
-  }
+   /* copy the FormatName UNICODE_STRING structure */
+   Status = MmCopyFromCaller(&SafeFormatName, FormatName, sizeof(UNICODE_STRING));
+   if(!NT_SUCCESS(Status))
+   {
+      SetLastNtError(Status);
+      return 0;
+   }
 
-  /* Allocate memory for the string */
-  Buf = ExAllocatePoolWithTag(PagedPool, cchMaxCount * sizeof(WCHAR), TAG_STRING);
-  if(!Buf)
-  {
-    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-    return 0;
-  }
+   /* Allocate memory for the string */
+   Buf = ExAllocatePoolWithTag(PagedPool, cchMaxCount * sizeof(WCHAR), TAG_STRING);
+   if(!Buf)
+   {
+      SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+      return 0;
+   }
 
-  /* Setup internal unicode string */
-  BufFormatName.Length = 0;
-  BufFormatName.MaximumLength = min(cchMaxCount * sizeof(WCHAR), SafeFormatName.MaximumLength);
-  BufFormatName.Buffer = Buf;
+   /* Setup internal unicode string */
+   BufFormatName.Length = 0;
+   BufFormatName.MaximumLength = min(cchMaxCount * sizeof(WCHAR), SafeFormatName.MaximumLength);
+   BufFormatName.Buffer = Buf;
 
-  if(BufFormatName.MaximumLength < sizeof(WCHAR))
-  {
-    ExFreePool(Buf);
-    SetLastWin32Error(ERROR_INVALID_PARAMETER);
-    return 0;
-  }
+   if(BufFormatName.MaximumLength < sizeof(WCHAR))
+   {
+      ExFreePool(Buf);
+      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      return 0;
+   }
 
-  if (format >= 0xC000)
-  {
-     Ret = IntGetClipboardFormatName(format, &BufFormatName);
-  }
-  else
-  {
-     SetLastNtError(NO_ERROR);
-     return 0;
-  }
+   if (format >= 0xC000)
+   {
+      Ret = IntGetClipboardFormatName(format, &BufFormatName);
+   }
+   else
+   {
+      SetLastNtError(NO_ERROR);
+      return 0;
+   }
 
-  /* copy the UNICODE_STRING buffer back to the user */
-  Status = MmCopyToCaller(SafeFormatName.Buffer, BufFormatName.Buffer, BufFormatName.MaximumLength);
-  if(!NT_SUCCESS(Status))
-  {
-    ExFreePool(Buf);
-    SetLastNtError(Status);
-    return 0;
-  }
+   /* copy the UNICODE_STRING buffer back to the user */
+   Status = MmCopyToCaller(SafeFormatName.Buffer, BufFormatName.Buffer, BufFormatName.MaximumLength);
+   if(!NT_SUCCESS(Status))
+   {
+      ExFreePool(Buf);
+      SetLastNtError(Status);
+      return 0;
+   }
 
-  BufFormatName.MaximumLength = SafeFormatName.MaximumLength;
-  BufFormatName.Buffer = SafeFormatName.Buffer;
+   BufFormatName.MaximumLength = SafeFormatName.MaximumLength;
+   BufFormatName.Buffer = SafeFormatName.Buffer;
 
-  /* update the UNICODE_STRING structure (only the Length member should change) */
-  Status = MmCopyToCaller(FormatName, &BufFormatName, sizeof(UNICODE_STRING));
-  if(!NT_SUCCESS(Status))
-  {
-    ExFreePool(Buf);
-    SetLastNtError(Status);
-    return 0;
-  }
+   /* update the UNICODE_STRING structure (only the Length member should change) */
+   Status = MmCopyToCaller(FormatName, &BufFormatName, sizeof(UNICODE_STRING));
+   if(!NT_SUCCESS(Status))
+   {
+      ExFreePool(Buf);
+      SetLastNtError(Status);
+      return 0;
+   }
 
-  ExFreePool(Buf);
-  return Ret;
+   ExFreePool(Buf);
+   return Ret;
 }
 
 HWND STDCALL
@@ -251,16 +251,17 @@ NtUserIsClipboardFormatAvailable(UINT format)
 {
    //UNIMPLEMENTED
 
-   if (format != 1 && format != 13) {
+   if (format != 1 && format != 13)
+   {
       DbgPrint("Clipboard Format unavailable (%d)\n", format);
       return FALSE;
    }
 
    if ((format==1 && uCBFormat==13) || (format==13 && uCBFormat==1))
-       uCBFormat = format;
+      uCBFormat = format;
 
    if (format != uCBFormat)
-     return FALSE;
+      return FALSE;
 
    return TRUE;
 }
@@ -269,48 +270,49 @@ NtUserIsClipboardFormatAvailable(UINT format)
 HANDLE STDCALL
 NtUserSetClipboardData(UINT uFormat, HANDLE hMem, DWORD Unknown2)
 {
-//    LPVOID pMem;
-    CHECK_LOCK
+   //    LPVOID pMem;
+   CHECK_LOCK
 
 
-   if (uFormat != 1 && uFormat != 13) {
+   if (uFormat != 1 && uFormat != 13)
+   {
       DbgPrint("Clipboard unsupported format (%d)\n", uFormat);
       return FALSE;
    }
 
-    if (hMem)
-    {
-        uCBFormat = uFormat;
-        hCBData = hMem;
-        //pMem = GlobalLock(hMem);
-        /*
-        switch (uFormat) {
-            default:
-                DbgPrint("Clipboard unsupported format (%d)\n", uFormat);
-                return FALSE;
-            case CF_TEXT:             // 1
-                break;
-            case CF_UNICODETEXT:      // 13
-                break;
-            case CF_BITMAP:           // 2
-                break;
-            case CF_OEMTEXT:          // 7
-                break;
-        } */
-    }
-    else
-    {
-    //the window provides data in the specified format
-    }
-    return hMem;
+   if (hMem)
+   {
+      uCBFormat = uFormat;
+      hCBData = hMem;
+      //pMem = GlobalLock(hMem);
+      /*
+      switch (uFormat) {
+          default:
+              DbgPrint("Clipboard unsupported format (%d)\n", uFormat);
+              return FALSE;
+          case CF_TEXT:             // 1
+              break;
+          case CF_UNICODETEXT:      // 13
+              break;
+          case CF_BITMAP:           // 2
+              break;
+          case CF_OEMTEXT:          // 7
+              break;
+      } */
+   }
+   else
+   {
+      //the window provides data in the specified format
+   }
+   return hMem;
 }
 
 HWND STDCALL
 NtUserSetClipboardViewer(HWND hWndNewViewer)
 {
-    HWND hwndPrev = 0;
-    DbgPrint("NtUserSetClipboardViewer is UNIMPLEMENTED (%p): returning %p\n", hWndNewViewer, hwndPrev);
-    return hwndPrev;
+   HWND hwndPrev = 0;
+   DbgPrint("NtUserSetClipboardViewer is UNIMPLEMENTED (%p): returning %p\n", hWndNewViewer, hwndPrev);
+   return hwndPrev;
 }
 
 /* EOF */

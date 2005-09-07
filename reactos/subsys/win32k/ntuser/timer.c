@@ -58,110 +58,110 @@ static ULONG          HintIndex = 0;
 UINT_PTR FASTCALL
 IntSetTimer(HWND Wnd, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, BOOL SystemTimer)
 {
-  PWINDOW_OBJECT WindowObject;
-  UINT_PTR Ret = 0;
+   PWINDOW_OBJECT WindowObject;
+   UINT_PTR Ret = 0;
 
-  DPRINT("IntSetTimer wnd %x id %p elapse %u timerproc %p systemtimer %s\n",
-         Wnd, IDEvent, Elapse, TimerFunc, SystemTimer ? "TRUE" : "FALSE");
+   DPRINT("IntSetTimer wnd %x id %p elapse %u timerproc %p systemtimer %s\n",
+          Wnd, IDEvent, Elapse, TimerFunc, SystemTimer ? "TRUE" : "FALSE");
 
-  if ((Wnd == NULL) && ! SystemTimer)
-    {
+   if ((Wnd == NULL) && ! SystemTimer)
+   {
       DPRINT("Window-less timer\n");
       /* find a free, window-less timer id */
       IntLockWindowlessTimerBitmap();
       IDEvent = RtlFindClearBitsAndSet(&WindowLessTimersBitMap, 1, HintIndex);
 
       if (IDEvent == (UINT_PTR) -1)
-        {
-          IntUnlockWindowlessTimerBitmap();
-          DPRINT1("Unable to find a free window-less timer id\n");
-          SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
-          return 0;
-        }
+      {
+         IntUnlockWindowlessTimerBitmap();
+         DPRINT1("Unable to find a free window-less timer id\n");
+         SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+         return 0;
+      }
 
       HintIndex = ++IDEvent;
       IntUnlockWindowlessTimerBitmap();
       Ret = IDEvent;
-    }
-  else
-    {
+   }
+   else
+   {
       WindowObject = IntGetWindowObject(Wnd);
       if (! WindowObject)
-        {
-          DPRINT1("Invalid window handle\n");
-          SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-          return 0;
-        }
+      {
+         DPRINT1("Invalid window handle\n");
+         SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+         return 0;
+      }
 
       if (WindowObject->OwnerThread->ThreadsProcess != PsGetCurrentProcess())
-        {
-          IntReleaseWindowObject(WindowObject);
-          DPRINT1("Trying to set timer for window in another process (shatter attack?)\n");
-          SetLastWin32Error(ERROR_ACCESS_DENIED);
-          return 0;
-        }
+      {
+         IntReleaseWindowObject(WindowObject);
+         DPRINT1("Trying to set timer for window in another process (shatter attack?)\n");
+         SetLastWin32Error(ERROR_ACCESS_DENIED);
+         return 0;
+      }
       IntReleaseWindowObject(WindowObject);
       Ret = IDEvent;
-    }
+   }
 
-  #if 1
+#if 1
 
-  /* Win NT/2k/XP */
-  if (Elapse > 0x7fffffff)
-    {
+   /* Win NT/2k/XP */
+   if (Elapse > 0x7fffffff)
+   {
       DPRINT("Adjusting uElapse\n");
       Elapse = 1;
-    }
+   }
 
-  #else
+#else
 
-  /* Win Server 2003 */
-  if (Elapse > 0x7fffffff)
-    {
+   /* Win Server 2003 */
+   if (Elapse > 0x7fffffff)
+   {
       DPRINT("Adjusting uElapse\n");
       Elapse = 0x7fffffff;
-    }
+   }
 
-  #endif
+#endif
 
-  /* Win 2k/XP */
-  if (Elapse < 10)
-    {
+   /* Win 2k/XP */
+   if (Elapse < 10)
+   {
       DPRINT("Adjusting uElapse\n");
       Elapse = 10;
-    }
+   }
 
-  if (! MsqSetTimer(PsGetWin32Thread()->MessageQueue, Wnd,
-                    IDEvent, Elapse, TimerFunc,
-                    SystemTimer ? WM_SYSTIMER : WM_TIMER))
-    {
+   if (! MsqSetTimer(PsGetWin32Thread()->MessageQueue, Wnd,
+                     IDEvent, Elapse, TimerFunc,
+                     SystemTimer ? WM_SYSTIMER : WM_TIMER))
+   {
       DPRINT1("Failed to set timer in message queue\n");
       SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
       return 0;
-    }
+   }
 
 
-  return Ret;
+   return Ret;
 }
 
 
 BOOL FASTCALL
 IntKillTimer(HWND Wnd, UINT_PTR IDEvent, BOOL SystemTimer)
 {
-  DPRINT("IntKillTimer wnd %x id %p systemtimer %s\n",
-         Wnd, IDEvent, SystemTimer ? "TRUE" : "FALSE");
+   DPRINT("IntKillTimer wnd %x id %p systemtimer %s\n",
+          Wnd, IDEvent, SystemTimer ? "TRUE" : "FALSE");
 
-  if (! MsqKillTimer(PsGetWin32Thread()->MessageQueue, Wnd,
-                     IDEvent, SystemTimer ? WM_SYSTIMER : WM_TIMER))
-    {
+   if (! MsqKillTimer(PsGetWin32Thread()->MessageQueue, Wnd,
+                      IDEvent, SystemTimer ? WM_SYSTIMER : WM_TIMER))
+   {
       DPRINT1("Unable to locate timer in message queue\n");
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return FALSE;
-    }
+   }
 
-  /* window-less timer? */
-  if ((Wnd == NULL) && ! SystemTimer)
-    {
+   /* window-less timer? */
+   if ((Wnd == NULL) && ! SystemTimer)
+   {
       /* Release the id */
       IntLockWindowlessTimerBitmap();
 
@@ -169,28 +169,28 @@ IntKillTimer(HWND Wnd, UINT_PTR IDEvent, BOOL SystemTimer)
       RtlClearBits(&WindowLessTimersBitMap, IDEvent - 1, 1);
 
       IntUnlockWindowlessTimerBitmap();
-    }
+   }
 
-  return TRUE;
+   return TRUE;
 }
 
 NTSTATUS FASTCALL
 InitTimerImpl(VOID)
 {
-  ULONG BitmapBytes;
+   ULONG BitmapBytes;
 
-  ExInitializeFastMutex(&Mutex);
+   ExInitializeFastMutex(&Mutex);
 
-  BitmapBytes = ROUND_UP(NUM_WINDOW_LESS_TIMERS, sizeof(ULONG) * 8) / 8;
-  WindowLessTimersBitMapBuffer = ExAllocatePoolWithTag(PagedPool, BitmapBytes, TAG_TIMERBMP);
-  RtlInitializeBitMap(&WindowLessTimersBitMap,
-                      WindowLessTimersBitMapBuffer,
-                      BitmapBytes * 8);
+   BitmapBytes = ROUND_UP(NUM_WINDOW_LESS_TIMERS, sizeof(ULONG) * 8) / 8;
+   WindowLessTimersBitMapBuffer = ExAllocatePoolWithTag(PagedPool, BitmapBytes, TAG_TIMERBMP);
+   RtlInitializeBitMap(&WindowLessTimersBitMap,
+                       WindowLessTimersBitMapBuffer,
+                       BitmapBytes * 8);
 
-  /* yes we need this, since ExAllocatePool isn't supposed to zero out allocated memory */
-  RtlClearAllBits(&WindowLessTimersBitMap);
+   /* yes we need this, since ExAllocatePool isn't supposed to zero out allocated memory */
+   RtlClearAllBits(&WindowLessTimersBitMap);
 
-  return STATUS_SUCCESS;
+   return STATUS_SUCCESS;
 }
 
 
@@ -198,19 +198,19 @@ UINT_PTR
 STDCALL
 NtUserSetTimer
 (
- HWND hWnd,
- UINT_PTR nIDEvent,
- UINT uElapse,
- TIMERPROC lpTimerFunc
+   HWND hWnd,
+   UINT_PTR nIDEvent,
+   UINT uElapse,
+   TIMERPROC lpTimerFunc
 )
 {
    DECLARE_RETURN(UINT_PTR);
 
    DPRINT("Enter NtUserSetTimer\n");
    UserEnterExclusive();
-   
+
    RETURN(IntSetTimer(hWnd, nIDEvent, uElapse, lpTimerFunc, FALSE));
-   
+
 CLEANUP:
    DPRINT("Leave NtUserSetTimer, ret=%i\n", _ret_);
    UserLeave();
@@ -222,17 +222,17 @@ BOOL
 STDCALL
 NtUserKillTimer
 (
- HWND hWnd,
- UINT_PTR uIDEvent
+   HWND hWnd,
+   UINT_PTR uIDEvent
 )
 {
    DECLARE_RETURN(BOOL);
 
    DPRINT("Enter NtUserKillTimer\n");
    UserEnterExclusive();
-   
+
    RETURN(IntKillTimer(hWnd, uIDEvent, FALSE));
-   
+
 CLEANUP:
    DPRINT("Leave NtUserKillTimer, ret=%i\n", _ret_);
    UserLeave();
@@ -243,19 +243,19 @@ CLEANUP:
 UINT_PTR
 STDCALL
 NtUserSetSystemTimer(
- HWND hWnd,
- UINT_PTR nIDEvent,
- UINT uElapse,
- TIMERPROC lpTimerFunc
+   HWND hWnd,
+   UINT_PTR nIDEvent,
+   UINT uElapse,
+   TIMERPROC lpTimerFunc
 )
 {
    DECLARE_RETURN(UINT_PTR);
 
    DPRINT("Enter NtUserSetSystemTimer\n");
    UserEnterExclusive();
-   
+
    RETURN(IntSetTimer(hWnd, nIDEvent, uElapse, lpTimerFunc, TRUE));
-   
+
 CLEANUP:
    DPRINT("Leave NtUserSetSystemTimer, ret=%i\n", _ret_);
    UserLeave();
@@ -266,17 +266,17 @@ CLEANUP:
 BOOL
 STDCALL
 NtUserKillSystemTimer(
- HWND hWnd,
- UINT_PTR uIDEvent
+   HWND hWnd,
+   UINT_PTR uIDEvent
 )
 {
    DECLARE_RETURN(BOOL);
 
    DPRINT("Enter NtUserKillSystemTimer\n");
    UserEnterExclusive();
-   
+
    RETURN(IntKillTimer(hWnd, uIDEvent, TRUE));
-   
+
 CLEANUP:
    DPRINT("Leave NtUserKillSystemTimer, ret=%i\n", _ret_);
    UserLeave();

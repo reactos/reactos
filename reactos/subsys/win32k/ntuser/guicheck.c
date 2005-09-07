@@ -48,9 +48,9 @@ static FAST_MUTEX GuiSwitchLock;
 static BOOL FASTCALL
 co_AddGuiApp(PW32PROCESS W32Data)
 {
-  W32Data->Flags |= W32PF_CREATEDWINORDC;
-  if (InterlockedIncrement(&NrGuiAppsRunning) == 1)
-    {
+   W32Data->Flags |= W32PF_CREATEDWINORDC;
+   if (InterlockedIncrement(&NrGuiAppsRunning) == 1)
+   {
       BOOL Initialized;
 
       ExAcquireFastMutex(&GuiSwitchLock);
@@ -58,89 +58,89 @@ co_AddGuiApp(PW32PROCESS W32Data)
       ExReleaseFastMutex(&GuiSwitchLock);
 
       if (!Initialized)
-        {
-          W32Data->Flags &= ~W32PF_CREATEDWINORDC;
-          InterlockedDecrement(&NrGuiAppsRunning);
-          return FALSE;
-        }
-    }
-  return TRUE;
+      {
+         W32Data->Flags &= ~W32PF_CREATEDWINORDC;
+         InterlockedDecrement(&NrGuiAppsRunning);
+         return FALSE;
+      }
+   }
+   return TRUE;
 }
 
 static void FASTCALL
 RemoveGuiApp(PW32PROCESS W32Data)
 {
-  W32Data->Flags &= ~W32PF_CREATEDWINORDC;
-  if (InterlockedDecrement(&NrGuiAppsRunning) == 0)
-    {
+   W32Data->Flags &= ~W32PF_CREATEDWINORDC;
+   if (InterlockedDecrement(&NrGuiAppsRunning) == 0)
+   {
       ExAcquireFastMutex(&GuiSwitchLock);
       IntEndDesktopGraphics();
       ExReleaseFastMutex(&GuiSwitchLock);
-    }
+   }
 }
 
 BOOL FASTCALL
 co_IntGraphicsCheck(BOOL Create)
 {
-  PW32PROCESS W32Data;
+   PW32PROCESS W32Data;
 
-  W32Data = PsGetWin32Process();
-  if (Create)
-    {
+   W32Data = PsGetWin32Process();
+   if (Create)
+   {
       if (! (W32Data->Flags & W32PF_CREATEDWINORDC) && ! (W32Data->Flags & W32PF_MANUALGUICHECK))
-        {
-          return co_AddGuiApp(W32Data);
-        }
-    }
-  else
-    {
+      {
+         return co_AddGuiApp(W32Data);
+      }
+   }
+   else
+   {
       if ((W32Data->Flags & W32PF_CREATEDWINORDC) && ! (W32Data->Flags & W32PF_MANUALGUICHECK))
-        {
-          RemoveGuiApp(W32Data);
-        }
-    }
+      {
+         RemoveGuiApp(W32Data);
+      }
+   }
 
-  return TRUE;
+   return TRUE;
 }
 
 VOID STDCALL
 NtUserManualGuiCheck(LONG Check)
 {
-  PW32PROCESS W32Data;
-  
-  DPRINT("Enter NtUserManualGuiCheck\n");
-  UserEnterExclusive();
+   PW32PROCESS W32Data;
 
-  W32Data = PsGetWin32Process();
-  if (0 == Check)
-    {
+   DPRINT("Enter NtUserManualGuiCheck\n");
+   UserEnterExclusive();
+
+   W32Data = PsGetWin32Process();
+   if (0 == Check)
+   {
       W32Data->Flags |= W32PF_MANUALGUICHECK;
-    }
-  else if (0 < Check)
-    {
+   }
+   else if (0 < Check)
+   {
       if (! (W32Data->Flags & W32PF_CREATEDWINORDC))
-        {
-          co_AddGuiApp(W32Data);
-        }
-    }
-  else
-    {
+      {
+         co_AddGuiApp(W32Data);
+      }
+   }
+   else
+   {
       if (W32Data->Flags & W32PF_CREATEDWINORDC)
-        {
-          RemoveGuiApp(W32Data);
-        }
-    }
+      {
+         RemoveGuiApp(W32Data);
+      }
+   }
 
-  DPRINT("Leave NtUserManualGuiCheck\n");    
-  UserLeave();
-    
+   DPRINT("Leave NtUserManualGuiCheck\n");
+   UserLeave();
+
 }
 
 NTSTATUS FASTCALL
 InitGuiCheckImpl (VOID)
 {
-  ExInitializeFastMutex(&GuiSwitchLock);
-  return STATUS_SUCCESS;
+   ExInitializeFastMutex(&GuiSwitchLock);
+   return STATUS_SUCCESS;
 }
 
 /* EOF */

@@ -39,82 +39,82 @@ NTSTATUS INTERNAL_CALL
 IntUserCreateSharedSectionPool(IN ULONG MaximumPoolSize,
                                IN PSHARED_SECTION_POOL *SharedSectionPool)
 {
-  PSHARED_SECTION_POOL Pool;
-  ULONG PoolStructSize;
+   PSHARED_SECTION_POOL Pool;
+   ULONG PoolStructSize;
 
-  ASSERT(SharedSectionPool);
+   ASSERT(SharedSectionPool);
 
-  PoolStructSize = ROUND_UP(sizeof(SHARED_SECTION_POOL), PAGE_SIZE);
-  Pool = ExAllocatePoolWithTag(NonPagedPool,
-                               PoolStructSize,
-                               TAG_SSECTPOOL);
-  if(Pool != NULL)
-  {
-    RtlZeroMemory(Pool, PoolStructSize);
+   PoolStructSize = ROUND_UP(sizeof(SHARED_SECTION_POOL), PAGE_SIZE);
+   Pool = ExAllocatePoolWithTag(NonPagedPool,
+                                PoolStructSize,
+                                TAG_SSECTPOOL);
+   if(Pool != NULL)
+   {
+      RtlZeroMemory(Pool, PoolStructSize);
 
-    /* initialize the session heap */
-    ExInitializeFastMutex(&Pool->Lock);
-    Pool->PoolSize = ROUND_UP(MaximumPoolSize, PAGE_SIZE);
-    Pool->PoolFree = Pool->PoolSize;
-    Pool->SharedSectionCount = 0;
-    Pool->SectionsArray.Next = NULL;
-    Pool->SectionsArray.nEntries = ((PoolStructSize - sizeof(SHARED_SECTION_POOL)) /
-                                    sizeof(SHARED_SECTION)) - 1;
+      /* initialize the session heap */
+      ExInitializeFastMutex(&Pool->Lock);
+      Pool->PoolSize = ROUND_UP(MaximumPoolSize, PAGE_SIZE);
+      Pool->PoolFree = Pool->PoolSize;
+      Pool->SharedSectionCount = 0;
+      Pool->SectionsArray.Next = NULL;
+      Pool->SectionsArray.nEntries = ((PoolStructSize - sizeof(SHARED_SECTION_POOL)) /
+                                      sizeof(SHARED_SECTION)) - 1;
 
-    ASSERT(Pool->SectionsArray.nEntries > 0);
+      ASSERT(Pool->SectionsArray.nEntries > 0);
 
-    *SharedSectionPool = Pool;
+      *SharedSectionPool = Pool;
 
-    return STATUS_SUCCESS;
-  }
+      return STATUS_SUCCESS;
+   }
 
-  return STATUS_INSUFFICIENT_RESOURCES;
+   return STATUS_INSUFFICIENT_RESOURCES;
 }
 
 
 VOID INTERNAL_CALL
 IntUserFreeSharedSectionPool(IN PSHARED_SECTION_POOL SharedSectionPool)
 {
-  PSHARED_SECTIONS_ARRAY Array, OldArray;
-  PSHARED_SECTION SharedSection, LastSharedSection;
+   PSHARED_SECTIONS_ARRAY Array, OldArray;
+   PSHARED_SECTION SharedSection, LastSharedSection;
 
-  ASSERT(SharedSectionPool);
+   ASSERT(SharedSectionPool);
 
-  Array = &SharedSectionPool->SectionsArray;
+   Array = &SharedSectionPool->SectionsArray;
 
-  ExAcquireFastMutex(&SharedSectionPool->Lock);
-  while(SharedSectionPool->SharedSectionCount > 0 && Array != NULL)
-  {
-    for(SharedSection = Array->SharedSection, LastSharedSection = SharedSection + Array->nEntries;
-        SharedSection != LastSharedSection && SharedSectionPool->SharedSectionCount > 0;
-        SharedSection++)
-    {
-      if(SharedSection->SectionObject != NULL)
+   ExAcquireFastMutex(&SharedSectionPool->Lock);
+   while(SharedSectionPool->SharedSectionCount > 0 && Array != NULL)
+   {
+      for(SharedSection = Array->SharedSection, LastSharedSection = SharedSection + Array->nEntries;
+            SharedSection != LastSharedSection && SharedSectionPool->SharedSectionCount > 0;
+            SharedSection++)
       {
-        ASSERT(SharedSection->SystemMappedBase);
+         if(SharedSection->SectionObject != NULL)
+         {
+            ASSERT(SharedSection->SystemMappedBase);
 
-        /* FIXME - use MmUnmapViewInSessionSpace() once implemented! */
-        MmUnmapViewInSystemSpace(SharedSection->SystemMappedBase);
-        /* dereference the keep-alive reference so the section get's deleted */
-        ObDereferenceObject(SharedSection->SectionObject);
+            /* FIXME - use MmUnmapViewInSessionSpace() once implemented! */
+            MmUnmapViewInSystemSpace(SharedSection->SystemMappedBase);
+            /* dereference the keep-alive reference so the section get's deleted */
+            ObDereferenceObject(SharedSection->SectionObject);
 
-        SharedSectionPool->SharedSectionCount--;
+            SharedSectionPool->SharedSectionCount--;
+         }
       }
-    }
 
-    OldArray = Array;
-    Array = Array->Next;
+      OldArray = Array;
+      Array = Array->Next;
 
-    /* all shared sections in this array were freed, link the following array to
-       the main session heap and free this array */
-    SharedSectionPool->SectionsArray.Next = Array;
-    ExFreePool(OldArray);
-  }
+      /* all shared sections in this array were freed, link the following array to
+         the main session heap and free this array */
+      SharedSectionPool->SectionsArray.Next = Array;
+      ExFreePool(OldArray);
+   }
 
-  ASSERT(SharedSectionPool->SectionsArray.Next == NULL);
-  ASSERT(SharedSectionPool->SharedSectionCount == 0);
+   ASSERT(SharedSectionPool->SectionsArray.Next == NULL);
+   ASSERT(SharedSectionPool->SharedSectionCount == 0);
 
-  ExReleaseFastMutex(&SharedSectionPool->Lock);
+   ExReleaseFastMutex(&SharedSectionPool->Lock);
 }
 
 
@@ -123,120 +123,120 @@ IntUserCreateSharedSection(IN PSHARED_SECTION_POOL SharedSectionPool,
                            IN OUT PVOID *SystemMappedBase,
                            IN OUT ULONG *SharedSectionSize)
 {
-  PSHARED_SECTIONS_ARRAY Array, LastArray;
-  PSHARED_SECTION FreeSharedSection, SharedSection, LastSharedSection;
-  LARGE_INTEGER SectionSize;
-  ULONG Size;
-  NTSTATUS Status;
+   PSHARED_SECTIONS_ARRAY Array, LastArray;
+   PSHARED_SECTION FreeSharedSection, SharedSection, LastSharedSection;
+   LARGE_INTEGER SectionSize;
+   ULONG Size;
+   NTSTATUS Status;
 
-  ASSERT(SharedSectionPool && SharedSectionSize && (*SharedSectionSize) > 0 && SystemMappedBase);
+   ASSERT(SharedSectionPool && SharedSectionSize && (*SharedSectionSize) > 0 && SystemMappedBase);
 
-  FreeSharedSection = NULL;
+   FreeSharedSection = NULL;
 
-  Size = ROUND_UP(*SharedSectionSize, PAGE_SIZE);
+   Size = ROUND_UP(*SharedSectionSize, PAGE_SIZE);
 
-  ExAcquireFastMutex(&SharedSectionPool->Lock);
+   ExAcquireFastMutex(&SharedSectionPool->Lock);
 
-  if(Size > SharedSectionPool->PoolFree)
-  {
-    ExReleaseFastMutex(&SharedSectionPool->Lock);
-    DPRINT1("Shared Section Pool limit (0x%x KB) reached, attempted to allocate a 0x%x KB shared section!\n",
-            SharedSectionPool->PoolSize / 1024, (*SharedSectionSize) / 1024);
-    return STATUS_INSUFFICIENT_RESOURCES;
-  }
-
-  /* walk the array to find a free entry */
-  for(Array = &SharedSectionPool->SectionsArray, LastArray = Array;
-      Array != NULL && FreeSharedSection == NULL;
-      Array = Array->Next)
-  {
-    LastArray = Array;
-
-    for(SharedSection = Array->SharedSection, LastSharedSection = SharedSection + Array->nEntries;
-        SharedSection != LastSharedSection;
-        SharedSection++)
-    {
-      if(SharedSection->SectionObject == NULL)
-      {
-        FreeSharedSection = SharedSection;
-        break;
-      }
-    }
-
-    if(Array->Next != NULL)
-    {
-      LastArray = Array;
-    }
-  }
-
-  ASSERT(LastArray);
-
-  if(FreeSharedSection == NULL)
-  {
-    ULONG nNewEntries;
-    PSHARED_SECTIONS_ARRAY NewArray;
-
-    ASSERT(LastArray->Next == NULL);
-
-    /* couldn't find a free entry in the array, extend the array */
-
-    nNewEntries = ((PAGE_SIZE - sizeof(SHARED_SECTIONS_ARRAY)) / sizeof(SHARED_SECTION)) + 1;
-    NewArray = ExAllocatePoolWithTag(NonPagedPool,
-                                     sizeof(SHARED_SECTIONS_ARRAY) + ((nNewEntries - 1) *
-                                                                      sizeof(SHARED_SECTION)),
-                                     TAG_SSECTPOOL);
-    if(NewArray == NULL)
-    {
+   if(Size > SharedSectionPool->PoolFree)
+   {
       ExReleaseFastMutex(&SharedSectionPool->Lock);
-      DPRINT1("Failed to allocate new array for shared sections!\n");
+      DPRINT1("Shared Section Pool limit (0x%x KB) reached, attempted to allocate a 0x%x KB shared section!\n",
+              SharedSectionPool->PoolSize / 1024, (*SharedSectionSize) / 1024);
       return STATUS_INSUFFICIENT_RESOURCES;
-    }
+   }
 
-    NewArray->nEntries = nNewEntries;
-    NewArray->Next = NULL;
-    LastArray->Next = NewArray;
+   /* walk the array to find a free entry */
+   for(Array = &SharedSectionPool->SectionsArray, LastArray = Array;
+         Array != NULL && FreeSharedSection == NULL;
+         Array = Array->Next)
+   {
+      LastArray = Array;
 
-    Array = NewArray;
-    FreeSharedSection = &Array->SharedSection[0];
-  }
+      for(SharedSection = Array->SharedSection, LastSharedSection = SharedSection + Array->nEntries;
+            SharedSection != LastSharedSection;
+            SharedSection++)
+      {
+         if(SharedSection->SectionObject == NULL)
+         {
+            FreeSharedSection = SharedSection;
+            break;
+         }
+      }
 
-  ASSERT(FreeSharedSection);
+      if(Array->Next != NULL)
+      {
+         LastArray = Array;
+      }
+   }
 
-  /* now allocate a real section */
+   ASSERT(LastArray);
 
-  SectionSize.QuadPart = Size;
-  Status = MmCreateSection(&FreeSharedSection->SectionObject,
-                           SECTION_ALL_ACCESS,
-                           NULL,
-                           &SectionSize,
-                           PAGE_EXECUTE_READWRITE,
-                           SEC_COMMIT,
-                           NULL,
-                           NULL);
-  if(NT_SUCCESS(Status))
-  {
-    Status = MmMapViewInSystemSpace(FreeSharedSection->SectionObject,
-                                    &FreeSharedSection->SystemMappedBase,
-                                    &FreeSharedSection->ViewSize);
-    if(NT_SUCCESS(Status))
-    {
-      (*SharedSectionSize) -= Size;
-      SharedSectionPool->SharedSectionCount++;
+   if(FreeSharedSection == NULL)
+   {
+      ULONG nNewEntries;
+      PSHARED_SECTIONS_ARRAY NewArray;
 
-      *SystemMappedBase = FreeSharedSection->SystemMappedBase;
-      *SharedSectionSize = FreeSharedSection->ViewSize;
-    }
-    else
-    {
-      ObDereferenceObject(FreeSharedSection->SectionObject);
-      FreeSharedSection->SectionObject = NULL;
-      DPRINT1("Failed to map the shared section into system space! Status 0x%x\n", Status);
-    }
-  }
+      ASSERT(LastArray->Next == NULL);
 
-  ExReleaseFastMutex(&SharedSectionPool->Lock);
+      /* couldn't find a free entry in the array, extend the array */
 
-  return Status;
+      nNewEntries = ((PAGE_SIZE - sizeof(SHARED_SECTIONS_ARRAY)) / sizeof(SHARED_SECTION)) + 1;
+      NewArray = ExAllocatePoolWithTag(NonPagedPool,
+                                       sizeof(SHARED_SECTIONS_ARRAY) + ((nNewEntries - 1) *
+                                                                        sizeof(SHARED_SECTION)),
+                                       TAG_SSECTPOOL);
+      if(NewArray == NULL)
+      {
+         ExReleaseFastMutex(&SharedSectionPool->Lock);
+         DPRINT1("Failed to allocate new array for shared sections!\n");
+         return STATUS_INSUFFICIENT_RESOURCES;
+      }
+
+      NewArray->nEntries = nNewEntries;
+      NewArray->Next = NULL;
+      LastArray->Next = NewArray;
+
+      Array = NewArray;
+      FreeSharedSection = &Array->SharedSection[0];
+   }
+
+   ASSERT(FreeSharedSection);
+
+   /* now allocate a real section */
+
+   SectionSize.QuadPart = Size;
+   Status = MmCreateSection(&FreeSharedSection->SectionObject,
+                            SECTION_ALL_ACCESS,
+                            NULL,
+                            &SectionSize,
+                            PAGE_EXECUTE_READWRITE,
+                            SEC_COMMIT,
+                            NULL,
+                            NULL);
+   if(NT_SUCCESS(Status))
+   {
+      Status = MmMapViewInSystemSpace(FreeSharedSection->SectionObject,
+                                      &FreeSharedSection->SystemMappedBase,
+                                      &FreeSharedSection->ViewSize);
+      if(NT_SUCCESS(Status))
+      {
+         (*SharedSectionSize) -= Size;
+         SharedSectionPool->SharedSectionCount++;
+
+         *SystemMappedBase = FreeSharedSection->SystemMappedBase;
+         *SharedSectionSize = FreeSharedSection->ViewSize;
+      }
+      else
+      {
+         ObDereferenceObject(FreeSharedSection->SectionObject);
+         FreeSharedSection->SectionObject = NULL;
+         DPRINT1("Failed to map the shared section into system space! Status 0x%x\n", Status);
+      }
+   }
+
+   ExReleaseFastMutex(&SharedSectionPool->Lock);
+
+   return Status;
 }
 
 
@@ -244,52 +244,52 @@ NTSTATUS INTERNAL_CALL
 InUserDeleteSharedSection(PSHARED_SECTION_POOL SharedSectionPool,
                           PVOID SystemMappedBase)
 {
-  PSHARED_SECTIONS_ARRAY Array;
-  PSECTION_OBJECT SectionObject;
-  PSHARED_SECTION SharedSection, LastSharedSection;
-  NTSTATUS Status;
+   PSHARED_SECTIONS_ARRAY Array;
+   PSECTION_OBJECT SectionObject;
+   PSHARED_SECTION SharedSection, LastSharedSection;
+   NTSTATUS Status;
 
-  ASSERT(SharedSectionPool && SystemMappedBase);
+   ASSERT(SharedSectionPool && SystemMappedBase);
 
-  SectionObject = NULL;
+   SectionObject = NULL;
 
-  ExAcquireFastMutex(&SharedSectionPool->Lock);
+   ExAcquireFastMutex(&SharedSectionPool->Lock);
 
-  for(Array = &SharedSectionPool->SectionsArray;
-      Array != NULL && SectionObject == NULL;
-      Array = Array->Next)
-  {
-    for(SharedSection = Array->SharedSection, LastSharedSection = SharedSection + Array->nEntries;
-        SharedSection != LastSharedSection;
-        SharedSection++)
-    {
-      if(SharedSection->SystemMappedBase == SystemMappedBase)
+   for(Array = &SharedSectionPool->SectionsArray;
+         Array != NULL && SectionObject == NULL;
+         Array = Array->Next)
+   {
+      for(SharedSection = Array->SharedSection, LastSharedSection = SharedSection + Array->nEntries;
+            SharedSection != LastSharedSection;
+            SharedSection++)
       {
-        SectionObject = SharedSection->SectionObject;
-        SharedSection->SectionObject = NULL;
-        SharedSection->SystemMappedBase = NULL;
+         if(SharedSection->SystemMappedBase == SystemMappedBase)
+         {
+            SectionObject = SharedSection->SectionObject;
+            SharedSection->SectionObject = NULL;
+            SharedSection->SystemMappedBase = NULL;
 
-        ASSERT(SharedSectionPool->SharedSectionCount > 0);
-        SharedSectionPool->SharedSectionCount--;
-        break;
+            ASSERT(SharedSectionPool->SharedSectionCount > 0);
+            SharedSectionPool->SharedSectionCount--;
+            break;
+         }
       }
-    }
-  }
+   }
 
-  ExReleaseFastMutex(&SharedSectionPool->Lock);
+   ExReleaseFastMutex(&SharedSectionPool->Lock);
 
-  if(SectionObject != NULL)
-  {
-    Status = MmUnmapViewInSystemSpace(SystemMappedBase);
-    ObDereferenceObject(SectionObject);
-  }
-  else
-  {
-    DPRINT1("Couldn't find and delete a shared section with SystemMappedBase=0x%x!\n", SystemMappedBase);
-    Status = STATUS_UNSUCCESSFUL;
-  }
+   if(SectionObject != NULL)
+   {
+      Status = MmUnmapViewInSystemSpace(SystemMappedBase);
+      ObDereferenceObject(SectionObject);
+   }
+   else
+   {
+      DPRINT1("Couldn't find and delete a shared section with SystemMappedBase=0x%x!\n", SystemMappedBase);
+      Status = STATUS_UNSUCCESSFUL;
+   }
 
-  return Status;
+   return Status;
 }
 
 
@@ -302,67 +302,67 @@ IntUserMapSharedSection(IN PSHARED_SECTION_POOL SharedSectionPool,
                         IN PULONG ViewSize  OPTIONAL,
                         IN BOOLEAN ReadOnly)
 {
-  PSHARED_SECTIONS_ARRAY Array;
-  PSECTION_OBJECT SectionObject;
-  PSHARED_SECTION SharedSection, LastSharedSection;
-  NTSTATUS Status;
+   PSHARED_SECTIONS_ARRAY Array;
+   PSECTION_OBJECT SectionObject;
+   PSHARED_SECTION SharedSection, LastSharedSection;
+   NTSTATUS Status;
 
-  ASSERT(SharedSectionPool && Process && SystemMappedBase && UserMappedBase);
+   ASSERT(SharedSectionPool && Process && SystemMappedBase && UserMappedBase);
 
-  SectionObject = NULL;
-  SharedSection = NULL;
+   SectionObject = NULL;
+   SharedSection = NULL;
 
-  ExAcquireFastMutex(&SharedSectionPool->Lock);
+   ExAcquireFastMutex(&SharedSectionPool->Lock);
 
-  for(Array = &SharedSectionPool->SectionsArray;
-      Array != NULL && SectionObject == NULL;
-      Array = Array->Next)
-  {
-    for(SharedSection = Array->SharedSection, LastSharedSection = SharedSection + Array->nEntries;
-        SharedSection != LastSharedSection;
-        SharedSection++)
-    {
-      if(SharedSection->SystemMappedBase == SystemMappedBase)
+   for(Array = &SharedSectionPool->SectionsArray;
+         Array != NULL && SectionObject == NULL;
+         Array = Array->Next)
+   {
+      for(SharedSection = Array->SharedSection, LastSharedSection = SharedSection + Array->nEntries;
+            SharedSection != LastSharedSection;
+            SharedSection++)
       {
-        SectionObject = SharedSection->SectionObject;
-        break;
+         if(SharedSection->SystemMappedBase == SystemMappedBase)
+         {
+            SectionObject = SharedSection->SectionObject;
+            break;
+         }
       }
-    }
-  }
+   }
 
-  if(SectionObject != NULL)
-  {
-    ULONG RealViewSize = (ViewSize ? min(*ViewSize, SharedSection->ViewSize) : SharedSection->ViewSize);
+   if(SectionObject != NULL)
+   {
+      ULONG RealViewSize = (ViewSize ? min(*ViewSize, SharedSection->ViewSize) : SharedSection->ViewSize);
 
-    ObReferenceObjectByPointer(SectionObject,
-                               (ReadOnly ? SECTION_MAP_READ : SECTION_MAP_READ | SECTION_MAP_WRITE),
-                               NULL,
-                               KernelMode);
+      ObReferenceObjectByPointer(SectionObject,
+                                 (ReadOnly ? SECTION_MAP_READ : SECTION_MAP_READ | SECTION_MAP_WRITE),
+                                 NULL,
+                                 KernelMode);
 
-    Status = MmMapViewOfSection(SectionObject,
-                                Process,
-                                UserMappedBase,
-                                0,
-                                0,
-                                SectionOffset,
-                                &RealViewSize,
-                                ViewUnmap, /* not sure if we should inherit it... */
-                                MEM_COMMIT,
-                                (ReadOnly ? PAGE_READONLY : PAGE_READWRITE));
-    if(!NT_SUCCESS(Status))
-    {
-      DPRINT1("Failed to map shared section (readonly=%d) into user memory! Status: 0x%x\n", ReadOnly, Status);
-    }
-  }
-  else
-  {
-    DPRINT1("Couldn't find and map a shared section with SystemMappedBase=0x%x!\n", SystemMappedBase);
-    Status = STATUS_UNSUCCESSFUL;
-  }
+      Status = MmMapViewOfSection(SectionObject,
+                                  Process,
+                                  UserMappedBase,
+                                  0,
+                                  0,
+                                  SectionOffset,
+                                  &RealViewSize,
+                                  ViewUnmap, /* not sure if we should inherit it... */
+                                  MEM_COMMIT,
+                                  (ReadOnly ? PAGE_READONLY : PAGE_READWRITE));
+      if(!NT_SUCCESS(Status))
+      {
+         DPRINT1("Failed to map shared section (readonly=%d) into user memory! Status: 0x%x\n", ReadOnly, Status);
+      }
+   }
+   else
+   {
+      DPRINT1("Couldn't find and map a shared section with SystemMappedBase=0x%x!\n", SystemMappedBase);
+      Status = STATUS_UNSUCCESSFUL;
+   }
 
-  ExReleaseFastMutex(&SharedSectionPool->Lock);
+   ExReleaseFastMutex(&SharedSectionPool->Lock);
 
-  return Status;
+   return Status;
 }
 
 
@@ -372,50 +372,50 @@ IntUserUnMapSharedSection(IN PSHARED_SECTION_POOL SharedSectionPool,
                           IN PVOID SystemMappedBase,
                           IN PVOID UserMappedBase)
 {
-  PSHARED_SECTIONS_ARRAY Array;
-  PSECTION_OBJECT SectionObject;
-  PSHARED_SECTION SharedSection, LastSharedSection;
-  NTSTATUS Status;
+   PSHARED_SECTIONS_ARRAY Array;
+   PSECTION_OBJECT SectionObject;
+   PSHARED_SECTION SharedSection, LastSharedSection;
+   NTSTATUS Status;
 
-  ASSERT(SharedSectionPool && Process && SystemMappedBase && UserMappedBase);
+   ASSERT(SharedSectionPool && Process && SystemMappedBase && UserMappedBase);
 
-  SectionObject = NULL;
+   SectionObject = NULL;
 
-  ExAcquireFastMutex(&SharedSectionPool->Lock);
+   ExAcquireFastMutex(&SharedSectionPool->Lock);
 
-  for(Array = &SharedSectionPool->SectionsArray;
-      Array != NULL && SectionObject == NULL;
-      Array = Array->Next)
-  {
-    for(SharedSection = Array->SharedSection, LastSharedSection = SharedSection + Array->nEntries;
-        SharedSection != LastSharedSection;
-        SharedSection++)
-    {
-      if(SharedSection->SystemMappedBase == SystemMappedBase)
+   for(Array = &SharedSectionPool->SectionsArray;
+         Array != NULL && SectionObject == NULL;
+         Array = Array->Next)
+   {
+      for(SharedSection = Array->SharedSection, LastSharedSection = SharedSection + Array->nEntries;
+            SharedSection != LastSharedSection;
+            SharedSection++)
       {
-        SectionObject = SharedSection->SectionObject;
-        break;
+         if(SharedSection->SystemMappedBase == SystemMappedBase)
+         {
+            SectionObject = SharedSection->SectionObject;
+            break;
+         }
       }
-    }
-  }
+   }
 
-  ExReleaseFastMutex(&SharedSectionPool->Lock);
+   ExReleaseFastMutex(&SharedSectionPool->Lock);
 
-  if(SectionObject != NULL)
-  {
-    Status = MmUnmapViewOfSection(Process,
-                                  UserMappedBase);
-    ObDereferenceObject(SectionObject);
-    if(!NT_SUCCESS(Status))
-    {
-      DPRINT1("Failed to unmap shared section UserMappedBase=0x%x! Status: 0x%x\n", UserMappedBase, Status);
-    }
-  }
-  else
-  {
-    DPRINT1("Couldn't find and unmap a shared section with SystemMappedBase=0x%x!\n", SystemMappedBase);
-    Status = STATUS_UNSUCCESSFUL;
-  }
+   if(SectionObject != NULL)
+   {
+      Status = MmUnmapViewOfSection(Process,
+                                    UserMappedBase);
+      ObDereferenceObject(SectionObject);
+      if(!NT_SUCCESS(Status))
+      {
+         DPRINT1("Failed to unmap shared section UserMappedBase=0x%x! Status: 0x%x\n", UserMappedBase, Status);
+      }
+   }
+   else
+   {
+      DPRINT1("Couldn't find and unmap a shared section with SystemMappedBase=0x%x!\n", SystemMappedBase);
+      Status = STATUS_UNSUCCESSFUL;
+   }
 
-  return Status;
+   return Status;
 }
