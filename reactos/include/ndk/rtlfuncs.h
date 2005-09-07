@@ -839,7 +839,7 @@ RtlxUnicodeStringToOemSize(IN PCUNICODE_STRING UnicodeString);
     ((STRING)->Length + sizeof(UNICODE_NULL)) / sizeof(WCHAR) \
 )
 #define RtlUnicodeStringToCountedOemSize(STRING) (                    \
-    (ULONG)(RtlUnicodeStringToOemSize(STRING) - sizeof(UNICODE_NULL)) \
+    (ULONG)(RtlUnicodeStringToOemSize(STRING) - sizeof(ANSI_NULL)) \
 )
 #endif
 
