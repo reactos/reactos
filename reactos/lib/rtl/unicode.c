@@ -1748,7 +1748,7 @@ RtlUpcaseUnicodeStringToOemString (
    NTSTATUS Status;
    ULONG Length; /* including nullterm */
 
-   Length = RtlUnicodeStringToAnsiSize(UniSource);
+   Length = RtlUnicodeStringToOemSize(UniSource);
    if (Length > 0x0000FFFF)
       return STATUS_INVALID_PARAMETER_2;
 
