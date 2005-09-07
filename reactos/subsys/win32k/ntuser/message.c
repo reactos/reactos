@@ -506,6 +506,7 @@ co_IntActivateWindowMouse(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, PWINDOW_OB
                        USHORT *HitTest)
 {
   ULONG Result;
+  PWINDOW_OBJECT Parent;
 
   if(*HitTest == (USHORT)HTTRANSPARENT)
   {
@@ -513,7 +514,14 @@ co_IntActivateWindowMouse(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, PWINDOW_OB
     return TRUE;
   }
 
-  Result = co_IntSendMessage(MsgWindow->hSelf, WM_MOUSEACTIVATE, (WPARAM)IntGetParent(MsgWindow), (LPARAM)MAKELONG(*HitTest, Msg->message));
+  Parent = IntGetParent(MsgWindow);
+  /* fixme: abort if no parent ? */ 
+  Result = co_IntSendMessage(MsgWindow->hSelf, 
+      WM_MOUSEACTIVATE, 
+      (WPARAM) (Parent ? Parent->hSelf : NULL), 
+      (LPARAM)MAKELONG(*HitTest, Msg->message)
+      );
+      
   switch (Result)
   {
     case MA_NOACTIVATEANDEAT:
