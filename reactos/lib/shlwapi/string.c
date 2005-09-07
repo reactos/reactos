@@ -2699,3 +2699,58 @@ BOOL WINAPI DoesStringRoundTripW(LPCWSTR lpSrcStr, LPSTR lpDst, INT iLen)
     SHAnsiToUnicode(lpDst, szBuff, MAX_PATH);
     return !strcmpW(lpSrcStr, szBuff);
 }
+
+/*************************************************************************
+ *      SHLoadIndirectString    [SHLWAPI.@]
+ *
+ * If passed a string that begins with a '@' extract the string from the
+ * appropriate resource, otherwise do a straight copy.
+ *
+ */
+HRESULT WINAPI SHLoadIndirectString(LPCWSTR src, LPWSTR dst, UINT dst_len, void **reserved)
+{
+    WCHAR *dllname = NULL;
+    HMODULE hmod = NULL;
+    HRESULT hr = E_FAIL;
+
+    TRACE("(%s %p %08x %p)\n", debugstr_w(src), dst, dst_len, reserved);
+
+    if(src[0] == '@')
+    {
+        WCHAR *index_str;
+        int index;
+
+        dst[0] = 0;
+        dllname = StrDupW(src + 1);
+        index_str = strchrW(dllname, ',');
+
+        if(!index_str) goto end;
+
+        *index_str = 0;
+        index_str++;
+        index = atoiW(index_str);
+  
+        hmod = LoadLibraryW(dllname);
+        if(!hmod) goto end;
+
+        if(index < 0)
+        {
+            if(LoadStringW(hmod, -index, dst, dst_len))
+                hr = S_OK;
+        }
+        else
+            FIXME("can't handle non-negative indicies (%d)\n", index);
+    }
+    else
+    {
+        if(dst != src)
+            lstrcpynW(dst, src, dst_len);
+        hr = S_OK;
+    }
+
+    TRACE("returing %s\n", debugstr_w(dst));
+end:
+    if(hmod) FreeLibrary(hmod);
+    HeapFree(GetProcessHeap(), 0, dllname);
+    return hr;
+}

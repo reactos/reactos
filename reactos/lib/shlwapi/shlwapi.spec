@@ -353,7 +353,7 @@
 353 stub -noname SHFormatDateTimeA
 354 stub -noname SHFormatDateTimeW
 355 stdcall -noname IUnknown_EnableModeless(ptr long)
-356 stdcall -noname _CreateAllAccessSecurityAttributes(ptr ptr)
+356 stdcall -noname _CreateAllAccessSecurityAttributes(ptr ptr long)
 357 stdcall -noname SHGetNewLinkInfoWrapW(wstr wstr wstr long long)
 358 stdcall -noname SHDefExtractIconWrapW(wstr long long ptr ptr long)
 359 stdcall @(long long wstr) kernel32.OpenEventW
@@ -401,7 +401,7 @@
 401 stdcall -noname PageSetupDlgWrapW(ptr)
 402 stdcall -noname PrintDlgWrapW(ptr)
 403 stdcall -noname GetOpenFileNameWrapW(ptr)
-404 stub -noname IShellFolder_EnumObjects
+404 stdcall -noname IUnknown_EnumObjects(ptr ptr long ptr)
 405 stdcall -noname MLBuildResURLA(str ptr long str ptr long)
 406 stdcall -noname MLBuildResURLW(wstr ptr long wstr ptr long)
 407 stub -noname AssocMakeProgid
@@ -422,7 +422,7 @@
 422 stdcall -noname _SHGlobalCounterCreateNamedA(str long)
 423 stdcall -noname _SHGlobalCounterCreateNamedW(wstr long)
 424 stdcall -noname _SHGlobalCounterDecrement(long)
-425 stub -noname DeleteMenuWrap
+425 stdcall -noname DeleteMenuWrap(ptr long long)
 426 stub -noname DestroyMenuWrap
 427 stub -noname TrackPopupMenuWrap
 428 stdcall @(long long long long long ptr) user32.TrackPopupMenuEx
@@ -436,7 +436,7 @@
 436 stdcall -noname CLSIDFromStringWrap(wstr ptr)
 437 stdcall -noname IsOS(long)
 438 stub -noname SHLoadRegUIStringA
-439 stub -noname SHLoadRegUIStringW
+439 stdcall -noname SHLoadRegUIStringW(ptr wstr ptr long)
 440 stdcall -noname SHGetWebFolderFilePathA(str ptr long)
 441 stdcall -noname SHGetWebFolderFilePathW(wstr ptr long)
 442 stdcall @(wstr ptr long) kernel32.GetEnvironmentVariableW
@@ -454,8 +454,8 @@
 454 stub -noname CharLowerNoDBCSW
 455 stdcall -noname PathIsValidCharA(long long)
 456 stdcall -noname PathIsValidCharW(long long)
-457 stub -noname GetLongPathNameWrapW
-458 stub -noname GetLongPathNameWrapA
+457 stdcall @(wstr ptr long) kernel32.GetLongPathNameW
+458 stdcall @(str ptr long) kernel32.GetLongPathNameA
 459 stdcall -noname SHExpandEnvironmentStringsA(str ptr long) kernel32.ExpandEnvironmentStringsA
 460 stdcall -noname SHExpandEnvironmentStringsW(wstr ptr long) kernel32.ExpandEnvironmentStringsW
 461 stdcall -noname SHGetAppCompatFlags(long)
@@ -559,7 +559,7 @@
 @ stdcall ColorAdjustLuma(long long long)
 @ stdcall ColorHLSToRGB(long long long)
 @ stdcall ColorRGBToHLS(long ptr ptr ptr)
-@ stdcall DllGetVersion (ptr) SHLWAPI_DllGetVersion
+@ stdcall -private DllGetVersion(ptr)
 @ stdcall GetMenuPosFromID(ptr long)
 @ stdcall HashData (ptr long ptr long)
 @ stdcall IntlStrEqWorkerA(long str str long) StrIsIntlEqualA
@@ -699,6 +699,7 @@
 @ stdcall SHGetValueA ( long str str ptr ptr ptr )
 @ stdcall SHGetValueW ( long wstr wstr ptr ptr ptr )
 @ stdcall SHIsLowMemoryMachine(long)
+@ stdcall SHLoadIndirectString(wstr ptr long ptr)
 @ stdcall SHOpenRegStream2A(long str str long)
 @ stdcall SHOpenRegStream2W(long wstr str long)
 @ stdcall SHOpenRegStreamA(long str str long)
