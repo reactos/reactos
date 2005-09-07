@@ -13,7 +13,7 @@
 #include "package.hpp"
 #include "expat.h"
 #include "log.h"
-#include <wine/urlmon.h>
+#include <urlmon.h>
 
 HRESULT WINAPI URLDownloadToFileA(      
     LPUNKNOWN pCaller,
