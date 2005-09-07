@@ -624,7 +624,7 @@ static HRESULT register_inf(BOOL doregister)
 /***********************************************************************
  *		DllRegisterServer (URLMON.@)
  */
-HRESULT WINAPI URLMON_DllRegisterServer(void)
+HRESULT WINAPI DllRegisterServer(void)
 {
     HRESULT hr;
 
@@ -641,7 +641,7 @@ HRESULT WINAPI URLMON_DllRegisterServer(void)
 /***********************************************************************
  *		DllUnregisterServer (URLMON.@)
  */
-HRESULT WINAPI URLMON_DllUnregisterServer(void)
+HRESULT WINAPI DllUnregisterServer(void)
 {
     HRESULT hr;
 

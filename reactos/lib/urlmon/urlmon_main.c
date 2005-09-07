@@ -65,7 +65,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
 /***********************************************************************
  *		DllInstall (URLMON.@)
  */
-HRESULT WINAPI URLMON_DllInstall(BOOL bInstall, LPCWSTR cmdline)
+HRESULT WINAPI DllInstall(BOOL bInstall, LPCWSTR cmdline)
 {
   FIXME("(%s, %s): stub\n", bInstall?"TRUE":"FALSE",
 	debugstr_w(cmdline));
@@ -76,7 +76,7 @@ HRESULT WINAPI URLMON_DllInstall(BOOL bInstall, LPCWSTR cmdline)
 /***********************************************************************
  *		DllCanUnloadNow (URLMON.@)
  */
-HRESULT WINAPI URLMON_DllCanUnloadNow(void)
+HRESULT WINAPI DllCanUnloadNow(void)
 {
     return URLMON_refCount != 0 ? S_FALSE : S_OK;
 }
@@ -199,7 +199,7 @@ static const IClassFactoryVtbl CF_Vtbl =
  *             E_UNEXPECTED
  */
 
-DWORD WINAPI URLMON_DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
+HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
     int i;
     IClassFactoryImpl *factory;
@@ -240,7 +240,7 @@ DWORD WINAPI URLMON_DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 /***********************************************************************
  *		DllRegisterServerEx (URLMON.@)
  */
-HRESULT WINAPI URLMON_DllRegisterServerEx(void)
+HRESULT WINAPI DllRegisterServerEx(void)
 {
     FIXME("(void): stub\n");
 
