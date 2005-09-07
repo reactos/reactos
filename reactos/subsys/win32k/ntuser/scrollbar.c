@@ -853,7 +853,7 @@ co_UserShowScrollBar(PWINDOW_OBJECT Window, int wBar, DWORD bShow)
    {
       IntUpdateSBInfo(Window, SB_CTL);
 
-      co_WinPosShowWindow(Window->hSelf, bShow ? SW_SHOW : SW_HIDE);
+      co_WinPosShowWindow(Window, bShow ? SW_SHOW : SW_HIDE);
       return( TRUE);
    }
 

@@ -29,7 +29,7 @@ BOOLEAN FASTCALL
 co_WinPosSetWindowPos(HWND Wnd, HWND WndInsertAfter, INT x, INT y, INT cx,
 		   INT cy, UINT flags);
 BOOLEAN FASTCALL
-co_WinPosShowWindow(HWND Wnd, INT Cmd);
+co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd);
 USHORT FASTCALL
 co_WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, PUSER_MESSAGE_QUEUE OnlyHitTests, POINT *WinPoint,
 		      PWINDOW_OBJECT* Window);

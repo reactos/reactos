@@ -93,8 +93,6 @@ co_DestroyThreadWindows(struct _ETHREAD *Thread);
 
 HWND FASTCALL UserGetShellWindow();
 
-HWND FASTCALL UserSetParent(HWND hWndChild, HWND hWndNewParent);
-
 HWND FASTCALL UserGetWindow(HWND hWnd, UINT Relationship);
 
 HDC FASTCALL

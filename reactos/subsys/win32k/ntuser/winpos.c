@@ -1236,25 +1236,15 @@ co_WinPosGetNonClientSize(HWND Wnd, RECT* WindowRect, RECT* ClientRect)
 }
 
 BOOLEAN FASTCALL
-co_WinPosShowWindow(HWND Wnd, INT Cmd)
+co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
 {
   BOOLEAN WasVisible;
-  PWINDOW_OBJECT Window;
-  NTSTATUS Status;
   UINT Swp = 0;
   RECT NewPos;
   BOOLEAN ShowFlag;
 //  HRGN VisibleRgn;
 
-  Status =
-    ObmReferenceObjectByHandle(gHandleTable,
-			       Wnd,
-			       otWindow,
-			       (PVOID*)&Window);
-  if (!NT_SUCCESS(Status))
-    {
-      return(FALSE);
-    }
+  ASSERT_REFS(Window); 
 
   WasVisible = (Window->Style & WS_VISIBLE) != 0;
 
@@ -1264,7 +1254,6 @@ co_WinPosShowWindow(HWND Wnd, INT Cmd)
       {
 	if (!WasVisible)
 	  {
-	    ObmDereferenceObject(Window);
 	    return(FALSE);
 	  }
 	Swp |= SWP_HIDEWINDOW | SWP_NOSIZE | SWP_NOMOVE;
@@ -1336,14 +1325,14 @@ co_WinPosShowWindow(HWND Wnd, INT Cmd)
   ShowFlag = (Cmd != SW_HIDE);
   if (ShowFlag != WasVisible)
     {
-      co_IntSendMessage(Wnd, WM_SHOWWINDOW, ShowFlag, 0);
+      co_IntSendMessage(Window->hSelf, WM_SHOWWINDOW, ShowFlag, 0);
       /*
        * FIXME: Need to check the window wasn't destroyed during the
        * window procedure.
        */
       if (!(Window->Parent))
         {
-          co_IntShellHookNotify(HSHELL_WINDOWCREATED, (LPARAM)Wnd);
+          co_IntShellHookNotify(HSHELL_WINDOWCREATED, (LPARAM)Window->hSelf);
         }
     }
 
@@ -1371,15 +1360,15 @@ co_WinPosShowWindow(HWND Wnd, INT Cmd)
         }
 
       /* Revert focus to parent */
-      if (Wnd == IntGetThreadFocusWindow() ||
-          IntIsChildWindow(Wnd, IntGetThreadFocusWindow()))
+      if (Window->hSelf == IntGetThreadFocusWindow() ||
+          IntIsChildWindow(Window->hSelf, IntGetThreadFocusWindow()))
         {
           UserSetFocus(Window->Parent->hSelf);
         }
 
       if (!(Window->Parent))
         {
-          co_IntShellHookNotify(HSHELL_WINDOWDESTROYED, (LPARAM)Wnd);
+          co_IntShellHookNotify(HSHELL_WINDOWDESTROYED, (LPARAM)Window->hSelf);
         }
     }
 
@@ -1400,12 +1389,12 @@ co_WinPosShowWindow(HWND Wnd, INT Cmd)
 	  wParam = SIZE_MINIMIZED;
 	}
 
-      co_IntSendMessage(Wnd, WM_SIZE, wParam,
+      co_IntSendMessage(Window->hSelf, WM_SIZE, wParam,
                      MAKELONG(Window->ClientRect.right -
                               Window->ClientRect.left,
                               Window->ClientRect.bottom -
                               Window->ClientRect.top));
-      co_IntSendMessage(Wnd, WM_MOVE, 0,
+      co_IntSendMessage(Window->hSelf, WM_MOVE, 0,
                      MAKELONG(Window->ClientRect.left,
                               Window->ClientRect.top));
       IntEngWindowChanged(Window, WOC_RGN_CLIENT);
@@ -1418,8 +1407,6 @@ co_WinPosShowWindow(HWND Wnd, INT Cmd)
       WinPosChangeActiveWindow(Wnd, FALSE);
     }
 */
-
-  ObmDereferenceObject(Window);
   return(WasVisible);
 }
 
@@ -1430,6 +1417,8 @@ co_WinPosSearchChildren(
 {
    PWINDOW_OBJECT Current;
    HWND *List, *phWnd;
+
+   ASSERT_REFS(ScopeWin);
 
    if ((List = IntWinListChildren(ScopeWin)))
    {

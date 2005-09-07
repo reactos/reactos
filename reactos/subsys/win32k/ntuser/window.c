@@ -913,7 +913,7 @@ IntSetOwner(HWND hWnd, HWND hWndNewOwner)
 }
 
 PWINDOW_OBJECT FASTCALL
-IntSetParent(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndNewParent)
+co_IntSetParent(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndNewParent)
 {
    PWINDOW_OBJECT WndOldParent, Sibling, InsertAfter;
    HWND hWnd, hWndNewParent, hWndOldParent;
@@ -930,7 +930,7 @@ IntSetParent(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndNewParent)
     * Windows hides the window first, then shows it again
     * including the WM_SHOWWINDOW messages and all
     */
-   WasVisible = co_WinPosShowWindow(hWnd, SW_HIDE);
+   WasVisible = co_WinPosShowWindow(Wnd, SW_HIDE);
 
    /* Validate that window and parent still exist */
    if (!IntIsWindow(hWnd) || !IntIsWindow(hWndNewParent))
@@ -1984,13 +1984,15 @@ co_IntCreateWindowEx(DWORD dwExStyle,
   {
      co_UserShowScrollBar(Window, SB_HORZ, TRUE);
   }
-  UserDereferenceWindowObjectCo(Window);
 
   if (dwStyle & WS_VISIBLE)
     {
       DPRINT("IntCreateWindow(): About to show window\n");
-      co_WinPosShowWindow(Window->hSelf, dwShowMode);
+      co_WinPosShowWindow(Window, dwShowMode);
     }
+
+   //faxme: temp hack
+  UserDereferenceWindowObjectCo(Window);
 
   DPRINT("IntCreateWindow(): = %X\n", Handle);
   DPRINT("WindowObject->SystemMenu = 0x%x\n", Window->SystemMenu);
@@ -2098,6 +2100,8 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
 {
   BOOLEAN isChild;
 
+  ASSERT_REFS(Window); 
+
   if (Window == NULL)
     {
       return FALSE;
@@ -2113,7 +2117,7 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
   /* Look whether the focus is within the tree of windows we will
    * be destroying.
    */
-  if (!co_WinPosShowWindow(Window->hSelf, SW_HIDE))
+  if (!co_WinPosShowWindow(Window, SW_HIDE))
     {
       if (UserGetActiveWindow() == Window->hSelf)
         {
@@ -2862,7 +2866,7 @@ CLEANUP:
 
 
 HWND FASTCALL
-UserSetParent(HWND hWndChild, HWND hWndNewParent)
+co_UserSetParent(HWND hWndChild, HWND hWndNewParent)
 {
    PWINDOW_OBJECT Wnd = NULL, WndParent = NULL, WndOldParent;
    HWND hWndOldParent = NULL;
@@ -2903,7 +2907,7 @@ UserSetParent(HWND hWndChild, HWND hWndNewParent)
       return( NULL);
    }
 
-   WndOldParent = IntSetParent(Wnd, WndParent);
+   WndOldParent = co_IntSetParent(Wnd, WndParent);
 
    if (WndOldParent)
    {
@@ -2944,7 +2948,7 @@ NtUserSetParent(HWND hWndChild, HWND hWndNewParent)
    DPRINT("Enter NtUserSetParent\n");
    UserEnterExclusive();
 
-   RETURN( UserSetParent(hWndChild, hWndNewParent));
+   RETURN( co_UserSetParent(hWndChild, hWndNewParent));
    
 CLEANUP:
    DPRINT("Leave NtUserSetParent, ret=%i\n",_ret_);
@@ -3408,7 +3412,7 @@ CLEANUP:
 
 
 LONG FASTCALL
-UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
+co_UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
 {
    PWINDOW_OBJECT Window, Parent;
    PWINSTATION_OBJECT WindowStation;
@@ -3499,7 +3503,7 @@ UserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
             if (Parent && (Parent->hSelf == IntGetDesktopWindow()))
                OldValue = (LONG) IntSetOwner(Window->hSelf, (HWND) NewValue);
             else
-               OldValue = (LONG) UserSetParent(Window->hSelf, (HWND) NewValue);
+               OldValue = (LONG) co_UserSetParent(Window->hSelf, (HWND) NewValue);
             if(Parent)
               IntReleaseWindowObject(Parent);
             break;
@@ -3548,7 +3552,7 @@ NtUserSetWindowLong(HWND hWnd, DWORD Index, LONG NewValue, BOOL Ansi)
    DPRINT("Enter NtUserSetWindowLong\n");
    UserEnterExclusive();
 
-   RETURN( UserSetWindowLong(hWnd, Index, NewValue, Ansi));
+   RETURN( co_UserSetWindowLong(hWnd, Index, NewValue, Ansi));
    
 CLEANUP:
    DPRINT("Leave NtUserSetWindowLong, ret=%i\n",_ret_);
@@ -3580,7 +3584,7 @@ NtUserSetWindowWord(HWND hWnd, INT Index, WORD NewValue)
       case GWL_ID:
       case GWL_HINSTANCE:
       case GWL_HWNDPARENT:
-         RETURN( UserSetWindowLong(hWnd, Index, (UINT)NewValue, TRUE));
+         RETURN( co_UserSetWindowLong(hWnd, Index, (UINT)NewValue, TRUE));
       default:
          if (Index < 0)
          {
@@ -4064,7 +4068,7 @@ NtUserSetWindowPlacement(HWND hWnd,
   }
 
   /* FIXME - change window status */
-  co_WinPosShowWindow(Window->hSelf, Safepl.showCmd);
+  co_WinPosShowWindow(Window, Safepl.showCmd);
 
   if (Window->InternalPos == NULL)
      Window->InternalPos = ExAllocatePoolWithTag(PagedPool, sizeof(INTERNALPOS), TAG_WININTLIST);
@@ -4245,15 +4249,25 @@ CLEANUP:
  * @implemented
  */
 BOOL STDCALL
-NtUserShowWindow(HWND hWnd,
-		 LONG nCmdShow)
+NtUserShowWindow(HWND hWnd, LONG nCmdShow)
 {
+  PWINDOW_OBJECT Window;
+  BOOL ret;
   DECLARE_RETURN(BOOL);
 
   DPRINT("Enter NtUserShowWindow\n");
   UserEnterExclusive();
-   
-  RETURN( co_WinPosShowWindow(hWnd, nCmdShow));
+  
+  if (!(Window = UserGetWindowObject(hWnd)))
+  {
+     RETURN(FALSE);
+  }
+  
+  UserReferenceWindowObjectCo(Window);
+  ret = co_WinPosShowWindow(Window, nCmdShow);
+  UserReferenceWindowObjectCo(Window);
+  
+  RETURN(ret);
    
 CLEANUP:
   DPRINT("Leave NtUserShowWindow, ret=%i\n",_ret_);
