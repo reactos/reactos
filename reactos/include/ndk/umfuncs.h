@@ -8,29 +8,53 @@
 #define _UMFUNCS_H
 
 /* DEPENDENCIES **************************************************************/
+struct _CSR_API_MESSAGE;
+struct _CSR_CAPTURE_BUFFER;
 
 /* PROTOTYPES ****************************************************************/
 
 /*
  * CSR Functions
  */
+PVOID
+NTAPI
+CsrAllocateCaptureBuffer(
+    ULONG ArgumentCount,
+    ULONG BufferSize
+);
+
+ULONG
+NTAPI
+CsrAllocateMessagePointer(
+    struct _CSR_CAPTURE_BUFFER *CaptureBuffer,
+	ULONG MessageLength,
+	PVOID *CaptureData
+);
+
+VOID
+NTAPI
+CsrCaptureMessageBuffer(
+    struct _CSR_CAPTURE_BUFFER *CaptureBuffer,
+	PVOID MessageString,
+	ULONG StringLength,
+	PVOID *CapturedData
+);
+
 NTSTATUS
 NTAPI
 CsrClientConnectToServer(
     PWSTR ObjectDirectory,
     ULONG ServerId,
-    PVOID Unknown,
-    PVOID Context,
-    ULONG ContextLength,
+    PVOID ConnectionInfo,
+    PULONG ConnectionInfoSize,
     PBOOLEAN ServerToServerCall
 );
 
-struct _CSR_API_MESSAGE;
 NTSTATUS
 NTAPI
 CsrClientCallServer(
     struct _CSR_API_MESSAGE *Request,
-    PVOID CapturedBuffer OPTIONAL,
+    struct _CSR_CAPTURE_BUFFER *CaptureBuffer OPTIONAL,
     ULONG ApiNumber,
     ULONG RequestLength
 );
@@ -38,6 +62,10 @@ CsrClientCallServer(
 NTSTATUS
 NTAPI
 CsrIdentifyAlertableThread(VOID);
+
+VOID
+NTAPI
+CsrFreeCaptureBuffer(struct _CSR_CAPTURE_BUFFER *CaptureBuffer);
 
 NTSTATUS
 NTAPI
@@ -53,7 +81,7 @@ CsrSetPriorityClass(
 VOID
 NTAPI
 CsrProbeForRead(
-    IN CONST PVOID Address,
+    IN PVOID Address,
     IN ULONG Length,
     IN ULONG Alignment
 );
@@ -61,23 +89,10 @@ CsrProbeForRead(
 VOID
 NTAPI
 CsrProbeForWrite(
-    IN CONST PVOID Address,
+    IN PVOID Address,
     IN ULONG Length,
     IN ULONG Alignment
 );
-
-NTSTATUS
-NTAPI
-CsrCaptureParameterBuffer(
-    PVOID ParameterBuffer,
-    ULONG ParameterBufferSize,
-    PVOID* ClientAddress,
-    PVOID* ServerAddress
-);
-
-NTSTATUS
-NTAPI
-CsrReleaseParameterBuffer(PVOID ClientAddress);
 
 /*
  * Debug Functions

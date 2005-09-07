@@ -170,6 +170,7 @@ NtResumeProcess 1
 NtResumeThread 2
 NtSaveKey 2
 NtSaveKeyEx 3
+NtSecureConnectPort 9
 NtSetBootEntryOrder 2
 NtSetBootOptions 2
 NtSetIoCompletion 5

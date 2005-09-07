@@ -5,16 +5,14 @@
 LIBRARY ntdll.dll
 
 EXPORTS
-CsrCaptureParameterBuffer@16
-CsrReleaseParameterBuffer@4
-CsrAllocateCaptureBuffer@12
-CsrAllocateCapturePointer@12
+CsrAllocateCaptureBuffer@8
 CsrAllocateMessagePointer@12
 CsrCaptureMessageBuffer@16
+CsrCaptureMessageMultiUnicodeStringsInPlace@12
 CsrCaptureMessageString@20
 CsrCaptureTimeout@8
 CsrClientCallServer@16
-CsrClientConnectToServer@24
+CsrClientConnectToServer@20
 CsrFreeCaptureBuffer@4
 CsrGetProcessId@0
 CsrIdentifyAlertableThread@0
@@ -219,6 +217,7 @@ NtRestoreKey@12
 NtResumeProcess@4
 NtResumeThread@8
 NtSaveKey@8
+NtSecureConnectPort@36
 NtSetContextThread@8
 NtSetDefaultHardErrorPort@4
 NtSetDefaultLocale@8
@@ -852,6 +851,7 @@ ZwRestoreKey@12
 ZwResumeProcess@4
 ZwResumeThread@8
 ZwSaveKey@8
+ZwSecureConnectPort@36
 ZwSetContextThread@8
 ZwSetDefaultHardErrorPort@4
 ZwSetDefaultLocale@8

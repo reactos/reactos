@@ -3322,6 +3322,37 @@ ZwSaveKeyEx(
     IN ULONG Flags
 );
 
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtSecureConnectPort(
+    PHANDLE PortHandle,
+    PUNICODE_STRING PortName,
+    PSECURITY_QUALITY_OF_SERVICE SecurityQos,
+    PPORT_VIEW ClientView OPTIONAL,
+    PSID Sid OPTIONAL,
+    PREMOTE_PORT_VIEW ServerView OPTIONAL,
+    PULONG MaxMessageLength OPTIONAL,
+    PVOID ConnectionInformation OPTIONAL,
+    PULONG ConnectionInformationLength OPTIONAL
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwSecureConnectPort(
+    PHANDLE PortHandle,
+    PUNICODE_STRING PortName,
+    PSECURITY_QUALITY_OF_SERVICE SecurityQos,
+    PPORT_VIEW ClientView OPTIONAL,
+    PSID Sid OPTIONAL,
+    PREMOTE_PORT_VIEW ServerView OPTIONAL,
+    PULONG MaxMessageLength OPTIONAL,
+    PVOID ConnectionInformation OPTIONAL,
+    PULONG ConnectionInformationLength OPTIONAL
+);
+
 NTSTATUS
 NTAPI
 NtSetBootEntryOrder(

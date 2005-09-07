@@ -14,11 +14,9 @@
 	<linkerflag>-lgcc</linkerflag>
 	<linkerflag>-nostartfiles</linkerflag>
 	<directory name="csr">
+		<file>api.c</file>
 		<file>capture.c</file>
-		<file>lpc.c</file>
-		<file>probe.c</file>
-		<file>srv.c</file>
-		<file>thread.c</file>
+		<file>connect.c</file>
 	</directory>
 	<directory name="dbg">
 		<file>debug.c</file>

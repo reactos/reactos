@@ -16,6 +16,8 @@
 #define NDEBUG
 #include "../include/debug.h"
 
+#define CSR_BASE_DLL 0 // <- This should be 1 when CSR gets committed
+
 /* GLOBALS *******************************************************************/
 
 extern UNICODE_STRING SystemDirectory;
@@ -198,41 +200,46 @@ BasepInitConsole(VOID)
 }
 
 
-BOOL STDCALL
+BOOL
+STDCALL
 DllMain(HANDLE hDll,
-	DWORD dwReason,
-	LPVOID lpReserved)
+        DWORD dwReason,
+        LPVOID lpReserved)
 {
-  NTSTATUS Status;
+    NTSTATUS Status;
+    BOOLEAN IsServer;
+    ULONG Dummy;
+    ULONG DummySize = sizeof(Dummy);
 
-  (void)lpReserved;
+    DPRINT("DllMain(hInst %lx, dwReason %lu)\n",
+           hDll, dwReason);
 
-  DPRINT("DllMain(hInst %lx, dwReason %lu)\n",
-	 hDll, dwReason);
-
-  switch (dwReason)
+    switch (dwReason)
     {
-      case DLL_PROCESS_ATTACH:
-	DPRINT("DLL_PROCESS_ATTACH\n");
+        case DLL_PROCESS_ATTACH:
 
-	LdrDisableThreadCalloutsForDll ((PVOID)hDll);
+        /* Don't bother us for each thread */
+        LdrDisableThreadCalloutsForDll((PVOID)hDll);
 
-	/*
-	 * Connect to the csrss server
-	 */
-	Status = CsrClientConnectToServer(L"\\Windows\\ApiPort",
-                                      0,
-                                      NULL,
-                                      NULL,
-                                      0,
-                                      NULL);
-	if (!NT_SUCCESS(Status))
-	  {
-	    DbgPrint("Failed to connect to csrss.exe (Status %lx)\n",
-		     Status);
-	    ZwTerminateProcess(NtCurrentProcess(), Status);
-	    return FALSE;
-	  }
+        /* Connect to the base server */
+        Status = CsrClientConnectToServer(L"\\Windows", // <- FIXME: SessionDir
+                                          CSR_BASE_DLL,
+                                          &Dummy,
+                                          &DummySize,
+                                          &IsServer);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to connect to CSR (Status %lx)\n", Status);
+            ZwTerminateProcess(NtCurrentProcess(), Status);
+            return FALSE;
+        }
+
+        /* Check if we are running a CSR Server */
+        if (!IsServer)
+        {
+            /* Set the termination port for the thread */
+            CsrNewThread();
+        }
 
 	hProcessHeap = RtlGetProcessHeap();
    hCurrentModule = hDll;

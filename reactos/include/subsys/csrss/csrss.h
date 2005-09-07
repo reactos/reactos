@@ -484,6 +484,7 @@ typedef struct
 typedef struct _CSR_API_MESSAGE
 {
     PORT_MESSAGE Header;
+    PVOID CsrCaptureData;
     ULONG Type;
     NTSTATUS Status;
     union
@@ -543,5 +544,76 @@ typedef struct _CSR_API_MESSAGE
         CSRSS_GET_PROCESS_LIST GetProcessListRequest;
     } Data;
 } CSR_API_MESSAGE, *PCSR_API_MESSAGE;
+
+/* Types used in the new CSR. Temporarly here for proper compile of NTDLL */
+#define CSR_SRV_SERVER 0
+
+#define CsrSrvClientConnect             0
+#define CsrSrvIdentifyAlertableThread   3
+#define CsrSrvSetPriorityClass          4
+
+#define CSR_MAKE_OPCODE(s,m) ((s) << 16) | (m)
+
+typedef struct _CSR_CONNECTION_INFO
+{
+    ULONG Version;
+    ULONG Unknown;
+    HANDLE ObjectDirectory;
+    PVOID SharedSectionBase;
+    PVOID SharedSectionHeap;
+    PVOID SharedSectionData;
+    ULONG DebugFlags;
+    ULONG Unknown2[3];
+    HANDLE ProcessId;
+} CSR_CONNECTION_INFO, *PCSR_CONNECTION_INFO;
+
+typedef struct _CSR_CLIENT_CONNECT
+{
+    ULONG ServerId;
+    PVOID ConnectionInfo;
+    ULONG ConnectionInfoSize;
+} CSR_CLIENT_CONNECT, *PCSR_CLIENT_CONNECT;
+
+typedef struct _CSR_IDENTIFY_ALTERTABLE_THREAD
+{
+    CLIENT_ID Cid;
+} CSR_IDENTIFY_ALTERTABLE_THREAD, *PCSR_IDENTIFY_ALTERTABLE_THREAD;
+
+typedef struct _CSR_SET_PRIORITY_CLASS
+{
+    HANDLE hProcess;
+    ULONG PriorityClass;
+} CSR_SET_PRIORITY_CLASS, *PCSR_SET_PRIORITY_CLASS;
+
+typedef struct _CSR_API_MESSAGE2
+{
+    PORT_MESSAGE Header;
+    union
+    {
+        CSR_CONNECTION_INFO ConnectionInfo;
+        struct
+        {
+            PVOID CsrCaptureData;
+            CSR_API_NUMBER Opcode;
+            ULONG Status; 
+            ULONG Reserved;
+            union
+            {
+                CSR_CLIENT_CONNECT ClientConnect;
+                CSR_SET_PRIORITY_CLASS SetPriorityClass;
+                CSR_IDENTIFY_ALTERTABLE_THREAD IdentifyAlertableThread;
+            };
+        };
+    };
+} CSR_API_MESSAGE2, *PCSR_API_MESSAGE2;
+
+typedef struct _CSR_CAPTURE_BUFFER
+{
+    ULONG Size;
+    struct _CSR_CAPTURE_BUFFER *PreviousCaptureBuffer;
+    ULONG PointerCount;
+    ULONG_PTR BufferEnd;
+    ULONG_PTR PointerArray[1];
+} CSR_CAPTURE_BUFFER, *PCSR_CAPTURE_BUFFER;
 
 #endif /* __INCLUDE_CSRSS_CSRSS_H */
