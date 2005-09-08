@@ -59,9 +59,21 @@
 	The current implemention of rbuild generates a dependency rule 
 	for each occurence of a file. 
 -->
+	<file>ctype.c</file>
 	<file>memccpy.c</file>
 	<file>memcmp.c</file>
+	<file>memicmp.c</file>
 	<file>strcspn.c</file>
+	<file>stricmp.c</file>
+	<file>strnicmp.c</file>
+	<file>strlwr.c</file>
+	<file>strrev.c</file>
+	<file>strset.c</file>
+	<file>strstr.c</file>
+	<file>strupr.c</file>
 	<file>strpbrk.c</file>
 	<file>strspn.c</file>
+	<file>wstring.c</file>
+	<file>wcsrev.c</file>
+	<file>wcsnset.c</file>
 </module>

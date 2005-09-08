@@ -1,19 +1,5 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            lib/ntdll/string/wstring.c
- * PURPOSE:         Wide string functions
- * PROGRAMMER:      David Welch (welch@mcmail.com)
- * UPDATE HISTORY:
- *                  Created 22/05/98
- *   1998/12/04  RJJ  Cleaned up and added i386 def checks
- */
-
-/* INCLUDES *****************************************************************/
-
-#include <ntdll.h>
-
+#include <string.h>
+#include <ctype.h>
 
 /* FUNCTIONS *****************************************************************/
 

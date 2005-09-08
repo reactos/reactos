@@ -1,16 +1,5 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            lib/ntdll/rtl/ctype.c
- * PURPOSE:         Character type and conversion functions
- * PROGRAMMERS:     ???
- *                  Eric Kohl
- * HISTORY:         ???: Created
- *                  29/12/1999: Added missing functions and changed
- *                              all functions to use ctype table
- */
-#include <ntdll.h>
+#include <string.h>
+#include <ctype.h>
 
 #undef _pctype
 

@@ -314,7 +314,6 @@
 		</if>
 		<file>atom.c</file>
 		<file>capture.c</file>
-		<file>ctype.c</file>
 		<file>debug.c</file>
 		<file>libsupp.c</file>
 		<file>misc.c</file>
@@ -323,10 +322,8 @@
 		<file>regio.c</file>
 		<file>sprintf.c</file>
 		<file>stdlib.c</file>
-		<file>string.c</file>
 		<file>strtok.c</file>
 		<file>swprintf.c</file>
-		<file>wstring.c</file>
 	</directory>
 	<directory name="se">
 		<file>access.c</file>

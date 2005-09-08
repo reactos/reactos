@@ -1,7 +1,8 @@
-/* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
-#include <ntdll.h>
+#include <string.h>
+#include <ctype.h>
 
 /*
+
  * @implemented
  */
 int _strnicmp(const char *s1, const char *s2, size_t n)

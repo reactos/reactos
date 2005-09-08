@@ -12,6 +12,7 @@
 	<library>intrlck</library>
 	<library>string</library>
 	<linkerflag>-lgcc</linkerflag>
+	<linkerflag>-nostdlib</linkerflag>
 	<linkerflag>-nostartfiles</linkerflag>
 	<directory name="csr">
 		<file>api.c</file>
@@ -61,16 +62,6 @@
 		<file>wtoi64.c</file>
 		<file>wtoi.c</file>
 		<file>wtol.c</file>
-	</directory>
-	<directory name="string">
-		<file>ctype.c</file>
-		<file>memicmp.c</file>
-		<file>stricmp.c</file>
-		<file>strlwr.c</file>
-		<file>strnicmp.c</file>
-		<file>strstr.c</file>
-		<file>strupr.c</file>
-		<file>wstring.c</file>
 	</directory>
 	<directory name="def">
 		<file>ntdll.rc</file>
