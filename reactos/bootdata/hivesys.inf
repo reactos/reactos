@@ -611,7 +611,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\usbohci","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\usbohci","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\usbohci","Start",0x00010001,0x00000003
 HKLM,"SYSTEM\CurrentControlSet\Services\usbohci","Group",0x00000000,"Base"
-HKLM,"SYSTEM\CurrentControlSet\Services\usbohci","ImagePath",0x00020000,"System32\drivers\ohci.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\usbohci","ImagePath",0x00020000,"System32\drivers\usbohci.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\usbohci","Tag",0x00010001,0x0000000f
 HKLM,"SYSTEM\CurrentControlSet\Services\usbohci","DisplayName",0x00000000,"ReactOS USB OHCI cromwell-type driver"
 ;hard coded values for Virtual PC 6/7 (Mac)
