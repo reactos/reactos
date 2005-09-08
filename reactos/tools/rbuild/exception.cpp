@@ -187,3 +187,14 @@ InvocationFailedException::InvocationFailedException ( const std::string& comman
 	Command = command;
 	ExitCode = exitcode;
 }
+
+
+UnsupportedBuildToolException::UnsupportedBuildToolException ( const std::string& buildTool,
+                                                               const std::string& version )
+	: Exception ( "Build tool '%s' with version '%s' is unsupported. Please upgrade your build tool.",
+	              buildTool.c_str (),
+	              version.c_str () )
+{
+	BuildTool = buildTool;
+	Version  = version;
+}

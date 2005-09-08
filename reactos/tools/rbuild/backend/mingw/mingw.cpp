@@ -361,6 +361,7 @@ void
 MingwBackend::ProcessNormal ()
 {
 	DetectCompiler ();
+	DetectBinutils ();
 	DetectNetwideAssembler ();
 	DetectPipeSupport ();
 	DetectPCHSupport ();
@@ -811,6 +812,111 @@ MingwBackend::TryToDetectThisNetwideAssembler ( const string& assembler )
 		NUL );
 	int exitcode = system ( command.c_str () );
 	return (exitcode == 0);
+}
+
+bool
+MingwBackend::TryToDetectThisBinutils ( const string& binutils )
+{
+	string command = ssprintf (
+		"%s -v 1>%s",
+		binutils.c_str (),
+		NUL,
+		NUL );
+	int exitcode = system ( command.c_str () );
+	return (exitcode == 0);
+}
+
+string
+MingwBackend::GetBinutilsVersion ( const string& binutilsCommand )
+{
+	FILE *fp;
+	int ch, i;
+	char buffer[81];
+
+	string versionCommand = ssprintf ( "%s -v",
+	                                   binutilsCommand.c_str (),
+	                                   NUL,
+	                                   NUL );
+	fp = popen ( versionCommand.c_str () , "r" );
+	for( i = 0; ( i < 80 ) && ( feof ( fp ) == 0 ); i++ )
+	{
+		buffer[i] = (char) ch;
+		ch = fgetc( fp );
+	}
+	buffer[i] = '\0';
+	pclose ( fp );
+	
+	char separators[] = " ";
+	char *token;
+	char *prevtoken;
+	
+	token = strtok ( buffer, separators );
+	while ( token != NULL )
+	{
+		prevtoken = token;
+		token = strtok ( NULL, separators );
+	}
+	string version = string ( prevtoken );
+	int firstSpace = version.find_last_not_of ( " \t" );
+	if ( firstSpace != -1 )
+		return string ( version, 0, firstSpace - 1);
+	else
+		return version;
+}
+
+bool
+MingwBackend::IsSupportedBinutilsVersion ( const string& binutilsVersion )
+{
+	if ( ( ( strcmp ( binutilsVersion.c_str (), "20040902") >= 0 ) &&
+	       ( strcmp ( binutilsVersion.c_str (), "20041008") <= 0 ) ) ||
+    	       ( strcmp ( binutilsVersion.c_str (), "20031001") < 0 ) )
+		return false;
+	else
+		return true;
+}
+
+void
+MingwBackend::DetectBinutils ()
+{
+	printf ( "Detecting binutils..." );
+
+	bool detectedBinutils = false;
+	const string& ROS_PREFIXValue = Environment::GetVariable ( "ROS_PREFIX" );
+	if ( ROS_PREFIXValue.length () > 0 )
+	{
+		binutilsPrefix = ROS_PREFIXValue;
+		binutilsCommand = binutilsPrefix + "-ld";
+		detectedBinutils = TryToDetectThisBinutils ( binutilsCommand );
+	}
+#if defined(WIN32)
+	if ( !detectedBinutils )
+	{
+		binutilsPrefix = "";
+		binutilsCommand = "ld";
+		detectedBinutils = TryToDetectThisBinutils ( binutilsCommand );
+	}
+#endif
+	if ( !detectedBinutils )
+	{
+		binutilsPrefix = "mingw32";
+		binutilsCommand = binutilsPrefix + "-ld";
+		detectedBinutils = TryToDetectThisBinutils ( binutilsCommand );
+	}
+	if ( detectedBinutils )
+	{
+		const string& binutilsVersion = GetBinutilsVersion ( binutilsCommand );
+		if ( IsSupportedBinutilsVersion ( binutilsVersion ) )
+			printf ( "detected (%s)\n", binutilsCommand.c_str () );
+		else
+		{
+			printf ( "detected (%s), but with unsupported version (%s)\n",
+			         binutilsCommand.c_str (),
+			         binutilsVersion.c_str () );
+			throw UnsupportedBuildToolException ( binutilsCommand, binutilsVersion );
+		}
+	}
+	else
+		printf ( "not detected\n" );
 }
 
 void
