@@ -221,23 +221,20 @@ NtUserCreateCaret(
    int nWidth,
    int nHeight)
 {
-   PWINDOW_OBJECT WindowObject;
+   PWINDOW_OBJECT Window;
    PUSER_MESSAGE_QUEUE ThreadQueue;
    DECLARE_RETURN(BOOL);
 
    DPRINT("Enter NtUserCreateCaret\n");
    UserEnterExclusive();
 
-   WindowObject = IntGetWindowObject(hWnd);
-   if(!WindowObject)
+   if(!(Window = UserGetWindowObject(hWnd)))
    {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
       RETURN(FALSE);
    }
 
-   if(WindowObject->OwnerThread != PsGetCurrentThread())
+   if(Window->OwnerThread != PsGetCurrentThread())
    {
-      IntReleaseWindowObject(WindowObject);
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       RETURN(FALSE);
    }
@@ -265,8 +262,6 @@ NtUserCreateCaret(
    ThreadQueue->CaretInfo->Visible = 0;
    ThreadQueue->CaretInfo->Showing = 0;
 
-   IntReleaseWindowObject(WindowObject);
-
    RETURN(TRUE);
 
 CLEANUP:
@@ -282,7 +277,7 @@ NtUserGetCaretBlinkTime(VOID)
    DECLARE_RETURN(UINT);
 
    DPRINT("Enter NtUserGetCaretBlinkTime\n");
-   UserEnterExclusive();
+   UserEnterShared();
 
    RETURN(IntGetCaretBlinkTime());
 
@@ -322,11 +317,11 @@ CLEANUP:
 }
 
 
-BOOL FASTCALL co_UserHideCaret(PWINDOW_OBJECT WindowObject)
+BOOL FASTCALL co_UserHideCaret(PWINDOW_OBJECT Window)
 {
    PUSER_MESSAGE_QUEUE ThreadQueue;
 
-   if(WindowObject->OwnerThread != PsGetCurrentThread())
+   if(Window->OwnerThread != PsGetCurrentThread())
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       return FALSE;
@@ -334,7 +329,7 @@ BOOL FASTCALL co_UserHideCaret(PWINDOW_OBJECT WindowObject)
 
    ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
 
-   if(ThreadQueue->CaretInfo->hWnd != WindowObject->hSelf)
+   if(ThreadQueue->CaretInfo->hWnd != Window->hSelf)
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       return FALSE;
@@ -342,7 +337,7 @@ BOOL FASTCALL co_UserHideCaret(PWINDOW_OBJECT WindowObject)
 
    if(ThreadQueue->CaretInfo->Visible)
    {
-      IntKillTimer(WindowObject->hSelf, IDCARETTIMER, TRUE);
+      IntKillTimer(Window->hSelf, IDCARETTIMER, TRUE);
 
       co_IntHideCaret(ThreadQueue->CaretInfo);
       ThreadQueue->CaretInfo->Visible = 0;
@@ -358,22 +353,21 @@ STDCALL
 NtUserHideCaret(
    HWND hWnd)
 {
-   PWINDOW_OBJECT WindowObject;
+   PWINDOW_OBJECT Window;
    DECLARE_RETURN(BOOL);
    BOOL ret;
 
    DPRINT("Enter NtUserHideCaret\n");
    UserEnterExclusive();
 
-   WindowObject = IntGetWindowObject(hWnd);
-   if(!WindowObject)
+   if(!(Window = UserGetWindowObject(hWnd)))
    {
-      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       RETURN(FALSE);
    }
 
-   ret = co_UserHideCaret(WindowObject);
-   IntReleaseWindowObject(WindowObject);
+   UserRefObjectCo(Window);
+   ret = co_UserHideCaret(Window);
+   UserDerefObjectCo(Window);
 
    RETURN(ret);
 
@@ -421,22 +415,22 @@ STDCALL
 NtUserShowCaret(
    HWND hWnd)
 {
-   PWINDOW_OBJECT WindowObject;
+   PWINDOW_OBJECT Window;
    DECLARE_RETURN(BOOL);
    BOOL ret;
 
    DPRINT("Enter NtUserShowCaret\n");
    UserEnterExclusive();
 
-   WindowObject = IntGetWindowObject(hWnd);
-   if(!WindowObject)
+   if(!(Window = UserGetWindowObject(hWnd)))
    {
-      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       RETURN(FALSE);
    }
 
-   ret = co_UserShowCaret(WindowObject);
-   IntReleaseWindowObject(WindowObject);
+   UserRefObjectCo(Window);
+   ret = co_UserShowCaret(Window);
+   UserDerefObjectCo(Window);
+
    RETURN(ret);
 
 CLEANUP:

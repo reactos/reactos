@@ -466,7 +466,7 @@ co_IntCreateScrollBars(PWINDOW_OBJECT Window)
 
    RtlZeroMemory(Window->Scroll, Size);
 
-   Result = co_WinPosGetNonClientSize(Window->hSelf,
+   Result = co_WinPosGetNonClientSize(Window,
                                       &Window->WindowRect,
                                       &Window->ClientRect);
 
@@ -597,7 +597,7 @@ NtUserGetScrollInfo(HWND hWnd, int fnBar, LPSCROLLINFO lpsi)
    DECLARE_RETURN(BOOL);
 
    DPRINT("Enter NtUserGetScrollInfo\n");
-   UserEnterShared();
+   UserEnterExclusive();
 
    Status = MmCopyFromCaller(&psi.cbSize, &(lpsi->cbSize), sizeof(UINT));
    if(!NT_SUCCESS(Status) ||

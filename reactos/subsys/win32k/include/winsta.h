@@ -42,7 +42,6 @@ typedef struct _WINSTATION_OBJECT
     struct _DESKTOP_OBJECT* ActiveDesktop;
     /* FIXME: Clipboard */
     LIST_ENTRY HotKeyListHead;
-    FAST_MUTEX HotKeyListLock;
 } WINSTATION_OBJECT, *PWINSTATION_OBJECT;
 
 extern WINSTATION_OBJECT *InputWindowStation;

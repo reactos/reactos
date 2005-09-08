@@ -72,7 +72,11 @@ CleanupAcceleratorImpl(VOID)
 static
 PACCELERATOR_TABLE FASTCALL UserGetAccelObject(HACCEL hAccel)
 {
-   PACCELERATOR_TABLE Accel= UserGetObject(&gHandleTable, hAccel,  otAccel);
+   PACCELERATOR_TABLE Accel;
+   
+   if (!hAccel) return NULL;
+   
+   Accel= UserGetObject(&gHandleTable, hAccel,  otAccel);
 
    if (Accel)
    {
@@ -355,7 +359,7 @@ found:
       mesg = 1;
    else if (IntGetCaptureWindow())
       mesg = 2;
-   else if (!IntIsWindowVisible(Window->hSelf)) /* FIXME: WINE IsWindowEnabled == IntIsWindowVisible? */
+   else if (!IntIsWindowVisible(Window)) /* FIXME: WINE IsWindowEnabled == IntIsWindowVisible? */
       mesg = 3;
    else
    {

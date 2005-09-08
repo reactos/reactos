@@ -227,7 +227,7 @@ NtUserGetSystemMetrics(ULONG Index)
    DECLARE_RETURN(ULONG);
 
    DPRINT("Enter NtUserGetSystemMetrics\n");
-   UserEnterExclusive();
+   UserEnterShared();
 
    RETURN(UserGetSystemMetrics(Index));
 

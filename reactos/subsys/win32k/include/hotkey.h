@@ -34,12 +34,6 @@ UnregisterWindowHotKeys(PWINDOW_OBJECT Window);
 VOID
 UnregisterThreadHotKeys(struct _ETHREAD *Thread);
 
-#define IntLockHotKeys(WinStaObject) \
-  ExAcquireFastMutex(&WinStaObject->HotKeyListLock)
-
-#define IntUnLockHotKeys(WinStaObject) \
-  ExReleaseFastMutex(&WinStaObject->HotKeyListLock)
-
 #endif /* _WIN32K_HOTKEY_H */
 
 /* EOF */

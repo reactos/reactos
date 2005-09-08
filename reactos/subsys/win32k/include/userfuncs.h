@@ -67,7 +67,7 @@ HWND FASTCALL UserGetActiveWindow();
 
 HWND FASTCALL UserGetForegroundWindow(VOID);
 
-HWND FASTCALL UserSetFocus(HWND hWnd);
+HWND FASTCALL co_UserSetFocus(PWINDOW_OBJECT Window);
 
 /*************** WINDC.C ***************/
 

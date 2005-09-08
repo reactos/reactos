@@ -41,8 +41,7 @@
 /* GLOBALS *******************************************************************/
 
 /* list of monitors */
-static PMONITOR_OBJECT MonitorList = NULL;
-static FAST_MUTEX MonitorListLock; /* R/W lock for monitor list */
+static PMONITOR_OBJECT gMonitorList = NULL;
 
 /* INITALIZATION FUNCTIONS ****************************************************/
 
@@ -50,7 +49,6 @@ NTSTATUS
 InitMonitorImpl()
 {
    DPRINT("Initializing monitor implementation...\n");
-   ExInitializeFastMutex(&MonitorListLock);
 
    return STATUS_SUCCESS;
 }
@@ -121,24 +119,11 @@ IntDestroyMonitorObject(IN PMONITOR_OBJECT pMonitor)
    ObmDereferenceObject(pMonitor);
 }
 
-/* IntGetMonitorObject
- *
- * Returns the MONITOR_OBJECT for the given monitor handle.
- *
- * Arguments
- *
- *   hMonitor
- *     Monitor handle for which to get the MONITOR_OBJECT
- *
- * Return value
- *   Returns a pointer to a MONITOR_OBJECT on success and increase the
- *   refcount of the monitor object; NULL on failure
- */
-static
-PMONITOR_OBJECT
-IntGetMonitorObject(IN HMONITOR hMonitor)
-{
 
+static
+PMONITOR_OBJECT FASTCALL
+UserGetMonitorObject(IN HMONITOR hMonitor)
+{
    PMONITOR_OBJECT Monitor = (PMONITOR_OBJECT)UserGetObject(&gHandleTable, hMonitor, otMonitor);
    if (!Monitor)
    {
@@ -148,22 +133,9 @@ IntGetMonitorObject(IN HMONITOR hMonitor)
 
    ASSERT(USER_BODY_TO_HEADER(Monitor)->RefCount >= 0);
 
-   USER_BODY_TO_HEADER(Monitor)->RefCount++;
-
    return Monitor;
 }
 
-/* IntReleaseMonitorObject
- *
- * Releases the given MONITOR_OBJECT.
- *
- * Arguments
- *
- *   pMonitor
- *     MONITOR_OBJECT to be released
- */
-#define IntReleaseMonitorObject(MonitorObj) \
-   ObmDereferenceObject(MonitorObj);
 
 /* IntAttachMonitor
  *
@@ -202,25 +174,23 @@ IntAttachMonitor(IN GDIDEVICE *pGdiDevice,
    }
 
    Monitor->GdiDevice = pGdiDevice;
-   ExAcquireFastMutex(&MonitorListLock);
-   if (MonitorList == NULL)
+   if (gMonitorList == NULL)
    {
       DPRINT("Primary monitor is beeing attached\n");
       Monitor->IsPrimary = TRUE;
-      MonitorList = Monitor;
+      gMonitorList = Monitor;
    }
    else
    {
       PMONITOR_OBJECT p;
       DPRINT("Additional monitor is beeing attached\n");
-      for (p = MonitorList; p->Next != NULL; p = p->Next)
+      for (p = gMonitorList; p->Next != NULL; p = p->Next)
          ;
       {
          p->Next = Monitor;
       }
       Monitor->Prev = p;
    }
-   ExReleaseFastMutex(&MonitorListLock);
 
    return STATUS_SUCCESS;
 }
@@ -241,8 +211,7 @@ IntDetachMonitor(IN GDIDEVICE *pGdiDevice)
 {
    PMONITOR_OBJECT Monitor;
 
-   ExAcquireFastMutex(&MonitorListLock);
-   for (Monitor = MonitorList; Monitor != NULL; Monitor = Monitor->Next)
+   for (Monitor = gMonitorList; Monitor != NULL; Monitor = Monitor->Next)
    {
       if (Monitor->GdiDevice == pGdiDevice)
          break;
@@ -251,7 +220,6 @@ IntDetachMonitor(IN GDIDEVICE *pGdiDevice)
    if (Monitor == NULL)
    {
       /* no monitor for given device found */
-      ExReleaseFastMutex(&MonitorListLock);
       return STATUS_INVALID_PARAMETER;
    }
 
@@ -264,9 +232,9 @@ IntDetachMonitor(IN GDIDEVICE *pGdiDevice)
       ExReleaseFastMutex(&NewPrimaryMonitor->Lock);
    }
 
-   if (MonitorList == Monitor)
+   if (gMonitorList == Monitor)
    {
-      MonitorList = Monitor->Next;
+      gMonitorList = Monitor->Next;
       if (Monitor->Next != NULL)
          Monitor->Next->Prev = NULL;
    }
@@ -276,7 +244,6 @@ IntDetachMonitor(IN GDIDEVICE *pGdiDevice)
       if (Monitor->Next != NULL)
          Monitor->Next->Prev = Monitor->Prev;
    }
-   ExReleaseFastMutex(&MonitorListLock);
 
    IntDestroyMonitorObject(Monitor);
 
@@ -296,14 +263,12 @@ IntGetPrimaryMonitor()
 {
    PMONITOR_OBJECT Monitor;
 
-   ExAcquireFastMutex(&MonitorListLock);
-   for (Monitor = MonitorList; Monitor != NULL; Monitor = Monitor->Next)
+   for (Monitor = gMonitorList; Monitor != NULL; Monitor = Monitor->Next)
    {
       /* FIXME: I guess locking the monitor is not neccessary to read 1 int */
       if (Monitor->IsPrimary)
          break;
    }
-   ExReleaseFastMutex(&MonitorListLock);
 
    return Monitor;
 }
@@ -352,8 +317,7 @@ IntGetMonitorsFromRect(OPTIONAL IN LPCRECT pRect,
    LONG iNearestDistanceX = 0x7fffffff, iNearestDistanceY = 0x7fffffff;
 
    /* find monitors which intersect the rectangle */
-   ExAcquireFastMutex(&MonitorListLock);
-   for (Monitor = MonitorList; Monitor != NULL; Monitor = Monitor->Next)
+   for (Monitor = gMonitorList; Monitor != NULL; Monitor = Monitor->Next)
    {
       RECT MonitorRect, IntersectionRect;
 
@@ -419,7 +383,6 @@ IntGetMonitorsFromRect(OPTIONAL IN LPCRECT pRect,
       }
       iCount++;
    }
-   ExReleaseFastMutex(&MonitorListLock);
 
    if (iCount == 0 && flags == MONITOR_DEFAULTTONEAREST)
    {
@@ -646,31 +609,32 @@ NtUserGetMonitorInfo(
    PMONITOR_OBJECT Monitor;
    MONITORINFOEXW MonitorInfo;
    NTSTATUS Status;
-
+   DECLARE_RETURN(BOOL);
+   
+   DPRINT("Enter NtUserGetMonitorInfo\n");
+   UserEnterShared();
+   
    /* get monitor object */
-   if ((Monitor = IntGetMonitorObject(hMonitor)) == NULL)
+   if (!(Monitor = UserGetMonitorObject(hMonitor)))
    {
       DPRINT("Couldnt find monitor 0x%lx\n", hMonitor);
-      SetLastNtError(STATUS_INVALID_HANDLE);
-      return FALSE;
+      RETURN(FALSE);
    }
 
    /* get size of pMonitorInfo */
    Status = MmCopyFromCaller(&MonitorInfo.cbSize, &pMonitorInfo->cbSize, sizeof (MonitorInfo.cbSize));
    if (!NT_SUCCESS(Status))
    {
-      IntReleaseMonitorObject(Monitor);
       SetLastNtError(Status);
-      return FALSE;
+      RETURN(FALSE);
    }
    if ((MonitorInfo.cbSize != sizeof (MONITORINFO)) &&
          (MonitorInfo.cbSize != sizeof (MONITORINFOEXW)))
    {
       SetLastNtError(STATUS_INVALID_PARAMETER);
-      return FALSE;
+      RETURN(FALSE);
    }
 
-   ExAcquireFastMutex(&Monitor->Lock);
    /* fill monitor info */
    MonitorInfo.rcMonitor.left = 0; /* FIXME: get origin */
    MonitorInfo.rcMonitor.top = 0; /* FIXME: get origin */
@@ -678,6 +642,7 @@ NtUserGetMonitorInfo(
    MonitorInfo.rcMonitor.bottom = MonitorInfo.rcMonitor.top + Monitor->GdiDevice->GDIInfo.ulVertRes;
    MonitorInfo.rcWork = MonitorInfo.rcMonitor; /* FIXME: use DEVMODE panning to calculate work area? */
    MonitorInfo.dwFlags = 0;
+
    if (Monitor->IsPrimary)
       MonitorInfo.dwFlags |= MONITORINFOF_PRIMARY;
 
@@ -692,8 +657,6 @@ NtUserGetMonitorInfo(
       memcpy(MonitorInfo.szDevice, Monitor->DeviceName.Buffer, len);
       memcpy(MonitorInfo.szDevice + (len / sizeof (WCHAR)), &nul, sizeof (WCHAR));
    }
-   ExReleaseFastMutex(&Monitor->Lock);
-   IntReleaseMonitorObject(Monitor);
 
    /* output data */
    Status = MmCopyToCaller(pMonitorInfo, &MonitorInfo, MonitorInfo.cbSize);
@@ -701,12 +664,17 @@ NtUserGetMonitorInfo(
    {
       DPRINT("GetMonitorInfo: MmCopyToCaller failed\n");
       SetLastNtError(Status);
-      return FALSE;
+      RETURN(FALSE);
    }
 
    DPRINT("GetMonitorInfo: success\n");
 
-   return TRUE;
+   RETURN(TRUE);
+   
+CLEANUP:
+   DPRINT("Leave NtUserGetMonitorInfo, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;
 }
 
 /* NtUserMonitorFromPoint
@@ -885,12 +853,14 @@ NtUserMonitorFromWindow(
    PWINDOW_OBJECT Window;
    HMONITOR hMonitor = NULL;
    RECT Rect;
-
-   Window = IntGetWindowObject(hWnd);
-   if (Window == NULL)
+   DECLARE_RETURN(HMONITOR);
+   
+   DPRINT("Enter NtUserMonitorFromWindow\n");
+   UserEnterShared();
+   
+   if (!(Window = UserGetWindowObject(hWnd)))
    {
-      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-      return (HMONITOR)NULL;
+      RETURN(NULL);
    }
 
    Rect.left = Rect.right = Window->WindowRect.left;
@@ -898,7 +868,10 @@ NtUserMonitorFromWindow(
 
    IntGetMonitorsFromRect(&Rect, &hMonitor, NULL, 1, dwFlags);
 
-   IntReleaseWindowObject(Window);
-
-   return hMonitor;
+   RETURN(hMonitor);
+   
+CLEANUP:
+   DPRINT("Leave NtUserMonitorFromWindow, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;   
 }

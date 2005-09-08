@@ -154,7 +154,7 @@ HWND FASTCALL
 IntGetActiveWindow (VOID);
 
 BOOL FASTCALL
-IntIsWindowVisible (HWND hWnd);
+IntIsWindowVisible (PWINDOW_OBJECT Window);
 
 BOOL FASTCALL
 IntIsChildWindow (HWND Parent, HWND Child);
@@ -178,10 +178,10 @@ PWINDOW_OBJECT FASTCALL
 IntGetParentObject(PWINDOW_OBJECT Wnd);
 
 INT FASTCALL
-IntGetWindowRgn(HWND hWnd, HRGN hRgn);
+IntGetWindowRgn(PWINDOW_OBJECT Window, HRGN hRgn);
 
 INT FASTCALL
-IntGetWindowRgnBox(HWND hWnd, RECT *Rect);
+IntGetWindowRgnBox(PWINDOW_OBJECT Window, RECT *Rect);
 
 BOOL FASTCALL
 IntGetWindowInfo(PWINDOW_OBJECT WindowObject, PWINDOWINFO pwi);
@@ -200,7 +200,7 @@ DWORD IntRemoveProcessWndProcHandles(HANDLE ProcessID);
 DWORD IntAddWndProcHandle(WNDPROC WindowProc, BOOL IsUnicode);
 
 BOOL FASTCALL
-IntShowOwnedPopups( HWND owner, BOOL fShow );
+IntShowOwnedPopups( PWINDOW_OBJECT owner, BOOL fShow );
 
 #endif /* _WIN32K_WINDOW_H */
 

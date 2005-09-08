@@ -49,24 +49,16 @@
 /* From kbdxx.c -- Key changes with numlock */
 #define KNUMP         0x400
 
-/* Lock the keyboard state to prevent unusual concurrent access */
-FAST_MUTEX QueueStateLock;
 
-BYTE QueueKeyStateTable[256];
+BYTE gQueueKeyStateTable[256];
 
-#define IntLockQueueState \
-  ExAcquireFastMutex(&QueueStateLock)
-
-#define IntUnLockQueueState \
-  ExReleaseFastMutex(&QueueStateLock)
 
 /* FUNCTIONS *****************************************************************/
 
 /* Initialization -- Right now, just zero the key state and init the lock */
 NTSTATUS FASTCALL InitKeyboardImpl(VOID)
 {
-   ExInitializeFastMutex(&QueueStateLock);
-   RtlZeroMemory(&QueueKeyStateTable,0x100);
+   RtlZeroMemory(&gQueueKeyStateTable,0x100);
    return STATUS_SUCCESS;
 }
 
@@ -93,7 +85,7 @@ static VOID STDCALL SetKeyState(DWORD key, DWORD vk, DWORD ext, BOOL down)
    if (vk == VK_CAPITAL || vk == VK_NUMLOCK)
    {
       if (down)
-         QueueKeyStateTable[vk] ^= KS_LOCK_BIT;
+         gQueueKeyStateTable[vk] ^= KS_LOCK_BIT;
    }
 
    if (ext && vk == VK_LSHIFT)
@@ -104,46 +96,46 @@ static VOID STDCALL SetKeyState(DWORD key, DWORD vk, DWORD ext, BOOL down)
       vk = VK_RMENU;
 
    if (down)
-      QueueKeyStateTable[vk] |= KS_DOWN_BIT;
+      gQueueKeyStateTable[vk] |= KS_DOWN_BIT;
    else
-      QueueKeyStateTable[vk] &= ~KS_DOWN_MASK;
+      gQueueKeyStateTable[vk] &= ~KS_DOWN_MASK;
 
    if (vk == VK_LSHIFT || vk == VK_RSHIFT)
    {
-      if ((QueueKeyStateTable[VK_LSHIFT] & KS_DOWN_BIT) ||
-            (QueueKeyStateTable[VK_RSHIFT] & KS_DOWN_BIT))
+      if ((gQueueKeyStateTable[VK_LSHIFT] & KS_DOWN_BIT) ||
+            (gQueueKeyStateTable[VK_RSHIFT] & KS_DOWN_BIT))
       {
-         QueueKeyStateTable[VK_SHIFT] |= KS_DOWN_BIT;
+         gQueueKeyStateTable[VK_SHIFT] |= KS_DOWN_BIT;
       }
       else
       {
-         QueueKeyStateTable[VK_SHIFT] &= ~KS_DOWN_MASK;
+         gQueueKeyStateTable[VK_SHIFT] &= ~KS_DOWN_MASK;
       }
    }
 
    if (vk == VK_LCONTROL || vk == VK_RCONTROL)
    {
-      if ((QueueKeyStateTable[VK_LCONTROL] & KS_DOWN_BIT) ||
-            (QueueKeyStateTable[VK_RCONTROL] & KS_DOWN_BIT))
+      if ((gQueueKeyStateTable[VK_LCONTROL] & KS_DOWN_BIT) ||
+            (gQueueKeyStateTable[VK_RCONTROL] & KS_DOWN_BIT))
       {
-         QueueKeyStateTable[VK_CONTROL] |= KS_DOWN_BIT;
+         gQueueKeyStateTable[VK_CONTROL] |= KS_DOWN_BIT;
       }
       else
       {
-         QueueKeyStateTable[VK_CONTROL] &= ~KS_DOWN_MASK;
+         gQueueKeyStateTable[VK_CONTROL] &= ~KS_DOWN_MASK;
       }
    }
 
    if (vk == VK_LMENU || vk == VK_RMENU)
    {
-      if ((QueueKeyStateTable[VK_LMENU] & KS_DOWN_BIT) ||
-            (QueueKeyStateTable[VK_RMENU] & KS_DOWN_BIT))
+      if ((gQueueKeyStateTable[VK_LMENU] & KS_DOWN_BIT) ||
+            (gQueueKeyStateTable[VK_RMENU] & KS_DOWN_BIT))
       {
-         QueueKeyStateTable[VK_MENU] |= KS_DOWN_BIT;
+         gQueueKeyStateTable[VK_MENU] |= KS_DOWN_BIT;
       }
       else
       {
-         QueueKeyStateTable[VK_MENU] &= ~KS_DOWN_MASK;
+         gQueueKeyStateTable[VK_MENU] &= ~KS_DOWN_MASK;
       }
    }
 }
@@ -351,13 +343,12 @@ DWORD FASTCALL UserGetKeyState(DWORD key)
 {
    DWORD ret = 0;
 
-   IntLockQueueState;
    if( key < 0x100 )
    {
-      ret = ((DWORD)(QueueKeyStateTable[key] & KS_DOWN_BIT) << 8 ) |
-            (QueueKeyStateTable[key] & KS_LOCK_BIT);
+      ret = ((DWORD)(gQueueKeyStateTable[key] & KS_DOWN_BIT) << 8 ) |
+            (gQueueKeyStateTable[key] & KS_LOCK_BIT);
    }
-   IntUnLockQueueState;
+
    return ret;
 }
 
@@ -386,13 +377,12 @@ DWORD FASTCALL UserGetAsyncKeyState(DWORD key)
 {
    DWORD ret = 0;
 
-   IntLockQueueState;
    if( key < 0x100 )
    {
-      ret = ((DWORD)(QueueKeyStateTable[key] & KS_DOWN_BIT) << 8 ) |
-            (QueueKeyStateTable[key] & KS_LOCK_BIT);
+      ret = ((DWORD)(gQueueKeyStateTable[key] & KS_DOWN_BIT) << 8 ) |
+            (gQueueKeyStateTable[key] & KS_LOCK_BIT);
    }
-   IntUnLockQueueState;
+
    return ret;
 }
 
@@ -434,7 +424,6 @@ int STDCALL ToUnicodeEx( UINT wVirtKey,
    }
    else
    {
-      IntLockQueueState;
       ToUnicodeResult = ToUnicodeInner( wVirtKey,
                                         wScanCode,
                                         lpKeyState,
@@ -443,7 +432,6 @@ int STDCALL ToUnicodeEx( UINT wVirtKey,
                                         wFlags,
                                         PsGetWin32Thread() ?
                                         PsGetWin32Thread()->KeyboardLayout : 0 );
-      IntUnLockQueueState;
    }
 
    return ToUnicodeResult;
@@ -458,7 +446,7 @@ int STDCALL ToUnicode( UINT wVirtKey,
 {
    return ToUnicodeEx( wVirtKey,
                        wScanCode,
-                       QueueKeyStateTable,
+                       gQueueKeyStateTable,
                        pwszBuff,
                        cchBuff,
                        wFlags,
@@ -735,14 +723,12 @@ IntTranslateKbdMessage(LPMSG lpMsg,
 
    ScanCode = (lpMsg->lParam >> 16) & 0xff;
 
-   IntLockQueueState;
-
    /* All messages have to contain the cursor point. */
    IntGetCursorLocation(PsGetWin32Thread()->Desktop->WindowStation,
                         &NewMsg.pt);
 
    UState = ToUnicodeInner(lpMsg->wParam, HIWORD(lpMsg->lParam) & 0xff,
-                           QueueKeyStateTable, wp, 2, 0,
+                           gQueueKeyStateTable, wp, 2, 0,
                            keyLayout );
 
    if (UState == 1)
@@ -797,7 +783,6 @@ IntTranslateKbdMessage(LPMSG lpMsg,
       Result = TRUE;
    }
 
-   IntUnLockQueueState;
    return Result;
 }
 
@@ -807,33 +792,47 @@ NtUserGetKeyboardState(
    LPBYTE lpKeyState)
 {
    BOOL Result = TRUE;
-
-   IntLockQueueState;
+   DECLARE_RETURN(DWORD);
+   
+   DPRINT("Enter NtUserGetKeyboardState\n");
+   UserEnterShared();
+   
    if (lpKeyState)
    {
-      if(!NT_SUCCESS(MmCopyToCaller(lpKeyState, QueueKeyStateTable, 256)))
+      if(!NT_SUCCESS(MmCopyToCaller(lpKeyState, gQueueKeyStateTable, 256)))
          Result = FALSE;
    }
-   IntUnLockQueueState;
-   return Result;
+
+   RETURN(Result);
+   
+CLEANUP:
+   DPRINT("Leave NtUserGetKeyboardState, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;
 }
 
 DWORD
 STDCALL
-NtUserSetKeyboardState(
-   LPBYTE lpKeyState)
+NtUserSetKeyboardState(LPBYTE lpKeyState)
 {
    BOOL Result = TRUE;
+   DECLARE_RETURN(DWORD);
+   
+   DPRINT("Enter NtUserSetKeyboardState\n");
+   UserEnterExclusive();
 
-   IntLockQueueState;
    if (lpKeyState)
    {
-      if(! NT_SUCCESS(MmCopyFromCaller(QueueKeyStateTable, lpKeyState, 256)))
+      if(! NT_SUCCESS(MmCopyFromCaller(gQueueKeyStateTable, lpKeyState, 256)))
          Result = FALSE;
    }
-   IntUnLockQueueState;
+   
+   RETURN(Result);
 
-   return Result;
+CLEANUP:
+   DPRINT("Leave NtUserSetKeyboardState, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;
 }
 
 static UINT VkToScan( UINT Code, BOOL ExtCode, PKBDTABLES pkKT )
@@ -950,13 +949,23 @@ UINT
 STDCALL
 NtUserMapVirtualKeyEx( UINT Code, UINT Type, DWORD keyboardId, HKL dwhkl )
 {
-   PKBDTABLES keyLayout = PsGetWin32Thread() ?
-                          PsGetWin32Thread()->KeyboardLayout : 0;
+   PKBDTABLES keyLayout;
+   DECLARE_RETURN(UINT);
+   
+   DPRINT("Enter NtUserMapVirtualKeyEx\n");
+   UserEnterExclusive();
+   
+   keyLayout = PsGetWin32Thread() ? PsGetWin32Thread()->KeyboardLayout : 0;
 
    if( !keyLayout )
-      return 0;
+      RETURN(0);
 
-   return IntMapVirtualKeyEx( Code, Type, keyLayout );
+   RETURN(IntMapVirtualKeyEx( Code, Type, keyLayout ));
+   
+CLEANUP:
+   DPRINT("Leave NtUserMapVirtualKeyEx, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;   
 }
 
 
@@ -974,6 +983,10 @@ NtUserToUnicodeEx(
    BYTE KeyStateBuf[0x100];
    PWCHAR OutPwszBuff = 0;
    int ret = 0;
+   DECLARE_RETURN(int);
+   
+   DPRINT("Enter NtUserSetKeyboardState\n");
+   UserEnterShared();//faxme: this syscall doesnt seem to need any locking...
 
 
    if( !NT_SUCCESS(MmCopyFromCaller(KeyStateBuf,
@@ -981,13 +994,13 @@ NtUserToUnicodeEx(
                                     sizeof(KeyStateBuf))) )
    {
       DPRINT1( "Couldn't copy key state from caller.\n" );
-      return 0;
+      RETURN(0);
    }
    OutPwszBuff = ExAllocatePoolWithTag(NonPagedPool,sizeof(WCHAR) * cchBuff, TAG_STRING);
    if( !OutPwszBuff )
    {
       DPRINT1( "ExAllocatePool(%d) failed\n", sizeof(WCHAR) * cchBuff);
-      return 0;
+      RETURN(0);
    }
    RtlZeroMemory( OutPwszBuff, sizeof( WCHAR ) * cchBuff );
 
@@ -1002,7 +1015,12 @@ NtUserToUnicodeEx(
    MmCopyToCaller(pwszBuff,OutPwszBuff,sizeof(WCHAR)*cchBuff);
    ExFreePool(OutPwszBuff);
 
-   return ret;
+   RETURN(ret);
+   
+CLEANUP:
+   DPRINT("Leave NtUserSetKeyboardState, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;   
 }
 
 static int W32kSimpleToupper( int ch )
@@ -1022,12 +1040,17 @@ NtUserGetKeyNameText( LONG lParam, LPWSTR lpString, int nSize )
    UINT VkCode = 0;
    UINT ScanCode = (lParam >> 16) & 0xff;
    BOOL ExtKey = lParam & (1<<24) ? TRUE : FALSE;
-   PKBDTABLES keyLayout =
-      PsGetWin32Thread() ?
+   PKBDTABLES keyLayout;
+   DECLARE_RETURN(DWORD);
+   
+   DPRINT("Enter NtUserGetKeyNameText\n");
+   UserEnterShared();
+   
+   keyLayout = PsGetWin32Thread() ?
       PsGetWin32Thread()->KeyboardLayout : 0;
 
    if( !keyLayout || nSize < 1 )
-      return 0;
+      RETURN(0);
 
    if( lParam & (1<<25) )
    {
@@ -1083,10 +1106,15 @@ NtUserGetKeyNameText( LONG lParam, LPWSTR lpString, int nSize )
       ret = 1;
 
       if( !NT_SUCCESS(MmCopyToCaller( lpString, UCName, 2 * sizeof(WCHAR) )) )
-         return 0;
+         RETURN(0);
    }
 
-   return ret;
+   RETURN(ret);
+   
+CLEANUP:
+   DPRINT("Leave NtUserGetKeyNameText, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;
 }
 
 /*
@@ -1125,11 +1153,9 @@ W32kKeyProcessMessage(LPMSG Msg,
       return;
    }
 
-   IntLockQueueState;
-
    /* arty -- handle numpad -- On real windows, the actual key produced
     * by the messaging layer is different based on the state of numlock. */
-   ModifierBits = ModBits(KeyboardLayout,QueueKeyStateTable);
+   ModifierBits = ModBits(KeyboardLayout,gQueueKeyStateTable);
 
    /* Get the raw scan code, so we can look up whether the key is a numpad
     * key
@@ -1152,7 +1178,6 @@ W32kKeyProcessMessage(LPMSG Msg,
          /* ignore shift codes */
          if( ScanCode == 0x2A || ScanCode == 0x36 )
          {
-            IntUnLockQueueState;
             return;
          }
          VscVkTable = KeyboardLayout->pVSCtoVK_E0;
@@ -1206,7 +1231,7 @@ W32kKeyProcessMessage(LPMSG Msg,
    }
 
    /* We need to unset SYSKEYDOWN if the ALT key is an ALT+Gr */
-   if( QueueKeyStateTable[VK_RMENU] & KS_DOWN_BIT )
+   if( gQueueKeyStateTable[VK_RMENU] & KS_DOWN_BIT )
    {
       if( Msg->message == WM_SYSKEYDOWN )
          Msg->message = WM_KEYDOWN;
@@ -1214,7 +1239,6 @@ W32kKeyProcessMessage(LPMSG Msg,
          Msg->message = WM_KEYUP;
    }
 
-   IntUnLockQueueState;
 }
 
 DWORD
@@ -1310,7 +1334,17 @@ STDCALL
 NtUserGetKeyboardType(
    DWORD TypeFlag)
 {
-   return UserGetKeyboardType(TypeFlag);
+   DECLARE_RETURN(DWORD);
+   
+   DPRINT("Enter NtUserGetKeyboardType\n");
+   UserEnterShared();
+   
+   RETURN( UserGetKeyboardType(TypeFlag));
+   
+CLEANUP:
+   DPRINT("Leave NtUserGetKeyboardType, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;
 }
 
 
@@ -1325,6 +1359,8 @@ NtUserVkKeyScanEx(
    DWORD KeyboardLayout,
    DWORD Unknown2)
 {
+/* FAXME: currently, this routine doesnt seem to need any locking */
+
    PKBDTABLES KeyLayout;
    PVK_TO_WCHAR_TABLE vtwTbl;
    PVK_TO_WCHARS10 vkPtr;

@@ -235,21 +235,18 @@ NtUserGetClassName (
    LPWSTR lpClassName,
    ULONG nMaxCount)
 {
-   PWINDOW_OBJECT WindowObject;
-   LONG Length;
+   PWINDOW_OBJECT Window;
    DECLARE_RETURN(DWORD);
 
    UserEnterShared();
+   DPRINT("Enter NtUserGetClassName\n");   
 
-   WindowObject = IntGetWindowObject(hWnd);
-   if (WindowObject == NULL)
+   if (!(Window = UserGetWindowObject(hWnd)))
    {
-      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       RETURN(0);
    }
-   Length = IntGetClassName(WindowObject, lpClassName, nMaxCount);
-   IntReleaseWindowObject(WindowObject);
-   RETURN(Length);
+
+   RETURN( IntGetClassName(Window, lpClassName, nMaxCount));
 
 CLEANUP:
    DPRINT("Leave NtUserGetClassName, ret=%i\n",_ret_);

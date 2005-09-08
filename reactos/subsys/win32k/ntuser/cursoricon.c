@@ -72,34 +72,47 @@ IntGetCursorLocation(PWINSTATION_OBJECT WinStaObject, POINT *loc)
 }
 
 
-
-
-/* temp hack */
-PCURICON_OBJECT FASTCALL UserGetCurIconObject(HANDLE hWnd)
+#if 0
+static
+PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCursor)
 {
-   PCURICON_OBJECT Window = (PCURICON_OBJECT)UserGetObject(&gHandleTable, hWnd, otCursor);
-   if (!Window)
+   PCURICON_OBJECT Cursor;
+   
+   if (!hCursor) return NULL;
+   
+   Cursor = (PCURICON_OBJECT)UserGetObject(&gHandleTable, hCursor, otCursor);
+   if (!Cursor)
    {
       SetLastWin32Error(ERROR_INVALID_CURSOR_HANDLE);
       return NULL;
    }
 
-   ASSERT(USER_BODY_TO_HEADER(Window)->RefCount >= 0);
-   return Window;
+   ASSERT(USER_BODY_TO_HEADER(Cursor)->RefCount >= 0);
+   return Cursor;
 }
-
-PCURICON_OBJECT FASTCALL
-IntGetCurIconObject(HANDLE Handle)
+#endif
+static
+PCURICON_OBJECT FASTCALL IntGetCurIconObject(HCURSOR hCursor)
 {
-   PCURICON_OBJECT ci = UserGetCurIconObject(Handle);
-   if (ci)
+   PCURICON_OBJECT Cursor;
+   
+   if (!hCursor) return NULL;
+   
+   Cursor = (PCURICON_OBJECT)UserGetObject(&gHandleTable, hCursor, otCursor);
+   if (!Cursor)
    {
-      ASSERT(USER_BODY_TO_HEADER(ci)->RefCount >= 0);
-
-      USER_BODY_TO_HEADER(ci)->RefCount++;
+      SetLastWin32Error(ERROR_INVALID_CURSOR_HANDLE);
+      return NULL;
    }
-   return ci;
+
+   ASSERT(USER_BODY_TO_HEADER(Cursor)->RefCount >= 0);
+   
+   USER_BODY_TO_HEADER(Cursor)->RefCount++;
+   
+   return Cursor;
 }
+
+
 
 #define COLORCURSORS_ALLOWED FALSE
 HCURSOR FASTCALL

@@ -205,7 +205,6 @@ FASTCALL
 co_WinPosArrangeIconicWindows(PWINDOW_OBJECT parent)
 {
    RECT rectParent;
-   HWND hwndChild;
    INT i, x, y, xspacing, yspacing;
    HWND *List = IntWinListChildren(parent);
 
@@ -224,12 +223,10 @@ co_WinPosArrangeIconicWindows(PWINDOW_OBJECT parent)
    {
       PWINDOW_OBJECT WndChild;
 
-      hwndChild = List[i];
-
       if (!(WndChild = UserGetWindowObject(List[i])))
          continue;
 
-      if((UserGetWindowLong( hwndChild, GWL_STYLE, FALSE) & WS_MINIMIZE) != 0 )
+      if((WndChild->Style & WS_MINIMIZE) != 0 )
       {
          UserRefObjectCo(WndChild);
 
@@ -454,6 +451,8 @@ co_WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
 {
    MINMAXINFO MinMax;
 
+   ASSERT_REFS_CO(Window);
+
    WinPosFillMinMaxInfoStruct(Window, &MinMax);
 
    co_IntSendMessage(Window->hSelf, WM_GETMINMAXINFO, 0, (LPARAM)&MinMax);
@@ -518,6 +517,8 @@ co_WinPosDoNCCALCSize(PWINDOW_OBJECT Window, PWINDOWPOS WinPos,
 {
    PWINDOW_OBJECT Parent;
    UINT wvrFlags = 0;
+
+   ASSERT_REFS_CO(Window);
 
    /* Send WM_NCCALCSIZE message to get new client area */
    if ((WinPos->flags & (SWP_FRAMECHANGED | SWP_NOSIZE)) != SWP_NOSIZE)
@@ -592,6 +593,8 @@ co_WinPosDoWinPosChanging(PWINDOW_OBJECT Window,
                           PRECT ClientRect)
 {
    INT X, Y;
+
+   ASSERT_REFS_CO(Window);
 
    if (!(WinPos->flags & SWP_NOSENDCHANGING))
    {
@@ -707,7 +710,7 @@ WinPosDoOwnedPopups(HWND hWnd, HWND hWndInsertAfter)
          if (!(Wnd = UserGetWindowObject(List[i])))
             continue;
 
-         if ((UserGetWindowLong(List[i], GWL_STYLE, FALSE) & WS_POPUP) &&
+         if ((Wnd->Style & WS_POPUP) &&
                UserGetWindow(List[i], GW_OWNER) == hWnd)
          {
             UserRefObjectCo(Wnd);
@@ -968,7 +971,7 @@ co_WinPosSetWindowPos(
       PWINDOW_OBJECT Sibling;
       PWINDOW_OBJECT InsertAfterWindow;
 
-      if ((ParentWindow = IntGetParentObject(Window)))
+      if ((ParentWindow = Window->Parent))
       {
          if (HWND_TOPMOST == WinPos.hwndInsertAfter)
          {
@@ -1024,7 +1027,6 @@ co_WinPosSetWindowPos(
             Window->ExStyle &= ~ WS_EX_TOPMOST;
          }
 
-         IntReleaseWindowObject(ParentWindow);
       }
    }
 
@@ -1255,12 +1257,14 @@ co_WinPosSetWindowPos(
 }
 
 LRESULT FASTCALL
-co_WinPosGetNonClientSize(HWND Wnd, RECT* WindowRect, RECT* ClientRect)
+co_WinPosGetNonClientSize(PWINDOW_OBJECT Window, RECT* WindowRect, RECT* ClientRect)
 {
    LRESULT Result;
 
+   ASSERT_REFS_CO(Window);
+   
    *ClientRect = *WindowRect;
-   Result = co_IntSendMessage(Wnd, WM_NCCALCSIZE, FALSE, (LPARAM) ClientRect);
+   Result = co_IntSendMessage(Window->hSelf, WM_NCCALCSIZE, FALSE, (LPARAM) ClientRect);
 
    FixClientRect(ClientRect, WindowRect);
 
@@ -1395,7 +1399,8 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
       if (Window->hSelf == IntGetThreadFocusWindow() ||
             IntIsChildWindow(Window->hSelf, IntGetThreadFocusWindow()))
       {
-         UserSetFocus(Window->Parent->hSelf);
+         //faxme: as long as we have ref on Window, we also, indirectly, have ref on parent...
+         co_UserSetFocus(Window->Parent);
       }
 
       if (!(Window->Parent))

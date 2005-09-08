@@ -258,7 +258,7 @@ ObmDeleteObject(HANDLE h, USER_OBJECT_TYPE type )
       return TRUE;
    }
 
-   //   DPRINT1("info: something not destroyed bcause refs still left, inuse %i\n",usedHandles);
+//   DPRINT1("info: something not destroyed bcause refs still left, inuse %i\n",usedHandles);
    return FALSE;
 }
 
@@ -283,7 +283,7 @@ BOOL FASTCALL ObmDereferenceObject(PVOID obj)
 
    if (hdr->RefCount == 0 && hdr->destroyed)
    {
-      //      DPRINT1("info: something destroyed bcaise of deref, in use=%i\n",usedHandles);
+//      DPRINT1("info: something destroyed bcaise of deref, in use=%i\n",usedHandles);
 
       UserFreeHandle(&gHandleTable, hdr->hSelf);
 

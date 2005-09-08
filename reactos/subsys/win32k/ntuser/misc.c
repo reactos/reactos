@@ -413,7 +413,10 @@ NtUserCallTwoParam(
          {
             DWORD Ret;
             RECT rcRect;
-            Ret = (DWORD)IntGetWindowRgnBox((HWND)Param1, &rcRect);
+            PWINDOW_OBJECT Window = UserGetWindowObject((HWND)Param1);
+            if (!Window) RETURN(ERROR);
+            
+            Ret = (DWORD)IntGetWindowRgnBox(Window, &rcRect);
             Status = MmCopyToCaller((PVOID)Param2, &rcRect, sizeof(RECT));
             if(!NT_SUCCESS(Status))
             {
@@ -424,7 +427,10 @@ NtUserCallTwoParam(
          }
       case TWOPARAM_ROUTINE_GETWINDOWRGN:
          {
-            RETURN( (DWORD)IntGetWindowRgn((HWND)Param1, (HRGN)Param2));
+            PWINDOW_OBJECT Window = UserGetWindowObject((HWND)Param1);
+            if (!Window) RETURN(ERROR);
+
+            RETURN( (DWORD)IntGetWindowRgn(Window, (HRGN)Param2));
          }
       case TWOPARAM_ROUTINE_SETMENUBARHEIGHT:
          {
@@ -480,7 +486,12 @@ NtUserCallTwoParam(
          RETURN( 0);
 
       case TWOPARAM_ROUTINE_SHOWOWNEDPOPUPS:
-         RETURN( (DWORD)IntShowOwnedPopups((HWND) Param1, (BOOL) Param2));
+      {
+         PWINDOW_OBJECT Window = UserGetWindowObject((HWND)Param1);
+         if (!Window) RETURN(0);
+         
+         RETURN( (DWORD)IntShowOwnedPopups(Window, (BOOL) Param2));
+      }
 
       case TWOPARAM_ROUTINE_ROS_SHOWWINDOW:
          {
