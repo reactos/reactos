@@ -1500,6 +1500,10 @@ CSR_API(CsrSetCursor)
       NewCursorY < 0 || NewCursorY >= Buff->MaxY)
     {
       ConioUnlockScreenBuffer(Buff);
+      if (NULL != Console)
+        {
+          ConioUnlockConsole(Console);
+        }
       return Request->Status = STATUS_INVALID_PARAMETER;
     }
   ConioPhysicalToLogical(Buff, Buff->CurrentX, Buff->CurrentY, &OldCursorX, &OldCursorY);
@@ -1510,6 +1514,10 @@ CSR_API(CsrSetCursor)
       if (! ConioSetScreenInfo(Console, Buff, OldCursorX, OldCursorY))
         {
           ConioUnlockScreenBuffer(Buff);
+          if (NULL != Console)
+            {
+              ConioUnlockConsole(Console);
+            }
           return Request->Status = STATUS_UNSUCCESSFUL;
         }
     }
