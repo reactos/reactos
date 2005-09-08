@@ -172,6 +172,8 @@ int __usb_get_extra_descriptor(char *buffer, unsigned size,
 	__usb_get_extra_descriptor((ifpoint)->extra,(ifpoint)->extralen,\
 		type,(void**)ptr)
 
+void usb_choose_address(struct usb_device *dev);
+
 /* -------------------------------------------------------------------------- */
 
 struct usb_operations;

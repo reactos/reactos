@@ -1,4 +1,4 @@
-<module name="usbuhci" type="kernelmodedriver" installbase="system32/drivers" warnings="true">
+<module name="usbuhci" type="kernelmodedriver" installbase="system32/drivers" installname="usbuhci.sys">
 	<define name="__USE_W32API" />
 	<define name="DEBUG_MODE" />
 	<include>../linux</include>

@@ -404,7 +404,6 @@ usb_match_id(struct usb_interface *interface, const struct usb_device_id *id)
 	firsttime = 1;
 	
 	save_id = (struct usb_device_id*)id;
-retry_id:	
 	id = (struct usb_device_id*)save_id;
 
 	/* proc_connectinfo in devio.c may call us with id == NULL. */

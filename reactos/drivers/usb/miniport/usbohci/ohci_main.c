@@ -268,7 +268,7 @@ OHCD_PnPStartDevice(IN PDEVICE_OBJECT DeviceObject,
 	PCM_RESOURCE_LIST AllocatedResources;
 
 	NTSTATUS Status; // debug
-	LONGLONG delay; // debug
+	//LONGLONG delay; // debug
 
 	if (DeviceObject == KeyboardFdo || DeviceObject == MouseFdo)
 		return STATUS_SUCCESS;
