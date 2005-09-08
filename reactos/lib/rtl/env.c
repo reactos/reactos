@@ -1,12 +1,8 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
+/* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/rtl/env.c
  * PURPOSE:         Environment functions
  * PROGRAMMER:      Eric Kohl
- * UPDATE HISTORY:
- *                  Created 30/09/98
  */
 
 /* INCLUDES ******************************************************************/

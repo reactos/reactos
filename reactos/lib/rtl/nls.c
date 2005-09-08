@@ -1,17 +1,12 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            lib/rtl/nls.c
- * PURPOSE:         National Language Support (NLS) functions
- * UPDATE HISTORY:
- *                  20/08/99 Created by Emanuele Aliberti
- *                  10/11/99 Added translation functions.
- *
- * TODO:
- *   1) Add multi-byte translation code.
+/*
+ * COPYRIGHT:         See COPYING in the top level directory
+ * PROJECT:           ReactOS system libraries
+ * FILE:              lib/rtl/nls.c
+ * PURPOSE:           National Language Support (NLS) functions
+ * PROGRAMMERS:       Emanuele Aliberti
  */
 
+/* INCLUDES *****************************************************************/
 
 #include <rtl.h>
 
@@ -38,17 +33,9 @@ PCHAR NlsUnicodeToOemTable =NULL;
 PWCHAR NlsDbcsUnicodeToOemTable = NULL;
 PUSHORT NlsOemLeadByteInfo = NULL; /* exported */
 
-
-
-
 #define INIT_FUNCTION
 
 /* FUNCTIONS *****************************************************************/
-
-
-
-
-
 
 /*
  * @unimplemented

@@ -32,25 +32,11 @@
 		<file>dllmain.c</file>
 	</directory>
 	<directory name="rtl">
-		<file>apc.c</file>
-		<file>callback.c</file>
-		<file>crc32.c</file>
 		<file>critical.c</file>
-		<file>dbgbuffer.c</file>
 		<file>exception.c</file>
-		<file>handle.c</file>
 		<file>libsupp.c</file>
-		<file>math.c</file>
-		<file>message.c</file>
-		<file>misc.c</file>
 		<file>path.c</file>
-		<file>process.c</file>
-		<file>propvar.c</file>
-		<file>rangelist.c</file>
-		<file>resource.c</file>
-		<file>secobj.c</file>
-		<file>teb.c</file>
-		<file>timerqueue.c</file>
+		<file>version.c</file>
 	</directory>
 	<directory name="stdio">
 		<file>sprintf.c</file>

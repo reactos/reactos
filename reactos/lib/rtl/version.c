@@ -1,31 +1,8 @@
-/*
- *  ReactOS kernel
- *  Copyright (C) 2004 ReactOS Team
- *  Copyright 1997 Marcus Meissner
- *  Copyright 1998 Patrik Stridvall
- *  Copyright 1998, 2003 Andreas Mohr
- *  Copyright 1997, 2003 Alexandre Julliard
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/* $Id$
- *
- * PROJECT:           ReactOS kernel
- * PURPOSE:           Runtime code
- * FILE:              lib/rtl/version.c
- * PROGRAMER:         Filip Navara
+/* COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS system libraries
+ * PURPOSE:         Runtime code
+ * FILE:            lib/rtl/version.c
+ * PROGRAMER:       Filip Navara
  */
 
 /* INCLUDES *****************************************************************/
@@ -234,14 +211,6 @@ RtlVerifyVersionInfo(
 
     return STATUS_SUCCESS;
 }
-
-
-/*
- Header hell made me do it, don't blame me. Please move these somewhere more
- sensible
-*/
-#define VER_CONDITION_MASK              7
-#define VER_NUM_BITS_PER_CONDITION_MASK 3
 
 /*
  * @implemented

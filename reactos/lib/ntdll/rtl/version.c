@@ -1,19 +1,21 @@
 /* $Id$
  *
- * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
- * PURPOSE:           Various functions
- * FILE:              lib/ntdll/rtl/misc.c
- * PROGRAMER:         Eric Kohl <ekohl@zr-online.de>
- * REVISION HISTORY:
- *                    10/08/2000: Created
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS system libraries
+ * FILE:            lib/ntdll/rtl/process.c
+ * PURPOSE:         Process functions
+ * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
+ * UPDATE HISTORY:
+ *                  Created 01/11/98
  */
 
-/* INCLUDES *****************************************************************/
+/* INCLUDES ****************************************************************/
 
 #include <ntdll.h>
 #define NDEBUG
 #include <debug.h>
+
+/* FUNCTIONS ****************************************************************/
 
 /**********************************************************************
  * NAME							EXPORTED
@@ -100,37 +102,43 @@ RtlGetNtVersionNumbers(LPDWORD major, LPDWORD minor, LPDWORD build)
 /*
 * @implemented
 */
-ULONG
-STDCALL
-RtlGetNtGlobalFlags(VOID)
+NTSTATUS STDCALL
+RtlGetVersion(RTL_OSVERSIONINFOW *Info)
 {
-	PPEB pPeb = NtCurrentPeb();
-	return pPeb->NtGlobalFlag;
+   if (Info->dwOSVersionInfoSize == sizeof(RTL_OSVERSIONINFOW) ||
+       Info->dwOSVersionInfoSize == sizeof(RTL_OSVERSIONINFOEXW))
+   {
+      PPEB Peb = NtCurrentPeb();
+
+      Info->dwMajorVersion = Peb->OSMajorVersion;
+      Info->dwMinorVersion = Peb->OSMinorVersion;
+      Info->dwBuildNumber = Peb->OSBuildNumber;
+      Info->dwPlatformId = Peb->OSPlatformId;
+      if(((Peb->OSCSDVersion >> 8) & 0xFF) != 0)
+      {
+        int i = _snwprintf(Info->szCSDVersion,
+                           (sizeof(Info->szCSDVersion) / sizeof(Info->szCSDVersion[0])) - 1,
+                           L"Service Pack %d",
+                           ((Peb->OSCSDVersion >> 8) & 0xFF));
+        Info->szCSDVersion[i] = L'\0';
+      }
+      else
+      {
+        RtlZeroMemory(Info->szCSDVersion, sizeof(Info->szCSDVersion));
+      }
+      if (Info->dwOSVersionInfoSize == sizeof(RTL_OSVERSIONINFOEXW))
+      {
+         RTL_OSVERSIONINFOEXW *InfoEx = (RTL_OSVERSIONINFOEXW *)Info;
+         InfoEx->wServicePackMajor = (Peb->OSCSDVersion >> 8) & 0xFF;
+         InfoEx->wServicePackMinor = Peb->OSCSDVersion & 0xFF;
+         InfoEx->wSuiteMask = SharedUserData->SuiteMask;
+         InfoEx->wProductType = SharedUserData->NtProductType;
+      }
+
+      return STATUS_SUCCESS;
+   }
+
+   return STATUS_INVALID_PARAMETER;
 }
 
-
-/*
- * @implemented
- */
-PVOID
-STDCALL
-RtlEncodePointer(IN PVOID Pointer)
-{
-  ULONG Cookie;
-  NTSTATUS Status;
-
-  Status = NtQueryInformationProcess(NtCurrentProcess(),
-                                     ProcessCookie,
-                                     &Cookie,
-                                     sizeof(Cookie),
-                                     NULL);
-
-  if(!NT_SUCCESS(Status))
-  {
-    DPRINT1("Failed to receive the process cookie! Status: 0x%x\n", Status);
-    return Pointer;
-  }
-
-  return (PVOID)((ULONG_PTR)Pointer ^ Cookie);
-}
-
+/* EOF */

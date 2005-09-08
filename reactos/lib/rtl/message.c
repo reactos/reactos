@@ -1,17 +1,14 @@
-/* $Id$
- *
- * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
- * PURPOSE:           Message table functions
- * FILE:              lib/ntdll/rtl/message.c
- * PROGRAMER:         Eric Kohl
- * REVISION HISTORY:
- *                    29/05/2001: Created
+/* COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS system libraries
+ * FILE:            lib/rtl/message.c
+ * PURPOSE:         Message table functions
+ * PROGRAMMERS:     Eric Kohl <ekohl@zr-online.de>
  */
 
 /* INCLUDES *****************************************************************/
 
-#include <ntdll.h>
+#include <rtl.h>
+
 #define NDEBUG
 #include <debug.h>
 

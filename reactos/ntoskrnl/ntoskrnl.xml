@@ -317,11 +317,9 @@
 		<file>ctype.c</file>
 		<file>debug.c</file>
 		<file>libsupp.c</file>
-		<file>message.c</file>
 		<file>misc.c</file>
 		<file>nls.c</file>
 		<file>purecall.c</file>
-		<file>rangelist.c</file>
 		<file>regio.c</file>
 		<file>sprintf.c</file>
 		<file>stdlib.c</file>

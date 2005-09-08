@@ -1,18 +1,18 @@
-/* $Id$
- *
- * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
- * PURPOSE:           User-mode callback support
- * FILE:              lib/ntdll/rtl/callback.c
- * PROGRAMER:         David Welch <welch@cwcom.net>
+/* COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS system libraries
+ * PURPOSE:         User-mode callback support
+ * FILE:            lib/rtl/callback.c
+ * PROGRAMER:       David Welch <welch@cwcom.net>
  */
 
 /* INCLUDES *****************************************************************/
 
-#include <ntdll.h>
+#include <rtl.h>
+
 #define NDEBUG
 #include <debug.h>
-/* TYPES *********************************************************************/
+
+/* FUNCTIONS *****************************************************************/
 
 typedef NTSTATUS (STDCALL *KERNEL_CALLBACK_FUNCTION)(PVOID Argument,
                                                     ULONG ArgumentLength);

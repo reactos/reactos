@@ -18,12 +18,14 @@
 
 
 KPROCESSOR_MODE
+STDCALL
 RtlpGetMode()
 {
    return KernelMode;
 }
 
 PVOID
+STDCALL
 RtlpAllocateMemory(UINT Bytes,
                    ULONG Tag)
 {
@@ -34,6 +36,7 @@ RtlpAllocateMemory(UINT Bytes,
 
 
 VOID
+STDCALL
 RtlpFreeMemory(PVOID Mem,
                ULONG Tag)
 {
@@ -57,6 +60,13 @@ VOID STDCALL
 RtlReleasePebLock(VOID)
 {
 
+}
+
+NTSTATUS
+STDCALL
+LdrShutdownThread(VOID)
+{
+    return STATUS_SUCCESS;
 }
 
 

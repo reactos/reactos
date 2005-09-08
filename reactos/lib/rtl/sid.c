@@ -1,16 +1,13 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
+ * PROJECT:           ReactOS system libraries
  * PURPOSE:           Security manager
  * FILE:              lib/rtl/sid.c
  * PROGRAMER:         David Welch <welch@cwcom.net>
- * REVISION HISTORY:
- *                 26/07/98: Added stubs for security functions
  */
 
 /* INCLUDES *****************************************************************/
-#define __NTDRIVER__
+
 #include <rtl.h>
 
 #define NDEBUG

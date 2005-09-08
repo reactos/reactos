@@ -1,13 +1,19 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            lib/ntdll/csr/propvar.c
- * PURPOSE:         CSRSS properties and variants API
+/*
+ * COPYRIGHT:         See COPYING in the top level directory
+ * PROJECT:           ReactOS system libraries
+ * FILE:              lib/rtl/propvar.c
+ * PURPOSE:           Native properties and variants API
+ * PROGRAMMER:        
  */
-#include <ntdll.h>
+
+/* INCLUDES *****************************************************************/
+
+#include <rtl.h>
+
 #define NDEBUG
 #include <debug.h>
+
+/* FUNCTIONS ***************************************************************/
 
 /*
  * @unimplemented

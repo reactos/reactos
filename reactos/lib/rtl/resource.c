@@ -1,29 +1,21 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
- * FILE:            lib/ntdll/rtl/resource.c
- * PURPOSE:         Resource (multiple-reader-single-writer lock) functions
- * PROGRAMMER:
- * UPDATE HISTORY:
- *                  Created 24/05/2001
- *
- * NOTES:           Partially take from Wine:
- *                  Copyright 1996-1998 Marcus Meissner
- *                            1999 Alex Korobka
- */
-
 /*
- * xxxResource() functions implement multiple-reader-single-writer lock.
- * The code is based on information published in WDJ January 1999 issue.
+ * COPYRIGHT:         See COPYING in the top level directory
+ * PROJECT:           ReactOS system libraries
+ * FILE:              lib/rtl/resource.c
+ * PURPOSE:           Resource (multiple-reader-single-writer lock) functions
+ * PROGRAMMER:        Partially takem from Wine:
+ *                    Copyright 1996-1998 Marcus Meissner
+ *                              1999 Alex Korobka
  */
 
-#include <ntdll.h>
+/* INCLUDES *****************************************************************/
+
+#include <rtl.h>
+
 #define NDEBUG
 #include <debug.h>
 
-
-/* FUNCTIONS ****************************************************************/
+/* FUNCTIONS ***************************************************************/
 
 /*
  * @implemented

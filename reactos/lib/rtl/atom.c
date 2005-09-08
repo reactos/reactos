@@ -1,12 +1,8 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+/* COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS system libraries
  * FILE:            lib/rtl/atom.c
  * PURPOSE:         Atom managment
- * PROGRAMMER:      Nobody
- * UPDATE HISTORY:
- *                  Created 22/05/98
+ * PROGRAMMER:      Thomas Weidenmueller
  */
 
 /* INCLUDES *****************************************************************/

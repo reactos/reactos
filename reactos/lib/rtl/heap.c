@@ -1,10 +1,10 @@
-/*
- * Win32 heap functions
- *
- * Copyright 1996 Alexandre Julliard
- * Copyright 1998 Ulrich Weigand
+/* COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS system libraries
+ * FILE:            lib/rtl/image.c
+ * PURPOSE:         Image handling functions
+ * PROGRAMMERS:     Copyright 1996 Alexandre Julliard
+ *                  Copyright 1998 Ulrich Weigand
  */
-
 
 /* Note: the heap data structures are based on what Pietrek describes in his
  * book 'Windows 95 System Programming Secrets'. The layout is not exactly
@@ -12,10 +12,14 @@
  * require it.
  */
 
+/* INCLUDES *****************************************************************/
+
 #include <rtl.h>
 
 #define NDEBUG
 #include <debug.h>
+
+/* FUNCTIONS *****************************************************************/
 
 #define WARN_ON(x) (1)
 

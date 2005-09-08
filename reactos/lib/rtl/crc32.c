@@ -1,11 +1,8 @@
-/*
- * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
- * PURPOSE:           crc32 functions
- * FILE:              lib/ntdll/rtl/crc32.c
- * PROGRAMER:         Steven Edwards
- * REVISION HISTORY:
- *                    11/15/2000: Created
+/* COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS system libraries
+ * PURPOSE:         crc32 functions
+ * FILE:            lib/rtl/crc32.c
+ * PROGRAMER:       Steven Edwards
  */
 
 /* This work is based off of rtl.c in Wine.
@@ -17,10 +14,12 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <ntdll.h>
+#include <rtl.h>
+
 #define NDEBUG
 #include <debug.h>
-/* FUNCTIONS ****************************************************************/
+
+/* FUNCTIONS *****************************************************************/
 
 /* CRC polynomial 0xedb88320 */
 static const ULONG CrcTable[256] =

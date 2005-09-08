@@ -1,19 +1,18 @@
-/* $Id$
- *
- * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
- * PURPOSE:           Handle table
- * FILE:              lib/ntdll/rtl/handle.c
- * PROGRAMER:         Eric Kohl <ekohl@rz-online.de>
+/* COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS system libraries
+ * PURPOSE:         Handle table
+ * FILE:            lib/rtl/handle.c
+ * PROGRAMER:       Eric Kohl <ekohl@rz-online.de>
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *****************************************************************/
 
-#include <ntdll.h>
+#include <rtl.h>
+
 #define NDEBUG
 #include <debug.h>
 
-/* FUNCTIONS *****************************************************************/
+/* GLOBALS ******************************************************************/
 
 VOID STDCALL
 RtlInitializeHandleTable(ULONG TableSize,

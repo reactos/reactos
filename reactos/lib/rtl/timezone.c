@@ -1,12 +1,9 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
+ * PROJECT:           ReactOS system libraries
  * PURPOSE:           Timezone functions
  * FILE:              lib/rtl/timezone.c
  * PROGRAMER:         Eric Kohl
- * REVISION HISTORY:
- *                    29/05/2001: Created
  */
 
 /* INCLUDES *****************************************************************/
@@ -16,7 +13,7 @@
 #define NDEBUG
 #include <debug.h>
 
-/* FUNCTIONS *****************************************************************/
+/* FUNCTIONS ***************************************************************/
 
 /*
  * @implemented

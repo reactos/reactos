@@ -15,29 +15,39 @@
 	</if>
 	<file>access.c</file>
 	<file>acl.c</file>
+	<file>apc.c</file>
 	<file>atom.c</file>
 	<file>bit.c</file>
 	<file>bitmap.c</file>
 	<file>bootdata.c</file>
+	<file>callback.c</file>
 	<file>compress.c</file>
+	<file>crc32.c</file>
+	<file>dbgbuffer.c</file>
 	<file>dos8dot3.c</file>
 	<file>encode.c</file>
 	<file>env.c</file>
 	<file>error.c</file>
 	<file>exception.c</file>
 	<file>generictable.c</file>
+	<file>handle.c</file>
 	<file>heap.c</file>
 	<file>image.c</file>
+	<file>math.c</file>
 	<file>mem.c</file>
+	<file>message.c</file>
 	<file>largeint.c</file>
 	<file>luid.c</file>
 	<file>network.c</file>
 	<file>nls.c</file>
 	<file>ppb.c</file>
 	<file>process.c</file>
+	<file>propvar.c</file>
 	<file>qsort.c</file>
 	<file>random.c</file>
+	<file>rangelist.c</file>
 	<file>registry.c</file>
+	<file>resource.c</file>
 	<file>sd.c</file>
 	<file>security.c</file>
 	<file>sid.c</file>
@@ -45,6 +55,7 @@
 	<file>thread.c</file>
 	<file>time.c</file>
 	<file>timezone.c</file>
+	<file>timerqueue.c</file>
 	<file>unicode.c</file>
 	<file>unicodeprefix.c</file>
 	<file>version.c</file>

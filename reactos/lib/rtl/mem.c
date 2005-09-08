@@ -1,13 +1,8 @@
-
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+/* COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS system libraries
  * FILE:            lib/rtl/mem.c
  * PURPOSE:         Memory functions
  * PROGRAMMER:      David Welch (welch@mcmail.com)
- * UPDATE HISTORY:
- *                  Created 22/05/98
  */
 
 /* INCLUDES *****************************************************************/
@@ -16,9 +11,6 @@
 
 #define NDEBUG
 #include <debug.h>
-
-
-
 
 /* FUNCTIONS *****************************************************************/
 

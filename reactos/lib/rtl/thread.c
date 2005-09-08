@@ -1,8 +1,8 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
+ * PROJECT:           ReactOS system libraries
  * PURPOSE:           Rtl user thread functions
- * FILE:              lib/ntdll/rtl/thread.c
+ * FILE:              lib/rtl/thread.c
  * PROGRAMERS:        
  *                    Alex Ionescu (alex@relsoft.net)
  *                    Eric Kohl
@@ -309,6 +309,21 @@ RtlInitializeContext(IN HANDLE ProcessHandle,
 }
 
 /*
+ * @implemented
+ */
+VOID 
+STDCALL 
+RtlExitUserThread(NTSTATUS Status)
+{
+    /* Call the Loader and tell him to notify the DLLs */
+    LdrShutdownThread();
+    
+    /* Shut us down */
+    NtCurrentTeb()->FreeStackOnTermination = TRUE;
+    NtTerminateThread(NtCurrentThread(), Status);
+}
+
+/*
  @implemented
 */
 VOID 
@@ -348,6 +363,14 @@ RtlFreeUserThreadStack(HANDLE ProcessHandle,
     
     /* Free it */
     NtFreeVirtualMemory(ProcessHandle, &StackLocation, &Size, MEM_RELEASE);
+}
+
+PTEB
+STDCALL
+_NtCurrentTeb(VOID)
+{
+    /* Return the TEB */
+    return NtCurrentTeb();
 }
 
 /* EOF */

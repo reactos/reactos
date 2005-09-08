@@ -1,13 +1,9 @@
-/* $Id$
- *
- * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
- * PURPOSE:           Security descriptor functions
- * FILE:              lib/rtl/encode.c
- * PROGRAMMER:        KJK::Hyperion <noog@libero.it>
- * REVISION HISTORY:
- *                 02/04/2003: created (code contributed by crazylord
- *                             <crazyl0rd@minithins.net>)
+/* COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS system libraries
+ * PURPOSE:         Security descriptor functions
+ * FILE:            lib/rtl/encode.c
+ * PROGRAMMER:      KJK::Hyperion <noog@libero.it>
+ *                  (code contributed by crazylord <crazyl0rd@minithins.net>)
  */
 
 /* INCLUDES *****************************************************************/

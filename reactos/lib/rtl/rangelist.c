@@ -1,41 +1,25 @@
 /*
- *  ReactOS kernel
- *  Copyright (C) 2004 ReactOS Team
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program; if not, write to the Free Software
- *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
- */
-/* $Id$
- *
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
+ * FILE:              lib/rtl/rangelist.c
  * PURPOSE:           Range list implementation
- * FILE:              lib/ntdll/rtl/rangelist.c
+ * PROGRAMMERS:       No programmer listed.
  */
 
-/* INCLUDES ****************************************************************/
+/* INCLUDES *****************************************************************/
 
-#include <ntdll.h>
+#include <rtl.h>
+
 #define NDEBUG
 #include <debug.h>
 
+/* TYPES ********************************************************************/
+
 typedef struct _RTL_RANGE_ENTRY
 {
-  LIST_ENTRY Entry;
-  RTL_RANGE Range;
+    LIST_ENTRY Entry;
+    RTL_RANGE Range;
 } RTL_RANGE_ENTRY, *PRTL_RANGE_ENTRY;
-
 
 /* FUNCTIONS ***************************************************************/
 
@@ -81,9 +65,7 @@ RtlAddRange (IN OUT PRTL_RANGE_LIST RangeList,
     return STATUS_INVALID_PARAMETER;
 
   /* Create new range entry */
-  RangeEntry = RtlAllocateHeap (RtlGetProcessHeap(),
-				0,
-				sizeof(RTL_RANGE_ENTRY));
+  RangeEntry = RtlpAllocateMemory(sizeof(RTL_RANGE_ENTRY), 0);
   if (RangeEntry == NULL)
     return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -138,9 +120,7 @@ RtlAddRange (IN OUT PRTL_RANGE_LIST RangeList,
       return STATUS_SUCCESS;
     }
 
-  RtlFreeHeap (RtlGetProcessHeap(),
-	       0,
-	       RangeEntry);
+  RtlpFreeMemory(RangeEntry, 0);
 
   return STATUS_UNSUCCESSFUL;
 }
@@ -177,9 +157,7 @@ RtlCopyRangeList (OUT PRTL_RANGE_LIST CopyRangeList,
     {
       Current = CONTAINING_RECORD (Entry, RTL_RANGE_ENTRY, Entry);
 
-      NewEntry = RtlAllocateHeap (RtlGetProcessHeap(),
-				  0,
-				  sizeof(RTL_RANGE_ENTRY));
+      NewEntry = RtlpAllocateMemory(sizeof(RTL_RANGE_ENTRY), 0);
       if (NewEntry == NULL)
 	return STATUS_INSUFFICIENT_RESOURCES;
 
@@ -232,9 +210,7 @@ RtlDeleteOwnersRanges (IN OUT PRTL_RANGE_LIST RangeList,
       if (Current->Range.Owner == Owner)
 	{
 	  RemoveEntryList (Entry);
-	  RtlFreeHeap (RtlGetProcessHeap(),
-		       0,
-		       Current);
+	  RtlpFreeMemory(Current, 0);
 
 	  RangeList->Count--;
 	  RangeList->Stamp++;
@@ -284,9 +260,7 @@ RtlDeleteRange (IN OUT PRTL_RANGE_LIST RangeList,
 	{
 	  RemoveEntryList (Entry);
 
-	  RtlFreeHeap (RtlGetProcessHeap(),
-		       0,
-		       Current);
+	  RtlpFreeMemory(Current, 0);
 
 	  RangeList->Count--;
 	  RangeList->Stamp++;
@@ -439,9 +413,7 @@ RtlFreeRangeList (IN PRTL_RANGE_LIST RangeList)
       DPRINT ("Range start: %I64u\n", Current->Range.Start);
       DPRINT ("Range end:   %I64u\n", Current->Range.End);
 
-      RtlFreeHeap (RtlGetProcessHeap(),
-		   0,
-		   Current);
+      RtlpFreeMemory(Current, 0);
     }
 
   RangeList->Flags = 0;
@@ -697,8 +669,10 @@ RtlIsRangeAvailable (IN PRTL_RANGE_LIST RangeList,
   while (Entry != &RangeList->ListHead)
     {
       Current = CONTAINING_RECORD (Entry, RTL_RANGE_ENTRY, Entry);
-      if (!((Current->Range.Start > End && Current->Range.End > End) ||
-	    (Current->Range.Start < Start && Current->Range.End < Start)))
+      if (!((Current->Range.Start >= End && Current->Range.End > End) ||
+	    (Current->Range.Start <= Start && Current->Range.End < Start &&
+	     (!(Flags & RTL_RANGE_SHARED) ||
+	      !(Current->Range.Flags & RTL_RANGE_SHARED)))))
 	{
 	  if (Callback != NULL)
 	    {

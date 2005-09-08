@@ -1,20 +1,18 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            lib/ntdll/rtl/image.c
+/* COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS system libraries
+ * FILE:            lib/rtl/image.c
  * PURPOSE:         Image handling functions
  * PROGRAMMER:      Eric Kohl
- * UPDATE HISTORY:
- *                  17/03/2000 Created
  */
+
+/* INCLUDES *****************************************************************/
 
 #include <rtl.h>
 
 #define NDEBUG
 #include <debug.h>
 
-/* FUNCTIONS ****************************************************************/
+/* FUNCTIONS *****************************************************************/
 
 /*
  * @implemented
