@@ -177,7 +177,8 @@ DWORD STDCALL
 ServerApiPortThread (PVOID PortHandle)
 {
    NTSTATUS Status = STATUS_SUCCESS;
-   PORT_MESSAGE Request;
+   BYTE RawRequest[sizeof(PORT_MESSAGE) + sizeof(CSR_CONNECTION_INFO)];
+   PPORT_MESSAGE Request = (PPORT_MESSAGE)RawRequest;
    HANDLE hApiListenPort = * (PHANDLE) PortHandle;
    HANDLE ServerPort = (HANDLE) 0;
    HANDLE ServerThread = (HANDLE) 0;
@@ -192,10 +193,10 @@ ServerApiPortThread (PVOID PortHandle)
         REMOTE_PORT_VIEW LpcRead;
         ServerPort = NULL;
 
-	Status = NtListenPort (hApiListenPort, &Request);
+	Status = NtListenPort (hApiListenPort, Request);
 	if (!NT_SUCCESS(Status))
 	  {
-	     DPRINT1("CSR: NtListenPort() failed\n");
+	     DPRINT1("CSR: NtListenPort() failed, status=%x\n", Status);
 	     break;
 	  }
 	Status = NtAcceptConnectPort(& ServerPort,
@@ -210,11 +211,11 @@ ServerApiPortThread (PVOID PortHandle)
 	     break;
 	  }
 
-	ProcessData = CsrCreateProcessData(Request.ClientId.UniqueProcess);
+	ProcessData = CsrCreateProcessData(Request->ClientId.UniqueProcess);
 	if (ProcessData == NULL)
 	  {
 	     DPRINT1("Unable to allocate or find data for process 0x%x\n",
-	             Request.ClientId.UniqueProcess);
+	             Request->ClientId.UniqueProcess);
 	     Status = STATUS_UNSUCCESSFUL;
 	     break;
 	  }
