@@ -2,7 +2,7 @@
 // this file is part of linux_wrapper.h
 
 //FIXME: Move this file, make its definitions more general
-#include "../host/ohci_main.h"
+#include "../usbohci/ohci_main.h"
 
 /*
   Initialize device before it's used by a driver. Ask low-level code to enable I/O and memory.

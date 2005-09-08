@@ -5,7 +5,7 @@
 
 #include <ddk/ntddk.h>
 #include <debug.h>
-#include "../usb_wrapper.h"
+#include "../miniport/usb_wrapper.h"
 
 USBPORT_INTERFACE UsbPortInterface;
 

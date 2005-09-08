@@ -41,7 +41,7 @@
 
 #include <linux/usb.h>
 #else
-#include "../usb_wrapper.h"
+#include "../miniport/usb_wrapper.h"
 //#define DEBUG
 #endif
 

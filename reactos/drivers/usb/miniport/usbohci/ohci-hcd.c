@@ -97,7 +97,7 @@
 #include <linux/list.h>
 #include <linux/interrupt.h>  /* for in_interrupt () */
 #include <linux/usb.h>
-#include "../core/hcd.h"
+#include "hcd.h"
 
 #include <asm/io.h>
 #include <asm/irq.h>
@@ -108,7 +108,7 @@
 #include "ohci_config.h"
 
 #include "../usb_wrapper.h"
-#include "../core/hcd.h"
+#include "hcd.h"
 
 //#define OHCI_VERBOSE_DEBUG
 #endif

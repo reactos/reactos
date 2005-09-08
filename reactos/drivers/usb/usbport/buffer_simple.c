@@ -5,7 +5,7 @@
  *
  */
 
-#include "../usb_wrapper.h"
+#include "../miniport/usb_wrapper.h"
 #define __KERNEL__
 #define CONFIG_PCI
 #include "hcd.h"

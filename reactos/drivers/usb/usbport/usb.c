@@ -50,7 +50,7 @@
 #include "hcd.h"
 #include "usb.h"
 #else
-#include "../usb_wrapper.h"
+#include "../miniport/usb_wrapper.h"
 #include "hcd.h"
 #endif
 

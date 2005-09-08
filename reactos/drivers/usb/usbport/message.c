@@ -10,7 +10,7 @@
 #include <linux/mm.h>
 #include <asm/byteorder.h>
 #else
-#include "../usb_wrapper.h"
+#include "../miniport/usb_wrapper.h"
 #endif
 
 #include "hcd.h"	/* for usbcore internals */

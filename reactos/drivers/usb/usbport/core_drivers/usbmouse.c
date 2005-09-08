@@ -3,7 +3,7 @@
 */
 
 #define NDEBUG
-#include "../../usb_wrapper.h"
+#include "../../miniport/usb_wrapper.h"
 
 extern USBPORT_INTERFACE UsbPortInterface;
 

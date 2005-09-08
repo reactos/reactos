@@ -17,7 +17,7 @@
 #endif
 #include <linux/usb.h>
 #else
-#include "../usb_wrapper.h"
+#include "../miniport/usb_wrapper.h"
 #endif
 
 static void usb_show_endpoint(struct usb_host_endpoint *endpoint)

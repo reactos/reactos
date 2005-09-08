@@ -61,7 +61,7 @@
 
 #include "uhci_config.h"
 #include "../usb_wrapper.h"
-#include "../core/hcd.h"
+#include "hcd.h"
 #include "uhci-hcd.h"
 
 #if 0

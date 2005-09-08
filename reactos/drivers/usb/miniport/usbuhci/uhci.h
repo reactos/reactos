@@ -6,9 +6,9 @@
 #include <ddk/usbiodef.h>
 #include <initguid.h>
 
-#include "../core/hcd.h"
+#include "hcd.h"
 
-#include "../host/ohci_main.h"
+#include "../usbohci/ohci_main.h"
 
 #define USB_UHCI_TAG TAG('u','s','b','u')
 

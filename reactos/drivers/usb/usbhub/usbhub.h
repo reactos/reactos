@@ -3,8 +3,8 @@
 #include <ddk/ntddk.h>
 #include <ddk/usbioctl.h>
 
-#include "../usb_wrapper.h"
-#include "../core/hub.h"
+#include "../miniport/usb_wrapper.h"
+#include "../usbport/hub.h"
 
 #define USB_HUB_TAG TAG('u','s','b','h')
 
