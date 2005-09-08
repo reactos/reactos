@@ -42,27 +42,6 @@
 		<file>sscanf.c</file>
 		<file>swprintf.c</file>
 	</directory>
-	<directory name="stdlib">
-		<file>abs.c</file>
-		<file>atoi64.c</file>
-		<file>atoi.c</file>
-		<file>atol.c</file>
-		<file>bsearch.c</file>
-		<file>itoa.c</file>
-		<file>itow.c</file>
-		<file>labs.c</file>
-		<file>lfind.c</file>
-		<file>mbstowcs.c</file>
-		<file>splitp.c</file>
-		<file>strtol.c</file>
-		<file>strtoul.c</file>
-		<file>wcstol.c</file>
-		<file>wcstombs.c</file>
-		<file>wcstoul.c</file>
-		<file>wtoi64.c</file>
-		<file>wtoi.c</file>
-		<file>wtol.c</file>
-	</directory>
 	<directory name="def">
 		<file>ntdll.rc</file>
 	</directory>
