@@ -165,6 +165,7 @@ BOOL DiskGetExtendedDriveParameters(ULONG DriveNumber, PVOID Buffer, USHORT Buff
 
 	memcpy(Buffer, Ptr, BufferSize);
 
+#ifdef DEBUG
         DbgPrint((DPRINT_DISK, "size of buffer:                          %x\n", Ptr[0]));
         DbgPrint((DPRINT_DISK, "information flags:                       %x\n", Ptr[1]));
         DbgPrint((DPRINT_DISK, "number of physical cylinders on drive:   %u\n", *(PULONG)&Ptr[2]));
@@ -194,6 +195,7 @@ BOOL DiskGetExtendedDriveParameters(ULONG DriveNumber, PVOID Buffer, USHORT Buff
         {
             DbgPrint((DPRINT_HB, "signature:                             %x\n", Ptr[15]));
         }
+#endif
 
 	return TRUE;
 }
@@ -202,6 +204,7 @@ BOOL i386DiskGetBootVolume(PULONG DriveNumber, PULONGLONG StartSector, PULONGLON
 {
 	PARTITION_TABLE_ENTRY	PartitionTableEntry;
 	UCHAR			VolumeType;
+	ULONG			ActivePartition;
 
 	DbgPrint((DPRINT_FILESYSTEM, "FsOpenVolume() DriveNumber: 0x%x PartitionNumber: 0x%x\n", i386BootDrive, i386BootPartition));
 
@@ -234,7 +237,7 @@ BOOL i386DiskGetBootVolume(PULONG DriveNumber, PULONGLONG StartSector, PULONGLON
 	if (i386BootPartition == 0)
 	{
 		// Partition requested was zero which means the boot partition
-		if (! DiskGetActivePartitionEntry(i386BootDrive, &PartitionTableEntry))
+		if (! DiskGetActivePartitionEntry(i386BootDrive, &PartitionTableEntry, &ActivePartition))
 		{
 			/* Try partition-less disk */
 			*StartSector = 0;
@@ -456,6 +459,46 @@ i386DiskGetBootPath(char *BootPath, unsigned Size)
 	strcpy(BootPath, Path);
 	strcat(BootPath, MachDiskBootingFromFloppy() ? "fdisk" : "cdrom");
 	strcat(strcat(strcat(BootPath, "("), Device), ")");
+
+	return TRUE;
+}
+
+BOOL
+i386DiskNormalizeSystemPath(char *SystemPath, unsigned Size)
+{
+	CHAR BootPath[256];
+	ULONG PartitionNumber;
+	ULONG DriveNumber;
+	PARTITION_TABLE_ENTRY PartEntry;
+	char *p;
+
+	if (!DissectArcPath(SystemPath, BootPath, &DriveNumber, &PartitionNumber))
+	{
+		return FALSE;
+	}
+
+	if (0 != PartitionNumber)
+	{
+		return TRUE;
+	}
+
+	if (! DiskGetActivePartitionEntry(DriveNumber,
+	                                  &PartEntry,
+	                                  &PartitionNumber) ||
+	    PartitionNumber < 1 || 9 < PartitionNumber)
+	{
+		return FALSE;
+	}
+
+	p = SystemPath;
+	while ('\0' != *p && 0 != strnicmp(p, "partition(", 10)) {
+		p++;
+	}
+	p = strchr(p, ')');
+	if (NULL == p || '0' != *(p - 1)) {
+		return FALSE;
+	}
+	*(p - 1) = '0' + PartitionNumber;
 
 	return TRUE;
 }

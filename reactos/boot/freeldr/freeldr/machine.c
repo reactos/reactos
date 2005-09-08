@@ -42,6 +42,7 @@
 #undef MachDiskGetBootPath
 #undef MachDiskGetBootDevice
 #undef MachDiskBootingFromFloppy
+#undef MachDiskNormalizeSystemPath
 #undef MachDiskReadLogicalSectors
 #undef MachDiskGetPartitionEntry
 #undef MachDiskGetDriveGeometry
@@ -189,6 +190,12 @@ BOOL
 MachDiskBootingFromFloppy()
 {
   return MachVtbl.DiskBootingFromFloppy();
+}
+
+BOOL
+MachDiskNormalizeSystemPath(char *SystemPath, unsigned Size)
+{
+  return MachVtbl.DiskNormalizeSystemPath(SystemPath, Size);
 }
 
 BOOL

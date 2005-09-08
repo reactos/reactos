@@ -52,6 +52,7 @@ XboxMachInit(char *CmdLine)
   MachVtbl.DiskGetBootPath = i386DiskGetBootPath;
   MachVtbl.DiskGetBootDevice = i386DiskGetBootDevice;
   MachVtbl.DiskBootingFromFloppy = i386DiskBootingFromFloppy;
+  MachVtbl.DiskNormalizeSystemPath = i386DiskNormalizeSystemPath;
   MachVtbl.DiskReadLogicalSectors = XboxDiskReadLogicalSectors;
   MachVtbl.DiskGetPartitionEntry = XboxDiskGetPartitionEntry;
   MachVtbl.DiskGetDriveGeometry = XboxDiskGetDriveGeometry;

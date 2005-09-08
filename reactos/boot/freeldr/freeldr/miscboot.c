@@ -54,6 +54,12 @@ VOID LoadAndBootBootSector(PCHAR OperatingSystemName)
 		return;
 	}
 
+	if (!MachDiskNormalizeSystemPath(FileName, sizeof(FileName)))
+	{
+		UiMessageBox("Invalid path to boot sector file");
+		return;
+	}
+
 	if (!FsOpenSystemVolume(FileName, FileName, NULL))
 	{
 		UiMessageBox("Failed to open boot drive.");

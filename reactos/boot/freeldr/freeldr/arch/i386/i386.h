@@ -34,6 +34,7 @@ extern BOOL i386DiskGetSystemVolume(char *SystemPath, char *RemainingPath,
 extern BOOL i386DiskGetBootPath(char *BootPath, unsigned Size);
 extern VOID i386DiskGetBootDevice(PULONG BootDevice);
 extern BOOL i386DiskBootingFromFloppy(VOID);
+extern BOOL i386DiskNormalizeSystemPath(char *SystemPath, unsigned Size);
 
 #endif /* __I386_I386_H_ */
 

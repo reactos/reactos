@@ -671,6 +671,12 @@ LoadAndBootReactOS(PCHAR OperatingSystemName)
 	}
 	else
 	{
+		if (! MachDiskNormalizeSystemPath(SystemPath,
+		                                  sizeof(SystemPath)))
+		{
+			UiMessageBox("Invalid system path");
+			return;
+		}
 		/* copy system path into kernel command line */
 		strcpy(reactos_kernel_cmdline, SystemPath);
 	}

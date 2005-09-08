@@ -61,6 +61,7 @@ typedef struct tagMACHVTBL
   BOOL (*DiskGetBootPath)(char *BootPath, unsigned Size);
   VOID (*DiskGetBootDevice)(PULONG BootDevice);
   BOOL (*DiskBootingFromFloppy)(VOID);
+  BOOL (*DiskNormalizeSystemPath)(char *SystemPath, unsigned Size);
   BOOL (*DiskReadLogicalSectors)(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
   BOOL (*DiskGetPartitionEntry)(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
   BOOL (*DiskGetDriveGeometry)(ULONG DriveNumber, PGEOMETRY DriveGeometry);
@@ -97,6 +98,7 @@ extern MACHVTBL MachVtbl;
 #define MachDiskGetBootPath(Path, Size)		MachVtbl.DiskGetBootPath((Path), (Size))
 #define MachDiskGetBootDevice(BootDevice)	MachVtbl.DiskGetBootDevice(BootDevice)
 #define MachDiskBootingFromFloppy()		MachVtbl.DiskBootingFromFloppy()
+#define MachDiskNormalizeSystemPath(Path, Size)	MachVtbl.DiskNormalizeSystemPath((Path), (Size))
 #define MachDiskReadLogicalSectors(Drive, Start, Count, Buf)	MachVtbl.DiskReadLogicalSectors((Drive), (Start), (Count), (Buf))
 #define MachDiskGetPartitionEntry(Drive, Part, Entry)	MachVtbl.DiskGetPartitionEntry((Drive), (Part), (Entry))
 #define MachDiskGetDriveGeometry(Drive, Geom)	MachVtbl.DiskGetDriveGeometry((Drive), (Geom))
