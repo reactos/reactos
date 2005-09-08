@@ -1263,9 +1263,10 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfun
 
     lpFile = wfileName;
 
+    strcpyW(wcmd, wszApplicationName);
     if (sei_tmp.lpParameters[0]) {
-        strcatW(wszApplicationName, wSpace);
-        strcatW(wszApplicationName, wszParameters);
+        strcatW(wcmd, wSpace);
+        strcatW(wcmd, wszParameters);
     }
 
     /* We set the default to open, and that should generally work.
@@ -1273,7 +1274,7 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfun
     if (!sei_tmp.lpVerb)
         sei_tmp.lpVerb = wszOpen;
 
-    retval = execfunc(wszApplicationName, NULL, FALSE, &sei_tmp, sei);
+    retval = execfunc(wcmd, NULL, FALSE, &sei_tmp, sei);
     if (retval > 32)
         return TRUE;
 

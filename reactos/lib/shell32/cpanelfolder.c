@@ -970,6 +970,7 @@ static HRESULT WINAPI IShellExecuteHookW_fnExecute(IShellExecuteHookW* iface, LP
     SHELLEXECUTEINFOW sei_tmp;
     PIDLCPanelStruct* pcpanel;
     WCHAR path[MAX_PATH];
+    WCHAR params[MAX_PATH];
     BOOL ret;
     int l;
 
@@ -990,12 +991,13 @@ static HRESULT WINAPI IShellExecuteHookW_fnExecute(IShellExecuteHookW* iface, LP
 
     /* pass applet name to Control_RunDLL to distinguish between applets in one .cpl file */
     path[l++] = '"';
-    path[l++] = ' ';
+    path[l] = '\0';
 
-    MultiByteToWideChar(CP_ACP, 0, pcpanel->szName+pcpanel->offsDispName, -1, path+l, MAX_PATH);
+    MultiByteToWideChar(CP_ACP, 0, pcpanel->szName+pcpanel->offsDispName, -1, params, MAX_PATH);
 
     memcpy(&sei_tmp, psei, sizeof(sei_tmp));
     sei_tmp.lpFile = path;
+    sei_tmp.lpParameters = params;
     sei_tmp.fMask &= ~SEE_MASK_INVOKEIDLIST;
     sei_tmp.lpVerb = wCplopen;
 
