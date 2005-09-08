@@ -61,6 +61,38 @@ RtlGetNtGlobalFlags(VOID)
 	return pPeb->NtGlobalFlag;
 }
 
+NTSTATUS
+STDCALL
+RtlDeleteHeapLock(
+    PRTL_CRITICAL_SECTION CriticalSection)
+{
+    return RtlDeleteCriticalSection(CriticalSection);
+}
+
+NTSTATUS
+STDCALL
+RtlEnterHeapLock(
+    PRTL_CRITICAL_SECTION CriticalSection)
+{
+    return RtlEnterCriticalSection(CriticalSection);
+}
+
+NTSTATUS
+STDCALL
+RtlInitializeHeapLock(
+    PRTL_CRITICAL_SECTION CriticalSection)
+{
+     return RtlInitializeCriticalSection(CriticalSection );
+}
+
+NTSTATUS
+STDCALL
+RtlLeaveHeapLock(
+    PRTL_CRITICAL_SECTION CriticalSection)
+{
+    return RtlLeaveCriticalSection(CriticalSection );
+}
+
 PVOID
 STDCALL
 RtlpAllocateMemory(UINT Bytes,

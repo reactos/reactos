@@ -317,7 +317,6 @@ RtlAreAnyAccessesGranted@8
 RtlAreBitsClear@12
 RtlAreBitsSet@12
 RtlAssert@16
-RtlBaseProcessStartRoutine DATA
 ;RtlCaptureStackBackTrace
 RtlCharToInteger@12
 RtlCheckRegistryKey@8

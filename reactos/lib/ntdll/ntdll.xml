@@ -29,13 +29,11 @@
 		<file>utils.c</file>
 	</directory>
 	<directory name="main">
+		<file>dispatch.c</file>
 		<file>dllmain.c</file>
 	</directory>
 	<directory name="rtl">
-		<file>critical.c</file>
-		<file>exception.c</file>
 		<file>libsupp.c</file>
-		<file>path.c</file>
 		<file>version.c</file>
 	</directory>
 	<directory name="stdio">

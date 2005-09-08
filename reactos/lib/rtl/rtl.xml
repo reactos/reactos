@@ -15,14 +15,13 @@
 	</if>
 	<file>access.c</file>
 	<file>acl.c</file>
-	<file>apc.c</file>
 	<file>atom.c</file>
 	<file>bit.c</file>
 	<file>bitmap.c</file>
 	<file>bootdata.c</file>
-	<file>callback.c</file>
 	<file>compress.c</file>
 	<file>crc32.c</file>
+	<file>critical.c</file>
 	<file>dbgbuffer.c</file>
 	<file>dos8dot3.c</file>
 	<file>encode.c</file>
@@ -40,6 +39,7 @@
 	<file>luid.c</file>
 	<file>network.c</file>
 	<file>nls.c</file>
+	<file>path.c</file>
 	<file>ppb.c</file>
 	<file>process.c</file>
 	<file>propvar.c</file>
@@ -58,6 +58,7 @@
 	<file>timerqueue.c</file>
 	<file>unicode.c</file>
 	<file>unicodeprefix.c</file>
+	<file>vectoreh.c</file>
 	<file>version.c</file>
 	<pch>rtl.h</pch>
 </module>

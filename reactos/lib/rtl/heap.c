@@ -570,7 +570,7 @@ static BOOLEAN HEAP_InitSubHeap( HEAP *heap, PVOID address, ULONG flags,
 
       /* Initialize critical section */
 
-      RtlInitializeCriticalSection( &heap->critSection );
+      RtlInitializeHeapLock( &heap->critSection );
    }
 
    /* Commit memory */
@@ -937,12 +937,12 @@ int HEAP_IsInsideHeap(
       return 0;
    flags |= heapPtr->flags;
    if (!(flags & HEAP_NO_SERIALIZE))
-      RtlEnterCriticalSection( &heapPtr->critSection );
+      RtlEnterHeapLock( &heapPtr->critSection );
    ret = (((subheap = HEAP_FindSubHeap( heapPtr, ptr )) != NULL) &&
           (((char *)ptr >= (char *)subheap + subheap->headerSize
             + sizeof(ARENA_INUSE))));
    if (!(flags & HEAP_NO_SERIALIZE))
-      RtlLeaveCriticalSection( &heapPtr->critSection );
+      RtlLeaveHeapLock( &heapPtr->critSection );
    return ret;
 }
 
@@ -1002,7 +1002,7 @@ static BOOLEAN HEAP_IsRealArena(
    flags |= heapPtr->flags;
    /* calling HeapLock may result in infinite recursion, so do the critsect directly */
    if (!(flags & HEAP_NO_SERIALIZE))
-      RtlEnterCriticalSection( &heapPtr->critSection );
+      RtlEnterHeapLock( &heapPtr->critSection );
 
    if (block)
    {
@@ -1032,7 +1032,7 @@ static BOOLEAN HEAP_IsRealArena(
          ret = HEAP_ValidateInUseArena( subheap, (ARENA_INUSE *)block - 1, quiet );
 
       if (!(flags & HEAP_NO_SERIALIZE))
-         RtlLeaveCriticalSection( &heapPtr->critSection );
+         RtlLeaveHeapLock( &heapPtr->critSection );
       return ret;
    }
 
@@ -1065,7 +1065,7 @@ static BOOLEAN HEAP_IsRealArena(
    }
 
    if (!(flags & HEAP_NO_SERIALIZE))
-      RtlLeaveCriticalSection( &heapPtr->critSection );
+      RtlLeaveHeapLock( &heapPtr->critSection );
    return ret;
 }
 
@@ -1105,14 +1105,14 @@ RtlCreateHeap(ULONG flags,
    if (RtlpGetMode() == UserMode)
    {
       /* link it into the per-process heap list */
-      RtlEnterCriticalSection (&RtlpProcessHeapsListLock);
+      RtlEnterHeapLock (&RtlpProcessHeapsListLock);
 
       heapPtr = subheap->heap;
       heapPtr->next = (HEAP*)NtCurrentPeb()->ProcessHeaps;
       NtCurrentPeb()->ProcessHeaps = (HANDLE)heapPtr;
       NtCurrentPeb()->NumberOfHeaps++;
 
-      RtlLeaveCriticalSection (&RtlpProcessHeapsListLock);
+      RtlLeaveHeapLock (&RtlpProcessHeapsListLock);
    }
 
    return (HANDLE)subheap;
@@ -1148,17 +1148,17 @@ RtlDestroyHeap(HANDLE heap) /* [in] Handle of heap */
          return heap; /* cannot delete the main process heap */
 
       /* remove it from the per-process list */
-      RtlEnterCriticalSection (&RtlpProcessHeapsListLock);
+      RtlEnterHeapLock (&RtlpProcessHeapsListLock);
 
       pptr = (HEAP**)&NtCurrentPeb()->ProcessHeaps;
       while (*pptr && *pptr != heapPtr) pptr = &(*pptr)->next;
       if (*pptr) *pptr = (*pptr)->next;
       NtCurrentPeb()->NumberOfHeaps--;
 
-      RtlLeaveCriticalSection (&RtlpProcessHeapsListLock);
+      RtlLeaveHeapLock (&RtlpProcessHeapsListLock);
    }
 
-   RtlDeleteCriticalSection( &heapPtr->critSection );
+   RtlDeleteHeapLock( &heapPtr->critSection );
    subheap = &heapPtr->subheap;
    // We must save the flags. The first subheap is located after
    // the heap structure. If we release the first subheap,
@@ -1207,7 +1207,7 @@ RtlAllocateHeap(HANDLE heap,   /* [in] Handle of private heap block */
    flags &= HEAP_GENERATE_EXCEPTIONS | HEAP_NO_SERIALIZE | HEAP_ZERO_MEMORY;
    flags |= heapPtr->flags;
    if (!(flags & HEAP_NO_SERIALIZE))
-      RtlEnterCriticalSection( &heapPtr->critSection );
+      RtlEnterHeapLock( &heapPtr->critSection );
    size = (size + 7) & ~7;
    if (size < HEAP_MIN_BLOCK_SIZE)
       size = HEAP_MIN_BLOCK_SIZE;
@@ -1219,7 +1219,7 @@ RtlAllocateHeap(HANDLE heap,   /* [in] Handle of private heap block */
       DPRINT("(%08x,%08lx,%08lx): returning NULL\n",
             heap, flags, size  );
       if (!(flags & HEAP_NO_SERIALIZE))
-         RtlLeaveCriticalSection( &heapPtr->critSection );
+         RtlLeaveHeapLock( &heapPtr->critSection );
       if (flags & HEAP_GENERATE_EXCEPTIONS)
          RtlRaiseStatus( STATUS_NO_MEMORY );
       return NULL;
@@ -1248,7 +1248,7 @@ RtlAllocateHeap(HANDLE heap,   /* [in] Handle of private heap block */
       memset( pInUse + 1, ARENA_INUSE_FILLER, pInUse->size & ARENA_SIZE_MASK );
 
    if (!(flags & HEAP_NO_SERIALIZE))
-      RtlLeaveCriticalSection( &heapPtr->critSection );
+      RtlLeaveHeapLock( &heapPtr->critSection );
 
    DPRINT("(%08x,%08lx,%08lx): returning %p\n",
          heap, flags, size, (PVOID)(pInUse + 1) );
@@ -1288,11 +1288,11 @@ BOOLEAN STDCALL RtlFreeHeap(
    flags &= HEAP_NO_SERIALIZE;
    flags |= heapPtr->flags;
    if (!(flags & HEAP_NO_SERIALIZE))
-      RtlEnterCriticalSection( &heapPtr->critSection );
+      RtlEnterHeapLock( &heapPtr->critSection );
    if (!HEAP_IsRealArena( heap, HEAP_NO_SERIALIZE, ptr, QUIET ))
    {
       if (!(flags & HEAP_NO_SERIALIZE))
-         RtlLeaveCriticalSection( &heapPtr->critSection );
+         RtlLeaveHeapLock( &heapPtr->critSection );
       DPRINT("(%08x,%08lx,%p): returning FALSE\n",
             heap, flags, ptr );
       return FALSE;
@@ -1305,7 +1305,7 @@ BOOLEAN STDCALL RtlFreeHeap(
    HEAP_MakeInUseBlockFree( subheap, pInUse, heapPtr->flags );
 
    if (!(flags & HEAP_NO_SERIALIZE))
-      RtlLeaveCriticalSection( &heapPtr->critSection );
+      RtlLeaveHeapLock( &heapPtr->critSection );
 
    DPRINT("(%08x,%08lx,%p): returning TRUE\n",
          heap, flags, ptr );
@@ -1354,11 +1354,11 @@ PVOID STDCALL RtlReAllocateHeap(
       Size = HEAP_MIN_BLOCK_SIZE;
 
    if (!(Flags & HEAP_NO_SERIALIZE))
-      RtlEnterCriticalSection( &heapPtr->critSection );
+      RtlEnterHeapLock( &heapPtr->critSection );
    if (!HEAP_IsRealArena( Heap, HEAP_NO_SERIALIZE, Ptr, QUIET ))
    {
       if (!(Flags & HEAP_NO_SERIALIZE))
-         RtlLeaveCriticalSection( &heapPtr->critSection );
+         RtlLeaveHeapLock( &heapPtr->critSection );
       DPRINT("(%08x,%08lx,%p,%08lx): returning NULL\n",
             Heap, Flags, Ptr, Size );
       if (Flags & HEAP_GENERATE_EXCEPTIONS)
@@ -1390,7 +1390,7 @@ PVOID STDCALL RtlReAllocateHeap(
                            heapPtr->flags))
          {
             if (!(Flags & HEAP_NO_SERIALIZE))
-               RtlLeaveCriticalSection( &heapPtr->critSection );
+               RtlLeaveHeapLock( &heapPtr->critSection );
             if (Flags & HEAP_GENERATE_EXCEPTIONS)
                RtlRaiseStatus( STATUS_NO_MEMORY );
             return NULL;
@@ -1407,7 +1407,7 @@ PVOID STDCALL RtlReAllocateHeap(
                !(pNew = HEAP_FindFreeBlock( heapPtr, Size, &newsubheap )))
          {
             if (!(Flags & HEAP_NO_SERIALIZE))
-               RtlLeaveCriticalSection( &heapPtr->critSection );
+               RtlLeaveHeapLock( &heapPtr->critSection );
             if (Flags & HEAP_GENERATE_EXCEPTIONS)
                RtlRaiseStatus( STATUS_NO_MEMORY );
             return NULL;
@@ -1450,7 +1450,7 @@ PVOID STDCALL RtlReAllocateHeap(
    /* Return the new arena */
 
    if (!(Flags & HEAP_NO_SERIALIZE))
-      RtlLeaveCriticalSection( &heapPtr->critSection );
+      RtlLeaveHeapLock( &heapPtr->critSection );
 
    DPRINT("(%08x,%08lx,%p,%08lx): returning %p\n",
          Heap, Flags, Ptr, Size, (PVOID)(pArena + 1) );
@@ -1491,7 +1491,7 @@ RtlLockHeap(IN HANDLE Heap)
    HEAP *heapPtr = HEAP_GetPtr( Heap );
    if (!heapPtr)
       return FALSE;
-   RtlEnterCriticalSection( &heapPtr->critSection );
+   RtlEnterHeapLock( &heapPtr->critSection );
    return TRUE;
 }
 
@@ -1515,7 +1515,7 @@ RtlUnlockHeap(HANDLE Heap)
    HEAP *heapPtr = HEAP_GetPtr( Heap );
    if (!heapPtr)
       return FALSE;
-   RtlLeaveCriticalSection( &heapPtr->critSection );
+   RtlLeaveHeapLock( &heapPtr->critSection );
    return TRUE;
 }
 
@@ -1548,7 +1548,7 @@ RtlSizeHeap(
    Flags &= HEAP_NO_SERIALIZE;
    Flags |= heapPtr->flags;
    if (!(Flags & HEAP_NO_SERIALIZE))
-      RtlEnterCriticalSection( &heapPtr->critSection );
+      RtlEnterHeapLock( &heapPtr->critSection );
    if (!HEAP_IsRealArena( Heap, HEAP_NO_SERIALIZE, Ptr, QUIET ))
    {
       ret = 0xffffffff;
@@ -1559,7 +1559,7 @@ RtlSizeHeap(
       ret = pArena->size & ARENA_SIZE_MASK;
    }
    if (!(Flags & HEAP_NO_SERIALIZE))
-      RtlLeaveCriticalSection( &heapPtr->critSection );
+      RtlLeaveHeapLock( &heapPtr->critSection );
 
    DPRINT("(%08x,%08lx,%p): returning %08lx\n",
          Heap, Flags, Ptr, ret );
@@ -1629,7 +1629,7 @@ BOOLEAN STDCALL HeapWalk(
    }
 
    if (!(heapPtr->flags & HEAP_NO_SERIALIZE))
-      RtlEnterCriticalSection( &heapPtr->critSection );
+      RtlEnterHeapLock( &heapPtr->critSection );
 
    /* set ptr to the next arena to be examined */
 
@@ -1717,7 +1717,7 @@ BOOLEAN STDCALL HeapWalk(
 
 HW_end:
    if (!(heapPtr->flags & HEAP_NO_SERIALIZE))
-      RtlLeaveCriticalSection( &heapPtr->critSection );
+      RtlLeaveHeapLock( &heapPtr->critSection );
 
    return ret;
 }
@@ -1735,7 +1735,7 @@ RtlInitializeHeapManager(VOID)
    Peb->MaximumNumberOfHeaps = -1; /* no limit */
    Peb->ProcessHeaps = NULL;
 
-   RtlInitializeCriticalSection(&RtlpProcessHeapsListLock);
+   RtlInitializeHeapLock(&RtlpProcessHeapsListLock);
 }
 
 
@@ -1749,7 +1749,7 @@ RtlEnumProcessHeaps(PHEAP_ENUMERATION_ROUTINE HeapEnumerationRoutine,
    NTSTATUS Status = STATUS_SUCCESS;
    HEAP** pptr;
 
-   RtlEnterCriticalSection(&RtlpProcessHeapsListLock);
+   RtlEnterHeapLock(&RtlpProcessHeapsListLock);
 
    for (pptr = (HEAP**)&NtCurrentPeb()->ProcessHeaps; *pptr; pptr = &(*pptr)->next)
    {
@@ -1758,7 +1758,7 @@ RtlEnumProcessHeaps(PHEAP_ENUMERATION_ROUTINE HeapEnumerationRoutine,
          break;
    }
 
-   RtlLeaveCriticalSection(&RtlpProcessHeapsListLock);
+   RtlLeaveHeapLock(&RtlpProcessHeapsListLock);
 
    return Status;
 }
@@ -1774,7 +1774,7 @@ RtlGetProcessHeaps(ULONG HeapCount,
    ULONG Result = 0;
    HEAP ** pptr;
 
-   RtlEnterCriticalSection(&RtlpProcessHeapsListLock);
+   RtlEnterHeapLock(&RtlpProcessHeapsListLock);
 
    Result = NtCurrentPeb()->NumberOfHeaps;
 
@@ -1787,7 +1787,7 @@ RtlGetProcessHeaps(ULONG HeapCount,
       }
    }
 
-   RtlLeaveCriticalSection (&RtlpProcessHeapsListLock);
+   RtlLeaveHeapLock (&RtlpProcessHeapsListLock);
 
    return Result;
 }
@@ -1802,7 +1802,7 @@ RtlValidateProcessHeaps(VOID)
    BOOLEAN Result = TRUE;
    HEAP ** pptr;
 
-   RtlEnterCriticalSection(&RtlpProcessHeapsListLock);
+   RtlEnterHeapLock(&RtlpProcessHeapsListLock);
 
    for (pptr = (HEAP**)&NtCurrentPeb()->ProcessHeaps; *pptr; pptr = &(*pptr)->next)
    {
@@ -1813,7 +1813,7 @@ RtlValidateProcessHeaps(VOID)
       }
    }
 
-   RtlLeaveCriticalSection (&RtlpProcessHeapsListLock);
+   RtlLeaveHeapLock (&RtlpProcessHeapsListLock);
 
    return Result;
 }

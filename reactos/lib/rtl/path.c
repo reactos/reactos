@@ -1,16 +1,15 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/ntdll/rtl/path.c
+ * FILE:            lib/rtl/path.c
  * PURPOSE:         Path and current directory functions
- * UPDATE HISTORY:
- *                  Created 03/02/00
+ * PROGRAMMERS:     
  */
 
-/* INCLUDES ******************************************************************/
+/* INCLUDES *****************************************************************/
 
-#include <ntdll.h>
+#include <rtl.h>
+
 #define NDEBUG
 #include <debug.h>
 

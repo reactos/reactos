@@ -17,6 +17,7 @@
 
 VOID RtlInitializeHeapManager (VOID);
 VOID LdrpInitLoader(VOID);
+VOID STDCALL RtlpInitDeferedCriticalSection(VOID);
 
 /* GLOBALS *******************************************************************/
 

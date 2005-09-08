@@ -34,6 +34,10 @@ extern VOID FASTCALL CHECK_PAGED_CODE_RTL(char *file, int line);
 PVOID STDCALL RtlpAllocateMemory(UINT Bytes, ULONG Tag);
 VOID STDCALL RtlpFreeMemory(PVOID Mem, ULONG Tag);
 KPROCESSOR_MODE STDCALL RtlpGetMode();
+NTSTATUS STDCALL RtlDeleteHeapLock(PRTL_CRITICAL_SECTION CriticalSection);
+NTSTATUS STDCALL RtlEnterHeapLock(PRTL_CRITICAL_SECTION CriticalSection);
+NTSTATUS STDCALL RtlInitializeHeapLock(PRTL_CRITICAL_SECTION CriticalSection);
+NTSTATUS STDCALL RtlLeaveHeapLock(PRTL_CRITICAL_SECTION CriticalSection);
 
 #define RtlpAllocateStringMemory RtlpAllocateMemory
 #define RtlpFreeStringMemory RtlpFreeMemory

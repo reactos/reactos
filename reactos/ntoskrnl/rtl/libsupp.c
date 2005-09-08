@@ -79,25 +79,15 @@ RtlpCurrentPeb(VOID)
 
 NTSTATUS
 STDCALL
-RtlDeleteCriticalSection(
+RtlDeleteHeapLock(
     PRTL_CRITICAL_SECTION CriticalSection)
 {
     return STATUS_SUCCESS;
 }
 
-DWORD
-STDCALL
-RtlSetCriticalSectionSpinCount(
-   PRTL_CRITICAL_SECTION CriticalSection,
-   DWORD SpinCount
-   )
-{
-   return 0;
-}
-
 NTSTATUS
 STDCALL
-RtlEnterCriticalSection(
+RtlEnterHeapLock(
     PRTL_CRITICAL_SECTION CriticalSection)
 {
     ExAcquireFastMutex((PFAST_MUTEX) CriticalSection);
@@ -106,7 +96,7 @@ RtlEnterCriticalSection(
 
 NTSTATUS
 STDCALL
-RtlInitializeCriticalSection(
+RtlInitializeHeapLock(
     PRTL_CRITICAL_SECTION CriticalSection)
 {
    ExInitializeFastMutex((PFAST_MUTEX)CriticalSection );
@@ -115,32 +105,12 @@ RtlInitializeCriticalSection(
 
 NTSTATUS
 STDCALL
-RtlLeaveCriticalSection(
+RtlLeaveHeapLock(
     PRTL_CRITICAL_SECTION CriticalSection)
 {
     ExReleaseFastMutex((PFAST_MUTEX) CriticalSection );
     return STATUS_SUCCESS;
 }
-
-BOOLEAN
-STDCALL
-RtlTryEnterCriticalSection(
-    PRTL_CRITICAL_SECTION CriticalSection)
-{
-    return ExTryToAcquireFastMutex((PFAST_MUTEX) CriticalSection );
-}
-
-
-NTSTATUS
-STDCALL
-RtlInitializeCriticalSectionAndSpinCount(
-    PRTL_CRITICAL_SECTION CriticalSection,
-    ULONG SpinCount)
-{
-    ExInitializeFastMutex((PFAST_MUTEX)CriticalSection );
-    return STATUS_SUCCESS;
-}
-
 
 #ifdef DBG
 VOID FASTCALL
