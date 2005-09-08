@@ -1,8 +1,0 @@
-;
-; Exports definition file for usbport.sys
-;
-EXPORTS
-USBPORT_RegisterUSBPortDriver@12
-USBPORT_GetHciMn@0
-USBPORT_AllocateUsbControllerInterface@4
-USBPORT_FreeUsbControllerInterface@4
