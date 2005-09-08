@@ -96,4 +96,5 @@
 	<file>wtoi.c</file>
 	<file>wtol.c</file>
 	<file>rand.c</file>
+	<file>sscanf.c</file>
 </module>

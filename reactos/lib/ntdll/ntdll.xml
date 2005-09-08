@@ -37,11 +37,6 @@
 		<file>libsupp.c</file>
 		<file>version.c</file>
 	</directory>
-	<directory name="stdio">
-		<file>sprintf.c</file>
-		<file>sscanf.c</file>
-		<file>swprintf.c</file>
-	</directory>
 	<directory name="def">
 		<file>ntdll.rc</file>
 	</directory>

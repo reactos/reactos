@@ -1,8 +1,12 @@
 /**/
 
-#include <ntdll.h>
-#define NDEBUG
-#include <debug.h>
+#include <windows.h>
+#define NTOS_MODE_USER
+#define _NTSYSTEM_
+#include <ndk/umtypes.h>
+#include <ndk/rtlfuncs.h>
+#include <stdlib.h>
+#include <stdarg.h>
 #include <stdio.h>
 
 /* helper function for *scanf.  Returns the value of character c in the
@@ -15,10 +19,6 @@ static int char2digit(char c, int base) {
     if ((c>='a') && (c<='z') && (c<='a'+base-11)) return (c-'a'+10);
     return -1;
 }
-
-#define debugstr_a(a) (a)
-#define TRACE DPRINT
-#define WARN DPRINT1
 
 /* vsscanf */
 #undef WIDE_SCANF

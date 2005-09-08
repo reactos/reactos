@@ -269,6 +269,22 @@ unsigned short _ctype[] = {
 unsigned short *_pctype = _ctype + 1;
 unsigned short *_pwctype = _ctype + 1;
 
+/*
+ * @implemented
+ */
+unsigned short **__p__pctype(void)
+{
+   return &_pctype;
+}
+
+/*
+ * @implemented
+ */
+unsigned short **__p__pwctype(void)
+{
+   return &_pwctype;
+}
+
 int _isctype (int c, int ctypeFlags)
 {
   return (_pctype[(unsigned char)(c & 0xFF)] & ctypeFlags);
@@ -278,6 +294,16 @@ int _isctype (int c, int ctypeFlags)
  * @implemented
  */
 int iswctype(wint_t wc, wctype_t wctypeFlags)
+{
+   return (_pwctype[(unsigned char)(wc & 0xFF)] & wctypeFlags);
+}
+
+/*
+ * obsolete
+ *
+ * @implemented
+ */
+int is_wctype(wint_t wc, wctype_t wctypeFlags)
 {
    return (_pwctype[(unsigned char)(wc & 0xFF)] & wctypeFlags);
 }
@@ -301,9 +327,25 @@ int isalnum(int c)
 /*
  * @implemented
  */
+int iswalnum(wint_t c)
+{
+    return iswctype(c, _ALPHA | _DIGIT);
+}
+
+/*
+ * @implemented
+ */
 int __isascii(int c)
 {
    return ((unsigned char)c <= 0x7f);
+}
+
+/*
+ * @implemented
+ */
+int iswascii(wint_t c)
+{
+    return __isascii(c);
 }
 
 /*
@@ -406,9 +448,42 @@ int iswalpha(wint_t c)
 /*
  * @implemented
  */
+int iswcntrl(wint_t c)
+{
+    return iswctype(c, _CONTROL);
+}
+
+/*
+ * @implemented
+ */
 int iswdigit(wint_t c)
 {
    return (iswctype (c, _DIGIT));
+}
+
+/*
+ * @implemented
+ */
+int iswgraph(wint_t c)
+{
+  return iswctype(c,_PUNCT | _ALPHA | _DIGIT);
+}
+
+/*
+ * @implemented
+ */
+int iswprint(wint_t c)
+{
+  return iswctype((unsigned short)c,_BLANK | _PUNCT | _ALPHA | _DIGIT);
+}
+
+
+/*
+ * @implemented
+ */
+int iswpunct(wint_t c)
+{
+    return iswctype(c, _PUNCT);
 }
 
 /*
@@ -418,6 +493,15 @@ int iswlower(wint_t c)
 {
    return (iswctype (c, _LOWER));
 }
+
+/*
+ * @implemented
+ */
+int iswupper(wint_t c)
+{
+    return iswctype(c, _UPPER);
+}
+
 
 /*
  * @implemented

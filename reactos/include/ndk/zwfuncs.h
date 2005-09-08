@@ -4350,29 +4350,4 @@ ZwYieldExecution(
     VOID
 );
 
-
-static __inline struct _PEB* NtCurrentPeb (void) 
-{
-    struct _PEB * pPeb;
-
-#if defined(__GNUC__)
-
-    __asm__ __volatile__
-    (
-      "movl %%fs:0x30, %0\n" /* fs:30h == Teb->Peb */
-      : "=r" (pPeb) /* can't have two memory operands */
-      : /* no inputs */
-    );
-
-#elif defined(_MSC_VER)
-
-    __asm mov eax, fs:0x30;
-    __asm mov pPeb, eax
-
-#else
-#error Unknown compiler for inline assembler
-#endif
-
-    return pPeb;
-}
 #endif

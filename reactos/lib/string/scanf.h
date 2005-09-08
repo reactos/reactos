@@ -83,17 +83,6 @@ _FUNCTION_ {
     int rd = 0, consumed = 0;
     int nch;
     if (!*format) return 0;
-#ifndef WIDE_SCANF
-#ifdef CONSOLE
-    TRACE("(%s): \n", debugstr_a(format));
-#else /* CONSOLE */
-#ifdef STRING
-    TRACE("%s (%s)\n", file, debugstr_a(format));
-#else /* STRING */
-    TRACE("%p (%s)\n", file, debugstr_a(format));
-#endif /* STRING */
-#endif /* CONSOLE */
-#endif /* WIDE_SCANF */
     nch = _GETC_(file);
     if (nch == _EOF_) return _EOF_RET;
 
@@ -232,7 +221,6 @@ _FUNCTION_ {
 			    else _SET_NUMBER_(int);
 			} else {
 			    if (negative) {
-				WARN("Dropping sign in reading a negative number into an unsigned value");
 				negative = 0;
 			    }
 			    if (I64_prefix) _SET_NUMBER_(ULONGLONG);
@@ -542,7 +530,6 @@ _FUNCTION_ {
     if (nch!=_EOF_) {
 	_UNGETC_(nch, file);
     }
-    TRACE("returning %d\n", rd);
     return rd;
 }
 

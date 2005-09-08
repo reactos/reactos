@@ -51,6 +51,8 @@
 	<file>sd.c</file>
 	<file>security.c</file>
 	<file>sid.c</file>
+	<file>sprintf.c</file>
+	<file>swprintf.c</file>
 	<file>splaytree.c</file>
 	<file>thread.c</file>
 	<file>time.c</file>

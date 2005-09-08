@@ -320,9 +320,7 @@
 		<file>nls.c</file>
 		<file>purecall.c</file>
 		<file>regio.c</file>
-		<file>sprintf.c</file>
 		<file>strtok.c</file>
-		<file>swprintf.c</file>
 	</directory>
 	<directory name="se">
 		<file>access.c</file>
