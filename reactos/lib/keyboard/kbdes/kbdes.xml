@@ -1,4 +1,4 @@
-<module name="kbdes" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbdes.dll" warnings="true">
+<module name="kbdes" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbdes.dll" allowwarnings="true">
 	<importlibrary definition="kbdes.def" />
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />

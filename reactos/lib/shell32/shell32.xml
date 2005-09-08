@@ -1,4 +1,4 @@
-<module name="shell32" type="win32dll" baseaddress="${BASEADDRESS_SHELL32}" installbase="system32" installname="shell32.dll" warnings="true">
+<module name="shell32" type="win32dll" baseaddress="${BASEADDRESS_SHELL32}" installbase="system32" installname="shell32.dll" allowwarnings="true">
 	<importlibrary definition="shell32.spec.def" />
 	<include base="shell32">.</include>
 	<include base="ReactOS">include/wine</include>

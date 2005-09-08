@@ -1,4 +1,4 @@
-<module name="winefile" type="win32gui"  installbase="system32" installname="winefile.exe" warnings="true">
+<module name="winefile" type="win32gui"  installbase="system32" installname="winefile.exe" allowwarnings="true">
 	<include base="winefile">.</include>
 	<define name="UNICODE" />
 	<define name="__USE_W32API" />

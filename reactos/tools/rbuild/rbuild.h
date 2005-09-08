@@ -233,7 +233,7 @@ public:
 	std::string installName;
 	std::string aliasedModuleName;
 	bool useWRC;
-	bool enableWarnings;
+	bool allowWarnings;
 	bool enabled;
 
 	Module ( const Project& project,

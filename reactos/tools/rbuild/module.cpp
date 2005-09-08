@@ -318,11 +318,20 @@ Module::Module ( const Project& project,
 	else
 		useWRC = true;
 
-	att = moduleNode.GetAttribute ( "warnings", false );
+	att = moduleNode.GetAttribute ( "allowwarnings", false );
+	if ( att == NULL )
+	{
+		att = moduleNode.GetAttribute ( "warnings", false );
+		if ( att != NULL )
+		{
+			printf ( "%s: WARNING: 'warnings' attribute of <module> is deprecated, use 'allowwarnings' instead\n",
+				moduleNode.location.c_str() );
+		}
+	}
 	if ( att != NULL )
-		enableWarnings = att->value == "true";
+		allowWarnings = att->value == "true";
 	else
-		enableWarnings = false;
+		allowWarnings = false;
 
 	att = moduleNode.GetAttribute ( "aliasof", false );
 	if ( type == Alias && att != NULL )

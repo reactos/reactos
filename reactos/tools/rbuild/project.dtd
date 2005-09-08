@@ -80,7 +80,7 @@
 	installbase	%Text; #IMPLIED
 	installname	%Text; #IMPLIED
 	usewrc		%Text; #IMPLIED
-	warnings %Text; #IMPLIED
+	allowwarnings	(true|false) "false"
 	aliasof %Text; #IMPLIED
 >
 

@@ -1,4 +1,4 @@
-<module name="shdocvw" type="win32dll" baseaddress="${BASEADDRESS_SHDOCVW}" installbase="system32" installname="shdocvw.dll" usewrc="false" warnings="true">
+<module name="shdocvw" type="win32dll" baseaddress="${BASEADDRESS_SHDOCVW}" installbase="system32" installname="shdocvw.dll" usewrc="false" allowwarnings="true">
 	<importlibrary definition="shdocvw.spec.def" />
 	<include base="shdocvw">.</include>
 	<include base="ReactOS">include/wine</include>

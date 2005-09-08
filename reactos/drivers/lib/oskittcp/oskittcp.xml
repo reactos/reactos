@@ -1,4 +1,4 @@
-<module name="oskittcp" type="staticlibrary" warnings="true">
+<module name="oskittcp" type="staticlibrary" allowwarnings="true">
 	<define name="__REACTOS__">1</define>
 	<define name="__NTDRIVER__"/>
 	<define name="KERNEL"/>

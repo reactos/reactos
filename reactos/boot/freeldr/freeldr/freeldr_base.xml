@@ -1,4 +1,4 @@
-<module name="freeldr_base" type="objectlibrary" warnings="true">
+<module name="freeldr_base" type="objectlibrary" allowwarnings="true">
 	<include base="freeldr_base">include</include>
 	<include base="freeldr_base">cache</include>
 	<include base="ntoskrnl">include</include>

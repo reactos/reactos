@@ -19,7 +19,10 @@
 
 #include "mingw.h"
 #include <assert.h>
-#ifndef _MSC_VER
+#ifdef _MSC_VER
+#define popen _popen
+#define pclose _pclose
+#else
 #include <dirent.h>
 #endif//_MSC_VER
 #include "modulehandler.h"
