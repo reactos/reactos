@@ -117,7 +117,7 @@ PWINDOW_OBJECT FASTCALL UserGetWindowObject(HWND hWnd)
    if (!hWnd) return NULL;
    
    Window = (PWINDOW_OBJECT)UserGetObject(&gHandleTable, hWnd, otWindow);
-   if (!Window)
+   if (!Window || 0 != (Window->Status & WINDOWSTATUS_DESTROYED))
    {
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       return NULL;
