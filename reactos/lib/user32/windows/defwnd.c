@@ -809,15 +809,15 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, POINT Pt)
 LRESULT
 DefWndHandleWindowPosChanging(HWND hWnd, WINDOWPOS* Pos)
 {
-    POINT maxSize, minTrack;
+    POINT maxTrack, minTrack;
     LONG style = GetWindowLongA(hWnd, GWL_STYLE);
 
     if (Pos->flags & SWP_NOSIZE) return 0;
     if ((style & WS_THICKFRAME) || ((style & (WS_POPUP | WS_CHILD)) == 0))
     {
-        WinPosGetMinMaxInfo(hWnd, &maxSize, NULL, &minTrack, NULL);
-        Pos->cx = min(Pos->cx, maxSize.x);
-        Pos->cy = min(Pos->cy, maxSize.y);
+        WinPosGetMinMaxInfo(hWnd, NULL, NULL, &minTrack, &maxTrack);
+        Pos->cx = min(Pos->cx, maxTrack.x);
+        Pos->cy = min(Pos->cy, maxTrack.y);
         if (!(style & WS_MINIMIZE))
         {
             if (Pos->cx < minTrack.x) Pos->cx = minTrack.x;
