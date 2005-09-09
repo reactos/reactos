@@ -403,6 +403,12 @@ VOID TuiUpdateDateTime(VOID)
 	BOOL	PMHour = FALSE;
 
 	MachRTCGetCurrentDateTime(&Year, &Month, &Day, &Hour, &Minute, &Second);
+	if (Year < 1 || 9999 < Year || Month < 1 || 12 < Month || Day < 1 ||
+            31 < Day || 23 < Hour || 59 < Minute || 59 < Second)
+	{
+		/* This happens on QEmu sometimes. We just skip updating */
+		return;
+	}
 	// Get the month name
 	strcpy(DateString, UiMonthNames[Month - 1]);
 	// Get the day
