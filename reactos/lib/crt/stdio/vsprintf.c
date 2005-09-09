@@ -35,7 +35,7 @@ _vsntprintf(_TCHAR *str, size_t maxlen, const _TCHAR *fmt, va_list ap)
 
   f._flag = _IOWRT|_IOSTRG|_IOBINARY;
   f._ptr = (char*)str;
-  f._cnt = maxlen;
+  f._cnt = maxlen * sizeof(_TCHAR);
   f._file = -1;
   len = _vftprintf(&f,fmt, ap);
   // what if the buffer is full ??
