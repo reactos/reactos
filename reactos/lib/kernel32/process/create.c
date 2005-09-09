@@ -973,7 +973,7 @@ GetAppName:
         }
                 
         /* Now check if we have a file, and if the path size is OK */
-        if (!RetVal || RetVal >= (MAX_PATH / sizeof(WCHAR)))
+        if (!RetVal || RetVal >= (MAX_PATH * sizeof(WCHAR)))
         {
             ULONG PathType;
             HANDLE hFile;
