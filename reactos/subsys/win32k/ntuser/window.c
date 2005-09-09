@@ -1452,7 +1452,12 @@ co_IntCreateWindowEx(DWORD dwExStyle,
       if ((dwStyle & (WS_CHILD | WS_POPUP)) == WS_CHILD)
          ParentWindowHandle = hWndParent;
       else
-         OwnerWindowHandle = UserGetAncestor(hWndParent, GA_ROOT);
+      {
+         //temp hack
+         PWINDOW_OBJECT Par = UserGetWindowObject(hWndParent);
+         if (Par)
+            OwnerWindowHandle = UserGetAncestor(Par, GA_ROOT)->hSelf;
+      }
    }
    else if ((dwStyle & (WS_CHILD | WS_POPUP)) == WS_CHILD)
    {
@@ -2622,19 +2627,12 @@ NtUserFlashWindowEx(DWORD Unknown0)
 /*
  * @implemented
  */
-HWND FASTCALL UserGetAncestor(HWND hWnd, UINT Type)
+PWINDOW_OBJECT FASTCALL UserGetAncestor(PWINDOW_OBJECT Wnd, UINT Type)
 {
-   PWINDOW_OBJECT Wnd, WndAncestor, Parent;
-   HWND hWndAncestor;
+   PWINDOW_OBJECT WndAncestor, Parent;
 
-   if (hWnd == IntGetDesktopWindow())
+   if (Wnd->hSelf == IntGetDesktopWindow())
    {
-      return NULL;
-   }
-
-   if (!(Wnd = IntGetWindowObject(hWnd)))
-   {
-      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       return NULL;
    }
 
@@ -2642,7 +2640,7 @@ HWND FASTCALL UserGetAncestor(HWND hWnd, UINT Type)
    {
       case GA_PARENT:
          {
-            WndAncestor = IntGetParentObject(Wnd);
+            WndAncestor = Wnd->Parent;
             break;
          }
 
@@ -2655,17 +2653,15 @@ HWND FASTCALL UserGetAncestor(HWND hWnd, UINT Type)
             for(;;)
             {
                tmp = Parent;
-               if(!(Parent = IntGetParentObject(WndAncestor)))
+               if(!(Parent = WndAncestor->Parent))
                {
                   break;
                }
                if(IntIsDesktopWindow(Parent))
                {
-                  IntReleaseWindowObject(Parent);
                   break;
                }
-               if(tmp)
-                  IntReleaseWindowObject(tmp);
+
                WndAncestor = Parent;
             }
             break;
@@ -2674,17 +2670,21 @@ HWND FASTCALL UserGetAncestor(HWND hWnd, UINT Type)
       case GA_ROOTOWNER:
          {
             WndAncestor = Wnd;
-            IntReferenceWindowObject(WndAncestor);
+
             for (;;)
             {
                PWINDOW_OBJECT Old;
                Old = WndAncestor;
                Parent = IntGetParent(WndAncestor);
-               IntReleaseWindowObject(Old);
+
                if (!Parent)
                {
                   break;
                }
+               
+               //temp hack
+               UserDerefObject(Parent);
+               
                WndAncestor = Parent;
             }
             break;
@@ -2692,18 +2692,11 @@ HWND FASTCALL UserGetAncestor(HWND hWnd, UINT Type)
 
       default:
          {
-            IntReleaseWindowObject(Wnd);
             return NULL;
          }
    }
 
-   hWndAncestor = (WndAncestor ? WndAncestor->hSelf : NULL);
-   IntReleaseWindowObject(Wnd);
-
-   if(WndAncestor && (WndAncestor != Wnd))
-      IntReleaseWindowObject(WndAncestor);
-
-   return hWndAncestor;
+   return WndAncestor;
 }
 
 
@@ -2714,12 +2707,21 @@ HWND FASTCALL UserGetAncestor(HWND hWnd, UINT Type)
 HWND STDCALL
 NtUserGetAncestor(HWND hWnd, UINT Type)
 {
+   PWINDOW_OBJECT Window, Ancestor;
    DECLARE_RETURN(HWND);
 
    DPRINT("Enter NtUserGetAncestor\n");
    UserEnterExclusive();
+   
+   if (!(Window = UserGetWindowObject(hWnd)))
+   {
+      RETURN(NULL);
+   }
 
-   RETURN(UserGetAncestor(hWnd, Type));
+   Ancestor = UserGetAncestor(Window, Type);
+   /* faxme: can UserGetAncestor ever return NULL for a valid window? */
+   
+   RETURN(Ancestor ? Ancestor->hSelf : NULL);
 
 CLEANUP:
    DPRINT("Leave NtUserGetAncestor, ret=%i\n",_ret_);

@@ -317,11 +317,13 @@ CLEANUP:
 }
 
 
-BOOL FASTCALL co_UserHideCaret(PWINDOW_OBJECT Window)
+BOOL FASTCALL co_UserHideCaret(PWINDOW_OBJECT Window OPTIONAL)
 {
    PUSER_MESSAGE_QUEUE ThreadQueue;
 
-   if(Window->OwnerThread != PsGetCurrentThread())
+   if (Window) ASSERT_REFS_CO(Window);
+
+   if(Window && Window->OwnerThread != PsGetCurrentThread())
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       return FALSE;
@@ -329,7 +331,7 @@ BOOL FASTCALL co_UserHideCaret(PWINDOW_OBJECT Window)
 
    ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
 
-   if(ThreadQueue->CaretInfo->hWnd != Window->hSelf)
+   if(Window && ThreadQueue->CaretInfo->hWnd != Window->hSelf)
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       return FALSE;
@@ -337,7 +339,7 @@ BOOL FASTCALL co_UserHideCaret(PWINDOW_OBJECT Window)
 
    if(ThreadQueue->CaretInfo->Visible)
    {
-      IntKillTimer(Window->hSelf, IDCARETTIMER, TRUE);
+      IntKillTimer((Window ? Window->hSelf : 0), IDCARETTIMER, TRUE);
 
       co_IntHideCaret(ThreadQueue->CaretInfo);
       ThreadQueue->CaretInfo->Visible = 0;
@@ -350,24 +352,23 @@ BOOL FASTCALL co_UserHideCaret(PWINDOW_OBJECT Window)
 
 BOOL
 STDCALL
-NtUserHideCaret(
-   HWND hWnd)
+NtUserHideCaret(HWND hWnd OPTIONAL)
 {
-   PWINDOW_OBJECT Window;
+   PWINDOW_OBJECT Window = NULL;
    DECLARE_RETURN(BOOL);
    BOOL ret;
 
    DPRINT("Enter NtUserHideCaret\n");
    UserEnterExclusive();
 
-   if(!(Window = UserGetWindowObject(hWnd)))
+   if(hWnd && !(Window = UserGetWindowObject(hWnd)))
    {
       RETURN(FALSE);
    }
 
-   UserRefObjectCo(Window);
+   if (Window) UserRefObjectCo(Window);
    ret = co_UserHideCaret(Window);
-   UserDerefObjectCo(Window);
+   if (Window) UserDerefObjectCo(Window);
 
    RETURN(ret);
 
@@ -378,11 +379,13 @@ CLEANUP:
 }
 
 
-BOOL FASTCALL co_UserShowCaret(PWINDOW_OBJECT Window)
+BOOL FASTCALL co_UserShowCaret(PWINDOW_OBJECT Window OPTIONAL)
 {
    PUSER_MESSAGE_QUEUE ThreadQueue;
 
-   if(Window->OwnerThread != PsGetCurrentThread())
+   if (Window) ASSERT_REFS_CO(Window);
+
+   if(Window && Window->OwnerThread != PsGetCurrentThread())
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       return FALSE;
@@ -390,7 +393,7 @@ BOOL FASTCALL co_UserShowCaret(PWINDOW_OBJECT Window)
 
    ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetWin32Thread()->MessageQueue;
 
-   if(ThreadQueue->CaretInfo->hWnd != Window->hSelf)
+   if(Window && ThreadQueue->CaretInfo->hWnd != Window->hSelf)
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       return FALSE;
@@ -403,7 +406,7 @@ BOOL FASTCALL co_UserShowCaret(PWINDOW_OBJECT Window)
       {
          co_IntSendMessage(ThreadQueue->CaretInfo->hWnd, WM_SYSTIMER, IDCARETTIMER, 0);
       }
-      IntSetTimer(Window->hSelf, IDCARETTIMER, IntGetCaretBlinkTime(), NULL, TRUE);
+      IntSetTimer((Window ? Window->hSelf : 0), IDCARETTIMER, IntGetCaretBlinkTime(), NULL, TRUE);
    }
 
    return TRUE;
@@ -412,24 +415,23 @@ BOOL FASTCALL co_UserShowCaret(PWINDOW_OBJECT Window)
 
 BOOL
 STDCALL
-NtUserShowCaret(
-   HWND hWnd)
+NtUserShowCaret(HWND hWnd OPTIONAL)
 {
-   PWINDOW_OBJECT Window;
+   PWINDOW_OBJECT Window = NULL;
    DECLARE_RETURN(BOOL);
    BOOL ret;
 
    DPRINT("Enter NtUserShowCaret\n");
    UserEnterExclusive();
 
-   if(!(Window = UserGetWindowObject(hWnd)))
+   if(hWnd && !(Window = UserGetWindowObject(hWnd)))
    {
       RETURN(FALSE);
    }
 
-   UserRefObjectCo(Window);
+   if (Window) UserRefObjectCo(Window);
    ret = co_UserShowCaret(Window);
-   UserDerefObjectCo(Window);
+   if (Window) UserDerefObjectCo(Window);
 
    RETURN(ret);
 

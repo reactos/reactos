@@ -120,6 +120,24 @@ CLEANUP:
    END_CLEANUP;
 }
 
+
+/*******************************************************************
+ *         can_activate_window
+ *
+ * Check if we can activate the specified window.
+ */
+static BOOL FASTCALL can_activate_window( PWINDOW_OBJECT Wnd )
+{
+    LONG style;
+
+    if (!Wnd) return FALSE;
+    style = Wnd->Style;
+    if (!(style & WS_VISIBLE)) return FALSE;
+    if ((style & (WS_POPUP|WS_CHILD)) == WS_CHILD) return FALSE;
+    return !(style & WS_DISABLED);
+}
+
+
 /*******************************************************************
  *         WinPosActivateOtherWindow
  *
@@ -128,7 +146,7 @@ CLEANUP:
 VOID FASTCALL
 co_WinPosActivateOtherWindow(PWINDOW_OBJECT Window OPTIONAL)
 {
-   PWINDOW_OBJECT Wnd, Old;
+   PWINDOW_OBJECT Wnd;
    HWND Fg;
 
    if (Window)
@@ -143,20 +161,8 @@ co_WinPosActivateOtherWindow(PWINDOW_OBJECT Window OPTIONAL)
    /* If this is popup window, try to activate the owner first. */
    if ((Window->Style & WS_POPUP) && (Wnd = IntGetOwner(Window)))
    {
-      for(;;)
-      {
-         Old = Wnd;
-         Wnd = Wnd->Parent;
-         if(IntIsDesktopWindow(Wnd))
-         {
-            Wnd = Old;
-            break;
-         }
-      }
-
-      if ((Wnd->Style & (WS_DISABLED | WS_VISIBLE)) == WS_VISIBLE &&
-            (Wnd->Style & (WS_POPUP | WS_CHILD)) != WS_CHILD)
-         goto done;
+      Wnd = UserGetAncestor( Wnd, GA_ROOT );
+      if (can_activate_window(Wnd)) goto done;
    }
 
    /* Pick a next top-level window. */
@@ -840,9 +846,11 @@ WinPosFixupFlags(WINDOWPOS *WinPos, PWINDOW_OBJECT Window)
             && HWND_NOTOPMOST != WinPos->hwndInsertAfter
             && HWND_BOTTOM != WinPos->hwndInsertAfter)
       {
-         PWINDOW_OBJECT Parent = Window->Parent;
-         if (UserGetAncestor(WinPos->hwndInsertAfter, GA_PARENT) !=
-               (Parent ? Parent->hSelf : NULL))
+         PWINDOW_OBJECT InsAfterWnd, Parent = Window->Parent;
+         
+         InsAfterWnd = UserGetWindowObject(WinPos->hwndInsertAfter);
+         
+         if (InsAfterWnd && UserGetAncestor(InsAfterWnd, GA_PARENT) != Parent)
          {
             return FALSE;
          }
@@ -932,7 +940,9 @@ co_WinPosSetWindowPos(
 
    if ((WinPos.flags & (SWP_NOZORDER | SWP_HIDEWINDOW | SWP_SHOWWINDOW)) !=
          SWP_NOZORDER &&
-         UserGetAncestor(WinPos.hwnd, GA_PARENT) == IntGetDesktopWindow())
+//         UserGetAncestor(WinPos.hwnd, GA_PARENT) == IntGetDesktopWindow())
+//faxme: is WinPos.hwnd constant?? (WinPos.hwnd = Window->hSelf above)
+         UserGetAncestor(Window, GA_PARENT)->hSelf == IntGetDesktopWindow())
    {
       WinPos.hwndInsertAfter = WinPosDoOwnedPopups(WinPos.hwnd, WinPos.hwndInsertAfter);
    }

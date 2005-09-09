@@ -305,7 +305,7 @@ BOOL FASTCALL ObmCreateHandleTable()
    PVOID mem;
 
    //FIXME: dont alloc all at once! must be mapped into umode also...
-   mem = ExAllocatePool(PagedPool, sizeof(USER_HANDLE_ENTRY) * 1024);
+   mem = ExAllocatePool(PagedPool, sizeof(USER_HANDLE_ENTRY) * 1024*2);
    if (!mem)
    {
       DPRINT1("Failed creating handle table\n");
@@ -313,7 +313,7 @@ BOOL FASTCALL ObmCreateHandleTable()
    }
 
    //FIXME: make auto growable
-   UserInitHandleTable(&gHandleTable, mem, sizeof(USER_HANDLE_ENTRY) * 1024);
+   UserInitHandleTable(&gHandleTable, mem, sizeof(USER_HANDLE_ENTRY) * 1024*2);
 
    return TRUE;
 }

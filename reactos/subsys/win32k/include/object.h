@@ -42,7 +42,7 @@ typedef enum _USER_OBJECT_TYPE
   otWindow,
   otMenu,
   otAccel,
-  otCursor,
+  otCursorIcon,
   otHook,
   otMonitor,
   otClass //fixme: remove

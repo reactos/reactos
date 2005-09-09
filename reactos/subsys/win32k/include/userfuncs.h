@@ -21,6 +21,8 @@ BOOL FASTCALL ObmDereferenceObject(PVOID obj);
 
 #define IntReferenceWindowObject(o) ObmReferenceObject(o)
 
+#define UserDerefObject(o) ObmReferenceObject(o)
+
 VOID FASTCALL IntReleaseWindowObject(PWINDOW_OBJECT Window);
 PWINDOW_OBJECT FASTCALL IntGetWindowObject(HWND hWnd);
 PVOID FASTCALL
@@ -136,7 +138,7 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Wnd);
 
 LONG FASTCALL UserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi);
 
-HWND FASTCALL UserGetAncestor(HWND hWnd, UINT Type);
+PWINDOW_OBJECT FASTCALL UserGetAncestor(PWINDOW_OBJECT Wnd, UINT Type);
 
 /*************** MENU.C ***************/
 

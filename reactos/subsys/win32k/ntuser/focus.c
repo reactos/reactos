@@ -250,28 +250,38 @@ co_IntMouseActivateWindow(PWINDOW_OBJECT Window)
       return FALSE;
    }
 
-   Top = UserGetAncestor(Window->hSelf, GA_ROOT);
-   if (Top != Window->hSelf)
-   {
-      TopWindow = IntGetWindowObject(Top);
-      if (TopWindow == NULL)
-      {
-         SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-         return FALSE;
-      }
-   }
-   else
-   {
-      TopWindow = Window;
-   }
+
+   TopWindow = UserGetAncestor(Window, GA_ROOT);
+   if (!TopWindow) return FALSE;
+//   if (TopWindow != Window)
+//   {
+      
+//   Top = UserGetAncestor(Window, GA_ROOT);
+//   if (Top != Window->hSelf)
+//   {
+//      TopWindow = IntGetWindowObject(Top);
+//      if (TopWindow == NULL)
+//      {
+//         SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+//         return FALSE;
+//      }
+//   }
+//   else
+//   {
+//      TopWindow = Window;
+//   }
 
    /* TMN: Check return valud from this function? */
+   UserRefObjectCo(TopWindow);
+   
    co_IntSetForegroundAndFocusWindow(TopWindow, Window, TRUE);
+   
+   UserDerefObjectCo(TopWindow);
 
-   if (Top != Window->hSelf)
-   {
-      IntReleaseWindowObject(TopWindow);
-   }
+//   if (TopWindow != Window)
+//   {
+//      IntReleaseWindowObject(TopWindow);
+//   }
    return TRUE;
 }
 
@@ -521,7 +531,8 @@ HWND FASTCALL co_UserSetFocus(PWINDOW_OBJECT Window OPTIONAL)
    if (Window)
    {
       PUSER_MESSAGE_QUEUE ThreadQueue;
-      HWND hWndPrev, hWndTop;
+      HWND hWndPrev;
+      PWINDOW_OBJECT TopWnd;
 
       ASSERT_REFS_CO(Window);
 
@@ -538,14 +549,13 @@ HWND FASTCALL co_UserSetFocus(PWINDOW_OBJECT Window OPTIONAL)
          return( 0);
       }
 
-      hWndTop = UserGetAncestor(Window->hSelf, GA_ROOT);
-      if (hWndTop != UserGetActiveWindow())
+      TopWnd = UserGetAncestor(Window, GA_ROOT);
+      if (TopWnd->hSelf != UserGetActiveWindow())
       {
-         PWINDOW_OBJECT WndTops = UserGetWindowObject(hWndTop);
-         
-         UserRefObjectCo(WndTops);
-         co_IntSetActiveWindow(WndTops);
-         UserDerefObjectCo(WndTops);
+//         PWINDOW_OBJECT WndTops = UserGetWindowObject(hWndTop);
+         UserRefObjectCo(TopWnd);
+         co_IntSetActiveWindow(TopWnd);
+         UserDerefObjectCo(TopWnd);
       }
 
       hWndPrev = co_IntSetFocusWindow(Window);
