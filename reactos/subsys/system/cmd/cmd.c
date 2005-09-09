@@ -299,9 +299,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 	TCHAR *first = NULL;
 	TCHAR *rest = NULL; 
 	TCHAR *full = NULL; 
-#ifndef __REACTOS__
 	TCHAR szWindowTitle[MAX_PATH];
-#endif
 	DWORD dwExitCode = 0;
 
 #ifdef _DEBUG
@@ -410,9 +408,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 		return;
 	}
 
-#ifndef __REACTOS__
 	GetConsoleTitle (szWindowTitle, MAX_PATH);
-#endif
 
 	/* check if this is a .BAT or .CMD file */
 	if (!_tcsicmp (_tcsrchr (szFullName, _T('.')), _T(".bat")) ||
@@ -494,9 +490,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 	/* Get code page if it has been change */
 	InputCodePage= GetConsoleCP();
     OutputCodePage = GetConsoleOutputCP();
-#ifndef __REACTOS__
-	SetConsoleTitle (szWindowTitle);
-#endif
+    SetConsoleTitle (szWindowTitle);
 
  free(first);
  free(rest);
