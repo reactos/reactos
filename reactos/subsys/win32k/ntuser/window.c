@@ -344,7 +344,7 @@ static LRESULT co_IntDestroyWindow(PWINDOW_OBJECT Window,
       return 0;
    }
    Window->Status |= WINDOWSTATUS_DESTROYING;
-   Window->Flags &= ~WS_VISIBLE;
+   Window->Style &= ~WS_VISIBLE;
    /* remove the window already at this point from the thread window list so we
       don't get into trouble when destroying the thread windows while we're still
       in IntDestroyWindow() */
