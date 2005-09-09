@@ -2343,7 +2343,8 @@ CSR_API(CsrGetTitle)
   RtlZeroMemory(&Request->Data.GetTitleRequest, sizeof(CSRSS_GET_TITLE));
   Request->Data.GetTitleRequest.ConsoleHandle = Request->Data.GetTitleRequest.ConsoleHandle;
   Request->Data.GetTitleRequest.Length = Console->Title.Length;
-  wcscpy (Request->Data.GetTitleRequest.Title, Console->Title.Buffer);
+  memcpy (Request->Data.GetTitleRequest.Title, Console->Title.Buffer,
+          Console->Title.Length);
   Length = CSR_API_MESSAGE_HEADER_SIZE(CSRSS_SET_TITLE) + Console->Title.Length;
 
   ConioUnlockConsole(Console);
