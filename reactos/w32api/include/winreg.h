@@ -7,13 +7,13 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#define HKEY_CLASSES_ROOT	((HKEY)0x80000000)
-#define HKEY_CURRENT_USER	((HKEY)0x80000001)
-#define HKEY_LOCAL_MACHINE	((HKEY)0x80000002)
-#define HKEY_USERS	((HKEY)0x80000003)
-#define HKEY_PERFORMANCE_DATA	((HKEY)0x80000004)
-#define HKEY_CURRENT_CONFIG	((HKEY)0x80000005)
-#define HKEY_DYN_DATA	((HKEY)0x80000006)
+#define HKEY_CLASSES_ROOT ((HKEY)0x80000000)
+#define HKEY_CURRENT_USER ((HKEY)0x80000001)
+#define HKEY_LOCAL_MACHINE ((HKEY)0x80000002)
+#define HKEY_USERS ((HKEY)0x80000003)
+#define HKEY_PERFORMANCE_DATA ((HKEY)0x80000004)
+#define HKEY_CURRENT_CONFIG ((HKEY)0x80000005)
+#define HKEY_DYN_DATA ((HKEY)0x80000006)
 #define REG_OPTION_VOLATILE 1
 #define REG_OPTION_NON_VOLATILE 0
 #define REG_CREATED_NEW_KEY 1
@@ -64,6 +64,10 @@ LONG WINAPI RegCreateKeyExW(HKEY,LPCWSTR,DWORD,LPWSTR,DWORD,REGSAM,LPSECURITY_AT
 LONG WINAPI RegCreateKeyW(HKEY,LPCWSTR,PHKEY);
 LONG WINAPI RegDeleteKeyA(HKEY,LPCSTR);
 LONG WINAPI RegDeleteKeyW(HKEY,LPCWSTR);
+#if (_WIN32_WINNT >= 0x0600)
+LONG WINAPI RegDeleteTreeA(HKEY,LPCSTR);
+LONG WINAPI RegDeleteTreeW(HKEY,LPCWSTR);
+#endif
 LONG WINAPI RegDeleteValueA(HKEY,LPCSTR);
 LONG WINAPI RegDeleteValueW(HKEY,LPCWSTR);
 LONG WINAPI RegEnumKeyA(HKEY,DWORD,LPSTR,DWORD);
@@ -111,6 +115,9 @@ typedef VALENTW VALENT,*PVALENT;
 #define RegCreateKey RegCreateKeyW
 #define RegCreateKeyEx RegCreateKeyExW
 #define RegDeleteKey RegDeleteKeyW
+#if (_WIN32_WINNT >= 0x0600)
+#define RegDeleteTree RegDeleteTreeW
+#endif
 #define RegDeleteValue RegDeleteValueW
 #define RegEnumKey RegEnumKeyW
 #define RegEnumKeyEx RegEnumKeyExW
@@ -136,6 +143,9 @@ typedef VALENTA VALENT,*PVALENT;
 #define RegCreateKey RegCreateKeyA
 #define RegCreateKeyEx RegCreateKeyExA
 #define RegDeleteKey RegDeleteKeyA
+#if (_WIN32_WINNT >= 0x0600)
+#define RegDeleteTree RegDeleteTreeA
+#endif
 #define RegDeleteValue RegDeleteValueA
 #define RegEnumKey RegEnumKeyA
 #define RegEnumKeyEx RegEnumKeyExA
