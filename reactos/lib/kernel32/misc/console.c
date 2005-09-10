@@ -3056,18 +3056,17 @@ GetConsoleTitleW(
       return 0;
    }
 
-   if(nSize * sizeof(WCHAR) < Request->Data.GetTitleRequest.Length)
+   if(nSize * sizeof(WCHAR) <= Request->Data.GetTitleRequest.Length)
    {
-      wcsncpy(lpConsoleTitle, Request->Data.GetTitleRequest.Title, nSize - 1);
-      lpConsoleTitle[nSize--] = L'\0';
+      nSize--;
    }
    else
    {
       nSize = Request->Data.GetTitleRequest.Length / sizeof (WCHAR);
-      wcscpy(lpConsoleTitle, Request->Data.GetTitleRequest.Title);
-      lpConsoleTitle[nSize] = L'\0';
    }
-
+   memcpy(lpConsoleTitle, Request->Data.GetTitleRequest.Title, nSize * sizeof(WCHAR));
+   lpConsoleTitle[nSize] = L'\0';
+   
    RtlFreeHeap(RtlGetProcessHeap(), 0, Request);
 
    return nSize;
@@ -3088,8 +3087,8 @@ GetConsoleTitleA(
 	DWORD		nSize
 	)
 {
-	wchar_t	WideTitle [CSRSS_MAX_TITLE_LENGTH];
-	DWORD	nWideTitle = sizeof WideTitle;
+	WCHAR	WideTitle [CSRSS_MAX_TITLE_LENGTH + 1];
+	DWORD	nWideTitle = CSRSS_MAX_TITLE_LENGTH + 1;
 	DWORD	nWritten;
 
 	if (!lpConsoleTitle || !nSize) return 0;
@@ -3102,7 +3101,7 @@ GetConsoleTitleA(
 		(LPWSTR) WideTitle,	// address of wide-character string
 		nWideTitle,		// number of characters in string
 		lpConsoleTitle,		// address of buffer for new string
-		nSize,			// size of buffer
+		nSize - 1,		// size of buffer
 		NULL,			// FAST
 		NULL	 		// FAST
 		)))
