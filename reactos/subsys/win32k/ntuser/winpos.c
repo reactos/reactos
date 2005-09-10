@@ -361,8 +361,8 @@ co_WinPosMinMaximize(PWINDOW_OBJECT Window, UINT ShowFlag, RECT* NewPos)
 
          case SW_MAXIMIZE:
             {
-               co_WinPosGetMinMaxInfo(Window, &Size, &InternalPos->MaxPos,
-                                      NULL, NULL);
+               co_WinPosGetMinMaxInfo(Window, NULL, &InternalPos->MaxPos,
+                                      NULL, &Size);
                DPRINT("Maximize: %d,%d %dx%d\n",
                       InternalPos->MaxPos.x, InternalPos->MaxPos.y, Size.x, Size.y);
                if (Window->Style & WS_MINIMIZE)
@@ -382,8 +382,8 @@ co_WinPosMinMaximize(PWINDOW_OBJECT Window, UINT ShowFlag, RECT* NewPos)
                   Window->Style &= ~WS_MINIMIZE;
                   if (Window->Flags & WINDOWOBJECT_RESTOREMAX)
                   {
-                     co_WinPosGetMinMaxInfo(Window, &Size,
-                                            &InternalPos->MaxPos, NULL, NULL);
+                     co_WinPosGetMinMaxInfo(Window, NULL,
+                                            &InternalPos->MaxPos, NULL, &Size);
                      Window->Style |= WS_MAXIMIZE;
                      IntGdiSetRect(NewPos, InternalPos->MaxPos.x,
                                    InternalPos->MaxPos.y, Size.x, Size.y);
@@ -437,8 +437,8 @@ WinPosFillMinMaxInfoStruct(PWINDOW_OBJECT Window, MINMAXINFO *Info)
    Info->ptMaxTrackSize.y = Info->ptMaxSize.y;
 
    IntGetWindowBorderMeasures(Window, &XInc, &YInc);
-   Info->ptMaxSize.x += 2 * XInc;
-   Info->ptMaxSize.y += 2 * YInc;
+   Info->ptMaxTrackSize.x += 2 * XInc;
+   Info->ptMaxTrackSize.y += 2 * YInc;
 
    if (Window->InternalPos != NULL)
    {
