@@ -1,20 +1,22 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS UHCI controller driver (Cromwell type)
- * FILE:            drivers/usb/cromwell/uhci/fdo.c
+ * PROJECT:         ReactOS USB miniport driver (Cromwell type)
+ * FILE:            drivers/usb/miniport/common/fdo.c
  * PURPOSE:         IRP_MJ_PNP/IRP_MJ_DEVICE_CONTROL operations for FDOs
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com),
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org),
  *                  James Tabor (jimtabor@adsl-64-217-116-74.dsl.hstntx.swbell.net)
  */
 
 #define NDEBUG
-#include "uhci.h"
+#include <debug.h>
+
+#include "usbcommon.h"
 
 #define IO_METHOD_FROM_CTL_CODE(ctlCode) (ctlCode&0x00000003)
 
 static VOID
-UhciGetUserBuffers(
+UsbMpGetUserBuffers(
 	IN PIRP Irp,
 	IN ULONG IoControlCode,
 	OUT PVOID* BufferIn,
@@ -47,14 +49,14 @@ UhciGetUserBuffers(
 }
 
 NTSTATUS STDCALL
-UhciFdoStartDevice(
+UsbMpFdoStartDevice(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP	Irp)
 {
 	PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
 	PDRIVER_OBJECT DriverObject;
-	POHCI_DRIVER_EXTENSION DriverExtension;
-	POHCI_DEVICE_EXTENSION DeviceExtension;
+	PUSBMP_DRIVER_EXTENSION DriverExtension;
+	PUSBMP_DEVICE_EXTENSION DeviceExtension;
 	PCM_RESOURCE_LIST AllocatedResources;
 
 	/*
@@ -62,7 +64,7 @@ UhciFdoStartDevice(
 	*/
 	DriverObject = DeviceObject->DriverObject;
 	DriverExtension = IoGetDriverObjectExtension(DriverObject, DriverObject);
-	DeviceExtension = (POHCI_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+	DeviceExtension = (PUSBMP_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
 	/*
 	* Store	some resources in the DeviceExtension.
@@ -131,7 +133,7 @@ UhciFdoStartDevice(
 	}
 	
 	/* Print assigned resources */
-	DPRINT("UHCI: Interrupt Vector 0x%lx, %S base 0x%lx, Length 0x%lx\n",
+	DPRINT("USBMP: Interrupt Vector 0x%lx, %S base 0x%lx, Length 0x%lx\n",
 		DeviceExtension->InterruptVector,
 		((struct hc_driver *)(*pci_ids)->driver_data)->flags & HCD_MEMORY ? L"Memory" : L"I/O",
 		DeviceExtension->BaseAddress,
@@ -142,15 +144,15 @@ UhciFdoStartDevice(
 }
 
 static NTSTATUS
-UhciFdoQueryBusRelations(
+UsbMpFdoQueryBusRelations(
 	IN PDEVICE_OBJECT DeviceObject,
 	OUT PDEVICE_RELATIONS* pDeviceRelations)
 {
-	POHCI_DEVICE_EXTENSION DeviceExtension;
+	PUSBMP_DEVICE_EXTENSION DeviceExtension;
 	PDEVICE_RELATIONS DeviceRelations;
 	NTSTATUS Status = STATUS_SUCCESS;
 	
-	DeviceExtension = (POHCI_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+	DeviceExtension = (PUSBMP_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	
 	/* Handling this IRP is easy, as we only
 	 * have one child: the root hub
@@ -171,7 +173,7 @@ UhciFdoQueryBusRelations(
 }
 
 NTSTATUS STDCALL
-UhciPnpFdo(
+UsbMpPnpFdo(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
 {
@@ -189,7 +191,7 @@ UhciPnpFdo(
 		{
 			Status = ForwardIrpAndWait(DeviceObject, Irp);
 			if (NT_SUCCESS(Status) && NT_SUCCESS(Irp->IoStatus.Status))
-				Status = UhciFdoStartDevice(DeviceObject, Irp);
+				Status = UsbMpFdoStartDevice(DeviceObject, Irp);
 			break;
 		}
 
@@ -219,18 +221,18 @@ UhciPnpFdo(
 				case BusRelations:
 				{
 					PDEVICE_RELATIONS DeviceRelations;
-					DPRINT("UHCI: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n");
-					Status = UhciFdoQueryBusRelations(DeviceObject, &DeviceRelations);
+					DPRINT("USBMP: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n");
+					Status = UsbMpFdoQueryBusRelations(DeviceObject, &DeviceRelations);
 					Information = (ULONG_PTR)DeviceRelations;
 					break;
 				}
 				case RemovalRelations:
 				{
-					DPRINT1("UHCI: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / RemovalRelations\n");
+					DPRINT1("USBMP: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / RemovalRelations\n");
 					return ForwardIrpAndForget(DeviceObject, Irp);
 				}
 				default:
-					DPRINT1("UHCI: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / Unknown type 0x%lx\n",
+					DPRINT1("USBMP: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / Unknown type 0x%lx\n",
 						IrpSp->Parameters.QueryDeviceRelations.Type);
 					return ForwardIrpAndForget(DeviceObject, Irp);
 			}
@@ -239,7 +241,7 @@ UhciPnpFdo(
 
 		default:
 		{
-			DPRINT1("UHCI: unknown minor function 0x%lx\n", MinorFunction);
+			DPRINT1("USBMP: unknown minor function 0x%lx\n", MinorFunction);
 			return ForwardIrpAndForget(DeviceObject, Irp);
 		}
 	}
@@ -250,32 +252,32 @@ UhciPnpFdo(
 }
 
 NTSTATUS
-UhciDeviceControlFdo(
+UsbMpDeviceControlFdo(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
 {
 	PIO_STACK_LOCATION Stack;
 	ULONG IoControlCode;
-	POHCI_DEVICE_EXTENSION DeviceExtension;
+	PUSBMP_DEVICE_EXTENSION DeviceExtension;
 	ULONG LengthIn, LengthOut;
 	ULONG_PTR Information = 0;
 	PVOID BufferIn, BufferOut;
 	NTSTATUS Status;
 
-	DPRINT("UHCI: UsbDeviceControlFdo() called\n");
+	DPRINT("USBMP: UsbDeviceControlFdo() called\n");
 
 	Stack = IoGetCurrentIrpStackLocation(Irp);
 	LengthIn = Stack->Parameters.DeviceIoControl.InputBufferLength;
 	LengthOut = Stack->Parameters.DeviceIoControl.OutputBufferLength;
-	DeviceExtension = (POHCI_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+	DeviceExtension = (PUSBMP_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	IoControlCode = Stack->Parameters.DeviceIoControl.IoControlCode;
-	UhciGetUserBuffers(Irp, IoControlCode, &BufferIn, &BufferOut);
+	UsbMpGetUserBuffers(Irp, IoControlCode, &BufferIn, &BufferOut);
 
 	switch (IoControlCode)
 	{
 		case IOCTL_GET_HCD_DRIVERKEY_NAME:
 		{
-			DPRINT("UHCI: IOCTL_GET_HCD_DRIVERKEY_NAME\n");
+			DPRINT("USBMP: IOCTL_GET_HCD_DRIVERKEY_NAME\n");
 			if (LengthOut < sizeof(USB_HCD_DRIVERKEY_NAME))
 				Status = STATUS_BUFFER_TOO_SMALL;
 			else if (BufferOut == NULL)
@@ -286,7 +288,7 @@ UhciDeviceControlFdo(
 				ULONG StringSize;
 				StringDescriptor = (PUSB_HCD_DRIVERKEY_NAME)BufferOut;
 				Status = IoGetDeviceProperty(
-					((POHCI_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->PhysicalDeviceObject,
+					((PUSBMP_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->PhysicalDeviceObject,
 					DevicePropertyDriverKeyName,
 					LengthOut - FIELD_OFFSET(USB_HCD_DRIVERKEY_NAME, DriverKeyName),
 					StringDescriptor->DriverKeyName,
@@ -302,7 +304,7 @@ UhciDeviceControlFdo(
 		}
 		case IOCTL_USB_GET_ROOT_HUB_NAME:
 		{
-			DPRINT("UHCI: IOCTL_USB_GET_ROOT_HUB_NAME\n");
+			DPRINT("USBMP: IOCTL_USB_GET_ROOT_HUB_NAME\n");
 			if (LengthOut < sizeof(USB_ROOT_HUB_NAME))
 				Status = STATUS_BUFFER_TOO_SMALL;
 			else if (BufferOut == NULL)
@@ -312,8 +314,8 @@ UhciDeviceControlFdo(
 				PUSB_ROOT_HUB_NAME StringDescriptor;
 				PUNICODE_STRING RootHubInterfaceName;
 				StringDescriptor = (PUSB_ROOT_HUB_NAME)BufferOut;
-				DeviceObject = ((POHCI_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->RootHubPdo;
-				RootHubInterfaceName = &((POHCI_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->HcdInterfaceName;
+				DeviceObject = ((PUSBMP_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->RootHubPdo;
+				RootHubInterfaceName = &((PUSBMP_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->HcdInterfaceName;
 
 				StringDescriptor->ActualLength = RootHubInterfaceName->Length + sizeof(WCHAR) + FIELD_OFFSET(USB_ROOT_HUB_NAME, RootHubName);
 				if (StringDescriptor->ActualLength <= LengthOut)
@@ -324,7 +326,7 @@ UhciDeviceControlFdo(
 						RootHubInterfaceName->Buffer,
 						RootHubInterfaceName->Length);
 					StringDescriptor->RootHubName[RootHubInterfaceName->Length / sizeof(WCHAR)] = UNICODE_NULL;
-					DPRINT("UHCI: IOCTL_USB_GET_ROOT_HUB_NAME returns '%S'\n", StringDescriptor->RootHubName);
+					DPRINT("USBMP: IOCTL_USB_GET_ROOT_HUB_NAME returns '%S'\n", StringDescriptor->RootHubName);
 					Information = StringDescriptor->ActualLength;
 				}
 				else
@@ -337,7 +339,7 @@ UhciDeviceControlFdo(
 		default:
 		{
 			/* Pass Irp to lower driver */
-			DPRINT1("UHCI: Unknown IOCTL code 0x%lx\n", Stack->Parameters.DeviceIoControl.IoControlCode);
+			DPRINT1("USBMP: Unknown IOCTL code 0x%lx\n", Stack->Parameters.DeviceIoControl.IoControlCode);
 			IoSkipCurrentIrpStackLocation(Irp);
 			return IoCallDriver(DeviceExtension->NextDeviceObject, Irp);
 		}

@@ -8,7 +8,7 @@
  * 1) Forget all device interrupts, scheduling, semaphores, threads etc.
  * 1a) Forget all DMA and PCI helper functions
  * 2) Forget usbdevfs, procfs and ioctls
- * 3) Emulate OHCI interrupts and root hub timer by polling
+ * 3) Emulate xHCI interrupts and root hub timer by polling
  * 4) Emulate hub kernel thread by polling
  * 5) Emulate synchronous USB-messages (usb_*_msg) with busy waiting
  *
@@ -43,7 +43,7 @@ static struct device_driver *m_drivers[MAX_DRVS];
 static int drvs_num=0;
 unsigned int LAST_USB_EVENT_TICK;
 
-NTSTATUS init_dma(POHCI_DEVICE_EXTENSION pDevExt);
+NTSTATUS init_dma(PUSBMP_DEVICE_EXTENSION pDevExt);
 
 /*------------------------------------------------------------------------*/ 
 /* 
@@ -357,7 +357,7 @@ struct pci_dev *my_pci_find_slot(int a,int b)
 int my_pci_write_config_word(struct pci_dev *dev, int where, u16 val)
 {
 	//dev->bus, dev->devfn, where, val
-	OHCI_DEVICE_EXTENSION *dev_ext = (OHCI_DEVICE_EXTENSION *)dev->dev_ext;
+	PUSBMP_DEVICE_EXTENSION dev_ext = (PUSBMP_DEVICE_EXTENSION)dev->dev_ext;
 
 	//FIXME: Is returning this value correct?
 	//FIXME: Mixing pci_dev and win structs isn't a good thing at all
@@ -440,7 +440,7 @@ static IO_ALLOCATION_ACTION NTAPI MapRegisterCallback(PDEVICE_OBJECT DeviceObjec
 #endif
 
 NTSTATUS
-init_dma(POHCI_DEVICE_EXTENSION pDevExt)
+init_dma(PUSBMP_DEVICE_EXTENSION pDevExt)
 {
 	// Prepare device descriptor structure
 	DEVICE_DESCRIPTION dd;
@@ -552,7 +552,7 @@ static IO_ALLOCATION_ACTION NTAPI MapRegisterCallback(PDEVICE_OBJECT DeviceObjec
                                                       PVOID MapRegisterBase,
                                                       PVOID Context)
 {
-	POHCI_DEVICE_EXTENSION pDevExt = (POHCI_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+	PUSBMP_DEVICE_EXTENSION pDevExt = (PUSBMP_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	UNREFERENCED_PARAMETER(Irp);
 
 	DPRINT("usb_linuxwrapper: MapRegisterCallback Called, base=0x%08x\n", MapRegisterBase);
@@ -664,7 +664,7 @@ address through the handle. If such a memory block can't be allocated, null is r
 void * my_pci_pool_alloc(struct pci_pool * pool, int mem_flags, dma_addr_t *dma_handle)
 {
 	PVOID result;
-	POHCI_DEVICE_EXTENSION devExt = (POHCI_DEVICE_EXTENSION)pool->pdev->dev_ext;
+	PUSBMP_DEVICE_EXTENSION devExt = (PUSBMP_DEVICE_EXTENSION)pool->pdev->dev_ext;
 	int page=0, offset;
 	int map, i, block;
 
@@ -789,7 +789,7 @@ void __inline__ my_pci_pool_destroy (struct pci_pool * pool)
 
 void  *my_pci_alloc_consistent(struct pci_dev *hwdev, size_t size, dma_addr_t *dma_handle)
 {
-    POHCI_DEVICE_EXTENSION devExt = (POHCI_DEVICE_EXTENSION)hwdev->dev_ext;
+    PUSBMP_DEVICE_EXTENSION devExt = (PUSBMP_DEVICE_EXTENSION)hwdev->dev_ext;
 	DPRINT1("pci_alloc_consistent() size=%d\n", size);
 
     return devExt->pDmaAdapter->DmaOperations->AllocateCommonBuffer(devExt->pDmaAdapter, size, (PPHYSICAL_ADDRESS)dma_handle, FALSE); //FIXME: Cache-enabled?
@@ -798,7 +798,7 @@ void  *my_pci_alloc_consistent(struct pci_dev *hwdev, size_t size, dma_addr_t *d
 dma_addr_t my_dma_map_single(struct device *hwdev, void *ptr, size_t size, enum dma_data_direction direction)
 {
     //PHYSICAL_ADDRESS BaseAddress;
-    //POHCI_DEVICE_EXTENSION pDevExt = (POHCI_DEVICE_EXTENSION)hwdev->dev_ext;
+    //PUSBMP_DEVICE_EXTENSION pDevExt = (PUSBMP_DEVICE_EXTENSION)hwdev->dev_ext;
     //PUCHAR VirtualAddress = (PUCHAR) MmGetMdlVirtualAddress(pDevExt->Mdl);
 	//ULONG transferSize = size;
 	//BOOLEAN WriteToDevice;

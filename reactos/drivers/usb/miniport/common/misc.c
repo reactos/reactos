@@ -1,14 +1,16 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS UHCI controller driver (Cromwell type)
- * FILE:            drivers/usb/cromwell/uhci/misc.c
+ * PROJECT:         ReactOS USB miniport driver (Cromwell type)
+ * FILE:            drivers/usb/miniport/common/misc.c
  * PURPOSE:         Misceallenous operations
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com),
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org),
  */
 
 #define NDEBUG
-#include "uhci.h"
+#include <debug.h>
+
+#include "usbcommon.h"
 #include <stdarg.h>
 
 NTSTATUS STDCALL
@@ -27,7 +29,7 @@ ForwardIrpAndWait(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
 {
-	PDEVICE_OBJECT LowerDevice = ((POHCI_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->NextDeviceObject;
+	PDEVICE_OBJECT LowerDevice = ((PUSBMP_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->NextDeviceObject;
 	KEVENT Event;
 	NTSTATUS Status;
 
@@ -36,7 +38,7 @@ ForwardIrpAndWait(
 	KeInitializeEvent(&Event, NotificationEvent, FALSE);
 	IoCopyCurrentIrpStackLocationToNext(Irp);
 
-	DPRINT("UHCI: Calling lower device %p [%wZ]\n", LowerDevice, &LowerDevice->DriverObject->DriverName);
+	DPRINT("USBMP: Calling lower device %p [%wZ]\n", LowerDevice, &LowerDevice->DriverObject->DriverName);
 	IoSetCompletionRoutine(Irp, ForwardIrpAndWaitCompletion, &Event, TRUE, TRUE, TRUE);
 
 	Status = IoCallDriver(LowerDevice, Irp);
@@ -55,7 +57,7 @@ ForwardIrpAndForget(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
 {
-	PDEVICE_OBJECT LowerDevice = ((POHCI_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->NextDeviceObject;
+	PDEVICE_OBJECT LowerDevice = ((PUSBMP_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->NextDeviceObject;
 
 	ASSERT(LowerDevice);
 
@@ -67,7 +69,7 @@ ForwardIrpAndForget(
  * PnP ids are ANSI-encoded in PnP device string
  * identification */
 NTSTATUS
-UhciInitMultiSzString(
+UsbMpInitMultiSzString(
 	OUT PUNICODE_STRING Destination,
 	... /* list of PCSZ */)
 {
@@ -103,7 +105,7 @@ UhciInitMultiSzString(
 
 	/* Initialize destination string */
 	DestinationSize += sizeof(WCHAR); // final NULL
-	Destination->Buffer = (PWSTR)ExAllocatePoolWithTag(PagedPool, DestinationSize, USB_UHCI_TAG);
+	Destination->Buffer = (PWSTR)ExAllocatePoolWithTag(PagedPool, DestinationSize, USB_MINIPORT_TAG);
 	if (!Destination->Buffer)
 		return STATUS_INSUFFICIENT_RESOURCES;
 	Destination->Length = 0;
@@ -123,7 +125,7 @@ UhciInitMultiSzString(
 		Status = RtlAnsiStringToUnicodeString(&UnicodeString, &AnsiString, FALSE);
 		if (!NT_SUCCESS(Status))
 		{
-			ExFreePoolWithTag(Destination->Buffer, USB_UHCI_TAG);
+			ExFreePoolWithTag(Destination->Buffer, USB_MINIPORT_TAG);
 			break;
 		}
 		Destination->Length += UnicodeString.Length + sizeof(WCHAR);
@@ -143,7 +145,7 @@ UhciInitMultiSzString(
 }
 
 NTSTATUS
-UhciDuplicateUnicodeString(
+UsbMpDuplicateUnicodeString(
 	OUT PUNICODE_STRING Destination,
 	IN PUNICODE_STRING Source,
 	IN POOL_TYPE PoolType)

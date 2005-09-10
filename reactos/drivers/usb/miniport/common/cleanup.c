@@ -1,21 +1,23 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS UHCI controller driver (Cromwell type)
- * FILE:            drivers/usb/cromwell/uhci/cleanup.c
+ * PROJECT:         ReactOS USB miniport driver (Cromwell type)
+ * FILE:            drivers/usb/miniport/common/cleanup.c
  * PURPOSE:         IRP_MJ_CLEANUP operations
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #define NDEBUG
-#include "uhci.h"
+#include <debug.h>
+
+#include "usbcommon.h"
 
 NTSTATUS STDCALL
-UhciCleanup(
+UsbMpCleanup(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
 {
-	DPRINT("UHCI: IRP_MJ_CLEANUP\n");
+	DPRINT("USBMP: IRP_MJ_CLEANUP\n");
 
 	Irp->IoStatus.Information = 0;
 	Irp->IoStatus.Status = STATUS_SUCCESS;

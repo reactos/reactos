@@ -7,12 +7,6 @@
 #define NDEBUG
 #include "uhci.h"
 
-/* declare basic init functions and structures */
-int uhci_hcd_init(void);
-void uhci_hcd_cleanup(void);
-int STDCALL usb_init(void);
-void STDCALL usb_exit(void);
-
 extern struct pci_driver uhci_pci_driver;
 extern struct pci_device_id* uhci_pci_ids;
 struct pci_device_id** pci_ids = &uhci_pci_ids;
@@ -22,7 +16,7 @@ InitLinuxWrapper(PDEVICE_OBJECT DeviceObject)
 {
 	NTSTATUS Status = STATUS_SUCCESS;
 
-	POHCI_DEVICE_EXTENSION DeviceExtension = (POHCI_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+	PUSBMP_DEVICE_EXTENSION DeviceExtension = (PUSBMP_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	
 	/* Create generic linux structure */
 	struct pci_dev *dev;
@@ -38,7 +32,7 @@ InitLinuxWrapper(PDEVICE_OBJECT DeviceObject)
 	strcpy(dev->dev.name, "UnivHCI PCI-USB Controller");
 	strcpy(dev->slot_name, "UHCD PCI Slot");
 	
-	/* Init the OHCI HCD. Probe will be called automatically, but will fail because id=NULL */
+	/* Init the HCD. Probe will be called automatically, but will fail because id=NULL */
 	Status = uhci_hcd_init();
 	if (!NT_SUCCESS(Status))
 	{
@@ -64,12 +58,12 @@ InitLinuxWrapper(PDEVICE_OBJECT DeviceObject)
 VOID STDCALL 
 DriverUnload(PDRIVER_OBJECT DriverObject)
 {
-	POHCI_DEVICE_EXTENSION DeviceExtension;
+	PUSBMP_DEVICE_EXTENSION DeviceExtension;
 	PDEVICE_OBJECT DeviceObject;
 	struct pci_dev *dev;
 
 	DeviceObject = DriverObject->DeviceObject;
-	DeviceExtension = (POHCI_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+	DeviceExtension = (PUSBMP_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
 	dev = DeviceExtension->pdev;
 
@@ -78,7 +72,7 @@ DriverUnload(PDRIVER_OBJECT DriverObject)
 	// Exit usb device
 	usb_exit();
 
-	// Remove device (ohci_pci_driver.remove)
+	// Remove device (uhci_pci_driver.remove)
 	uhci_pci_driver.remove(dev);
 
 	ExFreePool(dev->slot_name);

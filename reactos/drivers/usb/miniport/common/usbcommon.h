@@ -1,43 +1,45 @@
-//#include <ddk/ntddk.h>
+#ifndef _USBMP_COMMON_H_
+#define _USBMP_COMMON_H_
+
 // config and include core/hcd.h, for hc_device struct struct usb_interface *usb_ifnum_to_if(struct usb_device *dev, unsigned ifnum)
 
 #include "../usb_wrapper.h"
-#include <ddk/usbdi.h>
-#include <ddk/usbiodef.h>
+#include <usbdi.h>
+#include <usbiodef.h>
 #include <initguid.h>
 
-#include "hcd.h"
+#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
+#define USB_MINIPORT_TAG TAG('u','s','b','m')
 
-#include "../usbohci/ohci_main.h"
-
-#define USB_UHCI_TAG TAG('u','s','b','u')
+#include "../../usbport/hcd.h"
+#include "usbcommon_types.h"
 
 /* cleanup.c */
 NTSTATUS STDCALL
-UhciCleanup(
+UsbMpCleanup(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
 
 /* close.c */
 NTSTATUS STDCALL
-UhciClose(
+UsbMpClose(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
 
 /* create.c */
 NTSTATUS STDCALL
-UhciCreate(
+UsbMpCreate(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
 
 /* fdo.c */
 NTSTATUS STDCALL
-UhciPnpFdo(
+UsbMpPnpFdo(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
 
 NTSTATUS
-UhciDeviceControlFdo(
+UsbMpDeviceControlFdo(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
 
@@ -53,24 +55,24 @@ ForwardIrpAndForget(
 	IN PIRP Irp);
 
 NTSTATUS
-UhciDuplicateUnicodeString(
+UsbMpDuplicateUnicodeString(
 	OUT PUNICODE_STRING Destination,
 	IN PUNICODE_STRING Source,
 	IN POOL_TYPE PoolType);
 
 NTSTATUS
-UhciInitMultiSzString(
+UsbMpInitMultiSzString(
 	OUT PUNICODE_STRING Destination,
 	... /* list of PCSZ */);
 
 /* pdo.c */
 NTSTATUS STDCALL
-UhciPnpPdo(
+UsbMpPnpPdo(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
 
 NTSTATUS
-UhciDeviceControlPdo(
+UsbMpDeviceControlPdo(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
 
@@ -82,3 +84,5 @@ NTSTATUS
 InitLinuxWrapper(PDEVICE_OBJECT DeviceObject);
 
 extern struct pci_device_id** pci_ids;
+
+#endif

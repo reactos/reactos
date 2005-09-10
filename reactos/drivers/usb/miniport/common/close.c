@@ -1,24 +1,26 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS UHCI controller driver (Cromwell type)
- * FILE:            drivers/usb/cromwell/uhci/close.c
+ * PROJECT:         ReactOS USB miniport driver (Cromwell type)
+ * FILE:            drivers/usb/miniport/common/close.c
  * PURPOSE:         IRP_MJ_CLOSE operations
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #define NDEBUG
-#include "uhci.h"
+#include <debug.h>
+
+#include "usbcommon.h"
 
 NTSTATUS STDCALL
-UhciClose(
+UsbMpClose(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
 {
-	POHCI_DEVICE_EXTENSION pDeviceExtension;
+	PUSBMP_DEVICE_EXTENSION pDeviceExtension;
 
-	DPRINT("UHCI: IRP_MJ_CLOSE\n");
-	pDeviceExtension = (POHCI_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+	DPRINT("USBMP: IRP_MJ_CLOSE\n");
+	pDeviceExtension = (PUSBMP_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	InterlockedDecrement((PLONG)&pDeviceExtension->DeviceOpened);
 
 	Irp->IoStatus.Information = 0;
