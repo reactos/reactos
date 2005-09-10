@@ -99,8 +99,15 @@ inline BOOL is_valid_fd(int fd)
    BOOL b = (fd >= 0 && fd < g_fdend && (fdinfo(fd)->fdflags & FOPEN));
 
    if (!b){
-      DPRINT1("not valid fd %i, g_fdend %i, fdinfo %x, bucket %x, fdflags %x\n",
-         fd,g_fdend,fdinfo(fd),fdinfo_bucket(fd),fdinfo(fd)->fdflags);
+      if (fd >= 0 && fd < g_fdend)
+      {
+         DPRINT1("not valid fd %i, g_fdend %i, fdinfo %x, bucket %x, fdflags %x\n",
+                 fd,g_fdend,fdinfo(fd),fdinfo_bucket(fd),fdinfo(fd)->fdflags);
+      }
+      else
+      {
+         DPRINT1("not valid fd %i, g_fdend %i\n",fd,g_fdend);
+      }
 
    }
 
