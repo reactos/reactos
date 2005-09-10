@@ -314,6 +314,85 @@ CONFIGRET WINAPI CM_Enumerate_Classes_Ex(
 
 
 /***********************************************************************
+ * CM_Enumerate_EnumeratorsA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Enumerate_EnumeratorsA(
+    ULONG ulEnumIndex, PCHAR Buffer, PULONG pulLength, ULONG ulFlags)
+{
+    TRACE("%lu %p %p %lx\n", ulEnumIndex, Buffer, pulLength, ulFlags);
+    return CM_Enumerate_Enumerators_ExA(ulEnumIndex, Buffer, pulLength,
+                                        ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Enumerate_EnumeratorsW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Enumerate_EnumeratorsW(
+    ULONG ulEnumIndex, PWCHAR Buffer, PULONG pulLength, ULONG ulFlags)
+{
+    TRACE("%lu %p %p %lx\n", ulEnumIndex, Buffer, pulLength, ulFlags);
+    return CM_Enumerate_Enumerators_ExW(ulEnumIndex, Buffer, pulLength,
+                                        ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Enumerate_Enumerators_ExA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Enumerate_Enumerators_ExA(
+    ULONG ulEnumIndex, PCHAR Buffer, PULONG pulLength, ULONG ulFlags,
+    HMACHINE hMachine)
+{
+    FIXME("%lu %p %p %lx %lx\n", ulEnumIndex, Buffer, pulLength, ulFlags,
+          hMachine);
+    return CR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/***********************************************************************
+ * CM_Enumerate_Enumerators_ExW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Enumerate_Enumerators_ExW(
+    ULONG ulEnumIndex, PWCHAR Buffer, PULONG pulLength, ULONG ulFlags,
+    HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+
+    FIXME("%lu %p %p %lx %lx\n", ulEnumIndex, Buffer, pulLength, ulFlags,
+          hMachine);
+
+    if (Buffer == NULL || pulLength == NULL)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    Buffer[0] = (WCHAR)0;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, NULL))
+            return CR_FAILURE;
+    }
+
+    return PNP_EnumerateSubKeys(BindingHandle,
+                                PNP_BRANCH_ENUM,
+                                ulEnumIndex,
+                                Buffer,
+                                *pulLength,
+                                pulLength,
+                                ulFlags);
+}
+
+
+/***********************************************************************
  * CM_Get_Child [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Get_Child(

@@ -262,15 +262,15 @@ PNP_EnumerateSubKeys(handle_t BindingHandle,
     HKEY hKey;
     DWORD dwError;
 
-    DPRINT1("PNP_EnumerateSubKeys() called\n");
+    DPRINT("PNP_EnumerateSubKeys() called\n");
 
     switch (Branch)
     {
-        case 1:
+        case PNP_BRANCH_ENUM:
             hKey = hEnumKey;
             break;
 
-        case 2:
+        case PNP_BRANCH_CLASS:
             hKey = hClassKey;
             break;
 
@@ -289,14 +289,14 @@ PNP_EnumerateSubKeys(handle_t BindingHandle,
                             NULL);
     if (dwError != ERROR_SUCCESS)
     {
-        ret = CR_FAILURE;
+        ret = (dwError == ERROR_NO_MORE_ITEMS) ? CR_NO_SUCH_VALUE : CR_FAILURE;
+    }
+    else
+    {
+        *RequiredLength++;
     }
 
-    DPRINT1("PNP_EnumerateSubKeys() done (returns %lx)\n", ret);
-    if (ret == CR_SUCCESS)
-    {
-        DPRINT1("Sub key: %S\n", Buffer);
-    }
+    DPRINT("PNP_EnumerateSubKeys() done (returns %lx)\n", ret);
 
     return ret;
 }

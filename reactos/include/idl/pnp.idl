@@ -39,6 +39,8 @@ interface pnp
                                          [in] DWORD Length,
                                          [in] DWORD Flags);
 
+  cpp_quote("#define PNP_BRANCH_ENUM  1")
+  cpp_quote("#define PNP_BRANCH_CLASS 2")
   CONFIGRET PNP_EnumerateSubKeys(handle_t BindingHandle,
                                  [in] unsigned long Branch,
                                  [in] unsigned long Index,
