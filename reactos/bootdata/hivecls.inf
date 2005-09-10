@@ -47,6 +47,13 @@ HKCR,".txt","",0x00000000,"txtfile"
 HKCR,".txt","Content Type",0x00000000,"text/plain"
 HKCR,"txtfile\shell\open\command","",0x00020000,"%SystemRoot%\System32\notepad.exe %1"
 
+; MSI files
+HKCR,".msi","",0x00000000,"MSI.Package"
+HKCR,"Msi.Package\DefaultIcon","",0x00000000,"msiexec.exe"
+HKCR,"Msi.Package\shell\Open\command","",0x00020000,"%SystemRoot%\System32\msiexec /i %1"
+HKCR,"Msi.Package\shell\Repair\command","",0x00020000,"%SystemRoot%\System32\msiexec /f %1"
+HKCR,"Msi.Package\shell\Uninstall\command","",0x00020000,"%SystemRoot%\System32\msiexec /x %1"
+
 HKCR,"CLSID",,0x00000012
 
 ; For Shell32.dll
