@@ -299,6 +299,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 	TCHAR *first = NULL;
 	TCHAR *rest = NULL; 
 	TCHAR *full = NULL; 
+        TCHAR *dot = NULL;
 	TCHAR szWindowTitle[MAX_PATH];
 	DWORD dwExitCode = 0;
 
@@ -310,14 +311,14 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 	   need rewrite some code to use realloc when it need instead 
 	   of add 512bytes extra */
 
-	first = malloc ( _tcslen(First) + 512 * sizeof(TCHAR)); 
+	first = malloc ( (_tcslen(First) + 512) * sizeof(TCHAR)); 
 	if (first == NULL)
 	{
 	 error_out_of_memory();
 	 return ;
 	}
 
-	rest =	malloc ( _tcslen(Rest) + 512 * sizeof(TCHAR)); 
+	rest =	malloc ( (_tcslen(Rest) + 512) * sizeof(TCHAR)); 
 	if (rest == NULL)
 	{
 	 free (full);
@@ -325,7 +326,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 	 return ;
 	}
 
-	full =	malloc ( _tcslen(Full) + 512 * sizeof(TCHAR));
+	full =	malloc ( (_tcslen(Full) + 512) * sizeof(TCHAR));
 	if (full == NULL)
 	{
 	 free (full);
@@ -411,8 +412,8 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 	GetConsoleTitle (szWindowTitle, MAX_PATH);
 
 	/* check if this is a .BAT or .CMD file */
-	if (!_tcsicmp (_tcsrchr (szFullName, _T('.')), _T(".bat")) ||
-		!_tcsicmp (_tcsrchr (szFullName, _T('.')), _T(".cmd")))
+        dot = _tcsrchr (szFullName, _T('.'));
+	if (dot && (!_tcsicmp (dot, _T(".bat")) || !_tcsicmp (dot, _T(".cmd"))))
 	{
 #ifdef _DEBUG
 		DebugPrintf (_T("[BATCH: %s %s]\n"), szFullName, rest);
