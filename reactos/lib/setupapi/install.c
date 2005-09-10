@@ -334,7 +334,7 @@ static BOOL do_reg_operation( HKEY hkey, const WCHAR *value, INFCONTEXT *context
 
         if (type == REG_DWORD)
         {
-            DWORD dw = str ? strtoulW( str, NULL, 16 ) : 0;
+            DWORD dw = str ? strtoulW( str, NULL, 0 ) : 0;
             TRACE( "setting dword %s to %lx\n", debugstr_w(value), dw );
             RegSetValueExW( hkey, value, 0, type, (BYTE *)&dw, sizeof(dw) );
         }
