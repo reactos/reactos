@@ -728,7 +728,7 @@ IntGetSystemMenu(PWINDOW_OBJECT Window, BOOL bRevert, BOOL RetMenu)
       else
       {
          hSysMenu = UserCreateMenu(FALSE);
-         if (NULL == SysMenu)
+         if (NULL == hSysMenu)
          {
             return NULL;
          }
@@ -741,7 +741,7 @@ IntGetSystemMenu(PWINDOW_OBJECT Window, BOOL bRevert, BOOL RetMenu)
          SysMenu->MenuInfo.Flags |= MF_SYSMENU;
          SysMenu->MenuInfo.Wnd = Window->hSelf;
          hNewMenu = co_IntLoadSysMenuTemplate();
-         if(!NewMenu)
+         if(!hNewMenu)
          {
             IntReleaseMenuObject(SysMenu);
             UserDestroyMenu(hSysMenu);
