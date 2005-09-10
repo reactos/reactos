@@ -8,8 +8,8 @@
 #include "uhci.h"
 
 extern struct pci_driver uhci_pci_driver;
-extern struct pci_device_id* uhci_pci_ids;
-struct pci_device_id** pci_ids = &uhci_pci_ids;
+extern struct pci_device_id uhci_pci_ids[];
+struct pci_device_id* pci_ids = &uhci_pci_ids[0];
 
 NTSTATUS
 InitLinuxWrapper(PDEVICE_OBJECT DeviceObject)

@@ -83,6 +83,6 @@ DriverUnload(PDRIVER_OBJECT DriverObject);
 NTSTATUS
 InitLinuxWrapper(PDEVICE_OBJECT DeviceObject);
 
-extern struct pci_device_id** pci_ids;
+extern struct pci_device_id* pci_ids;
 
 #endif

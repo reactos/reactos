@@ -118,7 +118,7 @@ UsbMpFdoStartDevice(
 					DeviceExtension->BaseAddrLength = Descriptor->u.Port.Length;
 					DeviceExtension->Flags          = Descriptor->Flags;
 
-					((struct hc_driver *)(*pci_ids)->driver_data)->flags &= ~HCD_MEMORY;
+					((struct hc_driver *)pci_ids->driver_data)->flags &= ~HCD_MEMORY;
 				}
 				else if (Descriptor->Type == CmResourceTypeMemory)
 				{
@@ -126,7 +126,7 @@ UsbMpFdoStartDevice(
 					DeviceExtension->BaseAddrLength = Descriptor->u.Memory.Length;
 					DeviceExtension->Flags          = Descriptor->Flags;
 
-					((struct hc_driver *)(*pci_ids)->driver_data)->flags |= HCD_MEMORY;
+					((struct hc_driver *)pci_ids->driver_data)->flags |= HCD_MEMORY;
 				}
 			}
 		}
@@ -135,7 +135,7 @@ UsbMpFdoStartDevice(
 	/* Print assigned resources */
 	DPRINT("USBMP: Interrupt Vector 0x%lx, %S base 0x%lx, Length 0x%lx\n",
 		DeviceExtension->InterruptVector,
-		((struct hc_driver *)(*pci_ids)->driver_data)->flags & HCD_MEMORY ? L"Memory" : L"I/O",
+		((struct hc_driver *)pci_ids->driver_data)->flags & HCD_MEMORY ? L"Memory" : L"I/O",
 		DeviceExtension->BaseAddress,
 		DeviceExtension->BaseAddrLength);
 
