@@ -50,7 +50,7 @@ UsbMpDeviceControlPdo(
 				DeviceExtension = (PUSBMP_DEVICE_EXTENSION)DeviceExtension->FunctionalDeviceObject->DeviceExtension;
 				
 				pRootHubPointer = (PVOID*)Irp->AssociatedIrp.SystemBuffer;
-				*pRootHubPointer = (PVOID)DeviceExtension->pdev->bus; /* struct usb_device* */
+				*pRootHubPointer = ((struct usb_hcd*)DeviceExtension->pdev->data)->self.root_hub;
 				Information = sizeof(PVOID);
 				Status = STATUS_SUCCESS;
 			}
@@ -80,7 +80,7 @@ UsbMpPdoQueryId(
 	ULONG IdType;
 	UNICODE_STRING SourceString;
 	UNICODE_STRING String;
-	NTSTATUS Status;
+	NTSTATUS Status = STATUS_SUCCESS;
 
 	IdType = IoGetCurrentIrpStackLocation(Irp)->Parameters.QueryId.IdType;
 	DeviceExtension = (PUSBMP_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -96,13 +96,20 @@ UsbMpPdoQueryId(
 		}
 		case BusQueryHardwareIDs:
 		{
+			//CHAR Buffer[2][40];
 			DPRINT("USBMP: IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryHardwareIDs\n");
-			/* FIXME: Should return
-				USB\ROOT_HUB&VID????&PID????&REV????
-				USB\ROOT_HUB&VID????&PID????
-				USB\ROOT_HUB
-			*/
-			UsbMpInitMultiSzString(&SourceString, "USB\\ROOT_HUB", NULL);
+
+			/*FIXME: sprintf(Buffer[0], "USB\\VID%04X&PID%04X&REV%04X",
+				VENDOR,
+				PRODUCT,
+				REV);
+			sprintf(Buffer[1], "USB\\VID%04X&PID%04X",
+				VENDOR,
+				PRODUCT);
+			Status = UsbMpInitMultiSzString(
+				&SourceString,
+				Buffer[0], Buffer[1], "USB\\ROOT_HUB", NULL);*/
+			Status = UsbMpInitMultiSzString(&SourceString, "USB\\ROOT_HUB", NULL);
 			break;
 		}
 		case BusQueryCompatibleIDs:
@@ -121,11 +128,14 @@ UsbMpPdoQueryId(
 			return STATUS_NOT_SUPPORTED;
 	}
 
-	Status = UsbMpDuplicateUnicodeString(
-		&String,
-		&SourceString,
-		PagedPool);
-	*Information = (ULONG_PTR)String.Buffer;
+	if (NT_SUCCESS(Status))
+	{
+		Status = UsbMpDuplicateUnicodeString(
+			&String,
+			&SourceString,
+			PagedPool);
+		*Information = (ULONG_PTR)String.Buffer;
+	}
 	return Status;
 }
 
@@ -184,12 +194,12 @@ UsbMpPnpPdo(
 			/* FIXME: capabilities can change with connected device */
 			DeviceCapabilities->LockSupported = FALSE;
 			DeviceCapabilities->EjectSupported = FALSE;
-			DeviceCapabilities->Removable = TRUE;
+			DeviceCapabilities->Removable = FALSE;
 			DeviceCapabilities->DockDevice = FALSE;
 			DeviceCapabilities->UniqueID = FALSE;
-			DeviceCapabilities->SilentInstall = FALSE;
-			DeviceCapabilities->RawDeviceOK = TRUE;
-			DeviceCapabilities->SurpriseRemovalOK = TRUE;
+			DeviceCapabilities->SilentInstall = TRUE;
+			DeviceCapabilities->RawDeviceOK = FALSE;
+			DeviceCapabilities->SurpriseRemovalOK = FALSE;
 			DeviceCapabilities->HardwareDisabled = FALSE; /* FIXME */
 			//DeviceCapabilities->NoDisplayInUI = FALSE; /* FIXME */
 			DeviceCapabilities->DeviceState[0] = PowerDeviceD0; /* FIXME */

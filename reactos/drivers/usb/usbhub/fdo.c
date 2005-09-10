@@ -66,7 +66,7 @@ UsbhubFdoQueryBusRelations(
 	dev = DeviceExtension->dev;
 	
 	/* Create PDOs that are missing */
-	for (i = 0; i < USB_MAXCHILDREN; i++)
+	for (i = 0; i < dev->maxchild; i++)
 	{
 		if (dev->children[i] == NULL)
 		{
@@ -110,7 +110,13 @@ UsbhubFdoQueryBusRelations(
 		if (!NT_SUCCESS(Status))
 			goto ByeBye;
 		
-
+		DPRINT1("child #%lu: USB\\Vid_%04x&Pid_%04x&Rev_%04x (class %x:%x)\n",
+			i,
+			PdoExtension->dev->descriptor.idVendor,
+			PdoExtension->dev->descriptor.idProduct,
+			PdoExtension->dev->descriptor.bcdDevice,
+			PdoExtension->dev->descriptor.bDeviceClass,
+			PdoExtension->dev->descriptor.bDeviceSubClass);
 		sprintf(Buffer[0], "USB\\Vid_%04x&Pid_%04x&Rev_%04x",
 			PdoExtension->dev->descriptor.idVendor,
 			PdoExtension->dev->descriptor.idProduct,
