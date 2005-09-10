@@ -1,4 +1,4 @@
-<module name="mc" type="win32cui" installbase="system32" installname="mc.exe" warnings="true">
+<module name="mc" type="win32cui" installbase="system32" installname="mc.exe" allowwarnings="true">
 	<include base="mc">src</include>
 	<include base="mc">pc</include>
 	<include base="mc">slang</include>

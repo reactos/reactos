@@ -1,4 +1,4 @@
-<module name="ncftp" type="win32cui" installbase="system32" installname="ncftp.exe" warnings="true">
+<module name="ncftp" type="win32cui" installbase="system32" installname="ncftp.exe" allowwarnings="true">
 	<include base="ncftp">.</include>
 	<include base="ncftp">sio</include>
 	<include base="ncftp">Strn</include>
