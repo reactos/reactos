@@ -124,7 +124,8 @@ FileExists(WCHAR *Path, WCHAR *File)
 
   if(FileHandle == INVALID_HANDLE_VALUE)
   {
-    return FALSE;
+    /* If it was a sharing violation the file must already exist */
+    return GetLastError() == ERROR_SHARING_VIOLATION;
   }
 
   if(GetFileSize(FileHandle, NULL) <= 0)
@@ -503,7 +504,14 @@ PageWelcomeProc(
         {
           if(DriverFilesFound)
           {
-            /* FIXME - check for existing registry entries! */
+            if(!AddVmwareRegistryEntries())
+            {
+              WCHAR Msg[1024];
+              LoadString(hAppInstance, IDS_FAILEDTOADDREGENTRIES, Msg, sizeof(Msg) / sizeof(WCHAR));
+              MessageBox(GetParent(hwndDlg), Msg, NULL, MB_ICONWARNING);
+              SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_WELCOMEPAGE);
+              return TRUE;
+            }
             if(!EnableVmwareDriver(TRUE, TRUE, TRUE))
             {
 
