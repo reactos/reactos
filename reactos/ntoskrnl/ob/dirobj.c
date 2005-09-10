@@ -219,14 +219,14 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
                                      NULL);
   if(NT_SUCCESS(Status))
   {
-    PVOID TemporaryBuffer = ExAllocatePool(PagedPool,
+    PVOID TemporaryBuffer = ExAllocatePool(NonPagedPool,
                                            BufferLength);
     if(TemporaryBuffer != NULL)
     {
       POBJECT_HEADER EntryHeader;
       PLIST_ENTRY ListEntry;
       KIRQL OldLevel;
-      ULONG RequiredSize = 0;
+      ULONG RequiredSize = sizeof(OBJECT_DIRECTORY_INFORMATION);
       ULONG nDirectories = 0;
       POBJECT_DIRECTORY_INFORMATION DirInfo = (POBJECT_DIRECTORY_INFORMATION)TemporaryBuffer;
 
@@ -315,10 +315,11 @@ NtQueryDirectoryObject (IN HANDLE DirectoryHandle,
 
       if(NT_SUCCESS(Status) && nDirectories > 0)
       {
-        PWSTR strbuf = (PWSTR)((POBJECT_DIRECTORY_INFORMATION)TemporaryBuffer + nDirectories);
-        PWSTR deststrbuf = (PWSTR)((POBJECT_DIRECTORY_INFORMATION)Buffer + nDirectories);
+        PWSTR strbuf = (PWSTR)((POBJECT_DIRECTORY_INFORMATION)TemporaryBuffer + nDirectories + 1);
+        PWSTR deststrbuf = (PWSTR)((POBJECT_DIRECTORY_INFORMATION)Buffer + nDirectories + 1);
+        memset((POBJECT_DIRECTORY_INFORMATION)TemporaryBuffer + nDirectories, 0, sizeof(OBJECT_DIRECTORY_INFORMATION));
 
-        CopyBytes = nDirectories * sizeof(OBJECT_DIRECTORY_INFORMATION);
+        CopyBytes = (nDirectories + 1) * sizeof(OBJECT_DIRECTORY_INFORMATION);
 
         /* copy the names from the objects and append them to the list of the
            objects. copy to the temporary buffer only because the directory
