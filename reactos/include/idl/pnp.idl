@@ -75,6 +75,10 @@ interface pnp
                              [in, out] unsigned long *Length,
                              [in] unsigned long Flags);
 
+  CONFIGRET PNP_DeleteClassKey(handle_t BindingHandle,
+                               [in, string] wchar_t *ClassGuid,
+                               [in] unsigned long Flags);
+
   CONFIGRET PNP_GetDeviceStatus(handle_t BindingHandle,
                                 [in, string] wchar_t *DeviceInstance,
                                 [out] unsigned long *Status,

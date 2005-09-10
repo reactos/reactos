@@ -636,9 +636,9 @@ PNP_GetDeviceRegProp(handle_t BindingHandle,
 
 CONFIGRET
 PNP_GetClassName(handle_t BindingHandle,
-                 wchar_t *ClassGuid,    /* in */
-                 wchar_t *Buffer,       /* out */
-                 unsigned long *Length, /* in out */
+                 wchar_t *ClassGuid,
+                 wchar_t *Buffer,
+                 unsigned long *Length,
                  unsigned long Flags)
 {
     WCHAR szKeyName[MAX_PATH];
@@ -646,7 +646,7 @@ PNP_GetClassName(handle_t BindingHandle,
     HKEY hKey = NULL;
     ULONG ulSize;
 
-    DPRINT1("PNP_GetClassName() called\n");
+    DPRINT("PNP_GetClassName() called\n");
 
     lstrcpyW(szKeyName, L"System\\CurrentControlSet\\Control\\Class");
     lstrcatW(szKeyName, L"\\");
@@ -677,7 +677,33 @@ PNP_GetClassName(handle_t BindingHandle,
 
     RegCloseKey(hKey);
 
-    DPRINT1("PNP_GetClassName() done (returns %lx)\n", ret);
+    DPRINT("PNP_GetClassName() done (returns %lx)\n", ret);
+
+    return ret;
+}
+
+
+CONFIGRET
+PNP_DeleteClassKey(handle_t BindingHandle,
+                   wchar_t *ClassGuid,
+                   unsigned long Flags)
+{
+    CONFIGRET ret = CR_SUCCESS;
+
+    DPRINT("PNP_GetClassName(%S, %lx) called\n", ClassGuid, Flags);
+
+    if (Flags & CM_DELETE_CLASS_SUBKEYS)
+    {
+        if (RegDeleteTreeW(hClassKey, ClassGuid) != ERROR_SUCCESS)
+            ret = CR_REGISTRY_ERROR;
+    }
+    else
+    {
+        if (RegDeleteKeyW(hClassKey, ClassGuid) != ERROR_SUCCESS)
+            ret = CR_REGISTRY_ERROR;
+    }
+
+    DPRINT("PNP_DeleteClassKey() done (returns %lx)\n", ret);
 
     return ret;
 }

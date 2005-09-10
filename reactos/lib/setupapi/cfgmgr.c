@@ -62,6 +62,25 @@ typedef struct _MACHINE_INFO
 } MACHINE_INFO, *PMACHINE_INFO;
 
 
+static BOOL GuidToString(LPGUID Guid, LPWSTR String)
+{
+    LPWSTR lpString;
+
+    if (UuidToStringW(Guid, &lpString) != RPC_S_OK)
+        return FALSE;
+
+    lstrcpyW(&String[1], lpString);
+
+    String[0] = L'{';
+    String[MAX_GUID_STRING_LEN - 2] = L'}';
+    String[MAX_GUID_STRING_LEN - 1] = 0;
+
+    RpcStringFree(&lpString);
+
+    return TRUE;
+}
+
+
 /***********************************************************************
  * CM_Connect_MachineA [SETUPAPI.@]
  */
@@ -120,6 +139,54 @@ CONFIGRET WINAPI CM_Connect_MachineW(PCWSTR UNCServerName, PHMACHINE phMachine)
     phMachine = (PHMACHINE)pMachine;
 
     return CR_SUCCESS;
+}
+
+
+/***********************************************************************
+ * CM_Delete_Class_Key [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Delete_Class_Key(LPGUID ClassGuid, ULONG ulFlags)
+{
+    TRACE("%p %lx\n", ClassGuid, ulFlags);
+    return CM_Delete_Class_Key_Ex(ClassGuid, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Delete_Class_Key_Ex [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Delete_Class_Key_Ex(
+    LPGUID ClassGuid, ULONG ulFlags, HANDLE hMachine)
+{
+    WCHAR szGuidString[MAX_GUID_STRING_LEN];
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+
+    TRACE("%p %lx %lx\n", ClassGuid, ulFlags, hMachine);
+
+    if (ClassGuid == NULL)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags & ~CM_DELETE_CLASS_BITS)
+        return CR_INVALID_FLAG;
+
+    if (!GuidToString(ClassGuid, szGuidString))
+        return CR_INVALID_DATA;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, NULL))
+            return CR_FAILURE;
+    }
+
+    return PNP_DeleteClassKey(BindingHandle,
+                             szGuidString,
+                             ulFlags);
 }
 
 
@@ -390,25 +457,6 @@ CONFIGRET WINAPI CM_Get_Class_Key_Name_ExA(
     }
 
     return CR_SUCCESS;
-}
-
-
-static BOOL GuidToString(LPGUID Guid, LPWSTR String)
-{
-    LPWSTR lpString;
-
-    if (UuidToStringW(Guid, &lpString) != RPC_S_OK)
-        return FALSE;
-
-    lstrcpyW(&String[1], lpString);
-
-    String[0] = L'{';
-    String[MAX_GUID_STRING_LEN - 2] = L'}';
-    String[MAX_GUID_STRING_LEN - 1] = 0;
-
-    RpcStringFree(&lpString);
-
-    return TRUE;
 }
 
 

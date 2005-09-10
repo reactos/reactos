@@ -25,8 +25,8 @@
 @ stub CM_Create_DevNode_ExA
 @ stub CM_Create_DevNode_ExW
 @ stub CM_Create_Range_List
-@ stub CM_Delete_Class_Key
-@ stub CM_Delete_Class_Key_Ex
+@ stdcall CM_Delete_Class_Key(ptr long)
+@ stdcall CM_Delete_Class_Key_Ex(ptr long long)
 @ stub CM_Delete_DevNode_Key
 @ stub CM_Delete_DevNode_Key_Ex
 @ stub CM_Delete_Range

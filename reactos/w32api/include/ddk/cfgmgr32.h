@@ -708,8 +708,27 @@ CM_Connect_MachineW(
 /* FIXME: Obsolete CM_Create_DevNode */
 /* FIXME: Obsolete CM_Create_DevNodeEx */
 /* FIXME: Obsolete CM_Create_Range_List */
-/* FIXME: Obsolete CM_Delete_Class_Key */
-/* FIXME: Obsolete CM_Delete_Class_Key_Ex */
+
+/* Flags for CM_Delete_Class_Key.ulFlags constants */
+#define CM_DELETE_CLASS_ONLY              0x00000000
+#define CM_DELETE_CLASS_SUBKEYS           0x00000001
+#define CM_DELETE_CLASS_BITS              0x00000001
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Delete_Class_Key(
+  IN LPGUID  ClassGuid,
+  IN ULONG  ulFlags);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Delete_Class_Key_Ex(
+  IN LPGUID  ClassGuid,
+  IN ULONG  ulFlags,
+  IN HANDLE  hMachine);
+
 /* FIXME: Obsolete CM_Delete_DevNode_Key */
 /* FIXME: Obsolete CM_Delete_DevNode_Key_Ex */
 /* FIXME: Obsolete CM_Delete_Range */
