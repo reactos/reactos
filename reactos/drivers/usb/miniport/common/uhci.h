@@ -73,3 +73,12 @@ NTSTATUS
 UhciDeviceControlPdo(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
+
+/* Needed by this object library */
+VOID STDCALL 
+DriverUnload(PDRIVER_OBJECT DriverObject);
+
+NTSTATUS
+InitLinuxWrapper(PDEVICE_OBJECT DeviceObject);
+
+extern struct pci_device_id** pci_ids;

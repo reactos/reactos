@@ -1,3 +1,6 @@
+<directory name="common">
+	<xi:include href="common/common.xml" />
+</directory>
 <directory name="sys">
 	<xi:include href="sys/sys.xml" />
 </directory>

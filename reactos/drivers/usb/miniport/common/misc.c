@@ -85,9 +85,13 @@ UhciInitMultiSzString(
 	Source = va_arg(args, PCSZ);
 	while (Source != NULL)
 	{
+		DPRINT1("Source = %s\n", Source);
 		RtlInitAnsiString(&AnsiString, Source);
+		DPRINT1("AnsiString = %Z\n", &AnsiString);
+		DPRINT1("NLS_MB_CODE_PAGE_TAG = %lu\n", (ULONG)NLS_MB_CODE_PAGE_TAG);
 		DestinationSize += RtlAnsiStringToUnicodeSize(&AnsiString)
 			+ sizeof(WCHAR) /* final NULL */;
+		DPRINT1("DestinationSize = %lu\n", DestinationSize);
 		Source = va_arg(args, PCSZ);
 	}
 	va_end(args);

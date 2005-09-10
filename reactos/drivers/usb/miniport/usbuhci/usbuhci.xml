@@ -3,16 +3,12 @@
 	<define name="DEBUG_MODE" />
 	<include>../linux</include>
 	<include base="usbport"></include>
+	<include base="usbminiportcommon"></include>
 	<library>sys_base</library>
+	<library>usbminiportcommon</library>
+	<library>usbport</library>
 	<library>ntoskrnl</library>
 	<library>hal</library>
-	<library>usbport</library>
-	<file>cleanup.c</file>
-	<file>close.c</file>
-	<file>create.c</file>
-	<file>fdo.c</file>
-	<file>misc.c</file>
-	<file>pdo.c</file>
 	<file>uhci.c</file>
 	<file>uhci-hcd.c</file>
 	<file>uhci.rc</file>
