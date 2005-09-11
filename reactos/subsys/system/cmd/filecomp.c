@@ -541,6 +541,13 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, INT cusor)
 	static INT Sel;
 	BOOL NeededQuote = FALSE;
 	strOut[0] = _T('\0');
+	BOOL ShowAll = TRUE;
+
+	TCHAR * line = strIN; 
+	while (_istspace (*line))
+			line++;	
+	if(!_tcsncmp (line, _T("rd "), 3) || !_tcsncmp (line, _T("cd "), 3))
+		ShowAll = FALSE;
 
 	/* Copy the string, str can be edited and orginal should not be */
 	_tcscpy(str,strIN);
@@ -615,6 +622,15 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, INT cusor)
 		if(!_tcscmp (file.cFileName, _T(".")) ||
 			!_tcscmp (file.cFileName, _T("..")))
 			continue;
+		
+		/* Don't show files when they are doing 'cd' or 'rd' */
+		if(!ShowAll)
+		{
+			DWORD attr = GetFileAttributes (file.cFileName);
+			if(attr != 0xFFFFFFFF && (!(attr & FILE_ATTRIBUTE_DIRECTORY)))
+				continue;
+		}
+
 		/* Add the file to the list of files */
       if(FileList == NULL) 
       {
