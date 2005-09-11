@@ -824,7 +824,10 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
       }
       else
       {
-         MenuItem->fType |= MF_SEPARATOR;
+         if (0 == (MenuObject->MenuInfo.Flags & MF_SYSMENU))
+         {
+            MenuItem->fType |= MF_SEPARATOR;
+         }
          RtlInitUnicodeString(&MenuItem->Text, NULL);
       }
    }
