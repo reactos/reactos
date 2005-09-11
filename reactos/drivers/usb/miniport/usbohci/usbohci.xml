@@ -2,12 +2,13 @@
 	<define name="__USE_W32API" />
 	<define name="DEBUG_MODE" />
 	<include>../linux</include>
-	<include base="usbport"></include>
+	<include base="usbminiportcommon"></include>
 	<library>sys_base</library>
+	<library>usbminiportcommon</library>
+	<library>usbport</library>
 	<library>ntoskrnl</library>
 	<library>hal</library>
-	<library>usbport</library>
+	<file>ohci.c</file>
 	<file>ohci-hcd.c</file>
-	<file>ohci_main.c</file>
 	<file>ohci.rc</file>
 </module>

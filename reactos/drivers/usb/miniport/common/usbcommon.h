@@ -7,12 +7,18 @@
 #include <usbdi.h>
 #include <usbiodef.h>
 #include <initguid.h>
+#include <ntdd8042.h>
 
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 #define USB_MINIPORT_TAG TAG('u','s','b','m')
 
 #include "../../usbport/hcd.h"
 #include "usbcommon_types.h"
+
+extern CONNECT_DATA KbdClassInformation;
+extern CONNECT_DATA MouseClassInformation;
+extern PDEVICE_OBJECT KeyboardFdo;
+extern PDEVICE_OBJECT MouseFdo;
 
 /* cleanup.c */
 NTSTATUS STDCALL
@@ -40,6 +46,11 @@ UsbMpPnpFdo(
 
 NTSTATUS
 UsbMpDeviceControlFdo(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp);
+
+NTSTATUS
+UsbMpInternalDeviceControlFdo(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
 

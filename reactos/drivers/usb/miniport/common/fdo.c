@@ -59,6 +59,9 @@ UsbMpFdoStartDevice(
 	PUSBMP_DEVICE_EXTENSION DeviceExtension;
 	PCM_RESOURCE_LIST AllocatedResources;
 
+	if (DeviceObject == KeyboardFdo || DeviceObject == MouseFdo)
+		return STATUS_SUCCESS;
+
 	/*
 	* Get the initialization data we saved in VideoPortInitialize.
 	*/
@@ -348,5 +351,220 @@ UsbMpDeviceControlFdo(
 	Irp->IoStatus.Information = Information;
 	Irp->IoStatus.Status = Status;
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
+	return Status;
+}
+
+NTSTATUS
+UsbMpInternalDeviceControlFdo(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp)
+{
+	NTSTATUS Status = STATUS_INVALID_DEVICE_REQUEST;
+
+	DPRINT("USBMP: UsbMpDeviceInternalControlFdo(DO %p, code 0x%lx) called\n",
+		DeviceObject,
+		IoGetCurrentIrpStackLocation(Irp)->Parameters.DeviceIoControl.IoControlCode);
+
+	if (DeviceObject == KeyboardFdo)
+	{
+		// it's keyboard's IOCTL
+		PIO_STACK_LOCATION Stk;
+
+		Irp->IoStatus.Information = 0;
+		Stk = IoGetCurrentIrpStackLocation(Irp);
+
+		switch (Stk->Parameters.DeviceIoControl.IoControlCode)
+		{
+			case IOCTL_INTERNAL_KEYBOARD_CONNECT:
+				DPRINT("USBMP: IOCTL_INTERNAL_KEYBOARD_CONNECT\n");
+				if (Stk->Parameters.DeviceIoControl.InputBufferLength <	sizeof(CONNECT_DATA)) {
+					DPRINT1("USBMP: Keyboard IOCTL_INTERNAL_KEYBOARD_CONNECT "
+							"invalid buffer size\n");
+					Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+					goto intcontfailure;
+				}
+
+				RtlCopyMemory(&KbdClassInformation,
+					Stk->Parameters.DeviceIoControl.Type3InputBuffer,
+					sizeof(CONNECT_DATA));
+	
+				Irp->IoStatus.Status = STATUS_SUCCESS;
+				break;
+
+		case IOCTL_INTERNAL_I8042_KEYBOARD_WRITE_BUFFER:
+			DPRINT("USBMP: IOCTL_INTERNAL_I8042_KEYBOARD_WRITE_BUFFER\n");
+			if (Stk->Parameters.DeviceIoControl.InputBufferLength <	1) {
+				Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+				goto intcontfailure;
+			}
+/*			if (!DevExt->KeyboardInterruptObject) {
+				Irp->IoStatus.Status = STATUS_DEVICE_NOT_READY;
+				goto intcontfailure;
+			}*/
+
+			Irp->IoStatus.Status = STATUS_SUCCESS;
+			break;
+		case IOCTL_KEYBOARD_QUERY_ATTRIBUTES:
+			DPRINT("USBMP: IOCTL_KEYBOARD_QUERY_ATTRIBUTES\n");
+			if (Stk->Parameters.DeviceIoControl.OutputBufferLength <
+				sizeof(KEYBOARD_ATTRIBUTES)) {
+					DPRINT("USBMP: Keyboard IOCTL_KEYBOARD_QUERY_ATTRIBUTES "
+						"invalid buffer size\n");
+					Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+					goto intcontfailure;
+				}
+				/*RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
+					&DevExt->KeyboardAttributes,
+					sizeof(KEYBOARD_ATTRIBUTES));*/
+
+				Irp->IoStatus.Status = STATUS_SUCCESS;
+				break;
+		case IOCTL_KEYBOARD_QUERY_INDICATORS:
+			DPRINT("USBMP: IOCTL_KEYBOARD_QUERY_INDICATORS\n");
+			if (Stk->Parameters.DeviceIoControl.OutputBufferLength <
+				sizeof(KEYBOARD_INDICATOR_PARAMETERS)) {
+					DPRINT("USBMP: Keyboard IOCTL_KEYBOARD_QUERY_INDICATORS "
+						"invalid buffer size\n");
+					Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+					goto intcontfailure;
+				}
+				/*RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
+					&DevExt->KeyboardIndicators,
+					sizeof(KEYBOARD_INDICATOR_PARAMETERS));*/
+
+				Irp->IoStatus.Status = STATUS_SUCCESS;
+				break;
+		case IOCTL_KEYBOARD_QUERY_TYPEMATIC:
+			DPRINT("USBMP: IOCTL_KEYBOARD_QUERY_TYPEMATIC\n");
+			if (Stk->Parameters.DeviceIoControl.OutputBufferLength <
+				sizeof(KEYBOARD_TYPEMATIC_PARAMETERS)) {
+					DPRINT("USBMP: Keyboard IOCTL_KEYBOARD_QUERY_TYPEMATIC	"
+						"invalid buffer size\n");
+					Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+					goto intcontfailure;
+				}
+				/*RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
+					&DevExt->KeyboardTypematic,
+					sizeof(KEYBOARD_TYPEMATIC_PARAMETERS));*/
+
+				Irp->IoStatus.Status = STATUS_SUCCESS;
+				break;
+		case IOCTL_KEYBOARD_SET_INDICATORS:
+			DPRINT("USBMP: IOCTL_KEYBOARD_SET_INDICATORS\n");
+			if (Stk->Parameters.DeviceIoControl.InputBufferLength <
+				sizeof(KEYBOARD_INDICATOR_PARAMETERS)) {
+					DPRINT("USBMP: Keyboard IOCTL_KEYBOARD_SET_INDICTATORS	"
+						"invalid buffer size\n");
+					Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+					goto intcontfailure;
+				}
+
+				/*RtlCopyMemory(&DevExt->KeyboardIndicators,
+					Irp->AssociatedIrp.SystemBuffer,
+					sizeof(KEYBOARD_INDICATOR_PARAMETERS));*/
+
+				//DPRINT("%x\n", DevExt->KeyboardIndicators.LedFlags);
+
+				Irp->IoStatus.Status = STATUS_SUCCESS;
+				break;
+		case IOCTL_KEYBOARD_SET_TYPEMATIC:
+			DPRINT("USBMP: IOCTL_KEYBOARD_SET_TYPEMATIC\n");
+			if (Stk->Parameters.DeviceIoControl.InputBufferLength <
+				sizeof(KEYBOARD_TYPEMATIC_PARAMETERS)) {
+					DPRINT("USBMP: Keyboard IOCTL_KEYBOARD_SET_TYPEMATIC "
+						"invalid buffer size\n");
+					Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+					goto intcontfailure;
+				}
+
+				/*RtlCopyMemory(&DevExt->KeyboardTypematic,
+					Irp->AssociatedIrp.SystemBuffer,
+					sizeof(KEYBOARD_TYPEMATIC_PARAMETERS));*/
+
+				Irp->IoStatus.Status = STATUS_SUCCESS;
+				break;
+		case IOCTL_KEYBOARD_QUERY_INDICATOR_TRANSLATION:
+			/* We should check the UnitID, but it's	kind of	pointless as
+			* all keyboards are supposed to have the same one
+			*/
+#if 0
+			DPRINT("USBMP: IOCTL_KEYBOARD_QUERY_INDICATOR_TRANSLATION\n");
+			if (Stk->Parameters.DeviceIoControl.OutputBufferLength <
+				sizeof(LOCAL_KEYBOARD_INDICATOR_TRANSLATION)) {
+					DPRINT("USBMP: IOCTL_KEYBOARD_QUERY_INDICATOR_TRANSLATION:	"
+						"invalid buffer size (expected)\n");
+					/* It's to query the buffer size */
+					Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+					goto intcontfailure;
+				}
+				Irp->IoStatus.Information =
+					sizeof(LOCAL_KEYBOARD_INDICATOR_TRANSLATION);
+#endif
+				/*RtlCopyMemory(Irp->AssociatedIrp.SystemBuffer,
+					&IndicatorTranslation,
+					sizeof(LOCAL_KEYBOARD_INDICATOR_TRANSLATION));*/
+
+				Irp->IoStatus.Status = STATUS_SUCCESS;
+				break;
+		case IOCTL_INTERNAL_I8042_HOOK_KEYBOARD:
+			/* Nothing to do here */
+			Irp->IoStatus.Status = STATUS_SUCCESS;
+			break;
+		default:
+			Irp->IoStatus.Status = STATUS_INVALID_DEVICE_REQUEST;
+			break;
+		}
+
+	intcontfailure:
+			Status = Irp->IoStatus.Status;
+	}
+	else if (DeviceObject == MouseFdo)
+	{
+		// it's mouse's IOCTL
+		PIO_STACK_LOCATION Stk;
+
+		Irp->IoStatus.Information = 0;
+		Stk = IoGetCurrentIrpStackLocation(Irp);
+
+		switch (Stk->Parameters.DeviceIoControl.IoControlCode)
+		{
+			case IOCTL_INTERNAL_MOUSE_CONNECT:
+				DPRINT("USBMP: IOCTL_INTERNAL_MOUSE_CONNECT\n");
+				if (Stk->Parameters.DeviceIoControl.InputBufferLength <	sizeof(CONNECT_DATA)) {
+					DPRINT1("USBMP: IOCTL_INTERNAL_MOUSE_CONNECT "
+							"invalid buffer size\n");
+					Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+					goto intcontfailure2;
+				}
+
+				RtlCopyMemory(&MouseClassInformation,
+					Stk->Parameters.DeviceIoControl.Type3InputBuffer,
+					sizeof(CONNECT_DATA));
+	
+				Irp->IoStatus.Status = STATUS_SUCCESS;
+				break;
+
+		default:
+			Irp->IoStatus.Status = STATUS_SUCCESS;//STATUS_INVALID_DEVICE_REQUEST;
+			break;
+		}
+	intcontfailure2:
+		Status = Irp->IoStatus.Status;
+	}
+	else
+	{
+		DPRINT("USBMP: We got IOCTL for UsbCore\n");
+		IoCompleteRequest(Irp, IO_NO_INCREMENT);
+		return STATUS_SUCCESS;
+	}
+
+
+	if (Status == STATUS_INVALID_DEVICE_REQUEST) {
+		DPRINT1("USBMP: Invalid internal device request!\n");
+	}
+
+	if (Status != STATUS_PENDING)
+		IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
 	return Status;
 }

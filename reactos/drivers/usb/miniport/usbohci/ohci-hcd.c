@@ -107,8 +107,7 @@
 #else
 #include "ohci_config.h"
 
-#include "../usb_wrapper.h"
-#include "hcd.h"
+#include "../../usbport/hcd.h"
 
 //#define OHCI_VERBOSE_DEBUG
 #endif
@@ -625,6 +624,18 @@ int ohci_irq (struct usb_hcd *hcd, struct pt_regs *ptregs)
 }
 
 /*-------------------------------------------------------------------------*/
+
+// HCFS itself
+static char *hcfs2string (int state)
+{
+	switch (state) {
+		case OHCI_USB_RESET: return "reset";
+		case OHCI_USB_RESUME: return "resume";
+		case OHCI_USB_OPER: return "operational";
+		case OHCI_USB_SUSPEND: return "suspend";
+	}
+	return "?";
+}
 
 static void ohci_stop (struct usb_hcd *hcd)
 {	

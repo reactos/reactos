@@ -17,7 +17,11 @@
 #define INITGUID
 #include "usbcommon.h"
 
-static ULONG DeviceNumber = 0; /* FIXME: what is that? */
+// data for embedded drivers
+CONNECT_DATA KbdClassInformation;
+CONNECT_DATA MouseClassInformation;
+PDEVICE_OBJECT KeyboardFdo = NULL;
+PDEVICE_OBJECT MouseFdo = NULL;
 
 static NTSTATUS
 CreateRootHubPdo(
@@ -61,6 +65,64 @@ CreateRootHubPdo(
 	return STATUS_SUCCESS;
 }
 
+static NTSTATUS
+AddDevice_Keyboard(
+	IN PDRIVER_OBJECT DriverObject,
+	IN PDEVICE_OBJECT Pdo)
+{
+	UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\KeyboardClass0");
+	PDEVICE_OBJECT Fdo;
+	NTSTATUS Status;
+
+	Status = IoCreateDevice(DriverObject,
+		8, // debug
+		&DeviceName,
+		FILE_DEVICE_KEYBOARD,
+		FILE_DEVICE_SECURE_OPEN,
+		TRUE,
+		&Fdo);
+
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT1("USBMP: IoCreateDevice() for usb keyboard driver failed with status 0x%08lx\n", Status);
+		return Status;
+	}
+	KeyboardFdo = Fdo;
+	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
+	DPRINT("USBMP: Created keyboard Fdo: %p\n", Fdo);
+
+	return STATUS_SUCCESS;
+}
+
+static NTSTATUS
+AddDevice_Mouse(
+	IN PDRIVER_OBJECT DriverObject,
+	IN PDEVICE_OBJECT Pdo)
+{
+	UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\PointerClass0");
+	PDEVICE_OBJECT Fdo;
+	NTSTATUS Status;
+
+	Status = IoCreateDevice(DriverObject,
+		8, // debug
+		&DeviceName,
+		FILE_DEVICE_MOUSE,
+		FILE_DEVICE_SECURE_OPEN,
+		TRUE,
+		&Fdo);
+
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT1("USBMP: IoCreateDevice() for usb mouse driver failed with status 0x%08lx\n", Status);
+		return Status;
+	}
+	MouseFdo = Fdo;
+	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
+	DPRINT("USBMP: Created mouse Fdo: %p\n", Fdo);
+
+	return STATUS_SUCCESS;
+}
+
 NTSTATUS STDCALL
 AddDevice(
 	IN PDRIVER_OBJECT DriverObject,
@@ -74,8 +136,17 @@ AddDevice(
 	UNICODE_STRING LinkDeviceName;
 	PUSBMP_DRIVER_EXTENSION DriverExtension;
 	PUSBMP_DEVICE_EXTENSION DeviceExtension;
+	ULONG DeviceNumber;
+
+	/* FIXME: actually, we prevent multiple USB controllers on a computer */
+	static BOOLEAN xbox_workaround = FALSE;
 
 	DPRINT("USBMP: AddDevice called\n");
+	
+	if (xbox_workaround)
+		// Fail for any other host controller than the first
+		return STATUS_INSUFFICIENT_RESOURCES;
+	xbox_workaround = TRUE;
 
 	// Allocate driver extension now
 	DriverExtension = IoGetDriverObjectExtension(DriverObject, DriverObject);
@@ -142,8 +213,6 @@ AddDevice(
 
 	DeviceExtension->NextDeviceObject = IoAttachDeviceToDeviceStack(fdo, pdo);
 
-	fdo->Flags &= ~DO_DEVICE_INITIALIZING;
-
 	// Initialize device extension
 	DeviceExtension->IsFDO = TRUE;
 	DeviceExtension->DeviceNumber = DeviceNumber;
@@ -151,6 +220,8 @@ AddDevice(
 	DeviceExtension->FunctionalDeviceObject = fdo;
 	DeviceExtension->DriverExtension = DriverExtension;
 
+	fdo->Flags &= ~DO_DEVICE_INITIALIZING;
+	
 	/* FIXME: do a loop to find an available number */
 	swprintf(LinkDeviceBuffer, L"\\??\\HCD%lu", 0);
 
@@ -158,13 +229,19 @@ AddDevice(
 
 	Status = IoCreateSymbolicLink(&LinkDeviceName, &DeviceName);
 
+	if (NT_SUCCESS(Status))
+		Status = AddDevice_Keyboard(DriverObject, pdo);
+	if (NT_SUCCESS(Status))
+		Status = AddDevice_Mouse(DriverObject, pdo);
+
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("USBMP: IoCreateSymbolicLink call failed with status 0x%08x\n", Status);
+		DPRINT("USBMP: IoCreateSymbolicLink() call failed with status 0x%08x\n", Status);
 		IoDeleteDevice(DeviceExtension->RootHubPdo);
 		IoDeleteDevice(fdo);
 		return Status;
 	}
+	
 
 	return STATUS_SUCCESS;
 }
@@ -239,6 +316,15 @@ DispatchDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 }
 
 static NTSTATUS STDCALL
+DispatchInternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+{
+	if (((PUSBMP_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsFDO)
+		return UsbMpInternalDeviceControlFdo(DeviceObject, Irp);
+	else
+		return IrpStub(DeviceObject, Irp);
+}
+
+static NTSTATUS STDCALL
 DispatchPnp(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
 	if (((PUSBMP_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsFDO)
@@ -263,6 +349,7 @@ DispatchPower(PDEVICE_OBJECT fido, PIRP Irp)
 NTSTATUS STDCALL
 DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING RegPath)
 {
+	USBPORT_INTERFACE UsbPortInterface;
 	ULONG i;
 
 	DriverObject->DriverUnload = DriverUnload;
@@ -275,8 +362,20 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING RegPath)
 	DriverObject->MajorFunction[IRP_MJ_CLOSE] = DispatchClose;
 	DriverObject->MajorFunction[IRP_MJ_CLEANUP] = DispatchCleanup;
 	DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = DispatchDeviceControl;
+	DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = DispatchInternalDeviceControl;
 	DriverObject->MajorFunction[IRP_MJ_PNP] = DispatchPnp;
 	DriverObject->MajorFunction[IRP_MJ_POWER] = DispatchPower;
+
+	// Register in usbcore.sys
+	UsbPortInterface.KbdConnectData = &KbdClassInformation;
+	UsbPortInterface.MouseConnectData = &MouseClassInformation;
+	
+	KbdClassInformation.ClassService = NULL;
+	KbdClassInformation.ClassDeviceObject = NULL;
+	MouseClassInformation.ClassService = NULL;
+	MouseClassInformation.ClassDeviceObject = NULL;
+	
+	RegisterPortDriver(DriverObject, &UsbPortInterface);
 
 	return STATUS_SUCCESS;
 }

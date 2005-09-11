@@ -6,7 +6,16 @@
  * 
  * This file is licenced under the GPL.
  */
- 
+
+#include "usbcommon.h"
+#define USB_OHCI_TAG TAG('u','s','b','o')
+
+/* declare basic init functions and structures */
+int ohci_hcd_pci_init(void);
+void ohci_hcd_pci_cleanup(void);
+int STDCALL usb_init(void);
+void STDCALL usb_exit(void);
+
 /*
  * OHCI Endpoint Descriptor (ED) ... holds TD queue
  * See OHCI spec, section 4.2
@@ -244,18 +253,6 @@ struct ohci_regs {
 #define OHCI_USB_RESUME	(1 << 6)
 #define OHCI_USB_OPER	(2 << 6)
 #define OHCI_USB_SUSPEND (3 << 6)
-
-// HCFS itself
-static char *hcfs2string (int state)
-{
-	switch (state) {
-		case OHCI_USB_RESET: return "reset";
-		case OHCI_USB_RESUME: return "resume";
-		case OHCI_USB_OPER: return "operational";
-		case OHCI_USB_SUSPEND: return "suspend";
-	}
-	return "?";
-}
 
 /*
  * HcCommandStatus (cmdstatus) register masks
