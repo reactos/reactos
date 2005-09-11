@@ -14,9 +14,10 @@ PMENU_OBJECT FASTCALL UserGetMenuObject(HMENU hMenu);
    DPRINT1("obj 0x%x dereffed to %i refs\n",_obj_, USER_BODY_TO_HEADER(_obj_)->RefCount-1); \
    ObmDereferenceObject2(_obj_); \
 }
+
 #endif
 
-
+#define ObmDereferenceObject(_obj_) ObmDereferenceObject2(_obj_)
 
 
 
@@ -59,7 +60,7 @@ PMENU_OBJECT FASTCALL UserGetMenuObject(HMENU hMenu);
 
 
 VOID FASTCALL ObmReferenceObject(PVOID obj);
-BOOL FASTCALL ObmDereferenceObject(PVOID obj);
+BOOL FASTCALL ObmDereferenceObject2(PVOID obj);
 
 PWINDOW_OBJECT FASTCALL IntGetWindowObject(HWND hWnd);
 PVOID FASTCALL

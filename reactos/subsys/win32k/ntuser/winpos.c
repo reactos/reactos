@@ -1483,20 +1483,23 @@ PWINDOW_OBJECT child_window_from_point(PWINDOW_OBJECT parent, int x, int y )
 }
 #endif
 
+/* wine server: child_window_from_point 
 
+Caller must dereference the "returned" Window
+*/
 static
 VOID FASTCALL
 co_WinPosSearchChildren(
    PWINDOW_OBJECT ScopeWin, 
    PUSER_MESSAGE_QUEUE OnlyHitTests, 
    POINT *Point,
-   PWINDOW_OBJECT* Window, 
+   PWINDOW_OBJECT* Window,    
    USHORT *HitTest
    )
 {
    PWINDOW_OBJECT Current;
    HWND *List, *phWnd;
-
+   
    ASSERT_REFS_CO(ScopeWin);
 
    if ((List = IntWinListChildren(ScopeWin)))
@@ -1517,24 +1520,24 @@ co_WinPosSearchChildren(
             continue;
          }
 
-         if (!IntPtInWindow(Current, Point->x, Point->y))
+         if (!IntPtInWindow(Current, Point->x, Point->y)) 
          {
-            continue;
+             continue;
          }
-
+        
+         if (*Window) UserDerefObject(*Window);
          *Window = Current;
+         UserRefObject(*Window);
          
          if (Current->Style & WS_MINIMIZE)
          {
             *HitTest = HTCAPTION;
-            UserRefObject(Current);
             break;
          }
 
          if (Current->Style & WS_DISABLED)
          {
             *HitTest = HTERROR;
-            UserRefObject(Current);
             break;
          }
 
@@ -1561,13 +1564,12 @@ co_WinPosSearchChildren(
             co_WinPosSearchChildren(Current, OnlyHitTests, Point, Window, HitTest);
          }
          
-         UserRefObject(Current);
          UserDerefObjectCo(Current);
 
          break;
       }
       ExFreePool(List);
-   }
+   } 
 }
 
 /* wine: WINPOS_WindowFromPoint */

@@ -275,7 +275,7 @@ VOID FASTCALL ObmReferenceObject(PVOID obj)
 }
 
 
-BOOL FASTCALL ObmDereferenceObject(PVOID obj)
+BOOL FASTCALL ObmDereferenceObject2(PVOID obj)
 {
    PUSER_OBJECT_HEADER hdr = USER_BODY_TO_HEADER(obj);
 

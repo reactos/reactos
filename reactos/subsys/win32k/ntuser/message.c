@@ -773,7 +773,7 @@ MessageFound:
             USHORT HitTest;
 
             UserRefObjectCo(MsgWindow);
-            
+
             if(co_IntTranslateMouseMessage(ThreadQueue, &Msg->Msg, &HitTest, TRUE))
                /* FIXME - check message filter again, if the message doesn't match anymore,
                           search again */
@@ -782,7 +782,7 @@ MessageFound:
                /* eat the message, search again */
                goto CheckMessages;
             }
-            
+
             if(ThreadQueue->CaptureWindow == NULL)
             {
                co_IntSendHitTestMessages(ThreadQueue, &Msg->Msg);
