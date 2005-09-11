@@ -1329,9 +1329,9 @@ IopActionInterrogateDeviceStack(
    }
 
    Status = IopQueryDeviceCapabilities(DeviceNode, &DeviceCapabilities);
-   if (NT_SUCCESS(Status))
+   if (!NT_SUCCESS(Status))
    {
-      DPRINT("IopInitiatePnpIrp() failed (Status %x)\n", Status);
+      DPRINT("IopInitiatePnpIrp() failed (Status 0x%08lx)\n", Status);
    }
 
    DeviceNode->CapabilityFlags = *(PULONG)((ULONG_PTR)&DeviceCapabilities + 4);
