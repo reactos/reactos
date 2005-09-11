@@ -1,4 +1,5 @@
-/* Swedish resources by David Nordenberg */
+/* Swedish resources by David Nordenberg 
+   Updated 2005-07-09 by Andreas Bjerkeholt */
 
 LANGUAGE LANG_SWEDISH, SUBLANG_DEFAULT
 
@@ -26,8 +27,32 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Skärmsläckare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Det här utrymmet är avsiktligt lämnats tomt",IDC_STATIC,66,
-                    110,112,8
+    GROUPBOX        "&Skärmsläckare",IDC_SCREENS_DUMMY, 5, 7, 238, 176
+    
+    LTEXT           "Skärmsläckare:",IDC_STATIC,13, 24, 71, 9
+    CONTROL         "",IDC_SCREENS_CHOICES,"SysListView32",LVS_REPORT | 
+                    LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS |
+                    WS_BORDER | WS_TABSTOP,13, 34, 171, 109
+    PUSHBUTTON      "&Ta bort",IDC_SCREENS_DELETE, 189,47,39,10
+    PUSHBUTTON      "&Lägg till",IDC_SCREENS_POWER_BUTTON,    190,34,39,10
+
+    PUSHBUTTON      "&Inställningar",IDC_SCREENS_SETTINGS,138, 164, 48, 12,WS_GROUP
+    PUSHBUTTON      "&Förhandsvisa",IDC_SCREENS_TESTSC,190, 164, 48, 12
+
+    CONTROL         "&Kräv lösenord för att återvända.",IDC_SCREENS_USEPASSCHK,"button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13, 161, 119, 18
+
+    LTEXT           "&Vänta:",IDC_STATIC,13, 150, 17, 9
+    EDITTEXT        IDC_SCREENS_TIMEDELAY,33, 149, 31, 12,ES_RIGHT | WS_GROUP
+    CONTROL         "",IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
+                    UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
+                    WS_BORDER | WS_GROUP,52, 149, 12, 12
+    LTEXT           "minuter innan skärmsläckaren visas.",IDC_STATIC,70, 151, 147, 9
+
+    GROUPBOX        "&Energisparfunktioner för din bildskärm",IDC_SCREENS_DUMMY,5, 186, 238, 35
+    LTEXT           "För att ändra energisparfunktionerna för din bildskärm,\nklicka på Inställningar.",
+                    IDC_STATIC,16, 199, 155, 19
+    PUSHBUTTON      "Ins&tällningar",IDC_SCREENS_POWER_BUTTON,180, 202, 57, 12
 END
 
 IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 228
@@ -35,13 +60,13 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Utseende"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Det här utrymmet är avsiktligt lämnats tomt",IDC_STATIC,66,
-                    110,112,8
+    LTEXT           "Det här utrymmet har avsiktligt\nlämnats tomt",IDC_STATIC,66,
+                    110,112,20
 END
 
 IDD_SETTINGS DIALOGEX DISCARDABLE  0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Bildskärmsinställningar"
+CAPTION "Inställningar"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "&Bild:",1820,3,140,30,8
@@ -49,13 +74,13 @@ BEGIN
     GROUPBOX        "&Bildyta",1818,3,160,115,43
     CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP,
                     30,170,58,17
-    LTEXT           "Mindre",1815,9,170,15,8,NOT WS_GROUP
-    LTEXT           "Mer",1816,93,170,21,8,NOT WS_GROUP
+    LTEXT           "Lägre",1815,9,170,19,8,NOT WS_GROUP
+    LTEXT           "Högre",1816,93,170,21,8,NOT WS_GROUP
     LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,190,100,10,NOT WS_GROUP | SS_CENTER
     GROUPBOX        "&Färger",1817,125,160,115,43
     COMBOBOX        IDC_SETTINGS_BPP,131,170,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | 
                     WS_VSCROLL | WS_TABSTOP
-    CONTROL         "",1813,"Statisk",SS_BITMAP | SS_CENTERIMAGE | SS_SUNKEN,
+    CONTROL         "",1813,"Static",SS_BITMAP | SS_CENTERIMAGE | SS_SUNKEN,
                     131,188,103,9
     PUSHBUTTON      "&Avancerat...",IDC_SETTINGS_ADVANCED,306,205,56,14
 END
