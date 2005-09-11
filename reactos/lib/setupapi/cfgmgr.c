@@ -226,46 +226,16 @@ CONFIGRET WINAPI CM_Enumerate_Classes(
 }
 
 
-static CONFIGRET GetCmCodeFromErrorCode(DWORD ErrorCode)
-{
-    switch (ErrorCode)
-    {
-        case ERROR_SUCCESS:
-            return CR_SUCCESS;
-
-        case ERROR_ACCESS_DENIED:
-            return CR_ACCESS_DENIED;
-
-        case ERROR_INSUFFICIENT_BUFFER:
-            return CR_BUFFER_SMALL;
-
-        case ERROR_INVALID_DATA:
-            return CR_INVALID_DATA;
-
-        case ERROR_INVALID_PARAMETER:
-            return CR_INVALID_DATA;
-
-        case ERROR_NO_MORE_ITEMS:
-            return CR_NO_SUCH_VALUE;
-
-        case ERROR_NO_SYSTEM_RESOURCES:
-            return CR_OUT_OF_MEMORY;
-
-        default:
-            return CR_FAILURE;
-    }
-}
-
-
 /***********************************************************************
  * CM_Enumerate_Classes_Ex [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Enumerate_Classes_Ex(
     ULONG ulClassIndex, LPGUID ClassGuid, ULONG ulFlags, HMACHINE hMachine)
 {
-    HKEY hRelativeKey, hKey;
-    DWORD rc;
-    WCHAR Buffer[MAX_GUID_STRING_LEN];
+    WCHAR szBuffer[MAX_GUID_STRING_LEN];
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    CONFIGRET ret = CR_SUCCESS;
+    ULONG ulLength = MAX_GUID_STRING_LEN;
 
     TRACE("%lx %p %lx %p\n", ulClassIndex, ClassGuid, ulFlags, hMachine);
 
@@ -277,39 +247,34 @@ CONFIGRET WINAPI CM_Enumerate_Classes_Ex(
 
     if (hMachine != NULL)
     {
-        FIXME("hMachine argument ignored\n");
-        hRelativeKey = HKEY_LOCAL_MACHINE; /* FIXME: use here a field in hMachine */
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
     }
     else
-        hRelativeKey = HKEY_LOCAL_MACHINE;
-
-    rc = RegOpenKeyExW(
-        hRelativeKey,
-        ControlClass,
-        0, /* options */
-        KEY_ENUMERATE_SUB_KEYS,
-        &hKey);
-    if (rc != ERROR_SUCCESS)
-        return GetCmCodeFromErrorCode(rc);
-
-    rc = RegEnumKeyW(
-        hKey,
-        ulClassIndex,
-        Buffer,
-        sizeof(Buffer) / sizeof(WCHAR));
-
-    RegCloseKey(hKey);
-
-    if (rc == ERROR_SUCCESS)
     {
-        /* Remove the {} */
-        Buffer[MAX_GUID_STRING_LEN - 2] = UNICODE_NULL;
-        /* Convert the buffer to a GUID */
-        if (UuidFromStringW(&Buffer[1], ClassGuid) != RPC_S_OK)
+        if (!PnpGetLocalHandles(&BindingHandle, NULL))
             return CR_FAILURE;
     }
 
-    return GetCmCodeFromErrorCode(rc);
+    ret = PNP_EnumerateSubKeys(BindingHandle,
+                               PNP_BRANCH_CLASS,
+                               ulClassIndex,
+                               szBuffer,
+                               MAX_GUID_STRING_LEN,
+                               &ulLength,
+                               ulFlags);
+    if (ret == CR_SUCCESS)
+    {
+        /* Remove the {} */
+        szBuffer[MAX_GUID_STRING_LEN - 2] = UNICODE_NULL;
+
+        /* Convert the buffer to a GUID */
+        if (UuidFromStringW(&szBuffer[1], ClassGuid) != RPC_S_OK)
+            return CR_FAILURE;
+    }
+
+    return ret;
 }
 
 
