@@ -19,7 +19,7 @@
 
 INT cmd_start (LPTSTR First, LPTSTR Rest)
 {
-	TCHAR szFullName[MAX_PATH];
+	TCHAR szFullName[CMDLINE_LENGTH];
 	TCHAR first[CMDLINE_LENGTH];
 	TCHAR *rest = NULL; 
 	TCHAR *param = NULL;
@@ -117,12 +117,12 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 	
 	if (!_tcscmp (first + 1, _T(":")) && _istalpha (*first))
 	{
-		TCHAR szPath[MAX_PATH];
+		TCHAR szPath[CMDLINE_LENGTH];
 
 		_tcscpy (szPath, _T("A:"));
 		szPath[0] = _totupper (*first);
 		SetCurrentDirectory (szPath);
-		GetCurrentDirectory (MAX_PATH, szPath);
+		GetCurrentDirectory (CMDLINE_LENGTH, szPath);
 		if (szPath[0] != (TCHAR)_totupper (*first))
 			ConErrResPuts (STRING_FREE_ERROR1);
 

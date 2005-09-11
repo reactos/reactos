@@ -295,7 +295,7 @@ static BOOL RunFile(LPTSTR filename)
 static VOID
 Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 {
-	TCHAR szFullName[MAX_PATH];
+	TCHAR szFullName[CMDLINE_LENGTH];
 	TCHAR *first = NULL;
 	TCHAR *rest = NULL; 
 	TCHAR *full = NULL; 

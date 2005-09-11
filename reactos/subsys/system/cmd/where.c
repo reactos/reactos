@@ -86,7 +86,7 @@
 BOOL
 SearchForExecutableSingle (LPCTSTR pFileName, LPTSTR pFullName, LPTSTR pExtension)
 {
-	TCHAR  szPathBuffer[MAX_PATH];
+	TCHAR  szPathBuffer[CMDLINE_LENGTH];
 	LPTSTR pszBuffer = NULL;
 	DWORD  dwBuffer, len;
 	LPTSTR s,f;
@@ -106,7 +106,7 @@ SearchForExecutableSingle (LPCTSTR pFileName, LPTSTR pFullName, LPTSTR pExtensio
 #endif
 
 		if (GetFullPathName (pFileName,
-			             MAX_PATH,
+			             CMDLINE_LENGTH,
 			             szPathBuffer,
 			             &pFilePart)  ==0)
 			return FALSE;
@@ -129,7 +129,7 @@ SearchForExecutableSingle (LPCTSTR pFileName, LPTSTR pFullName, LPTSTR pExtensio
 	}
 
 	/* search in current directory */
-	len = GetCurrentDirectory (MAX_PATH, szPathBuffer);
+	len = GetCurrentDirectory (CMDLINE_LENGTH, szPathBuffer);
 	if (szPathBuffer[len - 1] != _T('\\'))
 	{
 		szPathBuffer[len] = _T('\\');
