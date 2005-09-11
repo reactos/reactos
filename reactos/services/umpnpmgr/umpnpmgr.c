@@ -293,7 +293,7 @@ PNP_EnumerateSubKeys(handle_t BindingHandle,
     }
     else
     {
-        *RequiredLength++;
+        (*RequiredLength)++;
     }
 
     DPRINT("PNP_EnumerateSubKeys() done (returns %lx)\n", ret);

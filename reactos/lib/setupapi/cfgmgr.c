@@ -344,9 +344,42 @@ CONFIGRET WINAPI CM_Enumerate_Enumerators_ExA(
     ULONG ulEnumIndex, PCHAR Buffer, PULONG pulLength, ULONG ulFlags,
     HMACHINE hMachine)
 {
-    FIXME("%lu %p %p %lx %lx\n", ulEnumIndex, Buffer, pulLength, ulFlags,
+    WCHAR szBuffer[MAX_DEVICE_ID_LEN];
+    ULONG ulOrigLength;
+    ULONG ulLength;
+    CONFIGRET ret = CR_SUCCESS;
+
+    TRACE("%lu %p %p %lx %lx\n", ulEnumIndex, Buffer, pulLength, ulFlags,
           hMachine);
-    return CR_CALL_NOT_IMPLEMENTED;
+
+    if (Buffer == NULL || pulLength == NULL)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    ulOrigLength = *pulLength;
+    *pulLength = 0;
+
+    ulLength = MAX_DEVICE_ID_LEN;
+    ret = CM_Enumerate_Enumerators_ExW(ulEnumIndex, szBuffer, &ulLength,
+                                       ulFlags, hMachine);
+    if (ret == CR_SUCCESS)
+    {
+        if (WideCharToMultiByte(CP_ACP,
+                                0,
+                                szBuffer,
+                                ulLength,
+                                Buffer,
+                                ulOrigLength,
+                                NULL,
+                                NULL) == 0)
+            ret = CR_FAILURE;
+        else
+            *pulLength = lstrlenA(Buffer) + 1;
+    }
+
+    return ret;
 }
 
 
@@ -359,7 +392,7 @@ CONFIGRET WINAPI CM_Enumerate_Enumerators_ExW(
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
 
-    FIXME("%lu %p %p %lx %lx\n", ulEnumIndex, Buffer, pulLength, ulFlags,
+    TRACE("%lu %p %p %lx %lx\n", ulEnumIndex, Buffer, pulLength, ulFlags,
           hMachine);
 
     if (Buffer == NULL || pulLength == NULL)
@@ -368,7 +401,7 @@ CONFIGRET WINAPI CM_Enumerate_Enumerators_ExW(
     if (ulFlags != 0)
         return CR_INVALID_FLAG;
 
-    Buffer[0] = (WCHAR)0;
+    *Buffer = UNICODE_NULL;
 
     if (hMachine != NULL)
     {
