@@ -841,10 +841,13 @@ MingwBackend::GetBinutilsVersion ( const string& binutilsCommand )
 	                                   NUL,
 	                                   NUL );
 	fp = popen ( versionCommand.c_str () , "r" );
-	for( i = 0; ( i < 80 ) && ( feof ( fp ) == 0 ); i++ )
+	for( i = 0; 
+             ( i < 80 ) && 
+                 ( feof ( fp ) == 0 && 
+                   ( ( ch = fgetc( fp ) ) != -1 ) ); 
+             i++ )
 	{
 		buffer[i] = (char) ch;
-		ch = fgetc( fp );
 	}
 	buffer[i] = '\0';
 	pclose ( fp );
