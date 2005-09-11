@@ -528,7 +528,7 @@ _strrev
 _strset
 _strtime
 _strtoi64=stub
-_strtoui64=stub
+_strtoui64=strtoull
 _strupr
 _swab
 _sys_errlist DATA
