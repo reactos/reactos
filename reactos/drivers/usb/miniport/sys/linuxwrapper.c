@@ -290,29 +290,29 @@ int my_schedule_timeout(int x)
 /*------------------------------------------------------------------------*/ 
 void my_wait_for_completion(struct completion *x)
 {
-	LONGLONG HH;
-	LONGLONG temp;
+//	LONGLONG HH;
+//	LONGLONG temp;
 	LARGE_INTEGER delay;
 
-	extern unsigned int LAST_USB_EVENT_TICK;
+	//extern unsigned int LAST_USB_EVENT_TICK;
 
-	printk("wait for completion11, x=0x%08x\n", (DWORD)x);
+	printk("wait for completion, x=0x%08x\n", (DWORD)x);
 
 	int n=10;
 	n = n*1000;	// to us format
 
 	while(!x->done && (n>0))
 	{
-		KeQueryTickCount((LARGE_INTEGER *)&HH);//IoInputDword(0x8008);
-		temp = HH - LAST_USB_EVENT_TICK;
+		//KeQueryTickCount((LARGE_INTEGER *)&HH);//IoInputDword(0x8008);
+		//temp = HH - LAST_USB_EVENT_TICK;
 
 		//if (temp>(3579)) {
-		if (temp>(1000)) {
-		//	do_all_timers();
-			LAST_USB_EVENT_TICK = HH;
-		}
+		//if (temp>(1000)) {
+			do_all_timers();
+		//	LAST_USB_EVENT_TICK = HH;
+		//}
 
-		//	handle_irqs(-1);
+			handle_irqs(-1);
 
 		delay.QuadPart = -10;
 		KeDelayExecutionThread(KernelMode, FALSE, &delay); //wait_us(1);
