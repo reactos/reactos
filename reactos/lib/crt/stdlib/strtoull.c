@@ -4,7 +4,8 @@
 #include <ctype.h>
 #include <errno.h>
 #include <stdlib.h>
-//#include <msvcrt/unconst.h>
+#include <stdint.h>
+#include <internal/file.h>
 
 /*
  * Convert a string to an unsigned long integer.
@@ -12,13 +13,13 @@
  * Ignores `locale' stuff.  Assumes that the upper and lower case
  * alphabets and digits are each contiguous.
  */
-unsigned long
+uint64_t
 strtoull(const char *nptr, char **endptr, int base)
 {
   const char *s = nptr;
-  unsigned long acc;
+  uint64_t acc;
   int c;
-  unsigned long cutoff;
+  uint64_t cutoff;
   int neg = 0, any, cutlim;
 
   /*
@@ -43,8 +44,8 @@ strtoull(const char *nptr, char **endptr, int base)
   }
   if (base == 0)
     base = c == '0' ? 8 : 10;
-  cutoff = (unsigned long)ULONG_MAX / base;
-  cutlim = (unsigned long)ULONG_MAX % base;
+  cutoff = UINT64_MAX / base;
+  cutlim = (int)(UINT64_MAX % base);
   for (acc = 0, any = 0;; c = *s++)
   {
     if (isdigit(c))
@@ -65,7 +66,7 @@ strtoull(const char *nptr, char **endptr, int base)
   }
   if (any < 0)
   {
-    acc = ULONG_MAX;
+    acc = UINT64_MAX;
     __set_errno ( ERANGE );
   }
   else if (neg)
