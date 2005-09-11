@@ -201,7 +201,7 @@ DeleteFiles(LPTSTR FileName, DWORD* dwFlags, DWORD dwAttrFlags)
 	        }
 	}
 
-        GetFullPathName (FileName,
+        GetFullPathName (szFileName,
                          MAX_PATH,
                          szFullPath,
                          &pFilePart);
