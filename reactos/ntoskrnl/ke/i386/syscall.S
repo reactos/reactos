@@ -458,3 +458,92 @@ _KiDebugService:
 
     /* Exit through common routine */
     jmp _KiServiceExit2
+
+.globl _NtRaiseException@12
+_NtRaiseException@12:
+
+    /* NOTE: We -must- be called by Zw* to have the right frame! */
+    /* Push the stack frame */
+    push ebp
+
+    /* Get the current thread and restore its trap frame */
+    mov ebx, [fs:KPCR_CURRENT_THREAD]
+    mov edx, [ebp+KTRAP_FRAME_EDX]
+    mov [ebx+KTHREAD_TRAP_FRAME], edx
+
+    /* Set up stack frame */
+    mov ebp, esp
+
+    /* Get the Trap Frame in EBX */
+    mov ebx, [ebp+0]
+
+    /* Get the exception list and restore */
+    mov eax, [ebx+KTRAP_FRAME_EXCEPTION_LIST]
+    mov [fs:KPCR_EXCEPTION_LIST], eax
+
+    /* Get the parameters */
+    mov edx, [ebp+16] /* Search frames */
+    mov ecx, [ebp+12] /* Context */
+    mov eax, [ebp+8]  /* Exception Record */
+
+    /* Raise the exception */
+    push edx
+    push ebx
+    push 0
+    push ecx
+    push eax
+    call _KiRaiseException@20
+
+    /* Restore trap frame in EBP */
+    pop ebp
+    mov esp, ebp
+
+.globl _NtContinue@8
+_NtContinue@8:
+
+    /* NOTE: We -must- be called by Zw* to have the right frame! */
+    /* Push the stack frame */
+    push ebp
+
+    /* Get the current thread and restore its trap frame */
+    mov ebx, [fs:KPCR_CURRENT_THREAD]
+    mov edx, [ebp+KTRAP_FRAME_EDX]
+    mov [ebx+KTHREAD_TRAP_FRAME], edx
+
+    /* Set up stack frame */
+    mov ebp, esp
+
+    /* Save the parameters */
+    mov eax, [ebp+0]
+    mov ecx, [ebp+8]
+
+    /* Call KiContinue */
+    push eax
+    push 0
+    push ecx
+    call _KiContinue@12
+
+    /* Check if we failed (bad context record) */
+    or eax, eax
+    jnz Error
+
+    /* Check if test alert was requested */
+    cmp dword ptr [ebp+12], 0
+    je DontTest
+
+    /* Test alert for the thread */
+    mov al, [ebx+KTHREAD_PREVIOUS_MODE]
+    push eax
+    call _KeTestAlertThread@4
+
+DontTest:
+    /* Return to previous context */
+    pop ebp
+    mov esp, ebp
+    jmp _KiServiceExit2
+
+Error:
+    pop ebp
+    mov esp, ebp
+    jmp _KiServiceExit
+

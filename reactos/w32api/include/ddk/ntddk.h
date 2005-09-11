@@ -33,6 +33,7 @@
 
 #include <stdarg.h>
 #include <windef.h>
+#include <excpt.h>
 #include <ntdef.h>
 #include <basetyps.h>
 

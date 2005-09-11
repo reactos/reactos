@@ -11,7 +11,6 @@
 
 /* C Standard Headers */
 #include <stdarg.h>
-#include <excpt.h>
 
 /* Helper Header */
 #include <helper.h>

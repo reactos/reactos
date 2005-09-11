@@ -1,11 +1,15 @@
 #include "precomp.h"
-#include <winternl.h>
+#include <windows.h>
+#define NTOS_MODE_USER
+#include <ndk/umtypes.h>
+#include <ndk/extypes.h>
+#include <ndk/rtlfuncs.h>
 
 /*
  * @implemented
  */
 void __cdecl
-_global_unwind2(PEXCEPTION_REGISTRATION RegistrationFrame)
+_global_unwind2(PEXCEPTION_REGISTRATION_RECORD RegistrationFrame)
 {
 #ifdef __GNUC__
    RtlUnwind(RegistrationFrame, &&__ret_label, NULL, 0);
@@ -17,14 +21,6 @@ __ret_label:
 }
 
 
-// This is dragged over from WINE:
-
-typedef struct __EXCEPTION_FRAME
-{
-  struct __EXCEPTION_FRAME *Prev;
-  PEXCEPTION_HANDLER       Handler;
-} EXCEPTION_FRAME, *PEXCEPTION_FRAME;
-
 /* VC++ extensions to Win32 SEH */
 typedef struct _SCOPETABLE
 {
@@ -35,8 +31,8 @@ typedef struct _SCOPETABLE
 
 typedef struct _MSVCRT_EXCEPTION_FRAME
 {
-  EXCEPTION_FRAME *prev;
-  void (*handler)(PEXCEPTION_RECORD, PEXCEPTION_FRAME,
+  PEXCEPTION_REGISTRATION_RECORD *prev;
+  void (*handler)(PEXCEPTION_RECORD, PEXCEPTION_REGISTRATION_RECORD,
                   PCONTEXT, PEXCEPTION_RECORD);
   PSCOPETABLE scopetable;
   int trylevel;

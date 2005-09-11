@@ -1,9 +1,10 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         ReactOS NT User-Mode DLL
  * FILE:            lib/ntdll/rtl/libsup.c
- * PURPOSE:         Rtl library support routines
- * PROGRAMMER:      Gunnar Dalsnes
+ * PURPOSE:         RTL Support Routines
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ *                  Gunnar Dalsnes
  */
 
 /* INCLUDES *****************************************************************/
@@ -13,6 +14,13 @@
 #include <debug.h>
 
 /* FUNCTIONS ***************************************************************/
+
+BOOLEAN
+NTAPI
+RtlpCheckForActiveDebugger(VOID)
+{
+    return (NtCurrentPeb()->BeingDebugged);
+}
 
 KPROCESSOR_MODE
 STDCALL
@@ -28,7 +36,6 @@ RtlpCurrentPeb(VOID)
     return NtCurrentPeb();
 }
 
-
 /*
  * @implemented
  */
@@ -38,7 +45,6 @@ RtlAcquirePebLock(VOID)
    PPEB Peb = NtCurrentPeb ();
    Peb->FastPebLockRoutine (Peb->FastPebLock);
 }
-
 
 /*
  * @implemented
@@ -57,8 +63,8 @@ ULONG
 STDCALL
 RtlGetNtGlobalFlags(VOID)
 {
-	PPEB pPeb = NtCurrentPeb();
-	return pPeb->NtGlobalFlag;
+    PPEB pPeb = NtCurrentPeb();
+    return pPeb->NtGlobalFlag;
 }
 
 NTSTATUS
@@ -82,7 +88,7 @@ STDCALL
 RtlInitializeHeapLock(
     PRTL_CRITICAL_SECTION CriticalSection)
 {
-     return RtlInitializeCriticalSection(CriticalSection );
+     return RtlInitializeCriticalSection(CriticalSection);
 }
 
 NTSTATUS
@@ -126,6 +132,27 @@ CHECK_PAGED_CODE_RTL(char *file, int line)
   /* meaningless in user mode */
 }
 #endif
+
+BOOLEAN
+NTAPI
+RtlpHandleDpcStackException(IN PEXCEPTION_REGISTRATION_RECORD RegistrationFrame,
+                            IN ULONG_PTR RegistrationFrameEnd,
+                            IN OUT PULONG_PTR StackLow,
+                            IN OUT PULONG_PTR StackHigh)
+{
+    /* There's no such thing as a DPC stack in user-mode */
+    return FALSE;
+}
+
+VOID
+NTAPI
+RtlpCheckLogException(IN PEXCEPTION_RECORD ExceptionRecord,
+                      IN PCONTEXT ContextRecord,
+                      IN PVOID ContextData,
+                      IN ULONG Size)
+{
+    /* Exception logging is not done in user-mode */
+}
 
 /* RTL Atom Tables ************************************************************/
 

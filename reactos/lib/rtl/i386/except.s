@@ -1,293 +1,266 @@
-/* $Id$
- *
- * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
- * PURPOSE:           User-mode exception support for IA-32
- * FILE:              lib/ntdll/rtl/i386/except.s
- * PROGRAMER:         Casper S. Hornstrup (chorns@users.sourceforge.net)
- * NOTES:             This file is shared with ntoskrnl/rtl/i386/except.s.
- *                    Please keep them in sync.
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS NT Library
+ * FILE:            lib/rtl/i386/except.S
+ * PURPOSE:         User-mode exception support for IA-32
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
-#define EXCEPTION_UNWINDING		0x02
+/* INCLUDES ******************************************************************/
 
-#define EREC_FLAGS				0x04
+#include <ndk/asm.h>
+#include <ndk/i386/segment.h>
+.intel_syntax noprefix
 
-#define ExceptionContinueExecution 0
-#define ExceptionContinueSearch    1
-#define ExceptionNestedException   2
-#define ExceptionCollidedUnwind    3
+#define EXCEPTION_UNWINDING         2
+#define EXCEPTION_EXIT_UNWIND       4
+#define EXCEPTION_UNWIND            (EXCEPTION_UNWINDING | EXCEPTION_EXIT_UNWIND)
 
-.globl _RtlpExecuteHandlerForException
-.globl _RtlpExecuteHandlerForUnwind
+#define ExceptionContinueExecution  0
+#define ExceptionContinueSearch     1
+#define ExceptionNestedException    2
+#define ExceptionCollidedUnwind     3
 
-#define CONTEXT_FLAGS	0x00
-#define CONTEXT_SEGGS	0x8C
-#define CONTEXT_SEGFS	0x90
-#define CONTEXT_SEGES	0x94
-#define CONTEXT_SEGDS	0x98
-#define CONTEXT_EDI		0x9C
-#define CONTEXT_ESI		0xA0
-#define CONTEXT_EBX		0xA4
-#define CONTEXT_EDX		0xA8
-#define CONTEXT_ECX		0xAC
-#define CONTEXT_EAX		0xB0
-#define CONTEXT_EBP		0xB4
-#define CONTEXT_EIP		0xB8
-#define CONTEXT_SEGCS	0xBC
-#define CONTEXT_EFLAGS	0xC0
-#define CONTEXT_ESP		0xC4
-#define CONTEXT_SEGSS	0xC8
+/* FUNCTIONS ****************************************************************/
 
+.globl _RtlpGetStackLimits@8
+_RtlpGetStackLimits@8:
 
-#define RCC_CONTEXT		0x08
+    /* Get the stack limits */
+    mov eax, [fs:TEB_STACK_LIMIT]
+    mov ecx, [fs:TEB_STACK_BASE]
 
-// EAX = value to print
-_do_debug:
-	pushal
-	pushl	%eax
-	call	_AsmDebug@4
-	popal
-	ret
+    /* Return them */
+    mov edx, [esp+4]
+    mov [edx], eax
+    mov edx, [esp+8]
+    mov [edx], ecx
 
-#ifndef __NTOSKRNL__
+    /* return */
+    ret 8
 
-//
-// VOID
-// RtlpCaptureContext(PCONTEXT pContext);
-//
-// Parameters:
-//   [ESP+08h] - PCONTEXT_X86 pContext
-// Registers:
-//   None
-// Returns:
-//   Nothing
-// Notes:
-//   Grabs the current CPU context.
-.globl _RtlpCaptureContext
-_RtlpCaptureContext:
-	pushl   %ebp
-    movl	%esp, %ebp
-    pushl   %ebx
-	movl	RCC_CONTEXT(%ebp), %edx		// EDX = Address of context structure
+.globl _RtlpGetExceptionList@0
+_RtlpGetExceptionList@0:
 
-	cld
-	pushf
-	pop		%eax
-	movl	%eax, CONTEXT_EFLAGS(%edx)
-	xorl	%eax, %eax
-	movl	%eax, CONTEXT_EAX(%edx)
-	movl	%eax, CONTEXT_EBX(%edx)
-	movl	%eax, CONTEXT_ECX(%edx)
-	movl	%eax, CONTEXT_EDX(%edx)
-	movl	%eax, CONTEXT_ESI(%edx)
-	movl	%eax, CONTEXT_EDI(%edx)
-	movl	%cs, %eax
-	movl	%eax, CONTEXT_SEGCS(%edx)
-	movl	%ds, %eax
-	movl	%eax, CONTEXT_SEGDS(%edx)
-	movl	%es, %eax
-	movl	%eax, CONTEXT_SEGES(%edx)
-	movl	%fs, %eax
-	movl	%eax, CONTEXT_SEGFS(%edx)
-	movl	%gs, %eax
-	movl	%eax, CONTEXT_SEGGS(%edx)
-	movl	%ss, %eax
-	movl	%eax, CONTEXT_SEGSS(%edx)
-
-	//
-	// STACK LAYOUT: - (ESP to put in context structure)
-	//               - RETURN ADDRESS OF CALLER OF CALLER
-	//               - EBP OF CALLER OF CALLER
-	//                 ...
-	//               - RETURN ADDRESS OF CALLER
-	//               - EBP OF CALLER
-	//                 ...
-	//
-
-	// Get return address of the caller of the caller of this function
-	movl	%ebp, %ebx
-	//movl	4(%ebx), %eax			// EAX = return address of caller
-	movl	(%ebx), %ebx			// EBX = EBP of caller
-
-	movl	4(%ebx), %eax			// EAX = return address of caller of caller
-	movl	(%ebx), %ebx			// EBX = EBP of caller of caller
-
-	movl	%eax, CONTEXT_EIP(%edx)	// EIP = return address of caller of caller
-	movl	%ebx, CONTEXT_EBP(%edx)	// EBP = EBP of caller of caller
-	addl	$8, %ebx
-	movl	%ebx, CONTEXT_ESP(%edx)	// ESP = EBP of caller of caller + 8
-
-    popl    %ebx
-    movl	%ebp, %esp
-    popl	%ebp
+    /* Return the exception list */
+    mov eax, [fs:TEB_EXCEPTION_LIST]
     ret
 
-#endif /* !__NTOSKRNL__ */
+.globl _RtlpSetExceptionList@4
+_RtlpSetExceptionList@4:
 
-#define REH_ERECORD		0x08
-#define REH_RFRAME		0x0C
-#define REH_CONTEXT		0x10
-#define REH_DCONTEXT	0x14
-#define REH_EROUTINE	0x18
+    /* Get the new list */
+    mov ecx, [esp+4]
+    mov ecx, [ecx]
 
-// Parameters:
-//   None
-// Registers:
-//   [EBP+08h] - PEXCEPTION_RECORD ExceptionRecord
-//   [EBP+0Ch] - PEXCEPTION_REGISTRATION RegistrationFrame
-//   [EBP+10h] - PVOID Context
-//   [EBP+14h] - PVOID DispatcherContext
-//   [EBP+18h] - PEXCEPTION_HANDLER ExceptionRoutine
-//   EDX       - Address of protecting exception handler
-// Returns:
-//   EXCEPTION_DISPOSITION
-// Notes:
-//   Setup the protecting exception handler and call the exception
-//   handler in the right context.
-_RtlpExecuteHandler:
-	pushl    %ebp
-    movl     %esp, %ebp
-    pushl    REH_RFRAME(%ebp)
+    /* Write it */
+    mov [fs:TEB_EXCEPTION_LIST], ecx
 
-    pushl    %edx
-    pushl    %fs:0x0
-    movl     %esp, %fs:0x0
+    /* Return */
+    ret 4
 
-    // Prepare to call the exception handler
-    pushl    REH_DCONTEXT(%ebp)
-    pushl    REH_CONTEXT(%ebp)
-    pushl    REH_RFRAME(%ebp)
-    pushl    REH_ERECORD(%ebp)
+.globl _RtlpGetExceptionAddress@0
+_RtlpGetExceptionAddress@0:
 
-    // Now call the exception handler
-    movl     REH_EROUTINE(%ebp), %eax
-    call    *%eax
+    /* Return the address from the stack */
+    mov eax, [ebp+4]
 
-	cmpl	$-1, %fs:0x0
-	jne		.reh_stack_looks_ok
-
-	// This should not happen
-	pushl	0
-	pushl	0
-	pushl	0
-	pushl	0
-	call	_RtlAssert@16
-
-.reh_loop:
-	jmp	.reh_loop
-
-.reh_stack_looks_ok:
-    movl     %fs:0x0, %esp
-
-    // Return to the 'front-end' for this function
-    popl     %fs:0x0
-    movl     %ebp, %esp
-    popl     %ebp
+    /* Return */
     ret
 
+.globl _RtlCaptureContext@4
+_RtlCaptureContext@4:
 
-#define REP_ERECORD     0x04
-#define REP_RFRAME      0x08
-#define REP_CONTEXT     0x0C
-#define REP_DCONTEXT    0x10
+    /* Preserve EBX and put the context in it */
+    push ebx
+    mov ebx, [esp+8]
 
-// Parameters:
-//   [ESP+04h] - PEXCEPTION_RECORD ExceptionRecord
-//   [ESP+08h] - PEXCEPTION_REGISTRATION RegistrationFrame
-//   [ESP+0Ch] - PCONTEXT Context
-//   [ESP+10h] - PVOID DispatcherContext
-// Registers:
-//   None
-// Returns:
-//   EXCEPTION_DISPOSITION
-// Notes:
-//    This exception handler protects the exception handling
-//    mechanism by detecting nested exceptions.
+    /* Save the basic register context */
+    mov [ebx+CONTEXT_EAX], eax
+    mov [ebx+CONTEXT_ECX], ecx
+    mov [ebx+CONTEXT_EDX], edx
+    mov eax, [esp]              /* We pushed EBX, remember? ;) */
+    mov [ebx+CONTEXT_EBX], eax
+    mov [ebx+CONTEXT_ESI], esi
+    mov [ebx+CONTEXT_EDI], edi
+
+    /* Capture the other regs */
+    jmp CaptureRest
+
+.globl _RtlpCaptureContext@4
+_RtlpCaptureContext@4:
+
+    /* Preserve EBX and put the context in it */
+    push ebx
+    mov ebx, [esp+8]
+    
+    /* Clear the basic register context */
+    mov dword ptr [ebx+CONTEXT_EAX], 0
+    mov dword ptr [ebx+CONTEXT_ECX], 0
+    mov dword ptr [ebx+CONTEXT_EDX], 0
+    mov dword ptr [ebx+CONTEXT_EBX], 0
+    mov dword ptr [ebx+CONTEXT_ESI], 0
+    mov dword ptr [ebx+CONTEXT_EDI], 0
+    
+CaptureRest:
+    /* Capture the segment registers */
+    mov [ebx+CONTEXT_SEGCS], cs
+    mov [ebx+CONTEXT_SEGDS], ds
+    mov [ebx+CONTEXT_SEGES], es
+    mov [ebx+CONTEXT_SEGFS], fs
+    mov [ebx+CONTEXT_SEGGS], gs
+    mov [ebx+CONTEXT_SEGSS], ss
+    
+    /* Capture flags */
+    pushfd
+    pop [ebx+CONTEXT_EFLAGS]
+
+    /* The return address should be in [ebp+4] */
+    mov eax, [ebp+4]
+    mov [ebx+CONTEXT_EIP], eax
+
+    /* Get EBP */
+    mov eax, [esp]
+    mov [ebx+CONTEXT_EBP], eax
+
+    /* And get ESP */
+    mov eax, [ebp+8]
+    mov [ebx+CONTEXT_ESP], eax
+
+    /* Return to the caller */
+    pop ebx
+    ret 4
+
+.globl _RtlpExecuteHandlerForException@20
+_RtlpExecuteHandlerForException@20:
+
+    /* Copy the routine in EDX */
+    mov edx, offset _RtlpExceptionProtector
+
+    /* Jump to common routine */
+    jmp _RtlpExecuteHandler@20
+
+.globl _RtlpExecuteHandlerForUnwind@20
+_RtlpExecuteHandlerForUnwind@20:
+    
+    /* Copy the routine in EDX */
+    mov edx, offset _RtlpExceptionProtector
+
+    /* Run the common routine */
+_RtlpExecuteHandler@20:
+
+    /* Save non-volatile */
+    push ebx
+    push esi
+    push edi
+    
+    /* Clear registers */
+    xor eax, eax
+    xor ebx, ebx
+    xor esi, esi
+    xor edi, edi
+
+    /* Call the 2nd-stage executer */
+    push [esp+0x20]
+    push [esp+0x20]
+    push [esp+0x20]
+    push [esp+0x20]
+    push [esp+0x20]
+    call _RtlpExecuteHandler2@20
+
+    /* Restore non-volatile */
+    pop edi
+    pop esi
+    pop ebx
+    ret 0x14
+
+.globl _RtlpExecuteHandler2@20
+_RtlpExecuteHandler2@20:
+
+    /* Set up stack frame */
+    push ebp
+    mov ebp, esp
+
+    /* Save the Frame */
+    push [ebp+0xC]
+
+    /* Push handler address */
+    push edx
+
+    /* Push the exception list */
+    push [fs:TEB_EXCEPTION_LIST]
+
+    /* Link us to it */
+    mov [fs:TEB_EXCEPTION_LIST], esp
+
+    /* Call the handler */
+    push [ebp+0x14]
+    push [ebp+0x10]
+    push [ebp+0xC]
+    push [ebp+8]
+    mov ecx, [ebp+0x18]
+    call ecx
+
+    /* Unlink us */
+    mov esp, [fs:TEB_EXCEPTION_LIST]
+
+    /* Restore it */
+    pop [fs:TEB_EXCEPTION_LIST]
+
+    /* Undo stack frame and return */
+    mov esp, ebp
+    pop ebp
+    ret 0x14
+
 _RtlpExceptionProtector:
-    movl     $ExceptionContinueSearch, %eax
-    movl     REP_ERECORD(%esp), %ecx
-    testl    $EXCEPTION_UNWINDING, EREC_FLAGS(%ecx)
-    jnz      .rep_end
 
-    // Unwinding is not taking place, so return ExceptionNestedException
+    /* Assume we'll continue */
+    mov eax, ExceptionContinueSearch
 
-    // Set DispatcherContext field to the exception registration for the
-    // exception handler that executed when a nested exception occurred
-    movl     REP_DCONTEXT(%esp), %ecx
-    movl     REP_RFRAME(%esp), %eax
-    movl     %eax, (%ecx)
-    movl     $ExceptionNestedException, %eax
+    /* Put the exception record in ECX and check the Flags */
+    mov ecx, [esp+4]
+    test dword ptr [ecx+EXCEPTION_RECORD_EXCEPTION_FLAGS], EXCEPTION_UNWIND
+    jnz return
 
-.rep_end:
-    ret
+    /* Save the frame in ECX and Context in EDX */
+    mov ecx, [esp+8]
+    mov edx, [esp+16]
 
+    /* Get the nested frame */
+    mov eax, [ecx+8]
 
-// Parameters:
-//   [ESP+04h] - PEXCEPTION_RECORD ExceptionRecord
-//   [ESP+08h] - PEXCEPTION_REGISTRATION RegistrationFrame
-//   [ESP+0Ch] - PCONTEXT Context
-//   [ESP+10h] - PVOID DispatcherContext
-//   [ESP+14h] - PEXCEPTION_HANDLER ExceptionHandler
-// Registers:
-//   None
-// Returns:
-//   EXCEPTION_DISPOSITION
-// Notes:
-//   Front-end
-_RtlpExecuteHandlerForException:
-    movl     $_RtlpExceptionProtector, %edx
-    jmp      _RtlpExecuteHandler
+    /* Set it as the dispatcher context */
+    mov [edx], eax
 
+    /* Return nested exception */
+    mov eax, ExceptionNestedException
 
-#define RUP_ERECORD     0x04
-#define RUP_RFRAME      0x08
-#define RUP_CONTEXT     0x0C
-#define RUP_DCONTEXT    0x10
+return:
+    ret 16
 
-// Parameters:
-//   [ESP+04h] - PEXCEPTION_RECORD ExceptionRecord
-//   [ESP+08h] - PEXCEPTION_REGISTRATION RegistrationFrame
-//   [ESP+0Ch] - PCONTEXT Context
-//   [ESP+10h] - PVOID DispatcherContext
-// Registers:
-//   None
-// Returns:
-//   EXCEPTION_DISPOSITION
-// Notes:
-//    This exception handler protects the exception handling
-//    mechanism by detecting collided unwinds.
 _RtlpUnwindProtector:
-    movl     $ExceptionContinueSearch, %eax
-    movl     %ecx, RUP_ERECORD(%esp)
-    testl    $EXCEPTION_UNWINDING, EREC_FLAGS(%ecx)
-    jz       .rup_end
+    /* Assume we'll continue */
+    mov eax, ExceptionContinueSearch
 
-    // Unwinding is taking place, so return ExceptionCollidedUnwind
+    /* Put the exception record in ECX and check the Flags */
+    mov ecx, [esp+4]
+    test dword ptr [ecx+EXCEPTION_RECORD_EXCEPTION_FLAGS], EXCEPTION_UNWIND
+    jnz .return
 
-    movl     RUP_RFRAME(%esp), %ecx
-    movl     RUP_DCONTEXT(%esp), %edx
+    /* Save the frame in ECX and Context in EDX */
+    mov ecx, [esp+8]
+    mov edx, [esp+16]
 
-    // Set DispatcherContext field to the exception registration for the
-    // exception handler that executed when a collision occurred
-    movl     RUP_RFRAME(%ecx), %eax
-    movl     %eax, (%edx)
-    movl     $ExceptionCollidedUnwind, %eax
+    /* Get the nested frame */
+    mov eax, [ecx+8]
 
-.rup_end:
-    ret
+    /* Set it as the dispatcher context */
+    mov [edx], eax
 
+    /* Return collided unwind */
+    mov eax, ExceptionCollidedUnwind
 
-// Parameters:
-//   [ESP+04h] - PEXCEPTION_RECORD ExceptionRecord
-//   [ESP+08h] - PEXCEPTION_REGISTRATION RegistrationFrame
-//   [ESP+0Ch] - PCONTEXT Context
-//   [ESP+10h] - PVOID DispatcherContext
-//   [ESP+14h] - PEXCEPTION_HANDLER ExceptionHandler
-// Registers:
-//   None
-// Returns:
-//   EXCEPTION_DISPOSITION
-_RtlpExecuteHandlerForUnwind:
-    movl     $_RtlpUnwindProtector, %edx
-    jmp      _RtlpExecuteHandler
+.return:
+    ret 16
+

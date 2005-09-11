@@ -63,6 +63,12 @@
  * -- AJ
  */
 
+typedef struct _EXCEPTION_REGISTRATION_RECORD
+{
+    struct _EXCEPTION_REGISTRATION_RECORD *prev;
+    PEXCEPTION_HANDLER handler;
+} EXCEPTION_REGISTRATION_RECORD, *PEXCEPTION_REGISTRATION_RECORD;
+
 /* Define this if you want to use your compiler built-in __try/__except support.
  * This is only useful when compiling to a native Windows binary, as the built-in
  * compiler exceptions will most certainly not work under Winelib.

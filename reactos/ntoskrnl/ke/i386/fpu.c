@@ -569,7 +569,7 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
 
       /* Dispatch exception */
       DPRINT("Dispatching exception (ExceptionCode = 0x%08x)\n", Er.ExceptionCode);
-      KiDispatchException(&Er, Context, Tf, PreviousMode, TRUE);
+      KiDispatchException(&Er, NULL, Tf, PreviousMode, TRUE);
 
       DPRINT("Math-fault handled!\n");
       return STATUS_SUCCESS;

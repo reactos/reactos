@@ -85,7 +85,7 @@ Ke386InitThreadWithContext(PKTHREAD Thread,
         TrapFrame = &InitFrame->TrapFrame;
 
         /* Set up a trap frame from the context. */
-        if (KeContextToTrapFrame(Context, TrapFrame))
+        if (KeContextToTrapFrame(Context, NULL, TrapFrame))
         {
             Thread->NpxState = NPX_STATE_VALID;
         }

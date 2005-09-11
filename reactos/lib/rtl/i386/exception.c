@@ -1,10 +1,10 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
+ * PROJECT:           ReactOS Run-Time Library
  * PURPOSE:           User-mode exception support for IA-32
- * FILE:              lib/ntdll/rtl/i386/exception.c
- * PROGRAMER:         Casper S. Hornstrup (chorns@users.sourceforge.net)
+ * FILE:              lib/rtl/i386/exception.c
+ * PROGRAMERS:        Alex Ionescu (alex@relsoft.net)
+ *                    Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 
 /* INCLUDES *****************************************************************/
@@ -14,383 +14,340 @@
 #define NDEBUG
 #include <debug.h>
 
-/* FUNCTIONS ***************************************************************/
-
-/* Implemented in except.s */
+/* PRIVATE FUNCTIONS *********************************************************/
 
 VOID
-RtlpCaptureContext(PCONTEXT pContext);
+STDCALL
+RtlpGetStackLimits(PULONG_PTR StackBase,
+                   PULONG_PTR StackLimit);
 
-#define SehpGetStackLimits(StackBase, StackLimit) \
-{ \
-	(*(StackBase)) = NtCurrentTeb()->Tib->StackBase; \
-	(*(StackLimit)) = NtCurrentTeb()->Tib->StackLimit; \
-}
+PEXCEPTION_REGISTRATION_RECORD
+STDCALL
+RtlpGetExceptionList(VOID);
 
-#define SehpGetExceptionList() \
-	(PEXCEPTION_REGISTRATION)(NtCurrentTeb()->Tib.ExceptionList)
+VOID
+STDCALL
+RtlpSetExceptionList(PEXCEPTION_REGISTRATION_RECORD NewExceptionList);
 
-#define SehpSetExceptionList(NewExceptionList) \
-	NtCurrentTeb()->Tib.ExceptionList = (PVOID)(NewExceptionList)
+/* PUBLIC FUNCTIONS **********************************************************/
 
-VOID STDCALL
-AsmDebug(ULONG Value)
+/*
+ * @unimplemented
+ */
+VOID
+STDCALL
+RtlGetCallersAddress(OUT PVOID *CallersAddress,
+                     OUT PVOID *CallersCaller)
 {
-  DbgPrint("Value 0x%.08x\n", Value);
+    UNIMPLEMENTED;
 }
-
-
-/* Declare a few prototypes for the functions in except.s */
-
-EXCEPTION_DISPOSITION
-RtlpExecuteHandlerForException(
-  PEXCEPTION_RECORD ExceptionRecord,
-  PEXCEPTION_REGISTRATION RegistrationFrame,
-  PCONTEXT Context,
-  PVOID DispatcherContext,
-  PEXCEPTION_HANDLER ExceptionHandler);
-
-EXCEPTION_DISPOSITION
-RtlpExecuteHandlerForUnwind(
-  PEXCEPTION_RECORD ExceptionRecord,
-  PEXCEPTION_REGISTRATION RegistrationFrame,
-  PCONTEXT Context,
-  PVOID DispatcherContext,
-  PEXCEPTION_HANDLER ExceptionHandler);
-
-
-#ifndef NDEBUG
-
-VOID RtlpDumpExceptionRegistrations(VOID)
-{
-  PEXCEPTION_REGISTRATION Current;
-
-  DbgPrint("Dumping exception registrations:\n");
-
-  Current = SehpGetExceptionList();
-
-  if ((ULONG_PTR)Current != -1)
-  {
-    while ((ULONG_PTR)Current != -1)
-    {
-      DbgPrint("   (0x%08X)   HANDLER (0x%08X)\n", Current, Current->handler);
-      Current = Current->prev;
-    }
-    DbgPrint("   End-Of-List\n");
-  } else {
-    DbgPrint("   No exception registrations exists.\n");
-  }
-}
-
-#endif /* NDEBUG */
-
-ULONG
-RtlpDispatchException(IN PEXCEPTION_RECORD  ExceptionRecord,
-	IN PCONTEXT  Context)
-{
-  PEXCEPTION_REGISTRATION RegistrationFrame, NestedFrame = NULL, DispatcherContext;
-  DWORD ReturnValue;
-
-  DPRINT("RtlpDispatchException()\n");
-
-#ifndef NDEBUG
-  RtlpDumpExceptionRegistrations();
-#endif /* NDEBUG */
-
-  RegistrationFrame = SehpGetExceptionList();
-
-  DPRINT("RegistrationFrame is 0x%X\n", RegistrationFrame);
-
-  while ((ULONG_PTR)RegistrationFrame != (ULONG_PTR)-1)
-  {
-    EXCEPTION_RECORD ExceptionRecord2;
-    //PVOID RegistrationFrameEnd = (PVOID)RegistrationFrame + 8;
-
-    // Make sure the registration frame is located within the stack
-
-    DPRINT("Error checking\n");
-#if 0
-    if (Teb->Tib.StackBase > RegistrationFrameEnd)
-    {
-      DPRINT("Teb->Tib.StackBase (0x%.08x) > RegistrationFrameEnd (0x%.08x)\n",
-        Teb->Tib.StackBase, RegistrationFrameEnd);
-      ExceptionRecord->ExceptionFlags |= EXCEPTION_STACK_INVALID;
-      return ExceptionContinueExecution;
-    }
-    // FIXME: Stack top, correct?
-    if (Teb->Tib.StackLimit < RegistrationFrameEnd)
-    {
-      DPRINT("Teb->Tib.StackLimit (0x%.08x) > RegistrationFrameEnd (0x%.08x)\n",
-        Teb->Tib.StackLimit, RegistrationFrameEnd);
-      ExceptionRecord->ExceptionFlags |= EXCEPTION_STACK_INVALID;
-      return ExceptionContinueExecution;
-    }
-
-    // Make sure stack is DWORD aligned
-    if ((ULONG_PTR)RegistrationFrame & 3)
-    {
-      DPRINT("RegistrationFrameEnd (0x%.08x) is not DWORD aligned.\n",
-        RegistrationFrameEnd);
-      ExceptionRecord->ExceptionFlags |= EXCEPTION_STACK_INVALID;
-      return ExceptionContinueExecution;
-    }
-#endif
-
-#if 0
-    /* FIXME: */
-    if (someFlag)
-      RtlpLogLastExceptionDisposition( hLog, retValue );
-#endif
-
-    DPRINT("Calling handler at 0x%X\n", RegistrationFrame->handler);
-    DPRINT("ExceptionRecord 0x%X\n", ExceptionRecord);
-    DPRINT("RegistrationFrame 0x%X\n", RegistrationFrame);
-    DPRINT("Context 0x%X\n", Context);
-    DPRINT("&DispatcherContext 0x%X\n", &DispatcherContext);
-
-    ReturnValue = RtlpExecuteHandlerForException(
-      ExceptionRecord,
-      RegistrationFrame,
-      Context,
-      &DispatcherContext,
-      RegistrationFrame->handler);
-#ifdef DEBUG
-    DPRINT("Exception handler said 0x%X\n", ReturnValue);
-	DPRINT("RegistrationFrame == 0x%.08x\n", RegistrationFrame);
-	{
-		PULONG sp = (PULONG)((PVOID)RegistrationFrame - 0x08);
-		DPRINT("StandardESP == 0x%.08x\n", sp[0]);
-		DPRINT("Exception Pointers == 0x%.08x\n", sp[1]);
-		DPRINT("PrevFrame == 0x%.08x\n", sp[2]);
-		DPRINT("Handler == 0x%.08x\n", sp[3]);
-		DPRINT("ScopeTable == 0x%.08x\n", sp[4]);
-		DPRINT("TryLevel == 0x%.08x\n", sp[5]);
-		DPRINT("EBP == 0x%.08x\n", sp[6]);
-	}
-#endif
-    if (RegistrationFrame == NestedFrame)
-    {
-      ExceptionRecord->ExceptionFlags &= ~EXCEPTION_NESTED_CALL;  // Turn off flag
-      NestedFrame = NULL;
-    }
-
-    if (ReturnValue == ExceptionContinueExecution)
-    {
-      DPRINT("ReturnValue == ExceptionContinueExecution\n");
-      if (ExceptionRecord->ExceptionFlags & EXCEPTION_NONCONTINUABLE)
-      {
-        DPRINT("(ExceptionRecord->ExceptionFlags & EXCEPTION_NONCONTINUABLE) == TRUE\n");
-
-        ExceptionRecord2.ExceptionRecord = ExceptionRecord;
-        ExceptionRecord2.ExceptionCode = STATUS_NONCONTINUABLE_EXCEPTION;
-        ExceptionRecord2.ExceptionFlags = EXCEPTION_NONCONTINUABLE;
-        ExceptionRecord2.NumberParameters = 0;
-        RtlRaiseException(&ExceptionRecord2);
-      }
-      else
-      {
-        /* Copy the (possibly changed) context back to the trap frame and return */
-        ZwContinue(Context, FALSE);
-        return ExceptionContinueExecution;
-      }
-    }
-    else if (ReturnValue == ExceptionContinueSearch)
-    {
-      DPRINT("ReturnValue == ExceptionContinueSearch\n");
-
-      /* Nothing to do here */
-    }
-    else if (ReturnValue == ExceptionNestedException)
-    {
-      DPRINT("ReturnValue == ExceptionNestedException\n");
-
-      ExceptionRecord->ExceptionFlags |= EXCEPTION_NESTED_CALL;
-      if (NestedFrame < DispatcherContext)
-	  {
-          NestedFrame = DispatcherContext;
-	  }
-    }
-    else /* if (ReturnValue == ExceptionCollidedUnwind) */
-    {
-      DPRINT("ReturnValue == ExceptionCollidedUnwind or unknown\n");
-
-      ExceptionRecord2.ExceptionRecord = ExceptionRecord;
-      ExceptionRecord2.ExceptionCode = STATUS_INVALID_DISPOSITION;
-      ExceptionRecord2.ExceptionFlags = EXCEPTION_NONCONTINUABLE;
-      ExceptionRecord2.NumberParameters = 0;
-      RtlRaiseException(&ExceptionRecord2);
-    }
-
-    RegistrationFrame = RegistrationFrame->prev;  // Go to previous frame
-  }
-
-  /* No exception handler will handle this exception */
-
-  DPRINT("RtlpDispatchException(): Return ExceptionContinueExecution\n");
-
-  ExceptionRecord->ExceptionFlags = EXCEPTION_NONCONTINUABLE;
-
-  return ExceptionContinueExecution;
-}
-
 
 /*
  * @implemented
  */
-VOID STDCALL
-RtlUnwind(PEXCEPTION_REGISTRATION RegistrationFrame,
-  PVOID ReturnAddress,
-  PEXCEPTION_RECORD ExceptionRecord,
-  DWORD EaxValue)
+BOOLEAN
+STDCALL
+RtlDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
+                     IN PCONTEXT Context)
 {
-  PEXCEPTION_REGISTRATION ERHead;
-  PEXCEPTION_RECORD pExceptRec;
-  EXCEPTION_RECORD TempER;
-  CONTEXT Context;
+    PEXCEPTION_REGISTRATION_RECORD RegistrationFrame, NestedFrame = NULL;
+    PEXCEPTION_REGISTRATION_RECORD DispatcherContext;
+    EXCEPTION_RECORD ExceptionRecord2;
+    EXCEPTION_DISPOSITION ReturnValue;
+    ULONG_PTR StackLow, StackHigh;
+    ULONG_PTR RegistrationFrameEnd;
+    DPRINT1("RtlDispatchException(): %p, %p \n", ExceptionRecord, Context);
 
-  DPRINT("RtlUnwind(). RegistrationFrame 0x%X\n", RegistrationFrame);
+    /* Get the current stack limits and registration frame */
+    RtlpGetStackLimits(&StackLow, &StackHigh);
+    RegistrationFrame = RtlpGetExceptionList();
+    DPRINT1("RegistrationFrame is 0x%X\n", RegistrationFrame);
 
-#ifndef NDEBUG
-  RtlpDumpExceptionRegistrations();
-#endif /* NDEBUG */
-
-  ERHead = SehpGetExceptionList();
-
-  DPRINT("ERHead is 0x%X\n", ERHead);
-
-  if (ExceptionRecord == NULL) // The normal case
-  {
-	DPRINT("ExceptionRecord == NULL (normal)\n");
-
-    pExceptRec = &TempER;
-    pExceptRec->ExceptionFlags = 0;
-    pExceptRec->ExceptionCode = STATUS_UNWIND;
-    pExceptRec->ExceptionRecord = NULL;
-    pExceptRec->ExceptionAddress = ReturnAddress;
-    pExceptRec->ExceptionInformation[0] = 0;
-  }
-  else
-  {
-    pExceptRec = ExceptionRecord;
-  }
-
-  if (RegistrationFrame)
-    pExceptRec->ExceptionFlags |= EXCEPTION_UNWINDING;
-  else
-    pExceptRec->ExceptionFlags |= (EXCEPTION_UNWINDING|EXCEPTION_EXIT_UNWIND);
-
-#ifndef NDEBUG
-  DPRINT("ExceptionFlags == 0x%x:\n", pExceptRec->ExceptionFlags);
-  if (pExceptRec->ExceptionFlags & EXCEPTION_UNWINDING)
-  {
-	  DPRINT("  * EXCEPTION_UNWINDING (0x%x)\n", EXCEPTION_UNWINDING);
-  }
-  if (pExceptRec->ExceptionFlags & EXCEPTION_EXIT_UNWIND)
-  {
-	  DPRINT("  * EXCEPTION_EXIT_UNWIND (0x%x)\n", EXCEPTION_EXIT_UNWIND);
-  }
-#endif /* NDEBUG */
-
-  Context.ContextFlags =
-    (CONTEXT_i386 | CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_SEGMENTS);
-
-  RtlpCaptureContext(&Context);
-
-  DPRINT("Context.Eip = 0x%.08x\n", Context.Eip);
-  DPRINT("Context.Ebp = 0x%.08x\n", Context.Ebp);
-  DPRINT("Context.Esp = 0x%.08x\n", Context.Esp);
-
-  Context.Esp += 0x10;
-  Context.Eax = EaxValue;
-
-  // Begin traversing the list of EXCEPTION_REGISTRATION
-  while ((ULONG_PTR)ERHead != (ULONG_PTR)-1 && ERHead != RegistrationFrame)
-  {
-    EXCEPTION_RECORD er2;
-
-    DPRINT("ERHead 0x%X\n", ERHead);
-
-    // If there's an exception frame, but it's lower on the stack
-    // than the head of the exception list, something's wrong!
-    if (RegistrationFrame && (RegistrationFrame <= ERHead))
+    /* Now loop every frame */
+    while (RegistrationFrame != EXCEPTION_CHAIN_END)
     {
-      DPRINT("The exception frame is bad\n");
+        /* Find out where it ends */
+        RegistrationFrameEnd = (ULONG_PTR)RegistrationFrame +
+                                sizeof(*RegistrationFrame);
 
-      // Generate an exception to bail out
-      er2.ExceptionRecord = pExceptRec;
-      er2.NumberParameters = 0;
-      er2.ExceptionCode = STATUS_INVALID_UNWIND_TARGET;
-      er2.ExceptionFlags = EXCEPTION_NONCONTINUABLE;
-
-      RtlRaiseException(&er2);
-    }
-
-#if 0
-    Stack = ERHead + sizeof(EXCEPTION_REGISTRATION);
-    if ( (Teb->Tib.StackBase <= (PVOID)ERHead )      // Make sure that ERHead
-      && (Teb->Tib.->StackLimit >= (PVOID)Stack )      // is in range, and a multiple
-      && (0 == ((ULONG_PTR)ERHead & 3)) )         // of 4 (i.e., sane)
-#else
-    if (1)
-#endif
-    {
-      PEXCEPTION_REGISTRATION NewERHead;
-      PEXCEPTION_REGISTRATION pCurrExceptReg;
-      EXCEPTION_DISPOSITION ReturnValue;
-
-      DPRINT("Executing handler at 0x%X for unwind\n", ERHead->handler);
-
-      ReturnValue = RtlpExecuteHandlerForUnwind(
-        pExceptRec,
-        ERHead,
-        &Context,
-        &NewERHead,
-        ERHead->handler);
-
-      DPRINT("Handler at 0x%X returned 0x%X\n", ERHead->handler, ReturnValue);
-
-      if (ReturnValue != ExceptionContinueSearch)
-      {
-        if (ReturnValue != ExceptionCollidedUnwind)
+        /* Make sure the registration frame is located within the stack */
+        if ((RegistrationFrameEnd > StackHigh) ||
+            ((ULONG_PTR)RegistrationFrame < StackLow) ||
+            ((ULONG_PTR)RegistrationFrame & 0x3))
         {
-          DPRINT("Bad return value\n");
+            /* Check if this happened in the DPC Stack */
+            if (RtlpHandleDpcStackException(RegistrationFrame,
+                                            RegistrationFrameEnd,
+                                            &StackLow,
+                                            &StackHigh))
+            {
+                /* Use DPC Stack Limits and restart */
+                continue;
+            }
 
-          er2.ExceptionRecord = pExceptRec;
-          er2.NumberParameters = 0;
-          er2.ExceptionCode = STATUS_INVALID_DISPOSITION;
-          er2.ExceptionFlags = EXCEPTION_NONCONTINUABLE;
+            /* Set invalid stack and return false */
+            ExceptionRecord->ExceptionFlags |= EXCEPTION_STACK_INVALID;
+            DPRINT1("Invalid exception frame\n");
+            return FALSE;
+        }
 
-          RtlRaiseException(&er2);
+        /* Check if logging is enabled */
+        DPRINT1("Checking for logging\n");
+        RtlpCheckLogException(ExceptionRecord,
+                              Context,
+                              RegistrationFrame,
+                              sizeof(*RegistrationFrame));
+
+        /* Call the handler */
+        DPRINT1("Executing handler: %p\n", RegistrationFrame->Handler);
+        ReturnValue = RtlpExecuteHandlerForException(ExceptionRecord,
+                                                     RegistrationFrame,
+                                                     Context,
+                                                     &DispatcherContext,
+                                                     RegistrationFrame->Handler);
+        DPRINT1("Handler returned: %lx\n", ReturnValue);
+
+        /* Check if this is a nested frame */
+        if (RegistrationFrame == NestedFrame)
+        {
+            /* Mask out the flag and the nested frame */
+            ExceptionRecord->ExceptionFlags &= ~EXCEPTION_NESTED_CALL;
+            NestedFrame = NULL;
+        }
+
+        /* Handle the dispositions */
+        if (ReturnValue == ExceptionContinueExecution)
+        {
+            /* Check if it was non-continuable */
+            if (ExceptionRecord->ExceptionFlags & EXCEPTION_NONCONTINUABLE)
+            {
+                /* Set up the exception record */
+                ExceptionRecord2.ExceptionRecord = ExceptionRecord;
+                ExceptionRecord2.ExceptionCode = STATUS_NONCONTINUABLE_EXCEPTION;
+                ExceptionRecord2.ExceptionFlags = EXCEPTION_NONCONTINUABLE;
+                ExceptionRecord2.NumberParameters = 0;
+
+                /* Raise the exception */
+                DPRINT1("Non-continuable\n");
+                RtlRaiseException(&ExceptionRecord2);
+            }
+            else
+            {
+                /* Return to caller */
+                return TRUE;
+            }
+        }
+        else if (ReturnValue == ExceptionNestedException)
+        {
+            /* Turn the nested flag on */
+            ExceptionRecord->ExceptionFlags |= EXCEPTION_NESTED_CALL;
+
+            /* Update the current nested frame */
+            if (NestedFrame < DispatcherContext) NestedFrame = DispatcherContext;
+        }
+        else if (ReturnValue == ExceptionContinueSearch)
+        {
         }
         else
         {
-          ERHead = NewERHead;
+            /* Set up the exception record */
+            ExceptionRecord2.ExceptionRecord = ExceptionRecord;
+            ExceptionRecord2.ExceptionCode = STATUS_INVALID_DISPOSITION;
+            ExceptionRecord2.ExceptionFlags = EXCEPTION_NONCONTINUABLE;
+            ExceptionRecord2.NumberParameters = 0;
+
+            /* Raise the exception */
+            RtlRaiseException(&ExceptionRecord2);
         }
-      }
 
-      pCurrExceptReg = ERHead;
-      ERHead = ERHead->prev;
-
-      DPRINT("New ERHead is 0x%X\n", ERHead);
-
-      DPRINT("Setting exception registration at 0x%X as current\n",
-        /*RegistrationFrame->prev*/ pCurrExceptReg->prev);
-
-      // Unlink the exception handler
-      SehpSetExceptionList(pCurrExceptReg->prev);
+        /* Go to the next frame */
+        RegistrationFrame = RegistrationFrame->Next;
     }
-    else // The stack looks goofy! Raise an exception to bail out
+
+    /* Unhandled, return false */
+    DPRINT1("FALSE:(\n");
+    return FALSE;
+}
+
+/*
+ * @implemented
+ */
+VOID
+STDCALL
+RtlUnwind(PVOID RegistrationFrame OPTIONAL,
+          PVOID ReturnAddress OPTIONAL,
+          PEXCEPTION_RECORD ExceptionRecord OPTIONAL,
+          PVOID EaxValue)
+{
+    PEXCEPTION_REGISTRATION_RECORD RegistrationFrame2, OldFrame;
+    PEXCEPTION_REGISTRATION_RECORD DispatcherContext;
+    EXCEPTION_RECORD ExceptionRecord2, ExceptionRecord3;
+    EXCEPTION_DISPOSITION ReturnValue;
+    ULONG_PTR StackLow, StackHigh;
+    ULONG_PTR RegistrationFrameEnd;
+    CONTEXT LocalContext;
+    PCONTEXT Context;
+    DPRINT1("RtlUnwind(). RegistrationFrame 0x%X\n", RegistrationFrame);
+
+    /* Get the current stack limits */
+    RtlpGetStackLimits(&StackLow, &StackHigh);
+
+    /* Check if we don't have an exception record */
+    if (!ExceptionRecord)
     {
-      DPRINT("Bad stack\n");
+        /* Overwrite the argument */
+        ExceptionRecord = &ExceptionRecord3;
 
-      er2.ExceptionRecord = pExceptRec;
-      er2.NumberParameters = 0;
-      er2.ExceptionCode = STATUS_BAD_STACK;
-      er2.ExceptionFlags = EXCEPTION_NONCONTINUABLE;
-
-      RtlRaiseException(&er2);
+        /* Setup a local one */
+        ExceptionRecord3.ExceptionFlags = 0;
+        ExceptionRecord3.ExceptionCode = STATUS_UNWIND;
+        ExceptionRecord3.ExceptionRecord = NULL;
+        ExceptionRecord3.ExceptionAddress = RtlpGetExceptionAddress();
+        ExceptionRecord3.NumberParameters = 0;
     }
-  }
+
+    /* Check if we have a frame */
+    if (RegistrationFrame)
+    {
+        /* Set it as unwinding */
+        ExceptionRecord->ExceptionFlags |= EXCEPTION_UNWINDING;
+    }
+    else
+    {
+        /* Set the Exit Unwind flag as well */
+        ExceptionRecord->ExceptionFlags |= (EXCEPTION_UNWINDING |
+                                            EXCEPTION_EXIT_UNWIND);
+    }
+
+    /* Now capture the context */
+    Context = &LocalContext;
+    LocalContext.ContextFlags = CONTEXT_INTEGER |
+                                CONTEXT_CONTROL |
+                                CONTEXT_SEGMENTS;
+    RtlpCaptureContext(Context);
+
+    /* Pop the current arguments off */
+    LocalContext.Esp += sizeof(RegistrationFrame) +
+                        sizeof(ReturnAddress) +
+                        sizeof(ExceptionRecord) +
+                        sizeof(ReturnValue);
+
+    /* Set the new value for EAX */
+    LocalContext.Eax = (ULONG)EaxValue;
+
+    /* Get the current frame */
+    RegistrationFrame2 = RtlpGetExceptionList();
+
+    /* Now loop every frame */
+    while (RegistrationFrame2 != EXCEPTION_CHAIN_END)
+    {
+        DPRINT1("RegistrationFrame is 0x%X\n", RegistrationFrame2);
+
+        /* If this is the target */
+        if (RegistrationFrame2 == RegistrationFrame)
+        {
+            /* Continue execution */
+            ZwContinue(Context, FALSE);
+        }
+
+        /* Check if the frame is too low */
+        if ((RegistrationFrame) && ((ULONG_PTR)RegistrationFrame <
+                                    (ULONG_PTR)RegistrationFrame2))
+        {
+            /* Create an invalid unwind exception */
+            ExceptionRecord2.ExceptionCode = STATUS_INVALID_UNWIND_TARGET;
+            ExceptionRecord2.ExceptionFlags = EXCEPTION_NONCONTINUABLE;
+            ExceptionRecord2.ExceptionRecord = ExceptionRecord;
+            ExceptionRecord2.NumberParameters = 0;
+
+            /* Raise the exception */
+            DPRINT1("Frame is invalid\n");
+            RtlRaiseException(&ExceptionRecord2);
+        }
+
+        /* Find out where it ends */
+        RegistrationFrameEnd = (ULONG_PTR)RegistrationFrame2 +
+                                sizeof(*RegistrationFrame2);
+
+        /* Make sure the registration frame is located within the stack */
+        if ((RegistrationFrameEnd > StackHigh) ||
+            ((ULONG_PTR)RegistrationFrame < StackLow) ||
+            ((ULONG_PTR)RegistrationFrame & 0x3))
+        {
+            /* Check if this happened in the DPC Stack */
+            if (RtlpHandleDpcStackException(RegistrationFrame,
+                                            RegistrationFrameEnd,
+                                            &StackLow,
+                                            &StackHigh))
+            {
+                /* Use DPC Stack Limits and restart */
+                continue;
+            }
+
+            /* Create an invalid stack exception */
+            ExceptionRecord2.ExceptionCode = STATUS_BAD_STACK;
+            ExceptionRecord2.ExceptionFlags = EXCEPTION_NONCONTINUABLE;
+            ExceptionRecord2.ExceptionRecord = ExceptionRecord;
+            ExceptionRecord2.NumberParameters = 0;
+
+            /* Raise the exception */
+            DPRINT1("Frame has bad stack\n");
+            RtlRaiseException(&ExceptionRecord2);
+        }
+        else
+        {
+            /* Call the handler */
+            DPRINT1("Executing unwind handler: %p\n", RegistrationFrame2->Handler);
+            ReturnValue = RtlpExecuteHandlerForUnwind(ExceptionRecord,
+                                                      RegistrationFrame2,
+                                                      Context,
+                                                      &DispatcherContext,
+                                                      RegistrationFrame2->Handler);
+            DPRINT1("Handler returned: %lx\n", ReturnValue);
+
+            /* Handle the dispositions */
+            if (ReturnValue == ExceptionContinueSearch)
+            {
+                /* Get out of here */
+                break;
+            }
+            else if (ReturnValue == ExceptionCollidedUnwind)
+            {
+                /* Get the previous frame */
+                RegistrationFrame2 = DispatcherContext;
+            }
+            else
+            {
+                /* Set up the exception record */
+                ExceptionRecord2.ExceptionRecord = ExceptionRecord;
+                ExceptionRecord2.ExceptionCode = STATUS_INVALID_DISPOSITION;
+                ExceptionRecord2.ExceptionFlags = EXCEPTION_NONCONTINUABLE;
+                ExceptionRecord2.NumberParameters = 0;
+
+                /* Raise the exception */
+                RtlRaiseException(&ExceptionRecord2);
+            }
+
+            /* Go to the next frame */
+            OldFrame = RegistrationFrame2;
+            RegistrationFrame2 = RegistrationFrame2->Next;
+
+            /* Remove this handler */
+            RtlpSetExceptionList(OldFrame);
+        }
+    }
+
+    /* Check if we reached the end */
+    if (RegistrationFrame == EXCEPTION_CHAIN_END)
+    {
+        /* Unwind completed, so we don't exit */
+        ZwContinue(Context, FALSE);
+    }
+    else
+    {
+        /* This is an exit_unwind or the frame wasn't present in the list */
+        ZwRaiseException(ExceptionRecord, Context, FALSE);
+    }
 }
 
 /* EOF */

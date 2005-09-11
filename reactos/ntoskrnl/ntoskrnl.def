@@ -127,9 +127,9 @@ ExQueryPoolBlockSize@8
 ExQueueWorkItem@8
 ExRaiseAccessViolation@0
 ExRaiseDatatypeMisalignment@0
-ExRaiseException@4
+ExRaiseException@4=RtlRaiseException@4
 ExRaiseHardError@24
-ExRaiseStatus@4
+ExRaiseStatus@4=RtlRaiseStatus@4
 ExRegisterCallback@12
 ExReinitializeResourceLite@4
 @ExReInitializeRundownProtection@4

@@ -200,11 +200,9 @@ NtCreateSymbolicLinkObject(OUT PHANDLE LinkHandle,
     }
   }
 
-  Status = RtlCaptureUnicodeString(&CapturedLinkTarget,
-                                   PreviousMode,
-                                   PagedPool,
-                                   FALSE,
-                                   LinkTarget);
+  Status = ProbeAndCaptureUnicodeString(&CapturedLinkTarget,
+                                        PreviousMode,
+                                        LinkTarget);
   if(!NT_SUCCESS(Status))
   {
     DPRINT1("NtCreateSymbolicLinkObject: Capturing the target link failed!\n");
@@ -263,9 +261,8 @@ NtCreateSymbolicLinkObject(OUT PHANDLE LinkHandle,
     ObDereferenceObject(SymbolicLink);
   }
 
-  RtlReleaseCapturedUnicodeString(&CapturedLinkTarget,
-                                  PreviousMode,
-                                  FALSE);
+  ReleaseCapturedUnicodeString(&CapturedLinkTarget,
+                               PreviousMode);
 
   return Status;
 }

@@ -239,11 +239,11 @@ finish:
 
 /* FUNCTIONS *****************************************************************/
 
-VOID STDCALL
-__true_LdrInitializeThunk (ULONG Unknown1,
-                    ULONG Unknown2,
-                    ULONG Unknown3,
-                    ULONG Unknown4)
+VOID
+STDCALL
+LdrpInit(PCONTEXT Context,
+         PVOID SystemArgument1,
+         PVOID SystemArgument2)
 {
    PIMAGE_NT_HEADERS NTHeaders;
    PEPFUNC EntryPoint;
@@ -256,7 +256,7 @@ __true_LdrInitializeThunk (ULONG Unknown1,
    SYSTEM_BASIC_INFORMATION SystemInformation;
    NTSTATUS Status;
 
-   DPRINT("LdrInitializeThunk()\n");
+   DPRINT("LdrpInit()\n");
    if (NtCurrentPeb()->Ldr == NULL || NtCurrentPeb()->Ldr->Initialized == FALSE)
      {
        Peb = (PPEB)(PEB_BASE);

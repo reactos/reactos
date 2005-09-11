@@ -15,6 +15,16 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+/*
+ * FIXMES:
+ *  - Clean up file.
+ *  - Add more exception frame support for non-i386 compatibility.
+ *  - Add PSEH handler when an exception occurs in an exception (KiCopyExceptionRecord).
+ *  - Implement official stack trace functions (exported) and remove stuff here.
+ *  - Forward exceptions to user-mode debugger.
+ *  - Wrap Ki NTDLL callbacks in SEH.
+ */
+
 /* GLOBALS *****************************************************************/
 
 #define FLAG_IF (1<<9)
@@ -172,7 +182,7 @@ KiKernelTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
   /* FIXME: Which exceptions are noncontinuable? */
   Er.ExceptionFlags = 0;
 
-  KiDispatchException(&Er, 0, Tf, KernelMode, TRUE);
+  KiDispatchException(&Er, NULL, Tf, KernelMode, TRUE);
 
   return(0);
 }
@@ -559,6 +569,7 @@ KiTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr)
 BOOLEAN
 STDCALL
 KeContextToTrapFrame(PCONTEXT Context,
+                     PKEXCEPTION_FRAME ExceptionFrame,
                      PKTRAP_FRAME TrapFrame)
 {
     /* Start with the basic Registers */
@@ -907,6 +918,158 @@ KeInitExceptions(VOID)
    set_system_call_gate(0x2e,(int)KiSystemService);
 }
 
+VOID
+NTAPI
+KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
+                    PKEXCEPTION_FRAME ExceptionFrame,
+                    PKTRAP_FRAME TrapFrame,
+                    KPROCESSOR_MODE PreviousMode,
+                    BOOLEAN FirstChance)
+{
+    CONTEXT Context;
+    KD_CONTINUE_TYPE Action;
+    ULONG_PTR Stack, NewStack;
+    ULONG Size;
+    DPRINT1("KiDispatchException() called\n");
+
+    /* Increase number of Exception Dispatches */
+    KeGetCurrentPrcb()->KeExceptionDispatchCount++;
+
+    /* Set the context flags */
+    Context.ContextFlags = CONTEXT_FULL | CONTEXT_DEBUG_REGISTERS;
+
+    /* Check if User Mode */
+    if (PreviousMode == UserMode)
+    {
+        /* Add the FPU Flag */
+        Context.ContextFlags |= CONTEXT_FLOATING_POINT;
+    }
+
+    /* Get a Context */
+    KeTrapFrameToContext(TrapFrame, &Context);
+
+    /* Handle kernel-mode first, it's simpler */
+    if (PreviousMode == KernelMode)
+    {
+        /* Check if this is a first-chance exception */
+        if (FirstChance == TRUE)
+        {
+            /* Break into the debugger for the first time */
+            Action = KdpEnterDebuggerException(ExceptionRecord,
+                                               PreviousMode,
+                                               &Context,
+                                               TrapFrame,
+                                               TRUE,
+                                               TRUE);
+
+            /* If the debugger said continue, then continue */
+            if (Action == kdContinue) goto Handled;
+
+            /* If the Debugger couldn't handle it, dispatch the exception */
+            if (RtlDispatchException(ExceptionRecord, &Context))
+            {
+                /* It was handled by an exception handler, continue */
+                goto Handled;
+            }
+        }
+
+        /* This is a second-chance exception, only for the debugger */
+        Action = KdpEnterDebuggerException(ExceptionRecord,
+                                           PreviousMode,
+                                           &Context,
+                                           TrapFrame,
+                                           FALSE,
+                                           FALSE);
+
+        /* If the debugger said continue, then continue */
+        if (Action == kdContinue) goto Handled;
+
+        /* Third strike; you're out */
+        KEBUGCHECKWITHTF(KMODE_EXCEPTION_NOT_HANDLED,
+                         ExceptionRecord->ExceptionCode,
+                         (ULONG_PTR)ExceptionRecord->ExceptionAddress,
+                         ExceptionRecord->ExceptionInformation[0],
+                         ExceptionRecord->ExceptionInformation[1],
+                         TrapFrame);
+    }
+    else
+    {
+        /* User mode exception, was it first-chance? */
+        if (FirstChance)
+        {
+            /* Enter Debugger if available */
+            Action = KdpEnterDebuggerException(ExceptionRecord,
+                                               PreviousMode,
+                                               &Context,
+                                               TrapFrame,
+                                               TRUE,
+                                               FALSE);
+
+            /* Exit if we're continuing */
+            if (Action == kdContinue) goto Handled;
+
+            /* FIXME: Forward exception to user mode debugger */
+
+            /* Set up the user-stack */
+            _SEH_TRY
+            {
+                /* Align context size and get stack pointer */
+                Size = (sizeof(CONTEXT) + 3) & ~3;
+                Stack = (Context.Esp & ~3) - Size;
+
+                /* Probe stack and copy Context */
+                ProbeForWrite((PVOID)Stack, Size, sizeof(ULONG));
+                RtlMoveMemory((PVOID)Stack, &Context, sizeof(CONTEXT));
+
+                /* Align exception record size and get stack pointer */
+                Size = (sizeof(EXCEPTION_RECORD) - 
+                        (EXCEPTION_MAXIMUM_PARAMETERS - ExceptionRecord->NumberParameters) *
+                        sizeof(ULONG) + 3) & ~3;
+                NewStack = Stack - Size;
+
+                /* Probe stack and copy exception record. Don't forget to add the two params */
+                ProbeForWrite((PVOID)(NewStack - 2 * sizeof(ULONG_PTR)),
+                              Size +  2 * sizeof(ULONG_PTR),
+                              sizeof(ULONG));
+                RtlMoveMemory((PVOID)NewStack, ExceptionRecord, Size);
+
+                /* Now write the two params for the user-mode dispatcher */
+                *(PULONG_PTR)(NewStack - 1 * sizeof(ULONG_PTR)) = Stack;
+                *(PULONG_PTR)(NewStack - 2 * sizeof(ULONG_PTR)) = NewStack;
+
+                /* Set new Stack Pointer */
+                TrapFrame->Esp = NewStack - 2 * sizeof(ULONG_PTR);
+
+                /* Set EIP to the User-mode Dispathcer */
+                TrapFrame->Eip = (ULONG)KeUserExceptionDispatcher;
+                return;
+            }
+            _SEH_HANDLE
+            {
+                /* Do second-chance */
+            }
+            _SEH_END;
+        }
+
+        /* FIXME: Forward the exception to the debugger for 2nd chance */
+
+        /* 3rd strike, kill the thread */
+        DPRINT1("Unhandled UserMode exception, terminating thread\n");
+        ZwTerminateThread(NtCurrentThread(), ExceptionRecord->ExceptionCode);
+        KEBUGCHECKWITHTF(KMODE_EXCEPTION_NOT_HANDLED,
+                         ExceptionRecord->ExceptionCode,
+                         (ULONG_PTR)ExceptionRecord->ExceptionAddress,
+                         ExceptionRecord->ExceptionInformation[0],
+                         ExceptionRecord->ExceptionInformation[1],
+                         TrapFrame);
+    }
+
+Handled:
+    /* Convert the context back into Trap/Exception Frames */
+    KeContextToTrapFrame(&Context, NULL, TrapFrame);
+    return;
+}
+
 /*
  * @implemented
  */
@@ -927,32 +1090,3 @@ KeRaiseUserException(IN NTSTATUS ExceptionCode)
    return((NTSTATUS)OldEip);
 }
 
-/*
- * @implemented
- */
-NTSTATUS
-STDCALL
-NtRaiseException (
-    IN PEXCEPTION_RECORD ExceptionRecord,
-    IN PCONTEXT Context,
-    IN BOOLEAN SearchFrames)
-{
-    PKTHREAD Thread = KeGetCurrentThread();
-    PKTRAP_FRAME TrapFrame = Thread->TrapFrame;
-    PKTRAP_FRAME PrevTrapFrame = (PKTRAP_FRAME)TrapFrame->Edx;
-
-    KeGetCurrentKPCR()->Tib.ExceptionList = TrapFrame->ExceptionList;
-
-    KiDispatchException(ExceptionRecord,
-                        Context,
-                        TrapFrame,
-                        KeGetPreviousMode(),
-                        SearchFrames);
-
-    /* Restore the user context */
-    Thread->TrapFrame = PrevTrapFrame;
-    __asm__("mov %%ebx, %%esp;\n" "jmp _KiServiceExit": : "b" (TrapFrame));
-
-    /* We never get here */
-    return(STATUS_SUCCESS);
-}

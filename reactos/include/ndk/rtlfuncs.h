@@ -38,6 +38,11 @@ RtlAssert(
 );
 
 NTSYSAPI
+VOID
+NTAPI
+RtlCaptureContext(OUT PCONTEXT ContextRecord);
+
+NTSYSAPI
 PVOID
 NTAPI
 RtlEncodePointer(IN PVOID Pointer);
@@ -46,6 +51,14 @@ NTSYSAPI
 PVOID
 NTAPI
 RtlDecodePointer(IN PVOID Pointer);
+
+NTSYSAPI
+BOOLEAN
+NTAPI
+RtlDispatchException(
+    IN PEXCEPTION_RECORD ExceptionRecord,
+    IN PCONTEXT Context
+);
 
 NTSYSAPI
 ULONG
@@ -71,10 +84,10 @@ NTSYSAPI
 VOID
 NTAPI
 RtlUnwind(
-    PEXCEPTION_REGISTRATION RegistrationFrame,
-    PVOID ReturnAddress,
-    PEXCEPTION_RECORD ExceptionRecord,
-    ULONG EaxValue
+    IN PVOID TargetFrame OPTIONAL,
+    IN PVOID TargetIp OPTIONAL,
+    IN PEXCEPTION_RECORD ExceptionRecord OPTIONAL,
+    IN PVOID ReturnValue
 );
 
 /*

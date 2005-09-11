@@ -793,57 +793,55 @@ KiFreeApcRoutine(PKAPC Apc,
  *--*/
 VOID
 STDCALL
-KiInitializeUserApc(IN PVOID Reserved,
+KiInitializeUserApc(IN PKEXCEPTION_FRAME ExceptionFrame,
                     IN PKTRAP_FRAME TrapFrame,
                     IN PKNORMAL_ROUTINE NormalRoutine,
                     IN PVOID NormalContext,
                     IN PVOID SystemArgument1,
                     IN PVOID SystemArgument2)
 {
-    PCONTEXT Context;
-    PULONG Esp;
+    CONTEXT Context;
+    ULONG_PTR Stack;
+    ULONG Size;
 
-    DPRINT("KiInitializeUserApc(TrapFrame %x/%x)\n", TrapFrame, KeGetCurrentThread()->TrapFrame);
+    DPRINT("KiInitializeUserApc(TrapFrame %x/%x)\n", TrapFrame,
+            KeGetCurrentThread()->TrapFrame);
 
-    /*
-     * Save the thread's current context (in other words the registers
-     * that will be restored when it returns to user mode) so the
-     * APC dispatcher can restore them later
-     */
-    Context = (PCONTEXT)(((PUCHAR)TrapFrame->Esp) - sizeof(CONTEXT));
-    RtlZeroMemory(Context, sizeof(CONTEXT));
-    Context->ContextFlags = CONTEXT_FULL;
-    Context->SegGs = TrapFrame->Gs;
-    Context->SegFs = TrapFrame->Fs;
-    Context->SegEs = TrapFrame->Es;
-    Context->SegDs = TrapFrame->Ds;
-    Context->Edi = TrapFrame->Edi;
-    Context->Esi = TrapFrame->Esi;
-    Context->Ebx = TrapFrame->Ebx;
-    Context->Edx = TrapFrame->Edx;
-    Context->Ecx = TrapFrame->Ecx;
-    Context->Eax = TrapFrame->Eax;
-    Context->Ebp = TrapFrame->Ebp;
-    Context->Eip = TrapFrame->Eip;
-    Context->SegCs = TrapFrame->Cs;
-    Context->EFlags = TrapFrame->Eflags;
-    Context->Esp = TrapFrame->Esp;
-    Context->SegSs = TrapFrame->Ss;
+    /* Don't deliver APCs in V86 mode */
+    if (TrapFrame->Eflags & 2) return;
 
-    /*
-     * Setup the trap frame so the thread will start executing at the
-     * APC Dispatcher when it returns to user-mode
-     */
-    Esp = (PULONG)(((PUCHAR)TrapFrame->Esp) - (sizeof(CONTEXT) + (6 * sizeof(ULONG))));
-    Esp[0] = 0xdeadbeef;
-    Esp[1] = (ULONG)NormalRoutine;
-    Esp[2] = (ULONG)NormalContext;
-    Esp[3] = (ULONG)SystemArgument1;
-    Esp[4] = (ULONG)SystemArgument2;
-    Esp[5] = (ULONG)Context;
-    TrapFrame->Eip = (ULONG)KeUserApcDispatcher;
-    DPRINT("TrapFrame->Eip: %x\n", TrapFrame->Eip);
-    TrapFrame->Esp = (ULONG)Esp;
+    /* Save the full context */
+    Context.ContextFlags = CONTEXT_FULL | CONTEXT_DEBUG_REGISTERS;
+    KeTrapFrameToContext(TrapFrame, &Context);
+
+    /* Protect with SEH */
+    _SEH_TRY
+    {
+        /* Get the aligned size */
+        Size = ((sizeof(CONTEXT) + 3) & ~3) + 4 * sizeof(ULONG_PTR);
+        Stack = (Context.Esp & ~3) - Size;
+
+        /* Probe and copy */
+        ProbeForWrite((PVOID)Stack, Size, 4);
+        RtlMoveMemory((PVOID)(Stack + 4 * sizeof(ULONG_PTR)),
+                      &Context,
+                      sizeof(CONTEXT));
+
+        /* Run at APC dispatcher */
+        TrapFrame->Eip = (ULONG)KeUserApcDispatcher;
+        TrapFrame->Esp = Stack;
+
+        /* Setup the stack */
+        *(PULONG_PTR)(Stack + 0 * sizeof(ULONG_PTR)) = (ULONG_PTR)NormalRoutine;
+        *(PULONG_PTR)(Stack + 1 * sizeof(ULONG_PTR)) = (ULONG_PTR)NormalContext;
+        *(PULONG_PTR)(Stack + 2 * sizeof(ULONG_PTR)) = (ULONG_PTR)SystemArgument1;
+        *(PULONG_PTR)(Stack + 3 * sizeof(ULONG_PTR)) = (ULONG_PTR)SystemArgument2;
+    }
+    _SEH_HANDLE
+    {
+        /* FIXME: Get the record and raise an exception */
+    }
+    _SEH_END;
 }
 
 /*++

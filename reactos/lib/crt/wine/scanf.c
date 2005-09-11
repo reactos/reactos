@@ -41,8 +41,11 @@
 #include <ctype.h>
 #include <internal/file.h>
 
+#include <windows.h>
 #define NTOS_MODE_USER
-#include <ndk/ntndk.h>
+#include <ndk/umtypes.h>
+#include <ndk/extypes.h>
+#include <ndk/rtlfuncs.h>
 
 #define NDEBUG
 #include <internal/debug.h>

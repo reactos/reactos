@@ -1321,7 +1321,7 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
 #error Unknown compiler for inline assembler
 #endif
 
-                KeContextToTrapFrame(Context, TrapFrame);
+                KeContextToTrapFrame(Context, NULL, TrapFrame);
                 return ((SigVal == 5) ? (kdContinue) : (kdHandleException));
                 break;
               }
@@ -1434,7 +1434,7 @@ GspBreakIn(PKINTERRUPT Interrupt,
 
   KdpGdbEnterDebuggerException (NULL, &Context, TrapFrame);
 
-  KeContextToTrapFrame (&Context, TrapFrame);
+  KeContextToTrapFrame (&Context, NULL, TrapFrame);
 
   KeLowerIrql (OldIrql);
 

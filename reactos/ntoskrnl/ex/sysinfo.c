@@ -155,11 +155,9 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
   /*
    * Copy the name to kernel space if necessary and convert it to ANSI.
    */
-  Status = RtlCaptureUnicodeString(&WName,
-                                   PreviousMode,
-                                   NonPagedPool,
-                                   FALSE,
-                                   VariableName);
+  Status = ProbeAndCaptureUnicodeString(&WName,
+                                        PreviousMode,
+                                        VariableName);
   if(NT_SUCCESS(Status))
   {
     /*
@@ -168,9 +166,8 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
     if(!SeSinglePrivilegeCheck(SeSystemEnvironmentPrivilege,
                                PreviousMode))
     {
-      RtlReleaseCapturedUnicodeString(&WName,
-                                     PreviousMode,
-                                     FALSE);
+      ReleaseCapturedUnicodeString(&WName,
+                                   PreviousMode);
       DPRINT1("NtQuerySystemEnvironmentValue: Caller requires the SeSystemEnvironmentPrivilege privilege!\n");
       return STATUS_PRIVILEGE_NOT_HELD;
     }
@@ -179,9 +176,8 @@ NtQuerySystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
      * convert the value name to ansi
      */
     Status = RtlUnicodeStringToAnsiString(&AName, &WName, TRUE);
-    RtlReleaseCapturedUnicodeString(&WName,
-                                   PreviousMode,
-                                   FALSE);
+    ReleaseCapturedUnicodeString(&WName,
+                                 PreviousMode);
     if(!NT_SUCCESS(Status))
     {
       return Status;
@@ -273,18 +269,14 @@ NtSetSystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
   /*
    * Copy the strings to kernel space if necessary
    */
-  Status = RtlCaptureUnicodeString(&CapturedName,
-                                   PreviousMode,
-                                   NonPagedPool,
-                                   FALSE,
-                                   VariableName);
+  Status = ProbeAndCaptureUnicodeString(&CapturedName,
+                                        PreviousMode,
+                                        VariableName);
   if(NT_SUCCESS(Status))
   {
-    Status = RtlCaptureUnicodeString(&CapturedValue,
-                                     PreviousMode,
-                                     NonPagedPool,
-                                     FALSE,
-                                     Value);
+    Status = ProbeAndCaptureUnicodeString(&CapturedValue,
+                                          PreviousMode,
+                                          Value);
     if(NT_SUCCESS(Status))
     {
       /*
@@ -319,14 +311,12 @@ NtSetSystemEnvironmentValue (IN	PUNICODE_STRING	VariableName,
         Status = STATUS_PRIVILEGE_NOT_HELD;
       }
 
-      RtlReleaseCapturedUnicodeString(&CapturedValue,
-                                     PreviousMode,
-                                     FALSE);
+      ReleaseCapturedUnicodeString(&CapturedValue,
+                                   PreviousMode);
     }
 
-    RtlReleaseCapturedUnicodeString(&CapturedName,
-                                   PreviousMode,
-                                   FALSE);
+    ReleaseCapturedUnicodeString(&CapturedName,
+                                 PreviousMode);
   }
 
   return Status;

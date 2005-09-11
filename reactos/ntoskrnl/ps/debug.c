@@ -57,7 +57,7 @@ PspGetOrSetContextKernelRoutine(PKAPC Apc,
     } else {
 
         /* Set the Context */
-        KeContextToTrapFrame(Context, KeGetCurrentThread()->TrapFrame);
+        KeContextToTrapFrame(Context, NULL, KeGetCurrentThread()->TrapFrame);
     }
 
     /* Notify the Native API that we are done */
@@ -221,7 +221,7 @@ NtSetContextThread(IN HANDLE ThreadHandle,
              * I don't know if trying to get your own context makes much
              * sense but we can handle it more efficently.
              */
-            KeContextToTrapFrame(&GetSetContext.Context, Thread->Tcb.TrapFrame);
+            KeContextToTrapFrame(&GetSetContext.Context, NULL, Thread->Tcb.TrapFrame);
 
         } else {
 

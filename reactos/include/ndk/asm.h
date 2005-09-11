@@ -144,6 +144,10 @@
 #define CONTEXT_FLAGS                   0x0
 #define CONTEXT_DR6                     0x14
 #define CONTEXT_FLOAT_SAVE              0x1C
+#define CONTEXT_SEGGS                   0x8C
+#define CONTEXT_SEGFS                   0x90
+#define CONTEXT_SEGES                   0x94
+#define CONTEXT_SEGDS                   0x98
 #define CONTEXT_EDI                     0x9C
 #define CONTEXT_ESI                     0xA0
 #define CONTEXT_EBX                     0xA4
@@ -152,20 +156,36 @@
 #define CONTEXT_EAX                     0xB0
 #define CONTEXT_EBP                     0xB4
 #define CONTEXT_EIP                     0xB8
+#define CONTEXT_SEGCS                   0xBC
+#define CONTEXT_EFLAGS                  0xC0
 #define CONTEXT_ESP                     0xC4
+#define CONTEXT_SEGSS                   0xC8
 #define CONTEXT_FLOAT_SAVE_CONTROL_WORD CONTEXT_FLOAT_SAVE + FN_CONTROL_WORD
 #define CONTEXT_FLOAT_SAVE_STATUS_WORD  CONTEXT_FLOAT_SAVE + FN_STATUS_WORD
 #define CONTEXT_FLOAT_SAVE_TAG_WORD     CONTEXT_FLOAT_SAVE + FN_TAG_WORD
+
+/* EXCEPTION_RECORD Constants */
+#define EXCEPTION_RECORD_EXCEPTION_CODE     0x0
+#define EXCEPTION_RECORD_EXCEPTION_FLAGS    0x4
+#define EXCEPTION_RECORD_EXCEPTION_RECORD   0x8
+#define EXCEPTION_RECORD_EXCEPTION_ADDRESS  0xC
+#define EXCEPTION_RECORD_NUMBER_PARAMETERS  0x10
+#define SIZEOF_EXCEPTION_RECORD             0x14
 
 /* TEB CONSTANTS */
 #define TEB_EXCEPTION_LIST              0x0
 #define TEB_STACK_BASE                  0x4
 #define TEB_STACK_LIMIT                 0x8
 #define TEB_FIBER_DATA                  0x10
+#define TEB_PEB                         0x30
+#define TEB_EXCEPTION_CODE              0x1A4
 #define TEB_ACTIVATION_CONTEXT_STACK_POINTER 0x1A8
 #define TEB_DEALLOCATION_STACK          0xE0C
 #define TEB_GUARANTEED_STACK_BYTES      0xF78
 #define TEB_FLS_DATA                    0xFB4
+
+/* PEB CONSTANTS */
+#define PEB_KERNEL_CALLBACK_TABLE       0x2C
 
 /* FIBER CONSTANTS */
 #define FIBER_PARAMETER                 0x0

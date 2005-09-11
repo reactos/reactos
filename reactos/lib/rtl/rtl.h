@@ -23,27 +23,7 @@
 /* Helper Header */
 #include <reactos/helper.h>
 
-/* FIXME: Move this somewhere else, maybe */
-#ifdef DBG
-extern VOID FASTCALL CHECK_PAGED_CODE_RTL(char *file, int line);
-#define PAGED_CODE_RTL() CHECK_PAGED_CODE_RTL(__FILE__, __LINE__)
-#else
-#define PAGED_CODE_RTL()
-#endif
-
-PVOID STDCALL RtlpAllocateMemory(UINT Bytes, ULONG Tag);
-VOID STDCALL RtlpFreeMemory(PVOID Mem, ULONG Tag);
-KPROCESSOR_MODE STDCALL RtlpGetMode();
-NTSTATUS STDCALL RtlDeleteHeapLock(PRTL_CRITICAL_SECTION CriticalSection);
-NTSTATUS STDCALL RtlEnterHeapLock(PRTL_CRITICAL_SECTION CriticalSection);
-NTSTATUS STDCALL RtlInitializeHeapLock(PRTL_CRITICAL_SECTION CriticalSection);
-NTSTATUS STDCALL RtlLeaveHeapLock(PRTL_CRITICAL_SECTION CriticalSection);
-
-#define RtlpAllocateStringMemory RtlpAllocateMemory
-#define RtlpFreeStringMemory RtlpFreeMemory
-
-#define TAG_USTR        TAG('U', 'S', 'T', 'R')
-#define TAG_ASTR        TAG('A', 'S', 'T', 'R')
-#define TAG_OSTR        TAG('O', 'S', 'T', 'R')
+/* Internal RTL header */
+#include "rtlp.h"
 
 /* EOF */

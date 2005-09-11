@@ -33,7 +33,7 @@ DbgUiRemoteBreakin@0
 DbgUiWaitStateChange@8
 DbgUserBreakPoint@0
 KiRaiseUserExceptionDispatcher@0
-KiUserApcDispatcher@20
+KiUserApcDispatcher@16
 KiUserCallbackDispatcher@12
 KiUserExceptionDispatcher@8
 LdrAccessResource@16

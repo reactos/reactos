@@ -352,5 +352,26 @@ _KiTrapUnknown:
 	movl	$255, %esi
 	jmp	_KiTrapProlog
 
+.intel_syntax noprefix
+.globl _KiCoprocessorError@0
+_KiCoprocessorError@0:
+
+    /* Get the NPX Thread's Initial stack */
+    mov eax, [fs:KPCR_NPX_THREAD]
+    mov eax, [eax+KTHREAD_INITIAL_STACK]
+
+    /* Make space for the FPU Save area */
+    sub eax, SIZEOF_FX_SAVE_AREA
+
+    /* Set the CR0 State */
+    mov dword ptr [eax+FN_CR0_NPX_STATE], 8
+
+    /* Update it */
+    mov eax, cr0
+    or eax, 8
+    mov cr0, eax
+
+    /* Return to caller */
+    ret
 
 /* EOF */

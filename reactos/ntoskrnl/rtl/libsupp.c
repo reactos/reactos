@@ -1,11 +1,10 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/rtl/libsupp.c
- * PURPOSE:         Rtl library support routines
- *
- * PROGRAMMERS:     No programmer listed.
+ * PURPOSE:         RTL Support Routines
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ *                  Gunnar Dalsnes
  */
 
 /* INCLUDES ******************************************************************/
@@ -14,8 +13,17 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+extern ULONG NtGlobalFlag;
+
 /* FUNCTIONS *****************************************************************/
 
+BOOLEAN
+NTAPI
+RtlpCheckForActiveDebugger(VOID)
+{
+    /* This check is meaningless in kernel-mode */
+    return TRUE;
+}
 
 KPROCESSOR_MODE
 STDCALL
@@ -123,6 +131,53 @@ CHECK_PAGED_CODE_RTL(char *file, int line)
   }
 }
 #endif
+
+VOID
+NTAPI
+RtlpCheckLogException(IN PEXCEPTION_RECORD ExceptionRecord,
+                      IN PCONTEXT ContextRecord,
+                      IN PVOID ContextData,
+                      IN ULONG Size)
+{
+    /* Check the global flag */
+    if (NtGlobalFlag & FLG_ENABLE_EXCEPTION_LOGGING)
+    {
+        /* FIXME: Log this exception */
+    }
+}
+
+BOOLEAN
+NTAPI
+RtlpHandleDpcStackException(IN PEXCEPTION_REGISTRATION_RECORD RegistrationFrame,
+                            IN ULONG_PTR RegistrationFrameEnd,
+                            IN OUT PULONG_PTR StackLow,
+                            IN OUT PULONG_PTR StackHigh)
+{
+    PKPRCB Prcb;
+    ULONG_PTR DpcStack;
+
+    /* Check if we are at DISPATCH or higher */
+    if (KeGetCurrentIrql() >= DISPATCH_LEVEL)
+    {
+        /* Get the PRCB and DPC Stack */
+        Prcb = KeGetCurrentPrcb();
+        DpcStack = (ULONG_PTR)Prcb->DpcStack;
+
+        /* Check if we are in a DPC and the stack matches */
+        if ((Prcb->DpcRoutineActive) &&
+            (RegistrationFrameEnd <= DpcStack) &&
+            ((ULONG_PTR)RegistrationFrame >= DpcStack - 4096))
+        {
+            /* Update the limits to the DPC Stack's */
+            *StackHigh = DpcStack;
+            *StackLow = DpcStack - 4096;
+            return TRUE;
+        }
+    }
+
+    /* Not in DPC stack */
+    return FALSE;
+}
 
 /* RTL Atom Tables ************************************************************/
 

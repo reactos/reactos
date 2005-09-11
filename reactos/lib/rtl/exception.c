@@ -1,8 +1,9 @@
 /* COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
- * PURPOSE:         User-mode exception support
+ * PROJECT:         ReactOS Runtime Library
+ * PURPOSE:         User-Mode Exception Support
  * FILE:            lib/rtl/exception.c
- * PROGRAMERS:      David Welch <welch@cwcom.net>
+ * PROGRAMERS:      Alex Ionescu (alex@relsoft.net)
+ *                  David Welch <welch@cwcom.net>
  *                  Skywing <skywing@valhallalegends.com>
  *                  KJK::Hyperion <noog@libero.it>
  */
@@ -16,72 +17,110 @@
 
 /* FUNCTIONS ***************************************************************/
 
-/* implemented in except.s */
-VOID
-RtlpCaptureContext(PCONTEXT Context);
-
-/*
-* @unimplemented
-*/
-NTSTATUS
-STDCALL
-RtlDispatchException(
-	PEXCEPTION_RECORD pExcptRec,
-	CONTEXT * pContext
-	)
-{
-	UNIMPLEMENTED;
-	return STATUS_NOT_IMPLEMENTED;
-}
-
-/*
-* @unimplemented
-*/
-VOID
-STDCALL
-RtlGetCallersAddress(
-	OUT PVOID *CallersAddress,
-	OUT PVOID *CallersCaller
-	)
-{
-	UNIMPLEMENTED;
-}
-
 /*
  * @implemented
  */
-VOID STDCALL
+VOID
+STDCALL
 RtlRaiseException(PEXCEPTION_RECORD ExceptionRecord)
 {
-  CONTEXT Context;
-  NTSTATUS Status;
+    CONTEXT Context;
+    NTSTATUS Status;
+    DPRINT1("RtlRaiseException(Status %p)\n", ExceptionRecord);
 
-  RtlpCaptureContext(&Context);
+    /* Capture the context */
+    RtlCaptureContext(&Context);
 
-  ExceptionRecord->ExceptionAddress = (PVOID)(*(((PULONG)Context.Ebp)+1));
-  Context.ContextFlags = CONTEXT_FULL;
+    /* Save the exception address */
+    ExceptionRecord->ExceptionAddress = RtlpGetExceptionAddress();
+    DPRINT1("ExceptionAddress %p\n", ExceptionRecord->ExceptionAddress);
 
-  Status = NtRaiseException(ExceptionRecord, &Context, TRUE);
-  RtlRaiseException(ExceptionRecord);
-  RtlRaiseStatus(Status);
+    /* Write the context flag */
+    Context.ContextFlags = CONTEXT_FULL;
+
+    /* Check if we're being debugged (user-mode only) */
+    if (!RtlpCheckForActiveDebugger())
+    {
+        /* Raise an exception immediately */
+        ZwRaiseException(ExceptionRecord, &Context, TRUE);
+    }
+    else
+    {
+        /* Dispatch the exception and check if we should continue */
+        if (RtlDispatchException(ExceptionRecord, &Context))
+        {
+            /* Raise the exception */
+            Status = ZwRaiseException(ExceptionRecord, &Context, FALSE);
+        }
+        else
+        {
+            /* Continue, go back to previous context */
+            ZwContinue(&Context, FALSE);
+        }
+    }
+
+    /* If we returned, raise a status  */
+    RtlRaiseStatus(Status);
 }
-
 
 /*
  * @implemented
  */
-VOID STDCALL
+VOID
+STDCALL
 RtlRaiseStatus(NTSTATUS Status)
 {
-  EXCEPTION_RECORD ExceptionRecord;
+    EXCEPTION_RECORD ExceptionRecord;
+    CONTEXT Context;
+    DPRINT1("RtlRaiseStatus(Status 0x%.08x)\n", Status);
 
-  DPRINT("RtlRaiseStatus(Status 0x%.08x)\n", Status);
+     /* Capture the context */
+    RtlCaptureContext(&Context);
 
-  ExceptionRecord.ExceptionCode    = Status;
-  ExceptionRecord.ExceptionRecord  = NULL;
-  ExceptionRecord.NumberParameters = 0;
-  ExceptionRecord.ExceptionFlags   = EXCEPTION_NONCONTINUABLE;
-  RtlRaiseException (& ExceptionRecord);
+    /* Add one argument to ESP */
+    Context.Esp += sizeof(PVOID);
+
+    /* Create an exception record */
+    ExceptionRecord.ExceptionAddress = RtlpGetExceptionAddress();
+    ExceptionRecord.ExceptionCode  = Status;
+    ExceptionRecord.ExceptionRecord = NULL;
+    ExceptionRecord.NumberParameters = 0;
+    ExceptionRecord.ExceptionFlags = EXCEPTION_NONCONTINUABLE;
+
+    /* Write the context flag */
+    Context.ContextFlags = CONTEXT_FULL;
+
+    /* Check if we're being debugged (user-mode only) */
+    if (!RtlpCheckForActiveDebugger())
+    {
+        /* Raise an exception immediately */
+        ZwRaiseException(&ExceptionRecord, &Context, TRUE);
+    }
+    else
+    {
+        /* Dispatch the exception */
+        RtlDispatchException(&ExceptionRecord, &Context);
+
+        /* Raise exception if we got here */
+        Status = ZwRaiseException(&ExceptionRecord, &Context, FALSE);
+    }
+
+    /* If we returned, raise a status */
+    RtlRaiseStatus(Status);
+}
+
+/*
+* @unimplemented
+*/
+USHORT
+STDCALL
+RtlCaptureStackBackTrace(IN ULONG FramesToSkip,
+                         IN ULONG FramesToCapture,
+                         OUT PVOID *BackTrace,
+                         OUT PULONG BackTraceHash OPTIONAL)
+{
+    UNIMPLEMENTED;
+    return 0;
 }
 
 /*
@@ -89,15 +128,12 @@ RtlRaiseStatus(NTSTATUS Status)
 */
 ULONG
 STDCALL
-RtlWalkFrameChain (
-	OUT PVOID *Callers,
-	IN ULONG Count,
-	IN ULONG Flags
-	)
+RtlWalkFrameChain(OUT PVOID *Callers,
+                  IN ULONG Count,
+                  IN ULONG Flags)
 {
-	UNIMPLEMENTED;
-	return 0;
+    UNIMPLEMENTED;
+    return 0;
 }
-
 
 /* EOF */

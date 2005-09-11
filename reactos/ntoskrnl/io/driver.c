@@ -1878,11 +1878,9 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
    }
 #endif
 
-   Status = RtlCaptureUnicodeString(&CapturedDriverServiceName,
-                                    PreviousMode,
-                                    PagedPool,
-                                    FALSE,
-                                    DriverServiceName);
+   Status = ProbeAndCaptureUnicodeString(&CapturedDriverServiceName,
+                                         PreviousMode,
+                                         DriverServiceName);
    if (!NT_SUCCESS(Status))
    {
       return Status;
@@ -2021,9 +2019,8 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
    Status = IopStartDevice(DeviceNode);
 
 ReleaseCapturedString:
-   RtlReleaseCapturedUnicodeString(&CapturedDriverServiceName,
-                                   PreviousMode,
-                                   FALSE);
+   ReleaseCapturedUnicodeString(&CapturedDriverServiceName,
+                                PreviousMode);
 
    return Status;
 }
