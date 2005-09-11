@@ -65,6 +65,7 @@ CreateRootHubPdo(
 	return STATUS_SUCCESS;
 }
 
+#if 0
 static NTSTATUS
 AddDevice_Keyboard(
 	IN PDRIVER_OBJECT DriverObject,
@@ -122,6 +123,7 @@ AddDevice_Mouse(
 
 	return STATUS_SUCCESS;
 }
+#endif
 
 NTSTATUS STDCALL
 AddDevice(
@@ -229,10 +231,12 @@ AddDevice(
 
 	Status = IoCreateSymbolicLink(&LinkDeviceName, &DeviceName);
 
+	/*
 	if (NT_SUCCESS(Status))
 		Status = AddDevice_Keyboard(DriverObject, pdo);
 	if (NT_SUCCESS(Status))
 		Status = AddDevice_Mouse(DriverObject, pdo);
+	*/
 
 	if (!NT_SUCCESS(Status))
 	{
