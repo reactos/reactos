@@ -287,7 +287,7 @@ EngDeleteWnd(
   }
 
   /* Get window object */
-  Window = IntGetWindowObject(WndObjInt->Hwnd);
+  Window = UserGetWindowObject(WndObjInt->Hwnd);
   if (Window == NULL)
     {
       DPRINT1("Warning: Couldnt get window object for WndObjInt->Hwnd!!!\n");
@@ -297,7 +297,6 @@ EngDeleteWnd(
     {
       /* Remove object from window */
       RemoveEntryList(&WndObjInt->ListEntry);
-      IntReleaseWindowObject(Window);
     }
 
   if (!calledFromUser){

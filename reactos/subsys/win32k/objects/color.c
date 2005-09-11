@@ -645,7 +645,7 @@ NtGdiUpdateColors(HDC hDC)
       UserEnterExclusive();
    }
 
-   Wnd = IntGetWindowObject(IntWindowFromDC(hDC));
+   Wnd = UserGetWindowObject(IntWindowFromDC(hDC));
    if (Wnd == NULL)
    {
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
@@ -657,9 +657,9 @@ NtGdiUpdateColors(HDC hDC)
       return FALSE;
    }
    
+   UserRefObjectCo(Wnd);
    ret = co_UserRedrawWindow(Wnd, NULL, 0, RDW_INVALIDATE);
-   
-   IntReleaseWindowObject(Wnd); //temp hack
+   UserDerefObjectCo(Wnd);
    
    if (!calledFromUser){
       UserLeave();

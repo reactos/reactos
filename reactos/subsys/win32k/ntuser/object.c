@@ -55,6 +55,8 @@ inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
 {
    PUSER_HANDLE_ENTRY entry;
 
+//   DPRINT1("handles used %i\n",usedHandles);
+
    if (ht->freelist)
    {
       entry = ht->freelist;

@@ -58,7 +58,7 @@ static ULONG          HintIndex = 0;
 UINT_PTR FASTCALL
 IntSetTimer(HWND Wnd, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, BOOL SystemTimer)
 {
-   PWINDOW_OBJECT WindowObject;
+   PWINDOW_OBJECT Window;
    UINT_PTR Ret = 0;
 
    DPRINT("IntSetTimer wnd %x id %p elapse %u timerproc %p systemtimer %s\n",
@@ -85,22 +85,19 @@ IntSetTimer(HWND Wnd, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, BOOL S
    }
    else
    {
-      WindowObject = IntGetWindowObject(Wnd);
-      if (! WindowObject)
+      if (!(Window = UserGetWindowObject(Wnd)))
       {
          DPRINT1("Invalid window handle\n");
-         SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
          return 0;
       }
 
-      if (WindowObject->OwnerThread->ThreadsProcess != PsGetCurrentProcess())
+      if (Window->OwnerThread->ThreadsProcess != PsGetCurrentProcess())
       {
-         IntReleaseWindowObject(WindowObject);
          DPRINT1("Trying to set timer for window in another process (shatter attack?)\n");
          SetLastWin32Error(ERROR_ACCESS_DENIED);
          return 0;
       }
-      IntReleaseWindowObject(WindowObject);
+
       Ret = IDEvent;
    }
 

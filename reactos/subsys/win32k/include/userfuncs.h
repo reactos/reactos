@@ -2,14 +2,56 @@
 #define _WIN32K_USERFUNCS_H
 
 
-#define ASSERT_REFS_CO(obj) \
+
+
+
+PMENU_OBJECT FASTCALL UserGetMenuObject(HMENU hMenu);
+
+
+#if 0
+#define ObmDereferenceObject(_obj_) \
 { \
-   LONG ref = USER_BODY_TO_HEADER(obj)->RefCount;\
+   DPRINT1("obj 0x%x dereffed to %i refs\n",_obj_, USER_BODY_TO_HEADER(_obj_)->RefCount-1); \
+   ObmDereferenceObject2(_obj_); \
+}
+#endif
+
+
+
+
+
+
+
+#define ASSERT_REFS_CO(_obj_) \
+{ \
+   LONG ref = USER_BODY_TO_HEADER(_obj_)->RefCount;\
    if (!(ref >= 1)){ \
-      DPRINT1("obj 0x%x, refs %i\n", obj, ref); \
+      DPRINT1("ASSERT: obj 0x%x, refs %i\n", _obj_, ref); \
       ASSERT(FALSE); \
    } \
 }
+
+#if 0
+#define ASSERT_REFS_CO(_obj_) \
+{ \
+   PSINGLE_LIST_ENTRY e; \
+   BOOL gotit=FALSE; \
+   LONG ref = USER_BODY_TO_HEADER(_obj_)->RefCount;\
+   if (!(ref >= 1)){ \
+      DPRINT1("obj 0x%x, refs %i\n", _obj_, ref); \
+      ASSERT(FALSE); \
+   } \
+   \
+   e = PsGetWin32Thread()->ReferencesList.Next; \
+   while (e) \
+   { \
+      PUSER_REFERENCE_ENTRY ref = CONTAINING_RECORD(e, USER_REFERENCE_ENTRY, Entry); \
+      if (ref->obj == _obj_){ gotit=TRUE; break; } \
+      e = e->Next; \
+   } \
+   ASSERT(gotit); \
+}
+#endif
 
 #define DUMP_REFS(obj) DPRINT1("obj 0x%x, refs %i\n",obj, USER_BODY_TO_HEADER(obj)->RefCount)
 
@@ -19,11 +61,6 @@
 VOID FASTCALL ObmReferenceObject(PVOID obj);
 BOOL FASTCALL ObmDereferenceObject(PVOID obj);
 
-#define IntReferenceWindowObject(o) ObmReferenceObject(o)
-
-#define UserDerefObject(o) ObmReferenceObject(o)
-
-VOID FASTCALL IntReleaseWindowObject(PWINDOW_OBJECT Window);
 PWINDOW_OBJECT FASTCALL IntGetWindowObject(HWND hWnd);
 PVOID FASTCALL
 ObmCreateObject(PUSER_HANDLE_TABLE ht, HANDLE* h,USER_OBJECT_TYPE type , ULONG size);
@@ -31,8 +68,8 @@ ObmCreateObject(PUSER_HANDLE_TABLE ht, HANDLE* h,USER_OBJECT_TYPE type , ULONG s
 BOOL FASTCALL 
 ObmDeleteObject(HANDLE h, USER_OBJECT_TYPE type );
 
-//#define UserRefObjectCo(o) ObmReferenceObject(o)
-//#define UserDerefObjectCo(o) ObmDereferenceObject(o)
+#define UserRefObject(o) ObmReferenceObject(o)
+#define UserDerefObject(o) ObmDereferenceObject(o)
 BOOL FASTCALL ObmCreateHandleTable();
 
 

@@ -318,7 +318,6 @@ NtUserDispatchMessage(PNTUSERDISPATCHMESSAGEINFO UnsafeMsgInfo)
 {
    NTSTATUS Status;
    NTUSERDISPATCHMESSAGEINFO MsgInfo;
-   PWINDOW_OBJECT WindowObject;
    LRESULT Result = TRUE;
    DECLARE_RETURN(LRESULT);
 
@@ -352,19 +351,19 @@ NtUserDispatchMessage(PNTUSERDISPATCHMESSAGEINFO UnsafeMsgInfo)
    }
    else
    {
+      PWINDOW_OBJECT Window;
+      
       /* Get the window object. */
-      WindowObject = IntGetWindowObject(MsgInfo.Msg.hwnd);
-      if (NULL == WindowObject)
+      Window = UserGetWindowObject(MsgInfo.Msg.hwnd);
+      if (NULL == Window)
       {
-         SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
          MsgInfo.HandledByKernel = TRUE;
          Result = 0;
       }
       else
       {
-         if (WindowObject->OwnerThread != PsGetCurrentThread())
+         if (Window->OwnerThread != PsGetCurrentThread())
          {
-            IntReleaseWindowObject(WindowObject);
             DPRINT1("Window doesn't belong to the calling thread!\n");
             MsgInfo.HandledByKernel = TRUE;
             Result = 0;
@@ -375,30 +374,29 @@ NtUserDispatchMessage(PNTUSERDISPATCHMESSAGEINFO UnsafeMsgInfo)
 
             MsgInfo.HandledByKernel = FALSE;
             Result = 0;
-            if (0xFFFF0000 != ((DWORD) WindowObject->WndProcW & 0xFFFF0000))
+            if (0xFFFF0000 != ((DWORD) Window->WndProcW & 0xFFFF0000))
             {
-               if (0xFFFF0000 != ((DWORD) WindowObject->WndProcA & 0xFFFF0000))
+               if (0xFFFF0000 != ((DWORD) Window->WndProcA & 0xFFFF0000))
                {
                   /* Both Unicode and Ansi winprocs are real, use whatever
                      usermode prefers */
-                  MsgInfo.Proc = (MsgInfo.Ansi ? WindowObject->WndProcA
-                                  : WindowObject->WndProcW);
+                  MsgInfo.Proc = (MsgInfo.Ansi ? Window->WndProcA
+                                  : Window->WndProcW);
                }
                else
                {
                   /* Real Unicode winproc */
                   MsgInfo.Ansi = FALSE;
-                  MsgInfo.Proc = WindowObject->WndProcW;
+                  MsgInfo.Proc = Window->WndProcW;
                }
             }
             else
             {
                /* Must have real Ansi winproc */
                MsgInfo.Ansi = TRUE;
-               MsgInfo.Proc = WindowObject->WndProcA;
+               MsgInfo.Proc = Window->WndProcA;
             }
          }
-         IntReleaseWindowObject(WindowObject);
       }
    }
    Status = MmCopyToCaller(UnsafeMsgInfo, &MsgInfo, sizeof(NTUSERDISPATCHMESSAGEINFO));
@@ -511,13 +509,15 @@ co_IntActivateWindowMouse(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, PWINDOW_OB
    ULONG Result;
    PWINDOW_OBJECT Parent;
 
+   ASSERT_REFS_CO(MsgWindow);
+
    if(*HitTest == (USHORT)HTTRANSPARENT)
    {
       /* eat the message, search again! */
       return TRUE;
    }
 
-   Parent = IntGetParent(MsgWindow);
+   Parent = IntGetParent(MsgWindow);//fixme: deref retval?
    /* fixme: abort if no parent ? */
    Result = co_IntSendMessage(MsgWindow->hSelf,
                               WM_MOUSEACTIVATE,
@@ -548,11 +548,13 @@ co_IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *
 {
    PWINDOW_OBJECT Window;
 
-   if(!(Window = IntGetWindowObject(Msg->hwnd)))
+   if(!(Window = UserGetWindowObject(Msg->hwnd)))
    {
       /* let's just eat the message?! */
       return TRUE;
    }
+
+   UserRefObjectCo(Window);
 
    if(ThreadQueue == Window->MessageQueue &&
          ThreadQueue->CaptureWindow != Window->hSelf)
@@ -566,10 +568,12 @@ co_IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *
          PWINDOW_OBJECT DesktopWindow;
          HWND hDesktop = IntGetDesktopWindow();
 
-         if((DesktopWindow = IntGetWindowObject(hDesktop)))
+         if((DesktopWindow = UserGetWindowObject(hDesktop)))
          {
             PWINDOW_OBJECT Wnd;
-
+            
+            UserRefObjectCo(DesktopWindow);
+            
             co_WinPosWindowFromPoint(DesktopWindow, Window->MessageQueue, &Msg->pt, &Wnd);
             if(Wnd)
             {
@@ -585,15 +589,15 @@ co_IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *
                   }
 
                   /* eat the message */
-                  IntReleaseWindowObject(Wnd);
-                  IntReleaseWindowObject(Window);
-                  IntReleaseWindowObject(DesktopWindow);
+                  UserDerefObject(Wnd);
+                  UserDerefObjectCo(DesktopWindow);
+                  UserDerefObjectCo(Window);
                   return TRUE;
                }
-               IntReleaseWindowObject(Wnd);
+               UserDerefObject(Wnd);
             }
 
-            IntReleaseWindowObject(DesktopWindow);
+            UserDerefObjectCo(DesktopWindow);
          }
       }
    }
@@ -641,7 +645,7 @@ co_IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *
       }
    }
 
-   IntReleaseWindowObject(Window);
+   UserDerefObjectCo(Window);
    return FALSE;
 }
 
@@ -651,7 +655,7 @@ co_IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *
  */
 BOOL FASTCALL
 co_IntPeekMessage(PUSER_MESSAGE Msg,
-                  HWND Wnd,
+                  HWND hWnd,
                   UINT MsgFilterMin,
                   UINT MsgFilterMax,
                   UINT RemoveMsg)
@@ -703,7 +707,7 @@ CheckMessages:
    Present = co_MsqFindMessage(ThreadQueue,
                                FALSE,
                                RemoveMessages,
-                               Wnd,
+                               hWnd,
                                MsgFilterMin,
                                MsgFilterMax,
                                &Message);
@@ -721,7 +725,7 @@ CheckMessages:
    Present = co_MsqFindMessage(ThreadQueue,
                                TRUE,
                                RemoveMessages,
-                               Wnd,
+                               hWnd,
                                MsgFilterMin,
                                MsgFilterMax,
                                &Message);
@@ -740,14 +744,14 @@ CheckMessages:
       ;
 
    /* Check for paint messages. */
-   if (IntGetPaintMessage(Wnd, MsgFilterMin, MsgFilterMax, PsGetWin32Thread(), &Msg->Msg, RemoveMessages))
+   if (IntGetPaintMessage(hWnd, MsgFilterMin, MsgFilterMax, PsGetWin32Thread(), &Msg->Msg, RemoveMessages))
    {
       Msg->FreeLParam = FALSE;
       return TRUE;
    }
 
    /* Check for WM_(SYS)TIMER messages */
-   Present = MsqGetTimerMessage(ThreadQueue, Wnd, MsgFilterMin, MsgFilterMax,
+   Present = MsqGetTimerMessage(ThreadQueue, hWnd, MsgFilterMin, MsgFilterMax,
                                 &Msg->Msg, RemoveMessages);
    if (Present)
    {
@@ -763,19 +767,22 @@ MessageFound:
       {
          PWINDOW_OBJECT MsgWindow = NULL;
 
-         if(Msg->Msg.hwnd && (MsgWindow = IntGetWindowObject(Msg->Msg.hwnd)) &&
+         if(Msg->Msg.hwnd && (MsgWindow = UserGetWindowObject(Msg->Msg.hwnd)) &&
                Msg->Msg.message >= WM_MOUSEFIRST && Msg->Msg.message <= WM_MOUSELAST)
          {
             USHORT HitTest;
 
+            UserRefObjectCo(MsgWindow);
+            
             if(co_IntTranslateMouseMessage(ThreadQueue, &Msg->Msg, &HitTest, TRUE))
                /* FIXME - check message filter again, if the message doesn't match anymore,
                           search again */
             {
-               IntReleaseWindowObject(MsgWindow);
+               UserDerefObjectCo(MsgWindow);
                /* eat the message, search again */
                goto CheckMessages;
             }
+            
             if(ThreadQueue->CaptureWindow == NULL)
             {
                co_IntSendHitTestMessages(ThreadQueue, &Msg->Msg);
@@ -783,21 +790,23 @@ MessageFound:
                      IS_BTN_MESSAGE(Msg->Msg.message, DOWN) &&
                      co_IntActivateWindowMouse(ThreadQueue, &Msg->Msg, MsgWindow, &HitTest))
                {
-                  IntReleaseWindowObject(MsgWindow);
+                  UserDerefObjectCo(MsgWindow);
                   /* eat the message, search again */
                   goto CheckMessages;
                }
             }
+            
+            UserDerefObjectCo(MsgWindow);
          }
          else
          {
             co_IntSendHitTestMessages(ThreadQueue, &Msg->Msg);
          }
 
-         if(MsgWindow)
-         {
-            IntReleaseWindowObject(MsgWindow);
-         }
+//         if(MsgWindow)
+//         {
+//            UserDerefObject(MsgWindow);
+//         }
 
          return TRUE;
       }
@@ -820,7 +829,7 @@ MessageFound:
 
 BOOL STDCALL
 NtUserPeekMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
-                  HWND Wnd,
+                  HWND hWnd,
                   UINT MsgFilterMin,
                   UINT MsgFilterMax,
                   UINT RemoveMsg)
@@ -839,16 +848,11 @@ NtUserPeekMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
    UserEnterExclusive();
 
    /* Validate input */
-   if (NULL != Wnd)
+   if (hWnd && hWnd != INVALID_HANDLE_VALUE)
    {
-      Window = IntGetWindowObject(Wnd);
-      if (NULL == Window)
+      if (!(Window = UserGetWindowObject(hWnd)))
       {
-         Wnd = NULL;
-      }
-      else
-      {
-         IntReleaseWindowObject(Window);
+         RETURN(-1);
       }
    }
 
@@ -858,7 +862,7 @@ NtUserPeekMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
       MsgFilterMax = 0;
    }
 
-   Present = co_IntPeekMessage(&Msg, Wnd, MsgFilterMin, MsgFilterMax, RemoveMsg);
+   Present = co_IntPeekMessage(&Msg, hWnd, MsgFilterMin, MsgFilterMax, RemoveMsg);
    if (Present)
    {
       Info.Msg = Msg.Msg;
@@ -945,7 +949,7 @@ co_IntWaitMessage(HWND Wnd,
 
 BOOL STDCALL
 NtUserGetMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
-                 HWND Wnd,
+                 HWND hWnd,
                  UINT MsgFilterMin,
                  UINT MsgFilterMax)
 /*
@@ -962,7 +966,7 @@ NtUserGetMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
    BOOL GotMessage;
    NTUSERGETMESSAGEINFO Info;
    NTSTATUS Status;
-   PWINDOW_OBJECT Window;
+   PWINDOW_OBJECT Window = NULL;
    PMSGMEMORY MsgMemoryEntry;
    PVOID UserMem;
    UINT Size;
@@ -973,14 +977,13 @@ NtUserGetMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
    UserEnterExclusive();
 
    /* Validate input */
-   if (NULL != Wnd)
+   if (hWnd && !(Window = UserGetWindowObject(hWnd)))
    {
-      Window = IntGetWindowObject(Wnd);
-      if(!Window)
-         Wnd = NULL;
-      else
-         IntReleaseWindowObject(Window);
+      RETURN(-1);
    }
+   
+//   if (Window) UserRefObjectCo(Window);
+   
    if (MsgFilterMax < MsgFilterMin)
    {
       MsgFilterMin = 0;
@@ -989,7 +992,7 @@ NtUserGetMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
 
    do
    {
-      GotMessage = co_IntPeekMessage(&Msg, Wnd, MsgFilterMin, MsgFilterMax, PM_REMOVE);
+      GotMessage = co_IntPeekMessage(&Msg, hWnd, MsgFilterMin, MsgFilterMax, PM_REMOVE);
       if (GotMessage)
       {
          Info.Msg = Msg.Msg;
@@ -1038,7 +1041,7 @@ NtUserGetMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
             RETURN( (BOOL) -1);
          }
       }
-      else if (! co_IntWaitMessage(Wnd, MsgFilterMin, MsgFilterMax))
+      else if (! co_IntWaitMessage(hWnd, MsgFilterMin, MsgFilterMax))
       {
          RETURN( (BOOL) -1);
       }
@@ -1048,6 +1051,8 @@ NtUserGetMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
    RETURN( WM_QUIT != Info.Msg.message);
 
 CLEANUP:
+//   if (Window) UserDerefObjectCo(Window);
+
    DPRINT("Leave NtUserGetMessage\n");
    UserLeave();
    END_CLEANUP;
@@ -1169,7 +1174,6 @@ UserPostMessage(HWND Wnd,
                 WPARAM wParam,
                 LPARAM lParam)
 {
-   PWINDOW_OBJECT Window;
    MSG UserModeMsg, KernelModeMsg;
    LARGE_INTEGER LargeTickCount;
    NTSTATUS Status;
@@ -1185,9 +1189,9 @@ UserPostMessage(HWND Wnd,
       PWINDOW_OBJECT DesktopWindow;
       ULONG i;
 
-      DesktopWindow = IntGetWindowObject(IntGetDesktopWindow());
+      DesktopWindow = UserGetWindowObject(IntGetDesktopWindow());
       List = IntWinListChildren(DesktopWindow);
-      IntReleaseWindowObject(DesktopWindow);
+      
       if (List != NULL)
       {
          for (i = 0; List[i]; i++)
@@ -1197,15 +1201,15 @@ UserPostMessage(HWND Wnd,
    }
    else
    {
-      Window = IntGetWindowObject(Wnd);
+      PWINDOW_OBJECT Window;
+      
+      Window = UserGetWindowObject(Wnd);
       if (NULL == Window)
       {
-         SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
          return FALSE;
       }
       if(Window->Status & WINDOWSTATUS_DESTROYING)
       {
-         IntReleaseWindowObject(Window);
          DPRINT1("Attempted to post message to window 0x%x that is being destroyed!\n", Wnd);
          /* FIXME - last error code? */
          return FALSE;
@@ -1229,7 +1233,6 @@ UserPostMessage(HWND Wnd,
       MsqPostMessage(Window->MessageQueue, &KernelModeMsg,
                      NULL != MsgMemoryEntry && 0 != KernelModeMsg.lParam,
                      QS_POSTMESSAGE);
-      IntReleaseWindowObject(Window);
    }
 
    return TRUE;
@@ -1336,7 +1339,8 @@ co_IntSendMessage(HWND hWnd,
    return 0;
 }
 
-static LRESULT FASTCALL
+static 
+LRESULT FASTCALL
 co_IntSendMessageTimeoutSingle(HWND hWnd,
                                UINT Msg,
                                WPARAM wParam,
@@ -1347,19 +1351,20 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
 {
    ULONG_PTR Result;
    NTSTATUS Status;
-   PWINDOW_OBJECT Window;
+   PWINDOW_OBJECT Window = NULL;
    PMSGMEMORY MsgMemoryEntry;
    INT lParamBufferSize;
    LPARAM lParamPacked;
    PW32THREAD Win32Thread;
+   DECLARE_RETURN(LRESULT);
 
    /* FIXME: Call hooks. */
-   Window = IntGetWindowObject(hWnd);
-   if (!Window)
+   if (!(Window = UserGetWindowObject(hWnd)))
    {
-      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-      return FALSE;
+       RETURN( FALSE);
    }
+   
+   UserRefObjectCo(Window);
 
    Win32Thread = PsGetWin32Thread();
 
@@ -1369,8 +1374,7 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
       if (Win32Thread->IsExiting)
       {
          /* Never send messages to exiting threads */
-         IntReleaseWindowObject(Window);
-         return FALSE;
+          RETURN( FALSE);
       }
 
       /* See if this message type is present in the table */
@@ -1386,9 +1390,8 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
 
       if (! NT_SUCCESS(PackParam(&lParamPacked, Msg, wParam, lParam)))
       {
-         IntReleaseWindowObject(Window);
          DPRINT1("Failed to pack message parameters\n");
-         return FALSE;
+          RETURN( FALSE);
       }
       if (0xFFFF0000 != ((DWORD) Window->WndProcW & 0xFFFF0000))
       {
@@ -1408,46 +1411,47 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
 
       if (! NT_SUCCESS(UnpackParam(lParamPacked, Msg, wParam, lParam)))
       {
-         IntReleaseWindowObject(Window);
          DPRINT1("Failed to unpack message parameters\n");
-         return TRUE;
+          RETURN( TRUE);
       }
 
-      IntReleaseWindowObject(Window);
-      return TRUE;
+       RETURN( TRUE);
    }
 
    if(uFlags & SMTO_ABORTIFHUNG && MsqIsHung(Window->MessageQueue))
    {
-      IntReleaseWindowObject(Window);
       /* FIXME - Set a LastError? */
-      return FALSE;
+       RETURN( FALSE);
    }
 
    if(Window->Status & WINDOWSTATUS_DESTROYING)
    {
-      IntReleaseWindowObject(Window);
       /* FIXME - last error? */
       DPRINT1("Attempted to send message to window 0x%x that is being destroyed!\n", hWnd);
-      return FALSE;
+       RETURN( FALSE);
    }
 
    Status = co_MsqSendMessage(Window->MessageQueue, hWnd, Msg, wParam, lParam,
                               uTimeout, (uFlags & SMTO_BLOCK), FALSE, uResult);
-   IntReleaseWindowObject(Window);
+
+
    if (STATUS_TIMEOUT == Status)
    {
       /* MSDN says GetLastError() should return 0 after timeout */
       SetLastWin32Error(0);
-      return FALSE;
+       RETURN( FALSE);
    }
    else if (! NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      return FALSE;
+       RETURN( FALSE);
    }
 
-   return TRUE;
+   RETURN( TRUE);
+   
+CLEANUP:
+   if (Window) UserDerefObjectCo(Window);
+   END_CLEANUP;
 }
 
 LRESULT FASTCALL
@@ -1468,14 +1472,14 @@ co_IntSendMessageTimeout(HWND hWnd,
       return co_IntSendMessageTimeoutSingle(hWnd, Msg, wParam, lParam, uFlags, uTimeout, uResult);
    }
 
-   DesktopWindow = IntGetWindowObject(IntGetDesktopWindow());
+   DesktopWindow = UserGetWindowObject(IntGetDesktopWindow());
    if (NULL == DesktopWindow)
    {
       SetLastWin32Error(ERROR_INTERNAL_ERROR);
       return 0;
    }
+
    Children = IntWinListChildren(DesktopWindow);
-   IntReleaseWindowObject(DesktopWindow);
    if (NULL == Children)
    {
       return 0;
@@ -1509,10 +1513,8 @@ co_IntPostOrSendMessage(HWND hWnd,
       return 0;
    }
 
-   Window = IntGetWindowObject(hWnd);
-   if(!Window)
+   if(!(Window = UserGetWindowObject(hWnd)))
    {
-      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       return 0;
    }
 
@@ -1528,13 +1530,11 @@ co_IntPostOrSendMessage(HWND hWnd,
       }
    }
 
-   IntReleaseWindowObject(Window);
-
    return (LRESULT)Result;
 }
 
 LRESULT FASTCALL
-co_IntDoSendMessage(HWND Wnd,
+co_IntDoSendMessage(HWND hWnd,
                     UINT Msg,
                     WPARAM wParam,
                     LPARAM lParam,
@@ -1552,15 +1552,14 @@ co_IntDoSendMessage(HWND Wnd,
    RtlZeroMemory(&Info, sizeof(NTUSERSENDMESSAGEINFO));
 
    /* FIXME: Call hooks. */
-   if (HWND_BROADCAST != Wnd)
+   if (HWND_BROADCAST != hWnd)
    {
-      Window = IntGetWindowObject(Wnd);
+      Window = UserGetWindowObject(hWnd);
       if (NULL == Window)
       {
          /* Tell usermode to not touch this one */
          Info.HandledByKernel = TRUE;
          MmCopyToCaller(UnsafeInfo, &Info, sizeof(NTUSERSENDMESSAGEINFO));
-         SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
          return 0;
       }
    }
@@ -1568,7 +1567,7 @@ co_IntDoSendMessage(HWND Wnd,
    /* FIXME: Check for an exiting window. */
 
    /* See if the current thread can handle the message */
-   if (HWND_BROADCAST != Wnd && NULL != PsGetWin32Thread() &&
+   if (HWND_BROADCAST != hWnd && NULL != PsGetWin32Thread() &&
          Window->MessageQueue == PsGetWin32Thread()->MessageQueue)
    {
       /* Gather the information usermode needs to call the window proc directly */
@@ -1599,17 +1598,16 @@ co_IntDoSendMessage(HWND Wnd,
          Info.Ansi = TRUE;
          Info.Proc = Window->WndProcA;
       }
-      IntReleaseWindowObject(Window);
    }
    else
    {
       /* Must be handled by other thread */
-      if (HWND_BROADCAST != Wnd)
-      {
-         IntReleaseWindowObject(Window);
-      }
+//      if (HWND_BROADCAST != hWnd)
+//      {
+//         UserDerefObject(Window);
+//      }
       Info.HandledByKernel = TRUE;
-      UserModeMsg.hwnd = Wnd;
+      UserModeMsg.hwnd = hWnd;
       UserModeMsg.message = Msg;
       UserModeMsg.wParam = wParam;
       UserModeMsg.lParam = lParam;

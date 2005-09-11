@@ -559,8 +559,6 @@ CLEANUP:
 void FASTCALL
 co_IntSetClassLong(PWINDOW_OBJECT Window, ULONG Offset, LONG dwNewLong, BOOL Ansi)
 {
-   PWINDOW_OBJECT Parent, Owner;
-
    ASSERT_REFS_CO(Window);
 
    if ((int)Offset >= 0)
@@ -591,25 +589,11 @@ co_IntSetClassLong(PWINDOW_OBJECT Window, ULONG Offset, LONG dwNewLong, BOOL Ans
          break;
       case GCL_HICON:
          Window->Class->hIcon = (HICON)dwNewLong;
-         Owner = IntGetOwner(Window);
-         Parent = IntGetParent(Window);
 
-         if ((!Owner) && (!Parent))
+         if (!IntGetOwner(Window) && !IntGetParent(Window))
          {
             co_IntShellHookNotify(HSHELL_REDRAW, (LPARAM) Window->hSelf);
          }
-
-         if (Parent)
-         {
-            IntReleaseWindowObject(Parent);
-         }
-
-         if (Owner)
-         {
-            IntReleaseWindowObject(Owner);
-         }
-
-
          break;
       case GCL_HICONSM:
          Window->Class->hIconSm = (HICON)dwNewLong;

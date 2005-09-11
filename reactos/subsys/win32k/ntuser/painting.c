@@ -164,11 +164,13 @@ co_IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
       {
          for (phWnd = List; *phWnd; ++phWnd)
          {
-            Window = IntGetWindowObject(*phWnd);
+            Window = UserGetWindowObject(*phWnd);
             if (Window && (Window->Style & WS_VISIBLE))
             {
+               UserRefObjectCo(Window);
                co_IntPaintWindows(Window, Flags);
-               IntReleaseWindowObject(Window);
+               UserDerefObjectCo(Window);
+
             }
          }
          ExFreePool(List);
@@ -344,11 +346,11 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
       {
          for (phWnd = List; *phWnd; ++phWnd)
          {
-            Child = IntGetWindowObject(*phWnd);
-            if(!Child)
+            if(!(Child = UserGetWindowObject(*phWnd)))
             {
                continue;
             }
+            
             if (Child->Style & WS_VISIBLE)
             {
                /*
@@ -362,7 +364,7 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
                IntInvalidateWindows(Child, hRgnTemp, Flags);
                NtGdiDeleteObject(hRgnTemp);
             }
-            IntReleaseWindowObject(Child);
+
          }
          ExFreePool(List);
       }
@@ -539,14 +541,12 @@ IntFindWindowToRepaint(HWND hWnd, PW32THREAD Thread)
    PWINDOW_OBJECT Child;
    HWND hFoundWnd = NULL;
 
-   Window = IntGetWindowObject(hWnd);
-   if (Window == NULL)
+   if (!(Window = UserGetWindowObject(hWnd)))
       return NULL;
 
    if (IntIsWindowDirty(Window) &&
          IntWndBelongsToThread(Window, Thread))
    {
-      IntReleaseWindowObject(Window);
       return hWnd;
    }
 
@@ -577,8 +577,6 @@ IntFindWindowToRepaint(HWND hWnd, PW32THREAD Thread)
          ExFreePool(List);
       }
    }
-
-   IntReleaseWindowObject(Window);
 
    return hFoundWnd;
 }
@@ -613,17 +611,13 @@ IntGetPaintMessage(HWND hWnd, UINT MsgFilterMin, UINT MsgFilterMax,
       return FALSE;
    }
 
-   Window = IntGetWindowObject(Message->hwnd);
-   if (Window != NULL)
-   {
-      Message->message = WM_PAINT;
-      Message->wParam = Message->lParam = 0;
-      IntReleaseWindowObject(Window);
+   if (!(Window = UserGetWindowObject(Message->hwnd)))
+      return FALSE;
 
-      return TRUE;
-   }
+   Message->message = WM_PAINT;
+   Message->wParam = Message->lParam = 0;
 
-   return FALSE;
+   return TRUE;
 }
 
 static
@@ -643,8 +637,9 @@ co_IntFixCaret(PWINDOW_OBJECT Window, LPRECT lprc, UINT flags)
 
    WndCaret = UserGetWindowObject(hWndCaret);
 
+   //fix: check for WndCaret can be null
    if (WndCaret == Window ||
-         ((flags & SW_SCROLLCHILDREN) && IntIsChildWindow(Window->hSelf, hWndCaret)))
+         ((flags & SW_SCROLLCHILDREN) && IntIsChildWindow(Window, WndCaret)))
    {
       POINT pt, FromOffset, ToOffset, Offset;
       RECT rcCaret;
@@ -683,7 +678,7 @@ co_IntFixCaret(PWINDOW_OBJECT Window, LPRECT lprc, UINT flags)
 HDC STDCALL
 NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
 {
-   PWINDOW_OBJECT Window;
+   PWINDOW_OBJECT Window = NULL;
    PAINTSTRUCT Ps;
    PROSRGNDATA Rgn;
    NTSTATUS Status;
@@ -692,12 +687,13 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
    DPRINT("Enter NtUserBeginPaint\n");
    UserEnterExclusive();
 
-   if (!(Window = IntGetWindowObject(hWnd)))
+   if (!(Window = UserGetWindowObject(hWnd)))
    {
-      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       RETURN( NULL);
    }
 
+   UserRefObjectCo(Window);
+   
    co_UserHideCaret(Window);
 
    if (Window->Flags & WINDOWOBJECT_NEED_NCPAINT)
@@ -728,7 +724,6 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
 
    if (!Ps.hdc)
    {
-      IntReleaseWindowObject(Window);
       RETURN( NULL);
    }
 
@@ -757,6 +752,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
    {
       if (Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT)
          MsqDecPaintCountQueue(Window->MessageQueue);
+         
       IntGetClientRect(Window, &Ps.rcPaint);
    }
    Window->Flags &= ~WINDOWOBJECT_NEED_INTERNALPAINT;
@@ -771,8 +767,6 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
       Ps.fErase = FALSE;
    }
 
-   IntReleaseWindowObject(Window);
-
    Status = MmCopyToCaller(UnsafePs, &Ps, sizeof(PAINTSTRUCT));
    if (! NT_SUCCESS(Status))
    {
@@ -783,6 +777,8 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
    RETURN( Ps.hdc);
 
 CLEANUP:
+   if (Window) UserDerefObjectCo(Window);
+   
    DPRINT("Leave NtUserBeginPaint, ret=%i\n",_ret_);
    UserLeave();
    END_CLEANUP;
@@ -805,15 +801,16 @@ NtUserEndPaint(HWND hWnd, CONST PAINTSTRUCT* lPs)
    DPRINT("Enter NtUserEndPaint\n");
    UserEnterExclusive();
 
-   if (!(Window = IntGetWindowObject(hWnd)))
+   if (!(Window = UserGetWindowObject(hWnd)))
    {
       RETURN(FALSE);
    }
 
    UserReleaseDC(Window, lPs->hdc);
-   co_UserShowCaret(Window);
 
-   IntReleaseWindowObject(Window); //temp hack
+   UserRefObjectCo(Window);
+   co_UserShowCaret(Window);
+   UserDerefObjectCo(Window);
 
    RETURN(TRUE);
 

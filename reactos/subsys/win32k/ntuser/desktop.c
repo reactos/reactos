@@ -463,7 +463,6 @@ HWND FASTCALL IntGetDesktopWindow(VOID)
 PWINDOW_OBJECT FASTCALL UserGetDesktopWindow(VOID)
 {
    PDESKTOP_OBJECT pdo = IntGetActiveDesktop();
-   PWINDOW_OBJECT DeskWnd;
 
    if (!pdo)
    {
@@ -471,11 +470,7 @@ PWINDOW_OBJECT FASTCALL UserGetDesktopWindow(VOID)
       return NULL;
    }
 
-   //temp hack
-   DeskWnd = IntGetWindowObject(pdo->DesktopWindow);
-   if (DeskWnd)
-      IntReleaseWindowObject(DeskWnd);
-   return DeskWnd;
+   return UserGetWindowObject(pdo->DesktopWindow);
 }
 
 
@@ -1190,13 +1185,10 @@ NtUserPaintDesktop(HDC hDC)
    IntGdiGetClipBox(hDC, &Rect);
 
    hWndDesktop = IntGetDesktopWindow();
-   if (!(WndDesktop = IntGetWindowObject(hWndDesktop)))
+   if (!(WndDesktop = UserGetWindowObject(hWndDesktop)))
       return FALSE;
 
    DesktopBrush = (HBRUSH)IntGetClassLong(WndDesktop, GCL_HBRBACKGROUND, FALSE); //fixme: verify retval
-
-   //temp hack
-   IntReleaseWindowObject(WndDesktop);
 
 
    /*
@@ -1207,7 +1199,7 @@ NtUserPaintDesktop(HDC hDC)
    {
       PWINDOW_OBJECT DeskWin;
 
-      if((DeskWin = IntGetWindowObject(hWndDesktop)))
+      if((DeskWin = UserGetWindowObject(hWndDesktop)))
       {
          SIZE sz;
          int x, y;
@@ -1215,7 +1207,7 @@ NtUserPaintDesktop(HDC hDC)
 
          sz.cx = DeskWin->WindowRect.right - DeskWin->WindowRect.left;
          sz.cy = DeskWin->WindowRect.bottom - DeskWin->WindowRect.top;
-         IntReleaseWindowObject(DeskWin);
+
 
          x = (sz.cx / 2) - (WinSta->cxWallpaper / 2);
          y = (sz.cy / 2) - (WinSta->cyWallpaper / 2);

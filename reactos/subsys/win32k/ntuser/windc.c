@@ -293,11 +293,10 @@ DceUpdateVisRgn(DCE *Dce, PWINDOW_OBJECT Window, ULONG Flags)
    }
    else if (Window == NULL)
    {
-      DesktopWindow = IntGetWindowObject(IntGetDesktopWindow());
+      DesktopWindow = UserGetWindowObject(IntGetDesktopWindow());
       if (NULL != DesktopWindow)
       {
          hRgnVisible = UnsafeIntCreateRectRgnIndirect(&DesktopWindow->WindowRect);
-         IntReleaseWindowObject(DesktopWindow);
       }
       else
       {
@@ -571,30 +570,20 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
 
 
 HDC STDCALL
-NtUserGetDCEx(HWND hWnd, HANDLE ClipRegion, ULONG Flags)
+NtUserGetDCEx(HWND hWnd OPTIONAL, HANDLE ClipRegion, ULONG Flags)
 {
    PWINDOW_OBJECT Wnd=NULL;
    DECLARE_RETURN(HDC);
-   HDC ret;
 
    DPRINT("Enter NtUserGetDCEx\n");
    UserEnterExclusive();
 
-   if (hWnd)
+   if (hWnd && !(Wnd = UserGetWindowObject(hWnd)))
    {
-      if (!(Wnd = IntGetWindowObject(hWnd)))
-      {
-         SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-         RETURN(NULL);
-      }
+      RETURN(NULL);
    }
 
-   ret = UserGetDCEx(Wnd, ClipRegion, Flags);
-
-   if (Wnd)
-      IntReleaseWindowObject(Wnd);
-
-   RETURN(ret);
+   RETURN( UserGetDCEx(Wnd, ClipRegion, Flags));
 
 CLEANUP:
    DPRINT("Leave NtUserGetDCEx, ret=%i\n",_ret_);
@@ -815,7 +804,7 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window)
          }
          else
          {
-            CurrentWindow = IntGetWindowObject(pDCE->hwndCurrent);
+            CurrentWindow = UserGetWindowObject(pDCE->hwndCurrent);
             if (NULL == CurrentWindow)
             {
                pDCE = pDCE->next;
@@ -826,14 +815,14 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window)
          dc = DC_LockDc(pDCE->hDC);
          if (dc == NULL)
          {
-            if (Window->hSelf != pDCE->hwndCurrent)
-            {
-               IntReleaseWindowObject(CurrentWindow);
-            }
+//            if (Window->hSelf != pDCE->hwndCurrent)
+//            {
+//               UserDerefObject(CurrentWindow);
+//            }
             pDCE = pDCE->next;
             continue;
          }
-         if (Window == CurrentWindow || IntIsChildWindow(Window->hSelf, CurrentWindow->hSelf))
+         if (Window == CurrentWindow || IntIsChildWindow(Window, CurrentWindow))
          {
             if (pDCE->DCXFlags & DCX_WINDOW)
             {
@@ -865,7 +854,7 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window)
          if (Window->hSelf != pDCE->hwndCurrent)
          {
             //              IntEngWindowChanged(CurrentWindow, WOC_RGN_CLIENT);
-            IntReleaseWindowObject(CurrentWindow);
+//            UserDerefObject(CurrentWindow);
          }
       }
 

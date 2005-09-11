@@ -61,10 +61,13 @@ co_IntSendDeactivateMessages(HWND hWndPrev, HWND hWnd)
 VOID FASTCALL
 co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
 {
-   PWINDOW_OBJECT Window, Owner, Parent;
-
-   if (hWnd && (Window = IntGetWindowObject(hWnd)))
+   PWINDOW_OBJECT Window;
+   
+   if ((Window = UserGetWindowObject(hWnd)))
    {
+      
+      UserRefObjectCo(Window);
+      
       /* Send palette messages */
       if (co_IntPostOrSendMessage(hWnd, WM_QUERYNEWPALETTE, 0, 0))
       {
@@ -76,22 +79,12 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
          co_WinPosSetWindowPos(Window, HWND_TOP, 0, 0, 0, 0,
                                SWP_NOSIZE | SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOSENDCHANGING);
 
-
-      Owner = IntGetOwner(Window);
-      if (!Owner)
+      if (!IntGetOwner(Window) && !IntGetParent(Window))
       {
-         Parent = IntGetParent(Window);
-         if (!Parent)
-            co_IntShellHookNotify(HSHELL_WINDOWACTIVATED, (LPARAM) hWnd);
-         else
-            IntReleaseWindowObject(Parent);
-      }
-      else
-      {
-         IntReleaseWindowObject(Owner);
+         co_IntShellHookNotify(HSHELL_WINDOWACTIVATED, (LPARAM) hWnd);
       }
 
-      IntReleaseWindowObject(Window);
+      UserDerefObjectCo(Window);
 
       /* FIXME: IntIsWindow */
 
@@ -130,17 +123,15 @@ IntFindChildWindowToOwner(PWINDOW_OBJECT Root, PWINDOW_OBJECT Owner)
 
    for(Child = Root->FirstChild; Child; Child = Child->NextSibling)
    {
-      OwnerWnd = IntGetWindowObject(Child->hOwner);
+      OwnerWnd = UserGetWindowObject(Child->hOwner);
       if(!OwnerWnd)
          continue;
 
       if(OwnerWnd == Owner)
       {
          Ret = Child->hSelf;
-         IntReleaseWindowObject(OwnerWnd);
          return Ret;
       }
-      IntReleaseWindowObject(OwnerWnd);
    }
 
    return NULL;
@@ -215,9 +206,9 @@ co_IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWin
 }
 
 BOOL FASTCALL
-co_IntSetForegroundWindow(PWINDOW_OBJECT Window)
+co_IntSetForegroundWindow(PWINDOW_OBJECT Window)//FIXME: can Window be NULL??
 {
-   ASSERT_REFS_CO(Window);
+   /*if (Window)*/ ASSERT_REFS_CO(Window);
 
    return co_IntSetForegroundAndFocusWindow(Window, Window, FALSE);
 }
@@ -234,18 +225,18 @@ co_IntMouseActivateWindow(PWINDOW_OBJECT Window)
    {
       BOOL Ret;
       PWINDOW_OBJECT TopWnd;
-      PWINDOW_OBJECT DesktopWindow = IntGetWindowObject(IntGetDesktopWindow());
+      PWINDOW_OBJECT DesktopWindow = UserGetWindowObject(IntGetDesktopWindow());
       if(DesktopWindow)
       {
          Top = IntFindChildWindowToOwner(DesktopWindow, Window);
-         if((TopWnd = IntGetWindowObject(Top)))
+         if((TopWnd = UserGetWindowObject(Top)))
          {
+            UserRefObjectCo(TopWnd);
             Ret = co_IntMouseActivateWindow(TopWnd);
-            IntReleaseWindowObject(TopWnd);
-            IntReleaseWindowObject(DesktopWindow);
+            UserDerefObjectCo(TopWnd);
+            
             return Ret;
          }
-         IntReleaseWindowObject(DesktopWindow);
       }
       return FALSE;
    }
@@ -253,23 +244,6 @@ co_IntMouseActivateWindow(PWINDOW_OBJECT Window)
 
    TopWindow = UserGetAncestor(Window, GA_ROOT);
    if (!TopWindow) return FALSE;
-//   if (TopWindow != Window)
-//   {
-      
-//   Top = UserGetAncestor(Window, GA_ROOT);
-//   if (Top != Window->hSelf)
-//   {
-//      TopWindow = IntGetWindowObject(Top);
-//      if (TopWindow == NULL)
-//      {
-//         SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
-//         return FALSE;
-//      }
-//   }
-//   else
-//   {
-//      TopWindow = Window;
-//   }
 
    /* TMN: Check return valud from this function? */
    UserRefObjectCo(TopWindow);
@@ -278,10 +252,6 @@ co_IntMouseActivateWindow(PWINDOW_OBJECT Window)
    
    UserDerefObjectCo(TopWindow);
 
-//   if (TopWindow != Window)
-//   {
-//      IntReleaseWindowObject(TopWindow);
-//   }
    return TRUE;
 }
 

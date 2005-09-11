@@ -126,7 +126,8 @@ CLEANUP:
  *
  * Check if we can activate the specified window.
  */
-static BOOL FASTCALL can_activate_window( PWINDOW_OBJECT Wnd )
+static 
+BOOL FASTCALL can_activate_window( PWINDOW_OBJECT Wnd OPTIONAL)
 {
     LONG style;
 
@@ -144,65 +145,54 @@ static BOOL FASTCALL can_activate_window( PWINDOW_OBJECT Wnd )
  *  Activates window other than pWnd.
  */
 VOID FASTCALL
-co_WinPosActivateOtherWindow(PWINDOW_OBJECT Window OPTIONAL)
+co_WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
 {
-   PWINDOW_OBJECT Wnd;
+   PWINDOW_OBJECT WndTo = NULL;
    HWND Fg;
 
-   if (Window)
-      ASSERT_REFS_CO(Window);
+   ASSERT_REFS_CO(Window);
 
-   if (!Window || IntIsDesktopWindow(Window))
+   if (IntIsDesktopWindow(Window))
    {
       IntSetFocusMessageQueue(NULL);
       return;
    }
 
    /* If this is popup window, try to activate the owner first. */
-   if ((Window->Style & WS_POPUP) && (Wnd = IntGetOwner(Window)))
+   if ((Window->Style & WS_POPUP) && (WndTo = IntGetOwner(Window)))
    {
-      Wnd = UserGetAncestor( Wnd, GA_ROOT );
-      if (can_activate_window(Wnd)) goto done;
+      WndTo = UserGetAncestor( WndTo, GA_ROOT );
+      if (can_activate_window(WndTo)) goto done;
    }
 
    /* Pick a next top-level window. */
    /* FIXME: Search for non-tooltip windows first. */
-   Wnd = Window;
-   while (Wnd != NULL)
+   WndTo = Window;
+   for (;;)
    {
-      if (Wnd->NextSibling == NULL)
-      {
-         Wnd = NULL;
-         break;
-      }
-
-      Wnd = Wnd->NextSibling;
-
-      if ((Wnd->Style & (WS_DISABLED | WS_VISIBLE)) == WS_VISIBLE &&
-            (Wnd->Style & (WS_POPUP | WS_CHILD)) != WS_CHILD)
-         break;
+      if (!(WndTo = WndTo->NextSibling)) break;
+      if (can_activate_window( WndTo )) break;
    }
 
 done:
 
-   if (Wnd)
-      UserRefObjectCo(Wnd);
+   if (WndTo) UserRefObjectCo(WndTo);
 
    Fg = UserGetForegroundWindow();
-   if (Wnd && (!Fg || Window->hSelf == Fg))
+   if ((!Fg || Window->hSelf == Fg) && WndTo)//fixme: ok if WndTo is NULL??
    {
-      if (co_IntSetForegroundWindow(Wnd))
+      /* fixme: wine can pass WndTo=NULL to co_IntSetForegroundWindow. hmm */
+      if (co_IntSetForegroundWindow(WndTo))
       {
-         UserDerefObjectCo(Wnd);
+         UserDerefObjectCo(WndTo);
          return;
       }
    }
 
-   if (!co_IntSetActiveWindow(Wnd))
+   if (!co_IntSetActiveWindow(WndTo))  /* ok for WndTo to be NULL here */
       co_IntSetActiveWindow(0);
 
-   if (Wnd)
-      UserDerefObjectCo(Wnd);
+   if (WndTo) UserDerefObjectCo(WndTo);
 }
 
 
@@ -419,6 +409,7 @@ co_WinPosMinMaximize(PWINDOW_OBJECT Window, UINT ShowFlag, RECT* NewPos)
    return(SwpFlags);
 }
 
+static
 VOID FASTCALL
 WinPosFillMinMaxInfoStruct(PWINDOW_OBJECT Window, MINMAXINFO *Info)
 {
@@ -480,7 +471,8 @@ co_WinPosGetMinMaxInfo(PWINDOW_OBJECT Window, POINT* MaxSize, POINT* MaxPos,
    return 0; //FIXME: what does it return?
 }
 
-STATIC VOID FASTCALL
+static
+VOID FASTCALL
 FixClientRect(PRECT ClientRect, PRECT WindowRect)
 {
    if (ClientRect->left < WindowRect->left)
@@ -517,7 +509,8 @@ FixClientRect(PRECT ClientRect, PRECT WindowRect)
    }
 }
 
-LONG STATIC FASTCALL
+static
+LONG FASTCALL
 co_WinPosDoNCCALCSize(PWINDOW_OBJECT Window, PWINDOWPOS WinPos,
                       RECT* WindowRect, RECT* ClientRect)
 {
@@ -592,6 +585,7 @@ co_WinPosDoNCCALCSize(PWINDOW_OBJECT Window, PWINDOWPOS WinPos,
    return wvrFlags;
 }
 
+static
 BOOL FASTCALL
 co_WinPosDoWinPosChanging(PWINDOW_OBJECT Window,
                           PWINDOWPOS WinPos,
@@ -646,6 +640,7 @@ co_WinPosDoWinPosChanging(PWINDOW_OBJECT Window,
  * Fix Z order taking into account owned popups -
  * basically we need to maintain them above the window that owns them
  */
+static
 HWND FASTCALL
 WinPosDoOwnedPopups(HWND hWnd, HWND hWndInsertAfter)
 {
@@ -662,9 +657,9 @@ WinPosDoOwnedPopups(HWND hWnd, HWND hWndInsertAfter)
 
       if (hWndInsertAfter != HWND_TOPMOST)
       {
-         DesktopWindow = IntGetWindowObject(IntGetDesktopWindow());
+         DesktopWindow = UserGetWindowObject(IntGetDesktopWindow());
          List = IntWinListChildren(DesktopWindow);
-         IntReleaseWindowObject(DesktopWindow);
+
          if (List != NULL)
          {
             for (i = 0; List[i]; i++)
@@ -673,15 +668,13 @@ WinPosDoOwnedPopups(HWND hWnd, HWND hWndInsertAfter)
                   break;
                if (HWND_TOP == hWndInsertAfter)
                {
-                  ChildObject = IntGetWindowObject(List[i]);
+                  ChildObject = UserGetWindowObject(List[i]);
                   if (NULL != ChildObject)
                   {
                      if (0 == (ChildObject->ExStyle & WS_EX_TOPMOST))
                      {
-                        IntReleaseWindowObject(ChildObject);
                         break;
                      }
-                     IntReleaseWindowObject(ChildObject);
                   }
                }
                if (List[i] != hWnd)
@@ -700,9 +693,8 @@ WinPosDoOwnedPopups(HWND hWnd, HWND hWndInsertAfter)
 
    if (!List)
    {
-      DesktopWindow = IntGetWindowObject(IntGetDesktopWindow());
+      DesktopWindow = UserGetWindowObject(IntGetDesktopWindow());
       List = IntWinListChildren(DesktopWindow);
-      IntReleaseWindowObject(DesktopWindow);
    }
    if (List != NULL)
    {
@@ -741,7 +733,8 @@ WinPosDoOwnedPopups(HWND hWnd, HWND hWndInsertAfter)
  * Update WindowRect and ClientRect of Window and all of its children
  * We keep both WindowRect and ClientRect in screen coordinates internally
  */
-VOID STATIC FASTCALL
+static
+VOID FASTCALL
 WinPosInternalMoveWindow(PWINDOW_OBJECT Window, INT MoveX, INT MoveY)
 {
    PWINDOW_OBJECT Child;
@@ -767,7 +760,7 @@ WinPosInternalMoveWindow(PWINDOW_OBJECT Window, INT MoveX, INT MoveY)
  *
  * Fix redundant flags and values in the WINDOWPOS structure.
  */
-
+static
 BOOL FASTCALL
 WinPosFixupFlags(WINDOWPOS *WinPos, PWINDOW_OBJECT Window)
 {
@@ -999,14 +992,14 @@ co_WinPosSetWindowPos(
             }
             if (NULL != InsertAfterWindow)
             {
-               IntReferenceWindowObject(InsertAfterWindow);
+               UserRefObject(InsertAfterWindow);
             }
          }
          else if (WinPos.hwndInsertAfter == HWND_BOTTOM)
          {
             if(ParentWindow->LastChild)
             {
-               IntReferenceWindowObject(ParentWindow->LastChild);
+               UserRefObject(ParentWindow->LastChild);
                InsertAfterWindow = ParentWindow->LastChild;
             }
             else
@@ -1022,7 +1015,7 @@ co_WinPosSetWindowPos(
             IntLinkWindow(Window, ParentWindow, InsertAfterWindow);
          }
          if (InsertAfterWindow != NULL)
-            IntReleaseWindowObject(InsertAfterWindow);
+            UserDerefObject(InsertAfterWindow);
          if ((HWND_TOPMOST == WinPos.hwndInsertAfter)
                || (0 != (Window->ExStyle & WS_EX_TOPMOST)
                    && NULL != Window->PrevSibling
@@ -1395,6 +1388,8 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
 
    if (Cmd == SW_HIDE)
    {
+      PWINDOW_OBJECT ThreadFocusWindow;
+      
       /* FIXME: This will cause the window to be activated irrespective
        * of whether it is owned by the same thread. Has to be done
        * asynchronously.
@@ -1405,9 +1400,13 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
          co_WinPosActivateOtherWindow(Window);
       }
 
+
+      //temphack
+      ThreadFocusWindow = UserGetWindowObject(IntGetThreadFocusWindow());
+      
       /* Revert focus to parent */
-      if (Window->hSelf == IntGetThreadFocusWindow() ||
-            IntIsChildWindow(Window->hSelf, IntGetThreadFocusWindow()))
+      if (ThreadFocusWindow && (Window == ThreadFocusWindow ||
+            IntIsChildWindow(Window, ThreadFocusWindow)))
       {
          //faxme: as long as we have ref on Window, we also, indirectly, have ref on parent...
          co_UserSetFocus(Window->Parent);
@@ -1457,10 +1456,43 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
    return(WasVisible);
 }
 
-STATIC VOID FASTCALL
+
+#if 0
+
+/* find child of 'parent' that contains the given point (in parent-relative coords) */
+PWINDOW_OBJECT child_window_from_point(PWINDOW_OBJECT parent, int x, int y )
+{
+    PWINDOW_OBJECT Wnd;// = parent->FirstChild;
+
+//    LIST_FOR_EACH_ENTRY( Wnd, &parent->children, struct window, entry )
+    for (Wnd = parent->FirstChild; Wnd; Wnd = Wnd->NextSibling)
+    {
+        if (!IntPtInWindow( Wnd, x, y )) continue;  /* skip it */
+
+        /* if window is minimized or disabled, return at once */
+        if (Wnd->Style & (WS_MINIMIZE|WS_DISABLED)) return Wnd;
+
+        /* if point is not in client area, return at once */
+        if (x < Wnd->ClientRect.left || x >= Wnd->ClientRect.right ||
+            y < Wnd->ClientRect.top || y >= Wnd->ClientRect.bottom)
+            return Wnd;
+
+        return child_window_from_point( Wnd, x - Wnd->ClientRect.left, y - Wnd->ClientRect.top );
+    }
+    return parent;  /* not found any child */
+}
+#endif
+
+
+static
+VOID FASTCALL
 co_WinPosSearchChildren(
-   PWINDOW_OBJECT ScopeWin, PUSER_MESSAGE_QUEUE OnlyHitTests, POINT *Point,
-   PWINDOW_OBJECT* Window, USHORT *HitTest)
+   PWINDOW_OBJECT ScopeWin, 
+   PUSER_MESSAGE_QUEUE OnlyHitTests, 
+   POINT *Point,
+   PWINDOW_OBJECT* Window, 
+   USHORT *HitTest
+   )
 {
    PWINDOW_OBJECT Current;
    HWND *List, *phWnd;
@@ -1471,50 +1503,52 @@ co_WinPosSearchChildren(
    {
       for (phWnd = List; *phWnd; ++phWnd)
       {
-         if (!(Current = IntGetWindowObject(*phWnd)))
+         if (!(Current = UserGetWindowObject(*phWnd)))
             continue;
 
          if (!(Current->Style & WS_VISIBLE))
          {
-            IntReleaseWindowObject(Current);
             continue;
          }
 
          if ((Current->Style & (WS_POPUP | WS_CHILD | WS_DISABLED)) ==
                (WS_CHILD | WS_DISABLED))
          {
-            IntReleaseWindowObject(Current);
             continue;
          }
 
          if (!IntPtInWindow(Current, Point->x, Point->y))
          {
-            IntReleaseWindowObject(Current);
             continue;
          }
 
-         if (*Window)
-            IntReleaseWindowObject(*Window);
          *Window = Current;
-
+         
          if (Current->Style & WS_MINIMIZE)
          {
             *HitTest = HTCAPTION;
+            UserRefObject(Current);
             break;
          }
 
          if (Current->Style & WS_DISABLED)
          {
             *HitTest = HTERROR;
+            UserRefObject(Current);
             break;
          }
 
+         UserRefObjectCo(Current);
+         
          if (OnlyHitTests && (Current->MessageQueue == OnlyHitTests))
          {
             *HitTest = co_IntSendMessage(Current->hSelf, WM_NCHITTEST, 0,
                                          MAKELONG(Point->x, Point->y));
             if ((*HitTest) == (USHORT)HTTRANSPARENT)
+            {
+               UserDerefObjectCo(Current);
                continue;
+            }
          }
          else
             *HitTest = HTCLIENT;
@@ -1526,6 +1560,9 @@ co_WinPosSearchChildren(
          {
             co_WinPosSearchChildren(Current, OnlyHitTests, Point, Window, HitTest);
          }
+         
+         UserRefObject(Current);
+         UserDerefObjectCo(Current);
 
          break;
       }
@@ -1533,6 +1570,7 @@ co_WinPosSearchChildren(
    }
 }
 
+/* wine: WINPOS_WindowFromPoint */
 USHORT FASTCALL
 co_WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, PUSER_MESSAGE_QUEUE OnlyHitTests, POINT *WinPoint,
                          PWINDOW_OBJECT* Window)
@@ -1560,11 +1598,10 @@ co_WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, PUSER_MESSAGE_QUEUE OnlyHitTes
    /* Translate the point to the space of the scope window. */
    DesktopWindowHandle = IntGetDesktopWindow();
    if((DesktopWindowHandle != ScopeWin->hSelf) &&
-         (DesktopWindow = IntGetWindowObject(DesktopWindowHandle)))
+         (DesktopWindow = UserGetWindowObject(DesktopWindowHandle)))
    {
       Point.x += ScopeWin->ClientRect.left - DesktopWindow->ClientRect.left;
       Point.y += ScopeWin->ClientRect.top - DesktopWindow->ClientRect.top;
-      IntReleaseWindowObject(DesktopWindow);
    }
 
    HitTest = HTNOWHERE;
@@ -1626,8 +1663,7 @@ NtUserGetMinMaxInfo(
    RETURN( FALSE);
 
 CLEANUP:
-   if (Window)
-      UserDerefObjectCo(Window);
+   if (Window) UserDerefObjectCo(Window);
 
    DPRINT("Leave NtUserGetMinMaxInfo, ret=%i\n",_ret_);
    UserLeave();

@@ -254,14 +254,23 @@ co_MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Fi
 {
    USHORT Msg = Message->Msg.message;
    PWINDOW_OBJECT Window = NULL;
-   HWND CaptureWin;
+   HWND hCaptureWin;
+   
+   ASSERT_REFS_CO(ScopeWin);
 
-   CaptureWin = IntGetCaptureWindow();
-   if (CaptureWin == NULL)
+   /*
+   co_WinPosWindowFromPoint can return a Window, and in that case
+   that window has a ref that we need to deref. Thats why we add "dummy"
+   refs in all other cases.
+   */
+   
+   hCaptureWin = IntGetCaptureWindow();
+   if (hCaptureWin == NULL)
    {
       if(Msg == WM_MOUSEWHEEL)
       {
-         Window = IntGetWindowObject(IntGetFocusWindow());
+         Window = UserGetWindowObject(IntGetFocusWindow());
+         if (Window) UserRefObject(Window);
       }
       else
       {
@@ -269,7 +278,12 @@ co_MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Fi
          if(Window == NULL)
          {
             Window = ScopeWin;
-            IntReferenceWindowObject(Window);
+            if (Window) UserRefObject(Window);
+         }
+         else
+         {
+            /* this is the one case where we dont add a ref, since the returned
+            window is already referenced */
          }
       }
    }
@@ -277,8 +291,11 @@ co_MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Fi
    {
       /* FIXME - window messages should go to the right window if no buttons are
                  pressed */
-      Window = IntGetWindowObject(CaptureWin);
+      Window = UserGetWindowObject(hCaptureWin);
+      if (Window) UserRefObject(Window);
    }
+
+
 
    if (Window == NULL)
    {
@@ -348,7 +365,7 @@ co_MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Fi
       IntUnLockHardwareMessageQueue(Window->MessageQueue);
 
       *Freed = FALSE;
-      IntReleaseWindowObject(Window);
+      UserDerefObject(Window);
       return(FALSE);
    }
 
@@ -391,7 +408,7 @@ co_MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Fi
          IntUnLockHardwareMessageQueue(Window->MessageQueue);
       }
 
-      IntReleaseWindowObject(Window);
+      UserDerefObject(Window);
       *Freed = FALSE;
       return(FALSE);
    }
@@ -430,7 +447,7 @@ co_MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Fi
       }
    }
 
-   IntReleaseWindowObject(Window);
+   UserDerefObject(Window);
    *Freed = FALSE;
    return(TRUE);
 }
@@ -444,14 +461,15 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
    POINT ScreenPoint;
    BOOL Accept, Freed;
    PLIST_ENTRY CurrentEntry;
-   PWINDOW_OBJECT DesktopWindow;
+   PWINDOW_OBJECT DesktopWindow = NULL;
    PVOID WaitObjects[2];
    NTSTATUS WaitStatus;
-
+   DECLARE_RETURN(BOOL);
+   
    if( !IntGetScreenDC() ||
          PsGetWin32Thread()->MessageQueue == W32kGetPrimitiveMessageQueue() )
    {
-      return FALSE;
+      RETURN(FALSE);
    }
 
    WaitObjects[1] = MessageQueue->NewMessages;
@@ -472,8 +490,10 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
    }
    while (NT_SUCCESS(WaitStatus) && STATUS_WAIT_0 != WaitStatus);
 
-   DesktopWindow = IntGetWindowObject(IntGetDesktopWindow());
-
+   DesktopWindow = UserGetWindowObject(IntGetDesktopWindow());
+   
+   if (DesktopWindow) UserRefObjectCo(DesktopWindow);//can DesktopWindow be NULL?
+   
    /* Process messages in the message queue itself. */
    IntLockHardwareMessageQueue(MessageQueue);
    CurrentEntry = MessageQueue->HardwareMessagesListHead.Flink;
@@ -485,6 +505,9 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
       if (Current->Msg.message >= WM_MOUSEFIRST &&
             Current->Msg.message <= WM_MOUSELAST)
       {
+         
+         
+         
          Accept = co_MsqTranslateMouseMessage(MessageQueue, hWnd, FilterLow, FilterHigh,
                                               Current, Remove, &Freed,
                                               DesktopWindow, &ScreenPoint, FALSE);
@@ -497,8 +520,8 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
             IntUnLockHardwareMessageQueue(MessageQueue);
             IntUnLockSystemHardwareMessageQueueLock(FALSE);
             *Message = Current;
-            IntReleaseWindowObject(DesktopWindow);
-            return(TRUE);
+            
+            RETURN(TRUE);
          }
 
       }
@@ -623,8 +646,8 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
             }
             IntUnLockSystemHardwareMessageQueueLock(FALSE);
             *Message = Current;
-            IntReleaseWindowObject(DesktopWindow);
-            return(TRUE);
+
+            RETURN(TRUE);
          }
          /* If the contents of the queue changed then restart processing. */
          if (HardwareMessageQueueStamp != ActiveStamp)
@@ -634,7 +657,7 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
          }
       }
    }
-   IntReleaseWindowObject(DesktopWindow);
+
    /* Check if the system message queue is now empty. */
    IntLockSystemMessageQueue(OldIrql);
    if (SystemMessageQueueCount == 0 && IsListEmpty(&HardwareMessageQueueHead))
@@ -644,7 +667,12 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
    IntUnLockSystemMessageQueue(OldIrql);
    IntUnLockSystemHardwareMessageQueueLock(FALSE);
 
-   return(FALSE);
+   RETURN(FALSE);
+
+CLEANUP:   
+   if (DesktopWindow) UserDerefObjectCo(DesktopWindow);
+   
+   END_CLEANUP;
 }
 
 VOID FASTCALL

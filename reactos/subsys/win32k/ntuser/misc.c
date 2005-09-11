@@ -182,35 +182,30 @@ NtUserCallOneParam(
    {
       case ONEPARAM_ROUTINE_GETMENU:
          {
-            PWINDOW_OBJECT WindowObject;
+            PWINDOW_OBJECT Window;
             DWORD Result;
 
-            WindowObject = IntGetWindowObject((HWND)Param);
-            if(!WindowObject)
+            if(!(Window = UserGetWindowObject((HWND)Param)))
             {
-               SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
                RETURN( FALSE);
             }
 
-            Result = (DWORD)WindowObject->IDMenu;
+            Result = (DWORD)Window->IDMenu;
 
-            IntReleaseWindowObject(WindowObject);
             RETURN( Result);
          }
 
       case ONEPARAM_ROUTINE_ISWINDOWUNICODE:
          {
-            PWINDOW_OBJECT WindowObject;
+            PWINDOW_OBJECT Window;
             DWORD Result;
 
-            WindowObject = IntGetWindowObject((HWND)Param);
-            if(!WindowObject)
+            Window = UserGetWindowObject((HWND)Param);
+            if(!Window)
             {
-               SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
                RETURN( FALSE);
             }
-            Result = WindowObject->Unicode;
-            IntReleaseWindowObject(WindowObject);
+            Result = Window->Unicode;
             RETURN( Result);
          }
 
@@ -219,32 +214,30 @@ NtUserCallOneParam(
 
       case ONEPARAM_ROUTINE_GETWNDCONTEXTHLPID:
          {
-            PWINDOW_OBJECT WindowObject;
+            PWINDOW_OBJECT Window;
             DWORD Result;
 
-            WindowObject = IntGetWindowObject((HWND)Param);
-            if(!WindowObject)
+            Window = UserGetWindowObject((HWND)Param);
+            if(!Window)
             {
-               SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
                RETURN( FALSE);
             }
 
-            Result = WindowObject->ContextHelpId;
+            Result = Window->ContextHelpId;
 
-            IntReleaseWindowObject(WindowObject);
             RETURN( Result);
          }
 
       case ONEPARAM_ROUTINE_SWAPMOUSEBUTTON:
          {
-            PWINSTATION_OBJECT WinStaObject;
+            PWINSTATION_OBJECT WinSta;
             NTSTATUS Status;
             DWORD Result;
 
             Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
                                                     KernelMode,
                                                     0,
-                                                    &WinStaObject);
+                                                    &WinSta);
             if (!NT_SUCCESS(Status))
                RETURN( (DWORD)FALSE);
 
@@ -252,7 +245,7 @@ NtUserCallOneParam(
             Result = (DWORD)IntSwapMouseButton(WinStaObject, (BOOL)Param); */
             Result = 0;
 
-            ObDereferenceObject(WinStaObject);
+            ObDereferenceObject(WinSta);
             RETURN( Result);
          }
 
@@ -267,17 +260,15 @@ NtUserCallOneParam(
 
       case ONEPARAM_ROUTINE_GETWINDOWINSTANCE:
          {
-            PWINDOW_OBJECT WindowObject;
+            PWINDOW_OBJECT Window;
             DWORD Result;
 
-            if(!(WindowObject = IntGetWindowObject((HWND)Param)))
+            if(!(Window = UserGetWindowObject((HWND)Param)))
             {
-               SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
                RETURN( FALSE);
             }
 
-            Result = (DWORD)WindowObject->Instance;
-            IntReleaseWindowObject(WindowObject);
+            Result = (DWORD)Window->Instance;
             RETURN( Result);
          }
 
@@ -286,7 +277,7 @@ NtUserCallOneParam(
 
       case ONEPARAM_ROUTINE_GETCURSORPOSITION:
          {
-            PWINSTATION_OBJECT WinStaObject;
+            PWINSTATION_OBJECT WinSta;
             NTSTATUS Status;
             POINT Pos;
 
@@ -295,41 +286,38 @@ NtUserCallOneParam(
             Status = IntValidateWindowStationHandle(PsGetCurrentProcess()->Win32WindowStation,
                                                     KernelMode,
                                                     0,
-                                                    &WinStaObject);
+                                                    &WinSta);
             if (!NT_SUCCESS(Status))
                RETURN( (DWORD)FALSE);
 
             /* FIXME - check if process has WINSTA_READATTRIBUTES */
-            IntGetCursorLocation(WinStaObject, &Pos);
+            IntGetCursorLocation(WinSta, &Pos);
 
             Status = MmCopyToCaller((PPOINT)Param, &Pos, sizeof(POINT));
             if(!NT_SUCCESS(Status))
             {
-               ObDereferenceObject(WinStaObject);
+               ObDereferenceObject(WinSta);
                SetLastNtError(Status);
                RETURN( FALSE);
             }
 
-            ObDereferenceObject(WinStaObject);
+            ObDereferenceObject(WinSta);
 
             RETURN( (DWORD)TRUE);
          }
 
       case ONEPARAM_ROUTINE_ISWINDOWINDESTROY:
          {
-            PWINDOW_OBJECT WindowObject;
+            PWINDOW_OBJECT Window;
             DWORD Result;
 
-            WindowObject = IntGetWindowObject((HWND)Param);
-            if(!WindowObject)
+            if(!(Window = UserGetWindowObject((HWND)Param)))
             {
-               SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
                RETURN( FALSE);
             }
 
-            Result = (DWORD)IntIsWindowInDestroy(WindowObject);
+            Result = (DWORD)IntIsWindowInDestroy(Window);
 
-            IntReleaseWindowObject(WindowObject);
             RETURN( Result);
          }
 
@@ -389,7 +377,7 @@ NtUserCallTwoParam(
    DWORD Routine)
 {
    NTSTATUS Status;
-   PWINDOW_OBJECT WindowObject;
+   PWINDOW_OBJECT Window;
    DECLARE_RETURN(DWORD);
 
    DPRINT("Enter NtUserCallTwoParam\n");
@@ -496,26 +484,26 @@ NtUserCallTwoParam(
       case TWOPARAM_ROUTINE_ROS_SHOWWINDOW:
          {
 #define WIN_NEEDS_SHOW_OWNEDPOPUP (0x00000040)
-            PWINDOW_OBJECT Window = IntGetWindowObject((HWND)Param1);
+            PWINDOW_OBJECT Window;
             DPRINT1("ROS_SHOWWINDOW\n");
-            if (Window == 0)
+            
+            if (!(Window = UserGetWindowObject((HWND)Param1)))
             {
-               SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
                RETURN( FALSE);
             }
+            
             if (Param2)
             {
                if (!(Window->Flags & WIN_NEEDS_SHOW_OWNEDPOPUP))
                {
-                  IntReleaseWindowObject(Window);
                   RETURN( TRUE);
                }
                Window->Flags &= ~WIN_NEEDS_SHOW_OWNEDPOPUP;
             }
             else
                Window->Flags |= WIN_NEEDS_SHOW_OWNEDPOPUP;
+
             DPRINT1("ROS_SHOWWINDOW ---> 0x%x\n",Window->Flags);
-            IntReleaseWindowObject(Window);
             RETURN( TRUE);
          }
       case TWOPARAM_ROUTINE_SWITCHTOTHISWINDOW:
@@ -538,16 +526,14 @@ NtUserCallTwoParam(
          }
 
       case TWOPARAM_ROUTINE_SETWNDCONTEXTHLPID:
-         WindowObject = IntGetWindowObject((HWND)Param1);
-         if(!WindowObject)
+         
+         if(!(Window = UserGetWindowObject((HWND)Param1)))
          {
-            SetLastWin32Error(ERROR_INVALID_HANDLE);
             RETURN( (DWORD)FALSE);
          }
 
-         WindowObject->ContextHelpId = Param2;
+         Window->ContextHelpId = Param2;
 
-         IntReleaseWindowObject(WindowObject);
          RETURN( (DWORD)TRUE);
 
       case TWOPARAM_ROUTINE_SETCARETPOS:
@@ -558,9 +544,8 @@ NtUserCallTwoParam(
             WINDOWINFO wi;
             DWORD Ret;
 
-            if(!(WindowObject = IntGetWindowObject((HWND)Param1)))
+            if(!(Window = UserGetWindowObject((HWND)Param1)))
             {
-               SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
                RETURN( FALSE);
             }
 
@@ -572,31 +557,27 @@ NtUserCallTwoParam(
             Status = MmCopyFromCaller(&wi.cbSize, (PVOID)Param2, sizeof(wi.cbSize));
             if(!NT_SUCCESS(Status))
             {
-               IntReleaseWindowObject(WindowObject);
                SetLastNtError(Status);
                RETURN( FALSE);
             }
 
             if(wi.cbSize != sizeof(WINDOWINFO))
             {
-               IntReleaseWindowObject(WindowObject);
                SetLastWin32Error(ERROR_INVALID_PARAMETER);
                RETURN( FALSE);
             }
 #endif
 
-            if((Ret = (DWORD)IntGetWindowInfo(WindowObject, &wi)))
+            if((Ret = (DWORD)IntGetWindowInfo(Window, &wi)))
             {
                Status = MmCopyToCaller((PVOID)Param2, &wi, sizeof(WINDOWINFO));
                if(!NT_SUCCESS(Status))
                {
-                  IntReleaseWindowObject(WindowObject);
                   SetLastNtError(Status);
                   RETURN( FALSE);
                }
             }
 
-            IntReleaseWindowObject(WindowObject);
             RETURN( Ret);
          }
 
@@ -728,12 +709,11 @@ NtUserCallHwndLock(
    DPRINT("Enter NtUserCallHwndLock\n");
    UserEnterExclusive();
 
-   Window = IntGetWindowObject(hWnd);
-   if (Window == 0)
+   if (!(Window = UserGetWindowObject(hWnd)))
    {
-      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       RETURN( FALSE);
    }
+   UserRefObjectCo(Window);
 
    /* FIXME: Routine can be 0x53 - 0x5E */
    switch (Routine)
@@ -744,19 +724,21 @@ NtUserCallHwndLock(
 
       case HWNDLOCK_ROUTINE_DRAWMENUBAR:
          {
-            PMENU_OBJECT MenuObject;
+            PMENU_OBJECT Menu;
             DPRINT("HWNDLOCK_ROUTINE_DRAWMENUBAR\n");
             Ret = FALSE;
             if (!((Window->Style & (WS_CHILD | WS_POPUP)) != WS_CHILD))
                break;
-            MenuObject = IntGetMenuObject((HMENU) Window->IDMenu);
-            if(MenuObject == NULL)
+            
+            if(!(Menu = UserGetMenuObject((HMENU) Window->IDMenu)))
                break;
-            MenuObject->MenuInfo.WndOwner = hWnd;
-            MenuObject->MenuInfo.Height = 0;
-            IntReleaseMenuObject(MenuObject);
+            
+            Menu->MenuInfo.WndOwner = hWnd;
+            Menu->MenuInfo.Height = 0;
+
             co_WinPosSetWindowPos(Window, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
                                   SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED );
+            
             Ret = TRUE;
             break;
          }
@@ -774,7 +756,7 @@ NtUserCallHwndLock(
          break;
    }
 
-   IntReleaseWindowObject(Window);
+   UserDerefObjectCo(Window);
 
    RETURN( Ret);
 
