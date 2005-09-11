@@ -1259,7 +1259,7 @@ int usb_new_device(struct usb_device *dev, struct device *parent)
 		usb_create_driverfs_intf_files (interface);
 	}
 	/* add a /proc/bus/usb entry */
-	usbfs_add_device(dev);
+	//usbfs_add_device(dev);
 
 	return 0;
 fail:

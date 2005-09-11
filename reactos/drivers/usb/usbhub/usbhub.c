@@ -99,6 +99,7 @@ UsbhubAddDevice(
 		IoDeleteDevice(Fdo);
 		return Status;
 	}
+	DeviceExtension->dev->dev.dev_ext = Pdo;
 	
 	DeviceExtension->IsFDO = TRUE;
 	Fdo->Flags |= DO_POWER_PAGABLE;
