@@ -295,7 +295,7 @@ static BOOL RunFile(LPTSTR filename)
 static VOID
 Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 {
-	TCHAR szFullName[CMDLINE_LENGTH];
+	TCHAR *szFullName=NULL;
 	TCHAR *first = NULL;
 	TCHAR *rest = NULL; 
 	TCHAR *full = NULL; 
@@ -321,7 +321,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 	rest =	malloc ( (_tcslen(Rest) + 512) * sizeof(TCHAR)); 
 	if (rest == NULL)
 	{
-	 free (full);
+	 free (first);
 	 error_out_of_memory();
 	 return ;
 	}
@@ -329,8 +329,18 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 	full =	malloc ( (_tcslen(Full) + 512) * sizeof(TCHAR));
 	if (full == NULL)
 	{
-	 free (full);
+	 free (first);
 	 free (rest);
+	 error_out_of_memory();
+	 return ;
+	}
+
+	szFullName = malloc ( (_tcslen(Full) + 512) * sizeof(TCHAR));
+	if (full == NULL)
+	{
+	 free (first);
+	 free (rest);
+	 free (full);
 	 error_out_of_memory();
 	 return ;
 	}
@@ -398,6 +408,11 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 
 		if (!working) ConErrResPuts (STRING_FREE_ERROR1);
 
+		free (first);
+	    free (rest);
+	    free (full);
+		free (szFullName);
+
 		return;
 	}
 
@@ -406,6 +421,11 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 	if (!SearchForExecutable (first, szFullName))
 	{
 		error_bad_command ();
+
+		free (first);
+	    free (rest);
+	    free (full);
+		free (szFullName);
 		return;
 	}
 
@@ -495,7 +515,8 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 
  free(first);
  free(rest);
- free(full);
+ free(full); 
+ free (szFullName);
 }
 
 
