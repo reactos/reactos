@@ -1017,6 +1017,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
                 /* Align context size and get stack pointer */
                 Size = (sizeof(CONTEXT) + 3) & ~3;
                 Stack = (Context.Esp & ~3) - Size;
+                DPRINT1("Stack: %lx\n", Stack);
 
                 /* Probe stack and copy Context */
                 ProbeForWrite((PVOID)Stack, Size, sizeof(ULONG));
@@ -1027,6 +1028,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
                         (EXCEPTION_MAXIMUM_PARAMETERS - ExceptionRecord->NumberParameters) *
                         sizeof(ULONG) + 3) & ~3;
                 NewStack = Stack - Size;
+                DPRINT1("NewStack: %lx\n", NewStack);
 
                 /* Probe stack and copy exception record. Don't forget to add the two params */
                 ProbeForWrite((PVOID)(NewStack - 2 * sizeof(ULONG_PTR)),

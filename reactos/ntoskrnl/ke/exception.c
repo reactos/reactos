@@ -23,7 +23,7 @@ KiContinuePreviousModeUser(IN PCONTEXT Context,
     CONTEXT LocalContext;
 
     /* We'll have to make a copy and probe it */
-    //ProbeForRead(Context, sizeof(CONTEXT), sizeof(ULONG));
+    ProbeForRead(Context, sizeof(CONTEXT), sizeof(ULONG));
     RtlMoveMemory(&LocalContext, Context, sizeof(CONTEXT));
     Context = &LocalContext;
 

@@ -498,6 +498,13 @@ _NtRaiseException@12:
     pop ebp
     mov esp, ebp
 
+    /* Check the result */
+    or eax, eax
+    jz _KiServiceExit2
+
+    /* Restore debug registers too */
+    jmp _KiServiceExit
+
 .globl _NtContinue@8
 _NtContinue@8:
 
