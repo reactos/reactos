@@ -25,6 +25,11 @@
 
 #define MAX_STRING_LEN      255
 
+#define ENCODING_ANSI		0
+#define ENCODING_UNICODE	1
+#define ENCODING_UNICODE_BE	2
+#define ENCODING_UTF8		3
+
 typedef struct
 {
   HANDLE  hInstance;
@@ -44,6 +49,7 @@ typedef struct
   WCHAR   szMarginRight[MAX_PATH];
   WCHAR   szHeader[MAX_PATH];
   WCHAR   szFooter[MAX_PATH];
+  int     iEncoding;
 
   FINDREPLACE find;
 } NOTEPAD_GLOBALS;

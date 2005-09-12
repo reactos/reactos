@@ -139,8 +139,14 @@ static VOID DoSaveFile(VOID)
 {
     HANDLE hFile;
     DWORD dwNumWrite;
-    LPSTR pTemp;
+    LPWSTR pTemp;
+    LPVOID pConverted;
     DWORD size;
+    BYTE bom[3];
+    int iBomSize = 0;
+    int iCodePage = -1;
+    int iNewSize;
+    int i;
 
     hFile = CreateFile(Globals.szFileName, GENERIC_WRITE, FILE_SHARE_WRITE,
                        NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -150,23 +156,82 @@ static VOID DoSaveFile(VOID)
         return;
     }
 
-    size = GetWindowTextLengthA(Globals.hEdit) + 1;
-    pTemp = HeapAlloc(GetProcessHeap(), 0, size);
+    size = GetWindowTextLengthW(Globals.hEdit) + 1;
+    pTemp = HeapAlloc(GetProcessHeap(), 0, size * sizeof(*pTemp));
     if (!pTemp)
     {
-	CloseHandle(hFile);
+        CloseHandle(hFile);
         ShowLastError();
         return;
     }
-    size = GetWindowTextA(Globals.hEdit, pTemp, size);
+    size = GetWindowTextW(Globals.hEdit, pTemp, size);
 
-    if (!WriteFile(hFile, pTemp, size, &dwNumWrite, NULL))
+    switch(Globals.iEncoding)
+    {
+        case ENCODING_ANSI:
+            iCodePage = CP_ACP;
+            break;
+
+        case ENCODING_UNICODE:
+            pConverted = pTemp;
+            iBomSize = 2;
+            bom[0] = 0xFF;
+            bom[1] = 0xFE;
+            break;
+
+        case ENCODING_UNICODE_BE:
+            pConverted = pTemp;
+            iBomSize = 2;
+            bom[0] = 0xFE;
+            bom[1] = 0xFF;
+
+            /* flip the endianness */
+            for (i = 0; i < size; i++)
+            {
+                pTemp[i] = ((pTemp[i] & 0x00FF) << 8)
+                           | ((pTemp[i] & 0xFF00) >> 8);
+            }
+            break;
+
+        case ENCODING_UTF8:
+            iCodePage = CP_UTF8;
+            iBomSize = 3;
+            bom[0] = 0xEF;
+            bom[1] = 0xBB;
+            bom[2] = 0xBF;
+            break;
+    }
+
+    if (iCodePage >= 0)
+    {
+        iNewSize = WideCharToMultiByte(iCodePage, 0, pTemp, size, NULL, 0, NULL, NULL);
+        pConverted = HeapAlloc(GetProcessHeap(), 0, iNewSize);
+        if (!pConverted)
+        {
+            HeapFree(GetProcessHeap(), 0, pTemp);
+            CloseHandle(hFile);
+            ShowLastError();
+            return;
+        }
+        WideCharToMultiByte(iCodePage, 0, pTemp, size, pConverted, iNewSize, NULL, NULL);
+    }
+    else
+    {
+        iNewSize = size * sizeof(WCHAR);
+    }
+
+    if ((iBomSize > 0) && !WriteFile(hFile, bom, iBomSize, &dwNumWrite, NULL))
+        ShowLastError();
+    else if (!WriteFile(hFile, pConverted, iNewSize, &dwNumWrite, NULL))
         ShowLastError();
     else
         SendMessage(Globals.hEdit, EM_SETMODIFY, FALSE, 0);
 
     CloseHandle(hFile);
     HeapFree(GetProcessHeap(), 0, pTemp);
+
+    if (iCodePage >= 0)
+        HeapFree(GetProcessHeap(), 0, pConverted);
 }
 
 /**
@@ -208,44 +273,48 @@ void DoOpenFile(LPCWSTR szFileName)
 {
     HANDLE hFile;
     LPSTR pTemp;
+    LPWSTR pTemp2 = NULL;
     DWORD size;
     DWORD dwNumRead;
+    LPWSTR p;
+    LPBYTE p2;
+    int iCodePage;
+    int iNewSize;
 
     /* Close any files and prompt to save changes */
     if (!DoCloseFile())
-	return;
+        return;
 
     hFile = CreateFile(szFileName, GENERIC_READ, FILE_SHARE_READ, NULL,
-	OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+                       OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if(hFile == INVALID_HANDLE_VALUE)
     {
-	ShowLastError();
-	return;
+        ShowLastError();
+        return;
     }
 
     size = GetFileSize(hFile, NULL);
     if (size == INVALID_FILE_SIZE)
     {
-	CloseHandle(hFile);
-	ShowLastError();
-	return;
+        CloseHandle(hFile);
+        ShowLastError();
+        return;
     }
-    size++;
 
-    pTemp = HeapAlloc(GetProcessHeap(), 0, size);
+    pTemp = HeapAlloc(GetProcessHeap(), 0, size + sizeof(WCHAR));
     if (!pTemp)
     {
-	CloseHandle(hFile);
-	ShowLastError();
-	return;
+        CloseHandle(hFile);
+        ShowLastError();
+        return;
     }
 
     if (!ReadFile(hFile, pTemp, size, &dwNumRead, NULL))
     {
-	CloseHandle(hFile);
-	HeapFree(GetProcessHeap(), 0, pTemp);
-	ShowLastError();
-	return;
+        CloseHandle(hFile);
+        HeapFree(GetProcessHeap(), 0, pTemp);
+        ShowLastError();
+        return;
     }
 
     CloseHandle(hFile);
@@ -253,15 +322,55 @@ void DoOpenFile(LPCWSTR szFileName)
 
     if (IsTextUnicode(pTemp, dwNumRead, NULL))
     {
-	LPWSTR p = (LPWSTR)pTemp;
-	/* We need to strip BOM Unicode character, SetWindowTextW won't do it for us. */
-	if (*p == 0xFEFF || *p == 0xFFFE) p++;
-	SetWindowTextW(Globals.hEdit, p);
+        p = (LPWSTR)pTemp;
+        p[dwNumRead / 2] = 0;
+
+        /* We need to strip BOM Unicode character, SetWindowTextW won't do it for us. */
+        if (*p == 0xFEFF)
+        {
+            Globals.iEncoding = ENCODING_UNICODE_BE;
+            p++;
+        }
+        else if (*p == 0xFFFE)
+        {
+            Globals.iEncoding = ENCODING_UNICODE;
+            p++;
+        }
     }
     else
-	SetWindowTextA(Globals.hEdit, pTemp);
+    {
+        p2 = pTemp;
+        if ((p2[0] == 0xEF) && (p2[1] == 0xBB) && (p2[2] == 0xBF))
+        {
+            iCodePage = CP_UTF8;
+            Globals.iEncoding = ENCODING_UTF8;
+            p2 += 3;
+            dwNumRead -= 3;
+        }
+        else
+        {
+            iCodePage = CP_ACP;
+            Globals.iEncoding = ENCODING_ANSI;
+        }
+
+        iNewSize = MultiByteToWideChar(iCodePage, 0, p2, dwNumRead, NULL, 0);
+        pTemp2 = HeapAlloc(GetProcessHeap(), 0, (iNewSize + 1) * sizeof(*pTemp2));
+        if (!pTemp2)
+        {
+            CloseHandle(hFile);
+            HeapFree(GetProcessHeap(), 0, pTemp);
+            ShowLastError();
+            return;
+        }
+        MultiByteToWideChar(iCodePage, 0, p2, dwNumRead, pTemp2, iNewSize);
+        pTemp2[iNewSize] = 0;
+        p = pTemp2;
+    }
+    SetWindowTextW(Globals.hEdit, p);
 
     HeapFree(GetProcessHeap(), 0, pTemp);
+    if (pTemp2)
+       HeapFree(GetProcessHeap(), 0, pTemp2);
 
     SendMessage(Globals.hEdit, EM_SETMODIFY, FALSE, 0);
     SendMessage(Globals.hEdit, EM_EMPTYUNDOBUFFER, 0, 0);
@@ -286,15 +395,18 @@ VOID DIALOG_FileNew(VOID)
 VOID DIALOG_FileOpen(VOID)
 {
     OPENFILENAME openfilename;
-    WCHAR szPath[MAX_PATH];
     WCHAR szDir[MAX_PATH];
+    WCHAR szPath[MAX_PATH];
     static const WCHAR szDefaultExt[] = { 't','x','t',0 };
     static const WCHAR txt_files[] = { '*','.','t','x','t',0 };
 
     ZeroMemory(&openfilename, sizeof(openfilename));
 
     GetCurrentDirectory(SIZEOF(szDir), szDir);
-    lstrcpy(szPath, txt_files);
+    if (Globals.szFileName[0] == 0)
+        lstrcpy(szPath, txt_files);
+    else
+        lstrcpy(szPath, Globals.szFileName);
 
     openfilename.lStructSize       = sizeof(openfilename);
     openfilename.hwndOwner         = Globals.hMainWnd;
@@ -325,18 +437,59 @@ VOID DIALOG_FileSave(VOID)
         DoSaveFile();
 }
 
+static UINT_PTR CALLBACK DIALOG_FileSaveAs_Hook(HWND hDlg, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    WCHAR szText[128];
+    HWND hCombo;
+    OFNOTIFY *pNotify;
+
+    switch(msg)
+    {
+        case WM_INITDIALOG:
+            hCombo = GetDlgItem(hDlg, ID_ENCODING);
+
+            LoadString(Globals.hInstance, STRING_ANSI, szText, SIZEOF(szText));
+            SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM) szText);
+
+            LoadString(Globals.hInstance, STRING_UNICODE, szText, SIZEOF(szText));
+            SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM) szText);
+
+            LoadString(Globals.hInstance, STRING_UNICODE_BE, szText, SIZEOF(szText));
+            SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM) szText);
+
+            LoadString(Globals.hInstance, STRING_UTF8, szText, SIZEOF(szText));
+            SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM) szText);
+
+            SendMessage(hCombo, CB_SETCURSEL, Globals.iEncoding, 0);
+            break;
+
+        case WM_NOTIFY:
+            if (((NMHDR *) lParam)->code == CDN_FILEOK)
+            {
+                pNotify = (OFNOTIFY *) lParam;
+                hCombo = GetDlgItem(hDlg, ID_ENCODING);
+                Globals.iEncoding = SendMessage(hCombo, CB_GETCURSEL, 0, 0);
+            }
+            break;
+    }
+    return 0;
+}
+
 VOID DIALOG_FileSaveAs(VOID)
 {
     OPENFILENAME saveas;
-    WCHAR szPath[MAX_PATH];
     WCHAR szDir[MAX_PATH];
+    WCHAR szPath[MAX_PATH];
     static const WCHAR szDefaultExt[] = { 't','x','t',0 };
     static const WCHAR txt_files[] = { '*','.','t','x','t',0 };
 
     ZeroMemory(&saveas, sizeof(saveas));
 
     GetCurrentDirectory(SIZEOF(szDir), szDir);
-    lstrcpy(szPath, txt_files);
+    if (Globals.szFileName[0] == 0)
+        lstrcpy(szPath, txt_files);
+    else
+        lstrcpy(szPath, Globals.szFileName);
 
     saveas.lStructSize       = sizeof(OPENFILENAME);
     saveas.hwndOwner         = Globals.hMainWnd;
@@ -346,8 +499,10 @@ VOID DIALOG_FileSaveAs(VOID)
     saveas.nMaxFile          = SIZEOF(szPath);
     saveas.lpstrInitialDir   = szDir;
     saveas.Flags             = OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT |
-        OFN_HIDEREADONLY;
+        OFN_HIDEREADONLY | OFN_EXPLORER | OFN_ENABLETEMPLATE | OFN_ENABLEHOOK;
     saveas.lpstrDefExt       = szDefaultExt;
+    saveas.lpTemplateName    = MAKEINTRESOURCE(DIALOG_ENCODING);
+    saveas.lpfnHook          = DIALOG_FileSaveAs_Hook;
 
     if (GetSaveFileName(&saveas)) {
         SetFileName(szPath);
@@ -423,14 +578,14 @@ VOID DIALOG_FilePrint(VOID)
     cHeightPels = GetDeviceCaps(printer.hDC, VERTRES);
 
     /* Get the file text */
-    size = GetWindowTextLength(Globals.hEdit) + 1;
+    size = GetWindowTextLengthW(Globals.hEdit) + 1;
     pTemp = HeapAlloc(GetProcessHeap(), 0, size * sizeof(WCHAR));
     if (!pTemp)
     {
         ShowLastError();
         return;
     }
-    size = GetWindowText(Globals.hEdit, pTemp, size);
+    size = GetWindowTextW(Globals.hEdit, pTemp, size);
 
     border = 150;
     for (copycount=1; copycount <= printer.nCopies; copycount++) {
@@ -700,8 +855,8 @@ static INT_PTR WINAPI DIALOG_PAGESETUP_DlgProc(HWND hDlg, UINT msg, WPARAM wPara
           return TRUE;
         }
 
-	default:
-	    break;
+        default:
+          break;
         }
       break;
 

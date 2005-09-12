@@ -22,6 +22,8 @@
 #define MAIN_MENU               0x201
 #define DIALOG_PAGESETUP        0x202
 #define ID_ACCEL                0x203
+#define DIALOG_ENCODING         0x204
+#define ID_ENCODING             0x205
 
 /* Commands */
 #define CMD_NEW                 0x100
@@ -76,3 +78,9 @@
 
 #define STRING_NOTFOUND 0x17B
 #define STRING_OUT_OF_MEMORY 0x17C
+
+#define STRING_ANSI 0x17D
+#define STRING_UNICODE 0x17E
+#define STRING_UNICODE_BE 0x17F
+#define STRING_UTF8 0x180
+

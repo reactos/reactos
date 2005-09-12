@@ -94,6 +94,17 @@ PUSHBUTTON    "Cancel",     0x152,               180, 21, 40, 15, WS_TABSTOP
 PUSHBUTTON    "&Help",       0x153,                180, 39, 40, 15, WS_TABSTOP
 }
 
+/* Dialog `Encoding' */
+DIALOG_ENCODING DIALOG 0, 0, 256, 26
+STYLE DS_SETFONT | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | 
+    WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Encoding"
+{
+COMBOBOX        ID_ENCODING,54,0,156,80,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+LTEXT           "Encoding:",0x155,5,2,41,12
+}
+
 STRINGTABLE DISCARDABLE
 {
 STRING_PAGESETUP_HEADERVALUE,   "&n"        /* FIXME */
@@ -125,5 +136,8 @@ STRING_NOTFOUND,                                        "'%s' can not be found."
 STRING_OUT_OF_MEMORY,                   "Not enough memory to complete this \
 task. \nClose one or more applications to increase the amount of \nfree \
 memory."
-
+STRING_ANSI,                                    "ANSI"
+STRING_UNICODE,                                 "Unicode"
+STRING_UNICODE_BE,                              "Unicode (big endian)"
+STRING_UTF8,                                    "UTF-8"
 }
