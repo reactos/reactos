@@ -26,6 +26,7 @@
 
 #include <assert.h>
 #include <stdio.h>
+#include <io.h> /* unlink() */
 #include <signal.h>
 #include <errno.h>
 #include <string.h>
