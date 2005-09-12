@@ -130,7 +130,7 @@ RemoveFile (LPTSTR lpFileName, DWORD dwFlags, WIN32_FIND_DATA* f)
 
 	        HANDLE file;
 	        DWORD temp;
-	        LONG BufferSize = 65536;
+#define BufferSize 65536
 	        BYTE buffer[BufferSize];
 	        LONGLONG i;
 	        LARGE_INTEGER FileSize;
@@ -150,7 +150,7 @@ RemoveFile (LPTSTR lpFileName, DWORD dwFlags, WIN32_FIND_DATA* f)
 			        WriteFile (file, buffer, BufferSize, &temp, NULL);
 			        ConOutPrintf (_T("%I64d%% %s\r"),(i * (LONGLONG)100)/FileSize.QuadPart,szDeleteWipe);
 		        }
-		        WriteFile (file, buffer, FileSize.QuadPart - i, &temp, NULL);
+		        WriteFile (file, buffer, (DWORD)(FileSize.QuadPart - i), &temp, NULL);
 		        ConOutPrintf (_T("100%% %s\n"),szDeleteWipe);
 		        CloseHandle (file);
                 }

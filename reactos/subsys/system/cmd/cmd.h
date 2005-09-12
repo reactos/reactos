@@ -224,11 +224,11 @@ VOID msg_pause (VOID);
 
 /* Prototypes for FILECOMP.C */
 #ifdef FEATURE_UNIX_FILENAME_COMPLETION
-VOID CompleteFilename (LPTSTR, INT);
+VOID CompleteFilename (LPTSTR, UINT);
 INT  ShowCompletionMatches (LPTSTR, INT);
 #endif
 #ifdef FEATURE_4NT_FILENAME_COMPLETION
-VOID CompleteFilename (LPTSTR, BOOL, LPTSTR, INT);
+VOID CompleteFilename (LPTSTR, BOOL, LPTSTR, UINT);
 #endif
 
 

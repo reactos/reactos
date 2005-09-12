@@ -25,7 +25,7 @@
 
 #ifdef FEATURE_UNIX_FILENAME_COMPLETION
 
-VOID CompleteFilename (LPTSTR str, INT charcount)
+VOID CompleteFilename (LPTSTR str, UINT charcount)
 {
 	WIN32_FIND_DATA file;
 	HANDLE hFile;
@@ -376,7 +376,7 @@ VOID FindPrefixAndSuffix(LPTSTR strIN, LPTSTR szPrefix, LPTSTR szSuffix)
 	/* number of quotes in the string */
 	INT nQuotes = 0;
 	/* used in for loops */
-	INT i;
+	UINT i;
 	/* Char number to break the string at */
 	INT PBreak = 0;
 	INT SBreak = 0;
@@ -509,7 +509,7 @@ VOID FindPrefixAndSuffix(LPTSTR strIN, LPTSTR szPrefix, LPTSTR szSuffix)
 	return ret;
  }
 
-VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, INT cusor)
+VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 {
 	/* Length of string before we complete it */
 	INT StartLength;
@@ -534,16 +534,17 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, INT cusor)
 	/* Number of files */
 	INT FileListSize = 0;
 	/* Used for loops */
-	INT i;
+	UINT i;
 	/* Editable string of what was passed in */
 	TCHAR str[MAX_PATH];
 	/* Keeps track of what element was last selected */
 	static INT Sel;
 	BOOL NeededQuote = FALSE;
-	strOut[0] = _T('\0');
 	BOOL ShowAll = TRUE;
-
 	TCHAR * line = strIN; 
+
+	strOut[0] = _T('\0');
+
 	while (_istspace (*line))
 			line++;	
 	if(!_tcsncmp (line, _T("rd "), 3) || !_tcsncmp (line, _T("cd "), 3))
@@ -708,14 +709,9 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, INT cusor)
 		/* insert the quoation and move things around */
 		if(szPrefix[LastSpace + 1] != _T('\"') && LastSpace != -1)
 		{
-			/* add another char or you will lose a null char ending */
-			_tcsncat(szPrefix,&szPrefix[_tcslen(szPrefix) - 1],1);
-			for(i = _tcslen(szPrefix) - 1; i > LastSpace; i--)
-			{
-				szPrefix[i] = szPrefix[i - 1];
-			}
+			memmove ( &szPrefix[LastSpace+1], &szPrefix[LastSpace], (_tcslen(szPrefix)-LastSpace+1) * sizeof(TCHAR) );
 			
-			if(LastSpace + 1 == _tcslen(szPrefix))
+			if((UINT)(LastSpace + 1) == _tcslen(szPrefix))
 			{
 				_tcscat(szPrefix,_T("\""));
 			}

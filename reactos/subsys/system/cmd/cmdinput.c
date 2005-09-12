@@ -138,6 +138,7 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 	WORD   wLastKey = 0;
 	TCHAR  ch;
 	BOOL bContinue=FALSE;/*is TRUE the second case will not be executed*/
+	TCHAR szPath[MAX_PATH];
 
 	/* get screen size */
 	GetScreenSize (&maxx, &maxy);
@@ -366,8 +367,7 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 				
 				/* used to later see if we went down to the next line */
 				tempscreen = charcount;
-				TCHAR szPath[MAX_PATH];				
-        szPath[0]=_T('\0');
+				szPath[0]=_T('\0');
 
 				/* str is the whole things that is on the current line 
 				   that is and and out.  arg 2 is weather it goes back
@@ -404,7 +404,7 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 					if(((charcount + orgx) / maxx) + orgy > maxy - 1)
 						orgy += maxy - ((charcount + orgx) / maxx + orgy + 1);
 				}
-				SetCursorXY((orgx + current) % maxx, orgy + (orgx + current) / maxx);
+				SetCursorXY((short)(((int)orgx + current) % maxx), (short)((int)orgy + ((int)orgx + current) / maxx));
 				GetCursorXY(&curx, &cury);
 
 #endif

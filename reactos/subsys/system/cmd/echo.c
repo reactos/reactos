@@ -33,7 +33,7 @@
 INT CommandEcho (LPTSTR cmd, LPTSTR param)
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
-	INT i = 0;
+	UINT i = 0;
 
 #ifdef _DEBUG
 	DebugPrintf (_T("CommandEcho '%s' : '%s'\n"), cmd, param);

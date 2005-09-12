@@ -1,6 +1,5 @@
 #include <windows.h>
 #include <winnt.h>
-#include <winternl.h>
 #include <shellapi.h>
 
 #include <tchar.h>
@@ -13,6 +12,9 @@
 #include <stdarg.h>
 #include <math.h>
 #include <time.h>
+
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 
 #include "cmd.h"
 #include "config.h"

@@ -193,8 +193,8 @@ VOID del(LPHIST_ENTRY item)
 	if (item==NULL || item==Top || item==Bottom)
 	{
 #ifdef _DEBUG
-		DebugPrintf(_T("del in " __FILE__  ": retrning\n"
-			    "item is 0x%08x (Bottom is0x%08x)\n"),
+		DebugPrintf(_T("del in ") _T(__FILE__)  _T(": retrning\n")
+			    _T("item is 0x%08x (Bottom is0x%08x)\n"),
 			    item, Bottom);
 #endif
 		return;

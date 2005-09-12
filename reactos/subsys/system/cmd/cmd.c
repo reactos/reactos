@@ -148,9 +148,9 @@
 #define NT_SUCCESS(StatCode)  ((NTSTATUS)(StatCode) >= 0)
 #endif
 
-typedef NTSTATUS (STDCALL *NtQueryInformationProcessProc)(HANDLE, PROCESSINFOCLASS,
+typedef NTSTATUS (WINAPI *NtQueryInformationProcessProc)(HANDLE, PROCESSINFOCLASS,
                                                           PVOID, ULONG, PULONG);
-typedef NTSTATUS (STDCALL *NtReadVirtualMemoryProc)(HANDLE, PVOID, PVOID, ULONG, PULONG);
+typedef NTSTATUS (WINAPI *NtReadVirtualMemoryProc)(HANDLE, PVOID, PVOID, ULONG, PULONG);
 
 BOOL bExit = FALSE;       /* indicates EXIT was typed */
 BOOL bCanExit = TRUE;     /* indicates if this shell is exitable */
@@ -356,7 +356,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 	}
 	else
 	{
-		INT i = 0;		
+		UINT i = 0;		
 		BOOL bInside = FALSE;
 		rest[0] = _T('\0');
 		full[0] = _T('\0');
@@ -1392,12 +1392,10 @@ Initialize (int argc, TCHAR* argv[])
 
 
 #ifdef _DEBUG
-	INT x;
-
 	DebugPrintf (_T("[command args:\n"));
-	for (x = 0; x < argc; x++)
+	for (i = 0; i < argc; i++)
 	{
-		DebugPrintf (_T("%d. %s\n"), x, argv[x]);
+		DebugPrintf (_T("%d. %s\n"), i, argv[i]);
 	}
 	DebugPrintf (_T("]\n"));
 #endif

@@ -276,7 +276,7 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 	TCHAR * tmpPath;
 	TCHAR szCurrent[MAX_PATH];
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
-	INT i;
+	UINT i;
  
  
 	/* Filter out special cases first */
