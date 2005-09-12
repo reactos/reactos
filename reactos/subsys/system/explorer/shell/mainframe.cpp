@@ -1608,7 +1608,7 @@ void SDIMainFrame::entry_selected(Entry* entry)
 
 		TCHAR path[MAX_PATH];
 
-		if (shell_entry->get_path(path)) {
+		if (shell_entry->get_path(path,COUNTOF(path))) {
 			String url;
 
 			if (path[0] == ':')

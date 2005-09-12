@@ -82,8 +82,8 @@ namespace XMLStorage {
 #define	XS_nicmp strnicmp
 #define	XS_toi atoi
 #define	XS_len strlen
-#define	XS_sprintf sprintf
-#define	XS_vsprintf vsprintf
+#define	XS_snprintf snprintf
+#define	XS_vsnprintf vsnprintf
 #else
 #define	XS_CHAR TCHAR
 #define	XS_TEXT(x) TEXT(x)
@@ -93,8 +93,8 @@ namespace XMLStorage {
 #define	XS_nicmp _tcsnicmp
 #define	XS_toi _ttoi
 #define	XS_len _tcslen
-#define	XS_sprintf _stprintf
-#define	XS_vsprintf _vstprintf
+#define	XS_snprintf _sntprintf
+#define	XS_vsnprintf _vsntprintf
 #endif
 
 #if defined(_STRING_DEFINED) && !defined(XS_STRING_UTF8)
@@ -1351,7 +1351,7 @@ struct XMLInt
 	operator XS_String() const
 	{
 		XS_CHAR buffer[32];
-		XS_sprintf(buffer, XS_NUMBERFMT, _value);
+		XS_snprintf(buffer, COUNTOF(buffer), XS_NUMBERFMT, _value);
 		return buffer;
 	}
 
@@ -1386,7 +1386,7 @@ struct XMLIntRef
 	void assign(int value)
 	{
 		XS_CHAR buffer[32];
-		XS_sprintf(buffer, XS_NUMBERFMT, value);
+		XS_snprintf(buffer, COUNTOF(buffer), XS_NUMBERFMT, value);
 		_ref.assign(buffer);
 	}
 

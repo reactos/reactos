@@ -126,8 +126,10 @@ ShellPath ShellEntry::create_absolute_pidl() const
 
 
  // get full path of a shell entry
-bool ShellEntry::get_path(PTSTR path) const
+bool ShellEntry::get_path(PTSTR path, size_t path_count) const
 {
+	if ( !path || 0 == path_count )
+		return false;
 /*
 	path[0] = TEXT('\0');
 
@@ -138,7 +140,7 @@ bool ShellEntry::get_path(PTSTR path) const
 	LPCTSTR ret = fs_path;
 
 	if (ret) {
-		_tcscpy(path, ret);
+		lstrcpyn(path, ret, path_count);
 		return true;
 	} else
 		return false;
@@ -146,9 +148,12 @@ bool ShellEntry::get_path(PTSTR path) const
 
 
  // get full path of a shell folder
-bool ShellDirectory::get_path(PTSTR path) const
+bool ShellDirectory::get_path(PTSTR path, size_t path_count) const
 {
 	CONTEXT("ShellDirectory::get_path()");
+
+	if ( !path || 0 == path_count )
+		return false;
 
 	path[0] = TEXT('\0');
 
@@ -163,7 +168,7 @@ bool ShellDirectory::get_path(PTSTR path) const
 	if (!(attribs & SFGAO_FILESYSTEM))
 		return false;
 
-	if (FAILED(path_from_pidl(get_parent_folder(), &*_pidl, path, MAX_PATH)))
+	if (FAILED(path_from_pidl(get_parent_folder(), &*_pidl, path, path_count)))
 		return false;
 
 	return true;
@@ -235,11 +240,12 @@ void ShellDirectory::read_directory(int scan_flags)
 
 	TCHAR buffer[MAX_PATH];
 
-	if ((scan_flags&SCAN_FILESYSTEM) && get_path(buffer) && _tcsncmp(buffer,TEXT("::{"),3)) {
+	if ((scan_flags&SCAN_FILESYSTEM) && get_path(buffer, COUNTOF(buffer)) && _tcsncmp(buffer,TEXT("::{"),3)) {
 		Entry* entry = NULL;	// eliminate useless GCC warning by initializing entry
 
 		LPTSTR p = buffer + _tcslen(buffer);
 
+		// TODO FIXME - this can overflow
 		lstrcpy(p, TEXT("\\*"));
 
 		WIN32_FIND_DATA w32fd;

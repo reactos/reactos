@@ -804,7 +804,7 @@ struct String
 		TCHAR b[BUFFER_LEN];
 
 		va_start(l, fmt);
-		super::assign(b, _vstprintf(b, fmt, l));
+		super::assign(b, _vsntprintf(b, COUNTOF(b), fmt, l));
 		va_end(l);
 
 		return *this;
@@ -814,7 +814,7 @@ struct String
 	{
 		TCHAR b[BUFFER_LEN];
 
-		super::assign(b, _vstprintf(b, fmt, l));
+		super::assign(b, _vsntprintf(b, COUNTOF(b), fmt, l));
 
 		return *this;
 	}
@@ -825,7 +825,7 @@ struct String
 		TCHAR b[BUFFER_LEN];
 
 		va_start(l, fmt);
-		super::append(b, _vstprintf(b, fmt, l));
+		super::append(b, _vsntprintf(b, COUNTOF(b), fmt, l));
 		va_end(l);
 
 		return *this;
@@ -835,7 +835,7 @@ struct String
 	{
 		TCHAR b[BUFFER_LEN];
 
-		super::append(b, _vstprintf(b, fmt, l));
+		super::append(b, _vsntprintf(b, COUNTOF(b), fmt, l));
 
 		return *this;
 	}
@@ -894,7 +894,7 @@ struct UNC
 		int l = strlen(s) + 1;
 		_str = (LPWSTR) malloc(2*l);
 
-		if (MultiByteToWideChar(CP_ACP, 0, s, -1, _str, l) <= 0)
+		if (_str && MultiByteToWideChar(CP_ACP, 0, s, -1, _str, l) <= 0)
 			*_str = '\0';
 	}
 

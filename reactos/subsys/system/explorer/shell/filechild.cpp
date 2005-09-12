@@ -280,7 +280,7 @@ void FileChildWindow::set_curdir(Entry* entry)
 			_right->set_header();
 		}
 
-		entry->get_path(_path);
+		entry->get_path(_path, COUNTOF(_path));
 	}
 
 	if (_hwnd)	// only change window title if the window already exists
@@ -453,7 +453,7 @@ LRESULT FileChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			TCHAR path[MAX_PATH];
 
 			if (_left && _left->_cur) {
-				_left->_cur->get_path(path);
+				_left->_cur->get_path(path, COUNTOF(path));
 				SetCurrentDirectory(path);
 			}
 

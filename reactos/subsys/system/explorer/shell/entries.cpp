@@ -325,7 +325,7 @@ void Entry::extract_icon()
 
 	ICON_ID icon_id = ICID_NONE;
 
-	if (get_path(path) && _tcsncmp(path,TEXT("::{"),3))
+	if (get_path(path, COUNTOF(path)) && _tcsncmp(path,TEXT("::{"),3))
 		icon_id = g_Globals._icon_cache.extract(path);
 
 	if (icon_id == ICID_NONE) {
@@ -392,7 +392,7 @@ BOOL Entry::launch_entry(HWND hwnd, UINT nCmdShow)
 {
 	TCHAR cmd[MAX_PATH];
 
-	if (!get_path(cmd))
+	if (!get_path(cmd, COUNTOF(cmd)))
 		return FALSE;
 
 	 // add path to the recent file list
@@ -453,7 +453,7 @@ HRESULT Entry::GetUIObjectOf(HWND hWnd, REFIID riid, LPVOID* ppvOut)
 {
 	TCHAR path[MAX_PATH];
 /*
-	if (!get_path(path))
+	if (!get_path(path, COUNTOF(path)))
 		return E_FAIL;
 
 	ShellPath shell_path(path);
@@ -479,7 +479,7 @@ HRESULT Entry::GetUIObjectOf(HWND hWnd, REFIID riid, LPVOID* ppvOut)
 	if (!_up)
 		return E_INVALIDARG;
 
-	if (!_up->get_path(path))
+	if (!_up->get_path(path, COUNTOF(path)))
 		return E_FAIL;
 
 	ShellPath shell_path(path);
@@ -505,6 +505,107 @@ HRESULT Entry::GetUIObjectOf(HWND hWnd, REFIID riid, LPVOID* ppvOut)
 	return hr;
 }
 
+ // get full path of specified directory entry
+bool Entry::get_path_base ( PTSTR path, size_t path_count, ENTRY_TYPE etype ) const
+{
+	int level = 0;
+	size_t len = 0;
+	size_t l = 0;
+	LPCTSTR name = NULL;
+	TCHAR buffer[MAX_PATH];
+
+	if ( !path || 0 == path_count )
+		return false;
+
+	const Entry* entry;
+	if ( path_count > 1 )
+	{
+		for(entry=this; entry; level++) {
+			l = 0;
+
+			if (entry->_etype == etype) {
+				name = entry->_data.cFileName;
+
+				for(LPCTSTR s=name; *s && *s!=TEXT('/') && *s!=TEXT('\\'); s++)
+					++l;
+
+				if (!entry->_up)
+					break;
+			} else {
+				if (entry->get_path(buffer, COUNTOF(buffer))) {
+					l = _tcslen(buffer);
+					name = buffer;
+
+					/* special handling of drive names */
+					if (l>0 && buffer[l-1]=='\\' && path[0]=='\\')
+						--l;
+
+					if ( len+l >= path_count )
+					{
+						if ( l + 1 > path_count )
+							len = 0;
+						else
+							len = path_count - l - 1;
+					}
+					memmove(path+l, path, len*sizeof(TCHAR));
+					if ( l+1 >= path_count )
+						l = path_count - 1;
+					memcpy(path, name, l*sizeof(TCHAR));
+					len += l;
+				}
+
+				entry = NULL;
+				break;
+			}
+
+			if (l > 0) {
+				if ( len+l+1 >= path_count )
+				{
+					/* compare to 2 here because of terminator plus the '\\' we prepend */
+					if ( l + 2 > path_count )
+						len = 0;
+					else
+						len = path_count - l - 2;
+				}
+				memmove(path+l+1, path, len*sizeof(TCHAR));
+				/* compare to 2 here because of terminator plus the '\\' we prepend */
+				if ( l+2 >= path_count )
+					l = path_count - 2;
+				memcpy(path+1, name, l*sizeof(TCHAR));
+				len += l+1;
+
+				if ( etype == ET_WINDOWS && entry->_up && !(entry->_up->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))	// a NTFS stream?
+					path[0] = TEXT(':');
+				else
+					path[0] = TEXT('\\');
+			}
+
+			entry = entry->_up;
+		}
+
+		if (entry) {
+			if ( len+l >= path_count )
+			{
+				if ( l + 1 > path_count )
+					len = 0;
+				else
+					len = path_count - l - 1;
+			}
+			memmove(path+l, path, len*sizeof(TCHAR));
+			if ( l+1 >= path_count )
+				l = path_count - 1;
+			memcpy(path, name, l*sizeof(TCHAR));
+			len += l;
+		}
+
+		if ( !level && (len+1 < path_count) )
+			path[len++] = TEXT('\\');
+	}
+
+	path[len] = TEXT('\0');
+
+	return true;
+}
 
  // recursively free all child entries
 void Entry::free_subentries()

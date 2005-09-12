@@ -395,7 +395,7 @@ void BookmarkList::import_IE_favorites(ShellDirectory& dir, HWND hwnd)
 				ShellDirectory new_dir(dir._folder, static_cast<ShellEntry*>(entry)->_pidl, hwnd);
 				new_folder._bookmarks.import_IE_favorites(new_dir, hwnd);
 			} else {
-				entry->get_path(path);
+				entry->get_path(path, COUNTOF(path));
 				ShellDirectory new_dir(GetDesktopFolder(), path, hwnd);
 				new_folder._bookmarks.import_IE_favorites(new_dir, hwnd);
 			}
@@ -406,7 +406,7 @@ void BookmarkList::import_IE_favorites(ShellDirectory& dir, HWND hwnd)
 
 			bookmark._name = DecodeXMLString(name);
 
-			entry->get_path(path);
+			entry->get_path(path, COUNTOF(path));
 			_tsplitpath(path, NULL, NULL, NULL, ext);
 
 			if (!_tcsicmp(ext, TEXT(".url"))) {

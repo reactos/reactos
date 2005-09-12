@@ -183,7 +183,7 @@ bool FileTypeManager::is_exe_file(LPCTSTR ext)
 const FileTypeInfo& FileTypeManager::operator[](String ext)
 {
 #ifndef __WINE__ ///@todo _tcslwr() for Wine
-	_tcslwr((LPTSTR)ext.c_str());
+	_tcslwr(&ext.at(0));
 #endif
 
 	iterator found = find(ext);
@@ -230,7 +230,7 @@ LPCTSTR FileTypeManager::set_type(Entry* entry, bool dont_hide_ext)
 		if (type._neverShowExt && !dont_hide_ext) {
 			int len = ext - entry->_data.cFileName;
 			entry->_display_name = (LPTSTR) malloc((len+1)*sizeof(TCHAR));
-			_tcsncpy(entry->_display_name, entry->_data.cFileName, len);
+			lstrcpyn(entry->_display_name, entry->_data.cFileName, len);
 			entry->_display_name[len] = TEXT('\0');
 		}
 
@@ -416,7 +416,7 @@ const Icon& IconCache::extract(LPCTSTR path, int idx)
 	CachePair key(path, idx);
 
 #ifndef __WINE__ ///@todo _tcslwr() for Wine
-	_tcslwr((LPTSTR)key.first.c_str());
+	_tcslwr(&key.first.at(0));
 #endif
 
 	PathIdxMap::iterator found = _pathIdxMap.find(key);

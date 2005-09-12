@@ -85,7 +85,7 @@ struct COMExceptionBase
 				LocalFree(pBuf);
 			 } else {
 				TCHAR buffer[128];
-				_stprintf(buffer, TEXT("unknown Exception: 0x%08lX"), _hr);
+				_sntprintf(buffer, COUNTOF(buffer), TEXT("unknown Exception: 0x%08lX"), _hr);
 				_msg = buffer;
 			 }
 		}
@@ -769,14 +769,14 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 
 #ifdef UNICODE
 #define	StrRet StrRetW
-#define	tcscpyn wcscpyn
+//#define	tcscpyn wcscpyn
 #else
 #define	StrRet StrRetA
-#define	tcscpyn strcpyn
+//#define	tcscpyn strcpyn
 #endif
 
-extern LPSTR strcpyn(LPSTR dest, LPCSTR source, size_t count);
-extern LPWSTR wcscpyn(LPWSTR dest, LPCWSTR source, size_t count);
+//extern LPSTR strcpyn(LPSTR dest, LPCSTR source, size_t count);
+//extern LPWSTR wcscpyn(LPWSTR dest, LPCWSTR source, size_t count);
 
  /// easy retrieval of multi byte strings out of STRRET structures
 struct StrRetA : public STRRET
@@ -795,11 +795,11 @@ struct StrRetA : public STRRET
 			break;
 
 		  case STRRET_OFFSET:
-			strcpyn(b, (LPCSTR)&shiid+UNION_MEMBER(uOffset), l);
+			lstrcpynA(b, (LPCSTR)&shiid+UNION_MEMBER(uOffset), l);
 			break;
 
 		  case STRRET_CSTR:
-			strcpyn(b, UNION_MEMBER(cStr), l);
+			lstrcpynA(b, UNION_MEMBER(cStr), l);
 		}
 	}
 };
@@ -817,7 +817,7 @@ struct StrRetW : public STRRET
 	{
 		switch(uType) {
 		  case STRRET_WSTR:
-			wcscpyn(b, UNION_MEMBER(pOleStr), l);
+			lstrcpynW(b, UNION_MEMBER(pOleStr), l);
 			break;
 
 		  case STRRET_OFFSET:

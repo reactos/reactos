@@ -34,7 +34,7 @@ struct WinEntry : public Entry
 protected:
 	WinEntry() : Entry(ET_WINDOWS) {}
 
-	virtual bool get_path(PTSTR path) const;
+	virtual bool get_path(PTSTR path, size_t path_count) const;
 	virtual ShellPath create_absolute_pidl() const;
 };
 

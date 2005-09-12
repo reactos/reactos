@@ -249,7 +249,7 @@ void StartMenu::AddShellEntries(const ShellDirectory& dir, int max, const String
 		_tcscat(ignore_path, ignore_dir);
 		_tcscat(ignore_name, ignore_ext);
 
-		dir.get_path(dir_path);
+		dir.get_path(dir_path, COUNTOF(dir_path));
 
 		if (_tcsicmp(trim_path_slash(dir_path), trim_path_slash(ignore_path)))
 			*ignore_name = '\0';
@@ -1286,7 +1286,7 @@ void StartMenu::ActivateEntry(int id, const ShellEntrySet& entries)
 			else {
 				TCHAR path[MAX_PATH];
 
-				if (entry->get_path(path))
+				if (entry->get_path(path, COUNTOF(path)))
 					new_folders.push_back(path);
 			}
 
