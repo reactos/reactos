@@ -179,7 +179,7 @@ inline static BOOL SHELL_OsIsUnicode(void)
 	};
 inline static void __SHCloneStrA(char ** target,const char * source)
 {
-	*target = SHAlloc(strlen(source)+1);
+	*target = (char*)SHAlloc(strlen(source)+1);
 	strcpy(*target, source);
 }
 
@@ -192,7 +192,7 @@ inline static void __SHCloneStrWtoA(char ** target, const WCHAR * source)
 
 inline static void __SHCloneStrW(WCHAR ** target, const WCHAR * source)
 {
-	*target = SHAlloc( (strlenW(source)+1) * sizeof(WCHAR) );
+	*target = (WCHAR*)SHAlloc( (strlenW(source)+1) * sizeof(WCHAR) );
 	strcpyW(*target, source);
 }
 
