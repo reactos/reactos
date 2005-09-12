@@ -532,17 +532,26 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 static VOID
 DoCommand (LPTSTR line)
 {
-	TCHAR com[CMDLINE_LENGTH];  /* the first word in the command */
-	LPTSTR cp = com;
+	TCHAR *com = NULL;  /* the first word in the command */
+	TCHAR *cp = NULL;
 	LPTSTR cstart;
 	LPTSTR rest;   /* pointer to the rest of the command line */
 	INT cl;
 	LPCOMMAND cmdptr;
 
+	
 #ifdef _DEBUG
 	DebugPrintf (_T("DoCommand: (\'%s\')\n"), line);
 #endif /* DEBUG */
 
+	com = malloc( (_tcslen(line) +512)*sizeof(TCHAR) );
+	if (com == NULL)
+	{
+	  error_out_of_memory();
+	  return;
+	}
+
+	cp = com;	
 	/* Skip over initial white space */
 	while (_istspace (*line))
 		line++;
@@ -574,12 +583,15 @@ DoCommand (LPTSTR line)
 		/* Terminate first word */
 		*cp = _T('\0');
 
-		/* commands are limited to MAX_PATH */
+		/* Do not limit commands to MAX_PATH */
+		/*
 		if(_tcslen(com) > MAX_PATH)
 		{
 		  error_bad_command();
+		  free(com);
 		  return;
 		}
+		*/
 
 		/* Skip over whitespace to rest of line */
 		while (_istspace (*rest))
@@ -627,6 +639,7 @@ DoCommand (LPTSTR line)
 			}
 		}
 	}
+ free(com);
 }
 
 
