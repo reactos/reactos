@@ -150,6 +150,10 @@ _KiUserExceptionDispatcher@8:
     or al, al
     jz RaiseException
 
+    /* Pop off the records */
+    pop ebx
+    pop ecx
+
     /* We're fine, continue execution */
     push 0
     push ecx
