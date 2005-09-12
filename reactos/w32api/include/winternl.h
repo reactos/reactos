@@ -2180,8 +2180,17 @@ NTSTATUS  WINAPI RtlpNtCreateKey(PHANDLE,ACCESS_MASK,const OBJECT_ATTRIBUTES*,UL
 NTSTATUS  WINAPI RtlpWaitForCriticalSection(RTL_CRITICAL_SECTION *);
 NTSTATUS  WINAPI RtlpUnWaitCriticalSection(RTL_CRITICAL_SECTION *);
 
-NTSTATUS WINAPI vDbgPrintEx(ULONG,ULONG,LPCSTR,va_list);
-NTSTATUS WINAPI vDbgPrintExWithPrefix(LPCSTR,ULONG,ULONG,LPCSTR,va_list);
+ULONG WINAPI
+vDbgPrintEx(IN ULONG ComponentId,
+            IN ULONG Level,
+            IN LPCSTR Format,
+            IN va_list ap);
+ULONG WINAPI
+vDbgPrintExWithPrefix(IN LPCSTR Prefix,
+                      IN ULONG ComponentId,
+                      IN ULONG Level,
+                      IN LPCSTR Format,
+                      IN va_list ap);
 
 /* Wine internal functions */
 
