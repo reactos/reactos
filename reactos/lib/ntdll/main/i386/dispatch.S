@@ -184,3 +184,19 @@ Exit:
     call _RtlRaiseException@4
     ret 8
 
+.globl _RtlpGetStackLimits@8
+_RtlpGetStackLimits@8:
+
+    /* Get the stack limits */
+    mov eax, [fs:TEB_STACK_LIMIT]
+    mov ecx, [fs:TEB_STACK_BASE]
+
+    /* Return them */
+    mov edx, [esp+4]
+    mov [edx], eax
+    mov edx, [esp+8]
+    mov [edx], ecx
+
+    /* return */
+    ret 8
+

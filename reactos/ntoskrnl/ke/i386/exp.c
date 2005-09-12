@@ -930,6 +930,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
     KD_CONTINUE_TYPE Action;
     ULONG_PTR Stack, NewStack;
     ULONG Size;
+    BOOLEAN UserDispatch = FALSE;
     DPRINT1("KiDispatchException() called\n");
 
     /* Increase number of Exception Dispatches */
@@ -1042,7 +1043,8 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 
                 /* Set EIP to the User-mode Dispathcer */
                 TrapFrame->Eip = (ULONG)KeUserExceptionDispatcher;
-                return;
+                UserDispatch = TRUE;
+                _SEH_LEAVE;
             }
             _SEH_HANDLE
             {
@@ -1050,6 +1052,9 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
             }
             _SEH_END;
         }
+
+        /* If we dispatch to user, return now */
+        if (UserDispatch) return;
 
         /* FIXME: Forward the exception to the debugger for 2nd chance */
 

@@ -23,7 +23,7 @@ KiContinuePreviousModeUser(IN PCONTEXT Context,
     CONTEXT LocalContext;
 
     /* We'll have to make a copy and probe it */
-    ProbeForRead(Context, sizeof(CONTEXT), sizeof(ULONG));
+    //ProbeForRead(Context, sizeof(CONTEXT), sizeof(ULONG));
     RtlMoveMemory(&LocalContext, Context, sizeof(CONTEXT));
     Context = &LocalContext;
 
@@ -99,6 +99,7 @@ KiRaiseException(PEXCEPTION_RECORD ExceptionRecord,
         /* Check the previous mode */
         if (PreviousMode != KernelMode)
         {
+#if 0
             /* Probe the context */
             ProbeForRead(Context, sizeof(CONTEXT), sizeof(ULONG));
 
@@ -107,13 +108,14 @@ KiRaiseException(PEXCEPTION_RECORD ExceptionRecord,
                          FIELD_OFFSET(EXCEPTION_RECORD, NumberParameters) +
                          sizeof(ULONG),
                          sizeof(ULONG));
-
+#endif
             /* Validate the maximum parameters */
             if ((ParameterCount = ExceptionRecord->NumberParameters) >
                 EXCEPTION_MAXIMUM_PARAMETERS)
             {
                 /* Too large */
-                return STATUS_INVALID_PARAMETER;
+                Status = STATUS_INVALID_PARAMETER;
+                _SEH_LEAVE;
             }
 
             /* Probe the entire parameters now*/
