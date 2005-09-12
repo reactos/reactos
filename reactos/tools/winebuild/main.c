@@ -26,7 +26,9 @@
 
 #include <assert.h>
 #include <stdio.h>
+#ifdef WIN32
 #include <io.h> /* unlink() */
+#endif//WIN32
 #include <signal.h>
 #include <errno.h>
 #include <string.h>
