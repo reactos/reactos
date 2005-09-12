@@ -269,7 +269,7 @@ static HTREEITEM InsertTreeViewItem( browse_info *info, IShellFolder * lpsf,
 	tvi.cChildren= pEnumIL ? 1 : 0;
 	tvi.mask |= TVIF_CHILDREN;
 
-	lptvid = SHAlloc( sizeof(TV_ITEMDATA) );
+	lptvid = (LPTV_ITEMDATA)SHAlloc( sizeof(TV_ITEMDATA) );
 	if (!lptvid)
 	    return NULL;
 
