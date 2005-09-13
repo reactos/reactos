@@ -72,7 +72,6 @@
  
  /*
   * FIXMEs:
-  *         - Fix Win32k Callbacks so we can optimize stack usage.
   *         - Dig in trap code and see why we need to push/pop the segments,
   *           which -shouldn't- be needed on syscalls; one of the things
   *           missing for this to work is lazy loading in the GPF handler,
@@ -94,6 +93,7 @@
 BadStack:
 
     /* Restore ESP0 stack */
+    int 3
     mov ecx, [fs:KPCR_TSS]
     mov esp, ss:[ecx+KTSS_ESP0]
 
@@ -115,18 +115,6 @@ _KiFastCallEntry:
     /* Set the current stack to Kernel Stack */
     mov ecx, [fs:KPCR_TSS]
     mov esp, ss:[ecx+KTSS_ESP0]
-    /*
-     * ^^^^^ Normally we should be able to use KTHREAD.InitialStack - sizeof
-     *       KTRAP_FRAME - sizeof(NPX_AREA) and that will give us exactly
-     *       our esp (ie: ebp == esp by the way the system is organized).
-     *       This didn't work until I added v86m trap frame bias, which was
-     *       needed anways. It works NICELY until we hit a Win32K Callback,
-     *       which also messes up a lea esp, [ebp+...] below. It seems the
-     *       stack for callbacks isn't properly set up (it's missing sizeof
-     *       KTRAP_FRAME), which is understandable since the whole code is
-     *       messed up and smashes new stacks instead of using the kernel
-     *       assigned one.
-     */
 
     /* Set up a fake INT Stack. */
     push USER_DS
@@ -157,6 +145,9 @@ _KiFastCallEntry:
     push [ebx+KPCR_EXCEPTION_LIST]
     mov dword ptr [ebx+KPCR_EXCEPTION_LIST], -1
 
+    /* Use the thread's stack */
+    mov ebp, [esi+KTHREAD_INITIAL_STACK]
+
     /* Push previous mode */
     push UserMode
 
@@ -169,11 +160,15 @@ _KiFastCallEntry:
     sub $0x30, %esp                                                    // + 0x70
 .intel_syntax noprefix
 
+    /* Make space for us on the stack */
+    sub ebp, 0x29C
+
     /* Write the previous mode */
     mov byte ptr [esi+KTHREAD_PREVIOUS_MODE], UserMode
 
-    /* Go on the Kernel stack frame */
-    mov ebp, esp
+    /* Sanity check */
+    cmp ebp, esp
+    jnz BadStack
 
     /* Flush DR7 */
     and dword ptr [ebp+KTRAP_FRAME_DR7], 0

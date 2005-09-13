@@ -203,7 +203,7 @@ KeUserModeCallback(IN ULONG RoutineIndex,
     }
   /* FIXME: Need to check whether we were interrupted from v86 mode. */
   RtlCopyMemory((char*)NewStack + StackSize - sizeof(KTRAP_FRAME) - sizeof(FX_SAVE_AREA),
-                Thread->Tcb.TrapFrame, sizeof(KTRAP_FRAME) - (4 * sizeof(DWORD)));
+                Thread->Tcb.TrapFrame, sizeof(KTRAP_FRAME) - (4 * sizeof(ULONG)));
   NewFrame = (PKTRAP_FRAME)((char*)NewStack + StackSize - sizeof(KTRAP_FRAME) - sizeof(FX_SAVE_AREA));
   /* We need the stack pointer to remain 4-byte aligned */
   NewFrame->Esp -= (((ArgumentLength + 3) & (~ 0x3)) + (4 * sizeof(ULONG)));
@@ -236,7 +236,7 @@ KeUserModeCallback(IN ULONG RoutineIndex,
   Thread->Tcb.InitialStack = Thread->Tcb.StackBase = (char*)NewStack + StackSize;
   Thread->Tcb.StackLimit = (ULONG)NewStack;
   Thread->Tcb.KernelStack = (char*)NewStack + StackSize - sizeof(KTRAP_FRAME) - sizeof(FX_SAVE_AREA);
-  KeGetCurrentKPCR()->TSS->Esp0 = (ULONG)Thread->Tcb.InitialStack - sizeof(FX_SAVE_AREA);
+  KeGetCurrentKPCR()->TSS->Esp0 = (ULONG)Thread->Tcb.InitialStack - sizeof(FX_SAVE_AREA) - 0x10;
   KePushAndStackSwitchAndSysRet((ULONG)&SavedState, Thread->Tcb.KernelStack);
 
   /*

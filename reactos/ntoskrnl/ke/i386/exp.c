@@ -614,7 +614,7 @@ KiEspToTrapFrame(IN PKTRAP_FRAME TrapFrame,
         /* Don't allow ESP to be lowered, this is illegal */
         if (Esp < Previous)
         {
-            //KeBugCheck(SET_OF_INVALID_CONTEXT);
+            KeBugCheck(SET_OF_INVALID_CONTEXT);
         }
 
         /* Create an edit frame, check if it was alrady */
@@ -767,7 +767,6 @@ KeContextToTrapFrame(IN PCONTEXT Context,
             TrapFrame->Ds = USER_DS;
             TrapFrame->Es = USER_DS;
             TrapFrame->Fs = Context->SegFs;
-            KEBUGCHECK(0);
             TrapFrame->Gs = 0;
         }
         else
