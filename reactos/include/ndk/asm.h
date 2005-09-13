@@ -48,12 +48,14 @@
 /*
  * Defines for accessing KPCR and KTHREAD structure members
  */
+#define KTHREAD_DEBUG_ACTIVE            0x03
 #define KTHREAD_INITIAL_STACK           0x18
 #define KTHREAD_STACK_LIMIT             0x1C
 #define KTHREAD_TEB                     0x20
 #define KTHREAD_KERNEL_STACK            0x28
 #define KTHREAD_NPX_STATE               0x31
 #define KTHREAD_STATE                   0x2D
+#define KTHREAD_ALERTED                 0x2E
 #define KTHREAD_APCSTATE_PROCESS        0x34 + 0x10
 #define KTHREAD_PENDING_USER_APC        0x34 + 0x16
 #define KTHREAD_PENDING_KERNEL_APC      0x34 + 0x15
@@ -72,6 +74,7 @@
 #define KPCR_EXCEPTION_LIST             0x0
 #define KPCR_INITIAL_STACK              0x4
 #define KPCR_STACK_LIMIT                0x8
+#define KPCR_TEB                        0x18
 #define KPCR_SELF                       0x1C
 #define KPCR_GDT                        0x3C
 #define KPCR_TSS                        0x40
@@ -91,7 +94,7 @@
 #define KTRAP_FRAME_DEBUGEIP            0x4
 #define KTRAP_FRAME_DEBUGARGMARK        0x8
 #define KTRAP_FRAME_DEBUGPOINTER        0xC
-#define KTRAP_FRAME_TEMPSS              0x10
+#define KTRAP_FRAME_TEMPCS              0x10
 #define KTRAP_FRAME_TEMPESP             0x14
 #define KTRAP_FRAME_DR0                 0x18
 #define KTRAP_FRAME_DR1                 0x1C

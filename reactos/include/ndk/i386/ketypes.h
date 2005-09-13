@@ -67,33 +67,30 @@ typedef struct _FX_SAVE_AREA
     ULONG Cr0NpxState;
 } FX_SAVE_AREA, *PFX_SAVE_AREA;
 
+/* FIXME: The names need to be fixed! */
 typedef struct _KTRAP_FRAME
 {
-    PVOID DebugEbp;
-    PVOID DebugEip;
-    PVOID DebugArgMark;
-    PVOID DebugPointer;
-    PVOID TempCs;
-    PVOID TempEip;
+    ULONG DebugEbp;
+    ULONG DebugEip;
+    ULONG DebugArgMark;
+    ULONG DebugPointer;
+    ULONG TempCs;
+    ULONG TempEsp;
     ULONG Dr0;
     ULONG Dr1;
     ULONG Dr2;
     ULONG Dr3;
     ULONG Dr6;
     ULONG Dr7;
-    USHORT Gs;
-    USHORT Reserved1;
-    USHORT Es;
-    USHORT Reserved2;
-    USHORT Ds;
-    USHORT Reserved3;
+    ULONG Gs;
+    ULONG Es;
+    ULONG Ds;
     ULONG Edx;
     ULONG Ecx;
     ULONG Eax;
     ULONG PreviousMode;
     PVOID ExceptionList;
-    USHORT Fs;
-    USHORT Reserved4;
+    ULONG Fs;
     ULONG Edi;
     ULONG Esi;
     ULONG Ebx;
@@ -103,16 +100,11 @@ typedef struct _KTRAP_FRAME
     ULONG Cs;
     ULONG Eflags;
     ULONG Esp;
-    USHORT Ss;
-    USHORT Reserved5;
-    USHORT V86_Es;
-    USHORT Reserved6;
-    USHORT V86_Ds;
-    USHORT Reserved7;
-    USHORT V86_Fs;
-    USHORT Reserved8;
-    USHORT V86_Gs;
-    USHORT Reserved9;
+    ULONG Ss;
+    ULONG V86_Es;
+    ULONG V86_Ds;
+    ULONG V86_Fs;
+    ULONG V86_Gs;
 } KTRAP_FRAME, *PKTRAP_FRAME;
 
 typedef struct _LDT_ENTRY
