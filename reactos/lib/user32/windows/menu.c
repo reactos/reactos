@@ -4415,9 +4415,9 @@ ModifyMenuW(
   LPCWSTR lpNewItem)
 {
   MENUITEMINFOW mii;
+  memset ( &mii, 0, sizeof(mii) );
   mii.cbSize = sizeof(MENUITEMINFOW);
   mii.fMask = MIIM_FTYPE | MIIM_STRING | MIIM_STATE;
-  mii.fType = 0;
   mii.fState = MFS_ENABLED;
 
   UNIMPLEMENTED;
@@ -4442,10 +4442,10 @@ ModifyMenuW(
   }
   else
   {
-    if(mii.dwTypeData != NULL)
+    /*if(mii.dwTypeData != NULL)
     {
       HeapFree(GetProcessHeap(),0, mii.dwTypeData);
-    }
+    }*/
     if (*lpNewItem == '\b')
     {
        mii.fType |= MF_HELP;
