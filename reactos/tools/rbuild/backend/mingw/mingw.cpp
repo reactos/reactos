@@ -863,9 +863,9 @@ MingwBackend::GetBinutilsVersion ( const string& binutilsCommand )
 		token = strtok ( NULL, separators );
 	}
 	string version = string ( prevtoken );
-	int firstSpace = version.find_last_not_of ( " \t" );
-	if ( firstSpace != -1 )
-		return string ( version, 0, firstSpace);
+	int lastDigit = version.find_last_not_of ( "\t\r\n" );
+	if ( lastDigit != -1 )
+		return string ( version, 0, lastDigit+1 );
 	else
 		return version;
 }
