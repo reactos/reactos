@@ -230,6 +230,11 @@ Path::Split ( vector<string>& out,
 	}
 	if ( include_last && strcmp ( prev, "." ) )
 		out.push_back ( prev );
+	// special-case where path only has "."
+	// don't move this check up higher as it might miss
+	// some funny paths...
+	if ( !out.size() && !strcmp ( prev, "." ) )
+		out.push_back ( "." );
 }
 
 XMLFile::XMLFile()
