@@ -26,13 +26,13 @@ extern "C" {
 #endif
 
 
-#define EXT_GET_DRIVERINFO		0x1101 /*!< ExtEscape code to get driver info */
-typedef struct tagEXTDRIVERINFO
+#define EXT_QUERY_OPENGLDRIVERINFO	0x1101 /*!< ExtEscape code to get driver info */
+typedef struct tagEXT_OPENGLDRIVERINFO
 {
 	DWORD version;          /*!< Driver interface version */
 	DWORD driver_version;	/*!< Driver version */
 	WCHAR driver_name[256]; /*!< Driver name */
-} EXTDRIVERINFO;
+} EXT_OPENGLDRIVERINFO;
 
 
 /*! \brief Append OpenGL Rendering Context (GLRC) to list
@@ -93,11 +93,12 @@ ROSGL_RemoveContext( GLRC *glrc )
 			if (p->next == glrc)
 			{
 				p->next = glrc->next;
-				return;
+				break;
 			}
 			p = p->next;
 		}
-		DBGPRINT( "Error: GLRC 0x%08x not found in list!", glrc );
+		if (p == NULL)
+			DBGPRINT( "Error: GLRC 0x%08x not found in list!", glrc );
 	}
 
 	/* release mutex */
@@ -165,6 +166,7 @@ BOOL
 ROSGL_ContainsContext( GLRC *glrc )
 {
 	GLRC *p;
+        BOOL found = FALSE;
 
 	/* synchronize */
 	if (WaitForSingleObject( OPENGL32_processdata.glrc_mutex, INFINITE ) ==
@@ -178,7 +180,10 @@ ROSGL_ContainsContext( GLRC *glrc )
 	while (p != NULL)
 	{
 		if (p == glrc)
-			return TRUE;
+		{
+			found = TRUE;
+			break;
+		}
 		p = p->next;
 	}
 
@@ -186,7 +191,7 @@ ROSGL_ContainsContext( GLRC *glrc )
 	if (!ReleaseMutex( OPENGL32_processdata.glrc_mutex ))
 		DBGPRINT( "Error: ReleaseMutex() failed (%d)", GetLastError() );
 
-	return FALSE;
+	return found;
 }
 
 
@@ -205,6 +210,14 @@ GLDCDATA *
 ROSGL_GetPrivateDCData( HDC hdc )
 {
 	GLDCDATA *data;
+
+	/* check hdc */
+	if (GetObjectType( hdc ) != OBJ_DC && GetObjectType( hdc ) != OBJ_MEMDC)
+	{
+		DBGPRINT( "Error: hdc is not a DC handle!" );
+		SetLastError( ERROR_INVALID_HANDLE );
+		return FALSE;
+	}
 
 	/* synchronize */
 	if (WaitForSingleObject( OPENGL32_processdata.dcdata_mutex, INFINITE ) ==
@@ -281,17 +294,24 @@ ROSGL_ICDForHDC( HDC hdc )
 	if (dcdata->icd == NULL)
 	{
 		LPCWSTR driverName;
-		EXTDRIVERINFO info;
+		EXT_OPENGLDRIVERINFO info;
 
 		driverName = _wgetenv( L"OPENGL32_DRIVER" );
 		if (driverName == NULL)
 		{
-			DWORD dwInput = 0;
+			DWORD dwInput;
 			LONG ret;
 
 			/* get driver name */
-			ret = ExtEscape( hdc, EXT_GET_DRIVERINFO, sizeof (dwInput), (LPCSTR)&dwInput,
-			                 sizeof (EXTDRIVERINFO), (LPSTR)&info );
+			dwInput = EXT_QUERY_OPENGLDRIVERINFO;
+			ret = ExtEscape( hdc, QUERYESCSUPPORT, sizeof (dwInput), (LPCSTR)&dwInput, 0, NULL );
+			if (ret > 0)
+			{
+				dwInput = 0;
+				ret = ExtEscape( hdc, EXT_QUERY_OPENGLDRIVERINFO, sizeof (dwInput),
+				                 (LPCSTR)&dwInput, sizeof (EXT_OPENGLDRIVERINFO),
+				                 (LPSTR)&info );
+			}
 			if (ret <= 0)
 			{
 				HKEY hKey;
@@ -299,11 +319,10 @@ ROSGL_ICDForHDC( HDC hdc )
 
 				if (ret < 0)
 				{
-					DBGPRINT( "Warning: ExtEscape to get the drivername failed!!! (%d)", GetLastError() );
+					DBGPRINT( "Warning: ExtEscape to get the drivername failed! (%d)", GetLastError() );
 					if (MessageBox( WindowFromDC( hdc ), L"Couldn't get installable client driver name!\nUsing default driver.",
 					                L"OPENGL32.dll: Warning", MB_OKCANCEL | MB_ICONWARNING ) == IDCANCEL)
 					{
-						SetLastError( 0 );
 						return NULL;
 					}
 				}
@@ -337,12 +356,12 @@ ROSGL_ICDForHDC( HDC hdc )
 		dcdata->icd = OPENGL32_LoadICD( info.driver_name );
 		if (dcdata->icd == NULL)
 		{
-                        WCHAR Buffer[256];
-                        snwprintf(Buffer, sizeof(Buffer)/sizeof(WCHAR),
-                                  L"Couldn't load driver \"%s\".", driverName);
+			WCHAR Buffer[256];
+			snwprintf(Buffer, sizeof(Buffer)/sizeof(WCHAR),
+			          L"Couldn't load driver \"%s\".", driverName);
 			MessageBox(WindowFromDC( hdc ), Buffer,
 			           L"OPENGL32.dll: Warning",
-                                   MB_OK | MB_ICONWARNING);
+			           MB_OK | MB_ICONWARNING);
                 }
 	}
 
@@ -381,7 +400,7 @@ ROSGL_SetContextCallBack( const ICDTable *table )
 		size = sizeof (PROC) * table->num_funcs;
 		memcpy( tebTable, table->dispatch_table, size );
 		memset( tebTable + table->num_funcs, 0,
-				sizeof (table->dispatch_table) - size );
+		        sizeof (table->dispatch_table) - size );
 	}
 	else
 	{
@@ -390,19 +409,19 @@ ROSGL_SetContextCallBack( const ICDTable *table )
 	}
 
 	/* put in empty functions as long as we dont have a fallback */
-	#define X(func, ret, typeargs, args, icdidx, tebidx, stack)            \
-		if (tebTable[icdidx] == NULL)                                      \
-		{                                                                  \
-			if (table != NULL)                                             \
-				DBGPRINT( "Warning: GL proc '%s' is NULL", #func );        \
-			tebTable[icdidx] = (PROC)glEmptyFunc##stack;                   \
+	#define X(func, ret, typeargs, args, icdidx, tebidx, stack)                 \
+		if (tebTable[icdidx] == NULL)                                       \
+		{                                                                   \
+			if (table != NULL)                                          \
+				DBGPRINT( "Warning: GL proc '%s' is NULL", #func ); \
+			tebTable[icdidx] = (PROC)glEmptyFunc##stack;                \
 		}
 	GLFUNCS_MACRO
 	#undef X
 
 	/* fill teb->glDispatchTable for fast calls */
-	#define X(func, ret, typeargs, args, icdidx, tebidx, stack)            \
-		if (tebidx >= 0)                                                   \
+	#define X(func, ret, typeargs, args, icdidx, tebidx, stack)         \
+		if (tebidx >= 0)                                            \
 			tebDispatchTable[tebidx] = tebTable[icdidx];
 	GLFUNCS_MACRO
 	#undef X
@@ -453,7 +472,7 @@ rosglChoosePixelFormat( HDC hdc, CONST PIXELFORMATDESCRIPTOR *pfd )
 	/* check input */
 	if (pfd->nSize != sizeof (PIXELFORMATDESCRIPTOR) || pfd->nVersion != 1)
 	{
-		SetLastError( 0 ); /* FIXME: use appropriate errorcode */
+		SetLastError( ERROR_INVALID_PARAMETER );
 		return 0;
 	}
 
@@ -544,18 +563,21 @@ rosglCopyContext( HGLRC hsrc, HGLRC hdst, UINT mask )
 	if (!ROSGL_ContainsContext( src ))
 	{
 		DBGPRINT( "Error: src GLRC not found!" );
-		return FALSE; /* FIXME: SetLastError() */
+		SetLastError( ERROR_INVALID_HANDLE );
+		return FALSE;
 	}
 	if (!ROSGL_ContainsContext( dst ))
 	{
 		DBGPRINT( "Error: dst GLRC not found!" );
-		return FALSE; /* FIXME: SetLastError() */
+		SetLastError( ERROR_INVALID_HANDLE );
+		return FALSE;
 	}
 
 	/* I think this is only possible within one ICD */
 	if (src->icd != src->icd)
 	{
 		DBGPRINT( "Error: src and dst GLRC use different ICDs!" );
+		SetLastError( ERROR_INVALID_HANDLE );
 		return FALSE;
 	}
 
@@ -599,6 +621,7 @@ rosglCreateLayerContext( HDC hdc, int layer )
 	icd = ROSGL_ICDForHDC( hdc );
 	if (icd == NULL)
 	{
+		ROSGL_DeleteContext( glrc );
 		DBGPRINT( "Couldn't get ICD by HDC :-(" );
 		/* FIXME: fallback? */
 		return NULL;
@@ -663,14 +686,16 @@ rosglDeleteContext( HGLRC hglrc )
 	if (!ROSGL_ContainsContext( glrc ))
 	{
 		DBGPRINT( "Error: hglrc not found!" );
-		return FALSE; /* FIXME: SetLastError() */
+		SetLastError( ERROR_INVALID_HANDLE );
+		return FALSE;
 	}
 
 	/* make sure GLRC is not current for some thread */
 	if (glrc->is_current)
 	{
 		DBGPRINT( "Error: GLRC is current for DC 0x%08x", glrc->hdc );
-		return FALSE; /* FIXME: SetLastError() */
+		SetLastError( ERROR_INVALID_FUNCTION );
+		return FALSE;
 	}
 
 	/* release ICD's context */
@@ -694,6 +719,7 @@ rosglDescribeLayerPlane( HDC hdc, int iPixelFormat, int iLayerPlane,
                          UINT nBytes, LPLAYERPLANEDESCRIPTOR plpd )
 {
 	UNIMPLEMENTED;
+	SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
 	return FALSE;
 }
 
@@ -721,6 +747,10 @@ rosglDescribePixelFormat( HDC hdc, int iFormat, UINT nBytes,
 		ret = icd->DrvDescribePixelFormat( hdc, iFormat, nBytes, pfd );
 		if (ret == 0)
 			DBGPRINT( "Error: DrvDescribePixelFormat(format=%d) failed (%d)", iFormat, GetLastError() );
+	}
+	else
+	{
+		SetLastError( ERROR_INVALID_FUNCTION );
 	}
 
 	return ret;
@@ -763,6 +793,7 @@ rosglGetLayerPaletteEntries( HDC hdc, int iLayerPlane, int iStart,
                              int cEntries, COLORREF *pcr )
 {
 	UNIMPLEMENTED;
+	SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
 	return 0;
 }
 
@@ -807,37 +838,26 @@ PROC
 APIENTRY
 rosglGetProcAddress( LPCSTR proc )
 {
+	PROC func;
+	GLDRIVERDATA *icd;
+
 	if (OPENGL32_threaddata->glrc == NULL)
 	{
 		DBGPRINT( "Error: No current GLRC!" );
+		SetLastError( ERROR_INVALID_FUNCTION );
 		return NULL;
 	}
 
-	if (proc[0] == 'g' && proc[1] == 'l' && proc[2] != 'u') /* glXXX */
+	icd = OPENGL32_threaddata->glrc->icd;
+	func = icd->DrvGetProcAddress( proc );
+	if (func != NULL)
 	{
-		PROC glXXX = NULL;
-		GLDRIVERDATA *icd = OPENGL32_threaddata->glrc->icd;
-		glXXX = icd->DrvGetProcAddress( proc );
-		if (glXXX)
-		{
-			DBGPRINT( "Info: Proc \"%s\" loaded from ICD.", proc );
-			return glXXX;
-		}
-
-		/* FIXME: go through own functions? */
-		DBGPRINT( "Warning: Unsupported GL extension: %s", proc );
-	}
-	if (proc[0] == 'w' && proc[1] == 'g' && proc[2] == 'l') /* wglXXX */
-	{
-		/* FIXME: support wgl extensions? (there are such IIRC) */
-		DBGPRINT( "Warning: Unsupported WGL extension: %s", proc );
-	}
-	if (proc[0] == 'g' && proc[1] == 'l' && proc[2] == 'u') /* gluXXX */
-	{
-		/* FIXME: do we support these as well? */
-		DBGPRINT( "Warning: GLU extension %s requested, returning NULL", proc );
+		DBGPRINT( "Info: Proc \"%s\" loaded from ICD.", proc );
+		return func;
 	}
 
+	/* FIXME: Should we return wgl/gl 1.1 functions? */
+	SetLastError( ERROR_PROC_NOT_FOUND );
 	return NULL;
 }
 
@@ -882,6 +902,7 @@ rosglMakeCurrent( HDC hdc, HGLRC hglrc )
 		if (GetObjectType( hdc ) != OBJ_DC && GetObjectType( hdc ) != OBJ_MEMDC)
 		{
 			DBGPRINT( "Error: hdc is not a DC handle!" );
+			SetLastError( ERROR_INVALID_HANDLE );
 			return FALSE;
 		}
 
@@ -889,20 +910,23 @@ rosglMakeCurrent( HDC hdc, HGLRC hglrc )
 		if (!ROSGL_ContainsContext( glrc ))
 		{
 			DBGPRINT( "Error: hglrc not found!" );
-			return FALSE; /* FIXME: SetLastError() */
+			SetLastError( ERROR_INVALID_HANDLE );
+			return FALSE;
 		}
 
 		/* check if it is available */
 		if (glrc->is_current && glrc->thread_id != GetCurrentThreadId()) /* used by another thread */
 		{
 			DBGPRINT( "Error: hglrc is current for thread 0x%08x", glrc->thread_id );
-			return FALSE; /* FIXME: SetLastError() */
+			SetLastError( ERROR_INVALID_HANDLE );
+			return FALSE;
 		}
 
 		/* call the ICD */
 		if (glrc->hglrc != NULL)
 		{
 			DBGPRINT( "Info: Calling DrvSetContext!" );
+			SetLastError( ERROR_SUCCESS );
 			icdTable = glrc->icd->DrvSetContext( hdc, glrc->hglrc,
 			                                     ROSGL_SetContextCallBack );
 			if (icdTable == NULL)
@@ -936,6 +960,7 @@ APIENTRY
 rosglRealizeLayerPalette( HDC hdc, int iLayerPlane, BOOL bRealize )
 {
 	UNIMPLEMENTED;
+	SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
 	return FALSE;
 }
 
@@ -946,6 +971,7 @@ rosglSetLayerPaletteEntries( HDC hdc, int iLayerPlane, int iStart,
                              int cEntries, CONST COLORREF *pcr )
 {
 	UNIMPLEMENTED;
+	SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
 	return 0;
 }
 
@@ -1018,18 +1044,21 @@ rosglShareLists( HGLRC hglrc1, HGLRC hglrc2 )
 	if (!ROSGL_ContainsContext( glrc1 ))
 	{
 		DBGPRINT( "Error: hglrc1 not found!" );
-		return FALSE; /* FIXME: SetLastError() */
+		SetLastError( ERROR_INVALID_HANDLE );
+		return FALSE;
 	}
 	if (!ROSGL_ContainsContext( glrc2 ))
 	{
 		DBGPRINT( "Error: hglrc2 not found!" );
-		return FALSE; /* FIXME: SetLastError() */
+		SetLastError( ERROR_INVALID_HANDLE );
+		return FALSE;
 	}
 
 	/* I think this is only possible within one ICD */
 	if (glrc1->icd != glrc2->icd)
 	{
 		DBGPRINT( "Error: hglrc1 and hglrc2 use different ICDs!" );
+		SetLastError( ERROR_INVALID_HANDLE );
 		return FALSE;
 	}
 
@@ -1063,6 +1092,7 @@ rosglSwapBuffers( HDC hdc )
 	}
 
 	/* FIXME: implement own functionality? */
+	SetLastError( ERROR_INVALID_FUNCTION );
 	return FALSE;
 }
 
@@ -1072,6 +1102,7 @@ APIENTRY
 rosglSwapLayerBuffers( HDC hdc, UINT fuPlanes )
 {
 	UNIMPLEMENTED;
+	SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
 	return FALSE;
 }
 
@@ -1081,6 +1112,7 @@ APIENTRY
 rosglUseFontBitmapsA( HDC hdc, DWORD  first, DWORD count, DWORD listBase )
 {
 	UNIMPLEMENTED;
+	SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
 	return FALSE;
 }
 
@@ -1090,6 +1122,7 @@ APIENTRY
 rosglUseFontBitmapsW( HDC hdc, DWORD  first, DWORD count, DWORD listBase )
 {
 	UNIMPLEMENTED;
+	SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
 	return FALSE;
 }
 
@@ -1101,6 +1134,7 @@ rosglUseFontOutlinesA( HDC hdc, DWORD first, DWORD count, DWORD listBase,
                        GLYPHMETRICSFLOAT *pgmf )
 {
 	UNIMPLEMENTED;
+	SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
 	return FALSE;
 }
 
@@ -1112,6 +1146,7 @@ rosglUseFontOutlinesW( HDC hdc, DWORD first, DWORD count, DWORD listBase,
                        GLYPHMETRICSFLOAT *pgmf )
 {
 	UNIMPLEMENTED;
+	SetLastError( ERROR_CALL_NOT_IMPLEMENTED );
 	return FALSE;
 }
 

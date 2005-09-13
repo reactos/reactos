@@ -33,10 +33,12 @@ extern "C" {
 /* debug flags */
 #if !defined(NDEBUG)
 # define DEBUG_OPENGL32
-/*# define DEBUG_OPENGL32_BRKPTS*/		/* enable breakpoints */
-# define DEBUG_OPENGL32_ICD_EXPORTS	/* dumps the list of (un)supported glXXX
-                                       functions when an ICD is loaded. */
-# define DEBUG_OPENGL32_TRACE       /* prints much information about whats going on */
+/* enable breakpoints */
+/*# define DEBUG_OPENGL32_BRKPTS*/
+/* dumps the list of (un)supported glXXX functions when an ICD is loaded. */
+# define DEBUG_OPENGL32_ICD_EXPORTS
+/* prints much information about whats going on */
+# define DEBUG_OPENGL32_TRACE
 #endif /* !NDEBUG */
 
 /* debug macros */
@@ -196,7 +198,7 @@ extern GLPROCESSDATA OPENGL32_processdata;
 /* function prototypes */
 GLDRIVERDATA *OPENGL32_LoadICD( LPCWSTR driver );
 BOOL OPENGL32_UnloadICD( GLDRIVERDATA *icd );
-
+BOOL APIENTRY rosglMakeCurrent( HDC hdc, HGLRC hglrc );
 
 /* empty gl functions from gl.c */
 int STDCALL glEmptyFunc0();

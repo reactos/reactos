@@ -78,9 +78,10 @@ OPENGL32_ThreadAttach()
 static void
 OPENGL32_ThreadDetach()
 {
-	/* FIXME - do we need to release some HDC or something? */
 	GLTHREADDATA* lpData = NULL;
 	PROC *dispatchTable = NULL;
+
+	rosglMakeCurrent( NULL, NULL );
 
 	lpData = (GLTHREADDATA*)TlsGetValue( OPENGL32_tls );
 	if (lpData != NULL)
