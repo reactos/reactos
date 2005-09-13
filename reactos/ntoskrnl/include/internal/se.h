@@ -83,114 +83,178 @@ extern PSECURITY_DESCRIPTOR SePublicOpenUnrestrictedSd;
 extern PSECURITY_DESCRIPTOR SeSystemDefaultSd;
 extern PSECURITY_DESCRIPTOR SeUnrestrictedSd;
 
-
 /* Functions */
-
-BOOLEAN SeInit1(VOID);
-BOOLEAN SeInit2(VOID);
-BOOLEAN SeInitSRM(VOID);
-
-VOID SepInitLuid(VOID);
-VOID SepInitPrivileges(VOID);
-BOOLEAN SepInitSecurityIDs(VOID);
-BOOLEAN SepInitDACLs(VOID);
-BOOLEAN SepInitSDs(VOID);
-
-VOID SeDeassignPrimaryToken(struct _EPROCESS *Process);
-
-NTSTATUS STDCALL
-SepCreateImpersonationTokenDacl(PTOKEN Token,
-                                PTOKEN PrimaryToken,
-                                PACL *Dacl);
-
-VOID SepInitializeTokenImplementation(VOID);
-
-PTOKEN STDCALL SepCreateSystemProcessToken(VOID);
-
-NTSTATUS SeExchangePrimaryToken(struct _EPROCESS* Process,
-				PACCESS_TOKEN NewToken,
-				PACCESS_TOKEN* OldTokenP);
-
-NTSTATUS
-SeCaptureLuidAndAttributesArray(PLUID_AND_ATTRIBUTES Src,
-				ULONG PrivilegeCount,
-				KPROCESSOR_MODE PreviousMode,
-				PLUID_AND_ATTRIBUTES AllocatedMem,
-				ULONG AllocatedLength,
-				POOL_TYPE PoolType,
-				ULONG d,
-				PLUID_AND_ATTRIBUTES* Dest,
-				PULONG Length);
-
-VOID
-SeReleaseLuidAndAttributesArray(PLUID_AND_ATTRIBUTES Privilege,
-				KPROCESSOR_MODE PreviousMode,
-				ULONG a);
+BOOLEAN
+NTAPI
+SeInit1(VOID);
 
 BOOLEAN
-SepPrivilegeCheck(PTOKEN Token,
-		  PLUID_AND_ATTRIBUTES Privileges,
-		  ULONG PrivilegeCount,
-		  ULONG PrivilegeControl,
-		  KPROCESSOR_MODE PreviousMode);
+NTAPI
+SeInit2(VOID);
+
+BOOLEAN
+NTAPI
+SeInitSRM(VOID);
+
+VOID
+NTAPI
+SepInitLuid(VOID);
+
+VOID
+NTAPI
+SepInitPrivileges(VOID);
+
+BOOLEAN
+NTAPI
+SepInitSecurityIDs(VOID);
+
+BOOLEAN
+NTAPI
+SepInitDACLs(VOID);
+
+BOOLEAN
+NTAPI
+SepInitSDs(VOID);
+
+VOID 
+NTAPI
+SeDeassignPrimaryToken(struct _EPROCESS *Process);
 
 NTSTATUS
 STDCALL
-SepDuplicateToken(PTOKEN Token,
-		  POBJECT_ATTRIBUTES ObjectAttributes,
-		  BOOLEAN EffectiveOnly,
-		  TOKEN_TYPE TokenType,
-		  SECURITY_IMPERSONATION_LEVEL Level,
-		  KPROCESSOR_MODE PreviousMode,
-		  PTOKEN* NewAccessToken);
-
-NTSTATUS
-SepCaptureSecurityQualityOfService(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
-                                   IN KPROCESSOR_MODE AccessMode,
-                                   IN POOL_TYPE PoolType,
-                                   IN BOOLEAN CaptureIfKernel,
-                                   OUT PSECURITY_QUALITY_OF_SERVICE *CapturedSecurityQualityOfService,
-                                   OUT PBOOLEAN Present);
+SepCreateImpersonationTokenDacl(
+    PTOKEN Token,
+    PTOKEN PrimaryToken,
+    PACL *Dacl
+);
 
 VOID
-SepReleaseSecurityQualityOfService(IN PSECURITY_QUALITY_OF_SERVICE CapturedSecurityQualityOfService  OPTIONAL,
-                                   IN KPROCESSOR_MODE AccessMode,
-                                   IN BOOLEAN CaptureIfKernel);
+NTAPI
+SepInitializeTokenImplementation(VOID);
+
+PTOKEN
+STDCALL
+SepCreateSystemProcessToken(VOID);
 
 NTSTATUS
-SepCaptureSid(IN PSID InputSid,
-              IN KPROCESSOR_MODE AccessMode,
-              IN POOL_TYPE PoolType,
-              IN BOOLEAN CaptureIfKernel,
-              OUT PSID *CapturedSid);
-
-VOID
-SepReleaseSid(IN PSID CapturedSid,
-              IN KPROCESSOR_MODE AccessMode,
-              IN BOOLEAN CaptureIfKernel);
+NTAPI
+SeExchangePrimaryToken(
+    struct _EPROCESS* Process,
+    PACCESS_TOKEN NewToken,
+    PACCESS_TOKEN* OldTokenP
+);
 
 NTSTATUS
-SepCaptureAcl(IN PACL InputAcl,
-              IN KPROCESSOR_MODE AccessMode,
-              IN POOL_TYPE PoolType,
-              IN BOOLEAN CaptureIfKernel,
-              OUT PACL *CapturedAcl);
+NTAPI
+SeCaptureLuidAndAttributesArray(
+    PLUID_AND_ATTRIBUTES Src,
+    ULONG PrivilegeCount,
+    KPROCESSOR_MODE PreviousMode,
+    PLUID_AND_ATTRIBUTES AllocatedMem,
+    ULONG AllocatedLength,
+    POOL_TYPE PoolType,
+    ULONG d,
+    PLUID_AND_ATTRIBUTES* Dest,
+    PULONG Length
+);
 
 VOID
-SepReleaseAcl(IN PACL CapturedAcl,
-              IN KPROCESSOR_MODE AccessMode,
-              IN BOOLEAN CaptureIfKernel);
+NTAPI
+SeReleaseLuidAndAttributesArray(
+    PLUID_AND_ATTRIBUTES Privilege,
+    KPROCESSOR_MODE PreviousMode,
+    ULONG a
+);
+
+BOOLEAN
+NTAPI
+SepPrivilegeCheck(
+    PTOKEN Token,
+    PLUID_AND_ATTRIBUTES Privileges,
+    ULONG PrivilegeCount,
+    ULONG PrivilegeControl,
+    KPROCESSOR_MODE PreviousMode
+);
 
 NTSTATUS
 STDCALL
-SeDefaultObjectMethod(PVOID Object,
-                      SECURITY_OPERATION_CODE OperationType,                         
-                      SECURITY_INFORMATION SecurityInformation,
-                      PSECURITY_DESCRIPTOR NewSecurityDescriptor,
-                      PULONG ReturnLength,
-                      PSECURITY_DESCRIPTOR *OldSecurityDescriptor,
-                      POOL_TYPE PoolType,
-                      PGENERIC_MAPPING GenericMapping);
+SepDuplicateToken(
+    PTOKEN Token,
+    POBJECT_ATTRIBUTES ObjectAttributes,
+    BOOLEAN EffectiveOnly,
+    TOKEN_TYPE TokenType,
+    SECURITY_IMPERSONATION_LEVEL Level,
+    KPROCESSOR_MODE PreviousMode,
+    PTOKEN* NewAccessToken
+);
+
+NTSTATUS
+NTAPI
+SepCaptureSecurityQualityOfService(
+    IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+    IN KPROCESSOR_MODE AccessMode,
+    IN POOL_TYPE PoolType,
+    IN BOOLEAN CaptureIfKernel,
+    OUT PSECURITY_QUALITY_OF_SERVICE *CapturedSecurityQualityOfService,
+    OUT PBOOLEAN Present
+);
+
+VOID
+NTAPI
+SepReleaseSecurityQualityOfService(
+    IN PSECURITY_QUALITY_OF_SERVICE CapturedSecurityQualityOfService OPTIONAL,
+    IN KPROCESSOR_MODE AccessMode,
+    IN BOOLEAN CaptureIfKernel
+);
+
+NTSTATUS
+NTAPI
+SepCaptureSid(
+    IN PSID InputSid,
+    IN KPROCESSOR_MODE AccessMode,
+    IN POOL_TYPE PoolType,
+    IN BOOLEAN CaptureIfKernel,
+    OUT PSID *CapturedSid
+);
+
+VOID
+NTAPI
+SepReleaseSid(
+    IN PSID CapturedSid,
+    IN KPROCESSOR_MODE AccessMode,
+    IN BOOLEAN CaptureIfKernel
+);
+
+NTSTATUS
+NTAPI
+SepCaptureAcl(
+    IN PACL InputAcl,
+    IN KPROCESSOR_MODE AccessMode,
+    IN POOL_TYPE PoolType,
+    IN BOOLEAN CaptureIfKernel,
+    OUT PACL *CapturedAcl
+);
+
+VOID
+NTAPI
+SepReleaseAcl(
+    IN PACL CapturedAcl,
+    IN KPROCESSOR_MODE AccessMode,
+    IN BOOLEAN CaptureIfKernel
+);
+
+NTSTATUS
+STDCALL
+SeDefaultObjectMethod(
+    PVOID Object,
+    SECURITY_OPERATION_CODE OperationType,
+    SECURITY_INFORMATION SecurityInformation,
+    PSECURITY_DESCRIPTOR NewSecurityDescriptor,
+    PULONG ReturnLength,
+    PSECURITY_DESCRIPTOR *OldSecurityDescriptor,
+    POOL_TYPE PoolType,
+    PGENERIC_MAPPING GenericMapping
+);
 
 #define SepAcquireTokenLockExclusive(Token)                                    \
   do {                                                                         \

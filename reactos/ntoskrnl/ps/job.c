@@ -57,6 +57,7 @@ PiDeleteJob ( PVOID ObjectBody )
 
 VOID 
 INIT_FUNCTION
+NTAPI
 PsInitJobManagment ( VOID )
 {
     UNICODE_STRING Name;
@@ -81,6 +82,7 @@ PsInitJobManagment ( VOID )
 }
 
 NTSTATUS
+NTAPI
 PspAssignProcessToJob (
     PEPROCESS Process,
     PEJOB Job)
@@ -90,6 +92,7 @@ PspAssignProcessToJob (
 }
 
 NTSTATUS
+NTAPI
 PspTerminateJobObject (
     PEJOB Job,
     KPROCESSOR_MODE AccessMode,

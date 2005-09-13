@@ -68,18 +68,23 @@ static const INFORMATION_CLASS_INFO SeTokenInformationClass[] = {
 
 /* FUNCTIONS *****************************************************************/
 
-VOID SepFreeProxyData(PVOID ProxyData)
+VOID
+NTAPI
+SepFreeProxyData(PVOID ProxyData)
 {
    UNIMPLEMENTED;
 }
 
-NTSTATUS SepCopyProxyData(PVOID* Dest, PVOID Src)
+NTSTATUS
+NTAPI
+SepCopyProxyData(PVOID* Dest, PVOID Src)
 {
    UNIMPLEMENTED;
    return(STATUS_NOT_IMPLEMENTED);
 }
 
 NTSTATUS
+NTAPI
 SeExchangePrimaryToken(PEPROCESS Process,
                        PACCESS_TOKEN NewTokenP,
                        PACCESS_TOKEN* OldTokenP)
@@ -109,6 +114,7 @@ SeExchangePrimaryToken(PEPROCESS Process,
 }
 
 VOID
+NTAPI
 SeDeassignPrimaryToken(PEPROCESS Process)
 {
     PTOKEN OldToken;
@@ -138,6 +144,7 @@ RtlLengthSidAndAttributes(ULONG Count,
 
 
 NTSTATUS
+NTAPI
 SepFindPrimaryGroupAndDefaultOwner(PTOKEN Token,
 				   PSID PrimaryGroup,
 				   PSID DefaultOwner)
@@ -557,7 +564,9 @@ SepDeleteToken(PVOID ObjectBody)
 }
 
 
-VOID INIT_FUNCTION
+VOID
+INIT_FUNCTION
+NTAPI
 SepInitializeTokenImplementation(VOID)
 {
     UNICODE_STRING Name;

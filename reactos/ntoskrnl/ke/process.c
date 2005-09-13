@@ -85,7 +85,7 @@ KeInitializeProcess(PKPROCESS Process,
     Process->DirectoryTableBase = DirectoryTableBase;
     Process->AutoAlignment = TRUE;
     Process->IopmOffset = 0xFFFF;
-    Process->State = PROCESS_STATE_ACTIVE;
+    Process->State = ProcessInMemory;
 
     /* Initialize the Thread List */
     InitializeListHead(&Process->ThreadListHead);

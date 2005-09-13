@@ -46,7 +46,9 @@ typedef struct
 KSPIN_LOCK CallbackStackListLock;
 static LIST_ENTRY CallbackStackListHead;
 
-VOID INIT_FUNCTION
+VOID 
+INIT_FUNCTION
+NTAPI
 PsInitialiseW32Call(VOID)
 {
   InitializeListHead(&CallbackStackListHead);
@@ -227,7 +229,7 @@ KeUserModeCallback(IN ULONG RoutineIndex,
   SavedState.SavedCallbackStack = Thread->Tcb.CallbackStack;
   SavedState.SavedExceptionStack = (PVOID)KeGetCurrentKPCR()->TSS->Esp0;
   if ((Thread->Tcb.NpxState & NPX_STATE_VALID) &&
-      ETHREAD_TO_KTHREAD(Thread) != KeGetCurrentPrcb()->NpxThread)
+      &Thread->Tcb != KeGetCurrentPrcb()->NpxThread)
     {
       RtlCopyMemory((char*)NewStack + StackSize - sizeof(FX_SAVE_AREA),
                     (char*)SavedState.SavedInitialStack - sizeof(FX_SAVE_AREA),

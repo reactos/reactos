@@ -10,105 +10,6 @@ struct _EJOB;
 
 extern LCID PsDefaultThreadLocaleId;
 extern LCID PsDefaultSystemLocaleId;
-
-/* Top level irp definitions. */
-#define	FSRTL_FSP_TOP_LEVEL_IRP			(0x01)
-#define	FSRTL_CACHE_TOP_LEVEL_IRP		(0x02)
-#define	FSRTL_MOD_WRITE_TOP_LEVEL_IRP		(0x03)
-#define	FSRTL_FAST_IO_TOP_LEVEL_IRP		(0x04)
-#define	FSRTL_MAX_TOP_LEVEL_IRP_FLAG		(0x04)
-
-#define PROCESS_STATE_TERMINATED (1)
-#define PROCESS_STATE_ACTIVE     (2)
-
-VOID PiInitDefaultLocale(VOID);
-VOID PiInitProcessManager(VOID);
-VOID PiShutdownProcessManager(VOID);
-VOID PsInitThreadManagment(VOID);
-VOID PsInitProcessManagment(VOID);
-VOID PsInitIdleThread(VOID);
-VOID PiTerminateProcessThreads(PEPROCESS Process, NTSTATUS ExitStatus);
-VOID PsTerminateCurrentThread(NTSTATUS ExitStatus);
-VOID PsTerminateOtherThread(PETHREAD Thread, NTSTATUS ExitStatus);
-VOID PsReleaseThread(PETHREAD Thread);
-VOID PsBeginThread(PKSTART_ROUTINE StartRoutine, PVOID StartContext);
-VOID PsBeginThreadWithContextInternal(VOID);
-VOID PiKillMostProcesses(VOID);
-NTSTATUS STDCALL PiTerminateProcess(PEPROCESS Process, NTSTATUS ExitStatus);
-VOID PiInitApcManagement(VOID);
-VOID STDCALL PiDeleteThread(PVOID ObjectBody);
-VOID PsReapThreads(VOID);
-VOID PsInitializeThreadReaper(VOID);
-VOID PsQueueThreadReap(PETHREAD Thread);
-NTSTATUS
-PsInitializeThread(PEPROCESS Process,
-		   PETHREAD* ThreadPtr,
-		   POBJECT_ATTRIBUTES ObjectAttributes,
-		   KPROCESSOR_MODE AccessMode,
-		   BOOLEAN First);
-
-PACCESS_TOKEN STDCALL PsReferenceEffectiveToken(PETHREAD Thread,
-					PTOKEN_TYPE TokenType,
-					PUCHAR b,
-					PSECURITY_IMPERSONATION_LEVEL Level);
-
-NTSTATUS STDCALL PsOpenTokenOfProcess(HANDLE ProcessHandle,
-			      PACCESS_TOKEN* Token);
-VOID
-STDCALL
-PspTerminateProcessThreads(PEPROCESS Process,
-                           NTSTATUS ExitStatus);
-NTSTATUS PsSuspendThread(PETHREAD Thread, PULONG PreviousCount);
-NTSTATUS PsResumeThread(PETHREAD Thread, PULONG PreviousCount);
-NTSTATUS
-STDCALL
-PspAssignPrimaryToken(PEPROCESS Process,
-                      HANDLE TokenHandle);
-VOID STDCALL PsExitSpecialApc(PKAPC Apc,
-		      PKNORMAL_ROUTINE *NormalRoutine,
-		      PVOID *NormalContext,
-		      PVOID *SystemArgument1,
-		      PVOID *SystemArgument2);
-
-NTSTATUS
-STDCALL
-PspInitializeProcessSecurity(PEPROCESS Process,
-                             PEPROCESS Parent OPTIONAL);
-
-
-VOID
-STDCALL
-PspSystemThreadStartup(PKSTART_ROUTINE StartRoutine,
-                       PVOID StartContext);
-
-NTSTATUS
-PsInitializeIdleOrFirstThread (
-    PEPROCESS Process,
-    PETHREAD* ThreadPtr,
-    PKSTART_ROUTINE StartRoutine,
-    KPROCESSOR_MODE AccessMode,
-    BOOLEAN First);
-/*
- * Internal thread priorities, added by Phillip Susi
- * TODO: rebalence these to make use of all priorities... the ones above 16
- * can not all be used right now
- */
-#define PROCESS_PRIO_IDLE			3
-#define PROCESS_PRIO_NORMAL			8
-#define PROCESS_PRIO_HIGH			13
-#define PROCESS_PRIO_RT				18
-
-
-VOID STDCALL PiDeleteProcess(PVOID ObjectBody);
-
-VOID
-STDCALL
-PspReapRoutine(PVOID Context);
-
-VOID
-STDCALL
-PspExitThread(NTSTATUS ExitStatus);
-
 extern LIST_ENTRY PspReaperListHead;
 extern WORK_QUEUE_ITEM PspReaperWorkItem;
 extern BOOLEAN PspReaping;
@@ -119,38 +20,273 @@ extern FAST_MUTEX PspActiveProcessMutex;
 extern LARGE_INTEGER ShortPsLockDelay, PsLockTimeout;
 extern EPROCESS_QUOTA_BLOCK PspDefaultQuotaBlock;
 
+/* Top level irp definitions. */
+#define	FSRTL_FSP_TOP_LEVEL_IRP         (0x01)
+#define	FSRTL_CACHE_TOP_LEVEL_IRP       (0x02)
+#define	FSRTL_MOD_WRITE_TOP_LEVEL_IRP   (0x03)
+#define	FSRTL_FAST_IO_TOP_LEVEL_IRP     (0x04)
+#define	FSRTL_MAX_TOP_LEVEL_IRP_FLAG    (0x04)
+
+#define MAX_PROCESS_NOTIFY_ROUTINE_COUNT    8
+#define MAX_LOAD_IMAGE_NOTIFY_ROUTINE_COUNT  8
+
+VOID
+NTAPI
+PiInitDefaultLocale(VOID);
+
+VOID
+NTAPI
+PiInitProcessManager(VOID);
+
+VOID
+NTAPI
+PiShutdownProcessManager(VOID);
+
+VOID
+NTAPI
+PsInitThreadManagment(VOID);
+
+VOID
+NTAPI
+PsInitProcessManagment(VOID);
+
+VOID
+NTAPI
+PsInitIdleThread(VOID);
+
+VOID
+NTAPI
+PiTerminateProcessThreads(
+    PEPROCESS Process,
+    NTSTATUS ExitStatus
+);
+
+VOID
+NTAPI
+PsTerminateCurrentThread(NTSTATUS ExitStatus);
+
+VOID
+NTAPI
+PsTerminateOtherThread(
+    PETHREAD Thread,
+    NTSTATUS ExitStatus
+);
+
+VOID
+NTAPI
+PsReleaseThread(PETHREAD Thread);
+
+VOID
+NTAPI
+PsBeginThread(
+    PKSTART_ROUTINE StartRoutine,
+    PVOID StartContext
+);
+
+VOID
+NTAPI
+PsBeginThreadWithContextInternal(VOID);
+
+VOID
+NTAPI
+PiKillMostProcesses(VOID);
+
+NTSTATUS
+STDCALL
+PiTerminateProcess(
+    PEPROCESS Process,
+    NTSTATUS ExitStatus
+);
+
+VOID
+NTAPI
+PiInitApcManagement(VOID);
+
 VOID
 STDCALL
-PspTerminateThreadByPointer(PETHREAD Thread,
-                            NTSTATUS ExitStatus);
+PiDeleteThread(PVOID ObjectBody);
 
-VOID PsUnfreezeOtherThread(PETHREAD Thread);
-VOID PsFreezeOtherThread(PETHREAD Thread);
-VOID PsFreezeProcessThreads(PEPROCESS Process);
-VOID PsUnfreezeProcessThreads(PEPROCESS Process);
-ULONG PsEnumThreadsByProcess(PEPROCESS Process);
-PEPROCESS STDCALL PsGetNextProcess(PEPROCESS OldProcess);
 VOID
+NTAPI
+PsReapThreads(VOID);
+
+VOID
+NTAPI
+PsInitializeThreadReaper(VOID);
+
+VOID
+NTAPI
+PsQueueThreadReap(PETHREAD Thread);
+
+NTSTATUS
+NTAPI
+PsInitializeThread(
+    PEPROCESS Process,
+    PETHREAD* ThreadPtr,
+    POBJECT_ATTRIBUTES ObjectAttributes,
+    KPROCESSOR_MODE AccessMode,
+    BOOLEAN First
+);
+
+PACCESS_TOKEN
+STDCALL
+PsReferenceEffectiveToken(
+    PETHREAD Thread,
+    PTOKEN_TYPE TokenType,
+    PUCHAR b,
+    PSECURITY_IMPERSONATION_LEVEL Level
+);
+
+NTSTATUS
+STDCALL
+PsOpenTokenOfProcess(
+    HANDLE ProcessHandle,
+    PACCESS_TOKEN* Token
+);
+
+VOID
+STDCALL
+PspTerminateProcessThreads(
+    PEPROCESS Process,
+    NTSTATUS ExitStatus
+);
+
+NTSTATUS
+NTAPI
+PsSuspendThread(
+    PETHREAD Thread,
+    PULONG PreviousCount
+);
+
+NTSTATUS
+NTAPI
+PsResumeThread(
+    PETHREAD Thread,
+    PULONG PreviousCount
+);
+
+NTSTATUS
+STDCALL
+PspAssignPrimaryToken(
+    PEPROCESS Process,
+    HANDLE TokenHandle
+);
+
+VOID
+STDCALL
+PsExitSpecialApc(
+    PKAPC Apc,
+    PKNORMAL_ROUTINE *NormalRoutine,
+    PVOID *NormalContext,
+    PVOID *SystemArgument1,
+    PVOID *SystemArgument2
+);
+
+NTSTATUS
+STDCALL
+PspInitializeProcessSecurity(
+    PEPROCESS Process,
+    PEPROCESS Parent OPTIONAL
+);
+
+VOID
+STDCALL
+PspSystemThreadStartup(
+    PKSTART_ROUTINE StartRoutine,
+    PVOID StartContext
+);
+
+NTSTATUS
+NTAPI
+PsInitializeIdleOrFirstThread(
+    PEPROCESS Process,
+    PETHREAD* ThreadPtr,
+    PKSTART_ROUTINE StartRoutine,
+    KPROCESSOR_MODE AccessMode,
+    BOOLEAN First
+);
+
+VOID
+STDCALL
+PiDeleteProcess(PVOID ObjectBody);
+
+VOID
+STDCALL
+PspReapRoutine(PVOID Context);
+
+VOID
+STDCALL
+PspExitThread(NTSTATUS ExitStatus);
+
+VOID
+STDCALL
+PspTerminateThreadByPointer(
+    PETHREAD Thread,
+    NTSTATUS ExitStatus
+);
+
+VOID
+NTAPI
+PsUnfreezeOtherThread(PETHREAD Thread);
+
+VOID
+NTAPI
+PsFreezeOtherThread(PETHREAD Thread);
+
+VOID
+NTAPI
+PsFreezeProcessThreads(PEPROCESS Process);
+
+VOID
+NTAPI
+PsUnfreezeProcessThreads(PEPROCESS Process);
+
+ULONG
+NTAPI
+PsEnumThreadsByProcess(PEPROCESS Process);
+
+PEPROCESS
+STDCALL
+PsGetNextProcess(PEPROCESS OldProcess);
+
+VOID
+NTAPI
 PsApplicationProcessorInit(VOID);
+
 VOID
+NTAPI
 PsPrepareForApplicationProcessorInit(ULONG Id);
-VOID STDCALL
+
+VOID
+STDCALL
 PsIdleThreadMain(PVOID Context);
 
-VOID STDCALL
-PiSuspendThreadRundownRoutine(PKAPC Apc);
-VOID STDCALL
-PiSuspendThreadKernelRoutine(PKAPC Apc,
-			     PKNORMAL_ROUTINE* NormalRoutine,
-			     PVOID* NormalContext,
-			     PVOID* SystemArgument1,
-			     PVOID* SystemArguemnt2);
-VOID STDCALL
-PiSuspendThreadNormalRoutine(PVOID NormalContext,
-			     PVOID SystemArgument1,
-			     PVOID SystemArgument2);
 VOID
+STDCALL
+PiSuspendThreadRundownRoutine(PKAPC Apc);
+
+VOID
+STDCALL
+PiSuspendThreadKernelRoutine(
+    PKAPC Apc,
+    PKNORMAL_ROUTINE* NormalRoutine,
+    PVOID* NormalContext,
+    PVOID* SystemArgument1,
+    PVOID* SystemArguemnt2
+);
+
+VOID
+STDCALL
+PiSuspendThreadNormalRoutine(
+    PVOID NormalContext,
+    PVOID SystemArgument1,
+    PVOID SystemArgument2
+);
+
+VOID
+NTAPI
 PsInitialiseSuspendImplementation(VOID);
+
 NTSTATUS
 STDCALL
 PspExitProcess(PEPROCESS Process);
@@ -163,37 +299,52 @@ VOID
 STDCALL
 PspDeleteThread(PVOID ObjectBody);
 
-extern LONG PiNrThreadsAwaitingReaping;
 
 NTSTATUS
-PsInitWin32Thread (PETHREAD Thread);
+NTAPI
+PsInitWin32Thread(PETHREAD Thread);
 
 VOID
-PsTerminateWin32Process (PEPROCESS Process);
+NTAPI
+PsTerminateWin32Process(PEPROCESS Process);
 
 VOID
-PsTerminateWin32Thread (PETHREAD Thread);
+NTAPI
+PsTerminateWin32Thread(PETHREAD Thread);
 
 VOID
+NTAPI
 PsInitialiseW32Call(VOID);
 
 VOID
 STDCALL
-PspRunCreateThreadNotifyRoutines(PETHREAD, BOOLEAN);
+PspRunCreateThreadNotifyRoutines(
+    PETHREAD,
+    BOOLEAN
+);
 
 VOID
 STDCALL
-PspRunCreateProcessNotifyRoutines(PEPROCESS, BOOLEAN);
+PspRunCreateProcessNotifyRoutines(
+    PEPROCESS,
+    BOOLEAN
+);
 
 VOID
 STDCALL
 PspRunLegoRoutine(IN PKTHREAD Thread);
 
-VOID INIT_FUNCTION PsInitJobManagment(VOID);
+VOID
+NTAPI
+INIT_FUNCTION
+PsInitJobManagment(VOID);
 
 VOID
 STDCALL
-PspInheritQuota(PEPROCESS Process, PEPROCESS ParentProcess);
+PspInheritQuota(
+    PEPROCESS Process,
+    PEPROCESS ParentProcess
+);
 
 VOID
 STDCALL
@@ -214,17 +365,15 @@ NTSTATUS
 STDCALL
 PspGetSystemDllEntryPoints(VOID);
 
-/* CLIENT ID */
+NTSTATUS 
+NTAPI
+PsLockProcess(
+    PEPROCESS Process,
+    BOOLEAN Timeout
+);
 
-NTSTATUS PsLockProcess(PEPROCESS Process, BOOLEAN Timeout);
-VOID PsUnlockProcess(PEPROCESS Process);
-
-#define ETHREAD_TO_KTHREAD(pEThread) (&(pEThread)->Tcb)
-#define KTHREAD_TO_ETHREAD(pKThread) (CONTAINING_RECORD((pKThread), ETHREAD, Tcb))
-#define EPROCESS_TO_KPROCESS(pEProcess) (&(pEProcess)->Pcb)
-#define KPROCESS_TO_EPROCESS(pKProcess) (CONTAINING_RECORD((pKProcess), EPROCESS, Pcb))
-
-#define MAX_PROCESS_NOTIFY_ROUTINE_COUNT    8
-#define MAX_LOAD_IMAGE_NOTIFY_ROUTINE_COUNT  8
+VOID
+NTAPI
+PsUnlockProcess(PEPROCESS Process);
 
 #endif /* __INCLUDE_INTERNAL_PS_H */

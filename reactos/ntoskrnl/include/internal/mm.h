@@ -888,4 +888,13 @@ VOID MiStartPagerThread(VOID);
 
 VOID MiStopPagerThread(VOID);
 
+
+NTSTATUS FASTCALL
+MiQueryVirtualMemory (IN HANDLE ProcessHandle,
+                      IN PVOID Address,
+                      IN CINT VirtualMemoryInformationClass,
+                      OUT PVOID VirtualMemoryInformation,
+                      IN ULONG Length,
+                      OUT PULONG ResultLength);
+
 #endif

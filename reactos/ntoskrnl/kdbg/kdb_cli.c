@@ -1080,8 +1080,8 @@ KdbpCmdProc(ULONG Argc, PCHAR Argv[])
             str2 = "";
          }
 
-         State = ((Process->Pcb.State == PROCESS_STATE_TERMINATED) ? "Terminated" :
-                 ((Process->Pcb.State == PROCESS_STATE_ACTIVE) ? "Active" : "Unknown"));
+         State = ((Process->Pcb.State == ProcessInMemory) ? "In Memory" :
+                 ((Process->Pcb.State == ProcessOutOfMemory) ? "Out of Memory" : "In Transition"));
 
          KdbpPrint(" %s0x%08x  %-10s  %s%s\n",
                    str1,
@@ -1134,8 +1134,8 @@ KdbpCmdProc(ULONG Argc, PCHAR Argv[])
          }
       }
 
-      State = ((Process->Pcb.State == PROCESS_STATE_TERMINATED) ? "Terminated" :
-              ((Process->Pcb.State == PROCESS_STATE_ACTIVE) ? "Active" : "Unknown"));
+      State = ((Process->Pcb.State == ProcessInMemory) ? "In Memory" :
+              ((Process->Pcb.State == ProcessOutOfMemory) ? "Out of Memory" : "In Transition"));
       KdbpPrint("%s"
                 "  PID:             0x%08x\n"
                 "  State:           %s (0x%x)\n"

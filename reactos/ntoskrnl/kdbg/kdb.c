@@ -194,7 +194,7 @@ KdbpOverwriteInstruction(
    /* Attach to the process */
    if (CurrentProcess != Process)
    {
-      KeStackAttachProcess(EPROCESS_TO_KPROCESS(Process), &ApcState);
+      KeStackAttachProcess(&Process->Pcb, &ApcState);
    }
 
    /* Make the page writeable if it is read only. */
@@ -1066,7 +1066,7 @@ KdbpAttachToThread(
       }
       if (KdbOriginalProcess != Process)
       {
-         KeStackAttachProcess(EPROCESS_TO_KPROCESS(Process), &KdbApcState);
+         KeStackAttachProcess(&Process->Pcb, &KdbApcState);
       }
       KdbCurrentProcess = Process;
    }

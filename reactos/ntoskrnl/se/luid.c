@@ -20,7 +20,9 @@ static LARGE_INTEGER LuidValue;
 
 /* FUNCTIONS *****************************************************************/
 
-VOID INIT_FUNCTION
+VOID
+INIT_FUNCTION
+NTAPI
 SepInitLuid(VOID)
 {
   LUID DummyLuidValue = SYSTEM_LUID;
@@ -32,6 +34,7 @@ SepInitLuid(VOID)
 
 
 NTSTATUS
+NTAPI
 ExpAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId)
 {
   LARGE_INTEGER NewLuid, PrevLuid;

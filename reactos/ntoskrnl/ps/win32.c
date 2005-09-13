@@ -61,6 +61,7 @@ PsEstablishWin32Callouts(PW32_CALLOUT_DATA CalloutData)
 }
 
 NTSTATUS
+NTAPI
 PsInitWin32Thread (PETHREAD Thread)
 {
     PEPROCESS Process;
@@ -89,6 +90,7 @@ PsInitWin32Thread (PETHREAD Thread)
 
 
 VOID
+NTAPI
 PsTerminateWin32Process (PEPROCESS Process)
 {
   if (Process->Win32Process == NULL)
@@ -105,6 +107,7 @@ PsTerminateWin32Process (PEPROCESS Process)
 
 
 VOID
+NTAPI
 PsTerminateWin32Thread (PETHREAD Thread)
 {
   if (Thread->Tcb.Win32Thread != NULL)
@@ -278,7 +281,7 @@ NtCallbackReturn (PVOID		Result,
    */
   KeRaiseIrql(HIGH_LEVEL, &oldIrql);
   if ((Thread->Tcb.NpxState & NPX_STATE_VALID) &&
-      ETHREAD_TO_KTHREAD(Thread) != KeGetCurrentPrcb()->NpxThread)
+      &Thread->Tcb != KeGetCurrentPrcb()->NpxThread)
     {
       RtlCopyMemory((char*)InitialStack - sizeof(FX_SAVE_AREA),
                     (char*)Thread->Tcb.InitialStack - sizeof(FX_SAVE_AREA),

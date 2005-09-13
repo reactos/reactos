@@ -56,6 +56,11 @@ extern NTSYSAPI POBJECT_TYPE PsProcessType;
 #define PROCESS_PRIORITY_CLASS_BELOW_NORMAL     5
 #define PROCESS_PRIORITY_CLASS_ABOVE_NORMAL     6
 
+/* Process base priorities */
+#define PROCESS_PRIORITY_IDLE                   3
+#define PROCESS_PRIORITY_NORMAL                 8
+#define PROCESS_PRIORITY_NORMAL_FOREGROUND      9
+
 /* Global Flags */
 #define FLG_STOP_ON_EXCEPTION          0x00000001
 #define FLG_SHOW_LDR_SNAPS             0x00000002

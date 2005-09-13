@@ -200,6 +200,7 @@ NTSTATUS
 ExpSetTimeZoneInformation(PTIME_ZONE_INFORMATION TimeZoneInformation);
 
 NTSTATUS
+NTAPI
 ExpAllocateLocallyUniqueId(OUT LUID *LocallyUniqueId);
 
 VOID

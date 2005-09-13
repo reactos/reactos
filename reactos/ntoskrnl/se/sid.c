@@ -56,7 +56,9 @@ PSID SeAnonymousLogonSid = NULL;
 /* FUNCTIONS ****************************************************************/
 
 
-BOOLEAN INIT_FUNCTION
+BOOLEAN
+INIT_FUNCTION
+NTAPI
 SepInitSecurityIDs(VOID)
 {
   ULONG SidLength0;
@@ -221,6 +223,7 @@ SepInitSecurityIDs(VOID)
 }
 
 NTSTATUS
+NTAPI
 SepCaptureSid(IN PSID InputSid,
               IN KPROCESSOR_MODE AccessMode,
               IN POOL_TYPE PoolType,
@@ -309,6 +312,7 @@ SepCaptureSid(IN PSID InputSid,
 }
 
 VOID
+NTAPI
 SepReleaseSid(IN PSID CapturedSid,
               IN KPROCESSOR_MODE AccessMode,
               IN BOOLEAN CaptureIfKernel)

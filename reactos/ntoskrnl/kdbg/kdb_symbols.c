@@ -527,7 +527,7 @@ KdbSymFreeProcessSymbols(IN PEPROCESS Process)
   CurrentProcess = PsGetCurrentProcess();
   if (CurrentProcess != Process)
   {
-    KeAttachProcess(EPROCESS_TO_KPROCESS(Process));
+    KeAttachProcess(&Process->Pcb);
   }
   Peb = Process->Peb;
   ASSERT(Peb);

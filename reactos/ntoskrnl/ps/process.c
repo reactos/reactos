@@ -30,6 +30,7 @@ LARGE_INTEGER ShortPsLockDelay, PsLockTimeout;
 /* INTERNAL FUNCTIONS *****************************************************************/
 
 NTSTATUS
+NTAPI
 PsLockProcess(PEPROCESS Process, BOOLEAN Timeout)
 {
   ULONG Attempts = 0;
@@ -88,6 +89,7 @@ PsLockProcess(PEPROCESS Process, BOOLEAN Timeout)
 }
 
 VOID
+NTAPI
 PsUnlockProcess(PEPROCESS Process)
 {
   PAGED_CODE();
@@ -331,7 +333,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     /* Now initialize the Kernel Process */
     DPRINT("Initialzing Kernel Process\n");
     KeInitializeProcess(&Process->Pcb,
-                        PROCESS_PRIO_NORMAL,
+                        PROCESS_PRIORITY_NORMAL,
                         Affinity,
                         DirectoryTableBase);
 
