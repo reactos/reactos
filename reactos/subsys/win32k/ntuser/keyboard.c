@@ -616,7 +616,8 @@ void InitKbdLayout( PVOID *pkKeyboardLayout )
          RtlInitUnicodeString(&LayoutValueName,L"Layout File");
 
          Status = ReadRegistryValue(&LayoutKeyName,&LayoutValueName,&LayoutFile);
-         RtlInitUnicodeString(&FullLayoutPath,SYSTEMROOT_DIR);
+
+         RtlFreeUnicodeString(&LayoutKeyName);
 
          if( !NT_SUCCESS(Status) )
          {
@@ -627,8 +628,8 @@ void InitKbdLayout( PVOID *pkKeyboardLayout )
          {
             DPRINT("Read registry and got %wZ\n", &LayoutFile);
 
-            RtlFreeUnicodeString(&LayoutKeyName);
 
+            RtlInitUnicodeString(&FullLayoutPath,SYSTEMROOT_DIR);
             AppendUnicodeString(&FullLayoutPath,&LayoutFile,FALSE);
 
             DPRINT("Loading Keyboard DLL %wZ\n", &FullLayoutPath);
@@ -647,7 +648,7 @@ void InitKbdLayout( PVOID *pkKeyboardLayout )
                return;
             }
             memcpy(KeyboardLayoutWSTR,FullLayoutPath.Buffer,
-                   FullLayoutPath.Length + sizeof(WCHAR));
+                   FullLayoutPath.Length);
             KeyboardLayoutWSTR[FullLayoutPath.Length / sizeof(WCHAR)] = 0;
 
             kbModule = EngLoadImage(KeyboardLayoutWSTR);
@@ -656,6 +657,7 @@ void InitKbdLayout( PVOID *pkKeyboardLayout )
             if( !kbModule )
                DPRINT1( "Load Keyboard Layout: No %wZ\n", &FullLayoutPath );
 
+            ExFreePool(KeyboardLayoutWSTR);
             RtlFreeUnicodeString(&FullLayoutPath);
          }
       }
@@ -694,7 +696,7 @@ void InitKbdLayout( PVOID *pkKeyboardLayout )
 #undef XX_STATUS
 }
 
-PKBDTABLES W32kGetDefaultKeyLayout()
+PKBDTABLES W32kGetDefaultKeyLayout(VOID)
 {
    PKBDTABLES pkKeyboardLayout = 0;
    InitKbdLayout( (PVOID) &pkKeyboardLayout );
