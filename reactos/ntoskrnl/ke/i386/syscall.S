@@ -93,12 +93,22 @@
 BadStack:
 
     /* Restore ESP0 stack */
-    int 3
     mov ecx, [fs:KPCR_TSS]
     mov esp, ss:[ecx+KTSS_ESP0]
 
-    /* FIXME: Generate Trap 6*/
-    int 3
+    /* Generate V86M Stack for Trap 6 */
+    push 0
+    push 0
+    push 0
+    push 0
+
+    /* Generate interrupt stack for Trap 6 */
+    push USER_DS
+    push 0
+    push 0x20202
+    push USER_CS
+    push 0
+    jmp _KiTrap6
 
 _KiFastCallEntry:
 
@@ -417,6 +427,7 @@ KiRosTrapReturn:
     jnz V86_Exit
 
     /* Check if the frame was edited */
+V86_Exit_Return:
     test word ptr [esp+KTRAP_FRAME_CS], FRAME_EDITED
     jz EditedFrame
 
@@ -500,8 +511,17 @@ FastRet:
     sti
     sysexit
 
-AbiosExit:
 V86_Exit:
+    /* Move to EDX position */
+    add esp, KTRAP_FRAME_EDX
+
+    /* Restore volatiles */
+    pop edx
+    pop ecx
+    pop eax
+    jmp V86_Exit_Return
+
+AbiosExit:
     /* Not yet supported */
     int 3
 
@@ -636,9 +656,10 @@ KiRosTrapReturn2:
 
     /* Check for V86 */
     test dword ptr [esp+KTRAP_FRAME_EFLAGS], X86_EFLAGS_VM
-    jnz V86_Exit
+    jnz V86_Exit2
 
     /* Check if the frame was edited */
+V86_Exit_Return2:
     test word ptr [esp+KTRAP_FRAME_CS], FRAME_EDITED
     jz EditedFrame2
 
@@ -676,6 +697,16 @@ CommonStackClean2:
     /* Pop error code and return */
     add esp, 4
     iret
+
+V86_Exit2:
+    /* Move to EDX position */
+    add esp, KTRAP_FRAME_EDX
+
+    /* Restore volatiles */
+    pop edx
+    pop ecx
+    pop eax
+    jmp V86_Exit_Return
 
 EditedFrame2:
     /* Restore real CS value */
@@ -838,9 +869,10 @@ KiRosTrapReturn3:
 
     /* Check for V86 */
     test dword ptr [esp+KTRAP_FRAME_EFLAGS], X86_EFLAGS_VM
-    jnz V86_Exit
+    jnz V86_Exit3
 
     /* Check if the frame was edited */
+V86_Exit_Return3:
     test word ptr [esp+KTRAP_FRAME_CS], FRAME_EDITED
     jz EditedFrame3
 
@@ -878,6 +910,16 @@ CommonStackClean3:
     /* Pop error code and return */
     add esp, 4
     iret
+
+V86_Exit3:
+    /* Move to EDX position */
+    add esp, KTRAP_FRAME_EDX
+
+    /* Restore volatiles */
+    pop edx
+    pop ecx
+    pop eax
+    jmp V86_Exit_Return
 
 EditedFrame3:
     /* Restore real CS value */
