@@ -239,6 +239,7 @@ ObQueryDeviceMapInformation(PEPROCESS Process,
 }
 
 VOID
+NTAPI
 ObpAddEntryDirectory(PDIRECTORY_OBJECT Parent,
 		     POBJECT_HEADER Header,
 		     PWSTR Name)
@@ -262,6 +263,7 @@ ObpAddEntryDirectory(PDIRECTORY_OBJECT Parent,
 
 
 VOID
+NTAPI
 ObpRemoveEntryDirectory(POBJECT_HEADER Header)
 /*
  * FUNCTION: Remove an entry from a namespace directory

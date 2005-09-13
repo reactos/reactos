@@ -288,6 +288,7 @@ ObpReleaseCapturedAttributes(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo)
  * RETURN VALUE
  */
 NTSTATUS
+NTAPI
 ObFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
             PUNICODE_STRING ObjectName,
 	     PVOID* ReturnedObject,
@@ -1247,6 +1248,7 @@ ObGetObjectPointerCount(PVOID Object)
  * 	Reference count.
  */
 ULONG
+NTAPI
 ObGetObjectHandleCount(PVOID Object)
 {
   POBJECT_HEADER Header;

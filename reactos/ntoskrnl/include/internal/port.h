@@ -1,69 +1,6 @@
 #ifndef __INCLUDE_INTERNAL_PORT_H
 #define __INCLUDE_INTERNAL_PORT_H
 
-typedef struct _EPORT_LISTENER
-{
-  HANDLE ListenerPid;
-  LIST_ENTRY ListenerListEntry;
-} EPORT_LISTENER, *PEPORT_LISTENER;
-
-typedef struct _EPORT
-{
-  KSPIN_LOCK	Lock;
-  KSEMAPHORE    Semaphore;
-
-  USHORT	Type;
-  USHORT	State;
-
-  struct _EPORT * RequestPort;
-  struct _EPORT	* OtherPort;
-
-  ULONG		QueueLength;
-  LIST_ENTRY	QueueListHead;
-
-  ULONG		ConnectQueueLength;
-  LIST_ENTRY	ConnectQueueListHead;
-
-  ULONG		MaxDataLength;
-  ULONG		MaxConnectInfoLength;
-  ULONG		MaxPoolUsage; /* size of NP zone */
-} EPORT, * PEPORT;
-
-typedef struct _EPORT_CONNECT_REQUEST_MESSAGE
-{
-  PORT_MESSAGE MessageHeader;
-  PEPROCESS ConnectingProcess;
-  struct _SECTION_OBJECT* SendSectionObject;
-  LARGE_INTEGER SendSectionOffset;
-  ULONG SendViewSize;
-  ULONG ConnectDataLength;
-  UCHAR ConnectData[0];
-} EPORT_CONNECT_REQUEST_MESSAGE, *PEPORT_CONNECT_REQUEST_MESSAGE;
-
-typedef struct _EPORT_CONNECT_REPLY_MESSAGE
-{
-  PORT_MESSAGE MessageHeader;
-  PVOID SendServerViewBase;
-  ULONG ReceiveClientViewSize;
-  PVOID ReceiveClientViewBase;
-  ULONG MaximumMessageSize;
-  ULONG ConnectDataLength;
-  UCHAR ConnectData[0];
-} EPORT_CONNECT_REPLY_MESSAGE, *PEPORT_CONNECT_REPLY_MESSAGE;
-
-typedef struct _TERMINATION_PORT {
-    struct _TERMINATION_PORT *Next;
-    PVOID Port;
-} TERMINATION_PORT, *PTERMINATION_PORT;
-
-NTSTATUS STDCALL
-LpcRequestPort (PEPORT		Port,
-		PPORT_MESSAGE	LpcMessage);
-NTSTATUS
-STDCALL
-LpcSendTerminationPort (PEPORT	Port,
-			LARGE_INTEGER	CreationTime);
-
 /* EPORT.Type */
 
 #define EPORT_TYPE_SERVER_RQST_PORT   (0)
@@ -81,68 +18,143 @@ LpcSendTerminationPort (PEPORT	Port,
 #define EPORT_CONNECTED_SERVER        (6)
 #define EPORT_DISCONNECTED            (7)
 
-/* Pool Tags */
+extern POBJECT_TYPE LpcPortObjectType;
+extern ULONG        LpcpNextMessageId;
+extern FAST_MUTEX   LpcpLock;
+
+typedef struct _EPORT_LISTENER
+{
+    HANDLE ListenerPid;
+    LIST_ENTRY ListenerListEntry;
+} EPORT_LISTENER, *PEPORT_LISTENER;
+
+typedef struct _EPORT
+{
+    KSPIN_LOCK Lock;
+    KSEMAPHORE Semaphore;
+    USHORT Type;
+    USHORT State;
+    struct _EPORT *RequestPort;
+    struct _EPORT *OtherPort;
+    ULONG QueueLength;
+    LIST_ENTRY QueueListHead;
+    ULONG ConnectQueueLength;
+    LIST_ENTRY ConnectQueueListHead;
+    ULONG MaxDataLength;
+    ULONG MaxConnectInfoLength;
+    ULONG MaxPoolUsage; /* size of NP zone */
+} EPORT, *PEPORT;
+
+typedef struct _EPORT_CONNECT_REQUEST_MESSAGE
+{
+    PORT_MESSAGE MessageHeader;
+    PEPROCESS ConnectingProcess;
+    struct _SECTION_OBJECT* SendSectionObject;
+    LARGE_INTEGER SendSectionOffset;
+    ULONG SendViewSize;
+    ULONG ConnectDataLength;
+    UCHAR ConnectData[0];
+} EPORT_CONNECT_REQUEST_MESSAGE, *PEPORT_CONNECT_REQUEST_MESSAGE;
+
+typedef struct _EPORT_CONNECT_REPLY_MESSAGE
+{
+    PORT_MESSAGE MessageHeader;
+    PVOID SendServerViewBase;
+    ULONG ReceiveClientViewSize;
+    PVOID ReceiveClientViewBase;
+    ULONG MaximumMessageSize;
+    ULONG ConnectDataLength;
+    UCHAR ConnectData[0];
+} EPORT_CONNECT_REPLY_MESSAGE, *PEPORT_CONNECT_REPLY_MESSAGE;
 
 typedef struct _QUEUEDMESSAGE
 {
-  PEPORT		Sender;
-  LIST_ENTRY	QueueListEntry;
-  PORT_MESSAGE	Message;
-} QUEUEDMESSAGE,  *PQUEUEDMESSAGE;
+    PEPORT Sender;
+    LIST_ENTRY QueueListEntry;
+    PORT_MESSAGE Message;
+} QUEUEDMESSAGE, *PQUEUEDMESSAGE;
+
+NTSTATUS
+STDCALL
+LpcRequestPort(
+    PEPORT Port,
+    PPORT_MESSAGE LpcMessage
+);
+
+NTSTATUS
+STDCALL
+LpcSendTerminationPort(
+    PEPORT Port,
+    LARGE_INTEGER CreationTime
+);
 
 /* Code in ntoskrnl/lpc/close.h */
 
-VOID STDCALL
-LpcpClosePort (PVOID	ObjectBody,
-	     ULONG	HandleCount);
-VOID STDCALL
-LpcpDeletePort (IN	PVOID	ObjectBody);
+VOID 
+STDCALL
+LpcpClosePort(
+    PVOID ObjectBody,
+    ULONG HandleCount
+);
+
+VOID
+STDCALL
+LpcpDeletePort(IN PVOID ObjectBody);
 
 /* Code in ntoskrnl/lpc/queue.c */
 
-VOID STDCALL
-EiEnqueueConnectMessagePort (IN OUT	PEPORT		Port,
-			     IN	PQUEUEDMESSAGE	Message);
-VOID STDCALL
-EiEnqueueMessagePort (IN OUT	PEPORT		Port,
-		      IN	PQUEUEDMESSAGE	Message);
-VOID STDCALL
-EiEnqueueMessageAtHeadPort (IN OUT	PEPORT		Port,
-			    IN	PQUEUEDMESSAGE	Message);
+VOID
+STDCALL
+EiEnqueueConnectMessagePort(
+    IN OUT PEPORT Port,
+    IN PQUEUEDMESSAGE Message
+);
+
+VOID
+STDCALL
+EiEnqueueMessagePort(
+    IN OUT PEPORT Port,
+    IN PQUEUEDMESSAGE Message
+);
+
+VOID
+STDCALL
+EiEnqueueMessageAtHeadPort(
+    IN OUT PEPORT Port,
+    IN PQUEUEDMESSAGE Message
+);
+
 PQUEUEDMESSAGE
 STDCALL
-EiDequeueConnectMessagePort (IN OUT	PEPORT	Port);
-PQUEUEDMESSAGE STDCALL
-EiDequeueMessagePort (IN OUT	PEPORT	Port);
+EiDequeueConnectMessagePort(IN OUT PEPORT Port);
 
-/* Code in ntoskrnl/lpc/create.c */
-
-NTSTATUS STDCALL
-NiCreatePort (PVOID			ObjectBody,
-	      PVOID			Parent,
-	      PWSTR			RemainingPath,
-	      POBJECT_ATTRIBUTES	ObjectAttributes);
+PQUEUEDMESSAGE
+STDCALL
+EiDequeueMessagePort(IN OUT PEPORT Port);
 
 /* Code in ntoskrnl/lpc/port.c */
 
-NTSTATUS STDCALL
-LpcpInitializePort (IN OUT  PEPORT	Port,
-		  IN      USHORT        Type,
-		  IN      PEPORT        Parent OPTIONAL);
 NTSTATUS
-LpcpInitSystem (VOID);
+STDCALL
+LpcpInitializePort(
+    IN OUT PEPORT Port,
+    IN USHORT Type,
+    IN PEPORT Parent OPTIONAL
+);
 
-extern POBJECT_TYPE	LpcPortObjectType;
-extern ULONG		LpcpNextMessageId;
-extern FAST_MUTEX	LpcpLock;
+NTSTATUS
+NTAPI
+LpcpInitSystem (VOID);
 
 /* Code in ntoskrnl/lpc/reply.c */
 
-NTSTATUS STDCALL
-EiReplyOrRequestPort (IN	PEPORT		Port,
-		      IN	PPORT_MESSAGE	LpcReply,
-		      IN	ULONG		MessageType,
-		      IN	PEPORT		Sender);
-
+NTSTATUS
+STDCALL
+EiReplyOrRequestPort(
+    IN PEPORT Port,
+    IN PPORT_MESSAGE LpcReply,
+    IN ULONG MessageType,
+    IN PEPORT Sender
+);
 
 #endif /* __INCLUDE_INTERNAL_PORT_H */

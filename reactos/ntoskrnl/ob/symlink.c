@@ -131,6 +131,7 @@ ObpParseSymbolicLink(PVOID Object,
  */
 VOID 
 INIT_FUNCTION
+NTAPI
 ObInitSymbolicLinkImplementation (VOID)
 {
   UNICODE_STRING Name;

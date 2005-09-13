@@ -85,6 +85,7 @@ ObpDecrementHandleCount(PVOID ObjectBody)
 
 
 NTSTATUS
+NTAPI
 ObpQueryHandleAttributes(HANDLE Handle,
 			 POBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleInfo)
 {
@@ -128,6 +129,7 @@ ObpQueryHandleAttributes(HANDLE Handle,
 
 
 NTSTATUS
+NTAPI
 ObpSetHandleAttributes(HANDLE Handle,
 		       POBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleInfo)
 {
@@ -227,6 +229,7 @@ ObpDeleteHandle(PHANDLE_TABLE HandleTable,
 
 
 NTSTATUS
+NTAPI
 ObDuplicateObject(PEPROCESS SourceProcess,
 		  PEPROCESS TargetProcess,
 		  HANDLE SourceHandle,
@@ -540,7 +543,9 @@ DuplicateHandleCallback(PHANDLE_TABLE HandleTable,
   return Ret;
 }
 
-VOID ObCreateHandleTable(PEPROCESS Parent,
+VOID
+NTAPI
+ObCreateHandleTable(PEPROCESS Parent,
 			 BOOLEAN Inherit,
 			 PEPROCESS Process)
 /*
@@ -582,6 +587,7 @@ ObKillProcess(PEPROCESS Process)
 
 
 NTSTATUS
+NTAPI
 ObpCreateHandle(PEPROCESS Process,
 	       PVOID ObjectBody,
 	       ACCESS_MASK GrantedAccess,
@@ -1139,6 +1145,7 @@ ObInsertObject(IN PVOID Object,
 
 
 ULONG
+NTAPI
 ObpGetHandleCountByHandleTable(PHANDLE_TABLE HandleTable)
 {
   return HandleTable->HandleCount;

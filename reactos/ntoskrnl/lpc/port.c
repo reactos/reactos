@@ -32,7 +32,9 @@ static GENERIC_MAPPING LpcpPortMapping =
 /* FUNCTIONS *****************************************************************/
 
 
-NTSTATUS INIT_FUNCTION
+NTSTATUS
+INIT_FUNCTION
+NTAPI
 LpcpInitSystem (VOID)
 {
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;

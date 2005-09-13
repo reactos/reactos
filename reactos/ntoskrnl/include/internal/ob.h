@@ -11,42 +11,40 @@
 
 struct _EPROCESS;
 
+#define ICIF_QUERY               0x1
+#define ICIF_SET                 0x2
+#define ICIF_QUERY_SIZE_VARIABLE 0x4
+#define ICIF_SET_SIZE_VARIABLE   0x8
+#define ICIF_SIZE_VARIABLE (ICIF_QUERY_SIZE_VARIABLE | ICIF_SET_SIZE_VARIABLE)
+
 typedef struct _DIRECTORY_OBJECT
 {
-   CSHORT Type;
-   CSHORT Size;
+    CSHORT Type;
+    CSHORT Size;
 
    /*
     * PURPOSE: Head of the list of our subdirectories
     */
-   LIST_ENTRY head;
-   KSPIN_LOCK Lock;
+    LIST_ENTRY head;
+    KSPIN_LOCK Lock;
 } DIRECTORY_OBJECT, *PDIRECTORY_OBJECT;
 
 typedef struct _SYMLINK_OBJECT
 {
-  CSHORT Type;
-  CSHORT Size;
-  UNICODE_STRING TargetName;
-  LARGE_INTEGER CreateTime;
+    CSHORT Type;
+    CSHORT Size;
+    UNICODE_STRING TargetName;
+    LARGE_INTEGER CreateTime;
 } SYMLINK_OBJECT, *PSYMLINK_OBJECT;
 
-/*
- * Enumeration of object types
- */
-enum
+typedef struct _INFORMATION_CLASS_INFO
 {
-   OBJTYP_INVALID,
-   OBJTYP_TYPE,
-   OBJTYP_DIRECTORY,
-   OBJTYP_SYMLNK,
-   OBJTYP_DEVICE,
-   OBJTYP_THREAD,
-   OBJTYP_FILE,
-   OBJTYP_PROCESS,
-   OBJTYP_SECTION,
-   OBJTYP_MAX,
-};
+  ULONG RequiredSizeQUERY;
+  ULONG RequiredSizeSET;
+  ULONG AlignmentSET;
+  ULONG AlignmentQUERY;
+  ULONG Flags;
+} INFORMATION_CLASS_INFO, *PINFORMATION_CLASS_INFO;
 
 #define BODY_TO_HEADER(objbdy)                                                 \
   CONTAINING_RECORD((objbdy), OBJECT_HEADER, Body)
@@ -62,10 +60,6 @@ enum
 
 #define OBJECT_ALLOC_SIZE(ObjectSize) ((ObjectSize)+sizeof(OBJECT_HEADER))
 
-extern PDIRECTORY_OBJECT NameSpaceRoot;
-extern POBJECT_TYPE ObSymbolicLinkType;
-extern PHANDLE_TABLE ObpKernelHandleTable;
-
 #define KERNEL_HANDLE_FLAG (1 << ((sizeof(HANDLE) * 8) - 1))
 #define ObIsKernelHandle(Handle, ProcessorMode)                                \
   (((ULONG_PTR)(Handle) & KERNEL_HANDLE_FLAG) &&                               \
@@ -73,94 +67,152 @@ extern PHANDLE_TABLE ObpKernelHandleTable;
 #define ObKernelHandleToHandle(Handle)                                         \
   (HANDLE)((ULONG_PTR)(Handle) & ~KERNEL_HANDLE_FLAG)
 
-VOID ObpAddEntryDirectory(PDIRECTORY_OBJECT Parent,
-			  POBJECT_HEADER Header,
-			  PWSTR Name);
-VOID ObpRemoveEntryDirectory(POBJECT_HEADER Header);
+extern PDIRECTORY_OBJECT NameSpaceRoot;
+extern POBJECT_TYPE ObSymbolicLinkType;
+extern PHANDLE_TABLE ObpKernelHandleTable;
 
 VOID
+NTAPI
+ObpAddEntryDirectory(
+    PDIRECTORY_OBJECT Parent,
+    POBJECT_HEADER Header,
+    PWSTR Name
+);
+
+VOID
+NTAPI
+ObpRemoveEntryDirectory(POBJECT_HEADER Header);
+
+VOID
+NTAPI
 ObInitSymbolicLinkImplementation(VOID);
 
+NTSTATUS
+NTAPI
+ObpCreateHandle(
+    struct _EPROCESS* Process,
+    PVOID ObjectBody,
+    ACCESS_MASK GrantedAccess,
+    BOOLEAN Inherit,
+    PHANDLE Handle
+);
 
-NTSTATUS ObpCreateHandle(struct _EPROCESS* Process,
-			PVOID ObjectBody,
-			ACCESS_MASK GrantedAccess,
-			BOOLEAN Inherit,
-			PHANDLE Handle);
-VOID ObCreateHandleTable(struct _EPROCESS* Parent,
-			 BOOLEAN Inherit,
-			 struct _EPROCESS* Process);
-NTSTATUS ObFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
-            PUNICODE_STRING ObjectName,
-		      PVOID* ReturnedObject,
-		      PUNICODE_STRING RemainingPath,
-		      POBJECT_TYPE ObjectType);
+VOID
+NTAPI
+ObCreateHandleTable(
+    struct _EPROCESS* Parent,
+    BOOLEAN Inherit,
+    struct _EPROCESS* Process
+);
 
 NTSTATUS
-ObpQueryHandleAttributes(HANDLE Handle,
-			 POBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleInfo);
+NTAPI
+ObFindObject(
+    POBJECT_CREATE_INFORMATION ObjectCreateInfo,
+    PUNICODE_STRING ObjectName,
+    PVOID* ReturnedObject,
+    PUNICODE_STRING RemainingPath,
+    POBJECT_TYPE ObjectType
+);
 
 NTSTATUS
-ObpSetHandleAttributes(HANDLE Handle,
-		       POBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleInfo);
+NTAPI
+ObpQueryHandleAttributes(
+    HANDLE Handle,
+    POBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleInfo
+);
+
+NTSTATUS
+NTAPI
+ObpSetHandleAttributes(
+    HANDLE Handle,
+    POBJECT_HANDLE_ATTRIBUTE_INFORMATION HandleInfo
+);
 
 NTSTATUS
 STDCALL
-ObpCreateTypeObject(struct _OBJECT_TYPE_INITIALIZER *ObjectTypeInitializer, 
-                    PUNICODE_STRING TypeName, 
-                    POBJECT_TYPE *ObjectType);
+ObpCreateTypeObject(
+    struct _OBJECT_TYPE_INITIALIZER *ObjectTypeInitializer,
+    PUNICODE_STRING TypeName,
+    POBJECT_TYPE *ObjectType
+);
 
 ULONG
+NTAPI
 ObGetObjectHandleCount(PVOID Object);
+
 NTSTATUS
-ObDuplicateObject(PEPROCESS SourceProcess,
-		  PEPROCESS TargetProcess,
-		  HANDLE SourceHandle,
-		  PHANDLE TargetHandle,
-		  ACCESS_MASK DesiredAccess,
-		  BOOLEAN InheritHandle,
-		  ULONG	Options);
+NTAPI
+ObDuplicateObject(
+    PEPROCESS SourceProcess,
+    PEPROCESS TargetProcess,
+    HANDLE SourceHandle,
+    PHANDLE TargetHandle,
+    ACCESS_MASK DesiredAccess,
+    BOOLEAN InheritHandle,
+    ULONG Options
+);
 
 ULONG
+NTAPI
 ObpGetHandleCountByHandleTable(PHANDLE_TABLE HandleTable);
 
 VOID
 STDCALL
-ObQueryDeviceMapInformation(PEPROCESS Process, PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo);
+ObQueryDeviceMapInformation(
+    PEPROCESS Process,
+    PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo
+);
 
-VOID FASTCALL
-ObpSetPermanentObject (IN PVOID ObjectBody, IN BOOLEAN Permanent);
+VOID
+FASTCALL
+ObpSetPermanentObject(
+    IN PVOID ObjectBody,
+    IN BOOLEAN Permanent
+);
 
 VOID
 STDCALL
 ObKillProcess(PEPROCESS Process);
+
 /* Security descriptor cache functions */
 
 NTSTATUS
+NTAPI
 ObpInitSdCache(VOID);
 
 NTSTATUS
-ObpAddSecurityDescriptor(IN PSECURITY_DESCRIPTOR SourceSD,
-			 OUT PSECURITY_DESCRIPTOR *DestinationSD);
+NTAPI
+ObpAddSecurityDescriptor(
+    IN PSECURITY_DESCRIPTOR SourceSD,
+    OUT PSECURITY_DESCRIPTOR *DestinationSD
+);
 
 NTSTATUS
+NTAPI
 ObpRemoveSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor);
 
 VOID
+NTAPI
 ObpReferenceCachedSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor);
 
 VOID
+NTAPI
 ObpDereferenceCachedSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor);
 
 VOID
 FASTCALL
-ObInitializeFastReference(IN PEX_FAST_REF FastRef,
-                          PVOID Object);
+ObInitializeFastReference(
+    IN PEX_FAST_REF FastRef,
+    PVOID Object
+);
 
 PVOID
 FASTCALL
-ObFastReplaceObject(IN PEX_FAST_REF FastRef,
-                    PVOID Object);
+ObFastReplaceObject(
+    IN PEX_FAST_REF FastRef,
+    PVOID Object
+);
 
 PVOID
 FASTCALL
@@ -168,53 +220,36 @@ ObFastReferenceObject(IN PEX_FAST_REF FastRef);
 
 VOID
 FASTCALL
-ObFastDereferenceObject(IN PEX_FAST_REF FastRef,
-                        PVOID Object);
+ObFastDereferenceObject(
+    IN PEX_FAST_REF FastRef,
+    PVOID Object
+);
 
 /* Secure object information functions */
 
-typedef struct _CAPTURED_OBJECT_ATTRIBUTES
-{
-  HANDLE RootDirectory;
-  ULONG Attributes;
-  PSECURITY_DESCRIPTOR SecurityDescriptor;
-  PSECURITY_QUALITY_OF_SERVICE SecurityQualityOfService;
-} CAPTURED_OBJECT_ATTRIBUTES, *PCAPTURED_OBJECT_ATTRIBUTES;
+NTSTATUS
+STDCALL
+ObpCaptureObjectName(
+    IN PUNICODE_STRING CapturedName,
+    IN PUNICODE_STRING ObjectName,
+    IN KPROCESSOR_MODE AccessMode
+);
 
 NTSTATUS
 STDCALL
-ObpCaptureObjectName(IN PUNICODE_STRING CapturedName,
-                     IN PUNICODE_STRING ObjectName,
-                     IN KPROCESSOR_MODE AccessMode);
-                     
-NTSTATUS
-STDCALL
-ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes,
-                           IN KPROCESSOR_MODE AccessMode,
-                           IN POBJECT_TYPE ObjectType,
-                           IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
-                           OUT PUNICODE_STRING ObjectName);
+ObpCaptureObjectAttributes(
+    IN POBJECT_ATTRIBUTES ObjectAttributes,
+    IN KPROCESSOR_MODE AccessMode,
+    IN POBJECT_TYPE ObjectType,
+    IN POBJECT_CREATE_INFORMATION ObjectCreateInfo,
+    OUT PUNICODE_STRING ObjectName
+);
 
 VOID
 STDCALL
 ObpReleaseCapturedAttributes(IN POBJECT_CREATE_INFORMATION ObjectCreateInfo);
 
 /* object information classes */
-
-#define ICIF_QUERY               0x1
-#define ICIF_SET                 0x2
-#define ICIF_QUERY_SIZE_VARIABLE 0x4
-#define ICIF_SET_SIZE_VARIABLE   0x8
-#define ICIF_SIZE_VARIABLE (ICIF_QUERY_SIZE_VARIABLE | ICIF_SET_SIZE_VARIABLE)
-
-typedef struct _INFORMATION_CLASS_INFO
-{
-  ULONG RequiredSizeQUERY;
-  ULONG RequiredSizeSET;
-  ULONG AlignmentSET;
-  ULONG AlignmentQUERY;
-  ULONG Flags;
-} INFORMATION_CLASS_INFO, *PINFORMATION_CLASS_INFO;
 
 #define ICI_SQ_SAME(Size, Alignment, Flags)                                    \
   { Size, Size, Alignment, Alignment, Flags }
