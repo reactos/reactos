@@ -865,7 +865,7 @@ MingwBackend::GetBinutilsVersion ( const string& binutilsCommand )
 	string version = string ( prevtoken );
 	int firstSpace = version.find_last_not_of ( " \t" );
 	if ( firstSpace != -1 )
-		return string ( version, 0, firstSpace - 1);
+		return string ( version, 0, firstSpace);
 	else
 		return version;
 }
@@ -910,7 +910,7 @@ MingwBackend::DetectBinutils ()
 	}
 	if ( detectedBinutils )
 	{
-		const string& binutilsVersion = GetBinutilsVersion ( binutilsCommand );
+		string binutilsVersion = GetBinutilsVersion ( binutilsCommand );
 		if ( IsSupportedBinutilsVersion ( binutilsVersion ) )
 			printf ( "detected (%s)\n", binutilsCommand.c_str () );
 		else
