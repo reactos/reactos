@@ -22,6 +22,7 @@ typedef struct _GET_SET_CTX_CONTEXT {
     KAPC Apc;
     KEVENT Event;
     CONTEXT Context;
+    KPROCESSOR_MODE Mode;
 } GET_SET_CTX_CONTEXT, *PGET_SET_CTX_CONTEXT;
 
 
@@ -42,22 +43,24 @@ PspGetOrSetContextKernelRoutine(PKAPC Apc,
     PGET_SET_CTX_CONTEXT GetSetContext;
     PKEVENT Event;
     PCONTEXT Context;
+    KPROCESSOR_MODE Mode;
 
     /* Get the Context Structure */
     GetSetContext = CONTAINING_RECORD(Apc, GET_SET_CTX_CONTEXT, Apc);
     Context = &GetSetContext->Context;
     Event = &GetSetContext->Event;
+    Mode = GetSetContext->Mode;
 
     /* Check if it's a set or get */
     if (SystemArgument1) {
 
         /* Get the Context */
-        KeTrapFrameToContext(KeGetCurrentThread()->TrapFrame, Context);
+        KeTrapFrameToContext(KeGetCurrentThread()->TrapFrame, NULL, Context);
 
     } else {
 
         /* Set the Context */
-        KeContextToTrapFrame(Context, NULL, KeGetCurrentThread()->TrapFrame);
+        KeContextToTrapFrame(Context, NULL, KeGetCurrentThread()->TrapFrame, Mode);
     }
 
     /* Notify the Native API that we are done */
@@ -111,7 +114,7 @@ NtGetContextThread(IN HANDLE ThreadHandle,
              * I don't know if trying to get your own context makes much
              * sense but we can handle it more efficently.
              */
-            KeTrapFrameToContext(Thread->Tcb.TrapFrame, &GetSetContext.Context);
+            KeTrapFrameToContext(Thread->Tcb.TrapFrame, NULL, &GetSetContext.Context);
 
         } else {
 
@@ -119,6 +122,9 @@ NtGetContextThread(IN HANDLE ThreadHandle,
             KeInitializeEvent(&GetSetContext.Event,
                               NotificationEvent,
                               FALSE);
+
+            /* Set the previous mode */
+            GetSetContext.Mode = PreviousMode;
 
             /* Initialize the APC */
             KeInitializeApc(&GetSetContext.Apc,
@@ -221,7 +227,7 @@ NtSetContextThread(IN HANDLE ThreadHandle,
              * I don't know if trying to get your own context makes much
              * sense but we can handle it more efficently.
              */
-            KeContextToTrapFrame(&GetSetContext.Context, NULL, Thread->Tcb.TrapFrame);
+            KeContextToTrapFrame(&GetSetContext.Context, NULL, Thread->Tcb.TrapFrame, PreviousMode);
 
         } else {
 
@@ -229,6 +235,9 @@ NtSetContextThread(IN HANDLE ThreadHandle,
             KeInitializeEvent(&GetSetContext.Event,
                               NotificationEvent,
                               FALSE);
+
+            /* Set the previous mode */
+            GetSetContext.Mode = PreviousMode;
 
             /* Initialize the APC */
             KeInitializeApc(&GetSetContext.Apc,

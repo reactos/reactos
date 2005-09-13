@@ -287,7 +287,10 @@ VOID inline FASTCALL KiSatisifyMultipleObjectWaits(PKWAIT_BLOCK WaitBlock);
 VOID FASTCALL KiWaitTest(PDISPATCHER_HEADER Object, KPRIORITY Increment);
 
 PULONG KeGetStackTopThread(struct _ETHREAD* Thread);
-BOOLEAN STDCALL KeContextToTrapFrame(PCONTEXT Context, PKEXCEPTION_FRAME ExeptionFrame, PKTRAP_FRAME TrapFrame);
+BOOLEAN STDCALL KeContextToTrapFrame(PCONTEXT Context,
+                                     PKEXCEPTION_FRAME ExeptionFrame,
+                                     PKTRAP_FRAME TrapFrame,
+                                     KPROCESSOR_MODE PreviousMode);
 VOID STDCALL KiDeliverApc(KPROCESSOR_MODE PreviousMode,
                   PVOID Reserved,
                   PKTRAP_FRAME TrapFrame);
@@ -368,8 +371,11 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
             PKTRAP_FRAME Tf,
 		    KPROCESSOR_MODE PreviousMode,
 		    BOOLEAN SearchFrames);
-VOID KeTrapFrameToContext(PKTRAP_FRAME TrapFrame,
-			  PCONTEXT Context);
+VOID
+NTAPI
+KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
+                     IN PKEXCEPTION_FRAME ExceptionFrame,
+                     IN OUT PCONTEXT Context);
 VOID
 KeApplicationProcessorInit(VOID);
 VOID

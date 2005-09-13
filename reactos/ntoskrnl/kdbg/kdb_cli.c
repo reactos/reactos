@@ -35,10 +35,6 @@
 
 /* DEFINES *******************************************************************/
 
-/* FIXME: NDK headers */
-#define TempEsp TempEip
-#define TempSegSs TempCs
-
 #define KEY_BS          8
 #define KEY_ESC         27
 #define KEY_DEL         127

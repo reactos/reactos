@@ -812,7 +812,7 @@ KiInitializeUserApc(IN PKEXCEPTION_FRAME ExceptionFrame,
 
     /* Save the full context */
     Context.ContextFlags = CONTEXT_FULL | CONTEXT_DEBUG_REGISTERS;
-    KeTrapFrameToContext(TrapFrame, &Context);
+    KeTrapFrameToContext(TrapFrame, ExceptionFrame, &Context);
 
     /* Protect with SEH */
     _SEH_TRY

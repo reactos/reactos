@@ -256,13 +256,13 @@ LdrpInit(PCONTEXT Context,
    SYSTEM_BASIC_INFORMATION SystemInformation;
    NTSTATUS Status;
 
-   DPRINT("LdrpInit()\n");
+   DPRINT1("LdrpInit()\n");
    if (NtCurrentPeb()->Ldr == NULL || NtCurrentPeb()->Ldr->Initialized == FALSE)
      {
        Peb = (PPEB)(PEB_BASE);
-       DPRINT("Peb %x\n", Peb);
+       DPRINT1("Peb %x\n", Peb);
        ImageBase = Peb->ImageBaseAddress;
-       DPRINT("ImageBase %x\n", ImageBase);
+       DPRINT1("ImageBase %x\n", ImageBase);
        if (ImageBase <= (PVOID)0x1000)
          {
            DPRINT("ImageBase is null\n");
@@ -271,7 +271,7 @@ LdrpInit(PCONTEXT Context,
 
        /*  If MZ header exists  */
        PEDosHeader = (PIMAGE_DOS_HEADER) ImageBase;
-       DPRINT("PEDosHeader %x\n", PEDosHeader);
+       DPRINT1("PEDosHeader %x\n", PEDosHeader);
 
        if (PEDosHeader->e_magic != IMAGE_DOS_SIGNATURE ||
            PEDosHeader->e_lfanew == 0L ||
@@ -294,10 +294,12 @@ LdrpInit(PCONTEXT Context,
        NTHeaders = (PIMAGE_NT_HEADERS)((ULONG_PTR)ImageBase + PEDosHeader->e_lfanew);
 
        /* Get number of processors */
+       DPRINT1("Here\n");
        Status = ZwQuerySystemInformation(SystemBasicInformation,
 	                                 &SystemInformation,
 					 sizeof(SYSTEM_BASIC_INFORMATION),
 					 NULL);
+        DPRINT1("Here2\n");
        if (!NT_SUCCESS(Status))
          {
 	   ZwTerminateProcess(NtCurrentProcess(), Status);

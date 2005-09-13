@@ -15,10 +15,6 @@
 
 /* TYPES *********************************************************************/
 
-/* FIXME: NDK headers */
-#define TempEsp TempEip
-#define TempSegSs TempCs
-
 /* DEFINES *******************************************************************/
 
 #define KDB_STACK_SIZE                   (4096*3)
@@ -108,6 +104,24 @@ STATIC CONST PCHAR ExceptionNrToString[] =
    "SIMD Fault"
 };
 
+ULONG
+NTAPI
+KiSsFromTrapFrame(IN PKTRAP_FRAME TrapFrame);
+
+ULONG
+NTAPI
+KiEspFromTrapFrame(IN PKTRAP_FRAME TrapFrame);
+
+VOID
+NTAPI
+KiSsToTrapFrame(IN PKTRAP_FRAME TrapFrame,
+                IN ULONG Ss);
+
+VOID
+NTAPI
+KiEspToTrapFrame(IN PKTRAP_FRAME TrapFrame,
+                 IN ULONG Esp);
+
 /* FUNCTIONS *****************************************************************/
 
 STATIC VOID
@@ -124,22 +138,11 @@ KdbpTrapFrameToKdbTrapFrame(PKTRAP_FRAME TrapFrame, PKDB_KTRAP_FRAME KdbTrapFram
       "movl %%cr4, %3"    "\n\t"
       : "=r"(KdbTrapFrame->Cr0), "=r"(KdbTrapFrame->Cr2),
         "=r"(KdbTrapFrame->Cr3), "=r"(KdbTrapFrame->Cr4));
-   
-   if (TrapFrame->PreviousMode == KernelMode)
-   {
-      /* If the trapframe is a kmode one use the temp ss:esp */
-      KdbTrapFrame->Tf.Esp = (ULONG)TrapFrame->TempEsp;
-      KdbTrapFrame->Tf.Ss = (USHORT)((ULONG)TrapFrame->TempSegSs & 0xFFFF);
-   }
-   else
-   {
-      /* Otherwise use ss:esp pushed by the CPU */
-      /* FIXME: maybe change all trapframes to always put ss:esp into tempss:tempesp so we
-       *        can handle umode and kmode the same way */
-      KdbTrapFrame->Tf.Esp = TrapFrame->Esp;
-      KdbTrapFrame->Tf.Ss = TrapFrame->Ss;
-   }
-   
+
+    KdbTrapFrame->Tf.Esp = KiEspFromTrapFrame(TrapFrame);
+    KdbTrapFrame->Tf.Ss = (USHORT)(KiSsFromTrapFrame(TrapFrame) & 0xFFFF);
+
+
    /* FIXME: copy v86 registers if TrapFrame is a V86 trapframe */
 }
 
@@ -151,20 +154,8 @@ KdbpKdbTrapFrameToTrapFrame(PKDB_KTRAP_FRAME KdbTrapFrame, PKTRAP_FRAME TrapFram
    
    /* FIXME: write cr0, cr2, cr3 and cr4 (not needed atm) */
    
-   if (TrapFrame->PreviousMode == KernelMode)
-   {
-      /* If the trapframe is a kmode one write to the temp ss:esp */
-      TrapFrame->TempEsp = (PVOID)KdbTrapFrame->Tf.Esp;
-      TrapFrame->TempSegSs = (PVOID)(((ULONG)TrapFrame->TempSegSs & ~0xffff) | KdbTrapFrame->Tf.Ss);
-   }
-   else
-   {
-      /* Otherwise write to ss:esp pushed by the CPU */
-      /* FIXME: maybe change all trap-epilogs to always put temp ss:esp into ss:esp so we
-       *        can handle umode and kmode the same way */
-      TrapFrame->Esp = KdbTrapFrame->Tf.Esp;
-      TrapFrame->Ss = KdbTrapFrame->Tf.Ss;
-   }
+    KiSsToTrapFrame(TrapFrame, KdbTrapFrame->Tf.Ss);
+    KiEspToTrapFrame(TrapFrame, KdbTrapFrame->Tf.Esp);
    
    /* FIXME: copy v86 registers if TrapFrame is a V86 trapframe */
 }

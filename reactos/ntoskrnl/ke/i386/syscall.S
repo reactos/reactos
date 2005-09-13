@@ -1,13 +1,8 @@
-/* $Id$
- *
+/*
  * FILE:            ntoskrnl/ke/i386/syscall.S
  * COPYRIGHT:       See COPYING in the top level directory
  * PURPOSE:         System Call Handler
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
- * UPDATE HISTORY:
- *                  ??-??-??: Original Version - David Welch(?)
- *                  13-01-05: Complete rewrite, added support for SYSENTER, direct kmode syscalls
- *                            and re-wrote most of handler code. - Alex Ionescu
  */
 
 #include <roscfg.h>
@@ -16,275 +11,491 @@
 #include <ndk/i386/segment.h>
 
 #define UserMode  (1)
+#define STATUS_INVALID_SYSTEM_SERVICE 0xC000001C
 
-.globl KeReturnFromSystemCallWithHook
 .globl _KiServiceExit
 .globl _KiServiceExit2
 .globl _KiFastCallEntry
 .globl _KiSystemService
 .globl _KiDebugService
+.intel_syntax noprefix
+
+/*
+ * NOTE: I will create some macros for trap entry and exit,
+ * DR* register restoration, modified frame exit, etc, if GAS
+ * allows it/I find a way how. This would remove a lot of
+ * duplicated code in this file plus the other irq/trap asm files.
+ * I think this is similar to what NT does, if you look at teh
+ * Dr_kit*_a functions which look auto-generated.
+ */
+
+/*
+ * There are 3 main types of Trap Exits:
+ *
+ * - KiServiceExit
+ *     - Clear interrupt flag
+ *     - Common User APC Dispatching
+ *     - Common exit code; segments and volatiles are not restored
+ * You use this for System Call return, when volatiles are irrelevant.
+ * (NtContinue, NtRaiseException, KiCallUserMode and all System Call returns)
+ *
+ * - KiServiceExit2
+ *     - Clear interrupt flag
+ *     - Common User APC Dispatching
+ *     - Common exit code; the entire frame is restored.
+ * You use this when volatiles and other registers need to be restored.
+ * For example, if debugging is active (NtContinue, NtRaiseException).
+ *
+ * - Kei386EoiHelper
+ *     - Clear interrupt flag
+ *     - Common User APC Dispatching
+ *     - Common exit code; the entire frame is restored but *NOT* the Previous Mode
+ * You use this in the same context as KiServiceExit2, but when the Previous Mode
+ * should be tampered with. Clearly, as its name suggests, this routine is mostly
+ * useful for End Of Interrupts.
+ * Note that this routine is EXPORTED.
+ * Note that this routine must called by a JMP, not a CALL.
+ */
+
+/*
+ * The common exit code has 3 modes of operation:
+ *    - Whether or not to restore segments
+ *    - Whether or not to restore volatiles
+ *    - Whether or not to restore the previous mode
+ * All these are exemplified by the 3 trap exits shown above
+ */
+
+/*
+ * There is also common Debug Code present in the common exit code, which
+ * in turn calls common code to save the debug registers
+ */
+ 
+ /*
+  * FIXMEs:
+  *         - Fix Win32k Callbacks so we can optimize stack usage.
+  *         - Dig in trap code and see why we need to push/pop the segments,
+  *           which -shouldn't- be needed on syscalls; one of the things
+  *           missing for this to work is lazy loading in the GPF handler,
+  *           but there are other things to consider.
+  *         - Use macros and merge with trap.s nicely
+  */
+
+/*
+ * Entries will be discussed later.
+ */
+ 
+ /*** This file is a mess; it is being worked on. Please contact Alex:
+  *** alex@relsoft.net if you want to make any changes to it before this
+  *** message goes away
+  */
+
+/* FUNCTIONS ***************************************************************/
+
+BadStack:
+
+    /* Restore ESP0 stack */
+    mov ecx, [fs:KPCR_TSS]
+    mov esp, ss:[ecx+KTSS_ESP0]
+
+    /* FIXME: Generate Trap 6*/
+    int 3
 
 _KiFastCallEntry:
 
+// ==================== UNIQUE SYSENTER STUB. DO NOT DUPLICATE ============//
     /* Set FS to PCR */
-    movl $PCR_SELECTOR, %ecx
-    movw %cx, %fs
+    mov ecx, PCR_SELECTOR
+    mov fs, cx
+
+    /* Set DS/ES to Kernel Selector */
+    mov ecx, KERNEL_DS
+    mov ds, cx
+    mov es, cx
 
     /* Set the current stack to Kernel Stack */
-    movl %fs:KPCR_TSS, %ecx
-    movl %ss:KTSS_ESP0(%ecx), %ecx
-    movl %ecx, %esp
+    mov ecx, [fs:KPCR_TSS]
+    mov esp, ss:[ecx+KTSS_ESP0]
+    /*
+     * ^^^^^ Normally we should be able to use KTHREAD.InitialStack - sizeof
+     *       KTRAP_FRAME - sizeof(NPX_AREA) and that will give us exactly
+     *       our esp (ie: ebp == esp by the way the system is organized).
+     *       This didn't work until I added v86m trap frame bias, which was
+     *       needed anways. It works NICELY until we hit a Win32K Callback,
+     *       which also messes up a lea esp, [ebp+...] below. It seems the
+     *       stack for callbacks isn't properly set up (it's missing sizeof
+     *       KTRAP_FRAME), which is understandable since the whole code is
+     *       messed up and smashes new stacks instead of using the kernel
+     *       assigned one.
+     */
 
     /* Set up a fake INT Stack. */
-    pushl $USER_DS
-    pushl %edx                  /* Ring 3 SS:ESP */
-    pushfl
-    orl $X86_EFLAGS_IF, (%esp)  /* Re-enable IRQs in EFLAGS, to fake INT */
-    pushl $USER_CS
-    pushl $KUSER_SHARED_SYSCALL_RET
+    push USER_DS
+    push edx                            /* Ring 3 SS:ESP */
+    pushf                               /* Ring 3 EFLAGS */
+    push 2                              /* Ring 0 EFLAGS */
+    add edx, 8                          /* Skip user parameter list */
+    popf                                /* Set our EFLAGS */
+    or dword ptr [esp], X86_EFLAGS_IF   /* Re-enable IRQs in EFLAGS, to fake INT */
+    push USER_CS
+    push KUSER_SHARED_SYSCALL_RET
 
-    /* User Parameter List */
-    add $8, %edx
+    /* Setup the Trap Frame stack */
+    push 0
+    push ebp
+    push ebx
+    push esi
+    push edi
+    push TEB_SELECTOR
+
+    /* Save pointer to our PCR */
+    mov ebx, [fs:KPCR_SELF]
+
+    /* Get a pointer to the current thread */
+    mov esi, [ebx+KPCR_CURRENT_THREAD]
+
+    /* Set the exception handler chain terminator */
+    push [ebx+KPCR_EXCEPTION_LIST]
+    mov dword ptr [ebx+KPCR_EXCEPTION_LIST], -1
+
+    /* Push previous mode */
+    push UserMode
+
+.att_syntax
+    /* Save other registers */
+    sub $0xC, %esp                                                    // + 0x70
+    pushl $USER_DS                                                          // + 0x40
+    pushl $USER_DS                                                          // + 0x44
+    pushl $0                                                          // + 0x48
+    sub $0x30, %esp                                                    // + 0x70
+.intel_syntax noprefix
+
+    /* Write the previous mode */
+    mov byte ptr [esi+KTHREAD_PREVIOUS_MODE], UserMode
+
+    /* Go on the Kernel stack frame */
+    mov ebp, esp
+
+    /* Flush DR7 */
+    and dword ptr [ebp+KTRAP_FRAME_DR7], 0
+
+    /* Check if the thread was being debugged */
+    test byte ptr [esi+KTHREAD_DEBUG_ACTIVE], 0xFF
+
+    /* Jump to shared code or DR Save */
+    //jnz Dr_FastCallDrSave
+    jmp SharedCode
 
 _KiSystemService:
 
-    /*
-     * Construct a trap frame on the stack.
-     * The following are already on the stack.
-     */
-    // SS                                                                  + 0x0
-    // ESP                                                                 + 0x4
-    // EFLAGS                                                              + 0x8
-    // CS                                                                  + 0xC
-    // EIP                                                                 + 0x10
-    pushl $0                                                            // + 0x14
-    pushl %ebp                                                          // + 0x18
-    pushl %ebx                                                          // + 0x1C
-    pushl %esi                                                          // + 0x20
-    pushl %edi                                                          // + 0x24
-    pushl %fs                                                           // + 0x28
+// ==================== UNIQUE SYSCALL TRAP ENTRY DO NOT DUPLICATE ============//
+    /* Create a trap frame */
+    push 0
+    push ebp
+    push ebx
+    push esi
+    push edi
+    push fs
 
     /* Load PCR Selector into fs */
-    movw $PCR_SELECTOR, %bx
-    movw %bx, %fs
-
-    /* Save the previous exception list */
-    pushl %fs:KPCR_EXCEPTION_LIST                                      // + 0x2C
-
-    /* Set the exception handler chain terminator */
-    movl $0xffffffff, %fs:KPCR_EXCEPTION_LIST
+    mov ebx, PCR_SELECTOR
+    mov fs, bx
 
     /* Get a pointer to the current thread */
-    movl %fs:KPCR_CURRENT_THREAD, %esi
+    mov esi, [fs:KPCR_CURRENT_THREAD]
+
+    /* Save the previous exception list */
+    push [fs:KPCR_EXCEPTION_LIST]
+
+    /* Set the exception handler chain terminator */
+    mov dword ptr [fs:KPCR_EXCEPTION_LIST], -1
 
     /* Save the old previous mode */
-    pushl %ss:KTHREAD_PREVIOUS_MODE(%esi)                              // + 0x30
-
-    /* Set the new previous mode based on the saved CS selector */
-    movl 0x24(%esp), %ebx
-    andl $1, %ebx
-    movb %bl, %ss:KTHREAD_PREVIOUS_MODE(%esi)
-
+    push ss:[esi+KTHREAD_PREVIOUS_MODE]
+    
+.att_syntax
     /* Save other registers */
-    pushl %eax                                                         // + 0x34
-    pushl %ecx                                                         // + 0x38
-    pushl %edx                                                         // + 0x3C
+    sub $0xC, %esp                                                    // + 0x70
     pushl %ds                                                          // + 0x40
     pushl %es                                                          // + 0x44
     pushl %gs                                                          // + 0x48
-    sub $0x28, %esp                                                    // + 0x70
+    sub $0x30, %esp                                                    // + 0x70
+.intel_syntax noprefix
 
-#ifdef DBG
-    /* Trick gdb 6 into backtracing over the system call */
-    mov 0x6c(%esp), %ebx
-    pushl 4(%ebx)    /* DebugEIP */                                    // + 0x74
-#else
-    pushl 0x60(%esp) /* DebugEIP */                                    // + 0x74
-#endif
-    pushl %ebp       /* DebugEBP */                                    // + 0x78
+    /* Set the new previous mode based on the saved CS selector */
+    mov ebx, [esp+0x6C]
+    and ebx, 1
+    mov byte ptr ss:[esi+KTHREAD_PREVIOUS_MODE], bl
 
-    /* Load the segment registers */
-    sti
-    movw $KERNEL_DS, %bx
-    movw %bx, %ds
-    movw %bx, %es
+    /* Go on the Kernel stack frame */
+    mov ebp, esp
 
     /* Save the old trap frame pointer where EDX would be saved */
-    movl KTHREAD_TRAP_FRAME(%esi), %ebx
-    movl %ebx, KTRAP_FRAME_EDX(%esp)
+    mov ebx, [esi+KTHREAD_TRAP_FRAME]
+    mov [ebp+KTRAP_FRAME_EDX], ebx
 
-    /* Allocate new Kernel stack frame */
-    movl %esp,%ebp
+// ==================== COMMON DR SAVE CHECK.AND DEBUG FRAME SETUP ============//
+    /* Flush DR7 */
+    and dword ptr [ebp+KTRAP_FRAME_DR7], 0
+
+    /* Check if the thread was being debugged */
+    test byte ptr [esi+KTHREAD_DEBUG_ACTIVE], 0xFF
+    cld
+    //jnz Dr_kss_a
 
     /* Save a pointer to the trap frame in the TCB */
-    movl %ebp, KTHREAD_TRAP_FRAME(%esi)
+SharedCode:
+    mov [esi+KTHREAD_TRAP_FRAME], ebp
+
+    /* Get the Debug Trap Frame EBP/EIP */
+    mov ebx, [ebp+KTRAP_FRAME_EBP]
+    mov edi, [ebp+KTRAP_FRAME_EIP]
+
+    /* Write the debug data */
+    mov [ebp+KTRAP_FRAME_DEBUGPOINTER], edx
+    mov dword ptr [ebp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00
+    mov [ebp+KTRAP_FRAME_DEBUGEBP], ebx
+    mov [ebp+KTRAP_FRAME_DEBUGEIP], edi
+
+// ============= END OF COMMON DR SAVE CHECK.AND DEBUG FRAME SETUP ============//
+    /* Enable interrupts */
+    sti
 
 CheckValidCall:
-
-#ifdef DBG
-    /*
-     * GDB thinks the function starts here and
-     * wants a standard prolog, so let's give it
-     */
-    pushl %ebp
-    movl %esp,%ebp
-    popl %ebp
-#endif
 
     /*
      * Find out which table offset to use. Converts 0x1124 into 0x10.
      * The offset is related to the Table Index as such: Offset = TableIndex x 10
      */
-    movl %eax, %edi
-    shrl $8, %edi
-    andl $0x10, %edi
-    movl %edi, %ecx
+    mov edi, eax
+    shr edi, 8
+    and edi, 0x10
+    mov ecx, edi
 
     /* Now add the thread's base system table to the offset */
-    addl KTHREAD_SERVICE_TABLE(%esi), %edi
+    add edi, [esi+KTHREAD_SERVICE_TABLE]
 
     /* Get the true syscall ID and check it */
-    movl %eax, %ebx
-    andl $0x0FFF, %eax
-    cmpl 8(%edi), %eax
+    mov ebx, eax
+    and eax, 0xFFF
+    cmp eax, [edi+8]
 
     /* Invalid ID, try to load Win32K Table */
     jnb KiBBTUnexpectedRange
 
+#if 0 // <== Disabled for two reasons: We don't save TEB in 0x18, but KPCR.
+      // <== We don't have a KeGdiFlushUserBatch callback yet (needs to be
+      //     sent through the PsInitializeWin32Callouts structure)
+    /* Check if this was Win32K */
+    cmp ecx, 0x10
+    jnz NotWin32K
+
+    /* Get the TEB */
+    mov ecx, [fs:KPCR_TEB]
+
+    /* Check if we should flush the User Batch */
+    xor ebx, ebx
+    or ebx, [ecx+TEB_GDI_BATCH_COUNT]
+    jz NoWin32K
+
+    /* Flush it */
+    push edx
+    push eax
+    call [_KeGdiFlushUserBatch]
+    pop eax
+    pop edx
+#endif
+
+NotWin32K:
     /* Users's current stack frame pointer is source */
-    movl %edx, %esi
+    mov esi, edx
 
     /* Allocate room for argument list from kernel stack */
-    movl 12(%edi), %ecx
-    movb (%ecx, %eax), %cl
-    movzx %cl, %ecx
-
-    /* Allocate space on our stack */
-    subl %ecx, %esp
+    mov ebx, [edi+12]
+    xor ecx, ecx
+    mov cl, [eax+ebx]
 
     /* Get pointer to function */
-    movl (%edi), %edi
-    movl (%edi, %eax, 4), %eax
+    mov edi, [edi]
+    mov ebx, [edi+eax*4]
 
-    /* Copy the arguments from the user stack to our stack */
-    shr $2, %ecx
-    movl %esp, %edi
-    cld
+    /* Allocate space on our stack */
+    sub esp, ecx
+
+    /* 
+     * Copy the arguments from the user stack to our stack
+     * FIXME: This needs to be probed with MmSystemRangeStart
+     */
+    shr ecx, 2
+    mov edi, esp
     rep movsd
 
     /* Do the System Call */
-    call *%eax
-    movl %eax, KTRAP_FRAME_EAX(%ebp)
+    call ebx
 
     /* Deallocate the kernel stack frame  */
-    movl %ebp, %esp
+    mov esp, ebp
 
 KeReturnFromSystemCall:
 
     /* Get the Current Thread */
-    movl %fs:KPCR_CURRENT_THREAD, %esi
+    mov ecx, [fs:KPCR_CURRENT_THREAD]
 
     /* Restore the old trap frame pointer */
-    movl KTRAP_FRAME_EDX(%esp), %ebx
-    movl %ebx, KTHREAD_TRAP_FRAME(%esi)
+    mov edx, [ebp+KTRAP_FRAME_EDX]
+    mov [ecx+KTHREAD_TRAP_FRAME], edx
 
 _KiServiceExit:
-
-    /* Get the Current Thread */
+    /* Disable interrupts */
     cli
-    movl %fs:KPCR_CURRENT_THREAD, %esi
+
+// ================= COMMON USER-MODE APC DELIVERY CHECK ============//
+    /* Check for V86 mode */
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], X86_EFLAGS_VM
+    jnz ApcLoop
 
     /* Deliver APCs only if we were called from user mode */
-    testb $1, KTRAP_FRAME_CS(%esp)
+    test byte ptr [ebp+KTRAP_FRAME_CS], 1
     je KiRosTrapReturn
 
+    /* Get the current thread */
+ApcLoop:
+    mov ebx, [fs:KPCR_CURRENT_THREAD]
+
+    /* Make it non-alerted */
+    mov byte ptr [ebx+KTHREAD_ALERTED], 0
+
     /* And only if any are actually pending */
-    cmpb $0, KTHREAD_PENDING_USER_APC(%esi)
+    cmp byte ptr [ebx+KTHREAD_PENDING_USER_APC], 0
     je KiRosTrapReturn
 
     /* Save pointer to Trap Frame */
-    movl %esp, %ebx
+    mov ebx, ebp
+
+// ================= PRESENT ONLY IF VOLATILES NEEDED ============//
+    /* Save some stuff that raising IRQL will kill */
+    mov [ebx+KTRAP_FRAME_EAX], eax
+    mov dword ptr [ebx+KTRAP_FRAME_FS], TEB_SELECTOR
+    mov dword ptr [ebx+KTRAP_FRAME_DS], USER_DS
+    mov dword ptr [ebx+KTRAP_FRAME_ES], USER_DS
+    mov dword ptr [ebx+KTRAP_FRAME_GS], 0
+// ============= END PRESENT ONLY IF VOLATILES NEEDED ============//
 
     /* Raise IRQL to APC_LEVEL */
-    movl $1, %ecx
+    mov ecx, 1
     call @KfRaiseIrql@4
 
     /* Save old IRQL */
-    pushl %eax
+    push eax
 
     /* Deliver APCs */
     sti
-    pushl %ebx
-    pushl $0
-    pushl $UserMode
+    push ebx
+    push 0
+    push UserMode
     call _KiDeliverApc@12
-    cli
 
     /* Return to old IRQL */
-    popl %ecx
+    pop ecx
     call @KfLowerIrql@4
+    
+    /* Restore EAX (only in volatile case) */
+    mov eax, [ebx+KTRAP_FRAME_EAX]
+    cli
+    jmp ApcLoop
+// ============== END COMMON USER-MODE APC DELIVERY CHECK ============//
 
 KiRosTrapReturn:
+// ========================= COMMON TRAP EXIT CODE ===================//
+    /* Restore exception list */
+    mov edx, [esp+KTRAP_FRAME_EXCEPTION_LIST]
+    mov [fs:KPCR_EXCEPTION_LIST], edx
 
+// ==================== ONLY IF PREVIOUS MODE NEEDED ==================//
+    /* Restore previous mode */
+    mov ecx, [esp+KTRAP_FRAME_PREVIOUS_MODE]
+    mov esi, [fs:KPCR_CURRENT_THREAD]
+    mov byte ptr [esi+KTHREAD_PREVIOUS_MODE], cl
+// ==================== END IF PREVIOUS MODE NEEDED ===================//
+
+    /* Check for V86 */
+    test dword ptr [esp+KTRAP_FRAME_EFLAGS], X86_EFLAGS_VM
+    jnz V86_Exit
+
+    /* Check if the frame was edited */
+    test word ptr [esp+KTRAP_FRAME_CS], FRAME_EDITED
+    jz EditedFrame
+
+// ==================== ONLY IF FULL RESTORE NEEDED ===================//
+    /* Check the old mode */
+    cmp word ptr [esp+KTRAP_FRAME_CS], USER_CS
+    bt word ptr [esp+KTRAP_FRAME_CS], 0
+    cmc
+    ja RestoreAll
+// ==================== END IF FULL RESTORE NEEDED ====================//
+
+ /* Skip debug information and unsaved registers */
+ //badbadbad
+    add esp, 0x30
+    pop gs
+    pop es
+    pop ds
+    add esp, 0x14
+//badbadbad
+
+    /* Restore FS */
+RestoreFs:
+    //lea esp, [ebp+KTRAP_FRAME_FS] <= BUG IN WIN32K CALLBACKS! STACK GETS SMASHED
+    pop fs
+
+CommonStackClean:
     /* Skip debug information and unsaved registers */
-    addl $0x30, %esp                                                   // + 0x48
-    popl %gs                                                           // + 0x44
-    popl %es                                                           // + 0x40
-    popl %ds                                                           // + 0x3C
-    popl %edx                                                          // + 0x38
-    popl %ecx                                                          // + 0x34
-    popl %eax                                                          // + 0x30
+    //lea esp, [ebp+KTRAP_FRAME_EDI] <= BUG IN WIN32K CALLBACKS! STACK GETS SMASHED
+    pop edi
+    pop esi
+    pop ebx
+    pop ebp
 
-    /* Restore the old previous mode */
-    popl %ebx                                                          // + 0x2C
-    movb %bl, %ss:KTHREAD_PREVIOUS_MODE(%esi)
+    /* Check for ABIOS */
+    cmp word ptr [esp+8], 0x80
+    ja AbiosExit
 
-    /* Restore the old exception handler list */
-    popl %fs:KPCR_EXCEPTION_LIST                                       // + 0x28
-
-    /* Restore final registers from trap frame */
-    popl %fs                                                           // + 0x24
-    popl %edi                                                          // + 0x20
-    popl %esi                                                          // + 0x1C
-    popl %ebx                                                          // + 0x18
-    popl %ebp                                                          // + 0x14
-    add $4, %esp                                                       // + 0x10
+AbiosReturn:
+    /* Pop error code */
+    add esp, 4
 
     /* Check if previous CS is from user-mode */
-    testl $1, 4(%esp)
+    test dword ptr [esp+4], 1
 
     /* It is, so use Fast Exit */
     jnz FastRet
 
-    /*
-     * Restore what the stub pushed, and return back to it.
-     * Note that we were CALLed, so the first thing on our stack is the ret EIP!
-     */
-    pop %edx                                                           // + 0x0C
-    pop %ecx                                                           // + 0x08
-    popf                                                               // + 0x04
-    jmp *%edx
+    /* Jump back to stub */
+    pop edx
+    pop ecx
+    popf
+    jmp edx
 
 IntRet:
 
     iret
 
 FastRet:
-
     /* Is SYSEXIT Supported/Wanted? */
-    cmpl $0, %ss:_KiFastSystemCallDisable
+    cmp dword ptr ss:[_KiFastSystemCallDisable], 0
+    jnz IntRet
+    test dword ptr [esp+8], X86_EFLAGS_TF
     jnz IntRet
 
     /* Restore FS to TIB */
-    mov $TEB_SELECTOR, %ecx
-    mov %ecx, %fs
-
+    mov ecx, TEB_SELECTOR
+    mov fs, ecx
+    
     /* We will be cleaning up the stack ourselves */
-    popl %edx                         /* New Ring 3 EIP */
-    add $0x4, %esp                    /* Skip Ring 3 DS */
-    andl $~X86_EFLAGS_IF, (%esp)      /* Remove IRQ hack from EFLAGS */
-    popfl                             /* Restore old EFLAGS */
-    popl %ecx                         /* Old Ring 3 SS:ESP */
+    pop edx                                 /* New Ring 3 EIP */
+    add esp, 4                              /* Skip Ring 3 DS */
+    and dword ptr [esp], ~X86_EFLAGS_IF     /* Remove IRQ hack from EFLAGS */
+    popf                                    /* Restore old EFLAGS */
+    pop ecx                                 /* Old Ring 3 SS:ESP */
 
     /*
      * At this point:
@@ -294,18 +505,72 @@ FastRet:
     sti
     sysexit
 
+AbiosExit:
+V86_Exit:
+    /* Not yet supported */
+    int 3
+
+RestoreAll:
+    /* Restore EAX */
+    mov eax, [esp+KTRAP_FRAME_EAX]
+
+    /* Skip registers */
+    add esp, 0x30
+
+    /* Restore segments and volatiles */
+    pop gs
+    pop es
+    pop ds
+    pop edx
+    pop ecx
+
+    /* Jump back to mainline code */
+    jmp RestoreFs
+
+EditedFrame:
+     /* Restore real CS value */
+     mov ebx, [esp+KTRAP_FRAME_TEMPCS]
+     mov [esp+KTRAP_FRAME_CS], ebx
+
+    /*
+     * If ESP was modified, then a special interrupt exit stack
+     * must be created to "update" ESP's value in a legal manner
+     */
+    mov ebx, [esp+KTRAP_FRAME_TEMPESP]
+    sub ebx, 0xC
+    mov [esp+KTRAP_FRAME_ERROR_CODE], ebx
+
+    /* Copy Interrupt Stack */
+    mov esi, [esp+KTRAP_FRAME_EFLAGS]
+    mov [ebx+8], esi
+    mov esi, [esp+KTRAP_FRAME_CS]
+    mov [ebx+4], esi
+    mov esi, [esp+KTRAP_FRAME_EIP]
+    mov [ebx], esi
+
+    /* Return */
+    add esp, KTRAP_FRAME_EDI
+    pop edi
+    pop esi
+    pop ebx
+    pop ebp
+    mov esp, [esp]
+    iret
+
 KiBBTUnexpectedRange:
 
     /* If this isn't a Win32K call, fail */
-    cmp $0x10, %ecx
+    cmp ecx, 0x10
     jne InvalidCall
 
     /* Set up Win32K Table */
-    pushl %edx
-    pushl %ebx
+    push edx
+    push ebx
     call _KiServiceCheck
-    popl %eax
-    popl %edx
+
+    /* FIXME: Handle failure */
+    pop eax
+    pop edx
 
     /* Try the Call again */
     jmp CheckValidCall
@@ -313,90 +578,145 @@ KiBBTUnexpectedRange:
 InvalidCall:
 
     /* Invalid System Call */
-    movl $0xC000001C, %eax /* STATUS_INVALID_SYSTEM_SERVICE */
-    movl %eax, KTRAP_FRAME_EAX(%ebp)
-    jmp _KiServiceExit
+    mov eax, STATUS_INVALID_SYSTEM_SERVICE
+    jmp KeReturnFromSystemCall
 
 _KiServiceExit2:
 
-    /* Get the Current Thread */
+    /* Disable interrupts */
     cli
-    movl %fs:KPCR_CURRENT_THREAD, %esi
+
+    /* Check for V86 mode */
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], X86_EFLAGS_VM
+    jnz ApcLoop2
 
     /* Deliver APCs only if we were called from user mode */
-    testb $1, KTRAP_FRAME_CS(%esp)
-    je KiRosTrapReturn
+    test byte ptr [ebp+KTRAP_FRAME_CS], 1
+    je KiRosTrapReturn2
+
+    /* Get the current thread */
+ApcLoop2:
+    mov ebx, [fs:KPCR_CURRENT_THREAD]
+
+    /* Make it non-alerted */
+    mov byte ptr [ebx+KTHREAD_ALERTED], 0
 
     /* And only if any are actually pending */
-    cmpb $0, KTHREAD_PENDING_USER_APC(%esi)
-    je KiRosTrapReturn
+    cmp byte ptr [ebx+KTHREAD_PENDING_USER_APC], 0
+    je KiRosTrapReturn2
 
     /* Save pointer to Trap Frame */
-    movl %esp, %ebx
+    mov ebx, ebp
 
     /* Raise IRQL to APC_LEVEL */
-    movl $1, %ecx
+    mov ecx, 1
     call @KfRaiseIrql@4
 
     /* Save old IRQL */
-    pushl %eax
+    push eax
 
     /* Deliver APCs */
     sti
-    pushl %ebx
-    pushl $0
-    pushl $UserMode
+    push ebx
+    push 0
+    push UserMode
     call _KiDeliverApc@12
-    cli
 
     /* Return to old IRQL */
-    popl %ecx
+    pop ecx
     call @KfLowerIrql@4
+    cli
+    jmp ApcLoop2
 
-    /* Skip useless Debug Data */
-    addl $0x18, %esp                                                   // + 0x74
+KiRosTrapReturn2:
 
-    /* Restore Debug Registers */
-    popl %eax                                                          // + 0x5C
-    movl %eax, %dr0
-    popl %eax                                                          // + 0x58
-    movl %eax, %dr1
-    popl %eax                                                          // + 0x54
-    movl %eax, %dr2
-    popl %eax                                                          // + 0x50
-    movl %eax, %dr3
-    popl %eax                                                          // + 0x4C
-    movl %eax, %dr6
-    popl %eax                                                          // + 0x48
-    movl %eax, %dr7
+    /* Restore exception list */
+    mov edx, [esp+KTRAP_FRAME_EXCEPTION_LIST]
+    mov [fs:KPCR_EXCEPTION_LIST], edx
 
-    /* Restore Registers */
-    popl %gs                                                           // + 0x44
-    popl %es                                                           // + 0x40
-    popl %ds                                                           // + 0x3C
-    popl %edx                                                          // + 0x38
-    popl %ecx                                                          // + 0x34
-    popl %eax                                                          // + 0x30
+    /* Restore previous mode */
+    mov ecx, [esp+KTRAP_FRAME_PREVIOUS_MODE]
+    mov esi, [fs:KPCR_CURRENT_THREAD]
+    mov byte ptr [esi+KTHREAD_PREVIOUS_MODE], cl
 
-    /* Restore the old previous mode */
-    popl %ebx                                                          // + 0x2C
-    movb %bl, %ss:KTHREAD_PREVIOUS_MODE(%esi)
+    /* Check for V86 */
+    test dword ptr [esp+KTRAP_FRAME_EFLAGS], X86_EFLAGS_VM
+    jnz V86_Exit
 
-    /* Restore the old exception handler list */
-    popl %fs:KPCR_EXCEPTION_LIST                                       // + 0x28
+    /* Check if the frame was edited */
+    test word ptr [esp+KTRAP_FRAME_CS], FRAME_EDITED
+    jz EditedFrame2
 
-    /* Restore final registers from trap frame */
-    popl %fs                                                           // + 0x24
-    popl %edi                                                          // + 0x20
-    popl %esi                                                          // + 0x1C
-    popl %ebx                                                          // + 0x18
-    popl %ebp                                                          // + 0x14
-    add $4, %esp                                                       // + 0x10
+    /* Restore volatiles */
+    mov edx, [esp+KTRAP_FRAME_EDX]
+    mov ecx, [esp+KTRAP_FRAME_ECX]
+    mov eax, [esp+KTRAP_FRAME_EAX]
 
-    /* Return to user-mode */
+    /* Check if it was kernel */
+    cmp word ptr [ebp+KTRAP_FRAME_CS], KERNEL_CS
+    jz CommonStackClean2
+
+    /* Skip registers */
+    lea esp, [ebp+KTRAP_FRAME_GS]
+
+    /* Restore segments and volatiles */
+    pop gs
+    pop es
+    pop ds
+    lea esp, [ebp+KTRAP_FRAME_FS]
+    pop fs
+
+CommonStackClean2:
+    /* Skip debug information and unsaved registers */
+    lea esp, [ebp+KTRAP_FRAME_EDI]
+    pop edi
+    pop esi
+    pop ebx
+    pop ebp
+
+    /* Check for ABIOS */
+    cmp word ptr [esp+8], 0x80
+    ja AbiosExit
+
+    /* Pop error code and return */
+    add esp, 4
     iret
 
-.intel_syntax noprefix
+EditedFrame2:
+    /* Restore real CS value */
+    mov ebx, [esp+KTRAP_FRAME_TEMPCS]
+    mov [esp+KTRAP_FRAME_CS], ebx
+
+    /*
+     * If ESP was modified, then a special interrupt exit stack
+     * must be created to "update" ESP's value in a legal manner
+     */
+    mov ebx, [esp+KTRAP_FRAME_TEMPESP]
+    sub ebx, 0xC
+    mov [esp+KTRAP_FRAME_ERROR_CODE], ebx
+
+    /* Copy Interrupt Stack */
+    mov esi, [esp+KTRAP_FRAME_EFLAGS]
+    mov [ebx+8], esi
+    mov esi, [esp+KTRAP_FRAME_CS]
+    mov [ebx+4], esi
+    mov esi, [esp+KTRAP_FRAME_EIP]
+    mov [ebx], esi
+
+    /* Restore volatiles */
+    mov eax, [esp+KTRAP_FRAME_EAX]
+    mov edx, [esp+KTRAP_FRAME_EDX]
+    mov ecx, [esp+KTRAP_FRAME_ECX]
+
+    /* Return */
+    add esp, KTRAP_FRAME_EDI
+    pop edi
+    pop esi
+    pop ebx
+    pop ebp
+    mov esp, [esp]
+    iret
+
 _KiDebugService:
 
     /* Create the Trap Frame */
@@ -414,9 +734,8 @@ _KiDebugService:
     /* Save Exception List */
     push fs:[KPCR_EXCEPTION_LIST]
 
-    /* Use Old Previous Mode */
-    mov ebx, fs:[KPCR_CURRENT_THREAD]
-    push [ebx+KTHREAD_PREVIOUS_MODE]
+    /* Traps don't need the previous mode */
+    sub esp, 4
 
     /* Continue building the Trap Frame */
     push eax
@@ -425,39 +744,180 @@ _KiDebugService:
     push ds
     push es
     push gs
+    sub esp, 0x30
 
     /* Switch Segments to Kernel */
-    mov bx, KERNEL_DS
-    mov ds, bx
-    mov es, bx
+    mov ax, KERNEL_DS
+    mov ds, ax
+    mov es, ax
 
-    /* Save Debug Registers */
-    mov ebx, eax
-    mov eax, dr7
-    push eax
-    mov eax, dr6
-    push eax
-    mov eax, dr3
-    push eax
-    mov eax, dr2
-    push eax
-    mov eax, dr1
-    push eax
-    mov eax, dr0
-    push eax
-    mov eax, ebx
+    /* Set up frame */
+    mov ebp, esp
 
-    /* Skip useless debug data */
-    sub esp, 0x18
+    /* Check if this was from V86 Mode */
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], X86_EFLAGS_VM
+    //jnz V86_kids
+
+    /* Get current thread */
+    mov ecx, [fs:KPCR_CURRENT_THREAD]
+    cld
+
+    /* Flush DR7 */
+    and dword ptr [ebp+KTRAP_FRAME_DR7], 0
+
+    /* Check if the thread was being debugged */
+    test byte ptr [ecx+KTHREAD_DEBUG_ACTIVE], 0xFF
+    //jnz Dr_kids
+
+    /* Get the Debug Trap Frame EBP/EIP */
+    mov ebx, [ebp+KTRAP_FRAME_EBP]
+    mov edi, [ebp+KTRAP_FRAME_EIP]
+
+    /* Write the debug data */
+    mov [ebp+KTRAP_FRAME_DEBUGPOINTER], edx
+    mov dword ptr [ebp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00
+    mov [ebp+KTRAP_FRAME_DEBUGEBP], ebx
+    mov [ebp+KTRAP_FRAME_DEBUGEIP], edi
 
     /* Call debug service dispatcher */
-    push edx
-    push ecx
-    push eax
+    push [ebp+KTRAP_FRAME_EDX]
+    push [ebp+KTRAP_FRAME_ECX]
+    push [ebp+KTRAP_FRAME_EAX]
     call _KdpServiceDispatcher@12
 
     /* Exit through common routine */
-    jmp _KiServiceExit2
+    jmp Kei386EoiHelper@0
+
+Kei386EoiHelper@0:
+
+    /* Disable interrupts */
+    cli
+
+    /* Check for V86 mode */
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], X86_EFLAGS_VM
+    jnz ApcLoop3
+
+    /* Deliver APCs only if we were called from user mode */
+    test byte ptr [ebp+KTRAP_FRAME_CS], 1
+    je KiRosTrapReturn3
+
+    /* Get the current thread */
+ApcLoop3:
+    mov ebx, [fs:KPCR_CURRENT_THREAD]
+
+    /* Make it non-alerted */
+    mov byte ptr [ebx+KTHREAD_ALERTED], 0
+
+    /* And only if any are actually pending */
+    cmp byte ptr [ebx+KTHREAD_PENDING_USER_APC], 0
+    je KiRosTrapReturn3
+
+    /* Save pointer to Trap Frame */
+    mov ebx, ebp
+
+    /* Raise IRQL to APC_LEVEL */
+    mov ecx, 1
+    call @KfRaiseIrql@4
+
+    /* Save old IRQL */
+    push eax
+
+    /* Deliver APCs */
+    sti
+    push ebx
+    push 0
+    push UserMode
+    call _KiDeliverApc@12
+
+    /* Return to old IRQL */
+    pop ecx
+    call @KfLowerIrql@4
+    cli
+    jmp ApcLoop3
+
+KiRosTrapReturn3:
+
+    /* Restore exception list */
+    mov edx, [esp+KTRAP_FRAME_EXCEPTION_LIST]
+    mov [fs:KPCR_EXCEPTION_LIST], edx
+
+    /* Check for V86 */
+    test dword ptr [esp+KTRAP_FRAME_EFLAGS], X86_EFLAGS_VM
+    jnz V86_Exit
+
+    /* Check if the frame was edited */
+    test word ptr [esp+KTRAP_FRAME_CS], FRAME_EDITED
+    jz EditedFrame3
+
+    /* Restore volatiles */
+    mov edx, [esp+KTRAP_FRAME_EDX]
+    mov ecx, [esp+KTRAP_FRAME_ECX]
+    mov eax, [esp+KTRAP_FRAME_EAX]
+
+    /* Check if it was kernel */
+    cmp word ptr [ebp+KTRAP_FRAME_CS], KERNEL_CS
+    jz CommonStackClean3
+
+    /* Skip registers */
+    lea esp, [ebp+KTRAP_FRAME_GS]
+
+    /* Restore segments and volatiles */
+    pop gs
+    pop es
+    pop ds
+    lea esp, [ebp+KTRAP_FRAME_FS]
+    pop fs
+
+CommonStackClean3:
+    /* Skip debug information and unsaved registers */
+    lea esp, [ebp+KTRAP_FRAME_EDI]
+    pop edi
+    pop esi
+    pop ebx
+    pop ebp
+
+    /* Check for ABIOS */
+    cmp word ptr [esp+8], 0x80
+    ja AbiosExit
+
+    /* Pop error code and return */
+    add esp, 4
+    iret
+
+EditedFrame3:
+    /* Restore real CS value */
+    mov ebx, [esp+KTRAP_FRAME_TEMPCS]
+    mov [esp+KTRAP_FRAME_CS], ebx
+
+    /*
+     * If ESP was modified, then a special interrupt exit stack
+     * must be created to "update" ESP's value in a legal manner
+     */
+    mov ebx, [esp+KTRAP_FRAME_TEMPESP]
+    sub ebx, 0xC
+    mov [esp+KTRAP_FRAME_ERROR_CODE], ebx
+
+    /* Copy Interrupt Stack */
+    mov esi, [esp+KTRAP_FRAME_EFLAGS]
+    mov [ebx+8], esi
+    mov esi, [esp+KTRAP_FRAME_CS]
+    mov [ebx+4], esi
+    mov esi, [esp+KTRAP_FRAME_EIP]
+    mov [ebx], esi
+
+    /* Restore volatiles */
+    mov eax, [esp+KTRAP_FRAME_EAX]
+    mov edx, [esp+KTRAP_FRAME_EDX]
+    mov ecx, [esp+KTRAP_FRAME_ECX]
+
+    /* Return */
+    add esp, KTRAP_FRAME_EDI
+    pop edi
+    pop esi
+    pop ebx
+    pop ebp
+    mov esp, [esp]
+    iret
 
 .globl _NtRaiseException@12
 _NtRaiseException@12:

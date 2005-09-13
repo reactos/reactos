@@ -165,7 +165,7 @@ RtlDispatchException(IN PEXCEPTION_RECORD ExceptionRecord,
     }
 
     /* Unhandled, return false */
-    DPRINT1("FALSE:(\n");
+    DPRINT1("FALSE\n");
     return FALSE;
 }
 

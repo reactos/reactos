@@ -85,7 +85,7 @@ Ke386InitThreadWithContext(PKTHREAD Thread,
         TrapFrame = &InitFrame->TrapFrame;
 
         /* Set up a trap frame from the context. */
-        if (KeContextToTrapFrame(Context, NULL, TrapFrame))
+        if (KeContextToTrapFrame(Context, NULL, TrapFrame, UserMode))
         {
             Thread->NpxState = NPX_STATE_VALID;
         }
@@ -146,7 +146,9 @@ Ke386InitThreadWithContext(PKTHREAD Thread,
 
     /* And set up the Context Switch Frame */
     CtxSwitchFrame->RetEip = KiThreadStartup;
-    CtxSwitchFrame->Esp0 = (ULONG)Thread->InitialStack - sizeof(FX_SAVE_AREA);
+    CtxSwitchFrame->Esp0 = (ULONG_PTR)Thread->InitialStack -
+                                      sizeof(FX_SAVE_AREA) -
+                                      0x10;
     CtxSwitchFrame->ExceptionList = (PVOID)0xFFFFFFFF;
 
     /* Save back the new value of the kernel stack. */

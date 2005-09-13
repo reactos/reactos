@@ -528,7 +528,7 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
 
       /* Fill the rest of the context */
       Context->ContextFlags = CONTEXT_FULL;
-      KeTrapFrameToContext(Tf, Context);
+      KeTrapFrameToContext(Tf, NULL, Context);
       Context->ContextFlags |= CONTEXT_FLOATING_POINT | CONTEXT_EXTENDED_REGISTERS;
 
       /* Determine exception code */
