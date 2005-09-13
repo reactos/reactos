@@ -54,6 +54,7 @@ class MSVCBackend : public Backend
 		void OutputFileUnits();
 
 		std::string DspFileName ( const Module& module ) const;
+		std::string VcprojFileName ( const Module& module ) const;
 		
 		std::vector<FileUnit> m_fileUnits;
 		std::vector<std::string> m_folders;
@@ -61,13 +62,12 @@ class MSVCBackend : public Backend
 		int m_unitCount;
 
 		FILE* m_dswFile;
+		FILE* m_slnFile;
 
 		// functions in msvcmaker.cpp:
 
 		void _generate_dsp ( const Module& module );
-
 		void _generate_dsw_header ( FILE* OUT );
-
 		void _generate_dsw_project (
 			FILE* OUT,
 			const Module& module,
@@ -75,9 +75,14 @@ class MSVCBackend : public Backend
 			const std::vector<Dependency*>& dependencies );
 
 		void _generate_dsw_footer ( FILE* OUT );
-
 		void _generate_wine_dsw ( FILE* OUT );
+
+		// functions in vcprojmaker.cpp:
+		void _generate_vcproj ( const Module& module );
+
+		void _generate_sln_header ( FILE* OUT );
+		void _generate_sln ( FILE* OUT );
 };
 
-#endif // __DEVCPP_H__
+#endif // __MSVC_H__
 
