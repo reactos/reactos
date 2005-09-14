@@ -940,18 +940,17 @@ CreateTable(FILE *Out, unsigned Bpp)
   MARK(Out);
   Output(Out, "\n");
   Output(Out, "static void (*PrimitivesTable[256])(PBLTINFO) =\n");
-  Output(Out, "  {\n");
+  Output(Out, "{\n");
   for (RopCode = 0; RopCode < 256; RopCode++)
     {
-      Output(Out, "    ");
       PrintRoutineName(Out, Bpp, FindRopInfo(RopCode));
       if (RopCode < 255)
         {
-          putc(',', Out);
+          Output(Out, ",");
         }
-      putc('\n', Out);
+      Output(Out, "\n");
     }
-  Output(Out, "  };\n");
+  Output(Out, "};\n");
 }
 
 static void
@@ -962,9 +961,9 @@ CreateBitBlt(FILE *Out, unsigned Bpp)
   Output(Out, "BOOLEAN\n");
   Output(Out, "DIB_%uBPP_BitBlt(PBLTINFO BltInfo)\n", Bpp);
   Output(Out, "{\n");
-  Output(Out, "  PrimitivesTable[BltInfo->Rop4 & 0xff](BltInfo);\n");
+  Output(Out, "PrimitivesTable[BltInfo->Rop4 & 0xff](BltInfo);\n");
   Output(Out, "\n");
-  Output(Out, "  return TRUE;\n");
+  Output(Out, "return TRUE;\n");
   Output(Out, "}\n");
 }
 
