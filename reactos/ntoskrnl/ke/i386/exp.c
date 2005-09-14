@@ -400,6 +400,7 @@ KiDoubleFaultHandler(VOID)
 }
 
 VOID
+NTAPI
 KiDumpTrapFrame(PKTRAP_FRAME Tf, ULONG Parameter1, ULONG Parameter2)
 {
   ULONG cr3_;
@@ -926,6 +927,7 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
 }
 
 VOID
+NTAPI
 KeDumpStackFrames(PULONG Frame)
 {
 	PULONG StackBase, StackEnd;
@@ -1109,7 +1111,9 @@ set_task_gate(unsigned int sel, unsigned task_sel)
   KiIdt[sel].b = 0x8500;
 }
 
-VOID INIT_FUNCTION
+VOID
+INIT_FUNCTION
+NTAPI
 KeInitExceptions(VOID)
 /*
  * FUNCTION: Initalize CPU exception handling

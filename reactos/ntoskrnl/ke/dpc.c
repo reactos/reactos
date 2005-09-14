@@ -32,6 +32,7 @@
  */
 VOID
 INIT_FUNCTION
+NTAPI
 KeInitDpc(PKPRCB Prcb)
 {
    InitializeListHead(&Prcb->DpcData[0].DpcListHead);

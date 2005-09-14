@@ -1,6 +1,8 @@
 #ifndef __NTOSKRNL_INCLUDE_INTERNAL_IO_H
 #define __NTOSKRNL_INCLUDE_INTERNAL_IO_H
 
+#include <ddk/ntdddisk.h>
+
 #define IO_METHOD_FROM_CTL_CODE(ctlCode) (ctlCode&0x00000003)
 
 extern POBJECT_TYPE IoCompletionType;
@@ -477,5 +479,60 @@ IopInitIoCompletionImplementation(VOID);
                  PartialDescriptors[(ResList)->List[0].PartialResourceList.Count]) \
                         : \
     FIELD_OFFSET(CM_RESOURCE_LIST, List)
+
+/* xhal.c */
+NTSTATUS
+FASTCALL
+xHalQueryDriveLayout(
+    IN PUNICODE_STRING DeviceName,
+    OUT PDRIVE_LAYOUT_INFORMATION *LayoutInfo
+);
+
+#undef HalExamineMBR
+VOID 
+FASTCALL
+HalExamineMBR(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN ULONG SectorSize,
+    IN ULONG MBRTypeIdentifier,
+    OUT PVOID *Buffer
+);
+
+VOID 
+FASTCALL
+xHalIoAssignDriveLetters(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock,
+    IN PSTRING NtDeviceName,
+    OUT PUCHAR NtSystemPath,
+    OUT PSTRING NtSystemPathString
+);
+
+NTSTATUS 
+FASTCALL
+xHalIoReadPartitionTable(
+    PDEVICE_OBJECT DeviceObject,
+    ULONG SectorSize,
+    BOOLEAN ReturnRecognizedPartitions,
+    PDRIVE_LAYOUT_INFORMATION *PartitionBuffer
+);
+
+NTSTATUS 
+FASTCALL
+xHalIoSetPartitionInformation(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN ULONG SectorSize,
+    IN ULONG PartitionNumber,
+    IN ULONG PartitionType
+);
+
+NTSTATUS 
+FASTCALL
+xHalIoWritePartitionTable(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN ULONG SectorSize,
+    IN ULONG SectorsPerTrack,
+    IN ULONG NumberOfHeads,
+    IN PDRIVE_LAYOUT_INFORMATION PartitionBuffer
+);
 
 #endif

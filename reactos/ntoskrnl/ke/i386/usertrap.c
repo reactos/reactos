@@ -78,6 +78,7 @@ print_user_address(PVOID address)
 }
 
 ULONG
+NTAPI
 KiUserTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2)
 {
   EXCEPTION_RECORD Er;

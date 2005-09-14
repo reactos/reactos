@@ -73,6 +73,7 @@ EXPORTED ULONG KeMinimumIncrement = 100000;
  */
 VOID
 INIT_FUNCTION
+NTAPI
 KiInitializeSystemClock(VOID)
 {
     TIME_FIELDS TimeFields;
@@ -100,6 +101,7 @@ KiInitializeSystemClock(VOID)
 }
 
 VOID
+NTAPI
 KiSetSystemTime(PLARGE_INTEGER NewSystemTime)
 {
   LARGE_INTEGER OldSystemTime;

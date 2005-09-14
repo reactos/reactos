@@ -24,10 +24,8 @@
 #include "ldr.h"
 #include "kd.h"
 #include "ex.h"
-#include "xhal.h"
-#include "v86m.h"
-#include "fs.h"
-#include "port.h"
+#include "fsrtl.h"
+#include "lpc.h"
 #include "rtl.h"
 #ifdef KDBG
 #include "../kdbg/kdb.h"

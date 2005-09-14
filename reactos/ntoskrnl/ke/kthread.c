@@ -38,7 +38,7 @@ KiRequestReschedule(CCHAR Processor)
 
     Pcr = (PKPCR)(KPCR_BASE + Processor * PAGE_SIZE);
     Pcr->Prcb->QuantumEnd = TRUE;
-    KiIpiSendRequest(1 << Processor, IPI_REQUEST_DPC);
+    KiIpiSendRequest(1 << Processor, IPI_DPC);
 }
 
 STATIC

@@ -77,36 +77,45 @@ CcMdlWriteCompleteDev(
 );
 
 NTSTATUS
+NTAPI
 CcRosFlushCacheSegment(PCACHE_SEGMENT CacheSegment);
 
 NTSTATUS
+NTAPI
 CcRosGetCacheSegment(
     PBCB Bcb,
     ULONG FileOffset,
     PULONG BaseOffset,
-    PVOID* BaseAddress,
+    PVOID *BaseAddress,
     PBOOLEAN UptoDate,
-    PCACHE_SEGMENT* CacheSeg
+    PCACHE_SEGMENT *CacheSeg
 );
 
 VOID
+NTAPI
 CcInitView(VOID);
 
 NTSTATUS
+NTAPI
 CcRosFreeCacheSegment(
     PBCB,
     PCACHE_SEGMENT
 );
 
 NTSTATUS
+NTAPI
 ReadCacheSegment(PCACHE_SEGMENT CacheSeg);
 
 NTSTATUS
+NTAPI
 WriteCacheSegment(PCACHE_SEGMENT CacheSeg);
 
-VOID CcInit(VOID);
+VOID
+NTAPI
+CcInit(VOID);
 
 NTSTATUS
+NTAPI
 CcRosUnmapCacheSegment(
     PBCB Bcb,
     ULONG FileOffset,
@@ -114,12 +123,14 @@ CcRosUnmapCacheSegment(
 );
 
 PCACHE_SEGMENT
+NTAPI
 CcRosLookupCacheSegment(
     PBCB Bcb,
     ULONG FileOffset
 );
 
 NTSTATUS
+NTAPI
 CcRosGetCacheSegmentChain(
     PBCB Bcb,
     ULONG FileOffset,
@@ -128,49 +139,57 @@ CcRosGetCacheSegmentChain(
 );
 
 VOID
+NTAPI
 CcInitCacheZeroPage(VOID);
 
 NTSTATUS
+NTAPI
 CcRosMarkDirtyCacheSegment(
     PBCB Bcb,
     ULONG FileOffset
 );
 
 NTSTATUS
+NTAPI
 CcRosFlushDirtyPages(
     ULONG Target,
     PULONG Count
 );
 
 VOID
+NTAPI
 CcRosDereferenceCache(PFILE_OBJECT FileObject);
 
 VOID
+NTAPI
 CcRosReferenceCache(PFILE_OBJECT FileObject);
 
 VOID
+NTAPI
 CcRosSetRemoveOnClose(PSECTION_OBJECT_POINTERS SectionObjectPointer);
 
 NTSTATUS
+NTAPI
 CcRosReleaseCacheSegment(
-    BCB*		    Bcb,
-    CACHE_SEGMENT*    CacheSeg,
-    BOOLEAN	    Valid,
-    BOOLEAN	    Dirty,
-    BOOLEAN	    Mapped
+    BCB* Bcb,
+    CACHE_SEGMENT *CacheSeg,
+    BOOLEAN Valid,
+    BOOLEAN Dirty,
+    BOOLEAN Mapped
 );
 
 NTSTATUS
 STDCALL
 CcRosRequestCacheSegment(
-    BCB*		    Bcb,
-    ULONG		    FileOffset,
-    PVOID*	    BaseAddress,
-    PBOOLEAN	    UptoDate,
-    CACHE_SEGMENT**   CacheSeg
+    BCB *Bcb,
+    ULONG FileOffset,
+    PVOID* BaseAddress,
+    PBOOLEAN UptoDate,
+    CACHE_SEGMENT **CacheSeg
 );
 
 NTSTATUS
+NTAPI
 CcTryToInitializeFileCache(PFILE_OBJECT FileObject);
 
 /*

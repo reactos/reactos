@@ -20,6 +20,12 @@
 #define I386_INTERRUPT_GATE    0xE
 #define I386_TRAP_GATE         0xF
 
+#define IPI_APC                 1
+#define IPI_DPC                 2
+#define IPI_FREEZE              3
+#define IPI_PACKET_READY        4
+#define IPI_SYNCH_REQUEST       10
+
 /* EXPORTED DATA *************************************************************/
 
 /* ENUMERATIONS **************************************************************/

@@ -27,6 +27,7 @@ static ULONG KeBugCheckCount = 1;
 
 VOID
 INIT_FUNCTION
+NTAPI
 KiInitializeBugCheck(VOID)
 {
     PRTL_MESSAGE_RESOURCE_DATA BugCheckData;

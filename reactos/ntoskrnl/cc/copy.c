@@ -39,6 +39,7 @@ ULONG CcFastReadResourceMiss;
 /* FUNCTIONS *****************************************************************/
 
 VOID
+NTAPI
 CcInitCacheZeroPage(VOID)
 {
    NTSTATUS Status;
@@ -58,6 +59,7 @@ CcInitCacheZeroPage(VOID)
 }
 
 NTSTATUS
+NTAPI
 ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
 		      PVOID Buffer)
 {
@@ -187,6 +189,7 @@ ReadCacheSegmentChain(PBCB Bcb, ULONG ReadOffset, ULONG Length,
 }
 
 NTSTATUS
+NTAPI
 ReadCacheSegment(PCACHE_SEGMENT CacheSeg)
 {
   ULONG Size;
@@ -228,6 +231,7 @@ ReadCacheSegment(PCACHE_SEGMENT CacheSeg)
 }
 
 NTSTATUS
+NTAPI
 WriteCacheSegment(PCACHE_SEGMENT CacheSeg)
 {
   ULONG Size;

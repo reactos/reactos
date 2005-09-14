@@ -159,6 +159,7 @@ CcRosTraceCacheMap (
 }
 
 NTSTATUS
+NTAPI
 CcRosFlushCacheSegment(PCACHE_SEGMENT CacheSegment)
 {
   NTSTATUS Status;
@@ -179,6 +180,7 @@ CcRosFlushCacheSegment(PCACHE_SEGMENT CacheSegment)
 }
 
 NTSTATUS
+NTAPI
 CcRosFlushDirtyPages(ULONG Target, PULONG Count)
 {
   PLIST_ENTRY current_entry;
@@ -355,6 +357,7 @@ CcRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed)
 }
 
 NTSTATUS
+NTAPI
 CcRosReleaseCacheSegment(PBCB Bcb,
 			 PCACHE_SEGMENT CacheSeg,
 			 BOOLEAN Valid,
@@ -403,6 +406,7 @@ CcRosReleaseCacheSegment(PBCB Bcb,
 }
 
 PCACHE_SEGMENT
+NTAPI
 CcRosLookupCacheSegment(PBCB Bcb, ULONG FileOffset)
 {
   PLIST_ENTRY current_entry;
@@ -434,6 +438,7 @@ CcRosLookupCacheSegment(PBCB Bcb, ULONG FileOffset)
 }
 
 NTSTATUS
+NTAPI
 CcRosMarkDirtyCacheSegment(PBCB Bcb, ULONG FileOffset)
 {
   PCACHE_SEGMENT CacheSeg;
@@ -470,6 +475,7 @@ CcRosMarkDirtyCacheSegment(PBCB Bcb, ULONG FileOffset)
 }
 
 NTSTATUS
+NTAPI
 CcRosUnmapCacheSegment(PBCB Bcb, ULONG FileOffset, BOOLEAN NowDirty)
 {
   PCACHE_SEGMENT CacheSeg;
@@ -689,6 +695,7 @@ CcRosCreateCacheSegment(PBCB Bcb,
 }
 
 NTSTATUS
+NTAPI
 CcRosGetCacheSegmentChain(PBCB Bcb,
 			  ULONG FileOffset,
 			  ULONG Length,
@@ -752,6 +759,7 @@ CcRosGetCacheSegmentChain(PBCB Bcb,
 }
 
 NTSTATUS
+NTAPI
 CcRosGetCacheSegment(PBCB Bcb,
 		     ULONG FileOffset,
 		     PULONG BaseOffset,
@@ -889,6 +897,7 @@ CcRosInternalFreeCacheSegment(PCACHE_SEGMENT CacheSeg)
 }
 
 NTSTATUS
+NTAPI
 CcRosFreeCacheSegment(PBCB Bcb, PCACHE_SEGMENT CacheSeg)
 {
   NTSTATUS Status;
@@ -995,6 +1004,7 @@ CcFlushCache(IN PSECTION_OBJECT_POINTERS SectionObjectPointers,
 }
 
 NTSTATUS
+NTAPI
 CcRosDeleteFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
 /*
  * FUNCTION: Releases the BCB associated with a file object
@@ -1065,7 +1075,9 @@ CcRosDeleteFileCache(PFILE_OBJECT FileObject, PBCB Bcb)
    return(STATUS_SUCCESS);
 }
 
-VOID CcRosReferenceCache(PFILE_OBJECT FileObject)
+VOID
+NTAPI
+CcRosReferenceCache(PFILE_OBJECT FileObject)
 {
   PBCB Bcb;
   ExAcquireFastMutex(&ViewLock);
@@ -1086,7 +1098,9 @@ VOID CcRosReferenceCache(PFILE_OBJECT FileObject)
   ExReleaseFastMutex(&ViewLock);
 }
 
-VOID CcRosSetRemoveOnClose(PSECTION_OBJECT_POINTERS SectionObjectPointer)
+VOID
+NTAPI
+CcRosSetRemoveOnClose(PSECTION_OBJECT_POINTERS SectionObjectPointer)
 {
   PBCB Bcb;
   DPRINT("CcRosSetRemoveOnClose()\n");
@@ -1104,7 +1118,9 @@ VOID CcRosSetRemoveOnClose(PSECTION_OBJECT_POINTERS SectionObjectPointer)
 }
 
 
-VOID CcRosDereferenceCache(PFILE_OBJECT FileObject)
+VOID
+NTAPI
+CcRosDereferenceCache(PFILE_OBJECT FileObject)
 {
   PBCB Bcb;
   ExAcquireFastMutex(&ViewLock);
@@ -1171,6 +1187,7 @@ CcRosReleaseFileCache(PFILE_OBJECT FileObject)
 }
 
 NTSTATUS
+NTAPI
 CcTryToInitializeFileCache(PFILE_OBJECT FileObject)
 {
    PBCB Bcb;
@@ -1328,7 +1345,9 @@ CmLazyCloseThreadMain(PVOID Ignored)
    }
 }
 
-VOID INIT_FUNCTION
+VOID
+INIT_FUNCTION
+NTAPI
 CcInitView(VOID)
 {
 #ifdef CACHE_BITMAP

@@ -137,7 +137,9 @@ static ISR_TABLE IsrTable[NR_IRQS][1];
 #define PRESENT (0x8000)
 #define I486_INTERRUPT_GATE (0xe00)
 
-VOID INIT_FUNCTION
+VOID
+INIT_FUNCTION
+NTAPI
 KeInitInterrupts (VOID)
 {
    int i, j;

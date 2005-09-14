@@ -89,18 +89,23 @@ LdrPEFixupImports ( PLDR_DATA_TABLE_ENTRY Module );
 /* FUNCTIONS *****************************************************************/
 
 VOID
+NTAPI
 LdrInitDebug ( PLOADER_MODULE Module, PWCH Name )
 {
 }
 
-VOID INIT_FUNCTION
+VOID
+INIT_FUNCTION
+NTAPI
 LdrInit1 ( VOID )
 {
     /* Hook for KDB on initialization of the loader. */
     KDB_LOADERINIT_HOOK(&NtoskrnlModuleObject, &HalModuleObject);
 }
 
-VOID INIT_FUNCTION
+VOID
+INIT_FUNCTION
+NTAPI
 LdrInitModuleManagement ( VOID )
 {
     PIMAGE_NT_HEADERS NtHeader;
@@ -138,6 +143,7 @@ LdrInitModuleManagement ( VOID )
 }
 
 NTSTATUS
+NTAPI
 LdrpLoadImage (
     PUNICODE_STRING DriverName,
     PVOID *ModuleBase,
@@ -175,6 +181,7 @@ LdrpLoadImage (
 
 
 NTSTATUS
+NTAPI
 LdrpUnloadImage ( PVOID ModuleBase )
 {
     return(STATUS_NOT_IMPLEMENTED);
@@ -182,6 +189,7 @@ LdrpUnloadImage ( PVOID ModuleBase )
 
 
 NTSTATUS
+NTAPI
 LdrpLoadAndCallImage ( PUNICODE_STRING ModuleName )
 {
     PDRIVER_INITIALIZE DriverEntry;
@@ -217,6 +225,7 @@ LdrpLoadAndCallImage ( PUNICODE_STRING ModuleName )
 
 
 NTSTATUS
+NTAPI
 LdrLoadModule(
     PUNICODE_STRING Filename,
     PLDR_DATA_TABLE_ENTRY *ModuleObject )
@@ -321,6 +330,7 @@ LdrLoadModule(
 
 
 NTSTATUS
+NTAPI
 LdrUnloadModule ( PLDR_DATA_TABLE_ENTRY ModuleObject )
 {
     KIRQL Irql;
@@ -365,6 +375,7 @@ LdrProcessModule(
 }
 
 NTSTATUS
+NTAPI
 LdrpQueryModuleInformation (
     PVOID Buffer,
     ULONG Size,
@@ -542,6 +553,7 @@ LdrpCompareModuleNames (
 }
 
 PLDR_DATA_TABLE_ENTRY
+NTAPI
 LdrGetModuleObject ( PUNICODE_STRING ModuleName )
 {
     PLDR_DATA_TABLE_ENTRY Module;
@@ -870,7 +882,9 @@ LdrPEProcessModule(
 }
 
 
-PVOID INIT_FUNCTION
+PVOID
+INIT_FUNCTION
+NTAPI
 LdrSafePEProcessModule (
     PVOID ModuleLoadBase,
     PVOID DriverBase,
