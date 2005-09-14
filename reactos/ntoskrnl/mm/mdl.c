@@ -55,7 +55,9 @@ MmAdvanceMdl (
 }
 
 
-VOID INIT_FUNCTION
+VOID
+INIT_FUNCTION
+NTAPI
 MmInitializeMdlImplementation(VOID)
 {
    MEMORY_AREA* Result;
@@ -97,6 +99,7 @@ MmInitializeMdlImplementation(VOID)
 
 
 PVOID
+NTAPI
 MmGetMdlPageAddress(PMDL Mdl, PVOID Offset)
 {
    PPFN_NUMBER MdlPages;
@@ -298,6 +301,7 @@ MmUnmapReservedMapping (
 
 
 VOID
+NTAPI
 MmBuildMdlFromPages(PMDL Mdl, PPFN_TYPE Pages)
 {
    memcpy(Mdl + 1, Pages, sizeof(PFN_TYPE) * (PAGE_ROUND_UP(Mdl->ByteOffset+Mdl->ByteCount)/PAGE_SIZE));

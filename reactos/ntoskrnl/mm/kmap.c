@@ -18,6 +18,7 @@
 
 /* FUNCTIONS ***************************************************************/
 NTSTATUS
+NTAPI
 MiZeroPage(PFN_TYPE Page)
 {
    PVOID TempAddress;
@@ -33,6 +34,7 @@ MiZeroPage(PFN_TYPE Page)
 }
 
 NTSTATUS
+NTAPI
 MiCopyFromUserPage(PFN_TYPE DestPage, PVOID SourceAddress)
 {
    PVOID TempAddress;

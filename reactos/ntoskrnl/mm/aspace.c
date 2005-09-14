@@ -20,6 +20,7 @@ STATIC MADDRESS_SPACE KernelAddressSpace;
 /* FUNCTIONS *****************************************************************/
 
 VOID
+NTAPI
 MmLockAddressSpace(PMADDRESS_SPACE AddressSpace)
 {
    /*
@@ -33,6 +34,7 @@ MmLockAddressSpace(PMADDRESS_SPACE AddressSpace)
 }
 
 VOID
+NTAPI
 MmUnlockAddressSpace(PMADDRESS_SPACE AddressSpace)
 {
    /*
@@ -45,23 +47,30 @@ MmUnlockAddressSpace(PMADDRESS_SPACE AddressSpace)
    ExReleaseFastMutex(&AddressSpace->Lock);
 }
 
-VOID INIT_FUNCTION
+VOID
+INIT_FUNCTION
+NTAPI
 MmInitializeKernelAddressSpace(VOID)
 {
    MmInitializeAddressSpace(NULL, &KernelAddressSpace);
 }
 
-PMADDRESS_SPACE MmGetCurrentAddressSpace(VOID)
+PMADDRESS_SPACE
+NTAPI
+MmGetCurrentAddressSpace(VOID)
 {
    return(&PsGetCurrentProcess()->AddressSpace);
 }
 
-PMADDRESS_SPACE MmGetKernelAddressSpace(VOID)
+PMADDRESS_SPACE
+NTAPI
+MmGetKernelAddressSpace(VOID)
 {
    return(&KernelAddressSpace);
 }
 
 NTSTATUS
+NTAPI
 MmInitializeAddressSpace(PEPROCESS Process,
                          PMADDRESS_SPACE AddressSpace)
 {
@@ -95,6 +104,7 @@ MmInitializeAddressSpace(PEPROCESS Process,
 }
 
 NTSTATUS
+NTAPI
 MmDestroyAddressSpace(PMADDRESS_SPACE AddressSpace)
 {
    if (AddressSpace->PageTableRefCountTable != NULL)

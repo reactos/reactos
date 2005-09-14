@@ -66,6 +66,7 @@ static ULONG UnzeroedPageCount = 0;
 /* FUNCTIONS *************************************************************/
 
 VOID
+NTAPI
 MmTransferOwnershipPage(PFN_TYPE Pfn, ULONG NewConsumer)
 {
    KIRQL oldIrql;
@@ -95,6 +96,7 @@ MmTransferOwnershipPage(PFN_TYPE Pfn, ULONG NewConsumer)
 }
 
 PFN_TYPE
+NTAPI
 MmGetLRUFirstUserPage(VOID)
 {
    PLIST_ENTRY NextListEntry;
@@ -114,6 +116,7 @@ MmGetLRUFirstUserPage(VOID)
 }
 
 VOID
+NTAPI
 MmSetLRULastPage(PFN_TYPE Pfn)
 {
    KIRQL oldIrql;
@@ -131,6 +134,7 @@ MmSetLRULastPage(PFN_TYPE Pfn)
 }
 
 PFN_TYPE
+NTAPI
 MmGetLRUNextUserPage(PFN_TYPE PreviousPfn)
 {
    PLIST_ENTRY NextListEntry;
@@ -158,6 +162,7 @@ MmGetLRUNextUserPage(PFN_TYPE PreviousPfn)
 }
 
 PFN_TYPE
+NTAPI
 MmGetContinuousPages(ULONG NumberOfBytes,
                      PHYSICAL_ADDRESS LowestAcceptableAddress,
                      PHYSICAL_ADDRESS HighestAcceptableAddress,
@@ -261,6 +266,7 @@ MmGetContinuousPages(ULONG NumberOfBytes,
 
 
 BOOLEAN
+NTAPI
 MiIsPfnRam(PADDRESS_RANGE BIOSMemoryMap,
            ULONG AddressRangeCount,
 	   PFN_TYPE Pfn)
@@ -301,7 +307,9 @@ MiIsPfnRam(PADDRESS_RANGE BIOSMemoryMap,
 }
 
 
-PVOID INIT_FUNCTION
+PVOID
+INIT_FUNCTION
+NTAPI
 MmInitializePageList(ULONG_PTR FirstPhysKernelAddress,
                      ULONG_PTR LastPhysKernelAddress,
                      ULONG MemorySizeInPages,
@@ -536,6 +544,7 @@ MmInitializePageList(ULONG_PTR FirstPhysKernelAddress,
 }
 
 VOID
+NTAPI
 MmSetFlagsPage(PFN_TYPE Pfn, ULONG Flags)
 {
    KIRQL oldIrql;
@@ -547,18 +556,21 @@ MmSetFlagsPage(PFN_TYPE Pfn, ULONG Flags)
 }
 
 VOID
+NTAPI
 MmSetRmapListHeadPage(PFN_TYPE Pfn, struct _MM_RMAP_ENTRY* ListHead)
 {
    MmPageArray[Pfn].RmapListHead = ListHead;
 }
 
 struct _MM_RMAP_ENTRY*
+NTAPI
 MmGetRmapListHeadPage(PFN_TYPE Pfn)
 {
    return(MmPageArray[Pfn].RmapListHead);
 }
 
 VOID
+NTAPI
 MmMarkPageMapped(PFN_TYPE Pfn)
 {
    KIRQL oldIrql;
@@ -577,6 +589,7 @@ MmMarkPageMapped(PFN_TYPE Pfn)
 }
 
 VOID
+NTAPI
 MmMarkPageUnmapped(PFN_TYPE Pfn)
 {
    KIRQL oldIrql;
@@ -600,6 +613,7 @@ MmMarkPageUnmapped(PFN_TYPE Pfn)
 }
 
 ULONG
+NTAPI
 MmGetFlagsPage(PFN_TYPE Pfn)
 {
    KIRQL oldIrql;
@@ -615,6 +629,7 @@ MmGetFlagsPage(PFN_TYPE Pfn)
 
 
 VOID
+NTAPI
 MmSetSavedSwapEntryPage(PFN_TYPE Pfn,  SWAPENTRY SavedSwapEntry)
 {
    KIRQL oldIrql;
@@ -626,6 +641,7 @@ MmSetSavedSwapEntryPage(PFN_TYPE Pfn,  SWAPENTRY SavedSwapEntry)
 }
 
 SWAPENTRY
+NTAPI
 MmGetSavedSwapEntryPage(PFN_TYPE Pfn)
 {
    SWAPENTRY SavedSwapEntry;
@@ -640,6 +656,7 @@ MmGetSavedSwapEntryPage(PFN_TYPE Pfn)
 }
 
 VOID
+NTAPI
 MmReferencePageUnsafe(PFN_TYPE Pfn)
 {
    KIRQL oldIrql;
@@ -664,6 +681,7 @@ MmReferencePageUnsafe(PFN_TYPE Pfn)
 }
 
 VOID
+NTAPI
 MmReferencePage(PFN_TYPE Pfn)
 {
    DPRINT("MmReferencePage(PysicalAddress %x)\n", Pfn << PAGE_SHIFT);
@@ -677,6 +695,7 @@ MmReferencePage(PFN_TYPE Pfn)
 }
 
 ULONG
+NTAPI
 MmGetReferenceCountPage(PFN_TYPE Pfn)
 {
    KIRQL oldIrql;
@@ -704,6 +723,7 @@ MmGetReferenceCountPage(PFN_TYPE Pfn)
 }
 
 BOOLEAN
+NTAPI
 MmIsUsablePage(PFN_TYPE Pfn)
 {
 
@@ -724,6 +744,7 @@ MmIsUsablePage(PFN_TYPE Pfn)
 }
 
 VOID
+NTAPI
 MmDereferencePage(PFN_TYPE Pfn)
 {
    KIRQL oldIrql;
@@ -795,6 +816,7 @@ MmDereferencePage(PFN_TYPE Pfn)
 }
 
 ULONG
+NTAPI
 MmGetLockCountPage(PFN_TYPE Pfn)
 {
    KIRQL oldIrql;
@@ -822,6 +844,7 @@ MmGetLockCountPage(PFN_TYPE Pfn)
 }
 
 VOID
+NTAPI
 MmLockPageUnsafe(PFN_TYPE Pfn)
 {
    KIRQL oldIrql;
@@ -846,6 +869,7 @@ MmLockPageUnsafe(PFN_TYPE Pfn)
 }
 
 VOID
+NTAPI
 MmLockPage(PFN_TYPE Pfn)
 {
    DPRINT("MmLockPage(PhysicalAddress %x)\n", Pfn << PAGE_SHIFT);
@@ -859,6 +883,7 @@ MmLockPage(PFN_TYPE Pfn)
 }
 
 VOID
+NTAPI
 MmUnlockPage(PFN_TYPE Pfn)
 {
    KIRQL oldIrql;
@@ -883,6 +908,7 @@ MmUnlockPage(PFN_TYPE Pfn)
 }
 
 PFN_TYPE
+NTAPI
 MmAllocPage(ULONG Consumer, SWAPENTRY SavedSwapEntry)
 {
    PFN_TYPE PfnOffset;
@@ -958,6 +984,7 @@ MmAllocPage(ULONG Consumer, SWAPENTRY SavedSwapEntry)
 }
 
 LONG
+NTAPI
 MmAllocPagesSpecifyRange(ULONG Consumer,
                          PHYSICAL_ADDRESS LowestAddress,
                          PHYSICAL_ADDRESS HighestAddress,
@@ -1174,7 +1201,9 @@ MmZeroPageThreadMain(PVOID Ignored)
    }
 }
 
-NTSTATUS INIT_FUNCTION
+NTSTATUS
+INIT_FUNCTION
+NTAPI
 MmInitZeroPageThread(VOID)
 {
    NTSTATUS Status;

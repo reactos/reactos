@@ -776,6 +776,7 @@ MiDumpTagStats(ULONG CurrentTag, ULONG CurrentNrBlocks, ULONG CurrentSize)
 #endif /* defined(TAG_STATISTICS_TRACKING) */
 
 VOID
+NTAPI
 MiDebugDumpNonPagedPoolStats(BOOLEAN NewOnly)
 {
 #if defined(TAG_STATISTICS_TRACKING)
@@ -857,6 +858,7 @@ MiDebugDumpNonPagedPoolStats(BOOLEAN NewOnly)
 }
 
 VOID
+NTAPI
 MiDebugDumpNonPagedPool(BOOLEAN NewOnly)
 {
 #if defined(POOL_DEBUG_APIS)
@@ -1577,7 +1579,9 @@ ExAllocateNonPagedPoolWithTag(POOL_TYPE Type, ULONG Size, ULONG Tag, PVOID Calle
    return(block);
 }
 
-VOID INIT_FUNCTION
+VOID
+INIT_FUNCTION
+NTAPI
 MiInitializeNonPagedPool(VOID)
 {
    NTSTATUS Status;

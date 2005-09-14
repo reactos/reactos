@@ -69,10 +69,14 @@ MM_SYSTEM_SIZE STDCALL MmQuerySystemSize(VOID)
    return(MmSystemSize);
 }
 
-VOID MiShutdownMemoryManager(VOID)
+VOID
+NTAPI
+MiShutdownMemoryManager(VOID)
 {}
 
-VOID INIT_FUNCTION
+VOID
+INIT_FUNCTION
+NTAPI
 MmInitVirtualMemory(ULONG_PTR LastKernelAddress,
                     ULONG KernelLength)
 /*
@@ -277,7 +281,9 @@ MmInitVirtualMemory(ULONG_PTR LastKernelAddress,
    MmInitializeMemoryConsumer(MC_USER, MmTrimUserMemory);
 }
 
-VOID INIT_FUNCTION
+VOID
+INIT_FUNCTION
+NTAPI
 MmInit1(ULONG_PTR FirstKrnlPhysAddr,
         ULONG_PTR LastKrnlPhysAddr,
         ULONG_PTR LastKernelAddress,
@@ -423,7 +429,9 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
    MmInitializeMdlImplementation();
 }
 
-VOID INIT_FUNCTION
+VOID
+NTAPI
+INIT_FUNCTION
 MmInit2(VOID)
 {
    MmInitializeRmapList();
@@ -432,7 +440,9 @@ MmInit2(VOID)
    MmInitPagingFile();
 }
 
-VOID INIT_FUNCTION
+VOID
+INIT_FUNCTION
+NTAPI
 MmInit3(VOID)
 {
    /*
@@ -469,6 +479,7 @@ MiFreeInitMemoryPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
 }
 
 VOID
+NTAPI
 MiFreeInitMemory(VOID)
 {
    MmLockAddressSpace(MmGetKernelAddressSpace());

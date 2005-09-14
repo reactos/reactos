@@ -49,7 +49,9 @@ VOID MmPrintMemoryStatistic(VOID)
             MmStats.NrFreePages);
 }
 
-VOID INIT_FUNCTION
+VOID
+INIT_FUNCTION
+NTAPI
 MmInitializeBalancer(ULONG NrAvailablePages, ULONG NrSystemPages)
 {
    memset(MiMemoryConsumers, 0, sizeof(MiMemoryConsumers));
@@ -68,7 +70,9 @@ MmInitializeBalancer(ULONG NrAvailablePages, ULONG NrSystemPages)
    MiMemoryConsumers[MC_NPPOOL].PagesUsed = NrSystemPages;
 }
 
-VOID INIT_FUNCTION
+VOID
+INIT_FUNCTION
+NTAPI
 MmInitializeMemoryConsumer(ULONG Consumer,
                            NTSTATUS (*Trim)(ULONG Target, ULONG Priority,
                                             PULONG NrFreed))
@@ -77,6 +81,7 @@ MmInitializeMemoryConsumer(ULONG Consumer,
 }
 
 NTSTATUS
+NTAPI
 MmReleasePageMemoryConsumer(ULONG Consumer, PFN_TYPE Page)
 {
    PMM_ALLOCATION_REQUEST Request;
@@ -117,6 +122,7 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PFN_TYPE Page)
 }
 
 VOID
+NTAPI
 MiTrimMemoryConsumer(ULONG Consumer)
 {
    LONG Target;
@@ -136,6 +142,7 @@ MiTrimMemoryConsumer(ULONG Consumer)
 }
 
 VOID
+NTAPI
 MmRebalanceMemoryConsumers(VOID)
 {
    LONG Target;
@@ -168,6 +175,7 @@ MiIsBalancerThread(VOID)
 }
 
 NTSTATUS
+NTAPI
 MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
                             PPFN_TYPE AllocatedPage)
 {
@@ -353,7 +361,9 @@ MiBalancerThread(PVOID Unused)
    }
 }
 
-VOID INIT_FUNCTION
+VOID
+INIT_FUNCTION
+NTAPI
 MiInitBalancerThread(VOID)
 {
    KPRIORITY Priority;

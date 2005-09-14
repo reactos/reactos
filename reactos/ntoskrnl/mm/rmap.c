@@ -34,7 +34,9 @@ static NPAGED_LOOKASIDE_LIST RmapLookasideList;
 
 /* FUNCTIONS ****************************************************************/
 
-VOID INIT_FUNCTION
+VOID
+INIT_FUNCTION
+NTAPI
 MmInitializeRmapList(VOID)
 {
    ExInitializeFastMutex(&RmapListLock);
@@ -48,6 +50,7 @@ MmInitializeRmapList(VOID)
 }
 
 NTSTATUS
+NTAPI
 MmWritePagePhysicalAddress(PFN_TYPE Page)
 {
    PMM_RMAP_ENTRY entry;
@@ -181,6 +184,7 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
 }
 
 NTSTATUS
+NTAPI
 MmPageOutPhysicalAddress(PFN_TYPE Page)
 {
    PMM_RMAP_ENTRY entry;
@@ -304,6 +308,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
 }
 
 VOID
+NTAPI
 MmSetCleanAllRmaps(PFN_TYPE Page)
 {
    PMM_RMAP_ENTRY current_entry;
@@ -324,6 +329,7 @@ MmSetCleanAllRmaps(PFN_TYPE Page)
 }
 
 VOID
+NTAPI
 MmSetDirtyAllRmaps(PFN_TYPE Page)
 {
    PMM_RMAP_ENTRY current_entry;
@@ -344,6 +350,7 @@ MmSetDirtyAllRmaps(PFN_TYPE Page)
 }
 
 BOOL
+NTAPI
 MmIsDirtyPageRmap(PFN_TYPE Page)
 {
    PMM_RMAP_ENTRY current_entry;
@@ -369,6 +376,7 @@ MmIsDirtyPageRmap(PFN_TYPE Page)
 }
 
 VOID
+NTAPI
 MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
              PVOID Address)
 {
@@ -434,6 +442,7 @@ MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
 }
 
 VOID
+NTAPI
 MmDeleteAllRmaps(PFN_TYPE Page, PVOID Context,
                  VOID (*DeleteMapping)(PVOID Context, PEPROCESS Process,
                                        PVOID Address))
@@ -474,6 +483,7 @@ MmDeleteAllRmaps(PFN_TYPE Page, PVOID Context,
 }
 
 VOID
+NTAPI
 MmDeleteRmap(PFN_TYPE Page, PEPROCESS Process,
              PVOID Address)
 {

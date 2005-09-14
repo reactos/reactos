@@ -28,7 +28,7 @@
 #include "v86m.h"
 #include "fs.h"
 #include "port.h"
-#include "nls.h"
+#include "rtl.h"
 #ifdef KDBG
 #include "../kdbg/kdb.h"
 #endif

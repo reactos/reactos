@@ -105,6 +105,7 @@ MmSplitRegion(PMM_REGION InitialRegion, PVOID InitialBaseAddress,
 }
 
 NTSTATUS
+NTAPI
 MmAlterRegion(PMADDRESS_SPACE AddressSpace, PVOID BaseAddress,
               PLIST_ENTRY RegionListHead, PVOID StartAddress, ULONG Length,
               ULONG NewType, ULONG NewProtect, PMM_ALTER_REGION_FUNC AlterFunc)
@@ -237,6 +238,7 @@ MmAlterRegion(PMADDRESS_SPACE AddressSpace, PVOID BaseAddress,
 }
 
 VOID
+NTAPI
 MmInitialiseRegion(PLIST_ENTRY RegionListHead, ULONG Length, ULONG Type,
                    ULONG Protect)
 {
@@ -252,6 +254,7 @@ MmInitialiseRegion(PLIST_ENTRY RegionListHead, ULONG Length, ULONG Type,
 }
 
 PMM_REGION
+NTAPI
 MmFindRegion(PVOID BaseAddress, PLIST_ENTRY RegionListHead, PVOID Address,
              PVOID* RegionBaseAddress)
 {

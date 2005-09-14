@@ -43,7 +43,9 @@ static PR_POOL MmPagedPool = NULL;
 
 /* FUNCTIONS *****************************************************************/
 
-VOID INIT_FUNCTION
+VOID
+INIT_FUNCTION
+NTAPI
 MmInitializePagedPool(VOID)
 {
 	/*

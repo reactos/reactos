@@ -157,6 +157,7 @@ MmFreePageTablesSectionSegment(PMM_SECTION_SEGMENT Segment)
 }
 
 VOID
+NTAPI
 MmFreeSectionSegments(PFILE_OBJECT FileObject)
 {
    if (FileObject->SectionObjectPointer->ImageSectionObject != NULL)
@@ -202,18 +203,21 @@ MmFreeSectionSegments(PFILE_OBJECT FileObject)
 }
 
 VOID
+NTAPI
 MmLockSectionSegment(PMM_SECTION_SEGMENT Segment)
 {
    ExAcquireFastMutex(&Segment->Lock);
 }
 
 VOID
+NTAPI
 MmUnlockSectionSegment(PMM_SECTION_SEGMENT Segment)
 {
    ExReleaseFastMutex(&Segment->Lock);
 }
 
 VOID
+NTAPI
 MmSetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
                              ULONG Offset,
                              ULONG Entry)
@@ -250,6 +254,7 @@ MmSetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
 
 
 ULONG
+NTAPI
 MmGetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
                              ULONG Offset)
 {
@@ -280,6 +285,7 @@ MmGetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
 }
 
 VOID
+NTAPI
 MmSharePageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
                                ULONG Offset)
 {
@@ -305,6 +311,7 @@ MmSharePageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
 }
 
 BOOLEAN
+NTAPI
 MmUnsharePageEntrySectionSegment(PSECTION_OBJECT Section,
                                  PMM_SECTION_SEGMENT Segment,
                                  ULONG Offset,
@@ -453,6 +460,7 @@ BOOL MiIsPageFromCache(PMEMORY_AREA MemoryArea,
 }
 
 NTSTATUS
+NTAPI
 MiReadPage(PMEMORY_AREA MemoryArea,
            ULONG SegOffset,
            PPFN_TYPE Page)
@@ -624,6 +632,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
 }
 
 NTSTATUS
+NTAPI
 MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
                              MEMORY_AREA* MemoryArea,
                              PVOID Address,
@@ -1142,6 +1151,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 }
 
 NTSTATUS
+NTAPI
 MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
                          MEMORY_AREA* MemoryArea,
                          PVOID Address,
@@ -1348,6 +1358,7 @@ MmPageOutDeleteMapping(PVOID Context, PEPROCESS Process, PVOID Address)
 }
 
 NTSTATUS
+NTAPI
 MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
                      MEMORY_AREA* MemoryArea,
                      PVOID Address,
@@ -1693,6 +1704,7 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
 }
 
 NTSTATUS
+NTAPI
 MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
                        PMEMORY_AREA MemoryArea,
                        PVOID Address,
@@ -1902,6 +1914,7 @@ MmAlterViewAttributes(PMADDRESS_SPACE AddressSpace,
 }
 
 NTSTATUS
+NTAPI
 MmProtectSectionView(PMADDRESS_SPACE AddressSpace,
                      PMEMORY_AREA MemoryArea,
                      PVOID BaseAddress,
@@ -1972,6 +1985,7 @@ MmQuerySectionView(PMEMORY_AREA MemoryArea,
 }
 
 VOID
+NTAPI
 MmpFreePageFileSegment(PMM_SECTION_SEGMENT Segment)
 {
    ULONG Length;
@@ -2087,7 +2101,9 @@ MmpCloseSection(PVOID ObjectBody,
           ObjectBody, HandleCount, ObGetObjectPointerCount(ObjectBody));
 }
 
-NTSTATUS INIT_FUNCTION
+NTSTATUS
+INIT_FUNCTION
+NTAPI
 MmCreatePhysicalMemorySection(VOID)
 {
    PSECTION_OBJECT PhysSection;
@@ -2134,7 +2150,9 @@ MmCreatePhysicalMemorySection(VOID)
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS INIT_FUNCTION
+NTSTATUS
+INIT_FUNCTION
+NTAPI
 MmInitSectionImplementation(VOID)
 {
    OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
@@ -2158,6 +2176,7 @@ MmInitSectionImplementation(VOID)
 }
 
 NTSTATUS
+NTAPI
 MmCreatePageFileSection(PSECTION_OBJECT *SectionObject,
                         ACCESS_MASK DesiredAccess,
                         POBJECT_ATTRIBUTES ObjectAttributes,
@@ -2229,6 +2248,7 @@ MmCreatePageFileSection(PSECTION_OBJECT *SectionObject,
 
 
 NTSTATUS
+NTAPI
 MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
                         ACCESS_MASK DesiredAccess,
                         POBJECT_ATTRIBUTES ObjectAttributes,

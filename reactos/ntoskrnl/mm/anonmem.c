@@ -48,6 +48,7 @@
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
+NTAPI
 MmWritePageVirtualMemory(PMADDRESS_SPACE AddressSpace,
                          PMEMORY_AREA MemoryArea,
                          PVOID Address,
@@ -129,6 +130,7 @@ MmWritePageVirtualMemory(PMADDRESS_SPACE AddressSpace,
 }
 
 NTSTATUS
+NTAPI
 MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
                        PMEMORY_AREA MemoryArea,
                        PVOID Address,
@@ -232,6 +234,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
 }
 
 NTSTATUS
+NTAPI
 MmNotPresentFaultVirtualMemory(PMADDRESS_SPACE AddressSpace,
                                MEMORY_AREA* MemoryArea,
                                PVOID Address,
@@ -789,6 +792,7 @@ MmFreeVirtualMemoryPage(PVOID Context,
 }
 
 VOID
+NTAPI
 MmFreeVirtualMemory(PEPROCESS Process,
                     PMEMORY_AREA MemoryArea)
 {
@@ -954,6 +958,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
 }
 
 NTSTATUS
+NTAPI
 MmProtectAnonMem(PMADDRESS_SPACE AddressSpace,
                  PMEMORY_AREA MemoryArea,
                  PVOID BaseAddress,
