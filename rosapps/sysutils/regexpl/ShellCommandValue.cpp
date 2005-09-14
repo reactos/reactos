@@ -194,11 +194,15 @@ CheckValueArgument:
       {
       case REG_DWORD_LITTLE_ENDIAN:
         {
-          TCHAR Buffer[11];
-          unsigned int n = *pDataBuffer;
-          _stprintf(Buffer,_T("0x%08X\n"),n);
-          rConsole.Write(Buffer);
+          TCHAR Buffer[3];
+          rConsole.Write(_T("0x"));
+          for (unsigned int i = 0 ; i < dwValueSize ; i++)
+          {
+            _stprintf(Buffer,_T("%02X"),*(pDataBuffer+((dwValueSize-1)-i)));
+            rConsole.Write(Buffer);
+          }
         }
+        rConsole.Write(_T("\n"));
         break;
       case REG_DWORD_BIG_ENDIAN:
         {
