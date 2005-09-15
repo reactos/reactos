@@ -399,7 +399,7 @@ void my_spin_lock(spinlock_t *sl);
 #define spin_unlock(a) my_spin_unlock(a)
 void my_spin_unlock(spinlock_t *sl);
 
-#define spin_lock_irqsave(a,b) my_spin_lock_irqsave(a,b)
+#define spin_lock_irqsave(a,b) b=0, my_spin_lock_irqsave(a,b)
 void my_spin_lock_irqsave(spinlock_t *sl, int flags);
 #define spin_unlock_irqrestore(a,b) my_spin_unlock(a)
 
