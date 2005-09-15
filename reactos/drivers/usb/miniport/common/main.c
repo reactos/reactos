@@ -64,7 +64,6 @@ CreateRootHubPdo(
 	*pPdo = Pdo;
 	return STATUS_SUCCESS;
 }
-
 #if 0
 static NTSTATUS
 AddDevice_Keyboard(
@@ -168,7 +167,7 @@ AddDevice(
 	}
 
 	// Create a unicode device name
-//	DeviceNumber = 0; //TODO: Allocate new device number every time
+	DeviceNumber = 0; //TODO: Allocate new device number every time
 	swprintf(DeviceBuffer, L"\\Device\\USBFDO-%lu", DeviceNumber);
 	RtlInitUnicodeString(&DeviceName, DeviceBuffer);
 
