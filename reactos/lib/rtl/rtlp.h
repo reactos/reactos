@@ -51,7 +51,7 @@ RtlLeaveHeapLock(PRTL_CRITICAL_SECTION CriticalSection);
 
 BOOLEAN
 NTAPI
-RtlpCheckForActiveDebugger(VOID);
+RtlpCheckForActiveDebugger(BOOLEAN Type);
 
 BOOLEAN
 NTAPI
@@ -62,6 +62,10 @@ RtlpHandleDpcStackException(IN PEXCEPTION_REGISTRATION_RECORD RegistrationFrame,
 
 #define RtlpAllocateStringMemory RtlpAllocateMemory
 #define RtlpFreeStringMemory     RtlpFreeMemory
+
+BOOLEAN
+NTAPI
+RtlpSetInDbgPrint(IN BOOLEAN NewValue);
 
 /* i386/except.S */
 
@@ -95,6 +99,15 @@ RtlpGetExceptionAddress(VOID);
 VOID
 NTAPI
 RtlpCaptureContext(OUT PCONTEXT ContextRecord);
+
+/* i386/debug.S */
+NTSTATUS
+NTAPI
+DebugService(IN ULONG Service,
+             IN PVOID Buffer,
+             IN ULONG Length,
+             IN PVOID Argument1,
+             IN PVOID Argument2);
 
 /* Tags for the String Allocators */
 #define TAG_USTR        TAG('U', 'S', 'T', 'R')
