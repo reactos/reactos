@@ -341,7 +341,7 @@ KiInsertQueueApc(PKAPC Apc,
                   if (Prcb->CurrentThread == Thread)
                   {
                      ASSERT (CurrentPrcb != Prcb);
-                     KiIpiSendRequest(Prcb->SetMember, IPI_REQUEST_APC);
+                     KiIpiSendRequest(Prcb->SetMember, IPI_APC);
                      break;
                   }
                }
