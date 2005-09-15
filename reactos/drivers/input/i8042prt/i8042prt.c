@@ -27,6 +27,8 @@
 #define I8042_MAX_COMMAND_LENGTH 16
 #define I8042_MAX_UPWARDS_STACK 5
 
+UNICODE_STRING I8042RegistryPath;
+
 /* FUNCTIONS *****************************************************************/
 
 /*
@@ -793,6 +795,21 @@ NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT DriverObject,
  */
 {
 	DPRINT("I8042 Driver 0.0.1\n");
+
+        I8042RegistryPath.MaximumLength = RegistryPath->Length + sizeof(L"\\Parameters");
+        I8042RegistryPath.Buffer = ExAllocatePoolWithTag(PagedPool, 
+                                                         I8042RegistryPath.MaximumLength,
+                                                         TAG_I8042);
+        if (I8042RegistryPath.Buffer == NULL) {
+
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        RtlCopyUnicodeString(&I8042RegistryPath, RegistryPath);
+        RtlAppendUnicodeToString(&I8042RegistryPath, L"\\Parameters");
+        I8042RegistryPath.Buffer[I8042RegistryPath.Length / sizeof(WCHAR)] = 0;
+
+
 
 	DriverObject->MajorFunction[IRP_MJ_CREATE] = I8042CreateDispatch;
 	DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] =

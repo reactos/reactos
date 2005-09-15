@@ -263,6 +263,8 @@ typedef struct _I8042_HOOK_WORKITEM
 #define MOUSE_NACK         0xFE
 
 /* i8042prt.c */
+extern UNICODE_STRING I8042RegistryPath;
+
 NTSTATUS I8042ReadData(UCHAR *Data);
 
 NTSTATUS I8042ReadStatus(UCHAR *Status);
