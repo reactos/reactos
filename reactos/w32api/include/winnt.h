@@ -52,11 +52,14 @@ extern "C" {
 #endif
 typedef char CHAR;
 typedef short SHORT;
-typedef long LONG;
+#ifndef LONG_DEFINED
+#define LONG_DEFINED
+    typedef long LONG;
+    typedef unsigned long ULONG,*PULONG;
+#endif//LONG_DEFINED
 typedef char CCHAR, *PCCHAR;
 typedef unsigned char UCHAR,*PUCHAR;
 typedef unsigned short USHORT,*PUSHORT;
-typedef unsigned long ULONG,*PULONG;
 typedef char *PSZ;
 
 typedef void *PVOID,*LPVOID;

@@ -325,8 +325,11 @@ static int convert_bitmap(char *data, int size)
 	{
 		type |= FL_SIZEBE | FL_OS2;
 	}
-	else
+	else 
+	{
+		fprintf(stderr, "bisizel %d bosizel %d b4sizel %d\n", bisizel, bosizel, b4sizel);
 		yyerror("Invalid bitmap format, bih->biSize = %ld", bih->biSize);
+	}
 
 	switch(type)
 	{
