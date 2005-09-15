@@ -165,7 +165,7 @@ static int ohci_urb_enqueue (
 	urb_priv_t	*urb_priv;
 	unsigned int	pipe = urb->pipe;
 	int		i, size = 0;
-	unsigned long	flags;
+	unsigned long	flags = 0;
 	int		retval = 0;
 	
 #ifdef OHCI_VERBOSE_DEBUG

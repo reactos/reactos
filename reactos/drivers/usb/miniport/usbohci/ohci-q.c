@@ -344,7 +344,7 @@ static struct ed *ed_get (
 	struct hcd_dev		*dev = (struct hcd_dev *) udev->hcpriv;
 	struct ed		*ed; 
 	unsigned		ep;
-	unsigned long		flags;
+	unsigned long		flags = 0;
 
 	ep = usb_pipeendpoint (pipe) << 1;
 	if (type != PIPE_CONTROL && is_out)
