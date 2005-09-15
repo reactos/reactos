@@ -1110,14 +1110,61 @@ IopAssignDeviceResources(
             }
             case CmResourceTypeInterrupt:
             {
+               INTERFACE_TYPE BusType;
+               ULONG SlotNumber;
+               ULONG ret;
+               UCHAR Irq;
+
                DescriptorRaw->u.Interrupt.Level = 0;
-               /* FIXME: if IRQ 9 is in the possible range, use it.
-                * This should be a PCI device */
-               if (ResourceDescriptor->u.Interrupt.MinimumVector <= 9
-                  && ResourceDescriptor->u.Interrupt.MaximumVector >= 9)
-                  DescriptorRaw->u.Interrupt.Vector = 9;
-               else
-                  DescriptorRaw->u.Interrupt.Vector = ResourceDescriptor->u.Interrupt.MinimumVector;
+               DescriptorRaw->u.Interrupt.Vector = ResourceDescriptor->u.Interrupt.MinimumVector;
+               /* FIXME: HACK: if we have a PCI device, we try
+                * to keep the IRQ assigned by the BIOS */
+               if (NT_SUCCESS(IoGetDeviceProperty(
+                  DeviceNode->PhysicalDeviceObject,
+                  DevicePropertyLegacyBusType,
+                  sizeof(INTERFACE_TYPE),
+                  &BusType,
+                  &ret)) && BusType == PCIBus)
+               {
+                  /* We have a PCI bus */
+                  if (NT_SUCCESS(IoGetDeviceProperty(
+                     DeviceNode->PhysicalDeviceObject,
+                     DevicePropertyAddress,
+                     sizeof(ULONG),
+                     &SlotNumber,
+                     &ret)) && SlotNumber > 0)
+                  {
+                     /* We have a good slot number */
+                     ret = HalGetBusDataByOffset(PCIConfiguration,
+                        DeviceNode->ResourceRequirements->BusNumber,
+                        SlotNumber,
+                        &Irq,
+                        0x3c /* PCI_INTERRUPT_LINE */,
+                        sizeof(UCHAR));
+                     if (ret != 0 && ret != 2
+                        && ResourceDescriptor->u.Interrupt.MinimumVector <= Irq
+                        && ResourceDescriptor->u.Interrupt.MaximumVector >= Irq)
+                     {
+                        /* The device already has an assigned IRQ */
+                        DescriptorRaw->u.Interrupt.Vector = Irq;
+                     }
+                     else
+                     {
+                         DPRINT1("Trying to assign IRQ 0x%lx to %wZ\n",
+                            DescriptorRaw->u.Interrupt.Vector,
+                            &DeviceNode->InstancePath);
+                         Irq = (UCHAR)DescriptorRaw->u.Interrupt.Vector;
+                         ret = HalSetBusDataByOffset(PCIConfiguration,
+                            DeviceNode->ResourceRequirements->BusNumber,
+                            SlotNumber,
+                            &Irq,
+                            0x3c /* PCI_INTERRUPT_LINE */,
+                            sizeof(UCHAR));
+                         if (ret == 0 || ret == 2)
+                            KEBUGCHECK(0);
+                     }
+                  }
+               }
 
                DescriptorTranslated->u.Interrupt.Level = 0;
                DescriptorTranslated->u.Interrupt.Vector = HalGetInterruptVector(
