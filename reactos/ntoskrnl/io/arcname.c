@@ -19,22 +19,441 @@
 
 #define FS_VOLUME_BUFFER_SIZE (MAX_PATH + sizeof(FILE_FS_VOLUME_INFORMATION))
 
+/* STRUCTURES ***************************************************************/
+
+typedef struct _DISKENTRY
+{
+  LIST_ENTRY ListEntry;
+  ULONG DiskNumber;
+  ULONG Signature;
+  ULONG Checksum;
+  PDEVICE_OBJECT DeviceObject;
+} DISKENTRY, *PDISKENTRY; 
+
+#define  PARTITION_TBL_SIZE 4
+
+#include <pshpack1.h>
+
+typedef struct _PARTITION
+{
+  unsigned char   BootFlags;					/* bootable?  0=no, 128=yes  */
+  unsigned char   StartingHead;					/* beginning head number */
+  unsigned char   StartingSector;				/* beginning sector number */
+  unsigned char   StartingCylinder;				/* 10 bit nmbr, with high 2 bits put in begsect */
+  unsigned char   PartitionType;				/* Operating System type indicator code */
+  unsigned char   EndingHead;					/* ending head number */
+  unsigned char   EndingSector;					/* ending sector number */
+  unsigned char   EndingCylinder;				/* also a 10 bit nmbr, with same high 2 bit trick */
+  unsigned int  StartingBlock;					/* first sector relative to start of disk */
+  unsigned int  SectorCount;					/* number of sectors in partition */
+} PARTITION, *PPARTITION;
+
+typedef struct _PARTITION_SECTOR
+{
+  UCHAR BootCode[440];				/* 0x000 */
+  ULONG Signature;				/* 0x1B8 */
+  UCHAR Reserved[2];				/* 0x1BC */
+  PARTITION Partition[PARTITION_TBL_SIZE];	/* 0x1BE */
+  USHORT Magic;					/* 0x1FE */
+} PARTITION_SECTOR, *PPARTITION_SECTOR;
+
+#include <poppack.h>
+
 /* FUNCTIONS ****************************************************************/
+
+STATIC 
+NTSTATUS
+STDCALL
+INIT_FUNCTION
+DiskQueryRoutine(PWSTR ValueName,
+                 ULONG ValueType,
+                 PVOID ValueData,
+                 ULONG ValueLength,
+                 PVOID Context,
+                 PVOID EntryContext)
+{
+  PLIST_ENTRY ListHead = (PLIST_ENTRY)Context;
+  PULONG GlobalDiskCount = (PULONG)EntryContext;
+  PDISKENTRY DiskEntry;
+  UNICODE_STRING NameU;
+
+  if (ValueType == REG_SZ &&
+      ValueLength == 20 * sizeof(WCHAR))
+    {
+      DiskEntry = ExAllocatePool(PagedPool, sizeof(DISKENTRY));
+      if (DiskEntry == NULL)
+        {
+          return STATUS_NO_MEMORY;
+        }
+      DiskEntry->DiskNumber = (*GlobalDiskCount)++;
+
+      NameU.Buffer = (PWCHAR)ValueData;
+      NameU.Length = NameU.MaximumLength = 8 * sizeof(WCHAR);
+      RtlUnicodeStringToInteger(&NameU, 16, &DiskEntry->Checksum);
+
+      NameU.Buffer = (PWCHAR)ValueData + 9;
+      RtlUnicodeStringToInteger(&NameU, 16, &DiskEntry->Signature);
+
+      InsertTailList(ListHead, &DiskEntry->ListEntry);
+    }
+
+  return STATUS_SUCCESS;
+}
+
+#define ROOT_NAME   L"\\Registry\\Machine\\HARDWARE\\DESCRIPTION\\System\\MultifunctionAdapter"
+
+STATIC VOID INIT_FUNCTION
+IopEnumerateBiosDisks(PLIST_ENTRY ListHead)
+{
+  RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+  WCHAR Name[100];
+  ULONG AdapterCount;
+  ULONG ControllerCount;
+  ULONG DiskCount;
+  NTSTATUS Status;
+  ULONG GlobalDiskCount=0;
+
+ 
+  memset(QueryTable, 0, sizeof(QueryTable));
+  QueryTable[0].Name = L"Identifier";
+  QueryTable[0].QueryRoutine = DiskQueryRoutine;
+  QueryTable[0].EntryContext = (PVOID)&GlobalDiskCount;
+
+  AdapterCount = 0;
+  while (1)
+    {
+      swprintf(Name, L"%s\\%lu", ROOT_NAME, AdapterCount);
+      Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
+                                      Name,
+                                      &QueryTable[1],
+                                      NULL,
+                                      NULL);
+      if (!NT_SUCCESS(Status))
+        {
+            break;
+        }
+        
+      swprintf(Name, L"%s\\%lu\\DiskController", ROOT_NAME, AdapterCount);
+      Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
+                                      Name,
+                                      &QueryTable[1],
+                                      NULL,
+                                      NULL);
+      if (NT_SUCCESS(Status))
+        {
+          ControllerCount = 0;
+          while (1)
+            {
+              swprintf(Name, L"%s\\%lu\\DiskController\\%lu", ROOT_NAME, AdapterCount, ControllerCount);
+              Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
+                                              Name,
+                                              &QueryTable[1],
+                                              NULL,
+                                              NULL);
+              if (!NT_SUCCESS(Status))
+                {
+                    break;
+                }
+                
+              swprintf(Name, L"%s\\%lu\\DiskController\\%lu\\DiskPeripheral", ROOT_NAME, AdapterCount, ControllerCount);
+              Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
+                                              Name,
+                                              &QueryTable[1],
+                                              NULL,
+                                              NULL);
+              if (NT_SUCCESS(Status))
+                {
+                  DiskCount = 0;
+                  while (1)
+                    {
+                      swprintf(Name, L"%s\\%lu\\DiskController\\%lu\\DiskPeripheral\\%lu", ROOT_NAME, AdapterCount, ControllerCount, DiskCount);
+                      Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
+                                                      Name,
+                                                      QueryTable,
+                                                      (PVOID)ListHead,
+                                                      NULL);
+                      if (!NT_SUCCESS(Status))
+                        {
+                          break;
+                        }
+                      DiskCount++;
+                    }
+                }
+              ControllerCount++;
+            }
+        }
+      AdapterCount++;
+    }
+}
+
+STATIC VOID INIT_FUNCTION
+IopEnumerateDisks(PLIST_ENTRY ListHead)
+{
+  ULONG i, k;
+  PDISKENTRY DiskEntry;
+  DISK_GEOMETRY DiskGeometry;
+  KEVENT Event;
+  PIRP Irp;
+  IO_STATUS_BLOCK StatusBlock;
+  LARGE_INTEGER PartitionOffset;
+  PULONG Buffer;
+  WCHAR DeviceNameBuffer[80];
+  UNICODE_STRING DeviceName;
+  NTSTATUS Status;
+  PDEVICE_OBJECT DeviceObject;
+  PFILE_OBJECT FileObject;
+  BOOLEAN IsRemovableMedia;
+  PPARTITION_SECTOR PartitionBuffer = NULL;
+  ULONG PartitionBufferSize = 0;
+
+
+  for (i = 0; i < IoGetConfigurationInformation()->DiskCount; i++)
+    {
+
+      swprintf(DeviceNameBuffer,
+	       L"\\Device\\Harddisk%lu\\Partition0",
+	       i);
+      RtlInitUnicodeString(&DeviceName,
+			   DeviceNameBuffer);
+
+
+      Status = IoGetDeviceObjectPointer(&DeviceName,
+				        FILE_READ_DATA,
+				        &FileObject,
+				        &DeviceObject);
+      if (!NT_SUCCESS(Status))
+        {
+	  continue;
+	}
+      IsRemovableMedia = DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA ? TRUE : FALSE;
+      ObDereferenceObject(FileObject);
+      if (IsRemovableMedia)
+        {
+          ObDereferenceObject(DeviceObject);
+          continue;
+	}
+      DiskEntry = ExAllocatePool(PagedPool, sizeof(DISKENTRY));
+      if (DiskEntry == NULL)
+        {
+          KEBUGCHECK(0);
+        }
+      DiskEntry->DiskNumber = i;
+      DiskEntry->DeviceObject = DeviceObject;
+
+      /* determine the sector size */
+      KeInitializeEvent(&Event, NotificationEvent, FALSE);
+      Irp = IoBuildDeviceIoControlRequest(IOCTL_DISK_GET_DRIVE_GEOMETRY,
+				          DeviceObject,
+				          NULL,
+				          0,
+				          &DiskGeometry,
+				          sizeof(DISK_GEOMETRY),
+				          FALSE,
+				          &Event,
+				          &StatusBlock);
+      if (Irp == NULL)
+        {
+          KEBUGCHECK(0);
+        }
+
+      Status = IoCallDriver(DeviceObject, Irp);
+      if (Status == STATUS_PENDING)
+        {
+          KeWaitForSingleObject(&Event,
+			        Executive,
+			        KernelMode,
+			        FALSE,
+			        NULL);
+          Status = StatusBlock.Status;
+        }
+      if (!NT_SUCCESS(Status))
+        {
+          KEBUGCHECK(0);
+        }
+      if (PartitionBuffer != NULL && PartitionBufferSize < DiskGeometry.BytesPerSector)
+        {
+          ExFreePool(PartitionBuffer);
+          PartitionBuffer = NULL;
+        }
+      if (PartitionBuffer == NULL)
+        {
+          PartitionBufferSize = max(DiskGeometry.BytesPerSector, PAGE_SIZE);
+          PartitionBuffer = ExAllocatePool(PagedPool, PartitionBufferSize);
+          if (PartitionBuffer == NULL)
+            {
+              KEBUGCHECK(0);
+            }
+        }
+
+      /* read the partition sector */
+      KeInitializeEvent(&Event, NotificationEvent, FALSE);
+      PartitionOffset.QuadPart = 0;
+      Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
+				         DeviceObject,
+				         PartitionBuffer,
+				         DiskGeometry.BytesPerSector,
+				         &PartitionOffset,
+				         &Event,
+				         &StatusBlock);
+      Status = IoCallDriver(DeviceObject, Irp);
+      if (Status == STATUS_PENDING)
+        {
+          KeWaitForSingleObject(&Event,
+			        Executive,
+			        KernelMode,
+			        FALSE,
+			        NULL);
+          Status = StatusBlock.Status;
+        }
+
+      if (!NT_SUCCESS(Status))
+        {
+          KEBUGCHECK(0);
+        }
+
+      /* Calculate the MBR checksum */
+      DiskEntry->Checksum = 0;
+      Buffer = (PULONG)PartitionBuffer;
+      for (k = 0; k < 128; k++)
+        {
+          DiskEntry->Checksum += Buffer[k];
+        }
+      DiskEntry->Checksum = ~DiskEntry->Checksum + 1;
+      DiskEntry->Signature = PartitionBuffer->Signature;
+
+      InsertTailList(ListHead, &DiskEntry->ListEntry);
+    }
+  if (PartitionBuffer)
+    {
+      ExFreePool(PartitionBuffer);
+    }
+}
+
+STATIC NTSTATUS INIT_FUNCTION
+IopAssignArcNamesToDisk(PDEVICE_OBJECT DeviceObject, ULONG RDisk, ULONG DiskNumber)
+{
+  WCHAR DeviceNameBuffer[80];
+  WCHAR ArcNameBuffer[80];
+  UNICODE_STRING DeviceName;
+  UNICODE_STRING ArcName;
+  PDRIVE_LAYOUT_INFORMATION LayoutInfo = NULL;
+  NTSTATUS Status;
+  ULONG i;
+  KEVENT Event;
+  PIRP Irp;
+  IO_STATUS_BLOCK StatusBlock;
+  ULONG PartitionNumber;
+
+  swprintf(DeviceNameBuffer,
+	   L"\\Device\\Harddisk%lu\\Partition0",
+	   DiskNumber);
+  RtlInitUnicodeString(&DeviceName,
+		       DeviceNameBuffer);
+
+  swprintf(ArcNameBuffer,
+	   L"\\ArcName\\multi(0)disk(0)rdisk(%lu)",
+	   RDisk);
+  RtlInitUnicodeString(&ArcName,
+		       ArcNameBuffer);
+
+  DPRINT("%wZ ==> %wZ\n", &ArcName, &DeviceName);
+
+  Status = IoAssignArcName(&ArcName, &DeviceName);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("IoAssignArcName failed, status=%lx\n", Status);
+      return(Status);
+    }
+
+  LayoutInfo = ExAllocatePool(PagedPool, 2 * PAGE_SIZE);
+  if (LayoutInfo == NULL)
+    {
+      return STATUS_NO_MEMORY;
+    }
+  KeInitializeEvent(&Event, NotificationEvent, FALSE);
+  Irp = IoBuildDeviceIoControlRequest(IOCTL_DISK_GET_DRIVE_LAYOUT,
+				      DeviceObject,
+				      NULL,
+				      0,
+				      LayoutInfo,
+				      2 * PAGE_SIZE,
+				      FALSE,
+				      &Event,
+				      &StatusBlock);
+  if (Irp == NULL)
+    {
+      ExFreePool(LayoutInfo);
+      return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+  Status = IoCallDriver(DeviceObject, Irp);
+  if (Status == STATUS_PENDING)
+    {
+      KeWaitForSingleObject(&Event,
+			    Executive,
+			    KernelMode,
+			    FALSE,
+			    NULL);
+      Status = StatusBlock.Status;
+    }
+  if (!NT_SUCCESS(Status))
+    {
+      ExFreePool(LayoutInfo);
+      return Status;
+    }
+
+  DPRINT("Number of partitions: %u\n", LayoutInfo->PartitionCount);
+  
+  PartitionNumber = 1;
+  for (i = 0; i < LayoutInfo->PartitionCount; i++)
+    {
+      if (!IsContainerPartition(LayoutInfo->PartitionEntry[i].PartitionType) &&
+          LayoutInfo->PartitionEntry[i].PartitionType != PARTITION_ENTRY_UNUSED)
+        {
+          
+          swprintf(DeviceNameBuffer,
+	           L"\\Device\\Harddisk%lu\\Partition%lu",
+	           DiskNumber,
+	           PartitionNumber);
+          RtlInitUnicodeString(&DeviceName, DeviceNameBuffer);
+
+          swprintf(ArcNameBuffer,
+	           L"\\ArcName\\multi(0)disk(0)rdisk(%lu)partition(%lu)",
+	           RDisk,
+	           PartitionNumber);
+          RtlInitUnicodeString(&ArcName, ArcNameBuffer);
+
+          DPRINT("%wZ ==> %wZ\n", &ArcName, &DeviceName);
+
+          Status = IoAssignArcName(&ArcName, &DeviceName);
+          if (!NT_SUCCESS(Status))
+            {
+              DPRINT1("IoAssignArcName failed, status=%lx\n", Status);
+              ExFreePool(LayoutInfo);
+	      return(Status);
+            }
+          PartitionNumber++;
+        }
+    }
+  ExFreePool(LayoutInfo);
+  return STATUS_SUCCESS;
+}
 
 NTSTATUS INIT_FUNCTION
 IoCreateArcNames(VOID)
 {
   PCONFIGURATION_INFORMATION ConfigInfo;
-  PDRIVE_LAYOUT_INFORMATION LayoutInfo = NULL;
   WCHAR DeviceNameBuffer[80];
   WCHAR ArcNameBuffer[80];
   UNICODE_STRING DeviceName;
   UNICODE_STRING ArcName;
-  ULONG i, j, k;
+  ULONG i, RDiskNumber;
   NTSTATUS Status;
-  PFILE_OBJECT FileObject;
-  PDEVICE_OBJECT DeviceObject;
-  BOOL IsRemovableMedia;
+  LIST_ENTRY BiosDiskListHead;
+  LIST_ENTRY DiskListHead;
+  PLIST_ENTRY Entry;
+  PDISKENTRY BiosDiskEntry;
+  PDISKENTRY DiskEntry;
 
   DPRINT("IoCreateArcNames() called\n");
 
@@ -66,80 +485,41 @@ IoCreateArcNames(VOID)
     }
 
   /* create ARC names for hard disk drives */
-  DPRINT("Disk drives: %lu\n", ConfigInfo->DiskCount);
-  for (i = 0, k = 0; i < ConfigInfo->DiskCount; i++)
+  InitializeListHead(&BiosDiskListHead);
+  InitializeListHead(&DiskListHead);
+  IopEnumerateBiosDisks(&BiosDiskListHead);
+  IopEnumerateDisks(&DiskListHead);
+
+  RDiskNumber = 0;
+  while (!IsListEmpty(&BiosDiskListHead))
     {
-      swprintf(DeviceNameBuffer,
-	       L"\\Device\\Harddisk%lu\\Partition0",
-	       i);
-      RtlInitUnicodeString(&DeviceName,
-			   DeviceNameBuffer);
-
-
-      Status = IoGetDeviceObjectPointer(&DeviceName,
-				        FILE_READ_DATA,
-				        &FileObject,
-				        &DeviceObject);
-      if (!NT_SUCCESS(Status))
+      Entry = RemoveHeadList(&BiosDiskListHead);
+      BiosDiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
+      Entry = DiskListHead.Flink;
+      while (Entry != &DiskListHead)
         {
-	  continue;
-	}
-      IsRemovableMedia = DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA ? TRUE : FALSE;
-      ObDereferenceObject(FileObject);
-      if (IsRemovableMedia)
-        {
-          continue;
-	}
+          DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
+          if (DiskEntry->Checksum == BiosDiskEntry->Checksum &&
+              DiskEntry->Signature == BiosDiskEntry->Signature)
+            {
 
-      swprintf(ArcNameBuffer,
-	       L"\\ArcName\\multi(0)disk(0)rdisk(%lu)partition(0)",
-	       k);
-      RtlInitUnicodeString(&ArcName,
-			   ArcNameBuffer);
-      DPRINT("%wZ ==> %wZ\n",
-	     &ArcName,
-	     &DeviceName);
+              Status = IopAssignArcNamesToDisk(DiskEntry->DeviceObject, RDiskNumber, DiskEntry->DiskNumber);
 
-      Status = IoAssignArcName(&ArcName,
-			       &DeviceName);
-      if (!NT_SUCCESS(Status))
-	return(Status);
+              RemoveEntryList(&DiskEntry->ListEntry);
+              ExFreePool(DiskEntry);
+              break;
+            }
+          Entry = Entry->Flink;
+        }
+      RDiskNumber++;
+      ExFreePool(BiosDiskEntry);
+    }
 
-      Status = xHalQueryDriveLayout(&DeviceName,
-				    &LayoutInfo);
-      if (!NT_SUCCESS(Status))
-	return(Status);
-
-      DPRINT("Number of partitions: %u\n", LayoutInfo->PartitionCount);
-
-      for (j = 0;j < LayoutInfo->PartitionCount; j++)
-	{
-	  swprintf(DeviceNameBuffer,
-		   L"\\Device\\Harddisk%lu\\Partition%lu",
-		   i,
-		   j + 1);
-	  RtlInitUnicodeString(&DeviceName,
-			       DeviceNameBuffer);
-
-	  swprintf(ArcNameBuffer,
-		   L"\\ArcName\\multi(0)disk(0)rdisk(%lu)partition(%lu)",
-		   k,
-		   j + 1);
-	  RtlInitUnicodeString(&ArcName,
-			       ArcNameBuffer);
-	  DPRINT("%wZ ==> %wZ\n",
-		 &ArcName,
-		 &DeviceName);
-
-	  Status = IoAssignArcName(&ArcName,
-				   &DeviceName);
-	  if (!NT_SUCCESS(Status))
-	    return(Status);
-	}
-
-      ExFreePool(LayoutInfo);
-      LayoutInfo = NULL;
-      k++;
+  while (!IsListEmpty(&DiskListHead))
+    {
+      Entry = RemoveHeadList(&DiskListHead);
+      DiskEntry = CONTAINING_RECORD(Entry, DISKENTRY, ListEntry);
+      ExFreePool(DiskEntry);
     }
 
   /* create ARC names for cdrom drives */
@@ -173,7 +553,7 @@ IoCreateArcNames(VOID)
 }
 
 
-static NTSTATUS
+static NTSTATUS INIT_FUNCTION
 IopCheckCdromDevices(PULONG DeviceNumber)
 {
   PCONFIGURATION_INFORMATION ConfigInfo;
