@@ -1,6 +1,7 @@
 <module name="rosperf" type="win32cui" installbase="system32" installname="rosperf.exe">
     <include base="rosperf">.</include>
     <define name="__USE_W32API" />
+    <define name="UNICODE" />
     <library>version</library>
     <library>gdi32</library>
     <library>user32</library>
@@ -9,6 +10,7 @@
     <file>rosperf.c</file>
     <file>lines.c</file>
     <file>fill.c</file>
+    <file>text.c</file>
     <file>testlist.c</file>
     <file>rosperf.rc</file>
 </module>

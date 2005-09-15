@@ -19,22 +19,26 @@
 #include <windows.h>
 #include "rosperf.h"
 
-static TEST TestList[] =
-  {
-    { L"fill", L"Fill", NullInit, FillProc, NullCleanup, NullCleanup },
-    { L"smallfill", L"Small Fill", NullInit, FillSmallProc, NullCleanup, NullCleanup },
-    { L"hlines", L"Horizontal Lines", NullInit, LinesHorizontalProc, NullCleanup, NullCleanup },
-    { L"vlines", L"Vertical Lines", NullInit, LinesVerticalProc, NullCleanup, NullCleanup },
-    { L"lines", L"Lines", NullInit, LinesProc, NullCleanup, NullCleanup },
-    { L"text", L"Text", NullInit, TextProc, NullCleanup, NullCleanup }
-  };
-
-
 void
-GetTests(unsigned *TestCount, PTEST *Tests)
-  {
-    *TestCount = sizeof(TestList) / sizeof(TEST);
-    *Tests = TestList;
-  }
+TextProc(void *Context, PPERF_INFO PerfInfo, unsigned Reps)
+{
+  unsigned Rep;
+  int y;
+  HDC Dc = NULL;
+  HFONT hfFont = GetStockObject(DEFAULT_GUI_FONT);
+
+  for (Rep = 0; Rep < Reps; )
+    {
+      Dc = (Rep & 0x10000) ? PerfInfo->BackgroundDc : PerfInfo->ForegroundDc;
+      SelectObject(Dc, hfFont);
+
+      for (y = 0; y < PerfInfo->WndHeight && Rep < Reps; Rep++, y += 15)
+        {
+		TextOut(Dc, 0, y, L"AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz:?<>0123456789", 66);
+        }
+    InvalidateRect(PerfInfo->Wnd, NULL, TRUE);
+    UpdateWindow(PerfInfo->Wnd);
+    }
+}
 
 /* EOF */
