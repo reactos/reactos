@@ -68,6 +68,15 @@ typedef struct _PARTENTRY
 } PARTENTRY, *PPARTENTRY;
 
 
+typedef struct _BIOSDISKENTRY
+{
+  LIST_ENTRY ListEntry;
+  ULONG DiskNumber;
+  ULONG Signature;
+  ULONG Checksum;
+} BIOSDISKENTRY, *PBIOSDISKENTRY; 
+
+
 typedef struct _DISKENTRY
 {
   LIST_ENTRY ListEntry;
@@ -80,6 +89,11 @@ typedef struct _DISKENTRY
   ULONGLONG DiskSize;
   ULONGLONG CylinderSize;
   ULONGLONG TrackSize;
+
+  BOOLEAN BiosFound;
+  ULONG BiosDiskNumber;
+  ULONG Signature;
+  ULONG Checksum;
 
   ULONG DiskNumber;
   USHORT Port;
@@ -118,10 +132,46 @@ typedef struct _PARTLIST
   PPARTENTRY ActiveBootPartition;
 
   LIST_ENTRY DiskListHead;
+  LIST_ENTRY BiosDiskListHead;
 
 } PARTLIST, *PPARTLIST;
 
+#define  PARTITION_TBL_SIZE 4
 
+#include <pshpack1.h>
+
+typedef struct _PARTITION
+{
+  unsigned char   BootFlags;					/* bootable?  0=no, 128=yes  */
+  unsigned char   StartingHead;					/* beginning head number */
+  unsigned char   StartingSector;				/* beginning sector number */
+  unsigned char   StartingCylinder;				/* 10 bit nmbr, with high 2 bits put in begsect */
+  unsigned char   PartitionType;				/* Operating System type indicator code */
+  unsigned char   EndingHead;					/* ending head number */
+  unsigned char   EndingSector;					/* ending sector number */
+  unsigned char   EndingCylinder;				/* also a 10 bit nmbr, with same high 2 bit trick */
+  unsigned int  StartingBlock;					/* first sector relative to start of disk */
+  unsigned int  SectorCount;					/* number of sectors in partition */
+} PARTITION, *PPARTITION;
+
+typedef struct _PARTITION_SECTOR
+{
+  UCHAR BootCode[440];				/* 0x000 */
+  ULONG Signature;				/* 0x1B8 */
+  UCHAR Reserved[2];				/* 0x1BC */
+  PARTITION Partition[PARTITION_TBL_SIZE];	/* 0x1BE */
+  USHORT Magic;					/* 0x1FE */
+} PARTITION_SECTOR, *PPARTITION_SECTOR;
+
+#include <poppack.h>
+
+typedef struct
+{
+   LIST_ENTRY ListEntry;
+   ULONG DiskNumber;
+   ULONG Idendifier;
+   ULONG Signature;
+} BIOS_DISK, *PBIOS_DISK;
 
 PPARTLIST
 CreatePartitionList (SHORT Left,

@@ -45,6 +45,15 @@
 #define FLG_ADDREG_TYPE_NONE             (0x00020000 | FLG_ADDREG_BINVALUETYPE)
 #define FLG_ADDREG_TYPE_MASK             (0xFFFF0000 | FLG_ADDREG_BINVALUETYPE)
 
+#include <pshpack1.h>
+
+typedef struct _REG_DISK_MOUNT_INFO
+{
+  ULONG Signature;
+  LARGE_INTEGER StartingOffset;
+} REG_DISK_MOUNT_INFO, *PREG_DISK_MOUNT_INFO;
+
+#include <poppack.h>
 
 /* FUNCTIONS ****************************************************************/
 
@@ -630,6 +639,63 @@ SetInstallPathValue(PUNICODE_STRING InstallPath)
 			  REG_SZ,
 			  (PVOID)InstallPath->Buffer,
 			  InstallPath->Length);
+  NtClose(KeyHandle);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+      return FALSE;
+    }
+
+  return TRUE;
+}
+
+BOOLEAN
+SetMountedDeviceValue(CHAR Letter, ULONG Signature, LARGE_INTEGER StartingOffset)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  WCHAR ValueNameBuffer[16];
+  UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\MountedDevices");
+  UNICODE_STRING ValueName;
+  REG_DISK_MOUNT_INFO MountInfo;
+  NTSTATUS Status;
+  HANDLE KeyHandle;
+
+  swprintf(ValueNameBuffer, L"\\DosDevices\\%C:", Letter);
+  RtlInitUnicodeString(&ValueName, ValueNameBuffer);
+  
+  InitializeObjectAttributes (&ObjectAttributes,
+			      &KeyName,
+			      OBJ_CASE_INSENSITIVE,
+			      NULL,
+			      NULL);
+  Status =  NtOpenKey (&KeyHandle,
+		       KEY_ALL_ACCESS,
+		       &ObjectAttributes);
+  if (!NT_SUCCESS(Status))
+    {
+      Status = NtCreateKey(&KeyHandle, 
+                           KEY_ALL_ACCESS,
+                           &ObjectAttributes,
+                           0,
+                           NULL,
+                           REG_OPTION_NON_VOLATILE,
+                           NULL);
+    }
+
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("NtCreateKey() failed (Status %lx)\n", Status);
+      return FALSE;
+    }
+
+  MountInfo.Signature = Signature;
+  MountInfo.StartingOffset = StartingOffset;
+  Status = NtSetValueKey (KeyHandle,
+			  &ValueName,
+			  0,
+			  REG_BINARY,
+			  (PVOID)&MountInfo,
+			  sizeof(MountInfo));
   NtClose(KeyHandle);
   if (!NT_SUCCESS(Status))
     {
