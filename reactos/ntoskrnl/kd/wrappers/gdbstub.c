@@ -1068,7 +1068,7 @@ GspSetHwBreakpoint(ULONG BreakpointNumber,
 }
 
 
-static BOOL gdb_attached_yet = TRUE;
+static BOOL gdb_attached_yet = FALSE;
 /*
  * This function does all command procesing for interfacing to gdb.
  */
@@ -1102,7 +1102,7 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
     {
       GspAccessLocation = NULL;
       GspMemoryError = TRUE;
-      TrapFrame->Eip += 3;
+      Context->Eip += 3;
     }
   else
     {
@@ -1321,8 +1321,7 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
 #error Unknown compiler for inline assembler
 #endif
 
-                KeContextToTrapFrame(Context, NULL, TrapFrame, KernelMode);
-                return ((SigVal == 5) ? (kdContinue) : (kdHandleException));
+                return kdContinue;
                 break;
               }
 
@@ -1399,7 +1398,7 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
       ASSERT(0);
     }
 
-    return kdDoNotHandleException;
+    return kdContinue;
 }
 
 

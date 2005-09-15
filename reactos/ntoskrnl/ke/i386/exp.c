@@ -1242,7 +1242,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
                                                &Context,
                                                TrapFrame,
                                                TRUE,
-                                               FALSE);
+                                               TRUE);
 
             /* Exit if we're continuing */
             if (Action == kdContinue) goto Handled;
