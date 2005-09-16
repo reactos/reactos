@@ -169,7 +169,6 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 		return 0;
 	}
 	
-	  
 	/* get the PATH environment variable and parse it */
 	/* search the PATH environment variable for the binary */
 	if (!SearchForExecutable (rest, szFullName))
@@ -186,6 +185,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 			 free(comspec);
 		return 1;
 	}
+	
 
 	/* check if this is a .BAT or .CMD file */
 	if (!_tcsicmp (_tcsrchr (szFullName, _T('.')), _T(".bat")) ||
@@ -197,14 +197,11 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 
 		_tcscpy(szFullCmdLine,comspec);
 
-		memcpy(&szFullCmdLine[_tcslen(szFullCmdLine)],_T(" \" /K \""), 6 * sizeof(TCHAR));				
+		memcpy(&szFullCmdLine[_tcslen(szFullCmdLine)],_T("\" /K \""), 6 * sizeof(TCHAR));				
 		memcpy(&szFullCmdLine[_tcslen(szFullCmdLine)], szFullName, _tcslen(szFullName) * sizeof(TCHAR));		
 		memcpy(&szFullCmdLine[1], &szFullCmdLine[0], _tcslen(szFullCmdLine) * sizeof(TCHAR)); 
         szFullCmdLine[0] = _T('\"');					
         szFullCmdLine[_tcslen(szFullCmdLine)] = _T('\"');
-		
-
-
 	}
 
 #ifdef _DEBUG
@@ -240,8 +237,17 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 		}
 		else
 		{
-		 bCreate = CreateProcess (szFullName, szFullCmdLine, NULL, NULL, FALSE,
-			DETACHED_PROCESS, NULL, NULL, &stui, &prci);
+			if(!_tcsicmp(szFullName,comspec))
+			{
+				bCreate = CreateProcess (szFullName, szFullCmdLine, NULL, NULL, FALSE,
+					CREATE_NEW_CONSOLE, NULL, NULL, &stui, &prci);
+				
+			}
+			else
+			{
+				bCreate = CreateProcess (szFullName, szFullCmdLine, NULL, NULL, FALSE,
+					DETACHED_PROCESS, NULL, NULL, &stui, &prci);
+			}
 
 		}
 		
