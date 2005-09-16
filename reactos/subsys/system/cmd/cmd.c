@@ -420,13 +420,16 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 	/* search the PATH environment variable for the binary */
 	if (!SearchForExecutable (first, szFullName))
 	{
-		error_bad_command ();
+		if (!SearchForExecutable (full, szFullName))
+		{
+			error_bad_command ();
+			free (first);
+			free (rest);
+			free (full);
+			free (szFullName);
+			return;
+		}
 
-		free (first);
-	    free (rest);
-	    free (full);
-		free (szFullName);
-		return;
 	}
 
 	GetConsoleTitle (szWindowTitle, MAX_PATH);
@@ -539,7 +542,6 @@ DoCommand (LPTSTR line)
 	INT cl;
 	LPCOMMAND cmdptr;
 
-	
 #ifdef _DEBUG
 	DebugPrintf (_T("DoCommand: (\'%s\')\n"), line);
 #endif /* DEBUG */
