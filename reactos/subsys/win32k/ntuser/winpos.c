@@ -351,8 +351,8 @@ co_WinPosMinMaximize(PWINDOW_OBJECT Window, UINT ShowFlag, RECT* NewPos)
 
          case SW_MAXIMIZE:
             {
-               co_WinPosGetMinMaxInfo(Window, NULL, &InternalPos->MaxPos,
-                                      NULL, &Size);
+               co_WinPosGetMinMaxInfo(Window, &Size, &InternalPos->MaxPos,
+                                      NULL, NULL);
                DPRINT("Maximize: %d,%d %dx%d\n",
                       InternalPos->MaxPos.x, InternalPos->MaxPos.y, Size.x, Size.y);
                if (Window->Style & WS_MINIMIZE)
@@ -420,16 +420,14 @@ WinPosFillMinMaxInfoStruct(PWINDOW_OBJECT Window, MINMAXINFO *Info)
    IntGetDesktopWorkArea(Desktop, &WorkArea);
 
    /* Get default values. */
-   Info->ptMaxSize.x = WorkArea.right - WorkArea.left;
-   Info->ptMaxSize.y = WorkArea.bottom - WorkArea.top;
    Info->ptMinTrackSize.x = UserGetSystemMetrics(SM_CXMINTRACK);
    Info->ptMinTrackSize.y = UserGetSystemMetrics(SM_CYMINTRACK);
-   Info->ptMaxTrackSize.x = Info->ptMaxSize.x;
-   Info->ptMaxTrackSize.y = Info->ptMaxSize.y;
 
    IntGetWindowBorderMeasures(Window, &XInc, &YInc);
-   Info->ptMaxTrackSize.x += 2 * XInc;
-   Info->ptMaxTrackSize.y += 2 * YInc;
+   Info->ptMaxSize.x = WorkArea.right - WorkArea.left + 2 * XInc;
+   Info->ptMaxSize.y = WorkArea.bottom - WorkArea.top + 2 * YInc;
+   Info->ptMaxTrackSize.x = Info->ptMaxSize.x;
+   Info->ptMaxTrackSize.y = Info->ptMaxSize.y;
 
    if (Window->InternalPos != NULL)
    {
@@ -437,8 +435,8 @@ WinPosFillMinMaxInfoStruct(PWINDOW_OBJECT Window, MINMAXINFO *Info)
    }
    else
    {
-      Info->ptMaxPosition.x -= WorkArea.left + XInc;
-      Info->ptMaxPosition.y -= WorkArea.top + YInc;
+      Info->ptMaxPosition.x = WorkArea.left - XInc;
+      Info->ptMaxPosition.y = WorkArea.top - YInc;
    }
 }
 
