@@ -264,7 +264,8 @@ DeleteFiles(LPTSTR FileName, DWORD* dwFlags, DWORD dwAttrFlags)
 
 		                if ((res == PROMPT_NO) || (res == PROMPT_BREAK))
 		                {
-			                continue;  //FIXME: Errorcode?
+								 nErrorLevel = 0;
+			                continue;
 		                }
 	                }
 
