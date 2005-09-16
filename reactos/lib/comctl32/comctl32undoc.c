@@ -682,17 +682,17 @@ static HANDLE CreateMRUListLazy_common(LPWINEMRULIST mp)
 
     /* get values from key 'MRUList' */
     if (newkey) {
-	datasize = mp->extview.nMaxItems + 1;
+	datasize = (mp->extview.nMaxItems + 1) * sizeof(WCHAR);
 	if((err=RegQueryValueExW( newkey, strMRUList, 0, &type,
 				  (LPBYTE)mp->realMRU, &datasize))) {
-	    /* not present - set size to 1 (will become 0 later) */
-	    datasize = 1;
+	    /* not present - set size to 2 (will become 0 later) */
+	    datasize = 2;
 	    *mp->realMRU = 0;
 	}
 
 	TRACE("MRU list = %s, datasize = %ld\n", debugstr_w(mp->realMRU), datasize);
 
-	mp->cursize = datasize - 1;
+	mp->cursize = datasize / sizeof(WCHAR) - 1;
 	/* datasize now has number of items in the MRUList */
 
 	/* get actual values for each entry */
