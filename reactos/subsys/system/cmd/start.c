@@ -23,6 +23,8 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 	TCHAR first[CMDLINE_LENGTH];
 	TCHAR *rest = NULL; 
 	TCHAR *param = NULL;
+	INT size;
+	LPTSTR comspec;
 	BOOL bWait = FALSE;
 	BOOL bBat  = FALSE;
 	BOOL bCreate = FALSE;
@@ -38,14 +40,41 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 		return 0;
 	}
 
+	/* get comspec */
+	comspec = malloc ( MAX_PATH * sizeof(TCHAR));
+	if (comspec == NULL)
+	{
+		error_out_of_memory();
+		return 1;
+	}
+	SetLastError(0);
+	size = GetEnvironmentVariable (_T("COMSPEC"), comspec, 512);
+	if(GetLastError() == ERROR_ENVVAR_NOT_FOUND)
+	{
+		Rest = _T("cmd");
+	}
+	else
+	{
+		if (size > MAX_PATH)
+		{
+			comspec = realloc(comspec,size * sizeof(TCHAR) );
+			if (comspec==NULL)
+			{
+				return 1;
+			}
+			size = GetEnvironmentVariable (_T("COMSPEC"), comspec, size);
+		}		
+	}
+
 	nErrorLevel = 0;
 
 	if( !*Rest )
 	{
-		// FIXME: use comspec instead
-		Rest = _T("cmd");
+		_tcscpy(Rest,_T("\""));
+		_tcscat(Rest,comspec);
+		_tcscat(Rest,_T("\""));
 	}
-	
+
 	rest = malloc ( _tcslen(Rest) + 1 * sizeof(TCHAR)); 
 	if (rest == NULL)
 	{
@@ -158,19 +187,8 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 		bBat = TRUE;				
 		memset(szFullCmdLine,0,CMDLINE_LENGTH * sizeof(TCHAR));
 
-		/* FIXME : use comspec instead */
-		if (!SearchForExecutable (_T("CMD"), szFullCmdLine))
-	    {
-		    error_bad_command ();
 
-		    if (rest != NULL) 
-		        free(rest);
-
-	        if (param != NULL) 
-		        free(param);
-
-		    return 1;
-	    }
+		_tcscpy(szFullCmdLine,comspec);
 
 		memcpy(&szFullCmdLine[_tcslen(szFullCmdLine)],_T("\" /K \""), 6 * sizeof(TCHAR));				
 		memcpy(&szFullCmdLine[_tcslen(szFullCmdLine)], szFullName, _tcslen(szFullName) * sizeof(TCHAR));		
@@ -217,7 +235,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 		{
 		 bCreate = CreateProcess (szFullName, szFullCmdLine, NULL, NULL, FALSE,
 			DETACHED_PROCESS, NULL, NULL, &stui, &prci);
-		
+
 		}
 		
 		if (bCreate)
