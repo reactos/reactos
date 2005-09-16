@@ -78,6 +78,8 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 	rest = malloc ( _tcslen(Rest) + 1 * sizeof(TCHAR)); 
 	if (rest == NULL)
 	{
+	 if(compsec != NULL)
+		free(comspec);
 	 error_out_of_memory();
 	 return 1;
 	}
@@ -85,6 +87,8 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 	param =malloc ( _tcslen(Rest) + 1 * sizeof(TCHAR)); 
 	if (rest == NULL)
 	{
+	 if(compsec != NULL)
+		free(comspec);
 	 free(rest);
 	 error_out_of_memory();
 	 return 1;
@@ -160,7 +164,8 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 
 	    if (param != NULL) 
 		    free(param);
-
+		 if (compsec != NULL)
+			 free(comspec);
 		return 0;
 	}
 	
@@ -177,6 +182,8 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 	    if (param != NULL) 
 		    free(param);
 
+		 if (compsec != NULL)
+			 free(comspec);
 		return 1;
 	}
 
@@ -266,6 +273,8 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
     if (param != NULL) 
 	    free(param);
 
+	 if (compsec != NULL)
+		 free(comspec);
 	return 0;
 }
 
