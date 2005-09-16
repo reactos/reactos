@@ -4646,7 +4646,10 @@ SetMenuItemInfoW(
   MENUITEMINFOW MenuItemInfoW;
 
   RtlCopyMemory(&MenuItemInfoW, lpmii, min(lpmii->cbSize, sizeof(MENUITEMINFOW)));
-  MenuItemInfoW.cch = wcslen(MenuItemInfoW.dwTypeData);
+  if (0 != (MenuItemInfoW.fMask & MIIM_STRING))
+  {
+    MenuItemInfoW.cch = wcslen(MenuItemInfoW.dwTypeData);
+  }
 
   return NtUserMenuItemInfo(hMenu, uItem, fByPosition,
                             (PROSMENUITEMINFO)&MenuItemInfoW, TRUE);
