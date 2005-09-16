@@ -237,18 +237,8 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 		}
 		else
 		{
-			if(!_tcsicmp(szFullName,comspec))
-			{
 				bCreate = CreateProcess (szFullName, szFullCmdLine, NULL, NULL, FALSE,
 					CREATE_NEW_CONSOLE, NULL, NULL, &stui, &prci);
-				
-			}
-			else
-			{
-				bCreate = CreateProcess (szFullName, szFullCmdLine, NULL, NULL, FALSE,
-					DETACHED_PROCESS, NULL, NULL, &stui, &prci);
-			}
-
 		}
 		
 		if (bCreate)
