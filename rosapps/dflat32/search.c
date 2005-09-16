@@ -47,7 +47,8 @@ static void replacetext(DFWINDOW wnd, char *cp1, DF_DBOX *db)
 /* ------- search for the occurrance of a string ------- */
 static void SearchTextBox(DFWINDOW wnd, int incr)
 {
-    char *s1 = NULL, *s2, *cp1;
+    char *s1 , *s2, *cp1;
+    s1 = s2 = cp1 = NULL;
     DF_DBOX *db = Replacing ? &ReplaceTextDB : &SearchTextDB;
     char *cp = DfGetEditBoxText(db, DF_ID_SEARCHFOR);
     BOOL rpl = TRUE, FoundOne = FALSE;

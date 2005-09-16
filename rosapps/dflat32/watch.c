@@ -44,7 +44,7 @@ DFWINDOW DfWatchIcon(void)
 //                        (DF_PARAM) &mx, (DF_PARAM) &my);
 
     mx = 0;//DF_SCREENWIDTH / 2;
-    mx = 0;//DF_SCREENHEIGHT / 2;
+    my = 0;//DF_SCREENHEIGHT / 2;
     wnd = DfDfCreateWindow(
                     DF_BOX,
                     NULL,
