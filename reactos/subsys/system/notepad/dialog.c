@@ -140,7 +140,7 @@ static VOID DoSaveFile(VOID)
     HANDLE hFile;
     DWORD dwNumWrite;
     LPWSTR pTemp;
-    LPVOID pConverted;
+    LPVOID pConverted = NULL;
     DWORD size;
     BYTE bom[3];
     int iBomSize = 0;
