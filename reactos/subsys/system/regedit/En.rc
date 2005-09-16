@@ -123,6 +123,23 @@ BEGIN
             MENUITEM "&DWORD Value",                ID_EDIT_NEW_DWORDVALUE
         END
   END
+  POPUP ""
+  BEGIN
+        MENUITEM "Expand/Collapse",                 ID_TREE_EXPANDBRANCH
+        POPUP "&New"
+        BEGIN
+            MENUITEM "&Key",                        ID_EDIT_NEW_KEY
+            MENUITEM SEPARATOR
+            MENUITEM "&String Value",               ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Binary Value",               ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&DWORD Value",                ID_EDIT_NEW_DWORDVALUE
+        END
+        MENUITEM "&Find",                           ID_EDIT_FIND, GRAYED
+        MENUITEM "&Delete",                         ID_TREE_DELETE
+        MENUITEM "&Rename",                         ID_TREE_RENAME
+        MENUITEM SEPARATOR
+        MENUITEM "&Copy Key Name",                  ID_EDIT_COPYKEYNAME, GRAYED
+  END
 END
 
 
@@ -312,6 +329,12 @@ BEGIN
   IDS_INHERIT_THISKEYONLY        "This key only"
   IDS_INHERIT_THISKEYANDSUBKEYS  "This key and subkeys"
   IDS_INHERIT_SUBKEYSONLY        "Subkeys only"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_EXPAND                     "&Expand"
+  IDS_COLLAPSE                   "&Collapse"
 END
 
 /*****************************************************************/

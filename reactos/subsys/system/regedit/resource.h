@@ -128,6 +128,8 @@
 #define IDS_ERR_RENVAL_TOEMPTY		32857
 #define ID_SWITCH_PANELS                32871
 #define ID_EDIT_PERMISSIONS		32872
+#define ID_TREE_DELETE                  32873
+#define ID_TREE_RENAME                  32874
 
 #define IDS_FLT_REGFILES		31001
 #define IDS_FLT_REGFILES_FLT		31002
@@ -152,6 +154,8 @@
 #define IDS_INHERIT_THISKEYONLY		31121
 #define IDS_INHERIT_THISKEYANDSUBKEYS	31122
 #define IDS_INHERIT_SUBKEYSONLY		31123
+#define IDS_EXPAND                      31124
+#define IDS_COLLAPSE                    31125
 
 
 #define IDD_EDIT_STRING			2000

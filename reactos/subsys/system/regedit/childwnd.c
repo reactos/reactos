@@ -110,6 +110,16 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case ID_VIEW_REFRESH:
         /* TODO */
         break;
+    case ID_TREE_EXPANDBRANCH:
+        TreeView_Expand(pChildWnd->hTreeWnd, TreeView_GetSelection(pChildWnd->hTreeWnd), TVE_EXPAND);
+        break;
+    case ID_TREE_COLLAPSEBRANCH:
+        TreeView_Expand(pChildWnd->hTreeWnd, TreeView_GetSelection(pChildWnd->hTreeWnd), TVE_COLLAPSE);
+        break;
+    case ID_TREE_RENAME:
+        SetFocus(pChildWnd->hTreeWnd);
+        TreeView_EditLabel(pChildWnd->hTreeWnd, TreeView_GetSelection(pChildWnd->hTreeWnd));
+        break;
     case ID_SWITCH_PANELS:
         pChildWnd->nFocusPanel = !pChildWnd->nFocusPanel;
         SetFocus(pChildWnd->nFocusPanel? pChildWnd->hListWnd: pChildWnd->hTreeWnd);
@@ -296,6 +306,13 @@ ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	    case NM_SETFOCUS:
 		pChildWnd->nFocusPanel = 0;
 		break;
+            case TVN_ENDLABELEDIT:
+                {
+                  TCHAR msg[32];
+                  _stprintf(msg, _T("rename to %s"), ((NMTVDISPINFO *) lParam)->item.pszText);
+                  MessageBox(pChildWnd->hTreeWnd, msg, NULL, MB_OK);
+                }
+                break;
             default:
                 return 0;
             }
@@ -345,6 +362,45 @@ ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
           EnableMenuItem(mnu, ID_EDIT_MODIFY_BIN, MF_BYCOMMAND | (cnt == 1 ? MF_ENABLED : MF_DISABLED | MF_GRAYED));
 
           TrackPopupMenu(mnu, TPM_RIGHTBUTTON, pt.x, pt.y, 0, hFrameWnd, NULL);
+        }
+      }
+      else if ((HWND)wParam == pChildWnd->hTreeWnd)
+      {
+        TVHITTESTINFO hti;
+        HMENU hContextMenu;
+        TVITEM item;
+        MENUITEMINFO mii;
+        TCHAR buffer[256];
+        LPTSTR s;
+
+        pt = MAKEPOINTS(lParam);
+        hti.pt.x = pt.x;
+        hti.pt.y = pt.y;
+        ScreenToClient(pChildWnd->hTreeWnd, &hti.pt);
+        TreeView_HitTest(pChildWnd->hTreeWnd, &hti);
+
+        if ((hti.flags & TVHT_ONITEM) != 0)
+        {
+          hContextMenu = GetSubMenu(hPopupMenus, PM_TREECONTEXT);
+          TreeView_SelectItem(pChildWnd->hTreeWnd, hti.hItem);
+
+          memset(&item, 0, sizeof(item));
+          item.mask = TVIF_STATE | TVIF_CHILDREN;
+          item.hItem = hti.hItem;
+          TreeView_GetItem(pChildWnd->hTreeWnd, &item);
+
+          LoadString(hInst, (item.state & TVIS_EXPANDED) ? IDS_COLLAPSE : IDS_EXPAND, buffer, sizeof(buffer) / sizeof(buffer[0]));
+
+          memset(&mii, 0, sizeof(mii));
+          mii.cbSize = sizeof(mii);
+          mii.fMask = MIIM_STRING | MIIM_STATE | MIIM_ID;
+          mii.fState = (item.cChildren > 0) ? MFS_DEFAULT : MFS_GRAYED;
+          mii.wID = (item.state & TVIS_EXPANDED) ? ID_TREE_COLLAPSEBRANCH : ID_TREE_EXPANDBRANCH;
+          s = buffer;
+          memcpy(&mii.dwTypeData, &s, sizeof(mii.dwTypeData)); /* arg MinGW */
+          SetMenuItemInfo(hContextMenu, 0, TRUE, &mii);
+
+          TrackPopupMenu(hContextMenu, TPM_RIGHTBUTTON, pt.x, pt.y, 0, pChildWnd->hWnd, NULL);
         }
       }
       break;
