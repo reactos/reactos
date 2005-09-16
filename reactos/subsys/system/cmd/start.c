@@ -78,7 +78,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 	rest = malloc ( _tcslen(Rest) + 1 * sizeof(TCHAR)); 
 	if (rest == NULL)
 	{
-	 if(compsec != NULL)
+	 if(comspec != NULL)
 		free(comspec);
 	 error_out_of_memory();
 	 return 1;
@@ -87,7 +87,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 	param =malloc ( _tcslen(Rest) + 1 * sizeof(TCHAR)); 
 	if (rest == NULL)
 	{
-	 if(compsec != NULL)
+	 if(comspec != NULL)
 		free(comspec);
 	 free(rest);
 	 error_out_of_memory();
@@ -164,7 +164,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 
 	    if (param != NULL) 
 		    free(param);
-		 if (compsec != NULL)
+		 if (comspec != NULL)
 			 free(comspec);
 		return 0;
 	}
@@ -182,7 +182,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 	    if (param != NULL) 
 		    free(param);
 
-		 if (compsec != NULL)
+		 if (comspec != NULL)
 			 free(comspec);
 		return 1;
 	}
@@ -197,7 +197,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 
 		_tcscpy(szFullCmdLine,comspec);
 
-		memcpy(&szFullCmdLine[_tcslen(szFullCmdLine)],_T("\" /K \""), 6 * sizeof(TCHAR));				
+		memcpy(&szFullCmdLine[_tcslen(szFullCmdLine)],_T(" \" /K \""), 6 * sizeof(TCHAR));				
 		memcpy(&szFullCmdLine[_tcslen(szFullCmdLine)], szFullName, _tcslen(szFullName) * sizeof(TCHAR));		
 		memcpy(&szFullCmdLine[1], &szFullCmdLine[0], _tcslen(szFullCmdLine) * sizeof(TCHAR)); 
         szFullCmdLine[0] = _T('\"');					
@@ -273,7 +273,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
     if (param != NULL) 
 	    free(param);
 
-	 if (compsec != NULL)
+	 if (comspec != NULL)
 		 free(comspec);
 	return 0;
 }
