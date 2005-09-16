@@ -1,6 +1,7 @@
 <module name="rtl" type="staticlibrary">
 	<define name="__USE_W32API" />
 	<define name="_NTOSKRNL_" />
+	<define name="__NO_CTYPE_INLINES" />
 	<include base="rtl">.</include>
 	<if property="ARCH" value="i386">
 		<directory name="i386">
