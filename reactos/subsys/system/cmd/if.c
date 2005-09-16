@@ -69,15 +69,36 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 			param++;
 
 		pp = param;
-		while (*pp && !_istspace (*pp))
+
+		INT i;
+		BOOL bInside = FALSE;
+		/* find the whole path to the file */
+		for(i = 0; i < _tcslen(param); i++)
+		{
+			if(param[i] == _T('\"')) 
+				bInside = !bInside;
+			if((param[i] == _T(' ')) && !bInside)
+			{					
+				break;
+			}
 			pp++;
+		}
+		*pp++ = _T('\0');
+		i = 0;
+		/* remove quotes */
+		while(i < _tcslen(param))
+		{
+			if(param[i] == _T('\"'))
+				memmove(&param[i],&param[i + 1], _tcslen(&param[i]) * sizeof(TCHAR));
+			else
+				i++;
+		}
 
 		if (*pp)
-		{
+		{			
 			WIN32_FIND_DATA f;
 			HANDLE hFind;
-
-			*pp++ = _T('\0');
+			
 			hFind = FindFirstFile (param, &f);
 			x_flag ^= (hFind == INVALID_HANDLE_VALUE) ? 0 : X_EXEC;
 			if (hFind != INVALID_HANDLE_VALUE)
