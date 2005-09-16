@@ -281,6 +281,7 @@ PspExitThread(NTSTATUS ExitStatus)
 
         /* Send the LPC Message */
         LpcSendTerminationPort(TerminationPort->Port, CurrentThread->CreateTime);
+        ObDereferenceObject(TerminationPort->Port);
 
         /* Free the Port */
         ExFreePool(TerminationPort);
