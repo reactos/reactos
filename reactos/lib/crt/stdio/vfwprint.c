@@ -238,6 +238,8 @@ static int numberf(FILE * f, double __n, wchar_t exp_sign,  int size, int precis
 		type |= ZEROTRUNC;
 		if ( exponent < -4 || fabs(exponent) >= precision )
 			 exp_sign -= 2; // g -> e and G -> E
+		else
+		         exp_sign = 'f';
 	}
 
 	if ( exp_sign == L'e' ||  exp_sign == L'E' ) {

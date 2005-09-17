@@ -225,6 +225,8 @@ static int numberf(FILE * f, double __n, char exp_sign,  int size, int precision
 		type |= ZEROTRUNC;
 		if ( exponent < -4 || fabs(exponent) >= precision )
 			 exp_sign -= 2; // g -> e and G -> E
+		else
+		         exp_sign = 'f';
 	}
 
 	if ( exp_sign == 'e' ||  exp_sign == 'E' ) {
