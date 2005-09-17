@@ -240,6 +240,8 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
   BOOL bPNegative;	/* Negative switch parameter */
   BOOL bIntoQuotes;	/* A flag showing if we are in quotes (") */
   LPTSTR ptrLast;	/* A pointer to the last character of param */
+  INT t = 0;
+  
 
 	/* Initialize variables; */
 	cCurSwitch = _T(' ');
@@ -257,6 +259,32 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
 	lpFlags->stAttribs.bParSetted = TRUE;
 	lpFlags->stOrderBy.bParSetted = TRUE;
 	lpFlags->stTimeField.bParSetted = TRUE;
+
+	
+	/* Add correct handling of *. */
+	for(t=0;t<_tcslen(Line);t++)
+	{		  
+	  static INT count=0;  
+
+	  if ((count==0) && (Line[t]==_T('*'))) 
+		   count++;
+	        
+	  else if ((count==1) && (Line[t]==_T('.'))) 
+		   count++;
+	 
+	  else if ((count==2) && (Line[t]==_T('*'))) 
+		   count++; 
+
+	  else if (!_istspace(Line[t]))
+	       {
+		      if (count==2) 	          
+	              lpFlags->bWideListColSort = ! bNegative;	      
+		      count=-1;
+	       }	 
+	  }
+
+	  
+
 
 	/* Main Loop (see README_DIR.txt) */
 	/* scan the command line char per char, and we process its char */
