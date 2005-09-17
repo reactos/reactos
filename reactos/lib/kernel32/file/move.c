@@ -325,7 +325,7 @@ MoveFileWithProgressW (
 	                     FILE_SHARE_WRITE|FILE_SHARE_READ,
 	                     NULL,
 	                     OPEN_EXISTING,
-	                     FILE_ATTRIBUTE_NORMAL,
+	                     FILE_FLAG_BACKUP_SEMANTICS,
 	                     NULL);
 
 	if (hFile == INVALID_HANDLE_VALUE)
@@ -366,6 +366,13 @@ MoveFileWithProgressW (
 	                                sizeof(FILE_RENAME_INFORMATION) + DstPathU.Length,
 	                                FileRenameInformation);
 	CloseHandle(hFile);
+	
+	/*
+	 *  FIXME:
+	 *  Fail now move the folder 
+	 *  Before we fail at CreateFileW 
+	 */
+	 
 	if (NT_SUCCESS(errCode))
 	{
 		Result = TRUE;
