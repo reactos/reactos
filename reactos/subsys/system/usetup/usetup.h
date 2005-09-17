@@ -30,6 +30,7 @@
 /* C Headers */
 #include <ctype.h>
 #include <stdio.h>
+#include <stddef.h>
 
 /* PSDK/NDK */
 #include <windows.h>
