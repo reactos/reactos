@@ -65,7 +65,6 @@ WSPSocket(
 	PHELPER_DATA				HelperData;
 	PVOID						HelperDLLContext;
 	DWORD						HelperEvents;
-	DWORD						IOOptions = 0;
 	UNICODE_STRING				TransportName;
 	UNICODE_STRING				DevName;
 	LARGE_INTEGER				GroupData;
@@ -204,10 +203,10 @@ WSPSocket(
 								0, 
 								0);
 
-	/* Set IO Flag */
-    if ((dwFlags & WSA_FLAG_OVERLAPPED) == 0) IOOptions = FILE_SYNCHRONOUS_IO_NONALERT;
-
-	/* Create the Socket */
+	/* Create the Socket as asynchronous. That means we have to block
+	   ourselves after every call to NtDeviceIoControlFile. This is
+	   because the kernel doesn't support overlapping synchronous I/O
+	   requests (made from multiple threads) at this time (Sep 2005) */
 	ZwCreateFile(&Sock,
 			GENERIC_READ | GENERIC_WRITE | SYNCHRONIZE,
 			&Object,
@@ -216,7 +215,7 @@ WSPSocket(
 			0,
 			FILE_SHARE_READ | FILE_SHARE_WRITE,
 			FILE_OPEN_IF,
-			IOOptions,
+			0,
 			EABuffer,
 			SizeOfEA);
 
@@ -510,6 +509,11 @@ WSPBind(
 					0xA + Socket->SharedData.SizeOfLocalAddress, /* Can't figure out a way to calculate this in C*/
 					BindData,
 					0xA + Socket->SharedData.SizeOfLocalAddress); /* Can't figure out a way to calculate this C */
+        
+	/* Wait for return */
+	if (Status == STATUS_PENDING) {
+		WaitForSingleObject(SockEvent, INFINITE);
+	}         
 	
 	/* Set up Socket Data */
 	Socket->SharedData.State = SocketBound;
@@ -558,6 +562,11 @@ WSPListen(
 					sizeof(ListenData),
 					NULL,
 					0);
+        
+	/* Wait for return */
+	if (Status == STATUS_PENDING) {
+		WaitForSingleObject(SockEvent, INFINITE);
+	}         
 
 	/* Set to Listening */
 	Socket->SharedData.Listening = TRUE;
@@ -827,6 +836,12 @@ WSPAccept(
 							sizeof(PendingAcceptData),
 							&PendingAcceptData,
 							sizeof(PendingAcceptData));
+        
+			/* Wait for return */
+			if (Status == STATUS_PENDING) {
+				WaitForSingleObject(SockEvent, INFINITE);
+				Status = IOSB.Status;
+			}
 
 			if (!NT_SUCCESS(Status)) {
 				NtClose( SockEvent );
@@ -855,6 +870,12 @@ WSPAccept(
 								sizeof(PendingAcceptData),
 								PendingData,
 								PendingDataLength);
+
+				/* Wait for return */
+				if (Status == STATUS_PENDING) {
+					WaitForSingleObject(SockEvent, INFINITE);
+					Status = IOSB.Status;
+				}
 
 				if (!NT_SUCCESS(Status)) {
 					NtClose( SockEvent );
@@ -942,6 +963,12 @@ WSPAccept(
 							NULL,
 							0);
 
+			/* Wait for return */
+			if (Status == STATUS_PENDING) {
+				WaitForSingleObject(SockEvent, INFINITE);
+				Status = IOSB.Status;
+			}
+
 			NtClose( SockEvent );
 
 			if (!NT_SUCCESS(Status)) {
@@ -987,6 +1014,12 @@ WSPAccept(
 					sizeof(AcceptData),
 					NULL,
 					0);
+
+	/* Wait for return */
+	if (Status == STATUS_PENDING) {
+		WaitForSingleObject(SockEvent, INFINITE);
+		Status = IOSB.Status;
+	}
 	
 	if (!NT_SUCCESS(Status)) {
 		WSPCloseSocket( AcceptSocket, lpErrno );
@@ -1077,6 +1110,11 @@ WSPConnect(
 										ConnectDataLength,
 										NULL,
 										0);
+		/* Wait for return */
+		if (Status == STATUS_PENDING) {
+			WaitForSingleObject(SockEvent, INFINITE);
+			Status = IOSB.Status;
+		}
 	}
 
 	/* Dynamic Structure...ugh */
@@ -1113,6 +1151,12 @@ WSPConnect(
 										sizeof(InConnectDataLength),
 										NULL,
 										0);
+
+		/* Wait for return */
+		if (Status == STATUS_PENDING) {
+			WaitForSingleObject(SockEvent, INFINITE);
+			Status = IOSB.Status;
+		}
 	}
 
 	/* AFD doesn't seem to care if these are invalid, but let's 0 them anyways */
@@ -1136,6 +1180,11 @@ WSPConnect(
 									0x22,
 									NULL,
 									0);
+	/* Wait for return */
+	if (Status == STATUS_PENDING) {
+		WaitForSingleObject(SockEvent, INFINITE);
+		Status = IOSB.Status;
+	}
 
 	/* Get any pending connect data */
 	 if (lpCalleeData != NULL) {
@@ -1149,6 +1198,11 @@ WSPConnect(
 										0,
 										lpCalleeData->buf,
 										lpCalleeData->len);
+		/* Wait for return */
+		if (Status == STATUS_PENDING) {
+			WaitForSingleObject(SockEvent, INFINITE);
+			Status = IOSB.Status;
+		}
 	 }
 
     /* Re-enable Async Event */
