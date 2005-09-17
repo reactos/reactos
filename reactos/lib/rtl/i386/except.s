@@ -15,7 +15,7 @@
 
 #define EXCEPTION_UNWINDING         2
 #define EXCEPTION_EXIT_UNWIND       4
-#define EXCEPTION_UNWIND            (EXCEPTION_UNWINDING | EXCEPTION_EXIT_UNWIND)
+#define EXCEPTION_UNWIND            (EXCEPTION_UNWINDING + EXCEPTION_EXIT_UNWIND)
 
 #define ExceptionContinueExecution  0
 #define ExceptionContinueSearch     1

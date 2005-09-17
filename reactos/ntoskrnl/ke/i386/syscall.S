@@ -499,7 +499,9 @@ FastRet:
     /* We will be cleaning up the stack ourselves */
     pop edx                                 /* New Ring 3 EIP */
     add esp, 4                              /* Skip Ring 3 DS */
-    and dword ptr [esp], ~X86_EFLAGS_IF     /* Remove IRQ hack from EFLAGS */
+/*  and dword ptr [esp], ~X86_EFLAGS_IF        Line below is equivalent to this,
+                                               but older binutils versions don't understand ~ */
+    and dword ptr [esp], 0xfffffdff         /* Remove IRQ hack from EFLAGS */
     popf                                    /* Restore old EFLAGS */
     pop ecx                                 /* Old Ring 3 SS:ESP */
 
