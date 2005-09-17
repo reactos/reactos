@@ -596,6 +596,7 @@ WSPSelect(
     PVOID				PollBuffer;
     ULONG				i, j = 0, x;
     HANDLE                              SockEvent;
+    BOOL                                HandleCounted;
     
     Status = NtCreateEvent( &SockEvent, GENERIC_READ | GENERIC_WRITE,
 			    NULL, 1, FALSE );
@@ -690,6 +691,7 @@ WSPSelect(
     
     /* Return in FDSET Format */
     for (i = 0; i < HandleCount; i++) {
+	HandleCounted = FALSE;
 	for(x = 1; x; x<<=1) {
 	    switch (PollInfo->Handles[i].Events & x) {
 	    case AFD_EVENT_RECEIVE: 
@@ -700,7 +702,10 @@ WSPSelect(
 		AFD_DbgPrint(MID_TRACE,("Event %x on handle %x\n",
 					PollInfo->Handles[i].Events,
 					PollInfo->Handles[i].Handle));
-		OutCount++;
+		if (! HandleCounted) {
+		    OutCount++;
+		    HandleCounted = TRUE;
+		}
 		if( readfds ) FD_SET(PollInfo->Handles[i].Handle, readfds);
 		break;
 
@@ -708,7 +713,10 @@ WSPSelect(
 		AFD_DbgPrint(MID_TRACE,("Event %x on handle %x\n",
 					PollInfo->Handles[i].Events,
 					PollInfo->Handles[i].Handle));
-		OutCount++;
+		if (! HandleCounted) {
+		    OutCount++;
+		    HandleCounted = TRUE;
+		}
 		if( writefds ) FD_SET(PollInfo->Handles[i].Handle, writefds);
 		break;
 		
@@ -716,7 +724,10 @@ WSPSelect(
 		AFD_DbgPrint(MID_TRACE,("Event %x on handle %x\n",
 					PollInfo->Handles[i].Events,
 					PollInfo->Handles[i].Handle));
-		OutCount++;
+		if (! HandleCounted) {
+		    OutCount++;
+		    HandleCounted = TRUE;
+		}
 		if( exceptfds ) FD_SET(PollInfo->Handles[i].Handle, exceptfds);
 		break;
 	    }
