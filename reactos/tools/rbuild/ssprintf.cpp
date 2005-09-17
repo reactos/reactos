@@ -126,7 +126,7 @@ number(std::string& f, LONGLONG num, int base, int size, int precision ,int type
 	if (type & LEFT)
 		type &= ~ZEROPAD;
 	if (base < 2 || base > 36)
-		return 0;
+		return false;
 	c = (type & ZEROPAD) ? '0' : ' ';
 	sign = 0;
 	if (type & SIGN) {
@@ -205,7 +205,7 @@ wnumber(std::wstring& f, LONGLONG num, int base, int size, int precision ,int ty
 	if (base < 2 || base > 36)
 		return 0;
 	c = (type & ZEROPAD) ? L'0' : L' ';
-	sign = 0;
+	sign = false;
 	if (type & SIGN) {
 		if (num < 0) {
 			sign = L'-';
@@ -305,7 +305,9 @@ numberf(std::string& f, double __n, char exp_sign,  int size, int precision, int
 	if ( exp_sign == 'g' || exp_sign == 'G' ) {
 		type |= ZEROTRUNC;
 		if ( exponent < -4 || fabs(exponent) >= precision )
-			 exp_sign -= 2; // g -> e and G -> E
+			exp_sign -= 2; // g -> e and G -> E
+		else
+			exp_sign = 'f';
 	}
 
 	if ( exp_sign == 'e' ||  exp_sign == 'E' ) {
@@ -495,7 +497,9 @@ wnumberf(std::wstring& f, double __n, wchar_t exp_sign,  int size, int precision
 	{
 		type |= ZEROTRUNC;
 		if ( exponent < -4 || fabs(exponent) >= precision )
-			 exp_sign -= 2; // g -> e and G -> E
+			exp_sign -= 2; // g -> e and G -> E
+		else
+			exp_sign = L'f';
 	}
 
 	if ( exp_sign == L'e' ||  exp_sign == L'E' )
@@ -694,7 +698,9 @@ numberfl(std::string& f, long double __n, char exp_sign,  int size, int precisio
 	if ( exp_sign == 'g' || exp_sign == 'G' ) {
 		type |= ZEROTRUNC;
 		if ( exponent < -4 || fabs(exponent) >= precision ) 
-			 exp_sign -= 2; // g -> e and G -> E
+			exp_sign -= 2; // g -> e and G -> E
+		else
+			exp_sign = 'f';
 	}
 
 	if ( exp_sign == 'e' || exp_sign == 'E' ) {
@@ -789,7 +795,7 @@ numberfl(std::string& f, long double __n, char exp_sign,  int size, int precisio
 		{
 			while ( intr > 0.0 )
 			{
-			        p=intr;
+				p=intr;
 				intr/=10.0L;
 				modfl(intr, &intr);
 
@@ -896,7 +902,9 @@ wnumberfl(std::wstring& f, long double __n, wchar_t exp_sign,  int size, int pre
 	if ( exp_sign == L'g' || exp_sign == L'G' ) {
 		type |= ZEROTRUNC;
 		if ( exponent < -4 || fabs(exponent) >= precision ) 
-			 exp_sign -= 2; // g -> e and G -> E
+			exp_sign -= 2; // g -> e and G -> E
+		else
+			exp_sign = 'f';
 	}
 
 	if ( exp_sign == L'e' || exp_sign == L'E' ) {
