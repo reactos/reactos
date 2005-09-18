@@ -873,7 +873,7 @@ GetFileAttributesExW(LPCWSTR lpFileName,
 		       SYNCHRONIZE | FILE_READ_ATTRIBUTES,
 		       &ObjectAttributes,
 		       &IoStatusBlock,
-		       FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+		       0,
 		       FILE_SYNCHRONOUS_IO_NONALERT);
   RtlFreeUnicodeString (&FileName);
   if (!NT_SUCCESS (Status))
