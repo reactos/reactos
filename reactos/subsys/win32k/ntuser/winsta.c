@@ -535,8 +535,6 @@ NtUserCreateWindowStation(
       return 0;
    }
 
-   InitHotKeys(WindowStationObject);
-
    CurInfo->Enabled = FALSE;
    CurInfo->ButtonsDown = 0;
    CurInfo->CursorClipInfo.IsClipped = FALSE;

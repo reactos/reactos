@@ -17,12 +17,21 @@
 #endif
 #define EXPORTED __declspec(dllexport)
 #define IMPORTED __declspec(dllimport)
-#define LIST_FOR_EACH(entry, head) \
-   for(entry = (head)->Flink; entry != (head); entry = entry->Flink)
-#define LIST_FOR_EACH_SAFE(tmp_entry, head, ptr, type, field) \
-   for ((tmp_entry)=(head)->Flink; (tmp_entry)!=(head) && \
-        ((ptr) = CONTAINING_RECORD(tmp_entry,type,field)) && \
-        ((tmp_entry) = (tmp_entry)->Flink); )
+
+/* iterate through the list using a list entry */
+#define LIST_FOR_EACH(elem, list, type, field) \
+    for ((elem) = CONTAINING_RECORD((list)->Flink, type, field); \
+         &(elem)->field != (list); \
+         (elem) = CONTAINING_RECORD((elem)->field.Flink, type, field))
+         
+/* iterate through the list using a list entry, with safety against removal */
+#define LIST_FOR_EACH_SAFE(cursor, cursor2, list, type, field) \
+    for ((cursor) = CONTAINING_RECORD((list)->Flink, type, field), \
+         (cursor2) = CONTAINING_RECORD((cursor)->field.Flink, type, field); \
+         &(cursor)->field != (list); \
+         (cursor) = (cursor2), \
+         (cursor2) = CONTAINING_RECORD((cursor)->field.Flink, type, field))
+         
 #define OPTHDROFFSET(a) ((LPVOID)((BYTE *)a		     +	\
 			 ((PIMAGE_DOS_HEADER)a)->e_lfanew    +	\
 			 sizeof (IMAGE_NT_SIGNATURE)		     +	\

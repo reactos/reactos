@@ -642,6 +642,8 @@ KeyboardThreadMain(PVOID StartContext)
 			   if(NextKeyInput.MakeCode == 0x2E)/* Ctrl-C */
 			   {
 			      DPRINT1("Ctrl-C pressed\n");
+               /* FIXME: this seems wrong! this bypass hotkeys and all and the winhellos CRTL+C hotkey test
+                  dont work (anymore) */
 			      co_MsqPostKeyboardMessage(WM_COPY,0,0);
                   continue;
 			   }
@@ -697,8 +699,7 @@ KeyboardThreadMain(PVOID StartContext)
                                   KeyInput.Flags & KEY_E0 ? 0xE0 :
                                   (KeyInput.Flags & KEY_E1 ? 0xE1 : 0));
 
-            if (GetHotKey(InputWindowStation,
-                          ModifierState,
+            if (GetHotKey(ModifierState,
                           msg.wParam,
                           &Thread,
                           &hWnd,

@@ -352,6 +352,13 @@ DriverEntry (
     return STATUS_UNSUCCESSFUL;
   }
 
+  Status = InitHotkeyImpl();
+  if (!NT_SUCCESS(Status))
+  {
+    DPRINT1("Failed to initialize hotkey implementation!\n");
+    return STATUS_UNSUCCESSFUL;
+  }
+
   Status = InitWindowStationImpl();
   if (!NT_SUCCESS(Status))
   {

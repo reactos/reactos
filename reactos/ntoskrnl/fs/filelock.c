@@ -161,7 +161,6 @@ FsRtlpCheckLockForReadOrWriteAccess(
    KIRQL                oldirql;
    PFILE_LOCK_TOC       LockToc;
    PFILE_LOCK_GRANTED   Granted;
-   PLIST_ENTRY          EnumEntry;
    LARGE_INTEGER        EndOffset;
 
    ASSERT(FileLock);
@@ -177,10 +176,8 @@ FsRtlpCheckLockForReadOrWriteAccess(
 
    KeAcquireSpinLock(&LockToc->SpinLock, &oldirql);
 
-   LIST_FOR_EACH(EnumEntry, &LockToc->GrantedListHead)
+   LIST_FOR_EACH(Granted, &LockToc->GrantedListHead, FILE_LOCK_GRANTED, ListEntry)
    {
-      Granted = CONTAINING_RECORD(EnumEntry, FILE_LOCK_GRANTED, ListEntry);
-
       //if overlapping
       if(IsOverlappingLock(&Granted->Lock, FileOffset, &EndOffset))
       {
@@ -358,12 +355,12 @@ FsRtlpFastUnlockAllByKey(
 {
    KIRQL				      oldirql;
    PFILE_LOCK_TOC		   LockToc;
-   PLIST_ENTRY			   EnumEntry;
-   PFILE_LOCK_GRANTED	Granted;
+   PFILE_LOCK_GRANTED	Granted, tmp;
    BOOLEAN				   Unlock = FALSE;
    //must make local copy since FILE_LOCK struct is allowed to be paged
    BOOLEAN        		GotUnlockRoutine;
    LIST_ENTRY           UnlockedListHead;
+   PLIST_ENTRY          EnumEntry;
 
    ASSERT(FileLock);
    LockToc = FileLock->LockInformation;
@@ -377,7 +374,7 @@ FsRtlpFastUnlockAllByKey(
    GotUnlockRoutine = FileLock->UnlockRoutine != NULL;
    KeAcquireSpinLock(&LockToc->SpinLock, &oldirql);
 
-   LIST_FOR_EACH_SAFE(EnumEntry, &LockToc->GrantedListHead, Granted, FILE_LOCK_GRANTED, ListEntry)
+   LIST_FOR_EACH_SAFE(Granted, tmp, &LockToc->GrantedListHead, FILE_LOCK_GRANTED, ListEntry)
    {
 
       if (Granted->Lock.Process == Process &&
@@ -506,17 +503,14 @@ FsRtlpAddLock(
    IN PVOID                Context
    )
 {
-   PLIST_ENTRY          EnumEntry;
    PFILE_LOCK_GRANTED   Granted;
    LARGE_INTEGER        EndOffset;
 
    EndOffset.QuadPart = FileOffset->QuadPart + Length->QuadPart - 1;
 
    //loop and try to find conflicking locks
-   LIST_FOR_EACH(EnumEntry, &LockToc->GrantedListHead)
+   LIST_FOR_EACH(Granted, &LockToc->GrantedListHead, FILE_LOCK_GRANTED, ListEntry)
    {
-      Granted = CONTAINING_RECORD(EnumEntry,FILE_LOCK_GRANTED, ListEntry);
-
       if (IsOverlappingLock(&Granted->Lock, FileOffset, &EndOffset))
       {
          //we found a locks that overlap with the new lock
@@ -578,13 +572,13 @@ FsRtlpCompletePendingLocks(
 {
    //walk pending list, FIFO order, try 2 complete locks
    PLIST_ENTRY                   EnumEntry;
-   PIRP                          Irp;
+   PIRP                          Irp, tmp;
    PIO_STACK_LOCATION            Stack;
    LIST_ENTRY                    CompletedListHead;
 
    InitializeListHead(&CompletedListHead);
 
-   LIST_FOR_EACH_SAFE(EnumEntry, &LockToc->PendingListHead, Irp, IRP, Tail.Overlay.ListEntry)
+   LIST_FOR_EACH_SAFE(Irp, tmp, &LockToc->PendingListHead, IRP, Tail.Overlay.ListEntry)
    {
       Stack = IoGetCurrentIrpStackLocation(Irp);
       if (FsRtlpAddLock(LockToc,
@@ -676,8 +670,7 @@ FsRtlpUnlockSingle(
 {
    KIRQL                oldirql;
    PFILE_LOCK_TOC       LockToc;
-   PFILE_LOCK_GRANTED   Granted;
-   PLIST_ENTRY          EnumEntry;
+   PFILE_LOCK_GRANTED   Granted, tmp;
 
    ASSERT(FileLock);
    LockToc = FileLock->LockInformation;
@@ -689,7 +682,7 @@ FsRtlpUnlockSingle(
 
    KeAcquireSpinLock(&LockToc->SpinLock, &oldirql );
 
-   LIST_FOR_EACH_SAFE(EnumEntry, &LockToc->GrantedListHead, Granted,FILE_LOCK_GRANTED,ListEntry)
+   LIST_FOR_EACH_SAFE(Granted, tmp, &LockToc->GrantedListHead, FILE_LOCK_GRANTED,ListEntry)
    {
 
       //must be exact match
@@ -778,7 +771,6 @@ FsRtlpDumpFileLocks(
    PFILE_LOCK_TOC       LockToc;
    PFILE_LOCK_GRANTED   Granted;
    PIRP                 Irp;
-   PLIST_ENTRY          EnumEntry;
    PIO_STACK_LOCATION   Stack;
 
    ASSERT(FileLock);
@@ -794,10 +786,8 @@ FsRtlpDumpFileLocks(
 
    KeAcquireSpinLock(&LockToc->SpinLock, &oldirql);
 
-   LIST_FOR_EACH(EnumEntry, &LockToc->GrantedListHead)
+   LIST_FOR_EACH(Granted, &LockToc->GrantedListHead, FILE_LOCK_GRANTED , ListEntry)
    {
-      Granted = CONTAINING_RECORD(EnumEntry, FILE_LOCK_GRANTED , ListEntry);
-
       DPRINT1("%s, start: %I64x, len: %I64x, end: %I64x, key: %i, proc: 0x%p, fob: 0x%p\n",
          Granted->Lock.ExclusiveLock ? "EXCL" : "SHRD",
          Granted->Lock.StartingByte.QuadPart,
@@ -812,9 +802,8 @@ FsRtlpDumpFileLocks(
 
    DPRINT1("Dumping pending file locks, FIFO order\n");
 
-   LIST_FOR_EACH(EnumEntry, &LockToc->PendingListHead)
+   LIST_FOR_EACH(Irp, &LockToc->PendingListHead, IRP , Tail.Overlay.ListEntry)
    {
-      Irp = CONTAINING_RECORD(EnumEntry, IRP , Tail.Overlay.ListEntry);
       Stack = IoGetCurrentIrpStackLocation(Irp);
 
       DPRINT1("%s, start: %I64x, len: %I64x, end: %I64x, key: %i, proc: 0x%p, fob: 0x%p\n",
