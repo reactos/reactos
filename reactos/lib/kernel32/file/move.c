@@ -326,26 +326,15 @@ MoveFileWithProgressW (
 	                     FILE_SHARE_WRITE|FILE_SHARE_READ,
 	                     NULL,
 	                     OPEN_EXISTING,
-	                    FILE_ATTRIBUTE_NORMAL,
+	                     FILE_FLAG_BACKUP_SEMANTICS,
 	                     NULL);
 
 	if (hFile == INVALID_HANDLE_VALUE)
 	{
-           hFile = CreateFileW (lpExistingFileName,
-	                     GENERIC_ALL,
-	                     FILE_SHARE_WRITE|FILE_SHARE_READ,
-	                     NULL,
-	                     OPEN_EXISTING,
-	                     FILE_FLAG_BACKUP_SEMANTICS,
-	                     NULL);
-			     
-	   if (hFile == INVALID_HANDLE_VALUE)
-	      return FALSE;
-	      
-           folder = TRUE;
-
+	   return FALSE;
 	}
 
+	
         /* validate & translate the filename */
         if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpNewFileName,
 				           &DstPathU,
@@ -379,6 +368,12 @@ MoveFileWithProgressW (
 	                                sizeof(FILE_RENAME_INFORMATION) + DstPathU.Length,
 	                                FileRenameInformation);
 	CloseHandle(hFile);
+
+	if (GetFileAttributesW(lpExistingFileName) & FILE_ATTRIBUTE_DIRECTORY)
+	{
+           folder = TRUE;
+	}
+
 	
 	/*
 	 *  FIXME:
