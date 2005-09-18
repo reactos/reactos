@@ -869,18 +869,12 @@ GetFileAttributesExW(LPCWSTR lpFileName,
 			      NULL);
 
   /* Open the file */
-
-
   Status = NtOpenFile (&FileHandle,
-		       SYNCHRONIZE | GENERIC_ALL,
+		       SYNCHRONIZE | FILE_READ_ATTRIBUTES,
 		       &ObjectAttributes,
 		       &IoStatusBlock,
 		       FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
 		       FILE_SYNCHRONOUS_IO_NONALERT);
-
-
-
-
   RtlFreeUnicodeString (&FileName);
   if (!NT_SUCCESS (Status))
     {
