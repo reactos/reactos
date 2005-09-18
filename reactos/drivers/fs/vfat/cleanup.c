@@ -75,10 +75,7 @@ VfatCleanupFile(PVFAT_IRP_CONTEXT IrpContext)
      CcUninitializeCacheMap (FileObject, NULL, NULL);
 #endif
      pFcb->OpenHandleCount--;
-     if (!(*pFcb->Attributes & FILE_ATTRIBUTE_DIRECTORY))
-       {
-         IoRemoveShareAccess(FileObject, &pFcb->FCBShareAccess);
-       }
+     IoRemoveShareAccess(FileObject, &pFcb->FCBShareAccess);
     }
   return STATUS_SUCCESS;
 }
