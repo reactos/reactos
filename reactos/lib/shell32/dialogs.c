@@ -413,6 +413,7 @@ int WINAPI RestartDialogEx(HWND hWndOwner, LPCWSTR lpwstrReason, DWORD uFlags, D
 int WINAPI LogoffWindowsDialog(DWORD uFlags)
 {
     ERR("LogoffWindowsDialog is UNIMPLEMENTED\n");
+    ExitProcess(0);
     return 0;
 }
 
