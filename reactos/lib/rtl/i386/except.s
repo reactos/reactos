@@ -95,7 +95,7 @@ CaptureRest:
     mov [ebx+CONTEXT_SEGFS], fs
     mov [ebx+CONTEXT_SEGGS], gs
     mov [ebx+CONTEXT_SEGSS], ss
-    
+
     /* Capture flags */
     pushfd
     pop [ebx+CONTEXT_EFLAGS]
@@ -105,7 +105,7 @@ CaptureRest:
     mov [ebx+CONTEXT_EIP], eax
 
     /* Get EBP */
-    mov eax, [esp]
+    mov eax, [ebp+0]
     mov [ebx+CONTEXT_EBP], eax
 
     /* And get ESP */
