@@ -305,20 +305,20 @@ seta_mulTerm ( LPCTSTR* p_, INT* result )
 }
 
 static BOOL
-seta_addTerm ( LPCTSTR* p_, INT* result )
+seta_ltorTerm ( LPCTSTR* p_, INT* result, LPCTSTR ops, BOOL (*subTerm)(LPCTSTR*,INT*) )
 {
 	LPCTSTR p = *p_;
 	INT lval;
-	if ( !seta_mulTerm ( &p, &lval ) )
+	if ( !subTerm ( &p, &lval ) )
 		return FALSE;
-	while ( *p && _tcschr(_T("*/%"),*p) )
+	while ( *p && _tcschr(ops,*p) )
 	{
 		INT rval;
 		TCHAR op = *p;
 
 		p = skip_ws ( p+1 );
 
-		if ( !seta_mulTerm ( &p, &rval ) )
+		if ( !subTerm ( &p, &rval ) )
 			return FALSE;
 
 		if ( !calc ( &lval, op, rval ) )
@@ -331,29 +331,15 @@ seta_addTerm ( LPCTSTR* p_, INT* result )
 }
 
 static BOOL
+seta_addTerm ( LPCTSTR* p_, INT* result )
+{
+	return seta_ltorTerm ( p_, result, _T("*/%"), seta_mulTerm );
+}
+
+static BOOL
 seta_logShiftTerm ( LPCTSTR* p_, INT* result )
 {
-	LPCTSTR p = *p_;
-	INT lval;
-	if ( !seta_addTerm ( &p, &lval ) )
-		return FALSE;
-	while ( *p && _tcschr(_T("+-"),*p) )
-	{
-		INT rval;
-		TCHAR op = *p;
-
-		p = skip_ws ( p+1 );
-
-		if ( !seta_addTerm ( &p, &rval ) )
-			return FALSE;
-
-		if ( !calc ( &lval, op, rval ) )
-			return FALSE;
-	}
-
-	*result = lval;
-	*p_ = p;
-	return TRUE;
+	return seta_ltorTerm ( p_, result, _T("+-"), seta_addTerm );
 }
 
 static BOOL
@@ -373,8 +359,18 @@ seta_bitAndTerm ( LPCTSTR* p_, INT* result )
 		if ( !seta_logShiftTerm ( &p, &rval ) )
 			return FALSE;
 
-		if ( !calc ( &lval, op, rval ) )
+		switch ( op )
+		{
+		case '<':
+			lval <<= rval;
+			break;
+		case '>':
+			lval >>= rval;
+			break;
+		default:
+			printf ( "Invalid operand.\n" );
 			return FALSE;
+		}
 	}
 
 	*result = lval;
@@ -385,73 +381,19 @@ seta_bitAndTerm ( LPCTSTR* p_, INT* result )
 static BOOL
 seta_bitExclOrTerm ( LPCTSTR* p_, INT* result )
 {
-	LPCTSTR p = *p_;
-	INT lval;
-	if ( !seta_bitAndTerm ( &p, &lval ) )
-		return FALSE;
-	while ( *p == _T('&') )
-	{
-		INT rval;
-
-		p = skip_ws ( p+1 );
-
-		if ( !seta_bitAndTerm ( &p, &rval ) )
-			return FALSE;
-
-		lval &= rval;
-	}
-
-	*result = lval;
-	*p_ = p;
-	return TRUE;
+	return seta_ltorTerm ( p_, result, _T("&"), seta_bitAndTerm );
 }
 
 static BOOL
 seta_bitOrTerm ( LPCTSTR* p_, INT* result )
 {
-	LPCTSTR p = *p_;
-	INT lval;
-	if ( !seta_bitExclOrTerm ( &p, &lval ) )
-		return FALSE;
-	while ( *p == _T('^') )
-	{
-		INT rval;
-
-		p = skip_ws ( p+1 );
-
-		if ( !seta_bitExclOrTerm ( &p, &rval ) )
-			return FALSE;
-
-		lval ^= rval;
-	}
-
-	*result = lval;
-	*p_ = p;
-	return TRUE;
+	return seta_ltorTerm ( p_, result, _T("^"), seta_bitExclOrTerm );
 }
 
 static BOOL
 seta_expr ( LPCTSTR* p_, INT* result )
 {
-	LPCTSTR p = *p_;
-	INT lval;
-	if ( !seta_bitOrTerm ( &p, &lval ) )
-		return FALSE;
-	while ( *p == _T('|') )
-	{
-		INT rval;
-
-		p = skip_ws ( p+1 );
-
-		if ( !seta_bitOrTerm ( &p, &rval ) )
-			return FALSE;
-
-		lval |= rval;
-	}
-
-	*result = lval;
-	*p_ = p;
-	return TRUE;
+	return seta_ltorTerm ( p_, result, _T("|"), seta_bitOrTerm );
 }
 
 static BOOL
@@ -498,10 +440,21 @@ seta_assignment ( LPCTSTR* p_, INT* result )
 
 		if ( !seta_identval ( ident, &identval ) )
 			identval = 0;
-		if ( op == '=' )
+		switch ( op )
+		{
+		case '=':
 			identval = exprval;
-		else if ( !calc ( &identval, op, exprval ) )
-			return FALSE;
+			break;
+		case '<':
+			identval <<= exprval;
+			break;
+		case '>':
+			identval >>= exprval;
+			break;
+		default:
+			if ( !calc ( &identval, op, exprval ) )
+				return FALSE;
+		}
 		buf = (LPTSTR)alloca ( 32 * sizeof(TCHAR) );
 		_sntprintf ( buf, 32, _T("%i"), identval );
 		SetEnvironmentVariable ( ident, buf ); // TODO FIXME - check return value
