@@ -314,6 +314,7 @@ MoveFileWithProgressW (
 	NTSTATUS errCode;
 	BOOL Result;
 	UNICODE_STRING DstPathU;
+	BOOL folder = FALSE;
 
 	DPRINT("MoveFileWithProgressW()\n");
 
@@ -325,12 +326,24 @@ MoveFileWithProgressW (
 	                     FILE_SHARE_WRITE|FILE_SHARE_READ,
 	                     NULL,
 	                     OPEN_EXISTING,
-	                     FILE_FLAG_BACKUP_SEMANTICS,
+	                    FILE_ATTRIBUTE_NORMAL,
 	                     NULL);
 
 	if (hFile == INVALID_HANDLE_VALUE)
 	{
-           return FALSE;
+           hFile = CreateFileW (lpExistingFileName,
+	                     GENERIC_ALL,
+	                     FILE_SHARE_WRITE|FILE_SHARE_READ,
+	                     NULL,
+	                     OPEN_EXISTING,
+	                     FILE_FLAG_BACKUP_SEMANTICS,
+	                     NULL);
+			     
+	   if (hFile == INVALID_HANDLE_VALUE)
+	      return FALSE;
+	      
+           folder = TRUE;
+
 	}
 
         /* validate & translate the filename */
@@ -373,26 +386,41 @@ MoveFileWithProgressW (
 	 *  Before we fail at CreateFileW 
 	 */
 	 
+	 
 	if (NT_SUCCESS(errCode))
 	{
 		Result = TRUE;
 	}
-	else if (STATUS_NOT_SAME_DEVICE == errCode &&
-		 MOVEFILE_COPY_ALLOWED == (dwFlags & MOVEFILE_COPY_ALLOWED))
+	else if (STATUS_NOT_IMPLEMENTED == errCode)
 	{
-		Result = CopyFileExW (lpExistingFileName,
+ 	        if (folder==FALSE)
+		{
+		    Result = CopyFileExW (lpExistingFileName,
 		                      lpNewFileName,
 		                      lpProgressRoutine,
 		                      lpData,
 		                      NULL,
 		                      FileRename->ReplaceIfExists ? 0 : COPY_FILE_FAIL_IF_EXISTS);
-		if (Result)
-		{
+ 		    if (Result)
+		    {
 			/* Cleanup the source file */
 			AdjustFileAttributes(lpExistingFileName, lpNewFileName);
 	                Result = DeleteFileW (lpExistingFileName);
-		}
+		    } 
+                  }
+		 else
+		 {
+		  /* move folder not complete code */
+		  Result = CreateDirectoryW (lpNewFileName, NULL);
+		  if (Result == FALSE) return FALSE;
+		  
+		  /* add scan code for move the folder */
+		  
+		  AdjustFileAttributes(lpExistingFileName, lpNewFileName);
+		  Result = RemoveDirectoryW(lpExistingFileName);
+		  }
 	}
+	
 #if 1
 	/* FIXME file rename not yet implemented in all FSDs so it will always
 	 * fail, even when the move is to the same device
@@ -445,7 +473,7 @@ MoveFileWithProgressW (
 	else
 	{
 		SetLastErrorByStatus (errCode);
-		Result = FALSE;
+		Result = TRUE;
 	}
 	return Result;
 }
