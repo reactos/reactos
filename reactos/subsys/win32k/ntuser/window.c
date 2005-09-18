@@ -3233,6 +3233,7 @@ UserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi)
 
    if (!(Window = UserGetWindowObject(hWnd)))
    {
+      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       return 0;
    }
 
