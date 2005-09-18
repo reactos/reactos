@@ -408,35 +408,21 @@ seta_assignment ( LPCTSTR* p_, INT* result )
 	if ( identlen )
 	{
 		if ( *p == _T('=') )
-			op = *p, p++;
+			op = *p, p = skip_ws(p+1);
 		else if ( _tcschr ( _T("*/%+-&^|"), *p ) && p[1] == _T('=') )
-			op = *p, p += 2;
+			op = *p, p = skip_ws(p+2);
 		else if ( _tcschr ( _T("<>"), *p ) && *p == p[1] && p[2] == _T('=') )
-			op = *p, p += 3;
-		else
-		{
-			_tprintf ( _T("Missing operand.\n") );
-			return FALSE;
-		}
-		p = skip_ws ( p );
+			op = *p, p = skip_ws(p+3);
 	}
 
 	/* allow to chain multiple assignments, such as: a=b=1 */
 	if ( ident && op )
 	{
-		if ( !seta_assignment ( &p, &exprval ) )
-			return FALSE;
-	}
-	else
-	{
-		if ( !seta_expr ( &p, &exprval ) )
-			return FALSE;
-	}
-
-	if ( identlen )
-	{
 		INT identval;
 		LPTSTR buf;
+
+		if ( !seta_assignment ( &p, &exprval ) )
+			return FALSE;
 
 		if ( !seta_identval ( ident, &identval ) )
 			identval = 0;
@@ -459,6 +445,13 @@ seta_assignment ( LPCTSTR* p_, INT* result )
 		_sntprintf ( buf, 32, _T("%i"), identval );
 		SetEnvironmentVariable ( ident, buf ); // TODO FIXME - check return value
 		exprval = identval;
+	}
+	else
+	{
+		/* restore p in case we found an ident but not an op */
+		p = *p_;
+		if ( !seta_expr ( &p, &exprval ) )
+			return FALSE;
 	}
 
 	*result = exprval;
