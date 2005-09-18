@@ -612,7 +612,8 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
       pFcb = FileObject->FsContext;
 
-      if (pFcb->OpenHandleCount != 0)
+      if (pFcb->OpenHandleCount != 0 &&
+          !(*pFcb->Attributes & FILE_ATTRIBUTE_DIRECTORY))
         {
           Status = IoCheckShareAccess(Stack->Parameters.Create.SecurityContext->DesiredAccess,
                                       Stack->Parameters.Create.ShareAccess,
@@ -708,7 +709,8 @@ VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	}
     }
 
-  if (pFcb->OpenHandleCount == 0)
+  if (pFcb->OpenHandleCount == 0 &&
+      !(*pFcb->Attributes & FILE_ATTRIBUTE_DIRECTORY))
   {
       IoSetShareAccess(Stack->Parameters.Create.SecurityContext->DesiredAccess,
                    Stack->Parameters.Create.ShareAccess,
