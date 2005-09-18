@@ -51,7 +51,7 @@ seta_eval ( LPCTSTR expr );
 static LPCTSTR
 skip_ws ( LPCTSTR p )
 {
-	return p + strspn ( p, " \t" );
+	return p + _tcsspn ( p, _T(" \t") );
 }
 
 INT cmd_set (LPTSTR cmd, LPTSTR param)
@@ -191,7 +191,7 @@ seta_identval ( LPCTSTR ident, INT* result )
 		return FALSE;
 	}
 	GetEnvironmentVariable ( ident, buf, dwBuffer );
-	*result = atoi ( buf );
+	*result = _ttoi ( buf );
 	return TRUE;
 }
 
@@ -225,7 +225,7 @@ calc ( INT* lval, TCHAR op, INT rval )
 		*lval |= rval;
 		break;
 	default:
-		printf ( "Invalid operand.\n" );
+		ConErrPrintf ( _T("Invalid operand.\n") );
 		return FALSE;
 	}
 	return TRUE;
@@ -238,15 +238,15 @@ static BOOL
 seta_unaryTerm ( LPCTSTR* p_, INT* result )
 {
 	LPCTSTR p = *p_;
-	if ( *p == '(' )
+	if ( *p == _T('(') )
 	{
 		INT rval;
 		p = skip_ws ( p + 1 );
 		if ( !seta_stmt ( &p, &rval ) )
 			return FALSE;
-		if ( *p != ')' )
+		if ( *p != _T(')') )
 		{
-			_tprintf ( _T("Expected ')'\n") );
+			ConErrPrintf ( _T("Expected ')'\n") );
 			return FALSE;
 		}
 		*result = rval;
@@ -254,8 +254,8 @@ seta_unaryTerm ( LPCTSTR* p_, INT* result )
 	}
 	else if ( isdigit(*p) )
 	{
-		*result = atoi ( p );
-		p = skip_ws ( p + strspn ( p, "1234567890" ) );
+		*result = _ttoi ( p );
+		p = skip_ws ( p + _tcsspn ( p, _T("1234567890") ) );
 	}
 	else if ( __iscsymf(*p) )
 	{
@@ -267,7 +267,7 @@ seta_unaryTerm ( LPCTSTR* p_, INT* result )
 	}
 	else
 	{
-		_tprintf ( _T("Expected number or variable name\n") );
+		ConErrPrintf ( _T("Expected number or variable name\n") );
 		return FALSE;
 	}
 	*p_ = p;
@@ -369,7 +369,7 @@ seta_bitAndTerm ( LPCTSTR* p_, INT* result )
 			lval >>= rval;
 			break;
 		default:
-			printf ( "Invalid operand.\n" );
+			ConErrPrintf ( _T("Invalid operand.\n") );
 			return FALSE;
 		}
 	}
@@ -487,12 +487,12 @@ seta_eval ( LPCTSTR p )
 	INT rval;
 	if ( !*p )
 	{
-		_tprintf ( _T("The syntax of the command is incorrect.\n") );
+		ConErrPrintf ( _T("The syntax of the command is incorrect.\n") );
 		return FALSE;
 	}
 	if ( !seta_stmt ( &p, &rval ) )
 		return FALSE;
-	_tprintf ( _T("%i\n"), rval );
+	ConOutPrintf ( _T("%i\n"), rval );
 	return TRUE;
 }
 
