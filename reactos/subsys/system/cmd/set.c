@@ -35,6 +35,8 @@
  */
 
 #include <precomp.h>
+#include <malloc.h>
+#include <stdio.h>
 #include "resource.h"
 
 #ifdef INCLUDE_CMD_SET
@@ -43,18 +45,35 @@
 /* initial size of environment variable buffer */
 #define ENV_BUFFER_SIZE  1024
 
+static BOOL
+seta_eval ( LPCTSTR expr );
+
+static LPCTSTR
+skip_ws ( LPCTSTR p )
+{
+	return p + strspn ( p, " \t" );
+}
 
 INT cmd_set (LPTSTR cmd, LPTSTR param)
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
+	INT i;
 	LPTSTR p;
 
-	if (!_tcsncmp (param, _T("/?"), 2))
+	if ( !_tcsncmp (param, _T("/?"), 2) )
 	{
 		ConOutResPaging(TRUE,STRING_SET_HELP);
 		return 0;
 	}
 
+	/* remove escapes */
+	if ( param[0] ) for ( i = 0; param[i+1]; i++ )
+	{
+		if ( param[i] == '^' && strchr("<|>",param[i+1]) )
+		{
+			memmove ( &param[i], &param[i+1], _tcslen(&param[i]) * sizeof(TCHAR) );
+		}
+	}
 
 	/* if no parameters, show the environment */
 	if (param[0] == _T('\0'))
@@ -81,6 +100,12 @@ INT cmd_set (LPTSTR cmd, LPTSTR param)
 		}
 
 		return 0;
+	}
+
+	if ( !_tcsnicmp (param, _T("/A"), 2) )
+	{
+		// TODO FIXME - what are we supposed to return?
+		return seta_eval ( skip_ws(param+2) );
 	}
 
 	p = _tcschr (param, _T('='));
@@ -122,6 +147,406 @@ INT cmd_set (LPTSTR cmd, LPTSTR param)
 	}
 
 	return 0;
+}
+
+static INT
+ident_len ( LPCTSTR p )
+{
+	LPCTSTR p2 = p;
+	if ( __iscsymf(*p) )
+	{
+		++p2;
+		while ( __iscsym(*p2) )
+			++p2;
+	}
+	return p2-p;
+}
+
+#define PARSE_IDENT(ident,identlen,p) \
+	identlen = ident_len(p); \
+	ident = (LPTSTR)alloca ( ( identlen + 1 ) * sizeof(TCHAR) ); \
+	memmove ( ident, p, identlen * sizeof(TCHAR) ); \
+	ident[identlen] = 0; \
+	p += identlen;
+
+static BOOL
+seta_identval ( LPCTSTR ident, INT* result )
+{
+	// get size of buffer for env var
+	LPTSTR buf;
+	DWORD dwBuffer = GetEnvironmentVariable ( ident, NULL, 0 );
+	// if GetEnvironmentVariable() fails, it returns 0
+	if ( !dwBuffer )
+	{
+		// TODO FIXME - is it correct to report a value of 0 for non-existant variables?
+		*result = 0;
+		return FALSE;
+	}
+	buf = (LPTSTR)alloca ( dwBuffer * sizeof(TCHAR) );
+	if ( !buf )
+	{
+		// TODO FIXME - is it correct to report 0 when report resources low... should we error somehow?
+		*result = 0;
+		return FALSE;
+	}
+	GetEnvironmentVariable ( ident, buf, dwBuffer );
+	*result = atoi ( buf );
+	return TRUE;
+}
+
+static BOOL
+calc ( INT* lval, TCHAR op, INT rval )
+{
+	switch ( op )
+	{
+	case '*':
+		*lval *= rval;
+		break;
+	case '/':
+		*lval /= rval;
+		break;
+	case '%':
+		*lval %= rval;
+		break;
+	case '+':
+		*lval += rval;
+		break;
+	case '-':
+		*lval -= rval;
+		break;
+	case '&':
+		*lval &= rval;
+		break;
+	case '^':
+		*lval ^= rval;
+		break;
+	case '|':
+		*lval |= rval;
+		break;
+	default:
+		printf ( "Invalid operand.\n" );
+		return FALSE;
+	}
+	return TRUE;
+}
+
+static BOOL
+seta_stmt ( LPCTSTR* p_, INT* result );
+
+static BOOL
+seta_unaryTerm ( LPCTSTR* p_, INT* result )
+{
+	LPCTSTR p = *p_;
+	if ( *p == '(' )
+	{
+		INT rval;
+		p = skip_ws ( p + 1 );
+		if ( !seta_stmt ( &p, &rval ) )
+			return FALSE;
+		if ( *p != ')' )
+		{
+			_tprintf ( _T("Expected ')'\n") );
+			return FALSE;
+		}
+		*result = rval;
+		p = skip_ws ( p + 1 );
+	}
+	else if ( isdigit(*p) )
+	{
+		*result = atoi ( p );
+		p = skip_ws ( p + strspn ( p, "1234567890" ) );
+	}
+	else if ( __iscsymf(*p) )
+	{
+		LPTSTR ident;
+		INT identlen;
+		PARSE_IDENT(ident,identlen,p);
+		if ( !seta_identval ( ident, result ) )
+			return FALSE;
+	}
+	else
+	{
+		_tprintf ( _T("Expected number or variable name\n") );
+		return FALSE;
+	}
+	*p_ = p;
+	return TRUE;
+}
+
+static BOOL
+seta_mulTerm ( LPCTSTR* p_, INT* result )
+{
+	LPCTSTR p = *p_;
+	TCHAR op = 0;
+	INT rval;
+	if ( _tcschr(_T("!~-"),*p) )
+	{
+		op = *p;
+		p = skip_ws ( p + 1 );
+	}
+	if ( !seta_unaryTerm ( &p, &rval ) )
+		return FALSE;
+	switch ( op )
+	{
+	case '!':
+		rval = !rval;
+		break;
+	case '~':
+		rval = ~rval;
+		break;
+	case '-':
+		rval = -rval;
+		break;
+	}
+
+	*result = rval;
+	*p_ = p;
+	return TRUE;
+}
+
+static BOOL
+seta_addTerm ( LPCTSTR* p_, INT* result )
+{
+	LPCTSTR p = *p_;
+	INT lval;
+	if ( !seta_mulTerm ( &p, &lval ) )
+		return FALSE;
+	while ( *p && _tcschr(_T("*/%"),*p) )
+	{
+		INT rval;
+		TCHAR op = *p;
+
+		p = skip_ws ( p+1 );
+
+		if ( !seta_mulTerm ( &p, &rval ) )
+			return FALSE;
+
+		if ( !calc ( &lval, op, rval ) )
+			return FALSE;
+	}
+
+	*result = lval;
+	*p_ = p;
+	return TRUE;
+}
+
+static BOOL
+seta_logShiftTerm ( LPCTSTR* p_, INT* result )
+{
+	LPCTSTR p = *p_;
+	INT lval;
+	if ( !seta_addTerm ( &p, &lval ) )
+		return FALSE;
+	while ( *p && _tcschr(_T("+-"),*p) )
+	{
+		INT rval;
+		TCHAR op = *p;
+
+		p = skip_ws ( p+1 );
+
+		if ( !seta_addTerm ( &p, &rval ) )
+			return FALSE;
+
+		if ( !calc ( &lval, op, rval ) )
+			return FALSE;
+	}
+
+	*result = lval;
+	*p_ = p;
+	return TRUE;
+}
+
+static BOOL
+seta_bitAndTerm ( LPCTSTR* p_, INT* result )
+{
+	LPCTSTR p = *p_;
+	INT lval;
+	if ( !seta_logShiftTerm ( &p, &lval ) )
+		return FALSE;
+	while ( *p && _tcschr(_T("<>"),*p) && p[0] == p[1] )
+	{
+		INT rval;
+		TCHAR op = *p;
+
+		p = skip_ws ( p+2 );
+
+		if ( !seta_logShiftTerm ( &p, &rval ) )
+			return FALSE;
+
+		if ( !calc ( &lval, op, rval ) )
+			return FALSE;
+	}
+
+	*result = lval;
+	*p_ = p;
+	return TRUE;
+}
+
+static BOOL
+seta_bitExclOrTerm ( LPCTSTR* p_, INT* result )
+{
+	LPCTSTR p = *p_;
+	INT lval;
+	if ( !seta_bitAndTerm ( &p, &lval ) )
+		return FALSE;
+	while ( *p == _T('&') )
+	{
+		INT rval;
+
+		p = skip_ws ( p+1 );
+
+		if ( !seta_bitAndTerm ( &p, &rval ) )
+			return FALSE;
+
+		lval &= rval;
+	}
+
+	*result = lval;
+	*p_ = p;
+	return TRUE;
+}
+
+static BOOL
+seta_bitOrTerm ( LPCTSTR* p_, INT* result )
+{
+	LPCTSTR p = *p_;
+	INT lval;
+	if ( !seta_bitExclOrTerm ( &p, &lval ) )
+		return FALSE;
+	while ( *p == _T('^') )
+	{
+		INT rval;
+
+		p = skip_ws ( p+1 );
+
+		if ( !seta_bitExclOrTerm ( &p, &rval ) )
+			return FALSE;
+
+		lval ^= rval;
+	}
+
+	*result = lval;
+	*p_ = p;
+	return TRUE;
+}
+
+static BOOL
+seta_expr ( LPCTSTR* p_, INT* result )
+{
+	LPCTSTR p = *p_;
+	INT lval;
+	if ( !seta_bitOrTerm ( &p, &lval ) )
+		return FALSE;
+	while ( *p == _T('|') )
+	{
+		INT rval;
+
+		p = skip_ws ( p+1 );
+
+		if ( !seta_bitOrTerm ( &p, &rval ) )
+			return FALSE;
+
+		lval |= rval;
+	}
+
+	*result = lval;
+	*p_ = p;
+	return TRUE;
+}
+
+static BOOL
+seta_assignment ( LPCTSTR* p_, INT* result )
+{
+	LPCTSTR p = *p_;
+	LPTSTR ident;
+	TCHAR op = 0;
+	INT identlen, exprval;
+
+	PARSE_IDENT(ident,identlen,p);
+	if ( identlen )
+	{
+		if ( *p == _T('=') )
+			op = *p, p++;
+		else if ( _tcschr ( _T("*/%+-&^|"), *p ) && p[1] == _T('=') )
+			op = *p, p += 2;
+		else if ( _tcschr ( _T("<>"), *p ) && *p == p[1] && p[2] == _T('=') )
+			op = *p, p += 3;
+		else
+		{
+			_tprintf ( _T("Missing operand.\n") );
+			return FALSE;
+		}
+		p = skip_ws ( p );
+	}
+
+	/* allow to chain multiple assignments, such as: a=b=1 */
+	if ( ident && op )
+	{
+		if ( !seta_assignment ( &p, &exprval ) )
+			return FALSE;
+	}
+	else
+	{
+		if ( !seta_expr ( &p, &exprval ) )
+			return FALSE;
+	}
+
+	if ( identlen )
+	{
+		INT identval;
+		LPTSTR buf;
+
+		if ( !seta_identval ( ident, &identval ) )
+			identval = 0;
+		if ( op == '=' )
+			identval = exprval;
+		else if ( !calc ( &identval, op, exprval ) )
+			return FALSE;
+		buf = (LPTSTR)alloca ( 32 * sizeof(TCHAR) );
+		_sntprintf ( buf, 32, _T("%i"), identval );
+		SetEnvironmentVariable ( ident, buf ); // TODO FIXME - check return value
+		exprval = identval;
+	}
+
+	*result = exprval;
+	*p_ = p;
+	return TRUE;
+}
+
+static BOOL
+seta_stmt ( LPCTSTR* p_, INT* result )
+{
+	LPCTSTR p = *p_;
+	INT rval;
+
+	if ( !seta_assignment ( &p, &rval ) )
+		return FALSE;
+	while ( *p == _T(',') )
+	{
+		p = skip_ws ( p+1 );
+
+		if ( !seta_assignment ( &p, &rval ) )
+			return FALSE;
+	}
+
+	*result = rval;
+	*p_ = p;
+	return TRUE;
+}
+
+static BOOL
+seta_eval ( LPCTSTR p )
+{
+	INT rval;
+	if ( !*p )
+	{
+		_tprintf ( _T("The syntax of the command is incorrect.\n") );
+		return FALSE;
+	}
+	if ( !seta_stmt ( &p, &rval ) )
+		return FALSE;
+	_tprintf ( _T("%i\n"), rval );
+	return TRUE;
 }
 
 #endif
