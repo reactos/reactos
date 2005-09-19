@@ -52,6 +52,11 @@ DefaultLayout    = 00000409
 pci_up = "Standard-PC"
 pci_mp = "Standard-PC Multiprocessor"
 
+[Map.Computer]
+;<id> = <pnp id string>
+pci_up = "PC UP"
+pci_mp = "PC MP"
+
 [Files.pci_up]
 ; <filename> = <directory_id>,<new name>
 hal.dll      = 2

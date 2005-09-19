@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- * COPYRIGHT:       See COPYING in the top level directory
+/* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/settings.c
  * PURPOSE:         Device settings support functions
@@ -33,6 +32,90 @@
 
 /* FUNCTIONS ****************************************************************/
 
+static BOOLEAN
+GetComputerIdentifier(PWSTR Identifier,
+                      ULONG IdentifierLength)
+{
+  OBJECT_ATTRIBUTES ObjectAttributes;
+  UNICODE_STRING KeyName;
+  LPCWSTR ComputerIdentifier;
+  HANDLE ProcessorsKey;
+  PKEY_FULL_INFORMATION pFullInfo;
+  ULONG Size, SizeNeeded;
+  NTSTATUS Status;
+
+  DPRINT("GetComputerIdentifier() called\n");
+
+  Size = sizeof(KEY_FULL_INFORMATION);
+  pFullInfo = (PKEY_FULL_INFORMATION)RtlAllocateHeap(RtlGetProcessHeap(), 0, Size);
+  if (!pFullInfo)
+    {
+      DPRINT("RtlAllocateHeap() failed\n");
+      return FALSE;
+    }
+
+  /* Open the processors key */
+  RtlInitUnicodeString(&KeyName,
+                       L"\\Registry\\Machine\\HARDWARE\\DESCRIPTION\\System\\CentralProcessor");
+  InitializeObjectAttributes(&ObjectAttributes,
+                             &KeyName,
+                             OBJ_CASE_INSENSITIVE,
+                             NULL,
+                             NULL);
+  Status = NtOpenKey(&ProcessorsKey,
+                     KEY_QUERY_VALUE ,
+                     &ObjectAttributes);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT("NtOpenKey() failed (Status 0x%lx)\n", Status);
+      RtlFreeHeap(RtlGetProcessHeap(), 0, pFullInfo);
+      return FALSE;
+    }
+
+  /* Get number of subkeys */
+  Status = NtQueryKey(
+    ProcessorsKey,
+    KeyFullInformation,
+    pFullInfo,
+    Size,
+    &Size);
+  NtClose(ProcessorsKey);
+  if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW)
+    {
+      DPRINT("NtQueryKey() failed (Status 0x%lx)\n", Status);
+      RtlFreeHeap(RtlGetProcessHeap(), 0, pFullInfo);
+      return FALSE;
+    }
+
+  /* Find computer identifier */
+  if (pFullInfo->SubKeys == 0)
+    {
+      /* Something strange happened. No processor detected */
+      RtlFreeHeap(RtlGetProcessHeap(), 0, pFullInfo);
+      return FALSE;
+    }
+
+  if (pFullInfo->SubKeys == 1)
+    {
+      /* Computer is mono-CPU */
+      ComputerIdentifier = L"PC UP";
+    }
+  else
+    {
+      /* Computer is multi-CPUs */
+      ComputerIdentifier = L"PC MP";
+    }
+  RtlFreeHeap(RtlGetProcessHeap(), 0, pFullInfo);
+
+  /* Copy computer identifier to return buffer */
+  SizeNeeded = (wcslen(ComputerIdentifier) + 1) * sizeof(WCHAR);
+  if (SizeNeeded > IdentifierLength)
+    return FALSE;
+  RtlCopyMemory(Identifier, ComputerIdentifier, SizeNeeded);
+  return TRUE;
+}
+
+
 PGENERIC_LIST
 CreateComputerTypeList(HINF InfFile)
 {
@@ -42,6 +125,48 @@ CreateComputerTypeList(HINF InfFile)
   PWCHAR KeyName;
   PWCHAR KeyValue;
   PWCHAR UserData;
+  WCHAR ComputerIdentifier[128];
+  WCHAR ComputerKey[32];
+
+  /* Get the computer identification */
+  if (!GetComputerIdentifier(ComputerIdentifier, 128))
+    {
+      ComputerIdentifier[0] = 0;
+    }
+
+  DPRINT("Computer identifier: '%S'\n", ComputerIdentifier);
+
+  /* Search for matching device identifier */
+  if (!InfFindFirstLine(InfFile, L"Map.Computer", NULL, &Context))
+    {
+      /* FIXME: error message */
+      return NULL;
+    }
+
+  do
+    {
+      if (!InfGetDataField(&Context, 1, &KeyValue))
+        {
+          /* FIXME: Handle error! */
+          DPRINT("InfGetDataField() failed\n");
+          return NULL;
+        }
+
+      DPRINT("KeyValue: %S\n", KeyValue);
+      if (wcsstr(ComputerIdentifier, KeyValue))
+        {
+          if (!InfGetDataField(&Context, 0, &KeyName))
+            {
+              /* FIXME: Handle error! */
+              DPRINT("InfGetDataField() failed\n");
+              return NULL;
+            }
+
+          DPRINT("Computer key: %S\n", KeyName);
+          wcscpy(ComputerKey, KeyName);
+        }
+    }
+  while (InfFindNextLine(&Context, &Context));
 
   List = CreateGenericList();
   if (List == NULL)
@@ -73,7 +198,8 @@ CreateComputerTypeList(HINF InfFile)
       wcscpy(UserData, KeyName);
 
       sprintf(Buffer, "%S", KeyValue);
-      AppendGenericListEntry(List, Buffer, UserData, FALSE);
+      AppendGenericListEntry(List, Buffer, UserData,
+                             _wcsicmp(KeyName, ComputerKey) ? FALSE : TRUE);
     }
   while (InfFindNextLine(&Context, &Context));
 
