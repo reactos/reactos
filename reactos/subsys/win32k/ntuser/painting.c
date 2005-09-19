@@ -259,11 +259,14 @@ co_IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
          {
             if (Window->UpdateRegion)
             {
+               hDC = UserGetDCEx(Window, Window->UpdateRegion,
+                                 DCX_CACHE | DCX_USESTYLE |
+                                 DCX_INTERSECTRGN | DCX_KEEPCLIPRGN);
                if (co_IntSendMessage(hWnd, WM_ERASEBKGND, (WPARAM)hDC, 0))
                {
                   Window->Flags &= ~WINDOWOBJECT_NEED_ERASEBKGND;
                }
-               UserReleaseDC(Window, hDC);
+               UserReleaseDC(Window, hDC, FALSE);
             }
          }
       }
@@ -829,7 +832,7 @@ NtUserEndPaint(HWND hWnd, CONST PAINTSTRUCT* lPs)
       RETURN(FALSE);
    }
 
-   UserReleaseDC(Window, lPs->hdc);
+   UserReleaseDC(Window, lPs->hdc, TRUE);
 
    UserRefObjectCo(Window);
    co_UserShowCaret(Window);
@@ -1295,7 +1298,7 @@ NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *UnsafeRect,
    if (hDC)
    {
       UserScrollDC(hDC, dx, dy, &rc, &cliprc, hrgnUpdate, rcUpdate);
-      UserReleaseDC(Window, hDC);
+      UserReleaseDC(Window, hDC, FALSE);
    }
 
    /*

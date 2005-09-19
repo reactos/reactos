@@ -118,7 +118,7 @@ DceAllocDCE(PWINDOW_OBJECT Window OPTIONAL, DCE_TYPE Type)
    if (NULL == defaultDCstate)
    {
       defaultDCstate = NtGdiGetDCState(Dce->hDC);
-      GDIOBJ_SetOwnership(defaultDCstate, NULL);
+      DC_SetOwnership(defaultDCstate, NULL);
    }
    GDIOBJ_SetOwnership(Dce->Self, NULL);
    DC_SetOwnership(Dce->hDC, NULL);
@@ -193,7 +193,6 @@ DceDeleteClipRgn(DCE* Dce)
    }
    else if (Dce->hClipRgn != NULL)
    {
-      GDIOBJ_SetOwnership(Dce->hClipRgn, PsGetCurrentProcess());
       NtGdiDeleteObject(Dce->hClipRgn);
    }
 
@@ -204,7 +203,7 @@ DceDeleteClipRgn(DCE* Dce)
 }
 
 STATIC INT FASTCALL
-DceReleaseDC(DCE* dce)
+DceReleaseDC(DCE* dce, BOOL EndPaint)
 {
    if (DCX_DCEBUSY != (dce->DCXFlags & (DCX_DCEEMPTY | DCX_DCEBUSY)))
    {
@@ -214,7 +213,7 @@ DceReleaseDC(DCE* dce)
    /* restore previous visible region */
 
    if ((dce->DCXFlags & (DCX_INTERSECTRGN | DCX_EXCLUDERGN)) &&
-         (dce->DCXFlags & DCX_CACHE) )
+         ((dce->DCXFlags & DCX_CACHE) || EndPaint))
    {
       DceDeleteClipRgn(dce);
    }
@@ -463,23 +462,27 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
    }
 
    Dce->hwndCurrent = (Window ? Window->hSelf : NULL);
-   Dce->DCXFlags = DcxFlags | DCX_DCEBUSY;
+   Dce->DCXFlags = Flags | DCX_DCEBUSY;
 
    if (0 == (Flags & (DCX_EXCLUDERGN | DCX_INTERSECTRGN)) && NULL != ClipRegion)
    {
-      NtGdiDeleteObject(ClipRegion);
+      if (Flags & DCX_KEEPCLIPRGN)
+         NtGdiDeleteObject(ClipRegion);
       ClipRegion = NULL;
    }
 
+#if 0
    if (NULL != Dce->hClipRgn)
    {
       DceDeleteClipRgn(Dce);
       Dce->hClipRgn = NULL;
    }
+#endif
 
    if (0 != (Flags & DCX_INTERSECTUPDATE) && NULL == ClipRegion)
    {
       Flags |= DCX_INTERSECTRGN | DCX_KEEPCLIPRGN;
+      Dce->DCXFlags |= DCX_INTERSECTRGN | DCX_KEEPCLIPRGN;
       ClipRegion = Window->UpdateRegion;
    }
 
@@ -488,18 +491,15 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
       if (!(Flags & DCX_WINDOW))
       {
          Dce->hClipRgn = UnsafeIntCreateRectRgnIndirect(&Window->ClientRect);
-         GDIOBJ_SetOwnership(Dce->hClipRgn, NULL);
       }
       else
       {
          Dce->hClipRgn = UnsafeIntCreateRectRgnIndirect(&Window->WindowRect);
-         GDIOBJ_SetOwnership(Dce->hClipRgn, NULL);
       }
    }
    else if (ClipRegion != NULL)
    {
       Dce->hClipRgn = ClipRegion;
-      GDIOBJ_SetOwnership(Dce->hClipRgn, NULL);
    }
 
    DceSetDrawable(Window, Dce->hDC, Flags, UpdateClipOrigin);
@@ -583,7 +583,7 @@ IntWindowFromDC(HDC hDc)
 
 
 INT FASTCALL
-UserReleaseDC(PWINDOW_OBJECT Window, HDC hDc)
+UserReleaseDC(PWINDOW_OBJECT Window, HDC hDc, BOOL EndPaint)
 {
    DCE *dce;
    INT nRet = 0;
@@ -599,7 +599,7 @@ UserReleaseDC(PWINDOW_OBJECT Window, HDC hDc)
 
    if (dce && (dce->DCXFlags & DCX_DCEBUSY))
    {
-      nRet = DceReleaseDC(dce);
+      nRet = DceReleaseDC(dce, EndPaint);
    }
 
    return nRet;
@@ -615,7 +615,7 @@ NtUserReleaseDC(HWND hWnd, HDC hDc)
    DPRINT("Enter NtUserReleaseDC\n");
    UserEnterExclusive();
 
-   RETURN(UserReleaseDC(NULL, hDc));
+   RETURN(UserReleaseDC(NULL, hDc, FALSE));
 
 CLEANUP:
    DPRINT("Leave NtUserReleaseDC, ret=%i\n",_ret_);
@@ -650,7 +650,6 @@ DceFreeDCE(PDCE dce, BOOLEAN Force)
    }
 
    NtGdiDeleteDC(dce->hDC);
-   GDIOBJ_SetOwnership(dce->hClipRgn, PsGetCurrentProcess());
    if (dce->hClipRgn && ! (dce->DCXFlags & DCX_KEEPCLIPRGN))
    {
       NtGdiDeleteObject(dce->hClipRgn);
@@ -703,7 +702,7 @@ DceFreeWindowDCE(PWINDOW_OBJECT Window)
                 * (for 1.0?).
                 */
                DPRINT1("[%p] GetDC() without ReleaseDC()!\n", Window->hSelf);
-               DceReleaseDC(pDCE);
+               DceReleaseDC(pDCE, FALSE);
             }
 
             pDCE->DCXFlags &= DCX_CACHE;
@@ -715,12 +714,12 @@ DceFreeWindowDCE(PWINDOW_OBJECT Window)
    }
 }
 
-void FASTCALL
+VOID FASTCALL
 DceEmptyCache()
 {
    while (FirstDce != NULL)
    {
-      DceFreeDCE(FirstDce, TRUE);
+      FirstDce = DceFreeDCE(FirstDce, TRUE);
    }
 }
 

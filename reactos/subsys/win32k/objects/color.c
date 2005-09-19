@@ -122,7 +122,7 @@ BOOL STDCALL NtGdiAnimatePalette(HPALETTE hPal, UINT StartIndex,
           else
             DC_UnlockDc(dc);
         }		
-      UserReleaseDC(Wnd,hDC);   
+      UserReleaseDC(Wnd,hDC, FALSE);
     }
     return TRUE;
 }
