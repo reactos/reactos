@@ -1064,10 +1064,20 @@ co_WinPosSetWindowPos(
       /* Clear the update region */
       co_UserRedrawWindow(Window, NULL, 0, RDW_VALIDATE | RDW_NOFRAME |
                           RDW_NOERASE | RDW_NOINTERNALPAINT | RDW_ALLCHILDREN);
+      if ((Window->Style & WS_VISIBLE) &&
+          Window->Parent == UserGetDesktopWindow())
+      {
+         co_IntShellHookNotify(HSHELL_WINDOWDESTROYED, (LPARAM)Window->hSelf);
+      }
       Window->Style &= ~WS_VISIBLE;
    }
    else if (WinPos.flags & SWP_SHOWWINDOW)
    {
+      if (!(Window->Style & WS_VISIBLE) &&
+          Window->Parent == UserGetDesktopWindow())
+      {
+         co_IntShellHookNotify(HSHELL_WINDOWCREATED, (LPARAM)Window->hSelf);
+      }
       Window->Style |= WS_VISIBLE;
    }
 
@@ -1199,11 +1209,22 @@ co_WinPosSetWindowPos(
          }
          if (RgnType != ERROR && RgnType != NULLREGION)
          {
-            NtGdiOffsetRgn(DirtyRgn,
-                           Window->WindowRect.left - Window->ClientRect.left,
-                           Window->WindowRect.top - Window->ClientRect.top);
-            co_UserRedrawWindow(Window, NULL, DirtyRgn,
-                                RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
+            if (Window->Parent)
+            {
+               NtGdiOffsetRgn(DirtyRgn,
+                  Window->WindowRect.left - Window->Parent->ClientRect.left,
+                  Window->WindowRect.top - Window->Parent->ClientRect.top);
+               co_UserRedrawWindow(Window->Parent, NULL, DirtyRgn,
+                  RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
+            }
+            else
+            {
+               NtGdiOffsetRgn(DirtyRgn,
+                  Window->WindowRect.left - Window->ClientRect.left,
+                  Window->WindowRect.top - Window->ClientRect.top);
+               co_UserRedrawWindow(Window, NULL, DirtyRgn,
+                  RDW_ERASE | RDW_FRAME | RDW_INVALIDATE | RDW_ALLCHILDREN);
+            }
          }
          NtGdiDeleteObject(DirtyRgn);
       }
@@ -1363,14 +1384,6 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
    if (ShowFlag != WasVisible)
    {
       co_IntSendMessage(Window->hSelf, WM_SHOWWINDOW, ShowFlag, 0);
-      /*
-       * FIXME: Need to check the window wasn't destroyed during the
-       * window procedure.
-       */
-      if (!(Window->Parent))
-      {
-         co_IntShellHookNotify(HSHELL_WINDOWCREATED, (LPARAM)Window->hSelf);
-      }
    }
 
    /* We can't activate a child window */
@@ -1408,11 +1421,6 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
       {
          //faxme: as long as we have ref on Window, we also, indirectly, have ref on parent...
          co_UserSetFocus(Window->Parent);
-      }
-
-      if (!(Window->Parent))
-      {
-         co_IntShellHookNotify(HSHELL_WINDOWDESTROYED, (LPARAM)Window->hSelf);
       }
    }
 
