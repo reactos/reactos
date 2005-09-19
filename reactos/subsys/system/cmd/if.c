@@ -52,8 +52,15 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 		return 0;
 	}
 
-	/* First check if param string begins with word 'not' */
-	if (!_tcsnicmp (param, _T("not"), 3) && _istspace (*(param + 3)))
+	/* First check if param string begins with '!' or 'not' */
+	if ( param[0] == _T('!') )
+	{
+		x_flag = X_EXEC;            /* Remember '!' */
+		++param;                    /* Step over '!' */
+		while (_istspace (*param))  /* And subsequent spaces */
+			param++;
+	}
+	else if (!_tcsnicmp (param, _T("not"), 3) && _istspace (*(param + 3)))
 	{
 		x_flag = X_EXEC;            /* Remember 'NOT' */
 		param += 3;                 /* Step over 'NOT' */
@@ -64,14 +71,15 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 	/* Check for 'exist' form */
 	if (!_tcsnicmp (param, _T("exist"), 5) && _istspace (*(param + 5)))
 	{
+		UINT i;
+		BOOL bInside = FALSE;
+
 		param += 5;
 		while (_istspace (*param))
 			param++;
 
 		pp = param;
 
-		INT i;
-		BOOL bInside = FALSE;
 		/* find the whole path to the file */
 		for(i = 0; i < _tcslen(param); i++)
 		{
@@ -155,38 +163,34 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 
 		x_flag |= X_EMPTY;          /* Syntax error if comd empty */
 	}
-	else if (NULL == (pp = _tcsstr (param, _T("=="))))
-	{
-		/* Check that '==' is present, syntax error if not */
-		error_syntax (NULL);
-		return 1;
-	}
 	else
 	{
-		/* Change first '='to space to terminate comparison loop */
-
-		*pp = _T(' ');   /* Need a space to terminate comparison loop */
-		pp += 2;                /* over '==' */
+		BOOL bInQuote = FALSE;
+		INT p1len;
+		pp = param;
+		while ( *pp && ( bInQuote || *pp != _T('=') ) )
+		{
+			if ( *pp == _T('\"') )
+				bInQuote = !bInQuote;
+			++pp;
+		}
+		p1len = pp-param;
+		/* check for "==" */
+		if ( *pp++ != _T('=') || *pp++ != _T('=') )
+		{
+			error_syntax ( NULL );
+			return 1;
+		}
 		while (_istspace (*pp)) /* Skip subsequent spaces */
 			pp++;
 
-		_tcscat (pp, _T(" "));  /* Add one space to ensure comparison ends */
+		/* are the two sides equal, and does the second end in the same place? */
+		if ( !_tcsncmp(param,pp,p1len) && _tcschr(_T(" ("),pp[p1len]) )
+			x_flag ^= X_EXEC;
+		pp += p1len;
 
-		while (*param == *pp)       /* Comparison loop */
-		{
-			if (_istspace (*param))      /* Terminates on space */
-				break;
-
-			param++, pp++;
-		}
-
-		if (x_flag ^= (*param != *pp) ? 0 : X_EXEC)
-		{
-			while (*pp && !_istspace (*pp))  /* Find first space, */
-				pp++;
-
+		if ( x_flag )
 			x_flag |= X_EMPTY;
-		}
 	}
 
 	if (x_flag & X_EMPTY)
