@@ -190,7 +190,7 @@ UsbMpPnpFdo(
 
 	switch (MinorFunction)
 	{
-		case IRP_MN_START_DEVICE:
+		case IRP_MN_START_DEVICE: /* 0x00 */
 		{
 			Status = ForwardIrpAndWait(DeviceObject, Irp);
 			if (NT_SUCCESS(Status) && NT_SUCCESS(Irp->IoStatus.Status))
@@ -198,12 +198,15 @@ UsbMpPnpFdo(
 			break;
 		}
 
-		case IRP_MN_REMOVE_DEVICE:
-		case IRP_MN_QUERY_REMOVE_DEVICE:
-		case IRP_MN_CANCEL_REMOVE_DEVICE:
-		case IRP_MN_SURPRISE_REMOVAL:
+		case IRP_MN_QUERY_REMOVE_DEVICE: /* 0x01 */
+		case IRP_MN_CANCEL_REMOVE_DEVICE: /* 0x03 */
+		{
+			return ForwardIrpAndForget(DeviceObject, Irp);
+		}
 
-		case IRP_MN_STOP_DEVICE:
+		case IRP_MN_REMOVE_DEVICE: /* 0x02 */
+		case IRP_MN_STOP_DEVICE: /* 0x04 */
+		case IRP_MN_SURPRISE_REMOVAL: /* 0x17 */
 		{
 			Status = ForwardIrpAndWait(DeviceObject, Irp);
 			if (NT_SUCCESS(Status) && NT_SUCCESS(Irp->IoStatus.Status))
@@ -211,8 +214,9 @@ UsbMpPnpFdo(
 			IoDeleteDevice(DeviceObject); // just delete device for now
 			break;
 		}
-		case IRP_MN_QUERY_STOP_DEVICE:
-		case IRP_MN_CANCEL_STOP_DEVICE:
+
+		case IRP_MN_QUERY_STOP_DEVICE: /* 0x05 */
+		case IRP_MN_CANCEL_STOP_DEVICE: /* 0x06 */
 		{
 			Status = STATUS_SUCCESS;
 			break;
@@ -244,7 +248,7 @@ UsbMpPnpFdo(
 
 		default:
 		{
-			DPRINT1("USBMP: unknown minor function 0x%lx\n", MinorFunction);
+			DPRINT1("USBMP: IRP_MJ_PNP / unknown minor function 0x%lx\n", MinorFunction);
 			return ForwardIrpAndForget(DeviceObject, Irp);
 		}
 	}

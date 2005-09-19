@@ -7,6 +7,7 @@ usb_exit@0
 usb_init_urb@4
 usb_alloc_urb@8
 usb_free_urb@4
+usb_get_string
 usb_get_urb@4
 usb_get_dev@4
 usb_submit_urb@8

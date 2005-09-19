@@ -630,6 +630,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\usbhub","Tag",0x00010001,0x00000011
 HKLM,"SYSTEM\CurrentControlSet\Services\usbhub","DisplayName",0x00000000,"ReactOS USB HUB cromwell-type driver"
 ;hard coded values
 HKLM,"SYSTEM\CurrentControlSet\Enum\USB\ROOT_HUB\0000","Service",0x0000000,"usbhub"
+HKLM,"SYSTEM\CurrentControlSet\Enum\USB\ROOT_HUB20\0000","Service",0x0000000,"usbhub"
 
 ; ReactOS PCNet NIC driver 
 ; To use the AMD supplied driver change the driver name to pcntn5m.sys

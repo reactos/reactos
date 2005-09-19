@@ -80,36 +80,49 @@ UsbMpPdoQueryId(
 	ULONG IdType;
 	UNICODE_STRING SourceString;
 	UNICODE_STRING String;
+	struct usb_device *roothub;
 	NTSTATUS Status = STATUS_SUCCESS;
 
 	IdType = IoGetCurrentIrpStackLocation(Irp)->Parameters.QueryId.IdType;
 	DeviceExtension = (PUSBMP_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	RtlInitUnicodeString(&String, NULL);
+	DeviceExtension = (PUSBMP_DEVICE_EXTENSION)DeviceExtension->FunctionalDeviceObject->DeviceExtension;
+	roothub = ((struct usb_hcd*)DeviceExtension->pdev->data)->self.root_hub;
 
 	switch (IdType)
 	{
 		case BusQueryDeviceID:
 		{
 			DPRINT("USBMP: IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryDeviceID\n");
-			RtlInitUnicodeString(&SourceString, L"USB\\ROOT_HUB");
+			if (roothub->speed == USB_SPEED_LOW || roothub->speed == USB_SPEED_FULL)
+				RtlInitUnicodeString(&SourceString, L"USB\\ROOT_HUB"); /* USB 1.1 */
+			else
+				RtlInitUnicodeString(&SourceString, L"USB\\ROOT_HUB20"); /* USB 2.0 */
 			break;
 		}
 		case BusQueryHardwareIDs:
 		{
-			//CHAR Buffer[2][40];
+			CHAR Buffer[2][40];
+			PCHAR RootHubName;
+			USHORT Vendor, Product, Revision;
+
 			DPRINT("USBMP: IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryHardwareIDs\n");
 
-			/*FIXME: sprintf(Buffer[0], "USB\\VID%04X&PID%04X&REV%04X",
-				VENDOR,
-				PRODUCT,
-				REV);
+			Vendor = DeviceExtension->pdev->vendor;
+			Product = DeviceExtension->pdev->device;
+			Revision = 0; /* FIXME */
+
+			sprintf(Buffer[0], "USB\\VID%04X&PID%04X&REV%04X",
+				Vendor, Product, Revision);
 			sprintf(Buffer[1], "USB\\VID%04X&PID%04X",
-				VENDOR,
-				PRODUCT);
+				Vendor, Product);
+			if (roothub->speed == USB_SPEED_LOW || roothub->speed == USB_SPEED_FULL)
+				RootHubName = "USB\\ROOT_HUB"; /* USB 1.1 */
+			else
+				RootHubName = "USB\\ROOT_HUB20"; /* USB 2.0 */
 			Status = UsbMpInitMultiSzString(
 				&SourceString,
-				Buffer[0], Buffer[1], "USB\\ROOT_HUB", NULL);*/
-			Status = UsbMpInitMultiSzString(&SourceString, "USB\\ROOT_HUB", NULL);
+				Buffer[0], Buffer[1], RootHubName, NULL);
 			break;
 		}
 		case BusQueryCompatibleIDs:

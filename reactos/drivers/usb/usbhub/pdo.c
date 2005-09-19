@@ -133,6 +133,61 @@ UsbhubPdoQueryId(
 	return Status;
 }
 
+static NTSTATUS
+UsbhubPdoQueryDeviceText(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp,
+	OUT ULONG_PTR* Information)
+{
+	PHUB_DEVICE_EXTENSION DeviceExtension;
+	DEVICE_TEXT_TYPE DeviceTextType;
+	LCID LocaleId;
+
+	DeviceTextType = IoGetCurrentIrpStackLocation(Irp)->Parameters.QueryDeviceText.DeviceTextType;
+	LocaleId = IoGetCurrentIrpStackLocation(Irp)->Parameters.QueryDeviceText.LocaleId;
+	DeviceExtension = (PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+	switch (DeviceTextType)
+	{
+		/*case DeviceTextDescription:
+		{
+			DPRINT1("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_TEXT / DeviceTextDescription\n");
+			return STATUS_NOT_IMPLEMENTED;
+		}*/
+		case DeviceTextLocationInformation:
+		{
+			int size;
+			char *buf;
+
+			DPRINT("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_TEXT / DeviceTextLocationInformation\n");
+			if (!DeviceExtension->dev->descriptor.iProduct)
+				return STATUS_NOT_SUPPORTED;
+
+			size = usb_get_string(DeviceExtension->dev, LocaleId, DeviceExtension->dev->descriptor.iProduct, NULL, 0);
+			if (size < 2)
+			{
+				DPRINT("Usbhub: usb_get_string() failed\n");
+				return STATUS_IO_DEVICE_ERROR;
+			}
+			buf = ExAllocatePool(PagedPool, size);
+			if (buf == NULL)
+				return STATUS_INSUFFICIENT_RESOURCES;
+			size = usb_get_string(DeviceExtension->dev, LocaleId, DeviceExtension->dev->descriptor.iProduct, buf, size);
+			if (size < 0)
+			{
+				DPRINT("Usbhub: usb_get_string() failed\n");
+				ExFreePool(buf);
+				return STATUS_IO_DEVICE_ERROR;
+			}
+			*Information = (ULONG_PTR)buf;
+			return STATUS_SUCCESS;
+		}
+		default:
+			DPRINT1("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_TEXT / unknown device text type 0x%lx\n", DeviceTextType);
+			return STATUS_NOT_SUPPORTED;
+	}
+}
+
 NTSTATUS STDCALL
 UsbhubPnpPdo(
 	IN PDEVICE_OBJECT DeviceObject,
@@ -152,6 +207,82 @@ UsbhubPnpPdo(
 		{
 			DPRINT("Usbhub: IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
 			Status = UsbhubPdoStartDevice(DeviceObject, Irp);
+			break;
+		}
+		case IRP_MN_QUERY_CAPABILITIES: /* 0x09 */
+		{
+			PDEVICE_CAPABILITIES DeviceCapabilities;
+			ULONG i;
+			DPRINT("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_CAPABILITIES\n");
+
+			DeviceCapabilities = (PDEVICE_CAPABILITIES)Stack->Parameters.DeviceCapabilities.Capabilities;
+			/* FIXME: capabilities can change with connected device */
+			DeviceCapabilities->LockSupported = TRUE;
+			DeviceCapabilities->EjectSupported = FALSE;
+			DeviceCapabilities->Removable = FALSE;
+			DeviceCapabilities->DockDevice = FALSE;
+			DeviceCapabilities->UniqueID = FALSE;
+			DeviceCapabilities->SilentInstall = TRUE;
+			DeviceCapabilities->RawDeviceOK = FALSE;
+			DeviceCapabilities->SurpriseRemovalOK = FALSE;
+			DeviceCapabilities->HardwareDisabled = FALSE; /* FIXME */
+			//DeviceCapabilities->NoDisplayInUI = FALSE; /* FIXME */
+			DeviceCapabilities->DeviceState[0] = PowerDeviceD0; /* FIXME */
+			for (i = 0; i < PowerSystemMaximum; i++)
+				DeviceCapabilities->DeviceState[i] = PowerDeviceD3; /* FIXME */
+			//DeviceCapabilities->DeviceWake = PowerDeviceUndefined; /* FIXME */
+			DeviceCapabilities->D1Latency = 0; /* FIXME */
+			DeviceCapabilities->D2Latency = 0; /* FIXME */
+			DeviceCapabilities->D3Latency = 0; /* FIXME */
+			Status = STATUS_SUCCESS;
+			break;
+		}
+		case IRP_MN_QUERY_RESOURCES: /* 0x0a */
+		{
+			PCM_RESOURCE_LIST ResourceList;
+
+			DPRINT("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_RESOURCES\n");
+			ResourceList = ExAllocatePool(PagedPool, sizeof(CM_RESOURCE_LIST));
+			if (!ResourceList)
+			{
+				DPRINT("Usbhub: ExAllocatePool() failed\n");
+				Status = STATUS_INSUFFICIENT_RESOURCES;
+			}
+			else
+			{
+				ResourceList->Count = 0;
+				Information = (ULONG_PTR)ResourceList;
+				Status = STATUS_SUCCESS;
+			}
+			break;
+		}
+		case IRP_MN_QUERY_RESOURCE_REQUIREMENTS: /* 0x0b */
+		{
+			PIO_RESOURCE_REQUIREMENTS_LIST ResourceList;
+
+			DPRINT("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_RESOURCE_REQUIREMENTS\n");
+			ResourceList = ExAllocatePool(PagedPool, sizeof(IO_RESOURCE_REQUIREMENTS_LIST));
+			if (!ResourceList)
+			{
+				DPRINT("Usbhub: ExAllocatePool() failed\n");
+				Status = STATUS_INSUFFICIENT_RESOURCES;
+			}
+			else
+			{
+				RtlZeroMemory(ResourceList, sizeof(IO_RESOURCE_REQUIREMENTS_LIST));
+				ResourceList->ListSize = sizeof(IO_RESOURCE_REQUIREMENTS_LIST);
+				ResourceList->AlternativeLists = 1;
+				ResourceList->List->Version = 1;
+				ResourceList->List->Revision = 1;
+				ResourceList->List->Count = 0;
+				Information = (ULONG_PTR)ResourceList;
+				Status = STATUS_SUCCESS;
+			}
+			break;
+		}
+		case IRP_MN_QUERY_DEVICE_TEXT: /* 0x0c */
+		{
+			Status = UsbhubPdoQueryDeviceText(DeviceObject, Irp, &Information);
 			break;
 		}
 		case IRP_MN_QUERY_ID: /* 0x13 */
