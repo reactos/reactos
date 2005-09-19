@@ -215,6 +215,11 @@
 #define STRING_HELP1                       718
 #define STRING_HELP2                       719
 
+#define STRING_INVALID_OPERAND             720
+#define STRING_EXPECTED_CLOSE_PAREN        721
+#define STRING_EXPECTED_NUMBER_OR_VARIABLE 722
+#define STRING_SYNTAX_COMMAND_INCORRECT    723
+
 /* These strings are language independent (cmd.rc) */
 #define STRING_FREEDOS_DEV                 800
 #define STRING_REACTOS_DEV                 801

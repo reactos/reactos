@@ -225,7 +225,7 @@ calc ( INT* lval, TCHAR op, INT rval )
 		*lval |= rval;
 		break;
 	default:
-		ConErrPrintf ( _T("Invalid operand.\n") );
+		ConErrResPuts ( STRING_INVALID_OPERAND );
 		return FALSE;
 	}
 	return TRUE;
@@ -246,7 +246,7 @@ seta_unaryTerm ( LPCTSTR* p_, INT* result )
 			return FALSE;
 		if ( *p != _T(')') )
 		{
-			ConErrPrintf ( _T("Expected ')'\n") );
+			ConErrResPuts ( STRING_EXPECTED_CLOSE_PAREN );
 			return FALSE;
 		}
 		*result = rval;
@@ -267,7 +267,7 @@ seta_unaryTerm ( LPCTSTR* p_, INT* result )
 	}
 	else
 	{
-		ConErrPrintf ( _T("Expected number or variable name\n") );
+		ConErrResPuts ( STRING_EXPECTED_NUMBER_OR_VARIABLE );
 		return FALSE;
 	}
 	*p_ = p;
@@ -369,7 +369,7 @@ seta_bitAndTerm ( LPCTSTR* p_, INT* result )
 			lval >>= rval;
 			break;
 		default:
-			ConErrPrintf ( _T("Invalid operand.\n") );
+			ConErrResPuts ( STRING_INVALID_OPERAND );
 			return FALSE;
 		}
 	}
@@ -487,7 +487,7 @@ seta_eval ( LPCTSTR p )
 	INT rval;
 	if ( !*p )
 	{
-		ConErrPrintf ( _T("The syntax of the command is incorrect.\n") );
+		ConErrResPuts ( STRING_SYNTAX_COMMAND_INCORRECT );
 		return FALSE;
 	}
 	if ( !seta_stmt ( &p, &rval ) )
