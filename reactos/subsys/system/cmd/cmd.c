@@ -1075,8 +1075,9 @@ ProcessInput (BOOL bFlag)
 	LPTSTR tp = NULL;
 	LPTSTR ip;
 	LPTSTR cp;
+	LPCTSTR tmp;
 	BOOL bEchoThisLine;
-
+	BOOL bSubstitute;
 
 	do
 	{
@@ -1091,10 +1092,15 @@ ProcessInput (BOOL bFlag)
 			bEchoThisLine = FALSE;
 		}
 
+		/* skip leading blanks */
+		while ( _istspace(*ip) )
+			++ip;
+
 		cp = commandline;
+		bSubstitute = TRUE;
 		while (*ip)
 		{
-			if (*ip == _T('%'))
+			if (bSubstitute && *ip == _T('%'))
 			{
 				switch (*++ip)
 				{
@@ -1259,6 +1265,71 @@ ProcessInput (BOOL bFlag)
 			if (_istcntrl (*ip))
 				*ip = _T(' ');
 			*cp++ = *ip++;
+
+			/* HACK HACK HACK check whether bSubstitute needs to be toggled */
+			*cp = 0;
+			tmp = commandline;
+			tmp += _tcsspn(tmp,_T(" \t"));
+			/* first we find and skip and pre-redirections... */
+			while ( _tcschr(_T("<>"),*tmp)
+				|| !_tcsncmp(tmp,_T("1>"),2)
+				|| !_tcsncmp(tmp,_T("2>"),2) )
+			{
+				if ( _istdigit(*tmp) )
+					tmp += 2;
+				else
+					tmp++;
+				tmp += _tcsspn(tmp,_T(" \t"));
+				if ( *tmp == _T('\"') )
+				{
+					tmp = _tcschr(tmp+1,_T('\"'));
+					if ( tmp )
+						++tmp;
+				}
+				else
+					tmp = _tcspbrk(tmp,_T(" \t"));
+				tmp += _tcsspn(tmp,_T(" \t"));
+			}
+			/* we should now be pointing to the actual command
+			 * (if there is one yet)*/
+			if ( tmp )
+			{
+				/* if we're currently substituting ( which is default )
+				 * check to see if we've parsed out a set/a. if so, we
+				 * need to disable substitution until we come across a
+				 * redirection */
+				if ( bSubstitute )
+				{
+					/* look for set /a */
+					if ( !_tcsnicmp(tmp,_T("set"),3) )
+					{
+						tmp += 3;
+						tmp += _tcsspn(tmp,_T(" \t"));
+						if ( !_tcsnicmp(tmp,_T("/a"),2) )
+							bSubstitute = FALSE;
+					}
+				}
+				/* if we're not currently substituting, it means we're
+				 * already inside a set /a. now we need to look for
+				 * a redirection in order to turn redirection back on */
+				else
+				{
+					/* look for redirector of some kind after the command */
+					while ( (tmp = _tcspbrk ( tmp, _T("^<>|") )) )
+					{
+						if ( *tmp == _T('^') )
+						{
+							if ( _tcschr(_T("<>|&"), *++tmp ) )
+								++tmp;
+						}
+						else
+						{
+							bSubstitute = TRUE;
+							break;
+						}
+					}
+				}
+			}
 		}
 
 		*cp = _T('\0');
@@ -1385,8 +1456,8 @@ Initialize (int argc, TCHAR* argv[])
 	GetVersionEx (&osvi);
 
 	/* Some people like to run ReactOS cmd.exe on Win98, it helps in the
-           build process. So don't link implicitly against ntdll.dll, load it
-           dynamically instead */
+	 * build process. So don't link implicitly against ntdll.dll, load it
+	 * dynamically instead */
 
 	if (osvi.dwPlatformId == VER_PLATFORM_WIN32_NT)
 	{
