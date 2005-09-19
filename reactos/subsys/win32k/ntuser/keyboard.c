@@ -261,7 +261,7 @@ static BOOL TryToTranslateChar(WORD wVirtKey,
                       [ModBits ^
                        ((CapsState & CAPITAL_BIT) ? vkPtr->Attributes : 0)];
 
-            if( CapsMod > keyLayout->pVkToWcharTable[nMod].nModifications )
+            if( CapsMod >= keyLayout->pVkToWcharTable[nMod].nModifications )
             {
                DWORD MaxBit = 1;
                while( MaxBit <

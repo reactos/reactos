@@ -162,35 +162,6 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   //{ '8',         NOCAPS, {'_', '8'} },
   //{ '9',         NOCAPS, {'ç', '9'} },
   //{ '0',         NOCAPS, {'à', '0'} },
-  /* First letter row */
-  { 'A',         CAPS,   {'a', 'A'} },
-  { 'Z',         CAPS,   {'z', 'Z'} },
-  //{ 'E',         CAPS,   {'e', 'E'} },
-  { 'R',         CAPS,   {'r', 'R'} },
-  { 'T',         CAPS,   {'t', 'T'} },
-  { 'Y',         CAPS,   {'y', 'Y'} },
-  { 'U',         CAPS,   {'u', 'U'} },
-  { 'I',         CAPS,   {'i', 'I'} },
-  { 'O',         CAPS,   {'o', 'O'} },
-  { 'P',         CAPS,   {'p', 'P'} },
-  /* Second letter row */
-  { 'Q',         CAPS,   {'q', 'Q'} },
-  { 'S',         CAPS,   {'s', 'S'} },
-  { 'D',         CAPS,   {'d', 'D'} },
-  { 'F',         CAPS,   {'f', 'F'} },
-  { 'G',         CAPS,   {'g', 'G'} },
-  { 'H',         CAPS,   {'h', 'H'} },
-  { 'J',         CAPS,   {'j', 'J'} },
-  { 'K',         CAPS,   {'k', 'K'} },
-  { 'L',         CAPS,   {'l', 'L'} },
-  { 'M',         CAPS,   {'m', 'M'} },
-  /* Third letter row */
-  { 'W',         CAPS,   {'w', 'W'} },
-  { 'X',         CAPS,   {'x', 'X'} },
-  { 'C',         CAPS,   {'c', 'C'} },
-  { 'V',         CAPS,   {'v', 'V'} },
-  { 'B',         CAPS,   {'b', 'B'} },
-  { 'N',         CAPS,   {'n', 'N'} },
 
   /* Specials */
   /* Ctrl-_ generates US */
@@ -214,6 +185,34 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
 
 ROSDATA VK_TO_WCHARS3 key_to_chars_3mod[] = {
   /* Normal, Shifted, Ctrl */
+
+  /* The alphabet */
+  { 'A',         CAPS,   {'a', 'A', 0x01} },
+  { 'B',         CAPS,   {'b', 'B', 0x02} },
+  { 'C',         CAPS,   {'c', 'C', 0x03} },
+  { 'D',         CAPS,   {'d', 'D', 0x04} },
+  { 'F',         CAPS,   {'f', 'F', 0x06} },
+  { 'G',         CAPS,   {'g', 'G', 0x07} },
+  { 'H',         CAPS,   {'h', 'H', 0x08} },
+  { 'I',         CAPS,   {'i', 'I', 0x09} },
+  { 'J',         CAPS,   {'j', 'J', 0x0a} },
+  { 'K',         CAPS,   {'k', 'K', 0x0b} },
+  { 'L',         CAPS,   {'l', 'L', 0x0c} },
+  { 'M',         CAPS,   {'m', 'M', 0x0d} },
+  { 'N',         CAPS,   {'n', 'N', 0x0e} },
+  { 'O',         CAPS,   {'o', 'O', 0x0f} },
+  { 'P',         CAPS,   {'p', 'P', 0x10} },
+  { 'Q',         CAPS,   {'q', 'Q', 0x11} },
+  { 'R',         CAPS,   {'r', 'R', 0x12} },
+  { 'S',         CAPS,   {'s', 'S', 0x13} },
+  { 'T',         CAPS,   {'t', 'T', 0x14} },
+  { 'U',         CAPS,   {'u', 'U', 0x15} },
+  { 'V',         CAPS,   {'v', 'V', 0x16} },
+  { 'W',         CAPS,   {'w', 'W', 0x17} },
+  { 'X',         CAPS,   {'x', 'X', 0x18} },
+  { 'Y',         CAPS,   {'y', 'Y', 0x19} },
+  { 'Z',         CAPS,   {'z', 'Z', 0x1a} },
+
   /* Legacy (telnet-style) ascii escapes */
   { VK_OEM_102, 0, {'<', '>', 0x1c /* FS */} },
   { VK_OEM_6, 0, {WCH_DEAD, WCH_DEAD, WCH_NONE} },
@@ -234,7 +233,7 @@ ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
   { '9' ,       1, {'ç',   '9',      WCH_NONE, '^'} },
   { '0' ,       1, {'à',   '0',      WCH_NONE, '@'} },
   { VK_OEM_PLUS,0, {'=',       '+',      WCH_NONE, '}'} },
-  { 'E' ,       1, {'e',       'E',      WCH_NONE, '€' /* euro */} },
+  { 'E' ,       1, {'e',       'E',      0x05, '€' /* euro */} },
   { VK_OEM_1,   0, {'$',       '£',  WCH_NONE, '¤'} },
   { VK_OEM_4,   0, {')',       '°',   WCH_NONE, ']'} },
   { 0, 0 }

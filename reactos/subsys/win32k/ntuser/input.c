@@ -516,7 +516,7 @@ KeyboardThreadMain(PVOID StartContext)
                ModifierState |= fsModifiers;
 
                if (ModifierState == fsModifiers &&
-                     (fsModifiers == MOD_ALT || fsModifiers == MOD_WIN || fsModifiers == MOD_CONTROL))
+                     (fsModifiers == MOD_ALT || fsModifiers == MOD_WIN))
                {
                   /* First send out special notifications
                    * (For alt, the message that turns on accelerator
@@ -637,31 +637,7 @@ KeyboardThreadMain(PVOID StartContext)
                else
                   msg.message = WM_SYSKEYUP;
             }
-            else if (ModifierState & MOD_CONTROL)
-			{
-			   if(NextKeyInput.MakeCode == 0x2E)/* Ctrl-C */
-			   {
-			      DPRINT1("Ctrl-C pressed\n");
-               /* FIXME: this seems wrong! this bypass hotkeys and all and the winhellos CRTL+C hotkey test
-                  dont work (anymore) */
-			      co_MsqPostKeyboardMessage(WM_COPY,0,0);
-                  continue;
-			   }
-			   else if(NextKeyInput.MakeCode == 0x2F) /* Ctrl-V */
-			   {
-				 DPRINT1("Ctrl-V pressed\n");
-				 co_MsqPostKeyboardMessage(WM_PASTE,0,0);
-                 continue;
-			   }
-			   else
-			   {
-				  DPRINT1("Ctrl with unknown combination %04x\n",NextKeyInput.MakeCode);
-                  if (!(KeyInput.Flags & KEY_BREAK))
-                    msg.message = WM_KEYDOWN;
-                  else
-                    msg.message = WM_KEYUP;
-			   }
-			}else
+            else
             {
                if (!(KeyInput.Flags & KEY_BREAK))
                   msg.message = WM_KEYDOWN;

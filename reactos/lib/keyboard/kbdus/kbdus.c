@@ -143,35 +143,6 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   { '8',         NOCAPS, {'8', '*'} },
   { '9',         NOCAPS, {'9', '('} },
   { '0',         NOCAPS, {'0', ')'} },
-  /* First letter row */
-  { 'Q',         CAPS,   {'q', 'Q'} },
-  { 'W',         CAPS,   {'w', 'W'} },
-  { 'E',         CAPS,   {'e', 'E'} },
-  { 'R',         CAPS,   {'r', 'R'} },
-  { 'T',         CAPS,   {'t', 'T'} },
-  { 'Y',         CAPS,   {'y', 'Y'} },
-  { 'U',         CAPS,   {'u', 'U'} },
-  { 'I',         CAPS,   {'i', 'I'} },
-  { 'O',         CAPS,   {'o', 'O'} },
-  { 'P',         CAPS,   {'p', 'P'} },
-  /* Second letter row */
-  { 'A',         CAPS,   {'a', 'A'} },
-  { 'S',         CAPS,   {'s', 'S'} },
-  { 'D',         CAPS,   {'d', 'D'} },
-  { 'F',         CAPS,   {'f', 'F'} },
-  { 'G',         CAPS,   {'g', 'G'} },
-  { 'H',         CAPS,   {'h', 'H'} },
-  { 'J',         CAPS,   {'j', 'J'} },
-  { 'K',         CAPS,   {'k', 'K'} },
-  { 'L',         CAPS,   {'l', 'L'} },
-  /* Third letter row */
-  { 'Z',         CAPS,   {'z', 'Z'} },
-  { 'X',         CAPS,   {'x', 'X'} },
-  { 'C',         CAPS,   {'c', 'C'} },
-  { 'V',         CAPS,   {'v', 'V'} },
-  { 'B',         CAPS,   {'b', 'B'} },
-  { 'N',         CAPS,   {'n', 'N'} },
-  { 'M',         CAPS,   {'m', 'M'} },
 
   /* Specials */
   /* Ctrl-_ generates US */
@@ -205,6 +176,35 @@ ROSDATA VK_TO_WCHARS3 key_to_chars_3mod[] = {
 
 ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
   /* Normal, Shifted, Ctrl, C-S-x */
+
+  /* The alphabet */
+  { 'A',         CAPS,   {'a', 'A', 0x01, 0x01} },
+  { 'B',         CAPS,   {'b', 'B', 0x02, 0x02} },
+  { 'C',         CAPS,   {'c', 'C', 0x03, 0x03} },
+  { 'D',         CAPS,   {'d', 'D', 0x04, 0x04} },
+  { 'E',         CAPS,   {'e', 'E', 0x05, 0x05} },
+  { 'F',         CAPS,   {'f', 'F', 0x06, 0x06} },
+  { 'G',         CAPS,   {'g', 'G', 0x07, 0x07} },
+  { 'H',         CAPS,   {'h', 'H', 0x08, 0x08} },
+  { 'I',         CAPS,   {'i', 'I', 0x09, 0x09} },
+  { 'J',         CAPS,   {'j', 'J', 0x0a, 0x0a} },
+  { 'K',         CAPS,   {'k', 'K', 0x0b, 0x0b} },
+  { 'L',         CAPS,   {'l', 'L', 0x0c, 0x0c} },
+  { 'M',         CAPS,   {'m', 'M', 0x0d, 0x0d} },
+  { 'N',         CAPS,   {'n', 'N', 0x0e, 0x0e} },
+  { 'O',         CAPS,   {'o', 'O', 0x0f, 0x0f} },
+  { 'P',         CAPS,   {'p', 'P', 0x10, 0x10} },
+  { 'Q',         CAPS,   {'q', 'Q', 0x11, 0x11} },
+  { 'R',         CAPS,   {'r', 'R', 0x12, 0x12} },
+  { 'S',         CAPS,   {'s', 'S', 0x13, 0x13} },
+  { 'T',         CAPS,   {'t', 'T', 0x14, 0x14} },
+  { 'U',         CAPS,   {'u', 'U', 0x15, 0x15} },
+  { 'V',         CAPS,   {'v', 'V', 0x16, 0x16} },
+  { 'W',         CAPS,   {'w', 'W', 0x17, 0x17} },
+  { 'X',         CAPS,   {'x', 'X', 0x18, 0x18} },
+  { 'Y',         CAPS,   {'y', 'Y', 0x19, 0x19} },
+  { 'Z',         CAPS,   {'z', 'Z', 0x1a, 0x1a} },
+
   /* Legacy Ascii generators */
   { '2', NOCAPS, {'2', '@', WCH_NONE, 0} },
   { '6', NOCAPS, {'6', '^', WCH_NONE, 0x1e /* RS */} },
