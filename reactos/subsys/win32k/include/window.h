@@ -60,7 +60,6 @@ typedef struct _WINDOW_OBJECT
   UINT IDMenu;
   /* Handle of region of the window to be updated. */
   HANDLE UpdateRegion;
-  HANDLE NCUpdateRegion;
   /* Handle of the window region. */
   HANDLE WindowRegion;
   /* Pointer to the owning thread's message queue. */

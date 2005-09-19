@@ -103,7 +103,6 @@ VOID FASTCALL
 MsqIncPaintCountQueue(PUSER_MESSAGE_QUEUE Queue)
 {
    Queue->PaintCount++;
-   Queue->PaintPosted = TRUE;
    Queue->QueueBits |= QS_PAINT;
    Queue->ChangedBits |= QS_PAINT;
    if (Queue->WakeMask & QS_PAINT)
@@ -114,10 +113,6 @@ VOID FASTCALL
 MsqDecPaintCountQueue(PUSER_MESSAGE_QUEUE Queue)
 {
    Queue->PaintCount--;
-   if (Queue->PaintCount == 0)
-   {
-      Queue->PaintPosted = FALSE;
-   }
 }
 
 
@@ -1341,7 +1336,6 @@ MsqInitializeMessageQueue(struct _ETHREAD *Thread, PUSER_MESSAGE_QUEUE MessageQu
    KeQueryTickCount(&LargeTickCount);
    MessageQueue->LastMsgRead = LargeTickCount.u.LowPart;
    MessageQueue->FocusWindow = NULL;
-   MessageQueue->PaintPosted = FALSE;
    MessageQueue->PaintCount = 0;
    MessageQueue->WakeMask = ~0;
    MessageQueue->NewMessagesHandle = NULL;

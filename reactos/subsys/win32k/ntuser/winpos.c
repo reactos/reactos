@@ -959,6 +959,7 @@ co_WinPosSetWindowPos(
          else if(VisRgn)
          {
             RGNDATA_UnlockRgn(VisRgn);
+            NtGdiOffsetRgn(VisBefore, -Window->WindowRect.left, -Window->WindowRect.top);
          }
       }
    }
@@ -1081,6 +1082,13 @@ co_WinPosSetWindowPos(
       Window->Style |= WS_VISIBLE;
    }
 
+   if (Window->UpdateRegion != NULL && Window->UpdateRegion != (HRGN)1)
+   {
+      NtGdiOffsetRgn(Window->UpdateRegion,
+                     NewWindowRect.left - OldWindowRect.left,
+                     NewWindowRect.top - OldWindowRect.top);
+   }
+
    DceResetActiveDCEs(Window);
 
    if (!(WinPos.flags & SWP_NOREDRAW))
@@ -1099,6 +1107,7 @@ co_WinPosSetWindowPos(
       else if(VisRgn)
       {
          RGNDATA_UnlockRgn(VisRgn);
+         NtGdiOffsetRgn(VisAfter, -Window->WindowRect.left, -Window->WindowRect.top);
       }
 
       /*
@@ -1136,11 +1145,9 @@ co_WinPosSetWindowPos(
          /* No use in copying bits which are in the update region. */
          if (Window->UpdateRegion != NULL)
          {
+            NtGdiOffsetRgn(CopyRgn, NewWindowRect.left, NewWindowRect.top);
             NtGdiCombineRgn(CopyRgn, CopyRgn, Window->UpdateRegion, RGN_DIFF);
-         }
-         if (Window->NCUpdateRegion != NULL)
-         {
-            NtGdiCombineRgn(CopyRgn, CopyRgn, Window->NCUpdateRegion, RGN_DIFF);
+            NtGdiOffsetRgn(CopyRgn, -NewWindowRect.left, -NewWindowRect.top);
          }
 
          /*
@@ -1163,6 +1170,7 @@ co_WinPosSetWindowPos(
             {
                RGNDATA_UnlockRgn(VisRgn);
             }
+
             /*
              * Small trick here: there is no function to bitblt a region. So
              * we set the region as the clipping region, take the bounding box
@@ -1172,11 +1180,10 @@ co_WinPosSetWindowPos(
              * Since NtUserGetDCEx takes ownership of the clip region, we need
              * to create a copy of CopyRgn and pass that. We need CopyRgn later
              */
-            HRGN ClipRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
-
-            NtGdiCombineRgn(ClipRgn, CopyRgn, NULL, RGN_COPY);
-            Dc = UserGetDCEx(Window, ClipRgn, DCX_WINDOW | DCX_CACHE |
-                             DCX_INTERSECTRGN | DCX_CLIPSIBLINGS);
+            NtGdiOffsetRgn(CopyRgn, NewWindowRect.left, NewWindowRect.top);
+            Dc = UserGetDCEx(Window, CopyRgn, DCX_WINDOW | DCX_CACHE |
+                             DCX_INTERSECTRGN | DCX_CLIPSIBLINGS |
+                             DCX_KEEPCLIPRGN);
             NtGdiBitBlt(Dc,
                         CopyRect.left, CopyRect.top, CopyRect.right - CopyRect.left,
                         CopyRect.bottom - CopyRect.top, Dc,
@@ -1184,6 +1191,7 @@ co_WinPosSetWindowPos(
                         CopyRect.top + (OldWindowRect.top - NewWindowRect.top), SRCCOPY);
             UserReleaseDC(Window, Dc);
             IntValidateParent(Window, CopyRgn);
+            NtGdiOffsetRgn(CopyRgn, -NewWindowRect.left, -NewWindowRect.top);
          }
          else if(VisRgn)
          {

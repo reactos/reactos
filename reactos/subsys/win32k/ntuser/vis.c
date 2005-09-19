@@ -38,37 +38,30 @@ VIS_ComputeVisibleRegion(
    BOOLEAN ClipSiblings)
 {
    HRGN VisRgn, ClipRgn;
-   INT LeftOffset, TopOffset;
    PWINDOW_OBJECT PreviousWindow, CurrentWindow, CurrentSibling;
 
    if (!(Window->Style & WS_VISIBLE))
    {
-      return NtGdiCreateRectRgn(0, 0, 0, 0);
+      return NULL;
    }
 
    if (ClientArea)
    {
-      if(!(ClipRgn = VIS_ComputeVisibleRegion(Window, FALSE, ClipChildren, ClipSiblings)))
+      if (!(ClipRgn = VIS_ComputeVisibleRegion(Window, FALSE, ClipChildren, ClipSiblings)))
       {
-         return NtGdiCreateRectRgn(0, 0, 0, 0);
+         return NULL;
       }
-      if(!(VisRgn = UnsafeIntCreateRectRgnIndirect(&Window->ClientRect)))
+      if (!(VisRgn = UnsafeIntCreateRectRgnIndirect(&Window->ClientRect)))
       {
          NtGdiDeleteObject(VisRgn);
-         return NtGdiCreateRectRgn(0, 0, 0, 0);
+         return NULL;
       }
-      LeftOffset = Window->ClientRect.left - Window->WindowRect.left;
-      TopOffset = Window->ClientRect.top - Window->WindowRect.top;
-      NtGdiOffsetRgn(VisRgn, -Window->WindowRect.left, -Window->WindowRect.top);
       NtGdiCombineRgn(VisRgn, VisRgn, ClipRgn, RGN_AND);
       NtGdiDeleteObject(ClipRgn);
-      NtGdiOffsetRgn(VisRgn, -LeftOffset, -TopOffset);
       return VisRgn;
    }
 
    VisRgn = UnsafeIntCreateRectRgnIndirect(&Window->WindowRect);
-   LeftOffset = Window->WindowRect.left;
-   TopOffset = Window->WindowRect.top;
 
    /*
     * Walk through all parent windows and for each clip the visble region
@@ -83,14 +76,15 @@ VIS_ComputeVisibleRegion(
       if (!(CurrentWindow->Style & WS_VISIBLE))
       {
          NtGdiDeleteObject(VisRgn);
-         return NtGdiCreateRectRgn(0, 0, 0, 0);
+         return NULL;
       }
+
       ClipRgn = UnsafeIntCreateRectRgnIndirect(&CurrentWindow->ClientRect);
       NtGdiCombineRgn(VisRgn, VisRgn, ClipRgn, RGN_AND);
       NtGdiDeleteObject(ClipRgn);
 
       if ((PreviousWindow->Style & WS_CLIPSIBLINGS) ||
-            (PreviousWindow == Window && ClipSiblings))
+          (PreviousWindow == Window && ClipSiblings))
       {
          CurrentSibling = CurrentWindow->FirstChild;
          while (CurrentSibling != NULL && CurrentSibling != PreviousWindow)
@@ -99,7 +93,7 @@ VIS_ComputeVisibleRegion(
             {
                ClipRgn = UnsafeIntCreateRectRgnIndirect(&CurrentSibling->WindowRect);
                /* Combine it with the window region if available */
-               if(CurrentSibling->WindowRegion && !(CurrentSibling->Style & WS_MINIMIZE))
+               if (CurrentSibling->WindowRegion && !(CurrentSibling->Style & WS_MINIMIZE))
                {
                   NtGdiOffsetRgn(ClipRgn, -CurrentSibling->WindowRect.left, -CurrentSibling->WindowRect.top);
                   NtGdiCombineRgn(ClipRgn, ClipRgn, CurrentSibling->WindowRegion, RGN_AND);
@@ -125,7 +119,7 @@ VIS_ComputeVisibleRegion(
          {
             ClipRgn = UnsafeIntCreateRectRgnIndirect(&CurrentWindow->WindowRect);
             /* Combine it with the window region if available */
-            if(CurrentWindow->WindowRegion && !(CurrentWindow->Style & WS_MINIMIZE))
+            if (CurrentWindow->WindowRegion && !(CurrentWindow->Style & WS_MINIMIZE))
             {
                NtGdiOffsetRgn(ClipRgn, -CurrentWindow->WindowRect.left, -CurrentWindow->WindowRect.top);
                NtGdiCombineRgn(ClipRgn, ClipRgn, CurrentWindow->WindowRegion, RGN_AND);
@@ -138,14 +132,12 @@ VIS_ComputeVisibleRegion(
       }
    }
 
-   if(Window->WindowRegion && !(Window->Style & WS_MINIMIZE))
+   if (Window->WindowRegion && !(Window->Style & WS_MINIMIZE))
    {
-      NtGdiOffsetRgn(VisRgn, -LeftOffset, -TopOffset);
+      NtGdiOffsetRgn(VisRgn, -Window->WindowRect.left, -Window->WindowRect.top);
       NtGdiCombineRgn(VisRgn, VisRgn, Window->WindowRegion, RGN_AND);
-      return VisRgn;
+      NtGdiOffsetRgn(VisRgn, Window->WindowRect.left, Window->WindowRect.top);
    }
-
-   NtGdiOffsetRgn(VisRgn, -LeftOffset, -TopOffset);
 
    return VisRgn;
 }
