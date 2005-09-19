@@ -136,6 +136,17 @@ LRESULT TaskBar::Init(LPCREATESTRUCT pcs)
 	//SendMessage(_htoolbar, TB_SETPADDING, 0, MAKELPARAM(8,8));
 
 	metrics.cbSize = sizeof(TBMETRICS);
+	metrics.dwMask = TBMF_PAD | TBMF_BARPAD | TBMF_BUTTONSPACING;
+	SendMessage(_htoolbar, TB_GETMETRICS, 0, (LPARAM)&metrics);
+	{
+	   FILE *f = fopen("test.txt", "w");
+	   fprintf(f, "Pad: %d, %d\nBarPad: %d, %d\nBS: %d, %d\n",
+	           metrics.cxPad, metrics.cyPad,
+	           metrics.cxBarPad, metrics.cyBarPad,
+	           metrics.cxButtonSpacing, metrics.cyButtonSpacing);
+	   fclose(f);
+	}
+
 	metrics.dwMask = TBMF_BARPAD | TBMF_BUTTONSPACING;
 	metrics.cxBarPad = 0;
 	metrics.cyBarPad = 0;
@@ -562,7 +573,7 @@ void TaskBar::ResizeButtons()
 
 	if (btns > 0) {
 		int bar_width = ClientRect(_hwnd).right;
-		int btn_width = bar_width / btns;
+		int btn_width = (bar_width / btns) - 3;
 
 		if (btn_width < TASKBUTTONWIDTH_MIN)
 			btn_width = TASKBUTTONWIDTH_MIN;
