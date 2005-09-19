@@ -74,6 +74,9 @@ typedef struct _BIOSDISKENTRY
   ULONG DiskNumber;
   ULONG Signature;
   ULONG Checksum;
+  BOOLEAN Recognized;
+  CM_DISK_GEOMETRY_DEVICE_DATA DiskGeometry;
+  CM_INT13_DRIVE_PARAMETER Int13DiskData;
 } BIOSDISKENTRY, *PBIOSDISKENTRY; 
 
 

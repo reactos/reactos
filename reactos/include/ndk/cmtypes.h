@@ -174,6 +174,116 @@ typedef struct _KEY_BASIC_INFORMATION
     WCHAR Name[1];
 } KEY_BASIC_INFORMATION, *PKEY_BASIC_INFORMATION;
 
+#else
+
+typedef struct _REG_DELETE_KEY_INFORMATION
+{
+    PVOID Object;
+} REG_DELETE_KEY_INFORMATION, *PREG_DELETE_KEY_INFORMATION;
+
+typedef struct _REG_SET_VALUE_KEY_INFORMATION
+{
+    PVOID Object;
+    PUNICODE_STRING ValueName;
+    ULONG TitleIndex;
+    ULONG Type;
+    PVOID Data;
+    ULONG DataSize;
+} REG_SET_VALUE_KEY_INFORMATION, *PREG_SET_VALUE_KEY_INFORMATION;
+
+typedef struct _REG_DELETE_VALUE_KEY_INFORMATION 
+{
+    PVOID Object;
+    PUNICODE_STRING ValueName;
+} REG_DELETE_VALUE_KEY_INFORMATION, *PREG_DELETE_VALUE_KEY_INFORMATION;
+
+typedef struct _REG_SET_INFORMATION_KEY_INFORMATION
+{
+    PVOID Object;
+    KEY_SET_INFORMATION_CLASS KeySetInformationClass;
+    PVOID KeySetInformation;
+    ULONG KeySetInformationLength;
+} REG_SET_INFORMATION_KEY_INFORMATION, *PREG_SET_INFORMATION_KEY_INFORMATION;
+
+typedef struct _REG_ENUMERATE_KEY_INFORMATION
+{
+    PVOID Object;
+    ULONG Index;
+    KEY_INFORMATION_CLASS KeyInformationClass;
+    PVOID KeyInformation;
+    ULONG Length;
+    PULONG ResultLength;
+} REG_ENUMERATE_KEY_INFORMATION, *PREG_ENUMERATE_KEY_INFORMATION;
+
+typedef struct _REG_ENUMERATE_VALUE_KEY_INFORMATION 
+{
+    PVOID Object;
+    ULONG Index;
+    KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass;
+    PVOID KeyValueInformation;
+    ULONG Length;
+    PULONG ResultLength;
+} REG_ENUMERATE_VALUE_KEY_INFORMATION, *PREG_ENUMERATE_VALUE_KEY_INFORMATION;
+
+typedef struct _REG_QUERY_KEY_INFORMATION
+{
+    PVOID Object;
+    KEY_INFORMATION_CLASS KeyInformationClass;
+    PVOID KeyInformation;
+    ULONG Length;
+    PULONG ResultLength;
+} REG_QUERY_KEY_INFORMATION, *PREG_QUERY_KEY_INFORMATION;
+
+typedef struct _REG_QUERY_VALUE_KEY_INFORMATION 
+{
+    PVOID Object;
+    PUNICODE_STRING ValueName;
+    KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass;
+    PVOID KeyValueInformation;
+    ULONG Length;
+    PULONG ResultLength;
+} REG_QUERY_VALUE_KEY_INFORMATION, *PREG_QUERY_VALUE_KEY_INFORMATION;
+
+typedef struct _REG_QUERY_MULTIPLE_VALUE_KEY_INFORMATION
+{
+    PVOID Object;
+    PKEY_VALUE_ENTRY ValueEntries;
+    ULONG EntryCount;
+    PVOID ValueBuffer;
+    PULONG BufferLength;
+    PULONG RequiredBufferLength;
+} REG_QUERY_MULTIPLE_VALUE_KEY_INFORMATION, *PREG_QUERY_MULTIPLE_VALUE_KEY_INFORMATION;
+
+typedef struct _REG_PRE_CREATE_KEY_INFORMATION 
+{
+    PUNICODE_STRING CompleteName;
+} REG_PRE_CREATE_KEY_INFORMATION, *PREG_PRE_CREATE_KEY_INFORMATION;
+
+typedef struct _REG_POST_CREATE_KEY_INFORMATION 
+{
+    PUNICODE_STRING CompleteName;
+    PVOID Object;
+    NTSTATUS Status;
+} REG_POST_CREATE_KEY_INFORMATION, *PREG_POST_CREATE_KEY_INFORMATION;
+
+typedef struct _REG_PRE_OPEN_KEY_INFORMATION 
+{
+    PUNICODE_STRING  CompleteName;
+} REG_PRE_OPEN_KEY_INFORMATION, *PREG_PRE_OPEN_KEY_INFORMATION;
+
+typedef struct _REG_POST_OPEN_KEY_INFORMATION 
+{
+    PUNICODE_STRING CompleteName;
+    PVOID Object;
+    NTSTATUS Status;
+} REG_POST_OPEN_KEY_INFORMATION, *PREG_POST_OPEN_KEY_INFORMATION;
+
+typedef struct _REG_POST_OPERATION_INFORMATION 
+{
+    PVOID Object;
+    NTSTATUS Status;
+} REG_POST_OPERATION_INFORMATION,*PREG_POST_OPERATION_INFORMATION;
+
 #endif
 
 typedef struct _PLUGPLAY_EVENT_BLOCK
@@ -274,6 +384,152 @@ typedef struct _PLUGPLAY_BUS_INSTANCE
     ULONG BusNumber;
     WCHAR BusName[MAX_BUS_NAME];
 } PLUGPLAY_BUS_INSTANCE, *PPLUGPLAY_BUS_INSTANCE;
+
+#ifdef NTOS_MODE_USER
+
+#include <pshpack1.h>
+typedef struct _CM_PARTIAL_RESOURCE_DESCRIPTOR {
+  UCHAR Type;
+  UCHAR ShareDisposition;
+  USHORT Flags;
+  union {
+    struct {
+      PHYSICAL_ADDRESS Start;
+      ULONG Length;
+    } Generic;
+    struct {
+      PHYSICAL_ADDRESS Start;
+      ULONG Length;
+    } Port;
+    struct {
+      ULONG Level;
+      ULONG Vector;
+      ULONG Affinity;
+    } Interrupt;
+    struct {
+      PHYSICAL_ADDRESS Start;
+      ULONG Length;
+    } Memory;
+    struct {
+      ULONG Channel;
+      ULONG Port;
+      ULONG Reserved1;
+    } Dma;
+    struct {
+      ULONG Data[3];
+    } DevicePrivate;
+    struct {
+      ULONG Start;
+      ULONG Length;
+      ULONG Reserved;
+    } BusNumber;
+    struct {
+      ULONG DataSize;
+      ULONG Reserved1;
+      ULONG Reserved2;
+    } DeviceSpecificData;
+  } u;
+} CM_PARTIAL_RESOURCE_DESCRIPTOR, *PCM_PARTIAL_RESOURCE_DESCRIPTOR;
+
+/* CM_PARTIAL_RESOURCE_DESCRIPTOR.Type */
+
+#define CmResourceTypeNull                0
+#define CmResourceTypePort                1
+#define CmResourceTypeInterrupt           2
+#define CmResourceTypeMemory              3
+#define CmResourceTypeDma                 4
+#define CmResourceTypeDeviceSpecific      5
+#define CmResourceTypeBusNumber           6
+#define CmResourceTypeMaximum             7
+#define CmResourceTypeNonArbitrated     128
+#define CmResourceTypeConfigData        128
+#define CmResourceTypeDevicePrivate     129
+#define CmResourceTypePcCardConfig      130
+#define CmResourceTypeMfCardConfig      131
+
+/* CM_PARTIAL_RESOURCE_DESCRIPTOR.ShareDisposition */
+
+typedef enum _CM_SHARE_DISPOSITION {
+  CmResourceShareUndetermined,
+  CmResourceShareDeviceExclusive,
+  CmResourceShareDriverExclusive,
+  CmResourceShareShared
+} CM_SHARE_DISPOSITION;
+
+/* CM_PARTIAL_RESOURCE_DESCRIPTOR.Flags if Type = CmResourceTypePort */
+
+#define CM_RESOURCE_PORT_MEMORY           0x0000
+#define CM_RESOURCE_PORT_IO               0x0001
+#define CM_RESOURCE_PORT_10_BIT_DECODE    0x0004
+#define CM_RESOURCE_PORT_12_BIT_DECODE    0x0008
+#define CM_RESOURCE_PORT_16_BIT_DECODE    0x0010
+#define CM_RESOURCE_PORT_POSITIVE_DECODE  0x0020
+#define CM_RESOURCE_PORT_PASSIVE_DECODE   0x0040
+#define CM_RESOURCE_PORT_WINDOW_DECODE    0x0080
+
+/* CM_PARTIAL_RESOURCE_DESCRIPTOR.Flags if Type = CmResourceTypeInterrupt */
+
+#define CM_RESOURCE_INTERRUPT_LEVEL_SENSITIVE 0x0000
+#define CM_RESOURCE_INTERRUPT_LATCHED         0x0001
+
+/* CM_PARTIAL_RESOURCE_DESCRIPTOR.Flags if Type = CmResourceTypeMemory */
+
+#define CM_RESOURCE_MEMORY_READ_WRITE     0x0000
+#define CM_RESOURCE_MEMORY_READ_ONLY      0x0001
+#define CM_RESOURCE_MEMORY_WRITE_ONLY     0x0002
+#define CM_RESOURCE_MEMORY_PREFETCHABLE   0x0004
+#define CM_RESOURCE_MEMORY_COMBINEDWRITE  0x0008
+#define CM_RESOURCE_MEMORY_24             0x0010
+#define CM_RESOURCE_MEMORY_CACHEABLE      0x0020
+
+/* CM_PARTIAL_RESOURCE_DESCRIPTOR.Flags if Type = CmResourceTypeDma */
+
+#define CM_RESOURCE_DMA_8                 0x0000
+#define CM_RESOURCE_DMA_16                0x0001
+#define CM_RESOURCE_DMA_32                0x0002
+#define CM_RESOURCE_DMA_8_AND_16          0x0004
+#define CM_RESOURCE_DMA_BUS_MASTER        0x0008
+#define CM_RESOURCE_DMA_TYPE_A            0x0010
+#define CM_RESOURCE_DMA_TYPE_B            0x0020
+#define CM_RESOURCE_DMA_TYPE_F            0x0040
+
+typedef struct _CM_PARTIAL_RESOURCE_LIST {
+  USHORT  Version;
+  USHORT  Revision;
+  ULONG  Count;
+  CM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptors[1];
+} CM_PARTIAL_RESOURCE_LIST, *PCM_PARTIAL_RESOURCE_LIST;
+
+typedef struct _CM_FULL_RESOURCE_DESCRIPTOR {
+  INTERFACE_TYPE  InterfaceType;
+  ULONG  BusNumber;
+  CM_PARTIAL_RESOURCE_LIST  PartialResourceList;
+} CM_FULL_RESOURCE_DESCRIPTOR, *PCM_FULL_RESOURCE_DESCRIPTOR;
+
+typedef struct _CM_RESOURCE_LIST {
+  ULONG  Count;
+  CM_FULL_RESOURCE_DESCRIPTOR  List[1];
+} CM_RESOURCE_LIST, *PCM_RESOURCE_LIST;
+
+typedef struct _CM_INT13_DRIVE_PARAMETER {
+  USHORT  DriveSelect;
+  ULONG  MaxCylinders;
+  USHORT  SectorsPerTrack;
+  USHORT  MaxHeads;
+  USHORT  NumberDrives;
+} CM_INT13_DRIVE_PARAMETER, *PCM_INT13_DRIVE_PARAMETER;
+
+typedef struct _CM_DISK_GEOMETRY_DEVICE_DATA
+{
+  ULONG BytesPerSector;
+  ULONG NumberOfCylinders;
+  ULONG SectorsPerTrack;
+  ULONG NumberOfHeads;
+} CM_DISK_GEOMETRY_DEVICE_DATA, *PCM_DISK_GEOMETRY_DEVICE_DATA;
+
+#include <poppack.h>
+
+#endif
 
 #endif
 
