@@ -154,6 +154,10 @@ IsHotKey (UINT fsModifiers, UINT vk)
 }
 
 
+
+/* SYSCALLS *****************************************************************/
+
+
 BOOL STDCALL
 NtUserRegisterHotKey(HWND hWnd,
                      int id,

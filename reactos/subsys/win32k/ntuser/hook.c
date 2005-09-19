@@ -59,21 +59,28 @@ IntAllocHookTable(void)
 }
 
 
-PHOOK FASTCALL IntGetHookObject(HHOOK hWnd)
+PHOOK FASTCALL IntGetHookObject(HHOOK hHook)
 {
-
-   PHOOK Window = (PHOOK)UserGetObject(&gHandleTable, hWnd, otHook);
-   if (!Window)
+   PHOOK Hook;
+   
+   if (!hHook)
+   {
+      SetLastWin32Error(ERROR_INVALID_HOOK_HANDLE);
+      return NULL;
+   }
+   
+   Hook = (PHOOK)UserGetObject(&gHandleTable, hHook, otHook);
+   if (!Hook)
    {
       SetLastWin32Error(ERROR_INVALID_HOOK_HANDLE);
       return NULL;
    }
 
-   ASSERT(USER_BODY_TO_HEADER(Window)->RefCount >= 0);
+   ASSERT(USER_BODY_TO_HEADER(Hook)->RefCount >= 0);
 
-   USER_BODY_TO_HEADER(Window)->RefCount++;
+   USER_BODY_TO_HEADER(Hook)->RefCount++;
 
-   return Window;
+   return Hook;
 }
 
 

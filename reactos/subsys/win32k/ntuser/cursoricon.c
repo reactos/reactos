@@ -77,7 +77,11 @@ PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon)
 {
    PCURICON_OBJECT CurIcon;
    
-   if (!hCurIcon) return NULL;
+   if (!hCurIcon)
+   {
+      SetLastWin32Error(ERROR_INVALID_CURSOR_HANDLE);
+      return NULL;
+   }
    
    CurIcon = (PCURICON_OBJECT)UserGetObject(&gHandleTable, hCurIcon, otCursorIcon);
    if (!CurIcon)

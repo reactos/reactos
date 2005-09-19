@@ -97,7 +97,11 @@ PWINDOW_OBJECT FASTCALL UserGetWindowObject(HWND hWnd)
 {
    PWINDOW_OBJECT Window;
    
-   if (!hWnd) return NULL;
+   if (!hWnd)
+   { 
+      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+      return NULL;
+   }
    
    Window = (PWINDOW_OBJECT)UserGetObject(&gHandleTable, hWnd, otWindow);
    if (!Window || 0 != (Window->Status & WINDOWSTATUS_DESTROYED))
@@ -3233,7 +3237,6 @@ UserGetWindowLong(HWND hWnd, DWORD Index, BOOL Ansi)
 
    if (!(Window = UserGetWindowObject(hWnd)))
    {
-      SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
       return 0;
    }
 

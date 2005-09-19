@@ -115,7 +115,15 @@ CleanupMenuImpl(VOID)
 
 PMENU_OBJECT FASTCALL UserGetMenuObject(HMENU hMenu)
 {
-   PMENU_OBJECT Menu = (PMENU_OBJECT)UserGetObject(&gHandleTable, hMenu, otMenu);
+   PMENU_OBJECT Menu;
+   
+   if (!hMenu)
+   {
+      SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
+      return NULL;
+   }
+   
+   Menu = (PMENU_OBJECT)UserGetObject(&gHandleTable, hMenu, otMenu);
    if (!Menu)
    {
       SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
