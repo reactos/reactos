@@ -254,7 +254,11 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
       {
 
       val = IsKeyInString (lpOptions,
+#ifdef _UNICODE
 			                     ir.Event.KeyEvent.uChar.UnicodeChar,
+#else
+			                     ir.Event.KeyEvent.uChar.AsciiChar,
+#endif 
 			                     bCaseSensitive);
       }
 
