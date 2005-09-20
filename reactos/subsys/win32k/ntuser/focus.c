@@ -520,7 +520,7 @@ HWND FASTCALL co_UserSetFocus(PWINDOW_OBJECT Window OPTIONAL)
       }
 
       TopWnd = UserGetAncestor(Window, GA_ROOT);
-      if (TopWnd->hSelf != UserGetActiveWindow())
+      if (TopWnd && TopWnd->hSelf != UserGetActiveWindow())
       {
 //         PWINDOW_OBJECT WndTops = UserGetWindowObject(hWndTop);
          UserRefObjectCo(TopWnd);

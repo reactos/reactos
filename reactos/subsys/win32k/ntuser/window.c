@@ -1374,9 +1374,9 @@ co_IntCreateWindowEx(DWORD dwExStyle,
       else
       {
          //temp hack
-         PWINDOW_OBJECT Par = UserGetWindowObject(hWndParent);
-         if (Par)
-            OwnerWindowHandle = UserGetAncestor(Par, GA_ROOT)->hSelf;
+         PWINDOW_OBJECT Par = UserGetWindowObject(hWndParent), Root;
+         if (Par && (Root = UserGetAncestor(Par, GA_ROOT)))
+            OwnerWindowHandle = Root->hSelf;
       }
    }
    else if ((dwStyle & (WS_CHILD | WS_POPUP)) == WS_CHILD)
@@ -2542,6 +2542,11 @@ NtUserFlashWindowEx(DWORD Unknown0)
 PWINDOW_OBJECT FASTCALL UserGetAncestor(PWINDOW_OBJECT Wnd, UINT Type)
 {
    PWINDOW_OBJECT WndAncestor, Parent;
+
+   if (Wnd->hSelf == IntGetDesktopWindow())
+   {
+      return NULL;
+   }
 
    switch (Type)
    {
