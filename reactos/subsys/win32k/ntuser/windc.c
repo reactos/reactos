@@ -63,6 +63,9 @@ DceGetVisRgn(PWINDOW_OBJECT Window, ULONG Flags, HWND hWndChild, ULONG CFlags)
                                      0 != (Flags & DCX_CLIPCHILDREN),
                                      0 != (Flags & DCX_CLIPSIBLINGS));
 
+   if (VisRgn == NULL)
+      VisRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
+
    return VisRgn;
 }
 
@@ -266,10 +269,6 @@ DceUpdateVisRgn(DCE *Dce, PWINDOW_OBJECT Window, ULONG Flags)
          DcxFlags = Flags & ~(DCX_CLIPSIBLINGS | DCX_CLIPCHILDREN | DCX_WINDOW);
       }
       hRgnVisible = DceGetVisRgn(Parent, DcxFlags, Window->hSelf, Flags);
-      if (hRgnVisible == NULL)
-      {
-         hRgnVisible = NtGdiCreateRectRgn(0, 0, 0, 0);
-      }
    }
    else if (Window == NULL)
    {
