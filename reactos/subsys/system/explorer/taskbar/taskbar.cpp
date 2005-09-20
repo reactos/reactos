@@ -29,7 +29,7 @@
 #include <precomp.h>
 
 #include "taskbar.h"
-#include "traynotify.h"	// for NOTIFYAREA_WIDTH_DEF
+#include "traynotify.h" // for NOTIFYAREA_WIDTH_DEF
 
 
 DynamicFct<BOOL (WINAPI*)(HWND hwnd)> g_SetTaskmanWindow(TEXT("user32"), "SetTaskmanWindow");
@@ -118,8 +118,6 @@ HWND TaskBar::Create(HWND hwndParent)
 
 LRESULT TaskBar::Init(LPCREATESTRUCT pcs)
 {
-        TBMETRICS metrics;
-	
 	if (super::Init(pcs))
 		return 1;
 
@@ -135,13 +133,19 @@ LRESULT TaskBar::Init(LPCREATESTRUCT pcs)
 	//SetWindowFont(_htoolbar, GetStockFont(ANSI_VAR_FONT), FALSE);
 	//SendMessage(_htoolbar, TB_SETPADDING, 0, MAKELPARAM(8,8));
 
+#ifndef __MINGW32__	// TBMETRICS missing in MinGW (as of 20.09.2005)
+	 // set metrics for the Taskbar toolbar to enable button spacing
+	TBMETRICS metrics;
+
 	metrics.cbSize = sizeof(TBMETRICS);
 	metrics.dwMask = TBMF_BARPAD | TBMF_BUTTONSPACING;
 	metrics.cxBarPad = 0;
 	metrics.cyBarPad = 0;
 	metrics.cxButtonSpacing = 3;
 	metrics.cyButtonSpacing = 3;
+
 	SendMessage(_htoolbar, TB_SETMETRICS, 0, (LPARAM)&metrics);
+#endif
 
 	_next_id = IDC_FIRST_APP;
 
@@ -392,8 +396,7 @@ BOOL CALLBACK TaskBar::EnumWndProc(HWND hwnd, LPARAM lparam)
 			HICON hIcon = get_window_icon_small(hwnd);
 			BOOL delete_icon = FALSE;
 
-			if (!hIcon)
-			{
+			if (!hIcon) {
 				hIcon = LoadIcon(0, IDI_APPLICATION);
 				delete_icon = TRUE;
 			}

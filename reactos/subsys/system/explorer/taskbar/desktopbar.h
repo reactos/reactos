@@ -31,7 +31,7 @@
 
 
 #define	DESKTOPBARBAR_HEIGHT	(GetSystemMetrics(SM_CYSIZE) + 5 * GetSystemMetrics(SM_CYEDGE))
-#define	REBARBAND_HEIGHT	(GetSystemMetrics(SM_CYSIZE) + 2 * GetSystemMetrics(SM_CYEDGE))
+#define	REBARBAND_HEIGHT		(GetSystemMetrics(SM_CYSIZE) + 2 * GetSystemMetrics(SM_CYEDGE))
 
 
 #define	IDC_START				0x1000

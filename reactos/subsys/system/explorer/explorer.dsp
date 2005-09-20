@@ -451,6 +451,10 @@ SOURCE=".\explorer-sw.rc"
 # End Source File
 # Begin Source File
 
+SOURCE=.\explorer.exe.manifest
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\explorer.ico
 # End Source File
 # Begin Source File

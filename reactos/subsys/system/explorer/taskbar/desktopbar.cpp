@@ -273,13 +273,17 @@ LRESULT DesktopBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 int DesktopBar::Notify(int id, NMHDR* pnmh)
 {
-        if (pnmh->code == RBN_CHILDSIZE) {
-                /* align the task bands to the top, so it's in row with the Start button */
-		NMREBARCHILDSIZE *childSize = (NMREBARCHILDSIZE*)pnmh;
+	if (pnmh->code == RBN_CHILDSIZE) {
+		/* align the task bands to the top, so it's in row with the Start button */
+		NMREBARCHILDSIZE* childSize = (NMREBARCHILDSIZE*)pnmh;
+
 		if (childSize->wID == IDW_TASKTOOLBAR) {
 			int cy = childSize->rcChild.top - childSize->rcBand.top;
-			childSize->rcChild.bottom -= cy;
-			childSize->rcChild.top -= cy;
+
+			if (cy) {
+				childSize->rcChild.bottom -= cy;
+				childSize->rcChild.top -= cy;
+			}
 		}
 	}
 

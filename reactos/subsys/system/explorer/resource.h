@@ -3,6 +3,7 @@
 // Used by explorer_intres.rc
 //
 #define IDS_TITLE                       1
+#define MANIFEST_RESOURCE_ID            1
 #define IDS_START                       2
 #define IDS_LOGOFF                      3
 #define IDS_SHUTDOWN                    4
