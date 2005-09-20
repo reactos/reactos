@@ -239,28 +239,14 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
 		while (TRUE)
 		{
 			ConInKey (&ir);
-      
-      if (bNoPrompt != FALSE)
-      {
+
 			val = IsKeyInString (lpOptions,
 #ifdef _UNICODE
 			                     ir.Event.KeyEvent.uChar.UnicodeChar,
 #else
 			                     ir.Event.KeyEvent.uChar.AsciiChar,
-#endif 
+#endif
 			                     bCaseSensitive);
-      }
-      else
-      {
-
-      val = IsKeyInString (lpOptions,
-#ifdef _UNICODE
-			                     ir.Event.KeyEvent.uChar.UnicodeChar,
-#else
-			                     ir.Event.KeyEvent.uChar.AsciiChar,
-#endif 
-			                     bCaseSensitive);
-      }
 
 			if (val >= 0)
 			{        
@@ -275,6 +261,9 @@ CommandChoice (LPTSTR cmd, LPTSTR param)
 		}
 
 		freep (arg);
+#ifdef _DEBUG
+		DebugPrintf (_T("ErrorLevel: %d\n"), nErrorLevel);
+#endif /* _DEBUG */
 		return 0;
 	}
 
