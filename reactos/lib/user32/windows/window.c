@@ -819,39 +819,36 @@ GetWindowRect(HWND hWnd,
 int STDCALL
 GetWindowTextA(HWND hWnd, LPSTR lpString, int nMaxCount)
 {
-  DWORD ProcessId;
-  if(!NtUserGetWindowThreadProcessId(hWnd, &ProcessId))
-  {
-    return 0;
-  }
+   DWORD ProcessId;
+ 
+   if (lpString == NULL)
+      return 0;
 
-  if(ProcessId != GetCurrentProcessId())
-  {
-    /* do not send WM_GETTEXT messages to other processes */
-    LPWSTR Buffer;
-    INT Length;
+   if (!NtUserGetWindowThreadProcessId(hWnd, &ProcessId))
+      return 0;
 
-    if (nMaxCount > 1)
-    {
-      *((PWSTR)lpString) = '\0';
-    }
-    Buffer = HeapAlloc(GetProcessHeap(), 0, nMaxCount * sizeof(WCHAR));
-    if (!Buffer)
-      return FALSE;
-    Length = NtUserInternalGetWindowText(hWnd, Buffer, nMaxCount);
-    if (Length > 0 && nMaxCount > 0 &&
-        !WideCharToMultiByte(CP_ACP, 0, Buffer, -1,
-        lpString, nMaxCount, NULL, NULL))
-    {
-      lpString[0] = '\0';
-    }
+   if (ProcessId != GetCurrentProcessId())
+   {
+      /* do not send WM_GETTEXT messages to other processes */
+      LPWSTR Buffer;
+      INT Length;
 
-    HeapFree(GetProcessHeap(), 0, Buffer);
+      Buffer = HeapAlloc(GetProcessHeap(), 0, nMaxCount * sizeof(WCHAR));
+      if (!Buffer)
+         return FALSE;
+      Length = NtUserInternalGetWindowText(hWnd, Buffer, nMaxCount);
+      if (Length > 0 && nMaxCount > 0 &&
+          !WideCharToMultiByte(CP_ACP, 0, Buffer, -1,
+          lpString, nMaxCount, NULL, NULL))
+      {
+         lpString[0] = '\0';
+      }
+      HeapFree(GetProcessHeap(), 0, Buffer);
 
-    return (LRESULT)Length;
-  }
+      return (LRESULT)Length;
+   }
 
-  return(SendMessageA(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString));
+   return SendMessageA(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString);
 }
 
 
@@ -903,29 +900,20 @@ GetWindowTextLengthW(HWND hWnd)
  * @implemented
  */
 int STDCALL
-GetWindowTextW(
-	HWND hWnd,
-	LPWSTR lpString,
-	int nMaxCount)
+GetWindowTextW(HWND hWnd, LPWSTR lpString, int nMaxCount)
 {
-  DWORD ProcessId;
-  if(!NtUserGetWindowThreadProcessId(hWnd, &ProcessId))
-  {
-    return 0;
-  }
+   DWORD ProcessId;
+   
+   if (lpString == NULL)
+      return 0;
 
-  if(ProcessId == GetCurrentProcessId())
-  {
-    return(SendMessageW(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString));
-  }
+   if (!NtUserGetWindowThreadProcessId(hWnd, &ProcessId))
+      return 0;
 
-  /* do not send WM_GETTEXT messages to other processes */
-  if (nMaxCount > 1)
-  {
-    *((PWSTR)lpString) = L'\0';
-  }
+   if (ProcessId == GetCurrentProcessId())
+      return SendMessageW(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString);
 
-  return (LRESULT)NtUserInternalGetWindowText(hWnd, (PWSTR)lpString, nMaxCount);
+   return NtUserInternalGetWindowText(hWnd, lpString, nMaxCount);
 }
 
 DWORD STDCALL

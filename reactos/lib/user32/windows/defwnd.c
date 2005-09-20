@@ -1426,10 +1426,6 @@ DefWindowProcA(HWND hWnd,
             LPSTR AnsiBuffer = (LPSTR)lParam;
             INT Length;
 
-            if (wParam > 1)
-            {
-                *((PWSTR)lParam) = '\0';
-            }
             Buffer = HeapAlloc(GetProcessHeap(), 0, wParam * sizeof(WCHAR));
             if (!Buffer)
                 return FALSE;
@@ -1505,10 +1501,6 @@ DefWindowProcW(HWND hWnd,
 
         case WM_GETTEXT:
         {
-            if (wParam > 1)
-            {
-                *((PWSTR)lParam) = L'\0';
-            }
             return (LRESULT)NtUserInternalGetWindowText(hWnd, (PWSTR)lParam, wParam);
         }
 
