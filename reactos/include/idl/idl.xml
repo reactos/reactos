@@ -23,4 +23,16 @@
 	<define name="_X86_" />
 	<file switches="-o">svcctl.idl</file>
 </module>
+<module name="eventlog_server" type="rpcserver">
+	<include base="ReactOS">.</include>
+	<include base="ReactOS">w32api/include</include>
+	<define name="_X86_" />
+	<file switches="-o">eventlogrpc.idl</file>
+</module>
+<module name="eventlog_client" type="rpcclient">
+	<include base="ReactOS">.</include>
+	<include base="ReactOS">w32api/include</include>
+	<define name="_X86_" />
+	<file switches="-o">eventlogrpc.idl</file>
+</module>
 </group>
