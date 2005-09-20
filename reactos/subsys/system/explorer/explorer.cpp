@@ -230,8 +230,7 @@ LPCTSTR FileTypeManager::set_type(Entry* entry, bool dont_hide_ext)
 		if (type._neverShowExt && !dont_hide_ext) {
 			int len = ext - entry->_data.cFileName;
 			entry->_display_name = (LPTSTR) malloc((len+1)*sizeof(TCHAR));
-			lstrcpyn(entry->_display_name, entry->_data.cFileName, len);
-			entry->_display_name[len] = TEXT('\0');
+			lstrcpyn(entry->_display_name, entry->_data.cFileName, len + 1);
 		}
 
 		if (is_exe_file(ext))
