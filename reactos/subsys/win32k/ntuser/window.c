@@ -1468,10 +1468,6 @@ co_IntCreateWindowEx(DWORD dwExStyle,
 
    InsertTailList(&Class->ClassWindowsListHead, &Window->ClassListEntry);
 
-   Window->ExStyle = dwExStyle;
-   Window->Style = dwStyle & ~WS_VISIBLE;
-   DPRINT("1: Style is now %lx\n", Window->Style);
-
    Window->SystemMenu = (HMENU)0;
    Window->ContextHelpId = 0;
    Window->IDMenu = 0;
@@ -1571,19 +1567,19 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    /* Correct the window style. */
    if (!(dwStyle & WS_CHILD))
    {
-      Window->Style |= WS_CLIPSIBLINGS;
-      DPRINT("3: Style is now %lx\n", Window->Style);
+      dwStyle |= WS_CLIPSIBLINGS;
+      DPRINT("3: Style is now %lx\n", dwStyle);
       if (!(dwStyle & WS_POPUP))
       {
-         Window->Style |= WS_CAPTION;
+         dwStyle |= WS_CAPTION;
          Window->Flags |= WINDOWOBJECT_NEED_SIZE;
-         DPRINT("4: Style is now %lx\n", Window->Style);
+         DPRINT("4: Style is now %lx\n", dwStyle);
       }
    }
 
    /* create system menu */
-   if((Window->Style & WS_SYSMENU) &&
-         (Window->Style & WS_CAPTION) == WS_CAPTION)
+   if((dwStyle & WS_SYSMENU) &&
+         (dwStyle & WS_CAPTION) == WS_CAPTION)
    {
       SystemMenu = IntGetSystemMenu(Window, TRUE, TRUE);
       if(SystemMenu)
@@ -1608,6 +1604,9 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    Size.cx = nWidth;
    Size.cy = nHeight;
 
+   Window->ExStyle = dwExStyle;
+   Window->Style = dwStyle & ~WS_VISIBLE;
+
    /* call hook */
    Cs.lpCreateParams = lpParam;
    Cs.hInstance = hInstance;
@@ -1617,7 +1616,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    Cs.cy = Size.cy;
    Cs.x = Pos.x;
    Cs.y = Pos.y;
-   Cs.style = dwStyle;
+   Cs.style = Window->Style;
    Cs.lpszName = (LPCWSTR) WindowName;
    Cs.lpszClass = (LPCWSTR) ClassName;
    Cs.dwExStyle = dwExStyle;
@@ -2569,13 +2568,11 @@ PWINDOW_OBJECT FASTCALL UserGetAncestor(PWINDOW_OBJECT Wnd, UINT Type)
 
       case GA_ROOT:
          {
-            PWINDOW_OBJECT tmp;
             WndAncestor = Wnd;
             Parent = NULL;
 
             for(;;)
             {
-               tmp = Parent;
                if(!(Parent = WndAncestor->Parent))
                {
                   break;
