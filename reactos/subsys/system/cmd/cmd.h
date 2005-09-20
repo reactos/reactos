@@ -299,7 +299,7 @@ TCHAR  cgetchar (VOID);
 BOOL   CheckCtrlBreak (INT);
 LPTSTR *split (LPTSTR, LPINT, BOOL);
 VOID   freep (LPTSTR *);
-LPTSTR _stpcpy (LPTSTR, LPTSTR);
+LPTSTR _stpcpy (LPTSTR, LPCTSTR);
 BOOL   IsValidPathName (LPCTSTR);
 BOOL   IsExistingFile (LPCTSTR);
 BOOL   IsExistingDirectory (LPCTSTR);

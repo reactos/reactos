@@ -103,9 +103,10 @@ INT cmd_set (LPTSTR cmd, LPTSTR param)
 		return 0;
 	}
 
+	/* the /A does *NOT* have to be followed by a whitespace */
 	if ( !_tcsnicmp (param, _T("/A"), 2) )
 	{
-		// TODO FIXME - what are we supposed to return?
+		/* TODO FIXME - what are we supposed to return? */
 		return seta_eval ( skip_ws(param+2) );
 	}
 

@@ -1,3 +1,9 @@
+#ifdef _MSC_VER
+#pragma warning ( disable : 4103 ) /* use #pragma pack to change alignment */
+#endif//_MSC_VER
+
+#include <stdlib.h>
+
 #include <windows.h>
 #include <winnt.h>
 #include <shellapi.h>
@@ -8,7 +14,6 @@
 #include <ctype.h>
 #include <string.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <stdarg.h>
 #include <math.h>
 #include <time.h>

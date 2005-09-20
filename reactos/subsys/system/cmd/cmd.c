@@ -142,6 +142,7 @@
  */
 
 #include <precomp.h>
+#include <malloc.h>
 #include "resource.h"
 
 #ifndef NT_SUCCESS
@@ -1061,6 +1062,188 @@ VOID ParseCommandLine (LPTSTR cmd)
 #endif /* FEATURE_REDIRECTION */
 }
 
+BOOL
+GrowIfNecessary ( UINT needed, LPTSTR* ret, UINT* retlen )
+{
+	if ( *ret && needed < *retlen )
+		return TRUE;
+	*retlen = needed;
+	if ( *ret )
+		free ( *ret );
+	*ret = (LPTSTR)malloc ( *retlen * sizeof(TCHAR) );
+	if ( !*ret )
+		SetLastError ( ERROR_OUTOFMEMORY );
+	return *ret != NULL;
+}
+
+LPCTSTR
+GetParsedEnvVar ( LPCTSTR envName, UINT* envNameLen )
+{
+	static LPTSTR ret = NULL;
+	static UINT retlen = 0;
+	LPTSTR p, tmp;
+	UINT size;
+
+	if ( envNameLen )
+		*envNameLen = 0;
+	SetLastError(0);
+	if ( *envName++ != '%' )
+		return NULL;
+	switch ( *envName )
+	{
+	case _T('0'):
+	case _T('1'):
+	case _T('2'):
+	case _T('3'):
+	case _T('4'):
+	case _T('5'):
+	case _T('6'):
+	case _T('7'):
+	case _T('8'):
+	case _T('9'):
+		if ((tmp = FindArg (*envName - _T('0'))))
+		{
+			if ( !GrowIfNecessary ( _tcslen(tmp), &ret, &retlen ) )
+				return NULL;
+			_tcscpy ( ret, tmp );
+			if ( envNameLen )
+				*envNameLen = 2;
+			return ret;
+		}
+		if ( !GrowIfNecessary ( 3, &ret, &retlen ) )
+			return NULL;
+		ret[0] = _T('%');
+		ret[1] = *envName;
+		ret[2] = 0;
+		if ( envNameLen )
+			*envNameLen = 2;
+		return ret;
+
+	case _T('%'):
+		if ( !GrowIfNecessary ( 2, &ret, &retlen ) )
+			return NULL;
+		ret[0] = _T('%');
+		ret[1] = 0;
+		if ( envNameLen )
+			*envNameLen = 2;
+		return ret;
+
+	case _T('?'):
+		/* TODO FIXME 10 is only max size for 32-bit */
+		if ( !GrowIfNecessary ( 11, &ret, &retlen ) )
+			return NULL;
+		_sntprintf ( ret, retlen, _T("%u"), nErrorLevel);
+		ret[retlen-1] = 0;
+		if ( envNameLen )
+			*envNameLen = 2;
+		return ret;
+	}
+	p = _tcschr ( envName, _T('%') );
+	if ( !p )
+	{
+		SetLastError ( ERROR_INVALID_PARAMETER );
+		return NULL;
+	}
+	size = p-envName;
+	if ( envNameLen )
+		*envNameLen = size + 2;
+	p = alloca ( (size+1) * sizeof(TCHAR) );
+	memmove ( p, envName, size * sizeof(TCHAR) );
+	p[size] = 0;
+	envName = p;
+	size = GetEnvironmentVariable ( envName, ret, retlen );
+	if ( size > retlen )
+	{
+		if ( !GrowIfNecessary ( size, &ret, &retlen ) )
+			return NULL;
+		size = GetEnvironmentVariable ( envName, ret, retlen );
+	}
+	if ( size )
+		return ret;
+
+	/* env var doesn't exist, look for a "special" one */
+	/* %CD% */
+	if (_tcsicmp(envName,_T("cd")) ==0)
+	{
+		size = GetCurrentDirectory ( retlen, ret );
+		if ( size > retlen )
+		{
+			if ( !GrowIfNecessary ( size, &ret, &retlen ) )
+				return NULL;
+			size = GetCurrentDirectory ( retlen, ret );
+		}
+		if ( !size )
+			return NULL;
+		return ret;
+	}
+	/* %TIME% */
+	else if (_tcsicmp(envName,_T("time")) ==0)
+	{
+		SYSTEMTIME t;
+		if ( !GrowIfNecessary ( MAX_PATH, &ret, &retlen ) )
+			return NULL;
+		GetSystemTime(&t);
+		_sntprintf ( ret, retlen, _T("%02d%c%02d%c%02d%c%02d"),
+			t.wHour, cTimeSeparator, t.wMinute, cTimeSeparator,
+			t.wSecond, cDecimalSeparator, t.wMilliseconds );
+		return ret;
+	}
+	/* %DATE% */
+	else if (_tcsicmp(envName,_T("date")) ==0)
+	{
+		if ( !GrowIfNecessary ( MAX_PATH, &ret, &retlen ) )
+			return NULL;
+		size = GetDateFormat(LOCALE_USER_DEFAULT, 0, NULL, _T("ddd"), ret, retlen );
+		/* TODO FIXME - test whether GetDateFormat() can return a value indicating the buffer wasn't big enough */
+		if ( !size )
+			return NULL;
+		tmp = ret + _tcslen(ret);
+		*tmp++ = _T(' ');
+		size = GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, NULL, NULL, tmp, retlen-(tmp-ret));
+		/* TODO FIXME - test whether GetDateFormat() can return a value indicating the buffer wasn't big enough */
+		if ( !size )
+			return NULL;
+		return ret;
+	}
+
+	/* %RANDOM% */
+	else if (_tcsicmp(envName,_T("random")) ==0)
+	{
+		if ( !GrowIfNecessary ( MAX_PATH, &ret, &retlen ) )
+			return NULL;
+		/* Get random number */
+		_itot(rand(),ret,10);
+		return ret;
+	}
+
+	/* %CMDCMDLINE% */
+	else if (_tcsicmp(envName,_T("cmdcmdline")) ==0)
+	{
+		return GetCommandLine();
+	}
+
+	/* %CMDEXTVERSION% */
+	else if (_tcsicmp(envName,_T("cmdextversion")) ==0)
+	{
+		if ( !GrowIfNecessary ( MAX_PATH, &ret, &retlen ) )
+			return NULL;
+		/* Set version number to 2 */
+		_itot(2,ret,10);
+		return ret;
+	}
+
+	/* %ERRORLEVEL% */
+	else if (_tcsicmp(envName,_T("errorlevel")) ==0)
+	{
+		if ( !GrowIfNecessary ( MAX_PATH, &ret, &retlen ) )
+			return NULL;
+		_itot(nErrorLevel,ret,10);
+		return ret;
+	}
+
+	return _T(""); /* not found - return empty string */
+}
+
 
 /*
  * do the prompt/input/process loop
@@ -1072,7 +1255,6 @@ ProcessInput (BOOL bFlag)
 {
 	TCHAR commandline[CMDLINE_LENGTH];
 	TCHAR readline[CMDLINE_LENGTH];
-	LPTSTR tp = NULL;
 	LPTSTR ip;
 	LPTSTR cp;
 	LPCTSTR tmp;
@@ -1100,165 +1282,14 @@ ProcessInput (BOOL bFlag)
 		bSubstitute = TRUE;
 		while (*ip)
 		{
-			if (bSubstitute && *ip == _T('%'))
+			if ( bSubstitute && *ip == _T('%') )
 			{
-				switch (*++ip)
-				{
-					case _T('%'):
-						*cp++ = *ip++;
-						break;
-
-					case _T('0'):
-					case _T('1'):
-					case _T('2'):
-					case _T('3'):
-					case _T('4'):
-					case _T('5'):
-					case _T('6'):
-					case _T('7'):
-					case _T('8'):
-					case _T('9'):
-						if ((tp = FindArg (*ip - _T('0'))))
-						{
-							cp = _stpcpy (cp, tp);
-							ip++;
-						}
-						else
-							*cp++ = _T('%');
-						break;
-
-					case _T('?'):
-						cp += _stprintf (cp, _T("%u"), nErrorLevel);
-						ip++;
-						break;
-
-					default:
-						tp = _tcschr(ip, _T('%'));
-						if ((tp != NULL) &&
-						    (tp <= _tcschr(ip, _T(' ')) - 1))
-						{
-							INT size = 512;
-							TCHAR *evar;
-							*tp = _T('\0');
-
-							/* FIXME: Correct error handling when it can not alloc memmory */
-
-							/* %CD% */
-							if (_tcsicmp(ip,_T("cd")) ==0)
-							{
-								TCHAR szPath[MAX_PATH];
-								GetCurrentDirectory (MAX_PATH, szPath);
-								cp = _stpcpy (cp, szPath);
-							}
-							/* %TIME% */
-							else if (_tcsicmp(ip,_T("time")) ==0)
-							{
-								TCHAR szTime[40];
-								SYSTEMTIME t;
-								GetSystemTime(&t);
-								
-								_sntprintf(szTime ,40,_T("%02d%c%02d%c%02d%c%02d"), t.wHour, cTimeSeparator,t.wMinute , cTimeSeparator,t.wSecond , cDecimalSeparator, t.wMilliseconds );
-								cp = _stpcpy (cp, szTime);
-							}
-
-							/* %DATE% */
-							else if (_tcsicmp(ip,_T("date")) ==0)
-							{
-								TCHAR szDate[40];
-
-								GetDateFormat(LOCALE_USER_DEFAULT, 0, NULL, _T("ddd"), szDate, sizeof (szDate));
-								cp = _stpcpy (cp, szDate);
-								cp = _stpcpy (cp, _T(" "));
-								GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, NULL, NULL, szDate, sizeof (szDate));
-								cp = _stpcpy (cp, szDate);
-							}
-
-							/* %RANDOM% */
-							else if (_tcsicmp(ip,_T("random")) ==0)
-							{
-								TCHAR szRand[40];
-								/* Get random number */
-								_itot(rand(),szRand,10);
-								cp = _stpcpy (cp, szRand);
-							}
-
-							/* %CMDCMDLINE% */
-							else if (_tcsicmp(ip,_T("cmdcmdline")) ==0)
-							{
-								TCHAR *pargv;
-								/* Get random number */
-								pargv = GetCommandLine();
-								cp = _stpcpy (cp, pargv);
-							}
-
-							/* %CMDEXTVERSION% */
-							else if (_tcsicmp(ip,_T("cmdextversion")) ==0)
-							{
-								TCHAR szVER[40];
-								/* Set version number to 2 */
-								_itot(2,szVER,10);
-								cp = _stpcpy (cp, szVER);
-							}
-
-							/* %ERRORLEVEL% */
-							else if (_tcsicmp(ip,_T("errorlevel")) ==0)
-							{
-								evar = malloc ( size * sizeof(TCHAR));
-								if (evar==NULL)
-									return 1;
-
-								memset(evar,0,512 * sizeof(TCHAR));
-								_itot(nErrorLevel,evar,10);
-								cp = _stpcpy (cp, evar);
-
-								free(evar);
-							}
-							else
-							{
-								evar = malloc ( 512 * sizeof(TCHAR));
-								if (evar==NULL)
-									return 1;
-								SetLastError(0);
-								size = GetEnvironmentVariable (ip, evar, 512);
-								if(GetLastError() == ERROR_ENVVAR_NOT_FOUND)
-								{
-								/* if no env var is found you must
-									continue with what was input*/
-									cp = _stpcpy (cp, _T("%"));
-									cp = _stpcpy (cp, ip);
-									cp = _stpcpy (cp, _T("%"));
-								}
-								else
-								{
-									if (size > 512)
-									{
-										evar = realloc(evar,size * sizeof(TCHAR) );
-										if (evar==NULL)
-										{
-											return 1;
-										}
-										size = GetEnvironmentVariable (ip, evar, size);
-									}
-
-									if (size)
-									{
-										cp = _stpcpy (cp, evar);
-									}
-								}
-
-								free(evar);
-							}
-
-							ip = tp + 1;
-
-						}
-						else
-						{
-							*cp++ = _T('%');
-						}
-
-						break;
-				}
+				UINT envNameLen;
+				LPCTSTR envVal = GetParsedEnvVar ( ip, &envNameLen );
+				if ( !envVal )
+					return 1;
+				ip += envNameLen;
+				cp = _stpcpy ( cp, envVal );
 				continue;
 			}
 

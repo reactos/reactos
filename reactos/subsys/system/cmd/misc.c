@@ -322,7 +322,7 @@ VOID freep (LPTSTR *p)
 }
 
 
-LPTSTR _stpcpy (LPTSTR dest, LPTSTR src)
+LPTSTR _stpcpy (LPTSTR dest, LPCTSTR src)
 {
 	_tcscpy (dest, src);
 	return (dest + _tcslen (src));
