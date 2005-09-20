@@ -72,7 +72,6 @@ INT cmd_set (LPTSTR cmd, LPTSTR param)
 		if ( param[i] == '^' && strchr("<|>&^",param[i+1]) )
 		{
 			memmove ( &param[i], &param[i+1], _tcslen(&param[i]) * sizeof(TCHAR) );
-			++i;
 		}
 	}
 
