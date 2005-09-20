@@ -527,6 +527,9 @@ IntGetClassLong(struct _WINDOW_OBJECT *Window, ULONG Offset, BOOL Ansi)
             Ret = (ULONG)Window->Class->lpfnWndProcW;
          }
          break;
+      case GCW_ATOM:
+         Ret = Window->Class->Atom;
+         break;
       default:
          Ret = 0;
          break;
