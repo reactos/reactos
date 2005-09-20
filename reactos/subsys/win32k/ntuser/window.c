@@ -878,7 +878,6 @@ co_IntSetParent(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndNewParent)
    PWINDOW_OBJECT WndOldParent, Sibling, InsertAfter;
 //   HWND hWnd, hWndNewParent;
    BOOL WasVisible;
-   BOOL MenuChanged;
 
    ASSERT(Wnd);
    ASSERT(WndNewParent);
@@ -929,15 +928,6 @@ co_IntSetParent(PWINDOW_OBJECT Wnd, PWINDOW_OBJECT WndNewParent)
 //         UserRefObject(InsertAfter);
          IntLinkWindow(Wnd, WndNewParent, InsertAfter /*prev sibling*/);
 //         UserDerefObject(InsertAfter);
-      }
-
-      if (WndNewParent->hSelf != IntGetDesktopWindow()) /* a child window */
-      {
-         if (!(Wnd->Style & WS_CHILD))
-         {
-            //if ( Wnd->Menu ) DestroyMenu ( Wnd->menu );
-            IntSetMenu(Wnd, NULL, &MenuChanged);
-         }
       }
    }
 
@@ -2552,11 +2542,6 @@ NtUserFlashWindowEx(DWORD Unknown0)
 PWINDOW_OBJECT FASTCALL UserGetAncestor(PWINDOW_OBJECT Wnd, UINT Type)
 {
    PWINDOW_OBJECT WndAncestor, Parent;
-
-   if (Wnd->hSelf == IntGetDesktopWindow())
-   {
-      return NULL;
-   }
 
    switch (Type)
    {
