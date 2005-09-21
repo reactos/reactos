@@ -339,7 +339,7 @@ void DoOpenFile(LPCWSTR szFileName)
     }
     else
     {
-        p2 = pTemp;
+        p2 = (LPBYTE)pTemp;
         if ((p2[0] == 0xEF) && (p2[1] == 0xBB) && (p2[2] == 0xBF))
         {
             iCodePage = CP_UTF8;
@@ -353,7 +353,7 @@ void DoOpenFile(LPCWSTR szFileName)
             Globals.iEncoding = ENCODING_ANSI;
         }
 
-        iNewSize = MultiByteToWideChar(iCodePage, 0, p2, dwNumRead, NULL, 0);
+        iNewSize = MultiByteToWideChar(iCodePage, 0, (LPCSTR)p2, dwNumRead, NULL, 0);
         pTemp2 = HeapAlloc(GetProcessHeap(), 0, (iNewSize + 1) * sizeof(*pTemp2));
         if (!pTemp2)
         {
@@ -362,7 +362,7 @@ void DoOpenFile(LPCWSTR szFileName)
             ShowLastError();
             return;
         }
-        MultiByteToWideChar(iCodePage, 0, p2, dwNumRead, pTemp2, iNewSize);
+        MultiByteToWideChar(iCodePage, 0, (LPCSTR)p2, dwNumRead, pTemp2, iNewSize);
         pTemp2[iNewSize] = 0;
         p = pTemp2;
     }
