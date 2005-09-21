@@ -3261,6 +3261,7 @@ int parse(int wParam, int lParam)
         calc.next = 1;
         calc.buffer[0] = TEXT('\0');
         calc.value = 0;
+        calc.init = 1;
         break;
 
     case TEXT('0'):
