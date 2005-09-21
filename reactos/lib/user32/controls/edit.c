@@ -2919,7 +2919,7 @@ static BOOL EDIT_EM_LineScroll_internal(EDITSTATE *es, INT dx, INT dy)
 		dx = es->text_width - x_offset_in_pixels;
 	nyoff = max(0, es->y_offset + dy);
 	if (nyoff >= es->line_count - lines_per_page)
-		nyoff = es->line_count - lines_per_page;
+		nyoff = max(0,es->line_count - lines_per_page);
 	dy = (es->y_offset - nyoff) * es->line_height;
 	if (dx || dy) {
 		RECT rc1;
