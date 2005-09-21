@@ -43,7 +43,7 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 	LPTSTR pp;
 
 #ifdef _DEBUG
-	DebugPrintf (_T("cmd_if: (\'%S\', \'%S\')\n"), cmd, param);
+	DebugPrintf (_T("cmd_if: (\'%s\', \'%s\')\n"), cmd, param);
 #endif
 
 	if (!_tcsncmp (param, _T("/?"), 2))
@@ -52,15 +52,8 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 		return 0;
 	}
 
-	/* First check if param string begins with '!' or 'not' */
-	if ( param[0] == _T('!') )
-	{
-		x_flag = X_EXEC;            /* Remember '!' */
-		++param;                    /* Step over '!' */
-		while (_istspace (*param))  /* And subsequent spaces */
-			param++;
-	}
-	else if (!_tcsnicmp (param, _T("not"), 3) && _istspace (*(param + 3)))
+	/* First check if param string begins with 'not' */
+	if (!_tcsnicmp (param, _T("not"), 3) && _istspace (*(param + 3)))
 	{
 		x_flag = X_EXEC;            /* Remember 'NOT' */
 		param += 3;                 /* Step over 'NOT' */
@@ -190,7 +183,11 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 		pp += p1len;
 
 		if ( x_flag )
+		{
+			while (*pp && !_istspace (*pp))  /* Find first space, */
+				pp++;
 			x_flag |= X_EMPTY;
+		}
 	}
 
 	if (x_flag & X_EMPTY)
