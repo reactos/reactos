@@ -35,6 +35,9 @@ ImportRegistryFile(PWSTR Filename,
 BOOLEAN
 SetInstallPathValue(PUNICODE_STRING InstallPath);
 
+BOOLEAN
+SetMountedDeviceValue(CHAR Letter, ULONG Signature, LARGE_INTEGER StartingOffset);
+
 #endif /* __REGISTRY_H__ */
 
 /* EOF */

@@ -191,6 +191,9 @@ DrawPartitionList (PPARTLIST List);
 VOID
 SelectPartition(PPARTLIST List, ULONG DiskNumber, ULONG PartitionNumber);
 
+BOOL
+SetMountedDeviceValues(PPARTLIST List);
+
 VOID
 ScrollDownPartitionList (PPARTLIST List);
 
