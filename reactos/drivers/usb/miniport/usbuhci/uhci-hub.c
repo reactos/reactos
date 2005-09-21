@@ -54,7 +54,7 @@ static int uhci_hub_status_data(struct usb_hcd *hcd, char *buf)
 
 /* size of returned buffer is part of USB spec */
 static int uhci_hub_control(struct usb_hcd *hcd, u16 typeReq, u16 wValue,
-			u16 wIndex, char *buf, u16 wLength)
+			u16 wIndex, u8 *buf, u16 wLength)
 {
 	struct uhci_hcd *uhci = hcd_to_uhci(hcd);
 	int i, status, retval = 0, len = 0;
