@@ -1077,93 +1077,25 @@ GrowIfNecessary ( UINT needed, LPTSTR* ret, UINT* retlen )
 }
 
 LPCTSTR
-GetParsedEnvVar ( LPCTSTR envName, UINT* envNameLen )
+GetEnvVarOrSpecial ( LPCTSTR varName )
 {
 	static LPTSTR ret = NULL;
 	static UINT retlen = 0;
-	LPTSTR p, tmp;
 	UINT size;
 
-	if ( envNameLen )
-		*envNameLen = 0;
-	SetLastError(0);
-	if ( *envName++ != '%' )
-		return NULL;
-	switch ( *envName )
-	{
-	case _T('0'):
-	case _T('1'):
-	case _T('2'):
-	case _T('3'):
-	case _T('4'):
-	case _T('5'):
-	case _T('6'):
-	case _T('7'):
-	case _T('8'):
-	case _T('9'):
-		if ((tmp = FindArg (*envName - _T('0'))))
-		{
-			if ( !GrowIfNecessary ( _tcslen(tmp), &ret, &retlen ) )
-				return NULL;
-			_tcscpy ( ret, tmp );
-			if ( envNameLen )
-				*envNameLen = 2;
-			return ret;
-		}
-		if ( !GrowIfNecessary ( 3, &ret, &retlen ) )
-			return NULL;
-		ret[0] = _T('%');
-		ret[1] = *envName;
-		ret[2] = 0;
-		if ( envNameLen )
-			*envNameLen = 2;
-		return ret;
-
-	case _T('%'):
-		if ( !GrowIfNecessary ( 2, &ret, &retlen ) )
-			return NULL;
-		ret[0] = _T('%');
-		ret[1] = 0;
-		if ( envNameLen )
-			*envNameLen = 2;
-		return ret;
-
-	case _T('?'):
-		/* TODO FIXME 10 is only max size for 32-bit */
-		if ( !GrowIfNecessary ( 11, &ret, &retlen ) )
-			return NULL;
-		_sntprintf ( ret, retlen, _T("%u"), nErrorLevel);
-		ret[retlen-1] = 0;
-		if ( envNameLen )
-			*envNameLen = 2;
-		return ret;
-	}
-	p = _tcschr ( envName, _T('%') );
-	if ( !p )
-	{
-		SetLastError ( ERROR_INVALID_PARAMETER );
-		return NULL;
-	}
-	size = p-envName;
-	if ( envNameLen )
-		*envNameLen = size + 2;
-	p = alloca ( (size+1) * sizeof(TCHAR) );
-	memmove ( p, envName, size * sizeof(TCHAR) );
-	p[size] = 0;
-	envName = p;
-	size = GetEnvironmentVariable ( envName, ret, retlen );
+	size = GetEnvironmentVariable ( varName, ret, retlen );
 	if ( size > retlen )
 	{
 		if ( !GrowIfNecessary ( size, &ret, &retlen ) )
 			return NULL;
-		size = GetEnvironmentVariable ( envName, ret, retlen );
+		size = GetEnvironmentVariable ( varName, ret, retlen );
 	}
 	if ( size )
 		return ret;
 
 	/* env var doesn't exist, look for a "special" one */
 	/* %CD% */
-	if (_tcsicmp(envName,_T("cd")) ==0)
+	if (_tcsicmp(varName,_T("cd")) ==0)
 	{
 		size = GetCurrentDirectory ( retlen, ret );
 		if ( size > retlen )
@@ -1177,7 +1109,7 @@ GetParsedEnvVar ( LPCTSTR envName, UINT* envNameLen )
 		return ret;
 	}
 	/* %TIME% */
-	else if (_tcsicmp(envName,_T("time")) ==0)
+	else if (_tcsicmp(varName,_T("time")) ==0)
 	{
 		SYSTEMTIME t;
 		if ( !GrowIfNecessary ( MAX_PATH, &ret, &retlen ) )
@@ -1189,8 +1121,10 @@ GetParsedEnvVar ( LPCTSTR envName, UINT* envNameLen )
 		return ret;
 	}
 	/* %DATE% */
-	else if (_tcsicmp(envName,_T("date")) ==0)
+	else if (_tcsicmp(varName,_T("date")) ==0)
 	{
+		LPTSTR tmp;
+
 		if ( !GrowIfNecessary ( MAX_PATH, &ret, &retlen ) )
 			return NULL;
 		size = GetDateFormat(LOCALE_USER_DEFAULT, 0, NULL, _T("ddd"), ret, retlen );
@@ -1207,7 +1141,7 @@ GetParsedEnvVar ( LPCTSTR envName, UINT* envNameLen )
 	}
 
 	/* %RANDOM% */
-	else if (_tcsicmp(envName,_T("random")) ==0)
+	else if (_tcsicmp(varName,_T("random")) ==0)
 	{
 		if ( !GrowIfNecessary ( MAX_PATH, &ret, &retlen ) )
 			return NULL;
@@ -1217,13 +1151,13 @@ GetParsedEnvVar ( LPCTSTR envName, UINT* envNameLen )
 	}
 
 	/* %CMDCMDLINE% */
-	else if (_tcsicmp(envName,_T("cmdcmdline")) ==0)
+	else if (_tcsicmp(varName,_T("cmdcmdline")) ==0)
 	{
 		return GetCommandLine();
 	}
 
 	/* %CMDEXTVERSION% */
-	else if (_tcsicmp(envName,_T("cmdextversion")) ==0)
+	else if (_tcsicmp(varName,_T("cmdextversion")) ==0)
 	{
 		if ( !GrowIfNecessary ( MAX_PATH, &ret, &retlen ) )
 			return NULL;
@@ -1233,7 +1167,7 @@ GetParsedEnvVar ( LPCTSTR envName, UINT* envNameLen )
 	}
 
 	/* %ERRORLEVEL% */
-	else if (_tcsicmp(envName,_T("errorlevel")) ==0)
+	else if (_tcsicmp(varName,_T("errorlevel")) ==0)
 	{
 		if ( !GrowIfNecessary ( MAX_PATH, &ret, &retlen ) )
 			return NULL;
@@ -1242,6 +1176,97 @@ GetParsedEnvVar ( LPCTSTR envName, UINT* envNameLen )
 	}
 
 	return _T(""); /* not found - return empty string */
+}
+
+LPCTSTR
+GetParsedEnvVar ( LPCTSTR varName, UINT* varNameLen, BOOL ModeSetA )
+{
+	static LPTSTR ret = NULL;
+	static UINT retlen = 0;
+	LPTSTR p, tmp;
+	UINT size;
+
+	if ( varNameLen )
+		*varNameLen = 0;
+	SetLastError(0);
+	if ( *varName++ != '%' )
+		return NULL;
+	switch ( *varName )
+	{
+	case _T('0'):
+	case _T('1'):
+	case _T('2'):
+	case _T('3'):
+	case _T('4'):
+	case _T('5'):
+	case _T('6'):
+	case _T('7'):
+	case _T('8'):
+	case _T('9'):
+		if ((tmp = FindArg (*varName - _T('0'))))
+		{
+			if ( varNameLen )
+				*varNameLen = 2;
+			if ( !*tmp )
+				return _T("");
+			if ( !GrowIfNecessary ( _tcslen(tmp)+1, &ret, &retlen ) )
+				return NULL;
+			_tcscpy ( ret, tmp );
+			return ret;
+		}
+		if ( !GrowIfNecessary ( 3, &ret, &retlen ) )
+			return NULL;
+		ret[0] = _T('%');
+		ret[1] = *varName;
+		ret[2] = 0;
+		if ( varNameLen )
+			*varNameLen = 2;
+		return ret;
+
+	case _T('%'):
+		if ( !GrowIfNecessary ( 2, &ret, &retlen ) )
+			return NULL;
+		ret[0] = _T('%');
+		ret[1] = 0;
+		if ( varNameLen )
+			*varNameLen = 2;
+		return ret;
+
+	case _T('?'):
+		/* TODO FIXME 10 is only max size for 32-bit */
+		if ( !GrowIfNecessary ( 11, &ret, &retlen ) )
+			return NULL;
+		_sntprintf ( ret, retlen, _T("%u"), nErrorLevel);
+		ret[retlen-1] = 0;
+		if ( varNameLen )
+			*varNameLen = 2;
+		return ret;
+	}
+	if ( ModeSetA )
+	{
+		/* HACK for set/a */
+		if ( !GrowIfNecessary ( 2, &ret, &retlen ) )
+			return NULL;
+		ret[0] = _T('%');
+		ret[1] = 0;
+		if ( varNameLen )
+			*varNameLen = 1;
+		return ret;
+	}
+	p = _tcschr ( varName, _T('%') );
+	if ( !p )
+	{
+		SetLastError ( ERROR_INVALID_PARAMETER );
+		return NULL;
+	}
+	size = p-varName;
+	if ( varNameLen )
+		*varNameLen = size + 2;
+	p = alloca ( (size+1) * sizeof(TCHAR) );
+	memmove ( p, varName, size * sizeof(TCHAR) );
+	p[size] = 0;
+	varName = p;
+	return GetEnvVarOrSpecial ( varName );
 }
 
 
@@ -1259,7 +1284,7 @@ ProcessInput (BOOL bFlag)
 	LPTSTR cp;
 	LPCTSTR tmp;
 	BOOL bEchoThisLine;
-	BOOL bSubstitute;
+	BOOL bModeSetA;
 
 	do
 	{
@@ -1279,13 +1304,13 @@ ProcessInput (BOOL bFlag)
 			++ip;
 
 		cp = commandline;
-		bSubstitute = TRUE;
+		bModeSetA = FALSE;
 		while (*ip)
 		{
-			if ( bSubstitute && *ip == _T('%') )
+			if ( *ip == _T('%') )
 			{
 				UINT envNameLen;
-				LPCTSTR envVal = GetParsedEnvVar ( ip, &envNameLen );
+				LPCTSTR envVal = GetParsedEnvVar ( ip, &envNameLen, bModeSetA );
 				if ( !envVal )
 					return 1;
 				ip += envNameLen;
@@ -1297,7 +1322,7 @@ ProcessInput (BOOL bFlag)
 				*ip = _T(' ');
 			*cp++ = *ip++;
 
-			/* HACK HACK HACK check whether bSubstitute needs to be toggled */
+			/* HACK HACK HACK check whether bModeSetA needs to be toggled */
 			*cp = 0;
 			tmp = commandline;
 			tmp += _tcsspn(tmp,_T(" \t"));
@@ -1329,7 +1354,7 @@ ProcessInput (BOOL bFlag)
 				 * check to see if we've parsed out a set/a. if so, we
 				 * need to disable substitution until we come across a
 				 * redirection */
-				if ( bSubstitute )
+				if ( !bModeSetA )
 				{
 					/* look for set /a */
 					if ( !_tcsnicmp(tmp,_T("set"),3) )
@@ -1337,7 +1362,7 @@ ProcessInput (BOOL bFlag)
 						tmp += 3;
 						tmp += _tcsspn(tmp,_T(" \t"));
 						if ( !_tcsnicmp(tmp,_T("/a"),2) )
-							bSubstitute = FALSE;
+							bModeSetA = TRUE;
 					}
 				}
 				/* if we're not currently substituting, it means we're
@@ -1350,12 +1375,12 @@ ProcessInput (BOOL bFlag)
 					{
 						if ( *tmp == _T('^') )
 						{
-							if ( _tcschr(_T("<>|&"), *++tmp ) )
+							if ( _tcschr(_T("<>|&"), *++tmp ) && *tmp )
 								++tmp;
 						}
 						else
 						{
-							bSubstitute = TRUE;
+							bModeSetA = FALSE;
 							break;
 						}
 					}
