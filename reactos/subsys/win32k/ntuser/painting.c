@@ -632,7 +632,7 @@ IntFindWindowToRepaint(PWINDOW_OBJECT Window, PW32THREAD Thread)
          hChild = IntFindWindowToRepaint(Window->FirstChild, Thread);
          if (hChild != NULL)
             return hChild;
-      }      
+      }
    }
 
    return NULL;
