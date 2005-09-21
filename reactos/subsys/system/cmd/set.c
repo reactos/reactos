@@ -481,7 +481,7 @@ seta_eval ( LPCTSTR p )
 	}
 	if ( !seta_stmt ( &p, &rval ) )
 		return FALSE;
-	ConOutPrintf ( _T("%i\n"), rval );
+	ConOutPrintf ( _T("%i"), rval );
 	return TRUE;
 }
 

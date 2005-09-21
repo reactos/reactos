@@ -636,9 +636,9 @@ STRING_SCREEN_COL,                 "invalid value for col"
 STRING_SCREEN_ROW,                 "invalid value for row"
 STRING_TIMER_TIME                  "Timer %d is %s: "
 
-STRING_INVALID_OPERAND,            "Invalid operand.\n"
-STRING_EXPECTED_CLOSE_PAREN,       "Expected ')'.\n"
-STRING_EXPECTED_NUMBER_OR_VARIABLE,"Expected number or variable name.\n"
-STRING_SYNTAX_COMMAND_INCORRECT,   "The syntax of the command is incorrect.\n"
+STRING_INVALID_OPERAND,            "Invalid operand."
+STRING_EXPECTED_CLOSE_PAREN,       "Expected ')'."
+STRING_EXPECTED_NUMBER_OR_VARIABLE,"Expected number or variable name."
+STRING_SYNTAX_COMMAND_INCORRECT,   "The syntax of the command is incorrect."
 
 }
