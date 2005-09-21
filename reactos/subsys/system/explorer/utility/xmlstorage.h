@@ -140,8 +140,8 @@ struct XS_String
 	XS_String& operator=(LPCWSTR s) {assign(s); return *this;}
 #ifdef XS_STRING_UTF8
 	void assign(const XS_String& s) {assign(s.c_str());}
-	void assign(LPCWSTR s) {if (s) {int bl=wcslen(s); LPSTR b=(LPSTR)alloca(bl); super::assign(b, WideCharToMultiByte(CP_UTF8, 0, s, bl, b, bl, 0, 0));} else erase();}
-	void assign(LPCWSTR s, int l) {int bl=l; if (s) {LPSTR b=(LPSTR)alloca(bl); super::assign(b, WideCharToMultiByte(CP_UTF8, 0, s, l, b, bl, 0, 0));} else erase();}
+	void assign(LPCWSTR s) {if (s) {int bl=2*wcslen(s); LPSTR b=(LPSTR)alloca(bl); super::assign(b, WideCharToMultiByte(CP_UTF8, 0, s, bl, b, bl, 0, 0));} else erase();}
+	void assign(LPCWSTR s, int l) {int bl=2*l; if (s) {LPSTR b=(LPSTR)alloca(bl); super::assign(b, WideCharToMultiByte(CP_UTF8, 0, s, l, b, bl, 0, 0));} else erase();}
 #else // if !UNICODE && !XS_STRING_UTF8
 	void assign(LPCWSTR s) {if (s) {int bl=wcslen(s); LPSTR b=(LPSTR)alloca(bl); super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, bl, b, bl, 0, 0));} else erase();}
 	void assign(LPCWSTR s, int l) {int bl=l; if (s) {LPSTR b=(LPSTR)alloca(bl); super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, l, b, bl, 0, 0));} else erase();}
@@ -169,7 +169,7 @@ struct XS_String
 		XS_CHAR b[BUFFER_LEN];
 
 		va_start(l, fmt);
-		super::assign(b, XS_vsprintf(b, fmt, l));
+		super::assign(b, XS_vsnprintf(b, COUNTOF(b), fmt, l));
 		va_end(l);
 
 		return *this;
@@ -179,7 +179,7 @@ struct XS_String
 	{
 		XS_CHAR b[BUFFER_LEN];
 
-		super::assign(b, XS_vsprintf(b, fmt, l));
+		super::assign(b, XS_vsnprintf(b, COUNTOF(b), fmt, l));
 
 		return *this;
 	}
@@ -190,7 +190,7 @@ struct XS_String
 		XS_CHAR b[BUFFER_LEN];
 
 		va_start(l, fmt);
-		super::append(b, XS_vsprintf(b, fmt, l));
+		super::append(b, XS_vsnprintf(b, COUNTOF(b), fmt, l));
 		va_end(l);
 
 		return *this;
@@ -200,7 +200,7 @@ struct XS_String
 	{
 		XS_CHAR b[BUFFER_LEN];
 
-		super::append(b, XS_vsprintf(b, fmt, l));
+		super::append(b, XS_vsnprintf(b, COUNTOF(b), fmt, l));
 
 		return *this;
 	}
@@ -336,6 +336,7 @@ typedef XS_String String_from_XML_Char;
 
 #else
 
+ /// converter from Expat strings to XMLStorage internal strings
 struct String_from_XML_Char : public XS_String
 {
 	String_from_XML_Char(const XML_Char* str)
@@ -397,6 +398,7 @@ struct XMLNode : public XS_String
 	typedef std::map<XS_String, XS_String> AttributeMap;
 #endif
 
+	 /// internal children node list
 	struct Children : public std::list<XMLNode*>
 	{
 		void assign(const Children& other)
@@ -678,9 +680,10 @@ protected:
 	}
 #endif
 
-	 /// XPath find functions
+	 /// XPath find function (const)
 	const XMLNode* find_relative(const char* path) const;
 
+	 /// XPath find function
 	XMLNode* find_relative(const char* path)
 		{return const_cast<XMLNode*>(const_cast<const XMLNode*>(this)->find_relative(path));}
 
@@ -708,6 +711,7 @@ struct XMLChildrenFilter
 	{
 	}
 
+	 /// internal iterator class
 	struct iterator
 	{
 		typedef XMLNode::Children::iterator BaseIterator;
@@ -806,6 +810,7 @@ struct const_XMLChildrenFilter
 	{
 	}
 
+	 /// internal iterator class
 	struct const_iterator
 	{
 		typedef XMLNode::Children::const_iterator BaseIterator;
@@ -954,6 +959,7 @@ struct XMLPos
 		return _cur->get(attr_name);
 	}
 
+	 /// attribute setting
 	void put(const XS_String& attr_name, const XS_String& value)
 	{
 		_cur->put(attr_name, value);
@@ -1230,6 +1236,7 @@ extern const LPCXSSTR XS_NUMBERFMT;
 #endif
 
 
+ /// type converter for boolean data
 struct XMLBool
 {
 	XMLBool(bool value=false)
@@ -1277,6 +1284,7 @@ private:
 	void operator=(const XMLBool&); // disallow assignment operations
 };
 
+ /// type converter for boolean data with write access
 struct XMLBoolRef
 {
 	XMLBoolRef(XMLNode* node, const XS_String& attr_name, bool def=false)
@@ -1318,6 +1326,7 @@ protected:
 };
 
 
+ /// type converter for integer data
 struct XMLInt
 {
 	XMLInt(int value)
@@ -1362,6 +1371,7 @@ private:
 	void operator=(const XMLInt&); // disallow assignment operations
 };
 
+ /// type converter for integer data with write access
 struct XMLIntRef
 {
 	XMLIntRef(XMLNode* node, const XS_String& attr_name, int def=0)
@@ -1395,6 +1405,7 @@ protected:
 };
 
 
+ /// type converter for string data
 struct XMLString
 {
 	XMLString(const XS_String& value)
@@ -1437,6 +1448,7 @@ private:
 	void operator=(const XMLString&); // disallow assignment operations
 };
 
+ /// type converter for string data with write access
 struct XMStringRef
 {
 	XMStringRef(XMLNode* node, const XS_String& attr_name, LPCXSSTR def=XS_TEXT(""))
@@ -1580,6 +1592,7 @@ protected:
 };
 
 
+ /// management of XML file headers
 struct XMLHeader
 {
 	XMLHeader(const std::string& xml_version="1.0", const std::string& encoding="UTF-8", const std::string& doctype="")
@@ -1595,6 +1608,7 @@ struct XMLHeader
 
 		if (!_doctype.empty())
 			out << _doctype << '\n';
+
 		if (!_additional.empty())
 			out << _additional << '\n';
 	}
@@ -1606,6 +1620,7 @@ struct XMLHeader
 };
 
 
+ /// XML document holder
 struct XMLDoc : public XMLNode
 {
 	XMLDoc()
@@ -1715,6 +1730,7 @@ struct XMLDoc : public XMLNode
 };
 
 
+ /// XML message wrapper
 struct XMLMessage : public XMLDoc
 {
 	XMLMessage(const char* name)
@@ -1724,6 +1740,174 @@ struct XMLMessage : public XMLDoc
 	}
 
 	XMLPos	_pos;
+};
+
+
+enum PRETTY_FLAGS {
+	PRETTY_PLAIN	= 0,
+	PRETTY_LINEFEED	= 1,
+	PRETTY_INDENT	= 2
+};
+
+struct XMLWriter
+{
+	XMLWriter(std::ostream& out, PRETTY_FLAGS pretty=PRETTY_INDENT, const XMLHeader& header=XMLHeader())
+	 :	_pofstream(NULL),
+		_out(out),
+		_pretty(pretty)
+	{
+		header.print(_out, false);
+	}
+
+	XMLWriter(LPCTSTR path, PRETTY_FLAGS pretty=PRETTY_INDENT, const XMLHeader& header=XMLHeader())
+	 :	_pofstream(new tofstream(path)),
+		_out(*_pofstream),
+		_pretty(pretty)
+	{
+		header.print(_out, false);
+	}
+
+	~XMLWriter()
+	{
+		_out << std::endl;
+		delete _pofstream;
+	}
+
+	 /// create node and move to it
+	void create(const XS_String& name)
+	{
+		if (!_stack.empty()) {
+			StackEntry& last = _stack.top();
+
+			if (last._state < PRE_CLOSED) {
+				write_attributes(last);
+				close_pre(last);
+			}
+
+			++last._children;
+		}
+
+		StackEntry entry;
+		entry._node_name = name;
+		_stack.push(entry);
+
+		write_pre(entry);
+	}
+
+	 /// go back to previous position
+	bool back()
+	{
+		if (!_stack.empty()) {
+			write_post(_stack.top());
+
+			_stack.pop();
+			return true;
+		} else
+			return false;
+	}
+
+	 /// attribute setting
+	void put(const XS_String& attr_name, const XS_String& value)
+	{
+		if (!_stack.empty())
+			_stack.top()._attributes[attr_name] = value;
+	}
+
+	 /// C++ write access to an attribute
+	XS_String& operator[](const XS_String& attr_name)
+	{
+		if (_stack.empty())
+			return s_empty_attr;
+
+		return _stack.top()._attributes[attr_name];
+	}
+
+	void set_content(const XS_String& s)
+	{
+		if (!_stack.empty())
+			_stack.top()._content = s;
+	}
+
+	 // public for access in StackEntry
+	enum WRITESTATE {
+		NOTHING, /*PRE,*/ ATTRIBUTES, PRE_CLOSED, /*CONTENT,*/ POST
+	};
+
+protected:
+	tofstream*		_pofstream;
+	std::ostream&	_out;
+	PRETTY_FLAGS	_pretty;
+
+	typedef XMLNode::AttributeMap AttrMap;
+
+	struct StackEntry {
+		XS_String	_node_name;
+		AttrMap		_attributes;
+		std::string	_content;
+		WRITESTATE	_state;
+		bool		_children;
+
+		StackEntry() : _children(false), _state(NOTHING) {}
+	};
+
+	std::stack<StackEntry> _stack;
+
+	static XS_String s_empty_attr;
+
+	void close_pre(StackEntry& entry)
+	{
+		_out << '>';
+
+		entry._state = PRE_CLOSED;
+	}
+
+	void write_pre(StackEntry& entry)
+	{
+		if (_pretty >= PRETTY_LINEFEED)
+			_out << std::endl;
+
+		if (_pretty == PRETTY_INDENT)
+			for(int i=_stack.size(); --i>0; )
+				_out << XML_INDENT_SPACE;
+
+		_out << '<' << EncodeXMLString(entry._node_name);
+		//entry._state = PRE;
+	}
+
+	void write_attributes(StackEntry& entry)
+	{
+		for(AttrMap::const_iterator it=entry._attributes.begin(); it!=entry._attributes.end(); ++it)
+			_out << ' ' << EncodeXMLString(it->first) << "=\"" << EncodeXMLString(it->second) << "\"";
+
+		entry._state = ATTRIBUTES;
+	}
+
+	void write_post(StackEntry& entry)
+	{
+		if (entry._state < ATTRIBUTES)
+			write_attributes(entry);
+
+		if (entry._children || !entry._content.empty()) {
+			if (entry._state < PRE_CLOSED)
+				close_pre(entry);
+
+			_out << entry._content;
+			//entry._state = CONTENT;
+
+			if (_pretty>=PRETTY_LINEFEED && entry._content.empty())
+				_out << std::endl;
+
+			if (_pretty==PRETTY_INDENT && entry._content.empty())
+				for(int i=_stack.size(); --i>0; )
+					_out << XML_INDENT_SPACE;
+
+			_out << "</" << EncodeXMLString(entry._node_name) << ">";
+		} else {
+			_out << "/>";
+		}
+
+		entry._state = POST;
+	}
 };
 
 
