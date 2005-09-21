@@ -1118,7 +1118,8 @@ co_WinPosSetWindowPos(
        * change.
        */
       if (VisBefore != NULL && VisAfter != NULL && !(WinPos.flags & SWP_NOCOPYBITS) &&
-            ((WinPos.flags & SWP_NOSIZE) || !(WvrFlags & WVR_REDRAW)))
+          ((WinPos.flags & SWP_NOSIZE) || !(WvrFlags & WVR_REDRAW)) &&
+          !(Window->ExStyle & WS_EX_TRANSPARENT))
       {
          CopyRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
          RgnType = NtGdiCombineRgn(CopyRgn, VisAfter, VisBefore, RGN_AND);

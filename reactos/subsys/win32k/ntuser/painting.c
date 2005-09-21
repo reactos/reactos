@@ -602,13 +602,28 @@ HWND FASTCALL
 IntFindWindowToRepaint(PWINDOW_OBJECT Window, PW32THREAD Thread)
 {
    HWND hChild;
+   PWINDOW_OBJECT TempWindow;
 
-   while (Window != NULL)
+   for (; Window != NULL; Window = Window->NextSibling)
    {
-      /* FIXME: Transparent windows. */
-      if (IntIsWindowDirty(Window) &&
-          IntWndBelongsToThread(Window, Thread))
+      if (IntWndBelongsToThread(Window, Thread) &&
+          IntIsWindowDirty(Window))
       {
+         /* Make sure all non-transparent siblings are already drawn. */
+         if (Window->ExStyle & WS_EX_TRANSPARENT)
+         {
+            for (TempWindow = Window->NextSibling; TempWindow != NULL;
+                 TempWindow = TempWindow->NextSibling)
+            {
+               if (!(TempWindow->ExStyle & WS_EX_TRANSPARENT) &&
+                   IntWndBelongsToThread(TempWindow, Thread) &&
+                   IntIsWindowDirty(TempWindow))
+               {
+                  return TempWindow->hSelf;
+               }
+            }
+         }
+
          return Window->hSelf;
       }
 
@@ -617,9 +632,7 @@ IntFindWindowToRepaint(PWINDOW_OBJECT Window, PW32THREAD Thread)
          hChild = IntFindWindowToRepaint(Window->FirstChild, Thread);
          if (hChild != NULL)
             return hChild;
-      }
-
-      Window = Window->NextSibling;
+      }      
    }
 
    return NULL;

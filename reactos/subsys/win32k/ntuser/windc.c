@@ -342,7 +342,6 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
       Flags |= DCX_CACHE;
    }
 
-
    if (Flags & DCX_USESTYLE)
    {
       Flags &= ~(DCX_CLIPCHILDREN | DCX_CLIPSIBLINGS | DCX_PARENTCLIP);

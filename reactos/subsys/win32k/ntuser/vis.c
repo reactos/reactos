@@ -89,7 +89,8 @@ VIS_ComputeVisibleRegion(
          CurrentSibling = CurrentWindow->FirstChild;
          while (CurrentSibling != NULL && CurrentSibling != PreviousWindow)
          {
-            if (CurrentSibling->Style & WS_VISIBLE)
+            if ((CurrentSibling->Style & WS_VISIBLE) &&
+                !(CurrentSibling->ExStyle & WS_EX_TRANSPARENT))
             {
                ClipRgn = UnsafeIntCreateRectRgnIndirect(&CurrentSibling->WindowRect);
                /* Combine it with the window region if available */
@@ -115,7 +116,8 @@ VIS_ComputeVisibleRegion(
       CurrentWindow = Window->FirstChild;
       while (CurrentWindow)
       {
-         if (CurrentWindow->Style & WS_VISIBLE)
+         if ((CurrentWindow->Style & WS_VISIBLE) &&
+             !(CurrentWindow->ExStyle & WS_EX_TRANSPARENT))
          {
             ClipRgn = UnsafeIntCreateRectRgnIndirect(&CurrentWindow->WindowRect);
             /* Combine it with the window region if available */
