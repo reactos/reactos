@@ -173,25 +173,14 @@ ident_len ( LPCTSTR p )
 static BOOL
 seta_identval ( LPCTSTR ident, INT* result )
 {
-	// get size of buffer for env var
-	LPTSTR buf;
-	DWORD dwBuffer = GetEnvironmentVariable ( ident, NULL, 0 );
-	// if GetEnvironmentVariable() fails, it returns 0
-	if ( !dwBuffer )
+	LPCTSTR identVal = GetEnvVarOrSpecial ( ident );
+	if ( !identVal )
 	{
-		// TODO FIXME - is it correct to report a value of 0 for non-existant variables?
+		/* TODO FIXME - what to do upon failure? */
 		*result = 0;
 		return FALSE;
 	}
-	buf = (LPTSTR)alloca ( dwBuffer * sizeof(TCHAR) );
-	if ( !buf )
-	{
-		// TODO FIXME - is it correct to report 0 when report resources low... should we error somehow?
-		*result = 0;
-		return FALSE;
-	}
-	GetEnvironmentVariable ( ident, buf, dwBuffer );
-	*result = _ttoi ( buf );
+	*result = _ttoi ( identVal );
 	return TRUE;
 }
 

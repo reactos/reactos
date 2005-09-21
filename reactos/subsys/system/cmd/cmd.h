@@ -99,6 +99,7 @@ INT cmd_cls (LPTSTR, LPTSTR);
 
 /* Prototypes for CMD.C */
 VOID ParseCommandLine (LPTSTR);
+LPCTSTR GetEnvVarOrSpecial ( LPCTSTR varName );
 VOID AddBreakHandler (VOID);
 VOID RemoveBreakHandler (VOID);
 
