@@ -206,7 +206,7 @@ struct hc_driver {
 	int		(*hub_status_data) (struct usb_hcd *hcd, char *buf);
 	int		(*hub_control) (struct usb_hcd *hcd,
 				u16 typeReq, u16 wValue, u16 wIndex,
-				char *buf, u16 wLength);
+				u8 *buf, u16 wLength);
 };
 
 // old version, "just in case"

@@ -16,10 +16,10 @@
 #define USB_ALTSETTINGALLOC		4
 #define USB_MAXINTERFACES		32
 
-static int usb_parse_endpoint(struct usb_host_endpoint *endpoint, unsigned char *buffer, int size)
+static int usb_parse_endpoint(struct usb_host_endpoint *endpoint, char *buffer, int size)
 {
 	struct usb_descriptor_header *header;
-	unsigned char *begin;
+	char *begin;
 	int parsed = 0, len, numskipped;
 
 	header = (struct usb_descriptor_header *)buffer;
@@ -101,12 +101,12 @@ static int usb_parse_endpoint(struct usb_host_endpoint *endpoint, unsigned char 
 	return parsed;
 }
 
-static int usb_parse_interface(struct usb_interface *interface, unsigned char *buffer, int size)
+static int usb_parse_interface(struct usb_interface *interface, char *buffer, int size)
 {
 	int i, len, numskipped, retval, parsed = 0;
 	struct usb_descriptor_header *header;
 	struct usb_host_interface *ifp;
-	unsigned char *begin;
+	char *begin;
 
 	interface->act_altsetting = 0;
 	interface->num_altsetting = 0;
@@ -410,8 +410,8 @@ int usb_get_configuration(struct usb_device *dev)
 {
 	int result;
 	unsigned int cfgno, length;
-	unsigned char *buffer;
-	unsigned char *bigbuffer;
+	char *buffer;
+	char *bigbuffer;
  	struct usb_config_descriptor *desc;
 
 	if (dev->descriptor.bNumConfigurations > USB_MAXCONFIG) {
