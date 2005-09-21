@@ -1,6 +1,8 @@
-@echo off
-@rem the next line illustrates a bug in our cmd
-set /a a=5%2
+@rem echo off
+
+@rem the next line reexecutes the script without params if it was called with params, else we'll get false failures
+@if not "%1"=="" seta_test.cmd
+
 @rem the next two lines illustrate bug in existing if code
 if not "=="=="==" goto failure
 if "=="=="==" goto next1
@@ -26,6 +28,10 @@ set /a a=2000/10
 if not "%a%"=="200" goto failure
 set /a a=42%%9
 if not "%a%"=="6" goto failure
+set /a a=5%2
+if not "%a%"=="5" goto failure
+set /a a=42^%13
+if not "%a%"=="423" goto failure
 set /a a=7+9
 if not "%a%"=="16" goto failure
 set /a a=9-7
@@ -36,6 +42,8 @@ set /a a=36^>^>2
 if not "%a%"=="9" goto failure
 set /a a=42^&9
 if not "%a%"=="8" goto failure
+set /a a=32^9
+if not "%a%"=="329" goto failure
 set /a a=32^^9
 if not "%a%"=="41" goto failure
 set /a a=10^|22
