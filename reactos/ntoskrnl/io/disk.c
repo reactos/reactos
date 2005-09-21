@@ -377,7 +377,7 @@ HalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
 }
 
 
-static VOID
+static BOOLEAN
 HalpAssignDrive(IN PUNICODE_STRING PartitionName,
 		IN ULONG DriveNumber,
 		IN UCHAR DriveType,
@@ -399,7 +399,7 @@ HalpAssignDrive(IN PUNICODE_STRING PartitionName,
       if ((ObSystemDeviceMap->DriveMap & (1 << DriveNumber)) != 0)
 	{
 	  DbgPrint("Drive letter already used!\n");
-	  return;
+	  return FALSE;
 	}
     }
   else
@@ -419,7 +419,7 @@ HalpAssignDrive(IN PUNICODE_STRING PartitionName,
       if (DriveNumber == AUTO_DRIVE)
 	{
 	  DbgPrint("No drive letter available!\n");
-	  return;
+	  return FALSE;
 	}
     }
 
@@ -444,7 +444,9 @@ HalpAssignDrive(IN PUNICODE_STRING PartitionName,
   Status = IoCreateSymbolicLink(&DriveName,
 		                PartitionName);
 
-  if (DriveType == DOSDEVICE_DRIVE_FIXED && hKey)
+  if (hKey &&
+      DriveType == DOSDEVICE_DRIVE_FIXED && 
+      Signature)
     {
       DiskMountInfo.Signature = Signature;
       DiskMountInfo.StartingOffset = StartingOffset;
@@ -462,6 +464,7 @@ HalpAssignDrive(IN PUNICODE_STRING PartitionName,
           DPRINT1("ZwCreateValueKey failed for %wZ, status=%x\n", &DriveName, Status);
         }
     }
+  return TRUE;
 }
 
 ULONG
@@ -806,40 +809,49 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             {
               DPRINT("%wZ => %08x:%08x%08x\n", &UnicodeString1, DiskMountInfo->Signature, 
                      DiskMountInfo->StartingOffset.u.HighPart, DiskMountInfo->StartingOffset.u.LowPart);
-              for (i = 0; i < ConfigInfo->DiskCount; i++)
                 {
-                  DPRINT("%x\n", LayoutArray[i]->Signature);
-                  if (LayoutArray[i] &&
-                      LayoutArray[i]->Signature == DiskMountInfo->Signature)
+                  BOOLEAN Found = FALSE;
+                  for (i = 0; i < ConfigInfo->DiskCount; i++)
                     {
-                      for (j = 0; j < LayoutArray[i]->PartitionCount; j++)
+                      DPRINT("%x\n", LayoutArray[i]->Signature);
+                      if (LayoutArray[i] &&
+                          LayoutArray[i]->Signature &&
+                          LayoutArray[i]->Signature == DiskMountInfo->Signature)
                         {
-                          if (LayoutArray[i]->PartitionEntry[j].StartingOffset.QuadPart == DiskMountInfo->StartingOffset.QuadPart)
+                          for (j = 0; j < LayoutArray[i]->PartitionCount; j++)
                             {
-                              if (IsRecognizedPartition(LayoutArray[i]->PartitionEntry[j].PartitionType))
+                              if (LayoutArray[i]->PartitionEntry[j].StartingOffset.QuadPart == DiskMountInfo->StartingOffset.QuadPart)
                                 {
-                    	          swprintf(Buffer2,
-		                           L"\\Device\\Harddisk%d\\Partition%d",
-                                           i,
-		                           LayoutArray[i]->PartitionEntry[j].PartitionNumber);
-	                          RtlInitUnicodeString(&UnicodeString2,
-				                       Buffer2);
+                                  if (IsRecognizedPartition(LayoutArray[i]->PartitionEntry[j].PartitionType) &&
+                                      LayoutArray[i]->PartitionEntry[j].RewritePartition == FALSE)
+                                    {
+                    	              swprintf(Buffer2,
+		                               L"\\Device\\Harddisk%d\\Partition%d",
+                                               i,
+		                               LayoutArray[i]->PartitionEntry[j].PartitionNumber);
+	                              RtlInitUnicodeString(&UnicodeString2,
+				                           Buffer2);
 
-	                          /* Assign drive */
-	                          DPRINT("  %wZ\n", &UnicodeString2);
-	                          HalpAssignDrive(&UnicodeString2,
-			                          k,
-			                          DOSDEVICE_DRIVE_FIXED,
-                                                  DiskMountInfo->Signature,
-                                                  DiskMountInfo->StartingOffset,
-                                                  NULL);
-                                  /* Mark the partition as assigned */
-                                  LayoutArray[i]->PartitionEntry[j].RewritePartition = TRUE;
+	                              /* Assign drive */
+	                              DPRINT("  %wZ\n", &UnicodeString2);
+	                              Found = HalpAssignDrive(&UnicodeString2,
+			                                      k,
+			                                      DOSDEVICE_DRIVE_FIXED,
+                                                              DiskMountInfo->Signature,
+                                                              DiskMountInfo->StartingOffset,
+                                                              NULL);
+                                      /* Mark the partition as assigned */
+                                      LayoutArray[i]->PartitionEntry[j].RewritePartition = TRUE;
+                                    }
+                                  break;
                                 }
-                              break;
                             }
                         }
-                      break;
+                    }
+                  if (Found == FALSE)
+                    {
+                      /* We didn't find a partition for this entry, remove them. */
+                      Status = ZwDeleteValueKey(hKey, &UnicodeString1);
                     }
                 }
             }
@@ -871,7 +883,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
 				           Buffer2);
 
                       /* Assign drive */
-                      DPRINT1("  %wZ\n", &UnicodeString2);
+                      DPRINT("  %wZ\n", &UnicodeString2);
 	              HalpAssignDrive(&UnicodeString2,
 			              AUTO_DRIVE,
 			              DOSDEVICE_DRIVE_FIXED,
