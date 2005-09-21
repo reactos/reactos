@@ -1552,7 +1552,7 @@ Initialize (int argc, TCHAR* argv[])
 	   for you can change the EnvirommentVariable for prompt before cmd start
 	   this patch are not 100% right, if it does not exists a PROMPT value cmd should use
 	   $P$G as defualt not set EnvirommentVariable PROMPT to $P$G if it does not exists */
-	if (GetEnvironmentVariable(_T("PROMPT"),lpBuffer, 2 * sizeof(TCHAR)) == 0)
+	if (GetEnvironmentVariable(_T("PROMPT"),lpBuffer, sizeof(lpBuffer) / sizeof(lpBuffer[0])) == 0)
 	    SetEnvironmentVariable (_T("PROMPT"), _T("$P$G"));
 
 

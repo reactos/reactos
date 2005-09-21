@@ -131,7 +131,7 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 		if (*pp)
 		{
 			*pp++ = _T('\0');
-			ValueSize = GetEnvironmentVariable(param, Value, sizeof Value);
+			ValueSize = GetEnvironmentVariable(param, Value, sizeof(Value) / sizeof(Value[0]));
 			x_flag ^= (0 == ValueSize)
 					? 0
 					: X_EXEC;
