@@ -991,8 +991,7 @@ RegDeleteKeyValueA(IN HKEY hKey,
 
 
 static NTSTATUS
-RegpDeleteTree(IN HKEY hKey,
-               OUT PBOOLEAN KeysDeleted)
+RegpDeleteTree(IN HKEY hKey)
 {
     typedef struct
     {
@@ -1008,8 +1007,6 @@ RegpDeleteTree(IN HKEY hKey,
     PREG_DEL_KEYS KeyDelRoot;
     NTSTATUS Status = STATUS_SUCCESS;
     NTSTATUS Status2 = STATUS_SUCCESS;
-    
-    *KeysDeleted = FALSE;
     
     InitializeListHead(&delQueueHead);
     
@@ -1147,10 +1144,22 @@ SubKeyFailureNoFree:
             
             /* NOTE: do NOT close the handle anymore, it's invalid already! */
 
-            if (!NT_SUCCESS(Status2) && NT_SUCCESS(Status))
+            if (!NT_SUCCESS(Status2))
             {
-                /* don't break, let's try to delete as many keys as possible */
-                Status = Status2;
+                /* close the key handle so we don't leak handles for keys we were
+                   unable to delete. But only do this for handles not supplied
+                   by the caller! */
+
+                if (delKeys->KeyHandle != hKey)
+                {
+                    NtClose(delKeys->KeyHandle);
+                }
+
+                if (!NT_SUCCESS(Status))
+                {
+                    /* don't break, let's try to delete as many keys as possible */
+                    Status = Status2;
+                }
             }
             
             /* remove the entry from the list */
@@ -1160,8 +1169,6 @@ SubKeyFailureNoFree:
                         0,
                         delKeys);
         } while (!IsListEmpty(&delQueueHead));
-        
-        *KeysDeleted = TRUE;
     }
     else
         Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1179,7 +1186,6 @@ LONG STDCALL
 RegDeleteTreeW(IN HKEY hKey,
                IN LPCWSTR lpSubKey  OPTIONAL)
 {
-    BOOLEAN KeysDeleted;
     HANDLE KeyHandle, CurKey, SubKeyHandle = NULL;
     NTSTATUS Status;
 
@@ -1217,12 +1223,22 @@ RegDeleteTreeW(IN HKEY hKey,
     else
         CurKey = KeyHandle;
 
-    Status = RegpDeleteTree(CurKey,
-                            &KeysDeleted);
+    Status = RegpDeleteTree(CurKey);
 
-    if (!KeysDeleted)
+    if (NT_SUCCESS(Status))
     {
-        /* only close handles of keys that weren't deleted! */
+        /* make sure we only close hKey (KeyHandle) when the caller specified a
+           subkey, because the handle would be invalid already! */
+        if (CurKey != KeyHandle)
+        {
+            CloseDefaultKey(KeyHandle);
+        }
+        
+        return ERROR_SUCCESS;
+    }
+    else
+    {
+        /* make sure we close all handles we created! */
         if (SubKeyHandle != NULL)
         {
             NtClose(SubKeyHandle);
@@ -1230,14 +1246,9 @@ RegDeleteTreeW(IN HKEY hKey,
 
 Cleanup:
         CloseDefaultKey(KeyHandle);
-    }
-
-    if (!NT_SUCCESS(Status))
-    {
+        
         return RtlNtStatusToDosError(Status);
     }
-
-    return ERROR_SUCCESS;
 }
 
 
