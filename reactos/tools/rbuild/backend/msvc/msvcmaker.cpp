@@ -48,13 +48,13 @@ MSVCBackend::_generate_dsp ( const Module& module )
 		imports.push_back ( module.non_if_data.libraries[i]->name );
 	}
 
-	string module_type = Right(module.GetTargetName(),3);
-	bool lib = (module_type == "lib");
-	bool dll = (module_type == "dll");
-	bool exe = (module_type == "exe");
+	string module_type = GetExtension(module.GetTargetName());
+	bool lib = (module_type == ".lib") || (module_type == ".a");
+	bool dll = (module_type == ".dll");
+	bool exe = (module_type == ".exe");
 	// TODO FIXME - need more checks here for 'sys' and possibly 'drv'?
 
-	bool console = exe; // FIXME: Not always correct
+	bool console = exe && (module.type == Win32CUI);
 
 	// TODO FIXME - not sure if the count here is right...
 	int parts = 0;
@@ -75,9 +75,16 @@ MSVCBackend::_generate_dsp ( const Module& module )
 
 	// TODO FIXME - what's diff. betw. 'c_srcs' and 'source_files'?
 	string dsp_path = module.GetBasePath();
-	vector<string> c_srcs, source_files, resource_files, includes;
+	vector<string> c_srcs, source_files, resource_files, includes, libraries, defines;
 	vector<const IfableData*> ifs_list;
 	ifs_list.push_back ( &module.non_if_data );
+
+	defines.push_back ( "WIN32" );
+	defines.push_back ( "_WINDOWS" );
+	defines.push_back ( "WIN32" );
+	defines.push_back ( "_MBCS" );
+	defines.push_back ( "STDCALL=__stdcall" );
+
 	while ( ifs_list.size() )
 	{
 		const IfableData& data = *ifs_list.back();
@@ -104,6 +111,19 @@ MSVCBackend::_generate_dsp ( const Module& module )
 				incs[i]->directory,
 				module.GetBasePath() );
 			includes.push_back ( path );
+		}
+		const vector<Library*>& libs = data.libraries;
+		for ( i = 0; i < libs.size(); i++ )
+		{
+			libraries.push_back ( libs[i]->name + ".lib" );
+		}
+		const vector<Define*>& defs = data.defines;
+		for ( i = 0; i < defs.size(); i++ )
+		{
+			if ( defs[i]->value[0] )
+				defines.push_back ( defs[i]->name + "=" + defs[i]->value );
+			else
+				defines.push_back ( defs[i]->name );
 		}
 	}
 	// TODO FIXME - we don't include header files in our build system
@@ -292,14 +312,6 @@ MSVCBackend::_generate_dsp ( const Module& module )
 		if ( dll ) fprintf ( OUT, "# PROP Ignore_Export_Lib 0\r\n" );
 		fprintf ( OUT, "# PROP Target_Dir \"\"\r\n" );
 
-		vector<string> defines;
-		defines.push_back ( "WINVER=0x0501" );
-		defines.push_back ( "_WIN32_WINNT=0x0501" );
-		defines.push_back ( "_WIN32_IE=0x0600" );
-		defines.push_back ( "WIN32" );
-		defines.push_back ( "_WINDOWS" );
-		defines.push_back ( "WIN32" );
-		defines.push_back ( "_MBCS" );
 		if ( debug )
 		{
 			defines.push_back ( "_DEBUG" );
@@ -500,19 +512,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 		{
 			fprintf ( OUT, "LINK32=link.exe\r\n" );
 			fprintf ( OUT, "# ADD BASE LINK32 " );
-			vector<string> libraries;
-			libraries.push_back ( "kernel32.lib" );
-			libraries.push_back ( "user32.lib" );
-			libraries.push_back ( "gdi32.lib" );
-			libraries.push_back ( "winspool.lib" );
-			libraries.push_back ( "comdlg32.lib" );
-			libraries.push_back ( "advapi32.lib" );
-			libraries.push_back ( "shell32.lib" );
-			libraries.push_back ( "ole32.lib" );
-			libraries.push_back ( "oleaut32.lib" );
-			libraries.push_back ( "uuid.lib" );
-			libraries.push_back ( "odbc32.lib" );
-			libraries.push_back ( "odbccp32.lib" );
+
 			for ( i = 0; i < libraries.size(); i++ )
 			{
 				fprintf ( OUT, "%s ", libraries[i].c_str() );
