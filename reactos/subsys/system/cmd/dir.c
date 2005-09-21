@@ -240,7 +240,7 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
   BOOL bPNegative;	/* Negative switch parameter */
   BOOL bIntoQuotes;	/* A flag showing if we are in quotes (") */
   LPTSTR ptrLast;	/* A pointer to the last character of param */
-  INT t = 0;
+  UINT t = 0;
   
 
 	/* Initialize variables; */
