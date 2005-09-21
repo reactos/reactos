@@ -106,7 +106,7 @@ STATIC VOID INIT_FUNCTION
 IopEnumerateBiosDisks(PLIST_ENTRY ListHead)
 {
   RTL_QUERY_REGISTRY_TABLE QueryTable[2];
-  WCHAR Name[100];
+  WCHAR Name[255];
   ULONG AdapterCount;
   ULONG ControllerCount;
   ULONG DiskCount;
