@@ -97,6 +97,10 @@ namespace XMLStorage {
 #define	XS_vsnprintf _vsntprintf
 #endif
 
+#ifndef COUNTOF
+#define COUNTOF(b) (sizeof(b)/sizeof(b[0]))
+#endif
+
 #if defined(_STRING_DEFINED) && !defined(XS_STRING_UTF8)
 
 #define	XS_String String
@@ -121,46 +125,46 @@ struct XS_String
 	XS_String() {}
 
 	XS_String(LPCXSSTR s) {if (s) super::assign(s);}
-	XS_String(LPCXSSTR s, int l) : super(s, l) {}
+	XS_String(LPCXSSTR s, size_t l) : super(s, l) {}
 
 	XS_String(const super& other) : super(other) {}
 	XS_String(const XS_String& other) : super(other) {}
 
 #if defined(UNICODE) && !defined(XS_STRING_UTF8)
 	XS_String(LPCSTR s) {assign(s);}
-	XS_String(LPCSTR s, int l) {assign(s, l);}
+	XS_String(LPCSTR s, size_t l) {assign(s, l);}
 	XS_String(const std::string& other) {assign(other.c_str());}
 	XS_String& operator=(LPCSTR s) {assign(s); return *this;}
-	void assign(LPCSTR s) {if (s) {int bl=strlen(s); LPWSTR b=(LPWSTR)alloca(sizeof(WCHAR)*bl); super::assign(b, MultiByteToWideChar(CP_ACP, 0, s, bl, b, bl));} else erase();}
-	void assign(LPCSTR s, int l) {if (s) {int bl=l; LPWSTR b=(LPWSTR)alloca(sizeof(WCHAR)*bl); super::assign(b, MultiByteToWideChar(CP_ACP, 0, s, l, b, bl));} else erase();}
+	void assign(LPCSTR s) {if (s) {size_t bl=strlen(s); LPWSTR b=(LPWSTR)alloca(sizeof(WCHAR)*bl); super::assign(b, MultiByteToWideChar(CP_ACP, 0, s, bl, b, bl));} else erase();}
+	void assign(LPCSTR s, size_t l) {if (s) {size_t bl=l; LPWSTR b=(LPWSTR)alloca(sizeof(WCHAR)*bl); super::assign(b, MultiByteToWideChar(CP_ACP, 0, s, l, b, bl));} else erase();}
 #else
 	XS_String(LPCWSTR s) {assign(s);}
-	XS_String(LPCWSTR s, int l) {assign(s, l);}
+	XS_String(LPCWSTR s, size_t l) {assign(s, l);}
 	XS_String(const std::wstring& other) {assign(other.c_str());}
 	XS_String& operator=(LPCWSTR s) {assign(s); return *this;}
 #ifdef XS_STRING_UTF8
 	void assign(const XS_String& s) {assign(s.c_str());}
-	void assign(LPCWSTR s) {if (s) {int bl=2*wcslen(s); LPSTR b=(LPSTR)alloca(bl); super::assign(b, WideCharToMultiByte(CP_UTF8, 0, s, bl, b, bl, 0, 0));} else erase();}
-	void assign(LPCWSTR s, int l) {int bl=2*l; if (s) {LPSTR b=(LPSTR)alloca(bl); super::assign(b, WideCharToMultiByte(CP_UTF8, 0, s, l, b, bl, 0, 0));} else erase();}
+	void assign(LPCWSTR s) {if (s) {size_t bl=wcslen(s); LPSTR b=(LPSTR)alloca(bl); super::assign(b, WideCharToMultiByte(CP_UTF8, 0, s, (int)bl, b, (int)bl, 0, 0));} else erase();}
+	void assign(LPCWSTR s, size_t l) {size_t bl=l; if (s) {LPSTR b=(LPSTR)alloca(bl); super::assign(b, WideCharToMultiByte(CP_UTF8, 0, s, (int)l, b, (int)bl, 0, 0));} else erase();}
 #else // if !UNICODE && !XS_STRING_UTF8
-	void assign(LPCWSTR s) {if (s) {int bl=wcslen(s); LPSTR b=(LPSTR)alloca(bl); super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, bl, b, bl, 0, 0));} else erase();}
-	void assign(LPCWSTR s, int l) {int bl=l; if (s) {LPSTR b=(LPSTR)alloca(bl); super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, l, b, bl, 0, 0));} else erase();}
+	void assign(LPCWSTR s) {if (s) {size_t bl=wcslen(s); LPSTR b=(LPSTR)alloca(bl); super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, (int)bl, b, (int)bl, 0, 0));} else erase();}
+	void assign(LPCWSTR s, size_t l) {size_t bl=l; if (s) {LPSTR b=(LPSTR)alloca(bl); super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, (int)l, b, (int)bl, 0, 0));} else erase();}
 #endif
 #endif
 
 	XS_String& operator=(LPCXSSTR s) {if (s) super::assign(s); else erase(); return *this;}
 	XS_String& operator=(const super& s) {super::assign(s); return *this;}
 	void assign(LPCXSSTR s) {super::assign(s);}
-	void assign(LPCXSSTR s, int l) {super::assign(s, l);}
+	void assign(LPCXSSTR s, size_t l) {super::assign(s, l);}
 
 	operator LPCXSSTR() const {return c_str();}
 
 #ifdef XS_STRING_UTF8
-	operator std::wstring() const {int bl=length(); LPWSTR b=(LPWSTR)alloca(sizeof(WCHAR)*bl); return std::wstring(b, MultiByteToWideChar(CP_UTF8, 0, c_str(), bl, b, bl));}
+	operator std::wstring() const {size_t bl=length(); LPWSTR b=(LPWSTR)alloca(sizeof(WCHAR)*bl); return std::wstring(b, MultiByteToWideChar(CP_UTF8, 0, c_str(), bl, b, bl));}
 #elif defined(UNICODE)
-	operator std::string() const {int bl=length(); LPSTR b=(LPSTR)alloca(bl); return std::string(b, WideCharToMultiByte(CP_ACP, 0, c_str(), bl, b, bl, 0, 0));}
+	operator std::string() const {size_t bl=length(); LPSTR b=(LPSTR)alloca(bl); return std::string(b, WideCharToMultiByte(CP_ACP, 0, c_str(), bl, b, bl, 0, 0));}
 #else
-	operator std::wstring() const {int bl=length(); LPWSTR b=(LPWSTR)alloca(sizeof(WCHAR)*bl); return std::wstring(b, MultiByteToWideChar(CP_ACP, 0, c_str(), bl, b, bl));}
+	operator std::wstring() const {size_t bl=length(); LPWSTR b=(LPWSTR)alloca(sizeof(WCHAR)*bl); return std::wstring(b, MultiByteToWideChar(CP_ACP, 0, c_str(), (int)bl, b, (int)bl));}
 #endif
 
 	XS_String& printf(LPCXSSTR fmt, ...)
@@ -215,7 +219,7 @@ struct XS_String
 
 inline void assign_utf8(XS_String& s, const char* str)
 {
-	int lutf8 = strlen(str);
+	int lutf8 = (int)strlen(str);
 
 #ifdef UNICODE
 	LPTSTR buffer = (LPTSTR)alloca(sizeof(TCHAR)*lutf8);
@@ -231,17 +235,17 @@ inline void assign_utf8(XS_String& s, const char* str)
 	s.assign(buffer, l);
 }
 
-inline std::string get_utf8(LPCTSTR s, int l)
+inline std::string get_utf8(LPCTSTR s, size_t l)
 {
 #ifdef UNICODE
-	int bl=2*l; LPSTR buffer = (LPSTR)alloca(bl);
-	l = WideCharToMultiByte(CP_UTF8, 0, s, l, buffer, bl, 0, 0);
+	size_t bl=2*l; LPSTR buffer = (LPSTR)alloca(bl);
+	l = WideCharToMultiByte(CP_UTF8, 0, s, (int)l, buffer, (int)bl, 0, 0);
 #else
 	LPWSTR wbuffer = (LPWSTR)alloca(sizeof(WCHAR)*l);
-	l = MultiByteToWideChar(CP_ACP, 0, s, l, wbuffer, l);
+	l = MultiByteToWideChar(CP_ACP, 0, s, (int)l, wbuffer, (int)l);
 
-	int bl=2*l; LPSTR buffer = (LPSTR)alloca(bl);
-	l = WideCharToMultiByte(CP_UTF8, 0, wbuffer, l, buffer, bl, 0, 0);
+	size_t bl=2*l; LPSTR buffer = (LPSTR)alloca(bl);
+	l = WideCharToMultiByte(CP_UTF8, 0, wbuffer, (int)l, buffer, (int)bl, 0, 0);
 #endif
 
 	return std::string(buffer, l);
@@ -1602,9 +1606,12 @@ struct XMLHeader
 	{
 	}
 
-	void print(std::ostream& out) const
+	void print(std::ostream& out, bool pretty=true) const
 	{
-		out << "<?xml version=\"" << _version << "\" encoding=\"" << _encoding << "\"?>\n";
+		out << "<?xml version=\"" << _version << "\" encoding=\"" << _encoding << "\"?>";
+
+		if (pretty)
+			out << std::endl;
 
 		if (!_doctype.empty())
 			out << _doctype << '\n';
@@ -1847,7 +1854,7 @@ protected:
 		WRITESTATE	_state;
 		bool		_children;
 
-		StackEntry() : _children(false), _state(NOTHING) {}
+		StackEntry() : _state(NOTHING), _children(false) {}
 	};
 
 	std::stack<StackEntry> _stack;
