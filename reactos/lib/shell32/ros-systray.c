@@ -54,7 +54,7 @@ static BOOL SHELL_NotifyIcon(DWORD dwMessage, void* pnid, HWND nid_hwnd, int nid
 	data.cbData = len;
 	data.lpData = pnotify_data;
 
-	for(hwnd=0; hwnd=FindWindowExW(0, hwnd, L"Shell_TrayWnd", NULL); )
+	for(hwnd=0; (hwnd=FindWindowExW(0, hwnd, L"Shell_TrayWnd", NULL)); )
 		if ((unicode?SendMessageW:SendMessageA)(hwnd, WM_COPYDATA, (WPARAM)nid_hwnd, (LPARAM)&data))
 			ret = TRUE;
 
