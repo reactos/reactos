@@ -104,18 +104,55 @@ UsbMpPdoQueryId(
 		{
 			CHAR Buffer[2][40];
 			PCHAR RootHubName;
-			USHORT Vendor, Product, Revision;
+			PCI_COMMON_CONFIG PciData;
+			ULONG BusNumber, SlotNumber;
+			ULONG ret;
+			PDEVICE_OBJECT Pdo;
 
 			DPRINT("USBMP: IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryHardwareIDs\n");
 
-			Vendor = DeviceExtension->pdev->vendor;
-			Product = DeviceExtension->pdev->device;
-			Revision = 0; /* FIXME */
+			Pdo = DeviceExtension->PhysicalDeviceObject;
+			Status = IoGetDeviceProperty(
+				Pdo,
+				DevicePropertyBusNumber,
+				sizeof(ULONG),
+				&BusNumber,
+				&ret);
+			if (!NT_SUCCESS(Status))
+			{
+				DPRINT("USBMP: IoGetDeviceProperty() failed with status 0x%08lx\n", Status);
+				break;
+			}
+
+			Status = IoGetDeviceProperty(
+				Pdo,
+				DevicePropertyAddress,
+				sizeof(ULONG),
+				&SlotNumber,
+				&ret);
+			if (!NT_SUCCESS(Status))
+			{
+				DPRINT("USBMP: IoGetDeviceProperty() failed with status 0x%08lx\n", Status);
+				break;
+			}
+
+			ret = HalGetBusDataByOffset(PCIConfiguration,
+				BusNumber,
+				SlotNumber,
+				&PciData,
+				0,
+				PCI_COMMON_HDR_LENGTH);
+			if (ret != PCI_COMMON_HDR_LENGTH)
+			{
+				DPRINT("USBMP: HalGetBusDataByOffset() failed (ret = %ld)\n", ret);
+				Status = STATUS_IO_DEVICE_ERROR;
+				break;
+			}
 
 			sprintf(Buffer[0], "USB\\VID%04X&PID%04X&REV%04X",
-				Vendor, Product, Revision);
+				PciData.VendorID, PciData.DeviceID, PciData.RevisionID);
 			sprintf(Buffer[1], "USB\\VID%04X&PID%04X",
-				Vendor, Product);
+				PciData.VendorID, PciData.DeviceID);
 			if (roothub->speed == USB_SPEED_LOW || roothub->speed == USB_SPEED_FULL)
 				RootHubName = "USB\\ROOT_HUB"; /* USB 1.1 */
 			else
