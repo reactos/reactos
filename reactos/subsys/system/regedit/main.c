@@ -28,6 +28,8 @@
 #include <process.h>
 #include <stdio.h>
 #include <fcntl.h>
+#include <aclui.h>
+#include <cguid.h>
 
 #include "main.h"
 #include "hexedit.h"

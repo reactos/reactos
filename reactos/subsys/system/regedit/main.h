@@ -99,6 +99,7 @@ extern BOOL IsDefaultValue(HWND hwndLV, int i);
 extern HWND CreateTreeView(HWND hwndParent, LPTSTR pHostName, int id);
 extern BOOL OnTreeExpanding(HWND hWnd, NMTREEVIEW* pnmtv);
 extern LPCTSTR GetItemPath(HWND hwndTV, HTREEITEM hItem, HKEY* phRootKey);
+extern BOOL CreateNewKey(HWND hwndTV, HTREEITEM hItem);
 
 /* edit.c */
 extern BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin);

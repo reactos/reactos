@@ -260,6 +260,55 @@ done:
 }
 
 
+BOOL CreateNewKey(HWND hwndTV, HTREEITEM hItem)
+{
+    TCHAR szNewKeyFormat[128];
+    TCHAR szNewKey[128];
+    LPCTSTR pszKeyPath;
+    int iIndex = 1;
+    HKEY hRootKey;
+    HKEY hKey = NULL;
+    HKEY hNewKey = NULL;
+    BOOL bSuccess = FALSE;
+    LONG lResult;
+    DWORD dwDisposition;
+    HTREEITEM hNewItem;
+
+    pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, hItem, &hRootKey);
+    if (RegOpenKey(hRootKey, pszKeyPath, &hKey) != ERROR_SUCCESS)
+        goto done;
+
+    if (LoadString(hInst, IDS_NEW_KEY, szNewKeyFormat, sizeof(szNewKeyFormat) / sizeof(szNewKeyFormat[0])) <= 0)
+        goto done;
+
+    do
+    {
+        _sntprintf(szNewKey, sizeof(szNewKey) / sizeof(szNewKey[0]), szNewKeyFormat, iIndex++);
+        lResult = RegCreateKeyEx(hKey, szNewKey, 0, NULL, 0, KEY_ALL_ACCESS, NULL, &hNewKey, &dwDisposition);
+        if (hNewKey && (dwDisposition == REG_OPENED_EXISTING_KEY))
+        {
+            RegCloseKey(hNewKey);
+            hNewKey = NULL;
+        }
+    }
+    while(!hNewKey);
+
+    hNewItem = AddEntryToTree(hwndTV, hItem, szNewKey, NULL, 0, NULL);
+    if (!hNewItem)
+        goto done;
+    TreeView_EditLabel(hwndTV, hNewItem);
+
+    bSuccess = TRUE;
+
+done:
+    if (hKey)
+        RegCloseKey(hKey);
+    if (hNewKey)
+        RegCloseKey(hNewKey);
+    return bSuccess;
+}
+
+
 /*
  * CreateTreeView - creates a tree view control.
  * Returns the handle to the new control if successful, or NULL otherwise.

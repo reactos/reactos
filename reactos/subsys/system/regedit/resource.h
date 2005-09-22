@@ -130,6 +130,9 @@
 #define ID_EDIT_PERMISSIONS		32872
 #define ID_TREE_DELETE                  32873
 #define ID_TREE_RENAME                  32874
+#define IDS_QUERY_DELETE_KEY_ONE        32875
+#define IDS_QUERY_DELETE_KEY_MORE       32876
+#define IDS_QUERY_DELETE_KEY_CONFIRM    32877
 
 #define IDS_FLT_REGFILES		31001
 #define IDS_FLT_REGFILES_FLT		31002
@@ -156,6 +159,8 @@
 #define IDS_INHERIT_SUBKEYSONLY		31123
 #define IDS_EXPAND                      31124
 #define IDS_COLLAPSE                    31125
+#define IDS_NEW_KEY                     31126
+#define IDS_NEW_VALUE                   31127
 
 
 #define IDD_EDIT_STRING			2000

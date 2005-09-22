@@ -466,6 +466,69 @@ BOOL RefreshView(HWND hWnd)
     return TRUE;
 }
 
+static BOOL CreateNewValue(HKEY hRootKey, LPCTSTR pszKeyPath, DWORD dwType)
+{
+    TCHAR szNewValueFormat[128];
+    TCHAR szNewValue[128];
+    int iIndex = 1;
+    BYTE data[128];
+    DWORD dwExistingType, cbData;
+    LONG lResult;
+    HKEY hKey;
+    LVFINDINFO lvfi;
+
+    if (RegOpenKey(hRootKey, pszKeyPath, &hKey) != ERROR_SUCCESS)
+        return FALSE;    
+
+    LoadString(hInst, IDS_NEW_VALUE, szNewValueFormat, sizeof(szNewValueFormat)
+        / sizeof(szNewValueFormat[0]));
+
+    do
+    {
+        _sntprintf(szNewValue, sizeof(szNewValue) / sizeof(szNewValue[0]),
+            szNewValueFormat, iIndex++);
+
+        cbData = sizeof(data);
+        lResult = RegQueryValueEx(hKey, szNewValue, NULL, &dwExistingType, data, &cbData);
+    }
+    while(lResult == ERROR_SUCCESS);
+
+    switch(dwType) {
+    case REG_DWORD:
+        cbData = sizeof(DWORD);
+        break;
+    case REG_SZ:
+    case REG_EXPAND_SZ:
+        cbData = sizeof(TCHAR);
+        break;
+    case REG_MULTI_SZ:
+        cbData = sizeof(TCHAR) * 2;
+        break;
+    case REG_QWORD:
+        cbData = sizeof(DWORD) * 2;
+        break;
+    default:
+        cbData = 0;
+        break;
+    }
+    memset(data, 0, cbData);
+    lResult = RegSetValueEx(hKey, szNewValue, 0, dwType, data, cbData);
+    if (lResult != ERROR_SUCCESS)
+        return FALSE;
+
+    RefreshListView(g_pChildWnd->hListWnd, hRootKey, pszKeyPath);
+
+    /* locate the newly added value, and get ready to rename it */
+    memset(&lvfi, 0, sizeof(lvfi));
+    lvfi.flags = LVFI_STRING;
+    lvfi.psz = szNewValue;
+    iIndex = ListView_FindItem(g_pChildWnd->hListWnd, -1, &lvfi);
+    if (iIndex >= 0)
+        ListView_EditLabel(g_pChildWnd->hListWnd, iIndex);
+
+    return TRUE;
+}
+
 /*******************************************************************************
  *
  *  FUNCTION: _CmdWndProc(HWND, unsigned, WORD, LONG)
@@ -593,6 +656,15 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
           }
         }
 	break;
+    case ID_EDIT_NEW_STRINGVALUE:
+        CreateNewValue(hKeyRoot, keyPath, REG_SZ);
+        break;
+    case ID_EDIT_NEW_BINARYVALUE:
+        CreateNewValue(hKeyRoot, keyPath, REG_BINARY);
+        break;
+    case ID_EDIT_NEW_DWORDVALUE:
+        CreateNewValue(hKeyRoot, keyPath, REG_DWORD);
+        break;
     }
     case ID_EDIT_COPYKEYNAME:
         CopyKeyName(hWnd, _T(""));
@@ -622,6 +694,9 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
    /*case ID_OPTIONS_TOOLBAR:*/
    /*	toggle_child(hWnd, LOWORD(wParam), hToolBar);*/
    /*    break;*/
+    case ID_EDIT_NEW_KEY:
+        CreateNewKey(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd));
+        break;
     default:
         result = FALSE;
     }

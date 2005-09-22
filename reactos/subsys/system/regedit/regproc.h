@@ -82,4 +82,13 @@ BOOL InitializeAclUiDll(VOID);
 VOID UnloadAclUiDll(VOID);
 BOOL RegKeyEditPermissions(HWND hWndOwner, HKEY hKey, LPCTSTR lpMachine, LPCTSTR lpKeyName);
 
+/*
+ * Processing
+ */
+LONG RegDeleteKeyRecursive(HKEY hKey, LPCTSTR lpSubKey);
+LONG RegCopyKey(HKEY hDestKey, LPCTSTR lpDestSubKey, HKEY hSrcKey, LPCTSTR lpSrcSubKey);
+LONG RegMoveKey(HKEY hDestKey, LPCTSTR lpDestSubKey, HKEY hSrcKey, LPCTSTR lpSrcSubKey);
+LONG RegRenameKey(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpNewName);
+LONG RegRenameValue(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpDestValue, LPCTSTR lpSrcValue);
+
 /* EOF */

@@ -25,6 +25,7 @@
 #include <stdio.h>
 
 #include "main.h"
+#include "regproc.h"
 
 ChildWnd* g_pChildWnd;
 HBITMAP SizingPattern = 0;
@@ -102,6 +103,12 @@ static void OnPaint(HWND hWnd)
 static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     ChildWnd* pChildWnd = g_pChildWnd;
+    HTREEITEM hSelection;
+    HKEY hRootKey;
+    LPCTSTR keyPath;
+    TCHAR szConfirmTitle[256];
+    TCHAR szConfirmText[256];
+
     switch (LOWORD(wParam)) {
         /* Parse the menu selections: */
     case ID_REGISTRY_EXIT:
@@ -119,6 +126,27 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case ID_TREE_RENAME:
         SetFocus(pChildWnd->hTreeWnd);
         TreeView_EditLabel(pChildWnd->hTreeWnd, TreeView_GetSelection(pChildWnd->hTreeWnd));
+        break;
+    case ID_TREE_DELETE:
+        hSelection = TreeView_GetSelection(pChildWnd->hTreeWnd);
+        keyPath = GetItemPath(pChildWnd->hTreeWnd, hSelection, &hRootKey);
+
+        LoadString(hInst, IDS_QUERY_DELETE_KEY_CONFIRM, szConfirmTitle, sizeof(szConfirmTitle) / sizeof(szConfirmTitle[0]));
+        LoadString(hInst, IDS_QUERY_DELETE_KEY_ONE, szConfirmText, sizeof(szConfirmText) / sizeof(szConfirmText[0]));
+
+        if (MessageBox(pChildWnd->hWnd, szConfirmText, szConfirmTitle, MB_YESNO) == IDYES)
+        {
+            if (RegDeleteKeyRecursive(hRootKey, keyPath) == ERROR_SUCCESS)
+                TreeView_DeleteItem(pChildWnd->hTreeWnd, hSelection);
+        }
+        break;
+    case ID_EDIT_NEW_KEY:
+        CreateNewKey(pChildWnd->hTreeWnd, TreeView_GetSelection(pChildWnd->hTreeWnd));
+        break;
+    case ID_EDIT_NEW_STRINGVALUE:
+    case ID_EDIT_NEW_BINARYVALUE:
+    case ID_EDIT_NEW_DWORDVALUE:
+        SendMessage(hFrameWnd, WM_COMMAND, wParam, lParam);
         break;
     case ID_SWITCH_PANELS:
         pChildWnd->nFocusPanel = !pChildWnd->nFocusPanel;
@@ -208,7 +236,7 @@ ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
             POINTS pt;
             pt = MAKEPOINTS(lParam);
             GetClientRect(hWnd, &rt);
-            pt.x = min(max(pt.x, SPLIT_MIN), rt.right - SPLIT_MIN);
+            pt.x = (SHORT) min(max(pt.x, SPLIT_MIN), rt.right - SPLIT_MIN);
             draw_splitbar(hWnd, last_split);
             last_split = -1;
             pChildWnd->nSplitPos = pt.x;
@@ -253,7 +281,7 @@ ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
             pt = MAKEPOINTS(lParam);
             GetClientRect(hWnd, &rt);
-            pt.x = min(max(pt.x, SPLIT_MIN), rt.right - SPLIT_MIN);
+            pt.x = (SHORT) min(max(pt.x, SPLIT_MIN), rt.right - SPLIT_MIN);
             if(last_split != pt.x)
             {
               rt.left = last_split-SPLIT_WIDTH/2;
@@ -308,11 +336,19 @@ ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		break;
             case TVN_ENDLABELEDIT:
                 {
-                  TCHAR msg[32];
-                  _stprintf(msg, _T("rename to %s"), ((NMTVDISPINFO *) lParam)->item.pszText);
-                  MessageBox(pChildWnd->hTreeWnd, msg, NULL, MB_OK);
+                  LPCTSTR keyPath;
+                  HKEY hRootKey;
+                  LPNMTVDISPINFO ptvdi;
+                  LONG lResult;
+
+                  ptvdi = (LPNMTVDISPINFO) lParam;
+                  if (ptvdi->item.pszText)
+                  {
+                    keyPath = GetItemPath(pChildWnd->hTreeWnd, ptvdi->item.hItem, &hRootKey);
+                    lResult = RegRenameKey(hRootKey, keyPath, ptvdi->item.pszText);
+                    return lResult == ERROR_SUCCESS;
+		  }
                 }
-                break;
             default:
                 return 0;
             }
@@ -329,6 +365,7 @@ ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 	{
                   		goto def;
                 	}
+                	return Result;
                 	break;
         	}
             }

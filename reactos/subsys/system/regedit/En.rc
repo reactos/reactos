@@ -277,6 +277,9 @@ BEGIN
     IDS_UNSUPPORTED_TYPE    "Can't edit keys of this type (%ld)"
     IDS_TOO_BIG_VALUE       "Value is too big (%ld)"
     IDS_MULTI_SZ_EMPTY_STRING "Data of type REG_MULTI_SZ cannot contain empty strings.\nThe empty strings have been removed from the list."
+    IDS_QUERY_DELETE_KEY_ONE    "Are you sure you want to delete this key?"
+    IDS_QUERY_DELETE_KEY_MORE   "Are you sure you want to delete these keys?"
+    IDS_QUERY_DELETE_KEY_CONFIRM "Confirm Key Delete"
     IDS_QUERY_DELETE_ONE    "Are you sure you want to delete this value?"
     IDS_QUERY_DELETE_MORE   "Are you sure you want to delete these values?"
     IDS_QUERY_DELETE_CONFIRM "Confirm Value Delete"
@@ -284,6 +287,8 @@ BEGIN
     IDS_ERR_DELETEVALUE     "Unable to delete all specified values!"
     IDS_ERR_RENVAL_CAPTION  "Error Renaming Value"
     IDS_ERR_RENVAL_TOEMPTY  "Cannot rename %s. The specified value name is empty. Try another name and try again."
+    IDS_NEW_KEY             "New Key #%d"
+    IDS_NEW_VALUE           "New Value #%d"
 END
 
 STRINGTABLE DISCARDABLE

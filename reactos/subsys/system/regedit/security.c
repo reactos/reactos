@@ -28,6 +28,8 @@
 #include <objbase.h>
 #include <basetyps.h>
 #include <unknwn.h>
+#include <aclui.h>
+#include <cguid.h>
 #include "security.h"
 #include "regproc.h"
 #include "resource.h"

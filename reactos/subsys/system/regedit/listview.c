@@ -27,6 +27,7 @@
 #include <stdio.h>
 
 #include "main.h"
+#include "regproc.h"
 
 #define CX_ICON    16
 #define CY_ICON    16
@@ -442,11 +443,19 @@ BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
 		    if(_tcslen(Info->item.pszText) == 0)
 		    {
 		      LoadString(hInst, IDS_ERR_RENVAL_TOEMPTY, msg, sizeof(msg)/sizeof(TCHAR));
+		      MessageBox(0, msg, NULL, 0);
+		      *Result = TRUE;
 		    }
 		    else
-                    _stprintf(msg, _T("rename from %s to %s"), lineinfo->name, Info->item.pszText);
-                    MessageBox(0, msg, NULL, 0);
-		    *Result = TRUE;
+			{
+			  HKEY hKeyRoot;
+			  LPCTSTR keyPath;
+			  LONG lResult;
+			  keyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
+			  lResult = RegRenameValue(hKeyRoot, keyPath, Info->item.pszText, lineinfo->name);
+		      *Result = TRUE;
+		      return (lResult == ERROR_SUCCESS);
+			}
 		  }
                 }
               }

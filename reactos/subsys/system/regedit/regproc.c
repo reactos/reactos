@@ -27,6 +27,8 @@
 #include <winnt.h>
 #include <winreg.h>
 #include <assert.h>
+#include <tchar.h>
+#include <malloc.h>
 #include "regproc.h"
 
 #define REG_VAL_BUF_SIZE        4096
@@ -1501,3 +1503,166 @@ CHAR *getAppName()
 {
     return app_name;
 }
+
+LONG RegDeleteKeyRecursive(HKEY hKey, LPCTSTR lpSubKey)
+{
+    LONG lResult;
+    HKEY hSubKey = NULL;
+    DWORD dwIndex, cbName;
+    TCHAR szSubKey[256];
+    FILETIME ft;
+
+    lResult = RegOpenKeyEx(hKey, lpSubKey, 0, KEY_ALL_ACCESS, &hSubKey);
+    if (lResult == ERROR_SUCCESS)
+    {
+        dwIndex = 0;
+        do
+        {
+            cbName = sizeof(szSubKey) / sizeof(szSubKey[0]);
+            lResult = RegEnumKeyEx(hSubKey, dwIndex++, szSubKey, &cbName, NULL, NULL, NULL, &ft);
+            if (lResult == ERROR_SUCCESS)
+                RegDeleteKeyRecursive(hSubKey, szSubKey);
+        }
+        while(lResult == ERROR_SUCCESS);
+
+        RegCloseKey(hSubKey);
+    }
+
+    return RegDeleteKey(hKey, lpSubKey);
+}
+
+LONG RegCopyKey(HKEY hDestKey, LPCTSTR lpDestSubKey, HKEY hSrcKey, LPCTSTR lpSrcSubKey)
+{
+    LONG lResult;
+    DWORD dwDisposition;
+    HKEY hDestSubKey = NULL;
+    HKEY hSrcSubKey = NULL;
+    DWORD dwIndex, dwType, cbName, cbData;
+    TCHAR szSubKey[256];
+    TCHAR szValueName[256];
+    BYTE szValueData[512];
+
+    FILETIME ft;
+
+    /* open the source subkey, if specified */
+    if (lpSrcSubKey)
+    {
+        lResult = RegOpenKeyEx(hSrcKey, lpSrcSubKey, 0, KEY_ALL_ACCESS, &hSrcSubKey);
+        if (lResult)
+            goto done;
+        hSrcKey = hSrcSubKey;
+    }
+
+    /* create the destination subkey */
+    lResult = RegCreateKeyEx(hDestKey, lpDestSubKey, 0, NULL, 0, KEY_WRITE, NULL,
+        &hDestSubKey, &dwDisposition);
+    if (lResult)
+        goto done;
+
+    /* copy all subkeys */
+    dwIndex = 0;
+    do
+    {
+        cbName = sizeof(szSubKey) / sizeof(szSubKey[0]);
+        lResult = RegEnumKeyEx(hSrcKey, dwIndex++, szSubKey, &cbName, NULL, NULL, NULL, &ft);
+        if (lResult == ERROR_SUCCESS)
+        {
+            lResult = RegCopyKey(hDestSubKey, szSubKey, hSrcKey, szSubKey);
+            if (lResult)
+                goto done;
+        }
+    }
+    while(lResult == ERROR_SUCCESS);
+
+    /* copy all subvalues */
+    dwIndex = 0;
+    do
+    {
+        cbName = sizeof(szValueName) / sizeof(szValueName[0]);
+        cbData = sizeof(szValueData) / sizeof(szValueData[0]);
+        lResult = RegEnumValue(hSrcKey, dwIndex++, szValueName, &cbName, NULL, &dwType, szValueData, &cbData);
+        if (lResult == ERROR_SUCCESS)
+        {
+            lResult = RegSetValueEx(hDestSubKey, szValueName, 0, dwType, szValueData, cbData);
+            if (lResult)
+                goto done;
+        }
+    }
+    while(lResult == ERROR_SUCCESS);
+
+    lResult = ERROR_SUCCESS;
+
+done:
+    if (hSrcSubKey)
+        RegCloseKey(hSrcSubKey);
+    if (hDestSubKey)
+        RegCloseKey(hDestSubKey);
+    if (lResult != ERROR_SUCCESS)
+        RegDeleteKeyRecursive(hDestKey, lpDestSubKey);
+    return lResult;
+
+}
+
+LONG RegMoveKey(HKEY hDestKey, LPCTSTR lpDestSubKey, HKEY hSrcKey, LPCTSTR lpSrcSubKey)
+{
+    LONG lResult;
+
+    if (!lpSrcSubKey)
+        return ERROR_INVALID_FUNCTION;
+
+    lResult = RegCopyKey(hDestKey, lpDestSubKey, hSrcKey, lpSrcSubKey);
+    if (lResult == ERROR_SUCCESS)
+        RegDeleteKeyRecursive(hSrcKey, lpSrcSubKey);
+
+    return lResult;
+}
+
+LONG RegRenameKey(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpNewName)
+{
+    LPCTSTR s;
+    LPTSTR lpNewSubKey;
+
+    s = _tcsrchr(lpSubKey, '\\');
+    if (s)
+    {
+        s++;
+        lpNewSubKey = (LPTSTR) alloca((s - lpSubKey + _tcslen(lpNewName) + 1) * sizeof(TCHAR));
+        memcpy(lpNewSubKey, lpSubKey, (s - lpSubKey) * sizeof(TCHAR));
+        _tcscpy(lpNewSubKey + (s - lpSubKey), lpNewName);
+        lpNewName = lpNewSubKey;
+    }
+    return RegMoveKey(hKey, lpNewName, hKey, lpSubKey);
+}
+
+LONG RegRenameValue(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpDestValue, LPCTSTR lpSrcValue)
+{
+    LONG lResult;
+    HKEY hSubKey = NULL;
+    DWORD dwType, cbData;
+    BYTE data[512];
+
+    if (lpSubKey)
+    {
+        lResult = RegOpenKey(hKey, lpSubKey, &hSubKey);
+        if (lResult != ERROR_SUCCESS)
+            goto done;
+        hKey = hSubKey;
+    }
+
+    cbData = sizeof(data);
+    lResult = RegQueryValueEx(hKey, lpSrcValue, NULL, &dwType, data, &cbData);
+    if (lResult != ERROR_SUCCESS)
+        goto done;
+
+    lResult = RegSetValueEx(hKey, lpDestValue, 0, dwType, data, cbData);
+    if (lResult != ERROR_SUCCESS)
+        goto done;
+
+    RegDeleteValue(hKey, lpSrcValue);
+
+done:
+    if (hKey)
+        RegCloseKey(hKey);
+    return lResult;
+}
+
