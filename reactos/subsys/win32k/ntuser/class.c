@@ -208,7 +208,7 @@ IntGetClassName(struct _WINDOW_OBJECT *WindowObject, LPWSTR lpClassName,
    Length = 0;
    Status = RtlQueryAtomInAtomTable(WinStaObject->AtomTable,
                                     WindowObject->Class->Atom, NULL, NULL, NULL, &Length);
-   Name = ExAllocatePoolWithTag(PagedPool, Length + sizeof(UNICODE_NULL), TAG_STRING);
+   Name = ExAllocatePoolWithTag(PagedPool, Length, TAG_STRING);
    Status = RtlQueryAtomInAtomTable(WinStaObject->AtomTable,
                                     WindowObject->Class->Atom, NULL, NULL, Name, &Length);
    if (!NT_SUCCESS(Status))

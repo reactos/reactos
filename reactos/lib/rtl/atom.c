@@ -610,6 +610,10 @@ RtlQueryAtomInAtomTable(PRTL_ATOM_TABLE AtomTable,
                   *NameLength = Length;
                }
           }
+        else if (NameLength != NULL)
+          {
+             *NameLength = (Entry->NameLength + 1) * sizeof(WCHAR);
+          }
 
         return Status;
      }
@@ -650,6 +654,10 @@ RtlQueryAtomInAtomTable(PRTL_ATOM_TABLE AtomTable,
                   AtomName[Length / sizeof(WCHAR)] = L'\0';
                   *NameLength = Length;
                }
+          }
+        else if (NameLength != NULL)
+          {
+             *NameLength = (Entry->NameLength + 1) * sizeof(WCHAR);
           }
      }
    else
