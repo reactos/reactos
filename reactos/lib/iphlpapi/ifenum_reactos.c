@@ -304,13 +304,14 @@ static BOOL isInterface( TDIEntityID *if_maybe ) {
 
 static BOOL isLoopback( HANDLE tcpFile, TDIEntityID *loop_maybe ) {
     IFEntrySafelySized entryInfo;
+    NTSTATUS status;
 
-    tdiGetMibForIfEntity( tcpFile, 
-                          loop_maybe,
-                          &entryInfo );
+    status = tdiGetMibForIfEntity( tcpFile, 
+                                   loop_maybe,
+                                   &entryInfo );
 
-    return !entryInfo.ent.if_type || 
-        entryInfo.ent.if_type == IFENT_SOFTWARE_LOOPBACK;
+    return NT_SUCCESS(status) && (!entryInfo.ent.if_type || 
+        entryInfo.ent.if_type == IFENT_SOFTWARE_LOOPBACK);
 }
 
 NTSTATUS tdiGetEntityType( HANDLE tcpFile, TDIEntityID *ent, PULONG type ) {
@@ -388,12 +389,18 @@ static NTSTATUS getInterfaceInfoSet( HANDLE tcpFile,
                 }
             }
         }
+
+        if (NT_SUCCESS(status)) {
+            *infoSet = infoSetInt;
+            *numInterfaces = curInterf;
+        } else {
+            HeapFree(GetProcessHeap(), 0, infoSetInt);
+        }
+
+        return status;
+    } else {
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
-
-    *infoSet = infoSetInt;
-    *numInterfaces = curInterf;
-
-    return STATUS_SUCCESS;
 }
 
 static DWORD getNumInterfacesInt(BOOL onlyNonLoopback)
