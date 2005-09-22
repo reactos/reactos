@@ -156,30 +156,47 @@ UsbhubPdoQueryDeviceText(
 		}*/
 		case DeviceTextLocationInformation:
 		{
-			int size;
-			char *buf;
+			unsigned short size;
+			int ret;
+			PWCHAR buf;
+			PWCHAR bufret;
 
 			DPRINT("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_TEXT / DeviceTextLocationInformation\n");
 			if (!DeviceExtension->dev->descriptor.iProduct)
 				return STATUS_NOT_SUPPORTED;
 
-			size = usb_get_string(DeviceExtension->dev, LocaleId, DeviceExtension->dev->descriptor.iProduct, NULL, 0);
-			if (size < 2)
+			ret = usb_get_string(DeviceExtension->dev, LocaleId, DeviceExtension->dev->descriptor.iProduct, &size, sizeof(size));
+			if (ret < 2)
 			{
-				DPRINT("Usbhub: usb_get_string() failed\n");
+				DPRINT("Usbhub: usb_get_string() failed with error %d\n", ret);
 				return STATUS_IO_DEVICE_ERROR;
 			}
+			size &= 0xff;
 			buf = ExAllocatePool(PagedPool, size);
 			if (buf == NULL)
-				return STATUS_INSUFFICIENT_RESOURCES;
-			size = usb_get_string(DeviceExtension->dev, LocaleId, DeviceExtension->dev->descriptor.iProduct, buf, size);
-			if (size < 0)
 			{
-				DPRINT("Usbhub: usb_get_string() failed\n");
+				DPRINT("Usbhub: ExAllocatePool() failed\n");
+				return STATUS_INSUFFICIENT_RESOURCES;
+			}
+			ret = usb_get_string(DeviceExtension->dev, LocaleId, DeviceExtension->dev->descriptor.iProduct, buf, size);
+			if (ret < 0)
+			{
+				DPRINT("Usbhub: usb_get_string() failed with error %d\n", ret);
 				ExFreePool(buf);
 				return STATUS_IO_DEVICE_ERROR;
 			}
-			*Information = (ULONG_PTR)buf;
+			bufret = ExAllocatePool(PagedPool, size - 2 /* size of length identifier */ + 2 /* final NULL */);
+			if (bufret == NULL)
+			{
+				DPRINT("Usbhub: ExAllocatePool() failed\n");
+				ExFreePool(buf);
+				return STATUS_INSUFFICIENT_RESOURCES;
+			}
+
+			RtlCopyMemory(bufret, &buf[1], size - 2);
+			bufret[(size - 1) / sizeof(WCHAR)] = 0;
+			*Information = (ULONG_PTR)bufret;
+			ExFreePool(buf);
 			return STATUS_SUCCESS;
 		}
 		default:
