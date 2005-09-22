@@ -136,7 +136,7 @@ TDI_STATUS InfoTdiQueryInformationEx(
     KIRQL OldIrql;
     UINT i;
     PVOID context = NULL;
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status = TDI_INVALID_PARAMETER;
     BOOL FoundEntity = FALSE;
     InfoRequest_f InfoRequest = NULL;
 
