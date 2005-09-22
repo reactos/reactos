@@ -854,7 +854,7 @@ MingwBackend::GetBinutilsVersion ( const string& binutilsCommand )
 	
 	char separators[] = " ";
 	char *token;
-	char *prevtoken;
+	char *prevtoken = NULL;
 	
 	token = strtok ( buffer, separators );
 	while ( token != NULL )
