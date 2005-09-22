@@ -266,7 +266,7 @@ RtlSetCurrentDirectory_U(PUNICODE_STRING dir)
 			       NULL,
 			       NULL);
 
-   Status = NtOpenFile (&handle,
+   Status = ZwOpenFile (&handle,
 			SYNCHRONIZE | FILE_TRAVERSE,
 			&Attr,
 			&iosb,
@@ -281,12 +281,12 @@ RtlSetCurrentDirectory_U(PUNICODE_STRING dir)
    }
 
    /* don't keep the directory handle open on removable media */
-   if (NT_SUCCESS(NtQueryVolumeInformationFile( handle, &iosb, &device_info,
+   if (NT_SUCCESS(ZwQueryVolumeInformationFile( handle, &iosb, &device_info,
                                                 sizeof(device_info), FileFsDeviceInformation )) &&
      (device_info.Characteristics & FILE_REMOVABLE_MEDIA))
    {
       DPRINT1("don't keep the directory handle open on removable media\n");
-      NtClose( handle );
+      ZwClose( handle );
       handle = 0;
    }
 
@@ -302,7 +302,7 @@ RtlSetCurrentDirectory_U(PUNICODE_STRING dir)
               0,
               MAX_PATH*sizeof(WCHAR)+sizeof(ULONG));
 
-   Status = NtQueryInformationFile(handle,
+   Status = ZwQueryInformationFile(handle,
                &iosb,
                filenameinfo,
                MAX_PATH*sizeof(WCHAR)+sizeof(ULONG),
@@ -357,7 +357,7 @@ RtlSetCurrentDirectory_U(PUNICODE_STRING dir)
 
 
    if (cd->Handle)
-      NtClose(cd->Handle);
+      ZwClose(cd->Handle);
    cd->Handle = handle;
 
    /* append trailing \ if missing */
@@ -961,7 +961,7 @@ RtlDoesFileExists_U(IN PWSTR FileName)
 	                            CurDir.Handle,
 	                            NULL);
 
-	Status = NtQueryAttributesFile (&Attr, &Info);
+	Status = ZwQueryAttributesFile (&Attr, &Info);
 
    RtlFreeUnicodeString(&NtFileName);
 

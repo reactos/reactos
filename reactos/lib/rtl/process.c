@@ -325,7 +325,7 @@ RtlEncodePointer(IN PVOID Pointer)
   ULONG Cookie;
   NTSTATUS Status;
 
-  Status = NtQueryInformationProcess(NtCurrentProcess(),
+  Status = ZwQueryInformationProcess(NtCurrentProcess(),
                                      ProcessCookie,
                                      &Cookie,
                                      sizeof(Cookie),
