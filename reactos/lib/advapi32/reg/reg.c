@@ -405,20 +405,15 @@ RegCopyTreeA(IN HKEY hKeySrc,
              IN LPCSTR lpSubKey  OPTIONAL,
              IN HKEY hKeyDest)
 {
-    UNICODE_STRING SubKeyName;
+    UNICODE_STRING SubKeyName = {0};
     LONG Ret;
     
-    if (lpSubKey != NULL)
+    if (lpSubKey != NULL &&
+        !RtlCreateUnicodeStringFromAsciiz(&SubKeyName,
+                                          (LPSTR)lpSubKey))
     {
-        if (!RtlCreateUnicodeStringFromAsciiz(&SubKeyName,
-                                              (LPSTR)lpSubKey))
-        {
-            return ERROR_NOT_ENOUGH_MEMORY;
-        }
+        return ERROR_NOT_ENOUGH_MEMORY;
     }
-    else
-        RtlInitUnicodeString(&SubKeyName,
-                             NULL);
 
     Ret = RegCopyTreeW(hKeySrc,
                        SubKeyName.Buffer,
@@ -440,20 +435,15 @@ RegConnectRegistryA (IN LPCSTR lpMachineName,
                      IN HKEY hKey,
                      OUT PHKEY phkResult)
 {
-    UNICODE_STRING MachineName;
+    UNICODE_STRING MachineName = {0};
     LONG Ret;
     
-    if (lpMachineName != NULL)
+    if (lpMachineName != NULL &&
+        !RtlCreateUnicodeStringFromAsciiz(&MachineName,
+                                          (LPSTR)lpMachineName))
     {
-        if (!RtlCreateUnicodeStringFromAsciiz(&MachineName,
-                                              (LPSTR)lpMachineName))
-        {
-            return ERROR_NOT_ENOUGH_MEMORY;
-        }
+        return ERROR_NOT_ENOUGH_MEMORY;
     }
-    else
-        RtlInitUnicodeString(&MachineName,
-                             NULL);
 
     Ret = RegConnectRegistryW(MachineName.Buffer,
                               hKey,
@@ -951,33 +941,23 @@ RegDeleteKeyValueA(IN HKEY hKey,
                    IN LPCSTR lpSubKey  OPTIONAL,
                    IN LPCSTR lpValueName  OPTIONAL)
 {
-    UNICODE_STRING SubKey, ValueName;
+    UNICODE_STRING SubKey = {0}, ValueName = {0};
     LONG Ret;
     
-    if (lpSubKey != NULL)
+    if (lpSubKey != NULL &&
+        !RtlCreateUnicodeStringFromAsciiz(&SubKey,
+                                          (LPSTR)lpSubKey))
     {
-        if (!RtlCreateUnicodeStringFromAsciiz(&SubKey,
-                                              (LPSTR)lpSubKey))
-        {
-            return ERROR_NOT_ENOUGH_MEMORY;
-        }
+        return ERROR_NOT_ENOUGH_MEMORY;
     }
-    else
-        RtlInitUnicodeString(&SubKey,
-                             NULL);
 
-    if (lpValueName != NULL)
+    if (lpValueName != NULL &&
+        !RtlCreateUnicodeStringFromAsciiz(&ValueName,
+                                          (LPSTR)lpValueName))
     {
-        if (!RtlCreateUnicodeStringFromAsciiz(&ValueName,
-                                              (LPSTR)lpValueName))
-        {
-            RtlFreeUnicodeString(&SubKey);
-            return ERROR_NOT_ENOUGH_MEMORY;
-        }
+        RtlFreeUnicodeString(&SubKey);
+        return ERROR_NOT_ENOUGH_MEMORY;
     }
-    else
-        RtlInitUnicodeString(&ValueName,
-                             NULL);
 
     Ret = RegDeleteKeyValueW(hKey,
                              SubKey.Buffer,
@@ -1261,20 +1241,15 @@ LONG STDCALL
 RegDeleteTreeA(IN HKEY hKey,
                IN LPCSTR lpSubKey  OPTIONAL)
 {
-    UNICODE_STRING SubKeyName;
+    UNICODE_STRING SubKeyName = {0};
     LONG Ret;
 
-    if (lpSubKey != NULL)
+    if (lpSubKey != NULL &&
+        !RtlCreateUnicodeStringFromAsciiz(&SubKeyName,
+                                          (LPSTR)lpSubKey))
     {
-        if (!RtlCreateUnicodeStringFromAsciiz(&SubKeyName,
-                                              (LPSTR)lpSubKey))
-        {
-            return ERROR_NOT_ENOUGH_MEMORY;
-        }
+        return ERROR_NOT_ENOUGH_MEMORY;
     }
-    else
-        RtlInitUnicodeString(&SubKeyName,
-                             NULL);
 
     Ret = RegDeleteTreeW(hKey,
                          SubKeyName.Buffer);
