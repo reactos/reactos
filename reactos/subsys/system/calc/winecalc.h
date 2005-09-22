@@ -23,8 +23,8 @@
 // numerics are defined here for easier porting
 
 typedef double calcfloat;
-#define FMT_DESC_FLOAT TEXT("%.32g")
-#define FMT_DESC_EXP TEXT("%.32e")
+#define FMT_DESC_FLOAT TEXT("%g")
+#define FMT_DESC_EXP TEXT("%e")
 
 #define CALC_ATOF(x) atof(x)
 
