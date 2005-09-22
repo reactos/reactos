@@ -1,5 +1,6 @@
 #include <windows.h>
 #include <commctrl.h>
+#include <oleauto.h>
 #include <objsel.h>
 #include <prsht.h>
 #include <aclui.h>
@@ -57,6 +58,7 @@ typedef struct _SECURITY_PAGE
 
     LPSECURITYINFO psi;
     SI_OBJECT_INFO ObjectInfo;
+    IDsObjectPicker *pDsObjectPicker;
     
     SI_ACCESS DefaultAccess;
     
@@ -86,8 +88,21 @@ ListViewSelectItem(IN HWND hwnd,
 HRESULT
 InitializeObjectPicker(IN PCWSTR ServerName,
                        IN PSI_OBJECT_INFO ObjectInfo,
-                       IN PCWSTR Attributes[],
                        OUT IDsObjectPicker **pDsObjectPicker);
+
+VOID
+FreeObjectPicker(IN IDsObjectPicker *pDsObjectPicker);
+
+typedef BOOL (*POBJPICK_SELECTED_SID)(IN IDsObjectPicker *pDsObjectPicker,
+                                      IN HWND hwndParent  OPTIONAL,
+                                      IN PSID pSid,
+                                      IN PVOID Context  OPTIONAL);
+
+HRESULT
+InvokeObjectPickerDialog(IN IDsObjectPicker *pDsObjectPicker,
+                         IN HWND hwndParent  OPTIONAL,
+                         IN POBJPICK_SELECTED_SID SelectedSidCallback,
+                         IN PVOID Context  OPTIONAL);
 
 /* CHECKLIST CONTROL **********************************************************/
 

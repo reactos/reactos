@@ -32,6 +32,11 @@
 
 #include <precomp.h>
 
+static PCWSTR ObjectPickerAttributes[] =
+{
+    L"ObjectSid",
+};
+
 static INT
 LengthOfStrResource(IN HINSTANCE hInst,
                     IN UINT uID)
@@ -207,7 +212,6 @@ ListViewSelectItem(IN HWND hwnd,
 HRESULT
 InitializeObjectPicker(IN PCWSTR ServerName,
                        IN PSI_OBJECT_INFO ObjectInfo,
-                       IN PCWSTR Attributes[],
                        OUT IDsObjectPicker **pDsObjectPicker)
 {
     HRESULT hRet;
@@ -250,8 +254,8 @@ InitializeObjectPicker(IN PCWSTR ServerName,
         InitInfo.cDsScopeInfos = sizeof(Scopes) / sizeof(Scopes[0]);
         InitInfo.aDsScopeInfos = Scopes;
         InitInfo.flOptions = DSOP_FLAG_MULTISELECT | DSOP_SCOPE_TYPE_TARGET_COMPUTER;
-        InitInfo.cAttributesToFetch = sizeof(Attributes) / sizeof(Attributes[0]);
-        InitInfo.apwzAttributeNames = Attributes;
+        InitInfo.cAttributesToFetch = sizeof(ObjectPickerAttributes) / sizeof(ObjectPickerAttributes[0]);
+        InitInfo.apwzAttributeNames = ObjectPickerAttributes;
 
         for (i = 0; i < InitInfo.cDsScopeInfos; i++)
         {
@@ -276,5 +280,84 @@ InitializeObjectPicker(IN PCWSTR ServerName,
     }
 
     return hRet;
+}
+
+HRESULT
+InvokeObjectPickerDialog(IN IDsObjectPicker *pDsObjectPicker,
+                         IN HWND hwndParent  OPTIONAL,
+                         IN POBJPICK_SELECTED_SID SelectedSidCallback,
+                         IN PVOID Context  OPTIONAL)
+{
+    IDataObject *pdo = NULL;
+    HRESULT hRet;
+    
+    hRet = pDsObjectPicker->lpVtbl->InvokeDialog(pDsObjectPicker,
+                                                 hwndParent,
+                                                 &pdo);
+    if (hRet == S_OK)
+    {
+        STGMEDIUM stm;
+        FORMATETC fe;
+
+        fe.cfFormat = RegisterClipboardFormat(CFSTR_DSOP_DS_SELECTION_LIST);
+        fe.ptd = NULL;
+        fe.dwAspect = DVASPECT_CONTENT;
+        fe.lindex = -1;
+        fe.tymed = TYMED_HGLOBAL;
+        
+        hRet = pdo->lpVtbl->GetData(pdo,
+                                    &fe,
+                                    &stm);
+        if (SUCCEEDED(hRet))
+        {
+            PDS_SELECTION_LIST SelectionList = (PDS_SELECTION_LIST)GlobalLock(stm.hGlobal);
+            if (SelectionList != NULL)
+            {
+                LPVARIANT vSid;
+                PSID pSid;
+                UINT i;
+                BOOL contLoop = TRUE;
+                
+                for (i = 0; i < SelectionList->cItems && contLoop; i++)
+                {
+                    vSid = SelectionList->aDsSelection[i].pvarFetchedAttributes;
+                    
+                    if (vSid != NULL && V_VT(vSid) == (VT_ARRAY | VT_UI1))
+                    {
+                        hRet = SafeArrayAccessData(V_ARRAY(vSid),
+                                                   (void HUGEP**)&pSid);
+                        if (FAILED(hRet))
+                        {
+                            break;
+                        }
+                        
+                        if (pSid != NULL)
+                        {
+                            contLoop = SelectedSidCallback(pDsObjectPicker,
+                                                           hwndParent,
+                                                           pSid,
+                                                           Context);
+                        }
+                        
+                        SafeArrayUnaccessData(V_ARRAY(vSid));
+                    }
+                }
+                
+                GlobalUnlock(stm.hGlobal);
+            }
+            
+            ReleaseStgMedium(&stm);
+        }
+
+        pdo->lpVtbl->Release(pdo);
+    }
+    
+    return hRet;
+}
+
+VOID
+FreeObjectPicker(IN IDsObjectPicker *pDsObjectPicker)
+{
+    pDsObjectPicker->lpVtbl->Release(pDsObjectPicker);
 }
 

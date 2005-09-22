@@ -30,11 +30,6 @@
 
 HINSTANCE hDllInstance;
 
-static PCWSTR ObjectPickerAttributes[] =
-{
-    L"ObjectSid",
-};
-
 static VOID
 DestroySecurityPage(IN PSECURITY_PAGE sp)
 {
@@ -95,6 +90,225 @@ FindSidInPrincipalsList(IN PPRINCIPAL_LISTITEM PrincipalsListHead,
     return NULL;
 }
 
+static BOOL
+AddPrincipalToList(IN PSECURITY_PAGE sp,
+                   IN PSID Sid)
+{
+    if (!FindSidInPrincipalsList(sp->PrincipalsListHead,
+                                 Sid))
+    {
+        DWORD SidLength, AccountNameSize, DomainNameSize;
+        SID_NAME_USE SidNameUse;
+        DWORD LookupResult;
+        PPRINCIPAL_LISTITEM AceListItem, *NextAcePtr;
+        
+        NextAcePtr = &sp->PrincipalsListHead;
+        for (AceListItem = sp->PrincipalsListHead; AceListItem != NULL; AceListItem = AceListItem->Next)
+        {
+            NextAcePtr = &AceListItem->Next;
+        }
+        
+        SidLength = GetLengthSid(Sid);
+
+        AccountNameSize = 0;
+        DomainNameSize = 0;
+
+        /* calculate the size of the buffer we need to calculate */
+        LookupAccountSid(sp->ServerName,
+                         Sid,
+                         NULL,
+                         &AccountNameSize,
+                         NULL,
+                         &DomainNameSize,
+                         &SidNameUse);
+
+        /* allocate the ace */
+        AceListItem = HeapAlloc(GetProcessHeap(),
+                                0,
+                                sizeof(PRINCIPAL_LISTITEM) +
+                                SidLength +
+                                ((AccountNameSize + DomainNameSize) * sizeof(WCHAR)));
+        if (AceListItem != NULL)
+        {
+            AceListItem->AccountName = (LPWSTR)((ULONG_PTR)(AceListItem + 1) + SidLength);
+            AceListItem->DomainName = AceListItem->AccountName + AccountNameSize;
+
+            CopySid(SidLength,
+                    (PSID)(AceListItem + 1),
+                    Sid);
+
+            LookupResult = ERROR_SUCCESS;
+            if (!LookupAccountSid(sp->ServerName,
+                                  Sid,
+                                  AceListItem->AccountName,
+                                  &AccountNameSize,
+                                  AceListItem->DomainName,
+                                  &DomainNameSize,
+                                  &SidNameUse))
+            {
+                LookupResult = GetLastError();
+                if (LookupResult != ERROR_NONE_MAPPED)
+                {
+                    HeapFree(GetProcessHeap(),
+                             0,
+                             AceListItem);
+                    return FALSE;
+                }
+            }
+
+            if (AccountNameSize == 0)
+            {
+                AceListItem->AccountName = NULL;
+            }
+            if (DomainNameSize == 0)
+            {
+                AceListItem->DomainName = NULL;
+            }
+
+            AceListItem->Next = NULL;
+            if (LookupResult == ERROR_NONE_MAPPED)
+            {
+                if (!ConvertSidToStringSid(Sid,
+                                           &AceListItem->DisplayString))
+                {
+                    AceListItem->DisplayString = NULL;
+                }
+            }
+            else
+            {
+                LSA_HANDLE LsaHandle;
+                NTSTATUS Status;
+
+                AceListItem->DisplayString = NULL;
+
+                /* read the domain of the SID */
+                if (OpenLSAPolicyHandle(sp->ServerName,
+                                        POLICY_LOOKUP_NAMES | POLICY_VIEW_LOCAL_INFORMATION,
+                                        &LsaHandle))
+                {
+                    PLSA_REFERENCED_DOMAIN_LIST ReferencedDomain;
+                    PLSA_TRANSLATED_NAME Names;
+                    PLSA_TRUST_INFORMATION Domain;
+                    PLSA_UNICODE_STRING DomainName;
+                    PPOLICY_ACCOUNT_DOMAIN_INFO PolicyAccountDomainInfo = NULL;
+
+                    Status = LsaLookupSids(LsaHandle,
+                                           1,
+                                           &Sid,
+                                           &ReferencedDomain,
+                                           &Names);
+                    if (NT_SUCCESS(Status))
+                    {
+                        if (ReferencedDomain != NULL &&
+                            Names->DomainIndex >= 0)
+                        {
+                            Domain = &ReferencedDomain->Domains[Names->DomainIndex];
+                            DomainName = &Domain->Name;
+                        }
+                        else
+                        {
+                            Domain = NULL;
+                            DomainName = NULL;
+                        }
+
+                        AceListItem->SidNameUse = Names->Use;
+
+                        switch (Names->Use)
+                        {
+                            case SidTypeAlias:
+                                if (Domain != NULL)
+                                {
+                                    /* query the domain name for BUILTIN accounts */
+                                    Status = LsaQueryInformationPolicy(LsaHandle,
+                                                                       PolicyAccountDomainInformation,
+                                                                       (PVOID*)&PolicyAccountDomainInfo);
+                                    if (NT_SUCCESS(Status))
+                                    {
+                                        DomainName = &PolicyAccountDomainInfo->DomainName;
+
+                                        /* make the user believe this is a group */
+                                        AceListItem->SidNameUse = SidTypeGroup;
+                                    }
+                                }
+                                /* fall through */
+
+                            case SidTypeUser:
+                            {
+                                if (Domain != NULL)
+                                {
+                                    AceListItem->DisplayString = (LPWSTR)LocalAlloc(LMEM_FIXED,
+                                                                                    (AccountNameSize * sizeof(WCHAR)) +
+                                                                                    (DomainName->Length + sizeof(WCHAR)) +
+                                                                                    (Names->Name.Length + sizeof(WCHAR)) +
+                                                                                    (4 * sizeof(WCHAR)));
+                                    if (AceListItem->DisplayString != NULL)
+                                    {
+                                        WCHAR *s;
+
+                                        /* NOTE: LSA_UNICODE_STRINGs are not always NULL-terminated! */
+
+                                        wcscpy(AceListItem->DisplayString,
+                                               AceListItem->AccountName);
+                                        wcscat(AceListItem->DisplayString,
+                                               L" (");
+                                        s = AceListItem->DisplayString + wcslen(AceListItem->DisplayString);
+                                        CopyMemory(s,
+                                                   DomainName->Buffer,
+                                                   DomainName->Length);
+                                        s += DomainName->Length / sizeof(WCHAR);
+                                        *(s++) = L'\\';
+                                        CopyMemory(s,
+                                                   Names->Name.Buffer,
+                                                   Names->Name.Length);
+                                        s += Names->Name.Length / sizeof(WCHAR);
+                                        *(s++) = L')';
+                                        *s = L'\0';
+                                    }
+
+                                    /* mark the ace as a user unless it's a
+                                       BUILTIN account */
+                                    if (PolicyAccountDomainInfo == NULL)
+                                    {
+                                        AceListItem->SidNameUse = SidTypeUser;
+                                    }
+                                }
+                                break;
+                            }
+
+                            case SidTypeWellKnownGroup:
+                            {
+                                /* make the user believe this is a group */
+                                AceListItem->SidNameUse = SidTypeGroup;
+                                break;
+                            }
+
+                            default:
+                            {
+                                DPRINT("Unhandled SID type: 0x%x\n", Names->Use);
+                                break;
+                            }
+                        }
+
+                        if (PolicyAccountDomainInfo != NULL)
+                        {
+                            LsaFreeMemory(PolicyAccountDomainInfo);
+                        }
+
+                        LsaFreeMemory(ReferencedDomain);
+                        LsaFreeMemory(Names);
+                    }
+                    LsaClose(LsaHandle);
+                }
+            }
+
+            /* append item to the cached ACL */
+            *NextAcePtr = AceListItem;
+        }
+    }
+
+    return TRUE;
+}
+
 static VOID
 ReloadPrincipalsList(IN PSECURITY_PAGE sp)
 {
@@ -118,15 +332,9 @@ ReloadPrincipalsList(IN PSECURITY_PAGE sp)
                                       &Dacl,
                                       &DaclDefaulted))
         {
-            PPRINCIPAL_LISTITEM AceListItem, *NextAcePtr;
             PSID Sid;
             PVOID Ace;
             ULONG AceIndex;
-            DWORD AccountNameSize, DomainNameSize, SidLength;
-            SID_NAME_USE SidNameUse;
-            DWORD LookupResult;
-            
-            NextAcePtr = &sp->PrincipalsListHead;
             
             for (AceIndex = 0;
                  AceIndex < Dacl->AceCount;
@@ -137,208 +345,9 @@ ReloadPrincipalsList(IN PSECURITY_PAGE sp)
                        &Ace);
 
                 Sid = (PSID)&((PACCESS_ALLOWED_ACE)Ace)->SidStart;
-
-                if (!FindSidInPrincipalsList(sp->PrincipalsListHead,
-                                             Sid))
-                {
-                    SidLength = GetLengthSid(Sid);
-
-                    AccountNameSize = 0;
-                    DomainNameSize = 0;
-
-                    /* calculate the size of the buffer we need to calculate */
-                    LookupAccountSid(sp->ServerName,
-                                     Sid,
-                                     NULL,
-                                     &AccountNameSize,
-                                     NULL,
-                                     &DomainNameSize,
-                                     &SidNameUse);
-
-                    /* allocate the ace */
-                    AceListItem = HeapAlloc(GetProcessHeap(),
-                                            0,
-                                            sizeof(PRINCIPAL_LISTITEM) +
-                                            SidLength +
-                                            ((AccountNameSize + DomainNameSize) * sizeof(WCHAR)));
-                    if (AceListItem != NULL)
-                    {
-                        AceListItem->AccountName = (LPWSTR)((ULONG_PTR)(AceListItem + 1) + SidLength);
-                        AceListItem->DomainName = AceListItem->AccountName + AccountNameSize;
-
-                        CopySid(SidLength,
-                                (PSID)(AceListItem + 1),
-                                Sid);
-
-                        LookupResult = ERROR_SUCCESS;
-                        if (!LookupAccountSid(sp->ServerName,
-                                              Sid,
-                                              AceListItem->AccountName,
-                                              &AccountNameSize,
-                                              AceListItem->DomainName,
-                                              &DomainNameSize,
-                                              &SidNameUse))
-                        {
-                            LookupResult = GetLastError();
-                            if (LookupResult != ERROR_NONE_MAPPED)
-                            {
-                                HeapFree(GetProcessHeap(),
-                                         0,
-                                         AceListItem);
-                                continue;
-                            }
-                        }
-
-                        if (AccountNameSize == 0)
-                        {
-                            AceListItem->AccountName = NULL;
-                        }
-                        if (DomainNameSize == 0)
-                        {
-                            AceListItem->DomainName = NULL;
-                        }
-
-                        AceListItem->Next = NULL;
-                        if (LookupResult == ERROR_NONE_MAPPED)
-                        {
-                            if (!ConvertSidToStringSid(Sid,
-                                                       &AceListItem->DisplayString))
-                            {
-                                AceListItem->DisplayString = NULL;
-                            }
-                        }
-                        else
-                        {
-                            LSA_HANDLE LsaHandle;
-                            NTSTATUS Status;
-
-                            AceListItem->DisplayString = NULL;
-
-                            /* read the domain of the SID */
-                            if (OpenLSAPolicyHandle(sp->ServerName,
-                                                    POLICY_LOOKUP_NAMES | POLICY_VIEW_LOCAL_INFORMATION,
-                                                    &LsaHandle))
-                            {
-                                PLSA_REFERENCED_DOMAIN_LIST ReferencedDomain;
-                                PLSA_TRANSLATED_NAME Names;
-                                PLSA_TRUST_INFORMATION Domain;
-                                PLSA_UNICODE_STRING DomainName;
-                                PPOLICY_ACCOUNT_DOMAIN_INFO PolicyAccountDomainInfo = NULL;
-
-                                Status = LsaLookupSids(LsaHandle,
-                                                       1,
-                                                       &Sid,
-                                                       &ReferencedDomain,
-                                                       &Names);
-                                if (NT_SUCCESS(Status))
-                                {
-                                    if (ReferencedDomain != NULL &&
-                                        Names->DomainIndex >= 0)
-                                    {
-                                        Domain = &ReferencedDomain->Domains[Names->DomainIndex];
-                                        DomainName = &Domain->Name;
-                                    }
-                                    else
-                                    {
-                                        Domain = NULL;
-                                        DomainName = NULL;
-                                    }
-
-                                    AceListItem->SidNameUse = Names->Use;
-
-                                    switch (Names->Use)
-                                    {
-                                        case SidTypeAlias:
-                                            if (Domain != NULL)
-                                            {
-                                                /* query the domain name for BUILTIN accounts */
-                                                Status = LsaQueryInformationPolicy(LsaHandle,
-                                                                                   PolicyAccountDomainInformation,
-                                                                                   (PVOID*)&PolicyAccountDomainInfo);
-                                                if (NT_SUCCESS(Status))
-                                                {
-                                                    DomainName = &PolicyAccountDomainInfo->DomainName;
-
-                                                    /* make the user believe this is a group */
-                                                    AceListItem->SidNameUse = SidTypeGroup;
-                                                }
-                                            }
-                                            /* fall through */
-
-                                        case SidTypeUser:
-                                        {
-                                            if (Domain != NULL)
-                                            {
-                                                AceListItem->DisplayString = (LPWSTR)LocalAlloc(LMEM_FIXED,
-                                                                                                (AccountNameSize * sizeof(WCHAR)) +
-                                                                                                (DomainName->Length + sizeof(WCHAR)) +
-                                                                                                (Names->Name.Length + sizeof(WCHAR)) +
-                                                                                                (4 * sizeof(WCHAR)));
-                                                if (AceListItem->DisplayString != NULL)
-                                                {
-                                                    WCHAR *s;
-
-                                                    /* NOTE: LSA_UNICODE_STRINGs are not always NULL-terminated! */
-
-                                                    wcscpy(AceListItem->DisplayString,
-                                                           AceListItem->AccountName);
-                                                    wcscat(AceListItem->DisplayString,
-                                                           L" (");
-                                                    s = AceListItem->DisplayString + wcslen(AceListItem->DisplayString);
-                                                    CopyMemory(s,
-                                                               DomainName->Buffer,
-                                                               DomainName->Length);
-                                                    s += DomainName->Length / sizeof(WCHAR);
-                                                    *(s++) = L'\\';
-                                                    CopyMemory(s,
-                                                               Names->Name.Buffer,
-                                                               Names->Name.Length);
-                                                    s += Names->Name.Length / sizeof(WCHAR);
-                                                    *(s++) = L')';
-                                                    *s = L'\0';
-                                                }
-
-                                                /* mark the ace as a user unless it's a
-                                                   BUILTIN account */
-                                                if (PolicyAccountDomainInfo == NULL)
-                                                {
-                                                    AceListItem->SidNameUse = SidTypeUser;
-                                                }
-                                            }
-                                            break;
-                                        }
-
-                                        case SidTypeWellKnownGroup:
-                                        {
-                                            /* make the user believe this is a group */
-                                            AceListItem->SidNameUse = SidTypeGroup;
-                                            break;
-                                        }
-
-                                        default:
-                                        {
-                                            DPRINT("Unhandled SID type: 0x%x\n", Names->Use);
-                                            break;
-                                        }
-                                    }
-
-                                    if (PolicyAccountDomainInfo != NULL)
-                                    {
-                                        LsaFreeMemory(PolicyAccountDomainInfo);
-                                    }
-
-                                    LsaFreeMemory(ReferencedDomain);
-                                    LsaFreeMemory(Names);
-                                }
-                                LsaClose(LsaHandle);
-                            }
-                        }
-
-                        /* append item to the cached ACL */
-                        *NextAcePtr = AceListItem;
-                        NextAcePtr = &AceListItem->Next;
-                    }
-                }
+                
+                AddPrincipalToList(sp,
+                                   Sid);
             }
         }
         LocalFree((HLOCAL)SecurityDescriptor);
@@ -389,8 +398,6 @@ FillPrincipalsList(IN PSECURITY_PAGE sp)
     DisableRedrawWindow(sp->hWndPrincipalsList);
 
     ListView_DeleteAllItems(sp->hWndPrincipalsList);
-
-    ReloadPrincipalsList(sp);
 
     for (CurItem = sp->PrincipalsListHead;
          CurItem != NULL;
@@ -817,6 +824,20 @@ ResizeControls(IN PSECURITY_PAGE sp,
                            hWndDeny);
 }
 
+static BOOL
+AddSelectedPrincipal(IN IDsObjectPicker *pDsObjectPicker,
+                     IN HWND hwndParent  OPTIONAL,
+                     IN PSID pSid,
+                     IN PVOID Context  OPTIONAL)
+{
+    PSECURITY_PAGE sp = (PSECURITY_PAGE)Context;
+    
+    AddPrincipalToList(sp,
+                       pSid);
+
+    return TRUE;
+}
+
 static INT_PTR CALLBACK
 SecurityPageProc(IN HWND hwndDlg,
                  IN UINT uMsg,
@@ -881,28 +902,33 @@ SecurityPageProc(IN HWND hwndDlg,
                 case IDC_ADD_PRINCIPAL:
                 {
                     HRESULT hRet;
-                    IDsObjectPicker *pDsObjectPicker = NULL;
-                    IDataObject *Selections = NULL;
                     
                     sp = (PSECURITY_PAGE)GetWindowLongPtr(hwndDlg,
                                                           DWL_USER);
                     
                     hRet = InitializeObjectPicker(sp->ServerName,
                                                   &sp->ObjectInfo,
-                                                  ObjectPickerAttributes,
-                                                  &pDsObjectPicker);
+                                                  &sp->pDsObjectPicker);
                     if (SUCCEEDED(hRet))
                     {
-                        hRet = pDsObjectPicker->lpVtbl->InvokeDialog(pDsObjectPicker,
-                                                                     hwndDlg,
-                                                                     &Selections);
+                        hRet = InvokeObjectPickerDialog(sp->pDsObjectPicker,
+                                                        hwndDlg,
+                                                        AddSelectedPrincipal,
+                                                        sp);
                         if (FAILED(hRet))
                         {
-                            MessageBox(hwndDlg, L"InvokeDialog failed!\n", NULL, 0);
+                            MessageBox(hwndDlg, L"InvokeObjectPickerDialog failed!\n", NULL, 0);
                         }
                         
                         /* delete the instance */
-                        pDsObjectPicker->lpVtbl->Release(pDsObjectPicker);
+                        FreeObjectPicker(sp->pDsObjectPicker);
+                        
+                        /* reload the principal list */
+                        FillPrincipalsList(sp);
+                    }
+                    else
+                    {
+                        MessageBox(hwndDlg, L"InitializeObjectPicker failed!\n", NULL, 0);
                     }
                     break;
                 }
@@ -972,6 +998,8 @@ SecurityPageProc(IN HWND hwndDlg,
                 lvc.fmt = LVCFMT_LEFT;
                 lvc.cx = rcLvClient.right;
                 ListView_InsertColumn(sp->hWndPrincipalsList, 0, &lvc);
+                
+                ReloadPrincipalsList(sp);
 
                 FillPrincipalsList(sp);
                 
