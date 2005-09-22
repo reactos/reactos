@@ -401,7 +401,7 @@ RtlLocalTimeToSystemTime(IN PLARGE_INTEGER LocalTime,
    SYSTEM_TIMEOFDAY_INFORMATION TimeInformation;
    NTSTATUS Status;
 
-   Status = NtQuerySystemInformation(SystemTimeOfDayInformation,
+   Status = ZwQuerySystemInformation(SystemTimeOfDayInformation,
                                      &TimeInformation,
                                      sizeof(SYSTEM_TIMEOFDAY_INFORMATION),
                                      NULL);
@@ -426,7 +426,7 @@ RtlSystemTimeToLocalTime(IN PLARGE_INTEGER SystemTime,
    SYSTEM_TIMEOFDAY_INFORMATION TimeInformation;
    NTSTATUS Status;
 
-   Status = NtQuerySystemInformation(SystemTimeOfDayInformation,
+   Status = ZwQuerySystemInformation(SystemTimeOfDayInformation,
                                      &TimeInformation,
                                      sizeof(SYSTEM_TIMEOFDAY_INFORMATION),
                                      NULL);
