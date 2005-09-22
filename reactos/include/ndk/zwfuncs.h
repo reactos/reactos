@@ -1090,6 +1090,18 @@ NtDuplicateToken(
     OUT PHANDLE NewTokenHandle
 );
 
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+ZwDuplicateToken(
+    IN HANDLE ExistingTokenHandle,
+    IN ACCESS_MASK DesiredAccess,
+    IN POBJECT_ATTRIBUTES ObjectAttributes OPTIONAL,
+    IN BOOLEAN EffectiveOnly,
+    IN TOKEN_TYPE TokenType,
+    OUT PHANDLE NewTokenHandle
+);
+
 NTSTATUS
 NTAPI
 NtEnumerateBootEntries(

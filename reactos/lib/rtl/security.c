@@ -29,7 +29,7 @@ RtlImpersonateSelf(IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel)
 
    PAGED_CODE_RTL();
 
-   Status = NtOpenProcessToken(NtCurrentProcess(),
+   Status = ZwOpenProcessToken(NtCurrentProcess(),
                                TOKEN_DUPLICATE,
                                &ProcessToken);
    if (!NT_SUCCESS(Status))
@@ -53,7 +53,7 @@ RtlImpersonateSelf(IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel)
 
    ObjAttr.SecurityQualityOfService = &Sqos;
 
-   Status = NtDuplicateToken(ProcessToken,
+   Status = ZwDuplicateToken(ProcessToken,
                              TOKEN_IMPERSONATE,
                              &ObjAttr,
                              Sqos.EffectiveOnly, /* why both here _and_ in Sqos? */
@@ -66,7 +66,7 @@ RtlImpersonateSelf(IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel)
       return(Status);
    }
 
-   Status = NtSetInformationThread(NtCurrentThread(),
+   Status = ZwSetInformationThread(NtCurrentThread(),
                                    ThreadImpersonationToken,
                                    &ImpersonationToken,
                                    sizeof(HANDLE));
@@ -75,8 +75,8 @@ RtlImpersonateSelf(IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel)
      DPRINT1("NtSetInformationThread() failed (Status %lx)\n", Status);
    }
 
-   NtClose(ImpersonationToken);
-   NtClose(ProcessToken);
+   ZwClose(ImpersonationToken);
+   ZwClose(ProcessToken);
 
    return(Status);
 }
@@ -103,14 +103,14 @@ RtlAdjustPrivilege(IN ULONG Privilege,
 
    if (CurrentThread)
    {
-      Status = NtOpenThreadToken (NtCurrentThread (),
+      Status = ZwOpenThreadToken (NtCurrentThread (),
                                   TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY,
                                   FALSE,
                                   &TokenHandle);
    }
    else
    {
-      Status = NtOpenProcessToken (NtCurrentProcess (),
+      Status = ZwOpenProcessToken (NtCurrentProcess (),
                                    TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY,
                                    &TokenHandle);
    }
@@ -128,13 +128,13 @@ RtlAdjustPrivilege(IN ULONG Privilege,
    NewState.Privileges[0].Luid.HighPart = 0;
    NewState.Privileges[0].Attributes = (Enable) ? SE_PRIVILEGE_ENABLED : 0;
 
-   Status = NtAdjustPrivilegesToken (TokenHandle,
+   Status = ZwAdjustPrivilegesToken (TokenHandle,
                                      FALSE,
                                      &NewState,
                                      sizeof(TOKEN_PRIVILEGES),
                                      &OldState,
                                      &ReturnLength);
-   NtClose (TokenHandle);
+   ZwClose (TokenHandle);
    if (Status == STATUS_NOT_ALL_ASSIGNED)
    {
       DPRINT1 ("Failed to assign all privileges\n");
