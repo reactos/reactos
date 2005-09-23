@@ -16,16 +16,17 @@
 #define ICMP_MIN_SIZE 8
 #define ICMP_MAX_SIZE 65535
 #define PACKET_SIZE 32
-/* we need this for packets which have the 'dont fragment' 
- * bit set, as they can get quite large otherwise 
+/* we need this for packets which have the 'dont fragment'
+ * bit set, as they can get quite large otherwise
  * (I've seen some reach 182 bytes */
-#define MAX_REC_SIZE 200 
+#define MAX_REC_SIZE 200
 
 /* pack the structures */
-#pragma pack(1) 
+#include <pshpack1.h>
 
 /* IPv4 Header, 20 bytes */
-typedef struct IPv4Header {
+typedef struct IPv4Header
+{
     BYTE h_len:4;
     BYTE version:4;
     BYTE tos;
@@ -40,7 +41,8 @@ typedef struct IPv4Header {
 } IPv4_HEADER, *PIPv4_HEADER;
 
 /* ICMP Header, 8 bytes */
-typedef struct ICMPHeader {
+typedef struct ICMPHeader
+{
     BYTE type;
     BYTE code;
     USHORT checksum;
@@ -49,20 +51,22 @@ typedef struct ICMPHeader {
 } ICMP_HEADER, *PICMP_HEADER;
 
 /* ICMP Echo Reply Header, 12 bytes */
-typedef struct EchoReplyHeader {
+typedef struct EchoReplyHeader
+{
     struct ICMPHeader icmpheader;
-    struct timeval timestamp; 
+    struct timeval timestamp;
 } ECHO_REPLY_HEADER, *PECHO_REPLY_HEADER;
 
 /* ICMP Echo Reply Header, 12 bytes */
-typedef struct TTLExceedHeader {
+typedef struct TTLExceedHeader
+{
     struct ICMPHeader icmpheader;
     struct IPv4Header ipheader;
     struct ICMPHeader OrigIcmpHeader;
 } TTL_EXCEED_HEADER, *PTTL_EXCEED_HEADER;
 
 /* return to normal */
-#pragma pack()
+#include <poppack.h>
 
 
 /* function definitions */

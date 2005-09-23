@@ -1,4 +1,22 @@
-/* 
+/*
+ *  ReactOS Win32 Applications
+ *  Copyright (C) 2005 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS traceroute utility
  * FILE:        apps/utils/net/tracert/tracert.c
@@ -29,7 +47,7 @@
 /*
  * globals
  */
-SOCKET icmpSock;                // socket descriptor 
+SOCKET icmpSock;                // socket descriptor
 SOCKADDR_IN source, dest;       // source and destination address info
 ECHO_REPLY_HEADER sendpacket;   // ICMP echo packet
 IPv4_HEADER recvpacket;         // return reveive packet
@@ -38,7 +56,7 @@ BOOL bUsePerformanceCounter;    // whether to use the high res performance count
 LARGE_INTEGER TicksPerMs;       // number of millisecs in relation to proc freq
 LARGE_INTEGER TicksPerUs;       // number of microsecs in relation to proc freq
 LONGLONG lTimeStart;            // send packet, timer start
-LONGLONG lTimeEnd;	    	    // receive packet, timer end
+LONGLONG lTimeEnd;              // receive packet, timer end
 
 CHAR cHostname[256];            // target hostname
 CHAR cDestIP[18];               // target IP
@@ -55,7 +73,7 @@ INT iTimeOut = 2000;            // -w  time before packet times out
 
 
 
-/* 
+/*
  *
  * Parse command line parameters and set any options
  *
@@ -63,35 +81,37 @@ INT iTimeOut = 2000;            // -w  time before packet times out
 BOOL ParseCmdline(int argc, char* argv[])
 {
     int i;
- 
-    if (argc < 2) 
+
+    if (argc < 2)
     {
        Usage();
        return FALSE;
     }
 
-    for (i = 1; i < argc; i++) {
-        if (argv[i][0] == '-') {
-            switch (argv[i][1]) {
-               case 'd': bResolveAddresses = FALSE;  
+    for (i = 1; i < argc; i++)
+    {
+        if (argv[i][0] == '-')
+        {
+            switch (argv[i][1])
+            {
+               case 'd': bResolveAddresses = FALSE;
                          break;
-               case 'h': sscanf(argv[i+1], "%d", &iMaxHops); 
+               case 'h': sscanf(argv[i+1], "%d", &iMaxHops);
                          break;
-               case 'l': break; /* @unimplemented@ */
-               case 'w': sscanf(argv[i+1], "%d", &iTimeOut); 
+               case 'j': break; /* @unimplemented@ */
+               case 'w': sscanf(argv[i+1], "%d", &iTimeOut);
                          break;
                default:
                   _tprintf(_T("%s is not a valid option.\n"), argv[i]);
                   Usage();
                   return FALSE;
             }
-        } else {
+        }
+        else
            /* copy target address */
            strncpy(cHostname, argv[i], 255);
-
-        }
     }
- 
+
     return TRUE;
 }
 
@@ -100,11 +120,11 @@ BOOL ParseCmdline(int argc, char* argv[])
 /*
  *
  * Driver function, controls the traceroute program
- * 
+ *
  */
-INT Driver(VOID) {
-    
-    INT i;
+INT Driver(VOID)
+{
+
     INT iHopCount = 1;              // hop counter. default max is 30
     INT iSeqNum = 0;                // initialise packet sequence number
     INT iTTL = 1;                   // set initial packet TTL to 1
@@ -115,27 +135,29 @@ INT Driver(VOID) {
     INT iNameInfoRet;               // getnameinfo return value
     INT iPacketSize = PACKET_SIZE;  // packet size
     WORD wHeaderLen;                // header length
-    PECHO_REPLY_HEADER icmphdr;     
-    
-    
+    PECHO_REPLY_HEADER icmphdr;
+
+
     //temps for getting host name
     CHAR cHost[256];
     CHAR cServ[256];
     CHAR *ip;
-    
+
     /* setup winsock */
     WSADATA wsaData;
 
     /* check for winsock 2 */
-    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0) {
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+    {
 #ifdef DBG
         _tprintf(_T("WSAStartup failed.\n"));
 #endif /* DBG */
         exit(1);
     }
-    
+
+    /* establish what timing method we can use */
     SetupTimingMethod();
-    
+
     /* setup target info */
     ResolveHostname();
 
@@ -145,11 +167,16 @@ INT Driver(VOID) {
     iMaxHops > 1 ? _tprintf(_T("s:\n\n")) : _tprintf(_T(":\n\n"));
 
     /* run until we hit either max hops, or we recieve 3 echo replys */
-    while ((iHopCount <= iMaxHops) && (bFoundTarget != TRUE)) {
+    while ((iHopCount <= iMaxHops) && (bFoundTarget != TRUE))
+    {
+        INT i;
+
         _tprintf(_T("%3d   "), iHopCount);
         /* run 3 pings for each hop */
-        for (i=0; i<3; i++) {
-            if (Setup(iTTL) != TRUE) {
+        for (i=0; i<3; i++)
+        {
+            if (Setup(iTTL) != TRUE)
+            {
 #ifdef DBG
                 _tprintf(_T("error in Setup()\n"));
 #endif /* DBG */
@@ -157,71 +184,77 @@ INT Driver(VOID) {
                 exit(1);
             }
             PreparePacket(iPacketSize, iSeqNum);
-            if (SendPacket(iPacketSize) != SOCKET_ERROR) {
+            if (SendPacket(iPacketSize) != SOCKET_ERROR)
+            {
                 /* loop until we get a good packet */
                 bAwaitPacket = TRUE;
-                while (bAwaitPacket) {
+                while (bAwaitPacket)
+                {
                     /* Receive replies until we either get a successful
                      * read, or a fatal error occurs. */
-                    if ((iRecieveReturn = ReceivePacket(iPacketSize)) < 0) {
+                    if ((iRecieveReturn = ReceivePacket(iPacketSize)) < 0)
+                    {
                         /* check the sequence number in the packet
                          * if it's bad, complain and wait for another packet
                          * , otherwise break */
                         wHeaderLen = recvpacket.h_len * 4;
                         icmphdr = (ECHO_REPLY_HEADER *)((char*)&recvpacket + wHeaderLen);
-                        if (icmphdr->icmpheader.seq != iSeqNum) {
+                        if (icmphdr->icmpheader.seq != iSeqNum)
+                        {
                             _tprintf(_T("bad sequence number!\n"));
                             continue;
-                        } else {
-                            break;
                         }
+                        else
+                            break;
                     }
-                    
+
                     /* if RecievePacket timed out we don't bother decoding */
-                    if (iRecieveReturn != 1) {
+                    if (iRecieveReturn != 1)
+                    {
                         iDecRes = DecodeResponse(iPacketSize, iSeqNum);
-   
-                        switch (iDecRes) {
+
+                        switch (iDecRes)
+                        {
                            case 0 : bAwaitPacket = FALSE;  /* time exceeded */
                                     break;
                            case 1 : bAwaitPacket = FALSE;  /* echo reply */
-                                    break; 
+                                    break;
                            case 2 : bAwaitPacket = FALSE;  /* destination unreachable */
-                                    break;  
-#ifdef DBG 
+                                    break;
+#ifdef DBG
                            case -1 :
-                                     _tprintf(_T("recieved foreign packet\n")); 
+                                     _tprintf(_T("recieved foreign packet\n"));
                                      break;
-                           case -2 : 
-                                     _tprintf(_T("error in DecodeResponse\n")); 
+                           case -2 :
+                                     _tprintf(_T("error in DecodeResponse\n"));
                                      break;
-                           case -3 : 
-                                     _tprintf(_T("unknown ICMP packet\n")); 
+                           case -3 :
+                                     _tprintf(_T("unknown ICMP packet\n"));
                                      break;
 #endif /* DBG */
                            default : break;
                         }
-                    } else {
+                    }
+                    else
                         /* packet timed out. Don't wait for it again */
                         bAwaitPacket = FALSE;
-                    }
-                }   
+                }
             }
 
             iSeqNum++;
             _tprintf(_T("   "));
         }
 
-        if(bResolveAddresses) {
-           /* gethostbyaddr() and getnameinfo() are 
+        if(bResolveAddresses)
+        {
+           /* gethostbyaddr() and getnameinfo() are
             * unimplemented in ROS at present.
-            * Alex has advised he will be implementing gethostbyaddr
-            * but as it's depricieted and getnameinfo is much nicer,
+            * Alex has advised he will be implementing getnameinfo.
             * I've used that for the time being for testing in Windows*/
-            
+
               //ip = inet_addr(inet_ntoa(source.sin_addr));
               //host = gethostbyaddr((char *)&ip, 4, 0);
-              
+
               ip = inet_ntoa(source.sin_addr);
 
               iNameInfoRet = getnameinfo((SOCKADDR *)&source,
@@ -231,30 +264,34 @@ INT Driver(VOID) {
                                  cServ,
                                  256,
                                  NI_NUMERICSERV);
-              if (iNameInfoRet == 0) {
+              if (iNameInfoRet == 0)
+              {
                  /* if IP address resolved to a hostname,
-                   * print the IP address after it */   
-                  if (lstrcmpA(cHost, ip) != 0) {
+                   * print the IP address after it */
+                  if (lstrcmpA(cHost, ip) != 0)
                       _tprintf(_T("%s [%s]"), cHost, ip);
-                  } else {
+                  else
                       _tprintf(_T("%s"), cHost);
-                  }
-              } else {
-                  _tprintf(_T("error: %d"), WSAGetLastError());    
+              }
+              else
+              {
+                  _tprintf(_T("error: %d"), WSAGetLastError());
 #ifdef DBG
                   _tprintf(_T(" getnameinfo failed: %d"), iNameInfoRet);
-#endif /* DBG */ 
+#endif /* DBG */
               }
 
-        } else {
-           _tprintf(_T("%s"), inet_ntoa(source.sin_addr));
         }
+        else
+           _tprintf(_T("%s"), inet_ntoa(source.sin_addr));
+
         _tprintf(_T("\n"));
 
         /* check if we've arrived at the target */
-        if (strcmp(cDestIP, inet_ntoa(source.sin_addr)) == 0) {
+        if (strcmp(cDestIP, inet_ntoa(source.sin_addr)) == 0)
             bFoundTarget = TRUE;
-        } else {
+        else
+        {
             iTTL++;
             iHopCount++;
             Sleep(500);
@@ -262,37 +299,39 @@ INT Driver(VOID) {
     }
     _tprintf(_T("\nTrace complete.\n"));
     WSACleanup();
-    
+
     return 0;
 }
+
 
 /*
  * Establish if performance counters are available and
  * set up timing figures in relation to processor frequency.
- * If performance counters are not available, we'll be using 
+ * If performance counters are not available, we'll be using
  * gettickcount, so set the figures to 1
  *
  */
 VOID SetupTimingMethod(VOID)
 {
     LARGE_INTEGER PerformanceCounterFrequency;
-    
+
     /* check if performance counters are available */
     bUsePerformanceCounter = QueryPerformanceFrequency(&PerformanceCounterFrequency);
-    if (bUsePerformanceCounter) {
+    if (bUsePerformanceCounter)
+    {
         /* restrict execution to first processor on SMP systems */
-        if (SetThreadAffinityMask(GetCurrentThread(), 1) == 0) {
+        if (SetThreadAffinityMask(GetCurrentThread(), 1) == 0)
             bUsePerformanceCounter = FALSE;
-        }
-    
+
         TicksPerMs.QuadPart  = PerformanceCounterFrequency.QuadPart / 1000;
         TicksPerUs.QuadPart  = PerformanceCounterFrequency.QuadPart / 1000000;
     }
-    
-    if (!bUsePerformanceCounter) {
+
+    if (!bUsePerformanceCounter)
+    {
         TicksPerMs.QuadPart = 1;
         TicksPerUs.QuadPart = 1;
-    }    
+    }
 }
 
 
@@ -300,7 +339,7 @@ VOID SetupTimingMethod(VOID)
  *
  * Check for a hostname or dotted deciamal for our target.
  * If we have a hostname, resolve to an IP and store it, else
- * just store the target IP address. Also set up other key 
+ * just store the target IP address. Also set up other key
  * SOCKADDR_IN members needed for the connection.
  *
  */
@@ -308,28 +347,34 @@ VOID ResolveHostname(VOID)
 {
     HOSTENT *hp;
     ULONG addr;
-    
+
     memset(&dest, 0, sizeof(dest));
 
     addr = inet_addr(cHostname);
     /* if address is not a dotted decimal */
-    if (addr == INADDR_NONE) {
+    if (addr == INADDR_NONE)
+    {
        hp = gethostbyname(cHostname);
-       if (hp != 0) {
+       if (hp != 0)
+       {
           memcpy(&dest.sin_addr, hp->h_addr, hp->h_length);
           //dest.sin_addr = *((struct in_addr *)hp->h_addr);
           dest.sin_family = hp->h_addrtype;
-       } else {
+       }
+       else
+       {
           _tprintf(_T("Unable to resolve target system name %s.\n"), cHostname);
           WSACleanup();
           exit(1);
        }
-    } else {
+    }
+    else
+    {
         dest.sin_addr.s_addr = addr;
         dest.sin_family = AF_INET;
     }
     /* copy destination IP address into a string */
-    strcpy(cDestIP, inet_ntoa(dest.sin_addr));       
+    strcpy(cDestIP, inet_ntoa(dest.sin_addr));
 }
 
 
@@ -347,23 +392,26 @@ INT Setup(INT iTTL)
 
     /* create raw socket */
     icmpSock = WSASocket(AF_INET, SOCK_RAW, IPPROTO_ICMP, 0, 0, 0);
-    if (icmpSock == INVALID_SOCKET) {
+    if (icmpSock == INVALID_SOCKET)
+    {
        _tprintf(_T("Could not create socket : %d.\n"), WSAGetLastError());
-       if (WSAGetLastError() == WSAEACCES) {
+       if (WSAGetLastError() == WSAEACCES)
+       {
             _tprintf(_T("\n\nYou must be an administrator to run this program!\n\n"));
             WSACleanup();
             exit(1);
-        }
+       }
        return FALSE;
     }
-    
+
     /* setup for TTL */
     iSockRet = setsockopt(icmpSock, IPPROTO_IP, IP_TTL, (const char *)&iTTL, sizeof(iTTL));
-    if (iSockRet == SOCKET_ERROR) {
+    if (iSockRet == SOCKET_ERROR)
+    {
        _tprintf(_T("TTL setsockopt failed : %d. \n"), WSAGetLastError());
        return FALSE;
     }
-    
+
     return TRUE;
 }
 
@@ -374,7 +422,7 @@ INT Setup(INT iTTL)
  * Calculate the packet checksum
  *
  */
-VOID PreparePacket(INT iPacketSize, INT iSeqNum) 
+VOID PreparePacket(INT iPacketSize, INT iSeqNum)
 {
     /* assemble ICMP echo request packet */
     sendpacket.icmpheader.type      = ECHO_REQUEST;
@@ -399,7 +447,7 @@ INT SendPacket(INT datasize)
 {
     INT iSockRet;
     INT iPacketSize;
-    
+
     iPacketSize = sizeof(ECHO_REPLY_HEADER) + datasize;
 
 #ifdef DBG
@@ -415,16 +463,20 @@ INT SendPacket(INT datasize)
                       0,                     //flags
                       (SOCKADDR *)&dest,     //destination
                       sizeof(dest));         //address length
-    
-    if (iSockRet == SOCKET_ERROR) {
-        if (WSAGetLastError() == WSAEACCES) {
+
+    if (iSockRet == SOCKET_ERROR)
+    {
+        if (WSAGetLastError() == WSAEACCES)
+        {
             _tprintf(_T("\n\nYou must be an administrator to run this program!\n\n"));
             exit(1);
             WSACleanup();
-        } else {
+        }
+        else
+        {
 #ifdef DBG
             _tprintf(_T("sendto failed %d\n"), WSAGetLastError());
-#endif /* DBG */            
+#endif /* DBG */
             return FALSE;
         }
     }
@@ -441,7 +493,7 @@ INT SendPacket(INT datasize)
 /*
  *
  * Set up a timeout value and put the socket in a select poll.
- * Wait until we recieve an IPv4 reply packet in reply to the ICMP 
+ * Wait until we recieve an IPv4 reply packet in reply to the ICMP
  * echo request packet and get the time the packet was recieved.
  * If we don't recieve a packet, do some checking to establish why.
  *
@@ -456,7 +508,7 @@ INT ReceivePacket(INT datasize)
 
     /* allow for a larger recv buffer to store ICMP TTL
      * exceed, IP header and orginal ICMP request */
-    iPacketSize = MAX_REC_SIZE + datasize; 
+    iPacketSize = MAX_REC_SIZE + datasize;
 
     iFromLen = sizeof(source);
 
@@ -467,14 +519,15 @@ INT ReceivePacket(INT datasize)
     /* monitor icmpSock for incomming connections */
     FD_ZERO(&readFDS);
     FD_SET(icmpSock, &readFDS);
-    
+
     /* set timeout values */
     timeVal.tv_sec  = iTimeOut / 1000;
     timeVal.tv_usec = iTimeOut % 1000;
-    
+
     iSelRet = select(0, &readFDS, NULL, NULL, &timeVal);
-    
-    if ((iSelRet != SOCKET_ERROR) && (iSelRet != 0)) {
+
+    if ((iSelRet != SOCKET_ERROR) && (iSelRet != 0))
+    {
         iSockRet = recvfrom(icmpSock,              //socket
                            (char *)&recvpacket,    //buffer
                            iPacketSize,            //size of buffer
@@ -482,25 +535,29 @@ INT ReceivePacket(INT datasize)
                            (SOCKADDR *)&source,    //source address
                            &iFromLen);             //pointer to address length
         /* get time packet was recieved */
-        lTimeEnd = GetTime();  
-    /* if socket timed out */                             
-    } else if (iSelRet == 0) {
+        lTimeEnd = GetTime();
+    /* if socket timed out */
+    }
+    else if (iSelRet == 0)
+    {
         _tprintf(_T("   *  "));
         return 1;
-    } else if (iSelRet == SOCKET_ERROR) {
+    }
+    else if (iSelRet == SOCKET_ERROR)
+    {
         _tprintf(_T("select() failed in sendPacket() %d\n"), WSAGetLastError());
-	return -1;
+        return -1;
     }
 
-    
-    if (iSockRet == SOCKET_ERROR) {
+
+    if (iSockRet == SOCKET_ERROR)
+    {
         _tprintf(_T("recvfrom failed: %d\n"), WSAGetLastError());
         return -2;
     }
 #ifdef DBG
-    else {
-	_tprintf(_T("reveived %d bytes\n"), iSockRet);
-    }
+    else
+    _tprintf(_T("reveived %d bytes\n"), iSockRet);
 #endif /* DBG */
 
     return 0;
@@ -511,7 +568,7 @@ INT ReceivePacket(INT datasize)
 /*
  *
  * Cast the IPv4 packet to an echo reply and to a TTL exceed.
- * Check the 'type' field to establish what was recieved, and 
+ * Check the 'type' field to establish what was recieved, and
  * ensure the packet is related to the originating process.
  * It all is well, print the time taken for the round trip.
  *
@@ -524,14 +581,17 @@ INT DecodeResponse(INT iPacketSize, INT iSeqNum)
     TTL_EXCEED_HEADER *TTLExceedHdr = (TTL_EXCEED_HEADER *)((char *)&recvpacket + header_len);
 
     /* Make sure the reply is ok */
-    if (iPacketSize < header_len + ICMP_MIN_SIZE) {
+    if (iPacketSize < header_len + ICMP_MIN_SIZE)
+    {
         _tprintf(_T("too few bytes from %s\n"), inet_ntoa(dest.sin_addr));
         return -2;
-    }  
-    
-    switch (IcmpHdr->icmpheader.type) {
+    }
+
+    switch (IcmpHdr->icmpheader.type)
+    {
            case TTL_EXCEEDED :
-                if (TTLExceedHdr->OrigIcmpHeader.id != (USHORT)GetCurrentProcessId()) {
+                if (TTLExceedHdr->OrigIcmpHeader.id != (USHORT)GetCurrentProcessId())
+                {
                 /* FIXME */
                 /* we've picked up a packet not related to this process
                  * probably from another local program. We ignore it */
@@ -544,7 +604,8 @@ INT DecodeResponse(INT iPacketSize, INT iSeqNum)
                 _tprintf(_T("%3Ld ms"), (lTimeEnd - lTimeStart) / TicksPerMs.QuadPart);
                 return 0;
            case ECHO_REPLY :
-                if (IcmpHdr->icmpheader.id != (USHORT)GetCurrentProcessId()) {
+                if (IcmpHdr->icmpheader.id != (USHORT)GetCurrentProcessId())
+                {
                 /* FIXME */
                 /* we've picked up a packet not related to this process
                  * probably from another local program. We ignore it */
@@ -562,7 +623,7 @@ INT DecodeResponse(INT iPacketSize, INT iSeqNum)
            default :
                 /* unknown ICMP packet */
                 return -3;
-    } 
+    }
 }
 
 
@@ -573,17 +634,21 @@ INT DecodeResponse(INT iPacketSize, INT iSeqNum)
  *
  */
 
-LONG GetTime(VOID) 
+LONG GetTime(VOID)
 {
     LARGE_INTEGER Time;
-    
-    if (bUsePerformanceCounter) {
-        if (QueryPerformanceCounter(&Time) == 0) {
+
+    if (bUsePerformanceCounter)
+    {
+        if (QueryPerformanceCounter(&Time) == 0)
+        {
             Time.u.LowPart = (DWORD)GetTickCount();
             Time.u.HighPart = 0;
             return (LONGLONG)Time.u.LowPart;
-        } 
-    } else {
+        }
+    }
+    else
+    {
             Time.u.LowPart = (DWORD)GetTickCount();
             Time.u.HighPart = 0;
             return (LONGLONG)Time.u.LowPart;
@@ -601,7 +666,8 @@ WORD CheckSum(PUSHORT data, UINT size)
 {
     DWORD dwSum = 0;
 
-    while (size > 1) {
+    while (size > 1)
+    {
         dwSum += *data++;
         size -= sizeof(USHORT);
     }
@@ -623,13 +689,13 @@ WORD CheckSum(PUSHORT data, UINT size)
  */
 VOID Usage(VOID)
 {
-    _tprintf(_T("\nUsage: tracert [-d] [-h maximum_hops] [-j host-list] [-w timeout] target_name\n\n"));
-    _tprintf(_T("Options:\n"));
-    _tprintf(_T("    -d                 Do not resolve addresses to hostnames.\n"));
-    _tprintf(_T("    -h maximum_hops    Maximum number of hops to search for target.\n"));
-    _tprintf(_T("    -j host-list       Loose source route along host-list.\n"));
-    _tprintf(_T("    -w timeout         Wait timeout milliseconds for each reply.\n\n"));
-    
+    _tprintf(_T("\nUsage: tracert [-d] [-h maximum_hops] [-j host-list] [-w timeout] target_name\n\n"
+                "Options:\n"
+                "    -d                 Do not resolve addresses to hostnames.\n"
+                "    -h maximum_hops    Maximum number of hops to search for target.\n"
+                "    -j host-list       Loose source route along host-list.\n"
+                "    -w timeout         Wait timeout milliseconds for each reply.\n\n"));
+
     /* temp notes to stop user questions until getnameinfo/gethostbyaddr and getsockopt are implemented */
     _tprintf(_T("NOTES\n-----\n"
            "- Setting TTL values is not currently supported in ReactOS, so the trace will\n"
