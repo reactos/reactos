@@ -720,6 +720,32 @@ VOID DIALOG_EditTimeDate(VOID)
 
 VOID DIALOG_EditWrap(VOID)
 {
+    static const WCHAR editW[] = { 'e','d','i','t',0 };
+    DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL |
+                    ES_AUTOVSCROLL | ES_MULTILINE;
+    RECT rc;
+    DWORD size;
+    LPWSTR pTemp;
+
+    size = GetWindowTextLength(Globals.hEdit) + 1;
+    pTemp = HeapAlloc(GetProcessHeap(), 0, size * sizeof(WCHAR));
+    if (!pTemp)
+    {
+        ShowLastError();
+        return;
+    }
+    GetWindowText(Globals.hEdit, pTemp, size);
+    DestroyWindow(Globals.hEdit);
+    GetClientRect(Globals.hMainWnd, &rc);
+    if( Globals.bWrapLongLines ) dwStyle |= WS_HSCROLL | ES_AUTOHSCROLL;
+    Globals.hEdit = CreateWindowEx(WS_EX_CLIENTEDGE, editW, NULL, dwStyle,
+                         0, 0, rc.right, rc.bottom, Globals.hMainWnd,
+                         NULL, Globals.hInstance, NULL);
+    SendMessage(Globals.hEdit, WM_SETFONT, (WPARAM)Globals.hFont, (LPARAM)FALSE);
+    SetWindowTextW(Globals.hEdit, pTemp);
+    SetFocus(Globals.hEdit);
+    HeapFree(GetProcessHeap(), 0, pTemp);
+    
     Globals.bWrapLongLines = !Globals.bWrapLongLines;
     CheckMenuItem(GetMenu(Globals.hMainWnd), CMD_WRAP,
         MF_BYCOMMAND | (Globals.bWrapLongLines ? MF_CHECKED : MF_UNCHECKED));
