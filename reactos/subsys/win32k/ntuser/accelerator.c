@@ -359,7 +359,7 @@ NtUserCreateAcceleratorTable(
       if (Accel->Table == NULL)
       {
          ObmDeleteObject(hAccel, otAccel);
-         SetLastNtError(Status);
+         SetLastNtError(STATUS_NO_MEMORY);
          RETURN( (HACCEL) 0);
       }
 
