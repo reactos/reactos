@@ -86,7 +86,7 @@ SI_INHERIT_TYPE RegInheritTypes[] = {
 };
 
 
-LPREGKEYSECURITY CRegKeySecurity_fnConstructor(HANDLE Handle, SE_OBJECT_TYPE ObjectType, SI_OBJECT_INFO *ObjectInfo, BOOL *Btn)
+static LPREGKEYSECURITY CRegKeySecurity_fnConstructor(HANDLE Handle, SI_OBJECT_INFO *ObjectInfo, BOOL *Btn)
 {
   LPREGKEYSECURITY obj;
 
@@ -96,7 +96,6 @@ LPREGKEYSECURITY CRegKeySecurity_fnConstructor(HANDLE Handle, SE_OBJECT_TYPE Obj
     obj->ref = 1;
     obj->lpVtbl = &efvt;
     obj->Handle = Handle;
-    obj->ObjectType = ObjectType;
     obj->ObjectInfo = *ObjectInfo;
     obj->Btn = Btn;
   }
@@ -153,11 +152,32 @@ CRegKeySecurity_fnGetSecurity(LPREGKEYSECURITY this,
                               PSECURITY_DESCRIPTOR* ppSecurityDescriptor,
                               BOOL fDefault)
 {
-  /* FIXME */
-  if(GetSecurityInfo(this->Handle, this->ObjectType, RequestedInformation, 0, 0,
-                     0, 0, ppSecurityDescriptor) == ERROR_SUCCESS)
+  DWORD DescriptorSize = 0;
+  PSECURITY_DESCRIPTOR SecurityDescriptor;
+  LONG ErrorCode;
+  
+  /* find out how much memory we need to allocate */
+  ErrorCode = RegGetKeySecurity(this->Handle, RequestedInformation, NULL, &DescriptorSize);
+  if(ErrorCode == ERROR_INSUFFICIENT_BUFFER)
   {
-    return S_OK;
+    SecurityDescriptor = (PSECURITY_DESCRIPTOR)LocalAlloc(LMEM_FIXED, DescriptorSize);
+    if (SecurityDescriptor != NULL)
+    {
+        if (RegGetKeySecurity(this->Handle, RequestedInformation, SecurityDescriptor, &DescriptorSize) == ERROR_SUCCESS)
+        {
+            *ppSecurityDescriptor = SecurityDescriptor;
+            return S_OK;
+        }
+        else
+        {
+            LocalFree((HLOCAL)SecurityDescriptor);
+            return E_ACCESSDENIED;
+        }
+    }
+    else
+    {
+        return E_OUTOFMEMORY;
+    }
   }
   else
   {
@@ -345,7 +365,7 @@ RegKeyEditPermissions(HWND hWndOwner,
   ObjectInfo.pszObjectName = KeyName;
   ObjectInfo.pszPageTitle = KeyName;
 
-  if(!(RegKeySecurity = CRegKeySecurity_fnConstructor(hInfoKey, SE_REGISTRY_KEY, &ObjectInfo, &Result)))
+  if(!(RegKeySecurity = CRegKeySecurity_fnConstructor(hInfoKey, &ObjectInfo, &Result)))
   {
     /* FIXME - print error with FormatMessage */
     return FALSE;

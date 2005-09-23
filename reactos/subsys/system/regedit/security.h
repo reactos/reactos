@@ -7,17 +7,6 @@ InitializeAclUiDll(VOID);
 VOID
 UnloadAclUiDll(VOID);
 
-/* FIXME - remove the definition */
-DWORD STDCALL
-GetSecurityInfo(HANDLE handle,
-                SE_OBJECT_TYPE ObjectType,
-                SECURITY_INFORMATION SecurityInfo,
-                PSID* ppsidOwner,
-                PSID* ppsidGroup,
-                PACL* ppDacl,
-                PACL* ppSacl,
-                PSECURITY_DESCRIPTOR* ppSecurityDescriptor);
-
 DEFINE_GUID(IID_CRegKeySecurity, 0x965fc360, 0x16ff, 0x11d0, 0x0091, 0xcb,0x00,0xaa,0x00,0xbb,0xb7,0x23);
 
 /******************************************************************************
@@ -72,7 +61,6 @@ typedef struct CRegKeySecurity
   DWORD ref;
   /* CRegKeySecurity fields */
   HANDLE Handle;
-  SE_OBJECT_TYPE ObjectType;
   SI_OBJECT_INFO ObjectInfo;
   BOOL *Btn;
 } REGKEYSECURITY;
