@@ -136,6 +136,7 @@ lib\serialui\serialui.dll               1
 lib\setupapi\setupapi.dll               1
 lib\shdocvw\shdocvw.dll                 1
 lib\shell32\shell32.dll                 1
+lib\shfolder\shfolder.dll               1
 lib\shlwapi\shlwapi.dll                 1
 lib\smdll\smdll.dll                     1
 lib\syssetup\syssetup.dll               1

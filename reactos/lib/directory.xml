@@ -224,6 +224,9 @@
 <directory name="shell32">
 	<xi:include href="shell32/shell32.xml" />
 </directory>
+<directory name="shfolder">
+	<xi:include href="shfolder/shfolder.xml" />
+</directory>
 <directory name="shlwapi">
 	<xi:include href="shlwapi/shlwapi.xml" />
 </directory>
