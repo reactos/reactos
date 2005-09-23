@@ -166,8 +166,10 @@ NTSTATUS tdiGetSetOfThings( HANDLE tcpFile,
                                   &allocationSizeForEntityArray,
                                   NULL );
 
-        if( !NT_SUCCESS(status) ) {
-            return status;
+        if(!status)
+        {
+            DPRINT("IOCTL Failed\n");
+            return STATUS_UNSUCCESSFUL;
         }
         
         arraySize = allocationSizeForEntityArray;
@@ -195,9 +197,10 @@ NTSTATUS tdiGetSetOfThings( HANDLE tcpFile,
         HeapFree( GetProcessHeap(), 0, entitySet );
         entitySet = 0;
 
-        if( !NT_SUCCESS(status) ) {
-            DPRINT("TdiGetSetOfThings() => %08x\n", (int)status);
-            return status;
+        if(!status)
+        {
+            DPRINT("IOCTL Failed\n");
+            return STATUS_UNSUCCESSFUL;
         }
 
         DPRINT("TdiGetSetOfThings(): Array changed size: %d -> %d.\n",
@@ -241,10 +244,11 @@ NTSTATUS tdiGetMibForIfEntity
                               &returnSize,
                               NULL );
 
-    if( !NT_SUCCESS(status) ) {
-        TRACE("failure: %08x\n", status);
-        return status;
-    } else TRACE("Success.\n");
+    if(!status)
+    {
+            DPRINT("IOCTL Failed\n");
+            return STATUS_UNSUCCESSFUL;
+    }
 
     DPRINT("TdiGetMibForIfEntity() => {\n"
            "  if_index ....................... %x\n"
@@ -339,7 +343,7 @@ NTSTATUS tdiGetEntityType( HANDLE tcpFile, TDIEntityID *ent, PULONG type ) {
 
     DPRINT("TdiGetEntityType() => %08x %08x\n", *type, status);
 
-    return status;
+    return (status ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
 }
 
 static NTSTATUS getInterfaceInfoSet( HANDLE tcpFile, 
@@ -425,8 +429,6 @@ static DWORD getNumInterfacesInt(BOOL onlyNonLoopback)
         return 0;
     }
 
-    closeTcpFile( tcpFile );
-
     for( i = 0; i < numEntities; i++ ) {
         if( isInterface( &entitySet[i] ) &&
             (!onlyNonLoopback || 
@@ -436,6 +438,8 @@ static DWORD getNumInterfacesInt(BOOL onlyNonLoopback)
 
     DPRINT("getNumInterfaces: success: %d %d %08x\n", 
            onlyNonLoopback, numInterfaces, status );
+
+    closeTcpFile( tcpFile );
 
     tdiFreeThingSet( entitySet );
     
