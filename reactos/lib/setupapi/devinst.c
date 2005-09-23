@@ -3737,7 +3737,7 @@ done:
     {
         if (DeviceInfoData)
         {
-            struct DeviceInfoElement *deviceInfo = (struct DeviceInfoElement *)DeviceInfoData;
+            struct DeviceInfoElement *deviceInfo = (struct DeviceInfoElement *)DeviceInfoData->Reserved;
             deviceInfo->Flags |= DI_DIDCOMPAT;
         }
         else
