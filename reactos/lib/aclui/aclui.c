@@ -330,7 +330,8 @@ ReloadPrincipalsList(IN PSECURITY_PAGE sp)
         if (GetSecurityDescriptorDacl(SecurityDescriptor,
                                       &DaclPresent,
                                       &Dacl,
-                                      &DaclDefaulted))
+                                      &DaclDefaulted) &&
+            DaclPresent && Dacl != NULL)
         {
             PSID Sid;
             PVOID Ace;
@@ -978,10 +979,10 @@ SecurityPageProc(IN HWND hwndDlg,
                                  (DWORD_PTR)sp);
 
                 sp->hiPrincipals = ImageList_LoadBitmap(hDllInstance,
-                                                  MAKEINTRESOURCE(IDB_USRGRPIMAGES),
-                                                  16,
-                                                  3,
-                                                  0);
+                                                        MAKEINTRESOURCE(IDB_USRGRPIMAGES),
+                                                        16,
+                                                        3,
+                                                        0);
 
                 /* setup the listview control */
                 ListView_SetExtendedListViewStyleEx(sp->hWndPrincipalsList,
