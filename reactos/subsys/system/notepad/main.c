@@ -114,6 +114,27 @@ static VOID NOTEPAD_InitData(VOID)
 }
 
 /***********************************************************************
+ * Enable/disable items on the menu based on control state
+ */
+static VOID NOTEPAD_InitMenuPopup(HMENU menu, int index)
+{
+    int enable;
+
+    EnableMenuItem(menu, CMD_UNDO,
+        SendMessage(Globals.hEdit, EM_CANUNDO, 0, 0) ? MF_ENABLED : MF_GRAYED);
+    EnableMenuItem(menu, CMD_PASTE,
+        IsClipboardFormatAvailable(CF_TEXT) ? MF_ENABLED : MF_GRAYED);
+    enable = SendMessage(Globals.hEdit, EM_GETSEL, 0, 0);
+    enable = (HIWORD(enable) == LOWORD(enable)) ? MF_GRAYED : MF_ENABLED;
+    EnableMenuItem(menu, CMD_CUT, enable);
+    EnableMenuItem(menu, CMD_COPY, enable);
+    EnableMenuItem(menu, CMD_DELETE, enable);
+    
+    EnableMenuItem(menu, CMD_SELECT_ALL,
+        GetWindowTextLength(Globals.hEdit) ? MF_ENABLED : MF_GRAYED);
+}
+
+/***********************************************************************
  *
  *           NOTEPAD_WndProc
  */
@@ -178,6 +199,10 @@ static LRESULT WINAPI NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam,
         DoOpenFile(szFileName);
         break;
     }
+    
+    case WM_INITMENUPOPUP:
+        NOTEPAD_InitMenuPopup((HMENU)wParam, lParam);
+        break;
 
     default:
         return DefWindowProc(hWnd, msg, wParam, lParam);
