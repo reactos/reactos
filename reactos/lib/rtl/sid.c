@@ -42,7 +42,8 @@ RtlLengthRequiredSid(IN ULONG SubAuthorityCount)
 {
   PAGED_CODE_RTL();
 
-  return (sizeof(SID) + (SubAuthorityCount - 1) * sizeof(ULONG));
+  return (sizeof(SID) - (ANYSIZE_ARRAY * sizeof(ULONG)) +
+          (SubAuthorityCount * sizeof(ULONG)));
 }
 
 
@@ -106,22 +107,18 @@ RtlEqualSid(IN PSID Sid1_,
 {
   PISID Sid1 =  Sid1_;
   PISID Sid2 =  Sid2_;
+  SIZE_T SidLen;
 
   PAGED_CODE_RTL();
 
-  if (Sid1->Revision != Sid2->Revision)
+  if (Sid1->Revision != Sid2->Revision ||
+      (*RtlSubAuthorityCountSid(Sid1)) != (*RtlSubAuthorityCountSid(Sid2)))
    {
       return(FALSE);
    }
-   if ((*RtlSubAuthorityCountSid(Sid1)) != (*RtlSubAuthorityCountSid(Sid2)))
-   {
-      return(FALSE);
-   }
-   if (RtlCompareMemory(Sid1, Sid2, RtlLengthSid(Sid1)) != RtlLengthSid(Sid1))
-   {
-      return(FALSE);
-   }
-   return(TRUE);
+   
+   SidLen = RtlLengthSid(Sid1);
+   return RtlCompareMemory(Sid1, Sid2, SidLen) == SidLen;
 }
 
 
@@ -135,7 +132,8 @@ RtlLengthSid(IN PSID Sid_)
 
   PAGED_CODE_RTL();
 
-  return (sizeof(SID) + (Sid->SubAuthorityCount-1) * sizeof(ULONG));
+  return (sizeof(SID) - sizeof(Sid->SubAuthority) +
+          (Sid->SubAuthorityCount * sizeof(ULONG)));
 }
 
 
@@ -243,7 +241,7 @@ RtlAllocateAndInitializeSid(PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
   if (Sid == NULL)
     return STATUS_INVALID_PARAMETER;
 
-  pSid = RtlpAllocateMemory(sizeof(SID) + (SubAuthorityCount - 1) * sizeof(ULONG),
+  pSid = RtlpAllocateMemory(RtlLengthRequiredSid(SubAuthorityCount),
                             TAG_SID);
   if (pSid == NULL)
     return STATUS_NO_MEMORY;
@@ -338,7 +336,7 @@ RtlConvertSidToUnicodeString(PUNICODE_STRING String,
    wcs = Buffer;
    wcs += swprintf (wcs, L"S-%u-", Sid->Revision);
    if (Sid->IdentifierAuthority.Value[0] == 0 &&
-         Sid->IdentifierAuthority.Value[1] == 0)
+       Sid->IdentifierAuthority.Value[1] == 0)
    {
       wcs += swprintf (wcs,
                        L"%lu",
@@ -366,28 +364,29 @@ RtlConvertSidToUnicodeString(PUNICODE_STRING String,
                        Sid->SubAuthority[i]);
    }
 
-   Length = (wcs - Buffer) * sizeof(WCHAR);
    if (AllocateBuffer)
    {
-      String->Buffer = RtlpAllocateMemory(Length + sizeof(WCHAR),
-                                          TAG_SID);
-      if (String->Buffer == NULL)
+      if (!RtlCreateUnicodeString(String,
+                                  Buffer))
+      {
          return STATUS_NO_MEMORY;
-      String->MaximumLength = Length + sizeof(WCHAR);
+      }
    }
    else
    {
+      Length = (wcs - Buffer) * sizeof(WCHAR);
+
       if (Length > String->MaximumLength)
          return STATUS_BUFFER_TOO_SMALL;
+
+      String->Length = Length;
+      RtlCopyMemory (String->Buffer,
+                     Buffer,
+                     Length);
+      if (Length < String->MaximumLength)
+         String->Buffer[Length / sizeof(WCHAR)] = 0;
    }
-
-   String->Length = Length;
-   RtlCopyMemory (String->Buffer,
-                  Buffer,
-                  Length);
-   if (Length < String->MaximumLength)
-      String->Buffer[Length / sizeof(WCHAR)] = 0;
-
+   
    return STATUS_SUCCESS;
 }
 
