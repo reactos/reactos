@@ -178,8 +178,8 @@ DbgUiContinue(PCLIENT_ID ClientId,
  * @unimplemented
  */
 NTSTATUS STDCALL
-DbgUiWaitStateChange(ULONG Unknown1,
-		     ULONG Unknown2)
+DbgUiWaitStateChange(PDBGUI_WAIT_STATE_CHANGE DbgUiWaitStateCange,
+                     PLARGE_INTEGER TimeOut)
 {
   return STATUS_NOT_IMPLEMENTED;
 }
