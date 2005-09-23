@@ -162,6 +162,7 @@ INT_PTR CALLBACK RunDlgProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
 
                             HeapFree(GetProcessHeap(), 0, psz);
                             SendMessageA (htxt, CB_SETEDITSEL, 0, MAKELPARAM (0, -1)) ;
+                            SetFocus(htxt);
                             return TRUE ;
                             }
                         FillList (htxt, psz) ;
@@ -217,15 +218,19 @@ INT_PTR CALLBACK RunDlgProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lPar
                         return TRUE ;
                         }
 
-                    ofnProc (&ofn) ;
-
-                    SetFocus (GetDlgItem (hwnd, IDOK)) ;
-                    SetWindowTextA (GetDlgItem (hwnd, 12298), szFName) ;
-                    SendMessageA (GetDlgItem (hwnd, 12298), CB_SETEDITSEL, 0, MAKELPARAM (0, -1)) ;
-                    SetFocus (GetDlgItem (hwnd, IDOK)) ;
+                    if(ofnProc (&ofn))
+                       {
+                        SetFocus (GetDlgItem (hwnd, IDOK)) ;
+                        SetWindowTextA (GetDlgItem (hwnd, 12298), szFName) ;
+                        SendMessageA (GetDlgItem (hwnd, 12298), CB_SETEDITSEL, 0, MAKELPARAM (0, -1)) ;
+                        SetFocus (GetDlgItem (hwnd, IDOK)) ;
+                        }
+                    else
+                        {
+                        SetFocus(GetDlgItem(hwnd, 12288));
+                        }
 
                     FreeLibrary (hComdlg) ;
-
                     return TRUE ;
                     }
                 }
