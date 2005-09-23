@@ -345,7 +345,7 @@ int PASCAL WinMain(HINSTANCE hInstance, HINSTANCE prev, LPSTR cmdline, int show)
     class.hInstance     = Globals.hInstance;
     class.hIcon         = LoadIcon(0, IDI_APPLICATION);
     class.hCursor       = LoadCursor(0, IDC_ARROW);
-    class.hbrBackground = (HBRUSH)(COLOR_WINDOW);
+    class.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     class.lpszMenuName  = MAKEINTRESOURCE(MAIN_MENU);
     class.lpszClassName = className;
 
