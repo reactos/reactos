@@ -730,6 +730,6 @@ static VOID STDCALL I8042DebugWorkItem(PDEVICE_OBJECT DeviceObject,
 	/* We hope kernel would understand this. If
 	 * that's not the case, nothing would happen.
 	 */
-	KdpServiceDispatcher(TAG('R', 'o', 's', ' '), EnterDebugger, NULL);
+	KdpServiceDispatcher(TAG('R', 'o', 's', ' '), (PVOID)Key, NULL);
 #endif /* __REACTOS__ */
 }
