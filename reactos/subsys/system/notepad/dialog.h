@@ -51,7 +51,7 @@ VOID DIALOG_HelpAboutWine(VOID);
 VOID DIALOG_TimeDate(VOID);
 
 /* utility functions */
-VOID ShowLastError();
+VOID ShowLastError(void);
 BOOL FileExists(LPCWSTR szFilename);
 BOOL DoCloseFile(void);
 void DoOpenFile(LPCWSTR szFileName);
