@@ -109,7 +109,7 @@ CaptureRest:
     mov [ebx+CONTEXT_EBP], eax
 
     /* And get ESP */
-    mov eax, [ebp+8]
+    lea eax, [ebp+8]
     mov [ebx+CONTEXT_ESP], eax
 
     /* Return to the caller */
