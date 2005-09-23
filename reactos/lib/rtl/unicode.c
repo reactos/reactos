@@ -32,19 +32,19 @@ RtlAnsiCharToUnicodeChar(IN PUCHAR *AnsiChar)
 {
     ULONG Size;
     NTSTATUS Status;
-    WCHAR UnicodeChar = 0x20;
+    WCHAR UnicodeChar = L' ';
 
     Size = (NlsLeadByteInfo[**AnsiChar] == 0) ? 1 : 2;
 
     Status = RtlMultiByteToUnicodeN(&UnicodeChar,
                                     sizeof(WCHAR),
                                     NULL,
-                                    *AnsiChar,
+                                    (PCHAR)*AnsiChar,
                                     Size);
 
     if (!NT_SUCCESS(Status))
     {
-        UnicodeChar = 0x20;
+        UnicodeChar = L' ';
     }
 
     *AnsiChar += Size;
