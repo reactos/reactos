@@ -43,7 +43,6 @@ KdpGetWrapperDebugMode(PCHAR Currentp2,
 {
     PCHAR p2 = Currentp2;
 
-#ifdef DBG
     /* Check for BOCHS Debugging */
     if (!_strnicmp(p2, "BOCHS", 5))
     {
@@ -75,7 +74,6 @@ KdpGetWrapperDebugMode(PCHAR Currentp2,
         /* Enable Debugging */
         KdDebuggerEnabled = TRUE;
     }
-#endif
 
 #ifdef KDBG
     /* Get the KDBG Settings and enable it */
