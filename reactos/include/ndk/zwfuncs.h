@@ -1090,7 +1090,7 @@ NtDuplicateToken(
     OUT PHANDLE NewTokenHandle
 );
 
-NTSYSCALLAPI
+NTSYSAPI
 NTSTATUS
 NTAPI
 ZwDuplicateToken(
