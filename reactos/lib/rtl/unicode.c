@@ -1919,7 +1919,7 @@ RtlCreateUnicodeString(
 
     if (UniDest->Buffer == NULL) return FALSE;
 
-    RtlMoveMemory(UniDest->Buffer, Source, Length);
+    RtlCopyMemory(UniDest->Buffer, Source, Length);
     UniDest->MaximumLength = (USHORT)Length;
     UniDest->Length = Length - sizeof (WCHAR);
 
