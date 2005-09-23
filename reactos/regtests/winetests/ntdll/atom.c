@@ -233,6 +233,19 @@ static void test_NtAtom(void)
         ok(res == STATUS_BUFFER_TOO_SMALL, "Got wrong retval, retval: %lx\n", res);
         ok((strlenW(testAtom1) * sizeof(WCHAR)) == Len, "Got wrong length %lx\n", Len);
 
+        res = pRtlQueryAtomInAtomTable(AtomTable, Atom1, NULL, NULL, NULL, &Len);
+        ok(!res, "Failed to retrieve atom length, retval: %lx\n", res);
+        ok(Len == strlenW(testAtom1) * sizeof(WCHAR), "Invalid atom length got %lu expected %u\n",
+           Len, strlenW(testAtom1) * sizeof(WCHAR));
+
+        Len = strlenW(testAtom1) * sizeof(WCHAR);
+        Name[strlenW(testAtom1)] = '*';
+        res = pRtlQueryAtomInAtomTable(AtomTable, Atom1, NULL, NULL, Name, &Len);
+        ok(!res, "Failed with exactly long enough buffer, retval: %lx\n", res);
+        ok(Name[strlenW(testAtom1)] == '*', "Writing outside buffer\n");
+        ok(0 == memcmp(Name, testAtom1, (strlenW(testAtom1) - 1) * sizeof(WCHAR)),
+           "We found wrong atom!!\n");
+
         res = pRtlPinAtomInAtomTable(AtomTable, Atom1);
         ok(!res, "Unable to pin atom in atom table, retval: %lx\n", res);
 
