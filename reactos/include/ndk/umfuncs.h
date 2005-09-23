@@ -108,14 +108,10 @@ VOID
 NTAPI
 DbgBreakPoint(VOID);
 
-NTSTATUS
+NTSYSAPI
+VOID
 NTAPI
-DbgSsInitialize(
-    HANDLE ReplyPort,
-    PVOID Callback,
-    ULONG Unknown2,
-    ULONG Unknown3
-);
+DbgBreakPointWithStatus(IN ULONG Status);
 
 NTSTATUS
 NTAPI
@@ -131,8 +127,8 @@ DbgUiContinue(
 NTSTATUS
 NTAPI
 DbgUiWaitStateChange(
-    ULONG Unknown1,
-    ULONG Unknown2
+    PDBGUI_WAIT_STATE_CHANGE DbgUiWaitStateCange,
+    PLARGE_INTEGER TimeOut
 );
 
 VOID

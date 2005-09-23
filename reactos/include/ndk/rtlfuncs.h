@@ -946,6 +946,13 @@ RtlOemToUnicodeN(
  * Ansi->Unicode String Functions
  */
 NTSYSAPI
+ULONG
+NTAPI
+RtlxAnsiStringToUnicodeSize(
+    PCANSI_STRING AnsiString
+);
+
+NTSYSAPI
 NTSTATUS
 NTAPI
 RtlAnsiStringToUnicodeString(

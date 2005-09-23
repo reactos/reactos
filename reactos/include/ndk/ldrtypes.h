@@ -32,7 +32,9 @@
 #define LDRP_PROCESS_ATTACH_CALLED        0x00080000
 #define LDRP_DEBUG_SYMBOLS_LOADED         0x00100000
 #define LDRP_IMAGE_NOT_AT_BASE            0x00200000
-#define LDRP_WX86_IGNORE_MACHINETYPE      0x00400000
+#define LDRP_COR_IMAGE                    0x00400000
+#define LDR_COR_OWNS_UNMAP                0x00800000
+#define LDRP_REDIRECTED                   0x10000000
 
 /* ENUMERATIONS **************************************************************/
 

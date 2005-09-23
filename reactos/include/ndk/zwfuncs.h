@@ -315,6 +315,26 @@ ZwClearEvent(
     IN HANDLE EventHandle
 );
 
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtCreateDebugObject(
+    OUT PHANDLE DebugHandle,
+    IN ACCESS_MASK DesiredAccess,
+    IN POBJECT_ATTRIBUTES ObjectAttributes,
+    IN BOOLEAN KillProcessOnExit
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwCreateDebugObject(
+    OUT PHANDLE DebugHandle,
+    IN ACCESS_MASK DesiredAccess,
+    IN POBJECT_ATTRIBUTES ObjectAttributes,
+    IN BOOLEAN KillProcessOnExit
+);
+
 NTSTATUS
 NTAPI
 NtCreateJobObject(
@@ -904,6 +924,32 @@ ZwCreateWaitablePort(
     ULONG MaxConnectInfoLength,
     ULONG MaxDataLength,
     ULONG NPMessageQueueSize OPTIONAL
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtQueryDebugFilterState(
+     ULONG ComponentId,
+     ULONG Level
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtDebugContinue(
+    IN HANDLE DebugObject,
+    IN PCLIENT_ID AppClientId,
+    IN NTSTATUS ContinueStatus
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwDebugContinue(
+    IN HANDLE DebugObject,
+    IN PCLIENT_ID AppClientId,
+    IN NTSTATUS ContinueStatus
 );
 
 NTSTATUS
@@ -3410,6 +3456,15 @@ ZwSetContextThread(
     IN PCONTEXT Context
 );
 
+NTSYSAPI
+NTSTATUS
+NTAPI
+NtSetDebugFilterState(
+    ULONG ComponentId,
+    ULONG Level,
+    BOOLEAN State
+);
+
 NTSTATUS
 NTAPI
 NtSetDefaultLocale(
@@ -4180,6 +4235,26 @@ NtW32Call(
     IN ULONG ArgumentLength,
     OUT PVOID* Result OPTIONAL,
     OUT PULONG ResultLength OPTIONAL
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
+NtWaitForDebugEvent(
+    IN HANDLE DebugObject,
+    IN BOOLEAN Alertable,
+    IN PLARGE_INTEGER Timeout OPTIONAL,
+    OUT PDBGUI_WAIT_STATE_CHANGE StateChange
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+ZwWaitForDebugEvent(
+    IN HANDLE DebugObject,
+    IN BOOLEAN Alertable,
+    IN PLARGE_INTEGER Timeout OPTIONAL,
+    OUT PDBGUI_WAIT_STATE_CHANGE StateChange
 );
 
 NTSTATUS

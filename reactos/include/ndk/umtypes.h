@@ -90,6 +90,17 @@
 #define NT_WARNING(x) ((ULONG)(x)>>30==2)
 #define NT_ERROR(x) ((ULONG)(x)>>30==3)
 
+/* Limits */
+#define MINCHAR             0x80
+#define MAXCHAR             0x7f
+#define MINSHORT            0x8000
+#define MAXSHORT            0x7fff
+#define MINLONG             0x80000000
+#define MAXLONG             0x7fffffff
+#define MAXUCHAR            0xff
+#define MAXUSHORT           0xffff
+#define MAXULONG            0xffffffff
+
 /* TYPES *********************************************************************/
 
 /* Basic Types that aren't defined in User-Mode Headers */
