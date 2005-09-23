@@ -376,11 +376,12 @@ int PASCAL WinMain(HINSTANCE hInstance, HINSTANCE prev, LPSTR cmdline, int show)
 
     while (GetMessage(&msg, 0, 0, 0))
     {
-	if (!TranslateAccelerator(Globals.hMainWnd, hAccel, &msg) && !IsDialogMessage(Globals.hFindReplaceDlg, &msg))
-	{
-	    TranslateMessage(&msg);
-	    DispatchMessage(&msg);
-	}
+    if (!IsDialogMessage(Globals.hFindReplaceDlg, &msg) &&
+        !TranslateAccelerator(Globals.hMainWnd, hAccel, &msg))
+    {
+        TranslateMessage(&msg);
+        DispatchMessage(&msg);
+    }
     }
     return msg.wParam;
 }
