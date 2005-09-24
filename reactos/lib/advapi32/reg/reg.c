@@ -518,7 +518,6 @@ RegpCopyTree(IN HKEY hKeySrc,
                                 NtClose(NewKeyHandle);
                                 
                                 Status2 = STATUS_INSUFFICIENT_RESOURCES;
-                                goto GoNextKey;
                             }
                         }
                         else
@@ -527,7 +526,6 @@ RegpCopyTree(IN HKEY hKeySrc,
                         }
                     }
                     
-GoNextKey:
                     if (!NT_SUCCESS(Status2) && NT_SUCCESS(Status))
                     {
                         Status = Status2;
