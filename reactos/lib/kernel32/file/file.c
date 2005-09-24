@@ -835,9 +835,7 @@ GetFileAttributesExW(LPCWSTR lpFileName,
 {
   FILE_NETWORK_OPEN_INFORMATION FileInformation;
   OBJECT_ATTRIBUTES ObjectAttributes;
-  IO_STATUS_BLOCK IoStatusBlock;
   UNICODE_STRING FileName;
-  HANDLE FileHandle;
   NTSTATUS Status;
   WIN32_FILE_ATTRIBUTE_DATA* FileAttributeData;
 
@@ -868,32 +866,14 @@ GetFileAttributesExW(LPCWSTR lpFileName,
 			      NULL,
 			      NULL);
 
-  /* Open the file */
-  Status = NtOpenFile (&FileHandle,
-		       SYNCHRONIZE | FILE_READ_ATTRIBUTES,
-		       &ObjectAttributes,
-		       &IoStatusBlock,
-		       0,
-		       FILE_SYNCHRONOUS_IO_NONALERT);
+  /* Get file attributes */
+  Status = NtQueryFullAttributesFile(&ObjectAttributes,
+                                     &FileInformation);
+                                     
   RtlFreeUnicodeString (&FileName);
   if (!NT_SUCCESS (Status))
     {
-      DPRINT ("NtOpenFile() failed  %x (Status %lx)\n", &ObjectAttributes, Status);
-      SetLastErrorByStatus (Status);
-      return FALSE;
-    }
-
-  /* Get file attributes */
-  Status = NtQueryInformationFile (FileHandle,
-				   &IoStatusBlock,
-				   &FileInformation,
-				   sizeof(FILE_NETWORK_OPEN_INFORMATION),
-				   FileNetworkOpenInformation);
-  NtClose (FileHandle);
-
-  if (!NT_SUCCESS (Status))
-    {
-      DPRINT1 ("NtQueryInformationFile() failed (Status %lx)\n", Status);
+      DPRINT ("NtQueryFullAttributesFile() failed (Status %lx)\n", Status);
       SetLastErrorByStatus (Status);
       return FALSE;
     }
