@@ -259,6 +259,7 @@ IntGetFullWindowStationName(
       FullName->Length += WinStaName->Length + sizeof(WCHAR);
    if (DesktopName != NULL)
       FullName->Length += DesktopName->Length + sizeof(WCHAR);
+   FullName->MaximumLength = FullName->Length;
    FullName->Buffer = ExAllocatePoolWithTag(PagedPool, FullName->Length, TAG_STRING);
    if (FullName->Buffer == NULL)
    {
