@@ -1360,7 +1360,7 @@ NtUserDrawIconEx(
       r.right = cxWidth;
       r.bottom = cyWidth;
 
-      hdcOff = NtGdiCreateCompatableDC(hdc);
+      hdcOff = NtGdiCreateCompatibleDC(hdc);
       if(!hdcOff)
          goto done;
 
@@ -1376,7 +1376,7 @@ NtUserDrawIconEx(
       NtGdiSelectObject(hdcOff, hbmOff);
    }
 
-   hdcMem = NtGdiCreateCompatableDC(hdc);
+   hdcMem = NtGdiCreateCompatibleDC(hdc);
    if(!hdcMem)
       goto cleanup;
 

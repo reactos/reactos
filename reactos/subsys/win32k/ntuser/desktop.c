@@ -1232,7 +1232,7 @@ NtUserPaintDesktop(HDC hDC)
          x = (sz.cx / 2) - (WinSta->cxWallpaper / 2);
          y = (sz.cy / 2) - (WinSta->cyWallpaper / 2);
 
-         hWallpaperDC = NtGdiCreateCompatableDC(hDC);
+         hWallpaperDC = NtGdiCreateCompatibleDC(hDC);
          if(hWallpaperDC != NULL)
          {
             HBITMAP hOldBitmap;

@@ -139,7 +139,7 @@ NtGdiCancelDC(HDC  hDC)
 }
 
 HDC STDCALL
-NtGdiCreateCompatableDC(HDC hDC)
+NtGdiCreateCompatibleDC(HDC hDC)
 {
   PDC  NewDC, OrigDC;
   HBITMAP  hBitmap;
@@ -808,7 +808,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   if ((hNewDC = DC_FindOpenDC(Driver)) != NULL)
   {
     hDC = hNewDC;
-    return  NtGdiCreateCompatableDC(hDC);
+    return  NtGdiCreateCompatibleDC(hDC);
   }
 
   if (Driver != NULL && Driver->Buffer != NULL)

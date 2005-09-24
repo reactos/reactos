@@ -661,7 +661,7 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 	if ( bInRect && Result == CLR_INVALID )
 	{
 		// FIXME: create a 1x1 32BPP DIB, and blit to it
-		HDC hDCTmp = NtGdiCreateCompatableDC(hDC);
+		HDC hDCTmp = NtGdiCreateCompatibleDC(hDC);
 		if ( hDCTmp )
 		{
 			static const BITMAPINFOHEADER bih = { sizeof(BITMAPINFOHEADER), 1, 1, 1, 32, BI_RGB, 0, 0, 0, 0, 0 };
@@ -860,13 +860,13 @@ NtGdiMaskBlt (
 		return NtGdiBitBlt(hdcDest, nXDest, nYDest, nWidth, nHeight, hdcSrc, nXSrc, nYSrc, FRGND_ROP3(dwRop));
 
 	/* 1. make mask bitmap's dc */
-	hDCMask = NtGdiCreateCompatableDC(hdcDest);
+	hDCMask = NtGdiCreateCompatibleDC(hdcDest);
 	hOldMaskBitmap = (HBITMAP)NtGdiSelectObject(hDCMask, hbmMask);
 
 	/* 2. make masked Background bitmap */
 
 	/* 2.1 make bitmap */
-	hDC1 = NtGdiCreateCompatableDC(hdcDest);
+	hDC1 = NtGdiCreateCompatibleDC(hdcDest);
 	hBitmap2 = NtGdiCreateCompatibleBitmap(hdcDest, nWidth, nHeight);
 	hOldBitmap2 = (HBITMAP)NtGdiSelectObject(hDC1, hBitmap2);
 
@@ -878,7 +878,7 @@ NtGdiMaskBlt (
 	/* 3. make masked Foreground bitmap */
 
 	/* 3.1 make bitmap */
-	hDC2 = NtGdiCreateCompatableDC(hdcDest);
+	hDC2 = NtGdiCreateCompatibleDC(hdcDest);
 	hBitmap3 = NtGdiCreateCompatibleBitmap(hdcDest, nWidth, nHeight);
 	hOldBitmap3 = (HBITMAP)NtGdiSelectObject(hDC2, hBitmap3);
 

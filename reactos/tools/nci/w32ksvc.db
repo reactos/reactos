@@ -24,7 +24,7 @@ NtGdiCreateBitmap			5
 NtGdiCreateBitmapIndirect		1
 NtGdiCreateColorSpace			1
 NtGdiCreateCompatibleBitmap		3
-NtGdiCreateCompatableDC			1
+NtGdiCreateCompatibleDC			1
 NtGdiCreateDC				4
 NtGdiCreateDIBitmap			6
 NtGdiCreateDIBBrush			4

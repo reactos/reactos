@@ -173,7 +173,7 @@ BOOL FASTCALL DC_InvertXform(const XFORM *xformSrc, XFORM *xformDest);
 /*  User entry points */
 
 BOOL STDCALL  NtGdiCancelDC(HDC  hDC);
-HDC STDCALL  NtGdiCreateCompatableDC(HDC  hDC);
+HDC STDCALL  NtGdiCreateCompatibleDC(HDC  hDC);
 HDC STDCALL  NtGdiCreateDC(PUNICODE_STRING Driver,
                            PUNICODE_STRING Device,
                            PUNICODE_STRING Output,

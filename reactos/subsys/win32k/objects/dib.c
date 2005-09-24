@@ -544,7 +544,7 @@ INT STDCALL NtGdiStretchDIBits(HDC  hDC,
       return 0;
    }
 
-   hdcMem = NtGdiCreateCompatableDC(hDC);
+   hdcMem = NtGdiCreateCompatibleDC(hDC);
    hBitmap = NtGdiCreateCompatibleBitmap(hDC, BitsInfo->bmiHeader.biWidth,
                                          BitsInfo->bmiHeader.biHeight);
    hOldBitmap = NtGdiSelectObject(hdcMem, hBitmap);
@@ -772,7 +772,7 @@ HBITMAP STDCALL NtGdiCreateDIBSection(HDC hDC,
   // If the reference hdc is null, take the desktop dc
   if (hDC == 0)
   {
-    hDC = NtGdiCreateCompatableDC(0);
+    hDC = NtGdiCreateCompatibleDC(0);
     bDesktopDC = TRUE;
   }
 
