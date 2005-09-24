@@ -220,7 +220,15 @@ PsInitProcessManagment(VOID)
 
    /* System threads may run on any processor. */
    RtlZeroMemory(PsInitialSystemProcess, sizeof(EPROCESS));
+#ifdef CONFIG_SMP   
+   /* FIXME:
+    *   Only the boot cpu is initialized. Threads of the 
+    *   system process should be able to run on all cpus.
+    */
+   PsInitialSystemProcess->Pcb.Affinity = 0xffffffff;
+#else
    PsInitialSystemProcess->Pcb.Affinity = KeActiveProcessors;
+#endif   
    PsInitialSystemProcess->Pcb.IopmOffset = 0xffff;
    PsInitialSystemProcess->Pcb.BasePriority = PROCESS_PRIORITY_NORMAL;
    PsInitialSystemProcess->Pcb.QuantumReset = 6;

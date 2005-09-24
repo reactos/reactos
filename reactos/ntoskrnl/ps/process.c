@@ -220,7 +220,14 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     else
     {
         pParentProcess = NULL;
+#ifdef CONFIG_SMP        
+   /* FIXME:
+    *   Only the boot cpu is initialized in the early boot phase. 
+    */
+        Affinity = 0xffffffff;
+#else
         Affinity = KeActiveProcessors;
+#endif
     }
 
     /* Add the debug port */
