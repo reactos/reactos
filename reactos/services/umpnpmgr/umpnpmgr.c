@@ -303,6 +303,21 @@ PNP_EnumerateSubKeys(handle_t BindingHandle,
 
 
 CONFIGRET
+PNP_GetDeviceListSize(handle_t BindingHandle,
+                      wchar_t *Filter,
+                      unsigned long *Length,
+                      DWORD Flags)
+{
+    DPRINT("PNP_GetDeviceListSize() called\n");
+
+    /* FIXME */
+    *Length = 2;
+
+    return CR_SUCCESS;
+}
+
+
+CONFIGRET
 PNP_GetDepth(handle_t BindingHandle,
              wchar_t *DeviceInstance,
              unsigned long *Depth,
@@ -629,6 +644,22 @@ PNP_GetDeviceRegProp(handle_t BindingHandle,
     }
 
     DPRINT("PNP_GetDeviceRegProp() done (returns %lx)\n", ret);
+
+    return ret;
+}
+
+
+CONFIGRET
+PNP_CreateKey(handle_t BindingHandle,
+              wchar_t *SubKey,
+              unsigned long samDesired,
+              unsigned long Flags)
+{
+    CONFIGRET ret = CR_SUCCESS;
+
+    DPRINT("PNP_CreateKey() called\n");
+
+    DPRINT("PNP_CreateKey() done (returns %lx)\n", ret);
 
     return ret;
 }

@@ -1195,9 +1195,34 @@ CONFIGRET WINAPI CM_Get_Device_ID_List_Size_ExA(
 CONFIGRET WINAPI CM_Get_Device_ID_List_Size_ExW(
     PULONG pulLen, PCWSTR pszFilter, ULONG ulFlags, HMACHINE hMachine)
 {
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+
     FIXME("%p %s %ld %lx\n", pulLen, debugstr_w(pszFilter), ulFlags, hMachine);
-    *pulLen = 2;
-    return CR_SUCCESS;
+
+    if (pulLen == NULL)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags & ~CM_GETIDLIST_FILTER_BITS)
+        return CR_INVALID_FLAG;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, NULL))
+            return CR_FAILURE;
+    }
+
+    *pulLen = 0;
+
+    return PNP_GetDeviceListSize(BindingHandle,
+                                 (LPWSTR)pszFilter,
+                                 pulLen,
+                                 ulFlags);
 }
 
 

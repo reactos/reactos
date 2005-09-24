@@ -49,6 +49,17 @@ interface pnp
                                  [out] unsigned long *RequiredLength,
                                  [in] DWORD Flags);
 
+//  CONFIGRET PNP_GetDeviceList(handle_t BindingHandle,
+//                              [in, unique, string] wchar_t *Filter,
+//                              [out, string, size_is(*Length)] unsigned char *Buffer
+//                              [in, out] unsigned long *Length,
+//                              [in] DWORD Flags);
+
+  CONFIGRET PNP_GetDeviceListSize(handle_t BindingHandle,
+                                  [in, unique, string] wchar_t *Filter,
+                                  [out] unsigned long *Length,
+                                  [in] DWORD Flags);
+
   CONFIGRET PNP_GetDepth(handle_t BindingHandle,
                          [in, string] wchar_t *DeviceInstance,
                          [out] unsigned long *Depth,
