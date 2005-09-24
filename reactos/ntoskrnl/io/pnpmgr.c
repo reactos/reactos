@@ -1294,6 +1294,7 @@ IopActionInterrogateDeviceStack(
    HANDLE InstanceKey = NULL;
    UNICODE_STRING ValueName;
    DEVICE_CAPABILITIES DeviceCapabilities;
+   PKEY_VALUE_PARTIAL_INFORMATION ParentPrefixIdInformation = NULL;
 
    DPRINT("IopActionInterrogateDeviceStack(%p, %p)\n", DeviceNode, Context);
    DPRINT("PDO 0x%p\n", DeviceNode->PhysicalDeviceObject);
@@ -1351,6 +1352,69 @@ IopActionInterrogateDeviceStack(
       DPRINT("IopInitiatePnpIrp() failed (Status %x)\n", Status);
    }
 
+   DPRINT("Sending IRP_MN_QUERY_CAPABILITIES to device stack\n");
+
+   Status = IopQueryDeviceCapabilities(DeviceNode, &DeviceCapabilities);
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT("IopInitiatePnpIrp() failed (Status 0x%08lx)\n", Status);
+   }
+
+   DeviceNode->CapabilityFlags = *(PULONG)((ULONG_PTR)&DeviceCapabilities + 4);
+
+   if (!DeviceCapabilities.UniqueID)
+   {
+      /* Device has not a unique ID. We need to prepend parent bus unique identifier */
+      DPRINT("Instance ID is not unique\n");
+      if (DeviceNode->Parent->InstancePath.Length > 0)
+      {
+         /* Parent device node exists */
+         HANDLE hKey;
+         OBJECT_ATTRIBUTES ObjectAttributes;
+         UNICODE_STRING KeyName;
+         ULONG KeyNameBufferLength;
+         PWSTR KeyNameBuffer = NULL;
+
+         KeyNameBufferLength = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]) + MAX_PATH * sizeof(WCHAR);
+         ParentPrefixIdInformation = ExAllocatePool(PagedPool, KeyNameBufferLength + sizeof(WCHAR));
+         KeyNameBuffer = ExAllocatePool(PagedPool, (49 * sizeof(WCHAR)) + DeviceNode->Parent->InstancePath.Length);
+         if (ParentPrefixIdInformation && KeyNameBuffer)
+         {
+            /* Memory is allocated, let's try to read registry settings */
+            wcscpy(KeyNameBuffer, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
+            wcscat(KeyNameBuffer, DeviceNode->Parent->InstancePath.Buffer);
+            RtlInitUnicodeString(&KeyName, KeyNameBuffer);
+            InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
+            Status = ZwOpenKey(&hKey, KEY_READ, &ObjectAttributes);
+            if (NT_SUCCESS(Status))
+            {
+               RtlInitUnicodeString(&ValueName, L"ParentIdPrefix");
+               Status = ZwQueryValueKey(
+                  hKey, &ValueName,
+                  KeyValuePartialInformation, ParentPrefixIdInformation,
+                  KeyNameBufferLength, &KeyNameBufferLength);
+               if (NT_SUCCESS(Status))
+               {
+                  /* NULL-terminate the string, as we have allocated enough place for it */
+                  ((PWSTR)ParentPrefixIdInformation->Data)[ParentPrefixIdInformation->DataLength / sizeof(WCHAR)] = 0;
+               }
+               else
+               {
+                  ExFreePool(ParentPrefixIdInformation);
+                  ParentPrefixIdInformation = NULL;
+               }
+               ZwClose(hKey);
+            }
+            else
+            {
+               ExFreePool(ParentPrefixIdInformation);
+               ParentPrefixIdInformation = NULL;
+            }
+         }
+         ExFreePool(KeyNameBuffer);
+      }
+   }
+
    DPRINT("Sending IRP_MN_QUERY_ID.BusQueryInstanceID to device stack\n");
 
    Stack.Parameters.QueryId.IdType = BusQueryInstanceID;
@@ -1363,6 +1427,13 @@ IopActionInterrogateDeviceStack(
    {
       /* Append the instance id string */
       wcscat(InstancePath, L"\\");
+      if (ParentPrefixIdInformation && ParentPrefixIdInformation->Type == REG_SZ)
+      {
+         /* Add information from parent bus device to InstancePath */
+         wcscat(InstancePath, (PWSTR)ParentPrefixIdInformation->Data);
+         if (*(PWSTR)IoStatusBlock.Information)
+            wcscat(InstancePath, L"&");
+      }
       wcscat(InstancePath, (PWSTR)IoStatusBlock.Information);
 
       /*
@@ -1374,20 +1445,7 @@ IopActionInterrogateDeviceStack(
    {
       DPRINT("IopInitiatePnpIrp() failed (Status %x)\n", Status);
    }
-
-   Status = IopQueryDeviceCapabilities(DeviceNode, &DeviceCapabilities);
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("IopInitiatePnpIrp() failed (Status 0x%08lx)\n", Status);
-   }
-
-   DeviceNode->CapabilityFlags = *(PULONG)((ULONG_PTR)&DeviceCapabilities + 4);
-
-   if (!DeviceCapabilities.UniqueID)
-   {
-      DPRINT("Instance ID is not unique\n");
-      /* FIXME: Add information from parent bus driver to InstancePath */
-   }
+   ExFreePool(ParentPrefixIdInformation);
 
    if (!RtlCreateUnicodeString(&DeviceNode->InstancePath, InstancePath))
    {
