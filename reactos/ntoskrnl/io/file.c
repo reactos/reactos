@@ -2155,21 +2155,84 @@ NtOpenFile(PHANDLE FileHandle,
 }
 
 NTSTATUS
-STDCALL
-NtQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
-                      OUT PFILE_BASIC_INFORMATION FileInformation)
+IopQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
+                       IN FILE_INFORMATION_CLASS FileInformationClass,
+                       OUT PVOID FileInformation)
 {
     IO_STATUS_BLOCK IoStatusBlock;
     HANDLE FileHandle;
     NTSTATUS Status;
+    KPROCESSOR_MODE AccessMode;
+    UNICODE_STRING ObjectName;
+    OBJECT_CREATE_INFORMATION ObjectCreateInfo;
+    OBJECT_ATTRIBUTES LocalObjectAttributes;
+    ULONG BufferSize;
+    union
+    {
+        FILE_BASIC_INFORMATION BasicInformation;
+        FILE_NETWORK_OPEN_INFORMATION NetworkOpenInformation;
+    }LocalFileInformation;
+
+    if (FileInformationClass == FileBasicInformation)
+    {
+        BufferSize = sizeof(FILE_BASIC_INFORMATION);
+    }
+    else if (FileInformationClass == FileNetworkOpenInformation)
+    {
+        BufferSize = sizeof(FILE_NETWORK_OPEN_INFORMATION);
+    }
+    else
+    {
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    AccessMode = ExGetPreviousMode();
+
+    if (AccessMode != KernelMode)
+    {
+        Status = STATUS_SUCCESS;
+        _SEH_TRY
+        {
+            ProbeForWrite(FileInformation,
+                          BufferSize,
+                          sizeof(ULONG));
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+        if (NT_SUCCESS(Status))
+        {
+            Status = ObpCaptureObjectAttributes(ObjectAttributes,
+                                                AccessMode,
+                                                NULL,
+                                                &ObjectCreateInfo,
+                                                &ObjectName);
+        }
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+        InitializeObjectAttributes(&LocalObjectAttributes,
+                                   &ObjectName,
+                                   ObjectCreateInfo.Attributes,
+                                   ObjectCreateInfo.RootDirectory,
+                                   ObjectCreateInfo.SecurityDescriptor);
+    }
 
     /* Open the file */
     Status = ZwOpenFile(&FileHandle,
                         SYNCHRONIZE | FILE_READ_ATTRIBUTES,
-                        ObjectAttributes,
+                        AccessMode == KernelMode ? ObjectAttributes : &LocalObjectAttributes,
                         &IoStatusBlock,
-                        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
+                        0,
                         FILE_SYNCHRONOUS_IO_NONALERT);
+    if (AccessMode != KernelMode)
+    {
+        ObpReleaseCapturedAttributes(&ObjectCreateInfo);
+        ExFreePool(ObjectName.Buffer);
+    }
     if (!NT_SUCCESS (Status))
     {
         DPRINT ("ZwOpenFile() failed (Status %lx)\n", Status);
@@ -2179,17 +2242,40 @@ NtQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
     /* Get file attributes */
     Status = ZwQueryInformationFile(FileHandle,
                                     &IoStatusBlock,
-                                    FileInformation,
-                                    sizeof(FILE_BASIC_INFORMATION),
-                                    FileBasicInformation);
+                                    AccessMode == KernelMode ? FileInformation : &LocalFileInformation,
+                                    BufferSize,
+                                    FileInformationClass);
     if (!NT_SUCCESS (Status))
     {
         DPRINT ("ZwQueryInformationFile() failed (Status %lx)\n", Status);
     }
-
     ZwClose(FileHandle);
+
+    if (NT_SUCCESS(Status) && AccessMode != KernelMode)
+    {
+        _SEH_TRY
+        {
+            memcpy(FileInformation, &LocalFileInformation, BufferSize);
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+    }
     return Status;
 }
+
+NTSTATUS
+STDCALL
+NtQueryAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
+                      OUT PFILE_BASIC_INFORMATION FileInformation)
+{
+    return IopQueryAttributesFile(ObjectAttributes,
+                                  FileBasicInformation,
+                                  FileInformation);
+}
+
 
 /*
  * @implemented
@@ -2383,36 +2469,9 @@ STDCALL
 NtQueryFullAttributesFile(IN POBJECT_ATTRIBUTES ObjectAttributes,
                           OUT PFILE_NETWORK_OPEN_INFORMATION FileInformation)
 {
-    IO_STATUS_BLOCK IoStatusBlock;
-    HANDLE FileHandle;
-    NTSTATUS Status;
-
-    /* Open the file */
-    Status = ZwOpenFile(&FileHandle,
-                        SYNCHRONIZE | FILE_READ_ATTRIBUTES,
-                        ObjectAttributes,
-                        &IoStatusBlock,
-                        FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                        FILE_SYNCHRONOUS_IO_NONALERT);
-    if (!NT_SUCCESS (Status))
-    {
-        DPRINT ("ZwOpenFile() failed (Status %lx)\n", Status);
-        return Status;
-    }
-
-    /* Get file attributes */
-    Status = ZwQueryInformationFile(FileHandle,
-                                    &IoStatusBlock,
-                                    FileInformation,
-                                    sizeof(FILE_NETWORK_OPEN_INFORMATION),
-                                    FileNetworkOpenInformation);
-    if (!NT_SUCCESS (Status))
-    {
-        DPRINT ("ZwQueryInformationFile() failed (Status %lx)\n", Status);
-    }
-
-    ZwClose (FileHandle);
-    return Status;
+  return IopQueryAttributesFile(ObjectAttributes,
+                                FileNetworkOpenInformation,
+                                FileInformation);
 }
 
 /*
