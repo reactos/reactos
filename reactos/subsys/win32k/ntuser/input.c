@@ -716,6 +716,7 @@ UserAcquireOrReleaseInputOwnership(BOOLEAN Release)
       InputThreadsRunning = FALSE;
 
       NtAlertThread(KeyboardThreadHandle);
+      NtAlertThread(MouseThreadHandle);
    }
    else if (!Release && !InputThreadsRunning)
    {
