@@ -87,7 +87,14 @@ static BOOL GetClassInfoExCommon(
 
   w.lpszMenuName = (LPCWSTR)&str2;
   w.lpszClassName = (LPCWSTR)&str3;
+  
+  /* get info about system classes? */
+  if (!hInst) hInst = User32Instance;
+  
   retval = (BOOL)NtUserGetClassInfo(hInst, str, &w, TRUE, 0);
+  
+  w.hInstance = (hInst == User32Instance) ? 0 : hInst;
+  
   if ( !IS_ATOM(str) )
     HEAP_free(str);
 

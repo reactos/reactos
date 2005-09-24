@@ -96,18 +96,16 @@ IntDesktopObjectCreate(PVOID ObjectBody,
 
    RtlInitUnicodeString(&UnicodeString, (RemainingPath + 1));
 
-
-
-   KeInitializeSpinLock(&Desktop->Lock);
    InitializeListHead(&Desktop->ShellHookWindows);
 
    Desktop->WindowStation = (PWINSTATION_OBJECT)Parent;
 
    /* Put the desktop on the window station's list of associcated desktops */
-   ExInterlockedInsertTailList(
+//   ExInterlocked
+   InsertTailList(
       &Desktop->WindowStation->DesktopListHead,
-      &Desktop->ListEntry,
-      &Desktop->WindowStation->Lock);
+      &Desktop->ListEntry);//,
+//      &Desktop->WindowStation->Lock);
 
    return RtlCreateUnicodeString(&Desktop->Name, UnicodeString.Buffer);
 }
@@ -116,19 +114,40 @@ VOID STDCALL
 IntDesktopObjectDelete(PVOID DeletedObject)
 {
    PDESKTOP_OBJECT Desktop = (PDESKTOP_OBJECT)DeletedObject;
-   KIRQL OldIrql;
 
    DPRINT("Deleting desktop (0x%X)\n", Desktop);
 
    /* Remove the desktop from the window station's list of associcated desktops */
-   KeAcquireSpinLock(&Desktop->WindowStation->Lock, &OldIrql);
    RemoveEntryList(&Desktop->ListEntry);
-   KeReleaseSpinLock(&Desktop->WindowStation->Lock, OldIrql);
 
    RtlFreeUnicodeString(&Desktop->Name);
 }
 
 /* PRIVATE FUNCTIONS **********************************************************/
+
+static int GetSystemVersionString(LPWSTR buffer)
+{
+   RTL_OSVERSIONINFOEXW versionInfo;
+   int len;
+
+   versionInfo.dwOSVersionInfoSize = sizeof(RTL_OSVERSIONINFOEXW);
+
+   if (!NT_SUCCESS(RtlGetVersion((PRTL_OSVERSIONINFOW)&versionInfo)))
+      return 0;
+
+   if (versionInfo.dwMajorVersion <= 4)
+      len = swprintf(buffer,
+                     L"ReactOS Version %d.%d %s Build %d",
+                     versionInfo.dwMajorVersion, versionInfo.dwMinorVersion,
+                     versionInfo.szCSDVersion, versionInfo.dwBuildNumber&0xFFFF);
+   else
+      len = swprintf(buffer,
+                     L"ReactOS %s (Build %d)",
+                     versionInfo.szCSDVersion, versionInfo.dwBuildNumber&0xFFFF);
+
+   return len;
+}
+
 
 NTSTATUS FASTCALL
 IntParseDesktopPath(PEPROCESS Process,
@@ -562,6 +581,37 @@ IntHideDesktop(PDESKTOP_OBJECT Desktop)
 #endif
 }
 
+
+
+
+static
+HWND* FASTCALL
+UserBuildShellHookHwndList(PDESKTOP_OBJECT Desktop)
+{
+   ULONG entries=0;
+   PSHELL_HOOK_WINDOW Current;
+   HWND* list;
+   
+   /* fixme: if we save nb elements in desktop, we dont have to loop to find nb entries */
+   LIST_FOR_EACH(Current, &Desktop->ShellHookWindows, SHELL_HOOK_WINDOW, ListEntry)
+      entries++;
+
+   if (!entries) return NULL;
+
+   list = ExAllocatePool(PagedPool, sizeof(HWND) * (entries + 1)); /* alloc one extra for nullterm */
+   if (list)
+   {
+      HWND* cursor = list;
+      
+      LIST_FOR_EACH(Current, &Desktop->ShellHookWindows, SHELL_HOOK_WINDOW, ListEntry)
+         *cursor++ = Current->hWnd;
+   
+      *cursor = NULL; /* nullterm list */
+   }
+
+   return list;
+}
+
 /*
  * Send the Message to the windows registered for ShellHook
  * notifications. The lParam contents depend on the Message. See
@@ -570,9 +620,7 @@ IntHideDesktop(PDESKTOP_OBJECT Desktop)
 VOID co_IntShellHookNotify(WPARAM Message, LPARAM lParam)
 {
    PDESKTOP_OBJECT Desktop = IntGetActiveDesktop();
-   PLIST_ENTRY Entry, Entry2;
-   PSHELL_HOOK_WINDOW Current;
-   KIRQL OldLevel;
+   HWND* HwndList;
 
    static UINT MsgType = 0;
 
@@ -599,43 +647,23 @@ VOID co_IntShellHookNotify(WPARAM Message, LPARAM lParam)
       return;
    }
 
-   /* We have to do some tricks because the list could change
-    * between calls, and we can't keep the lock during the call
-    */
-
-   KeAcquireSpinLock(&Desktop->Lock, &OldLevel);
-   Entry = Desktop->ShellHookWindows.Flink;
-   while (Entry != &Desktop->ShellHookWindows)
+   HwndList = UserBuildShellHookHwndList(Desktop);
+   if (HwndList)
    {
-      Current = CONTAINING_RECORD(Entry, SHELL_HOOK_WINDOW, ListEntry);
-      KeReleaseSpinLock(&Desktop->Lock, OldLevel);
-
-      DPRINT("Sending notify\n");
-      co_IntPostOrSendMessage(Current->hWnd,
-                              MsgType,
-                              Message,
-                              lParam);
-
-      /* Loop again to find the window we were sending to. If it doesn't
-       * exist anymore, we just stop. This could leave an infinite loop
-       * if a window is removed and readded to the list. That's quite
-       * unlikely though.
-       */
-
-      KeAcquireSpinLock(&Desktop->Lock, &OldLevel);
-      Entry2 = Desktop->ShellHookWindows.Flink;
-      while (Entry2 != Entry &&
-             Entry2 != &Desktop->ShellHookWindows)
+      HWND* cursor = HwndList;
+      
+      for (; *cursor; cursor++)
       {
-         Entry2 = Entry2->Flink;
+         DPRINT("Sending notify\n");
+         co_IntPostOrSendMessage(*cursor,
+                                 MsgType,
+                                 Message,
+                                 lParam);
       }
 
-      if (Entry2 == Entry)
-         Entry = Entry->Flink;
-      else
-         break;
+      ExFreePool(HwndList);
    }
-   KeReleaseSpinLock(&Desktop->Lock, OldLevel);
+   
 }
 
 /*
@@ -650,7 +678,6 @@ BOOL IntRegisterShellHookWindow(HWND hWnd)
 {
    PDESKTOP_OBJECT Desktop = PsGetWin32Thread()->Desktop;
    PSHELL_HOOK_WINDOW Entry;
-   KIRQL OldLevel;
 
    DPRINT("IntRegisterShellHookWindow\n");
 
@@ -659,20 +686,16 @@ BOOL IntRegisterShellHookWindow(HWND hWnd)
     */
    IntDeRegisterShellHookWindow(hWnd);
 
-   Entry = ExAllocatePoolWithTag(NonPagedPool,
+   Entry = ExAllocatePoolWithTag(PagedPool,
                                  sizeof(SHELL_HOOK_WINDOW),
                                  TAG_WINSTA);
-   /* We have to walk this structure with while holding a spinlock, so we
-    * need NonPagedPool */
 
    if (!Entry)
       return FALSE;
 
    Entry->hWnd = hWnd;
 
-   KeAcquireSpinLock(&Desktop->Lock, &OldLevel);
    InsertTailList(&Desktop->ShellHookWindows, &Entry->ListEntry);
-   KeReleaseSpinLock(&Desktop->Lock, OldLevel);
 
    return TRUE;
 }
@@ -685,30 +708,26 @@ BOOL IntRegisterShellHookWindow(HWND hWnd)
 BOOL IntDeRegisterShellHookWindow(HWND hWnd)
 {
    PDESKTOP_OBJECT Desktop = PsGetWin32Thread()->Desktop;
-   PLIST_ENTRY Entry;
    PSHELL_HOOK_WINDOW Current;
-   KIRQL OldLevel;
 
-   KeAcquireSpinLock(&Desktop->Lock, &OldLevel);
-
-   Entry = Desktop->ShellHookWindows.Flink;
-   while (Entry != &Desktop->ShellHookWindows)
+   LIST_FOR_EACH(Current, &Desktop->ShellHookWindows, SHELL_HOOK_WINDOW, ListEntry)
    {
-      Current = CONTAINING_RECORD(Entry, SHELL_HOOK_WINDOW, ListEntry);
       if (Current->hWnd == hWnd)
       {
-         RemoveEntryList(Entry);
-         KeReleaseSpinLock(&Desktop->Lock, OldLevel);
-         ExFreePool(Entry);
+         RemoveEntryList(&Current->ListEntry);
+         ExFreePool(Current);
          return TRUE;
       }
-      Entry = Entry->Flink;
    }
-
-   KeReleaseSpinLock(&Desktop->Lock, OldLevel);
 
    return FALSE;
 }
+
+
+
+
+/* SYSCALLS *******************************************************************/
+
 
 /*
  * NtUserCreateDesktop
@@ -759,7 +778,7 @@ NtUserCreateDesktop(
    CSR_API_MESSAGE Request;
    DECLARE_RETURN(HDESK);
 
-   DPRINT("Enter CreateDesktop: %wZ\n", lpszDesktopName);
+   DPRINT("Enter NtUserCreateDesktop: %wZ\n", lpszDesktopName);
    UserEnterExclusive();
 
    Status = IntValidateWindowStationHandle(
@@ -1035,6 +1054,10 @@ NtUserOpenInputDesktop(
    PDESKTOP_OBJECT Object;
    NTSTATUS Status;
    HDESK Desktop;
+   DECLARE_RETURN(HDESK);
+
+   DPRINT("Enter NtUserOpenInputDesktop\n");
+   UserEnterExclusive();
 
    DPRINT("About to open input desktop\n");
 
@@ -1049,7 +1072,7 @@ NtUserOpenInputDesktop(
    if (!NT_SUCCESS(Status))
    {
       DPRINT("Validation of input desktop handle (0x%X) failed\n", InputDesktop);
-      return (HDESK)0;
+      RETURN((HDESK)0);
    }
 
    /* Create a new handle to the object */
@@ -1068,11 +1091,16 @@ NtUserOpenInputDesktop(
    if (NT_SUCCESS(Status))
    {
       DPRINT("Successfully opened input desktop\n");
-      return (HDESK)Desktop;
+      RETURN((HDESK)Desktop);
    }
 
    SetLastNtError(Status);
-   return (HDESK)0;
+   RETURN((HDESK)0);
+   
+CLEANUP:
+   DPRINT("Leave NtUserOpenInputDesktop, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;   
 }
 
 /*
@@ -1102,6 +1130,10 @@ NtUserCloseDesktop(HDESK hDesktop)
 {
    PDESKTOP_OBJECT Object;
    NTSTATUS Status;
+   DECLARE_RETURN(BOOL);
+
+   DPRINT("Enter NtUserCloseDesktop\n");
+   UserEnterExclusive();
 
    DPRINT("About to close desktop handle (0x%X)\n", hDesktop);
 
@@ -1114,7 +1146,7 @@ NtUserCloseDesktop(HDESK hDesktop)
    if (!NT_SUCCESS(Status))
    {
       DPRINT("Validation of desktop handle (0x%X) failed\n", hDesktop);
-      return FALSE;
+      RETURN(FALSE);
    }
 
    ObDereferenceObject(Object);
@@ -1125,35 +1157,19 @@ NtUserCloseDesktop(HDESK hDesktop)
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      return FALSE;
+      RETURN(FALSE);
    }
 
-   return TRUE;
+   RETURN(TRUE);
+
+CLEANUP:
+   DPRINT("Leave NtUserCloseDesktop, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;     
 }
 
 
-static int GetSystemVersionString(LPWSTR buffer)
-{
-   RTL_OSVERSIONINFOEXW versionInfo;
-   int len;
 
-   versionInfo.dwOSVersionInfoSize = sizeof(RTL_OSVERSIONINFOEXW);
-
-   if (!NT_SUCCESS(RtlGetVersion((PRTL_OSVERSIONINFOW)&versionInfo)))
-      return 0;
-
-   if (versionInfo.dwMajorVersion <= 4)
-      len = swprintf(buffer,
-                     L"ReactOS Version %d.%d %s Build %d",
-                     versionInfo.dwMajorVersion, versionInfo.dwMinorVersion,
-                     versionInfo.szCSDVersion, versionInfo.dwBuildNumber&0xFFFF);
-   else
-      len = swprintf(buffer,
-                     L"ReactOS %s (Build %d)",
-                     versionInfo.szCSDVersion, versionInfo.dwBuildNumber&0xFFFF);
-
-   return len;
-}
 
 /*
  * NtUserPaintDesktop
@@ -1179,6 +1195,10 @@ NtUserPaintDesktop(HDC hDC)
    BOOL doPatBlt = TRUE;
    PWINDOW_OBJECT WndDesktop;
    int len;
+   DECLARE_RETURN(BOOL);
+   
+   UserEnterExclusive();
+   DPRINT("Enter NtUserPaintDesktop\n");
 
    PWINSTATION_OBJECT WinSta = PsGetWin32Thread()->Desktop->WindowStation;
 
@@ -1186,7 +1206,7 @@ NtUserPaintDesktop(HDC hDC)
 
    hWndDesktop = IntGetDesktopWindow();
    if (!(WndDesktop = UserGetWindowObject(hWndDesktop)))
-      return FALSE;
+      RETURN(FALSE);
 
    DesktopBrush = (HBRUSH)IntGetClassLong(WndDesktop, GCL_HBRBACKGROUND, FALSE); //fixme: verify retval
 
@@ -1277,7 +1297,12 @@ NtUserPaintDesktop(HDC hDC)
       }
    }
 
-   return TRUE;
+   RETURN(TRUE);
+   
+CLEANUP:
+   DPRINT("Leave NtUserPaintDesktop, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;   
 }
 
 
@@ -1302,6 +1327,10 @@ NtUserSwitchDesktop(HDESK hDesktop)
 {
    PDESKTOP_OBJECT DesktopObject;
    NTSTATUS Status;
+   DECLARE_RETURN(BOOL);
+   
+   UserEnterExclusive();
+   DPRINT("Enter NtUserSwitchDesktop\n");
 
    DPRINT("About to switch desktop (0x%X)\n", hDesktop);
 
@@ -1314,7 +1343,7 @@ NtUserSwitchDesktop(HDESK hDesktop)
    if (!NT_SUCCESS(Status))
    {
       DPRINT("Validation of desktop handle (0x%X) failed\n", hDesktop);
-      return FALSE;
+      RETURN(FALSE);
    }
 
    /*
@@ -1326,7 +1355,7 @@ NtUserSwitchDesktop(HDESK hDesktop)
    {
       ObDereferenceObject(DesktopObject);
       DPRINT1("Switching desktop 0x%x denied because the work station is locked!\n", hDesktop);
-      return FALSE;
+      RETURN(FALSE);
    }
 
    /* FIXME: Fail if the desktop belong to an invisible window station */
@@ -1344,7 +1373,12 @@ NtUserSwitchDesktop(HDESK hDesktop)
 
    ObDereferenceObject(DesktopObject);
 
-   return TRUE;
+   RETURN(TRUE);
+   
+CLEANUP:
+   DPRINT("Leave NtUserSwitchDesktop, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;   
 }
 
 /*
@@ -1376,18 +1410,22 @@ NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
    PDESKTOP_OBJECT DesktopObject;
    HDESK Ret, hThreadDesktop;
    OBJECT_HANDLE_INFORMATION HandleInformation;
+   DECLARE_RETURN(HDESK);
+   
+   UserEnterExclusive();
+   DPRINT("Enter NtUserGetThreadDesktop\n");
 
    if(!dwThreadId)
    {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      return 0;
+      RETURN(0);
    }
 
    Status = PsLookupThreadByThreadId((HANDLE)dwThreadId, &Thread);
    if(!NT_SUCCESS(Status))
    {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      return 0;
+      RETURN(0);
    }
 
    if(Thread->ThreadsProcess == PsGetCurrentProcess())
@@ -1396,7 +1434,7 @@ NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
          in the same context */
       Ret = Thread->Tcb.Win32Thread->hDesktop;
       ObDereferenceObject(Thread);
-      return Ret;
+      RETURN(Ret);
    }
 
    /* get the desktop handle and the desktop of the thread */
@@ -1405,7 +1443,7 @@ NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
    {
       ObDereferenceObject(Thread);
       DPRINT1("Desktop information of thread 0x%x broken!?\n", dwThreadId);
-      return NULL;
+      RETURN(NULL);
    }
 
    /* we could just use DesktopObject instead of looking up the handle, but latter
@@ -1425,7 +1463,7 @@ NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
    if(!NT_SUCCESS(Status))
    {
       ObDereferenceObject(Thread);
-      return NULL;
+      RETURN(NULL);
    }
 
    /* lookup our handle table if we can find a handle to the desktop object,
@@ -1435,7 +1473,12 @@ NtUserGetThreadDesktop(DWORD dwThreadId, DWORD Unknown1)
    /* all done, we got a valid handle to the desktop */
    ObDereferenceObject(DesktopObject);
    ObDereferenceObject(Thread);
-   return Ret;
+   RETURN(Ret);
+   
+CLEANUP:
+   DPRINT("Leave NtUserGetThreadDesktop, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;
 }
 
 /*
@@ -1451,7 +1494,11 @@ NtUserSetThreadDesktop(HDESK hDesktop)
    PW32THREAD W32Thread;
    PDESKTOP_OBJECT DesktopObject;
    NTSTATUS Status;
-
+   DECLARE_RETURN(BOOL);
+   
+   UserEnterExclusive();
+   DPRINT("Enter NtUserSetThreadDesktop\n");
+   
    /* Validate the new desktop. */
    Status = IntValidateDesktopHandle(
                hDesktop,
@@ -1462,7 +1509,7 @@ NtUserSetThreadDesktop(HDESK hDesktop)
    if (!NT_SUCCESS(Status))
    {
       DPRINT("Validation of desktop handle (0x%X) failed\n", hDesktop);
-      return FALSE;
+      RETURN(FALSE);
    }
 
    W32Thread = PsGetWin32Thread();
@@ -1477,7 +1524,12 @@ NtUserSetThreadDesktop(HDESK hDesktop)
    W32Thread->Desktop = DesktopObject;
    W32Thread->hDesktop = hDesktop;
 
-   return TRUE;
+   RETURN(TRUE);
+   
+CLEANUP:
+   DPRINT("Leave NtUserSetThreadDesktop, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;
 }
 
 /* EOF */

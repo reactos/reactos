@@ -292,11 +292,12 @@ co_IntPaintWindows(PWINDOW_OBJECT Window, ULONG Flags)
       {
          for (phWnd = List; *phWnd; ++phWnd)
          {
-            Window = IntGetWindowObject(*phWnd);
+            Window = UserGetWindowObject(*phWnd);
             if (Window && (Window->Style & WS_VISIBLE))
             {
+               UserRefObjectCo(Window);
                co_IntPaintWindows(Window, Flags);
-               ObmDereferenceObject(Window);
+               UserDerefObjectCo(Window);
             }
          }
          ExFreePool(List);
@@ -414,31 +415,21 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
    if (!(Flags & RDW_NOCHILDREN) && !(Window->Style & WS_MINIMIZE) &&
          ((Flags & RDW_ALLCHILDREN) || !(Window->Style & WS_CLIPCHILDREN)))
    {
-      HWND *List, *phWnd;
       PWINDOW_OBJECT Child;
 
-      if ((List = IntWinListChildren(Window)))
+      for (Child = Window->FirstChild; Child; Child = Child->NextSibling)
       {
-         for (phWnd = List; *phWnd; ++phWnd)
+         if (Child->Style & WS_VISIBLE)
          {
-            if(!(Child = UserGetWindowObject(*phWnd)))
-            {
-               continue;
-            }
-            
-            if (Child->Style & WS_VISIBLE)
-            {
-               /*
-                * Recursive call to update children UpdateRegion
-                */
-               HRGN hRgnTemp = NtGdiCreateRectRgn(0, 0, 0, 0);
-               NtGdiCombineRgn(hRgnTemp, hRgn, 0, RGN_COPY);
-               IntInvalidateWindows(Child, hRgnTemp, Flags);
-               NtGdiDeleteObject(hRgnTemp);
-            }
-
+            /*
+             * Recursive call to update children UpdateRegion
+             */
+            HRGN hRgnTemp = NtGdiCreateRectRgn(0, 0, 0, 0);
+            NtGdiCombineRgn(hRgnTemp, hRgn, 0, RGN_COPY);
+            IntInvalidateWindows(Child, hRgnTemp, Flags);
+            NtGdiDeleteObject(hRgnTemp);
          }
-         ExFreePool(List);
+
       }
    }
 
@@ -858,69 +849,6 @@ CLEANUP:
    UserLeave();
    END_CLEANUP;
 }
-
-/*
- * NtUserInvalidateRect
- *
- * Status
- *    @implemented
- */
-
-DWORD STDCALL
-NtUserInvalidateRect(HWND hWnd, CONST RECT *Rect, BOOL Erase)
-{
-   return NtUserRedrawWindow(hWnd, Rect, 0, RDW_INVALIDATE | (Erase ? RDW_ERASE : 0));
-}
-
-/*
- * NtUserInvalidateRgn
- *
- * Status
- *    @implemented
- */
-
-DWORD STDCALL
-NtUserInvalidateRgn(HWND hWnd, HRGN Rgn, BOOL Erase)
-{
-   return NtUserRedrawWindow(hWnd, NULL, Rgn, RDW_INVALIDATE | (Erase ? RDW_ERASE : 0));
-}
-
-
-
-BOOL FASTCALL
-co_UserValidateRgn(PWINDOW_OBJECT Window, HRGN hRgn)
-{
-   return co_UserRedrawWindow(Window, NULL, hRgn, RDW_VALIDATE | RDW_NOCHILDREN);
-}
-
-/*
- * NtUserValidateRgn
- *
- * Status
- *    @implemented
- */
-
-BOOL STDCALL
-NtUserValidateRgn(HWND hWnd, HRGN hRgn)
-{
-   return NtUserRedrawWindow(hWnd, NULL, hRgn, RDW_VALIDATE | RDW_NOCHILDREN);
-}
-
-/*
- * NtUserUpdateWindow
- *
- * Status
- *    @implemented
- */
-
-BOOL STDCALL
-NtUserUpdateWindow(HWND hWnd)
-{
-   return NtUserRedrawWindow(hWnd, NULL, 0, RDW_UPDATENOW | RDW_ALLCHILDREN);
-}
-
-
-
 
 
 INT FASTCALL

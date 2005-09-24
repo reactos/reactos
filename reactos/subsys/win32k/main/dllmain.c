@@ -70,7 +70,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
     {
       DPRINT("Creating W32 process PID:%d at IRQ level: %lu\n", Process->UniqueProcessId, KeGetCurrentIrql());
 
-      InitializeListHead(&Win32Process->ClassListHead);
+      InitializeListHead(&Win32Process->ClassList);
 
       InitializeListHead(&Win32Process->MenuListHead);
 
@@ -99,7 +99,9 @@ Win32kProcessCallback(struct _EPROCESS *Process,
       IntCleanupCurIcons(Process, Win32Process);
       IntEngCleanupDriverObjs(Process, Win32Process);
       CleanupMonitorImpl();
-
+      
+      /* no process windows should exist at this point, or the function will assert! */
+      DestroyProcessClasses(Win32Process);
 
       GDI_CleanupForProcess(Process);
 

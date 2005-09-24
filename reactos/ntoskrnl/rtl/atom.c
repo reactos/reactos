@@ -14,6 +14,7 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+
 /* PROTOTYPES ****************************************************************/
 
 static PRTL_ATOM_TABLE RtlpGetGlobalAtomTable(VOID);
@@ -38,6 +39,12 @@ RtlQueryAtomListInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
 
 /* GLOBALS *******************************************************************/
 
+/* FIXME: this is WRONG! The global atom table should live in the WinSta struct
+ * and accessed thru win32k callouts.
+ * NOTE: There is a session/win32k global atom table also, but its private to
+ * win32k. Its used for RegisterWindowMessage() and for window classes.
+ * -Gunnar
+ */
 static PRTL_ATOM_TABLE GlobalAtomTable = NULL;
 
 /* FUNCTIONS *****************************************************************/

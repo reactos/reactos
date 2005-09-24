@@ -7,6 +7,7 @@
 typedef struct _WNDCLASS_OBJECT
 {
   UINT    cbSize;
+  LONG    refs;                  /* windows using this class (is 0 after class creation) */
   UINT    style;
   WNDPROC lpfnWndProcA;
   WNDPROC lpfnWndProcW;
@@ -21,10 +22,8 @@ typedef struct _WNDCLASS_OBJECT
   HICON   hIconSm;
   BOOL Unicode;
   BOOL Global;
-  LIST_ENTRY ListEntry;
+  LIST_ENTRY ListEntry;          /* linked into owning process */
   PCHAR   ExtraData;
-  /* list of windows */
-  LIST_ENTRY ClassWindowsListHead;
 } WNDCLASS_OBJECT, *PWNDCLASS_OBJECT;
 
 NTSTATUS FASTCALL
@@ -33,24 +32,26 @@ InitClassImpl(VOID);
 NTSTATUS FASTCALL
 CleanupClassImpl(VOID);
 
-#define ClassDereferenceObject(ClassObj) \
-  ObmDereferenceObject(ClassObj)
+void FASTCALL DestroyProcessClasses(PW32PROCESS Process );
 
-BOOL FASTCALL
-ClassReferenceClassByAtom(
-   PWNDCLASS_OBJECT* Class,
+inline VOID FASTCALL 
+ClassDerefObject(PWNDCLASS_OBJECT Class);
+
+inline VOID FASTCALL 
+ClassRefObject(PWNDCLASS_OBJECT Class);
+
+PWNDCLASS_OBJECT FASTCALL
+ClassGetClassByAtom(
    RTL_ATOM Atom,
    HINSTANCE hInstance);
 
-BOOL FASTCALL
-ClassReferenceClassByName(
-   PWNDCLASS_OBJECT *Class,
+PWNDCLASS_OBJECT FASTCALL
+ClassGetClassByName(
    LPCWSTR ClassName,
    HINSTANCE hInstance);
 
-BOOL FASTCALL
-ClassReferenceClassByNameOrAtom(
-   PWNDCLASS_OBJECT *Class,
+PWNDCLASS_OBJECT FASTCALL
+ClassGetClassByNameOrAtom(
    LPCWSTR ClassNameOrAtom,
    HINSTANCE hInstance);
 

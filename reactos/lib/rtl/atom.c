@@ -347,6 +347,12 @@ RtlAddAtomToAtomTable(IN PRTL_ATOM_TABLE AtomTable,
         if (HashLink != NULL)
           {
              ULONG AtomNameLen = wcslen(AtomName);
+             
+             if (AtomNameLen > MAX_ATOM_LEN)
+             {
+                Status = STATUS_INVALID_PARAMETER;
+                goto end;
+             }
 
              Entry = RtlpAllocAtomTableEntry(sizeof(RTL_ATOM_TABLE_ENTRY) -
                                              sizeof(Entry->Name) +
@@ -390,7 +396,7 @@ RtlAddAtomToAtomTable(IN PRTL_ATOM_TABLE AtomTable,
              Status = STATUS_OBJECT_NAME_INVALID;
           }
      }
-
+end:
    RtlpUnlockAtomTable(AtomTable);
 
    return Status;
@@ -592,6 +598,8 @@ RtlQueryAtomInAtomTable(PRTL_ATOM_TABLE AtomTable,
                         PULONG NameLength)
 {
    ULONG Length;
+   BOOL Unlock = FALSE;
+   
    union
      {
      /* A RTL_ATOM_TABLE_ENTRY has a "WCHAR Name[1]" entry at the end.
@@ -616,6 +624,7 @@ RtlQueryAtomInAtomTable(PRTL_ATOM_TABLE AtomTable,
    else
      {
         RtlpLockAtomTable(AtomTable);
+        Unlock = TRUE;
 
         Entry = RtlpGetAtomEntry(AtomTable,
                                  (ULONG)((USHORT)Atom - 0xC000));
@@ -676,10 +685,7 @@ RtlQueryAtomInAtomTable(PRTL_ATOM_TABLE AtomTable,
         Status = STATUS_INVALID_HANDLE;
      }
 
-   if (NULL != Entry && Entry != &NumberEntry.AtomTableEntry)
-     {
-        RtlpUnlockAtomTable(AtomTable);
-     }
+   if (Unlock) RtlpUnlockAtomTable(AtomTable);
 
    return Status;
 }

@@ -212,7 +212,6 @@ NtUserCallOneParam(
 #define TWOPARAM_ROUTINE_UNKNOWN            0x54
 #define TWOPARAM_ROUTINE_SHOWOWNEDPOPUPS    0x55
 #define TWOPARAM_ROUTINE_SWITCHTOTHISWINDOW 0x56
-#define TWOPARAM_ROUTINE_VALIDATERGN        0x57
 #define TWOPARAM_ROUTINE_SETWNDCONTEXTHLPID 0x58
 #define TWOPARAM_ROUTINE_SETCARETPOS        0x60
 #define TWOPARAM_ROUTINE_GETWINDOWINFO      0x61
@@ -894,11 +893,6 @@ NtUserGetWOWClass(
   DWORD Unknown0,
   DWORD Unknown1);
 
-BOOL
-STDCALL
-NtUserHideCaret(
-  HWND hWnd);
-
 DWORD
 STDCALL
 NtUserImpersonateDdeClientWindow(
@@ -934,20 +928,6 @@ NtUserInternalGetWindowText(
   HWND hWnd,
   LPWSTR lpString,
   INT nMaxCount);
-
-DWORD
-STDCALL
-NtUserInvalidateRect(
-HWND hWnd,
-CONST RECT *lpRect,
-BOOL bErase);
-
-DWORD
-STDCALL
-  NtUserInvalidateRgn(
-  HWND hWnd,
-  HRGN hRgn,
-  BOOL bErase);
 
 
 BOOL
@@ -1575,7 +1555,8 @@ NtUserSetWinEventHook(
 BOOL
 STDCALL
 NtUserShowCaret(
-  HWND hWnd);
+  HWND hWnd,
+  BOOL bShow);
 
 DWORD
 STDCALL
@@ -1681,9 +1662,6 @@ NtUserUpdateInstance(
   DWORD Unknown1,
   DWORD Unknown2);
 
-BOOL STDCALL
-NtUserUpdateWindow( HWND hWnd );
-
 DWORD
 STDCALL
 NtUserUpdateLayeredWindow(
@@ -1714,10 +1692,6 @@ DWORD
 STDCALL
 NtUserValidateHandleSecure(
   DWORD Unknown0);
-
-VOID STDCALL
-NtUserValidateRect(HWND Wnd, const RECT* Rect);
-
 
 DWORD
 STDCALL

@@ -11,7 +11,7 @@ typedef struct _DESKTOP_OBJECT
     CSHORT Type;
     CSHORT Size;
     LIST_ENTRY ListEntry;
-    KSPIN_LOCK Lock;
+
     UNICODE_STRING Name;
     /* Pointer to the associated window station. */
     struct _WINSTATION_OBJECT *WindowStation;

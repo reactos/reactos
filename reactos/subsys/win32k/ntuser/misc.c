@@ -510,21 +510,6 @@ NtUserCallTwoParam(
          UNIMPLEMENTED
          RETURN( 0);
 
-      case TWOPARAM_ROUTINE_VALIDATERGN:
-         {
-            PWINDOW_OBJECT Window = UserGetWindowObject((HWND) Param1);
-            BOOL ret;
-
-            if (!Window)
-               RETURN(FALSE);
-
-            UserRefObjectCo(Window);
-            ret = co_UserValidateRgn(Window, (HRGN) Param2);
-            UserDerefObjectCo(Window);
-
-            RETURN((DWORD) ret);
-         }
-
       case TWOPARAM_ROUTINE_SETWNDCONTEXTHLPID:
          
          if(!(Window = UserGetWindowObject((HWND)Param1)))

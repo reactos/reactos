@@ -107,6 +107,8 @@
 #define NLS_MB_OEM_CODE_PAGE_TAG NlsMbOemCodePageTag
 #define NLS_OEM_LEAD_BYTE_INFO NlsOemLeadByteInfo
 
+#define MAX_ATOM_LEN              255 /* TCHARS not including nullterm */
+
 /* List Macros */
 static __inline
 VOID

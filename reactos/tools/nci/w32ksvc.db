@@ -417,15 +417,12 @@ NtUserGetWindowPlacement                2
 NtUserGetWindowLong                     3
 NtUserGetWindowRect			2
 NtUserGetWOWClass                       2
-NtUserHideCaret                         1
 NtUserHiliteMenuItem                    4
 NtUserImpersonateDdeClientWindow        2
 NtUserInitializeClientPfnArrays         4
 NtUserInitTask                          11
 NtUserInsertMenuItem			4
 NtUserInternalGetWindowText             3
-NtUserInvalidateRect                    3
-NtUserInvalidateRgn                     3
 NtUserIsClipboardFormatAvailable        1
 NtUserKillSystemTimer                   2
 NtUserKillTimer                         2
@@ -523,7 +520,7 @@ NtUserSetWindowsHookEx                  6
 NtUserSetWindowStationUser              4
 NtUserSetWindowWord                     3
 NtUserSetWinEventHook                   8
-NtUserShowCaret                         1
+NtUserShowCaret                         2
 NtUserShowScrollBar                     3
 NtUserShowWindow                        2
 NtUserShowWindowAsync                   2
@@ -544,12 +541,10 @@ NtUserUnregisterClass                   3
 NtUserUnregisterHotKey                  2
 NtUserUpdateInputContext                3
 NtUserUpdateInstance                    3
-NtUserUpdateWindow			1
 NtUserUpdateLayeredWindow               9
 NtUserUpdatePerUserSystemParameters     2
 NtUserUserHandleGrantAccess             3
 NtUserValidateHandleSecure              1
-NtUserValidateRect                      2
 NtUserVkKeyScanEx                       3
 NtUserWaitForInputIdle                  3
 NtUserWaitForMsgAndEvent                1
