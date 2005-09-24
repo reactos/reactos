@@ -10,5 +10,6 @@
 	<file>dialog.c</file>
 	<file>license.c</file>
 	<file>main.c</file>
+	<file>text.c</file>
 	<file>rsrc.rc</file>
 </module>

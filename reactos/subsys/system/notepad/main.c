@@ -23,9 +23,11 @@
  */
 
 #define UNICODE
+#define _UNICODE
 
 #include <windows.h>
 #include <stdio.h>
+#include <tchar.h>
 
 #include "main.h"
 #include "dialog.h"
@@ -94,6 +96,78 @@ static int NOTEPAD_MenuCommand(WPARAM wParam)
 }
 
 /***********************************************************************
+ *
+ *           NOTEPAD_FindNext
+ */
+
+static VOID NOTEPAD_FindNext(FINDREPLACE *pFindReplace)
+{
+    int iTextLength, iTargetLength;
+    LPTSTR pszText = NULL;
+    DWORD dwPosition, dwDummy;
+    BOOL bMatches = FALSE;
+
+    iTargetLength = _tcslen(pFindReplace->lpstrFindWhat);
+
+    iTextLength = GetWindowTextLength(Globals.hEdit);
+
+    if (iTextLength > 0)
+    {
+        pszText = (LPTSTR) HeapAlloc(GetProcessHeap(), 0, (iTextLength + 1) * sizeof(TCHAR));
+        if (!pszText)
+            return;
+
+        GetWindowText(Globals.hEdit, pszText, iTextLength + 1);
+    }
+
+    SendMessage(Globals.hEdit, EM_GETSEL, (WPARAM) &dwDummy, (LPARAM) &dwPosition);
+
+    while(dwPosition < iTextLength)
+    {
+        /* Make proper comparison */
+        if (pFindReplace->Flags & FR_MATCHCASE)
+            bMatches = !_tcsncmp(&pszText[dwPosition], pFindReplace->lpstrFindWhat, iTargetLength);
+        else
+            bMatches = !_tcsnicmp(&pszText[dwPosition], pFindReplace->lpstrFindWhat, iTargetLength);
+
+        if (bMatches && pFindReplace->Flags & FR_WHOLEWORD)
+        {
+            if ((dwPosition > 0) && !_istspace(pszText[dwPosition-1]))
+                bMatches = FALSE;
+            if ((dwPosition < iTextLength - 1) && !_istspace(pszText[dwPosition+1]))
+                bMatches = FALSE;
+        }
+
+        if (bMatches)
+            break;
+
+        if (pFindReplace->Flags & FR_DOWN) 
+            dwPosition++;
+        else
+            dwPosition--;
+    }
+
+    if (bMatches)
+    {
+        SendMessage(Globals.hEdit, EM_SETSEL, dwPosition, dwPosition + iTargetLength);
+        SendMessage(Globals.hEdit, EM_SCROLLCARET, 0, 0);
+    }
+
+    if (pszText)
+        HeapFree(GetProcessHeap(), 0, pszText);
+}
+
+/***********************************************************************
+ *
+ *           NOTEPAD_FindTerm
+ */
+
+static VOID NOTEPAD_FindTerm(VOID)
+{
+    Globals.hFindReplaceDlg = NULL;
+}
+
+/***********************************************************************
  * Data Initialization
  */
 static VOID NOTEPAD_InitData(VOID)
@@ -150,7 +224,7 @@ static LRESULT WINAPI NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam,
         GetClientRect(hWnd, &rc);
         Globals.hEdit = CreateWindowEx(WS_EX_CLIENTEDGE, editW, NULL,
                              WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL |
-                             ES_AUTOVSCROLL | ES_MULTILINE,
+                             ES_AUTOVSCROLL | ES_MULTILINE | ES_NOHIDESEL,
                              0, 0, rc.right, rc.bottom, hWnd,
                              NULL, Globals.hInstance, NULL);
         break;
@@ -205,6 +279,17 @@ static LRESULT WINAPI NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam,
         break;
 
     default:
+        if (msg == aFINDMSGSTRING)
+        {
+            FINDREPLACE *pFindReplace = (FINDREPLACE *) lParam;
+
+            if (pFindReplace->Flags & FR_FINDNEXT)
+                NOTEPAD_FindNext(pFindReplace);
+            else if (pFindReplace->Flags & FR_DIALOGTERM)
+                NOTEPAD_FindTerm();
+            break;
+        }
+
         return DefWindowProc(hWnd, msg, wParam, lParam);
     }
     return 0;
@@ -219,7 +304,7 @@ static int AlertFileDoesNotExist(LPCWSTR szFileName)
    LoadString(Globals.hInstance, STRING_DOESNOTEXIST, szResource, SIZEOF(szResource));
    wsprintf(szMessage, szResource, szFileName);
 
-   LoadString(Globals.hInstance, STRING_ERROR, szResource, SIZEOF(szResource));
+   LoadString(Globals.hInstance, STRING_NOTEPAD, szResource, SIZEOF(szResource));
 
    nResult = MessageBox(Globals.hMainWnd, szMessage, szResource,
                         MB_ICONEXCLAMATION | MB_YESNO);

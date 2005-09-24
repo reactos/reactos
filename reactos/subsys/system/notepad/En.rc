@@ -95,7 +95,7 @@ PUSHBUTTON    "&Help",       0x153,                180, 39, 40, 15, WS_TABSTOP
 }
 
 /* Dialog `Encoding' */
-DIALOG_ENCODING DIALOG 0, 0, 256, 26
+DIALOG_ENCODING DIALOG 0, 0, 256, 44
 STYLE DS_SETFONT | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | 
     WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
@@ -103,6 +103,8 @@ CAPTION "Encoding"
 {
 COMBOBOX        ID_ENCODING,54,0,156,80,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 LTEXT           "Encoding:",0x155,5,2,41,12
+COMBOBOX        ID_EOLN,54,18,156,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+LTEXT           "Endlines:",0x156,5,20,41,12
 }
 
 STRINGTABLE DISCARDABLE
@@ -140,4 +142,7 @@ STRING_ANSI,                                    "ANSI"
 STRING_UNICODE,                                 "Unicode"
 STRING_UNICODE_BE,                              "Unicode (big endian)"
 STRING_UTF8,                                    "UTF-8"
+STRING_CRLF,                                    "Windows"
+STRING_LF,                                      "Unix"
+STRING_CR,                                      "Mac"
 }

@@ -30,6 +30,10 @@
 #define ENCODING_UNICODE_BE	2
 #define ENCODING_UTF8		3
 
+#define EOLN_CRLF           0
+#define EOLN_LF             1
+#define EOLN_CR             2
+
 typedef struct
 {
   HANDLE  hInstance;
@@ -50,6 +54,7 @@ typedef struct
   WCHAR   szHeader[MAX_PATH];
   WCHAR   szFooter[MAX_PATH];
   int     iEncoding;
+  int     iEoln;
 
   FINDREPLACE find;
 } NOTEPAD_GLOBALS;
@@ -57,3 +62,9 @@ typedef struct
 extern NOTEPAD_GLOBALS Globals;
 
 VOID SetFileName(LPCWSTR szFileName);
+
+/* from text.c */
+BOOL ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, int *piEncoding, int *piEoln);
+BOOL WriteText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, int iEncoding, int iEoln);
+
+

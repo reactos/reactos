@@ -93,7 +93,7 @@ static void AlertFileNotFound(LPCWSTR szFileName)
    wsprintf(szMessage, szResource, szFileName);
 
    /* Load szCaption */
-   LoadString(Globals.hInstance, STRING_ERROR,  szResource, SIZEOF(szResource));
+   LoadString(Globals.hInstance, STRING_NOTEPAD,  szResource, SIZEOF(szResource));
 
    /* Display Modal Dialog */
    MessageBox(Globals.hMainWnd, szMessage, szResource, MB_ICONEXCLAMATION);
@@ -112,7 +112,7 @@ static int AlertFileNotSaved(LPCWSTR szFileName)
    wsprintf(szMessage, szResource, szFileName[0] ? szFileName : szUntitled);
 
    /* Load Caption */
-   LoadString(Globals.hInstance, STRING_ERROR, szResource, SIZEOF(szResource));
+   LoadString(Globals.hInstance, STRING_NOTEPAD, szResource, SIZEOF(szResource));
 
    /* Display modal */
    return MessageBox(Globals.hMainWnd, szMessage, szResource, MB_ICONEXCLAMATION|MB_YESNOCANCEL);
@@ -138,15 +138,8 @@ BOOL FileExists(LPCWSTR szFilename)
 static VOID DoSaveFile(VOID)
 {
     HANDLE hFile;
-    DWORD dwNumWrite;
     LPWSTR pTemp;
-    LPVOID pConverted = NULL;
     DWORD size;
-    BYTE bom[3];
-    int iBomSize = 0;
-    int iCodePage = -1;
-    int iNewSize;
-    int i;
 
     hFile = CreateFile(Globals.szFileName, GENERIC_WRITE, FILE_SHARE_WRITE,
                        NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -166,72 +159,13 @@ static VOID DoSaveFile(VOID)
     }
     size = GetWindowTextW(Globals.hEdit, pTemp, size);
 
-    switch(Globals.iEncoding)
-    {
-        case ENCODING_ANSI:
-            iCodePage = CP_ACP;
-            break;
-
-        case ENCODING_UNICODE:
-            pConverted = pTemp;
-            iBomSize = 2;
-            bom[0] = 0xFF;
-            bom[1] = 0xFE;
-            break;
-
-        case ENCODING_UNICODE_BE:
-            pConverted = pTemp;
-            iBomSize = 2;
-            bom[0] = 0xFE;
-            bom[1] = 0xFF;
-
-            /* flip the endianness */
-            for (i = 0; i < size; i++)
-            {
-                pTemp[i] = ((pTemp[i] & 0x00FF) << 8)
-                           | ((pTemp[i] & 0xFF00) >> 8);
-            }
-            break;
-
-        case ENCODING_UTF8:
-            iCodePage = CP_UTF8;
-            iBomSize = 3;
-            bom[0] = 0xEF;
-            bom[1] = 0xBB;
-            bom[2] = 0xBF;
-            break;
-    }
-
-    if (iCodePage >= 0)
-    {
-        iNewSize = WideCharToMultiByte(iCodePage, 0, pTemp, size, NULL, 0, NULL, NULL);
-        pConverted = HeapAlloc(GetProcessHeap(), 0, iNewSize);
-        if (!pConverted)
-        {
-            HeapFree(GetProcessHeap(), 0, pTemp);
-            CloseHandle(hFile);
-            ShowLastError();
-            return;
-        }
-        WideCharToMultiByte(iCodePage, 0, pTemp, size, pConverted, iNewSize, NULL, NULL);
-    }
-    else
-    {
-        iNewSize = size * sizeof(WCHAR);
-    }
-
-    if ((iBomSize > 0) && !WriteFile(hFile, bom, iBomSize, &dwNumWrite, NULL))
-        ShowLastError();
-    else if (!WriteFile(hFile, pConverted, iNewSize, &dwNumWrite, NULL))
+    if (!WriteText(hFile, pTemp, size, Globals.iEncoding, Globals.iEoln))
         ShowLastError();
     else
         SendMessage(Globals.hEdit, EM_SETMODIFY, FALSE, 0);
 
     CloseHandle(hFile);
     HeapFree(GetProcessHeap(), 0, pTemp);
-
-    if (iCodePage >= 0)
-        HeapFree(GetProcessHeap(), 0, pConverted);
 }
 
 /**
@@ -273,15 +207,9 @@ void DoOpenFile(LPCWSTR szFileName)
 {
     static const WCHAR dotlog[] = { '.','L','O','G',0 };
     HANDLE hFile;
-    LPSTR pTemp;
-    LPWSTR pTemp2 = NULL;
-    DWORD size;
-    DWORD dwNumRead;
+    LPWSTR pszText;
+    DWORD dwTextLen;
     WCHAR log[5];
-    LPWSTR p;
-    LPBYTE p2;
-    int iCodePage;
-    int iNewSize;
 
     /* Close any files and prompt to save changes */
     if (!DoCloseFile())
@@ -289,90 +217,19 @@ void DoOpenFile(LPCWSTR szFileName)
 
     hFile = CreateFile(szFileName, GENERIC_READ, FILE_SHARE_READ, NULL,
                        OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    if(hFile == INVALID_HANDLE_VALUE)
+    if (hFile == INVALID_HANDLE_VALUE)
     {
         ShowLastError();
-        return;
+        goto done;
     }
 
-    size = GetFileSize(hFile, NULL);
-    if (size == INVALID_FILE_SIZE)
+    if (!ReadText(hFile, &pszText, &dwTextLen, &Globals.iEncoding, &Globals.iEoln))
     {
-        CloseHandle(hFile);
         ShowLastError();
-        return;
+        goto done;
     }
 
-    pTemp = HeapAlloc(GetProcessHeap(), 0, size + sizeof(WCHAR));
-    if (!pTemp)
-    {
-        CloseHandle(hFile);
-        ShowLastError();
-        return;
-    }
-
-    if (!ReadFile(hFile, pTemp, size, &dwNumRead, NULL))
-    {
-        CloseHandle(hFile);
-        HeapFree(GetProcessHeap(), 0, pTemp);
-        ShowLastError();
-        return;
-    }
-
-    CloseHandle(hFile);
-    pTemp[dwNumRead] = 0;
-
-    if (IsTextUnicode(pTemp, dwNumRead, NULL))
-    {
-        p = (LPWSTR)pTemp;
-        p[dwNumRead / 2] = 0;
-
-        /* We need to strip BOM Unicode character, SetWindowTextW won't do it for us. */
-        if (*p == 0xFEFF)
-        {
-            Globals.iEncoding = ENCODING_UNICODE_BE;
-            p++;
-        }
-        else if (*p == 0xFFFE)
-        {
-            Globals.iEncoding = ENCODING_UNICODE;
-            p++;
-        }
-    }
-    else
-    {
-        p2 = (LPBYTE)pTemp;
-        if ((p2[0] == 0xEF) && (p2[1] == 0xBB) && (p2[2] == 0xBF))
-        {
-            iCodePage = CP_UTF8;
-            Globals.iEncoding = ENCODING_UTF8;
-            p2 += 3;
-            dwNumRead -= 3;
-        }
-        else
-        {
-            iCodePage = CP_ACP;
-            Globals.iEncoding = ENCODING_ANSI;
-        }
-
-        iNewSize = MultiByteToWideChar(iCodePage, 0, (LPCSTR)p2, dwNumRead, NULL, 0);
-        pTemp2 = HeapAlloc(GetProcessHeap(), 0, (iNewSize + 1) * sizeof(*pTemp2));
-        if (!pTemp2)
-        {
-            CloseHandle(hFile);
-            HeapFree(GetProcessHeap(), 0, pTemp);
-            ShowLastError();
-            return;
-        }
-        MultiByteToWideChar(iCodePage, 0, (LPCSTR)p2, dwNumRead, pTemp2, iNewSize);
-        pTemp2[iNewSize] = 0;
-        p = pTemp2;
-    }
-    SetWindowTextW(Globals.hEdit, p);
-
-    HeapFree(GetProcessHeap(), 0, pTemp);
-    if (pTemp2)
-       HeapFree(GetProcessHeap(), 0, pTemp2);
+    SetWindowTextW(Globals.hEdit, pszText);
 
     SendMessage(Globals.hEdit, EM_SETMODIFY, FALSE, 0);
     SendMessage(Globals.hEdit, EM_EMPTYUNDOBUFFER, 0, 0);
@@ -392,6 +249,12 @@ void DoOpenFile(LPCWSTR szFileName)
 
     SetFileName(szFileName);
     UpdateWindowCaption();
+
+done:
+    if (hFile != INVALID_HANDLE_VALUE)
+        CloseHandle(hFile);
+    if (pszText)
+        HeapFree(GetProcessHeap(), 0, pszText);
 }
 
 VOID DIALOG_FileNew(VOID)
@@ -475,14 +338,33 @@ static UINT_PTR CALLBACK DIALOG_FileSaveAs_Hook(HWND hDlg, UINT msg, WPARAM wPar
             SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM) szText);
 
             SendMessage(hCombo, CB_SETCURSEL, Globals.iEncoding, 0);
+
+            hCombo = GetDlgItem(hDlg, ID_EOLN);
+
+            LoadString(Globals.hInstance, STRING_CRLF, szText, SIZEOF(szText));
+            SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM) szText);
+
+            LoadString(Globals.hInstance, STRING_LF, szText, SIZEOF(szText));
+            SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM) szText);
+
+            LoadString(Globals.hInstance, STRING_CR, szText, SIZEOF(szText));
+            SendMessage(hCombo, CB_ADDSTRING, 0, (LPARAM) szText);
+
+            SendMessage(hCombo, CB_SETCURSEL, Globals.iEoln, 0);
             break;
 
         case WM_NOTIFY:
             if (((NMHDR *) lParam)->code == CDN_FILEOK)
             {
                 pNotify = (OFNOTIFY *) lParam;
+
                 hCombo = GetDlgItem(hDlg, ID_ENCODING);
-                Globals.iEncoding = SendMessage(hCombo, CB_GETCURSEL, 0, 0);
+				if (hCombo)
+	                Globals.iEncoding = SendMessage(hCombo, CB_GETCURSEL, 0, 0);
+
+                hCombo = GetDlgItem(hDlg, ID_EOLN);
+				if (hCombo)
+	                Globals.iEoln = SendMessage(hCombo, CB_GETCURSEL, 0, 0);					
             }
             break;
     }
@@ -736,7 +618,7 @@ VOID DIALOG_EditWrap(VOID)
 {
     static const WCHAR editW[] = { 'e','d','i','t',0 };
     DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL |
-                    ES_AUTOVSCROLL | ES_MULTILINE;
+                    ES_AUTOVSCROLL | ES_MULTILINE | ES_NOHIDESEL;
     RECT rc;
     DWORD size;
     LPWSTR pTemp;

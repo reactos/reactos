@@ -24,6 +24,7 @@
 #define ID_ACCEL                0x203
 #define DIALOG_ENCODING         0x204
 #define ID_ENCODING             0x205
+#define ID_EOLN                 0x206
 
 /* Commands */
 #define CMD_NEW                 0x100
@@ -84,3 +85,6 @@
 #define STRING_UNICODE_BE 0x17F
 #define STRING_UTF8 0x180
 
+#define STRING_CRLF 0x181
+#define STRING_LF 0x182
+#define STRING_CR 0x183
