@@ -21,7 +21,11 @@
 VOID FASTCALL
 ExAcquireFastMutexUnsafe(PFAST_MUTEX FastMutex)
 {
-  //ASSERT(FastMutex->Owner != KeGetCurrentThread());
+  ASSERT(KeGetCurrentThread() == NULL || FastMutex->Owner != KeGetCurrentThread());
+  ASSERT(KeGetCurrentIrql() == APC_LEVEL || 
+   KeGetCurrentThread() == NULL || 
+   KeGetCurrentThread()->KernelApcDisable);
+  
   InterlockedIncrementUL(&FastMutex->Contention);
   while (InterlockedExchange(&FastMutex->Count, 0) == 0)
      {
@@ -41,7 +45,11 @@ ExAcquireFastMutexUnsafe(PFAST_MUTEX FastMutex)
 VOID FASTCALL
 ExReleaseFastMutexUnsafe(PFAST_MUTEX FastMutex)
 {
-  //ASSERT(FastMutex->Owner == KeGetCurrentThread());
+  ASSERT(KeGetCurrentThread() == NULL || FastMutex->Owner == KeGetCurrentThread());
+  ASSERT(KeGetCurrentIrql() == APC_LEVEL || 
+   KeGetCurrentThread() == NULL || 
+   KeGetCurrentThread()->KernelApcDisable);
+  
   FastMutex->Owner = NULL;
   InterlockedExchange(&FastMutex->Count, 1);
   if (FastMutex->Contention > 0)
