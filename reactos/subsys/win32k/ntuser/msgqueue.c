@@ -42,7 +42,6 @@ static MSG SystemMessageQueue[SYSTEM_MESSAGE_QUEUE_SIZE];
 static ULONG SystemMessageQueueHead = 0;
 static ULONG SystemMessageQueueTail = 0;
 static ULONG SystemMessageQueueCount = 0;
-static ULONG SystemMessageQueueMouseMove = -1;
 static KSPIN_LOCK SystemMessageQueueLock;
 
 static ULONG volatile HardwareMessageQueueStamp = 0;
@@ -148,45 +147,54 @@ MsqInsertSystemMessage(MSG* Msg)
 {
    LARGE_INTEGER LargeTickCount;
    KIRQL OldIrql;
-   ULONG mmov = (ULONG)-1;
-
-   KeQueryTickCount(&LargeTickCount);
-   Msg->time = LargeTickCount.u.LowPart;
+   ULONG Prev;
 
    IntLockSystemMessageQueue(OldIrql);
 
-   /* only insert WM_MOUSEMOVE messages if not already in system message queue */
-   if(Msg->message == WM_MOUSEMOVE)
-      mmov = SystemMessageQueueMouseMove;
+   /*
+    * Bail out if the queue is full. FIXME: We should handle this case
+    * more gracefully.
+    */
 
-   if(mmov != (ULONG)-1)
+   if (SystemMessageQueueCount == SYSTEM_MESSAGE_QUEUE_SIZE)
    {
-      /* insert message at the queue head */
-      while (mmov != SystemMessageQueueHead )
-      {
-         ULONG prev = mmov ? mmov - 1 : SYSTEM_MESSAGE_QUEUE_SIZE - 1;
-         ASSERT((LONG) mmov >= 0);
-         ASSERT(mmov < SYSTEM_MESSAGE_QUEUE_SIZE);
-         SystemMessageQueue[mmov] = SystemMessageQueue[prev];
-         mmov = prev;
-      }
-      SystemMessageQueue[SystemMessageQueueHead] = *Msg;
+      IntUnLockSystemMessageQueue(OldIrql);
+      return;
    }
-   else
+
+   KeQueryTickCount(&LargeTickCount);
+   Msg->time = LargeTickCount.u.LowPart;
+   
+   /*
+    * If we got WM_MOUSEMOVE and there are already messages in the
+    * system message queue, check if the last message is mouse move
+    * and if it is then just overwrite it.
+    */
+
+   if (Msg->message == WM_MOUSEMOVE && SystemMessageQueueCount)
    {
-      if (SystemMessageQueueCount == SYSTEM_MESSAGE_QUEUE_SIZE)
+      if (SystemMessageQueueTail == 0)
+         Prev = SYSTEM_MESSAGE_QUEUE_SIZE - 1;
+      else
+         Prev = SystemMessageQueueTail - 1;
+      if (SystemMessageQueue[Prev].message == WM_MOUSEMOVE)
       {
-         IntUnLockSystemMessageQueue(OldIrql);
-         return;
+         SystemMessageQueueTail = Prev;
+         SystemMessageQueueCount--;
       }
-      SystemMessageQueue[SystemMessageQueueTail] = *Msg;
-      if(Msg->message == WM_MOUSEMOVE)
-         SystemMessageQueueMouseMove = SystemMessageQueueTail;
-      SystemMessageQueueTail =
-         (SystemMessageQueueTail + 1) % SYSTEM_MESSAGE_QUEUE_SIZE;
-      SystemMessageQueueCount++;
    }
+
+   /*
+    * Actually insert the message into the system message queue.
+    */
+
+   SystemMessageQueue[SystemMessageQueueTail] = *Msg;
+   SystemMessageQueueTail =
+      (SystemMessageQueueTail + 1) % SYSTEM_MESSAGE_QUEUE_SIZE;
+   SystemMessageQueueCount++;
+
    IntUnLockSystemMessageQueue(OldIrql);
+
    KeSetEvent(&HardwareMessageEvent, IO_NO_INCREMENT, FALSE);
 }
 
@@ -583,11 +591,6 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
       }
       IntLockSystemMessageQueue(OldIrql);
    }
-   /*
-    * we could set this to -1 conditionally if we find one, but
-    * this is more efficient and just as effective.
-    */
-   SystemMessageQueueMouseMove = -1;
    HardwareMessageQueueStamp++;
    IntUnLockSystemMessageQueue(OldIrql);
 
