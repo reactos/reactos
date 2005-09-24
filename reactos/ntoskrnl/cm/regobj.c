@@ -490,49 +490,49 @@ CmiObjectQueryName (PVOID ObjectBody,
 		    ULONG Length,
 		    PULONG ReturnLength)
 {
-  POBJECT_NAME_INFORMATION LocalInfo;
   PKEY_OBJECT KeyObject;
-  ULONG LocalReturnLength;
   NTSTATUS Status;
 
   DPRINT ("CmiObjectQueryName() called\n");
 
   KeyObject = (PKEY_OBJECT)ObjectBody;
 
-  LocalInfo = ExAllocatePool (NonPagedPool,
-			      sizeof(OBJECT_NAME_INFORMATION) +
-				MAX_PATH * sizeof(WCHAR));
-  if (LocalInfo == NULL)
-    return STATUS_INSUFFICIENT_RESOURCES;
-
   if (KeyObject->ParentKey != KeyObject)
     {
       Status = ObQueryNameString (KeyObject->ParentKey,
-				  LocalInfo,
-				  MAX_PATH * sizeof(WCHAR),
-				  &LocalReturnLength);
+				  ObjectNameInfo,
+				  Length,
+				  ReturnLength);
     }
   else
     {
       /* KeyObject is the root key */
       Status = ObQueryNameString (HEADER_TO_OBJECT_NAME(BODY_TO_HEADER(KeyObject))->Directory,
-				  LocalInfo,
-				  MAX_PATH * sizeof(WCHAR),
-				  &LocalReturnLength);
+				  ObjectNameInfo,
+				  Length,
+				  ReturnLength);
     }
 
-  if (!NT_SUCCESS (Status))
+  if (!NT_SUCCESS(Status) && Status != STATUS_INFO_LENGTH_MISMATCH)
     {
-      ExFreePool (LocalInfo);
       return Status;
     }
-  DPRINT ("Parent path: %wZ\n", &LocalInfo->Name);
+  (*ReturnLength) += sizeof(WCHAR) + KeyObject->Name.Length;
 
-  Status = RtlAppendUnicodeStringToString (&ObjectNameInfo->Name,
-					   &LocalInfo->Name);
-  ExFreePool (LocalInfo);
-  if (!NT_SUCCESS (Status))
-    return Status;
+  if (Status == STATUS_INFO_LENGTH_MISMATCH || *ReturnLength > Length)
+    {
+      return STATUS_INFO_LENGTH_MISMATCH;
+    }
+
+  if (ObjectNameInfo->Name.Buffer == NULL)
+    {
+      ObjectNameInfo->Name.Buffer = (PWCHAR)(ObjectNameInfo + 1);
+      ObjectNameInfo->Name.Length = 0;
+      ObjectNameInfo->Name.MaximumLength = Length - sizeof(OBJECT_NAME_INFORMATION);
+    }
+
+
+  DPRINT ("Parent path: %wZ\n", ObjectNameInfo->Name);
 
   Status = RtlAppendUnicodeToString (&ObjectNameInfo->Name,
 				     L"\\");
