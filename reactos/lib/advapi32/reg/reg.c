@@ -319,10 +319,294 @@ RegCloseKey (HKEY hKey)
 }
 
 
+static NTSTATUS
+RegpCopyTree(IN HKEY hKeySrc,
+             IN HKEY hKeyDest)
+{
+    typedef struct
+    {
+        LIST_ENTRY ListEntry;
+        HANDLE hKeySrc;
+        HANDLE hKeyDest;
+    } REGP_COPY_KEYS, *PREGP_COPY_KEYS;
+
+    LIST_ENTRY copyQueueHead;
+    PREGP_COPY_KEYS copyKeys, newCopyKeys;
+    union
+    {
+        KEY_VALUE_FULL_INFORMATION *KeyValue;
+        KEY_NODE_INFORMATION *KeyNode;
+        PVOID Buffer;
+    } Info;
+    ULONG Index, BufferSizeRequired, BufferSize = 0x200;
+    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status2 = STATUS_SUCCESS;
+    
+    InitializeListHead(&copyQueueHead);
+    
+    Info.Buffer = RtlAllocateHeap(ProcessHeap,
+                                  0,
+                                  BufferSize);
+    if (Info.Buffer == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    
+    copyKeys = RtlAllocateHeap(ProcessHeap,
+                               0,
+                               sizeof(REGP_COPY_KEYS));
+    if (copyKeys != NULL)
+    {
+        copyKeys->hKeySrc = hKeySrc;
+        copyKeys->hKeyDest = hKeyDest;
+        InsertHeadList(&copyQueueHead,
+                       &copyKeys->ListEntry);
+        
+        /* FIXME - copy security from hKeySrc to hKeyDest or just for the subkeys? */
+        
+        do
+        {
+            copyKeys = CONTAINING_RECORD(copyQueueHead.Flink,
+                                         REGP_COPY_KEYS,
+                                         ListEntry);
+
+            /* enumerate all values and copy them */
+            Index = 0;
+            for (;;)
+            {
+                Status2 = NtEnumerateValueKey(copyKeys->hKeySrc,
+                                              Index,
+                                              KeyValueFullInformation,
+                                              Info.KeyValue,
+                                              BufferSize,
+                                              &BufferSizeRequired);
+                if (NT_SUCCESS(Status2))
+                {
+                    UNICODE_STRING ValueName;
+                    PVOID Data;
+                    
+                    /* don't use RtlInitUnicodeString as the string is not NULL-terminated! */
+                    ValueName.Length = Info.KeyValue->NameLength;
+                    ValueName.MaximumLength = ValueName.Length;
+                    ValueName.Buffer = Info.KeyValue->Name;
+                    
+                    Data = (PVOID)((ULONG_PTR)Info.KeyValue + Info.KeyValue->DataOffset);
+                    
+                    Status2 = NtSetValueKey(copyKeys->hKeyDest,
+                                            &ValueName,
+                                            Info.KeyValue->TitleIndex,
+                                            Info.KeyValue->Type,
+                                            Data,
+                                            Info.KeyValue->DataLength);
+
+                    /* don't break, let's try to copy as many values as possible */
+                    if (!NT_SUCCESS(Status2) && NT_SUCCESS(Status))
+                    {
+                        Status = Status2;
+                    }
+
+                    Index++;
+                }
+                else if (Status2 == STATUS_BUFFER_OVERFLOW)
+                {
+                    PVOID Buffer;
+
+                    ASSERT(BufferSize < BufferSizeRequired);
+
+                    Buffer = RtlReAllocateHeap(ProcessHeap,
+                                               0,
+                                               Info.Buffer,
+                                               BufferSizeRequired);
+                    if (Buffer != NULL)
+                    {
+                        Info.Buffer = Buffer;
+                        /* try again */
+                    }
+                    else
+                    {
+                        /* don't break, let's try to copy as many values as possible */
+                        Status2 = STATUS_INSUFFICIENT_RESOURCES;
+                        Index++;
+                        
+                        if (NT_SUCCESS(Status))
+                        {
+                            Status = Status2;
+                        }
+                    }
+                }
+                else
+                {
+                    /* break to avoid an infinite loop in case of denied access or
+                       other errors! */
+                    if (Status2 != STATUS_NO_MORE_ENTRIES && NT_SUCCESS(Status))
+                    {
+                        Status = Status2;
+                    }
+                    
+                    break;
+                }
+            }
+            
+            /* enumerate all subkeys and open and enqueue them */
+            Index = 0;
+            for (;;)
+            {
+                Status2 = NtEnumerateKey(copyKeys->hKeySrc,
+                                         Index,
+                                         KeyNodeInformation,
+                                         Info.KeyNode,
+                                         BufferSize,
+                                         &BufferSizeRequired);
+                if (NT_SUCCESS(Status2))
+                {
+                    HANDLE KeyHandle, NewKeyHandle;
+                    OBJECT_ATTRIBUTES ObjectAttributes;
+                    UNICODE_STRING SubKeyName, ClassName;
+                    
+                    /* don't use RtlInitUnicodeString as the string is not NULL-terminated! */
+                    SubKeyName.Length = Info.KeyNode->NameLength;
+                    SubKeyName.MaximumLength = SubKeyName.Length;
+                    SubKeyName.Buffer = Info.KeyNode->Name;
+                    ClassName.Length = Info.KeyNode->ClassLength;
+                    ClassName.MaximumLength = ClassName.Length;
+                    ClassName.Buffer = (PWSTR)((ULONG_PTR)Info.KeyNode + Info.KeyNode->ClassOffset);
+                    
+                    /* open the subkey with sufficient rights */
+                    
+                    InitializeObjectAttributes(&ObjectAttributes,
+                                               &SubKeyName,
+                                               OBJ_CASE_INSENSITIVE,
+                                               copyKeys->hKeySrc,
+                                               NULL);
+                    
+                    Status2 = NtOpenKey(&KeyHandle,
+                                        KEY_ENUMERATE_SUB_KEYS | KEY_QUERY_VALUE,
+                                        &ObjectAttributes);
+                    if (NT_SUCCESS(Status2))
+                    {
+                        /* FIXME - attempt to query the security information */
+                        
+                        InitializeObjectAttributes(&ObjectAttributes,
+                                               &SubKeyName,
+                                               OBJ_CASE_INSENSITIVE,
+                                               copyKeys->hKeyDest,
+                                               NULL);
+
+                        Status2 = NtCreateKey(&NewKeyHandle,
+                                              KEY_ALL_ACCESS,
+                                              &ObjectAttributes,
+                                              Info.KeyNode->TitleIndex,
+                                              &ClassName,
+                                              0,
+                                              NULL);
+                        if (NT_SUCCESS(Status2))
+                        {
+                            newCopyKeys = RtlAllocateHeap(ProcessHeap,
+                                                          0,
+                                                          sizeof(REGP_COPY_KEYS));
+                            if (newCopyKeys != NULL)
+                            {
+                                /* save the handles and enqueue the subkey */
+                                newCopyKeys->hKeySrc = KeyHandle;
+                                newCopyKeys->hKeyDest = NewKeyHandle;
+                                InsertTailList(&copyQueueHead,
+                                               &newCopyKeys->ListEntry);
+                            }
+                            else
+                            {
+                                NtClose(KeyHandle);
+                                NtClose(NewKeyHandle);
+                                
+                                Status2 = STATUS_INSUFFICIENT_RESOURCES;
+                                goto GoNextKey;
+                            }
+                        }
+                        else
+                        {
+                            NtClose(KeyHandle);
+                        }
+                    }
+                    
+GoNextKey:
+                    if (!NT_SUCCESS(Status2) && NT_SUCCESS(Status))
+                    {
+                        Status = Status2;
+                    }
+                    
+                    Index++;
+                }
+                else if (Status2 == STATUS_BUFFER_OVERFLOW)
+                {
+                    PVOID Buffer;
+
+                    ASSERT(BufferSize < BufferSizeRequired);
+
+                    Buffer = RtlReAllocateHeap(ProcessHeap,
+                                               0,
+                                               Info.Buffer,
+                                               BufferSizeRequired);
+                    if (Buffer != NULL)
+                    {
+                        Info.Buffer = Buffer;
+                        /* try again */
+                    }
+                    else
+                    {
+                        /* don't break, let's try to copy as many keys as possible */
+                        Status2 = STATUS_INSUFFICIENT_RESOURCES;
+                        Index++;
+
+                        if (NT_SUCCESS(Status))
+                        {
+                            Status = Status2;
+                        }
+                    }
+                }
+                else
+                {
+                    /* break to avoid an infinite loop in case of denied access or
+                       other errors! */
+                    if (Status2 != STATUS_NO_MORE_ENTRIES && NT_SUCCESS(Status))
+                    {
+                        Status = Status2;
+                    }
+
+                    break;
+                }
+            }
+
+            /* close the handles and remove the entry from the list */
+            if (copyKeys->hKeySrc != hKeySrc)
+            {
+                NtClose(copyKeys->hKeySrc);
+            }
+            if (copyKeys->hKeyDest != hKeyDest)
+            {
+                NtClose(copyKeys->hKeyDest);
+            }
+            
+            RemoveEntryList(&copyKeys->ListEntry);
+
+            RtlFreeHeap(ProcessHeap,
+                        0,
+                        copyKeys);
+        } while (!IsListEmpty(&copyQueueHead));
+    }
+    else
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+    
+    RtlFreeHeap(ProcessHeap,
+                0,
+                Info.Buffer);
+
+    return Status;
+}
+
+
 /************************************************************************
  *  RegCopyTreeW
  *
- * @unimplemented
+ * @implemented
  */
 LONG STDCALL
 RegCopyTreeW(IN HKEY hKeySrc,
@@ -361,7 +645,7 @@ RegCopyTreeW(IN HKEY hKeySrc,
                                    NULL);
 
         Status = NtOpenKey(&SubKeyHandle,
-                           KEY_READ,
+                           KEY_ENUMERATE_SUB_KEYS | KEY_QUERY_VALUE,
                            &ObjectAttributes);
         if (!NT_SUCCESS(Status))
         {
@@ -373,8 +657,8 @@ RegCopyTreeW(IN HKEY hKeySrc,
     else
         CurKey = KeyHandle;
     
-    /* FIXME - copy all keys and values recursively */
-    Status = STATUS_NOT_IMPLEMENTED;
+    Status = RegpCopyTree(CurKey,
+                          hKeyDest);
     
     if (SubKeyHandle != NULL)
     {
@@ -1135,7 +1419,7 @@ SubKeyFailureNoFree:
                     NtClose(delKeys->KeyHandle);
                 }
 
-                if (!NT_SUCCESS(Status))
+                if (NT_SUCCESS(Status))
                 {
                     /* don't break, let's try to delete as many keys as possible */
                     Status = Status2;
