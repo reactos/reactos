@@ -180,7 +180,14 @@ CsrConnectToServer(IN PWSTR ObjectDirectory)
     PSID SystemSid = NULL;
     CSR_CONNECTION_INFO ConnectionInfo;
     ULONG ConnectionInfoLength = sizeof(CSR_CONNECTION_INFO);
-    DPRINT("CsrConnectToServer\n");
+
+    DPRINT("%s(%S)\n", __FUNCTION__, ObjectDirectory);
+
+    /* Binary compatibility with MS KERNEL32 */
+    if (NULL == ObjectDirectory)
+    {
+	    ObjectDirectory = L"\\Windows";
+    }
 
     /* Calculate the total port name size */
     PortNameLength = ((wcslen(ObjectDirectory) + 1) * sizeof(WCHAR)) +
