@@ -1852,7 +1852,7 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
    RTL_QUERY_REGISTRY_TABLE QueryTable[3];
    UNICODE_STRING ImagePath;
    UNICODE_STRING ServiceName;
-   UNICODE_STRING CapturedDriverServiceName;
+   UNICODE_STRING CapturedDriverServiceName = {0};
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status;
    ULONG Type;

@@ -130,11 +130,16 @@ ProbeAndCaptureUnicodeString(OUT PUNICODE_STRING Dest,
     /* Allocate space for the buffer */
     Buffer = ExAllocatePool(PagedPool, Dest->MaximumLength);
 
-    /* Copy it */
-    RtlCopyMemory(Buffer, Dest->Buffer, Dest->MaximumLength);
+    if (Buffer != NULL)
+    {
+        /* Copy it */
+        RtlCopyMemory(Buffer, Dest->Buffer, Dest->MaximumLength);
 
-    /* Set it as the buffer */
-    Dest->Buffer = Buffer;
+        /* Set it as the buffer */
+        Dest->Buffer = Buffer;
+    }
+    else
+        Status = STATUS_INSUFFICIENT_RESOURCES;
 
     /* Return */
     return Status;
