@@ -363,6 +363,7 @@ static NTSTATUS getInterfaceInfoSet( HANDLE tcpFile,
     if( infoSetInt ) {
         for( i = 0; i < numEntities; i++ ) {
             if( isInterface( &entIDSet[i] ) ) {
+                infoSetInt[curInterf].entity_id = entIDSet[i];
                 status = tdiGetMibForIfEntity
                     ( tcpFile,
                       &entIDSet[i],
@@ -769,7 +770,7 @@ DWORD getInterfaceEntryByName(const char *name, PMIB_IFROW entry)
                     sizeof(info.if_info) );
         }
         
-        DPRINT1("entry->bDescr = %s\n", entry->bDescr);
+        DPRINT("entry->bDescr = %s\n", entry->bDescr);
 
         closeTcpFile( tcpFile );
     }
