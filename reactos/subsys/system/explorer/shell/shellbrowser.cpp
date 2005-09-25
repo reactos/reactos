@@ -33,7 +33,12 @@
 
 ShellBrowser::ShellBrowser(HWND hwnd, HWND left_hwnd, WindowHandle& right_hwnd, ShellPathInfo& create_info,
 							HIMAGELIST himl, BrowserCallback* cb, CtxMenuInterfaces& cm_ifs)
- :	_hwnd(hwnd),
+#ifndef __MINGW32__	// IShellFolderViewCB missing in MinGW (as of 25.09.2005)
+ :	super(IID_IShellFolderViewCB),
+#else
+ :	
+#endif
+	_hwnd(hwnd),
 	_left_hwnd(left_hwnd),
 	_right_hwnd(right_hwnd),
 	_create_info(create_info),
@@ -357,7 +362,18 @@ void ShellBrowser::UpdateFolderView(IShellFolder* folder)
 		fs.fFlags = FWF_NOCLIENTEDGE|FWF_BESTFITWINDOW;
 	}
 
+#ifndef __MINGW32__	// IShellFolderViewCB missing in MinGW (as of 25.09.2005)
+	SFV_CREATE sfv_create;
+
+	sfv_create.cbSize = sizeof(SFV_CREATE);
+	sfv_create.pshf = folder;
+	sfv_create.psvOuter = NULL;
+	sfv_create.psfvcb = this;
+
+	HRESULT hr = SHCreateShellFolderView(&sfv_create, &_pShellView);
+#else
 	HRESULT hr = folder->CreateViewObject(_hwnd, IID_IShellView, (void**)&_pShellView);
+#endif
 
 	if (FAILED(hr)) {
 		_pShellView = NULL;
@@ -376,6 +392,23 @@ void ShellBrowser::UpdateFolderView(IShellFolder* folder)
 
 	_pShellView->UIActivate(SVUIA_ACTIVATE_NOFOCUS);
 }
+
+
+#ifndef __MINGW32__	// IShellFolderViewCB missing in MinGW (as of 25.09.2005)
+
+ /// shell view callback
+HRESULT STDMETHODCALLTYPE ShellBrowser::MessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	if (uMsg == SFVM_INITMENUPOPUP) {
+		//@todo never reached
+		InsertMenu((HMENU)lParam, 0, MF_BYPOSITION, 12345, TEXT("TEST ENTRY"));
+		return S_OK;
+	}
+
+	return E_NOTIMPL;
+}
+
+#endif
 
 
 HRESULT ShellBrowser::OnDefaultCommand(LPIDA pida)
