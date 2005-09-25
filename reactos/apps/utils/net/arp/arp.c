@@ -253,7 +253,7 @@ INT Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
     PMIB_IPNETROW pAddHost;
     PMIB_IPADDRTABLE pIpAddrTable;
     PMIB_IPNETTABLE pIpNetTable;
-    DWORD dwIpAddr;
+    DWORD dwIpAddr = 0;
     DWORD dwSize = 0;
     ULONG ulSize = 0;
     INT iRet, i, val;
@@ -395,7 +395,7 @@ INT Deletehost(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
     PMIB_IPADDRTABLE pIpAddrTable;
     PMIB_IPNETTABLE pIpNetTable;
     ULONG ulSize = 0;
-    DWORD dwIpAddr;
+    DWORD dwIpAddr = 0;
     DWORD dwSize = 0;
     INT iRet;
     BOOL bFlushTable = FALSE;
