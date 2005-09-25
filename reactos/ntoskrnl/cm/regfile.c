@@ -3456,14 +3456,20 @@ CmiDestroyCell (PREGISTRY_HIVE RegistryHive,
   else
     {
       PCELL_HEADER pFree = Cell;
+      PHASH_TABLE_CELL pHash = Cell;
+      LONG CellSize;
 
-      if (pFree->CellSize < 0)
-        pFree->CellSize = -pFree->CellSize;
+      if (pHash->Id == REG_HASH_TABLE_CELL_ID)
+        CellSize = sizeof(HASH_TABLE_CELL) + pHash->HashTableSize * sizeof(HASH_RECORD);
+      else
+        CellSize = abs(pFree->CellSize);
 
-      /* Clear block (except the block size) */
-      RtlZeroMemory(((char*)pFree) + sizeof(ULONG),
-		    pFree->CellSize - sizeof(ULONG));
-
+      /* Clear block */
+      RtlZeroMemory(pFree, CellSize);
+      
+      /* restore CellSize */
+      pFree->CellSize = CellSize;
+      
       /* Add block to the list of free blocks */
       CmiAddFree(RegistryHive, Cell, CellOffset, TRUE);
 
