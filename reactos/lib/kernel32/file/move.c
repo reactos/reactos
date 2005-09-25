@@ -386,7 +386,7 @@ MoveFileWithProgressW (
 	{
 		Result = TRUE;
 	}
-	else if (STATUS_NOT_IMPLEMENTED == errCode)
+	else 
 	{
  	        if (folder==FALSE)
 		{
@@ -697,7 +697,7 @@ FreeMemAndExit:
 	/* FIXME file rename not yet implemented in all FSDs so it will always
 	 * fail, even when the move is to the same device
 	 */
-	else if (STATUS_NOT_IMPLEMENTED == errCode)
+	//else if (STATUS_NOT_IMPLEMENTED == errCode)
 	{
 
 		UNICODE_STRING SrcPathU;
@@ -742,11 +742,7 @@ FreeMemAndExit:
 		}
 	}
 #endif
-	else
-	{
-		SetLastErrorByStatus (errCode);
-		Result = TRUE;
-	}
+	
 	return Result;
 }
 
