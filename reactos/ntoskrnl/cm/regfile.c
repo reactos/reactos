@@ -3033,6 +3033,7 @@ CmiAllocateHashTableCell (IN PREGISTRY_HIVE RegistryHive,
   else
     {
       ASSERT(SubKeyCount <= 0xffff); /* should really be USHORT_MAX or similar */
+      NewHashBlock->CellSize = -NewHashSize;
       NewHashBlock->Id = REG_HASH_TABLE_CELL_ID;
       NewHashBlock->HashTableSize = (USHORT)SubKeyCount;
       *HashBlock = NewHashBlock;
@@ -3456,20 +3457,14 @@ CmiDestroyCell (PREGISTRY_HIVE RegistryHive,
   else
     {
       PCELL_HEADER pFree = Cell;
-      PHASH_TABLE_CELL pHash = Cell;
-      LONG CellSize;
 
-      if (pHash->Id == REG_HASH_TABLE_CELL_ID)
-        CellSize = sizeof(HASH_TABLE_CELL) + pHash->HashTableSize * sizeof(HASH_RECORD);
-      else
-        CellSize = abs(pFree->CellSize);
+      if (pFree->CellSize < 0)
+        pFree->CellSize = -pFree->CellSize;
 
-      /* Clear block */
-      RtlZeroMemory(pFree, CellSize);
-      
-      /* restore CellSize */
-      pFree->CellSize = CellSize;
-      
+      /* Clear block (except the block size) */
+      RtlZeroMemory(((char*)pFree) + sizeof(ULONG),
+		    pFree->CellSize - sizeof(ULONG));
+
       /* Add block to the list of free blocks */
       CmiAddFree(RegistryHive, Cell, CellOffset, TRUE);
 
