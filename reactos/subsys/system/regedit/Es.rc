@@ -2,6 +2,7 @@
  * Regedit resources
  *
  * Copyright 2003 José Manuel Ferrer Ortiz
+ * Copyright 2005 Patricio Martínez Ros
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -88,7 +89,7 @@ BEGIN
     END
     POPUP "&Ayuda"
     BEGIN
-        MENUITEM "&Help Topics",                ID_HELP_HELPTOPICS
+        MENUITEM "Temas de Ayuda",                ID_HELP_HELPTOPICS
         MENUITEM SEPARATOR
         MENUITEM "&Acerca de Editor de registro", ID_HELP_ABOUT
     END
