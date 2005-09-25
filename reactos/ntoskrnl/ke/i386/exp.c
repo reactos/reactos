@@ -988,7 +988,7 @@ KeRosDumpStackFrames ( PULONG Frame, ULONG FrameCount )
 		if ( !Frame )
 		{
 #if defined __GNUC__
-			__asm__("mov %%ebp, %%ebx" : "=b" (Frame) : );
+			__asm__("mov %%ebp, %0" : "=r" (Frame) : );
 #elif defined(_MSC_VER)
 			__asm mov [Frame], ebp
 #endif
@@ -1042,7 +1042,7 @@ KeRosGetStackFrames ( PULONG Frames, ULONG FrameCount )
 	_SEH_TRY
 	{
 #if defined __GNUC__
-		__asm__("mov %%ebp, %%ebx" : "=b" (Frame) : );
+		__asm__("mov %%ebp, %0" : "=r" (Frame) : );
 #elif defined(_MSC_VER)
 		__asm mov [Frame], ebp
 #endif
