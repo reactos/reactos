@@ -129,6 +129,8 @@ struct DriverInfoElement /* Element of DeviceInfoSet.DriverListHead and DeviceIn
 
     DWORD DriverRank;
     SP_DRVINFO_DATA_V2_W Info;
+    LPWSTR InfPath;
+    LPWSTR InfSection;
 };
 
 struct DeviceInfoElement /* Element of DeviceInfoSet.ListHead */
@@ -3271,6 +3273,43 @@ AddDriverToList(
     }
 
     SetLastError(ERROR_INSUFFICIENT_BUFFER);
+    driverInfo->InfSection = NULL;
+    while (!Result && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+    {
+        HeapFree(GetProcessHeap(), 0, driverInfo->InfSection);
+        driverInfo->InfSection = HeapAlloc(GetProcessHeap(), 0, RequiredSize * sizeof(WCHAR));
+        if (!driverInfo->InfSection)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            HeapFree(GetProcessHeap(), 0, driverInfo);
+            return FALSE;
+        }
+        Result = SetupGetStringFieldW(
+            &ContextDevice,
+            1,
+            driverInfo->InfSection, RequiredSize,
+            &RequiredSize);
+    }
+    if (!Result)
+    {
+        HeapFree(GetProcessHeap(), 0, driverInfo->InfSection);
+        HeapFree(GetProcessHeap(), 0, driverInfo);
+        return FALSE;
+    }
+
+    driverInfo->InfPath = HeapAlloc(GetProcessHeap(), 0, (wcslen(InfFile) + 1) * sizeof(WCHAR));
+    if (!driverInfo->InfPath)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        HeapFree(GetProcessHeap(), 0, driverInfo->InfSection);
+        HeapFree(GetProcessHeap(), 0, driverInfo);
+        return FALSE;
+    }
+    RtlCopyMemory(driverInfo->InfPath, InfFile, (wcslen(InfFile) + 1) * sizeof(WCHAR));
+
+    Result = FALSE;
+    RequiredSize = 128; /* Initial buffer size */
+    SetLastError(ERROR_INSUFFICIENT_BUFFER);
     while (!Result && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
     {
         HeapFree(GetProcessHeap(), 0, DeviceDescription);
@@ -3285,6 +3324,8 @@ AddDriverToList(
     }
     if (!Result)
     {
+        HeapFree(GetProcessHeap(), 0, driverInfo->InfPath);
+        HeapFree(GetProcessHeap(), 0, driverInfo->InfSection);
         HeapFree(GetProcessHeap(), 0, driverInfo);
         HeapFree(GetProcessHeap(), 0, DeviceDescription);
         return FALSE;
@@ -3299,6 +3340,8 @@ AddDriverToList(
         InfInstallSection = HeapAlloc(GetProcessHeap(), 0, RequiredSize * sizeof(WCHAR));
         if (!InfInstallSection)
         {
+            HeapFree(GetProcessHeap(), 0, driverInfo->InfPath);
+            HeapFree(GetProcessHeap(), 0, driverInfo->InfSection);
             HeapFree(GetProcessHeap(), 0, driverInfo);
             HeapFree(GetProcessHeap(), 0, DeviceDescription);
             return FALSE;
@@ -3311,6 +3354,8 @@ AddDriverToList(
     }
     if (!Result)
     {
+        HeapFree(GetProcessHeap(), 0, driverInfo->InfPath);
+        HeapFree(GetProcessHeap(), 0, driverInfo->InfSection);
         HeapFree(GetProcessHeap(), 0, driverInfo);
         HeapFree(GetProcessHeap(), 0, DeviceDescription);
         HeapFree(GetProcessHeap(), 0, InfInstallSection);
@@ -4232,12 +4277,62 @@ SetupDiInstallDriverFiles(
     IN HDEVINFO DeviceInfoSet,
     IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL)
 {
+    BOOL ret = FALSE;
+
     TRACE("%p %p\n", DeviceInfoSet, DeviceInfoData);
 
-    FIXME("SetupDiInstallDriverFiles not implemented. Doing nothing\n");
-    //SetLastError(ERROR_GEN_FAILURE);
-    //return FALSE;
-    return TRUE;
+    if (!DeviceInfoSet)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if (DeviceInfoData && DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else if (DeviceInfoData && ((struct DeviceInfoElement *)DeviceInfoData->Reserved)->SelectedDriver == NULL)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (!DeviceInfoData && ((struct DeviceInfoSet *)DeviceInfoSet)->SelectedDriver == NULL)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else
+    {
+        struct DriverInfoElement *DriverInfo;
+        HWND hWnd;
+        HINF hInf;
+
+        if (DeviceInfoData)
+        {
+            DriverInfo = ((struct DeviceInfoElement *)DeviceInfoData->Reserved)->SelectedDriver;
+            hWnd = ((struct DeviceInfoElement *)DeviceInfoData->Reserved)->hwndParent;
+        }
+        else
+        {
+            DriverInfo = ((struct DeviceInfoSet *)DeviceInfoSet)->SelectedDriver;
+            hWnd = ((struct DeviceInfoSet *)DeviceInfoSet)->hwndParent;
+        }
+
+        hInf = SetupOpenInfFileW(DriverInfo->InfPath, NULL, INF_STYLE_WIN4, NULL);
+        if (hInf != INVALID_HANDLE_VALUE)
+        {
+            WCHAR SectionName[MAX_PATH];
+            DWORD SectionNameLength = 0;
+
+            ret = SetupDiGetActualSectionToInstallW(hInf, DriverInfo->InfSection,
+                SectionName, MAX_PATH, &SectionNameLength, NULL);
+            if (ret)
+            {
+                PVOID callback_context = SetupInitDefaultQueueCallback(hWnd);
+                ret = SetupInstallFromInfSectionW(hWnd, hInf, SectionName,
+                    SPINST_FILES, NULL, NULL, SP_COPY_NEWER,
+                    SetupDefaultQueueCallbackW, callback_context,
+                    NULL, NULL);
+                SetupTermDefaultQueueCallback(callback_context);
+            }
+            SetupCloseInfFile(hInf);
+        }
+    }
+
+    TRACE("Returning %d\n", ret);
+    return ret;
 }
 
 /***********************************************************************
