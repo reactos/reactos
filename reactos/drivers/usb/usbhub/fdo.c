@@ -252,7 +252,7 @@ UsbhubPnpFdo(
 			{
 				case BusRelations:
 				{
-					PDEVICE_RELATIONS DeviceRelations;
+					PDEVICE_RELATIONS DeviceRelations = NULL;
 					DPRINT("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n");
 					Status = UsbhubFdoQueryBusRelations(DeviceObject, &DeviceRelations);
 					Information = (ULONG_PTR)DeviceRelations;
