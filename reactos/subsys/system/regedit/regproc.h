@@ -39,11 +39,11 @@ void doRegisterDLL(LPSTR lpsLine);
 void doUnregisterDLL(LPSTR lpsLine);
 
 BOOL export_registry_key(CHAR *file_name, CHAR *reg_key_name);
-BOOL import_registry_file(LPSTR filename);
+BOOL import_registry_file(LPTSTR filename);
 void delete_registry_key(CHAR *reg_key_name);
 
-void setAppName(CHAR *name);
-CHAR *getAppName();
+void setAppName(const CHAR *name);
+const CHAR *getAppName(void);
 
 void processRegLines(FILE *in, CommandAPI command);
 
@@ -61,7 +61,7 @@ HKEY    getRegClass(LPSTR lpLine);
 DWORD   getDataType(LPSTR *lpValue, DWORD* parse_type);
 LPSTR   getArg(LPSTR arg);
 HRESULT openKey(LPSTR stdInput);
-void    closeKey();
+void    closeKey(void);
 
 /*
  * api setValue prototypes

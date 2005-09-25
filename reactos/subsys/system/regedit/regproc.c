@@ -46,18 +46,18 @@ static HKEY  currentKeyClass  = 0;
 static HKEY  currentKeyHandle = 0;
 static BOOL  bTheKeyIsOpen    = FALSE;
 
-static CHAR *app_name = "UNKNOWN";
+static const CHAR *app_name = "UNKNOWN";
 
-static CHAR *reg_class_names[] = {
+static const CHAR *reg_class_names[] = {
                                      "HKEY_LOCAL_MACHINE", "HKEY_USERS", "HKEY_CLASSES_ROOT",
-                                     "HKEY_CURRENT_CONFIG", "HKEY_CURRENT_USER"
+                                     "HKEY_CURRENT_CONFIG", "HKEY_CURRENT_USER", "HKEY_DYN_DATA"
                                  };
 
 #define REG_CLASS_NUMBER (sizeof(reg_class_names) / sizeof(reg_class_names[0]))
 
 static HKEY reg_class_keys[REG_CLASS_NUMBER] = {
             HKEY_LOCAL_MACHINE, HKEY_USERS, HKEY_CLASSES_ROOT,
-            HKEY_CURRENT_CONFIG, HKEY_CURRENT_USER
+            HKEY_CURRENT_CONFIG, HKEY_CURRENT_USER, HKEY_DYN_DATA
         };
 
 /* return values */
@@ -234,7 +234,7 @@ char* convertHexToDWORDStr(BYTE *buf, ULONG bufLen)
 DWORD convertHexCSVToHex(char *str, BYTE *buf, ULONG bufLen)
 {
     char *s = str;  /* Pointer to current */
-    char *b = (char*)buf;  /* Pointer to result  */
+    char *b = (char*) buf;  /* Pointer to result  */
 
     ULONG strLen    = strlen(str);
     ULONG strPos    = 0;
@@ -346,7 +346,7 @@ LPSTR getArg( LPSTR arg)
 /******************************************************************************
  * Replaces escape sequences with the characters.
  */
-void REGPROC_unescape_string(LPSTR str)
+static void REGPROC_unescape_string(LPSTR str)
 {
     int str_idx = 0;            /* current character under analysis */
     int val_idx = 0;            /* the last character of the unescaped string */
@@ -427,7 +427,7 @@ HRESULT setValue(LPSTR val_name, LPSTR val_data)
         }
     }
 
-    hRes = RegSetValueExA(
+    hRes = RegSetValueEx(
                currentKeyHandle,
                val_name,
                0,                  /* Reserved */
@@ -522,14 +522,14 @@ HKEY getRegClass(LPSTR lpClass)
 {
     LPSTR classNameEnd;
     LPSTR classNameBeg;
-    UINT i;
+    unsigned int i;
 
     char  lpClassCopy[KEY_MAX_LEN];
 
     if (lpClass == NULL)
         return (HKEY)ERROR_INVALID_PARAMETER;
 
-    strncpy(lpClassCopy, lpClass, KEY_MAX_LEN);
+    lstrcpynA(lpClassCopy, lpClass, KEY_MAX_LEN);
 
     classNameEnd  = strchr(lpClassCopy, '\\');    /* The class name ends by '\' */
     if (!classNameEnd)                            /* or the whole string */
@@ -558,7 +558,7 @@ HKEY getRegClass(LPSTR lpClass)
 /******************************************************************************
  * Close the currently opened key.
  */
-void closeKey()
+void closeKey(void)
 {
     RegCloseKey(currentKeyHandle);
 
@@ -579,7 +579,7 @@ void closeKey()
 void doSetValue(LPSTR stdInput)
 {
     /*
-     * We encoutered the end of the file, make sure we
+     * We encountered the end of the file, make sure we
      * close the opened key and exit
      */
     if (stdInput == NULL) {
@@ -610,14 +610,14 @@ void doSetValue(LPSTR stdInput)
 }
 
 /******************************************************************************
- * This funtion is the main entry point to the queryValue type of action.  It
+ * This function is the main entry point to the queryValue type of action.  It
  * receives the currently read line and dispatch the work depending on the
  * context.
  */
 void doQueryValue(LPSTR stdInput)
 {
     /*
-     * We encoutered the end of the file, make sure we
+     * We encountered the end of the file, make sure we
      * close the opened key and exit
      */
     if (stdInput == NULL) {
@@ -648,7 +648,7 @@ void doQueryValue(LPSTR stdInput)
 }
 
 /******************************************************************************
- * This funtion is the main entry point to the deletetValue type of action.  It
+ * This function is the main entry point to the deleteValue type of action.  It
  * receives the currently read line and dispatch the work depending on the
  * context.
  */
@@ -658,7 +658,7 @@ void doDeleteValue(LPSTR line)
 }
 
 /******************************************************************************
- * This funtion is the main entry point to the deleteKey type of action.  It
+ * This function is the main entry point to the deleteKey type of action.  It
  * receives the currently read line and dispatch the work depending on the
  * context.
  */
@@ -668,7 +668,7 @@ void doDeleteKey(LPSTR line)
 }
 
 /******************************************************************************
- * This funtion is the main entry point to the createKey type of action.  It
+ * This function is the main entry point to the createKey type of action.  It
  * receives the currently read line and dispatch the work depending on the
  * context.
  */
@@ -793,8 +793,7 @@ void processQueryValue(LPSTR cmdline)
 
         if (hRes == ERROR_SUCCESS) {
             lpsRes = HeapAlloc( GetProcessHeap(), 0, lLen);
-            strncpy(lpsRes, lpsData, lLen);
-            lpsRes[lLen-1]='\0';
+            lstrcpynA(lpsRes, lpsData, lLen);
         }
     } else {
         DWORD  dwLen  = KEY_MAX_LEN;
@@ -824,8 +823,7 @@ void processQueryValue(LPSTR cmdline)
             case REG_SZ:
             case REG_EXPAND_SZ: {
                     lpsRes = HeapAlloc( GetProcessHeap(), 0, dwLen);
-                    strncpy(lpsRes, lpbData, dwLen);
-                    lpsRes[dwLen-1]='\0';
+                    lstrcpynA(lpsRes, lpbData, dwLen);
                     break;
                 }
             case REG_DWORD: {
@@ -976,7 +974,7 @@ void processRegLines(FILE *in, CommandAPI command)
 }
 
 /******************************************************************************
- * This funtion is the main entry point to the registerDLL action.  It
+ * This function is the main entry point to the registerDLL action.  It
  * receives the currently read line, then loads and registers the requested DLLs
  */
 void doRegisterDLL(LPSTR stdInput)
@@ -989,7 +987,7 @@ void doRegisterDLL(LPSTR stdInput)
         return;
 
     /* Load and register the library, then free it */
-    theLib = LoadLibraryA(stdInput);
+    theLib = LoadLibrary(stdInput);
     if (theLib) {
         FARPROC lpfnDLLRegProc = GetProcAddress(theLib, "DllRegisterServer");
         if (lpfnDLLRegProc)
@@ -1009,7 +1007,7 @@ void doRegisterDLL(LPSTR stdInput)
 }
 
 /******************************************************************************
- * This funtion is the main entry point to the unregisterDLL action.  It
+ * This function is the main entry point to the unregisterDLL action.  It
  * receives the currently read line, then loads and unregisters the requested DLLs
  */
 void doUnregisterDLL(LPSTR stdInput)
@@ -1022,7 +1020,7 @@ void doUnregisterDLL(LPSTR stdInput)
         return;
 
     /* Load and unregister the library, then free it */
-    theLib = LoadLibraryA(stdInput);
+    theLib = LoadLibrary(stdInput);
     if (theLib) {
         FARPROC lpfnDLLRegProc = GetProcAddress(theLib, "DllUnregisterServer");
         if (lpfnDLLRegProc)
@@ -1047,7 +1045,7 @@ void doUnregisterDLL(LPSTR stdInput)
  * Print the message for GetLastError
  */
 
-void REGPROC_print_error()
+static void REGPROC_print_error(void)
 {
     LPVOID lpMsgBuf;
     DWORD error_code;
@@ -1076,7 +1074,7 @@ void REGPROC_print_error()
  * required_len - length of the string to place to the buffer in characters.
  *   The length does not include the terminating null character.
  */
-void REGPROC_resize_char_buffer(CHAR **buffer, DWORD *len, DWORD required_len)
+static void REGPROC_resize_char_buffer(CHAR **buffer, DWORD *len, DWORD required_len)
 {
     required_len++;
     if (required_len > *len) {
@@ -1092,7 +1090,7 @@ void REGPROC_resize_char_buffer(CHAR **buffer, DWORD *len, DWORD required_len)
 /******************************************************************************
  * Prints string str to file
  */
-void REGPROC_export_string(FILE *file, CHAR *str)
+static void REGPROC_export_string(FILE *file, CHAR *str)
 {
     size_t len = strlen(str);
     size_t i;
@@ -1133,7 +1131,7 @@ void REGPROC_export_string(FILE *file, CHAR *str)
  *      Is resized if necessary.
  * val_size - size of the buffer for storing values in bytes.
  */
-void export_hkey(FILE *file, HKEY key,
+static void export_hkey(FILE *file, HKEY key,
                  CHAR **reg_key_name_buf, DWORD *reg_key_name_len,
                  CHAR **val_name_buf, DWORD *val_name_len,
                  BYTE **val_buf, DWORD *val_size)
@@ -1176,8 +1174,8 @@ void export_hkey(FILE *file, HKEY key,
         DWORD value_type;
         DWORD val_name_len1 = *val_name_len;
         DWORD val_size1 = *val_size;
-        ret = RegEnumValueA(key, i, *val_name_buf, &val_name_len1, NULL,
-                            &value_type, *val_buf, &val_size1);
+        ret = RegEnumValue(key, i, *val_name_buf, &val_name_len1, NULL,
+                           &value_type, *val_buf, &val_size1);
         if (ret != ERROR_SUCCESS) {
             more_data = FALSE;
             if (ret != ERROR_NO_MORE_ITEMS) {
@@ -1198,7 +1196,7 @@ void export_hkey(FILE *file, HKEY key,
             case REG_SZ:
             case REG_EXPAND_SZ:
                 fputs("\"", file);
-                REGPROC_export_string(file, (CHAR*)*val_buf);
+                REGPROC_export_string(file, (char*) *val_buf);
                 fputs("\"\n", file);
                 break;
 
@@ -1217,7 +1215,7 @@ void export_hkey(FILE *file, HKEY key,
                 /* falls through */
             case REG_BINARY: {
                     DWORD i1;
-                    CHAR *hex_prefix;
+                    const CHAR *hex_prefix;
                     CHAR buf[20];
                     int cur_pos;
 
@@ -1260,8 +1258,8 @@ void export_hkey(FILE *file, HKEY key,
     while(more_data) {
         DWORD buf_len = *reg_key_name_len - curr_len;
 
-        ret = RegEnumKeyExA(key, i, *reg_key_name_buf + curr_len + 1, &buf_len,
-                            NULL, NULL, NULL, NULL);
+        ret = RegEnumKeyEx(key, i, *reg_key_name_buf + curr_len + 1, &buf_len,
+                           NULL, NULL, NULL, NULL);
         if (ret != ERROR_SUCCESS && ret != ERROR_MORE_DATA) {
             more_data = FALSE;
             if (ret != ERROR_NO_MORE_ITEMS) {
@@ -1271,8 +1269,8 @@ void export_hkey(FILE *file, HKEY key,
             HKEY subkey;
 
             i++;
-            if (RegOpenKeyA(key, *reg_key_name_buf + curr_len + 1,
-                            &subkey) == ERROR_SUCCESS) {
+            if (RegOpenKey(key, *reg_key_name_buf + curr_len + 1,
+                           &subkey) == ERROR_SUCCESS) {
                 export_hkey(file, subkey, reg_key_name_buf, reg_key_name_len,
                             val_name_buf, val_name_len, val_buf, val_size);
                 RegCloseKey(subkey);
@@ -1287,7 +1285,7 @@ void export_hkey(FILE *file, HKEY key,
 /******************************************************************************
  * Open file for export.
  */
-FILE *REGPROC_open_export_file(CHAR *file_name)
+static FILE *REGPROC_open_export_file(CHAR *file_name)
 {
     FILE *file = fopen(file_name, "w");
     if (!file) {
@@ -1350,7 +1348,7 @@ BOOL export_registry_key(CHAR *file_name, CHAR *reg_key_name)
                         &reg_key_name_buf, &reg_key_name_len,
                         &val_name_buf, &val_name_len,
                         &val_buf, &val_size);
-        } else if (RegOpenKeyA(reg_key_class, branch_name, &key) == ERROR_SUCCESS) {
+        } else if (RegOpenKey(reg_key_class, branch_name, &key) == ERROR_SUCCESS) {
             file = REGPROC_open_export_file(file_name);
             export_hkey(file, key,
                         &reg_key_name_buf, &reg_key_name_len,
@@ -1372,7 +1370,8 @@ BOOL export_registry_key(CHAR *file_name, CHAR *reg_key_name)
             /* do not export HKEY_CLASSES_ROOT */
             if (reg_class_keys[i] != HKEY_CLASSES_ROOT &&
                     reg_class_keys[i] != HKEY_CURRENT_USER &&
-                    reg_class_keys[i] != HKEY_CURRENT_CONFIG) {
+                    reg_class_keys[i] != HKEY_CURRENT_CONFIG &&
+                    reg_class_keys[i] != HKEY_DYN_DATA) {
                 strcpy(reg_key_name_buf, reg_class_names[i]);
                 export_hkey(file, reg_class_keys[i],
                             &reg_key_name_buf, &reg_key_name_len,
@@ -1393,7 +1392,7 @@ BOOL export_registry_key(CHAR *file_name, CHAR *reg_key_name)
 /******************************************************************************
  * Reads contents of the specified file into the registry.
  */
-BOOL import_registry_file(LPSTR filename)
+BOOL import_registry_file(LPTSTR filename)
 {
     FILE* reg_file = fopen(filename, "r");
 
@@ -1407,7 +1406,7 @@ BOOL import_registry_file(LPSTR filename)
 /******************************************************************************
  * Recursive function which removes the registry key with all subkeys.
  */
-void delete_branch(HKEY key,
+static void delete_branch(HKEY key,
                    CHAR **reg_key_name_buf, DWORD *reg_key_name_len)
 {
     HKEY branch_key;
@@ -1417,7 +1416,7 @@ void delete_branch(HKEY key,
     LONG ret;
     long int i;
 
-    if (RegOpenKeyA(key, *reg_key_name_buf, &branch_key) != ERROR_SUCCESS) {
+    if (RegOpenKey(key, *reg_key_name_buf, &branch_key) != ERROR_SUCCESS) {
         REGPROC_print_error();
     }
 
@@ -1436,8 +1435,8 @@ void delete_branch(HKEY key,
     for (i = subkeys - 1; i >= 0; i--) {
         DWORD buf_len = *reg_key_name_len - curr_len;
 
-        ret = RegEnumKeyExA(branch_key, i, *reg_key_name_buf + curr_len + 1,
-                            &buf_len, NULL, NULL, NULL, NULL);
+        ret = RegEnumKeyEx(branch_key, i, *reg_key_name_buf + curr_len + 1,
+                           &buf_len, NULL, NULL, NULL, NULL);
         if (ret != ERROR_SUCCESS &&
                 ret != ERROR_MORE_DATA &&
                 ret != ERROR_NO_MORE_ITEMS) {
@@ -1448,7 +1447,7 @@ void delete_branch(HKEY key,
     }
     (*reg_key_name_buf)[curr_len] = '\0';
     RegCloseKey(branch_key);
-    RegDeleteKeyA(key, *reg_key_name_buf);
+    RegDeleteKey(key, *reg_key_name_buf);
 }
 
 /******************************************************************************
@@ -1482,7 +1481,7 @@ void delete_registry_key(CHAR *reg_key_name)
                 getAppName(), reg_key_name);
         exit(1);
     }
-    if (RegOpenKeyA(reg_key_class, branch_name, &branch_key) == ERROR_SUCCESS) {
+    if (RegOpenKey(reg_key_class, branch_name, &branch_key) == ERROR_SUCCESS) {
         /* check whether the key exists */
         RegCloseKey(branch_key);
         delete_branch(reg_key_class, &branch_name, &branch_name_len);
@@ -1494,12 +1493,12 @@ void delete_registry_key(CHAR *reg_key_name)
  * Sets the application name. Then application name is used in the error
  * reporting.
  */
-void setAppName(CHAR *name)
+void setAppName(const CHAR *name)
 {
     app_name = name;
 }
 
-CHAR *getAppName()
+const CHAR *getAppName(void)
 {
     return app_name;
 }

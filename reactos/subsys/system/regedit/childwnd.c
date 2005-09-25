@@ -42,6 +42,7 @@ static LPCTSTR get_root_key_name(HKEY hRootKey)
     if (hRootKey == HKEY_LOCAL_MACHINE) return _T("HKEY_LOCAL_MACHINE");
     if (hRootKey == HKEY_USERS) return _T("HKEY_USERS");
     if (hRootKey == HKEY_CURRENT_CONFIG) return _T("HKEY_CURRENT_CONFIG");
+    if (hRootKey == HKEY_DYN_DATA) return _T("HKEY_DYN_DATA");
     return _T("UKNOWN HKEY, PLEASE REPORT");
 }
 
@@ -169,8 +170,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
  *  WM_DESTROY  - post a quit message and return
  *
  */
-LRESULT CALLBACK
-ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     static short last_split;
     BOOL Result;

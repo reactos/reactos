@@ -61,7 +61,7 @@ static void resize_frame_rect(HWND hWnd, PRECT prect)
     MoveWindow(g_pChildWnd->hWnd, prect->left, prect->top, prect->right, prect->bottom, TRUE);
 }
 
-void resize_frame_client(HWND hWnd)
+static void resize_frame_client(HWND hWnd)
 {
     RECT rect;
 
@@ -183,7 +183,7 @@ static BOOL CheckCommDlgError(HWND hWnd)
     return TRUE;
 }
 
-UINT_PTR CALLBACK ImportRegistryFile_OFNHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM lParam)
+static UINT_PTR CALLBACK ImportRegistryFile_OFNHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM lParam)
 {
     OPENFILENAME* pOpenFileName;
     OFNOTIFY* pOfNotify;
@@ -375,7 +375,7 @@ BOOL PrintRegistryHive(HWND hWnd, LPTSTR path)
     pd.nToPage     = 0xFFFF;
     pd.nMinPage    = 1;
     pd.nMaxPage    = 0xFFFF;
-    if (PrintDlg(&pd) == TRUE) {
+    if (PrintDlg(&pd)) {
         /* GDI calls to render output. */
         DeleteDC(pd.hDC); /* Delete DC when done.*/
     }
@@ -424,7 +424,7 @@ BOOL PrintRegistryHive(HWND hWnd, LPTSTR path)
     return TRUE;
 }
 
-BOOL CopyKeyName(HWND hWnd, LPTSTR keyName)
+static BOOL CopyKeyName(HWND hWnd, LPCTSTR keyName)
 {
     BOOL result;
 
@@ -717,8 +717,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
  *
  */
 
-LRESULT CALLBACK
-FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message) {
     case WM_CREATE:
@@ -729,6 +728,10 @@ FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_COMMAND:
         if (!_CmdWndProc(hWnd, message, wParam, lParam))
             return DefWindowProc(hWnd, message, wParam, lParam);
+        break;
+    case WM_ACTIVATE:
+        if (LOWORD(hWnd)) 
+            SetFocus(g_pChildWnd->hWnd);
         break;
     case WM_SIZE:
         resize_frame_client(hWnd);
@@ -743,10 +746,6 @@ FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     case WM_MENUSELECT:
         OnMenuSelect(hWnd, LOWORD(wParam), HIWORD(wParam), (HMENU)lParam);
-        break;
-    case WM_ACTIVATE:
-        if (LOWORD(hWnd))
-          SetFocus(g_pChildWnd->hWnd);
         break;
     case WM_DESTROY:
         WinHelp(hWnd, _T("regedit"), HELP_QUIT, 0);
