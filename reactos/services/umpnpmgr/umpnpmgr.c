@@ -794,6 +794,56 @@ PNP_SetDeviceProblem(handle_t BindingHandle,
 }
 
 
+CONFIGRET
+PNP_IsDockStationPresent(handle_t BindingHandle,
+                         unsigned long *Present)
+{
+    HKEY hKey;
+    DWORD dwType;
+    DWORD dwValue;
+    DWORD dwSize;
+    CONFIGRET ret = CR_SUCCESS;
+
+    DPRINT1("PNP_IsDockStationPresent() called\n");
+
+    *Present = FALSE;
+
+    if (RegOpenKeyExW(HKEY_CURRENT_CONFIG,
+                      L"CurrentDockInfo",
+                      0,
+                      KEY_READ,
+                      &hKey) != ERROR_SUCCESS)
+        return CR_REGISTRY_ERROR;
+
+    dwSize = sizeof(DWORD);
+    if (RegQueryValueExW(hKey,
+                         L"DockingState",
+                         NULL,
+                         &dwType,
+                         (LPBYTE)&dwValue,
+                         &dwSize) != ERROR_SUCCESS)
+        ret = CR_REGISTRY_ERROR;
+
+    RegCloseKey(hKey);
+
+    if (ret == CR_SUCCESS)
+    {
+        if (dwType != REG_DWORD || dwSize != sizeof(DWORD))
+        {
+            ret = CR_REGISTRY_ERROR;
+        }
+        else if (dwValue != 0)
+        {
+            *Present = TRUE;
+        }
+    }
+
+    DPRINT1("PNP_IsDockStationPresent() done (returns %lx)\n", ret);
+
+    return ret;
+}
+
+
 static DWORD WINAPI
 PnpEventThread(LPVOID lpParameter)
 {

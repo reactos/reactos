@@ -5,6 +5,7 @@
 #define WORD unsigned short
 #define DWORD unsigned long
 #define CONFIGRET unsigned long
+#define PBOOL unsigned long *
 
 [
   uuid (809F4e40-A03D-11CE-8F69-08003E30051B),
@@ -14,21 +15,32 @@
 ]
 interface pnp
 {
+  /* Function 0 */
+//  CONFIGRET PNP_Unknown0(handle_t BindingHandle);
+
+  /* Function 1 */
+//  CONFIGRET PNP_Unknown1(handle_t BindingHandle);
+
+  /* Function 2 */
   CONFIGRET PNP_GetVersion(handle_t BindingHandle,
                            [out] WORD *Version);
 
+  /* Function 3 */
   CONFIGRET PNP_GetGlobalState(handle_t BindingHandle,
                                [out] unsigned long *State,
                                [in] unsigned long Flags);
 
+  /* Function 6 */
   CONFIGRET PNP_ValidateDeviceInstance(handle_t BindingHandle,
                                        [in, string] wchar_t *DeviceInstance,
                                        [in] DWORD Flags);
 
+  /* Function 7 */
   CONFIGRET PNP_GetRootDeviceInstance(handle_t BindingHandle,
                                       [out, string, size_is(Length)] wchar_t *DeviceInstance,
                                       [in] DWORD Length);
 
+  /* Function 8 */
   cpp_quote("#define PNP_DEVICE_PARENT  1")
   cpp_quote("#define PNP_DEVICE_CHILD   2")
   cpp_quote("#define PNP_DEVICE_SIBLING 3")
@@ -39,6 +51,7 @@ interface pnp
                                          [in] DWORD Length,
                                          [in] DWORD Flags);
 
+  /* Function 9 */
   cpp_quote("#define PNP_BRANCH_ENUM  1")
   cpp_quote("#define PNP_BRANCH_CLASS 2")
   CONFIGRET PNP_EnumerateSubKeys(handle_t BindingHandle,
@@ -49,22 +62,26 @@ interface pnp
                                  [out] unsigned long *RequiredLength,
                                  [in] DWORD Flags);
 
+  /* Function 10 */
 //  CONFIGRET PNP_GetDeviceList(handle_t BindingHandle,
 //                              [in, unique, string] wchar_t *Filter,
 //                              [out, string, size_is(*Length)] unsigned char *Buffer
 //                              [in, out] unsigned long *Length,
 //                              [in] DWORD Flags);
 
+  /* Function 11 */
   CONFIGRET PNP_GetDeviceListSize(handle_t BindingHandle,
                                   [in, unique, string] wchar_t *Filter,
                                   [out] unsigned long *Length,
                                   [in] DWORD Flags);
 
+  /* Function 12 */
   CONFIGRET PNP_GetDepth(handle_t BindingHandle,
                          [in, string] wchar_t *DeviceInstance,
                          [out] unsigned long *Depth,
                          [in] DWORD Flags);
 
+  /* Function 13 */
   CONFIGRET PNP_GetDeviceRegProp(handle_t BindingHandle,
                                  [in, string] wchar_t *DeviceInstance,
                                  [in] unsigned long Property,
@@ -74,6 +91,7 @@ interface pnp
                                  [in, out] unsigned long *Length,
                                  [in] DWORD Flags);
 
+  /* Function 14 */
   CONFIGRET PNP_SetDeviceRegProp(handle_t BindingHandle,
                                  [in, string] wchar_t *DeviceId,
                                  [in] unsigned long Property,
@@ -82,24 +100,38 @@ interface pnp
                                  [in] unsigned long Length,
                                  [in] unsigned long Flags);
 
+  /* Function 16 */
+  CONFIGRET PNP_CreateKey(handle_t BindingHandle,
+                          [in, string] wchar_t *SubKey,
+                          [in] unsigned long DesiredAccess,
+                          [in] unsigned long Flags);
+
+  /* Function 19 */
   CONFIGRET PNP_GetClassName(handle_t BindingHandle,
                              [in, string] wchar_t *ClassGuid,
                              [out, string, size_is(*Length)] wchar_t *Buffer,
                              [in, out] unsigned long *Length,
                              [in] unsigned long Flags);
 
+  /* Function 20 */
   CONFIGRET PNP_DeleteClassKey(handle_t BindingHandle,
                                [in, string] wchar_t *ClassGuid,
                                [in] unsigned long Flags);
 
+  /* Function 30 */
   CONFIGRET PNP_GetDeviceStatus(handle_t BindingHandle,
                                 [in, string] wchar_t *DeviceInstance,
                                 [out] unsigned long *Status,
                                 [out] unsigned long *Problem,
                                 [in] DWORD Flags);
 
+  /* Function 31 */
   CONFIGRET PNP_SetDeviceProblem(handle_t BindingHandle,
                                  [in, string] wchar_t *DeviceInstance,
                                  [in] unsigned long Problem,
                                  [in] DWORD Flags);
+
+  /* Function 38 */
+  CONFIGRET PNP_IsDockStationPresent(handle_t BindingHandle,
+                                     [out]PBOOL Present);
 }

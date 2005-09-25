@@ -1521,6 +1521,49 @@ WORD WINAPI CM_Get_Version_Ex(HMACHINE hMachine)
 
 
 /***********************************************************************
+ * CM_Is_Dock_Station_Present [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Is_Dock_Station_Present(
+    PBOOL pbPresent)
+{
+    TRACE("%p\n", pbPresent);
+    return CM_Is_Dock_Station_Present_Ex(pbPresent, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Is_Dock_Station_Present_Ex [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Is_Dock_Station_Present_Ex(
+    PBOOL pbPresent, HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+
+    FIXME("%p %lx\n", pbPresent, hMachine);
+
+    if (pbPresent == NULL)
+        return CR_INVALID_POINTER;
+
+    *pbPresent = FALSE;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, NULL))
+            return CR_FAILURE;
+    }
+
+    return PNP_IsDockStationPresent(BindingHandle,
+                                    (unsigned long *)pbPresent);
+}
+
+
+/***********************************************************************
  * CM_Locate_DevNodeA [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Locate_DevNodeA(

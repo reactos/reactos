@@ -127,8 +127,8 @@
 @ stdcall CM_Get_Version_Ex(long)
 @ stub CM_Intersect_Range_List
 @ stub CM_Invert_Range_List
-@ stub CM_Is_Dock_Station_Present
-@ stub CM_Is_Dock_Station_Present_Ex
+@ stdcall CM_Is_Dock_Station_Present(ptr)
+@ stdcall CM_Is_Dock_Station_Present_Ex(ptr long)
 @ stdcall CM_Locate_DevNodeA(ptr str long)
 @ stdcall CM_Locate_DevNodeW(ptr wstr long)
 @ stdcall CM_Locate_DevNode_ExA(ptr str long long)
