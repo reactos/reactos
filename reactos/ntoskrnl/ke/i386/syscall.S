@@ -255,6 +255,22 @@ SharedCode:
     mov ebx, [ebp+KTRAP_FRAME_EBP]
     mov edi, [ebp+KTRAP_FRAME_EIP]
 
+#ifdef DBG
+    /*
+     * We want to know the address from where the syscall stub was called.
+     * If PrevMode is KernelMode, that address is stored in our own (kernel)
+     * stack, at location KTRAP_FRAME_ESP.
+     * If we're coming from UserMode, we load the usermode stack pointer
+     * and go back two frames (first frame is the syscall stub, second call
+     * is the caller of the stub).
+     */
+    mov edi, [ebp+KTRAP_FRAME_ESP]
+    test byte ptr [esi+KTHREAD_PREVIOUS_MODE], 0x01
+    jz PrevWasKernelMode
+    mov edi, [edi+4]
+PrevWasKernelMode:
+#endif
+
     /* Write the debug data */
     mov [ebp+KTRAP_FRAME_DEBUGPOINTER], edx
     mov dword ptr [ebp+KTRAP_FRAME_DEBUGARGMARK], 0xBADB0D00
@@ -333,6 +349,22 @@ NotWin32K:
     shr ecx, 2
     mov edi, esp
     rep movsd
+
+#ifdef DBG
+    /*
+     * The following lines are for the benefit of GDB. It will see the return
+     * address of the "call ebx" below, find the last label before it and
+     * thinks that that's the start of the function. It will then check to see
+     * if it starts with a standard function prolog (push ebp, mov ebp,esp).
+     * When that standard function prolog is not found, it will stop the
+     * stack backtrace. Since we do want to backtrace into usermode, let's
+     * make GDB happy and create a standard prolog.
+     */
+KiSystemService:
+    push ebp
+    mov ebp,esp
+    pop ebp
+#endif
 
     /* Do the System Call */
     call ebx
