@@ -1,4 +1,23 @@
-/* 
+/*
+ *  ReactOS Win32 Applications
+ *  Copyright (C) 2005 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+
+/*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS arp utility
  * FILE:        apps/utils/net/arp/arp.c
@@ -9,7 +28,6 @@
  *
  */
 
-#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -19,25 +37,100 @@
 #include <winsock2.h>
 #include <iphlpapi.h>
 
- 
+#define WIN32_LEAN_AND_MEAN
+#define UNICODE
+#define _UNICODE
+
 /*
  * Globals
- */ 
+ */
 const char SEPERATOR = '-';
- 
- 
- 
+int _CRT_glob = 0; // stop * from listing dir files in arp -d *
+
+
 /*
  * function declerations
- */ 
-INT DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr);
+ */
+DWORD DoFormatMessage(DWORD ErrorCode);
 INT PrintEntries(PMIB_IPNETROW pIpAddRow);
+INT DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr);
 INT Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr);
 INT Deletehost(PTCHAR pszInetAddr, PTCHAR pszIfAddr);
 VOID Usage(VOID);
- 
- 
- 
+
+
+/*
+ * convert error code into meaningful message
+ */
+DWORD DoFormatMessage(DWORD ErrorCode)
+{
+    LPVOID lpMsgBuf;
+    DWORD RetVal;
+    /* double brackets to silence the assignment warning message */
+    if ((RetVal = FormatMessage(
+            FORMAT_MESSAGE_ALLOCATE_BUFFER |
+            FORMAT_MESSAGE_FROM_SYSTEM |
+            FORMAT_MESSAGE_IGNORE_INSERTS,
+            NULL,
+            ErrorCode,
+            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), /* Default language */
+            (LPTSTR) &lpMsgBuf,
+            0,
+            NULL ))) {
+        _tprintf(_T("%s"), (LPTSTR)lpMsgBuf);
+
+        LocalFree(lpMsgBuf);
+        /* return number of TCHAR's stored in output buffer
+         * excluding '\0' - as FormatMessage does*/
+        return RetVal;
+    }
+    else
+        return 0;
+}
+
+
+
+/*
+ *
+ * Takes an ARP entry and prints the IP address,
+ * the MAC address and the entry type to screen
+ *
+ */
+INT PrintEntries(PMIB_IPNETROW pIpAddRow)
+{
+    IN_ADDR inaddr;
+    TCHAR cMacAddr[20];
+
+    /* print IP addresses */
+    inaddr.S_un.S_addr = pIpAddRow->dwAddr;
+    _tprintf(_T("  %-22s"), inet_ntoa(inaddr));
+
+    /* print MAC address */
+    _stprintf(cMacAddr, _T("%02x-%02x-%02x-%02x-%02x-%02x"),
+        pIpAddRow->bPhysAddr[0],
+        pIpAddRow->bPhysAddr[1],
+        pIpAddRow->bPhysAddr[2],
+        pIpAddRow->bPhysAddr[3],
+        pIpAddRow->bPhysAddr[4],
+        pIpAddRow->bPhysAddr[5]);
+    _tprintf(_T("%-22s"), cMacAddr);
+
+    /* print cache type */
+    switch (pIpAddRow->dwType)
+    {
+        case MIB_IPNET_TYPE_DYNAMIC : _tprintf(_T("dynamic\n"));
+                                      break;
+        case MIB_IPNET_TYPE_STATIC : _tprintf(_T("static\n"));
+                                      break;
+        case MIB_IPNET_TYPE_INVALID : _tprintf(_T("invalid\n"));
+                                      break;
+        case MIB_IPNET_TYPE_OTHER : _tprintf(_T("other\n"));
+                                      break;
+    }
+    return EXIT_SUCCESS;
+}
+
+
 /*
  *
  * Takes optional parameters of an internet address and interface address.
@@ -59,136 +152,99 @@ INT DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
     DWORD dwSize = 0;
     PTCHAR pszIpAddr;
     TCHAR szIntIpAddr[20];
- 
+
     /* Return required buffer size */
     GetIpNetTable(NULL, &ulSize, 0);
- 
+
     /* allocate memory for ARP address table */
     pIpNetTable = (PMIB_IPNETTABLE) malloc(ulSize * sizeof(BYTE));
     ZeroMemory(pIpNetTable, sizeof(*pIpNetTable));
- 
+
     /* get Arp address table */
-    if (pIpNetTable != NULL) {
+    if (pIpNetTable != NULL)
         GetIpNetTable(pIpNetTable, &ulSize, TRUE);
-    } else {
+    else
+    {
         _tprintf(_T("failed to allocate memory for GetIpNetTable\n"));
         free(pIpNetTable);
-        return -1;
+        exit(EXIT_FAILURE);
     }
- 
-    /* check there are entries in the table */ 
-    if (pIpNetTable->dwNumEntries == 0) {
+
+    /* check there are entries in the table */
+    if (pIpNetTable->dwNumEntries == 0)
+    {
         _tprintf(_T("No ARP entires found\n"));
         free(pIpNetTable);
-        return -1;
+        exit(EXIT_FAILURE);
     }
- 
- 
- 
+
+
+
     /* try doing this in the way it's done above, it's clearer */
     /* Retrieve the interface-to-ip address mapping
-     * table to get the IP address for adapter */    
+     * table to get the IP address for adapter */
     pIpAddrTable = (MIB_IPADDRTABLE *) malloc(dwSize);
     GetIpAddrTable(pIpAddrTable, &dwSize, 0);   // NULL ?
- 
+
 
     pIpAddrTable = (MIB_IPADDRTABLE *) malloc(dwSize);
     //ZeroMemory(pIpAddrTable, sizeof(*pIpAddrTable));
- 
-    if ((iRet = GetIpAddrTable(pIpAddrTable, &dwSize, TRUE)) != NO_ERROR) { // NO_ERROR = 0
+
+    if ((iRet = GetIpAddrTable(pIpAddrTable, &dwSize, TRUE)) != NO_ERROR)
+    {
         _tprintf(_T("GetIpAddrTable failed: %d\n"), iRet);
         _tprintf(_T("error: %d\n"), WSAGetLastError());
     }
- 
- 
-    for (k=0; k < pIpAddrTable->dwNumEntries; k++) {
-        if (pIpNetTable->table[0].dwIndex == pIpAddrTable->table[k].dwIndex) {
-            //printf("printing pIpAddrTable->table[?].dwIndex = %lx\n", pIpNetTable->table[k].dwIndex);
+
+
+    for (k=0; k < pIpAddrTable->dwNumEntries; k++)
+    {
+        if (pIpNetTable->table[0].dwIndex == pIpAddrTable->table[k].dwIndex)
+        {
+            //printf("debug print: pIpAddrTable->table[?].dwIndex = %lx\n", pIpNetTable->table[k].dwIndex);
             inaddr2.s_addr = pIpAddrTable->table[k].dwAddr;
             pszIpAddr = inet_ntoa(inaddr2);
             strcpy(szIntIpAddr, pszIpAddr);
         }
-    }   
- 
- 
+    }
+
+
     /* print header, including interface IP address and index number */
     _tprintf(_T("\nInterface: %s --- 0x%lx \n"), szIntIpAddr, pIpNetTable->table[0].dwIndex);
     _tprintf(_T("  Internet Address      Physical Address      Type\n"));
- 
+
     /* go through all ARP entries */
-    for (i=0; i < pIpNetTable->dwNumEntries; i++) {
- 
+    for (i=0; i < pIpNetTable->dwNumEntries; i++)
+    {
+
         /* if the user has supplied their own internet addesss *
          * only print the arp entry which matches that */
-        if (pszInetAddr) {
-            inaddr.S_un.S_addr = pIpNetTable->table[i].dwAddr;        
+        if (pszInetAddr)
+        {
+            inaddr.S_un.S_addr = pIpNetTable->table[i].dwAddr;
             pszIpAddr = inet_ntoa(inaddr);
- 
+
             /* check if it matches, print it */
-            if (strcmp(pszIpAddr, pszInetAddr) == 0) {
+            if (strcmp(pszIpAddr, pszInetAddr) == 0)
                 PrintEntries(&pIpNetTable->table[i]);
-            }
-        } else {
+        }
+        else
             /* if an address is not supplied, print all entries */
             PrintEntries(&pIpNetTable->table[i]);
-        }
- 
     }
- 
+
     free(pIpNetTable);
     free(pIpAddrTable);
- 
-    return 0;
+
+    return EXIT_SUCCESS;
 }
- 
- 
- 
-/*
- *
- * Takes an ARP entry and prints the IP address,
- * the MAC address and the entry type to screen
- *
- */
-INT PrintEntries(PMIB_IPNETROW pIpAddRow)
-{
-    IN_ADDR inaddr;
-    TCHAR cMacAddr[20];
- 
-    /* print IP addresses */
-    inaddr.S_un.S_addr = pIpAddRow->dwAddr;        
-    _tprintf(_T("  %-22s"), inet_ntoa(inaddr));  //error checking
- 
-    /* print MAC address */
-    _stprintf(cMacAddr, _T("%02x-%02x-%02x-%02x-%02x-%02x"),
-        pIpAddRow->bPhysAddr[0],
-        pIpAddRow->bPhysAddr[1],
-        pIpAddRow->bPhysAddr[2],
-        pIpAddRow->bPhysAddr[3],
-        pIpAddRow->bPhysAddr[4],
-        pIpAddRow->bPhysAddr[5]);
-    _tprintf(_T("%-22s"), cMacAddr);
- 
-    /* print cache type */
-    switch (pIpAddRow->dwType) {
-        case MIB_IPNET_TYPE_DYNAMIC : _tprintf(_T("dynamic\n"));
-                                      break;
-        case MIB_IPNET_TYPE_STATIC : _tprintf(_T("static\n"));
-                                      break;
-        case MIB_IPNET_TYPE_INVALID : _tprintf(_T("invalid\n"));
-                                      break;
-        case MIB_IPNET_TYPE_OTHER : _tprintf(_T("other\n"));
-                                      break;
-    }
-    return 0;
-}
- 
- 
- 
+
+
 /*
  *
  * Takes an internet address, a MAC address and an optional interface
  * address as arguments and checks their validity.
- * Fill out an MIB_IPNETROW structure and insert the data into the 
+ * Fill out an MIB_IPNETROW structure and insert the data into the
  * ARP cache as a static entry.
  *
  */
@@ -196,73 +252,101 @@ INT Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
 {
     PMIB_IPNETROW pAddHost;
     PMIB_IPADDRTABLE pIpAddrTable;
+    PMIB_IPNETTABLE pIpNetTable;
     DWORD dwIpAddr;
     DWORD dwSize = 0;
+    ULONG ulSize = 0;
     INT iRet, i, val;
     TCHAR c;
- 
+
     /* error checking */
- 
+
     /* check IP address */
-    if (pszInetAddr != NULL) {
-        if ((dwIpAddr = inet_addr(pszInetAddr)) == INADDR_NONE) {
+    if (pszInetAddr != NULL)
+    {
+        if ((dwIpAddr = inet_addr(pszInetAddr)) == INADDR_NONE)
+        {
             _tprintf(_T("ARP: bad IP address: %s\n"), pszInetAddr);
-            return -1;
+            exit(EXIT_FAILURE);
         }
-    } else {
+    }
+    else
+    {
         Usage();
-        return -1;
+        exit(EXIT_FAILURE);
     }
- 
+
     /* check MAC address */
-    if (strlen(pszEthAddr) != 17) {
+    if (strlen(pszEthAddr) != 17)
+    {
         _tprintf(_T("ARP: bad argument: %s\n"), pszEthAddr);
+        exit(EXIT_FAILURE);
+    }
+    for (i=0; i<17; i++)
+    {
+        if (pszEthAddr[i] == SEPERATOR)
+            continue;
+
+        if (!isxdigit(pszEthAddr[i]))
+        {
+            _tprintf(_T("ARP: bad argument: %s\n"), pszEthAddr);
+            exit(EXIT_FAILURE);
+        }
+    }
+
+    /* We need the IpNetTable to get the adapter index */
+    /* Return required buffer size */
+    GetIpNetTable(NULL, &ulSize, 0);
+    /* allocate memory for ARP address table */
+    pIpNetTable = (PMIB_IPNETTABLE) malloc(ulSize * sizeof(BYTE));
+    ZeroMemory(pIpNetTable, sizeof(*pIpNetTable));
+    /* get Arp address table */
+    if (pIpNetTable != NULL)
+        GetIpNetTable(pIpNetTable, &ulSize, TRUE);
+    else
+    {
+        _tprintf(_T("failed to allocate memory for GetIpNetTable\n"));
+        free(pIpNetTable);
         return -1;
     }
-    for (i=0; i<17; i++) {
-        if (pszEthAddr[i] == SEPERATOR) {
-            continue;
-        }
-        if (!isxdigit(pszEthAddr[i])) {
-            _tprintf(_T("ARP: bad argument: %s\n"), pszEthAddr);
-            return -1;
-        }
-    }
- 
+
+
     /* reserve memory on heap and zero */
     pAddHost = (MIB_IPNETROW *) malloc(sizeof(MIB_IPNETROW));
     ZeroMemory(pAddHost, sizeof(MIB_IPNETROW));
- 
- 
- 
- 
-    /* set dwIndex field to the index of a local IP address to 
+
+    /* set dwIndex field to the index of a local IP address to
      * indicate the network on which the ARP entry applies */
-    if (pszIfAddr) {
+    if (pszIfAddr)
         sscanf(pszIfAddr, "%lx", &pAddHost->dwIndex);
-    } else {
-        /* map the IP to the index */  
+    else
+    {
+        /* map the IP to the index */
         pIpAddrTable = (MIB_IPADDRTABLE *) malloc(dwSize);
         GetIpAddrTable(pIpAddrTable, &dwSize, 0);
- 
+
         pIpAddrTable = (MIB_IPADDRTABLE *) malloc(dwSize);
- 
-        if ((iRet = GetIpAddrTable(pIpAddrTable, &dwSize, TRUE)) != NO_ERROR) { // NO_ERROR = 0
+
+        if ((iRet = GetIpAddrTable(pIpAddrTable, &dwSize, TRUE)) != NO_ERROR)
+        {
             _tprintf(_T("GetIpAddrTable failed: %d\n"), iRet);
             _tprintf(_T("error: %d\n"), WSAGetLastError());
         }
-        printf("printing pIpAddrTable->table[0].dwIndex = %lx\n", pIpAddrTable->table[0].dwIndex);
-        pAddHost->dwIndex = 4;
+        //printf("debug print: pIpNetTable->table[0].dwIndex = %lx\n", pIpNetTable->table[0].dwIndex);
+        /* needs testing. I get the correct index on my machine, but need others
+         * to test their card index.  Any problems and we can use GetAdaptersInfo instead */
+        pAddHost->dwIndex = pIpNetTable->table[0].dwIndex;
 
         free(pIpAddrTable);
     }
- 
+
     /* Set MAC address to 6 bytes (typical) */
     pAddHost->dwPhysAddrLen = 6;
- 
- 
+
+
     /* Encode bPhysAddr into correct byte array */
-    for (i=0; i<6; i++) {
+    for (i=0; i<6; i++)
+    {
         val =0;
         c = toupper(pszEthAddr[i*3]);
         c = c - (isdigit(c) ? '0' : ('A' - 10));
@@ -272,103 +356,155 @@ INT Addhost(PTCHAR pszInetAddr, PTCHAR pszEthAddr, PTCHAR pszIfAddr)
         c = c - (isdigit(c) ? '0' : ('A' - 10));
         val += c;
         pAddHost->bPhysAddr[i] = val;
- 
     }
- 
- 
+
+
     /* copy converted IP address */
     pAddHost->dwAddr = dwIpAddr;
- 
- 
+
+
     /* set type to static */
     pAddHost->dwType = MIB_IPNET_TYPE_STATIC;
- 
- 
+
+
     /* Add the ARP entry */
-    if ((iRet = SetIpNetEntry(pAddHost)) != NO_ERROR) {
-        _tprintf(_T("The ARP entry addition failed: %d\n"), iRet);
-        return -1;
+    if ((iRet = SetIpNetEntry(pAddHost)) != NO_ERROR)
+    {
+        DoFormatMessage(iRet);
+        free(pAddHost);
+        exit(EXIT_FAILURE);
     }
- 
+
     free(pAddHost);
- 
-    return 0;
+
+    return EXIT_SUCCESS;
 }
- 
- 
- 
+
+
 /*
  *
- * Takes an internet address and an optional interface address as 
+ * Takes an internet address and an optional interface address as
  * arguments and checks their validity.
- * Add the interface number and IP to an MIB_IPNETROW structure 
- * and remove the entrty from the ARP cache.
+ * Add the interface number and IP to an MIB_IPNETROW structure
+ * and remove the entry from the ARP cache.
  *
  */
 INT Deletehost(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
 {
     PMIB_IPNETROW pDelHost;
     PMIB_IPADDRTABLE pIpAddrTable;
+    PMIB_IPNETTABLE pIpNetTable;
+    ULONG ulSize = 0;
     DWORD dwIpAddr;
     DWORD dwSize = 0;
-    INT iret;
- 
+    INT iRet;
+    BOOL bFlushTable = FALSE;
+
     /* error checking */
- 
+
     /* check IP address */
-    if (pszInetAddr != NULL) {
-        if ((dwIpAddr = inet_addr(pszInetAddr)) == INADDR_NONE) {
+    if (pszInetAddr != NULL)
+    {
+        /* if wildcard is given, set flag to delete all hosts */
+        if (strncmp(pszInetAddr, "*", 1) == 0)
+            bFlushTable = TRUE;
+        else if ((dwIpAddr = inet_addr(pszInetAddr)) == INADDR_NONE)
+        {
             _tprintf(_T("ARP: bad IP address: %s\n"), pszInetAddr);
-            return -1;
+            exit(EXIT_FAILURE);
         }
-    } else {
+    }
+    else
+    {
         Usage();
+        exit(EXIT_FAILURE);
+    }
+
+    /* We need the IpNetTable to get the adapter index */
+    /* Return required buffer size */
+    GetIpNetTable(NULL, &ulSize, 0);
+    /* allocate memory for ARP address table */
+    pIpNetTable = (PMIB_IPNETTABLE) malloc(ulSize * sizeof(BYTE));
+    ZeroMemory(pIpNetTable, sizeof(*pIpNetTable));
+    /* get Arp address table */
+    if (pIpNetTable != NULL)
+        GetIpNetTable(pIpNetTable, &ulSize, TRUE);
+    else
+    {
+        _tprintf(_T("failed to allocate memory for GetIpNetTable\n"));
+        free(pIpNetTable);
         return -1;
     }
- 
- 
+
+
      pIpAddrTable = (MIB_IPADDRTABLE*) malloc(sizeof(MIB_IPADDRTABLE));
      pDelHost = (MIB_IPNETROW *) malloc(sizeof(MIB_IPNETROW));
      ZeroMemory(pIpAddrTable, sizeof(MIB_IPADDRTABLE));
      ZeroMemory(pDelHost, sizeof(MIB_IPNETROW));
-    /* set dwIndex field to the index of a local IP address to 
+    /* set dwIndex field to the index of a local IP address to
      * indicate the network on which the ARP entry applies */
-    if (pszIfAddr) {
+    if (pszIfAddr)
         sscanf(pszIfAddr, "%lx", &pDelHost->dwIndex);
-    } else {
+    else
+    {
         /* map the IP to the index */
-        if (GetIpAddrTable(pIpAddrTable, &dwSize, 0) == ERROR_INSUFFICIENT_BUFFER) {
+        if (GetIpAddrTable(pIpAddrTable, &dwSize, 0) == ERROR_INSUFFICIENT_BUFFER)
             pIpAddrTable = (MIB_IPADDRTABLE *) malloc(dwSize);
-        }
-        if ((iret = GetIpAddrTable(pIpAddrTable, &dwSize, TRUE)) != NO_ERROR) {
-            _tprintf(_T("GetIpAddrTable failed: %d\n"), iret);
+
+        if ((iRet = GetIpAddrTable(pIpAddrTable, &dwSize, TRUE)) != NO_ERROR)
+        {
+            _tprintf(_T("GetIpAddrTable failed: %d\n"), iRet);
             _tprintf(_T("error: %d\n"), WSAGetLastError());
         }
-        pDelHost->dwIndex = 4; //pIpAddrTable->table[0].dwIndex;
-    }    
- 
-    /* copy converted IP address */
-    pDelHost->dwAddr = dwIpAddr; 
- 
-    /* Add the ARP entry */
-    if ((iret = DeleteIpNetEntry(pDelHost)) != NO_ERROR) {
-        _tprintf(_T("The ARP entry deletion failed: %d\n"), iret);
-        return -1;
+        /* needs testing. I get the correct index on my machine, but need others
+         * to test their card index. Any problems and we can use GetAdaptersInfo instead */
+        pDelHost->dwIndex = pIpNetTable->table[0].dwIndex;
     }
- 
+
+    if (bFlushTable == TRUE)
+    {
+        /* delete arp cache */
+        if ((iRet = FlushIpNetTable(pDelHost->dwIndex)) != NO_ERROR)
+        {
+            DoFormatMessage(iRet);
+            free(pIpAddrTable);
+            free(pDelHost);
+            return EXIT_FAILURE;
+        }
+        else
+        {
+            free(pIpAddrTable);
+            free(pDelHost);
+            return EXIT_SUCCESS;
+        }
+    }
+    else
+        /* copy converted IP address */
+        pDelHost->dwAddr = dwIpAddr;
+
+    /* Add the ARP entry */
+    if ((iRet = DeleteIpNetEntry(pDelHost)) != NO_ERROR)
+    {
+
+        DoFormatMessage(iRet);
+        free(pIpAddrTable);
+        free(pDelHost);
+        exit(EXIT_FAILURE);
+    }
+
     free(pIpAddrTable);
     free(pDelHost);
- 
-    return 0;
+
+    return EXIT_SUCCESS;
 }
- 
- 
- 
+
+
+
 /*
  *
  * print program usage to screen
  *
- */ 
+ */
 VOID Usage(VOID)
 {
     _tprintf(_T("\nDisplays and modifies the IP-to-Physical address translation tables used by\n"
@@ -401,10 +537,10 @@ VOID Usage(VOID)
                 "  > arp -s 157.55.85.212   00-aa-00-62-c6-09  .... Adds a static entry.\n"
                 "  > arp -a                                    .... Displays the arp table.\n\n"));
 }
- 
- 
- 
-/* 
+
+
+
+/*
  *
  * Program entry.
  * Parse command line and call the required function
@@ -412,35 +548,37 @@ VOID Usage(VOID)
  */
 INT main(int argc, char* argv[])
 {
-    const char N[] = "-N";
- 
-    if ((argc < 2) || (argc > 5)) 
+    if ((argc < 2) || (argc > 5))
     {
        Usage();
-       return FALSE;
+       return EXIT_FAILURE;
     }
- 
- 
-    if (argv[1][0] == '-') {
-        switch (argv[1][1]) {
-           /* FIX ME */
-           /* need better control for -a, as -N might not be arg 4 */
-           case 'a': if (argc == 2)
+
+    if (argv[1][0] == '-')
+    {
+        switch (argv[1][1])
+        {
+           case 'a': /* fall through */
+           case 'g':
+                     if (argc == 2)
                          DisplayArpEntries(NULL, NULL);
                      else if (argc == 3)
                          DisplayArpEntries(argv[2], NULL);
-                     else if ((argc == 5) && ((strcmp(argv[3], N)) == 0))
+                     else if ((argc == 4) && ((strcmp(argv[2], "-N")) == 0))
+                         DisplayArpEntries(NULL, argv[3]);
+                     else if ((argc == 5) && ((strcmp(argv[3], "-N")) == 0))
                          DisplayArpEntries(argv[2], argv[4]);
                      else
                          Usage();
+                         return EXIT_FAILURE;
                      break;
-           case 'g': break;
            case 'd': if (argc == 3)
                          Deletehost(argv[2], NULL);
                      else if (argc == 4)
                          Deletehost(argv[2], argv[3]);
                      else
                          Usage();
+                         return EXIT_FAILURE;
                      break;
            case 's': if (argc == 4)
                          Addhost(argv[2], argv[3], NULL);
@@ -448,15 +586,17 @@ INT main(int argc, char* argv[])
                          Addhost(argv[2], argv[3], argv[4]);
                      else
                          Usage();
+                         return EXIT_FAILURE;
                      break;
            default:
               Usage();
-              return -1;
+              return EXIT_FAILURE;
         }
-    } else {
-        Usage();
-        return -1;
     }
- 
-    return 0;
-}
+    else
+        Usage();
+
+    return EXIT_SUCCESS;
+} /*
+warning: suggest parentheses around assignment used as truth value
+warning: char format, void arg (arg 2)*/
