@@ -405,14 +405,291 @@ MoveFileWithProgressW (
                   }
 		 else
 		 {
-		  /* move folder not complete code */
-		  Result = CreateDirectoryW (lpNewFileName, NULL);
-		  if (Result == FALSE) return FALSE;
+		   /* move folder code start */
+		   WIN32_FIND_DATAW findBuffer;
+		   LPCWSTR lpExistingFileName2 = NULL;
+		   LPCWSTR lpNewFileName2 = NULL; 
+		   LPCWSTR lpDeleteFile = NULL;
+		   INT size;
+		   INT size2;
+		   BOOL loop = TRUE;
+		   BOOL Result = FALSE;
+
+		   /* Build the string */
+		   size = wcslen(lpExistingFileName); 
+
+		   lpDeleteFile = (LPCWSTR) HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,MAX_PATH * sizeof(WCHAR));
+		   if (lpDeleteFile == NULL)
+			   goto FreeMemAndExit;
+
+		   lpNewFileName2 = (LPCWSTR) HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,MAX_PATH * sizeof(WCHAR));
+		   if (lpNewFileName2 == NULL)
+			   goto FreeMemAndExit;
+
+		   lpExistingFileName2 = (LPCWSTR) HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,MAX_PATH * sizeof(WCHAR));
+		   if (lpExistingFileName2 == NULL)
+			   goto FreeMemAndExit;
+	
+		   if ((size+6)*sizeof(WCHAR)>MAX_PATH)
+		   {
+		     HeapReAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,(VOID *) lpExistingFileName2,(size+6)*sizeof(WCHAR));
+			 if (lpExistingFileName2 == NULL)
+			     goto FreeMemAndExit;
+		   }
+	
+		   wcscpy( (WCHAR *)lpExistingFileName2,lpExistingFileName);
+		   wcscpy( (WCHAR *)&lpExistingFileName2[size],L"\\*.*\0");
+	  
+		   /* Get the file name */
+		   memset(&findBuffer,0,sizeof(WIN32_FIND_DATAW));
+		   hFile = FindFirstFileW(lpExistingFileName2,  &findBuffer);
+		   if (hFile == NULL) 
+		       loop=FALSE;
+
+		   if (findBuffer.cFileName[0] == L'\0')
+		       loop=FALSE;
+	
+		   DPRINT("MoveFileWithProgressW : lpExistingFileName1 = %S\n",lpExistingFileName);
+		   DPRINT("MoveFileWithProgressW : lpExistingFileName2 = %S\n",lpExistingFileName2);
+		   DPRINT("MoveFileWithProgressW : lpNewFileName = %S\n",lpNewFileName);
+
+		   DPRINT("MoveFileWithProgressW : loop = %d %d %d\n",TRUE, FALSE, loop);
+
+		   
+		   CreateDirectoryW(lpNewFileName,NULL);
+
+
+		   /* search the file */
+		   while (loop==TRUE)
+		   {	
+		     Result = TRUE;
+
+		     if ((!wcscmp(findBuffer.cFileName,L"..")) || (!wcscmp(findBuffer.cFileName,L".")))
+		     {		  
+		       loop = FindNextFileW(hFile, &findBuffer);		  
+		  		  
+		       if (!loop)
+		       {					 
+		         size = wcslen(lpExistingFileName2)-4;
+		         FindClose(hFile);
+		         wcscpy( (WCHAR *)&lpExistingFileName2[size],L"\0");
+
+		         if (wcsncmp(lpExistingFileName,lpExistingFileName2,size))
+		         {  
+		           FindClose(hFile);			     
+
+				   /* delete folder */	
+
+				   size = GetFullPathNameW(lpExistingFileName2, MAX_PATH,(LPWSTR) lpDeleteFile, NULL);
+				   if (size>MAX_PATH)
+				   {                  
+				     lpDeleteFile = (LPCWSTR) HeapReAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY, 
+				                    (VOID *) lpDeleteFile,size);
+
+					 if (lpDeleteFile == NULL)
+					 {
+						 Result = FALSE;
+			             goto FreeMemAndExit;
+					 }
+
+				     GetFullPathNameW(lpExistingFileName2, size,(LPWSTR) lpDeleteFile, NULL);
+				   }
+				 
+				   DPRINT("MoveFileWithProgressW : folder : %s\n",lpDeleteFile);
+
+				   Result = RemoveDirectoryW(lpDeleteFile);
+				   if (Result == FALSE)
+				       break;
+				 				 
+				   loop=TRUE;				 				 
+				   size = wcslen(lpExistingFileName); 
+				
+				   if ((size+6)*sizeof(WCHAR)>MAX_PATH)
+				   {
+				     lpExistingFileName2 = (LPCWSTR) HeapReAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY, 
+				                           (VOID *)lpExistingFileName2,(size+6)*sizeof(WCHAR));
+
+					 if (lpExistingFileName2 == NULL)
+					 {
+						 Result = FALSE;
+			             goto FreeMemAndExit;
+					 }
+				   }
+
+				   wcscpy( (WCHAR *)lpExistingFileName2,lpExistingFileName);
+				   wcscpy( (WCHAR *)&lpExistingFileName2[size],L"\\*.*\0");
+
+				   /* Get the file name */
+				   memset(&findBuffer,0,sizeof(WIN32_FIND_DATAW));
+				   hFile = FindFirstFileW(lpExistingFileName2, &findBuffer);	                 
+		         }
+               } 		  
+               continue;		  		  
+             }
+	  	  	  
+		     if (findBuffer.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+		     {	
+               DPRINT("MoveFileWithProgressW : 1: %S %S\n",lpExistingFileName2,findBuffer.cFileName);
+
+               /* Build the new string */		  		  		  
+               size = wcslen(findBuffer.cFileName); 
+               size2= wcslen(lpExistingFileName2);
+
+               if ((size2+size+6)*sizeof(WCHAR)>MAX_PATH)
+               {
+	             lpExistingFileName2 = (LPCWSTR) HeapReAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY, 
+				                       (VOID *)lpExistingFileName2, (size2+size+6)*sizeof(WCHAR));
+
+				 if (lpExistingFileName2 == NULL)
+				 {
+				   Result = FALSE;
+			       goto FreeMemAndExit;
+				 }
+	           }
+
+	           wcscpy( (WCHAR *)&lpExistingFileName2[size2-3],findBuffer.cFileName);
+	           wcscpy( (WCHAR *)&lpExistingFileName2[size2+size-3],L"\\*.*\0");
+          
 		  
-		  /* add scan code for move the folder */
+	           /* Build the new dst string */
+	           size = wcslen(lpExistingFileName2) + wcslen(lpNewFileName);
+	           size2 = wcslen(lpExistingFileName);
 		  
-		  AdjustFileAttributes(lpExistingFileName, lpNewFileName);
-		  Result = RemoveDirectoryW(lpExistingFileName);
+	           if (size>MAX_PATH)
+	           {
+	             lpNewFileName2 = (LPCWSTR) HeapReAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY, 
+                                  (VOID *) lpNewFileName2, size*sizeof(WCHAR));
+
+				 if (lpNewFileName2 == NULL)
+				 {
+				   Result = FALSE;
+			       goto FreeMemAndExit;
+				 }
+	           }
+
+	           wcscpy((WCHAR *) lpNewFileName2,lpNewFileName);		 		  
+	           size = wcslen(lpNewFileName);		 
+	           wcscpy((WCHAR *)&lpNewFileName2[size], (WCHAR *)&lpExistingFileName2[size2]);
+	           size = wcslen(lpNewFileName2);
+	           wcscpy( (WCHAR *)&lpNewFileName2[size-4],L"\0");
+
+	           /* build dest path */
+	           /* remove this code when it will be out into kernel32.dll ? */				 
+
+	           size = GetFullPathNameW(lpNewFileName2, MAX_PATH,(LPWSTR) lpDeleteFile, NULL);
+	           if (MAX_PATH>size2)
+	           {
+	            lpDeleteFile = (LPCWSTR) HeapReAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY, 
+	                           (VOID *) lpDeleteFile,size) ;
+
+				if (lpDeleteFile == NULL)
+				{
+				  Result = FALSE;
+			      goto FreeMemAndExit;
+				}
+
+	            GetFullPathNameW(lpNewFileName2, size,(LPWSTR) lpDeleteFile, NULL);
+	           }
+
+	           /* Create Folder */
+	          
+	           DPRINT("MoveFileWithProgressW : CreateDirectoryW lpNewFileName2 : %S\n",lpNewFileName2);
+	           DPRINT("MoveFileWithProgressW : CreateDirectoryW : %S\n",lpDeleteFile);
+
+	           CreateDirectoryW(lpDeleteFile,NULL);
+
+	           DPRINT("MoveFileWithProgressW : 1x: %S : %S \n",lpExistingFileName2, lpNewFileName2);
+
+	           FindClose(hFile);
+	           memset(&findBuffer,0,sizeof(WIN32_FIND_DATAW));
+	           hFile = FindFirstFileW(lpExistingFileName2, &findBuffer);
+	         }
+		     else
+		     {
+		  
+	           /* Build the new string */		  		  		  		  
+	           size = wcslen(findBuffer.cFileName); 
+	           size2= wcslen(lpExistingFileName2);
+	           wcscpy( (WCHAR *)lpDeleteFile,lpExistingFileName2);	   
+	           wcscpy( (WCHAR *)&lpDeleteFile[size2-3],findBuffer.cFileName);	   
+		  
+	           /* Build dest string */
+	           size = wcslen(lpDeleteFile) + wcslen(lpNewFileName);
+	           size2 = wcslen(lpExistingFileName);
+
+	           if (size*sizeof(WCHAR)>MAX_PATH)
+	           {
+                 lpNewFileName2 = (LPCWSTR) HeapReAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY, 
+                                  (VOID *) lpNewFileName2, size*sizeof(WCHAR)); 
+
+				 if (lpNewFileName2 == NULL)
+				 {
+				   Result = FALSE;
+			       goto FreeMemAndExit;
+				 }
+               }
+		  
+               wcscpy((WCHAR *) lpNewFileName2,lpNewFileName);		 		  
+               size = wcslen(lpNewFileName);		 
+               wcscpy((WCHAR *)&lpNewFileName2[size], (WCHAR *)&lpDeleteFile[size2]);
+		 
+               /* copy file */		  
+               Result = CopyFileW(lpDeleteFile,lpNewFileName2, FALSE);               			   			              
+
+               /* delete file */
+               DPRINT("MoveFileWithProgressW : Delete file : %S : %S\n",lpDeleteFile, lpNewFileName2);
+		  
+           
+               Result = DeleteFileW(lpDeleteFile);
+               if (Result == FALSE)
+               {  
+                 DPRINT("MoveFileWithProgressW : Fails\n");
+                 break;
+               }
+             }	  	 
+             DPRINT("MoveFileWithProgressW : 2 : %S  : %S \n",lpExistingFileName2,findBuffer.cFileName);
+             loop = FindNextFileW(hFile, &findBuffer);	  	  
+           }
+
+           FindClose(hFile);    
+           memset(&findBuffer,0,sizeof(WIN32_FIND_DATAW));
+           hFile = FindFirstFileW(lpExistingFileName2, &findBuffer);
+           if (hFile == NULL) 
+               loop=TRUE;
+
+           if (findBuffer.cFileName[0] == L'\0')
+               loop=TRUE;
+
+           if (loop == FALSE)
+		   {
+		     FindClose(hFile);				 
+		     Result = RemoveDirectoryW(lpExistingFileName);
+		     DPRINT("MoveFileWithProgressW RemoveDirectoryW :%S",lpExistingFileName);
+		   }
+
+FreeMemAndExit:
+		   DPRINT("MoveFileWithProgressW : result : r=%d, T=%d, F=%d",Result,TRUE,FALSE);
+
+		   if (lpNewFileName2 != NULL)
+		   {		
+		     HeapFree(GetProcessHeap(),0,(VOID *)  lpNewFileName2);
+		     lpNewFileName2 = NULL;
+		   }
+
+		   if (lpExistingFileName2 != NULL)
+		   {	  
+		     HeapFree(GetProcessHeap(),0,(VOID *) lpExistingFileName2);		
+		     lpExistingFileName2 = NULL;
+		   }
+
+		   if (lpDeleteFile != NULL)
+		   {		
+		     HeapFree(GetProcessHeap(),0,(VOID *) lpDeleteFile);		
+		     lpDeleteFile = NULL;
+		   }
+
+		   return Result;
+		   // end move folder code		 
 		  }
 	}
 	

@@ -74,6 +74,7 @@ DWORD FilenameW2A_FitOrFail(LPSTR  DestA, INT destLen, LPCWSTR SourceW, INT sour
 DWORD FilenameU2A_FitOrFail(LPSTR  DestA, INT destLen, PUNICODE_STRING SourceU);
 
 #define HeapAlloc RtlAllocateHeap
+#define HeapReAlloc RtlReAllocateHeap
 #define HeapFree RtlFreeHeap
 
 POBJECT_ATTRIBUTES
