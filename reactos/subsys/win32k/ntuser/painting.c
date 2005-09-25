@@ -755,7 +755,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
    Ps.hdc = UserGetDCEx(Window, Window->UpdateRegion, DCX_INTERSECTRGN | DCX_USESTYLE);
    if (!Ps.hdc)
    {
-      RETURN( NULL);
+      RETURN(NULL);
    }
 
    if (Window->UpdateRegion != NULL)
@@ -766,6 +766,7 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
       {
          UnsafeIntGetRgnBox(Rgn, &Ps.rcPaint);
          RGNDATA_UnlockRgn(Rgn);
+         IntGdiIntersectRect(&Ps.rcPaint, &Ps.rcPaint, &Window->ClientRect);
          IntGdiOffsetRect(&Ps.rcPaint,
                           -Window->ClientRect.left,
                           -Window->ClientRect.top);
@@ -801,10 +802,10 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
    if (! NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
-      RETURN( NULL);
+      RETURN(NULL);
    }
 
-   RETURN( Ps.hdc);
+   RETURN(Ps.hdc);
 
 CLEANUP:
    if (Window) UserDerefObjectCo(Window);
@@ -855,6 +856,7 @@ INT FASTCALL
 co_UserGetUpdateRgn(PWINDOW_OBJECT Window, HRGN hRgn, BOOL bErase)
 {
    int RegionType;
+   RECT Rect;
 
    ASSERT_REFS_CO(Window);
 
@@ -864,7 +866,10 @@ co_UserGetUpdateRgn(PWINDOW_OBJECT Window, HRGN hRgn, BOOL bErase)
    }
    else
    {
-      RegionType = NtGdiCombineRgn(hRgn, Window->UpdateRegion, hRgn, RGN_COPY);
+      Rect = Window->ClientRect;
+      IntIntersectWithParents(Window, &Rect);
+      NtGdiSetRectRgn(hRgn, Rect.left, Rect.top, Rect.right, Rect.bottom);
+      RegionType = NtGdiCombineRgn(hRgn, hRgn, Window->UpdateRegion, RGN_AND);
       NtGdiOffsetRgn(hRgn, -Window->ClientRect.left, -Window->ClientRect.top);
    }
 
@@ -875,6 +880,7 @@ co_UserGetUpdateRgn(PWINDOW_OBJECT Window, HRGN hRgn, BOOL bErase)
 
    return RegionType;
 }
+
 /*
  * NtUserGetUpdateRgn
  *
@@ -923,7 +929,6 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
    RECT Rect;
    INT RegionType;
    PROSRGNDATA RgnData;
-   BOOL AlwaysPaint;
    NTSTATUS Status;
    DECLARE_RETURN(BOOL);
 
@@ -932,7 +937,7 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
 
    if (!(Window = UserGetWindowObject(hWnd)))
    {
-      RETURN( ERROR);
+      RETURN(FALSE);
    }
 
    if (Window->UpdateRegion == NULL)
@@ -941,16 +946,34 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
    }
    else
    {
-      RgnData = RGNDATA_LockRgn(Window->UpdateRegion);
-      ASSERT(RgnData != NULL);
-      RegionType = UnsafeIntGetRgnBox(RgnData, &Rect);
-      ASSERT(RegionType != ERROR);
-      RGNDATA_UnlockRgn(RgnData);
-   }
-   AlwaysPaint = (Window->Flags & WINDOWOBJECT_NEED_NCPAINT) ||
-                 (Window->Flags & WINDOWOBJECT_NEED_INTERNALPAINT);
+      /* Get the update region bounding box. */
+      if (Window->UpdateRegion == (HRGN)1)
+      {
+         Rect = Window->ClientRect;
+      }
+      else
+      {
+         RgnData = RGNDATA_LockRgn(Window->UpdateRegion);
+         ASSERT(RgnData != NULL);
+         RegionType = UnsafeIntGetRgnBox(RgnData, &Rect);
+         RGNDATA_UnlockRgn(RgnData);
 
-   if (bErase && Rect.left < Rect.right && Rect.top < Rect.bottom)
+         if (RegionType != ERROR && RegionType != NULLREGION)
+            IntGdiIntersectRect(&Rect, &Rect, &Window->ClientRect);
+      }
+
+      if (IntIntersectWithParents(Window, &Rect))
+      {
+         IntGdiOffsetRect(&Rect,
+                          -Window->ClientRect.left,
+                          -Window->ClientRect.top);
+      } else
+      {
+         Rect.left = Rect.top = Rect.right = Rect.bottom = 0;
+      }
+   }
+
+   if (bErase && !IntGdiIsEmptyRect(&Rect))
    {
       UserRefObjectCo(Window);
       co_UserRedrawWindow(Window, NULL, NULL, RDW_ERASENOW | RDW_NOCHILDREN);
@@ -963,11 +986,11 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
       if (!NT_SUCCESS(Status))
       {
          SetLastWin32Error(ERROR_INVALID_PARAMETER);
-         RETURN( FALSE);
+         RETURN(FALSE);
       }
    }
 
-   RETURN( (Rect.left < Rect.right && Rect.top < Rect.bottom) || AlwaysPaint);
+   RETURN(Window->UpdateRegion != NULL);
 
 CLEANUP:
    DPRINT("Leave NtUserGetUpdateRect, ret=%i\n",_ret_);
@@ -1314,7 +1337,7 @@ NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *UnsafeRect,
       UserDerefObjectCo(CaretWnd);
    }
 
-   RETURN( Result);
+   RETURN(Result);
 
 CLEANUP:
    if (Window)
