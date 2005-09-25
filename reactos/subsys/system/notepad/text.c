@@ -130,7 +130,7 @@ BOOL ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, int *piEncoding
 		else
 			goto done;
 
-		dwCharCount = MultiByteToWideChar(iCodePage, 0, &pBytes[dwPos], dwSize - dwPos, NULL, 0);
+		dwCharCount = MultiByteToWideChar(iCodePage, 0, (LPCSTR)&pBytes[dwPos], dwSize - dwPos, NULL, 0);
 		if (dwCharCount == 0)
 			goto done;
 
@@ -138,7 +138,7 @@ BOOL ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, int *piEncoding
 		if (!pszAllocText)
 			goto done;
 
-		if (!MultiByteToWideChar(iCodePage, 0, &pBytes[dwPos], dwSize - dwPos, pszAllocText, dwCharCount))
+		if (!MultiByteToWideChar(iCodePage, 0, (LPCSTR)&pBytes[dwPos], dwSize - dwPos, pszAllocText, dwCharCount))
 			goto done;
 
 		pszAllocText[dwCharCount] = '\0';
