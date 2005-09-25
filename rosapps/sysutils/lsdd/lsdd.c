@@ -1,6 +1,6 @@
 /* $Id$
  *
- * FILE  : ldd.c
+ * FILE  : lsdd.c
  * AUTHOR: Emanuele ALIBERTI
  * DATE  : 2000-08-04
  * DESC  : List DOS devices, i.e. symbolic links created
@@ -20,6 +20,8 @@
 
 #define LINKS_SIZE 32768
 #define DEVICE_SIZE 8192
+
+static const LPWSTR error_prefix = L"lsdd: ";
 
 static char SymbolicLinks [LINKS_SIZE];
 static char DosDeviceName [DEVICE_SIZE];
@@ -57,7 +59,7 @@ int
 main (int argc, char * argv [] )
 {
 	printf (
-		"ReactOS %s - List DOS Devices Utility\n"
+		"ReactOS/Win32 %s - List DOS Devices Utility\n"
 		"Written by E.Aliberti (%s)\n\n",
 		KERNEL_RELEASE_STR,
 		__DATE__
@@ -102,7 +104,7 @@ main (int argc, char * argv [] )
 			else
 			{
 				PrintWin32Error (
-					L"ldd: ",
+					error_prefix,
 					GetLastError ()
 					);
 			}
@@ -112,7 +114,7 @@ main (int argc, char * argv [] )
 	else
 	{
 		PrintWin32Error (
-			L"ldd: ",
+			error_prefix,
 			GetLastError ()
 			);
 		return EXIT_FAILURE;
