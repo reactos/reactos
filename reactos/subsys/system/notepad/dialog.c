@@ -617,8 +617,7 @@ VOID DIALOG_EditTimeDate(VOID)
 VOID DIALOG_EditWrap(VOID)
 {
     static const WCHAR editW[] = { 'e','d','i','t',0 };
-    DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL |
-                    ES_AUTOVSCROLL | ES_MULTILINE | ES_NOHIDESEL;
+    DWORD dwStyle;
     RECT rc;
     DWORD size;
     LPWSTR pTemp;
@@ -633,7 +632,7 @@ VOID DIALOG_EditWrap(VOID)
     GetWindowText(Globals.hEdit, pTemp, size);
     DestroyWindow(Globals.hEdit);
     GetClientRect(Globals.hMainWnd, &rc);
-    if( Globals.bWrapLongLines ) dwStyle |= WS_HSCROLL | ES_AUTOHSCROLL;
+    dwStyle = Globals.bWrapLongLines ? EDIT_STYLE_WRAP : EDIT_STYLE;
     Globals.hEdit = CreateWindowEx(WS_EX_CLIENTEDGE, editW, NULL, dwStyle,
                          0, 0, rc.right, rc.bottom, Globals.hMainWnd,
                          NULL, Globals.hInstance, NULL);
