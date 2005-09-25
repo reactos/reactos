@@ -693,55 +693,6 @@ FreeMemAndExit:
 		  }
 	}
 	
-#if 1
-	/* FIXME file rename not yet implemented in all FSDs so it will always
-	 * fail, even when the move is to the same device
-	 */
-	//else if (STATUS_NOT_IMPLEMENTED == errCode)
-	{
-
-		UNICODE_STRING SrcPathU;
-
-		SrcPathU.Buffer = alloca(sizeof(WCHAR) * MAX_PATH);
-		SrcPathU.MaximumLength = MAX_PATH * sizeof(WCHAR);
-		SrcPathU.Length = GetFullPathNameW(lpExistingFileName, MAX_PATH, SrcPathU.Buffer, NULL);
-		if (SrcPathU.Length >= MAX_PATH)
-		{
-		    SetLastError(ERROR_FILENAME_EXCED_RANGE);
-		    return FALSE;
-		}
-		SrcPathU.Length *= sizeof(WCHAR);
-
-		DstPathU.Buffer = alloca(sizeof(WCHAR) * MAX_PATH);
-		DstPathU.MaximumLength = MAX_PATH * sizeof(WCHAR);
-		DstPathU.Length = GetFullPathNameW(lpNewFileName, MAX_PATH, DstPathU.Buffer, NULL);
-		if (DstPathU.Length >= MAX_PATH)
-		{
-		    SetLastError(ERROR_FILENAME_EXCED_RANGE);
-		    return FALSE;
-		}
-		DstPathU.Length *= sizeof(WCHAR);
-
-		if (0 == RtlCompareUnicodeString(&SrcPathU, &DstPathU, TRUE))
-		{
-		   /* Source and destination file are the same, nothing to do */
-		   return TRUE;
-		}
-
-		Result = CopyFileExW (lpExistingFileName,
-		                      lpNewFileName,
-		                      lpProgressRoutine,
-		                      lpData,
-		                      NULL,
-		                      FileRename->ReplaceIfExists ? 0 : COPY_FILE_FAIL_IF_EXISTS);
-		if (Result)
-		{
-		    /* Cleanup the source file */
-                    AdjustFileAttributes(lpExistingFileName, lpNewFileName);
-		    Result = DeleteFileW (lpExistingFileName);
-		}
-	}
-#endif
 	
 	return Result;
 }
