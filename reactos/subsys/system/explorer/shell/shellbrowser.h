@@ -58,8 +58,7 @@ struct BrowserCallback
  /// Implementation of IShellBrowserImpl interface in explorer child windows
 struct ShellBrowser : public IShellBrowserImpl
 #ifndef __MINGW32__	// IShellFolderViewCB missing in MinGW (as of 25.09.2005)
-	,	public IComSrvBase<IShellFolderViewCB, ShellBrowser>,
-		public SimpleComObject
+	,	public IComSrvBase<IShellFolderViewCB, ShellBrowser>, public SimpleComObject
 #endif
 {
 	ShellBrowser(HWND hwnd, HWND left_hwnd, WindowHandle& right_hwnd, ShellPathInfo& create_info,

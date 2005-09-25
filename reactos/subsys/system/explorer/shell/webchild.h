@@ -530,9 +530,9 @@ interface FixedDWebBrowserEvents2 : public IDispatch
 #endif
 };
 
-struct ANSUNC DWebBrowserEvents2Impl : public SimpleComObject,
-					public IComSrvBase<FixedDWebBrowserEvents2, DWebBrowserEvents2Impl>,
-					public DWebBrowserEvents2IF
+struct ANSUNC DWebBrowserEvents2Impl
+ :	public IComSrvBase<FixedDWebBrowserEvents2, DWebBrowserEvents2Impl>, public SimpleComObject,
+	public DWebBrowserEvents2IF
 {
 	typedef IComSrvBase<FixedDWebBrowserEvents2, DWebBrowserEvents2Impl> super;
 

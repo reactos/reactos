@@ -22,7 +22,8 @@
 //////////////////////////////////////////////////////////////////////
 
 IDataObjectImpl::IDataObjectImpl(IDropSourceImpl* pDropSource)
- :	m_pDropSource(pDropSource),
+ :	super(IID_IDataObject),
+	m_pDropSource(pDropSource),
 	m_cRefCount(0)
 {
 }
@@ -31,37 +32,6 @@ IDataObjectImpl::~IDataObjectImpl()
 {
 	for(StorageArray::iterator it=_storage.begin(); it!=_storage.end(); ++it)
 		ReleaseStgMedium(it->_medium);
-}
-
-STDMETHODIMP IDataObjectImpl::QueryInterface(/* [in] */ REFIID riid,
-/* [iid_is][out] */ void __RPC_FAR *__RPC_FAR *ppvObject)
-{
-	*ppvObject = NULL;
-	if (IID_IUnknown==riid || IID_IDataObject==riid)
-			 *ppvObject=this;
-	/*if (riid == IID_IAsyncOperation)
-		*ppvObject=(IAsyncOperation*)this;*/
-	if (NULL!=*ppvObject)
-	{
-		((LPUNKNOWN)*ppvObject)->AddRef();
-		return S_OK;
-	}
-	return E_NOINTERFACE;
-}
-
-STDMETHODIMP_(ULONG) IDataObjectImpl::AddRef()
-{
-	return ++m_cRefCount;
-}
-
-STDMETHODIMP_(ULONG) IDataObjectImpl::Release()
-{
-   long nTemp = --m_cRefCount;
-
-   if (nTemp == 0)
-	  delete this;
-
-   return nTemp;
 }
 
 STDMETHODIMP IDataObjectImpl::GetData(
@@ -255,38 +225,6 @@ HRESULT STDMETHODCALLTYPE IDataObjectImpl::EnumDAdvise(
 // IDropSourceImpl Class
 //////////////////////////////////////////////////////////////////////
 
-STDMETHODIMP IDropSourceImpl::QueryInterface(/* [in] */ REFIID riid,
-										 /* [iid_is][out] */ void __RPC_FAR *__RPC_FAR *ppvObject)
-{
-   *ppvObject = NULL;
-   if (IID_IUnknown==riid || IID_IDropSource==riid)
-	   *ppvObject=this;
-
-	if (*ppvObject != NULL)
-	{
-	   ((LPUNKNOWN)*ppvObject)->AddRef();
-		return S_OK;
-	}
-	return E_NOINTERFACE;
-}
-
-STDMETHODIMP_(ULONG) IDropSourceImpl::AddRef()
-{
-	return ++m_cRefCount;
-}
-
-STDMETHODIMP_(ULONG) IDropSourceImpl::Release()
-{
-   long nTemp = --m_cRefCount;
-
-   assert(nTemp >= 0);
-
-   if (nTemp == 0)
-	  delete this;
-
-   return nTemp;
-}
-
 STDMETHODIMP IDropSourceImpl::QueryContinueDrag(
 	/* [in] */ BOOL fEscapePressed,
 	/* [in] */ DWORD grfKeyState)
@@ -314,7 +252,8 @@ STDMETHODIMP IDropSourceImpl::GiveFeedback(
 //////////////////////////////////////////////////////////////////////
 
 EnumFormatEtcImpl::EnumFormatEtcImpl(const FormatArray& ArrFE)
- :	m_cRefCount(0),
+ :	super(IID_IEnumFORMATETC),
+	m_cRefCount(0),
 	m_iCur(0)
 {
    for(FormatArray::const_iterator it=ArrFE.begin(); it!=ArrFE.end(); ++it)
@@ -322,45 +261,15 @@ EnumFormatEtcImpl::EnumFormatEtcImpl(const FormatArray& ArrFE)
 }
 
 EnumFormatEtcImpl::EnumFormatEtcImpl(const StorageArray& ArrFE)
- :	m_cRefCount(0),
+ :	super(IID_IEnumFORMATETC),
+	m_cRefCount(0),
 	m_iCur(0)
 {
    for(StorageArray::const_iterator it=ArrFE.begin(); it!=ArrFE.end(); ++it)
 		m_pFmtEtc.push_back(*it->_format);
 }
 
-STDMETHODIMP EnumFormatEtcImpl::QueryInterface(REFIID refiid, void** ppv)
-{
-   *ppv = NULL;
-   if (IID_IUnknown==refiid || IID_IEnumFORMATETC==refiid)
-			 *ppv=this;
-
-	if (*ppv != NULL)
-	{
-		((LPUNKNOWN)*ppv)->AddRef();
-		return S_OK;
-	}
-	return E_NOINTERFACE;
-}
-
-STDMETHODIMP_(ULONG) EnumFormatEtcImpl::AddRef(void)
-{
-   return ++m_cRefCount;
-}
-
-STDMETHODIMP_(ULONG) EnumFormatEtcImpl::Release(void)
-{
-   long nTemp = --m_cRefCount;
-
-   assert(nTemp >= 0);
-
-   if (nTemp == 0)
-	 delete this;
-
-   return nTemp;
-}
-
-STDMETHODIMP EnumFormatEtcImpl::Next( ULONG celt,LPFORMATETC lpFormatEtc, ULONG* pceltFetched)
+STDMETHODIMP EnumFormatEtcImpl::Next(ULONG celt,LPFORMATETC lpFormatEtc, ULONG* pceltFetched)
 {
    if (pceltFetched != NULL)
 	   *pceltFetched=0;
