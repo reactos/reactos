@@ -80,6 +80,11 @@ NtContinue(
       KeLowerIrql(oldIrql);
    }
 
+   if (TestAlert)
+   {
+      KeTestAlertThread(TrapFrame->PreviousMode);
+   }
+
    /* Restore the user context */
    Thread->TrapFrame = PrevTrapFrame;
    __asm__("mov %%ebx, %%esp;\n" "jmp _KiServiceExit": : "b" (TrapFrame));
