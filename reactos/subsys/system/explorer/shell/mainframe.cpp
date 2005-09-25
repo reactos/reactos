@@ -729,29 +729,34 @@ MDIMainFrame::MDIMainFrame(HWND hwnd)
 	 // insert shell namespace button
 	extraBtns.iString = SendMessage(_hextrabar, TB_ADDSTRING, 0, (LPARAM)TEXT("Shell\0"));
 	extraBtns.idCommand = ID_DRIVE_SHELL_NS;
+	extraBtns.iBitmap = 6;
 	SendMessage(_hextrabar, TB_INSERTBUTTON, INT_MAX, (LPARAM)&extraBtns);
 
 	 // insert web control button
 	extraBtns.iString = SendMessage(_hextrabar, TB_ADDSTRING, 0, (LPARAM)TEXT("Web\0"));
 	extraBtns.idCommand = ID_WEB_WINDOW;
+	extraBtns.iBitmap = 7;
 	SendMessage(_hextrabar, TB_INSERTBUTTON, INT_MAX, (LPARAM)&extraBtns);
 
 	if ((HIWORD(GetVersion())>>14) == W_VER_NT) {
 		 // insert NT object namespace button
 		extraBtns.iString = SendMessage(_hextrabar, TB_ADDSTRING, 0, (LPARAM)TEXT("NT Obj\0"));
 		extraBtns.idCommand = ID_DRIVE_NTOBJ_NS;
+		extraBtns.iBitmap = 8;
 		SendMessage(_hextrabar, TB_INSERTBUTTON, INT_MAX, (LPARAM)&extraBtns);
 	}
 
 	 // insert Registry button
 	extraBtns.iString = SendMessage(_hextrabar, TB_ADDSTRING, 0, (LPARAM)TEXT("Reg.\0"));
 	extraBtns.idCommand = ID_DRIVE_REGISTRY;
+	extraBtns.iBitmap = 9;
 	SendMessage(_hextrabar, TB_INSERTBUTTON, INT_MAX, (LPARAM)&extraBtns);
 
 #ifdef _DEBUG
 	 // insert FAT direct file system access button
 	extraBtns.iString = SendMessage(_hextrabar, TB_ADDSTRING, 0, (LPARAM)TEXT("FAT\0"));
 	extraBtns.idCommand = ID_DRIVE_FAT;
+	extraBtns.iBitmap = 10;
 	SendMessage(_hextrabar, TB_INSERTBUTTON, INT_MAX, (LPARAM)&extraBtns);
 #endif
 
