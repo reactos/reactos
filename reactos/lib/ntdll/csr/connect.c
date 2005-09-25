@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            lib/ntdll/csr/connect.c
@@ -40,7 +39,7 @@ HANDLE
 NTAPI
 CsrGetProcessId(VOID)
 {
-	return CsrProcessId;
+    return CsrProcessId;
 }
 
 /*
@@ -187,7 +186,7 @@ CsrConnectToServer(IN PWSTR ObjectDirectory)
     /* Binary compatibility with MS KERNEL32 */
     if (NULL == ObjectDirectory)
     {
-	    ObjectDirectory = L"\\Windows";
+        ObjectDirectory = L"\\Windows";
     }
 
     /* Calculate the total port name size */
@@ -209,12 +208,12 @@ CsrConnectToServer(IN PWSTR ObjectDirectory)
     /* Create a section for the port memory */
     CsrSectionViewSize.QuadPart = CSR_CSRSS_SECTION_SIZE;
     Status = NtCreateSection(&CsrSectionHandle,
-	             		     SECTION_ALL_ACCESS,
-			                 NULL,
-			                 &CsrSectionViewSize,
-			                 PAGE_READWRITE,
-			                 SEC_COMMIT,
-			                 NULL);
+                             SECTION_ALL_ACCESS,
+                             NULL,
+                             &CsrSectionViewSize,
+                             PAGE_READWRITE,
+                             SEC_COMMIT,
+                             NULL);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failure allocating CSR Section\n");
@@ -256,13 +255,13 @@ CsrConnectToServer(IN PWSTR ObjectDirectory)
     /* Connect to the port */
     Status = NtSecureConnectPort(&CsrApiPort,
                                  &PortName,
-			                     &SecurityQos,
-			                     &LpcWrite,
+                                 &SecurityQos,
+                                 &LpcWrite,
                                  SystemSid,
-			                     &LpcRead,
-			                     NULL,
-			                     &ConnectionInfo,
-			                     &ConnectionInfoLength);
+                                 &LpcRead,
+                                 NULL,
+                                 &ConnectionInfo,
+                                 &ConnectionInfoLength);
     NtClose(CsrSectionHandle);
     if (!NT_SUCCESS(Status))
     {
@@ -419,9 +418,9 @@ CsrClientConnectToServer(PWSTR ObjectDirectory,
                                      sizeof(CSR_CLIENT_CONNECT));
 #endif
         Status = CsrClientCallServer(&RosApiMessage,
-				                     NULL,
-				                     MAKE_CSR_API(CONNECT_PROCESS, CSR_NATIVE),
-				                     sizeof(CSR_API_MESSAGE));
+                                     NULL,
+                                     MAKE_CSR_API(CONNECT_PROCESS, CSR_NATIVE),
+                                     sizeof(CSR_API_MESSAGE));
     }
     else
     {
