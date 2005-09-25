@@ -1710,18 +1710,18 @@ co_IntCreateWindowEx(DWORD dwExStyle,
       /* WinPosGetMinMaxInfo sends the WM_GETMINMAXINFO message */
       co_WinPosGetMinMaxInfo(Window, &MaxSize, &MaxPos, &MinTrack,
                              &MaxTrack);
-      if (MaxSize.x < nWidth)
-         nWidth = MaxSize.x;
-      if (MaxSize.y < nHeight)
-         nHeight = MaxSize.y;
-      if (nWidth < MinTrack.x )
-         nWidth = MinTrack.x;
-      if (nHeight < MinTrack.y )
-         nHeight = MinTrack.y;
-      if (nWidth < 0)
-         nWidth = 0;
-      if (nHeight < 0)
-         nHeight = 0;
+      if (MaxSize.x < Size.cx)
+         Size.cx = MaxSize.x;
+      if (MaxSize.y < Size.cy)
+         Size.cy = MaxSize.y;
+      if (Size.cx < MinTrack.x )
+         Size.cx = MinTrack.x;
+      if (Size.cy < MinTrack.y )
+         Size.cy = MinTrack.y;
+      if (Size.cx < 0)
+         Size.cx = 0;
+      if (Size.cy < 0)
+         Size.cy = 0;
    }
 
    Window->WindowRect.left = Pos.x;
@@ -1744,7 +1744,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    Cs.y = Pos.y;
 
    DPRINT("[win32k.window] IntCreateWindowEx style %d, exstyle %d, parent %d\n", Cs.style, Cs.dwExStyle, Cs.hwndParent);
-   DPRINT("IntCreateWindowEx(): (%d,%d-%d,%d)\n", x, y, nWidth, nHeight);
+   DPRINT("IntCreateWindowEx(): (%d,%d-%d,%d)\n", x, y, Size.cx, Size.cy);
    DPRINT("IntCreateWindowEx(): About to send NCCREATE message.\n");
    Result = co_IntSendMessage(Window->hSelf, WM_NCCREATE, 0, (LPARAM) &Cs);
    if (!Result)
