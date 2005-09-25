@@ -63,7 +63,7 @@ BOOL ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, int *piEncoding
 	DWORD dwPos, i;
 	DWORD dwCharCount;
 	BOOL bSuccess = FALSE;
-	BYTE b;
+	BYTE b = 0;
 	int iEncoding = ENCODING_ANSI;
 	int iCodePage;
 	WCHAR szCrlf[2] = { '\r', '\n' };
@@ -216,14 +216,14 @@ done:
 
 static BOOL WriteEncodedText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, int iEncoding)
 {
-	LPBYTE pBytes;
+	LPBYTE pBytes = NULL;
 	LPBYTE pAllocBuffer = NULL;
 	DWORD dwPos = 0;
 	DWORD dwByteCount;
 	BYTE buffer[1024];
 	UINT iCodePage;
 	DWORD dwDummy, i;
-	BOOL bSuccess;
+	BOOL bSuccess = FALSE;
 	int iBufferSize, iRequiredBytes;
 	BYTE b;
 
