@@ -13,7 +13,7 @@ BEGIN
     BEGIN
         MENUITEM "&Help Topics", IDC_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&About ...", IDC_ABOUT
+        MENUITEM "&About Volume Control", IDC_ABOUT
     END
 END
 

@@ -55,6 +55,9 @@
 <directory name="sm">
 	<xi:include href="sm/sm.xml" />
 </directory>
+<directory name="sndvol32">
+	<xi:include href="sndvol32/sndvol32.xml" />
+</directory>
 <directory name="taskmgr">
 	<xi:include href="taskmgr/taskmgr.xml" />
 </directory>

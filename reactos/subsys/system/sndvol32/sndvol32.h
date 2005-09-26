@@ -28,7 +28,8 @@ extern HANDLE hAppHeap;
 
 #define SZ_APP_CLASS TEXT("Volume Control")
 
-#define DBG DbgPrint("SNDVOL32: %s:%i: ", __FILE__, __LINE__); DbgPrint
+ULONG DbgPrint(PCH , ...);
+#define DPRINT DbgPrint("SNDVOL32: %s:%i: ", __FILE__, __LINE__); DbgPrint
 
 
 /*
@@ -73,5 +74,19 @@ INT SndMixerGetProductName(PSND_MIXER Mixer, LPTSTR lpBuffer, UINT uSize);
 BOOL SndMixerEnumProducts(PSND_MIXER Mixer, PFNSNDMIXENUMPRODUCTS EnumProc, PVOID Context);
 INT SndMixerGetDestinationCount(PSND_MIXER Mixer);
 BOOL SndMixerEnumDestinationLines(PSND_MIXER Mixer, PFNSNDMIXENUMLINES EnumProc, PVOID Context);
+
+/*
+ * MISC
+ */
+INT
+AllocAndLoadString(OUT LPWSTR *lpTarget,
+                   IN HINSTANCE hInst,
+                   IN UINT uID);
+
+DWORD
+LoadAndFormatString(IN HINSTANCE hInstance,
+                    IN UINT uID,
+                    OUT LPWSTR *lpTarget,
+                    ...);
 
 #endif /* __SNDVOL32_H */
