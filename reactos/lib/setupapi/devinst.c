@@ -4385,7 +4385,7 @@ SetupDiInstallDevice(
     DWORD SectionNameLength = 0;
     BOOL Result = FALSE;
     INFCONTEXT ContextService;
-    UINT Flags;
+    INT Flags;
     DWORD RequiredSize;
     HINF hInf = NULL;
     LPCWSTR AssociatedService = NULL;
