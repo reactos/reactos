@@ -38,10 +38,14 @@ static BOOLEAN DefaultHandlesDisabled = FALSE;
 
 static NTSTATUS MapDefaultKey (PHANDLE ParentKey, HKEY Key);
 static VOID CloseDefaultKeys(VOID);
-#define CloseDefaultKey(Handle)                                                \
+#define ClosePredefKey(Handle)                                                 \
     if ((ULONG_PTR)Handle & 0x1) {                                             \
         NtClose(Handle);                                                       \
     }
+#define IsPredefKey(HKey)                                                      \
+    (((ULONG)(HKey) & 0xF0000000) == 0x80000000)
+#define GetPredefKeyIndex(HKey)                                                \
+    ((ULONG)(HKey) & 0x0FFFFFFF)
 
 static NTSTATUS OpenClassesRootKey(PHANDLE KeyHandle);
 static NTSTATUS OpenLocalMachineKey (PHANDLE KeyHandle);
@@ -147,14 +151,14 @@ MapDefaultKey (OUT PHANDLE RealKey,
 
   TRACE("MapDefaultKey (Key %x)\n", Key);
 
-  if (((ULONG)Key & 0xF0000000) != 0x80000000)
+  if (!IsPredefKey(Key))
     {
       *RealKey = (HANDLE)((ULONG_PTR)Key & ~0x1);
       return STATUS_SUCCESS;
     }
 
   /* Handle special cases here */
-  Index = (ULONG)Key & 0x0FFFFFFF;
+  Index = GetPredefKeyIndex(Key);
   if (Index >= MAX_DEFAULT_HANDLES)
     {
       return STATUS_INVALID_PARAMETER;
@@ -319,17 +323,18 @@ RegOverridePredefKey(IN HKEY hKey,
 {
     LONG ErrorCode = ERROR_SUCCESS;
     
-    if (hKey == HKEY_CLASSES_ROOT ||
-        hKey == HKEY_CURRENT_CONFIG ||
-        hKey == HKEY_CURRENT_USER ||
-        hKey == HKEY_LOCAL_MACHINE ||
-        hKey == HKEY_PERFORMANCE_DATA ||
-        hKey == HKEY_USERS)
+    if ((hKey == HKEY_CLASSES_ROOT ||
+         hKey == HKEY_CURRENT_CONFIG ||
+         hKey == HKEY_CURRENT_USER ||
+         hKey == HKEY_LOCAL_MACHINE ||
+         hKey == HKEY_PERFORMANCE_DATA ||
+         hKey == HKEY_USERS) &&
+        !IsPredefKey(hNewHKey))
     {
         PHANDLE Handle;
         ULONG Index;
 
-        Index = (ULONG)hKey & 0x0FFFFFFF;
+        Index = GetPredefKeyIndex(hKey);
         Handle = &DefaultHandleTable[Index];
 
         if (hNewHKey == NULL)
@@ -736,9 +741,9 @@ RegCopyTreeW(IN HKEY hKeySrc,
     }
     
 Cleanup:
-    CloseDefaultKey(DestKeyHandle);
+    ClosePredefKey(DestKeyHandle);
 Cleanup2:
-    CloseDefaultKey(KeyHandle);
+    ClosePredefKey(KeyHandle);
     
     if (!NT_SUCCESS(Status))
     {
@@ -991,7 +996,7 @@ RegCreateKeyExA (HKEY hKey,
       RtlFreeUnicodeString (&ClassString);
     }
 
-  CloseDefaultKey(ParentKey);
+  ClosePredefKey(ParentKey);
 
   TRACE("Status %x\n", Status);
   if (!NT_SUCCESS(Status))
@@ -1052,7 +1057,7 @@ RegCreateKeyExW (HKEY hKey,
                            samDesired,
                            lpdwDisposition);
 
-  CloseDefaultKey(ParentKey);
+  ClosePredefKey(ParentKey);
 
   TRACE("Status %x\n", Status);
   if (!NT_SUCCESS(Status))
@@ -1151,7 +1156,7 @@ RegDeleteKeyA (HKEY hKey,
   NtClose (TargetKey);
   
 Cleanup:
-  CloseDefaultKey(ParentKey);
+  ClosePredefKey(ParentKey);
 
   if (!NT_SUCCESS(Status))
     {
@@ -1203,7 +1208,7 @@ RegDeleteKeyW (HKEY hKey,
   NtClose (TargetKey);
   
 Cleanup:
-  CloseDefaultKey(ParentKey);
+  ClosePredefKey(ParentKey);
 
   if (!NT_SUCCESS(Status))
     {
@@ -1274,7 +1279,7 @@ RegDeleteKeyValueW(IN HKEY hKey,
     }
     
 Cleanup:
-    CloseDefaultKey(KeyHandle);
+    ClosePredefKey(KeyHandle);
 
     if (!NT_SUCCESS(Status))
     {
@@ -1565,7 +1570,7 @@ RegDeleteTreeW(IN HKEY hKey,
            subkey, because the handle would be invalid already! */
         if (CurKey != KeyHandle)
         {
-            CloseDefaultKey(KeyHandle);
+            ClosePredefKey(KeyHandle);
         }
         
         return ERROR_SUCCESS;
@@ -1579,7 +1584,7 @@ RegDeleteTreeW(IN HKEY hKey,
         }
 
 Cleanup:
-        CloseDefaultKey(KeyHandle);
+        ClosePredefKey(KeyHandle);
         
         return RtlNtStatusToDosError(Status);
     }
@@ -1679,7 +1684,7 @@ RegSetKeyValueW(IN HKEY hKey,
     }
     
 Cleanup:
-    CloseDefaultKey(KeyHandle);
+    ClosePredefKey(KeyHandle);
 
     return Ret;
 }
@@ -1757,7 +1762,7 @@ RegSetKeyValueA(IN HKEY hKey,
     }
     
 Cleanup:
-    CloseDefaultKey(KeyHandle);
+    ClosePredefKey(KeyHandle);
 
     return Ret;
 }
@@ -1789,7 +1794,7 @@ RegDeleteValueA (HKEY hKey,
 			     &ValueName);
   RtlFreeUnicodeString (&ValueName);
   
-  CloseDefaultKey(KeyHandle);
+  ClosePredefKey(KeyHandle);
   
   if (!NT_SUCCESS(Status))
     {
@@ -1826,7 +1831,7 @@ RegDeleteValueW (HKEY hKey,
   Status = NtDeleteValueKey (KeyHandle,
 			     &ValueName);
 
-  CloseDefaultKey(KeyHandle);
+  ClosePredefKey(KeyHandle);
 
   if (!NT_SUCCESS(Status))
     {
@@ -2051,7 +2056,7 @@ RegEnumKeyExA (HKEY hKey,
 		KeyInfo);
 
 Cleanup:
-    CloseDefaultKey(KeyHandle);
+    ClosePredefKey(KeyHandle);
 
     return ErrorCode;
 }
@@ -2199,7 +2204,7 @@ RegEnumKeyExW (HKEY hKey,
 	       KeyInfo);
 
 Cleanup:
-  CloseDefaultKey(KeyHandle);
+  ClosePredefKey(KeyHandle);
 
   return ErrorCode;
 }
@@ -2314,7 +2319,7 @@ RegEnumValueA( HKEY hKey, DWORD index, LPSTR value, LPDWORD val_count,
 
  done:
     if (buf_ptr != buffer) HeapFree( GetProcessHeap(), 0, buf_ptr );
-    CloseDefaultKey(KeyHandle);
+    ClosePredefKey(KeyHandle);
     return RtlNtStatusToDosError(status);
 }
 
@@ -2422,7 +2427,7 @@ RegEnumValueW( HKEY hKey, DWORD index, LPWSTR value, PDWORD val_count,
 
  done:
     if (buf_ptr != buffer) HeapFree( GetProcessHeap(), 0, buf_ptr );
-    CloseDefaultKey(KeyHandle);
+    ClosePredefKey(KeyHandle);
     return RtlNtStatusToDosError(status);
 }
 
@@ -2451,7 +2456,7 @@ RegFlushKey(HKEY hKey)
 
   Status = NtFlushKey (KeyHandle);
   
-  CloseDefaultKey(KeyHandle);
+  ClosePredefKey(KeyHandle);
   
   if (!NT_SUCCESS(Status))
     {
@@ -2495,7 +2500,7 @@ RegGetKeySecurity(HKEY hKey,
 				 *lpcbSecurityDescriptor,
 				 lpcbSecurityDescriptor);
 
-  CloseDefaultKey(KeyHandle);
+  ClosePredefKey(KeyHandle);
 
   if (!NT_SUCCESS(Status))
     {
@@ -2603,7 +2608,7 @@ RegLoadKeyW (HKEY hKey,
     }
 
 Cleanup:
-  CloseDefaultKey(KeyHandle);
+  ClosePredefKey(KeyHandle);
 
   return ErrorCode;
 }
@@ -2660,7 +2665,7 @@ RegNotifyChangeKeyValue (HKEY hKey,
       ErrorCode = RtlNtStatusToDosError (Status);
     }
 
-  CloseDefaultKey(KeyHandle);
+  ClosePredefKey(KeyHandle);
 
   return ErrorCode;
 }
@@ -2779,7 +2784,7 @@ RegOpenKeyExA (HKEY hKey,
 		ErrorCode = RtlNtStatusToDosError (Status);
 	}
 	
-	CloseDefaultKey(KeyHandle);
+	ClosePredefKey(KeyHandle);
 
 	return ErrorCode;
 }
@@ -2830,7 +2835,7 @@ RegOpenKeyExW (HKEY hKey,
 		ErrorCode = RtlNtStatusToDosError (Status);
 	}
 	
-	CloseDefaultKey(KeyHandle);
+	ClosePredefKey(KeyHandle);
 
 	return ErrorCode;
 }
@@ -3216,7 +3221,7 @@ RegQueryInfoKeyW (HKEY hKey,
     }
 
 Cleanup:
-  CloseDefaultKey(KeyHandle);
+  ClosePredefKey(KeyHandle);
   
   return ErrorCode;
 }
@@ -3466,7 +3471,7 @@ RegQueryValueExW (HKEY hKey,
 	       ValueInfo);
 
 Cleanup:
-  CloseDefaultKey(KeyHandle);
+  ClosePredefKey(KeyHandle);
 
   return ErrorCode;
 }
@@ -3735,7 +3740,7 @@ RegQueryValueW (HKEY hKey,
     }
 
 Cleanup:
-  CloseDefaultKey(KeyHandle);
+  ClosePredefKey(KeyHandle);
 
   return ErrorCode;
 }
@@ -3897,7 +3902,7 @@ RegReplaceKeyW (HKEY hKey,
     }
 
 Cleanup:
-  CloseDefaultKey(KeyHandle);
+  ClosePredefKey(KeyHandle);
 
   return ErrorCode;
 }
@@ -3991,7 +3996,7 @@ RegRestoreKeyW (HKEY hKey,
   NtClose (FileHandle);
   
 Cleanup:
-  CloseDefaultKey(KeyHandle);
+  ClosePredefKey(KeyHandle);
 
   if (!NT_SUCCESS(Status))
     {
@@ -4092,7 +4097,7 @@ RegSaveKeyW (HKEY hKey,
   NtClose (FileHandle);
 
 Cleanup:
-  CloseDefaultKey(KeyHandle);
+  ClosePredefKey(KeyHandle);
 
   if (!NT_SUCCESS(Status))
     {
@@ -4132,7 +4137,7 @@ RegSetKeySecurity (HKEY hKey,
 				SecurityInformation,
 				pSecurityDescriptor);
 
-  CloseDefaultKey(KeyHandle);
+  ClosePredefKey(KeyHandle);
   
   if (!NT_SUCCESS(Status))
     {
@@ -4282,7 +4287,7 @@ RegSetValueExW (HKEY hKey,
 			  (PVOID)lpData,
 			  (ULONG)cbData);
 
-  CloseDefaultKey(KeyHandle);
+  ClosePredefKey(KeyHandle);
 
   if (!NT_SUCCESS(Status))
     {
@@ -4407,7 +4412,7 @@ RegSetValueW (HKEY hKey,
     }
 
 Cleanup:
-  CloseDefaultKey(KeyHandle);
+  ClosePredefKey(KeyHandle);
 
   return ErrorCode;
 }
@@ -4473,7 +4478,7 @@ RegUnLoadKeyW (HKEY hKey,
 
   Status = NtUnloadKey (&ObjectAttributes);
   
-  CloseDefaultKey(KeyHandle);
+  ClosePredefKey(KeyHandle);
 
   if (!NT_SUCCESS(Status))
     {
