@@ -55,7 +55,8 @@ BaseDumpAppcompatCache@0
 BaseFlushAppcompatCache@0
 ;BaseInitAppcompatCache
 ;BaseInitAppcompatCacheSupport
-;BaseProcessInitPostImport
+BaseProcessInitPostImport@0
+BaseQueryModuleData@20
 BaseUpdateAppcompatCache@12
 Beep@8
 BeginUpdateResourceA@8
