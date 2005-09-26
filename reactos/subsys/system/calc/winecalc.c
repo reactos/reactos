@@ -2847,6 +2847,15 @@ void DestroyCalc (CALC *calc)
 {
     int i;
 
+    if (menus[MENU_STD] != 0)
+        DestroyMenu(menus[MENU_STD]);
+
+    if (menus[MENU_SCIMS] != 0)
+        DestroyMenu(menus[MENU_SCIMS]);
+
+    if (menus[MENU_SCIWS] != 0)
+        DestroyMenu(menus[MENU_SCIWS]);
+
     for (i=0;i<calc->numButtons;i++)
         DestroyWindow(calc->cb[i].hBtn);
 }
