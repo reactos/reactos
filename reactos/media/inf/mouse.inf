@@ -25,12 +25,17 @@ HKR, , NoInstallClass, 0, 1
 
 [Manufacturer]
 %StdMfg% = StdMfg
+%IbmMfg% = IbmMfg
 %LogMfg% = LogMfg
 %MSMfg%  = MSMfg
 
 [StdMfg]
 %SERIAL_MOUSE.DeviceDesc% = Serial_Inst,*PNP0F0C,SERENUM\PNP0F0C,*PNP0F17,SERENUM\PNP0F17,SERIAL_MOUSE
 %PS2_MOUSE.DeviceDesc% = PS2_Inst,*PNP0F0E,*PNP0F19,PS2_MOUSE
+%HID_MOUSE.DeviceDesc% = HID_Inst,HID_DEVICE_SYSTEM_MOUSE
+
+[IbmMfg]
+*IBM3780.DeviceDesc = PS2_Inst,*IBM3780
 
 [LogMfg]
 %*PNP0F08.DeviceDesc% = Serial_Inst,*PNP0F08,SERENUM\PNP0F08
@@ -97,31 +102,44 @@ HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt\Parameters","SampleRate",0x0001
 HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt\Parameters","BreakOnSysRq",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt\Parameters","MouseResolution",0x00010001,0x00000003
 
+;---------------------------- HID MOUSE DRIVER --------------------------
+
+[HID_Inst.NT]
+CopyFiles = HID_CopyFiles, Mouclass_CopyFiles
+
+[HID_CopyFiles]
+mouhid.sys
+
+[HID_Inst.NT.Services]
+AddService = mouhid, 0x00000002, mouhid_Service_Inst
+AddService = mouclass, , mouclass_Service_Inst
+
+[mouhid_Service_Inst]
+ServiceType   = 1
+StartType     = 3
+ErrorControl  = 0
+ServiceBinary = %12%\mouhid.sys
+LoadOrderGroup = Pointer Port
+
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
 ReactOS = "ReactOS Team"
 MouseClassName = "Mice and other pointing devices"
-StdMfg = "(Standard mice)"
-LogMfg = "Logitech"
-MSMfg  = "Microsoft"
 
-*PNP0F01.DeviceDesc = "Microsoft Serial Mouse"
-*PNP0F03.DeviceDesc = "Microsoft PS/2-style Mouse"
-*PNP0F08.DeviceDesc = "Logitech Serial Mouse"
-*PNP0F12.DeviceDesc = "Logitech PS/2-style Mouse"
-*PNP0F13.DeviceDesc = "PS/2 port for PS/2-style mice"
+StdMfg = "(Standard mice)"
 SERIAL_MOUSE.DeviceDesc = "Standard Serial Mouse"
 PS2_MOUSE.DeviceDesc = "Standard PS/2 Mouse"
+HID_MOUSE.DeviceDesc = "HID Mouse"
 
-[String.040c]
-MouseClassName = "Souris et autres dispositifs de pointage"
-StdMfg = "(Souris standard)"
+IbmMfg = "IBM"
+*IBM3780.DeviceDesc = "IBM PS/2 Trackpoint"
 
-*PNP0F01.DeviceDesc = "Souris Microsoft sur port série"
-*PNP0F03.DeviceDesc = "Souris Microsoft sur port PS/2"
-*PNP0F08.DeviceDesc = "Souris Logitech sur port série"
-*PNP0F12.DeviceDesc = "Souris Logitech sur port PS/2"
-*PNP0F13.DeviceDesc = "Souris compatible PS/2"
-SERIAL_MOUSE.DeviceDesc = "Souris standard sur port série"
-PS2_MOUSE.DeviceDesc = "Souris standard sur port PS/2"
+LogMfg = "Logitech"
+*PNP0F08.DeviceDesc = "Logitech Serial Mouse"
+*PNP0F12.DeviceDesc = "Logitech PS/2-style Mouse"
+
+MSMfg = "Microsoft"
+*PNP0F01.DeviceDesc = "Microsoft Serial Mouse"
+*PNP0F03.DeviceDesc = "Microsoft PS/2-style Mouse"
+*PNP0F13.DeviceDesc = "PS/2 port for PS/2-style mice"

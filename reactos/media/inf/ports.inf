@@ -61,14 +61,7 @@ LoadOrderGroup = PNP Filter
 [Strings]
 ReactOS = "ReactOS Team"
 PortsClassName = "Serial and parallel ports"
-StdMfg = "(Standard ports)"
 
+StdMfg = "(Standard ports)"
 *PNP0500.DeviceDesc = "Serial communication port"
 *PNP0501.DeviceDesc = "Serial communication port"
-
-[String.040c]
-PortsClassName = "Ports (Série et parallèle)"
-StdMfg = "(Ports standard)"
-
-*PNP0500.DeviceDesc = "Port de communication série"
-*PNP0501.DeviceDesc = "Port de communication série"

@@ -39,7 +39,7 @@ HKR, , NoInstallClass, 0, 1
 ;------------------------------ UHCI DRIVER -----------------------------
 
 [UHCI_Inst.NT]
-CopyFiles = UHCI_CopyFiles
+CopyFiles = UHCI_CopyFiles.NT
 
 [UHCI_CopyFiles.NT]
 usbport.sys
@@ -58,7 +58,7 @@ LoadOrderGroup = Base
 ;------------------------------ OHCI DRIVER -----------------------------
 
 [OHCI_Inst.NT]
-CopyFiles = OHCI_CopyFiles
+CopyFiles = OHCI_CopyFiles.NT
 
 [OHCI_CopyFiles.NT]
 usbport.sys
@@ -77,7 +77,7 @@ LoadOrderGroup = Base
 ;------------------------------ EHCI DRIVER -----------------------------
 
 [EHCI_Inst.NT]
-CopyFiles = EHCI_CopyFiles
+CopyFiles = EHCI_CopyFiles.NT
 
 [EHCI_CopyFiles.NT]
 usbport.sys
@@ -96,7 +96,7 @@ LoadOrderGroup = Base
 ;---------------------------- ROOT HUB DRIVER ---------------------------
 
 [RootHub_Inst.NT]
-CopyFiles = RootHub_CopyFiles
+CopyFiles = RootHub_CopyFiles.NT
 
 [RootHub_CopyFiles.NT]
 usbport.sys
