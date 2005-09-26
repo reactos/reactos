@@ -72,7 +72,6 @@ IoInitFileSystemImplementation(VOID)
 VOID
 IoShutdownRegisteredFileSystems(VOID)
 {
-  PLIST_ENTRY current_entry;
   FILE_SYSTEM_OBJECT* current;
   PIRP Irp;
   KEVENT Event;
@@ -87,11 +86,8 @@ IoShutdownRegisteredFileSystems(VOID)
 		    NotificationEvent,
 		    FALSE);
 
-  current_entry = FileSystemListHead.Flink;
-  while (current_entry!=(&FileSystemListHead))
+  LIST_FOR_EACH(current, &FileSystemListHead, FILE_SYSTEM_OBJECT,Entry)
     {
-      current = CONTAINING_RECORD(current_entry,FILE_SYSTEM_OBJECT,Entry);
-
       /* send IRP_MJ_SHUTDOWN */
       Irp = IoBuildSynchronousFsdRequest(IRP_MJ_SHUTDOWN,
 					 current->DeviceObject,
@@ -110,8 +106,6 @@ IoShutdownRegisteredFileSystems(VOID)
 				FALSE,
 				NULL);
 	}
-
-      current_entry = current_entry->Flink;
     }
 
   ExReleaseResourceLite(&FileSystemListLock);
@@ -224,8 +218,7 @@ IoMountVolume(IN PDEVICE_OBJECT DeviceObject,
  * RETURNS: Status
  */
 {
-  PLIST_ENTRY current_entry;
-  FILE_SYSTEM_OBJECT* current;
+  PFILE_SYSTEM_OBJECT current;
   NTSTATUS Status;
   DEVICE_TYPE MatchingDeviceType;
   PDEVICE_OBJECT DevObject;
@@ -262,13 +255,12 @@ IoMountVolume(IN PDEVICE_OBJECT DeviceObject,
 
   KeEnterCriticalRegion();
   ExAcquireResourceSharedLite(&FileSystemListLock,TRUE);
-  current_entry = FileSystemListHead.Flink;
-  while (current_entry!=(&FileSystemListHead))
+
+restart:
+  LIST_FOR_EACH(current,&FileSystemListHead, FILE_SYSTEM_OBJECT, Entry)
     {
-      current = CONTAINING_RECORD(current_entry,FILE_SYSTEM_OBJECT,Entry);
       if (current->DeviceObject->DeviceType != MatchingDeviceType)
 	{
-	  current_entry = current_entry->Flink;
 	  continue;
 	}
       /* If we are not allowed to mount this volume as a raw filesystem volume
@@ -294,8 +286,7 @@ IoMountVolume(IN PDEVICE_OBJECT DeviceObject,
 		return(Status);
 	      }
 	    ExAcquireResourceSharedLite(&FileSystemListLock,TRUE);
-	    current_entry = FileSystemListHead.Flink;
-	    continue;
+	    goto restart;
 
 	  case STATUS_SUCCESS:
 	    DeviceObject->Vpb->Flags = DeviceObject->Vpb->Flags |
@@ -306,7 +297,8 @@ IoMountVolume(IN PDEVICE_OBJECT DeviceObject,
 
 	  case STATUS_UNRECOGNIZED_VOLUME:
 	  default:
-	    current_entry = current_entry->Flink;
+       /* do nothing */
+       break;
 	}
     }
   ExReleaseResourceLite(&FileSystemListLock);
@@ -504,28 +496,26 @@ IoRegisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
 VOID STDCALL
 IoUnregisterFileSystem(IN PDEVICE_OBJECT DeviceObject)
 {
-  PLIST_ENTRY current_entry;
   PFILE_SYSTEM_OBJECT current;
 
   DPRINT("IoUnregisterFileSystem(DeviceObject 0x%p)\n", DeviceObject);
 
   KeEnterCriticalRegion();
   ExAcquireResourceExclusiveLite(&FileSystemListLock, TRUE);
-  current_entry = FileSystemListHead.Flink;
-  while (current_entry!=(&FileSystemListHead))
+
+  LIST_FOR_EACH(current,&FileSystemListHead, FILE_SYSTEM_OBJECT,Entry)
     {
-      current = CONTAINING_RECORD(current_entry,FILE_SYSTEM_OBJECT,Entry);
       if (current->DeviceObject == DeviceObject)
 	{
-	  RemoveEntryList(current_entry);
+     RemoveEntryList(&current->Entry);
 	  ExFreePoolWithTag(current, TAG_FILE_SYSTEM);
 	  ExReleaseResourceLite(&FileSystemListLock);
 	  KeLeaveCriticalRegion();
 	  IopNotifyFileSystemChange(DeviceObject, FALSE);
 	  return;
 	}
-      current_entry = current_entry->Flink;
     }
+    
   ExReleaseResourceLite(&FileSystemListLock);
   KeLeaveCriticalRegion();
 }
@@ -595,17 +585,11 @@ IopNotifyFileSystemChange(PDEVICE_OBJECT DeviceObject,
 			  BOOLEAN DriverActive)
 {
   PFS_CHANGE_NOTIFY_ENTRY ChangeEntry;
-  PLIST_ENTRY Entry;
 
   KeAcquireGuardedMutex(&FsChangeNotifyListLock);
-  Entry = FsChangeNotifyListHead.Flink;
-  while (Entry != &FsChangeNotifyListHead)
+  LIST_FOR_EACH(ChangeEntry, &FsChangeNotifyListHead,FS_CHANGE_NOTIFY_ENTRY, FsChangeNotifyList) 
     {
-      ChangeEntry = CONTAINING_RECORD(Entry, FS_CHANGE_NOTIFY_ENTRY, FsChangeNotifyList);
-
       (ChangeEntry->FSDNotificationProc)(DeviceObject, DriverActive);
-
-      Entry = Entry->Flink;
     }
   KeReleaseGuardedMutex(&FsChangeNotifyListLock);
 }
@@ -646,24 +630,20 @@ IoUnregisterFsRegistrationChange(IN PDRIVER_OBJECT DriverObject,
 				 IN PDRIVER_FS_NOTIFICATION FSDNotificationProc)
 {
   PFS_CHANGE_NOTIFY_ENTRY ChangeEntry;
-  PLIST_ENTRY Entry;
 
-  Entry = FsChangeNotifyListHead.Flink;
-  while (Entry != &FsChangeNotifyListHead)
+  LIST_FOR_EACH(ChangeEntry, &FsChangeNotifyListHead, FS_CHANGE_NOTIFY_ENTRY, FsChangeNotifyList)
     {
-      ChangeEntry = CONTAINING_RECORD(Entry, FS_CHANGE_NOTIFY_ENTRY, FsChangeNotifyList);
       if (ChangeEntry->DriverObject == DriverObject &&
 	  ChangeEntry->FSDNotificationProc == FSDNotificationProc)
 	{
 	  KeAcquireGuardedMutex(&FsChangeNotifyListLock);
-	  RemoveEntryList(Entry);
+     RemoveEntryList(&ChangeEntry->FsChangeNotifyList);
 	  KeReleaseGuardedMutex(&FsChangeNotifyListLock);
 
-	  ExFreePoolWithTag(Entry, TAG_FS_CHANGE_NOTIFY);
+     ExFreePoolWithTag(ChangeEntry, TAG_FS_CHANGE_NOTIFY);
 	  return;
 	}
 
-      Entry = Entry->Flink;
     }
 }
 

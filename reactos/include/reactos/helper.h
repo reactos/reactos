@@ -18,17 +18,21 @@
 #define EXPORTED __declspec(dllexport)
 #define IMPORTED __declspec(dllimport)
 
-/* iterate through the list using a list entry */
+/* iterate through the list using a list entry. 
+ * elem is set to NULL if the list is run thru without breaking out or if list is empty.
+ */
 #define LIST_FOR_EACH(elem, list, type, field) \
     for ((elem) = CONTAINING_RECORD((list)->Flink, type, field); \
-         &(elem)->field != (list); \
+         &(elem)->field != (list) || (elem = NULL); \
          (elem) = CONTAINING_RECORD((elem)->field.Flink, type, field))
          
-/* iterate through the list using a list entry, with safety against removal */
+/* iterate through the list using a list entry, with safety against removal 
+ * elem is set to NULL if the list is run thru without breaking out or if list is empty.
+ */
 #define LIST_FOR_EACH_SAFE(cursor, cursor2, list, type, field) \
     for ((cursor) = CONTAINING_RECORD((list)->Flink, type, field), \
          (cursor2) = CONTAINING_RECORD((cursor)->field.Flink, type, field); \
-         &(cursor)->field != (list); \
+         &(cursor)->field != (list) || (cursor = NULL); \
          (cursor) = (cursor2), \
          (cursor2) = CONTAINING_RECORD((cursor)->field.Flink, type, field))
          
@@ -55,7 +59,7 @@
 #define HOURS_TO_100NS(hours) (((LONGLONG)(hours)) * MINUTES_TO_100NS(60))
 #define UNICODIZE1(x) L##x
 #define UNICODIZE(x) UNICODIZE1(x)
-#define InsertAscendingListFIFO(ListHead, Type, ListEntryField, NewEntry, SortField)\
+#define InsertAscendingListFIFO(ListHead, NewEntry, Type, ListEntryField, SortField)\
 {\
   PLIST_ENTRY current;\
 \
@@ -73,7 +77,7 @@
   InsertTailList(current, &((NewEntry)->ListEntryField));\
 }
 
-#define InsertDescendingListFIFO(ListHead, Type, ListEntryField, NewEntry, SortField)\
+#define InsertDescendingListFIFO(ListHead, NewEntry, Type, ListEntryField, SortField)\
 {\
   PLIST_ENTRY current;\
 \
@@ -91,7 +95,7 @@
   InsertTailList(current, &((NewEntry)->ListEntryField));\
 }
 
-#define InsertAscendingList(ListHead, Type, ListEntryField, NewEntry, SortField)\
+#define InsertAscendingList(ListHead, NewEntry, Type, ListEntryField, SortField)\
 {\
   PLIST_ENTRY current;\
 \
@@ -109,7 +113,7 @@
   InsertTailList(current, &((NewEntry)->ListEntryField));\
 }
 
-#define InsertDescendingList(ListHead, Type, ListEntryField, NewEntry, SortField)\
+#define InsertDescendingList(ListHead, NewEntry, Type, ListEntryField, SortField)\
 {\
   PLIST_ENTRY current;\
 \

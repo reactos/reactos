@@ -217,7 +217,7 @@ KiExpireTimers(PKDPC Dpc,
                PVOID SystemArgument1,
                PVOID SystemArgument2)
 {
-    PKTIMER Timer;
+    PKTIMER Timer, tmp;
     ULONGLONG InterruptTime;
     LIST_ENTRY ExpiredTimerList;
     PLIST_ENTRY CurrentEntry = NULL;
@@ -235,17 +235,12 @@ KiExpireTimers(PKDPC Dpc,
     InterruptTime = KeQueryInterruptTime();
 
     /* Loop through the Timer List and remove Expired Timers. Insert them into the Expired Listhead */
-    CurrentEntry = KiTimerListHead.Flink;
-    while (CurrentEntry != &KiTimerListHead) {
-
-        /* Get the Current Timer */
-        Timer = CONTAINING_RECORD(CurrentEntry, KTIMER, TimerListEntry);
+    LIST_FOR_EACH_SAFE(Timer, tmp, &KiTimerListHead, KTIMER, TimerListEntry)
+    {
         DPRINT("Looping for Timer: %x. Duetime: %I64d. InterruptTime %I64d \n", Timer, Timer->DueTime.QuadPart, InterruptTime);
 
         /* Check if we have to Expire it */
         if (InterruptTime < Timer->DueTime.QuadPart) break;
-
-        CurrentEntry = CurrentEntry->Flink;
 
         /* Remove it from the Timer List, add it to the Expired List */
         RemoveEntryList(&Timer->TimerListEntry);
@@ -253,7 +248,9 @@ KiExpireTimers(PKDPC Dpc,
     }
 
     /* Expire the Timers */
-    while ((CurrentEntry = RemoveHeadList(&ExpiredTimerList)) != &ExpiredTimerList) {
+    while (!IsListEmpty(&ExpiredTimerList)) {
+
+        CurrentEntry = RemoveHeadList(&ExpiredTimerList);
 
         /* Get the Timer */
         Timer = CONTAINING_RECORD(CurrentEntry, KTIMER, TimerListEntry);
@@ -373,9 +370,9 @@ KiInsertTimer(PKTIMER Timer,
     /* Now insert it into the Timer List */
     DPRINT("Inserting Timer into list\n");
     InsertAscendingList(&KiTimerListHead,
+                        Timer,    
                         KTIMER,
                         TimerListEntry,
-                        Timer,
                         DueTime.QuadPart);
 
     return TRUE;

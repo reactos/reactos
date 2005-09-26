@@ -766,7 +766,6 @@ PnpRootQueryBusRelations(
   PPNPROOT_PDO_DEVICE_EXTENSION PdoDeviceExtension;
   PPNPROOT_FDO_DEVICE_EXTENSION DeviceExtension;
   PDEVICE_RELATIONS Relations;
-  PLIST_ENTRY CurrentEntry;
   PPNPROOT_DEVICE Device;
   NTSTATUS Status;
   ULONG Size;
@@ -796,11 +795,8 @@ PnpRootQueryBusRelations(
   Relations->Count = DeviceExtension->DeviceListCount;
 
   i = 0;
-  CurrentEntry = DeviceExtension->DeviceListHead.Flink;
-  while (CurrentEntry != &DeviceExtension->DeviceListHead)
+  LIST_FOR_EACH(Device,&DeviceExtension->DeviceListHead,PNPROOT_DEVICE, ListEntry) 
   {
-    Device = CONTAINING_RECORD(CurrentEntry, PNPROOT_DEVICE, ListEntry);
-
     if (!Device->Pdo)
     {
       /* Create a physical device object for the
@@ -894,8 +890,6 @@ PnpRootQueryBusRelations(
     Relations->Objects[i] = Device->Pdo;
 
     i++;
-
-    CurrentEntry = CurrentEntry->Flink;
   }
 
   if (NT_SUCCESS(Status))

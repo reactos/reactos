@@ -1383,7 +1383,6 @@ NtCancelIoFile(IN HANDLE FileHandle,
    NTSTATUS Status;
    PFILE_OBJECT FileObject;
    PETHREAD Thread;
-   PLIST_ENTRY IrpEntry;
    PIRP Irp;
    KIRQL OldIrql;
    BOOLEAN OurIrpsInList = FALSE;
@@ -1408,11 +1407,9 @@ NtCancelIoFile(IN HANDLE FileHandle,
     */
 
    Thread = PsGetCurrentThread();
-   for (IrpEntry = Thread->IrpList.Flink;
-        IrpEntry != &Thread->IrpList;
-        IrpEntry = IrpEntry->Flink)
+
+   LIST_FOR_EACH(Irp, &Thread->IrpList, IRP, ThreadListEntry)
    {
-      Irp = CONTAINING_RECORD(IrpEntry, IRP, ThreadListEntry);
       if (Irp->Tail.Overlay.OriginalFileObject == FileObject)
       {
          IoCancelIrp(Irp);
@@ -1440,11 +1437,8 @@ NtCancelIoFile(IN HANDLE FileHandle,
        * forever.
        */
 
-      for (IrpEntry = Thread->IrpList.Flink;
-           IrpEntry != &Thread->IrpList;
-           IrpEntry = IrpEntry->Flink)
+      LIST_FOR_EACH(Irp, &Thread->IrpList, IRP, ThreadListEntry)           
       {
-         Irp = CONTAINING_RECORD(IrpEntry, IRP, ThreadListEntry);
          if (Irp->Tail.Overlay.OriginalFileObject == FileObject)
          {
             OurIrpsInList = TRUE;

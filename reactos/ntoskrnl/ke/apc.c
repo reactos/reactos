@@ -254,8 +254,6 @@ KiInsertQueueApc(PKAPC Apc,
                  KPRIORITY PriorityBoost)
 {
     PKTHREAD Thread = Apc->Thread;
-    PLIST_ENTRY ApcListEntry;
-    PKAPC QueuedApc;
 
     KeAcquireSpinLockAtDpcLevel(&Thread->ApcQueueLock);
 
@@ -282,17 +280,14 @@ KiInsertQueueApc(PKAPC Apc,
 
         DPRINT("Inserting Special APC %x for '%.16s' into the Queue\n", Apc, ((PETHREAD)Thread)->ThreadsProcess->ImageFileName);
 
-        for (ApcListEntry = Thread->ApcStatePointer[(int)Apc->ApcStateIndex]->ApcListHead[(int)Apc->ApcMode].Flink;
-             ApcListEntry != &Thread->ApcStatePointer[(int)Apc->ApcStateIndex]->ApcListHead[(int)Apc->ApcMode];
-             ApcListEntry = ApcListEntry->Flink) {
-
-            QueuedApc = CONTAINING_RECORD(ApcListEntry, KAPC, ApcListEntry);
-            if (Apc->NormalRoutine != NULL) break;
-        }
-
-        /* We found the first "Normal" APC, so write right before it */
-        ApcListEntry = ApcListEntry->Blink;
-        InsertHeadList(ApcListEntry, &Apc->ApcListEntry);
+        /* insert special apc before normal apcs (if any) but after the last special apc (fifo) */
+        InsertAscendingListFIFO(
+           &Thread->ApcStatePointer[(int)Apc->ApcStateIndex]->ApcListHead[(int)Apc->ApcMode], 
+           Apc,
+           KAPC, 
+           ApcListEntry, 
+           NormalRoutine /* sort field */
+           );
 
     } else {
 
@@ -469,25 +464,23 @@ KeFlushQueueApc(IN PKTHREAD Thread,
 {
     KIRQL OldIrql;
     PKAPC Apc;
-    PLIST_ENTRY FirstEntry, CurrentEntry;
+    PLIST_ENTRY FirstEntry = NULL;
 
     /* Lock the Dispatcher Database and APC Queue */
     OldIrql = KeAcquireDispatcherDatabaseLock();
     KeAcquireSpinLockAtDpcLevel(&Thread->ApcQueueLock);
 
-    if (IsListEmpty(&Thread->ApcState.ApcListHead[PreviousMode])) {
-        FirstEntry = NULL;
-    } else {
-        FirstEntry = Thread->ApcState.ApcListHead[PreviousMode].Flink;
-        RemoveEntryList(&Thread->ApcState.ApcListHead[PreviousMode]);
-        CurrentEntry = FirstEntry;
-        do {
-            Apc = CONTAINING_RECORD(CurrentEntry, KAPC, ApcListEntry);
-            Apc->Inserted = FALSE;
-            CurrentEntry = CurrentEntry->Flink;
-        } while (CurrentEntry != FirstEntry);
+    /* mark all apcs as not-inserted */
+    LIST_FOR_EACH(Apc, &Thread->ApcState.ApcListHead[PreviousMode], KAPC, ApcListEntry) {
+       Apc->Inserted = FALSE;
     }
-
+    
+    if (!IsListEmpty(&Thread->ApcState.ApcListHead[PreviousMode])) {
+        FirstEntry = Thread->ApcState.ApcListHead[PreviousMode].Flink;
+        /* unlink list head from the rest of the list */
+        RemoveEntryList(&Thread->ApcState.ApcListHead[PreviousMode]);
+    }
+    
     /* Release the locks */
     KeReleaseSpinLockFromDpcLevel(&Thread->ApcQueueLock);
     KeReleaseDispatcherDatabaseLock(OldIrql);

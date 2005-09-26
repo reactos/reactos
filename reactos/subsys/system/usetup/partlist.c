@@ -838,7 +838,7 @@ AddDiskToList (HANDLE FileHandle,
 
   GetDriverName (DiskEntry);
 
-  InsertAscendingList(&List->DiskListHead, DISKENTRY, ListEntry, DiskEntry, BiosDiskNumber);
+  InsertAscendingList(&List->DiskListHead, DiskEntry, DISKENTRY, ListEntry, BiosDiskNumber);
 
   LayoutBuffer = (DRIVE_LAYOUT_INFORMATION*)RtlAllocateHeap (ProcessHeap,
 							     0,
@@ -1225,7 +1225,6 @@ PrintDiskData (PPARTLIST List,
 	       PDISKENTRY DiskEntry)
 {
   PPARTENTRY PartEntry;
-  PLIST_ENTRY Entry;
   CHAR LineBuffer[128];
   COORD coPos;
   ULONG Written;
@@ -1305,17 +1304,12 @@ PrintDiskData (PPARTLIST List,
   PrintEmptyLine (List);
 
   /* Print partition lines*/
-  Entry = DiskEntry->PartListHead.Flink;
-  while (Entry != &DiskEntry->PartListHead)
+  LIST_FOR_EACH(PartEntry, &DiskEntry->PartListHead, PARTENTRY, ListEntry)
     {
-      PartEntry = CONTAINING_RECORD (Entry, PARTENTRY, ListEntry);
-
       /* Print disk entry */
       PrintPartitionData (List,
 			  DiskEntry,
 			  PartEntry);
-
-      Entry = Entry->Flink;
     }
 
   /* Print separator line */
@@ -1507,16 +1501,11 @@ DrawPartitionList (PPARTLIST List)
   /* print list entries */
   List->Line = - List->Offset;
 
-  Entry = List->DiskListHead.Flink;
-  while (Entry != &List->DiskListHead)
+  LIST_FOR_EACH(DiskEntry, &List->DiskListHead, DISKENTRY, ListEntry)
     {
-      DiskEntry = CONTAINING_RECORD (Entry, DISKENTRY, ListEntry);
-
       /* Print disk entry */
       PrintDiskData (List,
 		     DiskEntry);
-
-      Entry = Entry->Flink;
     }
 }
 

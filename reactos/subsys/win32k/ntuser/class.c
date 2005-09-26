@@ -615,16 +615,6 @@ NtUserUnregisterClass(
       RETURN(FALSE);
    }
 
-/* this was probably ment to prevent sysclass dereg
-Seems wrong. Any class can have NULL hInst, not only sysclasses
-
-*/
-//   if (Class->hInstance && Class->hInstance != hInstance)
-//   {
-//      SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
-//      RETURN( FALSE);
-//   }
-
    if (Class->refs)
    {
       /* NOTE: the class will not be freed when its refs become 0 ie. no more

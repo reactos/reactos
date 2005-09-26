@@ -53,17 +53,15 @@ KeStartProfile(PKPROFILE Profile,
 {
     KIRQL OldIrql;
     PKPROFILE_SOURCE_OBJECT SourceBuffer;
-    PKPROFILE_SOURCE_OBJECT Source = NULL;
     PKPROFILE_SOURCE_OBJECT CurrentSource;
     BOOLEAN FreeBuffer = TRUE;
     PKPROCESS ProfileProcess;
-    PLIST_ENTRY ListEntry;
 
     /* Allocate a buffer first, before we raise IRQL */
     SourceBuffer = ExAllocatePoolWithTag(NonPagedPool,
                                           sizeof(KPROFILE_SOURCE_OBJECT),
                                           TAG('P', 'r', 'o', 'f'));
-    RtlZeroMemory(Source, sizeof(KPROFILE_SOURCE_OBJECT));
+    RtlZeroMemory(SourceBuffer, sizeof(KPROFILE_SOURCE_OBJECT));
 
     /* Raise to PROFILE_LEVEL */
     KeRaiseIrql(PROFILE_LEVEL, &OldIrql);
@@ -90,32 +88,23 @@ KeStartProfile(PKPROFILE Profile,
         }
 
         /* Check if this type of profile (source) is already running */
-        for (ListEntry = KiProfileSourceListHead.Flink;
-             ListEntry != &KiProfileSourceListHead;
-             ListEntry = ListEntry->Flink) {
-
-            /* Get the Source Object */
-            CurrentSource = CONTAINING_RECORD(ListEntry,
-                                              KPROFILE_SOURCE_OBJECT,
-                                              ListEntry);
-
+        LIST_FOR_EACH(CurrentSource, &KiProfileSourceListHead, KPROFILE_SOURCE_OBJECT, ListEntry)
+        {
             /* Check if it's the same as the one being requested now */
             if (CurrentSource->Source == Profile->Source) {
-
-                Source = CurrentSource;
                 break;
             }
         }
 
         /* See if the loop found something */
-        if (!Source) {
+        if (!CurrentSource) {
 
             /* Nothing found, use our allocated buffer */
-            Source = SourceBuffer;
+            CurrentSource = SourceBuffer;
 
             /* Set up the Source Object */
-            Source->Source = Profile->Source;
-            InsertHeadList(&KiProfileSourceListHead, &Source->ListEntry);
+            CurrentSource->Source = Profile->Source;
+            InsertHeadList(&KiProfileSourceListHead, &CurrentSource->ListEntry);
 
             /* Don't free the pool later on */
             FreeBuffer = FALSE;
@@ -138,7 +127,6 @@ STDCALL
 KeStopProfile(PKPROFILE Profile)
 {
     KIRQL OldIrql;
-    PLIST_ENTRY ListEntry;
     PKPROFILE_SOURCE_OBJECT CurrentSource = NULL;
 
     /* Raise to PROFILE_LEVEL and acquire spinlock */
@@ -153,18 +141,15 @@ KeStopProfile(PKPROFILE Profile)
         Profile->Active = FALSE;
 
         /* Find the Source Object */
-        for (ListEntry = KiProfileSourceListHead.Flink;
-             CurrentSource->Source != Profile->Source;
-             ListEntry = ListEntry->Flink) {
-
-            /* Get the Source Object */
-            CurrentSource = CONTAINING_RECORD(ListEntry,
-                                              KPROFILE_SOURCE_OBJECT,
-                                              ListEntry);
+        LIST_FOR_EACH(CurrentSource, &KiProfileSourceListHead, KPROFILE_SOURCE_OBJECT, ListEntry) 
+        {
+            if (CurrentSource->Source == Profile->Source) {
+                /* Remove it */
+                RemoveEntryList(&CurrentSource->ListEntry);
+                break;   
+            }
         }
 
-        /* Remove it */
-        RemoveEntryList(&CurrentSource->ListEntry);
     }
 
     /* Lower IRQL */
@@ -240,14 +225,10 @@ KiParseProfileList(IN PKTRAP_FRAME TrapFrame,
 {
     PULONG BucketValue;
     PKPROFILE Profile;
-    PLIST_ENTRY NextEntry;
 
     /* Loop the List */
-    for (NextEntry = ListHead->Flink; NextEntry != ListHead; NextEntry = NextEntry->Flink) {
-
-        /* Get the Current Profile in the List */
-        Profile = CONTAINING_RECORD(NextEntry, KPROFILE, ListEntry);
-
+    LIST_FOR_EACH(Profile, ListHead, KPROFILE, ListEntry)
+    {
         /* Check if the source is good, and if it's within the range */
         if ((Profile->Source != Source) ||
             (TrapFrame->Eip < (ULONG_PTR)Profile->RegionStart) ||

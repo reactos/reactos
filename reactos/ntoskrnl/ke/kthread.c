@@ -76,7 +76,6 @@ PKTHREAD
 KiScanThreadList(KPRIORITY Priority,
                  KAFFINITY Affinity)
 {
-    PLIST_ENTRY current_entry;
     PKTHREAD current;
     ULONG Mask;
 
@@ -84,11 +83,7 @@ KiScanThreadList(KPRIORITY Priority,
 
     if (PriorityListMask & Mask) {
 
-        current_entry = PriorityListHead[Priority].Flink;
-
-        while (current_entry != &PriorityListHead[Priority]) {
-
-            current = CONTAINING_RECORD(current_entry, KTHREAD, WaitListEntry);
+        LIST_FOR_EACH(current, &PriorityListHead[Priority], KTHREAD, WaitListEntry) {
 
             if (current->State != Ready) {
 
@@ -102,8 +97,6 @@ KiScanThreadList(KPRIORITY Priority,
                 KiRemoveFromThreadList(current);
                 return(current);
             }
-
-            current_entry = current_entry->Flink;
         }
     }
 
@@ -548,7 +541,6 @@ STDCALL
 KeFreezeAllThreads(PKPROCESS Process)
 {
     KIRQL OldIrql;
-    PLIST_ENTRY CurrentEntry;
     PKTHREAD Current;
     PKTHREAD CurrentThread = KeGetCurrentThread();
 
@@ -556,12 +548,8 @@ KeFreezeAllThreads(PKPROCESS Process)
     OldIrql = KeAcquireDispatcherDatabaseLock();
 
     /* Loop the Process's Threads */
-    CurrentEntry = Process->ThreadListHead.Flink;
-    while (CurrentEntry != &Process->ThreadListHead)
+    LIST_FOR_EACH(Current, &Process->ThreadListHead, KTHREAD, ThreadListEntry)
     {
-        /* Get the Thread */
-        Current = CONTAINING_RECORD(CurrentEntry, KTHREAD, ThreadListEntry);
-
         /* Make sure it's not ours */
         if (Current == CurrentThread) continue;
 
@@ -575,8 +563,6 @@ KeFreezeAllThreads(PKPROCESS Process)
                 Current->SuspendSemaphore.Header.SignalState--;
             }
         }
-
-        CurrentEntry = CurrentEntry->Flink;
     }
 
     /* Release the lock */
@@ -1456,8 +1442,8 @@ KiServiceCheck (VOID)
     if (Thread->ServiceTable != KeServiceDescriptorTableShadow) {
 
         /* We do. Initialize it and save the new table */
-        PsInitWin32Thread((PETHREAD)Thread);
         Thread->ServiceTable = KeServiceDescriptorTableShadow;
+        PsInitWin32Thread((PETHREAD)Thread);
     }
 }
 

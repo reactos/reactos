@@ -252,7 +252,6 @@ KiDoBugCheckCallbacks(VOID)
 {
     PKBUGCHECK_CALLBACK_RECORD CurrentRecord;
     PLIST_ENTRY ListHead;
-    PLIST_ENTRY NextEntry;
 
     /* FIXME: Check Checksum and add support for WithReason Callbacks */
 
@@ -261,14 +260,8 @@ KiDoBugCheckCallbacks(VOID)
     if (ListHead->Flink && ListHead->Blink) {
 
         /* Loop the list */
-        NextEntry = ListHead->Flink;
-        while (NextEntry != ListHead) {
-
-            /* Get the Callback Record */
-            CurrentRecord = CONTAINING_RECORD(NextEntry,
-                                              KBUGCHECK_CALLBACK_RECORD,
-                                              Entry);
-
+        LIST_FOR_EACH(CurrentRecord, ListHead, KBUGCHECK_CALLBACK_RECORD, Entry)
+        {
             /* Make sure it's inserted */
             if (CurrentRecord->State == BufferInserted) {
 
@@ -278,9 +271,6 @@ KiDoBugCheckCallbacks(VOID)
                                                  CurrentRecord->Length);
                 CurrentRecord->State = BufferFinished;
             }
-
-            /* Move to next Entry */
-            NextEntry = NextEntry->Flink;
         }
     }
 }
@@ -297,7 +287,6 @@ KeBugCheckWithTf(ULONG BugCheckCode,
     KIRQL OldIrql;
     BOOLEAN GotExtendedCrashInfo = FALSE;
     PVOID Address = 0;
-    PLIST_ENTRY CurrentEntry;
     PLDR_DATA_TABLE_ENTRY CurrentModule = NULL;
     extern LIST_ENTRY ModuleListHead;
 #if 0
@@ -322,14 +311,8 @@ KeBugCheckWithTf(ULONG BugCheckCode,
         Address = (PVOID)Tf->Eip;
 
         /* Try to get information on the module */
-        CurrentEntry = ModuleListHead.Flink;
-        while (CurrentEntry != &ModuleListHead) 
+        LIST_FOR_EACH(CurrentModule, &ModuleListHead, LDR_DATA_TABLE_ENTRY, InLoadOrderModuleList)
         {
-            /* Get the current Section */
-            CurrentModule = CONTAINING_RECORD(CurrentEntry,
-                                              LDR_DATA_TABLE_ENTRY,
-                                              InLoadOrderModuleList);
-
             /* Check if this is the right one */
             if ((Address != NULL && (Address >= (PVOID)CurrentModule->DllBase &&
                  Address < (PVOID)((ULONG_PTR)CurrentModule->DllBase + CurrentModule->SizeOfImage)))) 
@@ -338,9 +321,6 @@ KeBugCheckWithTf(ULONG BugCheckCode,
                 GotExtendedCrashInfo = TRUE;
                 break;
             }
-
-            /* Loop again */
-            CurrentEntry = CurrentEntry->Flink;
         }
     }
 

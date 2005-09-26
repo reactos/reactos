@@ -962,7 +962,6 @@ VOID
 STDCALL
 IoCancelThreadIo(PETHREAD Thread)
 {
-    PLIST_ENTRY IrpEntry;
     PIRP Irp;
     KIRQL OldIrql;
     ULONG Retries = 3000;
@@ -972,13 +971,8 @@ IoCancelThreadIo(PETHREAD Thread)
     OldIrql = KfRaiseIrql(APC_LEVEL);
 
     /* Start by cancelling all the IRPs in the current thread queue. */
-    for (IrpEntry = Thread->IrpList.Flink;
-        IrpEntry != &Thread->IrpList;
-        IrpEntry = IrpEntry->Flink)
+    LIST_FOR_EACH(Irp, &Thread->IrpList, IRP, ThreadListEntry)
     {
-       /* Get the IRP */
-        Irp = CONTAINING_RECORD(IrpEntry, IRP, ThreadListEntry);
-        
         /* Cancel it */
         IoCancelIrp(Irp);
     }
