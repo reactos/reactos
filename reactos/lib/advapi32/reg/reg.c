@@ -5,6 +5,7 @@
  * FILE:            lib/advapi32/reg/reg.c
  * PURPOSE:         Registry functions
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
+ *                  Thomas Weidenmueller <w3seek@reactos.com>
  * UPDATE HISTORY:
  *                  Created 01/11/98
  *                  19990309 EA Stubs
@@ -88,6 +89,54 @@ RegCleanup (VOID)
 
 
 static NTSTATUS
+OpenPredefinedKey(IN ULONG Index,
+                  OUT HANDLE Handle)
+{
+    NTSTATUS Status;
+
+    switch (Index)
+    {
+        case 0: /* HKEY_CLASSES_ROOT */
+            Status = OpenClassesRootKey (Handle);
+            break;
+
+        case 1: /* HKEY_CURRENT_USER */
+            Status = RtlOpenCurrentUser (MAXIMUM_ALLOWED,
+                                         Handle);
+            break;
+
+        case 2: /* HKEY_LOCAL_MACHINE */
+            Status = OpenLocalMachineKey (Handle);
+            break;
+
+        case 3: /* HKEY_USERS */
+            Status = OpenUsersKey (Handle);
+            break;
+#if 0
+        case 4: /* HKEY_PERFORMANCE_DATA */
+            Status = OpenPerformanceDataKey (Handle);
+            break;
+#endif
+
+        case 5: /* HKEY_CURRENT_CONFIG */
+            Status = OpenCurrentConfigKey (Handle);
+            break;
+
+        case 6: /* HKEY_DYN_DATA */
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        default:
+            WARN("MapDefaultHandle() no handle creator\n");
+            Status = STATUS_INVALID_PARAMETER;
+            break;
+    }
+    
+    return Status;
+}
+
+
+static NTSTATUS
 MapDefaultKey (OUT PHANDLE RealKey,
                IN HKEY Key)
 {
@@ -127,42 +176,8 @@ MapDefaultKey (OUT PHANDLE RealKey,
   if (DoOpen)
     {
       /* create/open the default handle */
-      switch (Index)
-	{
-	  case 0: /* HKEY_CLASSES_ROOT */
-	    Status = OpenClassesRootKey (Handle);
-	    break;
-
-	  case 1: /* HKEY_CURRENT_USER */
-	    Status = RtlOpenCurrentUser (MAXIMUM_ALLOWED,
-					 Handle);
-	    break;
-
-	  case 2: /* HKEY_LOCAL_MACHINE */
-	    Status = OpenLocalMachineKey (Handle);
-	    break;
-
-	  case 3: /* HKEY_USERS */
-	    Status = OpenUsersKey (Handle);
-	    break;
-#if 0
-	  case 4: /* HKEY_PERFORMANCE_DATA */
-	    Status = OpenPerformanceDataKey (Handle);
-	    break;
-#endif
-	  case 5: /* HKEY_CURRENT_CONFIG */
-	    Status = OpenCurrentConfigKey (Handle);
-	    break;
-
-	  case 6: /* HKEY_DYN_DATA */
-	    Status = STATUS_NOT_IMPLEMENTED;
-	    break;
-
-	  default:
-	    WARN("MapDefaultHandle() no handle creator\n");
-	    Status = STATUS_INVALID_PARAMETER;
-	    break;
-	}
+      Status = OpenPredefinedKey(Index,
+                                 Handle);
     }
 
    if (NT_SUCCESS(Status))
@@ -290,6 +305,63 @@ RegDisablePredefinedCacheEx(VOID)
     DefaultHandlesDisabled = TRUE;
     RtlLeaveCriticalSection (&HandleTableCS);
     return ERROR_SUCCESS;
+}
+
+
+/************************************************************************
+ *  RegOverridePredefKey
+ *
+ * @implemented
+ */
+LONG STDCALL
+RegOverridePredefKey(IN HKEY hKey,
+                     IN HKEY hNewHKey  OPTIONAL)
+{
+    LONG ErrorCode = ERROR_SUCCESS;
+    
+    if (hKey == HKEY_CLASSES_ROOT ||
+        hKey == HKEY_CURRENT_CONFIG ||
+        hKey == HKEY_CURRENT_USER ||
+        hKey == HKEY_LOCAL_MACHINE ||
+        hKey == HKEY_PERFORMANCE_DATA ||
+        hKey == HKEY_USERS)
+    {
+        PHANDLE Handle;
+        ULONG Index;
+
+        Index = (ULONG)hKey & 0x0FFFFFFF;
+        Handle = &DefaultHandleTable[Index];
+
+        if (hNewHKey == NULL)
+        {
+            /* restore the default mapping */
+            NTSTATUS Status = OpenPredefinedKey(Index,
+                                                &hNewHKey);
+            if (!NT_SUCCESS(Status))
+            {
+                return RtlNtStatusToDosError(Status);
+            }
+            
+            ASSERT(hNewHKey != NULL);
+        }
+
+        RtlEnterCriticalSection (&HandleTableCS);
+
+        /* close the currently mapped handle if existing */
+        if (*Handle != NULL)
+        {
+            NtClose(*Handle);
+        }
+        
+        /* update the mapping */
+        *Handle = hNewHKey;
+
+        RtlLeaveCriticalSection (&HandleTableCS);
+    }
+    else
+        ErrorCode = ERROR_INVALID_HANDLE;
+
+    return ErrorCode;
 }
 
 
