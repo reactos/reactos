@@ -3454,7 +3454,9 @@ GetVersionInformationFromInfFile(
             &RequiredSize);
     }
     //FIXME: DriverDate = Version.DriverVer => invalid date = 00/00/00
+    RtlZeroMemory(DriverDate, sizeof(FILETIME));
     //FIXME: DriverVersion = Version.DriverVer => invalid = 0
+    *DriverVersion = 0;
 
     *pProviderName = ProviderName;
     return TRUE;
@@ -3613,9 +3615,7 @@ SetupDiBuildDriverInfoList(
                     /* Check if the ClassGuid in this .inf file is corresponding with our needs */
                     if (!IsEqualIID(&list->ClassGuid, &GUID_NULL) && !IsEqualIID(&list->ClassGuid, &ClassGuid))
                     {
-                        SetupCloseInfFile(hInf);
-                        hInf = INVALID_HANDLE_VALUE;
-                        continue;
+                        goto next;
                     }
                 }
 
@@ -3766,9 +3766,11 @@ SetupDiBuildDriverInfoList(
                     ManufacturerName = ManufacturerSection = NULL;
                     Result = SetupFindNextLine(&ContextManufacturer, &ContextManufacturer);
                 }
+
+                ret = TRUE;
+next:
                 HeapFree(GetProcessHeap(), 0, ProviderName);
                 ProviderName = NULL;
-                ret = TRUE;
 
                 SetupCloseInfFile(hInf);
                 hInf = INVALID_HANDLE_VALUE;
