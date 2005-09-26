@@ -194,7 +194,7 @@ int WINAPI WinMain( HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdline, int cmd
 
     hWnd = CreateWindow( appname,
         appname,
-        WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
+        WS_CLIPSIBLINGS | (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX),
         CW_USEDEFAULT,
         CW_USEDEFAULT,
         calc.sciMode ? CALC_STANDARD_WIDTH :  CALC_SCIENTIFIC_WIDTH,
