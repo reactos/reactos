@@ -1411,7 +1411,9 @@ _alloca_probe
 _allrem
 _allshl
 _allshr
+_alldvrm
 _aulldiv
+_aulldvrm
 _aullrem
 _aullshr
 _except_handler2
