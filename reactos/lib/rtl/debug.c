@@ -256,6 +256,7 @@ DbgPrintReturnControlC(PCH Format,
     va_list ap;
 
     /* Call the internal routine that also handles ControlC */
+    va_start(ap, Format);
     return vDbgPrintExWithPrefixInternal(NULL,
                                          -1,
                                          DPFLTR_ERROR_LEVEL,
