@@ -2888,8 +2888,15 @@ SpiProcessRequests(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 
 		  if (Srb->SrbStatus == SRB_STATUS_BUSY)
 		    {
+                      CompleteThisRequest = FALSE;
+		      Irp->Tail.Overlay.DriverContext[3] = Srb;
+
 		      SpiRemoveActiveIrp(DeviceExtension, Irp, PrevIrp);
                       SpiFreeSrbExtension(DeviceExtension, OriginalSrb);
+
+                      Srb->OriginalRequest = LunExtension;
+                      Irp->Tail.Overlay.DriverContext[2] = 0;
+
 		      InsertHeadList(&DeviceExtension->PendingIrpListHead, (PLIST_ENTRY)&Irp->Tail.Overlay.DriverContext[0]);
 		      DeviceExtension->PendingIrpCount++;
 		      LunExtension->PendingIrpCount++;
@@ -2915,6 +2922,7 @@ SpiProcessRequests(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 		                    SenseInfoBuffer,
 		                    sizeof(SENSE_DATA));
 	              OriginalSrb->SrbStatus |= SRB_STATUS_AUTOSENSE_VALID;
+                      OriginalSrb->SrbExtension = Srb->SrbExtension;
 		      ExFreePool(Srb);
 		      CompleteThisRequest = TRUE;
 		    }
@@ -2933,7 +2941,7 @@ SpiProcessRequests(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 			  CompleteThisRequest = FALSE;
 			  Irp->Tail.Overlay.DriverContext[3] = Srb;
 			  SpiRemoveActiveIrp(DeviceExtension, Irp, PrevIrp);
-	                  SpiFreeSrbExtension(DeviceExtension, Srb);
+	                  SpiFreeSrbExtension(DeviceExtension, OriginalSrb);
 
                           Srb->OriginalRequest = LunExtension;
                           Irp->Tail.Overlay.DriverContext[2] = 0;
