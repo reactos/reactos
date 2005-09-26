@@ -165,6 +165,7 @@ void ExitInstance(HINSTANCE hInstance)
 {
     UnregisterHexEditorClass(hInstance);
     DestroyMenu(hMenuFrame);
+    DestroyMenu(hPopupMenus);
     UnloadAclUiDll();
 }
 
