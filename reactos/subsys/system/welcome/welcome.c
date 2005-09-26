@@ -143,6 +143,7 @@ WinMain(HINSTANCE hInst,
       ulInnerWidth = BitmapInfo.bmWidth;
       ulInnerHeight = (ulInnerWidth * 3) / 4;
       ulTitleHeight = BitmapInfo.bmHeight + 3;
+      DeleteObject(hTitleBitmap);
     }
   ulInnerHeight -= GetSystemMetrics(SM_CYCAPTION);
 
@@ -485,7 +486,7 @@ PaintBanner(HDC hdc, LPRECT rcPanel)
 	 rcPanel->right - rcPanel->left,
 	 rcPanel->bottom - 3,
 	 hdcMem, 0, 0, SRCCOPY);
-  SelectObject(hdc, hOldBitmap);
+  SelectObject(hdcMem, hOldBitmap);
 
   /* Dark blue line */
   hOldBrush = SelectObject(hdc, hbrDarkBlue);
