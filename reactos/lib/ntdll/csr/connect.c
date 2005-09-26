@@ -57,7 +57,7 @@ CsrClientCallServer(PCSR_API_MESSAGE ApiMessage,
     PULONG_PTR Pointers;
     ULONG_PTR CurrentPointer;
     DPRINT("CsrClientCallServer\n");
-  
+
     /* Fill out the Port Message Header */
     ApiMessage->Header.u1.s1.DataLength = RequestLength - sizeof(PORT_MESSAGE);
     ApiMessage->Header.u1.s1.TotalLength = RequestLength;
@@ -79,7 +79,6 @@ CsrClientCallServer(PCSR_API_MESSAGE ApiMessage,
         if (CaptureBuffer)
         {
             /* We have to convert from our local view to the remote view */
-            DPRINT1("Converting CaptureBuffer\n");
             ApiMessage->CsrCaptureData = (PVOID)((ULONG_PTR)CaptureBuffer +
                                                  CsrPortMemoryDelta);
 
@@ -91,14 +90,19 @@ CsrClientCallServer(PCSR_API_MESSAGE ApiMessage,
             Pointers = CaptureBuffer->PointerArray;
 
             /* Loop through every pointer and convert it */
+            DPRINT("PointerCount: %lx\n", PointerCount);
             while (PointerCount--)
             {
                 /* Get this pointer and check if it's valid */
+                DPRINT("Array Address: %p. This pointer: %p. Data: %p\n",
+                        &Pointers, Pointers, *Pointers);
                 if ((CurrentPointer = *Pointers++))
                 {
                     /* Update it */
+                    DPRINT("CurrentPointer: %p.\n", *(PULONG_PTR)CurrentPointer);
                     *(PULONG_PTR)CurrentPointer += CsrPortMemoryDelta;
                     Pointers[-1] = CurrentPointer - (ULONG_PTR)ApiMessage;
+                    DPRINT("CurrentPointer: %p.\n", *(PULONG_PTR)CurrentPointer);
                 }
             }
         }
@@ -112,7 +116,7 @@ CsrClientCallServer(PCSR_API_MESSAGE ApiMessage,
         if (CaptureBuffer)
         {
             /* We have to convert from the remote view to our remote view */
-            DPRINT1("Reconverting CaptureBuffer\n");
+            DPRINT("Reconverting CaptureBuffer\n");
             ApiMessage->CsrCaptureData = (PVOID)((ULONG_PTR)
                                                  ApiMessage->CsrCaptureData -
                                                  CsrPortMemoryDelta);

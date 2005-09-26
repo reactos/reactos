@@ -1548,7 +1548,6 @@ IntPeekConsoleInput(HANDLE hConsoleInput,
   CSR_API_MESSAGE Request; ULONG CsrRequest;
   PCSR_CAPTURE_BUFFER CaptureBuffer;
   NTSTATUS Status;
-  PVOID BufferTargetBase;
   ULONG Size;
 
   if(lpBuffer == NULL)
@@ -1560,38 +1559,38 @@ IntPeekConsoleInput(HANDLE hConsoleInput,
   Size = nLength * sizeof(INPUT_RECORD);
 
   /* Allocate a Capture Buffer */
-  DPRINT1("IntPeekConsoleInput: %lx %p\n", Size, lpNumberOfEventsRead);
+  DPRINT("IntPeekConsoleInput: %lx %p\n", Size, lpNumberOfEventsRead);
   CaptureBuffer = CsrAllocateCaptureBuffer(1, Size);
 
   /* Allocate space in the Buffer */
-  CsrCaptureMessageBuffer(CaptureBuffer, NULL, Size, &BufferTargetBase);
-  DPRINT1("Allocated message buffer: %p %p\n", CaptureBuffer, BufferTargetBase);
+  CsrCaptureMessageBuffer(CaptureBuffer,
+                          NULL,
+                          Size,
+                          (PVOID*)&Request.Data.PeekConsoleInputRequest.InputRecord);
 
   /* Set up the data to send to the Console Server */
   CsrRequest = MAKE_CSR_API(PEEK_CONSOLE_INPUT, CSR_CONSOLE);
   Request.Data.PeekConsoleInputRequest.ConsoleHandle = hConsoleInput;
   Request.Data.PeekConsoleInputRequest.Unicode = bUnicode;
   Request.Data.PeekConsoleInputRequest.Length = nLength;
-  Request.Data.PeekConsoleInputRequest.InputRecord = (INPUT_RECORD*)BufferTargetBase;
 
   /* Call the server */
-  DPRINT1("Calling Server\n");
   Status = CsrClientCallServer(&Request, 
                                CaptureBuffer,
                                CsrRequest,
                                sizeof(CSR_API_MESSAGE));
-  DPRINT1("Server returned: %x\n", Request.Status);
+  DPRINT("Server returned: %x\n", Request.Status);
 
   /* Check for success*/
   if (NT_SUCCESS(Request.Status))
   {
     /* Return the number of events read */
-    DPRINT1("Events read: %lx\n", Request.Data.PeekConsoleInputRequest.Length);
+    DPRINT("Events read: %lx\n", Request.Data.PeekConsoleInputRequest.Length);
     *lpNumberOfEventsRead = Request.Data.PeekConsoleInputRequest.Length;
 
     /* Copy into the buffer */
-    DPRINT1("Copying to buffer\n");
-    RtlCopyMemory(lpBuffer, 
+    DPRINT("Copying to buffer\n");
+    RtlCopyMemory(lpBuffer,
                   Request.Data.PeekConsoleInputRequest.InputRecord, 
                   sizeof(INPUT_RECORD) * *lpNumberOfEventsRead);
   }
@@ -1603,7 +1602,6 @@ IntPeekConsoleInput(HANDLE hConsoleInput,
   }
 
   /* Release the capture buffer */
-  DPRINT1("Release buffer and return\n");
   CsrFreeCaptureBuffer(CaptureBuffer);
 
   /* Return TRUE or FALSE */
@@ -1767,7 +1765,6 @@ IntWriteConsoleInput(HANDLE hConsoleInput,
 {
   CSR_API_MESSAGE Request; ULONG CsrRequest;
   PCSR_CAPTURE_BUFFER CaptureBuffer;
-  PVOID BufferTargetBase;
   NTSTATUS Status;
   DWORD Size;
 
@@ -1780,37 +1777,37 @@ IntWriteConsoleInput(HANDLE hConsoleInput,
   Size = nLength * sizeof(INPUT_RECORD);
 
   /* Allocate a Capture Buffer */
-  DPRINT1("IntWriteConsoleInput: %lx %p\n", Size, lpNumberOfEventsWritten);
+  DPRINT("IntWriteConsoleInput: %lx %p\n", Size, lpNumberOfEventsWritten);
   CaptureBuffer = CsrAllocateCaptureBuffer(1, Size);
 
   /* Allocate space in the Buffer */
-  CsrCaptureMessageBuffer(CaptureBuffer, NULL, Size, &BufferTargetBase);
-  DPRINT1("Allocated message buffer: %p %p\n", CaptureBuffer, BufferTargetBase);
+  CsrCaptureMessageBuffer(CaptureBuffer,
+                          NULL,
+                          Size,
+                          (PVOID*)&Request.Data.WriteConsoleInputRequest.InputRecord);
 
   /* Set up the data to send to the Console Server */
   CsrRequest = MAKE_CSR_API(WRITE_CONSOLE_INPUT, CSR_CONSOLE);
   Request.Data.WriteConsoleInputRequest.ConsoleHandle = hConsoleInput;
   Request.Data.WriteConsoleInputRequest.Unicode = bUnicode;
   Request.Data.WriteConsoleInputRequest.Length = nLength;
-  Request.Data.WriteConsoleInputRequest.InputRecord = (PINPUT_RECORD)BufferTargetBase;
 
   /* Call the server */
-  DPRINT1("Calling Server\n");
   Status = CsrClientCallServer(&Request, 
                                CaptureBuffer,
                                CsrRequest,
                                sizeof(CSR_API_MESSAGE));
-  DPRINT1("Server returned: %x\n", Request.Status);
+  DPRINT("Server returned: %x\n", Request.Status);
 
   /* Check for success*/
   if (NT_SUCCESS(Request.Status))
   {
     /* Return the number of events read */
-    DPRINT1("Events read: %lx\n", Request.Data.WriteConsoleInputRequest.Length);
+    DPRINT("Events read: %lx\n", Request.Data.WriteConsoleInputRequest.Length);
     *lpNumberOfEventsWritten = Request.Data.WriteConsoleInputRequest.Length;
 
     /* Copy into the buffer */
-    DPRINT1("Copying to buffer\n");
+    DPRINT("Copying to buffer\n");
     RtlCopyMemory(lpBuffer, 
                   Request.Data.WriteConsoleInputRequest.InputRecord, 
                   sizeof(INPUT_RECORD) * *lpNumberOfEventsWritten);
@@ -1823,7 +1820,6 @@ IntWriteConsoleInput(HANDLE hConsoleInput,
   }
 
   /* Release the capture buffer */
-  DPRINT1("Release buffer and return\n");
   CsrFreeCaptureBuffer(CaptureBuffer);
 
   /* Return TRUE or FALSE */
@@ -1885,7 +1881,6 @@ IntReadConsoleOutput(HANDLE hConsoleOutput,
 {
   CSR_API_MESSAGE Request; ULONG CsrRequest;
   PCSR_CAPTURE_BUFFER CaptureBuffer;
-  PVOID BufferTargetBase;
   NTSTATUS Status;
   DWORD Size, SizeX, SizeY;
 
@@ -1898,12 +1893,14 @@ IntReadConsoleOutput(HANDLE hConsoleOutput,
   Size = dwBufferSize.X * dwBufferSize.Y * sizeof(CHAR_INFO);
 
   /* Allocate a Capture Buffer */
-  DPRINT1("IntReadConsoleOutput: %lx %p\n", Size, lpReadRegion);
+  DPRINT("IntReadConsoleOutput: %lx %p\n", Size, lpReadRegion);
   CaptureBuffer = CsrAllocateCaptureBuffer(1, Size);
 
   /* Allocate space in the Buffer */
-  CsrCaptureMessageBuffer(CaptureBuffer, NULL, Size, &BufferTargetBase);
-  DPRINT1("Allocated message buffer: %p %p\n", CaptureBuffer, BufferTargetBase);
+  CsrCaptureMessageBuffer(CaptureBuffer,
+                          NULL,
+                          Size,
+                          (PVOID*)&Request.Data.ReadConsoleOutputRequest.CharInfo);
 
   /* Set up the data to send to the Console Server */
   CsrRequest = MAKE_CSR_API(READ_CONSOLE_OUTPUT, CSR_CONSOLE);
@@ -1912,21 +1909,19 @@ IntReadConsoleOutput(HANDLE hConsoleOutput,
   Request.Data.ReadConsoleOutputRequest.BufferSize = dwBufferSize;
   Request.Data.ReadConsoleOutputRequest.BufferCoord = dwBufferCoord;
   Request.Data.ReadConsoleOutputRequest.ReadRegion = *lpReadRegion;
-  Request.Data.ReadConsoleOutputRequest.CharInfo = (PCHAR_INFO)BufferTargetBase;
 
   /* Call the server */
-  DPRINT1("Calling Server\n");
   Status = CsrClientCallServer(&Request, 
                                CaptureBuffer,
                                CsrRequest,
                                sizeof(CSR_API_MESSAGE));
-  DPRINT1("Server returned: %x\n", Request.Status);
+  DPRINT("Server returned: %x\n", Request.Status);
 
   /* Check for success*/
   if (NT_SUCCESS(Request.Status))
   {
     /* Copy into the buffer */
-    DPRINT1("Copying to buffer\n");
+    DPRINT("Copying to buffer\n");
     SizeX = Request.Data.ReadConsoleOutputRequest.ReadRegion.Right - 
             Request.Data.ReadConsoleOutputRequest.ReadRegion.Left + 1;
     SizeY = Request.Data.ReadConsoleOutputRequest.ReadRegion.Bottom - 
@@ -1942,11 +1937,10 @@ IntReadConsoleOutput(HANDLE hConsoleOutput,
   }
 
   /* Return the read region */
-  DPRINT1("read region: %lx\n", Request.Data.ReadConsoleOutputRequest.ReadRegion);
+  DPRINT("read region: %lx\n", Request.Data.ReadConsoleOutputRequest.ReadRegion);
   *lpReadRegion = Request.Data.ReadConsoleOutputRequest.ReadRegion;
 
   /* Release the capture buffer */
-  DPRINT1("Release buffer and return\n");
   CsrFreeCaptureBuffer(CaptureBuffer);
 
   /* Return TRUE or FALSE */
@@ -2010,15 +2004,16 @@ IntWriteConsoleOutput(HANDLE hConsoleOutput,
   Size = dwBufferSize.Y * dwBufferSize.X * sizeof(CHAR_INFO);
 
   /* Allocate a Capture Buffer */
-  DPRINT1("IntWriteConsoleOutput: %lx %p\n", Size, lpWriteRegion);
+  DPRINT("IntWriteConsoleOutput: %lx %p\n", Size, lpWriteRegion);
   CaptureBuffer = CsrAllocateCaptureBuffer(1, Size);
 
   /* Allocate space in the Buffer */
-  CsrCaptureMessageBuffer(CaptureBuffer, NULL, Size, &BufferTargetBase);
-  DPRINT1("Allocated message buffer: %p %p\n", CaptureBuffer, BufferTargetBase);
+  CsrCaptureMessageBuffer(CaptureBuffer,
+                          NULL,
+                          Size,
+                          (PVOID*)&Request.Data.WriteConsoleOutputRequest.CharInfo);
 
   /* Copy from the buffer */
-  DPRINT1("Copying into buffer\n");
   RtlCopyMemory(BufferTargetBase, lpBuffer, Size);
 
   /* Set up the data to send to the Console Server */
@@ -2028,15 +2023,13 @@ IntWriteConsoleOutput(HANDLE hConsoleOutput,
   Request.Data.WriteConsoleOutputRequest.BufferSize = dwBufferSize;
   Request.Data.WriteConsoleOutputRequest.BufferCoord = dwBufferCoord;
   Request.Data.WriteConsoleOutputRequest.WriteRegion = *lpWriteRegion;
-  Request.Data.WriteConsoleOutputRequest.CharInfo = (CHAR_INFO*)BufferTargetBase;
 
   /* Call the server */
-  DPRINT1("Calling Server\n");
   Status = CsrClientCallServer(&Request, 
                                CaptureBuffer,
                                CsrRequest,
                                sizeof(CSR_API_MESSAGE));
-  DPRINT1("Server returned: %x\n", Request.Status);
+  DPRINT("Server returned: %x\n", Request.Status);
 
   /* Check for success*/
   if (!NT_SUCCESS(Request.Status))
@@ -2046,11 +2039,10 @@ IntWriteConsoleOutput(HANDLE hConsoleOutput,
   }
 
   /* Return the read region */
-  DPRINT1("read region: %lx\n", Request.Data.WriteConsoleOutputRequest.WriteRegion);
+  DPRINT("read region: %lx\n", Request.Data.WriteConsoleOutputRequest.WriteRegion);
   *lpWriteRegion = Request.Data.WriteConsoleOutputRequest.WriteRegion;
 
   /* Release the capture buffer */
-  DPRINT1("Release buffer and return\n");
   CsrFreeCaptureBuffer(CaptureBuffer);
 
   /* Return TRUE or FALSE */

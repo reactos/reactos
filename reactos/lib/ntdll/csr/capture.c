@@ -142,11 +142,11 @@ CsrAllocateMessagePointer(PCSR_CAPTURE_BUFFER CaptureBuffer,
         CaptureBuffer->BufferEnd += MessageLength;
     }
 
-    /* Increase the pointer count */
-    CaptureBuffer->PointerCount++;
-
     /* Write down this pointer in the array */
     CaptureBuffer->PointerArray[CaptureBuffer->PointerCount] = (ULONG_PTR)CaptureData;
+
+    /* Increase the pointer count */
+    CaptureBuffer->PointerCount++;
 
     /* Return the aligned length */
     return MessageLength;
