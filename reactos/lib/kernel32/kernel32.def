@@ -129,8 +129,8 @@ CreateNamedPipeW@32
 CreateNlsSecurityDescriptor@12
 CreatePipe@16
 CreateProcessA@40
-;CreateProcessInternalA
-;CreateProcessInternalW
+CreateProcessInternalA@48
+CreateProcessInternalW@48
 CreateProcessW@40
 CreateRemoteThread@28
 CreateSemaphoreA@16

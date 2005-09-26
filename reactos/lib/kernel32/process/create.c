@@ -613,153 +613,22 @@ BasepInitializeEnvironment(HANDLE ProcessHandle,
 /* FUNCTIONS ****************************************************************/
 
 /*
- * FUNCTION: The CreateProcess function creates a new process and its
- * primary thread. The new process executes the specified executable file
- * ARGUMENTS:
- *
- *     lpApplicationName = Pointer to name of executable module
- *     lpCommandLine = Pointer to command line string
- *     lpProcessAttributes = Process security attributes
- *     lpThreadAttributes = Thread security attributes
- *     bInheritHandles = Handle inheritance flag
- *     dwCreationFlags = Creation flags
- *     lpEnvironment = Pointer to new environment block
- *     lpCurrentDirectory = Pointer to current directory name
- *     lpStartupInfo = Pointer to startup info
- *     lpProcessInformation = Pointer to process information
- *
  * @implemented
  */
 BOOL
 STDCALL
-CreateProcessA(LPCSTR lpApplicationName,
-               LPSTR lpCommandLine,
-               LPSECURITY_ATTRIBUTES lpProcessAttributes,
-               LPSECURITY_ATTRIBUTES lpThreadAttributes,
-               BOOL bInheritHandles,
-               DWORD dwCreationFlags,
-               LPVOID lpEnvironment,
-               LPCSTR lpCurrentDirectory,
-               LPSTARTUPINFOA lpStartupInfo,
-               LPPROCESS_INFORMATION lpProcessInformation)
-{    
-    PUNICODE_STRING CommandLine = NULL;
-    UNICODE_STRING DummyString;
-    UNICODE_STRING LiveCommandLine;
-    UNICODE_STRING ApplicationName;
-    UNICODE_STRING CurrentDirectory;
-    BOOL bRetVal;
-    STARTUPINFOW StartupInfo;
-
-    DPRINT("dwCreationFlags %x, lpEnvironment %x, lpCurrentDirectory %x, "
-            "lpStartupInfo %x, lpProcessInformation %x\n",
-            dwCreationFlags, lpEnvironment, lpCurrentDirectory,
-            lpStartupInfo, lpProcessInformation);
-    
-    /* Copy Startup Info */
-    RtlMoveMemory(&StartupInfo, lpStartupInfo, sizeof(*lpStartupInfo));
-    
-    /* Initialize all strings to nothing */
-    LiveCommandLine.Buffer = NULL;
-    DummyString.Buffer = NULL;
-    ApplicationName.Buffer = NULL;
-    CurrentDirectory.Buffer = NULL;
-    StartupInfo.lpDesktop = NULL;
-    StartupInfo.lpReserved = NULL;
-    StartupInfo.lpTitle = NULL;
-    
-    /* Convert the Command line */
-    if (lpCommandLine)
-    {
-        /* If it's too long, then we'll have a problem */
-        if ((strlen(lpCommandLine) + 1) * sizeof(WCHAR) <
-            NtCurrentTeb()->StaticUnicodeString.MaximumLength)
-        {
-            /* Cache it in the TEB */
-            CommandLine = Basep8BitStringToCachedUnicodeString(lpCommandLine);
-        }
-        else
-        {
-            /* Use a dynamic version */
-            Basep8BitStringToHeapUnicodeString(&LiveCommandLine, 
-                                               lpCommandLine);
-        }
-    }
-    else
-    {
-        /* The logic below will use CommandLine, so we must make it valid */
-        CommandLine = &DummyString;
-    }
-    
-    /* Convert the Name and Directory */
-    if (lpApplicationName)
-    {
-        Basep8BitStringToHeapUnicodeString(&ApplicationName, 
-                                           lpApplicationName);
-    }
-    if (lpCurrentDirectory)
-    {
-        Basep8BitStringToHeapUnicodeString(&CurrentDirectory, 
-                                           lpCurrentDirectory);
-    }
-    
-    /* Now convert Startup Strings */
-    if (lpStartupInfo->lpReserved)
-    {
-        BasepAnsiStringToHeapUnicodeString(lpStartupInfo->lpReserved,
-                                           &StartupInfo.lpReserved);
-    }
-    if (lpStartupInfo->lpDesktop)
-    {
-        BasepAnsiStringToHeapUnicodeString(lpStartupInfo->lpDesktop,
-                                           &StartupInfo.lpDesktop);
-    }
-    if (lpStartupInfo->lpTitle)
-    {
-        BasepAnsiStringToHeapUnicodeString(lpStartupInfo->lpTitle,
-                                           &StartupInfo.lpTitle);
-    }
-
-    /* Call the Unicode function */
-    bRetVal = CreateProcessW(ApplicationName.Buffer,
-                             LiveCommandLine.Buffer ? 
-                             LiveCommandLine.Buffer : CommandLine->Buffer,
-                             lpProcessAttributes,
-                             lpThreadAttributes,
-                             bInheritHandles,
-                             dwCreationFlags,
-                             lpEnvironment,
-                             CurrentDirectory.Buffer,
-                             &StartupInfo,
-                             lpProcessInformation);
-
-    /* Clean up */
-    RtlFreeUnicodeString(&ApplicationName);
-    RtlFreeUnicodeString(&LiveCommandLine);
-    RtlFreeUnicodeString(&CurrentDirectory);
-    RtlFreeHeap(GetProcessHeap(), 0, StartupInfo.lpDesktop);
-    RtlFreeHeap(GetProcessHeap(), 0, StartupInfo.lpReserved);
-    RtlFreeHeap(GetProcessHeap(), 0, StartupInfo.lpTitle);
-
-    /* Return what Unicode did */
-    return bRetVal;
-}
-
-/*
- * @implemented
- */
-BOOL
-STDCALL
-CreateProcessW(LPCWSTR lpApplicationName,
-               LPWSTR lpCommandLine,
-               LPSECURITY_ATTRIBUTES lpProcessAttributes,
-               LPSECURITY_ATTRIBUTES lpThreadAttributes,
-               BOOL bInheritHandles,
-               DWORD dwCreationFlags,
-               LPVOID lpEnvironment,
-               LPCWSTR lpCurrentDirectory,
-               LPSTARTUPINFOW lpStartupInfo,
-               LPPROCESS_INFORMATION lpProcessInformation)
+CreateProcessInternalW(HANDLE hToken,
+                       LPCWSTR lpApplicationName,
+                       LPWSTR lpCommandLine,
+                       LPSECURITY_ATTRIBUTES lpProcessAttributes,
+                       LPSECURITY_ATTRIBUTES lpThreadAttributes,
+                       BOOL bInheritHandles,
+                       DWORD dwCreationFlags,
+                       LPVOID lpEnvironment,
+                       LPCWSTR lpCurrentDirectory,
+                       LPSTARTUPINFOW lpStartupInfo,
+                       LPPROCESS_INFORMATION lpProcessInformation,
+                       PHANDLE hNewToken)
 {
     NTSTATUS Status;
     PROCESS_PRIORITY_CLASS PriorityClass;
@@ -1445,6 +1314,205 @@ GetAppName:
 
     /* Return Success */
     return TRUE;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+CreateProcessW(LPCWSTR lpApplicationName,
+               LPWSTR lpCommandLine,
+               LPSECURITY_ATTRIBUTES lpProcessAttributes,
+               LPSECURITY_ATTRIBUTES lpThreadAttributes,
+               BOOL bInheritHandles,
+               DWORD dwCreationFlags,
+               LPVOID lpEnvironment,
+               LPCWSTR lpCurrentDirectory,
+               LPSTARTUPINFOW lpStartupInfo,
+               LPPROCESS_INFORMATION lpProcessInformation)
+{
+    /* Call the internal (but exported) version */
+    return CreateProcessInternalW(0,
+                                  lpApplicationName,
+                                  lpCommandLine,
+                                  lpProcessAttributes,
+                                  lpThreadAttributes,
+                                  bInheritHandles,
+                                  dwCreationFlags,
+                                  lpEnvironment,
+                                  lpCurrentDirectory,
+                                  lpStartupInfo,
+                                  lpProcessInformation,
+                                  NULL);
+}
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+CreateProcessInternalA(HANDLE hToken,
+                       LPCSTR lpApplicationName,
+                       LPSTR lpCommandLine,
+                       LPSECURITY_ATTRIBUTES lpProcessAttributes,
+                       LPSECURITY_ATTRIBUTES lpThreadAttributes,
+                       BOOL bInheritHandles,
+                       DWORD dwCreationFlags,
+                       LPVOID lpEnvironment,
+                       LPCSTR lpCurrentDirectory,
+                       LPSTARTUPINFOA lpStartupInfo,
+                       LPPROCESS_INFORMATION lpProcessInformation,
+                       PHANDLE hNewToken)
+{
+    PUNICODE_STRING CommandLine = NULL;
+    UNICODE_STRING DummyString;
+    UNICODE_STRING LiveCommandLine;
+    UNICODE_STRING ApplicationName;
+    UNICODE_STRING CurrentDirectory;
+    BOOL bRetVal;
+    STARTUPINFOW StartupInfo;
+
+    DPRINT("dwCreationFlags %x, lpEnvironment %x, lpCurrentDirectory %x, "
+            "lpStartupInfo %x, lpProcessInformation %x\n",
+            dwCreationFlags, lpEnvironment, lpCurrentDirectory,
+            lpStartupInfo, lpProcessInformation);
+    
+    /* Copy Startup Info */
+    RtlMoveMemory(&StartupInfo, lpStartupInfo, sizeof(*lpStartupInfo));
+
+    /* Initialize all strings to nothing */
+    LiveCommandLine.Buffer = NULL;
+    DummyString.Buffer = NULL;
+    ApplicationName.Buffer = NULL;
+    CurrentDirectory.Buffer = NULL;
+    StartupInfo.lpDesktop = NULL;
+    StartupInfo.lpReserved = NULL;
+    StartupInfo.lpTitle = NULL;
+
+    /* Convert the Command line */
+    if (lpCommandLine)
+    {
+        /* If it's too long, then we'll have a problem */
+        if ((strlen(lpCommandLine) + 1) * sizeof(WCHAR) <
+            NtCurrentTeb()->StaticUnicodeString.MaximumLength)
+        {
+            /* Cache it in the TEB */
+            CommandLine = Basep8BitStringToCachedUnicodeString(lpCommandLine);
+        }
+        else
+        {
+            /* Use a dynamic version */
+            Basep8BitStringToHeapUnicodeString(&LiveCommandLine, 
+                                               lpCommandLine);
+        }
+    }
+    else
+    {
+        /* The logic below will use CommandLine, so we must make it valid */
+        CommandLine = &DummyString;
+    }
+
+    /* Convert the Name and Directory */
+    if (lpApplicationName)
+    {
+        Basep8BitStringToHeapUnicodeString(&ApplicationName, 
+                                           lpApplicationName);
+    }
+    if (lpCurrentDirectory)
+    {
+        Basep8BitStringToHeapUnicodeString(&CurrentDirectory, 
+                                           lpCurrentDirectory);
+    }
+
+    /* Now convert Startup Strings */
+    if (lpStartupInfo->lpReserved)
+    {
+        BasepAnsiStringToHeapUnicodeString(lpStartupInfo->lpReserved,
+                                           &StartupInfo.lpReserved);
+    }
+    if (lpStartupInfo->lpDesktop)
+    {
+        BasepAnsiStringToHeapUnicodeString(lpStartupInfo->lpDesktop,
+                                           &StartupInfo.lpDesktop);
+    }
+    if (lpStartupInfo->lpTitle)
+    {
+        BasepAnsiStringToHeapUnicodeString(lpStartupInfo->lpTitle,
+                                           &StartupInfo.lpTitle);
+    }
+
+    /* Call the Unicode function */
+    bRetVal = CreateProcessInternalW(hToken,
+                                     ApplicationName.Buffer,
+                                     LiveCommandLine.Buffer ? 
+                                     LiveCommandLine.Buffer : CommandLine->Buffer,
+                                     lpProcessAttributes,
+                                     lpThreadAttributes,
+                                     bInheritHandles,
+                                     dwCreationFlags,
+                                     lpEnvironment,
+                                     CurrentDirectory.Buffer,
+                                     &StartupInfo,
+                                     lpProcessInformation,
+                                     hNewToken);
+
+    /* Clean up */
+    RtlFreeUnicodeString(&ApplicationName);
+    RtlFreeUnicodeString(&LiveCommandLine);
+    RtlFreeUnicodeString(&CurrentDirectory);
+    RtlFreeHeap(GetProcessHeap(), 0, StartupInfo.lpDesktop);
+    RtlFreeHeap(GetProcessHeap(), 0, StartupInfo.lpReserved);
+    RtlFreeHeap(GetProcessHeap(), 0, StartupInfo.lpTitle);
+
+    /* Return what Unicode did */
+    return bRetVal;
+}
+
+/*
+ * FUNCTION: The CreateProcess function creates a new process and its
+ * primary thread. The new process executes the specified executable file
+ * ARGUMENTS:
+ *
+ *     lpApplicationName = Pointer to name of executable module
+ *     lpCommandLine = Pointer to command line string
+ *     lpProcessAttributes = Process security attributes
+ *     lpThreadAttributes = Thread security attributes
+ *     bInheritHandles = Handle inheritance flag
+ *     dwCreationFlags = Creation flags
+ *     lpEnvironment = Pointer to new environment block
+ *     lpCurrentDirectory = Pointer to current directory name
+ *     lpStartupInfo = Pointer to startup info
+ *     lpProcessInformation = Pointer to process information
+ *
+ * @implemented
+ */
+BOOL
+STDCALL
+CreateProcessA(LPCSTR lpApplicationName,
+               LPSTR lpCommandLine,
+               LPSECURITY_ATTRIBUTES lpProcessAttributes,
+               LPSECURITY_ATTRIBUTES lpThreadAttributes,
+               BOOL bInheritHandles,
+               DWORD dwCreationFlags,
+               LPVOID lpEnvironment,
+               LPCSTR lpCurrentDirectory,
+               LPSTARTUPINFOA lpStartupInfo,
+               LPPROCESS_INFORMATION lpProcessInformation)
+{
+    /* Call the internal (but exported) version */
+    return CreateProcessInternalA(0,
+                                  lpApplicationName,
+                                  lpCommandLine,
+                                  lpProcessAttributes,
+                                  lpThreadAttributes,
+                                  bInheritHandles,
+                                  dwCreationFlags,
+                                  lpEnvironment,
+                                  lpCurrentDirectory,
+                                  lpStartupInfo,
+                                  lpProcessInformation,
+                                  NULL);
 }
 
 /* EOF */
