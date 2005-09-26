@@ -19,6 +19,8 @@ typedef struct tagLOADPARMS32 {
   DWORD dwReserved;
 } LOADPARMS32;
 
+extern BOOLEAN InWindows;
+
 /* FUNCTIONS ****************************************************************/
 
 /**
@@ -167,11 +169,19 @@ LoadLibraryExW (
 	HINSTANCE hInst;
 	NTSTATUS Status;
 	PWSTR SearchPath;
+    ULONG DllCharacteristics;
 
         (void)hFile;
 
 	if ( lpLibFileName == NULL )
 		return NULL;
+
+    /* Check for any flags LdrLoadDll might be interested in */
+    if (dwFlags & DONT_RESOLVE_DLL_REFERENCES)
+    {
+        /* Tell LDR to treat it as an EXE */
+        DllCharacteristics = IMAGE_FILE_EXECUTABLE_IMAGE;
+    }
 
 	dwFlags &=
 	  DONT_RESOLVE_DLL_REFERENCES |
@@ -182,7 +192,19 @@ LoadLibraryExW (
 	  dwFlags & LOAD_WITH_ALTERED_SEARCH_PATH ? lpLibFileName : NULL);
 
 	RtlInitUnicodeString(&DllName, (LPWSTR)lpLibFileName);
-	Status = LdrLoadDll(SearchPath, dwFlags, &DllName, (PVOID*)&hInst);
+    if (InWindows)
+    {
+        /* Call the API Properly */
+        Status = LdrLoadDll(SearchPath,
+                            (ULONG)&DllCharacteristics, // Silence compiler
+                            &DllName,
+                            (PVOID*)&hInst);
+    }
+    else
+    {
+        /* Call the ROS API. NOTE: Don't fix this, I have a patch to merge later. */
+        Status = LdrLoadDll(SearchPath, dwFlags, &DllName, (PVOID*)&hInst);
+    }
 	RtlFreeHeap(RtlGetProcessHeap(), 0, SearchPath);
 	if ( !NT_SUCCESS(Status))
 	{

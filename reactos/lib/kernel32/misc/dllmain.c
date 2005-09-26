@@ -13,7 +13,7 @@
 
 #include <k32.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include "../include/debug.h"
 
 /* GLOBALS *******************************************************************/
@@ -378,7 +378,7 @@ DllMain(HANDLE hDll,
 
         /* Insert more dll attach stuff here! */
         DllInitialized = TRUE;
-        DPRINT1("Initialization complete\n");
+        DPRINT("Initialization complete\n");
         break;
 
         case DLL_PROCESS_DETACH:

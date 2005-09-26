@@ -1633,3 +1633,11 @@ SetClientTimeZoneInformation(
     STUB;
     return 0;
 }
+
+ULONG
+WINAPI
+NlsGetCacheUpdateCount(VOID)
+{
+    STUB;
+    return 0;
+}

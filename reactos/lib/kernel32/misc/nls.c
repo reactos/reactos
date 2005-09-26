@@ -987,13 +987,4 @@ IsDBCSLeadByte(BYTE TestByte)
    return IntIsLeadByte(&AnsiCodePage.CodePageTable, TestByte);
 }
 
-ULONG
-WINAPI
-NlsGetCacheUpdateCount(VOID)
-{
-    /* FIXME: */
-    UNIMPLEMENTED;
-    return 0;
-}
-
 /* EOF */
