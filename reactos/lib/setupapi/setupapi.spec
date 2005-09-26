@@ -437,10 +437,10 @@
 @ stdcall SetupInstallFilesFromInfSectionW(long long long wstr wstr long)
 @ stdcall SetupInstallFromInfSectionA(long long str long long str long ptr ptr long ptr)
 @ stdcall SetupInstallFromInfSectionW(long long wstr long long wstr long ptr ptr long ptr)
-@ stub SetupInstallServicesFromInfSectionA
-@ stub SetupInstallServicesFromInfSectionExA
-@ stub SetupInstallServicesFromInfSectionExW
-@ stub SetupInstallServicesFromInfSectionW
+@ stdcall SetupInstallServicesFromInfSectionA(long str long)
+@ stdcall SetupInstallServicesFromInfSectionExA(long str long ptr ptr ptr ptr)
+@ stdcall SetupInstallServicesFromInfSectionExW(long wstr long ptr ptr ptr ptr)
+@ stdcall SetupInstallServicesFromInfSectionW(long wstr long)
 @ stdcall SetupIterateCabinetA(str long ptr ptr)
 @ stdcall SetupIterateCabinetW(wstr long ptr ptr)
 @ stub SetupLogErrorA

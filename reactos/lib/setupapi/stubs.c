@@ -125,6 +125,15 @@ HANDLE WINAPI SetupInitializeFileLogA(LPCSTR LogFileName, DWORD Flags)
 }
 
 /***********************************************************************
+ *		SetupInstallServicesFromInfSectionExW  (SETUPAPI.@)
+ */
+BOOL WINAPI SetupInstallServicesFromInfSectionExW( HINF hinf, PCWSTR sectionname, DWORD flags, HDEVINFO devinfo, PSP_DEVINFO_DATA devinfo_data, PVOID reserved1, PVOID reserved2 )
+{
+    FIXME("Stub %p, %s, 0x%lx, %p, %p, %p, %p\n", hinf, debugstr_w(sectionname), flags, devinfo, devinfo_data, reserved1, reserved2);
+    return TRUE;
+}
+
+/***********************************************************************
  *		SetupTerminateFileLog(SETUPAPI.@)
  */
 BOOL WINAPI SetupTerminateFileLog(HANDLE FileLogHandle)

@@ -953,3 +953,43 @@ void WINAPI InstallHinfSectionA( HWND hwnd, HINSTANCE handle, LPCSTR cmdline, IN
         RtlFreeUnicodeString( &cmdlineW );
     }
 }
+
+
+/***********************************************************************
+ *		SetupInstallServicesFromInfSectionA  (SETUPAPI.@)
+ */
+BOOL WINAPI SetupInstallServicesFromInfSectionA( HINF hinf, PCSTR sectionname, DWORD flags )
+{
+    return SetupInstallServicesFromInfSectionExA( hinf, sectionname, flags,
+                                                  NULL, NULL, NULL, NULL );
+}
+
+
+/***********************************************************************
+ *		SetupInstallServicesFromInfSectionW  (SETUPAPI.@)
+ */
+BOOL WINAPI SetupInstallServicesFromInfSectionW( HINF hinf, PCWSTR sectionname, DWORD flags )
+{
+    return SetupInstallServicesFromInfSectionExW( hinf, sectionname, flags,
+                                                  NULL, NULL, NULL, NULL );
+}
+
+
+/***********************************************************************
+ *		SetupInstallServicesFromInfSectionExA  (SETUPAPI.@)
+ */
+BOOL WINAPI SetupInstallServicesFromInfSectionExA( HINF hinf, PCSTR sectionname, DWORD flags, HDEVINFO devinfo, PSP_DEVINFO_DATA devinfo_data, PVOID reserved1, PVOID reserved2 )
+{
+    UNICODE_STRING sectionnameW;
+    BOOL ret = FALSE;
+
+    if (RtlCreateUnicodeStringFromAsciiz( &sectionnameW, sectionname ))
+    {
+        ret = SetupInstallServicesFromInfSectionExW( hinf, sectionnameW.Buffer, flags, devinfo, devinfo_data, reserved1, reserved2 );
+        RtlFreeUnicodeString( &sectionnameW );
+    }
+    else
+        SetLastError( ERROR_NOT_ENOUGH_MEMORY );
+
+    return ret;
+}
