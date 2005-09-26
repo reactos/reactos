@@ -633,8 +633,19 @@ MoveFileWithProgressW (
                size = wcslen(lpNewFileName);		 
                wcscpy((WCHAR *)&lpNewFileName2[size], (WCHAR *)&lpDeleteFile[size2]);
 		 
-               /* copy file */		  
-               Result = CopyFileW(lpDeleteFile,lpNewFileName2, FALSE);               			   			              
+               /* copy file */		                 
+			   Result = CopyFileExW (lpDeleteFile,
+		                      lpNewFileName2,
+		                      lpProgressRoutine,
+		                      lpData,
+		                      NULL,
+		                      0);
+
+			   if (Result == FALSE)
+               {  
+                 DPRINT("MoveFileWithProgressW : Fails\n");
+                 break;
+               }
 
                /* delete file */
                DPRINT("MoveFileWithProgressW : Delete file : %S : %S\n",lpDeleteFile, lpNewFileName2);
