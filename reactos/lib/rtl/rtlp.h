@@ -51,7 +51,7 @@ RtlLeaveHeapLock(PRTL_CRITICAL_SECTION CriticalSection);
 
 BOOLEAN
 NTAPI
-RtlpCheckForActiveDebugger(VOID);
+RtlpCheckForActiveDebugger(BOOLEAN Type);
 
 BOOLEAN
 NTAPI

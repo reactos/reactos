@@ -24,8 +24,6 @@ DbgBreakPoint@0
 DbgPrint
 DbgPrintEx
 DbgPrompt@12
-DbgSsHandleKmApiMsg@8
-DbgSsInitialize@16
 DbgUiConnectToDbg@0
 DbgUiContinue@8
 DbgUiIssueRemoteBreakin@4
@@ -161,6 +159,7 @@ NtPrivilegeObjectAuditAlarm@24
 NtProtectVirtualMemory@20
 NtPulseEvent@8
 NtQueryAttributesFile@8
+NtQueryDebugFilterState@8
 NtQueryDefaultLocale@8
 NtQueryDefaultUILanguage@4
 NtQueryDirectoryFile@44
@@ -218,6 +217,7 @@ NtResumeProcess@4
 NtResumeThread@8
 NtSaveKey@8
 NtSecureConnectPort@36
+NtSetDebugFilterState@12
 NtSetContextThread@8
 NtSetDefaultHardErrorPort@4
 NtSetDefaultLocale@8
@@ -265,6 +265,7 @@ NtUnlockFile@20
 NtUnlockVirtualMemory@16
 NtUnmapViewOfSection@8
 NtVdmControl@8
+NtWaitForDebugEvent@16
 NtWaitForMultipleObjects@20
 NtWaitForSingleObject@12
 NtWaitHighEventPair@4
@@ -716,6 +717,7 @@ ZwCloseObjectAuditAlarm@12
 ZwCompleteConnectPort@4
 ZwConnectPort@32
 ZwContinue@8
+ZwCreateDebugObject@16
 ZwCreateDirectoryObject@12
 ZwCreateEvent@20
 ZwCreateEventPair@12
@@ -735,6 +737,7 @@ ZwCreateSymbolicLinkObject@16
 ZwCreateThread@32
 ZwCreateTimer@16
 ZwCreateToken@52
+ZwDebugContinue@12
 ZwDelayExecution@8
 ZwDeleteAtom@4
 ZwDeleteFile@4

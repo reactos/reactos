@@ -18,7 +18,8 @@
 
 VOID
 STDCALL
-KdpBochsDebugPrint(IN PCH Message)
+KdpBochsDebugPrint(IN PCH Message,
+                   IN ULONG Length)
 {
     while (*Message != 0)
     {
@@ -40,8 +41,6 @@ KdpBochsDebugPrint(IN PCH Message)
         Message++;
     }
 }
-
-
 
 VOID
 STDCALL

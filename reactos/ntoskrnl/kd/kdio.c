@@ -55,10 +55,9 @@ KdpPrintToLogInternal(PVOID Context)
 
 VOID
 STDCALL
-KdpPrintToLog(PCH String)
+KdpPrintToLog(PCH String,
+              ULONG StringLength)
 {
-    ULONG StringLength = strlen(String);
-
     /* Don't overflow */
     if ((CurrentPosition + StringLength) > BufferSize) return;
 
@@ -142,7 +141,8 @@ KdpInitDebugLog(PKD_DISPATCH_TABLE DispatchTable,
 
 VOID
 STDCALL
-KdpSerialDebugPrint(LPSTR Message)
+KdpSerialDebugPrint(LPSTR Message,
+                    ULONG Length)
 {
     PCHAR pch = (PCHAR) Message;
 
@@ -186,6 +186,15 @@ KdpSerialInit(PKD_DISPATCH_TABLE DispatchTable,
 
 VOID
 STDCALL
+KdpScreenPrint(LPSTR Message,
+               ULONG Length)
+{
+    /* Call HAL */
+    HalDisplayString(Message);
+}
+
+VOID
+STDCALL
 KdpScreenInit(PKD_DISPATCH_TABLE DispatchTable,
               ULONG BootPhase)
 {
@@ -195,7 +204,7 @@ KdpScreenInit(PKD_DISPATCH_TABLE DispatchTable,
     {
         /* Write out the functions that we support for now */
         DispatchTable->KdpInitRoutine = KdpScreenInit;
-        DispatchTable->KdpPrintRoutine = HalDisplayString;
+        DispatchTable->KdpPrintRoutine = KdpScreenPrint;
 
         /* Register as a Provider */
         InsertTailList(&KdProviders, &DispatchTable->KdProvidersList);
@@ -247,10 +256,10 @@ KdpDetectConflicts(PCM_RESOURCE_LIST DriverList)
 
 ULONG
 STDCALL
-KdpPrintString(PANSI_STRING String)
+KdpPrintString(LPSTR String,
+               ULONG Length)
 {
     if (!KdpDebugMode.Value) return 0;
-    PCH pch = String->Buffer;
     PLIST_ENTRY CurrentEntry;
     PKD_DISPATCH_TABLE CurrentTable;
 
@@ -264,17 +273,17 @@ KdpPrintString(PANSI_STRING String)
                                          KdProvidersList);
 
         /* Call it */
-        CurrentTable->KdpPrintRoutine(pch);
+        CurrentTable->KdpPrintRoutine(String, Length);
 
         /* Next Table */
         CurrentEntry = CurrentEntry->Flink;
     }
 
     /* Call the Wrapper Routine */
-    if (WrapperInitRoutine) WrapperTable.KdpPrintRoutine(pch);
+    if (WrapperInitRoutine) WrapperTable.KdpPrintRoutine(String, Length);
 
     /* Return the Length */
-    return((ULONG)String->Length);
+    return Length;
 }
 
 /* EOF */

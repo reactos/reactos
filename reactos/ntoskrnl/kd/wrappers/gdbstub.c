@@ -1446,7 +1446,7 @@ extern ULONG KdpPortIrq;
 
 VOID
 STDCALL
-KdpGdbDebugPrint(PCH Message)
+KdpGdbDebugPrint(PCH Message, ULONG Length)
 {
 #if 0
   /* This can be quite annoying! */

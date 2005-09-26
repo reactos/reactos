@@ -219,6 +219,12 @@ typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
 #define NtCurrentThread() ( (HANDLE)(LONG_PTR) -2 )   
 #define ZwCurrentThread() NtCurrentThread()      
 
+#define DPFLTR_ERROR_LEVEL                  0
+#define DPFLTR_WARNING_LEVEL                1
+#define DPFLTR_TRACE_LEVEL                  2
+#define DPFLTR_INFO_LEVEL                   3
+#define DPFLTR_MASK                         0x80000000
+
 #define MAXIMUM_PROCESSORS                32
 
 #define MAXIMUM_WAIT_OBJECTS              64

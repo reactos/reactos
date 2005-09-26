@@ -839,11 +839,48 @@ _KiDebugService:
     mov [ebp+KTRAP_FRAME_DEBUGEBP], ebx
     mov [ebp+KTRAP_FRAME_DEBUGEIP], edi
 
+    /* Increase EIP so we skip the INT3 */
+    //inc dword ptr [ebp+KTRAP_FRAME_EIP]
+
     /* Call debug service dispatcher */
-    push [ebp+KTRAP_FRAME_EDX]
-    push [ebp+KTRAP_FRAME_ECX]
-    push [ebp+KTRAP_FRAME_EAX]
+    mov eax, [ebp+KTRAP_FRAME_EAX]
+    mov ecx, [ebp+KTRAP_FRAME_ECX]
+    mov edx, [ebp+KTRAP_FRAME_EAX]
+
+    /* Check for V86 mode */
+    test dword ptr [ebp+KTRAP_FRAME_EFLAGS], X86_EFLAGS_VM
+    jnz NotUserMode
+
+    /* Check if this is kernel or user-mode */
+    test byte ptr [ebp+KTRAP_FRAME_CS], 1
+    jz CallDispatch
+    cmp word ptr [ebp+KTRAP_FRAME_CS], USER_CS
+    jnz NotUserMode
+
+    /* Re-enable interrupts */
+VdmProc:
+    sti
+
+    /* Call the debug routine */
+CallDispatch:
+    mov esi, ecx
+    mov edi, edx
+    mov edx, eax
+    mov ecx, 3
+    push edi
+    push esi
+    push edx
     call _KdpServiceDispatcher@12
+
+NotUserMode:
+
+    /* Get the current process */
+    mov ebx, [fs:KPCR_CURRENT_THREAD]
+    mov ebx, [ebx+KTHREAD_APCSTATE_PROCESS]
+
+    /* Check if this is a VDM Process */
+    //cmp dword ptr [ebx+KPROCESS_VDM_OBJECTS], 0
+    //jz VdmProc
 
     /* Exit through common routine */
     jmp Kei386EoiHelper@0

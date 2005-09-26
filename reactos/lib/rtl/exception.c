@@ -39,7 +39,7 @@ RtlRaiseException(PEXCEPTION_RECORD ExceptionRecord)
     Context.ContextFlags = CONTEXT_FULL;
 
     /* Check if we're being debugged (user-mode only) */
-    if (!RtlpCheckForActiveDebugger())
+    if (!RtlpCheckForActiveDebugger(TRUE))
     {
         /* Raise an exception immediately */
         Status = ZwRaiseException(ExceptionRecord, &Context, TRUE);
@@ -91,7 +91,7 @@ RtlRaiseStatus(NTSTATUS Status)
     Context.ContextFlags = CONTEXT_FULL;
 
     /* Check if we're being debugged (user-mode only) */
-    if (!RtlpCheckForActiveDebugger())
+    if (!RtlpCheckForActiveDebugger(TRUE))
     {
         /* Raise an exception immediately */
         ZwRaiseException(&ExceptionRecord, &Context, TRUE);

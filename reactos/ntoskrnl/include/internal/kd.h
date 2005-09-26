@@ -107,7 +107,10 @@ VOID
 
 typedef
 VOID
-(STDCALL*PKDP_PRINT_ROUTINE)(PCH String);
+(STDCALL*PKDP_PRINT_ROUTINE)(
+    LPSTR String,
+    ULONG Length
+);
 
 typedef
 VOID
@@ -172,7 +175,9 @@ KdpEnterDebuggerException(
 
 ULONG
 STDCALL
-KdpPrintString(PANSI_STRING String);
+KdpPrintString(
+    LPSTR String,
+    ULONG Length);
 
 BOOLEAN
 STDCALL
@@ -180,7 +185,10 @@ KdpDetectConflicts(PCM_RESOURCE_LIST DriverList);
 
 VOID
 STDCALL
-KdpBochsDebugPrint(IN PCH Message);
+KdpBochsDebugPrint(
+    IN PCH Message,
+    IN ULONG Length
+);
 
 /* KD GLOBALS  ***************************************************************/
 

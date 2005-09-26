@@ -306,7 +306,6 @@
 			</directory>
 		</if>
 		<file>atom.c</file>
-		<file>debug.c</file>
 		<file>libsupp.c</file>
 		<file>misc.c</file>
 		<file>nls.c</file>

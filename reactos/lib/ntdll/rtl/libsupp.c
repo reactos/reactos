@@ -17,9 +17,28 @@
 
 BOOLEAN
 NTAPI
-RtlpCheckForActiveDebugger(VOID)
+RtlpCheckForActiveDebugger(BOOLEAN Type)
 {
     return (NtCurrentPeb()->BeingDebugged);
+}
+
+BOOLEAN
+NTAPI
+RtlpSetInDbgPrint(IN BOOLEAN NewValue)
+{
+    /* If we're setting it to false, do it and return */
+    if (NewValue == FALSE)
+    {
+        NtCurrentTeb()->InDbgPrint = FALSE;
+        return FALSE;
+    }
+
+    /* Setting to true; check if it's not already */
+    if (NtCurrentTeb()->InDbgPrint) return TRUE;
+
+    /* Set it and return */
+    NtCurrentTeb()->InDbgPrint = TRUE;
+    return FALSE;
 }
 
 KPROCESSOR_MODE

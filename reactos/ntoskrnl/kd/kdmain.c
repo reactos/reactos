@@ -21,26 +21,35 @@ ULONG EXPORTED KiBugCheckData;
 BOOLEAN KdpBreakPending;
 VOID STDCALL PspDumpThreads(BOOLEAN SystemThreads);
 
+typedef struct
+{
+	ULONG ComponentId;
+	ULONG Level;
+} KD_COMPONENT_DATA;
+#define MAX_KD_COMPONENT_TABLE_ENTRIES 128
+KD_COMPONENT_DATA KdComponentTable[MAX_KD_COMPONENT_TABLE_ENTRIES];
+ULONG KdComponentTableEntries = 0;
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 ULONG
 STDCALL
 KdpServiceDispatcher(ULONG Service,
-                     PVOID Context1,
-                     PVOID Context2)
+                     PVOID Buffer1,
+                     ULONG Buffer1Length)
 {
     ULONG Result = 0;
 
     switch (Service)
     {
-        case 1: /* DbgPrint */
-            Result = KdpPrintString ((PANSI_STRING)Context1);
+        case BREAKPOINT_PRINT: /* DbgPrint */
+            Result = KdpPrintString(Buffer1, Buffer1Length);
             break;
 
 #ifdef DBG
         case TAG('R', 'o', 's', ' '): /* ROS-INTERNAL */
         {
-            switch ((ULONG)Context1)
+            switch ((ULONG)Buffer1)
             {
                 case DumpNonPagedPool:
                     MiDebugDumpNonPagedPool(FALSE);
@@ -201,6 +210,56 @@ KdPowerTransition(ULONG PowerState)
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+STDCALL
+NtQueryDebugFilterState(IN ULONG ComponentId,
+                        IN ULONG Level)
+{
+	int i;
+
+	/* convert Level to mask if it isn't already one */
+	if ( Level < 32 )
+		Level = 1 << Level;
+
+	for ( i = 0; i < KdComponentTableEntries; i++ )
+	{
+		if ( ComponentId == KdComponentTable[i].ComponentId )
+		{
+			if ( Level & KdComponentTable[i].Level )
+				return TRUE;
+			break;
+		}
+	}
+	return FALSE;
+}
+
+NTSTATUS
+STDCALL
+NtSetDebugFilterState(IN ULONG ComponentId,
+                      IN ULONG Level,
+                      IN BOOLEAN State)
+{
+	int i;
+	for ( i = 0; i < KdComponentTableEntries; i++ )
+	{
+		if ( ComponentId == KdComponentTable[i].ComponentId )
+			break;
+	}
+	if ( i == KdComponentTableEntries )
+	{
+		if ( i == MAX_KD_COMPONENT_TABLE_ENTRIES )
+			return STATUS_INVALID_PARAMETER_1;
+		++KdComponentTableEntries;
+		KdComponentTable[i].ComponentId = ComponentId;
+		KdComponentTable[i].Level = 0;
+	}
+	if ( State )
+		KdComponentTable[i].Level |= Level;
+	else
+		KdComponentTable[i].Level &= ~Level;
+	return STATUS_SUCCESS;
 }
 
  /* EOF */

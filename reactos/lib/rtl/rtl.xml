@@ -24,6 +24,7 @@
 	<file>crc32.c</file>
 	<file>critical.c</file>
 	<file>dbgbuffer.c</file>
+	<file>debug.c</file>
 	<file>dos8dot3.c</file>
 	<file>encode.c</file>
 	<file>env.c</file>

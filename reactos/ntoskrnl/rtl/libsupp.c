@@ -19,10 +19,18 @@ extern ULONG NtGlobalFlag;
 
 BOOLEAN
 NTAPI
-RtlpCheckForActiveDebugger(VOID)
+RtlpCheckForActiveDebugger(BOOLEAN Type)
 {
     /* This check is meaningless in kernel-mode */
-    return TRUE;
+    return Type;
+}
+
+BOOLEAN
+NTAPI
+RtlpSetInDbgPrint(IN BOOLEAN NewValue)
+{
+    /* This check is meaningless in kernel-mode */
+    return FALSE;
 }
 
 KPROCESSOR_MODE
