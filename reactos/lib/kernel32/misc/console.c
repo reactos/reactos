@@ -1999,7 +1999,6 @@ IntWriteConsoleOutput(HANDLE hConsoleOutput,
   PCSR_CAPTURE_BUFFER CaptureBuffer;
   NTSTATUS Status;
   ULONG Size;
-  PVOID BufferTargetBase;
 
   Size = dwBufferSize.Y * dwBufferSize.X * sizeof(CHAR_INFO);
 
@@ -2014,7 +2013,7 @@ IntWriteConsoleOutput(HANDLE hConsoleOutput,
                           (PVOID*)&Request.Data.WriteConsoleOutputRequest.CharInfo);
 
   /* Copy from the buffer */
-  RtlCopyMemory(BufferTargetBase, lpBuffer, Size);
+  RtlCopyMemory(&Request.Data.WriteConsoleOutputRequest.CharInfo, lpBuffer, Size);
 
   /* Set up the data to send to the Console Server */
   CsrRequest = MAKE_CSR_API(WRITE_CONSOLE_OUTPUT, CSR_CONSOLE);
