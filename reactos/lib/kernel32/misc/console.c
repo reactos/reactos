@@ -2013,7 +2013,7 @@ IntWriteConsoleOutput(HANDLE hConsoleOutput,
                           (PVOID*)&Request.Data.WriteConsoleOutputRequest.CharInfo);
 
   /* Copy from the buffer */
-  RtlCopyMemory(&Request.Data.WriteConsoleOutputRequest.CharInfo, lpBuffer, Size);
+  RtlCopyMemory(Request.Data.WriteConsoleOutputRequest.CharInfo, lpBuffer, Size);
 
   /* Set up the data to send to the Console Server */
   CsrRequest = MAKE_CSR_API(WRITE_CONSOLE_OUTPUT, CSR_CONSOLE);
