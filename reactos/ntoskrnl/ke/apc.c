@@ -273,7 +273,7 @@ KiInsertQueueApc(PKAPC Apc,
     */
     if ((Apc->ApcMode != KernelMode) && (Apc->KernelRoutine == (PKKERNEL_ROUTINE)PsExitSpecialApc)) {
 
-        DPRINT1("Inserting the Thread Exit APC for '%.16s' into the Queue\n", ((PETHREAD)Thread)->ThreadsProcess->ImageFileName);
+        DPRINT("Inserting the Thread Exit APC for '%.16s' into the Queue\n", ((PETHREAD)Thread)->ThreadsProcess->ImageFileName);
         Thread->ApcStatePointer[(int)Apc->ApcStateIndex]->UserApcPending = TRUE;
         InsertHeadList(&Thread->ApcStatePointer[(int)Apc->ApcStateIndex]->ApcListHead[(int)Apc->ApcMode],
                        &Apc->ApcListEntry);

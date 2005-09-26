@@ -396,8 +396,8 @@ PsExitSpecialApc(PKAPC Apc,
                  PVOID* SystemArgument1,
                  PVOID* SystemArguemnt2)
 {
-    DPRINT1("PsExitSpecialApc called: 0x%x (proc: 0x%x, '%.16s')\n", 
-            PsGetCurrentThread(), PsGetCurrentProcess(), PsGetCurrentProcess()->ImageFileName);
+    DPRINT("PsExitSpecialApc called: 0x%x (proc: 0x%x, '%.16s')\n", 
+           PsGetCurrentThread(), PsGetCurrentProcess(), PsGetCurrentProcess()->ImageFileName);
 
     /* Don't do anything unless we are in User-Mode */
     if (Apc->SystemArgument2)
@@ -425,8 +425,8 @@ PspExitNormalApc(PVOID NormalContext,
     PETHREAD Thread = PsGetCurrentThread();
     NTSTATUS ExitStatus;
         
-    DPRINT1("PspExitNormalApc called: 0x%x (proc: 0x%x, '%.16s')\n", 
-            PsGetCurrentThread(), PsGetCurrentProcess(), PsGetCurrentProcess()->ImageFileName);
+    DPRINT("PspExitNormalApc called: 0x%x (proc: 0x%x, '%.16s')\n", 
+           PsGetCurrentThread(), PsGetCurrentProcess(), PsGetCurrentProcess()->ImageFileName);
 
     /* This should never happen */
     ASSERT(!SystemArgument2);
@@ -446,7 +446,7 @@ PspExitNormalApc(PVOID NormalContext,
     }
 
     /* If we're here, this is not a System Thread, so kill it from User-Mode */
-    DPRINT1("Initializing User-Mode APC\n");
+    DPRINT("Initializing User-Mode APC\n");
     KeInitializeApc(Apc,
                     &Thread->Tcb,
                     OriginalApcEnvironment,
