@@ -3033,7 +3033,6 @@ CmiAllocateHashTableCell (IN PREGISTRY_HIVE RegistryHive,
   else
     {
       ASSERT(SubKeyCount <= 0xffff); /* should really be USHORT_MAX or similar */
-      NewHashBlock->CellSize = -NewHashSize;
       NewHashBlock->Id = REG_HASH_TABLE_CELL_ID;
       NewHashBlock->HashTableSize = (USHORT)SubKeyCount;
       *HashBlock = NewHashBlock;
