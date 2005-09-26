@@ -4377,22 +4377,227 @@ SetupDiInstallDevice(
     IN HDEVINFO DeviceInfoSet,
     IN PSP_DEVINFO_DATA DeviceInfoData)
 {
+    struct DriverInfoElement *DriverInfo;
+    struct DeviceInfoSet *DevInfoSet = (struct DeviceInfoSet *)DeviceInfoSet;
+    struct DeviceInfoElement *DevInfo = (struct DeviceInfoElement *)DeviceInfoData->Reserved;
+    SYSTEMTIME DriverDate;
+    WCHAR SectionName[MAX_PATH];
+    DWORD SectionNameLength = 0;
+    BOOL Result = FALSE;
+    INFCONTEXT ContextService;
+    UINT Flags;
+    DWORD RequiredSize;
+    HINF hInf = NULL;
+    LPCWSTR AssociatedService = NULL;
+    BOOL RebootRequired = FALSE;
+    HKEY hEnumKey, hKey;
+    LONG rc;
+
     TRACE("%p %p\n", DeviceInfoSet, DeviceInfoData);
 
-    /* Steps to follow:
-     * 0. If DI_FLAGSEX_SETFAILEDINSTALL is set, set FAILEDINSTALL flag in ConfigFlags registry and exit
-     * 1. Create driver key and write InfPath and ProviderName
-     * 2a Process inf sections: {DDInstall}, {DDInstall}.HW [SetupDiOpenDevRegKey]
-     *  b Process {DDInstall}.LogConfigOverride if present [SetupDiOpenDevRegKey]
-     *  c Process {DDInstall}.Services [SetupDiOpenDevRegKey]
-     * 3. Copy inf file to Inf\ directory [SetupCopyOEMInf]
-     * 4. Install other waiting files
-     * 5. Load the driver/Call AddDevice
-     * 6. Send IRP_MN_START_DEVICE if DI_NEEDRESTART, DI_NEEDREBOOT and DI_DONOTCALLCONFIGMG are not set
-     */
+    if (!DeviceInfoSet)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if (DeviceInfoData && DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else if (DeviceInfoData && ((struct DeviceInfoElement *)DeviceInfoData->Reserved)->SelectedDriver == NULL)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (!DeviceInfoData && ((struct DeviceInfoSet *)DeviceInfoSet)->SelectedDriver == NULL)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else
+        Result = TRUE;
 
-    FIXME("SetupDiInstallDevice not implemented. Doing nothing\n");
-    //SetLastError(ERROR_GEN_FAILURE);
-    //return FALSE;
+    if (!Result)
+    {
+        /* One parameter is bad */
+        return FALSE;
+    }
+
+    /* FIXME: If DI_FLAGSEX_SETFAILEDINSTALL is set, set FAILEDINSTALL flag in ConfigFlags registry and exit */
+
+    if (DeviceInfoData)
+        DriverInfo = ((struct DeviceInfoElement *)DeviceInfoData->Reserved)->SelectedDriver;
+    else
+        DriverInfo = ((struct DeviceInfoSet *)DeviceInfoSet)->SelectedDriver;
+    FileTimeToSystemTime(&DriverInfo->Info.DriverDate, &DriverDate);
+
+    hInf = SetupOpenInfFileW(DriverInfo->InfPath, NULL, INF_STYLE_WIN4, NULL);
+    if (hInf == INVALID_HANDLE_VALUE)
+        return FALSE;
+
+    Result = SetupDiGetActualSectionToInstallW(hInf, DriverInfo->InfSection,
+        SectionName, MAX_PATH, &SectionNameLength, NULL);
+    if (!Result || SectionNameLength > MAX_PATH - 9)
+    {
+        SetupCloseInfFile(hInf);
+        return FALSE;
+    }
+
+    /* Create driver key information */
+    FIXME("FIXME: Create driver key information\n");
+    
+    /* Write information to driver key */
+    FIXME("FIXME: Write information to driver key\n");
+    FIXME("DriverDate      : '%u-%u-%u'\n", 0, DriverDate.wMonth, DriverDate.wDay, DriverDate.wYear);
+    FIXME("DriverDateData  :"); { ULONG i; for (i = 0; i < sizeof(DriverInfo->Info.DriverDate); i++) DbgPrint(" %02x", ((PCHAR)&DriverInfo->Info.DriverDate)[i] & 0xff); } DbgPrint("\n");
+    FIXME("DriverDesc      : '%S'\n", DriverInfo->Info.Description);
+    FIXME("DriverVersion   : '%u.%u.%u.%u'\n", DriverInfo->Info.DriverVersion & 0xff, (DriverInfo->Info.DriverVersion >> 8) & 0xff, (DriverInfo->Info.DriverVersion >> 16) & 0xff, (DriverInfo->Info.DriverVersion >> 24) & 0xff);
+    FIXME("InfPath         : '%S'\n", DriverInfo->InfPath);
+    FIXME("InfSection      : '%S'\n", DriverInfo->InfSection); /* FIXME: remove extension */
+    FIXME("InfSectionExt   : '%S'\n", L"???"); /* FIXME */
+    FIXME("MatchingDeviceId: '%S'\n", L"???"); /* FIXME */
+    FIXME("ProviderName    : '%S'\n", DriverInfo->Info.ProviderName);
+
+    /* Install services */
+    wcscat(SectionName, L".Services");
+    Result = SetupFindFirstLineW(hInf, SectionName, NULL, &ContextService);
+    while (Result)
+    {
+        LPWSTR ServiceName = NULL;
+        LPWSTR ServiceSection = NULL;
+
+        Result = SetupGetStringFieldW(
+            &ContextService,
+            1, /* Field index */
+            NULL, 0,
+            &RequiredSize);
+        if (!Result)
+            goto cleanup;
+        if (RequiredSize > 0)
+        {
+            /* We got the needed size for the buffer */
+            ServiceName = HeapAlloc(GetProcessHeap(), 0, RequiredSize * sizeof(WCHAR));
+            if (!ServiceName)
+            {
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+                goto cleanup;
+            }
+            Result = SetupGetStringFieldW(
+                &ContextService,
+                1, /* Field index */
+                ServiceName, RequiredSize,
+                &RequiredSize);
+            if (!Result)
+                goto cleanup;
+        }
+        Result = SetupGetIntField(
+            &ContextService,
+            2, /* Field index */
+            &Flags);
+        if (!Result)
+        {
+            /* The field may be empty. Ignore the error */
+            Flags = 0;
+        }
+        Result = SetupGetStringFieldW(
+            &ContextService,
+            3, /* Field index */
+            NULL, 0,
+            &RequiredSize);
+        if (!Result)
+            goto cleanup;
+        if (RequiredSize > 0)
+        {
+            /* We got the needed size for the buffer */
+            ServiceSection = HeapAlloc(GetProcessHeap(), 0, RequiredSize * sizeof(WCHAR));
+            if (!ServiceSection)
+            {
+                SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+               goto cleanup;
+            }
+            Result = SetupGetStringFieldW(
+                &ContextService,
+                3, /* Field index */
+                ServiceSection, RequiredSize,
+               &RequiredSize);
+            if (!Result)
+               goto cleanup;
+        }
+        SetLastError(ERROR_SUCCESS);
+        Result = SetupInstallServicesFromInfSectionExW(hInf, ServiceSection, Flags, DeviceInfoSet, DeviceInfoData, NULL, NULL);
+        if (Result && (Flags & SPSVCINST_ASSOCSERVICE))
+        {
+            AssociatedService = ServiceName;
+            ServiceName = NULL;
+            if (GetLastError() == ERROR_SUCCESS_REBOOT_REQUIRED)
+                RebootRequired = TRUE;
+        }
+cleanup:
+        HeapFree(GetProcessHeap(), 0, ServiceName);
+        HeapFree(GetProcessHeap(), 0, ServiceSection);
+        if (!Result)
+        {
+            HeapFree(GetProcessHeap(), 0, (LPWSTR)AssociatedService);
+            SetupCloseInfFile(hInf);
+            return FALSE;
+        }
+        Result = SetupFindNextLine(&ContextService, &ContextService);
+    }
+
+    /* Copy .inf file to Inf\ directory */
+    FIXME("FIXME: Copy .inf file to Inf\\ directory\n"); /* SetupCopyOEMInf */
+
+    /* Write information to enum key */
+    rc = RegOpenKeyExW(DevInfoSet->HKLM,
+        EnumKeyName,
+        0,
+        KEY_ENUMERATE_SUB_KEYS,
+        &hEnumKey);
+    if (rc != ERROR_SUCCESS)
+    {
+       SetLastError(rc);
+       HeapFree(GetProcessHeap(), 0, (LPWSTR)AssociatedService);
+       SetupCloseInfFile(hInf);
+       return FALSE;
+    }
+    rc = RegOpenKeyExW(
+        hEnumKey,
+        DevInfo->DeviceName,
+        0, /* Options */
+        KEY_SET_VALUE,
+        &hKey);
+    RegCloseKey(hEnumKey);
+    if (rc != ERROR_SUCCESS)
+    {
+       SetLastError(rc);
+       HeapFree(GetProcessHeap(), 0, (LPWSTR)AssociatedService);
+       SetupCloseInfFile(hInf);
+       return FALSE;
+    }
+    FIXME("FIXME: Write information to enum key\n");
+    FIXME("ParentIdPrefix  : '%S'\n", L"0000"); /* FIXME */
+    //FIXME("Service         : '%S'\n", AssociatedService);
+    FIXME("Class           : '%S'\n", L"???"); /* FIXME: SetupDiGetINFClass */
+    FIXME("ClassGUID       : '%S'\n", L"???"); /* FIXME: SetupDiGetINFClass */
+    //FIXME("DeviceDesc      : '%S'\n", DriverInfo->Info.Description);
+    FIXME("Driver          : '%S'\n", L"???"); /* FIXME: autogenerated key */
+    //FIXME("Mfg             : '%S'\n", DriverInfo->Info.MfgName);
+    rc = RegSetValueEx(hKey, L"Service", 0, REG_SZ, (const BYTE *)AssociatedService, (wcslen(AssociatedService) + 1) * sizeof(WCHAR));
+    if (rc == ERROR_SUCCESS)
+        rc = RegSetValueEx(hKey, L"DeviceDesc", 0, REG_SZ, (const BYTE *)DriverInfo->Info.Description, (wcslen(DriverInfo->Info.Description) + 1) * sizeof(WCHAR));
+    if (rc == ERROR_SUCCESS)
+        rc = RegSetValueEx(hKey, L"Mfg", 0, REG_SZ, (const BYTE *)DriverInfo->Info.MfgName, (wcslen(DriverInfo->Info.MfgName) + 1) * sizeof(WCHAR));
+    RegCloseKey(hKey);
+    if (rc != ERROR_SUCCESS)
+    {
+       SetLastError(rc);
+       HeapFree(GetProcessHeap(), 0, (LPWSTR)AssociatedService);
+       SetupCloseInfFile(hInf);
+       return FALSE;
+    }
+
+    /* Load the driver/call AddDevice */
+    FIXME("FIXME: Load the driver/call AddDevice\n");
+
+    /* Send IRP_MN_START_DEVICE if needed */
+    //if (!RebootRequired && !(Flags & (DI_NEEDRESTART | DI_NEEDREBOOT | DI_DONOTCALLCONFIGMG)))
+        FIXME("FIXME: Send IRP_MN_START_DEVICE\n");
+
+    /* End of installation */
+    HeapFree(GetProcessHeap(), 0, (LPWSTR)AssociatedService);
+    SetupCloseInfFile(hInf);
     return TRUE;
 }
