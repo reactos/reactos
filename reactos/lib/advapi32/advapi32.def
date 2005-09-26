@@ -503,7 +503,7 @@ RegOpenKeyExA@20
 RegOpenKeyExW@20
 RegOpenKeyW@12
 RegOpenUserClassesRoot@16
-;RegOverridePredefKey
+RegOverridePredefKey@8
 RegQueryInfoKeyA@48
 RegQueryInfoKeyW@48
 RegQueryMultipleValuesA@20
