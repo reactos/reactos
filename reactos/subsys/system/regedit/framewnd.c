@@ -77,7 +77,7 @@ static void OnEnterMenuLoop(HWND hWnd)
 
     /* Update the status bar pane sizes */
     nParts = -1;
-    SendMessage(hStatusBar, SB_SETPARTS, 1, (long)&nParts);
+    SendMessage(hStatusBar, SB_SETPARTS, 1, (LPARAM)&nParts);
     bInMenuLoop = TRUE;
     SendMessage(hStatusBar, SB_SETTEXT, (WPARAM)0, (LPARAM)_T(""));
 }
@@ -454,18 +454,6 @@ static BOOL CopyKeyName(HWND hWnd, LPCTSTR keyName)
     return result;
 }
 
-BOOL RefreshView(HWND hWnd)
-{
-    /* TODO:*/
-    MessageBeep(-1);
-    MessageBeep(MB_ICONASTERISK);
-    MessageBeep(MB_ICONEXCLAMATION);
-    MessageBeep(MB_ICONHAND);
-    MessageBeep(MB_ICONQUESTION);
-    MessageBeep(MB_OK);
-    return TRUE;
-}
-
 static BOOL CreateNewValue(HKEY hRootKey, LPCTSTR pszKeyPath, DWORD dwType)
 {
     TCHAR szNewValueFormat[128];
@@ -689,7 +677,8 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
 
     case ID_VIEW_REFRESH:
-        RefreshView(hWnd);
+        RefreshTreeView(g_pChildWnd->hTreeWnd);
+        /*RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath, NULL); */
         break;
    /*case ID_OPTIONS_TOOLBAR:*/
    /*	toggle_child(hWnd, LOWORD(wParam), hToolBar);*/

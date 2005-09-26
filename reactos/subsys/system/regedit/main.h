@@ -37,6 +37,8 @@
 #define PM_NEW          1
 #define PM_TREECONTEXT  2
 
+#define MAX_NEW_KEY_LEN 128
+
 extern HINSTANCE hInst;
 
 /******************************************************************************/
@@ -97,8 +99,11 @@ extern BOOL IsDefaultValue(HWND hwndLV, int i);
 
 /* treeview.c */
 extern HWND CreateTreeView(HWND hwndParent, LPTSTR pHostName, int id);
+extern BOOL RefreshTreeView(HWND hWndTV);
 extern BOOL OnTreeExpanding(HWND hWnd, NMTREEVIEW* pnmtv);
 extern LPCTSTR GetItemPath(HWND hwndTV, HTREEITEM hItem, HKEY* phRootKey);
+extern HTREEITEM InsertNode(HWND hwndTV, HTREEITEM hItem, LPTSTR name);
+extern HWND StartKeyRename(HWND hwndTV);
 extern BOOL CreateNewKey(HWND hwndTV, HTREEITEM hItem);
 
 /* edit.c */
