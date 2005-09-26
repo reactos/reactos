@@ -16,4 +16,5 @@
 	<file>misc.c</file>
 	<file>mixer.c</file>
 	<file>sndvol32.c</file>
+	<file>sndvol32.rc</file>
 </module>
