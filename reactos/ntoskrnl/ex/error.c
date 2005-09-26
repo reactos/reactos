@@ -95,7 +95,6 @@ NTSTATUS
 STDCALL
 NtSetDefaultHardErrorPort(IN HANDLE PortHandle)
 {
-
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
@@ -126,6 +125,14 @@ NtSetDefaultHardErrorPort(IN HANDLE PortHandle)
     }
 
     return Status;
+}
+
+VOID
+__cdecl
+_purecall(VOID)
+{
+    /* Not supported in Kernel Mode */
+    RtlRaiseStatus(STATUS_NOT_IMPLEMENTED);
 }
 
 /* EOF */

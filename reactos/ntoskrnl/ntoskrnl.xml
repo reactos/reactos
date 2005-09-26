@@ -116,6 +116,7 @@
 		<file>debug.c</file>
 	</directory>
 	<directory name="ex">
+		<file>atom.c</file>
 		<if property="ARCH" value="i386">
 			<directory name="i386">
 				<file>interlck.S</file>
@@ -305,11 +306,9 @@
 				<file>seh.s</file>
 			</directory>
 		</if>
-		<file>atom.c</file>
 		<file>libsupp.c</file>
 		<file>misc.c</file>
 		<file>nls.c</file>
-		<file>purecall.c</file>
 		<file>regio.c</file>
 		<file>strtok.c</file>
 	</directory>

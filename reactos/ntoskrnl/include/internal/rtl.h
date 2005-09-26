@@ -43,6 +43,15 @@ VOID
 NTAPI
 RtlpCreateNlsSection(VOID);
 
+NTSTATUS
+NTAPI
+RtlQueryAtomListInAtomTable(
+    IN PRTL_ATOM_TABLE AtomTable,
+    IN ULONG MaxAtomCount,
+    OUT ULONG *AtomCount,
+    OUT RTL_ATOM *AtomList
+);
+
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_NLS_H */
 
 /* EOF */
