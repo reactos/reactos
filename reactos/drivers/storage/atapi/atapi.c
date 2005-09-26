@@ -947,7 +947,6 @@ AtapiStartIo(IN PVOID DeviceExtension,
   if (Result != SRB_STATUS_PENDING)
     {
       DevExt->CurrentSrb = NULL;
-      Srb->SrbStatus = (UCHAR)Result;
 
       ScsiPortNotification(RequestComplete,
 			   DeviceExtension,
@@ -2350,22 +2349,6 @@ AtapiFlushCache(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 	              DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_48BIT_ADDRESS ? IDE_CMD_FLUSH_CACHE_EXT : IDE_CMD_FLUSH_CACHE,
 		      AtapiNoDataInterrupt);
 
-  /* Wait for controller ready */
-  for (Retries = 0; Retries < IDE_MAX_WRITE_RETRIES; Retries++)
-    {
-      Status = IDEReadStatus(DeviceExtension->CommandPortBase);
-      if (!(Status & IDE_SR_BUSY) || (Status & IDE_SR_ERR))
-	{
-	  break;
-	}
-      ScsiPortStallExecution(10);
-    }
-  if (Retries >= IDE_MAX_WRITE_RETRIES)
-    {
-      DPRINT1("Drive is BUSY for too long after sending write command\n");
-      DeviceExtension->Handler = NULL;
-      return(SRB_STATUS_BUSY);
-    }
 
   DPRINT("AtapiFlushCache() done!\n");
 
