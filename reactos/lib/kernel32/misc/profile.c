@@ -1872,3 +1872,18 @@ CloseProfileUserMapping(VOID)
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+QueryWin31IniFilesMappedToRegistry(DWORD Unknown0,
+                                   DWORD Unknown1,
+                                   DWORD Unknown2,
+                                   DWORD Unknown3)
+{
+    DPRINT1("QueryWin31IniFilesMappedToRegistry not implemented\n");
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
