@@ -930,7 +930,7 @@ static UINT IntMapVirtualKeyEx( UINT Code, UINT Type, PKBDTABLES keyLayout )
 
       case 2:
          {
-            WCHAR wp[2];
+            WCHAR wp[2] = {0};
 
             ret = VkToScan( Code, FALSE, keyLayout );
             ToUnicodeInner( Code, ret, 0, wp, 2, 0, keyLayout );

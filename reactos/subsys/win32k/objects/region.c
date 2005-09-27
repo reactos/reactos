@@ -2635,7 +2635,7 @@ NtGdiRectInRegion(HRGN  hRgn,
                        CONST LPRECT  unsaferc)
 {
   PROSRGNDATA Rgn;
-  RECT rc;
+  RECT rc = {0};
   BOOL Ret;
   NTSTATUS Status = STATUS_SUCCESS;
 

@@ -847,7 +847,7 @@ NtUserClipCursor(
    PSYSTEM_CURSORINFO CurInfo;
    RECT Rect;
    PWINDOW_OBJECT DesktopWindow = NULL;
-   POINT MousePos;
+   POINT MousePos = {0};
    DECLARE_RETURN(BOOL);
 
    DPRINT("Enter NtUserClipCursor\n");

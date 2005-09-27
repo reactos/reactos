@@ -62,7 +62,7 @@ BOOL STDCALL NtGdiCombineTransform(LPXFORM  UnsafeXFormResult,
                            CONST LPXFORM  Unsafexform2)
 {
   XFORM  xformTemp;
-  XFORM  xform1, xform2;
+  XFORM  xform1 = {0}, xform2 = {0};
   NTSTATUS Status = STATUS_SUCCESS;
   BOOL Ret;
 
@@ -425,7 +425,7 @@ NtGdiModifyWorldTransform(HDC            hDC,
                           DWORD          Mode)
 {
    PDC dc;
-   XFORM SafeXForm;
+   XFORM SafeXForm = {0};
    NTSTATUS Status = STATUS_SUCCESS;
 
    dc = DC_LockDc(hDC);
