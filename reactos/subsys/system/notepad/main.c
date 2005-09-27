@@ -78,6 +78,8 @@ static int NOTEPAD_MenuCommand(WPARAM wParam)
 
     case CMD_SEARCH:           DIALOG_Search(); break;
     case CMD_SEARCH_NEXT:      DIALOG_SearchNext(); break;
+    case CMD_REPLACE:          DIALOG_Replace(); break;
+    case CMD_GOTO:             DIALOG_GoTo(); break;
 
     case CMD_WRAP:             DIALOG_EditWrap(); break;
     case CMD_FONT:             DIALOG_SelectFont(); break;
@@ -106,6 +108,7 @@ static VOID NOTEPAD_FindNext(FINDREPLACE *pFindReplace)
     LPTSTR pszText = NULL;
     DWORD dwPosition, dwDummy;
     BOOL bMatches = FALSE;
+    TCHAR szResource[128], szText[128];
 
     iTargetLength = _tcslen(pFindReplace->lpstrFindWhat);
 
@@ -149,9 +152,18 @@ static VOID NOTEPAD_FindNext(FINDREPLACE *pFindReplace)
 
     if (bMatches)
     {
+        /* Found target */
         SendMessage(Globals.hEdit, EM_SETSEL, dwPosition, dwPosition + iTargetLength);
         SendMessage(Globals.hEdit, EM_SCROLLCARET, 0, 0);
     }
+	else
+	{
+        /* Can't find target */
+        LoadString(Globals.hInstance, STRING_CANNOTFIND, szResource, SIZEOF(szResource));
+        _sntprintf(szText, SIZEOF(szText), szResource, pFindReplace->lpstrFindWhat);
+        LoadString(Globals.hInstance, STRING_NOTEPAD, szResource, SIZEOF(szResource));
+        MessageBox(Globals.hEdit, szText, szResource, MB_OK);
+	}
 
     if (pszText)
         HeapFree(GetProcessHeap(), 0, pszText);

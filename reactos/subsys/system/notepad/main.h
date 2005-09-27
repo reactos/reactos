@@ -49,6 +49,7 @@ typedef struct
   LOGFONT lfFont;
   BOOL    bWrapLongLines;
   WCHAR   szFindText[MAX_PATH];
+  WCHAR   szReplaceText[MAX_PATH];
   WCHAR   szFileName[MAX_PATH];
   WCHAR   szFileTitle[MAX_PATH];
   WCHAR   szFilter[2 * MAX_STRING_LEN + 100];

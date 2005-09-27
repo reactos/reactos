@@ -51,8 +51,10 @@ POPUP "&Edit" {
   MENUITEM "&Font...",          CMD_FONT
  }
 POPUP "&Search" {
-  MENUITEM "&Search\tCtrl+F",   CMD_SEARCH
-  MENUITEM "&Search next\tF3",  CMD_SEARCH_NEXT
+  MENUITEM "&Find...\tCtrl+F",  CMD_SEARCH
+  MENUITEM "Find &next\tF3",    CMD_SEARCH_NEXT
+  MENUITEM "Replace\tCtrl+H",   CMD_REPLACE
+  MENUITEM "Go To...\tCtrl+G",  CMD_GOTO
  }
 POPUP "&Help" {
   MENUITEM "&Contents",         CMD_HELP_CONTENTS
@@ -107,6 +109,18 @@ COMBOBOX        ID_EOLN,54,18,156,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
 LTEXT           "Endlines:",0x156,5,20,41,12
 }
 
+/* Dialog 'Go To' */
+DIALOG_GOTO DIALOG 0,0,165,50
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Goto line"
+{
+EDITTEXT        ID_LINENUMBER,54,10,106,12,WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT           "Line number:",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
+DEFPUSHBUTTON   "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
+PUSHBUTTON      "Cancel", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
+}
+
 STRINGTABLE DISCARDABLE
 {
 STRING_PAGESETUP_HEADERVALUE,   "&n"        /* FIXME */
@@ -138,6 +152,7 @@ STRING_NOTFOUND,                                        "'%s' can not be found."
 STRING_OUT_OF_MEMORY,                   "Not enough memory to complete this \
 task. \nClose one or more applications to increase the amount of \nfree \
 memory."
+STRING_CANNOTFIND                               "Cannot find '%s'"
 STRING_ANSI,                                    "ANSI"
 STRING_UNICODE,                                 "Unicode"
 STRING_UNICODE_BE,                              "Unicode (big endian)"

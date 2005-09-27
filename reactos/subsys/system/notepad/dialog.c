@@ -21,11 +21,13 @@
  */
 
 #define UNICODE
+#define _UNICODE
 
 #include <assert.h>
 #include <stdio.h>
 #include <windows.h>
 #include <commdlg.h>
+#include <tchar.h>
 
 #include "main.h"
 #include "license.h"
@@ -669,27 +671,113 @@ VOID DIALOG_SelectFont(VOID)
     }
 }
 
+typedef HWND (STDCALL *FINDPROC)(LPFINDREPLACE lpfr);
+
+static VOID DIALOG_SearchDialog(FINDPROC pfnProc)
+{
+    ZeroMemory(&Globals.find, sizeof(Globals.find));
+    Globals.find.lStructSize      = sizeof(Globals.find);
+    Globals.find.hwndOwner        = Globals.hMainWnd;
+    Globals.find.hInstance        = Globals.hInstance;
+    Globals.find.lpstrFindWhat    = Globals.szFindText;
+    Globals.find.wFindWhatLen     = SIZEOF(Globals.szFindText);
+    Globals.find.lpstrReplaceWith = Globals.szReplaceText;
+    Globals.find.wReplaceWithLen  = SIZEOF(Globals.szReplaceText);
+    Globals.find.Flags            = FR_DOWN;
+
+    /* We only need to create the modal FindReplace dialog which will */
+    /* notify us of incoming events using hMainWnd Window Messages    */
+
+    Globals.hFindReplaceDlg = pfnProc(&Globals.find);
+    assert(Globals.hFindReplaceDlg !=0);
+}
+
 VOID DIALOG_Search(VOID)
 {
-        ZeroMemory(&Globals.find, sizeof(Globals.find));
-        Globals.find.lStructSize      = sizeof(Globals.find);
-        Globals.find.hwndOwner        = Globals.hMainWnd;
-        Globals.find.hInstance        = Globals.hInstance;
-        Globals.find.lpstrFindWhat    = Globals.szFindText;
-        Globals.find.wFindWhatLen     = SIZEOF(Globals.szFindText);
-        Globals.find.Flags            = FR_DOWN;
-
-        /* We only need to create the modal FindReplace dialog which will */
-        /* notify us of incoming events using hMainWnd Window Messages    */
-
-        Globals.hFindReplaceDlg = FindText(&Globals.find);
-        assert(Globals.hFindReplaceDlg !=0);
+    DIALOG_SearchDialog(FindText);
 }
 
 VOID DIALOG_SearchNext(VOID)
 {
     /* FIXME: Search Next */
     DIALOG_Search();
+}
+
+VOID DIALOG_Replace(VOID)
+{
+    DIALOG_SearchDialog(ReplaceText);
+}
+
+static INT_PTR CALLBACK DIALOG_GoTo_DialogProc(HWND hwndDialog, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    BOOL bResult = FALSE;
+    HWND hTextBox;
+    TCHAR szText[32];
+
+    switch(uMsg) {
+	case WM_INITDIALOG:
+        hTextBox = GetDlgItem(hwndDialog, ID_LINENUMBER);
+		_sntprintf(szText, sizeof(szText) / sizeof(szText[0]), _T("%d"), lParam);
+        SetWindowText(hTextBox, szText);
+		break;
+    case WM_COMMAND:
+        if (HIWORD(wParam) == BN_CLICKED)
+        {
+            if (LOWORD(wParam) == IDOK)
+            {
+                hTextBox = GetDlgItem(hwndDialog, ID_LINENUMBER);
+                GetWindowText(hTextBox, szText, sizeof(szText) / sizeof(szText[0]));
+                EndDialog(hwndDialog, _ttoi(szText));
+                bResult = TRUE;
+            }
+			else if (LOWORD(wParam) == IDCANCEL)
+			{
+                EndDialog(hwndDialog, 0);
+                bResult = TRUE;
+			}
+        }
+        break;
+    }
+
+    return bResult;
+}
+
+VOID DIALOG_GoTo(VOID)
+{
+    INT_PTR nLine;
+    LPTSTR pszText;
+    int nLength, i;
+    DWORD dwStart, dwEnd;
+
+    nLength = GetWindowTextLength(Globals.hEdit);
+    pszText = (LPTSTR) HeapAlloc(GetProcessHeap(), 0, (nLength + 1) * sizeof(*pszText));
+    if (!pszText)
+        return;
+
+    /* Retrieve current text */
+    GetWindowText(Globals.hEdit, pszText, nLength + 1);
+    SendMessage(Globals.hEdit, EM_GETSEL, (WPARAM) &dwStart, (LPARAM) &dwEnd);
+
+    nLine = 1;
+    for (i = 0; pszText[i] && (i < dwStart); i++)
+    {
+        if (pszText[i] == '\n')
+            nLine++;
+    }
+
+    nLine = DialogBoxParam(Globals.hInstance, MAKEINTRESOURCE(DIALOG_GOTO),
+        Globals.hMainWnd, DIALOG_GoTo_DialogProc, nLine);
+
+    if (nLine >= 1)
+	{
+        for (i = 0; pszText[i] && (nLine > 1) && (i < dwStart - 1); i++)
+        {
+            if (pszText[i] == '\n')
+                nLine--;
+        }
+        SendMessage(Globals.hEdit, EM_SETSEL, i, i);
+	}
+	HeapFree(GetProcessHeap(), 0, pszText);
 }
 
 VOID DIALOG_HelpContents(VOID)
