@@ -21,6 +21,19 @@
 /* GLOBALS *****************************************************************/
 
 /* FUNCTIONS ****************************************************************/
+static BOOL
+RemoveReadOnlyAttributeW(IN LPCWSTR lpFileName)
+{
+    DWORD Attributes;
+    Attributes = GetFileAttributesW(lpFileName);
+    if (Attributes != INVALID_FILE_ATTRIBUTES)
+    {	
+        return SetFileAttributesW(lpFileName,Attributes - 
+			                      (Attributes & ~FILE_ATTRIBUTE_READONLY));
+    }
+ 
+    return FALSE;
+}
 
 static BOOL
 AdjustFileAttributes (
@@ -478,26 +491,15 @@ MoveFileWithProgressW (
 		         {  
 		           FindClose(hFile);			     
 
-				   /* delete folder */	
-
-				   size = GetFullPathNameW(lpExistingFileName2, MAX_PATH,(LPWSTR) lpDeleteFile, NULL);
-				   if (size>MAX_PATH)
-				   {                  
-				     lpDeleteFile = (LPCWSTR) HeapReAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY, 
-				                    (VOID *) lpDeleteFile,size);
-
-					 if (lpDeleteFile == NULL)
-					 {
-						 Result = FALSE;
-			             goto FreeMemAndExit;
-					 }
-
-				     GetFullPathNameW(lpExistingFileName2, size,(LPWSTR) lpDeleteFile, NULL);
-				   }
-				 
+				   /* delete folder */					  				 
 				   DPRINT("MoveFileWithProgressW : folder : %s\n",lpDeleteFile);
 
-				   Result = RemoveDirectoryW(lpDeleteFile);
+
+				   Result = RemoveReadOnlyAttributeW(lpExistingFileName2);
+				   if (Result == FALSE)
+				       break;
+
+				   Result = RemoveDirectoryW(lpExistingFileName2);
 				   if (Result == FALSE)
 				       break;
 				 				 
@@ -547,7 +549,18 @@ MoveFileWithProgressW (
 				 }
 	           }
 
-	           wcscpy( (WCHAR *)&lpExistingFileName2[size2-3],findBuffer.cFileName);
+	            wcscpy( (WCHAR *)&lpExistingFileName2[size2-3],findBuffer.cFileName);
+
+			   
+			   /* FIXME 
+			    * RemoveReadOnlyAttributeW(lpExistingFileName2); is a hack 
+				* for to move readonly folders 
+				*/
+                wcscpy( (WCHAR *)&lpExistingFileName2[size2+size-3],L"\0");
+			    RemoveReadOnlyAttributeW(lpExistingFileName2);
+
+
+			   /* Continue */
 	           wcscpy( (WCHAR *)&lpExistingFileName2[size2+size-3],L"\\*.*\0");
           
 		  
@@ -651,6 +664,10 @@ MoveFileWithProgressW (
                DPRINT("MoveFileWithProgressW : Delete file : %S : %S\n",lpDeleteFile, lpNewFileName2);
 		  
            
+			   Result = RemoveReadOnlyAttributeW(lpDeleteFile);
+			   if (Result == FALSE)
+			       break;
+
                Result = DeleteFileW(lpDeleteFile);
                if (Result == FALSE)
                {  
