@@ -51,6 +51,7 @@ typedef struct _PREFERENCES_CONTEXT
     DWORD PlaybackID;
     DWORD RecordingID;
     UINT OtherLines;
+    TCHAR DeviceName[128];
     
     DWORD tmp;
 } PREFERENCES_CONTEXT, *PPREFERENCES_CONTEXT;
@@ -98,6 +99,7 @@ FillDeviceComboBox(PSND_MIXER Mixer,
 static BOOL CALLBACK
 PrefDlgAddLine(PSND_MIXER Mixer,
                LPMIXERLINE Line,
+               UINT DisplayControls,
                PVOID Context)
 {
     PPREFERENCES_CONTEXT PrefContext = (PPREFERENCES_CONTEXT)Context;
@@ -113,6 +115,8 @@ PrefDlgAddLine(PSND_MIXER Mixer,
                 {
                     PrefContext->SelectedLine = Line->dwLineID;
                 }
+                
+                DPRINT("!%ws cControls: %d\n", Line->szName, Line->cControls);
             }
             else
                 goto AddToOthersLines;
@@ -128,6 +132,7 @@ PrefDlgAddLine(PSND_MIXER Mixer,
                 {
                     PrefContext->SelectedLine = Line->dwLineID;
                 }
+                DPRINT("!%ws cControls: %d\n", Line->szName, Line->cControls);
             }
             else
                 goto AddToOthersLines;
@@ -196,10 +201,33 @@ PrefDlgAddConnection(PSND_MIXER Mixer,
                         (LPARAM)&lvi);
         if (i != (UINT)-1)
         {
-            /* FIXME - read config from registry */
+            TCHAR LineName[MIXER_LONG_NAME_CHARS];
+            DWORD Flags;
+            BOOL SelLine = FALSE;
+            
+            if (SndMixerGetLineName(PrefContext->Mixer,
+                                    PrefContext->SelectedLine,
+                                    LineName,
+                                    MIXER_LONG_NAME_CHARS,
+                                    FALSE) == -1)
+            {
+                LineName[0] = TEXT('\0');
+            }
+            
+            if (ReadLineConfig(PrefContext->DeviceName,
+                               LineName,
+                               Line->szName,
+                               &Flags))
+            {
+                if (Flags != 0x4)
+                {
+                    SelLine = TRUE;
+                }
+            }
+
             ListView_SetCheckState(hwndControls,
                                    i,
-                                   FALSE);
+                                   SelLine);
         }
     }
                            
@@ -214,18 +242,18 @@ UpdatePrefDlgControls(PPREFERENCES_CONTEXT Context,
     INT DeviceCbIndex;
 
     /* select the mixer */
-    DeviceCbIndex = SendMessage(GetDlgItem(Context->hwndDlg,
-                                           IDC_MIXERDEVICE),
-                                CB_GETCURSEL,
-                                0,
-                                0);
+    DeviceCbIndex = SendDlgItemMessage(Context->hwndDlg,
+                                       IDC_MIXERDEVICE,
+                                       CB_GETCURSEL,
+                                       0,
+                                       0);
     if (DeviceCbIndex != CB_ERR)
     {
-        MixerID = SendMessage(GetDlgItem(Context->hwndDlg,
-                                         IDC_MIXERDEVICE),
-                              CB_GETITEMDATA,
-                              DeviceCbIndex,
-                              0);
+        MixerID = SendDlgItemMessage(Context->hwndDlg,
+                                     IDC_MIXERDEVICE,
+                                     CB_GETITEMDATA,
+                                     DeviceCbIndex,
+                                     0);
         if (MixerID == CB_ERR)
         {
             MixerID = 0;
@@ -244,6 +272,10 @@ UpdatePrefDlgControls(PPREFERENCES_CONTEXT Context,
         Context->RecordingID = (DWORD)-1;
         Context->OtherLines = 0;
         Context->SelectedLine = (DWORD)-1;
+        
+        SndMixerGetProductName(Context->Mixer,
+                               Context->DeviceName,
+                               sizeof(Context->DeviceName) / sizeof(Context->DeviceName[0]));
 
         if (SndMixerEnumLines(Context->Mixer,
                               PrefDlgAddLine,
@@ -271,11 +303,11 @@ UpdatePrefDlgControls(PPREFERENCES_CONTEXT Context,
             if (Context->OtherLines != 0)
             {
                 /* select the first item in the other lines combo box by default */
-                SendMessage(GetDlgItem(Context->hwndDlg,
-                                       IDC_LINE),
-                            CB_SETCURSEL,
-                            0,
-                            0);
+                SendDlgItemMessage(Context->hwndDlg,
+                                   IDC_LINE,
+                                   CB_SETCURSEL,
+                                   0,
+                                   0);
             }
             EnableWindow(GetDlgItem(Context->hwndDlg,
                                     IDC_LINE),
@@ -349,18 +381,18 @@ DlgPreferencesProc(HWND hwndDlg,
                         DWORD LineID;
                         DWORD Index;
                         
-                        Index = SendMessage(GetDlgItem(hwndDlg,
-                                                       IDC_LINE),
-                                            CB_GETCURSEL,
-                                            0,
-                                            0);
+                        Index = SendDlgItemMessage(hwndDlg,
+                                                   IDC_LINE,
+                                                   CB_GETCURSEL,
+                                                   0,
+                                                   0);
                         if (Index != CB_ERR)
                         {
-                            LineID = SendMessage(GetDlgItem(hwndDlg,
-                                                            IDC_LINE),
-                                                 CB_GETITEMDATA,
-                                                 Index,
-                                                 0);
+                            LineID = SendDlgItemMessage(hwndDlg,
+                                                        IDC_LINE,
+                                                        CB_GETITEMDATA,
+                                                        Index,
+                                                        0);
                             if (LineID != CB_ERR)
                             {
                                 UpdatePrefDlgControls(Context,
@@ -769,6 +801,12 @@ WinMain(HINSTANCE hInstance,
     hAppInstance = hInstance;
     hAppHeap = GetProcessHeap();
     
+    if (!InitAppConfig())
+    {
+        DPRINT("Unable to open the Volume Control registry key!\n");
+        return 1;
+    }
+    
     /* load the application title */
     if (AllocAndLoadString(&lpAppTitle,
                            hAppInstance,
@@ -809,6 +847,8 @@ WinMain(HINSTANCE hInstance,
     {
         LocalFree(lpAppTitle);
     }
+    
+    CloseAppConfig();
 
     return 0;
 }

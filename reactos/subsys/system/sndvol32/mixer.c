@@ -111,6 +111,7 @@ SndMixerClose(PSND_MIXER Mixer)
 
 static BOOL
 SndMixerQueryControls(PSND_MIXER Mixer,
+                      PUINT DisplayControls,
                       LPMIXERLINE LineInfo,
                       LPMIXERCONTROL *Controls)
 {
@@ -138,7 +139,13 @@ SndMixerQueryControls(PSND_MIXER Mixer,
             {
                 for (j = 0; j < LineControls.cControls; j++)
                 {
-                    DPRINT("Line control: %ws\n", (*Controls)[j].szName);
+                    if (SndMixerIsDisplayControl(Mixer,
+                                                 &(*Controls)[j]))
+                    {
+                        (*DisplayControls)++;
+                    }
+
+                    DPRINT("Line control: %ws (0x%x, 0x%x)\n", (*Controls)[j].szName, (*Controls)[j].fdwControl, (*Controls)[j].dwControlType);
                 }
 
                 return TRUE;
@@ -169,7 +176,7 @@ static BOOL
 SndMixerQueryConnections(PSND_MIXER Mixer,
                          PSND_MIXER_DESTINATION Line)
 {
-    UINT i;
+    UINT i, DispControls;
     MIXERLINE LineInfo;
     MMRESULT Result;
     BOOL Ret = TRUE;
@@ -188,8 +195,11 @@ SndMixerQueryConnections(PSND_MIXER Mixer,
             PSND_MIXER_CONNECTION Con;
             
             DPRINT("++ Source: %ws\n", LineInfo.szName);
+            
+            DispControls = 0;
 
             if (!SndMixerQueryControls(Mixer,
+                                       &DispControls,
                                        &LineInfo,
                                        &Controls))
             {
@@ -205,6 +215,7 @@ SndMixerQueryConnections(PSND_MIXER Mixer,
             {
                 Con->Info = LineInfo;
                 Con->Controls = Controls;
+                Con->DisplayControls = DispControls;
                 Con->Next = Line->Connections;
                 Line->Connections = Con;
             }
@@ -247,19 +258,21 @@ SndMixerQueryDestinations(PSND_MIXER Mixer)
                                  &Line->Info,
                                  MIXER_GETLINEINFOF_DESTINATION) == MMSYSERR_NOERROR)
             {
-                DPRINT("+ Destination: %ws (%d)\n", Line->Info.szName, Line->Info.dwComponentType);
-
-                if (!SndMixerQueryConnections(Mixer, Line))
-                {
-                    DPRINT("Failed to query mixer connections!\n");
-                    Ret = FALSE;
-                    break;
-                }
+                DPRINT("+ Destination: %ws (0x%x, %d)\n", Line->Info.szName, Line->Info.dwLineID, Line->Info.dwComponentType);
+                
                 if (!SndMixerQueryControls(Mixer,
+                                           &Line->DisplayControls,
                                            &Line->Info,
                                            &Line->Controls))
                 {
                     DPRINT("Failed to query mixer controls!\n");
+                    Ret = FALSE;
+                    break;
+                }
+
+                if (!SndMixerQueryConnections(Mixer, Line))
+                {
+                    DPRINT("Failed to query mixer connections!\n");
                     Ret = FALSE;
                     break;
                 }
@@ -374,6 +387,47 @@ SndMixerGetProductName(PSND_MIXER Mixer,
     return -1;
 }
 
+INT
+SndMixerGetLineName(PSND_MIXER Mixer,
+                    DWORD LineID,
+                    LPTSTR lpBuffer,
+                    UINT uSize,
+                    BOOL LongName)
+{
+    if (Mixer->hmx)
+    {
+        int lnsz;
+        PSND_MIXER_DESTINATION Line;
+        LPMIXERLINE lpl = NULL;
+
+        for (Line = Mixer->Lines; Line != NULL; Line = Line->Next)
+        {
+            if (Line->Info.dwLineID == LineID)
+            {
+                lpl = &Line->Info;
+                break;
+            }
+        }
+
+        if (lpl != NULL)
+        {
+            lnsz = lstrlen(LongName ? lpl->szName : lpl->szShortName);
+            if(lnsz + 1 > uSize)
+            {
+                return lnsz + 1;
+            }
+            else
+            {
+                memcpy(lpBuffer, LongName ? lpl->szName : lpl->szShortName, lnsz * sizeof(TCHAR));
+                lpBuffer[lnsz] = _T('\0');
+                return lnsz;
+            }
+        }
+    }
+
+    return -1;
+}
+
 BOOL
 SndMixerEnumProducts(PSND_MIXER Mixer,
                      PFNSNDMIXENUMPRODUCTS EnumProc,
@@ -436,6 +490,7 @@ SndMixerEnumLines(PSND_MIXER Mixer,
         {
             if (!EnumProc(Mixer,
                           &Line->Info,
+                          Line->DisplayControls,
                           Context))
             {
                 return FALSE;
@@ -463,6 +518,17 @@ SndMixerEnumConnections(PSND_MIXER Mixer,
             if (Line->Info.dwLineID == LineID)
             {
                 PSND_MIXER_CONNECTION Connection;
+                
+                if (Line->DisplayControls != 0)
+                {
+                    if (!EnumProc(Mixer,
+                                  LineID,
+                                  &Line->Info,
+                                  Context))
+                    {
+                        return FALSE;
+                    }
+                }
 
                 for (Connection = Line->Connections; Connection != NULL; Connection = Connection->Next)
                 {
@@ -480,6 +546,23 @@ SndMixerEnumConnections(PSND_MIXER Mixer,
         }
     }
 
+    return FALSE;
+}
+
+BOOL
+SndMixerIsDisplayControl(PSND_MIXER Mixer,
+                         LPMIXERCONTROL Control)
+{
+    if (Mixer->hmx && !(Control->fdwControl & MIXERCONTROL_CONTROLF_DISABLED))
+    {
+        switch (Control->dwControlType & MIXERCONTROL_CT_CLASS_MASK)
+        {
+            case MIXERCONTROL_CT_CLASS_FADER:
+            case MIXERCONTROL_CT_CLASS_SWITCH:
+                return TRUE;
+        }
+    }
+    
     return FALSE;
 }
 

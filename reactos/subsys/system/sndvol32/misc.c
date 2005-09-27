@@ -127,3 +127,121 @@ LoadAndFormatString(IN HINSTANCE hInstance,
     return Ret;
 }
 
+/* NOTE: do NOT modify SNDVOL_REG_LINESTATE for binary compatibility with XP! */
+typedef struct _SNDVOL_REG_LINESTATE
+{
+    DWORD Flags;
+    WCHAR LineName[MIXER_LONG_NAME_CHARS];
+} SNDVOL_REG_LINESTATE, *PSNDVOL_REG_LINESTATE;
+
+static const TCHAR AppRegSettings[] = TEXT("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Volume Control");
+static const TCHAR AppOptionsKey[] = TEXT("Options");
+static const TCHAR LineStatesValue[] = TEXT("LineStates");
+static const TCHAR StyleValue[] = TEXT("Style");
+
+HKEY hAppSettingsKey = NULL;
+
+BOOL
+InitAppConfig(VOID)
+{
+    return RegCreateKeyEx(HKEY_CURRENT_USER,
+                          AppRegSettings,
+                          0,
+                          NULL,
+                          REG_OPTION_NON_VOLATILE,
+                          KEY_READ | KEY_WRITE,
+                          NULL,
+                          &hAppSettingsKey,
+                          NULL) == ERROR_SUCCESS;
+}
+
+VOID
+CloseAppConfig(VOID)
+{
+    if (hAppSettingsKey != NULL)
+    {
+        RegCloseKey(hAppSettingsKey);
+        hAppSettingsKey = NULL;
+    }
+}
+
+BOOL
+ReadLineConfig(IN LPTSTR szDeviceName,
+               IN LPTSTR szLineName,
+               IN LPTSTR szControlName,
+               OUT DWORD *Flags)
+{
+    HKEY hLineKey;
+    DWORD Type;
+    DWORD i, Size = 0;
+    PSNDVOL_REG_LINESTATE LineStates = NULL;
+    TCHAR szDevRegKey[MAX_PATH];
+    BOOL Ret = FALSE;
+
+    _stprintf(szDevRegKey,
+              TEXT("%s\\%s"),
+              szDeviceName,
+              szLineName);
+
+    if (RegCreateKeyEx(hAppSettingsKey,
+                       szDevRegKey,
+                       0,
+                       NULL,
+                       REG_OPTION_NON_VOLATILE,
+                       KEY_READ | KEY_WRITE,
+                       NULL,
+                       &hLineKey,
+                       NULL) == ERROR_SUCCESS)
+    {
+        if (RegQueryValueEx(hLineKey,
+                            LineStatesValue,
+                            NULL,
+                            &Type,
+                            NULL,
+                            &Size) != ERROR_SUCCESS ||
+            Type != REG_BINARY ||
+            Size == 0 || (Size % sizeof(SNDVOL_REG_LINESTATE) != 0))
+        {
+            goto ExitClose;
+        }
+        
+        LineStates = HeapAlloc(GetProcessHeap(),
+                               0,
+                               Size);
+
+        if (LineStates != NULL)
+        {
+            if (RegQueryValueEx(hLineKey,
+                                LineStatesValue,
+                                NULL,
+                                &Type,
+                                (LPBYTE)LineStates,
+                                &Size) != ERROR_SUCCESS ||
+                Type != REG_BINARY ||
+                Size == 0 || (Size % sizeof(SNDVOL_REG_LINESTATE) != 0))
+            {
+                goto ExitClose;
+            }
+            
+            /* try to find the control */
+            for (i = 0; i < Size / sizeof(SNDVOL_REG_LINESTATE); i++)
+            {
+                if (!_tcscmp(szControlName,
+                             LineStates[i].LineName))
+                {
+                    *Flags = LineStates[i].Flags;
+                    Ret = TRUE;
+                    break;
+                }
+            }
+        }
+
+ExitClose:
+        HeapFree(GetProcessHeap(),
+                 0,
+                 LineStates);
+        RegCloseKey(hLineKey);
+    }
+    
+    return Ret;
+}
