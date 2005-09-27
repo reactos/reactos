@@ -480,6 +480,8 @@ ComputerPageDlgProc(HWND hwndDlg,
                   SetWindowLong(hwndDlg, DWL_MSGRESULT, -1);
                   return TRUE;
                 }
+                /* Try to also set DNS hostname */
+                SetComputerNameEx(ComputerNamePhysicalDnsHostname, ComputerName);
 
                 /* Check admin passwords */
                 GetDlgItemText(hwndDlg, IDC_ADMINPASSWORD1, Password1, 15);
