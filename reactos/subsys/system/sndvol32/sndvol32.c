@@ -51,6 +51,8 @@ typedef struct _PREFERENCES_CONTEXT
     DWORD PlaybackID;
     DWORD RecordingID;
     UINT OtherLines;
+    
+    DWORD tmp;
 } PREFERENCES_CONTEXT, *PPREFERENCES_CONTEXT;
 
 typedef struct _PREFERENCES_FILL_DEVICES
@@ -173,20 +175,34 @@ PrefDlgAddConnection(PSND_MIXER Mixer,
                      PVOID Context)
 {
     PPREFERENCES_CONTEXT PrefContext = (PPREFERENCES_CONTEXT)Context;
+    HWND hwndControls;
     LVITEM lvi;
+    UINT i;
     
-    lvi.mask = LVIF_TEXT | LVIF_PARAM;
-    lvi.iItem = 0;
-    lvi.iSubItem = 0;
-    lvi.pszText = Line->szName;
-    lvi.lParam = (LPARAM)Line->dwSource;
-    
-    SendMessage(GetDlgItem(PrefContext->hwndDlg,
-                           IDC_CONTROLS),
-                LVM_INSERTITEM,
-                0,
-                (LPARAM)&lvi);
+    if (Line->cControls != 0)
+    {
+        hwndControls = GetDlgItem(PrefContext->hwndDlg,
+                                  IDC_CONTROLS);
 
+        lvi.mask = LVIF_TEXT | LVIF_PARAM;
+        lvi.iItem = PrefContext->tmp++;
+        lvi.iSubItem = 0;
+        lvi.pszText = Line->szName;
+        lvi.lParam = (LPARAM)Line->dwSource;
+
+        i = SendMessage(hwndControls,
+                        LVM_INSERTITEM,
+                        0,
+                        (LPARAM)&lvi);
+        if (i != (UINT)-1)
+        {
+            /* FIXME - read config from registry */
+            ListView_SetCheckState(hwndControls,
+                                   i,
+                                   FALSE);
+        }
+    }
+                           
     return TRUE;
 }
 
@@ -263,6 +279,9 @@ UpdatePrefDlgControls(PPREFERENCES_CONTEXT Context,
             }
             EnableWindow(GetDlgItem(Context->hwndDlg,
                                     IDC_LINE),
+                         FALSE);
+            EnableWindow(GetDlgItem(Context->hwndDlg,
+                                    IDC_OTHER),
                          Context->OtherLines != 0);
             CheckDlgButton(Context->hwndDlg,
                            IDC_LINE,
@@ -289,6 +308,7 @@ UpdatePrefDlgControls(PPREFERENCES_CONTEXT Context,
         ListView_DeleteAllItems(GetDlgItem(Context->hwndDlg,
                                   IDC_CONTROLS));
         
+        Context->tmp = 0;
         SndMixerEnumConnections(Context->Mixer,
                                 LineID,
                                 PrefDlgAddConnection,
@@ -326,8 +346,27 @@ DlgPreferencesProc(HWND hwndDlg,
                 {
                     if (HIWORD(wParam) == CBN_SELCHANGE)
                     {
-                        UpdatePrefDlgControls(Context,
-                                              (DWORD)-1);
+                        DWORD LineID;
+                        DWORD Index;
+                        
+                        Index = SendMessage(GetDlgItem(hwndDlg,
+                                                       IDC_LINE),
+                                            CB_GETCURSEL,
+                                            0,
+                                            0);
+                        if (Index != CB_ERR)
+                        {
+                            LineID = SendMessage(GetDlgItem(hwndDlg,
+                                                            IDC_LINE),
+                                                 CB_GETITEMDATA,
+                                                 Index,
+                                                 0);
+                            if (LineID != CB_ERR)
+                            {
+                                UpdatePrefDlgControls(Context,
+                                                      LineID);
+                            }
+                        }
                     }
                     break;
                 }
@@ -336,6 +375,9 @@ DlgPreferencesProc(HWND hwndDlg,
                 {
                     UpdatePrefDlgControls(Context,
                                           Context->PlaybackID);
+                    EnableWindow(GetDlgItem(hwndDlg,
+                                            IDC_LINE),
+                                 FALSE);
                     break;
                 }
                 
@@ -343,6 +385,9 @@ DlgPreferencesProc(HWND hwndDlg,
                 {
                     UpdatePrefDlgControls(Context,
                                           Context->RecordingID);
+                    EnableWindow(GetDlgItem(hwndDlg,
+                                            IDC_LINE),
+                                 FALSE);
                     break;
                 }
                 
@@ -350,19 +395,23 @@ DlgPreferencesProc(HWND hwndDlg,
                 {
                     INT LineCbIndex;
                     DWORD LineID;
+                    
+                    EnableWindow(GetDlgItem(hwndDlg,
+                                            IDC_LINE),
+                                 TRUE);
 
-                    LineCbIndex = SendMessage(GetDlgItem(Context->hwndDlg,
-                                                         IDC_MIXERDEVICE),
-                                              CB_GETCURSEL,
-                                              0,
-                                              0);
+                    LineCbIndex = SendDlgItemMessage(hwndDlg,
+                                                     IDC_LINE,
+                                                     CB_GETCURSEL,
+                                                     0,
+                                                     0);
                     if (LineCbIndex != CB_ERR)
                     {
-                        LineID = SendMessage(GetDlgItem(Context->hwndDlg,
-                                                        IDC_MIXERDEVICE),
-                                             CB_GETITEMDATA,
-                                             LineCbIndex,
-                                             0);
+                        LineID = SendDlgItemMessage(hwndDlg,
+                                                    IDC_LINE,
+                                                    CB_GETITEMDATA,
+                                                    LineCbIndex,
+                                                    0);
                         if (LineID != CB_ERR)
                         {
                             UpdatePrefDlgControls(Context,
