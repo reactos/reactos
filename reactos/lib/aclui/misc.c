@@ -1,6 +1,6 @@
 /*
  * ReactOS Access Control List Editor
- * Copyright (C) 2004 ReactOS Team
+ * Copyright (C) 2004-2005 ReactOS Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -41,36 +41,36 @@ static INT
 LengthOfStrResource(IN HINSTANCE hInst,
                     IN UINT uID)
 {
-  HRSRC hrSrc;
-  HGLOBAL hRes;
-  LPWSTR lpName, lpStr;
+    HRSRC hrSrc;
+    HGLOBAL hRes;
+    LPWSTR lpName, lpStr;
 
-  if(hInst == NULL)
-  {
-    return -1;
-  }
-
-  /* There are always blocks of 16 strings */
-  lpName = (LPWSTR)MAKEINTRESOURCE((uID >> 4) + 1);
-
-  /* Find the string table block */
-  if((hrSrc = FindResourceW(hInst, lpName, (LPWSTR)RT_STRING)) &&
-     (hRes = LoadResource(hInst, hrSrc)) &&
-     (lpStr = LockResource(hRes)))
-  {
-    UINT x;
-
-    /* Find the string we're looking for */
-    uID &= 0xF; /* position in the block, same as % 16 */
-    for(x = 0; x < uID; x++)
+    if (hInst == NULL)
     {
-      lpStr += (*lpStr) + 1;
+        return -1;
     }
 
-    /* Found the string */
-    return (int)(*lpStr);
-  }
-  return -1;
+    /* There are always blocks of 16 strings */
+    lpName = (LPWSTR)MAKEINTRESOURCE((uID >> 4) + 1);
+
+    /* Find the string table block */
+    if ((hrSrc = FindResourceW(hInst, lpName, (LPWSTR)RT_STRING)) &&
+        (hRes = LoadResource(hInst, hrSrc)) &&
+        (lpStr = LockResource(hRes)))
+    {
+        UINT x;
+
+        /* Find the string we're looking for */
+        uID &= 0xF; /* position in the block, same as % 16 */
+        for (x = 0; x < uID; x++)
+        {
+            lpStr += (*lpStr) + 1;
+        }
+
+        /* Found the string */
+        return (int)(*lpStr);
+    }
+    return -1;
 }
 
 static INT
@@ -78,25 +78,25 @@ AllocAndLoadString(OUT LPWSTR *lpTarget,
                    IN HINSTANCE hInst,
                    IN UINT uID)
 {
-  INT ln;
+    INT ln;
 
-  ln = LengthOfStrResource(hInst,
-                           uID);
-  if(ln++ > 0)
-  {
-    (*lpTarget) = (LPWSTR)LocalAlloc(LMEM_FIXED,
-                                     ln * sizeof(WCHAR));
-    if((*lpTarget) != NULL)
+    ln = LengthOfStrResource(hInst,
+                             uID);
+    if (ln++ > 0)
     {
-      INT Ret;
-      if(!(Ret = LoadStringW(hInst, uID, *lpTarget, ln)))
-      {
-        LocalFree((HLOCAL)(*lpTarget));
-      }
-      return Ret;
+        (*lpTarget) = (LPWSTR)LocalAlloc(LMEM_FIXED,
+                                         ln * sizeof(WCHAR));
+        if ((*lpTarget) != NULL)
+        {
+            INT Ret;
+            if (!(Ret = LoadStringW(hInst, uID, *lpTarget, ln)))
+            {
+                LocalFree((HLOCAL)(*lpTarget));
+            }
+            return Ret;
+        }
     }
-  }
-  return 0;
+    return 0;
 }
 
 DWORD
@@ -105,30 +105,30 @@ LoadAndFormatString(IN HINSTANCE hInstance,
                     OUT LPWSTR *lpTarget,
                     ...)
 {
-  DWORD Ret = 0;
-  LPWSTR lpFormat;
-  va_list lArgs;
+    DWORD Ret = 0;
+    LPWSTR lpFormat;
+    va_list lArgs;
 
-  if(AllocAndLoadString(&lpFormat,
-                        hInstance,
-                        uID) > 0)
-  {
-    va_start(lArgs, lpTarget);
-    /* let's use FormatMessage to format it because it has the ability to allocate
-       memory automatically */
-    Ret = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_STRING,
-                         lpFormat,
-                         0,
-                         0,
-                         (LPWSTR)lpTarget,
-                         0,
-                         &lArgs);
-    va_end(lArgs);
+    if (AllocAndLoadString(&lpFormat,
+                           hInstance,
+                           uID) > 0)
+    {
+        va_start(lArgs, lpTarget);
+        /* let's use FormatMessage to format it because it has the ability to allocate
+           memory automatically */
+        Ret = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_STRING,
+                             lpFormat,
+                             0,
+                             0,
+                             (LPWSTR)lpTarget,
+                             0,
+                             &lArgs);
+        va_end(lArgs);
 
-    LocalFree((HLOCAL)lpFormat);
-  }
+        LocalFree((HLOCAL)lpFormat);
+    }
 
-  return Ret;
+    return Ret;
 }
 
 BOOL
