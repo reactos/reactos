@@ -55,7 +55,8 @@ extern ULONG_PTR KERNEL_BASE;
     PKTHREAD _Thread = KeGetCurrentThread(); \
     if((_Thread) && (++_Thread->KernelApcDisable == 0)) \
     { \
-        if (!IsListEmpty(&_Thread->ApcState.ApcListHead[KernelMode])) \
+        if (!IsListEmpty(&_Thread->ApcState.ApcListHead[KernelMode]) && \
+            (_Thread->SpecialApcDisable == 0)) \
         { \
             KiKernelApcDeliveryCheck(); \
         } \

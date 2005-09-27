@@ -527,8 +527,8 @@ KeResumeThread(PKTHREAD Thread)
     return PreviousCount;
 }
 
-BOOLEAN
-STDCALL
+VOID
+FASTCALL
 KiInsertQueueApc(PKAPC Apc,
                  KPRIORITY PriorityBoost);
 
@@ -547,20 +547,42 @@ KeFreezeAllThreads(PKPROCESS Process)
     /* Acquire Lock */
     OldIrql = KeAcquireDispatcherDatabaseLock();
 
+    /* If someone is already trying to free us, try again */
+    while (CurrentThread->FreezeCount)
+    {
+        /* Release and re-acquire the lock so the APC will go through */
+        KeReleaseDispatcherDatabaseLock(OldIrql);
+        OldIrql = KeAcquireDispatcherDatabaseLock();
+    }
+
+    /* Enter a critical region */
+    KeEnterCriticalRegion();
+
     /* Loop the Process's Threads */
     LIST_FOR_EACH(Current, &Process->ThreadListHead, KTHREAD, ThreadListEntry)
     {
         /* Make sure it's not ours */
-        if (Current == CurrentThread) continue;
-
-        /* Make sure it wasn't already frozen, and that it's not suspended */
-        if (!(++Current->FreezeCount) && !(Current->SuspendCount))
+        if (Current != CurrentThread)
         {
-            /* Insert the APC */
-            if (!KiInsertQueueApc(&Current->SuspendApc, IO_NO_INCREMENT))
+            /* Should be bother inserting the APC? */
+            if (Current->ApcQueueable)
             {
-                /* Unsignal the Semaphore, the APC already got inserted */
-                Current->SuspendSemaphore.Header.SignalState--;
+                /* Make sure it wasn't already frozen, and that it's not suspended */
+                if (!(++Current->FreezeCount) && !(Current->SuspendCount))
+                {
+                    /* Did we already insert it? */
+                    if (!Current->SuspendApc.Inserted)
+                    {
+                        /* Insert the APC */
+                        Current->SuspendApc.Inserted = TRUE;
+                        KiInsertQueueApc(&Current->SuspendApc, IO_NO_INCREMENT);
+                    }
+                    else
+                    {
+                        /* Unsignal the Semaphore, the APC already got inserted */
+                        Current->SuspendSemaphore.Header.SignalState--;
+                    }
+                }
             }
         }
     }
@@ -589,20 +611,30 @@ KeSuspendThread(PKTHREAD Thread)
     {
         /* Raise an exception */
         KeReleaseDispatcherDatabaseLock(OldIrql);
-        ExRaiseStatus(STATUS_SUSPEND_COUNT_EXCEEDED);
+        RtlRaiseStatus(STATUS_SUSPEND_COUNT_EXCEEDED);
     }
 
-    /* Increment it */
-    Thread->SuspendCount++;
+    /* Should we bother to queue at all? */
+    if (Thread->ApcQueueable)
+    {
+        /* Increment the suspend count */
+        Thread->SuspendCount++;
 
-    /* Check if we should suspend it */
-    if (!PreviousCount && !Thread->FreezeCount) {
-
-        /* Insert the APC */
-        if (!KiInsertQueueApc(&Thread->SuspendApc, IO_NO_INCREMENT)) {
-
-            /* Unsignal the Semaphore, the APC already got inserted */
-            Thread->SuspendSemaphore.Header.SignalState--;
+        /* Check if we should suspend it */
+        if (!PreviousCount && !Thread->FreezeCount)
+        {
+            /* Is the APC already inserted? */
+            if (!Thread->SuspendApc.Inserted)
+            {
+                /* Not inserted, insert it */
+                Thread->SuspendApc.Inserted = TRUE;
+                KiInsertQueueApc(&Thread->SuspendApc, IO_NO_INCREMENT);
+            }
+            else
+            {
+                /* Unsignal the Semaphore, the APC already got inserted */
+                Thread->SuspendSemaphore.Header.SignalState--;
+            }
         }
     }
 
