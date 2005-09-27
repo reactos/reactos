@@ -117,11 +117,12 @@ SndMixerQueryControls(PSND_MIXER Mixer,
     if (LineInfo->cControls > 0)
     {
         *Controls = HeapAlloc(GetProcessHeap(),
-                              HEAP_ZERO_MEMORY,
+                              0,
                               LineInfo->cControls * sizeof(MIXERCONTROL));
         if (*Controls != NULL)
         {
             MIXERLINECONTROLS LineControls;
+            MMRESULT Result;
             UINT j;
 
             LineControls.cbStruct = sizeof(LineControls);
@@ -130,18 +131,14 @@ SndMixerQueryControls(PSND_MIXER Mixer,
             LineControls.cbmxctrl = sizeof(MIXERCONTROL);
             LineControls.pamxctrl = (PVOID)(*Controls);
 
-            for (j = 0; j < LineInfo->cControls; j++)
+            Result = mixerGetLineControls((HMIXEROBJ)Mixer->hmx,
+                                          &LineControls,
+                                          MIXER_GETLINECONTROLSF_ALL);
+            if (Result == MMSYSERR_NOERROR)
             {
-                (*Controls)[j].cbStruct = sizeof(MIXERCONTROL);
-            }
-
-            if (mixerGetLineControls((HMIXEROBJ)Mixer->hmx,
-                                     &LineControls,
-                                     MIXER_GETLINECONTROLSF_ALL) == MMSYSERR_NOERROR)
-            {
-                for (j = 0; j < LineInfo->cControls; j++)
+                for (j = 0; j < LineControls.cControls; j++)
                 {
-                    DPRINT("Line control: %ws", (*Controls)[j].szName);
+                    DPRINT("Line control: %ws\n", (*Controls)[j].szName);
                 }
 
                 return TRUE;
@@ -152,12 +149,12 @@ SndMixerQueryControls(PSND_MIXER Mixer,
                          0,
                          *Controls);
                 *Controls = NULL;
-                DPRINT("Failed to get line controls!\n");
+                DPRINT("Failed to get line (ID: 0x%x) controls: %d\n", LineInfo->dwLineID, Result);
             }
         }
         else
         {
-            DPRINT("Failed to allocate memory for %d line controls!\n", LineInfo->cControls);
+            DPRINT("Failed to allocate memory for %d line (ID: 0x%x) controls!\n", LineInfo->dwLineID, LineInfo->cControls);
         }
 
         return FALSE;
@@ -174,19 +171,23 @@ SndMixerQueryConnections(PSND_MIXER Mixer,
 {
     UINT i;
     MIXERLINE LineInfo;
+    MMRESULT Result;
     BOOL Ret = TRUE;
 
     LineInfo.cbStruct = sizeof(LineInfo);
-    LineInfo.dwDestination = Line->Info.dwDestination;
     for (i = Line->Info.cConnections; i > 0; i--)
     {
+        LineInfo.dwDestination = Line->Info.dwDestination;
         LineInfo.dwSource = i - 1;
-        if (mixerGetLineInfo((HMIXEROBJ)Mixer->hmx,
-                             &LineInfo,
-                             MIXER_GETLINEINFOF_SOURCE) == MMSYSERR_NOERROR)
+        Result = mixerGetLineInfo((HMIXEROBJ)Mixer->hmx,
+                                  &LineInfo,
+                                  MIXER_GETLINEINFOF_SOURCE);
+        if (Result == MMSYSERR_NOERROR)
         {
             LPMIXERCONTROL Controls;
             PSND_MIXER_CONNECTION Con;
+            
+            DPRINT("++ Source: %ws\n", LineInfo.szName);
 
             if (!SndMixerQueryControls(Mixer,
                                        &LineInfo,
@@ -216,7 +217,7 @@ SndMixerQueryConnections(PSND_MIXER Mixer,
         }
         else
         {
-            DPRINT("Failed to get connection information!\n");
+            DPRINT("Failed to get connection information: %d\n", Result);
             Ret = FALSE;
             break;
         }
@@ -246,6 +247,8 @@ SndMixerQueryDestinations(PSND_MIXER Mixer)
                                  &Line->Info,
                                  MIXER_GETLINEINFOF_DESTINATION) == MMSYSERR_NOERROR)
             {
+                DPRINT("+ Destination: %ws (%d)\n", Line->Info.szName, Line->Info.dwComponentType);
+
                 if (!SndMixerQueryConnections(Mixer, Line))
                 {
                     DPRINT("Failed to query mixer connections!\n");
@@ -440,6 +443,41 @@ SndMixerEnumLines(PSND_MIXER Mixer,
         }
 
         return TRUE;
+    }
+
+    return FALSE;
+}
+
+BOOL
+SndMixerEnumConnections(PSND_MIXER Mixer,
+                        DWORD LineID,
+                        PFNSNDMIXENUMCONNECTIONS EnumProc,
+                        PVOID Context)
+{
+    if (Mixer->hmx)
+    {
+        PSND_MIXER_DESTINATION Line;
+
+        for (Line = Mixer->Lines; Line != NULL; Line = Line->Next)
+        {
+            if (Line->Info.dwLineID == LineID)
+            {
+                PSND_MIXER_CONNECTION Connection;
+
+                for (Connection = Line->Connections; Connection != NULL; Connection = Connection->Next)
+                {
+                    if (!EnumProc(Mixer,
+                                  LineID,
+                                  &Connection->Info,
+                                  Context))
+                    {
+                        return FALSE;
+                    }
+                }
+                
+                return TRUE;
+            }
+        }
     }
 
     return FALSE;

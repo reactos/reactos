@@ -4,6 +4,7 @@
 #include <windows.h>
 #include <mmsystem.h>
 #include <commctrl.h>
+#include <shellapi.h>
 #include <stdio.h>
 #include <tchar.h>
 #include <string.h>
@@ -63,6 +64,7 @@ typedef struct _SND_MIXER
 } SND_MIXER, *PSND_MIXER;
 
 typedef BOOL (CALLBACK *PFNSNDMIXENUMLINES)(PSND_MIXER Mixer, LPMIXERLINE Line, PVOID Context);
+typedef BOOL (CALLBACK *PFNSNDMIXENUMCONNECTIONS)(PSND_MIXER Mixer, DWORD LineID, LPMIXERLINE Line, PVOID Context);
 typedef BOOL (CALLBACK *PFNSNDMIXENUMPRODUCTS)(PSND_MIXER Mixer, UINT Id, LPCTSTR ProductName, PVOID Context);
 
 PSND_MIXER SndMixerCreate(HWND hWndNotification);
@@ -73,7 +75,8 @@ UINT SndMixerGetSelection(PSND_MIXER Mixer);
 INT SndMixerGetProductName(PSND_MIXER Mixer, LPTSTR lpBuffer, UINT uSize);
 BOOL SndMixerEnumProducts(PSND_MIXER Mixer, PFNSNDMIXENUMPRODUCTS EnumProc, PVOID Context);
 INT SndMixerGetDestinationCount(PSND_MIXER Mixer);
-BOOL SndMixerEnumDestinationLines(PSND_MIXER Mixer, PFNSNDMIXENUMLINES EnumProc, PVOID Context);
+BOOL SndMixerEnumLines(PSND_MIXER Mixer, PFNSNDMIXENUMLINES EnumProc, PVOID Context);
+BOOL SndMixerEnumConnections(PSND_MIXER Mixer, DWORD LineID, PFNSNDMIXENUMCONNECTIONS EnumProc, PVOID Context);
 
 /*
  * MISC

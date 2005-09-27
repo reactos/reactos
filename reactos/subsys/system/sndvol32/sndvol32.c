@@ -31,6 +31,7 @@ HINSTANCE hAppInstance;
 ATOM MainWindowClass;
 HWND hMainWnd;
 HANDLE hAppHeap;
+LPTSTR lpAppTitle;
 
 #define GetDialogData(hwndDlg, type) \
     ( P##type )GetWindowLongPtr((hwndDlg), DWLP_USER)
@@ -44,6 +45,12 @@ typedef struct _PREFERENCES_CONTEXT
     PMIXER_WINDOW MixerWindow;
     PSND_MIXER Mixer;
     HWND hwndDlg;
+    
+    UINT Selected;
+    DWORD SelectedLine;
+    DWORD PlaybackID;
+    DWORD RecordingID;
+    UINT OtherLines;
 } PREFERENCES_CONTEXT, *PPREFERENCES_CONTEXT;
 
 typedef struct _PREFERENCES_FILL_DEVICES
@@ -86,6 +93,209 @@ FillDeviceComboBox(PSND_MIXER Mixer,
     return TRUE;
 }
 
+static BOOL CALLBACK
+PrefDlgAddLine(PSND_MIXER Mixer,
+               LPMIXERLINE Line,
+               PVOID Context)
+{
+    PPREFERENCES_CONTEXT PrefContext = (PPREFERENCES_CONTEXT)Context;
+    
+    switch (Line->dwComponentType)
+    {
+        case MIXERLINE_COMPONENTTYPE_DST_SPEAKERS:
+            if (PrefContext->PlaybackID == (DWORD)-1)
+            {
+                PrefContext->PlaybackID = Line->dwLineID;
+
+                if (PrefContext->SelectedLine == (DWORD)-1)
+                {
+                    PrefContext->SelectedLine = Line->dwLineID;
+                }
+            }
+            else
+                goto AddToOthersLines;
+
+            break;
+
+        case MIXERLINE_COMPONENTTYPE_DST_WAVEIN:
+            if (PrefContext->RecordingID == (DWORD)-1)
+            {
+                PrefContext->RecordingID = Line->dwLineID;
+                
+                if (PrefContext->SelectedLine == (DWORD)-1)
+                {
+                    PrefContext->SelectedLine = Line->dwLineID;
+                }
+            }
+            else
+                goto AddToOthersLines;
+
+            break;
+
+        default:
+        {
+            LRESULT lres;
+            HWND hwndCbOthers;
+            
+            if (PrefContext->SelectedLine == (DWORD)-1)
+            {
+                PrefContext->SelectedLine = Line->dwLineID;
+            }
+
+AddToOthersLines:
+            hwndCbOthers = GetDlgItem(PrefContext->hwndDlg,
+                                      IDC_LINE);
+
+            lres = SendMessage(hwndCbOthers,
+                               CB_ADDSTRING,
+                               0,
+                               (LPARAM)Line->szName);
+            if (lres != CB_ERR)
+            {
+                SendMessage(hwndCbOthers,
+                            CB_SETITEMDATA,
+                            (WPARAM)lres,
+                            Line->dwLineID);
+
+                PrefContext->OtherLines++;
+            }
+            break;
+        }
+    }
+    
+    return TRUE;
+}
+
+static BOOL CALLBACK
+PrefDlgAddConnection(PSND_MIXER Mixer,
+                     DWORD LineID,
+                     LPMIXERLINE Line,
+                     PVOID Context)
+{
+    PPREFERENCES_CONTEXT PrefContext = (PPREFERENCES_CONTEXT)Context;
+    LVITEM lvi;
+    
+    lvi.mask = LVIF_TEXT | LVIF_PARAM;
+    lvi.iItem = 0;
+    lvi.iSubItem = 0;
+    lvi.pszText = Line->szName;
+    lvi.lParam = (LPARAM)Line->dwSource;
+    
+    SendMessage(GetDlgItem(PrefContext->hwndDlg,
+                           IDC_CONTROLS),
+                LVM_INSERTITEM,
+                0,
+                (LPARAM)&lvi);
+
+    return TRUE;
+}
+
+static VOID
+UpdatePrefDlgControls(PPREFERENCES_CONTEXT Context,
+                      DWORD LineID)
+{
+    UINT OldID, MixerID = 0;
+    INT DeviceCbIndex;
+
+    /* select the mixer */
+    DeviceCbIndex = SendMessage(GetDlgItem(Context->hwndDlg,
+                                           IDC_MIXERDEVICE),
+                                CB_GETCURSEL,
+                                0,
+                                0);
+    if (DeviceCbIndex != CB_ERR)
+    {
+        MixerID = SendMessage(GetDlgItem(Context->hwndDlg,
+                                         IDC_MIXERDEVICE),
+                              CB_GETITEMDATA,
+                              DeviceCbIndex,
+                              0);
+        if (MixerID == CB_ERR)
+        {
+            MixerID = 0;
+        }
+    }
+    
+    OldID = Context->Selected;
+    if (MixerID != OldID &&
+        SndMixerSelect(Context->Mixer,
+                       MixerID))
+    {
+        Context->Selected = SndMixerGetSelection(Context->Mixer);
+        
+        /* update the controls */
+        Context->PlaybackID = (DWORD)-1;
+        Context->RecordingID = (DWORD)-1;
+        Context->OtherLines = 0;
+        Context->SelectedLine = (DWORD)-1;
+
+        if (SndMixerEnumLines(Context->Mixer,
+                              PrefDlgAddLine,
+                              Context))
+        {
+            UINT SelBox = 0;
+
+            /* enable/disable controls and make default selection */
+            EnableWindow(GetDlgItem(Context->hwndDlg,
+                                    IDC_PLAYBACK),
+                         Context->PlaybackID != (DWORD)-1);
+            CheckDlgButton(Context->hwndDlg,
+                           IDC_PLAYBACK,
+                           (Context->PlaybackID != (DWORD)-1 && SelBox++ == 0) ?
+                               BST_CHECKED : BST_UNCHECKED);
+
+            EnableWindow(GetDlgItem(Context->hwndDlg,
+                                    IDC_RECORDING),
+                         Context->RecordingID != (DWORD)-1);
+            CheckDlgButton(Context->hwndDlg,
+                           IDC_RECORDING,
+                           (Context->RecordingID != (DWORD)-1 && SelBox++ == 0) ?
+                               BST_CHECKED : BST_UNCHECKED);
+
+            if (Context->OtherLines != 0)
+            {
+                /* select the first item in the other lines combo box by default */
+                SendMessage(GetDlgItem(Context->hwndDlg,
+                                       IDC_LINE),
+                            CB_SETCURSEL,
+                            0,
+                            0);
+            }
+            EnableWindow(GetDlgItem(Context->hwndDlg,
+                                    IDC_LINE),
+                         Context->OtherLines != 0);
+            CheckDlgButton(Context->hwndDlg,
+                           IDC_LINE,
+                           (Context->OtherLines != 0 && SelBox++ == 0) ?
+                               BST_CHECKED : BST_UNCHECKED);
+            
+            /* disable the OK button if the device doesn't have any lines */
+            EnableWindow(GetDlgItem(Context->hwndDlg,
+                                    IDOK),
+                         Context->PlaybackID != (DWORD)-1 ||
+                         Context->RecordingID != (DWORD)-1 ||
+                         Context->OtherLines != 0);
+
+            LineID = Context->SelectedLine;
+        }
+    }
+    
+    /* update the line sources list */
+    if ((MixerID != OldID && Context->SelectedLine != (DWORD)-1) ||
+        (Context->SelectedLine != LineID && LineID != (DWORD)-1))
+    {
+        Context->SelectedLine = LineID;
+        
+        ListView_DeleteAllItems(GetDlgItem(Context->hwndDlg,
+                                  IDC_CONTROLS));
+        
+        SndMixerEnumConnections(Context->Mixer,
+                                LineID,
+                                PrefDlgAddConnection,
+                                Context);
+    }
+}
+
 static INT_PTR CALLBACK
 DlgPreferencesProc(HWND hwndDlg,
                    UINT uMsg,
@@ -98,8 +308,70 @@ DlgPreferencesProc(HWND hwndDlg,
     {
         case WM_COMMAND:
         {
+            Context = GetDialogData(hwndDlg,
+                                    PREFERENCES_CONTEXT);
             switch (LOWORD(wParam))
             {
+                case IDC_MIXERDEVICE:
+                {
+                    if (HIWORD(wParam) == CBN_SELCHANGE)
+                    {
+                        UpdatePrefDlgControls(Context,
+                                              (DWORD)-1);
+                    }
+                    break;
+                }
+                
+                case IDC_LINE:
+                {
+                    if (HIWORD(wParam) == CBN_SELCHANGE)
+                    {
+                        UpdatePrefDlgControls(Context,
+                                              (DWORD)-1);
+                    }
+                    break;
+                }
+                
+                case IDC_PLAYBACK:
+                {
+                    UpdatePrefDlgControls(Context,
+                                          Context->PlaybackID);
+                    break;
+                }
+                
+                case IDC_RECORDING:
+                {
+                    UpdatePrefDlgControls(Context,
+                                          Context->RecordingID);
+                    break;
+                }
+                
+                case IDC_OTHER:
+                {
+                    INT LineCbIndex;
+                    DWORD LineID;
+
+                    LineCbIndex = SendMessage(GetDlgItem(Context->hwndDlg,
+                                                         IDC_MIXERDEVICE),
+                                              CB_GETCURSEL,
+                                              0,
+                                              0);
+                    if (LineCbIndex != CB_ERR)
+                    {
+                        LineID = SendMessage(GetDlgItem(Context->hwndDlg,
+                                                        IDC_MIXERDEVICE),
+                                             CB_GETITEMDATA,
+                                             LineCbIndex,
+                                             0);
+                        if (LineID != CB_ERR)
+                        {
+                            UpdatePrefDlgControls(Context,
+                                                  LineID);
+                        }
+                    }
+                    break;
+                }
+                
                 case IDOK:
                 case IDCANCEL:
                 {
@@ -126,6 +398,9 @@ DlgPreferencesProc(HWND hwndDlg,
         case WM_INITDIALOG:
         {
             PREFERENCES_FILL_DEVICES FillDevContext;
+            LVCOLUMN lvc;
+            RECT rcClient;
+            HWND hwndControls;
 
             SetWindowLongPtr(hwndDlg,
                              DWLP_USER,
@@ -133,6 +408,7 @@ DlgPreferencesProc(HWND hwndDlg,
             Context = (PPREFERENCES_CONTEXT)((LONG_PTR)lParam);
             Context->hwndDlg = hwndDlg;
             Context->Mixer = SndMixerCreate(hwndDlg);
+            Context->Selected = (UINT)-1;
 
             FillDevContext.PrefContext = Context;
             FillDevContext.hComboBox = GetDlgItem(hwndDlg,
@@ -141,6 +417,26 @@ DlgPreferencesProc(HWND hwndDlg,
             SndMixerEnumProducts(Context->Mixer,
                                  FillDeviceComboBox,
                                  &FillDevContext);
+
+            /* initialize the list view control */
+            hwndControls = GetDlgItem(hwndDlg,
+                                      IDC_CONTROLS);
+            ListView_SetExtendedListViewStyle(hwndControls,
+                                              LVS_EX_CHECKBOXES);
+
+            GetClientRect(hwndControls,
+                          &rcClient);
+            lvc.mask = LVCF_TEXT | LVCF_WIDTH;
+            lvc.pszText = TEXT("");
+            lvc.cx = rcClient.right;
+            SendMessage(hwndControls,
+                        LVM_INSERTCOLUMN,
+                        0,
+                        (LPARAM)&lvc);
+
+            /* update all controls */
+            UpdatePrefDlgControls(Context,
+                                  (DWORD)-1);
             return TRUE;
         }
 
@@ -220,6 +516,17 @@ MainWindowProc(HWND hwnd,
                 case IDC_EXIT:
                 {
                     PostQuitMessage(0);
+                    break;
+                }
+                
+                case IDC_ABOUT:
+                {
+                    HICON hAppIcon = (HICON)GetClassLongPtrW(hwnd,
+                                                             GCLP_HICON);
+                    ShellAbout(hwnd,
+                               lpAppTitle,
+                               NULL,
+                               hAppIcon);
                     break;
                 }
             }
@@ -350,7 +657,6 @@ UnregisterApplicationClasses(VOID)
 static HWND
 CreateApplicationWindow(VOID)
 {
-    LPTSTR lpAppTitle;
     HWND hWnd;
 
     PMIXER_WINDOW MixerWindow = HeapAlloc(hAppHeap,
@@ -359,14 +665,6 @@ CreateApplicationWindow(VOID)
     if (MixerWindow == NULL)
     {
         return NULL;
-    }
-
-    /* load the application title */
-    if (AllocAndLoadString(&lpAppTitle,
-                           hAppInstance,
-                           IDS_SNDVOL32) == 0)
-    {
-      lpAppTitle = NULL;
     }
 
     if (mixerGetNumDevs() > 0)
@@ -401,11 +699,6 @@ CreateApplicationWindow(VOID)
         LocalFree(lpErrMessage);
     }
 
-    if (lpAppTitle != NULL)
-    {
-        LocalFree(lpAppTitle);
-    }
-
     if (hWnd == NULL)
     {
         HeapFree(hAppHeap,
@@ -426,6 +719,14 @@ WinMain(HINSTANCE hInstance,
 
     hAppInstance = hInstance;
     hAppHeap = GetProcessHeap();
+    
+    /* load the application title */
+    if (AllocAndLoadString(&lpAppTitle,
+                           hAppInstance,
+                           IDS_SNDVOL32) == 0)
+    {
+      lpAppTitle = NULL;
+    }
 
     InitCommonControls();
 
@@ -454,6 +755,11 @@ WinMain(HINSTANCE hInstance,
     DestroyWindow(hMainWnd);
 
     UnregisterApplicationClasses();
+    
+    if (lpAppTitle != NULL)
+    {
+        LocalFree(lpAppTitle);
+    }
 
     return 0;
 }
