@@ -258,7 +258,7 @@ LdrLoadModule(
     CHECKPOINT;
     if (!NT_SUCCESS(Status))
     {
-        CPRINT("Could not open module file: %wZ\n", Filename);
+        CPRINT("Could not open module file: %wZ (Status 0x%08lx)\n", Filename, Status);
         return(Status);
     }
     CHECKPOINT;
