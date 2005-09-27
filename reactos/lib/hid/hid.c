@@ -1,6 +1,6 @@
 /*
  * ReactOS Hid User Library
- * Copyright (C) 2004 ReactOS Team
+ * Copyright (C) 2004-2005 ReactOS Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,15 +21,12 @@
  * PROJECT:         ReactOS Hid User Library
  * FILE:            lib/hid/hid.c
  * PURPOSE:         ReactOS Hid User Library
+ * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  *
  * UPDATE HISTORY:
  *      07/12/2004  Created
  */
-#include <windows.h>
-#include <ddk/hidusage.h>
-#include <ddk/hidclass.h>
-#include <ddk/hidpi.h>
-#include "internal.h"
+#include <precomp.h>
 
 HINSTANCE hDllInstance;
 

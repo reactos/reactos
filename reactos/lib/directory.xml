@@ -92,6 +92,9 @@
 <directory name="glu32">
 	<xi:include href="glu32/glu32.xml" />
 </directory>
+<directory name="hid">
+	<xi:include href="hid/hid.xml" />
+</directory>
 <directory name="imagehlp">
 	<xi:include href="imagehlp/imagehlp.xml" />
 </directory>
