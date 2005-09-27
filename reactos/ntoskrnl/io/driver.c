@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/driver.c
@@ -1352,7 +1351,7 @@ IopInitializeBootDrivers(VOID)
    if (BootDriverCount == 0)
    {
       DbgPrint("No boot drivers available.\n");
-      KEBUGCHECK(0);
+      KEBUGCHECK(INACCESSIBLE_BOOT_DEVICE);
    }
 }
 
