@@ -102,13 +102,14 @@ static int NOTEPAD_MenuCommand(WPARAM wParam)
  *           NOTEPAD_FindNext
  */
 
-static VOID NOTEPAD_FindNext(FINDREPLACE *pFindReplace)
+static BOOL NOTEPAD_FindNext(FINDREPLACE *pFindReplace, BOOL bShowAlert)
 {
     int iTextLength, iTargetLength;
     LPTSTR pszText = NULL;
     DWORD dwPosition, dwDummy;
     BOOL bMatches = FALSE;
     TCHAR szResource[128], szText[128];
+    BOOL bSuccess;
 
     iTargetLength = _tcslen(pFindReplace->lpstrFindWhat);
 
@@ -118,7 +119,7 @@ static VOID NOTEPAD_FindNext(FINDREPLACE *pFindReplace)
     {
         pszText = (LPTSTR) HeapAlloc(GetProcessHeap(), 0, (iTextLength + 1) * sizeof(TCHAR));
         if (!pszText)
-            return;
+            return FALSE;
 
         GetWindowText(Globals.hEdit, pszText, iTextLength + 1);
     }
@@ -155,18 +156,53 @@ static VOID NOTEPAD_FindNext(FINDREPLACE *pFindReplace)
         /* Found target */
         SendMessage(Globals.hEdit, EM_SETSEL, dwPosition, dwPosition + iTargetLength);
         SendMessage(Globals.hEdit, EM_SCROLLCARET, 0, 0);
+        bSuccess = TRUE;
     }
 	else
 	{
         /* Can't find target */
-        LoadString(Globals.hInstance, STRING_CANNOTFIND, szResource, SIZEOF(szResource));
-        _sntprintf(szText, SIZEOF(szText), szResource, pFindReplace->lpstrFindWhat);
-        LoadString(Globals.hInstance, STRING_NOTEPAD, szResource, SIZEOF(szResource));
-        MessageBox(Globals.hEdit, szText, szResource, MB_OK);
+        if (bShowAlert)
+		{
+            LoadString(Globals.hInstance, STRING_CANNOTFIND, szResource, SIZEOF(szResource));
+            _sntprintf(szText, SIZEOF(szText), szResource, pFindReplace->lpstrFindWhat);
+            LoadString(Globals.hInstance, STRING_NOTEPAD, szResource, SIZEOF(szResource));
+            MessageBox(Globals.hEdit, szText, szResource, MB_OK);
+		}
+        bSuccess = FALSE;
 	}
 
     if (pszText)
         HeapFree(GetProcessHeap(), 0, pszText);
+    return bSuccess;
+}
+
+/***********************************************************************
+ *
+ *           NOTEPAD_Replace
+ */
+
+static VOID NOTEPAD_Replace(FINDREPLACE *pFindReplace)
+{
+    if (NOTEPAD_FindNext(pFindReplace, TRUE))
+        SendMessage(Globals.hEdit, EM_REPLACESEL, TRUE, (LPARAM) pFindReplace->lpstrReplaceWith);
+}
+
+/***********************************************************************
+ *
+ *           NOTEPAD_ReplaceAll
+ */
+
+static VOID NOTEPAD_ReplaceAll(FINDREPLACE *pFindReplace)
+{
+    BOOL bShowAlert = TRUE;
+
+    SendMessage(Globals.hEdit, EM_SETSEL, 0, 0);
+
+    while (NOTEPAD_FindNext(pFindReplace, bShowAlert))
+    {
+        SendMessage(Globals.hEdit, EM_REPLACESEL, TRUE, (LPARAM) pFindReplace->lpstrReplaceWith);
+        bShowAlert = FALSE;
+	}
 }
 
 /***********************************************************************
@@ -237,6 +273,9 @@ static LRESULT WINAPI NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam,
         Globals.hEdit = CreateWindowEx(EDIT_EXSTYLE, editW, NULL, EDIT_STYLE,
                              0, 0, rc.right, rc.bottom, hWnd,
                              NULL, Globals.hInstance, NULL);
+        if (!Globals.hEdit)
+            return -1;
+        SendMessage(Globals.hEdit, EM_LIMITTEXT, 0, 0);
         break;
     }
 
@@ -294,7 +333,11 @@ static LRESULT WINAPI NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam,
             FINDREPLACE *pFindReplace = (FINDREPLACE *) lParam;
 
             if (pFindReplace->Flags & FR_FINDNEXT)
-                NOTEPAD_FindNext(pFindReplace);
+                NOTEPAD_FindNext(pFindReplace, TRUE);
+            else if (pFindReplace->Flags & FR_REPLACE)
+                NOTEPAD_Replace(pFindReplace);
+            else if (pFindReplace->Flags & FR_REPLACEALL)
+                NOTEPAD_ReplaceAll(pFindReplace);
             else if (pFindReplace->Flags & FR_DIALOGTERM)
                 NOTEPAD_FindTerm();
             break;
