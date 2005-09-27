@@ -134,21 +134,24 @@ static BOOL RefreshTreeItem(HWND hwndTV, HTREEITEM hItem)
     HTREEITEM childItem;
     LPCTSTR KeyPath;
     DWORD dwCount, dwIndex, dwMaxSubKeyLen;
-    LPSTR Name;
+    LPSTR Name = NULL;
     TVITEM tvItem;
-    
+    LPTSTR pszNodes = NULL;
+    BOOL bSuccess = FALSE;
+    LPTSTR s;
+
     KeyPath = GetItemPath(hwndTV, hItem, &hRoot);
 
     if (*KeyPath) {
         if (RegOpenKeyEx(hRoot, KeyPath, 0, KEY_READ, &hKey) != ERROR_SUCCESS) {
-            return FALSE;
+            goto done;
         }
     } else {
         hKey = hRoot;
     }
 
     if (RegQueryInfoKey(hKey, 0, 0, 0, &dwCount, &dwMaxSubKeyLen, 0, 0, 0, 0, 0, 0) != ERROR_SUCCESS) {
-        return FALSE;
+        goto done;
     }
 
     /* Set the number of children again */
@@ -156,22 +159,63 @@ static BOOL RefreshTreeItem(HWND hwndTV, HTREEITEM hItem)
     tvItem.hItem = hItem;
     tvItem.cChildren = dwCount;
     if (!TreeView_SetItem(hwndTV, &tvItem)) {
-        return FALSE;
+        goto done;
     }
 
     /* We don't have to bother with the rest if it's not expanded. */
     if (TreeView_GetItemState(hwndTV, hItem, TVIS_EXPANDED) == 0) {
         RegCloseKey(hKey);
-        return TRUE;
+        bSuccess = TRUE;
+        goto done;
     }
 
     dwMaxSubKeyLen++; /* account for the \0 terminator */
     if (!(Name = HeapAlloc(GetProcessHeap(), 0, dwMaxSubKeyLen * sizeof(TCHAR)))) {
-        return FALSE;
+        goto done;
     }
     tvItem.cchTextMax = dwMaxSubKeyLen;
     if (!(tvItem.pszText = HeapAlloc(GetProcessHeap(), 0, dwMaxSubKeyLen * sizeof(TCHAR)))) {
-        return FALSE;
+        goto done;
+    }
+
+    /* Get all of the tree node siblings in one contiguous block of memory */
+    {
+        DWORD dwPhysicalSize = 0;
+        DWORD dwActualSize = 0;
+        DWORD dwNewPhysicalSize;
+        LPTSTR pszNewNodes;
+        DWORD dwStep = 10000;
+
+        for (childItem = TreeView_GetChild(hwndTV, hItem); childItem;
+                childItem = TreeView_GetNextSibling(hwndTV, childItem)) {
+
+            if (dwActualSize + dwMaxSubKeyLen + 1 > dwPhysicalSize)
+            {
+                dwNewPhysicalSize = dwActualSize + dwMaxSubKeyLen + 1 + dwStep;
+
+                if (pszNodes)
+                    pszNewNodes = (LPTSTR) HeapReAlloc(GetProcessHeap(), 0, pszNodes, dwNewPhysicalSize * sizeof(TCHAR));
+                else
+                    pszNewNodes = (LPTSTR) HeapAlloc(GetProcessHeap(), 0, dwNewPhysicalSize * sizeof(TCHAR));
+                if (!pszNewNodes)
+                    goto done;
+
+                dwPhysicalSize = dwNewPhysicalSize;
+                pszNodes = pszNewNodes;
+            }
+
+            tvItem.mask = TVIF_TEXT;
+            tvItem.hItem = childItem;
+            tvItem.pszText = &pszNodes[dwActualSize];
+            tvItem.cchTextMax = dwPhysicalSize - dwActualSize;
+            if (!TreeView_GetItem(hwndTV, &tvItem))
+                goto done;
+
+            dwActualSize += _tcslen(&pszNodes[dwActualSize]) + 1;
+        }
+
+        if (pszNodes)
+            pszNodes[dwActualSize] = '\0';
     }
 
     /* Now go through all the children in the registry, and check if any have to be added. */
@@ -184,36 +228,29 @@ static BOOL RefreshTreeItem(HWND hwndTV, HTREEITEM hItem)
             continue;
         }
 
-        /* Find the number of children of the node. */
-        dwSubCount = 0;
-        if (RegOpenKeyEx(hKey, Name, 0, KEY_QUERY_VALUE, &hSubKey) == ERROR_SUCCESS) {
-            if (RegQueryInfoKey(hSubKey, 0, 0, 0, &dwSubCount, 0, 0, 0, 0, 0, 0, 0) != ERROR_SUCCESS) {
-                dwSubCount = 0;
-            }
-            RegCloseKey(hSubKey);
-        }
-
         /* Check if the node is already in there. */
-        for (childItem = TreeView_GetChild(hwndTV, hItem); childItem;
-                childItem = TreeView_GetNextSibling(hwndTV, childItem)) {
-            tvItem.mask = TVIF_TEXT;
-            tvItem.hItem = childItem;
-            if (!TreeView_GetItem(hwndTV, &tvItem)) {
-                return FALSE;
-            }
-
-            if (!strcmp(tvItem.pszText, Name)) {
-                found = TRUE;
-                break;
+        if (pszNodes) {
+            for (s = pszNodes; *s; s += _tcslen(s) + 1) {
+                if (!strcmp(s, Name)) {
+                    found = TRUE;
+                    break;
+                }
             }
         }
 
         if (found == FALSE) {
+            /* Find the number of children of the node. */
+            dwSubCount = 0;
+            if (RegOpenKeyEx(hKey, Name, 0, KEY_QUERY_VALUE, &hSubKey) == ERROR_SUCCESS) {
+                if (RegQueryInfoKey(hSubKey, 0, 0, 0, &dwSubCount, 0, 0, 0, 0, 0, 0, 0) != ERROR_SUCCESS) {
+                    dwSubCount = 0;
+                }
+                RegCloseKey(hSubKey);
+            }
+
             AddEntryToTree(hwndTV, hItem, Name, NULL, dwSubCount);
         }
     }
-    HeapFree(GetProcessHeap(), 0, Name);
-    HeapFree(GetProcessHeap(), 0, tvItem.pszText);
     RegCloseKey(hKey);
 
     /* Now go through all the children in the tree, and check if any have to be removed. */
@@ -225,8 +262,14 @@ static BOOL RefreshTreeItem(HWND hwndTV, HTREEITEM hItem)
         }
         childItem = nextItem;
     }
+    bSuccess = TRUE;
 
-    return TRUE;
+done:
+    if (pszNodes)
+        HeapFree(GetProcessHeap(), 0, pszNodes);
+    if (Name)
+        HeapFree(GetProcessHeap(), 0, Name);
+    return bSuccess;
 }
 
 BOOL RefreshTreeView(HWND hwndTV)
