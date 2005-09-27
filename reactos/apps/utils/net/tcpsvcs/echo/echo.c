@@ -4,7 +4,6 @@
 #include "echo.h"
 #include "../skelserver/skelserver.h"
 
-// Handles the incoming data by reflecting it back to the sender.
 DWORD WINAPI EchoHandler(VOID* Sock_)
 {
     DWORD Retval = 0;
@@ -55,7 +54,7 @@ BOOL EchoIncomingPackets(SOCKET Sock)
                 }
                 else {
                     /* Client closed connection before we could reply to
-                    // all the data it sent, so quit early. */
+                       all the data it sent, so quit early. */
                     _tprintf(_T("Peer unexpectedly dropped connection!\n"));
                     return FALSE;
                 }

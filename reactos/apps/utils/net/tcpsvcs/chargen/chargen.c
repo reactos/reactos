@@ -75,15 +75,15 @@ BOOL GenerateChars(SOCKET Sock)
 
 BOOL SendChar(SOCKET Sock, TCHAR c)
 {
-    INT Temp;
+    INT RetVal;
     INT SentBytes;
 
     SentBytes = 0;
-    Temp = send(Sock, &c, sizeof(TCHAR), 0);
-    if (Temp > 0) {
-        SentBytes += Temp;
+    RetVal = send(Sock, &c, sizeof(TCHAR), 0);
+    if (RetVal > 0) {
+        SentBytes += RetVal;
     }
-    else if (Temp == SOCKET_ERROR) {
+    else if (RetVal == SOCKET_ERROR) {
         return FALSE;
     }
     else
