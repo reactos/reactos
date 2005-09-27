@@ -12,7 +12,7 @@
 /* DEPENDENCIES **************************************************************/
 #include "ldrtypes.h"
 /* FIXME: this needs be implemented in the w32api ddk */
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(NTOS_MODE_USER)
 #include <ntimage.h>
 #endif
 

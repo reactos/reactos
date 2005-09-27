@@ -1,178 +1,351 @@
-/* $Id$
- *
- * subsys/csr/csrsrv/session.c - CSR server - session management
- * 
- * ReactOS Operating System
- * 
- * --------------------------------------------------------------------
- *
- * This software is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of the
- * License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this software; see the file COPYING.LIB. If not, write
- * to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge,
- * MA 02139, USA.  
- *
- * --------------------------------------------------------------------
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS CSR Sub System
+ * FILE:            subsys/csr/csrsrv/session.c
+ * PURPOSE:         CSR Server DLL Session Implementation
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */
+
+/* INCLUDES ******************************************************************/
+
 #include "srv.h"
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
-//TODO: when CsrSrvSessionsFlag is FALSE, create just one session and
-//TODO: fail for more sessions requests.
+/* DATA **********************************************************************/
+RTL_CRITICAL_SECTION CsrNtSessionLock;
+LIST_ENTRY CsrNtSessionList;
+HANDLE CsrSmApiPort;
 
-/* LOCALS */
-
-struct {
-	RTL_CRITICAL_SECTION Lock;
-	HANDLE Heap;
-	ULONG LastUnusedId;
-} Session;
-
-
-
-NTSTATUS STDCALL CsrSrvInitializeSession (VOID)
+PSB_API_ROUTINE CsrServerSbApiDispatch[5] =
 {
-	NTSTATUS Status = STATUS_NOT_IMPLEMENTED;
+    CsrSbCreateSession,
+    CsrSbForeignSessionComplete,
+    CsrSbForeignSessionComplete,
+    CsrSbCreateProcess,
+    NULL
+};
 
-	DPRINT("CSRSRV: %s called\n", __FUNCTION__);
-	
-	Status = RtlInitializeCriticalSection (& Session.Lock);
-	if (NT_SUCCESS(Status))
-	{
-		Session.Heap = RtlCreateHeap (HEAP_GROWABLE,
-						NULL,
-						65536,
-						65536,
-						NULL,
-						NULL);
-		if (NULL == Session.Heap)
-		{
-			RtlDeleteCriticalSection (& Session.Lock);
-			Status = STATUS_NO_MEMORY;
-		}
-		Session.LastUnusedId = 0;
-	}
-	return Status;
+PCHAR CsrServerSbApiName[5] =
+{
+    "SbCreateSession",
+    "SbTerminateSEssion",
+    "SbForeignSessionComplete",
+    "SbCreateProcess",
+    "Unknown Csr Sb Api Number"
+};
+
+/* PRIVATE FUNCTIONS *********************************************************/
+
+/*++
+ * @name CsrInitializeNtSessions
+ *
+ * The CsrInitializeNtSessions routine sets up support for CSR Sessions.
+ *
+ * @param None
+ *
+ * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
+ *         othwerwise.
+ *
+ * @remarks None.
+ *
+ *--*/
+NTSTATUS
+NTAPI
+CsrInitializeNtSessions(VOID)
+{
+    NTSTATUS Status;
+    DPRINT("CSRSRV: %s called\n", __FUNCTION__);
+
+    /* Initialize the Session List */
+    InitializeListHead(&CsrNtSessionList);
+
+    /* Initialize the Session Lock */
+    Status = RtlInitializeCriticalSection(&CsrNtSessionLock);
+    return Status;
 }
 
-static NTSTATUS STDCALL CsrpCreateSessionDirectories (PCSR_SESSION pCsrSession)
+/*++
+ * @name CsrAllocateNtSession
+ *
+ * The CsrAllocateNtSession routine allocates a new CSR NT Session.
+ *
+ * @param SessionId
+ *        Session ID of the CSR NT Session to allocate. 
+ *
+ * @return Pointer to the newly allocated CSR NT Session.
+ *
+ * @remarks None.
+ *
+ *--*/
+PCSR_NT_SESSION
+NTAPI
+CsrAllocateNtSession(ULONG SessionId)
 {
-	NTSTATUS           Status = STATUS_SUCCESS;
-	CHAR               SessionIdBuffer [8];
-	ANSI_STRING        SessionIdNameA;
-	UNICODE_STRING     SessionIdNameW;
-	UNICODE_STRING     SessionDirectoryName;
-	OBJECT_ATTRIBUTES  DirectoryAttributes;
-	HANDLE             DirectoryHAndle;
+    PCSR_NT_SESSION NtSession;
 
-	DPRINT("CSRSRV: %s(%08lx) called\n", __FUNCTION__, pCsrSession);
+    /* Allocate an NT Session Object */
+    NtSession = RtlAllocateHeap(CsrHeap,
+                                0,
+                                sizeof(CSR_NT_SESSION));
 
-	sprintf (SessionIdBuffer, "\\Sessions\\%ld", pCsrSession->SessionId);
-	RtlInitAnsiString (& SessionIdNameA, SessionIdBuffer);
-	RtlAnsiStringToUnicodeString (& SessionIdNameW, & SessionIdNameA, TRUE);
-	RtlCopyUnicodeString (& SessionDirectoryName, & CsrSrvOption.NameSpace.Root);
-	RtlAppendUnicodeStringToString (& SessionDirectoryName, & SessionIdNameW);
+    /* Setup the Session Object */
+    if (NtSession)
+    {
+        NtSession->SessionId = SessionId;
+        NtSession->ReferenceCount = 1;
 
-	DPRINT("CSRSRV: %s(%08lx): %S\n", __FUNCTION__, pCsrSession,
-			SessionDirectoryName.Buffer);
+        /* Insert it into the Session List */
+        CsrAcquireNtSessionLock();
+        InsertHeadList(&CsrNtSessionList, &NtSession->SessionList);
+        CsrReleaseNtSessionLock();
+    }
 
-	InitializeObjectAttributes (& DirectoryAttributes,
-					& SessionDirectoryName,
-					OBJ_OPENIF,
-					NULL,
-					NULL);
-	Status = NtCreateDirectoryObject (& DirectoryHAndle,
-					  (DIRECTORY_CREATE_OBJECT|DIRECTORY_CREATE_SUBDIRECTORY),
-					  & DirectoryAttributes);
-	if (NT_SUCCESS(Status))
-	{
-		DPRINT1("CSRSRV: session %ld root directory not created (Status=%08lx)\n",
-				pCsrSession->SessionId, Status);
-	}
-	// TODO
-	return Status;
+    /* Return the Session (or NULL) */
+    return NtSession;
 }
 
-static NTSTATUS STDCALL CsrpDestroySessionDirectories (PCSR_SESSION pCsrSession)
+/*++
+ * @name CsrReferenceNtSession
+ *
+ * The CsrReferenceNtSession increases the reference count of a CSR NT Session.
+ *
+ * @param Session
+ *        Pointer to the CSR NT Session to reference.  
+ *
+ * @return None.
+ *
+ * @remarks None.
+ *
+ *--*/
+VOID
+NTAPI
+CsrReferenceNtSession(PCSR_NT_SESSION Session)
 {
-	DPRINT("CSRSRV: %s called\n", __FUNCTION__);
-	
-	return STATUS_NOT_IMPLEMENTED;
+    /* Acquire the lock */
+    CsrAcquireNtSessionLock();
+
+    /* Increase the reference count */
+    Session->ReferenceCount++;
+
+    /* Release the lock */
+    CsrReleaseNtSessionLock();
 }
 
-/*=====================================================================
- *	PUBLIC API
- *===================================================================*/
-
-NTSTATUS STDCALL CsrDestroySession (PCSR_SESSION pCsrSession)
+/*++
+ * @name CsrDereferenceNtSession
+ *
+ * The CsrDereferenceNtSession decreases the reference count of a
+ * CSR NT Session.
+ *
+ * @param Session
+ *        Pointer to the CSR NT Session to reference.  
+ * 
+ * @param ExitStatus
+ *        If this is the last reference to the session, this argument
+ *        specifies the exit status.
+ *
+ * @return None.
+ *
+ * @remarks CsrDereferenceNtSession will complete the session if
+ *          the last reference to it has been closed.
+ *
+ *--*/
+VOID
+NTAPI
+CsrDereferenceNtSession(PCSR_NT_SESSION Session,
+                        NTSTATUS ExitStatus)
 {
-	NTSTATUS Status = STATUS_SUCCESS;
+    /* Acquire the lock */
+    CsrAcquireNtSessionLock();
 
-	DPRINT("CSRSRV: %s(%08lx) called\n", __FUNCTION__, pCsrSession);
-	
-	if (NULL == pCsrSession)
-	{
-		Status = STATUS_INVALID_PARAMETER;
-	} else {
-		Status = CsrShutdownProcesses (pCsrSession);
-		Status = CsrpDestroySessionDirectories (pCsrSession);
-		RtlDestroyHeap (pCsrSession->Heap);
-		RtlFreeHeap (Session.Heap, 0, pCsrSession);
-	}
-	return Status;
+    /* Dereference the Session Object */
+    if (!(--Session->ReferenceCount))
+    {
+        /* Remove it from the list */
+        RemoveEntryList(&Session->SessionList);
+
+        /* Release the lock */
+        CsrReleaseNtSessionLock();
+
+        /* Tell SM that we're done here */
+        SmSessionComplete(CsrSmApiPort, Session->SessionId, ExitStatus);
+
+        /* Free the Session Object */
+        RtlFreeHeap(CsrHeap, 0, Session);
+    }
+    else
+    {
+        /* Release the lock, the Session is still active */
+        CsrReleaseNtSessionLock();
+    }
 }
 
-NTSTATUS STDCALL CsrCreateSession (PCSR_SESSION * ppCsrSession)
-{
-	NTSTATUS      Status = STATUS_SUCCESS;
-	PCSR_SESSION  pCsrSession = NULL;
 
-	DPRINT("CSRSRV: %s called\n", __FUNCTION__);
-	
-	if (NULL == ppCsrSession)
-	{
-		Status = STATUS_INVALID_PARAMETER;
-	} else {
-		RtlEnterCriticalSection (& Session.Lock);
-		pCsrSession = RtlAllocateHeap (Session.Heap,
-						HEAP_ZERO_MEMORY,
-						sizeof (CSR_SESSION));
-		if (NULL == pCsrSession)
-		{
-			Status = STATUS_NO_MEMORY;
-		} else {
-			pCsrSession->SessionId = Session.LastUnusedId ++;
-			Status = CsrpCreateSessionDirectories (pCsrSession);
-			if(NT_SUCCESS(Status))
-			{
-				pCsrSession->Heap = RtlCreateHeap(HEAP_GROWABLE,
-								  NULL,
-								  65536,
-								  65536,
-								  NULL,
-								  NULL);
-				if (NULL == pCsrSession->Heap)
-				{
-					Status = STATUS_NO_MEMORY;
-					CsrpDestroySessionDirectories (pCsrSession);
-					-- Session.LastUnusedId;
-				}
-			}
-		}
-		RtlLeaveCriticalSection (& Session.Lock);	
-	}
-	return Status;
+/* SESSION MANAGER FUNCTIONS**************************************************/
+
+/*++
+ * @name CsrSbCreateSession
+ *
+ * The CsrSbCreateSession API is called by the Session Manager whenever a new
+ * session is created.
+ *
+ * @param ApiMessage
+ *        Pointer to the Session Manager API Message.
+ *
+ * @return TRUE in case of success, FALSE othwerwise.
+ *
+ * @remarks The CsrSbCreateSession routine will initialize a new CSR NT
+ *          Session and allocate a new CSR Process for the subsystem process.
+ *
+ *--*/
+BOOLEAN
+NTAPI
+CsrSbCreateSession(IN PSB_API_MESSAGE ApiMessage)
+{
+    PSB_CREATE_SESSION CreateSession = &ApiMessage->SbCreateSession;
+    HANDLE hProcess, hThread;
+    PCSR_PROCESS CsrProcess;
+    NTSTATUS Status;
+    KERNEL_USER_TIMES KernelTimes;
+    PCSR_THREAD CsrThread;
+    PVOID ProcessData;
+    ULONG i;
+
+    /* Save the Process and Thread Handles */
+    hProcess = CreateSession->ProcessInfo.ProcessHandle;
+    hThread = CreateSession->ProcessInfo.ThreadHandle;
+
+    /* Lock the Processes */
+    CsrAcquireProcessLock();
+
+    /* Allocate a new process */
+    if (!(CsrProcess = CsrAllocateProcess()))
+    {
+        /* Fail */
+        ApiMessage->Status = STATUS_NO_MEMORY;
+        CsrReleaseProcessLock();
+        return TRUE;
+    }
+
+    /* Setup Process Data */
+    CsrProcess->ClientId = CreateSession->ProcessInfo.ClientId;
+    CsrProcess->ProcessHandle = hProcess;
+
+    /* Set the exception port */
+    Status = NtSetInformationProcess(hProcess,
+                                     ProcessExceptionPort,
+                                     &CsrApiPort,
+                                     sizeof(HANDLE));
+
+    /* Check for success */
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail the request */
+        CsrDeallocateProcess(CsrProcess);
+        CsrReleaseProcessLock();
+
+        /* Strange as it seems, NTSTATUSes are actually returned */
+        return (BOOLEAN)STATUS_NO_MEMORY;
+    }
+
+    /* Get the Create Time */
+    Status = NtQueryInformationThread(hThread,
+                                      ThreadTimes,
+                                      &KernelTimes,
+                                      sizeof(KERNEL_USER_TIMES),
+                                      NULL);
+
+    /* Check for success */
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail the request */
+        CsrDeallocateProcess(CsrProcess);
+        CsrReleaseProcessLock();
+
+        return (BOOLEAN)Status;
+    }
+
+    /* Allocate a new Thread */
+    if (!(CsrThread = CsrAllocateThread(CsrProcess)))
+    {
+        /* Fail the request */
+        CsrDeallocateProcess(CsrProcess);
+        ApiMessage->Status = STATUS_NO_MEMORY;
+        CsrReleaseProcessLock();
+        return TRUE;
+    }
+
+    /* Setup the Thread Object */
+    CsrThread->CreateTime = KernelTimes.CreateTime;
+    CsrThread->ClientId = CreateSession->ProcessInfo.ClientId;
+    CsrThread->ThreadHandle = hThread;
+    CsrThread->Flags = 0;
+
+    /* Insert it into the Process List */
+    CsrInsertThread(CsrProcess, CsrThread);
+
+    /* Allocate a new Session */
+    CsrProcess->NtSession = CsrAllocateNtSession(CreateSession->SessionId);
+
+    /* Set the Process Priority */
+    CsrSetBackgroundPriority(CsrProcess);
+
+    /* Get the first data location */
+    ProcessData = &CsrProcess->ServerData[CSR_SERVER_DLL_MAX];
+
+    /* Loop every DLL */
+    for (i = 0; i < CSR_SERVER_DLL_MAX; i++)
+    {
+        /* Check if the DLL is loaded and has Process Data */
+        if (CsrLoadedServerDll[i] && CsrLoadedServerDll[i]->SizeOfProcessData)
+        {
+            /* Write the pointer to the data */
+            CsrProcess->ServerData[i] = ProcessData;
+
+            /* Move to the next data location */
+            ProcessData = (PVOID)((ULONG_PTR)ProcessData +
+                                  CsrLoadedServerDll[i]->SizeOfProcessData);
+        }
+        else
+        {
+            /* Nothing for this Process */
+            CsrProcess->ServerData[i] = NULL;
+        }
+    }
+
+    /* Insert the Process */
+    CsrInsertProcess(NULL, NULL, CsrProcess);
+
+    /* Activate the Thread */
+    ApiMessage->Status = NtResumeThread(hThread, NULL);
+
+    /* Release lock and return */
+    CsrReleaseProcessLock();
+    return TRUE;
 }
 
+/*++
+ * @name CsrSbForeignSessionComplete
+ *
+ * The CsrSbForeignSessionComplete API is called by the Session Manager
+ * whenever a foreign session is completed (ie: terminated).
+ *
+ * @param ApiMessage
+ *        Pointer to the Session Manager API Message.
+ *
+ * @return TRUE in case of success, FALSE othwerwise.
+ *
+ * @remarks The CsrSbForeignSessionComplete API is not yet implemented.
+ *
+ *--*/
+BOOLEAN
+NTAPI
+CsrSbForeignSessionComplete(IN PSB_API_MESSAGE ApiMessage)
+{
+    /* Deprecated/Unimplemented in NT */
+    ApiMessage->Status = STATUS_NOT_IMPLEMENTED;
+    return TRUE;
+}
 /* EOF */

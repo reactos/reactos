@@ -1,104 +1,87 @@
-/* $Id$
- *
- * main.c - Client/Server Runtime - entry point
- * 
- * ReactOS Operating System
- * 
- * --------------------------------------------------------------------
- *
- * This software is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License as
- * published by the Free Software Foundation; either version 2 of the
- * License, or (at your option) any later version.
- *
- * This software is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Library General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this software; see the file COPYING.LIB. If not, write
- * to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge,
- * MA 02139, USA.  
- *
- * --------------------------------------------------------------------
- * 
- *	19990417 (Emanuele Aliberti)
- *		Do nothing native application skeleton
- * 	19990528 (Emanuele Aliberti)
- * 		Compiled successfully with egcs 1.1.2
- * 	19990605 (Emanuele Aliberti)
- * 		First standalone run under ReactOS (it
- * 		actually does nothing but running).
- * 	20050329 (Emanuele Aliberti)
- * 		C/S run-time moved to CSRSRV.DLL
- * 		Win32 emulation moved to server DLLs basesrv+winsrv
- * 		(previously code was already in win32csr.dll)
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS CSR Sub System
+ * FILE:            subsys/csr/csrss.c
+ * PURPOSE:         CSR Executable
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */
-#include "csr.h"
+
+/* INCLUDES ******************************************************************/
+
+#include <windows.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 
 #define NDEBUG
 #include <debug.h>
 
-COMMAND_LINE_ARGUMENT Argument;
+/* PRIVATE FUNCTIONS *********************************************************/
 
-/* never fail or so */
-
-VOID STDCALL CsrpSetDefaultProcessHardErrorMode (VOID)
+VOID
+NTAPI
+CsrpSetDefaultProcessHardErrorMode (VOID)
 {
-    DWORD DefaultHardErrorMode = 0; 
-    NtSetInformationProcess (NtCurrentProcess(),
-		    	     ProcessDefaultHardErrorMode,
-			     & DefaultHardErrorMode,
-			     sizeof DefaultHardErrorMode);
+    ULONG DefaultHardErrorMode = 0;
+
+    /* Disable hard errors */
+    NtSetInformationProcess(NtCurrentProcess(),
+                            ProcessDefaultHardErrorMode,
+                            &DefaultHardErrorMode,
+                            sizeof(DefaultHardErrorMode);
 }
 
-/* Native process' entry point */
-
-VOID STDCALL NtProcessStartup (PPEB Peb)
+int
+_cdecl
+main(int argc,
+     char *argv[],
+     char *envp[],
+     int DebugFlag)
 {
-  NTSTATUS  Status = STATUS_SUCCESS;
+    KPRIORITY BasePriority = (8 + 1) + 4;
+    NTSTATUS Status;
+    ULONG Response;
 
-  /*
-   *	Parse the command line.
-   */
-  Status = CsrParseCommandLine (Peb, & Argument);
-  if (STATUS_SUCCESS != Status)
-  {
-    DPRINT1("CSR: %s: CsrParseCommandLine failed (Status=0x%08lx)\n",
-	__FUNCTION__, Status);
-  }
-  /*
-   *	Initialize the environment subsystem server.
-   */
-  Status = CsrServerInitialization (Argument.Count, Argument.Vector);
-  if (!NT_SUCCESS(Status))
-  {
-    /* FATAL! */
-    DPRINT1("CSR: %s: CSRSRV!CsrServerInitialization failed (Status=0x%08lx)\n",
-	__FUNCTION__, Status);
+    /* Set the Priority */
+    NtSetInformationProcess(NtCurrentProcess(),
+                            ProcessBasePriority,
+                            &BasePriority,
+                            sizeof(KPRIORITY));
 
-    CsrFreeCommandLine (Peb, & Argument);
-    /*
-     *	Tell the SM we failed. If we are a required
-     *	subsystem, SM will halt the system.
-     */
-    NtTerminateProcess (NtCurrentProcess(), Status);
-  }
-  /*
-   *	The server booted OK: never stop on error!
-   */
-  CsrpSetDefaultProcessHardErrorMode ();
-  /*
-   *	Cleanup command line
-   */
-  CsrFreeCommandLine (Peb, & Argument);	
-  /*
-   *	Terminate the current thread only (server's
-   *	threads that serve the LPC port continue
-   *	running and keep the process alive).
-   */
-  NtTerminateThread (NtCurrentThread(), Status);
+    /* Give us IOPL so that we can access the VGA registers */
+    Status = NtSetInformationProcess(NtCurrentProcess(),
+                                     ProcessUserModeIOPL,
+                                     NULL,
+                                     0);
+    if (NT_SUCCESS(Status))
+    {
+        /* Raise a hard error */
+        DPRINT1("CSRSS: Could not raise IOPL: %x\n", Status);
+        Status = NtRaiseHardError(STATUS_IO_PRIVILEGE_FAILED,
+                                  0,
+                                  0,
+                                  NULL,
+                                  OptionOk,
+                                  &Response);
+    }
+
+    /* Initialize CSR through CSRSRV */
+    Status = CsrServerInitialization(argc, argv);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Kill us */
+        DPRINT1("CSRSS: CsrServerInitialization failed:% lx\n", Status);
+        NtTerminateProcess (NtCurrentProcess(), Status);
+    }
+
+    /* Disable errors */
+    CsrpSetDefaultProcessHardErrorMode();
+
+    /* If this is Session 0, make sure killing us bugchecks the system */
+    if (!NtCurrentPeb()->SessionId) RtlSetProcessIsCritical(TRUE, NULL, FALSE);
+
+    /* Kill this thread. CSRSRV keeps us going */
+    NtTerminateThread (NtCurrentThread(), Status);
+    return 0;
 }
 
 /* EOF */
