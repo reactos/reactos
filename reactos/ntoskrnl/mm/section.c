@@ -3230,6 +3230,8 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
          ObDereferenceObject(Section);
          return(STATUS_NO_MEMORY);
       }
+      
+      RtlZeroMemory(ImageSectionObject, sizeof(MM_IMAGE_SECTION_OBJECT));
 
       StatusExeFmt = ExeFmtpCreateImageSection(FileHandle, ImageSectionObject);
 
