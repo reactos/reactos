@@ -3059,34 +3059,57 @@ NtSetInformationFile(HANDLE FileHandle,
         PVOID Queue;
         PFILE_COMPLETION_INFORMATION CompletionInfo = FileInformation;
         PIO_COMPLETION_CONTEXT Context;
-
-        if (Length < sizeof(FILE_COMPLETION_INFORMATION))
+        
+        if (FileObject->Flags & FO_SYNCHRONOUS_IO || FileObject->CompletionContext != NULL)
         {
-            Status = STATUS_INFO_LENGTH_MISMATCH;
+            Status = STATUS_INVALID_PARAMETER;
         }
         else
         {
-            /* Reference the Port */
-            Status = ObReferenceObjectByHandle(CompletionInfo->Port,
-                                               IO_COMPLETION_MODIFY_STATE,
-                                               IoCompletionType,
-                                               PreviousMode,
-                                               (PVOID*)&Queue,
-                                               NULL);
-            if (NT_SUCCESS(Status))
+            if (Length < sizeof(FILE_COMPLETION_INFORMATION))
             {
-                /* Allocate the Context */
-                Context = ExAllocatePoolWithTag(PagedPool,
-                                                sizeof(IO_COMPLETION_CONTEXT),
-                                                TAG('I', 'o', 'C', 'p'));
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+            }
+            else
+            {
+                /* Reference the Port */
+                Status = ObReferenceObjectByHandle(CompletionInfo->Port, /* FIXME - protect with SEH! */
+                                                   IO_COMPLETION_MODIFY_STATE,
+                                                   IoCompletionType,
+                                                   PreviousMode,
+                                                   (PVOID*)&Queue,
+                                                   NULL);
+                if (NT_SUCCESS(Status))
+                {
+                    /* Allocate the Context */
+                    Context = ExAllocatePoolWithTag(PagedPool,
+                                                    sizeof(IO_COMPLETION_CONTEXT),
+                                                    TAG('I', 'o', 'C', 'p'));
 
-                /* Set the Data */
-                Context->Key = CompletionInfo->Key;
-                Context->Port = Queue;
-                FileObject->CompletionContext = Context;
-
-                /* Dereference the Port now */
-                ObDereferenceObject(Queue);
+                    if (Context != NULL)
+                    {
+                        /* Set the Data */
+                        Context->Key = CompletionInfo->Key; /* FIXME - protect with SEH! */
+                        Context->Port = Queue;
+                        
+                        if (InterlockedCompareExchangePointer(&FileObject->CompletionContext,
+                                                              Context,
+                                                              NULL) != NULL)
+                        {
+                            /* someone else set the completion port in the
+                               meanwhile, fail */
+                            ExFreePool(Context);
+                            ObDereferenceObject(Queue);
+                            Status = STATUS_INVALID_PARAMETER;
+                        }
+                    }
+                    else
+                    {
+                        /* Dereference the Port now */
+                        ObDereferenceObject(Queue);
+                        Status = STATUS_INSUFFICIENT_RESOURCES;
+                    }
+                }
             }
         }
 
