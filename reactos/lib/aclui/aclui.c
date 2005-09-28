@@ -1,6 +1,6 @@
 /*
  * ReactOS Access Control List Editor
- * Copyright (C) 2004 ReactOS Team
+ * Copyright (C) 2004-2005 ReactOS Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -101,33 +101,41 @@ AddPrincipalToList(IN PSECURITY_PAGE sp,
         SID_NAME_USE SidNameUse;
         DWORD LookupResult;
         PPRINCIPAL_LISTITEM AceListItem, *NextAcePtr;
+
+        AccountNameSize = 0;
+        DomainNameSize = 0;
+
+        /* calculate the size of the buffer we need to calculate */
+        if (!LookupAccountSid(sp->ServerName,
+                              Sid,
+                              NULL,
+                              &AccountNameSize,
+                              NULL,
+                              &DomainNameSize,
+                              &SidNameUse))
+        {
+            LookupResult = GetLastError();
+            if (LookupResult != ERROR_NONE_MAPPED)
+            {
+                return FALSE;
+            }
+        }
         
         NextAcePtr = &sp->PrincipalsListHead;
-        for (AceListItem = sp->PrincipalsListHead; AceListItem != NULL; AceListItem = AceListItem->Next)
+        for (AceListItem = sp->PrincipalsListHead;
+             AceListItem != NULL;
+             AceListItem = AceListItem->Next)
         {
             NextAcePtr = &AceListItem->Next;
         }
         
         SidLength = GetLengthSid(Sid);
 
-        AccountNameSize = 0;
-        DomainNameSize = 0;
-
-        /* calculate the size of the buffer we need to calculate */
-        LookupAccountSid(sp->ServerName,
-                         Sid,
-                         NULL,
-                         &AccountNameSize,
-                         NULL,
-                         &DomainNameSize,
-                         &SidNameUse);
-
         /* allocate the ace */
         AceListItem = HeapAlloc(GetProcessHeap(),
                                 0,
-                                sizeof(PRINCIPAL_LISTITEM) +
-                                SidLength +
-                                ((AccountNameSize + DomainNameSize) * sizeof(WCHAR)));
+                                sizeof(PRINCIPAL_LISTITEM) + SidLength +
+                                    ((AccountNameSize + DomainNameSize) * sizeof(WCHAR)));
         if (AceListItem != NULL)
         {
             AceListItem->AccountName = (LPWSTR)((ULONG_PTR)(AceListItem + 1) + SidLength);
@@ -236,11 +244,10 @@ AddPrincipalToList(IN PSECURITY_PAGE sp,
                             {
                                 if (Domain != NULL)
                                 {
+                                    SIZE_T Size = (AccountNameSize + DomainName->Length +
+                                                   Names->Name.Length + 6) * sizeof(WCHAR);
                                     AceListItem->DisplayString = (LPWSTR)LocalAlloc(LMEM_FIXED,
-                                                                                    (AccountNameSize * sizeof(WCHAR)) +
-                                                                                    (DomainName->Length + sizeof(WCHAR)) +
-                                                                                    (Names->Name.Length + sizeof(WCHAR)) +
-                                                                                    (4 * sizeof(WCHAR)));
+                                                                                    Size);
                                     if (AceListItem->DisplayString != NULL)
                                     {
                                         WCHAR *s;
@@ -369,6 +376,7 @@ AddPrincipalListEntry(IN PSECURITY_PAGE sp,
     li.state = (Selected ? LVIS_SELECTED : 0);
     li.stateMask = LVIS_SELECTED;
     li.pszText = (PrincipalListItem->DisplayString != NULL ? PrincipalListItem->DisplayString : PrincipalListItem->AccountName);
+
     switch (PrincipalListItem->SidNameUse)
     {
         case SidTypeUser:
@@ -412,7 +420,8 @@ FillPrincipalsList(IN PSECURITY_PAGE sp)
     
     EnableRedrawWindow(sp->hWndPrincipalsList);
     
-    GetClientRect(sp->hWndPrincipalsList, &rcLvClient);
+    GetClientRect(sp->hWndPrincipalsList,
+                  &rcLvClient);
     
     ListView_SetColumnWidth(sp->hWndPrincipalsList,
                             0,
@@ -424,8 +433,10 @@ UpdateControlStates(IN PSECURITY_PAGE sp)
 {
     PPRINCIPAL_LISTITEM Selected = (PPRINCIPAL_LISTITEM)ListViewGetSelectedItemData(sp->hWndPrincipalsList);
 
-    EnableWindow(sp->hBtnRemove, Selected != NULL);
-    EnableWindow(sp->hAceCheckList, Selected != NULL);
+    EnableWindow(sp->hBtnRemove,
+                 Selected != NULL);
+    EnableWindow(sp->hAceCheckList,
+                 Selected != NULL);
     
     if (Selected != NULL)
     {
@@ -992,13 +1003,16 @@ SecurityPageProc(IN HWND hwndDlg,
                                       sp->hiPrincipals,
                                       LVSIL_SMALL);
 
-                GetClientRect(sp->hWndPrincipalsList, &rcLvClient);
+                GetClientRect(sp->hWndPrincipalsList,
+                              &rcLvClient);
                 
                 /* add a column to the list view */
                 lvc.mask = LVCF_FMT | LVCF_WIDTH;
                 lvc.fmt = LVCFMT_LEFT;
                 lvc.cx = rcLvClient.right;
-                ListView_InsertColumn(sp->hWndPrincipalsList, 0, &lvc);
+                ListView_InsertColumn(sp->hWndPrincipalsList,
+                                      0,
+                                      &lvc);
                 
                 ReloadPrincipalsList(sp);
 
@@ -1074,9 +1088,9 @@ HPROPSHEETPAGE
 WINAPI
 CreateSecurityPage(IN LPSECURITYINFO psi)
 {
-    PROPSHEETPAGE psp;
+    PROPSHEETPAGE psp = {0};
     PSECURITY_PAGE sPage;
-    SI_OBJECT_INFO ObjectInfo;
+    SI_OBJECT_INFO ObjectInfo = {0};
     HRESULT hRet;
 
     if (psi == NULL)
@@ -1090,8 +1104,8 @@ CreateSecurityPage(IN LPSECURITYINFO psi)
     /* get the object information from the server. Zero the structure before
        because some applications seem to return SUCCESS but only seem to set the
        fields they care about. */
-    ZeroMemory(&ObjectInfo, sizeof(ObjectInfo));
-    hRet = psi->lpVtbl->GetObjectInformation(psi, &ObjectInfo);
+    hRet = psi->lpVtbl->GetObjectInformation(psi,
+                                             &ObjectInfo);
 
     if (FAILED(hRet))
     {
@@ -1126,8 +1140,6 @@ CreateSecurityPage(IN LPSECURITYINFO psi)
     }
     sPage->psi = psi;
     sPage->ObjectInfo = ObjectInfo;
-
-    ZeroMemory(&psp, sizeof(psp));
 
     psp.dwSize = sizeof(PROPSHEETPAGE);
     psp.dwFlags = PSP_USECALLBACK;
@@ -1169,10 +1181,10 @@ EditSecurity(IN HWND hwndOwner,
              IN LPSECURITYINFO psi)
 {
     HRESULT hRet;
-    SI_OBJECT_INFO ObjectInfo;
+    SI_OBJECT_INFO ObjectInfo = {0};
     PROPSHEETHEADER psh;
     HPROPSHEETPAGE hPages[1];
-    LPWSTR lpCaption;
+    LPWSTR lpCaption = NULL;
     BOOL Ret;
 
     if (psi == NULL)
@@ -1186,8 +1198,8 @@ EditSecurity(IN HWND hwndOwner,
     /* get the object information from the server. Zero the structure before
        because some applications seem to return SUCCESS but only seem to set the
        fields they care about. */
-    ZeroMemory(&ObjectInfo, sizeof(ObjectInfo));
-    hRet = psi->lpVtbl->GetObjectInformation(psi, &ObjectInfo);
+    hRet = psi->lpVtbl->GetObjectInformation(psi,
+                                             &ObjectInfo);
 
     if (FAILED(hRet))
     {
@@ -1213,11 +1225,17 @@ EditSecurity(IN HWND hwndOwner,
     /* Set the page title to the object name, make sure the format string
        has "%1" NOT "%s" because it uses FormatMessage() to automatically
        allocate the right amount of memory. */
-    LoadAndFormatString(hDllInstance,
-                        IDS_PSP_TITLE,
-                        &lpCaption,
-                        ObjectInfo.pszObjectName);
-    psh.pszCaption = lpCaption;
+    if (LoadAndFormatString(hDllInstance,
+                            IDS_PSP_TITLE,
+                            &lpCaption,
+                            ObjectInfo.pszObjectName))
+    {
+        psh.pszCaption = lpCaption;
+    }
+    else
+    {
+        psh.pszCaption = ObjectInfo.pszObjectName;
+    }
 
     psh.nPages = sizeof(hPages) / sizeof(HPROPSHEETPAGE);
     psh.nStartPage = 0;
