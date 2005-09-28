@@ -99,14 +99,44 @@ static int NOTEPAD_MenuCommand(WPARAM wParam)
 
 /***********************************************************************
  *
+ *           NOTEPAD_FindTextAt
+ */
+
+static BOOL NOTEPAD_FindTextAt(FINDREPLACE *pFindReplace, LPCTSTR pszText, int iTextLength, DWORD dwPosition)
+{
+    BOOL bMatches;
+    int iTargetLength;
+	
+    iTargetLength = _tcslen(pFindReplace->lpstrFindWhat);
+
+    /* Make proper comparison */
+    if (pFindReplace->Flags & FR_MATCHCASE)
+        bMatches = !_tcsncmp(&pszText[dwPosition], pFindReplace->lpstrFindWhat, iTargetLength);
+    else
+        bMatches = !_tcsnicmp(&pszText[dwPosition], pFindReplace->lpstrFindWhat, iTargetLength);
+
+    if (bMatches && pFindReplace->Flags & FR_WHOLEWORD)
+    {
+        if ((dwPosition > 0) && !_istspace(pszText[dwPosition-1]))
+            bMatches = FALSE;
+        if ((dwPosition < iTextLength - 1) && !_istspace(pszText[dwPosition+1]))
+            bMatches = FALSE;
+    }
+
+    return bMatches;
+}
+
+/***********************************************************************
+ *
  *           NOTEPAD_FindNext
  */
 
-static BOOL NOTEPAD_FindNext(FINDREPLACE *pFindReplace, BOOL bShowAlert)
+static BOOL NOTEPAD_FindNext(FINDREPLACE *pFindReplace, BOOL bReplace, BOOL bShowAlert)
 {
     int iTextLength, iTargetLength;
+    int iAdjustment = 0;
     LPTSTR pszText = NULL;
-    DWORD dwPosition, dwDummy;
+    DWORD dwPosition, dwBegin, dwEnd;
     BOOL bMatches = FALSE;
     TCHAR szResource[128], szText[128];
     BOOL bSuccess;
@@ -124,24 +154,20 @@ static BOOL NOTEPAD_FindNext(FINDREPLACE *pFindReplace, BOOL bShowAlert)
         GetWindowText(Globals.hEdit, pszText, iTextLength + 1);
     }
 
-    SendMessage(Globals.hEdit, EM_GETSEL, (WPARAM) &dwDummy, (LPARAM) &dwPosition);
+    SendMessage(Globals.hEdit, EM_GETSEL, (WPARAM) &dwBegin, (LPARAM) &dwEnd);
+    if (bReplace && ((dwEnd - dwBegin) == iTargetLength))
+	{
+        if (NOTEPAD_FindTextAt(pFindReplace, pszText, iTextLength, dwBegin))
+		{
+            SendMessage(Globals.hEdit, EM_REPLACESEL, TRUE, (LPARAM) pFindReplace->lpstrReplaceWith);
+            iAdjustment = _tcslen(pFindReplace->lpstrReplaceWith) - (dwEnd - dwBegin);
+		}
+	}
 
+    dwPosition = dwEnd;
     while(dwPosition < iTextLength)
     {
-        /* Make proper comparison */
-        if (pFindReplace->Flags & FR_MATCHCASE)
-            bMatches = !_tcsncmp(&pszText[dwPosition], pFindReplace->lpstrFindWhat, iTargetLength);
-        else
-            bMatches = !_tcsnicmp(&pszText[dwPosition], pFindReplace->lpstrFindWhat, iTargetLength);
-
-        if (bMatches && pFindReplace->Flags & FR_WHOLEWORD)
-        {
-            if ((dwPosition > 0) && !_istspace(pszText[dwPosition-1]))
-                bMatches = FALSE;
-            if ((dwPosition < iTextLength - 1) && !_istspace(pszText[dwPosition+1]))
-                bMatches = FALSE;
-        }
-
+        bMatches = NOTEPAD_FindTextAt(pFindReplace, pszText, iTextLength, dwPosition);
         if (bMatches)
             break;
 
@@ -154,6 +180,8 @@ static BOOL NOTEPAD_FindNext(FINDREPLACE *pFindReplace, BOOL bShowAlert)
     if (bMatches)
     {
         /* Found target */
+        if (dwPosition > dwBegin)
+            dwPosition += iAdjustment;
         SendMessage(Globals.hEdit, EM_SETSEL, dwPosition, dwPosition + iTargetLength);
         SendMessage(Globals.hEdit, EM_SCROLLCARET, 0, 0);
         bSuccess = TRUE;
@@ -178,17 +206,6 @@ static BOOL NOTEPAD_FindNext(FINDREPLACE *pFindReplace, BOOL bShowAlert)
 
 /***********************************************************************
  *
- *           NOTEPAD_Replace
- */
-
-static VOID NOTEPAD_Replace(FINDREPLACE *pFindReplace)
-{
-    if (NOTEPAD_FindNext(pFindReplace, TRUE))
-        SendMessage(Globals.hEdit, EM_REPLACESEL, TRUE, (LPARAM) pFindReplace->lpstrReplaceWith);
-}
-
-/***********************************************************************
- *
  *           NOTEPAD_ReplaceAll
  */
 
@@ -198,9 +215,8 @@ static VOID NOTEPAD_ReplaceAll(FINDREPLACE *pFindReplace)
 
     SendMessage(Globals.hEdit, EM_SETSEL, 0, 0);
 
-    while (NOTEPAD_FindNext(pFindReplace, bShowAlert))
+    while (NOTEPAD_FindNext(pFindReplace, TRUE, bShowAlert))
     {
-        SendMessage(Globals.hEdit, EM_REPLACESEL, TRUE, (LPARAM) pFindReplace->lpstrReplaceWith);
         bShowAlert = FALSE;
 	}
 }
@@ -333,9 +349,9 @@ static LRESULT WINAPI NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam,
             FINDREPLACE *pFindReplace = (FINDREPLACE *) lParam;
 
             if (pFindReplace->Flags & FR_FINDNEXT)
-                NOTEPAD_FindNext(pFindReplace, TRUE);
+                NOTEPAD_FindNext(pFindReplace, FALSE, TRUE);
             else if (pFindReplace->Flags & FR_REPLACE)
-                NOTEPAD_Replace(pFindReplace);
+                NOTEPAD_FindNext(pFindReplace, TRUE, TRUE);
             else if (pFindReplace->Flags & FR_REPLACEALL)
                 NOTEPAD_ReplaceAll(pFindReplace);
             else if (pFindReplace->Flags & FR_DIALOGTERM)
