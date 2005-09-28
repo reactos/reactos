@@ -12,6 +12,7 @@
 #define NTOS_MODE_USER
 #define _KERNEL32_
 #include <windows.h>
+#include <tlhelp32.h>
 #include <ndk/ntndk.h>
 
 /* CSRSS Header */

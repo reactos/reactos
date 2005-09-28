@@ -278,6 +278,8 @@ FreeUserPhysicalPages@12
 FreeVirtualBuffer@4
 GenerateConsoleCtrlEvent@8
 GetACP@0
+GetApplicationRecoveryCallback@12
+GetApplicationRestart@16
 GetAtomNameA@12
 GetAtomNameW@12
 GetBinaryType@8=GetBinaryTypeA@8
@@ -714,6 +716,10 @@ ReadFile@20
 ReadFileEx@20
 ReadFileScatter@20
 ReadProcessMemory@20
+RecoveryFinished@4
+RecoveryInProgress@4
+RegisterApplicationRecoveryCallback@8
+RegisterApplicationRestart@8
 ;RegisterConsoleIME
 ;RegisterConsoleOS2
 RegisterConsoleVDM@44
