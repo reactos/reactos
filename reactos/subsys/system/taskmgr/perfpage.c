@@ -115,6 +115,10 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 /*     PAINTSTRUCT ps; */
 
     switch (message) {
+	case WM_DESTROY:
+		GraphCtrl_Dispose(&PerformancePageCpuUsageHistoryGraph);
+		GraphCtrl_Dispose(&PerformancePageMemUsageHistoryGraph);
+
 	case WM_INITDIALOG:
 
 		/*  Save the width and height */

@@ -99,20 +99,18 @@ static void GraphCtrl_Init(TGraphCtrl* this)
     this->m_bitmapOldPlot = NULL;
 }
 
-#if 0
-TGraphCtrl::~TGraphCtrl()
+void GraphCtrl_Dispose(TGraphCtrl* this)
 {
     /*  just to be picky restore the bitmaps for the two memory dc's */
     /*  (these dc's are being destroyed so there shouldn't be any leaks) */
-    if (m_bitmapOldGrid != NULL) SelectObject(m_dcGrid, m_bitmapOldGrid);
-    if (m_bitmapOldPlot != NULL) SelectObject(m_dcPlot, m_bitmapOldPlot);
-    if (m_bitmapGrid    != NULL) DeleteObject(m_bitmapGrid);
-    if (m_bitmapPlot    != NULL) DeleteObject(m_bitmapPlot);
-    if (m_dcGrid        != NULL) DeleteDC(m_dcGrid);
-    if (m_dcPlot        != NULL) DeleteDC(m_dcPlot);
-    if (m_brushBack     != NULL) DeleteObject(m_brushBack);
+    if (this->m_bitmapOldGrid != NULL) SelectObject(this->m_dcGrid, this->m_bitmapOldGrid);
+    if (this->m_bitmapOldPlot != NULL) SelectObject(this->m_dcPlot, this->m_bitmapOldPlot);
+    if (this->m_bitmapGrid    != NULL) DeleteObject(this->m_bitmapGrid);
+    if (this->m_bitmapPlot    != NULL) DeleteObject(this->m_bitmapPlot);
+    if (this->m_dcGrid        != NULL) DeleteDC(this->m_dcGrid);
+    if (this->m_dcPlot        != NULL) DeleteDC(this->m_dcPlot);
+    if (this->m_brushBack     != NULL) DeleteObject(this->m_brushBack);
 }
-#endif
 
 BOOL GraphCtrl_Create(TGraphCtrl* this, HWND hWnd, HWND hParentWnd, UINT nID)
 {
