@@ -263,7 +263,7 @@ VOID DIALOG_FileNew(VOID)
 {
     static const WCHAR empty_strW[] = { 0 };
 
-    /* Close any files and promt to save changes */
+    /* Close any files and prompt to save changes */
     if (DoCloseFile()) {
         SetWindowText(Globals.hEdit, empty_strW);
         SendMessage(Globals.hEdit, EM_EMPTYUNDOBUFFER, 0, 0);

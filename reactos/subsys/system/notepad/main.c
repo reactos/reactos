@@ -194,7 +194,7 @@ static BOOL NOTEPAD_FindNext(FINDREPLACE *pFindReplace, BOOL bReplace, BOOL bSho
             LoadString(Globals.hInstance, STRING_CANNOTFIND, szResource, SIZEOF(szResource));
             _sntprintf(szText, SIZEOF(szText), szResource, pFindReplace->lpstrFindWhat);
             LoadString(Globals.hInstance, STRING_NOTEPAD, szResource, SIZEOF(szResource));
-            MessageBox(Globals.hEdit, szText, szResource, MB_OK);
+            MessageBox(Globals.hFindReplaceDlg, szText, szResource, MB_OK);
 		}
         bSuccess = FALSE;
 	}
