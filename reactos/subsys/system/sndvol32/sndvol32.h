@@ -18,10 +18,6 @@ typedef struct _MIXER_WINDOW
   UINT SelectedLine;
 } MIXER_WINDOW, *PMIXER_WINDOW;
 
-LRESULT CALLBACK MainWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-
-BOOL RebuildMixerWindowControls(PMIXER_WINDOW MixerWindow);
-
 extern HINSTANCE hAppInstance;
 extern ATOM MainWindowClass;
 extern HWND hMainWnd;

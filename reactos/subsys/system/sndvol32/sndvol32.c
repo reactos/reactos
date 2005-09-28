@@ -15,8 +15,6 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- *
- * VMware is a registered trademark of VMware, Inc.
  */
 /* $Id$
  *
@@ -115,8 +113,6 @@ PrefDlgAddLine(PSND_MIXER Mixer,
                 {
                     PrefContext->SelectedLine = Line->dwLineID;
                 }
-                
-                DPRINT("!%ws cControls: %d\n", Line->szName, Line->cControls);
             }
             else
                 goto AddToOthersLines;
@@ -132,7 +128,6 @@ PrefDlgAddLine(PSND_MIXER Mixer,
                 {
                     PrefContext->SelectedLine = Line->dwLineID;
                 }
-                DPRINT("!%ws cControls: %d\n", Line->szName, Line->cControls);
             }
             else
                 goto AddToOthersLines;
@@ -550,7 +545,7 @@ DeleteMixerWindowControls(PMIXER_WINDOW MixerWindow)
 {
 }
 
-BOOL
+static BOOL
 RebuildMixerWindowControls(PMIXER_WINDOW MixerWindow)
 {
     DeleteMixerWindowControls(MixerWindow);
@@ -558,7 +553,7 @@ RebuildMixerWindowControls(PMIXER_WINDOW MixerWindow)
     return TRUE;
 }
 
-LRESULT CALLBACK
+static LRESULT CALLBACK
 MainWindowProc(HWND hwnd,
                UINT uMsg,
                WPARAM wParam,
@@ -658,6 +653,7 @@ MainWindowProc(HWND hwnd,
                     {
                         DPRINT("Rebuilding mixer window controls failed!\n");
                         SndMixerDestroy(MixerWindow->Mixer);
+                        MixerWindow->Mixer = NULL;
                         Result = -1;
                     }
                 }
@@ -770,14 +766,16 @@ CreateApplicationWindow(VOID)
          */
 
         hWnd = NULL;
-        AllocAndLoadString(&lpErrMessage,
-                           hAppInstance,
-                           IDS_NOMIXERDEVICES);
-        MessageBox(NULL,
-                   lpErrMessage,
-                   lpAppTitle,
-                   MB_ICONINFORMATION);
-        LocalFree(lpErrMessage);
+        if (AllocAndLoadString(&lpErrMessage,
+                               hAppInstance,
+                               IDS_NOMIXERDEVICES))
+        {
+            MessageBox(NULL,
+                       lpErrMessage,
+                       lpAppTitle,
+                       MB_ICONINFORMATION);
+            LocalFree(lpErrMessage);
+        }
     }
 
     if (hWnd == NULL)
@@ -797,59 +795,68 @@ WinMain(HINSTANCE hInstance,
         int nCmdShow)
 {
     MSG Msg;
+    int Ret = 1;
 
     hAppInstance = hInstance;
     hAppHeap = GetProcessHeap();
     
-    if (!InitAppConfig())
+    if (InitAppConfig())
+    {
+        /* load the application title */
+        if (!AllocAndLoadString(&lpAppTitle,
+                                hAppInstance,
+                                IDS_SNDVOL32))
+        {
+            lpAppTitle = NULL;
+        }
+
+        InitCommonControls();
+
+        if (RegisterApplicationClasses())
+        {
+            hMainWnd = CreateApplicationWindow();
+            if (hMainWnd != NULL)
+            {
+                BOOL bRet;
+                while ((bRet =GetMessage(&Msg,
+                                         NULL,
+                                         0,
+                                         0)) != 0)
+                {
+                    if (bRet != -1)
+                    {
+                        TranslateMessage(&Msg);
+                        DispatchMessage(&Msg);
+                    }
+                }
+
+                DestroyWindow(hMainWnd);
+                Ret = 0;
+            }
+            else
+            {
+                DPRINT("Failed to creat application window (LastError: %d)!\n", GetLastError());
+            }
+
+            UnregisterApplicationClasses();
+        }
+        else
+        {
+            DPRINT("Failed to register application classes (LastError: %d)!\n", GetLastError());
+        }
+
+        if (lpAppTitle != NULL)
+        {
+            LocalFree(lpAppTitle);
+        }
+
+        CloseAppConfig();
+    }
+    else
     {
         DPRINT("Unable to open the Volume Control registry key!\n");
-        return 1;
-    }
-    
-    /* load the application title */
-    if (AllocAndLoadString(&lpAppTitle,
-                           hAppInstance,
-                           IDS_SNDVOL32) == 0)
-    {
-      lpAppTitle = NULL;
     }
 
-    InitCommonControls();
-
-    if (!RegisterApplicationClasses())
-    {
-        DPRINT("Failed to register application classes (LastError: %d)!\n", GetLastError());
-        return 1;
-    }
-
-    hMainWnd = CreateApplicationWindow();
-    if (hMainWnd == NULL)
-    {
-        DPRINT("Failed to creat application window (LastError: %d)!\n", GetLastError());
-        return 1;
-    }
-
-    while (GetMessage(&Msg,
-                      NULL,
-                      0,
-                      0))
-    {
-        TranslateMessage(&Msg);
-        DispatchMessage(&Msg);
-    }
-
-    DestroyWindow(hMainWnd);
-
-    UnregisterApplicationClasses();
-    
-    if (lpAppTitle != NULL)
-    {
-        LocalFree(lpAppTitle);
-    }
-    
-    CloseAppConfig();
-
-    return 0;
+    return Ret;
 }
 
