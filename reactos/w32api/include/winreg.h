@@ -58,6 +58,10 @@ BOOL WINAPI InitiateSystemShutdownW(LPWSTR,LPWSTR,DWORD,BOOL,BOOL);
 LONG WINAPI RegCloseKey(HKEY);
 LONG WINAPI RegConnectRegistryA(LPCSTR,HKEY,PHKEY);
 LONG WINAPI RegConnectRegistryW(LPCWSTR,HKEY,PHKEY);
+#if (_WIN32_WINNT >= 0x0600)
+LONG WINAPI RegCopyTreeA(HKEY,LPCSTR,HKEY);
+LONG WINAPI RegCopyTreeW(HKEY,LPCWSTR,HKEY);
+#endif
 LONG WINAPI RegCreateKeyA(HKEY,LPCSTR,PHKEY);
 LONG WINAPI RegCreateKeyExA(HKEY,LPCSTR,DWORD,LPSTR,DWORD,REGSAM,LPSECURITY_ATTRIBUTES,PHKEY,PDWORD);
 LONG WINAPI RegCreateKeyExW(HKEY,LPCWSTR,DWORD,LPWSTR,DWORD,REGSAM,LPSECURITY_ATTRIBUTES,PHKEY,PDWORD);
@@ -65,11 +69,16 @@ LONG WINAPI RegCreateKeyW(HKEY,LPCWSTR,PHKEY);
 LONG WINAPI RegDeleteKeyA(HKEY,LPCSTR);
 LONG WINAPI RegDeleteKeyW(HKEY,LPCWSTR);
 #if (_WIN32_WINNT >= 0x0600)
+LONG WINAPI RegDeleteKeyValueA(HKEY,LPCSTR,LPCSTR);
+LONG WINAPI RegDeleteKeyValueW(HKEY,LPCWSTR,LPCWSTR);
 LONG WINAPI RegDeleteTreeA(HKEY,LPCSTR);
 LONG WINAPI RegDeleteTreeW(HKEY,LPCWSTR);
 #endif
 LONG WINAPI RegDeleteValueA(HKEY,LPCSTR);
 LONG WINAPI RegDeleteValueW(HKEY,LPCWSTR);
+#if (_WIN32_WINNT >= 0x0600)
+LONG WINAPI RegDisablePredefinedCacheEx(VOID);
+#endif
 LONG WINAPI RegEnumKeyA(HKEY,DWORD,LPSTR,DWORD);
 LONG WINAPI RegEnumKeyW(HKEY,DWORD,LPWSTR,DWORD);
 LONG WINAPI RegEnumKeyExA(HKEY,DWORD,LPSTR,PDWORD,PDWORD,LPSTR,PDWORD,PFILETIME);
@@ -80,6 +89,10 @@ LONG WINAPI RegFlushKey(HKEY);
 LONG WINAPI RegGetKeySecurity(HKEY,SECURITY_INFORMATION,PSECURITY_DESCRIPTOR,PDWORD);
 LONG WINAPI RegLoadKeyA(HKEY,LPCSTR,LPCSTR);
 LONG WINAPI RegLoadKeyW(HKEY,LPCWSTR,LPCWSTR);
+#if (_WIN32_WINNT >= 0x0600)
+LONG WINAPI RegLoadMUIStringA(HKEY,LPCSTR,LPSTR,ULONG,ULONG,LPCSTR);
+LONG WINAPI RegLoadMUIStringW(HKEY,LPCWSTR,LPWSTR,ULONG,ULONG,LPCWSTR);
+#endif
 LONG WINAPI RegNotifyChangeKeyValue(HKEY,BOOL,DWORD,HANDLE,BOOL);
 LONG WINAPI RegOpenKeyA(HKEY,LPCSTR,PHKEY);
 LONG WINAPI RegOpenKeyExA(HKEY,LPCSTR,DWORD,REGSAM,PHKEY);
@@ -100,6 +113,10 @@ LONG WINAPI RegRestoreKeyW(HKEY,LPCWSTR,DWORD);
 LONG WINAPI RegSaveKeyA(HKEY,LPCSTR,LPSECURITY_ATTRIBUTES);
 LONG WINAPI RegSaveKeyW(HKEY,LPCWSTR,LPSECURITY_ATTRIBUTES);
 LONG WINAPI RegSetKeySecurity(HKEY,SECURITY_INFORMATION,PSECURITY_DESCRIPTOR);
+#if (_WIN32_WINNT >= 0x0600)
+LONG WINAPI RegSetKeyValueA(HKEY,LPCSTR,LPCSTR,DWORD,LPCVOID,DWORD);
+LONG WINAPI RegSetKeyValueW(HKEY,LPCWSTR,LPCWSTR,DWORD,LPCVOID,DWORD);
+#endif
 LONG WINAPI RegSetValueA(HKEY,LPCSTR,DWORD,LPCSTR,DWORD);
 LONG WINAPI RegSetValueExA(HKEY,LPCSTR,DWORD,DWORD,const BYTE*,DWORD);
 LONG WINAPI RegSetValueExW(HKEY,LPCWSTR,DWORD,DWORD,const BYTE*,DWORD);
@@ -112,10 +129,14 @@ typedef VALENTW VALENT,*PVALENT;
 #define AbortSystemShutdown AbortSystemShutdownW
 #define InitiateSystemShutdown InitiateSystemShutdownW
 #define RegConnectRegistry RegConnectRegistryW
+#if (_WIN32_WINNT >= 0x0600)
+#define RegCopyTree RegCopyTreeW
+#endif
 #define RegCreateKey RegCreateKeyW
 #define RegCreateKeyEx RegCreateKeyExW
 #define RegDeleteKey RegDeleteKeyW
 #if (_WIN32_WINNT >= 0x0600)
+#define RegDeleteKeyValue RegDeleteKeyValueW
 #define RegDeleteTree RegDeleteTreeW
 #endif
 #define RegDeleteValue RegDeleteValueW
@@ -123,6 +144,9 @@ typedef VALENTW VALENT,*PVALENT;
 #define RegEnumKeyEx RegEnumKeyExW
 #define RegEnumValue RegEnumValueW
 #define RegLoadKey RegLoadKeyW
+#if (_WIN32_WINNT >= 0x0600)
+#define RegLoadMUIString RegLoadMUIStringW
+#endif
 #define RegOpenKey RegOpenKeyW
 #define RegOpenKeyEx RegOpenKeyExW
 #define RegQueryInfoKey RegQueryInfoKeyW
@@ -132,6 +156,9 @@ typedef VALENTW VALENT,*PVALENT;
 #define RegReplaceKey RegReplaceKeyW
 #define RegRestoreKey RegRestoreKeyW
 #define RegSaveKey RegSaveKeyW
+#if (_WIN32_WINNT >= 0x0600)
+#define RegSetKeyValue RegSetKeyValueW
+#endif
 #define RegSetValue RegSetValueW
 #define RegSetValueEx RegSetValueExW
 #define RegUnLoadKey RegUnLoadKeyW
@@ -140,10 +167,14 @@ typedef VALENTA VALENT,*PVALENT;
 #define AbortSystemShutdown AbortSystemShutdownA
 #define InitiateSystemShutdown InitiateSystemShutdownA
 #define RegConnectRegistry RegConnectRegistryA
+#if (_WIN32_WINNT >= 0x0600)
+#define RegCopyTree RegCopyTreeA
+#endif
 #define RegCreateKey RegCreateKeyA
 #define RegCreateKeyEx RegCreateKeyExA
 #define RegDeleteKey RegDeleteKeyA
 #if (_WIN32_WINNT >= 0x0600)
+#define RegDeleteKeyValue RegDeleteKeyValueA
 #define RegDeleteTree RegDeleteTreeA
 #endif
 #define RegDeleteValue RegDeleteValueA
@@ -151,6 +182,9 @@ typedef VALENTA VALENT,*PVALENT;
 #define RegEnumKeyEx RegEnumKeyExA
 #define RegEnumValue RegEnumValueA
 #define RegLoadKey RegLoadKeyA
+#if (_WIN32_WINNT >= 0x0600)
+#define RegLoadMUIString RegLoadMUIStringA
+#endif
 #define RegOpenKey RegOpenKeyA
 #define RegOpenKeyEx RegOpenKeyExA
 #define RegQueryInfoKey RegQueryInfoKeyA
@@ -160,6 +194,9 @@ typedef VALENTA VALENT,*PVALENT;
 #define RegReplaceKey RegReplaceKeyA
 #define RegRestoreKey RegRestoreKeyA
 #define RegSaveKey RegSaveKeyA
+#if (_WIN32_WINNT >= 0x0600)
+#define RegSetKeyValue RegSetKeyValueA
+#endif
 #define RegSetValue RegSetValueA
 #define RegSetValueEx RegSetValueExA
 #define RegUnLoadKey RegUnLoadKeyA
