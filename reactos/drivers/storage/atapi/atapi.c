@@ -1171,6 +1171,11 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 		  DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_DMA_CMD;
 		}
 #endif
+              if (!(DeviceExtension->DeviceParams[UnitNumber].SupportedFeatures83 & 0x1000) ||
+		  !(DeviceExtension->DeviceParams[UnitNumber].EnabledFeatures86 & 0x1000))
+                {
+                  DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_NO_FLUSH;                      
+                }
 	      DeviceFound = TRUE;
 	    }
 	  else
@@ -1212,6 +1217,22 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 		  DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_DMA_CMD;
 		}
 #endif
+              if (DeviceExtension->DeviceFlags[UnitNumber] & DEVICE_48BIT_ADDRESS)
+                {
+                  if (!(DeviceExtension->DeviceParams[UnitNumber].SupportedFeatures83 & 0x2000) ||
+		      !(DeviceExtension->DeviceParams[UnitNumber].EnabledFeatures86 & 0x2000))
+                    {
+                      DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_NO_FLUSH;                      
+                    }
+                }
+              else
+                {
+                  if (!(DeviceExtension->DeviceParams[UnitNumber].SupportedFeatures83 & 0x1000) ||
+		      !(DeviceExtension->DeviceParams[UnitNumber].EnabledFeatures86 & 0x1000))
+                    {
+                      DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_NO_FLUSH;                      
+                    }
+                }
 	      DeviceFound = TRUE;
 	    }
 	  else
@@ -2311,12 +2332,8 @@ AtapiFlushCache(PATAPI_MINIPORT_EXTENSION DeviceExtension,
        * it doesn't make sense to flush cache on devices we don't
        * write to.
        */
-      return SRB_STATUS_INVALID_REQUEST;
-    }
-
-  if (!(DeviceExtension->DeviceParams[Srb->TargetId].SupportedFeatures83 & 0x1000))
-    {
-      /* The device states it doesn't support the command */
+       
+      /* The device states it doesn't support the command or it is disabled */      
       DPRINT("The drive doesn't support FLUSH_CACHE\n");
       return SRB_STATUS_INVALID_REQUEST;
     }
