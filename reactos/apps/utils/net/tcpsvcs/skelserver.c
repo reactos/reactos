@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include <winsock2.h>
 #include <tchar.h>
-#include "../tcpsvcs.h"
-#include "skelserver.h"
+#include "tcpsvcs.h"
 
 
 DWORD WINAPI StartServer(LPVOID lpParam)
@@ -10,9 +9,9 @@ DWORD WINAPI StartServer(LPVOID lpParam)
     const TCHAR* HostIP = "127.0.0.1";
     DWORD RetVal;
     WSADATA wsaData;
-    PMYDATA pData;
+    PSERVICES pServices;
 
-    pData = (PMYDATA)lpParam;
+    pServices = (PSERVICES)lpParam;
 
     if ((RetVal = WSAStartup(MAKEWORD(2, 2), &wsaData)) != 0)
     {
@@ -20,20 +19,22 @@ DWORD WINAPI StartServer(LPVOID lpParam)
         return -1;
     }
 
-    SOCKET ListeningSocket = SetUpListener(HostIP, htons(pData->Port));
+    SOCKET ListeningSocket = SetUpListener(HostIP, htons(pServices->Port));
     if (ListeningSocket == INVALID_SOCKET)
     {
         _tprintf(_T("error setting up socket\n"));
         return 3;
     }
 
-    printf("Waiting for connections...\n");
+    _tprintf(_T("Waiting for connections...\n"));
     while (1)
     {
-        AcceptConnections(ListeningSocket, pData->Service);
+        AcceptConnections(ListeningSocket, pServices->Service);
         printf("Acceptor restarting...\n");
     }
 
+    /* won't see this yet as we kill the service */
+    _tprintf(_T("Detaching Winsock2...\n"));
     WSACleanup();
     return 0;
 }
@@ -43,25 +44,21 @@ SOCKET SetUpListener(const char* ServAddr, int Port)
 {
     SOCKET Sock;
     SOCKADDR_IN Server;
-    DWORD InterfaceAddr = inet_addr(ServAddr);
 
-    if (InterfaceAddr != INADDR_NONE)
+    Sock = socket(AF_INET, SOCK_STREAM, 0);
+    if (Sock != INVALID_SOCKET)
     {
-        Sock = socket(AF_INET, SOCK_STREAM, 0);
-        if (Sock != INVALID_SOCKET)
+        Server.sin_family = AF_INET;
+        Server.sin_addr.s_addr = htonl(INADDR_ANY);
+        Server.sin_port = Port;
+        if (bind(Sock, (SOCKADDR*)&Server, sizeof(SOCKADDR_IN)) != SOCKET_ERROR)
         {
-            Server.sin_family = AF_INET;
-            Server.sin_addr.s_addr = InterfaceAddr;
-            Server.sin_port = Port;
-            if (bind(Sock, (SOCKADDR*)&Server, sizeof(SOCKADDR_IN)) != SOCKET_ERROR)
-            {
-                listen(Sock, SOMAXCONN);
-                return Sock;
-            }
-            else
-                printf("bind() failed\n");
-
+            listen(Sock, SOMAXCONN);
+            return Sock;
         }
+        else
+            printf("bind() failed\n");
+
     }
     return INVALID_SOCKET;
 }
@@ -83,7 +80,7 @@ VOID AcceptConnections(SOCKET ListeningSocket, LPTHREAD_START_ROUTINE Service)
         {
             _tprintf(_T("Accepted connection from %s:%d\n"),
                 inet_ntoa(Client.sin_addr), ntohs(Client.sin_port));
-
+            _tprintf(_T("About to create thread\n"));
             CreateThread(0, 0, Service, (void*)Sock, 0, &ThreadID);
         }
         else
@@ -94,20 +91,23 @@ VOID AcceptConnections(SOCKET ListeningSocket, LPTHREAD_START_ROUTINE Service)
     }
 }
 
-BOOL ShutdownConnection(SOCKET Sock)
+BOOL ShutdownConnection(SOCKET Sock, BOOL bRec)
 {
     /* Disallow any further data sends.  This will tell the other side
        that we want to go away now.  If we skip this step, we don't
        shut the connection down nicely. */
     if (shutdown(Sock, SD_SEND) == SOCKET_ERROR)
+    {
+        _tprintf(_T("Error in shutdown"));
         return FALSE;
+    }
 
       /* Receive any extra data still sitting on the socket.  After all
          data is received, this call will block until the remote host
          acknowledges the TCP control packet sent by the shutdown above.
          Then we'll get a 0 back from recv, signalling that the remote
          host has closed its side of the connection. */
-    while (1)
+    if (bRec)
     {
         char ReadBuffer[BUF];
         int NewBytes = recv(Sock, ReadBuffer, BUF, 0);
@@ -115,8 +115,6 @@ BOOL ShutdownConnection(SOCKET Sock)
             return FALSE;
         else if (NewBytes != 0)
             _tprintf(_T("FYI, received %d unexpected bytes during shutdown\n"), NewBytes);
-        else
-            break;
     }
 
     /* Close the socket. */

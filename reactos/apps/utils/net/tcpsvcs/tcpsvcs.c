@@ -2,37 +2,49 @@
 #include <winsock2.h>
 #include <tchar.h>
 #include "tcpsvcs.h"
-#include "skelserver/skelserver.h"
-#include "echo/echo.h"
-#include "chargen/chargen.h"
+
+LPTHREAD_START_ROUTINE
+ServiceHandler[NUM_SERVICES] = {
+    EchoHandler,
+    ChargenHandler,
+    DaytimeHandler,
+    NULL,
+    QotdHandler
+};
+
+INT ServicePort[NUM_SERVICES] = {
+    ECHO_PORT,
+    CHARGEN_PORT,
+    DAYTIME_PORT,
+    DISCARD_PORT,
+    QOTD_PORT
+};
 
 int main(int argc, char *argv[])
 {
-    PMYDATA pData[MAX_THREADS];
-    DWORD dwThreadId[MAX_THREADS];
-    HANDLE hThread[MAX_THREADS];
+    PSERVICES pServices[NUM_SERVICES];
+    DWORD dwThreadId[NUM_SERVICES];
+    HANDLE hThread[NUM_SERVICES];
     INT i;
 
     /* Create MAX_THREADS worker threads. */
-    for( i=0; i<MAX_THREADS; i++ )
+    for( i=0; i<NUM_SERVICES; i++ )
     {
         /* Allocate memory for thread data. */
-        pData[i] = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(MYDATA));
-
-        if( pData == NULL )
+        pServices[i] = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(SERVICES));
+        
+        if( pServices[i] == NULL )
             ExitProcess(2);
 
         /* Generate unique data for each thread. */
-        pData[0]->Port = ECHO_PORT;
-        pData[0]->Service = EchoHandler;
-        pData[1]->Port = CHARGEN_PORT;
-        pData[1]->Service = ChargenHandler;
+        pServices[i]->Service = ServiceHandler[i];
+        pServices[i]->Port = ServicePort[i];
 
         hThread[i] = CreateThread(
             NULL,              // default security attributes
             0,                 // use default stack size
             StartServer,       // thread function
-            pData[i],          // argument to thread function
+            pServices[i],      // argument to thread function
             0,                 // use default creation flags
             &dwThreadId[i]);   // returns the thread identifier
 
@@ -44,14 +56,13 @@ int main(int argc, char *argv[])
     }
 
     /* Wait until all threads have terminated. */
-    WaitForMultipleObjects(MAX_THREADS, hThread, TRUE, INFINITE);
+    WaitForMultipleObjects(NUM_SERVICES, hThread, TRUE, INFINITE);
 
     /* Close all thread handles upon completion. */
-    for(i=0; i<MAX_THREADS; i++)
+    for(i=0; i<NUM_SERVICES; i++)
     {
         CloseHandle(hThread[i]);
     }
 
     return 0;
 }
-

@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include <winsock2.h>
 #include <tchar.h>
-#include "chargen.h"
-#include "../skelserver/skelserver.h"
+#include "tcpsvcs.h"
 
 DWORD WINAPI ChargenHandler(VOID* Sock_)
 {
@@ -10,12 +9,12 @@ DWORD WINAPI ChargenHandler(VOID* Sock_)
     SOCKET Sock = (SOCKET)Sock_;
 
     if (!GenerateChars(Sock)) {
-        _tprintf(_T("Echo incoming packets failed\n"));
+        _tprintf(_T("Char generation failed\n"));
         Retval = 3;
     }
 
     _tprintf(_T("Shutting connection down...\n"));
-    if (ShutdownConnection(Sock)) {
+    if (ShutdownConnection(Sock, FALSE)) {
         _tprintf(_T("Connection is down.\n"));
     }
     else
@@ -23,6 +22,8 @@ DWORD WINAPI ChargenHandler(VOID* Sock_)
         _tprintf(_T("Connection shutdown failed\n"));
         Retval = 3;
     }
+    _tprintf(_T("Terminating thread\n"));
+    ExitThread(0);
 
     return Retval;
 }
@@ -35,6 +36,7 @@ BOOL GenerateChars(SOCKET Sock)
         loopIndex; /* line loop */
     char ring[END-START];
     char *endring;
+    BOOL bLoop = TRUE;
 
     /* fill ring with printable characters */
     for (charIndex=0, i=START; i<=END; charIndex++, i++)
@@ -45,7 +47,7 @@ BOOL GenerateChars(SOCKET Sock)
     /* where we will start output from */
     loopIndex = 0;
 
-    while (1)
+    while (bLoop)
     {
         /* if the loop index is equal to number of chars previously
          * printed, start the loop from the beginning */
@@ -56,21 +58,29 @@ BOOL GenerateChars(SOCKET Sock)
         charIndex = loopIndex;
         for (i=0; i<LINESIZ; i++)
         {
-            SendChar(Sock, ring[charIndex]);
+            /* FIXME: Should send lines instead of chars to improve efficiency
+             * TCP will wait until it fills a packet anway before putting on
+             * the wire, so it's pointless to keep polling send */
+            if (!SendChar(Sock, ring[charIndex]))
+            {
+                return FALSE;
+            }
             /* if current char equal last char, reset */
             if (ring[charIndex] == *endring)
                 charIndex = 0;
             else
                 charIndex++;
         }
-        SendChar(Sock, L'\r');
-        SendChar(Sock, L'\n');
+
+        if (bLoop)
+            if ((!SendChar(Sock, L'\r')) ||   (!SendChar(Sock, L'\n')))
+                return FALSE;
 
         /* increment loop index to start printing from next char in ring */
         loopIndex++;
     }
 
-    return 0;
+    return TRUE;
 }
 
 BOOL SendChar(SOCKET Sock, TCHAR c)
@@ -80,25 +90,22 @@ BOOL SendChar(SOCKET Sock, TCHAR c)
 
     SentBytes = 0;
     RetVal = send(Sock, &c, sizeof(TCHAR), 0);
-    if (RetVal > 0) {
+    /*FIXME: need to establish if peer closes connection,
+             not just report a socket error */
+    if (RetVal > 0)
+    {
         SentBytes += RetVal;
+        return TRUE;
     }
-    else if (RetVal == SOCKET_ERROR) {
+    else if (RetVal == SOCKET_ERROR)
+    {
+        _tprintf(("Socket error\n"));
         return FALSE;
     }
     else
-    {
-        /* Client closed connection before we could reply to
-           all the data it sent, so quit early. */
-        _tprintf(_T("Peer unexpectedly dropped connection!\n"));
-        return FALSE;
-    }
+        _tprintf(("unknown error\n"));
+        //WSAGetLastError()
 
     _tprintf(("Connection closed by peer.\n"));
     return TRUE;
 }
-
-
-
-
-

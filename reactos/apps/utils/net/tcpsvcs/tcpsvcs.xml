@@ -6,8 +6,10 @@
     <library>ws2_32</library>
     <library>shlwapi</library>
     <file>tcpsvcs.c</file>
-    <file>skelserver/skelserver.c</file>
-    <file>echo/echo.c</file>
-    <file>chargen/chargen.c</file>
+    <file>skelserver.c</file>
+    <file>echo.c</file>
+    <file>chargen.c</file>
+    <file>daytime.c</file>
+    <file>qotd.c</file>
 </module>
 

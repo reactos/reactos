@@ -1,8 +1,7 @@
 #include <stdio.h>
 #include <winsock2.h>
 #include <tchar.h>
-#include "echo.h"
-#include "../skelserver/skelserver.h"
+#include "tcpsvcs.h"
 
 DWORD WINAPI EchoHandler(VOID* Sock_)
 {
@@ -15,7 +14,7 @@ DWORD WINAPI EchoHandler(VOID* Sock_)
     }
 
     _tprintf(_T("Shutting connection down...\n"));
-    if (ShutdownConnection(Sock)) {
+    if (ShutdownConnection(Sock, TRUE)) {
         _tprintf(_T("Connection is down.\n"));
     }
     else
@@ -23,6 +22,8 @@ DWORD WINAPI EchoHandler(VOID* Sock_)
         _tprintf(_T("Connection shutdown failed\n"));
         Retval = 3;
     }
+    _tprintf(_T("Terminating thread\n"));
+    ExitThread(0);
 
     return Retval;
 }
@@ -68,4 +69,3 @@ BOOL EchoIncomingPackets(SOCKET Sock)
     _tprintf(("Connection closed by peer.\n"));
     return TRUE;
 }
-
