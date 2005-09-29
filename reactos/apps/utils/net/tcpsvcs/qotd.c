@@ -7,13 +7,13 @@
 //these need putting in an RC file.
 TCHAR Quotes[][MAX_QUOTE_BUF] =
 {
-    _T("\"I have a penchant for mischief, property damage, stalking and cheesecake, of course\" - kjk hyperion"),
+    _T("\"I have a penchant for mischief, property damage, stalking and cheesecake, of course\"\n - kjk hyperion"),
     _T("\"Wow! I fixed a setmenu bug.\" - jimtabor"),
-    _T("\"if the code is broken though, your free to call it ur own\" - Alex Ionescu"),
-    _T("\"i don't know about any bug; none exist; ReactOS is prefect\" - filip2307"),
-    _T("\"if you were kernel code, cutler would rewrite you.\" - Alex Ionescu"),
-    _T("\"Looks like Hartmut is cleaning out his WC. working copy, that is\" - WaxDragon")
-    _T("\"don't question it ... it's clearly an optimization\" - arty")
+    _T("\"if the code is broken though, your free to call it ur own\"\n - Alex Ionescu"),
+    _T("\"i don't know about any bug; none exist; ReactOS is prefect\"\n - filip2307"),
+    _T("\"if you were kernel code, cutler would rewrite you.\"\n - Alex Ionescu"),
+    _T("\"Looks like Hartmut is cleaning out his WC. working copy, that is\"\n - WaxDragon")
+    _T("\"don't question it ... it's clearly an optimization\"\n - arty")
 };
 
 DWORD WINAPI QotdHandler(VOID* Sock_)
@@ -21,11 +21,16 @@ DWORD WINAPI QotdHandler(VOID* Sock_)
     DWORD Retval = 0;
     SOCKET Sock;
     INT NumOfQuotes;
+    INT QuoteToPrint;
 
     Sock = (SOCKET)Sock_;
     NumOfQuotes = sizeof(Quotes) / MAX_QUOTE_BUF;
 
-    SendQuote(Sock, Quotes[1]);
+    /* randomise the quote */
+    srand((unsigned int) time(0));
+    QuoteToPrint = rand() % NumOfQuotes;
+
+    SendQuote(Sock, Quotes[QuoteToPrint]);
 
     _tprintf(_T("Shutting connection down...\n"));
     if (ShutdownConnection(Sock, FALSE))
