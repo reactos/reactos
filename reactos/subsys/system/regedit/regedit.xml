@@ -26,3 +26,6 @@
 	<file>treeview.c</file>
 	<file>regedit.rc</file>
 </module>
+<directory name="clb">
+	<xi:include href="clb/clb.xml" />
+</directory>

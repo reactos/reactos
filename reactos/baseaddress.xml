@@ -29,6 +29,7 @@
 <property name="BASEADDRESS_SMDLL" value="0x6b3B0000" />
 <property name="BASEADDRESS_URLMON" value="0x6b3C0000" />
 <property name="BASEADDRESS_SERIALUI" value="0x6b3D0000" />
+<property name="BASEADDRESS_CLB" value="0x6f2b0000" />
 <property name="BASEADDRESS_CARDS" value="0x701a0000" />
 <property name="BASEADDRESS_WININET" value="0x70200000" />
 <property name="BASEADDRESS_ACLUI" value="0x71550000" />
