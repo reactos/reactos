@@ -1,4 +1,4 @@
-/*
+﻿/*
  *  Notepad (Dutch resources)
  *
  *  Copyright 2003 Hans Leidekker
@@ -42,26 +42,21 @@ POPUP "Be&werken" {
   MENUITEM "&Plakken\tCtrl+V",           CMD_PASTE
   MENUITEM "&Verwijderen\tDel",          CMD_DELETE
   MENUITEM SEPARATOR
+  MENUITEM "&Zoeken\tCtrl+Z",       CMD_SEARCH
+  MENUITEM "&Volgende zoeken\tF3",  CMD_SEARCH_NEXT
+  MENUITEM SEPARATOR
   MENUITEM "&Alles selecteren\tCtrl+A",  CMD_SELECT_ALL
   MENUITEM "Tijd/&datum\tF5",            CMD_TIME_DATE
   MENUITEM SEPARATOR
   MENUITEM "A&utomatische terugloop",    CMD_WRAP
   MENUITEM "&Lettertype instellen...",   CMD_FONT
  }
-POPUP "&Zoeken" {
-  MENUITEM "&Zoeken\tCtrl+Z",       CMD_SEARCH
-  MENUITEM "&Volgende zoeken\tF3",  CMD_SEARCH_NEXT
- }
 POPUP "&Help" {
   MENUITEM "&Help-onderwerpen",  CMD_HELP_CONTENTS
   MENUITEM "&Zoeken...",         CMD_HELP_SEARCH
   MENUITEM "&Hulp bij Help",     CMD_HELP_ON_HELP
   MENUITEM SEPARATOR
-  POPUP "Inf&o..." {
-   MENUITEM "&Licentie",         CMD_LICENSE
-   MENUITEM "&GEEN GARANTIE",    CMD_NO_WARRANTY
-   MENUITEM "&Over Wine",        CMD_ABOUT_WINE
-  }
+  MENUITEM "Inf&o...",        CMD_ABOUT_WINE
  }
 }
 

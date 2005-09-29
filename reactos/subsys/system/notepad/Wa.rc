@@ -45,25 +45,20 @@ POPUP "&Candjî" {
   MENUITEM "C&laper\tCtrl+V",   CMD_PASTE
   MENUITEM "&Rafacer\tDel",     CMD_DELETE
   MENUITEM SEPARATOR
+  MENUITEM "Cwerî...",          CMD_SEARCH
+  MENUITEM "&Shûvant\tF3",      CMD_SEARCH_NEXT
+  MENUITEM SEPARATOR
   MENUITEM "&Tchwezi totafwait",        CMD_SELECT_ALL
   MENUITEM "&Eure/Date\tF5",    CMD_TIME_DATE
   MENUITEM SEPARATOR
   MENUITEM "Côper les ro&yes",  CMD_WRAP
- }
-POPUP "C&werî" {
-  MENUITEM "Cwerî...",          CMD_SEARCH
-  MENUITEM "&Shûvant\tF3",      CMD_SEARCH_NEXT
  }
 POPUP "&Aide" {
   MENUITEM "Å&dvins",           CMD_HELP_CONTENTS
   MENUITEM "C&werî...",         CMD_HELP_SEARCH
   MENUITEM "&Aide so l' Aide",  CMD_HELP_ON_HELP
   MENUITEM SEPARATOR
-  POPUP "&Informåcion..." {
-   MENUITEM "&Licinse",         CMD_LICENSE
-   MENUITEM "&NOLE WARANTEYE",  CMD_NO_WARRANTY
-   MENUITEM "Å &dfait di Wine", CMD_ABOUT_WINE
-  }
+  MENUITEM "&Informåcion...", CMD_ABOUT_WINE
  }
 }
 

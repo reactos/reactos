@@ -43,25 +43,20 @@ POPUP "S&zerkesztés" {
   MENUITEM "&Beillesztés\tCtrl+V",    CMD_PASTE
   MENUITEM "Tör&lés\tDel",      CMD_DELETE
   MENUITEM SEPARATOR
+  MENUITEM "&Keresés...",           CMD_SEARCH
+  MENUITEM "Köve&tkezõ keresése\tF3",  CMD_SEARCH_NEXT
+  MENUITEM SEPARATOR
   MENUITEM "&Az összes kijelölése",       CMD_SELECT_ALL
   MENUITEM "&Idõ/dátum\tF5",    CMD_TIME_DATE
   MENUITEM SEPARATOR
   MENUITEM "&Hosszú sorok tördelése",  CMD_WRAP
- }
-POPUP "&Keresés" {
-  MENUITEM "&Keresés...",           CMD_SEARCH
-  MENUITEM "Köve&tkezõ keresése\tF3",  CMD_SEARCH_NEXT
  }
 POPUP "&Súgó" {
   MENUITEM "&Témakörök",         CMD_HELP_CONTENTS
   MENUITEM "&Keresés...",        CMD_HELP_SEARCH
   MENUITEM "&Használat",     CMD_HELP_ON_HELP
   MENUITEM SEPARATOR
-  POPUP "Inf&ormáció..." {
-   MENUITEM "&Licenc",         CMD_LICENSE
-   MENUITEM "&SEMMI GARANCIA",     CMD_NO_WARRANTY
-   MENUITEM "&Wine névjegy",      CMD_ABOUT_WINE
-  }
+  MENUITEM "Inf&ormáció...",      CMD_ABOUT_WINE
  }
 }
 

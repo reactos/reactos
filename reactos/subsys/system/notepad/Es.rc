@@ -46,6 +46,9 @@ POPUP "&Editar" {
   MENUITEM "&Pegar\tCtrl+V",            CMD_PASTE
   MENUITEM "&Borrar\tDel",              CMD_DELETE
   MENUITEM SEPARATOR
+  MENUITEM "&Buscar\tCtrl+F",       CMD_SEARCH
+  MENUITEM "Buscar &siguiente\tF3", CMD_SEARCH_NEXT
+  MENUITEM SEPARATOR
   MENUITEM "Seleccionar t&odo\tCtrl+A", CMD_SELECT_ALL
   MENUITEM "&Hora y fecha\tF5",         CMD_TIME_DATE
   MENUITEM SEPARATOR
@@ -53,19 +56,13 @@ POPUP "&Editar" {
   MENUITEM "Tipo de &letra...",         CMD_FONT
  }
 POPUP "&Buscar" {
-  MENUITEM "&Buscar\tCtrl+F",       CMD_SEARCH
-  MENUITEM "Buscar &siguiente\tF3", CMD_SEARCH_NEXT
  }
 POPUP "A&yuda" {
   MENUITEM "Í&ndice",               CMD_HELP_CONTENTS
   MENUITEM "&Buscar...",            CMD_HELP_SEARCH
   MENUITEM "A&yuda sobre la ayuda", CMD_HELP_ON_HELP
   MENUITEM SEPARATOR
-  POPUP "&Información..." {
-   MENUITEM "&Licencia",            CMD_LICENSE
-   MENUITEM "SIN &GARANTÍA",        CMD_NO_WARRANTY
-   MENUITEM "&Acerca de Wine",      CMD_ABOUT_WINE
-  }
+  MENUITEM "&Información...",      CMD_ABOUT_WINE
  }
 }
 

@@ -45,26 +45,21 @@ POPUP "U&pravit" {
   MENUITEM "&Vlo¾it\tCtrl+V",    CMD_PASTE
   MENUITEM "&Smazat\tDel",      CMD_DELETE
   MENUITEM SEPARATOR
+  MENUITEM "&Hledej\tCtrl+F",   CMD_SEARCH
+  MENUITEM "&Najdi dal¹í\tF3",  CMD_SEARCH_NEXT
+  MENUITEM SEPARATOR
   MENUITEM "Vybrat v¹&e\tCtrl+A",       CMD_SELECT_ALL
   MENUITEM "È&as/Datum\tF5",    CMD_TIME_DATE
   MENUITEM SEPARATOR
   MENUITEM "Zalo&mit dlouhé øádky",  CMD_WRAP
   MENUITEM "&Písmo...",          CMD_FONT
  }
-POPUP "&Hledání" {
-  MENUITEM "&Hledej\tCtrl+F",   CMD_SEARCH
-  MENUITEM "&Najdi dal¹í\tF3",  CMD_SEARCH_NEXT
- }
 POPUP "&Nápovìda" {
   MENUITEM "&Obsah",         CMD_HELP_CONTENTS
   MENUITEM "&Najít...",        CMD_HELP_SEARCH
   MENUITEM "&Pomoc k nápovìdì",     CMD_HELP_ON_HELP
   MENUITEM SEPARATOR
-  POPUP "Inf&o..." {
-   MENUITEM "&Licence",         CMD_LICENSE
-   MENUITEM "&BEZ ZÁRUKY",     CMD_NO_WARRANTY
-   MENUITEM "&O Wine",      CMD_ABOUT_WINE
-  }
+  MENUITEM "Inf&o...",      CMD_ABOUT_WINE
  }
 }
 

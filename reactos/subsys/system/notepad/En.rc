@@ -30,8 +30,8 @@ MAIN_MENU MENU
   MENUITEM "&Save\tCtrl+S",     CMD_SAVE
   MENUITEM "Save &as...",       CMD_SAVE_AS
   MENUITEM SEPARATOR
-  MENUITEM "&Print",            CMD_PRINT
   MENUITEM "Page Se&tup...",    CMD_PAGE_SETUP
+  MENUITEM "&Print",            CMD_PRINT
   MENUITEM "P&rinter Setup...", CMD_PRINTER_SETUP
   MENUITEM SEPARATOR
   MENUITEM "E&xit",             CMD_EXIT
@@ -44,28 +44,29 @@ POPUP "&Edit" {
   MENUITEM "&Paste\tCtrl+V",    CMD_PASTE
   MENUITEM "&Delete\tDel",      CMD_DELETE
   MENUITEM SEPARATOR
-  MENUITEM "Select &all\tCtrl+A",       CMD_SELECT_ALL
-  MENUITEM "&Time/Date\tF5",    CMD_TIME_DATE
-  MENUITEM SEPARATOR
-  MENUITEM "&Wrap long lines",  CMD_WRAP
-  MENUITEM "&Font...",          CMD_FONT
- }
-POPUP "&Search" {
   MENUITEM "&Find...\tCtrl+F",  CMD_SEARCH
   MENUITEM "Find &next\tF3",    CMD_SEARCH_NEXT
   MENUITEM "Replace\tCtrl+H",   CMD_REPLACE
   MENUITEM "Go To...\tCtrl+G",  CMD_GOTO
+  MENUITEM SEPARATOR
+  MENUITEM "Select &all\tCtrl+A",       CMD_SELECT_ALL
+  MENUITEM "&Time/Date\tF5",    CMD_TIME_DATE
  }
+POPUP "F&ormat" {
+  MENUITEM "&Wrap long lines",  CMD_WRAP
+  MENUITEM "&Font...",          CMD_FONT
+}
+POPUP "&View" {
+  MENUITEM "Status&bar",    CMD_STATUSBAR
+}
 POPUP "&Help" {
   MENUITEM "&Contents",         CMD_HELP_CONTENTS
   MENUITEM "&Search...",        CMD_HELP_SEARCH
   MENUITEM "&Help on help",     CMD_HELP_ON_HELP
   MENUITEM SEPARATOR
-  POPUP "Inf&o..." {
-   MENUITEM "&License",         CMD_LICENSE
-   MENUITEM "&NO WARRANTY",     CMD_NO_WARRANTY
-   MENUITEM "&About Wine",      CMD_ABOUT_WINE
-  }
+  MENUITEM "&License",         CMD_LICENSE
+  MENUITEM "&NO WARRANTY",     CMD_NO_WARRANTY
+  MENUITEM "Inf&o",      CMD_ABOUT_WINE
  }
 }
 

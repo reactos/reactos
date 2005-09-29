@@ -54,6 +54,8 @@
 #define CMD_WRAP                0x119
 #define CMD_FONT                0x140
 
+#define CMD_STATUSBAR		0x150
+
 #define CMD_HELP_CONTENTS       0x130
 #define CMD_HELP_SEARCH         0x131
 #define CMD_HELP_ON_HELP        0x132
