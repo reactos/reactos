@@ -677,7 +677,7 @@ OutputDebugStringW@4
 PeekConsoleInputA@16
 PeekConsoleInputW@16
 PeekNamedPipe@24
-;PrivCopyFileExW
+PrivCopyFileExW@24
 ;PrivMoveFileIdentityW
 PostQueuedCompletionStatus@16
 PrepareTape@12
