@@ -457,4 +457,45 @@ ConvertToAutoInheritPrivateObjectSecurity(IN PSECURITY_DESCRIPTOR ParentDescript
     return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+BuildSecurityDescriptorW(IN PTRUSTEE_W pOwner  OPTIONAL,
+                         IN PTRUSTEE_W pGroup  OPTIONAL,
+                         IN ULONG cCountOfAccessEntries,
+                         IN PEXPLICIT_ACCESS pListOfAccessEntries  OPTIONAL,
+                         IN ULONG cCountOfAuditEntries,
+                         IN PEXPLICIT_ACCESS pListOfAuditEntries  OPTIONAL,
+                         IN PSECURITY_DESCRIPTOR pOldSD  OPTIONAL,
+                         OUT PULONG pSizeNewSD,
+                         OUT PSECURITY_DESCRIPTOR* pNewSD)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+BuildSecurityDescriptorA(IN PTRUSTEE_A pOwner  OPTIONAL,
+                         IN PTRUSTEE_A pGroup  OPTIONAL,
+                         IN ULONG cCountOfAccessEntries,
+                         IN PEXPLICIT_ACCESS pListOfAccessEntries  OPTIONAL,
+                         IN ULONG cCountOfAuditEntries,
+                         IN PEXPLICIT_ACCESS pListOfAuditEntries  OPTIONAL,
+                         IN PSECURITY_DESCRIPTOR pOldSD  OPTIONAL,
+                         OUT PULONG pSizeNewSD,
+                         OUT PSECURITY_DESCRIPTOR* pNewSD)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+
 /* EOF */

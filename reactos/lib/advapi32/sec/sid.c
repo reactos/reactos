@@ -1026,4 +1026,17 @@ CreateWellKnownSid(IN WELL_KNOWN_SID_TYPE WellKnownSidType,
     return FALSE;
 }
 
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+IsWellKnownSid(IN PSID pSid,
+               IN WELL_KNOWN_SID_TYPE WellKnownSidType)
+{
+    FIXME("unimplemented!\n", __FUNCTION__);
+    return FALSE;
+}
+
+
 /* EOF */

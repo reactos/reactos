@@ -47,8 +47,8 @@ BuildImpersonateExplicitAccessWithNameA@24
 BuildImpersonateExplicitAccessWithNameW@24
 BuildImpersonateTrusteeA@8
 BuildImpersonateTrusteeW@8
-;BuildSecurityDescriptorA@36
-;BuildSecurityDescriptorW@36
+BuildSecurityDescriptorA@36
+BuildSecurityDescriptorW@36
 BuildTrusteeWithNameA@8
 BuildTrusteeWithNameW@8
 BuildTrusteeWithObjectsAndNameA@24
@@ -325,7 +325,7 @@ IsTokenRestricted@4
 IsValidAcl@4
 IsValidSecurityDescriptor@4
 IsValidSid@4
-;IsWellKnownSid
+IsWellKnownSid@8
 LockServiceDatabase@4
 LogonUserA@24
 ;LogonUserExA
