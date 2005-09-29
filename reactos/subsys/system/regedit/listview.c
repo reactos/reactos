@@ -223,7 +223,7 @@ static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValB
                 LPTSTR strBinary;
                 if(dwCount > 0)
                 {
-		    strBinary = HeapAlloc(GetProcessHeap(), 0, (dwCount * sizeof(TCHAR) * 3) + 1);
+                    strBinary = HeapAlloc(GetProcessHeap(), 0, (dwCount * sizeof(TCHAR) * 3) + 1);
                     for (i = 0; i < dwCount; i++)
                     {
                         wsprintf( strBinary + i*3, _T("%02X "), pData[i] );
@@ -235,8 +235,8 @@ static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValB
                 else
                 {
                     TCHAR szText[128];
-		    LoadString(hInst, IDS_BINARY_EMPTY, szText, sizeof(szText)/sizeof(TCHAR));
-		    ListView_SetItemText(hwndLV, index, 2, szText);
+                    LoadString(hInst, IDS_BINARY_EMPTY, szText, sizeof(szText)/sizeof(TCHAR));
+                    ListView_SetItemText(hwndLV, index, 2, szText);
                 }
             }
             break;
@@ -310,6 +310,9 @@ static void OnGetDispInfo(NMLVDISPINFO* plvdi)
         break;
     case 1:
         switch (((LINE_INFO*)plvdi->item.lParam)->dwValType) {
+        case REG_NONE:
+            plvdi->item.pszText = _T("REG_NONE");
+            break;
         case REG_SZ:
             plvdi->item.pszText = _T("REG_SZ");
             break;
@@ -319,17 +322,17 @@ static void OnGetDispInfo(NMLVDISPINFO* plvdi)
         case REG_BINARY:
             plvdi->item.pszText = _T("REG_BINARY");
             break;
-        case REG_DWORD:
+        case REG_DWORD: /* REG_DWORD_LITTLE_ENDIAN */
             plvdi->item.pszText = _T("REG_DWORD");
             break;
         case REG_DWORD_BIG_ENDIAN:
             plvdi->item.pszText = _T("REG_DWORD_BIG_ENDIAN");
             break;
-        case REG_MULTI_SZ:
-            plvdi->item.pszText = _T("REG_MULTI_SZ");
-            break;
         case REG_LINK:
             plvdi->item.pszText = _T("REG_LINK");
+            break;
+        case REG_MULTI_SZ:
+            plvdi->item.pszText = _T("REG_MULTI_SZ");
             break;
         case REG_RESOURCE_LIST:
             plvdi->item.pszText = _T("REG_RESOURCE_LIST");
@@ -340,8 +343,8 @@ static void OnGetDispInfo(NMLVDISPINFO* plvdi)
         case REG_RESOURCE_REQUIREMENTS_LIST:
             plvdi->item.pszText = _T("REG_RESOURCE_REQUIREMENTS_LIST");
             break;
-        case REG_NONE:
-            plvdi->item.pszText = _T("REG_NONE");
+        case REG_QWORD: /* REG_QWORD_LITTLE_ENDIAN */
+            plvdi->item.pszText = _T("REG_QWORD");
             break;
         default: {
             TCHAR buf2[200];
