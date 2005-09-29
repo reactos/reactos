@@ -346,7 +346,8 @@ MoveFileWithProgressW (
 			 */
 		   RemoveReadOnlyAttributeW(lpExistingFileName);
            RemoveReadOnlyAttributeW(lpNewFileName);
-		   CreateDirectoryExW(lpExistingFileName,lpNewFileName,NULL);
+		   //CreateDirectoryExW(lpExistingFileName,lpNewFileName,NULL);
+		   CreateDirectoryW(lpNewFileName, NULL);
 		  		   
 		   /* search the files/folders and move them */
 		   while (loop==TRUE)
@@ -479,7 +480,8 @@ MoveFileWithProgressW (
 			   RemoveReadOnlyAttributeW(lpDeleteFile);
 			   RemoveReadOnlyAttributeW(lpNewFileName2);
 
-	           CreateDirectoryExW(lpDeleteFile, lpNewFileName2,NULL);
+			   CreateDirectoryW(lpNewFileName2,NULL);
+	           //CreateDirectoryExW(lpDeleteFile, lpNewFileName2,NULL);
 			   
 
 			   /* set new search path  from src string */
