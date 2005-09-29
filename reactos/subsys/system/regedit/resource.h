@@ -35,7 +35,7 @@
 #define IDC_REGEDIT                     109
 #define IDC_REGEDIT_FRAME               110
 #define IDR_REGEDIT_MENU                130
-#define IDD_DIALOG1                     131
+#define IDD_EXPORTRANGE                 131
 #define IDI_OPEN_FILE                   132
 #define IDD_DIALOG2                     132
 #define IDI_CLOSED_FILE                 133
@@ -173,5 +173,9 @@
 
 #define IDD_EDIT_MULTI_STRING		2006
 #define IDD_EDIT_BIN_DATA		2007
+
+#define IDC_EXPORT_ALL          2008
+#define IDC_EXPORT_BRANCH       2009
+#define IDC_EXPORT_BRANCH_TEXT  2010
 
 #define IDC_STATIC                      -1

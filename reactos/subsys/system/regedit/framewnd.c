@@ -183,25 +183,6 @@ static BOOL CheckCommDlgError(HWND hWnd)
     return TRUE;
 }
 
-static UINT_PTR CALLBACK ImportRegistryFile_OFNHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM lParam)
-{
-    OPENFILENAME* pOpenFileName;
-    OFNOTIFY* pOfNotify;
-
-    switch (uiMsg) {
-    case WM_INITDIALOG:
-        pOpenFileName = (OPENFILENAME*)lParam;
-        break;
-    case WM_NOTIFY:
-        pOfNotify = (OFNOTIFY*)lParam;
-    if (pOfNotify->hdr.code == CDN_INITDONE) {}
-        break;
-    default:
-        break;
-    }
-    return 0L;
-}
-
 #define MAX_CUSTOM_FILTER_SIZE 50
 TCHAR CustomFilterBuffer[MAX_CUSTOM_FILTER_SIZE];
 TCHAR FileNameBuffer[_MAX_PATH];
@@ -311,6 +292,37 @@ static BOOL ImportRegistryFile(HWND hWnd)
 }
 
 
+static UINT_PTR CALLBACK ExportRegistryFile_OFNHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM lParam)
+{
+    HWND hControl;
+    UINT_PTR iResult = 0;
+
+	switch(uiMsg) {
+	case WM_INITDIALOG:
+        hControl = GetDlgItem(hdlg, IDC_EXPORT_ALL);
+        if (hControl)
+		{
+            EnableWindow(hControl, FALSE);
+            SendMessage(hControl, BM_SETCHECK, BST_CHECKED, 0);
+		}
+
+        hControl = GetDlgItem(hdlg, IDC_EXPORT_BRANCH);
+        if (hControl)
+		{
+            EnableWindow(hControl, FALSE);
+            SendMessage(hControl, BM_SETCHECK, BST_UNCHECKED, 0);
+		}
+
+        hControl = GetDlgItem(hdlg, IDC_EXPORT_BRANCH_TEXT);
+        if (hControl)
+		{
+            EnableWindow(hControl, FALSE);
+		}
+		break;
+    }
+    return iResult;
+}
+
 static BOOL ExportRegistryFile(HWND hWnd)
 {
     OPENFILENAME ofn;
@@ -322,9 +334,9 @@ static BOOL ExportRegistryFile(HWND hWnd)
     LoadString(hInst, IDS_EXPORT_REG_FILE, Caption, sizeof(Caption)/sizeof(TCHAR));
     ofn.lpstrTitle = Caption;
     /*    ofn.lCustData = ;*/
-    ofn.Flags = OFN_ENABLETEMPLATE + OFN_EXPLORER;
-    ofn.lpfnHook = ImportRegistryFile_OFNHookProc;
-    ofn.lpTemplateName = MAKEINTRESOURCE(IDD_DIALOG1);
+    ofn.Flags = OFN_ENABLETEMPLATE | OFN_EXPLORER | OFN_ENABLEHOOK;
+    ofn.lpfnHook = ExportRegistryFile_OFNHookProc;
+    ofn.lpTemplateName = MAKEINTRESOURCE(IDD_EXPORTRANGE);
     if (GetSaveFileName(&ofn)) {
         BOOL result;
         /* FIXME - convert strings to ascii! */
