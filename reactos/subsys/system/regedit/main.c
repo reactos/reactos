@@ -118,12 +118,13 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     /* Initialize the Windows Common Controls DLL */
     InitCommonControls();
 
+    HMENU hEditMenu;
+    hEditMenu = GetSubMenu(hMenuFrame, 1);
+
     AclUiAvailable = InitializeAclUiDll();
     if(!AclUiAvailable)
     {
-      HMENU hEditMenu;
       /* hide the Edit/Permissions... menu entry */
-      hEditMenu = GetSubMenu(hMenuFrame, 1);
       if(hEditMenu != NULL)
       {
         RemoveMenu(hEditMenu, ID_EDIT_PERMISSIONS, MF_BYCOMMAND);
@@ -131,6 +132,9 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
         RemoveMenu(hEditMenu, 4, MF_BYPOSITION);
       }
     }
+
+    if(hEditMenu != NULL)
+        SetMenuDefaultItem(hEditMenu, ID_EDIT_MODIFY, MF_BYCOMMAND);
 
     nClipboardFormat = RegisterClipboardFormat(strClipboardFormat);
     /* if (nClipboardFormat == 0) {
