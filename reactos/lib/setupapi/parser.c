@@ -956,8 +956,7 @@ static struct inf_file *parse_file( HANDLE handle, const WCHAR *class, UINT *err
         WCHAR *new_buff = HeapAlloc( GetProcessHeap(), 0, size * sizeof(WCHAR) );
         if (new_buff)
         {
-            DWORD len = MultiByteToWideChar( CP_ACP, 0, buffer, size, new_buff,
-                                             size * sizeof(WCHAR) );
+            DWORD len = MultiByteToWideChar( CP_ACP, 0, buffer, size, new_buff, size );
             err = parse_buffer( file, new_buff, new_buff + len, error_line );
             HeapFree( GetProcessHeap(), 0, new_buff );
         }
