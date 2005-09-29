@@ -8,8 +8,9 @@
     <file>tcpsvcs.c</file>
     <file>skelserver.c</file>
     <file>echo.c</file>
-    <file>chargen.c</file>
+    <file>discard.c</file>
     <file>daytime.c</file>
     <file>qotd.c</file>
+    <file>chargen.c</file>
+    <file>tcpsvcs.rc</file>
 </module>
-

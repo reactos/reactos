@@ -39,21 +39,24 @@ BOOL EchoIncomingPackets(SOCKET Sock)
 
     do {
         ReadBytes = recv(Sock, ReadBuffer, BUF, 0);
-        if (ReadBytes > 0) {
+        if (ReadBytes > 0)
+        {
             _tprintf(_T("Received %d bytes from client\n"), ReadBytes);
 
             SentBytes = 0;
-            while (SentBytes < ReadBytes) {
+            while (SentBytes < ReadBytes)
+            {
                 Temp = send(Sock, ReadBuffer + SentBytes,
                         ReadBytes - SentBytes, 0);
-                if (Temp > 0) {
+                if (Temp > 0)
+                {
                     _tprintf(_T("Sent %d bytes back to client\n"), Temp);
                     SentBytes += Temp;
                 }
-                else if (Temp == SOCKET_ERROR) {
+                else if (Temp == SOCKET_ERROR)
                     return FALSE;
-                }
-                else {
+                else
+                {
                     /* Client closed connection before we could reply to
                        all the data it sent, so quit early. */
                     _tprintf(_T("Peer unexpectedly dropped connection!\n"));
@@ -61,9 +64,9 @@ BOOL EchoIncomingPackets(SOCKET Sock)
                 }
             }
         }
-        else if (ReadBytes == SOCKET_ERROR) {
+        else if (ReadBytes == SOCKET_ERROR)
             return FALSE;
-        }
+
     } while (ReadBytes != 0);
 
     _tprintf(("Connection closed by peer.\n"));

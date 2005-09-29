@@ -5,13 +5,15 @@
 #include "tcpsvcs.h"
 
 //these need putting in an RC file.
-TCHAR Quotes[][MAX_QUOTE_BUF] = {
+TCHAR Quotes[][MAX_QUOTE_BUF] =
+{
     _T("\"I have a penchant for mischief, property damage, stalking and cheesecake, of course\" - kjk hyperion"),
     _T("\"Wow! I fixed a setmenu bug.\" - jimtabor"),
     _T("\"if the code is broken though, your free to call it ur own\" - Alex Ionescu"),
     _T("\"i don't know about any bug; none exist; ReactOS is prefect\" - filip2307"),
     _T("\"if you were kernel code, cutler would rewrite you.\" - Alex Ionescu"),
     _T("\"Looks like Hartmut is cleaning out his WC. working copy, that is\" - WaxDragon")
+    _T("\"don't question it ... it's clearly an optimization\" - arty")
 };
 
 DWORD WINAPI QotdHandler(VOID* Sock_)
