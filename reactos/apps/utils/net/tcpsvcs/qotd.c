@@ -7,13 +7,13 @@
 //these need putting in an RC file.
 TCHAR Quotes[][MAX_QUOTE_BUF] =
 {
-    _T("\"I have a penchant for mischief, property damage, stalking and cheesecake, of course\"\n - kjk hyperion"),
+    _T("\"I have a penchant for mischief, property damage, stalking and cheesecake, of course\"\r\n - kjk hyperion"),
     _T("\"Wow! I fixed a setmenu bug.\" - jimtabor"),
-    _T("\"if the code is broken though, your free to call it ur own\"\n - Alex Ionescu"),
-    _T("\"i don't know about any bug; none exist; ReactOS is prefect\"\n - filip2307"),
-    _T("\"if you were kernel code, cutler would rewrite you.\"\n - Alex Ionescu"),
-    _T("\"Looks like Hartmut is cleaning out his WC. working copy, that is\"\n - WaxDragon")
-    _T("\"don't question it ... it's clearly an optimization\"\n - arty")
+    _T("\"if the code is broken though, your free to call it ur own\"\r\n - Alex Ionescu"),
+    _T("\"i don't know about any bug; none exist; ReactOS is prefect\"\r\n - filip2307"),
+    _T("\"if you were kernel code, cutler would rewrite you.\"\r\n - Alex Ionescu"),
+    _T("\"Looks like Hartmut is cleaning out his WC. working copy, that is\"\r\n - WaxDragon")
+    _T("\"don't question it ... it's clearly an optimization\"\r\n - arty")
 };
 
 DWORD WINAPI QotdHandler(VOID* Sock_)
