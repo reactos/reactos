@@ -123,7 +123,7 @@ static HTREEITEM AddEntryToTree(HWND hwndTV, HTREEITEM hParent, LPTSTR label, HK
     tvi.cChildren = dwChildren;
     tvi.lParam = (LPARAM)hKey;
     tvins.u.item = tvi;
-    tvins.hInsertAfter = (HTREEITEM)(hKey ? TVI_LAST : TVI_SORT);
+    tvins.hInsertAfter = (HTREEITEM)(hKey ? TVI_LAST : TVI_FIRST);
     tvins.hParent = hParent;
     return TreeView_InsertItem(hwndTV, &tvins);
 }
@@ -139,6 +139,7 @@ static BOOL RefreshTreeItem(HWND hwndTV, HTREEITEM hItem)
     LPTSTR pszNodes = NULL;
     BOOL bSuccess = FALSE;
     LPTSTR s;
+    BOOL bAddedAny;
 
     KeyPath = GetItemPath(hwndTV, hItem, &hRoot);
 
@@ -219,6 +220,7 @@ static BOOL RefreshTreeItem(HWND hwndTV, HTREEITEM hItem)
     }
 
     /* Now go through all the children in the registry, and check if any have to be added. */
+    bAddedAny = FALSE;
     for (dwIndex = 0; dwIndex < dwCount; dwIndex++) {
         DWORD cName = dwMaxSubKeyLen, dwSubCount;
         BOOL found;
@@ -249,9 +251,13 @@ static BOOL RefreshTreeItem(HWND hwndTV, HTREEITEM hItem)
             }
 
             AddEntryToTree(hwndTV, hItem, Name, NULL, dwSubCount);
+            bAddedAny = TRUE;
         }
     }
     RegCloseKey(hKey);
+
+    if (bAddedAny)
+        SendMessage(hwndTV, TVM_SORTCHILDREN, 0, (LPARAM) hItem);
 
     /* Now go through all the children in the tree, and check if any have to be removed. */
     childItem = TreeView_GetChild(hwndTV, hItem);
@@ -306,6 +312,7 @@ HTREEITEM InsertNode(HWND hwndTV, HTREEITEM hItem, LPTSTR name)
     if (!hItem) return FALSE;
     if (TreeView_GetItemState(hwndTV, hItem, TVIS_EXPANDEDONCE)) {
 	hNewItem = AddEntryToTree(hwndTV, hItem, name, 0, 0);
+	SendMessage(hwndTV, TVM_SORTCHILDREN, 0, (LPARAM) hItem);
     } else {
 	item.mask = TVIF_CHILDREN | TVIF_HANDLE;
 	item.hItem = hItem;
@@ -514,6 +521,7 @@ BOOL CreateNewKey(HWND hwndTV, HTREEITEM hItem)
     hNewItem = AddEntryToTree(hwndTV, hItem, szNewKey, NULL, 0);
     if (!hNewItem)
         goto done;
+    SendMessage(hwndTV, TVM_SORTCHILDREN, 0, (LPARAM) hItem);
     TreeView_EditLabel(hwndTV, hNewItem);
 
     bSuccess = TRUE;
