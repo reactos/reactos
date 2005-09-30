@@ -14,6 +14,9 @@
 <directory name="advpack">
 	<xi:include href="advpack/advpack.xml" />
 </directory>
+<directory name="authz">
+	<xi:include href="authz/authz.xml" />
+</directory>
 <directory name="cabinet">
 	<xi:include href="cabinet/cabinet.xml" />
 </directory>
