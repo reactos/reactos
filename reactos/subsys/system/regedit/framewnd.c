@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <shellapi.h>
 #include <objsel.h>
+#include <objbase.h>
 
 #include "main.h"
 #include "regproc.h"
@@ -679,20 +680,26 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         IDsObjectPicker *ObjectPicker;
         WCHAR szComputerName[MAX_COMPUTERNAME_LENGTH + 1];
         HRESULT hRet;
-
-        hRet = InitializeRemoteRegistryPicker(&ObjectPicker);
+        
+        hRet = CoInitialize(NULL);
         if (SUCCEEDED(hRet))
         {
-            hRet = InvokeRemoteRegistryPickerDialog(ObjectPicker,
-                                                    hWnd,
-                                                    szComputerName,
-                                                    sizeof(szComputerName) / sizeof(szComputerName[0]));
-            if (hRet == S_OK)
+            hRet = InitializeRemoteRegistryPicker(&ObjectPicker);
+            if (SUCCEEDED(hRet))
             {
-                /* FIXME - connect to the registry */
+                hRet = InvokeRemoteRegistryPickerDialog(ObjectPicker,
+                                                        hWnd,
+                                                        szComputerName,
+                                                        sizeof(szComputerName) / sizeof(szComputerName[0]));
+                if (hRet == S_OK)
+                {
+                    /* FIXME - connect to the registry */
+                }
+
+                FreeObjectPicker(ObjectPicker);
             }
 
-            FreeObjectPicker(ObjectPicker);
+            CoUninitialize();
         }
 
         return TRUE;
