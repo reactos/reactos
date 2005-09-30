@@ -132,16 +132,16 @@ void LoadSettings(void)
 	{
 		QueryByte(hKey,		"lfCharSet",		&Globals.lfFont.lfCharSet);
 		QueryByte(hKey,		"lfClipPrecision",	&Globals.lfFont.lfClipPrecision);
-		QueryDword(hKey,	"lfEscapement",		&Globals.lfFont.lfEscapement);
+		QueryDword(hKey,	"lfEscapement",		(DWORD*)&Globals.lfFont.lfEscapement);
 		QueryString(hKey,	"lfFaceName",		Globals.lfFont.lfFaceName, sizeof(Globals.lfFont.lfFaceName) / sizeof(Globals.lfFont.lfFaceName[0]));
 		QueryByte(hKey,		"lfItalic",			&Globals.lfFont.lfItalic);
-		QueryDword(hKey,	"lfOrientation",	&Globals.lfFont.lfOrientation);
+		QueryDword(hKey,	"lfOrientation",	(DWORD*)&Globals.lfFont.lfOrientation);
 		QueryByte(hKey,		"lfOutPrecision",	&Globals.lfFont.lfOutPrecision);
 		QueryByte(hKey,		"lfPitchAndFamily",	&Globals.lfFont.lfPitchAndFamily);
 		QueryByte(hKey,		"lfQuality",		&Globals.lfFont.lfQuality);
 		QueryByte(hKey,		"lfStrikeOut",		&Globals.lfFont.lfStrikeOut);
 		QueryByte(hKey,		"lfUnderline",		&Globals.lfFont.lfUnderline);
-		QueryDword(hKey,	"lfWeight",			&Globals.lfFont.lfWeight);
+		QueryDword(hKey,	"lfWeight",			(DWORD*)&Globals.lfFont.lfWeight);
 		QueryDword(hKey,	"iPointSize",		&dwPointSize);
 
 		if (dwPointSize != 0)
