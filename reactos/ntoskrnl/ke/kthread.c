@@ -467,7 +467,7 @@ KeRundownThread(VOID)
     while (!IsListEmpty(&Thread->MutantListHead)) {
 
         /* Get the Mutant */
-	CurrentEntry = RemoveHeadList(&Thread->MutantListHead);
+        CurrentEntry = RemoveHeadList(&Thread->MutantListHead);
         Mutant = CONTAINING_RECORD(CurrentEntry, KMUTANT, MutantListEntry);
         ASSERT(Mutant->ApcDisable == 0);
 
@@ -476,7 +476,6 @@ KeRundownThread(VOID)
         Mutant->Header.SignalState = 1;
         Mutant->Abandoned = TRUE;
         Mutant->OwnerThread = NULL;
-        RemoveEntryList(&Mutant->MutantListEntry);
 
         /* Check if the Wait List isn't empty */
         DPRINT("Checking whether to wake the Mutant\n");
