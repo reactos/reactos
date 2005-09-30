@@ -7,6 +7,9 @@
 <directory name="cmd">
 	<xi:include href="cmd/cmd.xml" />
 </directory>
+<directory name="devmgr">
+        <xi:include href="devmgr/devmgr.xml" />
+</directory>
 <directory name="dhcp">
 	<xi:include href="dhcp/dhcp.xml" />
 </directory>
