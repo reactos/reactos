@@ -233,7 +233,7 @@ InitializeObjectPicker(IN PCWSTR ServerName,
                 sizeof(DSOP_SCOPE_INIT_INFO),
                 DSOP_SCOPE_TYPE_TARGET_COMPUTER,
                 DSOP_SCOPE_FLAG_DEFAULT_FILTER_USERS | DSOP_SCOPE_FLAG_DEFAULT_FILTER_GROUPS |
-                DSOP_SCOPE_FLAG_STARTING_SCOPE,
+                    DSOP_SCOPE_FLAG_STARTING_SCOPE,
                 {
                     {
                         0,
@@ -241,7 +241,7 @@ InitializeObjectPicker(IN PCWSTR ServerName,
                         0
                     },
                     DSOP_DOWNLEVEL_FILTER_USERS | DSOP_DOWNLEVEL_FILTER_LOCAL_GROUPS |
-                    DSOP_DOWNLEVEL_FILTER_GLOBAL_GROUPS | DSOP_DOWNLEVEL_FILTER_ALL_WELLKNOWN_SIDS
+                        DSOP_DOWNLEVEL_FILTER_GLOBAL_GROUPS | DSOP_DOWNLEVEL_FILTER_ALL_WELLKNOWN_SIDS
                 },
                 NULL,
                 NULL,
@@ -304,7 +304,7 @@ InvokeObjectPickerDialog(IN IDsObjectPicker *pDsObjectPicker,
         fe.dwAspect = DVASPECT_CONTENT;
         fe.lindex = -1;
         fe.tymed = TYMED_HGLOBAL;
-        
+
         hRet = pdo->lpVtbl->GetData(pdo,
                                     &fe,
                                     &stm);
@@ -317,11 +317,11 @@ InvokeObjectPickerDialog(IN IDsObjectPicker *pDsObjectPicker,
                 PSID pSid;
                 UINT i;
                 BOOL contLoop = TRUE;
-                
+
                 for (i = 0; i < SelectionList->cItems && contLoop; i++)
                 {
                     vSid = SelectionList->aDsSelection[i].pvarFetchedAttributes;
-                    
+
                     if (vSid != NULL && V_VT(vSid) == (VT_ARRAY | VT_UI1))
                     {
                         hRet = SafeArrayAccessData(V_ARRAY(vSid),
@@ -330,7 +330,7 @@ InvokeObjectPickerDialog(IN IDsObjectPicker *pDsObjectPicker,
                         {
                             break;
                         }
-                        
+
                         if (pSid != NULL)
                         {
                             contLoop = SelectedSidCallback(pDsObjectPicker,
@@ -338,14 +338,14 @@ InvokeObjectPickerDialog(IN IDsObjectPicker *pDsObjectPicker,
                                                            pSid,
                                                            Context);
                         }
-                        
+
                         SafeArrayUnaccessData(V_ARRAY(vSid));
                     }
                 }
-                
+
                 GlobalUnlock(stm.hGlobal);
             }
-            
+
             ReleaseStgMedium(&stm);
         }
 

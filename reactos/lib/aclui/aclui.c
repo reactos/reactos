@@ -115,7 +115,8 @@ AddPrincipalToList(IN PSECURITY_PAGE sp,
                               &SidNameUse))
         {
             LookupResult = GetLastError();
-            if (LookupResult != ERROR_NONE_MAPPED)
+            if (LookupResult != ERROR_NONE_MAPPED &&
+                LookupResult != ERROR_INSUFFICIENT_BUFFER)
             {
                 return FALSE;
             }
@@ -375,7 +376,9 @@ AddPrincipalListEntry(IN PSECURITY_PAGE sp,
     li.iSubItem = 0;
     li.state = (Selected ? LVIS_SELECTED : 0);
     li.stateMask = LVIS_SELECTED;
-    li.pszText = (PrincipalListItem->DisplayString != NULL ? PrincipalListItem->DisplayString : PrincipalListItem->AccountName);
+    li.pszText = (PrincipalListItem->DisplayString != NULL ?
+                  PrincipalListItem->DisplayString :
+                  PrincipalListItem->AccountName);
 
     switch (PrincipalListItem->SidNameUse)
     {
@@ -632,192 +635,192 @@ ResizeControls(IN PSECURITY_PAGE sp,
         nControls += 2;
     }
     
-    if (!(dwp = BeginDeferWindowPos(nControls)))
+    if ((dwp = BeginDeferWindowPos(nControls)))
     {
-        return;
-    }
-    
-    /* resize the Principal list view */
-    GetWindowRect(sp->hWndPrincipalsList,
-                  &rcControl);
-    if (!(dwp = DeferWindowPos(dwp,
-                               sp->hWndPrincipalsList,
-                               NULL,
-                               0,
-                               0,
-                               cxWidth,
-                               rcControl.bottom - rcControl.top,
-                               SWP_NOMOVE | SWP_NOZORDER)))
-    {
-        return;
-    }
-    
-    /* move the Add Principal button */
-    GetWindowRect(sp->hBtnAdd,
-                  &rcControl);
-    GetWindowRect(sp->hBtnRemove,
-                  &rcControl2);
-    btnSpacing = rcControl2.left - rcControl.right;
-    pt2.x = 0;
-    pt2.y = 0;
-    MapWindowPoints(sp->hBtnAdd,
-                    sp->hWnd,
-                    &pt2,
-                    1);
-    if (!(dwp = DeferWindowPos(dwp,
-                               sp->hBtnAdd,
-                               NULL,
-                               pt.x + cxWidth - (rcControl2.right - rcControl2.left) -
-                                   (rcControl.right - rcControl.left) -
-                                   btnSpacing - cxEdge,
-                               pt2.y,
-                               0,
-                               0,
-                               SWP_NOSIZE | SWP_NOZORDER)))
-    {
-        return;
-    }
-    
-    /* move the Delete Principal button */
-    pt2.x = 0;
-    pt2.y = 0;
-    MapWindowPoints(sp->hBtnRemove,
-                    sp->hWnd,
-                    &pt2,
-                    1);
-    if (!(dwp = DeferWindowPos(dwp,
-                               sp->hBtnRemove,
-                               NULL,
-                               pt.x + cxWidth - (rcControl2.right - rcControl2.left) - cxEdge,
-                               pt2.y,
-                               0,
-                               0,
-                               SWP_NOSIZE | SWP_NOZORDER)))
-    {
-        return;
-    }
-    
-    /* move the Permissions For label */
-    GetWindowRect(hWndAllow,
-                  &rcControl);
-    GetWindowRect(hWndDeny,
-                  &rcControl2);
-    GetWindowRect(sp->hPermissionsForLabel,
-                  &rcControl3);
-    pt2.x = 0;
-    pt2.y = 0;
-    MapWindowPoints(sp->hPermissionsForLabel,
-                    sp->hWnd,
-                    &pt2,
-                    1);
-    if (!(dwp = DeferWindowPos(dwp,
-                               sp->hPermissionsForLabel,
-                               NULL,
-                               0,
-                               0,
-                               cxWidth - (rcControl2.right - rcControl2.left) -
-                                   (rcControl.right - rcControl.left) -
-                                   (2 * btnSpacing) - cxEdge,
-                               rcControl3.bottom - rcControl3.top,
-                               SWP_NOMOVE | SWP_NOZORDER)))
-    {
-        return;
-    }
-    
-    /* move the Allow label */
-    pt2.x = 0;
-    pt2.y = 0;
-    MapWindowPoints(hWndAllow,
-                    sp->hWnd,
-                    &pt2,
-                    1);
-    if (!(dwp = DeferWindowPos(dwp,
-                               hWndAllow,
-                               NULL,
-                               cxWidth - (rcControl2.right - rcControl2.left) -
-                                   (rcControl.right - rcControl.left) -
-                                   btnSpacing - cxEdge,
-                               pt2.y,
-                               0,
-                               0,
-                               SWP_NOSIZE | SWP_NOZORDER)))
-    {
-        return;
-    }
-    
-    /* move the Deny label */
-    pt2.x = 0;
-    pt2.y = 0;
-    MapWindowPoints(hWndDeny,
-                    sp->hWnd,
-                    &pt2,
-                    1);
-    if (!(dwp = DeferWindowPos(dwp,
-                               hWndDeny,
-                               NULL,
-                               cxWidth - (rcControl2.right - rcControl2.left) - cxEdge,
-                               pt2.y,
-                               0,
-                               0,
-                               SWP_NOSIZE | SWP_NOZORDER)))
-    {
-        return;
-    }
-    
-    /* resize the Permissions check list box */
-    GetWindowRect(sp->hAceCheckList,
-                  &rcControl);
-    GetWindowRect(sp->hBtnAdvanced,
-                  &rcControl2);
-    GetWindowRect(GetDlgItem(sp->hWnd,
-                             IDC_LABEL_ADVANCED),
-                  &rcControl3);
-    if (!(dwp = DeferWindowPos(dwp,
-                               sp->hAceCheckList,
-                               NULL,
-                               0,
-                               0,
-                               cxWidth,
-                               ((sp->ObjectInfo.dwFlags & SI_ADVANCED) ?
-                                   Height - (rcControl.top - rcWnd.top) - (rcControl3.bottom - rcControl3.top) - pt.x - btnSpacing :
-                                   Height - (rcControl.top - rcWnd.top) - pt.x),
-                               SWP_NOMOVE | SWP_NOZORDER)))
-    {
-        return;
-    }
-    
-    if (sp->ObjectInfo.dwFlags & SI_ADVANCED)
-    {
-        /* move and resize the Advanced label */
+        /* resize the Principal list view */
+        GetWindowRect(sp->hWndPrincipalsList,
+                      &rcControl);
         if (!(dwp = DeferWindowPos(dwp,
-                                   GetDlgItem(sp->hWnd,
-                                              IDC_LABEL_ADVANCED),
+                                   sp->hWndPrincipalsList,
                                    NULL,
-                                   pt.x,
-                                   Height - (rcControl3.bottom - rcControl3.top) - pt.x,
-                                   cxWidth - (rcControl2.right - rcControl2.left) - cxEdge,
-                                   rcControl3.bottom - rcControl3.top,
-                                   SWP_NOZORDER)))
+                                   0,
+                                   0,
+                                   cxWidth,
+                                   rcControl.bottom - rcControl.top,
+                                   SWP_NOMOVE | SWP_NOZORDER)))
         {
-            return;
+            goto EndDeferWnds;
         }
-        
-        /* move and resize the Advanced button */
+
+        /* move the Add Principal button */
+        GetWindowRect(sp->hBtnAdd,
+                      &rcControl);
+        GetWindowRect(sp->hBtnRemove,
+                      &rcControl2);
+        btnSpacing = rcControl2.left - rcControl.right;
+        pt2.x = 0;
+        pt2.y = 0;
+        MapWindowPoints(sp->hBtnAdd,
+                        sp->hWnd,
+                        &pt2,
+                        1);
         if (!(dwp = DeferWindowPos(dwp,
-                                   sp->hBtnAdvanced,
+                                   sp->hBtnAdd,
                                    NULL,
-                                   cxWidth - (rcControl2.right - rcControl2.left) + pt.x,
-                                   Height - (rcControl2.bottom - rcControl2.top) - pt.x,
+                                   pt.x + cxWidth - (rcControl2.right - rcControl2.left) -
+                                       (rcControl.right - rcControl.left) -
+                                       btnSpacing - cxEdge,
+                                   pt2.y,
                                    0,
                                    0,
                                    SWP_NOSIZE | SWP_NOZORDER)))
         {
-            return;
+            goto EndDeferWnds;
         }
+
+        /* move the Delete Principal button */
+        pt2.x = 0;
+        pt2.y = 0;
+        MapWindowPoints(sp->hBtnRemove,
+                        sp->hWnd,
+                        &pt2,
+                        1);
+        if (!(dwp = DeferWindowPos(dwp,
+                                   sp->hBtnRemove,
+                                   NULL,
+                                   pt.x + cxWidth - (rcControl2.right - rcControl2.left) - cxEdge,
+                                   pt2.y,
+                                   0,
+                                   0,
+                                   SWP_NOSIZE | SWP_NOZORDER)))
+        {
+            goto EndDeferWnds;
+        }
+
+        /* move the Permissions For label */
+        GetWindowRect(hWndAllow,
+                      &rcControl);
+        GetWindowRect(hWndDeny,
+                      &rcControl2);
+        GetWindowRect(sp->hPermissionsForLabel,
+                      &rcControl3);
+        pt2.x = 0;
+        pt2.y = 0;
+        MapWindowPoints(sp->hPermissionsForLabel,
+                        sp->hWnd,
+                        &pt2,
+                        1);
+        if (!(dwp = DeferWindowPos(dwp,
+                                   sp->hPermissionsForLabel,
+                                   NULL,
+                                   0,
+                                   0,
+                                   cxWidth - (rcControl2.right - rcControl2.left) -
+                                       (rcControl.right - rcControl.left) -
+                                       (2 * btnSpacing) - cxEdge,
+                                   rcControl3.bottom - rcControl3.top,
+                                   SWP_NOMOVE | SWP_NOZORDER)))
+        {
+            goto EndDeferWnds;
+        }
+
+        /* move the Allow label */
+        pt2.x = 0;
+        pt2.y = 0;
+        MapWindowPoints(hWndAllow,
+                        sp->hWnd,
+                        &pt2,
+                        1);
+        if (!(dwp = DeferWindowPos(dwp,
+                                   hWndAllow,
+                                   NULL,
+                                   cxWidth - (rcControl2.right - rcControl2.left) -
+                                       (rcControl.right - rcControl.left) -
+                                       btnSpacing - cxEdge,
+                                   pt2.y,
+                                   0,
+                                   0,
+                                   SWP_NOSIZE | SWP_NOZORDER)))
+        {
+            goto EndDeferWnds;
+        }
+
+        /* move the Deny label */
+        pt2.x = 0;
+        pt2.y = 0;
+        MapWindowPoints(hWndDeny,
+                        sp->hWnd,
+                        &pt2,
+                        1);
+        if (!(dwp = DeferWindowPos(dwp,
+                                   hWndDeny,
+                                   NULL,
+                                   cxWidth - (rcControl2.right - rcControl2.left) - cxEdge,
+                                   pt2.y,
+                                   0,
+                                   0,
+                                   SWP_NOSIZE | SWP_NOZORDER)))
+        {
+            goto EndDeferWnds;
+        }
+
+        /* resize the Permissions check list box */
+        GetWindowRect(sp->hAceCheckList,
+                      &rcControl);
+        GetWindowRect(sp->hBtnAdvanced,
+                      &rcControl2);
+        GetWindowRect(GetDlgItem(sp->hWnd,
+                                 IDC_LABEL_ADVANCED),
+                      &rcControl3);
+        if (!(dwp = DeferWindowPos(dwp,
+                                   sp->hAceCheckList,
+                                   NULL,
+                                   0,
+                                   0,
+                                   cxWidth,
+                                   ((sp->ObjectInfo.dwFlags & SI_ADVANCED) ?
+                                       Height - (rcControl.top - rcWnd.top) -
+                                           (rcControl3.bottom - rcControl3.top) - pt.x - btnSpacing :
+                                       Height - (rcControl.top - rcWnd.top) - pt.x),
+                                   SWP_NOMOVE | SWP_NOZORDER)))
+        {
+            goto EndDeferWnds;
+        }
+
+        if (sp->ObjectInfo.dwFlags & SI_ADVANCED)
+        {
+            /* move and resize the Advanced label */
+            if (!(dwp = DeferWindowPos(dwp,
+                                       GetDlgItem(sp->hWnd,
+                                                  IDC_LABEL_ADVANCED),
+                                       NULL,
+                                       pt.x,
+                                       Height - (rcControl3.bottom - rcControl3.top) - pt.x,
+                                       cxWidth - (rcControl2.right - rcControl2.left) - cxEdge,
+                                       rcControl3.bottom - rcControl3.top,
+                                       SWP_NOZORDER)))
+            {
+                goto EndDeferWnds;
+            }
+
+            /* move and resize the Advanced button */
+            if (!(dwp = DeferWindowPos(dwp,
+                                       sp->hBtnAdvanced,
+                                       NULL,
+                                       cxWidth - (rcControl2.right - rcControl2.left) + pt.x,
+                                       Height - (rcControl2.bottom - rcControl2.top) - pt.x,
+                                       0,
+                                       0,
+                                       SWP_NOSIZE | SWP_NOZORDER)))
+            {
+                goto EndDeferWnds;
+            }
+        }
+
+        EndDeferWindowPos(dwp);
     }
-    
-    EndDeferWindowPos(dwp);
-    
+
+EndDeferWnds:
     /* update the width of the principal list view column */
     GetClientRect(sp->hWndPrincipalsList,
                   &rcControl);
