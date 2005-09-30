@@ -526,7 +526,7 @@ STATIC VOID
 EnumerateBiosDiskEntries(PPARTLIST PartList)
 {
   RTL_QUERY_REGISTRY_TABLE QueryTable[3];
-  WCHAR Name[100];
+  WCHAR Name[120];
   ULONG AdapterCount;
   ULONG DiskCount;
   NTSTATUS Status;
