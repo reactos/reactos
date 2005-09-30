@@ -189,7 +189,7 @@ IntLoadSystemFonts(VOID)
          return;
       }
 
-      FileName.Buffer = ExAllocatePool(PagedPool, MAX_PATH);
+      FileName.Buffer = ExAllocatePool(PagedPool, MAX_PATH * sizeof(WCHAR));
       if (FileName.Buffer == NULL)
       {
          ExFreePool(DirInfoBuffer);
@@ -197,7 +197,7 @@ IntLoadSystemFonts(VOID)
          return;
       }
       FileName.Length = 0;
-      FileName.MaximumLength = MAX_PATH;
+      FileName.MaximumLength = MAX_PATH * sizeof(WCHAR);
 
       while (1)
       {
@@ -255,7 +255,6 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
    NTSTATUS Status;
    HANDLE FileHandle;
    OBJECT_ATTRIBUTES ObjectAttributes;
-   FILE_STANDARD_INFORMATION FileStdInfo;
    PVOID Buffer = NULL;
    IO_STATUS_BLOCK Iosb;
    INT Error;
@@ -305,7 +304,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
    Error = FT_New_Memory_Face(
       library,
       Buffer,
-      FileStdInfo.EndOfFile.u.LowPart,
+      ViewSize,
       0,
       &Face);
    IntUnLockFreeType;
