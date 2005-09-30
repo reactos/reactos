@@ -558,8 +558,7 @@ InitializeRemoteRegistryPicker(OUT IDsObjectPicker **pDsObjectPicker)
                         0,
                         0
                     },
-                    DSOP_DOWNLEVEL_FILTER_COMPUTERS |
-                        DSOP_DOWNLEVEL_FILTER_GLOBAL_GROUPS | DSOP_DOWNLEVEL_FILTER_ALL_WELLKNOWN_SIDS
+                    DSOP_DOWNLEVEL_FILTER_COMPUTERS
                 },
                 NULL,
                 NULL,
