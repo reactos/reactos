@@ -1555,12 +1555,18 @@ StartMenuRoot::StartMenuRoot(HWND hwnd)
 		// ignore exception and don't show additional shortcuts
 	}
 
+	ReadLogoSize();
+}
+
+void StartMenuRoot::ReadLogoSize()
+{
 	 // read size of logo bitmap
 	BITMAP bmp_hdr;
-	GetObject(ResBitmap(IDB_LOGOV), sizeof(BITMAP), &bmp_hdr);
+	GetObject(ResBitmap(GetLogoResId()), sizeof(BITMAP), &bmp_hdr);
 	_logo_size.cx = bmp_hdr.bmWidth;
 	_logo_size.cy = bmp_hdr.bmHeight;
 
+	 // cache logo width
 	_border_left = _logo_size.cx + 1;
 }
 
@@ -1776,6 +1782,11 @@ LRESULT	StartMenuRoot::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		Paint(canvas);
 		break;}
 
+	  case WM_DISPLAYCHANGE:
+		 // re-evaluate logo size using the correct color depth
+		ReadLogoSize();
+		break;
+
 	  default:
 		return super::WndProc(nmsg, wparam, lparam);
 	}
@@ -1785,11 +1796,8 @@ LRESULT	StartMenuRoot::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 void StartMenuRoot::Paint(PaintCanvas& canvas)
 {
-	int clr_bits;
-	{WindowCanvas dc(_hwnd); clr_bits=GetDeviceCaps(dc, BITSPIXEL);}
-
 	MemCanvas mem_dc;
-	ResBitmap bmp(clr_bits<=8? clr_bits<=4? IDB_LOGOV16: IDB_LOGOV256: IDB_LOGOV);
+	ResBitmap bmp(GetLogoResId());
 	BitmapSelection sel(mem_dc, bmp);
 
 	ClientRect clnt(_hwnd);
@@ -1805,6 +1813,20 @@ void StartMenuRoot::Paint(PaintCanvas& canvas)
 	BitBlt(canvas, 0, clnt.bottom-h, _logo_size.cx, h, mem_dc, 0, 0, SRCCOPY);
 
 	super::Paint(canvas);
+}
+
+UINT StartMenuRoot::GetLogoResId()
+{
+	WindowCanvas dc(_hwnd);
+
+	int clr_bits = GetDeviceCaps(dc, BITSPIXEL);
+
+	if (clr_bits > 8)
+		return IDB_LOGOV;
+	else if (clr_bits > 4)
+		return IDB_LOGOV256;
+	else
+		return IDB_LOGOV16;
 }
 
 

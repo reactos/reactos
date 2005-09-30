@@ -377,6 +377,9 @@ protected:
 
 	void	Paint(PaintCanvas& canvas);
 	void	CloseStartMenu(int id=0);
+
+	void	ReadLogoSize();
+	UINT	GetLogoResId();
 };
 
 
