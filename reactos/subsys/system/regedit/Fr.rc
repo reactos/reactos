@@ -45,7 +45,7 @@ BEGIN
         MENUITEM "&Importer un fichier de registres...",    ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Exporter un fichier de registres...",    ID_REGISTRY_EXPORTREGISTRYFILE
         MENUITEM SEPARATOR
-        MENUITEM "&Connecter à des registres via le réseau...", ID_REGISTRY_CONNECTNETWORKREGISTRY, GRAYED
+        MENUITEM "&Connecter à des registres via le réseau...", ID_REGISTRY_CONNECTNETWORKREGISTRY
         MENUITEM "&Déconnecter de registres réseau...", ID_REGISTRY_DISCONNECTNETWORKREGISTRY, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Im&primer\tCtrl+P",              ID_REGISTRY_PRINT, GRAYED

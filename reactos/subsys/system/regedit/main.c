@@ -30,6 +30,7 @@
 #include <fcntl.h>
 #include <aclui.h>
 #include <cguid.h>
+#include <objbase.h>
 
 #include "main.h"
 #include "hexedit.h"
@@ -189,6 +190,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 {
     MSG msg;
     HACCEL hAccel;
+    HRESULT hComInit;
     /*
         int hCrt;
         FILE *hf;
@@ -221,6 +223,9 @@ int APIENTRY WinMain(HINSTANCE hInstance,
         return FALSE;
     }
     hAccel = LoadAccelerators(hInstance, (LPCTSTR)IDC_REGEDIT);
+    
+    /* initialize the COM library for the remote registry object picker dialog */
+    hComInit = CoInitialize(NULL);
 
     /* Main message loop */
     while (GetMessage(&msg, (HWND)NULL, 0, 0)) {
@@ -230,6 +235,12 @@ int APIENTRY WinMain(HINSTANCE hInstance,
             DispatchMessage(&msg);
         }
     }
+    
+    if (SUCCEEDED(hComInit))
+    {
+        CoUninitialize();
+    }
+    
     ExitInstance(hInstance);
     return msg.wParam;
 }

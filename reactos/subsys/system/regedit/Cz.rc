@@ -47,7 +47,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&P¯ipojit sÌùov˝ registr...",
                                                 ID_REGISTRY_CONNECTNETWORKREGISTRY
-        , GRAYED
+
         MENUITEM "&Odpojit sÌùov˝ registr...",
                                                 ID_REGISTRY_DISCONNECTNETWORKREGISTRY
         , GRAYED

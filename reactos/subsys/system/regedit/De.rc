@@ -47,7 +47,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "&Mit Netzwerkregistry verbinden...",
                                                 ID_REGISTRY_CONNECTNETWORKREGISTRY
-        , GRAYED
+
         MENUITEM "&Von Netzwerkregistry trennen...",
                                                 ID_REGISTRY_DISCONNECTNETWORKREGISTRY
         , GRAYED

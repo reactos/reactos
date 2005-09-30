@@ -18,8 +18,6 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#define WIN32_LEAN_AND_MEAN     /* Exclude rarely-used stuff from Windows headers */
-
 #include <windows.h>
 #include <tchar.h>
 #include <commctrl.h>
@@ -28,6 +26,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <shellapi.h>
+#include <objsel.h>
 
 #include "main.h"
 #include "regproc.h"
@@ -529,6 +528,129 @@ static BOOL CreateNewValue(HKEY hRootKey, LPCTSTR pszKeyPath, DWORD dwType)
     return TRUE;
 }
 
+static HRESULT
+InitializeRemoteRegistryPicker(OUT IDsObjectPicker **pDsObjectPicker)
+{
+    HRESULT hRet;
+
+    *pDsObjectPicker = NULL;
+
+    hRet = CoCreateInstance(&CLSID_DsObjectPicker,
+                            NULL,
+                            CLSCTX_INPROC_SERVER,
+                            &IID_IDsObjectPicker,
+                            (LPVOID*)pDsObjectPicker);
+    if (SUCCEEDED(hRet))
+    {
+        DSOP_INIT_INFO InitInfo;
+        DSOP_SCOPE_INIT_INFO Scopes[] =
+        {
+            {
+                sizeof(DSOP_SCOPE_INIT_INFO),
+                DSOP_SCOPE_TYPE_USER_ENTERED_UPLEVEL_SCOPE | DSOP_SCOPE_TYPE_USER_ENTERED_DOWNLEVEL_SCOPE |
+                    DSOP_SCOPE_TYPE_GLOBAL_CATALOG | DSOP_SCOPE_TYPE_EXTERNAL_UPLEVEL_DOMAIN |
+                    DSOP_SCOPE_TYPE_EXTERNAL_DOWNLEVEL_DOMAIN | DSOP_SCOPE_TYPE_WORKGROUP |
+                    DSOP_SCOPE_TYPE_UPLEVEL_JOINED_DOMAIN | DSOP_SCOPE_TYPE_DOWNLEVEL_JOINED_DOMAIN,
+                0,
+                {
+                    {
+                        DSOP_FILTER_COMPUTERS,
+                        0,
+                        0
+                    },
+                    DSOP_DOWNLEVEL_FILTER_COMPUTERS |
+                        DSOP_DOWNLEVEL_FILTER_GLOBAL_GROUPS | DSOP_DOWNLEVEL_FILTER_ALL_WELLKNOWN_SIDS
+                },
+                NULL,
+                NULL,
+                S_OK
+            },
+        };
+
+        InitInfo.cbSize = sizeof(InitInfo);
+        InitInfo.pwzTargetComputer = NULL;
+        InitInfo.cDsScopeInfos = sizeof(Scopes) / sizeof(Scopes[0]);
+        InitInfo.aDsScopeInfos = Scopes;
+        InitInfo.flOptions = DSOP_SCOPE_TYPE_TARGET_COMPUTER;
+        InitInfo.cAttributesToFetch = 0;
+        InitInfo.apwzAttributeNames = NULL;
+
+        hRet = (*pDsObjectPicker)->lpVtbl->Initialize(*pDsObjectPicker,
+                                                      &InitInfo);
+
+        if (FAILED(hRet))
+        {
+            /* delete the object picker in case initialization failed! */
+            (*pDsObjectPicker)->lpVtbl->Release(*pDsObjectPicker);
+        }
+    }
+
+    return hRet;
+}
+
+static HRESULT
+InvokeRemoteRegistryPickerDialog(IN IDsObjectPicker *pDsObjectPicker,
+                                 IN HWND hwndParent  OPTIONAL,
+                                 OUT LPWSTR lpBuffer,
+                                 IN UINT uSize)
+{
+    IDataObject *pdo = NULL;
+    HRESULT hRet;
+
+    hRet = pDsObjectPicker->lpVtbl->InvokeDialog(pDsObjectPicker,
+                                                 hwndParent,
+                                                 &pdo);
+    if (hRet == S_OK)
+    {
+        STGMEDIUM stm;
+        FORMATETC fe;
+
+        fe.cfFormat = RegisterClipboardFormat(CFSTR_DSOP_DS_SELECTION_LIST);
+        fe.ptd = NULL;
+        fe.dwAspect = DVASPECT_CONTENT;
+        fe.lindex = -1;
+        fe.tymed = TYMED_HGLOBAL;
+
+        hRet = pdo->lpVtbl->GetData(pdo,
+                                    &fe,
+                                    &stm);
+        if (SUCCEEDED(hRet))
+        {
+            PDS_SELECTION_LIST SelectionList = (PDS_SELECTION_LIST)GlobalLock(stm.hGlobal);
+            if (SelectionList != NULL)
+            {
+                if (SelectionList->cItems == 1)
+                {
+                    UINT nlen = wcslen(SelectionList->aDsSelection[0].pwzName);
+                    if (nlen >= uSize)
+                    {
+                        nlen = uSize - 1;
+                    }
+
+                    memcpy(lpBuffer,
+                           SelectionList->aDsSelection[0].pwzName,
+                           nlen * sizeof(WCHAR));
+                    lpBuffer[nlen] = L'\0';
+                }
+
+                GlobalUnlock(stm.hGlobal);
+            }
+
+            ReleaseStgMedium(&stm);
+        }
+
+        pdo->lpVtbl->Release(pdo);
+    }
+
+    return hRet;
+}
+
+static VOID
+FreeObjectPicker(IN IDsObjectPicker *pDsObjectPicker)
+{
+    pDsObjectPicker->lpVtbl->Release(pDsObjectPicker);
+}
+
 /*******************************************************************************
  *
  *  FUNCTION: _CmdWndProc(HWND, unsigned, WORD, LONG)
@@ -554,7 +676,28 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         ExportRegistryFile(hWnd);
         return TRUE;
     case ID_REGISTRY_CONNECTNETWORKREGISTRY:
+    {
+        IDsObjectPicker *ObjectPicker;
+        WCHAR szComputerName[MAX_COMPUTERNAME_LENGTH + 1];
+        HRESULT hRet;
+
+        hRet = InitializeRemoteRegistryPicker(&ObjectPicker);
+        if (SUCCEEDED(hRet))
+        {
+            hRet = InvokeRemoteRegistryPickerDialog(ObjectPicker,
+                                                    hWnd,
+                                                    szComputerName,
+                                                    sizeof(szComputerName) / sizeof(szComputerName[0]));
+            if (hRet == S_OK)
+            {
+                /* FIXME - connect to the registry */
+            }
+
+            FreeObjectPicker(ObjectPicker);
+        }
+
         return TRUE;
+    }
     case ID_REGISTRY_DISCONNECTNETWORKREGISTRY:
         return TRUE;
     case ID_REGISTRY_PRINT:
