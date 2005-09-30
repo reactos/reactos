@@ -12,5 +12,6 @@
     <file>daytime.c</file>
     <file>qotd.c</file>
     <file>chargen.c</file>
+    <file>quotes.rc</file>
     <file>tcpsvcs.rc</file>
 </module>

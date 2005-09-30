@@ -4,33 +4,26 @@
 #include <time.h>
 #include "tcpsvcs.h"
 
-//these need putting in an RC file.
-TCHAR Quotes[][MAX_QUOTE_BUF] =
-{
-    _T("\"I have a penchant for mischief, property damage, stalking and cheesecake, of course\"\r\n - kjk hyperion"),
-    _T("\"Wow! I fixed a setmenu bug.\" - jimtabor"),
-    _T("\"if the code is broken though, your free to call it ur own\"\r\n - Alex Ionescu"),
-    _T("\"i don't know about any bug; none exist; ReactOS is prefect\"\r\n - filip2307"),
-    _T("\"if you were kernel code, cutler would rewrite you.\"\r\n - Alex Ionescu"),
-    _T("\"Looks like Hartmut is cleaning out his WC. working copy, that is\"\r\n - WaxDragon")
-    _T("\"don't question it ... it's clearly an optimization\"\r\n - arty")
-};
-
 DWORD WINAPI QotdHandler(VOID* Sock_)
 {
     DWORD Retval = 0;
     SOCKET Sock;
     INT NumOfQuotes;
     INT QuoteToPrint;
+    TCHAR Quote[160];
 
     Sock = (SOCKET)Sock_;
-    NumOfQuotes = sizeof(Quotes) / MAX_QUOTE_BUF;
+
+    NumOfQuotes = 70; // need to emurate the rc file to discover
+                      // how many quotes are in there.
 
     /* randomise the quote */
     srand((unsigned int) time(0));
     QuoteToPrint = rand() % NumOfQuotes;
 
-    SendQuote(Sock, Quotes[QuoteToPrint]);
+    LoadString(NULL, QuoteToPrint, Quote, sizeof(Quote)/sizeof(TCHAR));
+
+    SendQuote(Sock, Quote);
 
     _tprintf(_T("Shutting connection down...\n"));
     if (ShutdownConnection(Sock, FALSE))
