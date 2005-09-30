@@ -292,6 +292,8 @@ static LRESULT WINAPI NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam,
         if (!Globals.hEdit)
             return -1;
         SendMessage(Globals.hEdit, EM_LIMITTEXT, 0, 0);
+        if (Globals.hFont)
+            SendMessage(Globals.hEdit, WM_SETFONT, (WPARAM)Globals.hFont, (LPARAM)TRUE);
         break;
     }
 
@@ -492,6 +494,7 @@ int PASCAL WinMain(HINSTANCE hInstance, HINSTANCE prev, LPSTR cmdline, int show)
 
     ZeroMemory(&Globals, sizeof(Globals));
     Globals.hInstance       = hInstance;
+    LoadSettings();
 
     ZeroMemory(&class, sizeof(class));
     class.cbSize        = sizeof(class);
@@ -537,5 +540,6 @@ int PASCAL WinMain(HINSTANCE hInstance, HINSTANCE prev, LPSTR cmdline, int show)
             DispatchMessage(&msg);
         }
     }
+    SaveSettings();
     return msg.wParam;
 }

@@ -11,5 +11,6 @@
 	<file>license.c</file>
 	<file>main.c</file>
 	<file>text.c</file>
+	<file>settings.c</file>
 	<file>rsrc.rc</file>
 </module>

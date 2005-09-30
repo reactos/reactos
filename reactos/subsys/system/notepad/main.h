@@ -73,4 +73,8 @@ VOID SetFileName(LPCWSTR szFileName);
 BOOL ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, int *piEncoding, int *piEoln);
 BOOL WriteText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, int iEncoding, int iEoln);
 
+/* from settings.c */
+void LoadSettings(void);
+void SaveSettings(void);
+
 

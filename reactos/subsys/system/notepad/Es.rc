@@ -55,8 +55,6 @@ POPUP "&Editar" {
   MENUITEM "&Ajuste de línea",          CMD_WRAP
   MENUITEM "Tipo de &letra...",         CMD_FONT
  }
-POPUP "&Buscar" {
- }
 POPUP "A&yuda" {
   MENUITEM "Í&ndice",               CMD_HELP_CONTENTS
   MENUITEM "&Buscar...",            CMD_HELP_SEARCH
