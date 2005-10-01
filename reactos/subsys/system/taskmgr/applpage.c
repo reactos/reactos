@@ -48,6 +48,7 @@ void            ApplicationPageOnNotify(WPARAM wParam, LPARAM lParam);
 void            ApplicationPageShowContextMenu1(void);
 void            ApplicationPageShowContextMenu2(void);
 int CALLBACK    ApplicationPageCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort);
+int             PerfGetIndexByProcessId(DWORD dwProcessId);
 
 #if 0
 void SwitchToThisWindow (
@@ -936,9 +937,18 @@ void ApplicationPage_OnGotoProcess(void)
          */
         TabCtrl_SetCurFocus(hTabWnd, 1);
         /*
-         * FIXME: Select the process item in the list
+         * Select the process item in the list
          */
-        for (i=0; i<ListView_GetItemCount(hProcessPage); i++) {
+        i = PerfGetIndexByProcessId(dwProcessId);
+        if (i != -1)
+        {
+            ListView_SetItemState(hProcessPageListCtrl,
+                                  i,
+                                  LVIS_SELECTED | LVIS_FOCUSED,
+                                  LVIS_SELECTED | LVIS_FOCUSED);
+            ListView_EnsureVisible(hProcessPageListCtrl,
+                                   i,
+                                   FALSE);
         }
     }
 }
