@@ -456,22 +456,40 @@ KeRundownThread(VOID)
 {
     KIRQL OldIrql;
     PKTHREAD Thread = KeGetCurrentThread();
-    PLIST_ENTRY CurrentEntry;
+    PLIST_ENTRY NextEntry, ListHead;
     PKMUTANT Mutant;
-
     DPRINT("KeRundownThread: %x\n", Thread);
+
+    /* Optimized path if nothing is on the list at the moment */
+    if (IsListEmpty(&Thread->MutantListHead)) return;
 
     /* Lock the Dispatcher Database */
     OldIrql = KeAcquireDispatcherDatabaseLock();
 
-    while (!IsListEmpty(&Thread->MutantListHead)) {
-
+    /* Get the List Pointers */
+    ListHead = &Thread->MutantListHead;
+    NextEntry = ListHead->Flink;
+    while (NextEntry != ListHead)
+    {
         /* Get the Mutant */
-        CurrentEntry = RemoveHeadList(&Thread->MutantListHead);
-        Mutant = CONTAINING_RECORD(CurrentEntry, KMUTANT, MutantListEntry);
-        ASSERT(Mutant->ApcDisable == 0);
+        Mutant = CONTAINING_RECORD(NextEntry, KMUTANT, MutantListEntry);
+        DPRINT1("Mutant: %p. Type, Size %x %x\n", Mutant, Mutant->Header.Type, Mutant->Header.Size);
 
-        /* Uncondtionally abandon it */
+        /* Make sure it's not terminating with APCs off */
+        if (Mutant->ApcDisable)
+        {
+            /* Bugcheck the system */
+            KEBUGCHECKEX(0,//THREAD_TERMINATE_HELD_MUTEX,
+                         (ULONG_PTR)Thread,
+                         (ULONG_PTR)Mutant,
+                         0,
+                         0);
+        }
+
+        /* Now we can remove it */
+        RemoveEntryList(&Mutant->MutantListEntry);
+
+        /* Unconditionally abandon it */
         DPRINT("Abandonning the Mutant\n");
         Mutant->Header.SignalState = 1;
         Mutant->Abandoned = TRUE;
@@ -479,12 +497,15 @@ KeRundownThread(VOID)
 
         /* Check if the Wait List isn't empty */
         DPRINT("Checking whether to wake the Mutant\n");
-        if (!IsListEmpty(&Mutant->Header.WaitListHead)) {
-
+        if (!IsListEmpty(&Mutant->Header.WaitListHead))
+        {
             /* Wake the Mutant */
             DPRINT("Waking the Mutant\n");
             KiWaitTest(&Mutant->Header, MUTANT_INCREMENT);
         }
+
+        /* Move on */
+        NextEntry = NextEntry->Flink;
     }
 
     /* Release the Lock */
