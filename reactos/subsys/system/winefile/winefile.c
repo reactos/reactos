@@ -28,6 +28,8 @@
 #include <dirent.h>
 #endif
 
+#define COBJMACROS
+
 #include "winefile.h"
 
 #include "resource.h"
@@ -306,10 +308,10 @@ static void free_entry(Entry* entry)
 		DestroyIcon(entry->hicon);
 
 	if (entry->folder && entry->folder!=Globals.iDesktop)
-		(*entry->folder->lpVtbl->Release)(entry->folder);
+		IShellFolder_Release(entry->folder);
 
 	if (entry->pidl)
-		(*Globals.iMalloc->lpVtbl->Free)(Globals.iMalloc, entry->pidl);
+		IMalloc_Free(Globals.iMalloc, entry->pidl);
 #endif
 
 	free(entry);
@@ -664,7 +666,7 @@ static Entry* read_tree_unix(Root* root, LPCTSTR path, SORT_ORDER sortOrder, HWN
 static void free_strret(STRRET* str)
 {
 	if (str->uType == STRRET_WSTR)
-		(*Globals.iMalloc->lpVtbl->Free)(Globals.iMalloc, str->UNION_MEMBER(pOleStr));
+		IMalloc_Free(Globals.iMalloc, str->UNION_MEMBER(pOleStr));
 }
 
 
@@ -702,7 +704,7 @@ static HRESULT path_from_pidlA(IShellFolder* folder, LPITEMIDLIST pidl, LPSTR bu
 	STRRET str;
 
 	 /* SHGDN_FORPARSING: get full path of id list */
-	HRESULT hr = (*folder->lpVtbl->GetDisplayNameOf)(folder, pidl, SHGDN_FORPARSING, &str);
+	HRESULT hr = IShellFolder_GetDisplayNameOf(folder, pidl, SHGDN_FORPARSING, &str);
 
 	if (SUCCEEDED(hr)) {
 		get_strretA(&str, &pidl->mkid, buffer, len);
@@ -747,7 +749,7 @@ static HRESULT name_from_pidl(IShellFolder* folder, LPITEMIDLIST pidl, LPTSTR bu
 {
 	STRRET str;
 
-	HRESULT hr = (*folder->lpVtbl->GetDisplayNameOf)(folder, pidl, flags, &str);
+	HRESULT hr = IShellFolder_GetDisplayNameOf(folder, pidl, flags, &str);
 
 	if (SUCCEEDED(hr)) {
 		get_strret(&str, &pidl->mkid, buffer, len);
@@ -764,7 +766,7 @@ static HRESULT path_from_pidlW(IShellFolder* folder, LPITEMIDLIST pidl, LPWSTR b
 	STRRET str;
 
 	 /* SHGDN_FORPARSING: get full path of id list */
-	HRESULT hr = (*folder->lpVtbl->GetDisplayNameOf)(folder, pidl, SHGDN_FORPARSING, &str);
+	HRESULT hr = IShellFolder_GetDisplayNameOf(folder, pidl, SHGDN_FORPARSING, &str);
 
 	if (SUCCEEDED(hr)) {
 		get_strretW(&str, &pidl->mkid, buffer, len);
@@ -791,7 +793,7 @@ static LPITEMIDLIST get_path_pidl(LPTSTR path, HWND hwnd)
 	MultiByteToWideChar(CP_ACP, 0, path, -1, buffer, MAX_PATH);
 #endif
 
-	hr = (*Globals.iDesktop->lpVtbl->ParseDisplayName)(Globals.iDesktop, hwnd, NULL, buffer, &len, &pidl, NULL);
+	hr = IShellFolder_ParseDisplayName(Globals.iDesktop, hwnd, NULL, buffer, &len, &pidl, NULL);
 	if (FAILED(hr))
 		return NULL;
 
@@ -813,7 +815,7 @@ static LPITEMIDLIST get_to_absolute_pidl(Entry* entry, HWND hwnd)
 			LPITEMIDLIST pidl;
 			ULONG len;
 
-			hr = (*Globals.iDesktop->lpVtbl->ParseDisplayName)(Globals.iDesktop, hwnd, NULL, buffer, &len, &pidl, NULL);
+			hr = IShellFolder_ParseDisplayName(Globals.iDesktop, hwnd, NULL, buffer, &len, &pidl, NULL);
 
 			if (SUCCEEDED(hr))
 				return pidl;
@@ -835,7 +837,7 @@ static HICON extract_icon(IShellFolder* folder, LPCITEMIDLIST pidl)
 {
 	IExtractIcon* pExtract;
 
-	if (SUCCEEDED((*folder->lpVtbl->GetUIObjectOf)(folder, 0, 1, (LPCITEMIDLIST*)&pidl, &IID_IExtractIcon, 0, (LPVOID*)&pExtract))) {
+	if (SUCCEEDED(IShellFolder_GetUIObjectOf(folder, 0, 1, (LPCITEMIDLIST*)&pidl, &IID_IExtractIcon, 0, (LPVOID*)&pExtract))) {
 		TCHAR path[_MAX_PATH];
 		unsigned flags;
 		HICON hicon;
@@ -903,11 +905,11 @@ static Entry* read_tree_shell(Root* root, LPITEMIDLIST pidl, SORT_ORDER sortOrde
 			break;
 
 		 /* copy first element of item idlist */
-		next_pidl = (*Globals.iMalloc->lpVtbl->Alloc)(Globals.iMalloc, pidl->mkid.cb+sizeof(USHORT));
+		next_pidl = IMalloc_Alloc(Globals.iMalloc, pidl->mkid.cb+sizeof(USHORT));
 		memcpy(next_pidl, pidl, pidl->mkid.cb);
 		((LPITEMIDLIST)((LPBYTE)next_pidl+pidl->mkid.cb))->mkid.cb = 0;
 
-		hr = (*folder->lpVtbl->BindToObject)(folder, next_pidl, 0, &IID_IShellFolder, (void**)&child);
+		hr = IShellFolder_BindToObject(folder, next_pidl, 0, &IID_IShellFolder, (void**)&child);
 		if (!SUCCEEDED(hr))
 			break;
 
@@ -943,12 +945,12 @@ static void fill_w32fdata_shell(IShellFolder* folder, LPCITEMIDLIST pidl, SFGAOF
 		STGMEDIUM medium = {0, {0}, 0};
 		FORMATETC fmt = {Globals.cfStrFName, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL};
 
-		HRESULT hr = (*folder->lpVtbl->GetUIObjectOf)(folder, 0, 1, &pidl, &IID_IDataObject, 0, (LPVOID*)&pDataObj);
+		HRESULT hr = IShellFolder_GetUIObjectOf(folder, 0, 1, &pidl, &IID_IDataObject, 0, (LPVOID*)&pDataObj);
 
 		if (SUCCEEDED(hr)) {
-			hr = (*pDataObj->lpVtbl->GetData)(pDataObj, &fmt, &medium);
+			hr = IDataObject_GetData(pDataObj, &fmt, &medium);
 
-			(*pDataObj->lpVtbl->Release)(pDataObj);
+			IDataObject_Release(pDataObj);
 
 			if (SUCCEEDED(hr)) {
 				LPCTSTR path = (LPCTSTR)GlobalLock(medium.UNION_MEMBER(hGlobal));
@@ -1001,7 +1003,7 @@ static void read_directory_shell(Entry* dir, HWND hwnd)
 	if (!folder)
 		return;
 
-	hr = (*folder->lpVtbl->EnumObjects)(folder, hwnd, SHCONTF_FOLDERS|SHCONTF_NONFOLDERS|SHCONTF_INCLUDEHIDDEN|SHCONTF_SHAREABLE|SHCONTF_STORAGE, &idlist);
+	hr = IShellFolder_EnumObjects(folder, hwnd, SHCONTF_FOLDERS|SHCONTF_NONFOLDERS|SHCONTF_INCLUDEHIDDEN|SHCONTF_SHAREABLE|SHCONTF_STORAGE, &idlist);
 
 	if (SUCCEEDED(hr)) {
 		for(;;) {
@@ -1013,7 +1015,7 @@ static void read_directory_shell(Entry* dir, HWND hwnd)
 
 			memset(pidls, 0, sizeof(pidls));
 
-			hr = (*idlist->lpVtbl->Next)(idlist, FETCH_ITEM_COUNT, pidls, &cnt);
+			hr = IEnumIDList_Next(idlist, FETCH_ITEM_COUNT, pidls, &cnt);
 			if (!SUCCEEDED(hr))
 				break;
 
@@ -1034,7 +1036,7 @@ static void read_directory_shell(Entry* dir, HWND hwnd)
 
 				attribs = ~SFGAO_FILESYSTEM;	/*SFGAO_HASSUBFOLDER|SFGAO_FOLDER; SFGAO_FILESYSTEM sorgt dafür, daß "My Documents" anstatt von "Martin's Documents" angezeigt wird */
 
-				hr = (*folder->lpVtbl->GetAttributesOf)(folder, 1, (LPCITEMIDLIST*)&pidls[n], &attribs);
+				hr = IShellFolder_GetAttributesOf(folder, 1, (LPCITEMIDLIST*)&pidls[n], &attribs);
 
 				if (SUCCEEDED(hr)) {
 					if (attribs != (SFGAOF)~SFGAO_FILESYSTEM) {
@@ -1049,7 +1051,7 @@ static void read_directory_shell(Entry* dir, HWND hwnd)
 				entry->pidl = pidls[n];
 
 				if (entry->data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
-					hr = (*folder->lpVtbl->BindToObject)(folder, pidls[n], 0, &IID_IShellFolder, (void**)&child);
+					hr = IShellFolder_BindToObject(folder, pidls[n], 0, &IID_IShellFolder, (void**)&child);
 
 					if (SUCCEEDED(hr))
 						entry->folder = child;
@@ -1086,7 +1088,7 @@ static void read_directory_shell(Entry* dir, HWND hwnd)
 			}
 		}
 
-		(*idlist->lpVtbl->Release)(idlist);
+		IEnumIDList_Release(idlist);
 	}
 
 	if (last)
@@ -1491,7 +1493,7 @@ static void get_path(Entry* dir, PTSTR path)
 		attribs = 0;
 
 		if (dir->folder)
-			hr = (*dir->folder->lpVtbl->GetAttributesOf)(dir->folder, 1, (LPCITEMIDLIST*)&dir->pidl, &attribs);
+			hr = IShellFolder_GetAttributesOf(dir->folder, 1, (LPCITEMIDLIST*)&dir->pidl, &attribs);
 
 		if (SUCCEEDED(hr) && (attribs&SFGAO_FILESYSTEM)) {
 			IShellFolder* parent = dir->up? dir->up->folder: Globals.iDesktop;
@@ -1617,7 +1619,7 @@ static LRESULT CALLBACK CBTProc(int code, WPARAM wparam, LPARAM lparam)
 		newchild = NULL;
 
 		child->hwnd = (HWND) wparam;
-		SetWindowLong(child->hwnd, GWL_USERDATA, (LPARAM)child);
+		SetWindowLongPtr(child->hwnd, GWLP_USERDATA, (LPARAM)child);
 	}
 
 	return CallNextHookEx(hcbthook, code, wparam, lparam);
@@ -1697,7 +1699,7 @@ static INT_PTR CALLBACK DestinationDlgProc(HWND hwnd, UINT nmsg, WPARAM wparam, 
 
 	switch(nmsg) {
 		case WM_INITDIALOG:
-			SetWindowLong(hwnd, GWL_USERDATA, lparam);
+			SetWindowLongPtr(hwnd, GWLP_USERDATA, lparam);
 			SetWindowText(GetDlgItem(hwnd, 201), (LPCTSTR)lparam);
 			return 1;
 
@@ -1706,7 +1708,7 @@ static INT_PTR CALLBACK DestinationDlgProc(HWND hwnd, UINT nmsg, WPARAM wparam, 
 
 			switch(id) {
 			  case IDOK: {
-				LPTSTR dest = (LPTSTR) GetWindowLong(hwnd, GWL_USERDATA);
+				LPTSTR dest = (LPTSTR) GetWindowLongPtr(hwnd, GWLP_USERDATA);
 				GetWindowText(GetDlgItem(hwnd, 201), dest, MAX_PATH);
 				EndDialog(hwnd, id);
 				break;}
@@ -2084,7 +2086,7 @@ static BOOL activate_drive_window(LPCTSTR path)
 
 	/* search for a already open window for the same drive */
 	for(child_wnd=GetNextWindow(Globals.hmdiclient,GW_CHILD); child_wnd; child_wnd=GetNextWindow(child_wnd, GW_HWNDNEXT)) {
-		ChildWnd* child = (ChildWnd*) GetWindowLong(child_wnd, GWL_USERDATA);
+		ChildWnd* child = (ChildWnd*) GetWindowLongPtr(child_wnd, GWLP_USERDATA);
 
 		if (child) {
 			_tsplitpath(child->root.path, drv2, 0, 0, 0);
@@ -2109,7 +2111,7 @@ static BOOL activate_fs_window(LPCTSTR filesys)
 
 	/* search for a already open window of the given file system name */
 	for(child_wnd=GetNextWindow(Globals.hmdiclient,GW_CHILD); child_wnd; child_wnd=GetNextWindow(child_wnd, GW_HWNDNEXT)) {
-		ChildWnd* child = (ChildWnd*) GetWindowLong(child_wnd, GWL_USERDATA);
+		ChildWnd* child = (ChildWnd*) GetWindowLongPtr(child_wnd, GWLP_USERDATA);
 
 		if (child) {
 			if (!lstrcmpi(child->root.fs, filesys)) {
@@ -2256,7 +2258,7 @@ static LRESULT CALLBACK FrameWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM
 
 						/* change font in all open child windows */
 						for(childWnd=GetWindow(Globals.hmdiclient,GW_CHILD); childWnd; childWnd=GetNextWindow(childWnd,GW_HWNDNEXT)) {
-							ChildWnd* child = (ChildWnd*) GetWindowLong(childWnd, GWL_USERDATA);
+							ChildWnd* child = (ChildWnd*) GetWindowLongPtr(childWnd, GWLP_USERDATA);
 							SetWindowFont(child->left.hwnd, Globals.hfont, TRUE);
 							SetWindowFont(child->right.hwnd, Globals.hfont, TRUE);
 							ListBox_SetItemHeight(child->left.hwnd, 1, max(Globals.spaceSize.cy,IMAGE_HEIGHT+3));
@@ -2869,7 +2871,7 @@ static void create_tree_window(HWND parent, Pane* pane, int id, int id_header, L
 								LBS_DISABLENOSCROLL|LBS_NOINTEGRALHEIGHT|LBS_OWNERDRAWFIXED|LBS_NOTIFY,
 								0, 0, 0, 0, parent, (HMENU)id, Globals.hInstance, 0);
 
-	SetWindowLong(pane->hwnd, GWL_USERDATA, (LPARAM)pane);
+	SetWindowLongPtr(pane->hwnd, GWLP_USERDATA, (LPARAM)pane);
 	g_orgTreeWndProc = SubclassWindow(pane->hwnd, TreeWndProc);
 
 	SetWindowFont(pane->hwnd, Globals.hfont, FALSE);
@@ -3881,7 +3883,7 @@ static BOOL launch_entry(Entry* entry, HWND hwnd, UINT nCmdShow)
 		}
 
 		if (shexinfo.lpIDList != entry->pidl)
-			(*Globals.iMalloc->lpVtbl->Free)(Globals.iMalloc, shexinfo.lpIDList);
+			IMalloc_Free(Globals.iMalloc, shexinfo.lpIDList);
 
 		return ret;
 	}
@@ -4081,15 +4083,15 @@ static IContextMenu* CtxMenu_query_interfaces(IContextMenu* pcm1)
 	CtxMenu_reset();
 
 #ifndef __MINGW32__	/* IContextMenu3 missing in MinGW (as of 6.2.2005) */
-	if ((*pcm1->lpVtbl->QueryInterface)(pcm1, &IID_IContextMenu3, (void**)&pcm) == NOERROR)
+	if (IUnknown_QueryInterface(pcm1, &IID_IContextMenu3, (void**)&pcm) == NOERROR)
 		s_pctxmenu3 = (LPCONTEXTMENU3)pcm;
 	else
 #endif
-	if ((*pcm1->lpVtbl->QueryInterface)(pcm1, &IID_IContextMenu2, (void**)&pcm) == NOERROR)
+	if (IUnknown_QueryInterface(pcm1, &IID_IContextMenu2, (void**)&pcm) == NOERROR)
 		s_pctxmenu2 = (LPCONTEXTMENU2)pcm;
 
 	if (pcm) {
-		(*pcm1->lpVtbl->Release)(pcm1);
+		IUnknown_Release(pcm1);
 		return pcm;
 	} else
 		return pcm1;
@@ -4117,7 +4119,7 @@ static HRESULT ShellFolderContextMenu(IShellFolder* shell_folder, HWND hwndParen
 	IContextMenu* pcm;
 	BOOL executed = FALSE;
 
-	HRESULT hr = (*shell_folder->lpVtbl->GetUIObjectOf)(shell_folder, hwndParent, cidl, apidl, &IID_IContextMenu, NULL, (LPVOID*)&pcm);
+	HRESULT hr = IShellFolder_GetUIObjectOf(shell_folder, hwndParent, cidl, apidl, &IID_IContextMenu, NULL, (LPVOID*)&pcm);
 /*	HRESULT hr = CDefFolderMenu_Create2(dir?dir->_pidl:DesktopFolder(), hwndParent, 1, &pidl, shell_folder, NULL, 0, NULL, &pcm); */
 
 	if (SUCCEEDED(hr)) {
@@ -4153,7 +4155,7 @@ static HRESULT ShellFolderContextMenu(IShellFolder* shell_folder, HWND hwndParen
 				CtxMenu_reset();
 		}
 
-		(*pcm->lpVtbl->Release)(pcm);
+		IUnknown_Release(pcm);
 	}
 
 	return FAILED(hr)? hr: executed? S_OK: S_FALSE;
@@ -4162,7 +4164,7 @@ static HRESULT ShellFolderContextMenu(IShellFolder* shell_folder, HWND hwndParen
 
 static LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
-	ChildWnd* child = (ChildWnd*) GetWindowLong(hwnd, GWL_USERDATA);
+	ChildWnd* child = (ChildWnd*) GetWindowLongPtr(hwnd, GWLP_USERDATA);
 	ASSERT(child);
 
 	switch(nmsg) {
@@ -4185,7 +4187,7 @@ static LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM
 
 		case WM_NCDESTROY:
 			free_child_window(child);
-			SetWindowLong(hwnd, GWL_USERDATA, 0);
+			SetWindowLongPtr(hwnd, GWLP_USERDATA, 0);
 			break;
 
 		case WM_PAINT: {
@@ -4494,10 +4496,10 @@ static LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM
 						if (ShellFolderContextMenu(parentFolder, hwnd, 1, &pidlLast, pt.x, pt.y) == S_OK)
 							refresh_child(child);
 
-						(*parentFolder->lpVtbl->Release)(parentFolder);
+						IShellFolder_Release(parentFolder);
 					}
 
-					(*Globals.iMalloc->lpVtbl->Free)(Globals.iMalloc, pidl_abs);
+					IMalloc_Free(Globals.iMalloc, pidl_abs);
 				}
 			}
 			break;}
@@ -4546,8 +4548,8 @@ static LRESULT CALLBACK ChildWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM
 
 static LRESULT CALLBACK TreeWndProc(HWND hwnd, UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
-	ChildWnd* child = (ChildWnd*) GetWindowLong(GetParent(hwnd), GWL_USERDATA);
-	Pane* pane = (Pane*) GetWindowLong(hwnd, GWL_USERDATA);
+	ChildWnd* child = (ChildWnd*) GetWindowLongPtr(GetParent(hwnd), GWLP_USERDATA);
+	Pane* pane = (Pane*) GetWindowLongPtr(hwnd, GWLP_USERDATA);
 	ASSERT(child);
 
 	switch(nmsg) {
@@ -4773,8 +4775,8 @@ static void show_frame(HWND hwndParent, int cmdshow)
 static void ExitInstance(void)
 {
 #ifdef _SHELL_FOLDERS
-	(*Globals.iDesktop->lpVtbl->Release)(Globals.iDesktop);
-	(*Globals.iMalloc->lpVtbl->Release)(Globals.iMalloc);
+	IShellFolder_Release(Globals.iDesktop);
+	IMalloc_Release(Globals.iMalloc);
 	CoUninitialize();
 #endif
 
