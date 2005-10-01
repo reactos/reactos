@@ -549,9 +549,11 @@ void explorer_show_frame(int cmdshow, LPTSTR lpCmdLine)
 	XMLPos explorer_options = g_Globals.get_cfg("general/explorer");
 	XS_String mdiStr = XMLString(explorer_options, "mdi");
 
+	 // If there isn't yet the "mdi" setting in the configuration, display MDI/SDI dialog.
 	if (mdiStr.empty())
 		Dialog::DoModal(IDD_MDI_SDI, WINDOW_CREATOR(MdiSdiDlg), g_Globals._hwndDesktop);
 
+	 // Now read the setting again and interpret it as boolean value.
 	bool mdi = XMLBool(explorer_options, "mdi", true);
 
 	 // create main window
