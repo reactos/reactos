@@ -1,10 +1,3 @@
-/*
- * Explorer (Spanish resources)
- *
- * Copyright 2005 Patricio Martínez Ros
- *
- */
-
 //Microsoft Developer Studio generated resource script.
 //
 #include "resource.h"
@@ -20,8 +13,9 @@
 #undef APSTUDIO_READONLY_SYMBOLS
 
 /////////////////////////////////////////////////////////////////////////////
+// Spanish (Castilian) resources
 
-#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ESP)
 #ifdef _WIN32
 LANGUAGE LANG_SPANISH, SUBLANG_SPANISH
 #pragma code_page(1252)
@@ -32,32 +26,32 @@ LANGUAGE LANG_SPANISH, SUBLANG_SPANISH
 // Menu
 //
 
-IDM_MDIFRAME MENU DISCARDABLE
+IDM_MDIFRAME MENU DISCARDABLE 
 BEGIN
     POPUP "&Archivo"
     BEGIN
-        MENUITEM "&Salir",                       ID_FILE_EXIT
+        MENUITEM "&Salir",                      ID_FILE_EXIT
     END
     POPUP "&Ver"
     BEGIN
-        MENUITEM "&Herramientas",                    ID_VIEW_TOOL_BAR
-        MENUITEM "Barra &Extra",                  ID_VIEW_EXTRA_BAR
-        MENUITEM "Barra de &Unidades",                   ID_VIEW_DRIVE_BAR, CHECKED
-        MENUITEM "Barra &Lateral",                   ID_VIEW_SIDE_BAR
-        MENUITEM "Barra de &Estado",                 ID_VIEW_STATUSBAR
+        MENUITEM "&Herramientas",               ID_VIEW_TOOL_BAR
+        MENUITEM "Barra &Extra",                ID_VIEW_EXTRA_BAR
+        MENUITEM "Barra de &Unidades",          ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "Barra &Lateral",              ID_VIEW_SIDE_BAR
+        MENUITEM "Barra de &Estado",            ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&Actualizar\tF5",                ID_REFRESH
-        MENUITEM "P&antalla Completa\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
-        MENUITEM "&SDI",                         ID_VIEW_SDI
+        MENUITEM "&Actualizar\tF5",             ID_REFRESH
+        MENUITEM "P&antalla Completa\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
+        MENUITEM "&SDI",                        ID_VIEW_SDI
     END
     POPUP "&Ventana"
     BEGIN
-        MENUITEM "Nueva &Ventana",                 ID_WINDOW_NEW
-        MENUITEM "Cascada\tShift+F5",         ID_WINDOW_CASCADE
-        MENUITEM "Mosaico &Horizontal",          ID_WINDOW_TILE_HORZ
-        MENUITEM "Mosaico &Vertical\tShift+F4",  ID_WINDOW_TILE_VERT
-        MENUITEM "Agrupar Automaticamente",       ID_WINDOW_AUTOSORT
-        MENUITEM "Agrupar &Símbolos",            ID_WINDOW_ARRANGE
+        MENUITEM "Nueva &Ventana",              ID_WINDOW_NEW
+        MENUITEM "Cascada\tShift+F5",           ID_WINDOW_CASCADE
+        MENUITEM "Mosaico &Horizontal",         ID_WINDOW_TILE_HORZ
+        MENUITEM "Mosaico &Vertical\tShift+F4", ID_WINDOW_TILE_VERT
+        MENUITEM "Agrupar Automaticamente",     ID_WINDOW_AUTOSORT
+        MENUITEM "Agrupar &Símbolos",           ID_WINDOW_ARRANGE
     END
     POPUP "&Tools"
     BEGIN
@@ -66,179 +60,179 @@ BEGIN
     POPUP "A&yuda"
     BEGIN
         MENUITEM "Explorer &FAQ...",            ID_EXPLORER_FAQ
-        MENUITEM "&Acerca de Explorer...",          ID_ABOUT_EXPLORER
-        MENUITEM "Acerca de &OS...",                ID_ABOUT_WINDOWS
+        MENUITEM "&Acerca de Explorer...",      ID_ABOUT_EXPLORER
+        MENUITEM "Acerca de &OS...",            ID_ABOUT_WINDOWS
     END
 END
 
-IDM_DESKTOPBAR MENU DISCARDABLE
+IDM_DESKTOPBAR MENU DISCARDABLE 
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Configuracion...",                ID_DESKTOPBAR_SETTINGS
-        MENUITEM "&Administrador de Tareas...",            ID_TASKMGR
+        MENUITEM "&Configuracion...",           ID_DESKTOPBAR_SETTINGS
+        MENUITEM "&Administrador de Tareas...", ID_TASKMGR
         MENUITEM SEPARATOR
-        MENUITEM "&Acerca de Explorer...",          ID_ABOUT_EXPLORER
+        MENUITEM "&Acerca de Explorer...",      ID_ABOUT_EXPLORER
     END
 END
 
-IDM_VOLUME MENU DISCARDABLE
+IDM_VOLUME MENU DISCARDABLE 
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Abrir Control de Volumen",         ID_TRAY_VOLUME
-        MENUITEM "Ajustar Propiedades de Audio",     ID_VOLUME_PROPERTIES
+        MENUITEM "Abrir Control de Volumen",    ID_TRAY_VOLUME
+        MENUITEM "Ajustar Propiedades de Audio", ID_VOLUME_PROPERTIES
     END
 END
 
-IDM_NOTIFYAREA MENU DISCARDABLE
+IDM_NOTIFYAREA MENU DISCARDABLE 
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Mostrar iconos ocultos",          ID_SHOW_HIDDEN_ICONS
-        MENUITEM "Mostrar &Botón de Icono",           ID_SHOW_ICON_BUTTON
+        MENUITEM "&Mostrar iconos ocultos",     ID_SHOW_HIDDEN_ICONS
+        MENUITEM "Mostrar &Botón de Icono",     ID_SHOW_ICON_BUTTON
         MENUITEM "&Configurar Notificaciones...", ID_CONFIG_NOTIFYAREA
-        MENUITEM "Ajustar Fecha/&Hora...",        ID_CONFIG_TIME
+        MENUITEM "Ajustar Fecha/&Hora...",      ID_CONFIG_TIME
         MENUITEM SEPARATOR
-        MENUITEM "&Acerca de Explorer...",          ID_ABOUT_EXPLORER
+        MENUITEM "&Acerca de Explorer...",      ID_ABOUT_EXPLORER
     END
 END
 
-IDM_SDIFRAME MENU DISCARDABLE
+IDM_SDIFRAME MENU DISCARDABLE 
 BEGIN
     POPUP "&Archivo"
     BEGIN
-        MENUITEM "S&alir",                       ID_FILE_EXIT
+        MENUITEM "S&alir",                      ID_FILE_EXIT
     END
     POPUP "&Ver"
     BEGIN
-        MENUITEM "&Barra de Herramientas",                    ID_VIEW_TOOL_BAR
-        MENUITEM "Barra &Lateral",                   ID_VIEW_SIDE_BAR, GRAYED
-        MENUITEM "Barra de &Estado",                 ID_VIEW_STATUSBAR
+        MENUITEM "&Barra de Herramientas",      ID_VIEW_TOOL_BAR
+        MENUITEM "Barra &Lateral",              ID_VIEW_SIDE_BAR, GRAYED
+        MENUITEM "Barra de &Estado",            ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
-        MENUITEM "&Actualizar\tF5",                ID_REFRESH
-        MENUITEM "P&antalla Completa\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
+        MENUITEM "&Actualizar\tF5",             ID_REFRESH
+        MENUITEM "P&antalla Completa\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
         MENUITEM "&MDI",                        ID_VIEW_MDI
     END
     POPUP "Herramientas"
     BEGIN
-        MENUITEM "&Opciones",                    ID_TOOLS_OPTIONS
+        MENUITEM "&Opciones",                   ID_TOOLS_OPTIONS
     END
     POPUP "&Ayuda"
     BEGIN
         MENUITEM "Explorer &FAQ...",            ID_EXPLORER_FAQ
-        MENUITEM "&Acerca de Explorer...",          ID_ABOUT_EXPLORER
-        MENUITEM "Acerca de &OS...",                ID_ABOUT_WINDOWS
+        MENUITEM "&Acerca de Explorer...",      ID_ABOUT_EXPLORER
+        MENUITEM "Acerca de &OS...",            ID_ABOUT_WINDOWS
     END
 END
 
-IDM_WINEFILE MENU DISCARDABLE
+IDM_WINEFILE MENU DISCARDABLE 
 BEGIN
     POPUP "&Archivo"
     BEGIN
-        MENUITEM "&Abrir\tEnter",                101
-        MENUITEM "&Mover...\tF7",                106
-        MENUITEM "&Copiar...\tF8",                107
-        MENUITEM "&en el Portapapeles...\tF9",        118
-        MENUITEM "&Eliminar\tDel",                108
-        MENUITEM "Re&nombrar...",                  109
-        MENUITEM "Prop&iedades...\tAlt+Enter",   ID_EDIT_PROPERTIES
+        MENUITEM "&Abrir\tEnter",               101
+        MENUITEM "&Mover...\tF7",               106
+        MENUITEM "&Copiar...\tF8",              107
+        MENUITEM "&en el Portapapeles...\tF9",  118
+        MENUITEM "&Eliminar\tDel",              108
+        MENUITEM "Re&nombrar...",               109
+        MENUITEM "Prop&iedades...\tAlt+Enter",  ID_EDIT_PROPERTIES
         MENUITEM SEPARATOR
-        MENUITEM "C&omprimir...",                119
-        MENUITEM "Desc&omprimir...",              120
+        MENUITEM "C&omprimir...",               119
+        MENUITEM "Desc&omprimir...",            120
         MENUITEM SEPARATOR
-        MENUITEM "&Ejecutar...",                     ID_EXECUTE
-        MENUITEM "&Imprimir...",                   102
-        MENUITEM "Asociar...",                103
+        MENUITEM "&Ejecutar...",                ID_EXECUTE
+        MENUITEM "&Imprimir...",                102
+        MENUITEM "Asociar...",                  103
         MENUITEM SEPARATOR
         MENUITEM "Cr&ear Directorio...",        ID_EXECUTE
         MENUITEM "Busca&r...",                  104
-        MENUITEM "&Seleccionar Archivos...",            116
+        MENUITEM "&Seleccionar Archivos...",    116
         MENUITEM SEPARATOR
-        MENUITEM "S&alir\tAlt+X",                ID_FILE_EXIT
+        MENUITEM "S&alir\tAlt+X",               ID_FILE_EXIT
     END
     POPUP "&Disco"
     BEGIN
-        MENUITEM "&Copiar Disco...",               201
-        MENUITEM "&Etiqueta del Disco...",              202
+        MENUITEM "&Copiar Disco...",            201
+        MENUITEM "&Etiqueta del Disco...",      202
         MENUITEM SEPARATOR
-        MENUITEM "&Formateart Disco...",             203
+        MENUITEM "&Formateart Disco...",        203
         MENUITEM SEPARATOR
-        MENUITEM "Conectar a &Unidad de Red",      252
-        MENUITEM "&Desconectar Unidad de Red",   253
+        MENUITEM "Conectar a &Unidad de Red",   252
+        MENUITEM "&Desconectar Unidad de Red",  253
         MENUITEM SEPARATOR
-        MENUITEM "Guardar como...",                 254
-        MENUITEM "&Eliminar Guardado...",            255
+        MENUITEM "Guardar como...",             254
+        MENUITEM "&Eliminar Guardado...",       255
         MENUITEM SEPARATOR
-        MENUITEM "&Seleccionar Unidad...",            251
+        MENUITEM "&Seleccionar Unidad...",      251
     END
     POPUP "&Directorios"
     BEGIN
-        MENUITEM "&Siguiente Nivel\t+",              301
-        MENUITEM "Expandir &Arbol\t*",             302
-        MENUITEM "Expandir &Todo\tStrg+*",         303
-        MENUITEM "Contraer &Arbol\t-",           304
+        MENUITEM "&Siguiente Nivel\t+",         301
+        MENUITEM "Expandir &Arbol\t*",          302
+        MENUITEM "Expandir &Todo\tStrg+*",      303
+        MENUITEM "Contraer &Arbol\t-",          304
         MENUITEM SEPARATOR
-        MENUITEM "&Marcar Hijos",                505
+        MENUITEM "&Marcar Hijos",               505
     END
     POPUP "&Ver"
     BEGIN
         MENUITEM "A&rbol y Directorio",         413
-        MENUITEM "Solo Arb&ol",                  411
-        MENUITEM "S&olo Directorio",             412
+        MENUITEM "Solo Arb&ol",                 411
+        MENUITEM "S&olo Directorio",            412
         MENUITEM SEPARATOR
         MENUITEM "Sp&lit",                      414
         MENUITEM SEPARATOR
-        MENUITEM "&Nombre",                       ID_VIEW_NAME
-        MENUITEM "&Todos Los Detalles del Archivo",           ID_VIEW_ALL_ATTRIBUTES
+        MENUITEM "&Nombre",                     ID_VIEW_NAME
+        MENUITEM "&Todos Los Detalles del Archivo", ID_VIEW_ALL_ATTRIBUTES
         , CHECKED
-        MENUITEM "Detalles &Parciales...",         ID_VIEW_SELECTED_ATTRIBUTES
+        MENUITEM "Detalles &Parciales...",      ID_VIEW_SELECTED_ATTRIBUTES
         MENUITEM SEPARATOR
-        MENUITEM "&Ordenar por Nombre",               404
-        MENUITEM "Ordenar &por Tipo",               405
-        MENUITEM "Ord&enar por Tamaño",               406
-        MENUITEM "Or&denar por Fecha",               407
+        MENUITEM "&Ordenar por Nombre",         404
+        MENUITEM "Ordenar &por Tipo",           405
+        MENUITEM "Ord&enar por Tamaño",         406
+        MENUITEM "Or&denar por Fecha",          407
         MENUITEM SEPARATOR
-        MENUITEM "Ordenar por &...",                409
+        MENUITEM "Ordenar por &...",            409
     END
     POPUP "&Opciones"
     BEGIN
         MENUITEM "&Confirmacion...",            65535
-        MENUITEM "&Fuente...",                    65535
-        MENUITEM "Personalizar la &Barra de Herramientas...",       65535
+        MENUITEM "&Fuente...",                  65535
+        MENUITEM "Personalizar la &Barra de Herramientas...", 65535
         MENUITEM SEPARATOR
-        MENUITEM "Barra de Herramien&tas",                    ID_VIEW_TOOL_BAR, CHECKED
-        MENUITEM "Barra de Uni&dades",                   ID_VIEW_DRIVE_BAR, CHECKED
-        MENUITEM "Barra &Lateral",                   ID_VIEW_SIDE_BAR
-        MENUITEM "Barra de E&stado",                 ID_VIEW_STATUSBAR, CHECKED
-        MENUITEM "Pantalla Com&pleta\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
+        MENUITEM "Barra de Herramien&tas",      ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "Barra de Uni&dades",          ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "Barra &Lateral",              ID_VIEW_SIDE_BAR
+        MENUITEM "Barra de E&stado",            ID_VIEW_STATUSBAR, CHECKED
+        MENUITEM "Pantalla Com&pleta\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
         MENUITEM SEPARATOR
-        MENUITEM "&Símbolo después de ejecutar",       65535
-        MENUITEM "&Guardar cambios al salir",       511
+        MENUITEM "&Símbolo después de ejecutar", 65535
+        MENUITEM "&Guardar cambios al salir",   511
     END
     POPUP "&Seguridad"
     BEGIN
-        MENUITEM "&Aceso...",                  605
+        MENUITEM "&Aceso...",                   605
         MENUITEM "&Entrada...",                 606
-        MENUITEM "&Propietario...",                   607
+        MENUITEM "&Propietario...",             607
     END
     POPUP "&Ventana"
     BEGIN
-        MENUITEM "Nueva &Ventana",                 ID_WINDOW_NEW
-        MENUITEM "Cascada\tCtrl+F5",          ID_WINDOW_CASCADE
-        MENUITEM "Mosaico &Horizontal",          ID_WINDOW_TILE_HORZ
-        MENUITEM "Mosaico &Vertical\tCtrl+F4",   ID_WINDOW_TILE_VERT
-        MENUITEM "Agrupar Automaticamente",       ID_WINDOW_AUTOSORT
-        MENUITEM "Agrupar &Símbolos",            ID_WINDOW_ARRANGE
-        MENUITEM "&Actualizar\tF5",                ID_REFRESH
+        MENUITEM "Nueva &Ventana",              ID_WINDOW_NEW
+        MENUITEM "Cascada\tCtrl+F5",            ID_WINDOW_CASCADE
+        MENUITEM "Mosaico &Horizontal",         ID_WINDOW_TILE_HORZ
+        MENUITEM "Mosaico &Vertical\tCtrl+F4",  ID_WINDOW_TILE_VERT
+        MENUITEM "Agrupar Automaticamente",     ID_WINDOW_AUTOSORT
+        MENUITEM "Agrupar &Símbolos",           ID_WINDOW_ARRANGE
+        MENUITEM "&Actualizar\tF5",             ID_REFRESH
     END
     POPUP "&?"
     BEGIN
-        MENUITEM "&Temas de Ayuda\tF1",            ID_HELP
-        MENUITEM "Ayuda y &Buscar...\tF1",         ID_HELP
-        MENUITEM "&Usando la Ayuda\tF1",             ID_HELP_USING
+        MENUITEM "&Temas de Ayuda\tF1",         ID_HELP
+        MENUITEM "Ayuda y &Buscar...\tF1",      ID_HELP
+        MENUITEM "&Usando la Ayuda\tF1",        ID_HELP_USING
         MENUITEM SEPARATOR
-        MENUITEM "Info sobre &ArchivoWine...",     ID_ABOUT_WINEFILE
+        MENUITEM "Info sobre &ArchivoWine...",  ID_ABOUT_WINEFILE
     END
 END
 
@@ -254,18 +248,18 @@ CAPTION "Ejecutar"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "",101,"Static",SS_SIMPLE | SS_NOPREFIX,3,6,150,10
-    CONTROL         "Orden:",-1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,3,
-                    18,60,10
+    CONTROL         "Orden:",-1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,3,18,
+                    60,10
     EDITTEXT        201,3,29,134,12,ES_AUTOHSCROLL
-    CONTROL         "Como &Símbolo",214,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,
-                    45,71,12
+    CONTROL         "Como &Símbolo",214,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,3,45,71,12
     DEFPUSHBUTTON   "&Aceptar",1,158,6,47,14
     PUSHBUTTON      "&Cancelar",2,158,23,47,14
     PUSHBUTTON      "&Ayuda",254,158,43,47,14
 END
 
 IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 200, 65
-STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "Buscar Programa en el menu Inicio"
@@ -273,8 +267,8 @@ FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     LTEXT           "&Filtro:",IDC_STATIC,7,9,23,8
     EDITTEXT        IDC_FILTER,34,7,100,14,ES_AUTOHSCROLL
-    CONTROL         "List1",IDC_PROGRAMS_FOUND,"SysListView32",LVS_REPORT |
-                    LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER |
+    CONTROL         "List1",IDC_PROGRAMS_FOUND,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | 
                     WS_TABSTOP,7,25,186,33
     PUSHBUTTON      "&Marcar Entradas",IDC_CHECK_ENTRIES,136,7,57,14
 END
@@ -286,29 +280,29 @@ FONT 8, "MS Sans Serif"
 BEGIN
     LTEXT           "Por favor seleccione su algoritmo de alineamiento preferido:",
                     IDC_STATIC,7,7,195,8
-    CONTROL         "izquierda/arriba abajo",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW |
-                    BS_BOTTOM | WS_TABSTOP,7,25,46,44
-    CONTROL         "izquierda/arriba derecha",IDC_ICON_ALIGN_1,"Button",BS_OWNERDRAW |
-                    BS_BOTTOM | WS_TABSTOP,57,25,46,44
-    CONTROL         "derecha/arriba izquierda",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW |
-                    BS_BOTTOM | WS_TABSTOP,110,25,46,44
-    CONTROL         "derecha/arriba abajo",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW |
-                    BS_BOTTOM | WS_TABSTOP,159,25,46,44
-    CONTROL         "derecha/abajo arriba",IDC_ICON_ALIGN_4,"Button",BS_OWNERDRAW |
-                    BS_BOTTOM | WS_TABSTOP,7,73,46,44
-    CONTROL         "izquierda/abajo derecha",IDC_ICON_ALIGN_5,"Button",BS_OWNERDRAW |
-                    BS_BOTTOM | WS_TABSTOP,57,73,46,44
-    CONTROL         "derecha/abajo izquierda",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW |
-                    BS_BOTTOM | WS_TABSTOP,110,73,46,44
-    CONTROL         "derecha/abajo",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW |
+    CONTROL         "izquierda/arriba abajo",IDC_ICON_ALIGN_0,"Button",
+                    BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP,7,25,46,44
+    CONTROL         "izquierda/arriba derecha",IDC_ICON_ALIGN_1,"Button",
+                    BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP,57,25,46,44
+    CONTROL         "derecha/arriba izquierda",IDC_ICON_ALIGN_2,"Button",
+                    BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP,110,25,46,44
+    CONTROL         "derecha/arriba abajo",IDC_ICON_ALIGN_3,"Button",
+                    BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP,159,25,46,44
+    CONTROL         "derecha/abajo arriba",IDC_ICON_ALIGN_4,"Button",
+                    BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP,7,73,46,44
+    CONTROL         "izquierda/abajo derecha",IDC_ICON_ALIGN_5,"Button",
+                    BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP,57,73,46,44
+    CONTROL         "derecha/abajo izquierda",IDC_ICON_ALIGN_6,"Button",
+                    BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP,110,73,46,44
+    CONTROL         "derecha/abajo",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,159,73,46,44
-    CONTROL         "borde inferior",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW |
+    CONTROL         "borde inferior",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,7,121,46,44
-    CONTROL         "borde H/V",IDC_ICON_ALIGN_9,"Button",BS_OWNERDRAW |
+    CONTROL         "borde H/V",IDC_ICON_ALIGN_9,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,57,121,46,44
-    CONTROL         "aproximado",IDC_ICON_ALIGN_10,"Button",BS_OWNERDRAW |
+    CONTROL         "aproximado",IDC_ICON_ALIGN_10,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,110,121,46,44
-    CONTROL         "",IDC_ICON_ALIGN_11,"Button",BS_OWNERDRAW | BS_BOTTOM |
+    CONTROL         "",IDC_ICON_ALIGN_11,"Button",BS_OWNERDRAW | BS_BOTTOM | 
                     WS_TABSTOP,159,121,46,44
     CONTROL         "Mostrar &Version",ID_DESKTOP_VERSION,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,177,91,10
@@ -319,10 +313,10 @@ STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Propiedades de la Barra de Tareas"
 FONT 8, "MS Sans Serif"
 BEGIN
-    CONTROL         "Mostrar &Reloj",ID_SHOW_CLOCK,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Mostrar &Reloj",ID_SHOW_CLOCK,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,7,152,56,10
     CONTROL         "&Ocultar iconos de notificacion inactivos",
-                    ID_HIDE_INACTIVE_ICONS,"Button",BS_AUTOCHECKBOX |
+                    ID_HIDE_INACTIVE_ICONS,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,7,174,136,10
     PUSHBUTTON      "&Notificaciones...",ID_CONFIG_NOTIFYAREA,145,173,64,14
 END
@@ -335,13 +329,13 @@ BEGIN
 END
 
 IDD_NOTIFYAREA DIALOGEX 0, 0, 208, 174
-STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "Configurar Iconos de Notificaciones"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
-    CONTROL         "Tree1",IDC_NOTIFY_ICONS,"SysTreeView32",TVS_HASLINES |
+    CONTROL         "Tree1",IDC_NOTIFY_ICONS,"SysTreeView32",TVS_HASLINES | 
                     TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,194,31
     LTEXT           "&Texto de Info:",IDC_LABEL1,8,44,51,8
     EDITTEXT        IDC_NOTIFY_TOOLTIP,82,42,117,14,ES_AUTOHSCROLL
@@ -350,15 +344,15 @@ BEGIN
     LTEXT           "&Parche del Módulo:",IDC_LABEL3,8,81,65,8
     EDITTEXT        IDC_NOTIFY_MODULE,82,78,117,14,ES_AUTOHSCROLL
     GROUPBOX        "Modo de &Display",IDC_LABEL4,7,96,157,28
-    CONTROL         "&Mostrar",IDC_NOTIFY_SHOW,"Button",BS_AUTORADIOBUTTON |
+    CONTROL         "&Mostrar",IDC_NOTIFY_SHOW,"Button",BS_AUTORADIOBUTTON | 
                     WS_TABSTOP,15,108,38,10
-    CONTROL         "&Ocultar",IDC_NOTIFY_HIDE,"Button",BS_AUTORADIOBUTTON,66,
-                    108,36,10
+    CONTROL         "&Ocultar",IDC_NOTIFY_HIDE,"Button",BS_AUTORADIOBUTTON,
+                    66,108,36,10
     CONTROL         "A&utoocultar",IDC_NOTIFY_AUTOHIDE,"Button",
                     BS_AUTORADIOBUTTON,112,108,50,10
     ICON            "",IDC_PICTURE,173,101,21,20
     LTEXT           "Último cambio:",IDC_LABEL6,7,132,50,8
-    EDITTEXT        IDC_LAST_CHANGE,59,129,105,14,ES_AUTOHSCROLL |
+    EDITTEXT        IDC_LAST_CHANGE,59,129,105,14,ES_AUTOHSCROLL | 
                     ES_READONLY
     CONTROL         "Mostrar Ocu&ltos",ID_SHOW_HIDDEN_ICONS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,154,64,10
@@ -366,8 +360,8 @@ BEGIN
     PUSHBUTTON      "&Cancelar",IDCANCEL,151,153,50,14
 END
 
-IDD_MDI_SDI DIALOGEX 0, 0, 188, 126
-STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+IDD_MDI_SDI DIALOGEX 0, 0, 194, 138
+STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "Elegir modo MDI / SDI"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
@@ -391,18 +385,18 @@ END
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE MOVEABLE PURE
+1 TEXTINCLUDE MOVEABLE PURE 
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE MOVEABLE PURE
+2 TEXTINCLUDE MOVEABLE PURE 
 BEGIN
     "#include <windows.h>\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE MOVEABLE PURE
+3 TEXTINCLUDE MOVEABLE PURE 
 BEGIN
     "\r\n"
     "\0"
@@ -416,7 +410,7 @@ END
 // String Table
 //
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_TITLE               "ReactOS Explorer"
     IDS_START               "Iniciar"
@@ -435,7 +429,7 @@ BEGIN
     IDS_ADMIN               "Administracion"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_STARTMENU           "Menú Inicio"
     IDS_MINIMIZE_ALL        "mimimizar todas las ventanas"
@@ -453,7 +447,7 @@ BEGIN
     IDS_TERMINATE           "Finalizar ROS Explorer"
 END
 
-STRINGTABLE DISCARDABLE
+STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_NETWORK             "Red"
     IDS_CONNECTIONS         "Conexiones de Red"
@@ -467,7 +461,7 @@ BEGIN
     IDS_ALL_USERS           "Todos los Usuarios\\"
     IDS_SEARCH              "Buscar"
     IDS_ABOUT_EXPLORER      "&Acerca de Explorer..."
-    IDS_LAUNCH_MANY_PROGRAMS
+    IDS_LAUNCH_MANY_PROGRAMS 
                             "Ha seleccionado más de un programa.\n¿Está seguro de que desea ejecutarlos todos?"
     IDS_DESKTOPBAR_SETTINGS "Configuracion del Escritorio"
     IDS_DESKTOP             "Escritorio"

@@ -446,7 +446,7 @@ SOURCE=".\explorer-ru.rc"
 # End Source File
 # Begin Source File
 
-SOURCE=".\explorer-sw.rc"
+SOURCE=".\explorer-sv.rc"
 # PROP Exclude_From_Build 1
 # End Source File
 # Begin Source File
@@ -543,6 +543,10 @@ SOURCE=.\res\logov256.bmp
 # End Source File
 # Begin Source File
 
+SOURCE=.\res\mdi.bmp
+# End Source File
+# Begin Source File
+
 SOURCE=.\res\network.ico
 # End Source File
 # Begin Source File
@@ -568,6 +572,10 @@ SOURCE=.\resource.h
 # Begin Source File
 
 SOURCE=".\res\ros-big.ico"
+# End Source File
+# Begin Source File
+
+SOURCE=.\res\sdi.bmp
 # End Source File
 # Begin Source File
 

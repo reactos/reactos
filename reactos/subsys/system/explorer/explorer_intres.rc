@@ -41,6 +41,8 @@ IDB_ICON_ALIGN_7        BITMAP  MOVEABLE PURE   "res/icoalig7.bmp"
 IDB_ICON_ALIGN_8        BITMAP  MOVEABLE PURE   "res/icoalig8.bmp"
 IDB_ICON_ALIGN_9        BITMAP  MOVEABLE PURE   "res/icoalig9.bmp"
 IDB_ICON_ALIGN_10       BITMAP  MOVEABLE PURE   "res/icoali10.bmp"
+IDB_MDI                 BITMAP  MOVEABLE PURE   "res/mdi.bmp"
+IDB_SDI                 BITMAP  MOVEABLE PURE   "res/sdi.bmp"
 
 /////////////////////////////////////////////////////////////////////////////
 //

@@ -115,6 +115,8 @@
 #define IDI_ARROW_DOWN                  167
 #define IDI_NOTIFY_L                    168
 #define IDI_NOTIFY_R                    169
+#define IDB_MDI                         170
+#define IDB_SDI                         171
 #define ID_VIEW_NAME                    401
 #define ID_VIEW_ALL_ATTRIBUTES          402
 #define ID_VIEW_SELECTED_ATTRIBUTES     403
@@ -219,7 +221,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        169
 #define _APS_NEXT_COMMAND_VALUE         40024
-#define _APS_NEXT_CONTROL_VALUE         1033
+#define _APS_NEXT_CONTROL_VALUE         1034
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
