@@ -240,7 +240,8 @@ int copy (TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], INT append, DWORD lpdwFl
 		{
 			for (i = 0; i < dwRead; i++)
 			{
-				if (((LPTSTR)buffer)[i] == 0x1A)
+				/* we're dealing with ASCII files! */
+				if (((LPSTR)buffer)[i] == 0x1A)
 				{
 					bEof = TRUE;
 					break;
@@ -273,12 +274,13 @@ int copy (TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], INT append, DWORD lpdwFl
  
 	if (lpdwFlags & COPY_ASCII)
 	{
-		((LPTSTR)buffer)[0] = 0x1A;
-		((LPTSTR)buffer)[1] = _T('\0');
+		/* we're dealing with ASCII files! */
+		((LPSTR)buffer)[0] = 0x1A;
+		((LPSTR)buffer)[1] = '\0';
 #ifdef _DEBUG
 		DebugPrintf (_T("appending ^Z\n"));
 #endif
-		WriteFile (hFileDest, buffer, sizeof(TCHAR), &dwWritten, NULL);
+		WriteFile (hFileDest, buffer, sizeof(CHAR), &dwWritten, NULL);
 	}
  
 	free (buffer);
