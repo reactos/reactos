@@ -85,7 +85,7 @@ INT cmd_goto (LPTSTR cmd, LPTSTR param)
   /* jump to begin of the file */
   SetFilePointer (bc->hBatchFile, 0, &lNewPosHigh, FILE_BEGIN);
 
-	while (FileGetString (bc->hBatchFile, textline, sizeof(textline)))
+	while (FileGetString (bc->hBatchFile, textline, sizeof(textline) / sizeof(textline[0])))
 	{
      int pos;
      int size;     
