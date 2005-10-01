@@ -258,6 +258,9 @@ static VOID NOTEPAD_InitMenuPopup(HMENU menu, int index)
 {
     int enable;
 
+    CheckMenuItem(GetMenu(Globals.hMainWnd), CMD_WRAP,
+        MF_BYCOMMAND | (Globals.bWrapLongLines ? MF_CHECKED : MF_UNCHECKED));
+
     EnableMenuItem(menu, CMD_UNDO,
         SendMessage(Globals.hEdit, EM_CANUNDO, 0, 0) ? MF_ENABLED : MF_GRAYED);
     EnableMenuItem(menu, CMD_PASTE,
@@ -286,7 +289,7 @@ static LRESULT WINAPI NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam,
         static const WCHAR editW[] = { 'e','d','i','t',0 };
         RECT rc;
         GetClientRect(hWnd, &rc);
-        Globals.hEdit = CreateWindowEx(EDIT_EXSTYLE, editW, NULL, EDIT_STYLE,
+        Globals.hEdit = CreateWindowEx(EDIT_EXSTYLE, editW, NULL, Globals.bWrapLongLines ? EDIT_STYLE_WRAP : EDIT_STYLE,
                              0, 0, rc.right, rc.bottom, hWnd,
                              NULL, Globals.hInstance, NULL);
         if (!Globals.hEdit)

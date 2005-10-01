@@ -117,6 +117,15 @@ static BOOL QueryByte(HKEY hKey, LPCSTR pszValueName, BYTE *pbResult)
 	return TRUE;
 }
 
+static BOOL QueryBool(HKEY hKey, LPCSTR pszValueName, BOOL *pbResult)
+{
+	DWORD dwResult;
+	if (!QueryDword(hKey, pszValueName, &dwResult))
+		return FALSE;
+	*pbResult = dwResult ? TRUE : FALSE;
+	return TRUE;
+}
+
 static BOOL QueryString(HKEY hKey, LPCSTR pszValueName, LPTSTR pszResult, DWORD dwResultSize)
 {
 	return QueryGeneric(hKey, pszValueName, REG_SZ, pszResult, dwResultSize * sizeof(*pszResult));
@@ -143,6 +152,7 @@ void LoadSettings(void)
 		QueryByte(hKey,		"lfUnderline",		&Globals.lfFont.lfUnderline);
 		QueryDword(hKey,	"lfWeight",			(DWORD*)&Globals.lfFont.lfWeight);
 		QueryDword(hKey,	"iPointSize",		&dwPointSize);
+		QueryBool(hKey,     "fWrap",            &Globals.bWrapLongLines);
 
 		if (dwPointSize != 0)
 			Globals.lfFont.lfHeight = HeightFromPointSize(dwPointSize);
@@ -210,6 +220,7 @@ void SaveSettings(void)
 		SaveDword(hKey,		"lfUnderline",		Globals.lfFont.lfUnderline);
 		SaveDword(hKey,		"lfWeight",			Globals.lfFont.lfWeight);
 		SaveDword(hKey,		"iPointSize",		PointSizeFromHeight(Globals.lfFont.lfHeight));
+		SaveDword(hKey,		"fWrap",			Globals.bWrapLongLines ? 1 : 0);
 
 		RegCloseKey(hKey);
 	}

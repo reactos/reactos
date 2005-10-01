@@ -624,6 +624,8 @@ VOID DIALOG_EditWrap(VOID)
     DWORD size;
     LPWSTR pTemp;
 
+    Globals.bWrapLongLines = !Globals.bWrapLongLines;
+
     size = GetWindowTextLength(Globals.hEdit) + 1;
     pTemp = HeapAlloc(GetProcessHeap(), 0, size * sizeof(WCHAR));
     if (!pTemp)
@@ -639,13 +641,10 @@ VOID DIALOG_EditWrap(VOID)
                          0, 0, rc.right, rc.bottom, Globals.hMainWnd,
                          NULL, Globals.hInstance, NULL);
     SendMessage(Globals.hEdit, WM_SETFONT, (WPARAM)Globals.hFont, (LPARAM)FALSE);
+    SendMessage(Globals.hEdit, EM_LIMITTEXT, 0, 0);
     SetWindowTextW(Globals.hEdit, pTemp);
     SetFocus(Globals.hEdit);
     HeapFree(GetProcessHeap(), 0, pTemp);
-    
-    Globals.bWrapLongLines = !Globals.bWrapLongLines;
-    CheckMenuItem(GetMenu(Globals.hMainWnd), CMD_WRAP,
-        MF_BYCOMMAND | (Globals.bWrapLongLines ? MF_CHECKED : MF_UNCHECKED));
 }
 
 VOID DIALOG_SelectFont(VOID)
@@ -770,7 +769,7 @@ VOID DIALOG_GoTo(VOID)
 
     if (nLine >= 1)
 	{
-        for (i = 0; pszText[i] && (nLine > 1) && (i < dwStart - 1); i++)
+        for (i = 0; pszText[i] && (nLine > 1) && (i < nLength - 1); i++)
         {
             if (pszText[i] == '\n')
                 nLine--;
