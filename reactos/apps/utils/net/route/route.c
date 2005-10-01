@@ -20,7 +20,7 @@
 #define IPBUF 17
 #define IN_ADDR_OF(x) *((struct in_addr *)&(x))
 
-int usage()
+int Usage()
 {
     fprintf( stderr,
          "route usage:\n"
@@ -33,11 +33,11 @@ int usage()
     return 1;
 }
 
-int print_routes()
+int PrintRoutes()
 {
     PMIB_IPFORWARDTABLE IpForwardTable = NULL;
     PIP_ADAPTER_INFO pAdapterInfo = NULL;
-    DWORD Error;
+    DWORD Error = 0;
     ULONG Size = 0;
     ULONG adaptOutBufLen;
     TCHAR DefGate[16];
@@ -52,8 +52,8 @@ int print_routes()
     if( (GetIpForwardTable( NULL, &Size, TRUE )) == ERROR_INSUFFICIENT_BUFFER )
         IpForwardTable = malloc( Size );
 
-    if ((GetAdaptersInfo(pAdapterInfo, &adaptOutBufLen) == NO_ERROR) &&
-        GetIpForwardTable( IpForwardTable, &Size, TRUE ) == NO_ERROR)
+    if ((Error = (GetAdaptersInfo(pAdapterInfo, &adaptOutBufLen) == NO_ERROR)) &&
+        (Error = (GetIpForwardTable(IpForwardTable, &Size, TRUE) == NO_ERROR)))
     {
         _tcsncpy(DefGate, pAdapterInfo->GatewayList.IpAddress.String, 16);
         _tprintf(_T("===========================================================================\n"));
@@ -90,7 +90,8 @@ int print_routes()
         _tprintf(_T("===========================================================================\n"));
         _tprintf(_T("Persistent Routes:\n"));
 
-        free( IpForwardTable );
+        free(IpForwardTable);
+        free(pAdapterInfo);
 
         return ERROR_SUCCESS;
     }
@@ -181,13 +182,13 @@ int main( int argc, char **argv )
 {
 
     if( argc < 2 )
-        return usage();
+        return Usage();
     else if ( !strcasecmp( argv[1], "print" ) )
-        return print_routes();
+        return PrintRoutes();
     else if( !strcasecmp( argv[1], "add" ) )
         return add_route( argc-2, argv+2 );
     else if( !strcasecmp( argv[1], "delete" ) )
         return del_route( argc-2, argv+2 );
     else
-        return usage();
+        return Usage();
 }
