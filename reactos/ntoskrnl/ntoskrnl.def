@@ -588,7 +588,7 @@ KeQueryTimeIncrement@0
 KeRaiseUserException@4
 KeReadStateEvent@4
 KeReadStateMutant@4
-KeReadStateMutex@4
+KeReadStateMutex@4=KeReadStateMutant@4
 KeReadStateQueue@4
 KeReadStateSemaphore@4
 KeReadStateTimer@4
@@ -645,7 +645,7 @@ KeUpdateSystemTime@8
 KeUnstackDetachProcess@4
 KeUserModeCallback@20
 KeWaitForMultipleObjects@32
-KeWaitForMutexObject@20
+KeWaitForMutexObject@20=KeWaitForSingleObject@20
 KeWaitForSingleObject@20
 @KefAcquireSpinLockAtDpcLevel@4
 @KefReleaseSpinLockFromDpcLevel@4
