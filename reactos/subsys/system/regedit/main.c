@@ -73,6 +73,7 @@ TCHAR szChildClass[MAX_LOADSTRING];
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
     BOOL AclUiAvailable;
+    HMENU hEditMenu;
 
     WNDCLASSEX wcFrame = {
                              sizeof(WNDCLASSEX),
@@ -118,7 +119,6 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     /* Initialize the Windows Common Controls DLL */
     InitCommonControls();
 
-    HMENU hEditMenu;
     hEditMenu = GetSubMenu(hMenuFrame, 1);
 
     AclUiAvailable = InitializeAclUiDll();
