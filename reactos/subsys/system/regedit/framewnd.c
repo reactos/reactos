@@ -294,31 +294,51 @@ static BOOL ImportRegistryFile(HWND hWnd)
 
 static UINT_PTR CALLBACK ExportRegistryFile_OFNHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM lParam)
 {
-    HWND hControl;
+    HWND hwndExportAll;
+    HWND hwndExportBranch;
+    HWND hwndExportBranchText;
     UINT_PTR iResult = 0;
+    OPENFILENAME *pOfn;
+    LPTSTR pszSelectedKey;
+    OFNOTIFY *pOfnNotify;
 
 	switch(uiMsg) {
 	case WM_INITDIALOG:
-        hControl = GetDlgItem(hdlg, IDC_EXPORT_ALL);
-        if (hControl)
-		{
-            EnableWindow(hControl, FALSE);
-            SendMessage(hControl, BM_SETCHECK, BST_CHECKED, 0);
-		}
+        pOfn = (OPENFILENAME *) lParam;
+        pszSelectedKey = (LPTSTR) pOfn->lCustData;
 
-        hControl = GetDlgItem(hdlg, IDC_EXPORT_BRANCH);
-        if (hControl)
-		{
-            EnableWindow(hControl, FALSE);
-            SendMessage(hControl, BM_SETCHECK, BST_UNCHECKED, 0);
-		}
+        hwndExportAll = GetDlgItem(hdlg, IDC_EXPORT_ALL);
+        if (hwndExportAll)
+			SendMessage(hwndExportAll, BM_SETCHECK, pszSelectedKey[0] ? BST_UNCHECKED : BST_CHECKED, 0);
 
-        hControl = GetDlgItem(hdlg, IDC_EXPORT_BRANCH_TEXT);
-        if (hControl)
-		{
-            EnableWindow(hControl, FALSE);
+        hwndExportBranch = GetDlgItem(hdlg, IDC_EXPORT_BRANCH);
+        if (hwndExportBranch)
+            SendMessage(hwndExportBranch, BM_SETCHECK, pszSelectedKey[0] ? BST_CHECKED : BST_UNCHECKED, 0);
+
+        hwndExportBranchText = GetDlgItem(hdlg, IDC_EXPORT_BRANCH_TEXT);
+        if (hwndExportBranchText)
+            SetWindowText(hwndExportBranchText, pszSelectedKey);
+        break;
+
+	case WM_NOTIFY:
+        if (((NMHDR *) lParam)->code == CDN_FILEOK)
+        {
+            pOfnNotify = (OFNOTIFY *) lParam;
+            pszSelectedKey = (LPTSTR) pOfnNotify->lpOFN->lCustData;
+
+            hwndExportBranch = GetDlgItem(hdlg, IDC_EXPORT_BRANCH);
+            hwndExportBranchText = GetDlgItem(hdlg, IDC_EXPORT_BRANCH_TEXT);
+            if (hwndExportBranch && hwndExportBranchText
+                && (SendMessage(hwndExportBranch, BM_GETCHECK, 0, 0) == BST_CHECKED))
+			{
+			    GetWindowText(hwndExportBranchText, pszSelectedKey, _MAX_PATH);
+			}
+			else
+			{
+			    pszSelectedKey[0] = '\0';
+			}
 		}
-		break;
+        break;
     }
     return iResult;
 }
@@ -328,12 +348,18 @@ static BOOL ExportRegistryFile(HWND hWnd)
     OPENFILENAME ofn;
     TCHAR ExportKeyPath[_MAX_PATH];
     TCHAR Caption[128];
+    HKEY hKeyRoot;
+    LPCTSTR pszKeyPath;
 
-    ExportKeyPath[0] = _T('\0');
+    /* Figure out which key path we are exporting */
+    pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
+    RegKeyGetName(ExportKeyPath, sizeof(ExportKeyPath) / sizeof(ExportKeyPath[0]),
+        hKeyRoot, pszKeyPath);
+
     InitOpenFileName(hWnd, &ofn);
     LoadString(hInst, IDS_EXPORT_REG_FILE, Caption, sizeof(Caption)/sizeof(TCHAR));
     ofn.lpstrTitle = Caption;
-    /*    ofn.lCustData = ;*/
+    ofn.lCustData = (LPARAM) ExportKeyPath;
     ofn.Flags = OFN_ENABLETEMPLATE | OFN_EXPLORER | OFN_ENABLEHOOK;
     ofn.lpfnHook = ExportRegistryFile_OFNHookProc;
     ofn.lpTemplateName = MAKEINTRESOURCE(IDD_EXPORTRANGE);

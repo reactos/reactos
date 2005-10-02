@@ -1384,7 +1384,6 @@ BOOL export_registry_key(CHAR *file_name, CHAR *reg_key_name)
     if (file) {
         fclose(file);
     }
-    HeapFree(GetProcessHeap(), 0, reg_key_name);
     HeapFree(GetProcessHeap(), 0, val_buf);
     return TRUE;
 }
@@ -1663,5 +1662,35 @@ done:
     if (hKey)
         RegCloseKey(hKey);
     return lResult;
+}
+
+/******************************************************************************
+ * Key naming and parsing
+ */
+
+BOOL RegKeyGetName(LPTSTR pszDest, size_t iDestLength, HKEY hRootKey, LPCTSTR lpSubKey)
+{
+    LPCTSTR pszRootKey;
+
+    if (hRootKey == HKEY_CLASSES_ROOT)
+        pszRootKey = TEXT("HKEY_CLASSES_ROOT");
+	else if (hRootKey == HKEY_CURRENT_USER)
+        pszRootKey = TEXT("HKEY_CURRENT_USER");
+	else if (hRootKey == HKEY_LOCAL_MACHINE)
+        pszRootKey = TEXT("HKEY_LOCAL_MACHINE");
+	else if (hRootKey == HKEY_USERS)
+        pszRootKey = TEXT("HKEY_USERS");
+	else if (hRootKey == HKEY_CURRENT_CONFIG)
+        pszRootKey = TEXT("HKEY_CURRENT_CONFIG");
+	else if (hRootKey == HKEY_DYN_DATA)
+        pszRootKey = TEXT("HKEY_DYN_DATA");
+    else
+        return FALSE;
+
+    if (lpSubKey[0])
+        _sntprintf(pszDest, iDestLength, TEXT("%s\\%s"), pszRootKey, lpSubKey);
+	else
+        _sntprintf(pszDest, iDestLength, TEXT("%s"), pszRootKey);
+    return TRUE;
 }
 
