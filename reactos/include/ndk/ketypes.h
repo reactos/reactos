@@ -172,8 +172,6 @@ typedef VOID
 
 /* TYPES *********************************************************************/
 
-typedef LONG KPRIORITY;
-
 #ifdef NTOS_MODE_USER
 typedef CCHAR KPROCESSOR_MODE;
 

@@ -1313,6 +1313,15 @@ VOID
 NTAPI
 RtlReleasePebLock(VOID);
 
+NTSYSAPI
+VOID
+NTAPI
+RtlSetProcessIsCritical(
+    IN BOOLEAN NewValue,
+    OUT PBOOLEAN OldValue OPTIONAL,
+    IN BOOLEAN IsWinlogon
+);
+
 /*
  * Environment/Path Functions
  */

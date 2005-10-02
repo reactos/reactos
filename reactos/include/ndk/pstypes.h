@@ -13,7 +13,7 @@
 #include "ldrtypes.h"
 #include "mmtypes.h"
 #include "obtypes.h"
-#include "extypes.h"
+//#include "extypes.h"
 #ifndef NTOS_MODE_USER
 #include "setypes.h"
 #endif
@@ -207,6 +207,11 @@ typedef NTSTATUS
 
 /* TYPES *********************************************************************/
 
+struct _W32THREAD;
+struct _W32PROCESS;
+
+struct _ETHREAD;
+
 #ifdef NTOS_MODE_USER
 typedef struct _CLIENT_ID
 {
@@ -214,11 +219,6 @@ typedef struct _CLIENT_ID
     HANDLE UniqueThread;
 } CLIENT_ID, *PCLIENT_ID;
 #endif
-
-struct _W32THREAD;
-struct _W32PROCESS;
-
-struct _ETHREAD;
 
 typedef struct _DESCRIPTOR_TABLE_ENTRY
 {

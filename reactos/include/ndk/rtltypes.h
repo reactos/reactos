@@ -10,6 +10,7 @@
 #define _RTLTYPES_H
 
 /* DEPENDENCIES **************************************************************/
+#include "pstypes.h"
 
 /* CONSTANTS *****************************************************************/
 #define MAXIMUM_LEADBYTES 12
