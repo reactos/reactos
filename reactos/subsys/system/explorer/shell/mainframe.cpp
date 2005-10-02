@@ -93,6 +93,7 @@ int MainFrameBase::OpenShellFolders(LPIDA pida, HWND hFrameWnd)
 
 	LPCITEMIDLIST parent_pidl = (LPCITEMIDLIST) ((LPBYTE)pida+pida->aoffset[0]);
 	ShellFolder folder(parent_pidl);
+	LOG(FmtString(TEXT("MainFrameBase::OpenShellFolders(): parent_pidl=%s"), (LPCTSTR)FileSysShellPath(parent_pidl)));
 
 	for(int i=pida->cidl; i>0; --i) {
 		LPCITEMIDLIST pidl = (LPCITEMIDLIST) ((LPBYTE)pida+pida->aoffset[i]);
@@ -109,6 +110,7 @@ int MainFrameBase::OpenShellFolders(LPIDA pida, HWND hFrameWnd)
 					bool separateFolders = XMLBool(explorer_options, "separate-folders", true);
 
 					ShellPath pidl_abs = ShellPath(pidl).create_absolute_pidl(parent_pidl);
+					LOG(FmtString(TEXT("MainFrameBase::OpenShellFolders(): pidl_abs=%s"), (LPCTSTR)FileSysShellPath(pidl_abs)));
 
 					if (hFrameWnd && (mdi || !separateFolders)) {
 						int flags = OWM_PIDL;
@@ -922,7 +924,7 @@ LRESULT MDIMainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 				path = fsp;
 
 				if (path) {
-					LOG(FmtString(TEXT("PM_OPEN_WINDOW: path=%s"), path));
+					LOG(FmtString(TEXT("MDIMainFrame PM_OPEN_WINDOW: path=%s"), path));
 					lstrcpy(buffer, path);
 					path = buffer;
 				}
@@ -1354,46 +1356,51 @@ LRESULT SDIMainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 	  case WM_PAINT: {
 		PaintCanvas canvas(_hwnd);
-		ClientRect rt(_hwnd);
-		rt.left = _split_pos-SPLIT_WIDTH/2;
-		rt.right = _split_pos+SPLIT_WIDTH/2+1;
 
-		if (_right_hwnd) {
-			WindowRect right_rect(_right_hwnd);
-			ScreenToClient(_hwnd, &right_rect);
-			rt.top = right_rect.top;
-			rt.bottom = right_rect.bottom;
+		if (_left_hwnd) {
+			ClientRect rt(_hwnd);
+			rt.left = _split_pos-SPLIT_WIDTH/2;
+			rt.right = _split_pos+SPLIT_WIDTH/2+1;
+
+			if (_right_hwnd) {
+				WindowRect right_rect(_right_hwnd);
+				ScreenToClient(_hwnd, &right_rect);
+				rt.top = right_rect.top;
+				rt.bottom = right_rect.bottom;
+			}
+
+			HBRUSH lastBrush = SelectBrush(canvas, GetStockBrush(COLOR_SPLITBAR));
+			Rectangle(canvas, rt.left, rt.top-1, rt.right, rt.bottom+1);
+			SelectObject(canvas, lastBrush);
 		}
-
-		HBRUSH lastBrush = SelectBrush(canvas, GetStockBrush(COLOR_SPLITBAR));
-		Rectangle(canvas, rt.left, rt.top-1, rt.right, rt.bottom+1);
-		SelectObject(canvas, lastBrush);
 		break;}
 
 	  case WM_SETCURSOR:
-		if (LOWORD(lparam) == HTCLIENT) {
-			POINT pt;
-			GetCursorPos(&pt);
-			ScreenToClient(_hwnd, &pt);
+  		if (_left_hwnd)
+			if (LOWORD(lparam) == HTCLIENT) {
+				POINT pt;
+				GetCursorPos(&pt);
+				ScreenToClient(_hwnd, &pt);
 
-			if (pt.x>=_split_pos-SPLIT_WIDTH/2 && pt.x<_split_pos+SPLIT_WIDTH/2+1) {
-				SetCursor(LoadCursor(0, IDC_SIZEWE));
-				return TRUE;
+				if (pt.x>=_split_pos-SPLIT_WIDTH/2 && pt.x<_split_pos+SPLIT_WIDTH/2+1) {
+					SetCursor(LoadCursor(0, IDC_SIZEWE));
+					return TRUE;
+				}
 			}
-		}
 		goto def;
 
-	  case WM_LBUTTONDOWN: {
-		int x = GET_X_LPARAM(lparam);
+	  case WM_LBUTTONDOWN:
+		if (_left_hwnd) {
+			int x = GET_X_LPARAM(lparam);
 
-		ClientRect rt(_hwnd);
+			ClientRect rt(_hwnd);
 
-		if (x>=_split_pos-SPLIT_WIDTH/2 && x<_split_pos+SPLIT_WIDTH/2+1) {
-			_last_split = _split_pos;
-			SetCapture(_hwnd);
+			if (x>=_split_pos-SPLIT_WIDTH/2 && x<_split_pos+SPLIT_WIDTH/2+1) {
+				_last_split = _split_pos;
+				SetCapture(_hwnd);
+			}
 		}
-
-		break;}
+		break;
 
 	  case WM_LBUTTONUP:
 		if (GetCapture() == _hwnd)
@@ -1445,7 +1452,7 @@ LRESULT SDIMainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 				path = fsp;
 
 				if (path) {
-					LOG(FmtString(TEXT("PM_OPEN_WINDOW: path=%s"), path));
+					LOG(FmtString(TEXT("SDIMainFrame PM_OPEN_WINDOW: path=%s"), path));
 					lstrcpy(buffer, path);
 					path = buffer;
 				}
@@ -1548,7 +1555,7 @@ void SDIMainFrame::resize_children()
 
 		hdwp = DeferWindowPos(hdwp, _left_hwnd, 0, _clnt_rect.left, _clnt_rect.top, _split_pos-SPLIT_WIDTH/2-_clnt_rect.left, _clnt_rect.bottom-_clnt_rect.top, SWP_NOZORDER|SWP_NOACTIVATE);
 	} else {
-		//_split_pos = 0;
+		//_split_pos = -1;
 		cx = 0;
 	}
 
@@ -1661,7 +1668,7 @@ void SDIMainFrame::jump_to(LPCTSTR path, int mode)
 	} else */{
 		_shellpath_info._open_mode = mode;
 		_shellpath_info._shell_path = path;
-		_shellpath_info._root_shell_path = SpecialFolderPath(CSIDL_DRIVES, _hwnd);	//@@
+		_shellpath_info._root_shell_path = SpecialFolderPath(CSIDL_DRIVES, _hwnd);	//@@ path
 
 		update_shell_browser();
 	}
@@ -1678,7 +1685,7 @@ void SDIMainFrame::jump_to(LPCITEMIDLIST path, int mode)
 	} else {
 		_shellpath_info._open_mode = mode;
 		_shellpath_info._shell_path = path;
-		_shellpath_info._root_shell_path = SpecialFolderPath(CSIDL_DRIVES, _hwnd);	//@@
+		_shellpath_info._root_shell_path = path;	//@@ MF 02.10.2005 was: SpecialFolderPath(CSIDL_DRIVES, _hwnd);
 
 		update_shell_browser();
 	}
