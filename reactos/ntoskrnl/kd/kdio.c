@@ -171,7 +171,11 @@ KdpSerialInit(PKD_DISPATCH_TABLE DispatchTable,
         DispatchTable->KdpPrintRoutine = KdpSerialDebugPrint;
 
         /* Initialize the Port */
-        KdPortInitializeEx(&SerialPortInfo, 0, 0);
+        if (!KdPortInitializeEx(&SerialPortInfo, 0, 0))
+        {
+            KdpDebugMode.Serial = FALSE;
+            return;
+        }
 
         /* Register as a Provider */
         InsertTailList(&KdProviders, &DispatchTable->KdProvidersList);
