@@ -13,8 +13,8 @@
 #include "ldrtypes.h"
 #include "mmtypes.h"
 #include "obtypes.h"
-//#include "extypes.h"
 #ifndef NTOS_MODE_USER
+#include "extypes.h"
 #include "setypes.h"
 #endif
 

@@ -76,7 +76,7 @@ KeReleaseSemaphore(PKSEMAPHORE Semaphore,
                    LONG Adjustment,
                    BOOLEAN Wait)
 {
-    LONG InitialState, ULONG State;
+    LONG InitialState, State;
     KIRQL OldIrql;
     PKTHREAD CurrentThread;
 
@@ -91,7 +91,7 @@ KeReleaseSemaphore(PKSEMAPHORE Semaphore,
 
     /* Save the Old State and get new one */
     InitialState = Semaphore->Header.SignalState;
-    State = InitialState + Adjustement;
+    State = InitialState + Adjustment;
 
     /* Check if the Limit was exceeded */
     if ((Semaphore->Limit < State) || (InitialState > State))
@@ -105,7 +105,7 @@ KeReleaseSemaphore(PKSEMAPHORE Semaphore,
     Semaphore->Header.SignalState = State;
 
     /* Check if we should wake it */
-    if (!(InitialState) && !(IsListEmpty(&Semaphore->Header.WaitListHead))
+    if (!(InitialState) && !(IsListEmpty(&Semaphore->Header.WaitListHead)))
     {
         /* Wake the Semaphore */
         KiWaitTest(&Semaphore->Header, Increment);
