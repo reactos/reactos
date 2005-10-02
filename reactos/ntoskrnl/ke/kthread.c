@@ -473,7 +473,10 @@ KeRundownThread(VOID)
     {
         /* Get the Mutant */
         Mutant = CONTAINING_RECORD(NextEntry, KMUTANT, MutantListEntry);
-        DPRINT1("Mutant: %p. Type, Size %x %x\n", Mutant, Mutant->Header.Type, Mutant->Header.Size);
+        DPRINT1("Mutant: %p. Type, Size %x %x\n",
+                 Mutant,
+                 Mutant->Header.Type,
+                 Mutant->Header.Size);
 
         /* Make sure it's not terminating with APCs off */
         if (Mutant->ApcDisable)
