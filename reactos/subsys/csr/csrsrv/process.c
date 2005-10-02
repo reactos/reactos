@@ -1097,12 +1097,12 @@ CsrShutdownProcesses(PLUID CallerLuid,
                      ULONG Flags)
 {
     PLIST_ENTRY ListHead, NextEntry;
-    PCSR_PROCESS CsrProcess;
+    PCSR_PROCESS CsrProcess = NULL;
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
     BOOLEAN FirstTry = TRUE;
-    ULONG i;
-    PCSR_SERVER_DLL ServerDll;
-    ULONG Result;
+    ULONG i = 0;
+    PCSR_SERVER_DLL ServerDll = NULL;
+    ULONG Result = 0;
 
     /* Acquire process lock */
     CsrAcquireProcessLock();

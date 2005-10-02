@@ -1124,13 +1124,13 @@ NTAPI
 CsrCaptureArguments(IN PCSR_THREAD CsrThread,
                     IN PCSR_API_MESSAGE ApiMessage)
 {
-    PCSR_CAPTURE_BUFFER LocalCaptureBuffer;
-    ULONG LocalLength;
-    PCSR_CAPTURE_BUFFER RemoteCaptureBuffer;
-    SIZE_T BufferDistance;
-    ULONG PointerCount;
-    ULONG_PTR **PointerOffsets;
-    ULONG_PTR *CurrentPointer;
+    PCSR_CAPTURE_BUFFER LocalCaptureBuffer = NULL;
+    ULONG LocalLength = 0;
+    PCSR_CAPTURE_BUFFER RemoteCaptureBuffer = NULL;
+    SIZE_T BufferDistance = 0;
+    ULONG PointerCount = 0;
+    ULONG_PTR **PointerOffsets = NULL;
+    ULONG_PTR *CurrentPointer = NULL;
 
     /* Use SEH to make sure this is valid */
     _SEH_TRY
