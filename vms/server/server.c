@@ -32,35 +32,37 @@ HANDLE VmsApiPort = NULL;
 
 /**********************************************************************
  * NAME							PRIVATE
- * 	VmsStaticServerThread/1
+ * 	VmsApiNull/2
  */
-VOID STDCALL VmsStaticServerThread (PVOID x)
+NTSTATUS NTAPI VmsApiNull (IN OUT PCSR_API_MESSAGE ApiMessage,
+			   IN OUT PULONG Reply)
 {
-	NTSTATUS Status = STATUS_SUCCESS;
-	PPORT_MESSAGE Request = (PPORT_MESSAGE) x;
-	PPORT_MESSAGE Reply = NULL;
-	ULONG MessageType = 0;
-
 	DPRINT("VMSSRV: %s called\n", __FUNCTION__);
 
-	MessageType = Request->u2.s2.Type;
-	DPRINT("VMSSRV: %s received a message (Type=%d)\n",
-		__FUNCTION__, MessageType);
-	switch (MessageType)
-	{
-		default:
-			Reply = Request;
-			Status = NtReplyPort (VmsApiPort, Reply);
-			break;
-	}
+	*Reply = 0;
+	return STATUS_SUCCESS;
 }
+
+PCSR_API_ROUTINE VmsServerApiDispatchTable [1] =
+{
+	VmsApiNull
+};
+
+BOOLEAN VmsServerApiValidTable [1] =
+{
+    TRUE
+};
+
+PCHAR VmsServerApiNameTable [1] =
+{
+    "Null",
+};
 
 /*=====================================================================
  * 	PUBLIC API
  *===================================================================*/
 
-NTSTATUS STDCALL ServerDllInitialization (ULONG ArgumentCount,
-					  LPWSTR *Argument)
+NTSTATUS NTAPI ServerDllInitialization (PCSR_SERVER_DLL LoadedServerDll)
 {
 	NTSTATUS Status = STATUS_SUCCESS;
 	
@@ -70,13 +72,17 @@ NTSTATUS STDCALL ServerDllInitialization (ULONG ArgumentCount,
 	VmsApiPort = CsrQueryApiPort ();
 	if (NULL == VmsApiPort)
 	{
-		return STATUS_UNSUCCESSFUL;
-	}
-	// Register our message dispatcher
-	Status = CsrAddStaticServerThread (VmsStaticServerThread);
-	if (NT_SUCCESS(Status))
-	{
-		//TODO: perform the real VMS server internal initialization here
+		Status = STATUS_UNSUCCESSFUL;
+	} else {
+		// Set CSR information
+		LoadedServerDll->ApiBase             = 0;
+		LoadedServerDll->HighestApiSupported = 0;
+		LoadedServerDll->DispatchTable       = VmsServerApiDispatchTable;
+		LoadedServerDll->ValidTable          = VmsServerApiValidTable;
+		LoadedServerDll->NameTable           = VmsServerApiNameTable;
+		LoadedServerDll->SizeOfProcessData   = 0;
+		LoadedServerDll->ConnectCallback     = NULL;
+		LoadedServerDll->DisconnectCallback  = NULL;
 	}
 	return Status;
 }
