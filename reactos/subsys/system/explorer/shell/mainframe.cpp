@@ -224,7 +224,7 @@ MainFrameBase::MainFrameBase(HWND hwnd)
 					WS_CHILD|WS_TABSTOP|WS_BORDER|/*WS_VISIBLE|*/WS_CHILD|TVS_HASLINES|TVS_HASBUTTONS|TVS_SHOWSELALWAYS|TVS_INFOTIP,
 					-1, -1, 200, 0, _hwnd, (HMENU)IDW_SIDEBAR, g_Globals._hInstance, 0);
 
-	(void)TreeView_SetImageList(_hsidebar, _himl, TVSIL_NORMAL);
+	_himl_old = TreeView_SetImageList(_hsidebar, _himl, TVSIL_NORMAL);
 
 	CheckMenuItem(_menu_info._hMenuView, ID_VIEW_SIDE_BAR, MF_BYCOMMAND|MF_UNCHECKED/*MF_CHECKED*/);
 
@@ -266,6 +266,7 @@ MainFrameBase::MainFrameBase(HWND hwnd)
 
 MainFrameBase::~MainFrameBase()
 {
+	(void)TreeView_SetImageList(_hsidebar, _himl_old, TVSIL_NORMAL);
 	ImageList_Destroy(_himl);
 
 	 // don't exit desktop when closing file manager window
@@ -914,13 +915,13 @@ LRESULT MDIMainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 		TCHAR buffer[MAX_PATH];
 		LPCTSTR path;
-		ShellPath shell_path = DesktopFolderPath();
+		ShellPath root_path = DesktopFolderPath();
 
 		if (lparam) {
 			if (wparam & OWM_PIDL) {
 				 // take over PIDL from lparam
-				shell_path.assign((LPCITEMIDLIST)lparam);	// create as "rooted" window
-				FileSysShellPath fsp(shell_path);
+				root_path.assign((LPCITEMIDLIST)lparam);	// create as "rooted" window
+				FileSysShellPath fsp(root_path);
 				path = fsp;
 
 				if (path) {
@@ -931,7 +932,7 @@ LRESULT MDIMainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			} else {
 				 // take over path from lparam
 				path = (LPCTSTR)lparam;
-				shell_path = path;	// create as "rooted" window
+				root_path = path;	// create as "rooted" window
 			}
 		} else {
 			///@todo read paths and window placements from registry
@@ -949,7 +950,7 @@ LRESULT MDIMainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			OBJ_CONTEXT("create ShellChildWndInfo", path);
 
 			 // Shell Namespace as default view
-			ShellChildWndInfo create_info(_hmdiclient, path, shell_path);
+			ShellChildWndInfo create_info(_hmdiclient, path, root_path);
 
 			create_info._pos.showCmd = wparam&OWM_SEPARATE? SW_SHOWNORMAL: SW_SHOWMAXIMIZED;
 			create_info._pos.rcNormalPosition.left = CW_USEDEFAULT;
@@ -1442,13 +1443,13 @@ LRESULT SDIMainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 		TCHAR buffer[MAX_PATH];
 		LPCTSTR path;
-		ShellPath shell_path = DesktopFolderPath();
+		ShellPath root_path = DesktopFolderPath();
 
 		if (lparam) {
 			if (wparam & OWM_PIDL) {
 				 // take over PIDL from lparam
-				shell_path.assign((LPCITEMIDLIST)lparam);	// create as "rooted" window
-				FileSysShellPath fsp(shell_path);
+				root_path.assign((LPCITEMIDLIST)lparam);	// create as "rooted" window
+				FileSysShellPath fsp(root_path);
 				path = fsp;
 
 				if (path) {
@@ -1459,7 +1460,7 @@ LRESULT SDIMainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			} else {
 				 // take over path from lparam
 				path = (LPCTSTR)lparam;
-				shell_path = path;	// create as "rooted" window
+				root_path = path;	// create as "rooted" window
 			}
 		} else {
 			///@todo read paths and window placements from registry
@@ -1467,10 +1468,10 @@ LRESULT SDIMainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 				*buffer = '\0';
 
 			path = buffer;
-			shell_path = path;
+			root_path = path;
 		}
 
-		jump_to(shell_path, (OPEN_WINDOW_MODE)wparam);	//@todo content of 'path' not used any more
+		jump_to(root_path, (OPEN_WINDOW_MODE)wparam);	//@todo content of 'path' not used any more
 		return TRUE;}	// success
 
 	  default: def:

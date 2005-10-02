@@ -148,6 +148,7 @@ protected:
 	WindowHandle& _right_hwnd;
 	ShellPathInfo& _create_info;
 	HIMAGELIST	_himl;
+	HIMAGELIST	_himl_old;
 	BrowserCallback* _callback;
 
 	WindowHandle _hWndFrame;
@@ -175,6 +176,15 @@ protected:
 };
 
 
+#define	C_DRIVE_STR TEXT("C:\\")
+
+ // work around GCC's wide string constant bug
+#ifdef __GNUC__
+extern const LPCTSTR C_DRIVE;
+#else
+#define	C_DRIVE C_DRIVE_STR
+#endif
+
 template<typename BASE> struct ShellBrowserChildT
  : public BASE, public BrowserCallback
 {
@@ -198,8 +208,8 @@ template<typename BASE> struct ShellBrowserChildT
 	{
 		SHFILEINFO sfi;
 
-		_himlSmall = (HIMAGELIST)SHGetFileInfo(TEXT("C:\\"), 0, &sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX|SHGFI_SMALLICON);
-//		_himlLarge = (HIMAGELIST)SHGetFileInfo(TEXT("C:\\"), 0, &sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX|SHGFI_LARGEICON);
+		_himlSmall = (HIMAGELIST)SHGetFileInfo(C_DRIVE, 0, &sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX|SHGFI_SMALLICON);
+//		_himlLarge = (HIMAGELIST)SHGetFileInfo(C_DRIVE, 0, &sfi, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX|SHGFI_LARGEICON);
 	}
 
 protected:

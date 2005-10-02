@@ -31,6 +31,12 @@
 #include "../resource.h"
 
 
+ // work around GCC's wide string constant bug
+#ifdef __GNUC__
+const LPCTSTR C_DRIVE = C_DRIVE_STR;
+#endif
+
+
 ShellBrowser::ShellBrowser(HWND hwnd, HWND left_hwnd, WindowHandle& right_hwnd, ShellPathInfo& create_info,
 							HIMAGELIST himl, BrowserCallback* cb, CtxMenuInterfaces& cm_ifs)
 #ifndef __MINGW32__	// IShellFolderViewCB missing in MinGW (as of 25.09.2005)
@@ -55,7 +61,7 @@ ShellBrowser::ShellBrowser(HWND hwnd, HWND left_hwnd, WindowHandle& right_hwnd, 
 
 ShellBrowser::~ShellBrowser()
 {
-	(void)TreeView_SetImageList(_left_hwnd, 0, TVSIL_NORMAL);
+	(void)TreeView_SetImageList(_left_hwnd, _himl_old, TVSIL_NORMAL);
 
 	if (_pShellView)
 		_pShellView->Release();
@@ -146,7 +152,7 @@ void ShellBrowser::InitializeTree(HIMAGELIST himl)
 {
 	CONTEXT("ShellBrowserChild::InitializeTree()");
 
-	(void)TreeView_SetImageList(_left_hwnd, himl, TVSIL_NORMAL);
+	_himl_old = TreeView_SetImageList(_left_hwnd, himl, TVSIL_NORMAL);
 	TreeView_SetScrollTime(_left_hwnd, 100);
 
 	TV_INSERTSTRUCT tvInsert;

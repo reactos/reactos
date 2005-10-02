@@ -52,15 +52,16 @@ struct MainFrameBase : public PreTranslateWindow
 	WindowHandle _hsidebar;
 	HIMAGELIST	_himl;
 
-	HMENU	_hMenuFrame;
-	HMENU	_hMenuWindow;
+	HMENU		_hMenuFrame;
+	HMENU		_hMenuWindow;
 
-	MenuInfo _menu_info;
+	MenuInfo	_menu_info;
 
 protected:
 	FullScreenParameters _fullscreen;
 
-	HACCEL	_hAccel;
+	HACCEL		_hAccel;
+	HIMAGELIST	_himl_old;
 
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 	bool	ProcessMessage(UINT nmsg, WPARAM wparam, LPARAM lparam, LRESULT* pres);
