@@ -219,6 +219,8 @@
 #define STRING_EXPECTED_CLOSE_PAREN        721
 #define STRING_EXPECTED_NUMBER_OR_VARIABLE 722
 #define STRING_SYNTAX_COMMAND_INCORRECT    723
+#define STRING_RMDIR_HELP2				   724
+
 
 /* These strings are language independent (cmd.rc) */
 #define STRING_FREEDOS_DEV                 800

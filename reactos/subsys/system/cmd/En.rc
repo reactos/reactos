@@ -364,7 +364,10 @@ STRING_PROMPT_HELP3, "\nType PROMPT without parameters to reset the prompt to th
 STRING_REM_HELP, "Starts a comment line in a batch file.\n\nREM [Comment]"
 
 STRING_RMDIR_HELP,   "Removes a directory.\n\n\
-RMDIR [drive:]path\nRD [drive:]path"
+RMDIR [drive:]path\nRD [drive:]path\n\
+/S			Deletes all files and folders within target\n\
+/Q			Doesnt prompt for user\n"
+STRING_RMDIR_HELP2,	"Directory is not empty!\n"
 
 STRING_REN_HELP1, "Renames a file/directory or files/directories.\n\n\
 RENAME [/E /N /P /Q /S /T] old_name ... new_name\n\

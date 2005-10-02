@@ -499,68 +499,163 @@ INT cmd_mkdir (LPTSTR cmd, LPTSTR param)
  * RD / RMDIR
  *
  */
+BOOL DeleteFolder(LPTSTR FileName)
+{
+	TCHAR Base[MAX_PATH];
+	TCHAR TempFileName[MAX_PATH];
+	HANDLE hFile;
+    WIN32_FIND_DATA f;
+	_tcscpy(Base,FileName);
+	_tcscat(Base,_T("\\*"));
+	hFile = FindFirstFile(Base, &f);
+	Base[_tcslen(Base) - 1] = _T('\0');
+    if (hFile != INVALID_HANDLE_VALUE)
+    {
+        do
+        {
+       		if (!_tcscmp(f.cFileName, _T(".")) ||
+                !_tcscmp(f.cFileName, _T("..")))
+		        continue;
+			_tcscpy(TempFileName,Base);
+			_tcscat(TempFileName,f.cFileName);
+
+			if(f.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+				DeleteFolder(TempFileName);
+			else
+			{
+				SetFileAttributes(TempFileName,FILE_ATTRIBUTE_NORMAL);
+				if(!DeleteFile(TempFileName))
+					return 0;
+			}
+
+        }while (FindNextFile (hFile, &f));
+	    FindClose (hFile);
+    }
+	return RemoveDirectory(FileName);
+}
 INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
 {
 	LPTSTR dir;		/* pointer to the directory to change to */
-	LPTSTR place;	/* used to search for the \ when no space is used */
-
-	LPTSTR *p = NULL;
-	INT argc;
-
+	char ch;
+	INT args;
+	LPTSTR *arg = NULL;
+	INT i;
+	BOOL RD_SUB = FALSE;
+	BOOL RD_QUIET = FALSE;
+	HANDLE hFile;
+	WIN32_FIND_DATA f;
+	INT res;
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
+	TCHAR szFullPath[MAX_PATH];
+	
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
 		ConOutResPaging(TRUE,STRING_RMDIR_HELP);
 		return 0;
 	}
 
-	/* check if there is no space between the command and the path */
-	if (param[0] == _T('\0'))
-	{
-		/* search for the \ or . so that both short & long names will work */
-		for (place = cmd; *place; place++)
-			if (*place == _T('.') || *place == _T('\\'))
-				break;
+	nErrorLevel = 0;
 
-		if (*place)
-			dir = place;
+	arg = split (param, &args, FALSE);
+
+	if (args == 0)
+	{
+		/* only command given */
+		error_req_param_missing ();
+		freep (arg);
+		return 1;
+	}
+
+	/* check for options anywhere in command line */
+	for (i = 0; i < args; i++)
+	{
+		if (*arg[i] == _T('/'))
+		{
+			/*found a command, but check to make sure it has something after it*/
+			if (_tcslen (arg[i]) == 2)
+			{
+				ch = _totupper (arg[i][1]);
+				if (ch == _T('S'))
+				{
+					RD_SUB = TRUE;
+				}
+				else if (ch == _T('Q'))
+				{
+					RD_QUIET = TRUE;
+				}
+			}
+		}
 		else
-			/* signal that there are no parameters */
-			dir = NULL;
+		{
+			/* get the folder name */
+			_tcscpy(dir,arg[i]);
+		}
+	}
+	
+	if (!dir)
+	{
+		/* No folder to remove */
+		ConErrResPuts(STRING_ERROR_REQ_PARAM_MISSING);
+		freep(arg);
+		return 1;
+	}
+
+	GetFullPathName(dir,MAX_PATH,szFullPath,NULL);
+	/* remove trailing \ if any, but ONLY if dir is not the root dir */
+	if (_tcslen (szFullPath) >= 2 && szFullPath[_tcslen (szFullPath) - 1] == _T('\\'))
+		szFullPath[_tcslen(szFullPath) - 1] = _T('\0');
+
+	if(RD_SUB)
+	{
+		/* ask if they want to delete evrything in the folder */
+		if (!RD_QUIET)
+		{
+			LoadString( CMD_ModuleHandle, STRING_DEL_HELP2, szMsg, RC_STRING_MAX_SIZE);
+			res = FilePromptYNA (szMsg);
+			if ((res == PROMPT_NO) || (res == PROMPT_BREAK))
+			{
+				freep(arg);
+				nErrorLevel = 1;
+				return 1;
+			}
+		}
+
 	}
 	else
 	{
-		p = split (param, &argc, FALSE);
-		if (argc > 1)
+		/* check for files in the folder */
+		_tcscat(szFullPath,_T("\\*"));
+
+		hFile = FindFirstFile(szFullPath, &f);
+		if (hFile != INVALID_HANDLE_VALUE)
 		{
-			/*JPP 20-Jul-1998 use standard error message */
-			error_too_many_parameters (param);
-			freep (p);
-			return 1;
+			do
+			{
+				if (!_tcscmp(f.cFileName,_T(".")) ||
+					!_tcscmp(f.cFileName,_T("..")))
+					continue;
+				ConOutResPuts(STRING_RMDIR_HELP2);
+				freep(arg);
+				FindClose (hFile);
+				nErrorLevel = 1;
+				return 1;
+			}while (FindNextFile (hFile, &f));
+			FindClose (hFile);
 		}
-		else
-			dir = p[0];
+		/* reovme the \\* */
+		szFullPath[_tcslen(szFullPath) - 2] = _T('\0');
 	}
 
-	if (!dir)
+	if (!DeleteFolder(szFullPath))
 	{
-		ConErrResPuts(STRING_ERROR_REQ_PARAM_MISSING);
-		return 1;
-	}
-
-	/* remove trailing \ if any, but ONLY if dir is not the root dir */
-	if (_tcslen (dir) >= 2 && dir[_tcslen (dir) - 1] == _T('\\'))
-		dir[_tcslen(dir) - 1] = _T('\0');
-
-	if (!RemoveDirectory (dir))
-	{
+		/* Couldnt delete the folder, clean up and print out the error */
 		ErrorMessage (GetLastError(), _T("RD"));
-		freep (p);
-
+		freep (arg);
+		nErrorLevel = 1;
 		return 1;
 	}
 
-	freep (p);
-
+	freep (arg);
 	return 0;
 }
 #endif
