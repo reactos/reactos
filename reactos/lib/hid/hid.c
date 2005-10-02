@@ -369,14 +369,13 @@ HidD_Hello(OUT PCHAR Buffer,
            IN ULONG BufferLength)
 {
   const CHAR HelloString[] = "Hello\n";
-  ULONG StrSize = sizeof(HelloString) + sizeof(HelloString[0]);
   
   if(BufferLength > 0)
   {
-    memcpy(Buffer, HelloString, min(StrSize, BufferLength));
+    memcpy(Buffer, HelloString, min(sizeof(HelloString), BufferLength));
   }
   
-  return StrSize;
+  return sizeof(HelloString);
 }
 
 
