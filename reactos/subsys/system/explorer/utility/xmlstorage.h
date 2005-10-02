@@ -1228,15 +1228,19 @@ protected:
 };
 
 
+#define	XS_TRUE_STR XS_TEXT("true")
+#define	XS_FALSE_STR XS_TEXT("false")
+#define	XS_NUMBERFMT_STR XS_TEXT("%d")
+
  // work around GCC's wide string constant bug
 #ifdef __GNUC__
 extern const LPCXSSTR XS_TRUE;
 extern const LPCXSSTR XS_FALSE;
 extern const LPCXSSTR XS_NUMBERFMT;
 #else
-#define	XS_TRUE XS_TEXT("true")
-#define	XS_FALSE XS_TEXT("false")
-#define	XS_NUMBERFMT XS_TEXT("%d")
+#define	XS_TRUE XS_TRUE_STR
+#define	XS_FALSE XS_FALSE_STR
+#define	XS_NUMBERFMT XS_NUMBERFMT_STR
 #endif
 
 

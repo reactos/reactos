@@ -10,7 +10,7 @@ CC = gcc
 CXX = g++
 LINK = g++
 
-CFLAGS	= -DWIN32 -D_WIN32_IE=0x0600 -D_WIN32_WINNT=0x0501 -DWINVER=0x0500 -fexceptions -Wall -Wno-unused-value -I. -I$(EXPAT_INC)
+CFLAGS	= -DWIN32 -D_WIN32_IE=0x0600 -D_WIN32_WINNT=0x0501 -DWINVER=0x0500 -fexceptions -Wall -I. -I$(EXPAT_INC)
 RCFLAGS	= -DWIN32 -D__WINDRES__
 LFLAGS	= -Wl,--subsystem,windows
 
@@ -52,6 +52,7 @@ OBJECTS = \
 	window.o \
 	dragdropimpl.o \
 	shellbrowserimpl.o \
+	shellservices.o \
 	explorer.o \
 	entries.o \
 	winfs.o \
@@ -69,7 +70,6 @@ OBJECTS = \
 	desktopbar.o \
 	taskbar.o \
 	startmenu.o \
-	shellservices.o \
 	traynotify.o \
 	quicklaunch.o \
 	favorites.o \
