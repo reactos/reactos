@@ -1,37 +1,15 @@
 /*
- * ReactOS New devices installation
- * Copyright (C) 2004 ReactOS Team
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- */
-/*
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS New devices installation
  * FILE:            lib/newdev/newdev.c
  * PURPOSE:         New devices installation
- * PROGRAMMER:      Hervé Poussineau (hpoussin@reactos.org)
+ *
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
-#include <windows.h>
-#include <setupapi.h>
+#include "newdev.h"
 
-ULONG DbgPrint(PCH Format,...);
-#define UNIMPLEMENTED \
-  DbgPrint("NEWDEV:  %s at %s:%d is UNIMPLEMENTED!\n",__FUNCTION__,__FILE__,__LINE__)
-#define DPRINT1 DbgPrint("(%s:%d) ", __FILE__, __LINE__), DbgPrint
-
-BOOL
+BOOL WINAPI
 DevInstallW(
 	IN HWND Hwnd,
 	IN HINSTANCE Handle,
@@ -44,8 +22,7 @@ DevInstallW(
 	DWORD index;
 	BOOL ret;
 
-	DbgPrint("OK\n");
-	DbgPrint("Installing device %S\n", InstanceId);
+	DPRINT1("Installing device %S\n", InstanceId);
 
 	hDevInfo = SetupDiCreateDeviceInfoListExW(NULL, NULL, NULL, NULL);
 	if (hDevInfo == INVALID_HANDLE_VALUE)

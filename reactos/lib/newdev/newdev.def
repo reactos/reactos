@@ -1,16 +1,15 @@
 LIBRARY newdev.dll
 
 EXPORTS
-DevInstallW
+DevInstallW@16
 ;InstallDevInst
 ;InstallDevInstEx
-;InstallNewDevice
+InstallNewDevice@12
 ;InstallSelectedDevice
-;InstallSelectedDriver
+InstallSelectedDriverW@20
 ;InstallWindowsUpdateDriver
 ;RollbackDriver
-;UpdateDriverForPlugAndPlayDevicesA
-;UpdateDriverForPlugAndPlayDevicesA@20=UpdateDriverForPlugAndPlayDevicesA
-;UpdateDriverForPlugAndPlayDevicesW
+UpdateDriverForPlugAndPlayDevicesA@20
+UpdateDriverForPlugAndPlayDevicesW@20
 
 ;EOF
