@@ -298,6 +298,7 @@ modules\rosky\lib\libsky\libsky.dll     1       optional
 modules\rosky\lib\libskygi\libskygi.dll 1       optional
 modules\vms\server\vmssrv.dll           1	optional
 modules\vms\lib\vmsdll\vmsdll.dll       1	optional
+modules\rosapps\cmdutils\comp\comp.exe	1	optional
 modules\rosapps\cmdutils\find\find.exe	1	optional
 modules\rosapps\cmdutils\mode\mode.exe	1	optional
 modules\rosapps\cmdutils\more\more.exe	1	optional
