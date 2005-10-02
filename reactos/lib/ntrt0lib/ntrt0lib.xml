@@ -1,0 +1,5 @@
+<module name="ntrt0lib" type="staticlibrary">
+	<define name="_DISABLE_TIDENTS" />
+	<file>args.c</file>
+	<file>entry_point.c</file>
+</module>

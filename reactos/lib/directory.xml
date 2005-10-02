@@ -170,6 +170,9 @@
 <directory name="newdev">
 	<xi:include href="newdev/newdev.xml" />
 </directory>
+<directory name="ntrt0lib">
+	<xi:include href="ntrt0lib/ntrt0lib.xml" />
+</directory>
 <directory name="ntdll">
 	<xi:include href="ntdll/ntdll.xml" />
 </directory>
