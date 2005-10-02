@@ -1,37 +1,44 @@
 <group>
-<directory name="posix">
-	<xi:include href="posix/directory.xml">
-		<xi:fallback>
-			<xi:include href="empty.xml" />
-		</xi:fallback>
-	</xi:include>
-</directory>
-<directory name="os2">
-	<xi:include href="os2/directory.xml">
-		<xi:fallback>
-			<xi:include href="empty.xml" />
-		</xi:fallback>
-	</xi:include>
-</directory>
-<directory name="rosapps">
-	<xi:include href="rosapps/directory.xml">
-		<xi:fallback>
-			<xi:include href="empty.xml" />
-		</xi:fallback>
-	</xi:include>
-</directory>
-<directory name="rosky">
-	<xi:include href="rosky/directory.xml">
-		<xi:fallback>
-			<xi:include href="empty.xml" />
-		</xi:fallback>
-	</xi:include>
-</directory>
-<directory name="vms">
-	<xi:include href="vms/directory.xml">
-		<xi:fallback>
-			<xi:include href="empty.xml" />
-		</xi:fallback>
-	</xi:include>
-</directory>
+	<directory name="os2">
+		<xi:include href="os2/directory.xml">
+			<xi:fallback>
+				<xi:include href="empty.xml" />
+			</xi:fallback>
+		</xi:include>
+	</directory>
+	<directory name="posix">
+		<xi:include href="posix/directory.xml">
+			<xi:fallback>
+				<xi:include href="empty.xml" />
+			</xi:fallback>
+		</xi:include>
+	</directory>
+	<directory name="rosapps">
+		<xi:include href="rosapps/directory.xml">
+			<xi:fallback>
+				<xi:include href="empty.xml" />
+			</xi:fallback>
+		</xi:include>
+	</directory>
+	<directory name="rosky">
+		<xi:include href="rosky/directory.xml">
+			<xi:fallback>
+				<xi:include href="empty.xml" />
+			</xi:fallback>
+		</xi:include>
+	</directory>
+	<directory name="vms">
+		<xi:include href="vms/directory.xml">
+			<xi:fallback>
+				<xi:include href="empty.xml" />
+			</xi:fallback>
+		</xi:include>
+	</directory>
+	<directory name="windows">
+		<xi:include href="windows/directory.xml">
+			<xi:fallback>
+				<xi:include href="empty.xml" />
+			</xi:fallback>
+		</xi:include>
+	</directory>
 </group>
