@@ -112,6 +112,8 @@ void ShellBrowser::jump_to(LPCITEMIDLIST pidl)
 	-> see FileChildWindow::FileChildWindow()
 */
 
+	LOG(FmtString(TEXT("ShellBrowser::jump_to(): pidl=%s"), (LPCTSTR)FileSysShellPath(pidl)));
+
 	if (_cur_dir) {
 		static DynamicFct<LPITEMIDLIST(WINAPI*)(LPCITEMIDLIST, LPCITEMIDLIST)> ILFindChild(TEXT("SHELL32"), 24);
 
@@ -127,8 +129,10 @@ void ShellBrowser::jump_to(LPCITEMIDLIST pidl)
 
 			entry = _cur_dir->find_entry(child_pidl);
 
-			if (entry)
+			if (entry) {
+				_cur_dir = static_cast<ShellDirectory*>(entry);
 				_callback->entry_selected(entry);
+			}
 		}
 	}
 
