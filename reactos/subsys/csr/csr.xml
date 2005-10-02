@@ -6,8 +6,6 @@
 	<library>ntdll</library>
 	<library>csrsrv</library>
 	<file>main.c</file>
-	<file>args.c</file>
-	<file>csr.rc</file>
 </module>
 <directory name="csrsrv">
 	<xi:include href="csrsrv/csrsrv.xml" />

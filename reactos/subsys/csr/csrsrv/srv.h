@@ -5,7 +5,9 @@
 #define NTOS_MODE_USER
 #include <stdio.h>
 #include <windows.h>
+#include <winnt.h>
 #include <ndk/ntndk.h>
+#include <helper.h>
 
 /* CSR Header */
 #include <csr/server.h>
@@ -78,6 +80,13 @@ CsrLoadServerDll(
     IN PCHAR DllString,
     IN PCHAR EntryPoint,
     IN ULONG ServerId
+);
+
+NTSTATUS
+NTAPI
+CsrServerInitialization(
+    ULONG ArgumentCount,
+    PCHAR Arguments[]
 );
 
 NTSTATUS

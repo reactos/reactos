@@ -62,7 +62,7 @@ CsrCheckRequestThreads(VOID)
                                          0,
                                          0,
                                          0,
-                                         CsrApiRequestThread,
+                                         (PVOID)CsrApiRequestThread,
                                          NULL,
                                          &hThread,
                                          &ClientId);
@@ -550,7 +550,7 @@ CsrApiRequestThread(IN PVOID Parameter)
             {
                 /* Get the information and check if it matches our thread */
                 ClientDiedMsg = (PCLIENT_DIED_MSG)&ReceiveMsg;
-                if (ClientDiedMsg->CreateTime.QuadPart = CsrThread->CreateTime.QuadPart)
+                if (ClientDiedMsg->CreateTime.QuadPart == CsrThread->CreateTime.QuadPart)
                 {
                     /* Reference the thread */
                     CsrThread->ReferenceCount++;

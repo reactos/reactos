@@ -362,7 +362,7 @@ NTSTATUS
 NTAPI
 CsrCreateLocalSystemSD(OUT PSECURITY_DESCRIPTOR *LocalSystemSd)
 {
-    SID_IDENTIFIER_AUTHORITY NtSidAuthority = SECURITY_NT_AUTHORITY;
+    SID_IDENTIFIER_AUTHORITY NtSidAuthority = {SECURITY_NT_AUTHORITY};
     PSID SystemSid;
     ULONG SidLength;
     PSECURITY_DESCRIPTOR SecurityDescriptor;
@@ -460,9 +460,9 @@ NTSTATUS
 NTAPI
 CsrGetDosDevicesSd(OUT PSECURITY_DESCRIPTOR DosDevicesSd)
 {
-    SID_IDENTIFIER_AUTHORITY WorldAuthority = SECURITY_WORLD_SID_AUTHORITY;
-    SID_IDENTIFIER_AUTHORITY CreatorAuthority = SECURITY_CREATOR_SID_AUTHORITY;
-    SID_IDENTIFIER_AUTHORITY NtSidAuthority = SECURITY_NT_AUTHORITY;
+    SID_IDENTIFIER_AUTHORITY WorldAuthority = {SECURITY_WORLD_SID_AUTHORITY};
+    SID_IDENTIFIER_AUTHORITY CreatorAuthority = {SECURITY_CREATOR_SID_AUTHORITY};
+    SID_IDENTIFIER_AUTHORITY NtSidAuthority = {SECURITY_NT_AUTHORITY};
     PSID WorldSid, CreatorSid, AdminSid, SystemSid;
     UCHAR KeyValueBuffer[0x40];
     PKEY_VALUE_PARTIAL_INFORMATION KeyValuePartialInfo;
@@ -589,7 +589,7 @@ CsrGetDosDevicesSd(OUT PSECURITY_DESCRIPTOR DosDevicesSd)
                                         SystemSid);
 
         /* Get the ACE back */
-        Status = RtlGetAce(Dacl, 0, (PACE*)&Ace);
+        Status = RtlGetAce(Dacl, 0, (PVOID*)&Ace);
 
         /* Add some flags to it for the Admin SID */
         Ace->Header.AceFlags |= (OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE);
@@ -601,7 +601,7 @@ CsrGetDosDevicesSd(OUT PSECURITY_DESCRIPTOR DosDevicesSd)
                                         AdminSid);
 
         /* Get the ACE back */
-        Status = RtlGetAce(Dacl, 1, (PACE*)&Ace);
+        Status = RtlGetAce(Dacl, 1, (PVOID*)&Ace);
 
         /* Add some flags to it for the Creator SID */
         Ace->Header.AceFlags |= (OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE);
@@ -613,7 +613,7 @@ CsrGetDosDevicesSd(OUT PSECURITY_DESCRIPTOR DosDevicesSd)
                                         CreatorSid);
 
         /* Get the ACE back */
-        Status = RtlGetAce(Dacl, 2, (PACE*)&Ace);
+        Status = RtlGetAce(Dacl, 2, (PVOID*)&Ace);
 
         /* Add some flags to it for the SD */
         Ace->Header.AceFlags |= (OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE |
@@ -662,7 +662,7 @@ CsrGetDosDevicesSd(OUT PSECURITY_DESCRIPTOR DosDevicesSd)
                                         WorldSid);
 
         /* Get the ACE back */
-        Status = RtlGetAce(Dacl, 2, (PACE*)&Ace);
+        Status = RtlGetAce(Dacl, 2, (PVOID*)&Ace);
 
         /* Add some flags to it for the SD */
         Ace->Header.AceFlags |= (OBJECT_INHERIT_ACE | CONTAINER_INHERIT_ACE |

@@ -31,6 +31,7 @@
 #include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
+#include <csr/server.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -50,12 +51,18 @@ CsrpSetDefaultProcessHardErrorMode (VOID)
                             sizeof(DefaultHardErrorMode));
 }
 
+/*
+ * Note: Standard entrypoint for Native C Programs.
+ * The OS backend (NtProcessStartup) which calls this routine is
+ * implemented in a CRT-like static library (much like mainCRTStartup).
+ * Do NOT manually add the NtProcessStartup entrypoint or anything else.
+ */
 int
 _cdecl
-main(int argc,
-     char *argv[],
-     char *envp[],
-     int DebugFlag)
+_main(int argc,
+      char *argv[],
+      char *envp[],
+      int DebugFlag)
 {
     KPRIORITY BasePriority = (8 + 1) + 4;
     NTSTATUS Status;
