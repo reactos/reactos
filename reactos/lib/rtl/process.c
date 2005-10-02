@@ -340,4 +340,18 @@ RtlEncodePointer(IN PVOID Pointer)
   return (PVOID)((ULONG_PTR)Pointer ^ Cookie);
 }
 
+/*
+ * @unimplemented
+ */
+NTSYSAPI
+VOID
+NTAPI
+RtlSetProcessIsCritical(
+    IN   BOOLEAN   NewValue,
+    OUT  PBOOLEAN  OldValue OPTIONAL,
+    IN   BOOLEAN   IsWinlogon)
+{
+	//TODO
+}
+
 /* EOF */

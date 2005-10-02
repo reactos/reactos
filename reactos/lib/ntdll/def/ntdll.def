@@ -621,6 +621,7 @@ RtlSetInformationAcl@16
 RtlSetLastWin32Error@4
 RtlSetLastWin32ErrorAndNtStatusFromNtStatus@4
 RtlSetOwnerSecurityDescriptor@12
+RtlSetProcessIsCritical@12
 RtlSetSaclSecurityDescriptor@16
 RtlSetSecurityDescriptorRMControl@8
 RtlSetSecurityObject@20
