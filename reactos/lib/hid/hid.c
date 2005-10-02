@@ -368,8 +368,8 @@ ULONG DDKAPI
 HidD_Hello(OUT PCHAR Buffer,
            IN ULONG BufferLength)
 {
-  const PCHAR HelloString = "Hello\n";
-  ULONG StrSize = (lstrlenA(HelloString) + 1) * sizeof(CHAR);
+  const CHAR HelloString[] = "Hello\n";
+  ULONG StrSize = sizeof(HelloString) + sizeof(HelloString[0]);
   
   if(BufferLength > 0)
   {

@@ -28,7 +28,7 @@
 #include <precomp.h>
 
 HINSTANCE hInstance = NULL;
-LONG dllrefs = 0;
+static LONG dllrefs = 0;
 
 /* FIXME - they should be exported somewhere instead of defined here... */
 DEFINE_GUID(IID_IClassFactory, 0x00000001, 0x0000, 0x0000, 0xc0,0x00, 0x00,0x00,0x00,0x00,0x00,0x46);
@@ -1051,9 +1051,9 @@ DllRegisterServer(VOID)
     TCHAR szModule[MAX_PATH + 1];
     int lnszDescription;
 
-    if(!GetModuleFileName(hInstance,
-                          szModule,
-                          sizeof(szModule) / sizeof(szModule[0])))
+    if (!GetModuleFileName(hInstance,
+                           szModule,
+                           sizeof(szModule) / sizeof(szModule[0])))
     {
         return E_ACCESSDENIED;
     }
