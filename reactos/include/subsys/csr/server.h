@@ -1,50 +1,20 @@
+/*
+ * PROJECT:         ReactOS Native Headers
+ * FILE:            include/subsys/csr/server.h
+ * PURPOSE:         Public Definitions for CSR Servers
+ * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
+ */
 #ifndef _CSRSERVER_H
 #define _CSRSERVER_H
 
-#define CSR_SRV_SERVER 0
+/* DEPENDENCIES **************************************************************/
 
-typedef enum _CSR_PROCESS_FLAGS
-{
-    CsrProcessTerminating = 0x1,
-    CsrProcessSkipShutdown = 0x2,
-    CsrProcessCreateNewGroup = 0x100,
-    CsrProcessTerminated = 0x200,
-    CsrProcessLastThreadTerminated = 0x400,
-    CsrProcessIsConsoleApp = 0x800
-} CSR_PROCESS_FLAGS, *PCSR_PROCESS_FLAGS;
-
-typedef enum _CSR_THREAD_FLAGS
-{
-    CsrThreadAltertable = 0x1,
-    CsrThreadInTermination = 0x2,
-    CsrThreadTerminated = 0x4,
-    CsrThreadIsServerThread = 0x10
-} CSR_THREAD_FLAGS, *PCSR_THREAD_FLAGS;
-
-typedef enum _SHUTDOWN_RESULT
-{
-    CsrShutdownCsrProcess = 1,
-    CsrShutdownNonCsrProcess,
-    CsrShutdownCancelled
-} SHUTDOWN_RESULT, *PSHUTDOWN_RESULT;
-
-typedef enum _CSR_SHUTDOWN_FLAGS
-{
-    CsrShutdownSystem = 4,
-    CsrShutdownOther = 8
-} CSR_SHUTDOWN_FLAGS, *PCSR_SHUTDOWN_FLAGS;
-
-typedef enum _CSR_DEBUG_FLAGS
-{
-    CsrDebugOnlyThisProcess = 1,
-    CsrDebugProcessChildren = 2
-} CSR_PROCESS_DEBUG_FLAGS, *PCSR_PROCESS_DEBUG_FLAGS;
-
+/* TYPES **********************************************************************/
 typedef struct _CSR_NT_SESSION
 {
     ULONG ReferenceCount;
     LIST_ENTRY SessionList;
-	ULONG SessionId;
+    ULONG SessionId;
 } CSR_NT_SESSION, *PCSR_NT_SESSION;
 
 typedef struct _CSR_PROCESS
@@ -89,6 +59,47 @@ typedef struct _CSR_THREAD
     ULONG ImpersonationCount;
 } CSR_THREAD, *PCSR_THREAD; 
 
+/* ENUMERATIONS **************************************************************/
+#define CSR_SRV_SERVER 0
+
+typedef enum _CSR_PROCESS_FLAGS
+{
+    CsrProcessTerminating = 0x1,
+    CsrProcessSkipShutdown = 0x2,
+    CsrProcessCreateNewGroup = 0x100,
+    CsrProcessTerminated = 0x200,
+    CsrProcessLastThreadTerminated = 0x400,
+    CsrProcessIsConsoleApp = 0x800
+} CSR_PROCESS_FLAGS, *PCSR_PROCESS_FLAGS;
+
+typedef enum _CSR_THREAD_FLAGS
+{
+    CsrThreadAltertable = 0x1,
+    CsrThreadInTermination = 0x2,
+    CsrThreadTerminated = 0x4,
+    CsrThreadIsServerThread = 0x10
+} CSR_THREAD_FLAGS, *PCSR_THREAD_FLAGS;
+
+typedef enum _SHUTDOWN_RESULT
+{
+    CsrShutdownCsrProcess = 1,
+    CsrShutdownNonCsrProcess,
+    CsrShutdownCancelled
+} SHUTDOWN_RESULT, *PSHUTDOWN_RESULT;
+
+typedef enum _CSR_SHUTDOWN_FLAGS
+{
+    CsrShutdownSystem = 4,
+    CsrShutdownOther = 8
+} CSR_SHUTDOWN_FLAGS, *PCSR_SHUTDOWN_FLAGS;
+
+typedef enum _CSR_DEBUG_FLAGS
+{
+    CsrDebugOnlyThisProcess = 1,
+    CsrDebugProcessChildren = 2
+} CSR_PROCESS_DEBUG_FLAGS, *PCSR_PROCESS_DEBUG_FLAGS;
+
+/* FUNCTION TYPES ************************************************************/
 typedef
 NTSTATUS
 (*PCSR_CONNECT_CALLBACK)(
@@ -122,6 +133,7 @@ ULONG
     IN ULONG Flags,
     IN BOOLEAN FirstPhase
 );
+
 
 /* FIXME: Put into public NDK Header */
 typedef ULONG CSR_API_NUMBER;
@@ -303,4 +315,14 @@ SmConnectToSm(
     IN ULONG SubsystemType OPTIONAL,
     OUT PHANDLE hSmApiPort
 );
+
+/* PROTOTYPES ****************************************************************/
+
+NTSTATUS
+NTAPI
+CsrServerInitialization(
+    ULONG ArgumentCount,
+    PCHAR Arguments[]
+);
+
 #endif
