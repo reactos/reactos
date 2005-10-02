@@ -2,14 +2,13 @@
 <explorer-cfg>
   <general>
     <look-and-feel name="classic"/>
-	<explorer mdi="true"/>
+	<explorer mdi="true" separate-folders="true"/>
 	<language name="EN"/>
   </general>
 
   <desktop>
     <icon-alignment algorithm="simple" start="left-top" direction="horizontal"/>
   </desktop>
-
   <desktopbar>
     <options show-clock="true"/>
     <positions>

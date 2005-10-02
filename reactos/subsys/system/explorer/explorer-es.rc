@@ -360,22 +360,27 @@ BEGIN
     PUSHBUTTON      "&Cancelar",IDCANCEL,151,153,50,14
 END
 
-IDD_MDI_SDI DIALOGEX 0, 0, 194, 138
+IDD_MDI_SDI DIALOGEX 0, 0, 194, 157
 STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "Elegir modo MDI / SDI"
-FONT 8, "MS Sans Serif", 0, 0, 0x1
+FONT 8, "MS Sans Serif"
 BEGIN
     LTEXT           "Por favor, seleccione su interfaz de usuario preferida para el explorador:",
                     IDC_STATIC,7,7,170,18
     CONTROL         "&MDI (Multiple Document Interface)",IDC_MDI,"Button",
-                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,30,123,10
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,31,123,10
     CONTROL         "&SDI (Single Document Interface)",IDC_SDI,"Button",
-                    BS_AUTORADIOBUTTON,7,53,116,10
+                    BS_AUTORADIOBUTTON,7,62,116,10
+    CONTROL         170,IDC_STATIC,"Static",SS_BITMAP,145,23,15,13
+    CONTROL         171,IDC_STATIC,"Static",SS_BITMAP,145,57,15,13
+    CONTROL         "Open Subfolders in s&eparate windows",
+                    IDC_SEPARATE_SUBFOLDERS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,90,135,10
     LTEXT           "Esta configuración se usará por defecto y apartir de ahora para todas las ventanas del explorador.",
-                    IDC_STATIC,7,76,174,22
-    DEFPUSHBUTTON   "&Aceptar",IDOK,29,105,50,14,WS_GROUP
-    PUSHBUTTON      "&Cancelar",IDCANCEL,106,105,50,14
+                    IDC_STATIC,7,111,174,22
+    DEFPUSHBUTTON   "&Aceptar",IDOK,29,136,50,14,WS_GROUP
+    PUSHBUTTON      "&Cancelar",IDCANCEL,106,136,50,14
 END
 
 

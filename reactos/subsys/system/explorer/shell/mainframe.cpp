@@ -103,17 +103,24 @@ int MainFrameBase::OpenShellFolders(LPIDA pida, HWND hFrameWnd)
 		if (SUCCEEDED(hr))
 			if (attribs & SFGAO_FOLDER) {
 				try {
+					XMLPos explorer_options = g_Globals.get_cfg("general/explorer");
+
+					bool mdi = XMLBool(explorer_options, "mdi", true);
+					bool separateFolders = XMLBool(explorer_options, "separate-folders", true);
+
 					ShellPath pidl_abs = ShellPath(pidl).create_absolute_pidl(parent_pidl);
 
-					if (hFrameWnd) {
-						if (SendMessage(hFrameWnd, PM_OPEN_WINDOW, OWM_PIDL, (LPARAM)(LPCITEMIDLIST)pidl_abs))
+					if (hFrameWnd && (mdi || !separateFolders)) {
+						int flags = OWM_PIDL;
+
+						if (separateFolders)
+							flags |= OWM_SEPARATE;
+
+						if (SendMessage(hFrameWnd, PM_OPEN_WINDOW, flags, (LPARAM)(LPCITEMIDLIST)pidl_abs))
 							++cnt;
 					} else {
 						HWND hwnd;
 #ifndef _NO_MDI
-						XMLPos explorer_options = g_Globals.get_cfg("general/explorer");
-						bool mdi = XMLBool(explorer_options, "mdi", true);
-
 						if (mdi)
 							hwnd = MDIMainFrame::Create(pidl_abs, 0);
 						else
@@ -900,7 +907,9 @@ BOOL MDIMainFrame::TranslateMsg(MSG* pmsg)
 LRESULT MDIMainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	switch(nmsg) {
-	  case PM_OPEN_WINDOW: {CONTEXT("MDIMainFrame PM_OPEN_WINDOW");
+	  case PM_OPEN_WINDOW: {
+		CONTEXT("MDIMainFrame PM_OPEN_WINDOW");
+
 		TCHAR buffer[MAX_PATH];
 		LPCTSTR path;
 		ShellPath shell_path = DesktopFolderPath();
@@ -940,11 +949,11 @@ LRESULT MDIMainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			 // Shell Namespace as default view
 			ShellChildWndInfo create_info(_hmdiclient, path, shell_path);
 
-			create_info._pos.showCmd = SW_SHOWMAXIMIZED;
-			create_info._pos.rcNormalPosition.left = 0;
-			create_info._pos.rcNormalPosition.top = 0;
-			create_info._pos.rcNormalPosition.right = 600;
-			create_info._pos.rcNormalPosition.bottom = 280;
+			create_info._pos.showCmd = wparam&OWM_SEPARATE? SW_SHOWNORMAL: SW_SHOWMAXIMIZED;
+			create_info._pos.rcNormalPosition.left = CW_USEDEFAULT;
+			create_info._pos.rcNormalPosition.top = CW_USEDEFAULT;
+			create_info._pos.rcNormalPosition.right = CW_USEDEFAULT;
+			create_info._pos.rcNormalPosition.bottom = CW_USEDEFAULT;
 
 			create_info._open_mode = (OPEN_WINDOW_MODE)wparam;
 
@@ -1421,7 +1430,9 @@ LRESULT SDIMainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		}
 		break;
 
-	  case PM_OPEN_WINDOW: {CONTEXT("SDIMainFrame PM_OPEN_WINDOW");
+	  case PM_OPEN_WINDOW: {
+		CONTEXT("SDIMainFrame PM_OPEN_WINDOW");
+
 		TCHAR buffer[MAX_PATH];
 		LPCTSTR path;
 		ShellPath shell_path = DesktopFolderPath();
@@ -1449,9 +1460,10 @@ LRESULT SDIMainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 				*buffer = '\0';
 
 			path = buffer;
+			shell_path = path;
 		}
 
-		jump_to(shell_path, (OPEN_WINDOW_MODE)wparam);
+		jump_to(shell_path, (OPEN_WINDOW_MODE)wparam);	//@todo content of 'path' not used any more
 		return TRUE;}	// success
 
 	  default: def:

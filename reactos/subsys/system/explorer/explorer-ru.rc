@@ -330,7 +330,7 @@ BEGIN
     PUSHBUTTON      "&Справка",254,158,42,47,14
 END
 
-IDD_MDI_SDI DIALOGEX 0, 0, 194, 138
+IDD_MDI_SDI DIALOGEX 0, 0, 194, 157
 STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "Выберите режим MDI / SDI"
@@ -339,15 +339,18 @@ BEGIN
     LTEXT           "Выберите наиболее предпочтительный для вас\nвид проводника:",
                     IDC_STATIC,7,7,171,17
     CONTROL         "&MDI (многодокументный нтерфейс)",IDC_MDI,"Button",
-                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,30,136,10
-    CONTROL         170,IDC_STATIC,"Static",SS_BITMAP,145,23,15,13
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,31,136,10
     CONTROL         "&SDI (однодокументный интерфейс)",IDC_SDI,"Button",
-                    BS_AUTORADIOBUTTON,7,53,134,10
+                    BS_AUTORADIOBUTTON,7,62,134,10
+    CONTROL         170,IDC_STATIC,"Static",SS_BITMAP,145,23,15,13
     CONTROL         171,IDC_STATIC,"Static",SS_BITMAP,145,57,15,13
+    CONTROL         "Open Subfolders in s&eparate windows",
+                    IDC_SEPARATE_SUBFOLDERS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,90,135,10
     LTEXT           "Эти настройки будут использованны, как значение по умолчанию для всех окон проводника в будущем.",
-                    IDC_STATIC,7,76,174,26
-    DEFPUSHBUTTON   "&OK",IDOK,29,105,50,14,WS_GROUP
-    PUSHBUTTON      "&Cancel",IDCANCEL,106,105,50,14
+                    IDC_STATIC,7,107,174,26
+    DEFPUSHBUTTON   "&OK",IDOK,29,136,50,14,WS_GROUP
+    PUSHBUTTON      "&Cancel",IDCANCEL,106,136,50,14
 END
 
 IDD_NOTIFYAREA DIALOGEX 0, 0, 208, 174

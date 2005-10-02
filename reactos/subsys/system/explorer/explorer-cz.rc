@@ -362,7 +362,7 @@ BEGIN
     PUSHBUTTON      "&Zrušit",IDCANCEL,151,153,50,14
 END
 
-IDD_MDI_SDI DIALOGEX 0, 0, 194, 138
+IDD_MDI_SDI DIALOGEX 0, 0, 194, 157
 STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "Volba MDI / SDI módu"
@@ -371,15 +371,18 @@ BEGIN
     LTEXT           "Prosím zvolte si Vámi upøednostòovaný zpùsob zobrazení oken prùzkumníka:",
                     IDC_STATIC,7,7,160,8
     CONTROL         "&MDI (Mnoho dokumentový interface)",IDC_MDI,"Button",
-                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,30,121,10
-    CONTROL         170,IDC_STATIC,"Static",SS_BITMAP,145,23,15,13
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,31,121,10
     CONTROL         "&SDI (Jedno dokumentový interface)",IDC_SDI,"Button",
-                    BS_AUTORADIOBUTTON,7,53,115,10
+                    BS_AUTORADIOBUTTON,7,62,115,10
+    CONTROL         170,IDC_STATIC,"Static",SS_BITMAP,145,23,15,13
     CONTROL         171,IDC_STATIC,"Static",SS_BITMAP,145,57,15,13
+    CONTROL         "Open Subfolders in s&eparate windows",
+                    IDC_SEPARATE_SUBFOLDERS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,90,135,10
     LTEXT           "Toto nastavení bude použito jako implicitní pro všechny okna prùzkumníka.",
-                    IDC_STATIC,7,76,174,22
-    DEFPUSHBUTTON   "&Nastavit",IDOK,29,105,50,14,WS_GROUP
-    PUSHBUTTON      "&Zrušit",IDCANCEL,106,105,50,14
+                    IDC_STATIC,7,111,174,22
+    DEFPUSHBUTTON   "&Nastavit",IDOK,29,136,50,14,WS_GROUP
+    PUSHBUTTON      "&Zrušit",IDCANCEL,106,136,50,14
 END
 
 

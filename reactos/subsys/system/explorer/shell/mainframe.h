@@ -27,7 +27,7 @@
 
 
 #define	PM_OPEN_WINDOW			(WM_APP+0x07)
-enum OPEN_WINDOW_MODE {OWM_EXPLORE=1, OWM_DETAILS=2, OWM_PIDL=4};
+enum OPEN_WINDOW_MODE {OWM_EXPLORE=1, OWM_DETAILS=2, OWM_PIDL=4, OWM_SEPARATE=8};
 
 
  /// Explorer frame window base class

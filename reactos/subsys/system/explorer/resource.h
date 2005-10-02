@@ -164,6 +164,7 @@
 #define IDC_WIN_VERSION                 1030
 #define IDC_MDI                         1030
 #define IDC_SDI                         1031
+#define IDC_SEPARATE_SUBFOLDERS         1034
 #define ID_REFRESH                      1704
 #define ID_ABOUT_WINEFILE               1705
 #define IDS_VERSION_STR                 5000
@@ -221,7 +222,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        169
 #define _APS_NEXT_COMMAND_VALUE         40024
-#define _APS_NEXT_CONTROL_VALUE         1034
+#define _APS_NEXT_CONTROL_VALUE         1035
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif
