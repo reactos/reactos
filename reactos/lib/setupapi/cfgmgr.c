@@ -1539,7 +1539,7 @@ CONFIGRET WINAPI CM_Is_Dock_Station_Present_Ex(
 {
     RPC_BINDING_HANDLE BindingHandle = NULL;
 
-    FIXME("%p %lx\n", pbPresent, hMachine);
+    TRACE("%p %lx\n", pbPresent, hMachine);
 
     if (pbPresent == NULL)
         return CR_INVALID_POINTER;
@@ -1832,6 +1832,42 @@ CONFIGRET WINAPI CM_Open_Class_Key_ExW(
     }
 
     return CR_SUCCESS;
+}
+
+
+/***********************************************************************
+ * CM_Request_Eject_PC [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Request_Eject_PC(VOID)
+{
+    TRACE("\n");
+    return CM_Request_Eject_PC_Ex(NULL);
+}
+
+
+/***********************************************************************
+ * CM_Request_Eject_PC_Ex [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Request_Eject_PC_Ex(
+    HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+
+    TRACE("%lx\n", hMachine);
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, NULL))
+            return CR_FAILURE;
+    }
+
+    return PNP_RequestEjectPC(BindingHandle);
 }
 
 

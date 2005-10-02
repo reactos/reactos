@@ -794,6 +794,7 @@ PNP_SetDeviceProblem(handle_t BindingHandle,
 }
 
 
+/* Function 38 */
 CONFIGRET
 PNP_IsDockStationPresent(handle_t BindingHandle,
                          unsigned long *Present)
@@ -839,6 +840,22 @@ PNP_IsDockStationPresent(handle_t BindingHandle,
     }
 
     DPRINT1("PNP_IsDockStationPresent() done (returns %lx)\n", ret);
+
+    return ret;
+}
+
+
+/* Function 39 */
+CONFIGRET
+PNP_RequestEjectPC(handle_t BindingHandle)
+{
+    CONFIGRET ret = CR_SUCCESS;
+
+    DPRINT1("PNP_RequestEjectPC() called\n");
+
+    ret = CR_FAILURE; /* FIXME */
+
+    DPRINT1("PNP_RequestEjectPC() done (returns %lx)\n", ret);
 
     return ret;
 }

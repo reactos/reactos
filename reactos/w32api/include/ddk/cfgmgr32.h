@@ -1773,8 +1773,18 @@ CM_Request_Device_EjectW(
 #define CM_Request_Device_Eject_Ex CM_Request_Device_Eject_ExA
 #endif /* UNICODE */
 
-/* FIXME: Obsolete CM_Request_Eject_PC */
-/* FIXME: Obsolete CM_Request_Eject_PC_Ex */
+CMAPI
+CONFIGRET
+WINAPI
+CM_Request_Eject_PC(
+  VOID);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Request_Eject_PC_Ex(
+  IN HMACHINE  hMachine);
+
 /* FIXME: Obsolete CM_Run_Detection */
 /* FIXME: Obsolete CM_Run_Detection_Ex */
 /* FIXME: Obsolete CM_Set_Class_Registry_Property */

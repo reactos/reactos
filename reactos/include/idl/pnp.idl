@@ -134,4 +134,7 @@ interface pnp
   /* Function 38 */
   CONFIGRET PNP_IsDockStationPresent(handle_t BindingHandle,
                                      [out]PBOOL Present);
+
+  /* Function 39 */
+  CONFIGRET PNP_RequestEjectPC(handle_t BindingHandle);
 }
