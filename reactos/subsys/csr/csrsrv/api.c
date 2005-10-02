@@ -685,9 +685,9 @@ NTSTATUS
 NTAPI
 CsrApiHandleConnectionRequest(IN PCSR_API_MESSAGE ApiMessage)
 {
-    PCSR_THREAD CsrThread;
-    PCSR_PROCESS CsrProcess;
-    NTSTATUS Status;
+    PCSR_THREAD CsrThread = NULL;
+    PCSR_PROCESS CsrProcess = NULL;
+    NTSTATUS Status = STATUS_SUCCESS;
     PCSR_CONNECTION_INFO ConnectInfo = &ApiMessage->ConnectionInfo;
     BOOLEAN AllowConnection = FALSE;
     REMOTE_PORT_VIEW RemotePortView;
