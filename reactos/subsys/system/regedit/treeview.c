@@ -28,6 +28,8 @@
 #include <tchar.h>
 #include <process.h>
 #include <stdio.h>
+#include <string.h>
+#include <tchar.h>
 
 #include "main.h"
 
@@ -558,3 +560,69 @@ HWND CreateTreeView(HWND hwndParent, LPTSTR pHostName, int id)
     }
     return hwndTV;
 }
+
+BOOL SelectNode(HWND hwndTV, LPCTSTR keyPath)
+{
+	HTREEITEM hRoot, hItem;
+	HTREEITEM hChildItem;
+	TCHAR szPathPart[128];
+	TCHAR szBuffer[128];
+	LPCTSTR s;
+	TVITEM tvi;
+
+	hRoot = TreeView_GetRoot(hwndTV);
+	hItem = hRoot;
+
+	while(keyPath[0])
+	{
+		s = _tcschr(keyPath, '\\');
+		lstrcpyn(szPathPart, keyPath, s ? s - keyPath + 1 : _tcslen(keyPath) + 1);
+
+		/* Special case for root to expand root key abbreviations */
+		if (hItem == hRoot)
+		{
+			if (!_tcscmp(szPathPart, TEXT("HKCR")))
+				_tcscpy(szPathPart, TEXT("HKEY_CLASSES_ROOT"));
+			else if (!_tcscmp(szPathPart, TEXT("HKCU")))
+				_tcscpy(szPathPart, TEXT("HKEY_CURRENT_USER"));
+			else if (!_tcscmp(szPathPart, TEXT("HKLM")))
+				_tcscpy(szPathPart, TEXT("HKEY_LOCAL_MACHINE"));
+			else if (!_tcscmp(szPathPart, TEXT("HKU")))
+				_tcscpy(szPathPart, TEXT("HKEY_USERS"));
+			else if (!_tcscmp(szPathPart, TEXT("HKCC")))
+				_tcscpy(szPathPart, TEXT("HKEY_CURRENT_CONFIG"));
+			else if (!_tcscmp(szPathPart, TEXT("HKDD")))
+				_tcscpy(szPathPart, TEXT("HKEY_DYN_DATA"));
+		}
+
+		for (hChildItem = TreeView_GetChild(hwndTV, hItem); hChildItem;
+			hChildItem = TreeView_GetNextSibling(hwndTV, hChildItem))
+		{
+			memset(&tvi, 0, sizeof(tvi));
+			tvi.hItem = hChildItem;
+			tvi.mask = TVIF_TEXT;
+			tvi.pszText = szBuffer;
+			tvi.cchTextMax = sizeof(szBuffer) / sizeof(szBuffer[0]);
+
+			TreeView_GetItem(hwndTV, &tvi);
+
+			if (!_tcscmp(szBuffer, szPathPart))
+				break;
+		}
+
+		if (!hChildItem)
+			return FALSE;
+
+		if (!TreeView_Expand(hwndTV, hChildItem, TVE_EXPAND))
+			return FALSE;
+
+		keyPath = s ? s + 1 : "";
+		hItem = hChildItem;
+	}
+
+	TreeView_SelectItem(hwndTV, hItem);
+	TreeView_EnsureVisible(hwndTV, hItem);
+
+	return TRUE;
+}
+

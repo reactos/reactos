@@ -340,6 +340,7 @@ STRINGTABLE DISCARDABLE
 BEGIN
   IDS_EXPAND                     "&Expand"
   IDS_COLLAPSE                   "&Collapse"
+  IDS_GOTO_SUGGESTED_KEY         "&Go to '%s'"
 END
 
 /*****************************************************************/

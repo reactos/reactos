@@ -105,6 +105,7 @@ extern LPCTSTR GetItemPath(HWND hwndTV, HTREEITEM hItem, HKEY* phRootKey);
 extern HTREEITEM InsertNode(HWND hwndTV, HTREEITEM hItem, LPTSTR name);
 extern HWND StartKeyRename(HWND hwndTV);
 extern BOOL CreateNewKey(HWND hwndTV, HTREEITEM hItem);
+extern BOOL SelectNode(HWND hwndTV, LPCTSTR keyPath);
 
 /* edit.c */
 extern BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin);
