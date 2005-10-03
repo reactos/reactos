@@ -112,6 +112,21 @@ void __RPC_USER midl_user_free(void __RPC_FAR * ptr)
 }
 
 
+static CONFIGRET WINAPI
+NtStatusToCrError(NTSTATUS Status)
+{
+    switch (Status)
+    {
+    	case STATUS_NO_SUCH_DEVICE:
+    		return CR_NO_SUCH_DEVINST;
+    	default:
+    		/* FIXME: add more mappings */
+    		DPRINT1("Unable to map status 0x%08lx\n", Status);
+    		return CR_FAILURE;
+    }
+}
+
+
 CONFIGRET
 PNP_GetVersion(handle_t BindingHandle,
                unsigned short *Version)
@@ -235,8 +250,7 @@ PNP_GetRelatedDeviceInstance(handle_t BindingHandle,
                                sizeof(PLUGPLAY_CONTROL_RELATED_DEVICE_DATA));
     if (!NT_SUCCESS(Status))
     {
-        /* FIXME: Map Status to ret */
-        ret = CR_FAILURE;
+        ret = NtStatusToCrError(Status);
     }
 
     DPRINT("PNP_GetRelatedDeviceInstance() done (returns %lx)\n", ret);
@@ -341,7 +355,7 @@ PNP_GetDepth(handle_t BindingHandle,
     }
     else
     {
-        ret = CR_FAILURE; /* FIXME */
+        ret = NtStatusToCrError(Status);
     }
 
     DPRINT("PNP_GetDepth() done (returns %lx)\n", ret);
@@ -639,7 +653,7 @@ PNP_GetDeviceRegProp(handle_t BindingHandle,
         }
         else
         {
-            ret = CR_FAILURE; /* FIXME */
+            ret = NtStatusToCrError(Status);
         }
     }
 
@@ -767,7 +781,7 @@ PNP_GetDeviceStatus(handle_t BindingHandle,
     }
     else
     {
-        ret = CR_FAILURE; /* FIXME */
+        ret = NtStatusToCrError(Status);
     }
 
     DPRINT("PNP_GetDeviceStatus() done (returns %lx)\n", ret);
