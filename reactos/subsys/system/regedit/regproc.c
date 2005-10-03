@@ -427,7 +427,7 @@ HRESULT setValue(LPSTR val_name, LPSTR val_data)
         }
     }
 
-    hRes = RegSetValueEx(
+    hRes = RegSetValueExA(
                currentKeyHandle,
                val_name,
                0,                  /* Reserved */
@@ -987,7 +987,7 @@ void doRegisterDLL(LPSTR stdInput)
         return;
 
     /* Load and register the library, then free it */
-    theLib = LoadLibrary(stdInput);
+    theLib = LoadLibraryA(stdInput);
     if (theLib) {
         FARPROC lpfnDLLRegProc = GetProcAddress(theLib, "DllRegisterServer");
         if (lpfnDLLRegProc)
@@ -1020,7 +1020,7 @@ void doUnregisterDLL(LPSTR stdInput)
         return;
 
     /* Load and unregister the library, then free it */
-    theLib = LoadLibrary(stdInput);
+    theLib = LoadLibraryA(stdInput);
     if (theLib) {
         FARPROC lpfnDLLRegProc = GetProcAddress(theLib, "DllUnregisterServer");
         if (lpfnDLLRegProc)
@@ -1174,8 +1174,8 @@ static void export_hkey(FILE *file, HKEY key,
         DWORD value_type;
         DWORD val_name_len1 = *val_name_len;
         DWORD val_size1 = *val_size;
-        ret = RegEnumValue(key, i, *val_name_buf, &val_name_len1, NULL,
-                           &value_type, *val_buf, &val_size1);
+        ret = RegEnumValueA(key, i, *val_name_buf, &val_name_len1, NULL,
+                            &value_type, *val_buf, &val_size1);
         if (ret != ERROR_SUCCESS) {
             more_data = FALSE;
             if (ret != ERROR_NO_MORE_ITEMS) {
@@ -1258,8 +1258,8 @@ static void export_hkey(FILE *file, HKEY key,
     while(more_data) {
         DWORD buf_len = *reg_key_name_len - curr_len;
 
-        ret = RegEnumKeyEx(key, i, *reg_key_name_buf + curr_len + 1, &buf_len,
-                           NULL, NULL, NULL, NULL);
+        ret = RegEnumKeyExA(key, i, *reg_key_name_buf + curr_len + 1, &buf_len,
+                            NULL, NULL, NULL, NULL);
         if (ret != ERROR_SUCCESS && ret != ERROR_MORE_DATA) {
             more_data = FALSE;
             if (ret != ERROR_NO_MORE_ITEMS) {
@@ -1269,8 +1269,8 @@ static void export_hkey(FILE *file, HKEY key,
             HKEY subkey;
 
             i++;
-            if (RegOpenKey(key, *reg_key_name_buf + curr_len + 1,
-                           &subkey) == ERROR_SUCCESS) {
+            if (RegOpenKeyA(key, *reg_key_name_buf + curr_len + 1,
+                            &subkey) == ERROR_SUCCESS) {
                 export_hkey(file, subkey, reg_key_name_buf, reg_key_name_len,
                             val_name_buf, val_name_len, val_buf, val_size);
                 RegCloseKey(subkey);
@@ -1348,7 +1348,7 @@ BOOL export_registry_key(CHAR *file_name, CHAR *reg_key_name)
                         &reg_key_name_buf, &reg_key_name_len,
                         &val_name_buf, &val_name_len,
                         &val_buf, &val_size);
-        } else if (RegOpenKey(reg_key_class, branch_name, &key) == ERROR_SUCCESS) {
+        } else if (RegOpenKeyA(reg_key_class, branch_name, &key) == ERROR_SUCCESS) {
             file = REGPROC_open_export_file(file_name);
             export_hkey(file, key,
                         &reg_key_name_buf, &reg_key_name_len,
@@ -1393,7 +1393,7 @@ BOOL export_registry_key(CHAR *file_name, CHAR *reg_key_name)
  */
 BOOL import_registry_file(LPTSTR filename)
 {
-    FILE* reg_file = fopen(filename, "r");
+    FILE* reg_file = _tfopen(filename, _T("r"));
 
     if (reg_file) {
         processRegLines(reg_file, doSetValue);
@@ -1415,7 +1415,7 @@ static void delete_branch(HKEY key,
     LONG ret;
     long int i;
 
-    if (RegOpenKey(key, *reg_key_name_buf, &branch_key) != ERROR_SUCCESS) {
+    if (RegOpenKeyA(key, *reg_key_name_buf, &branch_key) != ERROR_SUCCESS) {
         REGPROC_print_error();
     }
 
@@ -1434,8 +1434,8 @@ static void delete_branch(HKEY key,
     for (i = subkeys - 1; i >= 0; i--) {
         DWORD buf_len = *reg_key_name_len - curr_len;
 
-        ret = RegEnumKeyEx(branch_key, i, *reg_key_name_buf + curr_len + 1,
-                           &buf_len, NULL, NULL, NULL, NULL);
+        ret = RegEnumKeyExA(branch_key, i, *reg_key_name_buf + curr_len + 1,
+                            &buf_len, NULL, NULL, NULL, NULL);
         if (ret != ERROR_SUCCESS &&
                 ret != ERROR_MORE_DATA &&
                 ret != ERROR_NO_MORE_ITEMS) {
@@ -1446,7 +1446,7 @@ static void delete_branch(HKEY key,
     }
     (*reg_key_name_buf)[curr_len] = '\0';
     RegCloseKey(branch_key);
-    RegDeleteKey(key, *reg_key_name_buf);
+    RegDeleteKeyA(key, *reg_key_name_buf);
 }
 
 /******************************************************************************
@@ -1480,7 +1480,7 @@ void delete_registry_key(CHAR *reg_key_name)
                 getAppName(), reg_key_name);
         exit(1);
     }
-    if (RegOpenKey(reg_key_class, branch_name, &branch_key) == ERROR_SUCCESS) {
+    if (RegOpenKeyA(reg_key_class, branch_name, &branch_key) == ERROR_SUCCESS) {
         /* check whether the key exists */
         RegCloseKey(branch_key);
         delete_branch(reg_key_class, &branch_name, &branch_name_len);

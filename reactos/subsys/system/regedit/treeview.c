@@ -136,7 +136,7 @@ static BOOL RefreshTreeItem(HWND hwndTV, HTREEITEM hItem)
     HTREEITEM childItem;
     LPCTSTR KeyPath;
     DWORD dwCount, dwIndex, dwMaxSubKeyLen;
-    LPSTR Name = NULL;
+    LPTSTR Name = NULL;
     TVITEM tvItem;
     LPTSTR pszNodes = NULL;
     BOOL bSuccess = FALSE;
@@ -235,7 +235,7 @@ static BOOL RefreshTreeItem(HWND hwndTV, HTREEITEM hItem)
         /* Check if the node is already in there. */
         if (pszNodes) {
             for (s = pszNodes; *s; s += _tcslen(s) + 1) {
-                if (!strcmp(s, Name)) {
+                if (!_tcscmp(s, Name)) {
                     found = TRUE;
                     break;
                 }
@@ -616,7 +616,7 @@ BOOL SelectNode(HWND hwndTV, LPCTSTR keyPath)
 		if (!TreeView_Expand(hwndTV, hChildItem, TVE_EXPAND))
 			return FALSE;
 
-		keyPath = s ? s + 1 : "";
+		keyPath = s ? s + 1 : _T("");
 		hItem = hChildItem;
 	}
 

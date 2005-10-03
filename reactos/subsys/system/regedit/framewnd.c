@@ -263,7 +263,7 @@ static BOOL ImportRegistryFile(HWND hWnd)
     /*    ofn.lCustData = ;*/
     if (GetOpenFileName(&ofn)) {
         /* FIXME - convert to ascii */
-	if (!import_registry_file((LPSTR)ofn.lpstrFile)) {
+	if (!import_registry_file(ofn.lpstrFile)) {
             /*printf("Can't open file \"%s\"\n", ofn.lpstrFile);*/
             return FALSE;
         }
@@ -617,7 +617,7 @@ InitializeRemoteRegistryPicker(OUT IDsObjectPicker **pDsObjectPicker)
 static HRESULT
 InvokeRemoteRegistryPickerDialog(IN IDsObjectPicker *pDsObjectPicker,
                                  IN HWND hwndParent  OPTIONAL,
-                                 OUT LPWSTR lpBuffer,
+                                 OUT LPTSTR lpBuffer,
                                  IN UINT uSize)
 {
     IDataObject *pdo = NULL;
@@ -652,10 +652,20 @@ InvokeRemoteRegistryPickerDialog(IN IDsObjectPicker *pDsObjectPicker,
                     {
                         nlen = uSize - 1;
                     }
-
+#if UNICODE
                     memcpy(lpBuffer,
                            SelectionList->aDsSelection[0].pwzName,
                            nlen * sizeof(WCHAR));
+#else
+                    WideCharToMultiByte(CP_ACP,
+                                        0,
+                                        SelectionList->aDsSelection[0].pwzName,
+                                        nlen,
+                                        lpBuffer,
+                                        uSize,
+                                        NULL,
+                                        NULL);
+#endif
                     lpBuffer[nlen] = L'\0';
                 }
 
@@ -704,7 +714,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case ID_REGISTRY_CONNECTNETWORKREGISTRY:
     {
         IDsObjectPicker *ObjectPicker;
-        WCHAR szComputerName[MAX_COMPUTERNAME_LENGTH + 1];
+        TCHAR szComputerName[MAX_COMPUTERNAME_LENGTH + 1];
         HRESULT hRet;
         
         hRet = CoInitialize(NULL);
