@@ -1466,7 +1466,15 @@ ReadFirstSubKey:
                 }
                 else if (Status2 == STATUS_NO_MORE_ENTRIES)
                 {
-                    ASSERT(newDelKeys == NULL);
+                    /* in some race conditions where another thread would delete
+                       the same tree at the same time, newDelKeys could actually
+                       be != NULL! */
+                    if (newDelKeys != NULL)
+                    {
+                        RtlFreeHeap(ProcessHeap,
+                                    0,
+                                    newDelKeys);
+                    }
                     break;
                 }
 
@@ -1555,7 +1563,7 @@ RegDeleteTreeW(IN HKEY hKey,
                                    NULL);
 
         Status = NtOpenKey(&SubKeyHandle,
-                           DELETE | KEY_ENUMERATE_SUB_KEYS | KEY_QUERY_VALUE,
+                           DELETE | KEY_ENUMERATE_SUB_KEYS,
                            &ObjectAttributes);
         if (!NT_SUCCESS(Status))
         {
