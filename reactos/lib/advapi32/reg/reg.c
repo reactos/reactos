@@ -1404,7 +1404,7 @@ ReadFirstSubKey:
 
                 /* open the subkey */
                 Status2 = NtOpenKey(&newDelKeys->KeyHandle,
-                                    DELETE | KEY_ENUMERATE_SUB_KEYS | KEY_QUERY_VALUE,
+                                    DELETE | KEY_ENUMERATE_SUB_KEYS,
                                     &ObjectAttributes);
                 if (!NT_SUCCESS(Status2))
                 {
@@ -1464,6 +1464,11 @@ ReadFirstSubKey:
                         Status2 = STATUS_INSUFFICIENT_RESOURCES;
                     }
                 }
+                else if (Status2 == STATUS_NO_MORE_ENTRIES)
+                {
+                    ASSERT(newDelKeys == NULL);
+                    break;
+                }
 
 SubKeyFailure:
                 ASSERT(newDelKeys != NULL);
@@ -1511,7 +1516,7 @@ SubKeyFailureNoFree:
     }
     else
         Status = STATUS_INSUFFICIENT_RESOURCES;
-    
+
     return Status;
 }
 
