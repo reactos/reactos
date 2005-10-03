@@ -455,7 +455,7 @@
 @ stdcall SetupOpenMasterInf()
 @ stub SetupPromptForDiskA
 @ stub SetupPromptForDiskW
-@ stub SetupPromptReboot
+@ stdcall SetupPromptReboot(ptr ptr long)
 @ stub SetupQueryDrivesInDiskSpaceListA
 @ stub SetupQueryDrivesInDiskSpaceListW
 @ stub SetupQueryFileLogA

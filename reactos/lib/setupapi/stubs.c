@@ -125,6 +125,57 @@ HANDLE WINAPI SetupInitializeFileLogA(LPCSTR LogFileName, DWORD Flags)
 }
 
 /***********************************************************************
+ *		SetupPromptReboot(SETUPAPI.@)
+ */
+INT WINAPI SetupPromptReboot(HSPFILEQ FileQueue, HWND Owner, BOOL ScanOnly)
+{
+#if 0
+    int ret;
+    TCHAR RebootText[RC_STRING_MAX_SIZE];
+    TCHAR RebootCaption[RC_STRING_MAX_SIZE];
+    INT rc = 0;
+
+    TRACE("%p %p %d\n", FileQueue, Owner, ScanOnly);
+
+    if (ScanOnly && !FileQueue)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return -1;
+    }
+
+    if (FileQueue)
+    {
+        FIXME("Case 'FileQueue != NULL' not implemented\n");
+        /* In some cases, do 'rc |= SPFILEQ_FILE_IN_USE' */
+    }
+
+    if (ScanOnly)
+        return rc;
+
+    /* We need to ask the question to the user. */
+    rc |= SPFILEQ_REBOOT_RECOMMENDED;
+    if (0 == LoadString(hInstance, IDS_QUERY_REBOOT_TEXT, RebootText, RC_STRING_MAX_SIZE))
+        return -1;
+    if (0 == LoadString(hInstance, IDS_QUERY_REBOOT_CAPTION, RebootCaption, RC_STRING_MAX_SIZE))
+        return -1;
+    ret = MessageBox(Owner, RebootText, RebootCaption, MB_YESNO | MB_DEFBUTTON1);
+    if (IDNO == ret)
+        return rc;
+    else
+    {
+        if (ExitWindowsEx(EWX_REBOOT, 0))
+            return rc | SPFILEQ_REBOOT_IN_PROGRESS;
+        else
+            return -1;
+    }
+#endif
+    FIXME("Stub %p %p %d\n", FileQueue, Owner, ScanOnly);
+    SetLastError(ERROR_GEN_FAILURE);
+    return -1;
+}
+
+
+/***********************************************************************
  *		SetupTerminateFileLog(SETUPAPI.@)
  */
 BOOL WINAPI SetupTerminateFileLog(HANDLE FileLogHandle)

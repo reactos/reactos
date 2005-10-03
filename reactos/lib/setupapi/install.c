@@ -1087,11 +1087,8 @@ BOOL WINAPI SetupInstallServicesFromInfSectionExW( HINF hinf, PCWSTR sectionname
         return FALSE;
     }
     if (!GetLineText(hinf, sectionname, L"LoadOrderGroup", &LoadOrderGroup))
-    {
-        CloseServiceHandle(hSCManager);
-        HeapFree(GetProcessHeap(), 0, ServiceBinary);
-        return FALSE;
-    }
+        /* LoadOrderGroup value is optional. Ignore the error */
+        LoadOrderGroup = NULL;
 
     /* Don't check return value, as these fields are optional and
      * GetLineText initialize output parameter even on failure */
