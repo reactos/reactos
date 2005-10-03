@@ -23,10 +23,35 @@ _main(
     ULONG DebugFlag
 );
 
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
-/* FUNCTIONSS ****************************************************************/
+/* FUNCTIONS ****************************************************************/
+
+ULONG FASTCALL WideCharStringToUnicodeString (PWCHAR wsIn, PUNICODE_STRING usOut)
+{
+	ULONG   Length = 0;
+	PWCHAR  CurrentChar = wsIn;
+
+	DPRINT("%s(%08lx,%08lx) called\n", __FUNCTION__, wsIn, usOut);
+
+	if (NULL != CurrentChar)
+	{
+		usOut->Buffer = CurrentChar;
+		while (*CurrentChar ++)
+		{
+			++ Length;
+			while (*CurrentChar ++)
+			{
+				++ Length;
+			}
+		}
+		++ Length;
+	}
+	usOut->Length = Length;
+	usOut->MaximumLength = Length;
+	return Length;
+}
 
 VOID
 STDCALL
@@ -36,6 +61,8 @@ NtProcessStartup(PPEB Peb)
     PRTL_USER_PROCESS_PARAMETERS ProcessParameters;
     PUNICODE_STRING CmdLineString;
     ANSI_STRING AnsiCmdLine;
+    UNICODE_STRING UnicodeEnvironment;
+    ANSI_STRING AnsiEnvironment;
     PCHAR NullPointer = NULL;
     INT argc = 0;
     PCHAR *argv;
@@ -44,6 +71,8 @@ NtProcessStartup(PPEB Peb)
     PCHAR Source, Destination;
     ULONG Length;
     ASSERT(Peb);
+
+    DPRINT("%s(%08lx) called\n", __FUNCTION__, Peb);
 
     /* Normalize and get the Process Parameters */
     ProcessParameters = RtlNormalizeProcessParams(Peb->ProcessParameters);
@@ -93,6 +122,7 @@ NtProcessStartup(PPEB Peb)
             {
                 /* Save one token pointer */
                 *ArgumentList++ = Destination;
+		DPRINT("NT: argv[%d]=[%d]\n", argc, Destination);
 
                 /* Increase one token count */
                 argc++;
@@ -112,25 +142,30 @@ NtProcessStartup(PPEB Peb)
     /* Now handle the enviornment, point the envp at our current list location. */
     envp = ArgumentList;
 
-    /* Change our source to the enviroment pointer */
-    Source = (PCHAR)ProcessParameters->Environment;
-
-    /* Simply do a direct copy */
-    if (Source)
+    if (0 < WideCharStringToUnicodeString (ProcessParameters->Environment, & UnicodeEnvironment))
     {
-        while (*Source)
-        {
-            /* Save a pointer to this token */
-            *ArgumentList++ = Source;
+    	RtlUnicodeStringToAnsiString (& AnsiEnvironment, & UnicodeEnvironment, TRUE);
 
-            /* Keep looking for another variable */
-            while (*Source++);
-        }
+    	/* Change our source to the enviroment pointer */
+    	Source = AnsiEnvironment.Buffer;
+
+    	/* Simply do a direct copy */
+    	if (Source)
+    	{
+        	while (*Source)
+        	{
+            		/* Save a pointer to this token */
+			*ArgumentList++ = Source;
+			DPRINT("NT: envp[%08x]=[%s]\n",Source,Source);
+
+			/* Keep looking for another variable */
+			while (*Source++);
+		}
+	}
+
+    	/* Null terminate the list again */
+    	*ArgumentList++ = NULL;
     }
-
-    /* Null terminate the list again */
-    *ArgumentList++ = NULL;
-
     /* Breakpoint if we were requested to do so */
     if (ProcessParameters->DebugFlags) DbgBreakPoint();
 
