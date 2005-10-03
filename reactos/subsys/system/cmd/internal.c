@@ -566,6 +566,7 @@ INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
 		return 1;
 	}
 
+	dir[0] = 0;
 	/* check for options anywhere in command line */
 	for (i = 0; i < args; i++)
 	{
@@ -592,7 +593,7 @@ INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
 		}
 	}
 	
-	if (!dir)
+	if (dir[0] == _T('\0'))
 	{
 		/* No folder to remove */
 		ConErrResPuts(STRING_ERROR_REQ_PARAM_MISSING);
