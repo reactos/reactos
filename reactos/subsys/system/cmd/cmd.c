@@ -423,15 +423,12 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 	/* search the PATH environment variable for the binary */
 	if (!SearchForExecutable (first, szFullName))
 	{
-		if (!SearchForExecutable (full, szFullName))
-		{
 			error_bad_command ();
 			free (first);
 			free (rest);
 			free (full);
 			free (szFullName);
 			return;
-		}
 
 	}
 
@@ -1619,13 +1616,14 @@ Initialize (int argc, TCHAR* argv[])
 				++i;
 				if (i < argc)
 				{
-					_tcscpy (commandline, argv[i]);
+					_tcscpy (commandline, _T("\""));
+					_tcscat (commandline, argv[i]);
+					_tcscat (commandline, _T("\""));
 					while (++i < argc)
 					{
 						_tcscat (commandline, _T(" "));
 						_tcscat (commandline, argv[i]);
 					}
-
 					ParseCommandLine(commandline);
 				}
 			}
