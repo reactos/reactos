@@ -24,7 +24,7 @@ DWORD WINAPI DiscardHandler(VOID* Sock_)
         _tprintf(_T("Connection shutdown failed\n"));
         Retval = 3;
     }
-    _tprintf(_T("Terminating thread\n"));
+    _tprintf(_T("Terminating discard thread\n"));
     ExitThread(0);
 
     return Retval;

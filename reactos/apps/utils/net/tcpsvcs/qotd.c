@@ -33,7 +33,7 @@ DWORD WINAPI QotdHandler(VOID* Sock_)
         _tprintf(_T("Connection shutdown failed\n"));
         Retval = 3;
     }
-    _tprintf(_T("Terminating thread\n"));
+    _tprintf(_T("Terminating qotd thread\n"));
     ExitThread(0);
 
     return Retval;

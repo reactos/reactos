@@ -5,9 +5,10 @@
 #define QOTD_PORT 17
 #define CHARGEN_PORT 19
 
-#define NUM_SERVICES 6
+#define NUM_SERVICES 5
 #define BUF_SIZE 255
 #define BUF 1024
+#define CS_TIMEOUT 1000
 
 /* RFC865 states no more than 512 chars per line */
 #define MAX_QUOTE_BUF 512
@@ -22,16 +23,24 @@
 /* data structure to pass to threads */
 typedef struct _Services {
     INT Port;
+    TCHAR *Name;
     LPTHREAD_START_ROUTINE Service;
 } SERVICES, *PSERVICES;
 
-/* tcpsvcs functions */
-//static VOID CALLBACK ServiceMain(DWORD argc, LPTSTR *argv);
+
+/* tcpsvcs functions * /
+static VOID WINAPI ServiceMain(DWORD argc, LPTSTR argv[]);
+VOID WINAPI ServerCtrlHandler(DWORD control);
+INT CreateServers(VOID);
+VOID LogEvent (LPCTSTR UserMessage, DWORD ExitCode, BOOL PrintErrorMsg);
+void UpdateStatus (int NewStatus, int Check);
+*/
 
 /* skelserver functions */
 DWORD WINAPI StartServer(LPVOID lpParam);
 SOCKET SetUpListener(const char* ServAddr, int Port);
-VOID AcceptConnections(SOCKET ListeningSocket, LPTHREAD_START_ROUTINE Service);
+VOID AcceptConnections(SOCKET ListeningSocket,
+    LPTHREAD_START_ROUTINE Service, TCHAR *Name);
 BOOL EchoIncomingPackets(SOCKET sd);
 BOOL ShutdownConnection(SOCKET Sock, BOOL bRec);
 

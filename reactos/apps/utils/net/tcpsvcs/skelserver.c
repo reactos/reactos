@@ -7,17 +7,9 @@
 DWORD WINAPI StartServer(LPVOID lpParam)
 {
     const TCHAR* HostIP = "127.0.0.1";
-    DWORD RetVal;
-    WSADATA wsaData;
     PSERVICES pServices;
 
     pServices = (PSERVICES)lpParam;
-
-    if ((RetVal = WSAStartup(MAKEWORD(2, 2), &wsaData)) != 0)
-    {
-        _tprintf(_T("WSAStartup() failed : %lu\n"), RetVal);
-        return -1;
-    }
 
     SOCKET ListeningSocket = SetUpListener(HostIP, htons(pServices->Port));
     if (ListeningSocket == INVALID_SOCKET)
@@ -26,10 +18,11 @@ DWORD WINAPI StartServer(LPVOID lpParam)
         return 3;
     }
 
-    _tprintf(_T("Waiting for connections...\n"));
+    _tprintf(_T("%s is waiting for connections on port %d...\n"),
+        pServices->Name, pServices->Port);
     while (1)
     {
-        AcceptConnections(ListeningSocket, pServices->Service);
+        AcceptConnections(ListeningSocket, pServices->Service, pServices->Name);
         printf("Acceptor restarting...\n");
     }
 
@@ -66,7 +59,8 @@ SOCKET SetUpListener(const char* ServAddr, int Port)
 
 
 
-VOID AcceptConnections(SOCKET ListeningSocket, LPTHREAD_START_ROUTINE Service)
+VOID AcceptConnections(SOCKET ListeningSocket,
+    LPTHREAD_START_ROUTINE Service, TCHAR *Name)
 {
     SOCKADDR_IN Client;
     SOCKET Sock;
@@ -78,9 +72,9 @@ VOID AcceptConnections(SOCKET ListeningSocket, LPTHREAD_START_ROUTINE Service)
         Sock = accept(ListeningSocket, (SOCKADDR*)&Client, &nAddrSize);
         if (Sock != INVALID_SOCKET)
         {
-            _tprintf(_T("Accepted connection from %s:%d\n"),
-                inet_ntoa(Client.sin_addr), ntohs(Client.sin_port));
-            _tprintf(_T("About to create thread\n"));
+            _tprintf(_T("Accepted connection to %s server from %s:%d\n"),
+                Name, inet_ntoa(Client.sin_addr), ntohs(Client.sin_port));
+            _tprintf(_T("Creating new thread for %s\n"), Name);
             CreateThread(0, 0, Service, (void*)Sock, 0, &ThreadID);
         }
         else
