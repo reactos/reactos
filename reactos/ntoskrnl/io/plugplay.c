@@ -231,7 +231,10 @@ IopTraverseDeviceNode(PDEVICE_NODE Node, PUNICODE_STRING DeviceInstance)
 
     if (RtlEqualUnicodeString(&Node->InstancePath,
                               DeviceInstance, TRUE))
+    {
+        ObReferenceObject(Node->PhysicalDeviceObject);
         return Node->PhysicalDeviceObject;
+    }
 
     /* Traversal of all children nodes */
     for (ChildNode = Node->Child;
