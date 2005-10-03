@@ -570,7 +570,7 @@ InitializeRemoteRegistryPicker(OUT IDsObjectPicker **pDsObjectPicker)
     if (SUCCEEDED(hRet))
     {
         DSOP_INIT_INFO InitInfo;
-        DSOP_SCOPE_INIT_INFO Scopes[] =
+        static DSOP_SCOPE_INIT_INFO Scopes[] =
         {
             {
                 sizeof(DSOP_SCOPE_INIT_INFO),
@@ -597,7 +597,7 @@ InitializeRemoteRegistryPicker(OUT IDsObjectPicker **pDsObjectPicker)
         InitInfo.pwzTargetComputer = NULL;
         InitInfo.cDsScopeInfos = sizeof(Scopes) / sizeof(Scopes[0]);
         InitInfo.aDsScopeInfos = Scopes;
-        InitInfo.flOptions = DSOP_SCOPE_TYPE_TARGET_COMPUTER;
+        InitInfo.flOptions = 0;
         InitInfo.cAttributesToFetch = 0;
         InitInfo.apwzAttributeNames = NULL;
 
