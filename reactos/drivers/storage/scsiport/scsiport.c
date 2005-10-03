@@ -32,6 +32,7 @@
 #include <ddk/srb.h>
 #include <ddk/scsi.h>
 #include <ddk/ntddscsi.h>
+#include <ddk/ntddstor.h>
 #include <stdio.h>
 
 #define NDEBUG
@@ -1710,10 +1711,10 @@ ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 {
   PIO_STACK_LOCATION Stack;
   PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+  NTSTATUS Status = STATUS_SUCCESS;
 
   DPRINT("ScsiPortDeviceControl()\n");
 
-  Irp->IoStatus.Status = STATUS_SUCCESS;
   Irp->IoStatus.Information = 0;
 
 
@@ -1755,16 +1756,35 @@ ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	  DPRINT("Inquiry data size: %lu\n", Irp->IoStatus.Information);
 	}
 	break;
+      
+      case IOCTL_SCSI_PASS_THROUGH:
+        DPRINT("  IOCTL_SCSI_PASS_THROUGH\n");
+        Status = STATUS_NOT_IMPLEMENTED;
+        break;
+
+      case IOCTL_SCSI_PASS_THROUGH_DIRECT:
+        DPRINT("  IOCTL_SCSI_PASS_THROUGH_DIRECT\n");
+        Status = STATUS_NOT_IMPLEMENTED;
+        break;
+
+      case IOCTL_SCSI_MINIPORT:
+        DPRINT1("  IOCTL_SCSI_MINIPORT\n");
+        DPRINT1("  Signature: %.8s\n", ((PSRB_IO_CONTROL)Irp->AssociatedIrp.SystemBuffer)->Signature);
+        DPRINT1("  ControlCode: 0x%lX\n", ((PSRB_IO_CONTROL)Irp->AssociatedIrp.SystemBuffer)->ControlCode);
+        Status = STATUS_INVALID_DEVICE_REQUEST;
+        break;
 
       default:
 	DPRINT1("  unknown ioctl code: 0x%lX\n",
 	       Stack->Parameters.DeviceIoControl.IoControlCode);
+        Status = STATUS_INVALID_DEVICE_REQUEST;
 	break;
     }
 
+  Irp->IoStatus.Status = Status;
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-  return(STATUS_SUCCESS);
+  return Status;
 }
 
 static VOID
