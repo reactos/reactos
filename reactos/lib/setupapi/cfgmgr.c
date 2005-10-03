@@ -779,11 +779,67 @@ CONFIGRET WINAPI CM_Get_DevNode_Registry_Property_ExA(
     DEVINST dnDevInst, ULONG ulProperty, PULONG pulRegDataType,
     PVOID Buffer, PULONG pulLength, ULONG ulFlags, HMACHINE hMachine)
 {
-    FIXME("%lx %lu %p %p %p %lx %lx\n",
+    PVOID BufferW;
+    ULONG LengthW;
+    ULONG RegDataType;
+    CONFIGRET ret;
+
+    TRACE("%lx %lu %p %p %p %lx %lx\n",
           dnDevInst, ulProperty, pulRegDataType, Buffer, pulLength,
           ulFlags, hMachine);
 
-    return CR_CALL_NOT_IMPLEMENTED;
+    if (!pulLength)
+        return CR_INVALID_POINTER;
+
+    LengthW = *pulLength * sizeof(WCHAR);
+    BufferW = HeapAlloc(GetProcessHeap(), 0, LengthW);
+
+    if (!BufferW)
+        return CR_OUT_OF_MEMORY;
+
+    ret = CM_Get_DevNode_Registry_Property_ExW(dnDevInst,
+                                               ulProperty,
+                                               &RegDataType,
+                                               BufferW,
+                                               &LengthW,
+                                               ulFlags,
+                                               hMachine);
+
+    if (ret == CR_SUCCESS)
+    {
+        if (RegDataType == REG_SZ || RegDataType == REG_EXPAND_SZ)
+        {
+            /* Do W->A conversion */
+            *pulLength = WideCharToMultiByte(CP_ACP,
+                                             0,
+                                             BufferW,
+                                             lstrlenW(BufferW) + 1,
+                                             Buffer,
+                                             *pulLength,
+                                             NULL,
+                                             NULL);
+            if (*pulLength == 0)
+                ret = CR_FAILURE;
+        }
+        else
+        {
+            /* Directly copy the value */
+            if (LengthW <= *pulLength)
+                memcpy(Buffer, BufferW, LengthW);
+            else
+            {
+                *pulLength = LengthW;
+                ret = CR_BUFFER_SMALL;
+            }
+        }
+    }
+
+    if (pulRegDataType)
+        *pulRegDataType = RegDataType;
+
+    HeapFree(GetProcessHeap(), 0, BufferW);
+
+    return ret;
 }
 
 
@@ -801,7 +857,7 @@ CONFIGRET WINAPI CM_Get_DevNode_Registry_Property_ExW(
     ULONG ulDataType = 0;
     ULONG ulTransferLength = 0;
 
-    FIXME("%lx %lu %p %p %p %lx %lx\n",
+    TRACE("%lx %lu %p %p %p %lx %lx\n",
           dnDevInst, ulProperty, pulRegDataType, Buffer, pulLength,
           ulFlags, hMachine);
 
