@@ -116,6 +116,52 @@ AcpiCreateInstanceIDString(PUNICODE_STRING InstanceID,
 }
 
 
+BOOLEAN
+AcpiCreateDeviceDescriptionString(PUNICODE_STRING DeviceDescription,
+                                  BM_NODE *Node)
+{
+  PWSTR Buffer;
+
+  DPRINT1("'%s', '%s', %ld\n", Node->device.id.hid, "PNP040", RtlCompareMemory(Node->device.id.hid, "PNP040", 6));
+  if (RtlCompareMemory(Node->device.id.hid, "PNP000", 6) == 6)
+    Buffer = L"Programmable interrupt controller";
+  else if (RtlCompareMemory(Node->device.id.hid, "PNP010", 6) == 6)
+    Buffer = L"System timer";
+  else if (RtlCompareMemory(Node->device.id.hid, "PNP020", 6) == 6)
+    Buffer = L"DMA controller";
+  else if (RtlCompareMemory(Node->device.id.hid, "PNP03", 5) == 5)
+    Buffer = L"Keyboard";
+  else if (RtlCompareMemory(Node->device.id.hid, "PNP040", 6) == 6)
+    Buffer = L"Parallel port";
+  else if (RtlCompareMemory(Node->device.id.hid, "PNP05", 5) == 5)
+    Buffer = L"Serial port";
+  else if (RtlCompareMemory(Node->device.id.hid, "PNP06", 5) ==5)
+    Buffer = L"Disk controller";
+  else if (RtlCompareMemory(Node->device.id.hid, "PNP07", 5) == 5)
+    Buffer = L"Disk controller";
+  else if (RtlCompareMemory(Node->device.id.hid, "PNP09", 5) == 5)
+    Buffer = L"Display adapter";
+  else if (RtlCompareMemory(Node->device.id.hid, "PNP0A0", 6) == 6)
+    Buffer = L"Bus controller";
+  else if (RtlCompareMemory(Node->device.id.hid, "PNP0E0", 6) == 6)
+    Buffer = L"PCMCIA controller";
+  else if (RtlCompareMemory(Node->device.id.hid, "PNP0F", 5) == 5)
+    Buffer = L"Mouse device";
+  else if (RtlCompareMemory(Node->device.id.hid, "PNP8", 4) == 4)
+    Buffer = L"Network adapter";
+  else if (RtlCompareMemory(Node->device.id.hid, "PNPA0", 5) == 5)
+    Buffer = L"SCSI controller";
+  else if (RtlCompareMemory(Node->device.id.hid, "PNPB0", 5) == 5)
+    Buffer = L"Multimedia device";
+  else if (RtlCompareMemory(Node->device.id.hid, "PNPC00", 6) == 6)
+    Buffer = L"Modem";
+  else
+    Buffer = L"Other ACPI device";
+
+  return AcpiCreateUnicodeString(DeviceDescription, Buffer, PagedPool);
+}
+
+
 static BOOLEAN
 AcpiCreateResourceList(PCM_RESOURCE_LIST* pResourceList,
                        PULONG ResourceListSize,
@@ -454,6 +500,15 @@ FdoQueryBusRelations(
 
         if (!AcpiCreateHardwareIDsString(&PdoDeviceExtension->HardwareIDs,
                                          Node))
+        {
+          ASSERT(FALSE);
+//          ErrorStatus = STATUS_INSUFFICIENT_RESOURCES;
+//          ErrorOccurred = TRUE;
+//          break;
+        }
+
+        if (!AcpiCreateDeviceDescriptionString(&PdoDeviceExtension->DeviceDescription,
+                                            Node))
         {
           ASSERT(FALSE);
 //          ErrorStatus = STATUS_INSUFFICIENT_RESOURCES;
