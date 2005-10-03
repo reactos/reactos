@@ -1479,14 +1479,18 @@ ReadFirstSubKey:
                 }
 
 SubKeyFailure:
-                ASSERT(newDelKeys != NULL);
-                RtlFreeHeap(ProcessHeap,
-                            0,
-                            newDelKeys);
+                /* newDelKeys can be NULL here when NtEnumerateKey returned an
+                   error other than STATUS_BUFFER_TOO_SMALL or STATUS_BUFFER_OVERFLOW! */
+                if (newDelKeys != NULL)
+                {
+                    RtlFreeHeap(ProcessHeap,
+                                0,
+                                newDelKeys);
+                }
 
 SubKeyFailureNoFree:
                 /* don't break, let's try to delete as many keys as possible */
-                if (Status2 != STATUS_NO_MORE_ENTRIES && NT_SUCCESS(Status))
+                if (NT_SUCCESS(Status))
                 {
                     Status = Status2;
                 }
