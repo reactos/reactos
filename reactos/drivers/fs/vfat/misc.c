@@ -136,7 +136,7 @@ VfatDispatchRequest (IN PVFAT_IRP_CONTEXT IrpContext)
    }
 }
 
-NTSTATUS STDCALL VfatBuildRequest (
+NTSTATUS NTAPI VfatBuildRequest (
         IN PDEVICE_OBJECT DeviceObject,
         IN PIRP Irp)
 {
@@ -222,7 +222,7 @@ PVFAT_IRP_CONTEXT VfatAllocateIrpContext(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    return IrpContext;
 }
 
-VOID STDCALL VfatDoRequest (PVOID IrpContext)
+VOID NTAPI VfatDoRequest (PVOID IrpContext)
 {
    InterlockedDecrement(&QueueCount);
    DPRINT ("VfatDoRequest (IrpContext %x), MajorFunction %x, %d\n", IrpContext, ((PVFAT_IRP_CONTEXT)IrpContext)->MajorFunction, QueueCount);

@@ -15,7 +15,7 @@
 
 /* FUNCTIONS ***************************************************************/
 
-static NTSTATUS STDCALL
+static NTSTATUS NTAPI
 VfatReadWritePartialCompletion (IN PDEVICE_OBJECT DeviceObject,
 				IN PIRP Irp,
 				IN PVOID Context)

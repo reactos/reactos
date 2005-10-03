@@ -41,7 +41,7 @@ VfatDiskShutDown(PVCB Vcb)
    return Status;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 VfatShutdown(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    NTSTATUS Status;
