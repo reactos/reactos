@@ -122,7 +122,6 @@ AcpiCreateDeviceDescriptionString(PUNICODE_STRING DeviceDescription,
 {
   PWSTR Buffer;
 
-  DPRINT1("'%s', '%s', %ld\n", Node->device.id.hid, "PNP040", RtlCompareMemory(Node->device.id.hid, "PNP040", 6));
   if (RtlCompareMemory(Node->device.id.hid, "PNP000", 6) == 6)
     Buffer = L"Programmable interrupt controller";
   else if (RtlCompareMemory(Node->device.id.hid, "PNP010", 6) == 6)
