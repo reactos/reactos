@@ -535,7 +535,7 @@ BOOL DeleteFolder(LPTSTR FileName)
 }
 INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
 {
-	LPTSTR dir;		/* pointer to the directory to change to */
+	TCHAR dir[MAX_PATH];		/* pointer to the directory to change to */
 	char ch;
 	INT args;
 	LPTSTR *arg = NULL;
