@@ -205,6 +205,39 @@ BEGIN
     END
 END
 
+IDM_DESKTOPBAR MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Einstellungen...",           ID_DESKTOPBAR_SETTINGS
+        MENUITEM "&Task Manager...",            ID_TASKMGR
+        MENUITEM SEPARATOR
+        MENUITEM "&Über Explorer...",           ID_ABOUT_EXPLORER
+    END
+END
+
+IDM_NOTIFYAREA MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "&Zeige versteckte Icons",     ID_SHOW_HIDDEN_ICONS
+        MENUITEM "Zeige Icon-&Button",          ID_SHOW_ICON_BUTTON
+        MENUITEM "&Konfiguriere Benachrichtigungen...", ID_CONFIG_NOTIFYAREA
+        MENUITEM "Einstellen von &Datum/Zeit...", ID_CONFIG_TIME
+        MENUITEM SEPARATOR
+        MENUITEM "&Über Explorer...",           ID_ABOUT_EXPLORER
+    END
+END
+
+IDM_VOLUME MENU DISCARDABLE 
+BEGIN
+    POPUP ""
+    BEGIN
+        MENUITEM "Öffne &Lautstärkeregler",     ID_TRAY_VOLUME
+        MENUITEM "Editieren der Audio-&Einstellungen", ID_VOLUME_PROPERTIES
+    END
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -229,7 +262,7 @@ END
 
 IDD_ABOUT_EXPLORER DIALOG DISCARDABLE  0, 0, 199, 106
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "About ReactOS Explorer"
+CAPTION "Über ReactOS Explorer"
 FONT 10, "MS Sans Serif"
 BEGIN
     LTEXT           "ReactOS Explorer",IDC_ROS_EXPLORER,91,13,104,11
@@ -240,6 +273,131 @@ BEGIN
                     8
     CONTROL         "&OK",IDOK,"Button",BS_OWNERDRAW | BS_FLAT | WS_GROUP,
                     154,90,38,12
+END
+
+IDD_DESKBAR_DESKTOP DIALOG DISCARDABLE  0, 0, 212, 204
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Desktop-Einstellungen"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Bitte wählen Sie den gewünschten Platzierungs-Algorithmus für die Desktop-Icons aus:",
+                    IDC_STATIC,7,7,197,23
+    CONTROL         "left/top dwn",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,7,35,46,44
+    CONTROL         "left/top right",IDC_ICON_ALIGN_1,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,57,35,46,44
+    CONTROL         "right/top left",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,110,35,46,44
+    CONTROL         "rig./top dwn",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,159,35,46,44
+    CONTROL         "left/bot. up",IDC_ICON_ALIGN_4,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,7,83,46,44
+    CONTROL         "left/bot. right",IDC_ICON_ALIGN_5,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,57,83,46,44
+    CONTROL         "right/bot. left",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,110,83,46,44
+    CONTROL         "rig./bot. dwn",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,159,83,46,44
+    CONTROL         "border down",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,7,131,46,44
+    CONTROL         "border H/V",IDC_ICON_ALIGN_9,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,57,131,46,44
+    CONTROL         "round about",IDC_ICON_ALIGN_10,"Button",BS_OWNERDRAW | 
+                    BS_BOTTOM | WS_TABSTOP,110,131,46,44
+    CONTROL         "",IDC_ICON_ALIGN_11,"Button",BS_OWNERDRAW | BS_BOTTOM | 
+                    WS_TABSTOP,159,131,46,44
+    CONTROL         "Anzeige der &Versionsnummer",ID_DESKTOP_VERSION,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,187,107,10
+END
+
+IDD_DESKBAR_STARTMENU DIALOG DISCARDABLE  0, 0, 210, 204
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Startmenu-Einstellungen"
+FONT 8, "MS Sans Serif"
+BEGIN
+END
+
+IDD_DESKBAR_TASKBAR DIALOG DISCARDABLE  0, 0, 210, 204
+STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Taskbar-Einstellungen"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Anzeigen der &Uhr",ID_SHOW_CLOCK,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,152,71,10
+    CONTROL         "&verstecke inaktive Notification-Icons",
+                    ID_HIDE_INACTIVE_ICONS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,174,131,10
+    PUSHBUTTON      "&Notifications...",ID_CONFIG_NOTIFYAREA,153,173,50,14
+END
+
+IDD_MDI_SDI DIALOGEX 0, 0, 194, 157
+STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Auswahl des Explorerfenster-Modus"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "Please select your prefered explorer user interface:",
+                    IDC_STATIC,7,7,160,8
+    CONTROL         "&MDI (Multiple Document Interface)",IDC_MDI,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,31,124,10
+    CONTROL         "&SDI (Single Document Interface)",IDC_SDI,"Button",
+                    BS_AUTORADIOBUTTON,7,62,118,10
+    CONTROL         170,IDC_STATIC,"Static",SS_BITMAP,145,23,15,13
+    CONTROL         171,IDC_STATIC,"Static",SS_BITMAP,145,57,15,13
+    CONTROL         "Öffne Unterverzeichnisses in &neuen Fenstern",
+                    IDC_SEPARATE_SUBFOLDERS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,90,157,10
+    LTEXT           "Diese Auswahl wird künftig für alle Explorer-Fenster verwendet werden.",
+                    IDC_STATIC,7,111,174,22
+    DEFPUSHBUTTON   "&OK",IDOK,29,136,50,14,WS_GROUP
+    PUSHBUTTON      "A&bbrechen",IDCANCEL,106,136,50,14
+END
+
+IDD_NOTIFYAREA DIALOGEX 0, 0, 208, 174
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Konfiguration der Benachrichtigungs-Icons"
+FONT 8, "MS Sans Serif"
+BEGIN
+    CONTROL         "Tree1",IDC_NOTIFY_ICONS,"SysTreeView32",TVS_HASLINES | 
+                    TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,194,31
+    LTEXT           "&Tooltip-Text:",IDC_LABEL1,7,44,40,8
+    EDITTEXT        IDC_NOTIFY_TOOLTIP,58,42,143,14,ES_AUTOHSCROLL
+    LTEXT           "&Fenster-Titel:",IDC_LABEL2,7,63,42,8
+    EDITTEXT        IDC_NOTIFY_TITLE,58,60,143,14,ES_AUTOHSCROLL
+    LTEXT           "&Modulpfad:",IDC_LABEL3,7,81,36,8
+    EDITTEXT        IDC_NOTIFY_MODULE,58,78,143,14,ES_AUTOHSCROLL
+    GROUPBOX        "&Anzeigemodus",IDC_LABEL4,7,96,157,28
+    CONTROL         "&zeigen",IDC_NOTIFY_SHOW,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,15,108,37,10
+    CONTROL         "&verstecken",IDC_NOTIFY_HIDE,"Button",
+                    BS_AUTORADIOBUTTON,55,108,51,10
+    CONTROL         "a&utomatisch",IDC_NOTIFY_AUTOHIDE,"Button",
+                    BS_AUTORADIOBUTTON,110,108,54,10
+    ICON            "",IDC_PICTURE,173,101,20,20
+    LTEXT           "&Letzte Änderung:",IDC_LABEL6,7,132,55,8
+    EDITTEXT        IDC_LAST_CHANGE,66,129,98,14,ES_AUTOHSCROLL | 
+                    ES_READONLY
+    CONTROL         "zei&ge versteckte",ID_SHOW_HIDDEN_ICONS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,154,68,10
+    DEFPUSHBUTTON   "&OK",IDOK,91,153,50,14,WS_GROUP
+    PUSHBUTTON      "A&bbrechen",IDCANCEL,151,153,50,14
+END
+
+IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 200, 65
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+    WS_SYSMENU | WS_THICKFRAME
+EXSTYLE WS_EX_APPWINDOW
+CAPTION "Programmsuche im Startmenu"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LTEXT           "&Filter:",IDC_STATIC,7,9,18,8
+    EDITTEXT        IDC_FILTER,34,7,96,14,ES_AUTOHSCROLL
+    CONTROL         "List1",IDC_PROGRAMS_FOUND,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | 
+                    WS_TABSTOP,7,25,186,33
+    PUSHBUTTON      "Alle über&prüfen",IDC_CHECK_ENTRIES,138,7,55,14
 END
 
 
