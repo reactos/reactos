@@ -130,16 +130,27 @@ BOOL ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, int *piEncoding
 		else
 			goto done;
 
-		dwCharCount = MultiByteToWideChar(iCodePage, 0, (LPCSTR)&pBytes[dwPos], dwSize - dwPos, NULL, 0);
-		if (dwCharCount == 0)
-			goto done;
+		if ((dwSize - dwPos) > 0)
+		{
+			dwCharCount = MultiByteToWideChar(iCodePage, 0, (LPCSTR)&pBytes[dwPos], dwSize - dwPos, NULL, 0);
+			if (dwCharCount == 0)
+				goto done;
+		}
+		else
+		{
+			/* special case for files with no characters (other than BOMs) */
+			dwCharCount = 0;
+		}
 
 		pszAllocText = (LPWSTR) HeapAlloc(GetProcessHeap(), 0, (dwCharCount + 1) * sizeof(WCHAR));
 		if (!pszAllocText)
 			goto done;
 
-		if (!MultiByteToWideChar(iCodePage, 0, (LPCSTR)&pBytes[dwPos], dwSize - dwPos, pszAllocText, dwCharCount))
-			goto done;
+		if ((dwSize - dwPos) > 0)
+		{
+			if (!MultiByteToWideChar(iCodePage, 0, (LPCSTR)&pBytes[dwPos], dwSize - dwPos, pszAllocText, dwCharCount))
+				goto done;
+		}
 
 		pszAllocText[dwCharCount] = '\0';
 		pszText = pszAllocText;
