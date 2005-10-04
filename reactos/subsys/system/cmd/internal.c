@@ -472,6 +472,9 @@ INT cmd_mkdir (LPTSTR cmd, LPTSTR param)
 	if (!dir)
 	{
 		ConErrResPuts (STRING_ERROR_REQ_PARAM_MISSING);
+		nErrorLevel = 1;
+		if(p != NULL)
+			freep (p);
 		return 1;
 	}
 
@@ -479,16 +482,20 @@ INT cmd_mkdir (LPTSTR cmd, LPTSTR param)
 	if (_tcslen (dir) >= 2 && dir[_tcslen (dir) - 1] == _T('\\'))
 		dir[_tcslen(dir) - 1] = _T('\0');
 
-	if(IsExistingDirectory(dir) || IsExistingFile(dir))
-	{
-		ConErrResPuts(STRING_MD_ERROR);
-		freep(p);
-		nErrorLevel = 1;
-		return 1;
-	}
 	if (!CreateDirectory (dir, NULL))
 	{
-		ErrorMessage (GetLastError(), _T("MD"));
+		if(GetLastError() == ERROR_ALREADY_EXISTS)
+		{
+			ConErrResPuts(STRING_MD_ERROR);
+		}
+		else if(GetLastError() == ERROR_PATH_NOT_FOUND)
+		{
+			ConErrResPuts(STRING_MD_ERROR2);
+		}
+		else
+		{
+			ErrorMessage (GetLastError(), _T("MD"));
+		}
 		nErrorLevel = 1;
 		freep (p);
 		return 1;
