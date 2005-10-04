@@ -433,7 +433,7 @@ INT cmd_mkdir (LPTSTR cmd, LPTSTR param)
 	LPTSTR place;	/* used to search for the \ when no space is used */
 	LPTSTR *p = NULL;
 	INT argc;
-
+	nErrorLevel = 0;
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
 		ConOutResPaging(TRUE,STRING_MKDIR_HELP);
@@ -479,10 +479,17 @@ INT cmd_mkdir (LPTSTR cmd, LPTSTR param)
 	if (_tcslen (dir) >= 2 && dir[_tcslen (dir) - 1] == _T('\\'))
 		dir[_tcslen(dir) - 1] = _T('\0');
 
+	if(IsExistingDirectory(dir) || IsExistingFile(dir))
+	{
+		ConErrResPuts(STRING_MD_ERROR);
+		freep(p);
+		nErrorLevel = 1;
+		return 1;
+	}
 	if (!CreateDirectory (dir, NULL))
 	{
 		ErrorMessage (GetLastError(), _T("MD"));
-
+		nErrorLevel = 1;
 		freep (p);
 		return 1;
 	}

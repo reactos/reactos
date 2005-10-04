@@ -220,6 +220,7 @@
 #define STRING_EXPECTED_NUMBER_OR_VARIABLE 722
 #define STRING_SYNTAX_COMMAND_INCORRECT    723
 #define STRING_RMDIR_HELP2				   724
+#define STRING_MD_ERROR					   725
 
 
 /* These strings are language independent (cmd.rc) */
