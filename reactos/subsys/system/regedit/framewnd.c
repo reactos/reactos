@@ -365,7 +365,7 @@ static BOOL ExportRegistryFile(HWND hWnd)
     ofn.lpTemplateName = MAKEINTRESOURCE(IDD_EXPORTRANGE);
     if (GetSaveFileName(&ofn)) {
         BOOL result;
-        LPCSTR pszExportKeyPath;
+        LPSTR pszExportKeyPath;
 #ifdef UNICODE
         CHAR buffer[_MAX_PATH];
 

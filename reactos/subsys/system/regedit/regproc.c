@@ -1290,7 +1290,7 @@ static FILE *REGPROC_open_export_file(const TCHAR *file_name)
     FILE *file = _tfopen(file_name, _T("w"));
     if (!file) {
         perror("");
-        fprintf(stderr,"%s: Can't open file \"%s\"\n", getAppName(), file_name);
+/*      fprintf(stderr,"%s: Can't open file \"%s\"\n", getAppName(), file_name);*/
         exit(1);
     }
     fputs("REGEDIT4\n", file);
