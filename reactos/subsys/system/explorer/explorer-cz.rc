@@ -33,6 +33,8 @@ IDM_MDIFRAME MENU PRELOAD DISCARDABLE
 BEGIN
     POPUP "&Soubor"
     BEGIN
+        MENUITEM "&Spustit...",                 ID_EXECUTE
+        MENUITEM SEPARATOR
         MENUITEM "&Ukonèit",                    ID_FILE_EXIT
     END
     POPUP "&Zobrazení"
@@ -105,6 +107,8 @@ IDM_SDIFRAME MENU PRELOAD DISCARDABLE
 BEGIN
     POPUP "&Soubor"
     BEGIN
+        MENUITEM "&Spustit...",                 ID_EXECUTE
+        MENUITEM SEPARATOR
         MENUITEM "&Ukonèit",                    ID_FILE_EXIT
     END
     POPUP "&Zobrazení"

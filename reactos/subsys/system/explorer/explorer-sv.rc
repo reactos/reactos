@@ -68,6 +68,8 @@ IDM_MDIFRAME MENU DISCARDABLE
 BEGIN
     POPUP "&Arkiv"
     BEGIN
+        MENUITEM "&Kör...",                     ID_EXECUTE
+        MENUITEM SEPARATOR
         MENUITEM "&Avsluta",                    ID_FILE_EXIT
     END
     POPUP "&Visa"
@@ -140,6 +142,8 @@ IDM_SDIFRAME MENU DISCARDABLE
 BEGIN
     POPUP "&Arkiv"
     BEGIN
+        MENUITEM "&Kör...",                     ID_EXECUTE
+        MENUITEM SEPARATOR
         MENUITEM "&Avsluta",                    ID_FILE_EXIT
     END
     POPUP "&Visa"

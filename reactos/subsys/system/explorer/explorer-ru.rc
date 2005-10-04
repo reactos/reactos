@@ -44,6 +44,8 @@ IDM_MDIFRAME MENU DISCARDABLE
 BEGIN
     POPUP "&Файл"
     BEGIN
+        MENUITEM "&Запустить...",               ID_EXECUTE
+        MENUITEM SEPARATOR
         MENUITEM "В&ыход",                      ID_FILE_EXIT
     END
     POPUP "&Вид"
@@ -96,6 +98,8 @@ IDM_SDIFRAME MENU DISCARDABLE
 BEGIN
     POPUP "&Файл"
     BEGIN
+        MENUITEM "&Запустить...",               ID_EXECUTE
+        MENUITEM SEPARATOR
         MENUITEM "В&ыход",                      ID_FILE_EXIT
     END
     POPUP "&Вид"

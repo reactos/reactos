@@ -30,6 +30,8 @@ IDM_MDIFRAME MENU DISCARDABLE
 BEGIN
     POPUP "ファイル(&F)"
     BEGIN
+        MENUITEM "&Execute...",                 ID_EXECUTE
+        MENUITEM SEPARATOR
         MENUITEM "終了(&X)",                    ID_FILE_EXIT
     END
     POPUP "表\示(&V)"
@@ -70,9 +72,11 @@ IDM_SDIFRAME MENU DISCARDABLE
 BEGIN
     POPUP "ファイル(&F)"
     BEGIN
+        MENUITEM "&Execute...",                 ID_EXECUTE
+        MENUITEM SEPARATOR
         MENUITEM "終了(&X)",                    ID_FILE_EXIT
     END
-    POPUP "表\示(&V)"
+    POPUP "表\\示(&V)"
     BEGIN
         MENUITEM "ツールバー(&T)",              ID_VIEW_TOOL_BAR
         MENUITEM "ステータスバー(&S)",          ID_VIEW_STATUSBAR

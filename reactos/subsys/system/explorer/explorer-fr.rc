@@ -74,6 +74,8 @@ IDM_MDIFRAME MENU DISCARDABLE
 BEGIN
     POPUP "&Fichier"
     BEGIN
+        MENUITEM "E&xécuter...",                ID_EXECUTE
+        MENUITEM SEPARATOR
         MENUITEM "&Fermer",                     ID_FILE_EXIT
     END
     POPUP "&Affichage"
@@ -113,6 +115,8 @@ IDM_SDIFRAME MENU DISCARDABLE
 BEGIN
     POPUP "&Fichier"
     BEGIN
+        MENUITEM "E&xécuter...",                ID_EXECUTE
+        MENUITEM SEPARATOR
         MENUITEM "&Fermer",                     ID_FILE_EXIT
     END
     POPUP "&Affichage"
