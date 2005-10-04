@@ -81,6 +81,8 @@ protected:
 
 	void	FillBookmarks();
 	virtual bool go_to(LPCTSTR url, bool new_window);
+
+	void	ExecuteCommandbar(LPCTSTR dir);
 };
 
 

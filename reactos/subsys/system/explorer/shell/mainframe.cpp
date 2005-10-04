@@ -387,7 +387,7 @@ int MainFrameBase::Command(int id, int code)
 		ExecuteDialog dlg = {{0}, 0};
 
 		if (DialogBoxParam(g_Globals._hInstance, MAKEINTRESOURCE(IDD_EXECUTE), _hwnd, ExecuteDialog::WndProc, (LPARAM)&dlg) == IDOK) {
-			CONTEXT("ShellExecute()");
+			CONTEXT("ID_EXECUTE - ShellExecute()");
 
 			HINSTANCE hinst = ShellExecute(_hwnd, NULL/*operation*/, dlg.cmd/*file*/, NULL/*parameters*/, NULL/*dir*/, dlg.cmdshow);
 
@@ -430,7 +430,8 @@ int MainFrameBase::Command(int id, int code)
 		break;
 
 	  case IDW_COMMANDBAR:
-		//@todo execute command in command bar
+		if (code == 1)
+			ExecuteCommandbar(NULL);
 		break;
 
 	  default:
@@ -438,6 +439,36 @@ int MainFrameBase::Command(int id, int code)
 	}
 
 	return 0;
+}
+
+
+void MainFrameBase::ExecuteCommandbar(LPCTSTR dir)
+{
+	TCHAR cmd[BUFFER_LEN];
+
+	if (GetWindowText(_hcommandedit, cmd, BUFFER_LEN)) {
+		CONTEXT("ExecuteCommandbar - ShellExecute()");
+
+		 // remove command prompt from 'cmd' string
+		LPCTSTR p = cmd;
+
+		if (*p == '>')
+			++p;
+
+		while(*p == ' ')
+			++p;
+
+		if (dir) {
+			 // remove "file://" from directory URL
+			if (!_tcsnicmp(dir, TEXT("file://"), 7))
+				dir += 7;
+		}
+
+		HINSTANCE hinst = ShellExecute(_hwnd, NULL, p, NULL, dir, SW_SHOWNORMAL);
+
+		if ((int)hinst <= 32)
+			display_error(_hwnd, GetLastError());
+	}
 }
 
 
@@ -1121,6 +1152,20 @@ int MDIMainFrame::Command(int id, int code)
 		MainFrameBase::Create(NULL, false);
 		break;
 
+	  case IDW_COMMANDBAR:
+		if (code == 1) {
+			TCHAR url[BUFFER_LEN];
+			LPCTSTR dir;
+
+			if (GetWindowText(_haddressedit, url, BUFFER_LEN))
+				dir = url;
+			else
+				dir = NULL;
+
+			ExecuteCommandbar(dir);
+		}
+		break;
+
 	///@todo There are even more menu items!
 
 	  default:
@@ -1486,6 +1531,11 @@ int SDIMainFrame::Command(int id, int code)
 	switch(id) {
 	  case ID_VIEW_MDI:
 		MainFrameBase::Create(_url, true);
+		break;
+
+	  case IDW_COMMANDBAR:
+		if (code == 1)
+			ExecuteCommandbar(_url);
 		break;
 
 	  default:
