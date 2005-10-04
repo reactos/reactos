@@ -69,7 +69,7 @@ INT cmd_set (LPTSTR cmd, LPTSTR param)
 	/* remove escapes */
 	if ( param[0] ) for ( i = 0; param[i+1]; i++ )
 	{
-		if ( param[i] == '^' )
+		if ( param[i] == _T('^') )
 		{
 			memmove ( &param[i], &param[i+1], _tcslen(&param[i]) * sizeof(TCHAR) );
 		}
@@ -105,8 +105,14 @@ INT cmd_set (LPTSTR cmd, LPTSTR param)
 	/* the /A does *NOT* have to be followed by a whitespace */
 	if ( !_tcsnicmp (param, _T("/A"), 2) )
 	{
+		BOOL Success = seta_eval ( skip_ws(param+2) );
+		if(!Success)
+		{
+			/*might seem random but this is what windows xp does */
+			nErrorLevel = 9165;
+		}
 		/* TODO FIXME - what are we supposed to return? */
-		return seta_eval ( skip_ws(param+2) );
+		return Success;
 	}
 
 	p = _tcschr (param, _T('='));
