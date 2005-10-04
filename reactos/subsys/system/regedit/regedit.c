@@ -194,6 +194,10 @@ BOOL PerformRegAction(REGEDIT_ACTION action, LPSTR s)
         }
     case ACTION_EXPORT: {
             CHAR filename[MAX_PATH];
+            LPCTSTR pszFilename;
+#ifdef UNICODE
+            WCHAR filename_wide[MAX_PATH];
+#endif
 
             filename[0] = '\0';
             get_file_name(&s, filename);
@@ -203,13 +207,21 @@ BOOL PerformRegAction(REGEDIT_ACTION action, LPSTR s)
                 exit(1);
             }
 
+#ifdef UNICODE
+            MultiByteToWideChar(CP_ACP, 0, filename, -1, filename_wide,
+                sizeof(filename_wide) / sizeof(filename_wide[0]));
+            pszFilename = filename_wide;
+#else
+            pszFilename = filename;
+#endif
+
             if (s[0]) {
                 CHAR reg_key_name[KEY_MAX_LEN];
 
                 get_file_name(&s, reg_key_name);
-                export_registry_key(filename, reg_key_name);
+                export_registry_key(pszFilename, reg_key_name);
             } else {
-                export_registry_key(filename, NULL);
+                export_registry_key(pszFilename, NULL);
             }
             break;
         }
