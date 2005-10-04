@@ -1285,9 +1285,9 @@ static void export_hkey(FILE *file, HKEY key,
 /******************************************************************************
  * Open file for export.
  */
-static FILE *REGPROC_open_export_file(CHAR *file_name)
+static FILE *REGPROC_open_export_file(const TCHAR *file_name)
 {
-    FILE *file = fopen(file_name, "w");
+    FILE *file = _tfopen(file_name, _T("w"));
     if (!file) {
         perror("");
         fprintf(stderr,"%s: Can't open file \"%s\"\n", getAppName(), file_name);
@@ -1305,7 +1305,7 @@ static FILE *REGPROC_open_export_file(CHAR *file_name)
  * reg_key_name - registry branch to export. The whole registry is exported if
  *      reg_key_name is NULL or contains an empty string.
  */
-BOOL export_registry_key(CHAR *file_name, CHAR *reg_key_name)
+BOOL export_registry_key(const TCHAR *file_name, CHAR *reg_key_name)
 {
     HKEY reg_key_class;
 

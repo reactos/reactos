@@ -365,10 +365,17 @@ static BOOL ExportRegistryFile(HWND hWnd)
     ofn.lpTemplateName = MAKEINTRESOURCE(IDD_EXPORTRANGE);
     if (GetSaveFileName(&ofn)) {
         BOOL result;
-        /* FIXME - convert strings to ascii! */
-        result = export_registry_key((CHAR*)ofn.lpstrFile, (CHAR*)ExportKeyPath);
-        /*result = export_registry_key(ofn.lpstrFile, NULL);*/
-        /*if (!export_registry_key(ofn.lpstrFile, NULL)) {*/
+        LPCSTR pszExportKeyPath;
+#ifdef UNICODE
+        CHAR buffer[_MAX_PATH];
+
+        WideCharToMultiByte(CP_ACP, 0, ExportKeyPath, -1, buffer, sizeof(buffer), NULL, NULL);
+        pszExportKeyPath = buffer;
+#else
+        pszExportKeyPath = ExportKeyPath;
+#endif
+
+        result = export_registry_key(ofn.lpstrFile, pszExportKeyPath);
         if (!result) {
             /*printf("Can't open file \"%s\"\n", ofn.lpstrFile);*/
             return FALSE;
