@@ -129,116 +129,6 @@ BEGIN
     END
 END
 
-IDM_WINEFILE MENU DISCARDABLE 
-BEGIN
-    POPUP "&Файл"
-    BEGIN
-        MENUITEM "&Открыть\tEnter",             101
-        MENUITEM "Пе&реместить...\tF7",         106
-        MENUITEM "&Копировать...\tF8",          107
-        MENUITEM "В буфер обм&ена...\tF9",      118
-        MENUITEM "&Удалить\tDel",               108
-        MENUITEM "Пе&реименовать...",           109
-        MENUITEM "Свойс&тва...\tAlt+Enter",     ID_EDIT_PROPERTIES
-        MENUITEM SEPARATOR
-        MENUITEM "Запако&вать...",              119
-        MENUITEM "Ра&спаковать...",             120
-        MENUITEM SEPARATOR
-        MENUITEM "&Запуск...",                  ID_EXECUTE
-        MENUITEM "&Печать...",                  102
-        MENUITEM "Объеденить...",               103
-        MENUITEM SEPARATOR
-        MENUITEM "Создат&ь папку...",           ID_EXECUTE
-        MENUITEM "По&иск...",                   104
-        MENUITEM "В&ыбрать файл...",            116
-        MENUITEM SEPARATOR
-        MENUITEM "Выхо&д\tAlt+X",               ID_FILE_EXIT
-    END
-    POPUP "&Диск"
-    BEGIN
-        MENUITEM "&Копировать диск...",         201
-        MENUITEM "&Метка диска...",             202
-        MENUITEM SEPARATOR
-        MENUITEM "&Форматировать диск...",      203
-        MENUITEM SEPARATOR
-        MENUITEM "Подключить &сетевой диск",    252
-        MENUITEM "&Отключить сетевой диск",     253
-        MENUITEM SEPARATOR
-        MENUITEM "Открыть доступ...",           254
-        MENUITEM "&Закрыть доступ...",          255
-        MENUITEM SEPARATOR
-        MENUITEM "&Выбрать диск...",            251
-    END
-    POPUP "&Папки"
-    BEGIN
-        MENUITEM "&Следующий уровень\t+",       301
-        MENUITEM "Развернуть &дерево\t*",       302
-        MENUITEM "Развернуть &всё\tCtrl+*",     303
-        MENUITEM "Свернуть &дерево\t-",         304
-        MENUITEM SEPARATOR
-        MENUITEM "&Отметить вложения",          505
-    END
-    POPUP "&Вид"
-    BEGIN
-        MENUITEM "Д&ерево и папки",             413
-        MENUITEM "То&лько дерево",              411
-        MENUITEM "Только &папка",               412
-        MENUITEM SEPARATOR
-        MENUITEM "Разд&елить",                  414
-        MENUITEM SEPARATOR
-        MENUITEM "&Имя",                        ID_VIEW_NAME
-        MENUITEM "&Все подробности о файле",    ID_VIEW_ALL_ATTRIBUTES
-        , CHECKED
-        MENUITEM "&Частичные подробности...",   ID_VIEW_SELECTED_ATTRIBUTES
-        MENUITEM SEPARATOR
-        MENUITEM "&Сортировать по имени",       404
-        MENUITEM "Сортировать &по типу",        405
-        MENUITEM "Сортировать по ра&змеру",     406
-        MENUITEM "Сортировать по &дате",        407
-        MENUITEM SEPARATOR
-        MENUITEM "Сортировать по &...",         409
-    END
-    POPUP "&Настройки"
-    BEGIN
-        MENUITEM "&Подтевржедение...",          65535
-        MENUITEM "&Шрифт...",                   65535
-        MENUITEM "Настроить панель &инструментов...", 65535
-        MENUITEM SEPARATOR
-        MENUITEM "&Панель инструментов",        ID_VIEW_TOOL_BAR, CHECKED
-        MENUITEM "&Диски",                      ID_VIEW_DRIVE_BAR, CHECKED
-        MENUITEM "&Избранное",                  ID_VIEW_SIDE_BAR
-        MENUITEM "&Строка состояния",           ID_VIEW_STATUSBAR, CHECKED
-        MENUITEM "В по&лный экран\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
-        MENUITEM SEPARATOR
-        MENUITEM "&Обоначить после выполнения", 65535
-        MENUITEM "&Сохранить изменения и выйти", 511
-    END
-    POPUP "&Безопасность"
-    BEGIN
-        MENUITEM "&Доступ...",                  605
-        MENUITEM "&Регистрация...",             606
-        MENUITEM "&Владелец...",                607
-    END
-    POPUP "&Окно"
-    BEGIN
-        MENUITEM "Новое &окно",                 ID_WINDOW_NEW
-        MENUITEM "Расположить каскадом\tCtrl+F5", ID_WINDOW_CASCADE
-        MENUITEM "Плиткой &горизонтально",      ID_WINDOW_TILE_HORZ
-        MENUITEM "Плиткой &вертикально\tCtrl+F4", ID_WINDOW_TILE_VERT
-        MENUITEM "Упорядочить автоматически",   ID_WINDOW_AUTOSORT
-        MENUITEM "Упорядочить &значки",         ID_WINDOW_ARRANGE
-        MENUITEM "&Обновить\tF5",               ID_REFRESH
-    END
-    POPUP "&?"
-    BEGIN
-        MENUITEM "&Вызов справки\tF1",          ID_HELP
-        MENUITEM "Поиск &справки...\tF1",       ID_HELP
-        MENUITEM "&Использование справки\tF1",  ID_HELP_USING
-        MENUITEM SEPARATOR
-        MENUITEM "Информация о &Winefile...",   ID_ABOUT_WINEFILE
-    END
-END
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -334,7 +224,7 @@ IDD_MDI_SDI DIALOGEX 0, 0, 194, 157
 STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "Выберите режим MDI / SDI"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     LTEXT           "Выберите наиболее предпочтительный для вас\nвид проводника:",
                     IDC_STATIC,7,7,171,17

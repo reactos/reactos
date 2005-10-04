@@ -29,120 +29,11 @@ LANGUAGE LANG_GERMAN, SUBLANG_GERMAN
 // Menu
 //
 
-IDM_WINEFILE MENU DISCARDABLE 
-BEGIN
-    POPUP "&Datei"
-    BEGIN
-        MENUITEM "Ö&ffnen\tEingabetaste",       101
-        MENUITEM "&Verschieben...\tF7",         106
-        MENUITEM "&Kopieren...\tF8",            107
-        MENUITEM "&In Zwischenablage...\tF9",   118
-        MENUITEM "&Löschen\tEntf",              108
-        MENUITEM "&Umbenennen...",              109
-        MENUITEM "&Eigenschaften...\tAlt+Eingabetaste", ID_EDIT_PROPERTIES
-        MENUITEM SEPARATOR
-        MENUITEM "K&omprimieren...",            119
-        MENUITEM "Deko&mprimieren...",          120
-        MENUITEM SEPARATOR
-        MENUITEM "&Ausführen...",               ID_EXECUTE
-        MENUITEM "&Drucken...",                 102
-        MENUITEM "Zuord&nen...",                103
-        MENUITEM SEPARATOR
-        MENUITEM "Ver&zeichnis erstellen...",   ID_EXECUTE
-        MENUITEM "&Suchen...",                  104
-        MENUITEM "Dateien aus&wählen...",       116
-        MENUITEM SEPARATOR
-        MENUITEM "&Beenden\tAlt+X",             ID_FILE_EXIT
-    END
-    POPUP "Da&tenträger"
-    BEGIN
-        MENUITEM "Datenträger &kopieren...",    201
-        MENUITEM "Datenträger &benennen...",    202
-        MENUITEM SEPARATOR
-        MENUITEM "Datenträger &formatieren...", 203
-        MENUITEM SEPARATOR
-        MENUITEM "Netzwerklaufwerk &verbinden...", 252
-        MENUITEM "Netzwerklaufwerk &trennen...", 253
-        MENUITEM SEPARATOR
-        MENUITEM "F&reigeben als...",           254
-        MENUITEM "Freigabe been&den...",        255
-        MENUITEM SEPARATOR
-        MENUITEM "Laufwerk aus&wählen...",      251
-    END
-    POPUP "&Verzeichnisse"
-    BEGIN
-        MENUITEM "&Nächste Ebene einblenden\t+", 301
-        MENUITEM "&Zweig einblenden\t*",        302
-        MENUITEM "Alle &Ebenen einblenden\tStrg+*", 303
-        MENUITEM "Zweig &ausblenden\t-",        304
-        MENUITEM SEPARATOR
-        MENUITEM "&Verzweigungen kennzeichnen", 505
-    END
-    POPUP "&Ansicht"
-    BEGIN
-        MENUITEM "Struktur &und Verzeichnis",   413
-        MENUITEM "Nur St&ruktur",               411
-        MENUITEM "Nur &Verzeichnis",            412
-        MENUITEM SEPARATOR
-        MENUITEM "&Teilen",                     414
-        MENUITEM SEPARATOR
-        MENUITEM "&Name",                       ID_VIEW_NAME
-        MENUITEM "A&lle Dateiangaben",          ID_VIEW_ALL_ATTRIBUTES
-        , CHECKED
-        MENUITEM "&Bestimmte Dateiangaben...",  ID_VIEW_SELECTED_ATTRIBUTES
-        MENUITEM SEPARATOR
-        MENUITEM "Nach N&ame",                  404
-        MENUITEM "Nach T&yp",                   405
-        MENUITEM "Nach &Größe",                 406
-        MENUITEM "Nach &Datum",                 407
-        MENUITEM SEPARATOR
-        MENUITEM "Angaben ausw&ählen...",       409
-    END
-    POPUP "&Optionen"
-    BEGIN
-        MENUITEM "&Bestätigen...",              65535
-        MENUITEM "Schrift&art...",              65535
-        MENUITEM "Symbolleiste &definieren...", 65535
-        MENUITEM SEPARATOR
-        MENUITEM "Sy&mbolleiste",               ID_VIEW_TOOL_BAR, CHECKED
-        MENUITEM "Lauf&werkleiste",             ID_VIEW_DRIVE_BAR, CHECKED
-        MENUITEM "&Statusleiste",               ID_VIEW_STATUSBAR, CHECKED
-        MENUITEM "Vollb&ild\tStrg+Umschalt+S",  ID_VIEW_FULLSCREEN
-        MENUITEM SEPARATOR
-        MENUITEM "&Symbol nach Programmstart",  65535
-        MENUITEM "&Einstellungen beim Beenden speichern", 511
-    END
-    POPUP "&Sicherheit"
-    BEGIN
-        MENUITEM "&Berechtigungen...",          605
-        MENUITEM "Über&wachen...",              606
-        MENUITEM "Besi&tzer...",                607
-    END
-    POPUP "&Fenster"
-    BEGIN
-        MENUITEM "Neues &Fenster",              ID_WINDOW_NEW
-        MENUITEM "Über&lappend\tUmschalt+F5",   ID_WINDOW_CASCADE
-        MENUITEM "&Untereinander",              ID_WINDOW_TILE_HORZ
-        MENUITEM "&Nebeneinander\tUmschalt+F4", ID_WINDOW_TILE_VERT
-        MENUITEM "au&tomatisch anordnen",       ID_WINDOW_AUTOSORT
-        MENUITEM "&Symbole anordnen",           ID_WINDOW_ARRANGE
-        MENUITEM "&Aktualisieren\tF5",          ID_REFRESH
-    END
-    POPUP "&?"
-    BEGIN
-        MENUITEM "&Hilfethemen\tF1",            ID_HELP
-        MENUITEM "&Suchen...\tF1",              ID_HELP
-        MENUITEM "Hilfe &verwenden\tF1",        ID_HELP_USING
-        MENUITEM SEPARATOR
-        MENUITEM "&Info about ReactOS Explorer...", ID_ABOUT_WINEFILE
-    END
-END
-
 IDM_MDIFRAME MENU DISCARDABLE 
 BEGIN
     POPUP "&Datei"
     BEGIN
-        MENUITEM "&Beenden",                    ID_FILE_EXIT
+        MENUITEM "&Schliessen",                 ID_FILE_EXIT
     END
     POPUP "&Ansicht"
     BEGIN
@@ -181,7 +72,7 @@ IDM_SDIFRAME MENU DISCARDABLE
 BEGIN
     POPUP "&Datei"
     BEGIN
-        MENUITEM "&Beenden",                    ID_FILE_EXIT
+        MENUITEM "&Schliessen",                 ID_FILE_EXIT
     END
     POPUP "&Ansicht"
     BEGIN
@@ -334,7 +225,7 @@ IDD_MDI_SDI DIALOGEX 0, 0, 194, 157
 STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "Auswahl des Explorerfenster-Modus"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     LTEXT           "Please select your prefered explorer user interface:",
                     IDC_STATIC,7,7,160,8
@@ -358,7 +249,7 @@ STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "Konfiguration der Benachrichtigungs-Icons"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     CONTROL         "Tree1",IDC_NOTIFY_ICONS,"SysTreeView32",TVS_HASLINES | 
                     TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,194,31
@@ -390,7 +281,7 @@ STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "Programmsuche im Startmenu"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     LTEXT           "&Filter:",IDC_STATIC,7,9,18,8
     EDITTEXT        IDC_FILTER,34,7,96,14,ES_AUTOHSCROLL

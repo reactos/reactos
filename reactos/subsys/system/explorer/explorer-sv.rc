@@ -103,116 +103,6 @@ BEGIN
     END
 END
 
-IDM_WINEFILE MENU DISCARDABLE 
-BEGIN
-    POPUP "&Arkiv"
-    BEGIN
-        MENUITEM "&Öppna\tEnter",               101
-        MENUITEM "&Flytta...\tF7",              106
-        MENUITEM "&Kopiera...\tF8",             107
-        MENUITEM "&I urklipp...\tF9",           118
-        MENUITEM "&Ta bort\tDel",               108
-        MENUITEM "&Byt namn...",                109
-        MENUITEM "&Egenskaper...\tAlt+Enter",   ID_EDIT_PROPERTIES
-        MENUITEM SEPARATOR
-        MENUITEM "&Komprimera...",              119
-        MENUITEM "Packa &upp...",               120
-        MENUITEM SEPARATOR
-        MENUITEM "&Kör...",                     ID_EXECUTE
-        MENUITEM "&Skriv ut...",                102
-        MENUITEM "Associera...",                103
-        MENUITEM SEPARATOR
-        MENUITEM "Skapa mapp...",               ID_EXECUTE
-        MENUITEM "&Sök...",                     104
-        MENUITEM "&Välj filer...",              116
-        MENUITEM SEPARATOR
-        MENUITEM "&Avsluta\tAlt+X",             ID_FILE_EXIT
-    END
-    POPUP "&Disk"
-    BEGIN
-        MENUITEM "&Kopiera disk...",            201
-        MENUITEM "&Namnge disk...",             202
-        MENUITEM SEPARATOR
-        MENUITEM "&Formatera disk...",          203
-        MENUITEM SEPARATOR
-        MENUITEM "Anslut &Nätverksenhet",       252
-        MENUITEM "&Koppla ifrån Nätverksenhet", 253
-        MENUITEM SEPARATOR
-        MENUITEM "Dela ut...",                  254
-        MENUITEM "&Ta bort utdelning...",       255
-        MENUITEM SEPARATOR
-        MENUITEM "&Välj enhet...",              251
-    END
-    POPUP "&Mappar"
-    BEGIN
-        MENUITEM "&Nästa nivå\t+",              301
-        MENUITEM "Utöka &träd\t*",              302
-        MENUITEM "Utöka &alla\tCtrl+*",         303
-        MENUITEM "Kollapsa &träd\t-",           304
-        MENUITEM SEPARATOR
-        MENUITEM "&Markera undermappar",        505
-    END
-    POPUP "&Visa"
-    BEGIN
-        MENUITEM "&Träd och mapp",              413
-        MENUITEM "Bara tr&äd",                  411
-        MENUITEM "Bara &mapp",                  412
-        MENUITEM SEPARATOR
-        MENUITEM "De&la",                       414
-        MENUITEM SEPARATOR
-        MENUITEM "&Namn",                       ID_VIEW_NAME
-        MENUITEM "&Alla Fildetaljer",           ID_VIEW_ALL_ATTRIBUTES
-        , CHECKED
-        MENUITEM "&Vissa detaljer...",          ID_VIEW_SELECTED_ATTRIBUTES
-        MENUITEM SEPARATOR
-        MENUITEM "&Sortera efter namn",         404
-        MENUITEM "Sortera efter t&yp",          405
-        MENUITEM "Sortera efter st&orlek",      406
-        MENUITEM "Sortera efter &datum",        407
-        MENUITEM SEPARATOR
-        MENUITEM "Sortera efter &...",          409
-    END
-    POPUP "&Inställningar"
-    BEGIN
-        MENUITEM "&Bekräftelse...",             65535
-        MENUITEM "&Teckensnitt...",             65535
-        MENUITEM "&Konfigurera verktygsfält...", 65535
-        MENUITEM SEPARATOR
-        MENUITEM "&Verktygsfält",               ID_VIEW_TOOL_BAR, CHECKED
-        MENUITEM "&Enhetsfält",                 ID_VIEW_DRIVE_BAR, CHECKED
-        MENUITEM "&Sidfält",                    ID_VIEW_SIDE_BAR
-        MENUITEM "St&atusfält",                 ID_VIEW_STATUSBAR, CHECKED
-        MENUITEM "F&ullskärm\tCtrl+Shift+S",    ID_VIEW_FULLSCREEN
-        MENUITEM SEPARATOR
-        MENUITEM "&Symbol efter körning",       65535
-        MENUITEM "&Spara ändringar vid stängning", 511
-    END
-    POPUP "&Säkerhet"
-    BEGIN
-        MENUITEM "&Åtkomst...",                 605
-        MENUITEM "&Loggning...",                606
-        MENUITEM "&Ägare...",                   607
-    END
-    POPUP "&Fönster"
-    BEGIN
-        MENUITEM "Nytt &fönster",               ID_WINDOW_NEW
-        MENUITEM "Överlappande\tCtrl+F5",       ID_WINDOW_CASCADE
-        MENUITEM "Ordna &horizontellt",         ID_WINDOW_TILE_HORZ
-        MENUITEM "Ordna &vertikalt\tCtrl+F4",   ID_WINDOW_TILE_VERT
-        MENUITEM "Ordna automatiskt",           ID_WINDOW_AUTOSORT
-        MENUITEM "Ordna &symboler",             ID_WINDOW_ARRANGE
-        MENUITEM "&Uppdatera\tF5",              ID_REFRESH
-    END
-    POPUP "&?"
-    BEGIN
-        MENUITEM "&Hjälpavsnitt\tF1",           ID_HELP
-        MENUITEM "Hjälp &sök...\tF1",           ID_HELP
-        MENUITEM "&Använda hjälpen\tF1",        ID_HELP_USING
-        MENUITEM SEPARATOR
-        MENUITEM "Information om &Winefile...", ID_ABOUT_WINEFILE
-    END
-END
-
 IDM_DESKTOPBAR MENU DISCARDABLE 
 BEGIN
     POPUP ""
@@ -401,7 +291,7 @@ IDD_MDI_SDI DIALOGEX 0, 0, 194, 157
 STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "Välj MDI / SDI Läge"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     LTEXT           "Välj det gränssnitt du föredrar:",IDC_STATIC,7,7,160,8
     CONTROL         "&MDI (multiple document interface)",IDC_MDI,"Button",

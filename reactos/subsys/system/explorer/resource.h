@@ -62,7 +62,6 @@
 #define IDR_MAINFRAME                   109
 #define IDM_MDIFRAME                    110
 #define ID_EXECUTE                      111
-#define IDM_WINEFILE                    112
 #define IDM_SDIFRAME                    113
 #define IDI_LOGOFF                      124
 #define IDI_FOLDERARROW                 125
@@ -166,7 +165,6 @@
 #define IDC_SDI                         1031
 #define IDC_SEPARATE_SUBFOLDERS         1034
 #define ID_REFRESH                      1704
-#define ID_ABOUT_WINEFILE               1705
 #define IDS_VERSION_STR                 5000
 #define IDS_EXPLORER_VERSION_STR        5001
 #define IDC_FILETREE                    10001

@@ -126,116 +126,6 @@ BEGIN
     END
 END
 
-IDM_WINEFILE MENU DISCARDABLE 
-BEGIN
-    POPUP "&Archivo"
-    BEGIN
-        MENUITEM "&Abrir\tEnter",               101
-        MENUITEM "&Mover...\tF7",               106
-        MENUITEM "&Copiar...\tF8",              107
-        MENUITEM "&en el Portapapeles...\tF9",  118
-        MENUITEM "&Eliminar\tDel",              108
-        MENUITEM "Re&nombrar...",               109
-        MENUITEM "Prop&iedades...\tAlt+Enter",  ID_EDIT_PROPERTIES
-        MENUITEM SEPARATOR
-        MENUITEM "C&omprimir...",               119
-        MENUITEM "Desc&omprimir...",            120
-        MENUITEM SEPARATOR
-        MENUITEM "&Ejecutar...",                ID_EXECUTE
-        MENUITEM "&Imprimir...",                102
-        MENUITEM "Asociar...",                  103
-        MENUITEM SEPARATOR
-        MENUITEM "Cr&ear Directorio...",        ID_EXECUTE
-        MENUITEM "Busca&r...",                  104
-        MENUITEM "&Seleccionar Archivos...",    116
-        MENUITEM SEPARATOR
-        MENUITEM "S&alir\tAlt+X",               ID_FILE_EXIT
-    END
-    POPUP "&Disco"
-    BEGIN
-        MENUITEM "&Copiar Disco...",            201
-        MENUITEM "&Etiqueta del Disco...",      202
-        MENUITEM SEPARATOR
-        MENUITEM "&Formateart Disco...",        203
-        MENUITEM SEPARATOR
-        MENUITEM "Conectar a &Unidad de Red",   252
-        MENUITEM "&Desconectar Unidad de Red",  253
-        MENUITEM SEPARATOR
-        MENUITEM "Guardar como...",             254
-        MENUITEM "&Eliminar Guardado...",       255
-        MENUITEM SEPARATOR
-        MENUITEM "&Seleccionar Unidad...",      251
-    END
-    POPUP "&Directorios"
-    BEGIN
-        MENUITEM "&Siguiente Nivel\t+",         301
-        MENUITEM "Expandir &Arbol\t*",          302
-        MENUITEM "Expandir &Todo\tStrg+*",      303
-        MENUITEM "Contraer &Arbol\t-",          304
-        MENUITEM SEPARATOR
-        MENUITEM "&Marcar Hijos",               505
-    END
-    POPUP "&Ver"
-    BEGIN
-        MENUITEM "A&rbol y Directorio",         413
-        MENUITEM "Solo Arb&ol",                 411
-        MENUITEM "S&olo Directorio",            412
-        MENUITEM SEPARATOR
-        MENUITEM "Sp&lit",                      414
-        MENUITEM SEPARATOR
-        MENUITEM "&Nombre",                     ID_VIEW_NAME
-        MENUITEM "&Todos Los Detalles del Archivo", ID_VIEW_ALL_ATTRIBUTES
-        , CHECKED
-        MENUITEM "Detalles &Parciales...",      ID_VIEW_SELECTED_ATTRIBUTES
-        MENUITEM SEPARATOR
-        MENUITEM "&Ordenar por Nombre",         404
-        MENUITEM "Ordenar &por Tipo",           405
-        MENUITEM "Ord&enar por Tamaño",         406
-        MENUITEM "Or&denar por Fecha",          407
-        MENUITEM SEPARATOR
-        MENUITEM "Ordenar por &...",            409
-    END
-    POPUP "&Opciones"
-    BEGIN
-        MENUITEM "&Confirmacion...",            65535
-        MENUITEM "&Fuente...",                  65535
-        MENUITEM "Personalizar la &Barra de Herramientas...", 65535
-        MENUITEM SEPARATOR
-        MENUITEM "Barra de Herramien&tas",      ID_VIEW_TOOL_BAR, CHECKED
-        MENUITEM "Barra de Uni&dades",          ID_VIEW_DRIVE_BAR, CHECKED
-        MENUITEM "Barra &Lateral",              ID_VIEW_SIDE_BAR
-        MENUITEM "Barra de E&stado",            ID_VIEW_STATUSBAR, CHECKED
-        MENUITEM "Pantalla Com&pleta\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
-        MENUITEM SEPARATOR
-        MENUITEM "&Símbolo después de ejecutar", 65535
-        MENUITEM "&Guardar cambios al salir",   511
-    END
-    POPUP "&Seguridad"
-    BEGIN
-        MENUITEM "&Aceso...",                   605
-        MENUITEM "&Entrada...",                 606
-        MENUITEM "&Propietario...",             607
-    END
-    POPUP "&Ventana"
-    BEGIN
-        MENUITEM "Nueva &Ventana",              ID_WINDOW_NEW
-        MENUITEM "Cascada\tCtrl+F5",            ID_WINDOW_CASCADE
-        MENUITEM "Mosaico &Horizontal",         ID_WINDOW_TILE_HORZ
-        MENUITEM "Mosaico &Vertical\tCtrl+F4",  ID_WINDOW_TILE_VERT
-        MENUITEM "Agrupar Automaticamente",     ID_WINDOW_AUTOSORT
-        MENUITEM "Agrupar &Símbolos",           ID_WINDOW_ARRANGE
-        MENUITEM "&Actualizar\tF5",             ID_REFRESH
-    END
-    POPUP "&?"
-    BEGIN
-        MENUITEM "&Temas de Ayuda\tF1",         ID_HELP
-        MENUITEM "Ayuda y &Buscar...\tF1",      ID_HELP
-        MENUITEM "&Usando la Ayuda\tF1",        ID_HELP_USING
-        MENUITEM SEPARATOR
-        MENUITEM "Info sobre &ArchivoWine...",  ID_ABOUT_WINEFILE
-    END
-END
-
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -364,7 +254,7 @@ IDD_MDI_SDI DIALOGEX 0, 0, 194, 157
 STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "Elegir modo MDI / SDI"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     LTEXT           "Por favor, seleccione su interfaz de usuario preferida para el explorador:",
                     IDC_STATIC,7,7,170,18

@@ -68,116 +68,6 @@ BEGIN
     END
 END
 
-IDM_WINEFILE MENU FIXED IMPURE 
-BEGIN
-    POPUP "&Soubor"
-    BEGIN
-        MENUITEM "&Otev¯Ìt\tEnter",             101
-        MENUITEM "&P¯esunout...\tF7",           106
-        MENUITEM "&KopÌrovat...\tF8",           107
-        MENUITEM "&Ve schr·nce...\tF9",         118
-        MENUITEM "&Smazat\tDel",                108
-        MENUITEM "P¯&ejmenovat...",             109
-        MENUITEM "&Vlastnosti...\tAlt+Enter",   ID_EDIT_PROPERTIES
-        MENUITEM SEPARATOR
-        MENUITEM "Ko&mprimovat...",             119
-        MENUITEM "Dekomp&rimovat...",           120
-        MENUITEM SEPARATOR
-        MENUITEM "Sp&ustit...",                 ID_EXECUTE
-        MENUITEM "&Tisknout...",                102
-        MENUITEM "&Asociovat...",               103
-        MENUITEM SEPARATOR
-        MENUITEM "Vytvo¯it adres·¯...",         ID_EXECUTE
-        MENUITEM "&Hledat...",                  104
-        MENUITEM "&Vybrat soubory...",          116
-        MENUITEM SEPARATOR
-        MENUITEM "UkonËit\tAlt+X",              ID_FILE_EXIT
-    END
-    POPUP "&Disk"
-    BEGIN
-        MENUITEM "&KopÌrovat disk...",          201
-        MENUITEM "&Jmenovka disku...",          202
-        MENUITEM SEPARATOR
-        MENUITEM "&Form·tovat disk...",         203
-        MENUITEM SEPARATOR
-        MENUITEM "&Pipojit sÌùov˝ disk",        252
-        MENUITEM "&Odpojit sÌùov˝ disk",        253
-        MENUITEM SEPARATOR
-        MENUITEM "&SdÌlet jako...",             254
-        MENUITEM "&Zruöit sdÌlenÌ...",          255
-        MENUITEM SEPARATOR
-        MENUITEM "Z&volit disk...",             251
-    END
-    POPUP "&Adres·¯e"
-    BEGIN
-        MENUITEM "&DalöÌ ˙roveÚ\t+",            301
-        MENUITEM "&Rozbalit strom\t*",          302
-        MENUITEM "R&ozbalit vöe\tCtrl+*",       303
-        MENUITEM "&Sbalit strom\t-",            304
-        MENUITEM SEPARATOR
-        MENUITEM "O&znaËit potomky",            505
-    END
-    POPUP "&ZobrazenÌ"
-    BEGIN
-        MENUITEM "&Strom a adres·¯e",           413
-        MENUITEM "&Jen strom",                  411
-        MENUITEM "J&en adres·¯e",               412
-        MENUITEM SEPARATOR
-        MENUITEM "&RozdÏlit",                   414
-        MENUITEM SEPARATOR
-        MENUITEM "&JmÈno",                      ID_VIEW_NAME
-        MENUITEM "&Vöechny detaily",            ID_VIEW_ALL_ATTRIBUTES
-        , CHECKED
-        MENUITEM "»·st&eËnÈ detaily...",        ID_VIEW_SELECTED_ATTRIBUTES
-        MENUITEM SEPARATOR
-        MENUITEM "T¯Ìdit podle jmÈ&na",         404
-        MENUITEM "T¯Ìdit podle &druhu",         405
-        MENUITEM "T¯Ìdit podle ve&likosti",     406
-        MENUITEM "T¯Ìdit podle &data",          407
-        MENUITEM SEPARATOR
-        MENUITEM "&T¯Ìdit podle...",            409
-    END
-    POPUP "&NastavenÌ"
-    BEGIN
-        MENUITEM "&Potvtrzov·nÌ...",            65535
-        MENUITEM "PÌ&smo...",                   65535
-        MENUITEM "&Upravit liötu n·stroj˘...",  65535
-        MENUITEM SEPARATOR
-        MENUITEM "&Liöta n·stroj˘",             ID_VIEW_TOOL_BAR, CHECKED
-        MENUITEM "L&iöta disk˘",                ID_VIEW_DRIVE_BAR, CHECKED
-        MENUITEM "&BoËnÌ liöta",                ID_VIEW_SIDE_BAR
-        MENUITEM "&Status Bar",                 ID_VIEW_STATUSBAR, CHECKED
-        MENUITEM "&Cel· obrazovka\tCtrl+Shift+S", ID_VIEW_FULLSCREEN
-        MENUITEM SEPARATOR
-        MENUITEM "S&ymbol po bÏhu",             65535
-        MENUITEM "&Uloûit zmÏny p¯i ukonËenÌ",  511
-    END
-    POPUP "&ZabezpeËenÌ"
-    BEGIN
-        MENUITEM "&P¯Ìstup...",                 605
-        MENUITEM "&Logov·nÌ...",                606
-        MENUITEM "&VlastnÌk...",                607
-    END
-    POPUP "&Okno"
-    BEGIN
-        MENUITEM "&NovÈ okno",                  ID_WINDOW_NEW
-        MENUITEM "&Kask·dovat\tCtrl+F5",        ID_WINDOW_CASCADE
-        MENUITEM "&Uspo¯·dat vodorovnÏ",        ID_WINDOW_TILE_HORZ
-        MENUITEM "U&spo¯·dat svisle\tCtrl+F4",  ID_WINDOW_TILE_VERT
-        MENUITEM "Us&po¯·dat automaticky",      ID_WINDOW_AUTOSORT
-        MENUITEM "Usp&o¯·dat symboly",          ID_WINDOW_ARRANGE
-        MENUITEM "&Aktualizovat\tF5",           ID_REFRESH
-    END
-    POPUP "&?"
-    BEGIN
-        MENUITEM "&TÈmata n·povÏdy\tF1",        ID_HELP
-        MENUITEM "&Hledat v n·povÏdÏ...\tF1",   ID_HELP
-        MENUITEM "&Jak pouûÌvat n·povÏdu\tF1",  ID_HELP_USING
-        MENUITEM SEPARATOR
-        MENUITEM "&Informace o Winefile...",    ID_ABOUT_WINEFILE
-    END
-END
-
 IDM_DESKTOPBAR MENU DISCARDABLE 
 BEGIN
     POPUP ""
@@ -366,7 +256,7 @@ IDD_MDI_SDI DIALOGEX 0, 0, 194, 157
 STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "Volba MDI / SDI mÛdu"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     LTEXT           "ProsÌm zvolte si V·mi up¯ednostÚovan˝ zp˘sob zobrazenÌ oken pr˘zkumnÌka:",
                     IDC_STATIC,7,7,160,8
