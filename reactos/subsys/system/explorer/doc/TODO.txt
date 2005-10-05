@@ -7,7 +7,6 @@
 - implement Drag Drop from the tree view.
 - activate accelerator keys like <DEL> in shell view folders
 - program manager "progman" DDE server
-- command line parameters like "/e,/root,c:\" and "::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\::{21EC2020-3AEA-1069-A2DD-08002B30309D}" (launch of control panel)
 - Windows-key combos
 - Application Desktop Toolbars
 - hide CVS subdirectories, may be even implement a CVS managment plugin

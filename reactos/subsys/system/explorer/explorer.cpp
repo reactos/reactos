@@ -533,8 +533,10 @@ ResBitmap::ResBitmap(UINT nid)
 
 #ifndef ROSSHELL
 
-void explorer_show_frame(int cmdshow, LPTSTR lpCmdLine)
+void explorer_show_frame(int cmdShow, LPTSTR lpCmdLine)
 {
+	ExplorerCmd cmd;
+
 	if (g_Globals._hMainWnd) {
 		if (IsIconic(g_Globals._hMainWnd))
 			ShowWindow(g_Globals._hMainWnd, SW_RESTORE);
@@ -553,21 +555,121 @@ void explorer_show_frame(int cmdshow, LPTSTR lpCmdLine)
 	if (mdiStr.empty())
 		Dialog::DoModal(IDD_MDI_SDI, WINDOW_CREATOR(MdiSdiDlg), g_Globals._hwndDesktop);
 
-	 // Now read the setting again and interpret it as boolean value.
-	bool mdi = XMLBool(explorer_options, "mdi", true);
+	 // Now read the MDI attribute again and interpret it as boolean value.
+	cmd._mdi = XMLBool(explorer_options, "mdi", true);
+
+	cmd._cmdShow = cmdShow;
+
+	 // parse command line options, which may overwrite the MDI flag
+	cmd.ParseCmdLine(lpCmdLine);
 
 	 // create main window
-	MainFrameBase::Create(lpCmdLine, mdi, cmdshow);
+	MainFrameBase::Create(cmd);
+}
+
+bool ExplorerCmd::ParseCmdLine(LPCTSTR lpCmdLine)
+{
+	bool ok = true;
+
+	LPCTSTR b = lpCmdLine;
+	LPCTSTR p = b;
+
+	while(*b) {
+		 // remove leading space
+		while(_istspace((unsigned)*b))
+			++b;
+
+		p = b;
+
+		bool quote = false;
+
+		 // options are separated by ','
+		for(; *p; ++p) {
+			if (*p == '"')	// Quote characters may appear at any position in the command line.
+				quote = !quote;
+			else if (*p==',' && !quote)
+				break;
+		}
+
+		if (p > b) {
+			int l = p - b;
+
+			 // remove trailing space
+			while(l>0 && _istspace((unsigned)b[l-1]))
+				--l;
+
+			if (!EvaluateOption(String(b, l)))
+				ok = false;
+
+			if (*p)
+				++p;
+
+			b = p;
+		}
+	}
+
+	return ok;
+}
+
+bool ExplorerCmd::EvaluateOption(LPCTSTR option)
+{
+	String opt_str;
+
+	 // Remove quote characters, as they are evaluated at this point.
+	for(; *option; ++option)
+		if (*option != '"')
+			opt_str += *option;
+
+	option = opt_str;
+
+	if (option[0] == '/') {
+		++option;
+
+		 // option /e for windows in explorer mode
+		if (!_tcsicmp(option, TEXT("e")))
+			_flags |= OWM_EXPLORE;
+		 // option /root for rooted explorer windows
+		else if (!_tcsicmp(option, TEXT("root")))
+			_flags |= OWM_ROOTED;
+		 // non-standard options: /mdi, /sdi
+		else if (!_tcsicmp(option, TEXT("mdi")))
+			_mdi = true;
+		else if (!_tcsicmp(option, TEXT("sdi")))
+			_mdi = false;
+		else
+			return false;
+	} else {
+		if (!_path.empty())
+			return false;
+
+		_path = opt_str;
+	}
+
+	return true;
+}
+
+bool ExplorerCmd::IsValidPath() const
+{
+	if (!_path.empty()) {
+		DWORD attribs = GetFileAttributes(_path);
+
+		if (attribs!=INVALID_FILE_ATTRIBUTES && (attribs&FILE_ATTRIBUTE_DIRECTORY))
+			return true;	// file system path
+		else if (*_path==':' && _path.at(1)==':')
+			return true;	// text encoded IDL
+	}
+
+	return false;
 }
 
 #else
 
-void explorer_show_frame(int cmdshow, LPTSTR lpCmdLine)
+void explorer_show_frame(int cmdShow, LPTSTR lpCmdLine)
 {
 	if (!lpCmdLine)
 		lpCmdLine = TEXT("explorer.exe");
 
-	launch_file(GetDesktopWindow(), lpCmdLine, cmdshow);
+	launch_file(GetDesktopWindow(), lpCmdLine, cmdShow);
 }
 
 #endif
@@ -671,7 +773,7 @@ static void InitInstance(HINSTANCE hInstance)
 }
 
 
-int explorer_main(HINSTANCE hInstance, LPTSTR lpCmdLine, int cmdshow)
+int explorer_main(HINSTANCE hInstance, LPTSTR lpCmdLine, int cmdShow)
 {
 	CONTEXT("explorer_main");
 
@@ -686,14 +788,14 @@ int explorer_main(HINSTANCE hInstance, LPTSTR lpCmdLine, int cmdshow)
 	}
 
 #ifndef ROSSHELL
-	if (cmdshow != SW_HIDE) {
+	if (cmdShow != SW_HIDE) {
 /*	// don't maximize if being called from the ROS desktop
-		if (cmdshow == SW_SHOWNORMAL)
+		if (cmdShow == SW_SHOWNORMAL)
 				///@todo read window placement from registry
-			cmdshow = SW_MAXIMIZE;
+			cmdShow = SW_MAXIMIZE;
 */
 
-		explorer_show_frame(cmdshow, lpCmdLine);
+		explorer_show_frame(cmdShow, lpCmdLine);
 	}
 #endif
 
@@ -721,10 +823,10 @@ int main(int argc, char* argv[])
 
 	LPWSTR cmdline = GetCommandLineW();
 
-	while(*cmdline && !_istspace(*cmdline))
+	while(*cmdline && !_istspace((unsigned)*cmdline))
 		++cmdline;
 
-	while(_istspace(*cmdline))
+	while(_istspace((unsigned)*cmdline))
 		++cmdline;
 
 	return wWinMain(GetModuleHandle(NULL), 0, cmdline, nShowCmd);
@@ -929,16 +1031,11 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 #ifndef ROSSHELL
 	if (g_Globals._hwndDesktop)
 		g_Globals._desktop_mode = true;
-
-	/**TODO fix command line handling */
-	if (*lpCmdLine=='"' && lpCmdLine[_tcslen(lpCmdLine)-1]=='"') {
-		++lpCmdLine;
-		lpCmdLine[_tcslen(lpCmdLine)-1] = '\0';
-	}
 #endif
 
 
 	int ret = explorer_main(hInstance, lpCmdLine, nShowCmd);
+
 
 	 // write configuration file
 	g_Globals.write_persistent();

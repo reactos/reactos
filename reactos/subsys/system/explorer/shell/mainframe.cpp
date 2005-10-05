@@ -38,12 +38,12 @@ extern HWND create_webchildwindow(const WebChildWndInfo& info);
 #include "../dialogs/settings.h"	// for MdiSdiDlg
 
 
-HWND MainFrameBase::Create(LPCTSTR path, bool mdi, UINT cmdshow)
+HWND MainFrameBase::Create(const ExplorerCmd& cmd)
 {
 	HWND hFrame;
 
-#ifndef _NO_MDI	///@todo implement command line option to switch between MDI and SDI
-	if (mdi)
+#ifndef _NO_MDI
+	if (cmd._mdi)
 		hFrame = MDIMainFrame::Create();
 	else
 #endif
@@ -54,32 +54,20 @@ HWND MainFrameBase::Create(LPCTSTR path, bool mdi, UINT cmdshow)
 
 		g_Globals._hMainWnd = hFrame;
 
-		if (path) {
-			static String sPath = path;	// copy path to avoid accessing freed memory
-			path = sPath;
-		}
-
 		if (hwndOld)
 			DestroyWindow(hwndOld);
 
-		ShowWindow(hFrame, cmdshow);
+		ShowWindow(hFrame, cmd._cmdShow);
 		UpdateWindow(hFrame);
 
-		bool valid_dir = false;
-
-		if (path) {
-			DWORD attribs = GetFileAttributes(path);
-
-			if (attribs!=INVALID_FILE_ATTRIBUTES && (attribs&FILE_ATTRIBUTE_DIRECTORY))
-				valid_dir = true;
-			else if (*path==':' || *path=='"')
-				valid_dir = true;
-		}
-
 		 // Open the first child window after initializing the application
-		if (valid_dir)
-			PostMessage(hFrame, PM_OPEN_WINDOW, 0, (LPARAM)path);
-		else
+		if (cmd.IsValidPath()) {
+			 // We use the static s_path variable to store the path string in order 
+			 // to avoid accessing prematurely freed memory in the PostMessage handlers.
+			static String s_path = cmd._path;
+
+			PostMessage(hFrame, PM_OPEN_WINDOW, cmd._flags, (LPARAM)(LPCTSTR)s_path);
+		} else
 			PostMessage(hFrame, PM_OPEN_WINDOW, OWM_EXPLORE|OWM_DETAILS, 0);
 	}
 
@@ -989,7 +977,7 @@ LRESULT MDIMainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			create_info._pos.rcNormalPosition.right = CW_USEDEFAULT;
 			create_info._pos.rcNormalPosition.bottom = CW_USEDEFAULT;
 
-			create_info._open_mode = (OPEN_WINDOW_MODE)wparam;
+			create_info._open_mode = wparam;
 
 		//	FileChildWindow::create(_hmdiclient, create_info);
 			return (LRESULT)MDIShellBrowserChild::create(create_info);
@@ -1149,7 +1137,7 @@ int MDIMainFrame::Command(int id, int code)
 		break;
 
 	  case ID_VIEW_SDI:
-		MainFrameBase::Create(NULL, false);
+		MainFrameBase::Create(ExplorerCmd());
 		break;
 
 	  case IDW_COMMANDBAR:
@@ -1516,7 +1504,7 @@ LRESULT SDIMainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			root_path = path;
 		}
 
-		jump_to(root_path, (OPEN_WINDOW_MODE)wparam);	//@todo content of 'path' not used any more
+		jump_to(root_path, wparam);	//@todo content of 'path' not used any more
 		return TRUE;}	// success
 
 	  default: def:
@@ -1530,7 +1518,7 @@ int SDIMainFrame::Command(int id, int code)
 {
 	switch(id) {
 	  case ID_VIEW_MDI:
-		MainFrameBase::Create(_url, true);
+		MainFrameBase::Create(ExplorerCmd(_url, true));
 		break;
 
 	  case IDW_COMMANDBAR:
@@ -1631,6 +1619,8 @@ void SDIMainFrame::update_shell_browser()
 		split_pos = _split_pos;
 		delete _shellBrowser.release();
 	}
+
+	///@todo use OWM_ROOTED flag
 
 	 // create explorer treeview
 	if (_shellpath_info._open_mode & OWM_EXPLORE) {

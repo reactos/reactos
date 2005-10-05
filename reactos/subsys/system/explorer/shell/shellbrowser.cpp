@@ -112,16 +112,16 @@ void ShellBrowser::jump_to(LPCITEMIDLIST pidl)
 	if (!_cur_dir)
 		_cur_dir = static_cast<ShellDirectory*>(_root._entry);
 
-/*@todo
-	we should call read_tree() here to iterate through the hierarchy and open all folders from shell_info._root_shell_path to shell_info._shell_path
-	_root._entry->read_tree(shell_info._root_shell_path.get_folder(), info._shell_path, SORT_NAME);
-	-> see FileChildWindow::FileChildWindow()
-*/
-
-	LOG(FmtString(TEXT("ShellBrowser::jump_to(): pidl=%s"), (LPCTSTR)FileSysShellPath(pidl)));
+	//LOG(FmtString(TEXT("ShellBrowser::jump_to(): pidl=%s"), (LPCTSTR)FileSysShellPath(pidl)));
 
 	if (_cur_dir) {
 		static DynamicFct<LPITEMIDLIST(WINAPI*)(LPCITEMIDLIST, LPCITEMIDLIST)> ILFindChild(TEXT("SHELL32"), 24);
+
+/*@todo
+	we should call read_tree() here to iterate through the hierarchy and open all folders from _create_info._root_shell_path (_cur_dir) to _create_info._shell_path (pidl)
+	_root._entry->read_tree(_create_info._root_shell_path.get_folder(), info._shell_path, SORT_NAME);
+	-> see FileChildWindow::FileChildWindow()_create_info._shell_path
+*/
 
 		LPCITEMIDLIST child_pidl;
 
@@ -582,7 +582,7 @@ LRESULT MDIShellBrowserChild::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			break;
 
 		  case ID_VIEW_SDI:
-			MainFrameBase::Create(_url, false);
+			MainFrameBase::Create(ExplorerCmd(_url, false));
 			break;
 
 		  default:
@@ -605,6 +605,8 @@ void MDIShellBrowserChild::update_shell_browser()
 		split_pos = _split_pos;
 		delete _shellBrowser.release();
 	}
+
+	///@todo use OWM_ROOTED flag
 
 	 // create explorer treeview
 	if (_create_info._open_mode & OWM_EXPLORE) {

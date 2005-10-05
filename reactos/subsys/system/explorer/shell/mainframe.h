@@ -27,7 +27,14 @@
 
 
 #define	PM_OPEN_WINDOW			(WM_APP+0x07)
-enum OPEN_WINDOW_MODE {OWM_EXPLORE=1, OWM_DETAILS=2, OWM_PIDL=4, OWM_SEPARATE=8};
+
+enum OPEN_WINDOW_MODE {
+	OWM_EXPLORE=1,	/// window in explore mode
+	OWM_ROOTED=2,	/// "rooted" window with special shell namespace root
+	OWM_DETAILS=4,	/// view files in detail mode
+	OWM_PIDL=8,		/// path is given as PIDL, otherwise as LPCTSTR
+	OWM_SEPARATE=16	/// open separate subfolder windows
+};
 
 
  /// Explorer frame window base class
@@ -38,7 +45,7 @@ struct MainFrameBase : public PreTranslateWindow
 	MainFrameBase(HWND hwnd);
 	~MainFrameBase();
 
-	static HWND Create(LPCTSTR path, bool mdi=true, UINT cmdshow=SW_SHOWNORMAL);
+	static HWND Create(const ExplorerCmd& cmd);
 	static int OpenShellFolders(LPIDA pida, HWND hFrameWnd);
 
 	WindowHandle _hwndrebar;
