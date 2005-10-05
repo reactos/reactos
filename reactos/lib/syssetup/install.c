@@ -159,20 +159,16 @@ HRESULT CreateShellLink(LPCTSTR linkPath, LPCTSTR cmd, LPCTSTR arg, LPCTSTR dir,
 
 
 static VOID
-CreateCmdLink(VOID)
+CreateShortcut(int csidl, LPCTSTR linkName, LPCTSTR command, LPCTSTR title)
 {
   TCHAR path[MAX_PATH];
   LPTSTR p;
 
-  CoInitialize(NULL);
-
-  SHGetSpecialFolderPath(0, path, CSIDL_DESKTOP, TRUE);
+  SHGetSpecialFolderPath(0, path, csidl, TRUE);
   p = PathAddBackslash(path);
+  _tcscpy(p, linkName);
 
-  _tcscpy(p, _T("Command Prompt.lnk"));
-  CreateShellLink(path, _T("cmd.exe"), _T(""), NULL, NULL, 0, _T("Open command prompt"));
-
-  CoUninitialize();
+  CreateShellLink(path, command, _T(""), NULL, NULL, 0, title);
 }
 
 
@@ -399,7 +395,20 @@ InstallReactOS (HINSTANCE hInstance)
       return 0;
     }
 
-  CreateCmdLink();
+  CoInitialize(NULL);
+
+  /* desktop shortcuts */
+  CreateShortcut(CSIDL_DESKTOP, _T("Command Prompt.lnk"), _T("cmd.exe"), _T("Open command prompt"));
+  CreateShortcut(CSIDL_DESKTOP, _T("winefile.lnk"), _T("winefile.exe"), _T("Launch Winefile"));
+
+  /* program startmenu shortcuts */
+  CreateShortcut(CSIDL_PROGRAMS, _T("Command Prompt.lnk"), _T("cmd.exe"), _T("Open command prompt"));
+  CreateShortcut(CSIDL_PROGRAMS, _T("explorer.lnk"), _T("explorer.exe"), _T("Launch Explorer"));
+  CreateShortcut(CSIDL_PROGRAMS, _T("winefile.lnk"), _T("winefile.exe"), _T("Launch Winefile"));
+  CreateShortcut(CSIDL_PROGRAMS, _T("notepad.lnk"), _T("notepad.exe"), _T("Launch Text Editor"));
+  CreateShortcut(CSIDL_PROGRAMS, _T("regedit.lnk"), _T("regedit.exe"), _T("Launch Registry Editor"));
+
+  CoUninitialize();
 
   /* Create the semi-random Domain-SID */
   CreateRandomSid (&DomainSid);
