@@ -33,6 +33,7 @@
 #include <ddk/scsi.h>
 #include <ddk/ntddscsi.h>
 #include <ddk/ntddstor.h>
+#include <ddk/ntdddisk.h>
 #include <stdio.h>
 
 #define NDEBUG
@@ -137,6 +138,10 @@ static VOID
 SpiFreeSrbExtension(PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
 		    PSCSI_REQUEST_BLOCK Srb);
 
+
+static NTSTATUS
+SpiScsiMiniport(IN PDEVICE_OBJECT DeviceObject,
+	        IN PIRP Irp);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -837,6 +842,9 @@ ScsiPortInitialize(IN PVOID Argument1,
 	}
 
       DPRINT ("Created device: %wZ (%p)\n", &DeviceName, PortDeviceObject);
+
+      /* Increase the stacksize. We reenter our device on IOCTL_SCSI_MINIPORT */
+      PortDeviceObject->StackSize++;
 
       /* Set the buffering strategy here... */
       PortDeviceObject->Flags |= DO_DIRECT_IO;
@@ -1771,8 +1779,7 @@ ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
         DPRINT1("  IOCTL_SCSI_MINIPORT\n");
         DPRINT1("  Signature: %.8s\n", ((PSRB_IO_CONTROL)Irp->AssociatedIrp.SystemBuffer)->Signature);
         DPRINT1("  ControlCode: 0x%lX\n", ((PSRB_IO_CONTROL)Irp->AssociatedIrp.SystemBuffer)->ControlCode);
-        Status = STATUS_INVALID_DEVICE_REQUEST;
-        break;
+        return SpiScsiMiniport(DeviceObject, Irp);
 
       default:
 	DPRINT1("  unknown ioctl code: 0x%lX\n",
@@ -1785,6 +1792,139 @@ ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
   IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
   return Status;
+}
+
+static NTSTATUS STDCALL
+SpiCompletion(IN PDEVICE_OBJECT DeviceObject,
+	      IN PIRP Irp,
+	      IN PVOID Context)
+{
+  PSCSI_REQUEST_BLOCK Srb;
+  
+  DPRINT("SpiCompletion(DeviceObject %x, Irp %x, Context %x)\n",
+         DeviceObject, Irp, Context);
+
+  Srb = (PSCSI_REQUEST_BLOCK)Context;
+  Irp->IoStatus.Information = 0;
+
+  switch (SRB_STATUS(Srb->SrbStatus))
+    {
+      case SRB_STATUS_SUCCESS:
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        Irp->IoStatus.Information = Srb->DataTransferLength;
+        break;
+
+      case SRB_STATUS_INVALID_PATH_ID:
+      case SRB_STATUS_INVALID_TARGET_ID:
+      case SRB_STATUS_INVALID_LUN:
+      case SRB_STATUS_NO_HBA:
+        Irp->IoStatus.Status = STATUS_NO_SUCH_DEVICE;
+	break;
+
+      case SRB_STATUS_NO_DEVICE:
+        Irp->IoStatus.Status = STATUS_DEVICE_NOT_CONNECTED;
+        break;
+
+      case SRB_STATUS_BUSY:
+	Irp->IoStatus.Status = STATUS_DEVICE_BUSY;
+        break;
+
+      case SRB_STATUS_DATA_OVERRUN:
+	Irp->IoStatus.Status = STATUS_DATA_OVERRUN;
+        Irp->IoStatus.Information = Srb->DataTransferLength;
+        break;
+
+      case SRB_STATUS_INVALID_REQUEST:
+        Irp->IoStatus.Status = STATUS_INVALID_DEVICE_REQUEST;
+        break;
+
+      default:
+	Irp->IoStatus.Status = STATUS_IO_DEVICE_ERROR;
+	break;
+    }
+
+  ExFreePool(Srb);
+
+  if (Irp->PendingReturned)
+    {
+      IoMarkIrpPending (Irp);
+    }
+  return Irp->IoStatus.Status;
+}
+
+static NTSTATUS
+SpiScsiMiniport(IN PDEVICE_OBJECT DeviceObject,
+	        IN PIRP Irp)
+{
+  PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
+  PSRB_IO_CONTROL SrbIoControl;
+  PIO_STACK_LOCATION IrpStack;
+  PSCSI_REQUEST_BLOCK Srb;
+  PSCSI_PORT_LUN_EXTENSION LunExtension;
+  
+  DPRINT("SpiScsiMiniport(DeviceObject %x, Irp %x)\n",
+         DeviceObject, Irp);
+
+  DeviceExtension = DeviceObject->DeviceExtension;
+  SrbIoControl = (PSRB_IO_CONTROL)Irp->AssociatedIrp.SystemBuffer;
+
+  IrpStack = IoGetCurrentIrpStackLocation(Irp);
+  if (IrpStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(SRB_IO_CONTROL) + sizeof(SENDCMDINPARAMS) - 1)
+    {
+      Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
+      IoCompleteRequest(Irp, IO_NO_INCREMENT);
+      return STATUS_INVALID_PARAMETER;
+    }
+  if (IrpStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(SRB_IO_CONTROL) + SrbIoControl->Length)
+    {
+      Irp->IoStatus.Information = sizeof(SRB_IO_CONTROL) + SrbIoControl->Length;
+      Irp->IoStatus.Status = STATUS_BUFFER_TOO_SMALL;
+      IoCompleteRequest(Irp, IO_NO_INCREMENT);
+      return STATUS_BUFFER_TOO_SMALL;
+    }
+  if (IsListEmpty(&DeviceExtension->LunExtensionListHead))
+    {
+      Irp->IoStatus.Status = STATUS_NO_SUCH_DEVICE;
+      Irp->IoStatus.Information = 0;
+      IoCompleteRequest(Irp, IO_NO_INCREMENT);
+      return STATUS_NO_SUCH_DEVICE;
+    }
+
+  Srb = ExAllocatePool(NonPagedPool, sizeof(SCSI_REQUEST_BLOCK));
+  if (Srb == NULL)
+    {
+      Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
+      IoCompleteRequest(Irp, IO_NO_INCREMENT);
+      return STATUS_INSUFFICIENT_RESOURCES;
+    }
+  RtlZeroMemory(Srb, sizeof(SCSI_REQUEST_BLOCK));
+  Srb->Length = sizeof(SCSI_REQUEST_BLOCK);
+  Srb->OriginalRequest = Irp;
+  Srb->Function = SRB_FUNCTION_IO_CONTROL;
+  Srb->DataBuffer = (PVOID)SrbIoControl;
+  Srb->DataTransferLength = sizeof(SRB_IO_CONTROL) + SrbIoControl->Length;
+
+  /* We using the first extension from the list. The miniport driver is responsible to find the correct device. */
+  LunExtension = CONTAINING_RECORD(DeviceExtension->LunExtensionListHead.Flink,
+				   SCSI_PORT_LUN_EXTENSION,
+				   List);
+  Srb->PathId = LunExtension->PathId;
+  Srb->TargetId = LunExtension->TargetId;
+  Srb->Lun = LunExtension->Lun;
+  
+  IrpStack = IoGetNextIrpStackLocation(Irp);
+  
+  IrpStack->MajorFunction = IRP_MJ_SCSI;
+  IrpStack->Parameters.Scsi.Srb = Srb;
+
+  IoSetCompletionRoutine(Irp,
+			 SpiCompletion,
+			 Srb,
+			 TRUE,
+			 TRUE,
+			 TRUE);
+
+  return IoCallDriver(DeviceObject, Irp);
 }
 
 static VOID
