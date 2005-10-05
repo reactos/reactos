@@ -856,8 +856,19 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 
 	BOOL startup_desktop;
 
+	 // strip extended options from the front of the command line
+	String ext_options;
+
+	while(*lpCmdLine == '-') {
+		while(*lpCmdLine && !_istspace((unsigned)*lpCmdLine))
+			ext_options += *lpCmdLine++;
+
+		while(_istspace((unsigned)*lpCmdLine))
+			++lpCmdLine;
+	}
+
 	 // command line option "-install" to replace previous shell application with ROS Explorer
-	if (_tcsstr(lpCmdLine,TEXT("-install"))) {
+	if (_tcsstr(ext_options,TEXT("-install"))) {
 		 // install ROS Explorer into the registry
 		TCHAR path[MAX_PATH];
 
@@ -921,24 +932,24 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 #endif
 
 	 // If there is given the command line option "-desktop", create desktop window anyways
-	if (_tcsstr(lpCmdLine,TEXT("-desktop")))
+	if (_tcsstr(ext_options,TEXT("-desktop")))
 		startup_desktop = TRUE;
 #ifndef ROSSHELL
-	else if (_tcsstr(lpCmdLine,TEXT("-nodesktop")))
+	else if (_tcsstr(ext_options,TEXT("-nodesktop")))
 		startup_desktop = FALSE;
 
 	 // Don't display cabinet window in desktop mode
-	if (startup_desktop && !_tcsstr(lpCmdLine,TEXT("-explorer")))
+	if (startup_desktop && !_tcsstr(ext_options,TEXT("-explorer")))
 		nShowCmd = SW_HIDE;
 #endif
 
-	if (_tcsstr(lpCmdLine,TEXT("-noautostart")))
+	if (_tcsstr(ext_options,TEXT("-noautostart")))
 		autostart = false;
-	else if (_tcsstr(lpCmdLine,TEXT("-autostart")))
+	else if (_tcsstr(ext_options,TEXT("-autostart")))
 		autostart = true;
 
 #ifndef __WINE__
-	if (_tcsstr(lpCmdLine,TEXT("-console"))) {
+	if (_tcsstr(ext_options,TEXT("-console"))) {
 		AllocConsole();
 
 		_dup2(_open_osfhandle((long)GetStdHandle(STD_INPUT_HANDLE), _O_RDONLY), 0);
@@ -974,10 +985,10 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 
 	bool use_gdb_stub = false;	// !IsDebuggerPresent();
 
-	if (_tcsstr(lpCmdLine,TEXT("-debug")))
+	if (_tcsstr(ext_options,TEXT("-debug")))
 		use_gdb_stub = true;
 
-	if (_tcsstr(lpCmdLine,TEXT("-break"))) {
+	if (_tcsstr(ext_options,TEXT("-break"))) {
 		LOG(TEXT("debugger breakpoint"));
 #ifdef _MSC_VER
 		__asm int 3
