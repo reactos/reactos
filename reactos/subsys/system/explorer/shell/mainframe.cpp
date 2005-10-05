@@ -1466,7 +1466,7 @@ LRESULT SDIMainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 	  case WM_MOUSEMOVE:
 		if (GetCapture() == _hwnd) {
-			int x = LOWORD(lparam);
+			int x = GET_X_LPARAM(lparam);
 
 			ClientRect rt(_hwnd);
 
