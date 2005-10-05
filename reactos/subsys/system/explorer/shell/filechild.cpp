@@ -134,7 +134,7 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 	_right = NULL;
 
 	switch(info._etype) {
-	  case ET_SHELL: {	//@@ separate into FileChildWindow in ShellChildWindow, WinChildWindow, UnixChildWindow ?
+	  case ET_SHELL: {	//@@ separate FileChildWindow into ShellChildWindow, WinChildWindow, UnixChildWindow ?
 		_root._drive_type = DRIVE_UNKNOWN;
 		_root._sort_order = SORT_NAME;
 
@@ -199,7 +199,7 @@ FileChildWindow::FileChildWindow(HWND hwnd, const FileChildWndInfo& info)
 		lstrcpy(_root._volname, TEXT("FAT XXX"));	//@@
 		lstrcpy(_root._fs, TEXT("FAT"));
 		lstrcpy(_root._path, drv);
-		FATDrive* drive = new FATDrive(TEXT("c:/reactos-bochs/cdrv.img"));	//TEXT("\\\\.\\F:"));	//@@
+		FATDrive* drive = new FATDrive(TEXT("c:/reactos-emu/c.img"));	//TEXT("\\\\.\\F:"));	//@@
 
 		if (drive->_hDrive != INVALID_HANDLE_VALUE) {
 			_root._entry = drive;
@@ -497,7 +497,7 @@ LRESULT FileChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		case WM_CONTEXTMENU: {
 			 // first select the current item in the listbox
 			HWND hpanel = (HWND) wparam;
-			POINTS& pos = MAKEPOINTS(lparam);
+			const POINTS& pos = MAKEPOINTS(lparam);
 			POINT pt; POINTSTOPOINT(pt, pos);
 			POINT pt_screen = pt;
 			ScreenToClient(hpanel, &pt);
