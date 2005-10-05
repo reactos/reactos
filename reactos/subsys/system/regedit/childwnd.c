@@ -178,42 +178,6 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
  *  Key suggestion
  */
 
-static LONG RegQueryStringValue(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpValueName,
-	LPTSTR lpDest, DWORD dwDestLength)
-{
-	LONG lResult;
-	HKEY hSubKey = NULL;
-	DWORD cbData, dwType;
-
-	if (lpSubKey)
-	{
-		lResult = RegOpenKey(hKey, lpSubKey, &hSubKey);
-		if (lResult != ERROR_SUCCESS)
-			goto done;
-		hKey = hSubKey;
-	}
-
-	cbData = (dwDestLength - 1) * sizeof(*lpDest);
-	lResult = RegQueryValueEx(hKey, lpValueName, NULL, &dwType,
-		(LPBYTE) lpDest, &cbData);
-	if (lResult != ERROR_SUCCESS)
-		goto done;
-	if (dwType != REG_SZ)
-	{
-		lResult = -1;
-		goto done;
-	}
-
-	lpDest[cbData / sizeof(*lpDest)] = '\0';
-
-done:
-	if (lResult != ERROR_SUCCESS)
-		lpDest[0] = '\0';
-	if (hSubKey)
-		RegCloseKey(hSubKey);
-	return lResult;
-}
-
 static void SuggestKeys(HKEY hRootKey, LPCTSTR pszKeyPath, LPTSTR pszSuggestions,
 	size_t iSuggestionsLength)
 {
