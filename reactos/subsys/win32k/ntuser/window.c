@@ -4162,13 +4162,15 @@ CLEANUP:
 /*
  * @unimplemented
  */
-DWORD STDCALL
-NtUserShowWindowAsync(DWORD Unknown0,
-                      DWORD Unknown1)
+BOOL STDCALL
+NtUserShowWindowAsync(HWND hWnd, LONG nCmdShow)
 {
+#if 0
    UNIMPLEMENTED
-
    return 0;
+#else
+   return NtUserShowWindow(hWnd, nCmdShow);
+#endif
 }
 
 

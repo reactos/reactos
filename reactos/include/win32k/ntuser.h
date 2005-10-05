@@ -1568,11 +1568,11 @@ NtUserShowWindow(
   HWND hWnd,
   LONG nCmdShow);
 
-DWORD
+BOOL
 STDCALL
 NtUserShowWindowAsync(
-  DWORD Unknown0,
-  DWORD Unknown1);
+  HWND hWnd,
+  LONG nCmdShow);
 
 BOOL
 STDCALL

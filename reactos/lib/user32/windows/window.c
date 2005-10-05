@@ -1280,8 +1280,7 @@ BOOL STDCALL
 ShowWindowAsync(HWND hWnd,
 		int nCmdShow)
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return NtUserShowWindowAsync(hWnd, nCmdShow);
 }
 
 
