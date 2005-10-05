@@ -10,7 +10,6 @@
 - command line parameters like "/e,/root,c:\" and "::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\::{21EC2020-3AEA-1069-A2DD-08002B30309D}" (launch of control panel)
 - Windows-key combos
 - Application Desktop Toolbars
-- command line in explorer windows
 - hide CVS subdirectories, may be even implement a CVS managment plugin
 - printer and RAS connection icons in desktop notification area
 - use multi threading for launching of programs and filling start menu subdirectories
@@ -26,7 +25,7 @@
 - Startmenu: You can open the start menu by pressing Win-key, but can't close with another hit of Win-key.
 - Export von Bookmarks für IE (+ Mozilla)
 
-- Search Programs -> performance monitor.msv -> Abort
+- Search Programs -> performance monitor.msc -> Abort
 
 
 <Nonvo> Martin, I would have a whish concerning explorer: I often want to start a program and give it some parameters. So nice featue: "Start with param..."
