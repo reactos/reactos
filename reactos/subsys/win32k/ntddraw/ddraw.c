@@ -17,9 +17,10 @@
 /* DIRECT DRAW OBJECT                                                   */
 /************************************************************************/
 
-BOOL FASTCALL
-DD_Cleanup(PDD_DIRECTDRAW pDD)
+BOOL INTERNAL_CALL
+DD_Cleanup(PVOID ObjectBody)
 {
+	PDD_DIRECTDRAW pDD = (PDD_DIRECTDRAW)ObjectBody;
 	pDD->DrvDisableDirectDraw(pDD->Global.dhpdev);
 	return TRUE;
 }
@@ -49,6 +50,8 @@ HANDLE STDCALL NtGdiDdCreateDirectDrawObject(
 		DC_UnlockDc(pDC);
 		return NULL;
 	}
+
+	
 
 	BOOL success = pDC->DriverFunctions.EnableDirectDraw(
 		pDC->PDev, &callbacks, &surface_callbacks, &palette_callbacks);
@@ -193,10 +196,12 @@ BOOL STDCALL NtGdiDdQueryDirectDrawObject(
 /* SURFACE OBJECT                                                       */
 /************************************************************************/
 
-BOOL FASTCALL
-DDSURF_Cleanup(PDD_SURFACE pDDSurf)
+BOOL INTERNAL_CALL
+DDSURF_Cleanup(PVOID pDDSurf)
 {
-	//FIXME: implement
+	/* FIXME: implement 
+	 * PDD_SURFACE pDDSurf = PVOID pDDSurf
+	 */
 	return TRUE;
 }
 
