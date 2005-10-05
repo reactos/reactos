@@ -775,6 +775,7 @@ VOID DIALOG_GoTo(VOID)
                 nLine--;
         }
         SendMessage(Globals.hEdit, EM_SETSEL, i, i);
+        SendMessage(Globals.hEdit, EM_SCROLLCARET, 0, 0);
 	}
 	HeapFree(GetProcessHeap(), 0, pszText);
 }
