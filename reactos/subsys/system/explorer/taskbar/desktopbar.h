@@ -117,3 +117,15 @@ protected:
 	const UINT WM_TASKBARCREATED;
 #endif
 };
+
+
+ /// special "Start" button with one click activation
+struct StartButton : public PictureButton
+{
+	typedef PictureButton super;
+
+	StartButton(HWND hwnd);
+
+protected:
+	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
+};

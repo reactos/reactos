@@ -99,8 +99,11 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 
 	_taskbar_pos = start_btn_width + 6;
 
-	new PictureButton(Button(_hwnd, start_str, 1, 1, start_btn_width, REBARBAND_HEIGHT, IDC_START, WS_VISIBLE|WS_CHILD|BS_OWNERDRAW),
-						SmallIcon(IDI_STARTMENU)/*, GetStockBrush(WHITE_BRUSH)*/);
+	 // create "Start" button
+	HWND hwndStart = Button(_hwnd, start_str, 1, 1, start_btn_width, REBARBAND_HEIGHT, IDC_START, WS_VISIBLE|WS_CHILD|BS_OWNERDRAW);
+	new StartButton(hwndStart);
+	 // disable double clicks
+	SetClassLong(hwndStart, GCL_STYLE, GetClassLong(hwndStart, GCL_STYLE) & ~CS_DBLCLKS);
 
 	 // create task bar
 	_hwndTaskBar = TaskBar::Create(_hwnd);
@@ -159,6 +162,71 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 
 	 // prepare Startmenu, but hide it for now
 	_startMenuRoot = GET_WINDOW(StartMenuRoot, StartMenuRoot::Create(_hwnd));
+
+	return 0;
+}
+
+
+StartButton::StartButton(HWND hwnd)
+ :	PictureButton(hwnd, SmallIcon(IDI_STARTMENU), GetSysColorBrush(COLOR_BTNFACE))
+{
+}
+
+LRESULT	StartButton::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
+{
+	switch(nmsg) {
+	   // one click activation: handle button-down message, don't wait for button-up
+	  case WM_LBUTTONDOWN:
+		if (!Button_GetState(_hwnd)) {
+			Button_SetState(_hwnd, TRUE);
+
+			SetCapture(_hwnd);
+
+			SendMessage(GetParent(_hwnd), WM_COMMAND, MAKEWPARAM(GetDlgCtrlID(_hwnd),0), 0);
+		}
+
+		Button_SetState(_hwnd, FALSE);
+		break;
+
+	   // re-target mouse move messages while moving the mouse cursor through the start menu
+	  case WM_MOUSEMOVE:
+		if (GetCapture() == _hwnd) {
+			POINT pt = {GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam)};
+
+			ClientToScreen(_hwnd, &pt);
+			HWND hwnd = WindowFromPoint(pt);
+
+			if (hwnd && hwnd!=_hwnd) {
+				ScreenToClient(hwnd, &pt);
+				SendMessage(hwnd, WM_MOUSEMOVE, 0, MAKELPARAM(pt.x, pt.y));
+			}
+		}
+		break;
+
+	  case WM_LBUTTONUP:
+		if (GetCapture() == _hwnd) {
+			ReleaseCapture();
+
+			POINT pt = {GET_X_LPARAM(lparam), GET_Y_LPARAM(lparam)};
+
+			ClientToScreen(_hwnd, &pt);
+			HWND hwnd = WindowFromPoint(pt);
+
+			if (hwnd && hwnd!=_hwnd) {
+				ScreenToClient(hwnd, &pt);
+				PostMessage(hwnd, WM_LBUTTONDOWN, 0, MAKELPARAM(pt.x, pt.y));
+				PostMessage(hwnd, WM_LBUTTONUP, 0, MAKELPARAM(pt.x, pt.y));
+			}
+		}
+		break;
+
+	  case WM_CANCELMODE:
+		ReleaseCapture();
+		break;
+
+	  default:
+		return super::WndProc(nmsg, wparam, lparam);
+	}
 
 	return 0;
 }
@@ -323,7 +391,7 @@ void DesktopBar::Resize(int cx, int cy)
 int DesktopBar::Command(int id, int code)
 {
 	switch(id) {
-	  case IDC_START:	///@todo startmenu should popup for WM_LBUTTONDOWN, not for WM_COMMAND
+	  case IDC_START:
 		ShowStartMenu();
 		break;
 
