@@ -34,6 +34,7 @@
 #include "main.h"
 #include "hexedit.h"
 #include "security.h"
+#include "regproc.h"
 
 BOOL ProcessCmdLine(LPSTR lpCmdLine);
 
@@ -74,6 +75,8 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
     BOOL AclUiAvailable;
     HMENU hEditMenu;
+    TCHAR szBuffer[256];
+    LPCTSTR s;
 
     WNDCLASSEX wcFrame = {
                              sizeof(WNDCLASSEX),
@@ -158,6 +161,19 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
         SetupStatusBar(hFrameWnd, FALSE);
         CheckMenuItem(GetSubMenu(hMenuFrame, ID_VIEW_MENU), ID_VIEW_STATUSBAR, MF_BYCOMMAND|MF_CHECKED);
     }
+
+    /* Restore position */
+    if (RegQueryStringValue(HKEY_CURRENT_USER,
+        _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Regedit"),
+        _T("LastKey"),
+        szBuffer, sizeof(szBuffer) / sizeof(szBuffer[0])) == ERROR_SUCCESS)
+    {
+        s = szBuffer;
+        if (!_tcsncmp(s, _T("My Computer\\"), 12))
+            s += 12;
+        SelectNode(g_pChildWnd->hTreeWnd, s);
+    }
+
     ShowWindow(hFrameWnd, nCmdShow);
     UpdateWindow(hFrameWnd);
     return TRUE;

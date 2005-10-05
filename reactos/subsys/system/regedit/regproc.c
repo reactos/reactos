@@ -1659,8 +1659,42 @@ LONG RegRenameValue(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpDestValue, LPCTSTR lp
     RegDeleteValue(hKey, lpSrcValue);
 
 done:
-    if (hKey)
-        RegCloseKey(hKey);
+    if (hSubKey)
+        RegCloseKey(hSubKey);
+    return lResult;
+}
+
+LONG RegQueryStringValue(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpValueName, LPTSTR pszBuffer, DWORD dwBufferLen)
+{
+    LONG lResult;
+    HKEY hSubKey = NULL;
+    DWORD cbData, dwType;
+
+    if (lpSubKey)
+    {
+        lResult = RegOpenKey(hKey, lpSubKey, &hSubKey);
+        if (lResult != ERROR_SUCCESS)
+            goto done;
+        hKey = hSubKey;
+    }
+
+    cbData = (dwBufferLen - 1) * sizeof(*pszBuffer);
+    lResult = RegQueryValueEx(hKey, lpValueName, NULL, &dwType, (LPBYTE) pszBuffer, &cbData);
+    if (lResult != ERROR_SUCCESS)
+        goto done;
+    if (dwType != REG_SZ)
+    {
+        lResult = -1;
+        goto done;
+    }
+
+    pszBuffer[cbData / sizeof(*pszBuffer)] = '\0';
+
+done:
+    if (lResult != ERROR_SUCCESS)
+        pszBuffer[0] = '\0';
+    if (hSubKey)
+        RegCloseKey(hSubKey);
     return lResult;
 }
 
@@ -1674,22 +1708,22 @@ BOOL RegKeyGetName(LPTSTR pszDest, size_t iDestLength, HKEY hRootKey, LPCTSTR lp
 
     if (hRootKey == HKEY_CLASSES_ROOT)
         pszRootKey = TEXT("HKEY_CLASSES_ROOT");
-	else if (hRootKey == HKEY_CURRENT_USER)
+    else if (hRootKey == HKEY_CURRENT_USER)
         pszRootKey = TEXT("HKEY_CURRENT_USER");
-	else if (hRootKey == HKEY_LOCAL_MACHINE)
+    else if (hRootKey == HKEY_LOCAL_MACHINE)
         pszRootKey = TEXT("HKEY_LOCAL_MACHINE");
-	else if (hRootKey == HKEY_USERS)
+    else if (hRootKey == HKEY_USERS)
         pszRootKey = TEXT("HKEY_USERS");
-	else if (hRootKey == HKEY_CURRENT_CONFIG)
+    else if (hRootKey == HKEY_CURRENT_CONFIG)
         pszRootKey = TEXT("HKEY_CURRENT_CONFIG");
-	else if (hRootKey == HKEY_DYN_DATA)
+    else if (hRootKey == HKEY_DYN_DATA)
         pszRootKey = TEXT("HKEY_DYN_DATA");
     else
         return FALSE;
 
     if (lpSubKey[0])
         _sntprintf(pszDest, iDestLength, TEXT("%s\\%s"), pszRootKey, lpSubKey);
-	else
+    else
         _sntprintf(pszDest, iDestLength, TEXT("%s"), pszRootKey);
     return TRUE;
 }
