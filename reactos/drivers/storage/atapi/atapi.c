@@ -52,6 +52,8 @@
 #include <ddk/srb.h>
 #include <ddk/scsi.h>
 #include <ddk/ntddscsi.h>
+#include <ddk/ntdddisk.h>
+#include <ddk/ntddstor.h>
 
 #include "atapi.h"
 
@@ -936,6 +938,60 @@ AtapiStartIo(IN PVOID DeviceExtension,
 	  }
 	break;
 
+      case SRB_FUNCTION_IO_CONTROL:
+        {
+          PSRB_IO_CONTROL SrbIoControl = (PSRB_IO_CONTROL)Srb->DataBuffer;
+          if (!_strnicmp((char*)SrbIoControl->Signature, "ScsiDisk", 8))
+            {
+              switch (SrbIoControl->ControlCode)
+                {
+                  default:
+                    Result = SRB_STATUS_INVALID_REQUEST;
+                    break;
+
+                  case IOCTL_SCSI_MINIPORT_IDENTIFY:
+                    {
+                      PSENDCMDOUTPARAMS OutParams = (PSENDCMDOUTPARAMS)((ULONG_PTR)Srb->DataBuffer + sizeof(SRB_IO_CONTROL));
+                      SENDCMDINPARAMS InParams = *(PSENDCMDINPARAMS)OutParams;
+                  
+
+                      RtlZeroMemory(OutParams, Srb->DataTransferLength - sizeof(SRB_IO_CONTROL));
+
+                      if (InParams.irDriveRegs.bCommandReg != IDE_CMD_IDENT_ATA_DRV)
+                        {
+                          DPRINT1("bCommandReg: %x\n", InParams.irDriveRegs.bCommandReg);
+                          OutParams->DriverStatus.bIDEError = 1;
+                          Result = SRB_STATUS_INVALID_REQUEST;
+                          break;
+                        }
+
+                      if (InParams.bDriveNumber > 1 ||
+                        (DevExt->DeviceFlags[InParams.bDriveNumber] & (DEVICE_PRESENT|DEVICE_ATAPI)) != DEVICE_PRESENT)
+                        {
+                          OutParams->DriverStatus.bIDEError = 1;
+                          Result = SRB_STATUS_NO_DEVICE;
+                          break;
+                        }
+
+                      if (Srb->DataTransferLength > sizeof(SRB_IO_CONTROL) + sizeof(SENDCMDOUTPARAMS) - 1)
+                        {
+                          OutParams->cBufferSize = min(IDENTIFY_BUFFER_SIZE, Srb->DataTransferLength - (sizeof(SRB_IO_CONTROL) + sizeof(SENDCMDOUTPARAMS) - 1));
+                          RtlCopyMemory(OutParams->bBuffer, &DevExt->DeviceParams[InParams.bDriveNumber], OutParams->cBufferSize);
+                        }
+
+                      Result = SRB_STATUS_SUCCESS;
+                      break;
+                    }
+                }
+            }
+          else
+            {
+              Result = SRB_STATUS_INVALID_REQUEST;
+            }
+            
+          break;
+        }
+
       default:
 	Result = SRB_STATUS_INVALID_REQUEST;
 	break;
@@ -1176,6 +1232,12 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
                 {
                   DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_NO_FLUSH;                      
                 }
+
+              /* Don't flush CD/DVD drives */
+              if (((DeviceExtension->DeviceParams[UnitNumber].ConfigBits >> 8) & 0x1F) == READ_ONLY_DIRECT_ACCESS_DEVICE)
+	        {
+	          DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_NO_FLUSH;
+	        }
 	      DeviceFound = TRUE;
 	    }
 	  else
@@ -1292,6 +1354,9 @@ AtapiIdentifyDevice(IN ULONG CommandPort,
 {
   LONG i;
   ULONG mode;
+  char SerialNumber[20];
+  char FirmwareRev[8];
+  char ModelNumber[40];
 
   /*  Get the Drive Identify block from drive or die  */
   if (AtapiPolledRead(CommandPort,
@@ -1310,9 +1375,12 @@ AtapiIdentifyDevice(IN ULONG CommandPort,
     }
 
   /*  Report on drive parameters if debug mode  */
-  IDESwapBytePairs(DrvParms->SerialNumber, 20);
-  IDESwapBytePairs(DrvParms->FirmwareRev, 8);
-  IDESwapBytePairs(DrvParms->ModelNumber, 40);
+  memcpy(SerialNumber, DrvParms->SerialNumber, 20);
+  memcpy(FirmwareRev, DrvParms->FirmwareRev, 8);
+  memcpy(ModelNumber, DrvParms->ModelNumber, 40);
+  IDESwapBytePairs((PUCHAR)SerialNumber, 20);
+  IDESwapBytePairs((PUCHAR)FirmwareRev, 8);
+  IDESwapBytePairs((PUCHAR)ModelNumber, 40);
   DPRINT("Config:%04x  Cyls:%5d  Heads:%2d  Sectors/Track:%3d  Gaps:%02d %02d\n",
          DrvParms->ConfigBits,
          DrvParms->LogicalCyls,
@@ -1323,13 +1391,13 @@ AtapiIdentifyDevice(IN ULONG CommandPort,
   DPRINT("Bytes/PLO:%3d  Vendor Cnt:%2d  Serial number:[%.20s]\n",
          DrvParms->BytesInPLO,
          DrvParms->VendorUniqueCnt,
-         DrvParms->SerialNumber);
+         SerialNumber);
   DPRINT("Cntlr type:%2d  BufSiz:%5d  ECC bytes:%3d  Firmware Rev:[%.8s]\n",
          DrvParms->ControllerType,
          DrvParms->BufferSize * IDE_SECTOR_BUF_SZ,
          DrvParms->ECCByteCnt,
-         DrvParms->FirmwareRev);
-  DPRINT("Model:[%.40s]\n", DrvParms->ModelNumber);
+         FirmwareRev);
+  DPRINT("Model:[%.40s]\n", ModelNumber);
   DPRINT("RWMultMax?:%04x  RWMult?:%02x  LBA:%d  DMA:%d  MinPIO:%d ns  MinDMA:%d ns\n",
          (DrvParms->RWMultImplemented),
 	 (DrvParms->RWMultCurrent) & 0xff,
@@ -1897,7 +1965,6 @@ AtapiInquiry(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 {
   PIDE_DRIVE_IDENTIFY DeviceParams;
   PINQUIRYDATA InquiryData;
-  ULONG i;
 
   DPRINT("SCSIOP_INQUIRY: DeviceExtension %p  TargetId: %lu\n",
 	 DeviceExtension, Srb->TargetId);
@@ -1906,10 +1973,7 @@ AtapiInquiry(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   DeviceParams = &DeviceExtension->DeviceParams[Srb->TargetId];
 
   /* clear buffer */
-  for (i = 0; i < Srb->DataTransferLength; i++)
-    {
-      ((PUCHAR)Srb->DataBuffer)[i] = 0;
-    }
+  memset(Srb->DataBuffer, 0, Srb->DataTransferLength);
 
   /* set device class */
   if (DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_ATAPI)
@@ -1917,12 +1981,6 @@ AtapiInquiry(PATAPI_MINIPORT_EXTENSION DeviceExtension,
       /* get it from the ATAPI configuration word */
       InquiryData->DeviceType = (DeviceParams->ConfigBits >> 8) & 0x1F;
       DPRINT("Device class: %u\n", InquiryData->DeviceType);
-
-      /* Don't flush CD/DVD drives */
-      if (InquiryData->DeviceType == READ_ONLY_DIRECT_ACCESS_DEVICE)
-	{
-	  DeviceExtension->DeviceFlags[Srb->TargetId] |= DEVICE_NO_FLUSH;
-	}
     }
   else
     {
@@ -1937,26 +1995,13 @@ AtapiInquiry(PATAPI_MINIPORT_EXTENSION DeviceExtension,
       InquiryData->RemovableMedia = 1;
     }
 
-  for (i = 0; i < 20; i += 2)
-    {
-      InquiryData->VendorId[i] =
-	((PUCHAR)DeviceParams->ModelNumber)[i];
-      InquiryData->VendorId[i+1] =
-	((PUCHAR)DeviceParams->ModelNumber)[i+1];
-    }
+  memcpy(InquiryData->VendorId, DeviceParams->ModelNumber, 20);
+  IDESwapBytePairs(InquiryData->VendorId, 20);
 
-  for (i = 0; i < 4; i++)
-    {
-      InquiryData->ProductId[12+i] = ' ';
-    }
+  memcpy(&InquiryData->ProductId[12], "    ", 4);
 
-  for (i = 0; i < 4; i += 2)
-    {
-      InquiryData->ProductRevisionLevel[i] =
-	((PUCHAR)DeviceParams->FirmwareRev)[i];
-      InquiryData->ProductRevisionLevel[i+1] =
-	((PUCHAR)DeviceParams->FirmwareRev)[i+1];
-    }
+  memcpy(InquiryData->ProductRevisionLevel, DeviceParams->FirmwareRev, 4);
+  IDESwapBytePairs(InquiryData->ProductRevisionLevel, 4);
 
   InquiryData->AdditionalLength = 31;
 
