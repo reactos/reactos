@@ -77,12 +77,10 @@ MSVCBackend::_generate_dsp ( const Module& module )
 	string dsp_path = module.GetBasePath();
 	vector<string> c_srcs, source_files, resource_files, includes, libraries, defines;
 	vector<const IfableData*> ifs_list;
+	ifs_list.push_back ( &module.project.non_if_data );
 	ifs_list.push_back ( &module.non_if_data );
 
-	defines.push_back ( "WIN32" );
-	defines.push_back ( "_WINDOWS" );
-	defines.push_back ( "WIN32" );
-	defines.push_back ( "_MBCS" );
+	// this is a define in MinGW w32api, but not Microsoft's headers
 	defines.push_back ( "STDCALL=__stdcall" );
 
 	while ( ifs_list.size() )
@@ -107,6 +105,10 @@ MSVCBackend::_generate_dsp ( const Module& module )
 		const vector<Include*>& incs = data.includes;
 		for ( i = 0; i < incs.size(); i++ )
 		{
+			// explicitly omit win32api directories
+			if ( !strncmp(incs[i]->directory.c_str(), "w32api", 6 ) )
+				continue;
+
 			string path = Path::RelativeFromDirectory (
 				incs[i]->directory,
 				module.GetBasePath() );
@@ -361,13 +363,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 		fprintf ( OUT, " /c" );
 		fprintf ( OUT, "\r\n" );
 
-		vector<string> defines2;
-		defines2.push_back ( "WINVER=0x0501" );
-		defines2.push_back ( "_WIN32_WINNT=0x0501" );
-		defines2.push_back ( "_WIN32_IE=0x0600" );
-		defines2.push_back ( "WIN32" );
-		defines2.push_back ( "_WINDOWS" );
-		defines2.push_back ( "_MBCS" );
+		vector<string> defines2 = defines;
 		if ( debug )
 		{
 			defines2.push_back ( "_DEBUG" );
@@ -433,7 +429,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 			for ( i = 0; i < includes.size(); i++ )
 			{
 				const string& include = includes[i];
-				if ( strpbrk ( include.c_str(), "[\\\"]" ) )
+				if ( strpbrk ( include.c_str(), "[\\\"]" ) || !strncmp ( include.c_str(), "../", 3 ) )
 				{
 					fprintf ( OUT, " /I \"%s\"", include.c_str() );
 				}
@@ -478,7 +474,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 			}
 			fprintf ( OUT, "# ADD BASE RSC /l 0x41d /d \"_DEBUG\"\r\n" );
 			fprintf ( OUT, "# ADD RSC /l 0x41d" );
-			if ( wine )
+			/*if ( wine )*/
 			{
 				for ( i = 0; i < includes.size(); i++ )
 				{
@@ -755,7 +751,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 	fprintf ( OUT, "# Begin Group \"Resource Files\"\r\n" );
 	fprintf ( OUT, "\r\n" );
 	fprintf ( OUT, "# PROP Default_Filter \"ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe\"\r\n" );
-	for ( i = 0; i < resource_files.size(); i++ )
+/*	for ( i = 0; i < resource_files.size(); i++ )
 	{
 		const string& resource_file = resource_files[i];
 		fprintf ( OUT, "# Begin Source File\r\n" );
@@ -763,7 +759,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 		fprintf ( OUT, "SOURCE=.\\%s\r\n", resource_file.c_str() );
 		fprintf ( OUT, "# End Source File\r\n" );
 	}
-	fprintf ( OUT, "# End Group\r\n" );
+*/	fprintf ( OUT, "# End Group\r\n" );
 
 	fprintf ( OUT, "# End Target\r\n" );
 	fprintf ( OUT, "# End Project\r\n" );

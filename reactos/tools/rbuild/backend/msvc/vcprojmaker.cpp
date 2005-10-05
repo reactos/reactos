@@ -77,12 +77,10 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 	string vcproj_path = module.GetBasePath();
 	vector<string> c_srcs, source_files, resource_files, includes, libraries, defines;
 	vector<const IfableData*> ifs_list;
+	ifs_list.push_back ( &module.project.non_if_data );
 	ifs_list.push_back ( &module.non_if_data );
 
-	defines.push_back ( "WIN32" );
-	defines.push_back ( "_WINDOWS" );
-	defines.push_back ( "WIN32" );
-	defines.push_back ( "_MBCS" );
+	// this is a define in MinGW w32api, but not Microsoft's headers
 	defines.push_back ( "STDCALL=__stdcall" );
 
 	while ( ifs_list.size() )
@@ -107,6 +105,10 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		const vector<Include*>& incs = data.includes;
 		for ( i = 0; i < incs.size(); i++ )
 		{
+			// explicitly omit win32api directories
+			if ( !strncmp(incs[i]->directory.c_str(), "w32api", 6 ) )
+				continue;
+
 			string path = Path::RelativeFromDirectory (
 				incs[i]->directory,
 				module.GetBasePath() );
@@ -291,6 +293,23 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			fprintf ( OUT, "\t\t\t\tSubSystem=\"%d\"\r\n", console ? 1 : 2 );
 			fprintf ( OUT, "\t\t\t\tTargetMachine=\"%d\"/>\r\n", 1 );
 		}
+		
+		fprintf ( OUT, "\t\t\t<Tool\r\n" );
+		fprintf ( OUT, "\t\t\t\tName=\"VCResourceCompilerTool\"\r\n" );
+		fprintf ( OUT, "\t\t\t\tAdditionalIncludeDirectories=\"" );
+		multiple_includes = false;
+		for ( i = 0; i < includes.size(); i++ )
+		{
+			const string& include = includes[i];
+			if ( strcmp ( include.c_str(), "." ) )
+			{
+				if ( multiple_includes )
+					fprintf ( OUT, ";" );
+				fprintf ( OUT, "%s", include.c_str() );
+				multiple_includes = true;
+			}
+		}
+		fprintf ( OUT, "\"/>\r\n " );
 
 		fprintf ( OUT, "\t\t\t<Tool\r\n" );
 		fprintf ( OUT, "\t\t\t\tName=\"VCMIDLTool\"/>\r\n" );
@@ -300,8 +319,6 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		fprintf ( OUT, "\t\t\t\tName=\"VCPreBuildEventTool\"/>\r\n" );
 		fprintf ( OUT, "\t\t\t<Tool\r\n" );
 		fprintf ( OUT, "\t\t\t\tName=\"VCPreLinkEventTool\"/>\r\n" );
-		fprintf ( OUT, "\t\t\t<Tool\r\n" );
-		fprintf ( OUT, "\t\t\t\tName=\"VCResourceCompilerTool\"/>\r\n" );
 		fprintf ( OUT, "\t\t\t<Tool\r\n" );
 		fprintf ( OUT, "\t\t\t\tName=\"VCWebServiceProxyGeneratorTool\"/>\r\n" );
 		fprintf ( OUT, "\t\t\t<Tool\r\n" );
