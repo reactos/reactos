@@ -124,9 +124,6 @@ int WINAPI WinMain( HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdline, int cmd
     WNDCLASS wc;
     HWND hWnd;
     HACCEL haccel;
-#ifdef UNICODE
-    CHAR s_ansi[CALC_BUF_SIZE];
-#endif
     TCHAR s[CALC_BUF_SIZE];
     int r;
 
@@ -139,12 +136,7 @@ int WINAPI WinMain( HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdline, int cmd
                          CALC_BUF_SIZE
     );
 
-#ifdef UNICODE
-    wcstombs(s_ansi, s, sizeof(s_ansi));
-    calc.sciMode  = atoi(s_ansi);
-#else
-    calc.sciMode  = atoi(s);
-#endif
+    calc.sciMode  = _ttoi(s);
 
     if (calc.sciMode != 0 &&
         calc.sciMode != 1)
@@ -157,12 +149,7 @@ int WINAPI WinMain( HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdline, int cmd
                          CALC_BUF_SIZE
         );
 
-#ifdef UNICODE
-    wcstombs(s_ansi, s, sizeof(s_ansi));
-    calc.digitGrouping  = atoi(s_ansi);
-#else
-    calc.digitGrouping  = atoi(s);
-#endif
+    calc.digitGrouping  = _ttoi(s);
 
     if (calc.digitGrouping != 0 &&
         calc.digitGrouping != 1)
@@ -3198,38 +3185,26 @@ oper	= (%C)\n"),
     MessageBox(calc->hWnd, s, title, MB_OK);
 }
 
-calcfloat calc_atof(TCHAR *s, int base)
+calcfloat calc_atof(const TCHAR *s, int base)
 {
-    // converts from another base to decimal calcfloat
 #ifdef UNICODE
     char s_ansi[128];
-    wcstombs(s_ansi, s, sizeof(s_ansi));
+#endif
+
+    // converts from another base to decimal calcfloat
     switch (base) {
     case NBASE_DECIMAL:
+        wcstombs(s_ansi, s, sizeof(s_ansi));
         return CALC_ATOF(s_ansi);
     case NBASE_HEX:
-        return (calcfloat)strtol(s_ansi, NULL, 16);
+        return (calcfloat)_tcstol(s, NULL, 16);
     case NBASE_OCTAL:
-        return (calcfloat)strtol(s_ansi, NULL, 8);
+        return (calcfloat)_tcstol(s, NULL, 8);
     case NBASE_BINARY:
-        return (calcfloat)strtol(s_ansi, NULL, 2);
+        return (calcfloat)_tcstol(s, NULL, 2);
     default:
         break;
     }
-#else
-    switch (base) {
-    case NBASE_DECIMAL:
-        return CALC_ATOF(s);
-    case NBASE_HEX:
-        return (calcfloat)strtol(s, NULL, 16);
-    case NBASE_OCTAL:
-        return (calcfloat)strtol(s, NULL, 8);
-    case NBASE_BINARY:
-        return (calcfloat)strtol(s, NULL, 2);
-    default:
-        break;
-    }
-#endif
 
     return 0L;
 }

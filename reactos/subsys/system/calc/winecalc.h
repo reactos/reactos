@@ -355,7 +355,7 @@ void calc_setmenuitem_radio(HMENU hMenu, UINT id);
 
 void show_debug(CALC *calc, TCHAR *title, long wParam, long lParam);
 
-calcfloat calc_atof(TCHAR *s, int base);
+calcfloat calc_atof(const TCHAR *s, int base);
 void calc_ftoa(CALC *calc, calcfloat r, TCHAR *buf);
 long factorial(long n);
 
