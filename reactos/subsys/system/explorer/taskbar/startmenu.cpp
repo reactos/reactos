@@ -311,7 +311,7 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		break;
 
 	  case WM_MOVE: {
-		POINTS& pos = MAKEPOINTS(lparam);
+		const POINTS& pos = MAKEPOINTS(lparam);
 
 		 // move open submenus of floating menus
 		if (_submenu) {
@@ -1623,13 +1623,13 @@ void StartMenuRoot::TrackStartmenu()
 	ShowWindow(hwnd, SW_SHOW);
 	SetForegroundWindow(hwnd);
 
-	while(IsWindow(hwnd)) {
+	while(IsWindow(hwnd) && IsWindowVisible(hwnd)) {
 		if (!GetMessage(&msg, 0, 0, 0)) {
 			PostQuitMessage(msg.wParam);
 			break;
 		}
 
-		 // Check for a mouse click on any window, which is not part of the start menu
+		 // Check for a mouse click on any window, that is not part of the start menu
 		if (msg.message==WM_LBUTTONDOWN || msg.message==WM_MBUTTONDOWN || msg.message==WM_RBUTTONDOWN) {
 			StartMenu* menu_wnd = NULL;
 
