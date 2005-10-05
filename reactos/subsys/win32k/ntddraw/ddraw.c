@@ -50,9 +50,7 @@ HANDLE STDCALL NtGdiDdCreateDirectDrawObject(
 		DC_UnlockDc(pDC);
 		return NULL;
 	}
-
 	
-
 	BOOL success = pDC->DriverFunctions.EnableDirectDraw(
 		pDC->PDev, &callbacks, &surface_callbacks, &palette_callbacks);
 
@@ -64,7 +62,21 @@ HANDLE STDCALL NtGdiDdCreateDirectDrawObject(
 	}
 
 	HANDLE hDirectDraw = GDIOBJ_AllocObj(GDI_OBJECT_TYPE_DIRECTDRAW);
+	if (!hDirectDraw)
+	{
+		/* No more memmory */
+		DC_UnlockDc(pDC);
+		return NULL;
+	}
+
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDraw, GDI_OBJECT_TYPE_DIRECTDRAW);
+	if (!pDirectDraw)
+	{
+		/* invalid handle */
+		DC_UnlockDc(pDC);
+		return NULL;
+	}
+	
 
 	pDirectDraw->Global.dhpdev = pDC->PDev;
 	pDirectDraw->Local.lpGbl = &pDirectDraw->Global;
