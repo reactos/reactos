@@ -20,6 +20,9 @@
 <directory name="explorer">
 	<xi:include href="explorer/explorer.xml" />
 </directory>
+<directory name="hostname">
+	<xi:include href="hostname/hostname.xml" />
+</directory>
 <directory name="ibrowser">
 	<xi:include href="ibrowser/ibrowser.xml" />
 </directory>
@@ -80,8 +83,8 @@
 <directory name="winlogon">
 	<xi:include href="winlogon/winlogon.xml" />
 </directory>
-<directory name="hostname">
-	<xi:include href="hostname/hostname.xml" />
+<directory name="winver">
+	<xi:include href="winver/winver.xml" />
 </directory>
 <directory name="welcome">
 	<xi:include href="welcome/welcome.xml" />
