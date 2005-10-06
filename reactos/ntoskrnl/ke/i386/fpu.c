@@ -326,6 +326,7 @@ KiGetFpuState(PKTHREAD Thread)
 {
     PFX_SAVE_AREA FxSaveArea = NULL;
     KIRQL OldIrql;
+    ULONG Cr0;
 
     KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
     if (Thread->NpxState & NPX_STATE_VALID)
@@ -334,16 +335,19 @@ KiGetFpuState(PKTHREAD Thread)
         if (Thread->NpxState & NPX_STATE_DIRTY)
         {
             ASSERT(KeGetCurrentPrcb()->NpxThread == Thread);
-            ASSERT((Ke386GetCr0() & X86_CR0_TS) == 0);
 
+            Cr0 = Ke386GetCr0();
+            asm volatile("clts");
             if (FxsrSupport)
                 asm volatile("fxsave %0" : : "m"(FxSaveArea->U.FxArea));
             else
             {
-                KeGetCurrentPrcb()->NpxThread = NULL;
                 asm volatile("fnsave %0" : : "m"(FxSaveArea->U.FnArea));
-                Ke386SetCr0(Ke386GetCr0() | X86_CR0_TS); /* FPU state has to be reloaded because fnsave changes it. */
+                /* FPU state has to be reloaded because fnsave changes it. */
+                Cr0 |= X86_CR0_TS;
+                KeGetCurrentPrcb()->NpxThread = NULL;
             }
+            Ke386SetCr0(Cr0);
             Thread->NpxState = NPX_STATE_VALID;
         }
     }
