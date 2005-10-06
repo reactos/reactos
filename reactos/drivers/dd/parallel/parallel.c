@@ -24,6 +24,9 @@
 #define LP_S (READ_PORT_UCHAR((PUCHAR)(LP_B+1)))
 #define LP_C (LP_B+2)
 
+NTSTATUS STDCALL
+DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath);
+
 static void Parallel_Reset(void)
 /*
  * FUNCTION: Resets the device attached to the parallel port
@@ -68,7 +71,7 @@ static void Parallel_putchar(unsigned char ch)
 	WRITE_PORT_UCHAR((PUCHAR)LP_C, LP_PSELECP | LP_PINITP);
 }
 
-NTSTATUS STDCALL
+static NTSTATUS STDCALL
 Dispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
  * FUNCTION: Handles user mode requests

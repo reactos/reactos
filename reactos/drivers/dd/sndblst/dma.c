@@ -5,7 +5,7 @@
 #include <ddk/ntddk.h>
 #include "sndblst.h"
 
-
+#if 0
 BOOLEAN CheckDMA(PDEVICE_EXTENSION Device)
 {
     // Don't forget to check for Compaq machines (they can't be configured
@@ -31,9 +31,10 @@ BOOLEAN CheckDMA(PDEVICE_EXTENSION Device)
 
     return FALSE;
 }
+#endif
 
 
-IO_ALLOCATION_ACTION STDCALL SoundProgramDMA(
+static IO_ALLOCATION_ACTION STDCALL SoundProgramDMA(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp,
     IN PVOID MapRegisterBase,
@@ -199,3 +200,4 @@ BOOLEAN CreateDMA(PDEVICE_OBJECT DeviceObject)
 //                    DeviceObject); // Context
     return TRUE;
 }
+

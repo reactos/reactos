@@ -180,7 +180,7 @@ vfatFindDirSpace(PDEVICE_EXTENSION DeviceExt,
   return TRUE;
 }
 
-NTSTATUS
+static NTSTATUS
 FATAddEntry (PDEVICE_EXTENSION DeviceExt,
 	     PUNICODE_STRING NameU,
 	     PVFATFCB* Fcb,
@@ -513,7 +513,7 @@ FATAddEntry (PDEVICE_EXTENSION DeviceExt,
   return STATUS_SUCCESS;
 }
 
-NTSTATUS
+static NTSTATUS
 FATXAddEntry (PDEVICE_EXTENSION DeviceExt,
 	      PUNICODE_STRING NameU,
 	      PVFATFCB* Fcb,
@@ -627,7 +627,7 @@ VfatAddEntry (PDEVICE_EXTENSION DeviceExt,
       return FATAddEntry(DeviceExt, NameU, Fcb, ParentFcb, RequestedOptions, ReqAttr);
 }
 
-NTSTATUS
+static NTSTATUS
 FATDelEntry (PDEVICE_EXTENSION DeviceExt, PVFATFCB pFcb)
 /*
  * deleting an existing FAT entry
@@ -681,7 +681,7 @@ FATDelEntry (PDEVICE_EXTENSION DeviceExt, PVFATFCB pFcb)
   return STATUS_SUCCESS;
 }
 
-NTSTATUS
+static NTSTATUS
 FATXDelEntry (PDEVICE_EXTENSION DeviceExt, PVFATFCB pFcb)
 /*
  * deleting an existing FAT entry

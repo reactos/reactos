@@ -65,7 +65,7 @@ NTSTATUS MakeSocketIntoConnection( PAFD_FCB FCB ) {
     return Status;
 }
 
-NTSTATUS DDKAPI StreamSocketConnectComplete
+static NTSTATUS DDKAPI StreamSocketConnectComplete
 ( PDEVICE_OBJECT DeviceObject,
   PIRP Irp,
   PVOID Context ) {

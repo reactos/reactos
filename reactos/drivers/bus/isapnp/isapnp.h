@@ -324,6 +324,12 @@ typedef struct _ISAPNP_DEVICE_EXTENSION
   ISAPNP_DEVICE_STATE State;
 } ISAPNP_DEVICE_EXTENSION, *PISAPNP_DEVICE_EXTENSION;
 
+NTSTATUS
+STDCALL
+DriverEntry(
+  IN PDRIVER_OBJECT DriverObject,
+  IN PUNICODE_STRING RegistryPath);
+
 #ifdef __cplusplus
 }
 #endif

@@ -154,7 +154,7 @@ SerialSetLineControl(
 	return Status;
 }
 
-BOOLEAN
+static BOOLEAN
 SerialClearPerfStats(
 	IN PSERIAL_DEVICE_EXTENSION DeviceExtension)
 {
@@ -165,7 +165,7 @@ SerialClearPerfStats(
 	return TRUE;
 }
 
-BOOLEAN
+static BOOLEAN
 SerialGetPerfStats(IN PIRP pIrp)
 {
 	PSERIAL_DEVICE_EXTENSION pDeviceExtension;
@@ -186,7 +186,7 @@ SerialGetPerfStats(IN PIRP pIrp)
 	return TRUE;
 }
 
-NTSTATUS
+static NTSTATUS
 SerialGetCommProp(
 	OUT PSERIAL_COMMPROP pCommProp,
 	IN PSERIAL_DEVICE_EXTENSION DeviceExtension)
@@ -232,7 +232,7 @@ SerialGetCommProp(
 	return STATUS_SUCCESS;
 }
 
-NTSTATUS
+static NTSTATUS
 SerialGetCommStatus(
 	OUT PSERIAL_STATUS pSerialStatus,
 	IN PSERIAL_DEVICE_EXTENSION DeviceExtension)

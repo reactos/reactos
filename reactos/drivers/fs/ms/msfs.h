@@ -76,4 +76,8 @@ NTSTATUS DEFAULTAPI MsfsWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 NTSTATUS DEFAULTAPI MsfsFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
+NTSTATUS NTAPI
+DriverEntry(PDRIVER_OBJECT DriverObject,
+	    PUNICODE_STRING RegistryPath);
+
 #endif /* __SERVICES_FS_NP_NPFS_H */

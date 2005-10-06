@@ -51,7 +51,7 @@ const char* MajorFunctionNames[] =
 
 static LONG QueueCount = 0;
 
-NTSTATUS VfatLockControl(
+static NTSTATUS VfatLockControl(
    IN PVFAT_IRP_CONTEXT IrpContext
    )
 {
@@ -91,7 +91,7 @@ Fail:;
    return Status;
 }
 
-NTSTATUS
+static NTSTATUS
 VfatDispatchRequest (IN PVFAT_IRP_CONTEXT IrpContext)
 {
     DPRINT ("VfatDispatchRequest (IrpContext %x), is called for %s\n", IrpContext,
@@ -222,7 +222,7 @@ PVFAT_IRP_CONTEXT VfatAllocateIrpContext(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    return IrpContext;
 }
 
-VOID NTAPI VfatDoRequest (PVOID IrpContext)
+static VOID NTAPI VfatDoRequest (PVOID IrpContext)
 {
    InterlockedDecrement(&QueueCount);
    DPRINT ("VfatDoRequest (IrpContext %x), MajorFunction %x, %d\n", IrpContext, ((PVFAT_IRP_CONTEXT)IrpContext)->MajorFunction, QueueCount);

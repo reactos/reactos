@@ -46,7 +46,13 @@
 #define NDEBUG
 #include <debug.h>
 
-VOID
+NTSTATUS
+STDCALL
+DriverEntry(
+    IN PDRIVER_OBJECT DriverObject,
+    IN PUNICODE_STRING RegistryPath);
+
+static VOID
 STDCALL
 MiniportHandleInterrupt(
     IN NDIS_HANDLE MiniportAdapterContext)
@@ -213,7 +219,7 @@ MiniportHandleInterrupt(
   NdisDprReleaseSpinLock(&Adapter->Lock);
 }
 
-NDIS_STATUS
+static NDIS_STATUS
 MiQueryCard(
     IN PADAPTER Adapter)
 /*
@@ -290,7 +296,7 @@ MiQueryCard(
   return NDIS_STATUS_SUCCESS;
 }
 
-NDIS_STATUS
+static NDIS_STATUS
 MiAllocateSharedMemory(
     PADAPTER Adapter)
 /*
@@ -436,7 +442,7 @@ MiAllocateSharedMemory(
   return NDIS_STATUS_SUCCESS;
 }
 
-VOID
+static VOID
 MiPrepareInitializationBlock(
     PADAPTER Adapter)
 /*
@@ -471,7 +477,7 @@ MiPrepareInitializationBlock(
   Adapter->InitializationBlockVirt->TLEN = (LOG_NUMBER_OF_BUFFERS << 4) & 0xf0;
 }
 
-VOID
+static VOID
 MiFreeSharedMemory(
     PADAPTER Adapter)
 /*
@@ -520,7 +526,7 @@ MiFreeSharedMemory(
     }
 }
 
-BOOLEAN
+static BOOLEAN
 STDCALL
 MiSyncStop(
     IN PVOID SynchronizeContext)
@@ -536,7 +542,7 @@ MiSyncStop(
   return TRUE;
 }
 
-VOID
+static VOID
 STDCALL
 MiniportHalt(
     IN NDIS_HANDLE MiniportAdapterContext)
@@ -579,7 +585,7 @@ MiniportHalt(
   NdisFreeMemory(Adapter, 0, 0);
 }
 
-BOOLEAN
+static BOOLEAN
 STDCALL
 MiSyncMediaDetection(
     IN PVOID SynchronizeContext)
@@ -602,7 +608,7 @@ MiSyncMediaDetection(
   return FALSE;
 }
 
-VOID
+static VOID
 STDCALL
 MiniportMediaDetectionTimer(
     IN PVOID SystemSpecific1,
@@ -631,7 +637,7 @@ MiniportMediaDetectionTimer(
     }
 }
 
-VOID
+static VOID
 MiInitChip(
     PADAPTER Adapter)
 /*
@@ -713,7 +719,7 @@ MiInitChip(
   Adapter->Flags &= ~RESET_IN_PROGRESS;
 }
 
-BOOLEAN
+static BOOLEAN
 MiTestCard(
     PADAPTER Adapter)
 /*
@@ -770,7 +776,7 @@ MiTestCard(
   return TRUE;
 }
 
-NDIS_STATUS
+static NDIS_STATUS
 STDCALL
 MiniportInitialize(
     OUT PNDIS_STATUS OpenErrorStatus,
@@ -944,7 +950,7 @@ MiniportInitialize(
   return Status;
 }
 
-VOID
+static VOID
 STDCALL
 MiniportISR(
     OUT PBOOLEAN InterruptRecognized,
@@ -997,7 +1003,7 @@ MiniportISR(
   NdisRawWritePortUshort(Adapter->PortOffset + RAP, Rap);
 }
 
-NDIS_STATUS
+static NDIS_STATUS
 STDCALL
 MiniportReset(
     OUT PBOOLEAN AddressingReset,
@@ -1022,7 +1028,7 @@ MiniportReset(
   return NDIS_STATUS_SUCCESS;
 }
 
-BOOLEAN
+static BOOLEAN
 STDCALL
 MiSyncStartTransmit(
     IN PVOID SynchronizeContext)
@@ -1038,7 +1044,7 @@ MiSyncStartTransmit(
   return TRUE;
 }
 
-NDIS_STATUS
+static NDIS_STATUS
 STDCALL
 MiniportSend(
     IN NDIS_HANDLE MiniportAdapterContext,
@@ -1127,7 +1133,7 @@ MiniportSend(
   return NDIS_STATUS_SUCCESS;
 }
 
-ULONG
+static ULONG
 STDCALL
 MiEthernetCrc(UCHAR *Address)
 /*

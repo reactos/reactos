@@ -10,7 +10,7 @@
 #define NDEBUG
 #include "vfat.h"
 
-BOOLEAN NTAPI
+static BOOLEAN NTAPI
 VfatFastIoCheckIfPossible(IN PFILE_OBJECT FileObject,
                           IN PLARGE_INTEGER FileOffset,
                           IN ULONG Lenght,
@@ -25,7 +25,7 @@ VfatFastIoCheckIfPossible(IN PFILE_OBJECT FileObject,
 	return FALSE;
 }
 
-BOOLEAN NTAPI
+static BOOLEAN NTAPI
 VfatFastIoRead(IN PFILE_OBJECT FileObject,
 			   IN PLARGE_INTEGER FileOffset,
 			   IN ULONG	Length,
@@ -39,7 +39,7 @@ VfatFastIoRead(IN PFILE_OBJECT FileObject,
    return FALSE;
 }
 
-BOOLEAN NTAPI
+static BOOLEAN NTAPI
 VfatFastIoWrite(IN PFILE_OBJECT FileObject,
 				IN PLARGE_INTEGER FileOffset,
 				IN ULONG Length,
@@ -53,7 +53,7 @@ VfatFastIoWrite(IN PFILE_OBJECT FileObject,
    return FALSE;
 }
 
-BOOLEAN NTAPI
+static BOOLEAN NTAPI
 VfatFastIoQueryBasicInfo(IN PFILE_OBJECT FileObject,
 						 IN BOOLEAN	Wait,
 						 OUT PFILE_BASIC_INFORMATION Buffer,
@@ -64,7 +64,7 @@ VfatFastIoQueryBasicInfo(IN PFILE_OBJECT FileObject,
    return FALSE;
 }
 
-BOOLEAN NTAPI
+static BOOLEAN NTAPI
 VfatFastIoQueryStandardInfo(IN PFILE_OBJECT FileObject,
 							IN BOOLEAN Wait,
 							OUT PFILE_STANDARD_INFORMATION Buffer,
@@ -75,7 +75,7 @@ VfatFastIoQueryStandardInfo(IN PFILE_OBJECT FileObject,
    return FALSE;
 }
 
-BOOLEAN NTAPI
+static BOOLEAN NTAPI
 VfatFastIoLock(IN PFILE_OBJECT FileObject,
 			   IN PLARGE_INTEGER FileOffset,
 			   IN PLARGE_INTEGER Length,
@@ -90,7 +90,7 @@ VfatFastIoLock(IN PFILE_OBJECT FileObject,
    return FALSE;
 }
 
-BOOLEAN NTAPI
+static BOOLEAN NTAPI
 VfatFastIoUnlockSingle(IN PFILE_OBJECT FileObject,
 					   IN PLARGE_INTEGER FileOffset,
 					   IN PLARGE_INTEGER Length,
@@ -103,7 +103,7 @@ VfatFastIoUnlockSingle(IN PFILE_OBJECT FileObject,
    return FALSE;
 }
 
-BOOLEAN NTAPI
+static BOOLEAN NTAPI
 VfatFastIoUnlockAll(IN PFILE_OBJECT FileObject,
 					PEPROCESS ProcessId,
 					OUT PIO_STATUS_BLOCK IoStatus,
@@ -113,7 +113,7 @@ VfatFastIoUnlockAll(IN PFILE_OBJECT FileObject,
    return FALSE;
 }
 
-BOOLEAN NTAPI
+static BOOLEAN NTAPI
 VfatFastIoUnlockAllByKey(IN PFILE_OBJECT FileObject,
 						 PEPROCESS ProcessId,
 						 ULONG Key,
@@ -124,7 +124,7 @@ VfatFastIoUnlockAllByKey(IN PFILE_OBJECT FileObject,
    return FALSE;
 }
 
-BOOLEAN NTAPI
+static BOOLEAN NTAPI
 VfatFastIoDeviceControl(IN PFILE_OBJECT FileObject, 
 						IN BOOLEAN Wait, 
 						IN PVOID InputBuffer OPTIONAL, 
@@ -139,26 +139,26 @@ VfatFastIoDeviceControl(IN PFILE_OBJECT FileObject,
    return FALSE;
 }
 
-VOID NTAPI
+static VOID NTAPI
 VfatAcquireFileForNtCreateSection(IN PFILE_OBJECT FileObject)
 {
    DPRINT("VfatAcquireFileForNtCreateSection\n");
 }
 
-VOID NTAPI
+static VOID NTAPI
 VfatReleaseFileForNtCreateSection(IN PFILE_OBJECT FileObject)
 {
    DPRINT("VfatReleaseFileForNtCreateSection\n");
 }
 
-VOID NTAPI
+static VOID NTAPI
 VfatFastIoDetachDevice(IN PDEVICE_OBJECT SourceDevice,
 					   IN PDEVICE_OBJECT TargetDevice)
 {
    DPRINT("VfatFastIoDetachDevice\n");
 }
 
-BOOLEAN NTAPI
+static BOOLEAN NTAPI
 VfatFastIoQueryNetworkOpenInfo(IN PFILE_OBJECT FileObject,
                                IN BOOLEAN Wait,
 							   OUT PFILE_NETWORK_OPEN_INFORMATION Buffer,
@@ -169,7 +169,7 @@ VfatFastIoQueryNetworkOpenInfo(IN PFILE_OBJECT FileObject,
    return FALSE;
 }
 
-NTSTATUS NTAPI
+static NTSTATUS NTAPI
 VfatAcquireForModWrite(IN PFILE_OBJECT FileObject,
 					   IN PLARGE_INTEGER EndingOffset,
 					   OUT PERESOURCE* ResourceToRelease,
@@ -179,7 +179,7 @@ VfatAcquireForModWrite(IN PFILE_OBJECT FileObject,
    return STATUS_UNSUCCESSFUL;
 }
 
-BOOLEAN NTAPI
+static BOOLEAN NTAPI
 VfatMdlRead(IN PFILE_OBJECT FileObject,
 			IN PLARGE_INTEGER FileOffset,
 			IN ULONG Length,
@@ -192,7 +192,7 @@ VfatMdlRead(IN PFILE_OBJECT FileObject,
    return FALSE;
 }
 
-BOOLEAN NTAPI
+static BOOLEAN NTAPI
 VfatMdlReadComplete(IN PFILE_OBJECT FileObject,
 					IN PMDL MdlChain,
 					IN PDEVICE_OBJECT DeviceObject)
@@ -201,7 +201,7 @@ VfatMdlReadComplete(IN PFILE_OBJECT FileObject,
    return FALSE;
 }
 
-BOOLEAN NTAPI
+static BOOLEAN NTAPI
 VfatPrepareMdlWrite(IN PFILE_OBJECT FileObject,
 					IN PLARGE_INTEGER FileOffset,
 					IN ULONG Length,
@@ -214,7 +214,7 @@ VfatPrepareMdlWrite(IN PFILE_OBJECT FileObject,
    return FALSE;
 }
 
-BOOLEAN NTAPI
+static BOOLEAN NTAPI
 VfatMdlWriteComplete(IN PFILE_OBJECT FileObject,
 					 IN PLARGE_INTEGER FileOffset,
 					 IN PMDL MdlChain,
@@ -224,7 +224,7 @@ VfatMdlWriteComplete(IN PFILE_OBJECT FileObject,
    return FALSE;
 }
 
-BOOLEAN NTAPI
+static BOOLEAN NTAPI
 VfatFastIoReadCompressed(IN PFILE_OBJECT FileObject,
 						 IN PLARGE_INTEGER FileOffset,
 						 IN ULONG Length,
@@ -240,7 +240,7 @@ VfatFastIoReadCompressed(IN PFILE_OBJECT FileObject,
    return FALSE;
 }
 
-BOOLEAN NTAPI
+static BOOLEAN NTAPI
 VfatFastIoWriteCompressed(IN PFILE_OBJECT FileObject,
 						  IN PLARGE_INTEGER FileOffset,
 						  IN ULONG Length,
@@ -256,7 +256,7 @@ VfatFastIoWriteCompressed(IN PFILE_OBJECT FileObject,
    return FALSE;
 }
 
-BOOLEAN NTAPI
+static BOOLEAN NTAPI
 VfatMdlReadCompleteCompressed(IN PFILE_OBJECT FileObject,
 							  IN PMDL MdlChain,
 							  IN PDEVICE_OBJECT DeviceObject)
@@ -265,7 +265,7 @@ VfatMdlReadCompleteCompressed(IN PFILE_OBJECT FileObject,
    return FALSE;
 }
 
-BOOLEAN NTAPI
+static BOOLEAN NTAPI
 VfatMdlWriteCompleteCompressed(IN PFILE_OBJECT FileObject,
 							   IN PLARGE_INTEGER FileOffset,
 							   IN PMDL MdlChain,
@@ -275,7 +275,7 @@ VfatMdlWriteCompleteCompressed(IN PFILE_OBJECT FileObject,
    return FALSE;
 }
 
-BOOLEAN NTAPI
+static BOOLEAN NTAPI
 VfatFastIoQueryOpen(IN PIRP Irp,
 					OUT PFILE_NETWORK_OPEN_INFORMATION  NetworkInformation,
 					IN PDEVICE_OBJECT DeviceObject)
@@ -284,7 +284,7 @@ VfatFastIoQueryOpen(IN PIRP Irp,
    return FALSE;
 }
 
-NTSTATUS NTAPI
+static NTSTATUS NTAPI
 VfatReleaseForModWrite(IN PFILE_OBJECT FileObject,
 					   IN PERESOURCE ResourceToRelease,
 					   IN PDEVICE_OBJECT DeviceObject)
@@ -293,7 +293,7 @@ VfatReleaseForModWrite(IN PFILE_OBJECT FileObject,
    return STATUS_UNSUCCESSFUL;
 }
 
-NTSTATUS NTAPI
+static NTSTATUS NTAPI
 VfatAcquireForCcFlush(IN PFILE_OBJECT FileObject,
 					  IN PDEVICE_OBJECT DeviceObject)
 {
@@ -301,7 +301,7 @@ VfatAcquireForCcFlush(IN PFILE_OBJECT FileObject,
    return STATUS_UNSUCCESSFUL;
 }
 
-NTSTATUS NTAPI
+static NTSTATUS NTAPI
 VfatReleaseForCcFlush(IN PFILE_OBJECT FileObject,
 					  IN PDEVICE_OBJECT DeviceObject)
 {

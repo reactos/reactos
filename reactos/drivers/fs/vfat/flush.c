@@ -13,7 +13,7 @@
 
 /* FUNCTIONS ****************************************************************/
 
-NTSTATUS VfatFlushFile(PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb)
+static NTSTATUS VfatFlushFile(PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb)
 {
    IO_STATUS_BLOCK IoStatus;
    NTSTATUS Status;

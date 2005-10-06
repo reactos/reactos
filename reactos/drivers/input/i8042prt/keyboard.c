@@ -577,7 +577,7 @@ BOOLEAN STDCALL I8042KeyboardEnable(PDEVICE_EXTENSION DevExt)
 	return TRUE;
 }
 
-BOOLEAN STDCALL I8042KeyboardDefaultsAndDisable(PDEVICE_EXTENSION DevExt)
+static BOOLEAN STDCALL I8042KeyboardDefaultsAndDisable(PDEVICE_EXTENSION DevExt)
 {
 	DPRINT("Disabling keyboard\n");
 	if (STATUS_SUCCESS != I8042SynchWritePort(DevExt,

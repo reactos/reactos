@@ -23,6 +23,10 @@ NTSTATUS STDCALL
 MupCreate(PDEVICE_OBJECT DeviceObject,
 	  PIRP Irp);
 
+/* mup.c */
 
+NTSTATUS STDCALL
+DriverEntry(PDRIVER_OBJECT DriverObject,
+	    PUNICODE_STRING RegistryPath);
 
 #endif /* MUP_H */

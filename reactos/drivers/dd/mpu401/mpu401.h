@@ -148,4 +148,8 @@ NTSTATUS STDCALL LoadSettings(
     IN  PVOID Context,
     IN  PVOID EntryContext);
 
+NTSTATUS STDCALL
+DriverEntry(PDRIVER_OBJECT DriverObject,
+	    PUNICODE_STRING RegistryPath);
+
 #endif

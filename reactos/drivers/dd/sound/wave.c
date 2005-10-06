@@ -29,7 +29,8 @@ SB16 sb16;
 
 ULONG OldIRQ;
 PKINTERRUPT IrqObject;
-BOOLEAN STDCALL DMAOutputISR(PKINTERRUPT Interrupt, PVOID ServiceContext)
+
+static BOOLEAN STDCALL DMAOutputISR(PKINTERRUPT Interrupt, PVOID ServiceContext)
 {
 	DPRINT1("interrupt\n");
 	return FALSE;

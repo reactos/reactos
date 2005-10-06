@@ -8,6 +8,7 @@
  */
 
 #include <ntddk.h>
+#include <ntifs.h>
 #include <ntddser.h>
 #include <stdio.h>
 
@@ -107,12 +108,6 @@ SerenumFdoPnp(
 /************************************ misc.c */
 
 NTSTATUS
-SerenumDuplicateUnicodeString(
-	OUT PUNICODE_STRING Destination,
-	IN PUNICODE_STRING Source,
-	IN POOL_TYPE PoolType);
-
-NTSTATUS
 SerenumInitMultiSzString(
 	OUT PUNICODE_STRING Destination,
 	... /* list of PCSZ */);
@@ -143,3 +138,10 @@ NTSTATUS
 SerenumPdoPnp(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
+
+/************************************ serenum.c */
+
+NTSTATUS STDCALL
+DriverEntry(
+	IN PDRIVER_OBJECT DriverObject,
+	IN PUNICODE_STRING RegPath);

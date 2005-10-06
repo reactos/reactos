@@ -3,3 +3,6 @@ typedef struct _RAMDRV_DEVICE_EXTENSION {
   unsigned long Size;
 } RAMDRV_DEVICE_EXTENSION, *PRAMDRV_DEVICE_EXTENSION;
 
+NTSTATUS STDCALL DriverEntry(IN PDRIVER_OBJECT DriverObject,
+			     IN PUNICODE_STRING RegistryPath);
+

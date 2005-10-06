@@ -106,10 +106,13 @@ typedef struct _DEVICE_EXTENSION
  * Functions
  */
 
+NTSTATUS STDCALL
+DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath);
+
 /* Waits until the mouse calms down but also quits out after a while
  * in case some destructive user wants to keep moving the mouse
  * before we're done */
-VOID ClearMouse(ULONG Port)
+static VOID ClearMouse(ULONG Port)
 {
 	ULONG Restarts = 0;
 	ULONG i;
@@ -129,7 +132,7 @@ VOID ClearMouse(ULONG Port)
 	}
 }
 
-BOOLEAN STDCALL
+static BOOLEAN STDCALL
 SerialMouseInterruptService(IN PKINTERRUPT Interrupt, PVOID ServiceContext)
 {
 	PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT)ServiceContext;
@@ -249,18 +252,18 @@ SerialMouseInterruptService(IN PKINTERRUPT Interrupt, PVOID ServiceContext)
 	return TRUE;
 }
 
-VOID
+static VOID
 SerialMouseInitializeDataQueue(PVOID Context)
 {
 }
 
-BOOLEAN STDCALL
+static BOOLEAN STDCALL
 MouseSynchronizeRoutine(PVOID Context)
 {
 	return TRUE;
 }
 
-VOID STDCALL
+static VOID STDCALL
 SerialMouseStartIo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
 	PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
@@ -285,7 +288,7 @@ SerialMouseStartIo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	}
 }
 
-NTSTATUS STDCALL
+static NTSTATUS STDCALL
 SerialMouseInternalDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
 	PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
@@ -339,7 +342,7 @@ SerialMouseInternalDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 	return Status;
 }
 
-NTSTATUS STDCALL
+static NTSTATUS STDCALL
 SerialMouseDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
 	PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
@@ -372,7 +375,7 @@ SerialMouseDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 	return Status;
 }
 
-VOID SerialMouseIsrDpc(PKDPC Dpc, PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
+static VOID SerialMouseIsrDpc(PKDPC Dpc, PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID Context)
 {
 	PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;
 	ULONG Queue;
@@ -388,7 +391,7 @@ VOID SerialMouseIsrDpc(PKDPC Dpc, PDEVICE_OBJECT DeviceObject, PIRP Irp, PVOID C
 	DeviceExtension->InputDataCount[Queue] = 0;
 }
 
-VOID InitializeSerialPort(ULONG Port)
+static VOID InitializeSerialPort(ULONG Port)
 {
 	/* DLAB off */
 	WRITE_PORT_UCHAR((PUCHAR)Port + 3, 0);
@@ -403,7 +406,7 @@ VOID InitializeSerialPort(ULONG Port)
 	WRITE_PORT_UCHAR((PUCHAR)Port + 3, 2);
 }
 
-BOOLEAN UARTReadChar(ULONG Port, CHAR *Value, ULONG Timeout)
+static BOOLEAN UARTReadChar(ULONG Port, CHAR *Value, ULONG Timeout)
 {
 	ULONG i, j;
 
@@ -429,7 +432,7 @@ BOOLEAN UARTReadChar(ULONG Port, CHAR *Value, ULONG Timeout)
 	return FALSE;
 }
 
-ULONG DetectMicrosoftMouse(ULONG Port)
+static ULONG DetectMicrosoftMouse(ULONG Port)
 {
 	CHAR Buffer[8];
 	ULONG Count, i;
@@ -507,7 +510,7 @@ ULONG DetectMicrosoftMouse(ULONG Port)
 	return MOUSE_TYPE_NONE;
 }
 
-PDEVICE_OBJECT
+static PDEVICE_OBJECT
 AllocatePointerDevice(PDRIVER_OBJECT DriverObject)
 {
 	PDEVICE_OBJECT DeviceObject;
@@ -558,7 +561,7 @@ AllocatePointerDevice(PDRIVER_OBJECT DriverObject)
 	return DeviceObject;
 }
 
-BOOLEAN
+static BOOLEAN
 InitializeMouse(ULONG Port, ULONG Irq, PDRIVER_OBJECT DriverObject)
 {
 	PDEVICE_EXTENSION DeviceExtension;

@@ -479,7 +479,7 @@ VfatGetAllInformation(PFILE_OBJECT FileObject,
   return STATUS_SUCCESS;
 }
 
-VOID UpdateFileSize(PFILE_OBJECT FileObject, PVFATFCB Fcb, ULONG Size, ULONG ClusterSize)
+static VOID UpdateFileSize(PFILE_OBJECT FileObject, PVFATFCB Fcb, ULONG Size, ULONG ClusterSize)
 {
    if (Size > 0)
    {

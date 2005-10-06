@@ -22,7 +22,7 @@
 
 /*  --------------------------------------------------------  PUBLICS  */
 
-ULONG vfatNameHash(ULONG hash, PUNICODE_STRING NameU)
+static ULONG vfatNameHash(ULONG hash, PUNICODE_STRING NameU)
 {
   PWCHAR last;
   PWCHAR curr;
@@ -65,7 +65,7 @@ vfatSplitPathName(PUNICODE_STRING PathNameU, PUNICODE_STRING DirNameU, PUNICODE_
     }
 }
 
-VOID
+static VOID
 vfatInitFcb(PVFATFCB Fcb, PUNICODE_STRING NameU)
 {
   USHORT PathNameBufferLength;
@@ -310,7 +310,7 @@ vfatGrabFCBFromTable(PDEVICE_EXTENSION  pVCB, PUNICODE_STRING  PathNameU)
   return  NULL;
 }
 
-NTSTATUS
+static NTSTATUS
 vfatFCBInitializeCacheFromVolume (PVCB  vcb, PVFATFCB  fcb)
 {
 #ifdef USE_ROS_CC_AND_FS

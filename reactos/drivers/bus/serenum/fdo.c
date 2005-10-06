@@ -68,7 +68,7 @@ SerenumAddDevice(
 	return STATUS_SUCCESS;
 }
 
-NTSTATUS STDCALL
+static NTSTATUS STDCALL
 SerenumFdoStartDevice(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
@@ -93,7 +93,7 @@ SerenumFdoStartDevice(
 	return STATUS_SUCCESS;
 }
 
-NTSTATUS
+static NTSTATUS
 SerenumFdoQueryBusRelations(
 	IN PDEVICE_OBJECT DeviceObject,
 	OUT PDEVICE_RELATIONS* pDeviceRelations)

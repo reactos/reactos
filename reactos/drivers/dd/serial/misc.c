@@ -11,7 +11,7 @@
 #define NDEBUG
 #include "serial.h"
 
-NTSTATUS STDCALL
+static NTSTATUS STDCALL
 ForwardIrpAndWaitCompletion(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp,

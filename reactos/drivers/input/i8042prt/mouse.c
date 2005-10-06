@@ -22,21 +22,23 @@
  * These functions are callbacks for filter driver custom interrupt
  * service routines.
  */
-VOID STDCALL I8042IsrWritePortMouse(PVOID Context,
-                                    UCHAR Value)
+static VOID STDCALL I8042IsrWritePortMouse(PVOID Context,
+                                           UCHAR Value)
 {
 	I8042IsrWritePort(Context, Value, 0xD4);
 }
 
-NTSTATUS STDCALL I8042SynchWritePortMouse(PVOID Context,
-                                         UCHAR Value,
-                                         BOOLEAN WaitForAck)
+#if 0
+static NTSTATUS STDCALL I8042SynchWritePortMouse(PVOID Context,
+                                                 UCHAR Value,
+                                                 BOOLEAN WaitForAck)
 {
 	return I8042SynchWritePort((PDEVICE_EXTENSION)Context,
 	                           0xD4,
 	                           Value,
 	                           WaitForAck);
 }
+#endif
 
 /* Test if packets are taking too long to come in. If they do, we
  * might have gotten out of sync and should just drop what we have.
@@ -77,10 +79,10 @@ static VOID STDCALL I8042MouseInputTestTimeout(PDEVICE_EXTENSION DevExt)
  * we should return (indicating to the system wether someone else
  * should try to handle the interrupt)
  */
-BOOLEAN STDCALL I8042MouseCallIsrHook(PDEVICE_EXTENSION DevExt,
-                                      UCHAR Status,
-                                      PUCHAR Input,
-				      PBOOLEAN ToReturn)
+static BOOLEAN STDCALL I8042MouseCallIsrHook(PDEVICE_EXTENSION DevExt,
+                                             UCHAR Status,
+                                             PUCHAR Input,
+				                             PBOOLEAN ToReturn)
 {
 	BOOLEAN HookReturn, HookContinue;
 
@@ -105,9 +107,9 @@ BOOLEAN STDCALL I8042MouseCallIsrHook(PDEVICE_EXTENSION DevExt,
 	return FALSE;
 }
 
-BOOLEAN STDCALL I8042MouseResetIsr(PDEVICE_EXTENSION DevExt,
-                                   UCHAR Status,
-                                   PUCHAR Value)
+static BOOLEAN STDCALL I8042MouseResetIsr(PDEVICE_EXTENSION DevExt,
+                                          UCHAR Status,
+                                          PUCHAR Value)
 {
 	BOOLEAN ToReturn = FALSE;
 
@@ -663,7 +665,8 @@ VOID STDCALL I8042DpcRoutineMouseTimeout(PKDPC Dpc,
  * returns FALSE if it doesn't understand the
  * call so someone else can handle it.
  */
-BOOLEAN STDCALL I8042StartIoMouse(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+#if 0
+static BOOLEAN STDCALL I8042StartIoMouse(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
 	PIO_STACK_LOCATION Stk;
 	PFDO_DEVICE_EXTENSION FdoDevExt = DeviceObject->DeviceExtension;
@@ -687,6 +690,7 @@ BOOLEAN STDCALL I8042StartIoMouse(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 
 	return TRUE;
 }
+#endif
 
 /*
  * Runs the mouse IOCTL_INTERNAL dispatch.

@@ -16,4 +16,7 @@ typedef enum __tagNULL_EXTENSION{
 
 #define NULL_DEVICE_TYPE(__DEVICE__) (*((PNULL_EXTENSION)((__DEVICE__)->DeviceExtension)))
 
+NTSTATUS STDCALL
+DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath);
+
 /* EOF */

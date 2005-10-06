@@ -408,4 +408,10 @@ NTSTATUS STDCALL
 CdfsSetVolumeInformation(PDEVICE_OBJECT DeviceObject,
 			 PIRP Irp);
 
+/* cdfs.c */
+
+NTSTATUS STDCALL
+DriverEntry(PDRIVER_OBJECT DriverObject,
+	    PUNICODE_STRING RegistryPath);
+
 #endif //CDFS_H

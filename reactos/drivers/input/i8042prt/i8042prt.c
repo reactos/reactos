@@ -460,14 +460,14 @@ hookworkitemdone:
 	DPRINT("HookWorkItem done\n");
 }
 
-VOID STDCALL I8042StartIo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+static VOID STDCALL I8042StartIo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
 	if (!I8042StartIoKbd(DeviceObject, Irp)) {
 		DPRINT1("Unhandled StartIo!\n");
 	}
 }
 
-NTSTATUS STDCALL I8042InternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+static NTSTATUS STDCALL I8042InternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
 	NTSTATUS Status = STATUS_INVALID_DEVICE_REQUEST;
 	PFDO_DEVICE_EXTENSION FdoDevExt = DeviceObject->DeviceExtension;
@@ -493,7 +493,7 @@ NTSTATUS STDCALL I8042InternalDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Ir
 	return Status;
 }
 
-NTSTATUS STDCALL I8042CreateDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+static NTSTATUS STDCALL I8042CreateDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
 	NTSTATUS Status;
 

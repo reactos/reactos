@@ -108,13 +108,14 @@ static inline UCHAR ReadData(VOID)
 	return READ_PORT_UCHAR(IsaPnPReadPort);
 }
 
-UCHAR ReadUchar(UCHAR Index)
+static UCHAR ReadUchar(UCHAR Index)
 {
 	WriteAddress(Index);
 	return ReadData();
 }
 
-USHORT ReadUshort(UCHAR Index)
+#if 0
+static USHORT ReadUshort(UCHAR Index)
 {
 	USHORT Value;
 
@@ -123,7 +124,7 @@ USHORT ReadUshort(UCHAR Index)
 	return Value;
 }
 
-ULONG ReadUlong(UCHAR Index)
+static ULONG ReadUlong(UCHAR Index)
 {
 	ULONG Value;
 
@@ -133,26 +134,29 @@ ULONG ReadUlong(UCHAR Index)
 	Value = (Value << 8) + ReadUchar(Index + 3);
 	return Value;
 }
+#endif
 
-VOID WriteUchar(UCHAR Index, UCHAR Value)
+static VOID WriteUchar(UCHAR Index, UCHAR Value)
 {
 	WriteAddress(Index);
 	WriteData(Value);
 }
 
-VOID WriteUshort(UCHAR Index, USHORT Value)
+#if 0
+static VOID WriteUshort(UCHAR Index, USHORT Value)
 {
 	WriteUchar(Index, Value >> 8);
 	WriteUchar(Index + 1, Value);
 }
 
-VOID WriteUlong(UCHAR Index, ULONG Value)
+static VOID WriteUlong(UCHAR Index, ULONG Value)
 {
 	WriteUchar(Index, Value >> 24);
 	WriteUchar(Index + 1, Value >> 16);
 	WriteUchar(Index + 2, Value >> 8);
 	WriteUchar(Index + 3, Value);
 }
+#endif
 
 static inline VOID SetReadDataPort(ULONG Port)
 {
@@ -187,29 +191,31 @@ static VOID SendWait(VOID)
 	WriteUchar(0x02, 0x02);
 }
 
-VOID SendWake(UCHAR csn)
+static VOID SendWake(UCHAR csn)
 {
 	WriteUchar(ISAPNP_CARD_WAKECSN, csn);
 }
 
-VOID SelectLogicalDevice(UCHAR LogicalDevice)
+#if 0
+static VOID SelectLogicalDevice(UCHAR LogicalDevice)
 {
 	WriteUchar(ISAPNP_CARD_LOG_DEVICE_NUM, LogicalDevice);
 }
 
-VOID ActivateLogicalDevice(UCHAR LogicalDevice)
+static VOID ActivateLogicalDevice(UCHAR LogicalDevice)
 {
 	SelectLogicalDevice(LogicalDevice);
 	WriteUchar(ISAPNP_CONTROL_ACTIVATE, 0x1);
 	KeStallExecutionProcessor(250);
 }
 
-VOID DeactivateLogicalDevice(UCHAR LogicalDevice)
+static VOID DeactivateLogicalDevice(UCHAR LogicalDevice)
 {
 	SelectLogicalDevice(LogicalDevice);
 	WriteUchar(ISAPNP_CONTROL_ACTIVATE, 0x0);
 	KeStallExecutionProcessor(500);
 }
+#endif
 
 #define READ_DATA_PORT_STEP 32  /* Minimum is 4 */
 
@@ -357,7 +363,7 @@ next:
 }
 
 
-VOID Peek(PUCHAR Data, ULONG Count)
+static VOID Peek(PUCHAR Data, ULONG Count)
 {
 	ULONG i, j;
 	UCHAR d = 0;
@@ -1414,7 +1420,7 @@ static NTSTATUS BuildDeviceList(PISAPNP_DEVICE_EXTENSION DeviceExtension)
 }
 
 
-NTSTATUS
+static NTSTATUS
 ISAPNPQueryBusRelations(
   IN PDEVICE_OBJECT DeviceObject,
   IN PIRP Irp,
@@ -1482,7 +1488,7 @@ ISAPNPQueryBusRelations(
 }
 
 
-NTSTATUS
+static NTSTATUS
 ISAPNPQueryDeviceRelations(
   IN PDEVICE_OBJECT DeviceObject,
   IN PIRP Irp,
@@ -1511,7 +1517,7 @@ ISAPNPQueryDeviceRelations(
 }
 
 
-NTSTATUS
+static NTSTATUS
 ISAPNPStartDevice(
   IN PDEVICE_OBJECT DeviceObject,
   IN PIRP Irp,
@@ -1550,7 +1556,7 @@ ISAPNPStartDevice(
 }
 
 
-NTSTATUS
+static NTSTATUS
 ISAPNPStopDevice(
   IN PDEVICE_OBJECT DeviceObject,
   IN PIRP Irp,
@@ -1571,7 +1577,7 @@ ISAPNPStopDevice(
 }
 
 
-NTSTATUS
+static NTSTATUS
 STDCALL
 ISAPNPDispatchOpenClose(
   IN PDEVICE_OBJECT DeviceObject,
@@ -1587,7 +1593,7 @@ ISAPNPDispatchOpenClose(
 }
 
 
-NTSTATUS
+static NTSTATUS
 STDCALL
 ISAPNPDispatchReadWrite(
   IN PDEVICE_OBJECT PhysicalDeviceObject,
@@ -1603,7 +1609,7 @@ ISAPNPDispatchReadWrite(
 }
 
 
-NTSTATUS
+static NTSTATUS
 STDCALL
 ISAPNPDispatchDeviceControl(
   IN PDEVICE_OBJECT DeviceObject,
@@ -1635,7 +1641,7 @@ ISAPNPDispatchDeviceControl(
 }
 
 
-NTSTATUS
+static NTSTATUS
 STDCALL
 ISAPNPControl(
   IN PDEVICE_OBJECT DeviceObject,
@@ -1677,7 +1683,7 @@ ISAPNPControl(
 }
 
 
-NTSTATUS
+static NTSTATUS
 STDCALL
 ISAPNPAddDevice(
   IN PDRIVER_OBJECT DriverObject,

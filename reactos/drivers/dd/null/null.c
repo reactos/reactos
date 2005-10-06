@@ -23,7 +23,7 @@ static const NULL_EXTENSION nxNull = NullBitBucket;
 static const NULL_EXTENSION nxZero = NullZeroStream;
 
 /* FUNCTIONS */
-NTSTATUS STDCALL
+static NTSTATUS STDCALL
 NullDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
     PIO_STACK_LOCATION piosStack = IoGetCurrentIrpStackLocation(Irp);
@@ -141,7 +141,7 @@ NullDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
     return (nErrCode);
 }
 
-VOID STDCALL
+static VOID STDCALL
 NullUnload(PDRIVER_OBJECT DriverObject)
 {
 }

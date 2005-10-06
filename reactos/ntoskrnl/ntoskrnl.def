@@ -1018,6 +1018,7 @@ RtlDescribeChunk@20
 RtlDestroyAtomTable@4
 RtlDestroyHeap@4
 RtlDowncaseUnicodeString@12
+RtlDuplicateUnicodeString@12
 RtlEmptyAtomTable@8
 RtlEnlargedIntegerMultiply@8
 RtlEnlargedUnsignedDivide@16

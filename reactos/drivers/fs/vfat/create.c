@@ -432,7 +432,7 @@ VfatOpenFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject, PVFATFCB* Pa
   return  Status;
 }
 
-NTSTATUS
+static NTSTATUS
 VfatCreateFile (PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
  * FUNCTION: Create or open a file

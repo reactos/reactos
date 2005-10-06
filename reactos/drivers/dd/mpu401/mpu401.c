@@ -28,7 +28,7 @@ UINT DeviceCount = 0;
 
 /* FUNCTIONS ***************************************************************/
 
-NTSTATUS InitDevice(
+static NTSTATUS InitDevice(
     IN PUNICODE_STRING RegistryPath,
     IN PVOID Context)
 {

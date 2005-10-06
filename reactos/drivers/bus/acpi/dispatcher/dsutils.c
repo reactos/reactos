@@ -239,7 +239,7 @@ acpi_ds_create_operand (
 	ACPI_OPERAND_OBJECT     *obj_desc;
 	ACPI_PARSE_OBJECT       *parent_op;
 	u16                     opcode;
-	u32                     flags;
+	u32                     flags = 0;
 	OPERATING_MODE          interpreter_mode;
 
 

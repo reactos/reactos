@@ -279,10 +279,12 @@ ReadVCN (PDEVICE_EXTENSION Vcb,
 }
 
 
+#if 0
 BOOL bitset(PUCHAR bitmap, ULONG i)
 {
 	return (bitmap[i>>3] & (1 << (i & 7))) !=0;
 }
+#endif
 
 
 VOID FixupUpdateSequenceArray(PFILE_RECORD_HEADER file)

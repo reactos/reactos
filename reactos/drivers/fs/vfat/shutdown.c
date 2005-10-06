@@ -13,7 +13,7 @@
 
 /* FUNCTIONS ****************************************************************/
 
-NTSTATUS
+static NTSTATUS
 VfatDiskShutDown(PVCB Vcb)
 {
    PIRP Irp;

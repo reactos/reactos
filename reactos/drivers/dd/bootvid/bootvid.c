@@ -221,7 +221,7 @@ InbvInitVGAMode(VOID)
 }
 
 
-BOOL STDCALL
+static BOOL STDCALL
 VidResetDisplay(VOID)
 {
    /*
@@ -233,7 +233,7 @@ VidResetDisplay(VOID)
 }
 
 
-VOID STDCALL
+static VOID STDCALL
 VidCleanUp(VOID)
 {
    InbvUnmapVideoMemory();
@@ -580,7 +580,7 @@ VidInitialize(VOID)
 }
 
 
-NTSTATUS STDCALL
+static NTSTATUS STDCALL
 VidDispatch(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
    PIO_STACK_LOCATION IrpSp;

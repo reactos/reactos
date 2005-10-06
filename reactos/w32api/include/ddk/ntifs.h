@@ -3643,6 +3643,14 @@ RtlCopySid (
 );
 
 NTSYSAPI
+BOOLEAN
+NTAPI
+RtlCreateUnicodeString(
+    PUNICODE_STRING DestinationString,
+    PCWSTR SourceString
+);
+
+NTSYSAPI
 NTSTATUS
 NTAPI
 RtlDecompressBuffer (
@@ -3699,6 +3707,15 @@ RtlDowncaseUnicodeString(
     IN OUT PUNICODE_STRING UniDest,
     IN PCUNICODE_STRING UniSource,
     IN BOOLEAN AllocateDestinationString
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlDuplicateUnicodeString(
+    IN ULONG Flags,
+    IN PCUNICODE_STRING SourceString,
+    OUT PUNICODE_STRING DestinationString
 );
 
 NTSYSAPI

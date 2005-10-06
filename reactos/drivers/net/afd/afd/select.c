@@ -12,7 +12,7 @@
 #include "tdiconn.h"
 #include "debug.h"
 
-VOID PrintEvents( ULONG Events ) {
+static VOID PrintEvents( ULONG Events ) {
 #if DBG
     char *events_list[] = { "AFD_EVENT_RECEIVE",
                             "AFD_EVENT_OOB_RECEIVE",
@@ -33,7 +33,7 @@ VOID PrintEvents( ULONG Events ) {
 #endif
 }
 
-VOID CopyBackStatus( PAFD_HANDLE HandleArray,
+static VOID CopyBackStatus( PAFD_HANDLE HandleArray,
 		     UINT HandleCount ) {
     UINT i;
 
@@ -43,7 +43,7 @@ VOID CopyBackStatus( PAFD_HANDLE HandleArray,
     }
 }
 
-VOID ZeroEvents( PAFD_HANDLE HandleArray,
+static VOID ZeroEvents( PAFD_HANDLE HandleArray,
 		 UINT HandleCount ) {
     UINT i;
 
@@ -51,7 +51,7 @@ VOID ZeroEvents( PAFD_HANDLE HandleArray,
 	HandleArray[i].Status = 0;
 }
 
-VOID RemoveSelect( PAFD_ACTIVE_POLL Poll ) {
+static VOID RemoveSelect( PAFD_ACTIVE_POLL Poll ) {
     AFD_DbgPrint(MID_TRACE,("Called\n"));
 
     RemoveEntryList( &Poll->ListEntry );
@@ -62,7 +62,7 @@ VOID RemoveSelect( PAFD_ACTIVE_POLL Poll ) {
     AFD_DbgPrint(MID_TRACE,("Done\n"));
 }
 
-VOID SignalSocket( PAFD_ACTIVE_POLL Poll, PAFD_POLL_INFO PollReq,
+static VOID SignalSocket( PAFD_ACTIVE_POLL Poll, PAFD_POLL_INFO PollReq,
 		   NTSTATUS Status ) {
     UINT i;
     PIRP Irp = Poll->Irp;
@@ -89,7 +89,7 @@ VOID SignalSocket( PAFD_ACTIVE_POLL Poll, PAFD_POLL_INFO PollReq,
     AFD_DbgPrint(MID_TRACE,("Done\n"));
 }
 
-VOID SelectTimeout( PKDPC Dpc,
+static VOID SelectTimeout( PKDPC Dpc,
 		    PVOID DeferredContext,
 		    PVOID SystemArgument1,
 		    PVOID SystemArgument2 ) {
@@ -324,7 +324,7 @@ AfdEnumEvents( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 }
 
 /* * * NOTE ALWAYS CALLED AT DISPATCH_LEVEL * * */
-BOOLEAN UpdatePollWithFCB( PAFD_ACTIVE_POLL Poll, PFILE_OBJECT FileObject ) {
+static BOOLEAN UpdatePollWithFCB( PAFD_ACTIVE_POLL Poll, PFILE_OBJECT FileObject ) {
     UINT i;
     PAFD_FCB FCB;
     UINT Signalled = 0;

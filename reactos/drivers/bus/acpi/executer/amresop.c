@@ -53,7 +53,7 @@
  *
  ******************************************************************************/
 
-ACPI_STATUS
+static ACPI_STATUS
 acpi_aml_check_object_type (
 	ACPI_OBJECT_TYPE        type_needed,
 	ACPI_OBJECT_TYPE        this_type,

@@ -30,4 +30,19 @@ NTSTATUS TdiQueryInformation(
     LONG QueryType,
     PMDL MdlBuffer);
 
+NTSTATUS TdiSetEventHandler(
+    PFILE_OBJECT FileObject,
+    LONG EventType,
+    PVOID Handler,
+    PVOID Context);
+
+NTSTATUS TdiQueryDeviceControl(
+    PFILE_OBJECT FileObject,
+    ULONG IoControlCode,
+    PVOID InputBuffer,
+    ULONG InputBufferLength,
+    PVOID OutputBuffer,
+    ULONG OutputBufferLength,
+    PULONG Return);
+
 #endif/*_TDI_PROTO_H*/

@@ -9,6 +9,7 @@
  */
 
 #include <ddk/ntddk.h>
+#include <ddk/ntifs.h>
 #include <stdio.h>
 
 #include "pcidef.h"
@@ -32,7 +33,7 @@
 
 /*** PRIVATE *****************************************************************/
 
-NTSTATUS
+static NTSTATUS
 STDCALL
 PciDispatchDeviceControl(
   IN PDEVICE_OBJECT DeviceObject,
@@ -67,7 +68,7 @@ PciDispatchDeviceControl(
 }
 
 
-NTSTATUS
+static NTSTATUS
 STDCALL
 PciPnpControl(
   IN PDEVICE_OBJECT DeviceObject,
@@ -98,7 +99,7 @@ PciPnpControl(
 }
 
 
-NTSTATUS
+static NTSTATUS
 STDCALL
 PciPowerControl(
   IN PDEVICE_OBJECT DeviceObject,
@@ -127,7 +128,7 @@ PciPowerControl(
 }
 
 
-NTSTATUS
+static NTSTATUS
 STDCALL
 PciAddDevice(
   IN PDRIVER_OBJECT DriverObject,
@@ -185,65 +186,6 @@ DriverEntry(
 
 
 BOOLEAN
-PciCreateUnicodeString(
-  PUNICODE_STRING Destination,
-  PWSTR Source,
-  POOL_TYPE PoolType)
-{
-  ULONG Length;
-
-  if (!Source)
-  {
-    RtlInitUnicodeString(Destination, NULL);
-    return TRUE;
-  }
-
-  Length = (wcslen(Source) + 1) * sizeof(WCHAR);
-
-  Destination->Buffer = ExAllocatePool(PoolType, Length);
-
-  if (Destination->Buffer == NULL)
-  {
-    return FALSE;
-  }
-
-  RtlCopyMemory(Destination->Buffer, Source, Length);
-
-  Destination->MaximumLength = Length;
-
-  Destination->Length = Length - sizeof(WCHAR);
-
-  return TRUE;
-}
-
-
-NTSTATUS
-PciDuplicateUnicodeString(
-  PUNICODE_STRING Destination,
-  PUNICODE_STRING Source,
-  POOL_TYPE PoolType)
-{
-  if (Source == NULL)
-  {
-    RtlInitUnicodeString(Destination, NULL);
-    return STATUS_SUCCESS;
-  }
-
-  Destination->Buffer = ExAllocatePool(PoolType, Source->MaximumLength);
-  if (Destination->Buffer == NULL)
-  {
-    return STATUS_INSUFFICIENT_RESOURCES;
-  }
-
-  Destination->MaximumLength = Source->MaximumLength;
-  Destination->Length = Source->Length;
-  RtlCopyMemory(Destination->Buffer, Source->Buffer, Source->MaximumLength);
-
-  return STATUS_SUCCESS;
-}
-
-
-BOOLEAN
 PciCreateDeviceIDString(PUNICODE_STRING DeviceID,
                         PPCI_DEVICE Device)
 {
@@ -257,7 +199,7 @@ PciCreateDeviceIDString(PUNICODE_STRING DeviceID,
            Device->PciConfig.u.type0.SubVendorID,
            Device->PciConfig.RevisionID);
 
-  if (!PciCreateUnicodeString(DeviceID, Buffer, PagedPool))
+  if (!RtlCreateUnicodeString(DeviceID, Buffer))
   {
     return FALSE;
   }
@@ -311,12 +253,12 @@ PciCreateInstanceIDString(PUNICODE_STRING InstanceID,
   {
      //DPRINT("xbox ohci controler found at bus 0x%lX, dev num %d, func num %d\n", Device->BusNumber, Device->SlotNumber.u.bits.DeviceNumber, Device->SlotNumber.u.bits.FunctionNumber);
 	 if (Device->SlotNumber.u.bits.DeviceNumber == 2)
-       return PciCreateUnicodeString(InstanceID, L"0000", PagedPool);
+       return RtlCreateUnicodeString(InstanceID, L"0000");
 	 else
-       return PciCreateUnicodeString(InstanceID, L"0001", PagedPool);
+       return RtlCreateUnicodeString(InstanceID, L"0001");
   }
   else
-	return PciCreateUnicodeString(InstanceID, L"0000", PagedPool);
+	return RtlCreateUnicodeString(InstanceID, L"0000");
 }
 
 

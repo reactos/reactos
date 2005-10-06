@@ -298,6 +298,9 @@ VOID STDCALL I8042SendHookWorkItem(PDEVICE_OBJECT DeviceObject,
 
 BOOLEAN I8042Write(PDEVICE_EXTENSION DevExt, PUCHAR addr, UCHAR data);
 
+NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT DriverObject,
+			     PUNICODE_STRING RegistryPath);
+
 /* keyboard.c */
 VOID STDCALL I8042IsrWritePortKbd(PVOID Context,
                                   UCHAR Value);

@@ -69,10 +69,10 @@ SerenumPdoQueryId(
 			return STATUS_NOT_SUPPORTED;
 	}
 
-	Status = SerenumDuplicateUnicodeString(
-		&String,
+	Status = RtlDuplicateUnicodeString(
+		RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
 		SourceString,
-		PagedPool);
+		&String);
 	*Information = (ULONG_PTR)String.Buffer;
 	return Status;
 }

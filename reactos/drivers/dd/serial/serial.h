@@ -345,3 +345,9 @@ SerialWrite(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp);
 
+/************************************ serial.c */
+
+NTSTATUS STDCALL
+DriverEntry(
+	IN PDRIVER_OBJECT DriverObject,
+	IN PUNICODE_STRING RegPath);

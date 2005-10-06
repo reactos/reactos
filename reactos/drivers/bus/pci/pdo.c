@@ -9,6 +9,7 @@
  */
 
 #include <ddk/ntddk.h>
+#include <ddk/ntifs.h>
 #include <initguid.h>
 #include <ddk/wdmguid.h>
 #include "pcidef.h"
@@ -77,10 +78,10 @@ PdoQueryId(
 
   switch (IrpSp->Parameters.QueryId.IdType) {
     case BusQueryDeviceID:
-      Status = PciDuplicateUnicodeString(
-        &String,
+      Status = RtlDuplicateUnicodeString(
+        RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
         &DeviceExtension->DeviceID,
-        PagedPool);
+        &String);
 
       DPRINT("DeviceID: %S\n", String.Buffer);
 
@@ -88,28 +89,28 @@ PdoQueryId(
       break;
 
     case BusQueryHardwareIDs:
-      Status = PciDuplicateUnicodeString(
-        &String,
+      Status = RtlDuplicateUnicodeString(
+        RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
         &DeviceExtension->HardwareIDs,
-        PagedPool);
+        &String);
 
       Irp->IoStatus.Information = (ULONG_PTR)String.Buffer;
       break;
 
     case BusQueryCompatibleIDs:
-      Status = PciDuplicateUnicodeString(
-        &String,
+      Status = RtlDuplicateUnicodeString(
+        RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
         &DeviceExtension->CompatibleIDs,
-        PagedPool);
+        &String);
 
       Irp->IoStatus.Information = (ULONG_PTR)String.Buffer;
       break;
 
     case BusQueryInstanceID:
-      Status = PciDuplicateUnicodeString(
-        &String,
+      Status = RtlDuplicateUnicodeString(
+        RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
         &DeviceExtension->InstanceID,
-        PagedPool);
+        &String);
 
       DPRINT("InstanceID: %S\n", String.Buffer);
 

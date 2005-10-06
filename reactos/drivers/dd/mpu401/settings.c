@@ -17,8 +17,8 @@
 #include <debug.h>
 #include "sbdebug.h"  // our own debug helper
 
-
-NTSTATUS
+#if 0
+static NTSTATUS
 OpenDevicesKey(
     IN PWSTR RegistryPath,
     OUT PHANDLE Key)
@@ -67,7 +67,7 @@ OpenDevicesKey(
 
     return s;
 }
-
+#endif
 
 
 NTSTATUS STDCALL EnumDeviceKeys(
@@ -275,8 +275,8 @@ NTSTATUS STDCALL LoadSettings(
 }
 
 
-
-NTSTATUS SaveSettings(
+#if 0
+static NTSTATUS SaveSettings(
     IN  PWSTR RegistryPath,
     IN  ULONG Port,
     IN  ULONG IRQ,
@@ -303,3 +303,5 @@ NTSTATUS SaveSettings(
 
     return STATUS_SUCCESS;
 }
+#endif
+

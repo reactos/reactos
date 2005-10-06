@@ -13,9 +13,11 @@
 #endif
 #include "debug.h"
 #include "tdiconn.h"
+#include "tdi_proto.h"
 
 #ifdef DBG
-VOID DisplayBuffer(
+#if 0
+static VOID DisplayBuffer(
     PVOID Buffer,
     ULONG Size)
 {
@@ -40,9 +42,10 @@ VOID DisplayBuffer(
     }
     DbgPrint("\n");
 }
+#endif
 #endif /* DBG */
 
-NTSTATUS TdiCall(
+static NTSTATUS TdiCall(
     PIRP Irp,
     PDEVICE_OBJECT DeviceObject,
     PKEVENT Event,
@@ -85,7 +88,7 @@ NTSTATUS TdiCall(
 }
 
 
-NTSTATUS TdiOpenDevice(
+static NTSTATUS TdiOpenDevice(
     PUNICODE_STRING DeviceName,
     ULONG EaLength,
     PFILE_FULL_EA_INFORMATION EaInfo,

@@ -112,12 +112,6 @@ PciCreateUnicodeString(
   PWSTR Source,
   POOL_TYPE PoolType);
 
-NTSTATUS
-PciDuplicateUnicodeString(
-  PUNICODE_STRING Destination,
-  PUNICODE_STRING Source,
-  POOL_TYPE PoolType);
-
 BOOLEAN
 PciCreateDeviceIDString(
   PUNICODE_STRING DeviceID,
@@ -159,5 +153,11 @@ NTSTATUS
 PdoPowerControl(
   PDEVICE_OBJECT DeviceObject,
   PIRP Irp);
+
+NTSTATUS
+STDCALL
+DriverEntry(
+  IN PDRIVER_OBJECT DriverObject,
+  IN PUNICODE_STRING RegistryPath);
 
 #endif  /*  __PCI_H  */

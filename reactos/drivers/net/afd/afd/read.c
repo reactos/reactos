@@ -26,14 +26,14 @@
 #include "tdiconn.h"
 #include "debug.h"
 
-BOOLEAN CantReadMore( PAFD_FCB FCB ) {
+static BOOLEAN CantReadMore( PAFD_FCB FCB ) {
     UINT BytesAvailable = FCB->Recv.Content - FCB->Recv.BytesUsed;
 
     return !BytesAvailable &&
         (FCB->PollState & (AFD_EVENT_CLOSE | AFD_EVENT_DISCONNECT));
 }
 
-VOID HandleEOFOnIrp( PAFD_FCB FCB, NTSTATUS Status, UINT Information ) {
+static VOID HandleEOFOnIrp( PAFD_FCB FCB, NTSTATUS Status, UINT Information ) {
     if( Status == STATUS_SUCCESS && Information == 0 ) {
         AFD_DbgPrint(MID_TRACE,("Looks like an EOF\n"));
         FCB->PollState |= AFD_EVENT_DISCONNECT;
@@ -41,7 +41,7 @@ VOID HandleEOFOnIrp( PAFD_FCB FCB, NTSTATUS Status, UINT Information ) {
     }
 }
 
-NTSTATUS TryToSatisfyRecvRequestFromBuffer( PAFD_FCB FCB,
+static NTSTATUS TryToSatisfyRecvRequestFromBuffer( PAFD_FCB FCB,
 					    PAFD_RECV_INFO RecvReq,
 					    PUINT TotalBytesCopied ) {
     UINT i, BytesToCopy = 0,
@@ -120,7 +120,7 @@ NTSTATUS TryToSatisfyRecvRequestFromBuffer( PAFD_FCB FCB,
     return STATUS_SUCCESS;
 }
 
-NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
+static NTSTATUS ReceiveActivity( PAFD_FCB FCB, PIRP Irp ) {
     PLIST_ENTRY NextIrpEntry;
     PIRP NextIrp;
     PIO_STACK_LOCATION NextIrpSp;
@@ -328,7 +328,7 @@ AfdConnectedSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 }
 
 
-NTSTATUS STDCALL
+static NTSTATUS STDCALL
 SatisfyPacketRecvRequest( PAFD_FCB FCB, PIRP Irp,
 			  PAFD_STORED_DATAGRAM DatagramRecv,
 			  PUINT TotalBytesCopied ) {
