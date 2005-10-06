@@ -131,6 +131,7 @@ struct DriverInfoElement /* Element of DeviceInfoSet.DriverListHead and DeviceIn
     SP_DRVINFO_DATA_V2_W Info;
     LPWSTR InfPath;
     LPWSTR InfSection;
+    LPWSTR MatchingId;
 };
 
 struct DeviceInfoElement /* Element of DeviceInfoSet.ListHead */
@@ -2867,11 +2868,11 @@ BOOL WINAPI SetupDiCallClassInstaller(
             InitializeListHead(&ClassCoInstallersListHead);
             InitializeListHead(&DeviceCoInstallersListHead);
 
-            if (CanHandle & CLASS_COINSTALLER)
-            {
-                FIXME("Doesn't use Class co-installers at the moment\n");
-            }
             if (CanHandle & DEVICE_COINSTALLER)
+            {
+                FIXME("Doesn't use Device co-installers at the moment\n");
+            }
+            if (CanHandle & CLASS_COINSTALLER)
             {
                 rc = RegOpenKeyEx(
                     HKEY_LOCAL_MACHINE,
@@ -2896,8 +2897,8 @@ BOOL WINAPI SetupDiCallClassInstaller(
                                     LPCWSTR ptr;
                                     for (ptr = KeyBuffer; *ptr; ptr += strlenW(ptr) + 1)
                                     {
-                                        /* Add coinstaller to DeviceCoInstallersListHead list */
-                                        FIXME("Device coinstaller is '%S'\n", ptr);
+                                        /* Add coinstaller to ClassCoInstallersListHead list */
+                                        FIXME("Class coinstaller is '%S'. UNIMPLEMENTED!\n", ptr);
                                     }
                                 }
                                 HeapFree(GetProcessHeap(), 0, KeyBuffer);
@@ -3254,26 +3255,29 @@ AddDriverToList(
     IN LPCWSTR InfFile,
     IN LPCWSTR ProviderName,
     IN LPCWSTR ManufacturerName,
+    IN LPCWSTR MatchingId,
     FILETIME DriverDate,
     DWORDLONG DriverVersion,
     IN DWORD Rank)
 {
-    struct DriverInfoElement *driverInfo;
+    struct DriverInfoElement *driverInfo = NULL;
     DWORD RequiredSize = 128; /* Initial buffer size */
     BOOL Result = FALSE;
     PLIST_ENTRY PreviousEntry;
     LPWSTR DeviceDescription = NULL;
     LPWSTR InfInstallSection = NULL;
+    BOOL ret = FALSE;
 
     driverInfo = HeapAlloc(GetProcessHeap(), 0, sizeof(struct DriverInfoElement));
     if (!driverInfo)
     {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        return FALSE;
+        goto cleanup;
     }
+    memset(driverInfo, 0, sizeof(struct DriverInfoElement));
 
+    /* Fill InfSection field */
     SetLastError(ERROR_INSUFFICIENT_BUFFER);
-    driverInfo->InfSection = NULL;
     while (!Result && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
     {
         HeapFree(GetProcessHeap(), 0, driverInfo->InfSection);
@@ -3281,8 +3285,7 @@ AddDriverToList(
         if (!driverInfo->InfSection)
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            HeapFree(GetProcessHeap(), 0, driverInfo);
-            return FALSE;
+            goto cleanup;
         }
         Result = SetupGetStringFieldW(
             &ContextDevice,
@@ -3291,22 +3294,27 @@ AddDriverToList(
             &RequiredSize);
     }
     if (!Result)
-    {
-        HeapFree(GetProcessHeap(), 0, driverInfo->InfSection);
-        HeapFree(GetProcessHeap(), 0, driverInfo);
-        return FALSE;
-    }
+        goto cleanup;
 
+    /* Copy InfFile information */
     driverInfo->InfPath = HeapAlloc(GetProcessHeap(), 0, (wcslen(InfFile) + 1) * sizeof(WCHAR));
     if (!driverInfo->InfPath)
     {
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        HeapFree(GetProcessHeap(), 0, driverInfo->InfSection);
-        HeapFree(GetProcessHeap(), 0, driverInfo);
-        return FALSE;
+        goto cleanup;
     }
     RtlCopyMemory(driverInfo->InfPath, InfFile, (wcslen(InfFile) + 1) * sizeof(WCHAR));
 
+    /* Copy MatchingId information */
+    driverInfo->MatchingId = HeapAlloc(GetProcessHeap(), 0, (wcslen(MatchingId) + 1) * sizeof(WCHAR));
+    if (!driverInfo->MatchingId)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        goto cleanup;
+    }
+    RtlCopyMemory(driverInfo->MatchingId, MatchingId, (wcslen(MatchingId) + 1) * sizeof(WCHAR));
+
+    /* Get device description */
     Result = FALSE;
     RequiredSize = 128; /* Initial buffer size */
     SetLastError(ERROR_INSUFFICIENT_BUFFER);
@@ -3315,7 +3323,7 @@ AddDriverToList(
         HeapFree(GetProcessHeap(), 0, DeviceDescription);
         DeviceDescription = HeapAlloc(GetProcessHeap(), 0, RequiredSize * sizeof(WCHAR));
         if (!DeviceDescription)
-            return FALSE;
+            goto cleanup;
         Result = SetupGetStringFieldW(
             &ContextDevice,
             0, /* Field index */
@@ -3323,14 +3331,9 @@ AddDriverToList(
             &RequiredSize);
     }
     if (!Result)
-    {
-        HeapFree(GetProcessHeap(), 0, driverInfo->InfPath);
-        HeapFree(GetProcessHeap(), 0, driverInfo->InfSection);
-        HeapFree(GetProcessHeap(), 0, driverInfo);
-        HeapFree(GetProcessHeap(), 0, DeviceDescription);
-        return FALSE;
-    }
+        goto cleanup;
 
+    /* Get inf install section */
     Result = FALSE;
     RequiredSize = 128; /* Initial buffer size */
     SetLastError(ERROR_INSUFFICIENT_BUFFER);
@@ -3339,13 +3342,7 @@ AddDriverToList(
         HeapFree(GetProcessHeap(), 0, InfInstallSection);
         InfInstallSection = HeapAlloc(GetProcessHeap(), 0, RequiredSize * sizeof(WCHAR));
         if (!InfInstallSection)
-        {
-            HeapFree(GetProcessHeap(), 0, driverInfo->InfPath);
-            HeapFree(GetProcessHeap(), 0, driverInfo->InfSection);
-            HeapFree(GetProcessHeap(), 0, driverInfo);
-            HeapFree(GetProcessHeap(), 0, DeviceDescription);
-            return FALSE;
-        }
+            goto cleanup;
         Result = SetupGetStringFieldW(
             &ContextDevice,
             1, /* Field index */
@@ -3353,14 +3350,7 @@ AddDriverToList(
             &RequiredSize);
     }
     if (!Result)
-    {
-        HeapFree(GetProcessHeap(), 0, driverInfo->InfPath);
-        HeapFree(GetProcessHeap(), 0, driverInfo->InfSection);
-        HeapFree(GetProcessHeap(), 0, driverInfo);
-        HeapFree(GetProcessHeap(), 0, DeviceDescription);
-        HeapFree(GetProcessHeap(), 0, InfInstallSection);
-        return FALSE;
-    }
+        goto cleanup;
 
     TRACE("Adding driver '%S' [%S/%S] (Rank 0x%lx)\n",
         DeviceDescription, InfFile, InfInstallSection, Rank);
@@ -3399,9 +3389,23 @@ AddDriverToList(
         InsertTailList(DriverListHead, &driverInfo->ListEntry);
     }
 
+    ret = TRUE;
+
+cleanup:
+    if (!ret)
+    {
+        if (driverInfo)
+        {
+            HeapFree(GetProcessHeap(), 0, driverInfo->InfPath);
+            HeapFree(GetProcessHeap(), 0, driverInfo->InfSection);
+            HeapFree(GetProcessHeap(), 0, driverInfo->MatchingId);
+        }
+        HeapFree(GetProcessHeap(), 0, driverInfo);
+    }
     HeapFree(GetProcessHeap(), 0, DeviceDescription);
     HeapFree(GetProcessHeap(), 0, InfInstallSection);
-    return TRUE;
+
+    return ret;
 }
 
 static BOOL
@@ -3414,9 +3418,15 @@ GetVersionInformationFromInfFile(
 {
     DWORD RequiredSize;
     WCHAR guidW[MAX_GUID_STRING_LEN + 1];
+    LPWSTR DriverVer = NULL;
     LPWSTR ProviderName = NULL;
+    LPWSTR pComma; /* Points into DriverVer */
+    LPWSTR pVersion = NULL; /* Points into DriverVer */
+    SYSTEMTIME SystemTime;
     BOOL Result;
+    BOOL ret = FALSE; /* Final result */
 
+    /* Get class Guid */
     if (!SetupGetLineTextW(
         NULL, /* Context */
         hInf,
@@ -3424,28 +3434,29 @@ GetVersionInformationFromInfFile(
         guidW, sizeof(guidW),
         NULL /* Required size */))
     {
-        return FALSE;
+        goto cleanup;
     }
-
-    /* Get Provider name, driver date, and driver version */
-
     guidW[37] = '\0'; /* Replace the } by a NULL character */
     if (UuidFromStringW(&guidW[1], ClassGuid) != RPC_S_OK)
     {
-        return FALSE;
+        SetLastError(ERROR_GEN_FAILURE);
+        goto cleanup;
     }
+
+    /* Get provider name */
     Result = SetupGetLineTextW(
         NULL, /* Context */
         hInf, L"Version", L"Provider",
         NULL, 0,
         &RequiredSize);
-    if (!Result && GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+    if (Result)
     {
+        /* We know know the needed buffer size */
         ProviderName = HeapAlloc(GetProcessHeap(), 0, RequiredSize * sizeof(WCHAR));
         if (!ProviderName)
         {
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            return FALSE;
+            goto cleanup;
         }
         Result = SetupGetLineTextW(
             NULL, /* Context */
@@ -3453,13 +3464,67 @@ GetVersionInformationFromInfFile(
             ProviderName, RequiredSize,
             &RequiredSize);
     }
-    //FIXME: DriverDate = Version.DriverVer => invalid date = 00/00/00
-    RtlZeroMemory(DriverDate, sizeof(FILETIME));
-    //FIXME: DriverVersion = Version.DriverVer => invalid = 0
-    *DriverVersion = 0;
-
+    if (!Result)
+        goto cleanup;
     *pProviderName = ProviderName;
-    return TRUE;
+
+    /* Read the "DriverVer" value */
+    Result = SetupGetLineTextW(
+        NULL, /* Context */
+        hInf, L"Version", L"DriverVer",
+        NULL, 0,
+        &RequiredSize);
+    if (Result)
+    {
+        /* We know know the needed buffer size */
+        DriverVer = HeapAlloc(GetProcessHeap(), 0, RequiredSize * sizeof(WCHAR));
+        if (!DriverVer)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        Result = SetupGetLineTextW(
+            NULL, /* Context */
+            hInf, L"Version", L"DriverVer",
+            DriverVer, RequiredSize,
+            &RequiredSize);
+    }
+    if (!Result)
+        goto cleanup;
+
+    /* Get driver date and driver version, by analyzing the "DriverVer" value */
+    pComma = wcschr(DriverVer, ',');
+    if (pComma != NULL)
+    {
+        *pComma = UNICODE_NULL;
+        pVersion = pComma + 1;
+    }
+    /* Get driver date version. Invalid date = 00/00/00 */
+    memset(DriverDate, 0, sizeof(FILETIME));
+    if (wcslen(DriverVer) == 10
+        && (DriverVer[2] == '-' || DriverVer[2] == '/')
+        && (DriverVer[5] == '-' || DriverVer[5] == '/'))
+    {
+        memset(&SystemTime, 0, sizeof(SYSTEMTIME));
+        DriverVer[2] = DriverVer[5] = UNICODE_NULL;
+        SystemTime.wMonth = ((DriverVer[0] - '0') * 10) + DriverVer[1] - '0';
+        SystemTime.wDay  = ((DriverVer[3] - '0') * 10) + DriverVer[4] - '0';
+        SystemTime.wYear = ((DriverVer[6] - '0') * 1000) + ((DriverVer[7] - '0') * 100) + ((DriverVer[8] - '0') * 10) + DriverVer[9] - '0';
+        SystemTimeToFileTime(&SystemTime, DriverDate);
+    }
+    /* Get driver version. Invalid version = 0.0.0.0 */
+    *DriverVersion = 0;
+    /* FIXME: use pVersion to fill DriverVersion variable */
+
+    ret = TRUE;
+
+cleanup:
+    if (!ret)
+        HeapFree(GetProcessHeap(), 0, ProviderName);
+    HeapFree(GetProcessHeap(), 0, DriverVer);
+
+    TRACE("Returning %d\n", ret);
+    return ret;
 }
 
 /***********************************************************************
@@ -3678,6 +3743,7 @@ SetupDiBuildDriverInfoList(
                                 filename,
                                 ProviderName,
                                 ManufacturerName,
+                                NULL,
                                 DriverDate, DriverVersion,
                                 0))
                             {
@@ -3731,6 +3797,7 @@ SetupDiBuildDriverInfoList(
                                             filename,
                                             ProviderName,
                                             ManufacturerName,
+                                            currentId,
                                             DriverDate, DriverVersion,
                                             DriverRank  + (i == 2 ? 0 : 0x1000 + i - 3));
                                         DriverAlreadyAdded = TRUE;
@@ -3749,6 +3816,7 @@ SetupDiBuildDriverInfoList(
                                                 filename,
                                                 ProviderName,
                                                 ManufacturerName,
+                                                currentId,
                                                 DriverDate, DriverVersion,
                                                 DriverRank + (i == 2 ? 0x2000 : 0x3000 + i - 3));
                                             DriverAlreadyAdded = TRUE;
@@ -4382,16 +4450,24 @@ SetupDiInstallDevice(
     struct DeviceInfoElement *DevInfo = (struct DeviceInfoElement *)DeviceInfoData->Reserved;
     SYSTEMTIME DriverDate;
     WCHAR SectionName[MAX_PATH];
+    WCHAR Buffer[32];
     DWORD SectionNameLength = 0;
     BOOL Result = FALSE;
     INFCONTEXT ContextService;
     INT Flags;
     DWORD RequiredSize;
-    HINF hInf = NULL;
+    HINF hInf = INVALID_HANDLE_VALUE;
     LPCWSTR AssociatedService = NULL;
     LPWSTR pSectionName = NULL;
+    LPWSTR ClassName = NULL;
+    GUID ClassGuid;
+    LPWSTR lpGuidString = NULL, lpFullGuidString = NULL;
     BOOL RebootRequired = FALSE;
     HKEY hEnumKey, hKey = INVALID_HANDLE_VALUE;
+    HKEY hClassKey = INVALID_HANDLE_VALUE;
+    LPWSTR DriverKey = NULL; /* {GUID}\Index */
+    LPWSTR pDeviceInstance; /* Points into DriverKey, on the Index field */
+    DWORD Index; /* Index used in the DriverKey name */
     LONG rc;
     HWND hWnd;
     PVOID callback_context;
@@ -4444,19 +4520,130 @@ SetupDiInstallDevice(
         goto cleanup;
     pSectionName = &SectionName[wcslen(SectionName)];
 
+    /* Get information from [Version] section */
+    ClassName = NULL;
+    RequiredSize = 0;
+    if (!SetupDiGetINFClassW(DriverInfo->InfPath, &ClassGuid, ClassName, RequiredSize, &RequiredSize))
+    {
+        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+            goto cleanup;
+        ClassName = HeapAlloc(GetProcessHeap(), 0, RequiredSize * sizeof(WCHAR));
+        if (!ClassName)
+        {
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            goto cleanup;
+        }
+        if (!SetupDiGetINFClassW(DriverInfo->InfPath, &ClassGuid, ClassName, RequiredSize, &RequiredSize))
+            goto cleanup;
+    }
+    /* Format ClassGuid to a string */
+    if (UuidToStringW((UUID*)&ClassGuid, &lpGuidString) != RPC_S_OK)
+        goto cleanup;
+    RequiredSize = lstrlenW(lpGuidString);
+    lpFullGuidString = HeapAlloc(GetProcessHeap(), 0, (RequiredSize + 3) * sizeof(WCHAR));
+    if (!lpFullGuidString)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        goto cleanup;
+    }
+    lpFullGuidString[0] = '{';
+    memcpy(&lpFullGuidString[1], lpGuidString, RequiredSize * sizeof(WCHAR));
+    lpFullGuidString[RequiredSize + 1] = '}';
+    lpFullGuidString[RequiredSize + 2] = '\0';
+
     /* Create driver key information */
-    FIXME("FIXME: Create driver key information\n");
-    
+    /* The driver key is in HKLM\System\CurrentControlSet\Control\Class\{GUID}\{#ID} */
+    DriverKey = HeapAlloc(GetProcessHeap(), 0, (wcslen(lpFullGuidString) + 6) * sizeof(WCHAR));
+    if (!DriverKey)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        goto cleanup;
+    }
+    wcscpy(DriverKey, lpFullGuidString);
+    wcscat(DriverKey, L"\\");
+    pDeviceInstance = &DriverKey[wcslen(DriverKey)];
+    rc = RegOpenKeyExW(DevInfoSet->HKLM,
+        ControlClass,
+        0,
+        KEY_CREATE_SUB_KEY,
+        &hClassKey);
+    if (rc != ERROR_SUCCESS)
+    {
+       SetLastError(rc);
+       goto cleanup;
+    }
+    /* Try all values for Index between 0 and 9999 */
+    Index = 0;
+    while (Index <= 9999)
+    {
+        DWORD Disposition;
+        wsprintf(pDeviceInstance, L"%04lu", Index);
+        rc = RegCreateKeyEx(hClassKey,
+            DriverKey,
+            0,
+            NULL,
+            REG_OPTION_NON_VOLATILE,
+            KEY_SET_VALUE,
+            NULL,
+            &hKey,
+            &Disposition);
+        if (rc != ERROR_SUCCESS)
+        {
+            SetLastError(rc);
+            goto cleanup;
+        }
+        if (Disposition == REG_CREATED_NEW_KEY)
+            break;
+        RegCloseKey(hKey);
+        hKey = INVALID_HANDLE_VALUE;
+        Index++;
+    }
+    if (Index > 9999)
+    {
+        /* Unable to create more than 9999 devices within the same class */
+        SetLastError(ERROR_GEN_FAILURE);
+        goto cleanup;
+    }
+
     /* Write information to driver key */
-    FIXME("FIXME: Write information to driver key\n");
-    FIXME("DriverDate      : '%u-%u-%u'\n", 0, DriverDate.wMonth, DriverDate.wDay, DriverDate.wYear);
-    FIXME("DriverDesc      : '%S'\n", DriverInfo->Info.Description);
-    FIXME("DriverVersion   : '%u.%u.%u.%u'\n", DriverInfo->Info.DriverVersion & 0xff, (DriverInfo->Info.DriverVersion >> 8) & 0xff, (DriverInfo->Info.DriverVersion >> 16) & 0xff, (DriverInfo->Info.DriverVersion >> 24) & 0xff);
-    FIXME("InfPath         : '%S'\n", DriverInfo->InfPath);
-    FIXME("InfSection      : '%S'\n", DriverInfo->InfSection); /* FIXME: remove extension */
-    FIXME("InfSectionExt   : '%S'\n", L"???"); /* FIXME */
-    FIXME("MatchingDeviceId: '%S'\n", L"???"); /* FIXME */
-    FIXME("ProviderName    : '%S'\n", DriverInfo->Info.ProviderName);
+    *pSectionName = UNICODE_NULL;
+    TRACE("Write information to driver key\n");
+    TRACE("DriverDate      : '%u-%u-%u'\n", DriverDate.wMonth, DriverDate.wDay, DriverDate.wYear);
+    TRACE("DriverDesc      : '%S'\n", DriverInfo->Info.Description);
+    TRACE("DriverVersion   : '%u.%u.%u.%u'\n", DriverInfo->Info.DriverVersion & 0xff, (DriverInfo->Info.DriverVersion >> 8) & 0xff, (DriverInfo->Info.DriverVersion >> 16) & 0xff, (DriverInfo->Info.DriverVersion >> 24) & 0xff);
+    TRACE("InfPath         : '%S'\n", DriverInfo->InfPath);
+    TRACE("InfSection      : '%S'\n", DriverInfo->InfSection);
+    TRACE("InfSectionExt   : '%S'\n", &SectionName[wcslen(DriverInfo->InfSection)]); /* FIXME */
+    TRACE("MatchingDeviceId: '%S'\n", DriverInfo->MatchingId);
+    TRACE("ProviderName    : '%S'\n", DriverInfo->Info.ProviderName);
+    swprintf(Buffer, L"%u-%u-%u", DriverDate.wMonth, DriverDate.wDay, DriverDate.wYear);
+    rc = RegSetValueEx(hKey, L"DriverDate", 0, REG_SZ, (const BYTE *)Buffer, (wcslen(Buffer) + 1) * sizeof(WCHAR));
+    if (rc == ERROR_SUCCESS)
+        rc = RegSetValueEx(hKey, L"DriverDateData", 0, REG_BINARY, (const BYTE *)&DriverInfo->Info.DriverDate, sizeof(FILETIME));
+    if (rc == ERROR_SUCCESS)
+        rc = RegSetValueEx(hKey, L"DriverDesc", 0, REG_SZ, (const BYTE *)DriverInfo->Info.Description, (wcslen(DriverInfo->Info.Description) + 1) * sizeof(WCHAR));
+    if (rc == ERROR_SUCCESS)
+    {
+        swprintf(Buffer, L"%u.%u.%u.%u", DriverInfo->Info.DriverVersion & 0xff, (DriverInfo->Info.DriverVersion >> 8) & 0xff, (DriverInfo->Info.DriverVersion >> 16) & 0xff, (DriverInfo->Info.DriverVersion >> 24) & 0xff);
+        rc = RegSetValueEx(hKey, L"DriverVersion", 0, REG_SZ, (const BYTE *)Buffer, (wcslen(Buffer) + 1) * sizeof(WCHAR));
+    }
+    if (rc == ERROR_SUCCESS)
+        rc = RegSetValueEx(hKey, L"InfPath", 0, REG_SZ, (const BYTE *)DriverInfo->InfPath, (wcslen(DriverInfo->InfPath) + 1) * sizeof(WCHAR));
+    if (rc == ERROR_SUCCESS)
+        rc = RegSetValueEx(hKey, L"InfSection", 0, REG_SZ, (const BYTE *)DriverInfo->InfSection, (wcslen(DriverInfo->InfSection) + 1) * sizeof(WCHAR));
+    if (rc == ERROR_SUCCESS)
+        rc = RegSetValueEx(hKey, L"InfSectionExt", 0, REG_SZ, (const BYTE *)&SectionName[wcslen(DriverInfo->InfSection)], (wcslen(SectionName) - wcslen(DriverInfo->InfSection) + 1) * sizeof(WCHAR));
+    if (rc == ERROR_SUCCESS)
+        rc = RegSetValueEx(hKey, L"MatchingDeviceId", 0, REG_SZ, (const BYTE *)DriverInfo->MatchingId, (wcslen(DriverInfo->MatchingId) + 1) * sizeof(WCHAR));
+    if (rc == ERROR_SUCCESS)
+        rc = RegSetValueEx(hKey, L"ProviderName", 0, REG_SZ, (const BYTE *)DriverInfo->Info.ProviderName, (wcslen(DriverInfo->Info.ProviderName) + 1) * sizeof(WCHAR));
+    if (rc != ERROR_SUCCESS)
+    {
+       SetLastError(rc);
+       goto cleanup;
+    }
+    RegCloseKey(hKey);
+    hKey = INVALID_HANDLE_VALUE;
 
     /* Install .Services section */
     wcscpy(pSectionName, L".Services");
@@ -4579,17 +4766,22 @@ nextfile:
         goto cleanup;
 
     /* Write information to enum key */
-    FIXME("FIXME: Write information to enum key\n");
-    FIXME("ParentIdPrefix  : '%S'\n", L"0000"); /* FIXME */
+    TRACE("Write information to enum key\n");
     TRACE("Service         : '%S'\n", AssociatedService);
-    FIXME("Class           : '%S'\n", L"???"); /* FIXME: SetupDiGetINFClass */
-    FIXME("ClassGUID       : '%S'\n", L"???"); /* FIXME: SetupDiGetINFClass */
+    TRACE("Class           : '%S'\n", ClassName);
+    TRACE("ClassGUID       : '%S'\n", lpFullGuidString);
     TRACE("DeviceDesc      : '%S'\n", DriverInfo->Info.Description);
-    FIXME("Driver          : '%S'\n", L"???"); /* FIXME: autogenerated key */
+    TRACE("Driver          : '%S'\n", DriverKey);
     TRACE("Mfg             : '%S'\n", DriverInfo->Info.MfgName);
     rc = RegSetValueEx(hKey, L"Service", 0, REG_SZ, (const BYTE *)AssociatedService, (wcslen(AssociatedService) + 1) * sizeof(WCHAR));
     if (rc == ERROR_SUCCESS)
+        rc = RegSetValueEx(hKey, L"Class", 0, REG_SZ, (const BYTE *)ClassName, (wcslen(ClassName) + 1) * sizeof(WCHAR));
+    if (rc == ERROR_SUCCESS)
+        rc = RegSetValueEx(hKey, L"ClassGUID", 0, REG_SZ, (const BYTE *)lpFullGuidString, (wcslen(lpFullGuidString) + 1) * sizeof(WCHAR));
+    if (rc == ERROR_SUCCESS)
         rc = RegSetValueEx(hKey, L"DeviceDesc", 0, REG_SZ, (const BYTE *)DriverInfo->Info.Description, (wcslen(DriverInfo->Info.Description) + 1) * sizeof(WCHAR));
+    if (rc == ERROR_SUCCESS)
+        rc = RegSetValueEx(hKey, L"Driver", 0, REG_SZ, (const BYTE *)DriverKey, (wcslen(DriverKey) + 1) * sizeof(WCHAR));
     if (rc == ERROR_SUCCESS)
         rc = RegSetValueEx(hKey, L"Mfg", 0, REG_SZ, (const BYTE *)DriverInfo->Info.MfgName, (wcslen(DriverInfo->Info.MfgName) + 1) * sizeof(WCHAR));
     if (rc != ERROR_SUCCESS)
@@ -4609,10 +4801,17 @@ nextfile:
 
 cleanup:
     /* End of installation */
+    if (hClassKey != INVALID_HANDLE_VALUE)
+        RegCloseKey(hClassKey);
     if (hKey != INVALID_HANDLE_VALUE)
         RegCloseKey(hKey);
+    if (lpGuidString)
+        RpcStringFreeW(&lpGuidString);
     HeapFree(GetProcessHeap(), 0, (LPWSTR)AssociatedService);
-    if (hInf != NULL && hInf != INVALID_HANDLE_VALUE)
+    HeapFree(GetProcessHeap(), 0, DriverKey);
+    HeapFree(GetProcessHeap(), 0, ClassName);
+    HeapFree(GetProcessHeap(), 0, lpFullGuidString);
+    if (hInf != INVALID_HANDLE_VALUE)
         SetupCloseInfFile(hInf);
 
     TRACE("Returning %d\n", ret);
