@@ -4391,10 +4391,11 @@ SetupDiInstallDevice(
     LPCWSTR AssociatedService = NULL;
     LPWSTR pSectionName = NULL;
     BOOL RebootRequired = FALSE;
-    HKEY hEnumKey, hKey;
+    HKEY hEnumKey, hKey = INVALID_HANDLE_VALUE;
     LONG rc;
     HWND hWnd;
     PVOID callback_context;
+    BOOL ret = FALSE; /* Return value */
 
     TRACE("%p %p\n", DeviceInfoSet, DeviceInfoData);
 
@@ -4416,7 +4417,7 @@ SetupDiInstallDevice(
     if (!Result)
     {
         /* One parameter is bad */
-        return FALSE;
+        goto cleanup;
     }
 
     /* FIXME: If DI_FLAGSEX_SETFAILEDINSTALL is set, set FAILEDINSTALL flag in ConfigFlags registry and exit */
@@ -4435,15 +4436,12 @@ SetupDiInstallDevice(
 
     hInf = SetupOpenInfFileW(DriverInfo->InfPath, NULL, INF_STYLE_WIN4, NULL);
     if (hInf == INVALID_HANDLE_VALUE)
-        return FALSE;
+        goto cleanup;
 
     Result = SetupDiGetActualSectionToInstallW(hInf, DriverInfo->InfSection,
         SectionName, MAX_PATH, &SectionNameLength, NULL);
     if (!Result || SectionNameLength > MAX_PATH - 9)
-    {
-        SetupCloseInfFile(hInf);
-        return FALSE;
-    }
+        goto cleanup;
     pSectionName = &SectionName[wcslen(SectionName)];
 
     /* Create driver key information */
@@ -4474,7 +4472,7 @@ SetupDiInstallDevice(
             NULL, 0,
             &RequiredSize);
         if (!Result)
-            goto cleanup;
+            goto nextfile;
         if (RequiredSize > 0)
         {
             /* We got the needed size for the buffer */
@@ -4482,7 +4480,7 @@ SetupDiInstallDevice(
             if (!ServiceName)
             {
                 SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                goto cleanup;
+                goto nextfile;
             }
             Result = SetupGetStringFieldW(
                 &ContextService,
@@ -4490,7 +4488,7 @@ SetupDiInstallDevice(
                 ServiceName, RequiredSize,
                 &RequiredSize);
             if (!Result)
-                goto cleanup;
+                goto nextfile;
         }
         Result = SetupGetIntField(
             &ContextService,
@@ -4507,7 +4505,7 @@ SetupDiInstallDevice(
             NULL, 0,
             &RequiredSize);
         if (!Result)
-            goto cleanup;
+            goto nextfile;
         if (RequiredSize > 0)
         {
             /* We got the needed size for the buffer */
@@ -4515,7 +4513,7 @@ SetupDiInstallDevice(
             if (!ServiceSection)
             {
                 SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-               goto cleanup;
+                goto nextfile;
             }
             Result = SetupGetStringFieldW(
                 &ContextService,
@@ -4523,7 +4521,7 @@ SetupDiInstallDevice(
                 ServiceSection, RequiredSize,
                &RequiredSize);
             if (!Result)
-               goto cleanup;
+               goto nextfile;
         }
         SetLastError(ERROR_SUCCESS);
         Result = SetupInstallServicesFromInfSectionExW(hInf, ServiceSection, Flags, DeviceInfoSet, DeviceInfoData, ServiceName, NULL);
@@ -4534,15 +4532,11 @@ SetupDiInstallDevice(
             if (GetLastError() == ERROR_SUCCESS_REBOOT_REQUIRED)
                 RebootRequired = TRUE;
         }
-cleanup:
+nextfile:
         HeapFree(GetProcessHeap(), 0, ServiceName);
         HeapFree(GetProcessHeap(), 0, ServiceSection);
         if (!Result)
-        {
-            HeapFree(GetProcessHeap(), 0, (LPWSTR)AssociatedService);
-            SetupCloseInfFile(hInf);
-            return FALSE;
-        }
+            goto cleanup;
         Result = SetupFindNextLine(&ContextService, &ContextService);
     }
 
@@ -4558,9 +4552,7 @@ cleanup:
     if (rc != ERROR_SUCCESS)
     {
        SetLastError(rc);
-       HeapFree(GetProcessHeap(), 0, (LPWSTR)AssociatedService);
-       SetupCloseInfFile(hInf);
-       return FALSE;
+       goto cleanup;
     }
     rc = RegOpenKeyExW(
         hEnumKey,
@@ -4572,9 +4564,7 @@ cleanup:
     if (rc != ERROR_SUCCESS)
     {
        SetLastError(rc);
-       HeapFree(GetProcessHeap(), 0, (LPWSTR)AssociatedService);
-       SetupCloseInfFile(hInf);
-       return FALSE;
+       goto cleanup;
     }
 
     /* Install .HW section */
@@ -4586,12 +4576,7 @@ cleanup:
         NULL, NULL);
     SetupTermDefaultQueueCallback(callback_context);
     if (!Result)
-    {
-        RegCloseKey(hKey);
-        HeapFree(GetProcessHeap(), 0, (LPWSTR)AssociatedService);
-        SetupCloseInfFile(hInf);
-        return FALSE;
-    }
+        goto cleanup;
 
     /* Write information to enum key */
     FIXME("FIXME: Write information to enum key\n");
@@ -4607,13 +4592,10 @@ cleanup:
         rc = RegSetValueEx(hKey, L"DeviceDesc", 0, REG_SZ, (const BYTE *)DriverInfo->Info.Description, (wcslen(DriverInfo->Info.Description) + 1) * sizeof(WCHAR));
     if (rc == ERROR_SUCCESS)
         rc = RegSetValueEx(hKey, L"Mfg", 0, REG_SZ, (const BYTE *)DriverInfo->Info.MfgName, (wcslen(DriverInfo->Info.MfgName) + 1) * sizeof(WCHAR));
-    RegCloseKey(hKey);
     if (rc != ERROR_SUCCESS)
     {
        SetLastError(rc);
-       HeapFree(GetProcessHeap(), 0, (LPWSTR)AssociatedService);
-       SetupCloseInfFile(hInf);
-       return FALSE;
+       goto cleanup;
     }
 
     /* Load the driver/call AddDevice */
@@ -4623,8 +4605,16 @@ cleanup:
     //if (!RebootRequired && !(Flags & (DI_NEEDRESTART | DI_NEEDREBOOT | DI_DONOTCALLCONFIGMG)))
         FIXME("FIXME: Send IRP_MN_START_DEVICE\n");
 
+   ret = TRUE;
+
+cleanup:
     /* End of installation */
+    if (hKey != INVALID_HANDLE_VALUE)
+        RegCloseKey(hKey);
     HeapFree(GetProcessHeap(), 0, (LPWSTR)AssociatedService);
-    SetupCloseInfFile(hInf);
-    return TRUE;
+    if (hInf != NULL && hInf != INVALID_HANDLE_VALUE)
+        SetupCloseInfFile(hInf);
+
+    TRACE("Returning %d\n", ret);
+    return ret;
 }
