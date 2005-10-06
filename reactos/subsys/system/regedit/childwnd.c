@@ -414,6 +414,20 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 			    _stprintf(fullPath, _T("%s\\%s"), rootName, keyPath);
 			    SendMessage(hStatusBar, SB_SETTEXT, 0, (LPARAM)fullPath);
 			    HeapFree(GetProcessHeap(), 0, fullPath);
+
+			    {
+			        HKEY hKey;
+			        TCHAR szBuffer[MAX_PATH];			
+			    	_sntprintf(szBuffer, sizeof(szBuffer) / sizeof(szBuffer[0]), _T("My Computer\\%s\\%s"), rootName, keyPath);
+
+			    	if (RegOpenKey(HKEY_CURRENT_USER,
+			        	_T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Regedit"),
+			    	    &hKey) == ERROR_SUCCESS)
+			    	{
+			    	    RegSetValueEx(hKey, _T("LastKey"), 0, REG_SZ, (LPBYTE) szBuffer, _tcslen(szBuffer) * sizeof(szBuffer[0]));
+			    	    RegCloseKey(hKey);
+			    	}
+			    }
 			}
 		    }
                 }
