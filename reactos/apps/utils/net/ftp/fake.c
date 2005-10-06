@@ -35,11 +35,10 @@ void blkfree(char **av0)
 		free(*av++);
 }
 
-char *glob(register char *v)
+char **glob(register char *v)
 {
    return NULL;
 }
-
 
 int sleep(int time)
 {
@@ -50,8 +49,8 @@ int herror(char *string)
 {
    return 0;
 }
-#if 0
 
+#if 0
 int gettimeofday(struct timeval *timenow,
 				 struct timezone *zone)
 {
@@ -294,11 +293,13 @@ char *getpass (const char * prompt)
   return NULL;
 }
 
+#if 0
 // Stubbed out here. Should be changed in Source code...
 int access(const char *filename, int accessmethod)
 {
    return 0;
 }
+#endif
 
 #ifndef __GNUC__
 #define EPOCHFILETIME (116444736000000000i64)

@@ -150,7 +150,8 @@ struct waitres {
    {34,"MaximumWaitReason"},
    {-1,"       ?         "}
 };
-BOOL CALLBACK
+
+static BOOL CALLBACK
 EnumThreadProc(HWND hwnd, LPARAM lp)
 {
 	DWORD r, pid, tid;

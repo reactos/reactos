@@ -20,7 +20,7 @@
 #define IPBUF 17
 #define IN_ADDR_OF(x) *((struct in_addr *)&(x))
 
-int Usage()
+static int Usage()
 {
     _ftprintf( stderr,
                _T("route usage:\n"
@@ -33,7 +33,7 @@ int Usage()
     return 1;
 }
 
-int PrintRoutes()
+static int PrintRoutes()
 {
     PMIB_IPFORWARDTABLE IpForwardTable = NULL;
     PIP_ADAPTER_INFO pAdapterInfo;
@@ -154,7 +154,7 @@ Error:
     }
 }
 
-int convert_add_cmd_line( PMIB_IPFORWARDROW RowToAdd,
+static int convert_add_cmd_line( PMIB_IPFORWARDROW RowToAdd,
               int argc, TCHAR **argv ) {
     int i;
 #if UNICODE
@@ -205,7 +205,7 @@ int convert_add_cmd_line( PMIB_IPFORWARDROW RowToAdd,
     return TRUE;
 }
 
-int add_route( int argc, TCHAR **argv ) {
+static int add_route( int argc, TCHAR **argv ) {
     MIB_IPFORWARDROW RowToAdd = { 0 };
     DWORD Error;
 
@@ -229,7 +229,7 @@ int add_route( int argc, TCHAR **argv ) {
     return Error;
 }
 
-int del_route( int argc, TCHAR **argv )
+static int del_route( int argc, TCHAR **argv )
 {
     MIB_IPFORWARDROW RowToDel = { 0 };
     DWORD Error;
@@ -252,9 +252,11 @@ int del_route( int argc, TCHAR **argv )
     return Error;
 }
 
+#if defined(_UNICODE) && defined(__GNUC__)
+static
+#endif
 int _tmain( int argc, TCHAR **argv )
 {
-
     if( argc < 2 )
         return Usage();
     else if ( !_tcscmp( argv[1], _T("print") ) )

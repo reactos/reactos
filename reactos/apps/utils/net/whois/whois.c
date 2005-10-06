@@ -50,8 +50,8 @@
 
 #define	NICHOST	"whois.internic.net"
 
-void usage();
-void leave(int iExitCode);
+static void usage();
+static void leave(int iExitCode);
 
 int main(int argc, char **argv)
 {
@@ -154,13 +154,13 @@ int main(int argc, char **argv)
 	return 0;
 }
 
-void usage()
+static void usage()
 {
 	(void)fprintf(stderr, "usage: whois [-h hostname] name ...\n");
 	leave(1);
 }
 
-void leave(int iExitCode)
+static void leave(int iExitCode)
 {
 	WSACleanup();
 	exit(iExitCode);

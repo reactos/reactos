@@ -106,7 +106,7 @@ BOOL                UsePerformanceCounter;
 
 
 /* Display the contents of a buffer */
-VOID DisplayBuffer(
+static VOID DisplayBuffer(
     PVOID Buffer,
     DWORD Size)
 {
@@ -125,7 +125,7 @@ VOID DisplayBuffer(
 }
 
 /* Display usage information on screen */
-VOID Usage(VOID)
+static VOID Usage(VOID)
 {
 	printf("\nUsage: ping [-t] [-n count] [-l size] [-w timeout] destination-host\n\n");
 	printf("Options:\n");
@@ -137,7 +137,7 @@ VOID Usage(VOID)
 }
 
 /* Reset configuration to default values */
-VOID Reset(VOID)
+static VOID Reset(VOID)
 {
     LARGE_INTEGER PerformanceCounterFrequency;
 
@@ -173,7 +173,7 @@ VOID Reset(VOID)
 }
 
 /* Return ULONG in a string */
-ULONG GetULONG(LPSTR String)
+static ULONG GetULONG(LPSTR String)
 {
     UINT i, Length;
     ULONG Value;
@@ -191,7 +191,7 @@ ULONG GetULONG(LPSTR String)
 }
 
 /* Return ULONG in a string. Try next paramter if not successful */
-ULONG GetULONG2(LPSTR String1, LPSTR String2, PINT i)
+static ULONG GetULONG2(LPSTR String1, LPSTR String2, PINT i)
 {
     ULONG Value;
 
@@ -209,7 +209,7 @@ ULONG GetULONG2(LPSTR String1, LPSTR String2, PINT i)
 }
 
 /* Parse command line parameters */
-BOOL ParseCmdline(int argc, char* argv[])
+static BOOL ParseCmdline(int argc, char* argv[])
 {
     INT i;
     BOOL ShowUsage;
@@ -278,7 +278,7 @@ BOOL ParseCmdline(int argc, char* argv[])
 }
 
 /* Calculate checksum of data */
-WORD Checksum(PUSHORT data, UINT size)
+static WORD Checksum(PUSHORT data, UINT size)
 {
     ULONG sum = 0;
 
@@ -297,7 +297,7 @@ WORD Checksum(PUSHORT data, UINT size)
 }
 
 /* Prepare to ping target */
-BOOL Setup(VOID)
+static BOOL Setup(VOID)
 {
     WORD     wVersionRequested;
     WSADATA  WsaData;
@@ -354,7 +354,7 @@ BOOL Setup(VOID)
 }
 
 /* Close socket */
-VOID Cleanup(VOID)
+static VOID Cleanup(VOID)
 {
     if (IcmpSock != INVALID_SOCKET)
         closesocket(IcmpSock);
@@ -362,7 +362,7 @@ VOID Cleanup(VOID)
     WSACleanup();
 }
 
-VOID QueryTime(PLARGE_INTEGER Time)
+static VOID QueryTime(PLARGE_INTEGER Time)
 {
     if (UsePerformanceCounter) {
         if (QueryPerformanceCounter(Time) == 0) {
@@ -384,7 +384,7 @@ VOID QueryTime(PLARGE_INTEGER Time)
     }
 }
 
-VOID TimeToMsString(LPSTR String, LARGE_INTEGER Time)
+static VOID TimeToMsString(LPSTR String, LARGE_INTEGER Time)
 {
     CHAR          Convstr[40];
     LARGE_INTEGER LargeTime;
@@ -398,7 +398,7 @@ VOID TimeToMsString(LPSTR String, LARGE_INTEGER Time)
 
 /* Locate the ICMP data and print it. Returns TRUE if the packet was good,
    FALSE if not */
-BOOL DecodeResponse(PCHAR buffer, UINT size, PSOCKADDR_IN from)
+static BOOL DecodeResponse(PCHAR buffer, UINT size, PSOCKADDR_IN from)
 {
     PIPv4_HEADER      IpHeader;
     PICMP_ECHO_PACKET Icmp;
@@ -462,7 +462,7 @@ BOOL DecodeResponse(PCHAR buffer, UINT size, PSOCKADDR_IN from)
 }
 
 /* Send and receive one ping */
-BOOL Ping(VOID)
+static BOOL Ping(VOID)
 {
     INT                 Status;
     SOCKADDR            From;

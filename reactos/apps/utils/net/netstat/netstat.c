@@ -50,7 +50,7 @@ static char TcpState[][32] = {
 	"DELETE_TCB"
 };
 
-VOID PrintError(DWORD ErrorCode)
+static VOID PrintError(DWORD ErrorCode)
 {
 	LPVOID lpMsgBuf;
 
@@ -182,37 +182,6 @@ static void ShowAdapterInfo()
 }
 #endif
 
-/*
-typedef struct {
-    UINT idLength;
-    UINT* ids;
-} AsnObjectIdentifier;
-
-VOID SnmpUtilPrintAsnAny(AsnAny* pAny);  // pointer to value to print
-VOID SnmpUtilPrintOid(AsnObjectIdentifier* Oid);  // object identifier to print
-
- */
-void test_snmp(void)
-{
-    int nBytes = 500;
-    BYTE* pCache;
-
-    pCache = (BYTE*)SnmpUtilMemAlloc(nBytes);
-    if (pCache != NULL) {
-        AsnObjectIdentifier* pOidSrc = NULL;
-        AsnObjectIdentifier AsnObId;
-        if (SnmpUtilOidCpy(&AsnObId, pOidSrc)) {
-            //
-            //
-            //
-            SnmpUtilOidFree(&AsnObId);
-        }
-        SnmpUtilMemFree(pCache);
-    } else {
-        _tprintf(_T("ERROR: call to SnmpUtilMemAlloc() failed\n"));
-    }
-}
-
 // Maximum string lengths for ASCII ip address and port names
 //
 #define HOSTNAMELEN		256
@@ -264,7 +233,7 @@ typedef struct {
 //
 // Translate port numbers into their text equivalent if there is one
 //
-PCHAR
+static PCHAR
 GetPortName(DWORD Flags, UINT port, PCHAR proto, PCHAR name, int namelen)
 {
 	struct servent *psrvent;
@@ -288,7 +257,7 @@ GetPortName(DWORD Flags, UINT port, PCHAR proto, PCHAR name, int namelen)
 //
 // Translate IP addresses into their name-resolved form if possible.
 //
-PCHAR
+static PCHAR
 GetIpHostName(DWORD Flags, BOOL local, UINT ipaddr, PCHAR name, int namelen)
 {
 //	struct hostent *phostent;
@@ -352,7 +321,7 @@ GetIpHostName(DWORD Flags, BOOL local, UINT ipaddr, PCHAR name, int namelen)
 	return name;
 }
 
-BOOLEAN usage(void)
+static BOOLEAN usage(void)
 {
 	TCHAR buffer[MAX_RESLEN];
 
@@ -366,7 +335,7 @@ BOOLEAN usage(void)
 //
 // Parses the command line arguments.
 //
-BOOLEAN
+static BOOLEAN
 GetOptions(int argc, char *argv[], PDWORD pFlags)
 {
 	int		i, j;
@@ -497,6 +466,37 @@ int main(int argc, char *argv[])
 }
 
 #else
+
+/*
+typedef struct {
+    UINT idLength;
+    UINT* ids;
+} AsnObjectIdentifier;
+
+VOID SnmpUtilPrintAsnAny(AsnAny* pAny);  // pointer to value to print
+VOID SnmpUtilPrintOid(AsnObjectIdentifier* Oid);  // object identifier to print
+
+ */
+static void test_snmp(void)
+{
+    int nBytes = 500;
+    BYTE* pCache;
+
+    pCache = (BYTE*)SnmpUtilMemAlloc(nBytes);
+    if (pCache != NULL) {
+        AsnObjectIdentifier* pOidSrc = NULL;
+        AsnObjectIdentifier AsnObId;
+        if (SnmpUtilOidCpy(&AsnObId, pOidSrc)) {
+            //
+            //
+            //
+            SnmpUtilOidFree(&AsnObId);
+        }
+        SnmpUtilMemFree(pCache);
+    } else {
+        _tprintf(_T("ERROR: call to SnmpUtilMemAlloc() failed\n"));
+    }
+}
 
 int main(int argc, char *argv[])
 {

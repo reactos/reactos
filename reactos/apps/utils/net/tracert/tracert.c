@@ -70,7 +70,19 @@ INT iMaxHops = 30;              // -h  Max number of hops before trace ends
 INT iHostList;                  // -j  @UNIMPLEMENTED@
 INT iTimeOut = 2000;            // -w  time before packet times out
 
-
+/* function definitions */
+static BOOL ParseCmdline(int argc, char* argv[]);
+static INT Driver(void);
+static INT Setup(INT ttl);
+static VOID SetupTimingMethod(void);
+static VOID ResolveHostname(void);
+static VOID PreparePacket(INT packetSize, INT seqNum);
+static INT SendPacket(INT datasize);
+static INT ReceivePacket(INT datasize);
+static INT DecodeResponse(INT packetSize, INT seqNum);
+static LONG GetTime(void);
+static WORD CheckSum(PUSHORT data, UINT size);
+static VOID Usage(void);
 
 
 /*
@@ -78,7 +90,7 @@ INT iTimeOut = 2000;            // -w  time before packet times out
  * Parse command line parameters and set any options
  *
  */
-BOOL ParseCmdline(int argc, char* argv[])
+static BOOL ParseCmdline(int argc, char* argv[])
 {
     int i;
 
@@ -122,7 +134,7 @@ BOOL ParseCmdline(int argc, char* argv[])
  * Driver function, controls the traceroute program
  *
  */
-INT Driver(VOID)
+static INT Driver(VOID)
 {
 
     INT iHopCount = 1;              // hop counter. default max is 30
@@ -311,7 +323,7 @@ INT Driver(VOID)
  * gettickcount, so set the figures to 1
  *
  */
-VOID SetupTimingMethod(VOID)
+static VOID SetupTimingMethod(VOID)
 {
     LARGE_INTEGER PerformanceCounterFrequency;
 
@@ -343,7 +355,7 @@ VOID SetupTimingMethod(VOID)
  * SOCKADDR_IN members needed for the connection.
  *
  */
-VOID ResolveHostname(VOID)
+static VOID ResolveHostname(VOID)
 {
     HOSTENT *hp;
     ULONG addr;
@@ -386,7 +398,7 @@ VOID ResolveHostname(VOID)
  * set in the outgoing IP packet.
  *
  */
-INT Setup(INT iTTL)
+static INT Setup(INT iTTL)
 {
     INT iSockRet;
 
@@ -422,7 +434,7 @@ INT Setup(INT iTTL)
  * Calculate the packet checksum
  *
  */
-VOID PreparePacket(INT iPacketSize, INT iSeqNum)
+static VOID PreparePacket(INT iPacketSize, INT iSeqNum)
 {
     /* assemble ICMP echo request packet */
     sendpacket.icmpheader.type      = ECHO_REQUEST;
@@ -443,7 +455,7 @@ VOID PreparePacket(INT iPacketSize, INT iSeqNum)
  * address.
  *
  */
-INT SendPacket(INT datasize)
+static INT SendPacket(INT datasize)
 {
     INT iSockRet;
     INT iPacketSize;
@@ -498,7 +510,7 @@ INT SendPacket(INT datasize)
  * If we don't recieve a packet, do some checking to establish why.
  *
  */
-INT ReceivePacket(INT datasize)
+static INT ReceivePacket(INT datasize)
 {
     TIMEVAL timeVal;
     FD_SET readFDS;
@@ -573,7 +585,7 @@ INT ReceivePacket(INT datasize)
  * It all is well, print the time taken for the round trip.
  *
  */
-INT DecodeResponse(INT iPacketSize, INT iSeqNum)
+static INT DecodeResponse(INT iPacketSize, INT iSeqNum)
 {
     unsigned short header_len = recvpacket.h_len * 4;
     /* cast the recieved packet into an ECHO reply and a TTL Exceed so we can check the ID*/
@@ -634,7 +646,7 @@ INT DecodeResponse(INT iPacketSize, INT iSeqNum)
  *
  */
 
-LONG GetTime(VOID)
+static LONG GetTime(VOID)
 {
     LARGE_INTEGER Time;
 
@@ -662,7 +674,7 @@ LONG GetTime(VOID)
  * Calculate packet checksum.
  *
  */
-WORD CheckSum(PUSHORT data, UINT size)
+static WORD CheckSum(PUSHORT data, UINT size)
 {
     DWORD dwSum = 0;
 
@@ -687,7 +699,7 @@ WORD CheckSum(PUSHORT data, UINT size)
  * print program usage to screen
  *
  */
-VOID Usage(VOID)
+static VOID Usage(VOID)
 {
     _tprintf(_T("\nUsage: tracert [-d] [-h maximum_hops] [-j host-list] [-w timeout] target_name\n\n"
                 "Options:\n"
