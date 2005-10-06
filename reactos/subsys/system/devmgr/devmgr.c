@@ -93,6 +93,8 @@ void ListByClass()
 	long Size;
 	long rc;
 
+	SendMessage(hwndListView, WM_SETREDRAW, FALSE, 0);
+
 	ListView_DeleteAllItems(hwndListView);
 	while (1)
 	{
@@ -187,6 +189,7 @@ void ListByClass()
 		}
 		SetupDiDestroyDeviceInfoList(hDevInfo);
 	}
+	SendMessage(hwndListView, WM_SETREDRAW, TRUE, 0);
 }
 
 CONFIGRET GetDeviceName(DEVINST DevInst, LPTSTR Buffer, DWORD BufferLength)
@@ -271,8 +274,9 @@ int ListByConnection()
 		_tprintf(_T("CM_Locate_DevNode() failed, cr= 0x%lx\n"), cr);
 		return 1;
 	}
-
+	SendMessage(hwndListView, WM_SETREDRAW, FALSE, 0);
 	cr = ListSubNodes(root, 0);
+	SendMessage(hwndListView, WM_SETREDRAW, TRUE, 0);
 	if (cr != CR_SUCCESS)
 		return 2;
 	return 0;
@@ -304,6 +308,7 @@ int ListByInterface(const GUID* guid)
 
 	i = 0;
 	DeviceInterfaceData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
+	SendMessage(hwndListView, WM_SETREDRAW, FALSE, 0);
 	while (TRUE)
 	{
 		if (!SetupDiEnumDeviceInterfaces(
@@ -332,6 +337,7 @@ int ListByInterface(const GUID* guid)
 		}
 
 	}
+	SendMessage(hwndListView, WM_SETREDRAW, TRUE, 0);
 	SetupDiDestroyDeviceInfoList(hDevInfo);
 	return 0;
 }
@@ -484,6 +490,7 @@ switch (uMessage)
       ResizeListView(hWnd);
       break;
    case WM_DESTROY:
+      ReleaseDC(hWnd, hDC);
       PostQuitMessage(0);
       break;
    case WM_COMMAND:
