@@ -5,7 +5,6 @@
  * FILE:            lib/kernel32/file/create.c
  * PURPOSE:         Directory functions
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
- *		    GetTempFileName is modified from WINE [ Alexandre Juiliard ]
  * UPDATE HISTORY:
  *                  Created 01/11/98
  *                  Removed use of SearchPath (not used by Windows)
