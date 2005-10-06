@@ -820,6 +820,8 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
                      IN PKEXCEPTION_FRAME ExceptionFrame,
                      IN OUT PCONTEXT Context)
 {
+    PFX_SAVE_AREA FxSaveArea = NULL;
+
     /* Start with the Control flags */
     if ((Context->ContextFlags & CONTEXT_CONTROL) == CONTEXT_CONTROL)
     {
@@ -890,40 +892,39 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
         Context->Edi = TrapFrame->Edi;
     }
 
-   if ((Context->ContextFlags & CONTEXT_DEBUG_REGISTERS) == CONTEXT_DEBUG_REGISTERS)
-   {
-	/*
-	 * FIXME: Implement this case
-	 */
-	Context->ContextFlags &= (~CONTEXT_DEBUG_REGISTERS) | CONTEXT_i386;
-     }
-   if ((Context->ContextFlags & CONTEXT_FLOATING_POINT) == CONTEXT_FLOATING_POINT)
-   {
-	/*
-	 * FIXME: Implement this case
-	 *
-	 * I think this should only be filled for FPU exceptions, otherwise I
-         * would not know where to get it from as it can be the current state
-	 * of the FPU or already saved in the thread's FPU save area.
-	 *  -blight
-	 */
-	Context->ContextFlags &= (~CONTEXT_FLOATING_POINT) | CONTEXT_i386;
-     }
-#if 0
-   if ((Context->ContextFlags & CONTEXT_EXTENDED_REGISTERS) == CONTEXT_EXTENDED_REGISTERS)
-   {
-	/*
-	 * FIXME: Investigate this
-	 *
-	 * This is the XMM state (first 512 bytes of FXSAVE_FORMAT/FX_SAVE_AREA)
-	 * This should only be filled in case of a SIMD exception I think, so
-	 * this is not the right place (like for FPU the state could already be
-	 * saved in the thread's FX_SAVE_AREA or still be in the CPU)
-	 *  -blight
-	 */
-        Context->ContextFlags &= ~CONTEXT_EXTENDED_REGISTERS;
-     }
-#endif
+    if ((Context->ContextFlags & CONTEXT_DEBUG_REGISTERS) == CONTEXT_DEBUG_REGISTERS)
+    {
+        /*
+         * FIXME: Implement this case
+         */
+        Context->ContextFlags &= (~CONTEXT_DEBUG_REGISTERS) | CONTEXT_i386;
+    }
+    if ((Context->ContextFlags & CONTEXT_FLOATING_POINT) == CONTEXT_FLOATING_POINT)
+    {
+        FxSaveArea = KiGetFpuState(KeGetCurrentThread());
+        if (FxSaveArea != NULL)
+        {
+            KiFxSaveAreaToFloatingSaveArea(&Context->FloatSave, FxSaveArea);
+        }
+        else
+        {
+            Context->ContextFlags &= (~CONTEXT_FLOATING_POINT) | CONTEXT_i386;
+        }
+    }
+    if ((Context->ContextFlags & CONTEXT_EXTENDED_REGISTERS) == CONTEXT_EXTENDED_REGISTERS)
+    {
+        if (FxSaveArea == NULL)
+            FxSaveArea = KiGetFpuState(KeGetCurrentThread());
+        if (FxSaveArea != NULL)
+        {
+            memcpy(Context->ExtendedRegisters, &FxSaveArea->U.FxArea,
+                   min(sizeof (Context->ExtendedRegisters), sizeof (FxSaveArea->U.FxArea)) );
+        }
+        else
+        {
+            Context->ContextFlags &= (~CONTEXT_EXTENDED_REGISTERS) | CONTEXT_i386;
+        }
+    }
 }
 
 VOID
@@ -1180,8 +1181,11 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
     /* Check if User Mode */
     if (PreviousMode == UserMode)
     {
+        extern ULONG FxsrSupport;
         /* Add the FPU Flag */
         Context.ContextFlags |= CONTEXT_FLOATING_POINT;
+        if (FxsrSupport)
+            Context.ContextFlags |= CONTEXT_EXTENDED_REGISTERS;
     }
 
     /* Get a Context */
@@ -1259,7 +1263,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
 
                 /* Probe stack and copy Context */
                 ProbeForWrite((PVOID)Stack, Size, sizeof(ULONG));
-                RtlMoveMemory((PVOID)Stack, &Context, sizeof(CONTEXT));
+                RtlCopyMemory((PVOID)Stack, &Context, sizeof(CONTEXT));
 
                 /* Align exception record size and get stack pointer */
                 Size = (sizeof(EXCEPTION_RECORD) - 
@@ -1272,7 +1276,7 @@ KiDispatchException(PEXCEPTION_RECORD ExceptionRecord,
                 ProbeForWrite((PVOID)(NewStack - 2 * sizeof(ULONG_PTR)),
                               Size +  2 * sizeof(ULONG_PTR),
                               sizeof(ULONG));
-                RtlMoveMemory((PVOID)NewStack, ExceptionRecord, Size);
+                RtlCopyMemory((PVOID)NewStack, ExceptionRecord, Size);
 
                 /* Now write the two params for the user-mode dispatcher */
                 *(PULONG_PTR)(NewStack - 1 * sizeof(ULONG_PTR)) = Stack;

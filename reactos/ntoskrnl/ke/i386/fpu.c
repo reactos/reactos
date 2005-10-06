@@ -62,6 +62,7 @@ KiTagWordFnsaveToFxsave(USHORT TagWord)
     return tmp;
 }
 
+
 STATIC USHORT
 KiTagWordFxsaveToFnsave(PFXSAVE_FORMAT FxSave)
 {
@@ -106,6 +107,7 @@ KiTagWordFxsaveToFnsave(PFXSAVE_FORMAT FxSave)
 
     return TagWord;
 }
+
 
 STATIC VOID
 KiFnsaveToFxsaveFormat(PFXSAVE_FORMAT FxSave, CONST PFNSAVE_FORMAT FnSave)
@@ -154,7 +156,8 @@ KiFxsaveToFnsaveFormat(PFNSAVE_FORMAT FnSave, CONST PFXSAVE_FORMAT FxSave)
     }
 }
 
-VOID
+
+STATIC VOID
 KiFloatingSaveAreaToFxSaveArea(PFX_SAVE_AREA FxSaveArea, CONST FLOATING_SAVE_AREA *FloatingSaveArea)
 {
     if (FxsrSupport)
@@ -168,6 +171,22 @@ KiFloatingSaveAreaToFxSaveArea(PFX_SAVE_AREA FxSaveArea, CONST FLOATING_SAVE_ARE
     FxSaveArea->NpxSavedCpu = 0;
     FxSaveArea->Cr0NpxState = FloatingSaveArea->Cr0NpxState;
 }
+
+
+VOID
+KiFxSaveAreaToFloatingSaveArea(FLOATING_SAVE_AREA *FloatingSaveArea, CONST PFX_SAVE_AREA FxSaveArea)
+{
+    if (FxsrSupport)
+    {
+        KiFxsaveToFnsaveFormat((PFNSAVE_FORMAT)FloatingSaveArea, &FxSaveArea->U.FxArea);
+    }
+    else
+    {
+        memcpy(FloatingSaveArea, &FxSaveArea->U.FnArea, sizeof(FxSaveArea->U.FnArea));
+    }
+    FloatingSaveArea->Cr0NpxState = FxSaveArea->Cr0NpxState;
+}
+
 
 BOOL
 KiContextToFxSaveArea(PFX_SAVE_AREA FxSaveArea, PCONTEXT Context)
@@ -213,6 +232,7 @@ KiContextToFxSaveArea(PFX_SAVE_AREA FxSaveArea, PCONTEXT Context)
 
     return FpuContextChanged;
 }
+
 
 VOID INIT_FUNCTION
 KiCheckFPU(VOID)
@@ -300,68 +320,38 @@ KiCheckFPU(VOID)
     Ke386RestoreFlags(Flags);
 }
 
-/* This is a rather naive implementation of Ke(Save/Restore)FloatingPointState
-   which will not work for WDM drivers. Please feel free to improve */
 
-#define FPU_STATE_SIZE 108
-
-NTSTATUS STDCALL
-KeSaveFloatingPointState(OUT PKFLOATING_SAVE Save)
+PFX_SAVE_AREA
+KiGetFpuState(PKTHREAD Thread)
 {
-    char *FpState;
+    PFX_SAVE_AREA FxSaveArea = NULL;
+    KIRQL OldIrql;
 
-    ASSERT_IRQL(DISPATCH_LEVEL);
-
-    /* check if we are doing software emulation */
-    if (!HardwareMathSupport)
+    KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
+    if (Thread->NpxState & NPX_STATE_VALID)
     {
-        return STATUS_ILLEGAL_FLOAT_CONTEXT;
+        FxSaveArea = (PFX_SAVE_AREA)((ULONG_PTR)Thread->InitialStack - sizeof (FX_SAVE_AREA));
+        if (Thread->NpxState & NPX_STATE_DIRTY)
+        {
+            ASSERT(KeGetCurrentPrcb()->NpxThread == Thread);
+            ASSERT((Ke386GetCr0() & X86_CR0_TS) == 0);
+
+            if (FxsrSupport)
+                asm volatile("fxsave %0" : : "m"(FxSaveArea->U.FxArea));
+            else
+            {
+                KeGetCurrentPrcb()->NpxThread = NULL;
+                asm volatile("fnsave %0" : : "m"(FxSaveArea->U.FnArea));
+                Ke386SetCr0(Ke386GetCr0() | X86_CR0_TS); /* FPU state has to be reloaded because fnsave changes it. */
+            }
+            Thread->NpxState = NPX_STATE_VALID;
+        }
     }
+    KeLowerIrql(OldIrql);
 
-    FpState = ExAllocatePool(NonPagedPool, FPU_STATE_SIZE);
-    if (NULL == FpState)
-    {
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-    *((PVOID *) Save) = FpState;
-
-#if defined(__GNUC__)
-    asm volatile("fsave %0\n\t" : "=m" (*FpState));
-#elif defined(_MSC_VER)
-    __asm mov eax, FpState;
-    __asm fsave [eax];
-#else
-#error Unknown compiler for inline assembler
-#endif
-
-    KeGetCurrentThread()->NpxIrql = KeGetCurrentIrql();
-
-    return STATUS_SUCCESS;
+    return FxSaveArea;
 }
 
-NTSTATUS STDCALL
-KeRestoreFloatingPointState(IN PKFLOATING_SAVE Save)
-{
-    char *FpState = *((PVOID *) Save);
-
-    if (KeGetCurrentThread()->NpxIrql != KeGetCurrentIrql())
-    {
-        KEBUGCHECK(UNDEFINED_BUG_CODE);
-    }
-
-#if defined(__GNUC__)
-    __asm__("frstor %0\n\t" : "=m" (*FpState));
-#elif defined(_MSC_VER)
-    __asm mov eax, FpState;
-    __asm frstor [eax];
-#else
-#error Unknown compiler for inline assembler
-#endif
-
-    ExFreePool(FpState);
-
-    return STATUS_SUCCESS;
-}
 
 NTSTATUS
 KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
@@ -403,7 +393,7 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
             if (NpxThread != NULL)
             {
                 KeGetCurrentPrcb()->NpxThread = NULL;
-                FxSaveArea = (PFX_SAVE_AREA)((char *)NpxThread->InitialStack - sizeof (FX_SAVE_AREA));
+                FxSaveArea = (PFX_SAVE_AREA)((ULONG_PTR)NpxThread->InitialStack - sizeof (FX_SAVE_AREA));
                 /* the fnsave might raise a delayed #MF exception */
                 if (FxsrSupport)
                 {
@@ -420,17 +410,17 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
 
             /* restore the state of the current thread */
             ASSERT((CurrentThread->NpxState & NPX_STATE_DIRTY) == 0);
-            FxSaveArea = (PFX_SAVE_AREA)((char *)CurrentThread->InitialStack - sizeof (FX_SAVE_AREA));
+            FxSaveArea = (PFX_SAVE_AREA)((ULONG_PTR)CurrentThread->InitialStack - sizeof (FX_SAVE_AREA));
             if (CurrentThread->NpxState & NPX_STATE_VALID)
             {
                 if (FxsrSupport)
                 {
-                  FxSaveArea->U.FxArea.MXCsr &= MxcsrFeatureMask;
-                  asm volatile("fxrstor %0" : : "m"(FxSaveArea->U.FxArea));
+                    FxSaveArea->U.FxArea.MXCsr &= MxcsrFeatureMask;
+                    asm volatile("fxrstor %0" : : "m"(FxSaveArea->U.FxArea));
                 }
                 else
                 {
-                  asm volatile("frstor %0" : : "m"(FxSaveArea->U.FnArea));
+                    asm volatile("frstor %0" : : "m"(FxSaveArea->U.FnArea));
                 }
             }
             else /* NpxState & NPX_STATE_INVALID */
@@ -448,7 +438,7 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
                 }
                 else if (!FpuInitialized)
                 {
-                    asm volatile("finit");
+                    asm volatile("fninit");
                 }
             }
             KeGetCurrentPrcb()->NpxThread = CurrentThread;
@@ -465,24 +455,31 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
     else /* ExceptionNr == 16 || ExceptionNr == 19 */
     {
         EXCEPTION_RECORD Er;
-        UCHAR DummyContext[sizeof(CONTEXT) + 16];
-        PCONTEXT Context;
         KPROCESSOR_MODE PreviousMode;
         PKTHREAD CurrentThread, NpxThread;
-        KIRQL oldIrql;
+        KIRQL OldIrql;
+        ULONG FpuEnvBuffer[7];
+        PFNSAVE_FORMAT FpuEnv = (PFNSAVE_FORMAT)FpuEnvBuffer;
 
         ASSERT(ExceptionNr == 16 || ExceptionNr == 19); /* math fault or XMM fault*/
 
-        KeRaiseIrql(DISPATCH_LEVEL, &oldIrql);
+        KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
 
         NpxThread = KeGetCurrentPrcb()->NpxThread;
         CurrentThread = KeGetCurrentThread();
         if (NpxThread == NULL)
         {
-            KeLowerIrql(oldIrql);
-            DPRINT1("!!! Math/Xmm fault ignored! (NpxThread == NULL)\n");
+            KeLowerIrql(OldIrql);
+            DPRINT("Math/Xmm fault ignored! (NpxThread == NULL)\n");
             return STATUS_SUCCESS;
         }
+        if (ExceptionNr == 16)
+        {
+            asm volatile("fnstenv %0" : : "m"(*FpuEnv));
+            asm volatile("fldenv %0" : : "m"(*FpuEnv)); /* Stupid x87... */
+            FpuEnv->StatusWord &= 0xffff;
+        }
+        KeLowerIrql(OldIrql);
 
         PreviousMode = ((Tf->Cs & 0xffff) == USER_CS) ? (UserMode) : (KernelMode);
         DPRINT("Math/Xmm fault happened! (PreviousMode = %s)\n",
@@ -490,63 +487,34 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
 
         ASSERT(NpxThread == CurrentThread); /* FIXME: Is not always true I think */
 
-        /* For fxsave we have to align Context->ExtendedRegisters on 16 bytes */
-        Context = (PCONTEXT)DummyContext;
-        Context = (PCONTEXT)((ULONG_PTR)Context + 0x10 - ((ULONG_PTR)Context->ExtendedRegisters & 0x0f));
-
         /* Get FPU/XMM state */
-        Context->FloatSave.Cr0NpxState = 0;
-        if (FxsrSupport)
-        {
-            PFXSAVE_FORMAT FxSave = (PFXSAVE_FORMAT)Context->ExtendedRegisters;
-            FxSave->MXCsrMask = MxcsrFeatureMask;
-            memset(FxSave->RegisterArea, 0, sizeof(FxSave->RegisterArea) +
-                   sizeof(FxSave->Reserved3) + sizeof(FxSave->Reserved4));
-            asm volatile("fxsave %0" : : "m"(*FxSave));
-            KeLowerIrql(oldIrql);
-            KiFxsaveToFnsaveFormat((PFNSAVE_FORMAT)&Context->FloatSave, FxSave);
-        }
-        else
-        {
-            PFNSAVE_FORMAT FnSave = (PFNSAVE_FORMAT)&Context->FloatSave;
-            asm volatile("fnsave %0" : : "m"(*FnSave));
-            KeLowerIrql(oldIrql);
-            KiFnsaveToFxsaveFormat((PFXSAVE_FORMAT)Context->ExtendedRegisters, FnSave);
-        }
-
-        /* Fill the rest of the context */
-        Context->ContextFlags = CONTEXT_FULL;
-        KeTrapFrameToContext(Tf, NULL, Context);
-        Context->ContextFlags |= CONTEXT_FLOATING_POINT | CONTEXT_EXTENDED_REGISTERS;
+        KeLowerIrql(OldIrql);
 
         /* Determine exception code */
         if (ExceptionNr == 16)
         {
-            USHORT FpuStatusWord = Context->FloatSave.StatusWord & 0xffff;
             DPRINT("FpuStatusWord = 0x%04x\n", FpuStatusWord);
 
-            if (FpuStatusWord & X87_SW_IE)
+            if (FpuEnv->StatusWord & X87_SW_IE)
                 Er.ExceptionCode = STATUS_FLOAT_INVALID_OPERATION;
-            else if (FpuStatusWord & X87_SW_DE)
+            else if (FpuEnv->StatusWord & X87_SW_DE)
                 Er.ExceptionCode = STATUS_FLOAT_DENORMAL_OPERAND;
-            else if (FpuStatusWord & X87_SW_ZE)
+            else if (FpuEnv->StatusWord & X87_SW_ZE)
                 Er.ExceptionCode = STATUS_FLOAT_DIVIDE_BY_ZERO;
-            else if (FpuStatusWord & X87_SW_OE)
-               Er.ExceptionCode = STATUS_FLOAT_OVERFLOW;
-            else if (FpuStatusWord & X87_SW_UE)
+            else if (FpuEnv->StatusWord & X87_SW_OE)
+                Er.ExceptionCode = STATUS_FLOAT_OVERFLOW;
+            else if (FpuEnv->StatusWord & X87_SW_UE)
                 Er.ExceptionCode = STATUS_FLOAT_UNDERFLOW;
-            else if (FpuStatusWord & X87_SW_PE)
+            else if (FpuEnv->StatusWord & X87_SW_PE)
                 Er.ExceptionCode = STATUS_FLOAT_INEXACT_RESULT;
-            else if (FpuStatusWord & X87_SW_SE)
+            else if (FpuEnv->StatusWord & X87_SW_SE)
                 Er.ExceptionCode = STATUS_FLOAT_STACK_CHECK;
             else
                 ASSERT(0); /* not reached */
-            /* FIXME: is this the right way to get the correct EIP of the faulting instruction? */
-            Er.ExceptionAddress = (PVOID)Context->FloatSave.ErrorOffset;
+            Er.ExceptionAddress = (PVOID)FpuEnv->ErrorOffset;
         }
         else /* ExceptionNr == 19 */
         {
-            /* FIXME: When should we use STATUS_FLOAT_MULTIPLE_FAULTS? */
             Er.ExceptionCode = STATUS_FLOAT_MULTIPLE_TRAPS;
             Er.ExceptionAddress = (PVOID)Tf->Eip;
         }
@@ -564,4 +532,68 @@ KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr)
     }
 
     return STATUS_UNSUCCESSFUL;
+}
+
+
+/* This is a rather naive implementation of Ke(Save/Restore)FloatingPointState
+   which will not work for WDM drivers. Please feel free to improve */
+
+NTSTATUS STDCALL
+KeSaveFloatingPointState(OUT PKFLOATING_SAVE Save)
+{
+    PFNSAVE_FORMAT FpState;
+
+    ASSERT_IRQL(DISPATCH_LEVEL);
+
+    /* check if we are doing software emulation */
+    if (!HardwareMathSupport)
+    {
+        return STATUS_ILLEGAL_FLOAT_CONTEXT;
+    }
+
+    FpState = ExAllocatePool(NonPagedPool, sizeof (FNSAVE_FORMAT));
+    if (NULL == FpState)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    *((PVOID *) Save) = FpState;
+
+#if defined(__GNUC__)
+    asm volatile("fnsave %0\n\t" : "=m" (*FpState));
+#elif defined(_MSC_VER)
+    __asm mov eax, FpState;
+    __asm fsave [eax];
+#else
+#error Unknown compiler for inline assembler
+#endif
+
+    KeGetCurrentThread()->NpxIrql = KeGetCurrentIrql();
+
+    return STATUS_SUCCESS;
+}
+
+
+NTSTATUS STDCALL
+KeRestoreFloatingPointState(IN PKFLOATING_SAVE Save)
+{
+    PFNSAVE_FORMAT FpState = *((PVOID *) Save);
+
+    if (KeGetCurrentThread()->NpxIrql != KeGetCurrentIrql())
+    {
+        KEBUGCHECK(UNDEFINED_BUG_CODE);
+    }
+
+#if defined(__GNUC__)
+    asm volatile("fnclex\n\t");
+    asm volatile("frstor %0\n\t" : "=m" (*FpState));
+#elif defined(_MSC_VER)
+    __asm mov eax, FpState;
+    __asm frstor [eax];
+#else
+#error Unknown compiler for inline assembler
+#endif
+
+    ExFreePool(FpState);
+
+    return STATUS_SUCCESS;
 }
