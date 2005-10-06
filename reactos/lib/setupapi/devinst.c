@@ -3545,7 +3545,7 @@ SetupDiBuildDriverInfoList(
     LPWSTR HardwareIDs = NULL;
     LPWSTR CompatibleIDs = NULL;
     FILETIME DriverDate;
-    DWORDLONG DriverVersion;
+    DWORDLONG DriverVersion = 0;
     DWORD RequiredSize;
     BOOL ret = FALSE;
 
