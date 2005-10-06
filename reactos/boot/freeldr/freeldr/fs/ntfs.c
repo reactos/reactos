@@ -45,7 +45,7 @@ ULONG NtfsSectorOfClusterZero;
 PNTFS_MFT_RECORD NtfsMasterFileTable;
 NTFS_ATTR_CONTEXT NtfsMFTContext;
 
-PUCHAR NtfsDecodeRun(PUCHAR DataRun, LONGLONG *DataRunOffset, ULONGLONG *DataRunLength)
+static PUCHAR NtfsDecodeRun(PUCHAR DataRun, LONGLONG *DataRunOffset, ULONGLONG *DataRunLength)
 {
     UCHAR DataRunOffsetSize;
     UCHAR DataRunLengthSize;
@@ -87,7 +87,7 @@ PUCHAR NtfsDecodeRun(PUCHAR DataRun, LONGLONG *DataRunOffset, ULONGLONG *DataRun
 }
 
 /* FIXME: Add support for attribute lists! */
-BOOL NtfsFindAttribute(PNTFS_ATTR_CONTEXT Context, PNTFS_MFT_RECORD MftRecord, ULONG Type, PWCHAR Name)
+static BOOL NtfsFindAttribute(PNTFS_ATTR_CONTEXT Context, PNTFS_MFT_RECORD MftRecord, ULONG Type, PWCHAR Name)
 {
     PNTFS_ATTR_RECORD AttrRecord;
     PNTFS_ATTR_RECORD AttrRecordEnd;
@@ -148,7 +148,7 @@ BOOL NtfsFindAttribute(PNTFS_ATTR_CONTEXT Context, PNTFS_MFT_RECORD MftRecord, U
 }
 
 /* FIXME: Optimize for multisector reads. */
-BOOL NtfsDiskRead(ULONGLONG Offset, ULONGLONG Length, PCHAR Buffer)
+static BOOL NtfsDiskRead(ULONGLONG Offset, ULONGLONG Length, PCHAR Buffer)
 {
     USHORT ReadLength;
 
@@ -190,7 +190,7 @@ BOOL NtfsDiskRead(ULONGLONG Offset, ULONGLONG Length, PCHAR Buffer)
     return TRUE;
 }
 
-ULONGLONG NtfsReadAttribute(PNTFS_ATTR_CONTEXT Context, ULONGLONG Offset, PCHAR Buffer, ULONGLONG Length)
+static ULONGLONG NtfsReadAttribute(PNTFS_ATTR_CONTEXT Context, ULONGLONG Offset, PCHAR Buffer, ULONGLONG Length)
 {
     ULONGLONG LastLCN;
     PUCHAR DataRun;
@@ -314,7 +314,7 @@ ULONGLONG NtfsReadAttribute(PNTFS_ATTR_CONTEXT Context, ULONGLONG Offset, PCHAR 
     return AlreadyRead;
 }
 
-BOOL NtfsFixupRecord(PNTFS_RECORD Record)
+static BOOL NtfsFixupRecord(PNTFS_RECORD Record)
 {
     USHORT *USA;
     USHORT USANumber;
@@ -338,7 +338,7 @@ BOOL NtfsFixupRecord(PNTFS_RECORD Record)
     return TRUE;
 }
 
-BOOL NtfsReadMftRecord(ULONG MFTIndex, PNTFS_MFT_RECORD Buffer)
+static BOOL NtfsReadMftRecord(ULONG MFTIndex, PNTFS_MFT_RECORD Buffer)
 {
     ULONGLONG BytesRead;
 
@@ -369,7 +369,7 @@ VOID NtfsPrintFile(PNTFS_INDEX_ENTRY IndexEntry)
 }
 #endif
 
-BOOL NtfsCompareFileName(PCHAR FileName, PNTFS_INDEX_ENTRY IndexEntry)
+static BOOL NtfsCompareFileName(PCHAR FileName, PNTFS_INDEX_ENTRY IndexEntry)
 {
     PWCHAR EntryFileName;
     UCHAR EntryFileNameLength;
@@ -402,7 +402,7 @@ BOOL NtfsCompareFileName(PCHAR FileName, PNTFS_INDEX_ENTRY IndexEntry)
     return TRUE;
 }
 
-BOOL NtfsFindMftRecord(ULONG MFTIndex, PCHAR FileName, ULONG *OutMFTIndex)
+static BOOL NtfsFindMftRecord(ULONG MFTIndex, PCHAR FileName, ULONG *OutMFTIndex)
 {
     PNTFS_MFT_RECORD MftRecord;
     ULONG Magic;
@@ -563,7 +563,7 @@ BOOL NtfsFindMftRecord(ULONG MFTIndex, PCHAR FileName, ULONG *OutMFTIndex)
     return FALSE;
 }
 
-BOOL NtfsLookupFile(PCHAR FileName, PNTFS_MFT_RECORD MftRecord, PNTFS_ATTR_CONTEXT DataContext)
+static BOOL NtfsLookupFile(PCHAR FileName, PNTFS_MFT_RECORD MftRecord, PNTFS_ATTR_CONTEXT DataContext)
 {
     ULONG NumberOfPathParts;
     CHAR PathPart[261];

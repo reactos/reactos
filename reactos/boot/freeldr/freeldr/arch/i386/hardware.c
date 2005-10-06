@@ -30,6 +30,7 @@
 
 #include "../../reactos/registry.h"
 #include "hardware.h"
+#include "machpc.h"
 
 
 #define MILLISEC     (10)

@@ -89,8 +89,8 @@ typedef struct
 // second list. In some cases, only a "stub" VBE may be present, supporting
 // only AX=4F00h; this case may be assumed if the list of supported video modes
 // is empty (consisting of a single word of FFFFh)
-
-VOID BiosSetVideoFont8x16(VOID)
+#if 0
+static VOID BiosSetVideoFont8x16(VOID)
 {
 	REGS	Regs;
 
@@ -106,11 +106,11 @@ VOID BiosSetVideoFont8x16(VOID)
 	Int386(0x10, &Regs, &Regs);
 }
 
-VOID VideoSetTextCursorPosition(ULONG X, ULONG Y)
+static VOID VideoSetTextCursorPosition(ULONG X, ULONG Y)
 {
 }
 
-ULONG VideoGetTextCursorPositionX(VOID)
+static ULONG VideoGetTextCursorPositionX(VOID)
 {
 	REGS	Regs;
 
@@ -135,7 +135,7 @@ ULONG VideoGetTextCursorPositionX(VOID)
 	return Regs.b.dl;
 }
 
-ULONG VideoGetTextCursorPositionY(VOID)
+static ULONG VideoGetTextCursorPositionY(VOID)
 {
 	REGS	Regs;
 
@@ -159,6 +159,7 @@ ULONG VideoGetTextCursorPositionY(VOID)
 
 	return Regs.b.dh;
 }
+#endif
 
 USHORT BiosIsVesaSupported(VOID)
 {

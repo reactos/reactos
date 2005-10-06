@@ -1256,7 +1256,7 @@ CmiCalcHiveChecksum (PREGISTRY_HIVE Hive)
 }
 
 
-BOOL
+static BOOL
 CmiExportHive (PREGISTRY_HIVE Hive,
 	       PCHAR KeyName)
 {

@@ -76,6 +76,43 @@ VOID MachInit(char *CmdLine);
 
 extern MACHVTBL MachVtbl;
 
+VOID MachConsPutChar(int Ch);
+BOOL MachConsKbHit();
+int MachConsGetCh();
+VOID MachVideoClearScreen(UCHAR Attr);
+VIDEODISPLAYMODE MachVideoSetDisplayMode(char *DisplayMode, BOOL Init);
+VOID MachVideoGetDisplaySize(PULONG Width, PULONG Height, PULONG Depth);
+ULONG MachVideoGetBufferSize(VOID);
+VOID MachVideoSetTextCursorPosition(ULONG X, ULONG Y);
+VOID MachVideoHideShowTextCursor(BOOL Show);
+VOID MachVideoPutChar(int Ch, UCHAR Attr, unsigned X, unsigned Y);
+VOID MachVideoCopyOffScreenBufferToVRAM(PVOID Buffer);
+BOOL MachVideoIsPaletteFixed(VOID);
+VOID MachVideoSetPaletteColor(UCHAR Color, UCHAR Red, UCHAR Green, UCHAR Blue);
+VOID MachVideoGetPaletteColor(UCHAR Color, UCHAR *Red, UCHAR *Green, UCHAR *Blue);
+VOID MachVideoSync(VOID);
+VOID MachVideoPrepareForReactOS(VOID);
+ULONG MachGetMemoryMap(PBIOS_MEMORY_MAP BiosMemoryMap, ULONG MaxMemoryMapSize);
+BOOL MachDiskGetBootVolume(PULONG DriveNumber, PULONGLONG StartSector, PULONGLONG SectorCount, int *FsType);
+BOOL
+MachDiskGetSystemVolume(char *SystemPath,
+                        char *RemainingPath,
+                        PULONG Device,
+                        PULONG DriveNumber,
+                        PULONGLONG StartSector,
+                        PULONGLONG SectorCount,
+                        int *FsType);
+BOOL MachDiskGetBootPath(char *BootPath, unsigned Size);
+VOID MachDiskGetBootDevice(PULONG BootDevice);
+BOOL MachDiskBootingFromFloppy();
+BOOL MachDiskNormalizeSystemPath(char *SystemPath, unsigned Size);
+BOOL MachDiskReadLogicalSectors(ULONG DriveNumber, ULONGLONG SectorNumber, ULONG SectorCount, PVOID Buffer);
+BOOL MachDiskGetPartitionEntry(ULONG DriveNumber, ULONG PartitionNumber, PPARTITION_TABLE_ENTRY PartitionTableEntry);
+BOOL MachDiskGetDriveGeometry(ULONG DriveNumber, PGEOMETRY DriveGeometry);
+ULONG MachDiskGetCacheableBlockCount(ULONG DriveNumber);
+VOID MachRTCGetCurrentDateTime(PULONG Year, PULONG Month, PULONG Day, PULONG Hour, PULONG Minute, PULONG Second);
+VOID MachHwDetect(VOID);
+
 #define MachConsPutChar(Ch)			MachVtbl.ConsPutChar(Ch)
 #define MachConsKbHit()				MachVtbl.ConsKbHit()
 #define MachConsGetCh()				MachVtbl.ConsGetCh()

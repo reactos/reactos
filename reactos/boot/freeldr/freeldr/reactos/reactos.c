@@ -34,7 +34,7 @@ char					reactos_module_strings[64][256];	// Array to hold module names
 unsigned long			reactos_memory_map_descriptor_size;
 memory_map_t			reactos_memory_map[32];		// Memory map
 
-BOOL
+static BOOL
 STDCALL
 FrLdrLoadKernel(PCHAR szFileName,
                 INT nPos)
@@ -144,7 +144,7 @@ LoadKernelSymbols(PCHAR szKernelName, int nPos)
   return TRUE;
 }
 
-BOOL
+static BOOL
 FrLdrLoadNlsFile(PCHAR szFileName,
                  PCHAR szModuleName)
 {
@@ -183,7 +183,7 @@ FrLdrLoadNlsFile(PCHAR szFileName,
     return(TRUE);
 }
 
-BOOL
+static BOOL
 FrLdrLoadNlsFiles(PCHAR szSystemRoot,
                   PCHAR szErrorOut)
 {
@@ -301,7 +301,7 @@ FrLdrLoadNlsFiles(PCHAR szSystemRoot,
     return(TRUE);
 }
 
-BOOL
+static BOOL
 FrLdrLoadDriver(PCHAR szFileName,
                 INT nPos)
 {
@@ -344,7 +344,7 @@ FrLdrLoadDriver(PCHAR szFileName,
     return(TRUE);
 }
 
-VOID
+static VOID
 FrLdrLoadBootDrivers(PCHAR szSystemRoot,
                      INT nPos)
 {
