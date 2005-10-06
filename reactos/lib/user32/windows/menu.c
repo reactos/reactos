@@ -4318,6 +4318,7 @@ ModifyMenuA(
   LPCSTR lpNewItem)
 {
   MENUITEMINFOA mii;
+  memset( &mii, 0, sizeof(mii) );
   mii.cbSize = sizeof(MENUITEMINFOA);
   mii.fMask = MIIM_FTYPE | MIIM_STRING | MIIM_STATE;
   mii.fType = 0;
