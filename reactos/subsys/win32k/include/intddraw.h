@@ -47,6 +47,10 @@ typedef struct
 	PDD_SURFCB_UPDATEOVERLAY        DdUpdateOverlay;
 	PDD_SURFCB_SETOVERLAYPOSITION   DdSetOverlayPosition;
 	PDD_SURFCB_SETPALETTE           DdSetPalette;
+	// Miscellaneous Callback Function
+	PDD_GETAVAILDRIVERMEMORY        DdGetAvailDriverMemory;
+	// NT callbacks 
+	DD_FREEDRIVERMEMORYDATA         DdFreeDriverMemory;
 	// Palette callbacks
 	PDD_PALCB_DESTROYPALETTE        DdDestroyPalette;
 	PDD_PALCB_SETENTRIES            DdSetEntries;

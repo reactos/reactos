@@ -14,15 +14,7 @@
 #include <debug.h>
 
 
-DWORD STDCALL NtGdiDdGetAvailDriverMemory(
-    HANDLE hDirectDrawLocal,
-    PDD_GETAVAILDRIVERMEMORYDATA puGetAvailDriverMemoryData
-)
-{
-	UNIMPLEMENTED
 
-	return 0;
-}
 
 BOOL STDCALL NtGdiD3dContextCreate(
     HANDLE hDirectDrawLocal,

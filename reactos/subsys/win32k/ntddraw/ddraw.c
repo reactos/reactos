@@ -302,8 +302,7 @@ DWORD STDCALL NtGdiDdGetDriverInfo(
 
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
 
-
-	 ddRVal = pDirectDraw->DrvGetDirectDrawInfo(
+    ddRVal = pDirectDraw->DrvGetDirectDrawInfo(
                  pDirectDraw->Global.dhpdev,(PDD_HALINFO) puGetDriverInfoData,
                  &pdwNumHeaps, pvmList, &pdwNumFourCC, pdwFourCC);
 
@@ -321,9 +320,7 @@ DWORD STDCALL NtGdiDdWaitForVerticalBlank(
 {
 	DWORD  ddRVal;
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
-
-	puWaitForVerticalBlankData->lpDD = pDirectDraw->Local.lpGbl;
-
+	
 	ddRVal = pDirectDraw->DdWaitForVerticalBlank(puWaitForVerticalBlankData);
 
     GDIOBJ_UnlockObjByPtr(pDirectDraw);
@@ -340,8 +337,6 @@ DWORD STDCALL NtGdiDdCanCreateSurface(
 	DWORD  ddRVal;
 
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
-
-	puCanCreateSurfaceData->lpDD = pDirectDraw->Local.lpGbl;
 
 	ddRVal = pDirectDraw->DdCanCreateSurface(puCanCreateSurfaceData);
 
@@ -373,6 +368,28 @@ DWORD STDCALL NtGdiDdBlt(
  return ddRVal;
 }
 
+ /* FIXME
+    this call is not implement yet  
+	where to get the pointer DdGetAvailDriverMemory(puGetAvailDriverMemoryData 
+	for the call in NtGdiDdCreateDirectDrawObject `??
+	or some where else ??
+	*/
+ 
+DWORD STDCALL NtGdiDdGetAvailDriverMemory(
+    HANDLE hDirectDrawLocal,
+    PDD_GETAVAILDRIVERMEMORYDATA puGetAvailDriverMemoryData
+)
+{
+	DWORD  ddRVal;
+
+	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
+
+    ddRVal = pDirectDraw->DdGetAvailDriverMemory(puGetAvailDriverMemoryData); 
+ 
+	GDIOBJ_UnlockObjByPtr(pDirectDraw);
+
+	return ddRVal;
+}
 
 
 
