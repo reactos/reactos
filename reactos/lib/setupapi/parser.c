@@ -2,6 +2,7 @@
  * INF file parsing
  *
  * Copyright 2002 Alexandre Julliard for CodeWeavers
+ *           2005 Hervé Poussineau (hpoussin@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -35,6 +36,7 @@
 #include "winreg.h"
 #include "winternl.h"
 #include "winerror.h"
+#include "cfgmgr32.h"
 #include "setupapi.h"
 #include "setupapi_private.h"
 
@@ -2069,5 +2071,85 @@ SetupGetInfFileListW(
     }
 
     HeapFree(GetProcessHeap(), 0, pFileSpecification);
+    return ret;
+}
+
+/***********************************************************************
+ *		SetupDiGetINFClassW    (SETUPAPI.@)
+ */
+BOOL WINAPI
+SetupDiGetINFClassW(
+    IN PCWSTR InfName,
+    OUT LPGUID ClassGuid,
+    OUT PWSTR ClassName,
+    IN DWORD ClassNameSize,
+    OUT PDWORD RequiredSize OPTIONAL)
+{
+    HINF hInf = INVALID_HANDLE_VALUE;
+    DWORD requiredSize;
+    WCHAR guidW[MAX_GUID_STRING_LEN + 1];
+    BOOL ret = FALSE;
+
+    TRACE("%S %p %p %ld %p\n", InfName, ClassGuid,
+        ClassName, ClassNameSize, RequiredSize);
+
+    /* Open .inf file */
+    hInf = SetupOpenInfFileW(InfName, NULL, INF_STYLE_WIN4, NULL);
+    if (hInf == INVALID_HANDLE_VALUE)
+        goto cleanup;
+
+    /* Read class Guid */
+    if (!SetupGetLineTextW(NULL, hInf, L"Version", L"ClassGUID", guidW, sizeof(guidW), NULL))
+        goto cleanup;
+    guidW[37] = '\0'; /* Replace the } by a NULL character */
+    if (UuidFromStringW(&guidW[1], ClassGuid) != RPC_S_OK)
+        goto cleanup;
+
+    /* Read class name */
+    ret = SetupGetLineTextW(NULL, hInf, L"Version", L"Class", ClassName, ClassNameSize, &requiredSize);
+    if (ret && ClassName == NULL && ClassNameSize == 0)
+    {
+        if (RequiredSize)
+            *RequiredSize = requiredSize;
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        ret = FALSE;
+        goto cleanup;
+    }
+    if (!ret)
+    {
+        if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+        {
+            if (RequiredSize)
+                *RequiredSize = requiredSize;
+            goto cleanup;
+        }
+        else if (!SetupDiClassNameFromGuidW(ClassGuid, ClassName, ClassNameSize, &requiredSize))
+        {
+            if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+            {
+                if (RequiredSize)
+                    *RequiredSize = requiredSize;
+                goto cleanup;
+            }
+            /* Return a NULL class name */
+            if (RequiredSize)
+                *RequiredSize = 1;
+            if (ClassNameSize < 1)
+            {
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                goto cleanup;
+            }
+            memcpy(ClassGuid, &GUID_NULL, sizeof(GUID));
+            *ClassName = UNICODE_NULL;
+        }
+    }
+
+    ret = TRUE;
+
+cleanup:
+    if (hInf != INVALID_HANDLE_VALUE)
+       SetupCloseInfFile(hInf);
+
+    TRACE("Returning %d\n", ret);
     return ret;
 }

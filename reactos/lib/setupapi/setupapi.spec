@@ -342,7 +342,7 @@
 @ stub SetupDiGetHwProfileListExA
 @ stub SetupDiGetHwProfileListExW
 @ stub SetupDiGetINFClassA
-@ stub SetupDiGetINFClassW
+@ stdcall SetupDiGetINFClassW(wstr ptr ptr long ptr)
 @ stub SetupDiGetSelectedDevice
 @ stub SetupDiGetSelectedDriverA
 @ stdcall SetupDiGetSelectedDriverW(ptr ptr ptr)
