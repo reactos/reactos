@@ -8,6 +8,7 @@
 #define GDI_OBJECT_TYPE_DD_CLIPPER    0x00640000
 #define GDI_OBJECT_TYPE_DD_MOTIONCOMP 0x00650000
 
+
 typedef struct
 {
 	DD_SURFACE_LOCAL Local;
@@ -22,38 +23,62 @@ typedef struct
 {
 	DD_DIRECTDRAW_LOCAL Local;
 	DD_DIRECTDRAW_GLOBAL Global;
-	// Drv callbacks
-	PGD_GETDIRECTDRAWINFO           DrvGetDirectDrawInfo;
-	PGD_DISABLEDIRECTDRAW           DrvDisableDirectDraw;
+	// Drv callbacks		
+	PGD_GETDIRECTDRAWINFO            DrvGetDirectDrawInfo; 	
+	PGD_DISABLEDIRECTDRAW            DrvDisableDirectDraw;
+	PDD_GETDRIVERINFO                DdGetDriverInfo; 
+
 	// DD callbacks
-	PDD_CREATESURFACE               DdCreateSurface;
-	PDD_SETCOLORKEY                 DdDrvSetColorKey; // ?????
-	PDD_WAITFORVERTICALBLANK        DdWaitForVerticalBlank;
-	PDD_CANCREATESURFACE            DdCanCreateSurface;
-	PDD_CREATEPALETTE               DdCreatePalette;
-	PDD_GETSCANLINE                 DdGetScanLine;
-	PDD_MAPMEMORY                   DdMapMemory;
+	DD_CALLBACKS                     DD;
+
 	// Surface callbacks
-	PDD_SURFCB_DESTROYSURFACE	    DdDestroySurface;
-	PDD_SURFCB_FLIP                 DdFlip;
-	PDD_SURFCB_SETCLIPLIST          DdSetClipList;
-	PDD_SURFCB_LOCK                 DdLock;
-	PDD_SURFCB_UNLOCK               DdUnlock;
-	PDD_SURFCB_BLT                  DdBlt;
-	PDD_SURFCB_SETCOLORKEY          DdSetColorKey;
-	PDD_SURFCB_ADDATTACHEDSURFACE   DdAddAttachedSurface;
-	PDD_SURFCB_GETBLTSTATUS         DdGetBltStatus;
-	PDD_SURFCB_GETFLIPSTATUS        DdGetFlipStatus;
-	PDD_SURFCB_UPDATEOVERLAY        DdUpdateOverlay;
-	PDD_SURFCB_SETOVERLAYPOSITION   DdSetOverlayPosition;
-	PDD_SURFCB_SETPALETTE           DdSetPalette;
-	// Miscellaneous Callback Function
-	PDD_GETAVAILDRIVERMEMORY        DdGetAvailDriverMemory;
-	// NT callbacks 
-	DD_FREEDRIVERMEMORYDATA         DdFreeDriverMemory;
+	DD_SURFACECALLBACKS              Surf;
+
 	// Palette callbacks
-	PDD_PALCB_DESTROYPALETTE        DdDestroyPalette;
-	PDD_PALCB_SETENTRIES            DdSetEntries;
+	DD_PALETTECALLBACKS              Pal;
+	
+	// Color Control Callback 
+	PDD_COLORCB_COLORCONTROL         DdControlColor; 
+	// Miscellaneous Callback
+	PDD_GETAVAILDRIVERMEMORY         DdGetAvailDriverMemory;
+    // Kernel Callback 
+	PDD_KERNELCB_SYNCSURFACE         DdSyncSurfaceData; 
+	PDD_KERNELCB_SYNCVIDEOPORT       DdSyncVideoPortData;
+	// NT-based Callback 
+	PDD_FLIPTOGDISURFACE             DdFlipToGDISurface; 
+	PDD_FREEDRIVERMEMORY             DdFreeDriverMemory; 
+	PDD_SETEXCLUSIVEMODE             DdSetExclusiveMode; 
+	// Motion Compensation
+    PDD_MOCOMPCB_BEGINFRAME          DdMoCompBeginFrame; 
+    PDD_MOCOMPCB_CREATE              DdMoCompCreate; 
+	PDD_MOCOMPCB_DESTROY             DdMoCompDestroy; 
+	PDD_MOCOMPCB_ENDFRAME            DdMoCompEndFrame;
+	PDD_MOCOMPCB_GETCOMPBUFFINFO     DdMoCompGetBuffInfo; 
+	PDD_MOCOMPCB_GETFORMATS          DdMoCompGetFormats;
+	PDD_MOCOMPCB_GETGUIDS            DdMoCompGetGuids; 
+	PDD_MOCOMPCB_GETINTERNALINFO     DdMoCompGetInternalInfo; 
+	PDD_MOCOMPCB_QUERYSTATUS         DdMoCompQueryStatus; 
+	PDD_MOCOMPCB_RENDER              DdMoCompRender; 
+	// Video Port Callback 
+    PDD_VPORTCB_CANCREATEVIDEOPORT   DdVideoPortCanCreate;
+    PDD_VPORTCB_COLORCONTROL         DdVideoPortColorControl;
+    PDD_VPORTCB_CREATEVIDEOPORT      DdVideoPortCreate;
+    PDD_VPORTCB_DESTROYVPORT         DdVideoPortDestroy;
+    PDD_VPORTCB_FLIP                 DdVideoPortFlip;
+    PDD_VPORTCB_GETBANDWIDTH         DdVideoPortGetBandwidth;
+    PDD_VPORTCB_GETVPORTCONNECT      DdVideoPortGetConnectInfo;
+    PDD_VPORTCB_GETFIELD             DdVideoPortGetField;
+    PDD_VPORTCB_GETFLIPSTATUS        DdVideoPortGetFlipStatus;
+    PDD_VPORTCB_GETINPUTFORMATS      DdVideoPortGetInputFormats;
+    PDD_VPORTCB_GETLINE              DdVideoPortGetLine;
+    PDD_VPORTCB_GETOUTPUTFORMATS     DdVideoPortGetOutputFormats;
+    PDD_VPORTCB_GETSIGNALSTATUS      DdVideoPortGetSignalStatus;
+    PDD_VPORTCB_UPDATE               DdVideoPortUpdate;
+    PDD_VPORTCB_WAITFORSYNC          DdVideoPortWaitForSync;
+    // Notify Callback 
+    //LPDD_NOTIFYCALLBACK NotifyCallback
+
+
 	// D3D Device context callbacks
 	PD3DNTHAL_CONTEXTCREATECB       D3dContextCreate;
 	PD3DNTHAL_CONTEXTDESTROYCB      D3dContextDestroy;
@@ -63,6 +88,9 @@ typedef struct
 	PDD_SURFCB_DESTROYSURFACE       DdDestroyD3DBuffer;
 	PDD_SURFCB_LOCK                 DdLockD3DBuffer;
 	PDD_SURFCB_UNLOCK               DdUnlockD3DBuffer;
+	
+	
+	           
 } DD_DIRECTDRAW, *PDD_DIRECTDRAW;
 
 BOOL INTERNAL_CALL DD_Cleanup(PVOID pDD);

@@ -141,16 +141,7 @@ DWORD STDCALL NtGdiDdCreateD3DBuffer(
 	return 0;
 }
 
-/*
-HANDLE STDCALL NtGdiDdCreateDirectDrawObject(
-    HDC hdc
-)
-{
-	UNIMPLEMENTED
 
-	return 0;
-}
-*/
 
 HANDLE STDCALL NtGdiDdCreateMoComp(
     HANDLE hDirectDraw,
@@ -162,21 +153,7 @@ HANDLE STDCALL NtGdiDdCreateMoComp(
 	return 0;
 }
 
-DWORD STDCALL NtGdiDdCreateSurface(
-    HANDLE hDirectDraw,
-    HANDLE *hSurface,
-    DDSURFACEDESC *puSurfaceDescription,
-    DD_SURFACE_GLOBAL *puSurfaceGlobalData,
-    DD_SURFACE_LOCAL *puSurfaceLocalData,
-    DD_SURFACE_MORE *puSurfaceMoreData,
-    PDD_CREATESURFACEDATA puCreateSurfaceData,
-    HANDLE *puhSurface
-)
-{
-	UNIMPLEMENTED
 
-	return 0;
-}
 
 DWORD STDCALL NtGdiDdCreateSurfaceEx(
     HANDLE hDirectDraw,
@@ -189,39 +166,7 @@ DWORD STDCALL NtGdiDdCreateSurfaceEx(
 	return 0;
 }
 
-/*
-HANDLE STDCALL NtGdiDdCreateSurfaceObject(
-    HANDLE hDirectDrawLocal,
-    HANDLE hSurface,
-    PDD_SURFACE_LOCAL puSurfaceLocal,
-    PDD_SURFACE_MORE puSurfaceMore,
-    PDD_SURFACE_GLOBAL puSurfaceGlobal,
-    BOOL bComplete
-)
-{
-	UNIMPLEMENTED
 
-	return 0;
-}
-
-BOOL STDCALL NtGdiDdDeleteDirectDrawObject(
-    HANDLE hDirectDrawLocal
-)
-{
-	UNIMPLEMENTED
-
-	return 0;
-}
-
-BOOL STDCALL NtGdiDdDeleteSurfaceObject(
-    HANDLE hSurface
-)
-{
-	UNIMPLEMENTED
-
-	return 0;
-}
-*/
 
 DWORD STDCALL NtGdiDdDestroyD3DBuffer(
     HANDLE hSurface
@@ -242,15 +187,7 @@ DWORD STDCALL NtGdiDdDestroyMoComp(
 	return 0;
 }
 
-DWORD STDCALL NtGdiDdDestroySurface(
-    HANDLE hSurface,
-    BOOL bRealDestroy
-)
-{
-	UNIMPLEMENTED
 
-	return 0;
-}
 
 DWORD STDCALL NtGdiDdEndMoCompFrame(
     HANDLE hMoComp,
@@ -262,18 +199,7 @@ DWORD STDCALL NtGdiDdEndMoCompFrame(
 	return 0;
 }
 
-DWORD STDCALL NtGdiDdFlip(
-    HANDLE hSurfaceCurrent,
-    HANDLE hSurfaceTarget,
-    HANDLE hSurfaceCurrentLeft,
-    HANDLE hSurfaceTargetLeft,
-    PDD_FLIPDATA puFlipData
-)
-{
-	UNIMPLEMENTED
 
-	return 0;
-}
 
 DWORD STDCALL NtGdiDdFlipToGDISurface(
     HANDLE hDirectDraw,
@@ -378,26 +304,9 @@ DWORD STDCALL NtGdiDdGetMoCompGuids(
 	return 0;
 }
 
-DWORD STDCALL NtGdiDdGetScanLine(
-    HANDLE hDirectDraw,
-    PDD_GETSCANLINEDATA puGetScanLineData
-)
-{
-	UNIMPLEMENTED
 
-	return 0;
-}
 
-DWORD STDCALL NtGdiDdLock(
-    HANDLE hSurface,
-    PDD_LOCKDATA puLockData,
-    HDC hdcClip
-)
-{
-	UNIMPLEMENTED
 
-	return 0;
-}
 
 DWORD STDCALL NtGdiDdLockD3D(
     HANDLE hSurface,
@@ -459,25 +368,9 @@ BOOL STDCALL NtGdiDdResetVisrgn(
 	return 0;
 }
 
-DWORD STDCALL NtGdiDdSetColorKey(
-    HANDLE hSurface,
-    PDD_SETCOLORKEYDATA puSetColorKeyData
-)
-{
-	UNIMPLEMENTED
 
-	return 0;
-}
 
-DWORD STDCALL NtGdiDdSetExclusiveMode(
-    HANDLE hDirectDraw,
-    PDD_SETEXCLUSIVEMODEDATA puSetExclusiveModeData
-)
-{
-	UNIMPLEMENTED
 
-	return 0;
-}
 
 BOOL STDCALL NtGdiDdSetGammaRamp(
     HANDLE hDirectDraw,
@@ -509,15 +402,7 @@ VOID STDCALL NtGdiDdUnattachSurface(
 	UNIMPLEMENTED
 }
 
-DWORD STDCALL NtGdiDdUnlock(
-    HANDLE hSurface,
-    PDD_UNLOCKDATA puUnlockData
-)
-{
-	UNIMPLEMENTED
 
-	return 0;
-}
 
 DWORD STDCALL NtGdiDdUnlockD3D(
     HANDLE hSurface,
@@ -529,16 +414,7 @@ DWORD STDCALL NtGdiDdUnlockD3D(
 	return 0;
 }
 
-DWORD STDCALL NtGdiDdUpdateOverlay(
-    HANDLE hSurfaceDestination,
-    HANDLE hSurfaceSource,
-    PDD_UPDATEOVERLAYDATA puUpdateOverlayData
-)
-{
-	UNIMPLEMENTED
 
-	return 0;
-}
 
 
 DWORD STDCALL NtGdiDdAlphaBlt(VOID)
