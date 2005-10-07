@@ -592,6 +592,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","Service",0x00000000,"Pci"
 HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","Class",0x00000000,"Computer"
 HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","ClassGUID",0x00000000,"{4D36E966-E325-11CE-BFC1-08002BE10318}"
+HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","ParentIdPrefix",0x0000000,"0000"
 
 ;USB UHCI Driver
 HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","Type",0x00010001,0x00000001

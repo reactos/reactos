@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/pnproot.c
@@ -309,6 +308,30 @@ PdoQueryResourceRequirements(
 }
 
 
+static NTSTATUS
+PnpRootPdoQueryCapabilities(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PIRP Irp,
+  PIO_STACK_LOCATION IrpSp)
+{
+  PPNPROOT_FDO_DEVICE_EXTENSION DeviceExtension;
+  PDEVICE_CAPABILITIES DeviceCapabilities;
+
+  DPRINT("Called\n");
+
+  DeviceExtension = (PPNPROOT_FDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+  DeviceCapabilities = IrpSp->Parameters.DeviceCapabilities.Capabilities;
+
+  if (DeviceCapabilities->Version != 1)
+    return STATUS_UNSUCCESSFUL;
+
+  DeviceCapabilities->UniqueID = TRUE;
+  /* FIXME: Fill other fields */
+
+  return STATUS_SUCCESS;
+}
+
+
 /*
  * FUNCTION: Handle Plug and Play IRPs for the child device
  * ARGUMENTS:
@@ -351,6 +374,10 @@ PnpRootPdoPnpControl(
 
   case IRP_MN_QUERY_RESOURCES:
     Status = PdoQueryResources(DeviceObject, Irp, IrpSp);
+    break;
+
+  case IRP_MN_QUERY_CAPABILITIES:
+    Status = PnpRootPdoQueryCapabilities(DeviceObject, Irp, IrpSp);
     break;
 
   case IRP_MN_START_DEVICE:

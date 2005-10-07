@@ -258,7 +258,7 @@ PciCreateInstanceIDString(PUNICODE_STRING InstanceID,
        return RtlCreateUnicodeString(InstanceID, L"0001");
   }
   else
-	return RtlCreateUnicodeString(InstanceID, L"0000");
+	return RtlCreateUnicodeString(InstanceID, L"");
 }
 
 
