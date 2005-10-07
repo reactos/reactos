@@ -31,6 +31,10 @@ typedef struct _DDVIDEOPORTCONNECT   *LPDDVIDEOPORTCONNECT; /* should be in dvp.
 typedef struct _DDVIDEOPORTINFO      *LPDDVIDEOPORTINFO; /* should be in dvp.h */
 typedef struct _DD_VIDEOPORT_LOCAL   *PDD_VIDEOPORT_LOCAL; /* should be defined here once we have dvp.h */
 
+
+
+
+
 /************************************************************************/
 /* Video memory info structures                                         */
 /************************************************************************/
@@ -475,31 +479,37 @@ typedef struct
 } DD_MAPMEMORYDATA, *PDD_MAPMEMORYDATA;
 typedef DWORD (STDCALL *PDD_MAPMEMORY)(PDD_MAPMEMORYDATA);
 
-typedef struct
+
+
+typedef DWORD   (APIENTRY *PDD_DESTROYDRIVER)(PDD_DESTROYDRIVERDATA);
+typedef DWORD   (APIENTRY *PDD_SETMODE)(PDD_SETMODEDATA);
+
+typedef struct DD_CALLBACKS
 {
-	DWORD                    dwSize;
-	DWORD                    dwFlags;
-	PVOID                    Reserved1;
-	PDD_CREATESURFACE        CreateSurface;
-	PDD_SETCOLORKEY          SetColorKey;
-	PVOID                    Reserved2;
-	PDD_WAITFORVERTICALBLANK WaitForVerticalBlank;
-	PDD_CANCREATESURFACE     CanCreateSurface;
-	PDD_CREATEPALETTE        CreatePalette;
-	PDD_GETSCANLINE          GetScanLine;
-	PDD_MAPMEMORY            MapMemory;
+    DWORD                     dwSize;
+    DWORD                     dwFlags;
+    PDD_DESTROYDRIVER         DestroyDriver;
+    PDD_CREATESURFACE         CreateSurface;
+    PDD_SETCOLORKEY           SetColorKey;
+    PDD_SETMODE               SetMode;
+    PDD_WAITFORVERTICALBLANK  WaitForVerticalBlank;
+    PDD_CANCREATESURFACE      CanCreateSurface;
+    PDD_CREATEPALETTE         CreatePalette;
+    PDD_GETSCANLINE           GetScanLine;
+    PDD_MAPMEMORY             MapMemory;
 } DD_CALLBACKS, *PDD_CALLBACKS;
 
-enum
-{
-	DDHAL_CB32_CREATESURFACE        = 1<<1,
-	DDHAL_CB32_SETCOLORKEY          = 1<<2,
-	DDHAL_CB32_WAITFORVERTICALBLANK = 1<<4,
-	DDHAL_CB32_CANCREATESURFACE     = 1<<5,
-	DDHAL_CB32_CREATEPALETTE        = 1<<6,
-	DDHAL_CB32_GETSCANLINE          = 1<<7,
-	DDHAL_CB32_MAPMEMORY            = 1<<31,
-};
+
+
+#define DDHAL_CB32_DESTROYDRIVER        0x00000001l
+#define DDHAL_CB32_CREATESURFACE        0x00000002l
+#define DDHAL_CB32_SETCOLORKEY          0x00000004l
+#define DDHAL_CB32_SETMODE              0x00000008l
+#define DDHAL_CB32_WAITFORVERTICALBLANK 0x00000010l
+#define DDHAL_CB32_CANCREATESURFACE     0x00000020l
+#define DDHAL_CB32_CREATEPALETTE        0x00000040l
+#define DDHAL_CB32_GETSCANLINE          0x00000080l
+#define DDHAL_CB32_MAPMEMORY            0x80000000l
 
 typedef struct
 {
@@ -1224,6 +1234,41 @@ typedef struct
 		DDSCAPSEX ddsCapsExAlt;
 	} ddsExtendedHeapRestrictions[1];
 } DD_MORESURFACECAPS, *PDD_MORESURFACECAPS;
+
+
+/*********************************************************/
+/* Kernel Callbacks                                      */
+/*********************************************************/
+typedef struct _DD_SYNCSURFACEDATA
+{
+    PDD_DIRECTDRAW_LOCAL  lpDD;    
+    PDD_SURFACE_LOCAL     lpDDSurface;
+    DWORD                 dwSurfaceOffset;      
+    ULONG_PTR             fpLockPtr;           
+    LONG                  lPitch;               
+    DWORD                 dwOverlayOffset;       
+    ULONG                 dwDriverReserved1;     
+    ULONG                 dwDriverReserved2;     
+    ULONG                 dwDriverReserved3;     
+    ULONG                 dwDriverReserved4;     
+    HRESULT               ddRVal;
+} DD_SYNCSURFACEDATA, *PDD_SYNCSURFACEDATA;
+typedef DWORD (STDCALL *PDD_KERNELCB_SYNCSURFACE)(PDD_SYNCSURFACEDATA);
+
+typedef struct _DD_SYNCVIDEOPORTDATA
+{
+    PDD_DIRECTDRAW_LOCAL  lpDD;       
+    PDD_VIDEOPORT_LOCAL   lpVideoPort;
+    DWORD                 dwOriginOffset;      
+    DWORD                 dwHeight;            
+    DWORD                 dwVBIHeight;         
+    ULONG                 dwDriverReserved1;   
+    ULONG                 dwDriverReserved2;   
+    ULONG                 dwDriverReserved3;   
+    HRESULT               ddRVal;
+} DD_SYNCVIDEOPORTDATA, *PDD_SYNCVIDEOPORTDATA;
+typedef DWORD (STDCALL *PDD_KERNELCB_SYNCVIDEOPORT)(PDD_SYNCVIDEOPORTDATA);
+
 
 
 
