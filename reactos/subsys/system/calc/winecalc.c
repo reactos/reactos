@@ -2741,6 +2741,8 @@ void DrawCalcText (HDC hdc, HDC hMemDC, PAINTSTRUCT  *ps, CALC *calc, int object
     HFONT hFontOrg;
     HPEN hPen;
     HPEN hPenOrg;
+    HBRUSH hBrush;
+    HBRUSH hBrushOrg;
 
     TCHAR s2[CALC_BUF_SIZE];
 
@@ -2801,6 +2803,8 @@ void DrawCalcText (HDC hdc, HDC hMemDC, PAINTSTRUCT  *ps, CALC *calc, int object
 
     hPen = CreatePen(PS_SOLID, 1, RGB(255,255,255));
     hPenOrg = SelectObject(hdc, hPen);
+    hBrush = GetSysColorBrush(COLOR_WINDOW);
+    hBrushOrg = SelectObject(hdc, hBrush);
 
     MoveToEx(hdc,
         WDISPLAY_LEFT - 1,
@@ -2814,6 +2818,7 @@ void DrawCalcText (HDC hdc, HDC hMemDC, PAINTSTRUCT  *ps, CALC *calc, int object
     Rectangle(hdc, WDISPLAY_LEFT, WDISPLAY_TOP, WDISPLAY_RIGHT, WDISPLAY_BOTTOM);
 
     SelectObject(hdc, hPenOrg);
+    SelectObject(hdc, hBrushOrg);
     DeleteObject(hPen);
 
     SetBkMode(hdc, TRANSPARENT);
