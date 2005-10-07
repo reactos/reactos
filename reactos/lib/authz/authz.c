@@ -148,19 +148,6 @@ AuthzFreeHandle(IN AUTHZ_ACCESS_CHECK_RESULTS_HANDLE AuthzHandle)
 AUTHZAPI
 BOOL
 WINAPI
-AuthzFreeResourceManager(IN AUTHZ_RESOURCE_MANAGER_HANDLE AuthzResourceManager)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-AUTHZAPI
-BOOL
-WINAPI
 AuthzGetInformationFromContext(IN AUTHZ_CLIENT_CONTEXT_HANDLE hAuthzClientContext,
                                IN AUTHZ_CONTEXT_INFORMATION_CLASS InfoClass,
                                IN DWORD BufferSize,
@@ -263,24 +250,6 @@ AuthzInitializeObjectAccessAuditEvent2(IN DWORD Flags,
                                        IN PWSTR szAdditionalInfo2,
                                        OUT PAUTHZ_AUDIT_EVENT_HANDLE phAuditEvent,
                                        IN DWORD dwAdditionalParameterCount)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-AUTHZAPI
-BOOL
-WINAPI
-AuthzInitializeResourceManager(IN DWORD flags,
-                               IN PFN_AUTHZ_DYNAMIC_ACCESS_CHECK pfnAccessCheck,
-                               IN PFN_AUTHZ_COMPUTE_DYNAMIC_GROUPS pfnComputeDynamicGroups,
-                               IN PFN_AUTHZ_FREE_DYNAMIC_GROUPS pfnFreeDynamicGroups,
-                               IN PCWSTR ResourceManagerName,
-                               IN PAUTHZ_RESOURCE_MANAGER_HANDLE pAuthzResourceManager)
 {
     UNIMPLEMENTED;
     return FALSE;
