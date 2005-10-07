@@ -600,7 +600,7 @@ BOOL SelectNode(HWND hwndTV, LPCTSTR keyPath)
 		{
 			memset(&tvi, 0, sizeof(tvi));
 			tvi.hItem = hChildItem;
-			tvi.mask = TVIF_TEXT;
+			tvi.mask = TVIF_TEXT | TVIF_CHILDREN;
 			tvi.pszText = szBuffer;
 			tvi.cchTextMax = sizeof(szBuffer) / sizeof(szBuffer[0]);
 
@@ -613,8 +613,11 @@ BOOL SelectNode(HWND hwndTV, LPCTSTR keyPath)
 		if (!hChildItem)
 			return FALSE;
 
-		if (!TreeView_Expand(hwndTV, hChildItem, TVE_EXPAND))
-			return FALSE;
+		if (tvi.cChildren > 0)
+		{
+			if (!TreeView_Expand(hwndTV, hChildItem, TVE_EXPAND))
+				return FALSE;
+		}
 
 		keyPath = s ? s + 1 : _T("");
 		hItem = hChildItem;
