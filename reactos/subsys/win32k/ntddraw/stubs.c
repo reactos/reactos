@@ -203,15 +203,7 @@ DWORD STDCALL NtGdiDdFlipToGDISurface(
 }
 
 
-DWORD STDCALL NtGdiDdGetBltStatus(
-    HANDLE hSurface,
-    PDD_GETBLTSTATUSDATA puGetBltStatusData
-)
-{
-	UNIMPLEMENTED
 
-	return 0;
-}
 
 HDC STDCALL NtGdiDdGetDC(
     HANDLE hSurface,
@@ -245,15 +237,7 @@ DWORD STDCALL NtGdiDdGetDxHandle(
 	return 0;
 }
 
-DWORD STDCALL NtGdiDdGetFlipStatus(
-    HANDLE hSurface,
-    PDD_GETFLIPSTATUSDATA puGetFlipStatusData
-)
-{
-	UNIMPLEMENTED
 
-	return 0;
-}
 
 DWORD STDCALL NtGdiDdGetInternalMoCompInfo(
     HANDLE hDirectDraw,
@@ -374,16 +358,7 @@ BOOL STDCALL NtGdiDdSetGammaRamp(
 	return 0;
 }
 
-DWORD STDCALL NtGdiDdSetOverlayPosition(
-    HANDLE hSurfaceSource,
-    HANDLE hSurfaceDestination,
-    PDD_SETOVERLAYPOSITIONDATA puSetOverlayPositionData
-)
-{
-	UNIMPLEMENTED
 
-	return 0;
-}
 
 VOID STDCALL NtGdiDdUnattachSurface(
     HANDLE hSurface,
