@@ -107,8 +107,11 @@ PdoQueryId(
       break;
 
     case BusQueryInstanceID:
+      /* FIXME: RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING flag
+       * needs to be removed once PciCreateInstanceIDString is fixed
+       */
       Status = RtlDuplicateUnicodeString(
-        RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
+        RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE | RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING,
         &DeviceExtension->InstanceID,
         &String);
 
