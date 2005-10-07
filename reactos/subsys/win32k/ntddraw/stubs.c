@@ -69,16 +69,7 @@ DWORD STDCALL NtGdiD3dValidateTextureStageState(
 	return 0;
 }
 
-DWORD STDCALL NtGdiDdAddAttachedSurface(
-    HANDLE hSurface,
-    HANDLE hSurfaceAttached,
-    PDD_ADDATTACHEDSURFACEDATA puAddAttachedSurfaceData
-)
-{
-	UNIMPLEMENTED
 
-	return 0;
-}
 
 
 
