@@ -202,6 +202,7 @@ apps\utils\net\ipconfig\ipconfig.exe    1
 apps\utils\net\netstat\netstat.exe      1
 apps\utils\net\ping\ping.exe            1
 apps\utils\net\telnet\telnet.exe        1
+apps\utils\net\tracert\tracert.exe      1
 apps\utils\net\whois\whois.exe          1
 apps\utils\ps\ps.exe                    1
 apps\utils\rosperf\rosperf.exe          1
