@@ -670,7 +670,7 @@ LRESULT CFn_WMInitDialog(HWND hDlg, WPARAM wParam, LPARAM lParam,
     if (lpcf->Flags & CF_INITTOLOGFONTSTRUCT)
     {
         /* look for fitting font name in combobox1 */
-        j=SendDlgItemMessageW(hDlg,cmb1,CB_FINDSTRING,-1,(LONG)lpxx->lfFaceName);
+        j=SendDlgItemMessageW(hDlg,cmb1,CB_FINDSTRING,-1,(LPARAM)lpxx->lfFaceName);
         if (j!=CB_ERR)
         {
             INT height = lpxx->lfHeight < 0 ? -lpxx->lfHeight :
@@ -699,7 +699,7 @@ LRESULT CFn_WMInitDialog(HWND hDlg, WPARAM wParam, LPARAM lParam,
     }
     if ((lpcf->Flags & CF_USESTYLE) && lpcf->lpszStyle)
     {
-        j=SendDlgItemMessageW(hDlg,cmb2,CB_FINDSTRING,-1,(LONG)lpcf->lpszStyle);
+        j=SendDlgItemMessageW(hDlg,cmb2,CB_FINDSTRING,-1,(LPARAM)lpcf->lpszStyle);
         if (j!=CB_ERR)
         {
             j=SendDlgItemMessageW(hDlg,cmb2,CB_SETCURSEL,j,0);

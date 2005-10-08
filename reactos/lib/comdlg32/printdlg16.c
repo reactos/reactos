@@ -493,6 +493,14 @@ BOOL16 WINAPI PrintDlg16(
 		    pi->pPortName
 	    );
 	    GlobalUnlock16(lppd->hDevMode);
+	    /* Copy back the [out] integer parameters */
+#define CVAL(x)	lppd->x = PrintStructures->lpPrintDlg->x;
+	    CVAL(Flags);
+	    CVAL(nFromPage);
+	    CVAL(nToPage);
+	    CVAL(nCopies);
+#undef CVAL
+
 	}
 	if (!(lppd->Flags & (PD_ENABLESETUPTEMPLATEHANDLE | PD_ENABLESETUPTEMPLATE)))
             GlobalFree16(hDlgTmpl); /* created from the 32 bits resource */

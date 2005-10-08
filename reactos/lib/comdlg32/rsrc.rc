@@ -41,6 +41,7 @@
  * which also have a neutral version. This is to
  * get localized bitmaps for example.
  */
+#include "cdlg_Bg.rc"
 #include "cdlg_Ca.rc"
 #include "cdlg_Cn.rc"
 #include "cdlg_Cs.rc"
