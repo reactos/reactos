@@ -95,8 +95,8 @@ static const DIDATAFORMAT Wine_InternalMouseFormat = {
     (LPDIOBJECTDATAFORMAT) Wine_InternalMouseObjectFormat
 };
 
-static IDirectInputDevice8AVtbl SysMouseAvt;
-static IDirectInputDevice8WVtbl SysMouseWvt;
+static const IDirectInputDevice8AVtbl SysMouseAvt;
+static const IDirectInputDevice8WVtbl SysMouseWvt;
 
 typedef struct SysMouseImpl SysMouseImpl;
 
@@ -108,8 +108,8 @@ typedef enum {
 
 struct SysMouseImpl
 {
-    LPVOID                          lpVtbl;
-    DWORD                           ref;
+    const void                     *lpVtbl;
+    LONG                            ref;
     GUID                            guid;
     
     IDirectInputImpl               *dinput;
@@ -241,7 +241,7 @@ static BOOL mousedev_enum_deviceW(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINST
     return FALSE;
 }
 
-static SysMouseImpl *alloc_device(REFGUID rguid, LPVOID mvt, IDirectInputImpl *dinput)
+static SysMouseImpl *alloc_device(REFGUID rguid, const void *mvt, IDirectInputImpl *dinput)
 {
     int offset_array[WINE_INTERNALMOUSE_NUM_OBJS] = {
 	FIELD_OFFSET(Wine_InternalMouseData, lX),
@@ -363,7 +363,7 @@ static HRESULT WINAPI SysMouseAImpl_SetCooperativeLevel(
 {
     SysMouseImpl *This = (SysMouseImpl *)iface;
     
-    TRACE("(this=%p,0x%08lx,0x%08lx)\n",This,(DWORD)hwnd,dwflags);
+    TRACE("(this=%p,%p,0x%08lx)\n",This,hwnd,dwflags);
     
     if (TRACE_ON(dinput)) {
 	TRACE(" cooperative level : ");
@@ -865,7 +865,7 @@ static HRESULT WINAPI SysMouseAImpl_SetProperty(LPDIRECTINPUTDEVICE8A iface,
     TRACE("(this=%p,%s,%p)\n",This,debugstr_guid(rguid),ph);
     
     if (!HIWORD(rguid)) {
-	switch ((DWORD)rguid) {
+	switch (LOWORD(rguid)) {
 	    case (DWORD) DIPROP_BUFFERSIZE: {
 		LPCDIPROPDWORD	pd = (LPCDIPROPDWORD)ph;
 		
@@ -884,7 +884,7 @@ static HRESULT WINAPI SysMouseAImpl_SetProperty(LPDIRECTINPUTDEVICE8A iface,
 		break;
 	    }
 	    default:
-	      FIXME("Unknown type %ld (%s)\n",(DWORD)rguid,debugstr_guid(rguid));
+	      FIXME("Unknown type %p (%s)\n",rguid,debugstr_guid(rguid));
 	      break;
 	}
     }
@@ -908,7 +908,7 @@ static HRESULT WINAPI SysMouseAImpl_GetProperty(LPDIRECTINPUTDEVICE8A iface,
 	_dump_DIPROPHEADER(pdiph);
     
     if (!HIWORD(rguid)) {
-	switch ((DWORD)rguid) {
+	switch (LOWORD(rguid)) {
 	    case (DWORD) DIPROP_BUFFERSIZE: {
 		LPDIPROPDWORD	pd = (LPDIPROPDWORD)pdiph;
 		
@@ -943,7 +943,7 @@ static HRESULT WINAPI SysMouseAImpl_GetProperty(LPDIRECTINPUTDEVICE8A iface,
 	    }
 	      
 	    default:
-	      FIXME("Unknown type %ld (%s)\n",(DWORD)rguid,debugstr_guid(rguid));
+	      FIXME("Unknown type %p (%s)\n",rguid,debugstr_guid(rguid));
 	      break;
 	  }
       }
@@ -960,7 +960,7 @@ static HRESULT WINAPI SysMouseAImpl_SetEventNotification(LPDIRECTINPUTDEVICE8A i
 							 HANDLE hnd) {
     SysMouseImpl *This = (SysMouseImpl *)iface;
     
-    TRACE("(this=%p,0x%08lx)\n",This,(DWORD)hnd);
+    TRACE("(this=%p,%p)\n",This,hnd);
     
     This->hEvent = hnd;
     
@@ -1133,7 +1133,7 @@ static HRESULT WINAPI SysMouseWImpl_GetDeviceInfo(LPDIRECTINPUTDEVICE8W iface, L
 }
 
 
-static IDirectInputDevice8AVtbl SysMouseAvt =
+static const IDirectInputDevice8AVtbl SysMouseAvt =
 {
     IDirectInputDevice2AImpl_QueryInterface,
     IDirectInputDevice2AImpl_AddRef,
@@ -1175,7 +1175,7 @@ static IDirectInputDevice8AVtbl SysMouseAvt =
 # define XCAST(fun)	(void*)
 #endif
 
-static IDirectInputDevice8WVtbl SysMouseWvt =
+static const IDirectInputDevice8WVtbl SysMouseWvt =
 {
     IDirectInputDevice2WImpl_QueryInterface,
     XCAST(AddRef)IDirectInputDevice2AImpl_AddRef,

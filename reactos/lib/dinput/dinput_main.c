@@ -46,10 +46,10 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(dinput);
 
-static IDirectInput7AVtbl ddi7avt;
-static IDirectInput7WVtbl ddi7wvt;
-static IDirectInput8AVtbl ddi8avt;
-static IDirectInput8WVtbl ddi8wvt;
+static const IDirectInput7AVtbl ddi7avt;
+static const IDirectInput7WVtbl ddi7wvt;
+static const IDirectInput8AVtbl ddi8avt;
+static const IDirectInput8WVtbl ddi8wvt;
 
 static const struct dinput_device *dinput_devices[] =
 {
@@ -86,7 +86,7 @@ HRESULT WINAPI DirectInputCreateEx(
 {
 	IDirectInputImpl* This;
 
-	TRACE("(0x%08lx,%04lx,%s,%p,%p)\n", (DWORD)hinst,dwVersion,debugstr_guid(riid),ppDI,punkOuter);
+	TRACE("(%p,%04lx,%s,%p,%p)\n", hinst,dwVersion,debugstr_guid(riid),ppDI,punkOuter);
 
 	if (IsEqualGUID(&IID_IDirectInputA,riid) ||
 	    IsEqualGUID(&IID_IDirectInput2A,riid) ||
@@ -384,7 +384,7 @@ static HRESULT WINAPI IDirectInputAImpl_RunControlPanel(LPDIRECTINPUT7A iface,
 							HWND hwndOwner,
 							DWORD dwFlags) {
   IDirectInputImpl *This = (IDirectInputImpl *)iface;
-  FIXME("(%p)->(%08lx,%08lx): stub\n",This, (DWORD) hwndOwner, dwFlags);
+  FIXME("(%p)->(%p,%08lx): stub\n",This, hwndOwner, dwFlags);
 
   return DI_OK;
 }
@@ -535,7 +535,7 @@ static HRESULT WINAPI IDirectInput8WImpl_ConfigureDevices(
 # define XCAST(fun)	(void*)
 #endif
 
-static IDirectInput7AVtbl ddi7avt = {
+static const IDirectInput7AVtbl ddi7avt = {
 	XCAST(QueryInterface)IDirectInputAImpl_QueryInterface,
 	XCAST(AddRef)IDirectInputAImpl_AddRef,
 	XCAST(Release)IDirectInputAImpl_Release,
@@ -555,7 +555,7 @@ static IDirectInput7AVtbl ddi7avt = {
 # define XCAST(fun)	(void*)
 #endif
 
-static IDirectInput7WVtbl ddi7wvt = {
+static const IDirectInput7WVtbl ddi7wvt = {
 	XCAST(QueryInterface)IDirectInputWImpl_QueryInterface,
 	XCAST(AddRef)IDirectInputAImpl_AddRef,
 	XCAST(Release)IDirectInputAImpl_Release,
@@ -575,7 +575,7 @@ static IDirectInput7WVtbl ddi7wvt = {
 # define XCAST(fun)	(void*)
 #endif
 
-static IDirectInput8AVtbl ddi8avt = {
+static const IDirectInput8AVtbl ddi8avt = {
 	XCAST(QueryInterface)IDirectInput8AImpl_QueryInterface,
 	XCAST(AddRef)IDirectInputAImpl_AddRef,
 	XCAST(Release)IDirectInputAImpl_Release,
@@ -595,7 +595,7 @@ static IDirectInput8AVtbl ddi8avt = {
 #else
 # define XCAST(fun)	(void*)
 #endif
-static IDirectInput8WVtbl ddi8wvt = {
+static const IDirectInput8WVtbl ddi8wvt = {
 	XCAST(QueryInterface)IDirectInput8WImpl_QueryInterface,
 	XCAST(AddRef)IDirectInputAImpl_AddRef,
 	XCAST(Release)IDirectInputAImpl_Release,
@@ -616,8 +616,8 @@ static IDirectInput8WVtbl ddi8wvt = {
 typedef struct
 {
     /* IUnknown fields */
-    IClassFactoryVtbl          *lpVtbl;
-    DWORD                       ref;
+    const IClassFactoryVtbl    *lpVtbl;
+    LONG                        ref;
 } IClassFactoryImpl;
 
 static HRESULT WINAPI DICF_QueryInterface(LPCLASSFACTORY iface,REFIID riid,LPVOID *ppobj) {
@@ -666,7 +666,7 @@ static HRESULT WINAPI DICF_LockServer(LPCLASSFACTORY iface,BOOL dolock) {
 	return S_OK;
 }
 
-static IClassFactoryVtbl DICF_Vtbl = {
+static const IClassFactoryVtbl DICF_Vtbl = {
 	DICF_QueryInterface,
 	DICF_AddRef,
 	DICF_Release,
@@ -678,7 +678,7 @@ static IClassFactoryImpl DINPUT_CF = {&DICF_Vtbl, 1 };
 /***********************************************************************
  *		DllCanUnloadNow (DINPUT.@)
  */
-HRESULT WINAPI DINPUT_DllCanUnloadNow(void)
+HRESULT WINAPI DllCanUnloadNow(void)
 {
     FIXME("(void): stub\n");
 
@@ -688,8 +688,7 @@ HRESULT WINAPI DINPUT_DllCanUnloadNow(void)
 /***********************************************************************
  *		DllGetClassObject (DINPUT.@)
  */
-HRESULT WINAPI DINPUT_DllGetClassObject(REFCLSID rclsid, REFIID riid,
-					LPVOID *ppv)
+HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
     TRACE("(%s,%s,%p)\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
     if ( IsEqualCLSID( &IID_IClassFactory, riid ) ) {

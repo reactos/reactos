@@ -29,8 +29,8 @@
 typedef struct IDirectInputImpl IDirectInputImpl;
 struct IDirectInputImpl
 {
-   LPVOID lpVtbl;
-   DWORD  ref;
+   const void *lpVtbl;
+   LONG  ref;
 
    /* Used to have an unique sequence number for all the events */
    DWORD evsequence;

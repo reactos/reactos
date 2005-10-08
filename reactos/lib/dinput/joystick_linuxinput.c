@@ -3,6 +3,7 @@
  * Copyright 1998,2000 Marcus Meissner
  * Copyright 1998,1999 Lionel Ulmer
  * Copyright 2000-2001 TransGaming Technologies Inc.
+ * Copyright 2005 Daniel Remenak
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -43,6 +44,9 @@
 #endif
 #ifdef HAVE_LINUX_INPUT_H
 # include <linux/input.h>
+# if defined(EVIOCGBIT) && defined(EV_ABS) && defined(BTN_PINKIE)
+#  define HAVE_CORRECT_LINUXINPUT_H
+# endif
 #endif
 
 #include "wine/debug.h"
@@ -65,13 +69,25 @@ WINE_DEFAULT_DEBUG_CHANNEL(dinput);
 #define WINE_JOYSTICK_AXIS_BASE   0
 #define WINE_JOYSTICK_BUTTON_BASE 8
 
+typedef struct EffectListItem EffectListItem;
+struct EffectListItem
+{
+        LPDIRECTINPUTEFFECT ref;
+	struct EffectListItem* next;
+};
+
+/* implemented in effect_linuxinput.c */
+HRESULT linuxinput_create_effect(int* fd, REFGUID rguid, LPDIRECTINPUTEFFECT* peff);
+HRESULT linuxinput_get_info_A(int fd, REFGUID rguid, LPDIEFFECTINFOA info);
+HRESULT linuxinput_get_info_W(int fd, REFGUID rguid, LPDIEFFECTINFOW info);
+
 typedef struct JoystickImpl JoystickImpl;
-static IDirectInputDevice8AVtbl JoystickAvt;
-static IDirectInputDevice8WVtbl JoystickWvt;
+static const IDirectInputDevice8AVtbl JoystickAvt;
+static const IDirectInputDevice8WVtbl JoystickWvt;
 struct JoystickImpl
 {
-        LPVOID                          lpVtbl;
-        DWORD                           ref;
+        const void                     *lpVtbl;
+        LONG                            ref;
         GUID                            guid;
 
 
@@ -97,6 +113,12 @@ struct JoystickImpl
 	BOOL				overflow;
 	DIJOYSTATE2			js;
 
+	/* Force feedback variables */
+	BOOL				has_ff;
+	int				num_effects;
+	EffectListItem*			top_effect;
+	int				ff_state;
+
 	/* data returned by the EVIOCGABS() ioctl */
 	int				axes[ABS_MAX+1][5];
 
@@ -107,9 +129,11 @@ struct JoystickImpl
 #define AXE_ABSFLAT	4
 
 
-	/* data returned by EVIOCGBIT for EV_ABS and EV_KEY */
+	/* data returned by EVIOCGBIT for caps, EV_ABS, EV_KEY, and EV_FF */
+	BYTE				evbits[(EV_MAX+7)/8];
 	BYTE				absbits[(ABS_MAX+7)/8];
 	BYTE				keybits[(KEY_MAX+7)/8];
+	BYTE				ffbits[(FF_MAX+7)/8];	
 };
 
 /* This GUID is slightly different from the linux joystick one. Take note. */
@@ -124,17 +148,24 @@ static void fake_current_js_state(JoystickImpl *ji);
 
 #define test_bit(arr,bit) (((BYTE*)arr)[bit>>3]&(1<<(bit&7)))
 
-static int joydev_have(void)
+static int joydev_have(BOOL require_ff)
 {
-  int i, fd;
+  int i, fd, flags, num_effects;
   int havejoy = 0;
 
   for (i=0;i<64;i++) {
       char	buf[200];
       BYTE	absbits[(ABS_MAX+7)/8],keybits[(KEY_MAX+7)/8];
+      BYTE	evbits[(EV_MAX+7)/8],ffbits[(FF_MAX+7)/8];
 
       sprintf(buf,EVDEVPREFIX"%d",i);
-      if (-1!=(fd=open(buf,O_RDONLY))) {
+
+      if (require_ff) 
+	  flags = O_RDWR;
+      else
+	  flags = O_RDONLY;
+
+      if (-1!=(fd=open(buf,flags))) {
 	  if (-1==ioctl(fd,EVIOCGBIT(EV_ABS,sizeof(absbits)),absbits)) {
 	      perror("EVIOCGBIT EV_ABS");
 	      close(fd);
@@ -145,6 +176,23 @@ static int joydev_have(void)
 	      close(fd);
 	      continue;
 	  }
+
+	  /* test for force feedback if it's required */
+	  if (require_ff) {
+	      if ((-1==ioctl(fd,EVIOCGBIT(0,sizeof(evbits)),evbits))) {
+	          perror("EVIOCGBIT 0");
+	          close(fd);
+	          continue; 
+	      }
+	      if (   (!test_bit(evbits,EV_FF))
+	          || (-1==ioctl(fd,EVIOCGBIT(EV_FF,sizeof(ffbits)),ffbits)) 
+                  || (-1==ioctl(fd,EVIOCGEFFECTS,&num_effects))
+                  || (num_effects <= 0)) {
+		  close(fd);
+	          continue;
+	      }
+	  }
+
 	  /* A true joystick has at least axis X and Y, and at least 1
 	   * button. copied from linux/drivers/input/joydev.c */
 	  if (test_bit(absbits,ABS_X) && test_bit(absbits,ABS_Y) &&
@@ -176,10 +224,12 @@ static BOOL joydev_enum_deviceA(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTAN
         (((dwDevType == DI8DEVCLASS_GAMECTRL) || (dwDevType == DI8DEVTYPE_JOYSTICK)) && (version >= 0x0800))))
     return FALSE;
 
+#ifndef HAVE_STRUCT_FF_EFFECT_DIRECTION
   if (dwFlags & DIEDFL_FORCEFEEDBACK)
     return FALSE;
+#endif
 
-  havejoy = joydev_have();
+  havejoy = joydev_have(dwFlags & DIEDFL_FORCEFEEDBACK);
 
   if (!havejoy)
       return FALSE;
@@ -214,10 +264,12 @@ static BOOL joydev_enum_deviceW(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTAN
         (((dwDevType == DI8DEVCLASS_GAMECTRL) || (dwDevType == DI8DEVTYPE_JOYSTICK)) && (version >= 0x0800))))
     return FALSE;
 
+#ifndef HAVE_STRUCT_FF_EFFECT_DIRECTION
   if (dwFlags & DIEDFL_FORCEFEEDBACK)
     return FALSE;
+#endif
 
-  havejoy = joydev_have();
+  havejoy = joydev_have(dwFlags & DIEDFL_FORCEFEEDBACK);
 
   if (!havejoy)
       return FALSE;
@@ -240,7 +292,7 @@ static BOOL joydev_enum_deviceW(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTAN
   return TRUE;
 }
 
-static JoystickImpl *alloc_device(REFGUID rguid, LPVOID jvt, IDirectInputImpl *dinput)
+static JoystickImpl *alloc_device(REFGUID rguid, const void *jvt, IDirectInputImpl *dinput)
 {
   JoystickImpl* newDevice;
   int i;
@@ -250,6 +302,9 @@ static JoystickImpl *alloc_device(REFGUID rguid, LPVOID jvt, IDirectInputImpl *d
   newDevice->ref = 1;
   newDevice->joyfd = -1;
   newDevice->dinput = dinput;
+#ifdef HAVE_STRUCT_FF_EFFECT_DIRECTION
+  newDevice->ff_state = FF_STATUS_STOPPED;
+#endif
   memcpy(&(newDevice->guid),rguid,sizeof(*rguid));
   for (i=0;i<ABS_MAX;i++) {
     newDevice->wantmin[i] = -32768;
@@ -269,7 +324,7 @@ static HRESULT joydev_create_deviceA(IDirectInputImpl *dinput, REFGUID rguid, RE
 {
   int havejoy = 0;
 
-  havejoy = joydev_have();
+  havejoy = joydev_have(FALSE);
 
   if (!havejoy)
       return DIERR_DEVICENOTREG;
@@ -296,7 +351,7 @@ static HRESULT joydev_create_deviceW(IDirectInputImpl *dinput, REFGUID rguid, RE
 {
   int havejoy = 0;
 
-  havejoy = joydev_have();
+  havejoy = joydev_have(FALSE);
 
   if (!havejoy)
       return DIERR_DEVICENOTREG;
@@ -337,6 +392,9 @@ static ULONG WINAPI JoystickAImpl_Release(LPDIRECTINPUTDEVICE8A iface)
 	ref = InterlockedDecrement(&(This->ref));
 	if (ref)
 		return ref;
+
+	/* Reset the FF state, free all effects, etc */
+	IDirectInputDevice8_SendForceFeedbackCommand(iface, DISFFC_RESET);
 
 	/* Free the data queue */
 	HeapFree(GetProcessHeap(),0,This->data_queue);
@@ -379,19 +437,32 @@ static HRESULT WINAPI JoystickAImpl_Acquire(LPDIRECTINPUTDEVICE8A iface)
     int		i;
     JoystickImpl *This = (JoystickImpl *)iface;
     char	buf[200];
+    BOOL	readonly = TRUE;
 
     TRACE("(this=%p)\n",This);
     if (This->joyfd!=-1)
     	return 0;
     for (i=0;i<64;i++) {
       sprintf(buf,EVDEVPREFIX"%d",i);
-      if (-1==(This->joyfd=open(buf,O_RDONLY))) {
-	if (errno==ENODEV)
-	  return DIERR_NOTFOUND;
-	perror(buf);
-	continue;
+      if (-1==(This->joyfd=open(buf,O_RDWR))) { 
+        if (-1==(This->joyfd=open(buf,O_RDONLY))) {
+	  /* Couldn't open the device at all */ 
+	  if (errno==ENODEV)
+	    return DIERR_NOTFOUND;
+	  perror(buf);
+	  continue;
+	}
+	else {
+	  /* Couldn't open in r/w but opened in read-only. */
+          WARN("Could not open %s in read-write mode.  Force feedback will be disabled.\n",buf);
+	}
       }
-      if ((-1!=ioctl(This->joyfd,EVIOCGBIT(EV_ABS,sizeof(This->absbits)),This->absbits)) &&
+      else {
+	/* Opened device in read-write */
+	readonly = FALSE;
+      }
+      if ((-1!=ioctl(This->joyfd,EVIOCGBIT(0,sizeof(This->evbits)),This->evbits)) &&
+	  (-1!=ioctl(This->joyfd,EVIOCGBIT(EV_ABS,sizeof(This->absbits)),This->absbits)) &&
           (-1!=ioctl(This->joyfd,EVIOCGBIT(EV_KEY,sizeof(This->keybits)),This->keybits)) &&
           (test_bit(This->absbits,ABS_X) && test_bit(This->absbits,ABS_Y) &&
 	   (test_bit(This->keybits,BTN_TRIGGER)||
@@ -406,6 +477,30 @@ static HRESULT WINAPI JoystickAImpl_Acquire(LPDIRECTINPUTDEVICE8A iface)
     }
     if (This->joyfd==-1)
     	return DIERR_NOTFOUND;
+
+    This->has_ff = FALSE;
+    This->num_effects = 0;
+
+#ifdef HAVE_STRUCT_FF_EFFECT_DIRECTION
+    if (!readonly && test_bit(This->evbits, EV_FF)) {
+        if (-1!=ioctl(This->joyfd,EVIOCGBIT(EV_FF,sizeof(This->ffbits)),This->ffbits)) {
+	    if (-1!=ioctl(This->joyfd,EVIOCGEFFECTS,&This->num_effects) 
+		&& This->num_effects > 0) {
+		This->has_ff = TRUE;
+		TRACE("Joystick seems to be capable of force feedback.\n");
+	    }
+	    else {
+		TRACE("Joystick does not support any effects, disabling force feedback.\n");
+	    }
+        }
+        else {
+            TRACE("Could not get EV_FF bits; disabling force feedback.\n");
+        }
+    }
+    else {
+        TRACE("Force feedback disabled (device is readonly or joystick incapable).\n");
+    }
+#endif
 
     for (i=0;i<ABS_MAX;i++) {
 	if (test_bit(This->absbits,i)) {
@@ -468,7 +563,9 @@ map_axis(JoystickImpl* This, int axis, int val) {
     if (xmin == xmax) return val;
 
     /* map the value from the hmin-hmax range into the wmin-wmax range */
-    ret = (val * (wmax-wmin)) / (hmax-hmin) + wmin;
+    ret = ((val-hmin) * (wmax-wmin)) / (hmax-hmin) + wmin;
+
+    TRACE("xmin=%d xmax=%d hmin=%d hmax=%d wmin=%d wmax=%d val=%d ret=%d\n", xmin, xmax, hmin, hmax, wmin, wmax, val, ret);
 
 #if 0
     /* deadzone doesn't work comfortably enough right now. needs more testing*/
@@ -492,6 +589,8 @@ static void fake_current_js_state(JoystickImpl *ji)
 	ji->js.lRx = map_axis(ji, ABS_RX, ji->axes[ABS_RX][AXE_ABS]);
 	ji->js.lRy = map_axis(ji, ABS_RY, ji->axes[ABS_RY][AXE_ABS]);
 	ji->js.lRz = map_axis(ji, ABS_RZ, ji->axes[ABS_RZ][AXE_ABS]);
+	ji->js.rglSlider[0] = map_axis(ji, ABS_THROTTLE, ji->axes[ABS_THROTTLE][AXE_ABS]);
+	ji->js.rglSlider[1] = map_axis(ji, ABS_RUDDER,   ji->axes[ABS_RUDDER  ][AXE_ABS]);
 }
 
 static void joy_polldev(JoystickImpl *This) {
@@ -613,11 +712,24 @@ static void joy_polldev(JoystickImpl *This) {
 		This->js.lRz = map_axis(This,ABS_RZ,ie.value);
 		GEN_EVENT(DIJOFS_RZ,This->js.lRz,ie.time.tv_usec,(This->dinput->evsequence)++);
 		break;
+	    case ABS_THROTTLE:
+                This->js.rglSlider[0] = map_axis(This,ABS_THROTTLE,ie.value);
+                GEN_EVENT(DIJOFS_SLIDER(0),This->js.rglSlider[0],ie.time.tv_usec,(This->dinput->evsequence)++);
+                break;
+	    case ABS_RUDDER:
+                This->js.rglSlider[1] = map_axis(This,ABS_RUDDER,ie.value);
+                GEN_EVENT(DIJOFS_SLIDER(1),This->js.rglSlider[1],ie.time.tv_usec,(This->dinput->evsequence)++);
+                break;
 	    default:
 		FIXME("unhandled joystick axe event (code %d, value %d)\n",ie.code,ie.value);
 		break;
 	    }
 	    break;
+#ifdef HAVE_STRUCT_FF_EFFECT_DIRECTION
+	case EV_FF_STATUS:
+	    This->ff_state = ie.value;
+	    break;
+#endif
 	default:
 	    FIXME("joystick cannot handle type %d event (code %d)\n",ie.type,ie.code);
 	    break;
@@ -683,7 +795,7 @@ static HRESULT WINAPI JoystickAImpl_SetProperty(LPDIRECTINPUTDEVICE8A iface,
   FIXME("ph.dwSize = %ld, ph.dwHeaderSize =%ld, ph.dwObj = %ld, ph.dwHow= %ld\n",ph->dwSize, ph->dwHeaderSize,ph->dwObj,ph->dwHow);
 
   if (!HIWORD(rguid)) {
-    switch ((DWORD)rguid) {
+    switch (LOWORD(rguid)) {
     case (DWORD) DIPROP_BUFFERSIZE: {
       LPCDIPROPDWORD	pd = (LPCDIPROPDWORD)ph;
 
@@ -701,6 +813,8 @@ static HRESULT WINAPI JoystickAImpl_SetProperty(LPDIRECTINPUTDEVICE8A iface,
       case 12:  /* Rx */
       case 16:  /* Ry */
       case 20:  /* Rz */
+      case 24:  /* Slider 0 -> Throttle */
+      case 28:  /* Slider 1 -> Rudder */
 	  This->wantmin[ph->dwObj/4] = pr->lMin;
 	  This->wantmax[ph->dwObj/4] = pr->lMax;
 	  break;
@@ -717,7 +831,7 @@ static HRESULT WINAPI JoystickAImpl_SetProperty(LPDIRECTINPUTDEVICE8A iface,
       break;
     }
     default:
-      FIXME("Unknown type %ld (%s)\n",(DWORD)rguid,debugstr_guid(rguid));
+      FIXME("Unknown type %p (%s)\n",rguid,debugstr_guid(rguid));
       break;
     }
   }
@@ -733,7 +847,7 @@ static HRESULT WINAPI JoystickAImpl_SetEventNotification(
 ) {
     JoystickImpl *This = (JoystickImpl *)iface;
 
-    TRACE("(this=%p,0x%08lx)\n",This,(DWORD)hnd);
+    TRACE("(this=%p,%p)\n",This,hnd);
     This->hEvent = hnd;
     return DI_OK;
 }
@@ -765,6 +879,9 @@ static HRESULT WINAPI JoystickAImpl_GetCapabilities(
     buttons=0;
     for (i=0;i<KEY_MAX;i++) if (test_bit(This->keybits,i)) buttons++;
 
+    if (This->has_ff) 
+	 lpDIDevCaps->dwFlags |= DIDC_FORCEFEEDBACK;
+
     lpDIDevCaps->dwAxes = axes;
     lpDIDevCaps->dwButtons = buttons;
 
@@ -795,7 +912,6 @@ static HRESULT WINAPI JoystickAImpl_EnumObjects(
   DIDEVICEOBJECTINSTANCEA ddoi;
   int xfd = This->joyfd;
 
-
   TRACE("(this=%p,%p,%p,%08lx)\n", This, lpCallback, lpvRef, dwFlags);
   if (TRACE_ON(dinput)) {
     TRACE("  - flags = ");
@@ -803,7 +919,9 @@ static HRESULT WINAPI JoystickAImpl_EnumObjects(
     TRACE("\n");
   }
 
-  if (xfd == -1) return DIERR_NOTACQUIRED;
+  /* We need to work even if we're not yet acquired */
+  if (xfd == -1)
+    IDirectInputDevice8_Acquire(iface);
 
   /* Only the fields till dwFFMaxForce are relevant */
   ddoi.dwSize = FIELD_OFFSET(DIDEVICEOBJECTINSTANCEA, dwFFMaxForce);
@@ -846,14 +964,27 @@ static HRESULT WINAPI JoystickAImpl_EnumObjects(
 	ddoi.guidType = GUID_Slider;
 	ddoi.dwOfs = DIJOFS_SLIDER(0);
 	break;
+      case ABS_RUDDER:
+	ddoi.guidType = GUID_Slider;
+	ddoi.dwOfs = DIJOFS_SLIDER(1);
+	break;
       default:
 	FIXME("unhandled abs axis %d, ignoring!\n",i);
       }
       ddoi.dwType = DIDFT_MAKEINSTANCE((1<<i) << WINE_JOYSTICK_AXIS_BASE) | DIDFT_ABSAXIS;
+      /* Linux event force feedback supports only (and always) x and y axes */
+      if (i == ABS_X || i == ABS_Y) {
+	if (This->has_ff)
+	  ddoi.dwFlags |= DIDOI_FFACTUATOR;
+      }
       sprintf(ddoi.tszName, "%d-Axis", i);
       _dump_OBJECTINSTANCEA(&ddoi);
-      if (lpCallback(&ddoi, lpvRef) != DIENUM_CONTINUE)
-	  return DI_OK;
+      if (lpCallback(&ddoi, lpvRef) != DIENUM_CONTINUE) {
+	/* return to unaquired state if that's where we were */
+	if (xfd == -1)
+	  IDirectInputDevice8_Unacquire(iface);
+	return DI_OK;
+      }
     }
   }
 
@@ -936,13 +1067,18 @@ static HRESULT WINAPI JoystickAImpl_EnumObjects(
       }
       sprintf(ddoi.tszName, "%d-Button", i);
       _dump_OBJECTINSTANCEA(&ddoi);
-      if (lpCallback(&ddoi, lpvRef) != DIENUM_CONTINUE)
-	  return DI_OK;
+      if (lpCallback(&ddoi, lpvRef) != DIENUM_CONTINUE) {
+	/* return to unaquired state if that's where we were */
+	if (xfd == -1)
+	  IDirectInputDevice8_Unacquire(iface);
+	return DI_OK;
+      }
     }
   }
 
-  if (xfd!=This->joyfd)
-    close(xfd);
+  /* return to unaquired state if that's where we were */
+  if (xfd == -1)
+    IDirectInputDevice8_Unacquire(iface);
 
   return DI_OK;
 }
@@ -978,7 +1114,7 @@ static HRESULT WINAPI JoystickAImpl_GetProperty(LPDIRECTINPUTDEVICE8A iface,
     _dump_DIPROPHEADER(pdiph);
 
   if (!HIWORD(rguid)) {
-    switch ((DWORD)rguid) {
+    switch (LOWORD(rguid)) {
     case (DWORD) DIPROP_BUFFERSIZE: {
       LPDIPROPDWORD	pd = (LPDIPROPDWORD)pdiph;
 
@@ -999,7 +1135,7 @@ static HRESULT WINAPI JoystickAImpl_GetProperty(LPDIRECTINPUTDEVICE8A iface,
     }
 
     default:
-      FIXME("Unknown type %ld (%s)\n",(DWORD)rguid,debugstr_guid(rguid));
+      FIXME("Unknown type %p (%s)\n",rguid,debugstr_guid(rguid));
       break;
     }
   }
@@ -1008,7 +1144,351 @@ static HRESULT WINAPI JoystickAImpl_GetProperty(LPDIRECTINPUTDEVICE8A iface,
   return DI_OK;
 }
 
-static IDirectInputDevice8AVtbl JoystickAvt =
+/****************************************************************************** 
+  *	CreateEffect - Create a new FF effect with the specified params
+  */
+static HRESULT WINAPI JoystickAImpl_CreateEffect(LPDIRECTINPUTDEVICE8A iface,
+						 REFGUID rguid,
+						 LPCDIEFFECT lpeff,
+						 LPDIRECTINPUTEFFECT *ppdef,
+						 LPUNKNOWN pUnkOuter)
+{
+#ifdef HAVE_STRUCT_FF_EFFECT_DIRECTION
+    EffectListItem* new = NULL;
+    HRESULT retval = DI_OK;
+#endif
+
+    JoystickImpl* This = (JoystickImpl*)iface;
+    TRACE("(this=%p,%p,%p,%p,%p)\n", This, rguid, lpeff, ppdef, pUnkOuter);
+
+#ifndef HAVE_STRUCT_FF_EFFECT_DIRECTION
+    TRACE("not available (compiled w/o ff support)\n");
+    *ppdef = NULL;
+    return DI_OK; 
+#else
+
+    new = malloc(sizeof(EffectListItem));
+    new->next = This->top_effect;
+    This->top_effect = new;
+
+    retval = linuxinput_create_effect(&(This->joyfd), rguid, &(new->ref));
+    if (retval != DI_OK)
+	return retval;
+ 
+    if (lpeff != NULL)
+	retval = IDirectInputEffect_SetParameters(new->ref, lpeff, 0);
+    if (retval != DI_OK && retval != DI_DOWNLOADSKIPPED)
+	return retval;
+
+    *ppdef = new->ref;
+
+    if (pUnkOuter != NULL)
+	FIXME("Interface aggregation not implemented.\n");
+
+    return DI_OK;
+
+#endif /* HAVE_STRUCT_FF_EFFECT_DIRECTION */
+} 
+
+/*******************************************************************************
+ *	EnumEffects - Enumerate available FF effects
+ */
+static HRESULT WINAPI JoystickAImpl_EnumEffects(LPDIRECTINPUTDEVICE8A iface,
+						LPDIENUMEFFECTSCALLBACKA lpCallback,
+						LPVOID pvRef,
+						DWORD dwEffType)
+{
+#ifdef HAVE_STRUCT_FF_EFFECT_DIRECTION
+    DIEFFECTINFOA dei; /* feif */
+    DWORD type = DIEFT_GETTYPE(dwEffType);
+    JoystickImpl* This = (JoystickImpl*)iface;
+    int xfd = This->joyfd;
+
+    TRACE("(this=%p,%p,%ld) type=%ld fd=%d\n", This, pvRef, dwEffType, type, xfd);
+
+    dei.dwSize = sizeof(DIEFFECTINFOA);          
+
+    /* We need to return something even if we're not yet acquired */
+    if (xfd == -1)
+	IDirectInputDevice8_Acquire(iface);
+
+    if ((type == DIEFT_ALL || type == DIEFT_CONSTANTFORCE)
+	&& test_bit(This->ffbits, FF_CONSTANT)) {
+	IDirectInputDevice8_GetEffectInfo(iface, &dei, &GUID_ConstantForce);
+	(*lpCallback)(&dei, pvRef);
+    }
+
+    if ((type == DIEFT_ALL || type == DIEFT_PERIODIC)
+	&& test_bit(This->ffbits, FF_PERIODIC)) {
+	if (test_bit(This->ffbits, FF_SQUARE)) {
+	    IDirectInputDevice8_GetEffectInfo(iface, &dei, &GUID_Square);
+	    (*lpCallback)(&dei, pvRef);
+	}
+	if (test_bit(This->ffbits, FF_SINE)) {
+            IDirectInputDevice8_GetEffectInfo(iface, &dei, &GUID_Sine);
+	    (*lpCallback)(&dei, pvRef);
+	}
+	if (test_bit(This->ffbits, FF_TRIANGLE)) {
+	    IDirectInputDevice8_GetEffectInfo(iface, &dei, &GUID_Triangle);
+	    (*lpCallback)(&dei, pvRef);
+	}
+	if (test_bit(This->ffbits, FF_SAW_UP)) {
+	    IDirectInputDevice8_GetEffectInfo(iface, &dei, &GUID_SawtoothUp);
+	    (*lpCallback)(&dei, pvRef);
+	}
+	if (test_bit(This->ffbits, FF_SAW_DOWN)) {
+	    IDirectInputDevice8_GetEffectInfo(iface, &dei, &GUID_SawtoothDown);
+	    (*lpCallback)(&dei, pvRef);
+	}
+    } 
+
+    if ((type == DIEFT_ALL || type == DIEFT_RAMPFORCE)
+	&& test_bit(This->ffbits, FF_RAMP)) {
+        IDirectInputDevice8_GetEffectInfo(iface, &dei, &GUID_RampForce);
+        (*lpCallback)(&dei, pvRef);
+    }
+
+    if (type == DIEFT_ALL || type == DIEFT_CONDITION) {
+	if (test_bit(This->ffbits, FF_SPRING)) {
+	    IDirectInputDevice8_GetEffectInfo(iface, &dei, &GUID_Spring);
+	    (*lpCallback)(&dei, pvRef);
+	}
+	if (test_bit(This->ffbits, FF_DAMPER)) {
+	    IDirectInputDevice8_GetEffectInfo(iface, &dei, &GUID_Damper);
+	    (*lpCallback)(&dei, pvRef);
+	}
+	if (test_bit(This->ffbits, FF_INERTIA)) {
+	    IDirectInputDevice8_GetEffectInfo(iface, &dei, &GUID_Inertia);
+	    (*lpCallback)(&dei, pvRef);
+	}
+	if (test_bit(This->ffbits, FF_FRICTION)) {
+	    IDirectInputDevice8_GetEffectInfo(iface, &dei, &GUID_Friction);
+	    (*lpCallback)(&dei, pvRef);
+	}
+    }
+
+    /* return to unaquired state if that's where it was */
+    if (xfd == -1)
+	IDirectInputDevice8_Unacquire(iface);
+#endif
+
+    return DI_OK;
+}
+
+static HRESULT WINAPI JoystickWImpl_EnumEffects(LPDIRECTINPUTDEVICE8W iface,
+                                                LPDIENUMEFFECTSCALLBACKW lpCallback,
+                                                LPVOID pvRef,
+                                                DWORD dwEffType)
+{
+#ifdef HAVE_STRUCT_FF_EFFECT_DIRECTION
+    /* seems silly to duplicate all this code but all the structures and functions
+     * are actually different (A/W) */
+    DIEFFECTINFOW dei; /* feif */
+    DWORD type = DIEFT_GETTYPE(dwEffType);
+    JoystickImpl* This = (JoystickImpl*)iface;
+    int xfd = This->joyfd;
+
+    TRACE("(this=%p,%p,%ld) type=%ld fd=%d\n", This, pvRef, dwEffType, type, xfd);
+
+    dei.dwSize = sizeof(DIEFFECTINFOW);          
+
+    /* We need to return something even if we're not yet acquired */
+    if (xfd == -1)
+	IDirectInputDevice8_Acquire(iface);
+
+    if ((type == DIEFT_ALL || type == DIEFT_CONSTANTFORCE)
+	&& test_bit(This->ffbits, FF_CONSTANT)) {
+	IDirectInputDevice8_GetEffectInfo(iface, &dei, &GUID_ConstantForce);
+	(*lpCallback)(&dei, pvRef);
+    }
+
+    if ((type == DIEFT_ALL || type == DIEFT_PERIODIC)
+	&& test_bit(This->ffbits, FF_PERIODIC)) {
+	if (test_bit(This->ffbits, FF_SQUARE)) {
+	    IDirectInputDevice8_GetEffectInfo(iface, &dei, &GUID_Square);
+	    (*lpCallback)(&dei, pvRef);
+	}
+	if (test_bit(This->ffbits, FF_SINE)) {
+            IDirectInputDevice8_GetEffectInfo(iface, &dei, &GUID_Sine);
+	    (*lpCallback)(&dei, pvRef);
+	}
+	if (test_bit(This->ffbits, FF_TRIANGLE)) {
+	    IDirectInputDevice8_GetEffectInfo(iface, &dei, &GUID_Triangle);
+	    (*lpCallback)(&dei, pvRef);
+	}
+	if (test_bit(This->ffbits, FF_SAW_UP)) {
+	    IDirectInputDevice8_GetEffectInfo(iface, &dei, &GUID_SawtoothUp);
+	    (*lpCallback)(&dei, pvRef);
+	}
+	if (test_bit(This->ffbits, FF_SAW_DOWN)) {
+	    IDirectInputDevice8_GetEffectInfo(iface, &dei, &GUID_SawtoothDown);
+	    (*lpCallback)(&dei, pvRef);
+	}
+    } 
+
+    if ((type == DIEFT_ALL || type == DIEFT_RAMPFORCE)
+	&& test_bit(This->ffbits, FF_RAMP)) {
+        IDirectInputDevice8_GetEffectInfo(iface, &dei, &GUID_RampForce);
+        (*lpCallback)(&dei, pvRef);
+    }
+
+    if (type == DIEFT_ALL || type == DIEFT_CONDITION) {
+	if (test_bit(This->ffbits, FF_SPRING)) {
+	    IDirectInputDevice8_GetEffectInfo(iface, &dei, &GUID_Spring);
+	    (*lpCallback)(&dei, pvRef);
+	}
+	if (test_bit(This->ffbits, FF_DAMPER)) {
+	    IDirectInputDevice8_GetEffectInfo(iface, &dei, &GUID_Damper);
+	    (*lpCallback)(&dei, pvRef);
+	}
+	if (test_bit(This->ffbits, FF_INERTIA)) {
+	    IDirectInputDevice8_GetEffectInfo(iface, &dei, &GUID_Inertia);
+	    (*lpCallback)(&dei, pvRef);
+	}
+	if (test_bit(This->ffbits, FF_FRICTION)) {
+	    IDirectInputDevice8_GetEffectInfo(iface, &dei, &GUID_Friction);
+	    (*lpCallback)(&dei, pvRef);
+	}
+    }
+
+    /* return to unaquired state if that's where it was */
+    if (xfd == -1)
+	IDirectInputDevice8_Unacquire(iface);
+#endif
+
+    return DI_OK;
+}
+
+/*******************************************************************************
+ *      GetEffectInfo - Get information about a particular effect 
+ */
+static HRESULT WINAPI JoystickAImpl_GetEffectInfo(LPDIRECTINPUTDEVICE8A iface,
+						  LPDIEFFECTINFOA pdei,
+						  REFGUID guid)
+{
+    JoystickImpl* This = (JoystickImpl*)iface;
+
+    TRACE("(this=%p,%p,%s)\n", This, pdei, _dump_dinput_GUID(guid));
+
+#ifdef HAVE_STRUCT_FF_EFFECT_DIRECTION
+    return linuxinput_get_info_A(This->joyfd, guid, pdei); 
+#else
+    return DI_OK;
+#endif
+}
+
+static HRESULT WINAPI JoystickWImpl_GetEffectInfo(LPDIRECTINPUTDEVICE8W iface,
+                                                  LPDIEFFECTINFOW pdei,
+                                                  REFGUID guid)
+{
+    JoystickImpl* This = (JoystickImpl*)iface;
+            
+    TRACE("(this=%p,%p,%s)\n", This, pdei, _dump_dinput_GUID(guid));
+        
+#ifdef HAVE_STRUCT_FF_EFFECT_DIRECTION
+    return linuxinput_get_info_W(This->joyfd, guid, pdei);
+#else
+    return DI_OK;
+#endif
+}
+
+/*******************************************************************************
+ *      GetForceFeedbackState - Get information about the device's FF state 
+ */
+static HRESULT WINAPI JoystickAImpl_GetForceFeedbackState(
+	LPDIRECTINPUTDEVICE8A iface,
+	LPDWORD pdwOut)
+{
+    JoystickImpl* This = (JoystickImpl*)iface;
+
+    TRACE("(this=%p,%p)\n", This, pdwOut);
+
+    (*pdwOut) = 0;
+
+#ifdef HAVE_STRUCT_FF_EFFECT_DIRECTION
+    /* DIGFFS_STOPPED is the only mandatory flag to report */
+    if (This->ff_state == FF_STATUS_STOPPED)
+	(*pdwOut) |= DIGFFS_STOPPED;
+#endif
+
+    return DI_OK;
+}
+
+/*******************************************************************************
+ *      SendForceFeedbackCommand - Send a command to the device's FF system
+ */
+static HRESULT WINAPI JoystickAImpl_SendForceFeedbackCommand(
+	LPDIRECTINPUTDEVICE8A iface,
+	DWORD dwFlags)
+{
+    JoystickImpl* This = (JoystickImpl*)iface;
+    TRACE("(this=%p,%ld)\n", This, dwFlags);
+
+#ifdef HAVE_STRUCT_FF_EFFECT_DIRECTION
+    if (dwFlags == DISFFC_STOPALL) {
+	/* Stop all effects */
+	EffectListItem* itr = This->top_effect;
+	while (itr) {
+	    IDirectInputEffect_Stop(itr->ref);
+	    itr = itr->next;
+	}
+    } else if (dwFlags == DISFFC_RESET) {
+	/* Stop, unload, release and free all effects */
+	/* This returns the device to its "bare" state */
+	while (This->top_effect) {
+	    EffectListItem* temp = This->top_effect; 
+	    IDirectInputEffect_Stop(temp->ref);
+	    IDirectInputEffect_Unload(temp->ref);
+	    IDirectInputEffect_Release(temp->ref);
+	    This->top_effect = temp->next; 
+	    free(temp);
+	}
+    } else if (dwFlags == DISFFC_PAUSE || dwFlags == DISFFC_CONTINUE) {
+	FIXME("No support for Pause or Continue in linux\n");
+    } else if (dwFlags == DISFFC_SETACTUATORSOFF 
+		|| dwFlags == DISFFC_SETACTUATORSON) {
+	FIXME("No direct actuator control in linux\n");
+    } else {
+	FIXME("Unknown Force Feedback Command!\n");
+	return DIERR_INVALIDPARAM;
+    }
+    return DI_OK;
+#else
+    return DIERR_UNSUPPORTED;
+#endif
+}
+
+/*******************************************************************************
+ *      EnumCreatedEffectObjects - Enumerate all the effects that have been
+ *		created for this device.
+ */
+static HRESULT WINAPI JoystickAImpl_EnumCreatedEffectObjects(
+	LPDIRECTINPUTDEVICE8A iface,
+	LPDIENUMCREATEDEFFECTOBJECTSCALLBACK lpCallback,
+	LPVOID pvRef,
+	DWORD dwFlags)
+{
+    /* this function is safe to call on non-ff-enabled builds */
+
+    JoystickImpl* This = (JoystickImpl*)iface;
+    EffectListItem* itr = This->top_effect;
+    TRACE("(this=%p,%p,%p,%ld)\n", This, lpCallback, pvRef, dwFlags);
+
+    if (!lpCallback)
+	return DIERR_INVALIDPARAM;
+
+    if (dwFlags != 0)
+	FIXME("Flags specified, but no flags exist yet (DX9)!");
+
+    while (itr) {
+	(*lpCallback)(itr->ref, pvRef);
+	itr = itr->next;
+    }
+
+    return DI_OK;
+}
+
+static const IDirectInputDevice8AVtbl JoystickAvt =
 {
 	IDirectInputDevice2AImpl_QueryInterface,
 	IDirectInputDevice2AImpl_AddRef,
@@ -1028,12 +1508,12 @@ static IDirectInputDevice8AVtbl JoystickAvt =
 	IDirectInputDevice2AImpl_GetDeviceInfo,
 	IDirectInputDevice2AImpl_RunControlPanel,
 	IDirectInputDevice2AImpl_Initialize,
-	IDirectInputDevice2AImpl_CreateEffect,
-	IDirectInputDevice2AImpl_EnumEffects,
-	IDirectInputDevice2AImpl_GetEffectInfo,
-	IDirectInputDevice2AImpl_GetForceFeedbackState,
-	IDirectInputDevice2AImpl_SendForceFeedbackCommand,
-	IDirectInputDevice2AImpl_EnumCreatedEffectObjects,
+	JoystickAImpl_CreateEffect,
+	JoystickAImpl_EnumEffects,
+	JoystickAImpl_GetEffectInfo,
+	JoystickAImpl_GetForceFeedbackState,
+	JoystickAImpl_SendForceFeedbackCommand,
+	JoystickAImpl_EnumCreatedEffectObjects,
 	IDirectInputDevice2AImpl_Escape,
 	JoystickAImpl_Poll,
 	IDirectInputDevice2AImpl_SendDeviceData,
@@ -1050,7 +1530,7 @@ static IDirectInputDevice8AVtbl JoystickAvt =
 # define XCAST(fun)	(void*)
 #endif
 
-static IDirectInputDevice8WVtbl JoystickWvt =
+static const IDirectInputDevice8WVtbl JoystickWvt =
 {
 	IDirectInputDevice2WImpl_QueryInterface,
 	XCAST(AddRef)IDirectInputDevice2AImpl_AddRef,
@@ -1070,12 +1550,12 @@ static IDirectInputDevice8WVtbl JoystickWvt =
 	IDirectInputDevice2WImpl_GetDeviceInfo,
 	XCAST(RunControlPanel)IDirectInputDevice2AImpl_RunControlPanel,
 	XCAST(Initialize)IDirectInputDevice2AImpl_Initialize,
-	XCAST(CreateEffect)IDirectInputDevice2AImpl_CreateEffect,
-	IDirectInputDevice2WImpl_EnumEffects,
-	IDirectInputDevice2WImpl_GetEffectInfo,
-	XCAST(GetForceFeedbackState)IDirectInputDevice2AImpl_GetForceFeedbackState,
-	XCAST(SendForceFeedbackCommand)IDirectInputDevice2AImpl_SendForceFeedbackCommand,
-	XCAST(EnumCreatedEffectObjects)IDirectInputDevice2AImpl_EnumCreatedEffectObjects,
+	XCAST(CreateEffect)JoystickAImpl_CreateEffect,
+	JoystickWImpl_EnumEffects,
+	JoystickWImpl_GetEffectInfo,
+	XCAST(GetForceFeedbackState)JoystickAImpl_GetForceFeedbackState,
+	XCAST(SendForceFeedbackCommand)JoystickAImpl_SendForceFeedbackCommand,
+	XCAST(EnumCreatedEffectObjects)JoystickAImpl_EnumCreatedEffectObjects,
 	XCAST(Escape)IDirectInputDevice2AImpl_Escape,
 	XCAST(Poll)JoystickAImpl_Poll,
 	XCAST(SendDeviceData)IDirectInputDevice2AImpl_SendDeviceData,

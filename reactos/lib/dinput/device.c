@@ -464,7 +464,7 @@ HRESULT WINAPI IDirectInputDevice2AImpl_SetCooperativeLevel(
 	LPDIRECTINPUTDEVICE8A iface,HWND hwnd,DWORD dwflags
 ) {
     IDirectInputDevice2AImpl *This = (IDirectInputDevice2AImpl *)iface;
-    TRACE("(this=%p,0x%08lx,0x%08lx)\n",This,(DWORD)hwnd,dwflags);
+    TRACE("(this=%p,%p,0x%08lx)\n",This,hwnd,dwflags);
     if (TRACE_ON(dinput)) {
 	TRACE(" cooperative level : ");
 	_dump_cooperativelevel_DI(dwflags);
@@ -476,7 +476,7 @@ HRESULT WINAPI IDirectInputDevice2AImpl_SetEventNotification(
 	LPDIRECTINPUTDEVICE8A iface,HANDLE hnd
 ) {
     IDirectInputDevice2AImpl *This = (IDirectInputDevice2AImpl *)iface;
-    FIXME("(this=%p,0x%08lx): stub\n",This,(DWORD)hnd);
+    FIXME("(this=%p,%p): stub\n",This,hnd);
     return DI_OK;
 }
 

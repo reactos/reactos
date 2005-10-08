@@ -84,12 +84,12 @@ typedef struct {
 } POV;
 
 typedef struct JoystickImpl JoystickImpl;
-static IDirectInputDevice8AVtbl JoystickAvt;
-static IDirectInputDevice8WVtbl JoystickWvt;
+static const IDirectInputDevice8AVtbl JoystickAvt;
+static const IDirectInputDevice8WVtbl JoystickWvt;
 struct JoystickImpl
 {
-        LPVOID                          lpVtbl;
-        DWORD                           ref;
+        const void                     *lpVtbl;
+        LONG                            ref;
         GUID                            guid;
 	char				dev[32];
 
@@ -254,10 +254,10 @@ static BOOL joydev_enum_deviceW(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTAN
 inline static DWORD get_config_key( HKEY defkey, HKEY appkey, const char *name,
                                     char *buffer, DWORD size )
 {
-    if (appkey && !RegQueryValueExA( appkey, name, 0, NULL, buffer, &size ))
+    if (appkey && !RegQueryValueExA( appkey, name, 0, NULL, (LPBYTE)buffer, &size ))
         return 0;
 
-    if (defkey && !RegQueryValueExA( defkey, name, 0, NULL, buffer, &size ))
+    if (defkey && !RegQueryValueExA( defkey, name, 0, NULL, (LPBYTE)buffer, &size ))
         return 0;
 
     return ERROR_FILE_NOT_FOUND;
@@ -269,28 +269,27 @@ inline static DWORD get_config_key( HKEY defkey, HKEY appkey, const char *name,
 
 static HRESULT setup_dinput_options(JoystickImpl * device)
 {
-    char buffer[MAX_PATH+1];
+    char buffer[MAX_PATH+16];
     HKEY hkey, appkey = 0;
     DWORD len;
 
     buffer[MAX_PATH]='\0';
 
-    if (RegOpenKeyA( HKEY_LOCAL_MACHINE, "Software\\Wine\\dinput", &hkey)) hkey = 0;
+    /* @@ Wine registry key: HKCU\Software\Wine\DirectInput */
+    if (RegOpenKeyA( HKEY_CURRENT_USER, "Software\\Wine\\DirectInput", &hkey)) hkey = 0;
 
     len = GetModuleFileNameA( 0, buffer, MAX_PATH );
     if (len && len < MAX_PATH) {
         HKEY tmpkey;
-
-        if (!RegOpenKeyA( HKEY_LOCAL_MACHINE, "Software\\Wine\\AppDefaults", &tmpkey )) {
-           char appname[MAX_PATH+16];
-           char *p = strrchr( buffer, '\\' );
-           if (p!=NULL) {
-                   strcpy(appname,p+1);
-                   strcat(appname,"\\dinput");
-                   TRACE("appname = [%s] \n",appname);
-                   if (RegOpenKeyA( tmpkey, appname, &appkey )) appkey = 0;
-           }
-           RegCloseKey( tmpkey );
+        /* @@ Wine registry key: HKCU\Software\Wine\AppDefaults\app.exe\DirectInput */
+        if (!RegOpenKeyA( HKEY_CURRENT_USER, "Software\\Wine\\AppDefaults", &tmpkey ))
+        {
+            char *p, *appname = buffer;
+            if ((p = strrchr( appname, '/' ))) appname = p + 1;
+            if ((p = strrchr( appname, '\\' ))) appname = p + 1;
+            strcat( appname, "\\DirectInput" );
+            if (RegOpenKeyA( tmpkey, appname, &appkey )) appkey = 0;
+            RegCloseKey( tmpkey );
         }
     }
 
@@ -386,7 +385,7 @@ static HRESULT setup_dinput_options(JoystickImpl * device)
     return DI_OK;
 }
 
-void calculate_ids(JoystickImpl* device)
+static void calculate_ids(JoystickImpl* device)
 {
     int i;
     int axis = 0;
@@ -437,7 +436,7 @@ void calculate_ids(JoystickImpl* device)
     }
 }
 
-static HRESULT alloc_device(REFGUID rguid, LPVOID jvt, IDirectInputImpl *dinput, LPDIRECTINPUTDEVICEA* pdev)
+static HRESULT alloc_device(REFGUID rguid, const void *jvt, IDirectInputImpl *dinput, LPDIRECTINPUTDEVICEA* pdev)
 {
     DWORD i;
     JoystickImpl* newDevice;
@@ -553,7 +552,7 @@ static HRESULT alloc_device(REFGUID rguid, LPVOID jvt, IDirectInputImpl *dinput,
 
     IDirectInputDevice_AddRef((LPDIRECTINPUTDEVICE8A)newDevice->dinput);
     InitializeCriticalSection(&(newDevice->crit));
-    newDevice->crit.DebugInfo->Spare[1] = (DWORD)"DINPUT_Mouse";
+    newDevice->crit.DebugInfo->Spare[0] = (DWORD_PTR)"DINPUT_Mouse";
 
     newDevice->devcaps.dwSize = sizeof(newDevice->devcaps);
     newDevice->devcaps.dwFlags = DIDC_ATTACHED;
@@ -689,7 +688,7 @@ static ULONG WINAPI JoystickAImpl_Release(LPDIRECTINPUTDEVICE8A iface)
     /* release the data transform filter */
     release_DataFormat(This->transform);
 
-    This->crit.DebugInfo->Spare[1] = 0;
+    This->crit.DebugInfo->Spare[0] = 0;
     DeleteCriticalSection(&(This->crit));
     IDirectInputDevice_Release((LPDIRECTINPUTDEVICE8A)This->dinput);
 
@@ -831,7 +830,7 @@ static HRESULT WINAPI JoystickAImpl_Unacquire(LPDIRECTINPUTDEVICE8A iface)
     return DI_NOEFFECT;
 }
 
-LONG map_axis(JoystickImpl * This, short val, short index)
+static LONG map_axis(JoystickImpl * This, short val, short index)
 {
     double    fval = val;
     double    fmin = This->props[index].lMin;
@@ -849,7 +848,7 @@ LONG map_axis(JoystickImpl * This, short val, short index)
 }
 
 /* convert wine format offset to user format object index */
-int offset_to_object(JoystickImpl *This, int offset)
+static int offset_to_object(JoystickImpl *This, int offset)
 {
     int i;
 
@@ -1094,7 +1093,7 @@ static HRESULT WINAPI JoystickAImpl_GetDeviceData(
     return hr;
 }
 
-int find_property(JoystickImpl * This, LPCDIPROPHEADER ph)
+static int find_property(JoystickImpl * This, LPCDIPROPHEADER ph)
 {
     int i;
     if (ph->dwHow == DIPH_BYOFFSET) {
@@ -1132,7 +1131,7 @@ static HRESULT WINAPI JoystickAImpl_SetProperty(
         _dump_DIPROPHEADER(ph);
 
     if (!HIWORD(rguid)) {
-        switch ((DWORD)rguid) {
+        switch (LOWORD(rguid)) {
         case (DWORD) DIPROP_BUFFERSIZE: {
             LPCDIPROPDWORD	pd = (LPCDIPROPDWORD)ph;
             TRACE("buffersize = %ld\n",pd->dwData);
@@ -1197,7 +1196,7 @@ static HRESULT WINAPI JoystickAImpl_SetProperty(
             break;
         }
         default:
-            FIXME("Unknown type %ld (%s)\n",(DWORD)rguid,debugstr_guid(rguid));
+            FIXME("Unknown type %p (%s)\n",rguid,debugstr_guid(rguid));
             break;
         }
     }
@@ -1213,7 +1212,7 @@ static HRESULT WINAPI JoystickAImpl_SetEventNotification(
 ) {
     JoystickImpl *This = (JoystickImpl *)iface;
 
-    TRACE("(this=%p,0x%08lx)\n",This,(DWORD)hnd);
+    TRACE("(this=%p,%p)\n",This,hnd);
     This->hEvent = hnd;
     return DI_OK;
 }
@@ -1428,7 +1427,7 @@ static HRESULT WINAPI JoystickAImpl_GetProperty(
         _dump_DIPROPHEADER(pdiph);
 
     if (!HIWORD(rguid)) {
-        switch ((DWORD)rguid) {
+        switch (LOWORD(rguid)) {
         case (DWORD) DIPROP_BUFFERSIZE: {
             LPDIPROPDWORD	pd = (LPDIPROPDWORD)pdiph;
             TRACE(" return buffersize = %d\n",This->queue_len);
@@ -1469,7 +1468,7 @@ static HRESULT WINAPI JoystickAImpl_GetProperty(
             break;
         }
         default:
-            FIXME("Unknown type %ld (%s)\n",(DWORD)rguid,debugstr_guid(rguid));
+            FIXME("Unknown type %p (%s)\n",rguid,debugstr_guid(rguid));
             break;
         }
     }
@@ -1640,7 +1639,7 @@ HRESULT WINAPI JoystickWImpl_GetDeviceInfo(
     return DI_OK;
 }
 
-static IDirectInputDevice8AVtbl JoystickAvt =
+static const IDirectInputDevice8AVtbl JoystickAvt =
 {
 	IDirectInputDevice2AImpl_QueryInterface,
 	IDirectInputDevice2AImpl_AddRef,
@@ -1682,7 +1681,7 @@ static IDirectInputDevice8AVtbl JoystickAvt =
 # define XCAST(fun)	(void*)
 #endif
 
-static IDirectInputDevice8WVtbl SysJoystickWvt =
+static const IDirectInputDevice8WVtbl SysJoystickWvt =
 {
 	IDirectInputDevice2WImpl_QueryInterface,
 	XCAST(AddRef)IDirectInputDevice2AImpl_AddRef,

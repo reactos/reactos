@@ -21,6 +21,7 @@
 	<file>data_formats.c</file>
 	<file>device.c</file>
 	<file>dinput_main.c</file>
+	<file>effect_linuxinput.c</file>
 	<file>joystick_linux.c</file>
 	<file>joystick_linuxinput.c</file>
 	<file>keyboard.c</file>

@@ -40,14 +40,14 @@ WINE_DEFAULT_DEBUG_CHANNEL(dinput);
 
 #define WINE_DINPUT_KEYBOARD_MAX_KEYS 256
 
-static IDirectInputDevice8AVtbl SysKeyboardAvt;
-static IDirectInputDevice8WVtbl SysKeyboardWvt;
+static const IDirectInputDevice8AVtbl SysKeyboardAvt;
+static const IDirectInputDevice8WVtbl SysKeyboardWvt;
 
 typedef struct SysKeyboardImpl SysKeyboardImpl;
 struct SysKeyboardImpl
 {
-        LPVOID                          lpVtbl;
-        DWORD                           ref;
+        const void                     *lpVtbl;
+        LONG                            ref;
         GUID                            guid;
 
 	IDirectInputImpl*               dinput;
@@ -83,11 +83,11 @@ static CRITICAL_SECTION_DEBUG critsect_debug =
 {
     0, 0, &keyboard_crit,
     { &critsect_debug.ProcessLocksList, &critsect_debug.ProcessLocksList },
-      0, 0, { 0, (DWORD)(__FILE__ ": keyboard_crit") }
+      0, 0, { (DWORD_PTR)(__FILE__ ": keyboard_crit") }
 };
 static CRITICAL_SECTION keyboard_crit = { &critsect_debug, -1, 0, 0, 0, 0 };
 
-static DWORD keyboard_users = 0;
+static LONG keyboard_users = 0;
 static HHOOK keyboard_hook = NULL;
 
 LRESULT CALLBACK KeyboardCallback( int code, WPARAM wparam, LPARAM lparam )
@@ -238,7 +238,7 @@ static BOOL keyboarddev_enum_deviceW(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEI
   return FALSE;
 }
 
-static SysKeyboardImpl *alloc_device(REFGUID rguid, LPVOID kvt, IDirectInputImpl *dinput)
+static SysKeyboardImpl *alloc_device(REFGUID rguid, const void *kvt, IDirectInputImpl *dinput)
 {
     SysKeyboardImpl* newDevice;
     DWORD kbd_users;
@@ -342,7 +342,7 @@ static HRESULT WINAPI SysKeyboardAImpl_SetProperty(
 	TRACE("(size=%ld,headersize=%ld,obj=%ld,how=%ld\n",
             ph->dwSize,ph->dwHeaderSize,ph->dwObj,ph->dwHow);
 	if (!HIWORD(rguid)) {
-		switch ((DWORD)rguid) {
+		switch (LOWORD(rguid)) {
 		case (DWORD) DIPROP_BUFFERSIZE: {
 			LPCDIPROPDWORD	pd = (LPCDIPROPDWORD)ph;
 
@@ -356,7 +356,7 @@ static HRESULT WINAPI SysKeyboardAImpl_SetProperty(
 			break;
 		}
 		default:
-			WARN("Unknown type %ld\n",(DWORD)rguid);
+			WARN("Unknown type %p\n",rguid);
 			break;
 		}
 	}
@@ -373,7 +373,7 @@ static HRESULT WINAPI SysKeyboardAImpl_GetProperty(
 	TRACE("(size=%ld,headersize=%ld,obj=%ld,how=%ld\n",
             ph->dwSize,ph->dwHeaderSize,ph->dwObj,ph->dwHow);
 	if (!HIWORD(rguid)) {
-		switch ((DWORD)rguid) {
+		switch (LOWORD(rguid)) {
 		case (DWORD) DIPROP_BUFFERSIZE: {
 			LPDIPROPDWORD	pd = (LPDIPROPDWORD)ph;
 
@@ -387,7 +387,7 @@ static HRESULT WINAPI SysKeyboardAImpl_GetProperty(
 			break;
 		}
 		default:
-			WARN("Unknown type %ld\n",(DWORD)rguid);
+			WARN("Unknown type %p\n",rguid);
 			break;
 		}
 	}
@@ -597,7 +597,7 @@ static HRESULT WINAPI SysKeyboardAImpl_SetEventNotification(LPDIRECTINPUTDEVICE8
 							    HANDLE hnd) {
   SysKeyboardImpl *This = (SysKeyboardImpl *)iface;
 
-  TRACE("(this=%p,0x%08lx)\n",This,(DWORD)hnd);
+  TRACE("(this=%p,%p)\n",This,hnd);
 
   This->hEvent = hnd;
   return DI_OK;
@@ -747,7 +747,7 @@ static HRESULT WINAPI SysKeyboardWImpl_GetDeviceInfo(LPDIRECTINPUTDEVICE8W iface
     return DI_OK;
 }
 
-static IDirectInputDevice8AVtbl SysKeyboardAvt =
+static const IDirectInputDevice8AVtbl SysKeyboardAvt =
 {
 	IDirectInputDevice2AImpl_QueryInterface,
 	IDirectInputDevice2AImpl_AddRef,
@@ -789,7 +789,7 @@ static IDirectInputDevice8AVtbl SysKeyboardAvt =
 # define XCAST(fun)	(void*)
 #endif
 
-static IDirectInputDevice8WVtbl SysKeyboardWvt =
+static const IDirectInputDevice8WVtbl SysKeyboardWvt =
 {
 	IDirectInputDevice2WImpl_QueryInterface,
 	XCAST(AddRef)IDirectInputDevice2AImpl_AddRef,
