@@ -104,7 +104,7 @@ LARGE_INTEGER       TicksPerMs; /* Ticks per millisecond */
 LARGE_INTEGER       TicksPerUs; /* Ticks per microsecond */
 BOOL                UsePerformanceCounter;
 
-
+#ifdef DBG
 /* Display the contents of a buffer */
 static VOID DisplayBuffer(
     PVOID Buffer,
@@ -123,6 +123,7 @@ static VOID DisplayBuffer(
       printf("%02X ", (p[i]) & 0xFF);
     }
 }
+#endif /* DBG */
 
 /* Display usage information on screen */
 static VOID Usage(VOID)
