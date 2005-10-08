@@ -56,18 +56,16 @@ extern const WCHAR szUnregisterProgIdInfo[];
 
 static MSIAPPID *load_appid( MSIPACKAGE* package, MSIRECORD *row )
 {
-    DWORD sz;
     LPCWSTR buffer;
     MSIAPPID *appid;
 
     /* fill in the data */
 
-    appid = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(MSIAPPID) );
+    appid = msi_alloc_zero( sizeof(MSIAPPID) );
     if (!appid)
         return NULL;
     
-    sz = IDENTIFIER_SIZE;
-    MSI_RecordGetStringW(row, 1, appid->AppID, &sz);
+    appid->AppID = load_dynamic_stringW( row, 1 );
     TRACE("loading appid %s\n", debugstr_w( appid->AppID ));
 
     buffer = MSI_RecordGetString(row,2);
@@ -117,39 +115,36 @@ static MSIAPPID *load_given_appid( MSIPACKAGE *package, LPCWSTR name )
     return appid;
 }
 
-static INT load_given_progid(MSIPACKAGE *package, LPCWSTR progid);
+static MSIPROGID *load_given_progid(MSIPACKAGE *package, LPCWSTR progid);
 static MSICLASS *load_given_class( MSIPACKAGE *package, LPCWSTR classid );
 
-static INT load_progid(MSIPACKAGE* package, MSIRECORD *row)
+static MSIPROGID *load_progid( MSIPACKAGE* package, MSIRECORD *row )
 {
-    DWORD index = package->loaded_progids;
+    MSIPROGID *progid;
     LPCWSTR buffer;
 
     /* fill in the data */
 
-    package->loaded_progids++;
-    if (package->loaded_progids == 1)
-        package->progids = HeapAlloc(GetProcessHeap(),0,sizeof(MSIPROGID));
-    else
-        package->progids = HeapReAlloc(GetProcessHeap(),0,
-            package->progids , package->loaded_progids * sizeof(MSIPROGID));
+    progid = msi_alloc_zero( sizeof(MSIPROGID) );
+    if (!progid)
+        return NULL;
 
-    memset(&package->progids[index],0,sizeof(MSIPROGID));
+    list_add_tail( &package->progids, &progid->entry );
 
-    package->progids[index].ProgID = load_dynamic_stringW(row,1);
-    TRACE("loading progid %s\n",debugstr_w(package->progids[index].ProgID));
+    progid->ProgID = load_dynamic_stringW(row,1);
+    TRACE("loading progid %s\n",debugstr_w(progid->ProgID));
 
     buffer = MSI_RecordGetString(row,2);
-    package->progids[index].ParentIndex = load_given_progid(package,buffer);
-    if (package->progids[index].ParentIndex < 0 && buffer)
+    progid->Parent = load_given_progid(package,buffer);
+    if (progid->Parent == NULL && buffer)
         FIXME("Unknown parent ProgID %s\n",debugstr_w(buffer));
 
     buffer = MSI_RecordGetString(row,3);
-    package->progids[index].Class = load_given_class(package,buffer);
-    if (package->progids[index].Class == NULL && buffer)
+    progid->Class = load_given_class(package,buffer);
+    if (progid->Class == NULL && buffer)
         FIXME("Unknown class %s\n",debugstr_w(buffer));
 
-    package->progids[index].Description = load_dynamic_stringW(row,4);
+    progid->Description = load_dynamic_stringW(row,4);
 
     if (!MSI_RecordIsNull(row,6))
     {
@@ -158,99 +153,96 @@ static INT load_progid(MSIPACKAGE* package, MSIRECORD *row)
         LPWSTR FilePath;
         static const WCHAR fmt[] = {'%','s',',','%','i',0};
 
-        build_icon_path(package,FileName,&FilePath);
+        FilePath = build_icon_path(package,FileName);
        
-        package->progids[index].IconPath = 
-                HeapAlloc(GetProcessHeap(),0,(strlenW(FilePath)+10)*
-                                sizeof(WCHAR));
+        progid->IconPath = msi_alloc( (strlenW(FilePath)+10)* sizeof(WCHAR) );
 
-        sprintfW(package->progids[index].IconPath,fmt,FilePath,icon_index);
+        sprintfW(progid->IconPath,fmt,FilePath,icon_index);
 
-        HeapFree(GetProcessHeap(),0,FilePath);
-        HeapFree(GetProcessHeap(),0,FileName);
+        msi_free(FilePath);
+        msi_free(FileName);
     }
     else
     {
         buffer = MSI_RecordGetString(row,5);
         if (buffer)
-            build_icon_path(package,buffer,&(package->progids[index].IconPath));
+            progid->IconPath = build_icon_path(package,buffer);
     }
 
-    package->progids[index].CurVerIndex = -1;
-    package->progids[index].VersionIndIndex = -1;
+    progid->CurVer = NULL;
+    progid->VersionInd = NULL;
 
     /* if we have a parent then we may be that parents CurVer */
-    if (package->progids[index].ParentIndex >= 0 && 
-        package->progids[index].ParentIndex != index)
+    if (progid->Parent && progid->Parent != progid)
     {
-        int pindex = package->progids[index].ParentIndex;
-        while (package->progids[pindex].ParentIndex>= 0 && 
-               package->progids[pindex].ParentIndex != pindex)
-            pindex = package->progids[pindex].ParentIndex;
+        MSIPROGID *parent = progid->Parent;
 
-        FIXME("BAD BAD need to determing if we are really the CurVer\n");
+        while (parent->Parent && parent->Parent != parent)
+            parent = parent->Parent;
 
-        package->progids[index].CurVerIndex = pindex;
-        package->progids[pindex].VersionIndIndex = index;
+        FIXME("need to determing if we are really the CurVer\n");
+
+        progid->CurVer = parent;
+        parent->VersionInd = progid;
     }
     
-    return index;
+    return progid;
 }
 
-static INT load_given_progid(MSIPACKAGE *package, LPCWSTR progid)
+static MSIPROGID *load_given_progid(MSIPACKAGE *package, LPCWSTR name)
 {
-    INT rc;
+    MSIPROGID *progid;
     MSIRECORD *row;
-    INT i;
     static const WCHAR ExecSeqQuery[] =
         {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
          '`','P','r','o','g','I','d','`',' ','W','H','E','R','E',' ',
          '`','P','r','o','g','I','d','`',' ','=',' ','\'','%','s','\'',0};
 
-    if (!progid)
-        return -1;
+    if (!name)
+        return NULL;
 
     /* check for progids already loaded */
-    for (i = 0; i < package->loaded_progids; i++)
-        if (strcmpiW(package->progids[i].ProgID,progid)==0)
+    LIST_FOR_EACH_ENTRY( progid, &package->progids, MSIPROGID, entry )
+    {
+        if (strcmpiW( progid->ProgID,name )==0)
         {
-            TRACE("found progid %s at index %i\n",debugstr_w(progid), i);
-            return i;
+            TRACE("found progid %s (%p)\n",debugstr_w(name), progid );
+            return progid;
         }
+    }
     
-    row = MSI_QueryGetRecord(package->db, ExecSeqQuery, progid);
-    if(!row)
-        return -1;
+    row = MSI_QueryGetRecord( package->db, ExecSeqQuery, name );
+    if (!row)
+        return NULL;
 
-    rc = load_progid(package, row);
+    progid = load_progid(package, row);
     msiobj_release(&row->hdr);
 
-    return rc;
+    return progid;
 }
 
 static MSICLASS *load_class( MSIPACKAGE* package, MSIRECORD *row )
 {
     MSICLASS *cls;
-    DWORD sz,i;
+    DWORD i;
     LPCWSTR buffer;
 
     /* fill in the data */
 
-    cls = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(MSICLASS) );
+    cls = msi_alloc_zero( sizeof(MSICLASS) );
     if (!cls)
         return NULL;
 
-    sz = IDENTIFIER_SIZE;
-    MSI_RecordGetStringW(row, 1, cls->CLSID, &sz);
-    TRACE("loading class %s\n",debugstr_w(cls->CLSID));
-    sz = IDENTIFIER_SIZE;
-    MSI_RecordGetStringW(row, 2, cls->Context, &sz);
+    list_add_tail( &package->classes, &cls->entry );
+
+    cls->clsid = load_dynamic_stringW( row, 1 );
+    TRACE("loading class %s\n",debugstr_w(cls->clsid));
+    cls->Context = load_dynamic_stringW( row, 2 );
     buffer = MSI_RecordGetString(row,3);
     cls->Component = get_loaded_component(package, buffer);
 
     cls->ProgIDText = load_dynamic_stringW(row,4);
-    cls->ProgIDIndex = 
-                load_given_progid(package, cls->ProgIDText);
+    cls->ProgID = load_given_progid(package, cls->ProgIDText);
 
     cls->Description = load_dynamic_stringW(row,5);
 
@@ -268,22 +260,20 @@ static MSICLASS *load_class( MSIPACKAGE* package, MSIRECORD *row )
         LPWSTR FilePath;
         static const WCHAR fmt[] = {'%','s',',','%','i',0};
 
-        build_icon_path(package,FileName,&FilePath);
+        FilePath = build_icon_path(package,FileName);
        
-        cls->IconPath = 
-                HeapAlloc(GetProcessHeap(),0,(strlenW(FilePath)+5)*
-                                sizeof(WCHAR));
+        cls->IconPath = msi_alloc( (strlenW(FilePath)+5)* sizeof(WCHAR) );
 
         sprintfW(cls->IconPath,fmt,FilePath,icon_index);
 
-        HeapFree(GetProcessHeap(),0,FilePath);
-        HeapFree(GetProcessHeap(),0,FileName);
+        msi_free(FilePath);
+        msi_free(FileName);
     }
     else
     {
         buffer = MSI_RecordGetString(row,8);
         if (buffer)
-            build_icon_path(package,buffer,&(cls->IconPath));
+            cls->IconPath = build_icon_path(package,buffer);
     }
 
     if (!MSI_RecordIsNull(row,10))
@@ -310,8 +300,7 @@ static MSICLASS *load_class( MSIPACKAGE* package, MSIRECORD *row )
         }
         else
         {
-            cls->DefInprocHandler32 = load_dynamic_stringW(
-                            row, 10);
+            cls->DefInprocHandler32 = load_dynamic_stringW( row, 10);
             reduce_to_longfilename(cls->DefInprocHandler32);
         }
     }
@@ -347,7 +336,7 @@ static MSICLASS *load_given_class(MSIPACKAGE *package, LPCWSTR classid)
     /* check for classes already loaded */
     LIST_FOR_EACH_ENTRY( cls, &package->classes, MSICLASS, entry )
     {
-        if (lstrcmpiW( cls->CLSID, classid )==0)
+        if (lstrcmpiW( cls->clsid, classid )==0)
         {
             TRACE("found class %s (%p)\n",debugstr_w(classid), cls);
             return cls;
@@ -368,13 +357,12 @@ static MSIEXTENSION *load_given_extension( MSIPACKAGE *package, LPCWSTR extensio
 
 static MSIMIME *load_mime( MSIPACKAGE* package, MSIRECORD *row )
 {
-    DWORD sz;
     LPCWSTR buffer;
     MSIMIME *mt;
 
     /* fill in the data */
 
-    mt = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(MSIMIME) );
+    mt = msi_alloc_zero( sizeof(MSIMIME) );
     if (!mt)
         return mt;
 
@@ -384,9 +372,8 @@ static MSIMIME *load_mime( MSIPACKAGE* package, MSIRECORD *row )
     buffer = MSI_RecordGetString( row, 2 );
     mt->Extension = load_given_extension( package, buffer );
 
-    sz = IDENTIFIER_SIZE;
-    MSI_RecordGetStringW( row, 3, mt->CLSID, &sz );
-    mt->Class = load_given_class( package, mt->CLSID );
+    mt->clsid = load_dynamic_stringW( row, 3 );
+    mt->Class = load_given_class( package, mt->clsid );
 
     list_add_tail( &package->mimes, &mt->entry );
 
@@ -429,30 +416,32 @@ static MSIMIME *load_given_mime( MSIPACKAGE *package, LPCWSTR mime )
 static MSIEXTENSION *load_extension( MSIPACKAGE* package, MSIRECORD *row )
 {
     MSIEXTENSION *ext;
-    DWORD sz;
     LPCWSTR buffer;
 
     /* fill in the data */
 
-    ext = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(MSIEXTENSION) );
+    ext = msi_alloc_zero( sizeof(MSIEXTENSION) );
+    if (!ext)
+        return NULL;
 
-    sz = 256;
-    MSI_RecordGetStringW( row, 1, ext->Extension, &sz );
+    list_init( &ext->verbs );
+
+    list_add_tail( &package->extensions, &ext->entry );
+
+    ext->Extension = load_dynamic_stringW( row, 1 );
     TRACE("loading extension %s\n", debugstr_w(ext->Extension));
 
     buffer = MSI_RecordGetString( row, 2 );
     ext->Component = get_loaded_component( package,buffer );
 
     ext->ProgIDText = load_dynamic_stringW( row, 3 );
-    ext->ProgIDIndex = load_given_progid( package, ext->ProgIDText );
+    ext->ProgID = load_given_progid( package, ext->ProgIDText );
 
     buffer = MSI_RecordGetString( row, 4 );
     ext->Mime = load_given_mime( package, buffer );
 
     buffer = MSI_RecordGetString(row,5);
     ext->Feature = get_loaded_feature( package, buffer );
-
-    list_add_tail( &package->extensions, &ext->entry );
 
     return ext;
 }
@@ -498,49 +487,36 @@ static MSIEXTENSION *load_given_extension( MSIPACKAGE *package, LPCWSTR name )
 static UINT iterate_load_verb(MSIRECORD *row, LPVOID param)
 {
     MSIPACKAGE* package = (MSIPACKAGE*)param;
-    DWORD index = package->loaded_verbs;
+    MSIVERB *verb;
     LPCWSTR buffer;
+    MSIEXTENSION *extension;
+
+    buffer = MSI_RecordGetString(row,1);
+    extension = load_given_extension( package, buffer );
+    if (!extension)
+    {
+        ERR("Verb unable to find loaded extension %s\n", debugstr_w(buffer));
+        return ERROR_SUCCESS;
+    }
 
     /* fill in the data */
 
-    package->loaded_verbs++;
-    if (package->loaded_verbs == 1)
-        package->verbs = HeapAlloc(GetProcessHeap(),0,sizeof(MSIVERB));
-    else
-        package->verbs = HeapReAlloc(GetProcessHeap(),0,
-            package->verbs , package->loaded_verbs * sizeof(MSIVERB));
+    verb = msi_alloc_zero( sizeof(MSIVERB) );
+    if (!verb)
+        return ERROR_OUTOFMEMORY;
 
-    memset(&package->verbs[index],0,sizeof(MSIVERB));
-
-    buffer = MSI_RecordGetString(row,1);
-    package->verbs[index].Extension = load_given_extension(package,buffer);
-    if (package->verbs[index].Extension == NULL && buffer)
-        ERR("Verb unable to find loaded extension %s\n", debugstr_w(buffer));
-
-    package->verbs[index].Verb = load_dynamic_stringW(row,2);
-    TRACE("loading verb %s\n",debugstr_w(package->verbs[index].Verb));
-    package->verbs[index].Sequence = MSI_RecordGetInteger(row,3);
+    verb->Verb = load_dynamic_stringW(row,2);
+    TRACE("loading verb %s\n",debugstr_w(verb->Verb));
+    verb->Sequence = MSI_RecordGetInteger(row,3);
 
     buffer = MSI_RecordGetString(row,4);
-    deformat_string(package,buffer,&package->verbs[index].Command);
+    deformat_string(package,buffer,&verb->Command);
 
     buffer = MSI_RecordGetString(row,5);
-    deformat_string(package,buffer,&package->verbs[index].Argument);
+    deformat_string(package,buffer,&verb->Argument);
 
     /* assosiate the verb with the correct extension */
-    if (package->verbs[index].Extension)
-    {
-        MSIEXTENSION* extension = package->verbs[index].Extension;
-        int count = extension->VerbCount;
-
-        if (count >= 99)
-            FIXME("Exceeding max verb count! Increase that limit!!!\n");
-        else
-        {
-            extension->VerbCount++;
-            extension->Verbs[count] = index;
-        }
-    }
+    list_add_tail( &extension->verbs, &verb->entry );
     
     return ERROR_SUCCESS;
 }
@@ -562,7 +538,7 @@ static UINT iterate_all_classes(MSIRECORD *rec, LPVOID param)
 
     LIST_FOR_EACH_ENTRY( cls, &package->classes, MSICLASS, entry )
     {
-        if (strcmpiW( clsid, cls->CLSID ))
+        if (strcmpiW( clsid, cls->clsid ))
             continue;
         if (strcmpW( context, cls->Context ))
             continue;
@@ -724,7 +700,7 @@ static void load_classes_and_such(MSIPACKAGE *package)
     if (!list_empty( &package->classes ) ||
         !list_empty( &package->mimes ) ||
         !list_empty( &package->extensions ) ||
-        package->progids || package->verbs )
+        !list_empty( &package->progids ) )
         return;
 
     load_all_classes(package);
@@ -735,15 +711,12 @@ static void load_classes_and_such(MSIPACKAGE *package)
     load_all_mimes(package);
 }
 
-static void mark_progid_for_install(MSIPACKAGE* package, INT index)
+static void mark_progid_for_install( MSIPACKAGE* package, MSIPROGID *progid )
 {
-    MSIPROGID* progid;
-    int i;
+    MSIPROGID *child;
 
-    if (index < 0 || index >= package->loaded_progids)
+    if (!progid)
         return;
-
-    progid = &package->progids[index];
 
     if (progid->InstallMe == TRUE)
         return;
@@ -751,9 +724,11 @@ static void mark_progid_for_install(MSIPACKAGE* package, INT index)
     progid->InstallMe = TRUE;
 
     /* all children if this is a parent also install */
-   for (i = 0; i < package->loaded_progids; i++)
-        if (package->progids[i].ParentIndex == index)
-            mark_progid_for_install(package,i);
+    LIST_FOR_EACH_ENTRY( child, &package->progids, MSIPROGID, entry )
+    {
+        if (child->Parent == progid)
+            mark_progid_for_install( package, child );
+    }
 }
 
 static void mark_mime_for_install( MSIMIME *mime )
@@ -763,84 +738,82 @@ static void mark_mime_for_install( MSIMIME *mime )
     mime->InstallMe = TRUE;
 }
 
+LONG msi_reg_set_val_str( HKEY hkey, LPCWSTR name, LPCWSTR value )
+{
+    DWORD len = value ? (lstrlenW(value) + 1) * sizeof (WCHAR) : 0;
+    return RegSetValueExW( hkey, name, 0, REG_SZ, (LPBYTE)value, len );
+}
+
+LONG msi_reg_set_val_multi_str( HKEY hkey, LPCWSTR name, LPCWSTR value )
+{
+    LPCWSTR p = value;
+    while (*p) p += lstrlenW(p) + 1;
+    return RegSetValueExW( hkey, name, 0, REG_MULTI_SZ,
+                           (LPBYTE)value, (p + 1 - value) * sizeof(WCHAR) );
+}
+
+LONG msi_reg_set_val_dword( HKEY hkey, LPCWSTR name, DWORD val )
+{
+    return RegSetValueExW( hkey, name, 0, REG_DWORD, (LPBYTE)&val, sizeof (DWORD) );
+}
+
+LONG msi_reg_set_subkey_val( HKEY hkey, LPCWSTR path, LPCWSTR name, LPCWSTR val )
+{
+    HKEY hsubkey = 0;
+    LONG r;
+
+    r = RegCreateKeyW( hkey, path, &hsubkey );
+    if (r != ERROR_SUCCESS)
+        return r;
+    r = msi_reg_set_val_str( hsubkey, name, val );
+    RegCloseKey( hsubkey );
+    return r;
+}
+
 static UINT register_appid(MSIAPPID *appid, LPCWSTR app )
 {
     static const WCHAR szAppID[] = { 'A','p','p','I','D',0 };
+    static const WCHAR szRemoteServerName[] =
+         {'R','e','m','o','t','e','S','e','r','v','e','r','N','a','m','e',0};
+    static const WCHAR szLocalService[] =
+         {'L','o','c','a','l','S','e','r','v','i','c','e',0};
+    static const WCHAR szService[] =
+         {'S','e','r','v','i','c','e','P','a','r','a','m','e','t','e','r','s',0};
+    static const WCHAR szDLL[] =
+         {'D','l','l','S','u','r','r','o','g','a','t','e',0};
+    static const WCHAR szActivate[] =
+         {'A','c','t','i','v','a','t','e','A','s','S','t','o','r','a','g','e',0};
+    static const WCHAR szY[] = {'Y',0};
+    static const WCHAR szRunAs[] = {'R','u','n','A','s',0};
+    static const WCHAR szUser[] = 
+         {'I','n','t','e','r','a','c','t','i','v','e',' ','U','s','e','r',0};
+
     HKEY hkey2,hkey3;
-    UINT size; 
 
     RegCreateKeyW(HKEY_CLASSES_ROOT,szAppID,&hkey2);
     RegCreateKeyW( hkey2, appid->AppID, &hkey3 );
-    RegSetValueExW( hkey3, NULL, 0, REG_SZ,
-                    (LPBYTE)app, (strlenW(app)+1)*sizeof(WCHAR) );
+    RegCloseKey(hkey2);
+    msi_reg_set_val_str( hkey3, NULL, app );
 
     if (appid->RemoteServerName)
-    {
-        static const WCHAR szRemoteServerName[] =
-             {'R','e','m','o','t','e','S','e','r','v','e','r','N','a','m','e',0};
-
-        size = (lstrlenW(appid->RemoteServerName)+1) * sizeof(WCHAR);
-
-        RegSetValueExW( hkey3, szRemoteServerName, 0, REG_SZ,
-                        (LPBYTE)appid->RemoteServerName, size);
-    }
+        msi_reg_set_val_str( hkey3, szRemoteServerName, appid->RemoteServerName );
 
     if (appid->LocalServer)
-    {
-        static const WCHAR szLocalService[] =
-             {'L','o','c','a','l','S','e','r','v','i','c','e',0};
-
-        size = (lstrlenW(appid->LocalServer)+1) * sizeof(WCHAR);
-
-        RegSetValueExW( hkey3, szLocalService, 0, REG_SZ,
-                        (LPBYTE)appid->LocalServer, size );
-    }
+        msi_reg_set_val_str( hkey3, szLocalService, appid->LocalServer );
 
     if (appid->ServiceParameters)
-    {
-        static const WCHAR szService[] =
-             {'S','e','r','v','i','c','e',
-              'P','a','r','a','m','e','t','e','r','s',0};
-
-        size = (lstrlenW(appid->ServiceParameters)+1) * sizeof(WCHAR);
-        RegSetValueExW( hkey3, szService, 0, REG_SZ,
-                        (LPBYTE)appid->ServiceParameters, size );
-    }
+        msi_reg_set_val_str( hkey3, szService, appid->ServiceParameters );
 
     if (appid->DllSurrogate)
-    {
-        static const WCHAR szDLL[] =
-             {'D','l','l','S','u','r','r','o','g','a','t','e',0};
-
-        size = (lstrlenW(appid->DllSurrogate)+1) * sizeof(WCHAR);
-        RegSetValueExW( hkey3, szDLL, 0, REG_SZ,
-                        (LPBYTE)appid->DllSurrogate, size );
-    }
+        msi_reg_set_val_str( hkey3, szDLL, appid->DllSurrogate );
 
     if (appid->ActivateAtStorage)
-    {
-        static const WCHAR szActivate[] =
-             {'A','c','t','i','v','a','t','e','A','s',
-              'S','t','o','r','a','g','e',0};
-        static const WCHAR szY[] = {'Y',0};
-
-        RegSetValueExW( hkey3, szActivate, 0, REG_SZ,
-                        (LPBYTE)szY, sizeof szY );
-    }
+        msi_reg_set_val_str( hkey3, szActivate, szY );
 
     if (appid->RunAsInteractiveUser)
-    {
-        static const WCHAR szRunAs[] = {'R','u','n','A','s',0};
-        static const WCHAR szUser[] = 
-             {'I','n','t','e','r','a','c','t','i','v','e',' ',
-              'U','s','e','r',0};
-
-        RegSetValueExW( hkey3, szRunAs, 0, REG_SZ,
-                        (LPBYTE)szUser, sizeof szUser );
-    }
+        msi_reg_set_val_str( hkey3, szRunAs, szUser );
 
     RegCloseKey(hkey3);
-    RegCloseKey(hkey2);
     return ERROR_SUCCESS;
 }
 
@@ -900,23 +873,21 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
                ACTION_VerifyFeatureForAction( feature, INSTALLSTATE_ADVERTISED )))
         {
             TRACE("Skipping class %s reg due to disabled feature %s\n", 
-                            debugstr_w(cls->CLSID), 
+                            debugstr_w(cls->clsid), 
                             debugstr_w(feature->Feature));
 
             continue;
         }
 
-        TRACE("Registering class %s (%p)\n", debugstr_w(cls->CLSID), cls);
+        TRACE("Registering class %s (%p)\n", debugstr_w(cls->clsid), cls);
 
         cls->Installed = TRUE;
-        if (cls->ProgIDIndex >= 0)
-            mark_progid_for_install( package, cls->ProgIDIndex );
+        mark_progid_for_install( package, cls->ProgID );
 
-        RegCreateKeyW( hkey, cls->CLSID, &hkey2 );
+        RegCreateKeyW( hkey, cls->clsid, &hkey2 );
 
         if (cls->Description)
-            RegSetValueExW( hkey2, NULL, 0, REG_SZ, (LPBYTE)cls->Description,
-                            (strlenW(cls->Description)+1)*sizeof(WCHAR));
+            msi_reg_set_val_str( hkey2, NULL, cls->Description );
 
         RegCreateKeyW( hkey2, cls->Context, &hkey3 );
         file = get_loaded_file( package, comp->KeyPath );
@@ -927,7 +898,6 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
          */
         if (strcmpiW( cls->Context, szInprocServer32 )!=0)
         {
-            sz = 0;
             sz = GetShortPathNameW( file->TargetPath, NULL, 0 );
             if (sz == 0)
             {
@@ -944,7 +914,7 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
                     size += sizeof(WCHAR);
                 }
 
-                argument = HeapAlloc(GetProcessHeap(), 0, size + sizeof(WCHAR));
+                argument = msi_alloc( size + sizeof(WCHAR));
                 GetShortPathNameW( file->TargetPath, argument, sz );
 
                 if (cls->Argument)
@@ -964,7 +934,7 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
                 size += sizeof(WCHAR);
             }
 
-            argument = HeapAlloc(GetProcessHeap(), 0, size + sizeof(WCHAR));
+            argument = msi_alloc( size + sizeof(WCHAR));
             strcpyW( argument, file->TargetPath );
 
             if (cls->Argument)
@@ -976,36 +946,27 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
 
         if (argument)
         {
-            RegSetValueExW(hkey3,NULL,0,REG_SZ, (LPBYTE)argument, size);
-            HeapFree(GetProcessHeap(),0,argument);
+            msi_reg_set_val_str( hkey3, NULL, argument );
+            msi_free(argument);
         }
 
         RegCloseKey(hkey3);
 
-        if (cls->ProgIDIndex >= 0 || cls->ProgIDText)
+        if (cls->ProgID || cls->ProgIDText)
         {
             LPCWSTR progid;
 
-            if (cls->ProgIDIndex >= 0)
-                progid = package->progids[cls->ProgIDIndex].ProgID;
+            if (cls->ProgID)
+                progid = cls->ProgID->ProgID;
             else
                 progid = cls->ProgIDText;
 
-            RegCreateKeyW(hkey2,szProgID,&hkey3);
-            RegSetValueExW(hkey3,NULL,0,REG_SZ,(LPBYTE)progid,
-                            (strlenW(progid)+1) *sizeof(WCHAR));
-            RegCloseKey(hkey3);
+            msi_reg_set_subkey_val( hkey2, szProgID, NULL, progid );
 
-            if (cls->ProgIDIndex >= 0 &&
-                package->progids[cls->ProgIDIndex].VersionIndIndex >= 0)
+            if (cls->ProgID && cls->ProgID->VersionInd)
             {
-                LPWSTR viprogid = strdupW(package->progids[package->progids[
-                        cls->ProgIDIndex].VersionIndIndex].ProgID);
-                RegCreateKeyW(hkey2,szVIProgID,&hkey3);
-                RegSetValueExW(hkey3,NULL,0,REG_SZ,(LPBYTE)viprogid,
-                            (strlenW(viprogid)+1) *sizeof(WCHAR));
-                RegCloseKey(hkey3);
-                HeapFree(GetProcessHeap(), 0, viprogid);
+                msi_reg_set_subkey_val( hkey2, szVIProgID, NULL, 
+                                        cls->ProgID->VersionInd->ProgID );
             }
         }
 
@@ -1013,8 +974,7 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
         { 
             MSIAPPID *appid = cls->AppID;
 
-            RegSetValueExW( hkey2, szAppID, 0, REG_SZ, (LPBYTE)appid->AppID,
-                           (lstrlenW(appid->AppID)+1)*sizeof(WCHAR) );
+            msi_reg_set_val_str( hkey2, szAppID, appid->AppID );
 
             register_appid( appid, cls->Description );
         }
@@ -1024,12 +984,7 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
             static const WCHAR szDefaultIcon[] = 
                 {'D','e','f','a','u','l','t','I','c','o','n',0};
 
-            RegCreateKeyW(hkey2,szDefaultIcon,&hkey3);
-
-            RegSetValueExW( hkey3, NULL, 0, REG_SZ, (LPVOID)cls->IconPath,
-                           (strlenW(cls->IconPath)+1) * sizeof(WCHAR));
-
-            RegCloseKey(hkey3);
+            msi_reg_set_subkey_val( hkey2, szDefaultIcon, NULL, cls->IconPath );
         }
 
         if (cls->DefInprocHandler)
@@ -1037,24 +992,15 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
             static const WCHAR szInproc[] =
                 {'I','n','p','r','o','c','H','a','n','d','l','e','r',0};
 
-            size = (strlenW(cls->DefInprocHandler) + 1) * sizeof(WCHAR);
-            RegCreateKeyW(hkey2,szInproc,&hkey3);
-            RegSetValueExW(hkey3,NULL,0,REG_SZ, 
-                            (LPBYTE)cls->DefInprocHandler, size);
-            RegCloseKey(hkey3);
+            msi_reg_set_subkey_val( hkey2, szInproc, NULL, cls->DefInprocHandler );
         }
 
         if (cls->DefInprocHandler32)
         {
             static const WCHAR szInproc32[] =
-                {'I','n','p','r','o','c','H','a','n','d','l','e','r','3','2',
-                 0};
-            size = (strlenW(cls->DefInprocHandler32) + 1) * sizeof(WCHAR);
+                {'I','n','p','r','o','c','H','a','n','d','l','e','r','3','2',0};
 
-            RegCreateKeyW(hkey2,szInproc32,&hkey3);
-            RegSetValueExW(hkey3,NULL,0,REG_SZ, 
-                           (LPBYTE)cls->DefInprocHandler32,size);
-            RegCloseKey(hkey3);
+            msi_reg_set_subkey_val( hkey2, szInproc32, NULL, cls->DefInprocHandler32 );
         }
         
         RegCloseKey(hkey2);
@@ -1071,15 +1017,11 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
                 ptr2 = strchrW(ptr,';');
                 if (ptr2)
                     *ptr2 = 0;
-                keyname = HeapAlloc(GetProcessHeap(),0,(strlenW(szFileType_fmt)+
-                                        strlenW(cls->CLSID) + 4) * sizeof(WCHAR));
-                sprintfW( keyname, szFileType_fmt, cls->CLSID, index );
+                keyname = msi_alloc( (strlenW(szFileType_fmt) + strlenW(cls->clsid) + 4) * sizeof(WCHAR));
+                sprintfW( keyname, szFileType_fmt, cls->clsid, index );
 
-                RegCreateKeyW(HKEY_CLASSES_ROOT,keyname,&hkey2);
-                RegSetValueExW(hkey2,NULL,0,REG_SZ, (LPVOID)ptr,
-                        strlenW(ptr)*sizeof(WCHAR));
-                RegCloseKey(hkey2);
-                HeapFree(GetProcessHeap(), 0, keyname);
+                msi_reg_set_subkey_val( HKEY_CLASSES_ROOT, keyname, NULL, ptr );
+                msi_free(keyname);
 
                 if (ptr2)
                     ptr = ptr2+1;
@@ -1092,7 +1034,7 @@ UINT ACTION_RegisterClassInfo(MSIPACKAGE *package)
         
         uirow = MSI_CreateRecord(1);
 
-        MSI_RecordSetStringW( uirow, 1, cls->CLSID );
+        MSI_RecordSetStringW( uirow, 1, cls->clsid );
         ui_actiondata(package,szRegisterClassInfo,uirow);
         msiobj_release(&uirow->hdr);
     }
@@ -1107,42 +1049,27 @@ static UINT register_progid_base(MSIPACKAGE* package, MSIPROGID* progid,
     static const WCHAR szCLSID[] = { 'C','L','S','I','D',0 };
     static const WCHAR szDefaultIcon[] =
         {'D','e','f','a','u','l','t','I','c','o','n',0};
-    HKEY hkey,hkey2;
+    HKEY hkey;
 
     RegCreateKeyW(HKEY_CLASSES_ROOT,progid->ProgID,&hkey);
 
     if (progid->Description)
-    {
-        RegSetValueExW(hkey,NULL,0,REG_SZ,
-                        (LPVOID)progid->Description, 
-                        (strlenW(progid->Description)+1) *
-                       sizeof(WCHAR));
-    }
+        msi_reg_set_val_str( hkey, NULL, progid->Description );
 
     if (progid->Class)
     {   
-        RegCreateKeyW(hkey,szCLSID,&hkey2);
-        RegSetValueExW( hkey2, NULL, 0, REG_SZ, (LPBYTE)progid->Class->CLSID, 
-                        (strlenW(progid->Class->CLSID)+1) * sizeof(WCHAR) );
-
+        msi_reg_set_subkey_val( hkey, szCLSID, NULL, progid->Class->clsid );
         if (clsid)
-            strcpyW( clsid, progid->Class->CLSID );
-
-        RegCloseKey(hkey2);
+            strcpyW( clsid, progid->Class->clsid );
     }
     else
     {
-        FIXME("UNHANDLED case, Parent progid but classid is NULL\n");
+        FIXME("progid (%s) with null classid\n", debugstr_w(progid->ProgID));
     }
 
     if (progid->IconPath)
-    {
-        RegCreateKeyW(hkey,szDefaultIcon,&hkey2);
+        msi_reg_set_subkey_val( hkey, szDefaultIcon, NULL, progid->IconPath );
 
-        RegSetValueExW(hkey2,NULL,0,REG_SZ,(LPVOID)progid->IconPath,
-                           (strlenW(progid->IconPath)+1) * sizeof(WCHAR));
-        RegCloseKey(hkey2);
-    }
     return ERROR_SUCCESS;
 }
 
@@ -1151,12 +1078,12 @@ static UINT register_progid(MSIPACKAGE *package, MSIPROGID* progid,
 {
     UINT rc = ERROR_SUCCESS; 
 
-    if (progid->ParentIndex < 0)
+    if (progid->Parent == NULL)
         rc = register_progid_base(package, progid, clsid);
     else
     {
         DWORD disp;
-        HKEY hkey,hkey2;
+        HKEY hkey;
         static const WCHAR szCLSID[] = { 'C','L','S','I','D',0 };
         static const WCHAR szDefaultIcon[] =
             {'D','e','f','a','u','l','t','I','c','o','n',0};
@@ -1173,44 +1100,21 @@ static UINT register_progid(MSIPACKAGE *package, MSIPROGID* progid,
             return rc;
         }
 
-        TRACE("Registering Parent %s index %i\n",
-                    debugstr_w(package->progids[progid->ParentIndex].ProgID), 
-                    progid->ParentIndex);
-        rc = register_progid(package,&package->progids[progid->ParentIndex],
-                        clsid);
+        TRACE("Registering Parent %s\n", debugstr_w(progid->Parent->ProgID) );
+        rc = register_progid( package, progid->Parent, clsid );
 
         /* clsid is same as parent */
-        RegCreateKeyW(hkey,szCLSID,&hkey2);
-        RegSetValueExW(hkey2,NULL,0,REG_SZ,(LPVOID)clsid, (strlenW(clsid)+1) *
-                       sizeof(WCHAR));
-
-        RegCloseKey(hkey2);
-
+        msi_reg_set_subkey_val( hkey, szCLSID, NULL, clsid );
 
         if (progid->Description)
-        {
-            RegSetValueExW(hkey,NULL,0,REG_SZ,(LPVOID)progid->Description,
-                           (strlenW(progid->Description)+1) * sizeof(WCHAR));
-        }
+            msi_reg_set_val_str( hkey, NULL, progid->Description );
 
         if (progid->IconPath)
-        {
-            RegCreateKeyW(hkey,szDefaultIcon,&hkey2);
-            RegSetValueExW(hkey2,NULL,0,REG_SZ,(LPVOID)progid->IconPath,
-                           (strlenW(progid->IconPath)+1) * sizeof(WCHAR));
-            RegCloseKey(hkey2);
-        }
+            msi_reg_set_subkey_val( hkey, szDefaultIcon, NULL, progid->IconPath );
 
         /* write out the current version */
-        if (progid->CurVerIndex >= 0)
-        {
-            RegCreateKeyW(hkey,szCurVer,&hkey2);
-            RegSetValueExW(hkey2,NULL,0,REG_SZ,
-                (LPVOID)package->progids[progid->CurVerIndex].ProgID,
-                (strlenW(package->progids[progid->CurVerIndex].ProgID)+1) * 
-                sizeof(WCHAR));
-            RegCloseKey(hkey2);
-        }
+        if (progid->CurVer)
+            msi_reg_set_subkey_val( hkey, szCurVer, NULL, progid->CurVer->ProgID );
 
         RegCloseKey(hkey);
     }
@@ -1219,7 +1123,7 @@ static UINT register_progid(MSIPACKAGE *package, MSIPROGID* progid,
 
 UINT ACTION_RegisterProgIdInfo(MSIPACKAGE *package)
 {
-    INT i;
+    MSIPROGID *progid;
     MSIRECORD *uirow;
 
     if (!package)
@@ -1227,31 +1131,29 @@ UINT ACTION_RegisterProgIdInfo(MSIPACKAGE *package)
 
     load_classes_and_such(package);
 
-    for (i = 0; i < package->loaded_progids; i++)
+    LIST_FOR_EACH_ENTRY( progid, &package->progids, MSIPROGID, entry )
     {
         WCHAR clsid[0x1000];
 
         /* check if this progid is to be installed */
-        package->progids[i].InstallMe =  ((package->progids[i].InstallMe) ||
-              (package->progids[i].Class &&
-               package->progids[i].Class->Installed));
+        if (progid->Class && progid->Class->Installed)
+            progid->InstallMe = TRUE;
 
-        if (!package->progids[i].InstallMe)
+        if (!progid->InstallMe)
         {
             TRACE("progid %s not scheduled to be installed\n",
-                             debugstr_w(package->progids[i].ProgID));
+                             debugstr_w(progid->ProgID));
             continue;
         }
        
-        TRACE("Registering progid %s index %i\n",
-                        debugstr_w(package->progids[i].ProgID), i);
+        TRACE("Registering progid %s\n", debugstr_w(progid->ProgID));
 
-        register_progid(package,&package->progids[i],clsid);
+        register_progid( package, progid, clsid );
 
         uirow = MSI_CreateRecord(1);
-        MSI_RecordSetStringW(uirow,1,package->progids[i].ProgID);
-        ui_actiondata(package,szRegisterProgIdInfo,uirow);
-        msiobj_release(&uirow->hdr);
+        MSI_RecordSetStringW( uirow, 1, progid->ProgID );
+        ui_actiondata( package, szRegisterProgIdInfo, uirow );
+        msiobj_release( &uirow->hdr );
     }
 
     return ERROR_SUCCESS;
@@ -1280,15 +1182,14 @@ static UINT register_verb(MSIPACKAGE *package, LPCWSTR progid,
         size += strlenW(verb->Argument);
      size += 4;
 
-     command = HeapAlloc(GetProcessHeap(),0, size * sizeof (WCHAR));
+     command = msi_alloc(size * sizeof (WCHAR));
      if (verb->Argument)
         sprintfW(command, fmt, component->FullKeypath, verb->Argument);
      else
         sprintfW(command, fmt2, component->FullKeypath);
 
-     RegSetValueExW(key,NULL,0,REG_SZ, (LPVOID)command, (strlenW(command)+1)*
-                     sizeof(WCHAR));
-     HeapFree(GetProcessHeap(),0,command);
+     msi_reg_set_val_str( key, NULL, command );
+     msi_free(command);
 
      advertise = create_component_advertise_string(package, component, 
                                                    extension->Feature->Feature);
@@ -1299,7 +1200,7 @@ static UINT register_verb(MSIPACKAGE *package, LPCWSTR progid,
          size += strlenW(verb->Argument);
      size += 4;
 
-     command = HeapAlloc(GetProcessHeap(),0, size * sizeof (WCHAR));
+     command = msi_alloc(size * sizeof (WCHAR));
      memset(command,0,size*sizeof(WCHAR));
 
      strcpyW(command,advertise);
@@ -1310,22 +1211,18 @@ static UINT register_verb(MSIPACKAGE *package, LPCWSTR progid,
          strcatW(command,verb->Argument);
      }
 
-     RegSetValueExW(key, szCommand, 0, REG_MULTI_SZ, (LPBYTE)command,
-                        (strlenW(command)+2)*sizeof(WCHAR));
+     msi_reg_set_val_multi_str( key, szCommand, command );
      
      RegCloseKey(key);
-     HeapFree(GetProcessHeap(),0,keyname);
-     HeapFree(GetProcessHeap(),0,advertise);
-     HeapFree(GetProcessHeap(),0,command);
+     msi_free(keyname);
+     msi_free(advertise);
+     msi_free(command);
 
      if (verb->Command)
      {
         keyname = build_directory_name(3, progid, szShell, verb->Verb);
-        RegCreateKeyW(HKEY_CLASSES_ROOT, keyname, &key);
-        RegSetValueExW(key,NULL,0,REG_SZ, (LPVOID)verb->Command,
-                                    (strlenW(verb->Command)+1) *sizeof(WCHAR));
-        RegCloseKey(key);
-        HeapFree(GetProcessHeap(),0,keyname);
+        msi_reg_set_subkey_val( HKEY_CLASSES_ROOT, keyname, NULL, verb->Command );
+        msi_free(keyname);
      }
 
      if (verb->Sequence != MSI_NULL_INTEGER)
@@ -1334,11 +1231,8 @@ static UINT register_verb(MSIPACKAGE *package, LPCWSTR progid,
         {
             *Sequence = verb->Sequence;
             keyname = build_directory_name(2, progid, szShell);
-            RegCreateKeyW(HKEY_CLASSES_ROOT, keyname, &key);
-            RegSetValueExW(key,NULL,0,REG_SZ, (LPVOID)verb->Verb,
-                            (strlenW(verb->Verb)+1) *sizeof(WCHAR));
-            RegCloseKey(key);
-            HeapFree(GetProcessHeap(),0,keyname);
+            msi_reg_set_subkey_val( HKEY_CLASSES_ROOT, keyname, NULL, verb->Verb );
+            msi_free(keyname);
         }
     }
     return ERROR_SUCCESS;
@@ -1365,7 +1259,7 @@ UINT ACTION_RegisterExtensionInfo(MSIPACKAGE *package)
     
     LIST_FOR_EACH_ENTRY( ext, &package->extensions, MSIEXTENSION, entry )
     {
-        WCHAR extension[257];
+        LPWSTR extension;
         MSIFEATURE *feature;
      
         if (!ext->Component)
@@ -1394,56 +1288,53 @@ UINT ACTION_RegisterExtensionInfo(MSIPACKAGE *package)
         /* this is only registered if the extension has at least 1 verb
          * according to MSDN
          */
-        if (ext->ProgIDIndex >= 0 && ext->VerbCount > 0)
-           mark_progid_for_install(package, ext->ProgIDIndex);
+        if (ext->ProgID && !list_empty( &ext->verbs ) )
+            mark_progid_for_install( package, ext->ProgID );
 
         mark_mime_for_install(ext->Mime);
 
+        extension = msi_alloc( (lstrlenW( ext->Extension ) + 2)*sizeof(WCHAR) );
         extension[0] = '.';
-        extension[1] = 0;
-        strcatW(extension,ext->Extension);
+        lstrcpyW(extension+1,ext->Extension);
 
         RegCreateKeyW(HKEY_CLASSES_ROOT,extension,&hkey);
+        msi_free( extension );
 
         if (ext->Mime)
-        {
-            RegSetValueExW(hkey,szContentType,0,REG_SZ,
-                            (LPBYTE)ext->Mime->ContentType,
-                     (strlenW(ext->Mime->ContentType)+1)*sizeof(WCHAR));
-        }
+            msi_reg_set_val_str( hkey, szContentType, ext->Mime->ContentType );
 
-        if (ext->ProgIDIndex >= 0 || ext->ProgIDText)
+        if (ext->ProgID || ext->ProgIDText)
         {
             static const WCHAR szSN[] = 
                 {'\\','S','h','e','l','l','N','e','w',0};
             HKEY hkey2;
             LPWSTR newkey;
             LPCWSTR progid;
-            INT v;
+            MSIVERB *verb;
             INT Sequence = MSI_NULL_INTEGER;
             
-            if (ext->ProgIDIndex >= 0)
-                progid = package->progids[ext->ProgIDIndex].ProgID;
+            if (ext->ProgID)
+                progid = ext->ProgID->ProgID;
             else
                 progid = ext->ProgIDText;
 
-            RegSetValueExW(hkey,NULL,0,REG_SZ,(LPVOID)progid,
-                           (strlenW(progid)+1)*sizeof(WCHAR));
+            msi_reg_set_val_str( hkey, NULL, progid );
 
-            newkey = HeapAlloc(GetProcessHeap(),0,
-                           (strlenW(progid)+strlenW(szSN)+1) * sizeof(WCHAR)); 
+            newkey = msi_alloc( (strlenW(progid)+strlenW(szSN)+1) * sizeof(WCHAR)); 
 
             strcpyW(newkey,progid);
             strcatW(newkey,szSN);
             RegCreateKeyW(hkey,newkey,&hkey2);
             RegCloseKey(hkey2);
 
-            HeapFree(GetProcessHeap(),0,newkey);
+            msi_free(newkey);
 
             /* do all the verbs */
-            for (v = 0; v < ext->VerbCount; v++)
+            LIST_FOR_EACH_ENTRY( verb, &ext->verbs, MSIVERB, entry )
+            {
                 register_verb( package, progid, ext->Component,
-                               ext, &package->verbs[ext->Verbs[v]], &Sequence);
+                               ext, verb, &Sequence);
+            }
         }
         
         RegCloseKey(hkey);
@@ -1461,7 +1352,6 @@ UINT ACTION_RegisterMIMEInfo(MSIPACKAGE *package)
 {
     static const WCHAR szExten[] = 
         {'E','x','t','e','n','s','i','o','n',0 };
-    HKEY hkey;
     MSIRECORD *uirow;
     MSIMIME *mt;
 
@@ -1472,7 +1362,7 @@ UINT ACTION_RegisterMIMEInfo(MSIPACKAGE *package)
 
     LIST_FOR_EACH_ENTRY( mt, &package->mimes, MSIMIME, entry )
     {
-        WCHAR extension[257];
+        LPWSTR extension;
         LPCWSTR exten;
         LPCWSTR mime;
         static const WCHAR fmt[] = 
@@ -1497,25 +1387,20 @@ UINT ACTION_RegisterMIMEInfo(MSIPACKAGE *package)
         
         mime = mt->ContentType;
         exten = mt->Extension->Extension;
+
+        extension = msi_alloc( (lstrlenW( exten ) + 2)*sizeof(WCHAR) );
         extension[0] = '.';
-        extension[1] = 0;
-        strcatW(extension,exten);
+        lstrcpyW(extension+1,exten);
 
-        key = HeapAlloc(GetProcessHeap(),0,(strlenW(mime)+strlenW(fmt)+1) *
-                                            sizeof(WCHAR));
+        key = msi_alloc( (strlenW(mime)+strlenW(fmt)+1) * sizeof(WCHAR) );
         sprintfW(key,fmt,mime);
-        RegCreateKeyW(HKEY_CLASSES_ROOT,key,&hkey);
-        RegSetValueExW(hkey,szExten,0,REG_SZ,(LPVOID)extension,
-                           (strlenW(extension)+1)*sizeof(WCHAR));
+        msi_reg_set_subkey_val( HKEY_CLASSES_ROOT, key, szExten, extension );
 
-        HeapFree(GetProcessHeap(),0,key);
+        msi_free(extension);
+        msi_free(key);
 
-        if (mt->CLSID[0])
-        {
+        if (mt->clsid)
             FIXME("Handle non null for field 3\n");
-        }
-
-        RegCloseKey(hkey);
 
         uirow = MSI_CreateRecord(2);
         MSI_RecordSetStringW(uirow,1,mt->ContentType);

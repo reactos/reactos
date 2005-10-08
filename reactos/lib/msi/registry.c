@@ -581,7 +581,7 @@ UINT WINAPI MsiDecomposeDescriptorA( LPCSTR szDescriptor, LPSTR szProduct,
     WideCharToMultiByte( CP_ACP, 0, component, MAX_FEATURE_CHARS+1,
                          szComponent, MAX_FEATURE_CHARS+1, NULL, NULL );
 
-    HeapFree( GetProcessHeap(), 0, str );
+    msi_free( str );
 
     return r;
 }
@@ -650,7 +650,7 @@ UINT WINAPI MsiEnumFeaturesA(LPCSTR szProduct, DWORD index,
                             szParent, GUID_SIZE, NULL, NULL);
     }
 
-    HeapFree( GetProcessHeap(), 0, szwProduct);
+    msi_free( szwProduct);
 
     return r;
 }
@@ -730,7 +730,7 @@ UINT WINAPI MsiEnumClientsA(LPCSTR szComponent, DWORD index, LPSTR szProduct)
                             szProduct, GUID_SIZE, NULL, NULL);
     }
 
-    HeapFree( GetProcessHeap(), 0, szwComponent);
+    msi_free( szwComponent);
 
     return r;
 }
@@ -780,8 +780,7 @@ UINT WINAPI MsiEnumComponentQualifiersA( LPSTR szComponent, DWORD iIndex,
     szwComponent = strdupAtoW(szComponent);
 
     if (lpQualifierBuf)
-        lpwQualifierBuf = HeapAlloc(GetProcessHeap(),0, (*pcchQualifierBuf) * 
-                        sizeof(WCHAR));
+        lpwQualifierBuf = msi_alloc( (*pcchQualifierBuf) * sizeof(WCHAR));
     else
         lpwQualifierBuf = NULL;
 
@@ -791,8 +790,7 @@ UINT WINAPI MsiEnumComponentQualifiersA( LPSTR szComponent, DWORD iIndex,
         pcchwQualifierBuf = 0;
 
     if (lpApplicationDataBuf)
-       lpwApplicationDataBuf = HeapAlloc(GetProcessHeap(),0 ,
-                            (*pcchApplicationDataBuf) * sizeof(WCHAR));
+       lpwApplicationDataBuf = msi_alloc( (*pcchApplicationDataBuf) * sizeof(WCHAR));
     else
         lpwApplicationDataBuf = NULL;
 
@@ -831,9 +829,9 @@ UINT WINAPI MsiEnumComponentQualifiersA( LPSTR szComponent, DWORD iIndex,
             *pcchApplicationDataBuf = length - 1;
     }
 
-    HeapFree(GetProcessHeap(),0,lpwApplicationDataBuf);
-    HeapFree(GetProcessHeap(),0,lpwQualifierBuf);
-    HeapFree(GetProcessHeap(),0,szwComponent);
+    msi_free(lpwApplicationDataBuf);
+    msi_free(lpwQualifierBuf);
+    msi_free(szwComponent);
 
     return rc;
 }
@@ -868,16 +866,16 @@ UINT WINAPI MsiEnumComponentQualifiersW( LPWSTR szComponent, DWORD iIndex,
         return ERROR_UNKNOWN_COMPONENT;
 
     full_buffer_size = (52 * sizeof(WCHAR)) + actual_pcchApplicationDataBuf;
-    full_buffer = HeapAlloc(GetProcessHeap(),0,full_buffer_size);
+    full_buffer = msi_alloc(full_buffer_size);
     
     rc = RegEnumValueW(key, iIndex, lpQualifierBuf, pcchQualifierBuf, NULL, 
                     NULL, (LPBYTE)full_buffer, &full_buffer_size);
 
     if (rc == ERROR_MORE_DATA)
     {
-        HeapFree(GetProcessHeap(),0,full_buffer);
+        msi_free(full_buffer);
         full_buffer_size+=sizeof(WCHAR);
-        full_buffer = HeapAlloc(GetProcessHeap(),0,full_buffer_size);
+        full_buffer = msi_alloc(full_buffer_size);
         rc = RegEnumValueW(key, iIndex, lpQualifierBuf, pcchQualifierBuf, NULL, 
                     NULL, (LPBYTE)full_buffer, &full_buffer_size);
     }
@@ -907,7 +905,7 @@ UINT WINAPI MsiEnumComponentQualifiersW( LPWSTR szComponent, DWORD iIndex,
                         debugstr_w(lpApplicationDataBuf));
     }
 
-    HeapFree(GetProcessHeap(),0,full_buffer);
+    msi_free(full_buffer);
 
     return rc;
 }
@@ -971,6 +969,6 @@ UINT WINAPI MsiEnumRelatedProductsA(LPCSTR szUpgradeCode, DWORD dwReserved,
         WideCharToMultiByte( CP_ACP, 0, productW, GUID_SIZE,
                              lpProductBuf, GUID_SIZE, NULL, NULL );
     }
-    HeapFree(GetProcessHeap(), 0, szwUpgradeCode);
+    msi_free( szwUpgradeCode);
     return r;
 }

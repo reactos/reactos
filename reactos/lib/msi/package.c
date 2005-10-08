@@ -380,6 +380,7 @@ MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db )
         list_init( &package->components );
         list_init( &package->features );
         list_init( &package->files );
+        list_init( &package->tempfiles );
         list_init( &package->folders );
         package->ActionFormat = NULL;
         package->LastAction = NULL;
@@ -390,6 +391,8 @@ MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db )
         list_init( &package->classes );
         list_init( &package->mimes );
         list_init( &package->extensions );
+        list_init( &package->progids );
+        list_init( &package->RunningActions );
 
         /* OK, here is where we do a slew of things to the database to 
          * prep for all that is to come as a package */
@@ -403,6 +406,34 @@ MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db )
     return package;
 }
 
+/*
+ * copy_package_to_temp   [internal]
+ *
+ * copy the msi file to a temp file to prevent locking a CD
+ * with a multi disc install 
+ *
+ * FIXME: I think this is wrong, and instead of copying the package,
+ *        we should read all the tables to memory, then open the
+ *        database to read binary streams on demand.
+ */ 
+static LPCWSTR copy_package_to_temp( LPCWSTR szPackage, LPWSTR filename )
+{
+    WCHAR path[MAX_PATH];
+    static const WCHAR szMSI[] = {'M','S','I',0};
+
+    GetTempPathW( MAX_PATH, path );
+    GetTempFileNameW( path, szMSI, 0, filename );
+
+    if( !CopyFileW( szPackage, filename, FALSE ) )
+    {
+        ERR("failed to copy package to temp path %s\n", debugstr_w(filename) );
+        return szPackage;
+    }
+
+    TRACE("Opening relocated package %s\n", debugstr_w( filename ));
+    return filename;
+}
+
 UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
 {
     MSIDATABASE *db = NULL;
@@ -410,6 +441,7 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
     MSIHANDLE handle;
     DWORD size;
     static const WCHAR szProductCode[]= {'P','r','o','d','u','c','t','C','o','d','e',0};
+    UINT r;
 
     TRACE("%s %p\n", debugstr_w(szPackage), pPackage);
 
@@ -422,7 +454,14 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
     }
     else
     {
-        UINT r = MSI_OpenDatabaseW(szPackage, MSIDBOPEN_READONLY, &db);
+        WCHAR temppath[MAX_PATH];
+        LPCWSTR file = copy_package_to_temp( szPackage, temppath );
+
+        r = MSI_OpenDatabaseW( file, MSIDBOPEN_READONLY, &db );
+
+        if (file != szPackage)
+            DeleteFileW( file );
+
         if( r != ERROR_SUCCESS )
             return r;
     }
@@ -451,7 +490,7 @@ UINT MSI_OpenPackageW(LPCWSTR szPackage, MSIPACKAGE **pPackage)
     size  = 0;
     MSI_GetPropertyW(package,szProductCode,NULL,&size);
     size ++;
-    package->ProductCode = HeapAlloc(GetProcessHeap(),0,size * sizeof(WCHAR));
+    package->ProductCode = msi_alloc(size * sizeof(WCHAR));
     MSI_GetPropertyW(package,szProductCode,package->ProductCode, &size);
     
     *pPackage = package;
@@ -463,39 +502,18 @@ UINT WINAPI MsiOpenPackageExW(LPCWSTR szPackage, DWORD dwOptions, MSIHANDLE *phP
 {
     MSIPACKAGE *package = NULL;
     UINT ret;
-    WCHAR path[MAX_PATH];
-    WCHAR filename[MAX_PATH];
-    static const WCHAR szMSI[] = {'M','S','I',0};
 
-    TRACE("%s %08lx %p\n",debugstr_w(szPackage), dwOptions, phPackage);
+    TRACE("%s %08lx %p\n", debugstr_w(szPackage), dwOptions, phPackage );
 
-    /* copy the msi file to a temp file to pervent locking a CD
-     * with a multi disc install 
-     */ 
-    if( szPackage[0] == '#' )
-        strcpyW(filename,szPackage);
-    else
-    {
-        GetTempPathW(MAX_PATH, path);
-        GetTempFileNameW(path, szMSI, 0, filename);
-
-        CopyFileW(szPackage, filename, FALSE);
-
-        TRACE("Opening relocated package %s\n",debugstr_w(filename));
-    }
-    
     if( dwOptions )
         FIXME("dwOptions %08lx not supported\n", dwOptions);
 
-    ret = MSI_OpenPackageW( filename, &package);
+    ret = MSI_OpenPackageW( szPackage, &package );
     if( ret == ERROR_SUCCESS )
     {
         *phPackage = alloc_msihandle( &package->hdr );
         msiobj_release( &package->hdr );
     }
-
-    if( szPackage[0] != '#' )
-        DeleteFileW(filename);
 
     return ret;
 }
@@ -519,7 +537,7 @@ UINT WINAPI MsiOpenPackageExA(LPCSTR szPackage, DWORD dwOptions, MSIHANDLE *phPa
 
     ret = MsiOpenPackageExW( szwPack, dwOptions, phPackage );
 
-    HeapFree( GetProcessHeap(), 0, szwPack );
+    msi_free( szwPack );
 
     return ret;
 }
@@ -580,7 +598,7 @@ INT MSI_ProcessMessage( MSIPACKAGE *package, INSTALLMESSAGE eMessageType,
     if ((eMessageType & 0xff000000) == INSTALLMESSAGE_PROGRESS)
         log_type |= 0x800;
 
-    message = HeapAlloc(GetProcessHeap(),0,1*sizeof (WCHAR));
+    message = msi_alloc(1*sizeof (WCHAR));
     message[0]=0;
     msg_field = MSI_RecordGetFieldCount(record);
     for (i = 1; i <= msg_field; i++)
@@ -593,8 +611,8 @@ INT MSI_ProcessMessage( MSIPACKAGE *package, INSTALLMESSAGE eMessageType,
         MSI_RecordGetStringW(record,i,NULL,&sz);
         sz+=4;
         total_size+=sz*sizeof(WCHAR);
-        tmp = HeapAlloc(GetProcessHeap(),0,sz*sizeof(WCHAR));
-        message = HeapReAlloc(GetProcessHeap(),0,message,total_size*sizeof (WCHAR));
+        tmp = msi_alloc(sz*sizeof(WCHAR));
+        message = msi_realloc(message,total_size*sizeof (WCHAR));
 
         MSI_RecordGetStringW(record,i,tmp,&sz);
 
@@ -607,7 +625,7 @@ INT MSI_ProcessMessage( MSIPACKAGE *package, INSTALLMESSAGE eMessageType,
         if (msg_field > 1)
             strcatW(message,space);
 
-        HeapFree(GetProcessHeap(),0,tmp);
+        msi_free(tmp);
     }
 
     TRACE("(%p %lx %lx %s)\n",gUIHandlerA, gUIFilter, log_type,
@@ -616,7 +634,7 @@ INT MSI_ProcessMessage( MSIPACKAGE *package, INSTALLMESSAGE eMessageType,
     /* convert it to ASCII */
     len = WideCharToMultiByte( CP_ACP, 0, message, -1,
                                NULL, 0, NULL, NULL );
-    msg = HeapAlloc( GetProcessHeap(), 0, len );
+    msg = msi_alloc( len );
     WideCharToMultiByte( CP_ACP, 0, message, -1,
                          msg, len, NULL, NULL );
 
@@ -640,9 +658,9 @@ INT MSI_ProcessMessage( MSIPACKAGE *package, INSTALLMESSAGE eMessageType,
             CloseHandle(log_file);
         }
     }
-    HeapFree( GetProcessHeap(), 0, msg );
+    msi_free( msg );
     
-    HeapFree(GetProcessHeap(),0,message);
+    msi_free( message);
     return ERROR_SUCCESS;
 }
 
@@ -694,8 +712,8 @@ UINT WINAPI MsiSetPropertyA( MSIHANDLE hInstall, LPCSTR szName, LPCSTR szValue)
     hr = MsiSetPropertyW( hInstall, szwName, szwValue);
 
 end:
-    HeapFree( GetProcessHeap(), 0, szwName );
-    HeapFree( GetProcessHeap(), 0, szwValue );
+    msi_free( szwName );
+    msi_free( szwValue );
 
     return hr;
 }
@@ -739,19 +757,15 @@ UINT MSI_SetPropertyW( MSIPACKAGE *package, LPCWSTR szName, LPCWSTR szValue)
         MSI_RecordSetStringW(row,2,szValue);
     }
 
-
     rc = MSI_DatabaseOpenViewW(package->db,Query,&view);
-    if (rc!= ERROR_SUCCESS)
+    if (rc == ERROR_SUCCESS)
     {
-        msiobj_release(&row->hdr);
-        return rc;
+        rc = MSI_ViewExecute(view,row);
+
+        MSI_ViewClose(view);
+        msiobj_release(&view->hdr);
     }
-
-    rc = MSI_ViewExecute(view,row);
-
     msiobj_release(&row->hdr);
-    MSI_ViewClose(view);
-    msiobj_release(&view->hdr);
 
     return rc;
 }
@@ -789,11 +803,11 @@ static UINT MSI_GetPropertyRow(MSIPACKAGE *package, LPCWSTR szName, MSIRECORD **
         return ERROR_INVALID_PARAMETER;
 
     sz = sizeof select + strlenW(szName)*sizeof(WCHAR);
-    query = HeapAlloc(GetProcessHeap(), 0, sz);
+    query = msi_alloc( sz);
     sprintfW(query,select,szName);
 
     rc = MSI_DatabaseOpenViewW(package->db, query, &view);
-    HeapFree(GetProcessHeap(), 0, query);
+    msi_free(query);
     if (rc == ERROR_SUCCESS)
     {
         rc = MSI_ViewExecute(view, 0);
@@ -874,7 +888,7 @@ UINT MSI_GetPropertyA(MSIPACKAGE *package, LPCSTR szName,
         *pchValueBuf = 0;
         TRACE("property not found\n");
     }
-    HeapFree( GetProcessHeap(), 0, szwName );
+    msi_free( szwName );
 
     return rc;
 }

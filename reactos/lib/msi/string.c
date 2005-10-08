@@ -72,18 +72,17 @@ string_table *msi_init_stringtable( int entries, UINT codepage )
 {
     string_table *st;
 
-    st = HeapAlloc( GetProcessHeap(), 0, sizeof (string_table) );
+    st = msi_alloc( sizeof (string_table) );
     if( !st )
         return NULL;    
-    st->strings = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY,
-                              sizeof (msistring) * entries );
-    if( !st )
-    {
-        HeapFree( GetProcessHeap(), 0, st );
-        return NULL;    
-    }
     if( entries < 1 )
         entries = 1;
+    st->strings = msi_alloc_zero( sizeof (msistring) * entries );
+    if( !st )
+    {
+        msi_free( st );
+        return NULL;    
+    }
     st->maxcount = entries;
     st->freeslot = 1;
     st->codepage = codepage;
@@ -98,10 +97,10 @@ VOID msi_destroy_stringtable( string_table *st )
     for( i=0; i<st->maxcount; i++ )
     {
         if( st->strings[i].refcount )
-            HeapFree( GetProcessHeap(), 0, st->strings[i].str );
+            msi_free( st->strings[i].str );
     }
-    HeapFree( GetProcessHeap(), 0, st->strings );
-    HeapFree( GetProcessHeap(), 0, st );
+    msi_free( st->strings );
+    msi_free( st );
 }
 
 static int st_find_free_entry( string_table *st )
@@ -123,8 +122,7 @@ static int st_find_free_entry( string_table *st )
 
     /* dynamically resize */
     sz = st->maxcount + 1 + st->maxcount/2;
-    p = HeapReAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY,
-                     st->strings, sz*sizeof(msistring) );
+    p = msi_realloc_zero( st->strings, sz*sizeof(msistring) );
     if( !p )
         return -1;
     st->strings = p;
@@ -177,7 +175,7 @@ int msi_addstring( string_table *st, UINT n, const CHAR *data, int len, UINT ref
     if( len < 0 )
         len = strlen(data);
     sz = MultiByteToWideChar( st->codepage, 0, data, len, NULL, 0 );
-    st->strings[n].str = HeapAlloc( GetProcessHeap(), 0, (sz+1)*sizeof(WCHAR) );
+    st->strings[n].str = msi_alloc( (sz+1)*sizeof(WCHAR) );
     if( !st->strings[n].str )
         return -1;
     MultiByteToWideChar( st->codepage, 0, data, len, st->strings[n].str, sz );
@@ -226,7 +224,7 @@ int msi_addstringW( string_table *st, UINT n, const WCHAR *data, int len, UINT r
         len = strlenW(data);
     TRACE("%s, n = %d len = %d\n", debugstr_w(data), n, len );
 
-    st->strings[n].str = HeapAlloc( GetProcessHeap(), 0, (len+1)*sizeof(WCHAR) );
+    st->strings[n].str = msi_alloc( (len+1)*sizeof(WCHAR) );
     if( !st->strings[n].str )
         return -1;
     TRACE("%d\n",__LINE__);
@@ -387,13 +385,13 @@ UINT msi_string2idA( string_table *st, LPCSTR buffer, UINT *id )
     sz = MultiByteToWideChar( st->codepage, 0, buffer, -1, NULL, 0 );
     if( sz <= 0 )
         return r;
-    str = HeapAlloc( GetProcessHeap(), 0, sz*sizeof(WCHAR) );
+    str = msi_alloc( sz*sizeof(WCHAR) );
     if( !str )
         return ERROR_NOT_ENOUGH_MEMORY;
     MultiByteToWideChar( st->codepage, 0, buffer, -1, str, sz );
 
     r = msi_string2idW( st, str, id );
-    HeapFree( GetProcessHeap(), 0, str );
+    msi_free( str );
 
     return r;
 }

@@ -23,18 +23,16 @@
 
 #include "wine/list.h"
 
-#define IDENTIFIER_SIZE 96
-
 typedef struct tagMSIFEATURE
 {
     struct list entry;
-    WCHAR Feature[IDENTIFIER_SIZE];
-    WCHAR Feature_Parent[IDENTIFIER_SIZE];
-    WCHAR Title[0x100];
-    WCHAR Description[0x100];
+    LPWSTR Feature;
+    LPWSTR Feature_Parent;
+    LPWSTR Title;
+    LPWSTR Description;
     INT Display;
     INT Level;
-    WCHAR Directory[IDENTIFIER_SIZE];
+    LPWSTR Directory;
     INT Attributes;
     
     INSTALLSTATE Installed;
@@ -50,12 +48,12 @@ typedef struct tagMSICOMPONENT
 {
     struct list entry;
     DWORD magic;
-    WCHAR Component[IDENTIFIER_SIZE];
-    WCHAR ComponentId[IDENTIFIER_SIZE];
-    WCHAR Directory[IDENTIFIER_SIZE];
+    LPWSTR Component;
+    LPWSTR ComponentId;
+    LPWSTR Directory;
     INT Attributes;
-    WCHAR Condition[0x100];
-    WCHAR KeyPath[IDENTIFIER_SIZE];
+    LPWSTR Condition;
+    LPWSTR KeyPath;
 
     INSTALLSTATE Installed;
     INSTALLSTATE ActionRequest;
@@ -114,15 +112,22 @@ typedef struct tagMSIFILE
        /* 2 = present but replace */
        /* 3 = present do not replace */
        /* 4 = Installed */
+       /* 5 = Skipped */
     LPWSTR  SourcePath;
     LPWSTR  TargetPath;
-    BOOL    Temporary; 
 } MSIFILE;
+
+typedef struct tagMSITEMPFILE
+{
+    struct list entry;
+    LPWSTR File;
+    LPWSTR Path;
+} MSITEMPFILE;
 
 typedef struct tagMSIAPPID
 {
     struct list entry;
-    WCHAR AppID[IDENTIFIER_SIZE]; /* Primary key */
+    LPWSTR AppID; /* Primary key */
     LPWSTR RemoteServerName;
     LPWSTR LocalServer;
     LPWSTR ServiceParameters;
@@ -131,13 +136,15 @@ typedef struct tagMSIAPPID
     BOOL RunAsInteractiveUser;
 } MSIAPPID;
 
+typedef struct tagMSIPROGID MSIPROGID;
+
 typedef struct tagMSICLASS
 {
     struct list entry;
-    WCHAR CLSID[IDENTIFIER_SIZE];     /* Primary Key */
-    WCHAR Context[IDENTIFIER_SIZE];   /* Primary Key */
+    LPWSTR clsid;     /* Primary Key */
+    LPWSTR Context;   /* Primary Key */
     MSICOMPONENT *Component;
-    INT ProgIDIndex;
+    MSIPROGID *ProgID;
     LPWSTR ProgIDText;
     LPWSTR Description;
     MSIAPPID *AppID;
@@ -157,34 +164,34 @@ typedef struct tagMSIMIME MSIMIME;
 typedef struct tagMSIEXTENSION
 {
     struct list entry;
-    WCHAR Extension[256];  /* Primary Key */
+    LPWSTR Extension;  /* Primary Key */
     MSICOMPONENT *Component;
-    INT ProgIDIndex;
+    MSIPROGID *ProgID;
     LPWSTR ProgIDText;
     MSIMIME *Mime;
     MSIFEATURE *Feature;
     /* not in the table, set during installation */
     BOOL Installed;
-    INT VerbCount;
-    INT Verbs[100]; /* yes hard coded limit, but realistically 100 verbs??? */
+    struct list verbs;
 } MSIEXTENSION;
 
-typedef struct tagMSIPROGID
+struct tagMSIPROGID
 {
+    struct list entry;
     LPWSTR ProgID;  /* Primary Key */
-    INT ParentIndex;
+    MSIPROGID *Parent;
     MSICLASS *Class;
     LPWSTR Description;
     LPWSTR IconPath;
     /* not in the table, set during installation */
     BOOL InstallMe;
-    INT CurVerIndex;
-    INT VersionIndIndex;
-} MSIPROGID;
+    MSIPROGID *CurVer;
+    MSIPROGID *VersionInd;
+};
 
 typedef struct tagMSIVERB
 {
-    MSIEXTENSION *Extension;
+    struct list entry;
     LPWSTR Verb;
     INT Sequence;
     LPWSTR Command;
@@ -196,7 +203,7 @@ struct tagMSIMIME
     struct list entry;
     LPWSTR ContentType;  /* Primary Key */
     MSIEXTENSION *Extension;
-    WCHAR CLSID[IDENTIFIER_SIZE];
+    LPWSTR clsid;
     MSICLASS *Class;
     /* not in the table, set during installation */
     BOOL InstallMe;
@@ -244,7 +251,7 @@ extern UINT ACTION_RegisterMIMEInfo(MSIPACKAGE *package);
 /* Helpers */
 extern DWORD deformat_string(MSIPACKAGE *package, LPCWSTR ptr, WCHAR** data );
 extern WCHAR *load_dynamic_stringW(MSIRECORD *row, INT index);
-extern LPWSTR load_dynamic_property(MSIPACKAGE *package, LPCWSTR prop, UINT* rc);
+extern LPWSTR msi_dup_property(MSIPACKAGE *package, LPCWSTR prop);
 extern LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source, 
                       BOOL set_prop, MSIFOLDER **folder);
 extern MSICOMPONENT *get_loaded_component( MSIPACKAGE* package, LPCWSTR Component );
@@ -253,7 +260,7 @@ extern MSIFILE *get_loaded_file( MSIPACKAGE* package, LPCWSTR file );
 extern MSIFOLDER *get_loaded_folder( MSIPACKAGE *package, LPCWSTR dir );
 extern int track_tempfile(MSIPACKAGE *package, LPCWSTR name, LPCWSTR path);
 extern UINT schedule_action(MSIPACKAGE *package, UINT script, LPCWSTR action);
-extern UINT build_icon_path(MSIPACKAGE *, LPCWSTR, LPWSTR *);
+extern LPWSTR build_icon_path(MSIPACKAGE *, LPCWSTR);
 extern DWORD build_version_dword(LPCWSTR);
 extern LPWSTR build_directory_name(DWORD , ...);
 extern BOOL create_full_pathW(const WCHAR *path);

@@ -49,7 +49,7 @@ static void MSI_CloseView( MSIOBJECTHDR *arg )
 
     LIST_FOR_EACH_SAFE( ptr, t, &query->mem )
     {
-        HeapFree( GetProcessHeap(), 0, ptr );
+        msi_free( ptr );
     }
 }
 
@@ -71,7 +71,7 @@ UINT VIEW_find_column( MSIVIEW *table, LPCWSTR name, UINT *n )
         if( r != ERROR_SUCCESS )
             return r;
         x = lstrcmpW( name, col_name );
-        HeapFree( GetProcessHeap(), 0, col_name );
+        msi_free( col_name );
         if( !x )
         {
             *n = i;
@@ -101,7 +101,7 @@ UINT WINAPI MsiDatabaseOpenViewA(MSIHANDLE hdb,
 
     r = MsiDatabaseOpenViewW( hdb, szwQuery, phView);
 
-    HeapFree( GetProcessHeap(), 0, szwQuery );
+    msi_free( szwQuery );
     return r;
 }
 
@@ -139,62 +139,28 @@ UINT MSI_DatabaseOpenViewW(MSIDATABASE *db,
     return r;
 }
 
-static UINT MSI_OpenQueryV( MSIDATABASE *db, MSIQUERY **view,
-                             LPCWSTR fmt, va_list args )
-{
-    LPWSTR szQuery;
-    LPCWSTR p;
-    UINT sz, rc;
-    va_list va;
-
-    /* figure out how much space we need to allocate */
-    va = args;
-    sz = lstrlenW(fmt) + 1;
-    p = fmt;
-    while (*p)
-    {
-        p = strchrW(p, '%');
-        if (!p)
-            break;
-        p++;
-        switch (*p)
-        {
-        case 's':  /* a string */
-            sz += lstrlenW(va_arg(va,LPCWSTR));
-            break;
-        case 'd':
-        case 'i':  /* an integer -2147483648 seems to be longest */
-            sz += 3*sizeof(int);
-            (void)va_arg(va,int);
-            break;
-        case '%':  /* a single % - leave it alone */
-            break;
-        default:
-            FIXME("Unhandled character type %c\n",*p);
-        }
-        p++;
-    }
-
-    /* construct the string */
-    szQuery = HeapAlloc(GetProcessHeap(), 0, sz*sizeof(WCHAR));
-    va = args;
-    vsnprintfW(szQuery, sz, fmt, va);
-
-    /* perform the query */
-    rc = MSI_DatabaseOpenViewW(db, szQuery, view);
-    HeapFree(GetProcessHeap(), 0, szQuery);
-    return rc;
-}
-
 UINT MSI_OpenQuery( MSIDATABASE *db, MSIQUERY **view, LPCWSTR fmt, ... )
 {
     UINT r;
-    va_list va;
+    int size = 100, res;
+    LPWSTR query;
 
-    va_start(va, fmt);
-    r = MSI_OpenQueryV( db, view, fmt, va );
-    va_end(va);
-
+    /* construct the string */
+    for (;;)
+    {
+        va_list va;
+        query = msi_alloc( size*sizeof(WCHAR) );
+        va_start(va, fmt);
+        res = vsnprintfW(query, size, fmt, va);
+        va_end(va);
+        if (res == -1) size *= 2;
+        else if (res >= size) size = res + 1;
+        else break;
+        msi_free( query );
+    }
+    /* perform the query */
+    r = MSI_DatabaseOpenViewW(db, query, view);
+    msi_free(query);
     return r;
 }
 
@@ -217,7 +183,8 @@ UINT MSI_IterateRecords( MSIQUERY *view, DWORD *count,
         r = MSI_ViewFetch( view, &rec );
         if( r != ERROR_SUCCESS )
             break;
-        r = func( rec, param );
+        if (func)
+            r = func( rec, param );
         msiobj_release( &rec->hdr );
         if( r != ERROR_SUCCESS )
             break;
@@ -240,11 +207,25 @@ MSIRECORD *MSI_QueryGetRecord( MSIDATABASE *db, LPCWSTR fmt, ... )
     MSIRECORD *rec = NULL;
     MSIQUERY *view = NULL;
     UINT r;
-    va_list va;
+    int size = 100, res;
+    LPWSTR query;
 
-    va_start(va, fmt);
-    r = MSI_OpenQueryV( db, &view, fmt, va );
-    va_end(va);
+    /* construct the string */
+    for (;;)
+    {
+        va_list va;
+        query = msi_alloc( size*sizeof(WCHAR) );
+        va_start(va, fmt);
+        res = vsnprintfW(query, size, fmt, va);
+        va_end(va);
+        if (res == -1) size *= 2;
+        else if (res >= size) size = res + 1;
+        else break;
+        msi_free( query );
+    }
+    /* perform the query */
+    r = MSI_DatabaseOpenViewW(db, query, &view);
+    msi_free(query);
 
     if( r == ERROR_SUCCESS )
     {
@@ -313,8 +294,7 @@ UINT MSI_ViewFetch(MSIQUERY *query, MSIRECORD **prec)
             ERR("Error getting column type for %d\n", i );
             continue;
         }
-        if (( type != MSITYPE_BINARY) && (type != (MSITYPE_BINARY |
-                                                   MSITYPE_NULLABLE)))
+        if (!MSITYPE_IS_BINARY(type))
         {
             ret = view->ops->fetch_int( view, query->row, i, &ival );
             if( ret )
@@ -335,7 +315,7 @@ UINT MSI_ViewFetch(MSIQUERY *query, MSIRECORD **prec)
 
                 sval = MSI_makestring( query->db, ival );
                 MSI_RecordSetStringW( rec, i, sval );
-                HeapFree( GetProcessHeap(), 0, sval );
+                msi_free( sval );
             }
             else
             {
@@ -468,6 +448,29 @@ out:
     return ret;
 }
 
+static UINT msi_set_record_type_string( MSIRECORD *rec, UINT field, UINT type )
+{
+    static const WCHAR fmt[] = { '%','d',0 };
+    WCHAR szType[0x10];
+
+    if (MSITYPE_IS_BINARY(type))
+        szType[0] = 'v';
+    else if (type & MSITYPE_LOCALIZABLE)
+        szType[0] = 'l';
+    else if (type & MSITYPE_STRING)
+        szType[0] = 's';
+    else
+        szType[0] = 'i';
+    if (type & MSITYPE_NULLABLE)
+        szType[0] &= ~0x20;
+
+    sprintfW( &szType[1], fmt, (type&0xff) );
+
+    TRACE("type %04x -> %s\n", type, debugstr_w(szType) );
+
+    return MSI_RecordSetStringW( rec, field, szType );
+}
+
 UINT WINAPI MsiViewGetColumnInfo(MSIHANDLE hView, MSICOLINFO info, MSIHANDLE *hRec)
 {
     MSIVIEW *view = NULL;
@@ -477,6 +480,12 @@ UINT WINAPI MsiViewGetColumnInfo(MSIHANDLE hView, MSICOLINFO info, MSIHANDLE *hR
     LPWSTR name;
 
     TRACE("%ld %d %p\n", hView, info, hRec);
+
+    if( !hRec )
+        return ERROR_INVALID_PARAMETER;
+
+    if( info != MSICOLINFO_NAMES && info != MSICOLINFO_TYPES )
+        return ERROR_INVALID_PARAMETER;
 
     query = msihandle2msiinfo( hView, MSIHANDLETYPE_VIEW );
     if( !query )
@@ -511,8 +520,11 @@ UINT WINAPI MsiViewGetColumnInfo(MSIHANDLE hView, MSICOLINFO info, MSIHANDLE *hR
         r = view->ops->get_column_info( view, i+1, &name, &type );
         if( r != ERROR_SUCCESS )
             continue;
-        MSI_RecordSetStringW( rec, i+1, name );
-        HeapFree( GetProcessHeap(), 0, name );
+        if (info == MSICOLINFO_NAMES)
+            MSI_RecordSetStringW( rec, i+1, name );
+        else
+            msi_set_record_type_string( rec, i+1, type);
+        msi_free( name );
     }
 
     *hRec = alloc_msihandle( &rec->hdr );
@@ -627,18 +639,64 @@ MSIDBERROR WINAPI MsiViewGetErrorA( MSIHANDLE handle, LPSTR szColumnNameBuffer,
     return r;
 }
 
-UINT WINAPI MsiDatabaseApplyTransformA( MSIHANDLE hdb, 
-                 LPCSTR szTransformFile, int iErrorCond)
+DEFINE_GUID( CLSID_MsiTransform, 0x000c1082, 0x0000, 0x0000, 0xc0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
+
+static UINT MSI_DatabaseApplyTransformW( MSIDATABASE *db, 
+                 LPCWSTR szTransformFile, int iErrorCond )
 {
-    FIXME("%ld %s %d\n", hdb, debugstr_a(szTransformFile), iErrorCond);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    UINT r;
+    IStorage *stg = NULL;
+ 
+    TRACE("%p %s %d\n", db, debugstr_w(szTransformFile), iErrorCond);
+
+    r = StgOpenStorage( szTransformFile, NULL,
+           STGM_DIRECT|STGM_READ|STGM_SHARE_DENY_WRITE, NULL, 0, &stg);
+    if( r )
+        return r;
+
+    if( TRACE_ON( msi ) )
+        enum_stream_names( stg );
+
+    /* r = table_apply_transform( db, stg ); */
+    FIXME("should apply transform %s\n", debugstr_w(szTransformFile) );
+
+    IStorage_Release( stg );
+
+    return r;
 }
 
 UINT WINAPI MsiDatabaseApplyTransformW( MSIHANDLE hdb, 
                  LPCWSTR szTransformFile, int iErrorCond)
 {
-    FIXME("%ld %s %d\n", hdb, debugstr_w(szTransformFile), iErrorCond);
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    MSIDATABASE *db;
+    UINT r;
+
+    db = msihandle2msiinfo( hdb, MSIHANDLETYPE_DATABASE );
+    if( !db )
+        return ERROR_INVALID_HANDLE;
+
+    r = MSI_DatabaseApplyTransformW( db, szTransformFile, iErrorCond );
+    msiobj_release( &db->hdr );
+    return r;
+}
+
+UINT WINAPI MsiDatabaseApplyTransformA( MSIHANDLE hdb, 
+                 LPCSTR szTransformFile, int iErrorCond)
+{
+    LPWSTR wstr;
+    UINT ret;
+
+    TRACE("%ld %s %d\n", hdb, debugstr_a(szTransformFile), iErrorCond);
+
+    wstr = strdupAtoW( szTransformFile );
+    if( szTransformFile && !wstr )
+        return ERROR_NOT_ENOUGH_MEMORY;
+
+    ret = MsiDatabaseApplyTransformW( hdb, wstr, iErrorCond);
+
+    msi_free( wstr );
+
+    return ret;
 }
 
 UINT WINAPI MsiDatabaseGenerateTransformA( MSIHANDLE hdb, MSIHANDLE hdbref,
@@ -785,7 +843,7 @@ UINT WINAPI MsiDatabaseGetPrimaryKeysA(MSIHANDLE hdb,
             return ERROR_OUTOFMEMORY;
     }
     r = MsiDatabaseGetPrimaryKeysW( hdb, szwTable, phRec );
-    HeapFree( GetProcessHeap(), 0, szwTable );
+    msi_free( szwTable );
 
     return r;
 }

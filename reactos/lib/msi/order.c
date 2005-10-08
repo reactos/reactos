@@ -160,7 +160,7 @@ static UINT ORDER_execute( struct tagMSIVIEW *view, MSIRECORD *record )
     if( r != ERROR_SUCCESS )
         return r;
 
-    ov->reorder = HeapAlloc( GetProcessHeap(), 0, num_rows*sizeof(UINT) );
+    ov->reorder = msi_alloc( num_rows*sizeof(UINT) );
     if( !ov->reorder )
         return ERROR_FUNCTION_FAILED;
 
@@ -187,7 +187,7 @@ static UINT ORDER_close( struct tagMSIVIEW *view )
     if( !ov->table )
          return ERROR_FUNCTION_FAILED;
 
-    HeapFree( GetProcessHeap(), 0, ov->reorder );
+    msi_free( ov->reorder );
     ov->reorder = NULL;
 
     return ov->table->ops->close( ov->table );
@@ -240,11 +240,11 @@ static UINT ORDER_delete( struct tagMSIVIEW *view )
     if( ov->table )
         ov->table->ops->delete( ov->table );
 
-    HeapFree( GetProcessHeap(), 0, ov->reorder );
+    msi_free( ov->reorder );
     ov->reorder = NULL;
 
     msiobj_release( &ov->db->hdr );
-    HeapFree( GetProcessHeap(), 0, ov );
+    msi_free( ov );
 
     return ERROR_SUCCESS;
 }
@@ -317,8 +317,7 @@ UINT ORDER_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table,
         return r;
     }
 
-    ov = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, 
-                    sizeof *ov + sizeof (UINT) * count );
+    ov = msi_alloc_zero( sizeof *ov + sizeof (UINT) * count );
     if( !ov )
         return ERROR_FUNCTION_FAILED;
     

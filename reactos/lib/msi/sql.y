@@ -258,19 +258,18 @@ column_and_type:
     column column_type
         {
             $$ = $1;
-            $$->type = $2;
+            $$->type = $2 | MSITYPE_VALID;
         }
     ;
 
 column_type:
     data_type_l
         {
-            $$ = $1 | MSITYPE_VALID;
+            $$ = $1;
         }
   | data_type_l TK_LOCALIZABLE
         {
-            FIXME("LOCALIZABLE ignored\n");
-            $$ = $1 | MSITYPE_VALID;
+            $$ = $1 | MSITYPE_LOCALIZABLE;
         }
     ;
 
@@ -312,7 +311,7 @@ data_type:
         }
   | TK_OBJECT
         {
-            $$ = 0;
+            $$ = MSITYPE_STRING | MSITYPE_VALID;
         }
     ;
 
@@ -349,11 +348,15 @@ unorderedsel:
   | TK_SELECT TK_DISTINCT selectfrom
         {
             SQL_input* sql = (SQL_input*) info;
+            UINT r;
 
             $$ = NULL;
-            DISTINCT_CreateView( sql->db, &$$, $3 );
-            if( !$$ )
+            r = DISTINCT_CreateView( sql->db, &$$, $3 );
+            if (r != ERROR_SUCCESS)
+            {
+                $3->ops->delete($3);
                 YYABORT;
+            }
         }
     ;
 
@@ -361,15 +364,20 @@ selectfrom:
     selcollist from 
         {
             SQL_input* sql = (SQL_input*) info;
+            UINT r;
 
             $$ = NULL;
             if( $1 )
-                SELECT_CreateView( sql->db, &$$, $2, $1 );
+            {
+                r = SELECT_CreateView( sql->db, &$$, $2, $1 );
+                if (r != ERROR_SUCCESS)
+                {
+                    $2->ops->delete($2);
+                    YYABORT;
+                }
+            }
             else
                 $$ = $2;
-
-            if( !$$ )
-                YYABORT;
         }
     ;
 
@@ -394,8 +402,11 @@ from:
 
             $$ = NULL;
             r = WHERE_CreateView( sql->db, &$$, $1, $3 );
-            if( r != ERROR_SUCCESS || !$$ )
+            if( r != ERROR_SUCCESS )
+            {
+                $1->ops->delete( $1 );
                 YYABORT;
+            }
         }
     ;
 
@@ -608,7 +619,7 @@ static void *parser_alloc( void *info, unsigned int sz )
     SQL_input* sql = (SQL_input*) info;
     struct list *mem;
 
-    mem = HeapAlloc( GetProcessHeap(), 0, sizeof (struct list) + sz );
+    mem = msi_alloc( sizeof (struct list) + sz );
     list_add_tail( sql->mem, mem );
     return &mem[1];
 }
@@ -641,7 +652,7 @@ int SQL_lex( void *SQL_lval, SQL_input *sql )
         if( ! sql->command[sql->n] )
             return 0;  /* end of input */
 
-        TRACE("string : %s\n", debugstr_w(&sql->command[sql->n]));
+        /* TRACE("string : %s\n", debugstr_w(&sql->command[sql->n])); */
         sql->len = sqliteGetToken( &sql->command[sql->n], &token );
         if( sql->len==0 )
             break;
@@ -650,7 +661,7 @@ int SQL_lex( void *SQL_lval, SQL_input *sql )
     }
     while( token == TK_SPACE );
 
-    TRACE("token : %d (%s)\n", token, debugstr_wn(&sql->command[sql->n], sql->len));
+    /* TRACE("token : %d (%s)\n", token, debugstr_wn(&sql->command[sql->n], sql->len)); */
     
     return token;
 }
@@ -800,8 +811,6 @@ UINT MSI_ParseSQL( MSIDATABASE *db, LPCWSTR command, MSIVIEW **phview,
     TRACE("Parse returned %d\n", r);
     if( r )
     {
-        if( *sql.view )
-            (*sql.view)->ops->delete( *sql.view );
         *sql.view = NULL;
         return ERROR_BAD_QUERY_SYNTAX;
     }

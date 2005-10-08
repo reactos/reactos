@@ -124,14 +124,14 @@ static UINT ACTION_AppSearchGetSignature(MSIPACKAGE *package, MSISIGNATURE *sig,
         {
             ACTION_VerStrToInteger(minVersion, &sig->MinVersionMS,
              &sig->MinVersionLS);
-            HeapFree(GetProcessHeap(), 0, minVersion);
+            msi_free( minVersion);
         }
         maxVersion = load_dynamic_stringW(row,4);
         if (maxVersion)
         {
             ACTION_VerStrToInteger(maxVersion, &sig->MaxVersionMS,
              &sig->MaxVersionLS);
-            HeapFree(GetProcessHeap(), 0, maxVersion);
+            msi_free( maxVersion);
         }
         sig->MinSize = MSI_RecordGetInteger(row,5);
         if (sig->MinSize == MSI_NULL_INTEGER)
@@ -325,7 +325,7 @@ static UINT ACTION_AppSearchReg(MSIPACKAGE *package, BOOL *appFound,
         /* FIXME: sanity-check sz before allocating (is there an upper-limit
          * on the value of a property?)
          */
-        value = HeapAlloc(GetProcessHeap(), 0, sz);
+        value = msi_alloc( sz);
         rc = RegQueryValueExW(key, valueName, NULL, &regType, value, &sz);
         if (rc)
         {
@@ -347,14 +347,13 @@ static UINT ACTION_AppSearchReg(MSIPACKAGE *package, BOOL *appFound,
                 if (*(LPWSTR)value == '#')
                 {
                     /* escape leading pound with another */
-                    propertyValue = HeapAlloc(GetProcessHeap(), 0,
-                     sz + sizeof(WCHAR));
+                    propertyValue = msi_alloc( sz + sizeof(WCHAR));
                     propertyValue[0] = '#';
                     strcpyW(propertyValue + 1, (LPWSTR)value);
                 }
                 else
                 {
-                    propertyValue = HeapAlloc(GetProcessHeap(), 0, sz);
+                    propertyValue = msi_alloc( sz);
                     strcpyW(propertyValue, (LPWSTR)value);
                 }
                 break;
@@ -362,20 +361,17 @@ static UINT ACTION_AppSearchReg(MSIPACKAGE *package, BOOL *appFound,
                 /* 7 chars for digits, 1 for NULL, 1 for #, and 1 for sign
                  * char if needed
                  */
-                propertyValue = HeapAlloc(GetProcessHeap(), 0,
-                 10 * sizeof(WCHAR));
+                propertyValue = msi_alloc( 10 * sizeof(WCHAR));
                 sprintfW(propertyValue, dwordFmt, *(DWORD *)value);
                 break;
             case REG_EXPAND_SZ:
                 /* space for extra #% characters in front */
-                propertyValue = HeapAlloc(GetProcessHeap(), 0,
-                 sz + 2 * sizeof(WCHAR));
+                propertyValue = msi_alloc( sz + 2 * sizeof(WCHAR));
                 sprintfW(propertyValue, expandSzFmt, (LPWSTR)value);
                 break;
             case REG_BINARY:
                 /* 3 == length of "#x<nibble>" */
-                propertyValue = HeapAlloc(GetProcessHeap(), 0,
-                 (sz * 3 + 1) * sizeof(WCHAR));
+                propertyValue = msi_alloc( (sz * 3 + 1) * sizeof(WCHAR));
                 for (i = 0; i < sz; i++)
                     sprintfW(propertyValue + i * 3, binFmt, value[i]);
                 break;
@@ -390,12 +386,12 @@ static UINT ACTION_AppSearchReg(MSIPACKAGE *package, BOOL *appFound,
         *appFound = TRUE;
 
 end:
-        HeapFree(GetProcessHeap(), 0, propertyValue);
-        HeapFree(GetProcessHeap(), 0, value);
+        msi_free( propertyValue);
+        msi_free( value);
         RegCloseKey(key);
 
-        HeapFree(GetProcessHeap(), 0, keyPath);
-        HeapFree(GetProcessHeap(), 0, valueName);
+        msi_free( keyPath);
+        msi_free( valueName);
 
         msiobj_release(&row->hdr);
         MSI_ViewClose(view);
@@ -449,7 +445,7 @@ static UINT ACTION_AppSearchIni(MSIPACKAGE *package, BOOL *appFound,
         fileName = load_dynamic_stringW(row,2);
         FIXME("AppSearch unimplemented for IniLocator (ini file name %s)\n",
          debugstr_w(fileName));
-        HeapFree(GetProcessHeap(), 0, fileName);
+        msi_free( fileName);
 
 end:
         msiobj_release(&row->hdr);
@@ -549,7 +545,7 @@ static UINT ACTION_FileVersionMatches(MSISIGNATURE *sig, LPCWSTR filePath,
 
         if (size)
         {
-            LPVOID buf = HeapAlloc(GetProcessHeap(), 0, size);
+            LPVOID buf = msi_alloc( size);
 
             if (buf)
             {
@@ -592,7 +588,7 @@ static UINT ACTION_FileVersionMatches(MSISIGNATURE *sig, LPCWSTR filePath,
                     else
                         *matches = TRUE;
                 }
-                HeapFree(GetProcessHeap(), 0, buf);
+                msi_free( buf);
             }
             else
                 rc = ERROR_OUTOFMEMORY;
@@ -671,8 +667,7 @@ static UINT ACTION_RecurseSearchDirectory(MSIPACKAGE *package, BOOL *appFound,
      * here.  Add two because we might need to add a backslash if the dir name
      * isn't backslash-terminated.
      */
-    buf = HeapAlloc(GetProcessHeap(), 0,
-     (dirLen + max(fileLen, lstrlenW(starDotStarW)) + 2) * sizeof(WCHAR));
+    buf = msi_alloc( (dirLen + max(fileLen, lstrlenW(starDotStarW)) + 2) * sizeof(WCHAR));
     if (buf)
     {
         /* a depth of 0 implies we should search dir, so go ahead and search */
@@ -726,7 +721,7 @@ static UINT ACTION_RecurseSearchDirectory(MSIPACKAGE *package, BOOL *appFound,
                 FindClose(hFind);
             }
         }
-        HeapFree(GetProcessHeap(), 0, buf);
+        msi_free(buf);
     }
     else
         rc = ERROR_OUTOFMEMORY;
@@ -965,8 +960,8 @@ UINT ACTION_AppSearch(MSIPACKAGE *package)
                     }
                 }
             }
-            HeapFree(GetProcessHeap(), 0, sig.File);
-            HeapFree(GetProcessHeap(), 0, sig.Languages);
+            msi_free( sig.File);
+            msi_free( sig.Languages);
             msiobj_release(&row->hdr);
         }
 

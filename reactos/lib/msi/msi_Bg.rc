@@ -1,8 +1,7 @@
 /*
- * Russian resources for MSI
+ * Bulgarian resources for MSI
  *
- * Copyright 2005 Mikhail Y. Zvyozdochkin
- *                Aleksey Bragin
+ * Copyright 2005 Milko Krachounov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,16 +18,16 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
-	5 "путь %s не найден"
-	9 "вставьте диск %s"
-	10 "неверные параметры"
-	11 "введите, какая папка содержит %s"
-	12 "недоступен источник установки (съемный или компакт-диск не вставлен в дисковод)"
-	13 "недоступен сетевой диск, содержащий необходимый файл"
-	14 "функциональность из:"
-	15 "выберите, какая папка содержит %s"
+	5 "пътят %s не е намерен"
+	9 "поставете диск %s"
+	10 "некоректни параметри"
+	11 "въведете папката, която съдържа %s"
+	12 "източника за инсталация на функционалността липсва"
+	13 "мрежовото устройства нужно за функционалността липсва "
+	14 "функционалност от:"
+	15 "изберете папката, която съдържа %s"
 }

@@ -252,6 +252,10 @@ UINT WINAPI MsiDatabaseIsTablePersistentA(MSIHANDLE, LPSTR);
 UINT WINAPI MsiDatabaseIsTablePersistentW(MSIHANDLE, LPWSTR);
 #define     MsiDatabaseIsTablePersistent WINELIB_NAME_AW(MsiDatabaseIsTablePersistent)
 
+UINT WINAPI MsiSequenceA(MSIHANDLE, LPCSTR, INT);
+UINT WINAPI MsiSequenceW(MSIHANDLE, LPCWSTR, INT);
+#define     MsiSequence WINELIB_NAME_AW(MsiSequence)
+
 UINT WINAPI MsiSummaryInfoPersist(MSIHANDLE);
 UINT WINAPI MsiSummaryInfoGetPropertyCount(MSIHANDLE,UINT*);
 

@@ -68,7 +68,7 @@ static void append_productcode(MSIPACKAGE* package, LPCWSTR action_property,
     DWORD len;
     static const WCHAR separator[] = {';',0};
 
-    prop = load_dynamic_property(package, action_property, NULL);
+    prop = msi_dup_property(package, action_property );
     if (prop)
         len = strlenW(prop);
     else
@@ -82,7 +82,7 @@ static void append_productcode(MSIPACKAGE* package, LPCWSTR action_property,
     /*null*/
     len++;
 
-    newprop = HeapAlloc(GetProcessHeap(),0,len*sizeof(WCHAR));
+    newprop = msi_alloc( len*sizeof(WCHAR) );
 
     if (prop)
     {
@@ -96,8 +96,8 @@ static void append_productcode(MSIPACKAGE* package, LPCWSTR action_property,
     MSI_SetPropertyW(package, action_property, newprop);
     TRACE("Found Related Product... %s now %s\n",debugstr_w(action_property),
                     debugstr_w(newprop));
-    HeapFree(GetProcessHeap(),0,prop);
-    HeapFree(GetProcessHeap(),0,newprop);
+    msi_free( prop );
+    msi_free( newprop );
 }
 
 static UINT ITERATE_FindRelatedProducts(MSIRECORD *rec, LPVOID param)

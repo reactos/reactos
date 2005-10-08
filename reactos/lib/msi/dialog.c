@@ -33,6 +33,7 @@
 #include "ocidl.h"
 #include "olectl.h"
 #include "richedit.h"
+#include "commctrl.h"
 
 #include "wine/debug.h"
 #include "wine/unicode.h"
@@ -48,7 +49,7 @@ typedef UINT (*msi_handler)( msi_dialog *, msi_control *, WPARAM );
 
 struct msi_control_tag
 {
-    struct msi_control_tag *next;
+    struct list entry;
     HWND hwnd;
     msi_handler handler;
     LPWSTR property;
@@ -56,6 +57,7 @@ struct msi_control_tag
     HBITMAP hBitmap;
     HICON hIcon;
     LPWSTR tabnext;
+    HMODULE hDll;
     WCHAR name[1];
 };
 
@@ -76,7 +78,7 @@ struct msi_dialog_tag
     HWND hwnd;
     LPWSTR default_font;
     msi_font *font_list;
-    msi_control *control_list;
+    struct list controls;
     HWND hWndFocus;
     WCHAR name[1];
 };
@@ -114,6 +116,8 @@ static const WCHAR szComboBox[] = { 'C','o','m','b','o','B','o','x',0 };
 static const WCHAR szEdit[] = { 'E','d','i','t',0 };
 static const WCHAR szMaskedEdit[] = { 'M','a','s','k','e','d','E','d','i','t',0 };
 static const WCHAR szPathEdit[] = { 'P','a','t','h','E','d','i','t',0 };
+static const WCHAR szProgressBar[] = {
+     'P','r','o','g','r','e','s','s','B','a','r',0 };
 static const WCHAR szRadioButtonGroup[] = { 
     'R','a','d','i','o','B','u','t','t','o','n','G','r','o','u','p',0 };
 static const WCHAR szIcon[] = { 'I','c','o','n',0 };
@@ -134,7 +138,6 @@ static LRESULT WINAPI MSIRadioGroup_WndProc(HWND hWnd, UINT msg, WPARAM wParam, 
 
 static DWORD uiThreadId;
 static HWND hMsiHiddenWindow;
-static HMODULE hRichedit;
 
 static INT msi_dialog_scale_unit( msi_dialog *dialog, INT val )
 {
@@ -147,20 +150,30 @@ static msi_control *msi_dialog_find_control( msi_dialog *dialog, LPCWSTR name )
 
     if( !name )
         return NULL;
-    for( control = dialog->control_list; control; control = control->next )
+    LIST_FOR_EACH_ENTRY( control, &dialog->controls, msi_control, entry )
         if( !strcmpW( control->name, name ) ) /* FIXME: case sensitive? */
-            break;
-    return control;
+            return control;
+    return NULL;
 }
 
 static msi_control *msi_dialog_find_control_by_hwnd( msi_dialog *dialog, HWND hwnd )
 {
     msi_control *control;
 
-    for( control = dialog->control_list; control; control = control->next )
+    LIST_FOR_EACH_ENTRY( control, &dialog->controls, msi_control, entry )
         if( hwnd == control->hwnd )
-            break;
-    return control;
+            return control;
+    return NULL;
+}
+
+static LPWSTR msi_get_deformatted_field( MSIPACKAGE *package, MSIRECORD *rec, int field )
+{
+    LPCWSTR str = MSI_RecordGetString( rec, field );
+    LPWSTR ret = NULL;
+
+    if (str)
+        deformat_string( package, str, &ret );
+    return ret;
 }
 
 /*
@@ -169,23 +182,32 @@ static msi_control *msi_dialog_find_control_by_hwnd( msi_dialog *dialog, HWND hw
  * Extract the {\style} string from the front of the text to display and
  *  update the pointer.
  */
-static LPWSTR msi_dialog_get_style( LPCWSTR *text )
+static LPWSTR msi_dialog_get_style( LPCWSTR p, LPCWSTR *rest )
 {
     LPWSTR ret = NULL;
-    LPCWSTR p = *text, q;
+    LPCWSTR q, i;
     DWORD len;
 
+    *rest = p;
+    if( !p )
+        return ret;
     if( *p++ != '{' )
         return ret;
     q = strchrW( p, '}' );
     if( !q )
         return ret;
-    *text = ++q;
-    if( *p++ != '\\' )
-        return ret;
-    len = q - p;
+    if( *p == '\\' || *p == '&' )
+        p++;
+
+    /* little bit of sanity checking to stop us getting confused with RTF */
+    for( i=p; i<q; i++ )
+        if( *i == '}' || *i == '\\' )
+            return ret;
     
-    ret = HeapAlloc( GetProcessHeap(), 0, len*sizeof(WCHAR) );
+    *rest = ++q;
+    len = q - p;
+
+    ret = msi_alloc( len*sizeof(WCHAR) );
     if( !ret )
         return ret;
     memcpy( ret, p, len*sizeof(WCHAR) );
@@ -204,8 +226,7 @@ static UINT msi_dialog_add_font( MSIRECORD *rec, LPVOID param )
 
     /* create a font and add it to the list */
     name = MSI_RecordGetString( rec, 1 );
-    font = HeapAlloc( GetProcessHeap(), 0,
-                      sizeof *font + strlenW( name )*sizeof (WCHAR) );
+    font = msi_alloc( sizeof *font + strlenW( name )*sizeof (WCHAR) );
     strcpyW( font->name, name );
     font->next = dialog->font_list;
     dialog->font_list = font;
@@ -288,21 +309,21 @@ static msi_control *msi_dialog_create_window( msi_dialog *dialog,
                 DWORD style, HWND parent )
 {
     DWORD x, y, width, height;
-    LPWSTR font = NULL, title = NULL;
+    LPWSTR font = NULL, title_font = NULL;
+    LPCWSTR title = NULL;
     msi_control *control;
 
     style |= WS_CHILD;
 
-    control = HeapAlloc( GetProcessHeap(), 0,
-                         sizeof *control + strlenW(name)*sizeof(WCHAR) );
+    control = msi_alloc( sizeof *control + strlenW(name)*sizeof(WCHAR) );
     strcpyW( control->name, name );
-    control->next = dialog->control_list;
-    dialog->control_list = control;
+    list_add_head( &dialog->controls, &control->entry );
     control->handler = NULL;
     control->property = NULL;
     control->value = NULL;
     control->hBitmap = NULL;
     control->hIcon = NULL;
+    control->hDll = NULL;
     control->tabnext = strdupW( MSI_RecordGetString( rec, 11) );
 
     x = MSI_RecordGetInteger( rec, 4 );
@@ -317,8 +338,8 @@ static msi_control *msi_dialog_create_window( msi_dialog *dialog,
 
     if( text )
     {
-        font = msi_dialog_get_style( &text );
-        deformat_string( dialog->package, text, &title );
+        deformat_string( dialog->package, text, &title_font );
+        font = msi_dialog_get_style( title_font, &title );
     }
 
     control->hwnd = CreateWindowW( szCls, title, style,
@@ -330,8 +351,8 @@ static msi_control *msi_dialog_create_window( msi_dialog *dialog,
     msi_dialog_set_font( dialog, control->hwnd,
                          font ? font : dialog->default_font );
 
-    HeapFree( GetProcessHeap(), 0, font );
-    HeapFree( GetProcessHeap(), 0, title );
+    msi_free( title_font );
+    msi_free( font );
 
     return control;
 }
@@ -359,13 +380,13 @@ static LPWSTR msi_create_tmp_path(void)
     if( !r )
         return path;
     len = lstrlenW( tmp ) + 20;
-    path = HeapAlloc( GetProcessHeap(), 0, len * sizeof (WCHAR) );
+    path = msi_alloc( len * sizeof (WCHAR) );
     if( path )
     {
         r = GetTempFileNameW( tmp, prefix, 0, path );
         if (!r)
         {
-            HeapFree( GetProcessHeap(), 0, path );
+            msi_free( path );
             path = NULL;
         }
     }
@@ -399,7 +420,7 @@ static HANDLE msi_load_image( MSIDATABASE *db, LPCWSTR name, UINT type,
         msiobj_release( &rec->hdr );
     }
 
-    HeapFree( GetProcessHeap(), 0, tmp );
+    msi_free( tmp );
     return himage;
 }
 
@@ -438,7 +459,10 @@ void msi_dialog_handle_event( msi_dialog* dialog, LPCWSTR control,
     if (!ctrl)
         return;
     if( lstrcmpW(attribute, szText) )
+    {
+        ERR("Attribute %s\n", debugstr_w(attribute));
         return;
+    }
     text = MSI_RecordGetString( rec , 1 );
     SetWindowTextW( ctrl->hwnd, text );
     msi_dialog_check_messages( NULL );
@@ -534,7 +558,7 @@ MSIText_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         msi_text_on_settext( hWnd );
         break;
     case WM_NCDESTROY:
-        HeapFree( GetProcessHeap(), 0, info );
+        msi_free( info );
         RemovePropW( hWnd, szButtonData );
         break;
     }
@@ -553,7 +577,7 @@ static UINT msi_dialog_text_control( msi_dialog *dialog, MSIRECORD *rec )
     if( !control )
         return ERROR_FUNCTION_FAILED;
 
-    info = HeapAlloc( GetProcessHeap(), 0, sizeof *info );
+    info = msi_alloc( sizeof *info );
     if( !info )
         return ERROR_SUCCESS;
 
@@ -572,7 +596,7 @@ static UINT msi_dialog_button_control( msi_dialog *dialog, MSIRECORD *rec )
 {
     msi_control *control;
     UINT attributes, style;
-    LPCWSTR text;
+    LPWSTR text;
 
     TRACE("%p %p\n", dialog, rec);
 
@@ -588,10 +612,11 @@ static UINT msi_dialog_button_control( msi_dialog *dialog, MSIRECORD *rec )
     control->handler = msi_dialog_button_handler;
 
     /* set the icon */
-    text = MSI_RecordGetString( rec, 10 );
+    text = msi_get_deformatted_field( dialog->package, rec, 10 );
     control->hIcon = msi_load_icon( dialog->package->db, text, attributes );
     if( attributes & msidbControlAttributesIcon )
         SendMessageW( control->hwnd, BM_SETIMAGE, IMAGE_ICON, (LPARAM) control->hIcon );
+    msi_free( text );
 
     return ERROR_SUCCESS;
 }
@@ -606,7 +631,6 @@ static LPWSTR msi_get_checkbox_value( msi_dialog *dialog, LPCWSTR prop )
         '\'','%','s','\'',0
     };
     MSIRECORD *rec = NULL;
-    LPCWSTR val = NULL;
     LPWSTR ret = NULL;
 
     /* find if there is a value associated with the checkbox */
@@ -614,24 +638,20 @@ static LPWSTR msi_get_checkbox_value( msi_dialog *dialog, LPCWSTR prop )
     if (!rec)
         return ret;
 
-    val = MSI_RecordGetString( rec, 2 );
-    if (val)
+    ret = msi_get_deformatted_field( dialog->package, rec, 2 );
+    if( ret && !ret[0] )
     {
-        deformat_string( dialog->package, val, &ret );
-        if( ret && !ret[0] )
-        {
-            HeapFree( GetProcessHeap(), 0, ret );
-            ret = NULL;
-        }
+        msi_free( ret );
+        ret = NULL;
     }
     msiobj_release( &rec->hdr );
     if (ret)
         return ret;
 
-    ret = load_dynamic_property(dialog->package, prop, NULL);
+    ret = msi_dup_property( dialog->package, prop );
     if( ret && !ret[0] )
     {
-        HeapFree( GetProcessHeap(), 0, ret );
+        msi_free( ret );
         ret = NULL;
     }
 
@@ -702,10 +722,17 @@ static UINT msi_dialog_scrolltext_control( msi_dialog *dialog, MSIRECORD *rec )
     LPCWSTR text;
     EDITSTREAM es;
     DWORD style;
+    HMODULE hRichedit;
+
+    hRichedit = LoadLibraryA("riched20");
 
     style = WS_BORDER | ES_MULTILINE | WS_VSCROLL |
             ES_READONLY | ES_AUTOVSCROLL | WS_TABSTOP;
     control = msi_dialog_add_control( dialog, rec, szRichEdit20W, style );
+    if (!control)
+        return ERROR_FUNCTION_FAILED;
+
+    control->hDll = hRichedit;
 
     text = MSI_RecordGetString( rec, 10 );
     info.string = strdupWtoA( text );
@@ -718,7 +745,7 @@ static UINT msi_dialog_scrolltext_control( msi_dialog *dialog, MSIRECORD *rec )
 
     SendMessageW( control->hwnd, EM_STREAMIN, SF_RTF, (LPARAM) &es );
 
-    HeapFree( GetProcessHeap(), 0, info.string );
+    msi_free( info.string );
 
     return ERROR_SUCCESS;
 }
@@ -727,7 +754,7 @@ static UINT msi_dialog_bitmap_control( msi_dialog *dialog, MSIRECORD *rec )
 {
     UINT cx, cy, flags, style, attributes;
     msi_control *control;
-    LPCWSTR text;
+    LPWSTR text;
 
     flags = LR_LOADFROMFILE;
     style = SS_BITMAP | SS_LEFT | WS_GROUP;
@@ -740,12 +767,12 @@ static UINT msi_dialog_bitmap_control( msi_dialog *dialog, MSIRECORD *rec )
     }
 
     control = msi_dialog_add_control( dialog, rec, szStatic, style );
-    text = MSI_RecordGetString( rec, 10 );
     cx = MSI_RecordGetInteger( rec, 6 );
     cy = MSI_RecordGetInteger( rec, 7 );
     cx = msi_dialog_scale_unit( dialog, cx );
     cy = msi_dialog_scale_unit( dialog, cy );
 
+    text = msi_get_deformatted_field( dialog->package, rec, 10 );
     control->hBitmap = msi_load_image( dialog->package->db, text,
                                        IMAGE_BITMAP, cx, cy, flags );
     if( control->hBitmap )
@@ -753,6 +780,8 @@ static UINT msi_dialog_bitmap_control( msi_dialog *dialog, MSIRECORD *rec )
                       IMAGE_BITMAP, (LPARAM) control->hBitmap );
     else
         ERR("Failed to load bitmap %s\n", debugstr_w(text));
+
+    msi_free( text );
     
     return ERROR_SUCCESS;
 }
@@ -761,7 +790,7 @@ static UINT msi_dialog_icon_control( msi_dialog *dialog, MSIRECORD *rec )
 {
     msi_control *control;
     DWORD attributes;
-    LPCWSTR text;
+    LPWSTR text;
 
     TRACE("\n");
 
@@ -769,12 +798,13 @@ static UINT msi_dialog_icon_control( msi_dialog *dialog, MSIRECORD *rec )
                             SS_ICON | SS_CENTERIMAGE | WS_GROUP );
             
     attributes = MSI_RecordGetInteger( rec, 8 );
-    text = MSI_RecordGetString( rec, 10 );
+    text = msi_get_deformatted_field( dialog->package, rec, 10 );
     control->hIcon = msi_load_icon( dialog->package->db, text, attributes );
     if( control->hIcon )
         SendMessageW( control->hwnd, STM_SETICON, (WPARAM) control->hIcon, 0 );
     else
         ERR("Failed to load bitmap %s\n", debugstr_w(text));
+    msi_free( text );
     return ERROR_SUCCESS;
 }
 
@@ -799,9 +829,9 @@ static UINT msi_dialog_edit_control( msi_dialog *dialog, MSIRECORD *rec )
     prop = MSI_RecordGetString( rec, 9 );
     if( prop )
         control->property = strdupW( prop );
-    val = load_dynamic_property( dialog->package, control->property, NULL );
+    val = msi_dup_property( dialog->package, control->property );
     SetWindowTextW( control->hwnd, val );
-    HeapFree( GetProcessHeap(), 0, val );
+    msi_free( val );
     return ERROR_SUCCESS;
 }
 
@@ -833,7 +863,7 @@ static void msi_mask_control_change( struct msi_maskedit_info *info )
     LPWSTR val;
     UINT i, n, r;
 
-    val = HeapAlloc( GetProcessHeap(), 0, (info->num_chars+1)*sizeof(WCHAR) );
+    val = msi_alloc( (info->num_chars+1)*sizeof(WCHAR) );
     for( i=0, n=0; i<info->num_groups; i++ )
     {
         if( (info->group[i].len + n) > info->num_chars )
@@ -857,7 +887,7 @@ static void msi_mask_control_change( struct msi_maskedit_info *info )
         MSI_SetPropertyW( info->dialog->package, info->prop, val );
         msi_dialog_evaluate_control_conditions( info->dialog );
     }
-    HeapFree( GetProcessHeap(), 0, val );
+    msi_free( val );
 }
 
 /* now move to the next control if necessary */
@@ -904,8 +934,8 @@ MSIMaskedEdit_WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         }
         break;
     case WM_NCDESTROY:
-        HeapFree( GetProcessHeap(), 0, info->prop );
-        HeapFree( GetProcessHeap(), 0, info );
+        msi_free( info->prop );
+        msi_free( info );
         RemovePropW( hWnd, szButtonData );
         break;
     }
@@ -928,7 +958,7 @@ msi_maskedit_set_text( struct msi_maskedit_info *info, LPCWSTR text )
             LPWSTR chunk = strdupW( p );
             chunk[ info->group[i].len ] = 0;
             SetWindowTextW( info->group[i].hwnd, chunk );
-            HeapFree( GetProcessHeap(), 0, chunk );
+            msi_free( chunk );
         }
         else
         {
@@ -954,13 +984,19 @@ static struct msi_maskedit_info * msi_dialog_parse_groups( LPCWSTR mask )
     if( !p )
         return info;
 
-    info = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof *info );
+    info = msi_alloc_zero( sizeof *info );
     if( !info )
         return info;
 
     p++;
     for( i=0; i<MASK_MAX_GROUPS; i++ )
     {
+        while (*p=='-')
+        {
+            total++;
+            p++;
+        }
+
         /* stop at the end of the string */
         if( p[0] == 0 || p[0] == '>' )
             break;
@@ -980,7 +1016,7 @@ static struct msi_maskedit_info * msi_dialog_parse_groups( LPCWSTR mask )
         p += n;
     }
 
-    TRACE("%d characters in %d groups\n", total, info->num_groups );
+    TRACE("%d characters in %d groups\n", total, i );
     if( i == MASK_MAX_GROUPS )
         ERR("too many groups in PIDTemplate %s\n", debugstr_w(mask));
 
@@ -991,10 +1027,9 @@ static struct msi_maskedit_info * msi_dialog_parse_groups( LPCWSTR mask )
 }
 
 static void
-msi_maskedit_create_children( struct msi_maskedit_info *info )
+msi_maskedit_create_children( struct msi_maskedit_info *info, LPCWSTR font )
 {
     DWORD width, height, style, wx, ww;
-    LPCWSTR text, font = NULL;
     RECT rect;
     HWND hwnd;
     UINT i;
@@ -1005,9 +1040,6 @@ msi_maskedit_create_children( struct msi_maskedit_info *info )
 
     width = rect.right - rect.left;
     height = rect.bottom - rect.top;
-
-    if( text )
-        font = msi_dialog_get_style( &text );
 
     for( i = 0; i < info->num_groups; i++ )
     {
@@ -1025,7 +1057,7 @@ msi_maskedit_create_children( struct msi_maskedit_info *info )
         SendMessageW( hwnd, EM_LIMITTEXT, info->group[i].len, 0 );
 
         msi_dialog_set_font( info->dialog, hwnd,
-                       font ? font : info->dialog->default_font );
+                             font?font:info->dialog->default_font );
         info->group[i].hwnd = hwnd;
     }
 }
@@ -1033,17 +1065,19 @@ msi_maskedit_create_children( struct msi_maskedit_info *info )
 /* office 2003 uses "73931<````=````=````=````=`````>@@@@@" */
 static UINT msi_dialog_maskedit_control( msi_dialog *dialog, MSIRECORD *rec )
 {
-    const static WCHAR pidt[] = {'P','I','D','T','e','m','p','l','a','t','e',0};
-    LPWSTR mask = NULL, title = NULL, val = NULL;
+    LPWSTR font_mask, val = NULL, font;
     struct msi_maskedit_info *info = NULL;
     UINT ret = ERROR_SUCCESS;
     msi_control *control;
-    LPCWSTR prop;
+    LPCWSTR prop, mask;
 
-    mask = load_dynamic_property( dialog->package, pidt, NULL );
+    TRACE("\n");
+
+    font_mask = msi_get_deformatted_field( dialog->package, rec, 10 );
+    font = msi_dialog_get_style( font_mask, &mask );
     if( !mask )
     {
-        ERR("PIDTemplate is empty\n");
+        ERR("mask template is empty\n");
         goto end;
     }
 
@@ -1077,24 +1111,32 @@ static UINT msi_dialog_maskedit_control( msi_dialog *dialog, MSIRECORD *rec )
     if( prop )
         info->prop = strdupW( prop );
 
-    msi_maskedit_create_children( info );
+    msi_maskedit_create_children( info, font );
 
     if( prop )
     {
-        val = load_dynamic_property( dialog->package, prop, NULL );
+        val = msi_dup_property( dialog->package, prop );
         if( val )
         {
             msi_maskedit_set_text( info, val );
-            HeapFree( GetProcessHeap(), 0, val );
+            msi_free( val );
         }
     }
 
 end:
     if( ret != ERROR_SUCCESS )
-        HeapFree( GetProcessHeap(), 0, info );
-    HeapFree( GetProcessHeap(), 0, title );
-    HeapFree( GetProcessHeap(), 0, mask );
+        msi_free( info );
+    msi_free( font_mask );
+    msi_free( font );
     return ret;
+}
+
+/******************** Progress Bar *****************************************/
+
+static UINT msi_dialog_progress_bar( msi_dialog *dialog, MSIRECORD *rec )
+{
+    msi_dialog_add_control( dialog, rec, PROGRESS_CLASSW, WS_VISIBLE );
+    return ERROR_SUCCESS;
 }
 
 /******************** Path Edit ********************************************/
@@ -1112,8 +1154,7 @@ static UINT msi_dialog_create_radiobutton( MSIRECORD *rec, LPVOID param )
     msi_dialog *dialog = group->dialog;
     msi_control *control;
     LPCWSTR prop, text, name;
-    DWORD style;
-    DWORD attributes = group->attributes;
+    DWORD style, attributes = group->attributes;
 
     style = WS_CHILD | BS_AUTORADIOBUTTON | BS_MULTILINE | WS_TABSTOP;
     name = MSI_RecordGetString( rec, 3 );
@@ -1125,6 +1166,8 @@ static UINT msi_dialog_create_radiobutton( MSIRECORD *rec, LPVOID param )
 
     control = msi_dialog_create_window( dialog, rec, szButton, name, text,
                                         style, group->parent->hwnd );
+    if (!control)
+        return ERROR_FUNCTION_FAILED;
     control->handler = msi_dialog_radiogroup_handler;
 
     prop = MSI_RecordGetString( rec, 1 );
@@ -1197,6 +1240,7 @@ struct control_handler msi_dialog_handler[] =
     { szEdit, msi_dialog_edit_control },
     { szMaskedEdit, msi_dialog_maskedit_control },
     { szPathEdit, msi_dialog_pathedit_control },
+    { szProgressBar, msi_dialog_progress_bar },
     { szRadioButtonGroup, msi_dialog_radiogroup_control },
     { szIcon, msi_dialog_icon_control },
 };
@@ -1394,7 +1438,7 @@ static UINT msi_dialog_set_tab_order( msi_dialog *dialog )
 {
     msi_control *control, *tab_next;
 
-    for( control = dialog->control_list; control; control = control->next )
+    LIST_FOR_EACH_ENTRY( control, &dialog->controls, msi_control, entry )
     {
         tab_next = msi_dialog_find_control( dialog, control->tabnext );
         if( !tab_next )
@@ -1422,7 +1466,6 @@ static LRESULT msi_dialog_oncreate( HWND hwnd, LPCREATESTRUCTW cs )
         'D','e','f','a','u','l','t','U','I','F','o','n','t',0 };
     msi_dialog *dialog = (msi_dialog*) cs->lpCreateParams;
     MSIRECORD *rec = NULL;
-    LPCWSTR text;
     LPWSTR title = NULL;
     SIZE size;
 
@@ -1445,16 +1488,16 @@ static LRESULT msi_dialog_oncreate( HWND hwnd, LPCREATESTRUCTW cs )
     msi_dialog_adjust_dialog_size( dialog, &size );
 
     dialog->attributes = MSI_RecordGetInteger( rec, 6 );
-    text = MSI_RecordGetString( rec, 7 );
 
-    dialog->default_font = load_dynamic_property( dialog->package, df, NULL );
+    dialog->default_font = msi_dup_property( dialog->package, df );
 
-    deformat_string( dialog->package, text, &title );
+    title = msi_get_deformatted_field( dialog->package, rec, 7 );
     SetWindowTextW( hwnd, title );
+    msi_free( title );
+
     SetWindowPos( hwnd, 0, 0, 0, size.cx, size.cy,
                   SWP_NOMOVE | SWP_NOACTIVATE | SWP_NOZORDER | SWP_NOREDRAW );
 
-    HeapFree( GetProcessHeap(), 0, title );
 
     msi_dialog_build_font_list( dialog );
     msi_dialog_fill_controls( dialog );
@@ -1477,8 +1520,8 @@ static UINT msi_dialog_send_event( msi_dialog *dialog, LPCWSTR event, LPCWSTR ar
 
     dialog->event_handler( dialog->package, event_fmt, arg_fmt, dialog );
 
-    HeapFree( GetProcessHeap(), 0, event_fmt );
-    HeapFree( GetProcessHeap(), 0, arg_fmt );
+    msi_free( event_fmt );
+    msi_free( arg_fmt );
 
     return ERROR_SUCCESS;
 }
@@ -1490,7 +1533,7 @@ static UINT msi_dialog_set_property( msi_dialog *dialog, LPCWSTR event, LPCWSTR 
     UINT len;
 
     len = strlenW(event);
-    prop = HeapAlloc( GetProcessHeap(), 0, len*sizeof(WCHAR));
+    prop = msi_alloc( len*sizeof(WCHAR));
     strcpyW( prop, &event[1] );
     p = strchrW( prop, ']' );
     if( p && p[1] == 0 )
@@ -1499,10 +1542,11 @@ static UINT msi_dialog_set_property( msi_dialog *dialog, LPCWSTR event, LPCWSTR 
         if( strcmpW( szNullArg, arg ) )
             deformat_string( dialog->package, arg, &arg_fmt );
         MSI_SetPropertyW( dialog->package, prop, arg_fmt );
+        msi_free( arg_fmt );
     }
     else
         ERR("Badly formatted property string - what happens?\n");
-    HeapFree( GetProcessHeap(), 0, prop );
+    msi_free( prop );
     return ERROR_SUCCESS;
 }
 
@@ -1633,19 +1677,19 @@ static UINT msi_dialog_edit_handler( msi_dialog *dialog,
           debugstr_w(control->property));
 
     sz = 0x20;
-    buf = HeapAlloc( GetProcessHeap(), 0, sz*sizeof(WCHAR) );
+    buf = msi_alloc( sz*sizeof(WCHAR) );
     while( buf )
     {
         r = GetWindowTextW( control->hwnd, buf, sz );
         if( r < (sz-1) )
             break;
-            sz *= 2;
-        buf = HeapReAlloc( GetProcessHeap(), 0, buf, sz*sizeof(WCHAR) );
+        sz *= 2;
+        buf = msi_realloc( buf, sz*sizeof(WCHAR) );
     }
 
     MSI_SetPropertyW( dialog->package, control->property, buf );
 
-    HeapFree( GetProcessHeap(), 0, buf );
+    msi_free( buf );
 
     return ERROR_SUCCESS;
 }
@@ -1772,8 +1816,7 @@ msi_dialog *msi_dialog_create( MSIPACKAGE* package, LPCWSTR szDialogName,
     TRACE("%p %s\n", package, debugstr_w(szDialogName));
 
     /* allocate the structure for the dialog to use */
-    dialog = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY,
-                        sizeof *dialog + sizeof(WCHAR)*strlenW(szDialogName) );
+    dialog = msi_alloc_zero( sizeof *dialog + sizeof(WCHAR)*strlenW(szDialogName) );
     if( !dialog )
         return NULL;
     strcpyW( dialog->name, szDialogName );
@@ -1781,12 +1824,14 @@ msi_dialog *msi_dialog_create( MSIPACKAGE* package, LPCWSTR szDialogName,
     dialog->package = package;
     dialog->event_handler = event_handler;
     dialog->finished = 0;
+    list_init( &dialog->controls );
 
     /* verify that the dialog exists */
     rec = msi_get_dialog_record( dialog );
     if( !rec )
     {
-        HeapFree( GetProcessHeap(), 0, dialog );
+        msiobj_release( &package->hdr );
+        msi_free( dialog );
         return NULL;
     }
     dialog->attributes = MSI_RecordGetInteger( rec, 6 );
@@ -1866,7 +1911,7 @@ UINT msi_dialog_run_message_loop( msi_dialog *dialog )
     }
 
     ShowWindow( hwnd, SW_SHOW );
-    UpdateWindow( hwnd );
+    /* UpdateWindow( hwnd ); - and causes the transparent static controls not to paint */
 
     if( dialog->attributes & msidbDialogAttributesModal )
     {
@@ -1901,20 +1946,26 @@ void msi_dialog_destroy( msi_dialog *dialog )
     if( dialog->hwnd )
         ShowWindow( dialog->hwnd, SW_HIDE );
     
+    if( dialog->hwnd )
+        DestroyWindow( dialog->hwnd );
+
     /* destroy the list of controls */
-    while( dialog->control_list )
+    while( !list_empty( &dialog->controls ) )
     {
-        msi_control *t = dialog->control_list;
-        dialog->control_list = t->next;
+        msi_control *t = LIST_ENTRY( list_head( &dialog->controls ),
+                                     msi_control, entry );
+        list_remove( &t->entry );
         /* leave dialog->hwnd - destroying parent destroys child windows */
-        HeapFree( GetProcessHeap(), 0, t->property );
-        HeapFree( GetProcessHeap(), 0, t->value );
+        msi_free( t->property );
+        msi_free( t->value );
         if( t->hBitmap )
             DeleteObject( t->hBitmap );
         if( t->hIcon )
             DestroyIcon( t->hIcon );
-        HeapFree( GetProcessHeap(), 0, t->tabnext );
-        HeapFree( GetProcessHeap(), 0, t );
+        msi_free( t->tabnext );
+        msi_free( t );
+        if (t->hDll)
+            FreeLibrary( t->hDll );
     }
 
     /* destroy the list of fonts */
@@ -1923,16 +1974,13 @@ void msi_dialog_destroy( msi_dialog *dialog )
         msi_font *t = dialog->font_list;
         dialog->font_list = t->next;
         DeleteObject( t->hfont );
-        HeapFree( GetProcessHeap(), 0, t );
+        msi_free( t );
     }
-    HeapFree( GetProcessHeap(), 0, dialog->default_font );
-
-    if( dialog->hwnd )
-        DestroyWindow( dialog->hwnd );
+    msi_free( dialog->default_font );
 
     msiobj_release( &dialog->package->hdr );
     dialog->package = NULL;
-    HeapFree( GetProcessHeap(), 0, dialog );
+    msi_free( dialog );
 }
 
 BOOL msi_dialog_register_class( void )
@@ -1944,7 +1992,7 @@ BOOL msi_dialog_register_class( void )
     cls.hInstance     = NULL;
     cls.hIcon         = LoadIconW(0, (LPWSTR)IDI_APPLICATION);
     cls.hCursor       = LoadCursorW(0, (LPWSTR)IDC_ARROW);
-    cls.hbrBackground = (HBRUSH)(COLOR_WINDOW);
+    cls.hbrBackground = (HBRUSH)(COLOR_3DFACE + 1);
     cls.lpszMenuName  = NULL;
     cls.lpszClassName = szMsiDialogClass;
 
@@ -1964,8 +2012,6 @@ BOOL msi_dialog_register_class( void )
     if( !hMsiHiddenWindow )
         return FALSE;
 
-    hRichedit = LoadLibraryA("riched20");
-
     return TRUE;
 }
 
@@ -1974,5 +2020,4 @@ void msi_dialog_unregister_class( void )
     DestroyWindow( hMsiHiddenWindow );
     UnregisterClassW( szMsiDialogClass, NULL );
     uiThreadId = 0;
-    FreeLibrary( hRichedit );
 }

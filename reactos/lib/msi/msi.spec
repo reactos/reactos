@@ -4,10 +4,10 @@
 8 stdcall MsiCloseHandle(long)
 9 stdcall MsiCollectUserInfoA(str)
 10 stdcall MsiCollectUserInfoW(wstr)
-11 stub MsiConfigureFeatureA
+11 stdcall MsiConfigureFeatureA(str str long)
 12 stub MsiConfigureFeatureFromDescriptorA
 13 stub MsiConfigureFeatureFromDescriptorW
-14 stdcall MsiConfigureFeatureW(str str ptr)
+14 stdcall MsiConfigureFeatureW(wstr wstr ptr)
 15 stdcall MsiConfigureProductA(str long long)
 16 stdcall MsiConfigureProductW(wstr long long)
 17 stdcall MsiCreateRecord(long)
@@ -125,8 +125,8 @@
 129 stdcall MsiReinstallFeatureW(wstr wstr long)
 130 stdcall MsiReinstallProductA(str long)
 131 stdcall MsiReinstallProductW(wstr long)
-132 stub MsiSequenceA
-133 stub MsiSequenceW
+132 stdcall MsiSequenceA(long str long)
+133 stdcall MsiSequenceW(long wstr long)
 134 stdcall MsiSetComponentStateA(long str long)
 135 stdcall MsiSetComponentStateW(long wstr long)
 136 stdcall MsiSetExternalUIA(ptr long ptr)
@@ -173,8 +173,8 @@
 177 stub MsiAdvertiseScriptW
 178 stub MsiGetPatchInfoA
 179 stub MsiGetPatchInfoW
-180 stub MsiEnumPatchesA
-181 stub MsiEnumPatchesW
+180 stdcall MsiEnumPatchesA(str long ptr ptr ptr)
+181 stdcall MsiEnumPatchesW(str long ptr ptr ptr)
 182 stdcall -private DllGetVersion(ptr)
 183 stub MsiGetProductCodeFromPackageCodeA
 184 stub MsiGetProductCodeFromPackageCodeW

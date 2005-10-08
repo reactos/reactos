@@ -48,6 +48,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
 DEFINE_GUID( CLSID_MsiDatabase, 0x000c1084, 0x0000, 0x0000,
              0xc0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
+DEFINE_GUID( CLSID_MsiPatch, 0x000c1086, 0x0000, 0x0000,
+             0xc0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
 
 /*
  *  .MSI  file format
@@ -91,7 +93,7 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
         /* UINT len = lstrlenW( szPerist ) + 1; */
         FIXME("don't support persist files yet\b");
         return ERROR_INVALID_PARAMETER;
-        /* szMode = HeapAlloc( GetProcessHeap(), 0, len * sizeof (DWORD) ); */
+        /* szMode = msi_alloc( len * sizeof (DWORD) ); */
     }
     else if( szPersist == MSIDBOPEN_READONLY )
     {
@@ -132,13 +134,13 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
         goto end;
     }
 
-    if( memcmp( &stat.clsid, &CLSID_MsiDatabase, sizeof (GUID) ) )
+    if ( !IsEqualGUID( &stat.clsid, &CLSID_MsiDatabase ) &&
+         !IsEqualGUID( &stat.clsid, &CLSID_MsiPatch ) ) 
     {
         ERR("storage GUID is not a MSI database GUID %s\n",
              debugstr_guid(&stat.clsid) );
         goto end;
     }
-
 
     db = alloc_msiobject( MSIHANDLETYPE_DATABASE, sizeof (MSIDATABASE),
                               MSI_CloseDatabase );
@@ -153,10 +155,13 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
 
     db->storage = stg;
     db->mode = szMode;
+    list_init( &db->tables );
 
-    ret = load_string_table( db );
-    if( ret != ERROR_SUCCESS )
+    db->strings = load_string_table( stg );
+    if( !db->strings )
         goto end;
+
+    ret = ERROR_SUCCESS;
 
     msiobj_addref( &db->hdr );
     IStorage_AddRef( stg );
@@ -215,8 +220,8 @@ UINT WINAPI MsiOpenDatabaseA(LPCSTR szDBPath, LPCSTR szPersist, MSIHANDLE *phDB)
 
 end:
     if( HIWORD(szPersist) )
-        HeapFree( GetProcessHeap(), 0, szwPersist );
-    HeapFree( GetProcessHeap(), 0, szwDBPath );
+        msi_free( szwPersist );
+    msi_free( szwDBPath );
 
     return r;
 }
@@ -271,8 +276,8 @@ UINT WINAPI MsiDatabaseImportA( MSIHANDLE handle,
     r = MsiDatabaseImportW( handle, path, file );
 
 end:
-    HeapFree( GetProcessHeap(), 0, path );
-    HeapFree( GetProcessHeap(), 0, file );
+    msi_free( path );
+    msi_free( file );
 
     return r;
 }
@@ -339,9 +344,9 @@ UINT WINAPI MsiDatabaseExportA( MSIHANDLE handle, LPCSTR szTable,
     r = MsiDatabaseExportW( handle, table, path, file );
 
 end:
-    HeapFree( GetProcessHeap(), 0, table );
-    HeapFree( GetProcessHeap(), 0, path );
-    HeapFree( GetProcessHeap(), 0, file );
+    msi_free( table );
+    msi_free( path );
+    msi_free( file );
 
     return r;
 }

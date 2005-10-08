@@ -1,8 +1,7 @@
 /*
- * Russian resources for MSI
+ * Finnish resources for MSI
  *
- * Copyright 2005 Mikhail Y. Zvyozdochkin
- *                Aleksey Bragin
+ * Copyright 2005 Kimmo Myllyvirta
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,16 +18,16 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+LANGUAGE LANG_FINNISH, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
-	5 "путь %s не найден"
-	9 "вставьте диск %s"
-	10 "неверные параметры"
-	11 "введите, какая папка содержит %s"
-	12 "недоступен источник установки (съемный или компакт-диск не вставлен в дисковод)"
-	13 "недоступен сетевой диск, содержащий необходимый файл"
-	14 "функциональность из:"
-	15 "выберите, какая папка содержит %s"
+	5 "Polkua %s ei lцydy."
+	9 "Anna levy %s"
+	10 "Virheelliset parametrit."
+	11 "Anna kansio, joka sisдltдд %s"
+	12 "Ominaisuuden asennuslдhde puuttuu."
+	13 "Ominaisuuden verkkolevy puuttuu."
+	14 "Ominaisuus:"
+	15 "Valitse kansio, joka sisдltдд %s"
 }

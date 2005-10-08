@@ -34,11 +34,12 @@
 
 #define MSI_DATASIZEMASK 0x00ff
 #define MSITYPE_VALID    0x0100
+#define MSITYPE_LOCALIZABLE 0x200
 #define MSITYPE_STRING   0x0800
 #define MSITYPE_NULLABLE 0x1000
 #define MSITYPE_KEY      0x2000
 
-#define MSITYPE_BINARY 0x8900
+#define MSITYPE_IS_BINARY(type) (((type) & ~MSITYPE_NULLABLE) == (MSITYPE_STRING|MSITYPE_VALID))
 
 struct tagMSITABLE;
 typedef struct tagMSITABLE MSITABLE;
@@ -57,8 +58,6 @@ struct tagMSIOBJECTHDR
     UINT type;
     LONG refcount;
     msihandledestructor destructor;
-    struct tagMSIOBJECTHDR *next;
-    struct tagMSIOBJECTHDR *prev;
 };
 
 typedef struct tagMSIDATABASE
@@ -67,7 +66,7 @@ typedef struct tagMSIDATABASE
     IStorage *storage;
     string_table *strings;
     LPCWSTR mode;
-    MSITABLE *first_table, *last_table;
+    struct list tables;
 } MSIDATABASE;
 
 typedef struct tagMSIVIEW MSIVIEW;
@@ -188,26 +187,22 @@ typedef struct tagMSIPACKAGE
     struct list components;
     struct list features;
     struct list files;
+    struct list tempfiles;
     struct list folders;
     LPWSTR ActionFormat;
     LPWSTR LastAction;
 
     struct list classes;
     struct list extensions;
-    struct tagMSIPROGID *progids;
-    UINT loaded_progids;
-    struct tagMSIVERB *verbs;
-    UINT loaded_verbs;
+    struct list progids;
     struct list mimes;
     struct list appids;
     
     struct tagMSISCRIPT *script;
 
-    struct tagMSIRUNNINGACTION *RunningAction;
-    UINT RunningActionCount;
+    struct list RunningActions;
 
     LPWSTR PackagePath;
-    LPWSTR msiFilePath;
     LPWSTR ProductCode;
 
     UINT CurrentInstallState;
@@ -241,8 +236,6 @@ typedef struct tagMSIPREVIEW
 #define MSIHANDLE_MAGIC 0x4d434923
 #define MSIMAXHANDLES 0xf0
 
-#define MSISUMINFO_OFFSET 0x30LL
-
 DEFINE_GUID(CLSID_IMsiServer,   0x000C101C,0x0000,0x0000,0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
 DEFINE_GUID(CLSID_IMsiServerX1, 0x000C103E,0x0000,0x0000,0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
 DEFINE_GUID(CLSID_IMsiServerX2, 0x000C1090,0x0000,0x0000,0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
@@ -250,6 +243,21 @@ DEFINE_GUID(CLSID_IMsiServerX3, 0x000C1094,0x0000,0x0000,0xC0,0x00,0x00,0x00,0x0
 
 DEFINE_GUID(CLSID_IMsiServerMessage, 0x000C101D,0x0000,0x0000,0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46);
 
+typedef struct {
+    BOOL unicode;
+    union {
+       LPSTR a;
+       LPWSTR w;
+    } str;
+} awstring;
+
+typedef struct {
+    BOOL unicode;
+    union {
+       LPCSTR a;
+       LPCWSTR w;
+    } str;
+} awcstring;
 
 /* handle functions */
 extern void *msihandle2msiinfo(MSIHANDLE handle, UINT type);
@@ -259,16 +267,9 @@ extern void msiobj_addref(MSIOBJECTHDR *);
 extern int msiobj_release(MSIOBJECTHDR *);
 extern void msiobj_lock(MSIOBJECTHDR *);
 extern void msiobj_unlock(MSIOBJECTHDR *);
-extern MSIHANDLE msiobj_findhandle( MSIOBJECTHDR *hdr );
 
-/* add this table to the list of cached tables in the database */
-extern void add_table(MSIDATABASE *db, MSITABLE *table);
-extern void remove_table( MSIDATABASE *db, MSITABLE *table );
-extern void free_table( MSIDATABASE *db, MSITABLE *table );
 extern void free_cached_tables( MSIDATABASE *db );
-extern UINT find_cached_table(MSIDATABASE *db, LPCWSTR name, MSITABLE **table);
-extern UINT get_table(MSIDATABASE *db, LPCWSTR name, MSITABLE **table);
-extern UINT load_string_table( MSIDATABASE *db );
+extern string_table *load_string_table( IStorage *stg );
 extern UINT MSI_CommitTables( MSIDATABASE *db );
 extern HRESULT init_string_table( IStorage *stg );
 
@@ -300,9 +301,10 @@ extern UINT read_raw_stream_data( MSIDATABASE*, LPCWSTR stname,
                               USHORT **pdata, UINT *psz );
 
 /* action internals */
-extern UINT ACTION_DoTopLevelINSTALL( MSIPACKAGE *, LPCWSTR, LPCWSTR, LPCWSTR );
+extern UINT MSI_InstallPackage( MSIPACKAGE *, LPCWSTR, LPCWSTR );
 extern void ACTION_free_package_structures( MSIPACKAGE* );
 extern UINT ACTION_DialogBox( MSIPACKAGE*, LPCWSTR);
+extern UINT MSI_Sequence( MSIPACKAGE *package, LPCWSTR szTable, INT iSequenceMode );
 
 /* record internals */
 extern UINT MSI_RecordSetIStream( MSIRECORD *, unsigned int, IStream *);
@@ -379,6 +381,10 @@ extern UINT MSIREG_OpenUserComponentsKey(LPCWSTR szComponent, HKEY* key, BOOL cr
 extern UINT MSIREG_OpenUpgradeCodesKey(LPCWSTR szProduct, HKEY* key, BOOL create);
 extern UINT MSIREG_OpenUserUpgradeCodesKey(LPCWSTR szProduct, HKEY* key, BOOL create);
 
+extern LONG msi_reg_set_val_str( HKEY hkey, LPCWSTR name, LPCWSTR value );
+extern LONG msi_reg_set_val_multi_str( HKEY hkey, LPCWSTR name, LPCWSTR value );
+extern LONG msi_reg_set_val_dword( HKEY hkey, LPCWSTR name, DWORD val );
+
 /* msi dialog interface */
 typedef UINT (*msi_dialog_event_handler)( MSIPACKAGE*, LPCWSTR, LPCWSTR, msi_dialog* );
 extern msi_dialog *msi_dialog_create( MSIPACKAGE*, LPCWSTR, msi_dialog_event_handler );
@@ -411,28 +417,55 @@ extern DWORD gUIFilter;
 extern LPVOID gUIContext;
 extern WCHAR gszLogFile[MAX_PATH];
 
+/* memory allocation macro functions */
+static inline void *msi_alloc( size_t len )
+{
+    return HeapAlloc( GetProcessHeap(), 0, len );
+}
+
+static inline void *msi_alloc_zero( size_t len )
+{
+    return HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, len );
+}
+
+static inline void *msi_realloc( void *mem, size_t len )
+{
+    return HeapReAlloc( GetProcessHeap(), 0, mem, len );
+}
+
+static inline void *msi_realloc_zero( void *mem, size_t len )
+{
+    return HeapReAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, mem, len );
+}
+
+static inline BOOL msi_free( void *mem )
+{
+    return HeapFree( GetProcessHeap(), 0, mem );
+}
+
 inline static char *strdupWtoA( LPCWSTR str )
 {
     LPSTR ret = NULL;
-    if (str)
-    {
-        DWORD len = WideCharToMultiByte( CP_ACP, 0, str, -1, NULL, 0, NULL, NULL
-);
-        if ((ret = HeapAlloc( GetProcessHeap(), 0, len )))
-            WideCharToMultiByte( CP_ACP, 0, str, -1, ret, len, NULL, NULL );
-    }
+    DWORD len;
+
+    if (!str) return ret;
+    len = WideCharToMultiByte( CP_ACP, 0, str, -1, NULL, 0, NULL, NULL);
+    ret = msi_alloc( len );
+    if (ret)
+        WideCharToMultiByte( CP_ACP, 0, str, -1, ret, len, NULL, NULL );
     return ret;
 }
 
 inline static LPWSTR strdupAtoW( LPCSTR str )
 {
     LPWSTR ret = NULL;
-    if (str)
-    {
-        DWORD len = MultiByteToWideChar( CP_ACP, 0, str, -1, NULL, 0 );
-        if ((ret = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) )))
-            MultiByteToWideChar( CP_ACP, 0, str, -1, ret, len );
-    }
+    DWORD len;
+
+    if (!str) return ret;
+    len = MultiByteToWideChar( CP_ACP, 0, str, -1, NULL, 0 );
+    ret = msi_alloc( len * sizeof(WCHAR) );
+    if (ret)
+        MultiByteToWideChar( CP_ACP, 0, str, -1, ret, len );
     return ret;
 }
 
@@ -440,8 +473,9 @@ inline static LPWSTR strdupW( LPCWSTR src )
 {
     LPWSTR dest;
     if (!src) return NULL;
-    dest = HeapAlloc(GetProcessHeap(), 0, (lstrlenW(src)+1)*sizeof(WCHAR));
-    lstrcpyW(dest, src);
+    dest = msi_alloc( (lstrlenW(src)+1)*sizeof(WCHAR) );
+    if (dest)
+        lstrcpyW(dest, src);
     return dest;
 }
 

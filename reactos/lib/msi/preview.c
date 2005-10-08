@@ -145,7 +145,7 @@ UINT WINAPI MsiPreviewDialogA( MSIHANDLE hPreview, LPCSTR szDialogName )
             return ERROR_OUTOFMEMORY;
     }
     r = MsiPreviewDialogW( hPreview, strW );
-    HeapFree( GetProcessHeap(), 0, strW );
+    msi_free( strW );
     return r;
 }
 
