@@ -28,7 +28,6 @@
 #include "winuser.h"
 #include "wingdi.h"
 #include "winreg.h"
-#include "shlwapi.h"
 #include "uxtheme.h"
 #include "tmschema.h"
 
@@ -93,6 +92,57 @@ static BOOL CALLBACK UXTHEME_broadcast_msg (HWND hWnd, LPARAM msg)
     return TRUE;
 }
 
+/* At the end of the day this is a subset of what SHRegGetPath() does - copied
+ * here to avoid linking against shlwapi. */
+static DWORD query_reg_path (HKEY hKey, LPCWSTR lpszValue,
+                             LPVOID pvData)
+{
+  DWORD dwRet, dwType, dwUnExpDataLen = MAX_PATH, dwExpDataLen;
+
+  TRACE("(hkey=%p,%s,%p)\n", hKey, debugstr_w(lpszValue),
+        pvData);
+
+  dwRet = RegQueryValueExW(hKey, lpszValue, 0, &dwType, pvData, &dwUnExpDataLen);
+  if (dwRet!=ERROR_SUCCESS && dwRet!=ERROR_MORE_DATA)
+      return dwRet;
+
+  if (dwType == REG_EXPAND_SZ)
+  {
+    DWORD nBytesToAlloc;
+
+    /* Expand type REG_EXPAND_SZ into REG_SZ */
+    LPWSTR szData;
+
+    /* If the caller didn't supply a buffer or the buffer is too small we have
+     * to allocate our own
+     */
+    if (dwRet == ERROR_MORE_DATA)
+    {
+      WCHAR cNull = '\0';
+      nBytesToAlloc = dwUnExpDataLen;
+
+      szData = (LPWSTR) LocalAlloc(LMEM_ZEROINIT, nBytesToAlloc);
+      RegQueryValueExW (hKey, lpszValue, 0, NULL, (LPBYTE)szData, &nBytesToAlloc);
+      dwExpDataLen = ExpandEnvironmentStringsW(szData, &cNull, 1);
+      dwUnExpDataLen = max(nBytesToAlloc, dwExpDataLen);
+      LocalFree((HLOCAL) szData);
+    }
+    else
+    {
+      nBytesToAlloc = (lstrlenW(pvData) + 1) * sizeof(WCHAR);
+      szData = (LPWSTR) LocalAlloc(LMEM_ZEROINIT, nBytesToAlloc );
+      lstrcpyW(szData, pvData);
+      dwExpDataLen = ExpandEnvironmentStringsW(szData, pvData, MAX_PATH );
+      if (dwExpDataLen > MAX_PATH) dwRet = ERROR_MORE_DATA;
+      dwUnExpDataLen = max(nBytesToAlloc, dwExpDataLen);
+      LocalFree((HLOCAL) szData);
+    }
+  }
+
+  RegCloseKey(hKey);
+  return dwRet;
+}
+
 /***********************************************************************
  *      UXTHEME_LoadTheme
  *
@@ -123,7 +173,7 @@ static void UXTHEME_LoadTheme(void)
         buffsize = sizeof(szCurrentSize)/sizeof(szCurrentSize[0]);
         if(RegQueryValueExW(hKey, szSizeName, NULL, NULL, (LPBYTE)szCurrentSize, &buffsize))
             szCurrentSize[0] = '\0';
-        if(SHRegGetPathW(hKey, NULL, szDllName, szCurrentTheme, 0))
+        if (query_reg_path (hKey, szDllName, szCurrentTheme))
             szCurrentTheme[0] = '\0';
         RegCloseKey(hKey);
     }
@@ -292,7 +342,7 @@ static void UXTHEME_RestoreSystemMetrics(void)
                 DWORD count = sizeof(colorStr);
             
                 if (RegQueryValueExA (colorKey, SysColorsNames[i], 0,
-                    &type, colorStr, &count) == ERROR_SUCCESS)
+                    &type, (LPBYTE) colorStr, &count) == ERROR_SUCCESS)
                 {
                     int r, g, b;
                     if (sscanf (colorStr, "%d %d %d", &r, &g, &b) == 3)
@@ -850,6 +900,7 @@ HRESULT WINAPI EnumThemes(LPCWSTR pszThemePath, EnumThemeProc callback,
     HANDLE hFind;
     WIN32_FIND_DATAW wfd;
     HRESULT hr;
+    size_t pathLen;
 
     TRACE("(%s,%p,%p)\n", debugstr_w(pszThemePath), callback, lpData);
 
@@ -857,7 +908,12 @@ HRESULT WINAPI EnumThemes(LPCWSTR pszThemePath, EnumThemeProc callback,
         return E_POINTER;
 
     lstrcpyW(szDir, pszThemePath);
-    PathAddBackslashW(szDir);
+    pathLen = lstrlenW (szDir);
+    if ((pathLen > 0) && (pathLen < MAX_PATH-1) && (szDir[pathLen - 1] != '\\'))
+    {
+        szDir[pathLen] = '\\';
+        szDir[pathLen+1] = 0;
+    }
 
     lstrcpyW(szPath, szDir);
     lstrcatW(szPath, szStar);
