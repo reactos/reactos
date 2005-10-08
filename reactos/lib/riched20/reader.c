@@ -127,10 +127,13 @@ int _RTFGetChar(RTF_Info *info)
 
 	TRACE("\n");
 
-	/* if the last buffer wasn't full, it's EOF */
+	/* Doc says, that if the last buffer wasn't full, it's EOF.
+	Actually, that's not true. */
+/*
 	if (stream->dwSize > 0 && stream->dwSize == stream->dwUsed
             && stream->dwSize < sizeof(stream->buffer))
 		return EOF;
+*/
 	if (stream->dwSize <= stream->dwUsed)
 	{
                 ME_StreamInFill(stream);
@@ -1089,12 +1092,15 @@ static void ReadStyleSheet(RTF_Info *info)
 	RTFStyleElt	*sep, *sepLast;
 	char		buf[rtfBufSiz], *bp;
 	const char	*fn = "ReadStyleSheet";
+	int             real_style;
 
 	TRACE("\n");
 
 	for (;;)
 	{
 		RTFGetToken (info);
+		if (info->rtfClass == rtfEOF)
+			break;
 		if (RTFCheckCM (info, rtfGroup, rtfEndGroup))
 			break;
 		sp = New (RTFStyle);
@@ -1112,6 +1118,7 @@ static void ReadStyleSheet(RTF_Info *info)
 		info->styleList = sp;
 		if (!RTFCheckCM (info, rtfGroup, rtfBeginGroup))
 			RTFPanic (info,"%s: missing \"{\"", fn);
+		real_style = TRUE;
 		for (;;)
 		{
 			RTFGetToken (info);
@@ -1120,8 +1127,15 @@ static void ReadStyleSheet(RTF_Info *info)
 				break;
 			if (info->rtfClass == rtfControl)
 			{
-				if (RTFCheckMM (info, rtfSpecialChar, rtfOptDest))
-					continue;	/* ignore "\*" */
+				if (RTFCheckMM (info, rtfSpecialChar, rtfOptDest)) {
+					RTFGetToken(info);
+					RTFPanic(info, "%s: skipping optional destination", fn);
+					RTFSkipGroup(info);
+					info->rtfClass = rtfGroup;
+					info->rtfMajor = rtfEndGroup;
+					real_style = FALSE;
+					break; /* ignore "\*" */
+				}
 				if (RTFCheckMM (info, rtfParAttr, rtfStyleNum))
 				{
 					sp->rtfSNum = info->rtfParam;
@@ -1178,6 +1192,7 @@ static void ReadStyleSheet(RTF_Info *info)
 				 * This passes over "{\*\keycode ... }, among
 				 * other things. A temporary (perhaps) hack.
 				 */
+                                RTFPanic(info, "%s: skipping begin", fn);
 				RTFSkipGroup (info);
 				continue;
 			}
@@ -1207,31 +1222,33 @@ static void ReadStyleSheet(RTF_Info *info)
 							fn, info->rtfTextBuf);
 			}
 		}
-		RTFGetToken (info);
-		if (!RTFCheckCM (info, rtfGroup, rtfEndGroup))
-			RTFPanic (info, "%s: missing \"}\"", fn);
-
-		/*
-		 * Check over the style structure.  A name is a must.
-		 * If no style number was specified, check whether it's the
-		 * Normal style (in which case it's given style number
-		 * rtfNormalStyleNum).  Note that some "normal" style names
-		 * just begin with "Normal" and can have other stuff following,
-		 * e.g., "Normal,Times 10 point".  Ugh.
-		 *
-		 * Some German RTF writers use "Standard" instead of "Normal".
-		 */
-		if (sp->rtfSName == NULL)
-			RTFPanic (info,"%s: missing style name", fn);
-		if (sp->rtfSNum < 0)
-		{
-			if (strncmp (buf, "Normal", 6) != 0
-				&& strncmp (buf, "Standard", 8) != 0)
-				RTFPanic (info,"%s: missing style number", fn);
-			sp->rtfSNum = rtfNormalStyleNum;
+		if (real_style) {
+			RTFGetToken (info);
+			if (!RTFCheckCM (info, rtfGroup, rtfEndGroup))
+				RTFPanic (info, "%s: missing \"}\"", fn);
+			/*
+			 * Check over the style structure.  A name is a must.
+			 * If no style number was specified, check whether it's the
+			 * Normal style (in which case it's given style number
+			 * rtfNormalStyleNum).  Note that some "normal" style names
+			 * just begin with "Normal" and can have other stuff following,
+			 * e.g., "Normal,Times 10 point".  Ugh.
+			 *
+			 * Some German RTF writers use "Standard" instead of "Normal".
+			 */
+			if (sp->rtfSName == NULL)
+				RTFPanic (info,"%s: missing style name", fn);
+			if (sp->rtfSNum < 0)
+			{
+				if (strncmp (buf, "Normal", 6) != 0
+					&& strncmp (buf, "Standard", 8) != 0)
+					RTFPanic (info,"%s: missing style number", fn);
+				sp->rtfSNum = rtfNormalStyleNum;
+			}
+			if (sp->rtfSNextPar == -1)	/* if \snext not given, */
+				sp->rtfSNextPar = sp->rtfSNum;	/* next is itself */
 		}
-		if (sp->rtfSNextPar == -1)	/* if \snext not given, */
-			sp->rtfSNextPar = sp->rtfSNum;	/* next is itself */
+		/* otherwise we're just dealing with fake end group from skipped group */
 	}
 	RTFRouteToken (info);	/* feed "}" back to router */
 }
@@ -2755,7 +2772,7 @@ RTFFlushCPOutputBuffer(RTF_Info *info)
         int length;
 
         length = MultiByteToWideChar(info->codePage, 0, info->cpOutputBuffer,
-                                     info->dwCPOutputCount, buffer, bufferMax);
+                                     info->dwCPOutputCount, buffer, bufferMax/sizeof(WCHAR));
         info->dwCPOutputCount = 0;
 
         RTFPutUnicodeString(info, buffer, length);

@@ -55,7 +55,7 @@ ME_StreamOutFlush(ME_TextEditor *editor)
       on initial random nWritten value, which is usually >STREAMOUT_BUFFER_SIZE */
     nRemaining = editor->pStream->pos - nStart;
     nWritten = 0xDEADBEEF;
-    stream->dwError = stream->pfnCallback(stream->dwCookie, editor->pStream->buffer + nStart,
+    stream->dwError = stream->pfnCallback(stream->dwCookie, (LPBYTE)editor->pStream->buffer + nStart,
                                           editor->pStream->pos - nStart, &nWritten);
     TRACE("error=%lu written=%lu\n", stream->dwError, nWritten);
     if (nWritten > (editor->pStream->pos - nStart) || nWritten<0) {
@@ -86,7 +86,7 @@ ME_StreamOutFree(ME_TextEditor *editor)
 
 
 static BOOL
-ME_StreamOutMove(ME_TextEditor *editor, BYTE *buffer, int len)
+ME_StreamOutMove(ME_TextEditor *editor, const char *buffer, int len)
 {
   ME_OutStream *pStream = editor->pStream;
   
@@ -599,8 +599,8 @@ ME_StreamOutRTFText(ME_TextEditor *editor, WCHAR *text, LONG nChars)
       nChars--;
     } else {
       BOOL unknown = FALSE;
-      BYTE letter[3];
-      
+      char letter[3];
+
       /* FIXME: In the MS docs for WideCharToMultiByte there is a big list of
        * codepages including CP_SYMBOL for which the last parameter must be set
        * to NULL for the function to succeed. But in Wine we need to care only
@@ -610,7 +610,7 @@ ME_StreamOutRTFText(ME_TextEditor *editor, WCHAR *text, LONG nChars)
                                    (editor->pStream->nCodePage == CP_SYMBOL) ? NULL : &unknown);
       if (unknown)
         pos += sprintf(buffer + pos, "\\u%d?", (short)*text);
-      else if (*letter < 128) {
+      else if ((BYTE)*letter < 128) {
         if (*letter == '{' || *letter == '}' || *letter == '\\')
           buffer[pos++] = '\\';
         buffer[pos++] = *letter;
@@ -720,7 +720,7 @@ ME_StreamOutText(ME_TextEditor *editor, int nStart, int nChars, DWORD dwFormat)
   ME_DisplayItem *item = ME_FindItemAtOffset(editor, diRun, nStart, &nStart);
   int nLen;
   UINT nCodePage = CP_ACP;
-  BYTE *buffer = NULL;
+  char *buffer = NULL;
   int nBufLen = 0;
   BOOL success = TRUE;
 
@@ -738,15 +738,15 @@ ME_StreamOutText(ME_TextEditor *editor, int nStart, int nChars, DWORD dwFormat)
       nLen = nChars;
 
     if (item->member.run.nFlags & MERF_ENDPARA) {
-      WCHAR szEOL[] = { '\r', '\n' };
+      static const WCHAR szEOL[2] = { '\r', '\n' };
       
       if (dwFormat & SF_UNICODE)
-        success = ME_StreamOutMove(editor, (BYTE *)szEOL, 4);
+        success = ME_StreamOutMove(editor, (const char *)szEOL, sizeof(szEOL));
       else
         success = ME_StreamOutMove(editor, "\r\n", 2);
     } else {
       if (dwFormat & SF_UNICODE)
-        success = ME_StreamOutMove(editor, (BYTE *)(item->member.run.strText->szData + nStart),
+        success = ME_StreamOutMove(editor, (const char *)(item->member.run.strText->szData + nStart),
                                    sizeof(WCHAR) * nLen);
       else {
         int nSize;
@@ -756,7 +756,7 @@ ME_StreamOutText(ME_TextEditor *editor, int nStart, int nChars, DWORD dwFormat)
         if (nSize > nBufLen) {
           if (buffer)
             FREE_OBJ(buffer);
-          buffer = ALLOC_N_OBJ(BYTE, nSize);
+          buffer = ALLOC_N_OBJ(char, nSize);
           nBufLen = nSize;
         }
         WideCharToMultiByte(nCodePage, 0, item->member.run.strText->szData + nStart,

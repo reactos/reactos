@@ -98,7 +98,7 @@ int ME_ReverseFindWhitespaceV(ME_String *s, int nVChar);
 /* row.c */
 ME_DisplayItem *ME_FindRowStart(ME_Context *c, ME_DisplayItem *run, int nRelPos);
 ME_DisplayItem *ME_RowStart(ME_DisplayItem *item);
-ME_DisplayItem *ME_RowEnd(ME_DisplayItem *item);
+/* ME_DisplayItem *ME_RowEnd(ME_DisplayItem *item); */
 void ME_RenumberParagraphs(ME_DisplayItem *item); /* TODO */
 ME_DisplayItem *ME_FindRowWithNumber(ME_TextEditor *editor, int nRow);
 int ME_RowNumberFromCharOfs(ME_TextEditor *editor, int nOfs);
