@@ -1,7 +1,7 @@
 /*
- * Top level resource file for shlwapi
+ * Copyright 2005
  *
- * Copyright 2004 Jon Griffiths
+ * Stefan Leichter
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,20 +18,10 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "windef.h"
-#include "winbase.h"
-#include "winuser.h"
-#include "resource.h"
+#define WINE_FILENAME_STR "shlwapi.dll"
+#define WINE_FILEVERSION 6,0,2800,1692
+#define WINE_FILEVERSION_STR "6.0.2800.1692"
+#define WINE_PRODUCTVERSION 6,0,2800,1692
+#define WINE_PRODUCTVERSION_STR "6.0.2800.1692"
 
-#include "version.rc"
-
-#include "shlwapi_De.rc"
-#include "shlwapi_En.rc"
-#include "shlwapi_Es.rc"
-#include "shlwapi_Nl.rc"
-#include "shlwapi_No.rc"
-#include "shlwapi_It.rc"
-#include "shlwapi_Ja.rc"
-#include "shlwapi_Pl.rc"
-#include "shlwapi_Pt.rc"
-#include "shlwapi_Sv.rc"
+#include "wine/wine_common_ver.rc"

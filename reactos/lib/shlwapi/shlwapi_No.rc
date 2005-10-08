@@ -1,7 +1,7 @@
 /*
- * Japanese resources for shlwapi
+ * Norwegian Bokm虱 resources for shlwapi
  *
- * Copyright 2004 Hajime Segawa
+ * Copyright 2005 Alexander N. Snes <alex@thehandofagony.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,18 +18,18 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+LANGUAGE LANG_NORWEGIAN, SUBLANG_NORWEGIAN_BOKMAL
 
 IDD_ERR_DIALOG DIALOG MOVEABLE DISCARDABLE 0, 0, 220, 60
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "エラー!"
-FONT 9, "MS UI Gothic"
+CAPTION "Feil"
+FONT 8, "MS Shell Dlg"
 {
  LTEXT "", IDS_ERR_USER_MSG2, 15, 5, 28, 20
  LTEXT "", IDS_ERR_USER_MSG, 15, 5, 210, 8
- CHECKBOX "今後はこのメッセージを表示しない(&i)", IDC_ERR_DONT_SHOW, 5, 20, 210, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ CHECKBOX "&Ikke vis denne meldingen igjen", IDC_ERR_DONT_SHOW, 5, 20, 210, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  PUSHBUTTON L"&OK" IDOK, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON L"キャンセル(&C)" IDCANCEL, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON L"はい(&Y)" IDYES, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON L"いいえ(&N)" IDNO, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON L"&Avbryt" IDCANCEL, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON L"&Ja" IDYES, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON L"&Nei" IDNO, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
 }

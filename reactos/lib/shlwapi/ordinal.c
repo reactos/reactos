@@ -2593,7 +2593,7 @@ HWND WINAPI SHCreateWorkerWindowA(LONG wndProc, HWND hWndParent, DWORD dwExStyle
   wc.hInstance     = shlwapi_hInstance;
   wc.hIcon         = NULL;
   wc.hCursor       = LoadCursorA(NULL, (LPSTR)IDC_ARROW);
-  wc.hbrBackground = (HBRUSH)COLOR_BTNSHADOW;
+  wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
   wc.lpszMenuName  = NULL;
   wc.lpszClassName = szClass;
 
@@ -2880,7 +2880,7 @@ HWND WINAPI SHCreateWorkerWindowW(LONG wndProc, HWND hWndParent, DWORD dwExStyle
   wc.hInstance     = shlwapi_hInstance;
   wc.hIcon         = NULL;
   wc.hCursor       = LoadCursorW(NULL, (LPWSTR)IDC_ARROW);
-  wc.hbrBackground = (HBRUSH)COLOR_BTNSHADOW;
+  wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
   wc.lpszMenuName  = NULL;
   wc.lpszClassName = szClass;
 

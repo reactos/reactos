@@ -546,7 +546,7 @@
 550 stub -noname GetTemplateInfoFromHandle
 551 stub -noname IShellFolder_CompareIDs
 
-@ stdcall AssocCreate(long long long long ptr ptr)
+@ stdcall AssocCreate(double double ptr ptr)
 @ stdcall AssocIsDangerous(long)
 @ stdcall AssocQueryKeyA(long long str ptr ptr)
 @ stdcall AssocQueryKeyW(long long wstr ptr ptr)
@@ -768,11 +768,11 @@
 @ stdcall StrCpyW (ptr wstr)
 @ stdcall StrDupA (str)
 @ stdcall StrDupW (wstr)
-@ stdcall StrFormatByteSize64A(long long ptr long)
+@ stdcall StrFormatByteSize64A(double ptr long)
 @ stdcall StrFormatByteSizeA(long ptr long)
-@ stdcall StrFormatByteSizeW(long long ptr long)
-@ stdcall StrFormatKBSizeA(long long str long)
-@ stdcall StrFormatKBSizeW(long long wstr long)
+@ stdcall StrFormatByteSizeW(double ptr long)
+@ stdcall StrFormatKBSizeA(double str long)
+@ stdcall StrFormatKBSizeW(double wstr long)
 @ stdcall StrFromTimeIntervalA(ptr long long long)
 @ stdcall StrFromTimeIntervalW(ptr long long long)
 @ stdcall StrIsIntlEqualA(long str str long)

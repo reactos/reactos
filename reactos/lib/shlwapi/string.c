@@ -1811,7 +1811,7 @@ HRESULT WINAPI SHStrDupA(LPCSTR lpszStr, LPWSTR * lppszDest)
 
   if (*lppszDest)
   {
-    MultiByteToWideChar(0, 0, lpszStr, -1, *lppszDest, len);
+    MultiByteToWideChar(0, 0, lpszStr, -1, *lppszDest, len/sizeof(WCHAR));
     hRet = S_OK;
   }
   else
