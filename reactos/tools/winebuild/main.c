@@ -42,14 +42,17 @@
 #include "build.h"
 
 int UsePIC = 0;
-int nb_debug_channels = 0;
 int nb_lib_paths = 0;
 int nb_errors = 0;
 int display_warnings = 0;
 int kill_at = 0;
+int verbose = 0;
+int save_temps = 0;
 
 #if defined(__i386__) || defined(__x86_64__)
 enum target_cpu target_cpu = CPU_x86;
+#elif defined(__x86_64__)
+enum target_cpu target_cpu = CPU_x86_64;
 #elif defined(__sparc__)
 enum target_cpu target_cpu = CPU_SPARC;
 #elif defined(__ALPHA__)
@@ -70,18 +73,18 @@ enum target_platform target_platform = PLATFORM_WINDOWS;
 enum target_platform target_platform = PLATFORM_UNSPECIFIED;
 #endif
 
-char **debug_channels = NULL;
 char **lib_path = NULL;
 
 char *input_file_name = NULL;
 char *spec_file_name = NULL;
 const char *output_file_name = NULL;
+static const char *output_file_source_name;
 
+char *as_command = NULL;
 char *ld_command = NULL;
 char *nm_command = NULL;
 
 static FILE *output_file;
-static const char *current_src_dir;
 static int nb_res_files;
 static char **res_files;
 
@@ -92,7 +95,6 @@ enum exec_mode_values
     MODE_DLL,
     MODE_EXE,
     MODE_DEF,
-    MODE_DEBUG,
     MODE_RELAY16,
     MODE_RELAY32,
     MODE_PEDLL
@@ -111,6 +113,7 @@ static const struct
     { "i586",    CPU_x86 },
     { "i686",    CPU_x86 },
     { "i786",    CPU_x86 },
+    { "x86_64",  CPU_x86_64 },
     { "sparc",   CPU_SPARC },
     { "alpha",   CPU_ALPHA },
     { "powerpc", CPU_POWERPC }
@@ -204,6 +207,12 @@ static void set_target( const char *target )
 
     free( spec );
 
+    if (!as_command)
+    {
+        as_command = xmalloc( strlen(target) + sizeof("-as") );
+        strcpy( as_command, target );
+        strcat( as_command, "-as" );
+    }
     if (!ld_command)
     {
         ld_command = xmalloc( strlen(target) + sizeof("-ld") );
@@ -236,7 +245,7 @@ static void exit_on_signal( int sig )
 static const char usage_str[] =
 "Usage: winebuild [OPTIONS] [FILES]\n\n"
 "Options:\n"
-"   -C, --source-dir=DIR     Look for source files in DIR\n"
+"       --as-cmd=AS          Command to use for assembling (default: as)\n"
 "   -d, --delay-lib=LIB      Import the specified library in delayed mode\n"
 "   -D SYM                   Ignored for C flags compatibility\n"
 "   -E, --export=FILE        Export the symbols defined in the .spec or .def file\n"
@@ -257,16 +266,17 @@ static const char usage_str[] =
 "   -N, --dll-name=DLLNAME   Set the DLL name (default: from input file name)\n"
 "   -o, --output=NAME        Set the output file name (default: stdout)\n"
 "   -r, --res=RSRC.RES       Load resources from RSRC.RES\n"
+"       --save-temps         Do not delete the generated intermediate files\n"
 "       --subsystem=SUBSYS   Set the subsystem (one of native, windows, console)\n"
 "       --target=TARGET      Specify target CPU and platform for cross-compiling\n"
 "   -u, --undefined=SYMBOL   Add an undefined reference to SYMBOL when linking\n"
+"   -v, --verbose            Display the programs invoked\n"
 "       --version            Print the version and exit\n"
 "   -w, --warnings           Turn on warnings\n"
 "\nMode options:\n"
 "       --dll                Build a .c file from a .spec or .def file\n"
 "       --def                Build a .def file from a .spec file\n"
 "       --exe                Build a .c file for an executable\n"
-"       --debug [FILES]      Build a .c file with the debug channels declarations\n"
 "       --relay16            Build the 16-bit relay assembly routines\n"
 "       --relay32            Build the 32-bit relay assembly routines\n"
 "       --pedll              Build a .c file for PE dll\n\n"
@@ -277,35 +287,36 @@ enum long_options_values
     LONG_OPT_DLL = 1,
     LONG_OPT_DEF,
     LONG_OPT_EXE,
-    LONG_OPT_DEBUG,
+    LONG_OPT_ASCMD,
     LONG_OPT_LDCMD,
     LONG_OPT_NMCMD,
     LONG_OPT_RELAY16,
     LONG_OPT_RELAY32,
+    LONG_OPT_SAVE_TEMPS,
     LONG_OPT_SUBSYSTEM,
     LONG_OPT_VERSION,
     LONG_OPT_TARGET,
     LONG_OPT_PEDLL
 };
 
-static const char short_options[] = "C:D:E:F:H:I:K:L:M:N:d:e:f:hi:kl:m:o:r:u:w";
+static const char short_options[] = "C:D:E:F:H:I:K:L:M:N:d:e:f:hi:kl:m:o:r:u:vw";
 
 static const struct option long_options[] =
 {
     { "dll",      0, 0, LONG_OPT_DLL },
     { "def",      0, 0, LONG_OPT_DEF },
     { "exe",      0, 0, LONG_OPT_EXE },
-    { "debug",    0, 0, LONG_OPT_DEBUG },
+    { "as-cmd",   1, 0, LONG_OPT_ASCMD },
     { "ld-cmd",   1, 0, LONG_OPT_LDCMD },
     { "nm-cmd",   1, 0, LONG_OPT_NMCMD },
     { "relay16",  0, 0, LONG_OPT_RELAY16 },
     { "relay32",  0, 0, LONG_OPT_RELAY32 },
+    { "save-temps",0, 0, LONG_OPT_SAVE_TEMPS },
     { "subsystem",1, 0, LONG_OPT_SUBSYSTEM },
     { "target",   1, 0, LONG_OPT_TARGET },
     { "version",  0, 0, LONG_OPT_VERSION },
     { "pedll",    1, 0, LONG_OPT_PEDLL },
     /* aliases for short options */
-    { "source-dir",    1, 0, 'C' },
     { "delay-lib",     1, 0, 'd' },
     { "export",        1, 0, 'E' },
     { "entry",         1, 0, 'e' },
@@ -321,6 +332,7 @@ static const struct option long_options[] =
     { "output",        1, 0, 'o' },
     { "res",           1, 0, 'r' },
     { "undefined",     1, 0, 'u' },
+    { "verbose",       0, 0, 'v' },
     { "warnings",      0, 0, 'w' },
     { NULL,            0, 0, 0 }
 };
@@ -347,9 +359,6 @@ static char **parse_options( int argc, char **argv, DLLSPEC *spec )
     {
         switch(optc)
         {
-        case 'C':
-            current_src_dir = optarg;
-            break;
         case 'D':
             /* ignored */
             break;
@@ -416,12 +425,25 @@ static char **parse_options( int argc, char **argv, DLLSPEC *spec )
             add_import_dll( optarg, NULL );
             break;
         case 'o':
-            if (unlink( optarg ) == -1 && errno != ENOENT)
-                fatal_error( "Unable to create output file '%s'\n", optarg );
-            if (!(output_file = fopen( optarg, "w" )))
-                fatal_error( "Unable to create output file '%s'\n", optarg );
-            output_file_name = xstrdup(optarg);
-            atexit( cleanup );  /* make sure we remove the output file on exit */
+            {
+                char *ext = strrchr( optarg, '.' );
+
+                if (unlink( optarg ) == -1 && errno != ENOENT)
+                    fatal_error( "Unable to create output file '%s'\n", optarg );
+                if (ext && !strcmp( ext, ".o" ))
+                {
+                    output_file_source_name = get_temp_file_name( optarg, ".s" );
+                    if (!(output_file = fopen( output_file_source_name, "w" )))
+                        fatal_error( "Unable to create output file '%s'\n", optarg );
+                }
+                else
+                {
+                    if (!(output_file = fopen( optarg, "w" )))
+                        fatal_error( "Unable to create output file '%s'\n", optarg );
+                }
+                output_file_name = xstrdup(optarg);
+                atexit( cleanup );  /* make sure we remove the output file on exit */
+            }
             break;
         case 'r':
             res_files = xrealloc( res_files, (nb_res_files+1) * sizeof(*res_files) );
@@ -429,6 +451,9 @@ static char **parse_options( int argc, char **argv, DLLSPEC *spec )
             break;
         case 'u':
             add_extra_ld_symbol( optarg );
+            break;
+        case 'v':
+            verbose++;
             break;
         case 'w':
             display_warnings = 1;
@@ -443,8 +468,8 @@ static char **parse_options( int argc, char **argv, DLLSPEC *spec )
             set_exec_mode( MODE_EXE );
             if (!spec->subsystem) spec->subsystem = IMAGE_SUBSYSTEM_WINDOWS_GUI;
             break;
-        case LONG_OPT_DEBUG:
-            set_exec_mode( MODE_DEBUG );
+        case LONG_OPT_ASCMD:
+            as_command = xstrdup( optarg );
             break;
         case LONG_OPT_LDCMD:
             ld_command = xstrdup( optarg );
@@ -457,6 +482,9 @@ static char **parse_options( int argc, char **argv, DLLSPEC *spec )
             break;
         case LONG_OPT_RELAY32:
             set_exec_mode( MODE_RELAY32 );
+            break;
+        case LONG_OPT_SAVE_TEMPS:
+            save_temps = 1;
             break;
         case LONG_OPT_SUBSYSTEM:
             set_subsystem( optarg, spec );
@@ -597,9 +625,6 @@ int main(int argc, char **argv)
         if (!parse_input_file( spec )) break;
         BuildDef32File( output_file, spec );
         break;
-    case MODE_DEBUG:
-        BuildDebugFile( output_file, current_src_dir, argv );
-        break;
     case MODE_RELAY16:
         fatal_error( "Win16 relays are not supported in ReactOS version of winebuild\n" );
         break;
@@ -619,6 +644,7 @@ int main(int argc, char **argv)
     if (output_file_name)
     {
         fclose( output_file );
+        if (output_file_source_name) assemble_file( output_file_source_name, output_file_name );
         output_file_name = NULL;
     }
     return 0;

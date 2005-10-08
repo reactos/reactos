@@ -1,14 +1,13 @@
 .\" -*- nroff -*-
-.TH WINEBUILD 1 "March 2003" "@PACKAGE_STRING@" "Wine dll builder"
+.TH WINEBUILD 1 "September 2005" "@PACKAGE_STRING@" "Wine dll builder"
 .SH NAME
 winebuild \- Wine dll builder
 .SH SYNOPSIS
 .BI winebuild\  [options]\ [input\ files]
 .SH DESCRIPTION
 .B winebuild
-generates the C and assembly files that are necessary to build a Wine
-dll, which is basically a Win32 dll encapsulated inside a Unix
-library.
+generates the assembly files that are necessary to build a Wine dll,
+which is basically a Win32 dll encapsulated inside a Unix library.
 .PP
 .B winebuild
 has different modes, depending on what kind of file it is asked to
@@ -20,11 +19,11 @@ You have to specify exactly one of the following options, depending on
 what you want winebuild to generate.
 .TP
 .BI \--dll
-Build a C file from a .spec file (see \fBSPEC FILE SYNTAX\fR for
-details), or from a standard Windows .def file. The .spec/.def file
-is specified via the -E option. The resulting C file must be compiled 
-and linked to the other object files to build a working Wine dll.
-In this mode, the
+Build an assembly file from a .spec file (see \fBSPEC FILE SYNTAX\fR
+for details), or from a standard Windows .def file. The
+.spec/.def file is specified via the -E option. The resulting file
+must be assembled and linked to the other object files to build a
+working Wine dll.  In this mode, the
 .I input files
 should be the list of all object files that will be linked into the
 final dll, to allow
@@ -33,27 +32,19 @@ to get the list of all undefined symbols that need to be imported from
 other dlls.
 .TP
 .BI \--exe
-Build a C file for an executable. This is basically the same as
+Build an assembly file for an executable. This is basically the same as
 the --dll mode except that it doesn't require a .spec/.def file as input,
 since an executable need not export functions. Some executables however
 do export functions, and for those a .spec/.def file can be specified via
 the -E option. The executable is named from the .spec/.def file name if 
-present, or explicitly through the -F option. The resulting C file must be 
-compiled and linked to the other object files to build a working Wine 
+present, or explicitly through the -F option. The resulting file must be 
+assembled and linked to the other object files to build a working Wine 
 executable, and all the other object files must be listed as
 .I input files.
 .TP
 .BI \--def
 Build a .def file from a spec file. The .spec file is specified via the
 -E option. This is used when building dlls with a PE (Win32) compiler.
-.TP
-.B \--debug
-Build a C file containing the definitions for debugging channels. In
-that mode the
-.I input files
-should be a list of C files to search for debug channel
-definitions. The resulting C file must be compiled and linked with the
-dll.
 .TP
 .B \--relay16
 Generate the assembly code for the 16-bit relay routines. This is for
@@ -64,10 +55,9 @@ Generate the assembly code for the 32-bit relay routines. This is for
 Wine internal usage only, you should never need to use this option.
 .SH OPTIONS
 .TP
-.BI \-C,\ --source-dir= directory
-Change to the specified directory before reading source files. Only
-meaningful in
-.BR \--debug\  mode.
+.BI \--as-cmd= as-command
+Specify the command to use to compile assembly files; the default is
+\fBas\fR.
 .TP
 .BI \-d,\ --delay-lib= name
 Set the delayed import mode for the specified library, which must be
@@ -131,10 +121,6 @@ Ignored for compatibility with the C compiler.
 Specify the command to use to link the object files; the default is
 \fBld\fR.
 .TP
-.BI \--nm-cmd= nm-command
-Specify the command to use to get the list of undefined symbols; the
-default is \fBnm\fR.
-.TP
 .BI \-L,\ --library-path= directory
 Append the specified directory to the list of directories that are
 searched for import libraries.
@@ -155,12 +141,19 @@ modules. The default is to use the base name of the spec file (without
 any extension). This is used for KERNEL, since it lives in
 KRNL386.EXE. It shouldn't be needed otherwise.
 .TP
+.BI \--nm-cmd= nm-command
+Specify the command to use to get the list of undefined symbols; the
+default is \fBnm\fR.
+.TP
 .BI \-o,\ --output= file
-Set the name of the output file (default is standard output).
+Set the name of the output file (default is standard output). If the
+output file name end in \fB.o\fR, the text output is sent to a
+temporary file that is then assembled to produce the specified .o
+file.
 .TP
 .BI \-r,\ --res= rsrc.res
 Load resources from the specified binary resource file. The
-\fIrsrc.res\fR can be produced from a source resource file with
+\fIrsrc.res\fR file can be produced from a source resource file with
 .BR wrc(1)
 (or with a Windows resource compiler).
 .br
@@ -170,6 +163,9 @@ can simply listed as
 and will automatically be handled correctly (though the
 .B \-r
 option will also work for Win32 files).
+.TP
+.B --save-temps
+Do not delete the various temporary files that \fBwinebuild\fR generates.
 .TP
 .BI --subsystem= subsystem[:major[.minor]]
 Set the subsystem of the executable, which can be one of the following:
@@ -200,6 +196,10 @@ as returned by config.sub.
 Add \fIsymbol\fR to the list of undefined symbols when invoking the
 linker. This makes it possible to force a specific module of a static
 library to be included when resolving imports.
+.TP
+.B \-v, --verbose
+Display the various subcommands being invoked by
+.B winebuild.
 .TP
 .B \--version
 Display the program version and exit.

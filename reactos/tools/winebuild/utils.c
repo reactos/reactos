@@ -30,8 +30,23 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef HAVE_UNISTD_H
+# include <unistd.h>
+#endif
 
 #include "build.h"
+
+#define MAX_TMP_FILES 8
+static const char *tmp_files[MAX_TMP_FILES];
+static unsigned int nb_tmp_files;
+
+/* atexit handler to clean tmp files */
+static void cleanup_tmp_files(void)
+{
+    unsigned int i;
+    for (i = 0; i < MAX_TMP_FILES; i++) if (tmp_files[i]) unlink( tmp_files[i] );
+}
+
 
 void *xmalloc (size_t size)
 {
@@ -150,6 +165,36 @@ void warning( const char *msg, ... )
     va_end( valist );
 }
 
+/* get a name for a temp file, automatically cleaned up on exit */
+char *get_temp_file_name( const char *prefix, const char *suffix )
+{
+    char *name;
+    const char *ext;
+    int fd;
+
+    assert( nb_tmp_files < MAX_TMP_FILES );
+    if (!nb_tmp_files && !save_temps) atexit( cleanup_tmp_files );
+
+    if (!prefix || !prefix[0]) prefix = "winebuild";
+    if (!suffix) suffix = "";
+    if (!(ext = strchr( prefix, '.' ))) ext = prefix + strlen(prefix);
+    name = xmalloc( sizeof("/tmp/") + (ext - prefix) + sizeof(".XXXXXX") + strlen(suffix) );
+    strcpy( name, "/tmp/" );
+    memcpy( name + 5, prefix, ext - prefix );
+    strcpy( name + 5 + (ext - prefix), ".XXXXXX" );
+    strcat( name, suffix );
+
+    /* first try without the /tmp/ prefix */
+    if ((fd = mkstemps( name + 5, strlen(suffix) )) != -1)
+        name += 5;
+    else if ((fd = mkstemps( name, strlen(suffix) )) == -1)
+        fatal_error( "could not generate a temp file\n" );
+
+    close( fd );
+    tmp_files[nb_tmp_files++] = name;
+    return name;
+}
+
 /* output a standard header for generated files */
 void output_standard_file_header( FILE *outfile )
 {
@@ -163,20 +208,19 @@ void output_standard_file_header( FILE *outfile )
 }
 
 /* dump a byte stream into the assembly code */
-void dump_bytes( FILE *outfile, const unsigned char *data, int len,
-                 const char *label, int constant )
+void dump_bytes( FILE *outfile, const void *buffer, unsigned int size )
 {
-    int i;
+    unsigned int i;
+    const unsigned char *ptr = buffer;
 
-    fprintf( outfile, "\nstatic %sunsigned char %s[%d] = {",
-             constant ? "const " : "", label, len );
-    for (i = 0; i < len; i++)
+    if (!size) return;
+    fprintf( outfile, "\t.byte " );
+    for (i = 0; i < size - 1; i++, ptr++)
     {
-        if (!(i & 7)) fprintf( outfile, "\n  " );
-        fprintf( outfile, "0x%02x", *data++ );
-        if (i < len - 1) fprintf( outfile, "," );
+        if ((i % 16) == 15) fprintf( outfile, "0x%02x\n\t.byte ", *ptr );
+        else fprintf( outfile, "0x%02x,", *ptr );
     }
-    fprintf( outfile, "\n};\n" );
+    fprintf( outfile, "0x%02x\n", *ptr );
 }
 
 
@@ -235,6 +279,26 @@ int remove_stdcall_decoration( char *name )
     for (p = end + 1; *p; p++) if (!isdigit(*p)) return -1;
     *end = 0;
     return atoi( end + 1 );
+}
+
+
+/*******************************************************************
+ *         assemble_file
+ *
+ * Run a file through the assembler.
+ */
+void assemble_file( const char *src_file, const char *obj_file )
+{
+    char *cmd;
+    int err;
+
+    if (!as_command) as_command = xstrdup("as");
+    cmd = xmalloc( strlen(as_command) + strlen(obj_file) + strlen(src_file) + 6 );
+    sprintf( cmd, "%s -o %s %s", as_command, obj_file, src_file );
+    if (verbose) fprintf( stderr, "%s\n", cmd );
+    err = system( cmd );
+    if (err) fatal_error( "%s failed with status %d\n", as_command, err );
+    free( cmd );
 }
 
 
@@ -319,6 +383,27 @@ const char *make_c_identifier( const char *str )
 }
 
 
+/*******************************************************************
+ *         get_stub_name
+ *
+ * Generate an internal name for a stub entry point.
+ */
+const char *get_stub_name( const ORDDEF *odp, const DLLSPEC *spec )
+{
+    static char buffer[256];
+    if (odp->name || odp->export_name)
+    {
+        char *p;
+        sprintf( buffer, "__wine_stub_%s", odp->name ? odp->name : odp->export_name );
+        /* make sure name is a legal C identifier */
+        for (p = buffer; *p; p++) if (!isalnum(*p) && *p != '_') break;
+        if (!*p) return buffer;
+    }
+    sprintf( buffer, "__wine_stub_%s_%d", make_c_identifier(spec->file_name), odp->ordinal );
+    return buffer;
+}
+
+
 /*****************************************************************
  *  Function:    get_alignment
  *
@@ -352,6 +437,7 @@ unsigned int get_alignment(unsigned int align)
     switch(target_cpu)
     {
     case CPU_x86:
+    case CPU_x86_64:
     case CPU_SPARC:
         if (target_platform != PLATFORM_APPLE) return align;
         /* fall through */
@@ -372,9 +458,28 @@ unsigned int get_page_size(void)
     switch(target_cpu)
     {
     case CPU_x86:     return 4096;
+    case CPU_x86_64:  return 4096;
     case CPU_POWERPC: return 4096;
     case CPU_SPARC:   return 8192;
     case CPU_ALPHA:   return 8192;
+    }
+    /* unreached */
+    assert(0);
+    return 0;
+}
+
+/* return the size of a pointer on the target CPU */
+unsigned int get_ptr_size(void)
+{
+    switch(target_cpu)
+    {
+    case CPU_x86:
+    case CPU_POWERPC:
+    case CPU_SPARC:
+    case CPU_ALPHA:
+        return 4;
+    case CPU_x86_64:
+        return 8;
     }
     /* unreached */
     assert(0);
@@ -420,20 +525,48 @@ const char *func_declaration( const char *func )
     return buffer;
 }
 
-/* return a size declaration for an assembly function */
-const char *func_size( const char *func )
+/* output a size declaration for an assembly function */
+void output_function_size( FILE *outfile, const char *name )
+{
+    switch (target_platform)
+    {
+    case PLATFORM_APPLE:
+    case PLATFORM_WINDOWS:
+        break;
+    default:
+        fprintf( outfile, "\t.size %s, .-%s\n", name, name );
+        break;
+    }
+}
+
+/* return a global symbol declaration for an assembly symbol */
+const char *asm_globl( const char *func )
 {
     static char buffer[256];
 
     switch (target_platform)
     {
     case PLATFORM_APPLE:
+        sprintf( buffer, "\t.globl _%s\n\t.private_extern _%s\n_%s:", func, func, func );
+        return buffer;
     case PLATFORM_WINDOWS:
-        return "";
+        sprintf( buffer, "\t.globl _%s\n_%s:", func, func );
+        return buffer;
     default:
-        sprintf( buffer, ".size %s, .-%s", func, func );
+        sprintf( buffer, "\t.globl %s\n\t.hidden %s\n%s:", func, func, func );
         return buffer;
     }
+}
+
+const char *get_asm_ptr_keyword(void)
+{
+    switch(get_ptr_size())
+    {
+    case 4: return ".long";
+    case 8: return ".quad";
+    }
+    assert(0);
+    return NULL;
 }
 
 const char *get_asm_string_keyword(void)
@@ -454,5 +587,14 @@ const char *get_asm_short_keyword(void)
     {
     case PLATFORM_SVR4: return ".half";
     default:            return ".short";
+    }
+}
+
+const char *get_asm_string_section(void)
+{
+    switch (target_platform)
+    {
+    case PLATFORM_APPLE: return ".cstring";
+    default:             return ".section .rodata";
     }
 }

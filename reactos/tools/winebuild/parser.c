@@ -272,7 +272,8 @@ static int parse_spec_export( ORDDEF *odp, DLLSPEC *spec )
         else if (!strcmp(token, "double"))
         {
             odp->u.func.arg_types[i++] = 'l';
-            if (i < sizeof(odp->u.func.arg_types)) odp->u.func.arg_types[i] = 'l';
+            if (get_ptr_size() == 4 && i < sizeof(odp->u.func.arg_types))
+                odp->u.func.arg_types[i] = 'l';
         }
         else
         {
@@ -352,6 +353,11 @@ static int parse_spec_equate( ORDDEF *odp, DLLSPEC *spec )
         error( "Expected number value, got '%s'\n", token );
         return 0;
     }
+    if (value < -0x8000 || value > 0xffff)
+    {
+        error( "Value %d for absolute symbol doesn't fit in 16 bits\n", value );
+        value = 0;
+    }
     odp->u.abs.value = value;
     return 1;
 }
@@ -366,6 +372,7 @@ static int parse_spec_stub( ORDDEF *odp, DLLSPEC *spec )
 {
     odp->u.func.arg_types[0] = '\0';
     odp->link_name = xstrdup("");
+    odp->flags |= FLAG_I386;  /* don't bother generating stubs for Winelib */
     return 1;
 }
 
@@ -556,11 +563,13 @@ error:
 }
 
 
-static int name_compare( const void *name1, const void *name2 )
+static int name_compare( const void *ptr1, const void *ptr2 )
 {
-    const ORDDEF *odp1 = *(const ORDDEF * const *)name1;
-    const ORDDEF *odp2 = *(const ORDDEF * const *)name2;
-    return strcmp( odp1->name, odp2->name );
+    const ORDDEF *odp1 = *(const ORDDEF * const *)ptr1;
+    const ORDDEF *odp2 = *(const ORDDEF * const *)ptr2;
+    const char *name1 = odp1->name ? odp1->name : odp1->export_name;
+    const char *name2 = odp2->name ? odp2->name : odp2->export_name;
+    return strcmp( name1, name2 );
 }
 
 /*******************************************************************
@@ -570,30 +579,47 @@ static int name_compare( const void *name1, const void *name2 )
  */
 static void assign_names( DLLSPEC *spec )
 {
-    int i, j;
+    int i, j, nb_exp_names = 0;
+    ORDDEF **all_names;
 
     spec->nb_names = 0;
     for (i = 0; i < spec->nb_entry_points; i++)
         if (spec->entry_points[i].name) spec->nb_names++;
-    if (!spec->nb_names) return;
+        else if (spec->entry_points[i].export_name) nb_exp_names++;
 
-    spec->names = xmalloc( spec->nb_names * sizeof(spec->names[0]) );
+    if (!spec->nb_names && !nb_exp_names) return;
+
+    /* check for duplicates */
+
+    all_names = xmalloc( (spec->nb_names + nb_exp_names) * sizeof(all_names[0]) );
     for (i = j = 0; i < spec->nb_entry_points; i++)
-        if (spec->entry_points[i].name) spec->names[j++] = &spec->entry_points[i];
+        if (spec->entry_points[i].name || spec->entry_points[i].export_name)
+            all_names[j++] = &spec->entry_points[i];
 
-    /* sort the list of names */
-    qsort( spec->names, spec->nb_names, sizeof(spec->names[0]), name_compare );
+    qsort( all_names, j, sizeof(all_names[0]), name_compare );
 
-    /* check for duplicate names */
-    for (i = 0; i < spec->nb_names - 1; i++)
+    for (i = 0; i < j - 1; i++)
     {
-        if (!strcmp( spec->names[i]->name, spec->names[i+1]->name ))
+        const char *name1 = all_names[i]->name ? all_names[i]->name : all_names[i]->export_name;
+        const char *name2 = all_names[i+1]->name ? all_names[i+1]->name : all_names[i+1]->export_name;
+        if (!strcmp( name1, name2 ))
         {
-            current_line = max( spec->names[i]->lineno, spec->names[i+1]->lineno );
+            current_line = max( all_names[i]->lineno, all_names[i+1]->lineno );
             error( "'%s' redefined\n%s:%d: First defined here\n",
-                   spec->names[i]->name, input_file_name,
-                   min( spec->names[i]->lineno, spec->names[i+1]->lineno ) );
+                   name1, input_file_name,
+                   min( all_names[i]->lineno, all_names[i+1]->lineno ) );
         }
+    }
+    free( all_names );
+
+    if (spec->nb_names)
+    {
+        spec->names = xmalloc( spec->nb_names * sizeof(spec->names[0]) );
+        for (i = j = 0; i < spec->nb_entry_points; i++)
+            if (spec->entry_points[i].name) spec->names[j++] = &spec->entry_points[i];
+
+        /* sort the list of names */
+        qsort( spec->names, spec->nb_names, sizeof(spec->names[0]), name_compare );
     }
 }
 
@@ -789,7 +815,7 @@ static int parse_def_export( char *name, DLLSPEC *spec )
     else
     {
         odp->type = TYPE_STDCALL;
-        args /= sizeof(int);
+        args /= get_ptr_size();
         if (args >= sizeof(odp->u.func.arg_types))
         {
             error( "Too many arguments in stdcall function '%s'\n", odp->name );
@@ -937,82 +963,5 @@ int parse_def_file( FILE *file, DLLSPEC *spec )
     current_line = 0;  /* no longer parsing the input file */
     assign_names( spec );
     assign_ordinals( spec );
-    return !nb_errors;
-}
-
-
-/*******************************************************************
- *         add_debug_channel
- */
-static void add_debug_channel( const char *name )
-{
-    int i;
-
-    for (i = 0; i < nb_debug_channels; i++)
-        if (!strcmp( debug_channels[i], name )) return;
-
-    debug_channels = xrealloc( debug_channels, (nb_debug_channels + 1) * sizeof(*debug_channels));
-    debug_channels[nb_debug_channels++] = xstrdup(name);
-}
-
-
-/*******************************************************************
- *         parse_debug_channels
- *
- * Parse a source file and extract the debug channel definitions.
- */
-int parse_debug_channels( const char *srcdir, const char *filename )
-{
-    FILE *file;
-    int eol_seen = 1;
-
-    file = open_input_file( srcdir, filename );
-    while (fgets( ParseBuffer, sizeof(ParseBuffer), file ))
-    {
-        char *channel, *end, *p = ParseBuffer;
-
-        p = ParseBuffer + strlen(ParseBuffer) - 1;
-        if (!eol_seen)  /* continuation line */
-        {
-            eol_seen = (*p == '\n');
-            continue;
-        }
-        if ((eol_seen = (*p == '\n'))) *p = 0;
-
-        p = ParseBuffer;
-        while (isspace(*p)) p++;
-        if (!memcmp( p, "WINE_DECLARE_DEBUG_CHANNEL", 26 ) ||
-            !memcmp( p, "WINE_DEFAULT_DEBUG_CHANNEL", 26 ))
-        {
-            p += 26;
-            while (isspace(*p)) p++;
-            if (*p != '(')
-            {
-                error( "invalid debug channel specification '%s'\n", ParseBuffer );
-                goto next;
-            }
-            p++;
-            while (isspace(*p)) p++;
-            if (!isalpha(*p))
-            {
-                error( "invalid debug channel specification '%s'\n", ParseBuffer );
-                goto next;
-            }
-            channel = p;
-            while (isalnum(*p) || *p == '_') p++;
-            end = p;
-            while (isspace(*p)) p++;
-            if (*p != ')')
-            {
-                error( "invalid debug channel specification '%s'\n", ParseBuffer );
-                goto next;
-            }
-            *end = 0;
-            add_debug_channel( channel );
-        }
-    next:
-        current_line++;
-    }
-    close_input_file( file );
     return !nb_errors;
 }

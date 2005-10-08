@@ -239,189 +239,93 @@ static void free_resource_tree( struct res_tree *tree )
     free( tree );
 }
 
-inline static void put_byte( unsigned char **buffer, unsigned char val )
-{
-    *(*buffer)++ = val;
-}
-
-inline static void put_word( unsigned char **buffer, WORD val )
-{
-#ifdef WORDS_BIGENDIAN
-    put_byte( buffer, HIBYTE(val) );
-    put_byte( buffer, LOBYTE(val) );
-#else
-    put_byte( buffer, LOBYTE(val) );
-    put_byte( buffer, HIBYTE(val) );
-#endif
-}
-
 /* output a string preceded by its length */
-static void output_string( unsigned char **buffer, const char *str )
+static void output_string( FILE *outfile, const char *str )
 {
-    int len = strlen(str);
-    put_byte( buffer, len );
-    while (len--) put_byte( buffer, *str++ );
-}
-
-/* get the resource data total size */
-unsigned int get_res16_data_size( DLLSPEC *spec, unsigned int res_offset, unsigned int alignment )
-{
-    const struct resource *res;
-    unsigned int i, total;
-    unsigned int align_mask = (1 << alignment) - 1;
-
-    if (!spec->nb_resources) return 0;
-
-    /* add padding at the beginning if needed so that resources are properly aligned */
-    total = ((res_offset + align_mask) & ~align_mask) - res_offset;
-
-    for (i = 0, res = spec->resources; i < spec->nb_resources; i++, res++)
-        total += (res->data_size + align_mask) & ~align_mask;
-
-    return total;
+    unsigned int i, len = strlen(str);
+    fprintf( outfile, "\t.byte 0x%02x", len );
+    for (i = 0; i < len; i++) fprintf( outfile, ",0x%02x", (unsigned char)str[i] );
+    fprintf( outfile, " /* %s */\n", str );
 }
 
 /* output the resource data */
-unsigned int output_res16_data( unsigned char **ret_buf, DLLSPEC *spec,
-                                unsigned int res_offset, unsigned int alignment )
+void output_res16_data( FILE *outfile, DLLSPEC *spec )
 {
     const struct resource *res;
-    unsigned char *p;
-    unsigned int i, total, padding;
-    unsigned int align_mask = (1 << alignment) - 1;
+    unsigned int i;
 
-    if (!spec->nb_resources) return 0;
+    if (!spec->nb_resources) return;
 
-    /* add padding at the beginning if needed so that resources are properly aligned */
-    padding = ((res_offset + align_mask) & ~align_mask) - res_offset;
-
-    for (i = total = 0, res = spec->resources; i < spec->nb_resources; i++, res++)
-        total += (res->data_size + align_mask) & ~align_mask;
-
-    *ret_buf = p = xmalloc( total + padding );
-    memset( p, 0, padding );
-    p += padding;
     for (i = 0, res = spec->resources; i < spec->nb_resources; i++, res++)
     {
-        unsigned int size = (res->data_size + align_mask) & ~align_mask;
-        memcpy( p, res->data, res->data_size );
-        memset( p + res->data_size, 0, size - res->data_size );
-        p += size;
+        fprintf( outfile, ".L__wine_spec_resource_%u:\n", i );
+        dump_bytes( outfile, res->data, res->data_size );
+        fprintf( outfile, ".L__wine_spec_resource_%u_end:\n", i );
     }
-    return total;
-}
-
-/* get the resource definitions total size */
-unsigned int get_res16_directory_size( DLLSPEC *spec )
-{
-    unsigned int i, j, total_size;
-    struct res_tree *tree;
-    const struct res_type *type;
-    const struct resource *res;
-
-    tree = build_resource_tree( spec );
-
-    total_size = 4;  /* alignment + terminator */
-    total_size += tree->nb_types * 8;  /* typeinfo structures */
-    total_size += spec->nb_resources * 12;  /* nameinfo structures */
-
-    for (i = 0, type = tree->types; i < tree->nb_types; i++, type++)
-    {
-        if (type->type->str) total_size += strlen(type->type->str) + 1;
-        for (j = 0, res = type->res; j < type->nb_names; j++, res++)
-            if (res->name.str) total_size += strlen(res->name.str) + 1;
-    }
-    total_size++;  /* final terminator */
-    if (total_size & 1) total_size++;
-    return total_size;
 }
 
 /* output the resource definitions */
-unsigned int output_res16_directory( unsigned char **ret_buf, DLLSPEC *spec,
-                                     unsigned int res_offset, unsigned int alignment )
+void output_res16_directory( FILE *outfile, DLLSPEC *spec, const char *header_name )
 {
-    int offset;
-    unsigned int i, j, total_size;
-    unsigned int align_mask = (1 << alignment) - 1;
+    unsigned int i, j;
     struct res_tree *tree;
     const struct res_type *type;
     const struct resource *res;
-    unsigned char *buffer;
 
     tree = build_resource_tree( spec );
 
-    /* make sure data offset is properly aligned */
-    res_offset = (res_offset + align_mask) & ~align_mask;
-
-    /* first compute total size */
-
-    offset = 4;  /* alignment + terminator */
-    offset += tree->nb_types * 8;  /* typeinfo structures */
-    offset += spec->nb_resources * 12;  /* nameinfo structures */
-
-    total_size = offset;
-
-    for (i = 0, type = tree->types; i < tree->nb_types; i++, type++)
-    {
-        if (type->type->str) total_size += strlen(type->type->str) + 1;
-        for (j = 0, res = type->res; j < type->nb_names; j++, res++)
-            if (res->name.str) total_size += strlen(res->name.str) + 1;
-    }
-    total_size++;  /* final terminator */
-    if (total_size & 1) total_size++;
-    *ret_buf = buffer = xmalloc( total_size );
-
-    put_word( &buffer, alignment );
+    fprintf( outfile, "\n.L__wine_spec_ne_rsrctab:\n" );
+    fprintf( outfile, "\t%s 0\n", get_asm_short_keyword() );  /* alignment */
 
     /* type and name structures */
 
     for (i = 0, type = tree->types; i < tree->nb_types; i++, type++)
     {
         if (type->type->str)
-        {
-            put_word( &buffer, offset );
-            offset += strlen(type->type->str) + 1;
-        }
+            fprintf( outfile, "\t%s .L__wine_spec_restype_%u-.L__wine_spec_ne_rsrctab\n",
+                     get_asm_short_keyword(), i );
         else
-            put_word( &buffer, type->type->id | 0x8000 );
+            fprintf( outfile, "\t%s 0x%04x\n", get_asm_short_keyword(), type->type->id | 0x8000 );
 
-        put_word( &buffer, type->nb_names );
-        put_word( &buffer, 0 );
-        put_word( &buffer, 0 );
+        fprintf( outfile, "\t%s %u,0,0\n", get_asm_short_keyword(), type->nb_names );
 
         for (j = 0, res = type->res; j < type->nb_names; j++, res++)
         {
-            put_word( &buffer, res_offset >> alignment );
-            put_word( &buffer, (res->data_size + align_mask) >> alignment );
-            put_word( &buffer, res->memopt );
+            fprintf( outfile, "\t%s .L__wine_spec_resource_%u-%s\n",
+                     get_asm_short_keyword(), res - spec->resources, header_name );
+            fprintf( outfile, "\t%s .L__wine_spec_resource_%u_end-.L__wine_spec_resource_%u\n",
+                     get_asm_short_keyword(), res - spec->resources, res - spec->resources );
+            fprintf( outfile, "\t%s 0x%04x\n", get_asm_short_keyword(), res->memopt );
             if (res->name.str)
-            {
-                put_word( &buffer, offset );
-                offset += strlen(res->name.str) + 1;
-            }
+                fprintf( outfile, "\t%s .L__wine_spec_resname_%u_%u-.L__wine_spec_ne_rsrctab\n",
+                         get_asm_short_keyword(), i, j );
             else
-                put_word( &buffer, res->name.id | 0x8000 );
-            put_word( &buffer, 0 );
-            put_word( &buffer, 0 );
-            res_offset += (res->data_size + align_mask) & ~align_mask;
+                fprintf( outfile, "\t%s 0x%04x\n", get_asm_short_keyword(), res->name.id | 0x8000 );
+
+            fprintf( outfile, "\t%s 0,0\n", get_asm_short_keyword() );
         }
     }
-    put_word( &buffer, 0 );  /* terminator */
+    fprintf( outfile, "\t%s 0\n", get_asm_short_keyword() );  /* terminator */
 
     /* name strings */
 
     for (i = 0, type = tree->types; i < tree->nb_types; i++, type++)
     {
-        if (type->type->str) output_string( &buffer, type->type->str );
+        if (type->type->str)
+        {
+            fprintf( outfile, ".L__wine_spec_restype_%u:\n", i );
+            output_string( outfile, type->type->str );
+        }
         for (j = 0, res = type->res; j < type->nb_names; j++, res++)
         {
-            if (res->name.str) output_string( &buffer, res->name.str );
+            if (res->name.str)
+            {
+                fprintf( outfile, ".L__wine_spec_resname_%u_%u:\n", i, j );
+                output_string( outfile, res->name.str );
+            }
         }
     }
-    put_byte( &buffer, 0 );  /* names terminator */
-    if ((buffer - *ret_buf) & 1) put_byte( &buffer, 0 );  /* align on word boundary */
-    assert( buffer - *ret_buf == total_size );
+    fprintf( outfile, "\t.byte 0\n" );  /* names terminator */
 
     free_resource_tree( tree );
-    return total_size;
 }
