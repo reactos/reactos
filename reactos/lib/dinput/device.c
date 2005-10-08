@@ -80,7 +80,10 @@ void _dump_EnumObjects_flags(DWORD dwFlags) {
 	    FE(DIDFT_NODATA),	    
 	    FE(DIDFT_FFACTUATOR),
 	    FE(DIDFT_FFEFFECTTRIGGER),
-	    FE(DIDFT_OUTPUT)
+	    FE(DIDFT_OUTPUT),
+	    FE(DIDFT_VENDORDEFINED),
+	    FE(DIDFT_ALIAS),
+	    FE(DIDFT_OPTIONAL)
 #undef FE
 	};
 	type = (dwFlags & 0xFF0000FF);
@@ -290,12 +293,12 @@ DataFormat *create_DataFormat(const DIDATAFORMAT *wine_format, LPCDIDATAFORMAT a
     int index = 0;
     DWORD next = 0;
     
-    ret = (DataFormat *) HeapAlloc(GetProcessHeap(), 0, sizeof(DataFormat));
+    ret = HeapAlloc(GetProcessHeap(), 0, sizeof(DataFormat));
     
-    done = (int *) HeapAlloc(GetProcessHeap(), 0, sizeof(int) * asked_format->dwNumObjs);
+    done = HeapAlloc(GetProcessHeap(), 0, sizeof(int) * asked_format->dwNumObjs);
     memset(done, 0, sizeof(int) * asked_format->dwNumObjs);
     
-    dt = (DataTransform *) HeapAlloc(GetProcessHeap(), 0, asked_format->dwNumObjs * sizeof(DataTransform));
+    dt = HeapAlloc(GetProcessHeap(), 0, asked_format->dwNumObjs * sizeof(DataTransform));
     
     TRACE("Creating DataTransform : \n");
     
@@ -310,13 +313,18 @@ DataFormat *create_DataFormat(const DIDATAFORMAT *wine_format, LPCDIDATAFORMAT a
 		 * the GUID of the Wine object.
 		 */
 		((asked_format->rgodf[j].pguid == NULL) ||
+		 (wine_format->rgodf[i].pguid == NULL) ||
 		 (IsEqualGUID(wine_format->rgodf[i].pguid, asked_format->rgodf[j].pguid)))
 		&&
 		(/* Then check if it accepts any instance id, and if not, if it matches Wine's
 		  * instance id.
 		  */
-		 ((asked_format->rgodf[j].dwType & 0x00FFFF00) == DIDFT_ANYINSTANCE) ||
-		 (wine_format->rgodf[i].dwType & asked_format->rgodf[j].dwType))) {
+		 (DIDFT_GETINSTANCE(asked_format->rgodf[j].dwType) == 0xFFFF) ||
+		 (DIDFT_GETINSTANCE(asked_format->rgodf[j].dwType) == 0x00FF) || /* This is mentionned in no DX docs, but it works fine - tested on WinXP */
+		 (DIDFT_GETINSTANCE(asked_format->rgodf[j].dwType) == DIDFT_GETINSTANCE(wine_format->rgodf[i].dwType)))
+		&&
+		( /* Then if the asked type matches the one Wine provides */
+		 wine_format->rgodf[i].dwType & asked_format->rgodf[j].dwType)) {
 		
 		done[j] = 1;
 		
@@ -329,19 +337,19 @@ DataFormat *create_DataFormat(const DIDATAFORMAT *wine_format, LPCDIDATAFORMAT a
 		TRACE("       * dwType: %08lx\n", asked_format->rgodf[j].dwType);
 		TRACE("         "); _dump_EnumObjects_flags(asked_format->rgodf[j].dwType); TRACE("\n");
 		
-		TRACE("   - Wine  (%d) :\n", j);
+		TRACE("   - Wine  (%d) :\n", i);
 		TRACE("       * GUID: %s ('%s')\n",
-		      debugstr_guid(wine_format->rgodf[j].pguid),
-		      _dump_dinput_GUID(wine_format->rgodf[j].pguid));
-		TRACE("       * Offset: %3ld\n", wine_format->rgodf[j].dwOfs);
-		TRACE("       * dwType: %08lx\n", wine_format->rgodf[j].dwType);
-		TRACE("         "); _dump_EnumObjects_flags(wine_format->rgodf[j].dwType); TRACE("\n");
+		      debugstr_guid(wine_format->rgodf[i].pguid),
+		      _dump_dinput_GUID(wine_format->rgodf[i].pguid));
+		TRACE("       * Offset: %3ld\n", wine_format->rgodf[i].dwOfs);
+		TRACE("       * dwType: %08lx\n", wine_format->rgodf[i].dwType);
+		TRACE("         "); _dump_EnumObjects_flags(wine_format->rgodf[i].dwType); TRACE("\n");
 		
 		if (wine_format->rgodf[i].dwType & DIDFT_BUTTON)
 		    dt[index].size = sizeof(BYTE);
 		else
 		    dt[index].size = sizeof(DWORD);
-		dt[index].offset_in  = wine_format ->rgodf[i].dwOfs;
+		dt[index].offset_in = wine_format->rgodf[i].dwOfs;
                 if (asked_format->rgodf[j].dwOfs < next) {
                     WARN("bad format: dwOfs=%ld, changing to %ld\n", asked_format->rgodf[j].dwOfs, next);
 		    dt[index].offset_out = next;
@@ -409,7 +417,7 @@ BOOL DIEnumDevicesCallbackAtoW(LPCDIDEVICEOBJECTINSTANCEA lpddi, LPVOID lpvRef) 
 
     data = (device_enumobjects_AtoWcb_data*) lpvRef;
     
-    memset(&ddtmp, 0, sizeof(DIDEVICEINSTANCEW)); 
+    memset(&ddtmp, 0, sizeof(ddtmp));
     
     ddtmp.dwSize = sizeof(DIDEVICEINSTANCEW);
     ddtmp.guidType     = lpddi->guidType;
@@ -749,8 +757,6 @@ HRESULT WINAPI IDirectInputDevice2AImpl_EnumCreatedEffectObjects(
 {
     FIXME("(this=%p,%p,%p,0x%08lx): stub!\n",
 	  iface, lpCallback, lpvRef, dwFlags);
-    if (lpCallback)
-	lpCallback(NULL, lpvRef);
     return DI_OK;
 }
 

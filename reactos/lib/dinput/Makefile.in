@@ -3,6 +3,7 @@ TOPOBJDIR = ../..
 SRCDIR    = @srcdir@
 VPATH     = @srcdir@
 MODULE    = dinput.dll
+IMPORTLIB = libdinput.$(IMPLIBEXT)
 IMPORTS   = ole32 user32 advapi32 kernel32
 EXTRALIBS = -ldxguid -luuid
 
@@ -16,7 +17,11 @@ C_SRCS = \
 	mouse.c \
 	regsvr.c
 
+IMPLIB_SRCS = data_formats.c
+
 RC_SRCS = version.rc
+
+SUBDIRS = tests
 
 @MAKE_DLL_RULES@
 

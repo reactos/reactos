@@ -22,8 +22,6 @@
 #include "config.h"
 #include "wine/port.h"
 
-#ifdef HAVE_LINUX_INPUT_H
-
 #include <assert.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -43,15 +41,9 @@
 #ifdef HAVE_SYS_ERRNO_H
 # include <sys/errno.h>
 #endif
-
-#ifdef HAVE_CORRECT_LINUXINPUT_H
-
 #ifdef HAVE_LINUX_INPUT_H
 # include <linux/input.h>
 #endif
-
-
-#define EVDEVPREFIX	"/dev/input/event"
 
 #include "wine/debug.h"
 #include "wine/unicode.h"
@@ -64,6 +56,10 @@
 #include "device_private.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dinput);
+
+#ifdef HAVE_CORRECT_LINUXINPUT_H
+
+#define EVDEVPREFIX	"/dev/input/event"
 
 /* Wine joystick driver object instances */
 #define WINE_JOYSTICK_AXIS_BASE   0
@@ -168,7 +164,7 @@ static int joydev_have(void)
   return havejoy;
 }
 
-static BOOL joydev_enum_deviceA(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTANCEA lpddi, int version, int id)
+static BOOL joydev_enum_deviceA(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTANCEA lpddi, DWORD version, int id)
 {
   int havejoy = 0;
 
@@ -176,8 +172,8 @@ static BOOL joydev_enum_deviceA(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTAN
       return FALSE;
 
   if (!((dwDevType == 0) ||
-        ((dwDevType == DIDEVTYPE_JOYSTICK) && (version < 8)) ||
-        (((dwDevType == DI8DEVCLASS_GAMECTRL) || (dwDevType == DI8DEVTYPE_JOYSTICK)) && (version >= 8))))
+        ((dwDevType == DIDEVTYPE_JOYSTICK) && (version < 0x0800)) ||
+        (((dwDevType == DI8DEVCLASS_GAMECTRL) || (dwDevType == DI8DEVTYPE_JOYSTICK)) && (version >= 0x0800))))
     return FALSE;
 
   if (dwFlags & DIEDFL_FORCEFEEDBACK)
@@ -195,7 +191,7 @@ static BOOL joydev_enum_deviceA(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTAN
   lpddi->guidProduct	= DInput_Wine_Joystick_GUID;
 
   lpddi->guidFFDriver = GUID_NULL;
-  if (version >= 8)
+  if (version >= 0x0800)
     lpddi->dwDevType    = DI8DEVTYPE_JOYSTICK | (DI8DEVTYPEJOYSTICK_STANDARD << 8);
   else
     lpddi->dwDevType    = DIDEVTYPE_JOYSTICK | (DIDEVTYPEJOYSTICK_TRADITIONAL << 8);
@@ -206,7 +202,7 @@ static BOOL joydev_enum_deviceA(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTAN
   return TRUE;
 }
 
-static BOOL joydev_enum_deviceW(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTANCEW lpddi, int version, int id)
+static BOOL joydev_enum_deviceW(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTANCEW lpddi, DWORD version, int id)
 {
   int havejoy = 0;
 
@@ -214,8 +210,8 @@ static BOOL joydev_enum_deviceW(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTAN
       return FALSE;
 
   if (!((dwDevType == 0) ||
-        ((dwDevType == DIDEVTYPE_JOYSTICK) && (version < 8)) ||
-        (((dwDevType == DI8DEVCLASS_GAMECTRL) || (dwDevType == DI8DEVTYPE_JOYSTICK)) && (version >= 8))))
+        ((dwDevType == DIDEVTYPE_JOYSTICK) && (version < 0x0800)) ||
+        (((dwDevType == DI8DEVCLASS_GAMECTRL) || (dwDevType == DI8DEVTYPE_JOYSTICK)) && (version >= 0x0800))))
     return FALSE;
 
   if (dwFlags & DIEDFL_FORCEFEEDBACK)
@@ -233,7 +229,7 @@ static BOOL joydev_enum_deviceW(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTAN
   lpddi->guidProduct	= DInput_Wine_Joystick_GUID;
 
   lpddi->guidFFDriver = GUID_NULL;
-  if (version >= 8)
+  if (version >= 0x0800)
     lpddi->dwDevType    = DI8DEVTYPE_JOYSTICK | (DI8DEVTYPEJOYSTICK_STANDARD << 8);
   else
     lpddi->dwDevType    = DIDEVTYPE_JOYSTICK | (DIDEVTYPEJOYSTICK_TRADITIONAL << 8);
@@ -322,16 +318,13 @@ static HRESULT joydev_create_deviceW(IDirectInputImpl *dinput, REFGUID rguid, RE
   return DIERR_DEVICENOTREG;
 }
 
-static dinput_device joydev = {
-  20,
+const struct dinput_device joystick_linuxinput_device = {
   "Wine Linux-input joystick driver",
   joydev_enum_deviceA,
   joydev_enum_deviceW,
   joydev_create_deviceA,
   joydev_create_deviceW
 };
-
-DECL_GLOBAL_CONSTRUCTOR(joydev_register) { dinput_register_device(&joydev); }
 
 /******************************************************************************
  *	Joystick
@@ -762,7 +755,7 @@ static HRESULT WINAPI JoystickAImpl_GetCapabilities(
 	wasacquired = 0;
     }
     lpDIDevCaps->dwFlags	= DIDC_ATTACHED;
-    if (This->dinput->version >= 8)
+    if (This->dinput->dwVersion >= 0x0800)
         lpDIDevCaps->dwDevType = DI8DEVTYPE_JOYSTICK | (DI8DEVTYPEJOYSTICK_STANDARD << 8);
     else
         lpDIDevCaps->dwDevType = DIDEVTYPE_JOYSTICK | (DIDEVTYPEJOYSTICK_TRADITIONAL << 8);
@@ -978,7 +971,7 @@ static HRESULT WINAPI JoystickAImpl_GetProperty(LPDIRECTINPUTDEVICE8A iface,
 {
   JoystickImpl *This = (JoystickImpl *)iface;
 
-  TRACE("(this=%p,%s,%p): stub!\n",
+  TRACE("(this=%p,%s,%p)\n",
 	iface, debugstr_guid(rguid), pdiph);
 
   if (TRACE_ON(dinput))
@@ -1094,6 +1087,14 @@ static IDirectInputDevice8WVtbl JoystickWvt =
 };
 #undef XCAST
 
-#endif  /* HAVE_LINUX_INPUT_H */
+#else  /* HAVE_CORRECT_LINUXINPUT_H */
 
-#endif
+const struct dinput_device joystick_linuxinput_device = {
+  "Wine Linux-input joystick driver",
+  NULL,
+  NULL,
+  NULL,
+  NULL
+};
+
+#endif  /* HAVE_CORRECT_LINUXINPUT_H */
