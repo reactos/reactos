@@ -139,7 +139,7 @@ typedef union YYSTYPE {
 	mtext_t		*mtext;
 } YYSTYPE;
 /* Line 1252 of yacc.c.  */
-#line 143 "wpp/wpp.tab.h"
+#line 143 "wpp/ppy.tab.h"
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
 # define YYSTYPE_IS_TRIVIAL 1

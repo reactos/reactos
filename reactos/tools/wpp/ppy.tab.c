@@ -282,7 +282,7 @@ typedef union YYSTYPE {
 	mtext_t		*mtext;
 } YYSTYPE;
 /* Line 191 of yacc.c.  */
-#line 287 "wpp/wpp.tab.c"
+#line 287 "wpp/ppy.tab.c"
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
 # define YYSTYPE_IS_TRIVIAL 1
@@ -294,7 +294,7 @@ typedef union YYSTYPE {
 
 
 /* Line 214 of yacc.c.  */
-#line 299 "wpp/wpp.tab.c"
+#line 299 "wpp/ppy.tab.c"
 
 #if ! defined (yyoverflow) || YYERROR_VERBOSE
 
@@ -1853,7 +1853,7 @@ yyreduce:
     }
 
 /* Line 999 of yacc.c.  */
-#line 1858 "wpp/wpp.tab.c"
+#line 1858 "wpp/ppy.tab.c"
 
   yyvsp -= yylen;
   yyssp -= yylen;
