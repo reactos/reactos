@@ -604,39 +604,39 @@ RPC_STATUS WINAPI RpcStringBindingComposeA(unsigned char *ObjUuid, unsigned char
   LPSTR data;
 
   TRACE( "(%s,%s,%s,%s,%s,%p)\n",
-        debugstr_a( ObjUuid ), debugstr_a( Protseq ),
-        debugstr_a( NetworkAddr ), debugstr_a( Endpoint ),
-        debugstr_a( Options ), StringBinding );
+        debugstr_a( (char*)ObjUuid ), debugstr_a( (char*)Protseq ),
+        debugstr_a( (char*)NetworkAddr ), debugstr_a( (char*)Endpoint ),
+        debugstr_a( (char*)Options ), StringBinding );
 
-  if (ObjUuid && *ObjUuid) len += strlen(ObjUuid) + 1;
-  if (Protseq && *Protseq) len += strlen(Protseq) + 1;
-  if (NetworkAddr && *NetworkAddr) len += strlen(NetworkAddr);
-  if (Endpoint && *Endpoint) len += strlen(Endpoint) + 2;
-  if (Options && *Options) len += strlen(Options) + 2;
+  if (ObjUuid && *ObjUuid) len += strlen((char*)ObjUuid) + 1;
+  if (Protseq && *Protseq) len += strlen((char*)Protseq) + 1;
+  if (NetworkAddr && *NetworkAddr) len += strlen((char*)NetworkAddr);
+  if (Endpoint && *Endpoint) len += strlen((char*)Endpoint) + 2;
+  if (Options && *Options) len += strlen((char*)Options) + 2;
 
   data = HeapAlloc(GetProcessHeap(), 0, len);
-  *StringBinding = data;
+  *StringBinding = (unsigned char*)data;
 
   if (ObjUuid && *ObjUuid) {
-    data += RPCRT4_strcopyA(data, ObjUuid);
+    data += RPCRT4_strcopyA(data, (char*)ObjUuid);
     *data++ = '@';
   }
   if (Protseq && *Protseq) {
-    data += RPCRT4_strcopyA(data, Protseq);
+    data += RPCRT4_strcopyA(data, (char*)Protseq);
     *data++ = ':';
   }
   if (NetworkAddr && *NetworkAddr)
-    data += RPCRT4_strcopyA(data, NetworkAddr);
+    data += RPCRT4_strcopyA(data, (char*)NetworkAddr);
 
   if ((Endpoint && *Endpoint) ||
       (Options && *Options)) {
     *data++ = '[';
     if (Endpoint && *Endpoint) {
-      data += RPCRT4_strcopyA(data, Endpoint);
+      data += RPCRT4_strcopyA(data, (char*)Endpoint);
       if (Options && *Options) *data++ = ',';
     }
     if (Options && *Options) {
-      data += RPCRT4_strcopyA(data, Options);
+      data += RPCRT4_strcopyA(data, (char*)Options);
     }
     *data++ = ']';
   }
@@ -708,7 +708,7 @@ RPC_STATUS WINAPI RpcStringBindingParseA( unsigned char *StringBinding, unsigned
   CHAR *data, *next;
   static const char ep_opt[] = "endpoint=";
 
-  TRACE("(%s,%p,%p,%p,%p,%p)\n", debugstr_a(StringBinding),
+  TRACE("(%s,%p,%p,%p,%p,%p)\n", debugstr_a((char*)StringBinding),
        ObjUuid, Protseq, NetworkAddr, Endpoint, Options);
 
   if (ObjUuid) *ObjUuid = NULL;
@@ -717,17 +717,17 @@ RPC_STATUS WINAPI RpcStringBindingParseA( unsigned char *StringBinding, unsigned
   if (Endpoint) *Endpoint = NULL;
   if (Options) *Options = NULL;
 
-  data = StringBinding;
+  data = (char*) StringBinding;
 
   next = strchr(data, '@');
   if (next) {
-    if (ObjUuid) *ObjUuid = RPCRT4_strndupA(data, next - data);
+    if (ObjUuid) *ObjUuid = (unsigned char*)RPCRT4_strndupA(data, next - data);
     data = next+1;
   }
 
   next = strchr(data, ':');
   if (next) {
-    if (Protseq) *Protseq = RPCRT4_strndupA(data, next - data);
+    if (Protseq) *Protseq = (unsigned char*)RPCRT4_strndupA(data, next - data);
     data = next+1;
   }
 
@@ -735,7 +735,7 @@ RPC_STATUS WINAPI RpcStringBindingParseA( unsigned char *StringBinding, unsigned
   if (next) {
     CHAR *close, *opt;
 
-    if (NetworkAddr) *NetworkAddr = RPCRT4_strndupA(data, next - data);
+    if (NetworkAddr) *NetworkAddr = (unsigned char*)RPCRT4_strndupA(data, next - data);
     data = next+1;
     close = strchr(data, ']');
     if (!close) goto fail;
@@ -753,21 +753,21 @@ RPC_STATUS WINAPI RpcStringBindingParseA( unsigned char *StringBinding, unsigned
       if (!next) {
         /* not an option, must be an endpoint */
         if (*Endpoint) goto fail;
-        *Endpoint = opt;
+        *Endpoint = (unsigned char*) opt;
       } else {
         if (strncmp(opt, ep_opt, strlen(ep_opt)) == 0) {
           /* endpoint option */
           if (*Endpoint) goto fail;
-          *Endpoint = RPCRT4_strdupA(next+1);
+          *Endpoint = (unsigned char*) RPCRT4_strdupA(next+1);
           HeapFree(GetProcessHeap(), 0, opt);
         } else {
           /* network option */
           if (*Options) {
             /* FIXME: this is kind of inefficient */
-            *Options = RPCRT4_strconcatA(*Options, opt);
+            *Options = (unsigned char*) RPCRT4_strconcatA( (char*)*Options, opt);
             HeapFree(GetProcessHeap(), 0, opt);
           } else 
-	    *Options = opt;
+	    *Options = (unsigned char*) opt;
         }
       }
     }
@@ -776,7 +776,7 @@ RPC_STATUS WINAPI RpcStringBindingParseA( unsigned char *StringBinding, unsigned
     if (*data) goto fail;
   }
   else if (NetworkAddr) 
-    *NetworkAddr = RPCRT4_strdupA(data);
+    *NetworkAddr = (unsigned char*)RPCRT4_strdupA(data);
 
   return RPC_S_OK;
 
@@ -942,7 +942,7 @@ RPC_STATUS WINAPI RpcBindingFromStringBindingA( unsigned char *StringBinding, RP
   unsigned char *ObjectUuid, *Protseq, *NetworkAddr, *Endpoint, *Options;
   UUID Uuid;
 
-  TRACE("(%s,%p)\n", debugstr_a(StringBinding), Binding);
+  TRACE("(%s,%p)\n", debugstr_a((char*)StringBinding), Binding);
 
   ret = RpcStringBindingParseA(StringBinding, &ObjectUuid, &Protseq,
                               &NetworkAddr, &Endpoint, &Options);
@@ -951,11 +951,11 @@ RPC_STATUS WINAPI RpcBindingFromStringBindingA( unsigned char *StringBinding, RP
   ret = UuidFromStringA(ObjectUuid, &Uuid);
 
   if (ret == RPC_S_OK)
-    ret = RPCRT4_CreateBindingA(&bind, FALSE, Protseq);
+    ret = RPCRT4_CreateBindingA(&bind, FALSE, (char*)Protseq);
   if (ret == RPC_S_OK)
     ret = RPCRT4_SetBindingObject(bind, &Uuid);
   if (ret == RPC_S_OK)
-    ret = RPCRT4_CompleteBindingA(bind, NetworkAddr, Endpoint, Options);
+    ret = RPCRT4_CompleteBindingA(bind, (char*)NetworkAddr, (char*)Endpoint, (char*)Options);
 
   RpcStringFreeA((unsigned char**)&Options);
   RpcStringFreeA((unsigned char**)&Endpoint);
@@ -1024,8 +1024,8 @@ RPC_STATUS WINAPI RpcBindingToStringBindingA( RPC_BINDING_HANDLE Binding, unsign
   ret = UuidToStringA(&bind->ObjectUuid, (unsigned char**)&ObjectUuid);
   if (ret != RPC_S_OK) return ret;
 
-  ret = RpcStringBindingComposeA(ObjectUuid, bind->Protseq, bind->NetworkAddr,
-                                 bind->Endpoint, NULL, StringBinding);
+  ret = RpcStringBindingComposeA((unsigned char*) ObjectUuid, (unsigned char*)bind->Protseq, (unsigned char*) bind->NetworkAddr,
+                                 (unsigned char*) bind->Endpoint, NULL, StringBinding);
 
   RpcStringFreeA((unsigned char**)&ObjectUuid);
 
@@ -1041,7 +1041,7 @@ RPC_STATUS WINAPI RpcBindingToStringBindingW( RPC_BINDING_HANDLE Binding, unsign
   unsigned char *str = NULL;
   TRACE("(%p,%p)\n", Binding, StringBinding);
   ret = RpcBindingToStringBindingA(Binding, &str);
-  *StringBinding = RPCRT4_strdupAtoW(str);
+  *StringBinding = RPCRT4_strdupAtoW((char*)str);
   RpcStringFreeA((unsigned char**)&str);
   return ret;
 }
@@ -1071,7 +1071,7 @@ RPC_STATUS WINAPI RpcNetworkIsProtseqValidA(unsigned char *protseq) {
 
   if (!protseq) return RPC_S_INVALID_RPC_PROTSEQ; /* ? */
   
-  if (RtlCreateUnicodeStringFromAsciiz(&protseqW, protseq)) {
+  if (RtlCreateUnicodeStringFromAsciiz(&protseqW, (char*)protseq)) {
     RPC_STATUS ret = RpcNetworkIsProtseqValidW(protseqW.Buffer);
     RtlFreeUnicodeString(&protseqW);
     return ret;

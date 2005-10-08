@@ -176,8 +176,8 @@ HRESULT WINAPI StdProxy_Construct(REFIID riid,
     This->PVtbl = vtbl->Vtbl;
 
   This->lpVtbl = &StdProxy_Vtbl;
-  /* 1 reference for the proxy and 1 for the object */
-  This->RefCount = 2;
+  /* one reference for the proxy */
+  This->RefCount = 1;
   This->stubless = stubless;
   This->piid = vtbl->header.piid;
   This->pUnkOuter = pUnkOuter;
@@ -186,6 +186,7 @@ HRESULT WINAPI StdProxy_Construct(REFIID riid,
   This->pChannel = NULL;
   *ppProxy = (LPRPCPROXYBUFFER)&This->lpVtbl;
   *ppvObj = &This->PVtbl;
+  IUnknown_AddRef((IUnknown *)*ppvObj);
   IPSFactoryBuffer_AddRef(pPSFactory);
 
   return S_OK;

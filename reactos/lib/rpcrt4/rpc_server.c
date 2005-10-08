@@ -78,7 +78,7 @@ static CRITICAL_SECTION_DEBUG server_cs_debug =
 {
     0, 0, &server_cs,
     { &server_cs_debug.ProcessLocksList, &server_cs_debug.ProcessLocksList },
-      0, 0, { 0, (DWORD)(__FILE__ ": server_cs") }
+      0, 0, { (DWORD_PTR)(__FILE__ ": server_cs") }
 };
 static CRITICAL_SECTION server_cs = { &server_cs_debug, -1, 0, 0, 0, 0 };
 
@@ -87,7 +87,7 @@ static CRITICAL_SECTION_DEBUG listen_cs_debug =
 {
     0, 0, &listen_cs,
     { &listen_cs_debug.ProcessLocksList, &listen_cs_debug.ProcessLocksList },
-      0, 0, { 0, (DWORD)(__FILE__ ": listen_cs") }
+      0, 0, { (DWORD_PTR)(__FILE__ ": listen_cs") }
 };
 static CRITICAL_SECTION listen_cs = { &listen_cs_debug, -1, 0, 0, 0, 0 };
 
@@ -109,7 +109,7 @@ static CRITICAL_SECTION_DEBUG spacket_cs_debug =
 {
     0, 0, &spacket_cs,
     { &spacket_cs_debug.ProcessLocksList, &spacket_cs_debug.ProcessLocksList },
-      0, 0, { 0, (DWORD)(__FILE__ ": spacket_cs") }
+      0, 0, { (DWORD_PTR)(__FILE__ ": spacket_cs") }
 };
 static CRITICAL_SECTION spacket_cs = { &spacket_cs_debug, -1, 0, 0, 0, 0 };
 
