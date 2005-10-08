@@ -449,19 +449,18 @@ RtlUnicodeToMultiByteN (PCHAR MbString,
    if (NlsMbCodePageTag == FALSE)
    {
       /* single-byte code page */
-      if (UnicodeSize > (MbSize * sizeof(WCHAR)))
-         Size = MbSize;
-      else
-         Size = UnicodeSize / sizeof(WCHAR);
+      Size =  (UnicodeSize > (MbSize * sizeof (WCHAR)))
+                 ? MbSize
+	         : (UnicodeSize / sizeof (WCHAR));
 
       if (ResultSize != NULL)
+      {
          *ResultSize = Size;
+      }
 
       for (i = 0; i < Size; i++)
       {
-         *MbString = NlsUnicodeToAnsiTable[*UnicodeString];
-         MbString++;
-         UnicodeString++;
+         *MbString++ = NlsUnicodeToAnsiTable[*UnicodeString++];
       }
    }
    else
