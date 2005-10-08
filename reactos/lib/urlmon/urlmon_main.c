@@ -24,12 +24,13 @@
 
 #include "windef.h"
 #include "winbase.h"
-#include "winerror.h"
-#include "wtypes.h"
+#include "winreg.h"
+
 #define NO_SHLWAPI_REG
 #include "shlwapi.h"
 
 #include "wine/debug.h"
+#include "wine/unicode.h"
 
 #include "winuser.h"
 #include "urlmon.h"
@@ -101,6 +102,9 @@ struct object_creation_info
  
 static const struct object_creation_info object_creation[] =
 {
+    { &CLSID_FileProtocol, FileProtocol_Construct },
+    { &CLSID_FtpProtocol, FtpProtocol_Construct },
+    { &CLSID_HttpProtocol, HttpProtocol_Construct },
     { &CLSID_InternetSecurityManager, &SecManagerImpl_Construct },
     { &CLSID_InternetZoneManager, ZoneMgrImpl_Construct }
 };
@@ -360,4 +364,119 @@ HRESULT WINAPI CoGetClassObjectFromURL( REFCLSID rclsid, LPCWSTR szCodeURL, DWOR
 	dwFileVersionMS, dwFileVersionLS, debugstr_w(szContentType), pBindCtx, dwClsContext, pvReserved,
 	debugstr_guid(riid), ppv);
     return E_NOINTERFACE;
+}
+
+/***********************************************************************
+ *           ReleaseBindInfo (URLMON.@)
+ *
+ * Release the resources used by the specified BINDINFO structure.
+ *
+ * PARAMS
+ *  pbindinfo [I] BINDINFO to release.
+ *
+ * RETURNS
+ *  Nothing.
+ */
+void WINAPI ReleaseBindInfo(BINDINFO* pbindinfo)
+{
+    TRACE("(%p)\n", pbindinfo);
+
+    if(!pbindinfo)
+        return;
+
+    CoTaskMemFree(pbindinfo->szExtraInfo);
+
+    if(pbindinfo->pUnk)
+        IUnknown_Release(pbindinfo->pUnk);
+}
+
+/***********************************************************************
+ *           FindMimeFromData (URLMON.@)
+ *
+ * Determines the Multipurpose Internet Mail Extensions (MIME) type from the data provided.
+ */
+HRESULT WINAPI FindMimeFromData(LPBC pBC, LPCWSTR pwzUrl, LPVOID pBuffer,
+        DWORD cbSize, LPCWSTR pwzMimeProposed, DWORD dwMimeFlags,
+        LPWSTR* ppwzMimeOut, DWORD dwReserved)
+{
+    TRACE("(%p,%s,%p,%ld,%s,0x%lx,%p,0x%lx)\n", pBC, debugstr_w(pwzUrl), pBuffer, cbSize,
+            debugstr_w(pwzMimeProposed), dwMimeFlags, ppwzMimeOut, dwReserved);
+
+    if(dwMimeFlags)
+        WARN("dwMimeFlags=%08lx\n", dwMimeFlags);
+    if(dwReserved)
+        WARN("dwReserved=%ld\n", dwReserved);
+
+    /* pBC seams to not be used */
+
+    if(!ppwzMimeOut || (!pwzUrl && !pBuffer))
+        return E_INVALIDARG;
+
+    if(pwzMimeProposed && (!pwzUrl || !pBuffer || (pBuffer && !cbSize))) {
+        DWORD len;
+
+        if(!pwzMimeProposed)
+            return E_FAIL;
+
+        len = strlenW(pwzMimeProposed)+1;
+        *ppwzMimeOut = CoTaskMemAlloc(len*sizeof(WCHAR));
+        memcpy(*ppwzMimeOut, pwzMimeProposed, len*sizeof(WCHAR));
+        return S_OK;
+    }
+
+    if(pBuffer) {
+        UCHAR *ptr = pBuffer;
+        DWORD len;
+        LPCWSTR ret;
+
+        static const WCHAR wszAppOctetStream[] = {'a','p','p','l','i','c','a','t','i','o','n','/',
+                'o','c','t','e','t','-','s','t','r','e','a','m','\0'};
+        static const WCHAR wszTextPlain[] = {'t','e','x','t','/','p','l','a','i','n','\0'};
+
+        if(!cbSize)
+            return E_FAIL;
+
+        ret = wszTextPlain;
+        for(ptr = pBuffer; ptr < (UCHAR*)pBuffer+cbSize-1; ptr++) {
+            if(*ptr < 0x20 && *ptr != '\n' && *ptr != '\r' && *ptr != '\t') {
+                ret = wszAppOctetStream;
+                break;
+            }
+        }
+
+        len = strlenW(ret)+1;
+        *ppwzMimeOut = CoTaskMemAlloc(len*sizeof(WCHAR));
+        memcpy(*ppwzMimeOut, ret, len*sizeof(WCHAR));
+        return S_OK;
+    }
+
+    if(pwzUrl) {
+        HKEY hkey;
+        DWORD res, size;
+        LPCWSTR ptr;
+        WCHAR mime[64];
+
+        static const WCHAR wszContentType[] =
+                {'C','o','n','t','e','n','t',' ','T','y','p','e','\0'};
+
+        ptr = strrchrW(pwzUrl, '.');
+        if(!ptr)
+            return E_FAIL;
+
+        res = RegOpenKeyW(HKEY_CLASSES_ROOT, ptr, &hkey);
+        if(res != ERROR_SUCCESS)
+            return E_FAIL;
+
+        size = sizeof(mime);
+        res = RegQueryValueExW(hkey, wszContentType, NULL, NULL, (LPBYTE)mime, &size);
+        RegCloseKey(hkey);
+        if(res != ERROR_SUCCESS)
+            return E_FAIL;
+
+        *ppwzMimeOut = CoTaskMemAlloc(size);
+        memcpy(*ppwzMimeOut, mime, size);
+        return S_OK;
+    }
+
+    return E_FAIL;
 }

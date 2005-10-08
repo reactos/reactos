@@ -37,7 +37,6 @@
 
 #include "wine/debug.h"
 
-#include "initguid.h"
 #include "urlmon_main.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
@@ -546,7 +545,7 @@ static struct regsvr_coclass const coclass_list[] = {
         "urlmon.dll",
         "Apartment"
     },
-    {   &CLSID_HttpsProtocol,
+    {   &CLSID_HttpSProtocol,
         "https: Asynchronous Pluggable Protocol Handler",
         NULL,
         "urlmon.dll",
@@ -594,7 +593,7 @@ static HRESULT register_inf(BOOL doregister)
     INF_SET_CLSID(FtpProtocol);
     INF_SET_CLSID(GopherProtocol);
     INF_SET_CLSID(HttpProtocol);
-    INF_SET_CLSID(HttpsProtocol);
+    INF_SET_CLSID(HttpSProtocol);
     INF_SET_CLSID(MkProtocol);
 
     for(i = 0; i < sizeof(pse)/sizeof(pse[0]); i++) {

@@ -1179,16 +1179,38 @@ static HRESULT URLMonikerImpl_Construct(URLMonikerImpl* This, LPCOLESTR lpszLeft
 HRESULT WINAPI CreateAsyncBindCtx(DWORD reserved, IBindStatusCallback *callback,
     IEnumFORMATETC *format, IBindCtx **pbind)
 {
-    HRESULT hres;
-    BIND_OPTS bindopts;
-    IBindCtx *bctx;
-
     TRACE("(%08lx %p %p %p)\n", reserved, callback, format, pbind);
 
     if(!callback)
         return E_INVALIDARG;
+
+    return CreateAsyncBindCtxEx(NULL, 0, callback, format, pbind, 0);
+}
+/***********************************************************************
+ *           CreateAsyncBindCtxEx (URLMON.@)
+ *
+ * Create an asynchronous bind context.
+ */ 
+HRESULT WINAPI CreateAsyncBindCtxEx(IBindCtx *ibind, DWORD options,
+    IBindStatusCallback *callback, IEnumFORMATETC *format, IBindCtx** pbind,
+    DWORD reserved)
+{
+    HRESULT hres;
+    BIND_OPTS bindopts;
+    IBindCtx *bctx;
+
+    TRACE("(%p %08lx %p %p %p %ld)\n", ibind, options, callback, format, pbind, reserved);
+
+    if(!pbind)
+        return E_INVALIDARG;
+
+    if(options)
+        FIXME("not supported options %08lx", options);
     if(format)
-        FIXME("format is not supported yet\n");
+        FIXME("format is not supported\n");
+
+    if(reserved)
+        WARN("reserved=%ld\n", reserved);
 
     hres = CreateBindCtx(0, &bctx);
     if(FAILED(hres))
@@ -1200,30 +1222,12 @@ HRESULT WINAPI CreateAsyncBindCtx(DWORD reserved, IBindStatusCallback *callback,
     bindopts.dwTickCountDeadline = 0;
     IBindCtx_SetBindOptions(bctx, &bindopts);
 
-    hres = IBindCtx_RegisterObjectParam(bctx, (LPOLESTR)BSCBHolder, (IUnknown*)callback);
-    if(FAILED(hres)) {
-        IBindCtx_Release(bctx);
-        return hres;
-    }
+    if(callback)
+        RegisterBindStatusCallback(bctx, callback, NULL, 0);
 
     *pbind = bctx;
 
     return S_OK;
-}
-/***********************************************************************
- *           CreateAsyncBindCtxEx (URLMON.@)
- *
- * Create an asynchronous bind context.
- *
- * FIXME
- *   Not implemented.
- */ 
-HRESULT WINAPI CreateAsyncBindCtxEx(IBindCtx *ibind, DWORD options,
-    IBindStatusCallback *callback, IEnumFORMATETC *format, IBindCtx** pbind,
-    DWORD reserved)
-{
-     FIXME("stub, returns failure\n");
-     return E_INVALIDARG;
 }
 
 
@@ -1274,39 +1278,6 @@ HRESULT WINAPI CreateURLMoniker(IMoniker *pmkContext, LPCWSTR szURL, IMoniker **
     return hres;
 }
 
-
-/***********************************************************************
- *           CoInternetGetSession (URLMON.@)
- *
- * Create a new internet session and return an IInternetSession interface
- * representing it.
- *
- * PARAMS
- *    dwSessionMode      [I] Mode for the internet session
- *    ppIInternetSession [O] Destination for creates IInternetSession object
- *    dwReserved         [I] Reserved, must be 0.
- *
- * RETURNS
- *    Success: S_OK. ppIInternetSession contains the IInternetSession interface.
- *    Failure: E_INVALIDARG, if any argument is invalid, or
- *             E_OUTOFMEMORY if memory allocation fails.
- */
-HRESULT WINAPI CoInternetGetSession(DWORD dwSessionMode, IInternetSession **ppIInternetSession, DWORD dwReserved)
-{
-    FIXME("(%ld, %p, %ld): stub\n", dwSessionMode, ppIInternetSession, dwReserved);
-
-    if(dwSessionMode) {
-      ERR("dwSessionMode: %ld, must be zero\n", dwSessionMode);
-    }
-
-    if(dwReserved) {
-      ERR("dwReserved: %ld, must be zero\n", dwReserved);
-    }
-
-    *ppIInternetSession=NULL;
-    return E_OUTOFMEMORY;
-}
-
 /***********************************************************************
  *           CoInternetQueryInfo (URLMON.@)
  *
@@ -1325,69 +1296,6 @@ HRESULT WINAPI CoInternetQueryInfo(LPCWSTR pwzUrl, QUERYOPTION QueryOption,
   FIXME("(%s, %x, %lx, %p, %lx, %p, %lx): stub\n", debugstr_w(pwzUrl),
     QueryOption, dwQueryFlags, pvBuffer, cbBuffer, pcbBuffer, dwReserved);
   return S_OK;
-}
-
-static BOOL URLMON_IsBinary(LPVOID pBuffer, DWORD cbSize)
-{
-    unsigned int i, binarycount = 0;
-    unsigned char *buff = pBuffer;
-    for(i=0; i<cbSize; i++) {
-        if(buff[i] < 32)
-            binarycount++;
-    }
-    return binarycount > (cbSize-binarycount);
-}
-
-/***********************************************************************
- *           FindMimeFromData (URLMON.@)
- *
- * Determines the Multipurpose Internet Mail Extensions (MIME) type from the data provided.
- *
- * NOTE
- *  See http://msdn.microsoft.com/workshop/networking/moniker/overview/appendix_a.asp
- */
-HRESULT WINAPI FindMimeFromData(LPBC pBC, LPCWSTR pwzUrl, LPVOID pBuffer,
-   DWORD cbSize, LPCWSTR pwzMimeProposed, DWORD dwMimeFlags,
-   LPWSTR* ppwzMimeOut, DWORD dwReserved)
-{
-    static const WCHAR szBinaryMime[] = {'a','p','p','l','i','c','a','t','i','o','n','/','o','c','t','e','t','-','s','t','r','e','a','m','\0'};
-    static const WCHAR szTextMime[] = {'t','e','x','t','/','p','l','a','i','n','\0'};
-    static const WCHAR szContentType[] = {'C','o','n','t','e','n','t',' ','T','y','p','e','\0'};
-    WCHAR szTmpMime[256];
-    LPCWSTR mimeType = NULL;
-    HKEY hKey = NULL;
-
-    TRACE("(%p,%s,%p,%ld,%s,0x%lx,%p,0x%lx)\n", pBC, debugstr_w(pwzUrl), pBuffer, cbSize,
-          debugstr_w(pwzMimeProposed), dwMimeFlags, ppwzMimeOut, dwReserved);
-
-    if((!pwzUrl && (!pBuffer || cbSize <= 0)) || !ppwzMimeOut)
-        return E_INVALIDARG;
-
-    if(pwzMimeProposed)
-        mimeType = pwzMimeProposed;
-    else {
-        /* Try and find the mime type in the registry */
-        if(pwzUrl) {
-            LPWSTR ext = strrchrW(pwzUrl, '.');
-            if(ext) {
-                DWORD dwSize;
-                if(!RegOpenKeyExW(HKEY_CLASSES_ROOT, ext, 0, 0, &hKey)) {
-                    if(!RegQueryValueExW(hKey, szContentType, NULL, NULL, (LPBYTE)szTmpMime, &dwSize)) {
-                        mimeType = szTmpMime;
-                    }
-                    RegCloseKey(hKey);
-                }
-            }
-        }
-    }
-    if(!mimeType && pBuffer && cbSize > 0)
-        mimeType = URLMON_IsBinary(pBuffer, cbSize)?szBinaryMime:szTextMime;
-
-    TRACE("Using %s\n", debugstr_w(mimeType));
-    *ppwzMimeOut = CoTaskMemAlloc((lstrlenW(mimeType)+1)*sizeof(WCHAR));
-    if(!*ppwzMimeOut) return E_OUTOFMEMORY;
-    lstrcpyW(*ppwzMimeOut, mimeType);
-    return S_OK;
 }
 
 /***********************************************************************
@@ -1445,7 +1353,7 @@ HRESULT WINAPI RegisterBindStatusCallback(
             IBindStatusCallback_Release(prev);
     }
 
-	return IBindCtx_RegisterObjectParam(pbc, (LPOLESTR)BSCBHolder, (IUnknown *)pbsc);
+    return IBindCtx_RegisterObjectParam(pbc, (LPOLESTR)BSCBHolder, (IUnknown *)pbsc);
 }
 
 /***********************************************************************
@@ -1484,22 +1392,6 @@ HRESULT WINAPI RevokeBindStatusCallback(
     }
 
     return hr;
-}
-
-/***********************************************************************
- *           ReleaseBindInfo (URLMON.@)
- *
- * Release the resources used by the specified BINDINFO structure.
- *
- * PARAMS
- *  pbindinfo [I] BINDINFO to release.
- *
- * RETURNS
- *  Nothing.
- */
-void WINAPI ReleaseBindInfo(BINDINFO* pbindinfo)
-{
-    FIXME("(%p)stub!\n", pbindinfo);
 }
 
 /***********************************************************************

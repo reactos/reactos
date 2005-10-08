@@ -27,6 +27,7 @@
 #include "windef.h"
 #include "winbase.h"
 #include "winuser.h"
+#include "winreg.h"
 #include "wine/debug.h"
 #include "ole2.h"
 #include "wine/unicode.h"
@@ -39,17 +40,84 @@ WINE_DEFAULT_DEBUG_CHANNEL(urlmon);
  *           InternetSecurityManager implementation
  *
  */
-typedef struct SecManagerImpl{
+typedef struct {
+    const IInternetSecurityManagerVtbl* lpInternetSecurityManagerVtbl;
 
-    const IInternetSecurityManagerVtbl* lpvtbl1;  /* VTable relative to the IInternetSecurityManager interface.*/
+    LONG ref;
 
-    LONG ref; /* reference counter for this object */
-
+    IInternetSecurityMgrSite *mgrsite;
+    IInternetSecurityManager *custom_manager;
 } SecManagerImpl;
+
+#define SECMGR_THIS(iface) DEFINE_THIS(SecManagerImpl, InternetSecurityManager, iface)
+
+static HRESULT map_url_to_zone(LPCWSTR url, DWORD *zone)
+{
+    WCHAR schema[64];
+    DWORD res, size=0;
+    HKEY hkey;
+    HRESULT hres;
+
+    static const WCHAR wszZoneMapProtocolKey[] =
+        {'S','o','f','t','w','a','r','e','\\',
+                    'M','i','c','r','o','s','o','f','t','\\',
+                    'W','i','n','d','o','w','s','\\',
+                    'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
+                    'I','n','t','e','r','n','e','t',' ','S','e','t','t','i','n','g','s','\\',
+                    'Z','o','n','e','M','a','p','\\',
+                    'P','r','o','t','o','c','o','l','D','e','f','a','u','l','t','s',0};
+    static const WCHAR wszFile[] = {'f','i','l','e',0};
+
+    hres = CoInternetParseUrl(url, PARSE_SCHEMA, 0, schema, sizeof(schema)/sizeof(WCHAR), &size, 0);
+    if(FAILED(hres))
+        return hres;
+    if(!*schema)
+        return 0x80041001;
+
+    /* file protocol is a special case */
+    if(!strcmpW(schema, wszFile)) {
+        WCHAR path[MAX_PATH];
+
+        hres = CoInternetParseUrl(url, PARSE_PATH_FROM_URL, 0, path,
+                sizeof(path)/sizeof(WCHAR), &size, 0);
+
+        if(SUCCEEDED(hres) && strchrW(path, '\\')) {
+            *zone = 0;
+            return S_OK;
+        }
+    }
+
+    WARN("domains are not yet implemented\n");
+
+    res = RegOpenKeyW(HKEY_CURRENT_USER, wszZoneMapProtocolKey, &hkey);
+    if(res != ERROR_SUCCESS) {
+        ERR("Could not open key %s\n", debugstr_w(wszZoneMapProtocolKey));
+        return E_UNEXPECTED;
+    }
+
+    size = sizeof(DWORD);
+    res = RegQueryValueExW(hkey, schema, NULL, NULL, (PBYTE)zone, &size);
+    if(res == ERROR_SUCCESS)
+        return S_OK;
+
+    res = RegOpenKeyW(HKEY_LOCAL_MACHINE, wszZoneMapProtocolKey, &hkey);
+    if(res != ERROR_SUCCESS) {
+        ERR("Could not open key %s\n", debugstr_w(wszZoneMapProtocolKey));
+        return E_UNEXPECTED;
+    }
+
+    size = sizeof(DWORD);
+    res = RegQueryValueExW(hkey, schema, NULL, NULL, (PBYTE)zone, &size);
+    if(res == ERROR_SUCCESS)
+                            return S_OK;
+
+    *zone = 3;
+    return S_OK;
+}
 
 static HRESULT WINAPI SecManagerImpl_QueryInterface(IInternetSecurityManager* iface,REFIID riid,void** ppvObject)
 {
-    SecManagerImpl *This = (SecManagerImpl *)iface;
+    SecManagerImpl *This = SECMGR_THIS(iface);
 
     TRACE("(%p)->(%s,%p)\n",This,debugstr_guid(riid),ppvObject);
 
@@ -66,8 +134,10 @@ static HRESULT WINAPI SecManagerImpl_QueryInterface(IInternetSecurityManager* if
         *ppvObject = iface;
 
     /* Check that we obtained an interface.*/
-    if ((*ppvObject)==0)
+    if (!*ppvObject) {
+        WARN("not supported interface %s\n", debugstr_guid(riid));
         return E_NOINTERFACE;
+    }
 
     /* Query Interface always increases the reference count by one when it is successful */
     IInternetSecurityManager_AddRef(iface);
@@ -77,24 +147,30 @@ static HRESULT WINAPI SecManagerImpl_QueryInterface(IInternetSecurityManager* if
 
 static ULONG WINAPI SecManagerImpl_AddRef(IInternetSecurityManager* iface)
 {
-    SecManagerImpl *This = (SecManagerImpl *)iface;
+    SecManagerImpl *This = SECMGR_THIS(iface);
     ULONG refCount = InterlockedIncrement(&This->ref);
 
-    TRACE("(%p)->(ref before=%lu)\n",This, refCount - 1);
+    TRACE("(%p) ref=%lu\n", This, refCount);
 
     return refCount;
 }
 
 static ULONG WINAPI SecManagerImpl_Release(IInternetSecurityManager* iface)
 {
-    SecManagerImpl *This = (SecManagerImpl *)iface;
+    SecManagerImpl *This = SECMGR_THIS(iface);
     ULONG refCount = InterlockedDecrement(&This->ref);
 
-    TRACE("(%p)->(ref before=%lu)\n",This, refCount + 1);
+    TRACE("(%p) ref=%lu\n", This, refCount);
 
     /* destroy the object if there's no more reference on it */
     if (!refCount){
+        if(This->mgrsite)
+            IInternetSecurityMgrSite_Release(This->mgrsite);
+        if(This->custom_manager)
+            IInternetSecurityManager_Release(This->custom_manager);
+
         HeapFree(GetProcessHeap(),0,This);
+
         URLMON_UnlockModule();
     }
 
@@ -104,32 +180,112 @@ static ULONG WINAPI SecManagerImpl_Release(IInternetSecurityManager* iface)
 static HRESULT WINAPI SecManagerImpl_SetSecuritySite(IInternetSecurityManager *iface,
                                                      IInternetSecurityMgrSite *pSite)
 {
-    FIXME("(%p)->(%p)\n", iface, pSite);
-    return E_NOTIMPL;
+    SecManagerImpl *This = SECMGR_THIS(iface);
+
+    TRACE("(%p)->(%p)\n", This, pSite);
+
+    if(This->mgrsite)
+        IInternetSecurityMgrSite_Release(This->mgrsite);
+
+    if(This->custom_manager) {
+        IInternetSecurityManager_Release(This->custom_manager);
+        This->custom_manager = NULL;
+    }
+
+    This->mgrsite = pSite;
+
+    if(pSite) {
+        IServiceProvider *servprov;
+        HRESULT hres;
+
+        IInternetSecurityMgrSite_AddRef(pSite);
+
+        hres = IInternetSecurityMgrSite_QueryInterface(pSite, &IID_IServiceProvider,
+                (void**)&servprov);
+        if(SUCCEEDED(hres)) {
+            IServiceProvider_QueryService(servprov, &SID_SInternetSecurityManager,
+                    &IID_IInternetSecurityManager, (void**)&This->custom_manager);
+            IServiceProvider_Release(servprov);
+        }
+    }
+
+    return S_OK;
 }
 
 static HRESULT WINAPI SecManagerImpl_GetSecuritySite(IInternetSecurityManager *iface,
                                                      IInternetSecurityMgrSite **ppSite)
 {
-    FIXME("(%p)->( %p)\n", iface, ppSite);
-    return E_NOTIMPL;
+    SecManagerImpl *This = SECMGR_THIS(iface);
+
+    TRACE("(%p)->(%p)\n", This, ppSite);
+
+    if(!ppSite)
+        return E_INVALIDARG;
+
+    if(This->mgrsite)
+        IInternetSecurityMgrSite_AddRef(This->mgrsite);
+
+    *ppSite = This->mgrsite;
+    return S_OK;
 }
 
 static HRESULT WINAPI SecManagerImpl_MapUrlToZone(IInternetSecurityManager *iface,
                                                   LPCWSTR pwszUrl, DWORD *pdwZone,
                                                   DWORD dwFlags)
 {
-    FIXME("(%p)->(%s %p %08lx)\n", iface, debugstr_w(pwszUrl), pdwZone, dwFlags);
-    return E_NOTIMPL;
+    SecManagerImpl *This = SECMGR_THIS(iface);
+    LPWSTR url;
+    DWORD size;
+    HRESULT hres;
+
+    TRACE("(%p)->(%s %p %08lx)\n", iface, debugstr_w(pwszUrl), pdwZone, dwFlags);
+
+    if(This->custom_manager) {
+        hres = IInternetSecurityManager_MapUrlToZone(This->custom_manager,
+                pwszUrl, pdwZone, dwFlags);
+        if(hres != INET_E_DEFAULT_ACTION)
+            return hres;
+    }
+
+    if(!pwszUrl)
+        return E_INVALIDARG;
+
+    if(dwFlags)
+        FIXME("not supported flags: %08lx\n", dwFlags);
+
+    size = (strlenW(pwszUrl)+16) * sizeof(WCHAR);
+    url = HeapAlloc(GetProcessHeap(), 0, size);
+
+    hres = CoInternetParseUrl(pwszUrl, PARSE_SECURITY_URL, 0, url, size/sizeof(WCHAR), &size, 0);
+    if(FAILED(hres))
+        memcpy(url, pwszUrl, size);
+
+    hres = map_url_to_zone(url, pdwZone);
+
+    HeapFree(GetProcessHeap(), 0, url);
+
+    return hres;
 }
 
 static HRESULT WINAPI SecManagerImpl_GetSecurityId(IInternetSecurityManager *iface, 
                                                    LPCWSTR pwszUrl,
                                                    BYTE *pbSecurityId, DWORD *pcbSecurityId,
-                                                   DWORD dwReserved)
+                                                   DWORD_PTR dwReserved)
 {
-    FIXME("(%p)->(%s %p %p %08lx)\n", iface, debugstr_w(pwszUrl), pbSecurityId, pcbSecurityId,
+    SecManagerImpl *This = SECMGR_THIS(iface);
+    HRESULT hres;
+
+    TRACE("(%p)->(%s %p %p %08lx)\n", iface, debugstr_w(pwszUrl), pbSecurityId, pcbSecurityId,
           dwReserved);
+
+    if(This->custom_manager) {
+        hres = IInternetSecurityManager_GetSecurityId(This->custom_manager,
+                pwszUrl, pbSecurityId, pcbSecurityId, dwReserved);
+        if(hres != INET_E_DEFAULT_ACTION)
+            return hres;
+    }
+
+    FIXME("Default action is not implemented\n");
     return E_NOTIMPL;
 }
 
@@ -140,8 +296,20 @@ static HRESULT WINAPI SecManagerImpl_ProcessUrlAction(IInternetSecurityManager *
                                                       BYTE *pContext, DWORD cbContext,
                                                       DWORD dwFlags, DWORD dwReserved)
 {
-    FIXME("(%p)->(%s %08lx %p %08lx %p %08lx %08lx %08lx)\n", iface, debugstr_w(pwszUrl), dwAction,
+    SecManagerImpl *This = SECMGR_THIS(iface);
+    HRESULT hres;
+
+    TRACE("(%p)->(%s %08lx %p %08lx %p %08lx %08lx %08lx)\n", iface, debugstr_w(pwszUrl), dwAction,
           pPolicy, cbPolicy, pContext, cbContext, dwFlags, dwReserved);
+
+    if(This->custom_manager) {
+        hres = IInternetSecurityManager_ProcessUrlAction(This->custom_manager, pwszUrl, dwAction,
+                pPolicy, cbPolicy, pContext, cbContext, dwFlags, dwReserved);
+        if(hres != INET_E_DEFAULT_ACTION)
+            return hres;
+    }
+
+    FIXME("Default action is not implemented\n");
     return E_NOTIMPL;
 }
                                                
@@ -152,22 +320,58 @@ static HRESULT WINAPI SecManagerImpl_QueryCustomPolicy(IInternetSecurityManager 
                                                        BYTE *pContext, DWORD cbContext,
                                                        DWORD dwReserved)
 {
-    FIXME("(%p)->(%s %s %p %p %p %08lx %08lx )\n", iface, debugstr_w(pwszUrl), debugstr_guid(guidKey),
+    SecManagerImpl *This = SECMGR_THIS(iface);
+    HRESULT hres;
+
+    TRACE("(%p)->(%s %s %p %p %p %08lx %08lx )\n", iface, debugstr_w(pwszUrl), debugstr_guid(guidKey),
           ppPolicy, pcbPolicy, pContext, cbContext, dwReserved);
+
+    if(This->custom_manager) {
+        hres = IInternetSecurityManager_QueryCustomPolicy(This->custom_manager, pwszUrl, guidKey,
+                ppPolicy, pcbPolicy, pContext, cbContext, dwReserved);
+        if(hres != INET_E_DEFAULT_ACTION)
+            return hres;
+    }
+
+    FIXME("Default action is not implemented\n");
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI SecManagerImpl_SetZoneMapping(IInternetSecurityManager *iface,
                                                     DWORD dwZone, LPCWSTR pwszPattern, DWORD dwFlags)
 {
-    FIXME("(%p)->(%08lx %s %08lx)\n", iface, dwZone, debugstr_w(pwszPattern),dwFlags);
+    SecManagerImpl *This = SECMGR_THIS(iface);
+    HRESULT hres;
+
+    TRACE("(%p)->(%08lx %s %08lx)\n", iface, dwZone, debugstr_w(pwszPattern),dwFlags);
+
+    if(This->custom_manager) {
+        hres = IInternetSecurityManager_SetZoneMapping(This->custom_manager, dwZone,
+                pwszPattern, dwFlags);
+        if(hres != INET_E_DEFAULT_ACTION)
+            return hres;
+    }
+
+    FIXME("Default action is not implemented\n");
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI SecManagerImpl_GetZoneMappings(IInternetSecurityManager *iface,
-                                                     DWORD dwZone, IEnumString **ppenumString, DWORD dwFlags)
+        DWORD dwZone, IEnumString **ppenumString, DWORD dwFlags)
 {
-    FIXME("(%p)->(%08lx %p %08lx)\n", iface, dwZone, ppenumString,dwFlags);
+    SecManagerImpl *This = SECMGR_THIS(iface);
+    HRESULT hres;
+
+    TRACE("(%p)->(%08lx %p %08lx)\n", iface, dwZone, ppenumString,dwFlags);
+
+    if(This->custom_manager) {
+        hres = IInternetSecurityManager_GetZoneMappings(This->custom_manager, dwZone,
+                ppenumString, dwFlags);
+        if(hres != INET_E_DEFAULT_ACTION)
+            return hres;
+    }
+
+    FIXME("Default action is not implemented\n");
     return E_NOTIMPL;
 }
 
@@ -194,8 +398,11 @@ HRESULT SecManagerImpl_Construct(IUnknown *pUnkOuter, LPVOID *ppobj)
     This = HeapAlloc(GetProcessHeap(), 0, sizeof(*This));
 
     /* Initialize the virtual function table. */
-    This->lpvtbl1      = &VT_SecManagerImpl;
-    This->ref          = 1;
+    This->lpInternetSecurityManagerVtbl = &VT_SecManagerImpl;
+
+    This->ref = 1;
+    This->mgrsite = NULL;
+    This->custom_manager = NULL;
 
     *ppobj = This;
 
@@ -212,6 +419,46 @@ typedef struct {
     const IInternetZoneManagerVtbl* lpVtbl;
     LONG ref;
 } ZoneMgrImpl;
+
+static HRESULT open_zone_key(DWORD zone, HKEY *hkey, URLZONEREG zone_reg)
+{
+    static const WCHAR wszZonesKey[] =
+        {'S','o','f','t','w','a','r','e','\\',
+            'M','i','c','r','o','s','o','f','t','\\',
+            'W','i','n','d','o','w','s','\\',
+            'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
+            'I','n','t','e','r','n','e','t',' ','S','e','t','t','i','n','g','s','\\',
+            'Z','o','n','e','s','\\',0};
+    static const WCHAR wszFormat[] = {'%','s','%','l','d',0};
+
+    WCHAR key_name[sizeof(wszZonesKey)/sizeof(WCHAR)+8];
+    HKEY parent_key;
+    DWORD res;
+
+    switch(zone_reg) {
+    case URLZONEREG_DEFAULT: /* FIXME: TEST */
+    case URLZONEREG_HKCU:
+        parent_key = HKEY_CURRENT_USER;
+        break;
+    case URLZONEREG_HKLM:
+        parent_key = HKEY_LOCAL_MACHINE;
+        break;
+    default:
+        WARN("Unknown URLZONEREG: %d\n", zone_reg);
+        return E_FAIL;
+    };
+
+    wsprintfW(key_name, wszFormat, wszZonesKey, zone);
+
+    res = RegOpenKeyW(parent_key, key_name, hkey);
+
+    if(res != ERROR_SUCCESS) {
+        WARN("RegOpenKey failed\n");
+        return E_INVALIDARG;
+    }
+
+    return S_OK;
+}
 
 /********************************************************************
  *      IInternetZoneManager_QueryInterface
@@ -324,15 +571,41 @@ static HRESULT WINAPI ZoneMgrImpl_SetZoneCustomPolicy(IInternetZoneManager* ifac
  *      IInternetZoneManager_GetZoneActionPolicy
  */
 static HRESULT WINAPI ZoneMgrImpl_GetZoneActionPolicy(IInternetZoneManager* iface,
-                                                      DWORD dwZone,
-                                                      DWORD dwAction,
-                                                      BYTE* pPolicy,
-                                                      DWORD cbPolicy,
-                                                      URLZONEREG urlZoneReg)
+        DWORD dwZone, DWORD dwAction, BYTE* pPolicy, DWORD cbPolicy, URLZONEREG urlZoneReg)
 {
-    FIXME("(%p)->(%08lx %08lx %p %08lx %08x) stub\n", iface, dwZone, dwAction, pPolicy,
-                                                       cbPolicy, urlZoneReg);
-    return E_NOTIMPL;
+    WCHAR action[16];
+    HKEY hkey;
+    LONG res;
+    DWORD size = cbPolicy;
+    HRESULT hres;
+
+    static const WCHAR wszFormat[] = {'%','l','X',0};
+
+    TRACE("(%p)->(%ld %08lx %p %ld %d)\n", iface, dwZone, dwAction, pPolicy,
+            cbPolicy, urlZoneReg);
+
+    if(!pPolicy)
+        return E_INVALIDARG;
+
+    hres = open_zone_key(dwZone, &hkey, urlZoneReg);
+    if(FAILED(hres))
+        return hres;
+
+    wsprintfW(action, wszFormat, dwAction);
+
+    res = RegQueryValueExW(hkey, action, NULL, NULL, pPolicy, &size);
+    if(res == ERROR_MORE_DATA) {
+        hres = E_INVALIDARG;
+    }else if(res == ERROR_FILE_NOT_FOUND) {
+        hres = E_FAIL;
+    }else if(res != ERROR_SUCCESS) {
+        ERR("RegQueryValue failed: %ld\n", res);
+        hres = E_UNEXPECTED;
+    }
+
+    RegCloseKey(hkey);
+
+    return hres;
 }
 
 /********************************************************************
@@ -468,6 +741,10 @@ HRESULT WINAPI CoInternetCreateSecurityManager( IServiceProvider *pSP,
     IInternetSecurityManager **ppSM, DWORD dwReserved )
 {
     TRACE("%p %p %ld\n", pSP, ppSM, dwReserved );
+
+    if(pSP)
+        FIXME("pSP not supported\n");
+
     return SecManagerImpl_Construct(NULL, (void**) ppSM);
 }
 
