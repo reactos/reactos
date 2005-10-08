@@ -4,7 +4,6 @@ TOPOBJDIR = ../..
 SRCDIR    = @srcdir@
 VPATH     = @srcdir@
 LEXOPT    = -Cf #-w -b
-YACCOPT   = #-v
 EXEEXT    = @EXEEXT@
 
 PROGRAMS = wrc$(EXEEXT)
@@ -21,7 +20,7 @@ C_SRCS = \
 	writeres.c
 
 EXTRA_SRCS = parser.y parser.l
-EXTRA_OBJS = y.tab.o @LEX_OUTPUT_ROOT@.o
+EXTRA_OBJS = parser.tab.o @LEX_OUTPUT_ROOT@.o
 
 all: $(PROGRAMS)
 
@@ -30,17 +29,17 @@ all: $(PROGRAMS)
 wrc$(EXEEXT): $(OBJS) $(LIBDIR)/wpp/libwpp.a
 	$(CC) $(CFLAGS) -o $@ $(OBJS) -L$(LIBDIR) -lwpp -lwine_unicode -lwine_port $(LEXLIB) $(LDFLAGS)
 
-y.tab.c y.tab.h: parser.y
-	$(YACC) $(YACCOPT) -d -t $(SRCDIR)/parser.y
+parser.tab.c parser.tab.h: parser.y
+	$(BISON) -d -t $(SRCDIR)/parser.y -o parser.tab.c
 
 # hack to allow parallel make
-y.tab.h: y.tab.c
-y.tab.o: y.tab.h
+parser.tab.h: parser.tab.c
+parser.tab.o: parser.tab.h
 
 @LEX_OUTPUT_ROOT@.c: parser.l
 	$(LEX) $(LEXOPT) -d -8 $(SRCDIR)/parser.l
 
-@LEX_OUTPUT_ROOT@.o: y.tab.h
+@LEX_OUTPUT_ROOT@.o: parser.tab.h
 
 install:: $(PROGRAMS)
 	$(MKINSTALLDIRS) $(bindir) $(mandir)/man$(prog_manext)

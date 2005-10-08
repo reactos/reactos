@@ -109,7 +109,7 @@ cident	[a-zA-Z_][0-9a-zA-Z_]*
 #include "parser.h"
 #include "newstruc.h"
 
-#include "y.tab.h"
+#include "parser.tab.h"
 
 #define YY_USE_PROTOS
 #define YY_NO_UNPUT

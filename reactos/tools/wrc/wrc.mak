@@ -44,7 +44,7 @@ WRC_SOURCES = $(addprefix $(WRC_BASE_), \
 	utils.c \
 	wrc.c \
 	writeres.c \
-	y.tab.c \
+	parser.tab.c \
 	lex.yy.c \
 	port$(SEP)mkstemps.c \
 	)
@@ -104,7 +104,7 @@ $(WRC_INT_)writeres.o: $(WRC_BASE_)writeres.c | $(WRC_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
-$(WRC_INT_)y.tab.o: $(WRC_BASE_)y.tab.c | $(WRC_INT)
+$(WRC_INT_)parser.tab.o: $(WRC_BASE_)parser.tab.c | $(WRC_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 

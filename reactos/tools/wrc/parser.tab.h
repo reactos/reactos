@@ -247,7 +247,7 @@ typedef union YYSTYPE {
 	ani_any_t	*ani;
 } YYSTYPE;
 /* Line 1275 of yacc.c.  */
-#line 251 "y.tab.h"
+#line 251 "parser.tab.h"
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
 # define YYSTYPE_IS_TRIVIAL 1

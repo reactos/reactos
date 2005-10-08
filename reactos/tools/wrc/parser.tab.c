@@ -527,7 +527,7 @@ typedef union YYSTYPE {
 	ani_any_t	*ani;
 } YYSTYPE;
 /* Line 191 of yacc.c.  */
-#line 531 "y.tab.c"
+#line 531 "parser.tab.c"
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
 # define YYSTYPE_IS_TRIVIAL 1
@@ -539,7 +539,7 @@ typedef union YYSTYPE {
 
 
 /* Line 214 of yacc.c.  */
-#line 543 "y.tab.c"
+#line 543 "parser.tab.c"
 
 #if ! defined (yyoverflow) || YYERROR_VERBOSE
 
@@ -4167,7 +4167,7 @@ yyreduce:
     }
 
 /* Line 1000 of yacc.c.  */
-#line 4171 "y.tab.c"
+#line 4171 "parser.tab.c"
 
   yyvsp -= yylen;
   yyssp -= yylen;
