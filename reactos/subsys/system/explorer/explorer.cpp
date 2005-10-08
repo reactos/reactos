@@ -419,8 +419,10 @@ ResBitmap::ResBitmap(UINT nid)
 
 #ifndef ROSSHELL
 
-void explorer_show_frame(int cmdshow, LPTSTR lpCmdLine)
+void explorer_show_frame(int cmdShow, LPTSTR lpCmdLine)
 {
+	ExplorerCmd cmd;
+
 	if (g_Globals._hMainWnd) {
 		if (IsIconic(g_Globals._hMainWnd))
 			ShowWindow(g_Globals._hMainWnd, SW_RESTORE);
@@ -438,36 +440,122 @@ void explorer_show_frame(int cmdshow, LPTSTR lpCmdLine)
 	if (hMainFrame) {
 		g_Globals._hMainWnd = hMainFrame;
 
-		ShowWindow(hMainFrame, cmdshow);
+		ShowWindow(hMainFrame, cmdShow);
 		UpdateWindow(hMainFrame);
 
 		bool valid_dir = false;
 
-		if (lpCmdLine) {
-			DWORD attribs = GetFileAttributes(lpCmdLine);
+		cmd._cmdShow = cmdShow;
 
-			if (attribs!=INVALID_FILE_ATTRIBUTES && (attribs&FILE_ATTRIBUTE_DIRECTORY))
-				valid_dir = true;
-			else if (*lpCmdLine==':' || *lpCmdLine=='"')
-				valid_dir = true;
-		}
+		 // parse command line options
+		cmd.ParseCmdLine(lpCmdLine);
 
 		 // Open the first child window after initializing the application
-		if (valid_dir)
-			PostMessage(hMainFrame, PM_OPEN_WINDOW, 0, (LPARAM)lpCmdLine);
+		if (cmd.IsValidPath())
+			PostMessage(hMainFrame, PM_OPEN_WINDOW, cmd._flags, (LPARAM)lpCmdLine);
 		else
 			PostMessage(hMainFrame, PM_OPEN_WINDOW, 0/*OWM_EXPLORE|OWM_DETAILS*/, 0);
 	}
 }
 
+bool ExplorerCmd::ParseCmdLine(LPCTSTR lpCmdLine)
+{
+	bool ok = true;
+
+	LPCTSTR b = lpCmdLine;
+	LPCTSTR p = b;
+
+	while(*b) {
+		 // remove leading space
+		while(_istspace((unsigned)*b))
+			++b;
+
+		p = b;
+
+		bool quote = false;
+
+		 // options are separated by ','
+		for(; *p; ++p) {
+			if (*p == '"')	// Quote characters may appear at any position in the command line.
+				quote = !quote;
+			else if (*p==',' && !quote)
+				break;
+		}
+
+		if (p > b) {
+			int l = p - b;
+
+			 // remove trailing space
+			while(l>0 && _istspace((unsigned)b[l-1]))
+				--l;
+
+			if (!EvaluateOption(String(b, l)))
+				ok = false;
+
+			if (*p)
+				++p;
+
+			b = p;
+		}
+	}
+
+	return ok;
+}
+
+bool ExplorerCmd::EvaluateOption(LPCTSTR option)
+{
+	String opt_str;
+
+	 // Remove quote characters, as they are evaluated at this point.
+	for(; *option; ++option)
+		if (*option != '"')
+			opt_str += *option;
+
+	option = opt_str;
+
+	if (option[0] == '/') {
+		++option;
+
+		 // option /e for windows in explorer mode
+		if (!_tcsicmp(option, TEXT("e")))
+			_flags |= OWM_EXPLORE;
+		 // option /root for rooted explorer windows
+		else if (!_tcsicmp(option, TEXT("root")))
+			_flags |= OWM_ROOTED;
+		else
+			return false;
+	} else {
+		if (!_path.empty())
+			return false;
+
+		_path = opt_str;
+	}
+
+	return true;
+}
+
+bool ExplorerCmd::IsValidPath() const
+{
+	if (!_path.empty()) {
+		DWORD attribs = GetFileAttributes(_path);
+
+		if (attribs!=INVALID_FILE_ATTRIBUTES && (attribs&FILE_ATTRIBUTE_DIRECTORY))
+			return true;	// file system path
+		else if (*_path==':' && _path.at(1)==':')
+			return true;	// text encoded IDL
+	}
+
+	return false;
+}
+
 #else
 
-void explorer_show_frame(int cmdshow, LPTSTR lpCmdLine)
+void explorer_show_frame(int cmdShow, LPTSTR lpCmdLine)
 {
 	if (!lpCmdLine)
 		lpCmdLine = TEXT("explorer.exe");
 
-	launch_file(GetDesktopWindow(), lpCmdLine, cmdshow);
+	launch_file(GetDesktopWindow(), lpCmdLine, cmdShow);
 }
 
 #endif
@@ -567,7 +655,7 @@ static void InitInstance(HINSTANCE hInstance)
 }
 
 
-int explorer_main(HINSTANCE hInstance, LPTSTR lpCmdLine, int cmdshow)
+int explorer_main(HINSTANCE hInstance, LPTSTR lpCmdLine, int cmdShow)
 {
 	CONTEXT("explorer_main");
 
@@ -582,14 +670,14 @@ int explorer_main(HINSTANCE hInstance, LPTSTR lpCmdLine, int cmdshow)
 	}
 
 #ifndef ROSSHELL
-	if (cmdshow != SW_HIDE) {
+	if (cmdShow != SW_HIDE) {
 /*	// don't maximize if being called from the ROS desktop
-		if (cmdshow == SW_SHOWNORMAL)
+		if (cmdShow == SW_SHOWNORMAL)
 				///@todo read window placement from registry
-			cmdshow = SW_MAXIMIZE;
+			cmdShow = SW_MAXIMIZE;
 */
 
-		explorer_show_frame(cmdshow, lpCmdLine);
+		explorer_show_frame(cmdShow, lpCmdLine);
 	}
 #endif
 
@@ -617,7 +705,10 @@ int main(int argc, char* argv[])
 
 	LPWSTR cmdline = GetCommandLineW();
 
-	while(*cmdline && !_istspace(*cmdline))
+	while(*cmdline && !_istspace((unsigned)*cmdline))
+		++cmdline;
+
+	while(_istspace((unsigned)*cmdline))
 		++cmdline;
 
 	return wWinMain(GetModuleHandle(NULL), 0, cmdline, nShowCmd);
@@ -647,8 +738,19 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 
 	BOOL startup_desktop;
 
+	 // strip extended options from the front of the command line
+	String ext_options;
+
+	while(*lpCmdLine == '-') {
+		while(*lpCmdLine && !_istspace((unsigned)*lpCmdLine))
+			ext_options += *lpCmdLine++;
+
+		while(_istspace((unsigned)*lpCmdLine))
+			++lpCmdLine;
+	}
+
 	 // command line option "-install" to replace previous shell application with ROS Explorer
-	if (_tcsstr(lpCmdLine,TEXT("-install"))) {
+	if (_tcsstr(ext_options,TEXT("-install"))) {
 		 // install ROS Explorer into the registry
 		TCHAR path[MAX_PATH];
 
@@ -704,19 +806,21 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 #endif
 
 	 // If there is given the command line option "-desktop", create desktop window anyways
-	if (_tcsstr(lpCmdLine,TEXT("-desktop")))
+	if (_tcsstr(ext_options,TEXT("-desktop")))
 		startup_desktop = TRUE;
 #ifndef ROSSHELL
-	else if (_tcsstr(lpCmdLine,TEXT("-nodesktop")))
+	else if (_tcsstr(ext_options,TEXT("-nodesktop")))
 		startup_desktop = FALSE;
 
 	 // Don't display cabinet window in desktop mode
-	if (startup_desktop && !_tcsstr(lpCmdLine,TEXT("-explorer")))
+	if (startup_desktop && !_tcsstr(ext_options,TEXT("-explorer")))
 		nShowCmd = SW_HIDE;
 #endif
 
-	if (_tcsstr(lpCmdLine,TEXT("-noautostart")))
+	if (_tcsstr(ext_options,TEXT("-noautostart")))
 		autostart = false;
+	else if (_tcsstr(ext_options,TEXT("-autostart")))
+		autostart = true;
 
 	if (startup_desktop) {
 		 // hide the XP login screen (Credit to Nicolas Escuder)
@@ -752,12 +856,6 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 	}
 
 #ifndef ROSSHELL
-	/**TODO fix command line handling */
-	if (*lpCmdLine=='"' && lpCmdLine[_tcslen(lpCmdLine)-1]=='"') {
-		++lpCmdLine;
-		lpCmdLine[_tcslen(lpCmdLine)-1] = '\0';
-	}
-
 	if (g_Globals._hwndDesktop)
 		g_Globals._desktop_mode = true;
 #endif

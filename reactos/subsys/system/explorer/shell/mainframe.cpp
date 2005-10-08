@@ -82,6 +82,8 @@ void MainFrame::update_explorer_view()
 		delete _shellBrowser.release();
 	}
 
+	///@todo use OWM_ROOTED flag
+
 	 // create explorer treeview
 	if (_create_info._open_mode & OWM_EXPLORE) {
 		if (!_left_hwnd) {

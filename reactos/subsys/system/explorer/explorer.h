@@ -55,6 +55,39 @@
 
 #include "shell/shellbrowser.h"
 
+
 #ifndef ROSSHELL
+
+ /// Explorer command line parser
+ // for commands like "/e,/root,c:\"
+ // or "::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\::{21EC2020-3AEA-1069-A2DD-08002B30309D}" (launch of control panel)
+struct ExplorerCmd
+{
+	ExplorerCmd()
+	 :	_flags(0),
+		_cmdShow(SW_SHOWNORMAL),
+		_valid_path(false)
+	{
+	}
+
+	ExplorerCmd(LPCTSTR url)
+	 :	_path(url),
+		_flags(0),
+		_cmdShow(SW_SHOWNORMAL),
+		_valid_path(true)	//@@
+	{
+	}
+
+	bool	ParseCmdLine(LPCTSTR lpCmdLine);
+	bool	EvaluateOption(LPCTSTR option);
+	bool	IsValidPath() const;
+
+	String	_path;
+	int		_flags;	// OPEN_WINDOW_MODE
+	int		_cmdShow;
+	bool	_valid_path;
+};
+
 #include "shell/mainframe.h"
+
 #endif

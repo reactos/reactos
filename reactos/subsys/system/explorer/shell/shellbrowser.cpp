@@ -633,7 +633,8 @@ void ShellBrowserChild::jump_to(LPCITEMIDLIST pidl)
 {
 	Entry* entry = NULL;
 
-	 //@@
+	///@todo use OWM_EXPLORE flag in _create_info._open_mode
+
 	if (!_cur_dir)
 		_cur_dir = static_cast<ShellDirectory*>(_root._entry);
 

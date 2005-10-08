@@ -805,7 +805,9 @@ END
 //
 // Generated from the TEXTINCLUDE 3 resource.
 //
+#ifndef ROSSHELL
 IDB_TOOLBAR BITMAP DISCARDABLE "res/toolbar.bmp"
+#endif
 #ifndef _ROS_
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE 
