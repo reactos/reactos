@@ -171,11 +171,7 @@ VOID CompleteFilename (LPTSTR str, UINT charcount)
 
 		if(!perfectmatch)
 		{
-#ifdef __REACTOS__
-			Beep (440, 50);
-#else
 			MessageBeep (-1);
-#endif
 		}
 	}
 	else
@@ -193,11 +189,7 @@ VOID CompleteFilename (LPTSTR str, UINT charcount)
 			}
 		}
 
-#ifdef __REACTOS__
-		Beep (440, 50);
-#else
 		MessageBeep (-1);
-#endif
 	}
 }
 
@@ -346,11 +338,7 @@ BOOL ShowCompletionMatches (LPTSTR str, INT charcount)
 	else
 	{
 		/* no match found */
-#ifdef __REACTOS__
-		Beep (440, 50);
-#else
 		MessageBeep (-1);
-#endif
 		return FALSE;
 	}
 

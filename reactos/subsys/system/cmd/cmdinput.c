@@ -356,11 +356,7 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 				}
 				else
 				{
-#ifdef __REACTOS__
-					Beep (440, 50);
-#else
 					MessageBeep (-1);
-#endif
 				}
 #endif
 #ifdef FEATURE_4NT_FILENAME_COMPLETION
@@ -478,11 +474,7 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 				}
 				else
 				{
-#ifdef __REACTOS__
-					Beep (440, 50);
-#else
 					MessageBeep (-1);
-#endif
 				}
 				break;
 
@@ -555,11 +547,7 @@ VOID ReadCommand (LPTSTR str, INT maxlen)
 #if 0
 				else
 				{
-#ifdef __REACTOS__
-					Beep (440, 100);
-#else
 					MessageBeep (-1);
-#endif
 				}
 #endif
 				break;

@@ -43,11 +43,7 @@ INT cmd_beep (LPTSTR cmd, LPTSTR param)
 	if (bc == NULL)
 		return 1;
 #endif
-#ifdef __REACTOS__
-    Beep (440, 50);
-#else
 	MessageBeep (-1);
-#endif
 
 	return 0;
 }
