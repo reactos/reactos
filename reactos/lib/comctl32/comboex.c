@@ -473,7 +473,7 @@ static CBE_ITEMDATA * COMBOEX_FindItem(COMBOEX_INFO *infoPtr, INT index)
     CBE_ITEMDATA *item;
     INT i;
 
-    if ((index > infoPtr->nb_items) || (index < -1))
+    if ((index >= infoPtr->nb_items) || (index < -1))
 	return 0;
     if (index == -1)
 	return infoPtr->edit;
@@ -509,7 +509,7 @@ static INT COMBOEX_DeleteItem (COMBOEX_INFO *infoPtr, INT index)
     TRACE("(index=%d)\n", index);
 
     /* if item number requested does not exist then return failure */
-    if ((index > infoPtr->nb_items) || (index < 0)) return CB_ERR;
+    if ((index >= infoPtr->nb_items) || (index < 0)) return CB_ERR;
     if (!(item = COMBOEX_FindItem(infoPtr, index))) return CB_ERR;
 
     /* doing this will result in WM_DELETEITEM being issued */
@@ -527,7 +527,7 @@ static BOOL COMBOEX_GetItemW (COMBOEX_INFO *infoPtr, COMBOBOXEXITEMW *cit)
     TRACE("(...)\n");
 
     /* if item number requested does not exist then return failure */
-    if ((index > infoPtr->nb_items) || (index < -1)) return FALSE;
+    if ((index >= infoPtr->nb_items) || (index < -1)) return FALSE;
 
     /* if the item is the edit control and there is no edit control, skip */
     if ((index == -1) && !COMBOEX_HasEdit(infoPtr)) return FALSE;
@@ -587,7 +587,7 @@ static INT COMBOEX_InsertItemW (COMBOEX_INFO *infoPtr, COMBOBOXEXITEMW *cit)
     /* get real index of item to insert */
     index = cit->iItem;
     if (index == -1) index = infoPtr->nb_items;
-    if (index > infoPtr->nb_items) index = infoPtr->nb_items;
+    if (index > infoPtr->nb_items) return -1;
 
     /* get zero-filled space and chain it in */
     if(!(item = (CBE_ITEMDATA *)Alloc (sizeof(*item)))) return -1;
@@ -740,7 +740,7 @@ static BOOL COMBOEX_SetItemW (COMBOEX_INFO *infoPtr, COMBOBOXEXITEMW *cit)
     if (TRACE_ON(comboex)) COMBOEX_DumpInput (cit);
 
     /* if item number requested does not exist then return failure */
-    if ((index > infoPtr->nb_items) || (index < -1)) return FALSE;
+    if ((index >= infoPtr->nb_items) || (index < -1)) return FALSE;
 
     /* if the item is the edit control and there is no edit control, skip */
     if ((index == -1) && !COMBOEX_HasEdit(infoPtr)) return FALSE;

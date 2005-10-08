@@ -579,7 +579,7 @@ INT WINAPI AddMRUStringA(HANDLE hList, LPCSTR lpszString)
     if (!stringW)
         return -1;
 
-    MultiByteToWideChar(CP_ACP, 0, lpszString, -1, stringW, len);
+    MultiByteToWideChar(CP_ACP, 0, lpszString, -1, stringW, len/sizeof(WCHAR));
     ret = AddMRUData(hList, stringW, len);
     Free(stringW);
     return ret;
@@ -689,6 +689,8 @@ static HANDLE CreateMRUListLazy_common(LPWINEMRULIST mp)
 	    datasize = 2;
 	    *mp->realMRU = 0;
 	}
+        else
+            datasize /= sizeof(WCHAR);
 
 	TRACE("MRU list = %s, datasize = %ld\n", debugstr_w(mp->realMRU), datasize);
 

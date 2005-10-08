@@ -390,7 +390,7 @@ typedef struct tagLISTVIEW_INFO
 #define LISTVIEW_DUMP(iP) do { \
   TRACE("hwndSelf=%p, clrBk=0x%06lx, clrText=0x%06lx, clrTextBk=0x%06lx, ItemHeight=%d, ItemWidth=%d, Style=0x%08lx\n", \
         iP->hwndSelf, iP->clrBk, iP->clrText, iP->clrTextBk, \
-        iP->nItemHeight, iP->nItemWidth, infoPtr->dwStyle); \
+        iP->nItemHeight, iP->nItemWidth, iP->dwStyle); \
   TRACE("hwndSelf=%p, himlNor=%p, himlSml=%p, himlState=%p, Focused=%d, Hot=%d, exStyle=0x%08lx, Focus=%d\n", \
         iP->hwndSelf, iP->himlNormal, iP->himlSmall, iP->himlState, \
         iP->nFocusedItem, iP->nHotItem, iP->dwLvExStyle, iP->bFocus ); \

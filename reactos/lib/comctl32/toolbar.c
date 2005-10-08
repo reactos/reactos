@@ -41,7 +41,6 @@
  *     - WM_WININICHANGE
  *   - Notifications:
  *     - NM_CHAR
- *     - NM_KEYDOWN
  *     - TBN_GETOBJECT
  *     - TBN_SAVE
  *   - Button wrapping (under construction).
@@ -1278,12 +1277,21 @@ TOOLBAR_WrapToolbar( HWND hwnd, DWORD dwStyle )
     btnPtr = infoPtr->buttons;
     x  = infoPtr->nIndent;
 
-    /* this can get the parents width, to know how far we can extend
-     * this toolbar.  We cannot use its height, as there may be multiple
-     * toolbars in a rebar control
-     */
-    GetClientRect( GetParent(hwnd), &rc );
-    infoPtr->nWidth = rc.right - rc.left;
+    if (GetParent(hwnd))
+    {
+        /* this can get the parents width, to know how far we can extend
+         * this toolbar.  We cannot use its height, as there may be multiple
+         * toolbars in a rebar control
+         */
+        GetClientRect( GetParent(hwnd), &rc );
+        infoPtr->nWidth = rc.right - rc.left;
+    }
+    else
+    {
+        GetWindowRect( hwnd, &rc );
+        infoPtr->nWidth = rc.right - rc.left;
+    }
+
     bButtonWrap = FALSE;
 
     TRACE("start ButtonWidth=%d, BitmapWidth=%d, nWidth=%d, nIndent=%d\n",
@@ -2193,6 +2201,7 @@ TOOLBAR_CustomizeDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		WCHAR Buffer[256];
 		int i = 0;
 		int index;
+		NMTBINITCUSTOMIZE nmtbic;
 
 		infoPtr = custInfo->tbInfo;
 
@@ -2202,10 +2211,9 @@ TOOLBAR_CustomizeDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		if (!TOOLBAR_SendNotify(&nmtb.hdr, infoPtr, TBN_QUERYINSERT))
 		    return FALSE;
 
-		/* UNDOCUMENTED: dialog hwnd immediately follows NMHDR */
-		memcpy(&nmtb.iItem, &hwnd, sizeof(hwnd));
+		nmtbic.hwndDialog = hwnd;
 		/* Send TBN_INITCUSTOMIZE notification */
-		if (TOOLBAR_SendNotify ((NMHDR *) &nmtb, infoPtr, TBN_INITCUSTOMIZE) ==
+		if (TOOLBAR_SendNotify (&nmtbic.hdr, infoPtr, TBN_INITCUSTOMIZE) ==
 		    TBNRF_HIDEHELP)
                 {
                     TRACE("TBNRF_HIDEHELP requested\n");
@@ -5783,6 +5791,77 @@ TOOLBAR_GetFont (HWND hwnd, WPARAM wParam, LPARAM lParam)
 }
 
 
+static void
+TOOLBAR_SetRelativeHotItem(TOOLBAR_INFO *infoPtr, INT iDirection, DWORD dwReason)
+{
+    INT i;
+    INT nNewHotItem = infoPtr->nHotItem;
+
+    for (i = 0; i < infoPtr->nNumButtons; i++)
+    {
+        /* did we wrap? */
+        if ((nNewHotItem + iDirection < 0) ||
+            (nNewHotItem + iDirection >= infoPtr->nNumButtons))
+        {
+            NMTBWRAPHOTITEM nmtbwhi;
+            nmtbwhi.idNew = infoPtr->buttons[nNewHotItem].idCommand;
+            nmtbwhi.iDirection = iDirection;
+            nmtbwhi.dwReason = dwReason;
+    
+            if (TOOLBAR_SendNotify(&nmtbwhi.hdr, infoPtr, TBN_WRAPHOTITEM))
+                return;
+        }
+
+        nNewHotItem += iDirection;
+        nNewHotItem = (nNewHotItem + infoPtr->nNumButtons) % infoPtr->nNumButtons;
+
+        if ((infoPtr->buttons[nNewHotItem].fsState & TBSTATE_ENABLED) &&
+            !(infoPtr->buttons[nNewHotItem].fsStyle & BTNS_SEP))
+        {
+            TOOLBAR_SetHotItemEx(infoPtr, nNewHotItem, dwReason);
+            break;
+        }
+    }
+}
+
+static LRESULT
+TOOLBAR_KeyDown (HWND hwnd, WPARAM wParam, LPARAM lParam)
+{
+    TOOLBAR_INFO *infoPtr = TOOLBAR_GetInfoPtr (hwnd);
+    NMKEY nmkey;
+
+    nmkey.nVKey = (UINT)wParam;
+    nmkey.uFlags = HIWORD(lParam);
+
+    if (TOOLBAR_SendNotify(&nmkey.hdr, infoPtr, NM_KEYDOWN))
+        return DefWindowProcW(hwnd, WM_KEYDOWN, wParam, lParam);
+
+    switch ((UINT)wParam)
+    {
+    case VK_LEFT:
+    case VK_UP:
+        TOOLBAR_SetRelativeHotItem(infoPtr, -1, HICF_ARROWKEYS);
+        break;
+    case VK_RIGHT:
+    case VK_DOWN:
+        TOOLBAR_SetRelativeHotItem(infoPtr, 1, HICF_ARROWKEYS);
+        break;
+    case VK_SPACE:
+    case VK_RETURN:
+        if ((infoPtr->nHotItem >= 0) &&
+            (infoPtr->buttons[infoPtr->nHotItem].fsState & TBSTATE_ENABLED))
+        {
+            SendMessageW (infoPtr->hwndNotify, WM_COMMAND,
+                MAKEWPARAM(infoPtr->buttons[infoPtr->nHotItem].idCommand, BN_CLICKED),
+                (LPARAM)hwnd);
+        }
+        break;
+    }
+
+    return 0;
+}
+
+
 static LRESULT
 TOOLBAR_LButtonDblClk (HWND hwnd, WPARAM wParam, LPARAM lParam)
 {
@@ -6080,7 +6159,7 @@ TOOLBAR_LButtonUp (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	if (btnPtr->fsState & TBSTATE_ENABLED)
 	{
 	    SendMessageW (infoPtr->hwndNotify, WM_COMMAND,
-	      MAKEWPARAM(infoPtr->buttons[nHit].idCommand, 0), (LPARAM)hwnd);
+	      MAKEWPARAM(infoPtr->buttons[nHit].idCommand, BN_CLICKED), (LPARAM)hwnd);
         }
     }
 
@@ -6320,6 +6399,7 @@ TOOLBAR_NCCreate (HWND hwnd, WPARAM wParam, LPARAM lParam)
     /* paranoid!! */
     infoPtr->dwStructSize = sizeof(TBBUTTON);
     infoPtr->nRows = 1;
+    infoPtr->nWidth = 0;
 
     /* fix instance handle, if the toolbar was created by CreateToolbarEx() */
     if (!GetWindowLongPtrW (hwnd, GWLP_HINSTANCE)) {
@@ -6483,23 +6563,24 @@ static LRESULT TOOLBAR_TTGetDispInfo (TOOLBAR_INFO *infoPtr, NMTTDISPINFOW *lpnm
 
         TRACE("TBN_GETINFOTIPA - got string %s\n", debugstr_a(tbgit.pszText));
 
-        len = -1 + MultiByteToWideChar(CP_ACP, 0, tbgit.pszText, -1, NULL, 0);
-        if (len > sizeof(lpnmtdi->szText)/sizeof(lpnmtdi->szText[0])-1)
+        len = MultiByteToWideChar(CP_ACP, 0, tbgit.pszText, -1, NULL, 0);
+        if (len > sizeof(lpnmtdi->szText)/sizeof(lpnmtdi->szText[0]))
         {
             /* need to allocate temporary buffer in infoPtr as there
              * isn't enough space in buffer passed to us by the
              * tooltip control */
-            infoPtr->pszTooltipText = Alloc((len+1)*sizeof(WCHAR));
+            infoPtr->pszTooltipText = Alloc(len*sizeof(WCHAR));
             if (infoPtr->pszTooltipText)
             {
-                MultiByteToWideChar(CP_ACP, 0, tbgit.pszText, len+1, infoPtr->pszTooltipText, (len+1)*sizeof(WCHAR));
+                MultiByteToWideChar(CP_ACP, 0, tbgit.pszText, -1, infoPtr->pszTooltipText, len);
                 lpnmtdi->lpszText = infoPtr->pszTooltipText;
                 return 0;
             }
         }
         else if (len > 0)
         {
-            MultiByteToWideChar(CP_ACP, 0, tbgit.pszText, len+1, lpnmtdi->lpszText, (len+1)*sizeof(WCHAR));
+            MultiByteToWideChar(CP_ACP, 0, tbgit.pszText, -1,
+                                lpnmtdi->lpszText, sizeof(lpnmtdi->szText)/sizeof(lpnmtdi->szText[0]));
             return 0;
         }
     }
@@ -6633,6 +6714,21 @@ TOOLBAR_Paint (HWND hwnd, WPARAM wParam)
 
     TOOLBAR_Refresh (hwnd, hdc, &ps);
     if (!wParam) EndPaint (hwnd, &ps);
+
+    return 0;
+}
+
+
+static LRESULT
+TOOLBAR_SetFocus (HWND hwnd, WPARAM wParam)
+{
+    TOOLBAR_INFO *infoPtr = TOOLBAR_GetInfoPtr (hwnd);
+
+    TRACE("nHotItem = %d\n", infoPtr->nHotItem);
+
+    /* make first item hot */
+    if (infoPtr->nNumButtons > 0)
+        TOOLBAR_SetHotItemEx(infoPtr, 0, HICF_OTHER);
 
     return 0;
 }
@@ -7091,7 +7187,9 @@ ToolbarWindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_GETFONT:
 		return TOOLBAR_GetFont (hwnd, wParam, lParam);
 
-/*	case WM_KEYDOWN: */
+	case WM_KEYDOWN:
+	    return TOOLBAR_KeyDown (hwnd, wParam, lParam);
+
 /*	case WM_KILLFOCUS: */
 
 	case WM_LBUTTONDBLCLK:
@@ -7138,6 +7236,9 @@ ToolbarWindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_PAINT:
 	    return TOOLBAR_Paint (hwnd, wParam);
+
+	case WM_SETFOCUS:
+	    return TOOLBAR_SetFocus (hwnd, wParam);
 
 	case WM_SETREDRAW:
 	    return TOOLBAR_SetRedraw (hwnd, wParam, lParam);

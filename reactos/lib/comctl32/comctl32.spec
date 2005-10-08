@@ -15,7 +15,7 @@
  11 stdcall -noname DPA_Merge(ptr ptr long ptr ptr long)
 #12 stub Cctl1632_ThunkData32
  13 stdcall MakeDragList(long)
- 14 stdcall LBItemFromPt(long long long long)
+ 14 stdcall LBItemFromPt(long double long)
  15 stdcall DrawInsert(long long long)
  16 stdcall CreateUpDownControl(long long long long long long long long long long long long)
  17 stdcall InitCommonControls()

@@ -252,15 +252,12 @@ static void ANIMATE_TransparentBlt(ANIMATE_INFO *infoPtr, HDC hdcDest, HDC hdcSo
 
 static BOOL ANIMATE_PaintFrame(ANIMATE_INFO* infoPtr, HDC hDC)
 {
-    void* pBitmapData = NULL;
-    LPBITMAPINFO pBitmapInfo = NULL;
-
+    void *pBitmapData;
+    LPBITMAPINFO pBitmapInfo;
     HDC hdcMem;
     HBITMAP hbmOld;
-
     int nOffsetX = 0;
     int nOffsetY = 0;
-
     int nWidth;
     int nHeight;
 
@@ -289,10 +286,10 @@ static BOOL ANIMATE_PaintFrame(ANIMATE_INFO* infoPtr, HDC hDC)
         infoPtr->hbmPrevFrame=CreateCompatibleBitmap(hDC, nWidth,nHeight );
     }
 
-    SetDIBits(hDC, infoPtr->hbmPrevFrame, 0, nHeight, pBitmapData, (LPBITMAPINFO)pBitmapInfo, DIB_RGB_COLORS);
-
     hdcMem = CreateCompatibleDC(hDC);
     hbmOld = SelectObject(hdcMem, infoPtr->hbmPrevFrame);
+
+    SetDIBits(hdcMem, infoPtr->hbmPrevFrame, 0, nHeight, pBitmapData, pBitmapInfo, DIB_RGB_COLORS);
 
     /*
      * we need to get the transparent color even without ACS_TRANSPARENT,

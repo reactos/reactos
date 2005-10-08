@@ -775,8 +775,8 @@ TREEVIEW_UpdateDispInfo(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *wineItem,
 		wineItem->pszText = newText;
 		MultiByteToWideChar( CP_ACP, 0,
 				     (LPSTR)callback.item.pszText, -1,
-				     wineItem->pszText, buflen);
-		wineItem->cchTextMax = buflen;
+				     wineItem->pszText, buflen/sizeof(WCHAR));
+		wineItem->cchTextMax = buflen/sizeof(WCHAR);
 	    }
 	    /* If ReAlloc fails we have nothing to do, but keep original text */
 	}
@@ -818,8 +818,8 @@ TREEVIEW_UpdateDispInfo(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *wineItem,
 		wineItem->pszText = newText;
 		MultiByteToWideChar( CP_ACP, 0,
 				     (LPSTR)callback.item.pszText, -1,
-				     wineItem->pszText, buflen);
-		wineItem->cchTextMax = buflen;
+				     wineItem->pszText, buflen/sizeof(WCHAR));
+		wineItem->cchTextMax = buflen/sizeof(WCHAR);
 		if (oldText)
 		    Free(oldText);
 	    }

@@ -147,6 +147,20 @@ void THEMING_Initialize (void)
 }
 
 /***********************************************************************
+ * THEMING_Uninitialize
+ *
+ * Unregister shadow classes for standard controls.
+ */
+void THEMING_Uninitialize (void)
+{
+    int i;
+    for (i = 0; i < NUM_SUBCLASSES; i++)
+    {
+        UnregisterClassW (subclasses[i].className, NULL);
+    }
+}
+
+/***********************************************************************
  * THEMING_CallOriginalClass
  *
  * Determines the original window proc and calls it.
