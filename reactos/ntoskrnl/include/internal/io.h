@@ -304,6 +304,22 @@ RawFsDriverEntry(PDRIVER_OBJECT DriverObject,
                  PUNICODE_STRING RegistryPath);
 
 
+/* pnpmgr.c */
+
+PDEVICE_NODE
+FASTCALL
+IopGetDeviceNode(PDEVICE_OBJECT DeviceObject);
+
+NTSTATUS
+IopActionConfigureChildServices(PDEVICE_NODE DeviceNode,
+                                PVOID Context);
+
+NTSTATUS
+IopActionInitChildServices(PDEVICE_NODE DeviceNode,
+                           PVOID Context,
+                           BOOLEAN BootDrivers);
+
+
 /* pnproot.c */
 
 NTSTATUS

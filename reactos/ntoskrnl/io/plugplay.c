@@ -562,13 +562,45 @@ IopGetDeviceDepth(PPLUGPLAY_CONTROL_DEPTH_DATA DepthData)
     if (DeviceObject == NULL)
         return STATUS_NO_SUCH_DEVICE;
 
-    DeviceNode = ((PEXTENDED_DEVOBJ_EXTENSION)DeviceObject->DeviceObjectExtension)->DeviceNode;
+    DeviceNode = IopGetDeviceNode(DeviceObject);
 
     DepthData->Depth = DeviceNode->Level;
 
     ObDereferenceObject(DeviceObject);
 
     return STATUS_SUCCESS;
+}
+
+
+static NTSTATUS
+IopResetDevice(PPLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData)
+{
+    PDEVICE_OBJECT DeviceObject;
+    PDEVICE_NODE DeviceNode;
+    NTSTATUS Status;
+
+    DPRINT("IopResetDevice() called\n");
+    DPRINT("Device name: %wZ\n", &ResetDeviceData->DeviceInstance);
+
+    /* Get the device object */
+    DeviceObject = IopGetDeviceObjectFromDeviceInstance(&ResetDeviceData->DeviceInstance);
+    if (DeviceObject == NULL)
+        return STATUS_NO_SUCH_DEVICE;
+
+    DeviceNode = IopGetDeviceNode(DeviceObject);
+
+    /* FIXME: we should stop the device, before starting it again */
+
+    /* Start the device */
+    IopDeviceNodeClearFlag(DeviceNode, DNF_DISABLED);
+    Status = IopActionConfigureChildServices(DeviceNode, DeviceNode->Parent);
+
+    if (NT_SUCCESS(Status))
+        Status = IopActionInitChildServices(DeviceNode, DeviceNode->Parent, FALSE);
+
+    ObDereferenceObject(DeviceObject);
+
+    return Status;
 }
 
 
@@ -697,6 +729,11 @@ NtPlugPlayControl(IN PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
             if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_DEPTH_DATA))
                 return STATUS_INVALID_PARAMETER;
             return IopGetDeviceDepth((PPLUGPLAY_CONTROL_DEPTH_DATA)Buffer);
+
+        case PlugPlayControlResetDevice:
+            if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_RESET_DEVICE_DATA))
+                return STATUS_INVALID_PARAMETER;
+            return IopResetDevice((PPLUGPLAY_CONTROL_RESET_DEVICE_DATA)Buffer);
 
         default:
             return STATUS_NOT_IMPLEMENTED;

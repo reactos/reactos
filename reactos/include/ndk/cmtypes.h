@@ -65,7 +65,8 @@ typedef enum _PLUGPLAY_CONTROL_CLASS
     PlugPlayControlProperty = 0x0A,
     PlugPlayControlGetRelatedDevice = 0x0C,
     PlugPlayControlDeviceStatus = 0x0E,
-    PlugPlayControlGetDeviceDepth
+    PlugPlayControlGetDeviceDepth,
+    PlugPlayControlResetDevice = 0x14
 } PLUGPLAY_CONTROL_CLASS;
 
 typedef enum _PLUGPLAY_BUS_CLASS
@@ -362,11 +363,17 @@ typedef struct _PLUGPLAY_CONTOL_STATUS_DATA
 } PLUGPLAY_CONTROL_STATUS_DATA, *PPLUGPLAY_CONTROL_STATUS_DATA;
 
 /* Class 0x0F */
-typedef struct _PLUGPLAY_CONTOL_DEPTH_DATA
+typedef struct _PLUGPLAY_CONTROL_DEPTH_DATA
 {
     UNICODE_STRING DeviceInstance;
     ULONG Depth;
 } PLUGPLAY_CONTROL_DEPTH_DATA, *PPLUGPLAY_CONTROL_DEPTH_DATA;
+
+/* Class 0x14 */
+typedef struct _PLUGPLAY_CONTROL_RESET_DEVICE_DATA
+{
+   UNICODE_STRING DeviceInstance;
+} PLUGPLAY_CONTROL_RESET_DEVICE_DATA, *PPLUGPLAY_CONTROL_RESET_DEVICE_DATA;
 
 typedef struct _PLUGPLAY_BUS_TYPE
 {
