@@ -1,5 +1,5 @@
 /*
- * Implementation of IProvideClassInfo interfaces for IE Web Browser control
+ * Implementation of IProvideClassInfo interfaces for WebBrowser control
  *
  * Copyright 2001 John R. Sheets (for CodeWeavers)
  *
@@ -29,96 +29,35 @@
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
 /**********************************************************************
- * Implement the IProvideClassInfo interface
- *
- * FIXME: Should we just pass in the IProvideClassInfo2 methods rather
- *        reimplementing them here?
+ * Implement the IProvideClassInfo2 interface
  */
 
-static HRESULT WINAPI WBPCI_QueryInterface(LPPROVIDECLASSINFO iface,
-                                           REFIID riid, LPVOID *ppobj)
+#define CLASSINFO_THIS(iface) DEFINE_THIS(WebBrowser, ProvideClassInfo, iface)
+
+static HRESULT WINAPI ProvideClassInfo_QueryInterface(IProvideClassInfo2 *iface,
+        REFIID riid, LPVOID *ppobj)
 {
-    FIXME("- no interface\n\tIID:\t%s\n", debugstr_guid(riid));
-
-    if (ppobj == NULL) return E_POINTER;
-
-    return E_NOINTERFACE;
+    WebBrowser *This = CLASSINFO_THIS(iface);
+    return IWebBrowser_QueryInterface(WEBBROWSER(This), riid, ppobj);
 }
 
-static ULONG WINAPI WBPCI_AddRef(LPPROVIDECLASSINFO iface)
+static ULONG WINAPI ProvideClassInfo_AddRef(IProvideClassInfo2 *iface)
 {
-    SHDOCVW_LockModule();
-
-    return 2; /* non-heap based object */
+    WebBrowser *This = CLASSINFO_THIS(iface);
+    return IWebBrowser_AddRef(WEBBROWSER(This));
 }
 
-static ULONG WINAPI WBPCI_Release(LPPROVIDECLASSINFO iface)
+static ULONG WINAPI ProvideClassInfo_Release(IProvideClassInfo2 *iface)
 {
-    SHDOCVW_UnlockModule();
-
-    return 1; /* non-heap based object */
+    WebBrowser *This = CLASSINFO_THIS(iface);
+    return IWebBrowser_Release(WEBBROWSER(This));
 }
 
-/* Return an ITypeInfo interface to retrieve type library info about
- * this control.
- */
-static HRESULT WINAPI WBPCI_GetClassInfo(LPPROVIDECLASSINFO iface, LPTYPEINFO *ppTI)
+static HRESULT WINAPI ProvideClassInfo_GetClassInfo(IProvideClassInfo2 *iface, LPTYPEINFO *ppTI)
 {
-    FIXME("stub: LPTYPEINFO = %p\n", *ppTI);
-    return S_OK;
-}
-
-/**********************************************************************
- * IProvideClassInfo virtual function table for IE Web Browser component
- */
-
-static const IProvideClassInfoVtbl WBPCI_Vtbl =
-{
-    WBPCI_QueryInterface,
-    WBPCI_AddRef,
-    WBPCI_Release,
-    WBPCI_GetClassInfo
-};
-
-IProvideClassInfoImpl SHDOCVW_ProvideClassInfo = { &WBPCI_Vtbl};
-
-
-/**********************************************************************
- * Implement the IProvideClassInfo2 interface (inherits from
- * IProvideClassInfo).
- */
-
-static HRESULT WINAPI WBPCI2_QueryInterface(LPPROVIDECLASSINFO2 iface,
-                                            REFIID riid, LPVOID *ppobj)
-{
-    FIXME("- no interface\n\tIID:\t%s\n", debugstr_guid(riid));
-
-    if (ppobj == NULL) return E_POINTER;
-    
-    return E_NOINTERFACE;
-}
-
-static ULONG WINAPI WBPCI2_AddRef(LPPROVIDECLASSINFO2 iface)
-{
-    SHDOCVW_LockModule();
-
-    return 2; /* non-heap based object */
-}
-
-static ULONG WINAPI WBPCI2_Release(LPPROVIDECLASSINFO2 iface)
-{
-    SHDOCVW_UnlockModule();
-
-    return 1; /* non-heap based object */
-}
-
-/* Return an ITypeInfo interface to retrieve type library info about
- * this control.
- */
-static HRESULT WINAPI WBPCI2_GetClassInfo(LPPROVIDECLASSINFO2 iface, LPTYPEINFO *ppTI)
-{
-    FIXME("stub: LPTYPEINFO = %p\n", *ppTI);
-    return S_OK;
+    WebBrowser *This = CLASSINFO_THIS(iface);
+    FIXME("(%p)->(%p)\n", This, ppTI);
+    return E_NOTIMPL;
 }
 
 /* Get the IID for generic default event callbacks.  This IID will
@@ -126,10 +65,12 @@ static HRESULT WINAPI WBPCI2_GetClassInfo(LPPROVIDECLASSINFO2 iface, LPTYPEINFO 
  * an event sink (callback implementation in the OLE control site)
  * to this control.
 */
-static HRESULT WINAPI WBPCI2_GetGUID(LPPROVIDECLASSINFO2 iface,
-                                     DWORD dwGuidKind, GUID *pGUID)
+static HRESULT WINAPI ProvideClassInfo_GetGUID(IProvideClassInfo2 *iface,
+        DWORD dwGuidKind, GUID *pGUID)
 {
-    FIXME("stub: dwGuidKind = %ld, pGUID = %s\n", dwGuidKind, debugstr_guid(pGUID));
+    WebBrowser *This = CLASSINFO_THIS(iface);
+
+    FIXME("(%p)->(%ld %p)\n", This, dwGuidKind, pGUID);
 
     if (dwGuidKind != GUIDKIND_DEFAULT_SOURCE_DISP_IID)
     {
@@ -150,17 +91,18 @@ static HRESULT WINAPI WBPCI2_GetGUID(LPPROVIDECLASSINFO2 iface,
     return S_OK;
 }
 
-/**********************************************************************
- * IProvideClassInfo virtual function table for IE Web Browser component
- */
+#undef CLASSINFO_THIS
 
-static const IProvideClassInfo2Vtbl WBPCI2_Vtbl =
+static const IProvideClassInfo2Vtbl ProvideClassInfoVtbl =
 {
-    WBPCI2_QueryInterface,
-    WBPCI2_AddRef,
-    WBPCI2_Release,
-    WBPCI2_GetClassInfo,
-    WBPCI2_GetGUID
+    ProvideClassInfo_QueryInterface,
+    ProvideClassInfo_AddRef,
+    ProvideClassInfo_Release,
+    ProvideClassInfo_GetClassInfo,
+    ProvideClassInfo_GetGUID
 };
 
-IProvideClassInfo2Impl SHDOCVW_ProvideClassInfo2 = { &WBPCI2_Vtbl};
+void WebBrowser_ClassInfo_Init(WebBrowser *This)
+{
+    This->lpProvideClassInfoVtbl = &ProvideClassInfoVtbl;
+}

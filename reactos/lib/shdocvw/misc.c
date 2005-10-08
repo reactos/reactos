@@ -1,5 +1,5 @@
 /*
- * Implementation of miscellaneous interfaces for IE Web Browser control:
+ * Implementation of miscellaneous interfaces for WebBrowser control:
  *
  *  - IQuickActivate
  *
@@ -29,66 +29,65 @@ WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
  * Implement the IQuickActivate interface
  */
 
-static HRESULT WINAPI WBQA_QueryInterface(LPQUICKACTIVATE iface,
-                                          REFIID riid, LPVOID *ppobj)
-{
-    FIXME("- no interface\n\tIID:\t%s\n", debugstr_guid(riid));
+#define QUICKACT_THIS(iface) DEFINE_THIS(WebBrowser, QuickActivate, iface)
 
-    if (ppobj == NULL) return E_POINTER;
-    
-    return E_NOINTERFACE;
+static HRESULT WINAPI QuickActivate_QueryInterface(IQuickActivate *iface,
+        REFIID riid, LPVOID *ppobj)
+{
+    WebBrowser *This = QUICKACT_THIS(iface);
+    return IWebBrowser_QueryInterface(WEBBROWSER(This), riid, ppobj);
 }
 
-static ULONG WINAPI WBQA_AddRef(LPQUICKACTIVATE iface)
+static ULONG WINAPI QuickActivate_AddRef(IQuickActivate *iface)
 {
-    SHDOCVW_LockModule();
-
-    return 2; /* non-heap based object */
+    WebBrowser *This = QUICKACT_THIS(iface);
+    return IWebBrowser_AddRef(WEBBROWSER(This));
 }
 
-static ULONG WINAPI WBQA_Release(LPQUICKACTIVATE iface)
+static ULONG WINAPI QuickActivate_Release(IQuickActivate *iface)
 {
-    SHDOCVW_UnlockModule();
-
-    return 1; /* non-heap based object */
+    WebBrowser *This = QUICKACT_THIS(iface);
+    return IWebBrowser_Release(WEBBROWSER(This));
 }
 
-/* Alternative interface for quicker, easier activation of a control. */
-static HRESULT WINAPI WBQA_QuickActivate(LPQUICKACTIVATE iface,
-                                         QACONTAINER *pQaContainer,
-                                         QACONTROL *pQaControl)
+static HRESULT WINAPI QuickActivate_QuickActivate(IQuickActivate *iface,
+        QACONTAINER *pQaContainer, QACONTROL *pQaControl)
 {
-    FIXME("stub: QACONTAINER = %p, QACONTROL = %p\n", pQaContainer, pQaControl);
-    return S_OK;
+    WebBrowser *This = QUICKACT_THIS(iface);
+    FIXME("(%p)->(%p %p)\n", This, pQaContainer, pQaControl);
+    return E_NOTIMPL;
 }
 
-static HRESULT WINAPI WBQA_SetContentExtent(LPQUICKACTIVATE iface, LPSIZEL pSizel)
+static HRESULT WINAPI QuickActivate_SetContentExtent(IQuickActivate *iface, LPSIZEL pSizel)
 {
-    FIXME("stub: LPSIZEL = %p\n", pSizel);
-    return E_NOINTERFACE;
+    WebBrowser *This = QUICKACT_THIS(iface);
+    FIXME("(%p)->(%p)\n", This, pSizel);
+    return E_NOTIMPL;
 }
 
-static HRESULT WINAPI WBQA_GetContentExtent(LPQUICKACTIVATE iface, LPSIZEL pSizel)
+static HRESULT WINAPI QuickActivate_GetContentExtent(IQuickActivate *iface, LPSIZEL pSizel)
 {
-    FIXME("stub: LPSIZEL = %p\n", pSizel);
-    return E_NOINTERFACE;
+    WebBrowser *This = QUICKACT_THIS(iface);
+    FIXME("(%p)->(%p)\n", This, pSizel);
+    return E_NOTIMPL;
 }
 
-/**********************************************************************
- * IQuickActivate virtual function table for IE Web Browser component
- */
+#undef QUICKACT_THIS
 
-static const IQuickActivateVtbl WBQA_Vtbl =
+static const IQuickActivateVtbl QuickActivateVtbl =
 {
-    WBQA_QueryInterface,
-    WBQA_AddRef,
-    WBQA_Release,
-    WBQA_QuickActivate,
-    WBQA_SetContentExtent,
-    WBQA_GetContentExtent
+    QuickActivate_QueryInterface,
+    QuickActivate_AddRef,
+    QuickActivate_Release,
+    QuickActivate_QuickActivate,
+    QuickActivate_SetContentExtent,
+    QuickActivate_GetContentExtent
 };
 
-IQuickActivateImpl SHDOCVW_QuickActivate = {&WBQA_Vtbl};
+void WebBrowser_Misc_Init(WebBrowser *This)
+{
+    This->lpQuickActivateVtbl = &QuickActivateVtbl;
+}
 
 /**********************************************************************
  * OpenURL  (SHDOCVW.@)

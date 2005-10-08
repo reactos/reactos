@@ -24,13 +24,11 @@ typedef enum BrowserNavConstants {
     navHyperlink = 0x40,
     navEnforceRestricted = 0x80
 } BrowserNavConstants;
-
 typedef enum RefreshConstants {
     REFRESH_NORMAL = 0,
     REFRESH_IFEXPIRED = 1,
     REFRESH_COMPLETELY = 3
 } RefreshConstants;
-
 /*****************************************************************************
  * IWebBrowser interface
  */
@@ -127,6 +125,8 @@ struct IWebBrowser {
     const IWebBrowserVtbl* lpVtbl;
 };
 struct IWebBrowserVtbl {
+    BEGIN_INTERFACE
+
     /*** IUnknown methods ***/
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(
         IWebBrowser* This,
@@ -268,8 +268,10 @@ struct IWebBrowserVtbl {
         IWebBrowser* This,
         VARIANT_BOOL* pBool);
 
+    END_INTERFACE
 };
 
+#ifdef COBJMACROS
 /*** IUnknown methods ***/
 #define IWebBrowser_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
 #define IWebBrowser_AddRef(p) (p)->lpVtbl->AddRef(p)
@@ -305,45 +307,9 @@ struct IWebBrowserVtbl {
 #define IWebBrowser_get_LocationName(p,a) (p)->lpVtbl->get_LocationName(p,a)
 #define IWebBrowser_get_LocationURL(p,a) (p)->lpVtbl->get_LocationURL(p,a)
 #define IWebBrowser_get_Busy(p,a) (p)->lpVtbl->get_Busy(p,a)
-
 #endif
 
-#define IWebBrowser_METHODS \
-    /*** IUnknown methods ***/ \
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE; \
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE; \
-    STDMETHOD_(ULONG,Release)(THIS) PURE; \
-    /*** IDispatch methods ***/ \
-    STDMETHOD_(HRESULT,GetTypeInfoCount)(THIS_ UINT* pctinfo) PURE; \
-    STDMETHOD_(HRESULT,GetTypeInfo)(THIS_ UINT iTInfo, LCID lcid, ITypeInfo** ppTInfo) PURE; \
-    STDMETHOD_(HRESULT,GetIDsOfNames)(THIS_ REFIID riid, LPOLESTR* rgszNames, UINT cNames, LCID lcid, DISPID* rgDispId) PURE; \
-    STDMETHOD_(HRESULT,Invoke)(THIS_ DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS* pDispParams, VARIANT* pVarResult, EXCEPINFO* pExcepInfo, UINT* puArgErr) PURE; \
-    /*** IWebBrowser methods ***/ \
-    STDMETHOD_(HRESULT,GoBack)(THIS) PURE; \
-    STDMETHOD_(HRESULT,GoForward)(THIS) PURE; \
-    STDMETHOD_(HRESULT,GoHome)(THIS) PURE; \
-    STDMETHOD_(HRESULT,GoSearch)(THIS) PURE; \
-    STDMETHOD_(HRESULT,Navigate)(THIS_ BSTR URL, VARIANT* Flags, VARIANT* TargetFrameName, VARIANT* PostData, VARIANT* Headers) PURE; \
-    STDMETHOD_(HRESULT,Refresh)(THIS) PURE; \
-    STDMETHOD_(HRESULT,Refresh2)(THIS_ VARIANT* Level) PURE; \
-    STDMETHOD_(HRESULT,Stop)(THIS) PURE; \
-    STDMETHOD_(HRESULT,get_Application)(THIS_ IDispatch** ppDisp) PURE; \
-    STDMETHOD_(HRESULT,get_Parent)(THIS_ IDispatch** ppDisp) PURE; \
-    STDMETHOD_(HRESULT,get_Container)(THIS_ IDispatch** ppDisp) PURE; \
-    STDMETHOD_(HRESULT,get_Document)(THIS_ IDispatch** ppDisp) PURE; \
-    STDMETHOD_(HRESULT,get_TopLevelContainer)(THIS_ VARIANT_BOOL* pBool) PURE; \
-    STDMETHOD_(HRESULT,get_Type)(THIS_ BSTR* Type) PURE; \
-    STDMETHOD_(HRESULT,get_Left)(THIS_ long* pl) PURE; \
-    STDMETHOD_(HRESULT,put_Left)(THIS_ long Left) PURE; \
-    STDMETHOD_(HRESULT,get_Top)(THIS_ long* pl) PURE; \
-    STDMETHOD_(HRESULT,put_Top)(THIS_ long Top) PURE; \
-    STDMETHOD_(HRESULT,get_Width)(THIS_ long* pl) PURE; \
-    STDMETHOD_(HRESULT,put_Width)(THIS_ long Width) PURE; \
-    STDMETHOD_(HRESULT,get_Height)(THIS_ long* pl) PURE; \
-    STDMETHOD_(HRESULT,put_Height)(THIS_ long Height) PURE; \
-    STDMETHOD_(HRESULT,get_LocationName)(THIS_ BSTR* LocationName) PURE; \
-    STDMETHOD_(HRESULT,get_LocationURL)(THIS_ BSTR* LocationURL) PURE; \
-    STDMETHOD_(HRESULT,get_Busy)(THIS_ VARIANT_BOOL* pBool) PURE;
+#endif
 
 HRESULT CALLBACK IWebBrowser_GoBack_Proxy(
     IWebBrowser* This);
@@ -631,6 +597,8 @@ struct IWebBrowserApp {
     const IWebBrowserAppVtbl* lpVtbl;
 };
 struct IWebBrowserAppVtbl {
+    BEGIN_INTERFACE
+
     /*** IUnknown methods ***/
     HRESULT (STDMETHODCALLTYPE *QueryInterface)(
         IWebBrowserApp* This,
@@ -855,8 +823,10 @@ struct IWebBrowserAppVtbl {
         IWebBrowserApp* This,
         VARIANT_BOOL bFullScreen);
 
+    END_INTERFACE
 };
 
+#ifdef COBJMACROS
 /*** IUnknown methods ***/
 #define IWebBrowserApp_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
 #define IWebBrowserApp_AddRef(p) (p)->lpVtbl->AddRef(p)
@@ -913,66 +883,9 @@ struct IWebBrowserAppVtbl {
 #define IWebBrowserApp_put_MenuBar(p,a) (p)->lpVtbl->put_MenuBar(p,a)
 #define IWebBrowserApp_get_FullScreen(p,a) (p)->lpVtbl->get_FullScreen(p,a)
 #define IWebBrowserApp_put_FullScreen(p,a) (p)->lpVtbl->put_FullScreen(p,a)
-
 #endif
 
-#define IWebBrowserApp_METHODS \
-    /*** IUnknown methods ***/ \
-    STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE; \
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE; \
-    STDMETHOD_(ULONG,Release)(THIS) PURE; \
-    /*** IDispatch methods ***/ \
-    STDMETHOD_(HRESULT,GetTypeInfoCount)(THIS_ UINT* pctinfo) PURE; \
-    STDMETHOD_(HRESULT,GetTypeInfo)(THIS_ UINT iTInfo, LCID lcid, ITypeInfo** ppTInfo) PURE; \
-    STDMETHOD_(HRESULT,GetIDsOfNames)(THIS_ REFIID riid, LPOLESTR* rgszNames, UINT cNames, LCID lcid, DISPID* rgDispId) PURE; \
-    STDMETHOD_(HRESULT,Invoke)(THIS_ DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS* pDispParams, VARIANT* pVarResult, EXCEPINFO* pExcepInfo, UINT* puArgErr) PURE; \
-    /*** IWebBrowser methods ***/ \
-    STDMETHOD_(HRESULT,GoBack)(THIS) PURE; \
-    STDMETHOD_(HRESULT,GoForward)(THIS) PURE; \
-    STDMETHOD_(HRESULT,GoHome)(THIS) PURE; \
-    STDMETHOD_(HRESULT,GoSearch)(THIS) PURE; \
-    STDMETHOD_(HRESULT,Navigate)(THIS_ BSTR URL, VARIANT* Flags, VARIANT* TargetFrameName, VARIANT* PostData, VARIANT* Headers) PURE; \
-    STDMETHOD_(HRESULT,Refresh)(THIS) PURE; \
-    STDMETHOD_(HRESULT,Refresh2)(THIS_ VARIANT* Level) PURE; \
-    STDMETHOD_(HRESULT,Stop)(THIS) PURE; \
-    STDMETHOD_(HRESULT,get_Application)(THIS_ IDispatch** ppDisp) PURE; \
-    STDMETHOD_(HRESULT,get_Parent)(THIS_ IDispatch** ppDisp) PURE; \
-    STDMETHOD_(HRESULT,get_Container)(THIS_ IDispatch** ppDisp) PURE; \
-    STDMETHOD_(HRESULT,get_Document)(THIS_ IDispatch** ppDisp) PURE; \
-    STDMETHOD_(HRESULT,get_TopLevelContainer)(THIS_ VARIANT_BOOL* pBool) PURE; \
-    STDMETHOD_(HRESULT,get_Type)(THIS_ BSTR* Type) PURE; \
-    STDMETHOD_(HRESULT,get_Left)(THIS_ long* pl) PURE; \
-    STDMETHOD_(HRESULT,put_Left)(THIS_ long Left) PURE; \
-    STDMETHOD_(HRESULT,get_Top)(THIS_ long* pl) PURE; \
-    STDMETHOD_(HRESULT,put_Top)(THIS_ long Top) PURE; \
-    STDMETHOD_(HRESULT,get_Width)(THIS_ long* pl) PURE; \
-    STDMETHOD_(HRESULT,put_Width)(THIS_ long Width) PURE; \
-    STDMETHOD_(HRESULT,get_Height)(THIS_ long* pl) PURE; \
-    STDMETHOD_(HRESULT,put_Height)(THIS_ long Height) PURE; \
-    STDMETHOD_(HRESULT,get_LocationName)(THIS_ BSTR* LocationName) PURE; \
-    STDMETHOD_(HRESULT,get_LocationURL)(THIS_ BSTR* LocationURL) PURE; \
-    STDMETHOD_(HRESULT,get_Busy)(THIS_ VARIANT_BOOL* pBool) PURE; \
-    /*** IWebBrowserApp methods ***/ \
-    STDMETHOD_(HRESULT,Quit)(THIS) PURE; \
-    STDMETHOD_(HRESULT,ClientToWindow)(THIS_ int* pcx, int* pcy) PURE; \
-    STDMETHOD_(HRESULT,PutProperty)(THIS_ BSTR szProperty, VARIANT vtValue) PURE; \
-    STDMETHOD_(HRESULT,GetProperty)(THIS_ BSTR szProperty, VARIANT* pvtValue) PURE; \
-    STDMETHOD_(HRESULT,get_Name)(THIS_ BSTR* Name) PURE; \
-    STDMETHOD_(HRESULT,get_HWND)(THIS_ long* pHWND) PURE; \
-    STDMETHOD_(HRESULT,get_FullName)(THIS_ BSTR* FullName) PURE; \
-    STDMETHOD_(HRESULT,get_Path)(THIS_ BSTR* Path) PURE; \
-    STDMETHOD_(HRESULT,get_Visible)(THIS_ VARIANT_BOOL* pBool) PURE; \
-    STDMETHOD_(HRESULT,put_Visible)(THIS_ VARIANT_BOOL Value) PURE; \
-    STDMETHOD_(HRESULT,get_StatusBar)(THIS_ VARIANT_BOOL* pBool) PURE; \
-    STDMETHOD_(HRESULT,put_StatusBar)(THIS_ VARIANT_BOOL Value) PURE; \
-    STDMETHOD_(HRESULT,get_StatusText)(THIS_ BSTR* StatusText) PURE; \
-    STDMETHOD_(HRESULT,put_StatusText)(THIS_ BSTR StatusText) PURE; \
-    STDMETHOD_(HRESULT,get_ToolBar)(THIS_ int* Value) PURE; \
-    STDMETHOD_(HRESULT,put_ToolBar)(THIS_ int Value) PURE; \
-    STDMETHOD_(HRESULT,get_MenuBar)(THIS_ VARIANT_BOOL* Value) PURE; \
-    STDMETHOD_(HRESULT,put_MenuBar)(THIS_ VARIANT_BOOL Value) PURE; \
-    STDMETHOD_(HRESULT,get_FullScreen)(THIS_ VARIANT_BOOL* pbFullScreen) PURE; \
-    STDMETHOD_(HRESULT,put_FullScreen)(THIS_ VARIANT_BOOL bFullScreen) PURE;
+#endif
 
 HRESULT CALLBACK IWebBrowserApp_Quit_Proxy(
     IWebBrowserApp* This);
@@ -1139,7 +1052,1169 @@ void __RPC_STUB IWebBrowserApp_put_FullScreen_Stub(
 
 #endif  /* __IWebBrowserApp_INTERFACE_DEFINED__ */
 
-DEFINE_GUID(CLSID_WebBrowser, 0x8856f961, 0x340a, 0x11d0, 0xa9, 0x6b, 0x00, 0xc0, 0x4f, 0xd7, 0x05, 0xa2);
+#ifndef __IWebBrowser2_FWD_DEFINED__
+#define __IWebBrowser2_FWD_DEFINED__
+typedef struct IWebBrowser2 IWebBrowser2;
+#endif
+
+/*****************************************************************************
+ * IWebBrowser2 interface
+ */
+#ifndef __IWebBrowser2_INTERFACE_DEFINED__
+#define __IWebBrowser2_INTERFACE_DEFINED__
+
+DEFINE_GUID(IID_IWebBrowser2, 0xd30c1661, 0xcdaf, 0x11d0, 0x8a,0x3e, 0x00,0xc0,0x4f,0xc9,0xe2,0x6e);
+#if defined(__cplusplus) && !defined(CINTERFACE)
+struct IWebBrowser2 : public IWebBrowserApp
+{
+    virtual HRESULT STDMETHODCALLTYPE Navigate2(
+        VARIANT* URL,
+        VARIANT* Flags,
+        VARIANT* TargetFrameName,
+        VARIANT* PostData,
+        VARIANT* Headers) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE QueryStatusWB(
+        OLECMDID cmdID,
+        OLECMDF* pcmdf) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE ExecWB(
+        OLECMDID cmdID,
+        OLECMDEXECOPT cmdexecopt,
+        VARIANT* pvaIn,
+        VARIANT* pvaOut) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE ShowBrowserBar(
+        VARIANT* pvaClsid,
+        VARIANT* pvarShow,
+        VARIANT* pvarSize) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE get_ReadyState(
+        READYSTATE* plReadyState) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE get_Offline(
+        VARIANT_BOOL* pbOffline) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE put_Offline(
+        VARIANT_BOOL bOffline) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE get_Silent(
+        VARIANT_BOOL* pbSilent) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE put_Silent(
+        VARIANT_BOOL bSilent) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE get_RegisterAsBrowser(
+        VARIANT_BOOL* pbRegister) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE put_RegisterAsBrowser(
+        VARIANT_BOOL bRegister) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE get_RegisterAsDropTarget(
+        VARIANT_BOOL* pbRegister) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE put_RegisterAsDropTarget(
+        VARIANT_BOOL bRegister) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE get_TheaterMode(
+        VARIANT_BOOL* pbRegister) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE put_TheaterMode(
+        VARIANT_BOOL bRegister) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE get_AddressBar(
+        VARIANT_BOOL* Value) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE put_AddressBar(
+        VARIANT_BOOL Value) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE get_Resizable(
+        VARIANT_BOOL* Value) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE put_Resizable(
+        VARIANT_BOOL Value) = 0;
+
+};
+#else
+typedef struct IWebBrowser2Vtbl IWebBrowser2Vtbl;
+struct IWebBrowser2 {
+    const IWebBrowser2Vtbl* lpVtbl;
+};
+struct IWebBrowser2Vtbl {
+    BEGIN_INTERFACE
+
+    /*** IUnknown methods ***/
+    HRESULT (STDMETHODCALLTYPE *QueryInterface)(
+        IWebBrowser2* This,
+        REFIID riid,
+        void** ppvObject);
+
+    ULONG (STDMETHODCALLTYPE *AddRef)(
+        IWebBrowser2* This);
+
+    ULONG (STDMETHODCALLTYPE *Release)(
+        IWebBrowser2* This);
+
+    /*** IDispatch methods ***/
+    HRESULT (STDMETHODCALLTYPE *GetTypeInfoCount)(
+        IWebBrowser2* This,
+        UINT* pctinfo);
+
+    HRESULT (STDMETHODCALLTYPE *GetTypeInfo)(
+        IWebBrowser2* This,
+        UINT iTInfo,
+        LCID lcid,
+        ITypeInfo** ppTInfo);
+
+    HRESULT (STDMETHODCALLTYPE *GetIDsOfNames)(
+        IWebBrowser2* This,
+        REFIID riid,
+        LPOLESTR* rgszNames,
+        UINT cNames,
+        LCID lcid,
+        DISPID* rgDispId);
+
+    HRESULT (STDMETHODCALLTYPE *Invoke)(
+        IWebBrowser2* This,
+        DISPID dispIdMember,
+        REFIID riid,
+        LCID lcid,
+        WORD wFlags,
+        DISPPARAMS* pDispParams,
+        VARIANT* pVarResult,
+        EXCEPINFO* pExcepInfo,
+        UINT* puArgErr);
+
+    /*** IWebBrowser methods ***/
+    HRESULT (STDMETHODCALLTYPE *GoBack)(
+        IWebBrowser2* This);
+
+    HRESULT (STDMETHODCALLTYPE *GoForward)(
+        IWebBrowser2* This);
+
+    HRESULT (STDMETHODCALLTYPE *GoHome)(
+        IWebBrowser2* This);
+
+    HRESULT (STDMETHODCALLTYPE *GoSearch)(
+        IWebBrowser2* This);
+
+    HRESULT (STDMETHODCALLTYPE *Navigate)(
+        IWebBrowser2* This,
+        BSTR URL,
+        VARIANT* Flags,
+        VARIANT* TargetFrameName,
+        VARIANT* PostData,
+        VARIANT* Headers);
+
+    HRESULT (STDMETHODCALLTYPE *Refresh)(
+        IWebBrowser2* This);
+
+    HRESULT (STDMETHODCALLTYPE *Refresh2)(
+        IWebBrowser2* This,
+        VARIANT* Level);
+
+    HRESULT (STDMETHODCALLTYPE *Stop)(
+        IWebBrowser2* This);
+
+    HRESULT (STDMETHODCALLTYPE *get_Application)(
+        IWebBrowser2* This,
+        IDispatch** ppDisp);
+
+    HRESULT (STDMETHODCALLTYPE *get_Parent)(
+        IWebBrowser2* This,
+        IDispatch** ppDisp);
+
+    HRESULT (STDMETHODCALLTYPE *get_Container)(
+        IWebBrowser2* This,
+        IDispatch** ppDisp);
+
+    HRESULT (STDMETHODCALLTYPE *get_Document)(
+        IWebBrowser2* This,
+        IDispatch** ppDisp);
+
+    HRESULT (STDMETHODCALLTYPE *get_TopLevelContainer)(
+        IWebBrowser2* This,
+        VARIANT_BOOL* pBool);
+
+    HRESULT (STDMETHODCALLTYPE *get_Type)(
+        IWebBrowser2* This,
+        BSTR* Type);
+
+    HRESULT (STDMETHODCALLTYPE *get_Left)(
+        IWebBrowser2* This,
+        long* pl);
+
+    HRESULT (STDMETHODCALLTYPE *put_Left)(
+        IWebBrowser2* This,
+        long Left);
+
+    HRESULT (STDMETHODCALLTYPE *get_Top)(
+        IWebBrowser2* This,
+        long* pl);
+
+    HRESULT (STDMETHODCALLTYPE *put_Top)(
+        IWebBrowser2* This,
+        long Top);
+
+    HRESULT (STDMETHODCALLTYPE *get_Width)(
+        IWebBrowser2* This,
+        long* pl);
+
+    HRESULT (STDMETHODCALLTYPE *put_Width)(
+        IWebBrowser2* This,
+        long Width);
+
+    HRESULT (STDMETHODCALLTYPE *get_Height)(
+        IWebBrowser2* This,
+        long* pl);
+
+    HRESULT (STDMETHODCALLTYPE *put_Height)(
+        IWebBrowser2* This,
+        long Height);
+
+    HRESULT (STDMETHODCALLTYPE *get_LocationName)(
+        IWebBrowser2* This,
+        BSTR* LocationName);
+
+    HRESULT (STDMETHODCALLTYPE *get_LocationURL)(
+        IWebBrowser2* This,
+        BSTR* LocationURL);
+
+    HRESULT (STDMETHODCALLTYPE *get_Busy)(
+        IWebBrowser2* This,
+        VARIANT_BOOL* pBool);
+
+    /*** IWebBrowserApp methods ***/
+    HRESULT (STDMETHODCALLTYPE *Quit)(
+        IWebBrowser2* This);
+
+    HRESULT (STDMETHODCALLTYPE *ClientToWindow)(
+        IWebBrowser2* This,
+        int* pcx,
+        int* pcy);
+
+    HRESULT (STDMETHODCALLTYPE *PutProperty)(
+        IWebBrowser2* This,
+        BSTR szProperty,
+        VARIANT vtValue);
+
+    HRESULT (STDMETHODCALLTYPE *GetProperty)(
+        IWebBrowser2* This,
+        BSTR szProperty,
+        VARIANT* pvtValue);
+
+    HRESULT (STDMETHODCALLTYPE *get_Name)(
+        IWebBrowser2* This,
+        BSTR* Name);
+
+    HRESULT (STDMETHODCALLTYPE *get_HWND)(
+        IWebBrowser2* This,
+        long* pHWND);
+
+    HRESULT (STDMETHODCALLTYPE *get_FullName)(
+        IWebBrowser2* This,
+        BSTR* FullName);
+
+    HRESULT (STDMETHODCALLTYPE *get_Path)(
+        IWebBrowser2* This,
+        BSTR* Path);
+
+    HRESULT (STDMETHODCALLTYPE *get_Visible)(
+        IWebBrowser2* This,
+        VARIANT_BOOL* pBool);
+
+    HRESULT (STDMETHODCALLTYPE *put_Visible)(
+        IWebBrowser2* This,
+        VARIANT_BOOL Value);
+
+    HRESULT (STDMETHODCALLTYPE *get_StatusBar)(
+        IWebBrowser2* This,
+        VARIANT_BOOL* pBool);
+
+    HRESULT (STDMETHODCALLTYPE *put_StatusBar)(
+        IWebBrowser2* This,
+        VARIANT_BOOL Value);
+
+    HRESULT (STDMETHODCALLTYPE *get_StatusText)(
+        IWebBrowser2* This,
+        BSTR* StatusText);
+
+    HRESULT (STDMETHODCALLTYPE *put_StatusText)(
+        IWebBrowser2* This,
+        BSTR StatusText);
+
+    HRESULT (STDMETHODCALLTYPE *get_ToolBar)(
+        IWebBrowser2* This,
+        int* Value);
+
+    HRESULT (STDMETHODCALLTYPE *put_ToolBar)(
+        IWebBrowser2* This,
+        int Value);
+
+    HRESULT (STDMETHODCALLTYPE *get_MenuBar)(
+        IWebBrowser2* This,
+        VARIANT_BOOL* Value);
+
+    HRESULT (STDMETHODCALLTYPE *put_MenuBar)(
+        IWebBrowser2* This,
+        VARIANT_BOOL Value);
+
+    HRESULT (STDMETHODCALLTYPE *get_FullScreen)(
+        IWebBrowser2* This,
+        VARIANT_BOOL* pbFullScreen);
+
+    HRESULT (STDMETHODCALLTYPE *put_FullScreen)(
+        IWebBrowser2* This,
+        VARIANT_BOOL bFullScreen);
+
+    /*** IWebBrowser2 methods ***/
+    HRESULT (STDMETHODCALLTYPE *Navigate2)(
+        IWebBrowser2* This,
+        VARIANT* URL,
+        VARIANT* Flags,
+        VARIANT* TargetFrameName,
+        VARIANT* PostData,
+        VARIANT* Headers);
+
+    HRESULT (STDMETHODCALLTYPE *QueryStatusWB)(
+        IWebBrowser2* This,
+        OLECMDID cmdID,
+        OLECMDF* pcmdf);
+
+    HRESULT (STDMETHODCALLTYPE *ExecWB)(
+        IWebBrowser2* This,
+        OLECMDID cmdID,
+        OLECMDEXECOPT cmdexecopt,
+        VARIANT* pvaIn,
+        VARIANT* pvaOut);
+
+    HRESULT (STDMETHODCALLTYPE *ShowBrowserBar)(
+        IWebBrowser2* This,
+        VARIANT* pvaClsid,
+        VARIANT* pvarShow,
+        VARIANT* pvarSize);
+
+    HRESULT (STDMETHODCALLTYPE *get_ReadyState)(
+        IWebBrowser2* This,
+        READYSTATE* plReadyState);
+
+    HRESULT (STDMETHODCALLTYPE *get_Offline)(
+        IWebBrowser2* This,
+        VARIANT_BOOL* pbOffline);
+
+    HRESULT (STDMETHODCALLTYPE *put_Offline)(
+        IWebBrowser2* This,
+        VARIANT_BOOL bOffline);
+
+    HRESULT (STDMETHODCALLTYPE *get_Silent)(
+        IWebBrowser2* This,
+        VARIANT_BOOL* pbSilent);
+
+    HRESULT (STDMETHODCALLTYPE *put_Silent)(
+        IWebBrowser2* This,
+        VARIANT_BOOL bSilent);
+
+    HRESULT (STDMETHODCALLTYPE *get_RegisterAsBrowser)(
+        IWebBrowser2* This,
+        VARIANT_BOOL* pbRegister);
+
+    HRESULT (STDMETHODCALLTYPE *put_RegisterAsBrowser)(
+        IWebBrowser2* This,
+        VARIANT_BOOL bRegister);
+
+    HRESULT (STDMETHODCALLTYPE *get_RegisterAsDropTarget)(
+        IWebBrowser2* This,
+        VARIANT_BOOL* pbRegister);
+
+    HRESULT (STDMETHODCALLTYPE *put_RegisterAsDropTarget)(
+        IWebBrowser2* This,
+        VARIANT_BOOL bRegister);
+
+    HRESULT (STDMETHODCALLTYPE *get_TheaterMode)(
+        IWebBrowser2* This,
+        VARIANT_BOOL* pbRegister);
+
+    HRESULT (STDMETHODCALLTYPE *put_TheaterMode)(
+        IWebBrowser2* This,
+        VARIANT_BOOL bRegister);
+
+    HRESULT (STDMETHODCALLTYPE *get_AddressBar)(
+        IWebBrowser2* This,
+        VARIANT_BOOL* Value);
+
+    HRESULT (STDMETHODCALLTYPE *put_AddressBar)(
+        IWebBrowser2* This,
+        VARIANT_BOOL Value);
+
+    HRESULT (STDMETHODCALLTYPE *get_Resizable)(
+        IWebBrowser2* This,
+        VARIANT_BOOL* Value);
+
+    HRESULT (STDMETHODCALLTYPE *put_Resizable)(
+        IWebBrowser2* This,
+        VARIANT_BOOL Value);
+
+    END_INTERFACE
+};
+
+#ifdef COBJMACROS
+/*** IUnknown methods ***/
+#define IWebBrowser2_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IWebBrowser2_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define IWebBrowser2_Release(p) (p)->lpVtbl->Release(p)
+/*** IDispatch methods ***/
+#define IWebBrowser2_GetTypeInfoCount(p,a) (p)->lpVtbl->GetTypeInfoCount(p,a)
+#define IWebBrowser2_GetTypeInfo(p,a,b,c) (p)->lpVtbl->GetTypeInfo(p,a,b,c)
+#define IWebBrowser2_GetIDsOfNames(p,a,b,c,d,e) (p)->lpVtbl->GetIDsOfNames(p,a,b,c,d,e)
+#define IWebBrowser2_Invoke(p,a,b,c,d,e,f,g,h) (p)->lpVtbl->Invoke(p,a,b,c,d,e,f,g,h)
+/*** IWebBrowser methods ***/
+#define IWebBrowser2_GoBack(p) (p)->lpVtbl->GoBack(p)
+#define IWebBrowser2_GoForward(p) (p)->lpVtbl->GoForward(p)
+#define IWebBrowser2_GoHome(p) (p)->lpVtbl->GoHome(p)
+#define IWebBrowser2_GoSearch(p) (p)->lpVtbl->GoSearch(p)
+#define IWebBrowser2_Navigate(p,a,b,c,d,e) (p)->lpVtbl->Navigate(p,a,b,c,d,e)
+#define IWebBrowser2_Refresh(p) (p)->lpVtbl->Refresh(p)
+#define IWebBrowser2_Refresh2(p,a) (p)->lpVtbl->Refresh2(p,a)
+#define IWebBrowser2_Stop(p) (p)->lpVtbl->Stop(p)
+#define IWebBrowser2_get_Application(p,a) (p)->lpVtbl->get_Application(p,a)
+#define IWebBrowser2_get_Parent(p,a) (p)->lpVtbl->get_Parent(p,a)
+#define IWebBrowser2_get_Container(p,a) (p)->lpVtbl->get_Container(p,a)
+#define IWebBrowser2_get_Document(p,a) (p)->lpVtbl->get_Document(p,a)
+#define IWebBrowser2_get_TopLevelContainer(p,a) (p)->lpVtbl->get_TopLevelContainer(p,a)
+#define IWebBrowser2_get_Type(p,a) (p)->lpVtbl->get_Type(p,a)
+#define IWebBrowser2_get_Left(p,a) (p)->lpVtbl->get_Left(p,a)
+#define IWebBrowser2_put_Left(p,a) (p)->lpVtbl->put_Left(p,a)
+#define IWebBrowser2_get_Top(p,a) (p)->lpVtbl->get_Top(p,a)
+#define IWebBrowser2_put_Top(p,a) (p)->lpVtbl->put_Top(p,a)
+#define IWebBrowser2_get_Width(p,a) (p)->lpVtbl->get_Width(p,a)
+#define IWebBrowser2_put_Width(p,a) (p)->lpVtbl->put_Width(p,a)
+#define IWebBrowser2_get_Height(p,a) (p)->lpVtbl->get_Height(p,a)
+#define IWebBrowser2_put_Height(p,a) (p)->lpVtbl->put_Height(p,a)
+#define IWebBrowser2_get_LocationName(p,a) (p)->lpVtbl->get_LocationName(p,a)
+#define IWebBrowser2_get_LocationURL(p,a) (p)->lpVtbl->get_LocationURL(p,a)
+#define IWebBrowser2_get_Busy(p,a) (p)->lpVtbl->get_Busy(p,a)
+/*** IWebBrowserApp methods ***/
+#define IWebBrowser2_Quit(p) (p)->lpVtbl->Quit(p)
+#define IWebBrowser2_ClientToWindow(p,a,b) (p)->lpVtbl->ClientToWindow(p,a,b)
+#define IWebBrowser2_PutProperty(p,a,b) (p)->lpVtbl->PutProperty(p,a,b)
+#define IWebBrowser2_GetProperty(p,a,b) (p)->lpVtbl->GetProperty(p,a,b)
+#define IWebBrowser2_get_Name(p,a) (p)->lpVtbl->get_Name(p,a)
+#define IWebBrowser2_get_HWND(p,a) (p)->lpVtbl->get_HWND(p,a)
+#define IWebBrowser2_get_FullName(p,a) (p)->lpVtbl->get_FullName(p,a)
+#define IWebBrowser2_get_Path(p,a) (p)->lpVtbl->get_Path(p,a)
+#define IWebBrowser2_get_Visible(p,a) (p)->lpVtbl->get_Visible(p,a)
+#define IWebBrowser2_put_Visible(p,a) (p)->lpVtbl->put_Visible(p,a)
+#define IWebBrowser2_get_StatusBar(p,a) (p)->lpVtbl->get_StatusBar(p,a)
+#define IWebBrowser2_put_StatusBar(p,a) (p)->lpVtbl->put_StatusBar(p,a)
+#define IWebBrowser2_get_StatusText(p,a) (p)->lpVtbl->get_StatusText(p,a)
+#define IWebBrowser2_put_StatusText(p,a) (p)->lpVtbl->put_StatusText(p,a)
+#define IWebBrowser2_get_ToolBar(p,a) (p)->lpVtbl->get_ToolBar(p,a)
+#define IWebBrowser2_put_ToolBar(p,a) (p)->lpVtbl->put_ToolBar(p,a)
+#define IWebBrowser2_get_MenuBar(p,a) (p)->lpVtbl->get_MenuBar(p,a)
+#define IWebBrowser2_put_MenuBar(p,a) (p)->lpVtbl->put_MenuBar(p,a)
+#define IWebBrowser2_get_FullScreen(p,a) (p)->lpVtbl->get_FullScreen(p,a)
+#define IWebBrowser2_put_FullScreen(p,a) (p)->lpVtbl->put_FullScreen(p,a)
+/*** IWebBrowser2 methods ***/
+#define IWebBrowser2_Navigate2(p,a,b,c,d,e) (p)->lpVtbl->Navigate2(p,a,b,c,d,e)
+#define IWebBrowser2_QueryStatusWB(p,a,b) (p)->lpVtbl->QueryStatusWB(p,a,b)
+#define IWebBrowser2_ExecWB(p,a,b,c,d) (p)->lpVtbl->ExecWB(p,a,b,c,d)
+#define IWebBrowser2_ShowBrowserBar(p,a,b,c) (p)->lpVtbl->ShowBrowserBar(p,a,b,c)
+#define IWebBrowser2_get_ReadyState(p,a) (p)->lpVtbl->get_ReadyState(p,a)
+#define IWebBrowser2_get_Offline(p,a) (p)->lpVtbl->get_Offline(p,a)
+#define IWebBrowser2_put_Offline(p,a) (p)->lpVtbl->put_Offline(p,a)
+#define IWebBrowser2_get_Silent(p,a) (p)->lpVtbl->get_Silent(p,a)
+#define IWebBrowser2_put_Silent(p,a) (p)->lpVtbl->put_Silent(p,a)
+#define IWebBrowser2_get_RegisterAsBrowser(p,a) (p)->lpVtbl->get_RegisterAsBrowser(p,a)
+#define IWebBrowser2_put_RegisterAsBrowser(p,a) (p)->lpVtbl->put_RegisterAsBrowser(p,a)
+#define IWebBrowser2_get_RegisterAsDropTarget(p,a) (p)->lpVtbl->get_RegisterAsDropTarget(p,a)
+#define IWebBrowser2_put_RegisterAsDropTarget(p,a) (p)->lpVtbl->put_RegisterAsDropTarget(p,a)
+#define IWebBrowser2_get_TheaterMode(p,a) (p)->lpVtbl->get_TheaterMode(p,a)
+#define IWebBrowser2_put_TheaterMode(p,a) (p)->lpVtbl->put_TheaterMode(p,a)
+#define IWebBrowser2_get_AddressBar(p,a) (p)->lpVtbl->get_AddressBar(p,a)
+#define IWebBrowser2_put_AddressBar(p,a) (p)->lpVtbl->put_AddressBar(p,a)
+#define IWebBrowser2_get_Resizable(p,a) (p)->lpVtbl->get_Resizable(p,a)
+#define IWebBrowser2_put_Resizable(p,a) (p)->lpVtbl->put_Resizable(p,a)
+#endif
+
+#endif
+
+HRESULT CALLBACK IWebBrowser2_Navigate2_Proxy(
+    IWebBrowser2* This,
+    VARIANT* URL,
+    VARIANT* Flags,
+    VARIANT* TargetFrameName,
+    VARIANT* PostData,
+    VARIANT* Headers);
+void __RPC_STUB IWebBrowser2_Navigate2_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IWebBrowser2_QueryStatusWB_Proxy(
+    IWebBrowser2* This,
+    OLECMDID cmdID,
+    OLECMDF* pcmdf);
+void __RPC_STUB IWebBrowser2_QueryStatusWB_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IWebBrowser2_ExecWB_Proxy(
+    IWebBrowser2* This,
+    OLECMDID cmdID,
+    OLECMDEXECOPT cmdexecopt,
+    VARIANT* pvaIn,
+    VARIANT* pvaOut);
+void __RPC_STUB IWebBrowser2_ExecWB_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IWebBrowser2_ShowBrowserBar_Proxy(
+    IWebBrowser2* This,
+    VARIANT* pvaClsid,
+    VARIANT* pvarShow,
+    VARIANT* pvarSize);
+void __RPC_STUB IWebBrowser2_ShowBrowserBar_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IWebBrowser2_get_ReadyState_Proxy(
+    IWebBrowser2* This,
+    READYSTATE* plReadyState);
+void __RPC_STUB IWebBrowser2_get_ReadyState_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IWebBrowser2_get_Offline_Proxy(
+    IWebBrowser2* This,
+    VARIANT_BOOL* pbOffline);
+void __RPC_STUB IWebBrowser2_get_Offline_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IWebBrowser2_put_Offline_Proxy(
+    IWebBrowser2* This,
+    VARIANT_BOOL bOffline);
+void __RPC_STUB IWebBrowser2_put_Offline_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IWebBrowser2_get_Silent_Proxy(
+    IWebBrowser2* This,
+    VARIANT_BOOL* pbSilent);
+void __RPC_STUB IWebBrowser2_get_Silent_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IWebBrowser2_put_Silent_Proxy(
+    IWebBrowser2* This,
+    VARIANT_BOOL bSilent);
+void __RPC_STUB IWebBrowser2_put_Silent_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IWebBrowser2_get_RegisterAsBrowser_Proxy(
+    IWebBrowser2* This,
+    VARIANT_BOOL* pbRegister);
+void __RPC_STUB IWebBrowser2_get_RegisterAsBrowser_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IWebBrowser2_put_RegisterAsBrowser_Proxy(
+    IWebBrowser2* This,
+    VARIANT_BOOL bRegister);
+void __RPC_STUB IWebBrowser2_put_RegisterAsBrowser_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IWebBrowser2_get_RegisterAsDropTarget_Proxy(
+    IWebBrowser2* This,
+    VARIANT_BOOL* pbRegister);
+void __RPC_STUB IWebBrowser2_get_RegisterAsDropTarget_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IWebBrowser2_put_RegisterAsDropTarget_Proxy(
+    IWebBrowser2* This,
+    VARIANT_BOOL bRegister);
+void __RPC_STUB IWebBrowser2_put_RegisterAsDropTarget_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IWebBrowser2_get_TheaterMode_Proxy(
+    IWebBrowser2* This,
+    VARIANT_BOOL* pbRegister);
+void __RPC_STUB IWebBrowser2_get_TheaterMode_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IWebBrowser2_put_TheaterMode_Proxy(
+    IWebBrowser2* This,
+    VARIANT_BOOL bRegister);
+void __RPC_STUB IWebBrowser2_put_TheaterMode_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IWebBrowser2_get_AddressBar_Proxy(
+    IWebBrowser2* This,
+    VARIANT_BOOL* Value);
+void __RPC_STUB IWebBrowser2_get_AddressBar_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IWebBrowser2_put_AddressBar_Proxy(
+    IWebBrowser2* This,
+    VARIANT_BOOL Value);
+void __RPC_STUB IWebBrowser2_put_AddressBar_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IWebBrowser2_get_Resizable_Proxy(
+    IWebBrowser2* This,
+    VARIANT_BOOL* Value);
+void __RPC_STUB IWebBrowser2_get_Resizable_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IWebBrowser2_put_Resizable_Proxy(
+    IWebBrowser2* This,
+    VARIANT_BOOL Value);
+void __RPC_STUB IWebBrowser2_put_Resizable_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+
+#endif  /* __IWebBrowser2_INTERFACE_DEFINED__ */
+
+#ifndef __DWebBrowserEvents_FWD_DEFINED__
+#define __DWebBrowserEvents_FWD_DEFINED__
+typedef struct DWebBrowserEvents DWebBrowserEvents;
+#endif
+
+/*****************************************************************************
+ * DWebBrowserEvents dispinterface
+ */
+#ifndef __DWebBrowserEvents_DISPINTERFACE_DEFINED__
+#define __DWebBrowserEvents_DISPINTERFACE_DEFINED__
+
+DEFINE_GUID(DIID_DWebBrowserEvents, 0xeab22ac2, 0x30c1, 0x11cf, 0xa7,0xeb, 0x00,0x00,0xc0,0x5b,0xae,0x0b);
+#if defined(__cplusplus) && !defined(CINTERFACE)
+struct DWebBrowserEvents : public IDispatch
+{
+};
+#else
+typedef struct DWebBrowserEventsVtbl DWebBrowserEventsVtbl;
+struct DWebBrowserEvents {
+    const DWebBrowserEventsVtbl* lpVtbl;
+};
+struct DWebBrowserEventsVtbl {
+    BEGIN_INTERFACE
+
+    /*** IUnknown methods ***/
+    HRESULT (STDMETHODCALLTYPE *QueryInterface)(
+        DWebBrowserEvents* This,
+        REFIID riid,
+        void** ppvObject);
+
+    ULONG (STDMETHODCALLTYPE *AddRef)(
+        DWebBrowserEvents* This);
+
+    ULONG (STDMETHODCALLTYPE *Release)(
+        DWebBrowserEvents* This);
+
+    /*** IDispatch methods ***/
+    HRESULT (STDMETHODCALLTYPE *GetTypeInfoCount)(
+        DWebBrowserEvents* This,
+        UINT* pctinfo);
+
+    HRESULT (STDMETHODCALLTYPE *GetTypeInfo)(
+        DWebBrowserEvents* This,
+        UINT iTInfo,
+        LCID lcid,
+        ITypeInfo** ppTInfo);
+
+    HRESULT (STDMETHODCALLTYPE *GetIDsOfNames)(
+        DWebBrowserEvents* This,
+        REFIID riid,
+        LPOLESTR* rgszNames,
+        UINT cNames,
+        LCID lcid,
+        DISPID* rgDispId);
+
+    HRESULT (STDMETHODCALLTYPE *Invoke)(
+        DWebBrowserEvents* This,
+        DISPID dispIdMember,
+        REFIID riid,
+        LCID lcid,
+        WORD wFlags,
+        DISPPARAMS* pDispParams,
+        VARIANT* pVarResult,
+        EXCEPINFO* pExcepInfo,
+        UINT* puArgErr);
+
+    END_INTERFACE
+};
+
+#ifdef COBJMACROS
+/*** IUnknown methods ***/
+#define DWebBrowserEvents_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define DWebBrowserEvents_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define DWebBrowserEvents_Release(p) (p)->lpVtbl->Release(p)
+/*** IDispatch methods ***/
+#define DWebBrowserEvents_GetTypeInfoCount(p,a) (p)->lpVtbl->GetTypeInfoCount(p,a)
+#define DWebBrowserEvents_GetTypeInfo(p,a,b,c) (p)->lpVtbl->GetTypeInfo(p,a,b,c)
+#define DWebBrowserEvents_GetIDsOfNames(p,a,b,c,d,e) (p)->lpVtbl->GetIDsOfNames(p,a,b,c,d,e)
+#define DWebBrowserEvents_Invoke(p,a,b,c,d,e,f,g,h) (p)->lpVtbl->Invoke(p,a,b,c,d,e,f,g,h)
+#endif
+
+#endif
+
+#endif  /* __DWebBrowserEvents_DISPINTERFACE_DEFINED__ */
+
+#ifndef __DWebBrowserEvents2_FWD_DEFINED__
+#define __DWebBrowserEvents2_FWD_DEFINED__
+typedef struct DWebBrowserEvents2 DWebBrowserEvents2;
+#endif
+
+/*****************************************************************************
+ * DWebBrowserEvents2 dispinterface
+ */
+#ifndef __DWebBrowserEvents2_DISPINTERFACE_DEFINED__
+#define __DWebBrowserEvents2_DISPINTERFACE_DEFINED__
+
+DEFINE_GUID(DIID_DWebBrowserEvents2, 0x34a715a0, 0x6587, 0x11d0, 0x92,0x4a, 0x00,0x20,0xaf,0xc7,0xac,0x4d);
+#if defined(__cplusplus) && !defined(CINTERFACE)
+struct DWebBrowserEvents2 : public IDispatch
+{
+};
+#else
+typedef struct DWebBrowserEvents2Vtbl DWebBrowserEvents2Vtbl;
+struct DWebBrowserEvents2 {
+    const DWebBrowserEvents2Vtbl* lpVtbl;
+};
+struct DWebBrowserEvents2Vtbl {
+    BEGIN_INTERFACE
+
+    /*** IUnknown methods ***/
+    HRESULT (STDMETHODCALLTYPE *QueryInterface)(
+        DWebBrowserEvents2* This,
+        REFIID riid,
+        void** ppvObject);
+
+    ULONG (STDMETHODCALLTYPE *AddRef)(
+        DWebBrowserEvents2* This);
+
+    ULONG (STDMETHODCALLTYPE *Release)(
+        DWebBrowserEvents2* This);
+
+    /*** IDispatch methods ***/
+    HRESULT (STDMETHODCALLTYPE *GetTypeInfoCount)(
+        DWebBrowserEvents2* This,
+        UINT* pctinfo);
+
+    HRESULT (STDMETHODCALLTYPE *GetTypeInfo)(
+        DWebBrowserEvents2* This,
+        UINT iTInfo,
+        LCID lcid,
+        ITypeInfo** ppTInfo);
+
+    HRESULT (STDMETHODCALLTYPE *GetIDsOfNames)(
+        DWebBrowserEvents2* This,
+        REFIID riid,
+        LPOLESTR* rgszNames,
+        UINT cNames,
+        LCID lcid,
+        DISPID* rgDispId);
+
+    HRESULT (STDMETHODCALLTYPE *Invoke)(
+        DWebBrowserEvents2* This,
+        DISPID dispIdMember,
+        REFIID riid,
+        LCID lcid,
+        WORD wFlags,
+        DISPPARAMS* pDispParams,
+        VARIANT* pVarResult,
+        EXCEPINFO* pExcepInfo,
+        UINT* puArgErr);
+
+    END_INTERFACE
+};
+
+#ifdef COBJMACROS
+/*** IUnknown methods ***/
+#define DWebBrowserEvents2_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define DWebBrowserEvents2_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define DWebBrowserEvents2_Release(p) (p)->lpVtbl->Release(p)
+/*** IDispatch methods ***/
+#define DWebBrowserEvents2_GetTypeInfoCount(p,a) (p)->lpVtbl->GetTypeInfoCount(p,a)
+#define DWebBrowserEvents2_GetTypeInfo(p,a,b,c) (p)->lpVtbl->GetTypeInfo(p,a,b,c)
+#define DWebBrowserEvents2_GetIDsOfNames(p,a,b,c,d,e) (p)->lpVtbl->GetIDsOfNames(p,a,b,c,d,e)
+#define DWebBrowserEvents2_Invoke(p,a,b,c,d,e,f,g,h) (p)->lpVtbl->Invoke(p,a,b,c,d,e,f,g,h)
+#endif
+
+#endif
+
+#endif  /* __DWebBrowserEvents2_DISPINTERFACE_DEFINED__ */
+
+/*****************************************************************************
+ * WebBrowser coclass
+ */
+
+DEFINE_GUID(CLSID_WebBrowser, 0x8856f961, 0x340a, 0x11d0, 0xa9,0x6b, 0x00,0xc0,0x4f,0xd7,0x05,0xa2);
+
+#ifndef __IShellWindows_FWD_DEFINED__
+#define __IShellWindows_FWD_DEFINED__
+typedef struct IShellWindows IShellWindows;
+#endif
+
+/*****************************************************************************
+ * IShellWindows interface
+ */
+#ifndef __IShellWindows_INTERFACE_DEFINED__
+#define __IShellWindows_INTERFACE_DEFINED__
+
+DEFINE_GUID(IID_IShellWindows, 0x85cb6900, 0x4d95, 0x11cf, 0x96,0x0c, 0x00,0x80,0xc7,0xf4,0xee,0x85);
+#if defined(__cplusplus) && !defined(CINTERFACE)
+struct IShellWindows : public IDispatch
+{
+    virtual HRESULT STDMETHODCALLTYPE get_Count(
+        long* Count) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE Item(
+        VARIANT index,
+        IDispatch** Folder) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE _NewEnum(
+        IUnknown** ppunk) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE Register(
+        IDispatch* pid,
+        long hWnd,
+        int swClass,
+        long* plCookie) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE RegisterPending(
+        long lThread,
+        VARIANT* pvarloc,
+        VARIANT* varlocRoot,
+        int swClass,
+        long* plCookie) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE Revoke(
+        long Cookie) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE OnNavigate(
+        long Cookie,
+        VARIANT* pvarLoc) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE OnActivated(
+        long Cookie,
+        VARIANT fActive) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE FindWindowSW(
+        VARIANT* pvarLoc,
+        VARIANT* pvarLocRoot,
+        int swClass,
+        long* phwnd,
+        int swfwOptions,
+        IDispatch** ppdispOut) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE OnCreated(
+        long lCookie,
+        IUnknown* punk) = 0;
+
+    virtual HRESULT STDMETHODCALLTYPE ProcessAttachDetach(
+        VARIANT_BOOL fAttach) = 0;
+
+};
+#else
+typedef struct IShellWindowsVtbl IShellWindowsVtbl;
+struct IShellWindows {
+    const IShellWindowsVtbl* lpVtbl;
+};
+struct IShellWindowsVtbl {
+    BEGIN_INTERFACE
+
+    /*** IUnknown methods ***/
+    HRESULT (STDMETHODCALLTYPE *QueryInterface)(
+        IShellWindows* This,
+        REFIID riid,
+        void** ppvObject);
+
+    ULONG (STDMETHODCALLTYPE *AddRef)(
+        IShellWindows* This);
+
+    ULONG (STDMETHODCALLTYPE *Release)(
+        IShellWindows* This);
+
+    /*** IDispatch methods ***/
+    HRESULT (STDMETHODCALLTYPE *GetTypeInfoCount)(
+        IShellWindows* This,
+        UINT* pctinfo);
+
+    HRESULT (STDMETHODCALLTYPE *GetTypeInfo)(
+        IShellWindows* This,
+        UINT iTInfo,
+        LCID lcid,
+        ITypeInfo** ppTInfo);
+
+    HRESULT (STDMETHODCALLTYPE *GetIDsOfNames)(
+        IShellWindows* This,
+        REFIID riid,
+        LPOLESTR* rgszNames,
+        UINT cNames,
+        LCID lcid,
+        DISPID* rgDispId);
+
+    HRESULT (STDMETHODCALLTYPE *Invoke)(
+        IShellWindows* This,
+        DISPID dispIdMember,
+        REFIID riid,
+        LCID lcid,
+        WORD wFlags,
+        DISPPARAMS* pDispParams,
+        VARIANT* pVarResult,
+        EXCEPINFO* pExcepInfo,
+        UINT* puArgErr);
+
+    /*** IShellWindows methods ***/
+    HRESULT (STDMETHODCALLTYPE *get_Count)(
+        IShellWindows* This,
+        long* Count);
+
+    HRESULT (STDMETHODCALLTYPE *Item)(
+        IShellWindows* This,
+        VARIANT index,
+        IDispatch** Folder);
+
+    HRESULT (STDMETHODCALLTYPE *_NewEnum)(
+        IShellWindows* This,
+        IUnknown** ppunk);
+
+    HRESULT (STDMETHODCALLTYPE *Register)(
+        IShellWindows* This,
+        IDispatch* pid,
+        long hWnd,
+        int swClass,
+        long* plCookie);
+
+    HRESULT (STDMETHODCALLTYPE *RegisterPending)(
+        IShellWindows* This,
+        long lThread,
+        VARIANT* pvarloc,
+        VARIANT* varlocRoot,
+        int swClass,
+        long* plCookie);
+
+    HRESULT (STDMETHODCALLTYPE *Revoke)(
+        IShellWindows* This,
+        long Cookie);
+
+    HRESULT (STDMETHODCALLTYPE *OnNavigate)(
+        IShellWindows* This,
+        long Cookie,
+        VARIANT* pvarLoc);
+
+    HRESULT (STDMETHODCALLTYPE *OnActivated)(
+        IShellWindows* This,
+        long Cookie,
+        VARIANT fActive);
+
+    HRESULT (STDMETHODCALLTYPE *FindWindowSW)(
+        IShellWindows* This,
+        VARIANT* pvarLoc,
+        VARIANT* pvarLocRoot,
+        int swClass,
+        long* phwnd,
+        int swfwOptions,
+        IDispatch** ppdispOut);
+
+    HRESULT (STDMETHODCALLTYPE *OnCreated)(
+        IShellWindows* This,
+        long lCookie,
+        IUnknown* punk);
+
+    HRESULT (STDMETHODCALLTYPE *ProcessAttachDetach)(
+        IShellWindows* This,
+        VARIANT_BOOL fAttach);
+
+    END_INTERFACE
+};
+
+#ifdef COBJMACROS
+/*** IUnknown methods ***/
+#define IShellWindows_QueryInterface(p,a,b) (p)->lpVtbl->QueryInterface(p,a,b)
+#define IShellWindows_AddRef(p) (p)->lpVtbl->AddRef(p)
+#define IShellWindows_Release(p) (p)->lpVtbl->Release(p)
+/*** IDispatch methods ***/
+#define IShellWindows_GetTypeInfoCount(p,a) (p)->lpVtbl->GetTypeInfoCount(p,a)
+#define IShellWindows_GetTypeInfo(p,a,b,c) (p)->lpVtbl->GetTypeInfo(p,a,b,c)
+#define IShellWindows_GetIDsOfNames(p,a,b,c,d,e) (p)->lpVtbl->GetIDsOfNames(p,a,b,c,d,e)
+#define IShellWindows_Invoke(p,a,b,c,d,e,f,g,h) (p)->lpVtbl->Invoke(p,a,b,c,d,e,f,g,h)
+/*** IShellWindows methods ***/
+#define IShellWindows_get_Count(p,a) (p)->lpVtbl->get_Count(p,a)
+#define IShellWindows_Item(p,a,b) (p)->lpVtbl->Item(p,a,b)
+#define IShellWindows__NewEnum(p,a) (p)->lpVtbl->_NewEnum(p,a)
+#define IShellWindows_Register(p,a,b,c,d) (p)->lpVtbl->Register(p,a,b,c,d)
+#define IShellWindows_RegisterPending(p,a,b,c,d,e) (p)->lpVtbl->RegisterPending(p,a,b,c,d,e)
+#define IShellWindows_Revoke(p,a) (p)->lpVtbl->Revoke(p,a)
+#define IShellWindows_OnNavigate(p,a,b) (p)->lpVtbl->OnNavigate(p,a,b)
+#define IShellWindows_OnActivated(p,a,b) (p)->lpVtbl->OnActivated(p,a,b)
+#define IShellWindows_FindWindowSW(p,a,b,c,d,e,f) (p)->lpVtbl->FindWindowSW(p,a,b,c,d,e,f)
+#define IShellWindows_OnCreated(p,a,b) (p)->lpVtbl->OnCreated(p,a,b)
+#define IShellWindows_ProcessAttachDetach(p,a) (p)->lpVtbl->ProcessAttachDetach(p,a)
+#endif
+
+#endif
+
+HRESULT CALLBACK IShellWindows_get_Count_Proxy(
+    IShellWindows* This,
+    long* Count);
+void __RPC_STUB IShellWindows_get_Count_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IShellWindows_Item_Proxy(
+    IShellWindows* This,
+    VARIANT index,
+    IDispatch** Folder);
+void __RPC_STUB IShellWindows_Item_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IShellWindows__NewEnum_Proxy(
+    IShellWindows* This,
+    IUnknown** ppunk);
+void __RPC_STUB IShellWindows__NewEnum_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IShellWindows_Register_Proxy(
+    IShellWindows* This,
+    IDispatch* pid,
+    long hWnd,
+    int swClass,
+    long* plCookie);
+void __RPC_STUB IShellWindows_Register_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IShellWindows_RegisterPending_Proxy(
+    IShellWindows* This,
+    long lThread,
+    VARIANT* pvarloc,
+    VARIANT* varlocRoot,
+    int swClass,
+    long* plCookie);
+void __RPC_STUB IShellWindows_RegisterPending_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IShellWindows_Revoke_Proxy(
+    IShellWindows* This,
+    long Cookie);
+void __RPC_STUB IShellWindows_Revoke_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IShellWindows_OnNavigate_Proxy(
+    IShellWindows* This,
+    long Cookie,
+    VARIANT* pvarLoc);
+void __RPC_STUB IShellWindows_OnNavigate_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IShellWindows_OnActivated_Proxy(
+    IShellWindows* This,
+    long Cookie,
+    VARIANT fActive);
+void __RPC_STUB IShellWindows_OnActivated_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IShellWindows_FindWindowSW_Proxy(
+    IShellWindows* This,
+    VARIANT* pvarLoc,
+    VARIANT* pvarLocRoot,
+    int swClass,
+    long* phwnd,
+    int swfwOptions,
+    IDispatch** ppdispOut);
+void __RPC_STUB IShellWindows_FindWindowSW_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IShellWindows_OnCreated_Proxy(
+    IShellWindows* This,
+    long lCookie,
+    IUnknown* punk);
+void __RPC_STUB IShellWindows_OnCreated_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK IShellWindows_ProcessAttachDetach_Proxy(
+    IShellWindows* This,
+    VARIANT_BOOL fAttach);
+void __RPC_STUB IShellWindows_ProcessAttachDetach_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+
+#endif  /* __IShellWindows_INTERFACE_DEFINED__ */
+
+/*****************************************************************************
+ * ShellWindows coclass
+ */
+
+DEFINE_GUID(CLSID_ShellWindows, 0x9ba05972, 0xf6a8, 0x11cf, 0xa4,0x42, 0x00,0xa0,0xc9,0x0a,0x8f,0x39);
+
+#ifndef __DShellWindowsEvents_FWD_DEFINED__
+#define __DShellWindowsEvents_FWD_DEFINED__
+typedef struct DShellWindowsEvents DShellWindowsEvents;
+#endif
+
+/* Begin additional prototypes for all interfaces */
+
+unsigned long   __RPC_USER VARIANT_UserSize     (unsigned long *, unsigned long,   VARIANT *);
+unsigned char * __RPC_USER VARIANT_UserMarshal  (unsigned long *, unsigned char *, VARIANT *);
+unsigned char * __RPC_USER VARIANT_UserUnmarshal(unsigned long *, unsigned char *, VARIANT *);
+void            __RPC_USER VARIANT_UserFree     (unsigned long *, VARIANT *);
+unsigned long   __RPC_USER BSTR_UserSize     (unsigned long *, unsigned long,   BSTR *);
+unsigned char * __RPC_USER BSTR_UserMarshal  (unsigned long *, unsigned char *, BSTR *);
+unsigned char * __RPC_USER BSTR_UserUnmarshal(unsigned long *, unsigned char *, BSTR *);
+void            __RPC_USER BSTR_UserFree     (unsigned long *, BSTR *);
+
+/* End additional prototypes */
+
 #ifdef __cplusplus
 }
 #endif

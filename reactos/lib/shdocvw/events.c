@@ -1,5 +1,5 @@
 /*
- * Implementation of event-related interfaces for IE Web Browser control:
+ * Implementation of event-related interfaces for WebBrowser control:
  *
  *  - IConnectionPointContainer
  *  - IConnectionPoint
@@ -36,46 +36,41 @@ static const GUID IID_INotifyDBEvents =
  * Implement the IConnectionPointContainer interface
  */
 
-static HRESULT WINAPI WBCPC_QueryInterface(LPCONNECTIONPOINTCONTAINER iface,
-                                           REFIID riid, LPVOID *ppobj)
-{
-    FIXME("- no interface\n\tIID:\t%s\n", debugstr_guid(riid));
+#define CONPTCONT_THIS(iface) DEFINE_THIS(WebBrowser, ConnectionPointContainer, iface)
 
-    if (ppobj == NULL) return E_POINTER;
-    
-    return E_NOINTERFACE;
+static HRESULT WINAPI ConnectionPointContainer_QueryInterface(IConnectionPointContainer *iface,
+        REFIID riid, LPVOID *ppobj)
+{
+    WebBrowser *This = CONPTCONT_THIS(iface);
+    return IWebBrowser_QueryInterface(WEBBROWSER(This), riid, ppobj);
 }
 
-static ULONG WINAPI WBCPC_AddRef(LPCONNECTIONPOINTCONTAINER iface)
+static ULONG WINAPI ConnectionPointContainer_AddRef(IConnectionPointContainer *iface)
 {
-    SHDOCVW_LockModule();
-
-    return 2; /* non-heap based object */
+    WebBrowser *This = CONPTCONT_THIS(iface);
+    return IWebBrowser_AddRef(WEBBROWSER(This));
 }
 
-static ULONG WINAPI WBCPC_Release(LPCONNECTIONPOINTCONTAINER iface)
+static ULONG WINAPI ConnectionPointContainer_Release(IConnectionPointContainer *iface)
 {
-    SHDOCVW_UnlockModule();
-
-    return 1; /* non-heap based object */
+    WebBrowser *This = CONPTCONT_THIS(iface);
+    return IWebBrowser_Release(WEBBROWSER(This));
 }
 
-/* Get a list of connection points inside this container. */
-static HRESULT WINAPI WBCPC_EnumConnectionPoints(LPCONNECTIONPOINTCONTAINER iface,
-                                                 LPENUMCONNECTIONPOINTS *ppEnum)
+static HRESULT WINAPI ConnectionPointContainer_EnumConnectionPoints(IConnectionPointContainer *iface,
+        LPENUMCONNECTIONPOINTS *ppEnum)
 {
-    FIXME("stub: IEnumConnectionPoints = %p\n", *ppEnum);
-    return S_OK;
+    WebBrowser *This = CONPTCONT_THIS(iface);
+    FIXME("(%p)->(%p)\n", This, ppEnum);
+    return E_NOTIMPL;
 }
 
-/* Retrieve the connection point in this container associated with the
- * riid interface.  When events occur in the control, the control can
- * call backwards into its embedding site, through these interfaces.
- */
-static HRESULT WINAPI WBCPC_FindConnectionPoint(LPCONNECTIONPOINTCONTAINER iface,
-                                                REFIID riid, LPCONNECTIONPOINT *ppCP)
+static HRESULT WINAPI ConnectionPointContainer_FindConnectionPoint(IConnectionPointContainer *iface,
+        REFIID riid, LPCONNECTIONPOINT *ppCP)
 {
-    TRACE(": IID = %s, IConnectionPoint = %p\n", debugstr_guid(riid), *ppCP);
+    WebBrowser *This = CONPTCONT_THIS(iface);
+
+    FIXME("(%p)->(%s %p)\n", This, debugstr_guid(riid), ppCP);
 
     /* For now, return the same IConnectionPoint object for both
      * event interface requests.
@@ -98,20 +93,16 @@ static HRESULT WINAPI WBCPC_FindConnectionPoint(LPCONNECTIONPOINTCONTAINER iface
     return E_FAIL;
 }
 
-/**********************************************************************
- * IConnectionPointContainer virtual function table for IE Web Browser component
- */
+#undef CONPTCONT_THIS
 
-static const IConnectionPointContainerVtbl WBCPC_Vtbl =
+static const IConnectionPointContainerVtbl ConnectionPointContainerVtbl =
 {
-    WBCPC_QueryInterface,
-    WBCPC_AddRef,
-    WBCPC_Release,
-    WBCPC_EnumConnectionPoints,
-    WBCPC_FindConnectionPoint
+    ConnectionPointContainer_QueryInterface,
+    ConnectionPointContainer_AddRef,
+    ConnectionPointContainer_Release,
+    ConnectionPointContainer_EnumConnectionPoints,
+    ConnectionPointContainer_FindConnectionPoint
 };
-
-IConnectionPointContainerImpl SHDOCVW_ConnectionPointContainer = {&WBCPC_Vtbl};
 
 
 /**********************************************************************
@@ -207,3 +198,8 @@ static const IConnectionPointVtbl WBCP_Vtbl =
 };
 
 static IConnectionPointImpl SHDOCVW_ConnectionPoint = {&WBCP_Vtbl};
+
+void WebBrowser_Events_Init(WebBrowser *This)
+{
+    This->lpConnectionPointContainerVtbl = &ConnectionPointContainerVtbl;
+}
