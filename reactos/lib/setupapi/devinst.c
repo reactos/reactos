@@ -24,22 +24,14 @@
 
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winnt.h"
-#include "winreg.h"
-#include "winternl.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winnls.h"
+#include <windows.h>
 #include "setupapi.h"
 #include "wine/debug.h"
 #include "wine/unicode.h"
 #include "cfgmgr32.h"
 #include "initguid.h"
-#include "winioctl.h"
-#include "rpc.h"
-#include "rpcdce.h"
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 
 #include "setupapi_private.h"
 
@@ -4790,14 +4782,17 @@ nextfile:
        goto cleanup;
     }
 
-    /* Load the driver/call AddDevice */
-    FIXME("FIXME: Load the driver/call AddDevice\n");
-
-    /* Send IRP_MN_START_DEVICE if needed */
-    //if (!RebootRequired && !(Flags & (DI_NEEDRESTART | DI_NEEDREBOOT | DI_DONOTCALLCONFIGMG)))
-        FIXME("FIXME: Send IRP_MN_START_DEVICE\n");
-
-   ret = TRUE;
+    /* Start the device */
+    if (!RebootRequired && !(Flags & (DI_NEEDRESTART | DI_NEEDREBOOT | DI_DONOTCALLCONFIGMG)))
+    {
+        PLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData;
+        NTSTATUS Status;
+        RtlInitUnicodeString(&ResetDeviceData.DeviceInstance, DevInfo->DeviceName);
+        Status = NtPlugPlayControl(PlugPlayControlResetDevice, &ResetDeviceData, sizeof(PLUGPLAY_CONTROL_RESET_DEVICE_DATA));
+        ret = NT_SUCCESS(Status);
+    }
+    else
+        ret = TRUE;
 
 cleanup:
     /* End of installation */
