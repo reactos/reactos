@@ -308,12 +308,13 @@ static DWORD shgfi_get_exe_type(LPCWSTR szFullPath)
  * SHGetFileInfoW            [SHELL32.@]
  *
  */
-DWORD WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
-                            SHFILEINFOW *psfi, UINT sizeofpsfi, UINT flags )
+DWORD_PTR WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
+                                SHFILEINFOW *psfi, UINT sizeofpsfi, UINT flags )
 {
     WCHAR szLocation[MAX_PATH], szFullPath[MAX_PATH];
     int iIndex;
-    DWORD ret = TRUE, dwAttributes = 0;
+    DWORD_PTR ret = TRUE;
+    DWORD dwAttributes = 0;
     IShellFolder * psfParent = NULL;
     IExtractIconW * pei = NULL;
     LPITEMIDLIST    pidlLast = NULL, pidl = NULL;
@@ -557,9 +558,9 @@ DWORD WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
         if (ret)
         {
             if (flags & SHGFI_SMALLICON)
-                ret = (DWORD) ShellSmallIconList;
+                ret = (DWORD_PTR) ShellSmallIconList;
             else
-                ret = (DWORD) ShellBigIconList;
+                ret = (DWORD_PTR) ShellBigIconList;
         }
     }
 
@@ -596,9 +597,9 @@ DWORD WINAPI SHGetFileInfoW(LPCWSTR path,DWORD dwFileAttributes,
 /*************************************************************************
  * SHGetFileInfoA            [SHELL32.@]
  */
-DWORD WINAPI SHGetFileInfoA(LPCSTR path,DWORD dwFileAttributes,
-                              SHFILEINFOA *psfi, UINT sizeofpsfi,
-                              UINT flags )
+DWORD_PTR WINAPI SHGetFileInfoA(LPCSTR path,DWORD dwFileAttributes,
+                                SHFILEINFOA *psfi, UINT sizeofpsfi,
+                                UINT flags )
 {
     INT len;
     LPWSTR temppath;
@@ -706,7 +707,7 @@ HICON WINAPI ExtractIconW(HINSTANCE hInstance, LPCWSTR lpszFile, UINT nIconIndex
     {
         ret = PrivateExtractIconsW(lpszFile, 0, cx, cy, NULL, NULL, 0, LR_DEFAULTCOLOR);
         if (ret != 0xFFFFFFFF && ret)
-            return (HICON)ret;
+            return (HICON)(UINT_PTR)ret;
         return NULL;
     }
     else

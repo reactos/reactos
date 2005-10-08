@@ -316,7 +316,7 @@ static void FillTreeView( browse_info *info, IShellFolder * lpsf,
 	HRESULT		hr;
 	HWND		hwnd = GetParent( info->hwndTreeView );
 
-	TRACE("%p %p %x %p\n",lpsf, pidl, (INT)hParent, lpe);
+	TRACE("%p %p %p %p\n",lpsf, pidl, hParent, lpe);
 
 	/* No IEnumIDList -> No children */
 	if (!lpe) return;

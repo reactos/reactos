@@ -67,7 +67,7 @@ static CRITICAL_SECTION_DEBUG critsect_debug =
 {
     0, 0, &SHELL32_SicCS,
     { &critsect_debug.ProcessLocksList, &critsect_debug.ProcessLocksList },
-      0, 0, { 0, (DWORD)(__FILE__ ": SHELL32_SicCS") }
+      0, 0, { (DWORD_PTR)(__FILE__ ": SHELL32_SicCS") }
 };
 static CRITICAL_SECTION SHELL32_SicCS = { &critsect_debug, -1, 0, 0, 0, 0 };
 

@@ -2384,7 +2384,7 @@ ShellLink_InvokeCommand( IContextMenu* iface, LPCMINVOKECOMMANDINFO lpici )
 }
 
 static HRESULT WINAPI
-ShellLink_GetCommandString( IContextMenu* iface, UINT idCmd, UINT uType,
+ShellLink_GetCommandString( IContextMenu* iface, UINT_PTR idCmd, UINT uType,
                             UINT* pwReserved, LPSTR pszName, UINT cchMax )
 {
     IShellLinkImpl *This = impl_from_IContextMenu(iface);

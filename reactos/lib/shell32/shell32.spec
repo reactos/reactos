@@ -120,9 +120,9 @@
  127 stdcall -noname SHWinHelp(long long long long)
  129 stdcall -noname DAD_AutoScroll(long ptr ptr)
  130 stdcall -noname DAD_DragEnter(long)
- 131 stdcall -noname DAD_DragEnterEx(long long long)
+ 131 stdcall -noname DAD_DragEnterEx(long double)
  132 stdcall -noname DAD_DragLeave()
- 134 stdcall -noname DAD_DragMove(long long)
+ 134 stdcall -noname DAD_DragMove(double)
  136 stdcall -noname DAD_SetDragImage(long long)
  137 stdcall -noname DAD_ShowDragImage(long)
  139 stub Desktop_UpdateBriefcaseOnEvent

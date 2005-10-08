@@ -153,7 +153,7 @@ static void 	 Control_WndProc_Create(HWND hWnd, const CREATESTRUCTA* cs)
 {
    CPanel*	panel = (CPanel*)cs->lpCreateParams;
 
-   SetWindowLongA(hWnd, 0, (LPARAM)panel);
+   SetWindowLongPtrA(hWnd, 0, (LONG_PTR)panel);
    panel->status = 0;
    panel->hWnd = hWnd;
 }
@@ -244,7 +244,7 @@ static LRESULT Control_WndProc_LButton(CPanel* panel, LPARAM lParam, BOOL up)
 static LRESULT WINAPI	Control_WndProc(HWND hWnd, UINT wMsg,
 					WPARAM lParam1, LPARAM lParam2)
 {
-   CPanel*	panel = (CPanel*)GetWindowLongA(hWnd, 0);
+   CPanel*	panel = (CPanel*)GetWindowLongPtrA(hWnd, 0);
 
    if (panel || wMsg == WM_CREATE) {
       switch (wMsg) {

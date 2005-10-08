@@ -51,7 +51,6 @@
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
-WINE_DECLARE_DEBUG_CHANNEL(exec);
 
 
 typedef struct {     /* structure for dropped files */

@@ -206,7 +206,7 @@ static int FM_InitMenuPopup(HMENU hmenu, LPCITEMIDLIST pAlternatePidl)
 
 		    MenuInfo.cbSize = sizeof(MENUINFO);
 		    MenuInfo.fMask = MIM_MENUDATA;
-		    MenuInfo.dwMenuData = (DWORD) lpFmMi;
+		    MenuInfo.dwMenuData = (ULONG_PTR) lpFmMi;
 		    SetMenuInfo (hMenuPopup, &MenuInfo);
 
 		    FileMenu_AppendItemW (hmenu, sTemp, uID, iIcon, hMenuPopup, FM_DEFAULT_HEIGHT);
@@ -277,7 +277,7 @@ HMENU WINAPI FileMenu_Create (
 
 	MenuInfo.cbSize = sizeof(MENUINFO);
 	MenuInfo.fMask = MIM_MENUDATA;
-	MenuInfo.dwMenuData = (DWORD) menudata;
+	MenuInfo.dwMenuData = (ULONG_PTR) menudata;
 	SetMenuInfo (hMenu, &MenuInfo);
 
 	return hMenu;
@@ -342,7 +342,7 @@ static BOOL FileMenu_AppendItemW(
 	  myItem->iIconIndex = icon;
 	  myItem->hMenu = hMenu;
 	  mii.fMask = MIIM_DATA;
-	  mii.dwItemData = (DWORD) myItem;
+	  mii.dwItemData = (ULONG_PTR) myItem;
 	}
 
 	if ( hMenuPopup )

@@ -400,7 +400,7 @@ static HRESULT WINAPI ISVBgCm_fnInvokeCommand(
  */
 static HRESULT WINAPI ISVBgCm_fnGetCommandString(
 	IContextMenu2 *iface,
-	UINT idCommand,
+	UINT_PTR idCommand,
 	UINT uFlags,
 	UINT* lpReserved,
 	LPSTR lpszName,

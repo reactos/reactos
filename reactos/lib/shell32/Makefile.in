@@ -81,8 +81,8 @@ SUBDIRS = tests
 version16.res: version16.rc
 	$(LDPATH) $(RC16) $(RC16FLAGS) -fo$@ $(SRCDIR)/version16.rc
 
-shell.spec.c: shell.spec version16.res
-	$(WINEBUILD) $(DEFS) $(DLLFLAGS) --dll -o $@ --main-module $(MODULE) --res version16.res --export $(SRCDIR)/shell.spec
+shell.spec.o: shell.spec version16.res
+	$(WINEBUILD) $(WINEBUILDFLAGS) --dll -o $@ --main-module $(MODULE) --res version16.res --export $(SRCDIR)/shell.spec
 
 authors.c: $(TOPSRCDIR)/AUTHORS
 	(LC_ALL=C; export LC_ALL; echo 'const char * const SHELL_Authors[] = {' && \

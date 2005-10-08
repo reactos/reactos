@@ -928,7 +928,7 @@ HINSTANCE WINAPI FindExecutableA(LPCSTR lpFile, LPCSTR lpDirectory, LPSTR lpResu
     if (wDirectory) SHFree( wDirectory );
 
     TRACE("returning %s\n", lpResult);
-    return (HINSTANCE)retval;
+    return retval;
 }
 
 /*************************************************************************
@@ -1051,7 +1051,7 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfun
 
 	if (SUCCEEDED(hr))
 	{
-	    hr = IShellExecuteHookW_Execute(pSEH, sei);
+	    hr = IShellExecuteHookW_Execute(pSEH, &sei_tmp);
 
 	    IShellExecuteHookW_Release(pSEH);
 
@@ -1151,7 +1151,7 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfun
 
 		if (SUCCEEDED(hr))
 		{
-		    hr = IShellExecuteHookW_Execute(pSEH, sei);
+		    hr = IShellExecuteHookW_Execute(pSEH, &sei_tmp);
 
 		    IShellExecuteHookW_Release(pSEH);
 
@@ -1338,7 +1338,7 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfun
         WCHAR lpstrTmpFile[256];
         strcpyW(lpstrTmpFile, wHttp);
         strcatW(lpstrTmpFile, lpFile);
-        retval = (UINT)ShellExecuteW(sei_tmp.hwnd, sei_tmp.lpVerb, lpstrTmpFile, NULL, NULL, 0);
+        retval = (UINT_PTR)ShellExecuteW(sei_tmp.hwnd, sei_tmp.lpVerb, lpstrTmpFile, NULL, NULL, 0);
     }
 
     TRACE("retval %u\n", retval);

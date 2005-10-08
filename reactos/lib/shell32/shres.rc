@@ -24358,6 +24358,7 @@ IDI_SHELL_MY_DOCUMENTS ICON mydocs.ico
  * which also have a neutral version. This is to
  * get localized bitmaps for example.
  */
+#include "shell32_Bg.rc"
 #include "shell32_Ca.rc"
 #include "shell32_Cn.rc"
 #include "shell32_Cs.rc"
