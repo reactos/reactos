@@ -1235,7 +1235,7 @@ static HRESULT WINAPI OLEFontImpl_GetTypeInfo(
   LCID        lcid,
   ITypeInfo** ppTInfo)
 {
-  static const WCHAR stdole32tlb[] = {'s','t','d','o','l','e','3','2','.','t','l','b',0};
+  static const WCHAR stdole2tlb[] = {'s','t','d','o','l','e','2','.','t','l','b',0};
   ITypeLib *tl;
   HRESULT hres;
 
@@ -1243,12 +1243,12 @@ static HRESULT WINAPI OLEFontImpl_GetTypeInfo(
   TRACE("(%p, iTInfo=%d, lcid=%04x, %p)\n", this, iTInfo, (int)lcid, ppTInfo);
   if (iTInfo != 0)
     return E_FAIL;
-  hres = LoadTypeLib(stdole32tlb, &tl);
+  hres = LoadTypeLib(stdole2tlb, &tl);
   if (FAILED(hres)) {
-    ERR("Could not load the stdole32.tlb?\n");
+    ERR("Could not load the stdole2.tlb?\n");
     return hres;
   }
-  hres = ITypeLib_GetTypeInfoOfGuid(tl, &IID_IDispatch, ppTInfo);
+  hres = ITypeLib_GetTypeInfoOfGuid(tl, &IID_IFontDisp, ppTInfo);
   if (FAILED(hres)) {
     FIXME("Did not IDispatch typeinfo from typelib, hres %lx\n",hres);
   }

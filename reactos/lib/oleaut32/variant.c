@@ -3124,6 +3124,10 @@ HRESULT WINAPI VarDiv(LPVARIANT left, LPVARIANT right, LPVARIANT result)
 	found = TRUE;
 	resvt = VT_R8;
     }
+    if (!found && (((1<<lvt) | (1<<rvt)) & (VTBIT_DECIMAL))) {
+	found = TRUE;
+	resvt = VT_DECIMAL;
+    }
     if (!found && (((1<<lvt) | (1<<rvt)) & (VTBIT_I1|VTBIT_I2|VTBIT_UI1|VTBIT_UI2|VTBIT_I4|VTBIT_UI4|(1<<VT_INT)|(1<<VT_UINT)))) {
 	found = TRUE;
 	resvt = VT_I4;
@@ -3148,6 +3152,10 @@ HRESULT WINAPI VarDiv(LPVARIANT left, LPVARIANT right, LPVARIANT result)
 	V_VT(result) = resvt;
 	V_R8(result) = V_R8(&lv) / V_R8(&rv);
 	rc = S_OK;
+	break;
+    case VT_DECIMAL:
+	rc = VarDecDiv(&(V_DECIMAL(&lv)), &(V_DECIMAL(&rv)), &(V_DECIMAL(result)));
+	V_VT(result) = resvt;
 	break;
     case VT_I4:
 	if (V_I4(&rv) == 0) return DISP_E_DIVBYZERO;
@@ -3193,6 +3201,10 @@ HRESULT WINAPI VarSub(LPVARIANT left, LPVARIANT right, LPVARIANT result)
 	found = TRUE;
 	resvt = VT_R8;
     }
+    if (!found && (((1<<lvt) | (1<<rvt)) & (VTBIT_DECIMAL))) {
+	found = TRUE;
+	resvt = VT_DECIMAL;
+    }
     if (!found && (((1<<lvt) | (1<<rvt)) & (VTBIT_I1|VTBIT_I2|VTBIT_UI1|VTBIT_UI2|VTBIT_I4|VTBIT_UI4|(1<<VT_INT)|(1<<VT_UINT)))) {
 	found = TRUE;
 	resvt = VT_I4;
@@ -3216,6 +3228,10 @@ HRESULT WINAPI VarSub(LPVARIANT left, LPVARIANT right, LPVARIANT result)
 	V_VT(result) = resvt;
 	V_R8(result) = V_R8(&lv) - V_R8(&rv);
 	rc = S_OK;
+	break;
+    case VT_DECIMAL:
+	rc = VarDecSub(&(V_DECIMAL(&lv)), &(V_DECIMAL(&rv)), &(V_DECIMAL(result)));
+	V_VT(result) = resvt;
 	break;
     case VT_I4:
 	V_VT(result) = resvt;

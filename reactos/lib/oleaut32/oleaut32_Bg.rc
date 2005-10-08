@@ -1,7 +1,7 @@
 /*
- * Swedish resources for oleaut32
+ * Bulgarian resources for oleaut32
  *
- * Copyright 2003 Jon Griffiths
+ * Copyright 2005 Milko Krachounov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,14 +18,14 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-LANGUAGE LANG_SWEDISH, SUBLANG_DEFAULT
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 {
-  IDS_TRUE  "Sant"
-  IDS_FALSE "Falskt"
-  IDS_YES   "Ja"
-  IDS_NO    "Nej"
-  IDS_ON    "Pе"
-  IDS_OFF   "Av"
+  IDS_TRUE  "Истина"
+  IDS_FALSE "Лъжа"
+  IDS_YES   "Да"
+  IDS_NO    "Не"
+  IDS_ON    "Включено"
+  IDS_OFF   "Изключено"
 }
