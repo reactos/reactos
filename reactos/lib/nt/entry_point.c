@@ -23,34 +23,49 @@ _main(
     ULONG DebugFlag
 );
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 /* FUNCTIONS ****************************************************************/
 
-ULONG FASTCALL WideCharStringToUnicodeString (PWCHAR wsIn, PUNICODE_STRING usOut)
+static
+ULONG STDCALL WideCharStringToUnicodeString (HANDLE hHeap, PWCHAR wsIn, PUNICODE_STRING usOut)
 {
-	ULONG   Length = 0;
+	ULONG   CharCount = 0;
 	PWCHAR  CurrentChar = wsIn;
+	ULONG   BufferLength = 0;
 
-	DPRINT("%s(%08lx,%08lx) called\n", __FUNCTION__, wsIn, usOut);
+	DPRINT("%s(%S) called\n", __FUNCTION__, wsIn);
 
 	if (NULL != CurrentChar)
 	{
-		usOut->Buffer = CurrentChar;
 		while (*CurrentChar ++)
 		{
-			++ Length;
+			++ CharCount;
 			while (*CurrentChar ++)
 			{
-				++ Length;
+				++ CharCount;
 			}
 		}
-		++ Length;
+		++ CharCount;
 	}
-	usOut->Length = Length;
-	usOut->MaximumLength = Length;
-	return Length;
+	BufferLength = CharCount * sizeof *usOut->Buffer;
+	if (0 < CharCount)
+	{
+		usOut->Buffer = RtlAllocateHeap (hHeap, 0, BufferLength);
+		if (NULL != usOut->Buffer)
+		{
+			RtlCopyMemory (usOut->Buffer, wsIn, BufferLength);
+			usOut->Length        = BufferLength;
+			usOut->MaximumLength = BufferLength;
+		}
+	} else {
+		usOut->Buffer        = NULL;
+		usOut->Length        = 0;
+		usOut->MaximumLength = 0;
+	}
+
+	return usOut->Length;
 }
 
 VOID
@@ -122,7 +137,6 @@ NtProcessStartup(PPEB Peb)
             {
                 /* Save one token pointer */
                 *ArgumentList++ = Destination;
-		DPRINT("NT: argv[%d]=[%d]\n", argc, Destination);
 
                 /* Increase one token count */
                 argc++;
@@ -142,9 +156,11 @@ NtProcessStartup(PPEB Peb)
     /* Now handle the enviornment, point the envp at our current list location. */
     envp = ArgumentList;
 
-    if (0 < WideCharStringToUnicodeString (ProcessParameters->Environment, & UnicodeEnvironment))
+    if (0 < WideCharStringToUnicodeString (Peb->ProcessHeap,
+			    ProcessParameters->Environment, & UnicodeEnvironment))
     {
     	RtlUnicodeStringToAnsiString (& AnsiEnvironment, & UnicodeEnvironment, TRUE);
+	RtlFreeUnicodeString (& UnicodeEnvironment);
 
     	/* Change our source to the enviroment pointer */
     	Source = AnsiEnvironment.Buffer;
@@ -156,7 +172,6 @@ NtProcessStartup(PPEB Peb)
         	{
             		/* Save a pointer to this token */
 			*ArgumentList++ = Source;
-			DPRINT("NT: envp[%08x]=[%s]\n",Source,Source);
 
 			/* Keep looking for another variable */
 			while (*Source++);
