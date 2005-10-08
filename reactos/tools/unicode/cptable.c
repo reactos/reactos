@@ -156,7 +156,7 @@ static const union cptable * const cptables[60] =
 
 static int cmp_codepage( const void *codepage, const void *entry )
 {
-    return (unsigned int)codepage - (*(const union cptable *const *)entry)->info.codepage;
+    return *(unsigned int *)codepage - (*(const union cptable *const *)entry)->info.codepage;
 }
 
 
@@ -165,7 +165,7 @@ const union cptable *wine_cp_get_table( unsigned int codepage )
 {
     const union cptable **res;
 
-    if (!(res = bsearch( (void *)codepage, cptables, NB_CODEPAGES,
+    if (!(res = bsearch( &codepage, cptables, NB_CODEPAGES,
                          sizeof(cptables[0]), cmp_codepage ))) return NULL;
     return *res;
 }
