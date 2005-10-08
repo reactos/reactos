@@ -288,6 +288,23 @@ PciCreateHardwareIDsString(PUNICODE_STRING HardwareIDs,
            Device->PciConfig.u.type0.SubVendorID);
   Index++;
 
+  Index += swprintf(&Buffer[Index],
+           L"PCI\\VEN_%04X&DEV_%04X&CC_%02X%02X%02X",
+           Device->PciConfig.VendorID,
+           Device->PciConfig.DeviceID,
+           Device->PciConfig.BaseClass,
+           Device->PciConfig.SubClass,
+           Device->PciConfig.ProgIf);
+  Index++;
+
+  Index += swprintf(&Buffer[Index],
+           L"PCI\\VEN_%04X&DEV_%04X&CC_%02X%02X",
+           Device->PciConfig.VendorID,
+           Device->PciConfig.DeviceID,
+           Device->PciConfig.BaseClass,
+           Device->PciConfig.SubClass);
+  Index++;
+
   Buffer[Index] = UNICODE_NULL;
 
   Length = (Index + 1) * sizeof(WCHAR);
@@ -315,29 +332,16 @@ PciCreateCompatibleIDsString(PUNICODE_STRING CompatibleIDs,
 
   Index = 0;
   Index += swprintf(&Buffer[Index],
-           L"PCI\\VEN_%04X&DEV_%04X&REV_%02X&CC_%02X%02X",
+           L"PCI\\VEN_%04X&DEV_%04X&REV_%02X",
            Device->PciConfig.VendorID,
            Device->PciConfig.DeviceID,
-           Device->PciConfig.RevisionID,
-           Device->PciConfig.BaseClass,
-           Device->PciConfig.SubClass);
+           Device->PciConfig.RevisionID);
   Index++;
 
   Index += swprintf(&Buffer[Index],
-           L"PCI\\VEN_%04X&DEV_%04X&CC_%02X%02X%02X",
+           L"PCI\\VEN_%04X&DEV_%04X",
            Device->PciConfig.VendorID,
-           Device->PciConfig.DeviceID,
-           Device->PciConfig.BaseClass,
-           Device->PciConfig.SubClass,
-           Device->PciConfig.ProgIf);
-  Index++;
-
-  Index += swprintf(&Buffer[Index],
-           L"PCI\\VEN_%04X&DEV_%04X&CC_%02X%02X",
-           Device->PciConfig.VendorID,
-           Device->PciConfig.DeviceID,
-           Device->PciConfig.BaseClass,
-           Device->PciConfig.SubClass);
+           Device->PciConfig.DeviceID);
   Index++;
 
   Index += swprintf(&Buffer[Index],
