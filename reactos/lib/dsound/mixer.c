@@ -19,29 +19,17 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#include "config.h"
 #include <assert.h>
 #include <stdarg.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/fcntl.h>
-#ifdef HAVE_UNISTD_H
-# include <unistd.h>
-#endif
-#include <stdlib.h>
-#include <string.h>
 #include <math.h>	/* Insomnia - pow() function */
 
+#define NONAMELESSSTRUCT
+#define NONAMELESSUNION
 #include "windef.h"
 #include "winbase.h"
-#include "wingdi.h"
-#include "winuser.h"
-#include "winerror.h"
 #include "mmsystem.h"
 #include "winreg.h"
 #include "winternl.h"
-#include "mmddk.h"
-#include "wine/windef16.h"
 #include "wine/debug.h"
 #include "dsound.h"
 #include "dsdriver.h"
@@ -103,12 +91,10 @@ void DSOUND_AmpFactorToVolPan(PDSVOLUMEPAN volpan)
 
 void DSOUND_RecalcFormat(IDirectSoundBufferImpl *dsb)
 {
-	DWORD sw;
 	TRACE("(%p)\n",dsb);
 
-	sw = dsb->pwfx->nChannels * (dsb->pwfx->wBitsPerSample / 8);
 	/* calculate the 10ms write lead */
-	dsb->writelead = (dsb->freq / 100) * sw;
+	dsb->writelead = (dsb->freq / 100) * dsb->pwfx->nBlockAlign;
 }
 
 void DSOUND_CheckEvent(IDirectSoundBufferImpl *dsb, int len)
@@ -178,11 +164,12 @@ static inline BYTE cvtS16toU8(INT16 s)
 
 static inline void cp_fields(const IDirectSoundBufferImpl *dsb, BYTE *ibuf, BYTE *obuf )
 {
+	DirectSoundDevice * device = dsb->dsound->device;
         INT fl,fr;
 
         if (dsb->pwfx->wBitsPerSample == 8)  {
-                if (dsb->dsound->pwfx->wBitsPerSample == 8 &&
-                    dsb->dsound->pwfx->nChannels == dsb->pwfx->nChannels) {
+                if (device->pwfx->wBitsPerSample == 8 &&
+                    device->pwfx->nChannels == dsb->pwfx->nChannels) {
                         /* avoid needless 8->16->8 conversion */
                         *obuf=*ibuf;
                         if (dsb->pwfx->nChannels==2)
@@ -196,25 +183,25 @@ static inline void cp_fields(const IDirectSoundBufferImpl *dsb, BYTE *ibuf, BYTE
                 fr = (dsb->pwfx->nChannels==2 ? *(((INT16 *)ibuf) + 1)  : fl);
         }
 
-        if (dsb->dsound->pwfx->nChannels == 2) {
-                if (dsb->dsound->pwfx->wBitsPerSample == 8) {
+        if (device->pwfx->nChannels == 2) {
+                if (device->pwfx->wBitsPerSample == 8) {
                         *obuf = cvtS16toU8(fl);
                         *(obuf + 1) = cvtS16toU8(fr);
                         return;
                 }
-                if (dsb->dsound->pwfx->wBitsPerSample == 16) {
+                if (device->pwfx->wBitsPerSample == 16) {
                         *((INT16 *)obuf) = fl;
                         *(((INT16 *)obuf) + 1) = fr;
                         return;
                 }
         }
-        if (dsb->dsound->pwfx->nChannels == 1) {
+        if (device->pwfx->nChannels == 1) {
                 fl = (fl + fr) >> 1;
-                if (dsb->dsound->pwfx->wBitsPerSample == 8) {
+                if (device->pwfx->wBitsPerSample == 8) {
                         *obuf = cvtS16toU8(fl);
                         return;
                 }
-                if (dsb->dsound->pwfx->wBitsPerSample == 16) {
+                if (device->pwfx->wBitsPerSample == 16) {
                         *((INT16 *)obuf) = fl;
                         return;
                 }
@@ -227,31 +214,31 @@ static INT DSOUND_MixerNorm(IDirectSoundBufferImpl *dsb, BYTE *buf, INT len)
 	INT	i, size, ipos, ilen;
 	BYTE	*ibp, *obp;
 	INT	iAdvance = dsb->pwfx->nBlockAlign;
-	INT	oAdvance = dsb->dsound->pwfx->nBlockAlign;
+	INT	oAdvance = dsb->dsound->device->pwfx->nBlockAlign;
 
 	ibp = dsb->buffer->memory + dsb->buf_mixpos;
 	obp = buf;
 
 	TRACE("(%p, %p, %p), buf_mixpos=%ld\n", dsb, ibp, obp, dsb->buf_mixpos);
 	/* Check for the best case */
-	if ((dsb->freq == dsb->dsound->pwfx->nSamplesPerSec) &&
-	    (dsb->pwfx->wBitsPerSample == dsb->dsound->pwfx->wBitsPerSample) &&
-	    (dsb->pwfx->nChannels == dsb->dsound->pwfx->nChannels)) {
-	        DWORD bytesleft = dsb->buflen - dsb->buf_mixpos;
+	if ((dsb->freq == dsb->dsound->device->pwfx->nSamplesPerSec) &&
+	    (dsb->pwfx->wBitsPerSample == dsb->dsound->device->pwfx->wBitsPerSample) &&
+	    (dsb->pwfx->nChannels == dsb->dsound->device->pwfx->nChannels)) {
+	        INT bytesleft = dsb->buflen - dsb->buf_mixpos;
 		TRACE("(%p) Best case\n", dsb);
 	    	if (len <= bytesleft )
-			memcpy(obp, ibp, len);
+			CopyMemory(obp, ibp, len);
 		else { /* wrap */
-			memcpy(obp, ibp, bytesleft );
-			memcpy(obp + bytesleft, dsb->buffer->memory, len - bytesleft);
+			CopyMemory(obp, ibp, bytesleft);
+			CopyMemory(obp + bytesleft, dsb->buffer->memory, len - bytesleft);
 		}
 		return len;
 	}
 
 	/* Check for same sample rate */
-	if (dsb->freq == dsb->dsound->pwfx->nSamplesPerSec) {
+	if (dsb->freq == dsb->dsound->device->pwfx->nSamplesPerSec) {
 		TRACE("(%p) Same sample rate %ld = primary %ld\n", dsb,
-			dsb->freq, dsb->dsound->pwfx->nSamplesPerSec);
+			dsb->freq, dsb->dsound->device->pwfx->nSamplesPerSec);
 		ilen = 0;
 		for (i = 0; i < len; i += oAdvance) {
 			cp_fields(dsb, ibp, obp );
@@ -273,7 +260,7 @@ static INT DSOUND_MixerNorm(IDirectSoundBufferImpl *dsb, BYTE *buf, INT len)
 	 * TransGaming Technologies Inc. */
 
 	/* FIXME("(%p) Adjusting frequency: %ld -> %ld (need optimization)\n",
-	   dsb, dsb->freq, dsb->dsound->pwfx->nSamplesPerSec); */
+	   dsb, dsb->freq, dsb->dsound->device->pwfx->nSamplesPerSec); */
 
 	size = len / oAdvance;
 	ilen = 0;
@@ -311,11 +298,11 @@ static void DSOUND_MixerVol(IDirectSoundBufferImpl *dsb, BYTE *buf, INT len)
 	/* with a mono primary buffer, it could sound very weird using */
 	/* this method. Oh well, tough patooties. */
 
-	switch (dsb->dsound->pwfx->wBitsPerSample) {
+	switch (dsb->dsound->device->pwfx->wBitsPerSample) {
 	case 8:
 		/* 8-bit WAV is unsigned, but we need to operate */
 		/* on signed data for this to work properly */
-		switch (dsb->dsound->pwfx->nChannels) {
+		switch (dsb->dsound->device->pwfx->nChannels) {
 		case 1:
 			for (i = 0; i < len; i++) {
 				INT val = *bpc - 128;
@@ -336,13 +323,13 @@ static void DSOUND_MixerVol(IDirectSoundBufferImpl *dsb, BYTE *buf, INT len)
 			}
 			break;
 		default:
-			FIXME("doesn't support %d channels\n", dsb->dsound->pwfx->nChannels);
+			FIXME("doesn't support %d channels\n", dsb->dsound->device->pwfx->nChannels);
 			break;
 		}
 		break;
 	case 16:
 		/* 16-bit WAV is signed -- much better */
-		switch (dsb->dsound->pwfx->nChannels) {
+		switch (dsb->dsound->device->pwfx->nChannels) {
 		case 1:
 			for (i = 0; i < len; i += 2) {
 				*bps = (*bps * dsb->cvolpan.dwTotalLeftAmpFactor) >> 16;
@@ -358,58 +345,60 @@ static void DSOUND_MixerVol(IDirectSoundBufferImpl *dsb, BYTE *buf, INT len)
 			}
 			break;
 		default:
-			FIXME("doesn't support %d channels\n", dsb->dsound->pwfx->nChannels);
+			FIXME("doesn't support %d channels\n", dsb->dsound->device->pwfx->nChannels);
 			break;
 		}
 		break;
 	default:
-		FIXME("doesn't support %d bit samples\n", dsb->dsound->pwfx->wBitsPerSample);
+		FIXME("doesn't support %d bit samples\n", dsb->dsound->device->pwfx->wBitsPerSample);
 		break;
 	}
 }
 
-static void *tmp_buffer;
-static size_t tmp_buffer_len = 0;
-
-static void *DSOUND_tmpbuffer(size_t len)
+static LPBYTE DSOUND_tmpbuffer(DirectSoundDevice *device, DWORD len)
 {
-  if (len>tmp_buffer_len) {
-    void *new_buffer = realloc(tmp_buffer, len);
-    if (new_buffer) {
-      tmp_buffer = new_buffer;
-      tmp_buffer_len = len;
+    TRACE("(%p,%ld)\n", device, len);
+
+    if (len > device->tmp_buffer_len) {
+        if (device->tmp_buffer)
+            device->tmp_buffer = HeapReAlloc(GetProcessHeap(), 0, device->tmp_buffer, len);
+        else
+            device->tmp_buffer = HeapAlloc(GetProcessHeap(), 0, len);
+
+        device->tmp_buffer_len = len;
     }
-    return new_buffer;
-  }
-  return tmp_buffer;
+
+    return device->tmp_buffer;
 }
 
 static DWORD DSOUND_MixInBuffer(IDirectSoundBufferImpl *dsb, DWORD writepos, DWORD fraglen)
 {
-	INT	i, len, ilen, temp, field, nBlockAlign, todo;
+	INT	i, len, ilen, field, todo;
 	BYTE	*buf, *ibuf;
 
 	TRACE("(%p,%ld,%ld)\n",dsb,writepos,fraglen);
 
 	len = fraglen;
 	if (!(dsb->playflags & DSBPLAY_LOOPING)) {
-		temp = MulDiv(dsb->dsound->pwfx->nAvgBytesPerSec, dsb->buflen,
-			dsb->nAvgBytesPerSec) -
-		       MulDiv(dsb->dsound->pwfx->nAvgBytesPerSec, dsb->buf_mixpos,
-			dsb->nAvgBytesPerSec);
-		len = (len > temp) ? temp : len;
-	}
-	nBlockAlign = dsb->dsound->pwfx->nBlockAlign;
-	len = len / nBlockAlign * nBlockAlign;	/* data alignment */
-
-	if (len == 0) {
-		/* This should only happen if we aren't looping and temp < nBlockAlign */
-		return 0;
+		int secondary_remainder = dsb->buflen - dsb->buf_mixpos;
+		int adjusted_remainder = MulDiv(dsb->dsound->device->pwfx->nAvgBytesPerSec, secondary_remainder, dsb->nAvgBytesPerSec);
+		assert(adjusted_remainder >= 0);
+		TRACE("secondary_remainder = %d, adjusted_remainder = %d, len = %d\n", secondary_remainder, adjusted_remainder, len);
+		if (adjusted_remainder < len) {
+			TRACE("clipping len to remainder of secondary buffer\n");
+			len = adjusted_remainder;
+		}
+		if (len == 0)
+			return 0;
 	}
 
-	/* Been seeing segfaults in malloc() for some reason... */
-	TRACE("allocating buffer (size = %d)\n", len);
-	if ((buf = ibuf = (BYTE *) DSOUND_tmpbuffer(len)) == NULL)
+	if (len % dsb->dsound->device->pwfx->nBlockAlign) {
+		INT nBlockAlign = dsb->dsound->device->pwfx->nBlockAlign;
+		ERR("length not a multiple of block size, len = %d, block size = %d\n", len, nBlockAlign);
+		len = (len / nBlockAlign) * nBlockAlign;	/* data alignment */
+	}
+
+	if ((buf = ibuf = DSOUND_tmpbuffer(dsb->dsound->device, len)) == NULL)
 		return 0;
 
 	TRACE("MixInBuffer (%p) len = %d, dest = %ld\n", dsb, len, writepos);
@@ -420,13 +409,13 @@ static DWORD DSOUND_MixInBuffer(IDirectSoundBufferImpl *dsb, DWORD writepos, DWO
 	    (dsb->dsbd.dwFlags & DSBCAPS_CTRL3D))
 		DSOUND_MixerVol(dsb, ibuf, len);
 
-	if (dsb->dsound->pwfx->wBitsPerSample == 8) {
-		BYTE	*obuf = dsb->dsound->buffer + writepos;
+	if (dsb->dsound->device->pwfx->wBitsPerSample == 8) {
+		BYTE	*obuf = dsb->dsound->device->buffer + writepos;
 
-		if ((writepos + len) <= dsb->dsound->buflen)
+		if ((writepos + len) <= dsb->dsound->device->buflen)
 			todo = len;
 		else
-			todo = dsb->dsound->buflen - writepos;
+			todo = dsb->dsound->device->buflen - writepos;
 
 		for (i = 0; i < todo; i++) {
 			/* 8-bit WAV is unsigned */
@@ -439,7 +428,7 @@ static DWORD DSOUND_MixInBuffer(IDirectSoundBufferImpl *dsb, DWORD writepos, DWO
  
 		if (todo < len) {
 			todo = len - todo;
-			obuf = dsb->dsound->buffer;
+			obuf = dsb->dsound->device->buffer;
 
 			for (i = 0; i < todo; i++) {
 				/* 8-bit WAV is unsigned */
@@ -454,12 +443,12 @@ static DWORD DSOUND_MixInBuffer(IDirectSoundBufferImpl *dsb, DWORD writepos, DWO
 		INT16	*ibufs, *obufs;
 
 		ibufs = (INT16 *) ibuf;
-		obufs = (INT16 *)(dsb->dsound->buffer + writepos);
+		obufs = (INT16 *)(dsb->dsound->device->buffer + writepos);
 
-		if ((writepos + len) <= dsb->dsound->buflen)
+		if ((writepos + len) <= dsb->dsound->device->buflen)
 			todo = len / 2;
 		else
-			todo = (dsb->dsound->buflen - writepos) / 2;
+			todo = (dsb->dsound->device->buflen - writepos) / 2;
 
 		for (i = 0; i < todo; i++) {
 			/* 16-bit WAV is signed */
@@ -472,7 +461,7 @@ static DWORD DSOUND_MixInBuffer(IDirectSoundBufferImpl *dsb, DWORD writepos, DWO
 
 		if (todo < (len / 2)) {
 			todo = (len / 2) - todo;
-			obufs = (INT16 *)dsb->dsound->buffer;
+			obufs = (INT16 *)dsb->dsound->device->buffer;
 
 			for (i = 0; i < todo; i++) {
 				/* 16-bit WAV is signed */
@@ -501,6 +490,9 @@ static DWORD DSOUND_MixInBuffer(IDirectSoundBufferImpl *dsb, DWORD writepos, DWO
 			dsb->buf_mixpos %= dsb->buflen;
 			if (dsb->leadin && (dsb->startpos <= dsb->buf_mixpos))
 				dsb->leadin = FALSE; /* HACK: see above */
+		} else if (dsb->buf_mixpos > dsb->buflen) {
+			ERR("Mixpos (%lu) past buflen (%lu), capping...\n", dsb->buf_mixpos, dsb->buflen);
+			dsb->buf_mixpos = dsb->buflen;
 		}
 	}
 
@@ -509,17 +501,19 @@ static DWORD DSOUND_MixInBuffer(IDirectSoundBufferImpl *dsb, DWORD writepos, DWO
 
 static void DSOUND_PhaseCancel(IDirectSoundBufferImpl *dsb, DWORD writepos, DWORD len)
 {
-	INT     ilen, field, nBlockAlign;
+	INT     ilen, field;
 	UINT    i, todo;
 	BYTE	*buf, *ibuf;
 
 	TRACE("(%p,%ld,%ld)\n",dsb,writepos,len);
 
-	nBlockAlign = dsb->dsound->pwfx->nBlockAlign;
-	len = len / nBlockAlign * nBlockAlign;  /* data alignment */
+	if (len % dsb->dsound->device->pwfx->nBlockAlign) {
+		INT nBlockAlign = dsb->dsound->device->pwfx->nBlockAlign;
+		ERR("length not a multiple of block size, len = %ld, block size = %d\n", len, nBlockAlign);
+		len = (len / nBlockAlign) * nBlockAlign;	/* data alignment */
+	}
 
-	TRACE("allocating buffer (size = %ld)\n", len);
-	if ((buf = ibuf = (BYTE *) DSOUND_tmpbuffer(len)) == NULL)
+	if ((buf = ibuf = DSOUND_tmpbuffer(dsb->dsound->device, len)) == NULL)
 		return;
 
 	TRACE("PhaseCancel (%p) len = %ld, dest = %ld\n", dsb, len, writepos);
@@ -531,13 +525,13 @@ static void DSOUND_PhaseCancel(IDirectSoundBufferImpl *dsb, DWORD writepos, DWOR
 		DSOUND_MixerVol(dsb, ibuf, len);
 
 	/* subtract instead of add, to phase out premixed data */
-	if (dsb->dsound->pwfx->wBitsPerSample == 8) {
-		BYTE	*obuf = dsb->dsound->buffer + writepos;
+	if (dsb->dsound->device->pwfx->wBitsPerSample == 8) {
+		BYTE	*obuf = dsb->dsound->device->buffer + writepos;
 
-		if ((writepos + len) <= dsb->dsound->buflen)
+		if ((writepos + len) <= dsb->dsound->device->buflen)
 			todo = len;
 		else
-			todo = dsb->dsound->buflen - writepos;
+			todo = dsb->dsound->device->buflen - writepos;
 
 		for (i = 0; i < todo; i++) {
 			/* 8-bit WAV is unsigned */
@@ -550,7 +544,7 @@ static void DSOUND_PhaseCancel(IDirectSoundBufferImpl *dsb, DWORD writepos, DWOR
  
 		if (todo < len) {
 			todo = len - todo;
-			obuf = dsb->dsound->buffer;
+			obuf = dsb->dsound->device->buffer;
 
 			for (i = 0; i < todo; i++) {
 				/* 8-bit WAV is unsigned */
@@ -565,12 +559,12 @@ static void DSOUND_PhaseCancel(IDirectSoundBufferImpl *dsb, DWORD writepos, DWOR
 		INT16	*ibufs, *obufs;
 
 		ibufs = (INT16 *) ibuf;
-		obufs = (INT16 *)(dsb->dsound->buffer + writepos);
+		obufs = (INT16 *)(dsb->dsound->device->buffer + writepos);
 
-		if ((writepos + len) <= dsb->dsound->buflen)
+		if ((writepos + len) <= dsb->dsound->device->buflen)
 			todo = len / 2;
 		else
-			todo = (dsb->dsound->buflen - writepos) / 2;
+			todo = (dsb->dsound->device->buflen - writepos) / 2;
 
 		for (i = 0; i < todo; i++) {
 			/* 16-bit WAV is signed */
@@ -583,7 +577,7 @@ static void DSOUND_PhaseCancel(IDirectSoundBufferImpl *dsb, DWORD writepos, DWOR
 
 		if (todo < (len / 2)) {
 			todo = (len / 2) - todo;
-			obufs = (INT16 *)dsb->dsound->buffer;
+			obufs = (INT16 *)dsb->dsound->device->buffer;
 
 			for (i = 0; i < todo; i++) {
 				/* 16-bit WAV is signed */
@@ -601,10 +595,10 @@ static void DSOUND_MixCancel(IDirectSoundBufferImpl *dsb, DWORD writepos, BOOL c
 {
 	DWORD   size, flen, len, npos, nlen;
 	INT	iAdvance = dsb->pwfx->nBlockAlign;
-	INT	oAdvance = dsb->dsound->pwfx->nBlockAlign;
+	INT	oAdvance = dsb->dsound->device->pwfx->nBlockAlign;
 	/* determine amount of premixed data to cancel */
 	DWORD primary_done =
-		((dsb->primary_mixpos < writepos) ? dsb->dsound->buflen : 0) +
+		((dsb->primary_mixpos < writepos) ? dsb->dsound->device->buflen : 0) +
 		dsb->primary_mixpos - writepos;
 
 	TRACE("(%p, %ld), buf_mixpos=%ld\n", dsb, writepos, dsb->buf_mixpos);
@@ -629,9 +623,9 @@ static void DSOUND_MixCancel(IDirectSoundBufferImpl *dsb, DWORD writepos, BOOL c
 		flen = dsb->freqAcc;
 		nlen = len / dsb->pwfx->nBlockAlign;
 		nlen = ((nlen << DSOUND_FREQSHIFT) + flen) / dsb->freqAdjust;
-		nlen *= dsb->dsound->pwfx->nBlockAlign;
+		nlen *= dsb->dsound->device->pwfx->nBlockAlign;
 		writepos =
-			((dsb->primary_mixpos < nlen) ? dsb->dsound->buflen : 0) +
+			((dsb->primary_mixpos < nlen) ? dsb->dsound->device->buflen : 0) +
 			dsb->primary_mixpos - nlen;
 	}
 
@@ -650,7 +644,7 @@ void DSOUND_MixCancelAt(IDirectSoundBufferImpl *dsb, DWORD buf_writepos)
 #if 0
 	DWORD   i, size, flen, len, npos, nlen;
 	INT	iAdvance = dsb->pwfx->nBlockAlign;
-	INT	oAdvance = dsb->dsound->pwfx->nBlockAlign;
+	INT	oAdvance = dsb->dsound->device->pwfx->nBlockAlign;
 	/* determine amount of premixed data to cancel */
 	DWORD buf_done =
 		((dsb->buf_mixpos < buf_writepos) ? dsb->buflen : 0) +
@@ -660,20 +654,15 @@ void DSOUND_MixCancelAt(IDirectSoundBufferImpl *dsb, DWORD buf_writepos)
 	WARN("(%p, %ld), buf_mixpos=%ld\n", dsb, buf_writepos, dsb->buf_mixpos);
 	/* since this is not implemented yet, just cancel *ALL* prebuffering for now
 	 * (which is faster anyway when there's only a single secondary buffer) */
-	dsb->dsound->need_remix = TRUE;
+	dsb->dsound->device->need_remix = TRUE;
 }
 
 void DSOUND_ForceRemix(IDirectSoundBufferImpl *dsb)
 {
 	TRACE("(%p)\n",dsb);
 	EnterCriticalSection(&dsb->lock);
-	if (dsb->state == STATE_PLAYING) {
-#if 0 /* this may not be quite reliable yet */
-		dsb->need_remix = TRUE;
-#else
-		dsb->dsound->need_remix = TRUE;
-#endif
-	}
+	if (dsb->state == STATE_PLAYING)
+		dsb->dsound->device->need_remix = TRUE;
 	LeaveCriticalSection(&dsb->lock);
 }
 
@@ -681,18 +670,17 @@ static DWORD DSOUND_MixOne(IDirectSoundBufferImpl *dsb, DWORD playpos, DWORD wri
 {
 	DWORD len, slen;
 	/* determine this buffer's write position */
-	DWORD buf_writepos = DSOUND_CalcPlayPosition(dsb, dsb->state & dsb->dsound->state, writepos,
-						     writepos, dsb->primary_mixpos, dsb->buf_mixpos);
+	DWORD buf_writepos = DSOUND_CalcPlayPosition(dsb, writepos, writepos);
 	/* determine how much already-mixed data exists */
 	DWORD buf_done =
 		((dsb->buf_mixpos < buf_writepos) ? dsb->buflen : 0) +
 		dsb->buf_mixpos - buf_writepos;
 	DWORD primary_done =
-		((dsb->primary_mixpos < writepos) ? dsb->dsound->buflen : 0) +
+		((dsb->primary_mixpos < writepos) ? dsb->dsound->device->buflen : 0) +
 		dsb->primary_mixpos - writepos;
 	DWORD adv_done =
-		((dsb->dsound->mixpos < writepos) ? dsb->dsound->buflen : 0) +
-		dsb->dsound->mixpos - writepos;
+		((dsb->dsound->device->mixpos < writepos) ? dsb->dsound->device->buflen : 0) +
+		dsb->dsound->device->mixpos - writepos;
 	DWORD played =
 		((buf_writepos < dsb->playpos) ? dsb->buflen : 0) +
 		buf_writepos - dsb->playpos;
@@ -761,7 +749,7 @@ static DWORD DSOUND_MixOne(IDirectSoundBufferImpl *dsb, DWORD playpos, DWORD wri
 			probably_valid_left = MulDiv(probably_valid_left,
 						     1 << DSOUND_FREQSHIFT,
 						     dsb->pwfx->nBlockAlign * dsb->freqAdjust) *
-				              dsb->dsound->pwfx->nBlockAlign;
+				              dsb->dsound->device->pwfx->nBlockAlign;
 			/* check whether to clip mix_len */
 			if (probably_valid_left < mixlen) {
 				TRACE("clipping to probably_valid_left=%ld\n", probably_valid_left);
@@ -779,7 +767,7 @@ static DWORD DSOUND_MixOne(IDirectSoundBufferImpl *dsb, DWORD playpos, DWORD wri
 	len = mixlen - primary_done;
 	TRACE("remaining mixlen=%ld\n", len);
 
-	if (len < dsb->dsound->fraglen) {
+	if (len < dsb->dsound->device->fraglen) {
 		/* smaller than a fragment, wait until it gets larger
 		 * before we take the mixing overhead */
 		TRACE("mixlen not worth it, deferring mixing\n");
@@ -790,20 +778,20 @@ static DWORD DSOUND_MixOne(IDirectSoundBufferImpl *dsb, DWORD playpos, DWORD wri
 	/* ok, we know how much to mix, let's go */
 	still_behind = (adv_done > primary_done);
 	while (len) {
-		slen = dsb->dsound->buflen - dsb->primary_mixpos;
+		slen = dsb->dsound->device->buflen - dsb->primary_mixpos;
 		if (slen > len) slen = len;
 		slen = DSOUND_MixInBuffer(dsb, dsb->primary_mixpos, slen);
 
-		if ((dsb->primary_mixpos < dsb->dsound->mixpos) &&
-		    (dsb->primary_mixpos + slen >= dsb->dsound->mixpos))
+		if ((dsb->primary_mixpos < dsb->dsound->device->mixpos) &&
+		    (dsb->primary_mixpos + slen >= dsb->dsound->device->mixpos))
 			still_behind = FALSE;
 
 		dsb->primary_mixpos += slen; len -= slen;
-		dsb->primary_mixpos %= dsb->dsound->buflen;
+		dsb->primary_mixpos %= dsb->dsound->device->buflen;
 
 		if ((dsb->state == STATE_STOPPED) || !slen) break;
 	}
-	TRACE("new primary_mixpos=%ld, primary_advbase=%ld\n", dsb->primary_mixpos, dsb->dsound->mixpos);
+	TRACE("new primary_mixpos=%ld, primary_advbase=%ld\n", dsb->primary_mixpos, dsb->dsound->device->mixpos);
 	TRACE("mixed data len=%ld, still_behind=%d\n", mixlen-len, still_behind);
 
 post_mix:
@@ -815,6 +803,7 @@ post_mix:
 		dsb->last_playpos = 0;
 		dsb->buf_mixpos = 0;
 		dsb->leadin = FALSE;
+		dsb->need_remix = FALSE;
 		DSOUND_CheckEvent(dsb, buf_left);
 	}
 
@@ -822,9 +811,9 @@ post_mix:
 	 * advance its underrun detector...*/
 	if (still_behind) return 0;
 	if ((mixlen - len) < primary_done) return 0;
-	slen = ((dsb->primary_mixpos < dsb->dsound->mixpos) ?
-		dsb->dsound->buflen : 0) + dsb->primary_mixpos -
-		dsb->dsound->mixpos;
+	slen = ((dsb->primary_mixpos < dsb->dsound->device->mixpos) ?
+		dsb->dsound->device->buflen : 0) + dsb->primary_mixpos -
+		dsb->dsound->device->mixpos;
 	if (slen > mixlen) {
 		/* the primary_done and still_behind checks above should have worked */
 		FIXME("problem with advancement calculation (advlen=%ld > mixlen=%ld)\n", slen, mixlen);
@@ -833,14 +822,14 @@ post_mix:
 	return slen;
 }
 
-static DWORD DSOUND_MixToPrimary(IDirectSoundImpl *dsound, DWORD playpos, DWORD writepos, DWORD mixlen, BOOL recover)
+static DWORD DSOUND_MixToPrimary(DirectSoundDevice *device, DWORD playpos, DWORD writepos, DWORD mixlen, BOOL recover)
 {
 	INT			i, len, maxlen = 0;
 	IDirectSoundBufferImpl	*dsb;
 
 	TRACE("(%ld,%ld,%ld,%d)\n", playpos, writepos, mixlen, recover);
-	for (i = 0; i < dsound->nrofbuffers; i++) {
-		dsb = dsound->buffers[i];
+	for (i = 0; i < device->nrofbuffers; i++) {
+		dsb = device->buffers[i];
 
 		if (dsb->buflen && dsb->state && !dsb->hwbuf) {
 			TRACE("Checking %p, mixlen=%ld\n", dsb, mixlen);
@@ -872,20 +861,20 @@ static DWORD DSOUND_MixToPrimary(IDirectSoundImpl *dsound, DWORD playpos, DWORD 
 	return maxlen;
 }
 
-static void DSOUND_MixReset(IDirectSoundImpl *dsound, DWORD writepos)
+static void DSOUND_MixReset(DirectSoundDevice *device, DWORD writepos)
 {
 	INT			i;
 	IDirectSoundBufferImpl	*dsb;
 	int nfiller;
 
-	TRACE("(%ld)\n", writepos);
+	TRACE("(%p,%ld)\n", device, writepos);
 
 	/* the sound of silence */
-	nfiller = dsound->pwfx->wBitsPerSample == 8 ? 128 : 0;
+	nfiller = device->pwfx->wBitsPerSample == 8 ? 128 : 0;
 
 	/* reset all buffer mix positions */
-	for (i = 0; i < dsound->nrofbuffers; i++) {
-		dsb = dsound->buffers[i];
+	for (i = 0; i < device->nrofbuffers; i++) {
+		dsb = device->buffers[i];
 
 		if (dsb->buflen && dsb->state && !dsb->hwbuf) {
 			TRACE("Resetting %p\n", dsb);
@@ -905,72 +894,72 @@ static void DSOUND_MixReset(IDirectSoundImpl *dsound, DWORD writepos)
 	}
 
 	/* wipe out premixed data */
-	if (dsound->mixpos < writepos) {
-		memset(dsound->buffer + writepos, nfiller, dsound->buflen - writepos);
-		memset(dsound->buffer, nfiller, dsound->mixpos);
+	if (device->mixpos < writepos) {
+		FillMemory(device->buffer + writepos, device->buflen - writepos, nfiller);
+		FillMemory(device->buffer, device->mixpos, nfiller);
 	} else {
-		memset(dsound->buffer + writepos, nfiller, dsound->mixpos - writepos);
+		FillMemory(device->buffer + writepos, device->mixpos - writepos, nfiller);
 	}
 
 	/* reset primary mix position */
-	dsound->mixpos = writepos;
+	device->mixpos = writepos;
 }
 
-static void DSOUND_CheckReset(IDirectSoundImpl *dsound, DWORD writepos)
+static void DSOUND_CheckReset(DirectSoundDevice *device, DWORD writepos)
 {
-	TRACE("(%p,%ld)\n",dsound,writepos);
-	if (dsound->need_remix) {
-		DSOUND_MixReset(dsound, writepos);
-		dsound->need_remix = FALSE;
+	TRACE("(%p,%ld)\n",device,writepos);
+	if (device->need_remix) {
+		DSOUND_MixReset(device, writepos);
+		device->need_remix = FALSE;
 		/* maximize Half-Life performance */
-		dsound->prebuf = ds_snd_queue_min;
-		dsound->precount = 0;
+		device->prebuf = ds_snd_queue_min;
+		device->precount = 0;
 	} else {
-		dsound->precount++;
-		if (dsound->precount >= 4) {
-			if (dsound->prebuf < ds_snd_queue_max)
-				dsound->prebuf++;
-			dsound->precount = 0;
+		device->precount++;
+		if (device->precount >= 4) {
+			if (device->prebuf < ds_snd_queue_max)
+				device->prebuf++;
+			device->precount = 0;
 		}
 	}
-	TRACE("premix adjust: %d\n", dsound->prebuf);
+	TRACE("premix adjust: %d\n", device->prebuf);
 }
 
-void DSOUND_WaveQueue(IDirectSoundImpl *dsound, DWORD mixq)
+void DSOUND_WaveQueue(DirectSoundDevice *device, DWORD mixq)
 {
-	TRACE("(%p,%ld)\n",dsound,mixq);
-	if (mixq + dsound->pwqueue > ds_hel_queue) mixq = ds_hel_queue - dsound->pwqueue;
-	TRACE("queueing %ld buffers, starting at %d\n", mixq, dsound->pwwrite);
+	TRACE("(%p,%ld)\n", device, mixq);
+	if (mixq + device->pwqueue > ds_hel_queue) mixq = ds_hel_queue - device->pwqueue;
+	TRACE("queueing %ld buffers, starting at %d\n", mixq, device->pwwrite);
 	for (; mixq; mixq--) {
-		waveOutWrite(dsound->hwo, dsound->pwave[dsound->pwwrite], sizeof(WAVEHDR));
-		dsound->pwwrite++;
-		if (dsound->pwwrite >= DS_HEL_FRAGS) dsound->pwwrite = 0;
-		dsound->pwqueue++;
+		waveOutWrite(device->hwo, device->pwave[device->pwwrite], sizeof(WAVEHDR));
+		device->pwwrite++;
+		if (device->pwwrite >= DS_HEL_FRAGS) device->pwwrite = 0;
+		device->pwqueue++;
 	}
 }
 
 /* #define SYNC_CALLBACK */
 
-void DSOUND_PerformMix(IDirectSoundImpl *dsound)
+void DSOUND_PerformMix(DirectSoundDevice *device)
 {
 	int nfiller;
 	BOOL forced;
 	HRESULT hres;
 
-	TRACE("(%p)\n", dsound);
+	TRACE("(%p)\n", device);
 
 	/* the sound of silence */
-	nfiller = dsound->pwfx->wBitsPerSample == 8 ? 128 : 0;
+	nfiller = device->pwfx->wBitsPerSample == 8 ? 128 : 0;
 
 	/* whether the primary is forced to play even without secondary buffers */
-	forced = ((dsound->state == STATE_PLAYING) || (dsound->state == STATE_STARTING));
+	forced = ((device->state == STATE_PLAYING) || (device->state == STATE_STARTING));
 
-	if (dsound->priolevel != DSSCL_WRITEPRIMARY) {
-		BOOL paused = ((dsound->state == STATE_STOPPED) || (dsound->state == STATE_STARTING));
+	if (device->priolevel != DSSCL_WRITEPRIMARY) {
+		BOOL paused = ((device->state == STATE_STOPPED) || (device->state == STATE_STARTING));
 		/* FIXME: document variables */
  		DWORD playpos, writepos, inq, maxq, frag;
- 		if (dsound->hwbuf) {
-			hres = IDsDriverBuffer_GetPosition(dsound->hwbuf, &playpos, &writepos);
+ 		if (device->hwbuf) {
+			hres = IDsDriverBuffer_GetPosition(device->hwbuf, &playpos, &writepos);
 			if (hres) {
 			    WARN("IDsDriverBuffer_GetPosition failed\n");
 			    return;
@@ -979,50 +968,50 @@ void DSOUND_PerformMix(IDirectSoundImpl *dsound)
 			 * but that's a little bit ambitious and unnecessary... */
 			/* rather add our safety margin to the writepos, if we're playing */
 			if (!paused) {
-				writepos += dsound->writelead;
-				writepos %= dsound->buflen;
+				writepos += device->writelead;
+				writepos %= device->buflen;
 			} else writepos = playpos;
 		} else {
- 			playpos = dsound->pwplay * dsound->fraglen;
+ 			playpos = device->pwplay * device->fraglen;
  			writepos = playpos;
  			if (!paused) {
-	 			writepos += ds_hel_margin * dsound->fraglen;
- 				writepos %= dsound->buflen;
+	 			writepos += ds_hel_margin * device->fraglen;
+ 				writepos %= device->buflen;
 	 		}
 		}
 		TRACE("primary playpos=%ld, writepos=%ld, clrpos=%ld, mixpos=%ld, buflen=%ld\n",
-		      playpos,writepos,dsound->playpos,dsound->mixpos,dsound->buflen);
-		assert(dsound->playpos < dsound->buflen);
+		      playpos,writepos,device->playpos,device->mixpos,device->buflen);
+		assert(device->playpos < device->buflen);
 		/* wipe out just-played sound data */
-		if (playpos < dsound->playpos) {
-			memset(dsound->buffer + dsound->playpos, nfiller, dsound->buflen - dsound->playpos);
-			memset(dsound->buffer, nfiller, playpos);
+		if (playpos < device->playpos) {
+			FillMemory(device->buffer + device->playpos, device->buflen - device->playpos, nfiller);
+			FillMemory(device->buffer, playpos, nfiller);
 		} else {
-			memset(dsound->buffer + dsound->playpos, nfiller, playpos - dsound->playpos);
+			FillMemory(device->buffer + device->playpos, playpos - device->playpos, nfiller);
 		}
-		dsound->playpos = playpos;
+		device->playpos = playpos;
 
-		EnterCriticalSection(&(dsound->mixlock));
+		EnterCriticalSection(&(device->mixlock));
 
 		/* reset mixing if necessary */
-		DSOUND_CheckReset(dsound, writepos);
+		DSOUND_CheckReset(device, writepos);
 
 		/* check how much prebuffering is left */
-		inq = dsound->mixpos;
+		inq = device->mixpos;
 		if (inq < writepos)
-			inq += dsound->buflen;
+			inq += device->buflen;
 		inq -= writepos;
 
 		/* find the maximum we can prebuffer */
 		if (!paused) {
 			maxq = playpos;
 			if (maxq < writepos)
-				maxq += dsound->buflen;
+				maxq += device->buflen;
 			maxq -= writepos;
-		} else maxq = dsound->buflen;
+		} else maxq = device->buflen;
 
-		/* clip maxq to dsound->prebuf */
-		frag = dsound->prebuf * dsound->fraglen;
+		/* clip maxq to device->prebuf */
+		frag = device->prebuf * device->fraglen;
 		if (maxq > frag) maxq = frag;
 
 		/* check for consistency */
@@ -1033,111 +1022,111 @@ void DSOUND_PerformMix(IDirectSoundImpl *dsound)
 			TRACE("reached end of mixed data (inq=%ld, maxq=%ld)\n", inq, maxq);
 			inq = 0;
 			/* stop the playback now, to allow buffers to refill */
-			if (dsound->state == STATE_PLAYING) {
-				dsound->state = STATE_STARTING;
+			if (device->state == STATE_PLAYING) {
+				device->state = STATE_STARTING;
 			}
-			else if (dsound->state == STATE_STOPPING) {
-				dsound->state = STATE_STOPPED;
+			else if (device->state == STATE_STOPPING) {
+				device->state = STATE_STOPPED;
 			}
 			else {
 				/* how can we have an underrun if we aren't playing? */
-				WARN("unexpected primary state (%ld)\n", dsound->state);
+				WARN("unexpected primary state (%ld)\n", device->state);
 			}
 #ifdef SYNC_CALLBACK
 			/* DSOUND_callback may need this lock */
-			LeaveCriticalSection(&(dsound->mixlock));
+			LeaveCriticalSection(&(device->mixlock));
 #endif
-			if (DSOUND_PrimaryStop(dsound) != DS_OK)
+			if (DSOUND_PrimaryStop(device) != DS_OK)
 				WARN("DSOUND_PrimaryStop failed\n");
 #ifdef SYNC_CALLBACK
-			EnterCriticalSection(&(dsound->mixlock));
+			EnterCriticalSection(&(device->mixlock));
 #endif
-			if (dsound->hwbuf) {
+			if (device->hwbuf) {
 				/* the Stop is supposed to reset play position to beginning of buffer */
 				/* unfortunately, OSS is not able to do so, so get current pointer */
-				hres = IDsDriverBuffer_GetPosition(dsound->hwbuf, &playpos, NULL);
+				hres = IDsDriverBuffer_GetPosition(device->hwbuf, &playpos, NULL);
 				if (hres) {
-					LeaveCriticalSection(&(dsound->mixlock));
+					LeaveCriticalSection(&(device->mixlock));
 					WARN("IDsDriverBuffer_GetPosition failed\n");
 					return;
 				}
 			} else {
-	 			playpos = dsound->pwplay * dsound->fraglen;
+	 			playpos = device->pwplay * device->fraglen;
 			}
 			writepos = playpos;
-			dsound->playpos = playpos;
-			dsound->mixpos = writepos;
+			device->playpos = playpos;
+			device->mixpos = writepos;
 			inq = 0;
-			maxq = dsound->buflen;
+			maxq = device->buflen;
 			if (maxq > frag) maxq = frag;
-			memset(dsound->buffer, nfiller, dsound->buflen);
+			FillMemory(device->buffer, device->buflen, nfiller);
 			paused = TRUE;
 		}
 
 		/* do the mixing */
-		frag = DSOUND_MixToPrimary(dsound, playpos, writepos, maxq, paused);
+		frag = DSOUND_MixToPrimary(device, playpos, writepos, maxq, paused);
 		if (forced) frag = maxq - inq;
-		dsound->mixpos += frag;
-		dsound->mixpos %= dsound->buflen;
+		device->mixpos += frag;
+		device->mixpos %= device->buflen;
 
 		if (frag) {
 			/* buffers have been filled, restart playback */
-			if (dsound->state == STATE_STARTING) {
-				dsound->state = STATE_PLAYING;
+			if (device->state == STATE_STARTING) {
+				device->state = STATE_PLAYING;
 			}
-			else if (dsound->state == STATE_STOPPED) {
+			else if (device->state == STATE_STOPPED) {
 				/* the dsound is supposed to play if there's something to play
 				 * even if it is reported as stopped, so don't let this confuse you */
-				dsound->state = STATE_STOPPING;
+				device->state = STATE_STOPPING;
 			}
-			LeaveCriticalSection(&(dsound->mixlock));
+			LeaveCriticalSection(&(device->mixlock));
 			if (paused) {
-				if (DSOUND_PrimaryPlay(dsound) != DS_OK)
+				if (DSOUND_PrimaryPlay(device) != DS_OK)
 					WARN("DSOUND_PrimaryPlay failed\n");
 				else
 					TRACE("starting playback\n");
 			}
 		}
 		else
-			LeaveCriticalSection(&(dsound->mixlock));
+			LeaveCriticalSection(&(device->mixlock));
 	} else {
 		/* in the DSSCL_WRITEPRIMARY mode, the app is totally in charge... */
-		if (dsound->state == STATE_STARTING) {
-			if (DSOUND_PrimaryPlay(dsound) != DS_OK)
+		if (device->state == STATE_STARTING) {
+			if (DSOUND_PrimaryPlay(device) != DS_OK)
 				WARN("DSOUND_PrimaryPlay failed\n");
 			else
-				dsound->state = STATE_PLAYING;
+				device->state = STATE_PLAYING;
 		}
-		else if (dsound->state == STATE_STOPPING) {
-			if (DSOUND_PrimaryStop(dsound) != DS_OK)
+		else if (device->state == STATE_STOPPING) {
+			if (DSOUND_PrimaryStop(device) != DS_OK)
 				WARN("DSOUND_PrimaryStop failed\n");
 			else
-				dsound->state = STATE_STOPPED;
+				device->state = STATE_STOPPED;
 		}
 	}
 }
 
 void CALLBACK DSOUND_timer(UINT timerID, UINT msg, DWORD dwUser, DWORD dw1, DWORD dw2)
 {
-        IDirectSoundImpl* This = (IDirectSoundImpl*)dwUser;
+        DirectSoundDevice * device = (DirectSoundDevice*)dwUser;
 	DWORD start_time =  GetTickCount();
         DWORD end_time;
 	TRACE("(%d,%d,0x%lx,0x%lx,0x%lx)\n",timerID,msg,dwUser,dw1,dw2);
         TRACE("entering at %ld\n", start_time);
 
-	if (dsound != This) {
+	if (DSOUND_renderer[device->drvdesc.dnDevNode] != device) {
 		ERR("dsound died without killing us?\n");
 		timeKillEvent(timerID);
 		timeEndPeriod(DS_TIME_RES);
 		return;
 	}
 
-	RtlAcquireResourceShared(&(This->buffer_list_lock), TRUE);
+	RtlAcquireResourceShared(&(device->buffer_list_lock), TRUE);
 
-	if (This->ref)
-		DSOUND_PerformMix(This);
+	if (device->ref)
+		DSOUND_PerformMix(device);
 
-	RtlReleaseResource(&(This->buffer_list_lock));
+	RtlReleaseResource(&(device->buffer_list_lock));
 
 	end_time = GetTickCount();
 	TRACE("completed processing at %ld, duration = %ld\n", end_time, end_time - start_time);
@@ -1145,28 +1134,28 @@ void CALLBACK DSOUND_timer(UINT timerID, UINT msg, DWORD dwUser, DWORD dw1, DWOR
 
 void CALLBACK DSOUND_callback(HWAVEOUT hwo, UINT msg, DWORD dwUser, DWORD dw1, DWORD dw2)
 {
-        IDirectSoundImpl* This = (IDirectSoundImpl*)dwUser;
+        DirectSoundDevice * device = (DirectSoundDevice*)dwUser;
 	TRACE("(%p,%x,%lx,%lx,%lx)\n",hwo,msg,dwUser,dw1,dw2);
 	TRACE("entering at %ld, msg=%08x(%s)\n", GetTickCount(), msg, 
 		msg==MM_WOM_DONE ? "MM_WOM_DONE" : msg==MM_WOM_CLOSE ? "MM_WOM_CLOSE" : 
 		msg==MM_WOM_OPEN ? "MM_WOM_OPEN" : "UNKNOWN");
 	if (msg == MM_WOM_DONE) {
 		DWORD inq, mixq, fraglen, buflen, pwplay, playpos, mixpos;
-		if (This->pwqueue == (DWORD)-1) {
+		if (device->pwqueue == (DWORD)-1) {
 			TRACE("completed due to reset\n");
 			return;
 		}
 /* it could be a bad idea to enter critical section here... if there's lock contention,
  * the resulting scheduling delays might obstruct the winmm player thread */
 #ifdef SYNC_CALLBACK
-		EnterCriticalSection(&(This->mixlock));
+		EnterCriticalSection(&(device->mixlock));
 #endif
 		/* retrieve current values */
-		fraglen = This->fraglen;
-		buflen = This->buflen;
-		pwplay = This->pwplay;
+		fraglen = device->fraglen;
+		buflen = device->buflen;
+		pwplay = device->pwplay;
 		playpos = pwplay * fraglen;
-		mixpos = This->mixpos;
+		mixpos = device->mixpos;
 		/* check remaining mixed data */
 		inq = ((mixpos < playpos) ? buflen : 0) + mixpos - playpos;
 		mixq = inq / fraglen;
@@ -1176,12 +1165,12 @@ void CALLBACK DSOUND_callback(HWAVEOUT hwo, UINT msg, DWORD dwUser, DWORD dw1, D
 		pwplay++;
 		if (pwplay >= DS_HEL_FRAGS) pwplay = 0;
 		/* write new values */
-		This->pwplay = pwplay;
-		This->pwqueue--;
+		device->pwplay = pwplay;
+		device->pwqueue--;
 		/* queue new buffer if we have data for it */
-		if (inq>1) DSOUND_WaveQueue(This, inq-1);
+		if (inq>1) DSOUND_WaveQueue(device, inq-1);
 #ifdef SYNC_CALLBACK
-		LeaveCriticalSection(&(This->mixlock));
+		LeaveCriticalSection(&(device->mixlock));
 #endif
 	}
 	TRACE("completed\n");

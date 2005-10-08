@@ -21,14 +21,10 @@
 
 #define NONAMELESSSTRUCT
 #define NONAMELESSUNION
+#define COBJMACROS
 #include <windows.h>
 
-#include <math.h>
-#include <stdlib.h>
-
 #include "wine/test.h"
-#include "windef.h"
-#include "wingdi.h"
 #include "dsound.h"
 #include "initguid.h"
 #include "dsconf.h"
@@ -56,9 +52,107 @@ DEFINE_GUID(DSPROPSETID_ZOOMFX_BufferProperties, \
 
 typedef HRESULT  (CALLBACK * MYPROC)(REFCLSID, REFIID, LPVOID *);
 
+static HRESULT (WINAPI *pDirectSoundCreate8)(LPCGUID,LPDIRECTSOUND8*,
+    LPUNKNOWN)=NULL;
+static HRESULT (WINAPI *pDirectSoundCaptureCreate)(LPCGUID,
+    LPDIRECTSOUNDCAPTURE*,LPUNKNOWN)=NULL;
+static HRESULT (WINAPI *pDirectSoundCaptureCreate8)(LPCGUID,
+    LPDIRECTSOUNDCAPTURE8*,LPUNKNOWN)=NULL;
+static HRESULT (WINAPI *pDirectSoundFullDuplexCreate)(LPCGUID,LPCGUID,
+    LPCDSCBUFFERDESC,LPCDSBUFFERDESC,HWND,DWORD,LPDIRECTSOUNDFULLDUPLEX*,
+    LPDIRECTSOUNDCAPTUREBUFFER8*,LPDIRECTSOUNDBUFFER8*,LPUNKNOWN)=NULL;
+
 BOOL CALLBACK callback(PDSPROPERTY_DIRECTSOUNDDEVICE_DESCRIPTION_DATA data,
                        LPVOID context)
 {
+    trace("  found device:\n");
+    trace("    Type: %s\n",
+          data->Type == DIRECTSOUNDDEVICE_TYPE_EMULATED ? "Emulated" :
+          data->Type == DIRECTSOUNDDEVICE_TYPE_VXD ? "VxD" :
+          data->Type == DIRECTSOUNDDEVICE_TYPE_WDM ? "WDM" : "Unknown");
+    trace("    DataFlow: %s\n",
+          data->DataFlow == DIRECTSOUNDDEVICE_DATAFLOW_RENDER ? "Render" :
+          data->DataFlow == DIRECTSOUNDDEVICE_DATAFLOW_CAPTURE ?
+          "Capture" : "Unknown");
+    trace("    DeviceId: {%08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}\n",
+          data->DeviceId.Data1,data->DeviceId.Data2,data->DeviceId.Data3,
+          data->DeviceId.Data4[0],data->DeviceId.Data4[1],
+          data->DeviceId.Data4[2],data->DeviceId.Data4[3],
+          data->DeviceId.Data4[4],data->DeviceId.Data4[5],
+          data->DeviceId.Data4[6],data->DeviceId.Data4[7]);
+    trace("    Description: %s\n", data->Description);
+    trace("    Module: %s\n", data->Module);
+    trace("    Interface: %s\n", data->Interface);
+    trace("    WaveDeviceId: %ld\n", data->WaveDeviceId);
+
+    return TRUE;
+}
+
+BOOL CALLBACK callback1(PDSPROPERTY_DIRECTSOUNDDEVICE_DESCRIPTION_1_DATA data,
+                        LPVOID context)
+{
+    char descriptionA[0x100];
+    char moduleA[MAX_PATH];
+
+    trace("  found device:\n");
+    trace("    Type: %s\n",
+          data->Type == DIRECTSOUNDDEVICE_TYPE_EMULATED ? "Emulated" :
+          data->Type == DIRECTSOUNDDEVICE_TYPE_VXD ? "VxD" :
+          data->Type == DIRECTSOUNDDEVICE_TYPE_WDM ? "WDM" : "Unknown");
+    trace("    DataFlow: %s\n",
+          data->DataFlow == DIRECTSOUNDDEVICE_DATAFLOW_RENDER ? "Render" :
+          data->DataFlow == DIRECTSOUNDDEVICE_DATAFLOW_CAPTURE ?
+          "Capture" : "Unknown");
+    trace("    DeviceId: {%08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}\n",
+          data->DeviceId.Data1,data->DeviceId.Data2,data->DeviceId.Data3,
+          data->DeviceId.Data4[0],data->DeviceId.Data4[1],
+          data->DeviceId.Data4[2],data->DeviceId.Data4[3],
+          data->DeviceId.Data4[4],data->DeviceId.Data4[5],
+          data->DeviceId.Data4[6],data->DeviceId.Data4[7]);
+    trace("    DescriptionA: %s\n", data->DescriptionA);
+    WideCharToMultiByte(CP_ACP, 0, data->DescriptionW, -1, descriptionA, sizeof(descriptionA), NULL, NULL);
+    trace("    DescriptionW: %s\n", descriptionA);
+    trace("    ModuleA: %s\n", data->ModuleA);
+    WideCharToMultiByte(CP_ACP, 0, data->ModuleW, -1, moduleA, sizeof(moduleA), NULL, NULL);
+    trace("    ModuleW: %s\n", moduleA);
+    trace("    WaveDeviceId: %ld\n", data->WaveDeviceId);
+
+    return TRUE;
+}
+
+BOOL CALLBACK callbackA(PDSPROPERTY_DIRECTSOUNDDEVICE_DESCRIPTION_A_DATA data,
+                        LPVOID context)
+{
+    trace("  found device:\n");
+    trace("    Type: %s\n",
+          data->Type == DIRECTSOUNDDEVICE_TYPE_EMULATED ? "Emulated" :
+          data->Type == DIRECTSOUNDDEVICE_TYPE_VXD ? "VxD" :
+          data->Type == DIRECTSOUNDDEVICE_TYPE_WDM ? "WDM" : "Unknown");
+    trace("    DataFlow: %s\n",
+          data->DataFlow == DIRECTSOUNDDEVICE_DATAFLOW_RENDER ? "Render" :
+          data->DataFlow == DIRECTSOUNDDEVICE_DATAFLOW_CAPTURE ?
+          "Capture" : "Unknown");
+    trace("    DeviceId: {%08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x}\n",
+          data->DeviceId.Data1,data->DeviceId.Data2,data->DeviceId.Data3,
+          data->DeviceId.Data4[0],data->DeviceId.Data4[1],
+          data->DeviceId.Data4[2],data->DeviceId.Data4[3],
+          data->DeviceId.Data4[4],data->DeviceId.Data4[5],
+          data->DeviceId.Data4[6],data->DeviceId.Data4[7]);
+    trace("    Description: %s\n", data->Description);
+    trace("    Module: %s\n", data->Module);
+    trace("    Interface: %s\n", data->Interface);
+    trace("    WaveDeviceId: %ld\n", data->WaveDeviceId);
+
+    return TRUE;
+}
+
+BOOL CALLBACK callbackW(PDSPROPERTY_DIRECTSOUNDDEVICE_DESCRIPTION_W_DATA data,
+                        LPVOID context)
+{
+    char descriptionA[0x100];
+    char moduleA[MAX_PATH];
+    char interfaceA[MAX_PATH];
+
     trace("found device:\n");
     trace("\tType: %s\n",
           data->Type == DIRECTSOUNDDEVICE_TYPE_EMULATED ? "Emulated" :
@@ -74,15 +168,18 @@ BOOL CALLBACK callback(PDSPROPERTY_DIRECTSOUNDDEVICE_DESCRIPTION_DATA data,
           data->DeviceId.Data4[2],data->DeviceId.Data4[3],
           data->DeviceId.Data4[4],data->DeviceId.Data4[5],
           data->DeviceId.Data4[6],data->DeviceId.Data4[7]);
-    trace("\tDescription: %s\n", data->Description);
-    trace("\tModule: %s\n", data->Module);
-    trace("\tInterface: %s\n", data->Interface);
+    WideCharToMultiByte(CP_ACP, 0, data->Description, -1, descriptionA, sizeof(descriptionA), NULL, NULL);
+    WideCharToMultiByte(CP_ACP, 0, data->Module, -1, moduleA, sizeof(moduleA), NULL, NULL);
+    WideCharToMultiByte(CP_ACP, 0, data->Interface, -1, interfaceA, sizeof(interfaceA), NULL, NULL);
+    trace("\tDescription: %s\n", descriptionA);
+    trace("\tModule: %s\n", moduleA);
+    trace("\tInterface: %s\n", interfaceA);
     trace("\tWaveDeviceId: %ld\n", data->WaveDeviceId);
 
     return TRUE;
 }
 
-static void propset_private_tests()
+static void propset_private_tests(void)
 {
     HMODULE hDsound;
     HRESULT rc;
@@ -99,6 +196,7 @@ static void propset_private_tests()
     fProc = (MYPROC)GetProcAddress(hDsound, "DllGetClassObject");
 
     /* try direct sound first */
+    /* DSOUND: Error: Invalid interface buffer */
     rc = (fProc)(&CLSID_DirectSound, &IID_IClassFactory, (void **)0);
     ok(rc==DSERR_INVALIDPARAM,"DllGetClassObject(CLSID_DirectSound, "
        "IID_IClassFactory) should have returned DSERR_INVALIDPARAM, "
@@ -111,95 +209,109 @@ static void propset_private_tests()
         goto error;
 
     /* direct sound doesn't have an IKsPropertySet */
-    rc = pcf->lpVtbl->CreateInstance(pcf, NULL, &IID_IKsPropertySet,
+    /* DSOUND: Error: Invalid interface buffer */
+    rc = IClassFactory_CreateInstance(pcf, NULL, &IID_IKsPropertySet,
                                      (void **)0);
     ok(rc==DSERR_INVALIDPARAM, "CreateInstance(IID_IKsPropertySet) should have "
        "returned DSERR_INVALIDPARAM, returned: %s\n",DXGetErrorString8(rc));
 
-    rc = pcf->lpVtbl->CreateInstance(pcf, NULL, &IID_IKsPropertySet,
+    rc = IClassFactory_CreateInstance(pcf, NULL, &IID_IKsPropertySet,
                                      (void **)(&pps));
     ok(rc==E_NOINTERFACE, "CreateInstance(IID_IKsPropertySet) should have "
        "returned E_NOINTERFACE, returned: %s\n",DXGetErrorString8(rc));
 
     /* and the direct sound 8 version */
-    rc = (fProc)(&CLSID_DirectSound8, &IID_IClassFactory, (void **)(&pcf));
-    ok(pcf!=0, "DllGetClassObject(CLSID_DirectSound8, IID_IClassFactory) "
-       "failed: %s\n",DXGetErrorString8(rc));
-    if (pcf==0)
-        goto error;
+    if (pDirectSoundCreate8) {
+        rc = (fProc)(&CLSID_DirectSound8, &IID_IClassFactory, (void **)(&pcf));
+        ok(pcf!=0, "DllGetClassObject(CLSID_DirectSound8, IID_IClassFactory) "
+           "failed: %s\n",DXGetErrorString8(rc));
+        if (pcf==0)
+            goto error;
 
-    /* direct sound 8 doesn't have an IKsPropertySet */
-    rc = pcf->lpVtbl->CreateInstance(pcf, NULL, &IID_IKsPropertySet,
-                                     (void **)(&pps));
-    ok(rc==E_NOINTERFACE, "CreateInstance(IID_IKsPropertySet) should have "
-       "returned E_NOINTERFACE, returned: %s\n",DXGetErrorString8(rc));
+        /* direct sound 8 doesn't have an IKsPropertySet */
+        rc = IClassFactory_CreateInstance(pcf, NULL, &IID_IKsPropertySet,
+                                         (void **)(&pps));
+        ok(rc==E_NOINTERFACE, "CreateInstance(IID_IKsPropertySet) should have "
+           "returned E_NOINTERFACE, returned: %s\n",DXGetErrorString8(rc));
+    }
 
     /* try direct sound capture next */
-    rc = (fProc)(&CLSID_DirectSoundCapture, &IID_IClassFactory,
-                 (void **)(&pcf));
-    ok(pcf!=0, "DllGetClassObject(CLSID_DirectSoundCapture, IID_IClassFactory) "
-       "failed: %s\n",DXGetErrorString8(rc));
-    if (pcf==0)
-        goto error;
+    if (pDirectSoundCaptureCreate) {
+        rc = (fProc)(&CLSID_DirectSoundCapture, &IID_IClassFactory,
+                     (void **)(&pcf));
+        ok(pcf!=0, "DllGetClassObject(CLSID_DirectSoundCapture, IID_IClassFactory) "
+           "failed: %s\n",DXGetErrorString8(rc));
+        if (pcf==0)
+            goto error;
 
-    /* direct sound capture doesn't have an IKsPropertySet */
-    rc = pcf->lpVtbl->CreateInstance(pcf, NULL, &IID_IKsPropertySet,
-                                     (void **)(&pps));
-    ok(rc==E_NOINTERFACE, "CreateInstance(IID_IKsPropertySet) should have "
-       "returned E_NOINTERFACE,returned: %s\n",DXGetErrorString8(rc));
+        /* direct sound capture doesn't have an IKsPropertySet */
+        rc = IClassFactory_CreateInstance(pcf, NULL, &IID_IKsPropertySet,
+                                         (void **)(&pps));
+        ok(rc==E_NOINTERFACE, "CreateInstance(IID_IKsPropertySet) should have "
+           "returned E_NOINTERFACE,returned: %s\n",DXGetErrorString8(rc));
+    }
 
     /* and the direct sound capture 8 version */
-    rc = (fProc)(&CLSID_DirectSoundCapture8, &IID_IClassFactory,
-                 (void **)(&pcf));
-    ok(pcf!=0, "DllGetClassObject(CLSID_DirectSoundCapture8, "
-       "IID_IClassFactory) failed: %s\n",DXGetErrorString8(rc));
-    if (pcf==0)
-        goto error;
+    if (pDirectSoundCaptureCreate8) {
+        rc = (fProc)(&CLSID_DirectSoundCapture8, &IID_IClassFactory,
+                     (void **)(&pcf));
+        ok(pcf!=0, "DllGetClassObject(CLSID_DirectSoundCapture8, "
+           "IID_IClassFactory) failed: %s\n",DXGetErrorString8(rc));
+        if (pcf==0)
+            goto error;
 
-    /* direct sound capture 8 doesn't have an IKsPropertySet */
-    rc = pcf->lpVtbl->CreateInstance(pcf, NULL, &IID_IKsPropertySet,
-                                     (void **)(&pps));
-    ok(rc==E_NOINTERFACE, "CreateInstance(IID_IKsPropertySet) should have "
-       "returned E_NOINTERFACE, returned: %s\n",DXGetErrorString8(rc));
+        /* direct sound capture 8 doesn't have an IKsPropertySet */
+        rc = IClassFactory_CreateInstance(pcf, NULL, &IID_IKsPropertySet,
+                                         (void **)(&pps));
+        ok(rc==E_NOINTERFACE, "CreateInstance(IID_IKsPropertySet) should have "
+           "returned E_NOINTERFACE, returned: %s\n",DXGetErrorString8(rc));
+    }
 
     /* try direct sound full duplex next */
-    rc = (fProc)(&CLSID_DirectSoundFullDuplex, &IID_IClassFactory,
-                 (void **)(&pcf));
-    ok(pcf!=0, "DllGetClassObject(CLSID_DirectSoundFullDuplex, "
-       "IID_IClassFactory) failed: %s\n",DXGetErrorString8(rc));
-    if (pcf==0)
-        goto error;
+    if (pDirectSoundFullDuplexCreate) {
+        rc = (fProc)(&CLSID_DirectSoundFullDuplex, &IID_IClassFactory,
+                     (void **)(&pcf));
+        ok(pcf!=0, "DllGetClassObject(CLSID_DirectSoundFullDuplex, "
+           "IID_IClassFactory) failed: %s\n",DXGetErrorString8(rc));
+        if (pcf==0)
+            goto error;
 
-    /* direct sound full duplex doesn't have an IKsPropertySet */
-    rc = pcf->lpVtbl->CreateInstance(pcf, NULL, &IID_IKsPropertySet,
-                                     (void **)(&pps));
-    ok(rc==E_NOINTERFACE, "CreateInstance(IID_IKsPropertySet) should have "
-       "returned NOINTERFACE, returned: %s\n",DXGetErrorString8(rc));
+        /* direct sound full duplex doesn't have an IKsPropertySet */
+        rc = IClassFactory_CreateInstance(pcf, NULL, &IID_IKsPropertySet,
+                                         (void **)(&pps));
+        ok(rc==E_NOINTERFACE, "CreateInstance(IID_IKsPropertySet) should have "
+           "returned NOINTERFACE, returned: %s\n",DXGetErrorString8(rc));
+    }
 
     /* try direct sound private last */
     rc = (fProc)(&CLSID_DirectSoundPrivate, &IID_IClassFactory,
                  (void **)(&pcf));
-    ok(pcf!=0, "DllGetClassObject(CLSID_DirectSoundPrivate, "
-       "IID_IClassFactory) failed: %s\n",DXGetErrorString8(rc));
+
+    /* some early versions of Direct Sound do not have this */
     if (pcf==0)
         goto error;
 
     /* direct sound private does have an IKsPropertySet */
-    rc = pcf->lpVtbl->CreateInstance(pcf, NULL, &IID_IKsPropertySet,
+    rc = IClassFactory_CreateInstance(pcf, NULL, &IID_IKsPropertySet,
                                      (void **)(&pps));
     ok(rc==DS_OK, "CreateInstance(IID_IKsPropertySet) failed: %s\n",
        DXGetErrorString8(rc));
     if (rc!=DS_OK)
         goto error;
 
-    rc = pps->lpVtbl->QuerySupport(pps, &DSPROPSETID_DirectSoundDevice,
+    /* test generic DSPROPERTY_DIRECTSOUNDDEVICE_DESCRIPTION */
+    rc = IKsPropertySet_QuerySupport(pps, &DSPROPSETID_DirectSoundDevice,
                                    DSPROPERTY_DIRECTSOUNDDEVICE_DESCRIPTION,
                                    &support);
-    ok(rc==DS_OK, "QuerySupport(DSPROPSETID_DirectSoundDevice, "
+    ok(rc==DS_OK||rc==E_INVALIDARG,
+       "QuerySupport(DSPROPSETID_DirectSoundDevice, "
        "DSPROPERTY_DIRECTSOUNDDEVICE_DESCRIPTION) failed: %s\n",
        DXGetErrorString8(rc));
-    if (rc!=DS_OK)
+    if (rc!=DS_OK) {
+        if (rc==E_INVALIDARG)
+            trace("  Not Supported\n");
         goto error;
+    }
 
     ok(support & KSPROPERTY_SUPPORT_GET,
        "Couldn't get DSPROPERTY_DIRECTSOUNDDEVICE_DESCRIPTION: "
@@ -208,7 +320,71 @@ static void propset_private_tests()
        "Shouldn't be able to set DSPROPERTY_DIRECTSOUNDDEVICE_DESCRIPTION: "
        "support = 0x%lx\n",support);
 
-    rc = pps->lpVtbl->QuerySupport(pps, &DSPROPSETID_DirectSoundDevice,
+    /* test DSPROPERTY_DIRECTSOUNDDEVICE_DESCRIPTION_1 */
+    rc = IKsPropertySet_QuerySupport(pps, &DSPROPSETID_DirectSoundDevice,
+                                   DSPROPERTY_DIRECTSOUNDDEVICE_DESCRIPTION_1,
+                                   &support);
+    ok(rc==DS_OK||rc==E_INVALIDARG,
+       "QuerySupport(DSPROPSETID_DirectSoundDevice, "
+       "DSPROPERTY_DIRECTSOUNDDEVICE_DESCRIPTION_1) failed: %s\n",
+       DXGetErrorString8(rc));
+    if (rc!=DS_OK) {
+        if (rc==E_INVALIDARG)
+            trace("  Not Supported\n");
+        goto error;
+    }
+
+    ok(support & KSPROPERTY_SUPPORT_GET,
+       "Couldn't get DSPROPERTY_DIRECTSOUNDDEVICE_DESCRIPTION_1: "
+       "support = 0x%lx\n",support);
+    ok(!(support & KSPROPERTY_SUPPORT_SET),
+       "Shouldn't be able to set DSPROPERTY_DIRECTSOUNDDEVICE_DESCRIPTION_1: "
+       "support = 0x%lx\n",support);
+
+    /* test DSPROPERTY_DIRECTSOUNDDEVICE_DESCRIPTION_A */
+    rc = IKsPropertySet_QuerySupport(pps, &DSPROPSETID_DirectSoundDevice,
+                                   DSPROPERTY_DIRECTSOUNDDEVICE_DESCRIPTION_A,
+                                   &support);
+    ok(rc==DS_OK||rc==E_INVALIDARG,
+       "QuerySupport(DSPROPSETID_DirectSoundDevice, "
+       "DSPROPERTY_DIRECTSOUNDDEVICE_DESCRIPTION_A) failed: %s\n",
+       DXGetErrorString8(rc));
+    if (rc!=DS_OK) {
+        if (rc==E_INVALIDARG)
+            trace("  Not Supported\n");
+        goto error;
+    }
+
+    ok(support & KSPROPERTY_SUPPORT_GET,
+       "Couldn't get DSPROPERTY_DIRECTSOUNDDEVICE_DESCRIPTION_A: "
+       "support = 0x%lx\n",support);
+    ok(!(support & KSPROPERTY_SUPPORT_SET),
+       "Shouldn't be able to set DSPROPERTY_DIRECTSOUNDDEVICE_DESCRIPTION_A: "
+       "support = 0x%lx\n",support);
+
+    /* test DSPROPERTY_DIRECTSOUNDDEVICE_DESCRIPTION_W */
+    rc = IKsPropertySet_QuerySupport(pps, &DSPROPSETID_DirectSoundDevice,
+                                   DSPROPERTY_DIRECTSOUNDDEVICE_DESCRIPTION_W,
+                                   &support);
+    ok(rc==DS_OK||rc==E_INVALIDARG,
+       "QuerySupport(DSPROPSETID_DirectSoundDevice, "
+       "DSPROPERTY_DIRECTSOUNDDEVICE_DESCRIPTION_W) failed: %s\n",
+       DXGetErrorString8(rc));
+    if (rc!=DS_OK) {
+        if (rc==E_INVALIDARG)
+            trace("  Not Supported\n");
+        goto error;
+    }
+
+    ok(support & KSPROPERTY_SUPPORT_GET,
+       "Couldn't get DSPROPERTY_DIRECTSOUNDDEVICE_DESCRIPTION_W: "
+       "support = 0x%lx\n",support);
+    ok(!(support & KSPROPERTY_SUPPORT_SET),
+       "Shouldn't be able to set DSPROPERTY_DIRECTSOUNDDEVICE_DESCRIPTION_W: "
+       "support = 0x%lx\n",support);
+
+    /* test generic DSPROPERTY_DIRECTSOUNDDEVICE_WAVEDEVICEMAPPING */
+    rc = IKsPropertySet_QuerySupport(pps, &DSPROPSETID_DirectSoundDevice,
         DSPROPERTY_DIRECTSOUNDDEVICE_WAVEDEVICEMAPPING, &support);
     ok(rc==DS_OK, "QuerySupport(DSPROPSETID_DirectSoundDevice, "
        "DSPROPERTY_DIRECTSOUNDDEVICE_WAVEDEVICEMAPPING) failed: %s\n",
@@ -223,7 +399,41 @@ static void propset_private_tests()
        "DSPROPERTY_DIRECTSOUNDDEVICE_WAVEDEVICEMAPPING: support = "
        "0x%lx\n",support);
 
-    rc = pps->lpVtbl->QuerySupport(pps, &DSPROPSETID_DirectSoundDevice,
+    /* test DSPROPERTY_DIRECTSOUNDDEVICE_WAVEDEVICEMAPPING_A */
+    rc = IKsPropertySet_QuerySupport(pps, &DSPROPSETID_DirectSoundDevice,
+        DSPROPERTY_DIRECTSOUNDDEVICE_WAVEDEVICEMAPPING_A, &support);
+    ok(rc==DS_OK, "QuerySupport(DSPROPSETID_DirectSoundDevice, "
+       "DSPROPERTY_DIRECTSOUNDDEVICE_WAVEDEVICEMAPPING_A) failed: %s\n",
+       DXGetErrorString8(rc));
+    if (rc!=DS_OK)
+        goto error;
+
+    ok(support & KSPROPERTY_SUPPORT_GET,
+       "Couldn't get DSPROPERTY_DIRECTSOUNDDEVICE_WAVEDEVICEMAPPING_A: "
+       "support = 0x%lx\n",support);
+    ok(!(support & KSPROPERTY_SUPPORT_SET), "Shouldn't be able to set "
+       "DSPROPERTY_DIRECTSOUNDDEVICE_WAVEDEVICEMAPPING_A: support = "
+       "0x%lx\n",support);
+
+    /* test DSPROPERTY_DIRECTSOUNDDEVICE_WAVEDEVICEMAPPING_W */
+    rc = IKsPropertySet_QuerySupport(pps, &DSPROPSETID_DirectSoundDevice,
+        DSPROPERTY_DIRECTSOUNDDEVICE_WAVEDEVICEMAPPING_W, &support);
+    ok(rc==DS_OK, "QuerySupport(DSPROPSETID_DirectSoundDevice, "
+       "DSPROPERTY_DIRECTSOUNDDEVICE_WAVEDEVICEMAPPING_W) failed: %s\n",
+       DXGetErrorString8(rc));
+    if (rc!=DS_OK)
+        goto error;
+
+    ok(support & KSPROPERTY_SUPPORT_GET,
+       "Couldn't get DSPROPERTY_DIRECTSOUNDDEVICE_WAVEDEVICEMAPPING_W: "
+       "support = 0x%lx\n",support);
+    ok(!(support & KSPROPERTY_SUPPORT_SET), "Shouldn't be able to set "
+       "DSPROPERTY_DIRECTSOUNDDEVICE_WAVEDEVICEMAPPING_W: support = "
+       "0x%lx\n",support);
+
+    /* test generic DSPROPERTY_DIRECTSOUNDDEVICE_ENUMERATE */
+    trace("*** Testing DSPROPERTY_DIRECTSOUNDDEVICE_ENUMERATE ***\n");
+    rc = IKsPropertySet_QuerySupport(pps, &DSPROPSETID_DirectSoundDevice,
                                    DSPROPERTY_DIRECTSOUNDDEVICE_ENUMERATE,
                                    &support);
     ok(rc==DS_OK, "QuerySupport(DSPROPSETID_DirectSoundDevice, "
@@ -245,8 +455,98 @@ static void propset_private_tests()
         data.Callback = callback;
         data.Context = 0;
 
-        rc = pps->lpVtbl->Get(pps, &DSPROPSETID_DirectSoundDevice,
+        rc = IKsPropertySet_Get(pps, &DSPROPSETID_DirectSoundDevice,
                               DSPROPERTY_DIRECTSOUNDDEVICE_ENUMERATE,
+                              NULL, 0, &data, sizeof(data), &bytes);
+        ok(rc==DS_OK, "Couldn't enumerate: 0x%lx\n",rc);
+   }
+
+    /* test DSPROPERTY_DIRECTSOUNDDEVICE_ENUMERATE_1 */
+    trace("*** Testing DSPROPERTY_DIRECTSOUNDDEVICE_ENUMERATE_1 ***\n");
+    rc = IKsPropertySet_QuerySupport(pps, &DSPROPSETID_DirectSoundDevice,
+                                   DSPROPERTY_DIRECTSOUNDDEVICE_ENUMERATE_1,
+                                   &support);
+    ok(rc==DS_OK, "QuerySupport(DSPROPSETID_DirectSoundDevice, "
+       "DSPROPERTY_DIRECTSOUNDDEVICE_ENUMERATE_1) failed: %s\n",
+       DXGetErrorString8(rc));
+    if (rc!=DS_OK)
+        goto error;
+
+    ok(support & KSPROPERTY_SUPPORT_GET,
+       "Couldn't get DSPROPERTY_DIRECTSOUNDDEVICE_ENUMERATE_1: "
+       "support = 0x%lx\n",support);
+    ok(!(support & KSPROPERTY_SUPPORT_SET),"Shouldn't be able to set "
+       "DSPROPERTY_DIRECTSOUNDDEVICE_ENUMERATE_1: support = 0x%lx\n",support);
+
+    if (support & KSPROPERTY_SUPPORT_GET) {
+        DSPROPERTY_DIRECTSOUNDDEVICE_ENUMERATE_1_DATA data;
+        ULONG bytes;
+
+        data.Callback = callback1;
+        data.Context = 0;
+
+        rc = IKsPropertySet_Get(pps, &DSPROPSETID_DirectSoundDevice,
+                              DSPROPERTY_DIRECTSOUNDDEVICE_ENUMERATE_1,
+                              NULL, 0, &data, sizeof(data), &bytes);
+        ok(rc==DS_OK, "Couldn't enumerate: 0x%lx\n",rc);
+    }
+
+    /* test DSPROPERTY_DIRECTSOUNDDEVICE_ENUMERATE_A */
+    trace("*** Testing DSPROPERTY_DIRECTSOUNDDEVICE_ENUMERATE_A ***\n");
+    rc = IKsPropertySet_QuerySupport(pps, &DSPROPSETID_DirectSoundDevice,
+                                   DSPROPERTY_DIRECTSOUNDDEVICE_ENUMERATE_A,
+                                   &support);
+    ok(rc==DS_OK, "QuerySupport(DSPROPSETID_DirectSoundDevice, "
+       "DSPROPERTY_DIRECTSOUNDDEVICE_ENUMERATE_A) failed: %s\n",
+       DXGetErrorString8(rc));
+    if (rc!=DS_OK)
+        goto error;
+
+    ok(support & KSPROPERTY_SUPPORT_GET,
+       "Couldn't get DSPROPERTY_DIRECTSOUNDDEVICE_ENUMERATE_A: "
+       "support = 0x%lx\n",support);
+    ok(!(support & KSPROPERTY_SUPPORT_SET),"Shouldn't be able to set "
+       "DSPROPERTY_DIRECTSOUNDDEVICE_ENUMERATE_A: support = 0x%lx\n",support);
+
+    if (support & KSPROPERTY_SUPPORT_GET) {
+        DSPROPERTY_DIRECTSOUNDDEVICE_ENUMERATE_A_DATA data;
+        ULONG bytes;
+
+        data.Callback = callbackA;
+        data.Context = 0;
+
+        rc = IKsPropertySet_Get(pps, &DSPROPSETID_DirectSoundDevice,
+                              DSPROPERTY_DIRECTSOUNDDEVICE_ENUMERATE_A,
+                              NULL, 0, &data, sizeof(data), &bytes);
+        ok(rc==DS_OK, "Couldn't enumerate: 0x%lx\n",rc);
+    }
+
+    /* test DSPROPERTY_DIRECTSOUNDDEVICE_ENUMERATE_W */
+    trace("*** Testing DSPROPERTY_DIRECTSOUNDDEVICE_ENUMERATE_W ***\n");
+    rc = IKsPropertySet_QuerySupport(pps, &DSPROPSETID_DirectSoundDevice,
+                                   DSPROPERTY_DIRECTSOUNDDEVICE_ENUMERATE_W,
+                                   &support);
+    ok(rc==DS_OK, "QuerySupport(DSPROPSETID_DirectSoundDevice, "
+       "DSPROPERTY_DIRECTSOUNDDEVICE_ENUMERATE_W) failed: %s\n",
+       DXGetErrorString8(rc));
+    if (rc!=DS_OK)
+        goto error;
+
+    ok(support & KSPROPERTY_SUPPORT_GET,
+       "Couldn't get DSPROPERTY_DIRECTSOUNDDEVICE_ENUMERATE_W: "
+       "support = 0x%lx\n",support);
+    ok(!(support & KSPROPERTY_SUPPORT_SET),"Shouldn't be able to set "
+       "DSPROPERTY_DIRECTSOUNDDEVICE_ENUMERATE_W: support = 0x%lx\n",support);
+
+    if (support & KSPROPERTY_SUPPORT_GET) {
+        DSPROPERTY_DIRECTSOUNDDEVICE_ENUMERATE_W_DATA data;
+        ULONG bytes;
+
+        data.Callback = callbackW;
+        data.Context = 0;
+
+        rc = IKsPropertySet_Get(pps, &DSPROPSETID_DirectSoundDevice,
+                              DSPROPERTY_DIRECTSOUNDDEVICE_ENUMERATE_W,
                               NULL, 0, &data, sizeof(data), &bytes);
         ok(rc==DS_OK, "Couldn't enumerate: 0x%lx\n",rc);
     }
@@ -268,13 +568,15 @@ static BOOL WINAPI dsenum_callback(LPGUID lpGuid, LPCSTR lpcstrDescription,
     trace("*** Testing %s - %s ***\n",lpcstrDescription,lpcstrModule);
 
     rc=DirectSoundCreate(lpGuid,&dso,NULL);
-    ok(rc==DS_OK||rc==DSERR_NODRIVER||rc==DSERR_ALLOCATED,
+    ok(rc==DS_OK||rc==DSERR_NODRIVER||rc==DSERR_ALLOCATED||rc==E_FAIL,
        "DirectSoundCreate() failed: %s\n",DXGetErrorString8(rc));
     if (rc!=DS_OK) {
         if (rc==DSERR_NODRIVER)
             trace("  No Driver\n");
         else if (rc == DSERR_ALLOCATED)
             trace("  Already In Use\n");
+        else if (rc == E_FAIL)
+            trace("  No Device\n");
         goto EXIT;
     }
 
@@ -399,7 +701,7 @@ EXIT:
     return 1;
 }
 
-static void propset_buffer_tests()
+static void propset_buffer_tests(void)
 {
     HRESULT rc;
     rc=DirectSoundEnumerateA(&dsenum_callback,NULL);
@@ -408,6 +710,25 @@ static void propset_buffer_tests()
 
 START_TEST(propset)
 {
+    HMODULE hDsound;
+
+    CoInitialize(NULL);
+
+    hDsound = LoadLibraryA("dsound.dll");
+    if (!hDsound) {
+        trace("dsound.dll not found\n");
+        return;
+    }
+
+    trace("DLL Version: %s\n", get_file_version("dsound.dll"));
+
+    pDirectSoundCreate8 = (void*)GetProcAddress(hDsound, "DirectSoundCreate8");
+    pDirectSoundCaptureCreate=(void*)GetProcAddress(hDsound,"DirectSoundCaptureCreate");
+    pDirectSoundCaptureCreate8=(void*)GetProcAddress(hDsound,"DirectSoundCaptureCreate8");
+    pDirectSoundFullDuplexCreate=(void*)GetProcAddress(hDsound,"DirectSoundFullDuplexCreate");
+
     propset_private_tests();
     propset_buffer_tests();
+
+    CoUninitialize();
 }

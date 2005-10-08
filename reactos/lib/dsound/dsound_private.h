@@ -28,8 +28,6 @@
 
 /* wine spec */
 #include "dxroslayer/dxros_layer.h"
-
-
 /* direct sound hardware acceleration levels */
 #define DS_HW_ACCEL_FULL        0	/* default on Windows 98 */
 #define DS_HW_ACCEL_STANDARD    1	/* default on Windows 2000 */
@@ -67,6 +65,8 @@ typedef struct IKsPrivatePropertySetImpl     IKsPrivatePropertySetImpl;
 typedef struct PrimaryBufferImpl             PrimaryBufferImpl;
 typedef struct SecondaryBufferImpl           SecondaryBufferImpl;
 typedef struct IClassFactoryImpl             IClassFactoryImpl;
+typedef struct DirectSoundDevice             DirectSoundDevice;
+typedef struct DirectSoundCaptureDevice      DirectSoundCaptureDevice;
 
 /*****************************************************************************
  * IDirectSound implementation structure
@@ -74,9 +74,19 @@ typedef struct IClassFactoryImpl             IClassFactoryImpl;
 struct IDirectSoundImpl
 {
     /* IUnknown fields */
-    IDirectSound8Vtbl          *lpVtbl;
-    DWORD                       ref;
-    /* IDirectSoundImpl fields */
+    const IDirectSound8Vtbl    *lpVtbl;
+    LONG                        ref;
+
+    DirectSoundDevice          *device;
+    LPUNKNOWN                   pUnknown;
+    LPDIRECTSOUND               pDS;
+    LPDIRECTSOUND8              pDS8;
+};
+
+struct DirectSoundDevice
+{
+    LONG                        ref;
+
     GUID                        guid;
     PIDSDRIVER                  driver;
     DSDRIVERDESC                drvdesc;
@@ -98,36 +108,30 @@ struct IDirectSoundImpl
     PrimaryBufferImpl*          primary;
     DSBUFFERDESC                dsbd;
     DWORD                       speaker_config;
-    BOOL                        initialized;
+    LPBYTE                      tmp_buffer;
+    DWORD                       tmp_buffer_len;
 
     /* DirectSound3DListener fields */
     IDirectSound3DListenerImpl*	listener;
     DS3DLISTENER                ds3dl;
     BOOL                        ds3dl_need_recalc;
-
-    LPUNKNOWN                   pUnknown;
-    LPDIRECTSOUND               pDS;
-    LPDIRECTSOUND8              pDS8;
 };
 
 /* reference counted buffer memory for duplicated buffer memory */
 typedef struct BufferMemory
 {
-    DWORD                       ref;
+    LONG                        ref;
     LPBYTE                      memory;
 } BufferMemory;
 
 HRESULT WINAPI IDirectSoundImpl_Create(
-    LPCGUID lpcGUID,
     LPDIRECTSOUND8 * ppds);
 
 HRESULT WINAPI DSOUND_Create(
-    LPCGUID lpcGUID,
     LPDIRECTSOUND *ppDS,
     IUnknown *pUnkOuter);
 
 HRESULT WINAPI DSOUND_Create8(
-    LPCGUID lpcGUID,
     LPDIRECTSOUND8 *ppDS,
     IUnknown *pUnkOuter);
 
@@ -135,8 +139,8 @@ HRESULT WINAPI DSOUND_Create8(
  * IDirectSound COM components
  */
 struct IDirectSound_IUnknown {
-    IUnknownVtbl               *lpVtbl;
-    DWORD                       ref;
+    const IUnknownVtbl         *lpVtbl;
+    LONG                        ref;
     LPDIRECTSOUND8              pds;
 };
 
@@ -145,8 +149,8 @@ HRESULT WINAPI IDirectSound_IUnknown_Create(
     LPUNKNOWN * ppunk);
 
 struct IDirectSound_IDirectSound {
-    IDirectSoundVtbl           *lpVtbl;
-    DWORD                       ref;
+    const IDirectSoundVtbl     *lpVtbl;
+    LONG                        ref;
     LPDIRECTSOUND8              pds;
 };
 
@@ -158,8 +162,8 @@ HRESULT WINAPI IDirectSound_IDirectSound_Create(
  * IDirectSound8 COM components
  */
 struct IDirectSound8_IUnknown {
-    IUnknownVtbl               *lpVtbl;
-    DWORD                       ref;
+    const IUnknownVtbl         *lpVtbl;
+    LONG                        ref;
     LPDIRECTSOUND8              pds;
 };
 
@@ -168,8 +172,8 @@ HRESULT WINAPI IDirectSound8_IUnknown_Create(
     LPUNKNOWN * ppunk);
 
 struct IDirectSound8_IDirectSound {
-    IDirectSoundVtbl           *lpVtbl;
-    DWORD                       ref;
+    const IDirectSoundVtbl     *lpVtbl;
+    LONG                        ref;
     LPDIRECTSOUND8              pds;
 };
 
@@ -178,8 +182,8 @@ HRESULT WINAPI IDirectSound8_IDirectSound_Create(
     LPDIRECTSOUND * ppds);
 
 struct IDirectSound8_IDirectSound8 {
-    IDirectSound8Vtbl          *lpVtbl;
-    DWORD                       ref;
+    const IDirectSound8Vtbl    *lpVtbl;
+    LONG                        ref;
     LPDIRECTSOUND8              pds;
 };
 
@@ -194,8 +198,8 @@ struct IDirectSoundBufferImpl
 {
     /* FIXME: document */
     /* IUnknown fields */
-    IDirectSoundBuffer8Vtbl    *lpVtbl;
-    DWORD                       ref;
+    const IDirectSoundBuffer8Vtbl *lpVtbl;
+    LONG                        ref;
     /* IDirectSoundBufferImpl fields */
     SecondaryBufferImpl*        dsb;
     IDirectSoundImpl*           dsound;
@@ -244,8 +248,8 @@ HRESULT WINAPI IDirectSoundBufferImpl_Destroy(
  */
 struct SecondaryBufferImpl
 {
-    IDirectSoundBuffer8Vtbl    *lpVtbl;
-    DWORD                       ref;
+    const IDirectSoundBuffer8Vtbl *lpVtbl;
+    LONG                        ref;
     IDirectSoundBufferImpl*     dsb;
 };
 
@@ -260,8 +264,8 @@ HRESULT WINAPI SecondaryBufferImpl_Destroy(
  */
 struct PrimaryBufferImpl
 {
-    IDirectSoundBuffer8Vtbl    *lpVtbl;
-    DWORD                       ref;
+    const IDirectSoundBuffer8Vtbl *lpVtbl;
+    LONG                        ref;
     IDirectSoundImpl*           dsound;
 };
 
@@ -276,12 +280,17 @@ HRESULT WINAPI PrimaryBufferImpl_Create(
 struct IDirectSoundCaptureImpl
 {
     /* IUnknown fields */
-    IDirectSoundCaptureVtbl           *lpVtbl;
-    DWORD                              ref;
+    const IDirectSoundCaptureVtbl     *lpVtbl;
+    LONG                               ref;
 
+    DirectSoundCaptureDevice          *device;
+};
+
+struct DirectSoundCaptureDevice
+{
     /* IDirectSoundCaptureImpl fields */
     GUID                               guid;
-    BOOL                               initialized;
+    LONG                               ref;
 
     /* DirectSound driver stuff */
     PIDSCDRIVER                        driver;
@@ -307,14 +316,25 @@ struct IDirectSoundCaptureImpl
     CRITICAL_SECTION                   lock;
 };
 
+HRESULT WINAPI IDirectSoundCaptureImpl_Create(
+    LPDIRECTSOUNDCAPTURE8 * ppds);
+
+HRESULT WINAPI DSOUND_CaptureCreate(
+    LPDIRECTSOUNDCAPTURE *ppDSC,
+    IUnknown *pUnkOuter);
+
+HRESULT WINAPI DSOUND_CaptureCreate8(
+    LPDIRECTSOUNDCAPTURE8 *ppDSC8,
+    IUnknown *pUnkOuter);
+
 /*****************************************************************************
  * IDirectSoundCaptureBuffer implementation structure
  */
 struct IDirectSoundCaptureBufferImpl
 {
     /* IUnknown fields */
-    IDirectSoundCaptureBuffer8Vtbl     *lpVtbl;
-    DWORD                               ref;
+    const IDirectSoundCaptureBuffer8Vtbl *lpVtbl;
+    LONG                                ref;
 
     /* IDirectSoundCaptureBufferImpl fields */
     IDirectSoundCaptureImpl*            dsound;
@@ -335,8 +355,8 @@ struct IDirectSoundCaptureBufferImpl
 struct IDirectSoundFullDuplexImpl
 {
     /* IUnknown fields */
-    IDirectSoundFullDuplexVtbl *lpVtbl;
-    DWORD                       ref;
+    const IDirectSoundFullDuplexVtbl *lpVtbl;
+    LONG                        ref;
 
     /* IDirectSoundFullDuplexImpl fields */
     CRITICAL_SECTION            lock;
@@ -348,8 +368,8 @@ struct IDirectSoundFullDuplexImpl
 struct IDirectSoundNotifyImpl
 {
     /* IUnknown fields */
-    IDirectSoundNotifyVtbl     *lpVtbl;
-    DWORD                       ref;
+    const IDirectSoundNotifyVtbl *lpVtbl;
+    LONG                        ref;
     IDirectSoundBufferImpl*     dsb;
 };
 
@@ -365,8 +385,8 @@ HRESULT WINAPI IDirectSoundNotifyImpl_Destroy(
 struct IDirectSoundCaptureNotifyImpl
 {
     /* IUnknown fields */
-    IDirectSoundNotifyVtbl             *lpVtbl;
-    DWORD                               ref;
+    const IDirectSoundNotifyVtbl       *lpVtbl;
+    LONG                                ref;
     IDirectSoundCaptureBufferImpl*      dscb;
 };
 
@@ -380,8 +400,8 @@ HRESULT WINAPI IDirectSoundCaptureNotifyImpl_Create(
 struct IDirectSound3DListenerImpl
 {
     /* IUnknown fields */
-    IDirectSound3DListenerVtbl *lpVtbl;
-    DWORD                       ref;
+    const IDirectSound3DListenerVtbl *lpVtbl;
+    LONG                        ref;
     /* IDirectSound3DListenerImpl fields */
     IDirectSoundImpl*           dsound;
 };
@@ -396,8 +416,8 @@ HRESULT WINAPI IDirectSound3DListenerImpl_Create(
 struct IKsBufferPropertySetImpl
 {
     /* IUnknown fields */
-    IKsPropertySetVtbl         *lpVtbl;
-    DWORD			ref;
+    const IKsPropertySetVtbl   *lpVtbl;
+    LONG 			ref;
     /* IKsPropertySetImpl fields */
     IDirectSoundBufferImpl*	dsb;
 };
@@ -414,8 +434,8 @@ HRESULT WINAPI IKsBufferPropertySetImpl_Destroy(
 struct IKsPrivatePropertySetImpl
 {
     /* IUnknown fields */
-    IKsPropertySetVtbl         *lpVtbl;
-    DWORD			ref;
+    const IKsPropertySetVtbl   *lpVtbl;
+    LONG 			ref;
 };
 
 HRESULT WINAPI IKsPrivatePropertySetImpl_Create(
@@ -427,8 +447,8 @@ HRESULT WINAPI IKsPrivatePropertySetImpl_Create(
 struct IDirectSound3DBufferImpl
 {
     /* IUnknown fields */
-    IDirectSound3DBufferVtbl   *lpVtbl;
-    DWORD                       ref;
+    const IDirectSound3DBufferVtbl *lpVtbl;
+    LONG                        ref;
     /* IDirectSound3DBufferImpl fields */
     IDirectSoundBufferImpl*     dsb;
 };
@@ -445,8 +465,8 @@ HRESULT WINAPI IDirectSound3DBufferImpl_Destroy(
 struct IClassFactoryImpl
 {
     /* IUnknown fields */
-    IClassFactoryVtbl          *lpVtbl;
-    DWORD                       ref;
+    const IClassFactoryVtbl    *lpVtbl;
+    LONG                        ref;
 };
 
 extern IClassFactoryImpl DSOUND_CAPTURE_CF;
@@ -463,24 +483,23 @@ HRESULT DSOUND_RemoveBuffer(IDirectSoundImpl * pDS, IDirectSoundBufferImpl * pDS
 
 /* primary.c */
 
-HRESULT DSOUND_PrimaryCreate(IDirectSoundImpl *This);
-HRESULT DSOUND_PrimaryDestroy(IDirectSoundImpl *This);
-HRESULT DSOUND_PrimaryPlay(IDirectSoundImpl *This);
-HRESULT DSOUND_PrimaryStop(IDirectSoundImpl *This);
-HRESULT DSOUND_PrimaryGetPosition(IDirectSoundImpl *This, LPDWORD playpos, LPDWORD writepos);
+HRESULT DSOUND_PrimaryCreate(DirectSoundDevice *device);
+HRESULT DSOUND_PrimaryDestroy(DirectSoundDevice *device);
+HRESULT DSOUND_PrimaryPlay(DirectSoundDevice *device);
+HRESULT DSOUND_PrimaryStop(DirectSoundDevice *device);
+HRESULT DSOUND_PrimaryGetPosition(DirectSoundDevice *device, LPDWORD playpos, LPDWORD writepos);
 
 /* buffer.c */
 
-DWORD DSOUND_CalcPlayPosition(IDirectSoundBufferImpl *This,
-			      DWORD state, DWORD pplay, DWORD pwrite, DWORD pmix, DWORD bmix);
+DWORD DSOUND_CalcPlayPosition(IDirectSoundBufferImpl *This, DWORD pplay, DWORD pwrite);
 
 /* mixer.c */
 
 void DSOUND_CheckEvent(IDirectSoundBufferImpl *dsb, int len);
 void DSOUND_ForceRemix(IDirectSoundBufferImpl *dsb);
 void DSOUND_MixCancelAt(IDirectSoundBufferImpl *dsb, DWORD buf_writepos);
-void DSOUND_WaveQueue(IDirectSoundImpl *dsound, DWORD mixq);
-void DSOUND_PerformMix(IDirectSoundImpl *dsound);
+void DSOUND_WaveQueue(DirectSoundDevice *device, DWORD mixq);
+void DSOUND_PerformMix(DirectSoundDevice *device);
 void CALLBACK DSOUND_timer(UINT timerID, UINT msg, DWORD dwUser, DWORD dw1, DWORD dw2);
 void CALLBACK DSOUND_callback(HWAVEOUT hwo, UINT msg, DWORD dwUser, DWORD dw1, DWORD dw2);
 
@@ -496,10 +515,11 @@ void DSOUND_Calc3DBuffer(IDirectSoundBufferImpl *dsb);
 
 #define DSOUND_FREQSHIFT (14)
 
-extern IDirectSoundImpl* dsound;
+extern DirectSoundDevice* DSOUND_renderer[MAXWAVEDRIVERS];
+extern GUID DSOUND_renderer_guids[MAXWAVEDRIVERS];
 
-extern GUID renderer_guids[MAXWAVEDRIVERS];
-extern GUID capture_guids[MAXWAVEDRIVERS];
+extern DirectSoundCaptureDevice * DSOUND_capture[MAXWAVEDRIVERS];
+extern GUID DSOUND_capture_guids[MAXWAVEDRIVERS];
 
 extern HRESULT mmErr(UINT err);
 extern void setup_dsound_options(void);

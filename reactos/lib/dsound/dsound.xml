@@ -20,6 +20,7 @@
       <file>capture.c</file>
       <file>dsound.c</file>
       <file>dsound_main.c</file>
+      <file>duplex.c</file>
       <file>mixer.c</file>
       <file>primary.c</file>
       <file>propset.c</file>

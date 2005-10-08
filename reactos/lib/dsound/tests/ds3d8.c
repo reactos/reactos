@@ -28,11 +28,8 @@
 #include <windows.h>
 
 #include <math.h>
-#include <stdlib.h>
 
 #include "wine/test.h"
-#include "windef.h"
-#include "wingdi.h"
 #include "dsound.h"
 #include "dxerr8.h"
 
@@ -342,8 +339,8 @@ void test_buffer8(LPDIRECTSOUND8 dso, LPDIRECTSOUNDBUFFER dsbo,
             ok(rc==DS_OK && temp_buffer!=NULL,
                "IDirectSoundBuffer_QueryInterface() failed: %s\n",
                DXGetErrorString8(rc));
-            ok(temp_buffer==dsbo,"COM interface broken: 0x%08lx != 0x%08lx\n",
-               (DWORD)temp_buffer,(DWORD)dsbo);
+            ok(temp_buffer==dsbo,"COM interface broken: %p != %p\n",
+               temp_buffer,dsbo);
             ref=IDirectSoundBuffer_Release(temp_buffer);
             ok(ref==1,"IDirectSoundBuffer_Release() has %d references, "
                "should have 1\n",ref);
@@ -354,8 +351,8 @@ void test_buffer8(LPDIRECTSOUND8 dso, LPDIRECTSOUNDBUFFER dsbo,
             ok(rc==DS_OK && temp_buffer!=NULL,
                "IDirectSound3DBuffer_QueryInterface() failed: %s\n",
                DXGetErrorString8(rc));
-            ok(temp_buffer==dsbo,"COM interface broken: 0x%08lx != 0x%08lx\n",
-               (DWORD)temp_buffer,(DWORD)dsbo);
+            ok(temp_buffer==dsbo,"COM interface broken: %p != %p\n",
+               temp_buffer,dsbo);
             ref=IDirectSoundBuffer_Release(temp_buffer);
             ok(ref==1,"IDirectSoundBuffer_Release() has %d references, "
                "should have 1\n",ref);
@@ -533,7 +530,7 @@ static HRESULT test_secondary8(LPGUID lpGuid, int play,
     LPDIRECTSOUNDBUFFER primary=NULL,secondary=NULL;
     LPDIRECTSOUND3DLISTENER listener=NULL;
     DSBUFFERDESC bufdesc;
-    WAVEFORMATEX wfx;
+    WAVEFORMATEX wfx, wfx1;
     int ref;
 
     /* Create the DirectSound object */
@@ -559,11 +556,18 @@ static HRESULT test_secondary8(LPGUID lpGuid, int play,
     else
         bufdesc.dwFlags|=(DSBCAPS_CTRLVOLUME|DSBCAPS_CTRLPAN);
     rc=IDirectSound8_CreateSoundBuffer(dso,&bufdesc,&primary,NULL);
-    ok(rc==DS_OK && primary!=NULL,"IDirectSound8_CreateSoundBuffer() "
-       "failed to create a %sprimary buffer: %s\n",has_3d?"3D ":"",
-       DXGetErrorString8(rc));
+    ok((rc==DS_OK && primary!=NULL) || (rc == DSERR_CONTROLUNAVAIL),
+       "IDirectSound8_CreateSoundBuffer() failed to create a %sprimary buffer: "
+       "%s\n",has_3d?"3D ":"", DXGetErrorString8(rc));
+    if (rc == DSERR_CONTROLUNAVAIL)
+        trace("  No Primary\n");
+    else if (rc==DS_OK && primary!=NULL) {
+        rc=IDirectSoundBuffer_GetFormat(primary,&wfx1,sizeof(wfx1),NULL);
+        ok(rc==DS_OK,"IDirectSoundBuffer8_Getformat() failed: %s\n",
+           DXGetErrorString8(rc));
+        if (rc!=DS_OK)
+            goto EXIT1;
 
-    if (rc==DS_OK && primary!=NULL) {
         if (has_listener) {
             rc=IDirectSoundBuffer_QueryInterface(primary,
                                                  &IID_IDirectSound3DListener,
@@ -612,7 +616,8 @@ static HRESULT test_secondary8(LPGUID lpGuid, int play,
         else
             bufdesc.dwFlags|=
                 (DSBCAPS_CTRLFREQUENCY|DSBCAPS_CTRLVOLUME|DSBCAPS_CTRLPAN);
-        bufdesc.dwBufferBytes=wfx.nAvgBytesPerSec*BUFFER_LEN/1000;
+        bufdesc.dwBufferBytes=align(wfx.nAvgBytesPerSec*BUFFER_LEN/1000,
+                                    wfx.nBlockAlign);
         bufdesc.lpwfxFormat=&wfx;
         if (has_3d) {
             /* a stereo 3D buffer should fail */
@@ -627,7 +632,8 @@ static HRESULT test_secondary8(LPGUID lpGuid, int play,
         }
 
         if (winetest_interactive) {
-            trace("  Testing a %s%ssecondary buffer %s%s%s%sat %ldx%dx%d\n",
+            trace("  Testing a %s%ssecondary buffer %s%s%s%sat %ldx%dx%d "
+                  "with a primary buffer at %ldx%dx%d\n",
                   has_3dbuffer?"3D ":"",
                   has_duplicate?"duplicated ":"",
                   listener!=NULL||move_sound?"with ":"",
@@ -635,7 +641,8 @@ static HRESULT test_secondary8(LPGUID lpGuid, int play,
                   listener!=NULL?"listener ":"",
                   listener&&move_sound?"and moving sound ":move_sound?
                   "moving sound ":"",
-                  wfx.nSamplesPerSec,wfx.wBitsPerSample,wfx.nChannels);
+                  wfx.nSamplesPerSec,wfx.wBitsPerSample,wfx.nChannels,
+                  wfx1.nSamplesPerSec,wfx1.wBitsPerSample,wfx1.nChannels);
         }
         rc=IDirectSound8_CreateSoundBuffer(dso,&bufdesc,&secondary,NULL);
         ok(rc==DS_OK && secondary!=NULL,"IDirectSound8_CreateSoundBuffer() "
@@ -649,8 +656,7 @@ static HRESULT test_secondary8(LPGUID lpGuid, int play,
            getDSBCAPS(bufdesc.dwFlags),DXGetErrorString8(rc));
         if (rc==DS_OK && secondary!=NULL) {
             if (!has_3d) {
-                DWORD refpan,pan;
-                LONG refvol,vol;
+                LONG refvol,vol,refpan,pan;
 
                 /* Check the initial secondary buffer's volume and pan */
                 rc=IDirectSoundBuffer_GetVolume(secondary,&vol);
@@ -756,6 +762,7 @@ static HRESULT test_secondary8(LPGUID lpGuid, int play,
             }
         }
     }
+EXIT1:
     if (has_listener) {
         ref=IDirectSound3DListener_Release(listener);
         ok(ref==0,"IDirectSound3dListener_Release() listener has %d "
@@ -788,8 +795,8 @@ static HRESULT test_for_driver8(LPGUID lpGuid)
     int ref;
 
     /* Create the DirectSound object */
-    rc=DirectSoundCreate8(lpGuid,&dso,NULL);
-    ok(rc==DS_OK||rc==DSERR_NODRIVER||rc==DSERR_ALLOCATED,
+    rc=pDirectSoundCreate8(lpGuid,&dso,NULL);
+    ok(rc==DS_OK||rc==DSERR_NODRIVER||rc==DSERR_ALLOCATED||rc==E_FAIL,
        "DirectSoundCreate8() failed: %s\n",DXGetErrorString8(rc));
     if (rc!=DS_OK)
         return rc;
@@ -840,9 +847,12 @@ static HRESULT test_primary8(LPGUID lpGuid)
     bufdesc.dwSize=sizeof(bufdesc);
     bufdesc.dwFlags=DSBCAPS_PRIMARYBUFFER|DSBCAPS_CTRLVOLUME|DSBCAPS_CTRLPAN;
     rc=IDirectSound8_CreateSoundBuffer(dso,&bufdesc,&primary,NULL);
-    ok(rc==DS_OK && primary!=NULL,"IDirectSound8_CreateSoundBuffer() failed "
-       "to create a primary buffer: 0x%lx\n",rc);
-    if (rc==DS_OK && primary!=NULL) {
+    ok((rc==DS_OK && primary!=NULL) || (rc == DSERR_CONTROLUNAVAIL),
+       "IDirectSound8_CreateSoundBuffer() failed to create a primary buffer: "
+       "%s\n",DXGetErrorString8(rc));
+    if (rc == DSERR_CONTROLUNAVAIL)
+        trace("  No Primary\n");
+    else if (rc==DS_OK && primary!=NULL) {
         test_buffer8(dso,primary,1,TRUE,0,TRUE,0,winetest_interactive &&
                      !(dscaps.dwFlags & DSCAPS_EMULDRIVER),1.0,0,NULL,0,0);
         if (winetest_interactive) {
@@ -1014,8 +1024,7 @@ static HRESULT test_primary_3d_with_listener8(LPGUID lpGuid)
             ok(rc==DS_OK && temp_buffer!=NULL,
                "IDirectSoundBuffer_QueryInterface() failed: %s\n",
                DXGetErrorString8(rc));
-            ok(temp_buffer==primary,"COM interface broken: 0x%08lx != "
-               "0x%08lx\n",(DWORD)temp_buffer,(DWORD)primary);
+            ok(temp_buffer==primary,"COM interface broken: %p != %p\n",temp_buffer,primary);
             if (rc==DS_OK && temp_buffer!=NULL) {
                 ref=IDirectSoundBuffer_Release(temp_buffer);
                 ok(ref==1,"IDirectSoundBuffer_Release() has %d references, "
@@ -1027,8 +1036,7 @@ static HRESULT test_primary_3d_with_listener8(LPGUID lpGuid)
                 ok(rc==DS_OK && temp_buffer!=NULL,
                    "IDirectSoundBuffer_QueryInterface() failed: %s\n",
                    DXGetErrorString8(rc));
-                ok(temp_buffer==primary,"COM interface broken: 0x%08lx != "
-                   "0x%08lx\n",(DWORD)temp_buffer,(DWORD)primary);
+                ok(temp_buffer==primary,"COM interface broken: %p != %p\n",temp_buffer,primary);
                 ref=IDirectSoundBuffer_Release(temp_buffer);
                 ok(ref==1,"IDirectSoundBuffer_Release() has %d references, "
                    "should have 1\n",ref);
@@ -1074,6 +1082,9 @@ static BOOL WINAPI dsenum_callback(LPGUID lpGuid, LPCSTR lpcstrDescription,
     } else if (rc == DSERR_ALLOCATED) {
         trace("  Already In Use\n");
         return 1;
+    } else if (rc == E_FAIL) {
+        trace("  No Device\n");
+        return 1;
     }
 
     trace("  Testing the primary buffer\n");
@@ -1104,7 +1115,7 @@ static BOOL WINAPI dsenum_callback(LPGUID lpGuid, LPCSTR lpcstrDescription,
     return 1;
 }
 
-static void ds3d8_tests()
+static void ds3d8_tests(void)
 {
     HRESULT rc;
     rc=DirectSoundEnumerateA(&dsenum_callback,NULL);
@@ -1123,6 +1134,8 @@ START_TEST(ds3d8)
         return;
     }
 
+    trace("DLL Version: %s\n", get_file_version("dsound.dll"));
+
     pDirectSoundCreate8 = (void*)GetProcAddress(hDsound, "DirectSoundCreate8");
     if (!pDirectSoundCreate8) {
         trace("ds3d8 test skipped\n");
@@ -1130,4 +1143,6 @@ START_TEST(ds3d8)
     }
 
     ds3d8_tests();
+
+    CoUninitialize();
 }

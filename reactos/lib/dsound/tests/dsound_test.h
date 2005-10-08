@@ -50,14 +50,15 @@ static const unsigned int formats[][4]={
 #define TIME_SLICE     31
 #define BUFFER_LEN    400
 
-
 extern char* wave_generate_la(WAVEFORMATEX*,double,DWORD*);
 extern HWND get_hwnd(void);
 extern void init_format(WAVEFORMATEX*,int,int,int,int);
 extern void test_buffer(LPDIRECTSOUND,LPDIRECTSOUNDBUFFER,
                         BOOL,BOOL,LONG,BOOL,LONG,BOOL,double,BOOL,
-                        LPDIRECTSOUND3DLISTENER,BOOL,BOOL);
+                        LPDIRECTSOUND3DLISTENER,BOOL,BOOL,BOOL,DWORD);
 extern void test_buffer8(LPDIRECTSOUND8,LPDIRECTSOUNDBUFFER,
                          BOOL,BOOL,LONG,BOOL,LONG,BOOL,double,BOOL,
                          LPDIRECTSOUND3DLISTENER,BOOL,BOOL);
 extern const char * getDSBCAPS(DWORD xmask);
+extern int align(int length, int align);
+extern const char * get_file_version(const char * file_name);
