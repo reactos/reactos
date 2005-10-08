@@ -67,8 +67,11 @@ PrintString(char* fmt,...)
 
 /* Native image's entry point */
 
-VOID STDCALL
-NtProcessStartup(PPEB Peb)
+int _cdecl
+_main(int argc,
+      char *argv[],
+      char *envp[],
+      int DebugFlag)
 {
   PROCESS_DEVICEMAP_INFORMATION DeviceMap;
   ULONG i;
@@ -93,9 +96,9 @@ NtProcessStartup(PPEB Peb)
   	}
       }
     PrintString("\n");
+    return 0;
   }
-
-  NtTerminateProcess(NtCurrentProcess(), 0);
+  return 1;
 }
 
 /* EOF */

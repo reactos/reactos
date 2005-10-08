@@ -2,6 +2,7 @@
 	<include base="autochk">.</include>
 	<define name="__USE_W32API" />
 	<define name="_DISABLE_TIDENTS" />
+	<library>nt</library>
 	<library>ntdll</library>
 	<file>autochk.c</file>
 	<file>autochk.rc</file>
