@@ -24,7 +24,6 @@ HANDLE CsrObjectDirectory = (HANDLE) 0;
 UNICODE_STRING CsrDirectoryName;
 
 extern HANDLE CsrssApiHeap;
-extern PRTL_USER_PROCESS_PARAMETERS RtlProcessParameters;
 
 static unsigned InitCompleteProcCount;
 static CSRPLUGIN_INIT_COMPLETE_PROC *InitCompleteProcs = NULL;
@@ -95,25 +94,15 @@ ULONG
 InitializeVideoAddressSpace(VOID);
 
 /**********************************************************************
- * CsrpParseCommandLine/2
+ * CsrpCreateObjectDirectory/3
  */
 static NTSTATUS
-CsrpParseCommandLine (
-	ULONG ArgumentCount,
-	PWSTR *ArgumentArray
-	)
+CsrpCreateObjectDirectory (int argc, char ** argv, char ** envp)
 {
    NTSTATUS Status;
    OBJECT_ATTRIBUTES Attributes;
 
   DPRINT("CSR: %s called\n", __FUNCTION__);
-
-
-   /*   DbgPrint ("Arguments: %ld\n", ArgumentCount);
-   for (i = 0; i < ArgumentCount; i++)
-     {
-	DbgPrint ("Argument %ld: %S\n", i, ArgumentArray[i]);
-	}*/
 
 
 	/* create object directory ('\Windows') */
@@ -133,13 +122,13 @@ CsrpParseCommandLine (
 }
 
 /**********************************************************************
- * CsrpInitVideo/0
+ * CsrpInitVideo/3
  *
  * TODO: we need a virtual device for sessions other than
  * TODO: the console one
  */
 static NTSTATUS
-CsrpInitVideo (ULONG argc, PWSTR* argv)
+CsrpInitVideo (int argc, char ** argv, char ** envp)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\??\\DISPLAY1");
@@ -170,7 +159,7 @@ CsrpInitVideo (ULONG argc, PWSTR* argv)
 }
 
 /**********************************************************************
- * CsrpInitWin32Csr/0
+ * CsrpInitWin32Csr/3
  *
  * TODO: this function should be turned more general to load an
  * TODO: hosted server DLL as received from the command line;
@@ -182,7 +171,7 @@ CsrpInitVideo (ULONG argc, PWSTR* argv)
  * TODO:                    DWORD  ServerId)
  */
 static NTSTATUS
-CsrpInitWin32Csr (ULONG argc, PWSTR* argv)
+CsrpInitWin32Csr (int argc, char ** argv, char ** envp)
 {
   NTSTATUS Status;
   UNICODE_STRING DllName;
@@ -296,10 +285,10 @@ CsrpCreateListenPort (IN     LPWSTR  Name,
 /* === INIT ROUTINES === */
 
 /**********************************************************************
- * CsrpCreateHeap/2
+ * CsrpCreateHeap/3
  */
 static NTSTATUS
-CsrpCreateHeap (ULONG argc, PWSTR* argv)
+CsrpCreateHeap (int argc, char ** argv, char ** envp)
 {
 	DPRINT("CSR: %s called\n", __FUNCTION__);
 
@@ -317,10 +306,10 @@ CsrpCreateHeap (ULONG argc, PWSTR* argv)
 }
 
 /**********************************************************************
- * CsrpCreateCallbackPort/2
+ * CsrpCreateCallbackPort/3
  */
 static NTSTATUS
-CsrpCreateCallbackPort (ULONG argc, PWSTR* argv)
+CsrpCreateCallbackPort (int argc, char ** argv, char ** envp)
 {
 	DPRINT("CSR: %s called\n", __FUNCTION__);
 
@@ -330,10 +319,10 @@ CsrpCreateCallbackPort (ULONG argc, PWSTR* argv)
 }
 
 /**********************************************************************
- * CsrpRegisterSubsystem/2
+ * CsrpRegisterSubsystem/3
  */
 static NTSTATUS
-CsrpRegisterSubsystem (ULONG argc, PWSTR* argv)
+CsrpRegisterSubsystem (int argc, char ** argv, char ** envp)
 {
 	NTSTATUS           Status = STATUS_SUCCESS;
 	OBJECT_ATTRIBUTES  BootstrapOkAttributes;
@@ -391,24 +380,65 @@ CsrpRegisterSubsystem (ULONG argc, PWSTR* argv)
 }
 
 /**********************************************************************
- * 	CsrpLoadKernelModeDriver/2
+ * 	EnvpToUnicodeString/2
+ */
+static ULONG FASTCALL
+EnvpToUnicodeString (char ** envp, PUNICODE_STRING UnicodeEnv)
+{
+	ULONG        CharCount = 0;
+	ULONG        Index = 0;
+	ANSI_STRING  AnsiEnv;
+
+	UnicodeEnv->Buffer = NULL;
+	
+	for (Index=0; NULL != envp[Index]; Index++)
+	{
+		CharCount += strlen (envp[Index]);
+		++ CharCount;
+	}
+	++ CharCount;
+	
+	AnsiEnv.Buffer = RtlAllocateHeap (RtlGetProcessHeap(), 0, CharCount);
+	if (NULL != AnsiEnv.Buffer)
+	{
+		PCHAR WritePos = AnsiEnv.Buffer;
+		
+		for (Index=0; NULL != envp[Index]; Index++)
+		{
+			strcat (WritePos, envp[Index]);
+			WritePos += strlen (envp[Index]) + 1;
+		}
+		AnsiEnv.Buffer [CharCount] = '\0';
+		AnsiEnv.Length             = CharCount;
+		AnsiEnv.MaximumLength      = CharCount;
+		RtlAnsiStringToUnicodeString (UnicodeEnv, & AnsiEnv, TRUE);
+		RtlFreeHeap (RtlGetProcessHeap(), 0, AnsiEnv.Buffer);
+	}
+	return CharCount;
+}
+/**********************************************************************
+ * 	CsrpLoadKernelModeDriver/3
  */
 static NTSTATUS
-CsrpLoadKernelModeDriver (ULONG argc, PWSTR* argv)
+CsrpLoadKernelModeDriver (int argc, char ** argv, char ** envp)
 {
-	NTSTATUS  Status = STATUS_SUCCESS;
-	WCHAR     Data [MAX_PATH + 1];
-	ULONG     DataLength = sizeof Data;
-	ULONG     DataType = 0;
+	NTSTATUS        Status = STATUS_SUCCESS;
+	WCHAR           Data [MAX_PATH + 1];
+	ULONG           DataLength = sizeof Data;
+	ULONG           DataType = 0;
+	UNICODE_STRING  Environment;
 
 
 	DPRINT("SM: %s called\n", __FUNCTION__);
 
+
+	EnvpToUnicodeString (envp, & Environment);	
 	Status = SmLookupSubsystem (L"Kmode",
 				    Data,
 				    & DataLength,
 				    & DataType,
-				    RtlProcessParameters->Environment);
+				    Environment.Buffer);
+	RtlFreeUnicodeString (& Environment);
 	if((STATUS_SUCCESS == Status) && (DataLength > sizeof Data[0]))
 	{
 		WCHAR                      ImagePath [MAX_PATH + 1] = {0};
@@ -434,7 +464,7 @@ CsrpLoadKernelModeDriver (ULONG argc, PWSTR* argv)
  * CsrpCreateApiPort/2
  */
 static NTSTATUS
-CsrpCreateApiPort (ULONG argc, PWSTR* argv)
+CsrpCreateApiPort (int argc, char ** argv, char ** envp)
 {
 	DPRINT("CSR: %s called\n", __FUNCTION__);
 
@@ -447,7 +477,7 @@ CsrpCreateApiPort (ULONG argc, PWSTR* argv)
  * CsrpApiRegisterDef/0
  */
 static NTSTATUS
-CsrpApiRegisterDef (ULONG argc, PWSTR* argv)
+CsrpApiRegisterDef (int argc, char ** argv, char ** envp)
 {
 	return CsrApiRegisterDefinitions(NativeDefinitions);
 }
@@ -456,7 +486,7 @@ CsrpApiRegisterDef (ULONG argc, PWSTR* argv)
  * CsrpCCTS/2
  */
 static NTSTATUS
-CsrpCCTS (ULONG argc, PWSTR* argv)
+CsrpCCTS (int argc, char ** argv, char ** envp)
 {
     ULONG Dummy;
     ULONG DummyLength = sizeof(Dummy);
@@ -473,7 +503,7 @@ CsrpCCTS (ULONG argc, PWSTR* argv)
  * TODO: in its own desktop (one logon desktop per winstation).
  */
 static NTSTATUS
-CsrpRunWinlogon (ULONG argc, PWSTR* argv)
+CsrpRunWinlogon (int argc, char ** argv, char ** envp)
 {
 	NTSTATUS                      Status = STATUS_SUCCESS;
 	UNICODE_STRING                ImagePath;
@@ -521,7 +551,7 @@ CsrpRunWinlogon (ULONG argc, PWSTR* argv)
 
 
 
-typedef NTSTATUS (* CSR_INIT_ROUTINE)(ULONG, PWSTR*);
+typedef NTSTATUS (* CSR_INIT_ROUTINE)(int,char**,char**);
 
 struct {
 	BOOL Required;
@@ -532,7 +562,7 @@ struct {
 	{TRUE, CsrpRegisterSubsystem,    "register with SM"},
 	{TRUE, CsrpCreateHeap,           "create the CSR heap"},
 	{TRUE, CsrpCreateApiPort,        "create the api port \\Windows\\ApiPort"},
-	{TRUE, CsrpParseCommandLine,     "parse the command line"},
+	{TRUE, CsrpCreateObjectDirectory,"create the object directory \\Windows"},
 	{TRUE, CsrpLoadKernelModeDriver, "load Kmode driver"},
 	{TRUE, CsrpInitVideo,            "initialize video"},
 	{TRUE, CsrpApiRegisterDef,       "initialize api definitions"},
@@ -553,8 +583,9 @@ struct {
  */
 BOOL STDCALL
 CsrServerInitialization (
-	ULONG ArgumentCount,
-	PWSTR *ArgumentArray
+	int argc,
+	char ** argv,
+	char ** envp
 	)
 {
 	UINT       i = 0;
@@ -564,7 +595,7 @@ CsrServerInitialization (
 
 	for (i=0; i < (sizeof InitRoutine / sizeof InitRoutine[0]); i++)
 	{
-		Status = InitRoutine[i].EntryPoint(ArgumentCount,ArgumentArray);
+		Status = InitRoutine[i].EntryPoint(argc,argv,envp);
 		if(!NT_SUCCESS(Status))
 		{
 			DPRINT1("CSR: %s: failed to %s (Status=%08lx)\n",
