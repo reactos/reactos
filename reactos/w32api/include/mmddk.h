@@ -29,6 +29,9 @@
 #include <mmsystem.h>
 #include <winbase.h>
 
+/* Maxium drivers  */
+#define MAXWAVEDRIVERS 10
+
 #define MAX_MIDIINDRV 	(16)
 /* For now I'm making 16 the maximum number of midi devices one can
  * have. This should be more than enough for everybody. But as a purist,
@@ -459,9 +462,9 @@ BOOL     WINAPI mmTaskSignal(HANDLE);
 void     WINAPI mmTaskYield(void);
 HANDLE   WINAPI mmGetCurrentTask(void);
 
-#ifdef __WINESRC__
+
 #define  WAVE_DIRECTSOUND               0x0080
-#endif
+
 
 #include <poppack.h>
 
