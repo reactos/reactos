@@ -9,7 +9,7 @@ LayoutFile = layout.inf
 Class      = Mouse
 ClassGUID  = {4D36E96F-E325-11CE-BFC1-08002BE10318}
 Provider   = %ReactOS%
-DriverVer  = 10/19/1999,5.00.2157.1
+DriverVer  = 10/08/2005,1.01.0.0
 
 [DestinationDirs]
 DefaultDestDir = 12
@@ -61,7 +61,7 @@ LoadOrderGroup = Pointer Class
 ;----------------------------- SERIAL DRIVER ----------------------------
 
 [Serial_Inst.NT]
-CopyFiles = Serial_CopyFiles, Mouclass_CopyFiles
+CopyFiles = Serial_CopyFiles.NT, Mouclass_CopyFiles.NT
 
 [Serial_CopyFiles.NT]
 sermouse.sys
@@ -80,7 +80,7 @@ LoadOrderGroup = Pointer Port
 ;------------------------------ PS/2 DRIVER -----------------------------
 
 [PS2_Inst.NT]
-CopyFiles = PS2_CopyFiles, Mouclass_CopyFiles
+CopyFiles = PS2_CopyFiles.NT, Mouclass_CopyFiles.NT
 AddReg = PS2_AddReg
 
 [PS2_CopyFiles.NT]
@@ -105,7 +105,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\i8042prt\Parameters","MouseResolution",0
 ;---------------------------- HID MOUSE DRIVER --------------------------
 
 [HID_Inst.NT]
-CopyFiles = HID_CopyFiles, Mouclass_CopyFiles
+CopyFiles = HID_CopyFiles.NT, Mouclass_CopyFiles.NT
 
 [HID_CopyFiles]
 mouhid.sys

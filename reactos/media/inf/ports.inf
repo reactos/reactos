@@ -9,7 +9,7 @@ LayoutFile = layout.inf
 Class      = Ports
 ClassGUID  = {4D36E978-E325-11CE-BFC1-08002BE10318}
 Provider   = %ReactOS%
-DriverVer  = 10/19/1999,5.00.2157.1
+DriverVer  = 10/08/2005,1.01.0.0
 
 [DestinationDirs]
 DefaultDestDir = 12
@@ -37,6 +37,12 @@ CopyFiles = ComPort_CopyFiles.NT
 [ComPort_CopyFiles.NT]
 serial.sys
 serenum.sys
+
+[ComPort_Inst.NT.HW]
+AddReg = ComPort_AddReg.NT
+
+[ComPort_AddReg.NT]
+HKR, , "UpperFilters", 0x00010000, "serenum"
 
 [ComPort_Inst.NT.Services]
 AddService = serial, 0x00000002, serial_Service_Inst
