@@ -31,13 +31,11 @@ extern "C" {
 #include "resource.h"
 
 #define MAX_LOADSTRING  100
-#define MAX_NAME_LEN    500
 
 
 ////////////////////////////////////////////////////////////////////////////////
 // Global Variables:
 //
-extern HINSTANCE hInst;
 extern HWND      hFrameWnd;
 extern HMENU     hMenuFrame;
 

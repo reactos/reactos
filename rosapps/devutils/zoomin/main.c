@@ -34,7 +34,6 @@
 // Global Variables:
 //
 
-HINSTANCE hInst;
 HWND hFrameWnd;
 HMENU hMenuFrame;
 
@@ -44,15 +43,9 @@ TCHAR szFrameClass[MAX_LOADSTRING];
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//
 //   FUNCTION: InitInstance(HANDLE, int)
 //
-//   PURPOSE: Saves instance handle and creates main window
-//
-//   COMMENTS:
-//
-//        In this function, we save the instance handle in a global variable and
-//        create and display the main program window.
+//   PURPOSE: creates main window
 //
 
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
@@ -66,7 +59,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
         hInstance,
         LoadIcon(hInstance, MAKEINTRESOURCE(IDI_ZOOMIN)),
         LoadCursor(0, IDC_ARROW),
-        0/*hbrBackground*/,
+        0,//(HBRUSH)(COLOR_BTNFACE+1),
         0/*lpszMenuName*/,
         szFrameClass,
         (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_ZOOMIN), IMAGE_ICON,
@@ -78,7 +71,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
     hFrameWnd = CreateWindowEx(0, (LPCTSTR)(int)hFrameWndClass, szTitle,
                     WS_OVERLAPPEDWINDOW | WS_EX_CLIENTEDGE,
-                    CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
+                    CW_USEDEFAULT, CW_USEDEFAULT, 250, 250,
                     NULL, hMenuFrame, hInstance, NULL/*lpParam*/);
 
     if (!hFrameWnd) {
@@ -110,13 +103,11 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
     LoadString(hInstance, IDC_ZOOMIN, szFrameClass, MAX_LOADSTRING);
 
-    // Store instance handle in our global variable
-    hInst = hInstance;
-
     // Perform application initialization:
     if (!InitInstance(hInstance, nCmdShow)) {
         return FALSE;
     }
+
     hAccel = LoadAccelerators(hInstance, (LPCTSTR)IDC_ZOOMIN);
 
     // Main message loop:
@@ -129,4 +120,3 @@ int APIENTRY WinMain(HINSTANCE hInstance,
     ExitInstance();
     return msg.wParam;
 }
-
