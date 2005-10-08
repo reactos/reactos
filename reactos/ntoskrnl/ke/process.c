@@ -205,7 +205,6 @@ STDCALL
 KiSwapProcess(PKPROCESS NewProcess,
               PKPROCESS OldProcess)
 {
-    /* FIXME: Write this in ASM. Much easier */
     DPRINT("Switching CR3 to: %x\n", NewProcess->DirectoryTableBase.u.LowPart);
     Ke386SetPageTableDirectory(NewProcess->DirectoryTableBase.u.LowPart);
 }

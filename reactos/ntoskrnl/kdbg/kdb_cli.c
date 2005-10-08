@@ -85,6 +85,7 @@ STATIC BOOLEAN KdbpCmdHelp(ULONG Argc, PCHAR Argv[]);
 /* GLOBALS *******************************************************************/
 
 STATIC BOOLEAN KdbUseIntelSyntax = FALSE; /* Set to TRUE for intel syntax */
+STATIC BOOLEAN KdbBreakOnModuleLoad = FALSE; /* Set to TRUE to break into KDB when a module is loaded */
 
 STATIC CHAR KdbCommandHistoryBuffer[2048]; /* Command history string ringbuffer */
 STATIC PCHAR KdbCommandHistory[sizeof(KdbCommandHistoryBuffer) / 8] = { NULL }; /* Command history ringbuffer */
@@ -1527,6 +1528,7 @@ KdbpCmdSet(ULONG Argc, PCHAR Argv[])
       KdbpPrint("Available settings:\n");
       KdbpPrint("  syntax [intel|at&t]\n");
       KdbpPrint("  condition [exception|*] [first|last] [never|always|kmode|umode]\n");
+      KdbpPrint("  break_on_module_load [true|false]\n");
    }
    else if (strcmp(Argv[1], "syntax") == 0)
    {
@@ -1641,6 +1643,22 @@ KdbpCmdSet(ULONG Argc, PCHAR Argv[])
          }
       }
    }
+   else if (strcmp(Argv[1], "break_on_module_load") == 0)
+   {
+      if (Argc == 2)
+         KdbpPrint("break_on_module_load = %s\n", KdbBreakOnModuleLoad ? "enabled" : "disabled");
+      else if (Argc >= 3)
+      {
+         if (_stricmp(Argv[2], "enable") == 0 || _stricmp(Argv[2], "enabled") == 0 ||
+             _stricmp(Argv[2], "true") == 0)
+            KdbBreakOnModuleLoad = TRUE;
+         else if (_stricmp(Argv[2], "disable") == 0 || _stricmp(Argv[2], "disabled") == 0 ||
+                  _stricmp(Argv[2], "false") == 0)
+            KdbBreakOnModuleLoad = FALSE;
+         else
+            KdbpPrint("Unknown setting '%s'.\n", Argv[2]);
+      }
+   }
    else
       KdbpPrint("Unknown setting '%s'.\n", Argv[1]);
 
@@ -1731,7 +1749,7 @@ KdbpPrint(
    if ((KdbNumberOfRowsTerminal < 0) || (KdbNumberOfColsTerminal < 0) ||
        (KdbNumberOfRowsPrinted) == 0) /* Refresh terminal size each time when number of rows printed is 0 */
    {
-      if ((KdbDebugState & KD_DEBUG_KDSERIAL) && TerminalReportsSize)
+      if ((KdbDebugState & KD_DEBUG_KDSERIAL) && TerminalConnected && TerminalReportsSize)
       {
          /* Try to query number of rows from terminal. A reply looks like "\x1b[8;24;80t" */
          TerminalReportsSize = FALSE;
@@ -1805,7 +1823,8 @@ KdbpPrint(
       /*DbgPrint("!%d!%d!%d!%d!", KdbNumberOfRowsPrinted, KdbNumberOfColsPrinted, i, RowsPrintedByTerminal);*/
 
       /* Display a prompt if we printed one screen full of text */
-      if ((LONG)(KdbNumberOfRowsPrinted + RowsPrintedByTerminal) >= KdbNumberOfRowsTerminal)
+      if (KdbNumberOfRowsTerminal > 0 &&
+          (LONG)(KdbNumberOfRowsPrinted + RowsPrintedByTerminal) >= KdbNumberOfRowsTerminal)
       {
          if (KdbNumberOfColsPrinted > 0)
             DbgPrint("\n");
@@ -2246,7 +2265,8 @@ KdbpCliMainLoop(
 VOID
 KdbpCliModuleLoaded(IN PUNICODE_STRING Name)
 {
-   return;
+   if (!KdbBreakOnModuleLoad)
+      return;
 
    DbgPrint("Module %wZ loaded.\n", Name);
    DbgBreakPointWithStatus(DBG_STATUS_CONTROL_C);
