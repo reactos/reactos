@@ -39,7 +39,7 @@ MulDiv(INT nNumber,
         /* Divide the product to get the quotient and remainder */
         Result.LowPart = RtlEnlargedUnsignedDivide(*(PULARGE_INTEGER)&Result,
                                                    (ULONG)nDenominator,
-                                                   &Result.HighPart);
+                                                   (PULONG)&Result.HighPart);
  
         /* Do the sign changes */
         if ((LONG)Result.LowPart >= 0)
