@@ -36,7 +36,10 @@
 
 static int s_factor = 2;	// zoom factor
 
-static POINT s_srcPos = {0, 0}; // zoom factor
+static POINT s_srcPos = {0, 0};			// source rectangle position
+static RECT s_lastSrc = {-1,-1,-1,-1};	// last cursor position
+
+BOOL s_dragging = FALSE;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -97,15 +100,15 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 	case WM_PAINT: {
 		PAINTSTRUCT ps;
 		HDC hdcMem;
-		RECT rect;
+		RECT clnt;
 		SIZE size;
 
 		BeginPaint(hWnd, &ps);
 		hdcMem = GetDC(GetDesktopWindow());
 
-		GetClientRect(hWnd, &rect);
-		size.cx = rect.right / s_factor;
-		size.cy = rect.bottom / s_factor;
+		GetClientRect(hWnd, &clnt);
+		size.cx = clnt.right / s_factor;
+		size.cy = clnt.bottom / s_factor;
 
 		StretchBlt(ps.hdc, 0, 0, size.cx*s_factor, size.cy*s_factor, hdcMem, s_srcPos.x, s_srcPos.y, size.cx, size.cy, SRCCOPY);
 
@@ -114,39 +117,68 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 		break;}
 
 	case WM_TIMER:
-		if (GetCapture() == hWnd) {
-			RECT rect;
+		if (s_dragging && GetCapture()==hWnd) {
+			RECT clnt, rect;
 
 			int width = GetSystemMetrics(SM_CXSCREEN);
 			int height = GetSystemMetrics(SM_CYSCREEN);
 
-			GetClientRect(hWnd, &rect);
-
 			GetCursorPos(&s_srcPos);
 
-			s_srcPos.x -= rect.right / s_factor / 2;
-			s_srcPos.y -= rect.bottom / s_factor / 2;
+			GetClientRect(hWnd, &clnt);
+
+			s_srcPos.x -= clnt.right / s_factor / 2;
+			s_srcPos.y -= clnt.bottom / s_factor / 2;
 
 			if (s_srcPos.x < 0)
 				s_srcPos.x = 0;
-			else if (s_srcPos.x+rect.right/s_factor > width)
-				s_srcPos.x = width - rect.right/s_factor;
+			else if (s_srcPos.x+clnt.right/s_factor > width)
+				s_srcPos.x = width - clnt.right/s_factor;
 
 			if (s_srcPos.y < 0)
 				s_srcPos.y = 0;
-			else if (s_srcPos.y+rect.bottom/s_factor > height)
-				s_srcPos.y = height - rect.bottom/s_factor;
+			else if (s_srcPos.y+clnt.bottom/s_factor > height)
+				s_srcPos.y = height - clnt.bottom/s_factor;
+
+			if (memcmp(&rect, &s_lastSrc, sizeof(RECT))) {
+				HDC hdc = GetDC(0);
+
+				if (s_lastSrc.bottom != -1)
+					DrawFocusRect(hdc, &s_lastSrc);
+
+				rect.left = s_srcPos.x - 1;
+				rect.top = s_srcPos.y - 1;
+				rect.right = rect.left + clnt.right/s_factor + 2;
+				rect.bottom = rect.top + clnt.bottom/s_factor + 2;
+				DrawFocusRect(hdc, &rect);
+
+				ReleaseDC(0, hdc);
+
+				s_lastSrc = rect;
+			}
 		}
 
 		InvalidateRect(hWnd, NULL, FALSE);
+		UpdateWindow(hWnd);
 		break;
 
 	case WM_LBUTTONDOWN:
+		s_dragging = TRUE;
 		SetCapture(hWnd);
 		break;
 
 	case WM_LBUTTONUP:
-		ReleaseCapture();
+	case WM_CANCELMODE:
+		if (s_dragging) {
+			HDC hdc = GetDC(0);
+			DrawFocusRect(hdc, &s_lastSrc);
+			ReleaseDC(0, hdc);
+
+			s_lastSrc.bottom = -1;
+
+			s_dragging = FALSE;
+			ReleaseCapture();
+		}
 		break;
 
 	case WM_DESTROY:
