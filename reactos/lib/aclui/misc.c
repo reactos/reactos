@@ -136,11 +136,9 @@ OpenLSAPolicyHandle(IN LPWSTR SystemName,
                     IN ACCESS_MASK DesiredAccess,
                     OUT PLSA_HANDLE PolicyHandle)
 {
-    LSA_OBJECT_ATTRIBUTES LsaObjectAttributes;
+    LSA_OBJECT_ATTRIBUTES LsaObjectAttributes = {0};
     LSA_UNICODE_STRING LsaSystemName, *psn;
     NTSTATUS Status;
-
-    ZeroMemory(&LsaObjectAttributes, sizeof(LSA_OBJECT_ATTRIBUTES));
 
     if (SystemName != NULL)
     {
@@ -227,7 +225,7 @@ InitializeObjectPicker(IN PCWSTR ServerName,
     {
         DSOP_INIT_INFO InitInfo;
         UINT i;
-        DSOP_SCOPE_INIT_INFO Scopes[] =
+        static DSOP_SCOPE_INIT_INFO Scopes[] =
         {
             {
                 sizeof(DSOP_SCOPE_INIT_INFO),
@@ -253,7 +251,7 @@ InitializeObjectPicker(IN PCWSTR ServerName,
         InitInfo.pwzTargetComputer = ServerName;
         InitInfo.cDsScopeInfos = sizeof(Scopes) / sizeof(Scopes[0]);
         InitInfo.aDsScopeInfos = Scopes;
-        InitInfo.flOptions = DSOP_FLAG_MULTISELECT | DSOP_SCOPE_TYPE_TARGET_COMPUTER;
+        InitInfo.flOptions = DSOP_FLAG_MULTISELECT;
         InitInfo.cAttributesToFetch = sizeof(ObjectPickerAttributes) / sizeof(ObjectPickerAttributes[0]);
         InitInfo.apwzAttributeNames = ObjectPickerAttributes;
 
