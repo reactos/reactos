@@ -9,6 +9,7 @@
 #define GDI_OBJECT_TYPE_DD_MOTIONCOMP 0x00650000
 
 
+
 typedef struct
 {
 	DD_SURFACE_LOCAL Local;
@@ -25,8 +26,7 @@ typedef struct
 	DD_DIRECTDRAW_GLOBAL Global;
 	// Drv callbacks		
 	PGD_GETDIRECTDRAWINFO            DrvGetDirectDrawInfo; 	
-	PGD_DISABLEDIRECTDRAW            DrvDisableDirectDraw;
-	PDD_GETDRIVERINFO                DdGetDriverInfo; 
+	PGD_DISABLEDIRECTDRAW            DrvDisableDirectDraw;	
 
 	// DD callbacks
 	DD_CALLBACKS                     DD;
@@ -36,14 +36,29 @@ typedef struct
 
 	// Palette callbacks
 	DD_PALETTECALLBACKS              Pal;
-	
+
+	// HAL 
+	DD_HALINFO                       Hal;
+
 	// Color Control Callback 
-	PDD_COLORCB_COLORCONTROL         DdControlColor; 
+	DD_COLORCONTROLCALLBACKS         Color;
+
+	// D3DHAL_CALLBACKS
+	//D3DHAL_CALLBACKS                 D3dHal;
+	//D3DHAL_CALLBACKS3                D3dHal3;
+	//D3DHAL_D3DEXTENDEDCAPS           D3dHal3Ext;
+
+	// Heap Callback
+	//DD_GETHEAPALIGNMENTDATA          HeapData;
+	
+	// Kernel Callback
+	//DD_KERNELCALLBACKS               Kernel;
+    //DDKERNELCAPS                     KernelCaps;
+
 	// Miscellaneous Callback
-	PDD_GETAVAILDRIVERMEMORY         DdGetAvailDriverMemory;
-    // Kernel Callback 
-	PDD_KERNELCB_SYNCSURFACE         DdSyncSurfaceData; 
-	PDD_KERNELCB_SYNCVIDEOPORT       DdSyncVideoPortData;
+	DD_MISCELLANEOUSCALLBACKS        Misc;
+
+    
 	// NT-based Callback 
 	PDD_FLIPTOGDISURFACE             DdFlipToGDISurface; 
 	PDD_FREEDRIVERMEMORY             DdFreeDriverMemory; 
@@ -77,17 +92,8 @@ typedef struct
     PDD_VPORTCB_WAITFORSYNC          DdVideoPortWaitForSync;
     // Notify Callback 
     //LPDD_NOTIFYCALLBACK NotifyCallback
+	
 
-
-	// D3D Device context callbacks
-	PD3DNTHAL_CONTEXTCREATECB       D3dContextCreate;
-	PD3DNTHAL_CONTEXTDESTROYCB      D3dContextDestroy;
-	// D3D Buffer callbacks
-	PDD_CANCREATESURFACE            DdCanCreateD3DBuffer;
-	PDD_CREATESURFACE               DdCreateD3DBuffer;
-	PDD_SURFCB_DESTROYSURFACE       DdDestroyD3DBuffer;
-	PDD_SURFCB_LOCK                 DdLockD3DBuffer;
-	PDD_SURFCB_UNLOCK               DdUnlockD3DBuffer;
 	
 	
 	           
