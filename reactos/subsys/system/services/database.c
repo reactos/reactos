@@ -25,8 +25,13 @@
 
 /* INCLUDES *****************************************************************/
 
-#include "services.h"
+#include <windows.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
+
 #include <services/services.h>
+
+#include "services.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -46,12 +51,12 @@ typedef struct _SERVICE_GROUP
 } SERVICE_GROUP, *PSERVICE_GROUP;
 
 
-
-
 /* GLOBALS *******************************************************************/
 
 LIST_ENTRY GroupListHead;
 LIST_ENTRY ServiceListHead;
+
+static RTL_RESOURCE DatabaseLock;
 
 
 /* FUNCTIONS *****************************************************************/
@@ -66,18 +71,18 @@ ScmGetServiceEntryByName(PUNICODE_STRING ServiceName)
 
   ServiceEntry = ServiceListHead.Flink;
   while (ServiceEntry != &ServiceListHead)
-  {
-    CurrentService = CONTAINING_RECORD(ServiceEntry,
-                                       SERVICE,
-                                       ServiceListEntry);
-    if (RtlEqualUnicodeString(&CurrentService->ServiceName, ServiceName, TRUE))
     {
-      DPRINT("Found service: '%wZ'\n", &CurrentService->ServiceName);
-      return CurrentService;
-    }
+      CurrentService = CONTAINING_RECORD(ServiceEntry,
+					 SERVICE,
+					 ServiceListEntry);
+      if (RtlEqualUnicodeString(&CurrentService->ServiceName, ServiceName, TRUE))
+	{
+	  DPRINT("Found service: '%wZ'\n", &CurrentService->ServiceName);
+	  return CurrentService;
+	}
 
-    ServiceEntry = ServiceEntry->Flink;
-  }
+      ServiceEntry = ServiceEntry->Flink;
+    }
 
   DPRINT("Couldn't find a matching service\n");
 
@@ -87,48 +92,50 @@ ScmGetServiceEntryByName(PUNICODE_STRING ServiceName)
 
 static NTSTATUS STDCALL
 CreateGroupOrderListRoutine(PWSTR ValueName,
-			    ULONG ValueType,
-			    PVOID ValueData,
-			    ULONG ValueLength,
-			    PVOID Context,
-			    PVOID EntryContext)
+                            ULONG ValueType,
+                            PVOID ValueData,
+                            ULONG ValueLength,
+                            PVOID Context,
+                            PVOID EntryContext)
 {
-  PSERVICE_GROUP Group;
+    PSERVICE_GROUP Group;
 
-  DPRINT("IopGetGroupOrderList(%S, %x, %x, %x, %x, %x)\n",
-         ValueName, ValueType, ValueData, ValueLength, Context, EntryContext);
+    DPRINT("IopGetGroupOrderList(%S, %x, %x, %x, %x, %x)\n",
+           ValueName, ValueType, ValueData, ValueLength, Context, EntryContext);
 
-  if (ValueType == REG_BINARY &&
-      ValueData != NULL &&
-      ValueLength >= sizeof(DWORD) &&
-      ValueLength >= (*(PULONG)ValueData + 1) * sizeof(DWORD))
+    if (ValueType == REG_BINARY &&
+        ValueData != NULL &&
+        ValueLength >= sizeof(DWORD) &&
+        ValueLength >= (*(PULONG)ValueData + 1) * sizeof(DWORD))
     {
-      Group = (PSERVICE_GROUP)Context;
-      Group->TagCount = ((PULONG)ValueData)[0];
-      if (Group->TagCount > 0)
+        Group = (PSERVICE_GROUP)Context;
+        Group->TagCount = ((PULONG)ValueData)[0];
+        if (Group->TagCount > 0)
         {
-	  if (ValueLength >= (Group->TagCount + 1) * sizeof(DWORD))
+            if (ValueLength >= (Group->TagCount + 1) * sizeof(DWORD))
             {
-              Group->TagArray = (PULONG)HeapAlloc(GetProcessHeap(),
-					          HEAP_ZERO_MEMORY,
-					          Group->TagCount * sizeof(DWORD));
-	      if (Group->TagArray == NULL)
-	        {
-		  Group->TagCount = 0;
-	          return STATUS_INSUFFICIENT_RESOURCES;
-		}
-	      RtlCopyMemory(Group->TagArray,
-		            (PULONG)ValueData + 1,
-			    Group->TagCount * sizeof(DWORD));
-	    }
-	  else
-	    {
-	      Group->TagCount = 0;
-	      return STATUS_UNSUCCESSFUL;
-	    }
-	}
+                Group->TagArray = (PULONG)HeapAlloc(GetProcessHeap(),
+                                                    HEAP_ZERO_MEMORY,
+                                                    Group->TagCount * sizeof(DWORD));
+                if (Group->TagArray == NULL)
+                {
+                    Group->TagCount = 0;
+                    return STATUS_INSUFFICIENT_RESOURCES;
+                }
+
+                RtlCopyMemory(Group->TagArray,
+                              (PULONG)ValueData + 1,
+                              Group->TagCount * sizeof(DWORD));
+            }
+            else
+            {
+                Group->TagCount = 0;
+                return STATUS_UNSUCCESSFUL;
+            }
+        }
     }
-  return STATUS_SUCCESS;
+
+    return STATUS_SUCCESS;
 }
 
 
@@ -140,45 +147,44 @@ CreateGroupListRoutine(PWSTR ValueName,
 		       PVOID Context,
 		       PVOID EntryContext)
 {
-  PSERVICE_GROUP Group;
-  RTL_QUERY_REGISTRY_TABLE QueryTable[2];
-  NTSTATUS Status;
+    PSERVICE_GROUP Group;
+    RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+    NTSTATUS Status;
 
-  if (ValueType == REG_SZ)
+    if (ValueType == REG_SZ)
     {
-      DPRINT("Data: '%S'\n", (PWCHAR)ValueData);
+        DPRINT("Data: '%S'\n", (PWCHAR)ValueData);
 
-      Group = (PSERVICE_GROUP)HeapAlloc(GetProcessHeap(),
-					HEAP_ZERO_MEMORY,
-					sizeof(SERVICE_GROUP));
-      if (Group == NULL)
-	{
-	  return STATUS_INSUFFICIENT_RESOURCES;
-	}
+        Group = (PSERVICE_GROUP)HeapAlloc(GetProcessHeap(),
+                                          HEAP_ZERO_MEMORY,
+                                          sizeof(SERVICE_GROUP));
+        if (Group == NULL)
+        {
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
 
-      if (!RtlCreateUnicodeString(&Group->GroupName,
-				  (PWSTR)ValueData))
-	{
-	  return STATUS_INSUFFICIENT_RESOURCES;
-	}
+        if (!RtlCreateUnicodeString(&Group->GroupName,
+                                    (PWSTR)ValueData))
+        {
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
 
-      RtlZeroMemory(&QueryTable, sizeof(QueryTable));
-      QueryTable[0].Name = (PWSTR)ValueData;
-      QueryTable[0].QueryRoutine = CreateGroupOrderListRoutine;
+        RtlZeroMemory(&QueryTable, sizeof(QueryTable));
+        QueryTable[0].Name = (PWSTR)ValueData;
+        QueryTable[0].QueryRoutine = CreateGroupOrderListRoutine;
 
-      Status = RtlQueryRegistryValues(RTL_REGISTRY_CONTROL,
-				      L"GroupOrderList",
-				      QueryTable,
-				      (PVOID)Group,
-				      NULL);
-      DPRINT("%x %d %S\n", Status, Group->TagCount, (PWSTR)ValueData);
+        Status = RtlQueryRegistryValues(RTL_REGISTRY_CONTROL,
+                                        L"GroupOrderList",
+                                        QueryTable,
+                                        (PVOID)Group,
+                                        NULL);
+        DPRINT("%x %d %S\n", Status, Group->TagCount, (PWSTR)ValueData);
 
-
-      InsertTailList(&GroupListHead,
-		     &Group->GroupListEntry);
+        InsertTailList(&GroupListHead,
+                       &Group->GroupListEntry);
     }
 
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 
@@ -296,7 +302,7 @@ ScmCreateServiceDataBase(VOID)
 {
   RTL_QUERY_REGISTRY_TABLE QueryTable[2];
   OBJECT_ATTRIBUTES ObjectAttributes;
-  UNICODE_STRING ServicesKeyName = 
+  UNICODE_STRING ServicesKeyName =
   RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services");
   UNICODE_STRING SubKeyName;
   HKEY ServicesKey;
@@ -313,6 +319,9 @@ ScmCreateServiceDataBase(VOID)
   InitializeListHead(&GroupListHead);
   InitializeListHead(&ServiceListHead);
 
+  /* Initialize the database lock */
+  RtlInitializeResource(&DatabaseLock);
+
   /* Build group order list */
   RtlZeroMemory(&QueryTable,
 		sizeof(QueryTable));
@@ -327,6 +336,9 @@ ScmCreateServiceDataBase(VOID)
 				  NULL);
   if (!NT_SUCCESS(Status))
     return Status;
+
+  RtlInitUnicodeString(&ServicesKeyName,
+		       L"\\Registry\\Machine\\System\\CurrentControlSet\\Services");
 
   InitializeObjectAttributes(&ObjectAttributes,
 			     &ServicesKeyName,
@@ -924,6 +936,15 @@ ScmAutoStartServices(VOID)
       CurrentService->ServiceVisited = FALSE;
       ServiceEntry = ServiceEntry->Flink;
     }
+}
+
+
+DWORD
+ScmMarkServiceForDelete(PSERVICE pService)
+{
+  DPRINT1("ScmMarkServiceForDelete() called\n");
+
+  return ERROR_SUCCESS;
 }
 
 /* EOF */

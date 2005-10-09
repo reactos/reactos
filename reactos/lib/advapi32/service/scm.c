@@ -245,25 +245,54 @@ CreateServiceA(
  *
  * @unimplemented
  */
-SC_HANDLE
-STDCALL
-CreateServiceW(
-    SC_HANDLE   hSCManager,
-    LPCWSTR     lpServiceName,
-    LPCWSTR     lpDisplayName,
-    DWORD       dwDesiredAccess,
-    DWORD       dwServiceType,
-    DWORD       dwStartType,
-    DWORD       dwErrorControl,
-    LPCWSTR     lpBinaryPathName,
-    LPCWSTR     lpLoadOrderGroup,
-    LPDWORD     lpdwTagId,
-    LPCWSTR     lpDependencies,
-    LPCWSTR     lpServiceStartName,
-    LPCWSTR     lpPassword)
+SC_HANDLE STDCALL
+CreateServiceW(SC_HANDLE hSCManager,
+               LPCWSTR lpServiceName,
+               LPCWSTR lpDisplayName,
+               DWORD dwDesiredAccess,
+               DWORD dwServiceType,
+               DWORD dwStartType,
+               DWORD dwErrorControl,
+               LPCWSTR lpBinaryPathName,
+               LPCWSTR lpLoadOrderGroup,
+               LPDWORD lpdwTagId,
+               LPCWSTR lpDependencies,
+               LPCWSTR lpServiceStartName,
+               LPCWSTR lpPassword)
 {
-    DPRINT1("CreateServiceW is unimplemented, but returning INVALID_HANDLE_VALUE instead of NULL\n");
-    return INVALID_HANDLE_VALUE;
+    SC_HANDLE hService = NULL;
+    DWORD dwError;
+
+    DPRINT1("CreateServiceW() called\n");
+
+    HandleBind();
+
+    /* Call to services.exe using RPC */
+    dwError = ScmrCreateServiceW(BindingHandle,
+                                 (unsigned int)hSCManager,
+                                 (LPWSTR)lpServiceName,
+                                 (LPWSTR)lpDisplayName,
+                                 dwDesiredAccess,
+                                 dwServiceType,
+                                 dwStartType,
+                                 dwErrorControl,
+                                 (LPWSTR)lpBinaryPathName,
+                                 (LPWSTR)lpLoadOrderGroup,
+                                 lpdwTagId,
+                                 NULL,              /* FIXME: lpDependencies */
+                                 0,                 /* FIXME: dwDependenciesLength */
+                                 (LPWSTR)lpServiceStartName,
+                                 NULL,              /* FIXME: lpPassword */
+                                 0,                 /* FIXME: dwPasswordLength */
+                                 (unsigned int *)&hService);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("ScmrCreateServiceW() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return INVALID_HANDLE_VALUE;
+    }
+
+    return hService;
 }
 
 

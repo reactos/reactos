@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * service control manager
  *
  * ReactOS Operating System
@@ -28,6 +27,10 @@
  */
 
 /* INCLUDES *****************************************************************/
+
+#include <windows.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
 
 #include "services.h"
 

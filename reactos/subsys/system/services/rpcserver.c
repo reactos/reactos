@@ -4,6 +4,10 @@
 
 /* INCLUDES ****************************************************************/
 
+#include <windows.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
+
 #include "services.h"
 #include "svcctl_s.h"
 
@@ -107,13 +111,13 @@ ScmStartRpcServer(VOID)
 
   DPRINT("ScmStartRpcServer() called");
 
-  Status = RpcServerUseProtseqEp(L"ncacn_np",
-                                 10,
-                                 L"\\pipe\\ntsvcs",
-                                 NULL);
+  Status = RpcServerUseProtseqEpW(L"ncacn_np",
+                                  10,
+                                  L"\\pipe\\ntsvcs",
+                                  NULL);
   if (Status != RPC_S_OK)
   {
-    DPRINT1("RpcServerUseProtseqEp() failed (Status %lx)\n", Status);
+    DPRINT1("RpcServerUseProtseqEpW() failed (Status %lx)\n", Status);
     return;
   }
 
@@ -142,7 +146,7 @@ ScmCreateManagerHandle(LPWSTR lpDatabaseName,
                        SC_HANDLE *Handle)
 {
   PMANAGER_HANDLE Ptr;
-  
+
   if (lpDatabaseName == NULL)
     lpDatabaseName = SERVICES_ACTIVE_DATABASEW;
 
@@ -325,6 +329,7 @@ ScmrDeleteService(handle_t BindingHandle,
 {
   PSERVICE_HANDLE hSvc;
   PSERVICE lpService;
+  DWORD dwError;
 
   DPRINT1("ScmrDeleteService() called\n");
 
@@ -343,9 +348,16 @@ ScmrDeleteService(handle_t BindingHandle,
     return ERROR_INVALID_HANDLE;
   }
 
-  /* FIXME: Mark service for delete */
+  /* FIXME: Acquire service database lock exclusively */
 
-  return ERROR_SUCCESS;
+  /* Mark service for delete */
+  dwError = ScmMarkServiceForDelete(lpService);
+
+  /* FIXME: Release service database lock */
+
+  DPRINT1("ScmrDeleteService() done\n");
+
+  return dwError;
 }
 
 
@@ -471,9 +483,49 @@ ScmrNotifyBootConfigStatus(handle_t BindingHandle,
 }
 
 
+#if 0
+static DWORD
+CreateServiceKey(LPWSTR lpServiceName, PHKEY phKey)
+{
+    HKEY hServicesKey = NULL;
+    DWORD dwDisposition;
+    DWORD dwError;
+
+    *phKey = NULL;
+
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                            L"System\\CurrentControlSet\\Services",
+                            0,
+                            KEY_WRITE,
+                            &hServicesKey);
+    if (dwError != ERROR_SUCCESS)
+        return dwError;
+
+    dwError = RegCreateKeyExW(hServicesKey,
+                              lpServiceName,
+                              0,
+                              NULL,
+                              REG_OPTION_NON_VOLATILE,
+                              KEY_WRITE,
+                              NULL,
+                              phKey,
+                              &dwDisposition);
+    if ((dwError == ERROR_SUCCESS) &&
+        (dwDisposition == REG_OPENED_EXISTING_KEY))
+    {
+        RegCloseKey(*phKey);
+        *phKey = NULL;
+        dwError = ERROR_SERVICE_EXISTS;
+    }
+
+    RegCloseKey(hServicesKey);
+
+    return dwError;
+}
+#endif
+
 
 /* Function 12 */
-#if 0
 unsigned long
 ScmrCreateServiceW(handle_t BindingHandle,
                    unsigned int hSCManager,
@@ -485,17 +537,168 @@ ScmrCreateServiceW(handle_t BindingHandle,
                    unsigned long dwErrorControl,
                    wchar_t *lpBinaryPathName,
                    wchar_t *lpLoadOrderGroup,
-                   unsigned long *lpdwTagId,
+                   unsigned long *lpdwTagId, /* in, out */
                    wchar_t *lpDependencies,
+                   unsigned long dwDependenciesLength,
                    wchar_t *lpServiceStartName,
-                   wchar_t *lpPassword)
+                   wchar_t *lpPassword,
+                   unsigned long dwPasswordLength,
+                   unsigned int *hService) /* out */
 {
-  DPRINT1("ScmrCreateServiceW() called\n");
-  if (lpdwTagId != NULL)
-    *lpdwTagId = 0;
-  return ERROR_SUCCESS;
-}
+    PMANAGER_HANDLE hManager;
+    DWORD dwError = ERROR_SUCCESS;
+#if 0
+    HKEY hServiceKey = NULL;
+    LPWSTR lpImagePath = NULL;
 #endif
+
+    DPRINT1("ScmrCreateServiceW() called\n");
+    DPRINT1("lpServiceName = %S\n", lpServiceName);
+    DPRINT1("lpDisplayName = %S\n", lpDisplayName);
+    DPRINT1("dwDesiredAccess = %lx\n", dwDesiredAccess);
+    DPRINT1("dwServiceType = %lu\n", dwServiceType);
+    DPRINT1("dwStartType = %lu\n", dwStartType);
+    DPRINT1("dwErrorControl = %lu\n", dwErrorControl);
+    DPRINT1("lpBinaryPathName = %S\n", lpBinaryPathName);
+    DPRINT1("lpLoadOrderGroup = %S\n", lpLoadOrderGroup);
+
+    hManager = (PMANAGER_HANDLE)hSCManager;
+    if (hManager->Handle.Tag != MANAGER_TAG)
+    {
+        DPRINT1("Invalid manager handle!\n");
+        return ERROR_INVALID_HANDLE;
+    }
+
+    /* Check access rights */
+    if (!RtlAreAllAccessesGranted(hManager->Handle.DesiredAccess,
+                                  SC_MANAGER_CREATE_SERVICE))
+    {
+        DPRINT1("Insufficient access rights! 0x%lx\n",
+                hManager->Handle.DesiredAccess);
+        return ERROR_ACCESS_DENIED;
+    }
+
+    /* FIXME: Fail if the service already exists! */
+
+#if 0
+    if (dwServiceType & SERVICE_DRIVER)
+    {
+        /* FIXME: Adjust the image path */
+        lpImagePath = HeapAlloc(GetProcessHeap(),
+                                HEAP_ZERO_MEMORY,
+                                wcslen(lpBinaryPathName) + sizeof(WCHAR));
+        if (lpImagePath == NULL)
+        {
+            dwError = ERROR_NOT_ENOUGH_MEMORY;
+            goto done;
+        }
+        wcscpy(lpImagePath, lpBinaryPathName);
+    }
+
+    /* FIXME: Allocate and fill a service entry */
+
+//    if (lpdwTagId != NULL)
+//        *lpdwTagId = 0;
+
+//    *hService = 0;
+
+
+    /* Write service data to the registry */
+    /* Create the service key */
+    dwError = CreateServiceKey(lpServiceName, &hServiceKey);
+    if (dwError != ERROR_SUCCESS)
+        goto done;
+
+    if ((lpDisplayName != NULL) && (wcslen(lpDisplayName) > 0))
+    {
+        RegSetValueExW(hServiceKey,
+                       L"DisplayName",
+                       0,
+                       REG_SZ,
+                       (LPBYTE)lpDisplayName,
+                       (wcslen(lpDisplayName) + 1) * sizeof(WCHAR));
+    }
+
+    /* Set the service type */
+    dwError = RegSetValueExW(hServiceKey,
+                             L"Type",
+                             0,
+                             REG_DWORD,
+                             (LPBYTE)&dwServiceType,
+                             sizeof(DWORD));
+    if (dwError != ERROR_SUCCESS)
+        goto done;
+
+    /* Set the start value */
+    dwError = RegSetValueExW(hServiceKey,
+                             L"Start",
+                             0,
+                             REG_DWORD,
+                             (LPBYTE)&dwStartType,
+                             sizeof(DWORD));
+    if (dwError != ERROR_SUCCESS)
+        goto done;
+
+    /* Set the error control value */
+    dwError = RegSetValueExW(hServiceKey,
+                             L"ErrorControl",
+                             0,
+                             REG_DWORD,
+                             (LPBYTE)&dwErrorControl,
+                             sizeof(DWORD));
+    if (dwError != ERROR_SUCCESS)
+        goto done;
+
+    /* Set the image path */
+    if (dwServiceType & SERVICE_WIN32)
+    {
+        dwError = RegSetValueExW(hServiceKey,
+                                 L"ImagePath",
+                                 0,
+                                 REG_SZ,
+                                 (LPBYTE)lpBinaryPathName,
+                                 (wcslen(lpBinaryPathName) + 1) * sizeof(WCHAR));
+        if (dwError != ERROR_SUCCESS)
+            goto done;
+    }
+    else if (dwServiceType & SERVICE_DRIVER)
+    {
+        /* FIXME: Adjust the path name */
+        dwError = RegSetValueExW(hServiceKey,
+                                 L"ImagePath",
+                                 0,
+                                 REG_SZ,
+                                 (LPBYTE)lpImagePath,
+                                 (wcslen(lpImagePath) +  1) *sizeof(WCHAR));
+        if (dwError != ERROR_SUCCESS)
+            goto done;
+    }
+
+    /* Set the group name */
+    if (lpLoadOrderGroup != NULL && *lpLoadOrderGroup != 0)
+    {
+        dwError = RegSetValueExW(hServiceKey,
+                                 L"Group",
+                                 0,
+                                 REG_SZ,
+                                 (LPBYTE)lpLoadOrderGroup,
+                                 (wcslen(lpLoadOrderGroup) + 1) * sizeof(WCHAR));
+        if (dwError != ERROR_SUCCESS)
+            goto done;
+    }
+
+done:;
+    if (hServiceKey != NULL)
+        RegCloseKey(hServiceKey);
+
+    if (lpImagePath != NULL)
+        HeapFree(GetProcessHeap(), 0, lpImagePath);
+#endif
+
+    DPRINT1("ScmrCreateServiceW() done (Error %lu)\n", dwError);
+
+    return dwError;
+}
 
 
 /* Function 15 */
