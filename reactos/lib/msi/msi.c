@@ -821,7 +821,9 @@ LANGID WINAPI MsiLoadStringA( MSIHANDLE handle, UINT id, LPSTR lpBuffer,
 INSTALLSTATE WINAPI MsiLocateComponentA(LPCSTR szComponent, LPSTR lpPathBuf,
                 DWORD *pcchBuf)
 {
-    FIXME("%s %p %p\n", debugstr_a(szComponent), lpPathBuf, pcchBuf);
+    /* This FIXME will crash some installer 
+	 *  FIXME("%s %p %p\n", debugstr_a(szComponent), lpPathBuf, pcchBuf);
+	 */
     return INSTALLSTATE_UNKNOWN;
 }
 
