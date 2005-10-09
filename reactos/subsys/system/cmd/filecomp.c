@@ -535,7 +535,7 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 
 	while (_istspace (*line))
 			line++;	
-	if(!_tcsncmp (line, _T("rd "), 3) || !_tcsncmp (line, _T("cd "), 3))
+	if(!_tcsnicmp (line, _T("rd "), 3) || !_tcsnicmp (line, _T("cd "), 3))
 		ShowAll = FALSE;
 
 	/* Copy the string, str can be edited and orginal should not be */
@@ -645,7 +645,17 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
  
 	}while(FindNextFile(hFile,&file));
 
-	
+	/* Check the size of the list to see if we
+	   found any matches */
+	if(FileListSize == 0)
+	{
+		_tcscpy(strOut,szOrginal);
+		CloseHandle(hFile);
+		if(FileList != NULL) 
+			free(FileList);
+		return;
+
+	}
 	/* Sort the files */
 	qsort(FileList,FileListSize,sizeof(FileName), compare);
 
