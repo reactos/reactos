@@ -561,7 +561,8 @@ void explorer_show_frame(int cmdShow, LPTSTR lpCmdLine)
 	cmd._cmdShow = cmdShow;
 
 	 // parse command line options, which may overwrite the MDI flag
-	cmd.ParseCmdLine(lpCmdLine);
+	if (lpCmdLine)
+		cmd.ParseCmdLine(lpCmdLine);
 
 	 // create main window
 	MainFrameBase::Create(cmd);
