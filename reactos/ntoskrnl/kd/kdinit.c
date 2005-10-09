@@ -27,6 +27,7 @@ KDP_DEBUG_MODE KdpDebugMode;
 PKDP_INIT_ROUTINE WrapperInitRoutine;
 KD_DISPATCH_TABLE WrapperTable;
 #endif
+BOOLEAN KdpEarlyBreak = FALSE;
 LIST_ENTRY KdProviders = {&KdProviders, &KdProviders};
 KD_DISPATCH_TABLE DispatchTable[KdMax];
 
@@ -179,6 +180,12 @@ KdInitSystem(ULONG BootPhase,
                 p2 += 10;
                 p2 = KdpGetDebugMode(p2);
                 p2 = KdpGetWrapperDebugMode(p2, LoaderBlock);
+            }
+            /* Check for early breakpoint */
+            else if (!_strnicmp(p2, "BREAK", 5))
+            {
+                p2 += 5;
+                KdpEarlyBreak = TRUE;
             }
             /* Check for Kernel Debugging Enable */
             else if (!_strnicmp(p2, "DEBUG", 5))

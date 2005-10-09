@@ -615,7 +615,7 @@ ExpInitializeExecutive(VOID)
 
     /* Report all resources used by hal */
     HalReportResourceUsage();
-    
+
     /* Clear the screen to blue */
     HalInitSystem(2, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
 
@@ -635,7 +635,8 @@ ExpInitializeExecutive(VOID)
     ExpInitTimeZoneInfo();
 
     /* Enter the kernel debugger before starting up the boot drivers */
-    if (KdDebuggerEnabled) KdbEnter();
+    if (KdDebuggerEnabled && KdpEarlyBreak)
+        DbgBreakPoint();
 
     /* Setup Drivers and Root Device Node */
     IoInit2(BootLog);

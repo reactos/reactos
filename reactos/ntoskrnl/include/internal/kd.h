@@ -280,4 +280,7 @@ extern KD_DISPATCH_TABLE WrapperTable;
 /* The KD Native Provider List */
 extern LIST_ENTRY KdProviders;
 
+/* Whether to enter KDB as early as possible or not */
+extern BOOLEAN KdpEarlyBreak;
+
 #endif /* __INCLUDE_INTERNAL_KERNEL_DEBUGGER_H */
