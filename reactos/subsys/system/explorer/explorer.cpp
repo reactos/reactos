@@ -448,7 +448,8 @@ void explorer_show_frame(int cmdShow, LPTSTR lpCmdLine)
 		cmd._cmdShow = cmdShow;
 
 		 // parse command line options
-		cmd.ParseCmdLine(lpCmdLine);
+		if (lpCmdLine)
+			cmd.ParseCmdLine(lpCmdLine);
 
 		 // Open the first child window after initializing the application
 		if (cmd.IsValidPath())
