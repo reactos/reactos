@@ -69,8 +69,18 @@ BOOL WINAPI ConvertSecurityDescriptorToStringSecurityDescriptorW(
 
 #ifdef UNICODE
 #define ConvertSidToStringSid ConvertSidToStringSidW
+#define ConvertStringSidToSid ConvertStringSidToSidW
+#define ConvertStringSecurityDescriptorToSecurityDescriptor \
+    ConvertStringSecurityDescriptorToSecurityDescriptorW
+#define ConvertSecurityDescriptorToStringSecurityDescriptor \
+    ConvertSecurityDescriptorToStringSecurityDescriptorW
 #else /* UNICODE */
 #define ConvertSidToStringSid ConvertSidToStringSidA
+#define ConvertStringSidToSid ConvertStringSidToSidA
+#define ConvertStringSecurityDescriptorToSecurityDescriptor \
+    ConvertStringSecurityDescriptorToSecurityDescriptorA
+#define ConvertSecurityDescriptorToStringSecurityDescriptor \
+    ConvertSecurityDescriptorToStringSecurityDescriptorA
 #endif /* UNICODE */
 
 #ifdef __cplusplus
