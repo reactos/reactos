@@ -2011,7 +2011,7 @@ int StartMenuHandler::Command(int id, int code)
 	// browse menu
 
 	  case IDC_NETWORK:
-#ifdef _ROS_	// to be removed when network will be implemented
+#ifdef _ROS_	///@todo to be removed when network browsing will be implemented in shell namespace
 		MessageBox(0, TEXT("network not yet implemented"), ResString(IDS_TITLE), MB_OK);
 #else
 		CreateSubmenu(id, CSIDL_NETWORK, ResString(IDS_NETWORK));
@@ -2062,11 +2062,13 @@ void StartMenuHandler::ShowSearchDialog()
 
 void StartMenuHandler::ShowSearchComputer()
 {
+#ifndef _ROS_	///@todo to be removed when SHFindComputer() will be implemented in shell32.dll
 	static DynamicFct<SHFINDCOMPUTER> SHFindComputer(TEXT("SHELL32"), 91);
 
 	if (SHFindComputer)
 		(*SHFindComputer)(NULL, NULL);
 	else
+#endif
 		MessageBox(0, TEXT("SHFindComputer() not yet implemented in SHELL32"), ResString(IDS_TITLE), MB_OK);
 }
 
