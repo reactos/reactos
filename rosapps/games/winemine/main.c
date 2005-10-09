@@ -388,14 +388,13 @@ void SaveBoard( BOARD *p_board )
 {
     DWORD disp;
     HKEY hkey;
-    SECURITY_ATTRIBUTES sa;
     unsigned i;
     char data[16];
     char key_name[8];
 
     if( RegCreateKeyEx( HKEY_LOCAL_MACHINE,
                 "Software\\Wine\\WineMine", 0, NULL,
-                REG_OPTION_NON_VOLATILE, KEY_WRITE, &sa,
+                REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL,
                 &hkey, &disp ) != ERROR_SUCCESS)
         return;
 
