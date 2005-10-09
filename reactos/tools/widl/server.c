@@ -338,7 +338,8 @@ static void write_procformatstring(type_t *iface)
                     if (is_base_type(var->type))
                     {
                         print_server("0x4e,    /* FC_IN_PARAM_BASETYPE */\n");
-                        print_server("0x%02x,    /* FC_<type> */\n", get_base_type(var->type->type));
+                        print_server("0x%02x,    /* FC_<type> */\n",
+                                     get_base_type(var->type->type));
                     }
                     else if (var->type->type == RPC_FC_RP)
                     {
@@ -364,27 +365,18 @@ static void write_procformatstring(type_t *iface)
                 }
                 else if (var->ptr_level == 1)
                 {
-//                    if (is_base_type(var->type))
-//                    {
-                        if (in_attr & !out_attr)
-                            print_server("0x4d,    /* FC_IN_PARAM */\n");
-                        else if (!in_attr & out_attr)
-                            print_server("0x51,    /* FC_OUT_PARAM */\n");
-                        else if (in_attr & out_attr)
-                            print_server("0x50,    /* FC_IN_OUT_PARAM */\n");
-                        fprintf(server, "#ifndef _ALPHA_\n");
-                        print_server("0x01,\n");
-                        fprintf(server, "#else\n");
-                        print_server("0x02,\n");
-                        fprintf(server, "#endif\n");
-                        print_server("NdrFcShort(0x%x),\n", type_offset);
-//                    }
-//                    else
-//                    {
-//                        error("%s:%d Unknown/unsupported type 0x%x\n",
-//                              __FUNCTION__,__LINE__, var->type->type);
-//                        return;
-//                    }
+                    if (in_attr & !out_attr)
+                        print_server("0x4d,    /* FC_IN_PARAM */\n");
+                    else if (!in_attr & out_attr)
+                        print_server("0x51,    /* FC_OUT_PARAM */\n");
+                    else if (in_attr & out_attr)
+                        print_server("0x50,    /* FC_IN_OUT_PARAM */\n");
+                    fprintf(server, "#ifndef _ALPHA_\n");
+                    print_server("0x01,\n");
+                    fprintf(server, "#else\n");
+                    print_server("0x02,\n");
+                    fprintf(server, "#endif\n");
+                    print_server("NdrFcShort(0x%x),\n", type_offset);
                 }
 
                 type_offset += get_var_type_offset(var);
@@ -478,7 +470,7 @@ static void write_typeformatstring(type_t *iface)
                             print_server("0x11, 0x%02X,    /* FC_RP, [flags] */\n", flags);
                             print_server("NdrFcShort(0x%02X),\n", 0x02);
                             print_server("0x%02X,\n", var->type->ref->ref->type);
-                            print_server("0x%02X,\n", 3); /* alignment -1 */
+                            print_server("0x%02X,\n", 3); /* alignment - 1 */
                             print_server("NdrFcShort(0x%02X),\n", get_type_size(var->type->ref->ref, 4));
 
                             field = var->type->ref->ref->fields;
@@ -573,7 +565,7 @@ static void write_typeformatstring(type_t *iface)
                             if (ref_attr)
                                 print_server("0x11, 0x0c,    /* FC_RP [allocated_on_stack] [simple_pointer] */\n");
                             else if (unique_attr)
-                                print_server("0x12, 0x0c,    /* FC_FP [allocated_on_stack] [simple_pointer] */\n");
+                                print_server("0x12, 0x0c,    /* FC_UP [allocated_on_stack] [simple_pointer] */\n");
                             else if (ptr_attr)
                                 print_server("0x14, 0x0c,    /* FC_FP [allocated_on_stack] [simple_pointer] */\n");
                         }
@@ -875,7 +867,7 @@ static void print_message_buffer_size(func_t *func, unsigned int *type_offset)
                     print_server("(PMIDL_STUB_MESSAGE)&_StubMsg,\n");
                     print_server("(unsigned char __RPC_FAR *)%s,\n", var->name);
                     print_server("(PFORMAT_STRING)&__MIDL_TypeFormatString.Format[%u]);\n",
-                                 local_type_offset + 4); /* FIXME */
+                                 local_type_offset + 4);
                     indent--;
                     fprintf(server,"\n");
                 }
@@ -1213,6 +1205,7 @@ static void marshall_out_arguments(func_t *func, unsigned int *type_offset)
     var_t *def;
     int out_attr;
     int string_attr;
+    int ptr_attr, ref_attr, unique_attr;
     void *sizeis_attr;
     unsigned int local_type_offset = *type_offset;
 
@@ -1230,6 +1223,12 @@ static void marshall_out_arguments(func_t *func, unsigned int *type_offset)
             {
                 sizeis_attr = get_attrp(var->attrs, ATTR_SIZEIS);
                 string_attr = is_attr(var->attrs, ATTR_STRING);
+
+                ptr_attr = is_attr(var->attrs, ATTR_PTR);
+                ref_attr = is_attr(var->attrs, ATTR_REF);
+                unique_attr = is_attr(var->attrs, ATTR_UNIQUE);
+                if (ptr_attr + ref_attr + unique_attr == 0)
+                    ref_attr = 1;
 
                 if (sizeis_attr != NULL)
                 {
@@ -1326,16 +1325,30 @@ static void marshall_out_arguments(func_t *func, unsigned int *type_offset)
 
                         if (var->ptr_level == 1)
                         {
-                            fprintf(server, "\n");
-                            print_server("*((");
-                            write_type(server, var->type, NULL, var->tname);
-                            fprintf(server, " __RPC_FAR *)_StubMsg.Buffer) = *");
-                            write_name(server, var);
-                            fprintf(server, ";\n");
+                            if (unique_attr)
+                            {
+                                print_server("NdrPointerMarshall(\n");
+                                indent++;
+                                print_server("(PMIDL_STUB_MESSAGE)&_StubMsg,\n");
+                                print_server("(unsigned char __RPC_FAR *)%s,\n", var->name);
+                                print_server("(PFORMAT_STRING)&__MIDL_TypeFormatString.Format[%u]);\n",
+                                             local_type_offset);
+                                indent--;
+                                fprintf(server, "\n");
+                            }
+                            else
+                            {
+                                fprintf(server, "\n");
+                                print_server("*((");
+                                write_type(server, var->type, NULL, var->tname);
+                                fprintf(server, " __RPC_FAR *)_StubMsg.Buffer) = *");
+                                write_name(server, var);
+                                fprintf(server, ";\n");
 
-                            print_server("_StubMsg.Buffer += sizeof(");
-                            write_type(server, var->type, NULL, var->tname);
-                            fprintf(server, ");");
+                                print_server("_StubMsg.Buffer += sizeof(");
+                                write_type(server, var->type, NULL, var->tname);
+                                fprintf(server, ");");
+                            }
                         }
                         else
                         {
