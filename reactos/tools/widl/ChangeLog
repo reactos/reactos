@@ -1,5 +1,12 @@
 ChangeLog
 
+2005-10-09 ekohl
+
+   tools/widl/client.c
+   tools/widl/server.c
+
+- Support [out, unique] base type parameters.
+
 2005-08-07 ekohl
 
    tools/widl/server.c
