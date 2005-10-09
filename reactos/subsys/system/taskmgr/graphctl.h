@@ -93,7 +93,7 @@ BOOL    GraphCtrl_Create(TGraphCtrl* this, HWND hWnd, HWND hParentWnd,
 UINT nID);
 void    GraphCtrl_Dispose(TGraphCtrl* this);
 void    GraphCtrl_DrawPoint(TGraphCtrl* this);
-void    GraphCtrl_InvalidateCtrl(TGraphCtrl* this);
+void    GraphCtrl_InvalidateCtrl(TGraphCtrl* this, BOOL bResize);
 void    GraphCtrl_Paint(TGraphCtrl* this, HWND hWnd, HDC dc);
 void    GraphCtrl_Reset(TGraphCtrl* this);
 void    GraphCtrl_Resize(TGraphCtrl* this);
