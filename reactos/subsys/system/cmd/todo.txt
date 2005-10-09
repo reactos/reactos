@@ -31,3 +31,6 @@ A lot of commands on failure just spit out GetLastError instead of looking for t
 
 *Reg Testing
 We need more batch files like the one Royce made for "set /a".  What out for if bugs when doing this... could lead to in the wrong direction when looking for a regression.
+
+*Remove dependance on __REACTOS__
+__REACTOS__ = 0 doesnt compile and is useless.  __REACTOS__ = 1 has been the default and works just fine on windows.
