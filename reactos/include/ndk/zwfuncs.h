@@ -45,7 +45,7 @@ NTAPI
 NtAccessCheck(
     IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     IN HANDLE ClientToken,
-    IN ACCESS_MASK DesiredAcces,
+    IN ACCESS_MASK DesiredAccess,
     IN PGENERIC_MAPPING GenericMapping,
     OUT PPRIVILEGE_SET PrivilegeSet,
     OUT PULONG ReturnLength,
@@ -59,7 +59,7 @@ NTAPI
 ZwAccessCheck(
     IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     IN HANDLE ClientToken,
-    IN ACCESS_MASK DesiredAcces,
+    IN ACCESS_MASK DesiredAccess,
     IN PGENERIC_MAPPING GenericMapping,
     OUT PPRIVILEGE_SET PrivilegeSet,
     OUT PULONG ReturnLength,
