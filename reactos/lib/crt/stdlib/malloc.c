@@ -25,6 +25,10 @@
 #include <stdlib.h>
 #include <malloc.h>
 
+
+/* fixme: should have this in common header */
+#define ROUND_UP(a,b) ((a + (b-1)) & ~(b-1))
+
 extern HANDLE hHeap;
 
 /*
@@ -32,7 +36,7 @@ extern HANDLE hHeap;
  */
 void* malloc(size_t _size)
 {
-   return HeapAlloc(hHeap, HEAP_ZERO_MEMORY, _size);
+   return HeapAlloc(hHeap, 0, ROUND_UP(_size, 16));
 }
 
 /*
@@ -48,7 +52,7 @@ void free(void* _ptr)
  */
 void* calloc(size_t _nmemb, size_t _size)
 {
-   return HeapAlloc(hHeap, HEAP_ZERO_MEMORY, _nmemb*_size);
+   return HeapAlloc(hHeap, HEAP_ZERO_MEMORY, ROUND_UP(_nmemb*_size, 16) );
 }
 
 /*
@@ -57,8 +61,8 @@ void* calloc(size_t _nmemb, size_t _size)
 void* realloc(void* _ptr, size_t _size)
 {
    if (!_ptr)
-      return HeapAlloc(hHeap, 0, _size);
-   return HeapReAlloc(hHeap, 0, _ptr, _size);
+      return HeapAlloc(hHeap, 0, ROUND_UP(_size, 16));
+   return HeapReAlloc(hHeap, 0, _ptr, ROUND_UP(_size, 16));
 }
 
 /*
@@ -66,7 +70,7 @@ void* realloc(void* _ptr, size_t _size)
  */
 void* _expand(void* _ptr, size_t _size)
 {
-   return HeapReAlloc(hHeap, HEAP_REALLOC_IN_PLACE_ONLY, _ptr, _size);
+   return HeapReAlloc(hHeap, HEAP_REALLOC_IN_PLACE_ONLY, _ptr, ROUND_UP(_size, 16));
 }
 
 /*
