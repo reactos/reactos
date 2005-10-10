@@ -323,79 +323,186 @@ DuplicateToken (IN HANDLE ExistingTokenHandle,
  * @implemented
  */
 BOOL STDCALL
-CheckTokenMembership (HANDLE ExistingTokenHandle,
-                      PSID SidToCheck,
-                      PBOOL IsMember)
+CheckTokenMembership(IN HANDLE ExistingTokenHandle,
+                     IN PSID SidToCheck,
+                     OUT PBOOL IsMember)
 {
-  HANDLE AccessToken = NULL;
-  BOOL Result = FALSE;
-  DWORD dwSize;
-  DWORD i;
-  PTOKEN_GROUPS lpGroups = NULL;
-  TOKEN_TYPE TokenInformation;
-
-  if (IsMember == NULL)
-  {
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return FALSE;
-  }
-
-  if (ExistingTokenHandle == NULL)
-  {
-    /* Get impersonation token of the calling thread */
-    if (!OpenThreadToken(GetCurrentThread(), TOKEN_QUERY, FALSE, &ExistingTokenHandle))
-      return FALSE;
-
-    if (!DuplicateToken(ExistingTokenHandle, SecurityAnonymous, &AccessToken))
+    PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
+    ACCESS_MASK GrantedAccess;
+    struct
     {
-      CloseHandle(ExistingTokenHandle);
-      goto ByeBye;
-    }
-    CloseHandle(ExistingTokenHandle);
-  }
-  else
-  {
-    if (!GetTokenInformation(ExistingTokenHandle, TokenType, &TokenInformation, sizeof(TokenInformation), &dwSize))
-      goto ByeBye;
-    if (TokenInformation != TokenImpersonation)
+        PRIVILEGE_SET PrivilegeSet;
+        LUID_AND_ATTRIBUTES Privileges[4];
+    } PrivBuffer;
+    ULONG PrivBufferSize = sizeof(PrivBuffer);
+    GENERIC_MAPPING GenericMapping =
     {
-      /* Duplicate token to have a impersonation token */
-      if (!DuplicateToken(ExistingTokenHandle, SecurityAnonymous, &AccessToken))
-        return FALSE;
+        STANDARD_RIGHTS_READ,
+        STANDARD_RIGHTS_WRITE,
+        STANDARD_RIGHTS_EXECUTE,
+        STANDARD_RIGHTS_ALL
+    };
+    PACL Dacl;
+    ULONG SidLen;
+    HANDLE hToken;
+    NTSTATUS Status, AccessStatus;
+
+    /* doesn't return gracefully if IsMember is NULL! */
+    *IsMember = FALSE;
+
+    SidLen = RtlLengthSid(SidToCheck);
+
+    if (ExistingTokenHandle == NULL)
+    {
+        Status = NtOpenThreadToken(NtCurrentThread(),
+                                   TOKEN_QUERY,
+                                   FALSE,
+                                   &hToken);
+
+        if (Status == STATUS_NO_TOKEN)
+        {
+            /* we're not impersonating, open the primary token */
+            Status = NtOpenProcessToken(NtCurrentProcess(),
+                                        TOKEN_QUERY | TOKEN_DUPLICATE,
+                                        &hToken);
+            if (NT_SUCCESS(Status))
+            {
+                HANDLE hNewToken = FALSE;
+                BOOL DupRet;
+
+                /* duplicate the primary token to create an impersonation token */
+                DupRet = DuplicateTokenEx(hToken,
+                                          TOKEN_QUERY | TOKEN_IMPERSONATE,
+                                          NULL,
+                                          SecurityImpersonation,
+                                          TokenImpersonation,
+                                          &hNewToken);
+
+                NtClose(hToken);
+
+                if (!DupRet)
+                {
+                    DPRINT1("Failed to duplicate the primary token!\n");
+                    return FALSE;
+                }
+
+                hToken = hNewToken;
+            }
+        }
+
+        if (!NT_SUCCESS(Status))
+        {
+            goto Cleanup;
+        }
     }
     else
-      AccessToken = ExistingTokenHandle;
-  }
-
-  *IsMember = FALSE;
-  /* Search in groups of the token */
-  if (!GetTokenInformation(AccessToken, TokenGroups, NULL, 0, &dwSize))
-    goto ByeBye;
-  lpGroups = (PTOKEN_GROUPS)HeapAlloc(GetProcessHeap(), 0, dwSize);
-  if (!lpGroups)
-    goto ByeBye;
-  if (!GetTokenInformation(AccessToken, TokenGroups, lpGroups, dwSize, &dwSize))
-    goto ByeBye;
-  for (i = 0; i < lpGroups->GroupCount; i++)
-  {
-    if (EqualSid(SidToCheck, &lpGroups->Groups[i].Sid))
     {
-      Result = TRUE;
-      *IsMember = TRUE;
-      goto ByeBye;
+        hToken = ExistingTokenHandle;
     }
-  }
-  /* FIXME: Search in users of the token? */
-  DPRINT1("CheckTokenMembership() partially implemented!\n");
-  Result = TRUE;
 
-ByeBye:
-  if (lpGroups != NULL)
-    HeapFree(GetProcessHeap(), 0, lpGroups);
-  if (AccessToken != NULL && AccessToken != ExistingTokenHandle)
-    CloseHandle(AccessToken);
+    /* create a security descriptor */
+    SecurityDescriptor = RtlAllocateHeap(RtlGetProcessHeap(),
+                                         0,
+                                         sizeof(SECURITY_DESCRIPTOR) +
+                                             sizeof(ACL) + SidLen +
+                                             sizeof(ACCESS_ALLOWED_ACE));
+    if (SecurityDescriptor == NULL)
+    {
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Cleanup;
+    }
 
-  return Result;
+    Status = RtlCreateSecurityDescriptor(SecurityDescriptor,
+                                         SECURITY_DESCRIPTOR_REVISION);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Cleanup;
+    }
+
+    /* set the owner and group */
+    Status = RtlSetOwnerSecurityDescriptor(SecurityDescriptor,
+                                           SidToCheck,
+                                           FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Cleanup;
+    }
+
+    Status = RtlSetGroupSecurityDescriptor(SecurityDescriptor,
+                                           SidToCheck,
+                                           FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Cleanup;
+    }
+
+    /* create the DACL */
+    Dacl = (PACL)(SecurityDescriptor + 1);
+    Status = RtlCreateAcl(Dacl,
+                          sizeof(ACL) + SidLen + sizeof(ACCESS_ALLOWED_ACE),
+                          ACL_REVISION);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Cleanup;
+    }
+
+    Status = RtlAddAccessAllowedAce(Dacl,
+                                    ACL_REVISION,
+                                    0x1,
+                                    SidToCheck);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Cleanup;
+    }
+
+    /* assign the DACL to the security descriptor */
+    Status = RtlSetDaclSecurityDescriptor(SecurityDescriptor,
+                                          TRUE,
+                                          Dacl,
+                                          FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        goto Cleanup;
+    }
+
+    /* it's time to perform the access check. Just use _some_ desired access right
+       (same as for the ACE) and see if we're getting it granted. This indicates
+       our SID is a member of the token. We however can't use a generic access
+       right as those aren't mapped and return an error (STATUS_GENERIC_NOT_MAPPED). */
+    Status = NtAccessCheck(SecurityDescriptor,
+                           hToken,
+                           0x1,
+                           &GenericMapping,
+                           &PrivBuffer.PrivilegeSet,
+                           &PrivBufferSize,
+                           &GrantedAccess,
+                           &AccessStatus);
+
+    if (NT_SUCCESS(Status) && NT_SUCCESS(AccessStatus) && (GrantedAccess == 0x1))
+    {
+        *IsMember = TRUE;
+    }
+
+Cleanup:
+    if (hToken != ExistingTokenHandle)
+    {
+        NtClose(hToken);
+    }
+
+    if (SecurityDescriptor != NULL)
+    {
+        RtlFreeHeap(RtlGetProcessHeap(),
+                    0,
+                    SecurityDescriptor);
+    }
+
+    if (!NT_SUCCESS(Status))
+    {
+        SetLastError(RtlNtStatusToDosError(Status));
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 
