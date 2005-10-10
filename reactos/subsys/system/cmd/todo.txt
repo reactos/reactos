@@ -34,3 +34,6 @@ We need more batch files like the one Royce made for "set /a".  What out for if 
 
 *Remove dependance on __REACTOS__
 __REACTOS__ = 0 doesnt compile and is useless.  __REACTOS__ = 1 has been the default and works just fine on windows.
+
+*Add Breaker
+THere is partly code in place for this already.  However it is broken and not finished.  PocketCMD which is open source and based off ros cmd does do this correctly though.  So there is something to look at and see how it can be done.  though it is hard to find where they are doing it even though they are based on eachother they look pretty different now a days.
