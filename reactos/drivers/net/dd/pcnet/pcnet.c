@@ -719,6 +719,7 @@ MiInitChip(
   Adapter->Flags &= ~RESET_IN_PROGRESS;
 }
 
+#if DBG
 static BOOLEAN
 MiTestCard(
     PADAPTER Adapter)
@@ -775,6 +776,7 @@ MiTestCard(
 
   return TRUE;
 }
+#endif
 
 static NDIS_STATUS
 STDCALL
