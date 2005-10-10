@@ -4012,13 +4012,13 @@ NtQuerySection(IN HANDLE SectionHandle,
 
    PreviousMode = ExGetPreviousMode();
 
-   DefaultQueryInfoBufferCheck(SectionInformationClass,
-                               ExSectionInfoClass,
-                               SectionInformation,
-                               SectionInformationLength,
-                               ResultLength,
-                               PreviousMode,
-                               &Status);
+   Status = DefaultQueryInfoBufferCheck(SectionInformationClass,
+                                        ExSectionInfoClass,
+                                        sizeof(ExSectionInfoClass) / sizeof(ExSectionInfoClass[0]),
+                                        SectionInformation,
+                                        SectionInformationLength,
+                                        ResultLength,
+                                        PreviousMode);
 
    if(!NT_SUCCESS(Status))
    {

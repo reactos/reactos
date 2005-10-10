@@ -227,13 +227,13 @@ NtQueryMutant(IN HANDLE MutantHandle,
     PAGED_CODE();
 
     /* Check buffers and parameters */
-    DefaultQueryInfoBufferCheck(MutantInformationClass,
-                                ExMutantInfoClass,
-                                MutantInformation,
-                                MutantInformationLength,
-                                ResultLength,
-                                PreviousMode,
-                                &Status);
+    Status = DefaultQueryInfoBufferCheck(MutantInformationClass,
+                                         ExMutantInfoClass,
+                                         sizeof(ExMutantInfoClass) / sizeof(ExMutantInfoClass[0]),
+                                         MutantInformation,
+                                         MutantInformationLength,
+                                         ResultLength,
+                                         PreviousMode);
     if(!NT_SUCCESS(Status)) {
 
         DPRINT("NtQueryMutant() failed, Status: 0x%x\n", Status);

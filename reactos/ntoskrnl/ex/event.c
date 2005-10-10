@@ -311,13 +311,13 @@ NtQueryEvent(IN HANDLE EventHandle,
     DPRINT("NtQueryEvent(0x%p, 0x%x)\n", EventHandle, EventInformationClass);
 
     /* Check buffers and class validity */
-    DefaultQueryInfoBufferCheck(EventInformationClass,
-                                ExEventInfoClass,
-                                EventInformation,
-                                EventInformationLength,
-                                ReturnLength,
-                                PreviousMode,
-                                &Status);
+    Status = DefaultQueryInfoBufferCheck(EventInformationClass,
+                                         ExEventInfoClass,
+                                         sizeof(ExEventInfoClass) / sizeof(ExEventInfoClass[0]),
+                                         EventInformation,
+                                         EventInformationLength,
+                                         ReturnLength,
+                                         PreviousMode);
     if(!NT_SUCCESS(Status)) {
 
         /* Invalid buffers */

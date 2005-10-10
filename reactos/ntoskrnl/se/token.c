@@ -615,13 +615,13 @@ NtQueryInformationToken(IN HANDLE TokenHandle,
   PreviousMode = ExGetPreviousMode();
 
   /* Check buffers and class validity */
-  DefaultQueryInfoBufferCheck(TokenInformationClass,
-                              SeTokenInformationClass,
-                              TokenInformation,
-                              TokenInformationLength,
-                              ReturnLength,
-                              PreviousMode,
-                              &Status);
+  Status = DefaultQueryInfoBufferCheck(TokenInformationClass,
+                                       SeTokenInformationClass,
+                                       sizeof(SeTokenInformationClass) / sizeof(SeTokenInformationClass[0]),
+                                       TokenInformation,
+                                       TokenInformationLength,
+                                       ReturnLength,
+                                       PreviousMode);
 
   if(!NT_SUCCESS(Status))
   {
@@ -1198,12 +1198,12 @@ NtSetInformationToken(IN HANDLE TokenHandle,
 
   PreviousMode = ExGetPreviousMode();
 
-  DefaultSetInfoBufferCheck(TokenInformationClass,
-                            SeTokenInformationClass,
-                            TokenInformation,
-                            TokenInformationLength,
-                            PreviousMode,
-                            &Status);
+  Status = DefaultSetInfoBufferCheck(TokenInformationClass,
+                                     SeTokenInformationClass,
+                                     sizeof(SeTokenInformationClass) / sizeof(SeTokenInformationClass[0]),
+                                     TokenInformation,
+                                     TokenInformationLength,
+                                     PreviousMode);
 
   if(!NT_SUCCESS(Status))
   {

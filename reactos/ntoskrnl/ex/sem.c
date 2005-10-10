@@ -215,13 +215,13 @@ NtQuerySemaphore(IN HANDLE SemaphoreHandle,
     PAGED_CODE();
 
     /* Check buffers and class validity */
-    DefaultQueryInfoBufferCheck(SemaphoreInformationClass,
-                                ExSemaphoreInfoClass,
-                                SemaphoreInformation,
-                                SemaphoreInformationLength,
-                                ReturnLength,
-                                PreviousMode,
-                                &Status);
+    Status = DefaultQueryInfoBufferCheck(SemaphoreInformationClass,
+                                         ExSemaphoreInfoClass,
+                                         sizeof(ExSemaphoreInfoClass) / sizeof(ExSemaphoreInfoClass[0]),
+                                         SemaphoreInformation,
+                                         SemaphoreInformationLength,
+                                         ReturnLength,
+                                         PreviousMode);
     if(!NT_SUCCESS(Status))
     {
         /* Invalid buffers */
