@@ -155,7 +155,7 @@ ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes,
                 Status = STATUS_INVALID_PARAMETER;
                 DPRINT1("Invalid Size: %lx or Attributes: %lx\n",
                        ObjectAttributes->Length, ObjectAttributes->Attributes); 
-                goto Quickie;
+                _SEH_LEAVE;
             }
         
             /* Set some Create Info */
@@ -179,7 +179,7 @@ ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes,
                 {
                     DPRINT1("Unable to capture the security descriptor!!!\n");
                     ObjectCreateInfo->SecurityDescriptor = NULL;
-                    goto Quickie;
+                    _SEH_LEAVE;
                 }
             
                 DPRINT("Probe done\n");
@@ -212,33 +212,33 @@ ObpCaptureObjectAttributes(IN POBJECT_ATTRIBUTES ObjectAttributes,
     {
         Status = _SEH_GetExceptionCode();
         DPRINT1("Failed\n");
-        goto Quickie;
     }
     _SEH_END;
 
-    /* Now check if the Object Attributes had an Object Name */
-    if (LocalObjectName)
+    if (NT_SUCCESS(Status))
     {
-        DPRINT("Name Buffer: %wZ\n", LocalObjectName);
-        Status = ObpCaptureObjectName(ObjectName,
-                                      LocalObjectName,
-                                      AccessMode);
-    }
-    else
-    {
-        /* Clear the string */
-        RtlInitUnicodeString(ObjectName, NULL);
-
-        /* He can't have specified a Root Directory */
-        if (ObjectCreateInfo->RootDirectory)
+        /* Now check if the Object Attributes had an Object Name */
+        if (LocalObjectName)
         {
-            DPRINT1("Invalid name\n");
-            Status = STATUS_OBJECT_NAME_INVALID;
+            DPRINT("Name Buffer: %wZ\n", LocalObjectName);
+            Status = ObpCaptureObjectName(ObjectName,
+                                          LocalObjectName,
+                                          AccessMode);
+        }
+        else
+        {
+            /* Clear the string */
+            RtlInitUnicodeString(ObjectName, NULL);
+
+            /* He can't have specified a Root Directory */
+            if (ObjectCreateInfo->RootDirectory)
+            {
+                DPRINT1("Invalid name\n");
+                Status = STATUS_OBJECT_NAME_INVALID;
+            }
         }
     }
-    
-Quickie:
-    if (!NT_SUCCESS(Status))
+    else
     {
         DPRINT1("Failed to capture, cleaning up\n");
         ObpReleaseCapturedAttributes(ObjectCreateInfo);
