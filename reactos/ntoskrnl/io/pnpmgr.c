@@ -1475,6 +1475,8 @@ IopActionInterrogateDeviceStack(
    PWSTR Ptr;
    USHORT Length;
    USHORT TotalLength;
+   ULONG RequiredLength;
+   LCID LocaleId;
    HANDLE InstanceKey = NULL;
    UNICODE_STRING ValueName;
    UNICODE_STRING ParentIdPrefix = { 0 };
@@ -1506,6 +1508,14 @@ IopActionInterrogateDeviceStack(
       /* Stop the traversal immediately and indicate successful operation */
       DPRINT("Stop\n");
       return STATUS_UNSUCCESSFUL;
+   }
+
+   /* Get Locale ID */
+   Status = ZwQueryDefaultLocale(FALSE, &LocaleId);
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT("ZwQueryDefaultLocale() failed with status 0x%lx\n", Status);
+      return Status;
    }
 
    /*
@@ -1735,7 +1745,7 @@ IopActionInterrogateDeviceStack(
    DPRINT("Sending IRP_MN_QUERY_DEVICE_TEXT.DeviceTextDescription to device stack\n");
 
    Stack.Parameters.QueryDeviceText.DeviceTextType = DeviceTextDescription;
-   Stack.Parameters.QueryDeviceText.LocaleId = 0; /* FIXME */
+   Stack.Parameters.QueryDeviceText.LocaleId = LocaleId;
    Status = IopInitiatePnpIrp(
       DeviceNode->PhysicalDeviceObject,
       &IoStatusBlock,
@@ -1743,18 +1753,22 @@ IopActionInterrogateDeviceStack(
       &Stack);
    if (NT_SUCCESS(Status))
    {
-      RtlInitUnicodeString(&ValueName,
-			   L"DeviceDesc");
-      Status = ZwSetValueKey(InstanceKey,
-			     &ValueName,
-			     0,
-			     REG_SZ,
-			     (PVOID)IoStatusBlock.Information,
-			     (wcslen((PWSTR)IoStatusBlock.Information) + 1) * sizeof(WCHAR));
+      RtlInitUnicodeString(&ValueName, L"DeviceDesc");
+      if (ZwQueryValueKey(InstanceKey, &ValueName, KeyValueBasicInformation, NULL, 0, &RequiredLength) == STATUS_OBJECT_NAME_NOT_FOUND)
+      {
+         /* This key is overriden when a driver is installed. Don't write the
+          * new description if another one already exists */
+         Status = ZwSetValueKey(InstanceKey,
+                                &ValueName,
+                                0,
+                                REG_SZ,
+                                (PVOID)IoStatusBlock.Information,
+                                (wcslen((PWSTR)IoStatusBlock.Information) + 1) * sizeof(WCHAR));
+      }
       if (!NT_SUCCESS(Status))
-	{
-	   DPRINT1("ZwSetValueKey() failed (Status %lx)\n", Status);
-	}
+      {
+         DPRINT1("ZwSetValueKey() failed (Status 0x%lx)\n", Status);
+     }
    }
    else
    {
@@ -1764,7 +1778,7 @@ IopActionInterrogateDeviceStack(
    DPRINT("Sending IRP_MN_QUERY_DEVICE_TEXT.DeviceTextLocation to device stack\n");
 
    Stack.Parameters.QueryDeviceText.DeviceTextType = DeviceTextLocationInformation;
-   Stack.Parameters.QueryDeviceText.LocaleId = 0; // FIXME
+   Stack.Parameters.QueryDeviceText.LocaleId = LocaleId;
    Status = IopInitiatePnpIrp(
       DeviceNode->PhysicalDeviceObject,
       &IoStatusBlock,
