@@ -16,128 +16,153 @@ char**__argv = NULL;
 wchar_t**__wargv = NULL;
 int __argc = 0;
 
+extern wchar_t **__winitenv;
+
 extern HANDLE hHeap;
 
 char* strndup(char* name, int len)
 {
-    char *s = malloc(len + 1);
-    if (s != NULL) {
-        strncpy(s, name, len);
-        name[len] = 0;
-    }
-    return s;
+   char *s = malloc(len + 1);
+   if (s != NULL)
+   {
+      memcpy(s, name, len);
+      s[len] = 0;
+   }
+   return s;
 }
 
 #define SIZE (4096 / sizeof(char*))
 
-int add(char* name)
+int add
+   (char* name)
 {
-    char** _new;
-    if ((__argc % SIZE) == 0) {
-        if (__argv == NULL)
-            _new = malloc(sizeof(char*) * SIZE);
-        else
-            _new = realloc(__argv, sizeof(char*) * (__argc + SIZE));
-        if (_new == NULL)
-            return -1;
-        __argv = _new;
-    }
-    __argv[__argc++] = name;
-    return 0;
+   char** _new;
+   if ((__argc % SIZE) == 0)
+   {
+      if (__argv == NULL)
+         _new = malloc(sizeof(char*) * (1 + SIZE));
+      else
+         _new = realloc(__argv, sizeof(char*) * (__argc + 1 + SIZE));
+      if (_new == NULL)
+         return -1;
+      __argv = _new;
+   }
+   __argv[__argc++] = name;
+   __argv[__argc] = NULL;
+   return 0;
 }
 
-int expand(char* name, int flag)
+int expand(char* name, int expand_wildcards)
 {
-    char* s;
-    WIN32_FIND_DATAA fd;
-    HANDLE hFile;
-    BOOLEAN first = TRUE;
-    char buffer[256];
-    int pos;
+   char* s;
+   WIN32_FIND_DATAA fd;
+   HANDLE hFile;
+   BOOLEAN first = TRUE;
+   char buffer[256];
+   int pos;
 
-    s = strpbrk(name, "*?");
-    if (s && flag) {
-        hFile = FindFirstFileA(name, &fd);
-        if (hFile != INVALID_HANDLE_VALUE) {
-            while(s != name && *s != '/' && *s != '\\')
-                s--;
-            pos = s - name;
-            if (*s == '/' || *s == '\\')
-                pos++;
-            strncpy(buffer, name, pos);
-            do {
-                if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
-                    strcpy(&buffer[pos], fd.cFileName);
-                    if (add(_strdup(buffer)) < 0) {
-                        FindClose(hFile);
-                        return -1;
-                    }
-                    first = FALSE;
-                }
+   if (expand_wildcards && (s = strpbrk(name, "*?")))
+   {
+      hFile = FindFirstFileA(name, &fd);
+      if (hFile != INVALID_HANDLE_VALUE)
+      {
+         while(s != name && *s != '/' && *s != '\\')
+            s--;
+         pos = s - name;
+         if (*s == '/' || *s == '\\')
+            pos++;
+         strncpy(buffer, name, pos);
+         do
+         {
+            if (!(fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+            {
+               strcpy(&buffer[pos], fd.cFileName);
+               if (add
+                     (_strdup(buffer)) < 0)
+               {
+                  FindClose(hFile);
+                  return -1;
+               }
+               first = FALSE;
             }
-            while(FindNextFileA(hFile, &fd));
-            FindClose(hFile);
-        }
-    }
-    if (first) {
-        if (add(name) < 0)
-            return -1;
-    }
-    else
-        free(name);
-    return 0;
+         }
+         while(FindNextFileA(hFile, &fd));
+         FindClose(hFile);
+      }
+   }
+   if (first)
+   {
+      if (add
+            (name) < 0)
+         return -1;
+   }
+   else
+      free(name);
+   return 0;
 }
 
 /*
  * @unimplemented
  */
-int __getmainargs(int* argc, char*** argv, char*** env, int flag)
+void __getmainargs(int* argc, char*** argv, char*** env, int expand_wildcards, int* new_mode)
 {
-    int i, afterlastspace, ignorespace, len, doexpand;
+   int i, afterlastspace, ignorespace, len, doexpand;
 
-    /* missing threading init */
+   /* missing threading init */
 
-    i = 0;
-    afterlastspace = 0;
-    ignorespace = 0;
-    doexpand = flag;
+   i = 0;
+   afterlastspace = 0;
+   ignorespace = 0;
+   doexpand = expand_wildcards;
 
-    len = strlen(_acmdln);
+   len = strlen(_acmdln);
 
-    while (_acmdln[i]) {
-	if (_acmdln[i] == '"') {
-	    if(ignorespace) {
-		ignorespace = 0;
-	    } else {
-		ignorespace = 1;
-		doexpand = 0;
-	    }
-	    memmove(_acmdln + i, _acmdln + i + 1, len - i);
-	    len--;
-	    continue;
-	}
+   while (_acmdln[i])
+   {
+      if (_acmdln[i] == '"')
+      {
+         if(ignorespace)
+         {
+            ignorespace = 0;
+         }
+         else
+         {
+            ignorespace = 1;
+            doexpand = 0;
+         }
+         memmove(_acmdln + i, _acmdln + i + 1, len - i);
+         len--;
+         continue;
+      }
 
-        if (_acmdln[i] == ' ' && !ignorespace) {
-            expand(strndup(_acmdln + afterlastspace, i - afterlastspace), doexpand);
+      if (_acmdln[i] == ' ' && !ignorespace)
+      {
+         expand(strndup(_acmdln + afterlastspace, i - afterlastspace), doexpand);
+         i++;
+         while (_acmdln[i]==' ')
             i++;
-            while (_acmdln[i]==' ')
-                i++;
-            afterlastspace=i;
-	    doexpand = flag;
-        } else {
-            i++;
-        }
-    }
+         afterlastspace=i;
+         doexpand = expand_wildcards;
+      }
+      else
+      {
+         i++;
+      }
+   }
 
-    if (_acmdln[afterlastspace] != 0) {
-        expand(strndup(_acmdln+afterlastspace, i - afterlastspace), doexpand);
-    }
-    HeapValidate(hHeap, 0, NULL);
-    *argc = __argc;
-    *argv = __argv;
-    *env  = _environ;
-    _pgmptr = _strdup((char*)argv[0]);
-    return 0;
+   if (_acmdln[afterlastspace] != 0)
+   {
+      expand(strndup(_acmdln+afterlastspace, i - afterlastspace), doexpand);
+   }
+
+   HeapValidate(hHeap, 0, NULL);
+
+   *argc = __argc;
+   *argv = __argv;
+   *env  = _environ;
+   _pgmptr = _strdup((char*)argv[0]);
+
+   // if (new_mode) _set_new_mode(*new_mode);
 }
 
 /*
@@ -146,10 +171,11 @@ int __getmainargs(int* argc, char*** argv, char*** env, int flag)
 void __wgetmainargs(int* argc, wchar_t*** wargv, wchar_t*** wenv,
                     int expand_wildcards, int* new_mode)
 {
-    extern wchar_t **__winitenv;
-    *argc = 0;
-    *wargv = NULL;
-    *wenv = __winitenv;
+   *argc = __argc;
+   *wargv = __wargv;
+   *wenv = __winitenv;
+
+   // if (new_mode) _set_new_mode(*new_mode);
 }
 
 /*
@@ -157,7 +183,7 @@ void __wgetmainargs(int* argc, wchar_t*** wargv, wchar_t*** wenv,
  */
 int* __p___argc(void)
 {
-    return &__argc;
+   return &__argc;
 }
 
 /*
@@ -165,7 +191,7 @@ int* __p___argc(void)
  */
 char*** __p___argv(void)
 {
-    return &__argv;
+   return &__argv;
 }
 
 /*
@@ -173,13 +199,13 @@ char*** __p___argv(void)
  */
 wchar_t*** __p___wargv(void)
 {
-    return &__wargv;
+   return &__wargv;
 }
 
 
 #if 0
 int _chkstk(void)
 {
-    return 0;
+   return 0;
 }
 #endif
