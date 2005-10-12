@@ -31,12 +31,14 @@ IDI_ZOOMIN              ICON    DISCARDABLE     "res/zoomin.ico"
 
 IDR_ZOOMIN_MENU MENU DISCARDABLE 
 BEGIN
+    POPUP "&File"
+    BEGIN
+        MENUITEM "E&xit\tAlt-F4",               ID_EDIT_EXIT
+    END
     POPUP "&Edit"
     BEGIN
         MENUITEM "&Copy\tCtrl+C",               ID_EDIT_COPY, GRAYED
-        MENUITEM "&Refresh\tF5",                ID_EDIT_REFRESH, GRAYED
-        MENUITEM SEPARATOR
-        MENUITEM "E&xit\tAlt-F4",               ID_EDIT_EXIT
+        MENUITEM "&Refresh\tF5",                ID_EDIT_REFRESH
     END
     POPUP "&Options"
     BEGIN
@@ -69,26 +71,21 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// Dialog
-//
-
-IDD_DIALOG1 DIALOG DISCARDABLE  0, 0, 186, 95
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Dialog"
-FONT 8, "MS Sans Serif"
-BEGIN
-    DEFPUSHBUTTON   "OK",IDOK,129,7,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,129,24,50,14
-END
-
-
-/////////////////////////////////////////////////////////////////////////////
-//
 // String Table
 //
 
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_APP_TITLE           "ReactOS Zoomin"
-    IDC_ZOOMIN              "ZOOMIN"
+END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Accelerator
+//
+
+IDR_ZOOMIN ACCELERATORS DISCARDABLE 
+BEGIN
+    VK_F5,          ID_REFRESH,             VIRTKEY, NOINVERT
 END

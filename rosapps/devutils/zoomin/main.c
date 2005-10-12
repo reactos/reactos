@@ -38,7 +38,6 @@ HWND hFrameWnd;
 HMENU hMenuFrame;
 
 TCHAR szTitle[MAX_LOADSTRING];
-TCHAR szFrameClass[MAX_LOADSTRING];
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -61,7 +60,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
         LoadCursor(0, IDC_ARROW),
         0,//(HBRUSH)(COLOR_BTNFACE+1),
         0/*lpszMenuName*/,
-        szFrameClass,
+        WNDCLASS_ZOOMIN,
         (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_ZOOMIN), IMAGE_ICON,
             GetSystemMetrics(SM_CXSMICON), GetSystemMetrics(SM_CYSMICON), LR_SHARED)
     };
@@ -70,7 +69,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 	hMenuFrame = LoadMenu(hInstance, MAKEINTRESOURCE(IDR_ZOOMIN_MENU));
 
     hFrameWnd = CreateWindowEx(0, (LPCTSTR)(int)hFrameWndClass, szTitle,
-                    WS_OVERLAPPEDWINDOW | WS_EX_CLIENTEDGE,
+                    WS_OVERLAPPEDWINDOW | WS_EX_CLIENTEDGE | WS_VSCROLL,
                     CW_USEDEFAULT, CW_USEDEFAULT, 250, 250,
                     NULL, hMenuFrame, hInstance, NULL/*lpParam*/);
 
@@ -80,6 +79,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 
     ShowWindow(hFrameWnd, nCmdShow);
     UpdateWindow(hFrameWnd);
+
     return TRUE;
 }
 
@@ -97,22 +97,21 @@ int APIENTRY WinMain(HINSTANCE hInstance,
                      int       nCmdShow)
 {
     MSG msg;
-    HACCEL hAccel;
+	HACCEL hAccel;
 
     // Initialize global strings
     LoadString(hInstance, IDS_APP_TITLE, szTitle, MAX_LOADSTRING);
-    LoadString(hInstance, IDC_ZOOMIN, szFrameClass, MAX_LOADSTRING);
 
     // Perform application initialization:
     if (!InitInstance(hInstance, nCmdShow)) {
         return FALSE;
     }
 
-    hAccel = LoadAccelerators(hInstance, (LPCTSTR)IDC_ZOOMIN);
+	hAccel = LoadAccelerators(hInstance, MAKEINTRESOURCE(IDR_ZOOMIN));
 
     // Main message loop:
     while (GetMessage(&msg, (HWND)NULL, 0, 0)) {
-        if (!TranslateAccelerator(msg.hwnd, hAccel, &msg)) {
+		if (!TranslateAccelerator(msg.hwnd, hAccel, &msg)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }

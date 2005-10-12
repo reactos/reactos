@@ -42,9 +42,32 @@ static RECT s_lastSrc = {-1,-1,-1,-1};	// last cursor position
 BOOL s_dragging = FALSE;
 
 
+ // zoom range
+
+#define MIN_ZOOM	1
+#define MAX_ZOOM	16
+
+
 ////////////////////////////////////////////////////////////////////////////////
-// Local module support methods
 //
+// FUNCTION: SetZoom()
+//
+// PURPOSE:  Change zoom level
+//
+
+static void SetZoom(HWND hWnd, int factor)
+{
+	TCHAR buffer[MAX_LOADSTRING];
+
+	if (factor>=MIN_ZOOM && factor<=MAX_ZOOM) {
+		s_factor = factor;
+
+		SetScrollPos(hWnd, SB_VERT, s_factor, TRUE);
+
+		wsprintf(buffer, TEXT("%s  %dx"), szTitle, s_factor);
+		SetWindowText(hWnd, buffer);
+	}
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -70,6 +93,10 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		// TODO:
 		break;
 
+	case ID_REFRESH:
+		InvalidateRect(hWnd, NULL, FALSE);
+		break;
+
 	default:
 		return FALSE;
 	}
@@ -89,6 +116,8 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 	switch (message) {
 	case WM_CREATE:
 		SetTimer(hWnd, 0, 200, NULL);	// refresh display all 200 ms
+		SetScrollRange(hWnd, SB_VERT, 1, MAX_ZOOM, FALSE);
+		SetZoom(hWnd, s_factor);
 		break;
 
 	case WM_COMMAND:
@@ -107,10 +136,11 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 		hdcMem = GetDC(GetDesktopWindow());
 
 		GetClientRect(hWnd, &clnt);
-		size.cx = clnt.right / s_factor;
-		size.cy = clnt.bottom / s_factor;
+		size.cx = (clnt.right + s_factor-1) / s_factor;
+		size.cy = (clnt.bottom + s_factor-1) / s_factor;
 
-		StretchBlt(ps.hdc, 0, 0, size.cx*s_factor, size.cy*s_factor, hdcMem, s_srcPos.x, s_srcPos.y, size.cx, size.cy, SRCCOPY);
+		StretchBlt(ps.hdc, 0, 0, size.cx*s_factor, size.cy*s_factor,
+					hdcMem, s_srcPos.x, s_srcPos.y, size.cx, size.cy, SRCCOPY);
 
 		ReleaseDC(GetDesktopWindow(), hdcMem);
 		EndPaint(hWnd, &ps);
@@ -178,6 +208,20 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 
 			s_dragging = FALSE;
 			ReleaseCapture();
+		}
+		break;
+
+	case WM_VSCROLL:
+		switch(wParam) {
+		  case SB_LINEUP:
+		  case SB_PAGEUP:
+			SetZoom(hWnd, s_factor-1);
+			break;
+
+		  case SB_LINEDOWN:
+		  case SB_PAGEDOWN:
+			SetZoom(hWnd, s_factor+1);
+			break;
 		}
 		break;
 
