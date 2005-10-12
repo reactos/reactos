@@ -68,12 +68,21 @@ ClassRefObject(PWNDCLASS_OBJECT Class)
 VOID FASTCALL DestroyClass(PWNDCLASS_OBJECT Class)
 {
    PWINSTATION_OBJECT WinSta;
-   WinSta = PsGetWin32Thread()->Desktop->WindowStation;
    
    ASSERT(Class->refs == 0);
    RemoveEntryList(&Class->ListEntry);
-   //FIXME: release ATOM
-   RtlDeleteAtomFromAtomTable(WinSta->AtomTable, Class->Atom);
+
+   /* FIXME See bug 899 */
+   if (NULL != PsGetWin32Thread())
+   {
+      WinSta = PsGetWin32Thread()->Desktop->WindowStation;
+      //FIXME: release ATOM
+      RtlDeleteAtomFromAtomTable(WinSta->AtomTable, Class->Atom);
+   }
+   else
+   {
+      DPRINT1("Can't locate window station, see bug 899\n");
+   }
    ExFreePool(Class);
 }
 
