@@ -692,5 +692,36 @@ GetExplicitEntriesFromAclW(
     return ErrorCode;
 }
 
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+GetEffectiveRightsFromAclW(
+	PACL pacl,
+	PTRUSTEE_W ptrustee_w,
+	PACCESS_MASK paccess_mask
+	)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+GetAuditedPermissionsFromAclW(
+	PACL pacl,
+	PTRUSTEE_W ptrustee_w,
+	PACCESS_MASK paccess_mask,
+	PACCESS_MASK paccess_mask2
+	)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
 
 /* EOF */

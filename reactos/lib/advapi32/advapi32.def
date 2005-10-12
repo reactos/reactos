@@ -32,7 +32,7 @@ AddAce@20
 AddAuditAccessAce@24
 AddAuditAccessAceEx@28
 AddAuditAccessObjectAce@36
-;AddUsersToEncryptedFile@8
+AddUsersToEncryptedFile@8
 AdjustTokenGroups@24
 AdjustTokenPrivileges@24
 AllocateAndInitializeSid@44
@@ -85,7 +85,7 @@ ControlServiceEx@16
 ;ConvertSecurityDescriptorToAccessNamedW=ConvertSecurityDescriptorToAccessW@28
 ;ConvertSecurityDescriptorToAccessW@28
 ;ConvertSecurityDescriptorToStringSecurityDescriptorA@20
-;ConvertSecurityDescriptorToStringSecurityDescriptorW@20
+ConvertSecurityDescriptorToStringSecurityDescriptorW@20
 ConvertSidToStringSidA@8
 ConvertSidToStringSidW@8
 ;ConvertStringSDToSDDomainA@24
@@ -95,7 +95,7 @@ ConvertSidToStringSidW@8
 ConvertStringSecurityDescriptorToSecurityDescriptorA@16
 ConvertStringSecurityDescriptorToSecurityDescriptorW@16
 ;ConvertStringSidToSidA@8
-;ConvertStringSidToSidW@8
+ConvertStringSidToSidW@8
 ConvertToAutoInheritPrivateObjectSecurity@24
 CopySid@12
 ;CreateCodeAuthzLevel@20
@@ -106,7 +106,7 @@ CreateProcessAsUserA@44
 ;CreateProcessAsUserSecure
 CreateProcessAsUserW@44
 ;CreateProcessWithLogonW
-;CreateRestrictedToken@36
+CreateRestrictedToken@36
 CreateServiceA@52
 CreateServiceW@52
 ;CreateTraceInstanceId@8
@@ -154,7 +154,7 @@ CryptEncrypt@28
 ;CryptEnumProviderTypesA@24
 ;CryptEnumProviderTypesW@24
 ;CryptEnumProvidersA@24
-;CryptEnumProvidersW@24
+CryptEnumProvidersW@24
 CryptExportKey@24
 CryptGenKey@16
 CryptGenRandom@12
@@ -179,8 +179,8 @@ CryptSignHashA@24
 ;CryptSignHashW@24
 CryptVerifySignatureA@24
 CryptVerifySignatureW@24
-;DecryptFileA@8
-;DecryptFileW@8
+DecryptFileA@8
+DecryptFileW@8
 DeleteAce@8
 DeleteService@4
 DeregisterEventSource@4
@@ -208,10 +208,10 @@ DuplicateTokenEx@24
 ;ElfReportEventA@48
 ;ElfReportEventW@48
 ;EnableTrace
-;EncryptFileA
-;EncryptFileW
+EncryptFileA@4
+EncryptFileW@4
 ;EncryptedFileKeyInfo
-;EncryptionDisable
+EncryptionDisable@8
 EnumDependentServicesA@24
 EnumDependentServicesW@24
 EnumServiceGroupW@36
@@ -223,13 +223,13 @@ EnumServicesStatusW@32
 EqualDomainSid@12
 EqualPrefixSid@8
 EqualSid@8
-;FileEncryptionStatusA
-;FileEncryptionStatusW
+FileEncryptionStatusA@8
+FileEncryptionStatusW@8
 FindFirstFreeAce@8
 ;FlushTraceA
 ;FlushTraceW
 ;FreeEncryptedFileKeyInfo
-;FreeEncryptionCertificateHashList
+FreeEncryptionCertificateHashList@4
 FreeInheritedFromArray@12
 FreeSid@4
 ;GetAccessPermissionsForObjectA
@@ -237,11 +237,11 @@ FreeSid@4
 GetAce@12
 GetAclInformation@16
 ;GetAuditedPermissionsFromAclA@16
-;GetAuditedPermissionsFromAclW@16
+GetAuditedPermissionsFromAclW@16
 GetCurrentHwProfileA@4
 GetCurrentHwProfileW@4
 ;GetEffectiveRightsFromAclA@12
-;GetEffectiveRightsFromAclW@12
+GetEffectiveRightsFromAclW@12
 ;GetEventLogInformation
 GetExplicitEntriesFromAclA@12=ADVAPI32.GetExplicitEntriesFromAclW
 GetExplicitEntriesFromAclW@12
@@ -343,7 +343,7 @@ LookupPrivilegeValueA@12
 LookupPrivilegeValueW@12
 ;LookupSecurityDescriptorPartsA@28
 ;LookupSecurityDescriptorPartsW@28
-;LsaAddAccountRights@16
+LsaAddAccountRights@16
 ;LsaAddPrivilegesToAccount@8
 ;LsaClearAuditLog@4
 LsaClose@4
@@ -353,9 +353,9 @@ LsaClose@4
 ;LsaCreateTrustedDomainEx
 ;LsaDelete@4
 ;LsaDeleteTrustedDomain@8
-;LsaEnumerateAccountRights@16
+LsaEnumerateAccountRights@16
 ;LsaEnumerateAccounts@20
-;LsaEnumerateAccountsWithUserRight@16
+LsaEnumerateAccountsWithUserRight@16
 ;LsaEnumeratePrivileges@20
 ;LsaEnumeratePrivilegesOfAccount@8
 ;LsaEnumerateTrustedDomains@20
@@ -390,10 +390,10 @@ LsaQueryInformationPolicy@12
 ;LsaQuerySecurityObject@12
 ;LsaQueryTrustedDomainInfo@16
 ;LsaQueryTrustedDomainInfoByName
-;LsaRemoveAccountRights@20
+LsaRemoveAccountRights@20
 ;LsaRemovePrivilegesFromAccount@12
 LsaRetrievePrivateData@12
-;LsaSetInformationPolicy@12
+LsaSetInformationPolicy@12
 ;LsaSetForestTrustInformation
 ;LsaSetInformationPolicy
 ;LsaSetInformationTrustedDomain@12
@@ -448,7 +448,7 @@ PrivilegedServiceAuditAlarmW@20
 ;ProvAccessRightsToNTAccessMask ; ?
 ;QueryAllTracesA
 ;QueryAllTracesW
-;QueryRecoveryAgentsOnEncryptedFile
+QueryRecoveryAgentsOnEncryptedFile@8
 ;QueryServiceConfig2A
 ;QueryServiceConfig2W
 QueryServiceConfigA@16
@@ -460,7 +460,7 @@ QueryServiceStatus@8
 QueryServiceStatusEx@20
 ;QueryTraceA
 ;QueryTraceW
-;QueryUsersOnEncryptedFile
+QueryUsersOnEncryptedFile@8
 ;QueryWindows31FilesMigration@4
 ;ReadEncryptedFileRaw
 ReadEventLogA@28
@@ -539,7 +539,7 @@ RegisterServiceCtrlHandlerW@8
 ;RegisterTraceGuidsA
 ;RegisterTraceGuidsW
 ;RemoveTraceCallback
-;RemoveUsersFromEncryptedFile
+RemoveUsersFromEncryptedFile@8
 ReportEventA@36
 ReportEventW@36
 RevertToSelf@0

@@ -27,6 +27,7 @@
 
 #include <advapi32.h>
 #include "crypt.h"
+#include <winefs.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -1934,4 +1935,99 @@ NTSTATUS WINAPI SystemFunction041(PVOID memory, ULONG length, ULONG flags)  /* R
 {
 	DPRINT1("(%p, %lx, %lx): stub [RtlDecryptMemory]\n", memory, length, flags);
 	return STATUS_SUCCESS;
+}
+
+
+/*
+ * @unimplemented
+ */
+DWORD WINAPI AddUsersToEncryptedFile (
+	LPCWSTR lpcwstr,
+	PENCRYPTION_CERTIFICATE_LIST pencryption_certificate_list
+	)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD WINAPI RemoveUsersFromEncryptedFile (
+	LPCWSTR lpcwstr,
+	PENCRYPTION_CERTIFICATE_HASH_LIST pencryption_certificate_hash_list
+	)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL WINAPI EncryptionDisable (
+	LPCWSTR,
+	BOOL
+	);
+
+/*
+ * @unimplemented
+ */
+BOOL WINAPI FileEncryptionStatusW (
+	LPCWSTR lpcwstr,
+	LPDWORD lpdword
+	)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL WINAPI FileEncryptionStatusA (
+	LPCSTR lpcstr,
+	LPDWORD lpdword
+	)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+DWORD WINAPI QueryUsersOnEncryptedFile (
+	LPCWSTR lpctstr,
+	PENCRYPTION_CERTIFICATE_HASH_LIST* pencryption_certificate_hash_list
+	)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+void WINAPI FreeEncryptionCertificateHashList (
+	PENCRYPTION_CERTIFICATE_HASH_LIST pencryption_certificate_hash_list
+	)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return;
+}
+
+
+/*
+ * @unimplemented
+ */
+DWORD WINAPI QueryRecoveryAgentsOnEncryptedFile (
+	LPCWSTR lpctstr,
+	PENCRYPTION_CERTIFICATE_HASH_LIST* pencryption_certificate_hash_list
+	)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
 }

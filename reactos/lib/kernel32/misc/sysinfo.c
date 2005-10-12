@@ -198,4 +198,20 @@ GetSystemRegistryQuota(PDWORD pdwQuotaAllowed,
     return FALSE;
 }
 
+/*
+ * @implemented
+ */
+VOID
+STDCALL
+GetNativeSystemInfo(
+    LPSYSTEM_INFO lpSystemInfo
+    )
+{
+    //FIXME: GetNativeSystemInfo should return always the real Hardware Processorarchitecture
+    // in case a Program is running in 32bit Mode on AMD64
+    // GetSystemInfo should return PROCESSOR_ARCHITECTURE_INTEL and
+    // GetNativeSystemInfo should return PROCESSOR_ARCHITECTURE_AMD64
+    GetSystemInfo(lpSystemInfo);
+}
+
 /* EOF */

@@ -592,17 +592,6 @@ GetDevicePowerState(
     return 0;
 }
 
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-GetNativeSystemInfo(
-    LPSYSTEM_INFO lpSystemInfo
-    )
-{
-    STUB;
-}
 
 /*
  * @unimplemented
@@ -720,7 +709,8 @@ IsWow64Process(
     )
 {
     STUB;
-    return 0;
+    *Wow64Process = FALSE;
+    return TRUE;
 }
 
 /*

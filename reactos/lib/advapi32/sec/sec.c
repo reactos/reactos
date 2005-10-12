@@ -498,4 +498,40 @@ BuildSecurityDescriptorA(IN PTRUSTEE_A pOwner  OPTIONAL,
 }
 
 
+/*
+ * @unimplemented
+ */
+BOOL WINAPI DecryptFileW(LPCWSTR lpFileName, DWORD dwReserved)
+{
+    DPRINT1("%s() not implemented!\n", __FUNCTION__);
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL WINAPI DecryptFileA(LPCSTR lpFileName, DWORD dwReserved)
+{
+    DPRINT1("%s() not implemented!\n", __FUNCTION__);
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL WINAPI EncryptFileW(LPCWSTR lpFileName)
+{
+    DPRINT1("%s() not implemented!\n", __FUNCTION__);
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL WINAPI EncryptFileA(LPCSTR lpFileName)
+{
+    DPRINT1("%s() not implemented!\n", __FUNCTION__);
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
 /* EOF */
