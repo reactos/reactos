@@ -2157,7 +2157,7 @@ BOOL WINAPI SetupDiGetDeviceRegistryPropertyA(
     DWORD PropertyBufferSizeW;
     PBYTE PropertyBufferW;
 
-    TRACE("%04lx %p %ld %p %p %ld %p\n", (DWORD)devinfo, DeviceInfoData,
+    TRACE("%p %p %ld %p %p %ld %p\n", devinfo, DeviceInfoData,
         Property, PropertyRegDataType, PropertyBuffer, PropertyBufferSize,
         RequiredSize);
 
@@ -2173,18 +2173,25 @@ BOOL WINAPI SetupDiGetDeviceRegistryPropertyA(
         PropertyBufferSizeW,
         &RequiredSizeW);
 
+    if (bResult || GetLastError() == ERROR_MORE_DATA)
+    {
+        bIsStringProperty = (RegType == REG_SZ || RegType == REG_MULTI_SZ || RegType == REG_EXPAND_SZ);
+
+        if (bIsStringProperty)
+           RequiredSizeA = RequiredSizeW / sizeof(WCHAR);
+        else
+            RequiredSizeA = RequiredSizeW;
+        if (RequiredSize)
+            *RequiredSize = RequiredSizeA;
+        if (PropertyRegDataType)
+            *PropertyRegDataType = RegType;
+    }
+
     if (!bResult)
     {
         HeapFree(GetProcessHeap(), 0, PropertyBufferW);
         return bResult;
     }
-
-    bIsStringProperty = (RegType == REG_SZ || RegType == REG_MULTI_SZ || RegType == REG_EXPAND_SZ);
-
-    if (bIsStringProperty)
-        RequiredSizeA = RequiredSizeW / sizeof(WCHAR);
-    else
-        RequiredSizeA = RequiredSizeW;
 
     if (RequiredSizeA <= PropertyBufferSize)
     {
@@ -2206,10 +2213,6 @@ BOOL WINAPI SetupDiGetDeviceRegistryPropertyA(
     }
 
     HeapFree(GetProcessHeap(), 0, PropertyBufferW);
-    if (PropertyRegDataType)
-        *PropertyRegDataType = RegType;
-    if (RequiredSize)
-        *RequiredSize = RequiredSizeA;
     return bResult;
 }
 
@@ -2877,13 +2880,13 @@ BOOL WINAPI SetupDiCallClassInstaller(
                     LPWSTR lpGuidString;
                     if (UuidToStringW((UUID*)&DeviceInfoData->ClassGuid, &lpGuidString) == RPC_S_OK)
                     {
-                        rc = RegQueryValueExW(hKey, L"Installer32", NULL, &dwRegType, NULL, &dwLength);
+                        rc = RegQueryValueExW(hKey, lpGuidString, NULL, &dwRegType, NULL, &dwLength);
                         if (rc == ERROR_SUCCESS && dwRegType == REG_SZ)
                         {
                             LPWSTR KeyBuffer = HeapAlloc(GetProcessHeap(), 0, dwLength);
                             if (KeyBuffer != NULL)
                             {
-                                rc = RegQueryValueExW(hKey, L"Installer32", NULL, NULL, (LPBYTE)KeyBuffer, &dwLength);
+                                rc = RegQueryValueExW(hKey, lpGuidString, NULL, NULL, (LPBYTE)KeyBuffer, &dwLength);
                                 if (rc == ERROR_SUCCESS)
                                 {
                                     LPCWSTR ptr;
