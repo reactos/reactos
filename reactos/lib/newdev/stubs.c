@@ -7,6 +7,9 @@
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
+//#define NDEBUG
+#include <debug.h>
+
 #include "newdev.h"
 
 BOOL WINAPI
