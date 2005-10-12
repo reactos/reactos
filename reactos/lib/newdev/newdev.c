@@ -23,7 +23,7 @@ DevInstallW(
 	SP_DEVINFO_DATA devInfoData;
 	DWORD requiredSize;
 	DWORD regDataType;
-	PTSTR buffer = NULL;
+	PBYTE buffer = NULL;
 	SP_DRVINFO_DATA drvInfoData;
 	BOOL ret;
 
