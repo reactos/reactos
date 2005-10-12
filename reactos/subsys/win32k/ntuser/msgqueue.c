@@ -210,6 +210,7 @@ MsqIsDblClk(LPMSG Msg, BOOL Remove)
    {
       return FALSE;
    }
+
    WinStaObject = PsGetWin32Thread()->Desktop->WindowStation;
 
    CurInfo = IntGetSysCursorInfo(WinStaObject);
@@ -227,6 +228,12 @@ MsqIsDblClk(LPMSG Msg, BOOL Remove)
 
       Res = (dX <= CurInfo->DblClickWidth) &&
             (dY <= CurInfo->DblClickHeight);
+
+      if(Res)
+      {
+         if(CurInfo->ButtonsDown)
+           Res = (CurInfo->ButtonsDown == Msg->message);
+      }
    }
 
    if(Remove)
@@ -237,6 +244,7 @@ MsqIsDblClk(LPMSG Msg, BOOL Remove)
          CurInfo->LastBtnDownX = Msg->pt.x;
          CurInfo->LastBtnDownY = Msg->pt.y;
          CurInfo->LastClkWnd = NULL;
+		 CurInfo->ButtonsDown = Msg->message;
       }
       else
       {
@@ -244,6 +252,7 @@ MsqIsDblClk(LPMSG Msg, BOOL Remove)
          CurInfo->LastBtnDownY = Msg->pt.y;
          CurInfo->LastClkWnd = (HANDLE)Msg->hwnd;
          CurInfo->LastBtnDown = Msg->time;
+		 CurInfo->ButtonsDown = Msg->message;
       }
    }
 
