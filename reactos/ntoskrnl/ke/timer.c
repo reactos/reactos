@@ -34,6 +34,19 @@ VOID STDCALL KiHandleExpiredTimer(PKTIMER Timer);
  *       Timer = timer to cancel
  * RETURNS: True if the timer was running
  *          False otherwise
+ *
+ * DANGER!
+ * The statement in the DDK for KeCancelTimer that "if a DPC object is
+ * associated with the timer, it too is canceled" is wrong -- nothing is
+ * done with the DPC object when the timer is removed from the system
+ * queue. So its very likely that the DPC will run after you have canceled
+ * the timer!
+ * For what it's worth, calling KeRemoveQueueDpc after KeCancelTimer would
+ * be sufficient to prevent any problems associated with destroying the DPC
+ * object, at least as the OS is currently implemented. This is because the
+ * DPC dispatcher doesn't need access to the object once the DPC is
+ * dequeued, and the dequeuing happens before the DPC routine gets called."
+ * -Gunnar (article by Walter Oney)
  */
 BOOLEAN
 STDCALL
