@@ -606,6 +606,7 @@ IopGetBusTypeGuidIndex(LPGUID BusTypeGuid)
             FoundIndex = i;
             goto Quickie;
         }
+        i++;
     }
 
     /* Check if we have to grow the list */
@@ -1280,7 +1281,7 @@ IopAssignDeviceResources(
                   = 0;
                break;
             }
-            /*case CmResourceTypeBusNumber:
+            case CmResourceTypeBusNumber:
             {
                DescriptorRaw->u.BusNumber.Start = DescriptorTranslated->u.BusNumber.Start
                   = ResourceDescriptor->u.BusNumber.MinBusNumber;
@@ -1289,7 +1290,7 @@ IopAssignDeviceResources(
                DescriptorRaw->u.BusNumber.Reserved = DescriptorTranslated->u.BusNumber.Reserved
                   = ResourceDescriptor->u.BusNumber.Reserved;
                break;
-            }*/
+            }
             /*CmResourceTypeDevicePrivate:
             case CmResourceTypePcCardConfig:
             case CmResourceTypeMfCardConfig:
