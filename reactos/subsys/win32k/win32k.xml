@@ -89,6 +89,7 @@
 		<file>painting.c</file>
 		<file>prop.c</file>
 		<file>scrollbar.c</file>
+		<file>session.c</file>
 		<file>stubs.c</file>
 		<file>timer.c</file>
 		<file>useratom.c</file>

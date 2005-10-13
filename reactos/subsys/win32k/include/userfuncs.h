@@ -73,12 +73,9 @@ ObmDeleteObject(HANDLE h, USER_OBJECT_TYPE type );
 #define UserDerefObject(o) ObmDereferenceObject(o)
 BOOL FASTCALL ObmCreateHandleTable();
 
-
-extern USER_HANDLE_TABLE gHandleTable;
-
-
 /******************** HANDLE.C ***************/
 
+extern USER_HANDLE_TABLE gHandleTable;
 
 PUSER_HANDLE_ENTRY handle_to_entry(PUSER_HANDLE_TABLE ht, HANDLE handle );
 VOID UserInitHandleTable(PUSER_HANDLE_TABLE ht, PVOID mem, ULONG bytes);
@@ -119,6 +116,13 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags);
 
 DWORD FASTCALL
 UserGetWindowDC(PWINDOW_OBJECT Wnd);
+
+
+/*************** SESSION.C ***************/
+
+extern PRTL_ATOM_TABLE gAtomTable;
+
+NTSTATUS FASTCALL InitSessionImpl(VOID);
 
 /*************** METRIC.C ***************/
 

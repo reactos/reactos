@@ -46,6 +46,7 @@ DWORD _locked=0;
 NTSTATUS FASTCALL InitUserImpl(VOID)
 {
    //PVOID mem;
+   NTSTATUS Status;
 
    //   DPRINT("Enter InitUserImpl\n");
    //   ExInitializeResourceLite(&UserLock);
@@ -56,6 +57,13 @@ NTSTATUS FASTCALL InitUserImpl(VOID)
    {
       DPRINT1("Failed creating handle table\n");
       return STATUS_INSUFFICIENT_RESOURCES;
+   }
+
+   Status = InitSessionImpl();
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT1("Error init session impl.\n");
+      return Status;
    }
 
    return STATUS_SUCCESS;
