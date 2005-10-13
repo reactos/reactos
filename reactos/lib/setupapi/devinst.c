@@ -93,6 +93,7 @@ struct CoInstallerElement
 {
     LIST_ENTRY ListEntry;
 
+    HMODULE Module;
     COINSTALLER_PROC Function;
     BOOL DoPostProcessing;
     PVOID PrivateData;
@@ -121,6 +122,7 @@ struct DriverInfoElement /* Element of DeviceInfoSet.DriverListHead and DeviceIn
 
     DWORD DriverRank;
     SP_DRVINFO_DATA_V2_W Info;
+    GUID ClassGuid;
     LPWSTR InfPath;
     LPWSTR InfSection;
     LPWSTR MatchingId;
@@ -1183,13 +1185,12 @@ end:
 static BOOL
 CreateDeviceInfoElement(
     IN LPCWSTR InstancePath,
-    LPCGUID pClassGuid,
+    IN LPCGUID pClassGuid,
     OUT struct DeviceInfoElement **pDeviceInfo)
 {
     struct DeviceInfoElement *deviceInfo;
 
     *pDeviceInfo = NULL;
-    if (IsEqualIID(&pClassGuid, &GUID_NULL)) { FIXME("Bad argument!!!"); return FALSE; }/* FIXME: remove */
 
     deviceInfo = HeapAlloc(GetProcessHeap(), 0, sizeof(struct DeviceInfoElement) + (wcslen(InstancePath) + 1) * sizeof(WCHAR));
     if (!deviceInfo)
@@ -2758,9 +2759,21 @@ BOOL WINAPI SetupDiOpenDeviceInterfaceA(
        DWORD OpenFlags,
        PSP_DEVICE_INTERFACE_DATA DeviceInterfaceData)
 {
-    FIXME("%p %s %08lx %p\n", DeviceInfoSet,
-        debugstr_a(DevicePath), OpenFlags, DeviceInterfaceData);
-    return FALSE;
+    LPWSTR DevicePathW = NULL;
+    BOOL bResult;
+
+    TRACE("%p %s %08lx %p\n", DeviceInfoSet, debugstr_a(DevicePath), OpenFlags, DeviceInterfaceData);
+
+    DevicePathW = MultiByteToUnicode(DevicePath, CP_ACP);
+    if (DevicePathW == NULL)
+        return FALSE;
+
+    bResult = SetupDiOpenDeviceInterfaceW(DeviceInfoSet,
+        DevicePathW, OpenFlags, DeviceInterfaceData);
+
+    MyFree(DevicePathW);
+
+    return bResult;
 }
 
 /***********************************************************************
@@ -2775,6 +2788,76 @@ BOOL WINAPI SetupDiSetClassInstallParamsA(
     FIXME("%p %p %x %lu\n",DeviceInfoSet, DeviceInfoData,
           ClassInstallParams->InstallFunction, ClassInstallParamsSize);
     return FALSE;
+}
+
+static DWORD
+GetFunctionPointer(
+        IN PWSTR InstallerName,
+        OUT HMODULE* ModulePointer,
+        OUT PVOID* FunctionPointer)
+{
+    HMODULE hModule = NULL;
+    LPSTR FunctionNameA = NULL;
+    PWCHAR Comma;
+    DWORD rc;
+
+    *ModulePointer = NULL;
+    *FunctionPointer = NULL;
+
+    Comma = strchrW(InstallerName, ',');
+    if (!Comma)
+    {
+        rc = ERROR_INVALID_PARAMETER;
+        goto cleanup;
+    }
+
+    /* W->A conversion for function name */
+    FunctionNameA = UnicodeToMultiByte(Comma + 1, CP_ACP);
+    if (!FunctionNameA)
+    {
+        rc = GetLastError();
+        goto cleanup;
+    }
+
+    /* Load library */
+    *Comma = '\0';
+    hModule = LoadLibraryW(InstallerName);
+    *Comma = ',';
+    if (!hModule)
+    {
+        rc = GetLastError();
+        goto cleanup;
+    }
+
+    /* Search function */
+    *FunctionPointer = GetProcAddress(hModule, FunctionNameA);
+    if (!*FunctionPointer)
+    {
+        rc = GetLastError();
+        goto cleanup;
+    }
+
+    *ModulePointer = hModule;
+    rc = ERROR_SUCCESS;
+
+cleanup:
+    if (rc != ERROR_SUCCESS && hModule)
+        FreeLibrary(hModule);
+    MyFree(FunctionNameA);
+    return rc;
+}
+
+static DWORD
+FreeFunctionPointer(
+        IN HMODULE ModulePointer,
+        IN PVOID FunctionPointer)
+{
+    if (ModulePointer == NULL)
+        return ERROR_SUCCESS;
+    if (FreeLibrary(ModulePointer))
+       return ERROR_SUCCESS;
+    else
+       return GetLastError();
 }
 
 /***********************************************************************
@@ -2853,6 +2936,7 @@ BOOL WINAPI SetupDiCallClassInstaller(
         {
             LIST_ENTRY ClassCoInstallersListHead;
             LIST_ENTRY DeviceCoInstallersListHead;
+            HMODULE ClassInstallerLibrary;
             CLASS_INSTALL_PROC ClassInstaller = NULL;
             COINSTALLER_CONTEXT_DATA Context;
             PLIST_ENTRY ListEntry;
@@ -2918,8 +3002,8 @@ BOOL WINAPI SetupDiCallClassInstaller(
                             rc = RegQueryValueExW(hKey, L"Installer32", NULL, NULL, (LPBYTE)KeyBuffer, &dwLength);
                             if (rc == ERROR_SUCCESS)
                             {
-                                /* Set ClassInstaller function pointer */
-                                FIXME("Installer is '%S'\n", KeyBuffer);
+                                /* Get ClassInstaller function pointer */
+                                rc = GetFunctionPointer(KeyBuffer, &ClassInstallerLibrary, (PVOID*)&ClassInstaller);
                             }
                             HeapFree(GetProcessHeap(), 0, KeyBuffer);
                         }
@@ -2962,7 +3046,10 @@ BOOL WINAPI SetupDiCallClassInstaller(
 
             /* Call Class installer */
             if (ClassInstaller)
+            {
                 rc = (*ClassInstaller)(InstallFunction, DeviceInfoSet, DeviceInfoData);
+                FreeFunctionPointer(ClassInstallerLibrary, ClassInstaller);
+            }
             else
                 rc = ERROR_DI_DO_DEFAULT;
 
@@ -2992,6 +3079,7 @@ BOOL WINAPI SetupDiCallClassInstaller(
                     Context.PrivateData = coinstaller->PrivateData;
                     rc = (*coinstaller->Function)(InstallFunction, DeviceInfoSet, DeviceInfoData, &Context);
                 }
+                FreeFunctionPointer(coinstaller->Module, coinstaller->Function);
                 ListEntry = ListEntry->Flink;
             }
 
@@ -3006,6 +3094,7 @@ BOOL WINAPI SetupDiCallClassInstaller(
                     Context.PrivateData = coinstaller->PrivateData;
                     rc = (*coinstaller->Function)(InstallFunction, DeviceInfoSet, DeviceInfoData, &Context);
                 }
+                FreeFunctionPointer(coinstaller->Module, coinstaller->Function);
                 ListEntry = ListEntry->Flink;
             }
 
@@ -3246,6 +3335,7 @@ static BOOL
 AddDriverToList(
     IN PLIST_ENTRY DriverListHead,
     IN DWORD DriverType, /* SPDIT_CLASSDRIVER or SPDIT_COMPATDRIVER */
+    IN LPGUID ClassGuid,
     IN INFCONTEXT ContextDevice,
     IN LPCWSTR InfFile,
     IN LPCWSTR ProviderName,
@@ -3351,6 +3441,7 @@ AddDriverToList(
         DeviceDescription, InfFile, InfInstallSection, Rank);
 
     driverInfo->DriverRank = Rank;
+    memcpy(&driverInfo->ClassGuid, ClassGuid, sizeof(GUID));
     driverInfo->Info.DriverType = DriverType;
     driverInfo->Info.Reserved = (ULONG_PTR)driverInfo;
     wcsncpy(driverInfo->Info.Description, DeviceDescription, LINE_LEN - 1);
@@ -3734,6 +3825,7 @@ SetupDiBuildDriverInfoList(
                             if (!AddDriverToList(
                                 &list->DriverListHead,
                                 DriverType,
+                                &ClassGuid,
                                 ContextDevice,
                                 filename,
                                 ProviderName,
@@ -3788,6 +3880,7 @@ SetupDiBuildDriverInfoList(
                                         AddDriverToList(
                                             &((struct DeviceInfoElement *)DeviceInfoData->Reserved)->DriverListHead,
                                             DriverType,
+                                            &ClassGuid,
                                             ContextDevice,
                                             filename,
                                             ProviderName,
@@ -3807,6 +3900,7 @@ SetupDiBuildDriverInfoList(
                                             AddDriverToList(
                                                 &((struct DeviceInfoElement *)DeviceInfoData->Reserved)->DriverListHead,
                                                 DriverType,
+                                                &ClassGuid,
                                                 ContextDevice,
                                                 filename,
                                                 ProviderName,
@@ -4290,6 +4384,8 @@ SetupDiSetSelectedDriverW(
                 ret = TRUE;
                 TRACE("Choosing driver whose rank is 0x%lx\n",
                     ((struct DriverInfoElement *)ItemList)->DriverRank);
+                if (DeviceInfoData)
+                    memcpy(&DeviceInfoData->ClassGuid, &(*pDriverInfo)->ClassGuid, sizeof(GUID));
             }
         }
     }
