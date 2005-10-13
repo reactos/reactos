@@ -52,12 +52,13 @@ HWND g_hColorButton             = NULL;
 
 HIMAGELIST g_hShellImageList    = NULL;
 
-/* Add the bitmaps in the C:\ReactOS directory and the current wallpaper if any */
+/* Add the images in the C:\ReactOS directory and the current wallpaper if any */
 void AddListViewItems()
 {
     WIN32_FIND_DATA fd;
     HANDLE hFind;
     TCHAR szSearchPath[MAX_PATH];
+	TCHAR szFileTypes[MAX_PATH];
     LV_ITEM listItem;
     LV_COLUMN dummy;
     RECT clientRect;
@@ -151,65 +152,79 @@ void AddListViewItems()
     
     RegCloseKey(regKey);
 
-    /* Add all the bitmaps in the C:\ReactOS directory. */
+    /* Add all the images in the C:\ReactOS directory. */
 
-    GetWindowsDirectory(szSearchPath, MAX_PATH);
-    _tcscat(szSearchPath, TEXT("\\*.bmp"));
-    
-    hFind = FindFirstFile(szSearchPath, &fd);
-    while(hFind != INVALID_HANDLE_VALUE)
-    {
-        /* Don't add any hidden bitmaps */
-        if((fd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) == 0)
-        {
-            TCHAR filename[MAX_PATH];
-            
-            GetWindowsDirectory(filename, MAX_PATH);
+	LoadString(hApplet, IDS_SUPPORTED_EXT, szFileTypes, sizeof(szFileTypes) / sizeof(TCHAR));
+	
+	TCHAR separators[] = TEXT(";");
+	TCHAR *token;
 
-            _tcscat(filename, TEXT("\\"));
-            _tcscat(filename, fd.cFileName);
-            
-            himl = (HIMAGELIST)SHGetFileInfo(filename,
-                                             0,
-                                             &sfi,
-                                             sizeof(sfi),
-                                             SHGFI_SYSICONINDEX | SHGFI_SMALLICON |
-                                             SHGFI_DISPLAYNAME);
+	token = _tcstok ( szFileTypes, separators );
+	while ( token != NULL )
+	{
+		GetWindowsDirectory(szSearchPath, MAX_PATH);
+		_tcscat(szSearchPath, TEXT("\\"));
+		_tcscat(szSearchPath, token);
+	    
+		hFind = FindFirstFile(szSearchPath, &fd);
+		while(hFind != INVALID_HANDLE_VALUE)
+		{
+			/* Don't add any hidden bitmaps */
+			if((fd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) == 0)
+			{
+				TCHAR filename[MAX_PATH];
+	            
+				GetWindowsDirectory(filename, MAX_PATH);
 
-            if(himl == NULL)
-            {
-                break;
-            }
-            
-            if(i++ == 0)
-            {
-                g_hShellImageList = himl;
-                ListView_SetImageList(g_hBackgroundList, himl, LVSIL_SMALL);
-            }
+				_tcscat(filename, TEXT("\\"));
+				_tcscat(filename, fd.cFileName);
+	            
+				himl = (HIMAGELIST)SHGetFileInfo(filename,
+												0,
+												&sfi,
+												sizeof(sfi),
+												SHGFI_SYSICONINDEX | SHGFI_SMALLICON |
+												SHGFI_DISPLAYNAME);
 
-            backgroundItem = &g_backgroundItems[g_listViewItemCount];
+				if(himl == NULL)
+				{
+					break;
+				}
+	            
+				if(i++ == 0)
+				{
+					g_hShellImageList = himl;
+					ListView_SetImageList(g_hBackgroundList, himl, LVSIL_SMALL);
+				}
 
-            backgroundItem->bWallpaper = TRUE;
-            
-            _tcscpy(backgroundItem->szDisplayName, sfi.szDisplayName);
-            _tcscpy(backgroundItem->szFilename, filename);
+				backgroundItem = &g_backgroundItems[g_listViewItemCount];
 
-            ZeroMemory(&listItem, sizeof(LV_ITEM));
-            listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
-            listItem.pszText    = backgroundItem->szDisplayName;
-            listItem.state      = 0;
-            listItem.iImage     = sfi.iIcon;
-            listItem.iItem      = g_listViewItemCount;
-            listItem.lParam     = g_listViewItemCount;
-            
-            ListView_InsertItem(g_hBackgroundList, &listItem);
-            
-            g_listViewItemCount++;
-        }
-        
-        if(!FindNextFile(hFind, &fd))
-            hFind = INVALID_HANDLE_VALUE;
-    }
+				backgroundItem->bWallpaper = TRUE;
+	            
+				_tcscpy(backgroundItem->szDisplayName, sfi.szDisplayName);
+				_tcscpy(backgroundItem->szFilename, filename);
+
+				ZeroMemory(&listItem, sizeof(LV_ITEM));
+				listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
+				listItem.pszText    = backgroundItem->szDisplayName;
+				listItem.state      = 0;
+				listItem.iImage     = sfi.iIcon;
+				listItem.iItem      = g_listViewItemCount;
+				listItem.lParam     = g_listViewItemCount;
+	            
+				ListView_InsertItem(g_hBackgroundList, &listItem);
+	            
+				g_listViewItemCount++;
+			}
+	        
+			if(!FindNextFile(hFind, &fd))
+				hFind = INVALID_HANDLE_VALUE;
+		}
+
+		token = _tcstok ( NULL, separators );
+	}
+
+
 }
 
 void InitBackgroundDialog()
@@ -293,6 +308,7 @@ void OnBrowseButton()
     OPENFILENAME ofn;
     TCHAR filename[MAX_PATH];
     TCHAR fileTitle[256];
+    TCHAR filter[MAX_PATH];
     BackgroundItem *backgroundItem = NULL;
         
     ZeroMemory(&ofn, sizeof(OPENFILENAME));
@@ -300,12 +316,14 @@ void OnBrowseButton()
     ofn.lStructSize = sizeof(OPENFILENAME);
     ofn.hwndOwner = g_hBackgroundPage;
     ofn.lpstrFile = filename;
+
+    LoadString(hApplet, IDS_BACKGROUND_COMDLG_FILTER, filter, sizeof(filter) / sizeof(TCHAR));
         
     /* Set lpstrFile[0] to '\0' so that GetOpenFileName does not 
      * use the contents of szFile to initialize itself */
     ofn.lpstrFile[0] = TEXT('\0');
     ofn.nMaxFile = MAX_PATH;
-    ofn.lpstrFilter = TEXT("Bitmap Files (*.bmp)\0*.bmp\0");
+    ofn.lpstrFilter = filter;
     ofn.nFilterIndex = 0;
     ofn.lpstrFileTitle = fileTitle;
     ofn.nMaxFileTitle = 256;

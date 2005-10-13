@@ -78,3 +78,9 @@ BEGIN
     IDS_COLOR_32BIT "True Color (32 Bit)"
     IDS_PIXEL "%lux%lu Pixel"
 END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_BACKGROUND_COMDLG_FILTER "Bilddateien (*.bmp;*.jpg;*.dib;*.png)\0*.bmp;*.jpg;*.jpeg;*.dib;*.png\0"
+    IDS_SUPPORTED_EXT "*.jpg;*.jpeg;*.bmp;*.dib;*.png"
+END
