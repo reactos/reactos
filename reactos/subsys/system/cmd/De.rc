@@ -24,13 +24,13 @@ Tippen Sie ATTRIB ohne Parameter ein um die derzeit gesetzten Attribute (aller D
 
 STRING_ALIAS_HELP,  "Setzt, loescht oder zeigt alias.\n\n\
 ALIAS [alias=[command]]\n\n\
-  alias    Name des alias.\n\
+  alias    Name des Alias.\n\
   command  Text welcher fuer das alias zugeordnet wird.\n\n\
-Listet alle aliases auf:\n\
+Listet alle Aliase auf:\n\
   ALIAS\n\n\
 Setzt ein neues oder ueberschreibt ein bestehendes alias:\n\
   ALIAS da=dir a:\n\n\
-Loescht ein alias von der alias-Liste:\n\
+Loescht ein Alias von der Alias-Liste:\n\
   ALIAS da="
 
 STRING_BEEP_HELP, "Gibt einen beep-Ton durch den PC-Speaker aus.\n\nBEEP"
@@ -98,12 +98,12 @@ COLOR [attr [/F]] \n\n\
   attr        Gibt die Farbattribute fuer die Konsolenausgabe an.\n\
   /F          fuellte die Konsoleausgabe mit dem Farbattribut\n\n\
 Es gibt 3 Moeglickeiten die Farbe festzulegen:\n\
-1) [bright] name on [bright] name  (only the first three letters are required)\n\
+1) [bright] name on [bright] name  (Nur die 4 ersten Buchstaben sind noetig)\n\
 2) decimal on decimal\n\
 3) two hex digits\n\n\
 Farben:\n\
 dec  hex  name       dec  hex  name\n\
-0    0    Black       8   8    Gray(Bright black)\n\
+0    0    Black       8   8    Gray (Bright black)\n\
 1    1    Blue        9   9    Bright Blue\n\
 2    2    Green      10   A    Bright Green\n\
 3    3    Cyan       11   B    Bright Cyan\n\
@@ -117,7 +117,7 @@ STRING_COPY_HELP1,  " %s ueberschreiben (Ja/Nein/Alle)? "
 STRING_COPY_HELP2, "Kopiert eine oder mehrere Dateien an eine andere Position.\n\n\
 COPY [/V][/Y|/-Y][/A|/B] Quelle [/A|/B]\n\
      [+ source [/A|/B] [+ ...]] [destination [/A|/B]]\n\n\
-  source       SBezeichnet die zu kopierende(n) Datei(en).\n\
+  source       Bezeichnet die zu kopierende(n) Datei(en).\n\
   /A           Weist auf eine ASCII-Textdatei hin.\n\
   /B           Weist auf eine Binaerdatei hin.\n\
   destination  Bezeichnet das Verzeichnis und/oder Dateinamen der neuen Datei(en).\n\
