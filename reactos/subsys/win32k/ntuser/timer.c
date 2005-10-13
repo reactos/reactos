@@ -60,6 +60,7 @@ IntSetTimer(HWND Wnd, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, BOOL S
 {
    PWINDOW_OBJECT Window;
    UINT_PTR Ret = 0;
+   PUSER_MESSAGE_QUEUE MessageQueue;
 
    DPRINT("IntSetTimer wnd %x id %p elapse %u timerproc %p systemtimer %s\n",
           Wnd, IDEvent, Elapse, TimerFunc, SystemTimer ? "TRUE" : "FALSE");
@@ -82,6 +83,7 @@ IntSetTimer(HWND Wnd, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, BOOL S
       HintIndex = ++IDEvent;
       IntUnlockWindowlessTimerBitmap();
       Ret = IDEvent;
+      MessageQueue = PsGetWin32Thread()->MessageQueue;
    }
    else
    {
@@ -99,6 +101,7 @@ IntSetTimer(HWND Wnd, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, BOOL S
       }
 
       Ret = IDEvent;
+      MessageQueue = Window->MessageQueue;
    }
 
 #if 1
@@ -128,7 +131,7 @@ IntSetTimer(HWND Wnd, UINT_PTR IDEvent, UINT Elapse, TIMERPROC TimerFunc, BOOL S
       Elapse = 10;
    }
 
-   if (! MsqSetTimer(PsGetWin32Thread()->MessageQueue, Wnd,
+   if (! MsqSetTimer(MessageQueue, Wnd,
                      IDEvent, Elapse, TimerFunc,
                      SystemTimer ? WM_SYSTIMER : WM_TIMER))
    {
