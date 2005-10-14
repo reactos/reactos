@@ -829,7 +829,7 @@ GspQuery(PCHAR Request)
           char Buffer[64];
           PEPROCESS Proc;
 
-          Proc = (PEPROCESS) ThreadInfo->Tcb.ApcState.Process;
+          Proc = (PEPROCESS) ThreadInfo->ThreadsProcess;
 
           Buffer[0] = '\0';
           if (NULL != Proc )
@@ -1104,7 +1104,7 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
           /* reply to host that an exception has occurred */
           SigVal = GspComputeSignal(ExceptionRecord->ExceptionCode);
 
-          ptr = &GspOutBuffer[0];
+          ptr = GspOutBuffer;
 
           *ptr++ = 'T'; /* notify gdb with signo, PC, FP and SP */
           *ptr++ = HexChars[(SigVal >> 4) & 0xf];
@@ -1213,9 +1213,21 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
                   *(ptr++) == ',' &&
                   GspHex2Long(&ptr, &Length))
                 {
-                  ptr = 0;
+                  PEPROCESS DbgProcess = NULL;
+
+                  ptr = NULL;
+                  if (NULL != GspDbgThread &&
+                      PsGetCurrentProcess() != GspDbgThread->ThreadsProcess)
+                    {
+                      DbgProcess = GspDbgThread->ThreadsProcess;
+                      KeAttachProcess(&DbgProcess->Pcb);
+                    }
                   GspMemoryError = FALSE;
                   GspMem2Hex((PCHAR) Address, GspOutBuffer, Length, 1);
+                  if (NULL != DbgProcess)
+                    {
+                      KeDetachProcess();
+                    }
                   if (GspMemoryError)
                     {
                       strcpy(GspOutBuffer, "E03");
@@ -1223,7 +1235,7 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
                     }
                 }
 
-              if (ptr)
+              if (NULL != ptr)
                 {
                   strcpy(GspOutBuffer, "E01");
                 }
@@ -1238,9 +1250,21 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
                       GspHex2Long(&ptr, &Length) &&
                       *(ptr++) == ':')
                     {
+                      PEPROCESS DbgProcess = NULL;
+
+                      ptr = NULL;
+                      if (NULL != GspDbgThread &&
+                          PsGetCurrentProcess() != GspDbgThread->ThreadsProcess)
+                        {
+                          DbgProcess = GspDbgThread->ThreadsProcess;
+                          KeAttachProcess(&DbgProcess->Pcb);
+                        }
                       GspMemoryError = FALSE;
                       GspHex2Mem(ptr, (PCHAR) Address, Length, TRUE);
-
+                      if (NULL != DbgProcess)
+                        {
+                          KeDetachProcess();
+                        }
                       if (GspMemoryError)
                         {
                           strcpy(GspOutBuffer, "E03");
@@ -1250,8 +1274,6 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
                         {
                           strcpy(GspOutBuffer, "OK");
                         }
-
-                      ptr = NULL;
                     }
                 }
 
