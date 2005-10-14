@@ -549,38 +549,9 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","ImagePath",0x00020000,"system32\d
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Ndis","Type",0x00010001,0x00000001
 
-; NIC drivers are like any other drivers - but no card-specific info here.
-; Comment the networking stuff out if you don't have the card and don't want to see errors
-; NE2000 NIC driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Group",0x00000000,"NDIS"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","ImagePath",0x00020000,"system32\drivers\ne2000.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne2000","Route",0x00000000,"Ne20001"
-
-; Configuration Entries for the NE2000 Adapter
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0001","Characteristics",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0001","DriverDesc",0x00000000,"Device Name(from Inffile)"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0001","ProviderName",0x00000000,"Provider Name(from Inffile)"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0001","NetCfgInstanceId",0x00000000,"{RANDOMCFGGUIDFOR_NE20001}"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0001\Linkage","Export",0x00000000,"\Device\Ne20001"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0001\Linkage","RootDevice",0x00000000,"Ne20001"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0001\Linkage","UpperBind",0x00000000,"Tcpip"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0001","Port",0x00000000,"c100"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0001","Irq",0x00000000,"B"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0001","NetworkAddress",0x00000000,"001122334455"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters\Tcpip","DefaultGateway",0x00010000,"0.0.0.0"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters\Tcpip","IPAddress",0x00010000,"0.0.0.0"
-HKLM,"SYSTEM\CurrentControlSet\Services\Ne20001\Parameters\Tcpip","SubnetMask",0x00010000,"0.0.0.0"
-
-; one day this will happen automatically; until then we need this since ndis5 drivers
-; rely on the fact that their resources are handed to them by ndis, so we have to find
-; the driver that goes with the detected cards.  this is how.
-HKLM,"SYSTEM\CurrentControlSet\Enum\Root\Ne2000\0000","Service",0x00000000,"Ne2000"
-HKLM,"SYSTEM\CurrentControlSet\Enum\Root\Ne2000\0000","Class",0x00000000,"Net"
-HKLM,"SYSTEM\CurrentControlSet\Enum\Root\Ne2000\0000","ClassGUID",0x00000000,"{4D36E972-E325-11CE-BFC1-08002BE10318}"
-HKLM,"SYSTEM\CurrentControlSet\Enum\Root\Ne2000\0000","Driver",0x00000000,"{4D36E972-E325-11CE-BFC1-08002BE10318}\0001"
+; NE2000 network card
+HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP80D6\0000","HardwareID",0x00010000,"*PNP80D6"
+HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP80D6\0000","DeviceDesc",0x00000000,"Network card"
 
 ; PCI driver
 HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP0A03\0000","HardwareID",0x00010000,"*PNP0A03"
@@ -590,48 +561,7 @@ HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP0A03\0000\LogConf","BasicConfigVect
 01,00,00,00,01,00,01,00,01,00,00,00, \
 00,06,00,00,00,00,00,00,01,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
 
-; ReactOS PCNet NIC driver 
-; To use the AMD supplied driver change the driver name to pcntn5m.sys
-;
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","Group",0x00000000,"NDIS"
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","ImagePath",0x00020000,"system32\drivers\pcnet.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet\Enum","0",0x00000000,"PCI\VEN_1022&DEV_2000\0000"
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet\Enum","Count",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet\Enum","NextInstance",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_1022&DEV_2000&SUBSYS_20001022&REV_10\0000","Service",0x00000000,"PCNet"
-HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_1022&DEV_2000&SUBSYS_20001022&REV_10\0000","Class",0x00000000,"Net"
-HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_1022&DEV_2000&SUBSYS_20001022&REV_10\0000","ClassGUID",0x00000000,"{4D36E972-E325-11CE-BFC1-08002BE10318}"
-HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_1022&DEV_2000&SUBSYS_20001022&REV_10\0000","Driver",0x00000000,"{4D36E972-E325-11CE-BFC1-08002BE10318}\0000"
 
-; Configuration Entries for the PCNet Adapter
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0000","Characteristics",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0000","DriverDesc",0x00000000,"Device Name(from Inffile)"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0000","ProviderName",0x00000000,"Provider Name(from Inffile)"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0000","NetCfgInstanceId",0x00000000,"{RANDOMCFGGUIDFOR_PCNET1}"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0000\Linkage","Export",0x00000000,"\Device\PCNet1"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0000\Linkage","RootDevice",0x00000000,"PCNet1"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0000\Linkage","UpperBind",0x00000000,"Tcpip"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0000","BUS_TO_SCAN",0x00000000,"ALL"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0000","BUSTIMER",0x00000000,"0"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0000","BUSTYPE",0x00000000,"5"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0000","EXTPHY",0x00000000,"0"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0000","FDUP",0x00000000,"0"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0000","LED0",0x00000000,"10000"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0000","LED1",0x00000000,"10000"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0000","LED2",0x00000000,"10000"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0000","LED3",0x00000000,"10000"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0000","MPMODE",0x00000000,"0"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0000","TP",0x00000000,"1"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0000","SlotNumber",0x00000000,"10"
-HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}\0000","BusNumber",0x00000000,"0"
-HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E972-E325-11CE-BFC1-08002BE10318}\{RANDOMCFGGUIDFOR_PCNET1}",,0x00000000,"Network Adapters"
-HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E972-E325-11CE-BFC1-08002BE10318}\{RANDOMCFGGUIDFOR_PCNET1}\Connection","Name",0x00000000,"AMD PCNet (static Registry entry)"
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters\Tcpip","DefaultGateway",0x00010000,"0.0.0.0"
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters\Tcpip","IPAddress",0x00010000,"0.0.0.0"
-HKLM,"SYSTEM\CurrentControlSet\Services\PCNet1\Parameters\Tcpip","SubnetMask",0x00010000,"0.0.0.0"
 
 ; Named Pipe filesystem driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Npfs","ErrorControl",0x00010001,0x00000000
@@ -691,12 +621,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip","Type",0x00010001,0x00000001
 ; These bindings are of the windows 2000 type, and will probably need to be
 ; twiddled to get 3rd-party network-related software to work.
 ; NT4 puts additional stuff in the Bind, Export, and Route values.
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Bind",0x00010000,"\Device\PCNet1", "\Device\Ne20001"
-;HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Bind",0x00010000,"\Device\3c90x1"
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Export",0x00010000,"\Device\Tcpip_PCNet1", "\Device\Tcpip_Ne20001"
-;HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Export",0x00010000,"\Device\Tcpip_3c90x1"
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Route",0x00010000,"PCNet1", "Ne20001"
-;HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Linkage","Route",0x00010000,"3c90x1"
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","DataBasePath",0x00010000,"DataBasePath"
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","Domain",0x00010000,""
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","Hostname",0x00010000,"ROSHost"
