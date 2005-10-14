@@ -583,16 +583,12 @@ HKLM,"SYSTEM\CurrentControlSet\Enum\Root\Ne2000\0000","ClassGUID",0x00000000,"{4
 HKLM,"SYSTEM\CurrentControlSet\Enum\Root\Ne2000\0000","Driver",0x00000000,"{4D36E972-E325-11CE-BFC1-08002BE10318}\0001"
 
 ; PCI driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Pci","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Group",0x00000000,"Boot Bus Extender"
-HKLM,"SYSTEM\CurrentControlSet\Services\Pci","ImagePath",0x00020000,"system32\drivers\pci.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Start",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Tag",0x00010001,0x00000002
-HKLM,"SYSTEM\CurrentControlSet\Services\Pci","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","Service",0x00000000,"Pci"
-HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","Class",0x00000000,"Computer"
-HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","ClassGUID",0x00000000,"{4D36E966-E325-11CE-BFC1-08002BE10318}"
-HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","ParentIdPrefix",0x0000000,"0000"
+HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP0A03\0000","HardwareID",0x00010000,"*PNP0A03"
+HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP0A03\0000","DeviceDesc",0x00000000,"PCI bus"
+HKLM,"SYSTEM\CurrentControlSet\Enum\Root\*PNP0A03\0000\LogConf","BasicConfigVector",0x000A0001, \
+40,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00, \
+01,00,00,00,01,00,01,00,01,00,00,00, \
+00,06,00,00,00,00,00,00,01,00,00,00,00,00,00,00,00,00,00,00,00,00,00,00
 
 ; ReactOS PCNet NIC driver 
 ; To use the AMD supplied driver change the driver name to pcntn5m.sys

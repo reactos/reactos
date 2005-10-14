@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * PROJECT:         ReactOS PCI Bus driver
  * FILE:            pci.c
  * PURPOSE:         Driver entry
@@ -185,7 +184,7 @@ DriverEntry(
 }
 
 
-BOOLEAN
+NTSTATUS
 PciCreateDeviceIDString(PUNICODE_STRING DeviceID,
                         PPCI_DEVICE Device)
 {
@@ -199,75 +198,36 @@ PciCreateDeviceIDString(PUNICODE_STRING DeviceID,
            Device->PciConfig.u.type0.SubVendorID,
            Device->PciConfig.RevisionID);
 
-  if (!RtlCreateUnicodeString(DeviceID, Buffer))
-  {
-    return FALSE;
-  }
-
-  return TRUE;
+  return RtlCreateUnicodeString(DeviceID, Buffer) ? STATUS_SUCCESS : STATUS_INSUFFICIENT_RESOURCES;
 }
 
 
-BOOLEAN
+NTSTATUS
 PciCreateInstanceIDString(PUNICODE_STRING InstanceID,
                           PPCI_DEVICE Device)
 {
-#if 0
   WCHAR Buffer[32];
-  ULONG Length;
   ULONG Index;
 
-  Index = swprintf(Buffer,
-                   L"%lX&%02lX",
-                   Device->BusNumber,
-                   (Device->SlotNumber.u.bits.DeviceNumber << 3) +
-                   Device->SlotNumber.u.bits.FunctionNumber);
-  Index++;
-  Buffer[Index] = UNICODE_NULL;
-
-  Length = (Index + 1) * sizeof(WCHAR);
-  InstanceID->Buffer = ExAllocatePool(PagedPool, Length);
-  if (InstanceID->Buffer == NULL)
+  Index = 0;
+  if (((PPDO_DEVICE_EXTENSION)Device->Pdo->DeviceExtension)->PciDevice->BusNumber != 0)
   {
-    return FALSE;
+    /* FIXME: Copy InstanceID of parent PCI bus to Buffer */
+    // Index += swprintf(Buffer, ....);
   }
 
-  InstanceID->Length = Length - sizeof(WCHAR);
-  InstanceID->MaximumLength = Length;
-  RtlCopyMemory(InstanceID->Buffer, Buffer, Length);
+  swprintf(&Buffer[Index], L"%02X", Device->SlotNumber.u.AsULONG & 0xff);
 
-  return TRUE;
-#endif
-  WCHAR Buffer[256];
-
-  swprintf(Buffer,
-           L"PCI\\VEN_%04X&DEV_%04X&SUBSYS_%08X&REV_%02X",
-           Device->PciConfig.VendorID,
-           Device->PciConfig.DeviceID,
-           (Device->PciConfig.u.type0.SubSystemID << 16) +
-           Device->PciConfig.u.type0.SubVendorID,
-           Device->PciConfig.RevisionID);
-
-  // XBOX HACK
-  if (!wcscmp(L"PCI\\VEN_10DE&DEV_01C2&SUBSYS_00000000&REV_D4", Buffer))
-  {
-     //DPRINT("xbox ohci controler found at bus 0x%lX, dev num %d, func num %d\n", Device->BusNumber, Device->SlotNumber.u.bits.DeviceNumber, Device->SlotNumber.u.bits.FunctionNumber);
-	 if (Device->SlotNumber.u.bits.DeviceNumber == 2)
-       return RtlCreateUnicodeString(InstanceID, L"0000");
-	 else
-       return RtlCreateUnicodeString(InstanceID, L"0001");
-  }
-  else
-	return RtlCreateUnicodeString(InstanceID, L"");
+  return RtlCreateUnicodeString(InstanceID, Buffer) ? STATUS_SUCCESS : STATUS_INSUFFICIENT_RESOURCES;
 }
 
 
-BOOLEAN
+NTSTATUS
 PciCreateHardwareIDsString(PUNICODE_STRING HardwareIDs,
                            PPCI_DEVICE Device)
 {
   WCHAR Buffer[256];
-  ULONG Length;
+  UNICODE_STRING BufferU;
   ULONG Index;
 
   Index = 0;
@@ -306,28 +266,20 @@ PciCreateHardwareIDsString(PUNICODE_STRING HardwareIDs,
   Index++;
 
   Buffer[Index] = UNICODE_NULL;
+  
+  BufferU.Length = BufferU.MaximumLength = Index * sizeof(WCHAR);
+  BufferU.Buffer = Buffer;
 
-  Length = (Index + 1) * sizeof(WCHAR);
-  HardwareIDs->Buffer = ExAllocatePool(PagedPool, Length);
-  if (HardwareIDs->Buffer == NULL)
-  {
-    return FALSE;
-  }
-
-  HardwareIDs->Length = Length - sizeof(WCHAR);
-  HardwareIDs->MaximumLength = Length;
-  RtlCopyMemory(HardwareIDs->Buffer, Buffer, Length);
-
-  return TRUE;
+  return RtlDuplicateUnicodeString(0, &BufferU, HardwareIDs);
 }
 
 
-BOOLEAN
+NTSTATUS
 PciCreateCompatibleIDsString(PUNICODE_STRING CompatibleIDs,
                              PPCI_DEVICE Device)
 {
   WCHAR Buffer[256];
-  ULONG Length;
+  UNICODE_STRING BufferU;
   ULONG Index;
 
   Index = 0;
@@ -379,27 +331,18 @@ PciCreateCompatibleIDsString(PUNICODE_STRING CompatibleIDs,
 
   Buffer[Index] = UNICODE_NULL;
 
-  Length = (Index + 1) * sizeof(WCHAR);
-  CompatibleIDs->Buffer = ExAllocatePool(PagedPool, Length);
-  if (CompatibleIDs->Buffer == NULL)
-  {
-    return FALSE;
-  }
+  BufferU.Length = BufferU.MaximumLength = Index * sizeof(WCHAR);
+  BufferU.Buffer = Buffer;
 
-  CompatibleIDs->Length = Length - sizeof(WCHAR);
-  CompatibleIDs->MaximumLength = Length;
-  RtlCopyMemory(CompatibleIDs->Buffer, Buffer, Length);
-
-  return TRUE;
+  return RtlDuplicateUnicodeString(0, &BufferU, CompatibleIDs);
 }
 
 
-BOOLEAN
+NTSTATUS
 PciCreateDeviceDescriptionString(PUNICODE_STRING DeviceDescription,
                                  PPCI_DEVICE Device)
 {
   PWSTR Description;
-  ULONG Length;
 
   switch (Device->PciConfig.BaseClass)
   {
@@ -655,51 +598,23 @@ PciCreateDeviceDescriptionString(PUNICODE_STRING DeviceDescription,
       break;
   }
 
-  Length = (wcslen(Description) + 1) * sizeof(WCHAR);
-  DeviceDescription->Buffer = ExAllocatePool(PagedPool, Length);
-  if (DeviceDescription->Buffer == NULL)
-  {
-    return FALSE;
-  }
-
-  DeviceDescription->Length = Length - sizeof(WCHAR);
-  DeviceDescription->MaximumLength = Length;
-  RtlCopyMemory(DeviceDescription->Buffer, Description, Length);
-
-  return TRUE;
+  return RtlCreateUnicodeString(DeviceDescription, Description) ? STATUS_SUCCESS : STATUS_INSUFFICIENT_RESOURCES;
 }
 
 
-BOOLEAN
+NTSTATUS
 PciCreateDeviceLocationString(PUNICODE_STRING DeviceLocation,
                               PPCI_DEVICE Device)
 {
   WCHAR Buffer[256];
-  ULONG Length;
-  ULONG Index;
 
-  Index = 0;
-  Index += swprintf(&Buffer[Index],
-                    L"PCI-Bus %lu, Device %u, Function %u",
-                    Device->BusNumber,
-                    Device->SlotNumber.u.bits.DeviceNumber,
-                    Device->SlotNumber.u.bits.FunctionNumber);
-  Index++;
+  swprintf(Buffer,
+           L"PCI-Bus %lu, Device %u, Function %u",
+           Device->BusNumber,
+           Device->SlotNumber.u.bits.DeviceNumber,
+           Device->SlotNumber.u.bits.FunctionNumber);
 
-  Buffer[Index] = UNICODE_NULL;
-
-  Length = (Index + 1) * sizeof(WCHAR);
-  DeviceLocation->Buffer = ExAllocatePool(PagedPool, Length);
-  if (DeviceLocation->Buffer == NULL)
-  {
-    return FALSE;
-  }
-
-  DeviceLocation->Length = Length - sizeof(WCHAR);
-  DeviceLocation->MaximumLength = Length;
-  RtlCopyMemory(DeviceLocation->Buffer, Buffer, Length);
-
-  return TRUE;
+  return RtlCreateUnicodeString(DeviceLocation, Buffer) ? STATUS_SUCCESS : STATUS_INSUFFICIENT_RESOURCES;
 }
 
 /* EOF */

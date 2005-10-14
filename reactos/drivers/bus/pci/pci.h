@@ -1,5 +1,3 @@
-/* $Id$ */
-
 #ifndef __PCI_H
 #define __PCI_H
 
@@ -47,7 +45,7 @@ typedef struct _COMMON_DEVICE_EXTENSION
   BOOLEAN Removed;
   // Current device power state for the device
   DEVICE_POWER_STATE DevicePowerState;
-} __attribute((packed)) COMMON_DEVICE_EXTENSION, *PCOMMON_DEVICE_EXTENSION;
+} COMMON_DEVICE_EXTENSION, *PCOMMON_DEVICE_EXTENSION;
 
 /* Physical Device Object device extension for a child device */
 typedef struct _PDO_DEVICE_EXTENSION
@@ -56,10 +54,8 @@ typedef struct _PDO_DEVICE_EXTENSION
   COMMON_DEVICE_EXTENSION Common;
   // Functional device object
   PDEVICE_OBJECT Fdo;
-  // PCI bus number
-  ULONG BusNumber;
-  // PCI slot number
-  PCI_SLOT_NUMBER SlotNumber;
+  // Pointer to PCI Device informations
+  PPCI_DEVICE PciDevice;
   // Device ID
   UNICODE_STRING DeviceID;
   // Instance ID
@@ -72,13 +68,15 @@ typedef struct _PDO_DEVICE_EXTENSION
   UNICODE_STRING DeviceDescription;
   // Textual description of device location
   UNICODE_STRING DeviceLocation;
-} __attribute((packed)) PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
+} PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
 
 /* Functional Device Object device extension for the PCI driver device object */
 typedef struct _FDO_DEVICE_EXTENSION
 {
   // Common device data
   COMMON_DEVICE_EXTENSION Common;
+  // PCI bus number serviced by this FDO
+  ULONG BusNumber;
   // Current state of the driver
   PCI_DEVICE_STATE State;
   // Namespace device list
@@ -89,7 +87,7 @@ typedef struct _FDO_DEVICE_EXTENSION
   KSPIN_LOCK DeviceListLock;
   // Lower device object
   PDEVICE_OBJECT Ldo;
-} __attribute((packed)) FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
+} FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
 
 
 /* fdo.c */
@@ -106,38 +104,32 @@ FdoPowerControl(
 
 /* pci.c */
 
-BOOLEAN
-PciCreateUnicodeString(
-  PUNICODE_STRING Destination,
-  PWSTR Source,
-  POOL_TYPE PoolType);
-
-BOOLEAN
+NTSTATUS
 PciCreateDeviceIDString(
   PUNICODE_STRING DeviceID,
   PPCI_DEVICE Device);
 
-BOOLEAN
+NTSTATUS
 PciCreateInstanceIDString(
   PUNICODE_STRING InstanceID,
   PPCI_DEVICE Device);
 
-BOOLEAN
+NTSTATUS
 PciCreateHardwareIDsString(
   PUNICODE_STRING HardwareIDs,
   PPCI_DEVICE Device);
 
-BOOLEAN
+NTSTATUS
 PciCreateCompatibleIDsString(
   PUNICODE_STRING HardwareIDs,
   PPCI_DEVICE Device);
 
-BOOLEAN
+NTSTATUS
 PciCreateDeviceDescriptionString(
   PUNICODE_STRING DeviceDescription,
   PPCI_DEVICE Device);
 
-BOOLEAN
+NTSTATUS
 PciCreateDeviceLocationString(
   PUNICODE_STRING DeviceLocation,
   PPCI_DEVICE Device);
