@@ -125,8 +125,6 @@ typedef struct _CPU_REGISTER
   BOOLEAN SetInContext;
 } CPU_REGISTER, *PCPU_REGISTER;
 
-#define EIP_REGNO 8
-
 static CPU_REGISTER GspRegisters[NUMREGS] =
 {
   { 4, FIELD_OFFSET(KTRAP_FRAME, Eax), FIELD_OFFSET(CONTEXT, Eax), TRUE },
@@ -516,44 +514,97 @@ GspGetEspFromTrapFrame(PKTRAP_FRAME TrapFrame)
 }
 
 
-VOID
-GspGetRegistersFromTrapFrame(PCHAR Address,
-  PCONTEXT Context,
+static VOID
+GspGetRegisters(PCHAR Address,
   PKTRAP_FRAME TrapFrame)
 {
-  ULONG Value;
-  PCHAR Buffer;
+  ULONG_PTR Value;
   PULONG p;
   DWORD i;
+  PETHREAD Thread;
+  ULONG_PTR *KernelStack;
 
-  Buffer = Address;
-  for (i = 0; i < sizeof(GspRegisters) / sizeof(GspRegisters[0]); i++)
+  if (NULL == GspDbgThread)
     {
-      if (TrapFrame)
+      Thread = PsGetCurrentThread();
+    }
+  else
+    {
+      TrapFrame = GspDbgThread->Tcb.TrapFrame;
+      Thread = GspDbgThread;
+    }
+
+  if (Waiting == Thread->Tcb.State)
+    {
+      KernelStack = Thread->Tcb.KernelStack;
+      for (i = 0; i < sizeof(GspRegisters) / sizeof(GspRegisters[0]); i++)
         {
-          if (ESP == i)
+          switch(i)
             {
-              Value = GspGetEspFromTrapFrame(TrapFrame);
+              case EBP:
+                Value = KernelStack[3];
+                break;
+              case EDI:
+                Value = KernelStack[4];
+                break;
+              case ESI:
+                Value = KernelStack[5];
+                break;
+              case EBX:
+                Value = KernelStack[6];
+                break;
+              case PC:
+                Value = KernelStack[7];
+                break;
+              case ESP:
+                Value = (ULONG_PTR) (KernelStack + 8);
+                break;
+              case CS:
+                Value = KERNEL_CS;
+                break;
+              case DS:
+                Value = KERNEL_DS;
+                break;
+              default:
+                Value = 0;
+                break;
+            }
+          Address = GspMem2Hex((PCHAR) &Value, Address, GspRegisters[i].Size,
+                               FALSE);
+        }
+    }
+  else
+    {
+      for (i = 0; i < sizeof(GspRegisters) / sizeof(GspRegisters[0]); i++)
+        {
+          if (TrapFrame)
+            {
+              if (ESP == i)
+                {
+                  Value = GspGetEspFromTrapFrame(TrapFrame);
+                }
+              else
+                {
+                  p = (PULONG)((ULONG_PTR) TrapFrame +
+                               GspRegisters[i].OffsetInTF);
+                  Value = *p;
+                }
+            }
+          else if (i == PC)
+            {
+              /*
+               * This thread has not been sheduled yet so assume it
+               * is still in PsBeginThreadWithContextInternal().
+               */
+              Value = (ULONG)KiThreadStartup;
             }
           else
             {
-              p = (PULONG)((ULONG_PTR) TrapFrame + GspRegisters[i].OffsetInTF);
-              Value = *p;
+              Value = 0;
             }
+          Address = GspMem2Hex((PCHAR) &Value, Address,
+                               GspRegisters[i].Size, FALSE);
         }
-      else if (i == EIP_REGNO)
-        {
-          /*
-           * This thread has not been sheduled yet so assume it
-           * is still in PsBeginThreadWithContextInternal().
-           */
-          Value = (ULONG)KiThreadStartup;
-        }
-      else
-        {
-          Value = 0;
-        }
-      Buffer = GspMem2Hex((PCHAR) &Value, Buffer, GspRegisters[i].Size, FALSE);
     }
 }
 
@@ -1158,14 +1209,7 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
               GspRemoteDebug = !GspRemoteDebug; /* toggle debug flag */
               break;
             case 'g': /* return the value of the CPU Registers */
-              if (NULL != GspDbgThread)
-                {
-                  GspGetRegistersFromTrapFrame(&GspOutBuffer[0], Context, GspDbgThread->Tcb.TrapFrame);
-                }
-              else
-                {
-                  GspGetRegistersFromTrapFrame(&GspOutBuffer[0], Context, TrapFrame);
-                }
+              GspGetRegisters(GspOutBuffer, TrapFrame);
               break;
             case 'G': /* set the value of the CPU Registers - return OK */
               if (NULL != GspDbgThread)
