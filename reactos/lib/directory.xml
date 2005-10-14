@@ -227,6 +227,9 @@
 <directory name="secur32">
 	<xi:include href="secur32/secur32.xml" />
 </directory>
+<directory name="security">
+	<xi:include href="security/security.xml" />
+</directory>
 <directory name="serialui">
 	<xi:include href="serialui/serialui.xml" />
 </directory>

@@ -28,6 +28,7 @@
 <property name="BASEADDRESS_MESA32" value="0x6b380000" />
 <property name="BASEADDRESS_OPENGL32" value="0x6b390000" />
 <property name="BASEADDRESS_SECUR32" value="0x6b3A0000" />
+<property name="BASEADDRESS_SECURITY" value="0x71F10000" />
 <property name="BASEADDRESS_SMDLL" value="0x6b3B0000" />
 <property name="BASEADDRESS_URLMON" value="0x6b3C0000" />
 <property name="BASEADDRESS_SERIALUI" value="0x6b3D0000" />
