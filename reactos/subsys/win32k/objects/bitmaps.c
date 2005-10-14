@@ -1022,10 +1022,9 @@ NtGdiSetPixel(
 	INT  Y,
 	COLORREF  Color)
 {
-	COLORREF cr = NtGdiGetPixel(hDC,X,Y);
-	if(cr != CLR_INVALID && NtGdiSetPixelV(hDC,X,Y,Color))
+	if (NtGdiSetPixelV(hDC,X,Y,Color))
 	{
-		return(cr);
+		return NtGdiGetPixel(hDC,X,Y);
 	}
 	return ((COLORREF) -1);
 }
