@@ -27,9 +27,9 @@ extern "C" {
 #endif
 
 #include <ddraw.h>
+#include <dvp.h>
 
 #ifndef __DDK_DDRAWINT_H
-typedef struct _DDVIDEOPORTCAPS *LPDDVIDEOPORTCAPS; /* should be in dvp.h */
 typedef struct _DDKERNELCAPS *LPDDKERNELCAPS; /* should be in ddkernel.h */
 typedef struct _VMEMHEAP *LPVMEMHEAP; /* should be in dmemmgr.h */
 #endif
@@ -38,7 +38,7 @@ typedef struct _VMEMHEAP *LPVMEMHEAP; /* should be in dmemmgr.h */
 
 /* the DirectDraw versions */
 #define DD_VERSION		0x0200 /* compatibility version */
-#define DD_RUNTIME_VERSION	0x0700 /* actual version */
+#define DD_RUNTIME_VERSION	0x0902 /* actual version */
 
 /* the HAL version returned from QUERYESCSUPPORT - DCICOMMAND */
 #define DD_HAL_VERSION	0x0100
@@ -49,6 +49,9 @@ typedef struct _VMEMHEAP *LPVMEMHEAP; /* should be in dmemmgr.h */
 #define DDNEWCALLBACKFNS	12
 #define DDVERSIONINFO		13
 
+#ifndef CCHDEVICENAME
+#define CCHDEVICENAME 32
+#endif
 #define MAX_DRIVER_NAME		CCHDEVICENAME
 
 
@@ -125,6 +128,9 @@ typedef struct _DDHALMODEINFO {
     DWORD	dwAlphaBitMask;
 } DDHALMODEINFO,*LPDDHALMODEINFO;
 
+
+
+
 #define DDMODEINFO_PALETTIZED	0x0001
 #define DDMODEINFO_MODEX	0x0002
 #define DDMODEINFO_UNSUPPORTED	0x0004
@@ -141,14 +147,16 @@ typedef struct _VIDMEM {
     union {
 	FLATPTR		fpEnd;
 	DWORD		dwWidth;
-    } DUMMYUNIONNAME1;
+    };
     DDSCAPS	ddsCaps;
     DDSCAPS	ddsCapsAlt;
     union {
 	LPVMEMHEAP	lpHeap;
 	DWORD		dwHeight;
-    } DUMMYUNIONNAME2;
+    }; 
 } VIDMEM,*LPVIDMEM;
+
+
 
 #ifndef __DDK_DDRAWINT_H
 #define VIDMEM_ISLINEAR		0x00000001
@@ -174,6 +182,8 @@ typedef struct _VIDMEMINFO {
     DWORD		dwNumHeaps;
     LPVIDMEM		pvmList;
 } VIDMEMINFO,*LPVIDMEMINFO;
+
+
 
 typedef struct _HEAPALIAS {
     FLATPTR	fpVidMem;
@@ -257,9 +267,14 @@ typedef struct _DDNONLOCALVIDMEMCAPS {
     DWORD	dwNLVBRops[DD_ROP_SPACE];
 } DDNONLOCALVIDMEMCAPS,*LPDDNONLOCALVIDMEMCAPS;
 
+
+
 #define DDSCAPS_EXECUTEBUFFER	DDSCAPS_RESERVED2
 #define DDSCAPS2_VERTEXBUFFER	DDSCAPS2_RESERVED1
 #define DDSCAPS2_COMMANDBUFFER	DDSCAPS2_RESERVED2
+
+
+
 
 /*****************************************************************************
  * ddraw->driver callbacks
@@ -290,6 +305,8 @@ typedef DWORD (PASCAL *LPDDHAL_GETSCANLINE)	    (LPDDHAL_GETSCANLINEDATA);
 typedef DWORD (PASCAL *LPDDHAL_SETEXCLUSIVEMODE)    (LPDDHAL_SETEXCLUSIVEMODEDATA);
 typedef DWORD (PASCAL *LPDDHAL_FLIPTOGDISURFACE)    (LPDDHAL_FLIPTOGDISURFACEDATA);
 
+
+
 typedef struct _DDHAL_DDCALLBACKS {
     DWORD				dwSize;
     DWORD				dwFlags;
@@ -305,6 +322,8 @@ typedef struct _DDHAL_DDCALLBACKS {
     LPDDHAL_SETEXCLUSIVEMODE		SetExclusiveMode;
     LPDDHAL_FLIPTOGDISURFACE		FlipToGDISurface;
 } DDHAL_DDCALLBACKS,*LPDDHAL_DDCALLBACKS;
+
+
 
 typedef struct _DDHAL_DESTROYSURFACEDATA	*LPDDHAL_DESTROYSURFACEDATA;
 typedef struct _DDHAL_FLIPDATA			*LPDDHAL_FLIPDATA;
@@ -352,6 +371,8 @@ typedef struct _DDHAL_DDSURFACECALLBACKS {
     LPVOID				reserved4;
     LPDDHALSURFCB_SETPALETTE		SetPalette;
 } DDHAL_DDSURFACECALLBACKS,*LPDDHAL_DDSURFACECALLBACKS;
+
+
 
 typedef struct _DDHAL_DESTROYPALETTEDATA	*LPDDHAL_DESTROYPALETTEDATA;
 typedef struct _DDHAL_SETENTRIESDATA		*LPDDHAL_SETENTRIESDATA;
@@ -416,7 +437,68 @@ typedef struct _DDHAL_DDMISCELLANEOUS2CALLBACKS {
     LPDDHAL_DESTROYDDLOCAL		DestroyDDLocal;
 } DDHAL_DDMISCELLANEOUS2CALLBACKS,*LPDDHAL_DDMISCELLANEOUS2CALLBACKS;
 
+
+typedef struct _DDHAL_CANCREATEVPORTDATA       *LPDDHAL_CANCREATEVPORTDATA;
+typedef struct _DDHAL_CREATEVPORTDATA          *LPDDHAL_CREATEVPORTDATA;
+typedef struct _DDHAL_FLIPVPORTDATA            *LPDDHAL_FLIPVPORTDATA;
+typedef struct _DDHAL_GETVPORTCONNECTDATA      *LPDDHAL_GETVPORTCONNECTDATA;
+typedef struct _DDHAL_GETVPORTBANDWIDTHDATA    *LPDDHAL_GETVPORTBANDWIDTHDATA;
+typedef struct _DDHAL_GETVPORTINPUTFORMATDATA  *LPDDHAL_GETVPORTINPUTFORMATDATA;
+typedef struct _DDHAL_GETVPORTOUTPUTFORMATDATA *LPDDHAL_GETVPORTOUTPUTFORMATDATA;
+typedef struct _DDHAL_GETVPORTFIELDDATA        *LPDDHAL_GETVPORTFIELDDATA;
+typedef struct _DDHAL_GETVPORTLINEDATA         *LPDDHAL_GETVPORTLINEDATA;
+typedef struct _DDHAL_DESTROYVPORTDATA         *LPDDHAL_DESTROYVPORTDATA;
+typedef struct _DDHAL_GETVPORTFLIPSTATUSDATA   *LPDDHAL_GETVPORTFLIPSTATUSDATA;
+typedef struct _DDHAL_UPDATEVPORTDATA          *LPDDHAL_UPDATEVPORTDATA;
+typedef struct _DDHAL_WAITFORVPORTSYNCDATA     *LPDDHAL_WAITFORVPORTSYNCDATA;
+typedef struct _DDHAL_GETVPORTSIGNALDATA       *LPDDHAL_GETVPORTSIGNALDATA;
+typedef struct _DDHAL_VPORTCOLORDATA           *LPDDHAL_VPORTCOLORDATA;
+
+typedef DWORD (PASCAL *LPDDHALVPORTCB_CANCREATEVIDEOPORT)(LPDDHAL_CANCREATEVPORTDATA);
+typedef DWORD (PASCAL *LPDDHALVPORTCB_CREATEVIDEOPORT)(LPDDHAL_CREATEVPORTDATA);
+typedef DWORD (PASCAL *LPDDHALVPORTCB_FLIP)(LPDDHAL_FLIPVPORTDATA);
+typedef DWORD (PASCAL *LPDDHALVPORTCB_GETBANDWIDTH)(LPDDHAL_GETVPORTBANDWIDTHDATA);
+typedef DWORD (PASCAL *LPDDHALVPORTCB_GETINPUTFORMATS)(LPDDHAL_GETVPORTINPUTFORMATDATA);
+typedef DWORD (PASCAL *LPDDHALVPORTCB_GETOUTPUTFORMATS)(LPDDHAL_GETVPORTOUTPUTFORMATDATA);
+typedef DWORD (PASCAL *LPDDHALVPORTCB_GETFIELD)(LPDDHAL_GETVPORTFIELDDATA);
+typedef DWORD (PASCAL *LPDDHALVPORTCB_GETLINE)(LPDDHAL_GETVPORTLINEDATA);
+typedef DWORD (PASCAL *LPDDHALVPORTCB_GETVPORTCONNECT)(LPDDHAL_GETVPORTCONNECTDATA);
+typedef DWORD (PASCAL *LPDDHALVPORTCB_DESTROYVPORT)(LPDDHAL_DESTROYVPORTDATA);
+typedef DWORD (PASCAL *LPDDHALVPORTCB_GETFLIPSTATUS)(LPDDHAL_GETVPORTFLIPSTATUSDATA);
+typedef DWORD (PASCAL *LPDDHALVPORTCB_UPDATE)(LPDDHAL_UPDATEVPORTDATA);
+typedef DWORD (PASCAL *LPDDHALVPORTCB_WAITFORSYNC)(LPDDHAL_WAITFORVPORTSYNCDATA);
+typedef DWORD (PASCAL *LPDDHALVPORTCB_GETSIGNALSTATUS)(LPDDHAL_GETVPORTSIGNALDATA);
+typedef DWORD (PASCAL *LPDDHALVPORTCB_COLORCONTROL)(LPDDHAL_VPORTCOLORDATA);
+
+typedef struct _DDHAL_DDVIDEOPORTCALLBACKS
+{
+    DWORD                             dwSize;
+    DWORD                             dwFlags;
+    LPDDHALVPORTCB_CANCREATEVIDEOPORT CanCreateVideoPort;
+    LPDDHALVPORTCB_CREATEVIDEOPORT    CreateVideoPort;
+    LPDDHALVPORTCB_FLIP               FlipVideoPort;
+    LPDDHALVPORTCB_GETBANDWIDTH       GetVideoPortBandwidth;
+    LPDDHALVPORTCB_GETINPUTFORMATS    GetVideoPortInputFormats;
+    LPDDHALVPORTCB_GETOUTPUTFORMATS   GetVideoPortOutputFormats;
+    LPVOID                            lpReserved1;
+    LPDDHALVPORTCB_GETFIELD           GetVideoPortField;
+    LPDDHALVPORTCB_GETLINE            GetVideoPortLine;
+    LPDDHALVPORTCB_GETVPORTCONNECT    GetVideoPortConnectInfo;
+    LPDDHALVPORTCB_DESTROYVPORT       DestroyVideoPort;
+    LPDDHALVPORTCB_GETFLIPSTATUS      GetVideoPortFlipStatus;
+    LPDDHALVPORTCB_UPDATE             UpdateVideoPort;
+    LPDDHALVPORTCB_WAITFORSYNC        WaitForVideoPortSync;
+    LPDDHALVPORTCB_GETSIGNALSTATUS    GetVideoSignalStatus;
+    LPDDHALVPORTCB_COLORCONTROL       ColorControl;
+} DDHAL_DDVIDEOPORTCALLBACKS;
+
+
+
+
+
 typedef HRESULT (WINAPI *LPDDGAMMACALIBRATORPROC)(LPDDGAMMARAMP, LPBYTE);
+
+
 
 /*****************************************************************************
  * driver info structure
@@ -448,25 +530,37 @@ typedef struct _DDHALINFO {
     LPDDHAL_DDEXEBUFCALLBACKS	lpDDExeBufCallbacks;
 } DDHALINFO;
 
+
+
 #define DDHALINFO_ISPRIMARYDISPLAY	0x00000001
 #define DDHALINFO_MODEXILLEGAL		0x00000002
 #define DDHALINFO_GETDRIVERINFOSET	0x00000004
+#define DDHALINFO_GETDRIVERINFO2    0x00000008
 
 /* where the high-level ddraw implementation stores the callbacks */
 typedef struct _DDHAL_CALLBACKS {
-    DDHAL_DDCALLBACKS		cbDDCallbacks;
-    DDHAL_DDSURFACECALLBACKS	cbDDSurfaceCallbacks;
-    DDHAL_DDPALETTECALLBACKS	cbDDPaletteCallbacks;
-    DDHAL_DDCALLBACKS		HALDD;
-    DDHAL_DDSURFACECALLBACKS	HALDDSurface;
-    DDHAL_DDPALETTECALLBACKS	HALDDPalette;
-    DDHAL_DDCALLBACKS		HELDD;
-    DDHAL_DDSURFACECALLBACKS	HELDDSurface;
-    DDHAL_DDPALETTECALLBACKS	HELDDPalette;
-    DDHAL_DDEXEBUFCALLBACKS	cbDDExeBufCallbacks;
-    DDHAL_DDEXEBUFCALLBACKS	HALDDExeBuf;
-    DDHAL_DDEXEBUFCALLBACKS	HELDDExeBuf;
-    /* there's more... videoport, colorcontrol, misc, and motion compensation callbacks... */
+    DDHAL_DDCALLBACKS		      cbDDCallbacks;
+    DDHAL_DDSURFACECALLBACKS	  cbDDSurfaceCallbacks;
+    DDHAL_DDPALETTECALLBACKS	  cbDDPaletteCallbacks;
+    DDHAL_DDCALLBACKS		      HALDD;
+    DDHAL_DDSURFACECALLBACKS	  HALDDSurface;
+    DDHAL_DDPALETTECALLBACKS	  HALDDPalette;
+    DDHAL_DDCALLBACKS		      HELDD;
+    DDHAL_DDSURFACECALLBACKS	  HELDDSurface;
+    DDHAL_DDPALETTECALLBACKS	  HELDDPalette;
+    DDHAL_DDEXEBUFCALLBACKS	      cbDDExeBufCallbacks;
+    DDHAL_DDEXEBUFCALLBACKS	      HALDDExeBuf;
+    DDHAL_DDEXEBUFCALLBACKS	      HELDDExeBuf;
+	DDHAL_DDVIDEOPORTCALLBACKS    cbDDVideoPortCallbacks;
+    DDHAL_DDVIDEOPORTCALLBACKS    HALDDVideoPort;
+//    DDHAL_DDCOLORCONTROLCALLBACKS cbDDColorControlCallbacks; 
+//    DDHAL_DDCOLORCONTROLCALLBACKS HALDDColorControl;
+    DDHAL_DDMISCELLANEOUSCALLBACKS cbDDMiscellaneousCallbacks;
+    DDHAL_DDMISCELLANEOUSCALLBACKS HALDDMiscellaneous;
+//    DDHAL_DDKERNELCALLBACKS        cbDDKernelCallbacks;
+//    DDHAL_DDKERNELCALLBACKS        HALDDKernel;
+//    DDHAL_DDMOTIONCOMPCALLBACKS    cbDDMotionCompCallbacks;
+//    DDHAL_DDMOTIONCOMPCALLBACKS    HALDDMotionComp;
 } DDHAL_CALLBACKS,*LPDDHAL_CALLBACKS;
 
 /*****************************************************************************
@@ -603,16 +697,137 @@ typedef struct _DDHAL_SETENTRIESDATA {
     LPDDHALPALCB_SETENTRIES	SetEntries;
 } DDHAL_SETENTRIESDATA;
 
-typedef struct _DDHAL_GETDRIVERINFODATA {
-    DWORD	dwSize;
-    DWORD	dwFlags;
-    GUID	guidInfo;
-    DWORD	dwExpectedSize;
-    LPVOID	lpvData;
-    DWORD	dwActualSize;
-    HRESULT	ddRVal;
-    ULONG_PTR	dwContext;
-} DDHAL_GETDRIVERINFODATA;
+typedef struct _DDHAL_CANCREATEVPORTDATA
+{
+    LPDDRAWI_DIRECTDRAW_LCL            lpDD;
+    LPDDVIDEOPORTDESC                  lpDDVideoPortDesc;
+    HRESULT                            ddRVal; 
+    LPDDHALVPORTCB_CANCREATEVIDEOPORT  CanCreateVideoPort;
+} DDHAL_CANCREATEVPORTDATA;
+
+typedef struct _DDHAL_CREATEVPORTDATA
+{
+    LPDDRAWI_DIRECTDRAW_LCL         lpDD;
+    LPDDVIDEOPORTDESC               lpDDVideoPortDesc;
+    LPDDRAWI_DDVIDEOPORT_LCL        lpVideoPort;
+    HRESULT                         ddRVal;
+    LPDDHALVPORTCB_CREATEVIDEOPORT  CreateVideoPort;
+} DDHAL_CREATEVPORTDATA;
+
+typedef struct _DDHAL_GETVPORTBANDWIDTHDATA
+{
+    LPDDRAWI_DIRECTDRAW_LCL      lpDD;          
+    LPDDRAWI_DDVIDEOPORT_LCL     lpVideoPort;    
+    LPDDPIXELFORMAT              lpddpfFormat;   
+    DWORD                        dwWidth;
+    DWORD                        dwHeight;
+    DWORD                        dwFlags;        
+    LPDDVIDEOPORTBANDWIDTH       lpBandwidth;       
+    HRESULT                      ddRVal;            
+    LPDDHALVPORTCB_GETBANDWIDTH  GetVideoPortBandwidth;
+} DDHAL_GETVPORTBANDWIDTHDATA;
+
+typedef struct _DDHAL_GETVPORTINPUTFORMATDATA
+{
+    LPDDRAWI_DIRECTDRAW_LCL         lpDD;        
+    LPDDRAWI_DDVIDEOPORT_LCL        lpVideoPort; 
+    DWORD                           dwFlags;     
+    LPDDPIXELFORMAT                 lpddpfFormat;
+    DWORD                           dwNumFormats;
+    HRESULT                         ddRVal;      
+    LPDDHALVPORTCB_GETINPUTFORMATS  GetVideoPortInputFormats;
+} DDHAL_GETVPORTINPUTFORMATDATA;
+
+typedef struct _DDHAL_GETVPORTFIELDDATA
+{
+    LPDDRAWI_DIRECTDRAW_LCL  lpDD;
+    LPDDRAWI_DDVIDEOPORT_LCL lpVideoPort;
+    BOOL                     bField;
+    HRESULT                  ddRVal;
+    LPDDHALVPORTCB_GETFIELD  GetVideoPortField;
+} DDHAL_GETVPORTFIELDDATA;
+
+typedef struct _DDHAL_GETVPORTOUTPUTFORMATDATA
+{
+    LPDDRAWI_DIRECTDRAW_LCL          lpDD;
+    LPDDRAWI_DDVIDEOPORT_LCL         lpVideoPort;
+    DWORD                            dwFlags;
+    LPDDPIXELFORMAT                  lpddpfInputFormat;
+    LPDDPIXELFORMAT                  lpddpfOutputFormats;
+    DWORD                            dwNumFormats;
+    HRESULT                          ddRVal;
+    LPDDHALVPORTCB_GETOUTPUTFORMATS  GetVideoPortOutputFormats;
+} DDHAL_GETVPORTOUTPUTFORMATDATA;
+
+typedef struct _DDHAL_GETVPORTLINEDATA
+{
+    LPDDRAWI_DIRECTDRAW_LCL  lpDD;
+    LPDDRAWI_DDVIDEOPORT_LCL lpVideoPort;
+    DWORD                    dwLine; 
+    HRESULT                  ddRVal;
+    LPDDHALVPORTCB_GETLINE   GetVideoPortLine;
+} DDHAL_GETVPORTLINEDATA;
+
+typedef struct _DDHAL_DESTROYVPORTDATA
+{
+    LPDDRAWI_DIRECTDRAW_LCL      lpDD;
+    LPDDRAWI_DDVIDEOPORT_LCL     lpVideoPort; 
+    HRESULT                      ddRVal;
+    LPDDHALVPORTCB_DESTROYVPORT  DestroyVideoPort;
+} DDHAL_DESTROYVPORTDATA;
+
+typedef struct _DDHAL_GETVPORTFLIPSTATUSDATA
+{
+    LPDDRAWI_DIRECTDRAW_LCL       lpDD;
+    FLATPTR                       fpSurface;
+    HRESULT                       ddRVal;
+    LPDDHALVPORTCB_GETFLIPSTATUS  GetVideoPortFlipStatus;
+} DDHAL_GETVPORTFLIPSTATUSDATA;
+
+typedef struct _DDHAL_UPDATEVPORTDATA
+{
+    LPDDRAWI_DIRECTDRAW_LCL   lpDD;
+    LPDDRAWI_DDVIDEOPORT_LCL  lpVideoPort;
+    LPDDRAWI_DDRAWSURFACE_INT *lplpDDSurface;
+    LPDDRAWI_DDRAWSURFACE_INT *lplpDDVBISurface;
+    LPDDVIDEOPORTINFO         lpVideoInfo;
+    DWORD                     dwFlags;
+    DWORD                     dwNumAutoflip;
+    DWORD                     dwNumVBIAutoflip;
+    HRESULT                   ddRVal;
+    LPDDHALVPORTCB_UPDATE     UpdateVideoPort;
+} DDHAL_UPDATEVPORTDATA;
+
+typedef struct _DDHAL_WAITFORVPORTSYNCDATA
+{
+    LPDDRAWI_DIRECTDRAW_LCL    lpDD;
+    LPDDRAWI_DDVIDEOPORT_LCL   lpVideoPort;
+    DWORD                      dwFlags;
+    DWORD                      dwLine;
+    DWORD                      dwTimeOut;
+    HRESULT                    ddRVal;
+    LPDDHALVPORTCB_WAITFORSYNC WaitForVideoPortSync;
+} DDHAL_WAITFORVPORTSYNCDATA;
+
+typedef struct _DDHAL_GETVPORTSIGNALDATA
+{
+    LPDDRAWI_DIRECTDRAW_LCL         lpDD; 
+    LPDDRAWI_DDVIDEOPORT_LCL        lpVideoPort;
+    DWORD                           dwStatus; 
+    HRESULT                         ddRVal; 
+    LPDDHALVPORTCB_GETSIGNALSTATUS  GetVideoSignalStatus;
+} DDHAL_GETVPORTSIGNALDATA;
+
+typedef struct _DDHAL_VPORTCOLORDATA
+{
+    LPDDRAWI_DIRECTDRAW_LCL     lpDD; 
+    LPDDRAWI_DDVIDEOPORT_LCL    lpVideoPort;
+    DWORD                       dwFlags; 
+    LPDDCOLORCONTROL            lpColorData;
+    HRESULT                     ddRVal; 
+    LPDDHALVPORTCB_COLORCONTROL ColorControl;
+} DDHAL_VPORTCOLORDATA;
+
 
 /*****************************************************************************
  * high-level ddraw implementation structures
@@ -1158,6 +1373,8 @@ typedef struct _DDHAL_ADDATTACHEDSURFACEDATA
     HRESULT                         ddRVal;
     LPDDHALSURFCB_ADDATTACHEDSURFACE    AddAttachedSurface;
 } DDHAL_ADDATTACHEDSURFACEDATA;
+
+
 
 typedef struct _DDHAL_BEGINMOCOMPFRAMEDATA
 {

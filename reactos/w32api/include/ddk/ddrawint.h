@@ -25,10 +25,6 @@ extern "C" {
 #endif
 
 // FIXME: These should have been defined in other header files!
-typedef struct _DDVIDEOPORTDESC      *LPDDVIDEOPORTDESC; /* should be in dvp.h */
-typedef struct _DDVIDEOPORTBANDWIDTH *LPDDVIDEOPORTBANDWIDTH; /* should be in dvp.h */
-typedef struct _DDVIDEOPORTCONNECT   *LPDDVIDEOPORTCONNECT; /* should be in dvp.h */
-typedef struct _DDVIDEOPORTINFO      *LPDDVIDEOPORTINFO; /* should be in dvp.h */
 typedef struct _DD_VIDEOPORT_LOCAL   *PDD_VIDEOPORT_LOCAL; /* should be defined here once we have dvp.h */
 
 
@@ -523,7 +519,7 @@ typedef struct
 	PVOID                    GetAvailDriverMemory;
 } DD_GETAVAILDRIVERMEMORYDATA, *PDD_GETAVAILDRIVERMEMORYDATA;
 typedef DWORD (STDCALL *PDD_GETAVAILDRIVERMEMORY)(PDD_GETAVAILDRIVERMEMORYDATA);
-
+            
 DEFINE_GUID(GUID_MiscellaneousCallbacks, 0xEFD60CC0, 0x49E7, 0x11D0, 0x88, 0x9D, 0x00, 0xAA, 0x00, 0xBB, 0xB7, 0x6A);
 
 typedef struct
