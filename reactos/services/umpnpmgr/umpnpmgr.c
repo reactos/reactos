@@ -22,6 +22,7 @@
  * FILE:             services/umpnpmgr/umpnpmgr.c
  * PURPOSE:          User-mode Plug and Play manager
  * PROGRAMMER:       Eric Kohl
+ *                   Hervé Poussineau (hpoussin@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
@@ -874,6 +875,51 @@ PNP_RequestEjectPC(handle_t BindingHandle)
     return ret;
 }
 
+typedef BOOL (*PDEV_INSTALL_W)(HWND, HINSTANCE, LPCWSTR, INT);
+
+static BOOL
+InstallDevice(PCWSTR DeviceInstance)
+{
+    PLUGPLAY_CONTROL_STATUS_DATA PlugPlayData;
+    HMODULE hNewDev = NULL;
+    PDEV_INSTALL_W DevInstallW;
+    NTSTATUS Status;
+    BOOL DeviceInstalled = FALSE;
+
+    RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
+                         DeviceInstance);
+    PlugPlayData.Operation = 0; /* Get status */
+
+    /* Get device status */
+    Status = NtPlugPlayControl(PlugPlayControlDeviceStatus,
+                               (PVOID)&PlugPlayData,
+                               sizeof(PLUGPLAY_CONTROL_STATUS_DATA));
+    if (!NT_SUCCESS(Status))
+        return FALSE;
+
+    if (PlugPlayData.DeviceStatus & DNF_STARTED || PlugPlayData.DeviceStatus & DNF_START_FAILED)
+        /* Device is already started, or disabled due to some problem. Don't install it */
+        return TRUE;
+
+    /* Install device */
+    SetEnvironmentVariable(L"USERPROFILE", L"."); /* FIXME: why is it needed? */
+    hNewDev = LoadLibraryW(L"newdev.dll");
+    if (!hNewDev)
+        goto cleanup;
+    DevInstallW = (PDEV_INSTALL_W)GetProcAddress(hNewDev, (LPCSTR)"DevInstallW");
+    if (!DevInstallW)
+        goto cleanup;
+    if (!DevInstallW(NULL, NULL, DeviceInstance, SW_SHOWNOACTIVATE))
+        goto cleanup;
+
+    DeviceInstalled = TRUE;
+
+cleanup:
+    if (hNewDev != NULL)
+        FreeLibrary(hNewDev);
+
+    return DeviceInstalled;
+}
 
 static DWORD WINAPI
 PnpEventThread(LPVOID lpParameter)
@@ -915,6 +961,7 @@ PnpEventThread(LPVOID lpParameter)
         if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_ARRIVAL, &RpcStatus))
         {
             DPRINT("Device arrival event: %S\n", PnpEvent->TargetDevice.DeviceIds);
+            InstallDevice(PnpEvent->TargetDevice.DeviceIds);
         }
         else
         {

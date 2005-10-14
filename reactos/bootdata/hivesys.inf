@@ -594,47 +594,6 @@ HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","Class",0x00000000,"Computer"
 HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","ClassGUID",0x00000000,"{4D36E966-E325-11CE-BFC1-08002BE10318}"
 HKLM,"SYSTEM\CurrentControlSet\Enum\Root\PCI\0000","ParentIdPrefix",0x0000000,"0000"
 
-;USB UHCI Driver
-HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","Group",0x00000000,"Base"
-HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","ImagePath",0x00020000,"System32\DRIVERS\usbuhci.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","Tag",0x00010001,0x0000000f
-HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci","DisplayName",0x00000000,"ReactOS USB UHCI controller miniport driver"
-;hard coded values for VMWARE
-HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci\Enum","0",0x00000000,"PCI\VEN_8086&DEV_7112&SUBSYS_197615AD&REV_00\0000"
-HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci\Enum","Count",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\usbuhci\Enum","NextInstance",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_8086&DEV_7112&SUBSYS_197615AD&REV_00\0000","Service",0x0000000,"usbuhci"
-HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_8086&DEV_7112&SUBSYS_197615AD&REV_00\0000","ParentIdPrefix",0x0000000,"0000"
-
-;USB OHCI Driver (Cromwell), especially the same name as windows OHCI miniport
-HKLM,"SYSTEM\CurrentControlSet\Services\usbohci","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\usbohci","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\usbohci","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\usbohci","Group",0x00000000,"Base"
-HKLM,"SYSTEM\CurrentControlSet\Services\usbohci","ImagePath",0x00020000,"System32\drivers\usbohci.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\usbohci","Tag",0x00010001,0x0000000f
-HKLM,"SYSTEM\CurrentControlSet\Services\usbohci","DisplayName",0x00000000,"ReactOS USB OHCI cromwell-type driver"
-;hard coded values for Virtual PC 6/7 (Mac)
-HKLM,"SYSTEM\CurrentControlSet\Services\usbohci\Enum","0",0x00000000,"PCI\VEN_2955&DEV_6E61&SUBSYS_6E612955&REV_11\0000"
-HKLM,"SYSTEM\CurrentControlSet\Services\usbohci\Enum","Count",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\usbohci\Enum","NextInstance",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Enum\PCI\VEN_2955&DEV_6E61&SUBSYS_6E612955&REV_11\0000","Service",0x0000000,"usbohci"
-
-;USB Hub driver
-HKLM,"SYSTEM\CurrentControlSet\Services\usbhub","Type",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\usbhub","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\usbhub","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\usbhub","Group",0x00000000,"Base"
-HKLM,"SYSTEM\CurrentControlSet\Services\usbhub","ImagePath",0x00020000,"System32\drivers\usbhub.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\usbhub","Tag",0x00010001,0x00000011
-HKLM,"SYSTEM\CurrentControlSet\Services\usbhub","DisplayName",0x00000000,"ReactOS USB HUB cromwell-type driver"
-;hard coded values
-HKLM,"SYSTEM\CurrentControlSet\Enum\USB\ROOT_HUB\0000","Service",0x0000000,"usbhub"
-HKLM,"SYSTEM\CurrentControlSet\Enum\USB\ROOT_HUB20\0000","Service",0x0000000,"usbhub"
-
 ; ReactOS PCNet NIC driver 
 ; To use the AMD supplied driver change the driver name to pcntn5m.sys
 ;
@@ -699,23 +658,12 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Null","ImagePath",0x00020000,"system32\d
 HKLM,"SYSTEM\CurrentControlSet\Services\Null","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Null","Type",0x00010001,0x00000001
 
-; Serial device driver
-HKLM,"SYSTEM\CurrentControlSet\Enum\ACPI\PNP0501\1","ClassGUID",0x00000000,"{4D36E978-E325-11CE-BFC1-08002BE10318}"
-HKLM,"SYSTEM\CurrentControlSet\Enum\ACPI\PNP0501\1","Service",0x00000000,"serial"
-HKLM,"SYSTEM\CurrentControlSet\Enum\ACPI\PNP0501\1","UpperFilters",0x00010000,"serenum"
-HKLM,"SYSTEM\CurrentControlSet\Enum\ACPI\PNP0501\2","ClassGUID",0x00000000,"{4D36E978-E325-11CE-BFC1-08002BE10318}"
-HKLM,"SYSTEM\CurrentControlSet\Enum\ACPI\PNP0501\2","Service",0x00000000,"serial"
-HKLM,"SYSTEM\CurrentControlSet\Enum\ACPI\PNP0501\2","UpperFilters",0x00010000,"serenum"
-
 ; Packet driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Packet","ErrorControl",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\Packet","Group",0x00000000,"PNP_TDI"
 HKLM,"SYSTEM\CurrentControlSet\Services\Packet","ImagePath",0x00020000,"system32\drivers\packet.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Packet","Start",0x00010001,0x00000004
 HKLM,"SYSTEM\CurrentControlSet\Services\Packet","Type",0x00010001,0x00000001
-; NOTE: These settings should be added by the network setup
-HKLM,"SYSTEM\CurrentControlSet\Services\Packet\Linkage","Bind",0x00010000,"\Device\Ne20001"
-HKLM,"SYSTEM\CurrentControlSet\Services\Packet\Linkage","Export",0x00010000,"\Device\packet"
 
 ; Plug and Play manager
 HKLM,"SYSTEM\CurrentControlSet\Services\PlugPlay","ErrorControl",0x00010001,0x00000000
@@ -736,16 +684,6 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","Group",0x00000000,"SCSI Port"
 HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","ImagePath",0x00020000,"system32\drivers\scsiport.sys"
 HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Scsiport","Type",0x00010001,0x00000001
-
-; Serial mouse driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Sermouse","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Sermouse","Group",0x00000000,"Pointer Port"
-HKLM,"SYSTEM\CurrentControlSet\Services\Sermouse","ImagePath",0x00020000,"system32\drivers\sermouse.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Sermouse","Start",0x00010001,0x00000003
-HKLM,"SYSTEM\CurrentControlSet\Services\Sermouse","Type",0x00010001,0x00000001
-;hard coded values for some serial mice
-HKLM,"SYSTEM\CurrentControlSet\Enum\Serenum\Mouse\0000","Service",0x0000000,"sermouse"
-HKLM,"SYSTEM\CurrentControlSet\Enum\Serenum\Mouse\0000","ClassGUID",0x0000000,"{4D36E96F-E325-11CE-BFC1-08002BE10318}"
 
 ; TCP/IP driver
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip","ErrorControl",0x00010001,0x00000001
