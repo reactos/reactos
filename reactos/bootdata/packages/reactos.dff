@@ -119,6 +119,7 @@ lib\msvcrt20\msvcrt20.dll               1
 lib\msvideo\msvfw32.dll                 1
 lib\mswsock\mswsock.dll                 1
 lib\netapi32\netapi32.dll               1
+lib\netcfgx\netcfgx.dll                 1
 lib\newdev\newdev.dll                   1
 lib\ntdll\ntdll.dll                     1
 lib\ntmarta\ntmarta.dll                 1
@@ -285,14 +286,20 @@ media\nls\c_28597.nls                   1
 media\nls\c_28598.nls                   1
 media\nls\c_28599.nls                   1
 media\drivers\etc\services              5
+media\inf\acpi.inf                      6
 media\inf\cdrom.inf                     6
 media\inf\NET_NIC.inf                   6
 media\inf\layout.inf                    6
+media\inf\machine.inf                   6
 media\inf\mouse.inf                     6
+media\inf\NET_NIC.inf                   6
+media\inf\netamd.inf                    6
+media\inf\netisa.inf                    6
 media\inf\ports.inf                     6
 media\inf\scsi.inf                      6
 media\inf\syssetup.inf                  6
 media\inf\usbport.inf                   6
+media\inf\usbstor.inf                   6
 modules\os2\server\os2srv.dll           1        optional
 modules\os2\lib\doscalls\doscalls.dll   1        optional
 modules\posix\server\psxsrv.dll         1        optional
