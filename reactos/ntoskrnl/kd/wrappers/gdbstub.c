@@ -128,28 +128,26 @@ typedef struct _CPU_REGISTER
   BOOLEAN SetInContext;
 } CPU_REGISTER, *PCPU_REGISTER;
 
-#define KTRAP_FRAME_X86 KTRAP_FRAME
-
 #define EIP_REGNO 8
 
 static CPU_REGISTER GspRegisters[NUMREGS] =
 {
-  { 4, FIELD_OFFSET (KTRAP_FRAME_X86, Eax), FIELD_OFFSET (CONTEXT, Eax), TRUE },
-  { 4, FIELD_OFFSET (KTRAP_FRAME_X86, Ecx), FIELD_OFFSET (CONTEXT, Ecx), TRUE },
-  { 4, FIELD_OFFSET (KTRAP_FRAME_X86, Edx), FIELD_OFFSET (CONTEXT, Edx), FALSE },
-  { 4, FIELD_OFFSET (KTRAP_FRAME_X86, Ebx), FIELD_OFFSET (CONTEXT, Ebx), TRUE },
-  { 4, FIELD_OFFSET (KTRAP_FRAME_X86, Esp), FIELD_OFFSET (CONTEXT, Esp), TRUE },
-  { 4, FIELD_OFFSET (KTRAP_FRAME_X86, Ebp), FIELD_OFFSET (CONTEXT, Ebp), TRUE },
-  { 4, FIELD_OFFSET (KTRAP_FRAME_X86, Esi), FIELD_OFFSET (CONTEXT, Esi), TRUE },
-  { 4, FIELD_OFFSET (KTRAP_FRAME_X86, Edi), FIELD_OFFSET (CONTEXT, Edi), TRUE },
-  { 4, FIELD_OFFSET (KTRAP_FRAME_X86, Eip), FIELD_OFFSET (CONTEXT, Eip), TRUE },
-  { 4, FIELD_OFFSET (KTRAP_FRAME_X86, Eflags), FIELD_OFFSET (CONTEXT, EFlags), TRUE },
-  { 4, FIELD_OFFSET (KTRAP_FRAME_X86, Cs), FIELD_OFFSET (CONTEXT, SegCs), TRUE },
-  { 4, FIELD_OFFSET (KTRAP_FRAME_X86, Ss), FIELD_OFFSET (CONTEXT, SegSs), TRUE },
-  { 4, FIELD_OFFSET (KTRAP_FRAME_X86, Ds), FIELD_OFFSET (CONTEXT, SegDs), TRUE },
-  { 4, FIELD_OFFSET (KTRAP_FRAME_X86, Es), FIELD_OFFSET (CONTEXT, SegEs), TRUE },
-  { 4, FIELD_OFFSET (KTRAP_FRAME_X86, Fs), FIELD_OFFSET (CONTEXT, SegFs), TRUE },
-  { 4, FIELD_OFFSET (KTRAP_FRAME_X86, Gs), FIELD_OFFSET (CONTEXT, SegGs), TRUE }
+  { 4, FIELD_OFFSET (KTRAP_FRAME, Eax), FIELD_OFFSET (CONTEXT, Eax), TRUE },
+  { 4, FIELD_OFFSET (KTRAP_FRAME, Ecx), FIELD_OFFSET (CONTEXT, Ecx), TRUE },
+  { 4, FIELD_OFFSET (KTRAP_FRAME, Edx), FIELD_OFFSET (CONTEXT, Edx), FALSE },
+  { 4, FIELD_OFFSET (KTRAP_FRAME, Ebx), FIELD_OFFSET (CONTEXT, Ebx), TRUE },
+  { 4, FIELD_OFFSET (KTRAP_FRAME, Esp), FIELD_OFFSET (CONTEXT, Esp), TRUE },
+  { 4, FIELD_OFFSET (KTRAP_FRAME, DebugEbp), FIELD_OFFSET (CONTEXT, Ebp), TRUE },
+  { 4, FIELD_OFFSET (KTRAP_FRAME, Esi), FIELD_OFFSET (CONTEXT, Esi), TRUE },
+  { 4, FIELD_OFFSET (KTRAP_FRAME, Edi), FIELD_OFFSET (CONTEXT, Edi), TRUE },
+  { 4, FIELD_OFFSET (KTRAP_FRAME, DebugEip), FIELD_OFFSET (CONTEXT, Eip), TRUE },
+  { 4, FIELD_OFFSET (KTRAP_FRAME, Eflags), FIELD_OFFSET (CONTEXT, EFlags), TRUE },
+  { 4, FIELD_OFFSET (KTRAP_FRAME, Cs), FIELD_OFFSET (CONTEXT, SegCs), TRUE },
+  { 4, FIELD_OFFSET (KTRAP_FRAME, Ss), FIELD_OFFSET (CONTEXT, SegSs), TRUE },
+  { 4, FIELD_OFFSET (KTRAP_FRAME, Ds), FIELD_OFFSET (CONTEXT, SegDs), TRUE },
+  { 4, FIELD_OFFSET (KTRAP_FRAME, Es), FIELD_OFFSET (CONTEXT, SegEs), TRUE },
+  { 4, FIELD_OFFSET (KTRAP_FRAME, Fs), FIELD_OFFSET (CONTEXT, SegFs), TRUE },
+  { 4, FIELD_OFFSET (KTRAP_FRAME, Gs), FIELD_OFFSET (CONTEXT, SegGs), TRUE }
 };
 
 static PCHAR GspThreadStates[DeferredReady+1] =
@@ -696,11 +694,9 @@ GspSetThread(PCHAR Request)
 VOID
 GspQuery(PCHAR Request)
 {
-  PCHAR Command;
   ULONG Value;
 
-	Command = strtok (Request, ",");
-	if (strncmp (Command, "C", 1) == 0)
+  if (strncmp(Request, "C", 1) == 0)
   {
     PCHAR ptr = &GspOutBuffer[2];
 
@@ -717,7 +713,7 @@ GspQuery(PCHAR Request)
     }
     GspLong2Hex (&ptr, Value);
   }
-  else if (strncmp (Command, "fThreadInfo", 11) == 0)
+  else if (strncmp (Request, "fThreadInfo", 11) == 0)
   {
     PEPROCESS Process;
     PLIST_ENTRY AThread, AProcess;
@@ -751,7 +747,7 @@ GspQuery(PCHAR Request)
       /* GspOutBuffer[0] = 'l'; */
     }
   }
-  else if (strncmp (Command, "sThreadInfo", 11) == 0)
+  else if (strncmp (Request, "sThreadInfo", 11) == 0)
   {
     PEPROCESS Process;
     PLIST_ENTRY AThread, AProcess;
@@ -803,67 +799,34 @@ GspQuery(PCHAR Request)
       GspOutBuffer[0] = 'l';
     }
   }
-  else if (strncmp (Command, "ThreadExtraInfo", 15) == 0)
+  else if (strncmp (Request, "ThreadExtraInfo", 15) == 0)
   {
     PETHREAD ThreadInfo;
-    PCHAR ptr = &Command[15];
 
     /* Get thread information */
-    if (GspFindThread (ptr, &ThreadInfo))
-	  {
-             PCHAR String = GspThreadStates[ThreadInfo->Tcb.State];
-
-             ObDereferenceObject(ThreadInfo);
-
-             GspMem2Hex (String, &GspOutBuffer[0], strlen (String), FALSE);
-	  }
-  }
-#if 0
-	else if (strncmp (Command, "L", 1) == 0)
-  {
-    PLIST_ENTRY CurrentEntry;
-    PETHREAD Current;
-    ULONG MaxThreads = 0;
-    ULONG ThreadId = 0;
-    ULONG ThreadCount = 0;
-
-    /* List threads */
-    GspHex2Mem (&Request[1], (PCHAR) &MaxThreads, 2, TRUE);
-    GspHex2Mem (&Request[3], (PCHAR) &Value, 4, TRUE);
-    GspHex2Mem (&Request[11], (PCHAR) &ThreadId, 4, TRUE);
-
-    GspOutBuffer[0] = 'q';
-    GspOutBuffer[1] = 'M';
-    Value = 0;
-    GspMem2Hex ((PCHAR) &Value, &GspOutBuffer[5], 4, TRUE);
-    GspMem2Hex ((PCHAR) &ThreadId, &GspOutBuffer[13], 4, TRUE);
-
-    CurrentEntry = PiThreadListHead.Flink;
-    while ((CurrentEntry != &PiThreadListHead) && (ThreadCount < MaxThreads))
-      {
-        Current = CONTAINING_RECORD (CurrentEntry, ETHREAD, Tcb.ThreadListEntry);
-        Value = 0;
-        GspMem2Hex ((PCHAR) &Value, &GspOutBuffer[21+ThreadCount*16], 4, TRUE);
-        Value = (ULONG) Current->Cid.UniqueThread;
-        GspMem2Hex ((PCHAR) &Value, &GspOutBuffer[21+ThreadCount*16+8], 4, TRUE);
-        CurrentEntry = CurrentEntry->Flink;
-        ThreadCount++;
-      }
-
-    if (CurrentEntry != &PiThreadListHead)
-		{
-      GspOutBuffer[4] = '0';
-		}
-    else
+    if (GspFindThread(Request + 16, &ThreadInfo))
     {
-      GspOutBuffer[4] = '1';
-    }
+      char Buffer[64];
+      PEPROCESS Proc;
 
-    GspMem2Hex ((PCHAR) &ThreadCount, &GspOutBuffer[2], 1, TRUE);
+      Proc = (PEPROCESS) ThreadInfo->Tcb.ApcState.Process;
+
+      Buffer[0] = '\0';
+      if (NULL != Proc )
+      {
+        sprintf(Buffer, "%s [%d:0x%x], ", Proc->ImageFileName,
+                (int) Proc->UniqueProcessId,
+                (int) ThreadInfo->Cid.UniqueThread);
+      }
+      strcpy(Buffer + strlen(Buffer), GspThreadStates[ThreadInfo->Tcb.State]);
+
+      ObDereferenceObject(ThreadInfo);
+
+      GspMem2Hex(Buffer, &GspOutBuffer[0], strlen(Buffer), FALSE);
+    }
   }
-#endif
 #if 0
-  else if (strncmp (Command, "Offsets", 7) == 0)
+  else if (strncmp (Request, "Offsets", 7) == 0)
   {
     strcpy (GspOutBuffer, "Text=0;Data=0;Bss=0");
   }
