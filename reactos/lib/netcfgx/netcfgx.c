@@ -104,6 +104,7 @@ NetClassInstaller(
 	LPWSTR UuidRpcString = NULL;
 	LPWSTR UuidString = NULL;
 	LPWSTR DeviceName = NULL;
+	LPWSTR ExportName = NULL;
 	LONG rc;
 	HKEY hKey = INVALID_HANDLE_VALUE;
 	HKEY hLinkageKey = INVALID_HANDLE_VALUE;
@@ -151,6 +152,17 @@ NetClassInstaller(
 	}
 	wcscpy(DeviceName, L"\\Device\\");
 	wcscat(DeviceName, UuidString);
+	
+	/* Create export name */
+	ExportName = HeapAlloc(GetProcessHeap(), 0, (wcslen(L"\\Device\\Tcpip_") + wcslen(UuidString)) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
+	if (!ExportName)
+	{
+		DPRINT("HeapAlloc() failed\n");
+		rc = ERROR_NOT_ENOUGH_MEMORY;
+		goto cleanup;
+	}
+	wcscpy(ExportName, L"\\Device\\Tcpip_");
+	wcscat(ExportName, UuidString);
 
 	/* Write Tcpip parameters in new service Key */
 	rc = RegCreateKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Services", 0, NULL, REG_OPTION_NON_VOLATILE, 0, NULL, &hKey, NULL);
@@ -269,22 +281,21 @@ NetClassInstaller(
 	rc = AppendStringToMultiSZ(hKey, L"Bind", DeviceName);
 	if (rc != ERROR_SUCCESS)
 		goto cleanup;
-	rc = AppendStringToMultiSZ(hKey, L"Export", DeviceName);
+	rc = AppendStringToMultiSZ(hKey, L"Export", ExportName);
 	if (rc != ERROR_SUCCESS)
 		goto cleanup;
 	rc = AppendStringToMultiSZ(hKey, L"Route", UuidString);
 	if (rc != ERROR_SUCCESS)
 		goto cleanup;
 
-	rc = ERROR_DI_DO_DEFAULT;
+	rc = ERROR_SUCCESS;
 
 cleanup:
 	if (UuidRpcString != NULL)
 		RpcStringFreeW(&UuidRpcString);
-	if (UuidString != NULL)
-		HeapFree(GetProcessHeap(), 0, UuidString);
-	if (DeviceName != NULL)
-		HeapFree(GetProcessHeap(), 0, DeviceName);
+	HeapFree(GetProcessHeap(), 0, UuidString);
+	HeapFree(GetProcessHeap(), 0, DeviceName);
+	HeapFree(GetProcessHeap(), 0, ExportName);
 	if (hKey != INVALID_HANDLE_VALUE)
 		RegCloseKey(hKey);
 	if (hLinkageKey != INVALID_HANDLE_VALUE)
