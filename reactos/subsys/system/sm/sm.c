@@ -98,7 +98,7 @@ PSM_CMD_DESCRIPTOR LookupCommand (const TCHAR * CommandName)
 	{
 		LoadString( GetModuleHandle(NULL), IDS_Unknown, (LPTSTR) UsageMessage,RC_STRING_MAX_SIZE);
 
-		_ftprintf(stderr, _T("%s '%s'.\n"), UsageMessage, CommandName);
+		_ftprintf(stderr, UsageMessage, CommandName);
 		return NULL;
 	}
 	return & Command [i];
