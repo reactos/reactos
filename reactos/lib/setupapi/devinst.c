@@ -2936,7 +2936,7 @@ BOOL WINAPI SetupDiCallClassInstaller(
         {
             LIST_ENTRY ClassCoInstallersListHead;
             LIST_ENTRY DeviceCoInstallersListHead;
-            HMODULE ClassInstallerLibrary;
+            HMODULE ClassInstallerLibrary = NULL;
             CLASS_INSTALL_PROC ClassInstaller = NULL;
             COINSTALLER_CONTEXT_DATA Context;
             PLIST_ENTRY ListEntry;
@@ -4828,7 +4828,6 @@ SetupDiInstallDevice(
     HKEY hClassKey = INVALID_HANDLE_VALUE;
     LONG rc;
     HWND hWnd;
-    PVOID callback_context;
     BOOL ret = FALSE; /* Return value */
 
     TRACE("%p %p\n", DeviceInfoSet, DeviceInfoData);
@@ -4914,6 +4913,17 @@ SetupDiInstallDevice(
     if (hKey == INVALID_HANDLE_VALUE && GetLastError() == ERROR_FILE_NOT_FOUND)
         hKey = SetupDiCreateDevRegKeyW(DeviceInfoSet, DeviceInfoData, DICS_FLAG_GLOBAL, 0, DIREG_DRV, NULL, NULL);
     if (hKey == INVALID_HANDLE_VALUE)
+        goto cleanup;
+
+    /* Install main section */
+    /* Files have already been copied in SetupDiInstallDriverFiles.
+     * Process only registry entries. */
+    *pSectionName = '\0';
+    Result = SetupInstallFromInfSectionW(hWnd, hInf, SectionName,
+        SPINST_REGISTRY, hKey, NULL, 0,
+        SetupDefaultQueueCallbackW, NULL,
+        NULL, NULL);
+    if (!Result)
         goto cleanup;
 
     /* Write information to driver key */
@@ -5048,12 +5058,10 @@ nextfile:
 
     /* Install .HW section */
     wcscpy(pSectionName, L".HW");
-    callback_context = SetupInitDefaultQueueCallback(hWnd);
     Result = SetupInstallFromInfSectionW(hWnd, hInf, SectionName,
         SPINST_REGISTRY, hKey, NULL, 0,
-        SetupDefaultQueueCallbackW, callback_context,
+        SetupDefaultQueueCallbackW, NULL,
         NULL, NULL);
-    SetupTermDefaultQueueCallback(callback_context);
     if (!Result)
         goto cleanup;
 
