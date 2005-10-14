@@ -465,7 +465,7 @@ IopLoadServiceModule(
       return Status;
    }
    
-   IopDisplayLoadingMessage(ServiceName->Buffer, TRUE);
+   //IopDisplayLoadingMessage(ServiceName->Buffer, TRUE);
 
    /*
     * Normalize the image path for all later processing.

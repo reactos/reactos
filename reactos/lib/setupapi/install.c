@@ -1104,7 +1104,12 @@ BOOL WINAPI SetupInstallServicesFromInfSectionExW( HINF hinf, PCWSTR sectionname
         ServiceType,
         StartType,
         ErrorControl,
-        ServiceBinary,
+        /* BIG HACK!!! As GetLineText() give us a full path, ignore the
+         * first letters which should be the OS directory. If that's not
+         * the case, the file name written to registry will be bad and
+         * the driver will not load...
+         */
+        ServiceBinary + GetWindowsDirectoryW(NULL, 0),
         LoadOrderGroup,
         NULL,
         Dependencies,
@@ -1119,7 +1124,7 @@ BOOL WINAPI SetupInstallServicesFromInfSectionExW( HINF hinf, PCWSTR sectionname
         CloseServiceHandle(hSCManager);
         return FALSE;
     }
-    CloseServiceHandle(hService);
+    //CloseServiceHandle(hService);
 
     return CloseServiceHandle(hSCManager);
 }

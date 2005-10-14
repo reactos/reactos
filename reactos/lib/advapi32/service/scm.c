@@ -262,12 +262,14 @@ CreateServiceW(SC_HANDLE hSCManager,
 {
     SC_HANDLE hService = NULL;
     DWORD dwError;
+    HKEY hEnumKey, hKey;
 
     DPRINT1("CreateServiceW() called\n");
 
     HandleBind();
 
     /* Call to services.exe using RPC */
+#if 0
     dwError = ScmrCreateServiceW(BindingHandle,
                                  (unsigned int)hSCManager,
                                  (LPWSTR)lpServiceName,
@@ -285,6 +287,19 @@ CreateServiceW(SC_HANDLE hSCManager,
                                  NULL,              /* FIXME: lpPassword */
                                  0,                 /* FIXME: dwPasswordLength */
                                  (unsigned int *)&hService);
+#else
+    RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Services", 0, KEY_ENUMERATE_SUB_KEYS, &hEnumKey);
+    RegCreateKeyExW(hEnumKey, lpServiceName, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, NULL);
+    RegCloseKey(hEnumKey);
+    if (lpLoadOrderGroup)
+      RegSetValueExW(hKey, L"Group", 0, REG_SZ, (const BYTE*)lpLoadOrderGroup, (wcslen(lpLoadOrderGroup) + 1) * sizeof(WCHAR));
+    RegSetValueExW(hKey, L"ImagePath", 0, REG_EXPAND_SZ, (const BYTE*)lpBinaryPathName, (wcslen(lpBinaryPathName) + 1) * sizeof(WCHAR));
+    RegSetValueExW(hKey, L"ErrorControl", 0, REG_DWORD, (const BYTE*)&dwErrorControl, sizeof(dwErrorControl));
+    RegSetValueExW(hKey, L"Start", 0, REG_DWORD, (const BYTE*)&dwStartType, sizeof(dwStartType));
+    RegSetValueExW(hKey, L"Type", 0, REG_DWORD, (const BYTE*)&dwStartType, sizeof(dwStartType));
+    RegCloseKey(hKey);
+    hService = INVALID_HANDLE_VALUE; dwError = ERROR_SUCCESS;
+#endif
     if (dwError != ERROR_SUCCESS)
     {
         DPRINT1("ScmrCreateServiceW() failed (Error %lu)\n", dwError);
