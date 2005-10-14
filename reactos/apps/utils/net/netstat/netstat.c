@@ -31,10 +31,9 @@
 
 /*
  * TODO:
- * rewrite DisplayOutput
- * sort function return values. BOOL is crap
+ * sort function return values.
  * implement -b, -o and -v
- * clean up GetPortName and GetIpHostName
+ * clean up GetIpHostName
  * command line parser needs more work
  */
 
@@ -45,9 +44,6 @@
 #include <iphlpapi.h>
 #include "netstat.h"
 
-CHAR localname[HOSTNAMELEN], remotename[HOSTNAMELEN];
-CHAR remoteport[PORTNAMELEN], localport[PORTNAMELEN];
-CHAR localaddr[ADDRESSLEN], remoteaddr[ADDRESSLEN];
 
 enum ProtoType {IP, TCP, UDP, ICMP} Protocol;
 DWORD Interval; /* time to pause between printing output */
@@ -68,6 +64,37 @@ TCHAR TcpState[][32] = {
     _T("TIME_WAIT"),
     _T("DELETE_TCB")
 };
+
+
+/*
+ * format message string and display output
+ */
+DWORD DoFormatMessage(DWORD ErrorCode)
+{
+    LPVOID lpMsgBuf;
+    DWORD RetVal;
+
+    if ((RetVal = FormatMessage(
+            FORMAT_MESSAGE_ALLOCATE_BUFFER |
+            FORMAT_MESSAGE_FROM_SYSTEM |
+            FORMAT_MESSAGE_IGNORE_INSERTS,
+            NULL,
+            ErrorCode,
+            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), /* Default language */
+            (LPTSTR) &lpMsgBuf,
+            0,
+            NULL )))
+    {
+        _tprintf(_T("%s"), (LPTSTR)lpMsgBuf);
+
+        LocalFree(lpMsgBuf);
+        /* return number of TCHAR's stored in output buffer
+         * excluding '\0' - as FormatMessage does*/
+        return RetVal;
+    }
+    else
+        return 0;
+}
 
 
 /*
@@ -132,7 +159,7 @@ BOOL ParseCmdline(int argc, char* argv[])
                         (--argv)[i]; /* move pointer back down to previous argv */
                         break;
                     case 'r' :
-                        bDoShowRouteTable = FALSE;
+                        bDoShowRouteTable = TRUE;
                         break;
                     case 'v' :
                         _tprintf(_T("got v\n"));
@@ -159,23 +186,16 @@ BOOL ParseCmdline(int argc, char* argv[])
     return EXIT_SUCCESS;
 }
 
-/* Simulate Microsofts netstat utility output. It's a bit
- * ugly and over nested, but it is a fairly acurate simulation
- * It was easier for testing, I'll rewrite it later with flags
- * For now, it works*/
+
+/*
+ * Simulate Microsofts netstat utility output
+ */
 BOOL DisplayOutput()
-// FIXME: This whole function needs rewriting
 {
     if (bNoOptions)
     {
         _tprintf(_T("\n  Proto  Local Address          Foreign Address        State\n"));
         ShowTcpTable();
-        return EXIT_SUCCESS;
-    }
-
-    if (bDoShowEthStats)
-    {
-        ShowEthernetStatistics();
         return EXIT_SUCCESS;
     }
 
@@ -187,150 +207,70 @@ BOOL DisplayOutput()
             _tprintf(_T("cannot find 'route.exe'\n"));
             return EXIT_FAILURE;
         }
+        return EXIT_SUCCESS;
     }
 
-    /* output connections: -a */
-    if (bDoShowAllCons)
+    if (bDoShowEthStats)
     {
-        /* filter out certain protocols: -p */
-        if (bDoShowProtoCons)
-        {
-            /* do we want to list the stats: -s */
-            if (bDoShowProtoStats)
-            {
-                switch (Protocol)
-                {
-                    case IP :
-                        ShowIpStatistics();
-                        break;
-                    case ICMP :
-                        ShowIcmpStatistics();
-                        break;
-                    case TCP :
-                        ShowTcpStatistics();
-                        _tprintf(_T("\nActive Connections\n"));
-                        _tprintf(_T("\n  Proto  Local Address          Foreign Address        State\n"));
-                        ShowTcpTable();
-                        break;
-                    case UDP :
-                        ShowUdpStatistics();
-                        _tprintf(_T("\nActive Connections\n"));
-                        _tprintf(_T("\n  Proto  Local Address          Foreign Address        State\n"));
-                        ShowUdpTable();
-                        break;
-                    default :
-                        break;
-                }
-                return EXIT_SUCCESS;
-            }
-            else
-            {
-                switch (Protocol)
-                {
-                    case IP :
-                        break;
-                    case ICMP :
-                        ShowIcmpStatistics();
-                        break;
-                    case TCP :
-                        _tprintf(_T("\nActive Connections\n"));
-                        _tprintf(_T("\n  Proto  Local Address          Foreign Address        State\n"));
-                        ShowTcpTable();
-                        break;
-                    case UDP :
-                        _tprintf(_T("\nActive Connections\n"));
-                        _tprintf(_T("\n  Proto  Local Address          Foreign Address        State\n"));
-                        ShowUdpTable();
-                        break;
-                    default :
-                        break;
-                }
-                return EXIT_SUCCESS;
-            }
-
-        }
-        else
-        {
-            _tprintf(_T("\nActive Connections\n"));
-            _tprintf(_T("\n  Proto  Local Address          Foreign Address        State\n"));
-            ShowTcpTable();
-            ShowUdpTable();
-            return EXIT_SUCCESS;
-        }
+        ShowEthernetStatistics();
+        return EXIT_SUCCESS;
     }
 
-    /* do we want to list the stats: -s */
-    if (bDoShowProtoStats)
+    if (bDoShowProtoCons)
     {
-        if (bDoShowProtoCons) // -p
+        switch (Protocol)
         {
-            /* show individual protocols only */
-            switch (Protocol)
-            {
                 case IP :
-                    ShowIpStatistics();
+                    if (bDoShowProtoStats)
+                    {
+                        ShowIpStatistics();
+                        return EXIT_SUCCESS;
+                    }
                     break;
                 case ICMP :
-                    ShowIcmpStatistics();
+                    if (bDoShowProtoStats)
+                    {
+                        ShowIcmpStatistics();
+                        return EXIT_SUCCESS;
+                    }
                     break;
                 case TCP :
-                    ShowTcpStatistics();
+                    if (bDoShowProtoStats)
+                        ShowTcpStatistics();
                     _tprintf(_T("\nActive Connections\n"));
                     _tprintf(_T("\n  Proto  Local Address          Foreign Address        State\n"));
                     ShowTcpTable();
                     break;
                 case UDP :
-                    ShowUdpStatistics();
+                    if (bDoShowProtoStats)
+                        ShowUdpStatistics();
                     _tprintf(_T("\nActive Connections\n"));
                     _tprintf(_T("\n  Proto  Local Address          Foreign Address        State\n"));
                     ShowUdpTable();
                     break;
                 default :
                     break;
-            }
-            return EXIT_SUCCESS;
         }
-        else
-        {
-            /* list the lot */
-            ShowIpStatistics();
-            ShowIcmpStatistics();
-            ShowTcpStatistics();
-            ShowUdpStatistics();
-            return EXIT_SUCCESS;
-        }
+    }
+    else if (bDoShowProtoStats)
+    {
+        ShowIpStatistics();
+        ShowIcmpStatistics();
+        ShowTcpStatistics();
+        ShowUdpStatistics();
+        return EXIT_SUCCESS;
+    }
+    else //if (bDoShowAllCons)
+    {
+        _tprintf(_T("\nActive Connections\n"));
+        _tprintf(_T("\n  Proto  Local Address          Foreign Address        State\n"));
+        ShowTcpTable();
+        ShowUdpTable();
     }
     return EXIT_SUCCESS;
 }
 
 
-/* format message string and display output */
-DWORD DoFormatMessage(DWORD ErrorCode)
-{
-    LPVOID lpMsgBuf;
-    DWORD RetVal;
-
-    if ((RetVal = FormatMessage(
-            FORMAT_MESSAGE_ALLOCATE_BUFFER |
-            FORMAT_MESSAGE_FROM_SYSTEM |
-            FORMAT_MESSAGE_IGNORE_INSERTS,
-            NULL,
-            ErrorCode,
-            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), /* Default language */
-            (LPTSTR) &lpMsgBuf,
-            0,
-            NULL )))
-    {
-        _tprintf(_T("%s"), (LPTSTR)lpMsgBuf);
-
-        LocalFree(lpMsgBuf);
-        /* return number of TCHAR's stored in output buffer
-         * excluding '\0' - as FormatMessage does*/
-        return RetVal;
-    }
-    else
-        return 0;
-}
 
 
 VOID ShowIpStatistics()
@@ -490,8 +430,12 @@ VOID ShowTcpTable()
     PMIB_TCPTABLE tcpTable;
     DWORD error, dwSize;
     DWORD i;
+    CHAR HostIp[HOSTNAMELEN], HostPort[PORTNAMELEN];
+    CHAR RemoteIp[HOSTNAMELEN], RemotePort[PORTNAMELEN];
+    CHAR Host[ADDRESSLEN];
+    CHAR Remote[ADDRESSLEN];
 
-    // Get the table of TCP endpoints
+    /* Get the table of TCP endpoints */
     dwSize = 0;
     error = GetTcpTable(NULL, &dwSize, TRUE);
     if (error != ERROR_INSUFFICIENT_BUFFER)
@@ -509,21 +453,26 @@ VOID ShowTcpTable()
         exit(EXIT_FAILURE);
     }
 
-    // Dump the TCP table
+    /* Dump the TCP table */
     for (i = 0; i < tcpTable->dwNumEntries; i++)
     {
-        if (bDoShowAllCons || (tcpTable->table[i].dwState ==
-            MIB_TCP_STATE_ESTAB))
+        /* If we aren't showing all connections, only display established, close wait
+         * and time wait. This is the default output for netstat */
+        if (bDoShowAllCons || (tcpTable->table[i].dwState ==  MIB_TCP_STATE_ESTAB)
+            || (tcpTable->table[i].dwState ==  MIB_TCP_STATE_CLOSE_WAIT)
+            || (tcpTable->table[i].dwState ==  MIB_TCP_STATE_TIME_WAIT))
         {
-            sprintf(localaddr, "%s:%s",
-                GetIpHostName(TRUE, tcpTable->table[i].dwLocalAddr, localname, HOSTNAMELEN),
-                GetPortName(tcpTable->table[i].dwLocalPort, "tcp", localport, PORTNAMELEN));
-            sprintf(remoteaddr, "%s:%s",
-                GetIpHostName(FALSE, tcpTable->table[i].dwRemoteAddr, remotename, HOSTNAMELEN),
-                tcpTable->table[i].dwRemoteAddr ?
-                GetPortName(tcpTable->table[i].dwRemotePort, "tcp", remoteport, PORTNAMELEN):
-                "0");
-            _tprintf(_T("  %-6s %-22s %-22s %s\n"), _T("TCP"), localaddr, remoteaddr, TcpState[tcpTable->table[i].dwState]);
+            /* I've split this up so it's easier to follow */
+            GetIpHostName(TRUE, tcpTable->table[i].dwLocalAddr, HostIp, HOSTNAMELEN);
+            GetPortName(tcpTable->table[i].dwLocalPort, "tcp", HostPort, PORTNAMELEN);
+            GetIpHostName(FALSE, tcpTable->table[i].dwRemoteAddr, RemoteIp, HOSTNAMELEN);
+            GetPortName(tcpTable->table[i].dwRemotePort, "tcp", RemotePort, PORTNAMELEN);
+
+            sprintf(Host, "%s:%s", HostIp, HostPort);
+            sprintf(Remote, "%s:%s", RemoteIp, RemotePort);
+
+            _tprintf(_T("  %-6s %-22s %-22s %s\n"), _T("TCP"),
+            Host, Remote, TcpState[tcpTable->table[i].dwState]);
         }
     }
 }
@@ -534,8 +483,10 @@ VOID ShowUdpTable()
     PMIB_UDPTABLE udpTable;
     DWORD error, dwSize;
     DWORD i;
+    CHAR HostIp[HOSTNAMELEN], HostPort[PORTNAMELEN];
+    CHAR Host[ADDRESSLEN];
 
-    // Get the table of UDP endpoints
+    /* Get the table of UDP endpoints */
     dwSize = 0;
     error = GetUdpTable(NULL, &dwSize, TRUE);
     if (error != ERROR_INSUFFICIENT_BUFFER)
@@ -553,38 +504,40 @@ VOID ShowUdpTable()
         exit(EXIT_FAILURE);
     }
 
-    // Dump the UDP table
+    /* Dump the UDP table */
     for (i = 0; i < udpTable->dwNumEntries; i++)
     {
-        sprintf(localaddr, "%s:%s",
-            GetIpHostName(TRUE, udpTable->table[i].dwLocalAddr, localname, HOSTNAMELEN),
-            GetPortName(udpTable->table[i].dwLocalPort, "tcp", localport, PORTNAMELEN));
-        _tprintf(_T("  %-6s %-22s %-22s\n"), _T("UDP"), localaddr, _T(":*:"));
+
+        /* I've split this up so it's easier to follow */
+        GetIpHostName(TRUE, udpTable->table[i].dwLocalAddr, HostIp, HOSTNAMELEN);
+        GetPortName(udpTable->table[i].dwLocalPort, "tcp", HostPort, PORTNAMELEN);
+
+        sprintf(Host, "%s:%s", HostIp, HostPort);
+
+        _tprintf(_T("  %-6s %-22s %-22s\n"), _T("UDP"), Host,  _T(":*:"));
     }
 }
 
 
-//
-// GetPortName
-//
-// Translate port numbers into their text equivalent if there is one
-//
+/*
+ * Translate port numbers into their text equivalent if there is one
+ */
 PCHAR
-GetPortName(UINT port, PCHAR proto, PCHAR name, int namelen)
+GetPortName(UINT Port, PCHAR Proto, CHAR Name[], INT NameLen)
 {
-    struct servent *psrvent;
+    struct servent *pSrvent;
 
-    if (bDoShowNumbers) {
-        sprintf(name, "%d", htons((WORD)port));
-        return name;
+    if (bDoShowNumbers)
+    {
+        sprintf(Name, "%d", htons((WORD)Port));
+        return Name;
     }
-    // Try to translate to a name
-    if ((psrvent = getservbyport(port, proto))) {
-        strcpy(name, psrvent->s_name );
-    } else {
-        sprintf(name, "%d", htons((WORD)port));
-    }
-    return name;
+    /* Try to translate to a name */
+    if ((pSrvent = getservbyport(Port, Proto)))
+        strcpy(Name, pSrvent->s_name );
+    else
+        sprintf(Name, "%d", htons((WORD)Port));
+    return Name;
 }
 
 
@@ -594,51 +547,51 @@ GetPortName(UINT port, PCHAR proto, PCHAR name, int namelen)
 // Translate IP addresses into their name-resolved form if possible.
 //
 PCHAR
-GetIpHostName(BOOL local, UINT ipaddr, PCHAR name, int namelen)
+GetIpHostName(BOOL Local, UINT IpAddr, CHAR Name[], int NameLen)
 {
 //  struct hostent *phostent;
-    UINT nipaddr;
+    UINT nIpAddr;
 
     // Does the user want raw numbers?
-    nipaddr = htonl(ipaddr);
+    nIpAddr = htonl(IpAddr);
     if (bDoShowNumbers) {
-        sprintf(name, "%d.%d.%d.%d",
-            (nipaddr >> 24) & 0xFF,
-            (nipaddr >> 16) & 0xFF,
-            (nipaddr >> 8) & 0xFF,
-            (nipaddr) & 0xFF);
-        return name;
+        sprintf(Name, "%d.%d.%d.%d",
+            (nIpAddr >> 24) & 0xFF,
+            (nIpAddr >> 16) & 0xFF,
+            (nIpAddr >> 8) & 0xFF,
+            (nIpAddr) & 0xFF);
+        return Name;
     }
 
-    name[0] = _T('\0');
+    Name[0] = L'\0';
 
     // Try to translate to a name
-    if (!ipaddr) {
-        if (!local) {
-            sprintf(name, "%d.%d.%d.%d",
-                (nipaddr >> 24) & 0xFF,
-                (nipaddr >> 16) & 0xFF,
-                (nipaddr >> 8) & 0xFF,
-                (nipaddr) & 0xFF);
+    if (!IpAddr) {
+        if (!Local) {
+            sprintf(Name, "%d.%d.%d.%d",
+                (nIpAddr >> 24) & 0xFF,
+                (nIpAddr >> 16) & 0xFF,
+                (nIpAddr >> 8) & 0xFF,
+                (nIpAddr) & 0xFF);
         } else {
             //gethostname(name, namelen);
         }
-    } else if (ipaddr == 0x0100007f) {
-        if (local) {
+    } else if (IpAddr == 0x0100007f) {
+        if (Local) {
             //gethostname(name, namelen);
         } else {
-            strcpy(name, "localhost");
+            strcpy(Name, "localhost");
         }
 //  } else if (phostent = gethostbyaddr((char*)&ipaddr, sizeof(nipaddr), PF_INET)) {
 //      strcpy(name, phostent->h_name);
     } else {
-        sprintf(name, "%d.%d.%d.%d",
-            ((nipaddr >> 24) & 0x000000FF),
-            ((nipaddr >> 16) & 0x000000FF),
-            ((nipaddr >> 8) & 0x000000FF),
-            ((nipaddr) & 0x000000FF));
+        sprintf(Name, "%d.%d.%d.%d",
+            ((nIpAddr >> 24) & 0x000000FF),
+            ((nIpAddr >> 16) & 0x000000FF),
+            ((nIpAddr >> 8) & 0x000000FF),
+            ((nIpAddr) & 0x000000FF));
     }
-    return name;
+    return Name;
 }
 
 VOID Usage()

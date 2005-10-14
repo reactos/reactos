@@ -1,6 +1,5 @@
 
-// Maximum string lengths for ASCII ip address and port names
-//
+/* Maximum string lengths for ASCII ip address and port names */
 #define HOSTNAMELEN     256
 #define PORTNAMELEN     256
 #define ADDRESSLEN      HOSTNAMELEN+PORTNAMELEN
@@ -55,7 +54,7 @@ VOID ShowUdpStatistics(VOID);
 VOID ShowEthernetStatistics(VOID);
 VOID ShowTcpTable(VOID);
 VOID ShowUdpTable(VOID);
-PCHAR GetPortName(UINT port, PCHAR proto, PCHAR name, int namelen);
-PCHAR GetIpHostName(BOOL local, UINT ipaddr, PCHAR name, int namelen);
+PCHAR GetPortName(UINT Port, PCHAR Proto, CHAR Name[PORTNAMELEN], INT NameLen);
+PCHAR GetIpHostName(BOOL local, UINT ipaddr, CHAR name[HOSTNAMELEN], int namelen);
 VOID Usage(VOID);
 
