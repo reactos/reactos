@@ -167,6 +167,9 @@
 <directory name="netapi32">
 	<xi:include href="netapi32/netapi32.xml" />
 </directory>
+<directory name="netcfgx">
+	<xi:include href="netcfgx/netcfgx.xml" />
+</directory>
 <directory name="newdev">
 	<xi:include href="newdev/newdev.xml" />
 </directory>
