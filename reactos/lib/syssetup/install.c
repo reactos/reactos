@@ -399,7 +399,6 @@ InstallReactOS (HINSTANCE hInstance)
 
   /* desktop shortcuts */
   CreateShortcut(CSIDL_DESKTOP, _T("Command Prompt.lnk"), _T("cmd.exe"), _T("Open command prompt"));
-  CreateShortcut(CSIDL_DESKTOP, _T("winefile.lnk"), _T("winefile.exe"), _T("Launch Winefile"));
 
   /* program startmenu shortcuts */
   CreateShortcut(CSIDL_PROGRAMS, _T("Command Prompt.lnk"), _T("cmd.exe"), _T("Open command prompt"));
