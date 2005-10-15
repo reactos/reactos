@@ -477,6 +477,7 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
    PVOID WaitObjects[2];
    NTSTATUS WaitStatus;
    DECLARE_RETURN(BOOL);
+   USER_REFERENCE_ENTRY Ref;
    
    if( !IntGetScreenDC() ||
          PsGetWin32Thread()->MessageQueue == W32kGetPrimitiveMessageQueue() )
@@ -504,7 +505,7 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 
    DesktopWindow = UserGetWindowObject(IntGetDesktopWindow());
    
-   if (DesktopWindow) UserRefObjectCo(DesktopWindow);//can DesktopWindow be NULL?
+   if (DesktopWindow) UserRefObjectCo(DesktopWindow, &Ref);//can DesktopWindow be NULL?
    
    /* Process messages in the message queue itself. */
    IntLockHardwareMessageQueue(MessageQueue);

@@ -151,6 +151,7 @@ co_VIS_WindowLayoutChanged(
 {
    HRGN Temp;
    PWINDOW_OBJECT Parent;
+   USER_REFERENCE_ENTRY Ref;
 
    ASSERT_REFS_CO(Window);
 
@@ -164,7 +165,7 @@ co_VIS_WindowLayoutChanged(
                      Window->WindowRect.left - Parent->ClientRect.left,
                      Window->WindowRect.top - Parent->ClientRect.top);
 
-      UserRefObjectCo(Parent);
+      UserRefObjectCo(Parent, &Ref);
       co_UserRedrawWindow(Parent, NULL, Temp,
                           RDW_FRAME | RDW_ERASE | RDW_INVALIDATE |
                           RDW_ALLCHILDREN);

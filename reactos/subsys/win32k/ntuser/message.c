@@ -547,6 +547,7 @@ BOOL FASTCALL
 co_IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *HitTest, BOOL Remove)
 {
    PWINDOW_OBJECT Window;
+   USER_REFERENCE_ENTRY Ref, DesktopRef;
 
    if(!(Window = UserGetWindowObject(Msg->hwnd)))
    {
@@ -554,7 +555,7 @@ co_IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *
       return TRUE;
    }
 
-   UserRefObjectCo(Window);
+   UserRefObjectCo(Window, &Ref);
 
    if(ThreadQueue == Window->MessageQueue &&
          ThreadQueue->CaptureWindow != Window->hSelf)
@@ -572,7 +573,7 @@ co_IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *
          {
             PWINDOW_OBJECT Wnd;
             
-            UserRefObjectCo(DesktopWindow);
+            UserRefObjectCo(DesktopWindow, &DesktopRef);
             
             co_WinPosWindowFromPoint(DesktopWindow, Window->MessageQueue, &Msg->pt, &Wnd);
             if(Wnd)
@@ -664,6 +665,7 @@ co_IntPeekMessage(PUSER_MESSAGE Msg,
    PUSER_MESSAGE_QUEUE ThreadQueue;
    PUSER_MESSAGE Message;
    BOOL Present, RemoveMessages;
+   USER_REFERENCE_ENTRY Ref;
 
    /* The queues and order in which they are checked are documented in the MSDN
       article on GetMessage() */
@@ -772,7 +774,7 @@ MessageFound:
          {
             USHORT HitTest;
 
-            UserRefObjectCo(MsgWindow);
+            UserRefObjectCo(MsgWindow, &Ref);
 
             if(co_IntTranslateMouseMessage(ThreadQueue, &Msg->Msg, &HitTest, TRUE))
                /* FIXME - check message filter again, if the message doesn't match anymore,
@@ -972,6 +974,7 @@ NtUserGetMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
    UINT Size;
    USER_MESSAGE Msg;
    DECLARE_RETURN(BOOL);
+//   USER_REFERENCE_ENTRY Ref;
 
    DPRINT("Enter NtUserGetMessage\n");
    UserEnterExclusive();
@@ -982,7 +985,7 @@ NtUserGetMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
       RETURN(-1);
    }
    
-//   if (Window) UserRefObjectCo(Window);
+//   if (Window) UserRefObjectCo(Window, &Ref);
    
    if (MsgFilterMax < MsgFilterMin)
    {
@@ -1357,6 +1360,7 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
    LPARAM lParamPacked;
    PW32THREAD Win32Thread;
    DECLARE_RETURN(LRESULT);
+   USER_REFERENCE_ENTRY Ref;
 
    /* FIXME: Call hooks. */
    if (!(Window = UserGetWindowObject(hWnd)))
@@ -1364,7 +1368,7 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
        RETURN( FALSE);
    }
    
-   UserRefObjectCo(Window);
+   UserRefObjectCo(Window, &Ref);
 
    Win32Thread = PsGetWin32Thread();
 

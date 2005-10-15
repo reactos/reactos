@@ -433,6 +433,7 @@ NtUserTranslateAccelerator(
    PWINDOW_OBJECT Window = NULL;
    PACCELERATOR_TABLE Accel = NULL;
    ULONG i;
+   USER_REFERENCE_ENTRY AccelRef, WindowRef;
    DECLARE_RETURN(int);
 
    DPRINT("NtUserTranslateAccelerator(hWnd %x, Table %x, Message %p)\n",
@@ -458,14 +459,14 @@ NtUserTranslateAccelerator(
       RETURN( 0);
    }
 
-   UserRefObjectCo(Accel);
+   UserRefObjectCo(Accel, &AccelRef);
 
    if (!(Window = UserGetWindowObject(hWnd)))
    {
       RETURN( 0);
    }
 
-   UserRefObjectCo(Window);
+   UserRefObjectCo(Window, &WindowRef);
 
 
    /* FIXME: Associate AcceleratorTable with the current thread */

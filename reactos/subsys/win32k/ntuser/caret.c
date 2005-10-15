@@ -405,6 +405,7 @@ STDCALL
 NtUserShowCaret(HWND hWnd OPTIONAL, BOOL bShow)
 {
    PWINDOW_OBJECT Window = NULL;
+   USER_REFERENCE_ENTRY Ref;
    DECLARE_RETURN(BOOL);
    BOOL ret;
 
@@ -416,7 +417,7 @@ NtUserShowCaret(HWND hWnd OPTIONAL, BOOL bShow)
       RETURN(FALSE);
    }
 
-   if (Window) UserRefObjectCo(Window);
+   if (Window) UserRefObjectCo(Window, &Ref);
    
    if (bShow)
       ret = co_UserShowCaret(Window);

@@ -689,6 +689,7 @@ NtUserCallHwndLock(
 {
    BOOL Ret = 0;
    PWINDOW_OBJECT Window;
+   USER_REFERENCE_ENTRY Ref;
    DECLARE_RETURN(BOOLEAN);
 
    DPRINT("Enter NtUserCallHwndLock\n");
@@ -698,7 +699,7 @@ NtUserCallHwndLock(
    {
       RETURN( FALSE);
    }
-   UserRefObjectCo(Window);
+   UserRefObjectCo(Window, &Ref);
 
    /* FIXME: Routine can be 0x53 - 0x5E */
    switch (Routine)

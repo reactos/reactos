@@ -149,6 +149,7 @@ co_WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
 {
    PWINDOW_OBJECT WndTo = NULL;
    HWND Fg;
+   USER_REFERENCE_ENTRY Ref;
 
    ASSERT_REFS_CO(Window);
 
@@ -176,7 +177,7 @@ co_WinPosActivateOtherWindow(PWINDOW_OBJECT Window)
 
 done:
 
-   if (WndTo) UserRefObjectCo(WndTo);
+   if (WndTo) UserRefObjectCo(WndTo, &Ref);
 
    Fg = UserGetForegroundWindow();
    if ((!Fg || Window->hSelf == Fg) && WndTo)//fixme: ok if WndTo is NULL??
@@ -224,7 +225,8 @@ co_WinPosArrangeIconicWindows(PWINDOW_OBJECT parent)
 
       if((WndChild->Style & WS_MINIMIZE) != 0 )
       {
-         UserRefObjectCo(WndChild);
+         USER_REFERENCE_ENTRY Ref;
+         UserRefObjectCo(WndChild, &Ref);
 
          co_WinPosSetWindowPos(WndChild, 0, x + UserGetSystemMetrics(SM_CXBORDER),
                                y - yspacing - UserGetSystemMetrics(SM_CYBORDER)
@@ -709,7 +711,8 @@ WinPosDoOwnedPopups(HWND hWnd, HWND hWndInsertAfter)
          if ((Wnd->Style & WS_POPUP) &&
                UserGetWindow(List[i], GW_OWNER) == hWnd)
          {
-            UserRefObjectCo(Wnd);
+            USER_REFERENCE_ENTRY Ref;
+            UserRefObjectCo(Wnd, &Ref);
 
             co_WinPosSetWindowPos(Wnd, hWndInsertAfter, 0, 0, 0, 0,
                                   SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE | SWP_NOSENDCHANGING);
@@ -1530,6 +1533,7 @@ co_WinPosSearchChildren(
 {
    PWINDOW_OBJECT Current;
    HWND *List, *phWnd;
+   USER_REFERENCE_ENTRY Ref;
    
    ASSERT_REFS_CO(ScopeWin);
 
@@ -1572,7 +1576,7 @@ co_WinPosSearchChildren(
             break;
          }
 
-         UserRefObjectCo(Current);
+         UserRefObjectCo(Current, &Ref);
          
          if (OnlyHitTests && (Current->MessageQueue == OnlyHitTests))
          {
@@ -1657,6 +1661,7 @@ NtUserGetMinMaxInfo(
    MINMAXINFO SafeMinMax;
    NTSTATUS Status;
    DECLARE_RETURN(BOOL);
+   USER_REFERENCE_ENTRY Ref;
 
    DPRINT("Enter NtUserGetMinMaxInfo\n");
    UserEnterExclusive();
@@ -1666,7 +1671,7 @@ NtUserGetMinMaxInfo(
       RETURN( FALSE);
    }
 
-   UserRefObjectCo(Window);
+   UserRefObjectCo(Window, &Ref);
 
    Size.x = Window->WindowRect.left;
    Size.y = Window->WindowRect.top;
