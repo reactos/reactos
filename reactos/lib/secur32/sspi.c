@@ -23,6 +23,16 @@ EnumerateSecurityPackagesW (
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+SECURITY_STATUS
+WINAPI
+EnumerateSecurityPackagesA(
+	PULONG pulong,
+	PSecPkgInfoA* psecpkginfoa
+	)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
 
 SECURITY_STATUS
 WINAPI
