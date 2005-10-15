@@ -1026,22 +1026,7 @@ typedef struct _STROBJ {
   LPWSTR  pwszOrg;
 } STROBJ;
 
-typedef struct _SURFACEALIGNMENT {
-  union {
-		struct {
-			DWORD  dwStartAlignment;
-			DWORD  dwPitchAlignment;
-			DWORD  dwReserved1;
-			DWORD  dwReserved2;
-		} Linear;
-		struct {
-			DWORD  dwXAlignment;
-			DWORD  dwYAlignment;
-			DWORD  dwReserved1;
-			DWORD  dwReserved2;
-		} Rectangular;
-  };
-} SURFACEALIGNMENT, *LPSURFACEALIGNMENT;
+
 
 /* SURFOBJ.iType constants */
 #define STYPE_BITMAP                      0L
