@@ -9,4 +9,4 @@
 #include <reactos/version.rc>
 
 #include "clb_En.rc"
-
+#include "clb_Ja.rc"
