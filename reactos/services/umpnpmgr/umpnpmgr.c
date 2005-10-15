@@ -875,7 +875,7 @@ PNP_RequestEjectPC(handle_t BindingHandle)
     return ret;
 }
 
-typedef BOOL (*PDEV_INSTALL_W)(HWND, HINSTANCE, LPCWSTR, INT);
+typedef BOOL (WINAPI *PDEV_INSTALL_W)(HWND, HINSTANCE, LPCWSTR, INT);
 
 static BOOL
 InstallDevice(PCWSTR DeviceInstance)
