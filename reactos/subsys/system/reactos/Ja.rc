@@ -1,0 +1,11 @@
+LANGUAGE LANG_JAPANESE, SUBLANG_NEUTRAL
+
+/* String Tables */
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_CAPTION  "ReactOS セットアップ"
+    IDS_TEXT     "この CD から直接 ReactOS をインストールすることはできません!\n\n"\
+                 "ReactOS をインストールするには、コンピュータを一旦終了させ、この CD から起動させてください。"
+END
+
+/* EOF */
