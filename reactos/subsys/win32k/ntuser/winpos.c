@@ -596,7 +596,7 @@ co_WinPosDoWinPosChanging(PWINDOW_OBJECT Window,
 
    if (!(WinPos->flags & SWP_NOSENDCHANGING))
    {
-      co_IntSendMessage(Window->hSelf, WM_WINDOWPOSCHANGING, 0, (LPARAM) WinPos);
+      co_IntPostOrSendMessage(Window->hSelf, WM_WINDOWPOSCHANGING, 0, (LPARAM) WinPos);
    }
 
    *WindowRect = Window->WindowRect;
@@ -1282,7 +1282,7 @@ co_WinPosSetWindowPos(
    }
 
    if ((WinPos.flags & SWP_AGG_STATUSFLAGS) != SWP_AGG_NOPOSCHANGE)
-      co_IntSendMessage(WinPos.hwnd, WM_WINDOWPOSCHANGED, 0, (LPARAM) &WinPos);
+      co_IntPostOrSendMessage(WinPos.hwnd, WM_WINDOWPOSCHANGED, 0, (LPARAM) &WinPos);
 
    return TRUE;
 }
@@ -1337,28 +1337,39 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
          /* Fall through. */
       case SW_MINIMIZE:
          {
-            Swp |= SWP_FRAMECHANGED | SWP_NOACTIVATE;
+            Swp |= SWP_NOACTIVATE;
             if (!(Window->Style & WS_MINIMIZE))
             {
-               Swp |= co_WinPosMinMaximize(Window, SW_MINIMIZE, &NewPos);
+               Swp |= co_WinPosMinMaximize(Window, SW_MINIMIZE, &NewPos) |
+                      SWP_FRAMECHANGED;
             }
             else
             {
                Swp |= SWP_NOSIZE | SWP_NOMOVE;
+               if (! WasVisible)
+               {
+                  Swp |= SWP_FRAMECHANGED;
+               }
             }
             break;
          }
 
       case SW_SHOWMAXIMIZED:
          {
-            Swp |= SWP_SHOWWINDOW | SWP_FRAMECHANGED;
+//__asm__("int $3\n");
+            Swp |= SWP_SHOWWINDOW;
             if (!(Window->Style & WS_MAXIMIZE))
             {
-               Swp |= co_WinPosMinMaximize(Window, SW_MAXIMIZE, &NewPos);
+               Swp |= co_WinPosMinMaximize(Window, SW_MAXIMIZE, &NewPos) |
+                      SWP_FRAMECHANGED;
             }
             else
             {
                Swp |= SWP_NOSIZE | SWP_NOMOVE;
+               if (! WasVisible)
+               {
+                  Swp |= SWP_FRAMECHANGED;
+               }
             }
             break;
          }
@@ -1377,14 +1388,19 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
       case SW_SHOWNORMAL:
       case SW_SHOWDEFAULT:
       case SW_RESTORE:
-         Swp |= SWP_SHOWWINDOW | SWP_FRAMECHANGED;
+         Swp |= SWP_SHOWWINDOW;
          if (Window->Style & (WS_MINIMIZE | WS_MAXIMIZE))
          {
-            Swp |= co_WinPosMinMaximize(Window, SW_RESTORE, &NewPos);
+            Swp |= co_WinPosMinMaximize(Window, SW_RESTORE, &NewPos) |
+                   SWP_FRAMECHANGED;
          }
          else
          {
             Swp |= SWP_NOSIZE | SWP_NOMOVE;
+            if (! WasVisible)
+            {
+               Swp |= SWP_FRAMECHANGED;
+            }
          }
          break;
    }
