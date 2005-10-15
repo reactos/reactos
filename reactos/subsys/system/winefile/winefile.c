@@ -2832,12 +2832,21 @@ static void format_bytes(LPTSTR buffer, LONGLONG bytes)
 
 	float fBytes = (float)bytes;
 
+#ifdef __WINE__	/* work around for incorrect implementation of wsprintf()/_stprintf() in WINE */
 	if (bytes >= 1073741824)	/* 1 GB */
 		wsprintf(buffer, sFmtGB, fBytes/1073741824.f+.5f);
 	else if (bytes >= 1048576)	/* 1 MB */
 		wsprintf(buffer, sFmtMB, fBytes/1048576.f+.5f);
 	else if (bytes >= 1024)		/* 1 kB */
 		wsprintf(buffer, sFmtkB, fBytes/1024.f+.5f);
+#else
+	if (bytes >= 1073741824)	/* 1 GB */
+		_stprintf(buffer, sFmtGB, fBytes/1073741824.f+.5f);
+	else if (bytes >= 1048576)	/* 1 MB */
+		_stprintf(buffer, sFmtMB, fBytes/1048576.f+.5f);
+	else if (bytes >= 1024)		/* 1 kB */
+		_stprintf(buffer, sFmtkB, fBytes/1024.f+.5f);
+#endif
 	else
 		_stprintf(buffer, sLongNumFmt, bytes);
 }
@@ -3218,10 +3227,10 @@ static void draw_item(Pane* pane, LPDRAWITEMSTRUCT dis, Entry* entry, int calcWi
 			textcolor = RGB(0,0,0);
 
 		if (dis->itemState & ODS_FOCUS) {
-			textcolor = RGB(255,255,255);
+			textcolor = COLOR_SELECTION_TXT;
 			bkcolor = COLOR_SELECTION;
 		} else {
-			bkcolor = RGB(255,255,255);
+			bkcolor = GetSysColor(COLOR_WINDOW);
 		}
 
 		hbrush = CreateSolidBrush(bkcolor);
@@ -3430,7 +3439,7 @@ static void draw_item(Pane* pane, LPDRAWITEMSTRUCT dis, Entry* entry, int calcWi
 		HPEN lastPen;
 		HPEN hpen;
 
-		if (!(GetVersion() & 0x80000000)) {	/* Windows NT? */
+		if (!(GetVersion() & 0x80000000)) {	/* Windows NT or higher? */
 			LOGBRUSH lb = {PS_SOLID, RGB(255,255,255)};
 			hpen = ExtCreatePen(PS_COSMETIC|PS_ALTERNATE, 1, &lb, 0, 0);
 		} else
