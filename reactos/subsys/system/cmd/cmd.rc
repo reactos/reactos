@@ -11,6 +11,7 @@
 #include "En.rc"
 #include "Fr.rc"
 #include "De.rc"
+#include "Es.rc"
 #include "Ja.rc"
 
 
