@@ -416,7 +416,7 @@ MakeAbsoluteSD@44
 ;MakeAbsoluteSD2
 MakeSelfRelativeSD@12
 MapGenericMask@8=NTDLL.RtlMapGenericMask
-;NotifyBootConfigStatus@4
+NotifyBootConfigStatus@4
 NotifyChangeEventLog@8
 ObjectCloseAuditAlarmA@12
 ObjectCloseAuditAlarmW@12

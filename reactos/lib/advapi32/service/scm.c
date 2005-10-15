@@ -263,13 +263,31 @@ CreateServiceW(SC_HANDLE hSCManager,
     SC_HANDLE hService = NULL;
     DWORD dwError;
     HKEY hEnumKey, hKey;
+    DWORD dwDependenciesLength = 0;
+    DWORD dwLength;
+    LPWSTR lpStr;
 
     DPRINT1("CreateServiceW() called\n");
 
+    /* Calculate the Dependencies length*/
+    if (lpDependencies != NULL)
+    {
+        lpStr = (LPWSTR)lpDependencies;
+        while (*lpStr)
+        {
+            dwLength = wcslen(lpStr) + 1;
+            dwDependenciesLength += dwLength;
+            lpStr = lpStr + dwLength;
+        }
+        dwDependenciesLength++;
+    }
+
+    /* FIXME: Encrypt the password */
+
+#if 0
     HandleBind();
 
     /* Call to services.exe using RPC */
-#if 0
     dwError = ScmrCreateServiceW(BindingHandle,
                                  (unsigned int)hSCManager,
                                  (LPWSTR)lpServiceName,
@@ -281,8 +299,8 @@ CreateServiceW(SC_HANDLE hSCManager,
                                  (LPWSTR)lpBinaryPathName,
                                  (LPWSTR)lpLoadOrderGroup,
                                  lpdwTagId,
-                                 NULL,              /* FIXME: lpDependencies */
-                                 0,                 /* FIXME: dwDependenciesLength */
+                                 lpDependencies,
+                                 dwDependenciesLength,
                                  (LPWSTR)lpServiceStartName,
                                  NULL,              /* FIXME: lpPassword */
                                  0,                 /* FIXME: dwPasswordLength */
@@ -991,9 +1009,7 @@ UnlockServiceDatabase(SC_LOCK ScLock)
 {
   DWORD dwError;
 
-#if 0
-  DPRINT("UnlockServiceDatabase(%x)\n", hSCManager);
-#endif
+  DPRINT("UnlockServiceDatabase(%x)\n", ScLock);
 
   HandleBind();
 
@@ -1011,10 +1027,39 @@ UnlockServiceDatabase(SC_LOCK ScLock)
 }
 
 
+/**********************************************************************
+ *  NotifyBootConfigStatus
+ *
+ * @implemented
+ */
+BOOL STDCALL
+NotifyBootConfigStatus(BOOL BootAcceptable)
+{
+    DWORD dwError;
+
+    DPRINT1("NotifyBootConfigStatus()\n");
+
+    HandleBind();
+
+    /* Call to services.exe using RPC */
+    dwError = ScmrNotifyBootConfigStatus(BindingHandle,
+                                         BootAcceptable);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("NotifyBootConfigStatus() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+
 void __RPC_FAR * __RPC_USER midl_user_allocate(size_t len)
 {
   return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
 }
+
 
 void __RPC_USER midl_user_free(void __RPC_FAR * ptr)
 {
