@@ -29,6 +29,7 @@
 #include "Es.rc"
 #include "Fi.rc"
 #include "Fr.rc"
+#include "Ja.rc"
 #include "Nl.rc"
 #include "No.rc"
 #include "Pl.rc"

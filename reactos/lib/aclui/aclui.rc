@@ -9,7 +9,7 @@
 #include <reactos/version.rc>
 
 IDB_USRGRPIMAGES BITMAP "res/usrgrp.bmp"
-
+#include "aclui_Ja.rc"
 #include "aclui_En.rc"
 #include "aclui_De.rc"
 #include "aclui_Nl.rc"

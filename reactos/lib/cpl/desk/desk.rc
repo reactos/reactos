@@ -12,10 +12,11 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 IDC_DESK_ICON ICON "resources/applet.ico"
 
-#include "en.rc"
 #include "cz.rc"
 #include "de.rc"
+#include "en.rc"
+#include "es.rc"
+#include "Ja.rc"
 #include "nl.rc"
 #include "pl.rc"
 #include "sv.rc"
-#include "es.rc"
