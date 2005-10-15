@@ -638,6 +638,7 @@ NtGdiUpdateColors(HDC hDC)
 {
    PWINDOW_OBJECT Wnd;
    BOOL calledFromUser, ret;
+   USER_REFERENCE_ENTRY Ref;
 
    calledFromUser = UserIsEntered();
    
@@ -657,7 +658,7 @@ NtGdiUpdateColors(HDC hDC)
       return FALSE;
    }
    
-   UserRefObjectCo(Wnd);
+   UserRefObjectCo(Wnd, &Ref);
    ret = co_UserRedrawWindow(Wnd, NULL, 0, RDW_INVALIDATE);
    UserDerefObjectCo(Wnd);
    

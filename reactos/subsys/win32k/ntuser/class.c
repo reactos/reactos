@@ -566,6 +566,7 @@ NtUserSetClassLong(HWND hWnd,
 {
    PWINDOW_OBJECT Window;
    LONG Ret;
+   USER_REFERENCE_ENTRY Ref;
    DECLARE_RETURN(DWORD);
 
    DPRINT("Enter NtUserSetClassLong\n");
@@ -576,7 +577,7 @@ NtUserSetClassLong(HWND hWnd,
       RETURN(0);
    }
 
-   UserRefObjectCo(Window);
+   UserRefObjectCo(Window, &Ref);
 
    Ret = IntGetClassLong(Window, Offset, Ansi);
    co_IntSetClassLong(Window, Offset, dwNewLong, Ansi);

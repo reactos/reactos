@@ -90,20 +90,18 @@ typedef struct _USER_REFERENCE_ENTRY
    ASSERT(_obj_ == ref->obj); \
    \
 }
-#define UserRefObjectCo(_obj_) \
+#define UserRefObjectCo(_obj_, _ref_) \
 { \
    PW32THREAD t; \
-   PUSER_REFERENCE_ENTRY ref; \
    \
    ASSERT(_obj_); \
    t = PsGetWin32Thread(); \
    ASSERT(t); \
-   ref = (PUSER_REFERENCE_ENTRY)_alloca(sizeof(USER_REFERENCE_ENTRY)); \
-   ASSERT(ref); \
-   ref->obj = _obj_; \
+   ASSERT(_ref_); \
+   (_ref_)->obj = _obj_; \
    ObmReferenceObject(_obj_); \
  \
-   PushEntryList(&t->ReferencesList, &ref->Entry); \
+   PushEntryList(&t->ReferencesList, &(_ref_)->Entry); \
    \
 }
 

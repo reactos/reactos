@@ -61,12 +61,13 @@ co_IntSendDeactivateMessages(HWND hWndPrev, HWND hWnd)
 VOID FASTCALL
 co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
 {
+   USER_REFERENCE_ENTRY Ref;
    PWINDOW_OBJECT Window;
    
    if ((Window = UserGetWindowObject(hWnd)))
    {
       
-      UserRefObjectCo(Window);
+      UserRefObjectCo(Window, &Ref);
       
       /* Send palette messages */
       if (co_IntPostOrSendMessage(hWnd, WM_QUERYNEWPALETTE, 0, 0))
@@ -218,6 +219,7 @@ co_IntMouseActivateWindow(PWINDOW_OBJECT Window)
 {
    HWND Top;
    PWINDOW_OBJECT TopWindow;
+   USER_REFERENCE_ENTRY Ref;
 
    ASSERT_REFS_CO(Window);
 
@@ -231,7 +233,7 @@ co_IntMouseActivateWindow(PWINDOW_OBJECT Window)
          Top = IntFindChildWindowToOwner(DesktopWindow, Window);
          if((TopWnd = UserGetWindowObject(Top)))
          {
-            UserRefObjectCo(TopWnd);
+            UserRefObjectCo(TopWnd, &Ref);
             Ret = co_IntMouseActivateWindow(TopWnd);
             UserDerefObjectCo(TopWnd);
             
@@ -246,7 +248,7 @@ co_IntMouseActivateWindow(PWINDOW_OBJECT Window)
    if (!TopWindow) return FALSE;
 
    /* TMN: Check return valud from this function? */
-   UserRefObjectCo(TopWindow);
+   UserRefObjectCo(TopWindow, &Ref);
    
    co_IntSetForegroundAndFocusWindow(TopWindow, Window, TRUE);
    
@@ -386,6 +388,7 @@ CLEANUP:
 HWND STDCALL
 NtUserSetActiveWindow(HWND hWnd)
 {
+   USER_REFERENCE_ENTRY Ref;
    DECLARE_RETURN(HWND);
 
    DPRINT("Enter NtUserSetActiveWindow(%x)\n", hWnd);
@@ -412,7 +415,7 @@ NtUserSetActiveWindow(HWND hWnd)
          RETURN( 0);
       }
 
-      UserRefObjectCo(Window);
+      UserRefObjectCo(Window, &Ref);
       hWndPrev = co_IntSetActiveWindow(Window);
       UserDerefObjectCo(Window);
 
@@ -503,6 +506,7 @@ HWND FASTCALL co_UserSetFocus(PWINDOW_OBJECT Window OPTIONAL)
       PUSER_MESSAGE_QUEUE ThreadQueue;
       HWND hWndPrev;
       PWINDOW_OBJECT TopWnd;
+      USER_REFERENCE_ENTRY Ref;
 
       ASSERT_REFS_CO(Window);
 
@@ -523,7 +527,7 @@ HWND FASTCALL co_UserSetFocus(PWINDOW_OBJECT Window OPTIONAL)
       if (TopWnd && TopWnd->hSelf != UserGetActiveWindow())
       {
 //         PWINDOW_OBJECT WndTops = UserGetWindowObject(hWndTop);
-         UserRefObjectCo(TopWnd);
+         UserRefObjectCo(TopWnd, &Ref);
          co_IntSetActiveWindow(TopWnd);
          UserDerefObjectCo(TopWnd);
       }
@@ -547,6 +551,7 @@ HWND STDCALL
 NtUserSetFocus(HWND hWnd)
 {
    PWINDOW_OBJECT Window;
+   USER_REFERENCE_ENTRY Ref;
    DECLARE_RETURN(HWND);
    HWND ret;
 
@@ -558,7 +563,7 @@ NtUserSetFocus(HWND hWnd)
       RETURN(NULL);
    }
 
-   UserRefObjectCo(Window);
+   UserRefObjectCo(Window, &Ref);
    ret = co_UserSetFocus(Window);
    UserDerefObjectCo(Window);
    

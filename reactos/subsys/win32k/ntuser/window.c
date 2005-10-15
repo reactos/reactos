@@ -239,7 +239,8 @@ static void IntSendDestroyMsg(HWND hWnd)
    Window = UserGetWindowObject(hWnd);
    if (Window)
    {
-//      UserRefObjectCo(Window);
+//      USER_REFERENCE_ENTRY Ref;
+//      UserRefObjectCo(Window, &Ref);
       
       if (!IntGetOwner(Window) && !IntGetParent(Window))
       {
@@ -569,7 +570,7 @@ co_DestroyThreadWindows(struct _ETHREAD *Thread)
    PW32THREAD WThread;
    PLIST_ENTRY Current;
    PWINDOW_OBJECT Wnd;
-
+   USER_REFERENCE_ENTRY Ref;
    WThread = Thread->Tcb.Win32Thread;
    
    while (!IsListEmpty(&WThread->WindowListHead))
@@ -588,7 +589,7 @@ co_DestroyThreadWindows(struct _ETHREAD *Thread)
       
       //ASSERT(co_UserDestroyWindow(Wnd));
       
-      UserRefObjectCo(Wnd);//faxme: temp hack??
+      UserRefObjectCo(Wnd, &Ref);//faxme: temp hack??
       if (!co_UserDestroyWindow(Wnd))
       {
          DPRINT1("Unable to destroy window 0x%x at thread cleanup... This is _VERY_ bad!\n", Wnd);
@@ -1355,6 +1356,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    BOOL MenuChanged;
    DECLARE_RETURN(HWND);
    BOOL HasOwner;
+   USER_REFERENCE_ENTRY ParentRef, Ref;
 
    ParentWindowHandle = PsGetWin32Thread()->Desktop->DesktopWindow;
    OwnerWindowHandle = NULL;
@@ -1388,7 +1390,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
 //   {
    ParentWindow = UserGetWindowObject(ParentWindowHandle);
 
-   if (ParentWindow) UserRefObjectCo(ParentWindow);
+   if (ParentWindow) UserRefObjectCo(ParentWindow, &ParentRef);
 //   }
 //   else
 //   {
@@ -1441,7 +1443,7 @@ co_IntCreateWindowEx(DWORD dwExStyle,
       RETURN( (HWND)0);
    }
 
-   UserRefObjectCo(Window);
+   UserRefObjectCo(Window, &Ref);
 
    ObDereferenceObject(WinSta);
 
@@ -2118,8 +2120,8 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
 
                if (IntWndBelongsToThread(Child, PsGetWin32Thread()))
                {
-
-                  UserRefObjectCo(Child);//temp hack?
+                  USER_REFERENCE_ENTRY ChildRef;
+                  UserRefObjectCo(Child, &ChildRef);//temp hack?
                   co_UserDestroyWindow(Child);
                   UserDerefObjectCo(Child);//temp hack?
 
@@ -2165,6 +2167,7 @@ NtUserDestroyWindow(HWND Wnd)
    PWINDOW_OBJECT Window;
    DECLARE_RETURN(BOOLEAN);
    BOOLEAN ret;
+   USER_REFERENCE_ENTRY Ref;
 
    DPRINT("Enter NtUserDestroyWindow\n");
    UserEnterExclusive();
@@ -2174,7 +2177,7 @@ NtUserDestroyWindow(HWND Wnd)
       RETURN(FALSE);
    }
 
-   UserRefObjectCo(Window);//faxme: dunno if win should be reffed during destroy..
+   UserRefObjectCo(Window, &Ref);//faxme: dunno if win should be reffed during destroy..
    ret = co_UserDestroyWindow(Window);
    UserDerefObjectCo(Window);//faxme: dunno if win should be reffed during destroy..
 
@@ -2778,6 +2781,7 @@ co_UserSetParent(HWND hWndChild, HWND hWndNewParent)
 {
    PWINDOW_OBJECT Wnd = NULL, WndParent = NULL, WndOldParent;
    HWND hWndOldParent = NULL;
+   USER_REFERENCE_ENTRY Ref, ParentRef;
 
    if (IntIsBroadcastHwnd(hWndChild) || IntIsBroadcastHwnd(hWndNewParent))
    {
@@ -2811,8 +2815,8 @@ co_UserSetParent(HWND hWndChild, HWND hWndNewParent)
       return( NULL);
    }
 
-   UserRefObjectCo(Wnd);
-   UserRefObjectCo(WndParent);
+   UserRefObjectCo(Wnd, &Ref);
+   UserRefObjectCo(WndParent, &ParentRef);
    
    WndOldParent = co_IntSetParent(Wnd, WndParent);
    
@@ -2930,6 +2934,7 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
    PWINSTATION_OBJECT WinStaObject;
    PWINDOW_OBJECT WndShell;
    DECLARE_RETURN(BOOL);
+   USER_REFERENCE_ENTRY Ref;
 
    DPRINT("Enter NtUserSetShellWindowEx\n");
    UserEnterExclusive();
@@ -2985,7 +2990,7 @@ NtUserSetShellWindowEx(HWND hwndShell, HWND hwndListView)
       RETURN( FALSE);
    }
 
-   UserRefObjectCo(WndShell);
+   UserRefObjectCo(WndShell, &Ref);
    co_WinPosSetWindowPos(WndShell, HWND_BOTTOM, 0, 0, 0, 0, SWP_NOMOVE|SWP_NOSIZE|SWP_NOACTIVATE);
 
    WinStaObject->ShellWindow = hwndShell;
@@ -3876,7 +3881,9 @@ NtUserSetMenu(
 
    if (Changed && Repaint)
    {
-      UserRefObjectCo(Window);
+      USER_REFERENCE_ENTRY Ref;
+
+      UserRefObjectCo(Window, &Ref);
       co_WinPosSetWindowPos(Window, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
                             SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED);
 
@@ -3917,6 +3924,7 @@ NtUserSetWindowPlacement(HWND hWnd,
    WINDOWPLACEMENT Safepl;
    NTSTATUS Status;
    DECLARE_RETURN(BOOL);
+   USER_REFERENCE_ENTRY Ref;
 
    DPRINT("Enter NtUserSetWindowPlacement\n");
    UserEnterExclusive();
@@ -3936,7 +3944,7 @@ NtUserSetWindowPlacement(HWND hWnd,
       RETURN( FALSE);
    }
 
-   UserRefObjectCo(Window);
+   UserRefObjectCo(Window, &Ref);
 
    if ((Window->Style & (WS_MAXIMIZE | WS_MINIMIZE)) == 0)
    {
@@ -3982,6 +3990,7 @@ NtUserSetWindowPos(
    DECLARE_RETURN(BOOL);
    PWINDOW_OBJECT Window;
    BOOL ret;
+   USER_REFERENCE_ENTRY Ref;
 
    DPRINT("Enter NtUserSetWindowPos\n");
    UserEnterExclusive();
@@ -3991,7 +4000,7 @@ NtUserSetWindowPos(
       RETURN(FALSE);
    }
 
-   UserRefObjectCo(Window);
+   UserRefObjectCo(Window, &Ref);
    ret = co_WinPosSetWindowPos(Window, hWndInsertAfter, X, Y, cx, cy, uFlags);
    UserDerefObjectCo(Window);
 
@@ -4114,7 +4123,8 @@ NtUserSetWindowRgn(
 
    if(bRedraw)
    {
-      UserRefObjectCo(Window);
+      USER_REFERENCE_ENTRY Ref;
+      UserRefObjectCo(Window, &Ref);
       co_UserRedrawWindow(Window, NULL, NULL, RDW_INVALIDATE);
       UserDerefObjectCo(Window);
    }
@@ -4137,6 +4147,7 @@ NtUserShowWindow(HWND hWnd, LONG nCmdShow)
    PWINDOW_OBJECT Window;
    BOOL ret;
    DECLARE_RETURN(BOOL);
+   USER_REFERENCE_ENTRY Ref;
 
    DPRINT("Enter NtUserShowWindow\n");
    UserEnterExclusive();
@@ -4146,7 +4157,7 @@ NtUserShowWindow(HWND hWnd, LONG nCmdShow)
       RETURN(FALSE);
    }
 
-   UserRefObjectCo(Window);
+   UserRefObjectCo(Window, &Ref);
    ret = co_WinPosShowWindow(Window, nCmdShow);
    UserDerefObjectCo(Window);
 
@@ -4206,6 +4217,7 @@ NtUserWindowFromPoint(LONG X, LONG Y)
    HWND Ret;
    PWINDOW_OBJECT DesktopWindow = NULL, Window = NULL;
    DECLARE_RETURN(HWND);
+   USER_REFERENCE_ENTRY Ref;
 
    DPRINT("Enter NtUserWindowFromPoint\n");
    UserEnterExclusive();
@@ -4219,7 +4231,7 @@ NtUserWindowFromPoint(LONG X, LONG Y)
 
       //hmm... threads live on desktops thus we have a reference on the desktop and indirectly the desktop window
       //its possible this referencing is useless, thou it shouldnt hurt...
-      UserRefObjectCo(DesktopWindow);
+      UserRefObjectCo(DesktopWindow, &Ref);
       
       Hit = co_WinPosWindowFromPoint(DesktopWindow, PsGetWin32Thread()->MessageQueue, &pt, &Window);
       
