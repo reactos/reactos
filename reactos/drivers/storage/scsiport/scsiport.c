@@ -1776,9 +1776,9 @@ ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
         break;
 
       case IOCTL_SCSI_MINIPORT:
-        DPRINT1("  IOCTL_SCSI_MINIPORT\n");
-        DPRINT1("  Signature: %.8s\n", ((PSRB_IO_CONTROL)Irp->AssociatedIrp.SystemBuffer)->Signature);
-        DPRINT1("  ControlCode: 0x%lX\n", ((PSRB_IO_CONTROL)Irp->AssociatedIrp.SystemBuffer)->ControlCode);
+        DPRINT("  IOCTL_SCSI_MINIPORT\n");
+        DPRINT("  Signature: %.8s\n", ((PSRB_IO_CONTROL)Irp->AssociatedIrp.SystemBuffer)->Signature);
+        DPRINT("  ControlCode: 0x%lX\n", ((PSRB_IO_CONTROL)Irp->AssociatedIrp.SystemBuffer)->ControlCode);
         return SpiScsiMiniport(DeviceObject, Irp);
 
       default:
@@ -1869,7 +1869,7 @@ SpiScsiMiniport(IN PDEVICE_OBJECT DeviceObject,
   SrbIoControl = (PSRB_IO_CONTROL)Irp->AssociatedIrp.SystemBuffer;
 
   IrpStack = IoGetCurrentIrpStackLocation(Irp);
-  if (IrpStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(SRB_IO_CONTROL) + sizeof(SENDCMDINPARAMS) - 1)
+  if (IrpStack->Parameters.DeviceIoControl.InputBufferLength < sizeof(SRB_IO_CONTROL))
     {
       Irp->IoStatus.Status = STATUS_INVALID_PARAMETER;
       IoCompleteRequest(Irp, IO_NO_INCREMENT);
