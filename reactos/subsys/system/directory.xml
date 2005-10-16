@@ -32,6 +32,9 @@
 <directory name="lsass">
 	<xi:include href="lsass/lsass.xml" />
 </directory>
+<directory name="msconfig">
+	<xi:include href="msconfig/msconfig.xml" />
+</directory>
 <directory name="msiexec">
 	<xi:include href="msiexec/msiexec.xml" />
 </directory>
