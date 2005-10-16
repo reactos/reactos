@@ -439,6 +439,7 @@ FrLdrLoadBootDrivers(PCHAR szSystemRoot,
                 /* Read the Start Value */
                 ValueSize = sizeof(ULONG);
                 rc = RegQueryValue(hDriverKey, "Start", &ValueType, (PUCHAR)&StartValue, &ValueSize);
+		if (rc != ERROR_SUCCESS) StartValue = (ULONG)-1;
                 DbgPrint((DPRINT_REACTOS, "  Start: %x  \n", (int)StartValue));
 
                 /* Read the Tag */
@@ -486,7 +487,7 @@ FrLdrLoadBootDrivers(PCHAR szSystemRoot,
                 } else {
 
                     DbgPrint((DPRINT_REACTOS, "  Skipping driver '%s' with Start %d, Tag %d and Group '%s' (Current Tag %d, current group '%s')\n",
-                    ServiceName, StartValue, TagValue, DriverGroup, OrderList[TagIndex], GroupName));
+                             ServiceName, StartValue, TagValue, DriverGroup, OrderList[TagIndex], GroupName));
                 }
 
                 Index++;
@@ -511,6 +512,7 @@ FrLdrLoadBootDrivers(PCHAR szSystemRoot,
             /* Read the Start Value */
             ValueSize = sizeof(ULONG);
             rc = RegQueryValue(hDriverKey, "Start", &ValueType, (PUCHAR)&StartValue, &ValueSize);
+            if (rc != ERROR_SUCCESS) StartValue = (ULONG)-1;
             DbgPrint((DPRINT_REACTOS, "  Start: %x  \n", (int)StartValue));
 
             /* Read the Tag */
