@@ -401,16 +401,21 @@ EnvpToUnicodeString (char ** envp, PUNICODE_STRING UnicodeEnv)
 	AnsiEnv.Buffer = RtlAllocateHeap (RtlGetProcessHeap(), 0, CharCount);
 	if (NULL != AnsiEnv.Buffer)
 	{
+
 		PCHAR WritePos = AnsiEnv.Buffer;
 		
 		for (Index=0; NULL != envp[Index]; Index++)
 		{
-			strcat (WritePos, envp[Index]);
+			strcpy (WritePos, envp[Index]);
 			WritePos += strlen (envp[Index]) + 1;
 		}
-		AnsiEnv.Buffer [CharCount] = '\0';
+
+      /* FIXME: the last (double) nullterm should perhaps not be included in Length
+       * but only in MaximumLength. -Gunnar */
+		AnsiEnv.Buffer [CharCount-1] = '\0';
 		AnsiEnv.Length             = CharCount;
 		AnsiEnv.MaximumLength      = CharCount;
+      
 		RtlAnsiStringToUnicodeString (UnicodeEnv, & AnsiEnv, TRUE);
 		RtlFreeHeap (RtlGetProcessHeap(), 0, AnsiEnv.Buffer);
 	}
