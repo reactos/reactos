@@ -204,7 +204,7 @@ ScStartService(PSCM_START_PACKET StartPacket)
 
   lpService->Arguments = HeapAlloc(GetProcessHeap(),
 				   HEAP_ZERO_MEMORY,
-				   StartPacket->Size);
+               StartPacket->Size * sizeof(WCHAR));
   if (lpService->Arguments == NULL)
     return ERROR_OUTOFMEMORY;
 
