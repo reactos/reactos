@@ -169,6 +169,7 @@ struct DeviceInfoElement /* Element of DeviceInfoSet.ListHead */
      * - DI_DIDCOMPAT
      *       Set when the device driver list is created
      * FlagsEx is a combination of:
+     * - DI_FLAGSEX_DIDCOMPATINFO (FIXME: not supported)
      */
     DWORD Flags;
     DWORD FlagsEx;
@@ -196,9 +197,11 @@ struct DeviceInfoSet /* HDEVINFO */
     /* Flags is a combination of:
      * - DI_DIDCLASS
      *       Set when the class driver list is created
+     * - DI_MULTMFGS (FIXME: not supported)
      * - DI_COMPAT_FROM_CLASS (FIXME: not supported)
      *       Forces SetupDiBuildDriverInfoList to build a class drivers list
      * FlagsEx is a combination of:
+     * - DI_FLAGSEX_DIDINFOLIST (FIXME: not supported)
      */
     DWORD Flags;
     DWORD FlagsEx;
@@ -4257,11 +4260,81 @@ SetupDiDestroyDriverInfoList(
     IN PSP_DEVINFO_DATA DeviceInfoData,
     IN DWORD DriverType)
 {
+    struct DeviceInfoSet *list;
+    BOOL ret = FALSE;
+
     TRACE("%p %p 0x%lx\n", DeviceInfoSet, DeviceInfoData, DriverType);
 
-    FIXME("not implemented\n");
-    SetLastError(ERROR_GEN_FAILURE);
-    return FALSE;
+    if (!DeviceInfoSet)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if (DriverType != SPDIT_CLASSDRIVER && DriverType != SPDIT_COMPATDRIVER)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (DriverType == SPDIT_COMPATDRIVER && !DeviceInfoData)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (DeviceInfoData && DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else
+    {
+        struct DeviceInfoElement *deviceInfo = NULL;
+        PLIST_ENTRY ListEntry;
+        struct DriverInfoElement *driverInfo;
+
+        if (!DeviceInfoData)
+            DriverType = SPDIT_CLASSDRIVER;
+        if (DriverType == SPDIT_CLASSDRIVER)
+        {
+            if (!(list->Flags & DI_DIDCLASS))
+                /* The list was not created */
+                goto done;
+        }
+        else if (DriverType == SPDIT_COMPATDRIVER)
+        {
+            deviceInfo = (struct DeviceInfoElement *)DeviceInfoData->Reserved;
+            if (!(deviceInfo->Flags & DI_DIDCOMPAT))
+                /* The list was not created */
+                goto done;
+        }
+
+        if (DriverType == SPDIT_CLASSDRIVER)
+        {
+            while (!IsListEmpty(&list->DriverListHead))
+            {
+                 ListEntry = RemoveHeadList(&list->DriverListHead);
+                 driverInfo = (struct DriverInfoElement *)ListEntry;
+                 HeapFree(GetProcessHeap(), 0, driverInfo->InfSection);
+                 HeapFree(GetProcessHeap(), 0, driverInfo->InfPath);
+                 HeapFree(GetProcessHeap(), 0, driverInfo->MatchingId);
+                 HeapFree(GetProcessHeap(), 0, driverInfo);
+            }
+            list->Flags &= ~(DI_DIDCLASS | DI_MULTMFGS);
+            list->FlagsEx &= ~DI_FLAGSEX_DIDINFOLIST;
+            list->SelectedDriver = NULL;
+        }
+        else
+        {
+            while (!IsListEmpty(&deviceInfo->DriverListHead))
+            {
+                 ListEntry = RemoveHeadList(&deviceInfo->DriverListHead);
+                 driverInfo = (struct DriverInfoElement *)ListEntry;
+                 if (list->SelectedDriver == driverInfo)
+                     list->SelectedDriver = NULL;
+                 HeapFree(GetProcessHeap(), 0, driverInfo->InfSection);
+                 HeapFree(GetProcessHeap(), 0, driverInfo->InfPath);
+                 HeapFree(GetProcessHeap(), 0, driverInfo->MatchingId);
+                 HeapFree(GetProcessHeap(), 0, driverInfo);
+            }
+            deviceInfo->Flags &= ~DI_DIDCOMPAT;
+            deviceInfo->FlagsEx &= ~DI_FLAGSEX_DIDCOMPATINFO;
+            deviceInfo->SelectedDriver = NULL;
+        }
+        ret = TRUE;
+    }
+
+done:
+    TRACE("Returning %d\n", ret);
+    return ret;
 }
 
 
