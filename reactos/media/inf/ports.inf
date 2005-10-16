@@ -20,7 +20,7 @@ AddReg = PortsClass.NT.AddReg
 [PortsClass.NT.AddReg]
 HKR, , ,               0, %PortsClassName%
 HKR, , Icon,           0, "-23"
-HKR, , Installer32,    0, "msports.dll,PortsClassInstaller"
+;HKR, , Installer32,    0, "msports.dll,PortsClassInstaller"
 
 [Manufacturer]
 %StdMfg% = StdMfg

@@ -18,7 +18,7 @@ AddReg = SCSIClass.NT.AddReg
 [SCSIClass.NT.AddReg]
 HKR, , ,            0, %SCSIClassName%
 HKR, , Icon,        0, "-10"
-HKR, , Installer32, 0, "syssetup.dll,ScsiClassInstaller"
+;HKR, , Installer32, 0, "syssetup.dll,ScsiClassInstaller"
 
 [Strings]
 ReactOS = "ReactOS Team"

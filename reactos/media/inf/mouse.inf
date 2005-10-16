@@ -20,7 +20,7 @@ AddReg = MouseClass.NT.AddReg
 [MouseClass.NT.AddReg]
 HKR, , ,               0, %MouseClassName%
 HKR, , Icon,           0, "-2"
-HKR, , Installer32,    0, "syssetup.dll,MouseClassInstaller"
+;HKR, , Installer32,    0, "syssetup.dll,MouseClassInstaller"
 HKR, , NoInstallClass, 0, 1
 
 [Manufacturer]
