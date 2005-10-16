@@ -327,9 +327,9 @@ PdoQueryResourceRequirements(
                       DeviceExtension->PciDevice->BusNumber,
                       DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
                       &PciConfig,
-                      sizeof(PCI_COMMON_CONFIG));
+                      PCI_COMMON_HDR_LENGTH);
   DPRINT("Size %lu\n", Size);
-  if (Size < sizeof(PCI_COMMON_CONFIG))
+  if (Size < PCI_COMMON_HDR_LENGTH)
   {
     Irp->IoStatus.Information = 0;
     return STATUS_UNSUCCESSFUL;
@@ -419,7 +419,7 @@ PdoQueryResourceRequirements(
   ResourceList->List[0].Count = ResCount;
 
   Descriptor = &ResourceList->List[0].Descriptors[0];
-  if (PCI_CONFIGURATION_TYPE(&PciConfig) == 0)
+  if (PCI_CONFIGURATION_TYPE(&PciConfig) == PCI_DEVICE_TYPE)
   {
     for (i = 0; i < PCI_TYPE0_ADDRESSES; i++)
     {
@@ -509,7 +509,7 @@ PdoQueryResourceRequirements(
       Descriptor->u.Interrupt.MaximumVector = 0xFF;
     }
   }
-  else if (PCI_CONFIGURATION_TYPE(&PciConfig) == 1)
+  else if (PCI_CONFIGURATION_TYPE(&PciConfig) == PCI_BRIDGE_TYPE)
   {
     for (i = 0; i < PCI_TYPE1_ADDRESSES; i++)
     {
@@ -598,7 +598,7 @@ PdoQueryResourceRequirements(
       Descriptor->u.BusNumber.Reserved = 0;
     }
   }
-  else if (PCI_CONFIGURATION_TYPE(&PciConfig) == 2)
+  else if (PCI_CONFIGURATION_TYPE(&PciConfig) == PCI_CARDBUS_BRIDGE_TYPE)
   {
     /* FIXME: Add Cardbus bridge resources */
   }
@@ -637,9 +637,9 @@ PdoQueryResources(
                       DeviceExtension->PciDevice->BusNumber,
                       DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
                       &PciConfig,
-                      sizeof(PCI_COMMON_CONFIG));
+                      PCI_COMMON_HDR_LENGTH);
   DPRINT("Size %lu\n", Size);
-  if (Size < sizeof(PCI_COMMON_CONFIG))
+  if (Size < PCI_COMMON_HDR_LENGTH)
   {
     Irp->IoStatus.Information = 0;
     return STATUS_UNSUCCESSFUL;
@@ -649,7 +649,7 @@ PdoQueryResources(
 
   /* Count required resource descriptors */
   ResCount = 0;
-  if (PCI_CONFIGURATION_TYPE(&PciConfig) == 0)
+  if (PCI_CONFIGURATION_TYPE(&PciConfig) == PCI_DEVICE_TYPE)
   {
     for (i = 0; i < PCI_TYPE0_ADDRESSES; i++)
     {
@@ -668,7 +668,7 @@ PdoQueryResources(
         (PciConfig.u.type0.InterruptLine != 0xFF))
       ResCount++;
   }
-  else if (PCI_CONFIGURATION_TYPE(&PciConfig) == 1)
+  else if (PCI_CONFIGURATION_TYPE(&PciConfig) == PCI_BRIDGE_TYPE)
   {
     for (i = 0; i < PCI_TYPE1_ADDRESSES; i++)
     {
@@ -683,7 +683,7 @@ PdoQueryResources(
         ResCount++;
     }
   }
-  else if (PCI_CONFIGURATION_TYPE(&PciConfig) == 2)
+  else if (PCI_CONFIGURATION_TYPE(&PciConfig) == PCI_CARDBUS_BRIDGE_TYPE)
   {
 
   }
@@ -721,7 +721,7 @@ PdoQueryResources(
   PartialList->Count = ResCount;
 
   Descriptor = &PartialList->PartialDescriptors[0];
-  if (PCI_CONFIGURATION_TYPE(&PciConfig) == 0)
+  if (PCI_CONFIGURATION_TYPE(&PciConfig) == PCI_DEVICE_TYPE)
   {
     for (i = 0; i < PCI_TYPE0_ADDRESSES; i++)
     {
@@ -775,7 +775,7 @@ PdoQueryResources(
       Descriptor->u.Interrupt.Affinity = 0xFFFFFFFF;
     }
   }
-  else if (PCI_CONFIGURATION_TYPE(&PciConfig) == 1)
+  else if (PCI_CONFIGURATION_TYPE(&PciConfig) == PCI_BRIDGE_TYPE)
   {
     for (i = 0; i < PCI_TYPE1_ADDRESSES; i++)
     {
@@ -817,7 +817,7 @@ PdoQueryResources(
       Descriptor++;
     }
   }
-  else if (PCI_CONFIGURATION_TYPE(&PciConfig) == 2)
+  else if (PCI_CONFIGURATION_TYPE(&PciConfig) == PCI_CARDBUS_BRIDGE_TYPE)
   {
     /* FIXME: Cardbus */
   }
