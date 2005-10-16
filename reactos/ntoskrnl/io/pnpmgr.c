@@ -1415,8 +1415,8 @@ IopGetParentIdPrefix(
       goto cleanup;
 
    /* 2. Create the ParentIdPrefix value */
-   currentByte = (PBYTE)DeviceNode->Parent;
-   for (i = 0; i < sizeof(DEVICE_NODE); i++, currentByte++)
+   currentByte = (PBYTE)DeviceNode->Parent->InstancePath.Buffer;
+   for (i = 0; i < DeviceNode->Parent->InstancePath.Length; i++, currentByte++)
       crc32 = (crc32 >> 8) ^ crc32Table[*currentByte ^ (crc32 & 0xff)];
    crc32 = ~crc32;
    KeyValue.Buffer = (PWSTR)ParentIdPrefixInformation->Data;
