@@ -26,12 +26,17 @@
 extern "C" {
 #endif
 
+#define OBJECT_ISROOT           0x80000000
+
 #include <ddraw.h>
 #include <dvp.h>
 #include <ddkernel.h>
 #include <dmemmgr.h>
 
 #define DDAPI WINAPI
+
+#define VALID_ALIGNMENT(align) \
+	   (!((align==0)||(align%2)!= 0 ))
 
 /* the DirectDraw versions */
 #define DD_VERSION		0x0200 /* compatibility version */
@@ -41,15 +46,65 @@ extern "C" {
 #define DD_HAL_VERSION	0x0100
 
 /* more DCICOMMAND escapes */
+#ifndef DCICOMMAND
+#define DCICOMMAND 3075       
+#endif
+
 #define DDCREATEDRIVEROBJECT	10
 #define DDGET32BITDRIVERNAME	11
 #define DDNEWCALLBACKFNS	12
 #define DDVERSIONINFO		13
 
+	
+
+#define DDUNSUPPORTEDMODE  ((DWORD) -1)
+
+#include "dciddi.h"
+
 #ifndef CCHDEVICENAME
 #define CCHDEVICENAME 32
 #endif
 #define MAX_DRIVER_NAME		CCHDEVICENAME
+
+#define DDHAL_DRIVER_DLLNAME    "DDRAW16.DLL"
+#define DDHAL_APP_DLLNAME   "DDRAW.DLL"
+
+
+
+/* GUID */
+#ifdef _WIN32
+DEFINE_GUID(GUID_MiscellaneousCallbacks, 0xefd60cc0, 0x49e7, 0x11d0, 0x88, 0x9d, 0x00, 0xaa, 0x00, 0xbb, 0xb7, 0x6a);
+DEFINE_GUID(GUID_VideoPortCallbacks,     0xefd60cc1, 0x49e7, 0x11d0, 0x88, 0x9d, 0x00, 0xaa, 0x00, 0xbb, 0xb7, 0x6a);
+DEFINE_GUID(GUID_ColorControlCallbacks,  0xefd60cc2, 0x49e7, 0x11d0, 0x88, 0x9d, 0x00, 0xaa, 0x00, 0xbb, 0xb7, 0x6a);
+DEFINE_GUID(GUID_VideoPortCaps,          0xefd60cc3, 0x49e7, 0x11d0, 0x88, 0x9d, 0x00, 0xaa, 0x00, 0xbb, 0xb7, 0x6a);
+DEFINE_GUID(GUID_D3DCallbacks2,          0x0ba584e1, 0x70b6, 0x11d0, 0x88, 0x9d, 0x00, 0xaa, 0x00, 0xbb, 0xb7, 0x6a);
+DEFINE_GUID(GUID_D3DCallbacks3,          0xddf41230, 0xec0a, 0x11d0, 0xa9, 0xb6, 0x00, 0xaa, 0x00, 0xc0, 0x99, 0x3e);
+DEFINE_GUID(GUID_NonLocalVidMemCaps,     0x86c4fa80, 0x8d84, 0x11d0, 0x94, 0xe8, 0x00, 0xc0, 0x4f, 0xc3, 0x41, 0x37);
+DEFINE_GUID(GUID_KernelCallbacks,        0x80863800, 0x6B06, 0x11D0, 0x9B, 0x06, 0x0, 0xA0, 0xC9, 0x03, 0xA3, 0xB8);
+DEFINE_GUID(GUID_KernelCaps,             0xFFAA7540, 0x7AA8, 0x11D0, 0x9B, 0x06, 0x00, 0xA0, 0xC9, 0x03, 0xA3, 0xB8);
+DEFINE_GUID(GUID_D3DExtendedCaps,        0x7de41f80, 0x9d93, 0x11d0, 0x89, 0xab, 0x0, 0xa0, 0xc9, 0x5, 0x41, 0x29);
+DEFINE_GUID(GUID_ZPixelFormats,          0x93869880, 0x36cf, 0x11d1, 0x9b, 0x1b, 0x0, 0xaa, 0x0, 0xbb, 0xb8, 0xae);
+DEFINE_GUID(GUID_DDMoreSurfaceCaps,      0x3b8a0466, 0xf269, 0x11d1, 0x88, 0x0b, 0x0, 0xc0, 0x4f, 0xd9, 0x30, 0xc5);
+DEFINE_GUID(GUID_DDStereoMode,           0xf828169c, 0xa8e8, 0x11d2, 0xa1, 0xf2, 0x0, 0xa0, 0xc9, 0x83, 0xea, 0xf6);
+DEFINE_GUID(GUID_OptSurfaceKmodeInfo,    0xe05c8472, 0x51d4, 0x11d1, 0x8c, 0xce, 0x0, 0xa0, 0xc9, 0x6, 0x29, 0xa8);
+DEFINE_GUID(GUID_OptSurfaceUmodeInfo,    0x9d792804, 0x5fa8, 0x11d1, 0x8c, 0xd0, 0x0, 0xa0, 0xc9, 0x6, 0x29, 0xa8);
+DEFINE_GUID(GUID_UserModeDriverInfo,     0xf0b0e8e2, 0x5f97, 0x11d1, 0x8c, 0xd0, 0x0, 0xa0, 0xc9, 0x6, 0x29, 0xa8);
+DEFINE_GUID(GUID_UserModeDriverPassword, 0x97f861b6, 0x60a1, 0x11d1, 0x8c, 0xd0, 0x0, 0xa0, 0xc9, 0x6, 0x29, 0xa8);
+DEFINE_GUID(GUID_D3DParseUnknownCommandCallback,  0x2e04ffa0, 0x98e4, 0x11d1, 0x8c, 0xe1, 0x0, 0xa0, 0xc9, 0x6, 0x29, 0xa8);
+DEFINE_GUID(GUID_MotionCompCallbacks,           0xb1122b40, 0x5dA5, 0x11d1, 0x8f, 0xcF, 0x00, 0xc0, 0x4f, 0xc2, 0x9b, 0x4e);
+DEFINE_GUID(GUID_Miscellaneous2Callbacks,   0x406B2F00, 0x3E5A, 0x11D1, 0xB6, 0x40, 0x00, 0xAA, 0x00, 0xA1, 0xF9, 0x6A);
+#endif 
+
+#ifndef _WIN32
+#undef  E_NOTIMPL
+#undef  E_OUTOFMEMORY
+#undef  E_INVALIDARG
+#undef  E_FAIL
+#define E_NOTIMPL      0x80004001L
+#define E_OUTOFMEMORY  0x8007000EL
+#define E_INVALIDARG   0x80070057L
+#define E_FAIL         0x80004005L
+#endif
 
 
 /*****************************************************************************
@@ -152,14 +207,14 @@ typedef struct _VIDMEM {
 
 
 
-#ifndef __DDK_DDRAWINT_H
+
 #define VIDMEM_ISLINEAR		0x00000001
 #define VIDMEM_ISRECTANGULAR	0x00000002
 #define VIDMEM_ISHEAP		0x00000004
 #define VIDMEM_ISNONLOCAL	0x00000008
 #define VIDMEM_ISWC		0x00000010
 #define VIDMEM_ISDISABLED	0x00000020
-#endif
+
 
 typedef struct _VIDMEMINFO {
     FLATPTR		fpPrimary;
@@ -611,6 +666,21 @@ typedef struct _DDHALINFO {
 #define DDCOLORCONTROLCALLBACKSSIZE sizeof( DDHAL_DDCOLORCONTROLCALLBACKS )
 #define DDKERNELCALLBACKSSIZE sizeof(DDHAL_DDKERNELCALLBACKS)
 #define DDMOTIONCOMPCALLBACKSSIZE sizeof( DDHAL_DDMOTIONCOMPCALLBACKS )
+
+#define MAX_PALETTE_SIZE    256
+
+#define MAX_AUTOFLIP_BUFFERS    10
+#define DDSCAPS2_INDEXBUFFER    DDSCAPS2_RESERVED3
+#define DDSCAPS3_VIDEO          DDSCAPS3_RESERVED2
+#define D3DFMT_INTERNAL_D32     71
+#define D3DFMT_INTERNAL_S1D15   72
+#define D3DFMT_INTERNAL_D15S1   73
+#define D3DFMT_INTERNAL_S8D24   74
+#define D3DFMT_INTERNAL_D24S8   75
+#define D3DFMT_INTERNAL_X8D24   76
+#define D3DFMT_INTERNAL_D24X8   77
+#define DDHAL_PLEASEALLOC_BLOCKSIZE       0x00000002l
+#define DDHAL_PLEASEALLOC_LINEARSIZE        0x00000003l
 
 #define DDHAL_CB32_DESTROYDRIVER    0x00000001l
 #define DDHAL_CB32_CREATESURFACE    0x00000002l
@@ -1084,13 +1154,17 @@ typedef struct _DDSTEREOMODE
 /*****************************************************************************
  * high-level ddraw implementation structures
  */
-#ifndef _NO_COM
 typedef struct _IUNKNOWN_LIST {
     struct _IUNKNOWN_LIST *	lpLink;
     LPGUID			lpGuid;
+
+#ifndef _NO_COM
     IUnknown *			lpIUnknown;
-} IUNKNOWN_LIST,*LPIUNKNOWN_LIST;
+#else
+	LPVOID              lpIUnknown;
 #endif /* _NO_COM */
+} IUNKNOWN_LIST,*LPIUNKNOWN_LIST;
+
 
 typedef struct _PROCESS_LIST {
     struct _PROCESS_LIST *	lpLink;
@@ -1136,7 +1210,7 @@ typedef struct _DDRAWI_DIRECTDRAW_INT {
     DWORD			dwIntRefCnt;
 } DDRAWI_DIRECTDRAW_INT;
 
-#ifndef _NO_COM
+
 typedef struct _DDRAWI_DIRECTDRAW_LCL {
     DWORD			lpDDMore;
     LPDDRAWI_DIRECTDRAW_GBL	lpGbl;
@@ -1144,7 +1218,11 @@ typedef struct _DDRAWI_DIRECTDRAW_LCL {
     DWORD			dwLocalFlags;
     DWORD			dwLocalRefCnt;
     DWORD			dwProcessId;
+#ifndef _NO_COM
     IUnknown *			pUnkOuter;
+#else
+    PVOID			pUnkOuter;
+#endif
     DWORD			dwObsolete1;
     ULONG_PTR			hWnd;
     ULONG_PTR			hDC;
@@ -1154,7 +1232,11 @@ typedef struct _DDRAWI_DIRECTDRAW_LCL {
     DWORD			dwPreferredMode;
     /* DirectX 2 */
     HINSTANCE			hD3DInstance;
+#ifndef _NO_COM
     IUnknown *			pD3DIUnknown;
+#else
+	    PVOID			pD3DIUnknown;
+#endif
     LPDDHAL_CALLBACKS		lpDDCB;
     ULONG_PTR			hDDVxd;
     /* DirectX 5.0 */
@@ -1169,7 +1251,7 @@ typedef struct _DDRAWI_DIRECTDRAW_LCL {
     ULONG_PTR			hGammaCalibrator;
     LPDDGAMMACALIBRATORPROC	lpGammaCalibrator;
 } DDRAWI_DIRECTDRAW_LCL;
-#endif /* _NO_COM */
+
 
 #define DDRAWILCL_HASEXCLUSIVEMODE	0x00000001
 #define DDRAWILCL_ISFULLSCREEN		0x00000002
@@ -1394,10 +1476,24 @@ typedef struct _DDRAWI_DDRAWSURFACE_GBL_MORE {
 #define GET_LPDDRAWSURFACE_GBL_MORE(psurf_gbl) \
     (*(((LPDDRAWI_DDRAWSURFACE_GBL_MORE *)(psurf_gbl)) - 1))
 
+#define SURFACE_PHYSICALVIDMEM( psurf_gbl ) \
+                  ( GET_LPDDRAWSURFACE_GBL_MORE(psurf_gbl )->fpPhysicalVidMem )
+
+
+typedef struct  _DISPLAYMODEINFO
+{
+    WORD       wWidth;
+    WORD       wHeight;
+    BYTE       wBPP;
+    BYTE       wMonitorsAttachedToDesktop;
+    WORD       wRefreshRate;
+} DISPLAYMODEINFO, *LPDISPLAYMODEINFO;
+
+#define EQUAL_DISPLAYMODE ( A, B ) (0 == memcmp(&(A), &(B), sizeof (DISPLAYMODEINFO)))
 
 
 
-#ifndef _NO_COM
+
 typedef struct _DDRAWI_DDRAWSURFACE_MORE {
     DWORD			dwSize;
     IUNKNOWN_LIST *		lpIUnknowns;
@@ -1423,6 +1519,9 @@ typedef struct _DDRAWI_DDRAWSURFACE_MORE {
     LPDWORD			lpGammaRamp;
     LPDWORD			lpOriginalGammaRamp;
     LPVOID			lpDDrawReserved6;
+	#ifndef WIN95
+    DISPLAYMODEINFO dmiDDrawReserved7;
+    #endif
     DWORD			dwSurfaceHandle;
     DWORD			qwDDrawReserved8[2];
     LPVOID			lpDDrawReserved9;
@@ -1432,42 +1531,8 @@ typedef struct _DDRAWI_DDRAWSURFACE_MORE {
     DWORD			dwFVF;
     LPVOID			lpVB;
 } DDRAWI_DDRAWSURFACE_MORE;
-#else
-typedef struct _DDRAWI_DDRAWSURFACE_MORE {
-    DWORD			dwSize;
-    PVOID		lpIUnknowns;
-    LPDDRAWI_DIRECTDRAW_LCL	lpDD_lcl;
-    DWORD			dwPageLockCount;
-    DWORD			dwBytesAllocated;
-    LPDDRAWI_DIRECTDRAW_INT	lpDD_int;
-    DWORD			dwMipMapCount;
-    LPDDRAWI_DDRAWCLIPPER_INT	lpDDIClipper;
-    /* DirectX 5.0 */
-    LPHEAPALIASINFO		lpHeapAliasInfo;
-    DWORD			dwOverlayFlags;
-    VOID			*rgjunc;
-    LPDDRAWI_DDVIDEOPORT_LCL	lpVideoPort;
-    LPDDOVERLAYFX		lpddOverlayFX;
-    DDSCAPSEX			ddsCapsEx;
-    DWORD			dwTextureStage;
-    LPVOID			lpDDRAWReserved;
-    LPVOID			lpDDRAWReserved2;
-    LPVOID			lpDDrawReserved3;
-    DWORD			dwDDrawReserved4;
-    LPVOID			lpDDrawReserved5;
-    LPDWORD			lpGammaRamp;
-    LPDWORD			lpOriginalGammaRamp;
-    LPVOID			lpDDrawReserved6;
-    DWORD			dwSurfaceHandle;
-    DWORD			qwDDrawReserved8[2];
-    LPVOID			lpDDrawReserved9;
-    DWORD			cSurfaces;
-    LPDDSURFACEDESC2		pCreatedDDSurfaceDesc2;
-    LPDDRAWI_DDRAWSURFACE_LCL	*slist;
-    DWORD			dwFVF;
-    LPVOID			lpVB;
-} DDRAWI_DDRAWSURFACE_MORE;
-#endif /* _NO_COM */
+
+
 
 typedef struct _DDRAWI_DDRAWSURFACE_LCL {
     LPDDRAWI_DDRAWSURFACE_MORE	lpSurfMore;
@@ -1479,8 +1544,16 @@ typedef struct _DDRAWI_DDRAWSURFACE_LCL {
     DWORD			dwProcessId;
     DWORD			dwFlags;
     DDSCAPS			ddsCaps;
+	union
+    {
     LPDDRAWI_DDRAWPALETTE_INT	lpDDPalette;
-    LPDDRAWI_DDRAWCLIPPER_LCL	lpDDClipper;
+	LPDDRAWI_DDRAWPALETTE_INT   lp16DDPalette;
+	};
+	union
+    {
+    LPDDRAWI_DDRAWCLIPPER_LCL   lpDDClipper;
+    LPDDRAWI_DDRAWCLIPPER_INT   lp16DDClipper;
+    };
     DWORD			dwModeCreatedIn;
     DWORD			dwBackBufferCount;
     DDCOLORKEY			ddckCKDestBlt;
@@ -1573,13 +1646,84 @@ typedef struct _DDRAWI_DDRAWPALETTE_GBL {
 #define DDRAWIPAL_STORED_8INDEX	0x00001000
 #define DDRAWIPAL_ALPHA		0x00002000
 
-#ifndef _NO_COM
+#define D3DFORMAT_OP_TEXTURE         0x00000001L
+#define D3DFORMAT_OP_VOLUMETEXTURE   0x00000002L
+#define D3DFORMAT_OP_CUBETEXTURE     0x00000004L
+#define D3DFORMAT_OP_OFFSCREEN_RENDERTARGET  0x00000008L
+#define D3DFORMAT_OP_SAME_FORMAT_RENDERTARGET 0x00000010L
+#define D3DFORMAT_OP_ZSTENCIL        0x00000040L
+#define D3DFORMAT_OP_ZSTENCIL_WITH_ARBITRARY_COLOR_DEPTH 0x00000080L
+#define D3DFORMAT_OP_SAME_FORMAT_UP_TO_ALPHA_RENDERTARGET 0x00000100L
+#define D3DFORMAT_OP_DISPLAYMODE     0x00000400L
+#define D3DFORMAT_OP_3DACCELERATION  0x00000800L
+#define D3DFORMAT_OP_PIXELSIZE       0x00001000L
+#define D3DFORMAT_OP_CONVERT_TO_ARGB 0x00002000L
+#define D3DFORMAT_OP_OFFSCREENPLAIN  0x00004000L
+#define D3DFORMAT_OP_SRGBREAD        0x00008000L
+#define D3DFORMAT_OP_BUMPMAP         0x00010000L
+#define D3DFORMAT_OP_NOFILTER        0x00040000L
+#define DDPF_D3DFORMAT               0x00200000l
+#define DDPF_NOVEL_TEXTURE_FORMAT    0x00100000l
+#define D3DFORMAT_MEMBEROFGROUP_ARGB 0x00080000L
+#define D3DFORMAT_OP_SRGBWRITE       0x00100000L
+#define D3DFORMAT_OP_NOALPHABLEND    0x00200000L
+#define D3DFORMAT_OP_AUTOGENMIPMAP   0x00400000L
+#define D3DFORMAT_OP_VERTEXTEXTURE   0x00800000L 
+#define D3DFORMAT_OP_NOTEXCOORDWRAPNORMIP 0x01000000L
+#define DELETED_OK                   0
+#define DELETED_LASTONE              1
+#define DELETED_NOTFOUND             2
+#define DDCALLBACKSSIZE_V1           ( offsetof( DDHAL_DDCALLBACKS, SetExclusiveMode ) )
+#define DDCALLBACKSSIZE               sizeof( DDHAL_DDCALLBACKS )
+#define DDRAWICLIP_WATCHWINDOW        0x00000001
+#define DDRAWICLIP_ISINITIALIZED      0x00000002
+#define DDRAWICLIP_INMASTERSPRITELIST 0x00000004
+#define PFINDEX_UNINITIALIZED         (0UL)
+#define PFINDEX_UNSUPPORTED           (~0UL)
+#define ROP_HAS_SOURCE                0x00000001
+#define ROP_HAS_PATTERN               0x00000002
+#define ROP_HAS_SOURCEPATTERN         ROP_HAS_PATTERN | ROP_HAS_SOURCE
+#define DDRAWIVPORT_ON                0x00000001
+#define DDRAWIVPORT_SOFTWARE_AUTOFLIP 0x00000002
+#define DDRAWIVPORT_COLORKEYANDINTERP 0x00000004
+#define DDRAWIVPORT_NOKERNELHANDLES   0x00000008
+#define DDRAWIVPORT_SOFTWARE_BOB      0x00000010
+#define DDRAWIVPORT_VBION             0x00000020
+#define DDRAWIVPORT_VIDEOON           0x00000040
+#define DDRAWI_GETCOLOR               0x0001
+#define DDRAWI_SETCOLOR               0x0002
+#define DDMCQUERY_READ                0x00000001
+#define DDWAITVB_I_TESTVB             0x80000006
+
+
+#define DDBLT_ANYALPHA \
+        (DDBLT_ALPHASRCSURFACEOVERRIDE | DDBLT_ALPHASRCCONSTOVERRIDE | \
+        DDBLT_ALPHASRC | DDBLT_ALPHADESTSURFACEOVERRIDE | \
+        DDBLT_ALPHADESTCONSTOVERRIDE | DDBLT_ALPHADEST)
+
+#define DDHAL_ALIGNVALIDCAPS  (DDSCAPS_OFFSCREENPLAIN | DDSCAPS_EXECUTEBUFFER | \
+                               DDSCAPS_OVERLAY | DDSCAPS_TEXTURE | \
+                               DDSCAPS_ZBUFFER | DDSCAPS_ALPHA | DDSCAPS_FLIP )
+
+
+#define DDHALINFOSIZE_V2 sizeof(DDHALINFO)
+
+#define DDOVER_ANYALPHA \
+           (DDOVER_ALPHASRCSURFACEOVERRIDE | DDOVER_ALPHASRCCONSTOVERRIDE | \
+            DDOVER_ALPHASRC | DDOVER_ALPHADESTSURFACEOVERRIDE | \
+            DDOVER_ALPHADESTCONSTOVERRIDE | DDOVER_ALPHADEST)
+
+
 typedef struct _DDRAWI_DDRAWPALETTE_LCL {
     DWORD			lpPalMore;
     LPDDRAWI_DDRAWPALETTE_GBL	lpGbl;
     ULONG_PTR			dwUnused0;
     DWORD			dwLocalRefCnt;
+#ifndef _NO_COM
     IUnknown *			pUnkOuter;
+#else
+    PVOID               pUnkOuter;
+#endif
     LPDDRAWI_DIRECTDRAW_LCL	lpDD_lcl;
     ULONG_PTR			dwReserved1;
     /* DirectX 6.0 */
@@ -1587,7 +1731,6 @@ typedef struct _DDRAWI_DDRAWPALETTE_LCL {
     ULONG_PTR			dwDDRAWReserved2;
     ULONG_PTR			dwDDRAWReserved3;
 } DDRAWI_DDRAWPALETTE_LCL;
-#endif /* _NO_COM */
 
 
 typedef struct _DDMCCOMPBUFFERINFO
@@ -1846,6 +1989,196 @@ typedef struct _DDHAL_WAITFORVERTICALBLANKDATA
     HRESULT                     ddRVal;    
     LPDDHAL_WAITFORVERTICALBLANK    WaitForVerticalBlank; 
 } DDHAL_WAITFORVERTICALBLANKDATA;
+
+typedef struct _DDHAL_DRVSETCOLORKEYDATA
+{
+    LPDDRAWI_DDRAWSURFACE_LCL lpDDSurface;
+    DWORD                dwFlags;
+    DDCOLORKEY           ckNew;
+    HRESULT              ddRVal;
+    LPDDHAL_SETCOLORKEY  SetColorKey;
+} DDHAL_DRVSETCOLORKEYDATA;
+
+typedef struct _DDMONITORINFO
+{
+    WORD    Manufacturer; 
+    WORD    Product;      
+    DWORD   SerialNumber; 
+    GUID    DeviceIdentifier;
+    int     Mode640x480;     
+    int     Mode800x600;
+    int     Mode1024x768;
+    int     Mode1280x1024;
+    int     Mode1600x1200;
+    int     ModeReserved1;
+    int     ModeReserved2;
+    int     ModeReserved3;
+} DDMONITORINFO, FAR *LPDDMONITORINFO;
+
+typedef struct _DDRAWI_DDRAWCLIPPER_INT
+{
+    LPVOID                   lpVtbl;
+    LPDDRAWI_DDRAWCLIPPER_LCL lpLcl;
+    LPDDRAWI_DDRAWCLIPPER_INT  lpLink;
+    DWORD                   dwIntRefCnt;
+} DDRAWI_DDRAWCLIPPER_INT;
+
+typedef struct _DDHAL_UPDATENONLOCALHEAPDATA
+{
+    LPDDRAWI_DIRECTDRAW_GBL lpDD;       
+    DWORD           dwHeap;     
+    FLATPTR         fpGARTLin;  
+    FLATPTR         fpGARTDev;  
+    ULONG_PTR       ulPolicyMaxBytes;
+    HRESULT         ddRVal;          
+    LPDDHAL_UPDATENONLOCALHEAP   UpdateNonLocalHeap;
+} DDHAL_UPDATENONLOCALHEAPDATA;
+
+typedef struct _DDHAL_SETCLIPLISTDATA
+{
+    LPDDRAWI_DIRECTDRAW_GBL    lpDD; 
+    LPDDRAWI_DDRAWSURFACE_LCL  lpDDSurface;
+    HRESULT                    ddRVal;
+    LPDDHALSURFCB_SETCLIPLIST  SetClipList;
+} DDHAL_SETCLIPLISTDATA;
+
+typedef struct _DDRAWI_DDMOTIONCOMP_LCL
+{ 
+    LPDDRAWI_DIRECTDRAW_LCL   lpDD;
+    GUID                      guid;
+    DWORD                     dwUncompWidth;
+    DWORD                     dwUncompHeight;
+    DDPIXELFORMAT             ddUncompPixelFormat;
+    DWORD                     dwInternalFlags;
+    DWORD                     dwRefCnt;
+    DWORD                     dwProcessId;
+    HANDLE                    hMoComp;
+    DWORD                     dwDriverReserved1;
+    DWORD                     dwDriverReserved2;
+    DWORD                     dwDriverReserved3;
+    LPVOID                    lpDriverReserved1;
+    LPVOID                    lpDriverReserved2;
+    LPVOID                 lpDriverReserved3;
+} DDRAWI_DDMOTIONCOMP_LCL;
+
+typedef struct _DDRAWI_DDMOTIONCOMP_INT
+{
+    LPVOID                    lpVtbl;
+    LPDDRAWI_DDMOTIONCOMP_LCL lpLcl;
+    LPDDRAWI_DDMOTIONCOMP_INT lpLink;
+    DWORD                     dwIntRefCnt;
+} DDRAWI_DDMOTIONCOMP_INT;
+
+
+typedef struct _DDRAWI_DDVIDEOPORT_LCL
+{
+    LPDDRAWI_DIRECTDRAW_LCL   lpDD;       
+    DDVIDEOPORTDESC           ddvpDesc;   
+    DDVIDEOPORTINFO           ddvpInfo;   
+    LPDDRAWI_DDRAWSURFACE_INT lpSurface;  
+    LPDDRAWI_DDRAWSURFACE_INT lpVBISurface;  
+    LPDDRAWI_DDRAWSURFACE_INT *lpFlipInts;   
+    DWORD                     dwNumAutoflip; 
+    DWORD                     dwProcessID;   
+    DWORD                     dwStateFlags;
+    DWORD                     dwFlags;
+    DWORD                     dwRefCnt;
+    FLATPTR                   fpLastFlip;    
+    ULONG_PTR                 dwReserved1;   
+    ULONG_PTR                 dwReserved2;   
+    HANDLE                    hDDVideoPort;  
+    DWORD                     dwNumVBIAutoflip;
+    LPDDVIDEOPORTDESC         lpVBIDesc;  
+    LPDDVIDEOPORTDESC         lpVideoDesc;
+    LPDDVIDEOPORTINFO         lpVBIInfo;
+    LPDDVIDEOPORTINFO         lpVideoInfo;    
+    DWORD                     dwVBIProcessID; 
+    LPDDRAWI_DDVIDEOPORT_INT  lpVPNotify;
+} DDRAWI_DDVIDEOPORT_LCL;
+
+
+typedef struct _DDRAWI_DDVIDEOPORT_INT
+{
+    LPVOID                      lpVtbl;    
+    LPDDRAWI_DDVIDEOPORT_LCL    lpLcl;     
+    LPDDRAWI_DDVIDEOPORT_INT    lpLink;    
+    DWORD                       dwIntRefCnt;
+    DWORD                       dwFlags; 
+} DDRAWI_DDVIDEOPORT_INT;
+
+
+typedef struct _DDRAWI_DDRAWCLIPPER_LCL
+{
+    DWORD                     lpClipMore;
+    LPDDRAWI_DDRAWCLIPPER_GBL lpGbl;     
+    LPDDRAWI_DIRECTDRAW_LCL   lpDD_lcl;  
+    DWORD                     dwLocalRefCnt;
+#ifndef _NO_COM
+    IUnknown                  *pUnkOuter;
+#else
+    PVOID                     *pUnkOuter;
+#endif
+    LPDDRAWI_DIRECTDRAW_INT   lpDD_int;   
+    ULONG_PTR                 dwReserved1;
+#ifndef _NO_COM
+    IUnknown *                pAddrefedThisOwner;                                                   
+#else
+	PVOID                     pAddrefedThisOwner;                                                   
+#endif
+} DDRAWI_DDRAWCLIPPER_LCL;
+
+
+
+typedef struct _DDRAWI_DDRAWCLIPPER_GBL
+{
+    DWORD                     dwRefCnt;  
+    DWORD                     dwFlags;   
+    LPDDRAWI_DIRECTDRAW_GBL   lpDD;      
+    DWORD                     dwProcessId;
+    ULONG_PTR                 dwReserved1;
+    ULONG_PTR                 hWnd;      
+    LPRGNDATA                 lpStaticClipList; 
+} DDRAWI_DDRAWCLIPPER_GBL;
+
+typedef BOOL    (PASCAL *LPDDHEL_INIT)(LPDDRAWI_DIRECTDRAW_GBL,BOOL);
+
+extern HRESULT DDAPI 
+       LateAllocateSurfaceMem(
+                              LPDIRECTDRAWSURFACE lpSurface,
+                              DWORD dwPleaseAllocType,
+                              DWORD dwWidthInBytesOrSize,
+                              DWORD dwHeight);
+
+       LPDIRECTDRAWSURFACE GetNextMipMap(
+                           LPDIRECTDRAWSURFACE lpLevel);
+
+
+
+typedef struct IDirectDrawClipperVtbl DIRECTDRAWCLIPPERCALLBACKS;
+typedef struct IDirectDrawPaletteVtbl DIRECTDRAWPALETTECALLBACKS;
+typedef struct IDirectDrawSurfaceVtbl DIRECTDRAWSURFACECALLBACKS;
+typedef struct IDirectDrawSurface2Vtbl DIRECTDRAWSURFACE2CALLBACKS;
+typedef struct IDirectDrawSurface3Vtbl DIRECTDRAWSURFACE3CALLBACKS;
+typedef struct IDirectDrawSurface4Vtbl DIRECTDRAWSURFACE4CALLBACKS;
+typedef struct IDirectDrawSurface7Vtbl DIRECTDRAWSURFACE7CALLBACKS;
+typedef struct IDirectDrawColorControlVtbl DIRECTDRAWCOLORCONTROLCALLBACKS;
+typedef struct IDirectDrawVtbl DIRECTDRAWCALLBACKS;
+typedef struct IDirectDraw2Vtbl DIRECTDRAW2CALLBACKS;
+typedef struct IDirectDraw4Vtbl DIRECTDRAW4CALLBACKS;
+typedef struct IDirectDraw7Vtbl DIRECTDRAW7CALLBACKS;
+typedef struct IDirectDrawKernelVtbl DIRECTDRAWKERNELCALLBACKS;
+typedef struct IDirectDrawSurfaceKernelVtbl DIRECTDRAWSURFACEKERNELCALLBACKS;
+typedef struct IDirectDrawGammaControlVtbl DIRECTDRAWGAMMACONTROLCALLBACKS;
+
+
+typedef DIRECTDRAWCLIPPERCALLBACKS FAR *LPDIRECTDRAWCLIPPERCALLBACKS;
+typedef DIRECTDRAWPALETTECALLBACKS FAR *LPDIRECTDRAWPALETTECALLBACKS;
+typedef DIRECTDRAWSURFACECALLBACKS FAR *LPDIRECTDRAWSURFACECALLBACKS;
+typedef DIRECTDRAWCALLBACKS FAR *LPDIRECTDRAWCALLBACKS;
+
+HRESULT CALLBACK 
+        D3DParseUnknownCommand (LPVOID lpvCommands,
+                                LPVOID *lplpvReturnedCommand);
 
 #ifdef __cplusplus
 } /* extern "C" */

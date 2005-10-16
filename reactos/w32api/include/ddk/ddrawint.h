@@ -883,8 +883,8 @@ typedef struct
 /* IDirectDrawColorControl callbacks                                    */
 /************************************************************************/
 
-#define DDRAWI_GETCOLOR      1
-#define DDRAWI_SETCOLOR      2
+#define DDRAWI_GETCOLOR      0x0001
+#define DDRAWI_SETCOLOR      0x0002
 
 typedef struct
 {
@@ -1028,7 +1028,7 @@ typedef struct
 } DD_RENDERMOCOMPDATA, *PDD_RENDERMOCOMPDATA;
 typedef DWORD (STDCALL *PDD_MOCOMPCB_RENDER)(PDD_RENDERMOCOMPDATA);
 
-#define DDMCQUERY_READ 1
+#define DDMCQUERY_READ 0x00000001
 
 typedef struct
 {
