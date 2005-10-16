@@ -72,6 +72,7 @@ lib\cpl\main\main.cpl                   1
 lib\cpl\ncpa\ncpa.cpl                   1
 lib\cpl\sysdm\sysdm.cpl                 1
 lib\cpl\timedate\timedate.cpl           1
+lib\cfgmgr32\cfgmgr32.dll               1
 lib\comctl32\comctl32.dll               1
 lib\comdlg32\comdlg32.dll               1
 lib\crtdll\crtdll.dll                   1
@@ -104,6 +105,7 @@ lib\keyboard\kbdsg\kbdsg.dll            1
 lib\keyboard\kbduk\kbduk.dll            1
 lib\keyboard\kbdus\kbdus.dll            1
 lib\kernel32\kernel32.dll               1
+lib\lsasrv\lsasrv.dll                   1
 lib\lzexpand\lz32.dll                   1
 lib\mesa32\mesa32.dll                   1
 lib\winmm\midimap\midimap.dll           1
@@ -134,6 +136,7 @@ lib\riched20\riched20.dll               1
 lib\richedit\riched32.dll               1
 lib\rpcrt4\rpcrt4.dll                   1
 lib\samlib\samlib.dll                   1
+lib\samsrv\samsrv.dll                   1
 lib\secur32\secur32.dll                 1
 lib\serialui\serialui.dll               1
 lib\setupapi\setupapi.dll               1

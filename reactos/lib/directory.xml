@@ -224,6 +224,9 @@
 <directory name="samlib">
 	<xi:include href="samlib/samlib.xml" />
 </directory>
+<directory name="samsrv">
+	<xi:include href="samsrv/samsrv.xml" />
+</directory>
 <directory name="secur32">
 	<xi:include href="secur32/secur32.xml" />
 </directory>
