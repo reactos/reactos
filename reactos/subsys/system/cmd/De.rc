@@ -46,7 +46,7 @@ CHDIR [Laufwerk:][Pfad]\n\
 CHDIR[..|.]\n\
 CD [Laufwerk:][Pfad]\n\
 CD[..|.]\n\n\
-  ..   uebergeordnete Verzeichnis\n\
+  ..   uebergeordnetes Verzeichnis\n\
   .    vorhergehende Verzeichnis\n\n\
 Geben Sie CD Laufwerk: ein, um das aktuelle Verzeichnis auf dem angegebenen\n\
 Laufwerk anzuzeigen.\n\
@@ -141,7 +141,7 @@ DATE [/T][date]\n\n\
   /T    nur Datum anzeigen\n\n\
 Der Befehl DATE ohne Parameter zeigt das aktuelle Datum an und fragt nach\n\
 einem neuen. Druecken Sie die EINGABETASTE, um das bisherige Datum zu behalten."
-				
+
 STRING_DEL_HELP1,  "Loescht eine oder mehrere Dateien.\n\n\
 DEL [/N /P /T /Q /W /Y /Z] Dateinamen ...\n\
 DELETE [/N /P /T /Q /W /Y /Z] Dateinamen ...\n\
@@ -205,7 +205,7 @@ STRING_DIR_HELP2, " Datentraeger in Laufwerk %c ist %s\n"
 STRING_DIR_HELP3, " Datentraeger in Laufwerk %c hat keinen Namen\n"
 STRING_DIR_HELP4, " Datentraeger-Seriennummer ist %04X-%04X\n"
 STRING_DIR_HELP5, "\n     Gelistete Dateien:\n%16i Datei(en)% 14s bytes\n"
-STRING_DIR_HELP6, "%16i VErzeichnis(se)% 15s bytes\n"
+STRING_DIR_HELP6, "%16i Verzeichnis(se)% 15s bytes\n"
 STRING_DIR_HELP7, "\n Verzeichnisse %s\n\n"
 STRING_DIR_HELP8, "%16i Datei(en)% 14s bytes\n"
 
@@ -383,7 +383,7 @@ Nutzen Sie den 'move' Befehl falls Sie Objekte verschieben wollen.\n"
 STRING_REN_HELP2, "    %lu Datei umbennant\n"
 
 STRING_REN_HELP3, "    %lu Dateien umbennant\n"
-		 
+
 STRING_SHIFT_HELP, "Veraendert die Position ersetzbarer Parameter in einem Batchprogramm.\n\n\
 SHIFT [DOWN]"
 
@@ -597,7 +597,7 @@ STRING_ERROR_ERROR1,         "Unbekannter Fehler! Fehlernummer: 0x%lx\n"
 STRING_ERROR_ERROR2,         "Syntax-Fehler"
 STRING_FOR_ERROR1,           "'in' fehlt fuer ein statement."
 STRING_FOR_ERROR2,           "Klammern nicht gefunden."
-STRING_FOR_ERROR3,           "'do' fehlt." 
+STRING_FOR_ERROR3,           "'do' fehlt."
 STRING_FOR_ERROR4,           "kein Befehl nach 'do'."
 STRING_FREE_ERROR1,          "Ungueltiges Laufwerk"
 STRING_FREE_ERROR2,          "keine Bezeichnung"
@@ -635,7 +635,7 @@ STRING_ERROR_DRIVER_NOT_READY,     "Laufwerk ist nicht bereit"
 STRING_PATH_ERROR,                 "CMD: Not in environment '%s'\n"
 
 STRING_CMD_SHELLINFO,              "\nReactOS Befehlszeilen Interpreter"
-STRING_VERSION_RUNVER,             " laeft in %s"
+STRING_VERSION_RUNVER,             " laeuft in %s"
 STRING_COPY_FILE ,                 "        %d Datei(en) kopiert\n"
 STRING_DELETE_WIPE,                "wiped"
 STRING_FOR_ERROR,                  "ungueltige Variablenangabe."
