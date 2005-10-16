@@ -1,5 +1,12 @@
 ChangeLog
 
+2005-10-16 ekohl
+
+   tools/widl/client.c
+   tools/widl/server.c
+
+- Fix [out, size_is, unique] parameter issues.
+
 2005-10-09 ekohl
 
    tools/widl/client.c
