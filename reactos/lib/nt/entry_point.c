@@ -29,44 +29,32 @@ _main(
 /* FUNCTIONS ****************************************************************/
 
 static
-ULONG STDCALL WideCharStringToUnicodeString (HANDLE hHeap, PWCHAR wsIn, PUNICODE_STRING usOut)
+VOID FASTCALL EnvironmentStringToUnicodeString (PWCHAR wsIn, PUNICODE_STRING usOut)
 {
-	ULONG   CharCount = 0;
-	PWCHAR  CurrentChar = wsIn;
-	ULONG   BufferLength = 0;
+   if (wsIn)
+   {
+      PWCHAR CurrentChar = wsIn;
+      
+      while (*CurrentChar)
+      {
+         while(*CurrentChar++);
+      }
+      /* double nullterm at end */
+      CurrentChar++;
 
-	DPRINT("%s(%S) called\n", __FUNCTION__, wsIn);
-
-	if (NULL != CurrentChar)
-	{
-		while (*CurrentChar ++)
-		{
-			++ CharCount;
-			while (*CurrentChar ++)
-			{
-				++ CharCount;
-			}
-		}
-		++ CharCount;
-	}
-	BufferLength = CharCount * sizeof *usOut->Buffer;
-	if (0 < CharCount)
-	{
-		usOut->Buffer = RtlAllocateHeap (hHeap, 0, BufferLength);
-		if (NULL != usOut->Buffer)
-		{
-			RtlCopyMemory (usOut->Buffer, wsIn, BufferLength);
-			usOut->Length        = BufferLength;
-			usOut->MaximumLength = BufferLength;
-		}
-	} else {
-		usOut->Buffer        = NULL;
-		usOut->Length        = 0;
-		usOut->MaximumLength = 0;
-	}
-
-	return usOut->Length;
+      usOut->Buffer = wsIn;
+      /* FIXME: the last (double) nullterm should perhaps not be included in Length
+       * but only in MaximumLength. -Gunnar */
+      usOut->MaximumLength = usOut->Length =  (CurrentChar-wsIn) * sizeof(WCHAR);
+   }
+   else
+   {
+      usOut->Buffer = NULL;
+      usOut->Length =  usOut->MaximumLength = 0;
+   }
 }
+
+
 
 VOID
 STDCALL
@@ -94,7 +82,14 @@ NtProcessStartup(PPEB Peb)
     ASSERT(ProcessParameters);
 
     /* Allocate memory for the argument list, enough for 512 tokens */
-    ArgumentList = RtlAllocateHeap(Peb->ProcessHeap, 0, 512 * sizeof(PCHAR));
+    //FIXME: what if 512 is not enough????
+    ArgumentList = RtlAllocateHeap(RtlGetProcessHeap(), 0, 512 * sizeof(PCHAR));
+    if (!ArgumentList)
+    {
+       DPRINT1("ERR: no mem!");
+       Status = STATUS_NO_MEMORY;
+       goto fail;
+    }
 
     /* Use a null pointer as default */
     argv = &NullPointer;
@@ -114,7 +109,12 @@ NtProcessStartup(PPEB Peb)
     }
 
     /* Convert it to an ANSI string */
-    RtlUnicodeStringToAnsiString(&AnsiCmdLine, CmdLineString, TRUE);
+    Status = RtlUnicodeStringToAnsiString(&AnsiCmdLine, CmdLineString, TRUE);
+    if (!NT_SUCCESS(Status))
+    {
+       DPRINT1("ERR: no mem(guess)\n");
+       goto fail;
+    }
 
     /* Save parameters for parsing */
     Source = AnsiCmdLine.Buffer;
@@ -124,7 +124,13 @@ NtProcessStartup(PPEB Peb)
     if (Source)
     {
         /* Allocate a buffer for the destination */
-        Destination = RtlAllocateHeap(Peb->ProcessHeap, 0, Length + sizeof(WCHAR));
+        Destination = RtlAllocateHeap(RtlGetProcessHeap(), 0, Length + sizeof(WCHAR));
+       if (!Destination)
+       {
+          DPRINT1("ERR: no mem!");
+          Status = STATUS_NO_MEMORY;
+          goto fail;
+       }
 
         /* Start parsing */
         while (*Source)
@@ -156,27 +162,27 @@ NtProcessStartup(PPEB Peb)
     /* Now handle the enviornment, point the envp at our current list location. */
     envp = ArgumentList;
 
-    if (0 < WideCharStringToUnicodeString (Peb->ProcessHeap,
-			    ProcessParameters->Environment, & UnicodeEnvironment))
+    if (ProcessParameters->Environment)
     {
-    	RtlUnicodeStringToAnsiString (& AnsiEnvironment, & UnicodeEnvironment, TRUE);
-	RtlFreeUnicodeString (& UnicodeEnvironment);
+      EnvironmentStringToUnicodeString(ProcessParameters->Environment, &UnicodeEnvironment);
+      Status = RtlUnicodeStringToAnsiString (& AnsiEnvironment, & UnicodeEnvironment, TRUE);
+      if (!NT_SUCCESS(Status))
+      {
+         DPRINT1("ERR: no mem(guess)\n");
+         goto fail;
+      }
 
-    	/* Change our source to the enviroment pointer */
-    	Source = AnsiEnvironment.Buffer;
+      ASSERT(AnsiEnvironment.Buffer);
 
-    	/* Simply do a direct copy */
-    	if (Source)
-    	{
-        	while (*Source)
-        	{
-            		/* Save a pointer to this token */
-			*ArgumentList++ = Source;
+      Source = AnsiEnvironment.Buffer;
+      while (*Source)
+     	{
+     		/* Save a pointer to this token */
+    		*ArgumentList++ = Source;
 
-			/* Keep looking for another variable */
-			while (*Source++);
-		}
-	}
+   		/* Keep looking for another variable */
+         while (*Source++);
+	   }
 
     	/* Null terminate the list again */
     	*ArgumentList++ = NULL;
@@ -187,6 +193,7 @@ NtProcessStartup(PPEB Peb)
     /* Call the Main Function */
     Status = _main(argc, argv, envp, ProcessParameters->DebugFlags);
 
+fail:
     /* We're done here */
     NtTerminateProcess(NtCurrentProcess(), Status);
 }
