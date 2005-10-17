@@ -6,8 +6,7 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_CAPTION  "Instalace ReactOS"
-    IDS_TEXT     "ReactOS nelze instalovat pøímo z tohoto CD!\n\n"\
-                 "Prosím restartujte poèítaè z tohoto CD aby jste nainstalovali ReactOS."
+    IDS_TEXT     "ReactOS nelze instalovat pøímo z tohoto CD!\n\nProsím restartujte poèítaè z tohoto CD aby jste nainstalovali ReactOS."
 END
 
 /* EOF */

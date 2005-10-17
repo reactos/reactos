@@ -24,8 +24,7 @@ LANGUAGE LANG_SWEDISH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE 
 BEGIN
     IDS_CAPTION  "ReactOS installation"
-    IDS_TEXT     "Du kan inte installera ReactOS direkt från den här CDn!\n\n"\
-                 "Starta om datorn med hjälp av skivan för att installera ReactOS."
+    IDS_TEXT     "Du kan inte installera ReactOS direkt från den här CDn!\n\nStarta om datorn med hjälp av skivan för att installera ReactOS."
 END
 
 /* EOF */
