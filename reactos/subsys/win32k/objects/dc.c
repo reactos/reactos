@@ -661,6 +661,61 @@ IntPrepareDriverIfNeeded()
    return (PrimarySurface.PreparedDriver ? TRUE : IntPrepareDriver());
 }
 
+static BOOL FASTCALL
+PrepareVideoPrt()
+{
+   PIRP Irp;
+   NTSTATUS Status;
+   IO_STATUS_BLOCK Iosb;
+   BOOL Prepare = TRUE;
+   ULONG Length = sizeof(BOOL);
+   PIO_STACK_LOCATION StackPtr;
+   LARGE_INTEGER StartOffset;
+   PFILE_OBJECT FileObject = PrimarySurface.VideoFileObject;
+   PDEVICE_OBJECT DeviceObject = FileObject->DeviceObject;
+
+   DPRINT("PrepareVideoPrt() called\n");
+
+   KeClearEvent(&PrimarySurface.VideoFileObject->Event);
+
+   ObReferenceObjectByPointer(FileObject, 0, IoFileObjectType, KernelMode);
+
+   StartOffset.QuadPart = 0;
+   Irp = IoBuildSynchronousFsdRequest(IRP_MJ_WRITE,
+                                      DeviceObject,
+                                      (PVOID) &Prepare,
+                                      Length,
+                                      &StartOffset,
+                                      NULL,
+                                      &Iosb);
+   if (NULL == Irp)
+   {
+      return FALSE;
+   }
+
+   /* Set up IRP Data */
+   Irp->Tail.Overlay.OriginalFileObject = FileObject;
+   Irp->RequestorMode = KernelMode;
+   Irp->Overlay.AsynchronousParameters.UserApcRoutine = NULL;
+   Irp->Overlay.AsynchronousParameters.UserApcContext = NULL;
+   Irp->Flags |= IRP_WRITE_OPERATION;
+
+   /* Setup Stack Data */
+   StackPtr = IoGetNextIrpStackLocation(Irp);
+   StackPtr->FileObject = PrimarySurface.VideoFileObject;
+   StackPtr->Parameters.Write.Key = 0;
+
+   Status = IoCallDriver(DeviceObject, Irp);
+
+   if (STATUS_PENDING == Status)
+   {
+      KeWaitForSingleObject(&FileObject->Event, Executive, KernelMode, TRUE, 0);
+      Status = Iosb.Status;
+   }
+
+   return NT_SUCCESS(Status);
+}
+
 BOOL FASTCALL
 IntCreatePrimarySurface()
 {
@@ -670,6 +725,11 @@ IntCreatePrimarySurface()
    BOOL calledFromUser;
    
    if (! IntPrepareDriverIfNeeded())
+   {
+      return FALSE;
+   }
+
+   if (! PrepareVideoPrt())
    {
       return FALSE;
    }
