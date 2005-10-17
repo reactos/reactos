@@ -267,7 +267,8 @@ BEGIN
     IDS_ERR_DELETEVALUE     "Es konnten nicht alle Werte gelöscht werden!"
     IDS_ERR_RENVAL_CAPTION  "Fehler beim Umbennnen des Wertes"
     IDS_ERR_RENVAL_TOEMPTY  "Kann %s nicht umbennenen. Der angebene Name ist leer."
-
+    IDS_NEW_KEY             "Neuer Schlüssel #%d"
+    IDS_NEW_VALUE           "Neuer Wert #%d"
 END
 
 STRINGTABLE DISCARDABLE
