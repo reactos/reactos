@@ -86,20 +86,26 @@ static const IPersistFolder3Vtbl vt_FSFldr_PersistFolder3; /* IPersistFolder3 fo
 static const IDropTargetVtbl dtvt;
 static const ISFHelperVtbl shvt;
 
-#define _IShellFolder2_Offset ((int)(&(((IGenericSFImpl*)0)->lpvtblShellFolder)))
-#define _ICOM_THIS_From_IShellFolder2(class, name) class* This = (class*)(((char*)name)-_IShellFolder2_Offset);
+static inline IGenericSFImpl *impl_from_IShellFolder2( IShellFolder2 *iface )
+{
+    return (IGenericSFImpl *)((char*)iface - FIELD_OFFSET(IGenericSFImpl, lpvtblShellFolder));
+}
 
-#define _IPersistFolder2_Offset ((int)(&(((IGenericSFImpl*)0)->lpvtblPersistFolder3)))
-#define _ICOM_THIS_From_IPersistFolder2(class, name) class* This = (class*)(((char*)name)-_IPersistFolder2_Offset);
+static inline IGenericSFImpl *impl_from_IPersistFolder3( IPersistFolder3 *iface )
+{
+    return (IGenericSFImpl *)((char*)iface - FIELD_OFFSET(IGenericSFImpl, lpvtblPersistFolder3));
+}
 
-#define _IPersistFolder3_Offset ((int)(&(((IGenericSFImpl*)0)->lpvtblPersistFolder3)))
-#define _ICOM_THIS_From_IPersistFolder3(class, name) class* This = (class*)(((char*)name)-_IPersistFolder3_Offset);
+static inline IGenericSFImpl *impl_from_IDropTarget( IDropTarget *iface )
+{
+    return (IGenericSFImpl *)((char*)iface - FIELD_OFFSET(IGenericSFImpl, lpvtblDropTarget));
+}
 
-#define _IDropTarget_Offset ((int)(&(((IGenericSFImpl*)0)->lpvtblDropTarget)))
-#define _ICOM_THIS_From_IDropTarget(class, name) class* This = (class*)(((char*)name)-_IDropTarget_Offset);
+static inline IGenericSFImpl *impl_from_ISFHelper( ISFHelper *iface )
+{
+    return (IGenericSFImpl *)((char*)iface - FIELD_OFFSET(IGenericSFImpl, lpvtblSFHelper));
+}
 
-#define _ISFHelper_Offset ((int)(&(((IGenericSFImpl*)0)->lpvtblSFHelper)))
-#define _ICOM_THIS_From_ISFHelper(class, name) class* This = (class*)(((char*)name)-_ISFHelper_Offset);
 
 /*
   converts This to an interface pointer
@@ -264,7 +270,7 @@ static HRESULT WINAPI
 IShellFolder_fnQueryInterface (IShellFolder2 * iface, REFIID riid,
                                LPVOID * ppvObj)
 {
-    _ICOM_THIS_From_IShellFolder2 (IGenericSFImpl, iface)
+    IGenericSFImpl *This = impl_from_IShellFolder2(iface);
 
     TRACE ("(%p)->(%s,%p)\n", This, shdebugstr_guid (riid), ppvObj);
 
@@ -277,7 +283,7 @@ IShellFolder_fnQueryInterface (IShellFolder2 * iface, REFIID riid,
 
 static ULONG WINAPI IShellFolder_fnAddRef (IShellFolder2 * iface)
 {
-    _ICOM_THIS_From_IShellFolder2 (IGenericSFImpl, iface)
+    IGenericSFImpl *This = impl_from_IShellFolder2(iface);
 
     TRACE ("(%p)->(count=%lu)\n", This, This->ref);
 
@@ -289,7 +295,7 @@ static ULONG WINAPI IShellFolder_fnAddRef (IShellFolder2 * iface)
  */
 static ULONG WINAPI IShellFolder_fnRelease (IShellFolder2 * iface)
 {
-    _ICOM_THIS_From_IShellFolder2 (IGenericSFImpl, iface)
+    IGenericSFImpl *This = impl_from_IShellFolder2(iface);
 
     TRACE ("(%p)->(count=%lu)\n", This, This->ref);
 
@@ -373,7 +379,7 @@ IShellFolder_fnParseDisplayName (IShellFolder2 * iface,
                                  DWORD * pchEaten, LPITEMIDLIST * ppidl,
                                  DWORD * pdwAttributes)
 {
-    _ICOM_THIS_From_IShellFolder2 (IGenericSFImpl, iface)
+    IGenericSFImpl *This = impl_from_IShellFolder2(iface);
 
     HRESULT hr = E_INVALIDARG;
     LPCWSTR szNext = NULL;
@@ -444,7 +450,7 @@ static HRESULT WINAPI
 IShellFolder_fnEnumObjects (IShellFolder2 * iface, HWND hwndOwner,
                             DWORD dwFlags, LPENUMIDLIST * ppEnumIDList)
 {
-    _ICOM_THIS_From_IShellFolder2 (IGenericSFImpl, iface)
+    IGenericSFImpl *This = impl_from_IShellFolder2(iface);
 
     TRACE ("(%p)->(HWND=%p flags=0x%08lx pplist=%p)\n", This, hwndOwner,
      dwFlags, ppEnumIDList);
@@ -474,7 +480,7 @@ static HRESULT WINAPI
 IShellFolder_fnBindToObject (IShellFolder2 * iface, LPCITEMIDLIST pidl,
                              LPBC pbc, REFIID riid, LPVOID * ppvOut)
 {
-    _ICOM_THIS_From_IShellFolder2 (IGenericSFImpl, iface)
+    IGenericSFImpl *This = impl_from_IShellFolder2(iface);
 
     TRACE ("(%p)->(pidl=%p,%p,%s,%p)\n", This, pidl, pbc,
      shdebugstr_guid (riid), ppvOut);
@@ -495,7 +501,7 @@ static HRESULT WINAPI
 IShellFolder_fnBindToStorage (IShellFolder2 * iface, LPCITEMIDLIST pidl,
                               LPBC pbcReserved, REFIID riid, LPVOID * ppvOut)
 {
-    _ICOM_THIS_From_IShellFolder2 (IGenericSFImpl, iface)
+    IGenericSFImpl *This = impl_from_IShellFolder2(iface);
 
     FIXME ("(%p)->(pidl=%p,%p,%s,%p) stub\n", This, pidl, pbcReserved,
      shdebugstr_guid (riid), ppvOut);
@@ -512,7 +518,7 @@ static HRESULT WINAPI
 IShellFolder_fnCompareIDs (IShellFolder2 * iface, LPARAM lParam,
                            LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
 {
-    _ICOM_THIS_From_IShellFolder2 (IGenericSFImpl, iface)
+    IGenericSFImpl *This = impl_from_IShellFolder2(iface);
 
     int nReturn;
 
@@ -529,7 +535,7 @@ static HRESULT WINAPI
 IShellFolder_fnCreateViewObject (IShellFolder2 * iface, HWND hwndOwner,
                                  REFIID riid, LPVOID * ppvOut)
 {
-    _ICOM_THIS_From_IShellFolder2 (IGenericSFImpl, iface)
+    IGenericSFImpl *This = impl_from_IShellFolder2(iface);
 
     LPSHELLVIEW pShellView;
     HRESULT hr = E_INVALIDARG;
@@ -570,7 +576,7 @@ static HRESULT WINAPI
 IShellFolder_fnGetAttributesOf (IShellFolder2 * iface, UINT cidl,
                                 LPCITEMIDLIST * apidl, DWORD * rgfInOut)
 {
-    _ICOM_THIS_From_IShellFolder2 (IGenericSFImpl, iface)
+    IGenericSFImpl *This = impl_from_IShellFolder2(iface);
 
     HRESULT hr = S_OK;
 
@@ -640,7 +646,7 @@ IShellFolder_fnGetUIObjectOf (IShellFolder2 * iface,
                               UINT cidl, LPCITEMIDLIST * apidl, REFIID riid,
                               UINT * prgfInOut, LPVOID * ppvOut)
 {
-    _ICOM_THIS_From_IShellFolder2 (IGenericSFImpl, iface)
+    IGenericSFImpl *This = impl_from_IShellFolder2(iface);
 
     LPITEMIDLIST pidl;
     IUnknown *pObj = NULL;
@@ -774,7 +780,7 @@ static HRESULT WINAPI
 IShellFolder_fnGetDisplayNameOf (IShellFolder2 * iface, LPCITEMIDLIST pidl,
                                  DWORD dwFlags, LPSTRRET strRet)
 {
-    _ICOM_THIS_From_IShellFolder2 (IGenericSFImpl, iface)
+    IGenericSFImpl *This = impl_from_IShellFolder2(iface);
 
     HRESULT hr = S_OK;
     int len = 0;
@@ -834,7 +840,7 @@ static HRESULT WINAPI IShellFolder_fnSetNameOf (IShellFolder2 * iface,
                                                 DWORD dwFlags,
                                                 LPITEMIDLIST * pPidlOut)
 {
-    _ICOM_THIS_From_IShellFolder2 (IGenericSFImpl, iface)
+    IGenericSFImpl *This = impl_from_IShellFolder2(iface);
     WCHAR szSrc[MAX_PATH], szDest[MAX_PATH];
     LPWSTR ptr;
     BOOL bIsFolder = _ILIsFolder (ILFindLastID (pidl));
@@ -885,14 +891,14 @@ static HRESULT WINAPI IShellFolder_fnSetNameOf (IShellFolder2 * iface,
 static HRESULT WINAPI IShellFolder_fnGetDefaultSearchGUID (IShellFolder2 *iface,
                                                            GUID * pguid)
 {
-    _ICOM_THIS_From_IShellFolder2 (IGenericSFImpl, iface)
+    IGenericSFImpl *This = impl_from_IShellFolder2(iface);
     FIXME ("(%p)\n", This);
     return E_NOTIMPL;
 }
 static HRESULT WINAPI IShellFolder_fnEnumSearches (IShellFolder2 * iface,
                                                    IEnumExtraSearch ** ppenum)
 {
-    _ICOM_THIS_From_IShellFolder2 (IGenericSFImpl, iface)
+    IGenericSFImpl *This = impl_from_IShellFolder2(iface);
     FIXME ("(%p)\n", This);
     return E_NOTIMPL;
 }
@@ -901,7 +907,7 @@ static HRESULT WINAPI
 IShellFolder_fnGetDefaultColumn (IShellFolder2 * iface, DWORD dwRes,
                                  ULONG * pSort, ULONG * pDisplay)
 {
-    _ICOM_THIS_From_IShellFolder2 (IGenericSFImpl, iface)
+    IGenericSFImpl *This = impl_from_IShellFolder2(iface);
 
     TRACE ("(%p)\n", This);
 
@@ -917,7 +923,7 @@ static HRESULT WINAPI
 IShellFolder_fnGetDefaultColumnState (IShellFolder2 * iface, UINT iColumn,
                                       DWORD * pcsFlags)
 {
-    _ICOM_THIS_From_IShellFolder2 (IGenericSFImpl, iface)
+    IGenericSFImpl *This = impl_from_IShellFolder2(iface);
 
     TRACE ("(%p)\n", This);
 
@@ -933,7 +939,7 @@ static HRESULT WINAPI
 IShellFolder_fnGetDetailsEx (IShellFolder2 * iface, LPCITEMIDLIST pidl,
                              const SHCOLUMNID * pscid, VARIANT * pv)
 {
-    _ICOM_THIS_From_IShellFolder2 (IGenericSFImpl, iface)
+    IGenericSFImpl *This = impl_from_IShellFolder2(iface);
     FIXME ("(%p)\n", This);
 
     return E_NOTIMPL;
@@ -943,7 +949,7 @@ static HRESULT WINAPI
 IShellFolder_fnGetDetailsOf (IShellFolder2 * iface, LPCITEMIDLIST pidl,
                              UINT iColumn, SHELLDETAILS * psd)
 {
-    _ICOM_THIS_From_IShellFolder2 (IGenericSFImpl, iface)
+    IGenericSFImpl *This = impl_from_IShellFolder2(iface);
     HRESULT hr = E_FAIL;
 
     TRACE ("(%p)->(%p %i %p)\n", This, pidl, iColumn, psd);
@@ -990,7 +996,7 @@ static HRESULT WINAPI
 IShellFolder_fnMapColumnToSCID (IShellFolder2 * iface, UINT column,
                                 SHCOLUMNID * pscid)
 {
-    _ICOM_THIS_From_IShellFolder2 (IGenericSFImpl, iface)
+    IGenericSFImpl *This = impl_from_IShellFolder2(iface);
     FIXME ("(%p)\n", This);
     return E_NOTIMPL;
 }
@@ -1027,7 +1033,7 @@ static const IShellFolder2Vtbl sfvt =
 static HRESULT WINAPI
 ISFHelper_fnQueryInterface (ISFHelper * iface, REFIID riid, LPVOID * ppvObj)
 {
-    _ICOM_THIS_From_ISFHelper (IGenericSFImpl, iface);
+    IGenericSFImpl *This = impl_from_ISFHelper(iface);
 
     TRACE ("(%p)->(count=%lu)\n", This, This->ref);
 
@@ -1036,7 +1042,7 @@ ISFHelper_fnQueryInterface (ISFHelper * iface, REFIID riid, LPVOID * ppvObj)
 
 static ULONG WINAPI ISFHelper_fnAddRef (ISFHelper * iface)
 {
-    _ICOM_THIS_From_ISFHelper (IGenericSFImpl, iface);
+    IGenericSFImpl *This = impl_from_ISFHelper(iface);
 
     TRACE ("(%p)->(count=%lu)\n", This, This->ref);
 
@@ -1045,7 +1051,7 @@ static ULONG WINAPI ISFHelper_fnAddRef (ISFHelper * iface)
 
 static ULONG WINAPI ISFHelper_fnRelease (ISFHelper * iface)
 {
-    _ICOM_THIS_From_ISFHelper (IGenericSFImpl, iface);
+    IGenericSFImpl *This = impl_from_ISFHelper(iface);
 
     TRACE ("(%p)\n", This);
 
@@ -1061,7 +1067,7 @@ static ULONG WINAPI ISFHelper_fnRelease (ISFHelper * iface)
 static HRESULT WINAPI
 ISFHelper_fnGetUniqueName (ISFHelper * iface, LPSTR lpName, UINT uLen)
 {
-    _ICOM_THIS_From_ISFHelper (IGenericSFImpl, iface)
+    IGenericSFImpl *This = impl_from_ISFHelper(iface);
     IEnumIDList *penum;
     HRESULT hr;
     char szText[MAX_PATH];
@@ -1111,7 +1117,7 @@ static HRESULT WINAPI
 ISFHelper_fnAddFolder (ISFHelper * iface, HWND hwnd, LPCSTR lpName,
                        LPITEMIDLIST * ppidlOut)
 {
-    _ICOM_THIS_From_ISFHelper (IGenericSFImpl, iface)
+    IGenericSFImpl *This = impl_from_ISFHelper(iface);
     char lpstrNewDir[MAX_PATH];
     DWORD bRes;
     HRESULT hres = E_FAIL;
@@ -1154,7 +1160,7 @@ ISFHelper_fnAddFolder (ISFHelper * iface, HWND hwnd, LPCSTR lpName,
 static HRESULT WINAPI
 ISFHelper_fnDeleteItems (ISFHelper * iface, UINT cidl, LPCITEMIDLIST * apidl)
 {
-    _ICOM_THIS_From_ISFHelper (IGenericSFImpl, iface)
+    IGenericSFImpl *This = impl_from_ISFHelper(iface);
     UINT i;
     char szPath[MAX_PATH];
     BOOL bConfirm = TRUE;
@@ -1218,7 +1224,7 @@ ISFHelper_fnCopyItems (ISFHelper * iface, IShellFolder * pSFFrom, UINT cidl,
     char szSrcPath[MAX_PATH],
       szDstPath[MAX_PATH];
 
-    _ICOM_THIS_From_ISFHelper (IGenericSFImpl, iface);
+    IGenericSFImpl *This = impl_from_ISFHelper(iface);
 
     TRACE ("(%p)->(%p,%u,%p)\n", This, pSFFrom, cidl, apidl);
 
@@ -1266,7 +1272,7 @@ static HRESULT WINAPI
 IFSFldr_PersistFolder3_QueryInterface (IPersistFolder3 * iface, REFIID iid,
                                        LPVOID * ppvObj)
 {
-    _ICOM_THIS_From_IPersistFolder3 (IGenericSFImpl, iface);
+    IGenericSFImpl *This = impl_from_IPersistFolder3(iface);
 
     TRACE ("(%p)\n", This);
 
@@ -1280,7 +1286,7 @@ IFSFldr_PersistFolder3_QueryInterface (IPersistFolder3 * iface, REFIID iid,
 static ULONG WINAPI
 IFSFldr_PersistFolder3_AddRef (IPersistFolder3 * iface)
 {
-    _ICOM_THIS_From_IPersistFolder3 (IGenericSFImpl, iface);
+    IGenericSFImpl *This = impl_from_IPersistFolder3(iface);
 
     TRACE ("(%p)->(count=%lu)\n", This, This->ref);
 
@@ -1294,7 +1300,7 @@ IFSFldr_PersistFolder3_AddRef (IPersistFolder3 * iface)
 static ULONG WINAPI
 IFSFldr_PersistFolder3_Release (IPersistFolder3 * iface)
 {
-    _ICOM_THIS_From_IPersistFolder3 (IGenericSFImpl, iface);
+    IGenericSFImpl *This = impl_from_IPersistFolder3(iface);
 
     TRACE ("(%p)->(count=%lu)\n", This, This->ref);
 
@@ -1307,7 +1313,7 @@ IFSFldr_PersistFolder3_Release (IPersistFolder3 * iface)
 static HRESULT WINAPI
 IFSFldr_PersistFolder3_GetClassID (IPersistFolder3 * iface, CLSID * lpClassId)
 {
-    _ICOM_THIS_From_IPersistFolder3 (IGenericSFImpl, iface);
+    IGenericSFImpl *This = impl_from_IPersistFolder3(iface);
 
     TRACE ("(%p)\n", This);
 
@@ -1329,7 +1335,7 @@ IFSFldr_PersistFolder3_Initialize (IPersistFolder3 * iface, LPCITEMIDLIST pidl)
 {
     char sTemp[MAX_PATH];
 
-    _ICOM_THIS_From_IPersistFolder3 (IGenericSFImpl, iface);
+    IGenericSFImpl *This = impl_from_IPersistFolder3(iface);
 
     TRACE ("(%p)->(%p)\n", This, pidl);
 
@@ -1357,7 +1363,7 @@ static HRESULT WINAPI
 IFSFldr_PersistFolder3_fnGetCurFolder (IPersistFolder3 * iface,
                                        LPITEMIDLIST * pidl)
 {
-    _ICOM_THIS_From_IPersistFolder3 (IGenericSFImpl, iface);
+    IGenericSFImpl *This = impl_from_IPersistFolder3(iface);
 
     TRACE ("(%p)->(%p)\n", This, pidl);
 
@@ -1378,7 +1384,7 @@ IFSFldr_PersistFolder3_InitializeEx (IPersistFolder3 * iface,
 {
     char sTemp[MAX_PATH];
 
-    _ICOM_THIS_From_IPersistFolder3 (IGenericSFImpl, iface);
+    IGenericSFImpl *This = impl_from_IPersistFolder3(iface);
 
     TRACE ("(%p)->(%p,%p,%p)\n", This, pbc, pidlRoot, ppfti);
     if (ppfti)
@@ -1429,7 +1435,7 @@ static HRESULT WINAPI
 IFSFldr_PersistFolder3_GetFolderTargetInfo (IPersistFolder3 * iface,
                                             PERSIST_FOLDER_TARGET_INFO * ppfti)
 {
-    _ICOM_THIS_From_IPersistFolder3 (IGenericSFImpl, iface);
+    IGenericSFImpl *This = impl_from_IPersistFolder3(iface);
     FIXME ("(%p)->(%p)\n", This, ppfti);
     ZeroMemory (ppfti, sizeof (ppfti));
     return E_NOTIMPL;
@@ -1456,7 +1462,7 @@ ISFDropTarget_QueryDrop (IDropTarget * iface, DWORD dwKeyState,
 {
     DWORD dwEffect = *pdwEffect;
 
-    _ICOM_THIS_From_IDropTarget (IGenericSFImpl, iface);
+    IGenericSFImpl *This = impl_from_IDropTarget(iface);
 
     *pdwEffect = DROPEFFECT_NONE;
 
@@ -1474,7 +1480,7 @@ ISFDropTarget_QueryDrop (IDropTarget * iface, DWORD dwKeyState,
 static HRESULT WINAPI
 ISFDropTarget_QueryInterface (IDropTarget * iface, REFIID riid, LPVOID * ppvObj)
 {
-    _ICOM_THIS_From_IDropTarget (IGenericSFImpl, iface);
+    IGenericSFImpl *This = impl_from_IDropTarget(iface);
 
     TRACE ("(%p)\n", This);
 
@@ -1483,7 +1489,7 @@ ISFDropTarget_QueryInterface (IDropTarget * iface, REFIID riid, LPVOID * ppvObj)
 
 static ULONG WINAPI ISFDropTarget_AddRef (IDropTarget * iface)
 {
-    _ICOM_THIS_From_IDropTarget (IGenericSFImpl, iface);
+    IGenericSFImpl *This = impl_from_IDropTarget(iface);
 
     TRACE ("(%p)\n", This);
 
@@ -1492,7 +1498,7 @@ static ULONG WINAPI ISFDropTarget_AddRef (IDropTarget * iface)
 
 static ULONG WINAPI ISFDropTarget_Release (IDropTarget * iface)
 {
-    _ICOM_THIS_From_IDropTarget (IGenericSFImpl, iface);
+    IGenericSFImpl *This = impl_from_IDropTarget(iface);
 
     TRACE ("(%p)\n", This);
 
@@ -1505,7 +1511,7 @@ ISFDropTarget_DragEnter (IDropTarget * iface, IDataObject * pDataObject,
 {
     FORMATETC fmt;
 
-    _ICOM_THIS_From_IDropTarget (IGenericSFImpl, iface);
+    IGenericSFImpl *This = impl_from_IDropTarget(iface);
 
     TRACE ("(%p)->(DataObject=%p)\n", This, pDataObject);
 
@@ -1523,7 +1529,7 @@ static HRESULT WINAPI
 ISFDropTarget_DragOver (IDropTarget * iface, DWORD dwKeyState, POINTL pt,
                         DWORD * pdwEffect)
 {
-    _ICOM_THIS_From_IDropTarget (IGenericSFImpl, iface);
+    IGenericSFImpl *This = impl_from_IDropTarget(iface);
 
     TRACE ("(%p)\n", This);
 
@@ -1537,7 +1543,7 @@ ISFDropTarget_DragOver (IDropTarget * iface, DWORD dwKeyState, POINTL pt,
 
 static HRESULT WINAPI ISFDropTarget_DragLeave (IDropTarget * iface)
 {
-    _ICOM_THIS_From_IDropTarget (IGenericSFImpl, iface);
+    IGenericSFImpl *This = impl_from_IDropTarget(iface);
 
     TRACE ("(%p)\n", This);
 
@@ -1550,7 +1556,7 @@ static HRESULT WINAPI
 ISFDropTarget_Drop (IDropTarget * iface, IDataObject * pDataObject,
                     DWORD dwKeyState, POINTL pt, DWORD * pdwEffect)
 {
-    _ICOM_THIS_From_IDropTarget (IGenericSFImpl, iface);
+    IGenericSFImpl *This = impl_from_IDropTarget(iface);
 
     FIXME ("(%p) object dropped\n", This);
 

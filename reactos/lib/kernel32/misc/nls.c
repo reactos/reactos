@@ -72,8 +72,11 @@ GetCPFileNameFromRegistry(UINT CodePage, LPWSTR FileName, ULONG FileNameSize);
 /* PRIVATE FUNCTIONS **********************************************************/
 
 /**
+ * @name NlsInit
+ *
  * Internal NLS related stuff initialization.
  */
+
 BOOL FASTCALL
 NlsInit()
 {
@@ -118,8 +121,11 @@ NlsInit()
 }
 
 /**
+ * @name NlsUninit
+ *
  * Internal NLS related stuff uninitialization.
  */
+
 VOID FASTCALL
 NlsUninit()
 {
@@ -140,6 +146,8 @@ NlsUninit()
 }
 
 /**
+ * @name IntGetLoadedCodePageEntry
+ *
  * Internal function to get structure containing a code page information
  * of code page that is already loaded.
  *
@@ -150,6 +158,7 @@ NlsUninit()
  * @return Code page entry or NULL if the specified code page hasn't
  *         been loaded yet.
  */
+
 PCODEPAGE_ENTRY FASTCALL
 IntGetLoadedCodePageEntry(UINT CodePage)
 {
@@ -174,6 +183,8 @@ IntGetLoadedCodePageEntry(UINT CodePage)
 }
 
 /**
+ * @name IntGetCodePageEntry
+ *
  * Internal function to get structure containing a code page information.
  *
  * @param CodePage
@@ -182,7 +193,8 @@ IntGetLoadedCodePageEntry(UINT CodePage)
  *
  * @return Code page entry.
  */
-PCODEPAGE_ENTRY FASTCALL
+
+static PCODEPAGE_ENTRY FASTCALL
 IntGetCodePageEntry(UINT CodePage)
 {
    CHAR SectionName[40];
@@ -301,12 +313,15 @@ IntGetCodePageEntry(UINT CodePage)
 }
 
 /**
+ * @name IntMultiByteToWideCharUTF8
+ *
  * Internal version of MultiByteToWideChar for UTF8.
  *
  * @see MultiByteToWideChar
  * @todo Add UTF8 validity checks.
  */
-INT STDCALL
+
+static INT STDCALL
 IntMultiByteToWideCharUTF8(DWORD Flags,
                            LPCSTR MultiByteString, INT MultiByteCount,
                            LPWSTR WideCharString, INT WideCharCount)
@@ -362,13 +377,16 @@ IntMultiByteToWideCharUTF8(DWORD Flags,
 }
 
 /**
+ * @name IntMultiByteToWideCharCP
+ *
  * Internal version of MultiByteToWideChar for code page tables.
  *
  * @see MultiByteToWideChar
  * @todo Handle MB_PRECOMPOSED, MB_COMPOSITE, MB_USEGLYPHCHARS and
  *       DBCS codepages.
  */
-INT STDCALL
+
+static INT STDCALL
 IntMultiByteToWideCharCP(UINT CodePage, DWORD Flags,
                          LPCSTR MultiByteString, INT MultiByteCount,
                          LPWSTR WideCharString, INT WideCharCount)
@@ -435,11 +453,14 @@ IntMultiByteToWideCharCP(UINT CodePage, DWORD Flags,
 }
 
 /**
+ * @name IntWideCharToMultiByteUTF8
+ *
  * Internal version of WideCharToMultiByte for UTF8.
  *
  * @see WideCharToMultiByte
  */
-INT STDCALL
+
+static INT STDCALL
 IntWideCharToMultiByteUTF8(UINT CodePage, DWORD Flags,
                            LPCWSTR WideCharString, INT WideCharCount,
                            LPSTR MultiByteString, INT MultiByteCount,
@@ -512,12 +533,15 @@ IntWideCharToMultiByteUTF8(UINT CodePage, DWORD Flags,
 }
 
 /**
+ * @name IntWideCharToMultiByteCP
+ *
  * Internal version of WideCharToMultiByte for code page tables.
  *
  * @see WideCharToMultiByte
  * @todo Handle default characters and flags.
  */
-INT STDCALL
+
+static INT STDCALL
 IntWideCharToMultiByteCP(UINT CodePage, DWORD Flags,
                          LPCWSTR WideCharString, INT WideCharCount,
                          LPSTR MultiByteString, INT MultiByteCount,
@@ -570,9 +594,35 @@ IntWideCharToMultiByteCP(UINT CodePage, DWORD Flags,
    }
 }
 
+/** 
+ * @name IntIsLeadByte
+ *
+ * Internal function to detect if byte is lead byte in specific character
+ * table.
+ */
+
+static BOOL STDCALL
+IntIsLeadByte(PCPTABLEINFO TableInfo, BYTE Byte)
+{
+   UINT LeadByteNo;
+
+   if (TableInfo->MaximumCharacterSize == 2)
+   {
+      for (LeadByteNo = 0; LeadByteNo < MAXIMUM_LEADBYTES; LeadByteNo++)
+      {
+         if (TableInfo->LeadByte[LeadByteNo] == Byte)
+            return TRUE;
+      }
+   }
+
+   return FALSE;
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /**
+ * @name GetNlsSectionName
+ *
  * Construct a name of NLS section.
  *
  * @param CodePage
@@ -596,6 +646,7 @@ IntWideCharToMultiByteCP(UINT CodePage, DWORD Flags,
  *
  * @implemented
  */
+
 BOOL STDCALL
 GetNlsSectionName(UINT CodePage, UINT Base, ULONG Unknown,
                   LPSTR BaseName, LPSTR Result, ULONG ResultSize)
@@ -619,6 +670,8 @@ GetNlsSectionName(UINT CodePage, UINT Base, ULONG Unknown,
 }
 
 /**
+ * @name GetCPFileNameFromRegistry
+ *
  * Get file name of code page definition file.
  *
  * @param CodePage
@@ -633,6 +686,7 @@ GetNlsSectionName(UINT CodePage, UINT Base, ULONG Unknown,
  *
  * @implemented
  */
+
 BOOL STDCALL
 GetCPFileNameFromRegistry(UINT CodePage, LPWSTR FileName, ULONG FileNameSize)
 {
@@ -693,6 +747,8 @@ GetCPFileNameFromRegistry(UINT CodePage, LPWSTR FileName, ULONG FileNameSize)
 }
 
 /**
+ * @name IsValidCodePage
+ *
  * Detect if specified code page is valid and present in the system.
  *
  * @param CodePage
@@ -700,6 +756,7 @@ GetCPFileNameFromRegistry(UINT CodePage, LPWSTR FileName, ULONG FileNameSize)
  *
  * @return TRUE if code page is present.
  */
+
 BOOL STDCALL
 IsValidCodePage(UINT CodePage)
 {
@@ -711,6 +768,8 @@ IsValidCodePage(UINT CodePage)
 }
 
 /**
+ * @name MultiByteToWideChar
+ *
  * Convert a multi-byte string to wide-charater equivalent.
  *
  * @param CodePage
@@ -738,6 +797,7 @@ IsValidCodePage(UINT CodePage)
  *
  * @implemented
  */
+
 INT STDCALL
 MultiByteToWideChar(UINT CodePage, DWORD Flags,
                     LPCSTR MultiByteString, INT MultiByteCount,
@@ -781,6 +841,8 @@ MultiByteToWideChar(UINT CodePage, DWORD Flags,
 }
 
 /**
+ * @name WideCharToMultiByte
+ *
  * Convert a wide-charater string to closest multi-byte equivalent.
  *
  * @param CodePage
@@ -816,6 +878,7 @@ MultiByteToWideChar(UINT CodePage, DWORD Flags,
  *
  * @implemented
  */
+
 INT STDCALL
 WideCharToMultiByte(UINT CodePage, DWORD Flags,
                     LPCWSTR WideCharString, INT WideCharCount,
@@ -861,77 +924,67 @@ WideCharToMultiByte(UINT CodePage, DWORD Flags,
    }
 }
 
-/*
+/**
+ * @name GetACP
+ *
+ * Get active ANSI code page number.
+ *
  * @implemented
  */
-UINT
-STDCALL
-GetACP (VOID)
+
+UINT STDCALL
+GetACP(VOID)
 {
-    return AnsiCodePage.CodePageTable.CodePage;
+   return AnsiCodePage.CodePageTable.CodePage;
 }
 
-/*
+/**
+ * @name GetOEMCP
+ *
+ * Get active OEM code page number.
+ * 
  * @implemented
  */
-UINT
-STDCALL
-GetOEMCP (VOID)
+
+UINT STDCALL
+GetOEMCP(VOID)
 {
-    return OemCodePage.CodePageTable.CodePage;
+   return OemCodePage.CodePageTable.CodePage;
 }
 
-static __inline BOOL
-IntIsLeadByte(PCPTABLEINFO TableInfo, UCHAR Ch)
-{
-  if(TableInfo->MaximumCharacterSize == 2)
-  {
-    UINT i;
-    for(i = 0; i < MAXIMUM_LEADBYTES; i++)
-    {
-      if(TableInfo->LeadByte[i] == Ch)
-      {
-        return TRUE;
-      }
-    }
-  }
-  return FALSE;
-}
-
-/*
+/**
+ * @name IsDBCSLeadByteEx
+ *
+ * Determine if passed byte is lead byte in specified code page.
+ *
  * @implemented
  */
-BOOL
-STDCALL
-IsDBCSLeadByte (
-    BYTE    TestChar
-    )
+
+BOOL STDCALL
+IsDBCSLeadByteEx(UINT CodePage, BYTE TestByte)
 {
-   return IntIsLeadByte(&AnsiCodePage.CodePageTable, (UCHAR)TestChar);
+   PCODEPAGE_ENTRY CodePageEntry;
+
+   CodePageEntry = IntGetCodePageEntry(CodePage);
+   if (CodePageEntry != NULL)
+      return IntIsLeadByte(&CodePageEntry->CodePageTable, TestByte);
+
+   SetLastError(ERROR_INVALID_PARAMETER);
+   return FALSE;
 }
 
-
-/*
+/**
+ * @name IsDBCSLeadByteEx
+ *
+ * Determine if passed byte is lead byte in current ANSI code page.
+ *
  * @implemented
  */
-BOOL
-STDCALL
-IsDBCSLeadByteEx (
-    UINT    CodePage,
-    BYTE    TestChar
-    )
+
+BOOL STDCALL
+IsDBCSLeadByte(BYTE TestByte)
 {
-    PCODEPAGE_ENTRY CodePageEntry;
-
-    CodePageEntry = IntGetCodePageEntry(CodePage);
-    if(CodePageEntry != NULL)
-    {
-      return IntIsLeadByte(&CodePageEntry->CodePageTable, (UCHAR)TestChar);
-    }
-
-    SetLastError(ERROR_INVALID_PARAMETER);
-    return FALSE;
+   return IntIsLeadByte(&AnsiCodePage.CodePageTable, TestByte);
 }
-
 
 /* EOF */

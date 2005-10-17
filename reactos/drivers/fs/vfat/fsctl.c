@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/fs/vfat/fsctl.c
@@ -422,7 +421,7 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    HashTableSize = FCB_HASH_TABLE_SIZE;
    DPRINT("VFAT: Recognized volume\n");
    Status = IoCreateDevice(VfatGlobalData->DriverObject,
-			   ROUND_UP(sizeof (DEVICE_EXTENSION), sizeof(DWORD)) + sizeof(HASHENTRY*) * HashTableSize,
+			   ROUND_UP(sizeof (DEVICE_EXTENSION), sizeof(ULONG)) + sizeof(HASHENTRY*) * HashTableSize,
 			   NULL,
 			   FILE_DEVICE_FILE_SYSTEM,
 			   0,
@@ -435,8 +434,8 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
 
    DeviceObject->Flags = DeviceObject->Flags | DO_DIRECT_IO;
    DeviceExt = (PVOID) DeviceObject->DeviceExtension;
-   RtlZeroMemory(DeviceExt, ROUND_UP(sizeof(DEVICE_EXTENSION), sizeof(DWORD)) + sizeof(HASHENTRY*) * HashTableSize);
-   DeviceExt->FcbHashTable = (HASHENTRY**)((ULONG_PTR)DeviceExt + ROUND_UP(sizeof(DEVICE_EXTENSION), sizeof(DWORD)));
+   RtlZeroMemory(DeviceExt, ROUND_UP(sizeof(DEVICE_EXTENSION), sizeof(ULONG)) + sizeof(HASHENTRY*) * HashTableSize);
+   DeviceExt->FcbHashTable = (HASHENTRY**)((ULONG_PTR)DeviceExt + ROUND_UP(sizeof(DEVICE_EXTENSION), sizeof(ULONG)));
    DeviceExt->HashTableSize = HashTableSize;
 
    /* use same vpb as device disk */

@@ -12,7 +12,7 @@
 @ stub CreateServerInterfaceFromStub # wxp
 @ stdcall DceErrorInqTextA (long ptr)
 @ stdcall DceErrorInqTextW (long ptr)
-@ stdcall -private DllRegisterServer() RPCRT4_DllRegisterServer
+@ stdcall -private DllRegisterServer()
 @ stub GlobalMutexClearExternal
 @ stub GlobalMutexRequestExternal
 @ stdcall IUnknown_AddRef_Proxy(ptr)
@@ -137,7 +137,7 @@
 @ stub MesInqProcEncodingId
 @ stub MqGetContext # win9x
 @ stub MqRegisterQueue # win9x
-@ stub NDRCContextBinding
+@ stdcall NDRCContextBinding(ptr)
 @ stub NDRCContextMarshall
 @ stub NDRCContextUnmarshall
 @ stub NDRSContextMarshall2
@@ -197,8 +197,8 @@
 @ stdcall NdrConformantVaryingStructMarshall(ptr ptr ptr)
 @ stdcall NdrConformantVaryingStructMemorySize(ptr ptr)
 @ stdcall NdrConformantVaryingStructUnmarshall(ptr ptr ptr long)
-@ stub NdrContextHandleInitialize
-@ stub NdrContextHandleSize
+@ stdcall NdrContextHandleInitialize(ptr ptr)
+@ stdcall NdrContextHandleSize(ptr ptr ptr)
 @ stdcall NdrConvert2(ptr ptr long)
 @ stdcall NdrConvert(ptr ptr)
 @ stub NdrCorrelationFree
@@ -261,10 +261,10 @@
 @ stub NdrMesTypeEncode2
 @ stub NdrMesTypeEncode
 @ stub NdrMesTypeFree2
-@ stub NdrNonConformantStringBufferSize #(ptr ptr ptr)
-@ stub NdrNonConformantStringMarshall #(ptr ptr ptr)
-@ stub NdrNonConformantStringMemorySize #(ptr ptr)
-@ stub NdrNonConformantStringUnmarshall #(ptr ptr ptr long)
+@ stdcall NdrNonConformantStringBufferSize(ptr ptr ptr)
+@ stdcall NdrNonConformantStringMarshall(ptr ptr ptr)
+@ stdcall NdrNonConformantStringMemorySize(ptr ptr)
+@ stdcall NdrNonConformantStringUnmarshall(ptr ptr ptr long)
 @ stdcall NdrNonEncapsulatedUnionBufferSize(ptr ptr ptr)
 @ stdcall NdrNonEncapsulatedUnionFree(ptr ptr ptr)
 @ stdcall NdrNonEncapsulatedUnionMarshall(ptr ptr ptr)
@@ -305,10 +305,10 @@
 @ stdcall NdrSendReceive(ptr ptr)
 @ stub NdrServerCall2
 @ stub NdrServerCall
-@ stub NdrServerContextMarshall
-@ stub NdrServerContextNewMarshall # wxp
-@ stub NdrServerContextNewUnmarshall # wxp
-@ stub NdrServerContextUnmarshall
+@ stdcall NdrServerContextMarshall(ptr ptr long)
+@ stdcall NdrServerContextNewMarshall(ptr ptr ptr ptr) # wxp
+@ stdcall NdrServerContextNewUnmarshall(ptr ptr) # wxp
+@ stdcall NdrServerContextUnmarshall(ptr)
 @ stub NdrServerInitialize
 @ stub NdrServerInitializeMarshall
 @ stdcall NdrServerInitializeNew(ptr ptr ptr)

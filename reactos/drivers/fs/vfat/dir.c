@@ -1,6 +1,4 @@
 /*
- * $Id$
- *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/fs/vfat/dir.c
@@ -115,8 +113,8 @@ VfatGetFileDirectoryInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
     pInfo->ChangeTime = pInfo->LastWriteTime;
     if (DirContext->DirEntry.FatX.Attrib & FILE_ATTRIBUTE_DIRECTORY)
       {
-        pInfo->EndOfFile.QuadPart = 0LL;
-        pInfo->AllocationSize.QuadPart = 0LL;
+        pInfo->EndOfFile.QuadPart = 0;
+        pInfo->AllocationSize.QuadPart = 0;
       }
     else
       {
@@ -141,8 +139,8 @@ VfatGetFileDirectoryInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
     pInfo->ChangeTime = pInfo->LastWriteTime;
     if (DirContext->DirEntry.Fat.Attrib & FILE_ATTRIBUTE_DIRECTORY)
       {
-        pInfo->EndOfFile.QuadPart = 0LL;
-        pInfo->AllocationSize.QuadPart = 0LL;
+        pInfo->EndOfFile.QuadPart = 0;
+        pInfo->AllocationSize.QuadPart = 0;
       }
     else
       {
@@ -242,8 +240,8 @@ VfatGetFileBothInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
     pInfo->ChangeTime = pInfo->LastWriteTime;
     if (DirContext->DirEntry.FatX.Attrib & FILE_ATTRIBUTE_DIRECTORY)
       {
-        pInfo->EndOfFile.QuadPart = 0LL;
-        pInfo->AllocationSize.QuadPart = 0LL;
+        pInfo->EndOfFile.QuadPart = 0;
+        pInfo->AllocationSize.QuadPart = 0;
       }
     else
       {
@@ -275,8 +273,8 @@ VfatGetFileBothInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
     pInfo->ChangeTime = pInfo->LastWriteTime;
     if (DirContext->DirEntry.Fat.Attrib & FILE_ATTRIBUTE_DIRECTORY)
       {
-        pInfo->EndOfFile.QuadPart = 0LL;
-        pInfo->AllocationSize.QuadPart = 0LL;
+        pInfo->EndOfFile.QuadPart = 0;
+        pInfo->AllocationSize.QuadPart = 0;
       }
     else
       {

@@ -15,6 +15,9 @@ extern "C" {
 #define SYSPAL_NOSTATIC256  3
 
 #define WINGDIAPI
+
+#define AC_SRC_OVER 0
+#define AC_SRC_ALPHA 1
 #define BI_RGB 0
 #define BI_RLE8 1
 #define BI_RLE4 2

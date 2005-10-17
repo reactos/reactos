@@ -166,8 +166,10 @@ typedef struct tagICreateTypeLib2Impl
     struct tagICreateTypeInfo2Impl *last_typeinfo;
 } ICreateTypeLib2Impl;
 
-#define _ITypeLib2_Offset(impl) ((int)(&(((impl*)0)->lpVtblTypeLib2)))
-#define ICOM_THIS_From_ITypeLib2(impl, iface) impl* This = (impl*)(((char*)iface)-_ITypeLib2_Offset(impl))
+static inline ICreateTypeLib2Impl *impl_from_ITypeLib2( ITypeLib2 *iface )
+{
+    return (ICreateTypeLib2Impl *)((char*)iface - FIELD_OFFSET(ICreateTypeLib2Impl, lpVtblTypeLib2));
+}
 
 typedef struct tagICreateTypeInfo2Impl
 {
@@ -192,8 +194,10 @@ typedef struct tagICreateTypeInfo2Impl
     struct tagICreateTypeInfo2Impl *next_typeinfo;
 } ICreateTypeInfo2Impl;
 
-#define _ITypeInfo2_Offset(impl) ((int)(&(((impl*)0)->lpVtblTypeInfo2)))
-#define ICOM_THIS_From_ITypeInfo2(impl, iface) impl* This = (impl*)(((char*)iface)-_ITypeInfo2_Offset(impl))
+static inline ICreateTypeInfo2Impl *impl_from_ITypeInfo2( ITypeInfo2 *iface )
+{
+    return (ICreateTypeInfo2Impl *)((char*)iface - FIELD_OFFSET(ICreateTypeInfo2Impl, lpVtblTypeInfo2));
+}
 
 static ULONG WINAPI ICreateTypeLib2_fnRelease(ICreateTypeLib2 *iface);
 
@@ -1328,7 +1332,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnAddRefTypeInfo(
     ICreateTypeInfo2Impl *This = (ICreateTypeInfo2Impl *)iface;
 
     ITypeLib *container;
-    int index;
+    UINT index;
     HRESULT res;
 
     TRACE("(%p,%p,%p)\n", iface, pTInfo, phRefType);
@@ -2198,7 +2202,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnSetName(
  */
 static HRESULT WINAPI ITypeInfo2_fnQueryInterface(ITypeInfo2 * iface, REFIID riid, LPVOID * ppv)
 {
-    ICOM_THIS_From_ITypeInfo2(ICreateTypeInfo2Impl, iface);
+    ICreateTypeInfo2Impl *This = impl_from_ITypeInfo2(iface);
 
     return ICreateTypeInfo2_QueryInterface((ICreateTypeInfo2 *)This, riid, ppv);
 }
@@ -2210,7 +2214,7 @@ static HRESULT WINAPI ITypeInfo2_fnQueryInterface(ITypeInfo2 * iface, REFIID rii
  */
 static ULONG WINAPI ITypeInfo2_fnAddRef(ITypeInfo2 * iface)
 {
-    ICOM_THIS_From_ITypeInfo2(ICreateTypeInfo2Impl, iface);
+    ICreateTypeInfo2Impl *This = impl_from_ITypeInfo2(iface);
 
     return ICreateTypeInfo2_AddRef((ICreateTypeInfo2 *)This);
 }
@@ -2222,7 +2226,7 @@ static ULONG WINAPI ITypeInfo2_fnAddRef(ITypeInfo2 * iface)
  */
 static ULONG WINAPI ITypeInfo2_fnRelease(ITypeInfo2 * iface)
 {
-    ICOM_THIS_From_ITypeInfo2(ICreateTypeInfo2Impl, iface);
+    ICreateTypeInfo2Impl *This = impl_from_ITypeInfo2(iface);
 
     return ICreateTypeInfo2_Release((ICreateTypeInfo2 *)This);
 }
@@ -2461,7 +2465,7 @@ static HRESULT WINAPI ITypeInfo2_fnGetContainingTypeLib(
         ITypeLib** ppTLib,
         UINT* pIndex)
 {
-    ICOM_THIS_From_ITypeInfo2(ICreateTypeInfo2Impl, iface);
+    ICreateTypeInfo2Impl *This = impl_from_ITypeInfo2(iface);
 
     TRACE("(%p,%p,%p)\n", iface, ppTLib, pIndex);
     
@@ -3431,7 +3435,7 @@ static HRESULT WINAPI ICreateTypeLib2_fnSetHelpStringDll(
  */
 static HRESULT WINAPI ITypeLib2_fnQueryInterface(ITypeLib2 * iface, REFIID riid, LPVOID * ppv)
 {
-    ICOM_THIS_From_ITypeLib2(ICreateTypeLib2Impl, iface);
+    ICreateTypeLib2Impl *This = impl_from_ITypeLib2(iface);
 
     return ICreateTypeLib2_QueryInterface((ICreateTypeLib2 *)This, riid, ppv);
 }
@@ -3443,7 +3447,7 @@ static HRESULT WINAPI ITypeLib2_fnQueryInterface(ITypeLib2 * iface, REFIID riid,
  */
 static ULONG WINAPI ITypeLib2_fnAddRef(ITypeLib2 * iface)
 {
-    ICOM_THIS_From_ITypeLib2(ICreateTypeLib2Impl, iface);
+    ICreateTypeLib2Impl *This = impl_from_ITypeLib2(iface);
 
     return ICreateTypeLib2_AddRef((ICreateTypeLib2 *)This);
 }
@@ -3455,7 +3459,7 @@ static ULONG WINAPI ITypeLib2_fnAddRef(ITypeLib2 * iface)
  */
 static ULONG WINAPI ITypeLib2_fnRelease(ITypeLib2 * iface)
 {
-    ICOM_THIS_From_ITypeLib2(ICreateTypeLib2Impl, iface);
+    ICreateTypeLib2Impl *This = impl_from_ITypeLib2(iface);
 
     return ICreateTypeLib2_Release((ICreateTypeLib2 *)This);
 }
@@ -3468,7 +3472,7 @@ static ULONG WINAPI ITypeLib2_fnRelease(ITypeLib2 * iface)
 static UINT WINAPI ITypeLib2_fnGetTypeInfoCount(
         ITypeLib2 * iface)
 {
-    ICOM_THIS_From_ITypeLib2(ICreateTypeLib2Impl, iface);
+    ICreateTypeLib2Impl *This = impl_from_ITypeLib2(iface);
 
     TRACE("(%p)\n", iface);
 
@@ -3485,7 +3489,7 @@ static HRESULT WINAPI ITypeLib2_fnGetTypeInfo(
         UINT index,
         ITypeInfo** ppTInfo)
 {
-    ICOM_THIS_From_ITypeLib2(ICreateTypeLib2Impl, iface);
+    ICreateTypeLib2Impl *This = impl_from_ITypeLib2(iface);
 
     TRACE("(%p,%d,%p)\n", iface, index, ppTInfo);
 
@@ -3506,7 +3510,7 @@ static HRESULT WINAPI ITypeLib2_fnGetTypeInfoType(
         UINT index,
         TYPEKIND* pTKind)
 {
-    ICOM_THIS_From_ITypeLib2(ICreateTypeLib2Impl, iface);
+    ICreateTypeLib2Impl *This = impl_from_ITypeLib2(iface);
 
     TRACE("(%p,%d,%p)\n", iface, index, pTKind);
 
@@ -3529,7 +3533,7 @@ static HRESULT WINAPI ITypeLib2_fnGetTypeInfoOfGuid(
         REFGUID guid,
         ITypeInfo** ppTinfo)
 {
-    ICOM_THIS_From_ITypeLib2(ICreateTypeLib2Impl, iface);
+    ICreateTypeLib2Impl *This = impl_from_ITypeLib2(iface);
 
     int guidoffset;
     int typeinfo;
@@ -3554,9 +3558,9 @@ static HRESULT WINAPI ITypeLib2_fnGetLibAttr(
         ITypeLib2 * iface,
         TLIBATTR** ppTLibAttr)
 {
-/*     ICOM_THIS_From_ITypeLib2(ICreateTypeLib2Impl, iface); */
+    ICreateTypeLib2Impl *This = impl_from_ITypeLib2(iface);
 
-    FIXME("(%p,%p), stub!\n", iface, ppTLibAttr);
+    FIXME("(%p,%p), stub!\n", This, ppTLibAttr);
 
     return E_OUTOFMEMORY;
 }
@@ -3570,9 +3574,9 @@ static HRESULT WINAPI ITypeLib2_fnGetTypeComp(
         ITypeLib2 * iface,
         ITypeComp** ppTComp)
 {
-/*     ICOM_THIS_From_ITypeLib2(ICreateTypeLib2Impl, iface); */
+    ICreateTypeLib2Impl *This = impl_from_ITypeLib2(iface);
 
-    FIXME("(%p,%p), stub!\n", iface, ppTComp);
+    FIXME("(%p,%p), stub!\n", This, ppTComp);
 
     return E_OUTOFMEMORY;
 }
@@ -3590,9 +3594,9 @@ static HRESULT WINAPI ITypeLib2_fnGetDocumentation(
         DWORD* pdwHelpContext,
         BSTR* pBstrHelpFile)
 {
-/*     ICOM_THIS_From_ITypeLib2(ICreateTypeLib2Impl, iface); */
+    ICreateTypeLib2Impl *This = impl_from_ITypeLib2(iface);
 
-    FIXME("(%p,%d,%p,%p,%p,%p), stub!\n", iface, index, pBstrName, pBstrDocString, pdwHelpContext, pBstrHelpFile);
+    FIXME("(%p,%d,%p,%p,%p,%p), stub!\n", This, index, pBstrName, pBstrDocString, pdwHelpContext, pBstrHelpFile);
 
     return E_OUTOFMEMORY;
 }
@@ -3608,7 +3612,7 @@ static HRESULT WINAPI ITypeLib2_fnIsName(
         ULONG lHashVal,
         BOOL* pfName)
 {
-    ICOM_THIS_From_ITypeLib2(ICreateTypeLib2Impl, iface);
+    ICreateTypeLib2Impl *This = impl_from_ITypeLib2(iface);
 
     char *encoded_name;
     int nameoffset;
@@ -3646,9 +3650,9 @@ static HRESULT WINAPI ITypeLib2_fnFindName(
         MEMBERID* rgMemId,
         USHORT* pcFound)
 {
-/*     ICOM_THIS_From_ITypeLib2(ICreateTypeLib2Impl, iface); */
+    ICreateTypeLib2Impl *This = impl_from_ITypeLib2(iface);
 
-    FIXME("(%p,%s,%lx,%p,%p,%p), stub!\n", iface, debugstr_w(szNameBuf), lHashVal, ppTInfo, rgMemId, pcFound);
+    FIXME("(%p,%s,%lx,%p,%p,%p), stub!\n", This, debugstr_w(szNameBuf), lHashVal, ppTInfo, rgMemId, pcFound);
 
     return E_OUTOFMEMORY;
 }
@@ -3662,9 +3666,9 @@ static void WINAPI ITypeLib2_fnReleaseTLibAttr(
         ITypeLib2 * iface,
         TLIBATTR* pTLibAttr)
 {
-/*     ICOM_THIS_From_ITypeLib2(ICreateTypeLib2Impl, iface); */
+    ICreateTypeLib2Impl *This = impl_from_ITypeLib2(iface);
 
-    FIXME("(%p,%p), stub!\n", iface, pTLibAttr);
+    FIXME("(%p,%p), stub!\n", This, pTLibAttr);
 }
 
 /******************************************************************************
@@ -3682,9 +3686,9 @@ static HRESULT WINAPI ITypeLib2_fnGetCustData(
         REFGUID guid,      /* [I] The GUID under which the custom data is stored. */
         VARIANT* pVarVal)  /* [O] The custom data. */
 {
-/*     ICOM_THIS_From_ITypeLib2(ICreateTypeLib2Impl, iface); */
+    ICreateTypeLib2Impl *This = impl_from_ITypeLib2(iface);
 
-    FIXME("(%p,%s,%p), stub!\n", iface, debugstr_guid(guid), pVarVal);
+    FIXME("(%p,%s,%p), stub!\n", This, debugstr_guid(guid), pVarVal);
 
     return E_OUTOFMEMORY;
 }
@@ -3705,9 +3709,9 @@ static HRESULT WINAPI ITypeLib2_fnGetLibStatistics(
         ULONG* pcUniqueNames,   /* [O] The number of unique names in the type library. */
         ULONG* pcchUniqueNames) /* [O] The number of changed (?) characters in names in the type library. */
 {
-/*     ICOM_THIS_From_ITypeLib2(ICreateTypeLib2Impl, iface); */
+    ICreateTypeLib2Impl *This = impl_from_ITypeLib2(iface);
 
-    FIXME("(%p,%p,%p), stub!\n", iface, pcUniqueNames, pcchUniqueNames);
+    FIXME("(%p,%p,%p), stub!\n", This, pcUniqueNames, pcchUniqueNames);
 
     return E_OUTOFMEMORY;
 }
@@ -3730,9 +3734,9 @@ static HRESULT WINAPI ITypeLib2_fnGetDocumentation2(
         DWORD* pdwHelpStringContext,
         BSTR* pbstrHelpStringDll)
 {
-/*     ICOM_THIS_From_ITypeLib2(ICreateTypeLib2Impl, iface); */
+    ICreateTypeLib2Impl *This = impl_from_ITypeLib2(iface);
 
-    FIXME("(%p,%d,%ld,%p,%p,%p), stub!\n", iface, index, lcid, pbstrHelpString, pdwHelpStringContext, pbstrHelpStringDll);
+    FIXME("(%p,%d,%ld,%p,%p,%p), stub!\n", This, index, lcid, pbstrHelpString, pdwHelpStringContext, pbstrHelpStringDll);
 
     return E_OUTOFMEMORY;
 }
@@ -3751,9 +3755,9 @@ static HRESULT WINAPI ITypeLib2_fnGetAllCustData(
         ITypeLib2 * iface,   /* [I] The type library in which to find the custom data. */
         CUSTDATA* pCustData) /* [O] The structure in which to place the custom data. */
 {
-/*     ICOM_THIS_From_ITypeLib2(ICreateTypeLib2Impl, iface); */
+    ICreateTypeLib2Impl *This = impl_from_ITypeLib2(iface);
 
-    FIXME("(%p,%p), stub!\n", iface, pCustData);
+    FIXME("(%p,%p), stub!\n", This, pCustData);
 
     return E_OUTOFMEMORY;
 }

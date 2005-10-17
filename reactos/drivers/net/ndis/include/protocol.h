@@ -11,7 +11,6 @@
 typedef struct _PROTOCOL_BINDING {
     LIST_ENTRY                    ListEntry;        /* Entry on global list */
     KSPIN_LOCK                    Lock;             /* Protecting spin lock */
-    ULONG                         RefCount;         /* Reference count */
     NDIS_PROTOCOL_CHARACTERISTICS Chars;            /* Characteristics */
     WORK_QUEUE_ITEM               WorkItem;         /* Work item */
     LIST_ENTRY                    AdapterListHead;  /* List of adapter bindings */
@@ -27,10 +26,16 @@ typedef struct _ADAPTER_BINDING {
     LIST_ENTRY        ProtocolListEntry;        /* Entry on protocol binding adapter list */
     LIST_ENTRY        AdapterListEntry;         /* Entry on logical adapter list */
     KSPIN_LOCK        Lock;                     /* Protecting spin lock */
-    ULONG             RefCount;                 /* Reference count */
     PPROTOCOL_BINDING ProtocolBinding;          /* Protocol that opened adapter */
     PLOGICAL_ADAPTER  Adapter;                  /* Adapter opened by protocol */
 } ADAPTER_BINDING, *PADAPTER_BINDING;
+
+typedef struct _NDIS_REQUEST_MAC_BLOCK {
+    PVOID Unknown1;
+    PNDIS_OPEN_BLOCK Binding;
+    PVOID Unknown3;
+    PVOID Unknown4;
+} NDIS_REQUEST_MAC_BLOCK, *PNDIS_REQUEST_MAC_BLOCK;
 
 #define GET_ADAPTER_BINDING(Handle)((PADAPTER_BINDING)Handle)
 

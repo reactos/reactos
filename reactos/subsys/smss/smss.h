@@ -48,6 +48,7 @@ NTSTATUS SmCreatePagingFiles(VOID);
 NTSTATUS SmInitializeRegistry(VOID);
 
 /* initss.c */
+NTSTATUS STDCALL SmRegisterInternalSubsystem(LPWSTR,USHORT,PHANDLE);
 NTSTATUS SmLoadSubsystems(VOID);
 
 /* smapi.c */
@@ -89,7 +90,6 @@ typedef struct _SM_CLIENT_DATA
   HANDLE	        ApiPortThread;
   HANDLE	        SbApiPort;
   WCHAR	                SbApiPortName [SM_SB_NAME_MAX_LENGTH];
-  struct _SM_CLIENT_DATA * Next;
 
 } SM_CLIENT_DATA, *PSM_CLIENT_DATA;
 NTSTATUS SmInitializeClientManagement (VOID);

@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/fs/fs_rec/vfat.c
@@ -26,9 +25,6 @@
  */
 
 /* INCLUDES *****************************************************************/
-
-#include <ntifs.h>
-#include <ntdddisk.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -46,7 +42,7 @@ FsRecIsFatVolume(IN PDEVICE_OBJECT DeviceObject)
    DISK_GEOMETRY DiskGeometry;
    ULONG Size;
    struct _BootSector* Boot;
-   BOOL RecognizedFS = FALSE;
+   BOOLEAN RecognizedFS = FALSE;
    Size = sizeof(DISK_GEOMETRY);
 
    Status = FsRecDeviceIoControl(DeviceObject,
@@ -90,8 +86,8 @@ FsRecIsFatVolume(IN PDEVICE_OBJECT DeviceObject)
       }
       else if (DiskGeometry.MediaType == RemovableMedia &&
                PartitionInfo.PartitionNumber > 0 &&
-               PartitionInfo.StartingOffset.QuadPart == 0LL &&
-               PartitionInfo.PartitionLength.QuadPart > 0LL)
+               PartitionInfo.StartingOffset.QuadPart == 0 &&
+               PartitionInfo.PartitionLength.QuadPart > 0)
       {
          /* This is possible a removable media formated as super floppy */
          RecognizedFS = TRUE;

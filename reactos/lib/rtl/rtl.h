@@ -8,6 +8,10 @@
 
 /* INCLUDES ******************************************************************/
 
+/* We're a core NT DLL, we don't import syscalls */
+#define _NTSYSTEM_
+#define _NTDLLBUILD_
+
 /* C Headers */
 #include <stdio.h>
 
@@ -27,9 +31,13 @@ extern VOID FASTCALL CHECK_PAGED_CODE_RTL(char *file, int line);
 #define PAGED_CODE_RTL()
 #endif
 
-extern PVOID RtlpAllocateMemory(UINT Bytes, ULONG Tag);
-extern VOID RtlpFreeMemory(PVOID Mem, ULONG Tag);
-extern KPROCESSOR_MODE RtlpGetMode();
+PVOID STDCALL RtlpAllocateMemory(UINT Bytes, ULONG Tag);
+VOID STDCALL RtlpFreeMemory(PVOID Mem, ULONG Tag);
+KPROCESSOR_MODE STDCALL RtlpGetMode();
+NTSTATUS STDCALL RtlDeleteHeapLock(PRTL_CRITICAL_SECTION CriticalSection);
+NTSTATUS STDCALL RtlEnterHeapLock(PRTL_CRITICAL_SECTION CriticalSection);
+NTSTATUS STDCALL RtlInitializeHeapLock(PRTL_CRITICAL_SECTION CriticalSection);
+NTSTATUS STDCALL RtlLeaveHeapLock(PRTL_CRITICAL_SECTION CriticalSection);
 
 #define RtlpAllocateStringMemory RtlpAllocateMemory
 #define RtlpFreeStringMemory RtlpFreeMemory

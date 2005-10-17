@@ -33,6 +33,7 @@
 
 HANDLE DbgSsApiPort = (HANDLE) 0;
 HANDLE DbgUiApiPort = (HANDLE) 0;
+HANDLE hSmDbgApiPort = (HANDLE) 0;
 
 /* FUNCTIONS *********************************************************/
 
@@ -40,12 +41,12 @@ static VOID STDCALL
 DbgSsApiPortThread (PVOID dummy)
 {
 	NTSTATUS Status = STATUS_SUCCESS;
-	LPC_MAX_MESSAGE	Request ;
+	PORT_MESSAGE	Request ;
     
-    RtlZeroMemory(&Request, sizeof(LPC_MAX_MESSAGE));
+    RtlZeroMemory(&Request, sizeof(PORT_MESSAGE));
 	while (TRUE)
 	{
-		Status = NtListenPort (DbgSsApiPort, & Request.Header);
+		Status = NtListenPort (DbgSsApiPort, & Request);
 		if (!NT_SUCCESS(Status))
 		{
 			DPRINT1("SM: %s: NtListenPort() failed! (Status==x%08lx)\n", __FUNCTION__, Status);
@@ -60,12 +61,12 @@ static VOID STDCALL
 DbgUiApiPortThread (PVOID dummy)
 {
 	NTSTATUS Status = STATUS_SUCCESS;
-	LPC_MAX_MESSAGE	Request;
+	PORT_MESSAGE	Request;
     
-    RtlZeroMemory(&Request, sizeof(LPC_MAX_MESSAGE));
+    RtlZeroMemory(&Request, sizeof(PORT_MESSAGE));
 	while (TRUE)
 	{
-		Status = NtListenPort (DbgUiApiPort, & Request.Header);
+		Status = NtListenPort (DbgUiApiPort, & Request);
 		if (!NT_SUCCESS(Status))
 		{
 			DPRINT1("SM: %s: NtListenPort() failed! (Status==x%08lx)\n", __FUNCTION__, Status);
@@ -135,8 +136,19 @@ SmInitializeDbgSs (VOID)
 	NTSTATUS  Status = STATUS_SUCCESS;
 	HANDLE    hDbgSsApiPortThread = (HANDLE) 0;
 
+
 	DPRINT("SM: %s called\n", __FUNCTION__);
 
+	/* Self register */
+	Status = SmRegisterInternalSubsystem (L"Debug",
+						(USHORT)-1,
+						& hSmDbgApiPort);
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT1("DBG:%s: SmRegisterInternalSubsystem failed with Status=%08lx\n",
+			__FUNCTION__, Status);
+		return Status;
+	}
 	/* Create the \DbgSsApiPort object (LPC) */
 	Status = SmpCreatePT(& DbgSsApiPort,
 			     SM_DBGSS_PORT_NAME,

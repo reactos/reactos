@@ -35,6 +35,7 @@ typedef struct _DEBUG_OBJECT_KILL_PROCESS_ON_EXIT_INFORMATION
 } DEBUG_OBJECT_KILL_PROCESS_ON_EXIT_INFORMATION, *
 PDEBUG_OBJECT_KILL_PROCESS_ON_EXIT_INFORMATION;
 
+#ifndef NTOS_MODE_USER
 typedef struct _DBGK_DEBUG_OBJECT
 {
     KEVENT Event;
@@ -45,11 +46,12 @@ typedef struct _DBGK_DEBUG_OBJECT
         ULONG Flags;
         struct
         {
-            UCHAR DebuggerInactive  :1;
-            UCHAR KillProcessOnExit :1;
+            UCHAR DebuggerInactive:1;
+            UCHAR KillProcessOnExit:1;
         };
     };
 } DBGK_DEBUG_OBJECT, *PDBGK_DEBUG_OBJECT;
+#endif
 
 typedef enum _DBG_STATE
 {
@@ -135,5 +137,22 @@ typedef struct _DBGUI_WAIT_STATE_CHANGE
         DBGKM_UNLOAD_DLL UnloadDll;
     } StateInfo;
 } DBGUI_WAIT_STATE_CHANGE, *PDBGUI_WAIT_STATE_CHANGE;
+
+typedef struct _DBGKM_MSG
+{
+    PORT_MESSAGE h;
+    ULONG Opcode;
+    ULONG Status;
+    union
+    {
+	    DBGKM_EXCEPTION Exception;
+        DBGKM_CREATE_THREAD CreateThread;
+        DBGKM_CREATE_PROCESS CreateProcess;
+	    DBGKM_EXIT_THREAD ExitThread;
+        DBGKM_EXIT_PROCESS ExitProcess;
+	    DBGKM_LOAD_DLL LoadDll;
+        DBGKM_UNLOAD_DLL UnloadDll;
+    };
+} DBGKM_MSG, *PDBGKM_MSG;
 
 #endif

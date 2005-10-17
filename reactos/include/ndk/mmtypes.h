@@ -10,14 +10,45 @@
 #define _MMTYPES_H
 
 /* DEPENDENCIES **************************************************************/
-
 #include "arch/mmtypes.h"
 
 /* EXPORTED DATA *************************************************************/
 
 /* CONSTANTS *****************************************************************/
+#ifdef NTOS_MODE_USER
+#define SEC_BASED       0x00200000
+#define SEC_NO_CHANGE   0x00400000
+#endif
 
 /* ENUMERATIONS **************************************************************/
+
+#ifdef NTOS_MODE_USER
+typedef enum _SECTION_INHERIT
+{
+    ViewShare = 1,
+    ViewUnmap = 2
+} SECTION_INHERIT;
+
+typedef enum _POOL_TYPE
+{
+    NonPagedPool,
+    PagedPool,
+    NonPagedPoolMustSucceed,
+    DontUseThisType,
+    NonPagedPoolCacheAligned,
+    PagedPoolCacheAligned,
+    NonPagedPoolCacheAlignedMustS,
+    MaxPoolType,
+    NonPagedPoolSession = 32,
+    PagedPoolSession,
+    NonPagedPoolMustSucceedSession,
+    DontUseThisTypeSession,
+    NonPagedPoolCacheAlignedSession,
+    PagedPoolCacheAlignedSession,
+    NonPagedPoolCacheAlignedMustSSession
+} POOL_TYPE;
+#endif
+
 typedef enum _PP_NPAGED_LOOKASIDE_NUMBER
 {
     LookasideSmallIrpList = 0,
@@ -30,8 +61,95 @@ typedef enum _PP_NPAGED_LOOKASIDE_NUMBER
     LookasideMaximumList = 7
 } PP_NPAGED_LOOKASIDE_NUMBER;
 
+typedef enum _MEMORY_INFORMATION_CLASS
+{
+    MemoryBasicInformation,
+    MemoryWorkingSetList,
+    MemorySectionName,
+    MemoryBasicVlmInformation
+} MEMORY_INFORMATION_CLASS;
+
+typedef enum _SECTION_INFORMATION_CLASS
+{
+    SectionBasicInformation,
+    SectionImageInformation,
+} SECTION_INFORMATION_CLASS;
+
 /* TYPES *********************************************************************/
 
+#ifdef NTOS_MODE_USER
+typedef struct _VM_COUNTERS
+{
+    SIZE_T PeakVirtualSize;
+    SIZE_T VirtualSize;
+    ULONG PageFaultCount;
+    SIZE_T PeakWorkingSetSize;
+    SIZE_T WorkingSetSize;
+    SIZE_T QuotaPeakPagedPoolUsage;
+    SIZE_T QuotaPagedPoolUsage;
+    SIZE_T QuotaPeakNonPagedPoolUsage;
+    SIZE_T QuotaNonPagedPoolUsage;
+    SIZE_T PagefileUsage;
+    SIZE_T PeakPagefileUsage;
+} VM_COUNTERS, *PVM_COUNTERS;
+
+typedef struct _VM_COUNTERS_EX
+{
+    SIZE_T PeakVirtualSize;
+    SIZE_T VirtualSize;
+    ULONG PageFaultCount;
+    SIZE_T PeakWorkingSetSize;
+    SIZE_T WorkingSetSize;
+    SIZE_T QuotaPeakPagedPoolUsage;
+    SIZE_T QuotaPagedPoolUsage;
+    SIZE_T QuotaPeakNonPagedPoolUsage;
+    SIZE_T QuotaNonPagedPoolUsage;
+    SIZE_T PagefileUsage;
+    SIZE_T PeakPagefileUsage;
+    SIZE_T PrivateUsage;
+} VM_COUNTERS_EX, *PVM_COUNTERS_EX;
+#endif
+
+typedef struct _MEMORY_WORKING_SET_LIST
+{
+    ULONG NumberOfPages;
+    ULONG WorkingSetList[1];
+} MEMORY_WORKING_SET_LIST, *PMEMORY_WORKING_SET_LIST;
+
+typedef struct
+{
+    UNICODE_STRING SectionFileName;
+    WCHAR          NameBuffer[ANYSIZE_ARRAY];
+} MEMORY_SECTION_NAME, *PMEMORY_SECTION_NAME;
+
+typedef struct _SECTION_BASIC_INFORMATION
+{
+    PVOID           BaseAddress;
+    ULONG           Attributes;
+    LARGE_INTEGER   Size;
+} SECTION_BASIC_INFORMATION, *PSECTION_BASIC_INFORMATION;
+
+typedef struct _SECTION_IMAGE_INFORMATION
+{
+    PVOID TransferAddress;
+    ULONG ZeroBits;
+    ULONG MaximumStackSize;
+    ULONG CommittedStackSize;
+    ULONG SubsystemType;
+    USHORT SubSystemMinorVersion;
+    USHORT SubSystemMajorVersion;
+    ULONG GpValue;
+    USHORT ImageCharacteristics;
+    USHORT DllChracteristics;
+    USHORT Machine;
+    UCHAR ImageContainsCode;
+    UCHAR Spare1;
+    ULONG LoaderFlags;
+    ULONG ImageFileSIze;
+    ULONG Reserved[1];
+} SECTION_IMAGE_INFORMATION, *PSECTION_IMAGE_INFORMATION;
+
+#ifndef NTOS_MODE_USER
 /* FIXME: Forced to do this for now, because of EPROCESS, will go away before 0.3.0 */
 typedef struct _MADDRESS_SPACE
 {
@@ -42,12 +160,6 @@ typedef struct _MADDRESS_SPACE
     PUSHORT PageTableRefCountTable;
     ULONG PageTableRefCountTableSize;
 } MADDRESS_SPACE, *PMADDRESS_SPACE;
-
-typedef struct _PP_LOOKASIDE_LIST
-{
-    struct _GENERAL_LOOKASIDE *P;
-    struct _GENERAL_LOOKASIDE *L;
-} PP_LOOKASIDE_LIST, *PPP_LOOKASIDE_LIST;
 
 typedef struct _ADDRESS_RANGE
 {
@@ -160,4 +272,5 @@ typedef struct _MMSUPPORT
     ULONG GrowthSinceLastEstimate;
 } MMSUPPORT, *PMMSUPPORT;
 
+#endif
 #endif

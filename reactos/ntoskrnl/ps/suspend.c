@@ -45,13 +45,11 @@ NtResumeThread(IN HANDLE ThreadHandle,
            ThreadHandle, SuspendCount);
 
     /* Check buffer validity */
-    if(SuspendCount && PreviousMode == UserMode) {
+    if(SuspendCount && PreviousMode != KernelMode) {
 
         _SEH_TRY {
 
-            ProbeForWrite(SuspendCount,
-                          sizeof(ULONG),
-                          sizeof(ULONG));
+            ProbeForWriteUlong(SuspendCount);
          } _SEH_HANDLE {
 
             Status = _SEH_GetExceptionCode();
@@ -124,9 +122,7 @@ NtSuspendThread(IN HANDLE ThreadHandle,
     {
         _SEH_TRY
         {
-            ProbeForWrite(PreviousSuspendCount,
-                          sizeof(ULONG),
-                          sizeof(ULONG));
+            ProbeForWriteUlong(PreviousSuspendCount);
          }
         _SEH_HANDLE
         {

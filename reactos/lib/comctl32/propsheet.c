@@ -162,7 +162,7 @@ const WCHAR PropSheetInfoStr[] =
 /******************************************************************************
  * Prototypes
  */
-static int PROPSHEET_CreateDialog(PropSheetInfo* psInfo);
+static INT_PTR PROPSHEET_CreateDialog(PropSheetInfo* psInfo);
 static BOOL PROPSHEET_SizeMismatch(HWND hwndDlg, PropSheetInfo* psInfo);
 static BOOL PROPSHEET_AdjustSize(HWND hwndDlg, PropSheetInfo* psInfo);
 static BOOL PROPSHEET_AdjustButtons(HWND hwndParent, PropSheetInfo* psInfo);
@@ -452,6 +452,9 @@ BOOL PROPSHEET_CollectPageInfo(LPCPROPSHEETPAGEW lppsp,
   DWORD dwFlags;
   int width, height;
 
+  if (!lppsp)
+    return FALSE;
+
   TRACE("\n");
   psInfo->proppage[index].hpage = (HPROPSHEETPAGE)lppsp;
   psInfo->proppage[index].hwndPage = 0;
@@ -591,7 +594,7 @@ BOOL PROPSHEET_CollectPageInfo(LPCPROPSHEETPAGEW lppsp,
 
     if ( !HIWORD( lppsp->pszTitle ) )
     {
-      if (!LoadStringW( lppsp->hInstance, (UINT)lppsp->pszTitle,szTitle,sizeof(szTitle) ))
+      if (!LoadStringW( lppsp->hInstance, (DWORD_PTR)lppsp->pszTitle,szTitle,sizeof(szTitle) ))
       {
         pTitle = pszNull;
 	FIXME("Could not load resource #%04x?\n",LOWORD(lppsp->pszTitle));
@@ -640,7 +643,7 @@ BOOL PROPSHEET_CollectPageInfo(LPCPROPSHEETPAGEW lppsp,
  *
  * Creates the actual property sheet.
  */
-int PROPSHEET_CreateDialog(PropSheetInfo* psInfo)
+INT_PTR PROPSHEET_CreateDialog(PropSheetInfo* psInfo)
 {
   LRESULT ret;
   LPCVOID template;
@@ -708,7 +711,7 @@ int PROPSHEET_CreateDialog(PropSheetInfo* psInfo)
    * -1 (error). */
   if( psInfo->unicode )
   {
-    ret = (int)CreateDialogIndirectParamW(psInfo->ppshheader.hInstance,
+    ret = (INT_PTR)CreateDialogIndirectParamW(psInfo->ppshheader.hInstance,
                                           (LPDLGTEMPLATEW) temp,
                                           psInfo->ppshheader.hwndParent,
                                           PROPSHEET_DialogProc,
@@ -717,7 +720,7 @@ int PROPSHEET_CreateDialog(PropSheetInfo* psInfo)
   }
   else
   {
-    ret = (int)CreateDialogIndirectParamA(psInfo->ppshheader.hInstance,
+    ret = (INT_PTR)CreateDialogIndirectParamA(psInfo->ppshheader.hInstance,
                                           (LPDLGTEMPLATEA) temp,
                                           psInfo->ppshheader.hwndParent,
                                           PROPSHEET_DialogProc,
@@ -827,8 +830,8 @@ static BOOL PROPSHEET_AdjustSize(HWND hwndDlg, PropSheetInfo* psInfo)
 
   rc.right -= rc.left;
   rc.bottom -= rc.top;
-  TRACE("setting tab %08lx, rc (0,0)-(%ld,%ld)\n",
-        (DWORD)hwndTabCtrl, rc.right, rc.bottom);
+  TRACE("setting tab %p, rc (0,0)-(%ld,%ld)\n",
+        hwndTabCtrl, rc.right, rc.bottom);
   SetWindowPos(hwndTabCtrl, 0, 0, 0, rc.right, rc.bottom,
                SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 
@@ -843,8 +846,8 @@ static BOOL PROPSHEET_AdjustSize(HWND hwndDlg, PropSheetInfo* psInfo)
   /*
    * Resize the property sheet.
    */
-  TRACE("setting dialog %08lx, rc (0,0)-(%ld,%ld)\n",
-        (DWORD)hwndDlg, rc.right, rc.bottom);
+  TRACE("setting dialog %p, rc (0,0)-(%ld,%ld)\n",
+        hwndDlg, rc.right, rc.bottom);
   SetWindowPos(hwndDlg, 0, 0, 0, rc.right, rc.bottom,
                SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
   return TRUE;
@@ -879,8 +882,8 @@ static BOOL PROPSHEET_AdjustSizeWizard(HWND hwndDlg, PropSheetInfo* psInfo)
   AdjustWindowRect(&rc, GetWindowLongW(hwndDlg, GWL_STYLE), FALSE);
 
   /* Resize the property sheet */
-  TRACE("setting dialog %08lx, rc (0,0)-(%ld,%ld)\n",
-        (DWORD)hwndDlg, rc.right, rc.bottom);
+  TRACE("setting dialog %p, rc (0,0)-(%ld,%ld)\n",
+        hwndDlg, rc.right, rc.bottom);
   SetWindowPos(hwndDlg, 0, 0, 0, rc.right - rc.left, rc.bottom - rc.top,
                SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 
@@ -1361,7 +1364,7 @@ static UINT GetTemplateSize(DLGTEMPLATE* pTemplate)
   TRACE("%d items\n",nrofitems);
   while (nrofitems > 0)
     {
-      p = (WORD*)(((DWORD)p + 3) & ~3); /* DWORD align */
+      p = (WORD*)(((DWORD_PTR)p + 3) & ~3); /* DWORD align */
       
       /* skip header */
       p += (istemplateex ? sizeof(MyDLGITEMTEMPLATEEX) : sizeof(DLGITEMTEMPLATE))/sizeof(WORD);
@@ -1564,7 +1567,7 @@ static VOID PROPSHEET_LoadWizardBitmaps(PropSheetInfo *psInfo)
         !(psInfo->ppshheader.dwFlags & PSH_USEHBMWATERMARK))
     {
       ((PropSheetInfo *)psInfo)->ppshheader.u4.hbmWatermark = 
-        CreateMappedBitmap(psInfo->ppshheader.hInstance, (INT)psInfo->ppshheader.u4.pszbmWatermark, 0, NULL, 0);
+        CreateMappedBitmap(psInfo->ppshheader.hInstance, (INT_PTR)psInfo->ppshheader.u4.pszbmWatermark, 0, NULL, 0);
     }
 
     /* Same behavior as for watermarks */
@@ -1572,7 +1575,7 @@ static VOID PROPSHEET_LoadWizardBitmaps(PropSheetInfo *psInfo)
         !(psInfo->ppshheader.dwFlags & PSH_USEHBMHEADER))
     {
       ((PropSheetInfo *)psInfo)->ppshheader.u5.hbmHeader = 
-        CreateMappedBitmap(psInfo->ppshheader.hInstance, (INT)psInfo->ppshheader.u5.pszbmHeader, 0, NULL, 0);
+        CreateMappedBitmap(psInfo->ppshheader.hInstance, (INT_PTR)psInfo->ppshheader.u5.pszbmHeader, 0, NULL, 0);
     }
   }
 }
@@ -2631,7 +2634,7 @@ static LRESULT PROPSHEET_IdToIndex(HWND hwndDlg, int iPageId)
     TRACE("(%p, %d)\n", hwndDlg, iPageId);
     for (index = 0; index < psInfo->nPages; index++) {
         psp = (LPCPROPSHEETPAGEW)psInfo->proppage[index].hpage;
-        if (psp->u.pszTemplate == (LPCWSTR)iPageId)
+        if (psp->u.pszTemplate == MAKEINTRESOURCEW(iPageId))
             return index;
     }
 
@@ -2799,9 +2802,9 @@ static INT do_loop(PropSheetInfo *psInfo)
  *| ID_PSREBOOTSYSTEM - The user must reboot the computer for the changes to take effect.
  *| ID_PSRESTARTWINDOWS - The user must restart Windows for the changes to take effect.
  */
-INT WINAPI PropertySheetA(LPCPROPSHEETHEADERA lppsh)
+INT_PTR WINAPI PropertySheetA(LPCPROPSHEETHEADERA lppsh)
 {
-  int bRet = 0;
+  INT_PTR bRet = 0;
   PropSheetInfo* psInfo = (PropSheetInfo*) GlobalAlloc(GPTR,
                                                        sizeof(PropSheetInfo));
   UINT i, n;
@@ -2850,9 +2853,9 @@ INT WINAPI PropertySheetA(LPCPROPSHEETHEADERA lppsh)
  *
  * See PropertySheetA.
  */
-INT WINAPI PropertySheetW(LPCPROPSHEETHEADERW lppsh)
+INT_PTR WINAPI PropertySheetW(LPCPROPSHEETHEADERW lppsh)
 {
-  int bRet = 0;
+  INT_PTR bRet = 0;
   PropSheetInfo* psInfo = (PropSheetInfo*) GlobalAlloc(GPTR,
                                                        sizeof(PropSheetInfo));
   UINT i, n;
@@ -3238,7 +3241,7 @@ static LRESULT PROPSHEET_Paint(HWND hwnd, HDC hdcParam)
 	    }
 	    else
 	    {
-		nLength = LoadStringW(ppshpage->hInstance, (UINT)ppshpage->pszHeaderTitle,
+		nLength = LoadStringW(ppshpage->hInstance, (UINT_PTR)ppshpage->pszHeaderTitle,
 				      szBuffer, 256);
 		if (nLength != 0)
 		{
@@ -3262,7 +3265,7 @@ static LRESULT PROPSHEET_Paint(HWND hwnd, HDC hdcParam)
 	    }
 	    else
 	    {
-		nLength = LoadStringW(ppshpage->hInstance, (UINT)ppshpage->pszHeaderSubTitle,
+		nLength = LoadStringW(ppshpage->hInstance, (UINT_PTR)ppshpage->pszHeaderSubTitle,
 				      szBuffer, 256);
 		if (nLength != 0)
 		{
@@ -3440,7 +3443,7 @@ PROPSHEET_DialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
          WCHAR szText[256];
 
          if (LoadStringW(psInfo->ppshheader.hInstance,
-                 (UINT)psInfo->ppshheader.pszCaption, szText, 255))
+                         (UINT_PTR)psInfo->ppshheader.pszCaption, szText, 255))
             PROPSHEET_SetTitleW(hwnd, psInfo->ppshheader.dwFlags, szText);
       }
       else

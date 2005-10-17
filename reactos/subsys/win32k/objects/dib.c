@@ -923,6 +923,7 @@ DIB_CreateDIBSection(
 	return NULL;
       }
     bmp->dib = (DIBSECTION *) dib;
+    bmp->flFlags = BITMAPOBJ_IS_APIBITMAP;
 
     /* WINE NOTE: WINE makes use of a colormap, which is a color translation table between the DIB and the X physical
                   device. Obviously, this is left out of the ReactOS implementation. Instead, we call

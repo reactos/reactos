@@ -99,16 +99,16 @@ static UINT SELECT_set_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT va
     return sv->table->ops->set_int( sv->table, row, col, val );
 }
 
-static UINT SELECT_insert_row( struct tagMSIVIEW *view, UINT *num )  
+static UINT SELECT_insert_row( struct tagMSIVIEW *view, MSIRECORD *record )
 {
     MSISELECTVIEW *sv = (MSISELECTVIEW*)view;
 
-    TRACE("%p %p\n", sv, num );
+    TRACE("%p %p\n", sv, record );
 
     if( !sv->table )
          return ERROR_FUNCTION_FAILED;
 
-    return sv->table->ops->insert_row( sv->table, num );
+    return sv->table->ops->insert_row( sv->table, record );
 }
 
 static UINT SELECT_execute( struct tagMSIVIEW *view, MSIRECORD *record )

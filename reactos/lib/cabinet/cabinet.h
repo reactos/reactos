@@ -324,15 +324,15 @@ typedef struct {
   cab_ULONG          cDataBlocks;
   cab_ULONG          cbFileRemainer; /* uncompressed, yet to be written data */
                /* of spanned file of a spanning folder of a spanning cabinet */
-  cab_UBYTE          szFileNameCFDATA1[CB_MAX_FILENAME];
+  char               szFileNameCFDATA1[CB_MAX_FILENAME];
   int                handleCFDATA1;
-  cab_UBYTE          szFileNameCFFILE1[CB_MAX_FILENAME];
+  char               szFileNameCFFILE1[CB_MAX_FILENAME];
   int                handleCFFILE1;
-  cab_UBYTE          szFileNameCFDATA2[CB_MAX_FILENAME];
+  char               szFileNameCFDATA2[CB_MAX_FILENAME];
   int                handleCFDATA2;
-  cab_UBYTE          szFileNameCFFILE2[CB_MAX_FILENAME];
+  char               szFileNameCFFILE2[CB_MAX_FILENAME];
   int                handleCFFILE2;
-  cab_UBYTE          szFileNameCFFOLDER[CB_MAX_FILENAME];
+  char               szFileNameCFFOLDER[CB_MAX_FILENAME];
   int                handleCFFOLDER;
   cab_ULONG          sizeFileCFDATA1;
   cab_ULONG          sizeFileCFFILE1;

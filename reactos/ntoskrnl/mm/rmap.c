@@ -21,6 +21,9 @@ typedef struct _MM_RMAP_ENTRY
    struct _MM_RMAP_ENTRY* Next;
    PEPROCESS Process;
    PVOID Address;
+#ifdef DBG
+   PVOID Caller;
+#endif
 }
 MM_RMAP_ENTRY, *PMM_RMAP_ENTRY;
 
@@ -110,8 +113,8 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
    Type = MemoryArea->Type;
    if (Type == MEMORY_AREA_SECTION_VIEW)
    {
-      Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress;
-
+      Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress 
+               + MemoryArea->Data.SectionData.ViewOffset;
       /*
        * Get or create a pageop
        */
@@ -234,7 +237,8 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
    Type = MemoryArea->Type;
    if (Type == MEMORY_AREA_SECTION_VIEW)
    {
-      Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress;
+      Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress 
+             + MemoryArea->Data.SectionData.ViewOffset;;
 
       /*
        * Get or create a pageop
@@ -381,6 +385,9 @@ MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
    }
    new_entry->Address = Address;
    new_entry->Process = Process;
+#ifdef DBG
+   new_entry->Caller = __builtin_return_address(0);
+#endif   
 
    if (MmGetPfnForProcess(Process, Address) != Page)
    {
@@ -394,6 +401,22 @@ MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
    ExAcquireFastMutex(&RmapListLock);
    current_entry = MmGetRmapListHeadPage(Page);
    new_entry->Next = current_entry;
+#ifdef DBG
+   while (current_entry)
+   {
+      if (current_entry->Address == new_entry->Address && current_entry->Process == new_entry->Process)
+      {
+          DbgPrint("MmInsertRmap tries to add a second rmap entry for address %p\n    current caller ", 
+                   current_entry->Address);
+          KeRosPrintAddress(new_entry->Caller);
+          DbgPrint("\n    previous caller ");
+          KeRosPrintAddress(current_entry->Caller);
+          DbgPrint("\n");
+          KeBugCheck(0);
+      }
+      current_entry = current_entry->Next;
+   }
+#endif
    MmSetRmapListHeadPage(Page, new_entry);
    ExReleaseFastMutex(&RmapListLock);
    if (Process == NULL)

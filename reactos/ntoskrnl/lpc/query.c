@@ -39,7 +39,7 @@
  */
 /*EXPORTED*/ NTSTATUS STDCALL
 NtQueryInformationPort (IN	HANDLE	PortHandle,
-			IN	CINT	PortInformationClass,
+			IN	PORT_INFORMATION_CLASS	PortInformationClass,
 			OUT	PVOID	PortInformation,
 			IN	ULONG	PortInformationLength,
 			OUT	PULONG	ReturnLength)

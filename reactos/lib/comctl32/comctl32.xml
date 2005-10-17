@@ -40,6 +40,11 @@
 	<file>status.c</file>
 	<file>syslink.c</file>
 	<file>tab.c</file>
+	<file>theme_combo.c</file>
+	<file>theme_dialog.c</file>
+	<file>theme_edit.c</file>
+	<file>theme_listbox.c</file>
+	<file>theming.c</file>
 	<file>toolbar.c</file>
 	<file>tooltips.c</file>
 	<file>trackbar.c</file>

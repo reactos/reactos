@@ -8,6 +8,12 @@
 #define RESTRICTED_POINTER
 
 #define NTAPI __stdcall
+#if !defined(_M_CEE_PURE)
+#define NTAPI_INLINE    NTAPI
+#else
+#define NTAPI_INLINE
+#endif
+
 #define OBJ_INHERIT          0x00000002
 #define OBJ_PERMANENT        0x00000010
 #define OBJ_EXCLUSIVE        0x00000020
@@ -50,6 +56,9 @@ typedef STRING ANSI_STRING;
 typedef PSTRING PANSI_STRING;
 typedef STRING OEM_STRING;
 typedef PSTRING POEM_STRING;
+typedef CONST STRING* PCOEM_STRING;
+typedef STRING CANSI_STRING;
+typedef PSTRING PCANSI_STRING;
 typedef LARGE_INTEGER PHYSICAL_ADDRESS, *PPHYSICAL_ADDRESS;
 typedef enum _SECTION_INHERIT {
   ViewShare = 1,

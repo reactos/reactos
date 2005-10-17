@@ -67,6 +67,9 @@ IntGetScreenDC(VOID);
 HWND FASTCALL
 IntGetDesktopWindow (VOID);
 
+PWINDOW_OBJECT FASTCALL 
+UserGetDesktopWindow(VOID);
+
 HWND FASTCALL
 IntGetCurrentThreadDesktopWindow(VOID);
 
@@ -80,7 +83,7 @@ PDESKTOP_OBJECT FASTCALL
 IntGetActiveDesktop(VOID);
 
 NTSTATUS FASTCALL
-IntShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width, ULONG Height);
+co_IntShowDesktop(PDESKTOP_OBJECT Desktop, ULONG Width, ULONG Height);
 
 NTSTATUS FASTCALL
 IntHideDesktop(PDESKTOP_OBJECT Desktop);
@@ -107,7 +110,7 @@ IntDesktopUpdatePerUserSettings(BOOL bEnable);
 BOOL IntRegisterShellHookWindow(HWND hWnd);
 BOOL IntDeRegisterShellHookWindow(HWND hWnd);
 
-VOID IntShellHookNotify(WPARAM Message, LPARAM lParam);
+VOID co_IntShellHookNotify(WPARAM Message, LPARAM lParam);
 
 #define IntIsActiveDesktop(Desktop) \
   ((Desktop)->WindowStation->ActiveDesktop == (Desktop))

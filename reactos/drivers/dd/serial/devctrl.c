@@ -31,7 +31,7 @@ SerialGetUserBuffers(
 		case METHOD_IN_DIRECT:
 		case METHOD_OUT_DIRECT:
 			*BufferIn = Irp->AssociatedIrp.SystemBuffer;
-			*BufferOut = MmGetSystemAddressForMdl(Irp->MdlAddress);
+			*BufferOut = MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
 			break;
 		case METHOD_NEITHER:
 			*BufferIn = IoGetCurrentIrpStackLocation(Irp)->Parameters.DeviceIoControl.Type3InputBuffer;

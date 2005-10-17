@@ -751,7 +751,7 @@ IoCreateFile(OUT PHANDLE  FileHandle,
    PFILE_OBJECT  FileObject = NULL;
    PDEVICE_OBJECT DeviceObject;
    PIRP   Irp;
-   PIO_STACK_LOCATION StackLoc;
+   PEXTENDED_IO_STACK_LOCATION StackLoc;
    IO_SECURITY_CONTEXT  SecurityContext;
    KPROCESSOR_MODE      AccessMode;
    HANDLE               LocalHandle;
@@ -781,18 +781,13 @@ IoCreateFile(OUT PHANDLE  FileHandle,
    {
      _SEH_TRY
      {
-       ProbeForWrite(FileHandle,
-                     sizeof(HANDLE),
-                     sizeof(ULONG));
+       ProbeForWriteHandle(FileHandle);
        ProbeForWrite(IoStatusBlock,
                      sizeof(IO_STATUS_BLOCK),
                      sizeof(ULONG));
        if(AllocationSize != NULL)
        {
-         ProbeForRead(AllocationSize,
-                      sizeof(LARGE_INTEGER),
-                      sizeof(ULONG));
-         SafeAllocationSize = *AllocationSize;
+         SafeAllocationSize = ProbeForReadLargeInteger(AllocationSize);
        }
        else
          SafeAllocationSize.QuadPart = 0;
@@ -1004,7 +999,7 @@ IoCreateFile(OUT PHANDLE  FileHandle,
     * Get the stack location for the new
     * IRP and prepare it.
     */
-   StackLoc = IoGetNextIrpStackLocation(Irp);
+   StackLoc = (PEXTENDED_IO_STACK_LOCATION)IoGetNextIrpStackLocation(Irp);
    StackLoc->MinorFunction = 0;
    StackLoc->Flags = (UCHAR)Options;
    StackLoc->Control = 0;
@@ -1395,7 +1390,7 @@ NtCancelIoFile(IN HANDLE FileHandle,
    LARGE_INTEGER Interval;
 
    if ((ULONG_PTR)IoStatusBlock >= (ULONG_PTR)MmUserProbeAddress &&
-       KeGetPreviousMode() == UserMode)
+       KeGetPreviousMode() != KernelMode)
       return STATUS_ACCESS_VIOLATION;
 
    Status = ObReferenceObjectByHandle(FileHandle, 0, IoFileObjectType,
@@ -1968,7 +1963,7 @@ NtLockFile(IN HANDLE FileHandle,
            OUT PIO_STATUS_BLOCK IoStatusBlock,
            IN PLARGE_INTEGER ByteOffset,
            IN PLARGE_INTEGER Length,
-           IN PULONG  Key,
+           IN ULONG  Key,
            IN BOOLEAN FailImmediately,
            IN BOOLEAN ExclusiveLock)
 {
@@ -2072,7 +2067,7 @@ NtLockFile(IN HANDLE FileHandle,
     /* Set Parameters */
     StackPtr->Parameters.LockControl.Length = LocalLength;
     StackPtr->Parameters.LockControl.ByteOffset = *ByteOffset;
-    StackPtr->Parameters.LockControl.Key = Key ? *Key : 0;
+    StackPtr->Parameters.LockControl.Key = Key ? Key : 0;
 
     /* Set Flags */
     if (FailImmediately) StackPtr->Flags = SL_FAIL_IMMEDIATELY;
@@ -3189,7 +3184,7 @@ NTSTATUS
 STDCALL
 NtSetQuotaInformationFile(HANDLE FileHandle,
                           PIO_STATUS_BLOCK IoStatusBlock,
-                          PFILE_QUOTA_INFORMATION Buffer,
+                          PVOID Buffer,
                           ULONG BufferLength)
 {
     UNIMPLEMENTED;
@@ -3205,7 +3200,7 @@ NtUnlockFile(IN  HANDLE FileHandle,
              OUT PIO_STATUS_BLOCK IoStatusBlock,
              IN  PLARGE_INTEGER ByteOffset,
              IN  PLARGE_INTEGER Length,
-             OUT PULONG Key OPTIONAL)
+             OUT ULONG Key OPTIONAL)
 {
     PFILE_OBJECT FileObject = NULL;
     PLARGE_INTEGER LocalLength = NULL;
@@ -3297,7 +3292,7 @@ NtUnlockFile(IN  HANDLE FileHandle,
     /* Set Parameters */
     StackPtr->Parameters.LockControl.Length = LocalLength;
     StackPtr->Parameters.LockControl.ByteOffset = *ByteOffset;
-    StackPtr->Parameters.LockControl.Key = Key ? *Key : 0;
+    StackPtr->Parameters.LockControl.Key = Key ? Key : 0;
 
     /* Call the Driver */
     Status = IoCallDriver(DeviceObject, Irp);

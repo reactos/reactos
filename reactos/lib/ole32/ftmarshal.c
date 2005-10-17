@@ -47,8 +47,10 @@ typedef struct _FTMarshalImpl {
 #define _IFTMUnknown_(This)(IUnknown*)&(This->lpVtbl)
 #define _IFTMarshal_(This) (IMarshal*)&(This->lpvtblFTM)
 
-#define _IFTMarshall_Offset ((int)(&(((FTMarshalImpl*)0)->lpvtblFTM)))
-#define _ICOM_THIS_From_IFTMarshal(class, name) class* This = (class*)(((char*)name)-_IFTMarshall_Offset);
+static inline FTMarshalImpl *impl_from_IMarshal( IMarshal *iface )
+{
+    return (FTMarshalImpl *)((char*)iface - FIELD_OFFSET(FTMarshalImpl, lpvtblFTM));
+}
 
 /* inner IUnknown to handle aggregation */
 static HRESULT WINAPI
@@ -104,7 +106,7 @@ static HRESULT WINAPI
 FTMarshalImpl_QueryInterface (LPMARSHAL iface, REFIID riid, LPVOID * ppv)
 {
 
-    _ICOM_THIS_From_IFTMarshal (FTMarshalImpl, iface);
+    FTMarshalImpl *This = impl_from_IMarshal(iface);
 
     TRACE ("(%p)->(\n\tIID:\t%s,%p)\n", This, debugstr_guid (riid), ppv);
     return IUnknown_QueryInterface (This->pUnkOuter, riid, ppv);
@@ -114,7 +116,7 @@ static ULONG WINAPI
 FTMarshalImpl_AddRef (LPMARSHAL iface)
 {
 
-    _ICOM_THIS_From_IFTMarshal (FTMarshalImpl, iface);
+    FTMarshalImpl *This = impl_from_IMarshal(iface);
 
     TRACE ("\n");
     return IUnknown_AddRef (This->pUnkOuter);
@@ -124,7 +126,7 @@ static ULONG WINAPI
 FTMarshalImpl_Release (LPMARSHAL iface)
 {
 
-    _ICOM_THIS_From_IFTMarshal (FTMarshalImpl, iface);
+    FTMarshalImpl *This = impl_from_IMarshal(iface);
 
     TRACE ("\n");
     return IUnknown_Release (This->pUnkOuter);
@@ -146,7 +148,7 @@ FTMarshalImpl_GetMarshalSizeMax (LPMARSHAL iface, REFIID riid, void *pv, DWORD d
     IMarshal *pMarshal = NULL;
     HRESULT hres;
 
-    _ICOM_THIS_From_IFTMarshal (FTMarshalImpl, iface);
+    FTMarshalImpl *This = impl_from_IMarshal(iface);
 
     FIXME ("(), stub!\n");
 
@@ -172,7 +174,7 @@ FTMarshalImpl_MarshalInterface (LPMARSHAL iface, IStream * pStm, REFIID riid, vo
     IMarshal *pMarshal = NULL;
     HRESULT hres;
 
-    _ICOM_THIS_From_IFTMarshal (FTMarshalImpl, iface);
+    FTMarshalImpl *This = impl_from_IMarshal(iface);
 
     FIXME ("(), stub!\n");
 

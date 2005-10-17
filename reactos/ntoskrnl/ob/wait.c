@@ -75,12 +75,8 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
             
             if(TimeOut)
             {
-                ProbeForRead(TimeOut,
-                             sizeof(LARGE_INTEGER),
-                             sizeof(ULONG));
-
                 /* Make a local copy of the timeout on the stack */
-                SafeTimeOut = *TimeOut;
+                SafeTimeOut = ProbeForReadLargeInteger(TimeOut);
                 TimeOut = &SafeTimeOut;
             }
         }
@@ -153,7 +149,7 @@ NtWaitForMultipleObjects(IN ULONG ObjectCount,
         DefaultObject = ObjectHeader->Type->DefaultObject;
 
         /* Check if it's the internal offset */
-        if ((LONG_PTR)DefaultObject >= 0)
+        if (IsPointerOffset(DefaultObject))
         {
             /* Increase reference count */
             InterlockedIncrement(&ObjectHeader->PointerCount);
@@ -247,7 +243,7 @@ Quickie:
     if (LockInUse) KeLeaveCriticalRegion();
 
     /* Return status */
-    DPRINT1("Returning: %x\n", Status);
+    DPRINT("Returning: %x\n", Status);
     return Status;
 }
 
@@ -273,11 +269,8 @@ NtWaitForSingleObject(IN HANDLE ObjectHandle,
     {
         _SEH_TRY
         {
-            ProbeForRead(TimeOut,
-                         sizeof(LARGE_INTEGER),
-                         sizeof(ULONG));
             /* Make a copy on the stack */
-            SafeTimeOut = *TimeOut;
+            SafeTimeOut = ProbeForReadLargeInteger(TimeOut);
             TimeOut = &SafeTimeOut;
         }
         _SEH_HANDLE
@@ -302,7 +295,7 @@ NtWaitForSingleObject(IN HANDLE ObjectHandle,
         WaitableObject = BODY_TO_HEADER(Object)->Type->DefaultObject;
 
         /* Is it an offset for internal objects? */
-        if ((LONG_PTR)WaitableObject >= 0)
+        if (IsPointerOffset(WaitableObject))
         {
             /* Turn it into a pointer */
             WaitableObject = (PVOID)((ULONG_PTR)Object +
@@ -354,11 +347,8 @@ NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
     {
         _SEH_TRY
         {
-            ProbeForRead(TimeOut,
-                         sizeof(LARGE_INTEGER),
-                         sizeof(ULONG));
             /* Make a copy on the stack */
-            SafeTimeOut = *TimeOut;
+            SafeTimeOut = ProbeForReadLargeInteger(TimeOut);
             TimeOut = &SafeTimeOut;
         }
         _SEH_HANDLE
@@ -399,7 +389,7 @@ NtSignalAndWaitForSingleObject(IN HANDLE ObjectHandleToSignal,
     WaitableObject = BODY_TO_HEADER(WaitObj)->Type->DefaultObject;
 
     /* Handle internal offset */
-    if ((LONG_PTR)WaitableObject >= 0)
+    if (IsPointerOffset(WaitableObject))
     {
         /* Get real pointer */
         WaitableObject = (PVOID)((ULONG_PTR)WaitObj +

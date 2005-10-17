@@ -4492,11 +4492,8 @@ NtCreateSection (OUT PHANDLE SectionHandle,
    {
      _SEH_TRY
      {
-       ProbeForRead(MaximumSize,
-                    sizeof(LARGE_INTEGER),
-                    sizeof(ULONG));
        /* make a copy on the stack */
-       SafeMaximumSize = *MaximumSize;
+       SafeMaximumSize = ProbeForReadLargeInteger(MaximumSize);
        MaximumSize = &SafeMaximumSize;
      }
      _SEH_HANDLE
@@ -4576,9 +4573,7 @@ NtOpenSection(PHANDLE   SectionHandle,
    {
      _SEH_TRY
      {
-       ProbeForWrite(SectionHandle,
-                     sizeof(HANDLE),
-                     sizeof(ULONG));
+       ProbeForWriteHandle(SectionHandle);
      }
      _SEH_HANDLE
      {
@@ -4748,21 +4743,15 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
      {
        if(BaseAddress != NULL)
        {
-         ProbeForWrite(BaseAddress,
-                       sizeof(PVOID),
-                       sizeof(ULONG));
+         ProbeForWritePointer(BaseAddress);
          SafeBaseAddress = *BaseAddress;
        }
        if(SectionOffset != NULL)
        {
-         ProbeForWrite(SectionOffset,
-                       sizeof(LARGE_INTEGER),
-                       sizeof(ULONG));
+         ProbeForWriteLargeInteger(SectionOffset);
          SafeSectionOffset = *SectionOffset;
        }
-       ProbeForWrite(ViewSize,
-                     sizeof(ULONG),
-                     sizeof(ULONG));
+       ProbeForWriteUlong(ViewSize);
        SafeViewSize = *ViewSize;
      }
      _SEH_HANDLE
@@ -5293,11 +5282,8 @@ NtExtendSection(IN HANDLE SectionHandle,
    {
      _SEH_TRY
      {
-       ProbeForRead(NewMaximumSize,
-                    sizeof(LARGE_INTEGER),
-                    sizeof(ULONG));
        /* make a copy on the stack */
-       SafeNewMaximumSize = *NewMaximumSize;
+       SafeNewMaximumSize = ProbeForReadLargeInteger(NewMaximumSize);
        NewMaximumSize = &SafeNewMaximumSize;
      }
      _SEH_HANDLE

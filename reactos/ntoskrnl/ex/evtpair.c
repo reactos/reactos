@@ -66,13 +66,11 @@ NtCreateEventPair(OUT PHANDLE EventPairHandle,
     DPRINT("NtCreateEventPair: 0x%p\n", EventPairHandle);
 
     /* Check Output Safety */
-    if(PreviousMode == UserMode) {
+    if(PreviousMode != KernelMode) {
 
         _SEH_TRY {
 
-            ProbeForWrite(EventPairHandle,
-                          sizeof(HANDLE),
-                          sizeof(ULONG));
+            ProbeForWriteHandle(EventPairHandle);
         } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
 
             Status = _SEH_GetExceptionCode();
@@ -142,13 +140,11 @@ NtOpenEventPair(OUT PHANDLE EventPairHandle,
     PAGED_CODE();
 
     /* Check Output Safety */
-    if(PreviousMode == UserMode) {
+    if(PreviousMode != KernelMode) {
 
         _SEH_TRY {
 
-            ProbeForWrite(EventPairHandle,
-                          sizeof(HANDLE),
-                          sizeof(ULONG));
+            ProbeForWriteHandle(EventPairHandle);
         } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
 
             Status = _SEH_GetExceptionCode();

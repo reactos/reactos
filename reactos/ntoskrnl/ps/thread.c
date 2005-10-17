@@ -597,9 +597,7 @@ NtCreateThread(OUT PHANDLE ThreadHandle,
 
         _SEH_TRY {
 
-            ProbeForWrite(ThreadHandle,
-                          sizeof(HANDLE),
-                          sizeof(ULONG));
+            ProbeForWriteHandle(ThreadHandle);
 
             if(ClientId != NULL) {
 
@@ -632,18 +630,18 @@ NtCreateThread(OUT PHANDLE ThreadHandle,
     }
 
     /* Use probed data for the Initial TEB */
-    SafeInitialTeb = *InitialTeb;
+    SafeInitialTeb = *InitialTeb; /* FIXME - not protected! */
     InitialTeb = &SafeInitialTeb;
 
     /* Call the shared function */
-    return PspCreateThread(ThreadHandle,
+    return PspCreateThread(ThreadHandle, /* FIXME - not protected! */
                            DesiredAccess,
                            ObjectAttributes,
                            ProcessHandle,
                            NULL,
-                           ClientId,
-                           ThreadContext,
-                           InitialTeb,
+                           ClientId, /* FIXME - not protected! */
+                           ThreadContext, /* FIXME - not protected! */
+                           InitialTeb, /* FIXME - not protected! */
                            CreateSuspended,
                            NULL,
                            NULL);
@@ -672,9 +670,7 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
     {
         _SEH_TRY
         {
-            ProbeForWrite(ThreadHandle,
-                          sizeof(HANDLE),
-                          sizeof(ULONG));
+            ProbeForWriteHandle(ThreadHandle);
 
             if(ClientId != NULL)
             {
@@ -696,7 +692,7 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
     }
 
     /* Open by name if one was given */
-    if (ObjectAttributes->ObjectName)
+    if (ObjectAttributes->ObjectName) /* FIXME - neither probed nor protected! */
     {
         /* Open it */
         Status = ObOpenObjectByName(ObjectAttributes,
@@ -711,18 +707,18 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
         {
             DPRINT1("Could not open object by name\n");
         }
-
+        /* FIXME - would be a good idea to return the handle in case of success! */
         /* Return Status */
         return(Status);
     }
     else if (ClientId)
     {
         /* Open by Thread ID */
-        if (ClientId->UniqueProcess)
+        if (ClientId->UniqueProcess) /* FIXME - neither probed nor protected! */
         {
             /* Get the Process */
-            DPRINT("Opening by Process ID: %x\n", ClientId->UniqueProcess);
-            Status = PsLookupProcessThreadByCid(ClientId,
+            DPRINT("Opening by Process ID: %x\n", ClientId->UniqueProcess); /* FIXME - neither probed nor protected! */
+            Status = PsLookupProcessThreadByCid(ClientId, /* FIXME - neither probed nor protected! */
                                                 NULL,
                                                 &Thread);
         }
@@ -742,7 +738,7 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
 
         /* Open the Thread Object */
         Status = ObOpenObjectByPointer(Thread,
-                                       ObjectAttributes->Attributes,
+                                       ObjectAttributes->Attributes, /* FIXME - neither probed nor protected! */
                                        NULL,
                                        DesiredAccess,
                                        PsThreadType,

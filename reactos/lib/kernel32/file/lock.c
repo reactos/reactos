@@ -98,7 +98,7 @@ LockFileEx(
 			(PIO_STATUS_BLOCK)lpOverlapped,
 			&Offset,
 			&BytesToLock,
-			NULL,
+			0,
 			LockImmediate,
 			LockExclusive);
    if ( !NT_SUCCESS(errCode) )
@@ -168,7 +168,7 @@ UnlockFileEx(
 			  (PIO_STATUS_BLOCK)lpOverlapped,
 			  &StartAddress,
 			  &BytesToUnLock,
-			  NULL);
+			  0);
    if ( !NT_SUCCESS(errCode) ) {
       SetLastErrorByStatus (errCode);
       return FALSE;

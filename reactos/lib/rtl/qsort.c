@@ -1,52 +1,6 @@
-/* $Id: qsort.c 12852 2005-01-06 13:58:04Z mf $
- * 
- * FILE: ntoskrnl/rtl/qsort.c
- * NOTE: Adapted from CygWin newlib 2000-03-12.
- */
 /*
-FUNCTION
-<<qsort>>---sort an array
-
-INDEX
-	qsort
-
-ANSI_SYNOPSIS
-	#include <stdlib.h>
-	void qsort(void *<[base]>, size_t <[nmemb]>, size_t <[size]>,
-		   int (*<[compar]>)(const void *, const void *) );
-
-TRAD_SYNOPSIS
-	#include <stdlib.h>
-	qsort(<[base]>, <[nmemb]>, <[size]>, <[compar]> )
-	char *<[base]>;
-	size_t <[nmemb]>;
-	size_t <[size]>;
-	int (*<[compar]>)();
-
-DESCRIPTION
-<<qsort>> sorts an array (beginning at <[base]>) of <[nmemb]> objects.
-<[size]> describes the size of each element of the array.
-
-You must supply a pointer to a comparison function, using the argument
-shown as <[compar]>.  (This permits sorting objects of unknown
-properties.)  Define the comparison function to accept two arguments,
-each a pointer to an element of the array starting at <[base]>.  The
-result of <<(*<[compar]>)>> must be negative if the first argument is
-less than the second, zero if the two arguments match, and positive if
-the first argument is greater than the second (where ``less than'' and
-``greater than'' refer to whatever arbitrary ordering is appropriate).
-
-The array is sorted in place; that is, when <<qsort>> returns, the
-array elements beginning at <[base]> have been reordered.
-
-RETURNS
-<<qsort>> does not return a result.
-
-PORTABILITY
-<<qsort>> is required by ANSI (without specifying the sorting algorithm).
-*/
-
-/*-
+ * COPYRIGHT:         
+ *-
  * Copyright (c) 1992, 1993
  *	The Regents of the University of California.  All rights reserved.
  *
@@ -77,6 +31,11 @@ PORTABILITY
  * LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.
+ *
+ * PROJECT:           ReactOS system libraries
+ * PURPOSE:           Unicode Conversion Routines
+ * FILE:              lib/rtl/qsort.c
+ * PROGRAMMER:        Adapted from CygWin newlib 2000-03-12.       
  */
 
 #ifndef __GNUC__

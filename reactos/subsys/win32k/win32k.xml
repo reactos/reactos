@@ -1,4 +1,4 @@
-<module name="win32k_base" type="objectlibrary" warnings="true">
+<module name="win32k_base" type="objectlibrary">
 	<include base="win32k">.</include>
 	<include base="win32k">include</include>
 	<include base="ntoskrnl">include</include>
@@ -14,10 +14,12 @@
 		<file>dib1bpp.c</file>
 		<file>dib4bpp.c</file>
 		<file>dib8bpp.c</file>
+		<file>dib8gen.c</file>
 		<file>dib16bpp.c</file>
 		<file>dib16gen.c</file>
 		<file>dib24bpp.c</file>
 		<file>dib32bpp.c</file>
+		<file>dib32gen.c</file>
 		<file>dib.c</file>
 	</directory>
 	<directory name="eng">
@@ -56,8 +58,6 @@
 		<file>driver.c</file>
 		<file>error.c</file>
 		<file>math.c</file>
-		<file>object.c</file>
-		<file>ssec.c</file>
 		<file>copy.c</file>
 	</directory>
 	<directory name="ntddraw">
@@ -85,6 +85,7 @@
 		<file>misc.c</file>
 		<file>monitor.c</file>
 		<file>msgqueue.c</file>
+		<file>ntuser.c</file>		
 		<file>painting.c</file>
 		<file>prop.c</file>
 		<file>scrollbar.c</file>
@@ -96,6 +97,8 @@
 		<file>window.c</file>
 		<file>winpos.c</file>
 		<file>winsta.c</file>
+		<file>object.c</file>
+		<file>ssec.c</file>
 	</directory>
 	<directory name="objects">
 		<file>bezier.c</file>

@@ -72,6 +72,8 @@ public:
 	std::string compilerPrefix;
 	std::string compilerCommand;
 	std::string nasmCommand;
+	std::string binutilsPrefix;
+	std::string binutilsCommand;
 	bool usePipe;
 	Directory* intermediateDirectory;
 	Directory* outputDirectory;
@@ -108,6 +110,10 @@ private:
 	bool TryToDetectThisCompiler ( const std::string& compiler );
 	void DetectCompiler ();
 	bool TryToDetectThisNetwideAssembler ( const std::string& assembler );
+	bool TryToDetectThisBinutils ( const std::string& binutils );
+	std::string GetBinutilsVersion ( const std::string& binutilsCommand );
+	bool IsSupportedBinutilsVersion ( const std::string& binutilsVersion );
+	void DetectBinutils ();
 	void DetectNetwideAssembler ();
 	void DetectPipeSupport ();
 	void DetectPCHSupport ();

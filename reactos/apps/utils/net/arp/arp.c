@@ -8,8 +8,8 @@
  *   GM 27/06/05 Created
  *
  */
- 
- 
+
+#define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,10 +18,7 @@
 #include <ctype.h>
 #include <winsock2.h>
 #include <iphlpapi.h>
- 
-#define WIN32_LEAN_AND_MEAN
-#define UNICODE
-#define _UNICODE
+
  
 /*
  * Globals

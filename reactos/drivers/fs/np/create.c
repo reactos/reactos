@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
  * FILE:       drivers/fs/np/create.c
@@ -9,12 +8,10 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ntifs.h>
-#include <ndk/iotypes.h>
-#include "npfs.h"
-
 #define NDEBUG
 #include <debug.h>
+
+#include "npfs.h"
 
 /* FUNCTIONS *****************************************************************/
 
@@ -110,7 +107,7 @@ NTSTATUS STDCALL
 NpfsCreate(PDEVICE_OBJECT DeviceObject,
 	   PIRP Irp)
 {
-  PIO_STACK_LOCATION IoStack;
+  PEXTENDED_IO_STACK_LOCATION IoStack;
   PFILE_OBJECT FileObject;
   PNPFS_PIPE Pipe;
   PNPFS_FCB ClientFcb;
@@ -121,14 +118,14 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
   DPRINT("NpfsCreate(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
   DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-  IoStack = IoGetCurrentIrpStackLocation(Irp);
+  IoStack = (PEXTENDED_IO_STACK_LOCATION)IoGetCurrentIrpStackLocation(Irp);
   FileObject = IoStack->FileObject;
   DPRINT("FileObject %p\n", FileObject);
   DPRINT("FileName %wZ\n", &FileObject->FileName);
 
   Irp->IoStatus.Information = 0;
 
-  SpecialAccess = ((IoStack->Parameters.Create.ShareAccess & 3) == 3);
+  SpecialAccess = ((IoStack->Parameters.CreatePipe.ShareAccess & 3) == 3);
   if (SpecialAccess)
     {
       DPRINT("NpfsCreate() open client end for special use!\n");
@@ -310,7 +307,7 @@ NTSTATUS STDCALL
 NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
 		    PIRP Irp)
 {
-   PIO_STACK_LOCATION IoStack;
+   PEXTENDED_IO_STACK_LOCATION IoStack;
    PFILE_OBJECT FileObject;
    PNPFS_DEVICE_EXTENSION DeviceExt;
    PNPFS_PIPE Pipe;
@@ -321,7 +318,7 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
    DPRINT("NpfsCreateNamedPipe(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
    DeviceExt = (PNPFS_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-   IoStack = IoGetCurrentIrpStackLocation(Irp);
+   IoStack = (PEXTENDED_IO_STACK_LOCATION)IoGetCurrentIrpStackLocation(Irp);
    FileObject = IoStack->FileObject;
    DPRINT("FileObject %p\n", FileObject);
    DPRINT("Pipe name %wZ\n", &FileObject->FileName);
@@ -416,8 +413,8 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
        Pipe->MaximumInstances = Buffer->MaximumInstances;
        Pipe->CurrentInstances = 0;
        Pipe->TimeOut = Buffer->DefaultTimeout;
-       if (!(IoStack->Parameters.Create.Options & FILE_PIPE_OUTBOUND) ||
-           IoStack->Parameters.Create.Options & FILE_PIPE_FULL_DUPLEX)
+       if (!(IoStack->Parameters.CreatePipe.Options & FILE_PIPE_OUTBOUND) ||
+           IoStack->Parameters.CreatePipe.Options & FILE_PIPE_FULL_DUPLEX)
          {
            if (Buffer->InboundQuota == 0)
              {
@@ -441,7 +438,7 @@ NpfsCreateNamedPipe(PDEVICE_OBJECT DeviceObject,
            Pipe->InboundQuota = 0;
          }
 
-       if (IoStack->Parameters.Create.Options & (FILE_PIPE_FULL_DUPLEX|FILE_PIPE_OUTBOUND))
+       if (IoStack->Parameters.CreatePipe.Options & (FILE_PIPE_FULL_DUPLEX|FILE_PIPE_OUTBOUND))
          {
            if (Buffer->OutboundQuota == 0)
              {
@@ -540,7 +537,7 @@ NpfsCleanup(PDEVICE_OBJECT DeviceObject,
    PFILE_OBJECT FileObject;
    PNPFS_FCB Fcb, OtherSide;
    PNPFS_PIPE Pipe;
-   BOOL Server;
+   BOOLEAN Server;
 
    DPRINT("NpfsCleanup(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
@@ -676,7 +673,7 @@ NpfsClose(PDEVICE_OBJECT DeviceObject,
    PFILE_OBJECT FileObject;
    PNPFS_FCB Fcb;
    PNPFS_PIPE Pipe;
-   BOOL Server;
+   BOOLEAN Server;
 
    DPRINT("NpfsClose(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 

@@ -167,89 +167,80 @@ LPWSTR load_dynamic_property(MSIPACKAGE *package, LPCWSTR prop, UINT* rc)
     return str;
 }
 
-int get_loaded_component(MSIPACKAGE* package, LPCWSTR Component )
+MSICOMPONENT* get_loaded_component( MSIPACKAGE* package, LPCWSTR Component )
 {
-    int rc = -1;
-    DWORD i;
+    MSICOMPONENT *comp;
 
-    for (i = 0; i < package->loaded_components; i++)
+    LIST_FOR_EACH_ENTRY( comp, &package->components, MSICOMPONENT, entry )
     {
-        if (strcmpW(Component,package->components[i].Component)==0)
-        {
-            rc = i;
-            break;
-        }
+        if (lstrcmpW(Component,comp->Component)==0)
+            return comp;
     }
-    return rc;
+    return NULL;
 }
 
-int get_loaded_feature(MSIPACKAGE* package, LPCWSTR Feature )
+MSIFEATURE* get_loaded_feature(MSIPACKAGE* package, LPCWSTR Feature )
 {
-    int rc = -1;
-    DWORD i;
+    MSIFEATURE *feature;
 
-    for (i = 0; i < package->loaded_features; i++)
+    LIST_FOR_EACH_ENTRY( feature, &package->features, MSIFEATURE, entry )
     {
-        if (strcmpW(Feature,package->features[i].Feature)==0)
-        {
-            rc = i;
-            break;
-        }
+        if (lstrcmpW( Feature, feature->Feature )==0)
+            return feature;
     }
-    return rc;
+    return NULL;
 }
 
-int get_loaded_file(MSIPACKAGE* package, LPCWSTR file)
+MSIFILE* get_loaded_file( MSIPACKAGE* package, LPCWSTR key )
 {
-    int rc = -1;
-    DWORD i;
+    MSIFILE *file;
 
-    for (i = 0; i < package->loaded_files; i++)
+    LIST_FOR_EACH_ENTRY( file, &package->files, MSIFILE, entry )
     {
-        if (strcmpW(file,package->files[i].File)==0)
-        {
-            rc = i;
-            break;
-        }
+        if (lstrcmpW( key, file->File )==0)
+            return file;
     }
-    return rc;
+    return NULL;
 }
 
-int track_tempfile(MSIPACKAGE *package, LPCWSTR name, LPCWSTR path)
+int track_tempfile( MSIPACKAGE *package, LPCWSTR name, LPCWSTR path )
 {
-    DWORD i;
-    DWORD index;
+    MSIFILE *file;
 
     if (!package)
         return -2;
 
-    for (i=0; i < package->loaded_files; i++)
-        if (strcmpW(package->files[i].File,name)==0)
-            return -1;
+    file = get_loaded_file( package, name );
+    if (file)
+        return -1;
 
-    index = package->loaded_files;
-    package->loaded_files++;
-    if (package->loaded_files== 1)
-        package->files = HeapAlloc(GetProcessHeap(),0,sizeof(MSIFILE));
-    else
-        package->files = HeapReAlloc(GetProcessHeap(),0,
-            package->files , package->loaded_files * sizeof(MSIFILE));
+    file = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof (MSIFILE) );
 
-    memset(&package->files[index],0,sizeof(MSIFILE));
+    file->File = strdupW( name );
+    file->TargetPath = strdupW( path );
+    file->Temporary = TRUE;
 
-    package->files[index].File = strdupW(name);
-    package->files[index].TargetPath = strdupW(path);
-    package->files[index].Temporary = TRUE;
-
-    TRACE("Tracking tempfile (%s)\n",debugstr_w(package->files[index].File));  
+    TRACE("Tracking tempfile (%s)\n", debugstr_w( file->File ));  
 
     return 0;
+}
+
+MSIFOLDER *get_loaded_folder( MSIPACKAGE *package, LPCWSTR dir )
+{
+    MSIFOLDER *folder;
+    
+    LIST_FOR_EACH_ENTRY( folder, &package->folders, MSIFOLDER, entry )
+    {
+        if (lstrcmpW( dir, folder->Directory )==0)
+            return folder;
+    }
+    return NULL;
 }
 
 LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source, 
                       BOOL set_prop, MSIFOLDER **folder)
 {
-    DWORD i;
+    MSIFOLDER *f;
     LPWSTR p, path = NULL;
 
     TRACE("Working to resolve %s\n",debugstr_w(name));
@@ -275,17 +266,6 @@ LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source,
             path = build_directory_name(2, check_path, NULL);
             if (strcmpiW(path,check_path)!=0)
                 MSI_SetPropertyW(package,cszTargetDir,path);
-
-            if (folder)
-            {
-                for (i = 0; i < package->loaded_folders; i++)
-                {
-                    if (strcmpW(package->folders[i].Directory,name)==0)
-                        break;
-                }
-                *folder = &(package->folders[i]);
-            }
-            return path;
         }
         else
         {
@@ -300,81 +280,66 @@ LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source,
                         *(p+1) = 0;
                 }
             }
-            if (folder)
-            {
-                for (i = 0; i < package->loaded_folders; i++)
-                {
-                    if (strcmpW(package->folders[i].Directory,name)==0)
-                        break;
-                }
-                *folder = &(package->folders[i]);
-            }
-            return path;
         }
+        if (folder)
+            *folder = get_loaded_folder( package, name );
+        return path;
     }
 
-    for (i = 0; i < package->loaded_folders; i++)
-    {
-        if (strcmpW(package->folders[i].Directory,name)==0)
-            break;
-    }
-
-    if (i >= package->loaded_folders)
+    f = get_loaded_folder( package, name );
+    if (!f)
         return NULL;
 
     if (folder)
-        *folder = &(package->folders[i]);
+        *folder = f;
 
-    if (!source && package->folders[i].ResolvedTarget)
+    if (!source && f->ResolvedTarget)
     {
-        path = strdupW(package->folders[i].ResolvedTarget);
+        path = strdupW( f->ResolvedTarget );
         TRACE("   already resolved to %s\n",debugstr_w(path));
         return path;
     }
-    else if (source && package->folders[i].ResolvedSource)
+    else if (source && f->ResolvedSource)
     {
-        path = strdupW(package->folders[i].ResolvedSource);
+        path = strdupW( f->ResolvedSource );
         TRACE("   (source)already resolved to %s\n",debugstr_w(path));
         return path;
     }
-    else if (!source && package->folders[i].Property)
+    else if (!source && f->Property)
     {
-        path = build_directory_name(2, package->folders[i].Property, NULL);
+        path = build_directory_name( 2, f->Property, NULL );
                     
         TRACE("   internally set to %s\n",debugstr_w(path));
         if (set_prop)
-            MSI_SetPropertyW(package,name,path);
+            MSI_SetPropertyW( package, name, path );
         return path;
     }
 
-    if (package->folders[i].ParentIndex >= 0)
+    if (f->Parent)
     {
-        LPWSTR parent = package->folders[package->folders[i].ParentIndex].Directory;
+        LPWSTR parent = f->Parent->Directory;
 
         TRACE(" ! Parent is %s\n", debugstr_w(parent));
 
         p = resolve_folder(package, parent, source, set_prop, NULL);
         if (!source)
         {
-            TRACE("   TargetDefault = %s\n",
-                    debugstr_w(package->folders[i].TargetDefault));
+            TRACE("   TargetDefault = %s\n", debugstr_w(f->TargetDefault));
 
-            path = build_directory_name(3, p, 
-                            package->folders[i].TargetDefault, NULL);
-            package->folders[i].ResolvedTarget = strdupW(path);
+            path = build_directory_name( 3, p, f->TargetDefault, NULL );
+            f->ResolvedTarget = strdupW( path );
             TRACE("   resolved into %s\n",debugstr_w(path));
             if (set_prop)
                 MSI_SetPropertyW(package,name,path);
         }
         else 
         {
-            if (package->folders[i].SourceDefault && 
-                package->folders[i].SourceDefault[0]!='.')
-                path = build_directory_name(3, p, package->folders[i].SourceDefault, NULL);
+            if (f->SourceDefault && f->SourceDefault[0]!='.')
+                path = build_directory_name( 3, p, f->SourceDefault, NULL );
             else
                 path = strdupW(p);
             TRACE("   (source)resolved into %s\n",debugstr_w(path));
-            package->folders[i].ResolvedSource = strdupW(path);
+            f->ResolvedSource = strdupW( path );
         }
         HeapFree(GetProcessHeap(),0,p);
     }
@@ -437,89 +402,113 @@ UINT schedule_action(MSIPACKAGE *package, UINT script, LPCWSTR action)
 
 static void remove_tracked_tempfiles(MSIPACKAGE* package)
 {
-    DWORD i;
+    MSIFILE *file;
 
     if (!package)
         return;
 
-    for (i = 0; i < package->loaded_files; i++)
+    LIST_FOR_EACH_ENTRY( file, &package->files, MSIFILE, entry )
     {
-        if (package->files[i].Temporary)
+        if (file->Temporary)
         {
-            TRACE("Cleaning up %s\n",debugstr_w(package->files[i].TargetPath));
-            DeleteFileW(package->files[i].TargetPath);
+            TRACE("Cleaning up %s\n", debugstr_w( file->TargetPath ));
+            DeleteFileW( file->TargetPath );
         }
-
     }
 }
+
+static void free_feature( MSIFEATURE *feature )
+{
+    struct list *item, *cursor;
+
+    LIST_FOR_EACH_SAFE( item, cursor, &feature->Components )
+    {
+        ComponentList *cl = LIST_ENTRY( item, ComponentList, entry );
+        list_remove( &cl->entry );
+        HeapFree( GetProcessHeap(), 0, cl );
+    }
+    HeapFree( GetProcessHeap(), 0, feature );
+}
+
 
 /* Called when the package is being closed */
 void ACTION_free_package_structures( MSIPACKAGE* package)
 {
     INT i;
+    struct list *item, *cursor;
     
     TRACE("Freeing package action data\n");
 
     remove_tracked_tempfiles(package);
 
-    /* No dynamic buffers in features */
-    if (package->features && package->loaded_features > 0)
-        HeapFree(GetProcessHeap(),0,package->features);
-
-    for (i = 0; i < package->loaded_folders; i++)
+    LIST_FOR_EACH_SAFE( item, cursor, &package->features )
     {
-        HeapFree(GetProcessHeap(),0,package->folders[i].Directory);
-        HeapFree(GetProcessHeap(),0,package->folders[i].TargetDefault);
-        HeapFree(GetProcessHeap(),0,package->folders[i].SourceDefault);
-        HeapFree(GetProcessHeap(),0,package->folders[i].ResolvedTarget);
-        HeapFree(GetProcessHeap(),0,package->folders[i].ResolvedSource);
-        HeapFree(GetProcessHeap(),0,package->folders[i].Property);
-    }
-    if (package->folders && package->loaded_folders > 0)
-        HeapFree(GetProcessHeap(),0,package->folders);
-
-    for (i = 0; i < package->loaded_components; i++)
-        HeapFree(GetProcessHeap(),0,package->components[i].FullKeypath);
-
-    if (package->components && package->loaded_components > 0)
-        HeapFree(GetProcessHeap(),0,package->components);
-
-    for (i = 0; i < package->loaded_files; i++)
-    {
-        HeapFree(GetProcessHeap(),0,package->files[i].File);
-        HeapFree(GetProcessHeap(),0,package->files[i].FileName);
-        HeapFree(GetProcessHeap(),0,package->files[i].ShortName);
-        HeapFree(GetProcessHeap(),0,package->files[i].Version);
-        HeapFree(GetProcessHeap(),0,package->files[i].Language);
-        HeapFree(GetProcessHeap(),0,package->files[i].SourcePath);
-        HeapFree(GetProcessHeap(),0,package->files[i].TargetPath);
+        MSIFEATURE *feature = LIST_ENTRY( item, MSIFEATURE, entry );
+        list_remove( &feature->entry );
+        free_feature( feature );
     }
 
-    if (package->files && package->loaded_files > 0)
-        HeapFree(GetProcessHeap(),0,package->files);
+    LIST_FOR_EACH_SAFE( item, cursor, &package->folders )
+    {
+        MSIFOLDER *folder = LIST_ENTRY( item, MSIFOLDER, entry );
+
+        list_remove( &folder->entry );
+        HeapFree( GetProcessHeap(), 0, folder->Directory );
+        HeapFree( GetProcessHeap(), 0, folder->TargetDefault );
+        HeapFree( GetProcessHeap(), 0, folder->SourceDefault );
+        HeapFree( GetProcessHeap(), 0, folder->ResolvedTarget );
+        HeapFree( GetProcessHeap(), 0, folder->ResolvedSource );
+        HeapFree( GetProcessHeap(), 0, folder->Property );
+    }
+
+    LIST_FOR_EACH_SAFE( item, cursor, &package->components )
+    {
+        MSICOMPONENT *comp = LIST_ENTRY( item, MSICOMPONENT, entry );
+        
+        list_remove( &comp->entry );
+        HeapFree( GetProcessHeap(), 0, comp->FullKeypath );
+        HeapFree( GetProcessHeap(), 0, comp );
+    }
+
+    LIST_FOR_EACH_SAFE( item, cursor, &package->files )
+    {
+        MSIFILE *file = LIST_ENTRY( item, MSIFILE, entry );
+
+        list_remove( &file->entry );
+        HeapFree( GetProcessHeap(), 0, file->File );
+        HeapFree( GetProcessHeap(), 0, file->FileName );
+        HeapFree( GetProcessHeap(), 0, file->ShortName );
+        HeapFree( GetProcessHeap(), 0, file->Version );
+        HeapFree( GetProcessHeap(), 0, file->Language );
+        HeapFree( GetProcessHeap(), 0, file->SourcePath );
+        HeapFree( GetProcessHeap(), 0, file->TargetPath );
+        HeapFree( GetProcessHeap(), 0, file );
+    }
 
     /* clean up extension, progid, class and verb structures */
-    for (i = 0; i < package->loaded_classes; i++)
+    LIST_FOR_EACH_SAFE( item, cursor, &package->classes )
     {
-        HeapFree(GetProcessHeap(),0,package->classes[i].Description);
-        HeapFree(GetProcessHeap(),0,package->classes[i].FileTypeMask);
-        HeapFree(GetProcessHeap(),0,package->classes[i].IconPath);
-        HeapFree(GetProcessHeap(),0,package->classes[i].DefInprocHandler);
-        HeapFree(GetProcessHeap(),0,package->classes[i].DefInprocHandler32);
-        HeapFree(GetProcessHeap(),0,package->classes[i].Argument);
-        HeapFree(GetProcessHeap(),0,package->classes[i].ProgIDText);
+        MSICLASS *cls = LIST_ENTRY( item, MSICLASS, entry );
+
+        list_remove( &cls->entry );
+        HeapFree( GetProcessHeap(), 0, cls->Description );
+        HeapFree( GetProcessHeap(), 0, cls->FileTypeMask );
+        HeapFree( GetProcessHeap(), 0, cls->IconPath );
+        HeapFree( GetProcessHeap(), 0, cls->DefInprocHandler );
+        HeapFree( GetProcessHeap(), 0, cls->DefInprocHandler32 );
+        HeapFree( GetProcessHeap(), 0, cls->Argument );
+        HeapFree( GetProcessHeap(), 0, cls->ProgIDText );
+        HeapFree( GetProcessHeap(), 0, cls );
     }
 
-    if (package->classes && package->loaded_classes > 0)
-        HeapFree(GetProcessHeap(),0,package->classes);
-
-    for (i = 0; i < package->loaded_extensions; i++)
+    LIST_FOR_EACH_SAFE( item, cursor, &package->extensions )
     {
-        HeapFree(GetProcessHeap(),0,package->extensions[i].ProgIDText);
-    }
+        MSIEXTENSION *ext = LIST_ENTRY( item, MSIEXTENSION, entry );
 
-    if (package->extensions && package->loaded_extensions > 0)
-        HeapFree(GetProcessHeap(),0,package->extensions);
+        list_remove( &ext->entry );
+        HeapFree( GetProcessHeap(), 0, ext->ProgIDText );
+        HeapFree( GetProcessHeap(), 0, ext );
+    }
 
     for (i = 0; i < package->loaded_progids; i++)
     {
@@ -541,22 +530,26 @@ void ACTION_free_package_structures( MSIPACKAGE* package)
     if (package->verbs && package->loaded_verbs > 0)
         HeapFree(GetProcessHeap(),0,package->verbs);
 
-    for (i = 0; i < package->loaded_mimes; i++)
-        HeapFree(GetProcessHeap(),0,package->mimes[i].ContentType);
-
-    if (package->mimes && package->loaded_mimes > 0)
-        HeapFree(GetProcessHeap(),0,package->mimes);
-
-    for (i = 0; i < package->loaded_appids; i++)
+    LIST_FOR_EACH_SAFE( item, cursor, &package->mimes )
     {
-        HeapFree(GetProcessHeap(),0,package->appids[i].RemoteServerName);
-        HeapFree(GetProcessHeap(),0,package->appids[i].LocalServer);
-        HeapFree(GetProcessHeap(),0,package->appids[i].ServiceParameters);
-        HeapFree(GetProcessHeap(),0,package->appids[i].DllSurrogate);
+        MSIMIME *mt = LIST_ENTRY( item, MSIMIME, entry );
+
+        list_remove( &mt->entry );
+        HeapFree( GetProcessHeap(), 0, mt->ContentType );
+        HeapFree( GetProcessHeap(), 0, mt );
     }
 
-    if (package->appids && package->loaded_appids > 0)
-        HeapFree(GetProcessHeap(),0,package->appids);
+    LIST_FOR_EACH_SAFE( item, cursor, &package->appids )
+    {
+        MSIAPPID *appid = LIST_ENTRY( item, MSIAPPID, entry );
+
+        list_remove( &appid->entry );
+        HeapFree( GetProcessHeap(), 0, appid->RemoteServerName );
+        HeapFree( GetProcessHeap(), 0, appid->LocalServer );
+        HeapFree( GetProcessHeap(), 0, appid->ServiceParameters );
+        HeapFree( GetProcessHeap(), 0, appid->DllSurrogate );
+        HeapFree( GetProcessHeap(), 0, appid );
+    }
 
     if (package->script)
     {
@@ -753,25 +746,24 @@ void ui_actiondata(MSIPACKAGE *package, LPCWSTR action, MSIRECORD * record)
     msiobj_release(&row->hdr);
 }
 
-BOOL ACTION_VerifyComponentForAction(MSIPACKAGE* package, INT index, 
+BOOL ACTION_VerifyComponentForAction(MSIPACKAGE* package, MSICOMPONENT* comp,
                                             INSTALLSTATE check )
 {
-    if (package->components[index].Installed == check)
+    if (comp->Installed == check)
         return FALSE;
 
-    if (package->components[index].ActionRequest == check)
+    if (comp->ActionRequest == check)
         return TRUE;
     else
         return FALSE;
 }
 
-BOOL ACTION_VerifyFeatureForAction(MSIPACKAGE* package, INT index, 
-                                            INSTALLSTATE check )
+BOOL ACTION_VerifyFeatureForAction( MSIFEATURE* feature, INSTALLSTATE check )
 {
-    if (package->features[index].Installed == check)
+    if (feature->Installed == check)
         return FALSE;
 
-    if (package->features[index].ActionRequest == check)
+    if (feature->ActionRequest == check)
         return TRUE;
     else
         return FALSE;
@@ -844,21 +836,20 @@ LPWSTR create_component_advertise_string(MSIPACKAGE* package,
 /* update compoennt state based on a feature change */
 void ACTION_UpdateComponentStates(MSIPACKAGE *package, LPCWSTR szFeature)
 {
-    int i;
     INSTALLSTATE newstate;
     MSIFEATURE *feature;
+    ComponentList *cl;
 
-    i = get_loaded_feature(package,szFeature);
-    if (i < 0)
+    feature = get_loaded_feature(package,szFeature);
+    if (!feature)
         return;
 
-    feature = &package->features[i];
     newstate = feature->ActionRequest;
 
-    for( i = 0; i < feature->ComponentCount; i++)
+    LIST_FOR_EACH_ENTRY( cl, &feature->Components, ComponentList, entry )
     {
-        MSICOMPONENT* component = &package->components[feature->Components[i]];
-
+        MSICOMPONENT* component = cl->component;
+    
         TRACE("MODIFYING(%i): Component %s (Installed %i, Action %i, Request %i)\n",
             newstate, debugstr_w(component->Component), component->Installed, 
             component->Action, component->ActionRequest);
@@ -874,30 +865,31 @@ void ACTION_UpdateComponentStates(MSIPACKAGE *package, LPCWSTR szFeature)
             }
             else 
             {
-                int j,k;
+                ComponentList *clist;
+                MSIFEATURE *f;
 
                 component->ActionRequest = newstate;
                 component->Action = newstate;
 
                 /*if any other feature wants is local we need to set it local*/
-                for (j = 0; 
-                     j < package->loaded_features &&
-                     component->ActionRequest != INSTALLSTATE_LOCAL; 
-                     j++)
+                LIST_FOR_EACH_ENTRY( f, &package->features, MSIFEATURE, entry )
                 {
-                    for (k = 0; k < package->features[j].ComponentCount; k++)
-                        if ( package->features[j].Components[k] ==
-                             feature->Components[i] )
+                    if ( component->ActionRequest != INSTALLSTATE_LOCAL )
+                        break;
+
+                    LIST_FOR_EACH_ENTRY( clist, &f->Components, ComponentList, entry )
+                    {
+                        if ( clist->component == component )
                         {
-                            if (package->features[j].ActionRequest == 
-                                INSTALLSTATE_LOCAL)
+                            if (f->ActionRequest == INSTALLSTATE_LOCAL)
                             {
-                                TRACE("Saved by %s\n", debugstr_w(package->features[j].Feature));
+                                TRACE("Saved by %s\n", debugstr_w(f->Feature));
                                 component->ActionRequest = INSTALLSTATE_LOCAL;
                                 component->Action = INSTALLSTATE_LOCAL;
                             }
                             break;
                         }
+                    }
                 }
             }
         }

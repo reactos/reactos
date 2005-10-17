@@ -574,7 +574,7 @@ DWORD WINAPI RegQueryValue16( HKEY hkey, LPCSTR name, LPSTR data, LPDWORD count
 {
     fix_win16_hkey( &hkey );
     if (count) *count &= 0xffff;
-    return RegQueryValueA( hkey, name, data, count );
+    return RegQueryValueA( hkey, name, data, (LONG*) count );
 }
 
 /******************************************************************************

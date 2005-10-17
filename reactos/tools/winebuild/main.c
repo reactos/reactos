@@ -233,31 +233,32 @@ static void exit_on_signal( int sig )
 static const char usage_str[] =
 "Usage: winebuild [OPTIONS] [FILES]\n\n"
 "Options:\n"
-"    -C --source-dir=DIR     Look for source files in DIR\n"
-"    -d --delay-lib=LIB      Import the specified library in delayed mode\n"
-"    -D SYM                  Ignored for C flags compatibility\n"
-"    -E --export=FILE        Export the symbols defined in the .spec or .def file\n"
-"    -e --entry=FUNC         Set the DLL entry point function (default: DllMain)\n"
-"    -f FLAGS                Compiler flags (only -fPIC is supported)\n"
-"    -F --filename=DLLFILE   Set the DLL filename (default: from input file name)\n"
-"    -h --help               Display this help message\n"
-"    -H --heap=SIZE          Set the heap size for a Win16 dll\n"
-"    -i --ignore=SYM[,SYM]   Ignore specified symbols when resolving imports\n"
-"    -I DIR                  Ignored for C flags compatibility\n"
-"    -k --kill-at            Kill stdcall decorations in generated .def files\n"
-"    -K FLAGS                Compiler flags (only -KPIC is supported)\n"
+"   -C, --source-dir=DIR     Look for source files in DIR\n"
+"   -d, --delay-lib=LIB      Import the specified library in delayed mode\n"
+"   -D SYM                   Ignored for C flags compatibility\n"
+"   -E, --export=FILE        Export the symbols defined in the .spec or .def file\n"
+"   -e, --entry=FUNC         Set the DLL entry point function (default: DllMain)\n"
+"   -f FLAGS                 Compiler flags (only -fPIC is supported)\n"
+"   -F, --filename=DLLFILE   Set the DLL filename (default: from input file name)\n"
+"   -h, --help               Display this help message\n"
+"   -H, --heap=SIZE          Set the heap size for a Win16 dll\n"
+"   -i, --ignore=SYM[,SYM]   Ignore specified symbols when resolving imports\n"
+"   -I DIR                   Ignored for C flags compatibility\n"
+"   -k, --kill-at            Kill stdcall decorations in generated .def files\n"
+"   -K, FLAGS                Compiler flags (only -KPIC is supported)\n"
 "       --ld-cmd=LD          Command to use for linking (default: ld)\n"
-"    -l --library=LIB        Import the specified library\n"
-"    -L --library-path=DIR   Look for imports libraries in DIR\n"
-"    -M --main-module=MODULE Set the name of the main module for a Win16 dll\n"
+"   -l, --library=LIB        Import the specified library\n"
+"   -L, --library-path=DIR   Look for imports libraries in DIR\n"
+"   -M, --main-module=MODULE Set the name of the main module for a Win16 dll\n"
 "       --nm-cmd=NM          Command to use to get undefined symbols (default: nm)\n"
-"    -N --dll-name=DLLNAME   Set the DLL name (default: from input file name)\n"
-"    -o --output=NAME        Set the output file name (default: stdout)\n"
-"    -r --res=RSRC.RES       Load resources from RSRC.RES\n"
+"   -N, --dll-name=DLLNAME   Set the DLL name (default: from input file name)\n"
+"   -o, --output=NAME        Set the output file name (default: stdout)\n"
+"   -r, --res=RSRC.RES       Load resources from RSRC.RES\n"
 "       --subsystem=SUBSYS   Set the subsystem (one of native, windows, console)\n"
 "       --target=TARGET      Specify target CPU and platform for cross-compiling\n"
+"   -u, --undefined=SYMBOL   Add an undefined reference to SYMBOL when linking\n"
 "       --version            Print the version and exit\n"
-"    -w --warnings           Turn on warnings\n"
+"   -w, --warnings           Turn on warnings\n"
 "\nMode options:\n"
 "       --dll                Build a .c file from a .spec or .def file\n"
 "       --def                Build a .def file from a .spec file\n"
@@ -284,7 +285,7 @@ enum long_options_values
     LONG_OPT_PEDLL
 };
 
-static const char short_options[] = "C:D:E:F:H:I:K:L:M:N:d:e:f:hi:kl:m:o:r:w";
+static const char short_options[] = "C:D:E:F:H:I:K:L:M:N:d:e:f:hi:kl:m:o:r:u:w";
 
 static const struct option long_options[] =
 {
@@ -316,6 +317,7 @@ static const struct option long_options[] =
     { "dll-name",      1, 0, 'N' },
     { "output",        1, 0, 'o' },
     { "res",           1, 0, 'r' },
+    { "undefined",     1, 0, 'u' },
     { "warnings",      0, 0, 'w' },
     { NULL,            0, 0, 0 }
 };
@@ -373,7 +375,6 @@ static char **parse_options( int argc, char **argv, DLLSPEC *spec )
             lib_path[nb_lib_paths++] = xstrdup( optarg );
             break;
         case 'M':
-            spec->owner_name = xstrdup( optarg );
             spec->type = SPEC_WIN16;
             break;
         case 'N':
@@ -422,6 +423,9 @@ static char **parse_options( int argc, char **argv, DLLSPEC *spec )
         case 'r':
             res_files = xrealloc( res_files, (nb_res_files+1) * sizeof(*res_files) );
             res_files[nb_res_files++] = xstrdup( optarg );
+            break;
+        case 'u':
+            add_extra_ld_symbol( optarg );
             break;
         case 'w':
             display_warnings = 1;
@@ -568,7 +572,7 @@ int main(int argc, char **argv)
                 fatal_error( "Win16 specs are not supported in ReactOS version of winebuild\n" );
                 break;
             case SPEC_WIN32:
-                read_undef_symbols( argv );
+                read_undef_symbols( spec, argv );
                 BuildSpec32File( output_file, spec );
                 break;
             default: assert(0);
@@ -580,7 +584,7 @@ int main(int argc, char **argv)
         load_resources( argv, spec );
         load_import_libs( argv );
         if (spec_file_name && !parse_input_file( spec )) break;
-        read_undef_symbols( argv );
+        read_undef_symbols( spec, argv );
         BuildSpec32File( output_file, spec );
         break;
     case MODE_DEF:

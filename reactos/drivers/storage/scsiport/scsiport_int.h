@@ -7,8 +7,12 @@
 
 #define VERSION "0.0.3"
 
+#ifndef PAGE_ROUND_UP
 #define PAGE_ROUND_UP(x) ( (((ULONG_PTR)x)%PAGE_SIZE) ? ((((ULONG_PTR)x)&(~(PAGE_SIZE-1)))+PAGE_SIZE) : ((ULONG_PTR)x) )
+#endif
+#ifndef ROUND_UP
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
+#endif
 
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
 

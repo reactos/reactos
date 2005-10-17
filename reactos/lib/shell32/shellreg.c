@@ -95,7 +95,7 @@ HRESULT WINAPI SHRegQueryValueW(
 {
 	WARN("%p %s %p %p semi-stub\n",
 		hkey, debugstr_w(lpszSubKey), lpszData, lpcbData);
-	return RegQueryValueW( hkey, lpszSubKey, lpszData, lpcbData );
+	return RegQueryValueW( hkey, lpszSubKey, lpszData, (LONG*)lpcbData );
 }
 
 /*************************************************************************

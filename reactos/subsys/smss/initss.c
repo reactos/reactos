@@ -39,61 +39,59 @@ HANDLE hSmApiPort = (HANDLE) 0;
  */
 
 /**********************************************************************
- *	SmpRegisterSmss/0
- *
+ *	SmRegisterInternalSubsystem/3
+ * 
  * DESCRIPTION
- *	Make smss register with itself for IMAGE_SUBSYSTEM_NATIVE
- *	(programmatically). This also opens hSmApiPort to be used
- *	in loading required subsystems.
+ *	Register with itself for ImageSubsystemId
+ *	(programmatically).
  */
-
-static NTSTATUS
-SmpRegisterSmss(VOID)
+NTSTATUS STDCALL SmRegisterInternalSubsystem (LPWSTR PgmName,
+					      USHORT ImageSubsystemId,
+					      PHANDLE ApiPort)
 {
-	NTSTATUS Status = STATUS_SUCCESS;
-	RTL_USER_PROCESS_INFORMATION ProcessInfo;
+	NTSTATUS                      Status = STATUS_SUCCESS;
+	RTL_USER_PROCESS_INFORMATION  ProcessInfo;
 
 	
-	DPRINT("SM: %s called\n",__FUNCTION__);
-	
+	DPRINT("SM: %s(%S,%d) called\n",__FUNCTION__, PgmName, ImageSubsystemId);
+
 	RtlZeroMemory (& ProcessInfo, sizeof ProcessInfo);
 	ProcessInfo.Size = sizeof ProcessInfo;
 	ProcessInfo.ProcessHandle = (HANDLE) SmSsProcessId;
 	ProcessInfo.ClientId.UniqueProcess = (HANDLE) SmSsProcessId;
 	DPRINT("SM: %s: ProcessInfo.ProcessHandle=%lx\n",
 		__FUNCTION__,ProcessInfo.ProcessHandle);
-	Status = SmCreateClient (& ProcessInfo, L"Session Manager");
+	Status = SmCreateClient (& ProcessInfo, PgmName);
 	if (NT_SUCCESS(Status))
 	{
 		UNICODE_STRING SbApiPortName = {0,0,NULL};
 		
 		RtlInitUnicodeString (& SbApiPortName, L"");	
 		Status = SmConnectApiPort(& SbApiPortName,
-					  (HANDLE) -1, /* SM has no SB port */
-					  IMAGE_SUBSYSTEM_NATIVE,
-					  & hSmApiPort);
+					  (HANDLE) -1, /* internal SS have no SB port */
+					  ImageSubsystemId,
+					  ApiPort);
 		if(!NT_SUCCESS(Status))
 		{
 			DPRINT("SM: %s: SMLIB!SmConnectApiPort failed (Status=0x%08lx)\n",
 				__FUNCTION__,Status);
 			return Status;
 		}
-		DPRINT("SM self registered\n");
+		DPRINT("SM:%s: %S self registered\n", __FUNCTION__, PgmName);
 	}
 	else
 	{
-		DPRINT1("SM: %s: SmCreateClient failed (Status=0x%08lx)\n",
-			__FUNCTION__, Status);
+		DPRINT1("SM: %s: SmCreateClient(%S) failed (Status=0x%08lx)\n",
+			__FUNCTION__, PgmName, Status);
 	}
 	/*
 	 * Note that you don't need to call complete session
-	 * because connection handling code autocompletes
-	 * the client structure for IMAGE_SUBSYSTEM_NATIVE.
+	 * here because connection handling code autocompletes
+	 * the client structure for IMAGE_SUBSYSTEM_NATIVE and
+	 * -1.
 	 */
 	return Status;
 }
-
-
 /**********************************************************************
  * 	SmpLoadRequiredSubsystems/0
  */
@@ -157,15 +155,27 @@ SmLoadSubsystems(VOID)
 	NTSTATUS  Status = STATUS_SUCCESS;
 
 	
-	DPRINT("SM: loading subsystems\n");
+	DPRINT("SM: loading subsystems...\n");
 
-	/* SM self registers */
-	Status = SmpRegisterSmss();
-	if(!NT_SUCCESS(Status)) return Status;
+	/*
+	 *  SM self registers: this also opens hSmApiPort to be used
+	 * in loading required subsystems.
+	 */
+	Status = SmRegisterInternalSubsystem (L"Session Manager", IMAGE_SUBSYSTEM_NATIVE, & hSmApiPort);
+	if(!NT_SUCCESS(Status)) 
+	{
+		DPRINT1("SM: SmRegisterInternalSubsystem failed Status=%08lx\n", __FUNCTION__, Status);
+		return Status;
+	}
 	/* Load Required subsystems (Debug Windows) */
 	Status = SmpLoadRequiredSubsystems();
-	if(!NT_SUCCESS(Status)) return Status;
+	if(!NT_SUCCESS(Status))
+	{
+		DPRINT1("SM: SmpLoadRequiredSubsystems failed Status=%08lx\n", __FUNCTION__, Status);
+		return Status;
+	}
 	/* done */
+	DPRINT("SM: done loading subsystems\n");
 	return Status;
 }
 

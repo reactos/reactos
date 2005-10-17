@@ -117,29 +117,29 @@ typedef struct _KTRAP_FRAME
 
 typedef struct _LDT_ENTRY
 {
-    WORD LimitLow;
-    WORD BaseLow;
+    USHORT LimitLow;
+    USHORT BaseLow;
     union
     {
         struct
         {
-            BYTE BaseMid;
-            BYTE Flags1;
-            BYTE Flags2;
-            BYTE BaseHi;
+            UCHAR BaseMid;
+            UCHAR Flags1;
+            UCHAR Flags2;
+            UCHAR BaseHi;
         } Bytes;
         struct
         {
-            DWORD BaseMid : 8;
-            DWORD Type : 5;
-            DWORD Dpl : 2;
-            DWORD Pres : 1;
-            DWORD LimitHi : 4;
-            DWORD Sys : 1;
-            DWORD Reserved_0 : 1;
-            DWORD Default_Big : 1;
-            DWORD Granularity : 1;
-            DWORD BaseHi : 8;
+            ULONG BaseMid : 8;
+            ULONG Type : 5;
+            ULONG Dpl : 2;
+            ULONG Pres : 1;
+            ULONG LimitHi : 4;
+            ULONG Sys : 1;
+            ULONG Reserved_0 : 1;
+            ULONG Default_Big : 1;
+            ULONG Granularity : 1;
+            ULONG BaseHi : 8;
         } Bits;
     } HighWord;
 } LDT_ENTRY, *PLDT_ENTRY, *LPLDT_ENTRY;
@@ -216,28 +216,28 @@ typedef struct _HARDWARE_PTE_X86
 
 typedef struct _DESCRIPTOR
 {
-    WORD Pad;
-    WORD Limit;
-    DWORD Base;
+    USHORT Pad;
+    USHORT Limit;
+    ULONG Base;
 } KDESCRIPTOR, *PKDESCRIPTOR;
 
 typedef struct _KSPECIAL_REGISTERS
 {
-    DWORD Cr0;
-    DWORD Cr2;
-    DWORD Cr3;
-    DWORD Cr4;
-    DWORD KernelDr0;
-    DWORD KernelDr1;
-    DWORD KernelDr2;
-    DWORD KernelDr3;
-    DWORD KernelDr6;
-    DWORD KernelDr7;
+    ULONG Cr0;
+    ULONG Cr2;
+    ULONG Cr3;
+    ULONG Cr4;
+    ULONG KernelDr0;
+    ULONG KernelDr1;
+    ULONG KernelDr2;
+    ULONG KernelDr3;
+    ULONG KernelDr6;
+    ULONG KernelDr7;
     KDESCRIPTOR Gdtr;
     KDESCRIPTOR Idtr;
-    WORD Tr;
-    WORD Ldtr;
-    DWORD Reserved[6];
+    USHORT Tr;
+    USHORT Ldtr;
+    ULONG Reserved[6];
 } KSPECIAL_REGISTERS, *PKSPECIAL_REGISTERS;
 
 #pragma pack(push,4)
@@ -384,32 +384,45 @@ typedef struct _KPRCB
  */
 typedef struct _KIPCR
 {
-    KPCR_TIB  Tib;                /* 00 */
-    struct _KPCR  *Self;          /* 1C */
-    struct _KPRCB  *Prcb;         /* 20 */
-    KIRQL  Irql;                  /* 24 */
-    ULONG  IRR;                   /* 28 */
-    ULONG  IrrActive;             /* 2C */
-    ULONG  IDR;                   /* 30 */
-    PVOID  KdVersionBlock;        /* 34 */
-    PUSHORT  IDT;                 /* 38 */
-    PUSHORT  GDT;                 /* 3C */
-    struct _KTSS  *TSS;           /* 40 */
-    USHORT  MajorVersion;         /* 44 */
-    USHORT  MinorVersion;         /* 46 */
-    KAFFINITY  SetMember;         /* 48 */
-    ULONG  StallScaleFactor;      /* 4C */
-    UCHAR  SparedUnused;          /* 50 */
-    UCHAR  Number;                /* 51 */
-    UCHAR  Reserved;              /* 52 */
-    UCHAR  L2CacheAssociativity;  /* 53 */
-    ULONG  VdmAlert;              /* 54 */
-    ULONG  KernelReserved[14];    /* 58 */
-    ULONG  L2CacheSize;           /* 90 */
-    ULONG  HalReserved[16];       /* 94 */
-    ULONG  InterruptMode;         /* D4 */
-    UCHAR  KernelReserved2[0x48]; /* D8 */
-    KPRCB  PrcbData;              /* 120 */
+    union
+    {
+        NT_TIB NtTib;
+        struct 
+        {
+            struct _EXCEPTION_REGISTRATION_RECORD *Used_ExceptionList;
+            PVOID Used_StackBase;
+            PVOID PerfGlobalGroupMask;
+            PVOID TssCopy;
+            ULONG ContextSwitches;
+            KAFFINITY SetMemberCopy;
+            PVOID Used_Self;
+        };
+    };
+    struct _KPCR *Self;          /* 1C */
+    struct _KPRCB *Prcb;         /* 20 */
+    KIRQL Irql;                  /* 24 */
+    ULONG IRR;                   /* 28 */
+    ULONG IrrActive;             /* 2C */
+    ULONG IDR;                   /* 30 */
+    PVOID KdVersionBlock;        /* 34 */
+    PUSHORT IDT;                 /* 38 */
+    PUSHORT GDT;                 /* 3C */
+    struct _KTSS *TSS;           /* 40 */
+    USHORT MajorVersion;         /* 44 */
+    USHORT MinorVersion;         /* 46 */
+    KAFFINITY SetMember;         /* 48 */
+    ULONG StallScaleFactor;      /* 4C */
+    UCHAR SparedUnused;          /* 50 */
+    UCHAR Number;                /* 51 */
+    UCHAR Reserved;              /* 52 */
+    UCHAR L2CacheAssociativity;  /* 53 */
+    ULONG VdmAlert;              /* 54 */
+    ULONG KernelReserved[14];    /* 58 */
+    ULONG L2CacheSize;           /* 90 */
+    ULONG HalReserved[16];       /* 94 */
+    ULONG InterruptMode;         /* D4 */
+    UCHAR KernelReserved2[0x48]; /* D8 */
+    KPRCB PrcbData;              /* 120 */
 } KIPCR, *PKIPCR;
 
 #pragma pack(pop)
@@ -507,9 +520,6 @@ typedef struct _KTSS
 #include <poppack.h>
 
 /* i386 Doesn't have Exception Frames */
-typedef struct _KEXCEPTION_FRAME
-{
-
-} KEXCEPTION_FRAME, *PKEXCEPTION_FRAME;
+typedef struct _KEXCEPTION_FRAME KEXCEPTION_FRAME, *PKEXCEPTION_FRAME;
 
 #endif

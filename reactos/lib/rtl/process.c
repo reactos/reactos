@@ -1,12 +1,10 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
- * FILE:            lib/ntdll/rtl/process.c
- * PURPOSE:         Process functions
- * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
- * UPDATE HISTORY:
- *                  Created 01/11/98
+/*
+ * COPYRIGHT:         See COPYING in the top level directory
+ * PROJECT:           ReactOS system libraries
+ * FILE:              lib/rtl/process.c
+ * PURPOSE:           Process functions
+ * PROGRAMMER:        Alex Ionescu (alex@relsoft.net)
+ *                    Ariadne (ariadne@xs4all.nl)
  */
 
 /* INCLUDES ****************************************************************/
@@ -315,6 +313,31 @@ RtlCreateUserProcess(IN PUNICODE_STRING ImageFileName,
     /* Close the Section Handle and return */
     ZwClose(hSection);
     return STATUS_SUCCESS;
+}
+
+/*
+ * @implemented
+ */
+PVOID
+STDCALL
+RtlEncodePointer(IN PVOID Pointer)
+{
+  ULONG Cookie;
+  NTSTATUS Status;
+
+  Status = NtQueryInformationProcess(NtCurrentProcess(),
+                                     ProcessCookie,
+                                     &Cookie,
+                                     sizeof(Cookie),
+                                     NULL);
+
+  if(!NT_SUCCESS(Status))
+  {
+    DPRINT1("Failed to receive the process cookie! Status: 0x%x\n", Status);
+    return Pointer;
+  }
+
+  return (PVOID)((ULONG_PTR)Pointer ^ Cookie);
 }
 
 /* EOF */

@@ -85,7 +85,6 @@ NdisDprFreePacket@4
 NdisDprFreePacketNonInterlocked@4
 NdisDprReleaseSpinLock@4
 NdisEqualString@12
-NdisFlushBuffer@8
 NdisFreeBuffer@4
 NdisFreeBufferPool@4
 NdisFreeDmaChannel@4
@@ -128,7 +127,6 @@ NdisIMRevertBack@8
 NdisIMSwitchToMiniport@8
 NdisInitAnsiString@8
 NdisInitializeEvent@4
-NdisInitializeInterrupt@40
 NdisInitializeReadWriteLock@4
 NdisInitializeString@8
 NdisInitializeTimer@12
@@ -236,16 +234,13 @@ NdisReadNetworkAddress@16
 NdisReadPciSlotInformation@20
 NdisReadPcmciaAttributeMemory@16
 ;NdisReEnumerateProtocolBindings ?
-NdisReinitializePacket@4
 NdisRegisterAdapter@24
 NdisRegisterAdapterShutdownHandler@12
-NdisRegisterMac@24
 NdisRegisterProtocol@16
 ;NdisRegisterTdiCallBack ?
 NdisReleaseAdapterResources@4
 NdisReleaseReadWriteLock@8
 NdisReleaseSpinLock@4
-NdisRemoveInterrupt@4
 NdisRequest@12
 NdisReset@8
 NdisResetEvent@4

@@ -50,9 +50,12 @@ INT cmd_shift (LPTSTR cmd, LPTSTR param)
 		return 0;
 	}
 
+	nErrorLevel = 0;
+
 	if (bc == NULL)
 	{
 		/* not in batch - error!! */
+		nErrorLevel = 1;
 		return 1;
 	}
 

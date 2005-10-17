@@ -1,6 +1,4 @@
-/* $Id$
- *
- *
+/*
  * FILE:             drivers/fs/vfat/fcb.c
  * PURPOSE:          Routines to manipulate FCBs.
  * COPYRIGHT:        See COPYING in the top level directory
@@ -380,7 +378,7 @@ vfatMakeRootFCB(PDEVICE_EXTENSION  pVCB)
   }
   else
   {
-    memset(FCB->entry.Fat.Filename, ' ', 11);
+    memset(FCB->entry.Fat.ShortName, ' ', 11);
     FCB->entry.Fat.FileSize = pVCB->FatInfo.rootDirectorySectors * pVCB->FatInfo.BytesPerSector;
     FCB->entry.Fat.Attrib = FILE_ATTRIBUTE_DIRECTORY;
     if (pVCB->FatInfo.FatType == FAT32)

@@ -159,7 +159,6 @@ _unmarshal_interface(marshal_state *buf, REFIID riid, LPUNKNOWN *pUnk) {
 
 static HRESULT
 _marshal_interface(marshal_state *buf, REFIID riid, LPUNKNOWN pUnk) {
-    LPUNKNOWN		newiface = NULL;
     LPBYTE		tempbuf = NULL;
     IStream		*pStm = NULL;
     STATSTG		ststg;
@@ -183,11 +182,6 @@ _marshal_interface(marshal_state *buf, REFIID riid, LPUNKNOWN pUnk) {
     hres = E_FAIL;
 
     TRACE("...%s...\n",debugstr_guid(riid));
-    hres = IUnknown_QueryInterface(pUnk,riid,(LPVOID*)&newiface);
-    if (hres) {
-	WARN("%p does not support iface %s\n",pUnk,debugstr_guid(riid));
-	goto fail;
-    }
     
     hres = CreateStreamOnHGlobal(0,TRUE,&pStm);
     if (hres) {
@@ -195,7 +189,7 @@ _marshal_interface(marshal_state *buf, REFIID riid, LPUNKNOWN pUnk) {
 	goto fail;
     }
     
-    hres = CoMarshalInterface(pStm,riid,newiface,0,NULL,0);
+    hres = CoMarshalInterface(pStm,riid,pUnk,0,NULL,0);
     if (hres) {
 	ERR("Marshalling interface %s failed with %lx\n", debugstr_guid(riid), hres);
 	goto fail;
@@ -226,7 +220,6 @@ _marshal_interface(marshal_state *buf, REFIID riid, LPUNKNOWN pUnk) {
     hres = xbuf_add(buf,tempbuf,ststg.cbSize.u.LowPart);
     
     HeapFree(GetProcessHeap(),0,tempbuf);
-    IUnknown_Release(newiface);
     IStream_Release(pStm);
     
     return hres;
@@ -235,7 +228,6 @@ fail:
     xsize = 0;
     xbuf_add(buf,(LPBYTE)&xsize,sizeof(xsize));
     if (pStm) IUnknown_Release(pStm);
-    if (newiface) IUnknown_Release(newiface);
     HeapFree(GetProcessHeap(), 0, tempbuf);
     return hres;
 }
@@ -556,7 +548,7 @@ serialize_param(
 	    if (hres) return hres;
 	}
 	/* need to recurse since we need to free the stuff */
-	hres = serialize_param(tinfo,writeit,debugout,dealloc,&tdesc2,&(V_I4(vt)),buf);
+	hres = serialize_param(tinfo,writeit,debugout,dealloc,&tdesc2,(DWORD*)&(V_I4(vt)),buf);
 	if (debugout) TRACE_(olerelay)(")");
 	return hres;
     }
@@ -663,6 +655,8 @@ serialize_param(
 	case TKIND_INTERFACE:
 	    if (writeit)
 	       hres=_marshal_interface(buf,&(tattr->guid),(LPUNKNOWN)arg);
+	    if (dealloc)
+	        IUnknown_Release((LPUNKNOWN)arg);
 	    break;
 	case TKIND_RECORD: {
 	    int i;
@@ -1077,7 +1071,7 @@ deserialize_param(
 		tdesc2.vt = vttype;
 		V_VT(vt)  = vttype;
 	        if (debugout) TRACE_(olerelay)("Vt(%ld)(",vttype);
-		hres = deserialize_param(tinfo, readit, debugout, alloc, &tdesc2, &(V_I4(vt)), buf);
+		hres = deserialize_param(tinfo, readit, debugout, alloc, &tdesc2, (DWORD*)&(V_I4(vt)), buf);
 		TRACE_(olerelay)(")");
 		return hres;
 	    } else {
@@ -1526,7 +1520,7 @@ xCall(LPVOID retptr, int method, TMProxyImpl *tpinfo /*, args */)
     ULONG		status;
     BSTR		fname,iname;
     BSTR		names[10];
-    int			nrofnames;
+    UINT		nrofnames;
     int			is_idispatch_getidsofnames = 0;
     DWORD		remoteresult = 0;
     ITypeInfo 		*tinfo;
@@ -2016,7 +2010,7 @@ TMStubImpl_Invoke(
     HRESULT	hres;
     DWORD	*args, res, *xargs, nrofargs;
     marshal_state	buf;
-    int		nrofnames;
+    UINT	nrofnames;
     BSTR	names[10];
     BSTR	fname = NULL,iname = NULL;
     BOOL	is_idispatch_getidsofnames = 0;
@@ -2220,11 +2214,34 @@ afterserialize:
 	return hres;
 
     ITypeInfo_Release(tinfo);
+    HeapFree(GetProcessHeap(), 0, args);
+
     xmsg->cbBuffer	= buf.curoff;
-    I_RpcGetBuffer((RPC_MESSAGE *)xmsg);
-    memcpy(xmsg->Buffer, buf.base, buf.curoff);
-    HeapFree(GetProcessHeap(),0,args);
-    return S_OK;
+    if (rpcchanbuf)
+    {
+        hres = IRpcChannelBuffer_GetBuffer(rpcchanbuf, xmsg, &This->iid);
+        if (hres != S_OK)
+            ERR("IRpcChannelBuffer_GetBuffer failed with error 0x%08lx\n", hres);
+    }
+    else
+    {
+        /* FIXME: remove this case when we start sending an IRpcChannelBuffer
+         * object with builtin OLE */
+        RPC_STATUS status = I_RpcGetBuffer((RPC_MESSAGE *)xmsg);
+        if (status != RPC_S_OK)
+        {
+            ERR("I_RpcGetBuffer failed with error %ld\n", status);
+            hres = E_FAIL;
+        }
+    }
+
+    if (hres == S_OK)
+        memcpy(xmsg->Buffer, buf.base, buf.curoff);
+
+    HeapFree(GetProcessHeap(), 0, buf.base);
+
+    TRACE("returning\n");
+    return hres;
 }
 
 static LPRPCSTUBBUFFER WINAPI
@@ -2237,6 +2254,7 @@ static ULONG WINAPI
 TMStubImpl_CountRefs(LPRPCSTUBBUFFER iface) {
     TMStubImpl *This = (TMStubImpl *)iface;
 
+    FIXME("()\n");
     return This->ref; /*FIXME? */
 }
 
@@ -2305,10 +2323,9 @@ static const IPSFactoryBufferVtbl psfacbufvtbl = {
 static const IPSFactoryBufferVtbl *lppsfac = &psfacbufvtbl;
 
 /***********************************************************************
- *           DllGetClassObject [OLE32.63]
+ *           TMARSHAL_DllGetClassObject
  */
-HRESULT WINAPI
-TypeLibFac_DllGetClassObject(REFCLSID rclsid, REFIID iid,LPVOID *ppv)
+HRESULT TMARSHAL_DllGetClassObject(REFCLSID rclsid, REFIID iid,LPVOID *ppv)
 {
     if (IsEqualIID(iid,&IID_IPSFactoryBuffer)) {
 	*ppv = &lppsfac;

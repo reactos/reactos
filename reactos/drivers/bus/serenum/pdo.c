@@ -233,7 +233,7 @@ SerenumPdoPnp(
 					DPRINT("Serenum: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_TEXT / DeviceTextDescription\n");
 
 					Source = &((PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->DeviceDescription;
-					Description = ExAllocatePool(PagedPool, Source->Length + sizeof(WCHAR));
+					Description = ExAllocatePoolWithTag(PagedPool, Source->Length + sizeof(WCHAR), SERENUM_TAG);
 					if (!Description)
 						Status = STATUS_INSUFFICIENT_RESOURCES;
 					else
@@ -277,7 +277,7 @@ SerenumPdoPnp(
 			PPNP_BUS_INFORMATION BusInfo;
 			DPRINT("Serenum: IRP_MJ_PNP / IRP_MN_QUERY_BUS_INFORMATION\n");
 
-			BusInfo = (PPNP_BUS_INFORMATION)ExAllocatePool(PagedPool, sizeof(PNP_BUS_INFORMATION));
+			BusInfo = (PPNP_BUS_INFORMATION)ExAllocatePoolWithTag(PagedPool, sizeof(PNP_BUS_INFORMATION), SERENUM_TAG);
 			if (!BusInfo)
 				Status = STATUS_INSUFFICIENT_RESOURCES;
 			else

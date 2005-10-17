@@ -223,7 +223,7 @@ KeRemoveQueue(IN PKQUEUE Queue,
             Thread->WaitBlockList = &Thread->WaitBlock[0];
 
             /* Fail if there's an APC Pending */
-            if (WaitMode == UserMode && Thread->ApcState.UserApcPending) {
+            if (WaitMode != KernelMode && Thread->ApcState.UserApcPending) {
 
                 /* Return the status and increase the pending threads */
                 ListEntry = (PLIST_ENTRY)STATUS_USER_APC;
@@ -344,7 +344,7 @@ KeRundownQueue(IN PKQUEUE Queue)
     if (FirstEntry == &Queue->EntryListHead) {
 
         /* It is, so don't return anything */
-        EnumEntry = NULL;
+        FirstEntry = NULL;
 
     } else {
 

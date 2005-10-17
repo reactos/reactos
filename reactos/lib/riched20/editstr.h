@@ -270,6 +270,8 @@ typedef struct tagME_TextEditor
   BOOL bScrollX, bScrollY;
   int nScrollPosY;
   int nZoomNumerator, nZoomDenominator;
+  RECT rcFormat;
+  BOOL bRedraw;
 } ME_TextEditor;
 
 typedef struct tagME_Context

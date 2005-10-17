@@ -202,7 +202,7 @@ CSR_API(CsrCreateDesktop)
   DPRINT("CsrCreateDesktop\n");
 
   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
   if (! BgInitialized)
     {
@@ -252,7 +252,7 @@ CSR_API(CsrShowDesktop)
   DPRINT("CsrShowDesktop\n");
 
   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
   nmh.hdr.hwndFrom = Request->Data.ShowDesktopRequest.DesktopWindow;
   nmh.hdr.idFrom = 0;
@@ -276,7 +276,7 @@ CSR_API(CsrHideDesktop)
   DPRINT("CsrHideDesktop\n");
 
   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
   nmh.hdr.hwndFrom = Request->Data.ShowDesktopRequest.DesktopWindow;
   nmh.hdr.idFrom = 0;

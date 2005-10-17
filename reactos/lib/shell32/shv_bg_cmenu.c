@@ -361,6 +361,10 @@ static HRESULT WINAPI ISVBgCm_fnInvokeCommand(
 	  {
 	    switch(LOWORD(lpcmi->lpVerb))
 	    {
+	      case FCIDM_SHVIEW_REFRESH:
+	        if (lpSV) IShellView_Refresh(lpSV);
+	        break;
+
 	      case FCIDM_SHVIEW_NEWFOLDER:
 	        DoNewFolder(iface, lpSV);
 		break;

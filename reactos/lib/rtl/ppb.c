@@ -1,12 +1,9 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS system libraries
- * FILE:            lib/ntdll/rtl/ppb.c
- * PURPOSE:         Process parameters functions
- * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
- * UPDATE HISTORY:
- *                  Created 01/11/98
+/*
+ * COPYRIGHT:         See COPYING in the top level directory
+ * PROJECT:           ReactOS system libraries
+ * FILE:              lib/rtl/ppb.c
+ * PURPOSE:           Process parameters functions
+ * PROGRAMMER:        Ariadne ( ariadne@xs4all.nl)
  */
 
 /* INCLUDES ****************************************************************/

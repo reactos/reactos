@@ -211,10 +211,7 @@ HalFlushCommonBuffer(
   ULONG Unknown2,
   ULONG Unknown3,
   ULONG Unknown4,
-  ULONG Unknown5,
-  ULONG Unknown6,
-  ULONG Unknown7,
-  ULONG Unknown8)
+  ULONG Unknown5)
 {
   UNIMPLEMENTED;
 

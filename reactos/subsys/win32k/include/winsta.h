@@ -27,7 +27,6 @@ typedef struct _WINSTATION_OBJECT
     UNICODE_STRING Name;
     LIST_ENTRY DesktopListHead;
     PRTL_ATOM_TABLE AtomTable;
-    PVOID HandleTable;
     HANDLE SystemMenuTemplate;
     PVOID SystemCursor;
     UINT CaretBlinkRate;
@@ -43,7 +42,6 @@ typedef struct _WINSTATION_OBJECT
     struct _DESKTOP_OBJECT* ActiveDesktop;
     /* FIXME: Clipboard */
     LIST_ENTRY HotKeyListHead;
-    FAST_MUTEX HotKeyListLock;
 } WINSTATION_OBJECT, *PWINSTATION_OBJECT;
 
 extern WINSTATION_OBJECT *InputWindowStation;
@@ -90,7 +88,7 @@ BOOL FASTCALL
 IntGetWindowStationObject(PWINSTATION_OBJECT Object);
 
 BOOL FASTCALL
-IntInitializeDesktopGraphics(VOID);
+co_IntInitializeDesktopGraphics(VOID);
 
 VOID FASTCALL
 IntEndDesktopGraphics(VOID);

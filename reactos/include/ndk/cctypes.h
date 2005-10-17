@@ -13,9 +13,8 @@
 /* DEPENDENCIES **************************************************************/
 
 /* EXPORTED DATA *************************************************************/
-extern ULONG NTOSAPI CcFastMdlReadWait;
-extern ULONG NTOSAPI CcFastReadNotPossible;
-extern ULONG NTOSAPI CcFastReadWait;
+extern ULONG NTSYSAPI CcFastReadNotPossible;
+extern ULONG NTSYSAPI CcFastReadWait;
 
 /* ENUMERATIONS **************************************************************/
 

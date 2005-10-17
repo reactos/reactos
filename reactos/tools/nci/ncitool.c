@@ -420,7 +420,7 @@ CreateSystemServiceTable(FILE *SyscallDb,
 
     /* First we build the SSDT */
     fprintf(SyscallTable,"\n\n\n");
-    fprintf(SyscallTable,"SSDT %sSSDT[] = {\n", Name);
+    fprintf(SyscallTable,"ULONG_PTR %sSSDT[] = {\n", Name);
 
     /* We loop, incrementing the System Call Index, until the end of the file */
     for (SyscallId = 0; ((!feof(SyscallDb)) && (fgets(Line, sizeof(Line), SyscallDb) != NULL));) {
@@ -435,7 +435,7 @@ CreateSystemServiceTable(FILE *SyscallDb,
             if (SyscallId > 0) fprintf(SyscallTable,",\n");
         
             /* Write the syscall name in the service table. */
-            fprintf(SyscallTable,"\t\t(PVOID (NTAPI *)(VOID))%s", NtSyscallName);
+            fprintf(SyscallTable,"\t\t(ULONG_PTR)%s", NtSyscallName);
             
             /* Only increase if we actually added something */
             SyscallId++;
@@ -448,7 +448,7 @@ CreateSystemServiceTable(FILE *SyscallDb,
     /* Now we build the SSPT */
     rewind(SyscallDb);
     fprintf(SyscallTable,"\n\n\n");
-    fprintf(SyscallTable,"SSPT %sSSPT[] = {\n", Name);
+    fprintf(SyscallTable,"UCHAR %sSSPT[] = {\n", Name);
 
     for (SyscallId = 0; ((!feof(SyscallDb)) && (fgets(Line, sizeof(Line), SyscallDb) != NULL));) {
 

@@ -215,7 +215,8 @@ BOOL SetRootPath(TCHAR *InPath)
 {
   TCHAR oldpath[MAX_PATH];
   TCHAR OutPath[MAX_PATH];
-  TCHAR OutPathUpper[MAX_PATH];
+  TCHAR OutPathTemp[MAX_PATH];
+  TCHAR OutPathTemp2[MAX_PATH];
   BOOL fail;
   
   
@@ -228,16 +229,20 @@ BOOL SetRootPath(TCHAR *InPath)
   
   if (_tcsncicmp(&InPath[1],_T(":\\"),2)!=0)
   {
-      if (!GetRootPath(InPath,OutPathUpper,MAX_PATH))
-         _tcscpy(OutPathUpper,InPath);
+      if (!GetRootPath(InPath,OutPathTemp,MAX_PATH))
+         _tcscpy(OutPathTemp,InPath);
   }
   else 
   {
-    _tcscpy(OutPathUpper,InPath);
+    _tcscpy(OutPathTemp,InPath);
   }
   
-   _tcsupr(OutPathUpper); 
-  GetLongPathName(OutPathUpper, OutPath, MAX_PATH);  
+   _tcsupr(OutPathTemp); 
+  /* The use of both of these together will correct the case of a path
+     where as one alone or GetFullPath will not.  Exameple:
+	  c:\windows\SYSTEM32 => C:\WINDOWS\system32 */
+  GetShortPathName(OutPathTemp, OutPathTemp2, MAX_PATH);
+  GetLongPathName(OutPathTemp2, OutPath, MAX_PATH);  
 
   fail = SetCurrentDirectory(OutPath);
   if (!fail) 
@@ -291,9 +296,16 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 	{
 		bChangeDrive = TRUE;
 		tmpPath = _tcsstr(param,_T(" "));
+		if(!tmpPath)
+		{
+			/* Didnt find an directories */
+			LoadString(CMD_ModuleHandle, STRING_ERROR_PATH_NOT_FOUND, szMsg, RC_STRING_MAX_SIZE);
+			ConErrPrintf(szMsg);
+			nErrorLevel = 1;
+			return 1;
+		}
 		tmpPath++;
 		_tcscpy(szPath,tmpPath);
- 
 	}
 	else
 	{
@@ -315,17 +327,14 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 	/* Get Current Directory */
 	GetRootPath(_T("."),szCurrent,MAX_PATH);
  
-	/* Remove " */
-	if(szPath[0] == _T('\"'))
+   /* Remove " */
+	i = 0;
+	while(i < _tcslen(szPath))
 	{
-		tmpPath = _tcsstr(szPath,_T("\""));
-		tmpPath++;
-		_tcscpy(szPath,tmpPath);
-	}
- 
-	if(szPath[_tcslen(szPath) - 1] == _T('\"'))
-	{
-		szPath[_tcslen(szPath) - 1] = _T('\0');
+		if(szPath[i] == _T('\"'))
+			memmove(&szPath[i],&szPath[i + 1], _tcslen(&szPath[i]) * sizeof(TCHAR));
+		else
+			i++;
 	}
  
 	tmpPath = szPath;
@@ -339,7 +348,7 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 		return 0;
 	}
 	 
- 
+
 	/* change to full path if relative path was given */
 	GetFullPathName(szPath,MAX_PATH,szFinalPath,NULL);
  

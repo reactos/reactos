@@ -37,7 +37,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 typedef struct
 {
 	const IStreamVtbl *lpVtbl;
-	DWORD  ref;
+	LONG   ref;
 	HKEY   hKey;
 	LPBYTE pbBuffer;
 	DWORD  dwLength;

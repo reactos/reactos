@@ -360,7 +360,7 @@ KiInsertQueueApc(PKAPC Apc,
         }
 
    } else if ((Thread->State == Waiting) &&
-              (Thread->WaitMode == UserMode) &&
+              (Thread->WaitMode != KernelMode) &&
               (Thread->Alertable)) {
 
         DPRINT("Waking up Thread for User-Mode APC Delivery \n");
@@ -469,29 +469,23 @@ KeFlushQueueApc(IN PKTHREAD Thread,
 {
     KIRQL OldIrql;
     PKAPC Apc;
-    PLIST_ENTRY ApcEntry, CurrentEntry;
+    PLIST_ENTRY FirstEntry, CurrentEntry;
 
     /* Lock the Dispatcher Database and APC Queue */
     OldIrql = KeAcquireDispatcherDatabaseLock();
     KeAcquireSpinLockAtDpcLevel(&Thread->ApcQueueLock);
 
-    ApcEntry = CurrentEntry = NULL;
-    while (!IsListEmpty(&Thread->ApcState.ApcListHead[PreviousMode]))
-    {
-       if (ApcEntry == NULL)
-       {
-          ApcEntry = CurrentEntry = RemoveHeadList(&Thread->ApcState.ApcListHead[PreviousMode]);
-       }
-       else
-       {
-          CurrentEntry->Flink = RemoveHeadList(&Thread->ApcState.ApcListHead[PreviousMode]);
-          CurrentEntry = CurrentEntry->Flink;
-       }
-       CurrentEntry->Flink = NULL;
-
-       /* Get the APC */
-       Apc = CONTAINING_RECORD(CurrentEntry, KAPC, ApcListEntry);
-       Apc->Inserted = FALSE;
+    if (IsListEmpty(&Thread->ApcState.ApcListHead[PreviousMode])) {
+        FirstEntry = NULL;
+    } else {
+        FirstEntry = Thread->ApcState.ApcListHead[PreviousMode].Flink;
+        RemoveEntryList(&Thread->ApcState.ApcListHead[PreviousMode]);
+        CurrentEntry = FirstEntry;
+        do {
+            Apc = CONTAINING_RECORD(CurrentEntry, KAPC, ApcListEntry);
+            Apc->Inserted = FALSE;
+            CurrentEntry = CurrentEntry->Flink;
+        } while (CurrentEntry != FirstEntry);
     }
 
     /* Release the locks */
@@ -499,7 +493,7 @@ KeFlushQueueApc(IN PKTHREAD Thread,
     KeReleaseDispatcherDatabaseLock(OldIrql);
 
     /* Return the first entry */
-    return ApcEntry;
+    return FirstEntry;
 }
 
 /*++
@@ -674,8 +668,8 @@ KiDeliverApc(KPROCESSOR_MODE DeliveryMode,
             }
 
             /* Dequeue the APC */
-            Apc->Inserted = FALSE;
             RemoveEntryList(ApcListEntry);
+            Apc->Inserted = FALSE;
 
             /* Go back to APC_LEVEL */
             KeReleaseSpinLock(&Thread->ApcQueueLock, OldIrql);
@@ -709,7 +703,7 @@ KiDeliverApc(KPROCESSOR_MODE DeliveryMode,
 
     /* Now we do the User APCs */
     if ((!IsListEmpty(&Thread->ApcState.ApcListHead[UserMode])) &&
-        (DeliveryMode == UserMode) && (Thread->ApcState.UserApcPending == TRUE)) {
+        (DeliveryMode != KernelMode) && (Thread->ApcState.UserApcPending == TRUE)) {
 
         /* It's not pending anymore */
         Thread->ApcState.UserApcPending = FALSE;

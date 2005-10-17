@@ -618,8 +618,8 @@ IoRegisterDeviceInterface(
    ASSERT(PdoNameInfo->Name.Length);
 
    /* Create base key name for this interface: HKLM\SYSTEM\CurrentControlSet\Control\DeviceClasses\{GUID} */
-   ASSERT(PhysicalDeviceObject->DeviceObjectExtension->DeviceNode);
-   InstancePath = &PhysicalDeviceObject->DeviceObjectExtension->DeviceNode->InstancePath;
+   ASSERT(((PEXTENDED_DEVOBJ_EXTENSION)PhysicalDeviceObject->DeviceObjectExtension)->DeviceNode);
+   InstancePath = &((PEXTENDED_DEVOBJ_EXTENSION)PhysicalDeviceObject->DeviceObjectExtension)->DeviceNode->InstancePath;
    BaseKeyName.Length = wcslen(BaseKeyString) * sizeof(WCHAR);
    BaseKeyName.MaximumLength = BaseKeyName.Length
       + GuidString.Length;

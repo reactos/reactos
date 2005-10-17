@@ -38,6 +38,7 @@ extern "C" {
 #define DDKFASTAPI __fastcall
 #define DDKCDECLAPI __cdecl
 
+/* FIXME: REMOVE THIS UNCOMPATIBLE CRUFT!!! */
 #if defined(_NTOSKRNL_)
 #ifndef NTOSAPI
 #define NTOSAPI DECL_EXPORT
@@ -73,6 +74,7 @@ extern "C" {
 
 #define RESTRICTED_POINTER
 #define POINTER_ALIGNMENT
+#define DECLSPEC_ADDRSAFE
 
 #ifdef NONAMELESSUNION
 # define _DDK_DUMMYUNION_MEMBER(name) DUMMYUNIONNAME.name
@@ -80,6 +82,18 @@ extern "C" {
 #else
 # define _DDK_DUMMYUNION_MEMBER(name) name
 # define _DDK_DUMMYUNION_N_MEMBER(n, name) name
+#endif
+
+#if !defined(_NTSYSTEM_)
+#define NTSYSAPI     DECLSPEC_IMPORT
+#define NTSYSCALLAPI DECLSPEC_IMPORT
+#else
+#define NTSYSAPI
+#if defined(_NTDLLBUILD_)
+#define NTSYSCALLAPI
+#else
+#define NTSYSCALLAPI DECLSPEC_ADDRSAFE
+#endif
 #endif
 
 /*
@@ -174,6 +188,14 @@ typedef enum _MODE {
   MaximumMode
 } MODE;
 
+typedef struct _QUAD
+{
+    union
+    {
+        LONGLONG UseThisFieldToCopy;
+        float DoNotUseThisField;
+    };
+} QUAD, *PQUAD;
 
 /* Structures not exposed to drivers */
 typedef struct _IO_TIMER *PIO_TIMER;
@@ -329,6 +351,9 @@ typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
    SYNCHRONIZE)
 /* end winnt.h */
 
+#define OBJECT_TYPE_CREATE (0x0001)
+#define OBJECT_TYPE_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0x1)
+
 #define DIRECTORY_QUERY (0x0001)
 #define DIRECTORY_TRAVERSE (0x0002)
 #define DIRECTORY_CREATE_OBJECT (0x0004)
@@ -343,6 +368,8 @@ typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
 #define SEMAPHORE_MODIFY_STATE (0x0002)
 #define SEMAPHORE_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x3)
 
+#define THREAD_ALERT (0x0004)
+
 /* Exported object types */
 extern NTOSAPI POBJECT_TYPE ExDesktopObjectType;
 extern NTOSAPI POBJECT_TYPE ExEventObjectType;
@@ -353,6 +380,7 @@ extern NTOSAPI POBJECT_TYPE IoDeviceHandlerObjectType;
 extern NTOSAPI POBJECT_TYPE IoDeviceObjectType;
 extern NTOSAPI POBJECT_TYPE IoDriverObjectType;
 extern NTOSAPI POBJECT_TYPE IoFileObjectType;
+extern NTOSAPI POBJECT_TYPE PsThreadType;
 extern NTOSAPI POBJECT_TYPE LpcPortObjectType;
 extern NTOSAPI POBJECT_TYPE MmSectionObjectType;
 extern NTOSAPI POBJECT_TYPE SeTokenObjectType;
@@ -2470,6 +2498,15 @@ extern DECL_EXPORT HAL_DISPATCH HalDispatchTable;
 #define HalReferenceHandlerForBus       HALDISPATCH->HalReferenceHandlerForBus
 #define HalReferenceBusHandler          HALDISPATCH->HalReferenceBusHandler
 #define HalDereferenceBusHandler        HALDISPATCH->HalDereferenceBusHandler
+#define HalInitPnpDriver                HALDISPATCH->HalInitPnpDriver
+#define HalInitPowerManagement          HALDISPATCH->HalInitPowerManagement
+#define HalGetDmaAdapter                HALDISPATCH->HalGetDmaAdapter
+#define HalGetInterruptTranslator       HALDISPATCH->HalGetInterruptTranslator
+#define HalStartMirroring               HALDISPATCH->HalStartMirroring
+#define HalEndMirroring                 HALDISPATCH->HalEndMirroring
+#define HalMirrorPhysicalMemory         HALDISPATCH->HalMirrorPhysicalMemory
+#define HalEndOfBoot                    HALDISPATCH->HalEndOfBoot
+#define HalMirrorVerify                 HALDISPATCH->HalMirrorVerify
 
 typedef enum _FILE_INFORMATION_CLASS {
   FileDirectoryInformation = 1,
@@ -2645,6 +2682,13 @@ typedef struct _ERESOURCE {
   } DUMMYUNIONNAME;
   KSPIN_LOCK  SpinLock;
 } ERESOURCE, *PERESOURCE;
+
+typedef struct _DEVOBJ_EXTENSION
+{
+    CSHORT Type;
+    USHORT Size;
+    PDEVICE_OBJECT DeviceObject;
+} DEVOBJ_EXTENSION, *PDEVOBJ_EXTENSION;
 
 typedef struct _DRIVER_EXTENSION {
   struct _DRIVER_OBJECT  *DriverObject;
@@ -3171,22 +3215,6 @@ typedef struct _IO_STACK_LOCATION {
       USHORT  ShareAccess;
       ULONG POINTER_ALIGNMENT  EaLength;
     } Create;
-    /* FIXME: CreatePipe and CreateMailslot aren't defined in official
-     * DDK/IFS headers. */
-    struct {
-      PIO_SECURITY_CONTEXT  SecurityContext;
-      ULONG  Options;
-      USHORT  Reserved;
-      USHORT  ShareAccess;
-      struct _NAMED_PIPE_CREATE_PARAMETERS  *Parameters;
-    } CreatePipe;
-    struct {
-      PIO_SECURITY_CONTEXT  SecurityContext;
-      ULONG  Options;
-      USHORT  Reserved;
-      USHORT  ShareAccess;
-      struct _MAILSLOT_CREATE_PARAMETERS  *Parameters;
-    } CreateMailslot;
     struct {
       ULONG  Length;
       ULONG POINTER_ALIGNMENT  Key;
@@ -3812,6 +3840,38 @@ typedef struct _RTL_BITMAP_RUN {
     ULONG  NumberOfBits;
 } RTL_BITMAP_RUN, *PRTL_BITMAP_RUN;
 
+typedef struct _RTL_RANGE_LIST
+{
+    LIST_ENTRY ListHead;
+    ULONG Flags;  /* RTL_RANGE_LIST_... flags */
+    ULONG Count;
+    ULONG Stamp;
+} RTL_RANGE_LIST, *PRTL_RANGE_LIST;
+
+typedef struct _RTL_RANGE
+{
+    ULONGLONG Start;
+    ULONGLONG End;
+    PVOID UserData;
+    PVOID Owner;
+    UCHAR Attributes;
+    UCHAR Flags;  /* RTL_RANGE_... flags */
+} RTL_RANGE, *PRTL_RANGE;
+
+typedef struct _RANGE_LIST_ITERATOR
+{
+    PLIST_ENTRY RangeListHead;
+    PLIST_ENTRY MergedHead;
+    PVOID Current;
+    ULONG Stamp;
+} RTL_RANGE_LIST_ITERATOR, *PRTL_RANGE_LIST_ITERATOR;
+
+typedef BOOLEAN
+(NTAPI *PRTL_CONFLICT_RANGE_CALLBACK) (
+    PVOID Context,
+    struct _RTL_RANGE *Range
+);
+
 typedef NTSTATUS
 (DDKAPI *PRTL_QUERY_REGISTRY_ROUTINE)(
   IN PWSTR  ValueName,
@@ -4018,6 +4078,8 @@ typedef enum _KINTERRUPT_MODE {
   LevelSensitive,
   Latched
 } KINTERRUPT_MODE;
+
+#define THREAD_WAIT_OBJECTS 3
 
 typedef VOID
 (DDKAPI *PKINTERRUPT_ROUTINE)(
@@ -4332,6 +4394,14 @@ typedef enum _PROCESSINFOCLASS {
   ProcessDebugObjectHandle,
   ProcessDebugFlags,
   ProcessHandleTracing,
+  ProcessIoPriority,
+  ProcessExecuteFlags,
+  ProcessTlsInformation,
+  ProcessCookie,
+  ProcessImageInformation,
+  ProcessCycleTime,
+  ProcessPagePriority,
+  ProcessInstrumentationCallback,
   MaxProcessInfoClass
 } PROCESSINFOCLASS;
 
@@ -4355,14 +4425,66 @@ typedef enum _THREADINFOCLASS {
   ThreadIsIoPending,
   ThreadHideFromDebugger,
   ThreadBreakOnTermination,
+  ThreadSwitchLegacyState,
+  ThreadIsTerminated,
+  ThreadLastSystemCall,
+  ThreadIoPriority,
+  ThreadCycleTime,
+  ThreadPagePriority,
+  ThreadActualBasePriority,
   MaxThreadInfoClass
 } THREADINFOCLASS;
+
+typedef struct _PROCESS_BASIC_INFORMATION
+{
+    NTSTATUS ExitStatus;
+    PPEB PebBaseAddress;
+    ULONG_PTR AffinityMask;
+    KPRIORITY BasePriority;
+    ULONG_PTR UniqueProcessId;
+    ULONG_PTR InheritedFromUniqueProcessId;
+} PROCESS_BASIC_INFORMATION,*PPROCESS_BASIC_INFORMATION;
 
 typedef struct _PROCESS_WS_WATCH_INFORMATION
 {
     PVOID FaultingPc;
     PVOID FaultingVa;
 } PROCESS_WS_WATCH_INFORMATION, *PPROCESS_WS_WATCH_INFORMATION;
+
+typedef struct _PROCESS_DEVICEMAP_INFORMATION
+{
+    union
+    {
+        struct
+        {
+            HANDLE DirectoryHandle;
+        } Set;
+        struct
+        {
+            ULONG DriveMap;
+            UCHAR DriveType[32];
+        } Query;
+    };
+} PROCESS_DEVICEMAP_INFORMATION, *PPROCESS_DEVICEMAP_INFORMATION;
+
+typedef struct _KERNEL_USER_TIMES
+{
+    LARGE_INTEGER CreateTime;
+    LARGE_INTEGER ExitTime;
+    LARGE_INTEGER KernelTime;
+    LARGE_INTEGER UserTime;
+} KERNEL_USER_TIMES, *PKERNEL_USER_TIMES;
+
+typedef struct _PROCESS_ACCESS_TOKEN
+{
+    HANDLE Token;
+    HANDLE Thread;
+} PROCESS_ACCESS_TOKEN, *PPROCESS_ACCESS_TOKEN;
+
+typedef struct _PROCESS_SESSION_INFORMATION
+{
+    ULONG SessionId;
+} PROCESS_SESSION_INFORMATION, *PPROCESS_SESSION_INFORMATION;
 
 #define ES_SYSTEM_REQUIRED                0x00000001
 #define ES_DISPLAY_REQUIRED               0x00000002
@@ -4823,6 +4945,16 @@ RtlAssert(
 
 #endif /* DBG */
 
+#ifdef _NTSYSTEM_
+#define NLS_MB_CODE_PAGE_TAG NlsMbCodePageTag
+#define NLS_MB_OEM_CODE_PAGE_TAG NlsMbOemCodePageTag
+#else
+#define NLS_MB_CODE_PAGE_TAG (*NlsMbCodePageTag)
+#define NLS_MB_OEM_CODE_PAGE_TAG (*NlsMbOemCodePageTag)
+#endif /* _NT_SYSTEM */
+ 
+extern BOOLEAN NTSYSAPI NLS_MB_CODE_PAGE_TAG;
+extern BOOLEAN NTSYSAPI NLS_MB_OEM_CODE_PAGE_TAG;
 
 /*
 ** Driver support routines
@@ -4967,8 +5099,14 @@ InterlockedPushEntrySList(
 NTOSAPI
 ULONG
 DDKAPI
-RtlAnsiStringToUnicodeSize(
-  IN PANSI_STRING  AnsiString);
+RtlxAnsiStringToUnicodeSize(
+  IN PCANSI_STRING  AnsiString);
+
+#define RtlAnsiStringToUnicodeSize(STRING) (               \
+  NLS_MB_CODE_PAGE_TAG ?                                   \
+  RtlxAnsiStringToUnicodeSize(STRING) :                    \
+  ((STRING)->Length + sizeof(ANSI_NULL)) * sizeof(WCHAR)   \
+)
 
 NTOSAPI
 NTSTATUS
@@ -4983,7 +5121,7 @@ NTSTATUS
 DDKAPI
 RtlAppendUnicodeStringToString(
   IN OUT PUNICODE_STRING  Destination,
-  IN PUNICODE_STRING  Source);
+  IN PCUNICODE_STRING  Source);
 
 NTOSAPI
 NTSTATUS
@@ -5071,15 +5209,20 @@ NTOSAPI
 LONG
 DDKAPI
 RtlCompareUnicodeString(
-  IN PUNICODE_STRING  String1,
-  IN PUNICODE_STRING  String2,
+  IN PCUNICODE_STRING  String1,
+  IN PCUNICODE_STRING  String2,
   IN BOOLEAN  CaseInSensitive);
 
-NTOSAPI
+static __inline
 LARGE_INTEGER
-DDKAPI
-RtlConvertLongToLargeInteger(
-  IN LONG  SignedInteger);
+NTAPI_INLINE
+RtlConvertLongToLargeInteger(LONG SignedInteger)
+{
+    LARGE_INTEGER Result;
+
+    Result.QuadPart = SignedInteger;
+    return Result;
+}
 
 NTOSAPI
 LUID
@@ -5135,7 +5278,7 @@ VOID
 DDKAPI
 RtlCopyUnicodeString(
   IN OUT PUNICODE_STRING  DestinationString,
-  IN PUNICODE_STRING  SourceString);
+  IN PCUNICODE_STRING  SourceString);
 
 NTOSAPI
 NTSTATUS
@@ -5440,8 +5583,8 @@ NTOSAPI
 BOOLEAN
 DDKAPI
 RtlPrefixUnicodeString(
-  IN PUNICODE_STRING  String1,
-  IN PUNICODE_STRING  String2,
+  IN PCUNICODE_STRING  String1,
+  IN PCUNICODE_STRING  String2,
   IN BOOLEAN  CaseInSensitive);
 
 NTOSAPI
@@ -5583,25 +5726,25 @@ DDKFASTAPI
 RtlUlonglongByteSwap(
   IN ULONGLONG  Source);
 
-NTOSAPI
-ULONG
-DDKAPI
-RtlUnicodeStringToAnsiSize(
-  IN PUNICODE_STRING  UnicodeString);
+#define RtlUnicodeStringToAnsiSize(STRING) (                  \
+    NLS_MB_CODE_PAGE_TAG ?                                    \
+    RtlxUnicodeStringToAnsiSize(STRING) :                     \
+    ((STRING)->Length + sizeof(UNICODE_NULL)) / sizeof(WCHAR) \
+)
 
 NTOSAPI
 NTSTATUS
 DDKAPI
 RtlUnicodeStringToAnsiString(
   IN OUT PANSI_STRING  DestinationString,
-  IN PUNICODE_STRING  SourceString,
+  IN PCUNICODE_STRING  SourceString,
   IN BOOLEAN  AllocateDestinationString);
 
 NTOSAPI
 NTSTATUS
 DDKAPI
 RtlUnicodeStringToInteger(
-  IN PUNICODE_STRING  String,
+  IN PCUNICODE_STRING  String,
   IN ULONG  Base  OPTIONAL,
   OUT PULONG  Value);
 
@@ -5642,7 +5785,7 @@ NTOSAPI
 BOOLEAN
 DDKAPI
 RtlValidRelativeSecurityDescriptor(
-  IN PISECURITY_DESCRIPTOR_RELATIVE  SecurityDescriptorInput,
+  IN PSECURITY_DESCRIPTOR SecurityDescriptorInput,
   IN ULONG  SecurityDescriptorLength,
   IN SECURITY_INFORMATION  RequiredInformation);
 
@@ -5690,7 +5833,7 @@ NTOSAPI
 ULONG
 DDKAPI
 RtlxUnicodeStringToAnsiSize(
-  IN PUNICODE_STRING  UnicodeString);
+  IN PCUNICODE_STRING  UnicodeString);
 
 /*
  * VOID
@@ -7873,31 +8016,6 @@ DDKAPI
 KeAcquireInterruptSpinLock(
   IN PKINTERRUPT  Interrupt);
 
-
-/* System Service Dispatch Table */
-typedef PVOID (NTAPI * SSDT)(VOID);
-typedef SSDT * PSSDT;
-
-/* System Service Parameters Table */
-typedef UCHAR SSPT, * PSSPT;
-
-typedef struct _SSDT_ENTRY {
-	PSSDT  SSDT;
-	PULONG  ServiceCounterTable;
-	ULONG  NumberOfServices;
-	PSSPT  SSPT;
-} SSDT_ENTRY, *PSSDT_ENTRY;
-
-NTOSAPI
-BOOLEAN
-DDKAPI
-KeAddSystemServiceTable(
-  IN PSSDT  SSDT,
-  IN PULONG  ServiceCounterTable,
-  IN ULONG  NumberOfServices,
-  IN PSSPT  SSPT,
-  IN ULONG  TableIndex);
-
 NTOSAPI
 BOOLEAN
 DDKAPI
@@ -7960,6 +8078,11 @@ KeEnterCriticalRegion(
  *   IN BOOLEAN  DmaOperation)
  */
 #define KeFlushIoBuffers(_Mdl, _ReadOperation, _DmaOperation)
+
+NTHALAPI
+VOID
+DDKAPI
+KeFlushWriteBuffer(VOID);
 
 NTOSAPI
 PRKTHREAD
@@ -8117,6 +8240,7 @@ DDKAPI
 KeReadStateMutex(
   IN PRKMUTEX  Mutex);
 
+
 NTOSAPI
 LONG
 DDKAPI
@@ -8213,6 +8337,11 @@ KeRestoreFloatingPointState(
   IN PKFLOATING_SAVE  FloatSave);
 
 NTOSAPI
+VOID
+DDKAPI
+KeRevertToUserAffinityThread(VOID);
+
+NTOSAPI
 NTSTATUS
 DDKAPI
 KeSaveFloatingPointState(
@@ -8246,6 +8375,12 @@ DDKAPI
 KeSetPriorityThread(
   IN PKTHREAD  Thread,
   IN KPRIORITY  Priority);
+
+NTOSAPI
+VOID
+DDKAPI
+KeSetSystemAffinityThread(
+    IN KAFFINITY Affinity);
 
 NTOSAPI
 VOID

@@ -1450,9 +1450,9 @@ KdbpCmdPcr(ULONG Argc, PCHAR Argv[])
              "  VdmAlert:                  0x%08x\n"
              "  L2CacheSize:               0x%08x\n"
              "  InterruptMode:             0x%08x\n",
-             Pcr->Tib.ExceptionList, Pcr->Tib.StackBase, Pcr->Tib.StackLimit,
-             Pcr->Tib.SubSystemTib, Pcr->Tib.FiberData, Pcr->Tib.ArbitraryUserPointer,
-             Pcr->Tib.Self, Pcr->Self, Pcr->Prcb, Pcr->Irql, Pcr->IRR, Pcr->IrrActive,
+             Pcr->NtTib.ExceptionList, Pcr->NtTib.StackBase, Pcr->NtTib.StackLimit,
+             Pcr->NtTib.SubSystemTib, Pcr->NtTib.FiberData, Pcr->NtTib.ArbitraryUserPointer,
+             Pcr->NtTib.Self, Pcr->Self, Pcr->Prcb, Pcr->Irql, Pcr->IRR, Pcr->IrrActive,
              Pcr->IDR, Pcr->KdVersionBlock, Pcr->IDT, Pcr->GDT, Pcr->TSS,
              Pcr->MajorVersion, Pcr->MinorVersion, Pcr->SetMember, Pcr->StallScaleFactor,
              Pcr->Number, Pcr->L2CacheAssociativity,

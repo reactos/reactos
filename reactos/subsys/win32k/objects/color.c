@@ -83,7 +83,7 @@ BOOL STDCALL NtGdiAnimatePalette(HPALETTE hPal, UINT StartIndex,
         UINT pal_entries;
         HDC hDC;
         PDC dc;	
-		HWND hHwd;
+      PWINDOW_OBJECT Wnd;
         const PALETTEENTRY *pptr = PaletteColors;
  
         palPtr = (PPALGDI)PALETTE_LockPalette(hPal);
@@ -109,8 +109,8 @@ BOOL STDCALL NtGdiAnimatePalette(HPALETTE hPal, UINT StartIndex,
         PALETTE_UnlockPalette(palPtr);
  
         /* Immediately apply the new palette if current window uses it */		
-		hHwd = NtUserGetDesktopWindow();
-        hDC =  (HDC)NtUserGetWindowDC(hHwd);
+      Wnd = UserGetDesktopWindow();
+        hDC =  (HDC)UserGetWindowDC(Wnd);
         dc = DC_LockDc(hDC);
         if (NULL != dc)
         {
@@ -122,7 +122,7 @@ BOOL STDCALL NtGdiAnimatePalette(HPALETTE hPal, UINT StartIndex,
           else
             DC_UnlockDc(dc);
         }		
-		NtUserReleaseDC(hHwd,hDC);   
+      UserReleaseDC(Wnd,hDC);   
     }
     return TRUE;
 }
@@ -636,15 +636,36 @@ NtGdiUnrealizeObject(HGDIOBJ hgdiobj)
 BOOL STDCALL
 NtGdiUpdateColors(HDC hDC)
 {
-   HWND hWnd;
+   PWINDOW_OBJECT Wnd;
+   BOOL calledFromUser, ret;
 
-   hWnd = (HWND)NtUserCallOneParam((DWORD)hDC, ONEPARAM_ROUTINE_WINDOWFROMDC);
-   if (hWnd == NULL)
+   calledFromUser = UserIsEntered();
+   
+   if (!calledFromUser){
+      UserEnterExclusive();
+   }
+
+   Wnd = IntGetWindowObject(IntWindowFromDC(hDC));
+   if (Wnd == NULL)
    {
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
+
+      if (!calledFromUser){
+         UserLeave();
+      }
+      
       return FALSE;
    }
-   return NtUserRedrawWindow(hWnd, NULL, 0, RDW_INVALIDATE);
+   
+   ret = co_UserRedrawWindow(Wnd, NULL, 0, RDW_INVALIDATE);
+   
+   IntReleaseWindowObject(Wnd); //temp hack
+   
+   if (!calledFromUser){
+      UserLeave();
+   }
+   
+   return ret;
 }
 
 INT STDCALL COLOR_PaletteLookupPixel(PALETTEENTRY *palPalEntry, INT size,

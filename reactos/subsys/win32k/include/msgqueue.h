@@ -1,7 +1,6 @@
 #ifndef _WIN32K_MSGQUEUE_H
 #define _WIN32K_MSGQUEUE_H
 
-#include "caret.h"
 #include "hook.h"
 
 #define MSQ_HUNG        5000
@@ -68,8 +67,6 @@ typedef struct _USER_MESSAGE_QUEUE
   LIST_ENTRY TimerListHead;
   /* Lock for the hardware message list. */
   KMUTEX HardwareLock;
-  /* Lock for the queue. */
-  FAST_MUTEX Lock;
   /* Pointer to the current WM_MOUSEMOVE message */
   PUSER_MESSAGE MouseMoveMsg;
   /* True if a WM_QUIT message is pending. */
@@ -124,7 +121,7 @@ typedef struct _USER_MESSAGE_QUEUE
 BOOL FASTCALL
 MsqIsHung(PUSER_MESSAGE_QUEUE MessageQueue);
 NTSTATUS FASTCALL
-MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
+co_MsqSendMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 	       HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam,
                UINT uTimeout, BOOL Block, BOOL HookMessage,
                ULONG_PTR *uResult);
@@ -138,7 +135,7 @@ MsqPostMessage(PUSER_MESSAGE_QUEUE MessageQueue,
 VOID FASTCALL
 MsqPostQuitMessage(PUSER_MESSAGE_QUEUE MessageQueue, ULONG ExitCode);
 BOOLEAN STDCALL
-MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
+co_MsqFindMessage(IN PUSER_MESSAGE_QUEUE MessageQueue,
 	       IN BOOLEAN Hardware,
 	       IN BOOLEAN Remove,
 	       IN HWND Wnd,
@@ -158,9 +155,9 @@ MsqGetHardwareMessageQueue(VOID);
 NTSTATUS FASTCALL
 MsqInitializeImpl(VOID);
 BOOLEAN FASTCALL
-MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue);
+co_MsqDispatchOneSentMessage(PUSER_MESSAGE_QUEUE MessageQueue);
 NTSTATUS FASTCALL
-MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue, HWND WndFilter,
+co_MsqWaitForNewMessages(PUSER_MESSAGE_QUEUE MessageQueue, HWND WndFilter,
                       UINT MsgFilterMin, UINT MsgFilterMax);
 VOID FASTCALL
 MsqSendNotifyMessage(PUSER_MESSAGE_QUEUE MessageQueue,
@@ -170,17 +167,17 @@ MsqIncPaintCountQueue(PUSER_MESSAGE_QUEUE Queue);
 VOID FASTCALL
 MsqDecPaintCountQueue(PUSER_MESSAGE_QUEUE Queue);
 LRESULT FASTCALL
-IntSendMessage(HWND hWnd,
+co_IntSendMessage(HWND hWnd,
 		UINT Msg,
 		WPARAM wParam,
 		LPARAM lParam);
 LRESULT FASTCALL
-IntPostOrSendMessage(HWND hWnd,
+co_IntPostOrSendMessage(HWND hWnd,
 		     UINT Msg,
 		     WPARAM wParam,
 		     LPARAM lParam);
 LRESULT FASTCALL
-IntSendMessageTimeout(HWND hWnd,
+co_IntSendMessageTimeout(HWND hWnd,
                       UINT Msg,
                       WPARAM wParam,
                       LPARAM lParam,
@@ -193,7 +190,7 @@ BOOL FASTCALL
 IntTranslateKbdMessage(LPMSG lpMsg, HKL dwhkl);
 
 VOID FASTCALL
-MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
+co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam);
 VOID FASTCALL
 MsqPostHotKeyMessage(PVOID Thread, HWND hWnd, WPARAM wParam, LPARAM lParam);
 VOID FASTCALL
@@ -216,12 +213,6 @@ VOID FASTCALL MsqSetHooks(PUSER_MESSAGE_QUEUE Queue, PHOOKTABLE Hooks);
 LPARAM FASTCALL MsqSetMessageExtraInfo(LPARAM lParam);
 LPARAM FASTCALL MsqGetMessageExtraInfo(VOID);
 VOID STDCALL MsqRemoveWindowMessagesFromQueue(PVOID pWindow); /* F*(&$ headers, will be gone in the rewrite! */
-
-#define IntLockMessageQueue(MsgQueue) \
-  ExAcquireFastMutex(&(MsgQueue)->Lock)
-
-#define IntUnLockMessageQueue(MsgQueue) \
-  ExReleaseFastMutex(&(MsgQueue)->Lock)
 
 #define IntLockHardwareMessageQueue(MsgQueue) \
   KeWaitForMutexObject(&(MsgQueue)->HardwareLock, UserRequest, KernelMode, FALSE, NULL)

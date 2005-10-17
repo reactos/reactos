@@ -187,7 +187,7 @@ KePrepareForApplicationProcessorInit(ULONG Id)
   memset(Pcr, 0, PAGE_SIZE);
   Pcr->Number = Id;
   Pcr->SetMember = 1 << Id;
-  Pcr->Tib.Self = &Pcr->Tib;
+  Pcr->NtTib.Self = &Pcr->NtTib;
   Pcr->Self = (PKPCR)Pcr;
   Pcr->Prcb = &Pcr->PrcbData;
   Pcr->Irql = SYNCH_LEVEL;
@@ -197,7 +197,7 @@ KePrepareForApplicationProcessorInit(ULONG Id)
   Pcr->StallScaleFactor = BootPcr->StallScaleFactor;
 
   /* Mark the end of the exception handler list */
-  Pcr->Tib.ExceptionList = (PVOID)-1;
+  Pcr->NtTib.ExceptionList = (PVOID)-1;
 
   KiGdtPrepareForApplicationProcessorInit(Id);
 
@@ -287,7 +287,7 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
    KPCR->Self = (PKPCR)KPCR;
    KPCR->Prcb = &KPCR->PrcbData;
    KPCR->Irql = SYNCH_LEVEL;
-   KPCR->Tib.Self = &KPCR->Tib;
+   KPCR->NtTib.Self = &KPCR->NtTib;
    KPCR->GDT = KiBootGdt;
    KPCR->IDT = (PUSHORT)KiIdt;
    KPCR->TSS = &KiBootTss;
@@ -308,7 +308,7 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
    KiCheckFPU();
 
    /* Mark the end of the exception handler list */
-   KPCR->Tib.ExceptionList = (PVOID)-1;
+   KPCR->NtTib.ExceptionList = (PVOID)-1;
 
    KeInitDpc(KPCR->Prcb);
 

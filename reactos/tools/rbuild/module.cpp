@@ -24,6 +24,34 @@ using std::string;
 using std::vector;
 
 string
+Right ( const string& s, size_t n )
+{
+	if ( n > s.size() )
+		return s;
+	return string ( &s[s.size()-n] );
+}
+
+string
+Replace ( const string& s, const string& find, const string& with )
+{
+	string ret;
+	const char* p = s.c_str();
+	while ( p )
+	{
+		const char* p2 = strstr ( p, find.c_str() );
+		if ( !p2 )
+			break;
+		if ( p2 > p )
+			ret += string ( p, p2-p );
+		ret += with;
+		p = p2 + find.size();
+	}
+	if ( *p )
+		ret += p;
+	return ret;
+}
+
+string
 FixSeparator ( const string& s )
 {
 	string s2(s);
@@ -32,6 +60,19 @@ FixSeparator ( const string& s )
 	{
 		*p++ = CSEP;
 		p = strchr ( p, CBAD_SEP );
+	}
+	return s2;
+}
+
+string
+DosSeparator ( const string& s )
+{
+	string s2(s);
+	char* p = strchr ( &s2[0], '/' );
+	while ( p )
+	{
+		*p++ = '\\';
+		p = strchr ( p, '/' );
 	}
 	return s2;
 }

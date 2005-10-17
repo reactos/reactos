@@ -10,7 +10,6 @@
 #define _ZWTYPES_H
 
 /* DEPENDENCIES **************************************************************/
-#include "rtltypes.h"
 #include <cfg.h>
 
 /* EXPORTED DATA *************************************************************/
@@ -24,9 +23,6 @@
 #define PORT_ALL_ACCESS               (0x1)
 
 #define EVENT_PAIR_ALL_ACCESS    (0x1F0000L)
-
-#define OBJECT_TYPE_CREATE 0x0001
-#define OBJECT_TYPE_ALL_ACCESS (STANDARD_RIGHTS_REQUIRED | 0x1)
 
 /* For ProcessDeviceMap */
 #define DOSDEVICE_DRIVE_UNKNOWN    0
@@ -117,18 +113,6 @@ typedef enum _PLUGPLAY_EVENT_CATEGORY
 /**** Information Classes ****/
 
 /*
- * Process (extra ones not defined in DDK)
- */
-typedef enum _PROCESS_INFORMATION_FLAGS
-{
-    ProcessUnknown33 = 33,
-    ProcessUnknown34,
-    ProcessUnknown35,
-    ProcessCookie,
-    MaximumProcessInformationClass
-} PROCESS_INFORMATION_FLAGS;
-
-/*
  * System
  */
 typedef enum _SYSTEM_INFORMATION_CLASS
@@ -201,6 +185,14 @@ typedef enum _OBJECT_INFORMATION_CLASS
     ObjectAllTypesInformation,
     ObjectHandleInformation
 } OBJECT_INFORMATION_CLASS;
+
+/*
+ * Port
+ */
+typedef enum _PORT_INFORMATION_CLASS
+{
+    PortNoInformation
+} PORT_INFORMATION_CLASS;
 
 /*
  * Memory
@@ -285,8 +277,8 @@ typedef enum _PLUGPLAY_CONTROL_CLASS
 
 /* TYPES *********************************************************************/
 
-typedef unsigned short LANGID;
-typedef LANGID *PLANGID;
+typedef USHORT LANGID, *PLANGID;
+typedef USHORT RTL_ATOM, *PRTL_ATOM;
 
 typedef struct _PLUGPLAY_EVENT_BLOCK
 {
@@ -492,63 +484,12 @@ typedef struct _EVENT_BASIC_INFORMATION
  * Process
  */
 
-/* Class 0 */
-typedef struct _PROCESS_BASIC_INFORMATION
-{
-    NTSTATUS ExitStatus;
-    PPEB PebBaseAddress;
-    KAFFINITY AffinityMask;
-    KPRIORITY BasePriority;
-    ULONG UniqueProcessId;
-    ULONG InheritedFromUniqueProcessId;
-} PROCESS_BASIC_INFORMATION, *PPROCESS_BASIC_INFORMATION;
-
-
-/* Class 4 */
-typedef struct _KERNEL_USER_TIMES
-{
-    LARGE_INTEGER CreateTime;
-    LARGE_INTEGER ExitTime;
-    LARGE_INTEGER KernelTime;
-    LARGE_INTEGER UserTime;
-} KERNEL_USER_TIMES, *PKERNEL_USER_TIMES;
-
-/* Class 9 */
-typedef struct _PROCESS_ACCESS_TOKEN
-{
-    HANDLE Token;
-    HANDLE Thread;
-} PROCESS_ACCESS_TOKEN, *PPROCESS_ACCESS_TOKEN;
-
 /* Class 16 */
 typedef struct _PROCESS_PRIORITY_CLASS
 {
     BOOLEAN Foreground;
     UCHAR   PriorityClass;
 } PROCESS_PRIORITY_CLASS, *PPROCESS_PRIORITY_CLASS;
-
-/* Class 23 */
-typedef struct _PROCESS_DEVICEMAP_INFORMATION
-{
-    union
-    {
-        struct
-        {
-            HANDLE DirectoryHandle;
-        } Set;
-        struct
-        {
-            ULONG DriveMap;
-            UCHAR DriveType[32];
-        } Query;
-    };
-} PROCESS_DEVICEMAP_INFORMATION, *PPROCESS_DEVICEMAP_INFORMATION;
-
-/* Class 24 */
-typedef struct _PROCESS_SESSION_INFORMATION
-{
-    ULONG SessionId;
-} PROCESS_SESSION_INFORMATION, *PPROCESS_SESSION_INFORMATION;
 
 /*
  * System

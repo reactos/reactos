@@ -1145,9 +1145,7 @@ NtOpenKey(OUT PHANDLE KeyHandle,
   {
     _SEH_TRY
     {
-      ProbeForWrite(KeyHandle,
-                    sizeof(HANDLE),
-                    sizeof(ULONG));
+      ProbeForWriteHandle(KeyHandle);
     }
     _SEH_HANDLE
     {

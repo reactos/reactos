@@ -1926,6 +1926,11 @@ HRESULT WINAPI VarParseNumFromStr(OLECHAR *lpszStr, LCID lcid, ULONG dwFlags,
  *  - Rounding (dropping of decimal points) occurs without error. See VarI8FromR8()
  *    for details of the rounding method.
  *  - pVarDst is not cleared before the result is stored in it.
+ *  - WinXP and Win2003 support VTBIT_I8, VTBIT_UI8 but that's buggy (by
+ *    design?): If some other VTBIT's for integers are specified together
+ *    with VTBIT_I8 and the number will fit only in a VT_I8 Windows will "cast"
+ *    the number to the smallest requested integer truncating this way the
+ *    number.  Wine dosn't implement this "feature" (yet?).
  */
 HRESULT WINAPI VarNumFromParseNum(NUMPARSE *pNumprs, BYTE *rgbDig,
                                   ULONG dwVtBits, VARIANT *pVarDst)
@@ -2893,8 +2898,12 @@ HRESULT WINAPI VarAdd(LPVARIANT left, LPVARIANT right, LPVARIANT result)
     }
     if (resvt != tvt) {
         if ((hres = VariantChangeType(result, &tv, 0, resvt)) != S_OK) {
-            /* Overflow! Change to the vartype with the next higher priority */
-            resvt = prio2vt[coerce[resvt] + 1];
+            /* Overflow! Change to the vartype with the next higher priority.
+               With one exception: I4 ==> R8 even if it would fit in I8 */
+            if (resvt == VT_I4)
+                resvt = VT_R8;
+            else
+                resvt = prio2vt[coerce[resvt] + 1];
             hres = VariantChangeType(result, &tv, 0, resvt);
         }
     } else
@@ -3061,8 +3070,12 @@ HRESULT WINAPI VarMul(LPVARIANT left, LPVARIANT right, LPVARIANT result)
     }
     if (resvt != tvt) {
         while ((hres = VariantChangeType(result, &tv, 0, resvt)) != S_OK) {
-            /* Overflow! Change to the vartype with the next higher priority */
-            resvt = prio2vt[coerce[resvt] + 1];
+            /* Overflow! Change to the vartype with the next higher priority.
+               With one exception: I4 ==> R8 even if it would fit in I8 */
+            if (resvt == VT_I4)
+                resvt = VT_R8;
+            else
+                resvt = prio2vt[coerce[resvt] + 1];
         }
     } else
         hres = VariantCopy(result, &tv);

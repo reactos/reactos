@@ -40,8 +40,8 @@ SM_PORT_API SmApi [] =
  * with a macro) */
 PSM_CONNECT_DATA FASTCALL SmpGetConnectData (PSM_PORT_MESSAGE Request)
 {
-	PLPC_MAX_MESSAGE LpcMaxMessage = (PLPC_MAX_MESSAGE) Request;
-	return (PSM_CONNECT_DATA) & LpcMaxMessage->Data[0];
+	PPORT_MESSAGE PortMessage = (PPORT_MESSAGE) Request;
+	return (PSM_CONNECT_DATA)(PortMessage + 1);
 }
 
 #if !defined(__USE_NT_LPC__)
@@ -71,7 +71,7 @@ SmpCallbackServer (PSM_PORT_MESSAGE Request,
 
 	DPRINT("SM: %s called\n", __FUNCTION__);
 
-	if (	(IMAGE_SUBSYSTEM_UNKNOWN == ConnectData->SubSystemId) ||
+	if (	((USHORT)-1 == ConnectData->SubSystemId) ||
 		(IMAGE_SUBSYSTEM_NATIVE  == ConnectData->SubSystemId))
 	{
 		DPRINT("SM: %s: we do not need calling back SM!\n",
@@ -107,7 +107,6 @@ VOID STDCALL
 SmpApiConnectedThread(PVOID pConnectedPort)
 {
 	NTSTATUS	Status = STATUS_SUCCESS;
-	PVOID		Unknown = NULL;
 	PPORT_MESSAGE	Reply = NULL;
 	SM_PORT_MESSAGE	Request;
 	HANDLE          ConnectedPort = * (PHANDLE) pConnectedPort;
@@ -120,14 +119,14 @@ SmpApiConnectedThread(PVOID pConnectedPort)
 		DPRINT("SM: %s: waiting for message\n",__FUNCTION__);
 
 		Status = NtReplyWaitReceivePort(ConnectedPort,
-						(PULONG) & Unknown,
+						NULL,
 						Reply,
 						(PPORT_MESSAGE) & Request);
 		if (NT_SUCCESS(Status))
 		{
 			DPRINT("SM: %s: message received (type=%d)\n",
 				__FUNCTION__,
-				LPC_MESSAGE_TYPE(Request));
+				Request.Header.u2.s2.Type);
 
 			switch (Request.Header.u2.s2.Type)
 			{
@@ -318,10 +317,10 @@ VOID STDCALL
 SmpApiThread (HANDLE ListeningPort)
 {
 	NTSTATUS	Status = STATUS_SUCCESS;
-	LPC_MAX_MESSAGE	Request;
+	SM_PORT_MESSAGE	Request;
 
 	DPRINT("SM: %s called\n", __FUNCTION__);
-    RtlZeroMemory(&Request, sizeof(LPC_MAX_MESSAGE));
+    RtlZeroMemory(&Request, sizeof(PORT_MESSAGE));
 
 	while (TRUE)
 	{
@@ -331,7 +330,7 @@ SmpApiThread (HANDLE ListeningPort)
 			DPRINT1("SM: %s: NtListenPort() failed! (Status==x%08lx)\n", __FUNCTION__, Status);
 			break;
 		}
-		Status = SmpHandleConnectionRequest ((PSM_PORT_MESSAGE) & Request);
+		Status = SmpHandleConnectionRequest (& Request);
 		if(!NT_SUCCESS(Status))
 		{
 			DPRINT1("SM: %s: SmpHandleConnectionRequest failed (Status=0x%08lx)\n",

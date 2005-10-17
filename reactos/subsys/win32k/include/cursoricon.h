@@ -13,7 +13,6 @@ typedef struct _CURICON_OBJECT
 {
   LIST_ENTRY ListEntry;
   HANDLE Self;
-  FAST_MUTEX Lock;
   LIST_ENTRY ProcessList;
   HMODULE hModule;
   HRSRC hRsrc;
@@ -37,7 +36,6 @@ typedef struct _SYSTEM_CURSORINFO
   BOOL Enabled;
   BOOL SwapButtons;
   UINT ButtonsDown;
-  FAST_MUTEX CursorMutex;
   CURSORCLIP_INFO CursorClipInfo;
   PCURICON_OBJECT CurrentCursorObject;
   BYTE ShowingCursor;
@@ -52,7 +50,6 @@ typedef struct _SYSTEM_CURSORINFO
 
 HCURSOR FASTCALL IntSetCursor(PWINSTATION_OBJECT WinStaObject, PCURICON_OBJECT NewCursor, BOOL ForceChange);
 BOOL FASTCALL IntSetupCurIconHandles(PWINSTATION_OBJECT WinStaObject);
-PCURICON_OBJECT FASTCALL IntGetCurIconObject(PWINSTATION_OBJECT WinStaObject, HANDLE Handle);
 PCURICON_OBJECT FASTCALL IntCreateCurIconHandle(PWINSTATION_OBJECT WinStaObject);
 VOID FASTCALL IntCleanupCurIcons(struct _EPROCESS *Process, PW32PROCESS Win32Process);
 
@@ -63,12 +60,6 @@ BOOL FASTCALL IntGetCursorLocation(PWINSTATION_OBJECT WinStaObject, POINT *loc);
 
 #define IntReleaseCurIconObject(CurIconObj) \
   ObmDereferenceObject(CurIconObj)
-
-#define IntLockProcessCursorIcons(W32Process) \
-  ExAcquireFastMutex(&W32Process->CursorIconListLock)
-
-#define IntUnLockProcessCursorIcons(W32Process) \
-  ExReleaseFastMutex(&W32Process->CursorIconListLock)
 
 #endif /* _WIN32K_CURSORICON_H */
 

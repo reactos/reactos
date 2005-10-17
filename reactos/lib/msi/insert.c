@@ -109,7 +109,7 @@ err:
 static UINT INSERT_execute( struct tagMSIVIEW *view, MSIRECORD *record )
 {
     MSIINSERTVIEW *iv = (MSIINSERTVIEW*)view;
-    UINT n, type, val, r, row, col_count = 0;
+    UINT r, col_count = 0;
     MSIVIEW *sv;
     MSIRECORD *values = NULL;
 
@@ -136,38 +136,13 @@ static UINT INSERT_execute( struct tagMSIVIEW *view, MSIRECORD *record )
     if( !values )
         goto err;
 
-    row = -1;
-    r = sv->ops->insert_row( sv, &row );
-    TRACE("insert_row returned %x\n", r);
-    if( r )
-        goto err;
-
-    for( n = 1; n <= col_count; n++ )
-    {
-        r = sv->ops->get_column_info( sv, n, NULL, &type );
-        if( r )
-            break;
-
-        if( type & MSITYPE_STRING )
-        {
-            const WCHAR *str = MSI_RecordGetString( values, n );
-            val = msi_addstringW( iv->db->strings, 0, str, -1, 1 );
-        }
-        else
-        {
-            val = MSI_RecordGetInteger( values, n );
-            val |= 0x8000;
-        }
-        r = sv->ops->set_int( sv, row, n, val );
-        if( r )
-            break;
-    }
+    r = sv->ops->insert_row( sv, values );
 
 err:
     if( values )
         msiobj_release( &values->hdr );
 
-    return ERROR_SUCCESS;
+    return r;
 }
 
 

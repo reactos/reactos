@@ -12,10 +12,6 @@ void _assert( const char *expr, const char *file, int line ) {
   __kernel_abort();
 }
 
-int isalnum( int x ) { return isalpha(x) || isdigit(x); }
-int iscntrl( int x ) { return 32 > x; }
-int ispunct( int x ) { return !isspace(x) && !isalnum(x) && !iscntrl(x) && !isspace(x); }
-
 static int belongs_to_base( int x, int base ) {
   if( x >= '0' && '9' >= x ) {
     if( base > x - '0' ) return x - '0';

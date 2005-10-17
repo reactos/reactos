@@ -99,7 +99,7 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 
 	_taskbar_pos = start_btn_width + 6;
 
-	new PictureButton(Button(_hwnd, start_str, 2, 2, start_btn_width, DESKTOPBARBAR_HEIGHT-8, IDC_START, WS_VISIBLE|WS_CHILD|BS_OWNERDRAW),
+	new PictureButton(Button(_hwnd, start_str, 1, 1, start_btn_width, REBARBAND_HEIGHT, IDC_START, WS_VISIBLE|WS_CHILD|BS_OWNERDRAW),
 						SmallIcon(IDI_STARTMENU)/*, GetStockBrush(WHITE_BRUSH)*/);
 
 	 // create task bar
@@ -124,36 +124,33 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 	_hwndrebar = CreateWindowEx(WS_EX_TOOLWINDOW, REBARCLASSNAME, NULL,
 					WS_CHILD|WS_VISIBLE|WS_CLIPSIBLINGS|WS_CLIPCHILDREN|
 					RBS_VARHEIGHT|RBS_AUTOSIZE|RBS_DBLCLKTOGGLE|	//|RBS_REGISTERDROP
-					CCS_NODIVIDER|CCS_NOPARENTALIGN,
+					CCS_NODIVIDER|CCS_NOPARENTALIGN|CCS_TOP,
 					0, 0, 0, 0, _hwnd, 0, g_Globals._hInstance, 0);
 
 	REBARBANDINFO rbBand;
 
 	rbBand.cbSize = sizeof(REBARBANDINFO);
-	rbBand.fMask  = RBBIM_TEXT|RBBIM_STYLE|RBBIM_CHILD|RBBIM_CHILDSIZE|RBBIM_SIZE;
+	rbBand.fMask  = RBBIM_TEXT|RBBIM_STYLE|RBBIM_CHILD|RBBIM_CHILDSIZE|RBBIM_SIZE|RBBIM_ID|RBBIM_IDEALSIZE;
 #ifndef RBBS_HIDETITLE // missing in MinGW headers as of 25.02.2004
 #define RBBS_HIDETITLE	0x400
 #endif
-	rbBand.fStyle = RBBS_CHILDEDGE|RBBS_GRIPPERALWAYS|RBBS_HIDETITLE;
-
-	rbBand.cxMinChild = 0;
-	rbBand.cyMinChild = 0;
-	rbBand.cyChild = 0;
-	rbBand.cyMaxChild = 0;
-	rbBand.cyIntegral = DESKTOPBARBAR_HEIGHT;	//@@ OK?
+	rbBand.cyChild = REBARBAND_HEIGHT;
+	rbBand.cyMaxChild = (ULONG)-1;
+	rbBand.cyMinChild = REBARBAND_HEIGHT;
+	rbBand.cyIntegral = REBARBAND_HEIGHT + 3;	//@@ OK?
+	rbBand.cxMinChild = rbBand.cyIntegral * 3;
+	rbBand.fStyle = RBBS_VARIABLEHEIGHT|RBBS_GRIPPERALWAYS|RBBS_HIDETITLE;
 
 	rbBand.lpText = TEXT("Quicklaunch");
 	rbBand.hwndChild = _hwndQuickLaunch;
-	rbBand.cxMinChild = 0;
-	rbBand.cyMinChild = HIWORD(SendMessage(_hwndQuickLaunch, TB_GETBUTTONSIZE, 0, 0)) + 2;
 	rbBand.cx = 250;
+	rbBand.wID = IDW_QUICKLAUNCHBAR;
 	SendMessage(_hwndrebar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
 
 	rbBand.lpText = TEXT("Taskbar");
 	rbBand.hwndChild = _hwndTaskBar;
-	rbBand.cxMinChild = 0;
-	rbBand.cyMinChild = ClientRect(_hwndTaskBar).bottom + 2;
 	rbBand.cx = 200;	//pcs->cx-_taskbar_pos-quicklaunch_width-(notifyarea_width+1);
+	rbBand.wID = IDW_TASKTOOLBAR;
 	SendMessage(_hwndrebar, RB_INSERTBAND, (WPARAM)-1, (LPARAM)&rbBand);
 #endif
 
@@ -274,6 +271,20 @@ LRESULT DesktopBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 	return 0;
 }
 
+int DesktopBar::Notify(int id, NMHDR* pnmh)
+{
+        if (pnmh->code == RBN_CHILDSIZE) {
+                /* align the task bands to the top, so it's in row with the Start button */
+		NMREBARCHILDSIZE *childSize = (NMREBARCHILDSIZE*)pnmh;
+		if (childSize->wID == IDW_TASKTOOLBAR) {
+			int cy = childSize->rcChild.top - childSize->rcBand.top;
+			childSize->rcChild.bottom -= cy;
+			childSize->rcChild.top -= cy;
+		}
+	}
+
+	return 0;
+}
 
 void DesktopBar::Resize(int cx, int cy)
 {
@@ -284,7 +295,7 @@ void DesktopBar::Resize(int cx, int cy)
 	HDWP hdwp = BeginDeferWindowPos(3);
 
 	if (_hwndrebar)
-		DeferWindowPos(hdwp, _hwndrebar, 0, _taskbar_pos, 0, cx-_taskbar_pos-(notifyarea_width+1), cy, SWP_NOZORDER|SWP_NOACTIVATE);
+		DeferWindowPos(hdwp, _hwndrebar, 0, _taskbar_pos, 1, cx-_taskbar_pos-(notifyarea_width+1), cy-2, SWP_NOZORDER|SWP_NOACTIVATE);
 	else {
 		if (_hwndQuickLaunch)
 			DeferWindowPos(hdwp, _hwndQuickLaunch, 0, _taskbar_pos, 1, quicklaunch_width, cy-2, SWP_NOZORDER|SWP_NOACTIVATE);

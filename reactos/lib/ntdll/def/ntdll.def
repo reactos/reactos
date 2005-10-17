@@ -5,17 +5,16 @@
 LIBRARY ntdll.dll
 
 EXPORTS
-CsrCaptureParameterBuffer@16
-CsrReleaseParameterBuffer@4
-CsrAllocateCaptureBuffer@12
-CsrAllocateCapturePointer@12
+CsrAllocateCaptureBuffer@8
 CsrAllocateMessagePointer@12
 CsrCaptureMessageBuffer@16
+CsrCaptureMessageMultiUnicodeStringsInPlace@12
 CsrCaptureMessageString@20
 CsrCaptureTimeout@8
 CsrClientCallServer@16
-CsrClientConnectToServer@24
+CsrClientConnectToServer@20
 CsrFreeCaptureBuffer@4
+CsrGetProcessId@0
 CsrIdentifyAlertableThread@0
 CsrNewThread@0
 CsrProbeForRead@12
@@ -218,6 +217,7 @@ NtRestoreKey@12
 NtResumeProcess@4
 NtResumeThread@8
 NtSaveKey@8
+NtSecureConnectPort@36
 NtSetContextThread@8
 NtSetDefaultHardErrorPort@4
 NtSetDefaultLocale@8
@@ -304,7 +304,7 @@ RtlAllocateAndInitializeSid@44
 RtlAllocateHandle@8
 RtlAllocateHeap@12
 RtlAnsiCharToUnicodeChar@4
-RtlAnsiStringToUnicodeSize@4
+RtlAnsiStringToUnicodeSize@4=RtlxAnsiStringToUnicodeSize@4
 RtlAnsiStringToUnicodeString@12
 RtlAppendAsciizToString@8
 RtlAppendStringToString@8
@@ -317,7 +317,6 @@ RtlAreAnyAccessesGranted@8
 RtlAreBitsClear@12
 RtlAreBitsSet@12
 RtlAssert@16
-RtlBaseProcessStartRoutine DATA
 ;RtlCaptureStackBackTrace
 RtlCharToInteger@12
 RtlCheckRegistryKey@8
@@ -392,6 +391,7 @@ RtlDestroyQueryDebugBuffer@4
 RtlDetermineDosPathNameType_U@4
 RtlDoesFileExists_U@4
 RtlDosPathNameToNtPathName_U@16
+RtlDosPathNameToRelativeNtPathName_U@16
 RtlDosSearchPath_U@24
 RtlDowncaseUnicodeChar@4
 RtlDowncaseUnicodeString@12
@@ -567,7 +567,7 @@ RtlNumberGenericTableElements@4
 RtlNumberGenericTableElementsAvl@4
 RtlNumberOfClearBits@4
 RtlNumberOfSetBits@4
-RtlOemStringToUnicodeSize@4
+RtlOemStringToUnicodeSize@4=RtlxOemStringToUnicodeSize@4
 RtlOemStringToUnicodeString@12
 RtlOemToUnicodeN@20
 RtlOpenCurrentUser@8
@@ -595,6 +595,7 @@ RtlReAllocateHeap@16
 RtlRealPredecessor@4
 RtlRealSuccessor@4
 RtlReleasePebLock@0
+RtlReleaseRelativeName@4
 RtlReleaseResource@4
 ;RtlRemoteCall
 RtlRemoveVectoredExceptionHandler@4
@@ -643,11 +644,11 @@ RtlTimeToTimeFields@8
 RtlTryEnterCriticalSection@4
 @RtlUlongByteSwap@4
 @RtlUlonglongByteSwap@8
-RtlUnicodeStringToAnsiSize@4
+RtlUnicodeStringToAnsiSize@4=RtlxUnicodeStringToAnsiSize@4
 RtlUnicodeStringToAnsiString@12
 RtlUnicodeStringToCountedOemString@12
 RtlUnicodeStringToInteger@12
-RtlUnicodeStringToOemSize@4
+RtlUnicodeStringToOemSize@4=RtlxUnicodeStringToOemSize@4
 RtlUnicodeStringToOemString@12
 RtlUnicodeToCustomCPN@24
 RtlUnicodeToMultiByteN@20
@@ -849,6 +850,7 @@ ZwRestoreKey@12
 ZwResumeProcess@4
 ZwResumeThread@8
 ZwSaveKey@8
+ZwSecureConnectPort@36
 ZwSetContextThread@8
 ZwSetDefaultHardErrorPort@4
 ZwSetDefaultLocale@8

@@ -212,14 +212,11 @@ NtCreateJobObject (
     CurrentProcess = PsGetCurrentProcess();
 
     /* check for valid buffers */
-    if(PreviousMode == UserMode)
+    if(PreviousMode != KernelMode)
     {
         _SEH_TRY
         {
-            /* probe with 32bit alignment */
-            ProbeForWrite(JobHandle,
-                sizeof(HANDLE),
-                sizeof(ULONG));
+            ProbeForWriteHandle(JobHandle);
         }
         _SEH_HANDLE
         {
@@ -385,14 +382,11 @@ NtOpenJobObject (
     PreviousMode = ExGetPreviousMode();
 
     /* check for valid buffers */
-    if(PreviousMode == UserMode)
+    if(PreviousMode != KernelMode)
     {
         _SEH_TRY
         {
-            /* probe with 32bit alignment */
-            ProbeForWrite(JobHandle,
-                sizeof(HANDLE),
-                sizeof(ULONG));
+            ProbeForWriteHandle(JobHandle);
         }
         _SEH_HANDLE
         {

@@ -167,10 +167,12 @@ SetMailslotInfo(HANDLE hMailslot,
 		DWORD lReadTimeout)
 {
    FILE_MAILSLOT_SET_INFORMATION Buffer;
+   LARGE_INTEGER Timeout;
    IO_STATUS_BLOCK Iosb;
    NTSTATUS Status;
 
-   Buffer.ReadTimeout.QuadPart = lReadTimeout * -10000;
+   Timeout.QuadPart = lReadTimeout * -10000;
+   Buffer.ReadTimeout = &Timeout;
 
    Status = NtSetInformationFile(hMailslot,
 				 &Iosb,

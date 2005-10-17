@@ -1342,7 +1342,7 @@ static HRESULT VARIANT_FormatNumber(LPVARIANT pVarIn, LPOLESTR lpszFormat,
 
     case FMT_GEN_INLINE:
       pToken += 2;
-      TRACE("copy %s\n", debugstr_a(pToken));
+      TRACE("copy %s\n", debugstr_a((LPCSTR)pToken));
       while (*pToken)
         *pBuff++ = *pToken++;
       break;

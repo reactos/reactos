@@ -13,6 +13,35 @@
 
 /* CONSTANTS *****************************************************************/
 
+#ifdef NTOS_MODE_USER
+/* Definitions for Object Creation */
+#define OBJ_INHERIT 2L
+#define OBJ_PERMANENT 16L
+#define OBJ_EXCLUSIVE 32L
+#define OBJ_CASE_INSENSITIVE 64L
+#define OBJ_OPENIF 128L
+#define OBJ_OPENLINK 256L
+#define OBJ_VALID_ATTRIBUTES 498L
+#define InitializeObjectAttributes(p,n,a,r,s) { \
+    (p)->Length = sizeof(OBJECT_ATTRIBUTES); \
+    (p)->RootDirectory = (r); \
+    (p)->Attributes = (a); \
+    (p)->ObjectName = (n); \
+    (p)->SecurityDescriptor = (s); \
+    (p)->SecurityQualityOfService = NULL; \
+}
+
+/* Directory Object Access Rights */
+#define DIRECTORY_QUERY                 0x0001
+#define DIRECTORY_TRAVERSE              0x0002
+#define DIRECTORY_CREATE_OBJECT         0x0004
+#define DIRECTORY_CREATE_SUBDIRECTORY   0x0008
+#define DIRECTORY_ALL_ACCESS            STANDARD_RIGHTS_REQUIRED | 0xF
+#endif
+
+/* Duplication Flags */
+#define DUPLICATE_SAME_ATTRIBUTES       0x00000004
+
 /* Values for DosDeviceDriveType */
 #define DOSDEVICE_DRIVE_UNKNOWN		0
 #define DOSDEVICE_DRIVE_CALCULATE	1
@@ -22,6 +51,7 @@
 #define DOSDEVICE_DRIVE_CDROM		5
 #define DOSDEVICE_DRIVE_RAMDISK		6
 
+#ifndef NTOS_MODE_USER
 /* Object Flags */
 #define OB_FLAG_CREATE_INFO    0x01
 #define OB_FLAG_KERNEL_MODE    0x02
@@ -41,12 +71,23 @@ typedef enum _OB_OPEN_REASON
     ObInheritHandle,
     ObMaxOpenReason
 } OB_OPEN_REASON;
+#endif
+
+typedef enum _OBJECT_INFORMATION_CLASS
+{
+    ObjectBasicInformation,
+    ObjectNameInformation,
+    ObjectTypeInformation,
+    ObjectAllTypesInformation,
+    ObjectHandleInformation
+} OBJECT_INFORMATION_CLASS;
 
 /* FUNCTION TYPES ************************************************************/
 
+#ifndef NTOS_MODE_USER
 /* Object Callbacks FIXME: Update these soon */
 typedef NTSTATUS
-(STDCALL *OB_OPEN_METHOD)(
+(NTAPI *OB_OPEN_METHOD)(
     OB_OPEN_REASON  Reason,
     PVOID  ObjectBody,
     PEPROCESS  Process,
@@ -55,7 +96,7 @@ typedef NTSTATUS
 );
 
 typedef NTSTATUS
-(STDCALL *OB_PARSE_METHOD)(
+(NTAPI *OB_PARSE_METHOD)(
     PVOID  Object,
     PVOID  *NextObject,
     PUNICODE_STRING  FullPath,
@@ -64,24 +105,24 @@ typedef NTSTATUS
 );
 
 typedef VOID
-(STDCALL *OB_DELETE_METHOD)(
+(NTAPI *OB_DELETE_METHOD)(
     PVOID  DeletedObject
 );
 
 typedef VOID
-(STDCALL *OB_CLOSE_METHOD)(
+(NTAPI *OB_CLOSE_METHOD)(
     PVOID  ClosedObject,
     ULONG  HandleCount
 );
 
 typedef VOID
-(STDCALL *OB_DUMP_METHOD)(VOID);
+(NTAPI *OB_DUMP_METHOD)(VOID);
 
 typedef NTSTATUS
-(STDCALL *OB_OKAYTOCLOSE_METHOD)(VOID);
+(NTAPI *OB_OKAYTOCLOSE_METHOD)(VOID);
 
 typedef NTSTATUS
-(STDCALL *OB_QUERYNAME_METHOD)(
+(NTAPI *OB_QUERYNAME_METHOD)(
     PVOID  ObjectBody,
     POBJECT_NAME_INFORMATION  ObjectNameInfo,
     ULONG  Length,
@@ -89,17 +130,16 @@ typedef NTSTATUS
 );
 
 typedef PVOID
-(STDCALL *OB_FIND_METHOD)(
+(NTAPI *OB_FIND_METHOD)(
     PVOID  WinStaObject,
     PWSTR  Name,
     ULONG  Attributes
 );
 
-
 typedef NTSTATUS
-(STDCALL *OB_SECURITY_METHOD)(
+(NTAPI *OB_SECURITY_METHOD)(
     PVOID Object,
-    SECURITY_OPERATION_CODE OperationType,                         
+    SECURITY_OPERATION_CODE OperationType,
     SECURITY_INFORMATION SecurityInformation,
     PSECURITY_DESCRIPTOR NewSecurityDescriptor,
     PULONG ReturnLength,
@@ -110,15 +150,36 @@ typedef NTSTATUS
 
 /* FIXME: TEMPORARY HACK */
 typedef NTSTATUS
-(STDCALL *OB_CREATE_METHOD)(
+(NTAPI *OB_CREATE_METHOD)(
     PVOID  ObjectBody,
     PVOID  Parent,
     PWSTR  RemainingPath,
     struct _OBJECT_ATTRIBUTES*  ObjectAttributes
 );
+#endif
 
 /* TYPES *********************************************************************/
 
+#ifdef NTOS_MODE_USER
+typedef struct _OBJECT_NAME_INFORMATION
+{
+    UNICODE_STRING Name;
+} OBJECT_NAME_INFORMATION, *POBJECT_NAME_INFORMATION;
+#endif
+
+typedef struct _OBJECT_HANDLE_ATTRIBUTE_INFORMATION
+{
+    BOOLEAN Inherit;
+    BOOLEAN ProtectFromClose;
+} OBJECT_HANDLE_ATTRIBUTE_INFORMATION, *POBJECT_HANDLE_ATTRIBUTE_INFORMATION;
+
+typedef struct _OBJECT_DIRECTORY_INFORMATION
+{
+    UNICODE_STRING ObjectName;
+    UNICODE_STRING ObjectTypeName;
+} OBJECT_DIRECTORY_INFORMATION, *POBJECT_DIRECTORY_INFORMATION;
+
+#ifndef NTOS_MODE_USER
 typedef struct _OBJECT_BASIC_INFORMATION
 {
     ULONG Attributes;
@@ -159,7 +220,7 @@ typedef struct _OBJECT_CREATE_INFORMATION
 
 typedef struct _OBJECT_TYPE_INITIALIZER
 {
-    WORD Length;
+    USHORT Length;
     UCHAR UseDefaultObject;
     UCHAR CaseInsensitive;
     ULONG InvalidAttributes;
@@ -226,15 +287,6 @@ typedef struct _OBJECT_HEADER_CREATOR_INFO
     USHORT Reserved;
 } OBJECT_HEADER_CREATOR_INFO, *POBJECT_HEADER_CREATOR_INFO;
 
-typedef struct _QUAD
-{
-    union
-    {
-        LONGLONG UseThisFieldToCopy;
-        float DoNotUseThisField;
-    };
-} QUAD, *PQUAD;
-
 typedef struct _OBJECT_HEADER
 {
     LIST_ENTRY Entry; /* FIXME: REMOVE THIS SOON */
@@ -290,7 +342,8 @@ typedef struct _DEVICE_MAP
 
 /* EXPORTED DATA *************************************************************/
 
-extern NTOSAPI POBJECT_TYPE ObDirectoryType;
-extern NTOSAPI PDEVICE_MAP ObSystemDeviceMap;
+extern POBJECT_TYPE NTSYSAPI ObDirectoryType;
+extern PDEVICE_MAP NTSYSAPI ObSystemDeviceMap;
+#endif
 
 #endif

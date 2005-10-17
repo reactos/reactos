@@ -156,8 +156,8 @@ typedef LONGLONG USN;
 #define Int64ShraMod32(a,b) ((LONGLONG)(a)>>(b))
 #define Int64ShrlMod32(a,b) ((DWORDLONG)(a)>>(b))
 #endif
-#define ANSI_NULL '\0'
-#define UNICODE_NULL L'\0'
+#define ANSI_NULL ((CHAR)0)
+#define UNICODE_NULL ((WCHAR)0)
 typedef BYTE BOOLEAN,*PBOOLEAN;
 #endif
 typedef BYTE FCHAR;
@@ -2382,6 +2382,8 @@ typedef union _SLIST_HEADER {
 } SLIST_HEADER,*PSLIST_HEADER;
 #endif /* !_SLIST_HEADER_ */
 
+/* FIXME: Please oh please stop including winnt.h from the DDK... */
+#ifndef __NTDDK_H
 typedef struct _RTL_CRITICAL_SECTION_DEBUG {
 	WORD Type;
 	WORD CreatorBackTraceIndex;
@@ -2399,6 +2401,8 @@ typedef struct _RTL_CRITICAL_SECTION {
 	HANDLE LockSemaphore;
 	ULONG_PTR SpinCount;
 } RTL_CRITICAL_SECTION,*PRTL_CRITICAL_SECTION;
+#endif
+
 typedef struct _EVENTLOGRECORD {
 	DWORD Length;
 	DWORD Reserved;
@@ -3099,6 +3103,8 @@ typedef union _FILE_SEGMENT_ELEMENT {
 #define JOB_OBJECT_SET_SECURITY_ATTRIBUTES  16
 #define JOB_OBJECT_ALL_ACCESS               (STANDARD_RIGHTS_REQUIRED|SYNCHRONIZE|31)
 
+/* FIXME: Oh how I wish, I wish the w32api DDK wouldn't include winnt.h... */
+#ifndef __NTDDK_H
 typedef enum _JOBOBJECTINFOCLASS {
 	JobObjectBasicAccountingInformation = 1,
 	JobObjectBasicLimitInformation,
@@ -3112,6 +3118,8 @@ typedef enum _JOBOBJECTINFOCLASS {
 	JobObjectJobSetInformation,
 	MaxJobObjectInfoClass
 } JOBOBJECTINFOCLASS;
+#endif
+
 typedef struct _JOBOBJECT_BASIC_ACCOUNTING_INFORMATION {
 	LARGE_INTEGER TotalUserTime;
 	LARGE_INTEGER TotalKernelTime;
@@ -3338,6 +3346,7 @@ typedef struct _SYSTEM_BATTERY_STATE {
 	ULONG  DefaultAlert2;
 } SYSTEM_BATTERY_STATE, *PSYSTEM_BATTERY_STATE;
 
+typedef DWORD EXECUTION_STATE;
 typedef enum _POWER_INFORMATION_LEVEL {
 	SystemPowerPolicyAc,
 	SystemPowerPolicyDc,

@@ -28,8 +28,6 @@
  * -Gunnar
  */
 
-#define WINVER 0x0500
-
 #include <k32.h>
 
 #include "wine/config.h"

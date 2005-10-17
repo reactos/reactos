@@ -195,6 +195,25 @@ ControlService(SC_HANDLE        hService,
 
 
 /**********************************************************************
+ *  ControlServiceEx
+ *
+ * @unimplemented
+ */
+BOOL STDCALL
+ControlServiceEx(IN SC_HANDLE hService,
+                 IN DWORD dwControl,
+                 IN DWORD dwInfoLevel,
+                 IN OUT PVOID pControlParams)
+{
+    DPRINT1("ControlServiceEx(0x%p, 0x%x, 0x%x, 0x%p) UNIMPLEMENTED!\n",
+            hService, dwControl, dwInfoLevel, pControlParams);
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+}
+
+
+
+/**********************************************************************
  *  CreateServiceA
  *
  * @unimplemented

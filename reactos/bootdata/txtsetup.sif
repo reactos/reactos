@@ -14,6 +14,7 @@ Signature = "$ReactOS$"
 [SourceFiles]
 ; <filename> = <directory_id>
 atapi.sys     = 3
+buslogic.sys  = 3
 blue.sys      = 3
 c_437.nls     = 2
 c_1252.nls    = 2

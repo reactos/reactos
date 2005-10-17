@@ -320,9 +320,14 @@ INT CommandAlias (LPTSTR cmd, LPTSTR param)
 		return 0;
 	}
 
+	nErrorLevel = 0;
+
 	/* error if no '=' found */
 	if ((ptr = _tcschr (param, _T('='))) == 0)
+	{
+		nErrorLevel = 1;
 		return 1;
+	}
 
 	/* Split rest into name and substitute */
 	*ptr++ = _T('\0');

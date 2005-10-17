@@ -563,12 +563,16 @@ out:
     return r;
 }
 
-UINT WINAPI MsiViewGetErrorW( MSIHANDLE handle, LPWSTR szColumnNameBuffer,
+MSIDBERROR WINAPI MsiViewGetErrorW( MSIHANDLE handle, LPWSTR szColumnNameBuffer,
                               DWORD *pcchBuf )
 {
     MSIQUERY *query = NULL;
+    static const WCHAR szError[] = { 0 };
+    MSIDBERROR r = MSIDBERROR_NOERROR;
+    int len;
 
-    FIXME("%ld %p %p\n", handle, szColumnNameBuffer, pcchBuf );
+    FIXME("%ld %p %p - returns empty error string\n",
+          handle, szColumnNameBuffer, pcchBuf );
 
     if( !pcchBuf )
         return MSIDBERROR_INVALIDARG;
@@ -577,16 +581,30 @@ UINT WINAPI MsiViewGetErrorW( MSIHANDLE handle, LPWSTR szColumnNameBuffer,
     if( !query )
         return MSIDBERROR_INVALIDARG;
 
+    len = lstrlenW( szError );
+    if( szColumnNameBuffer )
+    {
+        if( *pcchBuf > len )
+            lstrcpyW( szColumnNameBuffer, szError );
+        else
+            r = MSIDBERROR_MOREDATA;
+    }
+    *pcchBuf = len;
+
     msiobj_release( &query->hdr );
-    return MSIDBERROR_NOERROR;
+    return r;
 }
 
-UINT WINAPI MsiViewGetErrorA( MSIHANDLE handle, LPSTR szColumnNameBuffer,
+MSIDBERROR WINAPI MsiViewGetErrorA( MSIHANDLE handle, LPSTR szColumnNameBuffer,
                               DWORD *pcchBuf )
 {
+    static const CHAR szError[] = { 0 };
     MSIQUERY *query = NULL;
+    MSIDBERROR r = MSIDBERROR_NOERROR;
+    int len;
 
-    FIXME("%ld %p %p\n", handle, szColumnNameBuffer, pcchBuf );
+    FIXME("%ld %p %p - returns empty error string\n",
+          handle, szColumnNameBuffer, pcchBuf );
 
     if( !pcchBuf )
         return MSIDBERROR_INVALIDARG;
@@ -595,8 +613,18 @@ UINT WINAPI MsiViewGetErrorA( MSIHANDLE handle, LPSTR szColumnNameBuffer,
     if( !query )
         return MSIDBERROR_INVALIDARG;
 
+    len = lstrlenA( szError );
+    if( szColumnNameBuffer )
+    {
+        if( *pcchBuf > len )
+            lstrcpyA( szColumnNameBuffer, szError );
+        else
+            r = MSIDBERROR_MOREDATA;
+    }
+    *pcchBuf = len;
+
     msiobj_release( &query->hdr );
-    return MSIDBERROR_NOERROR;
+    return r;
 }
 
 UINT WINAPI MsiDatabaseApplyTransformA( MSIHANDLE hdb, 

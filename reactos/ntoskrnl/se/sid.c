@@ -316,7 +316,7 @@ SepReleaseSid(IN PSID CapturedSid,
   PAGED_CODE();
 
   if(CapturedSid != NULL &&
-     (AccessMode == UserMode ||
+     (AccessMode != KernelMode ||
       (AccessMode == KernelMode && CaptureIfKernel)))
   {
     ExFreePool(CapturedSid);

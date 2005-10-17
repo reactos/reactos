@@ -90,13 +90,11 @@ NtCreateMutant(OUT PHANDLE MutantHandle,
     DPRINT("NtCreateMutant(0x%p, 0x%x, 0x%p)\n", MutantHandle, DesiredAccess, ObjectAttributes);
 
     /* Check Output Safety */
-    if(PreviousMode == UserMode) {
+    if(PreviousMode != KernelMode) {
 
         _SEH_TRY {
 
-            ProbeForWrite(MutantHandle,
-                          sizeof(HANDLE),
-                          sizeof(ULONG));
+            ProbeForWriteHandle(MutantHandle);
         } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
 
             Status = _SEH_GetExceptionCode();
@@ -169,13 +167,11 @@ NtOpenMutant(OUT PHANDLE MutantHandle,
     DPRINT("NtOpenMutant(0x%p, 0x%x, 0x%p)\n", MutantHandle, DesiredAccess, ObjectAttributes);
 
     /* Check Output Safety */
-    if(PreviousMode == UserMode) {
+    if(PreviousMode != KernelMode) {
 
         _SEH_TRY {
 
-            ProbeForWrite(MutantHandle,
-                          sizeof(HANDLE),
-                          sizeof(ULONG));
+            ProbeForWriteHandle(MutantHandle);
         } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
 
             Status = _SEH_GetExceptionCode();
@@ -305,9 +301,7 @@ NtReleaseMutant(IN HANDLE MutantHandle,
 
         _SEH_TRY {
 
-            ProbeForWrite(PreviousCount,
-                          sizeof(LONG),
-                          sizeof(ULONG));
+            ProbeForWriteLong(PreviousCount);
         } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
 
             Status = _SEH_GetExceptionCode();

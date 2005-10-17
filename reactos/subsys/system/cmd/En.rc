@@ -46,7 +46,7 @@ CHDIR[..|.]\n\
 CD [/D][drive:][path]\n\
 CD[..|.]\n\n\
   ..   parent directory\n\
-  .    previous directory\n\
+  .    current directory\n\
   /D   Will change current drive and current directory.\n\n\
 Type CD drive: to display the current directory on the specified drive.\n\
 Type CD without a parameter to display the current drive and directory.\n"

@@ -839,10 +839,10 @@ COMBOEX_FindStringExact (COMBOEX_INFO *infoPtr, INT start, LPCWSTR str)
 }
 
 
-static DWORD COMBOEX_GetItemData (COMBOEX_INFO *infoPtr, INT index)
+static DWORD_PTR COMBOEX_GetItemData (COMBOEX_INFO *infoPtr, INT index)
 {
     CBE_ITEMDATA *item1, *item2;
-    DWORD ret = 0;
+    DWORD_PTR ret = 0;
 
     item1 = get_item_data(infoPtr, index);
     if ((item1 != NULL) && ((LRESULT)item1 != CB_ERR)) {
@@ -854,7 +854,7 @@ static DWORD COMBOEX_GetItemData (COMBOEX_INFO *infoPtr, INT index)
 	if (item1->mask & CBEIF_LPARAM) ret = item1->lParam;
 	TRACE("returning 0x%08lx\n", ret);
     } else {
-        ret = (DWORD)item1;
+        ret = (DWORD_PTR)item1;
         TRACE("non-valid result from combo, returning 0x%08lx\n", ret);
     }
     return ret;
@@ -878,7 +878,7 @@ static INT COMBOEX_SetCursel (COMBOEX_INFO *infoPtr, INT index)
 }
 
 
-static DWORD COMBOEX_SetItemData (COMBOEX_INFO *infoPtr, INT index, DWORD data)
+static DWORD_PTR COMBOEX_SetItemData (COMBOEX_INFO *infoPtr, INT index, DWORD_PTR data)
 {
     CBE_ITEMDATA *item1, *item2;
 
@@ -894,8 +894,8 @@ static DWORD COMBOEX_SetItemData (COMBOEX_INFO *infoPtr, INT index, DWORD data)
 	TRACE("setting lparam to 0x%08lx\n", data);
 	return 0;
     }
-    TRACE("non-valid result from combo 0x%08lx\n", (DWORD)item1);
-    return (LRESULT)item1;
+    TRACE("non-valid result from combo %p\n", item1);
+    return (DWORD_PTR)item1;
 }
 
 
@@ -1136,10 +1136,10 @@ static LRESULT COMBOEX_Command (COMBOEX_INFO *infoPtr, WPARAM wParam, LPARAM lPa
 	    n = SendMessageW (infoPtr->hwndCombo, CB_GETCOUNT, 0, 0);
 	    for (cursel = 0; cursel < n; cursel++){
                 item = get_item_data(infoPtr, cursel);
-		if ((INT)item == CB_ERR) break;
+		if ((INT_PTR)item == CB_ERR) break;
 		if (!cmptext(COMBOEX_GetText(infoPtr, item), wintext)) break;
 	    }
-	    if ((cursel == n) || ((INT)item == CB_ERR)) {
+	    if ((cursel == n) || ((INT_PTR)item == CB_ERR)) {
 		TRACE("failed to find match??? item=%p cursel=%d\n",
 		      item, cursel);
 		if (infoPtr->hwndEdit)
@@ -1149,7 +1149,7 @@ static LRESULT COMBOEX_Command (COMBOEX_INFO *infoPtr, WPARAM wParam, LPARAM lPa
 	}
 	else {
             item = get_item_data(infoPtr, cursel);
-	    if ((INT)item == CB_ERR) {
+	    if ((INT_PTR)item == CB_ERR) {
 		TRACE("failed to find match??? item=%p cursel=%d\n",
 		      item, cursel);
 		if (infoPtr->hwndEdit)
@@ -2223,7 +2223,7 @@ COMBOEX_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    return COMBOEX_SetCursel (infoPtr, (INT)wParam);
 
 	case CB_SETITEMDATA:
-	    return COMBOEX_SetItemData (infoPtr, (INT)wParam, (DWORD)lParam);
+	    return COMBOEX_SetItemData (infoPtr, (INT)wParam, (DWORD_PTR)lParam);
 
 	case CB_SETITEMHEIGHT:
 	    return COMBOEX_SetItemHeight (infoPtr, (INT)wParam, (UINT)lParam);

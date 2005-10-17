@@ -9,16 +9,9 @@
  *   CSH 01/08-2000 Created
  *   09-13-2003 Vizzini Updates for SendPackets support
  */
-#include <roscfg.h>
+
 #include "ndissys.h"
 #include <buffer.h>
-
-VOID
-EXPORT
-NdisMSendComplete(
-    IN  NDIS_HANDLE     MiniportAdapterHandle,
-    IN  PNDIS_PACKET    Packet,
-    IN  NDIS_STATUS     Status);
 
 #define SERVICES_KEY L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\"
 #define LINKAGE_KEY  L"\\Linkage"
@@ -85,7 +78,7 @@ ProIndicatePacket(
   NDIS_DbgPrint(MAX_TRACE, ("acquiring miniport block lock\n"));
   KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
     {
-      Adapter->LoopPacket = Packet;
+      Adapter->NdisMiniportBlock.IndicatedPacket[KeGetCurrentProcessorNumber()] = Packet;
       BufferedLength = CopyPacketToBuffer(Adapter->LookaheadBuffer, Packet, 0, Adapter->NdisMiniportBlock.CurrentLookahead);
     }
   KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
@@ -105,7 +98,7 @@ ProIndicatePacket(
   NDIS_DbgPrint(MAX_TRACE, ("acquiring miniport block lock\n"));
   KeAcquireSpinLock(&Adapter->NdisMiniportBlock.Lock, &OldIrql);
     {
-      Adapter->LoopPacket = NULL;
+      Adapter->NdisMiniportBlock.IndicatedPacket[KeGetCurrentProcessorNumber()] = NULL;
     }
   KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
 
@@ -113,7 +106,7 @@ ProIndicatePacket(
 }
 
 
-NDIS_STATUS STDCALL
+NDIS_STATUS NTAPI
 ProRequest(
     IN  NDIS_HANDLE     MacBindingHandle,
     IN  PNDIS_REQUEST   NdisRequest)
@@ -131,6 +124,7 @@ ProRequest(
   NDIS_STATUS NdisStatus;
   PADAPTER_BINDING AdapterBinding;
   PLOGICAL_ADAPTER Adapter;
+  PNDIS_REQUEST_MAC_BLOCK MacBlock = (PNDIS_REQUEST_MAC_BLOCK)NdisRequest->MacReserved;
 
   NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
@@ -139,6 +133,8 @@ ProRequest(
 
   ASSERT(AdapterBinding->Adapter);
   Adapter = AdapterBinding->Adapter;
+
+  MacBlock->Binding = &AdapterBinding->NdisOpenBlock;
 
   /*
    * If the miniport is already busy, queue a workitem
@@ -158,7 +154,7 @@ ProRequest(
   /* MiniQueueWorkItem must be called at IRQL >= DISPATCH_LEVEL */
   if (QueueWorkItem)
     {
-      MiniQueueWorkItem(AdapterBinding, NdisWorkItemRequest, (PVOID)NdisRequest);
+      MiniQueueWorkItem(Adapter, NdisWorkItemRequest, (PVOID)NdisRequest);
       KeReleaseSpinLock(&Adapter->NdisMiniportBlock.Lock, OldIrql);
       return NDIS_STATUS_PENDING;
     }
@@ -169,7 +165,7 @@ ProRequest(
   /* TODO (?): move the irql raise into MiniDoRequest */
   KeRaiseIrql(DISPATCH_LEVEL, &OldIrql);
     {
-      NdisStatus = MiniDoRequest(AdapterBinding, NdisRequest);
+      NdisStatus = MiniDoRequest(&Adapter->NdisMiniportBlock, NdisRequest);
 
       NDIS_DbgPrint(MAX_TRACE, ("acquiring miniport block lock\n"));
       KeAcquireSpinLockAtDpcLevel(&Adapter->NdisMiniportBlock.Lock);
@@ -178,7 +174,7 @@ ProRequest(
           Adapter->MiniportBusy = FALSE;
 
           if (Adapter->WorkQueueHead)
-            KeInsertQueueDpc(&Adapter->MiniportDpc, NULL, NULL);
+            KeInsertQueueDpc(&Adapter->NdisMiniportBlock.DeferredDpc, NULL, NULL);
         }
       KeReleaseSpinLockFromDpcLevel(&Adapter->NdisMiniportBlock.Lock);
     }
@@ -188,7 +184,7 @@ ProRequest(
 }
 
 
-NDIS_STATUS STDCALL
+NDIS_STATUS NTAPI
 ProReset(
     IN  NDIS_HANDLE MacBindingHandle)
 {
@@ -198,7 +194,7 @@ ProReset(
 }
 
 
-NDIS_STATUS STDCALL
+NDIS_STATUS NTAPI
 ProSend(
     IN  NDIS_HANDLE     MacBindingHandle,
     IN  PNDIS_PACKET    Packet)
@@ -278,7 +274,7 @@ ProSend(
 
       if (QueueWorkItem)
         {
-          MiniQueueWorkItem(AdapterBinding, NdisWorkItemSendLoopback, (PVOID)Packet);
+          MiniQueueWorkItem(Adapter, NdisWorkItemSendLoopback, (PVOID)Packet);
           return NDIS_STATUS_PENDING;
         }
 
@@ -299,7 +295,7 @@ ProSend(
               Adapter->MiniportBusy = FALSE;
 
               if (Adapter->WorkQueueHead)
-                KeInsertQueueDpc(&Adapter->MiniportDpc, NULL, NULL);
+                KeInsertQueueDpc(&Adapter->NdisMiniportBlock.DeferredDpc, NULL, NULL);
               else
                 NDIS_DbgPrint(MID_TRACE,("Failed to insert packet into work queue\n"));
             }
@@ -315,12 +311,12 @@ ProSend(
   /* This is a normal send packet, not a loopback packet. */
   if (QueueWorkItem)
     {
-      MiniQueueWorkItem(AdapterBinding, NdisWorkItemSend, (PVOID)Packet);
+      MiniQueueWorkItem(Adapter, NdisWorkItemSend, (PVOID)Packet);
       NDIS_DbgPrint(MAX_TRACE, ("Queued a work item and returning\n"));
       return NDIS_STATUS_PENDING;
     }
 
-  ASSERT(Adapter->Miniport);
+  ASSERT(Adapter->NdisMiniportBlock.DriverHandle);
 
   /*
    * Call the appropriate send handler
@@ -328,12 +324,13 @@ ProSend(
    * If a miniport provides a SendPackets handler, we always call it.  If not, we call the
    * Send handler.
    */
-  if(Adapter->Miniport->Chars.SendPacketsHandler)
+  if(Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendPacketsHandler)
     {
       if(Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_DESERIALIZE)
         {
           NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's SendPackets handler\n"));
-          (*Adapter->Miniport->Chars.SendPacketsHandler)(Adapter->NdisMiniportBlock.MiniportAdapterContext, &Packet, 1);
+          (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendPacketsHandler)(
+            Adapter->NdisMiniportBlock.MiniportAdapterContext, &Packet, 1);
         }
       else
         {
@@ -341,7 +338,8 @@ ProSend(
           KeRaiseIrql(DISPATCH_LEVEL, &RaiseOldIrql);
             {
               NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's SendPackets handler\n"));
-              (*Adapter->Miniport->Chars.SendPacketsHandler)(Adapter->NdisMiniportBlock.MiniportAdapterContext, &Packet, 1);
+              (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendPacketsHandler)(
+                Adapter->NdisMiniportBlock.MiniportAdapterContext, &Packet, 1);
             }
           KeLowerIrql(RaiseOldIrql);
         }
@@ -356,7 +354,8 @@ ProSend(
       if(Adapter->NdisMiniportBlock.Flags & NDIS_ATTRIBUTE_DESERIALIZE)
         {
           NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's Send handler\n"));
-          NdisStatus = (*Adapter->Miniport->Chars.SendHandler)(Adapter->NdisMiniportBlock.MiniportAdapterContext, Packet, 0);
+          NdisStatus = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendHandler)(
+            Adapter->NdisMiniportBlock.MiniportAdapterContext, Packet, 0);
           NDIS_DbgPrint(MAX_TRACE, ("back from miniport's send handler\n"));
         }
       else
@@ -365,7 +364,8 @@ ProSend(
           KeRaiseIrql(DISPATCH_LEVEL, &RaiseOldIrql);
 
           NDIS_DbgPrint(MAX_TRACE, ("Calling miniport's Send handler\n"));
-          NdisStatus = (*Adapter->Miniport->Chars.SendHandler)(Adapter->NdisMiniportBlock.MiniportAdapterContext, Packet, 0);
+          NdisStatus = (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.SendHandler)(
+            Adapter->NdisMiniportBlock.MiniportAdapterContext, Packet, 0);
           NDIS_DbgPrint(MAX_TRACE, ("back from miniport's send handler\n"));
 	  if( NdisStatus != NDIS_STATUS_PENDING ) {
 	      Adapter->MiniportBusy = FALSE;
@@ -380,7 +380,7 @@ ProSend(
     {
       if (Adapter->WorkQueueHead)
         {
-          KeInsertQueueDpc(&Adapter->MiniportDpc, NULL, NULL);
+          KeInsertQueueDpc(&Adapter->NdisMiniportBlock.DeferredDpc, NULL, NULL);
           NDIS_DbgPrint(MAX_TRACE, ("MiniportDpc queued; returning NDIS_STATUS_SUCCESS\n"));
         }
     }
@@ -391,7 +391,7 @@ ProSend(
 }
 
 
-VOID STDCALL
+VOID NTAPI
 ProSendPackets(
     IN  NDIS_HANDLE     NdisBindingHandle,
     IN  PPNDIS_PACKET   PacketArray,
@@ -401,7 +401,7 @@ ProSendPackets(
 }
 
 
-NDIS_STATUS STDCALL
+NDIS_STATUS NTAPI
 ProTransferData(
     IN  NDIS_HANDLE         MacBindingHandle,
     IN  NDIS_HANDLE         MacReceiveContext,
@@ -428,19 +428,19 @@ ProTransferData(
     /* FIXME: Interrupts must be disabled for adapter */
     /* XXX sd - why is that true? */
 
-    if (Packet == Adapter->LoopPacket) {
+    if (Packet == Adapter->NdisMiniportBlock.IndicatedPacket[KeGetCurrentProcessorNumber()]) {
 	NDIS_DbgPrint(MAX_TRACE, ("LoopPacket\n"));
         /* NDIS is responsible for looping this packet */
         NdisCopyFromPacketToPacket(Packet,
                                    ByteOffset,
                                    BytesToTransfer,
-                                   Adapter->LoopPacket,
+                                   Adapter->NdisMiniportBlock.IndicatedPacket[KeGetCurrentProcessorNumber()],
                                    0,
                                    BytesTransferred);
         return NDIS_STATUS_SUCCESS;
     }
 
-    return (*Adapter->Miniport->Chars.TransferDataHandler)(
+    return (*Adapter->NdisMiniportBlock.DriverHandle->MiniportCharacteristics.TransferDataHandler)(
         Packet,
         BytesTransferred,
         Adapter->NdisMiniportBlock.MiniportAdapterContext,
@@ -610,18 +610,21 @@ NdisOpenAdapter(
 
   AdapterBinding->ProtocolBinding        = Protocol;
   AdapterBinding->Adapter                = Adapter;
-  AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.ProtocolBindingContext = ProtocolBindingContext;
+  AdapterBinding->NdisOpenBlock.ProtocolBindingContext = ProtocolBindingContext;
 
   /* Set fields required by some NDIS macros */
-  AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.BindingHandle = (NDIS_HANDLE)AdapterBinding;
+  AdapterBinding->NdisOpenBlock.BindingHandle = (NDIS_HANDLE)AdapterBinding;
 
   /* Set handlers (some NDIS macros require these) */
 
-  AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.RequestHandler      = ProRequest;
-  AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.ResetHandler        = ProReset;
-  AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.SendHandler         = ProSend;
-  AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.SendPacketsHandler  = ProSendPackets;
-  AdapterBinding->NdisOpenBlock.NdisCommonOpenBlock.TransferDataHandler = ProTransferData;
+  AdapterBinding->NdisOpenBlock.RequestHandler      = ProRequest;
+  AdapterBinding->NdisOpenBlock.ResetHandler        = ProReset;
+  AdapterBinding->NdisOpenBlock.SendHandler         = ProSend;
+  AdapterBinding->NdisOpenBlock.SendPacketsHandler  = ProSendPackets;
+  AdapterBinding->NdisOpenBlock.TransferDataHandler = ProTransferData;
+
+  AdapterBinding->NdisOpenBlock.RequestCompleteHandler = 
+    Protocol->Chars.RequestCompleteHandler; 
 
 #if 0
   /* XXX this looks fishy */
@@ -729,8 +732,6 @@ NdisRegisterProtocol(
     }
 
   KeInitializeSpinLock(&Protocol->Lock);
-
-  Protocol->RefCount = 1;
 
   InitializeListHead(&Protocol->AdapterListHead);
 
@@ -937,6 +938,7 @@ NdisReset(
 /*
  * @implemented
  */
+#undef NdisSend
 VOID
 EXPORT
 NdisSend(
@@ -958,6 +960,7 @@ NdisSend(
 /*
  * @implemented
  */
+#undef NdisSendPackets
 VOID
 EXPORT
 NdisSendPackets(
@@ -972,6 +975,7 @@ NdisSendPackets(
 /*
  * @implemented
  */
+#undef NdisTransferData
 VOID
 EXPORT
 NdisTransferData(

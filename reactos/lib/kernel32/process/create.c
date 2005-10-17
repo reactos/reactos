@@ -36,9 +36,13 @@ _SEH_FILTER(BaseExceptionFilter)
         }
         _SEH_HANDLE
         {
-            ExceptionDisposition = UnhandledExceptionFilter(ExceptionInfo);
         }
         _SEH_END;
+    }
+    if ((ExceptionDisposition == EXCEPTION_CONTINUE_SEARCH || ExceptionDisposition == EXCEPTION_EXECUTE_HANDLER) &&
+        GlobalTopLevelExceptionFilter != UnhandledExceptionFilter)
+    {
+       ExceptionDisposition = UnhandledExceptionFilter(ExceptionInfo);
     }
 
     return ExceptionDisposition;

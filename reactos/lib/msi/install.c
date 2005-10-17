@@ -263,7 +263,6 @@ UINT WINAPI MsiSetTargetPathA(MSIHANDLE hInstall, LPCSTR szFolder,
 UINT MSI_SetTargetPathW(MSIPACKAGE *package, LPCWSTR szFolder, 
                              LPCWSTR szFolderPath)
 {
-    DWORD i;
     DWORD attrib;
     LPWSTR path = NULL;
     LPWSTR path2 = NULL;
@@ -312,16 +311,17 @@ UINT MSI_SetTargetPathW(MSIPACKAGE *package, LPCWSTR szFolder,
     }
     else
     {
-        for (i = 0; i < package->loaded_folders; i++)
+        MSIFOLDER *f;
+
+        LIST_FOR_EACH_ENTRY( f, &package->folders, MSIFOLDER, entry )
         {
-            HeapFree(GetProcessHeap(),0,package->folders[i].ResolvedTarget);
-            package->folders[i].ResolvedTarget=NULL;
+            HeapFree( GetProcessHeap(),0,f->ResolvedTarget);
+            f->ResolvedTarget=NULL;
         }
 
-        for (i = 0; i < package->loaded_folders; i++)
+        LIST_FOR_EACH_ENTRY( f, &package->folders, MSIFOLDER, entry )
         {
-            path2=resolve_folder(package, package->folders[i].Directory, FALSE,
-                       TRUE, NULL);
+            path2 = resolve_folder(package, f->Directory, FALSE, TRUE, NULL);
             HeapFree(GetProcessHeap(),0,path2);
         }
     }
@@ -416,30 +416,29 @@ UINT WINAPI MsiSetFeatureStateA(MSIHANDLE hInstall, LPCSTR szFeature,
 UINT WINAPI MSI_SetFeatureStateW(MSIPACKAGE* package, LPCWSTR szFeature,
                                 INSTALLSTATE iState)
 {
-    INT index, i;
     UINT rc = ERROR_SUCCESS;
+    MSIFEATURE *feature, *child;
 
     TRACE(" %s to %i\n",debugstr_w(szFeature), iState);
 
-    index = get_loaded_feature(package,szFeature);
-    if (index < 0)
+    feature = get_loaded_feature(package,szFeature);
+    if (!feature)
         return ERROR_UNKNOWN_FEATURE;
 
     if (iState == INSTALLSTATE_ADVERTISED && 
-        package->features[index].Attributes & 
-            msidbFeatureAttributesDisallowAdvertise)
+        feature->Attributes & msidbFeatureAttributesDisallowAdvertise)
         return ERROR_FUNCTION_FAILED;
 
-    package->features[index].ActionRequest= iState;
-    package->features[index].Action= iState;
+    feature->ActionRequest = iState;
+    feature->Action = iState;
 
     ACTION_UpdateComponentStates(package,szFeature);
 
     /* update all the features that are children of this feature */
-    for (i = 0; i < package->loaded_features; i++)
+    LIST_FOR_EACH_ENTRY( child, &package->features, MSIFEATURE, entry )
     {
-        if (strcmpW(szFeature, package->features[i].Feature_Parent) == 0)
-            MSI_SetFeatureStateW(package, package->features[i].Feature, iState);
+        if (lstrcmpW(szFeature, child->Feature_Parent) == 0)
+            MSI_SetFeatureStateW(package, child->Feature, iState);
     }
     
     return rc;
@@ -487,19 +486,19 @@ UINT WINAPI MsiGetFeatureStateA(MSIHANDLE hInstall, LPSTR szFeature,
 UINT MSI_GetFeatureStateW(MSIPACKAGE *package, LPWSTR szFeature,
                   INSTALLSTATE *piInstalled, INSTALLSTATE *piAction)
 {
-    INT index;
+    MSIFEATURE *feature;
 
-    index = get_loaded_feature(package,szFeature);
-    if (index < 0)
+    feature = get_loaded_feature(package,szFeature);
+    if (!feature)
         return ERROR_UNKNOWN_FEATURE;
 
     if (piInstalled)
-        *piInstalled = package->features[index].Installed;
+        *piInstalled = feature->Installed;
 
     if (piAction)
-        *piAction = package->features[index].Action;
+        *piAction = feature->Action;
 
-    TRACE("returning %i %i\n",*piInstalled,*piAction);
+    TRACE("returning %i %i\n", feature->Installed, feature->Action);
 
     return ERROR_SUCCESS;
 }
@@ -525,6 +524,22 @@ piAction);
 }
 
 /***********************************************************************
+ * MsiSetComponentStateA (MSI.@)
+ */
+UINT WINAPI MsiSetComponentStateA(MSIHANDLE hInstall, LPCSTR szComponent,
+                                  INSTALLSTATE iState)
+{
+    UINT rc;
+    LPWSTR szwComponent = strdupAtoW(szComponent);
+
+    rc = MsiSetComponentStateW(hInstall, szwComponent, iState);
+
+    HeapFree(GetProcessHeap(), 0, szwComponent);
+
+    return rc;
+}
+
+/***********************************************************************
  * MsiGetComponentStateA (MSI.@)
  */
 UINT WINAPI MsiGetComponentStateA(MSIHANDLE hInstall, LPSTR szComponent,
@@ -542,28 +557,60 @@ UINT WINAPI MsiGetComponentStateA(MSIHANDLE hInstall, LPSTR szComponent,
     return rc;
 }
 
+static UINT MSI_SetComponentStateW(MSIPACKAGE *package, LPCWSTR szComponent,
+                                   INSTALLSTATE iState)
+{
+    MSICOMPONENT *comp;
+
+    TRACE("%p %s %d\n", package, debugstr_w(szComponent), iState);
+
+    comp = get_loaded_component(package, szComponent);
+    if (!comp)
+        return ERROR_UNKNOWN_COMPONENT;
+
+    comp->Installed = iState;
+
+    return ERROR_SUCCESS;
+}
+
 UINT MSI_GetComponentStateW(MSIPACKAGE *package, LPWSTR szComponent,
                   INSTALLSTATE *piInstalled, INSTALLSTATE *piAction)
 {
-    INT index;
+    MSICOMPONENT *comp;
 
-    TRACE("%p %s %p %p\n", package, debugstr_w(szComponent), piInstalled,
-piAction);
+    TRACE("%p %s %p %p\n", package, debugstr_w(szComponent),
+           piInstalled, piAction);
 
-    index = get_loaded_component(package,szComponent);
-    if (index < 0)
+    comp = get_loaded_component(package,szComponent);
+    if (!comp)
         return ERROR_UNKNOWN_COMPONENT;
 
     if (piInstalled)
-        *piInstalled = package->components[index].Installed;
+        *piInstalled = comp->Installed;
 
     if (piAction)
-        *piAction = package->components[index].Action;
+        *piAction = comp->Action;
 
-    TRACE("states (%i, %i)\n",
-(piInstalled)?*piInstalled:-1,(piAction)?*piAction:-1);
+    TRACE("states (%i, %i)\n", comp->Installed, comp->Action );
 
     return ERROR_SUCCESS;
+}
+
+/***********************************************************************
+ * MsiSetComponentStateW (MSI.@)
+ */
+UINT WINAPI MsiSetComponentStateW(MSIHANDLE hInstall, LPCWSTR szComponent,
+                                  INSTALLSTATE iState)
+{
+    MSIPACKAGE* package;
+    UINT ret;
+
+    package = msihandle2msiinfo(hInstall, MSIHANDLETYPE_PACKAGE);
+    if (!package)
+        return ERROR_INVALID_HANDLE;
+    ret = MSI_SetComponentStateW(package, szComponent, iState);
+    msiobj_release(&package->hdr);
+    return ret;
 }
 
 /***********************************************************************

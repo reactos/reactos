@@ -214,7 +214,7 @@ PspExitThread(NTSTATUS ExitStatus)
     PTERMINATION_PORT TerminationPort;
     PTEB Teb;
     KIRQL oldIrql;
-    PLIST_ENTRY ApcEntry;
+    PLIST_ENTRY FirstEntry, CurrentEntry;
     PKAPC Apc;
 
     DPRINT("PspExitThread(ExitStatus %x), Current: 0x%x\n", ExitStatus, PsGetCurrentThread());
@@ -340,37 +340,42 @@ PspExitThread(NTSTATUS ExitStatus)
     KeDisableThreadApcQueueing(&CurrentThread->Tcb);
 
     /* Flush the User APCs */
-    ApcEntry = KeFlushQueueApc(&CurrentThread->Tcb, UserMode);
-    while(ApcEntry)
+    FirstEntry = KeFlushQueueApc(&CurrentThread->Tcb, UserMode);
+    if (FirstEntry != NULL)
     {
-       /* Get the APC */
-       Apc = CONTAINING_RECORD(ApcEntry, KAPC, ApcListEntry);
+        CurrentEntry = FirstEntry;
+        do
+        {
+           /* Get the APC */
+           Apc = CONTAINING_RECORD(CurrentEntry, KAPC, ApcListEntry);
 
-       /* Move to the next one */
-       ApcEntry = ApcEntry->Flink;
+           /* Move to the next one */
+           CurrentEntry = CurrentEntry->Flink;
 
-       /* Rundown the APC or de-allocate it */
-       if (Apc->RundownRoutine)
-       {
-          /* Call its own routine */
-          (Apc->RundownRoutine)(Apc);
-       }
-       else
-       {
-          /* Do it ourselves */
-          ExFreePool(Apc);
-       }
+           /* Rundown the APC or de-allocate it */
+           if (Apc->RundownRoutine)
+           {
+              /* Call its own routine */
+              (Apc->RundownRoutine)(Apc);
+           }
+           else
+           {
+              /* Do it ourselves */
+              ExFreePool(Apc);
+           }
+        }
+        while (CurrentEntry != FirstEntry);
     }
 
     /* Call the Lego routine */
     if (CurrentThread->Tcb.LegoData) PspRunLegoRoutine(&CurrentThread->Tcb);
 
     /* Flush the APC queue, which should be empty */
-    if ((ApcEntry = KeFlushQueueApc(&CurrentThread->Tcb, KernelMode)))
+    if ((FirstEntry = KeFlushQueueApc(&CurrentThread->Tcb, KernelMode)))
     {
         /* Bugcheck time */
         KEBUGCHECKEX(KERNEL_APC_PENDING_DURING_EXIT,
-                     (ULONG_PTR)ApcEntry,
+                     (ULONG_PTR)FirstEntry,
                      CurrentThread->Tcb.KernelApcDisable,
                      oldIrql,
                      0);

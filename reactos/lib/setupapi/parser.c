@@ -1523,13 +1523,13 @@ BOOL WINAPI SetupGetLineTextW( PINFCONTEXT context, HINF hinf, PCWSTR section_na
         total += PARSER_string_substW( file, field->text, NULL, 0 ) + 1;
 
     if (required) *required = total;
-    if (total > size)
-    {
-        SetLastError( ERROR_INSUFFICIENT_BUFFER );
-        return FALSE;
-    }
     if (buffer)
     {
+        if (total > size)
+        {
+            SetLastError( ERROR_INSUFFICIENT_BUFFER );
+            return FALSE;
+        }
         for (i = 0, field = &file->fields[line->first_field]; i < line->nb_fields; i++, field++)
         {
             unsigned int len = PARSER_string_substW( file, field->text, buffer, size );
@@ -1574,13 +1574,13 @@ BOOL WINAPI SetupGetLineTextA( PINFCONTEXT context, HINF hinf, PCSTR section_nam
         total += PARSER_string_substA( file, field->text, NULL, 0 ) + 1;
 
     if (required) *required = total;
-    if (total > size)
-    {
-        SetLastError( ERROR_INSUFFICIENT_BUFFER );
-        return FALSE;
-    }
     if (buffer)
     {
+        if (total > size)
+        {
+            SetLastError( ERROR_INSUFFICIENT_BUFFER );
+            return FALSE;
+        }
         for (i = 0, field = &file->fields[line->first_field]; i < line->nb_fields; i++, field++)
         {
             unsigned int len = PARSER_string_substA( file, field->text, buffer, size );
@@ -1619,13 +1619,13 @@ BOOL WINAPI SetupGetStringFieldA( PINFCONTEXT context, DWORD index, PSTR buffer,
     if (!field) return FALSE;
     len = PARSER_string_substA( file, field->text, NULL, 0 );
     if (required) *required = len + 1;
-    if (size <= len)
-    {
-        SetLastError( ERROR_INSUFFICIENT_BUFFER );
-        return FALSE;
-    }
     if (buffer)
     {
+        if (size <= len)
+        {
+            SetLastError( ERROR_INSUFFICIENT_BUFFER );
+            return FALSE;
+        }
         PARSER_string_substA( file, field->text, buffer, size );
 
         TRACE( "context %p/%p/%d/%d index %ld returning %s\n",
@@ -1650,13 +1650,13 @@ BOOL WINAPI SetupGetStringFieldW( PINFCONTEXT context, DWORD index, PWSTR buffer
     if (!field) return FALSE;
     len = PARSER_string_substW( file, field->text, NULL, 0 );
     if (required) *required = len + 1;
-    if (size <= len)
-    {
-        SetLastError( ERROR_INSUFFICIENT_BUFFER );
-        return FALSE;
-    }
     if (buffer)
     {
+        if (size <= len)
+        {
+            SetLastError( ERROR_INSUFFICIENT_BUFFER );
+            return FALSE;
+        }
         PARSER_string_substW( file, field->text, buffer, size );
 
         TRACE( "context %p/%p/%d/%d index %ld returning %s\n",

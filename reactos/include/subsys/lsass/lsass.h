@@ -98,7 +98,7 @@ typedef union _LSASS_REQUEST
 {
    PORT_MESSAGE Header;
    struct {
-      UCHAR LpcHeader[LPC_MESSAGE_BASE_SIZE];
+      UCHAR LpcHeader[sizeof(PORT_MESSAGE)];
       ULONG Type;
       union
         {

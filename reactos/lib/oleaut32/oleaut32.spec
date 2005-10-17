@@ -1,4 +1,3 @@
-1 stdcall -private DllGetClassObject(ptr ptr ptr)
 2 stdcall SysAllocString(wstr)
 3 stdcall SysReAllocString(ptr wstr)
 4 stdcall SysAllocStringLen(wstr long)
@@ -312,8 +311,6 @@
 317 stdcall VarR8Round(double long ptr)
 318 stdcall VarCat(ptr ptr ptr)
 319 stdcall VarDateFromUdateEx(ptr long long ptr)
-320 stdcall -private DllRegisterServer()
-321 stdcall -private DllUnregisterServer()
 322 stdcall GetRecordInfoFromGuids(ptr long long long ptr ptr)
 323 stdcall GetRecordInfoFromTypeInfo(ptr ptr)
 325 stub SetVarConversionLocaleSetting
@@ -382,7 +379,6 @@
 399 stub UserMSG_free_local
 401 stdcall OleLoadPictureEx(ptr long long long long long long ptr)
 402 stub OleLoadPictureFileEx
-410 stdcall -private DllCanUnloadNow()
 411 stdcall SafeArrayCreateVector(long long long)
 412 stdcall SafeArrayCopyData(ptr ptr)
 413 stdcall VectorFromBstr(ptr ptr)
@@ -414,3 +410,8 @@
 439 stdcall VarUI8FromUI2(long ptr)
 440 stdcall VarUI8FromUI4(long ptr)
 441 stdcall VarUI8FromDec(long ptr)
+
+@ stdcall -private DllCanUnloadNow()
+@ stdcall -private DllGetClassObject(ptr ptr ptr)
+@ stdcall -private DllRegisterServer()
+@ stdcall -private DllUnregisterServer()

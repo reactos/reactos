@@ -25,8 +25,8 @@ HRESULT WINAPI Main_DirectDraw_Initialize (LPDIRECTDRAW7 iface, LPGUID lpGUID)
 
 	// get the HDC
 	This->hdc = GetWindowDC(GetDesktopWindow());
-	This->Height = GetDeviceCaps(This->hdc, HORZRES);
-	This->Width = GetDeviceCaps(This->hdc, VERTRES);
+	This->Height = GetDeviceCaps(This->hdc, VERTRES);
+	This->Width = GetDeviceCaps(This->hdc, HORZRES);
 	This->Bpp = GetDeviceCaps(This->hdc, BITSPIXEL);
 
 	// call software first
@@ -151,7 +151,7 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 ULONG WINAPI Main_DirectDraw_AddRef (LPDIRECTDRAW7 iface) 
 {
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-    ULONG ref = InterlockedIncrement(&This->ref);
+    ULONG ref = InterlockedIncrement(&This->DirectDrawGlobal.dwRefCnt);
 
    	return ref;
 }
@@ -159,7 +159,7 @@ ULONG WINAPI Main_DirectDraw_AddRef (LPDIRECTDRAW7 iface)
 ULONG WINAPI Main_DirectDraw_Release (LPDIRECTDRAW7 iface) 
 {
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-    ULONG ref = InterlockedDecrement(&This->ref);
+    ULONG ref = InterlockedDecrement(&This->DirectDrawGlobal.dwRefCnt);
     
     if (ref == 0)
     {

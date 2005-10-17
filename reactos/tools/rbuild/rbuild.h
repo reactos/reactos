@@ -245,11 +245,11 @@ public:
 	bool HasImportLibrary () const;
 	bool IsDLL () const;
 	bool GenerateInOutputTree () const;
-	std::string GetTargetName () const;
-	std::string GetDependencyPath () const;
-	std::string GetBasePath () const;
-	std::string GetPath () const;
-	std::string GetPathWithPrefix ( const std::string& prefix ) const;
+	std::string GetTargetName () const; // "foo.exe"
+	std::string GetDependencyPath () const; // "path/foo.exe" or "path/libfoo.a"
+	std::string GetBasePath () const; // "path"
+	std::string GetPath () const; // "path/foo.exe"
+	std::string GetPathWithPrefix ( const std::string& prefix ) const; // "path/prefixfoo.exe"
 	void GetTargets ( string_list& ) const;
 	std::string GetInvocationTarget ( const int index ) const;
 	bool HasFileWithExtension ( const IfableData&, const std::string& extension ) const;
@@ -739,9 +739,17 @@ private:
 	std::string StripSymbol ( std::string symbol );
 };
 
+extern std::string
+Right ( const std::string& s, size_t n );
+
+extern std::string
+Replace ( const std::string& s, const std::string& find, const std::string& with );
 
 extern std::string
 FixSeparator ( const std::string& s );
+
+extern std::string
+DosSeparator ( const std::string& s );
 
 extern std::string
 ReplaceExtension (

@@ -6,7 +6,6 @@
 typedef struct _W32THREAD
 {
   struct _USER_MESSAGE_QUEUE* MessageQueue;
-  FAST_MUTEX WindowListLock;
   LIST_ENTRY WindowListHead;
   LIST_ENTRY W32CallbackListHead;
   struct _KBDTABLES* KeyboardLayout;
@@ -14,6 +13,8 @@ typedef struct _W32THREAD
   HANDLE hDesktop;
   DWORD MessagePumpHookValue;
   BOOLEAN IsExiting;
+  SINGLE_LIST_ENTRY  ReferencesList;
+
 } W32THREAD, *PW32THREAD;
 
 #include <poppack.h>
@@ -21,9 +22,7 @@ typedef struct _W32THREAD
 
 typedef struct _W32PROCESS
 {
-  FAST_MUTEX ClassListLock;
   LIST_ENTRY ClassListHead;
-  FAST_MUTEX MenuListLock;
   LIST_ENTRY MenuListHead;
   FAST_MUTEX PrivateFontListLock;
   LIST_ENTRY PrivateFontListHead;

@@ -225,6 +225,7 @@ HRESULT WINAPI GetThemeMargins(HTHEME hTheme, HDC hdc, int iPartId,
     PTHEME_PROPERTY tp;
 
     TRACE("(%d, %d, %d)\n", iPartId, iStateId, iPropId);
+    memset (pMargins, 0, sizeof (MARGINS));
     if(!hTheme)
         return E_HANDLE;
 

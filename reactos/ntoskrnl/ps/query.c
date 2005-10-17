@@ -1303,9 +1303,7 @@ NtQueryInformationThread (IN	HANDLE		ThreadHandle,
                          1);
            if (ReturnLength != NULL)
              {
-               ProbeForWrite(ReturnLength,
-                             sizeof(ULONG),
-                             sizeof(ULONG));
+               ProbeForWriteUlong(ReturnLength);
              }
          }
        _SEH_HANDLE

@@ -110,9 +110,7 @@ NtCreateEvent(OUT PHANDLE EventHandle,
 
         _SEH_TRY {
 
-            ProbeForWrite(EventHandle,
-                          sizeof(HANDLE),
-                          sizeof(ULONG));
+            ProbeForWriteHandle(EventHandle);
         } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
 
             Status = _SEH_GetExceptionCode();
@@ -190,9 +188,7 @@ NtOpenEvent(OUT PHANDLE EventHandle,
 
         _SEH_TRY {
 
-            ProbeForWrite(EventHandle,
-                          sizeof(HANDLE),
-                          sizeof(ULONG));
+            ProbeForWriteHandle(EventHandle);
         } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
 
             Status = _SEH_GetExceptionCode();
@@ -246,13 +242,11 @@ NtPulseEvent(IN HANDLE EventHandle,
             EventHandle, PreviousState);
 
     /* Check buffer validity */
-    if(PreviousState && PreviousMode == UserMode) {
+    if(PreviousState && PreviousMode != KernelMode) {
 
         _SEH_TRY {
 
-            ProbeForWrite(PreviousState,
-                          sizeof(LONG),
-                          sizeof(ULONG));
+            ProbeForWriteLong(PreviousState);
          } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
 
             Status = _SEH_GetExceptionCode();
@@ -382,13 +376,11 @@ NtResetEvent(IN HANDLE EventHandle,
             EventHandle, PreviousState);
 
     /* Check buffer validity */
-    if(PreviousState && PreviousMode == UserMode) {
+    if(PreviousState && PreviousMode != KernelMode) {
 
         _SEH_TRY {
 
-            ProbeForWrite(PreviousState,
-                          sizeof(LONG),
-                          sizeof(ULONG));
+            ProbeForWriteLong(PreviousState);
          } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
 
             Status = _SEH_GetExceptionCode();
@@ -449,13 +441,11 @@ NtSetEvent(IN HANDLE EventHandle,
            EventHandle, PreviousState);
 
     /* Check buffer validity */
-    if(PreviousState != NULL && PreviousMode == UserMode) {
+    if(PreviousState != NULL && PreviousMode != KernelMode) {
 
         _SEH_TRY {
 
-            ProbeForWrite(PreviousState,
-                          sizeof(LONG),
-                          sizeof(ULONG));
+            ProbeForWriteLong(PreviousState);
          } _SEH_EXCEPT(_SEH_ExSystemExceptionFilter) {
 
             Status = _SEH_GetExceptionCode();

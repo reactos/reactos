@@ -196,6 +196,11 @@ Specify the target CPU and platform on which the generated code will
 be built. The target specification is in the standard autoconf format
 as returned by config.sub.
 .TP
+.BI \-u,\ --undefined= symbol
+Add \fIsymbol\fR to the list of undefined symbols when invoking the
+linker. This makes it possible to force a specific module of a static
+library to be included when resolving imports.
+.TP
 .B \--version
 Display the program version and exit.
 .TP

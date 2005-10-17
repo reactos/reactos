@@ -165,6 +165,38 @@ BOOL DiskGetExtendedDriveParameters(ULONG DriveNumber, PVOID Buffer, USHORT Buff
 
 	memcpy(Buffer, Ptr, BufferSize);
 
+#ifdef DEBUG
+        DbgPrint((DPRINT_DISK, "size of buffer:                          %x\n", Ptr[0]));
+        DbgPrint((DPRINT_DISK, "information flags:                       %x\n", Ptr[1]));
+        DbgPrint((DPRINT_DISK, "number of physical cylinders on drive:   %u\n", *(PULONG)&Ptr[2]));
+        DbgPrint((DPRINT_DISK, "number of physical heads on drive:       %u\n", *(PULONG)&Ptr[4]));
+        DbgPrint((DPRINT_DISK, "number of physical sectors per track:    %u\n", *(PULONG)&Ptr[6]));
+        DbgPrint((DPRINT_DISK, "total number of sectors on drive:        %I64u\n", *(unsigned long long*)&Ptr[8]));
+        DbgPrint((DPRINT_DISK, "bytes per sector:                        %u\n", Ptr[12]));
+        if (Ptr[0] >= 0x1e)
+        {
+            DbgPrint((DPRINT_HB, "EED configuration parameters:            %x:%x\n", Ptr[13], Ptr[14]));
+            if (Ptr[13] != 0xffff && Ptr[14] != 0xffff)
+            {
+               PUCHAR SpecPtr = (PUCHAR)((Ptr[13] << 4) + Ptr[14]);
+               DbgPrint((DPRINT_DISK, "SpecPtr:                                 %x\n", SpecPtr));
+               DbgPrint((DPRINT_DISK, "physical I/O port base address:          %x\n", *(PUSHORT)&SpecPtr[0]));
+               DbgPrint((DPRINT_DISK, "disk-drive control port address:         %x\n", *(PUSHORT)&SpecPtr[2]));
+               DbgPrint((DPRINT_DISK, "drive flags:                             %x\n", SpecPtr[4]));
+               DbgPrint((DPRINT_DISK, "proprietary information:                 %x\n", SpecPtr[5]));
+               DbgPrint((DPRINT_DISK, "IRQ for drive:                           %u\n", SpecPtr[6]));
+               DbgPrint((DPRINT_DISK, "sector count for multi-sector transfers: %u\n", SpecPtr[7]));
+               DbgPrint((DPRINT_DISK, "DMA control:                             %x\n", SpecPtr[8]));
+               DbgPrint((DPRINT_DISK, "programmed I/O control:                  %x\n", SpecPtr[9]));
+               DbgPrint((DPRINT_DISK, "drive options:                           %x\n", *(PUSHORT)&SpecPtr[10]));
+            }
+        }
+        if (Ptr[0] >= 0x42)
+        {
+            DbgPrint((DPRINT_HB, "signature:                             %x\n", Ptr[15]));
+        }
+#endif
+
 	return TRUE;
 }
 
@@ -172,6 +204,7 @@ BOOL i386DiskGetBootVolume(PULONG DriveNumber, PULONGLONG StartSector, PULONGLON
 {
 	PARTITION_TABLE_ENTRY	PartitionTableEntry;
 	UCHAR			VolumeType;
+	ULONG			ActivePartition;
 
 	DbgPrint((DPRINT_FILESYSTEM, "FsOpenVolume() DriveNumber: 0x%x PartitionNumber: 0x%x\n", i386BootDrive, i386BootPartition));
 
@@ -204,7 +237,7 @@ BOOL i386DiskGetBootVolume(PULONG DriveNumber, PULONGLONG StartSector, PULONGLON
 	if (i386BootPartition == 0)
 	{
 		// Partition requested was zero which means the boot partition
-		if (! DiskGetActivePartitionEntry(i386BootDrive, &PartitionTableEntry))
+		if (! DiskGetActivePartitionEntry(i386BootDrive, &PartitionTableEntry, &ActivePartition))
 		{
 			/* Try partition-less disk */
 			*StartSector = 0;
@@ -301,6 +334,10 @@ i386DiskBootingFromFloppy(VOID)
      (P) == PARTITION_FAT32_XINT13 || \
      (P) == PARTITION_XINT13)
 
+#define IsContainerPartition(P) \
+    ((P) == PARTITION_EXTENDED         || \
+     (P) == PARTITION_XINT13_EXTENDED)
+
 BOOL i386DiskGetSystemVolume(char *SystemPath,
                              char *RemainingPath,
                              PULONG Device,
@@ -344,7 +381,8 @@ BOOL i386DiskGetSystemVolume(char *SystemPath,
 			{
 				return FALSE;
 			}
-			if (IsRecognizedPartition(PartitionTableEntry.SystemIndicator))
+                        if (!IsContainerPartition(PartitionTableEntry.SystemIndicator) &&
+                            PartitionTableEntry.SystemIndicator != PARTITION_ENTRY_UNUSED)
 			{
 				if (++RosPartition == PartitionNumber)
 				{
@@ -421,6 +459,46 @@ i386DiskGetBootPath(char *BootPath, unsigned Size)
 	strcpy(BootPath, Path);
 	strcat(BootPath, MachDiskBootingFromFloppy() ? "fdisk" : "cdrom");
 	strcat(strcat(strcat(BootPath, "("), Device), ")");
+
+	return TRUE;
+}
+
+BOOL
+i386DiskNormalizeSystemPath(char *SystemPath, unsigned Size)
+{
+	CHAR BootPath[256];
+	ULONG PartitionNumber;
+	ULONG DriveNumber;
+	PARTITION_TABLE_ENTRY PartEntry;
+	char *p;
+
+	if (!DissectArcPath(SystemPath, BootPath, &DriveNumber, &PartitionNumber))
+	{
+		return FALSE;
+	}
+
+	if (0 != PartitionNumber)
+	{
+		return TRUE;
+	}
+
+	if (! DiskGetActivePartitionEntry(DriveNumber,
+	                                  &PartEntry,
+	                                  &PartitionNumber) ||
+	    PartitionNumber < 1 || 9 < PartitionNumber)
+	{
+		return FALSE;
+	}
+
+	p = SystemPath;
+	while ('\0' != *p && 0 != strnicmp(p, "partition(", 10)) {
+		p++;
+	}
+	p = strchr(p, ')');
+	if (NULL == p || '0' != *(p - 1)) {
+		return FALSE;
+	}
+	*(p - 1) = '0' + PartitionNumber;
 
 	return TRUE;
 }

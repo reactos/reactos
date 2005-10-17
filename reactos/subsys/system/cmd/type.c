@@ -50,7 +50,7 @@ INT cmd_type (LPTSTR cmd, LPTSTR param)
 	{
 		ConOutResPaging(TRUE,STRING_TYPE_HELP1);
 		return 0;
-	}
+	}	
 
 	if (!*param)
 	{

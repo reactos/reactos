@@ -1,0 +1,35 @@
+<group>
+	<directory name="kbdda">
+		<xi:include href="kbdda/kbdda.xml" />
+	</directory>
+	<directory name="kbddv">
+		<xi:include href="kbddv/kbddv.xml" />
+	</directory>
+	<directory name="kbdes">
+		<xi:include href="kbdes/kbdes.xml" />
+	</directory>
+	<directory name="kbdfr">
+		<xi:include href="kbdfr/kbdfr.xml" />
+	</directory>
+	<directory name="kbdgr">
+		<xi:include href="kbdgr/kbdgr.xml" />
+	</directory>
+	<directory name="kbdru">
+		<xi:include href="kbdru/kbdru.xml" />
+	</directory>
+	<directory name="kbdse">
+		<xi:include href="kbdse/kbdse.xml" />
+	</directory>
+	<directory name="kbdsg">
+		<xi:include href="kbdsg/kbdsg.xml" />
+	</directory>
+	<directory name="kbduk">
+		<xi:include href="kbduk/kbduk.xml" />
+	</directory>
+	<directory name="kbdus">
+		<xi:include href="kbdus/kbdus.xml" />
+	</directory>
+	<directory name="kbdbe">
+		<xi:include href="kbdbe/kbdbe.xml" />
+	</directory>
+</group>

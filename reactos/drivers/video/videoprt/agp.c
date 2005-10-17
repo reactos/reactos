@@ -91,7 +91,7 @@ IopInitiatePnpIrp(
 }
 
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 IntAgpCommitPhysical(
    IN PVOID HwDeviceExtension,
    IN PVOID PhysicalContext,
@@ -123,7 +123,7 @@ IntAgpCommitPhysical(
    return NT_SUCCESS(Status);
 }
 
-VOID STDCALL
+VOID NTAPI
 IntAgpFreePhysical(
    IN PVOID HwDeviceExtension,
    IN PVOID PhysicalContext,
@@ -151,7 +151,7 @@ IntAgpFreePhysical(
    }
 }
 
-VOID STDCALL
+VOID NTAPI
 IntAgpReleasePhysical(
    IN PVOID HwDeviceExtension,
    IN PVOID PhysicalContext)
@@ -180,7 +180,7 @@ IntAgpReleasePhysical(
    ExFreePool(AgpMapping);
 }
 
-PHYSICAL_ADDRESS STDCALL
+PHYSICAL_ADDRESS NTAPI
 IntAgpReservePhysical(
    IN  PVOID HwDeviceExtension,
    IN  ULONG Pages,
@@ -245,7 +245,7 @@ IntAgpReservePhysical(
 }
    
 
-PVOID STDCALL
+PVOID NTAPI
 IntAgpCommitVirtual(
    IN PVOID HwDeviceExtension,
    IN PVOID VirtualContext,
@@ -327,7 +327,7 @@ IntAgpCommitVirtual(
    return BaseAddress;
 }
 
-VOID STDCALL
+VOID NTAPI
 IntAgpFreeVirtual(
    IN PVOID HwDeviceExtension,
    IN PVOID VirtualContext,
@@ -381,7 +381,7 @@ IntAgpFreeVirtual(
    }
 }
 
-VOID STDCALL
+VOID NTAPI
 IntAgpReleaseVirtual(
    IN PVOID HwDeviceExtension,
    IN PVOID VirtualContext)
@@ -415,7 +415,7 @@ IntAgpReleaseVirtual(
    ExFreePool(VirtualMapping);
 }
 
-PVOID STDCALL
+PVOID NTAPI
 IntAgpReserveVirtual(
    IN  PVOID HwDeviceExtension,
    IN  HANDLE ProcessHandle,
@@ -475,7 +475,7 @@ IntAgpReserveVirtual(
 }
 
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 IntAgpSetRate(
    IN PVOID HwDeviceExtension,
    IN ULONG Rate)
@@ -492,7 +492,7 @@ IntAgpSetRate(
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 IntAgpGetInterface(
    IN PVOID HwDeviceExtension,
    IN OUT PINTERFACE Interface)

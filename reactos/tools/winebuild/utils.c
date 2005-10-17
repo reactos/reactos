@@ -250,7 +250,6 @@ DLLSPEC *alloc_dll_spec(void)
     spec = xmalloc( sizeof(*spec) );
     spec->file_name          = NULL;
     spec->dll_name           = NULL;
-    spec->owner_name         = NULL;
     spec->init_func          = NULL;
     spec->type               = SPEC_WIN32;
     spec->base               = MAX_ORDINALS;
@@ -291,7 +290,6 @@ void free_dll_spec( DLLSPEC *spec )
     }
     free( spec->file_name );
     free( spec->dll_name );
-    free( spec->owner_name );
     free( spec->init_func );
     free( spec->entry_points );
     free( spec->names );

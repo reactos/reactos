@@ -16,7 +16,7 @@
 /* PROTOTYPES ****************************************************************/
 
 NTSTATUS
-STDCALL
+NTAPI
 ObCreateObject (
     IN KPROCESSOR_MODE      ObjectAttributesAccessMode OPTIONAL,
     IN POBJECT_TYPE         ObjectType,
@@ -30,58 +30,13 @@ ObCreateObject (
 );
 
 ULONG
-STDCALL
+NTAPI
 ObGetObjectPointerCount (
     IN PVOID Object
 );
 
 NTSTATUS
-STDCALL
-ObInsertObject (
-    IN PVOID            Object,
-    IN PACCESS_STATE    PassedAccessState OPTIONAL,
-    IN ACCESS_MASK      DesiredAccess,
-    IN ULONG            AdditionalReferences,
-    OUT PVOID           *ReferencedObject OPTIONAL,
-    OUT PHANDLE         Handle
-);
-
-VOID
-STDCALL
-ObMakeTemporaryObject (
-    IN PVOID Object
-);
-
-NTSTATUS
-STDCALL
-ObOpenObjectByPointer (
-    IN PVOID            Object,
-    IN ULONG            HandleAttributes,
-    IN PACCESS_STATE    PassedAccessState OPTIONAL,
-    IN ACCESS_MASK      DesiredAccess OPTIONAL,
-    IN POBJECT_TYPE     ObjectType OPTIONAL,
-    IN KPROCESSOR_MODE  AccessMode,
-    OUT PHANDLE         Handle
-);
-
-NTSTATUS
-STDCALL
-ObQueryNameString (
-    IN PVOID                        Object,
-    OUT POBJECT_NAME_INFORMATION    ObjectNameInfo,
-    IN ULONG                        Length,
-    OUT PULONG                      ReturnLength
-);
-
-NTSTATUS
-STDCALL
-ObQueryObjectAuditingByHandle (
-    IN HANDLE       Handle,
-    OUT PBOOLEAN    GenerateOnClose
-);
-
-NTSTATUS
-STDCALL
+NTAPI
 ObReferenceObjectByName (
     IN PUNICODE_STRING  ObjectName,
     IN ULONG            Attributes,
@@ -94,7 +49,7 @@ ObReferenceObjectByName (
 );
 
 NTSTATUS 
-STDCALL
+NTAPI
 ObFindHandleForObject(
     IN PEPROCESS Process,
     IN PVOID Object,

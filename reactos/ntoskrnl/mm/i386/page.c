@@ -411,17 +411,18 @@ VOID MmDeletePageTable(PEPROCESS Process, PVOID Address)
    {
       ULONGLONG ZeroPde = 0LL;
       ExfpInterlockedExchange64UL(PAE_ADDR_TO_PDE(Address), &ZeroPde);
+      MiFlushTlb((PULONG)PAE_ADDR_TO_PDE(Address), PAE_ADDR_TO_PTE(Address));
    }
    else
    {
       *(ADDR_TO_PDE(Address)) = 0;
+      MiFlushTlb(ADDR_TO_PDE(Address), ADDR_TO_PTE(Address));
    }
    if (Address >= MmSystemRangeStart)
    {
       KEBUGCHECK(0);
       //       MmGlobalKernelPageDirectory[ADDR_TO_PDE_OFFSET(Address)] = 0;
    }
-   MiFlushTlb(NULL, Address);
    if (Process != NULL && Process != CurrentProcess)
    {
       KeDetachProcess();
@@ -455,6 +456,7 @@ VOID MmFreePageTable(PEPROCESS Process, PVOID Address)
       }
       Pfn = PAE_PTE_TO_PFN(*(PAE_ADDR_TO_PDE(Address)));
       ExfpInterlockedExchange64UL(PAE_ADDR_TO_PDE(Address), &ZeroPte);
+      MiFlushTlb((PULONG)PAE_ADDR_TO_PDE(Address), PAE_ADDR_TO_PTE(Address));
    }
    else
    {
@@ -471,8 +473,8 @@ VOID MmFreePageTable(PEPROCESS Process, PVOID Address)
       }
       Pfn = PTE_TO_PFN(*(ADDR_TO_PDE(Address)));
       *(ADDR_TO_PDE(Address)) = 0;
+      MiFlushTlb(ADDR_TO_PDE(Address), ADDR_TO_PTE(Address));
    }
-   MiFlushTlb(NULL, Address);
 
    if (Address >= MmSystemRangeStart)
    {

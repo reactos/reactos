@@ -78,7 +78,7 @@ void Telnet::DoInit() {
 	telSetConsoleTitle("No Connection");
 
 	// Change the icon
-	hConsoleWindow = GetConsoleWindow();
+	hConsoleWindow = TelnetGetConsoleWindow();
 	iconChange = SetIcon(hConsoleWindow, 0, &oldBIcon, &oldSIcon, ini.get_startdir());
 
 	if (WSAStartup(MAKEWORD(1, 1), &WsaData)) {
@@ -105,7 +105,7 @@ MapLoader(KeyTrans, Charmap),
 Console(GetStdHandle(STD_OUTPUT_HANDLE)),
 TelHandler(Network, Console, Parser),
 ThreadParams(TelHandler),
-Clipboard(GetConsoleWindow(), Network),
+Clipboard(TelnetGetConsoleWindow(), Network),
 Mouse(Clipboard),
 Scroller(Mouse, ini.get_scroll_size()),
 Parser(Console, KeyTrans, Scroller, Network, Charmap) {
@@ -117,7 +117,7 @@ MapLoader(KeyTrans, Charmap),
 Console(GetStdHandle(STD_OUTPUT_HANDLE)),
 TelHandler(Network, Console, Parser),
 ThreadParams(TelHandler),
-Clipboard(GetConsoleWindow(), Network),
+Clipboard(TelnetGetConsoleWindow(), Network),
 Mouse(Clipboard),
 Scroller(Mouse, ini.get_scroll_size()),
 Parser(Console, KeyTrans, Scroller, Network, Charmap) {

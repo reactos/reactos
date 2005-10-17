@@ -5,8 +5,8 @@
 4  stdcall -noname ApplyTheme(ptr ptr ptr)
 7  stdcall -noname GetThemeDefaults(wstr wstr long wstr long)
 8  stdcall -noname EnumThemes(wstr ptr ptr)
-9  stdcall -noname EnumThemeColors(wstr wstr long wstr)
-10 stdcall -noname EnumThemeSizes(wstr wstr long wstr)
+9  stdcall -noname EnumThemeColors(wstr wstr long ptr)
+10 stdcall -noname EnumThemeSizes(wstr wstr long ptr)
 11 stdcall -noname ParseThemeIniFile(wstr wstr ptr ptr)
 13 stub -noname DrawNCPreview
 14 stub -noname RegisterDefaultTheme

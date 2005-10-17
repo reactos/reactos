@@ -46,7 +46,7 @@ typedef struct
   ULONG nMaxIds;
    ULONG nProcessIdsCopied;
    ULONG nProcessIdsTotal;
-   HANDLE ProcessId[1];
+   HANDLE ProcessId[0];
 } CSRSS_GET_PROCESS_LIST, *PCSRSS_GET_PROCESS_LIST;
 
 typedef struct
@@ -54,8 +54,8 @@ typedef struct
    HANDLE ConsoleHandle;
    BOOL Unicode;
    ULONG NrCharactersToWrite;
-   BYTE Buffer[1];
    ULONG NrCharactersWritten;
+   BYTE Buffer[0];
 } CSRSS_WRITE_CONSOLE, *PCSRSS_WRITE_CONSOLE;
 
 typedef struct
@@ -66,7 +66,7 @@ typedef struct
    WORD nCharsCanBeDeleted;     /* number of chars already in buffer that can be backspaced */
    HANDLE EventHandle;
    ULONG NrCharactersRead;
-   BYTE Buffer[1];
+   BYTE Buffer[0];
 } CSRSS_READ_CONSOLE, *PCSRSS_READ_CONSOLE;
 
 typedef struct
@@ -132,9 +132,9 @@ typedef struct
    BOOL Unicode;
    WORD Length;
    COORD Coord;
-   CHAR String[1];
    COORD EndCoord;
    ULONG NrCharactersWritten;
+   CHAR String[0];
 } CSRSS_WRITE_CONSOLE_OUTPUT_CHAR, *PCSRSS_WRITE_CONSOLE_OUTPUT_CHAR;
 
 typedef struct
@@ -142,8 +142,8 @@ typedef struct
    HANDLE ConsoleHandle;
    WORD Length;
    COORD Coord;
-   CHAR String[1];
    COORD EndCoord;
+   WORD Attribute[0];
 } CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB, *PCSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB;
 
 typedef struct
@@ -197,14 +197,14 @@ typedef struct
 {
   HANDLE Console;
   DWORD Length;
-  WCHAR Title[1];
+  WCHAR Title[0];
 } CSRSS_SET_TITLE, *PCSRSS_SET_TITLE;
 
 typedef struct
 {
-   HANDLE ConsoleHandle;
+  HANDLE ConsoleHandle;
   DWORD Length;
-  WCHAR Title[1];
+  WCHAR Title[0];
 } CSRSS_GET_TITLE, *PCSRSS_GET_TITLE;
 
 typedef struct
@@ -241,7 +241,7 @@ typedef struct
   COORD ReadCoord;
   COORD EndCoord;
   DWORD CharsRead;
-  CHAR String[1];
+  CHAR String[0];
 }CSRSS_READ_CONSOLE_OUTPUT_CHAR, *PCSRSS_READ_CONSOLE_OUTPUT_CHAR;
 
 typedef struct
@@ -250,13 +250,13 @@ typedef struct
   DWORD NumAttrsToRead;
   COORD ReadCoord;
   COORD EndCoord;
-  CHAR String[1];
+  WORD Attribute[0];
 }CSRSS_READ_CONSOLE_OUTPUT_ATTRIB, *PCSRSS_READ_CONSOLE_OUTPUT_ATTRIB;
 
 typedef struct
 {
   HANDLE ConsoleHandle;
-   DWORD NumInputEvents;
+  DWORD NumInputEvents;
 }CSRSS_GET_NUM_INPUT_EVENTS, *PCSRSS_GET_NUM_INPUT_EVENTS;
 
 typedef struct
@@ -410,20 +410,14 @@ typedef struct
   HANDLE InputWaitHandle;
 } CSRSS_GET_INPUT_WAIT_HANDLE, *PCSRSS_GET_INPUT_WAIT_HANDLE;
 
-#define CSRSS_MAX_WRITE_CONSOLE       \
-      (MAX_MESSAGE_DATA - sizeof(ULONG) - sizeof(CSRSS_WRITE_CONSOLE))
-
-#define CSRSS_MAX_SET_TITLE           (MAX_MESSAGE_DATA - sizeof( HANDLE ) - sizeof( DWORD ) - sizeof( ULONG ) - LPC_MESSAGE_BASE_SIZE)
-
-#define CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR   (MAX_MESSAGE_DATA - sizeof( ULONG ) - sizeof( CSRSS_WRITE_CONSOLE_OUTPUT_CHAR ))
-
-#define CSRSS_MAX_WRITE_CONSOLE_OUTPUT_ATTRIB   ((MAX_MESSAGE_DATA - sizeof( ULONG ) - sizeof( CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB )) / 2)
-
-#define CSRSS_MAX_READ_CONSOLE        (MAX_MESSAGE_DATA - sizeof( ULONG ) - sizeof( CSRSS_READ_CONSOLE ))
-
-#define CSRSS_MAX_READ_CONSOLE_OUTPUT_CHAR    (MAX_MESSAGE_DATA - sizeof(ULONG) - sizeof(HANDLE) - sizeof(DWORD) - sizeof(CSRSS_READ_CONSOLE_OUTPUT_CHAR))
-
-#define CSRSS_MAX_READ_CONSOLE_OUTPUT_ATTRIB  (MAX_MESSAGE_DATA - sizeof(ULONG) - sizeof(HANDLE) - sizeof(DWORD) - sizeof(CSRSS_READ_CONSOLE_OUTPUT_ATTRIB))
+#define CSR_API_MESSAGE_HEADER_SIZE(Type)       (FIELD_OFFSET(CSR_API_MESSAGE, Data) + sizeof(Type))
+#define CSRSS_MAX_WRITE_CONSOLE                 (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE))
+#define CSRSS_MAX_WRITE_CONSOLE_OUTPUT_CHAR     (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE_OUTPUT_CHAR))
+#define CSRSS_MAX_WRITE_CONSOLE_OUTPUT_ATTRIB   (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_WRITE_CONSOLE_OUTPUT_ATTRIB))
+#define CSRSS_MAX_READ_CONSOLE                  (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_READ_CONSOLE))
+#define CSRSS_MAX_READ_CONSOLE_OUTPUT_CHAR      (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_READ_CONSOLE_OUTPUT_CHAR))
+#define CSRSS_MAX_READ_CONSOLE_OUTPUT_ATTRIB    (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_READ_CONSOLE_OUTPUT_ATTRIB))
+#define CSRSS_MAX_GET_PROCESS_LIST              (LPC_MAX_DATA_LENGTH - CSR_API_MESSAGE_HEADER_SIZE(CSRSS_GET_PROCESS_LIST))
 
 /* WCHARs, not bytes! */
 #define CSRSS_MAX_TITLE_LENGTH          80
@@ -468,7 +462,7 @@ typedef struct
 #define GET_OUTPUT_HANDLE             (0x25)
 #define CLOSE_HANDLE                  (0x26)
 #define VERIFY_HANDLE                 (0x27)
-#define DUPLICATE_HANDLE		    (0x28)
+#define DUPLICATE_HANDLE	      (0x28)
 #define SETGET_CONSOLE_HW_STATE       (0x29)
 #define GET_CONSOLE_WINDOW            (0x2A)
 #define CREATE_DESKTOP                (0x2B)
@@ -481,24 +475,20 @@ typedef struct
 #define SET_CONSOLE_CP                (0x32)
 #define GET_CONSOLE_OUTPUT_CP         (0x33)
 #define SET_CONSOLE_OUTPUT_CP         (0x34)
-#define GET_INPUT_WAIT_HANDLE	    (0x35)
+#define GET_INPUT_WAIT_HANDLE	      (0x35)
 #define GET_PROCESS_LIST              (0x36)
 
 /* Keep in sync with definition below. */
-#define CSRSS_HEADER_SIZE (LPC_MESSAGE_BASE_SIZE + sizeof(ULONG) + sizeof(NTSTATUS))
+#define CSRSS_HEADER_SIZE (sizeof(PORT_MESSAGE) + sizeof(ULONG) + sizeof(NTSTATUS))
 
 typedef struct _CSR_API_MESSAGE
 {
-  union
-  {
     PORT_MESSAGE Header;
-    struct
+    PVOID CsrCaptureData;
+    ULONG Type;
+    NTSTATUS Status;
+    union
     {
-      BYTE HeaderReserved[LPC_MESSAGE_BASE_SIZE];
-      ULONG Type;
-      NTSTATUS Status;
-      union
-      {
         CSRSS_CREATE_PROCESS CreateProcessRequest;
         CSRSS_CONNECT_PROCESS ConnectRequest;
         CSRSS_WRITE_CONSOLE WriteConsoleRequest;
@@ -552,9 +542,78 @@ typedef struct _CSR_API_MESSAGE
         CSRSS_SET_CONSOLE_OUTPUT_CP SetConsoleOutputCodePage;
         CSRSS_GET_INPUT_WAIT_HANDLE GetConsoleInputWaitHandle;
         CSRSS_GET_PROCESS_LIST GetProcessListRequest;
-      } Data;
-    };
-  };
+    } Data;
 } CSR_API_MESSAGE, *PCSR_API_MESSAGE;
+
+/* Types used in the new CSR. Temporarly here for proper compile of NTDLL */
+#define CSR_SRV_SERVER 0
+
+#define CsrSrvClientConnect             0
+#define CsrSrvIdentifyAlertableThread   3
+#define CsrSrvSetPriorityClass          4
+
+#define CSR_MAKE_OPCODE(s,m) ((s) << 16) | (m)
+
+typedef struct _CSR_CONNECTION_INFO
+{
+    ULONG Version;
+    ULONG Unknown;
+    HANDLE ObjectDirectory;
+    PVOID SharedSectionBase;
+    PVOID SharedSectionHeap;
+    PVOID SharedSectionData;
+    ULONG DebugFlags;
+    ULONG Unknown2[3];
+    HANDLE ProcessId;
+} CSR_CONNECTION_INFO, *PCSR_CONNECTION_INFO;
+
+typedef struct _CSR_CLIENT_CONNECT
+{
+    ULONG ServerId;
+    PVOID ConnectionInfo;
+    ULONG ConnectionInfoSize;
+} CSR_CLIENT_CONNECT, *PCSR_CLIENT_CONNECT;
+
+typedef struct _CSR_IDENTIFY_ALTERTABLE_THREAD
+{
+    CLIENT_ID Cid;
+} CSR_IDENTIFY_ALTERTABLE_THREAD, *PCSR_IDENTIFY_ALTERTABLE_THREAD;
+
+typedef struct _CSR_SET_PRIORITY_CLASS
+{
+    HANDLE hProcess;
+    ULONG PriorityClass;
+} CSR_SET_PRIORITY_CLASS, *PCSR_SET_PRIORITY_CLASS;
+
+typedef struct _CSR_API_MESSAGE2
+{
+    PORT_MESSAGE Header;
+    union
+    {
+        CSR_CONNECTION_INFO ConnectionInfo;
+        struct
+        {
+            PVOID CsrCaptureData;
+            CSR_API_NUMBER Opcode;
+            ULONG Status; 
+            ULONG Reserved;
+            union
+            {
+                CSR_CLIENT_CONNECT ClientConnect;
+                CSR_SET_PRIORITY_CLASS SetPriorityClass;
+                CSR_IDENTIFY_ALTERTABLE_THREAD IdentifyAlertableThread;
+            };
+        };
+    };
+} CSR_API_MESSAGE2, *PCSR_API_MESSAGE2;
+
+typedef struct _CSR_CAPTURE_BUFFER
+{
+    ULONG Size;
+    struct _CSR_CAPTURE_BUFFER *PreviousCaptureBuffer;
+    ULONG PointerCount;
+    ULONG_PTR BufferEnd;
+    ULONG_PTR PointerArray[1];
+} CSR_CAPTURE_BUFFER, *PCSR_CAPTURE_BUFFER;
 
 #endif /* __INCLUDE_CSRSS_CSRSS_H */

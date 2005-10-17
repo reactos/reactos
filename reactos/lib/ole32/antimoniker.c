@@ -53,6 +53,11 @@ typedef struct AntiMonikerImpl{
 
 } AntiMonikerImpl;
 
+static inline IMoniker *impl_from_IROTData( IROTData *iface )
+{
+    return (IMoniker *)((char*)iface - FIELD_OFFSET(AntiMonikerImpl, lpvtbl2));
+}
+
 
 /*******************************************************************************
  *        AntiMoniker_QueryInterface
@@ -485,7 +490,7 @@ AntiMonikerImpl_IsSystemMoniker(IMoniker* iface,DWORD* pwdMksys)
 static HRESULT WINAPI
 AntiMonikerROTDataImpl_QueryInterface(IROTData *iface,REFIID riid,VOID** ppvObject)
 {
-    ICOM_THIS_From_IROTData(IMoniker, iface);
+    IMoniker *This = impl_from_IROTData(iface);
 
     TRACE("(%p,%p,%p)\n",iface,riid,ppvObject);
 
@@ -497,7 +502,7 @@ AntiMonikerROTDataImpl_QueryInterface(IROTData *iface,REFIID riid,VOID** ppvObje
  */
 static ULONG WINAPI AntiMonikerROTDataImpl_AddRef(IROTData *iface)
 {
-    ICOM_THIS_From_IROTData(IMoniker, iface);
+    IMoniker *This = impl_from_IROTData(iface);
 
     TRACE("(%p)\n",iface);
 
@@ -509,7 +514,7 @@ static ULONG WINAPI AntiMonikerROTDataImpl_AddRef(IROTData *iface)
  */
 static ULONG WINAPI AntiMonikerROTDataImpl_Release(IROTData* iface)
 {
-    ICOM_THIS_From_IROTData(IMoniker, iface);
+    IMoniker *This = impl_from_IROTData(iface);
 
     TRACE("(%p)\n",iface);
 

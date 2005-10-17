@@ -28,7 +28,7 @@ void ME_InitContext(ME_Context *c, ME_TextEditor *editor, HDC hDC)
   c->pt.x = 0;
   c->pt.y = 0;
   c->hbrMargin = CreateSolidBrush(RGB(224,224,224));
-  GetClientRect(editor->hWnd, &c->rcView);
+  c->rcView = editor->rcFormat;
 }
 
 void ME_DestroyContext(ME_Context *c)

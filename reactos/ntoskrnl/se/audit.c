@@ -16,19 +16,19 @@
 
 /* FUNCTIONS ****************************************************************/
 
-NTSTATUS STDCALL
+NTSTATUS
+STDCALL
 NtAccessCheckAndAuditAlarm(IN PUNICODE_STRING SubsystemName,
-			   IN PHANDLE ObjectHandle,
-			   IN PUNICODE_STRING ObjectTypeName,
-			   IN PUNICODE_STRING ObjectName,
-			   IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-			   IN ACCESS_MASK DesiredAccess,
-			   IN PGENERIC_MAPPING GenericMapping,
-			   IN BOOLEAN ObjectCreation,
-			   OUT PACCESS_MASK GrantedAccess,
-			   OUT PNTSTATUS AccessStatus,
-			   OUT PBOOLEAN GenerateOnClose
-	)
+                           IN PVOID HandleId,
+                           IN PUNICODE_STRING ObjectTypeName,
+                           IN PUNICODE_STRING ObjectName,
+                           IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+                           IN ACCESS_MASK DesiredAccess,
+                           IN PGENERIC_MAPPING GenericMapping,
+                           IN BOOLEAN ObjectCreation,
+                           OUT PACCESS_MASK GrantedAccess,
+                           OUT PNTSTATUS AccessStatus,
+                           OUT PBOOLEAN GenerateOnClose)
 {
   UNIMPLEMENTED;
   return(STATUS_NOT_IMPLEMENTED);

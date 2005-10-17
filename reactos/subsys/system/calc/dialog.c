@@ -19,6 +19,7 @@
  */
 
 #include <windows.h>
+#include <tchar.h>
 #include "dialog.h"
 #include "resource.h"
 #include "winecalc.h"
@@ -50,32 +51,32 @@ BOOL CALLBACK AboutDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam )
         HFONT hFont;
         HFONT hFontOrg;
 
-        char c1[CALC_BUF_SIZE];
-        char c2[CALC_BUF_SIZE];
-        char c3[CALC_BUF_SIZE];
-        char c4[CALC_BUF_SIZE];
-        char c5[CALC_BUF_SIZE];
+        TCHAR c1[CALC_BUF_SIZE];
+        TCHAR c2[CALC_BUF_SIZE];
+        TCHAR c3[CALC_BUF_SIZE];
+        TCHAR c4[CALC_BUF_SIZE];
+        TCHAR c5[CALC_BUF_SIZE];
 
         hdc = BeginPaint( hDlg, &ps );
 
         hMemDC = CreateCompatibleDC( hdc );
 
-        LoadString( hInstance, IDS_COPYRIGHT1, c1, sizeof(c1));
-        LoadString( hInstance, IDS_COPYRIGHT2, c2, sizeof(c2));
-        LoadString( hInstance, IDS_COPYRIGHT3, c3, sizeof(c3));
-        LoadString( hInstance, IDS_COPYRIGHT4, c4, sizeof(c4));
-        LoadString( hInstance, IDS_COPYRIGHT5, c5, sizeof(c5));
+        LoadString( hInstance, IDS_COPYRIGHT1, c1, sizeof(c1) / sizeof(c1[0]));
+        LoadString( hInstance, IDS_COPYRIGHT2, c2, sizeof(c2) / sizeof(c2[0]));
+        LoadString( hInstance, IDS_COPYRIGHT3, c3, sizeof(c3) / sizeof(c3[0]));
+        LoadString( hInstance, IDS_COPYRIGHT4, c4, sizeof(c4) / sizeof(c4[0]));
+        LoadString( hInstance, IDS_COPYRIGHT5, c5, sizeof(c5) / sizeof(c5[0]));
 
         hFont = GetStockObject(DEFAULT_GUI_FONT);
         hFontOrg = SelectObject(hdc, hFont);
 
         SetBkMode(hdc, TRANSPARENT);
 
-	TextOut(hdc, 10, 10, c1, strlen(c1));
-        TextOut(hdc, 10, 35, c2, strlen(c2));
-        TextOut(hdc, 10, 50, c3, strlen(c3));
-        TextOut(hdc, 10, 75, c4, strlen(c4));
-	TextOut(hdc, 10, 90, c5, strlen(c5));
+	TextOut(hdc, 10, 10, c1, _tcslen(c1));
+        TextOut(hdc, 10, 35, c2, _tcslen(c2));
+        TextOut(hdc, 10, 50, c3, _tcslen(c3));
+        TextOut(hdc, 10, 75, c4, _tcslen(c4));
+	TextOut(hdc, 10, 90, c5, _tcslen(c5));
 
         SelectObject(hdc, hFontOrg);
 

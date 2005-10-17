@@ -17,19 +17,104 @@
 #ifdef INCLUDE_CMD_START
 
 
-INT cmd_start (LPTSTR first, LPTSTR rest)
+INT cmd_start (LPTSTR First, LPTSTR Rest)
 {
 	TCHAR szFullName[MAX_PATH];
+	TCHAR first[CMDLINE_LENGTH];
+	TCHAR *rest = NULL; 
+	TCHAR *param = NULL;
 	BOOL bWait = FALSE;
-	TCHAR *param;
+	BOOL bBat  = FALSE;
+	BOOL bCreate = FALSE;
+	TCHAR szFullCmdLine [CMDLINE_LENGTH];
+	PROCESS_INFORMATION prci;
+	STARTUPINFO stui;
 
-	if (_tcsncmp (rest, _T("/?"), 2) == 0)
+		
+	
+	if (_tcsncmp (Rest, _T("/?"), 2) == 0)
 	{
 		ConOutResPaging(TRUE,STRING_START_HELP1);
 		return 0;
 	}
 
+	nErrorLevel = 0;
+
+	if( !*Rest )
+	{
+		// FIXME: use comspec instead
+		Rest = _T("cmd");
+	}
+	
+	rest = malloc ( _tcslen(Rest) + 1 * sizeof(TCHAR)); 
+	if (rest == NULL)
+	{
+	 error_out_of_memory();
+	 return 1;
+	}
+
+	param =malloc ( _tcslen(Rest) + 1 * sizeof(TCHAR)); 
+	if (rest == NULL)
+	{
+	 free(rest);
+	 error_out_of_memory();
+	 return 1;
+	}
+
+	param[0] = _T('\0');
+
+
+	_tcscpy(rest,Rest);
+	
+	/* Parsing the command that gets called by start, and it's parameters */
+	if(!_tcschr(rest,_T('\"')))
+	{
+		INT i = 0;
+		INT count = _tcslen(rest);
+		
+		/* find the end of the command and start of the args */
+		for(i = 0; i < count; i++)
+		{
+			if(rest[i] == _T(' '))
+			{	
+				
+				_tcscpy(param,&rest[i]);
+				rest[i] = _T('\0');
+				break;
+			}
+		}
+	}
+	else
+	{
+		INT i = 0;	
+		INT count = _tcslen(rest);		
+		BOOL bInside = FALSE;
+
+		/* find the end of the command and put the arguments in param */
+		for(i = 0; i < count; i++)
+		{
+			if(rest[i] == _T('\"')) 
+				bInside = !bInside;
+			if((rest[i] == _T(' ')) && !bInside)
+			{					
+				_tcscpy(param,&rest[i]);
+				rest[i] = _T('\0');
+				break;
+			}
+		}
+		i = 0;
+		/* remove any slashes */
+		while(i < count)
+		{
+			if(rest[i] == _T('\"'))
+				memmove(&rest[i],&rest[i + 1], _tcslen(&rest[i]) * sizeof(TCHAR));
+			else
+				i++;
+		}
+	}
+	
 	/* check for a drive change */
+	
 	if (!_tcscmp (first + 1, _T(":")) && _istalpha (*first))
 	{
 		TCHAR szPath[MAX_PATH];
@@ -41,27 +126,28 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 		if (szPath[0] != (TCHAR)_totupper (*first))
 			ConErrResPuts (STRING_FREE_ERROR1);
 
+		if (rest != NULL) 
+		    free(rest);
+
+	    if (param != NULL) 
+		    free(param);
+
 		return 0;
 	}
-
-	if( !*rest )
-	  {
-	    // FIXME: use comspec instead
-	    rest = _T("cmd");
-	  }
-
+	
+	  
 	/* get the PATH environment variable and parse it */
 	/* search the PATH environment variable for the binary */
-	param = _tcschr( rest, _T(' ') );  // skip program name to reach parameters
-	if( param )
-	  {
-	    *param = 0;
-	    param++;
-	  }
-
 	if (!SearchForExecutable (rest, szFullName))
 	{
 		error_bad_command ();
+
+		if (rest != NULL) 
+		    free(rest);
+
+	    if (param != NULL) 
+		    free(param);
+
 		return 1;
 	}
 
@@ -69,38 +155,72 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 	if (!_tcsicmp (_tcsrchr (szFullName, _T('.')), _T(".bat")) ||
 	    !_tcsicmp (_tcsrchr (szFullName, _T('.')), _T(".cmd")))
 	{
+		bBat = TRUE;				
+		memset(szFullCmdLine,0,CMDLINE_LENGTH * sizeof(TCHAR));
+
+		/* FIXME : use comspec instead */
+		if (!SearchForExecutable (_T("CMD"), szFullCmdLine))
+	    {
+		    error_bad_command ();
+
+		    if (rest != NULL) 
+		        free(rest);
+
+	        if (param != NULL) 
+		        free(param);
+
+		    return 1;
+	    }
+
+		memcpy(&szFullCmdLine[_tcslen(szFullCmdLine)],_T("\" /K \""), 6 * sizeof(TCHAR));				
+		memcpy(&szFullCmdLine[_tcslen(szFullCmdLine)], szFullName, _tcslen(szFullName) * sizeof(TCHAR));		
+		memcpy(&szFullCmdLine[1], &szFullCmdLine[0], _tcslen(szFullCmdLine) * sizeof(TCHAR)); 
+        szFullCmdLine[0] = _T('\"');					
+        szFullCmdLine[_tcslen(szFullCmdLine)] = _T('\"');
+		
+
+
+	}
+
 #ifdef _DEBUG
 		DebugPrintf (_T("[BATCH: %s %s]\n"), szFullName, rest);
 #endif
-
-		ConErrResPuts(STRING_START_ERROR1);
-	}
-	else
-	{
-		/* exec the program */
-		TCHAR szFullCmdLine [CMDLINE_LENGTH];
-		PROCESS_INFORMATION prci;
-		STARTUPINFO stui;
+		
 
 #ifdef _DEBUG
 		DebugPrintf (_T("[EXEC: %s %s]\n"), szFullName, rest);
 #endif
 		/* build command line for CreateProcess() */
-		_tcscpy (szFullCmdLine, first);
-		if( param )
+		if (bBat == FALSE)
+		{
+		  _tcscpy (szFullCmdLine, first);
+		  if( param != NULL )
 		  {
+			 
 		    _tcscat(szFullCmdLine, _T(" ") );
 		    _tcscat (szFullCmdLine, param);
 		  }
+		}
 
 		/* fill startup info */
 		memset (&stui, 0, sizeof (STARTUPINFO));
 		stui.cb = sizeof (STARTUPINFO);
 		stui.dwFlags = STARTF_USESHOWWINDOW;
 		stui.wShowWindow = SW_SHOWDEFAULT;
-
-		if (CreateProcess (szFullName, szFullCmdLine, NULL, NULL, FALSE,
-		                   CREATE_NEW_CONSOLE, NULL, NULL, &stui, &prci))
+		        
+		if (bBat == TRUE)
+		{
+		 bCreate = CreateProcess (NULL, szFullCmdLine, NULL, NULL, FALSE,
+			 CREATE_NEW_CONSOLE, NULL, NULL, &stui, &prci);
+		}
+		else
+		{
+		 bCreate = CreateProcess (szFullName, szFullCmdLine, NULL, NULL, FALSE,
+			DETACHED_PROCESS, NULL, NULL, &stui, &prci);
+		
+		}
+		
+		if (bCreate)
 		{
 			if (bWait)
 			{
@@ -120,7 +240,13 @@ INT cmd_start (LPTSTR first, LPTSTR rest)
 			ErrorMessage(GetLastError (),
 			              _T("Error executing CreateProcess()!!\n"));
 		}
-	}
+
+
+	if (rest != NULL) 
+	    free(rest);
+
+    if (param != NULL) 
+	    free(param);
 
 	return 0;
 }

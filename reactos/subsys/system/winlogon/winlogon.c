@@ -593,6 +593,8 @@ WinMain(HINSTANCE hInstance,
     DbgPrint("WL: Cannot switch to Winlogon desktop (0x%X)\n", GetLastError());
   }
 
+  InitServices();
+  
   /* Check for pending setup */
   if (GetSetupType () != 0)
   {
@@ -615,8 +617,6 @@ WinMain(HINSTANCE hInstance,
     ExitProcess(2);
     return 2;
   }
-
-  InitServices();
 
 #if 0
    /* real winlogon uses "Winlogon" */

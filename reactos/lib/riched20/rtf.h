@@ -1070,6 +1070,7 @@ struct _RTF_Info {
     RTFColor	*colorList;	/* initialized to NULL */
     RTFStyle	*styleList;
     int ansiCodePage; /* ANSI codepage used in conversion to Unicode */
+    int defFont;
 
     /* Character attributes */
     int unicodeLength; /* The length of ANSI representation of Unicode characters */
@@ -1103,6 +1104,7 @@ struct _RTF_Info {
 
     RTFState         stack[maxStack];
     int              stackTop;
+    BOOL             styleChanged;
 };
 
 

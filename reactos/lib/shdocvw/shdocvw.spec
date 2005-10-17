@@ -102,7 +102,7 @@
 229 stub -noname SafeOpenPromptForPackager
 
 @ stdcall -private DllCanUnloadNow()
-@ stdcall -private DllGetClassObject(long long ptr)
+@ stdcall -private DllGetClassObject(ptr ptr ptr)
 @ stdcall -private DllGetVersion(ptr)
 @ stdcall -private DllInstall(long wstr)
 @ stdcall -private DllRegisterServer()

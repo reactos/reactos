@@ -19,7 +19,7 @@ InitializeLsaPort(VOID)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;
   UNICODE_STRING PortName;
-  LPC_MAX_MESSAGE Request;
+  PORT_MESSAGE Request;
   NTSTATUS Status;
 
   ConnectPortHandle = NULL;
@@ -46,7 +46,7 @@ InitializeLsaPort(VOID)
     }
 
   Status = NtListenPort(ConnectPortHandle,
-			&Request.Header);
+			&Request);
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("NtListenPort() failed (Status %lx)\n", Status);
@@ -89,7 +89,7 @@ ByeBye:
 static NTSTATUS
 ProcessPortMessage(VOID)
 {
-  LPC_MAX_MESSAGE Request;
+  PORT_MESSAGE Request;
 //  LPC_MAX_MESSAGE Reply;
   NTSTATUS Status;
 
@@ -103,7 +103,7 @@ ProcessPortMessage(VOID)
       Status = NtReplyWaitReceivePort(MessagePortHandle,
 				      0,
 				      NULL,
-				      &Request.Header);
+				      &Request);
       if (!NT_SUCCESS(Status))
 	{
 	  DPRINT1("NtReplyWaitReceivePort() failed (Status %lx)\n", Status);
@@ -112,18 +112,18 @@ ProcessPortMessage(VOID)
 
       DPRINT("Received message\n");
 
-      if (Request.Header.u2.s2.Type == LPC_PORT_CLOSED)
+      if (Request.u2.s2.Type == LPC_PORT_CLOSED)
 	{
 	  DPRINT("Port closed\n");
 
 //	  return STATUS_UNSUCCESSFUL;
 	}
-      if (Request.Header.u2.s2.Type == LPC_REQUEST)
+      if (Request.u2.s2.Type == LPC_REQUEST)
 	{
 	  DPRINT("Received request\n");
 
 	}
-      else if (Request.Header.u2.s2.Type == LPC_DATAGRAM)
+      else if (Request.u2.s2.Type == LPC_DATAGRAM)
 	{
 	  DPRINT("Received datagram\n");
 

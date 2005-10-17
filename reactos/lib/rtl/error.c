@@ -1,14 +1,8 @@
-/* $Id$
- *
- * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
- * PURPOSE:           Rtl error functions
- * FILE:              lib/rtl/error.c
- * PROGRAMER:         Eric Kohl
- * REVISION HISTORY:
- *                    22/07/99: Added RtlNtStatusToDosError.
- * 1999-11-30: Added RtlNtStatusToPsxErrno.
- * 1999-12-18: STDCALL RtlNtStatusToDosError
+/* COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS system libraries
+ * PURPOSE:         Rtl error functions
+ * FILE:            lib/rtl/error.c
+ * PROGRAMER:       Eric Kohl
  */
 
 /*

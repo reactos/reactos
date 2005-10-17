@@ -2,7 +2,7 @@
 #define _WIN32K_CALLBACK_H
 
 LRESULT STDCALL
-IntCallWindowProc(WNDPROC Proc,
+co_IntCallWindowProc(WNDPROC Proc,
                   BOOLEAN IsAnsiProc,
                   HWND Wnd,
                   UINT Message,
@@ -11,7 +11,7 @@ IntCallWindowProc(WNDPROC Proc,
                   INT lParamBufferSize);
 
 VOID STDCALL
-IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
+co_IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
 			    HWND hWnd,
 			    UINT Msg,
 			    ULONG_PTR CompletionCallbackContext,
@@ -19,13 +19,13 @@ IntCallSentMessageCallback(SENDASYNCPROC CompletionCallback,
 
 
 HMENU STDCALL
-IntLoadSysMenuTemplate();
+co_IntLoadSysMenuTemplate();
 
 BOOL STDCALL
-IntLoadDefaultCursors(VOID);
+co_IntLoadDefaultCursors(VOID);
 
 LRESULT STDCALL
-IntCallHookProc(INT HookId,
+co_IntCallHookProc(INT HookId,
                 INT Code,
                 WPARAM wParam,
                 LPARAM lParam,

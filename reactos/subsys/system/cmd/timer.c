@@ -107,6 +107,8 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 		return 0;
 	}
 
+	nErrorLevel = 0;
+
 	LoadString( CMD_ModuleHandle, STRING_TIMER_TIME, szMsg, RC_STRING_MAX_SIZE);
 
 	p = split (param, &argc, FALSE);

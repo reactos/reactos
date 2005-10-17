@@ -26,7 +26,7 @@
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-VP_STATUS STDCALL
+VP_STATUS NTAPI
 IntInt10AllocateBuffer(
    IN PVOID Context,
    OUT PUSHORT Seg,
@@ -74,7 +74,7 @@ IntInt10AllocateBuffer(
    return NO_ERROR;
 }
 
-VP_STATUS STDCALL
+VP_STATUS NTAPI
 IntInt10FreeBuffer(
    IN PVOID Context,
    IN USHORT Seg,
@@ -97,7 +97,7 @@ IntInt10FreeBuffer(
    return Status;
 }
 
-VP_STATUS STDCALL
+VP_STATUS NTAPI
 IntInt10ReadMemory(
    IN PVOID Context,
    IN USHORT Seg,
@@ -121,7 +121,7 @@ IntInt10ReadMemory(
    return NO_ERROR;
 }
 
-VP_STATUS STDCALL
+VP_STATUS NTAPI
 IntInt10WriteMemory(
    IN PVOID Context,
    IN USHORT Seg,
@@ -145,7 +145,7 @@ IntInt10WriteMemory(
    return NO_ERROR;
 }
 
-VP_STATUS STDCALL
+VP_STATUS NTAPI
 IntInt10CallBios(
    IN PVOID Context,
    IN OUT PINT10_BIOS_ARGUMENTS BiosArguments)
@@ -200,7 +200,7 @@ IntInt10CallBios(
  * @implemented
  */
 
-VP_STATUS STDCALL
+VP_STATUS NTAPI
 VideoPortInt10(
    IN PVOID HwDeviceExtension,
    IN PVIDEO_X86_BIOS_ARGUMENTS BiosArguments)

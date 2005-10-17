@@ -61,7 +61,7 @@ __p_sig_fn_t signal(int sig, __p_sig_fn_t func)
    }
 
    // check with IsBadCodePtr
-   if ( func < (__p_sig_fn_t)4096 )
+   if ( func < (__p_sig_fn_t)4096 && func != SIG_DFL && func != SIG_IGN)
    {
       __set_errno(EINVAL);
       return SIG_ERR;

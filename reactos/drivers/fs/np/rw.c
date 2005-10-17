@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
  * FILE:       drivers/fs/np/rw.c
@@ -9,11 +8,10 @@
 
 /* INCLUDES ******************************************************************/
 
-#include <ntifs.h>
-#include "npfs.h"
-
 #define NDEBUG
 #include <debug.h>
+
+#include "npfs.h"
 
 /* FUNCTIONS *****************************************************************/
 
@@ -431,7 +429,7 @@ NpfsRead(IN PDEVICE_OBJECT DeviceObject,
 	   }
 	   else
 	   {
-              PNPFS_CONTEXT Context = (PNPFS_CONTEXT)&Irp->Tail.Overlay.DriverContext;
+              Context = (PNPFS_CONTEXT)&Irp->Tail.Overlay.DriverContext;
 
               Context->WaitEvent = &Fcb->ReadEvent;
 	      Status = NpfsAddWaitingReadWriteRequest(DeviceObject, Irp);

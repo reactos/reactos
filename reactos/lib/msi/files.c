@@ -56,14 +56,13 @@ extern const WCHAR szRemoveFiles[];
 
 static const WCHAR cszTempFolder[]= {'T','e','m','p','F','o','l','d','e','r',0};
 
-inline static UINT create_component_directory ( MSIPACKAGE* package, INT component)
+static UINT create_component_directory( MSIPACKAGE* package, MSICOMPONENT *comp )
 {
     UINT rc = ERROR_SUCCESS;
     MSIFOLDER *folder;
     LPWSTR install_path;
 
-    install_path = resolve_folder(package, package->components[component].Directory,
-                        FALSE, FALSE, &folder);
+    install_path = resolve_folder(package, comp->Directory, FALSE, FALSE, &folder);
     if (!install_path)
         return ERROR_FUNCTION_FAILED; 
 
@@ -208,23 +207,22 @@ static INT_PTR cabinet_notify(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION pfdin)
         LPWSTR tracknametmp;
         static const WCHAR tmpprefix[] = {'C','A','B','T','M','P','_',0};
         LPWSTR given_file;
-        INT index;
 
         MSIRECORD * uirow;
         LPWSTR uipath;
+        MSIFILE *f;
 
         given_file = strdupAtoW(pfdin->psz1);
-        index = get_loaded_file(data->package, given_file);
+        f = get_loaded_file(data->package, given_file);
 
-        if (index < 0)
+        if (!f)
         {
             ERR("Unknown File in Cabinent (%s)\n",debugstr_w(given_file));
             HeapFree(GetProcessHeap(),0,given_file);
             return 0;
         }
 
-        if (!((data->package->files[index].State == 1 ||
-               data->package->files[index].State == 2)))
+        if (!((f->State == 1 || f->State == 2)))
         {
             TRACE("Skipping extraction of %s\n",debugstr_w(given_file));
             HeapFree(GetProcessHeap(),0,given_file);
@@ -254,16 +252,16 @@ static INT_PTR cabinet_notify(FDINOTIFICATIONTYPE fdint, PFDINOTIFICATION pfdin)
 
         /* the UI chunk */
         uirow=MSI_CreateRecord(9);
-        MSI_RecordSetStringW(uirow,1,data->package->files[index].File);
-        uipath = strdupW(data->package->files[index].TargetPath);
+        MSI_RecordSetStringW( uirow, 1, f->FileName );
+        uipath = strdupW( f->TargetPath );
         *(strrchrW(uipath,'\\')+1)=0;
         MSI_RecordSetStringW(uirow,9,uipath);
-        MSI_RecordSetInteger(uirow,6,data->package->files[index].FileSize);
+        MSI_RecordSetInteger( uirow, 6, f->FileSize );
         ui_actiondata(data->package,szInstallFiles,uirow);
         msiobj_release( &uirow->hdr );
         HeapFree(GetProcessHeap(),0,uipath);
 
-        ui_progress(data->package,2,data->package->files[index].FileSize,0,0);
+        ui_progress( data->package, 2, f->FileSize, 0, 0);
 
         return cabinet_open(file, _O_WRONLY | _O_CREAT, 0);
     }
@@ -434,7 +432,7 @@ static UINT ready_volume(MSIPACKAGE* package, LPCWSTR path, LPWSTR last_volume,
     return ERROR_SUCCESS;
 }
 
-static UINT ready_media_for_file(MSIPACKAGE *package, int fileindex, 
+static UINT ready_media_for_file(MSIPACKAGE *package, MSIFILE *file,
                                  MSICOMPONENT* comp)
 {
     UINT rc = ERROR_SUCCESS;
@@ -452,7 +450,6 @@ static UINT ready_media_for_file(MSIPACKAGE *package, int fileindex,
     static UINT last_sequence = 0; 
     static LPWSTR last_volume = NULL;
     static LPWSTR last_path = NULL;
-    MSIFILE* file = NULL;
     UINT type;
     LPCWSTR prompt;
     static DWORD count = 0;
@@ -469,8 +466,6 @@ static UINT ready_media_for_file(MSIPACKAGE *package, int fileindex,
         memset(source,0,sizeof(source));
         return ERROR_SUCCESS;
     }
-
-    file = &package->files[fileindex];
 
     if (file->Sequence <= last_sequence)
     {
@@ -582,8 +577,6 @@ static UINT ready_media_for_file(MSIPACKAGE *package, int fileindex,
             }
         }
         rc = !extract_cabinet_file(package, source, last_path);
-        /* reaquire file ptr */
-        file = &package->files[fileindex];
     }
     else
     {
@@ -616,21 +609,21 @@ static UINT ready_media_for_file(MSIPACKAGE *package, int fileindex,
     return rc;
 }
 
-inline static UINT get_file_target(MSIPACKAGE *package, LPCWSTR file_key, 
+static UINT get_file_target(MSIPACKAGE *package, LPCWSTR file_key, 
                                    LPWSTR* file_source)
 {
-    DWORD index;
+    MSIFILE *file;
 
     if (!package)
         return ERROR_INVALID_HANDLE;
 
-    for (index = 0; index < package->loaded_files; index ++)
+    LIST_FOR_EACH_ENTRY( file, &package->files, MSIFILE, entry )
     {
-        if (strcmpW(file_key,package->files[index].File)==0)
+        if (lstrcmpW( file_key, file->File )==0)
         {
-            if (package->files[index].State >= 2)
+            if (file->State >= 2)
             {
-                *file_source = strdupW(package->files[index].TargetPath);
+                *file_source = strdupW( file->TargetPath );
                 return ERROR_SUCCESS;
             }
             else
@@ -651,8 +644,8 @@ inline static UINT get_file_target(MSIPACKAGE *package, LPCWSTR file_key,
 UINT ACTION_InstallFiles(MSIPACKAGE *package)
 {
     UINT rc = ERROR_SUCCESS;
-    DWORD index;
     LPWSTR ptr;
+    MSIFILE *file;
 
     if (!package)
         return ERROR_INVALID_HANDLE;
@@ -673,17 +666,14 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
     FIXME("Write DiskPrompt\n");
     
     /* Pass 1 */
-    for (index = 0; index < package->loaded_files; index++)
+    LIST_FOR_EACH_ENTRY( file, &package->files, MSIFILE, entry )
     {
-        MSIFILE *file;
         MSICOMPONENT* comp = NULL;
-
-        file = &package->files[index];
 
         if (file->Temporary)
             continue;
 
-        if (!ACTION_VerifyComponentForAction(package, file->ComponentIndex, 
+        if (!ACTION_VerifyComponentForAction(package, file->Component, 
                                        INSTALLSTATE_LOCAL))
         {
             ui_progress(package,2,file->FileSize,0,0);
@@ -700,13 +690,12 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
 
             TRACE("Pass 1: %s\n",debugstr_w(file->File));
 
-            create_component_directory( package, file->ComponentIndex);
+            create_component_directory( package, file->Component );
 
             /* recalculate file paths because things may have changed */
 
-            if (file->ComponentIndex >= 0)
-                comp = &package->components[file->ComponentIndex];
-            else
+            comp = file->Component;
+            if (!comp)
             {
                 ERR("No Component for file\n");
                 continue;
@@ -721,13 +710,8 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
     }
 
     /* Pass 2 */
-    for (index = 0; index < package->loaded_files; index++)
+    LIST_FOR_EACH_ENTRY( file, &package->files, MSIFILE, entry )
     {
-        MSIFILE *file;
-        MSICOMPONENT* comp = NULL;
-
-        file = &package->files[index];
-
         if (file->Temporary)
             continue;
 
@@ -735,23 +719,13 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
         {
             TRACE("Pass 2: %s\n",debugstr_w(file->File));
 
-            if (file->ComponentIndex >= 0)
-                comp = &package->components[file->ComponentIndex];
-
-            rc = ready_media_for_file(package, index, comp);
+            rc = ready_media_for_file( package, file, file->Component );
             if (rc != ERROR_SUCCESS)
             {
                 ERR("Unable to ready media\n");
                 rc = ERROR_FUNCTION_FAILED;
                 break;
             }
-
-            /*
-             * WARNING!
-             * our file table could change here because a new temp file
-             * may have been created. So reaquire our ptr.
-             */
-            file = &package->files[index];
 
             TRACE("file paths %s to %s\n",debugstr_w(file->SourcePath),
                   debugstr_w(file->TargetPath));
@@ -797,7 +771,7 @@ UINT ACTION_InstallFiles(MSIPACKAGE *package)
     }
 
     /* cleanup */
-    ready_media_for_file(NULL, 0, NULL);
+    ready_media_for_file(NULL, NULL, NULL);
     return rc;
 }
 
@@ -808,27 +782,25 @@ static UINT ITERATE_DuplicateFiles(MSIRECORD *row, LPVOID param)
     WCHAR dest_name[0x100];
     LPWSTR dest_path, dest;
     LPCWSTR file_key, component;
-    INT component_index;
     DWORD sz;
     DWORD rc;
+    MSICOMPONENT *comp;
 
     component = MSI_RecordGetString(row,2);
-    component_index = get_loaded_component(package,component);
+    comp = get_loaded_component(package,component);
 
-    if (!ACTION_VerifyComponentForAction(package, component_index,
-                            INSTALLSTATE_LOCAL))
+    if (!ACTION_VerifyComponentForAction(package, comp, INSTALLSTATE_LOCAL))
     {
         TRACE("Skipping copy due to disabled component %s\n",
                         debugstr_w(component));
 
         /* the action taken was the same as the current install state */        
-        package->components[component_index].Action =
-                package->components[component_index].Installed;
+        comp->Action = comp->Installed;
 
         return ERROR_SUCCESS;
     }
 
-    package->components[component_index].Action = INSTALLSTATE_LOCAL;
+    comp->Action = INSTALLSTATE_LOCAL;
 
     file_key = MSI_RecordGetString(row,3);
     if (!file_key)

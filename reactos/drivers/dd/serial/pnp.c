@@ -274,7 +274,7 @@ SerialPnpStartDevice(
 	if (NT_SUCCESS(Status))
 	{
 		/* Key = \Device\Serialx, Value = COMx */
-		ZwSetValueKey(hKey, &DeviceName, 0, REG_SZ, &ComPortBuffer, ComPort.Length + sizeof(WCHAR));
+		ZwSetValueKey(hKey, &DeviceName, 0, REG_SZ, ComPortBuffer, ComPort.Length + sizeof(WCHAR));
 		ZwClose(hKey);
 	}
 

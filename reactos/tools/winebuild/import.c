@@ -21,6 +21,7 @@
 
 #include "config.h"
 
+#include <assert.h>
 #include <ctype.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -34,7 +35,6 @@
 #endif
 
 #include "winglue.h"
-//#include "wine/exception.h"
 #include "build.h"
 
 #ifndef EXCEPTION_NONCONTINUABLE
@@ -56,13 +56,16 @@ struct import
     int          nb_imports;  /* number of imported functions */
 };
 
-static char **undef_symbols;  /* list of undefined symbols */
-static int nb_undef_symbols = -1;
-static int undef_size;
+struct name_table
+{
+    char **names;
+    unsigned int count, size;
+};
 
-static char **ignore_symbols; /* list of symbols to ignore */
-static int nb_ignore_symbols;
-static int ignore_size;
+static struct name_table undef_symbols;    /* list of undefined symbols */
+static struct name_table ignore_symbols;   /* list of symbols to ignore */
+static struct name_table extra_ld_symbols; /* list of extra symbols that ld should resolve */
+static struct name_table delayed_imports;  /* list of delayed import dlls */
 
 static char *ld_tmp_file;  /* ld temp file name */
 
@@ -71,8 +74,6 @@ static int nb_imports = 0;      /* number of imported dlls (delayed or not) */
 static int nb_delayed = 0;      /* number of delayed dlls */
 static int total_imports = 0;   /* total number of imported functions */
 static int total_delayed = 0;   /* total number of imported functions in delayed DLLs */
-static char **delayed_imports;  /* names of delayed import dlls */
-static int nb_delayed_imports;  /* size of the delayed_imports array */
 
 /* list of symbols that are ignored by default */
 static const char * const default_ignored_symbols[] =
@@ -151,16 +152,50 @@ static int func_cmp( const void *func1, const void *func2 )
                    odp2->name ? odp2->name : odp2->export_name );
 }
 
-/* locate a symbol in a (sorted) list */
-inline static const char *find_symbol( const char *name, char **table, int size )
+/* add a name to a name table */
+inline static void add_name( struct name_table *table, const char *name )
+{
+    if (table->count == table->size)
+    {
+        table->size += (table->size / 2);
+        if (table->size < 32) table->size = 32;
+        table->names = xrealloc( table->names, table->size * sizeof(*table->names) );
+    }
+    table->names[table->count++] = xstrdup( name );
+}
+
+/* remove a name from a name table */
+inline static void remove_name( struct name_table *table, unsigned int idx )
+{
+    assert( idx < table->count );
+    free( table->names[idx] );
+    memmove( table->names + idx, table->names + idx + 1,
+             (table->count - idx - 1) * sizeof(*table->names) );
+    table->count--;
+}
+
+/* make a name table empty */
+inline static void empty_name_table( struct name_table *table )
+{
+    unsigned int i;
+
+    for (i = 0; i < table->count; i++) free( table->names[i] );
+    table->count = 0;
+}
+
+/* locate a name in a (sorted) list */
+inline static const char *find_name( const char *name, const struct name_table *table )
 {
     char **res = NULL;
 
-    if (table) {
-        res = bsearch( &name, table, size, sizeof(*table), name_cmp );
-    }
-
+    if (table->count) res = bsearch( &name, table->names, table->count, sizeof(*table->names), name_cmp );
     return res ? *res : NULL;
+}
+
+/* sort a name table */
+inline static void sort_names( struct name_table *table )
+{
+    if (table->count) qsort( table->names, table->count, sizeof(*table->names), name_cmp );
 }
 
 /* locate an export in a (sorted) export list */
@@ -173,13 +208,6 @@ inline static ORDDEF *find_export( const char *name, ORDDEF **table, int size )
     odp = &func;
     if (table) res = bsearch( &odp, table, size, sizeof(*table), func_cmp );
     return res ? *res : NULL;
-}
-
-/* sort a symbol table */
-inline static void sort_symbols( char **table, int size )
-{
-    if (table )
-        qsort( table, size, sizeof(*table), name_cmp );
 }
 
 inline static void output_function_size( FILE *outfile, const char *name )
@@ -209,9 +237,9 @@ static int is_delayed_import( const char *name )
 {
     int i;
 
-    for (i = 0; i < nb_delayed_imports; i++)
+    for (i = 0; i < delayed_imports.count; i++)
     {
-        if (!strcmp( delayed_imports[i], name )) return 1;
+        if (!strcmp( delayed_imports.names[i], name )) return 1;
     }
     return 0;
 }
@@ -367,13 +395,13 @@ void add_delayed_import( const char *name )
     struct import *imp;
     char *fullname = get_dll_name( name, NULL );
 
-    delayed_imports = xrealloc( delayed_imports, (nb_delayed_imports+1) * sizeof(*delayed_imports) );
-    delayed_imports[nb_delayed_imports++] = fullname;
+    add_name( &delayed_imports, fullname );
     if ((imp = is_already_imported( fullname )) && !imp->delay)
     {
         imp->delay = 1;
         nb_delayed++;
     }
+    free( fullname );
 }
 
 /* remove an imported dll, based on its index in the dll_imports array */
@@ -390,52 +418,35 @@ static void remove_import_dll( int index )
 /* initialize the list of ignored symbols */
 static void init_ignored_symbols(void)
 {
-    int i;
+    unsigned int i;
 
-    nb_ignore_symbols = sizeof(default_ignored_symbols)/sizeof(default_ignored_symbols[0]);
-    ignore_size = nb_ignore_symbols + 32;
-    ignore_symbols = xmalloc( ignore_size * sizeof(*ignore_symbols) );
-    for (i = 0; i < nb_ignore_symbols; i++)
-        ignore_symbols[i] = xstrdup( default_ignored_symbols[i] );
+    for (i = 0; i < sizeof(default_ignored_symbols)/sizeof(default_ignored_symbols[0]); i++)
+        add_name( &ignore_symbols, default_ignored_symbols[i] );
 }
 
 /* add a symbol to the ignored symbol list */
 /* if the name starts with '-' the symbol is removed instead */
 void add_ignore_symbol( const char *name )
 {
-    int i;
+    unsigned int i;
 
-    if (!ignore_symbols) init_ignored_symbols();  /* first time around, fill list with defaults */
+    if (!ignore_symbols.size) init_ignored_symbols();  /* first time around, fill list with defaults */
 
     if (name[0] == '-')  /* remove it */
     {
-        if (!name[1])  /* remove everything */
+        if (!name[1]) empty_name_table( &ignore_symbols );  /* remove everything */
+        else for (i = 0; i < ignore_symbols.count; i++)
         {
-            for (i = 0; i < nb_ignore_symbols; i++) free( ignore_symbols[i] );
-            nb_ignore_symbols = 0;
-        }
-        else
-        {
-            for (i = 0; i < nb_ignore_symbols; i++)
-            {
-                if (!strcmp( ignore_symbols[i], name+1 ))
-                {
-                    free( ignore_symbols[i] );
-                    memmove( &ignore_symbols[i], &ignore_symbols[i+1], nb_ignore_symbols - i - 1 );
-                    nb_ignore_symbols--;
-                }
-            }
+            if (!strcmp( ignore_symbols.names[i], name+1 )) remove_name( &ignore_symbols, i-- );
         }
     }
-    else
-    {
-        if (nb_ignore_symbols == ignore_size)
-        {
-            ignore_size += 32;
-            ignore_symbols = xrealloc( ignore_symbols, ignore_size * sizeof(*ignore_symbols) );
-        }
-        ignore_symbols[nb_ignore_symbols++] = xstrdup( name );
-    }
+    else add_name( &ignore_symbols, name );
+}
+
+/* add a symbol to the list of extra symbols that ld must resolve */
+void add_extra_ld_symbol( const char *name )
+{
+    add_name( &extra_ld_symbols, name );
 }
 
 /* add a function to the list of imports from a given dll */
@@ -447,103 +458,33 @@ static void add_import_func( struct import *imp, ORDDEF *func )
     if (imp->delay) total_delayed++;
 }
 
-/* add a symbol to the undef list */
-inline static void add_undef_symbol( const char *name )
-{
-    if (nb_undef_symbols == undef_size)
-    {
-        undef_size += 128;
-        undef_symbols = xrealloc( undef_symbols, undef_size * sizeof(*undef_symbols) );
-    }
-    undef_symbols[nb_undef_symbols++] = xstrdup( name );
-}
-
-/* remove all the holes in the undefined symbol list; return the number of removed symbols */
-static int remove_symbol_holes(void)
-{
-    int i, off;
-    for (i = off = 0; i < nb_undef_symbols; i++)
-    {
-        if (!undef_symbols[i]) off++;
-        else undef_symbols[i - off] = undef_symbols[i];
-    }
-    nb_undef_symbols -= off;
-    return off;
-}
-
-/* add a symbol to the extra list, but only if needed */
-static int add_extra_symbol( const char **extras, int *count, const char *name, const DLLSPEC *spec )
+/* check if the spec file exports any stubs */
+static int has_stubs( const DLLSPEC *spec )
 {
     int i;
-
-    if (!find_symbol( name, undef_symbols, nb_undef_symbols ))
-    {
-        /* check if the symbol is being exported by this dll */
-        for (i = 0; i < spec->nb_entry_points; i++)
-        {
-            ORDDEF *odp = &spec->entry_points[i];
-            if (odp->type == TYPE_STDCALL ||
-                odp->type == TYPE_CDECL ||
-                odp->type == TYPE_VARARGS ||
-                odp->type == TYPE_EXTERN)
-            {
-                if (odp->name && !strcmp( odp->name, name )) return 0;
-            }
-        }
-        extras[*count] = name;
-        (*count)++;
-    }
-    return 1;
-}
-
-/* add the extra undefined symbols that will be contained in the generated spec file itself */
-static void add_extra_undef_symbols( const DLLSPEC *spec )
-{
-    const char *extras[10];
-    int i, count = 0, nb_stubs = 0;
-    int kernel_imports = 0, ntdll_imports = 0;
-
-    sort_symbols( undef_symbols, nb_undef_symbols );
-
     for (i = 0; i < spec->nb_entry_points; i++)
     {
         ORDDEF *odp = &spec->entry_points[i];
-        if (odp->type == TYPE_STUB) nb_stubs++;
+        if (odp->type == TYPE_STUB) return 1;
     }
+    return 0;
+}
 
-    /* add symbols that will be contained in the spec file itself */
-    if (!(spec->characteristics & IMAGE_FILE_DLL))
-    {
-        switch (spec->subsystem)
-        {
-        case IMAGE_SUBSYSTEM_WINDOWS_GUI:
-        case IMAGE_SUBSYSTEM_WINDOWS_CUI:
-            kernel_imports += add_extra_symbol( extras, &count, "GetCommandLineA", spec );
-            kernel_imports += add_extra_symbol( extras, &count, "GetStartupInfoA", spec );
-            kernel_imports += add_extra_symbol( extras, &count, "GetModuleHandleA", spec );
-            kernel_imports += add_extra_symbol( extras, &count, "ExitProcess", spec );
-            break;
-        }
-    }
-    if (nb_delayed)
-    {
-        kernel_imports += add_extra_symbol( extras, &count, "LoadLibraryA", spec );
-        kernel_imports += add_extra_symbol( extras, &count, "FreeLibrary", spec );
-        kernel_imports += add_extra_symbol( extras, &count, "GetProcAddress", spec );
-        kernel_imports += add_extra_symbol( extras, &count, "RaiseException", spec );
-    }
-    if (nb_stubs)
-        ntdll_imports += add_extra_symbol( extras, &count, "RtlRaiseException", spec );
+/* get the default entry point for a given spec file */
+static const char *get_default_entry_point( const DLLSPEC *spec )
+{
+    if (spec->characteristics & IMAGE_FILE_DLL) return "__wine_spec_dll_entry";
+    if (spec->subsystem == IMAGE_SUBSYSTEM_NATIVE) return "DriverEntry";
+    return "__wine_spec_exe_entry";
+}
 
-    /* make sure we import the dlls that contain these functions */
-    if (kernel_imports) add_import_dll( "kernel32", NULL );
-    if (ntdll_imports) add_import_dll( "ntdll", NULL );
-
-    if (count)
-    {
-        for (i = 0; i < count; i++) add_undef_symbol( extras[i] );
-        sort_symbols( undef_symbols, nb_undef_symbols );
-    }
+/* add the extra undefined symbols that will be contained in the generated spec file itself */
+static void add_extra_undef_symbols( DLLSPEC *spec )
+{
+    if (!spec->init_func) spec->init_func = xstrdup( get_default_entry_point(spec) );
+    add_extra_ld_symbol( spec->init_func );
+    if (has_stubs( spec )) add_extra_ld_symbol( "__wine_spec_unimplemented_stub" );
+    if (nb_delayed) add_extra_ld_symbol( "__wine_spec_delay_load" );
 }
 
 /* check if a given imported dll is not needed, taking forwards into account */
@@ -570,8 +511,8 @@ static int check_unused( const struct import* imp, const DLLSPEC *spec )
 /* returns the name of the combined file */
 static const char *ldcombine_files( char **argv )
 {
-    int i, len = 0;
-    char *cmd;
+    unsigned int i, len = 0;
+    char *cmd, *p;
     int fd, err;
 
     if (output_file_name && output_file_name[0])
@@ -587,10 +528,14 @@ static const char *ldcombine_files( char **argv )
     atexit( remove_ld_tmp_file );
 
     if (!ld_command) ld_command = xstrdup("ld");
+    for (i = 0; i < extra_ld_symbols.count; i++) len += strlen(extra_ld_symbols.names[i]) + 5;
     for (i = 0; argv[i]; i++) len += strlen(argv[i]) + 1;
-    cmd = xmalloc( len + strlen(ld_tmp_file) + 8 + strlen(ld_command)  );
-    sprintf( cmd, "%s -r -o %s", ld_command, ld_tmp_file );
-    for (i = 0; argv[i]; i++) sprintf( cmd + strlen(cmd), " %s", argv[i] );
+    cmd = p = xmalloc( len + strlen(ld_tmp_file) + 8 + strlen(ld_command)  );
+    p += sprintf( cmd, "%s -r -o %s", ld_command, ld_tmp_file );
+    for (i = 0; i < extra_ld_symbols.count; i++)
+        p += sprintf( p, " -u %s", asm_name(extra_ld_symbols.names[i]) );
+    for (i = 0; argv[i]; i++)
+        p += sprintf( p, " %s", argv[i] );
     err = system( cmd );
     if (err) fatal_error( "%s -r failed with status %d\n", ld_command, err );
     free( cmd );
@@ -598,7 +543,7 @@ static const char *ldcombine_files( char **argv )
 }
 
 /* read in the list of undefined symbols */
-void read_undef_symbols( char **argv )
+void read_undef_symbols( DLLSPEC *spec, char **argv )
 {
     size_t prefix_len;
     FILE *f;
@@ -608,14 +553,12 @@ void read_undef_symbols( char **argv )
 
     if (!argv[0]) return;
 
+    add_extra_undef_symbols( spec );
+
     strcpy( name_prefix, asm_name("") );
     prefix_len = strlen( name_prefix );
 
-    undef_size = nb_undef_symbols = 0;
-
-    /* if we have multiple object files, link them together */
-    if (argv[1]) name = ldcombine_files( argv );
-    else name = argv[0];
+    name = ldcombine_files( argv );
 
     if (!nm_command) nm_command = xstrdup("nm");
     cmd = xmalloc( strlen(nm_command) + strlen(name) + 5 );
@@ -632,7 +575,7 @@ void read_undef_symbols( char **argv )
         while (*p == ' ') p++;
         if (p[0] == 'U' && p[1] == ' ' && p[2]) p += 2;
         if (prefix_len && !strncmp( p, name_prefix, prefix_len )) p += prefix_len;
-        add_undef_symbol( p );
+        add_name( &undef_symbols, p );
     }
     if ((err = pclose( f ))) warning( "%s failed with status %d\n", cmd, err );
     free( cmd );
@@ -640,47 +583,39 @@ void read_undef_symbols( char **argv )
 
 static void remove_ignored_symbols(void)
 {
-    int i;
+    unsigned int i;
 
-    if (!ignore_symbols) init_ignored_symbols();
-    sort_symbols( ignore_symbols, nb_ignore_symbols );
-    for (i = 0; i < nb_undef_symbols; i++)
+    if (!ignore_symbols.size) init_ignored_symbols();
+    sort_names( &ignore_symbols );
+    for (i = 0; i < undef_symbols.count; i++)
     {
-        if (find_symbol( undef_symbols[i], ignore_symbols, nb_ignore_symbols ))
-        {
-            free( undef_symbols[i] );
-            undef_symbols[i] = NULL;
-        }
+        if (find_name( undef_symbols.names[i], &ignore_symbols ))
+            remove_name( &undef_symbols, i-- );
     }
-    remove_symbol_holes();
 }
 
 /* resolve the imports for a Win32 module */
 int resolve_imports( DLLSPEC *spec )
 {
-    int i, j;
+    unsigned int i, j, removed;
 
-    if (nb_undef_symbols == -1) return 0; /* no symbol file specified */
-
-    add_extra_undef_symbols( spec );
     remove_ignored_symbols();
 
     for (i = 0; i < nb_imports; i++)
     {
         struct import *imp = dll_imports[i];
 
-        for (j = 0; j < nb_undef_symbols; j++)
+        for (j = removed = 0; j < undef_symbols.count; j++)
         {
-            ORDDEF *odp = find_export( undef_symbols[j], imp->exports, imp->nb_exports );
+            ORDDEF *odp = find_export( undef_symbols.names[j], imp->exports, imp->nb_exports );
             if (odp)
             {
                 add_import_func( imp, odp );
-                free( undef_symbols[j] );
-                undef_symbols[j] = NULL;
+                remove_name( &undef_symbols, j-- );
+                removed++;
             }
         }
-        /* remove all the holes in the undef symbols list */
-        if (!remove_symbol_holes() && check_unused( imp, spec ))
+        if (!removed && check_unused( imp, spec ))
         {
             /* the dll is not used, get rid of it */
             warning( "%s imported but no symbols used\n", imp->spec->file_name );
@@ -919,7 +854,7 @@ static int output_delayed_imports( FILE *outfile, const DLLSPEC *spec )
         }
     }
     fprintf( outfile, "\n" );
-    fprintf( outfile, "static struct {\n" );
+    fprintf( outfile, "struct {\n" );
     fprintf( outfile, "  struct ImgDelayDescr {\n" );
     fprintf( outfile, "    unsigned int  grAttrs;\n" );
     fprintf( outfile, "    const char   *szName;\n" );
@@ -929,15 +864,15 @@ static int output_delayed_imports( FILE *outfile, const DLLSPEC *spec )
     fprintf( outfile, "    void*         pBoundIAT;\n" );
     fprintf( outfile, "    void*         pUnloadIAT;\n" );
     fprintf( outfile, "    unsigned long dwTimeStamp;\n" );
-    fprintf( outfile, "  } imp[%d];\n", nb_delayed );
+    fprintf( outfile, "  } imp[%d];\n", nb_delayed + 1 );
     fprintf( outfile, "  void         *IAT[%d];\n", total_delayed );
     fprintf( outfile, "  const char   *INT[%d];\n", total_delayed );
-    fprintf( outfile, "} delay_imports = {\n" );
+    fprintf( outfile, "} __wine_spec_delay_imports = {\n" );
     fprintf( outfile, "  {\n" );
     for (i = j = 0; i < nb_imports; i++)
     {
         if (!dll_imports[i]->delay) continue;
-        fprintf( outfile, "    { 0, \"%s\", &__wine_delay_imp_hmod[%d], &delay_imports.IAT[%d], &delay_imports.INT[%d], 0, 0, 0 },\n",
+        fprintf( outfile, "    { 0, \"%s\", &__wine_delay_imp_hmod[%d], &__wine_spec_delay_imports.IAT[%d], &__wine_spec_delay_imports.INT[%d], 0, 0, 0 },\n",
                  dll_imports[i]->spec->file_name, i, j, j );
         j += dll_imports[i]->nb_imports;
     }
@@ -969,32 +904,6 @@ static int output_delayed_imports( FILE *outfile, const DLLSPEC *spec )
     }
     fprintf( outfile, "  }\n};\n\n" );
 
-    fprintf( outfile, "extern void __stdcall RaiseException(unsigned int, unsigned int, unsigned int, const void *args[]);\n" );
-    fprintf( outfile, "extern void * __stdcall LoadLibraryA(const char*);\n");
-    fprintf( outfile, "extern void * __stdcall GetProcAddress(void *, const char*);\n");
-    fprintf( outfile, "\n" );
-
-    fprintf( outfile, "void *__stdcall __wine_delay_load( int idx_nr )\n" );
-    fprintf( outfile, "{\n" );
-    fprintf( outfile, "  int idx = idx_nr >> 16, nr = idx_nr & 0xffff;\n" );
-    fprintf( outfile, "  struct ImgDelayDescr *imd = delay_imports.imp + idx;\n" );
-    fprintf( outfile, "  void **pIAT = imd->pIAT + nr;\n" );
-    fprintf( outfile, "  const char** pINT = imd->pINT + nr;\n" );
-    fprintf( outfile, "  void *fn;\n\n" );
-
-    fprintf( outfile, "  if (!*imd->phmod) *imd->phmod = LoadLibraryA(imd->szName);\n" );
-    fprintf( outfile, "  if (*imd->phmod && (fn = GetProcAddress(*imd->phmod, *pINT)))\n");
-    fprintf( outfile, "    /* patch IAT with final value */\n" );
-    fprintf( outfile, "    return *pIAT = fn;\n" );
-    fprintf( outfile, "  else {\n");
-    fprintf( outfile, "    const void *args[2];\n" );
-    fprintf( outfile, "    args[0] = imd->szName;\n" );
-    fprintf( outfile, "    args[1] = *pINT;\n" );
-    fprintf( outfile, "    RaiseException( 0x%08x, %d, 2, args );\n",
-             EXCEPTION_WINE_STUB, EXCEPTION_NONCONTINUABLE );
-    fprintf( outfile, "    return 0;\n" );
-    fprintf( outfile, "  }\n}\n" );
-
     return nb_delayed;
 }
 
@@ -1017,17 +926,17 @@ static void output_delayed_import_thunks( FILE *outfile, const DLLSPEC *spec )
     {
     case CPU_x86:
         fprintf( outfile, "    \"\\tpushl %%ecx\\n\\tpushl %%edx\\n\\tpushl %%eax\\n\"\n" );
-        fprintf( outfile, "    \"\\tcall %s\\n\"\n", asm_name("__wine_delay_load") );
+        fprintf( outfile, "    \"\\tcall %s\\n\"\n", asm_name("__wine_spec_delay_load") );
         fprintf( outfile, "    \"\\tpopl %%edx\\n\\tpopl %%ecx\\n\\tjmp *%%eax\\n\"\n" );
         break;
     case CPU_SPARC:
         fprintf( outfile, "    \"\\tsave %%sp, -96, %%sp\\n\"\n" );
-        fprintf( outfile, "    \"\\tcall %s\\n\"\n", asm_name("__wine_delay_load") );
+        fprintf( outfile, "    \"\\tcall %s\\n\"\n", asm_name("__wine_spec_delay_load") );
         fprintf( outfile, "    \"\\tmov %%g1, %%o0\\n\"\n" );
         fprintf( outfile, "    \"\\tjmp %%o0\\n\\trestore\\n\"\n" );
         break;
     case CPU_ALPHA:
-        fprintf( outfile, "    \"\\tjsr $26,%s\\n\"\n", asm_name("__wine_delay_load") );
+        fprintf( outfile, "    \"\\tjsr $26,%s\\n\"\n", asm_name("__wine_spec_delay_load") );
         fprintf( outfile, "    \"\\tjmp $31,($0)\\n\"\n" );
         break;
     case CPU_POWERPC:
@@ -1054,7 +963,7 @@ static void output_delayed_import_thunks( FILE *outfile, const DLLSPEC *spec )
         fprintf( outfile, "    \"\\tstw  %s, %d(%s)\\n\"\n", ppc_reg(0), 44+extra_stack_storage, ppc_reg(1));
 
         /* Call the __wine_delay_load function, arg1 is arg1. */
-        fprintf( outfile, "    \"\\tbl %s\\n\"\n", asm_name("__wine_delay_load") );
+        fprintf( outfile, "    \"\\tbl %s\\n\"\n", asm_name("__wine_spec_delay_load") );
 
         /* Load return value from call into ctr register */
         fprintf( outfile, "    \"\\tmtctr %s\\n\"\n", ppc_reg(3));
@@ -1145,7 +1054,7 @@ static void output_delayed_import_thunks( FILE *outfile, const DLLSPEC *spec )
 
     fprintf( outfile, "\n    \".align %d\\n\"\n", get_alignment(8) );
     fprintf( outfile, "    \"%s:\\n\"\n", asm_name(delayed_import_thunks));
-    pos = nb_delayed * 32;
+    pos = (nb_delayed + 1) * 32;
     for (i = 0; i < nb_imports; i++)
     {
         if (!dll_imports[i]->delay) continue;
@@ -1153,7 +1062,7 @@ static void output_delayed_import_thunks( FILE *outfile, const DLLSPEC *spec )
         {
             ORDDEF *odp = dll_imports[i]->imports[j];
             output_import_thunk( outfile, odp->name ? odp->name : odp->export_name,
-                                 "delay_imports", pos );
+                                 "__wine_spec_delay_imports", pos );
         }
     }
     output_function_size( outfile, delayed_import_thunks );

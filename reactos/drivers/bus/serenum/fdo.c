@@ -124,9 +124,10 @@ SerenumFdoQueryBusRelations(
 	}
 	NumPDO = (DeviceExtension->AttachedPdo != NULL ? 1 : 0);
 
-	DeviceRelations = (PDEVICE_RELATIONS)ExAllocatePool(
+	DeviceRelations = (PDEVICE_RELATIONS)ExAllocatePoolWithTag(
 		PagedPool,
-		sizeof(DEVICE_RELATIONS) + sizeof(PDEVICE_OBJECT) * (NumPDO - 1));
+		sizeof(DEVICE_RELATIONS) + sizeof(PDEVICE_OBJECT) * (NumPDO - 1),
+		SERENUM_TAG);
 	if (!DeviceRelations)
 		return STATUS_INSUFFICIENT_RESOURCES;
 

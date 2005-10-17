@@ -27,7 +27,7 @@ CSR_API(CsrRegisterServicesProcess)
   NTSTATUS Status;
 
   Request->Header.u1.s1.TotalLength = sizeof(CSR_API_MESSAGE);
-  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - LPC_MESSAGE_BASE_SIZE;
+  Request->Header.u1.s1.DataLength = sizeof(CSR_API_MESSAGE) - sizeof(PORT_MESSAGE);
 
   if (ServicesProcessIdValid == TRUE)
     {

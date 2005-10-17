@@ -32,8 +32,7 @@
 #include "ole2.h"
 #include "olectl.h"
 #include "oleauto.h"
-
-#include "tmarshal.h"
+#include "typelib.h"
 
 #include "wine/debug.h"
 
@@ -701,7 +700,7 @@ extern void _get_STDFONT_CF(LPVOID);
 extern void _get_STDPIC_CF(LPVOID);
 
 /***********************************************************************
- *		DllGetClassObject (OLEAUT32.1)
+ *		DllGetClassObject (OLEAUT32.@)
  */
 HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
 {
@@ -727,7 +726,7 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
         return OLEAUTPS_DllGetClassObject(&CLSID_PSDispatch, iid, ppv);
     }
     if (IsEqualGUID(rclsid,&CLSID_PSOAInterface)) {
-	if (S_OK==TypeLibFac_DllGetClassObject(rclsid,iid,ppv))
+	if (S_OK==TMARSHAL_DllGetClassObject(rclsid,iid,ppv))
 	    return S_OK;
 	/*FALLTHROUGH*/
     }
@@ -736,7 +735,7 @@ HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
 }
 
 /***********************************************************************
- *		DllCanUnloadNow (OLEAUT32.410)
+ *		DllCanUnloadNow (OLEAUT32.@)
  *
  * Determine if this dll can be unloaded from the callers address space.
  *
@@ -756,7 +755,7 @@ HRESULT WINAPI DllCanUnloadNow(void)
  */
 BOOL WINAPI DllMain(HINSTANCE hInstDll, DWORD fdwReason, LPVOID lpvReserved)
 {
-  TRACE("(%p,%lu,%p)\n", hInstDll, fdwReason, lpvReserved);
+  TRACE("(%p,%ld,%p)\n", hInstDll, fdwReason, lpvReserved);
 
   switch (fdwReason) {
   case DLL_PROCESS_ATTACH:

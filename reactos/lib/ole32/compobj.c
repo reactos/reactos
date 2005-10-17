@@ -224,9 +224,6 @@ static APARTMENT *apartment_construct(DWORD model)
 
     apt = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*apt));
     apt->tid = GetCurrentThreadId();
-    DuplicateHandle(GetCurrentProcess(), GetCurrentThread(),
-                    GetCurrentProcess(), &apt->thread,
-                    THREAD_ALL_ACCESS, FALSE, 0);
 
     list_init(&apt->proxies);
     list_init(&apt->stubmgrs);
@@ -360,7 +357,6 @@ DWORD apartment_release(struct apartment *apt)
 
         DEBUG_CLEAR_CRITSEC_NAME(&apt->cs);
         DeleteCriticalSection(&apt->cs);
-        CloseHandle(apt->thread);
 
         HeapFree(GetProcessHeap(), 0, apt);
     }
@@ -813,27 +809,29 @@ HRESULT WINAPI CoCreateGuid(GUID *pguid)
  */
 HRESULT WINAPI __CLSIDFromStringA(LPCSTR idstr, CLSID *id)
 {
-  const BYTE *s = (const BYTE *) idstr;
+  const BYTE *s;
   int	i;
   BYTE table[256];
 
-  if (!s)
-	  s = "{00000000-0000-0000-0000-000000000000}";
-  else {  /* validate the CLSID string */
+  if (!idstr) {
+    memset( id, 0, sizeof (CLSID) );
+    return S_OK;
+  }
 
-      if (strlen(s) != 38)
-          return CO_E_CLASSSTRING;
+  /* validate the CLSID string */
+  if (strlen(idstr) != 38)
+    return CO_E_CLASSSTRING;
 
-      if ((s[0]!='{') || (s[9]!='-') || (s[14]!='-') || (s[19]!='-') || (s[24]!='-') || (s[37]!='}'))
-          return CO_E_CLASSSTRING;
+  s = (const BYTE *) idstr;
+  if ((s[0]!='{') || (s[9]!='-') || (s[14]!='-') || (s[19]!='-') || (s[24]!='-') || (s[37]!='}'))
+    return CO_E_CLASSSTRING;
 
-      for (i=1; i<37; i++) {
-          if ((i == 9)||(i == 14)||(i == 19)||(i == 24)) continue;
-          if (!(((s[i] >= '0') && (s[i] <= '9'))  ||
-                ((s[i] >= 'a') && (s[i] <= 'f'))  ||
-                ((s[i] >= 'A') && (s[i] <= 'F'))))
-              return CO_E_CLASSSTRING;
-      }
+  for (i=1; i<37; i++) {
+    if ((i == 9)||(i == 14)||(i == 19)||(i == 24)) continue;
+    if (!(((s[i] >= '0') && (s[i] <= '9'))  ||
+          ((s[i] >= 'a') && (s[i] <= 'f'))  ||
+          ((s[i] >= 'A') && (s[i] <= 'F'))))
+       return CO_E_CLASSSTRING;
   }
 
   TRACE("%s -> %p\n", s, id);
@@ -1026,7 +1024,7 @@ HRESULT WINAPI ProgIDFromCLSID(REFCLSID clsid, LPOLESTR *lplpszProgID)
 
   if (ret == S_OK)
   {
-    DWORD progidlen = 0;
+    LONG progidlen = 0;
 
     if (RegQueryValueW(hkey, NULL, NULL, &progidlen))
       ret = REGDB_E_CLASSNOTREG;
@@ -1064,7 +1062,7 @@ HRESULT WINAPI ProgIDFromCLSID(REFCLSID clsid, LPOLESTR *lplpszProgID)
 HRESULT WINAPI CLSIDFromProgID16(LPCOLESTR16 progid, LPCLSID riid)
 {
 	char	*buf,buf2[80];
-	DWORD	buf2len;
+	LONG	buf2len;
 	HRESULT	err;
 	HKEY	xhkey;
 
@@ -1101,7 +1099,7 @@ HRESULT WINAPI CLSIDFromProgID(LPCOLESTR progid, LPCLSID riid)
 {
     static const WCHAR clsidW[] = { '\\','C','L','S','I','D',0 };
     WCHAR buf2[CHARS_IN_GUID];
-    DWORD buf2len = sizeof(buf2);
+    LONG buf2len = sizeof(buf2);
     HKEY xhkey;
 
     WCHAR *buf = HeapAlloc( GetProcessHeap(),0,(strlenW(progid)+8) * sizeof(WCHAR) );
@@ -1166,7 +1164,7 @@ HRESULT WINAPI CoGetPSClsid(REFIID riid, CLSID *pclsid)
     static const WCHAR wszPSC[] = {'\\','P','r','o','x','y','S','t','u','b','C','l','s','i','d','3','2',0};
     WCHAR path[ARRAYSIZE(wszInterface) - 1 + CHARS_IN_GUID - 1 + ARRAYSIZE(wszPSC)];
     WCHAR value[CHARS_IN_GUID];
-    DWORD len;
+    LONG len;
     HKEY hkey;
 
     TRACE("() riid=%s, pclsid=%p\n", debugstr_guid(riid), pclsid);
@@ -1562,7 +1560,6 @@ HRESULT COM_RegReadPath(HKEY hkeyroot, const WCHAR *keyname, const WCHAR *valuen
 }
 
 /***********************************************************************
- *           CoGetClassObject [COMPOBJ.7]
  *           CoGetClassObject [OLE32.@]
  *
  * FIXME.  If request allows of several options and there is a failure
@@ -1663,6 +1660,23 @@ HRESULT WINAPI CoGetClassObject(
     }
 
     return hres;
+}
+
+/***********************************************************************
+ *           CoGetClassObject [COMPOBJ.7]
+ *
+ */
+HRESULT WINAPI CoGetClassObject16(
+    REFCLSID rclsid, DWORD dwClsContext, COSERVERINFO *pServerInfo,
+    REFIID iid, LPVOID *ppv)
+{
+    FIXME(", stub!\n\tCLSID:\t%s,\n\tIID:\t%s\n", debugstr_guid(rclsid), debugstr_guid(iid));
+
+    if (pServerInfo) {
+	FIXME("\tpServerInfo: name=%s\n",debugstr_w(pServerInfo->pwszName));
+	FIXME("\t\tpAuthInfo=%p\n",pServerInfo->pAuthInfo);
+    }
+    return E_NOTIMPL;
 }
 /***********************************************************************
  *        CoResumeClassObjects (OLE32.@)
@@ -1772,8 +1786,8 @@ HRESULT WINAPI GetClassFile(LPCOLESTR filePathName,CLSID *pclsid)
 
     return MK_E_INVALIDEXTENSION;
 }
+
 /***********************************************************************
- *           CoCreateInstance [COMPOBJ.13]
  *           CoCreateInstance [OLE32.@]
  */
 HRESULT WINAPI CoCreateInstance(
@@ -1838,6 +1852,23 @@ HRESULT WINAPI CoCreateInstance(
 		debugstr_guid(iid), debugstr_guid(rclsid),hres);
 
 	return hres;
+}
+
+/***********************************************************************
+ *           CoCreateInstance [COMPOBJ.13]
+ */
+HRESULT WINAPI CoCreateInstance16(
+	REFCLSID rclsid,
+	LPUNKNOWN pUnkOuter,
+	DWORD dwClsContext,
+	REFIID iid,
+	LPVOID *ppv)
+{
+  FIXME("(%s, %p, %lx, %s, %p), stub!\n", 
+	debugstr_guid(rclsid), pUnkOuter, dwClsContext, debugstr_guid(iid),
+	ppv
+  );
+  return E_NOTIMPL;
 }
 
 /***********************************************************************
@@ -2173,7 +2204,7 @@ HRESULT WINAPI OleGetAutoConvert(REFCLSID clsidOld, LPCLSID pClsidNew)
     static const WCHAR wszAutoConvertTo[] = {'A','u','t','o','C','o','n','v','e','r','t','T','o',0};
     HKEY hkey = NULL;
     WCHAR buf[CHARS_IN_GUID];
-    DWORD len;
+    LONG len;
     HRESULT res = S_OK;
 
     if (ERROR_SUCCESS != COM_OpenKeyForCLSID(clsidOld, KEY_READ, &hkey))
@@ -2458,6 +2489,16 @@ BOOL WINAPI CoIsHandlerConnected(IUnknown *pUnk)
     FIXME("%p\n", pUnk);
 
     return TRUE;
+}
+
+/***********************************************************************
+ *           CoAllowSetForegroundWindow [OLE32.@]
+ *
+ */
+HRESULT WINAPI CoAllowSetForegroundWindow(IUnknown *pUnk, void *pvReserved)
+{
+    FIXME("(%p, %p): stub\n", pUnk, pvReserved);
+    return S_OK;
 }
  
 /***********************************************************************

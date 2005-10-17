@@ -33,8 +33,10 @@ List:
 	Priority 4:
 	- FIXED: Kernel and Memory Types are not architecture-specific (Eric) [ketypes.h, mmtypes.h]
 	- FIXED: Win32K Builds with windows.h (Filip) [extypes.h, ketypes.h]
+	- FIXED: Modify design of NDK so that all the types are in their respective files (Alex) [*.h]
 
 	Priority 5:
-	- LPC Types are totally wrong. [lpctypes.h]
+	- FIXED: LPC Types are totally wrong. (Alex) [lpctypes.h]
 	- Missing System Info Classes [zwtypes.h]
 	- FIXED: Process Priority Classes are messed up (Alex) [pstypes.h]
+	

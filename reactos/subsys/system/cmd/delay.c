@@ -26,6 +26,8 @@ INT CommandDelay (LPTSTR cmd, LPTSTR param)
 		return 0;
 	}
 
+	nErrorLevel = 0;
+
 	if (*param==0)
 	{
 		error_req_param_missing ();

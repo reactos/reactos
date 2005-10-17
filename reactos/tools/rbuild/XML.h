@@ -44,6 +44,7 @@ public:
 
 	std::string RelativeFromWorkingDirectory ();
 	static std::string RelativeFromWorkingDirectory ( const std::string& path );
+	static std::string RelativeFromDirectory ( const std::string& path, const std::string& base_directory);
 
 	static void Split ( std::vector<std::string>& out,
 	                    const std::string& path,

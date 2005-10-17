@@ -73,7 +73,7 @@ BOOL DissectArcPath(CHAR *ArcPath, CHAR *BootPath, ULONG* BootDrive, ULONG* Boot
 		p = p + 11;
 		*BootPartition = atoi(p);
 		p = strchr(p, ')');
-		if ((p == NULL) || (*BootPartition == 0))
+		if (p == NULL)
 			return FALSE;
 		p++;
 	}

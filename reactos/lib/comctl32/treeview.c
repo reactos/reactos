@@ -59,6 +59,8 @@
 #include "winnls.h"
 #include "commctrl.h"
 #include "comctl32.h"
+#include "uxtheme.h"
+#include "tmschema.h"
 #include "wine/unicode.h"
 #include "wine/debug.h"
 
@@ -194,6 +196,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(treeview);
 #define STATEIMAGEINDEX(x) (((x) >> 12) & 0x0f)
 #define OVERLAYIMAGEINDEX(x) (((x) >> 8) & 0x0f)
 #define ISVISIBLE(x)         ((x)->visibleOrder >= 0)
+
+
+static const WCHAR themeClass[] = { 'T','r','e','e','v','i','e','w',0 };
 
 
 typedef VOID (*TREEVIEW_ItemEnumFunc)(TREEVIEW_INFO *, TREEVIEW_ITEM *,LPVOID);
@@ -654,12 +659,13 @@ TREEVIEW_SendCustomDrawItemNotify(TREEVIEW_INFO *infoPtr, HDC hdc,
 {
     HWND hwnd = infoPtr->hwnd;
     LPNMCUSTOMDRAW nmcd;
-    DWORD dwDrawStage, dwItemSpec;
+    DWORD dwDrawStage;
+    DWORD_PTR dwItemSpec;
     UINT uItemState;
     INT retval;
 
     dwDrawStage = CDDS_ITEM | uItemDrawState;
-    dwItemSpec = (DWORD)wineItem;
+    dwItemSpec = (DWORD_PTR)wineItem;
     uItemState = 0;
     if (wineItem->state & TVIS_SELECTED)
 	uItemState |= CDIS_SELECTED;
@@ -1233,11 +1239,11 @@ TREEVIEW_InsertItemT(TREEVIEW_INFO *infoPtr, const TVINSERTSTRUCTW *ptdi, BOOL i
     insertAfter = ptdi->hInsertAfter;
 
     /* Validate this now for convenience. */
-    switch ((DWORD)insertAfter)
+    switch ((DWORD_PTR)insertAfter)
     {
-    case (DWORD)TVI_FIRST:
-    case (DWORD)TVI_LAST:
-    case (DWORD)TVI_SORT:
+    case (DWORD_PTR)TVI_FIRST:
+    case (DWORD_PTR)TVI_LAST:
+    case (DWORD_PTR)TVI_SORT:
 	break;
 
     default:
@@ -1269,9 +1275,9 @@ TREEVIEW_InsertItemT(TREEVIEW_INFO *infoPtr, const TVINSERTSTRUCTW *ptdi, BOOL i
 
     infoPtr->uNumItems++;
 
-    switch ((DWORD)insertAfter)
+    switch ((DWORD_PTR)insertAfter)
     {
-    case (DWORD)TVI_FIRST:
+    case (DWORD_PTR)TVI_FIRST:
         {
            TREEVIEW_ITEM *originalFirst = parentItem->firstChild;
            TREEVIEW_InsertBefore(newItem, parentItem->firstChild, parentItem);
@@ -1280,7 +1286,7 @@ TREEVIEW_InsertItemT(TREEVIEW_INFO *infoPtr, const TVINSERTSTRUCTW *ptdi, BOOL i
         }
 	break;
 
-    case (DWORD)TVI_LAST:
+    case (DWORD_PTR)TVI_LAST:
 	TREEVIEW_InsertAfter(newItem, parentItem->lastChild, parentItem);
 	break;
 
@@ -1289,7 +1295,7 @@ TREEVIEW_InsertItemT(TREEVIEW_INFO *infoPtr, const TVINSERTSTRUCTW *ptdi, BOOL i
 	TREEVIEW_InsertAfter(newItem, insertAfter, insertAfter->parent);
 	break;
 
-    case (DWORD)TVI_SORT:
+    case (DWORD_PTR)TVI_SORT:
 	{
 	    TREEVIEW_ITEM *aChild;
 	    TREEVIEW_ITEM *previousChild = NULL;
@@ -2361,45 +2367,58 @@ TREEVIEW_DrawItemLines(TREEVIEW_INFO *infoPtr, HDC hdc, TREEVIEW_ITEM *item)
     {
 	if (item->cChildren)
 	{
-	    LONG height = item->rect.bottom - item->rect.top;
-	    LONG width  = item->stateOffset - item->linesOffset;
-	    LONG rectsize = min(height, width) / 4;
-	    /* plussize = ceil(rectsize * 3/4) */
-	    LONG plussize = (rectsize + 1) * 3 / 4;
-
-	    HPEN hNewPen  = CreatePen(PS_SOLID, 0, infoPtr->clrLine);
-	    HPEN hOldPen  = SelectObject(hdc, hNewPen);
-
-	    Rectangle(hdc, centerx - rectsize - 1, centery - rectsize - 1,
-		      centerx + rectsize + 2, centery + rectsize + 2);
-
-	    SelectObject(hdc, hOldPen);
-	    DeleteObject(hNewPen);
-
-	    if (height < 18 || width < 18)
-	    {
-	        MoveToEx(hdc, centerx - plussize + 1, centery, NULL);
-	        LineTo(hdc, centerx + plussize, centery);
-
-	        if (!(item->state & TVIS_EXPANDED))
-	        {
-		    MoveToEx(hdc, centerx, centery - plussize + 1, NULL);
-		    LineTo(hdc, centerx, centery + plussize);
-	        }
-	    }
-	    else
-	    {
-		Rectangle(hdc, centerx - plussize + 1, centery - 1,
-		centerx + plussize, centery + 2);
-
-		if (!(item->state & TVIS_EXPANDED))
-		{
-		    Rectangle(hdc, centerx - 1, centery - plussize + 1,
-		    centerx + 2, centery + plussize);
-		    SetPixel(hdc, centerx - 1, centery, infoPtr->clrBk);
-		    SetPixel(hdc, centerx + 1, centery, infoPtr->clrBk);
-		}
-	    }
+            HTHEME theme = GetWindowTheme(infoPtr->hwnd);
+            if (theme)
+            {
+                RECT glyphRect = item->rect;
+                glyphRect.left = item->linesOffset;
+                glyphRect.right = item->stateOffset;
+                DrawThemeBackground (theme, hdc, TVP_GLYPH,
+                    (item->state & TVIS_EXPANDED) ? GLPS_OPENED : GLPS_CLOSED,
+                    &glyphRect, NULL);
+            }
+            else
+            {
+                LONG height = item->rect.bottom - item->rect.top;
+                LONG width  = item->stateOffset - item->linesOffset;
+                LONG rectsize = min(height, width) / 4;
+                /* plussize = ceil(rectsize * 3/4) */
+                LONG plussize = (rectsize + 1) * 3 / 4;
+    
+                HPEN hNewPen  = CreatePen(PS_SOLID, 0, infoPtr->clrLine);
+                HPEN hOldPen  = SelectObject(hdc, hNewPen);
+    
+                Rectangle(hdc, centerx - rectsize - 1, centery - rectsize - 1,
+                          centerx + rectsize + 2, centery + rectsize + 2);
+    
+                SelectObject(hdc, hOldPen);
+                DeleteObject(hNewPen);
+    
+                if (height < 18 || width < 18)
+                {
+                    MoveToEx(hdc, centerx - plussize + 1, centery, NULL);
+                    LineTo(hdc, centerx + plussize, centery);
+    
+                    if (!(item->state & TVIS_EXPANDED))
+                    {
+                        MoveToEx(hdc, centerx, centery - plussize + 1, NULL);
+                        LineTo(hdc, centerx, centery + plussize);
+                    }
+                }
+                else
+                {
+                    Rectangle(hdc, centerx - plussize + 1, centery - 1,
+                    centerx + plussize, centery + 2);
+    
+                    if (!(item->state & TVIS_EXPANDED))
+                    {
+                        Rectangle(hdc, centerx - 1, centery - plussize + 1,
+                        centerx + 2, centery + plussize);
+                        SetPixel(hdc, centerx - 1, centery, infoPtr->clrBk);
+                        SetPixel(hdc, centerx + 1, centery, infoPtr->clrBk);
+                    }
+                }
+            }
 	}
     }
     SelectObject(hdc, hbrOld);
@@ -2573,9 +2592,9 @@ TREEVIEW_DrawItem(TREEVIEW_INFO *infoPtr, HDC hdc, TREEVIEW_ITEM *wineItem)
     /* Draw insertion mark if necessary */
 
     if (infoPtr->insertMarkItem)
-	TRACE("item:%d,mark:%d\n",
+	TRACE("item:%d,mark:%p\n",
 	      TREEVIEW_GetItemIndex(infoPtr, wineItem),
-	      (int)infoPtr->insertMarkItem);
+	      infoPtr->insertMarkItem);
 
     if (wineItem == infoPtr->insertMarkItem)
     {
@@ -2954,7 +2973,7 @@ TREEVIEW_Sort(TREEVIEW_INFO *infoPtr, BOOL fRecurse, HTREEITEM parent,
     /* Check for a valid handle to the parent item */
     if (!TREEVIEW_ValidItem(infoPtr, parent))
     {
-	ERR("invalid item hParent=%x\n", (INT)parent);
+	ERR("invalid item hParent=%p\n", parent);
 	return FALSE;
     }
 
@@ -3625,7 +3644,7 @@ TREEVIEW_EditLabel(TREEVIEW_INFO *infoPtr, HTREEITEM hItem)
     TEXTMETRICW textMetric;
     static const WCHAR EditW[] = {'E','d','i','t',0};
 
-    TRACE("%x %p\n", (unsigned)hwnd, hItem);
+    TRACE("%p %p\n", hwnd, hItem);
     if (!TREEVIEW_ValidItem(infoPtr, editItem))
 	return NULL;
 
@@ -4952,6 +4971,8 @@ TREEVIEW_Create(HWND hwnd, const CREATESTRUCTW *lpcs)
     /* Make sure actual scrollbar state is consistent with uInternalStatus */
     ShowScrollBar(hwnd, SB_VERT, FALSE);
     ShowScrollBar(hwnd, SB_HORZ, FALSE);
+    
+    OpenThemeData (hwnd, themeClass);
 
     return 0;
 }
@@ -4971,8 +4992,11 @@ TREEVIEW_Destroy(TREEVIEW_INFO *infoPtr)
 	SetWindowLongPtrW(infoPtr->hwndEdit, GWLP_WNDPROC,
 		       (DWORD_PTR)infoPtr->wpEditOrig);
 
+    CloseThemeData (GetWindowTheme (infoPtr->hwnd));
+
     /* Deassociate treeview from the window before doing anything drastic. */
     SetWindowLongPtrW(infoPtr->hwnd, 0, (DWORD_PTR)NULL);
+
 
     DeleteObject(infoPtr->hDefaultFont);
     DeleteObject(infoPtr->hBoldFont);
@@ -5201,6 +5225,40 @@ TREEVIEW_MouseMove (TREEVIEW_INFO * infoPtr, WPARAM wParam, LPARAM lParam)
     return 0;
 }
 
+/* Draw themed border */
+static BOOL nc_paint (TREEVIEW_INFO *infoPtr, HRGN region)
+{
+    HTHEME theme = GetWindowTheme (infoPtr->hwnd);
+    HDC dc;
+    RECT r;
+    HRGN cliprgn;
+    int cxEdge = GetSystemMetrics (SM_CXEDGE),
+        cyEdge = GetSystemMetrics (SM_CYEDGE);
+
+    if (!theme) return FALSE;
+
+    GetWindowRect(infoPtr->hwnd, &r);
+
+    cliprgn = CreateRectRgn (r.left + cxEdge, r.top + cyEdge,
+        r.right - cxEdge, r.bottom - cyEdge);
+    if (region != (HRGN)1)
+        CombineRgn (cliprgn, cliprgn, region, RGN_AND);
+    OffsetRect(&r, -r.left, -r.top);
+
+    dc = GetDCEx(infoPtr->hwnd, region, DCX_WINDOW|DCX_INTERSECTRGN);
+    OffsetRect(&r, -r.left, -r.top);
+
+    if (IsThemeBackgroundPartiallyTransparent (theme, 0, 0))
+        DrawThemeParentBackground(infoPtr->hwnd, dc, &r);
+    DrawThemeBackground (theme, dc, 0, 0, &r, 0);
+    ReleaseDC(infoPtr->hwnd, dc);
+
+    /* Call default proc to get the scrollbars etc. painted */
+    DefWindowProcW (infoPtr->hwnd, WM_NCPAINT, (WPARAM)cliprgn, 0);
+
+    return TRUE;
+}
+
 static LRESULT
 TREEVIEW_Notify(TREEVIEW_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 {
@@ -5343,6 +5401,15 @@ TREEVIEW_KillFocus(TREEVIEW_INFO *infoPtr)
     TREEVIEW_Invalidate(infoPtr, infoPtr->selectedItem);
     UpdateWindow(infoPtr->hwnd);
     TREEVIEW_SendSimpleNotify(infoPtr, NM_KILLFOCUS);
+    return 0;
+}
+
+/* update theme after a WM_THEMECHANGED message */
+static LRESULT theme_changed (TREEVIEW_INFO* infoPtr)
+{
+    HTHEME theme = GetWindowTheme (infoPtr->hwnd);
+    CloseThemeData (theme);
+    OpenThemeData (infoPtr->hwnd, themeClass);
     return 0;
 }
 
@@ -5551,6 +5618,11 @@ TREEVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         else
             return 0;
 
+    case WM_NCPAINT:
+        if (nc_paint (infoPtr, (HRGN)wParam))
+            return 0;
+        goto def;
+
     case WM_NOTIFY:
 	return TREEVIEW_Notify(infoPtr, wParam, lParam);
 
@@ -5589,6 +5661,9 @@ TREEVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     case WM_TIMER:
 	return TREEVIEW_HandleTimer(infoPtr, wParam);
+
+    case WM_THEMECHANGED:
+        return theme_changed (infoPtr);
 
     case WM_VSCROLL:
 	return TREEVIEW_VScroll(infoPtr, wParam);

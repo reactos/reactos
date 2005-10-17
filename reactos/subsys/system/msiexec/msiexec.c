@@ -24,12 +24,13 @@
 #include <objbase.h>
 #include <stdio.h>
 
-#include "msiexec.h"
-
 #include "wine/debug.h"
 #include "wine/unicode.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(msiexec);
+
+typedef HRESULT (WINAPI *DLLREGISTERSERVER)(void);
+typedef HRESULT (WINAPI *DLLUNREGISTERSERVER)(void);
 
 struct string_list
 {

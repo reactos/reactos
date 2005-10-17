@@ -88,63 +88,7 @@ typedef struct _QUEUEDMESSAGE
   PEPORT		Sender;
   LIST_ENTRY	QueueListEntry;
   PORT_MESSAGE	Message;
-  UCHAR		MessageData [MAX_MESSAGE_DATA];
 } QUEUEDMESSAGE,  *PQUEUEDMESSAGE;
-
-typedef struct _LPC_DBG_MESSAGE
-{
-   PORT_MESSAGE Header;
-   ULONG Type;
-   ULONG Status;
-   union
-     {
-	struct
-	  {
-	     EXCEPTION_RECORD ExceptionRecord;
-	     ULONG FirstChance;
-	  } Exception;
-	struct
-	  {
-	     ULONG Reserved;
-	     PVOID StartAddress;
-	  } CreateThread;
-	struct
-	  {
-	     ULONG Reserved;
-	     HANDLE FileHandle;
-	     PVOID Base;
-	     ULONG PointerToSymbolTable;
-	     ULONG NumberOfSymbols;
-	     ULONG Reserved2;
-	     PVOID EntryPoint;
-	  } CreateProcess;
-	struct
-	  {
-	     ULONG ExitCode;
-	  } ExitThread;
-	struct
-	  {
-	     ULONG ExitCode;
-	  } ExitProcess;
-	struct
-	  {
-	     HANDLE FileHandle;
-	     PVOID Base;
-	     ULONG PointerToSymbolTable;
-	     ULONG NumberOfSymbols;
-	  } LoadDll;
-	struct
-	  {
-	     PVOID Base;
-	  } UnloadDll;
-     } Data;
-} LPC_DBG_MESSAGE, *PLPC_DBG_MESSAGE;
-
-typedef struct _LPC_TERMINATION_MESSAGE
-{
-   PORT_MESSAGE Header;
-   LARGE_INTEGER CreationTime;
-} LPC_TERMINATION_MESSAGE, *PLPC_TERMINATION_MESSAGE;
 
 /* Code in ntoskrnl/lpc/close.h */
 

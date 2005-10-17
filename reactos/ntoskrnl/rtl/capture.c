@@ -32,7 +32,7 @@ RtlCaptureUnicodeString(OUT PUNICODE_STRING Dest,
    * Copy the source string structure to kernel space.
    */
 
-  if(CurrentMode == UserMode)
+  if(CurrentMode != KernelMode)
   {
     RtlZeroMemory(&Src, sizeof(Src));
 

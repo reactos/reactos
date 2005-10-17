@@ -111,8 +111,6 @@ ObmpCloseAllHandles(PUSER_HANDLE_TABLE HandleTable)
   PVOID ObjectBody;
   ULONG i;
 
-  ObmpLockHandleTable(HandleTable);
-
   CurrentEntry = HandleTable->ListHead.Flink;
 
   while (CurrentEntry != &HandleTable->ListHead)
@@ -131,11 +129,8 @@ ObmpCloseAllHandles(PUSER_HANDLE_TABLE HandleTable)
 	      ObjectHeader->HandleCount--;
 	      Current->Handles[i].ObjectBody = NULL;
 
-	      ObmpUnlockHandleTable(HandleTable);
-
 	      ObmDereferenceObject(ObjectBody);
 
-	      ObmpLockHandleTable(HandleTable);
 	      CurrentEntry = &HandleTable->ListHead;
 	      break;
 	    }
@@ -144,7 +139,6 @@ ObmpCloseAllHandles(PUSER_HANDLE_TABLE HandleTable)
       CurrentEntry = CurrentEntry->Flink;
     }
 
-  ObmpUnlockHandleTable(HandleTable);
 }
 
 VOID FASTCALL
@@ -177,13 +171,10 @@ ObmpDeleteHandle(PUSER_HANDLE_TABLE HandleTable,
   PUSER_HANDLE Entry;
   PVOID ObjectBody;
 
-  ObmpLockHandleTable(HandleTable);
-
   Entry = ObmpGetObjectByHandle(HandleTable, Handle);
   if (Entry == NULL)
     {
       DPRINT1("Invalid handle\n");
-      ObmpUnlockHandleTable(HandleTable);
       return NULL;
     }
 
@@ -196,8 +187,6 @@ ObmpDeleteHandle(PUSER_HANDLE_TABLE HandleTable,
       ObmReferenceObjectByPointer(ObjectBody, otUnknown);
       Entry->ObjectBody = NULL;
     }
-
-  ObmpUnlockHandleTable(HandleTable);
 
   return ObjectBody;
 }
@@ -372,8 +361,6 @@ ObmCreateHandle(PUSER_HANDLE_TABLE HandleTable,
       USER_BODY_TO_HEADER(ObjectBody)->HandleCount++;
     }
 
-  ObmpLockHandleTable(HandleTable);
-
   Handle = 1;
   Current = HandleTable->ListHead.Flink;
   /*
@@ -390,7 +377,6 @@ ObmCreateHandle(PUSER_HANDLE_TABLE HandleTable,
 	  if (!Block->Handles[i].ObjectBody)
 	    {
 	      Block->Handles[i].ObjectBody = ObjectBody;
-	      ObmpUnlockHandleTable(HandleTable);
 	      *HandleReturn = (HANDLE)((Handle + i) << 2);
 	      return STATUS_SUCCESS;
 	    }
@@ -415,7 +401,6 @@ ObmCreateHandle(PUSER_HANDLE_TABLE HandleTable,
   RtlZeroMemory(NewBlock, sizeof(USER_HANDLE_BLOCK));
   NewBlock->Handles[0].ObjectBody = ObjectBody;
   InsertTailList(&HandleTable->ListHead, &NewBlock->ListEntry);
-  ObmpUnlockHandleTable(HandleTable);
   *HandleReturn = (HANDLE)(Handle << 2);
 
   return STATUS_SUCCESS;
@@ -441,20 +426,15 @@ ObmReferenceObjectByHandle(PUSER_HANDLE_TABLE HandleTable,
   PUSER_HANDLE UserHandle;
   PVOID ObjectBody;
 
-  ObmpLockHandleTable(HandleTable);
-
   UserHandle = ObmpGetObjectByHandle(HandleTable, Handle);
 
   if ((UserHandle == NULL) || (UserHandle->ObjectBody == NULL))
     {
-      ObmpUnlockHandleTable(HandleTable);
       return STATUS_UNSUCCESSFUL;
     }
 
   ObjectBody = UserHandle->ObjectBody;
   ObmReferenceObjectByPointer(ObjectBody, ObjectType);
-
-  ObmpUnlockHandleTable(HandleTable);
 
   ObjectHeader = USER_BODY_TO_HEADER(ObjectBody);
 
@@ -491,7 +471,6 @@ VOID FASTCALL
 ObmInitializeHandleTable(PUSER_HANDLE_TABLE HandleTable)
 {
   InitializeListHead(&HandleTable->ListHead);
-  ExInitializeFastMutex(&HandleTable->ListLock);
 }
 
 VOID FASTCALL

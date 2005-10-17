@@ -22,6 +22,7 @@
 #include <math.h>
 
 #include <windows.h>
+#include <tchar.h>
 // #include <commctrl.h>
 
 #include "winecalc.h"
@@ -71,9 +72,9 @@
 
 // various display error messages
 
-static char err_invalid        [CALC_BUF_SIZE];
-static char err_divide_by_zero [CALC_BUF_SIZE];
-static char err_undefined      [CALC_BUF_SIZE];
+static TCHAR err_invalid        [CALC_BUF_SIZE];
+static TCHAR err_divide_by_zero [CALC_BUF_SIZE];
+static TCHAR err_undefined      [CALC_BUF_SIZE];
 
 // calculator state is kept here
 
@@ -105,7 +106,7 @@ static int sta[] = { 16, 27, 38, 49 };
 
 static HMENU menus[3];
 
-static char appname[40];
+static TCHAR appname[40];
 
 static int debug;
 
@@ -123,33 +124,45 @@ int WINAPI WinMain( HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdline, int cmd
     WNDCLASS wc;
     HWND hWnd;
     HACCEL haccel;
-
-    char s[CALC_BUF_SIZE];
+#ifdef UNICODE
+    CHAR s_ansi[CALC_BUF_SIZE];
+#endif
+    TCHAR s[CALC_BUF_SIZE];
     int r;
 
     hInstance = hInst;
 
-    r = GetProfileString("SciCalc",
-                         "layout",
-                         "0",
+    r = GetProfileString(TEXT("SciCalc"),
+                         TEXT("layout"),
+                         TEXT("0"),
                          s,
                          CALC_BUF_SIZE
     );
 
+#ifdef UNICODE
+    wcstombs(s_ansi, s, sizeof(s_ansi));
+    calc.sciMode  = atoi(s_ansi);
+#else
     calc.sciMode  = atoi(s);
+#endif
 
     if (calc.sciMode != 0 &&
         calc.sciMode != 1)
         calc.sciMode = 1; // Standard Mode
 
-    r = GetProfileString("SciCalc",
-                         "UseSep",
-                         "0",
+    r = GetProfileString(TEXT("SciCalc"),
+                         TEXT("UseSep"),
+                         TEXT("0"),
                          s,
                          CALC_BUF_SIZE
         );
 
-    calc.digitGrouping = atoi(s);
+#ifdef UNICODE
+    wcstombs(s_ansi, s, sizeof(s_ansi));
+    calc.digitGrouping  = atoi(s_ansi);
+#else
+    calc.digitGrouping  = atoi(s);
+#endif
 
     if (calc.digitGrouping != 0 &&
         calc.digitGrouping != 1)
@@ -157,13 +170,13 @@ int WINAPI WinMain( HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdline, int cmd
 
     calc.new      = 1; // initialize struct values
 
-    if (!LoadString( hInst, IDS_APPNAME,            appname,            sizeof(appname)))
+    if (!LoadString( hInst, IDS_APPNAME,            appname,            sizeof(appname) / sizeof(appname[0])))
         exit(1);
-    if (!LoadString( hInst, IDS_ERR_INVALID_INPUT,  err_invalid,        sizeof(err_invalid)))
+    if (!LoadString( hInst, IDS_ERR_INVALID_INPUT,  err_invalid,        sizeof(err_invalid) / sizeof(err_invalid[0])))
         exit(1);
-    if (!LoadString( hInst, IDS_ERR_DIVIDE_BY_ZERO, err_divide_by_zero, sizeof(err_divide_by_zero)))
+    if (!LoadString( hInst, IDS_ERR_DIVIDE_BY_ZERO, err_divide_by_zero, sizeof(err_divide_by_zero) / sizeof(err_divide_by_zero[0])))
         exit(1);
-    if (!LoadString( hInst, IDS_ERR_UNDEFINED,      err_undefined,      sizeof(err_undefined)))
+    if (!LoadString( hInst, IDS_ERR_UNDEFINED,      err_undefined,      sizeof(err_undefined) / sizeof(err_undefined[0])))
         exit(1);
 
     wc.style         = CS_HREDRAW | CS_VREDRAW;
@@ -197,7 +210,7 @@ int WINAPI WinMain( HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdline, int cmd
     ShowWindow( hWnd, cmdshow );
     UpdateWindow( hWnd );
 
-    if (!(haccel = LoadAccelerators(hInst, "MAIN_MENU")))
+    if (!(haccel = LoadAccelerators(hInst, TEXT("MAIN_MENU"))))
         exit(1);
 
     while( GetMessage(&msg, NULL, 0, 0) ) {
@@ -259,13 +272,13 @@ LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_DESTROY:
         {
             int r;
-            char s[CALC_BUF_SIZE];
+            TCHAR s[CALC_BUF_SIZE];
 
-            sprintf(s, "%d", calc.sciMode);
-            r = WriteProfileString("SciCalc", "layout", s);
+            _stprintf(s, TEXT("%d"), calc.sciMode);
+            r = WriteProfileString(TEXT("SciCalc"), TEXT("layout"), s);
 
-            sprintf(s, "%d", calc.digitGrouping);
-            r = WriteProfileString("SciCalc", "UseSep", s);
+            _stprintf(s, TEXT("%d"), calc.digitGrouping);
+            r = WriteProfileString(TEXT("SciCalc"), TEXT("UseSep"), s);
         }
 
         DestroyCalc( &calc );
@@ -277,7 +290,7 @@ LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         case VK_F1:
             calc.next = 1;
-            MessageBox(hWnd, "No Help Available", "Windows Help", MB_OK);
+            MessageBox(hWnd, TEXT("No Help Available"), TEXT("Windows Help"), MB_OK);
             return 0;
 
         case VK_F2: // DWORD
@@ -365,7 +378,7 @@ LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         case VK_DELETE:
 
             calc.next = 1;
-            calc.buffer[0] = '\0';
+            calc.buffer[0] = TEXT('\0');
             calc_buffer_display(&calc);
             return 0;
 
@@ -377,11 +390,11 @@ LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
     case WM_CHAR:
         if (debug)
-            show_debug(&calc, "Start WM_CHAR", wParam, lParam);
+            show_debug(&calc, TEXT("Start WM_CHAR"), wParam, lParam);
 
         switch (wParam) {
 
-        case '\x13': // Ctrl+S Sta Statistics
+        case TEXT('\x13'): // Ctrl+S Sta Statistics
 
             if (hWndDlgStats) { // Statistics Box already displayed, focus but don't create another one
                 // SetFocus(hWndDlgStats);
@@ -400,7 +413,7 @@ LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
                    hWndDlgStats = CreateDialog( // modeless dialog
                       calc.hInst,  	            // handle to application instance
-                      "DLG_STATS",	            // identifies dialog box template name
+                      TEXT("DLG_STATS"),	            // identifies dialog box template name
                       hWnd,	                    // handle to owner window
                       StatsDlgProc);            // pointer to dialog box procedure
 
@@ -413,14 +426,14 @@ LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
             break;
 
-        case '\x01': // Ctrl+A Ave Statistics
-        case '\x04': // Ctrl+D s Standard Deviation Statistics
-        case '\x14': // Ctrl+T Sum Statistics
+        case TEXT('\x01'): // Ctrl+A Ave Statistics
+        case TEXT('\x04'): // Ctrl+D s Standard Deviation Statistics
+        case TEXT('\x14'): // Ctrl+T Sum Statistics
             {
                int i;
                int n;
 
-               char s[CALC_BUF_SIZE];
+               TCHAR s[CALC_BUF_SIZE];
                double val = 0L;
                double avg = 0L;
                double total = 0L;
@@ -438,10 +451,10 @@ LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                    x[i] = val;
                }
 
-               if (LOWORD(wParam) != '\x14') // not sum only
+               if (LOWORD(wParam) != TEXT('\x14')) // not sum only
                   avg = total / n;
 
-               if (LOWORD(wParam == '\x04')) {   // standard deviation is sqrt(sum( xbar - x )^2 / (n-1))
+               if (LOWORD(wParam == TEXT('\x04'))) {   // standard deviation is sqrt(sum( xbar - x )^2 / (n-1))
                    val = 0L;
 
                    for (i=0;i<n;i++)
@@ -453,28 +466,28 @@ LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                       total = sqrt(val / (n - 1)); // sample of population
                }
 
-               if (LOWORD(wParam) == '\x01') // average or mean
+               if (LOWORD(wParam) == TEXT('\x01')) // average or mean
                    total = avg;
 
                calc_ftoa(&calc, total, s);
-               strcpy(calc.buffer, s);
+               _tcscpy(calc.buffer, s);
                calc_buffer_display(&calc);
             }
 
             break;
 
-        case '\x03': // Ctrl+C Copy
+        case TEXT('\x03'): // Ctrl+C Copy
             {
                 int i;
                 int len;
-                char *s;
+                TCHAR *s;
                 HGLOBAL hGlobalMemory;
                 PSTR pGlobalMemory;
 
-                if (!(len = strlen(calc.display)))
+                if (!(len = _tcslen(calc.display)))
                     return 0;
 
-                if (!(hGlobalMemory = GlobalAlloc(GHND, len + 1)))
+                if (!(hGlobalMemory = GlobalAlloc(GHND, (len + 1) * sizeof(TCHAR))))
                     return 0;
 
                 if (!(pGlobalMemory = GlobalLock(hGlobalMemory)))
@@ -502,15 +515,15 @@ LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             }
             break;
 
-        case '\x16': // Ctrl+V Paste
+        case TEXT('\x16'): // Ctrl+V Paste
             {
-                char *s;
+                TCHAR *s;
                 int c;
                 int cmd = 0;
                 int size = 0;
                 int i = 0;
                 HGLOBAL hGlobalMemory;
-                PSTR pGlobalMemory;
+                LPTSTR pGlobalMemory;
 
                 if (IsClipboardFormatAvailable(CF_TEXT)) {
                     if (!OpenClipboard(hWnd))
@@ -522,13 +535,13 @@ LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                     if (!(size = GlobalSize(hGlobalMemory)))
                         return 0;
 
-                    if (!(s = (char *)malloc(size)))
+                    if (!(s = (TCHAR *)malloc(size)))
                         return 0;
 
                     if (!(pGlobalMemory = GlobalLock(hGlobalMemory)))
                         return 0;
 
-                    strcpy(s, pGlobalMemory);
+                    _tcscpy(s, pGlobalMemory);
 
                     GlobalUnlock(hGlobalMemory);
 
@@ -548,11 +561,11 @@ LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                     // parse the pasted data, validate and SendMessage it one character at a time.
                     // it would appear wincalc does it this way (slow), although very slow appearing on Wine.
 
-                    while ((c = *s++) && (i++ < size)) {
-                        if (c == ':') {
+                    while ((c = *s++) && (i++ < size / sizeof(TCHAR))) {
+                        if (c == TEXT(':')) {
                             cmd = 1;
                         }
-                        else if (c == '\\') {
+                        else if (c == TEXT('\\')) {
                             SendMessage(hWnd, WM_KEYDOWN, VK_INSERT, lParam);
                         }
                         else {
@@ -560,34 +573,34 @@ LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                                 cmd = 0;
 
                                 switch(c) {
-                                case 'c': // clear memory
+                                case TEXT('c'): // clear memory
 
-                                case 'C':
+                                case TEXT('C'):
                                     SendMessage(hWnd, WM_CHAR, 0x0c, lParam);
                                     break;
-                                case 'e': // enable scientific notation
+                                case TEXT('e'): // enable scientific notation
 
-                                case 'E':
+                                case TEXT('E'):
                                     SendMessage(hWnd, WM_CHAR, 'v', lParam);
                                     break;
-                                case 'm': // store display in memory
+                                case TEXT('m'): // store display in memory
 
-                                case 'M':
+                                case TEXT('M'):
                                     SendMessage(hWnd, WM_CHAR, 0x0d, NUMBER_OF_THE_BEAST);
                                     break;
-                                case 'p': // add display to memory
+                                case TEXT('p'): // add display to memory
 
-                                case 'P':
+                                case TEXT('P'):
                                     SendMessage(hWnd, WM_CHAR, 0x10, lParam);
                                     break;
-                                case 'q': // clear current calculation
+                                case TEXT('q'): // clear current calculation
 
-                                case 'Q':
-                                    SendMessage(hWnd, WM_CHAR, '\x1b', lParam);
+                                case TEXT('Q'):
+                                    SendMessage(hWnd, WM_CHAR, TEXT('\x1b'), lParam);
                                     break;
-                                case 'r': // read memory into display
+                                case TEXT('r'): // read memory into display
 
-                                case 'R':
+                                case TEXT('R'):
                                     SendMessage(hWnd, WM_CHAR, 0x12, lParam);
                                     break;
                                 default: // just eat it but complain
@@ -598,32 +611,32 @@ LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                             }
                             else {
                                 if ((calc.numBase == NBASE_HEX) &&
-                                        ((c >= '0' && c <= '9') ||
-                                        (c >= 'a' && c <= 'f') ||
-                                        (c >= 'A' && c <= 'F'))) {
+                                        ((c >= TEXT('0') && c <= TEXT('9')) ||
+                                        (c >= TEXT('a') && c <= TEXT('f')) ||
+                                        (c >= TEXT('A') && c <= TEXT('F')))) {
 
                                     SendMessage(hWnd, WM_CHAR, c, lParam);
                                 }
                                 else if ((calc.numBase == NBASE_DECIMAL) &&
-                                        (c >= '0' && c <= '9')) {
+                                        (c >= TEXT('0') && c <= TEXT('9'))) {
                                     SendMessage(hWnd, WM_CHAR, c, lParam);
                                 }
                                 else if ((calc.numBase == NBASE_OCTAL) &&
-                                        (c >= '0' && c <= '7')) {
+                                        (c >= TEXT('0') && c <= TEXT('7'))) {
                                     SendMessage(hWnd, WM_CHAR, c, lParam);
                                 }
                                 else if ((calc.numBase == NBASE_BINARY) &&
-                                        (c == '0' || c == '1')) {
+                                        (c == TEXT('0') || c == TEXT('1'))) {
                                     SendMessage(hWnd, WM_CHAR, c, lParam);
                                 }
-                                else if (c == '.' || c == ',' ||
-                                        c == 'e' || c == 'E' ||
-                                        c == '+' || c == '-') {
+                                else if (c == TEXT('.') || c == TEXT(',') ||
+                                        c == TEXT('e') || c == TEXT('E') ||
+                                        c == TEXT('+') || c == TEXT('-')) {
                                     SendMessage(hWnd, WM_CHAR, c, lParam);
                                 }
-                                else if (c == ' ' ||  // eat harmless trash here
-                                    c == ';' ||
-                                        c == ':') {
+                                else if (c == TEXT(' ') ||  // eat harmless trash here
+                                    c == TEXT(';') ||
+                                        c == TEXT(':')) {
                                     ;                  // noop
                                 }
                                 else {                // extra spicy trash gets noticed
@@ -650,11 +663,11 @@ LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         switch(LOWORD(wParam)) {
 
         case IDM_COPY:
-            SendMessage(hWnd, WM_CHAR, '\x03', lParam);
+            SendMessage(hWnd, WM_CHAR, TEXT('\x03'), lParam);
             return 0;
 
         case IDM_PASTE:
-            SendMessage(hWnd, WM_CHAR, '\x16', lParam);
+            SendMessage(hWnd, WM_CHAR, TEXT('\x16'), lParam);
             return 0;
 
         case IDM_MODE_STANDARD:
@@ -739,11 +752,11 @@ LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             return 0;
 
         case IDM_HELP_TOPICS:
-            MessageBox(hWnd, "No Help Available", "Windows Help", MB_OK);
+            MessageBox(hWnd, TEXT("No Help Available"), TEXT("Windows Help"), MB_OK);
             return 0;
 
         case IDM_ABOUT:
-            DialogBox( calc.hInst, "DLG_ABOUT", hWnd, AboutDlgProc );
+            DialogBox( calc.hInst, TEXT("DLG_ABOUT"), hWnd, AboutDlgProc );
             return 0;
 
         case ID_CALC_NS_HEX:
@@ -944,39 +957,39 @@ LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 case ID_CALC_SEVEN:
                 case ID_CALC_EIGHT:
                 case ID_CALC_NINE:
-                    SendMessage(hWnd, WM_CHAR, LOWORD(wParam)+'0' , lParam);
+                    SendMessage(hWnd, WM_CHAR, LOWORD(wParam)+TEXT('0') , lParam);
                     break;
 
                 case ID_CALC_A:
-                    SendMessage(hWnd, WM_CHAR, 'a', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('a'), lParam);
                     break;
 
                 case ID_CALC_B:
-                    SendMessage(hWnd, WM_CHAR, 'b', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('b'), lParam);
                     break;
 
                 case ID_CALC_C:
-                    SendMessage(hWnd, WM_CHAR, 'c', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('c'), lParam);
                     break;
 
                 case ID_CALC_D:
-                    SendMessage(hWnd, WM_CHAR, 'd', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('d'), lParam);
                     break;
 
                 case ID_CALC_E:
-                    SendMessage(hWnd, WM_CHAR, 'e', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('e'), lParam);
                     break;
 
                 case ID_CALC_F:
-                    SendMessage(hWnd, WM_CHAR, 'f', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('f'), lParam);
                     break;
 
                 case ID_CALC_DECIMAL:
-                    SendMessage(hWnd, WM_CHAR, '.', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('.'), lParam);
                     break;
 
                 case ID_CALC_BACKSPACE:
-                    SendMessage(hWnd, WM_CHAR, '\b', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('\b'), lParam);
                     break;
 
                 case ID_CALC_CLEAR_ENTRY:
@@ -984,7 +997,7 @@ LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                     break;
 
                 case ID_CALC_CLEAR_ALL:
-                    SendMessage(hWnd, WM_CHAR, '\x1b', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('\x1b'), lParam);
                     break;
 
                 case ID_CALC_MEM_CLEAR:
@@ -1004,75 +1017,75 @@ LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                     break;
 
                 case ID_CALC_SQRT:
-                    SendMessage(hWnd, WM_CHAR, '?', lParam); // this is not a wincalc keystroke
+                    SendMessage(hWnd, WM_CHAR, TEXT('?'), lParam); // this is not a wincalc keystroke
                     break;
 
                 case ID_CALC_SQUARE:
-                    SendMessage(hWnd, WM_CHAR, '@', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('@'), lParam);
                     break;
 
                 case ID_CALC_PI:
-                    SendMessage(hWnd, WM_CHAR, 'p', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('p'), lParam);
                     break;
 
                 case ID_CALC_LN:
-                    SendMessage(hWnd, WM_CHAR, 'n', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('n'), lParam);
                     break;
 
                 case ID_CALC_LOG10:
-                    SendMessage(hWnd, WM_CHAR, 'l', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('l'), lParam);
                     break;
 
                 case ID_CALC_CUBE:
-                    SendMessage(hWnd, WM_CHAR, '#', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('#'), lParam);
                     break;
 
                 case ID_CALC_POWER:
-                    SendMessage(hWnd, WM_CHAR, 'y', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('y'), lParam);
                     break;
 
                 case ID_CALC_SIN:
-                    SendMessage(hWnd, WM_CHAR, 's', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('s'), lParam);
                     break;
 
                 case ID_CALC_COS:
-                    SendMessage(hWnd, WM_CHAR, 'o', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('o'), lParam);
                     break;
 
                 case ID_CALC_TAN:
-                    SendMessage(hWnd, WM_CHAR, 't', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('t'), lParam);
                     break;
 
                 case ID_CALC_LSH:
-                    SendMessage(hWnd, WM_CHAR, '<', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('<'), lParam);
                     break;
 
                 case ID_CALC_NOT:
-                    SendMessage(hWnd, WM_CHAR, '~', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('~'), lParam);
                     break;
 
                 case ID_CALC_AND:
-                    SendMessage(hWnd, WM_CHAR, '&', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('&'), lParam);
                     break;
 
                 case ID_CALC_OR:
-                    SendMessage(hWnd, WM_CHAR, '|', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('|'), lParam);
                     break;
 
                 case ID_CALC_XOR:
-                    SendMessage(hWnd, WM_CHAR, '^', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('^'), lParam);
                     break;
 
                 case ID_CALC_INT:
-                    SendMessage(hWnd, WM_CHAR, ';', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT(';'), lParam);
                     break;
 
                 case ID_CALC_FACTORIAL:
-                    SendMessage(hWnd, WM_CHAR, '!', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('!'), lParam);
                     break;
 
                 case ID_CALC_RECIPROCAL:
-                    SendMessage(hWnd, WM_CHAR, 'r', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('r'), lParam);
                     break;
 
                 case ID_CALC_SIGN:
@@ -1080,47 +1093,47 @@ LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                     break;
 
                 case ID_CALC_PLUS:
-                    SendMessage(hWnd, WM_CHAR, '+', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('+'), lParam);
                     break;
 
                 case ID_CALC_MINUS:
-                    SendMessage(hWnd, WM_CHAR, '-', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('-'), lParam);
                     break;
 
                 case ID_CALC_MULTIPLY:
-                    SendMessage(hWnd, WM_CHAR, '*', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('*'), lParam);
                     break;
 
                 case ID_CALC_DIVIDE:
-                    SendMessage(hWnd, WM_CHAR, '/', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('/'), lParam);
                     break;
 
                 case ID_CALC_EQUALS:
-                    SendMessage(hWnd, WM_CHAR, '=', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('='), lParam);
                     break;
 
                 case ID_CALC_PERCENT:
-                    SendMessage(hWnd, WM_CHAR, '%', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('%'), lParam);
                     break;
 
                 case ID_CALC_EXP:
-                    SendMessage(hWnd, WM_CHAR, 'x', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('x'), lParam);
                     break;
 
                 case ID_CALC_FE:
-                    SendMessage(hWnd, WM_CHAR, 'v', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('v'), lParam);
                     break;
 
                 case ID_CALC_LEFTPAREN:
-                    SendMessage(hWnd, WM_CHAR, '(', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('('), lParam);
                     break;
 
                 case ID_CALC_RIGHTPAREN:
-                    SendMessage(hWnd, WM_CHAR, ')', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT(')'), lParam);
                     break;
 
                 case ID_CALC_MOD:
-                    SendMessage(hWnd, WM_CHAR, '%', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('%'), lParam);
                     break;
 
                 case ID_CALC_DAT:
@@ -1128,23 +1141,23 @@ LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                     break;
 
                 case ID_CALC_AVE:
-                    SendMessage(hWnd, WM_CHAR, '\x01', lParam); // Ctrl+A
+                    SendMessage(hWnd, WM_CHAR, TEXT('\x01'), lParam); // Ctrl+A
                     break;
 
                 case ID_CALC_S:
-                    SendMessage(hWnd, WM_CHAR, '\x04', lParam); // Ctrl+D
+                    SendMessage(hWnd, WM_CHAR, TEXT('\x04'), lParam); // Ctrl+D
                     break;
 
                 case ID_CALC_STA:
-                    SendMessage(hWnd, WM_CHAR, '\x13', lParam); // Ctrl+S
+                    SendMessage(hWnd, WM_CHAR, TEXT('\x13'), lParam); // Ctrl+S
                     break;
 
                 case ID_CALC_SUM:
-                    SendMessage(hWnd, WM_CHAR, '\x14', lParam); // Ctrl+T
+                    SendMessage(hWnd, WM_CHAR, TEXT('\x14'), lParam); // Ctrl+T
                     break;
 
                 case ID_CALC_DMS:
-                    SendMessage(hWnd, WM_CHAR, 'm', lParam);
+                    SendMessage(hWnd, WM_CHAR, TEXT('m'), lParam);
                     break;
 
                 default:
@@ -1156,7 +1169,7 @@ LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 SetFocus(hWnd);
 
                 if (debug)
-                   show_debug(&calc, "After WM_CHAR", wParam, lParam);
+                   show_debug(&calc, TEXT("After WM_CHAR"), wParam, lParam);
 
                 return 0;
 
@@ -1172,33 +1185,33 @@ void InitLuts(void)
 
     // initialize keys lut for validating keystrokes in various number bases
 
-    for (i='0';i<='9';i++) {
+    for (i=TEXT('0');i<=TEXT('9');i++) {
         keys[NBASE_HEX][i]       = 1;
         keys[NBASE_DECIMAL][i]   = 1;
 
-        if (i <= '7')
+        if (i <= TEXT('7'))
             keys[NBASE_OCTAL][i]  = 1;
 
-        if (i <= '1')
+        if (i <= TEXT('1'))
             keys[NBASE_BINARY][i] = 1;
     }
 
-    for (i='a';i<='f';i++)
+    for (i=TEXT('a');i<=TEXT('f');i++)
         keys[NBASE_HEX][i] = 1;
 
-    for (i='A';i<='F';i++)
+    for (i=TEXT('A');i<=TEXT('F');i++)
         keys[NBASE_HEX][i] = 1;
 }
 
 void InitMenus(HINSTANCE hInst)
 {
-    if (!(menus[MENU_STD]   = LoadMenu(hInst,"MAIN_MENU")))
+    if (!(menus[MENU_STD]   = LoadMenu(hInst,TEXT("MAIN_MENU"))))
         exit(1);
 
-    if (!(menus[MENU_SCIMS] = LoadMenu(hInst,"SCIMS_MENU")))
+    if (!(menus[MENU_SCIMS] = LoadMenu(hInst,TEXT("SCIMS_MENU"))))
         exit(1);
 
-    if (!(menus[MENU_SCIWS] = LoadMenu(hInst,"SCIWS_MENU")))
+    if (!(menus[MENU_SCIWS] = LoadMenu(hInst,TEXT("SCIWS_MENU"))))
         exit(1);
 
     CheckMenuItem(menus[MENU_STD], IDM_MODE_STANDARD, MF_CHECKED);
@@ -1264,11 +1277,11 @@ void InitCalc (CALC *calc)
         calc->value         = 0;
         calc->memory        = 0;
         calc->displayMode   = 0;
-        calc->buffer[0]     = '\0';
-        strcpy(calc->display, "0.");
+        calc->buffer[0]     = TEXT('\0');
+        _tcscpy(calc->display, TEXT("0."));
 
         calc->err           = 0;
-        calc->next          = '\0';
+        calc->next          = TEXT('\0');
 
         calc->wordSize      = WORDSIZE_QWORD;
         calc->invMode       = 0;
@@ -1284,7 +1297,7 @@ void InitCalc (CALC *calc)
         skipy = CALC_STANDARD_MARGIN_TOP + CALC_EDIT_HEIGHT;
 
         calc->cb[0].id       = 0;
-        strcpy(calc->cb[0].label,"FILLER");
+        _tcscpy(calc->cb[0].label,TEXT("FILLER"));
         calc->cb[0].color    = CALC_COLOR_BLUE;
         calc->cb[0].r.left   = skipx + 4;
         calc->cb[0].r.top    = skipy + 2;
@@ -1295,7 +1308,7 @@ void InitCalc (CALC *calc)
         skipx = SZ_FILLER_X + MARGIN_STANDARD_BIG_X + 11;
 
         calc->cb[1].id       = ID_CALC_BACKSPACE;
-        LoadString( hInst, IDS_BTN_BACKSPACE, calc->cb[1].label, sizeof(calc->cb[1].label));
+        LoadString( hInst, IDS_BTN_BACKSPACE, calc->cb[1].label, sizeof(calc->cb[1].label) / sizeof(calc->cb[1].label[0]));
         calc->cb[1].color    = CALC_COLOR_RED;
         calc->cb[1].r.left   = skipx;
         calc->cb[1].r.top    = skipy;
@@ -1306,7 +1319,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_BIGBTN_X + MARGIN_SMALL_X;
 
         calc->cb[2].id       = ID_CALC_CLEAR_ENTRY;
-        LoadString( hInst, IDS_BTN_CLEAR_ENTRY, calc->cb[2].label, sizeof(calc->cb[2].label));
+        LoadString( hInst, IDS_BTN_CLEAR_ENTRY, calc->cb[2].label, sizeof(calc->cb[2].label) / sizeof(calc->cb[2].label[0]));
         calc->cb[2].color    = CALC_COLOR_RED;
         calc->cb[2].r.left   = skipx;
         calc->cb[2].r.top    = skipy;
@@ -1317,7 +1330,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_BIGBTN_X + MARGIN_SMALL_X;
 
         calc->cb[3].id       = ID_CALC_CLEAR_ALL;
-        LoadString( hInst, IDS_BTN_CLEAR_ALL, calc->cb[3].label, sizeof(calc->cb[3].label));
+        LoadString( hInst, IDS_BTN_CLEAR_ALL, calc->cb[3].label, sizeof(calc->cb[3].label) / sizeof(calc->cb[3].label[0]));
         calc->cb[3].color    = CALC_COLOR_RED;
         calc->cb[3].r.left   = skipx;
         calc->cb[3].r.top    = skipy;
@@ -1331,7 +1344,7 @@ void InitCalc (CALC *calc)
         skipy += SZ_BIGBTN_Y + MARGIN_BIG_Y;
 
         calc->cb[4].id       = ID_CALC_MEM_CLEAR;
-        LoadString( hInst, IDS_BTN_MEM_CLEAR, calc->cb[4].label, sizeof(calc->cb[4].label));
+        LoadString( hInst, IDS_BTN_MEM_CLEAR, calc->cb[4].label, sizeof(calc->cb[4].label) / sizeof(calc->cb[4].label[0]));
         calc->cb[4].color    = CALC_COLOR_RED;
         calc->cb[4].r.left   = skipx;
         calc->cb[4].r.top    = skipy;
@@ -1342,7 +1355,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_STANDARD_BIG_X;
 
         calc->cb[5].id       = ID_CALC_SEVEN;
-        strcpy(calc->cb[5].label,"7");
+        _tcscpy(calc->cb[5].label,TEXT("7"));
         calc->cb[5].color    = CALC_COLOR_BLUE;
         calc->cb[5].r.left   = skipx;
         calc->cb[5].r.top    = skipy;
@@ -1353,7 +1366,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[6].id       = ID_CALC_EIGHT;
-        strcpy(calc->cb[6].label,"8");
+        _tcscpy(calc->cb[6].label,TEXT("8"));
         calc->cb[6].color    = CALC_COLOR_BLUE;
         calc->cb[6].r.left   = skipx;
         calc->cb[6].r.top    = skipy;
@@ -1364,7 +1377,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[7].id       = ID_CALC_NINE;
-        strcpy(calc->cb[7].label,"9");
+        _tcscpy(calc->cb[7].label,TEXT("9"));
         calc->cb[7].color    = CALC_COLOR_BLUE;
         calc->cb[7].r.left   = skipx;
         calc->cb[7].r.top    = skipy;
@@ -1375,7 +1388,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[8].id       = ID_CALC_DIVIDE;
-        strcpy(calc->cb[8].label,"/");
+        _tcscpy(calc->cb[8].label,TEXT("/"));
         calc->cb[8].color    = CALC_COLOR_RED;
         calc->cb[8].r.left   = skipx;
         calc->cb[8].r.top    = skipy;
@@ -1386,7 +1399,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[9].id       = ID_CALC_SQRT;
-        LoadString( hInst, IDS_BTN_SQRT, calc->cb[9].label, sizeof(calc->cb[9].label));
+        LoadString( hInst, IDS_BTN_SQRT, calc->cb[9].label, sizeof(calc->cb[9].label) / sizeof(calc->cb[9].label[0]));
         calc->cb[9].color    = CALC_COLOR_BLUE;
         calc->cb[9].r.left   = skipx;
         calc->cb[9].r.top    = skipy;
@@ -1400,7 +1413,7 @@ void InitCalc (CALC *calc)
         skipy += SZ_MEDBTN_Y + MARGIN_SMALL_Y;
 
         calc->cb[10].id       = ID_CALC_MEM_RECALL;
-        LoadString( hInst, IDS_BTN_MEM_RECALL, calc->cb[10].label, sizeof(calc->cb[10].label));
+        LoadString( hInst, IDS_BTN_MEM_RECALL, calc->cb[10].label, sizeof(calc->cb[10].label) / sizeof(calc->cb[10].label[0]));
         calc->cb[10].color    = CALC_COLOR_RED;
         calc->cb[10].r.left   = skipx;
         calc->cb[10].r.top    = skipy;
@@ -1411,7 +1424,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_STANDARD_BIG_X;
 
         calc->cb[11].id       = ID_CALC_FOUR;
-        strcpy(calc->cb[11].label,"4");
+        _tcscpy(calc->cb[11].label,TEXT("4"));
         calc->cb[11].color    = CALC_COLOR_BLUE;
         calc->cb[11].r.left   = skipx;
         calc->cb[11].r.top    = skipy;
@@ -1422,7 +1435,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[12].id       = ID_CALC_FIVE;
-        strcpy(calc->cb[12].label,"5");
+        _tcscpy(calc->cb[12].label,TEXT("5"));
         calc->cb[12].color    = CALC_COLOR_BLUE;
         calc->cb[12].r.left   = skipx;
         calc->cb[12].r.top    = skipy;
@@ -1433,7 +1446,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[13].id       = ID_CALC_SIX;
-        strcpy(calc->cb[13].label,"6");
+        _tcscpy(calc->cb[13].label,TEXT("6"));
         calc->cb[13].color    = CALC_COLOR_BLUE;
         calc->cb[13].r.left   = skipx;
         calc->cb[13].r.top    = skipy;
@@ -1444,7 +1457,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[14].id       = ID_CALC_MULTIPLY;
-        strcpy(calc->cb[14].label,"*");
+        _tcscpy(calc->cb[14].label,TEXT("*"));
         calc->cb[14].color    = CALC_COLOR_RED;
         calc->cb[14].r.left   = skipx;
         calc->cb[14].r.top    = skipy;
@@ -1455,7 +1468,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[15].id       = ID_CALC_PERCENT;
-        strcpy(calc->cb[15].label,"%");
+        _tcscpy(calc->cb[15].label,TEXT("%"));
         calc->cb[15].color    = CALC_COLOR_BLUE;
         calc->cb[15].r.left   = skipx;
         calc->cb[15].r.top    = skipy;
@@ -1469,7 +1482,7 @@ void InitCalc (CALC *calc)
         skipy += SZ_MEDBTN_Y + MARGIN_SMALL_Y;
 
         calc->cb[16].id       = ID_CALC_MEM_STORE;
-        LoadString( hInst, IDS_BTN_MEM_STORE, calc->cb[16].label, sizeof(calc->cb[16].label));
+        LoadString( hInst, IDS_BTN_MEM_STORE, calc->cb[16].label, sizeof(calc->cb[16].label) / sizeof(calc->cb[16].label[0]));
         calc->cb[16].color    = CALC_COLOR_RED;
         calc->cb[16].r.left   = skipx;
         calc->cb[16].r.top    = skipy;
@@ -1480,7 +1493,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_STANDARD_BIG_X;
 
         calc->cb[17].id       = ID_CALC_ONE;
-        strcpy(calc->cb[17].label,"1");
+        _tcscpy(calc->cb[17].label,TEXT("1"));
         calc->cb[17].color    = CALC_COLOR_BLUE;
         calc->cb[17].r.left   = skipx;
         calc->cb[17].r.top    = skipy;
@@ -1491,7 +1504,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[18].id       = ID_CALC_TWO;
-        strcpy(calc->cb[18].label,"2");
+        _tcscpy(calc->cb[18].label,TEXT("2"));
         calc->cb[18].color    = CALC_COLOR_BLUE;
         calc->cb[18].r.left   = skipx;
         calc->cb[18].r.top    = skipy;
@@ -1502,7 +1515,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[19].id       = ID_CALC_THREE;
-        strcpy(calc->cb[19].label,"3");
+        _tcscpy(calc->cb[19].label,TEXT("3"));
         calc->cb[19].color    = CALC_COLOR_BLUE;
         calc->cb[19].r.left   = skipx;
         calc->cb[19].r.top    = skipy;
@@ -1513,7 +1526,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[20].id       = ID_CALC_MINUS;
-        strcpy(calc->cb[20].label,"-");
+        _tcscpy(calc->cb[20].label,TEXT("-"));
         calc->cb[20].color    = CALC_COLOR_RED;
         calc->cb[20].r.left   = skipx;
         calc->cb[20].r.top    = skipy;
@@ -1524,7 +1537,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[21].id       = ID_CALC_RECIPROCAL;
-        strcpy(calc->cb[21].label,"1/x");
+        _tcscpy(calc->cb[21].label,TEXT("1/x"));
         calc->cb[21].color    = CALC_COLOR_RED;
         calc->cb[21].r.left   = skipx;
         calc->cb[21].r.top    = skipy;
@@ -1538,7 +1551,7 @@ void InitCalc (CALC *calc)
         skipy += SZ_MEDBTN_Y + MARGIN_SMALL_Y;
 
         calc->cb[22].id       = ID_CALC_MEM_PLUS;
-        LoadString( hInst, IDS_BTN_MEM_PLUS, calc->cb[22].label, sizeof(calc->cb[22].label));
+        LoadString( hInst, IDS_BTN_MEM_PLUS, calc->cb[22].label, sizeof(calc->cb[22].label) / sizeof(calc->cb[22].label[0]));
         calc->cb[22].color    = CALC_COLOR_RED;
         calc->cb[22].r.left   = skipx;
         calc->cb[22].r.top    = skipy;
@@ -1549,7 +1562,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_STANDARD_BIG_X;
 
         calc->cb[23].id       = ID_CALC_ZERO;
-        strcpy(calc->cb[23].label,"0");
+        _tcscpy(calc->cb[23].label,TEXT("0"));
         calc->cb[23].color    = CALC_COLOR_BLUE;
         calc->cb[23].r.left   = skipx;
         calc->cb[23].r.top    = skipy;
@@ -1560,7 +1573,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[24].id       = ID_CALC_SIGN;
-        strcpy(calc->cb[24].label,"+/-");
+        _tcscpy(calc->cb[24].label,TEXT("+/-"));
         calc->cb[24].color    = CALC_COLOR_RED;
         calc->cb[24].r.left   = skipx;
         calc->cb[24].r.top    = skipy;
@@ -1571,7 +1584,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[25].id       = ID_CALC_DECIMAL;
-        strcpy(calc->cb[25].label,".");
+        _tcscpy(calc->cb[25].label,TEXT("."));
         calc->cb[25].color    = CALC_COLOR_BLUE;
         calc->cb[25].r.left   = skipx;
         calc->cb[25].r.top    = skipy;
@@ -1582,7 +1595,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[26].id       = ID_CALC_PLUS;
-        strcpy(calc->cb[26].label,"+");
+        _tcscpy(calc->cb[26].label,TEXT("+"));
         calc->cb[26].color    = CALC_COLOR_RED;
         calc->cb[26].r.left   = skipx;
         calc->cb[26].r.top    = skipy;
@@ -1593,7 +1606,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[27].id       = ID_CALC_EQUALS;
-        strcpy(calc->cb[27].label,"=");
+        _tcscpy(calc->cb[27].label,TEXT("="));
         calc->cb[27].color    = CALC_COLOR_RED;
         calc->cb[27].r.left   = skipx;
         calc->cb[27].r.top    = skipy;
@@ -1610,7 +1623,7 @@ void InitCalc (CALC *calc)
         skipy = CALC_SCIENTIFIC_MARGIN_TOP + CALC_EDIT_HEIGHT - 1;
 
         calc->cb[0].id       = 0;
-        strcpy(calc->cb[0].label,"FILLER");
+        _tcscpy(calc->cb[0].label,TEXT("FILLER"));
         calc->cb[0].color    = CALC_COLOR_BLUE;
         calc->cb[0].r.left   = skipx + 4 * SZ_MEDBTN_X + 2 * SZ_SPACER_X + 2 * MARGIN_SMALL_X + 12;
         calc->cb[0].r.top    = skipy;
@@ -1619,7 +1632,7 @@ void InitCalc (CALC *calc)
         calc->cb[0].enable   = 1;
 
         calc->cb[1].id       = 0;
-        strcpy(calc->cb[1].label,"FILLER");
+        _tcscpy(calc->cb[1].label,TEXT("FILLER"));
         calc->cb[1].color    = CALC_COLOR_BLUE;
         calc->cb[1].r.left   = skipx + 3 * SZ_MEDBTN_X +     SZ_SPACER_X + 2 * MARGIN_SMALL_X + 8;
         calc->cb[1].r.top    = skipy;
@@ -1632,7 +1645,7 @@ void InitCalc (CALC *calc)
         skipx = MARGIN_BIG_X;
 
         calc->cb[2].id       = ID_CALC_BACKSPACE;
-        LoadString( hInst, IDS_BTN_BACKSPACE, calc->cb[2].label, sizeof(calc->cb[2].label));
+        LoadString( hInst, IDS_BTN_BACKSPACE, calc->cb[2].label, sizeof(calc->cb[2].label) / sizeof(calc->cb[2].label[0]));
         calc->cb[2].color    = CALC_COLOR_RED;
         calc->cb[2].r.left   = skipx;
         calc->cb[2].r.top    = skipy;
@@ -1643,7 +1656,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_BIGBTN_X + MARGIN_SMALL_X;
 
         calc->cb[3].id       = ID_CALC_CLEAR_ENTRY;
-        LoadString( hInst, IDS_BTN_CLEAR_ENTRY, calc->cb[3].label, sizeof(calc->cb[3].label));
+        LoadString( hInst, IDS_BTN_CLEAR_ENTRY, calc->cb[3].label, sizeof(calc->cb[3].label) / sizeof(calc->cb[3].label[0]));
         calc->cb[3].color    = CALC_COLOR_RED;
         calc->cb[3].r.left   = skipx;
         calc->cb[3].r.top    = skipy;
@@ -1654,7 +1667,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_BIGBTN_X + MARGIN_SMALL_X;
 
         calc->cb[4].id       = ID_CALC_CLEAR_ALL;
-        LoadString( hInst, IDS_BTN_CLEAR_ALL, calc->cb[4].label, sizeof(calc->cb[4].label));
+        LoadString( hInst, IDS_BTN_CLEAR_ALL, calc->cb[4].label, sizeof(calc->cb[4].label) / sizeof(calc->cb[4].label[0]));
         calc->cb[4].color    = CALC_COLOR_RED;
         calc->cb[4].r.left   = skipx;
         calc->cb[4].r.top    = skipy;
@@ -1668,7 +1681,7 @@ void InitCalc (CALC *calc)
         skipy += SZ_MEDBTN_Y + MARGIN_SMALL_Y;
 
         calc->cb[5].id       = ID_CALC_STA;
-        strcpy(calc->cb[5].label,"Sta");
+        _tcscpy(calc->cb[5].label,TEXT("Sta"));
         calc->cb[5].color    = CALC_COLOR_GRAY;
         calc->cb[5].r.left   = skipx;
         calc->cb[5].r.top    = skipy;
@@ -1679,7 +1692,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X + SZ_SPACER_X;
 
         calc->cb[6].id       = ID_CALC_FE;
-        strcpy(calc->cb[6].label,"F-E");
+        _tcscpy(calc->cb[6].label,TEXT("F-E"));
         calc->cb[6].color    = CALC_COLOR_MAGENTA;
         calc->cb[6].r.left   = skipx;
         calc->cb[6].r.top    = skipy;
@@ -1690,7 +1703,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[7].id       = ID_CALC_LEFTPAREN;
-        strcpy(calc->cb[7].label,"(");
+        _tcscpy(calc->cb[7].label,TEXT("("));
         calc->cb[7].color    = CALC_COLOR_MAGENTA;
         calc->cb[7].r.left   = skipx;
         calc->cb[7].r.top    = skipy;
@@ -1701,7 +1714,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[8].id       = ID_CALC_RIGHTPAREN;
-        strcpy(calc->cb[8].label,")");
+        _tcscpy(calc->cb[8].label,TEXT(")"));
         calc->cb[8].color    = CALC_COLOR_MAGENTA;
         calc->cb[8].r.left   = skipx;
         calc->cb[8].r.top    = skipy;
@@ -1712,7 +1725,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X + SZ_SPACER_X;
 
         calc->cb[9].id       = ID_CALC_MEM_CLEAR;
-        LoadString( hInst, IDS_BTN_MEM_CLEAR, calc->cb[9].label, sizeof(calc->cb[9].label));
+        LoadString( hInst, IDS_BTN_MEM_CLEAR, calc->cb[9].label, sizeof(calc->cb[9].label) / sizeof(calc->cb[9].label[0]));
         calc->cb[9].color    = CALC_COLOR_RED;
         calc->cb[9].r.left   = skipx;
         calc->cb[9].r.top    = skipy;
@@ -1723,7 +1736,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X + SZ_SPACER_X;
 
         calc->cb[10].id       = ID_CALC_SEVEN;
-        strcpy(calc->cb[10].label,"7");
+        _tcscpy(calc->cb[10].label,TEXT("7"));
         calc->cb[10].color    = CALC_COLOR_BLUE;
         calc->cb[10].r.left   = skipx;
         calc->cb[10].r.top    = skipy;
@@ -1734,7 +1747,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[11].id       = ID_CALC_EIGHT;
-        strcpy(calc->cb[11].label,"8");
+        _tcscpy(calc->cb[11].label,TEXT("8"));
         calc->cb[11].color    = CALC_COLOR_BLUE;
         calc->cb[11].r.left   = skipx;
         calc->cb[11].r.top    = skipy;
@@ -1745,7 +1758,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[12].id       = ID_CALC_NINE;
-        strcpy(calc->cb[12].label,"9");
+        _tcscpy(calc->cb[12].label,TEXT("9"));
         calc->cb[12].color    = CALC_COLOR_BLUE;
         calc->cb[12].r.left   = skipx;
         calc->cb[12].r.top    = skipy;
@@ -1756,7 +1769,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[13].id       = ID_CALC_DIVIDE;
-        strcpy(calc->cb[13].label,"/");
+        _tcscpy(calc->cb[13].label,TEXT("/"));
         calc->cb[13].color    = CALC_COLOR_RED;
         calc->cb[13].r.left   = skipx;
         calc->cb[13].r.top    = skipy;
@@ -1767,7 +1780,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[14].id       = ID_CALC_MOD;
-        strcpy(calc->cb[14].label,"Mod");
+        _tcscpy(calc->cb[14].label,TEXT("Mod"));
         calc->cb[14].color    = CALC_COLOR_RED;
         calc->cb[14].r.left   = skipx;
         calc->cb[14].r.top    = skipy;
@@ -1778,7 +1791,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[15].id       = ID_CALC_AND;
-        strcpy(calc->cb[15].label,"And");
+        _tcscpy(calc->cb[15].label,TEXT("And"));
         calc->cb[15].color    = CALC_COLOR_RED;
         calc->cb[15].r.left   = skipx;
         calc->cb[15].r.top    = skipy;
@@ -1792,7 +1805,7 @@ void InitCalc (CALC *calc)
         skipy += SZ_MEDBTN_Y + MARGIN_SMALL_Y;
 
         calc->cb[16].id       = ID_CALC_AVE;
-        strcpy(calc->cb[16].label,"Ave");
+        _tcscpy(calc->cb[16].label,TEXT("Ave"));
         calc->cb[16].color    = CALC_COLOR_GRAY;
         calc->cb[16].r.left   = skipx;
         calc->cb[16].r.top    = skipy;
@@ -1803,7 +1816,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X + SZ_SPACER_X;
 
         calc->cb[17].id       = ID_CALC_DMS;
-        strcpy(calc->cb[17].label,"dms");
+        _tcscpy(calc->cb[17].label,TEXT("dms"));
         calc->cb[17].color    = CALC_COLOR_MAGENTA;
         calc->cb[17].r.left   = skipx;
         calc->cb[17].r.top    = skipy;
@@ -1814,7 +1827,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[18].id       = ID_CALC_EXP;
-        strcpy(calc->cb[18].label,"Exp");
+        _tcscpy(calc->cb[18].label,TEXT("Exp"));
         calc->cb[18].color    = CALC_COLOR_MAGENTA;
         calc->cb[18].r.left   = skipx;
         calc->cb[18].r.top    = skipy;
@@ -1825,7 +1838,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[19].id       = ID_CALC_LN;
-        strcpy(calc->cb[19].label,"ln");
+        _tcscpy(calc->cb[19].label,TEXT("ln"));
         calc->cb[19].color    = CALC_COLOR_MAGENTA;
         calc->cb[19].r.left   = skipx;
         calc->cb[19].r.top    = skipy;
@@ -1836,7 +1849,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X + SZ_SPACER_X;
 
         calc->cb[20].id       = ID_CALC_MEM_RECALL;
-        strcpy(calc->cb[20].label,"MR");
+        _tcscpy(calc->cb[20].label,TEXT("MR"));
         calc->cb[20].color    = CALC_COLOR_RED;
         calc->cb[20].r.left   = skipx;
         calc->cb[20].r.top    = skipy;
@@ -1847,7 +1860,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X + SZ_SPACER_X;
 
         calc->cb[21].id       = ID_CALC_FOUR;
-        strcpy(calc->cb[21].label,"4");
+        _tcscpy(calc->cb[21].label,TEXT("4"));
         calc->cb[21].color    = CALC_COLOR_BLUE;
         calc->cb[21].r.left   = skipx;
         calc->cb[21].r.top    = skipy;
@@ -1858,7 +1871,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[22].id       = ID_CALC_FIVE;
-        strcpy(calc->cb[22].label,"5");
+        _tcscpy(calc->cb[22].label,TEXT("5"));
         calc->cb[22].color    = CALC_COLOR_BLUE;
         calc->cb[22].r.left   = skipx;
         calc->cb[22].r.top    = skipy;
@@ -1869,7 +1882,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[23].id       = ID_CALC_SIX;
-        strcpy(calc->cb[23].label,"6");
+        _tcscpy(calc->cb[23].label,TEXT("6"));
         calc->cb[23].color    = CALC_COLOR_BLUE;
         calc->cb[23].r.left   = skipx;
         calc->cb[23].r.top    = skipy;
@@ -1880,7 +1893,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[24].id       = ID_CALC_MULTIPLY;
-        strcpy(calc->cb[24].label,"*");
+        _tcscpy(calc->cb[24].label,TEXT("*"));
         calc->cb[24].color    = CALC_COLOR_RED;
         calc->cb[24].r.left   = skipx;
         calc->cb[24].r.top    = skipy;
@@ -1891,7 +1904,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[25].id       = ID_CALC_OR;
-        strcpy(calc->cb[25].label,"Or");
+        _tcscpy(calc->cb[25].label,TEXT("Or"));
         calc->cb[25].color    = CALC_COLOR_RED;
         calc->cb[25].r.left   = skipx;
         calc->cb[25].r.top    = skipy;
@@ -1902,7 +1915,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[26].id       = ID_CALC_XOR;
-        strcpy(calc->cb[26].label,"Xor");
+        _tcscpy(calc->cb[26].label,TEXT("Xor"));
         calc->cb[26].color    = CALC_COLOR_RED;
         calc->cb[26].r.left   = skipx;
         calc->cb[26].r.top    = skipy;
@@ -1916,7 +1929,7 @@ void InitCalc (CALC *calc)
         skipy += SZ_MEDBTN_Y + MARGIN_SMALL_Y;
 
         calc->cb[27].id       = ID_CALC_SUM;
-        strcpy(calc->cb[27].label,"Sum");
+        _tcscpy(calc->cb[27].label,TEXT("Sum"));
         calc->cb[27].color    = CALC_COLOR_GRAY;
         calc->cb[27].r.left   = skipx ;
         calc->cb[27].r.top    = skipy;
@@ -1927,7 +1940,7 @@ void InitCalc (CALC *calc)
         skipx += MARGIN_SMALL_X + SZ_MEDBTN_X + SZ_SPACER_X;
 
         calc->cb[28].id       = ID_CALC_SIN;
-        strcpy(calc->cb[28].label,"sin");
+        _tcscpy(calc->cb[28].label,TEXT("sin"));
         calc->cb[28].color    = CALC_COLOR_MAGENTA;
         calc->cb[28].r.left   = skipx;
         calc->cb[28].r.top    = skipy;
@@ -1938,7 +1951,7 @@ void InitCalc (CALC *calc)
         skipx += MARGIN_SMALL_X + SZ_MEDBTN_X;
 
         calc->cb[29].id       = ID_CALC_POWER	;
-        strcpy(calc->cb[29].label,"x^y");
+        _tcscpy(calc->cb[29].label,TEXT("x^y"));
         calc->cb[29].color    = CALC_COLOR_MAGENTA;
         calc->cb[29].r.left   = skipx;
         calc->cb[29].r.top    = skipy;
@@ -1949,7 +1962,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[30].id       = ID_CALC_LOG10;
-        strcpy(calc->cb[30].label,"log");
+        _tcscpy(calc->cb[30].label,TEXT("log"));
         calc->cb[30].color    = CALC_COLOR_MAGENTA;
         calc->cb[30].r.left   = skipx;
         calc->cb[30].r.top    = skipy;
@@ -1960,7 +1973,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X + SZ_SPACER_X;
 
         calc->cb[31].id       = ID_CALC_MEM_STORE;
-        LoadString( hInst, IDS_BTN_MEM_STORE, calc->cb[31].label, sizeof(calc->cb[31].label));
+        LoadString( hInst, IDS_BTN_MEM_STORE, calc->cb[31].label, sizeof(calc->cb[31].label) / sizeof(calc->cb[31].label[0]));
         calc->cb[31].color    = CALC_COLOR_RED;
         calc->cb[31].r.left   = skipx;
         calc->cb[31].r.top    = skipy;
@@ -1971,7 +1984,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X + SZ_SPACER_X;
 
         calc->cb[32].id       = ID_CALC_ONE;
-        strcpy(calc->cb[32].label,"1");
+        _tcscpy(calc->cb[32].label,TEXT("1"));
         calc->cb[32].color    = CALC_COLOR_BLUE;
         calc->cb[32].r.left   = skipx;
         calc->cb[32].r.top    = skipy;
@@ -1982,7 +1995,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[33].id       = ID_CALC_TWO;
-        strcpy(calc->cb[33].label,"2");
+        _tcscpy(calc->cb[33].label,TEXT("2"));
         calc->cb[33].color    = CALC_COLOR_BLUE;
         calc->cb[33].r.left   = skipx;
         calc->cb[33].r.top    = skipy;
@@ -1993,7 +2006,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[34].id       = ID_CALC_THREE;
-        strcpy(calc->cb[34].label,"3");
+        _tcscpy(calc->cb[34].label,TEXT("3"));
         calc->cb[34].color    = CALC_COLOR_BLUE;
         calc->cb[34].r.left   = skipx;
         calc->cb[34].r.top    = skipy;
@@ -2004,7 +2017,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[35].id       = ID_CALC_MINUS;
-        strcpy(calc->cb[35].label,"-");
+        _tcscpy(calc->cb[35].label,TEXT("-"));
         calc->cb[35].color    = CALC_COLOR_RED;
         calc->cb[35].r.left   = skipx;
         calc->cb[35].r.top    = skipy;
@@ -2015,7 +2028,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[36].id       = ID_CALC_LSH;
-        strcpy(calc->cb[36].label,"Lsh");
+        _tcscpy(calc->cb[36].label,TEXT("Lsh"));
         calc->cb[36].color    = CALC_COLOR_RED;
         calc->cb[36].r.left   = skipx;
         calc->cb[36].r.top    = skipy;
@@ -2026,7 +2039,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[37].id       = ID_CALC_NOT;
-        strcpy(calc->cb[37].label,"Not");
+        _tcscpy(calc->cb[37].label,TEXT("Not"));
         calc->cb[37].color    = CALC_COLOR_RED;
         calc->cb[37].r.left   = skipx;
         calc->cb[37].r.top    = skipy;
@@ -2040,7 +2053,7 @@ void InitCalc (CALC *calc)
         skipy += SZ_MEDBTN_Y + MARGIN_SMALL_Y;
 
         calc->cb[38].id       = ID_CALC_S;
-        strcpy(calc->cb[38].label,"s");
+        _tcscpy(calc->cb[38].label,TEXT("s"));
         calc->cb[38].color    = CALC_COLOR_GRAY;
         calc->cb[38].r.left   = skipx;
         calc->cb[38].r.top    = skipy;
@@ -2051,7 +2064,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X + SZ_SPACER_X;
 
         calc->cb[39].id       = ID_CALC_COS;
-        strcpy(calc->cb[39].label,"cos");
+        _tcscpy(calc->cb[39].label,TEXT("cos"));
         calc->cb[39].color    = CALC_COLOR_MAGENTA;
         calc->cb[39].r.left   = skipx;
         calc->cb[39].r.top    = skipy;
@@ -2062,7 +2075,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[40].id       = ID_CALC_CUBE;
-        strcpy(calc->cb[40].label,"x^3");
+        _tcscpy(calc->cb[40].label,TEXT("x^3"));
         calc->cb[40].color    = CALC_COLOR_MAGENTA;
         calc->cb[40].r.left   = skipx;
         calc->cb[40].r.top    = skipy;
@@ -2073,7 +2086,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[41].id       = ID_CALC_FACTORIAL;
-        strcpy(calc->cb[41].label,"n!");
+        _tcscpy(calc->cb[41].label,TEXT("n!"));
         calc->cb[41].color    = CALC_COLOR_MAGENTA;
         calc->cb[41].r.left   = skipx;
         calc->cb[41].r.top    = skipy;
@@ -2084,7 +2097,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X + SZ_SPACER_X;
 
         calc->cb[42].id       = ID_CALC_MEM_PLUS;
-        LoadString( hInst, IDS_BTN_MEM_PLUS, calc->cb[42].label, sizeof(calc->cb[42].label));
+        LoadString( hInst, IDS_BTN_MEM_PLUS, calc->cb[42].label, sizeof(calc->cb[42].label) / sizeof(calc->cb[42].label[0]));
         calc->cb[42].color    = CALC_COLOR_RED;
         calc->cb[42].r.left   = skipx;
         calc->cb[42].r.top    = skipy;
@@ -2095,7 +2108,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X + SZ_SPACER_X;
 
         calc->cb[43].id       = ID_CALC_ZERO;
-        strcpy(calc->cb[43].label,"0");
+        _tcscpy(calc->cb[43].label,TEXT("0"));
         calc->cb[43].color    = CALC_COLOR_BLUE;
         calc->cb[43].r.left   = skipx;
         calc->cb[43].r.top    = skipy;
@@ -2106,7 +2119,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[44].id       = ID_CALC_SIGN;
-        strcpy(calc->cb[44].label,"+/-");
+        _tcscpy(calc->cb[44].label,TEXT("+/-"));
         calc->cb[44].color    = CALC_COLOR_RED;
         calc->cb[44].r.left   = skipx;
         calc->cb[44].r.top    = skipy;
@@ -2117,7 +2130,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[45].id       = ID_CALC_DECIMAL;
-        strcpy(calc->cb[45].label,".");
+        _tcscpy(calc->cb[45].label,TEXT("."));
         calc->cb[45].color    = CALC_COLOR_BLUE;
         calc->cb[45].r.left   = skipx;
         calc->cb[45].r.top    = skipy;
@@ -2128,7 +2141,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[46].id       = ID_CALC_PLUS;
-        strcpy(calc->cb[46].label,"+");
+        _tcscpy(calc->cb[46].label,TEXT("+"));
         calc->cb[46].color    = CALC_COLOR_RED;
         calc->cb[46].r.left   = skipx;
         calc->cb[46].r.top    = skipy;
@@ -2139,7 +2152,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[47].id       = ID_CALC_EQUALS;
-        strcpy(calc->cb[47].label,"=");
+        _tcscpy(calc->cb[47].label,TEXT("="));
         calc->cb[47].color    = CALC_COLOR_RED;
         calc->cb[47].r.left   = skipx;
         calc->cb[47].r.top    = skipy;
@@ -2150,7 +2163,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[48].id       = ID_CALC_INT;
-        strcpy(calc->cb[48].label,"Int");
+        _tcscpy(calc->cb[48].label,TEXT("Int"));
         calc->cb[48].color    = CALC_COLOR_RED;
         calc->cb[48].r.left   = skipx;
         calc->cb[48].r.top    = skipy;
@@ -2165,7 +2178,7 @@ void InitCalc (CALC *calc)
         skipy += SZ_MEDBTN_Y + MARGIN_SMALL_Y;
 
         calc->cb[49].id       = ID_CALC_DAT;
-        strcpy(calc->cb[49].label,"Dat");
+        _tcscpy(calc->cb[49].label,TEXT("Dat"));
         calc->cb[49].color    = CALC_COLOR_GRAY;
         calc->cb[49].r.left   = skipx;
         calc->cb[49].r.top    = skipy;
@@ -2176,7 +2189,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X + SZ_SPACER_X;
 
         calc->cb[50].id       = ID_CALC_TAN;
-        strcpy(calc->cb[50].label,"tan");
+        _tcscpy(calc->cb[50].label,TEXT("tan"));
         calc->cb[50].color    = CALC_COLOR_MAGENTA;
         calc->cb[50].r.left   = skipx;
         calc->cb[50].r.top    = skipy;
@@ -2187,7 +2200,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[51].id       = ID_CALC_SQUARE;
-        strcpy(calc->cb[51].label,"x^2");
+        _tcscpy(calc->cb[51].label,TEXT("x^2"));
         calc->cb[51].color    = CALC_COLOR_MAGENTA;
         calc->cb[51].r.left   = skipx;
         calc->cb[51].r.top    = skipy;
@@ -2198,7 +2211,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[52].id       = ID_CALC_RECIPROCAL;
-        strcpy(calc->cb[52].label,"1/x");
+        _tcscpy(calc->cb[52].label,TEXT("1/x"));
         calc->cb[52].color    = CALC_COLOR_MAGENTA;
         calc->cb[52].r.left   = skipx;
         calc->cb[52].r.top    = skipy;
@@ -2209,7 +2222,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X + SZ_SPACER_X;
 
         calc->cb[53].id       = ID_CALC_PI;
-        strcpy(calc->cb[53].label,"pi");
+        _tcscpy(calc->cb[53].label,TEXT("pi"));
         calc->cb[53].color    = CALC_COLOR_BLUE;
         calc->cb[53].r.left   = skipx;
         calc->cb[53].r.top    = skipy;
@@ -2220,7 +2233,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X + SZ_SPACER_X;
 
         calc->cb[54].id       = ID_CALC_A;
-        strcpy(calc->cb[54].label,"A");
+        _tcscpy(calc->cb[54].label,TEXT("A"));
         calc->cb[54].color    = CALC_COLOR_GRAY;
         calc->cb[54].r.left   = skipx;
         calc->cb[54].r.top    = skipy;
@@ -2231,7 +2244,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[55].id       = ID_CALC_B;
-        strcpy(calc->cb[55].label,"B");
+        _tcscpy(calc->cb[55].label,TEXT("B"));
         calc->cb[55].color    = CALC_COLOR_GRAY;
         calc->cb[55].r.left   = skipx;
         calc->cb[55].r.top    = skipy;
@@ -2242,7 +2255,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[56].id       = ID_CALC_C;
-        strcpy(calc->cb[56].label,"C");
+        _tcscpy(calc->cb[56].label,TEXT("C"));
         calc->cb[56].color    = CALC_COLOR_GRAY;
         calc->cb[56].r.left   = skipx;
         calc->cb[56].r.top    = skipy;
@@ -2253,7 +2266,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[57].id       = ID_CALC_D;
-        strcpy(calc->cb[57].label,"D");
+        _tcscpy(calc->cb[57].label,TEXT("D"));
         calc->cb[57].color    = CALC_COLOR_GRAY;
         calc->cb[57].r.left   = skipx;
         calc->cb[57].r.top    = skipy;
@@ -2264,7 +2277,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[58].id       = ID_CALC_E;
-        strcpy(calc->cb[58].label,"E");
+        _tcscpy(calc->cb[58].label,TEXT("E"));
         calc->cb[58].color    = CALC_COLOR_GRAY;
         calc->cb[58].r.left   = skipx;
         calc->cb[58].r.top    = skipy;
@@ -2275,7 +2288,7 @@ void InitCalc (CALC *calc)
         skipx += SZ_MEDBTN_X + MARGIN_SMALL_X;
 
         calc->cb[59].id       = ID_CALC_F;
-        strcpy(calc->cb[59].label,"F");
+        _tcscpy(calc->cb[59].label,TEXT("F"));
         calc->cb[59].color    = CALC_COLOR_GRAY;
         calc->cb[59].r.left   = skipx;
         calc->cb[59].r.top    = skipy;
@@ -2286,7 +2299,7 @@ void InitCalc (CALC *calc)
         // Buttons
 
         calc->cb[60].id       = ID_CALC_NS_HEX;
-        strcpy(calc->cb[60].label,"Hex");
+        _tcscpy(calc->cb[60].label,TEXT("Hex"));
         calc->cb[60].color    = CALC_COLOR_GRAY;
         calc->cb[60].r.left   = CALC_NS_HEX_LEFT;
         calc->cb[60].r.top    = CALC_NS_HEX_TOP;
@@ -2295,7 +2308,7 @@ void InitCalc (CALC *calc)
         calc->cb[60].enable   = 1;
 
         calc->cb[61].id       = ID_CALC_NS_DEC;
-        strcpy(calc->cb[61].label,"Dec");
+        _tcscpy(calc->cb[61].label,TEXT("Dec"));
         calc->cb[61].color    = CALC_COLOR_GRAY;
         calc->cb[61].r.left   = CALC_NS_DEC_LEFT;
         calc->cb[61].r.top    = CALC_NS_DEC_TOP;
@@ -2304,7 +2317,7 @@ void InitCalc (CALC *calc)
         calc->cb[61].enable   = 1;
 
         calc->cb[62].id       = ID_CALC_NS_OCT;
-        strcpy(calc->cb[62].label,"Oct");
+        _tcscpy(calc->cb[62].label,TEXT("Oct"));
         calc->cb[62].color    = CALC_COLOR_GRAY;
         calc->cb[62].r.left   = CALC_NS_OCT_LEFT;
         calc->cb[62].r.top    = CALC_NS_OCT_TOP;
@@ -2313,7 +2326,7 @@ void InitCalc (CALC *calc)
         calc->cb[62].enable   = 1;
 
         calc->cb[63].id       = ID_CALC_NS_BIN;
-        strcpy(calc->cb[63].label,"Bin");
+        _tcscpy(calc->cb[63].label,TEXT("Bin"));
         calc->cb[63].color    = CALC_COLOR_GRAY;
         calc->cb[63].r.left   = CALC_NS_BIN_LEFT;
         calc->cb[63].r.top    = CALC_NS_BIN_TOP;
@@ -2322,7 +2335,7 @@ void InitCalc (CALC *calc)
         calc->cb[63].enable   = 1;
 
         calc->cb[64].id       = ID_CALC_MS_DEGREES;
-        strcpy(calc->cb[64].label,"Degrees");
+        _tcscpy(calc->cb[64].label,TEXT("Degrees"));
         calc->cb[64].color    = CALC_COLOR_GRAY;
         calc->cb[64].r.left   = CALC_MS_DEGREES_LEFT;
         calc->cb[64].r.top    = CALC_MS_DEGREES_TOP;
@@ -2331,7 +2344,7 @@ void InitCalc (CALC *calc)
         calc->cb[64].enable   = 1;
 
         calc->cb[65].id       = ID_CALC_MS_RADIANS;
-        strcpy(calc->cb[65].label,"Radians");
+        _tcscpy(calc->cb[65].label,TEXT("Radians"));
         calc->cb[65].color    = CALC_COLOR_GRAY;
         calc->cb[65].r.left   = CALC_MS_RADIANS_LEFT;
         calc->cb[65].r.top    = CALC_MS_RADIANS_TOP;
@@ -2340,7 +2353,7 @@ void InitCalc (CALC *calc)
         calc->cb[65].enable   = 1;
 
         calc->cb[66].id       = ID_CALC_MS_GRADS;
-        strcpy(calc->cb[66].label,"Grads");
+        _tcscpy(calc->cb[66].label,TEXT("Grads"));
         calc->cb[66].color    = CALC_COLOR_GRAY;
         calc->cb[66].r.left   = CALC_MS_GRADS_LEFT;
         calc->cb[66].r.top    = CALC_MS_GRADS_TOP;
@@ -2349,7 +2362,7 @@ void InitCalc (CALC *calc)
         calc->cb[66].enable   = 1;
 
         calc->cb[67].id       = ID_CALC_CB_INV;
-        strcpy(calc->cb[67].label,"Inv");
+        _tcscpy(calc->cb[67].label,TEXT("Inv"));
         calc->cb[67].color    = CALC_COLOR_GRAY;
         calc->cb[67].r.left   = CALC_CB_INV_LEFT;
         calc->cb[67].r.top    = CALC_CB_INV_TOP;
@@ -2358,7 +2371,7 @@ void InitCalc (CALC *calc)
         calc->cb[67].enable   = 1;
 
         calc->cb[68].id       = ID_CALC_CB_HYP;
-        strcpy(calc->cb[68].label,"Hyp");
+        _tcscpy(calc->cb[68].label,TEXT("Hyp"));
         calc->cb[68].color    = CALC_COLOR_GRAY;
         calc->cb[68].r.left   = CALC_CB_HYP_LEFT;
         calc->cb[68].r.top    = CALC_CB_HYP_TOP;
@@ -2367,7 +2380,7 @@ void InitCalc (CALC *calc)
         calc->cb[68].enable   = 1;
 
         calc->cb[69].id       = ID_CALC_WS_QWORD;
-        strcpy(calc->cb[69].label,"Qword");
+        _tcscpy(calc->cb[69].label,TEXT("Qword"));
         calc->cb[69].color    = CALC_COLOR_GRAY;
         calc->cb[69].r.left   = CALC_WS_QWORD_LEFT;
         calc->cb[69].r.top    = CALC_WS_QWORD_TOP;
@@ -2376,7 +2389,7 @@ void InitCalc (CALC *calc)
         calc->cb[69].enable   = 1;
 
         calc->cb[70].id       = ID_CALC_WS_DWORD;
-        strcpy(calc->cb[70].label,"Dword");
+        _tcscpy(calc->cb[70].label,TEXT("Dword"));
         calc->cb[70].color    = CALC_COLOR_GRAY;
         calc->cb[70].r.left   = CALC_WS_DWORD_LEFT;
         calc->cb[70].r.top    = CALC_WS_DWORD_TOP;
@@ -2385,7 +2398,7 @@ void InitCalc (CALC *calc)
         calc->cb[70].enable   = 1;
 
         calc->cb[71].id       = ID_CALC_WS_WORD;
-        strcpy(calc->cb[71].label,"Word");
+        _tcscpy(calc->cb[71].label,TEXT("Word"));
         calc->cb[71].color    = CALC_COLOR_GRAY;
         calc->cb[71].r.left   = CALC_WS_WORD_LEFT;
         calc->cb[71].r.top    = CALC_WS_WORD_TOP;
@@ -2394,7 +2407,7 @@ void InitCalc (CALC *calc)
         calc->cb[71].enable   = 1;
 
         calc->cb[72].id       = ID_CALC_WS_BYTE;
-        strcpy(calc->cb[72].label,"Byte");
+        _tcscpy(calc->cb[72].label,TEXT("Byte"));
         calc->cb[72].color    = CALC_COLOR_GRAY;
         calc->cb[72].r.left   = CALC_WS_BYTE_LEFT;
         calc->cb[72].r.top    = CALC_WS_BYTE_TOP;
@@ -2430,7 +2443,7 @@ void InitCalc (CALC *calc)
     ;
 
         calc->cb[n].hBtn = CreateWindow(
-            "BUTTON",
+            TEXT("BUTTON"),
             calc->cb[n].label,
             WS_VISIBLE | WS_CHILD | WS_BORDER | BS_CENTER | BS_VCENTER | BS_TEXT |
                 (calc->cb[n].enable ? 0 : WS_DISABLED), // BS_FLAT
@@ -2455,7 +2468,7 @@ void InitCalc (CALC *calc)
         for (; n<=top_button; n++) {
             int j = ID_CALC_NS_HEX + n - top_button + CALC_NS_COUNT - 1;
             calc->cb[n].hBtn = CreateWindow(
-                "BUTTON",
+                TEXT("BUTTON"),
                 calc->cb[n].label,
                 WS_VISIBLE | WS_CHILD | BS_LEFT | BS_VCENTER | BS_TEXT | BS_RADIOBUTTON,
                 CALC_NS_OFFSET_X + calc->cb[n].r.left,
@@ -2478,7 +2491,7 @@ void InitCalc (CALC *calc)
 
         for (; n<=top_button; n++) {
             calc->cb[n].hBtn = CreateWindow(
-                "BUTTON",
+                TEXT("BUTTON"),
                 calc->cb[n].label,
                 WS_VISIBLE | WS_CHILD | BS_LEFT | BS_VCENTER | BS_TEXT | BS_RADIOBUTTON,
                 CALC_MS_OFFSET_X + calc->cb[n].r.left,
@@ -2501,7 +2514,7 @@ void InitCalc (CALC *calc)
 
         for (; n<=top_button; n++) {
             calc->cb[n].hBtn = CreateWindow(
-                "BUTTON",
+                TEXT("BUTTON"),
                 calc->cb[n].label,
                 WS_VISIBLE | WS_CHILD | BS_LEFT | BS_VCENTER | BS_TEXT | BS_CHECKBOX,
                 CALC_CB_OFFSET_X + calc->cb[n].r.left,
@@ -2524,7 +2537,7 @@ void InitCalc (CALC *calc)
 
         for (; n<=top_button; n++) {
             calc->cb[n].hBtn = CreateWindow(
-                "BUTTON",
+                TEXT("BUTTON"),
                 calc->cb[n].label,
                 WS_CHILD | BS_LEFT | BS_VCENTER | BS_TEXT | BS_RADIOBUTTON,
                 CALC_WS_OFFSET_X + calc->cb[n].r.left,
@@ -2714,7 +2727,7 @@ static RECT scirect3 = {
 
 void DrawCalc (HDC hdc, HDC hMemDC, PAINTSTRUCT  *ps, CALC *calc)
 {
-    char s[CALC_BUF_SIZE];
+    TCHAR s[CALC_BUF_SIZE];
 
     scirect1.right = calc->cb[0].r.right + 2;
     scirect2.left  = calc->cb[0].r.right + 5;
@@ -2729,12 +2742,12 @@ void DrawCalc (HDC hdc, HDC hMemDC, PAINTSTRUCT  *ps, CALC *calc)
         DrawCalcRectSci(hdc, hMemDC, ps, calc, &scirect3);
     }
 
-    LoadString(calc->hInst, IDS_BTN_MEM_STATUS_M, s, sizeof(s));
+    LoadString(calc->hInst, IDS_BTN_MEM_STATUS_M, s, sizeof(s) / sizeof(s[0]));
 
     DrawCalcText(hdc, hMemDC, ps, calc, 0, s);
 }
 
-void DrawCalcText (HDC hdc, HDC hMemDC, PAINTSTRUCT  *ps, CALC *calc, int object, char *s)
+void DrawCalcText (HDC hdc, HDC hMemDC, PAINTSTRUCT  *ps, CALC *calc, int object, TCHAR *s)
 {
     POINT pt;
     HFONT hFont;
@@ -2742,7 +2755,7 @@ void DrawCalcText (HDC hdc, HDC hMemDC, PAINTSTRUCT  *ps, CALC *calc, int object
     HPEN hPen;
     HPEN hPenOrg;
 
-    char s2[CALC_BUF_SIZE];
+    TCHAR s2[CALC_BUF_SIZE];
 
     int WDISPLAY_LEFT;
     int WDISPLAY_TOP;
@@ -2776,14 +2789,14 @@ void DrawCalcText (HDC hdc, HDC hMemDC, PAINTSTRUCT  *ps, CALC *calc, int object
             calc->cb[object].r.left + 9,
             calc->cb[object].r.top  + 7,
             s,
-            strlen(s)
+            _tcslen(s)
         );
 
         SetBkMode(hdc, OPAQUE);
     }
 
     if (calc->paren) {
-        sprintf(s2, "(=%d",calc->paren);
+        _stprintf(s2, TEXT("(=%d"),calc->paren);
 
         SetBkMode(hdc, TRANSPARENT);
 
@@ -2793,7 +2806,7 @@ void DrawCalcText (HDC hdc, HDC hMemDC, PAINTSTRUCT  *ps, CALC *calc, int object
             calc->cb[object+1].r.left + 13,
             calc->cb[object+1].r.top  + 6,
             s2,
-            strlen(s2)
+            _tcslen(s2)
         );
 
         SetBkMode(hdc, OPAQUE);
@@ -2824,7 +2837,7 @@ void DrawCalcText (HDC hdc, HDC hMemDC, PAINTSTRUCT  *ps, CALC *calc, int object
         WDISPLAY_RIGHT - 4,
         WDISPLAY_TOP   + 1,
         calc->display,
-        strlen(calc->display)
+        _tcslen(calc->display)
     );
 
     SelectObject(hdc, hFontOrg);
@@ -2839,7 +2852,7 @@ void DestroyCalc (CALC *calc)
 }
 
 void calc_buffer_format(CALC *calc) {
-    char *p;
+    TCHAR *p;
     int n;
     int flag = 0;
     int point = 0;
@@ -2854,22 +2867,22 @@ void calc_buffer_format(CALC *calc) {
 
     p = calc->buffer;
     while (*p) {
-        if (*p++ == '.')
+        if (*p++ == TEXT('.'))
             point++;
     }
 
     if (point > 1) {
-        calc->buffer[strlen(calc->buffer)-1] = '\0';
+        calc->buffer[_tcslen(calc->buffer)-1] = TEXT('\0');
         MessageBeep(0);
     }
 
     if (point) {
         p = calc->buffer;
-        n = strlen(p) - 1;
+        n = _tcslen(p) - 1;
         while (*(p+n) &&
-                *(p+n) != '.' &&
-                *(p+n) == '0') {
-            calc->buffer[n] = '\0';
+                *(p+n) != TEXT('.') &&
+                *(p+n) == TEXT('0')) {
+            calc->buffer[n] = TEXT('\0');
             n--;
         }
     }
@@ -2878,19 +2891,19 @@ void calc_buffer_format(CALC *calc) {
 
     p = calc->buffer;
     while (*p) {
-        if (*p != '0')
+        if (*p != TEXT('0'))
             break;
         p++;
     }
 
     // remove trailing points
 
-    n = strlen(p);
+    n = _tcslen(p);
 
     while (n) {
-        if (*(p+n-1) == '.') {
+        if (*(p+n-1) == TEXT('.')) {
             if (flag) {
-                *(p + n) = '\0';
+                *(p + n) = TEXT('\0');
             }
             else {
                 flag = 1;
@@ -2903,47 +2916,47 @@ void calc_buffer_format(CALC *calc) {
     }
 
     //   if (!*p)
-    //      strcpy(p, "0");
+    //      _tcscpy(p, TEXT("0"));
 
     // chop at 32 digits
     if (flag)
-        *(p+33) = '\0';
+        *(p+33) = TEXT('\0');
     else
-        *(p+32) = '\0';
+        *(p+32) = TEXT('\0');
 
     n = 0;
     while (*p)
         *(calc->buffer + n++) = *(p++);
-    *(calc->buffer + n) = '\0';
+    *(calc->buffer + n) = TEXT('\0');
 }
 
 void calc_buffer_display(CALC *calc) {
-    char *p;
-    char s[CALC_BUF_SIZE];
-    char r[CALC_BUF_SIZE] = "0";
+    TCHAR *p;
+    TCHAR s[CALC_BUF_SIZE];
+    TCHAR r[CALC_BUF_SIZE] = TEXT("0");
     int point=0;
     calcfloat real;
 
     switch (calc->numBase) {
     case NBASE_HEX:
         real = calc_atof(calc->buffer, calc->numBase);
-        sprintf(calc->display, "%lx", (long)real);
+        _stprintf(calc->display, TEXT("%lx"), (long)real);
         break;
 
     case NBASE_OCTAL:
-        sprintf(calc->display, "%lo", (long)calc->buffer);
+        _stprintf(calc->display, TEXT("%lo"), (long)calc->buffer);
         break;
 
     case NBASE_BINARY:
-        sprintf(calc->display, "%lx", (long)calc->buffer);
+        _stprintf(calc->display, TEXT("%lx"), (long)calc->buffer);
         break;
 
     case NBASE_DECIMAL:
         calc_buffer_format(calc);
 
         if (calc->displayMode) {
-            if (!strcmp(calc->buffer, "0") || !calc->buffer[0]) {
-                strcpy(calc->display, "0.e+0");
+            if (!_tcscmp(calc->buffer, TEXT("0")) || !calc->buffer[0]) {
+                _tcscpy(calc->display, TEXT("0.e+0"));
             }
             else {
                 int i = 0;
@@ -2952,21 +2965,21 @@ void calc_buffer_display(CALC *calc) {
                 int exp = 0;
 
                 r = calc_atof(calc->buffer, calc->numBase);
-                sprintf(s, FMT_DESC_EXP, r);
+                _stprintf(s, FMT_DESC_EXP, r);
                 // remove leading zeros in exponent
                 p = s;
                 while (*p) {
-                    if (*p == 'e') { // starting exponent parsing
+                    if (*p == TEXT('e')) { // starting exponent parsing
 
                         exp = 1;
                     }
                     else if (exp) { // inside exponent, and haven't seen a digit, so could be a leading zero
 
-                        if (*p == '0')
+                        if (*p == TEXT('0'))
                             lz = 1;
                     }
 
-                    if (exp && (*p != 'e') && (*p != '0') && (*p != '+') && (*p != '-')) {
+                    if (exp && (*p != TEXT('e')) && (*p != TEXT('0')) && (*p != TEXT('+')) && (*p != TEXT('-'))) {
                         exp = 0;
                         lz = 0;
                     }
@@ -2977,9 +2990,9 @@ void calc_buffer_display(CALC *calc) {
                     p++;
                 }
 
-                if (calc->display[i-1] == '+') // all trailing zeros
+                if (calc->display[i-1] == TEXT('+')) // all trailing zeros
 
-                    calc->display[i++] = '0';
+                    calc->display[i++] = TEXT('0');
 
                 calc->display[i] = 0;
             }
@@ -2991,29 +3004,29 @@ void calc_buffer_display(CALC *calc) {
             // add point if missing
             // display
 
-            strcpy(s,calc->buffer);
+            _tcscpy(s,calc->buffer);
             p = s;
 
             while (*p) {
-                if (*p++ == '.')
+                if (*p++ == TEXT('.'))
                     point = 1;
             }
 
             if (!*s)
-                strcpy(s, "0");
+                _tcscpy(s, TEXT("0"));
 
             if (calc->digitGrouping)
                 calc_sep(s);
 
             if (!point && calc->numBase == NBASE_DECIMAL)
-                strcat(s, ".");
+                _tcscat(s, TEXT("."));
 
-            if (*s == '.') {
-                strcat(r, s);
-                strcpy(calc->display, r);
+            if (*s == TEXT('.')) {
+                _tcscat(r, s);
+                _tcscpy(calc->display, r);
             }
             else {
-                strcpy(calc->display, s);
+                _tcscpy(calc->display, s);
             }
         }
     }
@@ -3021,17 +3034,17 @@ void calc_buffer_display(CALC *calc) {
     UpdateWindow(calc->hWnd);
 }
 
-char *calc_sep(char *s)
+TCHAR *calc_sep(TCHAR *s)
 {
-    char c;
-    char *p;
+    TCHAR c;
+    TCHAR *p;
     int n;
     int x = 1;
     int i = 0;
     int point = 0;
-    char r[CALC_BUF_SIZE];
+    TCHAR r[CALC_BUF_SIZE];
 
-    n = strlen(s);
+    n = _tcslen(s);
 
     if (!*s)
         return s;
@@ -3043,7 +3056,7 @@ char *calc_sep(char *s)
     // see if there is a point character
 
     while (*p) {
-        if (*p++ == '.') {
+        if (*p++ == TEXT('.')) {
             point = p - s;
             break;
         }
@@ -3054,8 +3067,8 @@ char *calc_sep(char *s)
     if (point) {
         i = n - point + 1;
         n = point - 1;
-        strcpy(r, s);
-        strrev(r);
+        _tcscpy(r, s);
+        _tcsrev(r);
     }
 
     // commify the integer part now
@@ -3063,17 +3076,17 @@ char *calc_sep(char *s)
     while ((c = *(s + --n))) {
         r[i++] = c;
         if (x++ % 3 == 0)
-            r[i++] = ',';
+            r[i++] = TEXT(',');
         if (n == -1)
             break;
     }
 
-    if (r[i-1] == ',')
-        r[--i] = '\0';
+    if (r[i-1] == TEXT(','))
+        r[--i] = TEXT('\0');
     else
-        r[i] = '\0';
+        r[i] = TEXT('\0');
 
-    strcpy(s, strrev(r));
+    _tcscpy(s, _tcsrev(r));
 
     return s;
 }
@@ -3133,13 +3146,13 @@ calcfloat calc_convert_from_radians(CALC *calc)
     return 0L;
 }
 
-void show_debug(CALC *calc, char *title, long w, long l)
+void show_debug(CALC *calc, TCHAR *title, long w, long l)
 {
-    char s[1024];
+    TCHAR s[1024];
 
-    sprintf(s,
+    _stprintf(s,
 
-        "wParam	= (%c) %d:%d, %x:%xh\n \
+        TEXT("wParam	= (%C) %d:%d, %x:%xh\n \
 lParam	= %d:%d, %x:%x\n \
 value	= %.32g\n \
 memory	= %.32g\n \
@@ -3150,7 +3163,7 @@ trigMode	= %d\n \
 wordSize	= %d\n \
 invMode	= %d\n \
 hypMode	= %d\n \
-oper	= (%c)\n",
+oper	= (%C)\n"),
 
         LOWORD(w),
         LOWORD(w),
@@ -3176,10 +3189,25 @@ oper	= (%c)\n",
     MessageBox(calc->hWnd, s, title, MB_OK);
 }
 
-calcfloat calc_atof(char *s, int base)
+calcfloat calc_atof(TCHAR *s, int base)
 {
     // converts from another base to decimal calcfloat
-
+#ifdef UNICODE
+    char s_ansi[128];
+    wcstombs(s_ansi, s, sizeof(s_ansi));
+    switch (base) {
+    case NBASE_DECIMAL:
+        return CALC_ATOF(s_ansi);
+    case NBASE_HEX:
+        return (calcfloat)strtol(s_ansi, NULL, 16);
+    case NBASE_OCTAL:
+        return (calcfloat)strtol(s_ansi, NULL, 8);
+    case NBASE_BINARY:
+        return (calcfloat)strtol(s_ansi, NULL, 2);
+    default:
+        break;
+    }
+#else
     switch (base) {
     case NBASE_DECIMAL:
         return CALC_ATOF(s);
@@ -3192,23 +3220,24 @@ calcfloat calc_atof(char *s, int base)
     default:
         break;
     }
+#endif
 
     return 0L;
 }
 
-void calc_ftoa(CALC *calc, calcfloat r, char *buf)
+void calc_ftoa(CALC *calc, calcfloat r, TCHAR *buf)
 {
     // converts from decimal calcfloat to another base
 
     switch (calc->numBase) {
     case NBASE_DECIMAL:
-        sprintf(buf, FMT_DESC_FLOAT, r);
+        _stprintf(buf, FMT_DESC_FLOAT, r);
         break;
     case NBASE_HEX:
-        sprintf(buf, "%lX", (long)r);
+        _stprintf(buf, TEXT("%lX"), (long)r);
         break;
     case NBASE_OCTAL:
-        sprintf(buf, "%lo", (long)r);
+        _stprintf(buf, TEXT("%lo"), (long)r);
         break;
     case NBASE_BINARY: // 911 - need routine here
 
@@ -3221,71 +3250,72 @@ void calc_ftoa(CALC *calc, calcfloat r, char *buf)
 int parse(int wParam, int lParam)
 {
     switch (wParam) {
-    case '\b': // backspace
+    case TEXT('\b'): // backspace
 
         if (calc.buffer[0])
-            calc.buffer[strlen(calc.buffer)-1] = '\0';
+            calc.buffer[_tcslen(calc.buffer)-1] = TEXT('\0');
         break;
 
-    case '\x1b': // ESC
+    case TEXT('\x1b'): // ESC
 
         calc.next = 1;
-        calc.buffer[0] = '\0';
+        calc.buffer[0] = TEXT('\0');
         calc.value = 0;
         break;
 
-    case '0':
-    case '1':
-    case '2':
-    case '3':
-    case '4':
-    case '5':
-    case '6':
-    case '7':
-    case '8':
-    case '9':
-    case 'a':
-    case 'b':
-    case 'c':
-    case 'd':
-    case 'e':
-    case 'f':
-    case 'A':
-    case 'B':
-    case 'C':
-    case 'D':
-    case 'E':
-    case 'F':
+    case TEXT('0'):
+    case TEXT('1'):
+    case TEXT('2'):
+    case TEXT('3'):
+    case TEXT('4'):
+    case TEXT('5'):
+    case TEXT('6'):
+    case TEXT('7'):
+    case TEXT('8'):
+    case TEXT('9'):
+    case TEXT('a'):
+    case TEXT('b'):
+    case TEXT('c'):
+    case TEXT('d'):
+    case TEXT('e'):
+    case TEXT('f'):
+    case TEXT('A'):
+    case TEXT('B'):
+    case TEXT('C'):
+    case TEXT('D'):
+    case TEXT('E'):
+    case TEXT('F'):
         {
-            char s22[CALC_BUF_SIZE];
-            UCHAR w = (UCHAR)LOWORD(wParam);
+            TCHAR s22[CALC_BUF_SIZE];
+            TCHAR w = (TCHAR)LOWORD(wParam);
 
-            if (!keys[calc.numBase][w]) {
+            if (!keys[calc.numBase][(WORD)w]) {
                MessageBeep(0);
                return 0;
             }
 
             if (calc.next) { // user first digit indicates new buffer needed after previous UI event
                calc.next      = 0;
-               calc.buffer[0] = '\0';
+               calc.buffer[0] = TEXT('\0');
             }
             calc.newenter = 1;
 
-            sprintf(s22,"%c", w);
-            strcat(calc.buffer, s22);
+            _stprintf(s22,TEXT("%C"), w);
+            _tcscat(calc.buffer, s22);
+            //MessageBox(NULL, s22, NULL, 0);
         }
         break;
 
-    case '.':
-    case ',': // 911 - need to handle this, i18n
+    case TEXT('.'):
+    case TEXT(','): // 911 - need to handle this, i18n
 
         if (calc.numBase == NBASE_DECIMAL) {
             if (calc.next) { // first digit indicates new buffer needed after previous UI event
                calc.next      = 0;
-               calc.buffer[0] = '\0';
+               calc.buffer[0] = TEXT('\0');
             }
 
-            strcat(calc.buffer, ".");
+            _tcscat(calc.buffer, TEXT("."));
         }
         else {
             MessageBeep(0);
@@ -3293,13 +3323,13 @@ int parse(int wParam, int lParam)
         }
         break;
 
-    case 'x':
-    case 'X': // exp, e(1)=2.718
+    case TEXT('x'):
+    case TEXT('X'): // exp, e(1)=2.718
 
         if (calc.numBase == NBASE_DECIMAL) {
             calc.next = 1;
             calc.value = exp(calc_atof(calc.buffer, calc.numBase));
-            sprintf(calc.buffer, FMT_DESC_FLOAT, calc.value);
+            _stprintf(calc.buffer, FMT_DESC_FLOAT, calc.value);
         }
         else {
             MessageBeep(0);
@@ -3307,36 +3337,36 @@ int parse(int wParam, int lParam)
         }
         break;
 
-    case 'l':
-    case 'L':
+    case TEXT('l'):
+    case TEXT('L'):
         calc.next = 1;
         if (calc_atof(calc.buffer, calc.numBase) == 0.0L) {
-            strcpy(calc.buffer, err_invalid);
+            _tcscpy(calc.buffer, err_invalid);
         }
         else {
             calc.value = log10(calc_atof(calc.buffer, calc.numBase));
-            sprintf(calc.buffer, FMT_DESC_FLOAT, calc.value);
+            _stprintf(calc.buffer, FMT_DESC_FLOAT, calc.value);
         }
         break;
 
-    case 'N':
-    case 'n': // ln is natural logarithm
+    case TEXT('N'):
+    case TEXT('n'): // ln is natural logarithm
 
         calc.next = 1;
         if (calc_atof(calc.buffer, calc.numBase) == 0.0L) {
-            strcpy(calc.buffer, err_invalid);
+            _tcscpy(calc.buffer, err_invalid);
         }
         else {
             calc.value = log(calc_atof(calc.buffer, calc.numBase));
-            sprintf(calc.buffer, FMT_DESC_FLOAT, calc.value);
+            _stprintf(calc.buffer, FMT_DESC_FLOAT, calc.value);
         }
         break;
 
-    case 'p':
-    case 'P':
+    case TEXT('p'):
+    case TEXT('P'):
         if (calc.numBase == NBASE_DECIMAL) {
             calc.next = 1;
-            sprintf(calc.buffer, FMT_DESC_FLOAT, CONST_PI);
+            _stprintf(calc.buffer, FMT_DESC_FLOAT, CONST_PI);
         }
         else {
             MessageBeep(0);
@@ -3344,7 +3374,7 @@ int parse(int wParam, int lParam)
         }
         break;
 
-    case '\x0c': // Ctrl+L MC (only need to invalid rectangle if wasn't already zero, no need to update display)
+    case TEXT('\x0c'): // Ctrl+L MC (only need to invalid rectangle if wasn't already zero, no need to update display)
 
         calc.next = 1;
         if (calc.memory)  {
@@ -3356,16 +3386,16 @@ int parse(int wParam, int lParam)
         return 0;
         break;
 
-    case '\x12': // Ctrl+R MR (value doesn't change, so no invalid rectangle. but display is updated.)
+    case TEXT('\x12'): // Ctrl+R MR (value doesn't change, so no invalid rectangle. but display is updated.)
 
         calc.next = 1;
         if (calc.memory != calc_atof(calc.buffer, calc.numBase))
-            sprintf(calc.buffer,FMT_DESC_FLOAT,calc.memory);
+            _stprintf(calc.buffer,FMT_DESC_FLOAT,calc.memory);
         else
             return 0;
         break;
 
-    case '\x10': // Ctrl+P M+ (need to invalidate rectangle in many cases but not display)
+    case TEXT('\x10'): // Ctrl+P M+ (need to invalidate rectangle in many cases but not display)
 
         calc.next = 1;
         InvalidateRect(calc.hWnd, &rFiller, TRUE);
@@ -3373,7 +3403,7 @@ int parse(int wParam, int lParam)
         return 0;
         break;
 
-    case '\x0d': // Ctrl+M  MS (only need to invalid rectangle if was zero and now not,
+    case TEXT('\x0d'): // Ctrl+M  MS (only need to invalid rectangle if was zero and now not,
 
         // or was not zero and now is, not display)
         calc.next = 1;
@@ -3397,7 +3427,7 @@ int parse(int wParam, int lParam)
         break;
 
         // fall through for Enter processing ... but there is a bug here in Ctrl+M vs. Return
-    case '=':
+    case TEXT('='):
         {
             calcfloat r = calc.operand;
 
@@ -3407,40 +3437,40 @@ int parse(int wParam, int lParam)
                 r = calc_atof(calc.buffer, calc.numBase); // convert buffer from whatever base to decimal real
             }
 
-            if (calc.oper == '+') {
+            if (calc.oper == TEXT('+')) {
                 calc.value += r;
             }
-            else if (calc.oper == '-') {
+            else if (calc.oper == TEXT('-')) {
                 calc.value -= r;
             }
-            else if (calc.oper == '*') {
+            else if (calc.oper == TEXT('*')) {
                 calc.value *= r;
             }
-            else if (calc.oper == '%') {
+            else if (calc.oper == TEXT('%')) {
                 calc.value = (long)calc.value % (long)r;
             }
-            else if (calc.oper == '/') {
+            else if (calc.oper == TEXT('/')) {
                 if (!calc_atof(calc.buffer, calc.numBase)) {
-                    strcpy(calc.buffer, err_undefined);
+                    _tcscpy(calc.buffer, err_undefined);
                     calc.err = 1;
                 }
                 else {
                     calc.value /= r;
                 }
             }
-            else if (calc.oper == '&') {
+            else if (calc.oper == TEXT('&')) {
                 calc.value = (calcfloat)((long)calc.value & (long)r);
             }
-            else if (calc.oper == '|') {
+            else if (calc.oper == TEXT('|')) {
                 calc.value = (calcfloat)((long)calc.value | (long)r);
             }
-            else if (calc.oper == '^') {
+            else if (calc.oper == TEXT('^')) {
                 calc.value = (calcfloat)((long)calc.value ^ (long)r);
             }
-            else if (calc.oper == 'y') {
+            else if (calc.oper == TEXT('y')) {
                 calc.value = (calcfloat)pow(calc.value, r);
             }
-            else if (calc.oper == '<') {
+            else if (calc.oper == TEXT('<')) {
                 if (calc.invMode)
                    calc.value = (calcfloat)((long)calc.value >> (long)calc_atof(calc.buffer, calc.numBase));
                 else
@@ -3459,21 +3489,21 @@ int parse(int wParam, int lParam)
         }
         break;
 
-    case 'R':
-    case 'r': // 1/x
+    case TEXT('R'):
+    case TEXT('r'): // 1/x
 
         calc.next = 1;
         if (calc_atof(calc.buffer, calc.numBase) == 0) {
             calc.err = 1;
-            strcpy(calc.buffer, err_divide_by_zero);
+            _tcscpy(calc.buffer, err_divide_by_zero);
         }
         else {
             calc.value = 1/calc_atof(calc.buffer, calc.numBase);
-            sprintf(calc.buffer, FMT_DESC_FLOAT, calc.value );
+            _stprintf(calc.buffer, FMT_DESC_FLOAT, calc.value );
         }
         break;
 
-    case '@': // ^2 - sqrt in standard mode, squared in sci mode
+    case TEXT('@'): // ^2 - sqrt in standard mode, squared in sci mode
 
         calc.next = 1;
         calc.value = calc_atof(calc.buffer, calc.numBase);
@@ -3483,87 +3513,87 @@ int parse(int wParam, int lParam)
         else
            calc.value = sqrt(calc.value);
 
-        sprintf(calc.buffer, FMT_DESC_FLOAT, calc.value );
+        _stprintf(calc.buffer, FMT_DESC_FLOAT, calc.value );
         break;
 
-    case '#': // ^3
+    case TEXT('#'): // ^3
 
         calc.next = 1;
         calc.value = calc_atof(calc.buffer, calc.numBase);
         calc.value *= calc.value * calc.value;
-        sprintf(calc.buffer, FMT_DESC_FLOAT, calc.value );
+        _stprintf(calc.buffer, FMT_DESC_FLOAT, calc.value );
         break;
 
-    case 'Y':
-    case 'y': // x^y
+    case TEXT('Y'):
+    case TEXT('y'): // x^y
 
         calc.next = 1;
         calc.value = calc_atof(calc.buffer, calc.numBase);
-        calc.oper = 'y';
+        calc.oper = TEXT('y');
         calc.next = 1;
         break;
 
-    case '<': // Lsh
+    case TEXT('<'): // Lsh
 
         calc.next = 1;
         calc.value = calc_atof(calc.buffer, calc.numBase);
-        calc.oper = '<';
+        calc.oper = TEXT('<');
         calc.next = 1;
         break;
 
-    case ';': // INT
+    case TEXT(';'): // INT
 
         calc.next = 1;
         calc.value = (long)calc_atof(calc.buffer, calc.numBase);
-        sprintf(calc.buffer, FMT_DESC_FLOAT, calc.value );
+        _stprintf(calc.buffer, FMT_DESC_FLOAT, calc.value );
         break;
 
-    case '!': // factorial, need to use gamma function for reals t^(z-1)*e^t dt
+    case TEXT('!'): // factorial, need to use gamma function for reals t^(z-1)*e^t dt
 
         calc.next = 1;
         calc.value = calc_atof(calc.buffer, calc.numBase);
         calc.value = (calcfloat)factorial((long)calc.value);
-        sprintf(calc.buffer, FMT_DESC_FLOAT, calc.value );
+        _stprintf(calc.buffer, FMT_DESC_FLOAT, calc.value );
         break;
 
-    case '&': // bitwise and
+    case TEXT('&'): // bitwise and
 
         calc.oper = '&';
         calc.next = 1;
         calc.value = calc_atof(calc.buffer, calc.numBase);
         break;
 
-    case '|': // bitwise or
+    case TEXT('|'): // bitwise or
 
-        calc.oper = '|';
+        calc.oper = TEXT('|');
         calc.next = 1;
         calc.value = calc_atof(calc.buffer, calc.numBase);
         break;
 
-    case '^': // bitwise xor
+    case TEXT('^'): // bitwise xor
 
-        calc.oper = '^';
+        calc.oper = TEXT('^');
         calc.next = 1;
         calc.value = calc_atof(calc.buffer, calc.numBase);
         break;
 
-    case '~': // bitwise not
+    case TEXT('~'): // bitwise not
 
         calc.next = 1;
         calc.value = ~ (long) calc_atof(calc.buffer, calc.numBase);
-        sprintf(calc.buffer, FMT_DESC_FLOAT, calc.value );
+        _stprintf(calc.buffer, FMT_DESC_FLOAT, calc.value );
         break;
 
-    case '+':
+    case TEXT('+'):
         calc.operand = calc_atof(calc.buffer, calc.numBase);
         calc.value   += calc.operand;
         calc_ftoa(&calc, calc.value, calc.buffer);
-        calc.oper    = '+';
+        calc.oper    = TEXT('+');
         calc.newenter = 1;
         calc.next = 1;
         break;
 
-    case '-':
+    case TEXT('-'):
         if (calc.init) {
             calc.init = 0;
             calc.operand = calc_atof(calc.buffer, calc.numBase);
@@ -3574,12 +3604,12 @@ int parse(int wParam, int lParam)
             calc_ftoa(&calc, calc.value, calc.buffer);
         }
 
-        calc.oper    = '-';
+        calc.oper    = TEXT('-');
         calc.newenter = 1;
         calc.next = 1;
         break;
 
-    case '*':
+    case TEXT('*'):
         if (calc.init) {
             calc.init = 0;
             calc.operand = calc_atof(calc.buffer, calc.numBase);
@@ -3589,12 +3619,12 @@ int parse(int wParam, int lParam)
             calc.value   *= calc.operand;
             calc_ftoa(&calc, calc.value, calc.buffer);
         }
-        calc.oper    = '*';
+        calc.oper    = TEXT('*');
         calc.newenter = 1;
         calc.next = 1;
         break;
 
-    case '/':
+    case TEXT('/'):
         if (calc.init) {
             calc.init = 0;
             calc.operand = calc_atof(calc.buffer, calc.numBase);
@@ -3604,12 +3634,12 @@ int parse(int wParam, int lParam)
            calc.value   /= calc.operand;
            calc_ftoa(&calc, calc.value, calc.buffer);
         }
-        calc.oper    = '/';
+        calc.oper    = TEXT('/');
         calc.newenter = 1;
         calc.next = 1;
         break;
 
-    case '%':
+    case TEXT('%'):
         if (!calc.sciMode) {
             if (calc.init) {
                calc.init = 0;
@@ -3617,7 +3647,7 @@ int parse(int wParam, int lParam)
                calc.value = calc.operand;
             }
             else {
-               calc.value = (long)atof(calc.buffer) % (long)calc.operand;
+               calc.value = (long)calc_atof(calc.buffer, calc.numBase) % (long)calc.operand;
                calc_ftoa(&calc, calc.value, calc.buffer);
             }
         }
@@ -3625,17 +3655,17 @@ int parse(int wParam, int lParam)
             calcfloat r;
             r = calc_atof(calc.buffer, calc.numBase);
             calc.next = 1;
-            sprintf(calc.buffer, FMT_DESC_FLOAT, r * calc.value / (calcfloat)100.0);
+            _stprintf(calc.buffer, FMT_DESC_FLOAT, r * calc.value / (calcfloat)100.0);
         }
 
-        calc.oper    = '%';
+        calc.oper    = TEXT('%');
         calc.newenter = 1;
         calc.next = 1;
         break;
 
-    case 'O': // cos
+    case TEXT('O'): // cos
 
-    case 'o':
+    case TEXT('o'):
         if (calc.numBase == NBASE_DECIMAL) {
 
             calcfloat r;
@@ -3649,7 +3679,7 @@ int parse(int wParam, int lParam)
                 calc.value = cosh(r);
             else
                 calc.value = cos(calc_atof(calc.buffer, calc.numBase));
-            sprintf(calc.buffer, FMT_DESC_FLOAT, calc.value );
+            _stprintf(calc.buffer, FMT_DESC_FLOAT, calc.value );
         }
         else {
             MessageBeep(0);
@@ -3657,9 +3687,9 @@ int parse(int wParam, int lParam)
         }
         break;
 
-    case 'S': // sin
+    case TEXT('S'): // sin
 
-    case 's':
+    case TEXT('s'):
         if (calc.numBase == NBASE_DECIMAL) {
 
             calcfloat r = calc_convert_to_radians(&calc);
@@ -3673,7 +3703,7 @@ int parse(int wParam, int lParam)
             else
                 calc.value = sin(r);
 
-            sprintf(calc.buffer, FMT_DESC_FLOAT, calc.value );
+            _stprintf(calc.buffer, FMT_DESC_FLOAT, calc.value );
         }
         else {
             MessageBeep(0);
@@ -3681,9 +3711,9 @@ int parse(int wParam, int lParam)
         }
         break;
 
-    case 'T': // tan
+    case TEXT('T'): // tan
 
-    case 't':
+    case TEXT('t'):
         if (calc.numBase == NBASE_DECIMAL) {
             calcfloat r = calc_convert_to_radians(&calc);
             calc.next = 1;
@@ -3696,7 +3726,7 @@ int parse(int wParam, int lParam)
             else
                 calc.value = tan(r);
 
-            sprintf(calc.buffer, FMT_DESC_FLOAT, calc.value );
+            _stprintf(calc.buffer, FMT_DESC_FLOAT, calc.value );
         }
         else {
             MessageBeep(0);
@@ -3704,9 +3734,9 @@ int parse(int wParam, int lParam)
         }
         break;
 
-    case 'M': // dms = Degrees Minutes Seconds
+    case TEXT('M'): // dms = Degrees Minutes Seconds
 
-    case 'm':
+    case TEXT('m'):
         if (calc.numBase == NBASE_DECIMAL) {
             calcfloat r2;
             calcfloat r  = calc_atof(calc.buffer, calc.numBase);
@@ -3715,7 +3745,7 @@ int parse(int wParam, int lParam)
 
             r = (long)r + r2 * 0.6; // multiply by 60 and divide by 100
             calc.value = r;
-            sprintf(calc.buffer, FMT_DESC_FLOAT, calc.value );
+            _stprintf(calc.buffer, FMT_DESC_FLOAT, calc.value );
         }
         else {
             MessageBeep(0);
@@ -3723,47 +3753,47 @@ int parse(int wParam, int lParam)
         }
         break;
 
-    case 'V': // toggle scientic notation like 1.e+2 or 100
+    case TEXT('V'): // toggle scientic notation like 1.e+2 or 100
 
-    case 'v':
+    case TEXT('v'):
         calc.displayMode = !calc.displayMode;
         break;
 
 // non-standard keystrokes ...
 
-    case '?':
+    case TEXT('?'):
 
         calc.next = 1;
         if (calc_atof(calc.buffer, calc.numBase) < 0) {
             calc.err = 1;
-            strcpy(calc.buffer, err_invalid);
+            _tcscpy(calc.buffer, err_invalid);
         }
         else {
             calc.value = sqrt(calc_atof(calc.buffer, calc.numBase));
-            sprintf(calc.buffer, FMT_DESC_FLOAT, calc.value );
+            _stprintf(calc.buffer, FMT_DESC_FLOAT, calc.value );
         }
         break;
 
-    case 'Z': // +/-
+    case TEXT('Z'): // +/-
 
         {
-            char s[CALC_BUF_SIZE] = "-";
+            TCHAR s[CALC_BUF_SIZE] = TEXT("-");
 
-            if (!strcmp(calc.buffer, "0"))
+            if (!_tcscmp(calc.buffer, TEXT("0")))
                 return 0;
 
-            if (calc.buffer[0] == '-')
-                strcpy(s, calc.buffer+1);
+            if (calc.buffer[0] == TEXT('-'))
+                _tcscpy(s, calc.buffer+1);
             else
-                strcpy(s+1, calc.buffer);
+                _tcscpy(s+1, calc.buffer);
 
-            strcpy(calc.buffer, s);
+            _tcscpy(calc.buffer, s);
         }
         break;
 
-    case 'G': // debug mode
+    case TEXT('G'): // debug mode
 
-    case 'g':
+    case TEXT('g'):
         calc.next = 1;
         debug = !debug;
         break;

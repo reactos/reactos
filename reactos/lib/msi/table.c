@@ -731,14 +731,39 @@ UINT load_string_table( MSIDATABASE *db )
     db->strings = msi_init_stringtable( count, codepage );
 
     offset = 0;
+    n = 1;
     for( i=1; i<count; i++ )
     {
         len = pool[i*2];
-        n = msi_addstring( db->strings, i, data+offset, len, pool[i*2+1] );
-        if( n != i )
-            ERR("Failed to add string %ld\n", i );
+
+        /*
+         * If a string is over 64k, the previous string entry is made null
+         * and its the high word of the length is inserted in the null string's
+         * reference count field.
+         */
+        if( pool[i*2-2] == 0 )
+            len += pool[i*2-1] * 0x10000;
+
+        if( (offset + len) > datasize )
+        {
+            ERR("string table corrupt?\n");
+            break;
+        }
+
+        /* don't add the high word of a string's length as a string */
+        if ( len || !pool[i*2+1] )
+        {
+            r = msi_addstring( db->strings, n, data+offset, len, pool[i*2+1] );
+            if( r != n )
+                ERR("Failed to add string %ld\n", n );
+            n++;
+        }
+
         offset += len;
     }
+
+    if ( datasize != offset )
+        ERR("string table load failed! (%08x != %08lx)\n", datasize, offset );
 
     TRACE("Loaded %ld strings\n", count);
 
@@ -1167,7 +1192,7 @@ static UINT TABLE_set_int( struct tagMSIVIEW *view, UINT row, UINT col, UINT val
     return ERROR_SUCCESS;
 }
 
-static UINT TABLE_insert_row( struct tagMSIVIEW *view, UINT *num )
+static UINT table_create_new_row( struct tagMSIVIEW *view, UINT *num )
 {
     MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
     USHORT **p, *row;
@@ -1217,7 +1242,7 @@ static UINT TABLE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
     r = get_table( tv->db, tv->name, &tv->table );
     if( r != ERROR_SUCCESS )
         return r;
-    
+
     return ERROR_SUCCESS;
 }
 
@@ -1276,11 +1301,167 @@ static UINT TABLE_get_column_info( struct tagMSIVIEW *view,
     return ERROR_SUCCESS;
 }
 
+static UINT table_find_in_column( MSITABLEVIEW *tv, UINT col, UINT val, UINT *row )
+{
+    UINT i, r, x;
+
+    for( i=0; i<tv->table->row_count; i++ )
+    {
+        r = TABLE_fetch_int( (struct tagMSIVIEW*) tv, i, col, &x );
+        if ( r != ERROR_SUCCESS )
+        {
+            ERR("TABLE_fetch_int shouldn't fail here\n");
+            break;
+        }
+        if ( x == val )
+        {
+            *row = i;
+            return ERROR_SUCCESS;
+        }
+    }
+    return ERROR_FUNCTION_FAILED;
+}
+
+static UINT table_validate_new( MSITABLEVIEW *tv, MSIRECORD *rec )
+{
+    LPCWSTR str;
+    UINT i, val, r, row;
+    BOOL has_key = FALSE;
+
+    /* FIXME: set the MsiViewGetError value */
+
+    for( i = 0; i<tv->num_cols; i++ )
+    {
+        /* check for duplicate keys */
+        if( !( tv->columns[i].type & MSITYPE_KEY ) )
+            continue;
+
+        has_key = TRUE;
+
+        TRACE("column %d (%s.%s)is a key\n", i,
+             debugstr_w(tv->columns[i].tablename),
+             debugstr_w(tv->columns[i].colname) );
+
+        val = 0;
+        if( tv->columns[i].type & MSITYPE_STRING )
+        {
+             /* keys can't be null */
+             str = MSI_RecordGetString( rec, i+1 );
+             if( !str )
+                 return ERROR_INVALID_DATA;
+
+             /* if the string doesn't exist in the string table yet, it's OK */
+             r = msi_string2idW( tv->db->strings, str, &val );
+             if( ERROR_SUCCESS != r )
+                 return ERROR_SUCCESS;
+        }
+        else
+        {
+            val = MSI_RecordGetInteger( rec, i+1 );
+            val ^= 0x8000;
+        }
+
+        /* if we find the same value in the table, it's a duplicate */
+        row = 0;
+        r = table_find_in_column( tv, i+1, val, &row );
+        if( ERROR_SUCCESS != r )
+            return ERROR_SUCCESS;
+
+        TRACE("found in row %d\n", row );
+    }
+
+    if (has_key)
+        return ERROR_INVALID_DATA;
+
+    return ERROR_SUCCESS;
+}
+
+static UINT TABLE_insert_row( struct tagMSIVIEW *view, MSIRECORD *rec )
+{
+    MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
+    UINT n, type, val, r, row, col_count = 0;
+
+    r = TABLE_get_dimensions( view, NULL, &col_count );
+    if( r )
+        return r;
+
+    row = -1;
+    r = table_create_new_row( view, &row );
+    TRACE("insert_row returned %08x\n", r);
+    if( r )
+        return r;
+
+    for( n = 1; n <= col_count; n++ )
+    {
+        r = TABLE_get_column_info( view, n, NULL, &type );
+        if( r )
+            break;
+
+        if( type & MSITYPE_STRING )
+        {
+            const WCHAR *str = MSI_RecordGetString( rec, n );
+            val = msi_addstringW( tv->db->strings, 0, str, -1, 1 );
+        }
+        else
+        {
+            val = MSI_RecordGetInteger( rec, n );
+            val ^= 0x8000;
+        }
+        r = TABLE_set_int( view, row, n, val );
+        if( r )
+            break;
+    }
+
+    return r;
+}
+
 static UINT TABLE_modify( struct tagMSIVIEW *view, MSIMODIFY eModifyMode,
                 MSIRECORD *rec)
 {
-    FIXME("%p %d %p\n", view, eModifyMode, rec );
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
+    UINT r;
+
+    TRACE("%p %d %p\n", view, eModifyMode, rec );
+
+    if (!tv->table)
+    {
+        r = TABLE_execute( view, NULL );
+        if( r )
+            return r;
+    }
+
+    switch (eModifyMode)
+    {
+    case MSIMODIFY_VALIDATE_NEW:
+        r = table_validate_new( tv, rec );
+        break;
+
+    case MSIMODIFY_INSERT_TEMPORARY:
+        r = table_validate_new( tv, rec );
+        if (r != ERROR_SUCCESS)
+            break;
+        r = TABLE_insert_row( view, rec );
+        break;
+
+    case MSIMODIFY_REFRESH:
+    case MSIMODIFY_INSERT:
+    case MSIMODIFY_UPDATE:
+    case MSIMODIFY_ASSIGN:
+    case MSIMODIFY_REPLACE:
+    case MSIMODIFY_MERGE:
+    case MSIMODIFY_DELETE:
+    case MSIMODIFY_VALIDATE:
+    case MSIMODIFY_VALIDATE_FIELD:
+    case MSIMODIFY_VALIDATE_DELETE:
+        FIXME("%p %d %p - mode not implemented\n", view, eModifyMode, rec );
+        r = ERROR_CALL_NOT_IMPLEMENTED;
+        break;
+
+    default:
+        r = ERROR_INVALID_DATA;
+    }
+
+    return r;
 }
 
 static UINT TABLE_delete( struct tagMSIVIEW *view )

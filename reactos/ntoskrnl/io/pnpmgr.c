@@ -30,7 +30,7 @@ PDEVICE_NODE FASTCALL
 IopGetDeviceNode(
   PDEVICE_OBJECT DeviceObject)
 {
-  return DeviceObject->DeviceObjectExtension->DeviceNode;
+  return ((PEXTENDED_DEVOBJ_EXTENSION)DeviceObject->DeviceObjectExtension)->DeviceNode;
 }
 
 NTSTATUS
@@ -619,7 +619,7 @@ IopCreateDeviceNode(PDEVICE_NODE ParentNode,
 
   Node->PhysicalDeviceObject = PhysicalDeviceObject;
 
-  PhysicalDeviceObject->DeviceObjectExtension->DeviceNode = Node;
+  ((PEXTENDED_DEVOBJ_EXTENSION)PhysicalDeviceObject->DeviceObjectExtension)->DeviceNode = Node;
 
   if (ParentNode)
     {

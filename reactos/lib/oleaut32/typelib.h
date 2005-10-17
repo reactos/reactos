@@ -597,9 +597,12 @@ WORD offset from start of block to SAFEARRAY
 WORD typeofarray
 */
 
+#include "poppack.h"
+
 extern DWORD _invoke(FARPROC func,CALLCONV callconv, int nrargs, DWORD *args);
 extern void dump_Variant(VARIANT * pvar);
-#include "poppack.h"
+
+HRESULT TMARSHAL_DllGetClassObject(REFCLSID rclsid, REFIID iid,LPVOID *ppv);
 
 /*---------------------------END--------------------------------------------*/
 #endif

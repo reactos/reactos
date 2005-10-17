@@ -69,6 +69,12 @@ interface pnp
                                  [in] unsigned long Length,
                                  [in] unsigned long Flags);
 
+  CONFIGRET PNP_GetClassName(handle_t BindingHandle,
+                             [in, string] wchar_t *ClassGuid,
+                             [out, string, size_is(*Length)] wchar_t *Buffer,
+                             [in, out] unsigned long *Length,
+                             [in] unsigned long Flags);
+
   CONFIGRET PNP_GetDeviceStatus(handle_t BindingHandle,
                                 [in, string] wchar_t *DeviceInstance,
                                 [out] unsigned long *Status,

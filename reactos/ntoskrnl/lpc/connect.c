@@ -265,14 +265,10 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
     {
       _SEH_TRY
         {
-          ProbeForWrite(UnsafeConnectedPortHandle,
-                        sizeof(HANDLE),
-                        sizeof(ULONG));
+          ProbeForWriteHandle(UnsafeConnectedPortHandle);
           if (UnsafeMaximumMessageSize != NULL)
             {
-              ProbeForWrite(UnsafeMaximumMessageSize,
-                            sizeof(ULONG),
-                            sizeof(ULONG));
+              ProbeForWriteUlong(UnsafeMaximumMessageSize);
             }
         }
       _SEH_HANDLE
@@ -341,10 +337,7 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
         {
           _SEH_TRY
             {
-              ProbeForRead(UnsafeConnectDataLength,
-                           sizeof(ULONG),
-                           1);
-              ConnectDataLength = *UnsafeConnectDataLength;
+              ConnectDataLength = ProbeForReadUlong(UnsafeConnectDataLength);
             }
           _SEH_HANDLE
             {
@@ -374,9 +367,7 @@ NtConnectPort (PHANDLE				UnsafeConnectedPortHandle,
             {
               _SEH_TRY
                 {
-                  ProbeForWrite(UnsafeConnectData,
-                                ConnectDataLength,
-                                1);
+                  ProbeForWriteUlong(UnsafeConnectData);
                   RtlCopyMemory(ConnectData,
                                 UnsafeConnectData,
                                 ConnectDataLength);

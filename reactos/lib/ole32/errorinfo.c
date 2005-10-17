@@ -147,14 +147,22 @@ static const ISupportErrorInfoVtbl ISupportErrorInfoImpl_VTable;
 /*
  converts an object pointer to This
  */
-#define _IErrorInfo_Offset ((int)(&(((ErrorInfoImpl*)0)->lpvtei)))
-#define _ICOM_THIS_From_IErrorInfo(class, name) class* This = (class*)(((char*)name)-_IErrorInfo_Offset)
 
-#define _ICreateErrorInfo_Offset ((int)(&(((ErrorInfoImpl*)0)->lpvtcei)))
-#define _ICOM_THIS_From_ICreateErrorInfo(class, name) class* This = (class*)(((char*)name)-_ICreateErrorInfo_Offset)
+static inline ErrorInfoImpl *impl_from_IErrorInfo( IErrorInfo *iface )
+{
+    return (ErrorInfoImpl *)((char*)iface - FIELD_OFFSET(ErrorInfoImpl, lpvtei));
+}
 
-#define _ISupportErrorInfo_Offset ((int)(&(((ErrorInfoImpl*)0)->lpvtsei)))
-#define _ICOM_THIS_From_ISupportErrorInfo(class, name) class* This = (class*)(((char*)name)-_ISupportErrorInfo_Offset)
+static inline ErrorInfoImpl *impl_from_ICreateErrorInfo( ICreateErrorInfo *iface )
+{
+    return (ErrorInfoImpl *)((char*)iface - FIELD_OFFSET(ErrorInfoImpl, lpvtcei));
+}
+
+static inline ErrorInfoImpl *impl_from_ISupportErrorInfo( ISupportErrorInfo *iface )
+{
+    return (ErrorInfoImpl *)((char*)iface - FIELD_OFFSET(ErrorInfoImpl, lpvtsei));
+}
+
 
 /*
  converts This to an object pointer
@@ -186,7 +194,7 @@ static HRESULT WINAPI IErrorInfoImpl_QueryInterface(
 	REFIID     riid,
 	VOID**     ppvoid)
 {
-	_ICOM_THIS_From_IErrorInfo(ErrorInfoImpl, iface);
+	ErrorInfoImpl *This = impl_from_IErrorInfo(iface);
 	TRACE("(%p)->(\n\tIID:\t%s,%p)\n",This,debugstr_guid(riid),ppvoid);
 
 	*ppvoid = NULL;
@@ -217,7 +225,7 @@ static HRESULT WINAPI IErrorInfoImpl_QueryInterface(
 static ULONG WINAPI IErrorInfoImpl_AddRef(
  	IErrorInfo* iface)
 {
-	_ICOM_THIS_From_IErrorInfo(ErrorInfoImpl, iface);
+	ErrorInfoImpl *This = impl_from_IErrorInfo(iface);
 	TRACE("(%p)->(count=%lu)\n",This,This->ref);
 	return InterlockedIncrement(&This->ref);
 }
@@ -225,7 +233,7 @@ static ULONG WINAPI IErrorInfoImpl_AddRef(
 static ULONG WINAPI IErrorInfoImpl_Release(
 	IErrorInfo* iface)
 {
-	_ICOM_THIS_From_IErrorInfo(ErrorInfoImpl, iface);
+	ErrorInfoImpl *This = impl_from_IErrorInfo(iface);
         ULONG ref = InterlockedDecrement(&This->ref);
 
 	TRACE("(%p)->(count=%lu)\n",This,ref+1);
@@ -243,7 +251,7 @@ static HRESULT WINAPI IErrorInfoImpl_GetGUID(
 	IErrorInfo* iface,
 	GUID * pGUID)
 {
-	_ICOM_THIS_From_IErrorInfo(ErrorInfoImpl, iface);
+	ErrorInfoImpl *This = impl_from_IErrorInfo(iface);
 	TRACE("(%p)->(count=%lu)\n",This,This->ref);
 	if(!pGUID )return E_INVALIDARG;
 	memcpy(pGUID, &This->m_Guid, sizeof(GUID));
@@ -254,7 +262,7 @@ static HRESULT WINAPI IErrorInfoImpl_GetSource(
 	IErrorInfo* iface,
 	BSTR *pBstrSource)
 {
-	_ICOM_THIS_From_IErrorInfo(ErrorInfoImpl, iface);
+	ErrorInfoImpl *This = impl_from_IErrorInfo(iface);
 	TRACE("(%p)->(pBstrSource=%p)\n",This,pBstrSource);
 	if (pBstrSource == NULL)
 	    return E_INVALIDARG;
@@ -266,7 +274,7 @@ static HRESULT WINAPI IErrorInfoImpl_GetDescription(
 	IErrorInfo* iface,
 	BSTR *pBstrDescription)
 {
-	_ICOM_THIS_From_IErrorInfo(ErrorInfoImpl, iface);
+	ErrorInfoImpl *This = impl_from_IErrorInfo(iface);
 
 	TRACE("(%p)->(pBstrDescription=%p)\n",This,pBstrDescription);
 	if (pBstrDescription == NULL)
@@ -280,7 +288,7 @@ static HRESULT WINAPI IErrorInfoImpl_GetHelpFile(
 	IErrorInfo* iface,
 	BSTR *pBstrHelpFile)
 {
-	_ICOM_THIS_From_IErrorInfo(ErrorInfoImpl, iface);
+	ErrorInfoImpl *This = impl_from_IErrorInfo(iface);
 
 	TRACE("(%p)->(pBstrHelpFile=%p)\n",This, pBstrHelpFile);
 	if (pBstrHelpFile == NULL)
@@ -294,7 +302,7 @@ static HRESULT WINAPI IErrorInfoImpl_GetHelpContext(
 	IErrorInfo* iface,
 	DWORD *pdwHelpContext)
 {
-	_ICOM_THIS_From_IErrorInfo(ErrorInfoImpl, iface);
+	ErrorInfoImpl *This = impl_from_IErrorInfo(iface);
 	TRACE("(%p)->(pdwHelpContext=%p)\n",This, pdwHelpContext);
 	if (pdwHelpContext == NULL)
 	    return E_INVALIDARG;
@@ -322,7 +330,7 @@ static HRESULT WINAPI ICreateErrorInfoImpl_QueryInterface(
 	REFIID     riid,
 	VOID**     ppvoid)
 {
-	_ICOM_THIS_From_ICreateErrorInfo(ErrorInfoImpl, iface);
+	ErrorInfoImpl *This = impl_from_ICreateErrorInfo(iface);
 	TRACE("(%p)\n", This);
 	return IErrorInfo_QueryInterface(_IErrorInfo_(This), riid, ppvoid);
 }
@@ -330,7 +338,7 @@ static HRESULT WINAPI ICreateErrorInfoImpl_QueryInterface(
 static ULONG WINAPI ICreateErrorInfoImpl_AddRef(
  	ICreateErrorInfo* iface)
 {
-	_ICOM_THIS_From_ICreateErrorInfo(ErrorInfoImpl, iface);
+	ErrorInfoImpl *This = impl_from_ICreateErrorInfo(iface);
 	TRACE("(%p)\n", This);
 	return IErrorInfo_AddRef(_IErrorInfo_(This));
 }
@@ -338,7 +346,7 @@ static ULONG WINAPI ICreateErrorInfoImpl_AddRef(
 static ULONG WINAPI ICreateErrorInfoImpl_Release(
 	ICreateErrorInfo* iface)
 {
-	_ICOM_THIS_From_ICreateErrorInfo(ErrorInfoImpl, iface);
+	ErrorInfoImpl *This = impl_from_ICreateErrorInfo(iface);
 	TRACE("(%p)\n", This);
 	return IErrorInfo_Release(_IErrorInfo_(This));
 }
@@ -348,7 +356,7 @@ static HRESULT WINAPI ICreateErrorInfoImpl_SetGUID(
 	ICreateErrorInfo* iface,
 	REFGUID rguid)
 {
-	_ICOM_THIS_From_ICreateErrorInfo(ErrorInfoImpl, iface);
+	ErrorInfoImpl *This = impl_from_ICreateErrorInfo(iface);
 	TRACE("(%p)->(%s)\n", This, debugstr_guid(rguid));
 	memcpy(&This->m_Guid,  rguid, sizeof(GUID));
 	return S_OK;
@@ -358,7 +366,7 @@ static HRESULT WINAPI ICreateErrorInfoImpl_SetSource(
 	ICreateErrorInfo* iface,
 	LPOLESTR szSource)
 {
-	_ICOM_THIS_From_ICreateErrorInfo(ErrorInfoImpl, iface);
+	ErrorInfoImpl *This = impl_from_ICreateErrorInfo(iface);
 	TRACE("(%p): %s\n",This, debugstr_w(szSource));
 	if (This->bstrSource != NULL)
 	    ERRORINFO_SysFreeString(This->bstrSource);
@@ -371,7 +379,7 @@ static HRESULT WINAPI ICreateErrorInfoImpl_SetDescription(
 	ICreateErrorInfo* iface,
 	LPOLESTR szDescription)
 {
-	_ICOM_THIS_From_ICreateErrorInfo(ErrorInfoImpl, iface);
+	ErrorInfoImpl *This = impl_from_ICreateErrorInfo(iface);
 	TRACE("(%p): %s\n",This, debugstr_w(szDescription));
 	if (This->bstrDescription != NULL)
 	    ERRORINFO_SysFreeString(This->bstrDescription);
@@ -384,7 +392,7 @@ static HRESULT WINAPI ICreateErrorInfoImpl_SetHelpFile(
 	ICreateErrorInfo* iface,
 	LPOLESTR szHelpFile)
 {
-	_ICOM_THIS_From_ICreateErrorInfo(ErrorInfoImpl, iface);
+	ErrorInfoImpl *This = impl_from_ICreateErrorInfo(iface);
 	TRACE("(%p,%s)\n",This,debugstr_w(szHelpFile));
 	if (This->bstrHelpFile != NULL)
 	    ERRORINFO_SysFreeString(This->bstrHelpFile);
@@ -396,7 +404,7 @@ static HRESULT WINAPI ICreateErrorInfoImpl_SetHelpContext(
 	ICreateErrorInfo* iface,
  	DWORD dwHelpContext)
 {
-	_ICOM_THIS_From_ICreateErrorInfo(ErrorInfoImpl, iface);
+	ErrorInfoImpl *This = impl_from_ICreateErrorInfo(iface);
 	TRACE("(%p,%ld)\n",This,dwHelpContext);
 	This->m_dwHelpContext = dwHelpContext;
 	return S_OK;
@@ -420,7 +428,7 @@ static HRESULT WINAPI ISupportErrorInfoImpl_QueryInterface(
 	REFIID     riid,
 	VOID**     ppvoid)
 {
-	_ICOM_THIS_From_ISupportErrorInfo(ErrorInfoImpl, iface);
+	ErrorInfoImpl *This = impl_from_ISupportErrorInfo(iface);
 	TRACE("(%p)\n", This);
 
 	return IErrorInfo_QueryInterface(_IErrorInfo_(This), riid, ppvoid);
@@ -429,7 +437,7 @@ static HRESULT WINAPI ISupportErrorInfoImpl_QueryInterface(
 static ULONG WINAPI ISupportErrorInfoImpl_AddRef(
  	ISupportErrorInfo* iface)
 {
-	_ICOM_THIS_From_ISupportErrorInfo(ErrorInfoImpl, iface);
+	ErrorInfoImpl *This = impl_from_ISupportErrorInfo(iface);
 	TRACE("(%p)\n", This);
 	return IErrorInfo_AddRef(_IErrorInfo_(This));
 }
@@ -437,7 +445,7 @@ static ULONG WINAPI ISupportErrorInfoImpl_AddRef(
 static ULONG WINAPI ISupportErrorInfoImpl_Release(
 	ISupportErrorInfo* iface)
 {
-	_ICOM_THIS_From_ISupportErrorInfo(ErrorInfoImpl, iface);
+	ErrorInfoImpl *This = impl_from_ISupportErrorInfo(iface);
 	TRACE("(%p)\n", This);
 	return IErrorInfo_Release(_IErrorInfo_(This));
 }
@@ -447,7 +455,7 @@ static HRESULT WINAPI ISupportErrorInfoImpl_InterfaceSupportsErrorInfo(
 	ISupportErrorInfo* iface,
 	REFIID riid)
 {
-	_ICOM_THIS_From_ISupportErrorInfo(ErrorInfoImpl, iface);
+	ErrorInfoImpl *This = impl_from_ISupportErrorInfo(iface);
 	TRACE("(%p)->(%s)\n", This, debugstr_guid(riid));
 	return (IsEqualIID(riid, &This->m_Guid)) ? S_OK : S_FALSE;
 }

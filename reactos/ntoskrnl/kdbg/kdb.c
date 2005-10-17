@@ -1206,7 +1206,7 @@ KdbEnterDebuggerException(
    ul = min(ExpNr, RTL_NUMBER_OF(KdbEnterConditions) - 1);
    EnterCondition = KdbEnterConditions[ul][FirstChance ? 0 : 1];
    if (EnterCondition == KdbDoNotEnter ||
-       (EnterCondition == KdbEnterFromUmode && PreviousMode != UserMode) ||
+       (EnterCondition == KdbEnterFromUmode && PreviousMode == KernelMode) ||
        (EnterCondition == KdbEnterFromKmode && PreviousMode != KernelMode))
    {
       EnterConditionMet = FALSE;

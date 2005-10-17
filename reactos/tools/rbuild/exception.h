@@ -139,4 +139,14 @@ public:
 	int ExitCode;
 };
 
+
+class UnsupportedBuildToolException : public Exception
+{
+public:
+	UnsupportedBuildToolException ( const std::string& buildtool,
+	                                const std::string& version );
+	std::string BuildTool;
+	std::string Version;
+};
+
 #endif /* __EXCEPTION_H */

@@ -202,7 +202,7 @@
 
 
 #if ! defined (YYSTYPE) && ! defined (YYSTYPE_IS_DECLARED)
-#line 240 "./parser.y"
+#line 241 "./parser.y"
 typedef union YYSTYPE {
 	string_t	*str;
 	int		num;

@@ -22,6 +22,11 @@
 #define __WINE_NTSTATUS_H
 
 #ifndef WIN32_NO_STATUS
+/*
+ * Debug codes
+ */
+#define DBG_CONTROL_C                    ((NTSTATUS)0x40010005L)
+#define DBG_CONTROL_BREAK                ((NTSTATUS)0x40010008L)
 
 /*
  * Exception codes

@@ -1,6 +1,7 @@
 #ifndef _HELPER_H
 #define _HELPER_H
- 
+
+/* FIXME: clean this mess up and move to NDK */
 #define ROUNDUP(a,b)	((((a)+(b)-1)/(b))*(b))
 #define ROUNDDOWN(a,b)	(((a)/(b))*(b))
 #define ROUND_UP ROUNDUP
@@ -10,8 +11,10 @@
 #define ABS_VALUE(V) (((V) < 0) ? -(V) : (V))
 #define RtlRosMin(X,Y) (((X) < (Y))? (X) : (Y))
 #define RtlRosMin3(X,Y,Z) (((X) < (Y)) ? RtlRosMin(X,Z) : RtlRosMin(Y,Z))
+#ifndef KEBUGCHECK
 #define KEBUGCHECKEX(a,b,c,d,e) DbgPrint("KeBugCheckEx at %s:%i\n",__FILE__,__LINE__), KeBugCheckEx(a,b,c,d,e)
 #define KEBUGCHECK(a) DbgPrint("KeBugCheck at %s:%i\n",__FILE__,__LINE__), KeBugCheck(a)
+#endif
 #define EXPORTED __declspec(dllexport)
 #define IMPORTED __declspec(dllimport)
 #define LIST_FOR_EACH(entry, head) \

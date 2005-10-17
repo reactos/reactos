@@ -38,6 +38,8 @@
 #include "winnls.h"
 #include "commctrl.h"
 #include "comctl32.h"
+#include "uxtheme.h"
+#include "tmschema.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(progress);
@@ -62,6 +64,70 @@ typedef struct
 #define MARQUEE_LEDS      5
 #define ID_MARQUEE_TIMER  1
 
+/* Helper to obtain size of a progress bar chunk ("led"). */
+static inline int get_led_size ( PROGRESS_INFO *infoPtr, LONG style,
+                                 const RECT* rect )
+{
+    HTHEME theme = GetWindowTheme (infoPtr->Self);
+    if (theme)
+    {
+        int chunkSize;
+        if (SUCCEEDED( GetThemeInt( theme, 0, 0, TMT_PROGRESSCHUNKSIZE, &chunkSize )))
+            return chunkSize;
+    }
+
+    if (style & PBS_VERTICAL)
+        return MulDiv (rect->right - rect->left, 2, 3);
+    else
+        return MulDiv (rect->bottom - rect->top, 2, 3);
+}
+
+/* Helper to obtain gap between progress bar chunks */
+static inline int get_led_gap ( PROGRESS_INFO *infoPtr )
+{
+    HTHEME theme = GetWindowTheme (infoPtr->Self);
+    if (theme)
+    {
+        int spaceSize;
+        if (SUCCEEDED( GetThemeInt( theme, 0, 0, TMT_PROGRESSSPACESIZE, &spaceSize )))
+            return spaceSize;
+    }
+
+    return LED_GAP;
+}
+
+/* Get client rect. Takes into account that theming needs no adjustment. */
+static inline void get_client_rect (HWND hwnd, RECT* rect)
+{
+    HTHEME theme = GetWindowTheme (hwnd);
+    GetClientRect (hwnd, rect);
+    if (!theme)
+        InflateRect(rect, -1, -1);
+    else
+    {
+        DWORD dwStyle = GetWindowLongW (hwnd, GWL_STYLE);
+        int part = (dwStyle & PBS_VERTICAL) ? PP_BARVERT : PP_BAR;
+        GetThemeBackgroundContentRect (theme, 0, part, 0, rect, rect);
+    }
+}
+
+/* Compute the extend of the bar */
+static inline int get_bar_size( LONG style, const RECT* rect )
+{
+    if (style & PBS_VERTICAL)
+        return rect->bottom - rect->top;
+    else
+        return rect->right - rect->left;
+}
+
+/* Compute the pixel position of a progress value */
+static inline int get_bar_position( PROGRESS_INFO *infoPtr, LONG style,
+                                    const RECT* rect, INT value )
+{
+    return MulDiv (value - infoPtr->MinVal, get_bar_size (style, rect),
+                      infoPtr->MaxVal - infoPtr->MinVal);
+}
+
 /***********************************************************************
  * PROGRESS_Invalidate
  *
@@ -71,37 +137,214 @@ static void PROGRESS_Invalidate( PROGRESS_INFO *infoPtr, INT old, INT new )
 {
     LONG style = GetWindowLongW (infoPtr->Self, GWL_STYLE);
     RECT rect;
-    int oldPos, newPos, ledWidth;
+    int oldPos, newPos;
+    BOOL barSmooth = (style & PBS_SMOOTH) && !GetWindowTheme (infoPtr->Self);
 
-    GetClientRect (infoPtr->Self, &rect);
-    InflateRect(&rect, -1, -1);
+    get_client_rect( infoPtr->Self, &rect );
+
+    oldPos = get_bar_position( infoPtr, style, &rect, old );
+    newPos = get_bar_position( infoPtr, style, &rect, new );
 
     if (style & PBS_VERTICAL)
     {
-        oldPos = rect.bottom - MulDiv (old - infoPtr->MinVal, rect.bottom - rect.top,
-                                       infoPtr->MaxVal - infoPtr->MinVal);
-        newPos = rect.bottom - MulDiv (new - infoPtr->MinVal, rect.bottom - rect.top,
-                                       infoPtr->MaxVal - infoPtr->MinVal);
-        ledWidth = MulDiv (rect.right - rect.left, 2, 3);
-        rect.top = min( oldPos, newPos );
-        rect.bottom = max( oldPos, newPos );
-        if (!(style & PBS_SMOOTH)) rect.top -= ledWidth;
-        InvalidateRect( infoPtr->Self, &rect, oldPos < newPos );
+        rect.top = rect.bottom - max( oldPos, newPos );
+        rect.bottom = rect.bottom - min( oldPos, newPos );
+        if (!barSmooth) rect.top -=
+            get_led_size (infoPtr, style, &rect) + get_led_gap (infoPtr);
     }
     else
     {
-        oldPos = rect.left + MulDiv (old - infoPtr->MinVal, rect.right - rect.left,
-                                     infoPtr->MaxVal - infoPtr->MinVal);
-        newPos = rect.left + MulDiv (new - infoPtr->MinVal, rect.right - rect.left,
-                                     infoPtr->MaxVal - infoPtr->MinVal);
-        ledWidth = MulDiv (rect.bottom - rect.top, 2, 3);
         rect.left = min( oldPos, newPos );
         rect.right = max( oldPos, newPos );
-        if (!(style & PBS_SMOOTH)) rect.right += ledWidth;
-        InvalidateRect( infoPtr->Self, &rect, oldPos > newPos );
+        if (!barSmooth) rect.right +=
+              get_led_size (infoPtr, style, &rect) + get_led_gap (infoPtr);
+    }
+    InvalidateRect( infoPtr->Self, &rect, oldPos > newPos );
+}
+
+/* Information for a progress bar drawing helper */
+typedef struct tagProgressDrawInfo
+{
+    HDC hdc;
+    RECT rect;
+    HBRUSH hbrBar;
+    HBRUSH hbrBk;
+    int ledW, ledGap;
+    HTHEME theme;
+    RECT bgRect;
+} ProgressDrawInfo;
+
+typedef void (*ProgressDrawProc)(const ProgressDrawInfo* di, int start, int end);
+
+/* draw solid horizontal bar from 'start' to 'end' */
+static void draw_solid_bar_H (const ProgressDrawInfo* di, int start, int end)
+{
+    RECT r;
+    r.left = di->rect.left + start;
+    r.top = di->rect.top;
+    r.right = di->rect.left + end;
+    r.bottom = di->rect.bottom;
+    FillRect (di->hdc, &r, di->hbrBar);
+}
+
+/* draw solid horizontal background from 'start' to 'end' */
+static void draw_solid_bkg_H (const ProgressDrawInfo* di, int start, int end)
+{
+    RECT r;
+    r.left = di->rect.left + start;
+    r.top = di->rect.top;
+    r.right = di->rect.left + end;
+    r.bottom = di->rect.bottom;
+    FillRect (di->hdc, &r, di->hbrBk);
+}
+
+/* draw solid vertical bar from 'start' to 'end' */
+static void draw_solid_bar_V (const ProgressDrawInfo* di, int start, int end)
+{
+    RECT r;
+    r.left = di->rect.left;
+    r.top = di->rect.bottom - end;
+    r.right = di->rect.right;
+    r.bottom = di->rect.bottom - start;
+    FillRect (di->hdc, &r, di->hbrBar);
+}
+
+/* draw solid vertical background from 'start' to 'end' */
+static void draw_solid_bkg_V (const ProgressDrawInfo* di, int start, int end)
+{
+    RECT r;
+    r.left = di->rect.left;
+    r.top = di->rect.bottom - end;
+    r.right = di->rect.right;
+    r.bottom = di->rect.bottom - start;
+    FillRect (di->hdc, &r, di->hbrBk);
+}
+
+/* draw chunky horizontal bar from 'start' to 'end' */
+static void draw_chunk_bar_H (const ProgressDrawInfo* di, int start, int end)
+{
+    RECT r;
+    int right = di->rect.left + end;
+    r.left = di->rect.left + start;
+    r.top = di->rect.top;
+    r.bottom = di->rect.bottom;
+    while (r.left < right)
+    {
+        r.right = min (r.left + di->ledW, right);
+        FillRect (di->hdc, &r, di->hbrBar);
+        r.left = r.right;
+        r.right = min (r.left + di->ledGap, right);
+        FillRect (di->hdc, &r, di->hbrBk);
+        r.left = r.right;
     }
 }
 
+/* draw chunky vertical bar from 'start' to 'end' */
+static void draw_chunk_bar_V (const ProgressDrawInfo* di, int start, int end)
+{
+    RECT r;
+    int top = di->rect.bottom - end;
+    r.left = di->rect.left;
+    r.right = di->rect.right;
+    r.bottom = di->rect.bottom - start;
+    while (r.bottom > top)
+    {
+        r.top = max (r.bottom - di->ledW, top);
+        FillRect (di->hdc, &r, di->hbrBar);
+        r.bottom = r.top;
+        r.top = max (r.bottom - di->ledGap, top);
+        FillRect (di->hdc, &r, di->hbrBk);
+        r.bottom = r.top;
+    }
+}
+
+/* drawing functions for "classic" style */
+static const ProgressDrawProc drawProcClassic[8] = {
+  /* Smooth */
+    /* Horizontal */
+    draw_solid_bar_H, draw_solid_bkg_H,
+    /* Vertical */
+    draw_solid_bar_V, draw_solid_bkg_V,
+  /* Chunky */
+    /* Horizontal */
+    draw_chunk_bar_H, draw_solid_bkg_H,
+    /* Vertical */
+    draw_chunk_bar_V, draw_solid_bkg_V,
+};
+
+/* draw themed horizontal bar from 'start' to 'end' */
+static void draw_theme_bar_H (const ProgressDrawInfo* di, int start, int end)
+{
+    RECT r;
+    int right = di->rect.left + end;
+    r.left = di->rect.left + start;
+    r.top = di->rect.top;
+    r.bottom = di->rect.bottom;
+    while (r.left < right)
+    {
+        r.right = min (r.left + di->ledW, right);
+        DrawThemeBackground (di->theme, di->hdc, PP_CHUNK, 0, &r, NULL);
+        r.left = r.right;
+        r.right = min (r.left + di->ledGap, right);
+        DrawThemeBackground (di->theme, di->hdc, PP_BAR, 0, &di->bgRect, &r);
+        r.left = r.right;
+    }
+}
+
+/* draw themed horizontal bar from 'start' to 'end' */
+static void draw_theme_bar_V (const ProgressDrawInfo* di, int start, int end)
+{
+    RECT r;
+    int top = di->rect.bottom - end;
+    r.left = di->rect.left;
+    r.right = di->rect.right;
+    r.bottom = di->rect.bottom - start;
+    while (r.bottom > top)
+    {
+        r.top = max (r.bottom - di->ledW, top);
+        DrawThemeBackground (di->theme, di->hdc, PP_CHUNKVERT, 0, &r, NULL);
+        r.bottom = r.top;
+        r.top = max (r.bottom - di->ledGap, top);
+        DrawThemeBackground (di->theme, di->hdc, PP_BARVERT, 0, &di->bgRect, &r);
+        r.bottom = r.top;
+    }
+}
+
+/* draw themed horizontal background from 'start' to 'end' */
+static void draw_theme_bkg_H (const ProgressDrawInfo* di, int start, int end)
+{
+    RECT r;
+    r.left = di->rect.left + start;
+    r.top = di->rect.top;
+    r.right = di->rect.left + end;
+    r.bottom = di->rect.bottom;
+    DrawThemeBackground (di->theme, di->hdc, PP_BAR, 0, &di->bgRect, &r);
+}
+
+/* draw themed vertical background from 'start' to 'end' */
+static void draw_theme_bkg_V (const ProgressDrawInfo* di, int start, int end)
+{
+    RECT r;
+    r.left = di->rect.left;
+    r.top = di->rect.bottom - end;
+    r.right = di->rect.right;
+    r.bottom = di->rect.bottom - start;
+    DrawThemeBackground (di->theme, di->hdc, PP_BARVERT, 0, &di->bgRect, &r);
+}
+
+/* drawing functions for themed style */
+static const ProgressDrawProc drawProcThemed[8] = {
+  /* Smooth */
+    /* Horizontal */
+    draw_theme_bar_H, draw_theme_bkg_H,
+    /* Vertical */
+    draw_theme_bar_V, draw_theme_bkg_V,
+  /* Chunky */
+    /* Horizontal */
+    draw_theme_bar_H, draw_theme_bkg_H,
+    /* Vertical */
+    draw_theme_bar_V, draw_theme_bkg_V,
+};
 
 /***********************************************************************
  * PROGRESS_Draw
@@ -109,273 +352,118 @@ static void PROGRESS_Invalidate( PROGRESS_INFO *infoPtr, INT old, INT new )
  */
 static LRESULT PROGRESS_Draw (PROGRESS_INFO *infoPtr, HDC hdc)
 {
-    HBRUSH hbrBar, hbrBk;
-    int rightBar, rightMost, ledWidth;
-    RECT rect;
+    int barSize;
     DWORD dwStyle;
+    BOOL barSmooth;
+    const ProgressDrawProc* drawProcs;
+    ProgressDrawInfo pdi;
 
     TRACE("(infoPtr=%p, hdc=%p)\n", infoPtr, hdc);
 
+    pdi.hdc = hdc;
+    pdi.theme = GetWindowTheme (infoPtr->Self);
+
     /* get the required bar brush */
     if (infoPtr->ColorBar == CLR_DEFAULT)
-        hbrBar = GetSysColorBrush(COLOR_HIGHLIGHT);
+        pdi.hbrBar = GetSysColorBrush(COLOR_HIGHLIGHT);
     else
-        hbrBar = CreateSolidBrush (infoPtr->ColorBar);
+        pdi.hbrBar = CreateSolidBrush (infoPtr->ColorBar);
 
     if (infoPtr->ColorBk == CLR_DEFAULT)
-        hbrBk = GetSysColorBrush(COLOR_3DFACE);
+        pdi.hbrBk = GetSysColorBrush(COLOR_3DFACE);
     else
-        hbrBk = CreateSolidBrush(infoPtr->ColorBk);
-
-    /* get client rectangle */
-    GetClientRect (infoPtr->Self, &rect);
-    FrameRect( hdc, &rect, hbrBk );
-    InflateRect(&rect, -1, -1);
+        pdi.hbrBk = CreateSolidBrush(infoPtr->ColorBk);
 
     /* get the window style */
     dwStyle = GetWindowLongW (infoPtr->Self, GWL_STYLE);
 
-    /* compute extent of progress bar */
-    if (dwStyle & PBS_VERTICAL) {
-        rightBar  = rect.bottom -
-                    MulDiv (infoPtr->CurVal - infoPtr->MinVal,
-	                    rect.bottom - rect.top,
-	                    infoPtr->MaxVal - infoPtr->MinVal);
-        ledWidth  = MulDiv (rect.right - rect.left, 2, 3);
-        rightMost = rect.top;
-    } else {
-        rightBar = rect.left +
-                   MulDiv (infoPtr->CurVal - infoPtr->MinVal,
-	                   rect.right - rect.left,
-	                   infoPtr->MaxVal - infoPtr->MinVal);
-        ledWidth = MulDiv (rect.bottom - rect.top, 2, 3);
-        rightMost = rect.right;
+    /* get client rectangle */
+    GetClientRect (infoPtr->Self, &pdi.rect);
+    if (!pdi.theme) {
+        FrameRect( hdc, &pdi.rect, pdi.hbrBk );
+        InflateRect(&pdi.rect, -1, -1);
+    }
+    else
+    {
+        RECT cntRect;
+        int part = (dwStyle & PBS_VERTICAL) ? PP_BARVERT : PP_BAR;
+        
+        GetThemeBackgroundContentRect (pdi.theme, hdc, part, 0, &pdi.rect, 
+            &cntRect);
+        
+        /* Exclude content rect - content background will be drawn later */
+        ExcludeClipRect (hdc, cntRect.left, cntRect.top, 
+            cntRect.right, cntRect.bottom);
+        if (IsThemeBackgroundPartiallyTransparent (pdi.theme, part, 0))
+            DrawThemeParentBackground (infoPtr->Self, hdc, NULL);
+        DrawThemeBackground (pdi.theme, hdc, part, 0, &pdi.rect, NULL);
+        SelectClipRgn (hdc, NULL);
+        CopyRect (&pdi.rect, &cntRect);
     }
 
-    /* now draw the bar */
-    if (dwStyle & PBS_SMOOTH)
+    /* compute some drawing parameters */
+    barSmooth = (dwStyle & PBS_SMOOTH) && !pdi.theme;
+    drawProcs = &((pdi.theme ? drawProcThemed : drawProcClassic)[(barSmooth ? 0 : 4)
+        + ((dwStyle & PBS_VERTICAL) ? 2 : 0)]);
+    barSize = get_bar_size( dwStyle, &pdi.rect );
+    if (pdi.theme)
     {
-        if (dwStyle & PBS_VERTICAL)
-        {
-            if (dwStyle & PBS_MARQUEE)
-            {
-                INT old_top, old_bottom, ledMStart, leds;
-                old_top = rect.top;
-                old_bottom = rect.bottom;
+        GetWindowRect( infoPtr->Self, &pdi.bgRect );
+        ScreenToClient( infoPtr->Self, (POINT*)&pdi.bgRect );
+        ScreenToClient( infoPtr->Self, (POINT*)&pdi.bgRect.right );
+    }
 
-                leds = rect.bottom - rect.top;
-                ledMStart = (infoPtr->MarqueePos + MARQUEE_LEDS) - leds;
-                
-                if(ledMStart > 0)
-                {
-                    rect.top = max(rect.bottom - ledMStart, old_top);
-                    FillRect(hdc, &rect, hbrBar);
-                    rect.bottom = rect.top;
-                }
-                if(infoPtr->MarqueePos > 0)
-                {
-                    rect.top = max(old_bottom - infoPtr->MarqueePos, old_top);
-                    FillRect(hdc, &rect, hbrBk);
-                    rect.bottom = rect.top;
-                }
-                if(rect.top >= old_top)
-                {
-                    rect.top = max(rect.bottom - MARQUEE_LEDS, old_top);
-                    FillRect(hdc, &rect, hbrBar);
-                    rect.bottom = rect.top;
-                }
-                if(rect.top >= old_top)
-                {
-                    rect.top = old_top;
-                    FillRect(hdc, &rect, hbrBk);
-                }
-            }
-            else
-            {
-                INT old_top = rect.top;
-                rect.top = rightBar;
-                FillRect(hdc, &rect, hbrBar);
-                rect.bottom = rect.top;
-                rect.top = old_top;
-                FillRect(hdc, &rect, hbrBk);
-            }
+    if (!barSmooth)
+        pdi.ledW = get_led_size( infoPtr, dwStyle, &pdi.rect);
+    pdi.ledGap = get_led_gap( infoPtr );
+
+    if (dwStyle & PBS_MARQUEE)
+    {
+        const int ledW = !barSmooth ? (pdi.ledW + pdi.ledGap) : 1;
+        const int leds = (barSize + ledW - 1) / ledW;
+        const int ledMEnd = infoPtr->MarqueePos + MARQUEE_LEDS;
+
+        if (ledMEnd > leds)
+        {
+            /* case 1: the marquee bar extends over the end and wraps around to 
+             * the start */
+            const int gapStart = max((ledMEnd - leds) * ledW, 0);
+            const int gapEnd = min(infoPtr->MarqueePos * ledW, barSize);
+
+            drawProcs[0]( &pdi, 0, gapStart);
+            drawProcs[1]( &pdi, gapStart, gapEnd);
+            drawProcs[0]( &pdi, gapEnd, barSize);
         }
         else
         {
-            if (dwStyle & PBS_MARQUEE)
-            {
-                INT old_left, old_right, ledMStart, leds;
-                old_left = rect.left;
-                old_right = rect.right;
+            /* case 2: the marquee bar is between start and end */
+            const int barStart = infoPtr->MarqueePos * ledW;
+            const int barEnd = min (ledMEnd * ledW, barSize);
 
-                leds = rect.right - rect.left;
-                ledMStart = (infoPtr->MarqueePos + MARQUEE_LEDS) - leds;
-                rect.right = rect.left;
-                
-                if(ledMStart > 0)
-                {
-                    rect.right = min(rect.left + ledMStart, old_right);
-                    FillRect(hdc, &rect, hbrBar);
-                    rect.left = rect.right;
-                }
-                if(infoPtr->MarqueePos > 0)
-                {
-                    rect.right = min(old_left + infoPtr->MarqueePos, old_right);
-                    FillRect(hdc, &rect, hbrBk);
-                    rect.left = rect.right;
-                }
-                if(rect.right < old_right)
-                {
-                    rect.right = min(rect.left + MARQUEE_LEDS, old_right);
-                    FillRect(hdc, &rect, hbrBar);
-                    rect.left = rect.right;
-                }
-                if(rect.right < old_right)
-                {
-                    rect.right = old_right;
-                    FillRect(hdc, &rect, hbrBk);
-                }
-            }
-            else
-            {
-                INT old_right = rect.right;
-                rect.right = rightBar;
-                FillRect(hdc, &rect, hbrBar);
-                rect.left = rect.right;
-                rect.right = old_right;
-                FillRect(hdc, &rect, hbrBk);
-            }
+            drawProcs[1]( &pdi, 0, barStart);
+            drawProcs[0]( &pdi, barStart, barEnd);
+            drawProcs[1]( &pdi, barEnd, barSize);
         }
-    } else {
-        if (dwStyle & PBS_VERTICAL) {
-            if (dwStyle & PBS_MARQUEE)
-            {
-                INT i, old_top, old_bottom, ledMStart, leds;
-                old_top = rect.top;
-                old_bottom = rect.bottom;
-
-                leds = ((rect.bottom - rect.top) + (ledWidth + LED_GAP) - 1) / (ledWidth + LED_GAP);
-                ledMStart = (infoPtr->MarqueePos + MARQUEE_LEDS) - leds;
-                
-                while(ledMStart > 0)
-                {
-                    rect.top = max(rect.bottom - ledWidth, old_top);
-                    FillRect(hdc, &rect, hbrBar);
-                    rect.bottom = rect.top;
-                    rect.top -= LED_GAP;
-                    if (rect.top <= old_top) break;
-                    FillRect(hdc, &rect, hbrBk);
-                    rect.bottom = rect.top;
-                    ledMStart--;
-                }
-                if(infoPtr->MarqueePos > 0)
-                {
-                    rect.top = max(old_bottom - (infoPtr->MarqueePos * (ledWidth + LED_GAP)), old_top);
-                    FillRect(hdc, &rect, hbrBk);
-                    rect.bottom = rect.top;
-                }
-                for(i = 0; i < MARQUEE_LEDS && rect.top >= old_top; i++)
-                {
-                    rect.top = max(rect.bottom - ledWidth, old_top);
-                    FillRect(hdc, &rect, hbrBar);
-                    rect.bottom = rect.top;
-                    rect.top -= LED_GAP;
-                    if (rect.top <= old_top) break;
-                    FillRect(hdc, &rect, hbrBk);
-                    rect.bottom = rect.top;
-                }
-                if(rect.top >= old_top)
-                {
-                    rect.top = old_top;
-                    FillRect(hdc, &rect, hbrBk);
-                }
-            }
-            else
-            {
-                while(rect.bottom > rightBar) {
-                    rect.top = rect.bottom - ledWidth;
-                    if (rect.top < rightMost)
-                        rect.top = rightMost;
-                    FillRect(hdc, &rect, hbrBar);
-                    rect.bottom = rect.top;
-                    rect.top -= LED_GAP;
-                    if (rect.top <= rightBar) break;
-                    FillRect(hdc, &rect, hbrBk);
-                    rect.bottom = rect.top;
-                }
-            }
-            rect.top = rightMost;
-            FillRect(hdc, &rect, hbrBk);
-        } else {
-            if (dwStyle & PBS_MARQUEE)
-            {
-                INT i, old_right, old_left, ledMStart, leds;
-                old_left = rect.left;
-                old_right = rect.right;
-
-                leds = ((rect.right - rect.left) + ledWidth - 1) / (ledWidth + LED_GAP);
-                ledMStart = (infoPtr->MarqueePos + MARQUEE_LEDS) - leds;
-                rect.right = rect.left;
-                
-                while(ledMStart > 0)
-                {
-                    rect.right = min(rect.left + ledWidth, old_right);
-                    FillRect(hdc, &rect, hbrBar);
-                    rect.left = rect.right;
-                    rect.right += LED_GAP;
-                    if (rect.right > old_right) break;
-                    FillRect(hdc, &rect, hbrBk);
-                    rect.left = rect.right;
-                    ledMStart--;
-                }
-                if(infoPtr->MarqueePos > 0)
-                {
-                    rect.right = min(old_left + (infoPtr->MarqueePos * (ledWidth + LED_GAP)), old_right);
-                    FillRect(hdc, &rect, hbrBk);
-                    rect.left = rect.right;
-                }
-                for(i = 0; i < MARQUEE_LEDS && rect.right < old_right; i++)
-                {
-                    rect.right = min(rect.left + ledWidth, old_right);
-                    FillRect(hdc, &rect, hbrBar);
-                    rect.left = rect.right;
-                    rect.right += LED_GAP;
-                    if (rect.right > old_right) break;
-                    FillRect(hdc, &rect, hbrBk);
-                    rect.left = rect.right;
-                }
-                if(rect.right < old_right)
-                {
-                    rect.right = old_right;
-                    FillRect(hdc, &rect, hbrBk);
-                }
-            }
-            else
-            {
-                while(rect.left < rightBar) {
-                    rect.right = rect.left + ledWidth;
-                    if (rect.right > rightMost)
-                        rect.right = rightMost;
-                    FillRect(hdc, &rect, hbrBar);
-                    rect.left = rect.right;
-                    rect.right += LED_GAP;
-                    if (rect.right >= rightBar) break;
-                    FillRect(hdc, &rect, hbrBk);
-                    rect.left = rect.right;
-                }
-                rect.right = rightMost;
-                FillRect(hdc, &rect, hbrBk);
-            }
+    }
+    else
+    {
+        int barEnd = get_bar_position( infoPtr, dwStyle, &pdi.rect,
+            infoPtr->CurVal);
+        if (!barSmooth)
+        {
+            const int ledW = pdi.ledW + pdi.ledGap;
+            barEnd = min (((barEnd + ledW - 1) / ledW) * ledW, barSize);
         }
+        drawProcs[0]( &pdi, 0, barEnd);
+        drawProcs[1]( &pdi, barEnd, barSize);
     }
 
     /* delete bar brush */
-    if (infoPtr->ColorBar != CLR_DEFAULT) DeleteObject (hbrBar);
-    if (infoPtr->ColorBk != CLR_DEFAULT) DeleteObject (hbrBk);
+    if (infoPtr->ColorBar != CLR_DEFAULT) DeleteObject (pdi.hbrBar);
+    if (infoPtr->ColorBk != CLR_DEFAULT) DeleteObject (pdi.hbrBk);
 
     return 0;
 }
-
 
 /***********************************************************************
  * PROGRESS_Paint
@@ -404,39 +492,19 @@ static LRESULT PROGRESS_Timer (PROGRESS_INFO *infoPtr, INT idTimer)
         LONG style = GetWindowLongW (infoPtr->Self, GWL_STYLE);
         RECT rect;
         int ledWidth, leds;
+        HTHEME theme = GetWindowTheme (infoPtr->Self);
+        BOOL barSmooth = (style & PBS_SMOOTH) && !theme;
 
-        GetClientRect (infoPtr->Self, &rect);
-        InflateRect(&rect, -1, -1);
+        get_client_rect (infoPtr->Self, &rect);
 
-        if(!(style & PBS_SMOOTH))
-        {
-            int width, height;
-
-            if(style & PBS_VERTICAL)
-            {
-                width = rect.bottom - rect.top;
-                height = rect.right - rect.left;
-            }
-            else
-            {
-                height = rect.bottom - rect.top;
-                width = rect.right - rect.left;
-            }
-            ledWidth = MulDiv (height, 2, 3);
-            leds = (width + ledWidth - 1) / (ledWidth + LED_GAP);
-        }
+        if(!barSmooth)
+            ledWidth = get_led_size( infoPtr, style, &rect ) + 
+                get_led_gap( infoPtr );
         else
-        {
             ledWidth = 1;
-            if(style & PBS_VERTICAL)
-            {
-                leds = rect.bottom - rect.top;
-            }
-            else
-            {
-                leds = rect.right - rect.left;
-            }
-        }
+
+        leds = (get_bar_size( style, &rect ) + ledWidth - 1) / 
+            ledWidth;
 
         /* increment the marquee progress */
         if(++infoPtr->MarqueePos >= leds)
@@ -444,7 +512,8 @@ static LRESULT PROGRESS_Timer (PROGRESS_INFO *infoPtr, INT idTimer)
             infoPtr->MarqueePos = 0;
         }
 
-        InvalidateRect(infoPtr->Self, &rect, TRUE);
+        InvalidateRect(infoPtr->Self, &rect, FALSE);
+        UpdateWindow(infoPtr->Self);
     }
     return 0;
 }
@@ -496,6 +565,8 @@ static LRESULT WINAPI ProgressWindowProc(HWND hwnd, UINT message,
                                          WPARAM wParam, LPARAM lParam)
 {
     PROGRESS_INFO *infoPtr;
+    static const WCHAR themeClass[] = {'P','r','o','g','r','e','s','s',0};
+    HTHEME theme;
 
     TRACE("hwnd=%p msg=%04x wparam=%x lParam=%lx\n", hwnd, message, wParam, lParam);
 
@@ -508,8 +579,11 @@ static LRESULT WINAPI ProgressWindowProc(HWND hwnd, UINT message,
     case WM_CREATE:
     {
 	DWORD dwExStyle = GetWindowLongW (hwnd, GWL_EXSTYLE);
+        
+        theme = OpenThemeData (hwnd, themeClass);
+
 	dwExStyle &= ~(WS_EX_CLIENTEDGE | WS_EX_WINDOWEDGE);
-	dwExStyle |= WS_EX_STATICEDGE;
+	if (!theme) dwExStyle |= WS_EX_STATICEDGE;
         SetWindowLongW (hwnd, GWL_EXSTYLE, dwExStyle);
 	/* Force recalculation of a non-client area */
 	SetWindowPos(hwnd, 0, 0, 0, 0, 0,
@@ -531,6 +605,7 @@ static LRESULT WINAPI ProgressWindowProc(HWND hwnd, UINT message,
         infoPtr->ColorBar = CLR_DEFAULT;
         infoPtr->ColorBk = CLR_DEFAULT;
         infoPtr->Font = 0;
+
         TRACE("Progress Ctrl creation, hwnd=%p\n", hwnd);
         return 0;
     }
@@ -539,7 +614,12 @@ static LRESULT WINAPI ProgressWindowProc(HWND hwnd, UINT message,
         TRACE("Progress Ctrl destruction, hwnd=%p\n", hwnd);
         Free (infoPtr);
         SetWindowLongPtrW(hwnd, 0, 0);
+        theme = GetWindowTheme (hwnd);
+        CloseThemeData (theme);
         return 0;
+
+    case WM_ERASEBKGND:
+        return 1;
 
     case WM_GETFONT:
         return (LRESULT)infoPtr->Font;
@@ -553,6 +633,25 @@ static LRESULT WINAPI ProgressWindowProc(HWND hwnd, UINT message,
     case WM_TIMER:
         return PROGRESS_Timer (infoPtr, (INT)wParam);
 
+    case WM_THEMECHANGED:
+    {
+        DWORD dwExStyle = GetWindowLongW (hwnd, GWL_EXSTYLE);
+        
+        theme = GetWindowTheme (hwnd);
+        CloseThemeData (theme);
+        theme = OpenThemeData (hwnd, themeClass);
+        
+        /* WS_EX_STATICEDGE disappears when the control is themed */
+        if (theme)
+            dwExStyle &= ~WS_EX_STATICEDGE;
+        else
+            dwExStyle |= WS_EX_STATICEDGE;
+        SetWindowLongW (hwnd, GWL_EXSTYLE, dwExStyle);
+        
+        InvalidateRect (hwnd, NULL, FALSE);
+        return 0;
+    }
+
     case PBM_DELTAPOS:
     {
 	INT oldVal;
@@ -562,6 +661,7 @@ static LRESULT WINAPI ProgressWindowProc(HWND hwnd, UINT message,
 	    PROGRESS_CoercePos (infoPtr);
 	    TRACE("PBM_DELTAPOS: current pos changed from %d to %d\n", oldVal, infoPtr->CurVal);
             PROGRESS_Invalidate( infoPtr, oldVal, infoPtr->CurVal );
+            UpdateWindow( infoPtr->Self );
         }
         return oldVal;
     }
@@ -575,6 +675,7 @@ static LRESULT WINAPI ProgressWindowProc(HWND hwnd, UINT message,
 	    PROGRESS_CoercePos(infoPtr);
 	    TRACE("PBM_SETPOS: current pos changed from %d to %d\n", oldVal, infoPtr->CurVal);
             PROGRESS_Invalidate( infoPtr, oldVal, infoPtr->CurVal );
+            UpdateWindow( infoPtr->Self );
         }
         return oldVal;
     }
@@ -601,6 +702,7 @@ static LRESULT WINAPI ProgressWindowProc(HWND hwnd, UINT message,
 	{
 	    TRACE("PBM_STEPIT: current pos changed from %d to %d\n", oldVal, infoPtr->CurVal);
             PROGRESS_Invalidate( infoPtr, oldVal, infoPtr->CurVal );
+            UpdateWindow( infoPtr->Self );
 	}
         return oldVal;
     }

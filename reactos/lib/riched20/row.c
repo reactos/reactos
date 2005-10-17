@@ -116,10 +116,14 @@ ME_RowNumberFromCharOfs(ME_TextEditor *editor, int nOfs)
   }
   if (item)
   {
+    ME_DisplayItem *next_para = item->member.para.next_para;
+    
     nOfs -= item->member.para.nCharOfs;
     item = ME_FindItemFwd(item, diRun);
     while ((item = ME_FindItemFwd(item, diStartRowOrParagraph)) != NULL)
     {
+      if (item == next_para)
+        break;
       item = ME_FindItemFwd(item, diRun);
       if (item->member.run.nCharOfs > nOfs)
         break;

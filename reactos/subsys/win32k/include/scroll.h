@@ -16,7 +16,7 @@ typedef struct _WINDOW_SCROLLINFO
 #define SBOBJ_TO_SBID(Obj)	((Obj) - OBJID_HSCROLL)
 #define SBID_IS_VALID(id)	(id == SB_HORZ || id == SB_VERT || id == SB_CTL)
 
-BOOL FASTCALL IntCreateScrollBars(PWINDOW_OBJECT Window);
+BOOL FASTCALL co_IntCreateScrollBars(PWINDOW_OBJECT Window);
 BOOL FASTCALL IntDestroyScrollBars(PWINDOW_OBJECT Window);
 
 #endif /* _WIN32K_SCROLL_H */

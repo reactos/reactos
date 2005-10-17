@@ -18,7 +18,7 @@ VIS_ComputeVisibleRegion(PWINDOW_OBJECT Window, BOOLEAN ClientArea,
    BOOLEAN ClipChildren, BOOLEAN ClipSiblings);
 
 VOID FASTCALL
-VIS_WindowLayoutChanged(PWINDOW_OBJECT Window, HRGN UncoveredRgn);
+co_VIS_WindowLayoutChanged(PWINDOW_OBJECT Window, HRGN UncoveredRgn);
 
 #endif /* ! defined(_WIN32K_VIS_H) */
 

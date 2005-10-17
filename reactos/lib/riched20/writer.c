@@ -588,7 +588,7 @@ ME_StreamOutRTFText(ME_TextEditor *editor, WCHAR *text, LONG nChars)
             return FALSE;
           pos = i;
         }
-      if (!pos)
+      if (pos < nBytes)
         if (!ME_StreamOutMove(editor, buffer + pos, nBytes - pos))
           return FALSE;
       pos = 0;
@@ -681,6 +681,8 @@ ME_StreamOutRTF(ME_TextEditor *editor, int nStart, int nChars, int dwFormat)
           if (!ME_StreamOutPrint(editor, "\r\n\\par"))
             return FALSE;
           nChars--;
+          if (editor->bEmulateVersion10 && nChars)
+            nChars--;
         } else {
           int nEnd;
           
@@ -790,7 +792,12 @@ ME_StreamOut(ME_TextEditor *editor, DWORD dwFormat, EDITSTREAM *stream)
     nTo = -1;
   }
   if (nTo == -1)
+  {
     nTo = ME_GetTextLength(editor);
+    /* Generate an end-of-paragraph at the end of SCF_ALL RTF output */
+    if (dwFormat & SF_RTF)
+      nTo++;
+  }
   TRACE("from %d to %d\n", nStart, nTo);
   
   if (dwFormat & SF_RTF)

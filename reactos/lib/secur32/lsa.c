@@ -75,18 +75,18 @@ LsaCallAuthenticationPackage(HANDLE LsaHandle,
 {
    PLSASS_REQUEST Request;
    PLSASS_REPLY Reply;
-   UCHAR RawRequest[MAX_MESSAGE_DATA];
-   UCHAR RawReply[MAX_MESSAGE_DATA];
+   LSASS_REQUEST RawRequest;
+   LSASS_REPLY RawReply;
    NTSTATUS Status;
    ULONG OutBufferSize;
 
-   Request = (PLSASS_REQUEST)RawRequest;
-   Reply = (PLSASS_REPLY)RawReply;
+   Request = (PLSASS_REQUEST)&RawRequest;
+   Reply = (PLSASS_REPLY)&RawReply;
    
    Request->Header.u1.s1.DataLength = sizeof(LSASS_REQUEST) + SubmitBufferLength -
-     LPC_MESSAGE_BASE_SIZE;
+     sizeof(PORT_MESSAGE);
    Request->Header.u1.s1.TotalLength = 
-     Request->Header.u1.s1.DataLength + LPC_MESSAGE_BASE_SIZE;
+     Request->Header.u1.s1.DataLength + sizeof(PORT_MESSAGE);
    Request->Type = LSASS_REQUEST_CALL_AUTHENTICATION_PACKAGE;
    Request->d.CallAuthenticationPackageRequest.AuthenticationPackage =
      AuthenticationPackage;
@@ -142,14 +142,14 @@ LsaLookupAuthenticationPackage(HANDLE LsaHandle,
 {
    NTSTATUS Status;
    PLSASS_REQUEST Request;
-   UCHAR RawRequest[MAX_MESSAGE_DATA];
+   LSASS_REQUEST RawRequest;
    LSASS_REPLY Reply;
    
-   Request = (PLSASS_REQUEST)RawRequest;
+   Request = (PLSASS_REQUEST)&RawRequest;
    Request->Header.u1.s1.DataLength = sizeof(LSASS_REQUEST) + PackageName->Length -
-     LPC_MESSAGE_BASE_SIZE;
+     sizeof(PORT_MESSAGE);
    Request->Header.u1.s1.TotalLength = Request->Header.u1.s1.DataLength +
-     LPC_MESSAGE_BASE_SIZE;
+     sizeof(PORT_MESSAGE);
    Request->Type = LSASS_REQUEST_LOOKUP_AUTHENTICATION_PACKAGE;
    
    Status = NtRequestWaitReplyPort(LsaHandle,
@@ -192,23 +192,23 @@ LsaLogonUser(HANDLE LsaHandle,
    ULONG RequestLength;
    ULONG CurrentLength;
    PLSASS_REQUEST Request;
-   UCHAR RawMessage[MAX_MESSAGE_DATA];
+   LSASS_REQUEST RawMessage;
    PLSASS_REPLY Reply;
-   UCHAR RawReply[MAX_MESSAGE_DATA];
+   LSASS_REPLY RawReply;
    NTSTATUS Status;
    
-   RequestLength = sizeof(LSASS_REQUEST) - LPC_MESSAGE_BASE_SIZE;
+   RequestLength = sizeof(LSASS_REQUEST) - sizeof(PORT_MESSAGE);
    RequestLength = RequestLength + (OriginName->Length * sizeof(WCHAR));
    RequestLength = RequestLength + AuthenticationInformationLength;
    RequestLength = RequestLength + 
      (LocalGroups->GroupCount * sizeof(SID_AND_ATTRIBUTES));
    
    CurrentLength = 0;
-   Request = (PLSASS_REQUEST)RawMessage;
+   Request = (PLSASS_REQUEST)&RawMessage;
    
    Request->d.LogonUserRequest.OriginNameLength = OriginName->Length;
-   Request->d.LogonUserRequest.OriginName = (PWSTR)&RawMessage[CurrentLength];
-   memcpy((PWSTR)&RawMessage[CurrentLength],
+   Request->d.LogonUserRequest.OriginName = (PWSTR)&RawMessage + CurrentLength;
+   memcpy((PWSTR)&RawMessage + CurrentLength,
 	  OriginName->Buffer,
 	  OriginName->Length * sizeof(WCHAR));
    CurrentLength = CurrentLength + (OriginName->Length * sizeof(WCHAR));
@@ -219,28 +219,28 @@ LsaLogonUser(HANDLE LsaHandle,
      AuthenticationPackage;
    
    Request->d.LogonUserRequest.AuthenticationInformation = 
-     (PVOID)&RawMessage[CurrentLength];
+     (PVOID)((ULONG_PTR)&RawMessage + CurrentLength);
    Request->d.LogonUserRequest.AuthenticationInformationLength =
      AuthenticationInformationLength;
-   memcpy((PVOID)&RawMessage[CurrentLength],
+   memcpy((PVOID)((ULONG_PTR)&RawMessage + CurrentLength),
 	  AuthenticationInformation,
 	  AuthenticationInformationLength);
    CurrentLength = CurrentLength + AuthenticationInformationLength;
    
    Request->d.LogonUserRequest.LocalGroupsCount = LocalGroups->GroupCount;
    Request->d.LogonUserRequest.LocalGroups = 
-     (PSID_AND_ATTRIBUTES)&RawMessage[CurrentLength];
-   memcpy((PSID_AND_ATTRIBUTES)&RawMessage[CurrentLength],
+     (PSID_AND_ATTRIBUTES)&RawMessage + CurrentLength;
+   memcpy((PSID_AND_ATTRIBUTES)&RawMessage + CurrentLength,
 	  LocalGroups->Groups,
 	  LocalGroups->GroupCount * sizeof(SID_AND_ATTRIBUTES));
    
    Request->d.LogonUserRequest.SourceContext = *SourceContext;
    
    Request->Type = LSASS_REQUEST_LOGON_USER;
-   Request->Header.u1.s1.DataLength = RequestLength - LPC_MESSAGE_BASE_SIZE;
-   Request->Header.u1.s1.TotalLength = RequestLength + LPC_MESSAGE_BASE_SIZE;
+   Request->Header.u1.s1.DataLength = RequestLength - sizeof(PORT_MESSAGE);
+   Request->Header.u1.s1.TotalLength = RequestLength + sizeof(PORT_MESSAGE);
    
-   Reply = (PLSASS_REPLY)RawReply;
+   Reply = (PLSASS_REPLY)&RawReply;
    
    Status = NtRequestWaitReplyPort(LsaHandle,
 				   &Request->Header,
@@ -304,7 +304,7 @@ LsaRegisterLogonProcess(PLSA_STRING LsaLogonProcessName,
    
    Request.Type = LSASS_REQUEST_REGISTER_LOGON_PROCESS;
    Request.Header.u1.s1.DataLength = sizeof(LSASS_REQUEST) - 
-     LPC_MESSAGE_BASE_SIZE;
+     sizeof(PORT_MESSAGE);
    Request.Header.u1.s1.TotalLength = sizeof(LSASS_REQUEST);
    
    Request.d.RegisterLogonProcessRequest.Length = LsaLogonProcessName->Length;

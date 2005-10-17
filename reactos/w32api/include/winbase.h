@@ -504,6 +504,9 @@ extern "C" {
 #define QUERY_ACTCTX_FLAG_USE_ACTIVE_ACTCTX 0x00000004
 #define QUERY_ACTCTX_FLAG_ACTCTX_IS_HMODULE 0x00000008
 #define QUERY_ACTCTX_FLAG_ACTCTX_IS_ADDRESS 0x00000010
+#if (_WIN32_WINNT >= 0x0600)
+#define SYMLINK_FLAG_DIRECTORY 0x1
+#endif
 #endif /* (_WIN32_WINNT >= 0x0501) */
 #if (_WIN32_WINNT >= 0x0500)
 #define REPLACEFILE_WRITE_THROUGH 0x00000001
@@ -2090,6 +2093,7 @@ typedef PCACTCTXW PCACTCTX;
 #define ReportEvent ReportEventW
 #define SearchPath SearchPathW
 #define SetComputerName SetComputerNameW
+#define SetComputerNameEx SetComputerNameExW
 #define SetCurrentDirectory SetCurrentDirectoryW
 #define SetDefaultCommConfig SetDefaultCommConfigW
 #if (_WIN32_WINNT >= 0x0502)
@@ -2288,6 +2292,7 @@ typedef ENUMRESTYPEPROCA ENUMRESTYPEPROC;
 #define ReportEvent ReportEventA
 #define SearchPath SearchPathA
 #define SetComputerName SetComputerNameA
+#define SetComputerNameEx SetComputerNameExA
 #define SetCurrentDirectory SetCurrentDirectoryA
 #define SetDefaultCommConfig SetDefaultCommConfigA
 #if (_WIN32_WINNT >= 0x0502)

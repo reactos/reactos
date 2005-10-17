@@ -60,10 +60,11 @@ static UINT CREATE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
 {
     MSICREATEVIEW *cv = (MSICREATEVIEW*)view;
     column_info *col;
-    UINT r, nField, row, table_val, column_val;
+    UINT r, nField;
     static const WCHAR szTables[] =  { '_','T','a','b','l','e','s',0 };
     static const WCHAR szColumns[] = { '_','C','o','l','u','m','n','s',0 };
     MSIVIEW *tv = NULL;
+    MSIRECORD *rec;
 
     TRACE("%p Table %s (%s)\n", cv, debugstr_w(cv->name), 
           cv->bIsTemp?"temporary":"permanent");
@@ -71,12 +72,6 @@ static UINT CREATE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
     /* only add tables that don't exist already */
     if( TABLE_Exists(cv->db, cv->name ) )
         return ERROR_BAD_QUERY_SYNTAX;
-
-    /* add the name to the _Tables table */
-    table_val = msi_addstringW( cv->db->strings, 0, cv->name, -1, 1 );
-    TRACE("New string %s -> %d\n", debugstr_w( cv->name ), table_val );
-    if( table_val < 0 )
-        return ERROR_FUNCTION_FAILED;
 
     r = TABLE_CreateView( cv->db, szTables, &tv );
     TRACE("CreateView returned %x\n", r);
@@ -86,19 +81,25 @@ static UINT CREATE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
     r = tv->ops->execute( tv, 0 );
     TRACE("tv execute returned %x\n", r);
     if( r )
-        return r;
+        goto err;
 
-    row = -1;
-    r = tv->ops->insert_row( tv, &row );
+    rec = MSI_CreateRecord( 1 );
+    if( !rec )
+        goto err;
+
+    r = MSI_RecordSetStringW( rec, 1, cv->name );
+    if( r )
+        goto err;
+
+    r = tv->ops->insert_row( tv, rec );
     TRACE("insert_row returned %x\n", r);
     if( r )
         goto err;
 
-    r = tv->ops->set_int( tv, row, 1, table_val );
-    if( r )
-        goto err;
     tv->ops->delete( tv );
     tv = NULL;
+
+    msiobj_release( &rec->hdr );
 
     /* add each column to the _Columns table */
     r = TABLE_CreateView( cv->db, szColumns, &tv );
@@ -108,7 +109,15 @@ static UINT CREATE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
     r = tv->ops->execute( tv, 0 );
     TRACE("tv execute returned %x\n", r);
     if( r )
-        return r;
+        goto err;
+
+    rec = MSI_CreateRecord( 4 );
+    if( !rec )
+        goto err;
+
+    r = MSI_RecordSetStringW( rec, 1, cv->name );
+    if( r )
+        goto err;
 
     /*
      * need to set the table, column number, col name and type
@@ -117,36 +126,21 @@ static UINT CREATE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
     nField = 1;
     for( col = cv->col_info; col; col = col->next )
     {
-        row = -1;
-        r = tv->ops->insert_row( tv, &row );
+        r = MSI_RecordSetInteger( rec, 2, nField );
         if( r )
             goto err;
 
-        column_val = msi_addstringW( cv->db->strings, 0, col->column, -1, 1 );
-        TRACE("New string %s -> %d\n", debugstr_w( col->column ), column_val );
-        if( column_val < 0 )
-            break;
-
-        /* add the string again here so we increase the reference count */
-        table_val = msi_addstringW( cv->db->strings, 0, cv->name, -1, 1 );
-        if( table_val < 0 )
-            break;
-
-        r = tv->ops->set_int( tv, row, 1, table_val );
+        r = MSI_RecordSetStringW( rec, 3, col->column );
         if( r )
-            break;
+            goto err;
 
-        r = tv->ops->set_int( tv, row, 2, 0x8000|nField );
+        r = MSI_RecordSetInteger( rec, 4, col->type );
         if( r )
-            break;
+            goto err;
 
-        r = tv->ops->set_int( tv, row, 3, column_val );
+        r = tv->ops->insert_row( tv, rec );
         if( r )
-            break;
-
-        r = tv->ops->set_int( tv, row, 4, 0x8000|col->type );
-        if( r )
-            break;
+            goto err;
 
         nField++;
     }

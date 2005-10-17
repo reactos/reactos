@@ -22,17 +22,6 @@
 		<file>putch.c</file>
 		<file>ungetch.c</file>
 	</directory>
-	<directory name="ctype">
-		<file>ctype.c</file>
-		<file>isalnum.c</file>
-		<file>isascii.c</file>
-		<file>iscntrl.c</file>
-		<file>isgraph.c</file>
-		<file>isprint.c</file>
-		<file>ispunct.c</file>
-		<file>isupper.c</file>
-		<file>isctype.c</file>
-	</directory>
 	<directory name="direct">
 		<file>chdir.c</file>
 		<file>chdrive.c</file>

@@ -21,7 +21,7 @@ wcsnlen (
 	)
 {
   UINT i = 0;
-  while( lpsz[i] && i < ucchMax ) i++;
+  while( i < ucchMax && lpsz[i] ) i++;
   return i;
 }
 
@@ -37,7 +37,7 @@ strnlen (
 	)
 {
   UINT i = 0;
-  while( lpsz[i] && i < uiMax ) i++;
+  while( i < uiMax && lpsz[i] ) i++;
   return i;
 }
 

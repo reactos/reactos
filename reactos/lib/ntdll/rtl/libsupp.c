@@ -1,13 +1,12 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            lib/ntdll/rtl/libsup.c
  * PURPOSE:         Rtl library support routines
  * PROGRAMMER:      Gunnar Dalsnes
- * UPDATE HISTORY:
- *
  */
+
+/* INCLUDES *****************************************************************/
 
 #include <ntdll.h>
 #define NDEBUG
@@ -16,13 +15,86 @@
 /* FUNCTIONS ***************************************************************/
 
 KPROCESSOR_MODE
+STDCALL
 RtlpGetMode()
 {
    return UserMode;
 }
 
+PPEB
+STDCALL
+RtlpCurrentPeb(VOID)
+{
+    return NtCurrentPeb();
+}
+
+
+/*
+ * @implemented
+ */
+VOID STDCALL
+RtlAcquirePebLock(VOID)
+{
+   PPEB Peb = NtCurrentPeb ();
+   Peb->FastPebLockRoutine (Peb->FastPebLock);
+}
+
+
+/*
+ * @implemented
+ */
+VOID STDCALL
+RtlReleasePebLock(VOID)
+{
+   PPEB Peb = NtCurrentPeb ();
+   Peb->FastPebUnlockRoutine (Peb->FastPebLock);
+}
+
+/*
+* @implemented
+*/
+ULONG
+STDCALL
+RtlGetNtGlobalFlags(VOID)
+{
+	PPEB pPeb = NtCurrentPeb();
+	return pPeb->NtGlobalFlag;
+}
+
+NTSTATUS
+STDCALL
+RtlDeleteHeapLock(
+    PRTL_CRITICAL_SECTION CriticalSection)
+{
+    return RtlDeleteCriticalSection(CriticalSection);
+}
+
+NTSTATUS
+STDCALL
+RtlEnterHeapLock(
+    PRTL_CRITICAL_SECTION CriticalSection)
+{
+    return RtlEnterCriticalSection(CriticalSection);
+}
+
+NTSTATUS
+STDCALL
+RtlInitializeHeapLock(
+    PRTL_CRITICAL_SECTION CriticalSection)
+{
+     return RtlInitializeCriticalSection(CriticalSection );
+}
+
+NTSTATUS
+STDCALL
+RtlLeaveHeapLock(
+    PRTL_CRITICAL_SECTION CriticalSection)
+{
+    return RtlLeaveCriticalSection(CriticalSection );
+}
 
 PVOID
+STDCALL
 RtlpAllocateMemory(UINT Bytes,
                    ULONG Tag)
 {
@@ -35,6 +107,7 @@ RtlpAllocateMemory(UINT Bytes,
 
 
 VOID
+STDCALL
 RtlpFreeMemory(PVOID Mem,
                ULONG Tag)
 {

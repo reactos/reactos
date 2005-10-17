@@ -159,7 +159,7 @@ static VOID STDCALL
 IopLogWorker (PVOID Parameter)
 {
   PERROR_LOG_ENTRY LogEntry;
-  PLPC_MAX_MESSAGE Request;
+  PPORT_MESSAGE Request;
   PIO_ERROR_LOG_MESSAGE Message;
   PIO_ERROR_LOG_PACKET Packet;
   KIRQL Irql;
@@ -249,7 +249,7 @@ IopLogWorker (PVOID Parameter)
 
       /* Allocate request buffer */
       Request = ExAllocatePool (NonPagedPool,
-				sizeof(LPC_MAX_MESSAGE));
+				sizeof(PORT_MESSAGE) + PORT_MAXIMUM_MESSAGE_LENGTH);
       if (Request == NULL)
 	{
 	  DPRINT ("Failed to allocate request buffer!\n");
@@ -264,7 +264,7 @@ IopLogWorker (PVOID Parameter)
 	}
 
       /* Initialize the log message */
-      Message = (PIO_ERROR_LOG_MESSAGE)Request->Data;
+      Message = (PIO_ERROR_LOG_MESSAGE)(Request + 1);
       Message->Type = IO_TYPE_ERROR_MESSAGE;
       Message->Size =
 	sizeof(IO_ERROR_LOG_MESSAGE) - sizeof(IO_ERROR_LOG_PACKET) +
@@ -285,13 +285,13 @@ IopLogWorker (PVOID Parameter)
 
       DPRINT ("SequenceNumber %lx\n", Packet->SequenceNumber);
 
-      Request->Header.u1.s1.DataLength = Message->Size;
-      Request->Header.u1.s1.TotalLength =
-	Request->Header.u1.s1.DataLength + sizeof(PPORT_MESSAGE);
+      Request->u1.s1.DataLength = Message->Size;
+      Request->u1.s1.TotalLength =
+	Request->u1.s1.DataLength + sizeof(PPORT_MESSAGE);
 
       /* Send the error message to the log port */
       Status = ZwRequestPort (IopLogPort,
-			      &Request->Header);
+			      Request);
 
       /* Release request buffer */
       ExFreePool (Request);

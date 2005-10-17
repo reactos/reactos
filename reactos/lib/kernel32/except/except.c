@@ -164,8 +164,13 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
 
       /* Print a stack trace. */
       DbgPrint("Unhandled exception\n");
-      DbgPrint("Address:\n");
-      DbgPrint("   %8x   %s\n",
+      DbgPrint("ExceptionCode:    %8x\n", ExceptionInfo->ExceptionRecord->ExceptionCode);
+      if (ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
+          ExceptionInfo->ExceptionRecord->NumberParameters == 2)
+      {
+         DbgPrint("Faulting Address: %8x\n", ExceptionInfo->ExceptionRecord->ExceptionInformation[1]);
+      }
+      DbgPrint("Address:          %8x   %s\n",
          ExceptionInfo->ExceptionRecord->ExceptionAddress,
          _module_name_from_addr(ExceptionInfo->ExceptionRecord->ExceptionAddress, &StartAddr, szMod, sizeof(szMod)));
       _dump_context ( ExceptionInfo->ContextRecord );

@@ -18,23 +18,9 @@
 
 typedef struct 
 {
-	DDHAL_DDCALLBACKS DdMain;
-    DDHAL_DDSURFACECALLBACKS DdSurface;
-    DDHAL_DDPALETTECALLBACKS DdPalette;
-    D3DHAL_CALLBACKS D3dMain;
-    DDHAL_DDEXEBUFCALLBACKS	D3dBufferCallbacks;
-
-} DRIVERCALLBACKS;
-
-typedef struct 
-{
 	IDirectDraw7Vtbl* lpVtbl;
-	DRIVERCALLBACKS DriverCallbacks;
-    DWORD ref;
-
+	DDRAWI_DIRECTDRAW_GBL DirectDrawGlobal;
 	DDHALINFO HalInfo;	
-    D3DHAL_GLOBALDRIVERDATA	D3dDriverData;
-	LPDDSURFACEDESC pD3dTextureFormats;
 
     HWND window;
     DWORD cooperative_level;
@@ -42,7 +28,6 @@ typedef struct
 	int Height, Width, Bpp;
 
 	GUID* lpGUID;
-	DDRAWI_DIRECTDRAW_GBL DirectDrawGlobal;
 
 } IDirectDrawImpl; 
 

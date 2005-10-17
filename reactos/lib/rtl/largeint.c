@@ -1,21 +1,17 @@
-/* $Id$
- *
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+/* COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS system libraries
  * FILE:            lib/rtl/largeint.c
  * PURPOSE:         Large integer operations
- * UPDATE HISTORY:
- *                  Created 22/05/98
- *   08/30/98  RJJ  Implemented several functions
+ * PROGRAMMERS:     
  */
 
 /* INCLUDES *****************************************************************/
 
+#define NO_RTL_INLINES
 #include <rtl.h>
 
 #define NDEBUG
 #include <debug.h>
-
 
 /* FUNCTIONS *****************************************************************/
 

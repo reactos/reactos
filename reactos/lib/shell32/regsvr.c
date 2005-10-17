@@ -313,7 +313,7 @@ static HRESULT register_coclasses(struct regsvr_coclass const *list)
 				  &shellfolder_key, NULL);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
 	    if (list->flags & SHELLFOLDER_WANTSFORPARSING)
-		res = RegSetValueExA(shellfolder_key, wfparsing_valuename, 0, REG_SZ, "", 1);
+		res = RegSetValueExA(shellfolder_key, wfparsing_valuename, 0, REG_SZ, (LPBYTE)"", 1);
 	    if (list->flags & SHELLFOLDER_ATTRIBUTES) 
 		res = RegSetValueExA(shellfolder_key, attributes_valuename, 0, REG_DWORD, 
 				     (LPBYTE)&list->dwAttributes, sizeof(DWORD));
@@ -605,6 +605,24 @@ static struct regsvr_coclass const coclass_list[] = {
 	"shell32.dll",
 	"Apartment",
     },
+    {	&CLSID_FolderShortcut,
+	"Foldershortcut",
+	NULL,
+	"shell32.dll",
+	"Apartment",
+	SHELLFOLDER_ATTRIBUTES|SHELLFOLDER_CALLFORATTRIBUTES,
+	SFGAO_FILESYSTEM|SFGAO_FOLDER|SFGAO_LINK,
+	SFGAO_HASSUBFOLDER|SFGAO_FILESYSTEM|SFGAO_FOLDER|SFGAO_FILESYSANCESTOR
+    },
+    {	&CLSID_MyDocuments,
+	"My Documents",
+	NULL,
+	"shell32.dll",
+	"Apartment",
+	SHELLFOLDER_WANTSFORPARSING|SHELLFOLDER_ATTRIBUTES|SHELLFOLDER_CALLFORATTRIBUTES,
+	SFGAO_FILESYSANCESTOR|SFGAO_FOLDER|SFGAO_HASSUBFOLDER,
+	SFGAO_FILESYSTEM
+    },
     { NULL }			/* list terminator */
 };
 
@@ -621,15 +639,21 @@ static struct regsvr_interface const interface_list[] = {
  */
 static const WCHAR wszDesktop[] = { 'D','e','s','k','t','o','p',0 };
 static const WCHAR wszSlash[] = { '/', 0 };
+static const WCHAR wszMyDocuments[] = { 'M','y',' ','D','o','c','u','m','e','n','t','s', 0 };
 
 static struct regsvr_namespace const namespace_extensions_list[] = {
+    {   
+        &CLSID_MyDocuments,
+        wszDesktop,
+        wszMyDocuments
+    },
     { NULL }
 };
 
 /***********************************************************************
  *		DllRegisterServer (SHELL32.@)
  */
-HRESULT WINAPI SHELL32_DllRegisterServer()
+HRESULT WINAPI DllRegisterServer(void)
 {
     HRESULT hr;
 
@@ -648,7 +672,7 @@ HRESULT WINAPI SHELL32_DllRegisterServer()
 /***********************************************************************
  *		DllUnregisterServer (SHELL32.@)
  */
-HRESULT WINAPI SHELL32_DllUnregisterServer()
+HRESULT WINAPI DllUnregisterServer(void)
 {
     HRESULT hr;
 

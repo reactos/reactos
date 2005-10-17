@@ -1,7 +1,8 @@
-/* $Id$ */
-
 #ifndef __DRIVERS_FS_NP_NPFS_H
 #define __DRIVERS_FS_NP_NPFS_H
+
+#include <ntifs.h>
+#include <ndk/iotypes.h>
 
 typedef struct _NPFS_DEVICE_EXTENSION
 {

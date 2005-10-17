@@ -338,7 +338,7 @@ SepReleaseSecurityQualityOfService(IN PSECURITY_QUALITY_OF_SERVICE CapturedSecur
   PAGED_CODE();
 
   if(CapturedSecurityQualityOfService != NULL &&
-     (AccessMode == UserMode ||
+     (AccessMode != KernelMode ||
       (AccessMode == KernelMode && CaptureIfKernel)))
   {
     ExFreePool(CapturedSecurityQualityOfService);
@@ -819,7 +819,7 @@ SeReleaseSecurityDescriptor(
               and CaptureIfKernelMode that you previously passed to
               SeCaptureSecurityDescriptor() in order to avoid memory leaks! */
   if(CapturedSecurityDescriptor != NULL &&
-     (CurrentMode == UserMode ||
+     (CurrentMode != KernelMode ||
       (CurrentMode == KernelMode && CaptureIfKernelMode)))
   {
     /* only delete the descriptor when SeCaptureSecurityDescriptor() allocated one! */

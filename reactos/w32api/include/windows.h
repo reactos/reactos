@@ -47,11 +47,11 @@
 #include <excpt.h>
 #include <stdarg.h>
 #include <windef.h>
-#include <wincon.h>
 #include <winbase.h>
 #if !(defined NOGDI || defined  _WINGDI_H)
 #include <wingdi.h>
 #endif
+#include <wincon.h>
 #ifndef _WINUSER_H
 #include <winuser.h>
 #endif

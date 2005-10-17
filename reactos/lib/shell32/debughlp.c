@@ -245,7 +245,7 @@ static void dump_pidl_hex( LPCITEMIDLIST pidl )
         if( i!=(n-1) && (i%max_line) != (max_line-1) )
             continue;
         szAscii[ (i%max_line)+1 ] = 0;
-        DPRINTF("%-*s   %s\n", max_line*3, szHex, szAscii );
+        ERR("%-*s   %s\n", max_line*3, szHex, szAscii );
     }
 }
 

@@ -778,7 +778,7 @@ MmMapLockedPagesSpecifyCache ( IN PMDL Mdl,
    /* Calculate the number of pages required. */
    PageCount = PAGE_ROUND_UP(Mdl->ByteCount + Mdl->ByteOffset) / PAGE_SIZE;
 
-   if (AccessMode == UserMode)
+   if (AccessMode != KernelMode)
    {
       MEMORY_AREA *Result;
       LARGE_INTEGER BoundaryAddressMultiple;
@@ -885,7 +885,7 @@ MmMapLockedPagesSpecifyCache ( IN PMDL Mdl,
       {
          return NULL;
       }
-      if (AccessMode == UserMode)
+      if (AccessMode != KernelMode)
       {
          /* Throw exception */
          ExRaiseStatus(STATUS_ACCESS_VIOLATION);

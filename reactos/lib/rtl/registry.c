@@ -1,12 +1,9 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
+ * PROJECT:           ReactOS system libraries
  * PURPOSE:           Rtl registry functions
  * FILE:              lib/rtl/registry.c
  * PROGRAMER:         Eric Kohl
- * REVISION HISTORY:
- *                    2000/08/11: Created
  */
 
 /*
@@ -15,16 +12,14 @@
  *	- support RTL_QUERY_REGISTRY_DELETE
  */
 
-/* INCLUDES ****************************************************************/
+/* INCLUDES *****************************************************************/
 
-#define __NTDRIVER__
 #include <rtl.h>
 
 #define NDEBUG
 #include <debug.h>
 
 #define TAG_RTLREGISTRY TAG('R', 't', 'l', 'R')
-
 
 /* FUNCTIONS ***************************************************************/
 

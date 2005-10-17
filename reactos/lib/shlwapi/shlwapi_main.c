@@ -105,7 +105,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
  *     as pdvi, provided that the size is set correctly.
  *     Returns version as shlwapi.dll from IE5.01.
  */
-HRESULT WINAPI SHLWAPI_DllGetVersion (DLLVERSIONINFO *pdvi)
+HRESULT WINAPI DllGetVersion (DLLVERSIONINFO *pdvi)
 {
   DLLVERSIONINFO2 *pdvi2 = (DLLVERSIONINFO2*)pdvi;
 

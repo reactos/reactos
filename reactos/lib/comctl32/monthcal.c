@@ -55,6 +55,8 @@
 #include "winnls.h"
 #include "commctrl.h"
 #include "comctl32.h"
+#include "uxtheme.h"
+#include "tmschema.h"
 #include "wine/unicode.h"
 #include "wine/debug.h"
 
@@ -125,6 +127,7 @@ typedef struct
 /* Offsets of days in the week to the weekday of january 1 in a leap year */
 static const int DayOfWeekTable[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
 
+static const WCHAR themeClass[] = { 'S','c','r','o','l','l','b','a','r',0 };
 
 #define MONTHCAL_GetInfoPtr(hwnd) ((MONTHCAL_INFO *)GetWindowLongPtrW(hwnd, 0))
 
@@ -388,6 +391,45 @@ static void MONTHCAL_DrawDay(MONTHCAL_INFO *infoPtr, HDC hdc, int day, int month
 }
 
 
+static void paint_button (MONTHCAL_INFO *infoPtr, HDC hdc, BOOL btnNext, 
+                          BOOL pressed, RECT* r)
+{
+    HTHEME theme = GetWindowTheme (infoPtr->hwndSelf);
+    
+    if (theme)
+    {
+        static const int states[] = {
+            /* Prev button */
+            ABS_LEFTNORMAL,  ABS_LEFTPRESSED,  ABS_LEFTDISABLED,
+            /* Next button */
+            ABS_RIGHTNORMAL, ABS_RIGHTPRESSED, ABS_RIGHTDISABLED
+        };
+        int stateNum = btnNext ? 3 : 0;
+        if (pressed)
+            stateNum += 1;
+        else
+        {
+            DWORD dwStyle = GetWindowLongW(infoPtr->hwndSelf, GWL_STYLE);
+            if (dwStyle & WS_DISABLED) stateNum += 2;
+        }
+        DrawThemeBackground (theme, hdc, SBP_ARROWBTN, states[stateNum], r, NULL);
+    }
+    else
+    {
+        int style = btnNext ? DFCS_SCROLLRIGHT : DFCS_SCROLLLEFT;
+        if (pressed)
+            style |= DFCS_PUSHED;
+        else
+        {
+            DWORD dwStyle = GetWindowLongW(infoPtr->hwndSelf, GWL_STYLE);
+            if (dwStyle & WS_DISABLED) style |= DFCS_INACTIVE;
+        }
+        
+        DrawFrameControl(hdc, r, DFC_SCROLL, style);
+    }
+}
+
+
 static void MONTHCAL_Refresh(MONTHCAL_INFO *infoPtr, HDC hdc, PAINTSTRUCT* ps)
 {
   static const WCHAR todayW[] = { 'T','o','d','a','y',':',0 };
@@ -434,27 +476,11 @@ static void MONTHCAL_Refresh(MONTHCAL_INFO *infoPtr, HDC hdc, PAINTSTRUCT* ps)
 
   /* if the previous button is pressed draw it depressed */
   if(IntersectRect(&rcTemp, &(ps->rcPaint), prev))
-  {
-    if((infoPtr->status & MC_PREVPRESSED))
-        DrawFrameControl(hdc, prev, DFC_SCROLL,
-  	   DFCS_SCROLLLEFT | DFCS_PUSHED |
-          (dwStyle & WS_DISABLED ? DFCS_INACTIVE : 0));
-    else /* if the previous button is pressed draw it depressed */
-      DrawFrameControl(hdc, prev, DFC_SCROLL,
-	   DFCS_SCROLLLEFT |(dwStyle & WS_DISABLED ? DFCS_INACTIVE : 0));
-  }
+    paint_button (infoPtr, hdc, FALSE, infoPtr->status & MC_PREVPRESSED, prev);
 
   /* if next button is depressed draw it depressed */
   if(IntersectRect(&rcTemp, &(ps->rcPaint), next))
-  {
-    if((infoPtr->status & MC_NEXTPRESSED))
-      DrawFrameControl(hdc, next, DFC_SCROLL,
-    	   DFCS_SCROLLRIGHT | DFCS_PUSHED |
-           (dwStyle & WS_DISABLED ? DFCS_INACTIVE : 0));
-    else /* if the next button is pressed draw it depressed */
-      DrawFrameControl(hdc, next, DFC_SCROLL,
-           DFCS_SCROLLRIGHT |(dwStyle & WS_DISABLED ? DFCS_INACTIVE : 0));
-  }
+    paint_button (infoPtr, hdc, TRUE, infoPtr->status & MC_NEXTPRESSED, next);
 
   oldBkColor = SetBkColor(hdc, infoPtr->titlebk);
   SetTextColor(hdc, infoPtr->titletxt);
@@ -1812,6 +1838,15 @@ static LRESULT MONTHCAL_SetFont(MONTHCAL_INFO *infoPtr, HFONT hFont, BOOL redraw
     return (LRESULT)hOldFont;
 }
 
+/* update theme after a WM_THEMECHANGED message */
+static LRESULT theme_changed (MONTHCAL_INFO* infoPtr)
+{
+    HTHEME theme = GetWindowTheme (infoPtr->hwndSelf);
+    CloseThemeData (theme);
+    theme = OpenThemeData (infoPtr->hwndSelf, themeClass);
+    return 0;
+}
+
 /* FIXME: check whether dateMin/dateMax need to be adjusted. */
 static LRESULT
 MONTHCAL_Create(HWND hwnd, WPARAM wParam, LPARAM lParam)
@@ -1857,6 +1892,8 @@ MONTHCAL_Create(HWND hwnd, WPARAM wParam, LPARAM lParam)
   /* call MONTHCAL_UpdateSize to set all of the dimensions */
   /* of the control */
   MONTHCAL_UpdateSize(infoPtr);
+  
+  OpenThemeData (infoPtr->hwndSelf, themeClass);
 
   return 0;
 }
@@ -1869,6 +1906,9 @@ MONTHCAL_Destroy(MONTHCAL_INFO *infoPtr)
   if(infoPtr->monthdayState)
       Free(infoPtr->monthdayState);
   SetWindowLongPtrW(infoPtr->hwndSelf, 0, 0);
+  
+  CloseThemeData (GetWindowTheme (infoPtr->hwndSelf));
+  
   Free(infoPtr);
   return 0;
 }
@@ -1987,6 +2027,9 @@ MONTHCAL_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
   case WM_TIMER:
     return MONTHCAL_Timer(infoPtr, wParam);
+    
+  case WM_THEMECHANGED:
+    return theme_changed (infoPtr);
 
   case WM_DESTROY:
     return MONTHCAL_Destroy(infoPtr);

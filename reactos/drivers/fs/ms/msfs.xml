@@ -9,4 +9,5 @@
 	<file>msfs.c</file>
 	<file>rw.c</file>
 	<file>msfs.rc</file>
+	<pch>msfs.h</pch>
 </module>

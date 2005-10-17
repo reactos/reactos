@@ -11,18 +11,16 @@
 
 /* INCLUDES ****************************************************************/
 
-#include <ddk/ntddk.h>
-#include <ddk/ntddkbd.h>
-#include <ddk/ntdd8042.h>
-
+#ifndef NDEBUG
 #define NDEBUG
+#endif
 #include <debug.h>
 
 #include "i8042prt.h"
 
 /* GLOBALS *******************************************************************/
 
-static BYTE TypematicTable[] = {
+static UCHAR TypematicTable[] = {
 	0x00, 0x00, 0x00, 0x05, 0x08, 0x0B, 0x0D, 0x0F, 0x10, 0x12, /*  0-9 */
 	0x13, 0x14, 0x15, 0x16, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1A, /* 10-19 */
 	0x1B, 0x1C, 0x1C, 0x1C, 0x1D, 0x1D, 0x1E };
@@ -87,12 +85,12 @@ NTSTATUS STDCALL I8042SynchWritePortKbd(PVOID Context,
 BOOLEAN STDCALL I8042InterruptServiceKbd(struct _KINTERRUPT *Interrupt,
                                              VOID * Context)
 {
-	BYTE Output;
-	BYTE PortStatus;
+	UCHAR Output;
+	UCHAR PortStatus;
 	NTSTATUS Status;
 	PDEVICE_EXTENSION DevExt = (PDEVICE_EXTENSION) Context;
 	BOOLEAN HookContinue = FALSE, HookReturn;
-	UINT Iterations = 0;
+	ULONG Iterations = 0;
 
 	KEYBOARD_INPUT_DATA *InputData =
 	                         DevExt->KeyboardBuffer + DevExt->KeysInBuffer;
@@ -228,7 +226,7 @@ VOID STDCALL I8042DpcRoutineKbd(PKDPC Dpc,
 	if (!DevExt->KeyboardData.ClassService)
 		return;
 
-	((KEYBOARD_CLASS_SERVICE_CALLBACK) DevExt->KeyboardData.ClassService)(
+	((PSERVICE_CALLBACK_ROUTINE) DevExt->KeyboardData.ClassService)(
 		                 DevExt->KeyboardData.ClassDeviceObject,
 		                 DevExt->KeyboardBuffer,
 		                 DevExt->KeyboardBuffer + KeysInBufferCopy,
@@ -240,9 +238,9 @@ VOID STDCALL I8042DpcRoutineKbd(PKDPC Dpc,
 }
 
 /* You have to send the rate/delay in a somewhat awkward format */
-static USHORT I8042GetTypematicByte(USHORT Rate, USHORT Delay)
+static UCHAR I8042GetTypematicByte(USHORT Rate, USHORT Delay)
 {
-	USHORT ret;
+	UCHAR ret;
 
 	if (Rate < 3) {
 		ret = 0x0;
@@ -630,7 +628,7 @@ BOOLEAN STDCALL I8042DetectKeyboard(PDEVICE_EXTENSION DevExt)
 {
 	NTSTATUS Status;
 	UCHAR Value;
-	UINT RetryCount = 10;
+	ULONG RetryCount = 10;
 
 	DPRINT("Detecting keyboard\n");
 
@@ -713,6 +711,7 @@ detectsetleds:
 /* debug stuff */
 VOID STDCALL
 KdpServiceDispatcher(ULONG Code, PVOID Context1, PVOID Context2);
+#define EnterDebugger ((PVOID)0x25)
 
 static VOID STDCALL I8042DebugWorkItem(PDEVICE_OBJECT DeviceObject,
                                        PVOID Context)
@@ -727,5 +726,10 @@ static VOID STDCALL I8042DebugWorkItem(PDEVICE_OBJECT DeviceObject,
 	if (!Key)
 		return;
 
-	KdpServiceDispatcher(TAG('R', 'o', 's', ' '), (PVOID)Key, NULL);
+#ifdef __REACTOS__
+	/* We hope kernel would understand this. If
+	 * that's not the case, nothing would happen.
+	 */
+	KdpServiceDispatcher(TAG('R', 'o', 's', ' '), EnterDebugger, NULL);
+#endif /* __REACTOS__ */
 }

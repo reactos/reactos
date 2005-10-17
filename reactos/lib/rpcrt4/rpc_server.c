@@ -739,14 +739,14 @@ RPC_STATUS WINAPI RpcServerUseProtseqEpExA( unsigned char *Protseq, UINT MaxCall
 {
   RpcServerProtseq* ps;
 
-  TRACE("(%s,%u,%s,%p,{%u,%lu,%lu})\n", debugstr_a( Protseq ), MaxCalls,
-       debugstr_a( Endpoint ), SecurityDescriptor,
+  TRACE("(%s,%u,%s,%p,{%u,%lu,%lu})\n", debugstr_a( (char*)Protseq ), MaxCalls,
+       debugstr_a( (char*)Endpoint ), SecurityDescriptor,
        lpPolicy->Length, lpPolicy->EndpointFlags, lpPolicy->NICFlags );
 
   ps = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(RpcServerProtseq));
   ps->MaxCalls = MaxCalls;
-  ps->Protseq = RPCRT4_strdupA(Protseq);
-  ps->Endpoint = RPCRT4_strdupA(Endpoint);
+  ps->Protseq = RPCRT4_strdupA((char*)Protseq);
+  ps->Endpoint = RPCRT4_strdupA((char*)Endpoint);
 
   return RPCRT4_use_protseq(ps);
 }
@@ -776,7 +776,7 @@ RPC_STATUS WINAPI RpcServerUseProtseqEpExW( LPWSTR Protseq, UINT MaxCalls, LPWST
  */
 RPC_STATUS WINAPI RpcServerUseProtseqA(unsigned char *Protseq, unsigned int MaxCalls, void *SecurityDescriptor)
 {
-  TRACE("(Protseq == %s, MaxCalls == %d, SecurityDescriptor == ^%p)\n", debugstr_a(Protseq), MaxCalls, SecurityDescriptor);
+  TRACE("(Protseq == %s, MaxCalls == %d, SecurityDescriptor == ^%p)\n", debugstr_a((char*)Protseq), MaxCalls, SecurityDescriptor);
   return RpcServerUseProtseqEpA(Protseq, MaxCalls, NULL, SecurityDescriptor);
 }
 

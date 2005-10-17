@@ -81,7 +81,7 @@ CsrClientCallServer(PCSR_API_MESSAGE Request,
 
     /* Fill out the header */
     Request->Type = ApiNumber;
-    Request->Header.u1.s1.DataLength = RequestLength - LPC_MESSAGE_BASE_SIZE;
+    Request->Header.u1.s1.DataLength = RequestLength - sizeof(PORT_MESSAGE);
     Request->Header.u1.s1.TotalLength = RequestLength;
     DPRINT("CSR: API: %x, u1.s1.DataLength: %x, u1.s1.TotalLength: %x\n", 
             ApiNumber,
@@ -109,8 +109,8 @@ CsrClientConnectToServer(PWSTR ObjectDirectory,
                          ULONG ContextLength,
                          PBOOLEAN ServerToServerCall)
 {
-   NTSTATUS Status;
-   UNICODE_STRING PortName = RTL_CONSTANT_STRING(L"\\Windows\\ApiPort");
+   NTSTATUS Status = STATUS_SUCCESS;
+   UNICODE_STRING PortName;
    ULONG ConnectInfoLength;
    CSR_API_MESSAGE Request;
    PORT_VIEW LpcWrite;
@@ -121,6 +121,13 @@ CsrClientConnectToServer(PWSTR ObjectDirectory,
      {
        return STATUS_SUCCESS;
      }
+
+   if (NULL == ObjectDirectory)
+   {
+	   return STATUS_INVALID_PARAMETER;
+   }
+
+   RtlInitUnicodeString (& PortName, ObjectDirectory);
 
    CsrSectionViewSize.QuadPart = CSR_CSRSS_SECTION_SIZE;
    Status = NtCreateSection(&CsrSectionHandle,

@@ -8,7 +8,7 @@
 @ stub CMP_Report_LogOn
 @ stub CMP_UnregisterNotification
 @ stub CMP_WaitNoPendingInstallEvents
-@ stub CMP_WaitServices
+@ stub CMP_WaitServicesAvailable
 @ stub CM_Add_Empty_Log_Conf
 @ stub CM_Add_Empty_Log_Conf_Ex
 @ stub CM_Add_IDA
@@ -55,14 +55,14 @@
 @ stub CM_Free_Res_Des_Handle
 @ stdcall CM_Get_Child(ptr long long)
 @ stdcall CM_Get_Child_Ex(ptr long long long)
-@ stub CM_Get_Class_Key_NameA
-@ stub CM_Get_Class_Key_NameW
-@ stub CM_Get_Class_Key_Name_ExA
-@ stub CM_Get_Class_Key_Name_ExW
-@ stub CM_Get_Class_NameA
-@ stub CM_Get_Class_NameW
-@ stub CM_Get_Class_Name_ExA
-@ stub CM_Get_Class_Name_ExW
+@ stdcall CM_Get_Class_Key_NameA(ptr str ptr long)
+@ stdcall CM_Get_Class_Key_NameW(ptr wstr ptr long)
+@ stdcall CM_Get_Class_Key_Name_ExA(ptr str ptr long long)
+@ stdcall CM_Get_Class_Key_Name_ExW(ptr wstr ptr long long)
+@ stdcall CM_Get_Class_NameA(ptr str ptr long)
+@ stdcall CM_Get_Class_NameW(ptr wstr ptr long)
+@ stdcall CM_Get_Class_Name_ExA(ptr str ptr long long)
+@ stdcall CM_Get_Class_Name_ExW(ptr wstr ptr long long)
 @ stdcall CM_Get_Depth(ptr long long)
 @ stdcall CM_Get_Depth_Ex(ptr long long long)
 @ stdcall CM_Get_DevNode_Registry_PropertyA(long long ptr ptr ptr long)
@@ -139,10 +139,10 @@
 @ stub CM_Move_DevNode
 @ stub CM_Move_DevNode_Ex
 @ stub CM_Next_Range
-@ stub CM_Open_Class_KeyA
-@ stub CM_Open_Class_KeyW
-@ stub CM_Open_Class_Key_ExA
-@ stub CM_Open_Class_Key_ExW
+@ stdcall CM_Open_Class_KeyA(ptr str long long ptr long)
+@ stdcall CM_Open_Class_KeyW(ptr wstr long long ptr long)
+@ stdcall CM_Open_Class_Key_ExA(ptr str long long ptr long long)
+@ stdcall CM_Open_Class_Key_ExW(ptr wstr long long ptr long long)
 @ stub CM_Open_DevNode_Key
 @ stub CM_Open_DevNode_Key_Ex
 @ stub CM_Query_Arbitrator_Free_Data
@@ -166,6 +166,7 @@
 @ stub CM_Request_Device_EjectA
 @ stub CM_Request_Device_EjectW
 @ stub CM_Request_Eject_PC
+@ stub CM_Request_Eject_PC_Ex
 @ stub CM_Reset_Children_Marks
 @ stub CM_Reset_Children_Marks_Ex
 @ stub CM_Run_Detection
@@ -516,16 +517,16 @@
 @ stub ShouldDeviceBeExcluded
 @ stdcall StampFileSecurity(wstr ptr)
 @ stdcall StringTableAddString(ptr wstr long)
-@ stub StringTableAddStringEx
+@ stdcall StringTableAddStringEx(ptr wstr long ptr long)
 @ stdcall StringTableDestroy(ptr)
 @ stdcall StringTableDuplicate(ptr)
 @ stub StringTableEnum
-@ stub StringTableGetExtraData
+@ stdcall StringTableGetExtraData(ptr long ptr long)
 @ stdcall StringTableInitialize()
-@ stub StringTableInitializeEx
+@ stdcall StringTableInitializeEx(long long)
 @ stdcall StringTableLookUpString(ptr wstr long)
-@ stub StringTableLookUpStringEx
-@ stub StringTableSetExtraData
+@ stdcall StringTableLookUpStringEx(ptr wstr long ptr ptr)
+@ stdcall StringTableSetExtraData(ptr long ptr long)
 @ stdcall StringTableStringFromId(ptr long)
 @ stdcall StringTableStringFromIdEx(ptr long ptr ptr)
 @ stdcall StringTableTrim(ptr)

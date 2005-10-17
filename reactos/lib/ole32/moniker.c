@@ -981,8 +981,6 @@ static HRESULT WINAPI EnumMonikerImpl_CreateEnumROTMoniker(MInterfacePointer **m
 /* Shared implementation of moniker marshaler based on saving and loading of
  * monikers */
 
-#define ICOM_THIS_From_IMoniker(class, name) class* This = (class*)(((char*)name)-FIELD_OFFSET(class, lpVtblMarshal))
-
 typedef struct MonikerMarshal
 {
     const IUnknownVtbl *lpVtbl;
@@ -991,6 +989,11 @@ typedef struct MonikerMarshal
     LONG ref;
     IMoniker *moniker;
 } MonikerMarshal;
+
+static inline MonikerMarshal *impl_from_IMarshal( IMarshal *iface )
+{
+    return (MonikerMarshal *)((char*)iface - FIELD_OFFSET(MonikerMarshal, lpVtblMarshal));
+}
 
 static HRESULT WINAPI MonikerMarshalInner_QueryInterface(IUnknown *iface, REFIID riid, LPVOID *ppv)
 {
@@ -1031,19 +1034,19 @@ static const IUnknownVtbl VT_MonikerMarshalInner =
 
 static HRESULT WINAPI MonikerMarshal_QueryInterface(IMarshal *iface, REFIID riid, LPVOID *ppv)
 {
-    ICOM_THIS_From_IMoniker(MonikerMarshal, iface);
+    MonikerMarshal *This = impl_from_IMarshal(iface);
     return IMoniker_QueryInterface(This->moniker, riid, ppv);
 }
 
 static ULONG WINAPI MonikerMarshal_AddRef(IMarshal *iface)
 {
-    ICOM_THIS_From_IMoniker(MonikerMarshal, iface);
+    MonikerMarshal *This = impl_from_IMarshal(iface);
     return IMoniker_AddRef(This->moniker);
 }
 
 static ULONG WINAPI MonikerMarshal_Release(IMarshal *iface)
 {
-    ICOM_THIS_From_IMoniker(MonikerMarshal, iface);
+    MonikerMarshal *This = impl_from_IMarshal(iface);
     return IMoniker_Release(This->moniker);
 }
 
@@ -1051,7 +1054,7 @@ static HRESULT WINAPI MonikerMarshal_GetUnmarshalClass(
   LPMARSHAL iface, REFIID riid, void* pv, DWORD dwDestContext,
   void* pvDestContext, DWORD mshlflags, CLSID* pCid)
 {
-    ICOM_THIS_From_IMoniker(MonikerMarshal, iface);
+    MonikerMarshal *This = impl_from_IMarshal(iface);
 
     TRACE("(%s, %p, %lx, %p, %lx, %p)\n", debugstr_guid(riid), pv,
         dwDestContext, pvDestContext, mshlflags, pCid);
@@ -1063,7 +1066,7 @@ static HRESULT WINAPI MonikerMarshal_GetMarshalSizeMax(
   LPMARSHAL iface, REFIID riid, void* pv, DWORD dwDestContext,
   void* pvDestContext, DWORD mshlflags, DWORD* pSize)
 {
-    ICOM_THIS_From_IMoniker(MonikerMarshal, iface);
+    MonikerMarshal *This = impl_from_IMarshal(iface);
     HRESULT hr;
     ULARGE_INTEGER size;
 
@@ -1080,7 +1083,7 @@ static HRESULT WINAPI MonikerMarshal_MarshalInterface(LPMARSHAL iface, IStream *
     REFIID riid, void* pv, DWORD dwDestContext,
     void* pvDestContext, DWORD mshlflags)
 {
-    ICOM_THIS_From_IMoniker(MonikerMarshal, iface);
+    MonikerMarshal *This = impl_from_IMarshal(iface);
 
     TRACE("(%p, %s, %p, %lx, %p, %lx)\n", pStm, debugstr_guid(riid), pv,
         dwDestContext, pvDestContext, mshlflags);
@@ -1090,7 +1093,7 @@ static HRESULT WINAPI MonikerMarshal_MarshalInterface(LPMARSHAL iface, IStream *
 
 static HRESULT WINAPI MonikerMarshal_UnmarshalInterface(LPMARSHAL iface, IStream *pStm, REFIID riid, void **ppv)
 {
-    ICOM_THIS_From_IMoniker(MonikerMarshal, iface);
+    MonikerMarshal *This = impl_from_IMarshal(iface);
     HRESULT hr;
 
     TRACE("(%p, %s, %p)\n", pStm, debugstr_guid(riid), ppv);

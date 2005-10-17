@@ -193,6 +193,7 @@ ReportDetectedDevice(
 ByeBye:
 	if (Pdo)
 	{
+		ASSERT(PdoDeviceExtension);
 		if (PdoDeviceExtension->DeviceDescription.Buffer)
 			RtlFreeUnicodeString(&PdoDeviceExtension->DeviceDescription);
 		if (PdoDeviceExtension->DeviceId.Buffer)

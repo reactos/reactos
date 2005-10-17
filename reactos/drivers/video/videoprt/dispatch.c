@@ -25,8 +25,8 @@
 
 /* EXTERNAL FUNCTIONS *********************************************************/
 
-VOID STDCALL HalAcquireDisplayOwnership(IN PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParameters);
-VOID STDCALL HalReleaseDisplayOwnership();
+VOID NTAPI HalAcquireDisplayOwnership(IN PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParameters);
+VOID NTAPI HalReleaseDisplayOwnership();
 
 /* GLOBAL VARIABLES ***********************************************************/
 
@@ -38,7 +38,7 @@ PVIDEO_PORT_DEVICE_EXTENSION ResetDisplayParametersDeviceExtension = NULL;
  * Reset display to blue screen
  */
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 IntVideoPortResetDisplayParameters(ULONG Columns, ULONG Rows)
 {
    PVIDEO_PORT_DRIVER_EXTENSION DriverExtension;
@@ -63,7 +63,7 @@ IntVideoPortResetDisplayParameters(ULONG Columns, ULONG Rows)
    return FALSE;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 IntVideoPortAddDevice(
    IN PDRIVER_OBJECT DriverObject,
    IN PDEVICE_OBJECT PhysicalDeviceObject)
@@ -96,7 +96,7 @@ IntVideoPortAddDevice(
  *    PASSIVE_LEVEL
  */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 IntVideoPortDispatchOpen(
    IN PDEVICE_OBJECT DeviceObject,
    IN PIRP Irp)
@@ -166,7 +166,7 @@ IntVideoPortDispatchOpen(
  *    PASSIVE_LEVEL
  */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 IntVideoPortDispatchClose(
    IN PDEVICE_OBJECT DeviceObject,
    IN PIRP Irp)
@@ -198,7 +198,7 @@ IntVideoPortDispatchClose(
  *    PASSIVE_LEVEL
  */
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 IntVideoPortDispatchDeviceControl(
    IN PDEVICE_OBJECT DeviceObject,
    IN PIRP Irp)
@@ -264,7 +264,7 @@ IntVideoPortDispatchDeviceControl(
    return Status;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 IntVideoPortPnPStartDevice(
    IN PDEVICE_OBJECT DeviceObject,
    IN PIRP Irp)
@@ -352,7 +352,7 @@ IntVideoPortPnPStartDevice(
 
 
 NTSTATUS
-STDCALL
+NTAPI
 IntVideoPortForwardIrpAndWaitCompletionRoutine(
     PDEVICE_OBJECT Fdo,
     PIRP Irp,
@@ -368,7 +368,7 @@ IntVideoPortForwardIrpAndWaitCompletionRoutine(
 
 
 NTSTATUS
-STDCALL
+NTAPI
 IntVideoPortForwardIrpAndWait(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    KEVENT Event;
@@ -390,7 +390,7 @@ IntVideoPortForwardIrpAndWait(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 }
 
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 IntVideoPortDispatchPnp(
    IN PDEVICE_OBJECT DeviceObject,
    IN PIRP Irp)
@@ -442,7 +442,7 @@ IntVideoPortDispatchPnp(
    return Status;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 IntVideoPortDispatchCleanup(
    IN PDEVICE_OBJECT DeviceObject,
    IN PIRP Irp)
@@ -459,7 +459,7 @@ IntVideoPortDispatchCleanup(
    return STATUS_SUCCESS;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 IntVideoPortDispatchPower(
    IN PDEVICE_OBJECT DeviceObject,
    IN PIRP Irp)
@@ -467,7 +467,7 @@ IntVideoPortDispatchPower(
    return STATUS_NOT_IMPLEMENTED;
 }
 
-VOID STDCALL
+VOID NTAPI
 IntVideoPortUnload(PDRIVER_OBJECT DriverObject)
 {
 }

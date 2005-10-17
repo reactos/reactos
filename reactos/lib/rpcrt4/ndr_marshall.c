@@ -125,7 +125,8 @@ NDR_MARSHALL NdrMarshaller[NDR_TABLE_SIZE] = {
   NdrComplexArrayMarshall,
   /* 0x22 */
   NdrConformantStringMarshall, 0, 0,
-  NdrConformantStringMarshall, 0, 0, 0, 0,
+  NdrConformantStringMarshall,
+  NdrNonConformantStringMarshall, 0, 0, 0,
   /* 0x2a */
   NdrEncapsulatedUnionMarshall,
   NdrNonEncapsulatedUnionMarshall,
@@ -158,7 +159,8 @@ NDR_UNMARSHALL NdrUnmarshaller[NDR_TABLE_SIZE] = {
   NdrComplexArrayUnmarshall,
   /* 0x22 */
   NdrConformantStringUnmarshall, 0, 0,
-  NdrConformantStringUnmarshall, 0, 0, 0, 0,
+  NdrConformantStringUnmarshall,
+  NdrNonConformantStringUnmarshall, 0, 0, 0,
   /* 0x2a */
   NdrEncapsulatedUnionUnmarshall,
   NdrNonEncapsulatedUnionUnmarshall,
@@ -191,7 +193,8 @@ NDR_BUFFERSIZE NdrBufferSizer[NDR_TABLE_SIZE] = {
   NdrComplexArrayBufferSize,
   /* 0x22 */
   NdrConformantStringBufferSize, 0, 0,
-  NdrConformantStringBufferSize, 0, 0, 0, 0,
+  NdrConformantStringBufferSize,
+  NdrNonConformantStringBufferSize, 0, 0, 0,
   /* 0x2a */
   NdrEncapsulatedUnionBufferSize,
   NdrNonEncapsulatedUnionBufferSize,
@@ -220,7 +223,8 @@ NDR_MEMORYSIZE NdrMemorySizer[NDR_TABLE_SIZE] = {
   NdrComplexArrayMemorySize,
   /* 0x22 */
   NdrConformantStringMemorySize, 0, 0,
-  NdrConformantStringMemorySize, 0, 0, 0, 0,
+  NdrConformantStringMemorySize,
+  NdrNonConformantStringMemorySize, 0, 0, 0,
   /* 0x2a */
   0, 0, 0, 0, 0,
   /* 0x2f */
@@ -478,8 +482,8 @@ void WINAPI NdrConformantStringBufferSize(PMIDL_STUB_MESSAGE pStubMsg,
   }
   else if (*pFormat == RPC_FC_C_CSTRING) {
     /* we need 12 octets for the [maxlen, offset, len] DWORDS, + 1 octet for '\0' */
-    TRACE("string=%s\n", debugstr_a(pMemory));
-    pStubMsg->BufferLength += strlen(pMemory) + 13 + BUFFER_PARANOIA;
+    TRACE("string=%s\n", debugstr_a((char*)pMemory));
+    pStubMsg->BufferLength += strlen((char*)pMemory) + 13 + BUFFER_PARANOIA;
   }
   else if (*pFormat == RPC_FC_C_WSTRING) {
     /* we need 12 octets for the [maxlen, offset, len] DWORDS, + 2 octets for L'\0' */
@@ -582,13 +586,56 @@ unsigned char *WINAPI NdrConformantStringUnmarshall( PMIDL_STUB_MESSAGE pStubMsg
   pStubMsg->Buffer += len*esize;
 
   if (*pFormat == RPC_FC_C_CSTRING) {
-    TRACE("string=%s\n", debugstr_a(pMem));
+    TRACE("string=%s\n", debugstr_a((char*)pMem));
   }
   else if (*pFormat == RPC_FC_C_WSTRING) {
     TRACE("string=%s\n", debugstr_w((LPWSTR)pMem));
   }
 
   return NULL; /* FIXME: is this always right? */
+}
+
+/***********************************************************************
+ *           NdrNonConformantStringMarshall [RPCRT4.@]
+ */
+unsigned char *  WINAPI NdrNonConformantStringMarshall(PMIDL_STUB_MESSAGE pStubMsg,
+                                unsigned char *pMemory,
+                                PFORMAT_STRING pFormat)
+{
+    FIXME("stub\n");
+    return NULL;
+}
+
+/***********************************************************************
+ *           NdrNonConformantStringUnmarshall [RPCRT4.@]
+ */
+unsigned char *  WINAPI NdrNonConformantStringUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
+                                unsigned char **ppMemory,
+                                PFORMAT_STRING pFormat,
+                                unsigned char fMustAlloc)
+{
+    FIXME("stub\n");
+    return NULL;
+}
+
+/***********************************************************************
+ *           NdrNonConformantStringBufferSize [RPCRT4.@]
+ */
+void WINAPI NdrNonConformantStringBufferSize(PMIDL_STUB_MESSAGE pStubMsg,
+                                unsigned char *pMemory,
+                                PFORMAT_STRING pFormat)
+{
+    FIXME("stub\n");
+}
+
+/***********************************************************************
+ *           NdrNonConformantStringMemorySize [RPCRT4.@]
+ */
+unsigned long WINAPI NdrNonConformantStringMemorySize(PMIDL_STUB_MESSAGE pStubMsg,
+                                PFORMAT_STRING pFormat)
+{
+    FIXME("stub\n");
+    return 0;
 }
 
 static inline void dump_pointer_attr(unsigned char attr)
@@ -2659,8 +2706,56 @@ void WINAPI NdrClientContextMarshall(PMIDL_STUB_MESSAGE pStubMsg,
  *           NdrClientContextUnmarshall
  */
 void WINAPI NdrClientContextUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
-                                  NDR_CCONTEXT * pContextHandle,
-                                  RPC_BINDING_HANDLE BindHandle)
+                                       NDR_CCONTEXT * pContextHandle,
+                                       RPC_BINDING_HANDLE BindHandle)
 {
     FIXME("(%p, %p, %p): stub\n", pStubMsg, pContextHandle, BindHandle);
+}
+
+void WINAPI NdrServerContextMarshall(PMIDL_STUB_MESSAGE pStubMsg,
+                                     NDR_SCONTEXT ContextHandle,
+                                     NDR_RUNDOWN RundownRoutine )
+{
+    FIXME("(%p, %p, %p): stub\n", pStubMsg, ContextHandle, RundownRoutine);
+}
+
+NDR_SCONTEXT WINAPI NdrServerContextUnmarshall(PMIDL_STUB_MESSAGE pStubMsg)
+{
+    FIXME("(%p): stub\n", pStubMsg);
+    return NULL;
+}
+
+void WINAPI NdrContextHandleSize(PMIDL_STUB_MESSAGE pStubMsg,
+                                 unsigned char* pMemory,
+                                 PFORMAT_STRING pFormat)
+{
+    FIXME("(%p, %p, %p): stub\n", pStubMsg, pMemory, pFormat);
+}
+
+NDR_SCONTEXT WINAPI NdrContextHandleInitialize(PMIDL_STUB_MESSAGE pStubMsg,
+                                               PFORMAT_STRING pFormat)
+{
+    FIXME("(%p, %p): stub\n", pStubMsg, pFormat);
+    return NULL;
+}
+
+void WINAPI NdrServerContextNewMarshall(PMIDL_STUB_MESSAGE pStubMsg,
+                                        NDR_SCONTEXT ContextHandle,
+                                        NDR_RUNDOWN RundownRoutine,
+                                        PFORMAT_STRING pFormat)
+{
+    FIXME("(%p, %p, %p, %p): stub\n", pStubMsg, ContextHandle, RundownRoutine, pFormat);
+}
+
+NDR_SCONTEXT WINAPI NdrServerContextNewUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
+                                                  PFORMAT_STRING pFormat)
+{
+    FIXME("(%p, %p): stub\n", pStubMsg, pFormat);
+    return NULL;
+}
+
+RPC_BINDING_HANDLE WINAPI NDRCContextBinding(NDR_CCONTEXT CContext)
+{
+    FIXME("(%p): stub\n", CContext);
+    return NULL;
 }

@@ -119,7 +119,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
             COMCTL32_hModule = (HMODULE)hinstDLL;
 
             /* add global subclassing atom (used by 'tooltip' and 'updown') */
-            COMCTL32_wSubclass = (LPWSTR)(DWORD)GlobalAddAtomW (strCC32SubclassInfo);
+            COMCTL32_wSubclass = (LPWSTR)(DWORD_PTR)GlobalAddAtomW (strCC32SubclassInfo);
             TRACE("Subclassing atom added: %p\n", COMCTL32_wSubclass);
 
             /* create local pattern brush */
@@ -144,6 +144,9 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
             TRACKBAR_Register ();
             TREEVIEW_Register ();
             UPDOWN_Register ();
+
+            /* subclass user32 controls */
+            THEMING_Initialize ();
             break;
 
 	case DLL_PROCESS_DETACH:
@@ -305,7 +308,7 @@ MenuHelp (UINT uMsg, WPARAM wParam, LPARAM lParam, HMENU hMainMenu,
  */
 
 BOOL WINAPI
-ShowHideMenuCtl (HWND hwnd, UINT uFlags, LPINT lpInfo)
+ShowHideMenuCtl (HWND hwnd, UINT_PTR uFlags, LPINT lpInfo)
 {
     LPINT lpMenuId;
 
@@ -322,9 +325,9 @@ ShowHideMenuCtl (HWND hwnd, UINT uFlags, LPINT lpInfo)
     while (*lpMenuId != uFlags)
 	lpMenuId += 2;
 
-    if (GetMenuState ((HMENU)lpInfo[1], uFlags, MF_BYCOMMAND) & MFS_CHECKED) {
+    if (GetMenuState ((HMENU)(DWORD_PTR)lpInfo[1], uFlags, MF_BYCOMMAND) & MFS_CHECKED) {
 	/* uncheck menu item */
-	CheckMenuItem ((HMENU)lpInfo[0], *lpMenuId, MF_BYCOMMAND | MF_UNCHECKED);
+	CheckMenuItem ((HMENU)(DWORD_PTR)lpInfo[0], *lpMenuId, MF_BYCOMMAND | MF_UNCHECKED);
 
 	/* hide control */
 	lpMenuId++;
@@ -333,7 +336,7 @@ ShowHideMenuCtl (HWND hwnd, UINT uFlags, LPINT lpInfo)
     }
     else {
 	/* check menu item */
-	CheckMenuItem ((HMENU)lpInfo[0], *lpMenuId, MF_BYCOMMAND | MF_CHECKED);
+	CheckMenuItem ((HMENU)(DWORD_PTR)lpInfo[0], *lpMenuId, MF_BYCOMMAND | MF_CHECKED);
 
 	/* show control */
 	lpMenuId++;
@@ -373,8 +376,8 @@ GetEffectiveClientRect (HWND hwnd, LPRECT lpRect, LPINT lpInfo)
     INT  *lpRun;
     HWND hwndCtrl;
 
-    TRACE("(0x%08lx 0x%08lx 0x%08lx)\n",
-	   (DWORD)hwnd, (DWORD)lpRect, (DWORD)lpInfo);
+    TRACE("(%p %p %p)\n",
+	   hwnd, lpRect, lpInfo);
 
     GetClientRect (hwnd, lpRect);
     lpRun = lpInfo;
@@ -503,7 +506,7 @@ CreateStatusWindowA (LONG style, LPCSTR text, HWND parent, UINT wid)
     return CreateWindowA(STATUSCLASSNAMEA, text, style,
 			   CW_USEDEFAULT, CW_USEDEFAULT,
 			   CW_USEDEFAULT, CW_USEDEFAULT,
-			   parent, (HMENU)wid, 0, 0);
+			   parent, (HMENU)(DWORD_PTR)wid, 0, 0);
 }
 
 
@@ -529,7 +532,7 @@ CreateStatusWindowW (LONG style, LPCWSTR text, HWND parent, UINT wid)
     return CreateWindowW(STATUSCLASSNAMEW, text, style,
 			   CW_USEDEFAULT, CW_USEDEFAULT,
 			   CW_USEDEFAULT, CW_USEDEFAULT,
-			   parent, (HMENU)wid, 0, 0);
+			   parent, (HMENU)(DWORD_PTR)wid, 0, 0);
 }
 
 
@@ -564,7 +567,7 @@ CreateUpDownControl (DWORD style, INT x, INT y, INT cx, INT cy,
 {
     HWND hUD =
 	CreateWindowW (UPDOWN_CLASSW, 0, style, x, y, cx, cy,
-			 parent, (HMENU)id, inst, 0);
+			 parent, (HMENU)(DWORD_PTR)id, inst, 0);
     if (hUD) {
 	SendMessageW (hUD, UDM_SETBUDDY, (WPARAM)buddy, 0);
 	SendMessageW (hUD, UDM_SETRANGE, 0, MAKELONG(maxVal, minVal));
@@ -725,7 +728,7 @@ CreateToolbarEx (HWND hwnd, DWORD style, UINT wID, INT nBitmaps,
 
     hwndTB =
         CreateWindowExW(0, TOOLBARCLASSNAMEW, NULL, style|WS_CHILD, 0,0,100,30,
-                        hwnd, (HMENU)wID, COMCTL32_hModule, NULL);
+                        hwnd, (HMENU)(DWORD_PTR)wID, COMCTL32_hModule, NULL);
     if(hwndTB) {
 	TBADDBITMAP tbab;
 
@@ -784,7 +787,7 @@ CreateToolbarEx (HWND hwnd, DWORD style, UINT wID, INT nBitmaps,
  */
 
 HBITMAP WINAPI
-CreateMappedBitmap (HINSTANCE hInstance, INT idBitmap, UINT wFlags,
+CreateMappedBitmap (HINSTANCE hInstance, INT_PTR idBitmap, UINT wFlags,
 		    LPCOLORMAP lpColorMap, INT iNumMaps)
 {
     HGLOBAL hglb;
@@ -931,8 +934,7 @@ CreateToolbar (HWND hwnd, DWORD style, UINT wID, INT nBitmaps,
  *     Returns version of a comctl32.dll from IE4.01 SP1.
  */
 
-HRESULT WINAPI
-COMCTL32_DllGetVersion (DLLVERSIONINFO *pdvi)
+HRESULT WINAPI DllGetVersion (DLLVERSIONINFO *pdvi)
 {
     if (pdvi->cbSize != sizeof(DLLVERSIONINFO)) {
         WARN("wrong DLLVERSIONINFO size from app\n");
@@ -960,7 +962,7 @@ COMCTL32_DllGetVersion (DLLVERSIONINFO *pdvi)
  *     Success: S_OK
  *     Failure: A HRESULT error
  */
-HRESULT WINAPI COMCTL32_DllInstall(BOOL bInstall, LPCWSTR cmdline)
+HRESULT WINAPI DllInstall(BOOL bInstall, LPCWSTR cmdline)
 {
   FIXME("(%s, %s): stub\n", bInstall?"TRUE":"FALSE",
 	debugstr_w(cmdline));

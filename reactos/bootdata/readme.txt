@@ -7,7 +7,8 @@ Updated March 11th, 2004
 -------------------
 
 ReactOS is an Open Source effort to develop a quality operating system that is
-compatible with Windows NT applications and drivers.
+compatible with applications and drivers written for the Microsoft Windows NT
+family of operating systems (NT4, 2000, XP, 2003).
 
 Website: http://www.reactos.com
 

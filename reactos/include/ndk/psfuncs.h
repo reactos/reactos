@@ -14,58 +14,58 @@
 
 /* PROTOTYPES ****************************************************************/
 
-struct _W32THREAD* STDCALL
+struct _W32THREAD* NTAPI
 PsGetWin32Thread(VOID);
 
-struct _W32PROCESS* STDCALL
+struct _W32PROCESS* NTAPI
 PsGetWin32Process(VOID);
 
 PVOID
-STDCALL
+NTAPI
 PsGetProcessWin32Process(PEPROCESS Process);
 
 VOID
-STDCALL
+NTAPI
 PsSetProcessWin32Process(
     PEPROCESS Process,
     PVOID Win32Process
 );
 
 VOID
-STDCALL
+NTAPI
 PsSetThreadWin32Thread(
     PETHREAD Thread,
     PVOID Win32Thread
 );
 
 PVOID
-STDCALL
+NTAPI
 PsGetThreadWin32Thread(PETHREAD Thread);
                        
 VOID
-STDCALL
+NTAPI
 PsRevertThreadToSelf(
     IN struct _ETHREAD* Thread
 );
 
 struct _W32THREAD*
-STDCALL
+NTAPI
 PsGetWin32Thread(
     VOID
 );
 
 struct _W32PROCESS*
-STDCALL
+NTAPI
 PsGetWin32Process(
     VOID
 );
 
 VOID 
-STDCALL
+NTAPI
 PsEstablishWin32Callouts(PW32_CALLOUT_DATA CalloutData);
 
 HANDLE
-STDCALL
+NTAPI
 PsGetProcessId(struct _EPROCESS *Process);
 
 #endif
