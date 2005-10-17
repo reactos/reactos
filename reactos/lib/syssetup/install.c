@@ -158,17 +158,48 @@ HRESULT CreateShellLink(LPCTSTR linkPath, LPCTSTR cmd, LPCTSTR arg, LPCTSTR dir,
 }
 
 
-static VOID
-CreateShortcut(int csidl, LPCTSTR linkName, LPCTSTR command, LPCTSTR title)
+static BOOL
+CreateShortcut(int csidl, LPCTSTR folder, LPCTSTR linkName, LPCTSTR command, UINT nIdTitle)
+{
+  TCHAR path[MAX_PATH];
+  TCHAR title[256];
+  LPTSTR p = path;
+
+  if (!SHGetSpecialFolderPath(0, path, csidl, TRUE))
+    return FALSE;
+
+  if (folder)
+    {
+      p = PathAddBackslash(p);
+      _tcscpy(p, folder);
+    }
+
+  p = PathAddBackslash(p);
+  _tcscpy(p, linkName);
+
+  if (!LoadString(hDllInstance, nIdTitle, title, 256))
+    return FALSE;
+
+  return SUCCEEDED(CreateShellLink(path, command, _T(""), NULL, NULL, 0, title));
+}
+
+
+static BOOL
+CreateShortcutFolder(int csidl, UINT nID, LPTSTR name, int nameLen)
 {
   TCHAR path[MAX_PATH];
   LPTSTR p;
 
-  SHGetSpecialFolderPath(0, path, csidl, TRUE);
-  p = PathAddBackslash(path);
-  _tcscpy(p, linkName);
+  if (!SHGetSpecialFolderPath(0, path, csidl, TRUE))
+    return FALSE;
 
-  CreateShellLink(path, command, _T(""), NULL, NULL, 0, title);
+  if (!LoadString(hDllInstance, nID, name, nameLen))
+    return FALSE;
+
+  p = PathAddBackslash(path);
+  _tcscpy(p, name);
+
+  return CreateDirectory(path, NULL) || GetLastError()==ERROR_ALREADY_EXISTS;
 }
 
 
@@ -365,6 +396,8 @@ ProcessSysSetupInf(VOID)
 DWORD STDCALL
 InstallReactOS (HINSTANCE hInstance)
 {
+  TCHAR sAccessories[256];
+
 # if 0
   OutputDebugStringA ("InstallReactOS() called\n");
 
@@ -397,15 +430,19 @@ InstallReactOS (HINSTANCE hInstance)
 
   CoInitialize(NULL);
 
-  /* desktop shortcuts */
-  CreateShortcut(CSIDL_DESKTOP, _T("Command Prompt.lnk"), _T("cmd.exe"), _T("Open command prompt"));
+  /* create desktop shortcuts */
+  CreateShortcut(CSIDL_DESKTOP, NULL, _T("Command Prompt.lnk"), _T("cmd.exe"), IDS_CMT_CMD);
 
-  /* program startmenu shortcuts */
-  CreateShortcut(CSIDL_PROGRAMS, _T("Command Prompt.lnk"), _T("cmd.exe"), _T("Open command prompt"));
-  CreateShortcut(CSIDL_PROGRAMS, _T("explorer.lnk"), _T("explorer.exe"), _T("Launch Explorer"));
-  CreateShortcut(CSIDL_PROGRAMS, _T("winefile.lnk"), _T("winefile.exe"), _T("Launch Winefile"));
-  CreateShortcut(CSIDL_PROGRAMS, _T("notepad.lnk"), _T("notepad.exe"), _T("Launch Text Editor"));
-  CreateShortcut(CSIDL_PROGRAMS, _T("regedit.lnk"), _T("regedit.exe"), _T("Launch Registry Editor"));
+  /* create program startmenu shortcuts */
+  CreateShortcut(CSIDL_PROGRAMS, NULL, _T("Command Prompt.lnk"), _T("cmd.exe"), IDS_CMT_CMD);
+  CreateShortcut(CSIDL_PROGRAMS, NULL, _T("explorer.lnk"), _T("explorer.exe"), IDS_CMT_EXPLORER);
+  CreateShortcut(CSIDL_PROGRAMS, NULL, _T("winefile.lnk"), _T("winefile.exe"), IDS_CMT_WINEFILE);
+
+  /* create and fill Accessories subfolder */
+  if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_ACCESSORIES, sAccessories, 256)) {
+    CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("notepad.lnk"), _T("notepad.exe"), IDS_CMT_NOTEPAD);
+    CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("regedit.lnk"), _T("regedit.exe"), IDS_CMT_REGEDIT);
+  }
 
   CoUninitialize();
 

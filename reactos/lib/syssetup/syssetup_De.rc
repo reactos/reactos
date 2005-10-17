@@ -188,9 +188,19 @@ BEGIN
     IDS_LOCALETITLE      "Regionale Einstellungen"
     IDS_LOCALESUBTITLE   "Sie können ReactOS auf unterschiedliche Regionen und Sprachen einstellen."
     IDS_DATETIMETITLE    "Datum und Uhrzeit"
-    IDS_DATETIMESUBTITLE "SSetzen Sie das korrekte Datum und Uhrzeit für ihren Computer."
+    IDS_DATETIMESUBTITLE "Setzen Sie das korrekte Datum und Uhrzeit für ihren Computer."
     IDS_PROCESSTITLE     "Process page title"
     IDS_PROCESSSUBTITLE  "Process page subtitle"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_ACCESSORIES     "Zubehör"
+    IDS_CMT_CMD         "Öffne Kommandozeilenfenster"
+    IDS_CMT_EXPLORER    "Starte Explorer"
+    IDS_CMT_WINEFILE    "Starte Winefile"
+    IDS_CMT_NOTEPAD     "Starte Texteditor"
+    IDS_CMT_REGEDIT     "Starte Registry Editor"
 END
 
 /* EOF */

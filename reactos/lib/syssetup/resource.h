@@ -85,6 +85,14 @@
 
 #define IDS_ACKPROJECTS                 3100
 
+#define IDS_ACCESSORIES			3200
+
+#define IDS_CMT_CMD			3210
+#define IDS_CMT_EXPLORER		3211
+#define IDS_CMT_WINEFILE		3212
+#define IDS_CMT_NOTEPAD			3213
+#define IDS_CMT_REGEDIT			3214
+
 #define IDR_GPL				4000
 
 #endif /* RESOURCE_H */
