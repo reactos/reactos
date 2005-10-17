@@ -327,7 +327,6 @@ CreateStubs(FILE * SyscallDb,
 {
     char Line[INPUT_BUFFER_SIZE];
     char *NtSyscallName;
-    char *ZwSyscallName = NULL;
     char *SyscallArguments;
     int SyscallId;
     unsigned StackBytes;
@@ -344,14 +343,6 @@ CreateStubs(FILE * SyscallDb,
  
         /* Make sure we really extracted something */
         if (NtSyscallName) {
-            
-            /* Create the ZwXXX name, if requested */
-            if (NeedsZw) {
-                ZwSyscallName = alloca(strlen(NtSyscallName));
-                strcpy(ZwSyscallName, NtSyscallName);
-                ZwSyscallName[0] = 'Z';
-                ZwSyscallName[1] = 'w';
-            }
      
             /* Create Usermode Stubs for Nt/Zw syscalls in each Usermode file */
             int i;
@@ -364,18 +355,28 @@ CreateStubs(FILE * SyscallDb,
                                   SyscallId | Index);
 
                 /* If a Zw Version is needed (was specified), write it too */
-                if (ZwSyscallName) WriteUserModeStub(UserModeFiles[i], 
-                                                     ZwSyscallName,
-                                                     StackBytes,
-                                                     SyscallId | Index);
+                if (NeedsZw) {
+
+                    NtSyscallName[0] = 'Z';
+                    NtSyscallName[1] = 'w';
+                    WriteUserModeStub(UserModeFiles[i],
+                                      NtSyscallName,
+                                      StackBytes,
+                                      SyscallId | Index);
+                }
 
             }
 
             /* Create the Kernel coutnerparts (only Zw*, Nt* are the real functions!) */
-            if (KernelModeFile) WriteKernelModeStub(KernelModeFile, 
-                                                    ZwSyscallName, 
-                                                    StackBytes, 
-                                                    SyscallId | Index);
+            if (KernelModeFile) {
+
+                NtSyscallName[0] = 'Z';
+                NtSyscallName[1] = 'w';
+                WriteKernelModeStub(KernelModeFile,
+                                    NtSyscallName,
+                                    StackBytes,
+                                    SyscallId | Index);
+            }
         
             /* Only increase if we actually added something */
             SyscallId++;
