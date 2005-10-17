@@ -94,7 +94,7 @@ protected:
 	int		Command(int id, int code);
 	int		Notify(int id, NMHDR* pnmh);
 
-	void	ActivateApp(TaskBarMap::iterator it, bool can_minimize=true);
+	void	ActivateApp(TaskBarMap::iterator it, bool can_minimize=true, bool can_restore=true);
 	void	ShowAppSystemMenu(TaskBarMap::iterator it);
 
 	static BOOL CALLBACK EnumWndProc(HWND hwnd, LPARAM lparam);

@@ -194,7 +194,7 @@ LRESULT TaskBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		Point pt(lparam);
 		ScreenToClient(_htoolbar, &pt);
 
-		if ((HWND)wparam==_htoolbar && SendMessage(_htoolbar, TB_HITTEST, 0, (LPARAM)&pt)>0)
+		if ((HWND)wparam==_htoolbar && SendMessage(_htoolbar, TB_HITTEST, 0, (LPARAM)&pt)>=0)
 			break;	// avoid displaying context menu for application button _and_ desktop bar at the same time
 
 		goto def;}
@@ -258,7 +258,7 @@ int TaskBar::Notify(int id, NMHDR* pnmh)
 				(it=_map.find_id(btninfo.idCommand))!=_map.end()) {
 				//TaskBarEntry& entry = it->second;
 
-				ActivateApp(it, false);
+				ActivateApp(it, false, false);	// don't restore minimized windows on right button click
 
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
 				static DynamicFct<DWORD(STDAPICALLTYPE*)(RESTRICTIONS)> pSHRestricted(TEXT("SHELL32"), "SHRestricted");
@@ -277,7 +277,7 @@ int TaskBar::Notify(int id, NMHDR* pnmh)
 }
 
 
-void TaskBar::ActivateApp(TaskBarMap::iterator it, bool can_minimize)
+void TaskBar::ActivateApp(TaskBarMap::iterator it, bool can_minimize, bool can_restore)
 {
 	HWND hwnd = it->first;
 
@@ -285,7 +285,7 @@ void TaskBar::ActivateApp(TaskBarMap::iterator it, bool can_minimize)
 						(hwnd==GetForegroundWindow() || hwnd==_last_foreground_wnd);
 
 	 // switch to selected application window
-	if (!minimize_it)
+	if (can_restore && !minimize_it)
 		if (IsIconic(hwnd))
 			PostMessage(hwnd, WM_SYSCOMMAND, SC_RESTORE, 0);
 
@@ -312,8 +312,10 @@ void TaskBar::ShowAppSystemMenu(TaskBarMap::iterator it)
 		GetCursorPos(&pt);
 		int cmd = TrackPopupMenu(hmenu, TPM_LEFTBUTTON|TPM_RIGHTBUTTON|TPM_RETURNCMD, pt.x, pt.y, 0, _hwnd, NULL);
 
-		if (cmd)
+		if (cmd) {
+			ActivateApp(it, false, false);	// reactivate window after the context menu has closed
 			PostMessage(it->first, WM_SYSCOMMAND, cmd, 0);
+		}
 	}
 }
 
