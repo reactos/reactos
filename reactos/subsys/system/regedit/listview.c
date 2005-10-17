@@ -242,7 +242,6 @@ static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValB
             break;
         }
     }
-	HeapFree(GetProcessHeap(), 0, linfo);
 }
 
 static BOOL CreateListColumns(HWND hWndListView)
