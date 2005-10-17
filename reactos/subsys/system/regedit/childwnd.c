@@ -270,7 +270,8 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         /* load "My Computer" string */
         LoadString(hInst, IDS_MY_COMPUTER, buffer, sizeof(buffer)/sizeof(TCHAR));
 
-	g_pChildWnd = pChildWnd = HeapAlloc(GetProcessHeap(), 0, sizeof(ChildWnd));
+	    g_pChildWnd = pChildWnd = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ChildWnd));
+		
         if (!pChildWnd) return 0;
         _tcsncpy(pChildWnd->szPath, buffer, MAX_PATH);
         pChildWnd->nSplitPos = 250;
