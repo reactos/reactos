@@ -102,7 +102,7 @@ struct Window : public WindowHandle
 	LRESULT	SendParent(UINT nmsg, WPARAM wparam=0, LPARAM lparam=0);
 	LRESULT	PostParent(UINT nmsg, WPARAM wparam=0, LPARAM lparam=0);
 
-	static void CancelModes(HWND hwnd=0);
+	static void CancelModes();
 
 
 protected:
