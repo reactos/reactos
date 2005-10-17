@@ -23,6 +23,7 @@
 #include <limits.h>
 #include <stdio.h>
 #include <ctype.h>
+#include <stdlib.h>
 #include <windows.h>
 #include <winnt.h>
 #include <winreg.h>

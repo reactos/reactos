@@ -28,6 +28,7 @@
 #include <shellapi.h>
 #include <objsel.h>
 #include <objbase.h>
+#include <ole2.h>
 
 #include "main.h"
 #include "regproc.h"
