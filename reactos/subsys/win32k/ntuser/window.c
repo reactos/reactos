@@ -2035,7 +2035,7 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
    ASSERT_REFS_CO(Window); //fixme: temp hack?
 
    /* Check for owner thread and desktop window */
-   if ((Window->OwnerThread != PsGetCurrentThread()) || IntIsDesktopWindow(Window))
+   if ((Window->OwnerThread != PsGetCurrentThread()))
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
       return FALSE;
@@ -2103,7 +2103,8 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
          HWND *ChildHandle;
          PWINDOW_OBJECT Child, Desktop;
 
-         Desktop = UserGetWindowObject(IntGetDesktopWindow());
+         Desktop = IntIsDesktopWindow(Window) ? Window :
+                   UserGetWindowObject(IntGetDesktopWindow());
          Children = IntWinListChildren(Desktop);
 
          if (Children)
