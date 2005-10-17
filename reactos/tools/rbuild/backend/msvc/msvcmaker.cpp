@@ -250,7 +250,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 	fprintf ( OUT, "# PROP Scc_LocalPath \"\"\r\n" );
 	fprintf ( OUT, "CPP=cl.exe\r\n" );
 	if ( !lib && !exe ) fprintf ( OUT, "MTL=midl.exe\r\n" );
-	fprintf ( OUT, "RSC=rc.exe\r\n" );
+	fprintf ( OUT, "RSC=windres.exe\r\n" );
 
 	int n = 0;
 
