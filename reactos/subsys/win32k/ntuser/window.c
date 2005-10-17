@@ -2034,7 +2034,7 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
 
    ASSERT_REFS_CO(Window); //fixme: temp hack?
 
-   /* Check for owner thread and desktop window */
+   /* Check for owner thread */
    if ((Window->OwnerThread != PsGetCurrentThread()))
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
