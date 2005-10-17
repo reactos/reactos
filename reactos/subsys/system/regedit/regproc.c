@@ -1620,17 +1620,26 @@ LONG RegRenameKey(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpNewName)
 {
     LPCTSTR s;
     LPTSTR lpNewSubKey;
+	LONG Ret = 0;
 
     s = _tcsrchr(lpSubKey, '\\');
     if (s)
     {
         s++;
-        lpNewSubKey = (LPTSTR) alloca((s - lpSubKey + _tcslen(lpNewName) + 1) * sizeof(TCHAR));
-        memcpy(lpNewSubKey, lpSubKey, (s - lpSubKey) * sizeof(TCHAR));
-        _tcscpy(lpNewSubKey + (s - lpSubKey), lpNewName);
-        lpNewName = lpNewSubKey;
+        lpNewSubKey = (LPTSTR) HeapAlloc(GetProcessHeap(), 0, (s - lpSubKey + _tcslen(lpNewName) + 1) * sizeof(TCHAR));
+        if (lpNewName != NULL) {
+			memcpy(lpNewSubKey, lpSubKey, (s - lpSubKey) * sizeof(TCHAR));
+			_tcscpy(lpNewSubKey + (s - lpSubKey), lpNewName);
+			lpNewName = lpNewSubKey;		
+		}
     }
-    return RegMoveKey(hKey, lpNewName, hKey, lpSubKey);
+	if (lpNewName != NULL) {
+		Ret = RegMoveKey(hKey, lpNewName, hKey, lpSubKey);
+		if (s) {
+			HeapFree(GetProcessHeap(), 0, lpNewSubKey);
+		}
+	}
+    return Ret;
 }
 
 LONG RegRenameValue(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpDestValue, LPCTSTR lpSrcValue)
