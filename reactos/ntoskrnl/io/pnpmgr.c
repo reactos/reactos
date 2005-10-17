@@ -325,13 +325,10 @@ IoGetDeviceProperty(
         if (!NT_SUCCESS(Status))
         {
           ExFreePool(ValueInformation);
-          return Status;
-        }
-
-        if (ValueInformation->DataLength > BufferLength)
-        {
-          ExFreePool(ValueInformation);
-          return STATUS_BUFFER_TOO_SMALL;
+          if (Status == STATUS_BUFFER_OVERFLOW)
+            return STATUS_BUFFER_TOO_SMALL;
+          else
+            return Status;
         }
 
         /* FIXME: Verify the value (NULL-terminated, correct format). */
