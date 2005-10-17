@@ -2052,11 +2052,13 @@ int StartMenuHandler::Command(int id, int code)
 
 void StartMenuHandler::ShowSearchDialog()
 {
+#ifndef _ROS_	///@todo to be removed when SHFindFiles() will be implemented in shell32.dll
 	static DynamicFct<SHFINDFILES> SHFindFiles(TEXT("SHELL32"), 90);
 
 	if (SHFindFiles)
 		(*SHFindFiles)(NULL, NULL);
 	else
+#endif
 		MessageBox(0, TEXT("SHFindFiles() not yet implemented in SHELL32"), ResString(IDS_TITLE), MB_OK);
 }
 
