@@ -15,7 +15,9 @@
 #define	_EXCPT_H_
 
 /* All the headers include this file. */
+#if defined(__MINGW32__)
 #include <_mingw.h>
+#endif
 
 #include <windef.h>
 
