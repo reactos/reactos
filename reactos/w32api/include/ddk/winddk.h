@@ -3402,6 +3402,11 @@ typedef struct _IO_STACK_LOCATION {
 #define SL_INVOKE_ON_SUCCESS              0x40
 #define SL_INVOKE_ON_ERROR                0x80
 
+/* IO_STACK_LOCATION.Parameters.ReadWriteControl.WhichSpace */
+
+#define PCI_WHICHSPACE_CONFIG             0x0
+#define PCI_WHICHSPACE_ROM                0x52696350 /* 'PciR' */
+
 typedef enum _KEY_INFORMATION_CLASS {
   KeyBasicInformation,
   KeyNodeInformation,
