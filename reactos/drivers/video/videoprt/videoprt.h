@@ -148,6 +148,11 @@ IntVideoPortDispatchPower(
    IN PDEVICE_OBJECT DeviceObject,
    IN PIRP Irp);
 
+NTSTATUS NTAPI
+IntVideoPortDispatchWrite(
+   IN PDEVICE_OBJECT DeviceObject,
+   IN PIRP Irp);
+
 VOID NTAPI
 IntVideoPortUnload(PDRIVER_OBJECT DriverObject);
 

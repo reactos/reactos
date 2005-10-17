@@ -18,7 +18,6 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id$
  */
 
 #include "videoprt.h"
@@ -133,18 +132,6 @@ IntVideoPortDispatchOpen(
       Irp->IoStatus.Status = STATUS_SUCCESS;
 
       InterlockedIncrement((PLONG)&DeviceExtension->DeviceOpened);
-
-      /*
-       * Storing the device extension pointer in a static variable is an
-       * ugly hack. Unfortunately, we need it in VideoPortResetDisplayParameters
-       * and HalAcquireDisplayOwnership doesn't allow us to pass a userdata
-       * parameter. On the bright side, the DISPLAY device is opened
-       * exclusively, so there can be only one device extension active at
-       * any point in time.
-       */
-
-      ResetDisplayParametersDeviceExtension = DeviceExtension;
-      HalAcquireDisplayOwnership(IntVideoPortResetDisplayParameters);
    }
    else
    {
@@ -263,6 +250,56 @@ IntVideoPortDispatchDeviceControl(
 
    return Status;
 }
+
+/*
+ * IntVideoPortWrite
+ *
+ * This is a bit of a hack. We want to take ownership of the display as late
+ * as possible, just before the switch to graphics mode. Win32k knows when
+ * this happens, we don't. So we need Win32k to inform us. This could be done
+ * using an IOCTL, but there's no way of knowing which IOCTL codes are unused
+ * in the communication between GDI driver and miniport driver. So we use
+ * IRP_MJ_WRITE as the signal that win32k is ready to switch to graphics mode,
+ * since we know for certain that there is no read/write activity going on
+ * between GDI and miniport drivers.
+ * We don't actually need the data that is passed, we just trigger on the fact
+ * that an IRP_MJ_WRITE was sent.
+ *
+ * Run Level
+ *    PASSIVE_LEVEL
+ */
+
+NTSTATUS NTAPI
+IntVideoPortDispatchWrite(
+   IN PDEVICE_OBJECT DeviceObject,
+   IN PIRP Irp)
+{
+   PIO_STACK_LOCATION piosStack = IoGetCurrentIrpStackLocation(Irp);
+   PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
+   NTSTATUS nErrCode;
+
+   DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+   /*
+    * Storing the device extension pointer in a static variable is an
+    * ugly hack. Unfortunately, we need it in VideoPortResetDisplayParameters
+    * and HalAcquireDisplayOwnership doesn't allow us to pass a userdata
+    * parameter. On the bright side, the DISPLAY device is opened
+    * exclusively, so there can be only one device extension active at
+    * any point in time.
+    */
+
+   ResetDisplayParametersDeviceExtension = DeviceExtension;
+   HalAcquireDisplayOwnership(IntVideoPortResetDisplayParameters);
+
+   nErrCode = STATUS_SUCCESS;
+   Irp->IoStatus.Information = piosStack->Parameters.Write.Length;
+   Irp->IoStatus.Status = nErrCode;
+   IoCompleteRequest(Irp, IO_NO_INCREMENT);
+
+   return nErrCode;
+}
+
 
 NTSTATUS NTAPI
 IntVideoPortPnPStartDevice(

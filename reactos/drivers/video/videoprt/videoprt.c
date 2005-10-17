@@ -646,6 +646,7 @@ VideoPortInitialize(
    DriverObject->MajorFunction[IRP_MJ_CREATE] = IntVideoPortDispatchOpen;
    DriverObject->MajorFunction[IRP_MJ_CLOSE] = IntVideoPortDispatchClose;
    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = IntVideoPortDispatchDeviceControl;
+   DriverObject->MajorFunction[IRP_MJ_WRITE] = IntVideoPortDispatchWrite;
    DriverObject->DriverUnload = IntVideoPortUnload;
 
    /*
