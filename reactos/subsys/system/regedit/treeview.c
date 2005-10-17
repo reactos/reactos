@@ -181,9 +181,9 @@ static BOOL RefreshTreeItem(HWND hwndTV, HTREEITEM hItem)
         goto done;
     }
     tvItem.cchTextMax = dwMaxSubKeyLen;
-    if (!(tvItem.pszText = HeapAlloc(GetProcessHeap(), 0, dwMaxSubKeyLen * sizeof(TCHAR)))) {
+    /*if (!(tvItem.pszText = HeapAlloc(GetProcessHeap(), 0, dwMaxSubKeyLen * sizeof(TCHAR)))) {
         goto done;
-    }
+    }*/
 
     /* Get all of the tree node siblings in one contiguous block of memory */
     {

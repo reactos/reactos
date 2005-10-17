@@ -517,7 +517,7 @@ HEXEDIT_WM_NCDESTROY(PHEXEDIT_DATA hed)
 {
   if(hed->hBuffer)
   {
-    while(LocalUnlock(hed->hBuffer));
+    //while(LocalUnlock(hed->hBuffer));
     LocalFree(hed->hBuffer);
   }
 

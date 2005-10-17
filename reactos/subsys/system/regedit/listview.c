@@ -223,7 +223,7 @@ static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValB
                 LPTSTR strBinary;
                 if(dwCount > 0)
                 {
-                    strBinary = HeapAlloc(GetProcessHeap(), 0, (dwCount * sizeof(TCHAR) * 3) + 1);
+                    strBinary = HeapAlloc(GetProcessHeap(), 0, (dwCount * sizeof(TCHAR) * 3) + sizeof(TCHAR));
                     for (i = 0; i < dwCount; i++)
                     {
                         wsprintf( strBinary + i*3, _T("%02X "), pData[i] );
