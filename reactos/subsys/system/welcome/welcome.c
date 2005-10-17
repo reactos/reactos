@@ -566,7 +566,7 @@ OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	     0,
 	     SRCCOPY);
     }
-  else if (hTopicBitmap[nTopic] != 0)
+  else if ((nTopic != -1) && (hTopicBitmap[nTopic] != 0))
     {
       GetObject(hTopicBitmap[nTopic], sizeof(BITMAP), &bmpInfo);
       hOldBitmap = SelectObject (hdcMem, hTopicBitmap[nTopic]);
