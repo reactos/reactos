@@ -1296,7 +1296,6 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
                     {
                       PEPROCESS DbgProcess = NULL;
 
-                      ptr = NULL;
                       if (NULL != GspDbgThread &&
                           PsGetCurrentProcess() != GspDbgThread->ThreadsProcess)
                         {
@@ -1318,6 +1317,7 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
                         {
                           strcpy(GspOutBuffer, "OK");
                         }
+                      ptr = NULL;
                     }
                 }
 
