@@ -38,6 +38,8 @@ LpcSendTerminationPort (IN PEPORT Port,
 #ifdef __USE_NT_LPC__
   Msg.h.u2.s2.Type = LPC_CLIENT_DIED;
 #endif
+  Msg.h.u1.s1.TotalLength = sizeof(Msg);
+  Msg.h.u1.s1.DataLength = sizeof(Msg) - sizeof(PORT_MESSAGE);
   Msg.CreateTime = CreateTime;
   Status = LpcRequestPort (Port, &Msg.h);
   return(Status);
