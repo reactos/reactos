@@ -269,6 +269,7 @@ LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         }
 
         DestroyCalc( &calc );
+		DestroyMenus();
         PostQuitMessage( 0 );
         return 0;
 
@@ -2839,6 +2840,12 @@ void DestroyCalc (CALC *calc)
 {
     int i;
 
+    for (i=0;i<calc->numButtons;i++)
+        DestroyWindow(calc->cb[i].hBtn);
+}
+
+void DestroyMenus()
+{
     if (menus[MENU_STD] != 0)
         DestroyMenu(menus[MENU_STD]);
 
@@ -2847,9 +2854,6 @@ void DestroyCalc (CALC *calc)
 
     if (menus[MENU_SCIWS] != 0)
         DestroyMenu(menus[MENU_SCIWS]);
-
-    for (i=0;i<calc->numButtons;i++)
-        DestroyWindow(calc->cb[i].hBtn);
 }
 
 void calc_buffer_format(CALC *calc) {
