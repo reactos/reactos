@@ -123,6 +123,8 @@ MsConfigWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         break;
 
     case WM_DESTROY:
+		DestroyWindow(hToolsPage);
+		DestroyWindow(hServicesPage);
         return DefWindowProc(hDlg, message, wParam, lParam);
 
     }
