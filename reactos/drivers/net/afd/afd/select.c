@@ -51,25 +51,28 @@ static VOID ZeroEvents( PAFD_HANDLE HandleArray,
 	HandleArray[i].Status = 0;
 }
 
-static VOID RemoveSelect( PAFD_ACTIVE_POLL Poll ) {
-    AFD_DbgPrint(MID_TRACE,("Called\n"));
 
-    RemoveEntryList( &Poll->ListEntry );
-    KeCancelTimer( &Poll->Timer );
-
-    ExFreePool( Poll );
-
-    AFD_DbgPrint(MID_TRACE,("Done\n"));
-}
-
-static VOID SignalSocket( PAFD_ACTIVE_POLL Poll, PAFD_POLL_INFO PollReq,
-		   NTSTATUS Status ) {
+/* you must pass either Poll OR Irp */
+static VOID SignalSocket( 
+   PAFD_ACTIVE_POLL Poll OPTIONAL, 
+   PIRP _Irp OPTIONAL, 
+   PAFD_POLL_INFO PollReq,
+	NTSTATUS Status 
+   ) 
+{
     UINT i;
-    PIRP Irp = Poll->Irp;
+    PIRP Irp = _Irp ? _Irp : Poll->Irp;
     AFD_DbgPrint(MID_TRACE,("Called (Status %x)\n", Status));
-    KeCancelTimer( &Poll->Timer );
-    Poll->Irp->IoStatus.Status = Status;
-    Poll->Irp->IoStatus.Information =
+    
+    if (Poll)
+    {
+       KeCancelTimer( &Poll->Timer );
+      RemoveEntryList( &Poll->ListEntry );
+      ExFreePool( Poll );
+   }
+    
+    Irp->IoStatus.Status = Status;
+    Irp->IoStatus.Information =
         FIELD_OFFSET(AFD_POLL_INFO, Handles) + sizeof(AFD_HANDLE) * PollReq->HandleCount;
     CopyBackStatus( PollReq->Handles,
 		    PollReq->HandleCount );
@@ -84,8 +87,6 @@ static VOID SignalSocket( PAFD_ACTIVE_POLL Poll, PAFD_POLL_INFO PollReq,
     UnlockHandles( AFD_HANDLES(PollReq), PollReq->HandleCount );
     AFD_DbgPrint(MID_TRACE,("Completing\n"));
     IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
-    RemoveEntryList( &Poll->ListEntry );
-    RemoveSelect( Poll );
     AFD_DbgPrint(MID_TRACE,("Done\n"));
 }
 
@@ -108,7 +109,7 @@ static VOID SelectTimeout( PKDPC Dpc,
     ZeroEvents( PollReq->Handles, PollReq->HandleCount );
 
     KeAcquireSpinLock( &DeviceExt->Lock, &OldIrql );
-    SignalSocket( Poll, PollReq, STATUS_TIMEOUT );
+    SignalSocket( Poll, NULL, PollReq, STATUS_TIMEOUT );
     KeReleaseSpinLock( &DeviceExt->Lock, OldIrql );
 
     AFD_DbgPrint(MID_TRACE,("Timeout\n"));
@@ -143,7 +144,7 @@ VOID KillSelectsForFCB( PAFD_DEVICE_EXTENSION DeviceExt,
             if( (PVOID)HandleArray[i].Handle == FileObject &&
                 (!OnlyExclusive || (OnlyExclusive && Poll->Exclusive)) ) {
                 ZeroEvents( PollReq->Handles, PollReq->HandleCount );
-                SignalSocket( Poll, PollReq, STATUS_SUCCESS );
+                SignalSocket( Poll, NULL, PollReq, STATUS_SUCCESS );
             }
 	}
     }
@@ -161,7 +162,6 @@ AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     PFILE_OBJECT FileObject;
     PAFD_POLL_INFO PollReq = Irp->AssociatedIrp.SystemBuffer;
     PAFD_DEVICE_EXTENSION DeviceExt = DeviceObject->DeviceExtension;
-    PAFD_ACTIVE_POLL Poll = NULL;
     UINT CopySize = IrpSp->Parameters.DeviceIoControl.InputBufferLength;
     UINT AllocSize =
 	CopySize + sizeof(AFD_ACTIVE_POLL) - sizeof(AFD_POLL_INFO);
@@ -196,22 +196,7 @@ AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
     ZeroEvents( PollReq->Handles,
 		PollReq->HandleCount );
 
-    Poll = ExAllocatePool( NonPagedPool, AllocSize );
-
-    if( Poll ) {
-	Poll->Irp = Irp;
-	Poll->DeviceExt = DeviceExt;
-	Poll->Exclusive = Exclusive;
-
-	KeInitializeTimerEx( &Poll->Timer, NotificationTimer );
-	KeSetTimer( &Poll->Timer, PollReq->Timeout, &Poll->TimeoutDpc );
-
-	KeInitializeDpc( (PRKDPC)&Poll->TimeoutDpc,
-			 (PKDEFERRED_ROUTINE)SelectTimeout,
-			 Poll );
-
 	KeAcquireSpinLock( &DeviceExt->Lock, &OldIrql );
-	InsertTailList( &DeviceExt->Polls, &Poll->ListEntry );
 
 	for( i = 0; i < PollReq->HandleCount; i++ ) {
 	    if( !AFD_HANDLES(PollReq)[i].Handle ) continue;
@@ -243,14 +228,37 @@ AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	if( Signalled ) {
 	    Status = STATUS_SUCCESS;
 	    Irp->IoStatus.Status = Status;
-	    SignalSocket( Poll, PollReq, Status );
+	    SignalSocket( NULL, Irp, PollReq, Status );
 	} else {
-	    Status = STATUS_PENDING;
-	    IoMarkIrpPending( Irp );
+      
+       PAFD_ACTIVE_POLL Poll = NULL;
+       
+       Poll = ExAllocatePool( NonPagedPool, AllocSize );
+ 
+       if (Poll){
+          Poll->Irp = Irp;
+          Poll->DeviceExt = DeviceExt;
+          Poll->Exclusive = Exclusive;
+
+          KeInitializeTimerEx( &Poll->Timer, NotificationTimer );
+
+          KeInitializeDpc( (PRKDPC)&Poll->TimeoutDpc,
+             (PKDEFERRED_ROUTINE)SelectTimeout,
+             Poll );
+          
+          InsertTailList( &DeviceExt->Polls, &Poll->ListEntry );
+
+          KeSetTimer( &Poll->Timer, PollReq->Timeout, &Poll->TimeoutDpc );
+
+          Status = STATUS_PENDING;
+          IoMarkIrpPending( Irp );
+       } else {
+          AFD_DbgPrint(MAX_TRACE, ("FIXME: do something with the IRP!\n"));
+          Status = STATUS_NO_MEMORY;
+       }
 	}
 
 	KeReleaseSpinLock( &DeviceExt->Lock, OldIrql );
-    } else Status = STATUS_NO_MEMORY;
 
     AFD_DbgPrint(MID_TRACE,("Returning %x\n", Status));
 
@@ -400,7 +408,7 @@ VOID PollReeval( PAFD_DEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject ) {
 	if( UpdatePollWithFCB( Poll, FileObject ) ) {
 	    ThePollEnt = ThePollEnt->Flink;
 	    AFD_DbgPrint(MID_TRACE,("Signalling socket\n"));
-	    SignalSocket( Poll, PollReq, STATUS_SUCCESS );
+	    SignalSocket( Poll, NULL, PollReq, STATUS_SUCCESS );
 	} else
 	    ThePollEnt = ThePollEnt->Flink;
     }
