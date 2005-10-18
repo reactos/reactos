@@ -19,9 +19,6 @@
 <directory name="route">
     <xi:include href="route/route.xml" />
 </directory>
-<directory name="tcpsvcs">
-    <xi:include href="tcpsvcs/tcpsvcs.xml" />
-</directory>
 <directory name="telnet">
     <xi:include href="telnet/telnet.xml" />
 </directory>
