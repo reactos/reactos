@@ -9,6 +9,7 @@ ServicesPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	LV_COLUMN   column;
 	TCHAR       szTemp[256];
+	DWORD dwStyle;
 
     switch (message) {
     case WM_INITDIALOG:
@@ -16,7 +17,6 @@ ServicesPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         hServicesListCtrl = GetDlgItem(hDlg, IDC_TOOLS_LIST);
         hServicesDialog = hDlg;
 
-		DWORD dwStyle;
         dwStyle = SendMessage(hServicesListCtrl, LVM_GETEXTENDEDLISTVIEWSTYLE, 0, 0);
         dwStyle = dwStyle | LVS_EX_FULLROWSELECT | LVS_EX_CHECKBOXES;
         SendMessage(hServicesListCtrl, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, dwStyle);

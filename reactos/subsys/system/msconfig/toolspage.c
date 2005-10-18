@@ -47,6 +47,7 @@ ToolsPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 	TCHAR       szTemp2[256];
 	LPNMITEMACTIVATE lpnmitem;
 	LPNMHDR nmh;
+	DWORD dwStyle;
 
     switch (message) {
     case WM_INITDIALOG:
@@ -54,7 +55,6 @@ ToolsPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         hToolsListCtrl = GetDlgItem(hDlg, IDC_TOOLS_LIST);
         hToolsDialog = hDlg;
 
-		DWORD dwStyle;
         dwStyle = SendMessage(hToolsListCtrl, LVM_GETEXTENDEDLISTVIEWSTYLE, 0, 0);
         dwStyle = dwStyle | LVS_EX_FULLROWSELECT;
         SendMessage(hToolsListCtrl, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, dwStyle);
