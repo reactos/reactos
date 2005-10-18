@@ -197,6 +197,8 @@ subsys\system\expand\expand.exe         1
 subsys\system\hostname\hostname.exe     1
 services\eventlog\eventlog.exe          1
 services\rpcss\rpcss.exe                1
+services\tcpsvcs\tcpsvcs.exe            1
+services\tcpsvcs\quotes                 5
 services\umpnpmgr\umpnpmgr.exe          1
 apps\utils\net\arp\arp.exe              1
 apps\utils\net\route\route.exe          1
@@ -206,8 +208,6 @@ apps\utils\net\ipconfig\ipconfig.exe    1
 apps\utils\net\netstat\netstat.exe      1
 apps\utils\net\ping\ping.exe            1
 apps\utils\net\telnet\telnet.exe        1
-apps\utils\net\tcpsvcs\tcpsvcs.exe      1
-apps\utils\net\tcpsvcs\quotes           5
 apps\utils\net\tracert\tracert.exe      1
 apps\utils\net\whois\whois.exe          1
 apps\utils\ps\ps.exe                    1
