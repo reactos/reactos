@@ -124,11 +124,7 @@ static HTREEITEM AddEntryToTree(HWND hwndTV, HTREEITEM hParent, LPTSTR label, HK
     tvi.iSelectedImage = Image_Open;
     tvi.cChildren = dwChildren;
     tvi.lParam = (LPARAM)hKey;
-#if defined(__MINGW32__)
-    tvins.u.item = tvi;
-#else
-	tvins.item = tvi;
-#endif
+    tvins.DUMMYUNIONNAME.item = tvi;
     tvins.hInsertAfter = (HTREEITEM)(hKey ? TVI_LAST : TVI_FIRST);
     tvins.hParent = hParent;
     return TreeView_InsertItem(hwndTV, &tvins);
@@ -366,11 +362,7 @@ static BOOL InitTreeViewItems(HWND hwndTV, LPTSTR pHostName)
     tvi.cChildren = 5;
     /* Save the heading level in the item's application-defined data area.  */
     tvi.lParam = (LPARAM)NULL;
-#if defined(__MINGW32__)
-		tvins.u.item = tvi;
-#else
-		tvins.item = tvi;
-#endif
+    tvins.DUMMYUNIONNAME.item = tvi;
     tvins.hInsertAfter = (HTREEITEM)TVI_FIRST;
     tvins.hParent = TVI_ROOT;
     /* Add the item to the tree view control.  */
