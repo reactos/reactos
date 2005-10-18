@@ -6,7 +6,7 @@
 	<xi:include href="rpcss/rpcss.xml" />
 </directory>
 <directory name="tcpsvcs">
-    <xi:include href="tcpsvcs/tcpsvcs.xml" />
+	<xi:include href="tcpsvcs/tcpsvcs.xml" />
 </directory>
 <directory name="umpnpmgr">
 	<xi:include href="umpnpmgr/umpnpmgr.xml" />
