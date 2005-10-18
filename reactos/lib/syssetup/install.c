@@ -433,14 +433,15 @@ InstallReactOS (HINSTANCE hInstance)
   /* create desktop shortcuts */
   CreateShortcut(CSIDL_DESKTOP, NULL, _T("Command Prompt.lnk"), _T("cmd.exe"), IDS_CMT_CMD);
 
-  /* create program startmenu shortcuts */
-  CreateShortcut(CSIDL_PROGRAMS, NULL, _T("Command Prompt.lnk"), _T("cmd.exe"), IDS_CMT_CMD);
-  CreateShortcut(CSIDL_PROGRAMS, NULL, _T("explorer.lnk"), _T("explorer.exe"), IDS_CMT_EXPLORER);
+  /* create program startmenu shortcuts */  
   CreateShortcut(CSIDL_PROGRAMS, NULL, _T("winefile.lnk"), _T("winefile.exe"), IDS_CMT_WINEFILE);
 
   /* create and fill Accessories subfolder */
   if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_ACCESSORIES, sAccessories, 256)) {
+	//CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("Calculator.lnk"), _T("calc.exe"), IDS_CMT_CALC);
+	CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("Command Prompt.lnk"), _T("cmd.exe"), IDS_CMT_CMD);
     CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("notepad.lnk"), _T("notepad.exe"), IDS_CMT_NOTEPAD);
+    CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("explorer.lnk"), _T("explorer.exe"), IDS_CMT_EXPLORER);
     CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("regedit.lnk"), _T("regedit.exe"), IDS_CMT_REGEDIT);
   }
 

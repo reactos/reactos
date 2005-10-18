@@ -92,6 +92,7 @@
 #define IDS_CMT_WINEFILE		3212
 #define IDS_CMT_NOTEPAD			3213
 #define IDS_CMT_REGEDIT			3214
+#define IDS_CMT_CALC			3215
 
 #define IDR_GPL				4000
 
