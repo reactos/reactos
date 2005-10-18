@@ -43,12 +43,7 @@
 
 
 /* command line buffer length */
-#ifdef __REACTOS__
 #define CMDLINE_LENGTH  8192
-#else
-#define CMDLINE_LENGTH  8192
-//#define CMDLINE_LENGTH  1024
-#endif
 
 /* global variables */
 extern HANDLE hOut;
@@ -305,9 +300,6 @@ BOOL   IsValidPathName (LPCTSTR);
 BOOL   IsExistingFile (LPCTSTR);
 BOOL   IsExistingDirectory (LPCTSTR);
 BOOL   FileGetString (HANDLE, LPTSTR, INT);
-#ifndef __REACTOS__
-HWND   GetConsoleWindow(VOID);
-#endif
 
 #define PROMPT_NO    0
 #define PROMPT_YES   1
