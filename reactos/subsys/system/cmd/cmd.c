@@ -1648,24 +1648,6 @@ Initialize (int argc, TCHAR* argv[])
 	{
 		ParseCommandLine (_T("\\cmdstart.bat"));
 	}
-#ifndef __REACTOS__
-	else
-	{
-		/* try to run cmdstart.bat from install dir */
-		LPTSTR p;
-
-		_tcscpy (commandline, argv[0]);
-		p = _tcsrchr (commandline, _T('\\')) + 1;
-		_tcscpy (p, _T("cmdstart.bat"));
-
-		if (IsExistingFile (_T("commandline")))
-		{
-			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR4, szMsg, RC_STRING_MAX_SIZE);
-			ConErrPrintf(szMsg, commandline);
-			ParseCommandLine (commandline);
-		}
-	}
-#endif
 
 #ifdef FEATURE_DIR_STACK
 	/* initialize directory stack */
@@ -1692,10 +1674,6 @@ Initialize (int argc, TCHAR* argv[])
 
 static VOID Cleanup (int argc, TCHAR *argv[])
 {
-#ifndef __REACTOS__
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
-#endif
-
 	/* run cmdexit.bat */
 	if (IsExistingFile (_T("cmdexit.bat")))
 	{
@@ -1708,25 +1686,6 @@ static VOID Cleanup (int argc, TCHAR *argv[])
 		ConErrResPuts (STRING_CMD_ERROR5);
 		ParseCommandLine (_T("\\cmdexit.bat"));
 	}
-#ifndef __REACTOS__
-	else
-	{
-		/* try to run cmdexit.bat from install dir */
-		TCHAR commandline[CMDLINE_LENGTH];
-		LPTSTR p;
-
-		_tcscpy (commandline, argv[0]);
-		p = _tcsrchr (commandline, _T('\\')) + 1;
-		_tcscpy (p, _T("cmdexit.bat"));
-
-		if (IsExistingFile (_T("commandline")))
-		{
-			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR4, szMsg, RC_STRING_MAX_SIZE);
-			ConErrPrintf(szMsg, commandline);
-			ParseCommandLine (commandline);
-		}
-	}
-#endif
 
 #ifdef FEATURE_ALIASES
 	DestroyAlias ();

@@ -15,15 +15,10 @@
 #ifndef _CONFIG_H_INCLUDED_
 #define _CONFIG_H_INCLUDED_
 
-
-#ifndef __REACTOS__
-#define WIN32_LEAN_AND_MEAN
-#endif /* __REACTOS__ */
-
-
 /* Define to enable debugging code */
 //#define _DEBUG
 
+#define WIN32_LEAN_AND_MEAN
 
 /* Define to enable the alias command, and aliases.*/
 #define FEATURE_ALIASES
