@@ -151,6 +151,7 @@ main ( int argc, char** argv )
 	{
 		printf ( "Generates project files for buildsystems\n\n" );
 		printf ( "  rbuild [switches] buildsystem\n" );
+		printf ( "  rbuild msvc\n" );
 		printf ( "Switches:\n" );
 		printf ( "  -v            Be verbose.\n" );
 		printf ( "  -c            Clean as you go. Delete generated files as soon as they are not\n" );
@@ -163,9 +164,10 @@ main ( int argc, char** argv )
 		printf ( "  -ps           Generate proxy makefiles in source tree instead of the output.\n" );
 		printf ( "                tree.\n" );
 		printf ( "\n" );
-		printf ( "  buildsystem  Target build system. Can be one of:\n" );
+		printf ( "  buildsystem   Target build system. Can be one of:\n" );
 		printf ( "                 mingw   MinGW\n" );
-		printf ( "                 devcpp  DevC++\n" );
+		printf ( "                 devcpp  DevC++\n\n" );
+		printf ( "  msvc          Generates dsp files for MSVC" );
 		return 1;
 	}
 	try

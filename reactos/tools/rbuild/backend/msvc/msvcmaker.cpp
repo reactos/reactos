@@ -250,7 +250,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 	fprintf ( OUT, "# PROP Scc_LocalPath \"\"\r\n" );
 	fprintf ( OUT, "CPP=cl.exe\r\n" );
 	if ( !lib && !exe ) fprintf ( OUT, "MTL=midl.exe\r\n" );
-	fprintf ( OUT, "RSC=windres.exe\r\n" );
+	fprintf ( OUT, "RSC=rc.exe\r\n" );
 
 	int n = 0;
 
@@ -481,6 +481,11 @@ MSVCBackend::_generate_dsp ( const Module& module )
 					fprintf ( OUT, " /i \"%s\"", includes[i].c_str() );
 				}
 			}
+
+			for ( i = 0; i < defines.size(); i++ )
+			{
+				fprintf ( OUT, " /D \"%s\"", defines[i].c_str() );
+			}
 			fprintf ( OUT, " /d \"_DEBUG\"\r\n" );
 		}
 		else
@@ -498,6 +503,13 @@ MSVCBackend::_generate_dsp ( const Module& module )
 				for ( i = 0; i < includes.size(); i++ )
 					fprintf ( OUT, " /i \"%s\"", includes[i].c_str() );
 			}
+
+			for ( i = 0; i < defines.size(); i++ )
+			{
+				fprintf ( OUT, " /D \"%s\"", defines[i].c_str() );
+			}
+
+
 			fprintf ( OUT, "/d \"NDEBUG\"\r\n" );
 		}
 		fprintf ( OUT, "BSC32=bscmake.exe\r\n" );
