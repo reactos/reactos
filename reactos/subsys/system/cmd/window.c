@@ -49,8 +49,7 @@ static INT ServiceActivate (LPTSTR param, HWND hWnd)
 
 
 	if (*param)
-		p = split(param, &argc);
-
+		p = split(param, &argc, FALSE);
 
 	for (i = 0; i < argc; i++)
 	{
@@ -187,7 +186,7 @@ INT CommandWindow (LPTSTR cmd, LPTSTR param)
 		return 0;
 	}
 
-	h = GetConsoleWindow();
+	hwnd = GetConsoleWindow();
 	Sleep(0);
 	return ServiceActivate(param, hwnd);
 }
@@ -195,8 +194,9 @@ INT CommandWindow (LPTSTR cmd, LPTSTR param)
 
 INT CommandActivate (LPTSTR cmd, LPTSTR param)
 {
-	LPTSTR str;
 	HWND hwnd;
+	LPTSTR *arg;
+	INT argc;
 
 	if (_tcsncmp (param, _T("/?"), 2) == 0)
 	{
@@ -207,24 +207,25 @@ INT CommandActivate (LPTSTR cmd, LPTSTR param)
 	if(!(*param))
 		return 1;
 
-	str=_tcschr(param,_T(' '));
-
-	if (str)
+	/*Split the user input into array*/
+	arg = split (param, &argc, FALSE);
+	if(argc < 2)
 	{
-		*str=_T('\0');
-		str++;
+		if(arg != NULL)
+			freep(arg);
 	}
-	else
-		str = "";
-
-	hwnd = FindWindow(NULL, param);
+	hwnd = FindWindow(NULL, arg[0]);
 	if (hwnd == NULL)
 	{
+		if(arg != NULL)
+			freep(arg);
 		ConErrResPuts(STRING_WINDOW_ERROR1);
 		return 1;
 	}
+	if(arg != NULL)
+		freep(arg);
 
-	return ServiceActivate(str, hwnd);
+	return ServiceActivate(param, hwnd);
 }
 
 #endif /* (  defined(INCLUDE_CMD_WINDOW) ||  defined(INCLUDE_CMD_ACTIVATE)  ) */
