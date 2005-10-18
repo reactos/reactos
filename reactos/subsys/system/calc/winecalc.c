@@ -2938,7 +2938,6 @@ void calc_buffer_format(CALC *calc) {
 void calc_buffer_display(CALC *calc) {
     TCHAR *p;
     TCHAR s[CALC_BUF_SIZE];
-    TCHAR r[CALC_BUF_SIZE] = TEXT("0");
     int point=0;
     calcfloat real;
 
@@ -2966,11 +2965,10 @@ void calc_buffer_display(CALC *calc) {
             else {
                 int i = 0;
                 int lz = 0;
-                calcfloat r;
                 int exp = 0;
 
-                r = calc_atof(calc->buffer, calc->numBase);
-                _stprintf(s, FMT_DESC_EXP, r);
+                real = calc_atof(calc->buffer, calc->numBase);
+                _stprintf(s, FMT_DESC_EXP, real);
                 // remove leading zeros in exponent
                 p = s;
                 while (*p) {
@@ -3026,13 +3024,11 @@ void calc_buffer_display(CALC *calc) {
             if (!point && calc->numBase == NBASE_DECIMAL)
                 _tcscat(s, TEXT("."));
 
-            if (*s == TEXT('.')) {
-                _tcscat(r, s);
-                _tcscpy(calc->display, r);
-            }
-            else {
-                _tcscpy(calc->display, s);
-            }
+            if (*s == TEXT('.'))
+                _tcscpy(calc->display, TEXT("0"));
+            else
+                calc->display[0] = 0;
+            _tcscat(calc->display, s);
         }
     }
     InvalidateRect(calc->hWnd, NULL, FALSE);
