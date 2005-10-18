@@ -95,7 +95,7 @@ BEGIN
     POPUP "&Hilfe"
     BEGIN
         MENUITEM "Explorer &FAQ...",            ID_EXPLORER_FAQ
-        MENUITEM "&About Explorer...",          ID_ABOUT_EXPLORER
+        MENUITEM "&Über Explorer...",          ID_ABOUT_EXPLORER
         MENUITEM "About &OS...",                ID_ABOUT_WINDOWS
     END
 END

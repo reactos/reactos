@@ -428,7 +428,7 @@ TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
   /S          Split time. Return stopwatch split\n\
               time without changing its value\n\
   /n          Specifiy the stopwach number.\n\
-              Stopwaches avaliable are 0 to 9\n\
+              Stopwaches available are 0 to 9\n\
               If it is not specified default is 1\n\
   /Fn         Format for output\n\
               n can be:\n\

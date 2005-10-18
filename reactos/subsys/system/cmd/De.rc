@@ -20,15 +20,15 @@ ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] Dateiname ...\n\
  /S   Verarbeitet uebereinstimmende Dateien im aktuellen Ordner\n\
       und in allen Unterordnern.\n\
   /D  Verarbeitet auch die Ordner.\n\n\
-Tippen Sie ATTRIB ohne Parameter ein um die derzeit gesetzten Attribute (aller Dateien) anzuzeigen."
+ATTRIB ohne Parameter zeigt die derzeit gesetzten Attribute aller Dateien an."
 
-STRING_ALIAS_HELP,  "Setzt, loescht oder zeigt alias.\n\n\
+STRING_ALIAS_HELP,  "Setzt, loescht oder zeigt Alias.\n\n\
 ALIAS [alias=[command]]\n\n\
   alias    Name des Alias.\n\
-  command  Text welcher fuer das alias zugeordnet wird.\n\n\
+  command  Text welcher fuer den Alias zugeordnet wird.\n\n\
 Listet alle Aliase auf:\n\
   ALIAS\n\n\
-Setzt ein neues oder ueberschreibt ein bestehendes alias:\n\
+Setzt ein neues oder ueberschreibt ein bestehendes Alias:\n\
   ALIAS da=dir a:\n\n\
 Loescht ein Alias von der Alias-Liste:\n\
   ALIAS da="
@@ -136,7 +136,7 @@ STRING_DATE_HELP2, "\nGeben Sie das neue Datum ein (dd%cmm%cyyyy): "
 
 STRING_DATE_HELP3, "\nGeben Sie das neue Datum ein (yyyy%cmm%cdd): "
 
-STRING_DATE_HELP4, "Aendert das eingestellte Datum oder zeigt es an.\n\n\
+STRING_DATE_HELP4, "Andert das eingestellte Datum oder zeigt es an.\n\n\
 DATE [/T][date]\n\n\
   /T    nur Datum anzeigen\n\n\
 Der Befehl DATE ohne Parameter zeigt das aktuelle Datum an und fragt nach\n\
@@ -317,13 +317,13 @@ MOVE [/N][Laufwerk:][Pfad]Verzeichnis1 Verzeichnis2\n\n\
 Derzeitige Einschraenkung:\n\
 Es ist noch nicht moeglich Objekte ueber die Laufwerksgrenzen hinaus zu verschieben.\n"
 
-STRING_MSGBOX_HELP, "Zeigt eine MessageBox und wartet auf eine Eingabe vom Benutzer.\n\n\
+STRING_MSGBOX_HELP, "Zeigt ein Fenster und wartet auf eine Eingabe vom Benutzer.\n\n\
 MSGBOX type ['title'] prompt\n\n\
-type          button displayed\n\
-              possible values are: OK, OKCANCEL,\n\
+type          Button anzeigen\n\
+              moegliche Werte sind: OK, OKCANCEL,\n\
               YESNO, YESNOCANCEL\n\
-title         title of message box\n\
-prompt        text displayed by the message box\n\n\n\
+title         Titel des Fensters\n\
+prompt        Text der in dem Fenster angezeigt wird\n\n\n\
 ERRORLEVEL is set according the button pressed:\n\n\
 YES  :  10    |  NO      :  11\n\
 OK   :  10    |  CANCEL  :  12\n"
@@ -355,8 +355,8 @@ Sie kann aus normalen Zeichen und folgenden Sonderzeichen bestehen:\n\n\
   $_   Carriage return and linefeed\n\
   $$   $ (Dollarzeichen)"
 
-STRING_PAUSE_HELP1, "Haelt die Ausfuehrung einer Batchdatei an und zeigt folgende Meldung an:\n\
-'Druecken Sie eine beliebige Taste . . .' or a user defined message.\n\n\
+STRING_PAUSE_HELP1, "Haelt die Ausfuehrung einer Batchdatei an und zeigt folgende Meldung oder eine benutzerdefinierte Nachricht an:\n\
+'Druecken Sie eine beliebige Taste . . .'.\n\n\
 PAUSE [message]"
 
 STRING_PROMPT_HELP2, "  $+   Zeigt die aktuelle Tiefe des Verzeichnis-Stacks an"
@@ -426,11 +426,11 @@ TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
   /S          Split time. Return stopwatch split\n\
               time without changing its value\n\
   /n          Anzahl der Stopuhren\n\
-              Stopwaches avaliable are 0 to 9\n\
+              gueltige Stopuhren sind 0 bis 9\n\
               Standardwert = 1\n\
   /Fn         Ausgabeformatierung\n\
               n kann 0 oder 1 sein:\n\
-                    0    milliseconds\n\
+                    0    Millisekunden\n\
                     1    hh%cmm%css%cdd\n\n\
 Falls nicht ON, OFF oder /S angegeben wurde wird\n\
 die Stopuhr ausgeschalten.\n\n"
@@ -474,9 +474,9 @@ STRING_VERSION_HELP5, "\nSenden Sie Bug-Reports an <ros-dev@reactos.com>.\n\
 Updates sind auf der offiziellen ReactOS-Seite verfuegbar:\n\
 http://www.reactos.com"
 
-STRING_VERSION_HELP6, "\nFreeDOS version programmiert von:\n"
+STRING_VERSION_HELP6, "\nFreeDOS Version programmiert von:\n"
 
-STRING_VERSION_HELP7, "\nReactOS version programmiert von:\n"
+STRING_VERSION_HELP7, "\nReactOS Version programmiert von:\n"
 
 STRING_VOL_HELP1, " Datentraeger im Laufwerk %c: ist %s"
 STRING_VOL_HELP2, " Datentraeger im Laufwerk %c: hat keine Bezeichnung"
@@ -486,27 +486,27 @@ STRING_VOL_HELP4, "Zeigt die Laufwerksvolumebezeichnung und die Seriennummer an,
 STRING_WINDOW_HELP1, "change console window aspect\n\n\
 WINDOW [/POS[=]left,top,width,heigth]\n\
               [MIN|MAX|RESTORE] ['title']\n\n\
-/POS          specify window placement and dimensions\n\
-MIN           minimize the window\n\
-MAX           maximize the window\n\
-RESTORE       restore the window"
+/POS          Gibt Position und Größe des Fenster an\n\
+MIN           minimieren das Fenster\n\
+MAX           maximieren das Fenster\n\
+RESTORE       stellt das Fenster wieder her"
 
 STRING_WINDOW_HELP2, "change console window aspect\n\n\
 ACTIVATE 'window' [/POS[=]left,top,width,heigth]\n\
               [MIN|MAX|RESTORE] ['title']\n\n\
 window        tile of window on wich perform actions\n\
 /POS          specify window placement and dimensions\n\
-MIN           minimize the window\n\
-MAX           maximize the window\n\
-RESTORE       restore the window\n\
-title         new title"
+MIN           minimieren das Fenster\n\
+MAX           maximieren das Fenster\n\
+RESTORE       stellt das Fenster wieder her\n\
+title         neuer Titel"
 
 
 STRING_HELP1, "Uebersicht aller verfuegbaren Befehle und deren Kurzbeschreibung\n\n\
   Befehl /?     Um naehere Informationen zu einem bestimmten Befehl\n\
                 zu erhalten.\n\n\
 ?        Listet alle Befehle auf (ohne Erklarung).\n\
-ALIAS    Setzt, loescht oder zeigt alias.\n\
+ALIAS    Setzt, loescht oder zeigt den Alias.\n\
 ATTRIB   Zeigt Dateiattribute an bzw. aendert sie.\n\
 BEEP     Gibt einen beep-Ton durch den PC-Speaker aus.\n\
 CALL     Ruft eine Batchdatei aus einer anderen Batchdatei heraus auf.\n\
@@ -574,9 +574,9 @@ STRING_CHCP_ERROR4,          "ungueltige Code-Page\n"
 STRING_CHOICE_ERROR,         "Ungueltige Option. Erwartetes Format: /C[:]options"
 STRING_CHOICE_ERROR_TXT,     "Ungueltige Option. Erwartetes Format: /T[:]c,nn"
 STRING_CHOICE_ERROR_OPTION,  "Ungueltige Option: %s"
-STRING_MD_ERROR,             "A subdirectory or file already exists.\n"
+STRING_MD_ERROR,             "Unterverzeichnis oder Datei existiert bereits.\n"
 STRING_CMD_ERROR1,           "Die Eingaben konnten nicht umgeleitet werden (von der Datei) %s\n"
-STRING_CMD_ERROR2,           "Error creating temporary file for pipe data\n"
+STRING_CMD_ERROR2,           "Ein Fehler ist beim Erstellen der temponaeren Date für Pipedaten aufgetreten\n"
 STRING_CMD_ERROR3,           "%s kann nicht in die Datei umgeleitet werden \n"
 STRING_CMD_ERROR4,           "Running %s...\n"
 STRING_CMD_ERROR5,           "Running cmdexit.bat...\n"
