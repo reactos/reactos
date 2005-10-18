@@ -32,7 +32,14 @@ typedef u_int32_t uintTIME;
 #define TIME uintTIME
 #include "dhcpd.h"
 
+#if (_MSC_VER < 900) || defined(__STDC__)
+#define inline
+#else
+#define inline __inline
+#endif
+
 #define INLINE inline
+
 #define PROTO(x) x
 
 typedef void (*handler_t) PROTO ((struct packet *));
