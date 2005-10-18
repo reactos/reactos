@@ -105,8 +105,13 @@ MSVCBackend::_generate_dsp ( const Module& module )
 		const vector<Include*>& incs = data.includes;
 		for ( i = 0; i < incs.size(); i++ )
 		{
+
 			// explicitly omit win32api directories
 			if ( !strncmp(incs[i]->directory.c_str(), "w32api", 6 ) )
+				continue;
+
+			// explicitly omit include/wine directories
+			if ( !strncmp(incs[i]->directory.c_str(), "include\\wine", 12 ) )
 				continue;
 
 			string path = Path::RelativeFromDirectory (
