@@ -470,7 +470,7 @@ LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 int len;
                 TCHAR *s;
                 HGLOBAL hGlobalMemory;
-                PSTR pGlobalMemory;
+                LPTSTR pGlobalMemory;
 
                 if (!(len = _tcslen(calc.display)))
                     return 0;
@@ -506,10 +506,10 @@ LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         case TEXT('\x16'): // Ctrl+V Paste
             {
                 TCHAR *s;
-                int c;
+                TCHAR c;
                 int cmd = 0;
-                int size = 0;
-                int i = 0;
+                size_t size = 0;
+                size_t i = 0;
                 HGLOBAL hGlobalMemory;
                 LPTSTR pGlobalMemory;
 
@@ -3082,7 +3082,7 @@ TCHAR *calc_sep(TCHAR *s)
         r[i++] = c;
         if (x++ % 3 == 0)
             r[i++] = TEXT(',');
-        if (n == -1)
+        if (n == 0)
             break;
     }
 
