@@ -1,3 +1,17 @@
+/*
+ *  ReactOS Services
+ *  Copyright (C) 2005 ReactOS Team
+ *
+ * LICENCE:     GPL - See COPYING in the top level directory
+ * PROJECT:     ReactOS simple TCP/IP services
+ * FILE:        apps/utils/net/tcpsvcs/tcpsvcs.h
+ * PURPOSE:     Provide CharGen, Daytime, Discard, Echo, and Qotd services
+ * PROGRAMMERS: Ged Murphy (gedmurphy@gmail.com)
+ * REVISIONS:
+ *   GM 04/10/05 Created
+ *
+ */
+
 /* default port numbers */
 #define ECHO_PORT 7
 #define DISCARD_PORT 9
@@ -28,13 +42,13 @@ typedef struct _Services {
 } SERVICES, *PSERVICES;
 
 
-/* tcpsvcs functions * /
-static VOID WINAPI ServiceMain(DWORD argc, LPTSTR argv[]);
+/* tcpsvcs functions */
+//static VOID WINAPI ServiceMain(DWORD argc, LPTSTR argv[]);
 VOID WINAPI ServerCtrlHandler(DWORD control);
 INT CreateServers(VOID);
 VOID LogEvent (LPCTSTR UserMessage, DWORD ExitCode, BOOL PrintErrorMsg);
 void UpdateStatus (int NewStatus, int Check);
-*/
+
 
 /* skelserver functions */
 DWORD WINAPI StartServer(LPVOID lpParam);

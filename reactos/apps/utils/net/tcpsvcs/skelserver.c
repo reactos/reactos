@@ -1,8 +1,21 @@
+/*
+ *  ReactOS Services
+ *  Copyright (C) 2005 ReactOS Team
+ *
+ * LICENCE:     GPL - See COPYING in the top level directory
+ * PROJECT:     ReactOS simple TCP/IP services
+ * FILE:        apps/utils/net/tcpsvcs/skelserver.c
+ * PURPOSE:     Provide CharGen, Daytime, Discard, Echo, and Qotd services
+ * PROGRAMMERS: Ged Murphy (gedmurphy@gmail.com)
+ * REVISIONS:
+ *   GM 04/10/05 Created
+ *
+ */
+
 #include <stdio.h>
 #include <winsock2.h>
 #include <tchar.h>
 #include "tcpsvcs.h"
-
 
 DWORD WINAPI StartServer(LPVOID lpParam)
 {
@@ -26,7 +39,7 @@ DWORD WINAPI StartServer(LPVOID lpParam)
         printf("Acceptor restarting...\n");
     }
 
-    /* won't see this yet as we kill the service */
+    /* won't see this yet as we kill the service with ctrl+c */
     _tprintf(_T("Detaching Winsock2...\n"));
     WSACleanup();
     return 0;

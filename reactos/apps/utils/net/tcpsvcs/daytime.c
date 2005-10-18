@@ -1,3 +1,17 @@
+/*
+ *  ReactOS Services
+ *  Copyright (C) 2005 ReactOS Team
+ *
+ * LICENCE:     GPL - See COPYING in the top level directory
+ * PROJECT:     ReactOS simple TCP/IP services
+ * FILE:        apps/utils/net/tcpsvcs/daytime.c
+  * PURPOSE:     Provide CharGen, Daytime, Discard, Echo, and Qotd services
+ * PROGRAMMERS: Ged Murphy (gedmurphy@gmail.com)
+ * REVISIONS:
+ *   GM 04/10/05 Created
+ *
+ */
+
 #include <stdio.h>
 #include <winsock2.h>
 #include <tchar.h>
@@ -9,7 +23,7 @@ DWORD WINAPI DaytimeHandler(VOID* Sock_)
     struct tm *newtime;
     time_t aclock;
     TCHAR *pszTime;
-    DWORD Retval = 0;
+    DWORD RetVal = 0;
     SOCKET Sock = (SOCKET)Sock_;
     
     time(&aclock);
@@ -24,12 +38,11 @@ DWORD WINAPI DaytimeHandler(VOID* Sock_)
     else
     {
         _tprintf(_T("Connection shutdown failed\n"));
-        Retval = 3;
+        RetVal = -1;
     }
+    
     _tprintf(_T("Terminating daytime thread\n"));
-    ExitThread(0);
-
-    return Retval;
+    ExitThread(RetVal);
 }
 
 

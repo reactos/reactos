@@ -1,3 +1,17 @@
+/*
+ *  ReactOS Services
+ *  Copyright (C) 2005 ReactOS Team
+ *
+ * LICENCE:     GPL - See COPYING in the top level directory
+ * PROJECT:     ReactOS simple TCP/IP services
+ * FILE:        apps/utils/net/tcpsvcs/chargen.c
+  * PURPOSE:     Provide CharGen, Daytime, Discard, Echo, and Qotd services
+ * PROGRAMMERS: Ged Murphy (gedmurphy@gmail.com)
+ * REVISIONS:
+ *   GM 04/10/05 Created
+ *
+ */
+
 #include <stdio.h>
 #include <winsock2.h>
 #include <tchar.h>
@@ -5,13 +19,13 @@
 
 DWORD WINAPI ChargenHandler(VOID* Sock_)
 {
-    DWORD Retval = 0;
+    DWORD RetVal = 0;
     SOCKET Sock = (SOCKET)Sock_;
 
     if (!GenerateChars(Sock))
     {
         _tprintf(_T("Char generation failed\n"));
-        Retval = 3;
+        RetVal = -1;
     }
 
     _tprintf(_T("Shutting connection down...\n"));
@@ -20,12 +34,12 @@ DWORD WINAPI ChargenHandler(VOID* Sock_)
     else
     {
         _tprintf(_T("Connection shutdown failed\n"));
-        Retval = 3;
+        RetVal = -1;
     }
+    
     _tprintf(_T("Terminating chargen thread\n"));
-    ExitThread(0);
+    ExitThread(RetVal);
 
-    return Retval;
 }
 
 
@@ -41,7 +55,7 @@ BOOL GenerateChars(SOCKET Sock)
     /* fill ring with printable characters */
     for (charIndex=0, i=START; i<=END; charIndex++, i++)
         ring[charIndex] = i;
-    /* establish the end character in the ring */
+    /* save the address of the end character in the ring */
     endring = &ring[charIndex];
 
     /* where we will start output from */
