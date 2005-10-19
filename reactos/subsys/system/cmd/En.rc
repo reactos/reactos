@@ -220,14 +220,14 @@ STRING_DIRSTACK_HELP3, "Prints the contents of the directory stack.\n\nDIRS"
 
 STRING_DIRSTACK_HELP4, "Directory stack empty"
 
-STRING_ECHO_HELP1,  "Display a messages without trailing carridge return and line feed.\n\n\
+STRING_ECHO_HELP1,  "Display a messages without trailing carriage return and line feed.\n\n\
   ECHOS message"
 
 STRING_ECHO_HELP2,  "Displays a message to the standard error.\n\n\
   ECHOERR message\n\
   ECHOERR.           prints an empty line"
 
-STRING_ECHO_HELP3, "Prints a messages to standard error output without trailing carridge return and line feed.\n\n\
+STRING_ECHO_HELP3, "Prints a messages to standard error output without trailing carriage return and line feed.\n\n\
   ECHOSERR message"
 
 STRING_ECHO_HELP4, "Displays a message or switches command echoing on or off.\n\n\
