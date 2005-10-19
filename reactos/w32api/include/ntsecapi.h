@@ -122,11 +122,54 @@ extern "C" {
 #define TRUST_TYPE_UPLEVEL 2
 #define TRUST_TYPE_MIT 3
 #define TRUST_TYPE_DCE 4
+
 #if !defined(_NTDEF_H) && !defined(_SUBAUTH_H)
 typedef LONG NTSTATUS, *PNTSTATUS;
+typedef struct _UNICODE_STRING {
+  USHORT Length;
+  USHORT MaximumLength;
+  PWSTR Buffer;
+} UNICODE_STRING, *PUNICODE_STRING;
+typedef struct _STRING {
+  USHORT Length;
+  USHORT MaximumLength;
+  PCHAR Buffer;
+} STRING, *PSTRING;
 #endif
+
+#if defined (_NTDEF_H)
 typedef UNICODE_STRING LSA_UNICODE_STRING, *PLSA_UNICODE_STRING;
 typedef STRING LSA_STRING, *PLSA_STRING;
+typedef OBJECT_ATTRIBUTES LSA_OBJECT_ATTRIBUTES, *PLSA_OBJECT_ATTRIBUTES;
+
+#else
+
+typedef struct _LSA_UNICODE_STRING {
+  USHORT Length;
+  USHORT MaximumLength;
+#ifdef MIDL_PASS
+  [size_is(MaximumLength / 2), length_is(Length / 2)]
+#endif
+  PWSTR  Buffer;
+} LSA_UNICODE_STRING, *PLSA_UNICODE_STRING;
+
+typedef struct _LSA_STRING {
+  USHORT Length;
+  USHORT MaximumLength;
+  PCHAR Buffer;
+} LSA_STRING, *PLSA_STRING;
+
+typedef struct _LSA_OBJECT_ATTRIBUTES {
+  ULONG Length;
+  HANDLE RootDirectory;
+  PLSA_UNICODE_STRING ObjectName;
+  ULONG Attributes;
+  PVOID SecurityDescriptor;
+  PVOID SecurityQualityOfService;
+} LSA_OBJECT_ATTRIBUTES, *PLSA_OBJECT_ATTRIBUTES;
+
+#endif
+
 typedef enum _MSV1_0_LOGON_SUBMIT_TYPE {
   MsV1_0InteractiveLogon = 2,
   MsV1_0Lm20Logon,
@@ -282,10 +325,7 @@ typedef struct _LSA_ENUMERATION_INFORMATION {
   PSID Sid;
 } LSA_ENUMERATION_INFORMATION, *PLSA_ENUMERATION_INFORMATION;
 typedef ULONG LSA_OPERATIONAL_MODE, *PLSA_OPERATIONAL_MODE;
-#if !defined(_NTDEF_H)
-typedef OBJECT_ATTRIBUTES LSA_OBJECT_ATTRIBUTES, *PLSA_OBJECT_ATTRIBUTES;
-#endif
-typedef OBJECT_ATTRIBUTES LSA_OBJECT_ATTRIBUTES, *PLSA_OBJECT_ATTRIBUTES;
+
 typedef struct _LSA_FOREST_TRUST_DOMAIN_INFO {
   PSID Sid;
   LSA_UNICODE_STRING DnsName;
