@@ -205,7 +205,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 		fprintf ( OUT, "\t\t\t\tAdditionalIncludeDirectories=\"" );
 		bool multiple_includes = false;
-		fprintf ( OUT, "/.;" );
+		fprintf ( OUT, "./;" );
 		for ( i = 0; i < includes.size(); i++ )
 		{
 			const string& include = includes[i];
@@ -303,6 +303,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		fprintf ( OUT, "\t\t\t\tName=\"VCResourceCompilerTool\"\r\n" );
 		fprintf ( OUT, "\t\t\t\tAdditionalIncludeDirectories=\"" );
 		multiple_includes = false;
+		fprintf ( OUT, "./;" );
 		for ( i = 0; i < includes.size(); i++ )
 		{
 			const string& include = includes[i];
