@@ -11,17 +11,16 @@
 /* We're a core NT DLL, we don't import syscalls */
 #define _NTSYSTEM_
 #define _NTDLLBUILD_
+#define WIN32_NO_STATUS
+#define NTOS_MODE_USER
+#define _INC_SWPRINTF_INL_
 
 /* C Headers */
 #include <stdio.h>
 
 /* PSDK/NDK Headers */
 #include <windows.h>
-#define NTOS_MODE_USER
 #include <ndk/ntndk.h>
-
-/* Helper Header */
-#include <reactos/helper.h>
 
 /* Internal RTL header */
 #include "rtlp.h"

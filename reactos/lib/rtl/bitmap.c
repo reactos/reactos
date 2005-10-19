@@ -24,7 +24,7 @@
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 RtlInitializeBitMap(PRTL_BITMAP BitMapHeader,
 		    PULONG BitMapBuffer,
 		    ULONG SizeOfBitMap)
@@ -37,7 +37,7 @@ RtlInitializeBitMap(PRTL_BITMAP BitMapHeader,
 /*
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 RtlAreBitsClear(PRTL_BITMAP BitMapHeader,
 		ULONG StartingIndex,
 		ULONG Length)
@@ -77,7 +77,7 @@ RtlAreBitsClear(PRTL_BITMAP BitMapHeader,
 /*
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 RtlAreBitsSet(PRTL_BITMAP BitMapHeader,
 	      ULONG StartingIndex,
 	      ULONG Length)
@@ -122,7 +122,7 @@ RtlAreBitsSet(PRTL_BITMAP BitMapHeader,
  * This function is exercised by the whole page allocator in npool.c
  * which is how i came across this error.
  */
-VOID STDCALL
+VOID NTAPI
 RtlClearAllBits(IN OUT PRTL_BITMAP BitMapHeader)
 {
     memset(BitMapHeader->Buffer,
@@ -134,7 +134,7 @@ RtlClearAllBits(IN OUT PRTL_BITMAP BitMapHeader)
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 RtlClearBit(PRTL_BITMAP BitMapHeader,
 	    ULONG BitNumber)
 {
@@ -152,7 +152,7 @@ RtlClearBit(PRTL_BITMAP BitMapHeader,
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 RtlClearBits(PRTL_BITMAP BitMapHeader,
 	     ULONG StartingIndex,
 	     ULONG NumberToClear)
@@ -188,7 +188,7 @@ RtlClearBits(PRTL_BITMAP BitMapHeader,
 /*
  * @implemented
  */
-ULONG STDCALL
+ULONG NTAPI
 RtlFindClearBits(PRTL_BITMAP BitMapHeader,
 		 ULONG NumberToFind,
 		 ULONG HintIndex)
@@ -271,7 +271,7 @@ RtlFindClearBits(PRTL_BITMAP BitMapHeader,
 /*
  * @implemented
  */
-ULONG STDCALL
+ULONG NTAPI
 RtlFindClearBitsAndSet(PRTL_BITMAP BitMapHeader,
 		       ULONG NumberToFind,
 		       ULONG HintIndex)
@@ -295,7 +295,7 @@ RtlFindClearBitsAndSet(PRTL_BITMAP BitMapHeader,
 /*
  * @implemented
  */
-ULONG STDCALL
+ULONG NTAPI
 RtlFindFirstRunClear(PRTL_BITMAP BitMapHeader,
 		     PULONG StartingIndex)
 {
@@ -359,7 +359,7 @@ RtlFindFirstRunClear(PRTL_BITMAP BitMapHeader,
 /*
  * @unimplemented
  */
-ULONG STDCALL
+ULONG NTAPI
 RtlFindClearRuns(PRTL_BITMAP BitMapHeader,
 		 PRTL_BITMAP_RUN RunArray,
 		 ULONG SizeOfRunArray,
@@ -373,7 +373,7 @@ RtlFindClearRuns(PRTL_BITMAP BitMapHeader,
 /*
  * @unimplemented
  */
-ULONG STDCALL
+ULONG NTAPI
 RtlFindLastBackwardRunClear(IN PRTL_BITMAP BitMapHeader,
 			    IN ULONG FromIndex,
 			    IN PULONG StartingRunIndex)
@@ -386,7 +386,7 @@ RtlFindLastBackwardRunClear(IN PRTL_BITMAP BitMapHeader,
 /*
  * @unimplemented
  */
-ULONG STDCALL
+ULONG NTAPI
 RtlFindNextForwardRunClear(IN PRTL_BITMAP BitMapHeader,
 			   IN ULONG FromIndex,
 			   IN PULONG StartingRunIndex)
@@ -399,7 +399,7 @@ RtlFindNextForwardRunClear(IN PRTL_BITMAP BitMapHeader,
 /*
  * @implemented
  */
-ULONG STDCALL
+ULONG NTAPI
 RtlFindFirstRunSet(IN PRTL_BITMAP BitMapHeader,
 		   IN PULONG StartingIndex)
 {
@@ -463,7 +463,7 @@ RtlFindFirstRunSet(IN PRTL_BITMAP BitMapHeader,
 /*
  * @implemented
  */
-ULONG STDCALL
+ULONG NTAPI
 RtlFindLongestRunClear(PRTL_BITMAP BitMapHeader,
 		       PULONG StartingIndex)
 {
@@ -527,7 +527,7 @@ RtlFindLongestRunClear(PRTL_BITMAP BitMapHeader,
 /*
  * @implemented
  */
-ULONG STDCALL
+ULONG NTAPI
 RtlFindLongestRunSet(PRTL_BITMAP BitMapHeader,
 		     PULONG StartingIndex)
 {
@@ -591,7 +591,7 @@ RtlFindLongestRunSet(PRTL_BITMAP BitMapHeader,
 /*
  * @implemented
  */
-ULONG STDCALL
+ULONG NTAPI
 RtlFindSetBits(PRTL_BITMAP BitMapHeader,
 	       ULONG NumberToFind,
 	       ULONG HintIndex)
@@ -675,7 +675,7 @@ RtlFindSetBits(PRTL_BITMAP BitMapHeader,
 /*
  * @implemented
  */
-ULONG STDCALL
+ULONG NTAPI
 RtlFindSetBitsAndClear(PRTL_BITMAP BitMapHeader,
 		       ULONG NumberToFind,
 		       ULONG HintIndex)
@@ -699,7 +699,7 @@ RtlFindSetBitsAndClear(PRTL_BITMAP BitMapHeader,
 /*
  * @implemented
  */
-ULONG STDCALL
+ULONG NTAPI
 RtlNumberOfClearBits(PRTL_BITMAP BitMapHeader)
 {
   PULONG Ptr;
@@ -731,7 +731,7 @@ RtlNumberOfClearBits(PRTL_BITMAP BitMapHeader)
 /*
  * @implemented
  */
-ULONG STDCALL
+ULONG NTAPI
 RtlNumberOfSetBits(PRTL_BITMAP BitMapHeader)
 {
   PULONG Ptr;
@@ -768,7 +768,7 @@ RtlNumberOfSetBits(PRTL_BITMAP BitMapHeader)
  * The companion function, RtlClearAllBits, is exercised by the whole page
  * allocator in npool.c which is how i came across this error.
  */
-VOID STDCALL
+VOID NTAPI
 RtlSetAllBits(IN OUT PRTL_BITMAP BitMapHeader)
 {
   memset(BitMapHeader->Buffer,
@@ -780,7 +780,7 @@ RtlSetAllBits(IN OUT PRTL_BITMAP BitMapHeader)
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 RtlSetBit(PRTL_BITMAP BitMapHeader,
 	  ULONG BitNumber)
 {
@@ -798,7 +798,7 @@ RtlSetBit(PRTL_BITMAP BitMapHeader,
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 RtlSetBits(PRTL_BITMAP BitMapHeader,
 	   ULONG StartingIndex,
 	   ULONG NumberToSet)
@@ -834,7 +834,7 @@ RtlSetBits(PRTL_BITMAP BitMapHeader,
 /*
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 RtlTestBit(PRTL_BITMAP BitMapHeader,
 	   ULONG BitNumber)
 {

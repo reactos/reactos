@@ -19,7 +19,7 @@
  * @implemented
  */
 LARGE_INTEGER
-STDCALL
+NTAPI
 RtlConvertLongToLargeInteger (
    LONG SignedInteger
 )
@@ -35,7 +35,7 @@ RtlConvertLongToLargeInteger (
  * @implemented
  */
 LARGE_INTEGER
-STDCALL
+NTAPI
 RtlConvertUlongToLargeInteger (
    ULONG UnsignedInteger
 )
@@ -51,7 +51,7 @@ RtlConvertUlongToLargeInteger (
  * @implemented
  */
 LARGE_INTEGER
-STDCALL
+NTAPI
 RtlEnlargedIntegerMultiply (
    LONG Multiplicand,
    LONG Multiplier
@@ -68,7 +68,7 @@ RtlEnlargedIntegerMultiply (
  * @implemented
  */
 ULONG
-STDCALL
+NTAPI
 RtlEnlargedUnsignedDivide (
    ULARGE_INTEGER Dividend,
    ULONG  Divisor,
@@ -85,7 +85,7 @@ RtlEnlargedUnsignedDivide (
  * @implemented
  */
 LARGE_INTEGER
-STDCALL
+NTAPI
 RtlEnlargedUnsignedMultiply (
    ULONG Multiplicand,
    ULONG Multiplier
@@ -102,7 +102,7 @@ RtlEnlargedUnsignedMultiply (
  * @implemented
  */
 LARGE_INTEGER
-STDCALL
+NTAPI
 RtlExtendedIntegerMultiply (
    LARGE_INTEGER Multiplicand,
    LONG  Multiplier
@@ -119,7 +119,7 @@ RtlExtendedIntegerMultiply (
  * @implemented
  */
 LARGE_INTEGER
-STDCALL
+NTAPI
 RtlExtendedLargeIntegerDivide (
    LARGE_INTEGER Dividend,
    ULONG  Divisor,
@@ -164,7 +164,7 @@ RtlExtendedLargeIntegerDivide (
 /*
  * @implemented
  */
-LARGE_INTEGER STDCALL
+LARGE_INTEGER NTAPI
 RtlExtendedMagicDivide (LARGE_INTEGER Dividend,
                         LARGE_INTEGER MagicDivisor,
                         CCHAR ShiftCount)
@@ -215,7 +215,7 @@ RtlExtendedMagicDivide (LARGE_INTEGER Dividend,
  * @implemented
  */
 LARGE_INTEGER
-STDCALL
+NTAPI
 RtlLargeIntegerAdd (
    LARGE_INTEGER Addend1,
    LARGE_INTEGER Addend2
@@ -232,7 +232,7 @@ RtlLargeIntegerAdd (
  * @implemented
  */
 LARGE_INTEGER
-STDCALL
+NTAPI
 RtlLargeIntegerArithmeticShift (
    LARGE_INTEGER LargeInteger,
    CCHAR  ShiftCount
@@ -261,7 +261,7 @@ RtlLargeIntegerArithmeticShift (
  * @implemented
  */
 LARGE_INTEGER
-STDCALL
+NTAPI
 RtlLargeIntegerDivide (
    LARGE_INTEGER Dividend,
    LARGE_INTEGER Divisor,
@@ -282,7 +282,7 @@ RtlLargeIntegerDivide (
  * @implemented
  */
 LARGE_INTEGER
-STDCALL
+NTAPI
 RtlLargeIntegerNegate (
    LARGE_INTEGER Subtrahend
 )
@@ -298,7 +298,7 @@ RtlLargeIntegerNegate (
  * @implemented
  */
 LARGE_INTEGER
-STDCALL
+NTAPI
 RtlLargeIntegerShiftLeft (
    LARGE_INTEGER LargeInteger,
    CCHAR  ShiftCount
@@ -317,7 +317,7 @@ RtlLargeIntegerShiftLeft (
  * @implemented
  */
 LARGE_INTEGER
-STDCALL
+NTAPI
 RtlLargeIntegerShiftRight (
    LARGE_INTEGER LargeInteger,
    CCHAR  ShiftCount
@@ -336,7 +336,7 @@ RtlLargeIntegerShiftRight (
  * @implemented
  */
 LARGE_INTEGER
-STDCALL
+NTAPI
 RtlLargeIntegerSubtract (
    LARGE_INTEGER Minuend,
    LARGE_INTEGER Subtrahend

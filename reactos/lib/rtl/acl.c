@@ -14,7 +14,7 @@
 
 /* FUNCTIONS ***************************************************************/
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 RtlFirstFreeAce(PACL Acl,
                 PACE* Ace)
 {
@@ -62,7 +62,7 @@ RtlFirstFreeAce(PACL Acl,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlGetAce(PACL Acl,
           ULONG AceIndex,
           PVOID *Ace)
@@ -150,7 +150,7 @@ RtlpAddKnownAce (PACL Acl,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlAddAccessAllowedAce (IN OUT PACL Acl,
                         IN ULONG Revision,
                         IN ACCESS_MASK AccessMask,
@@ -170,7 +170,7 @@ RtlAddAccessAllowedAce (IN OUT PACL Acl,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlAddAccessAllowedAceEx (IN OUT PACL Acl,
                           IN ULONG Revision,
                           IN ULONG Flags,
@@ -191,7 +191,7 @@ RtlAddAccessAllowedAceEx (IN OUT PACL Acl,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlAddAccessDeniedAce (PACL Acl,
                        ULONG Revision,
                        ACCESS_MASK AccessMask,
@@ -211,7 +211,7 @@ RtlAddAccessDeniedAce (PACL Acl,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlAddAccessDeniedAceEx (IN OUT PACL Acl,
                          IN ULONG Revision,
                          IN ULONG Flags,
@@ -254,7 +254,7 @@ RtlpAddData(PVOID AceList,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlAddAce(PACL Acl,
           ULONG AclRevision,
           ULONG StartingIndex,
@@ -323,7 +323,7 @@ RtlAddAce(PACL Acl,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlAddAuditAccessAce(PACL Acl,
                      ULONG Revision,
                      ACCESS_MASK AccessMask,
@@ -390,7 +390,7 @@ RtlAddAuditAccessAce(PACL Acl,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlAddAuditAccessAceEx(PACL Acl,
                        ULONG Revision,
                        ULONG Flags,
@@ -477,7 +477,7 @@ RtlpDeleteData(PVOID Ace,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlDeleteAce(PACL Acl,
              ULONG AceIndex)
 {
@@ -513,7 +513,7 @@ RtlDeleteAce(PACL Acl,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlCreateAcl(PACL Acl,
              ULONG AclSize,
              ULONG AclRevision)
@@ -546,7 +546,7 @@ RtlCreateAcl(PACL Acl,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlQueryInformationAcl(PACL Acl,
                        PVOID Information,
                        ULONG InformationLength,
@@ -615,7 +615,7 @@ RtlQueryInformationAcl(PACL Acl,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlSetInformationAcl(PACL Acl,
                      PVOID Information,
                      ULONG InformationLength,
@@ -660,7 +660,7 @@ RtlSetInformationAcl(PACL Acl,
 /*
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 RtlValidAcl (PACL Acl)
 {
    PACE Ace;

@@ -16,7 +16,7 @@
 /*
  * @implemented
  */
-CCHAR STDCALL
+CCHAR NTAPI
 RtlFindLeastSignificantBit(IN ULONGLONG Set)
 {
   int i;
@@ -37,7 +37,7 @@ RtlFindLeastSignificantBit(IN ULONGLONG Set)
 /*
  * @implemented
  */
-CCHAR STDCALL
+CCHAR NTAPI
 RtlFindMostSignificantBit(IN ULONGLONG Set)
 {
   int i;

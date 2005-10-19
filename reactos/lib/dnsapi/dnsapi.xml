@@ -20,6 +20,7 @@
 		<file>names.c</file>
 		<file>query.c</file>
 		<file>stubs.c</file>
+		<pch>precomp.h</pch>
 	</directory>
 	<file>dnsapi.rc</file>
 </module>

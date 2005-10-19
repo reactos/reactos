@@ -9,6 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 /* PSDK/NDK Headers */
+#define WIN32_NO_STATUS
 #define NTOS_MODE_USER
 #define _KERNEL32_
 #include <windows.h>

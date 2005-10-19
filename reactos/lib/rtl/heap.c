@@ -286,7 +286,7 @@ HEAP_FindSubHeap(HEAP *heap,  /* [in] Heap pointer */
  *
  * Make sure the heap storage is committed up to (not including) ptr.
  */
-static inline BOOLEAN
+static __inline BOOLEAN
 HEAP_Commit(SUBHEAP *subheap,
             PVOID ptr,
             ULONG flags)
@@ -1078,7 +1078,7 @@ static BOOLEAN HEAP_IsRealArena(
  *
  * @implemented
  */
-HANDLE STDCALL
+HANDLE NTAPI
 RtlCreateHeap(ULONG flags,
               PVOID BaseAddress,
               SIZE_T maxSize,
@@ -1130,7 +1130,7 @@ RtlCreateHeap(ULONG flags,
  *  Success: A NULL HANDLE, if heap is NULL or it was destroyed
  *  Failure: The Heap handle, if heap is the process heap.
  */
-HANDLE STDCALL
+HANDLE NTAPI
 RtlDestroyHeap(HANDLE heap) /* [in] Handle of heap */
 {
    HEAP *heapPtr = HEAP_GetPtr( heap );
@@ -1186,7 +1186,7 @@ RtlDestroyHeap(HANDLE heap) /* [in] Handle of heap */
  * 0x7d030f60--invalid flags in RtlHeapAllocate
  * @implemented
  */
-PVOID STDCALL
+PVOID NTAPI
 RtlAllocateHeap(HANDLE heap,   /* [in] Handle of private heap block */
                 ULONG flags,   /* [in] Heap allocation control flags */
                 ULONG size)    /* [in] Number of bytes to allocate */
@@ -1264,7 +1264,7 @@ RtlAllocateHeap(HANDLE heap,   /* [in] Handle of private heap block */
  *
  * @implemented
  */
-BOOLEAN STDCALL RtlFreeHeap(
+BOOLEAN NTAPI RtlFreeHeap(
    HANDLE heap, /* [in] Handle of heap */
    ULONG flags,   /* [in] Heap freeing flags */
    PVOID ptr     /* [in] Address of memory to free */
@@ -1327,7 +1327,7 @@ BOOLEAN STDCALL RtlFreeHeap(
  * 0x7d030f60--invalid flags in RtlHeapAllocate
  * @implemented
  */
-PVOID STDCALL RtlReAllocateHeap(
+PVOID NTAPI RtlReAllocateHeap(
    HANDLE Heap,
    ULONG Flags,
    PVOID Ptr,
@@ -1463,7 +1463,7 @@ PVOID STDCALL RtlReAllocateHeap(
  *
  * @unimplemented
  */
-ULONG STDCALL
+ULONG NTAPI
 RtlCompactHeap(HANDLE Heap,
 		ULONG Flags)
 {
@@ -1485,7 +1485,7 @@ RtlCompactHeap(HANDLE Heap,
  *
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 RtlLockHeap(IN HANDLE Heap)
 {
    HEAP *heapPtr = HEAP_GetPtr( Heap );
@@ -1509,7 +1509,7 @@ RtlLockHeap(IN HANDLE Heap)
  *
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 RtlUnlockHeap(HANDLE Heap)
 {
    HEAP *heapPtr = HEAP_GetPtr( Heap );
@@ -1533,7 +1533,7 @@ RtlUnlockHeap(HANDLE Heap)
  *
  * @implemented
  */
-ULONG STDCALL
+ULONG NTAPI
 RtlSizeHeap(
    HANDLE Heap,
    ULONG Flags,
@@ -1585,7 +1585,7 @@ RtlSizeHeap(
  *
  * @implemented
  */
-BOOLEAN STDCALL RtlValidateHeap(
+BOOLEAN NTAPI RtlValidateHeap(
    HANDLE Heap,
    ULONG Flags,
    PVOID Block
@@ -1612,7 +1612,7 @@ BOOLEAN STDCALL RtlValidateHeap(
  * FALSE: Failure
  */
 #if 0
-BOOLEAN STDCALL HeapWalk(
+BOOLEAN NTAPI HeapWalk(
    HANDLE heap,               /* [in]  Handle to heap to enumerate */
    LPPROCESS_HEAP_ENTRY entry /* [out] Pointer to structure of enumeration info */
 )
@@ -1742,7 +1742,7 @@ RtlInitializeHeapManager(VOID)
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlEnumProcessHeaps(PHEAP_ENUMERATION_ROUTINE HeapEnumerationRoutine,
                     PVOID lParam)
 {
@@ -1767,7 +1767,7 @@ RtlEnumProcessHeaps(PHEAP_ENUMERATION_ROUTINE HeapEnumerationRoutine,
 /*
  * @implemented
  */
-ULONG STDCALL
+ULONG NTAPI
 RtlGetProcessHeaps(ULONG HeapCount,
                    HANDLE *HeapArray)
 {
@@ -1796,7 +1796,7 @@ RtlGetProcessHeaps(ULONG HeapCount,
 /*
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 RtlValidateProcessHeaps(VOID)
 {
    BOOLEAN Result = TRUE;
@@ -1822,7 +1822,7 @@ RtlValidateProcessHeaps(VOID)
 /*
  * @unimplemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 RtlZeroHeap(
     IN PVOID HeapHandle,
     IN ULONG Flags

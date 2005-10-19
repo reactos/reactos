@@ -59,7 +59,7 @@ RtlpGetIndexLength(ULONG Index)
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
                      IN BOOLEAN AllowExtendedCharacters,
                      IN OUT PGENERATE_NAME_CONTEXT Context,
@@ -232,7 +232,7 @@ RtlGenerate8dot3Name(IN PUNICODE_STRING Name,
 /*
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 RtlIsNameLegalDOS8Dot3(IN PUNICODE_STRING UnicodeName,
                        IN PANSI_STRING AnsiName,
                        OUT PBOOLEAN SpacesFound)
@@ -316,7 +316,7 @@ RtlIsNameLegalDOS8Dot3(IN PUNICODE_STRING UnicodeName,
 * @unimplemented
 */
 NTSTATUS
-STDCALL
+NTAPI
 RtlVolumeDeviceToDosName(
 	IN  PVOID VolumeDeviceObject,
 	OUT PUNICODE_STRING DosName

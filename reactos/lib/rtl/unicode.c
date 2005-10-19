@@ -27,7 +27,7 @@ extern PUSHORT NlsLeadByteInfo;
 * @implemented
 */
 WCHAR
-STDCALL
+NTAPI
 RtlAnsiCharToUnicodeChar(IN PUCHAR *AnsiChar)
 {
     ULONG Size;
@@ -59,7 +59,7 @@ RtlAnsiCharToUnicodeChar(IN PUCHAR *AnsiChar)
  *  If the dest buffer is too small a partial copy is NOT performed!
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlAnsiStringToUnicodeString(
    IN OUT PUNICODE_STRING UniDest,
    IN PANSI_STRING AnsiSource,
@@ -107,7 +107,7 @@ RtlAnsiStringToUnicodeString(
  *  The calculated size in bytes including nullterm.
  */
 ULONG
-STDCALL
+NTAPI
 RtlxAnsiStringToUnicodeSize(IN PCANSI_STRING AnsiString)
 {
     ULONG Size;
@@ -129,7 +129,7 @@ RtlxAnsiStringToUnicodeSize(IN PCANSI_STRING AnsiString)
  *  Dest is never nullterminated.
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlAppendStringToString(IN PSTRING Destination,
                         IN PSTRING Source)
 {
@@ -161,7 +161,7 @@ RtlAppendStringToString(IN PSTRING Destination,
  *  When dest fits exactly in MaximumLength characters the nullterm is ommitted.
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlAppendUnicodeStringToString(
    IN OUT PUNICODE_STRING Destination,
    IN PCUNICODE_STRING Source)
@@ -211,7 +211,7 @@ RtlAppendUnicodeStringToString(
  *  This function does not read garbage behind '\0' as the native version does.
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlCharToInteger(
     PCSZ str,      /* [I] '\0' terminated single-byte string containing a number */
     ULONG base,    /* [I] Number base for conversion (allowed 0, 2, 8, 10 or 16) */
@@ -283,7 +283,7 @@ RtlCharToInteger(
  * @implemented
  */
 LONG
-STDCALL
+NTAPI
 RtlCompareString(
    IN PSTRING s1,
    IN PSTRING s2,
@@ -316,7 +316,7 @@ RtlCompareString(
  *  TRUE if strings are equal.
  */
 BOOLEAN
-STDCALL
+NTAPI
 RtlEqualString(
    IN PSTRING s1,
    IN PSTRING s2,
@@ -333,7 +333,7 @@ RtlEqualString(
  *  TRUE if strings are equal.
  */
 BOOLEAN
-STDCALL
+NTAPI
 RtlEqualUnicodeString(
    IN CONST UNICODE_STRING *s1,
    IN CONST UNICODE_STRING *s2,
@@ -347,7 +347,7 @@ RtlEqualUnicodeString(
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 RtlFreeAnsiString(IN PANSI_STRING AnsiString)
 {
     if (AnsiString->Buffer)
@@ -361,7 +361,7 @@ RtlFreeAnsiString(IN PANSI_STRING AnsiString)
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 RtlFreeOemString(IN POEM_STRING OemString)
 {
    if (OemString->Buffer) RtlpFreeStringMemory(OemString->Buffer, TAG_OSTR);
@@ -371,7 +371,7 @@ RtlFreeOemString(IN POEM_STRING OemString)
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 RtlFreeUnicodeString(IN PUNICODE_STRING UnicodeString)
 {
     if (UnicodeString->Buffer)
@@ -385,7 +385,7 @@ RtlFreeUnicodeString(IN PUNICODE_STRING UnicodeString)
 * @unimplemented
 */
 BOOLEAN
-STDCALL
+NTAPI
 RtlIsValidOemCharacter(IN PWCHAR Char)
 {
     UNIMPLEMENTED;
@@ -399,7 +399,7 @@ RtlIsValidOemCharacter(IN PWCHAR Char)
  *  If source is NULL the length of source is assumed to be 0.
  */
 VOID
-STDCALL
+NTAPI
 RtlInitAnsiString(IN OUT PANSI_STRING DestinationString,
                   IN PCSZ SourceString)
 {
@@ -427,7 +427,7 @@ RtlInitAnsiString(IN OUT PANSI_STRING DestinationString,
  *  If source is NULL the length of source is assumed to be 0.
  */
 VOID
-STDCALL
+NTAPI
 RtlInitString(
    IN OUT PSTRING DestinationString,
    IN PCSZ SourceString)
@@ -442,7 +442,7 @@ RtlInitString(
  *  If source is NULL the length of source is assumed to be 0.
  */
 VOID
-STDCALL
+NTAPI
 RtlInitUnicodeString(IN OUT PUNICODE_STRING DestinationString,
                      IN PCWSTR SourceString)
 {
@@ -467,7 +467,7 @@ RtlInitUnicodeString(IN OUT PUNICODE_STRING DestinationString,
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlInitUnicodeStringEx(OUT PUNICODE_STRING DestinationString,
                        IN PCWSTR SourceString)
 {
@@ -499,7 +499,7 @@ RtlInitUnicodeStringEx(OUT PUNICODE_STRING DestinationString,
  *  When str fits exactly in length characters the nullterm is ommitted.
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlIntegerToChar(
    IN ULONG Value,
    IN ULONG Base,
@@ -552,7 +552,7 @@ RtlIntegerToChar(
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlIntegerToUnicode(
     IN ULONG Value,
     IN ULONG Base  OPTIONAL,
@@ -606,7 +606,7 @@ RtlIntegerToUnicode(
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlIntegerToUnicodeString(
    IN ULONG Value,
    IN ULONG Base OPTIONAL,
@@ -633,7 +633,7 @@ RtlIntegerToUnicodeString(
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlInt64ToUnicodeString (
     IN ULONGLONG Value,
     IN ULONG Base OPTIONAL,
@@ -666,7 +666,7 @@ RtlInt64ToUnicodeString (
  *  TRUE if String2 contains String1 as a prefix.
  */
 BOOLEAN
-STDCALL
+NTAPI
 RtlPrefixString(
    PANSI_STRING String1,
    PANSI_STRING String2,
@@ -713,7 +713,7 @@ RtlPrefixString(
  *  TRUE if String2 contains String1 as a prefix.
  */
 BOOLEAN
-STDCALL
+NTAPI
 RtlPrefixUnicodeString(
    PCUNICODE_STRING String1,
    PCUNICODE_STRING String2,
@@ -781,7 +781,7 @@ RtlPrefixUnicodeString(
  *  version does.
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlUnicodeStringToInteger(
     PCUNICODE_STRING str, /* [I] Unicode string to be converted */
     ULONG base,                /* [I] Number base for conversion (allowed 0, 2, 8, 10 or 16) */
@@ -872,7 +872,7 @@ RtlUnicodeStringToInteger(
  *  Bytes necessary for the conversion including nullterm.
  */
 ULONG
-STDCALL
+NTAPI
 RtlxUnicodeStringToOemSize(IN PCUNICODE_STRING UnicodeString)
 {
     ULONG Size;
@@ -894,7 +894,7 @@ RtlxUnicodeStringToOemSize(IN PCUNICODE_STRING UnicodeString)
  *  It performs a partial copy if ansi is too small.
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlUnicodeStringToAnsiString(
    IN OUT PANSI_STRING AnsiDest,
    IN PCUNICODE_STRING UniSource,
@@ -948,7 +948,7 @@ RtlUnicodeStringToAnsiString(
  *  Does NOT perform a partial copy if unicode is too small!
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlOemStringToUnicodeString(
    IN OUT PUNICODE_STRING UniDest,
    IN PCOEM_STRING OemSource,
@@ -998,7 +998,7 @@ RtlOemStringToUnicodeString(
  *   This function always '\0' terminates the string returned.
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlUnicodeStringToOemString(
    IN OUT POEM_STRING OemDest,
    IN PCUNICODE_STRING UniSource,
@@ -1049,7 +1049,7 @@ RtlUnicodeStringToOemString(
  * RETURNS
  *  The length of the string if all tests were passed, 0 otherwise.
  */
-ULONG STDCALL
+ULONG NTAPI
 RtlIsTextUnicode (PVOID Buffer,
                   ULONG Length,
                   ULONG *Flags)
@@ -1109,7 +1109,7 @@ done:
  *  A partial copy is NOT performed if the dest buffer is too small!
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlOemStringToCountedUnicodeString(
    IN OUT PUNICODE_STRING UniDest,
    IN PCOEM_STRING OemSource,
@@ -1168,7 +1168,7 @@ RtlOemStringToCountedUnicodeString(
  *  The comparison is case insensitive.
  */
 BOOLEAN
-STDCALL
+NTAPI
 RtlEqualComputerName(
    IN PUNICODE_STRING ComputerName1,
    IN PUNICODE_STRING ComputerName2)
@@ -1204,7 +1204,7 @@ RtlEqualComputerName(
  *  The comparison is case insensitive.
  */
 BOOLEAN
-STDCALL
+NTAPI
 RtlEqualDomainName (
    IN PUNICODE_STRING DomainName1,
    IN PUNICODE_STRING DomainName2
@@ -1232,7 +1232,7 @@ RtlEqualDomainName (
  *  See RtlStringFromGUID.
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlGUIDFromString(
    IN UNICODE_STRING *str,
    OUT GUID* guid
@@ -1346,7 +1346,7 @@ RtlGUIDFromString(
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 RtlEraseUnicodeString(
    IN PUNICODE_STRING String)
 {
@@ -1361,7 +1361,7 @@ RtlEraseUnicodeString(
 * @implemented
 */
 NTSTATUS
-STDCALL
+NTAPI
 RtlHashUnicodeString(
   IN CONST UNICODE_STRING *String,
   IN BOOLEAN CaseInSensitive,
@@ -1417,7 +1417,7 @@ RtlHashUnicodeString(
  *  Does a partial copy if the dest buffer is too small
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlUnicodeStringToCountedOemString(
    IN OUT POEM_STRING OemDest,
    IN PUNICODE_STRING UniSource,
@@ -1471,7 +1471,7 @@ RtlUnicodeStringToCountedOemString(
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlLargeIntegerToChar(
    IN PLARGE_INTEGER Value,
    IN ULONG  Base,
@@ -1524,7 +1524,7 @@ RtlLargeIntegerToChar(
  *  might not be '\0' terminated. dest->Length is only set upon success.
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlUpcaseUnicodeString(
    IN OUT PUNICODE_STRING UniDest,
    IN PCUNICODE_STRING UniSource,
@@ -1562,7 +1562,7 @@ RtlUpcaseUnicodeString(
  *  It performs a partial copy if ansi is too small.
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlUpcaseUnicodeStringToAnsiString(
    IN OUT PANSI_STRING AnsiDest,
    IN PUNICODE_STRING UniSource,
@@ -1613,7 +1613,7 @@ RtlUpcaseUnicodeStringToAnsiString(
  *  It performs a partial copy if ansi is too small.
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlUpcaseUnicodeStringToCountedOemString(
    IN OUT POEM_STRING OemDest,
    IN PCUNICODE_STRING UniSource,
@@ -1670,7 +1670,7 @@ RtlUpcaseUnicodeStringToCountedOemString(
  *  It performs a partial copy if oem is too small.
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlUpcaseUnicodeStringToOemString (
    IN OUT POEM_STRING OemDest,
    IN PCUNICODE_STRING UniSource,
@@ -1722,7 +1722,7 @@ RtlUpcaseUnicodeStringToOemString (
  *  Bytes calculated including nullterm
  */
 ULONG
-STDCALL
+NTAPI
 RtlxOemStringToUnicodeSize(IN PCOEM_STRING OemString)
 {
     ULONG Size;
@@ -1740,7 +1740,7 @@ RtlxOemStringToUnicodeSize(IN PCOEM_STRING OemString)
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlStringFromGUID (IN REFGUID Guid,
                    OUT PUNICODE_STRING GuidString)
 {
@@ -1783,7 +1783,7 @@ RtlStringFromGUID (IN REFGUID Guid,
  *  Bytes calculated including nullterm
  */
 ULONG
-STDCALL
+NTAPI
 RtlxUnicodeStringToAnsiSize(IN PCUNICODE_STRING UnicodeString)
 {
     ULONG Size;
@@ -1801,7 +1801,7 @@ RtlxUnicodeStringToAnsiSize(IN PCUNICODE_STRING UnicodeString)
  * @implemented
  */
 LONG
-STDCALL
+NTAPI
 RtlCompareUnicodeString(
    IN PCUNICODE_STRING s1,
    IN PCUNICODE_STRING s2,
@@ -1831,7 +1831,7 @@ RtlCompareUnicodeString(
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 RtlCopyString(
    IN OUT PSTRING DestinationString,
    IN PSTRING SourceString OPTIONAL)
@@ -1872,7 +1872,7 @@ RtlCopyString(
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 RtlCopyUnicodeString(
    IN OUT PUNICODE_STRING DestinationString,
    IN PCUNICODE_STRING SourceString)
@@ -1907,7 +1907,7 @@ RtlCopyUnicodeString(
  * Creates a nullterminated UNICODE_STRING
  */
 BOOLEAN
-STDCALL
+NTAPI
 RtlCreateUnicodeString(
    IN OUT PUNICODE_STRING UniDest,
    IN PCWSTR  Source)
@@ -1930,7 +1930,7 @@ RtlCreateUnicodeString(
  * @implemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 RtlCreateUnicodeStringFromAsciiz(
    OUT PUNICODE_STRING Destination,
    IN PCSZ Source)
@@ -1956,7 +1956,7 @@ RtlCreateUnicodeStringFromAsciiz(
  *  Dest->Length is only set upon success.
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlDowncaseUnicodeString(
    IN OUT PUNICODE_STRING UniDest,
    IN PCUNICODE_STRING UniSource,
@@ -2007,7 +2007,7 @@ RtlDowncaseUnicodeString(
  *  When dest fits exactly in MaximumLength characters the '\0' is ommitted.
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlAppendUnicodeToString(IN OUT PUNICODE_STRING Destination,
                          IN PCWSTR Source)
 {
@@ -2048,7 +2048,7 @@ RtlAppendUnicodeToString(IN OUT PUNICODE_STRING Destination,
  *  dest is never '\0' terminated.
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlAppendAsciizToString(
    IN OUT   PSTRING  Destination,
    IN PCSZ  Source)
@@ -2075,7 +2075,7 @@ RtlAppendAsciizToString(
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 RtlUpperString(PSTRING DestinationString,
                PSTRING SourceString)
 {
@@ -2102,7 +2102,7 @@ RtlUpperString(PSTRING DestinationString,
  *  See RtlpDuplicateUnicodeString
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlDuplicateUnicodeString(
    IN ULONG Flags,
    IN PCUNICODE_STRING SourceString,
@@ -2145,7 +2145,7 @@ RtlDuplicateUnicodeString(
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlValidateUnicodeString(IN ULONG Flags,
                          IN PUNICODE_STRING UnicodeString)
 {

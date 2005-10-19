@@ -40,7 +40,7 @@ PUSHORT NlsOemLeadByteInfo = NULL; /* exported */
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlCustomCPToUnicodeN(IN PCPTABLEINFO CustomCP,
                       PWCHAR UnicodeString,
                       ULONG UnicodeSize,
@@ -81,7 +81,7 @@ RtlCustomCPToUnicodeN(IN PCPTABLEINFO CustomCP,
 
 
 
-WCHAR STDCALL
+WCHAR NTAPI
 RtlDowncaseUnicodeChar (IN WCHAR Source)
 {
    USHORT Offset;
@@ -124,7 +124,7 @@ RtlDowncaseUnicodeChar (IN WCHAR Source)
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 RtlGetDefaultCodePage(OUT PUSHORT AnsiCodePage,
                       OUT PUSHORT OemCodePage)
 {
@@ -138,7 +138,7 @@ RtlGetDefaultCodePage(OUT PUSHORT AnsiCodePage,
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 RtlInitCodePageTable(IN PUSHORT TableBase,
                      OUT PCPTABLEINFO CodePageTable)
 {
@@ -198,7 +198,7 @@ RtlInitCodePageTable(IN PUSHORT TableBase,
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 RtlInitNlsTables(IN PUSHORT AnsiTableBase,
                  IN PUSHORT OemTableBase,
                  IN PUSHORT CaseTableBase,
@@ -225,7 +225,7 @@ RtlInitNlsTables(IN PUSHORT AnsiTableBase,
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlMultiByteToUnicodeN(
    IN PWCHAR UnicodeString,
    IN ULONG UnicodeSize,
@@ -266,7 +266,7 @@ RtlMultiByteToUnicodeN(
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlMultiByteToUnicodeSize(PULONG UnicodeSize,
                           PCSTR MbString,
                           ULONG MbSize)
@@ -316,7 +316,7 @@ RtlMultiByteToUnicodeSize(PULONG UnicodeSize,
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlOemToUnicodeN (PWCHAR UnicodeString,
                   ULONG UnicodeSize,
                   PULONG ResultSize,
@@ -359,7 +359,7 @@ RtlOemToUnicodeN (PWCHAR UnicodeString,
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 RtlResetRtlTranslations(IN PNLSTABLEINFO NlsTable)
 {
    DPRINT("RtlResetRtlTranslations() called\n");
@@ -392,7 +392,7 @@ RtlResetRtlTranslations(IN PNLSTABLEINFO NlsTable)
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlUnicodeToCustomCPN(IN PCPTABLEINFO CustomCP,
                       PCHAR CustomString,
                       ULONG CustomSize,
@@ -436,7 +436,7 @@ RtlUnicodeToCustomCPN(IN PCPTABLEINFO CustomCP,
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlUnicodeToMultiByteN (PCHAR MbString,
                         ULONG MbSize,
                         PULONG ResultSize,
@@ -477,7 +477,7 @@ RtlUnicodeToMultiByteN (PCHAR MbString,
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlUnicodeToMultiByteSize(PULONG MbSize,
                           PWCHAR UnicodeString,
                           ULONG UnicodeSize)
@@ -515,7 +515,7 @@ RtlUnicodeToMultiByteSize(PULONG MbSize,
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlUnicodeToOemN (PCHAR OemString,
                   ULONG OemSize,
                   PULONG ResultSize,
@@ -559,7 +559,7 @@ RtlUnicodeToOemN (PCHAR OemString,
 /*
  * @implemented
  */
-WCHAR STDCALL
+WCHAR NTAPI
 RtlUpcaseUnicodeChar(IN WCHAR Source)
 {
    USHORT Offset;
@@ -587,7 +587,7 @@ RtlUpcaseUnicodeChar(IN WCHAR Source)
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlUpcaseUnicodeToCustomCPN (IN PCPTABLEINFO CustomCP,
                              PCHAR CustomString,
                              ULONG CustomSize,
@@ -632,7 +632,7 @@ RtlUpcaseUnicodeToCustomCPN (IN PCPTABLEINFO CustomCP,
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlUpcaseUnicodeToMultiByteN (PCHAR MbString,
                               ULONG MbSize,
                               PULONG ResultSize,
@@ -676,7 +676,7 @@ RtlUpcaseUnicodeToMultiByteN (PCHAR MbString,
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlUpcaseUnicodeToOemN (PCHAR OemString,
                         ULONG OemSize,
                         PULONG ResultSize,
@@ -721,7 +721,7 @@ RtlUpcaseUnicodeToOemN (PCHAR OemString,
 /*
  * @unimplemented
  */
-CHAR STDCALL
+CHAR NTAPI
 RtlUpperChar (IN CHAR Source)
 {
    WCHAR Unicode;

@@ -18,35 +18,35 @@ extern VOID FASTCALL CHECK_PAGED_CODE_RTL(char *file, int line);
 
 /* These provide support for sharing code between User and Kernel RTL */
 PVOID
-STDCALL
+NTAPI
 RtlpAllocateMemory(
     ULONG Bytes,
     ULONG Tag);
 
 VOID
-STDCALL
+NTAPI
 RtlpFreeMemory(
     PVOID Mem,
     ULONG Tag);
 
 KPROCESSOR_MODE
-STDCALL
+NTAPI
 RtlpGetMode(VOID);
 
 NTSTATUS
-STDCALL
+NTAPI
 RtlDeleteHeapLock(PRTL_CRITICAL_SECTION CriticalSection);
 
 NTSTATUS
-STDCALL
+NTAPI
 RtlEnterHeapLock(PRTL_CRITICAL_SECTION CriticalSection);
 
 NTSTATUS
-STDCALL
+NTAPI
 RtlInitializeHeapLock(PRTL_CRITICAL_SECTION CriticalSection);
 
 NTSTATUS
-STDCALL
+NTAPI
 RtlLeaveHeapLock(PRTL_CRITICAL_SECTION CriticalSection);
 
 BOOLEAN
@@ -70,7 +70,7 @@ RtlpSetInDbgPrint(IN BOOLEAN NewValue);
 /* i386/except.S */
 
 EXCEPTION_DISPOSITION
-STDCALL
+NTAPI
 RtlpExecuteHandlerForException(PEXCEPTION_RECORD ExceptionRecord,
                                PEXCEPTION_REGISTRATION_RECORD RegistrationFrame,
                                PCONTEXT Context,
@@ -78,7 +78,7 @@ RtlpExecuteHandlerForException(PEXCEPTION_RECORD ExceptionRecord,
                                PEXCEPTION_HANDLER ExceptionHandler);
 
 EXCEPTION_DISPOSITION
-STDCALL
+NTAPI
 RtlpExecuteHandlerForUnwind(PEXCEPTION_RECORD ExceptionRecord,
                             PEXCEPTION_REGISTRATION_RECORD RegistrationFrame,
                             PCONTEXT Context,

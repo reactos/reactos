@@ -9,6 +9,7 @@
 #ifndef __EVENTLOG_H__
 #define __EVENTLOG_H__
 
+#define WIN32_NO_STATUS
 #include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>

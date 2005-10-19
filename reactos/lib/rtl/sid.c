@@ -17,7 +17,7 @@
 
 /* FUNCTIONS ***************************************************************/
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 RtlValidSid(IN PSID Sid_)
 {
   PISID Sid =  Sid_;
@@ -37,7 +37,7 @@ RtlValidSid(IN PSID Sid_)
 /*
  * @implemented
  */
-ULONG STDCALL
+ULONG NTAPI
 RtlLengthRequiredSid(IN ULONG SubAuthorityCount)
 {
   PAGED_CODE_RTL();
@@ -50,7 +50,7 @@ RtlLengthRequiredSid(IN ULONG SubAuthorityCount)
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlInitializeSid(IN PSID Sid_,
                  IN PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
                  IN UCHAR SubAuthorityCount)
@@ -72,7 +72,7 @@ RtlInitializeSid(IN PSID Sid_,
 /*
  * @implemented
  */
-PULONG STDCALL
+PULONG NTAPI
 RtlSubAuthoritySid(IN PSID Sid_,
                    IN ULONG SubAuthority)
 {
@@ -87,7 +87,7 @@ RtlSubAuthoritySid(IN PSID Sid_,
 /*
  * @implemented
  */
-PUCHAR STDCALL
+PUCHAR NTAPI
 RtlSubAuthorityCountSid(IN PSID Sid_)
 {
   PISID Sid =  Sid_;
@@ -101,7 +101,7 @@ RtlSubAuthorityCountSid(IN PSID Sid_)
 /*
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 RtlEqualSid(IN PSID Sid1_,
             IN PSID Sid2_)
 {
@@ -125,7 +125,7 @@ RtlEqualSid(IN PSID Sid1_,
 /*
  * @implemented
  */
-ULONG STDCALL
+ULONG NTAPI
 RtlLengthSid(IN PSID Sid_)
 {
   PISID Sid =  Sid_;
@@ -140,7 +140,7 @@ RtlLengthSid(IN PSID Sid_)
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlCopySid(ULONG BufferLength,
            PSID Dest,
            PSID Src)
@@ -163,7 +163,7 @@ RtlCopySid(ULONG BufferLength,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlCopySidAndAttributesArray(ULONG Count,
                              PSID_AND_ATTRIBUTES Src,
                              ULONG SidAreaSize,
@@ -204,7 +204,7 @@ RtlCopySidAndAttributesArray(ULONG Count,
 /*
  * @implemented
  */
-PSID_IDENTIFIER_AUTHORITY STDCALL
+PSID_IDENTIFIER_AUTHORITY NTAPI
 RtlIdentifierAuthoritySid(IN PSID Sid_)
 {
   PISID Sid =  Sid_;
@@ -218,7 +218,7 @@ RtlIdentifierAuthoritySid(IN PSID Sid_)
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlAllocateAndInitializeSid(PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
 			    UCHAR SubAuthorityCount,
 			    ULONG SubAuthority0,
@@ -286,7 +286,7 @@ RtlAllocateAndInitializeSid(PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
  *  Docs says FreeSid does NOT return a value
  *  even thou it's defined to return a PVOID...
  */
-PVOID STDCALL
+PVOID NTAPI
 RtlFreeSid(IN PSID Sid)
 {
    PAGED_CODE_RTL();
@@ -299,7 +299,7 @@ RtlFreeSid(IN PSID Sid)
 /*
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 RtlEqualPrefixSid(IN PSID Sid1_,
                   IN PSID Sid2_)
 {
@@ -317,7 +317,7 @@ RtlEqualPrefixSid(IN PSID Sid1_,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlConvertSidToUnicodeString(PUNICODE_STRING String,
                              PSID Sid_,
                              BOOLEAN AllocateBuffer)

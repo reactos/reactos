@@ -13,7 +13,7 @@
 #include <stdarg.h>
 
 /* Helper Header */
-#include <helper.h>
+#include <reactos/helper.h>
 
 /* A version of ntdef.h to be used with PSDK headers. */
 #include "umtypes.h"

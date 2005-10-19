@@ -25,12 +25,6 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <windows.h>
-#define NTOS_MODE_USER
-#include <ndk/ntndk.h>
-
-#include <services/services.h>
-
 #include "services.h"
 
 #define NDEBUG

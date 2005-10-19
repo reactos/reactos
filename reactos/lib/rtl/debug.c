@@ -269,7 +269,7 @@ DbgPrintReturnControlC(PCH Format,
  * @implemented
  */
 ULONG
-STDCALL
+NTAPI
 DbgPrompt(PCH OutputString,
           PCH InputString,
           USHORT InputSize)
@@ -293,7 +293,7 @@ DbgPrompt(PCH OutputString,
  * @implemented
  */
 BOOLEAN
-STDCALL
+NTAPI
 DbgQueryDebugFilterState(IN ULONG ComponentId,
                          IN ULONG Level)
 {
@@ -305,7 +305,7 @@ DbgQueryDebugFilterState(IN ULONG ComponentId,
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 DbgSetDebugFilterState(IN ULONG ComponentId,
                        IN ULONG Level,
                        IN BOOLEAN State)
@@ -318,7 +318,7 @@ DbgSetDebugFilterState(IN ULONG ComponentId,
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 DbgLoadImageSymbols(IN PUNICODE_STRING Name,
                     IN ULONG Base,
                     IN ULONG Unknown3)

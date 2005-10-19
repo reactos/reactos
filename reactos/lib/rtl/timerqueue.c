@@ -21,7 +21,7 @@ typedef VOID (CALLBACK *WAITORTIMERCALLBACKFUNC) (PVOID, BOOLEAN );
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlCreateTimer(HANDLE TimerQueue,
                PHANDLE phNewTimer,
 	       WAITORTIMERCALLBACKFUNC Callback,
@@ -39,7 +39,7 @@ RtlCreateTimer(HANDLE TimerQueue,
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlCreateTimerQueue(PHANDLE TimerQueue)
 {
   DPRINT1("RtlCreateTimerQueue: stub\n");
@@ -51,7 +51,7 @@ RtlCreateTimerQueue(PHANDLE TimerQueue)
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlDeleteTimer(HANDLE TimerQueue,
                HANDLE Timer,
 	       HANDLE CompletionEvent)
@@ -65,7 +65,7 @@ RtlDeleteTimer(HANDLE TimerQueue,
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlDeleteTimerQueue(HANDLE TimerQueue)
 {
   DPRINT1("RtlDeleteTimerQueue: stub\n");
@@ -77,7 +77,7 @@ RtlDeleteTimerQueue(HANDLE TimerQueue)
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlDeleteTimerQueueEx(HANDLE TimerQueue,
                       HANDLE CompletionEvent)
 {
@@ -90,7 +90,7 @@ RtlDeleteTimerQueueEx(HANDLE TimerQueue,
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlUpdateTimer(HANDLE TimerQueue,
                HANDLE Timer,
 	       ULONG DueTime,

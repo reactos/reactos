@@ -3,9 +3,11 @@
  */
 
 #include <stdio.h>
+#define WIN32_NO_STATUS
 #include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
+#include <services/services.h>
 
 typedef struct _SERVICE
 {

@@ -1,10 +1,7 @@
-#include <ctype.h>
-#include <windows.h>
-#include <winerror.h>
-#include <windns.h>
-#include <internal/windns.h>
-#define NTOS_MODE_USER
-#include <ndk/ntndk.h>
+#include "precomp.h"
+
+#define NDEBUG
+#include <debug.h>
 
 static BOOL DnsIntNameContainsDots( LPCWSTR Name ) {
   return wcschr( Name, '.' ) ? TRUE : FALSE;

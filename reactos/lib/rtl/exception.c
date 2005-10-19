@@ -21,7 +21,7 @@
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 RtlRaiseException(PEXCEPTION_RECORD ExceptionRecord)
 {
     CONTEXT Context;
@@ -67,7 +67,7 @@ RtlRaiseException(PEXCEPTION_RECORD ExceptionRecord)
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 RtlRaiseStatus(NTSTATUS Status)
 {
     EXCEPTION_RECORD ExceptionRecord;
@@ -113,7 +113,7 @@ RtlRaiseStatus(NTSTATUS Status)
 * @unimplemented
 */
 USHORT
-STDCALL
+NTAPI
 RtlCaptureStackBackTrace(IN ULONG FramesToSkip,
                          IN ULONG FramesToCapture,
                          OUT PVOID *BackTrace,
@@ -127,7 +127,7 @@ RtlCaptureStackBackTrace(IN ULONG FramesToSkip,
 * @unimplemented
 */
 ULONG
-STDCALL
+NTAPI
 RtlWalkFrameChain(OUT PVOID *Callers,
                   IN ULONG Count,
                   IN ULONG Flags)

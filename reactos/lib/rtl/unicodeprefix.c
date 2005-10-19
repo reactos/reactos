@@ -19,7 +19,7 @@
 * @unimplemented
 */
 PUNICODE_PREFIX_TABLE_ENTRY
-STDCALL
+NTAPI
 RtlFindUnicodePrefix (
 	PUNICODE_PREFIX_TABLE PrefixTable,
 	PUNICODE_STRING FullName,
@@ -34,7 +34,7 @@ RtlFindUnicodePrefix (
 * @unimplemented
 */
 VOID
-STDCALL
+NTAPI
 RtlInitializeUnicodePrefix (
 	PUNICODE_PREFIX_TABLE PrefixTable
 	)
@@ -46,7 +46,7 @@ RtlInitializeUnicodePrefix (
 * @unimplemented
 */
 BOOLEAN
-STDCALL
+NTAPI
 RtlInsertUnicodePrefix (
 	PUNICODE_PREFIX_TABLE PrefixTable,
 	PUNICODE_STRING Prefix,
@@ -61,7 +61,7 @@ RtlInsertUnicodePrefix (
 * @unimplemented
 */
 PUNICODE_PREFIX_TABLE_ENTRY
-STDCALL
+NTAPI
 RtlNextUnicodePrefix (
 	PUNICODE_PREFIX_TABLE PrefixTable,
 	BOOLEAN Restart
@@ -75,7 +75,7 @@ RtlNextUnicodePrefix (
 * @unimplemented
 */
 VOID
-STDCALL
+NTAPI
 RtlRemoveUnicodePrefix (
 	PUNICODE_PREFIX_TABLE PrefixTable,
 	PUNICODE_PREFIX_TABLE_ENTRY PrefixTableEntry

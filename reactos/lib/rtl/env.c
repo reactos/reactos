@@ -12,13 +12,13 @@
 #define NDEBUG
 #include <debug.h>
 
-PPEB STDCALL RtlpCurrentPeb(VOID);
+PPEB NTAPI RtlpCurrentPeb(VOID);
 /* FUNCTIONS *****************************************************************/
 
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlCreateEnvironment(BOOLEAN Inherit,
                      PWSTR *Environment)
 {
@@ -93,7 +93,7 @@ RtlCreateEnvironment(BOOLEAN Inherit,
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 RtlDestroyEnvironment(PWSTR Environment)
 {
    ULONG Size = 0;
@@ -108,7 +108,7 @@ RtlDestroyEnvironment(PWSTR Environment)
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlExpandEnvironmentStrings_U(PWSTR Environment,
                               PUNICODE_STRING Source,
                               PUNICODE_STRING Destination,
@@ -241,7 +241,7 @@ RtlExpandEnvironmentStrings_U(PWSTR Environment,
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 RtlSetCurrentEnvironment(PWSTR NewEnvironment,
                          PWSTR *OldEnvironment)
 {
@@ -265,7 +265,7 @@ RtlSetCurrentEnvironment(PWSTR NewEnvironment,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlSetEnvironmentVariable(PWSTR *Environment,
                           PUNICODE_STRING Name,
                           PUNICODE_STRING Value)
@@ -488,7 +488,7 @@ found:
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlQueryEnvironmentVariable_U(PWSTR Environment,
                               PUNICODE_STRING Name,
                               PUNICODE_STRING Value)

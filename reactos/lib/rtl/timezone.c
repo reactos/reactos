@@ -18,7 +18,7 @@
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlQueryTimeZoneInformation(LPTIME_ZONE_INFORMATION TimeZoneInformation)
 {
    RTL_QUERY_REGISTRY_TABLE QueryTable[8];
@@ -82,7 +82,7 @@ RtlQueryTimeZoneInformation(LPTIME_ZONE_INFORMATION TimeZoneInformation)
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlSetTimeZoneInformation(LPTIME_ZONE_INFORMATION TimeZoneInformation)
 {
    ULONG Length;

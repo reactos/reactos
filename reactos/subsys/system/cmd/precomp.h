@@ -3,7 +3,7 @@
 #endif//_MSC_VER
 
 #include <stdlib.h>
-
+#define WIN32_NO_STATUS
 #include <windows.h>
 #include <winnt.h>
 #include <shellapi.h>

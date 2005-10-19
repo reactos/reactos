@@ -135,7 +135,7 @@ RtlpCheckIntegerAtom(PWSTR AtomName,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlCreateAtomTable(IN ULONG TableSize,
                    IN OUT PRTL_ATOM_TABLE *AtomTable)
 {
@@ -183,7 +183,7 @@ RtlCreateAtomTable(IN ULONG TableSize,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlDestroyAtomTable(IN PRTL_ATOM_TABLE AtomTable)
 {
    PRTL_ATOM_TABLE_ENTRY *CurrentBucket, *LastBucket;
@@ -232,7 +232,7 @@ RtlDestroyAtomTable(IN PRTL_ATOM_TABLE AtomTable)
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlEmptyAtomTable(PRTL_ATOM_TABLE AtomTable,
                   BOOLEAN DeletePinned)
 {
@@ -286,7 +286,7 @@ RtlEmptyAtomTable(PRTL_ATOM_TABLE AtomTable,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlAddAtomToAtomTable(IN PRTL_ATOM_TABLE AtomTable,
                       IN PWSTR AtomName,
                       OUT PRTL_ATOM Atom)
@@ -406,7 +406,7 @@ end:
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlDeleteAtomFromAtomTable(IN PRTL_ATOM_TABLE AtomTable,
                            IN RTL_ATOM Atom)
 {
@@ -478,7 +478,7 @@ RtlDeleteAtomFromAtomTable(IN PRTL_ATOM_TABLE AtomTable,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlLookupAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
                          IN PWSTR AtomName,
                          OUT PRTL_ATOM Atom)
@@ -535,7 +535,7 @@ RtlLookupAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlPinAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
                       IN RTL_ATOM Atom)
 {
@@ -589,7 +589,7 @@ RtlPinAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
  * (again EXCLUDING the null terminator) is returned in NameLength, at least
  * on Win2k, XP and ReactOS. NT4 will return 0 in that case.
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlQueryAtomInAtomTable(PRTL_ATOM_TABLE AtomTable,
                         RTL_ATOM Atom,
                         PULONG RefCount,
@@ -694,7 +694,7 @@ RtlQueryAtomInAtomTable(PRTL_ATOM_TABLE AtomTable,
 /*
  * @private - only used by NtQueryInformationAtom
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlQueryAtomListInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
                             IN ULONG MaxAtomCount,
                             OUT ULONG *AtomCount,

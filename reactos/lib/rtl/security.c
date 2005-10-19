@@ -18,7 +18,7 @@
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlImpersonateSelf(IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel)
 {
    HANDLE ProcessToken;
@@ -85,7 +85,7 @@ RtlImpersonateSelf(IN SECURITY_IMPERSONATION_LEVEL ImpersonationLevel)
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlAdjustPrivilege(IN ULONG Privilege,
                    IN BOOLEAN Enable,
                    IN BOOLEAN CurrentThread,
@@ -164,7 +164,7 @@ RtlAdjustPrivilege(IN ULONG Privilege,
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlDeleteSecurityObject(IN PSECURITY_DESCRIPTOR *ObjectDescriptor)
 {
     DPRINT("RtlDeleteSecurityObject(%p)\n", ObjectDescriptor);
@@ -181,7 +181,7 @@ RtlDeleteSecurityObject(IN PSECURITY_DESCRIPTOR *ObjectDescriptor)
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlNewSecurityObject(IN PSECURITY_DESCRIPTOR ParentDescriptor,
                      IN PSECURITY_DESCRIPTOR CreatorDescriptor,
                      OUT PSECURITY_DESCRIPTOR *NewDescriptor,
@@ -198,7 +198,7 @@ RtlNewSecurityObject(IN PSECURITY_DESCRIPTOR ParentDescriptor,
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlQuerySecurityObject(IN PSECURITY_DESCRIPTOR ObjectDescriptor,
                        IN SECURITY_INFORMATION SecurityInformation,
                        OUT PSECURITY_DESCRIPTOR ResultantDescriptor,
@@ -214,7 +214,7 @@ RtlQuerySecurityObject(IN PSECURITY_DESCRIPTOR ObjectDescriptor,
  * @unimplemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlSetSecurityObject(IN SECURITY_INFORMATION SecurityInformation,
                      IN PSECURITY_DESCRIPTOR ModificationDescriptor,
                      OUT PSECURITY_DESCRIPTOR *ObjectsSecurityDescriptor,

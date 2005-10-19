@@ -15,7 +15,7 @@
 
 /* FUNCTIONS ***************************************************************/
 
-VOID STDCALL
+VOID NTAPI
 RtlRunDecodeUnicodeString (IN UCHAR Hash,
                            IN OUT PUNICODE_STRING String)
 {
@@ -38,7 +38,7 @@ RtlRunDecodeUnicodeString (IN UCHAR Hash,
 }
 
 
-VOID STDCALL
+VOID NTAPI
 RtlRunEncodeUnicodeString (IN OUT PUCHAR Hash,
                            IN OUT PUNICODE_STRING String)
 {
