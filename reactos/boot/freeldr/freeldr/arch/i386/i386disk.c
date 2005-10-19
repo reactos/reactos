@@ -175,7 +175,7 @@ BOOL DiskGetExtendedDriveParameters(ULONG DriveNumber, PVOID Buffer, USHORT Buff
         DbgPrint((DPRINT_DISK, "bytes per sector:                        %u\n", Ptr[12]));
         if (Ptr[0] >= 0x1e)
         {
-            DbgPrint((DPRINT_HB, "EED configuration parameters:            %x:%x\n", Ptr[13], Ptr[14]));
+            DbgPrint((DPRINT_DISK, "EED configuration parameters:            %x:%x\n", Ptr[13], Ptr[14]));
             if (Ptr[13] != 0xffff && Ptr[14] != 0xffff)
             {
                PUCHAR SpecPtr = (PUCHAR)((Ptr[13] << 4) + Ptr[14]);
@@ -193,7 +193,7 @@ BOOL DiskGetExtendedDriveParameters(ULONG DriveNumber, PVOID Buffer, USHORT Buff
         }
         if (Ptr[0] >= 0x42)
         {
-            DbgPrint((DPRINT_HB, "signature:                             %x\n", Ptr[15]));
+            DbgPrint((DPRINT_DISK, "signature:                             %x\n", Ptr[15]));
         }
 #endif
 
