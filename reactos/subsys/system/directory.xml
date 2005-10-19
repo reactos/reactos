@@ -11,9 +11,6 @@
 <directory name="devmgr">
         <xi:include href="devmgr/devmgr.xml" />
 </directory>
-<directory name="dhcp">
-	<xi:include href="dhcp/dhcp.xml" />
-</directory>
 <directory name="expand">
 	<xi:include href="expand/expand.xml" />
 </directory>
