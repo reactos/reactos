@@ -19,12 +19,13 @@
 
 DWORD WINAPI StartServer(LPVOID lpParam)
 {
+	SOCKET ListeningSocket;
     const TCHAR* HostIP = "127.0.0.1";
     PSERVICES pServices;
 
     pServices = (PSERVICES)lpParam;
 
-    SOCKET ListeningSocket = SetUpListener(HostIP, htons(pServices->Port));
+    ListeningSocket = SetUpListener(HostIP, htons(pServices->Port));
     if (ListeningSocket == INVALID_SOCKET)
     {
         _tprintf(_T("error setting up socket\n"));
