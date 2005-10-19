@@ -1716,53 +1716,6 @@ static VOID Cleanup (int argc, TCHAR *argv[])
 	}
 }
 
-#ifdef __REACTOS__
-#ifdef _UNICODE
-PWCHAR * _CommandLineToArgvW(PWCHAR lpCmdLine, int *pNumArgs)
-{
-	PWCHAR * argvw = NULL;
-	PWCHAR ptr = lpCmdLine;
-	PWCHAR str;
-	int len;
-	int NumArgs;
-
-	NumArgs = 0;
-
-	while(lpCmdLine && *lpCmdLine)
-	{
-		while (iswspace(*lpCmdLine)) lpCmdLine++;
-		if (*lpCmdLine)
-		{
-			if ((NumArgs % 10)==0)
-			{
-				PWCHAR * old_argvw = argvw;
-				argvw = malloc((NumArgs + 10) * sizeof(PWCHAR));
-				memcpy(argvw, old_argvw, NumArgs * sizeof(PWCHAR));
-				free(old_argvw);
-			}
-			ptr = wcschr(lpCmdLine, L' ');
-			if (ptr)
-			{
-				len = ptr - lpCmdLine;
-			}
-			else
-			{
-				len = wcslen(lpCmdLine);
-			}
-			str = malloc((len + 1) * sizeof(WCHAR));
-			memcpy(str, lpCmdLine, len * sizeof(WCHAR));
-			str[len] = 0;
-			argvw[NumArgs]=str;
-			NumArgs++;
-			lpCmdLine = ptr;
-		}
-	}
-	*pNumArgs = NumArgs;
-	return argvw;
-}
-#endif
-#endif
-
 /*
  * main function
  */
@@ -1778,11 +1731,7 @@ int _main (int argc, char *argv[])
 #ifdef _UNICODE
 	PWCHAR * argv;
 	int argc=0;
-#ifdef __REACTOS__
-	argv = _CommandLineToArgvW(GetCommandLineW(), &argc);
-#else
 	argv = CommandLineToArgvW(GetCommandLineW(), &argc);
-#endif
 #endif
 
 	GetCurrentDirectory(MAX_PATH,startPath);
