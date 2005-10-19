@@ -60,6 +60,6 @@ typedef NEWCPLINFOA NEWCPLINFO,*LPNEWCPLINFO;
 #ifdef __cplusplus
 }
 #endif
+#include <poppack.h>
 #endif
 
-#include <poppack.h>
