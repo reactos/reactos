@@ -91,7 +91,7 @@ Applet(HWND hwnd, UINT uMsg, LONG wParam, LONG lParam)
 
 
 /* Control Panel Callback */
-LONG CALLBACK
+LONG APIENTRY 
 CPlApplet(HWND hwndCpl,
 	  UINT uMsg,
 	  LPARAM lParam1,
