@@ -12,6 +12,7 @@
 #include "Fr.rc"
 #include "De.rc"
 #include "Es.rc"
+#include "Ru.rc"
 #include "Ja.rc"
 
 
