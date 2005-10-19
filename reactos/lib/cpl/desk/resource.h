@@ -40,7 +40,9 @@
 #define IDC_SCREENS_TIMEDELAY           1016
 #define IDC_SCREENS_TIME                1017
 #define IDC_SCREENS_DELETE              1018
+#define IDC_SCREENS_ADD_BUTTON          1019
 #define IDC_SCREENS_DUMMY               5000
+#define IDC_SCREENS_DUMMY2              5001
 
 #define IDS_CPLNAME                 2000
 #define IDS_CPLDESCRIPTION          2001

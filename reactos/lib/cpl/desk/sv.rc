@@ -34,7 +34,7 @@ BEGIN
                     LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS |
                     WS_BORDER | WS_TABSTOP,13, 34, 171, 109
     PUSHBUTTON      "&Ta bort",IDC_SCREENS_DELETE, 189,47,39,10
-    PUSHBUTTON      "&Lägg till",IDC_SCREENS_POWER_BUTTON,    190,34,39,10
+    PUSHBUTTON      "&Lägg till",IDC_SCREENS_ADD_BUTTON,    190,34,39,10
 
     PUSHBUTTON      "&Inställningar",IDC_SCREENS_SETTINGS,138, 164, 48, 12,WS_GROUP
     PUSHBUTTON      "&Förhandsvisa",IDC_SCREENS_TESTSC,190, 164, 48, 12
@@ -49,7 +49,7 @@ BEGIN
                     WS_BORDER | WS_GROUP,52, 149, 12, 12
     LTEXT           "minuter innan skärmsläckaren visas.",IDC_STATIC,70, 151, 147, 9
 
-    GROUPBOX        "&Energisparfunktioner för din bildskärm",IDC_SCREENS_DUMMY,5, 186, 238, 35
+    GROUPBOX        "&Energisparfunktioner för din bildskärm",IDC_SCREENS_DUMMY2,5, 186, 238, 35
     LTEXT           "För att ändra energisparfunktionerna för din bildskärm,\nklicka på Inställningar.",
                     IDC_STATIC,16, 199, 155, 19
     PUSHBUTTON      "Ins&tällningar",IDC_SCREENS_POWER_BUTTON,180, 202, 57, 12

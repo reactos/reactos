@@ -38,7 +38,7 @@ BEGIN
                     LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS |
                     WS_BORDER | WS_TABSTOP,13, 34, 171, 109
     PUSHBUTTON      "Eliminar",IDC_SCREENS_DELETE, 189,47,39,10
-    PUSHBUTTON      "&Añadir",IDC_SCREENS_POWER_BUTTON,    190,34,39,10
+    PUSHBUTTON      "&Añadir",IDC_SCREENS_ADD_BUTTON,    190,34,39,10
 
     PUSHBUTTON      "Configuración...",IDC_SCREENS_SETTINGS,133, 164, 56, 12,WS_GROUP
     PUSHBUTTON      "&Vista previa",IDC_SCREENS_TESTSC,192, 164, 43, 12
@@ -53,7 +53,7 @@ BEGIN
                     WS_BORDER | WS_GROUP,62, 148, 12, 12
     LTEXT           "Minutos antes de mostrar el protector de pantalla.",IDC_STATIC,79, 150, 161, 9
 
-    GROUPBOX        "Ahorro de energía del monitor",IDC_SCREENS_DUMMY,5, 186, 238, 35
+    GROUPBOX        "Ahorro de energía del monitor",IDC_SCREENS_DUMMY2,5, 186, 238, 35
     LTEXT           "Para ajustar la configuración de energía del monitor, haga click en Energía.",
                     IDC_STATIC,16, 199, 155, 19
     PUSHBUTTON      "Energía...",IDC_SCREENS_POWER_BUTTON,180, 202, 57, 12

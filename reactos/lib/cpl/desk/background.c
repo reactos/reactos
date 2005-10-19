@@ -71,6 +71,8 @@ void AddListViewItems()
     LONG result;
     UINT i = 0;
     BackgroundItem *backgroundItem = NULL;
+	TCHAR separators[] = TEXT(";");
+	TCHAR *token;
 
     GetClientRect(g_hBackgroundList, &clientRect);
     
@@ -156,8 +158,6 @@ void AddListViewItems()
 
 	LoadString(hApplet, IDS_SUPPORTED_EXT, szFileTypes, sizeof(szFileTypes) / sizeof(TCHAR));
 	
-	TCHAR separators[] = TEXT(";");
-	TCHAR *token;
 
 	token = _tcstok ( szFileTypes, separators );
 	while ( token != NULL )
@@ -229,14 +229,19 @@ void AddListViewItems()
 
 void InitBackgroundDialog()
 {
-    g_hBackgroundList       = GetDlgItem(g_hBackgroundPage, IDC_BACKGROUND_LIST);
+    TCHAR szString[256];
+    HKEY regKey;
+    TCHAR szBuffer[2];
+    DWORD bufferSize = sizeof(szBuffer);
+    DWORD varType = REG_SZ;
+    LONG result;
+    
+	g_hBackgroundList       = GetDlgItem(g_hBackgroundPage, IDC_BACKGROUND_LIST);
     g_hBackgroundPreview    = GetDlgItem(g_hBackgroundPage, IDC_BACKGROUND_PREVIEW);
     g_hPlacementCombo       = GetDlgItem(g_hBackgroundPage, IDC_PLACEMENT_COMBO);
     g_hColorButton          = GetDlgItem(g_hBackgroundPage, IDC_COLOR_BUTTON);
 
     AddListViewItems();
-    
-    TCHAR szString[256];
     
     LoadString(hApplet, IDS_CENTER, szString, sizeof(szString) / sizeof(TCHAR));
     SendMessage(g_hPlacementCombo, CB_INSERTSTRING, PLACEMENT_CENTER, (LPARAM)szString);
@@ -248,13 +253,6 @@ void InitBackgroundDialog()
     SendMessage(g_hPlacementCombo, CB_INSERTSTRING, PLACEMENT_TILE, (LPARAM)szString);
 
     /* Load the default settings from the registry */
-    HKEY regKey;
-    
-    TCHAR szBuffer[2];
-    DWORD bufferSize = sizeof(szBuffer);
-    DWORD varType = REG_SZ;
-    LONG result;
-    
     RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Desktop"), 0, KEY_ALL_ACCESS, &regKey);
     
     result = RegQueryValueEx(regKey, TEXT("WallpaperStyle"), 0, &varType, (LPBYTE)szBuffer, &bufferSize);
@@ -310,6 +308,8 @@ void OnBrowseButton()
     TCHAR fileTitle[256];
     TCHAR filter[MAX_PATH];
     BackgroundItem *backgroundItem = NULL;
+	SHFILEINFO sfi;
+	LV_ITEM listItem;
         
     ZeroMemory(&ofn, sizeof(OPENFILENAME));
 
@@ -335,9 +335,6 @@ void OnBrowseButton()
         /* Check if there is already a entry that holds this filename */
         if(CheckListBoxFilename(g_hBackgroundList, filename) == TRUE)
             return;
-        
-        SHFILEINFO sfi;
-        LV_ITEM listItem;
         
         if(g_listViewItemCount > (MAX_BACKGROUNDS - 1))
             return;
@@ -402,6 +399,13 @@ void ListViewItemChanged(int itemIndex)
 
 void DrawBackgroundPreview(LPDRAWITEMSTRUCT draw)
 {
+	float scaleX;
+	float scaleY;
+	int scaledWidth;
+	int scaledHeight;
+	int posX;
+	int posY;
+
     if(g_backgroundItems[g_backgroundSelection].bWallpaper == FALSE)
     {
         FillRect(draw->hDC, &draw->rcItem, GetSysColorBrush(COLOR_BACKGROUND));
@@ -411,14 +415,14 @@ void DrawBackgroundPreview(LPDRAWITEMSTRUCT draw)
     if(g_pWallpaperBitmap == NULL)
         return;
 
-    float scaleX = ((float)GetSystemMetrics(SM_CXSCREEN) - 1) / (float)draw->rcItem.right;
-    float scaleY = ((float)GetSystemMetrics(SM_CYSCREEN) - 1) / (float)draw->rcItem.bottom;
+    scaleX = ((float)GetSystemMetrics(SM_CXSCREEN) - 1) / (float)draw->rcItem.right;
+    scaleY = ((float)GetSystemMetrics(SM_CYSCREEN) - 1) / (float)draw->rcItem.bottom;
 
-    int scaledWidth = g_pWallpaperBitmap->width / scaleX;
-    int scaledHeight = g_pWallpaperBitmap->height / scaleY;
+    scaledWidth = g_pWallpaperBitmap->width / scaleX;
+    scaledHeight = g_pWallpaperBitmap->height / scaleY;
     
-    int posX = (draw->rcItem.right / 2) - (scaledWidth / 2);
-    int posY = (draw->rcItem.bottom / 2) - (scaledHeight / 2);
+    posX = (draw->rcItem.right / 2) - (scaledWidth / 2);
+    posY = (draw->rcItem.bottom / 2) - (scaledHeight / 2);
     
     FillRect(draw->hDC, &draw->rcItem, GetSysColorBrush(COLOR_BACKGROUND));
     

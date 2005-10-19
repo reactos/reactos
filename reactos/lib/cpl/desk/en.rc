@@ -31,7 +31,7 @@ BEGIN
                     LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS |
                     WS_BORDER | WS_TABSTOP,13, 34, 171, 109
     PUSHBUTTON      "&Delete",IDC_SCREENS_DELETE, 189,47,39,10
-    PUSHBUTTON      "&Add",IDC_SCREENS_POWER_BUTTON,    190,34,39,10
+    PUSHBUTTON      "&Add",IDC_SCREENS_ADD_BUTTON,    190,34,39,10
 
     PUSHBUTTON      "Se&ttings...",IDC_SCREENS_SETTINGS,140, 164, 48, 12,WS_GROUP
     PUSHBUTTON      "Pre&view",IDC_SCREENS_TESTSC,192, 164, 43, 12
@@ -46,7 +46,7 @@ BEGIN
                     WS_BORDER | WS_GROUP,52, 149, 12, 12
     LTEXT           "Minutes before showing Screensaver.",IDC_STATIC,70, 151, 147, 9
 
-    GROUPBOX        "&Energy Saving features of monitor",IDC_SCREENS_DUMMY,5, 186, 238, 35
+    GROUPBOX        "&Energy Saving features of monitor",IDC_SCREENS_DUMMY2,5, 186, 238, 35
     LTEXT           "To adjust the power settings for your monitor, click on Power Settings.",
                     IDC_STATIC,16, 199, 155, 19
     PUSHBUTTON      "P&ower Settings",IDC_SCREENS_POWER_BUTTON,180, 202, 57, 12
