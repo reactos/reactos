@@ -25,9 +25,12 @@
 /*
  * Debug codes
  */
-#define DBG_CONTROL_C                    ((NTSTATUS)0x40010005L)
 #define DBG_PRINTEXCEPTION_C             ((NTSTATUS)0x40010006L)
+
+#ifndef _WINNT_H
+#define DBG_CONTROL_C                    ((NTSTATUS)0x40010005L)
 #define DBG_CONTROL_BREAK                ((NTSTATUS)0x40010008L)
+#endif
 
 /*
  * Exception codes
