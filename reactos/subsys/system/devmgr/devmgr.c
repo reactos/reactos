@@ -12,7 +12,9 @@
 #include <commctrl.h>
 #include <windows.h>
 #include <commctrl.h>
-
+#if defined (__GNUC__)
+#include <winioctl.h>
+#endif
 
 /* FIXME: should be in cfgmgr32.h */
 typedef DWORD               CONFIGRET;
@@ -341,9 +343,6 @@ int ListByInterface(const GUID* guid)
 	SetupDiDestroyDeviceInfoList(hDevInfo);
 	return 0;
 }
-
-DEFINE_GUID(GUID_DEVINTERFACE_SERENUM_BUS_ENUMERATOR,
-  0x4D36E978L, 0xE325, 0x11CE, 0xBF, 0xC1, 0x08, 0x00, 0x2B, 0xE1, 0x03, 0x18);
 
 /*int main(void)
 {
