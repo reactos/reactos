@@ -1,3 +1,5 @@
+#define _CRT_SECURE_NO_DEPRECATE
+
 #define WIN32_NO_STATUS
 #include <windows.h>
 #define NTOS_MODE_USER
