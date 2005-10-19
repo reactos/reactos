@@ -4,6 +4,8 @@
 #pragma GCC system_header
 #endif
 
+#include <pshpack1.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -21,18 +23,18 @@ extern "C" {
 #define CPL_STARTWPARMSA 9
 #define CPL_STARTWPARMSW 10
 #define CPL_SETUP 200
-typedef LONG(APIENTRY *APPLET_PROC)(HWND,UINT,LONG,LONG);
+typedef LONG(APIENTRY *APPLET_PROC)(HWND,UINT,LPARAM,LPARAM);
 typedef struct tagCPLINFO {
 	int idIcon;
 	int idName;
 	int idInfo;
-	LONG lData;
+	LONG_PTR lData;
 } CPLINFO,*LPCPLINFO;
 typedef struct tagNEWCPLINFOA {
 	DWORD dwSize;
 	DWORD dwFlags;
 	DWORD dwHelpContext;
-	LONG lData;
+	LONG_PTR lData;
 	HICON hIcon;
 	CHAR szName[32];
 	CHAR szInfo[64];
@@ -42,7 +44,7 @@ typedef struct tagNEWCPLINFOW {
 	DWORD dwSize;
 	DWORD dwFlags;
 	DWORD dwHelpContext;
-	LONG lData;
+	LONG_PTR lData;
 	HICON hIcon;
 	WCHAR szName[32];
 	WCHAR szInfo[64];
@@ -59,3 +61,5 @@ typedef NEWCPLINFOA NEWCPLINFO,*LPNEWCPLINFO;
 }
 #endif
 #endif
+
+#include <poppack.h>
