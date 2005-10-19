@@ -50,7 +50,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 
 	string module_type = GetExtension(module.GetTargetName());
 	bool lib = (module_type == ".lib") || (module_type == ".a");
-	bool dll = (module_type == ".dll");
+	bool dll = (module_type == ".dll") || (module_type == ".cpl");
 	bool exe = (module_type == ".exe");
 	// TODO FIXME - need more checks here for 'sys' and possibly 'drv'?
 
@@ -555,6 +555,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 			// TODO FIXME - do we need their kludge?
 			//if ( module.name == "ntdll" ) fprintf ( OUT, " /nodefaultlib" ); // FIXME: Kludge
 			if ( dll ) fprintf ( OUT, " /def:\"%s.def\"", module.name.c_str() );
+			if (( dll ) && ( module_type == ".cpl")) fprintf ( OUT, " /out:\"Win32\\%s%s\"", module.name.c_str(), module_type.c_str() );
 			if ( debug ) fprintf ( OUT, " /pdbtype:sept" );
 			fprintf ( OUT, "\r\n" );
 		}
