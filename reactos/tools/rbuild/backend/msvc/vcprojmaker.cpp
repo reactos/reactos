@@ -50,7 +50,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 	string module_type = GetExtension(module.GetTargetName());
 	bool lib = (module_type == ".lib") || (module_type == ".a");
-	bool dll = (module_type == ".dll");
+	bool dll = (module_type == ".dll") || (module_type == ".cpl");
 	bool exe = (module_type == ".exe");
 	// TODO FIXME - need more checks here for 'sys' and possibly 'drv'?
 
@@ -107,6 +107,10 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		{
 			// explicitly omit win32api directories
 			if ( !strncmp(incs[i]->directory.c_str(), "w32api", 6 ) )
+				continue;
+
+			// explicitly omit include/wine directories
+			if ( !strncmp(incs[i]->directory.c_str(), "include\\wine", 12 ) )
 				continue;
 
 			string path = Path::RelativeFromDirectory (
@@ -201,6 +205,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 		fprintf ( OUT, "\t\t\t\tAdditionalIncludeDirectories=\"" );
 		bool multiple_includes = false;
+		fprintf ( OUT, "/.;" );
 		for ( i = 0; i < includes.size(); i++ )
 		{
 			const string& include = includes[i];
