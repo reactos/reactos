@@ -14,6 +14,7 @@
 
 /* C Headers */
 #define _CTYPE_DISABLE_MACROS
+#define _CRT_SECURE_NO_DEPRECATE
 #define _INC_SWPRINTF_INL_
 #include <limits.h>
 #include <stdio.h>

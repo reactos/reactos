@@ -42,14 +42,14 @@ RtlpSetInDbgPrint(IN BOOLEAN NewValue)
 }
 
 KPROCESSOR_MODE
-STDCALL
+NTAPI
 RtlpGetMode()
 {
    return UserMode;
 }
 
 PPEB
-STDCALL
+NTAPI
 RtlpCurrentPeb(VOID)
 {
     return NtCurrentPeb();
@@ -58,7 +58,7 @@ RtlpCurrentPeb(VOID)
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 RtlAcquirePebLock(VOID)
 {
    PPEB Peb = NtCurrentPeb ();
@@ -68,7 +68,7 @@ RtlAcquirePebLock(VOID)
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 RtlReleasePebLock(VOID)
 {
    PPEB Peb = NtCurrentPeb ();
@@ -79,7 +79,7 @@ RtlReleasePebLock(VOID)
 * @implemented
 */
 ULONG
-STDCALL
+NTAPI
 RtlGetNtGlobalFlags(VOID)
 {
     PPEB pPeb = NtCurrentPeb();
@@ -87,7 +87,7 @@ RtlGetNtGlobalFlags(VOID)
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 RtlDeleteHeapLock(
     PRTL_CRITICAL_SECTION CriticalSection)
 {
@@ -95,7 +95,7 @@ RtlDeleteHeapLock(
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 RtlEnterHeapLock(
     PRTL_CRITICAL_SECTION CriticalSection)
 {
@@ -103,7 +103,7 @@ RtlEnterHeapLock(
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 RtlInitializeHeapLock(
     PRTL_CRITICAL_SECTION CriticalSection)
 {
@@ -111,7 +111,7 @@ RtlInitializeHeapLock(
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 RtlLeaveHeapLock(
     PRTL_CRITICAL_SECTION CriticalSection)
 {
@@ -119,7 +119,7 @@ RtlLeaveHeapLock(
 }
 
 PVOID
-STDCALL
+NTAPI
 RtlpAllocateMemory(UINT Bytes,
                    ULONG Tag)
 {
@@ -132,7 +132,7 @@ RtlpAllocateMemory(UINT Bytes,
 
 
 VOID
-STDCALL
+NTAPI
 RtlpFreeMemory(PVOID Mem,
                ULONG Tag)
 {

@@ -9,7 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 /* FIXME: Cleanup this mess */
-typedef NTSTATUS (STDCALL *PEPFUNC)(PPEB);
+typedef NTSTATUS (NTAPI *PEPFUNC)(PPEB);
 NTSTATUS LdrMapSections(HANDLE ProcessHandle,
 			PVOID ImageBase,
 			HANDLE SectionHandle,
@@ -24,7 +24,7 @@ PEPFUNC LdrPEStartup (PVOID  ImageBase,
 		      PLDR_DATA_TABLE_ENTRY* Module,
 		      PWSTR FullDosName);
 typedef BOOL 
-(STDCALL *PDLLMAIN_FUNC)(HANDLE hInst,
+(NTAPI *PDLLMAIN_FUNC)(HANDLE hInst,
                          ULONG ul_reason_for_call,
                          LPVOID lpReserved);
 

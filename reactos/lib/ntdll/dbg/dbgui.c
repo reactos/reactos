@@ -40,7 +40,7 @@ DebugPrint(IN PANSI_STRING DebugString,
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 DbgUiConnectToDbg(VOID)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -66,7 +66,7 @@ DbgUiConnectToDbg(VOID)
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 DbgUiContinue(PCLIENT_ID ClientId,
               ULONG ContinueStatus)
 {
@@ -95,7 +95,7 @@ DbgUiWaitStateChange(PDBGUI_WAIT_STATE_CHANGE DbgUiWaitStateCange,
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 DbgUiRemoteBreakin(VOID)
 {
     /* Make sure a debugger is enabled; if so, breakpoint */
@@ -109,7 +109,7 @@ DbgUiRemoteBreakin(VOID)
  * @implemented
  */
 NTSTATUS
-STDCALL
+NTAPI
 DbgUiIssueRemoteBreakin(HANDLE Process)
 {
     HANDLE hThread;

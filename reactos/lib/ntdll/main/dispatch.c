@@ -12,7 +12,7 @@
 #define NDEBUG
 #include <debug.h>
 
-typedef NTSTATUS (STDCALL *USER_CALL)(PVOID Argument, ULONG ArgumentLength);
+typedef NTSTATUS (NTAPI *USER_CALL)(PVOID Argument, ULONG ArgumentLength);
 
 /* FUNCTIONS ****************************************************************/
 
@@ -20,7 +20,7 @@ typedef NTSTATUS (STDCALL *USER_CALL)(PVOID Argument, ULONG ArgumentLength);
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 KiUserExceptionDispatcher(PEXCEPTION_RECORD ExceptionRecord,
                           PCONTEXT Context)
 {
@@ -53,7 +53,7 @@ KiUserExceptionDispatcher(PEXCEPTION_RECORD ExceptionRecord,
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 KiRaiseUserExceptionDispatcher(VOID)
 {
     EXCEPTION_RECORD ExceptionRecord;
@@ -72,7 +72,7 @@ KiRaiseUserExceptionDispatcher(VOID)
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 KiUserCallbackDispatcher(ULONG Index,
                          PVOID Argument,
                          ULONG ArgumentLength)
