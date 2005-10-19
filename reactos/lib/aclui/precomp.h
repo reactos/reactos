@@ -5,9 +5,6 @@
 #include <prsht.h>
 #include <aclui.h>
 #include <sddl.h>
-#if defined (__GNUC__)
-#include <winternl.h>
-#endif
 #include <ntsecapi.h>
 #if SUPPORT_UXTHEME
 #include <uxtheme.h>
