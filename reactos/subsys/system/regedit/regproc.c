@@ -1619,7 +1619,7 @@ LONG RegMoveKey(HKEY hDestKey, LPCTSTR lpDestSubKey, HKEY hSrcKey, LPCTSTR lpSrc
 LONG RegRenameKey(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpNewName)
 {
     LPCTSTR s;
-    LPTSTR lpNewSubKey;
+    LPTSTR lpNewSubKey = NULL;
 	LONG Ret = 0;
 
     s = _tcsrchr(lpSubKey, '\\');
