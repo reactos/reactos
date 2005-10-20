@@ -1,5 +1,6 @@
 #ifdef _MSC_VER
 #pragma warning ( disable : 4103 ) /* use #pragma pack to change alignment */
+#define _CRT_SECURE_NO_DEPRECATE
 #endif//_MSC_VER
 
 #include <stdlib.h>

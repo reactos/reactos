@@ -53,7 +53,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 	}
 
 	string module_type = GetExtension(module.GetTargetName());
-	bool lib = (module_type == ".lib") || (module_type == ".a");
+	bool lib = (module.type == ObjectLibrary) || (module_type == ".lib") || (module_type == ".a");
 	bool dll = (module_type == ".dll") || (module_type == ".cpl");
 	bool exe = (module_type == ".exe");
 	// TODO FIXME - need more checks here for 'sys' and possibly 'drv'?
@@ -448,8 +448,13 @@ MSVCBackend::_generate_sln_project (
 
 	//FIXME: only omit ProjectDependencies in VS 2005 when there are no dependencies
 	//NOTE: VS 2002 do not use ProjectSection; it uses GlobalSection instead
-	if (configuration.VSProjectVersion == "7.10") {
+	if ((configuration.VSProjectVersion == "7.10") || (dependencies.size() > 0)) {
 		fprintf ( OUT, "\tProjectSection(ProjectDependencies) = postProject\r\n" );
+		for ( size_t i = 0; i < dependencies.size(); i++ )
+		{
+			Dependency& dependency = *dependencies[i];
+			fprintf ( OUT, "\t\t%s = %s\r\n", dependency.module.guid.c_str(), dependency.module.guid.c_str() );
+		}
 		fprintf ( OUT, "\tEndProjectSection\r\n" );
 	}
 
@@ -477,10 +482,10 @@ MSVCBackend::_generate_sln_footer ( FILE* OUT )
 	fprintf ( OUT, "\tEndGlobalSection\r\n" );
 	fprintf ( OUT, "\tGlobalSection(ExtensibilityAddIns) = postSolution\r\n" );
 	fprintf ( OUT, "\tEndGlobalSection\r\n" );
-
 	
 	if (configuration.VSProjectVersion == "7.00") {
 		fprintf ( OUT, "\tGlobalSection(ProjectDependencies) = postSolution\r\n" );
+		//FIXME: Add dependencies for VS 2002
 		fprintf ( OUT, "\tEndGlobalSection\r\n" );
 	}
 
