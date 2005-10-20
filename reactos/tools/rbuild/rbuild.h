@@ -57,6 +57,8 @@ typedef std::vector<std::string> string_list;
 #define SBAD_SEP "\\"
 #endif
 
+#define MS_VS_DEF_VERSION "7.10"
+
 class Project;
 class IfableData;
 class Module;
@@ -95,6 +97,7 @@ public:
 	bool AutomaticDependencies;
 	bool CheckDependenciesForModuleOnly;
 	std::string CheckDependenciesForModuleOnlyModule;
+	std::string VSProjectVersion;
 	bool MakeHandlesInstallDirectories;
 	bool GenerateProxyMakefilesInSourceTree;
 };

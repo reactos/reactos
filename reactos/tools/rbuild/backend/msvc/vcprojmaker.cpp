@@ -171,7 +171,11 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 	fprintf ( OUT, "<?xml version=\"1.0\" encoding = \"Windows-1252\"?>\r\n" );
 	fprintf ( OUT, "<VisualStudioProject\r\n" );
 	fprintf ( OUT, "\tProjectType=\"Visual C++\"\r\n" );
-	fprintf ( OUT, "\tVersion=\"7.00\"\r\n" );
+
+	if (configuration.VSProjectVersion.empty())
+		configuration.VSProjectVersion = MS_VS_DEF_VERSION;
+
+	fprintf ( OUT, "\tVersion=\"%s\"\r\n", configuration.VSProjectVersion.c_str() );
 	fprintf ( OUT, "\tName=\"%s\"\r\n", module.name.c_str() );
 	fprintf ( OUT, "\tKeyword=\"Win32Proj\">\r\n" );
 
@@ -386,8 +390,22 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 void
 MSVCBackend::_generate_sln_header ( FILE* OUT )
 {
-    fprintf ( OUT, "Microsoft Visual Studio Solution File, Format Version 9.00\r\n" );
-    fprintf ( OUT, "# Visual C++ Express 2005\r\n" );
+    if (configuration.VSProjectVersion.empty())
+        configuration.VSProjectVersion = MS_VS_DEF_VERSION;
+
+    string version;
+
+    if (configuration.VSProjectVersion == "7.00")
+	version = "7.00";
+
+    if (configuration.VSProjectVersion == "7.10")
+	version = "8.00";
+
+    if (configuration.VSProjectVersion == "8.00")
+	version = "9.00";
+
+    fprintf ( OUT, "Microsoft Visual Studio Solution File, Format Version %s\r\n", version.c_str() );
+    fprintf ( OUT, "# Visual Studio 2005\r\n" );
     fprintf ( OUT, "\r\n" );
 }
 
@@ -410,7 +428,7 @@ MSVCBackend::_generate_sln ( FILE* OUT )
 
 /*
 	m_devFile << "Microsoft Visual Studio Solution File, Format Version 9.00" << endl;
-	m_devFile << "# Visual C++ Express 2005" << endl;
+	m_devFile << "# Visual Studio 2005" << endl;
 
 	m_devFile << "# FIXME Project listings here" << endl;
 	m_devFile << "EndProject" << endl;

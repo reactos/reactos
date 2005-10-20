@@ -61,6 +61,41 @@ ParseAutomaticDependencySwitch ( char switchChar2,
 	return true;
 }
 
+
+bool
+ParseVCProjectSwitch ( char switchChar2,
+	               char* switchStart )
+{
+	switch ( switchChar2 )
+	{
+		case 's':
+			if ( strlen ( switchStart ) <= 3 )
+			{
+				printf ( "Switch -dm requires a module name\n" );
+				return false;
+			}
+			configuration.VSProjectVersion = string(&switchStart[3]);
+
+			if (configuration.VSProjectVersion.at(0) == '{') {
+				printf ( "Error: invalid char {\n" );
+				return false;
+			}
+
+			if (configuration.VSProjectVersion.length() == 1) //7,8
+				configuration.VSProjectVersion.append(".00");
+
+			if (configuration.VSProjectVersion.length() == 3) //7.1
+				configuration.VSProjectVersion.append("0");
+
+			break;
+		default:
+			printf ( "Unknown switch -d%c\n",
+			         switchChar2 );
+			return false;
+	}
+	return true;
+}
+
 bool
 ParseMakeSwitch ( char switchChar2 )
 {
@@ -101,7 +136,11 @@ ParseSwitch ( int argc, char** argv, int index )
 	switch ( switchChar )
 	{
 		case 'v':
-			configuration.Verbose = true;
+			if (switchChar2 == 's')
+				return ParseVCProjectSwitch ( switchChar2,
+			                                      argv[index] );
+			else
+				configuration.Verbose = true;
 			break;
 		case 'c':
 			configuration.CleanAsYouGo = true;
@@ -163,11 +202,12 @@ main ( int argc, char** argv )
 		printf ( "                not generate the directories.\n" );
 		printf ( "  -ps           Generate proxy makefiles in source tree instead of the output.\n" );
 		printf ( "                tree.\n" );
+		printf ( "  -vs{version}  Version of MS VS project files. Default is %s.\n", MS_VS_DEF_VERSION );
 		printf ( "\n" );
 		printf ( "  buildsystem   Target build system. Can be one of:\n" );
 		printf ( "                 mingw   MinGW\n" );
-		printf ( "                 devcpp  DevC++\n\n" );
-		printf ( "  msvc          Generates dsp files for MSVC" );
+		printf ( "                 devcpp  DevC++\n" );
+		printf ( "                 msvc    MS Visual Studio\n" );
 		return 1;
 	}
 	try
