@@ -419,13 +419,13 @@ MSVCBackend::_generate_sln_header ( FILE* OUT )
     string version;
 
     if (configuration.VSProjectVersion == "7.00")
-	version = "7.00";
+		version = "7.00";
 
     if (configuration.VSProjectVersion == "7.10")
-	version = "8.00";
+		version = "8.00";
 
     if (configuration.VSProjectVersion == "8.00")
-	version = "9.00";
+		version = "9.00";
 
     fprintf ( OUT, "Microsoft Visual Studio Solution File, Format Version %s\r\n", version.c_str() );
     fprintf ( OUT, "# Visual Studio 2005\r\n" );

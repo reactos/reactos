@@ -92,8 +92,11 @@ void MSVCBackend::ProcessModules()
 		Module &module = *ProjectNode.modules[i];
 
 		module.guid = _gen_guid();
-		this->_generate_dsp ( module );
-		this->_generate_vcproj ( module );
+
+		if (configuration.VSProjectVersion == "6.00")
+			this->_generate_dsp ( module );
+		else
+			this->_generate_vcproj ( module );
 
 
 		/*for(size_t k = 0; k < module.non_if_data.files.size(); k++)

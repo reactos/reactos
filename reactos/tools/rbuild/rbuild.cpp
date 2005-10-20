@@ -189,8 +189,7 @@ main ( int argc, char** argv )
 	if ( !ParseArguments ( argc, argv ) )
 	{
 		printf ( "Generates project files for buildsystems\n\n" );
-		printf ( "  rbuild [switches] buildsystem\n" );
-		printf ( "  rbuild msvc\n" );
+		printf ( "  rbuild [switches] buildsystem\n\n" );
 		printf ( "Switches:\n" );
 		printf ( "  -v            Be verbose.\n" );
 		printf ( "  -c            Clean as you go. Delete generated files as soon as they are not\n" );
