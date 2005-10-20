@@ -1,0 +1,104 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         PCI IDE bus driver extension
+ * FILE:            drivers/storage/pciidex/miniport.c
+ * PURPOSE:         Miniport functions
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
+ */
+
+#define NDEBUG
+#include <debug.h>
+
+#define INITGUID
+#include "pciidex.h"
+
+static NTSTATUS NTAPI
+PciIdeXPnpDispatch(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp)
+{
+	if (((PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsFDO)
+		return PciIdeXFdoPnpDispatch(DeviceObject, Irp);
+	else
+		return PciIdeXPdoPnpDispatch(DeviceObject, Irp);
+}
+
+NTSTATUS NTAPI
+PciIdeXInitialize(
+	IN PDRIVER_OBJECT DriverObject,
+	IN PUNICODE_STRING RegistryPath,
+	IN PCONTROLLER_PROPERTIES HwGetControllerProperties,
+	IN ULONG ExtensionSize)
+{
+	ULONG i;
+	PPCIIDEX_DRIVER_EXTENSION DriverExtension;
+	NTSTATUS Status;
+
+	DPRINT("PciIdeXInitialize(%p '%wZ' %p 0x%lx)\n",
+		DriverObject, RegistryPath, HwGetControllerProperties, ExtensionSize);
+
+	Status = IoAllocateDriverObjectExtension(
+		DriverObject,
+		DriverObject,
+		sizeof(PCIIDEX_DRIVER_EXTENSION),
+		(PVOID*)&DriverExtension);
+	if (!NT_SUCCESS(Status))
+		return Status;
+	RtlZeroMemory(DriverExtension, sizeof(PCIIDEX_DRIVER_EXTENSION));
+	DriverExtension->MiniControllerExtensionSize = ExtensionSize;
+	DriverExtension->HwGetControllerProperties = HwGetControllerProperties;
+
+	DriverObject->DriverExtension->AddDevice = PciIdeXAddDevice;
+
+	for (i = 0; i < IRP_MJ_MAXIMUM_FUNCTION; i++)
+		DriverObject->MajorFunction[i] = ForwardIrpAndForget;
+	DriverObject->MajorFunction[IRP_MJ_PNP] = PciIdeXPnpDispatch;
+
+	return STATUS_SUCCESS;
+}
+
+/* May be called at IRQL <= DISPATCH_LEVEL */
+NTSTATUS NTAPI
+PciIdeXGetBusData(
+	IN PVOID DeviceExtension,
+	IN PVOID Buffer,
+	IN ULONG ConfigDataOffset,
+	IN ULONG BufferLength)
+{
+	PFDO_DEVICE_EXTENSION FdoDeviceExtension;
+	ULONG BytesRead = 0;
+	NTSTATUS Status = STATUS_UNSUCCESSFUL;
+
+	DPRINT("PciIdeXGetBusData(%p %p 0x%lx 0x%lx)\n",
+		DeviceExtension, Buffer, ConfigDataOffset, BufferLength);
+
+	FdoDeviceExtension = CONTAINING_RECORD(DeviceExtension, FDO_DEVICE_EXTENSION, MiniControllerExtension);
+	if (FdoDeviceExtension->BusInterface)
+	{
+		BytesRead = (*FdoDeviceExtension->BusInterface->GetBusData)(
+			FdoDeviceExtension->BusInterface->Context,
+			PCI_WHICHSPACE_CONFIG,
+			Buffer,
+			ConfigDataOffset,
+			BufferLength);
+		if (BytesRead == BufferLength)
+			Status = STATUS_SUCCESS;
+	}
+
+	return Status;
+}
+
+/* May be called at IRQL <= DISPATCH_LEVEL */
+NTSTATUS NTAPI
+PciIdeXSetBusData(
+	IN PVOID DeviceExtension,
+	IN PVOID Buffer,
+	IN PVOID DataMask,
+	IN ULONG ConfigDataOffset,
+	IN ULONG BufferLength)
+{
+	DPRINT1("PciIdeXSetBusData(%p %p %p 0x%lx 0x%lx)\n",
+		DeviceExtension, Buffer, DataMask, ConfigDataOffset, BufferLength);
+
+	return STATUS_NOT_IMPLEMENTED;
+}

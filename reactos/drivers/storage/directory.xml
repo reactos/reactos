@@ -16,6 +16,12 @@
 <directory name="floppy">
 	<xi:include href="floppy/floppy.xml" />
 </directory>
+<directory name="pciide">
+	<xi:include href="pciide/pciide.xml" />
+</directory>
+<directory name="pciidex">
+	<xi:include href="pciidex/pciidex.xml" />
+</directory>
 <directory name="scsiport">
 	<xi:include href="scsiport/scsiport.xml" />
 </directory>
