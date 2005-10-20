@@ -441,8 +441,14 @@ MSVCBackend::_generate_sln_project (
 	vcproj_file = DosSeparator ( std::string(".\\") + vcproj_file );
 
 	fprintf ( OUT, "Project(\"%s\") = \"%s\", \"%s\", \"%s\"\r\n", sln_guid.c_str() , module.name.c_str(), vcproj_file.c_str(), vcproj_guid.c_str() );
-	fprintf ( OUT, "\tProjectSection(ProjectDependencies) = postProject\r\n" );
-	fprintf ( OUT, "\tEndProjectSection\r\n" );
+
+	//FIXME: only omit ProjectDependencies in VS 2005 when there are no dependencies
+	//NOTE: VS 2002 do not use ProjectSection; it uses GlobalSection instead
+	if (configuration.VSProjectVersion == "7.10") {
+		fprintf ( OUT, "\tProjectSection(ProjectDependencies) = postProject\r\n" );
+		fprintf ( OUT, "\tEndProjectSection\r\n" );
+	}
+
 	fprintf ( OUT, "EndProject\r\n" );
 }
 
@@ -467,10 +473,21 @@ MSVCBackend::_generate_sln_footer ( FILE* OUT )
 	fprintf ( OUT, "\tEndGlobalSection\r\n" );
 	fprintf ( OUT, "\tGlobalSection(ExtensibilityAddIns) = postSolution\r\n" );
 	fprintf ( OUT, "\tEndGlobalSection\r\n" );
+
+	
+	if (configuration.VSProjectVersion == "7.00") {
+		fprintf ( OUT, "\tGlobalSection(ProjectDependencies) = postSolution\r\n" );
+		fprintf ( OUT, "\tEndGlobalSection\r\n" );
+	}
+
+	if (configuration.VSProjectVersion == "8.00") {
+		fprintf ( OUT, "\tGlobalSection(SolutionProperties) = preSolution\r\n" );
+        	fprintf ( OUT, "\t\tHideSolutionNode = FALSE\r\n" );
+		fprintf ( OUT, "\tEndGlobalSection\r\n" );
+	}
+
 	fprintf ( OUT, "EndGlobal\r\n" );
-
-
-    fprintf ( OUT, "\r\n" );
+	fprintf ( OUT, "\r\n" );
 }
 
 
