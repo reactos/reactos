@@ -264,6 +264,8 @@ Module::Module ( const Project& project,
 				att->value );
 		}
 	}
+	else
+		isUnicode = false;
 
 	att = moduleNode.GetAttribute ( "entrypoint", false );
 	if ( att != NULL )
