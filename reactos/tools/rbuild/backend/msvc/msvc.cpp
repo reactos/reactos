@@ -53,8 +53,11 @@ MSVCBackend::MSVCBackend(Project &project,
 
 void MSVCBackend::Process()
 {
-
-	string filename_sln = ProjectNode.name + ".sln";
+	string filename_sln ( ProjectNode.name );
+	if ( configuration.VSProjectVersion == "6.00" )
+		filename_sln += ".dsw";
+	else
+		filename_sln += ".sln";
 	printf ( "Creating MSVC workspace: %s\n", filename_sln.c_str() );
 	
 	ProcessModules();
@@ -66,7 +69,11 @@ void MSVCBackend::Process()
 		return;
 	}
 
-	_generate_sln ( m_slnFile );
+	if ( configuration.VSProjectVersion == "6.00" )
+		_generate_wine_dsw ( m_slnFile );
+	else
+		_generate_sln ( m_slnFile );
+
 	fclose ( m_slnFile );
 	printf ( "Done.\n" );
 }
