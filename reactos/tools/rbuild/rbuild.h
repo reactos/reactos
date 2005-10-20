@@ -214,6 +214,7 @@ public:
 	const XMLElement& node;
 	std::string xmlbuildFile;
 	std::string name;
+	std::string guid;
 	std::string extension;
 	std::string entrypoint;
 	std::string baseaddress;
