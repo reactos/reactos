@@ -222,6 +222,7 @@ public:
 	ModuleType type;
 	ImportLibrary* importLibrary;
 	bool mangledSymbols;
+	bool isUnicode;
 	Bootstrap* bootstrap;
 	IfableData non_if_data;
 	std::vector<Invoke*> invocations;
