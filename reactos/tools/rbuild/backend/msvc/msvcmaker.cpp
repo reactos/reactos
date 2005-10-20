@@ -31,6 +31,10 @@
 using std::string;
 using std::vector;
 
+#ifdef OUT
+#undef OUT
+#endif//OUT
+
 void
 MSVCBackend::_generate_dsp ( const Module& module )
 {
