@@ -207,6 +207,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_GAMES		    "Games"
+    IDS_CMT_SOLITAIRE	"Solitaire"
 END
 
 
