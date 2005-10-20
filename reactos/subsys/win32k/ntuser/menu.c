@@ -1630,6 +1630,26 @@ NtUserGetMenuBarInfo(
 {
    UNIMPLEMENTED
 
+   switch (idObject)
+   {
+      case OBJID_CLIENT:
+      {
+         DPRINT1("OBJID_CLIENT, idItem = %d\n",idItem);
+         break;
+      }
+      case OBJID_MENU:
+      {
+         DPRINT1("OBJID_MENU, idItem = %d\n",idItem);
+         break;
+      }
+      case OBJID_SYSMENU:
+      {
+         DPRINT1("OBJID_SYSMENU, idItem = %d\n",idItem);
+         break;
+      }
+      default:
+         DPRINT1("Unknown idObject = %d, idItem = %d\n",idObject,idItem);
+   }
    return 0;
 }
 
