@@ -1203,7 +1203,7 @@ pGetSecurityInfoCheck(SECURITY_INFORMATION SecurityInfo,
             ppsidOwner = NULL;
         }
         if ((SecurityInfo & GROUP_SECURITY_INFORMATION) &&
-            *ppsidGroup != NULL)
+           (ppsidGroup) && (*ppsidGroup)) 
         {
             *ppsidGroup = NULL;
         }
