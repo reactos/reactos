@@ -284,7 +284,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		{
 			fprintf ( OUT, "\t\t\t<Tool\r\n" );
 			fprintf ( OUT, "\t\t\t\tName=\"VCLibrarianTool\"\r\n" );
-			fprintf ( OUT, "\t\t\t\tOutputFile=\"$(OutDir)/%s.%s\"/>\r\n", module.name.c_str(), module_type.c_str() );
+			fprintf ( OUT, "\t\t\t\tOutputFile=\"$(OutDir)/%s%s\"/>\r\n", module.name.c_str(), module_type.c_str() );
 		}
 		else
 		{
@@ -300,7 +300,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			}
 			fprintf ( OUT, "\"\r\n" );
 
-			fprintf ( OUT, "\t\t\t\tOutputFile=\"$(OutDir)/%s.%s\"\r\n", module.name.c_str(), module_type.c_str() );
+			fprintf ( OUT, "\t\t\t\tOutputFile=\"$(OutDir)/%s%s\"\r\n", module.name.c_str(), module_type.c_str() );
 			fprintf ( OUT, "\t\t\t\tLinkIncremental=\"%d\"\r\n", debug ? 2 : 1 );
 			fprintf ( OUT, "\t\t\t\tGenerateDebugInformation=\"TRUE\"\r\n" );
 
