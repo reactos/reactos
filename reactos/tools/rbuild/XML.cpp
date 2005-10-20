@@ -17,7 +17,7 @@
  */
 #include "pch.h"
 
-#ifdef _MSC_VER
+#ifndef MAX_PATH
 #define MAX_PATH _MAX_PATH
 #endif
 

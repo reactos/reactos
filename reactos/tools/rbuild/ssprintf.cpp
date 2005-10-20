@@ -317,7 +317,7 @@ numberf(std::string& f, double __n, char exp_sign,  int size, int precision, int
 		else if (  frac < -0.5  )
 			e--;
 
-		result = numberf(f,__n/pow(10.0L,e),'f',size-4, precision, type);
+		result = numberf(f,__n/pow(10.0L,(long double)e),'f',size-4, precision, type);
 		if (result < 0)
 			return false;
 		f += exp_sign;
@@ -510,7 +510,7 @@ wnumberf(std::wstring& f, double __n, wchar_t exp_sign,  int size, int precision
 		else if (  frac < -0.5  )
 			e--;
 
-		result = wnumberf(f,__n/pow(10.0L,e),L'f',size-4, precision, type);
+		result = wnumberf(f,__n/pow(10.0L,(long double) e),L'f',size-4, precision, type);
 		if (result < 0)
 			return false;
 		f += exp_sign;
