@@ -31,8 +31,6 @@
 
 using namespace std;
 
-void gen_guid();
-
 static class MSVCFactory : public Backend::Factory
 {
 	public:
@@ -93,9 +91,10 @@ void MSVCBackend::ProcessModules()
 	{
 		Module &module = *ProjectNode.modules[i];
 
+		module.guid = _gen_guid();
 		this->_generate_dsp ( module );
 		this->_generate_vcproj ( module );
-//		gen_guid();
+
 
 		/*for(size_t k = 0; k < module.non_if_data.files.size(); k++)
 		{

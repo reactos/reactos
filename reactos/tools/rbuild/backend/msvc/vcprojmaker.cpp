@@ -140,7 +140,8 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 	std::vector<std::string> cfgs;
 
-	cfgs.push_back ( module.name + " - Win32" );
+	cfgs.push_back ( "Debug" );
+	cfgs.push_back ( "Release" );
 
 	if (!no_cpp)
 	{
@@ -177,6 +178,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 	fprintf ( OUT, "\tVersion=\"%s\"\r\n", configuration.VSProjectVersion.c_str() );
 	fprintf ( OUT, "\tName=\"%s\"\r\n", module.name.c_str() );
+	fprintf ( OUT, "\tProjectGUID=\"%s\"\r\n", module.guid.c_str() ); 
 	fprintf ( OUT, "\tKeyword=\"Win32Proj\">\r\n" );
 
 	fprintf ( OUT, "\t<Platforms>\r\n" );
@@ -436,12 +438,11 @@ MSVCBackend::_generate_sln_project (
 	std::string vcproj_guid,
 	const std::vector<Dependency*>& dependencies )
 {
-	
-    vcproj_file = DosSeparator ( std::string(".\\") + vcproj_file );
+	vcproj_file = DosSeparator ( std::string(".\\") + vcproj_file );
 
 	fprintf ( OUT, "Project(\"%s\") = \"%s\", \"%s\", \"%s\"\r\n", sln_guid.c_str() , module.name.c_str(), vcproj_file.c_str(), vcproj_guid.c_str() );
-	fprintf ( OUT, "	ProjectSection(ProjectDependencies) = postProject\r\n" );
-	fprintf ( OUT, "	EndProjectSection\r\n" );
+	fprintf ( OUT, "\tProjectSection(ProjectDependencies) = postProject\r\n" );
+	fprintf ( OUT, "\tEndProjectSection\r\n" );
 	fprintf ( OUT, "EndProject\r\n" );
 }
 
@@ -449,17 +450,23 @@ MSVCBackend::_generate_sln_project (
 void
 MSVCBackend::_generate_sln_footer ( FILE* OUT )
 {
-    fprintf ( OUT, "Global\r\n" );
-
-	fprintf ( OUT, "	GlobalSection(SolutionConfiguration) = preSolution\r\n" );
-	fprintf ( OUT, "		Debug = Debug\r\n" );
-	fprintf ( OUT, "		Release = Release\r\n" );
-	fprintf ( OUT, "	EndGlobalSection\r\n" );
-
-	fprintf ( OUT, "	GlobalSection(ExtensibilityGlobals) = postSolution\r\n" );
-	fprintf ( OUT, "	EndGlobalSection\r\n" );
-	fprintf ( OUT, "	GlobalSection(ExtensibilityAddIns) = postSolution\r\n" );
-	fprintf ( OUT, "	EndGlobalSection\r\n" );
+	fprintf ( OUT, "Global\r\n" );
+	fprintf ( OUT, "\tGlobalSection(SolutionConfiguration) = preSolution\r\n" );
+	fprintf ( OUT, "\t\tDebug = Debug\r\n" );
+	fprintf ( OUT, "\t\tRelease = Release\r\n" );
+	fprintf ( OUT, "\tEndGlobalSection\r\n" );
+	fprintf ( OUT, "\tGlobalSection(ProjectConfiguration) = postSolution\r\n" );
+	for ( size_t i = 0; i < ProjectNode.modules.size(); i++ )
+	{
+		Module& module = *ProjectNode.modules[i];
+		std::string guid = module.guid;
+		_generate_sln_configurations ( OUT, guid.c_str() );
+	} 
+	fprintf ( OUT, "\tEndGlobalSection\r\n" );
+	fprintf ( OUT, "\tGlobalSection(ExtensibilityGlobals) = postSolution\r\n" );
+	fprintf ( OUT, "\tEndGlobalSection\r\n" );
+	fprintf ( OUT, "\tGlobalSection(ExtensibilityAddIns) = postSolution\r\n" );
+	fprintf ( OUT, "\tEndGlobalSection\r\n" );
 	fprintf ( OUT, "EndGlobal\r\n" );
 
 
@@ -468,20 +475,29 @@ MSVCBackend::_generate_sln_footer ( FILE* OUT )
 
 
 void
+MSVCBackend::_generate_sln_configurations ( FILE* OUT, std::string vcproj_guid )
+{
+	fprintf ( OUT, "\t\t%s.Debug.ActiveCfg = Debug|Win32\r\n", vcproj_guid.c_str() );
+	fprintf ( OUT, "\t\t%s.Debug.Build.0 = Debug|Win32\r\n", vcproj_guid.c_str() );
+	fprintf ( OUT, "\t\t%s.Debug.Release.ActiveCfg = Release|Win32\r\n", vcproj_guid.c_str() );
+	fprintf ( OUT, "\t\t%s.Debug.Release.Build.0 = Release|Win32\r\n", vcproj_guid.c_str() );
+}
+
+void
 MSVCBackend::_generate_sln ( FILE* OUT )
 {
 	string sln_guid = "{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}";
+	vector<string> guids;
 
 	_generate_sln_header(OUT);
 	// TODO FIXME - is it necessary to sort them?
 	for ( size_t i = 0; i < ProjectNode.modules.size(); i++ )
 	{
 		Module& module = *ProjectNode.modules[i];
-
+		
 		std::string vcproj_file = VcprojFileName ( module );
-		std::string vcproj_guid = _gen_guid();
-		_generate_sln_project ( OUT, module, vcproj_file, sln_guid, vcproj_guid, module.dependencies );
-    }
-    _generate_sln_footer ( OUT );
+		_generate_sln_project ( OUT, module, vcproj_file, sln_guid, module.guid, module.dependencies );
+	}
+	_generate_sln_footer ( OUT );
 }
 

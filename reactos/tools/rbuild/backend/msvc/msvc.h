@@ -86,7 +86,7 @@ class MSVCBackend : public Backend
 			const std::string &replace_str);
 
 		void _generate_vcproj ( const Module& module );
-		
+
 		void _generate_sln_header ( FILE* OUT );
 		void _generate_sln_footer ( FILE* OUT );
 		void _generate_sln ( FILE* OUT );
@@ -97,6 +97,9 @@ class MSVCBackend : public Backend
 			std::string sln_guid,
 			std::string vcproj_guid,
 			const std::vector<Dependency*>& dependencies );
+		void _generate_sln_configurations (
+			FILE* OUT,
+			std::string vcproj_guid );
 
 };
 
