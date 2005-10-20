@@ -54,39 +54,20 @@ MSVCBackend::MSVCBackend(Project &project,
 void MSVCBackend::Process()
 {
 
-	string filename_dsw = ProjectNode.name + ".dsw";
 	string filename_sln = ProjectNode.name + ".sln";
-
-	if (configuration.VSProjectVersion == "6.00")
-		printf ( "Creating MSVC workspace: %s\n", filename_dsw.c_str() );
-	else
-		printf ( "Creating MSVC workspace: %s\n", filename_sln.c_str() );
+	printf ( "Creating MSVC workspace: %s\n", filename_sln.c_str() );
 	
 	ProcessModules();
+	m_slnFile = fopen ( filename_sln.c_str(), "wb" );
 
-	if (configuration.VSProjectVersion == "6.00") { 
-		m_dswFile = fopen ( filename_dsw.c_str(), "wb" );
-
-		if ( !m_dswFile )
-		{
-			printf ( "Could not create file '%s'.\n", filename_dsw.c_str() );
-			return;
-		}
-		_generate_wine_dsw ( m_dswFile );
-		fclose ( m_dswFile );
-	}
-	else {
-		m_slnFile = fopen ( filename_sln.c_str(), "wb" );
-	
-		if ( !m_slnFile )
-		{
-			printf ( "Could not create file '%s'.\n", filename_sln.c_str() );
-			return;
-		}
-		_generate_sln ( m_slnFile );
-		fclose ( m_slnFile );
+	if ( !m_slnFile )
+	{
+		printf ( "Could not create file '%s'.\n", filename_sln.c_str() );
+		return;
 	}
 
+	_generate_sln ( m_slnFile );
+	fclose ( m_slnFile );
 	printf ( "Done.\n" );
 }
 
