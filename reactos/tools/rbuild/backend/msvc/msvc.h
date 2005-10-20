@@ -80,8 +80,13 @@ class MSVCBackend : public Backend
 		// functions in vcprojmaker.cpp:
 
 		std::string _gen_guid();
-		void _generate_vcproj ( const Module& module );
+		std::string _replace_str(
+			std::string string1,
+			const std::string &find_str,
+			const std::string &replace_str);
 
+		void _generate_vcproj ( const Module& module );
+		
 		void _generate_sln_header ( FILE* OUT );
 		void _generate_sln_footer ( FILE* OUT );
 		void _generate_sln ( FILE* OUT );

@@ -255,6 +255,8 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		{
 			if ( i > 0 )
 				fprintf ( OUT, ";" );
+
+			defines[i] = _replace_str(defines[i], "\"","&quot;"); 
 			fprintf ( OUT, "%s", defines[i].c_str() );
 		}
 		fprintf ( OUT, "\"\r\n" );
@@ -386,6 +388,21 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 	fprintf ( OUT, "</VisualStudioProject>\r\n" );
 	fclose(OUT);
 }
+
+std::string
+MSVCBackend::_replace_str(std::string string1, const std::string &find_str, const std::string &replace_str)
+{
+        std::string::size_type pos = string1.find(find_str, 0);
+        int intLen = find_str.length();
+
+        while(std::string::npos != pos)
+        {
+                string1.replace(pos, intLen, replace_str);
+                pos = string1.find(find_str, intLen + pos);
+        }
+
+        return string1;
+} 
 
 void
 MSVCBackend::_generate_sln_header ( FILE* OUT )
