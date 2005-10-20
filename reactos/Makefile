@@ -321,6 +321,26 @@ $(ERRCODES_H) $(ERRCODES_RC): $(WMC_TARGET) $(KERNEL32_MC)
 	$(ECHO_WMC)
 	$(Q)$(WMC_TARGET) -i -H $(ERRCODES_H) -o $(ERRCODES_RC) $(KERNEL32_MC)
 
+.PHONY: msvc6
+msvc6: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -vs6.00 msvc
+
+.PHONY: msvc7
+msvc7: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -vs7.00 msvc
+
+.PHONY: msvc71
+msvc71: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -vs7.10 msvc
+
+.PHONY: msvc8
+msvc8: $(RBUILD_TARGET)
+	$(ECHO_RBUILD)
+	$(Q)$(RBUILD_TARGET) $(ROS_RBUILDFLAGS) -vs8.00 msvc
+
 .PHONY: makefile_auto_clean
 makefile_auto_clean:
 	-@$(rm) makefile.auto $(PREAUTO) 2>$(NUL)
