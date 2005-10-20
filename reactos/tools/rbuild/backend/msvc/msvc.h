@@ -78,10 +78,21 @@ class MSVCBackend : public Backend
 		void _generate_wine_dsw ( FILE* OUT );
 
 		// functions in vcprojmaker.cpp:
+
+		std::string _gen_guid();
 		void _generate_vcproj ( const Module& module );
 
 		void _generate_sln_header ( FILE* OUT );
+		void _generate_sln_footer ( FILE* OUT );
 		void _generate_sln ( FILE* OUT );
+		void _generate_sln_project (
+			FILE* OUT,
+			const Module& module,
+			std::string dsp_file,
+			std::string sln_guid,
+			std::string vcproj_guid,
+			const std::vector<Dependency*>& dependencies );
+
 };
 
 #endif // __MSVC_H__

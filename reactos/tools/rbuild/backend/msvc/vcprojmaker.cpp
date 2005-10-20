@@ -409,9 +409,52 @@ MSVCBackend::_generate_sln_header ( FILE* OUT )
     fprintf ( OUT, "\r\n" );
 }
 
+
+void
+MSVCBackend::_generate_sln_project (
+	FILE* OUT,
+	const Module& module,
+	std::string vcproj_file,
+	std::string sln_guid,
+	std::string vcproj_guid,
+	const std::vector<Dependency*>& dependencies )
+{
+	
+    vcproj_file = DosSeparator ( std::string(".\\") + vcproj_file );
+
+	fprintf ( OUT, "Project(\"%s\") = \"%s\", \"%s\", \"%s\"\r\n", sln_guid.c_str() , module.name.c_str(), vcproj_file.c_str(), vcproj_guid.c_str() );
+	fprintf ( OUT, "	ProjectSection(ProjectDependencies) = postProject\r\n" );
+	fprintf ( OUT, "	EndProjectSection\r\n" );
+	fprintf ( OUT, "EndProject\r\n" );
+}
+
+
+void
+MSVCBackend::_generate_sln_footer ( FILE* OUT )
+{
+    fprintf ( OUT, "Global\r\n" );
+
+	fprintf ( OUT, "	GlobalSection(SolutionConfiguration) = preSolution\r\n" );
+	fprintf ( OUT, "		Debug = Debug\r\n" );
+	fprintf ( OUT, "		Release = Release\r\n" );
+	fprintf ( OUT, "	EndGlobalSection\r\n" );
+
+	fprintf ( OUT, "	GlobalSection(ExtensibilityGlobals) = postSolution\r\n" );
+	fprintf ( OUT, "	EndGlobalSection\r\n" );
+	fprintf ( OUT, "	GlobalSection(ExtensibilityAddIns) = postSolution\r\n" );
+	fprintf ( OUT, "	EndGlobalSection\r\n" );
+	fprintf ( OUT, "EndGlobal\r\n" );
+
+
+    fprintf ( OUT, "\r\n" );
+}
+
+
 void
 MSVCBackend::_generate_sln ( FILE* OUT )
 {
+	string sln_guid = "{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}";
+
 	_generate_sln_header(OUT);
 	// TODO FIXME - is it necessary to sort them?
 	for ( size_t i = 0; i < ProjectNode.modules.size(); i++ )
@@ -419,31 +462,9 @@ MSVCBackend::_generate_sln ( FILE* OUT )
 		Module& module = *ProjectNode.modules[i];
 
 		std::string vcproj_file = VcprojFileName ( module );
-		_generate_dsw_project ( OUT, module, vcproj_file, module.dependencies );
+		std::string vcproj_guid = _gen_guid();
+		_generate_sln_project ( OUT, module, vcproj_file, sln_guid, vcproj_guid, module.dependencies );
     }
-//    _generate_dsw_footer ( OUT );
+    _generate_sln_footer ( OUT );
 }
 
-
-
-/*
-	m_devFile << "Microsoft Visual Studio Solution File, Format Version 9.00" << endl;
-	m_devFile << "# Visual Studio 2005" << endl;
-
-	m_devFile << "# FIXME Project listings here" << endl;
-	m_devFile << "EndProject" << endl;
-	m_devFile << "Global" << endl;
-	m_devFile << "	GlobalSection(SolutionConfigurationPlatforms) = preSolution" << endl;
-	m_devFile << "		Debug|Win32 = Debug|Win32" << endl;
-	m_devFile << "		Release|Win32 = Release|Win32" << endl;
-	m_devFile << "	EndGlobalSection" << endl;
-	m_devFile << "	GlobalSection(ProjectConfigurationPlatforms) = postSolution" << endl;
-	m_devFile << "	#FIXME Project Listings Here" << endl;
-	m_devFile << "	EndGlobalSection" << endl;
-	m_devFile << "	GlobalSection(SolutionProperties) = preSolution" << endl;
-	m_devFile << "		HideSolutionNode = FALSE" << endl;
-	m_devFile << "	EndGlobalSection" << endl;
-	m_devFile << "EndGlobal" << endl;
-
-	m_devFile << endl << endl;
-*/
