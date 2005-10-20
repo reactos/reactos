@@ -398,6 +398,7 @@ DWORD STDCALL
 InstallReactOS (HINSTANCE hInstance)
 {
   TCHAR sAccessories[256];
+  TCHAR sGames[256];
 
 # if 0
   OutputDebugStringA ("InstallReactOS() called\n");
@@ -439,12 +440,14 @@ InstallReactOS (HINSTANCE hInstance)
 
   /* create and fill Accessories subfolder */
   if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_ACCESSORIES, sAccessories, 256)) {
-	//CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("Calculator.lnk"), _T("calc.exe"), IDS_CMT_CALC);
 	CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("Command Prompt.lnk"), _T("cmd.exe"), IDS_CMT_CMD);
     CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("notepad.lnk"), _T("notepad.exe"), IDS_CMT_NOTEPAD);
     CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("explorer.lnk"), _T("explorer.exe"), IDS_CMT_EXPLORER);
     CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("regedit.lnk"), _T("regedit.exe"), IDS_CMT_REGEDIT);
   }
+  
+  /* create Games subfolder */
+  CreateShortcutFolder(CSIDL_PROGRAMS, IDS_GAMES, sGames, 256);  
 
   CoUninitialize();
 

@@ -204,4 +204,10 @@ BEGIN
     IDS_CMT_REGEDIT     "Launch Registry Editor"
 END
 
+STRINGTABLE
+BEGIN
+    IDS_GAMES		    "Games"
+END
+
+
 /* EOF */
