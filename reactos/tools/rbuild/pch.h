@@ -27,11 +27,15 @@
 #include <map>
 #include <set>
 
+#ifdef WIN32
+#include <windows.h>
+#ifndef MAX_PATH
+#define MAX_PATH _MAX_PATH
+#endif//MAX_PATH
+#endif//WIN32
+
 #include <stdarg.h>
 
-#ifdef _MSC_VER
-#define MAX_PATH _MAX_PATH
-#endif
 
 #ifndef WIN32
 #include <string.h>
