@@ -20,7 +20,7 @@
  *
  */
 
-
+#include "../../pch.h"
 #include "msvc.h"
 #include <string>
 
@@ -45,7 +45,7 @@ MSVCBackend::_gen_guid()
 	GUID m_guid;
 	HRESULT result;
 	bool good_guid = false;
-	char* guid;
+	static char guid[38];
 	
 	// Load ole32. We will need it later on
 	HMODULE olelib = LoadLibrary ( "ole32.dll" );
