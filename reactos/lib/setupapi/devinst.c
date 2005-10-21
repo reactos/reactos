@@ -2153,7 +2153,7 @@ BOOL WINAPI SetupDiGetDeviceRegistryPropertyA(
         PropertyBufferSizeW,
         &RequiredSizeW);
 
-    if (bResult || GetLastError() == ERROR_MORE_DATA)
+    if (bResult || GetLastError() == ERROR_INSUFFICIENT_BUFFER)
     {
         bIsStringProperty = (RegType == REG_SZ || RegType == REG_MULTI_SZ || RegType == REG_EXPAND_SZ);
 
@@ -2327,10 +2327,16 @@ BOOL WINAPI SetupDiGetDeviceRegistryPropertyW(
                     &BufferSize);
                 if (RequiredSize)
                     *RequiredSize = BufferSize;
-                if (rc == ERROR_SUCCESS)
-                    ret = TRUE;
-                else
-                    SetLastError(rc);
+                switch(rc) {
+                    case ERROR_SUCCESS:
+                        ret = TRUE;
+                        break;
+                    case ERROR_MORE_DATA:  
+                        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+			break;
+                    default:
+                        SetLastError(rc);
+                }
                 RegCloseKey(hKey);
                 break;
             }
