@@ -341,7 +341,7 @@
 @ stub SetupDiGetHwProfileList
 @ stub SetupDiGetHwProfileListExA
 @ stub SetupDiGetHwProfileListExW
-@ stub SetupDiGetINFClassA
+@ stdcall SetupDiGetINFClassA(str ptr ptr long ptr)
 @ stdcall SetupDiGetINFClassW(wstr ptr ptr long ptr)
 @ stub SetupDiGetSelectedDevice
 @ stub SetupDiGetSelectedDriverA
@@ -401,7 +401,7 @@
 @ stub SetupGetFileCompressionInfoW
 @ stdcall SetupGetFileQueueCount(long long ptr)
 @ stdcall SetupGetFileQueueFlags(long ptr)
-@ stub SetupGetInfFileListA
+@ stdcall SetupGetInfFileListA(str long str long ptr)
 @ stdcall SetupGetInfFileListW(wstr long wstr long ptr)
 @ stdcall SetupGetInfInformationA(ptr long ptr long ptr)
 @ stdcall SetupGetInfInformationW(ptr long ptr long ptr)

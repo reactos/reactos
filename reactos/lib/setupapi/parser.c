@@ -2075,6 +2075,52 @@ SetupGetInfFileListW(
 }
 
 /***********************************************************************
+ *		SetupGetInfFileListA    (SETUPAPI.@)
+ */
+BOOL WINAPI
+SetupGetInfFileListA(
+    IN PCSTR DirectoryPath OPTIONAL,
+    IN DWORD InfStyle,
+    IN OUT PSTR ReturnBuffer OPTIONAL,
+    IN DWORD ReturnBufferSize OPTIONAL,
+    OUT PDWORD RequiredSize OPTIONAL)
+{
+    PWSTR DirectoryPathW = NULL;
+    PWSTR ReturnBufferW = NULL;
+    BOOL ret = FALSE;
+
+    TRACE("%s %lx %p %ld %p\n", debugstr_a(DirectoryPath), InfStyle,
+        ReturnBuffer, ReturnBufferSize, RequiredSize);
+
+    if (DirectoryPath != NULL)
+    {
+        DirectoryPathW = MultiByteToUnicode(DirectoryPath, CP_ACP);
+        if (DirectoryPathW == NULL) goto Cleanup;
+    }
+
+    if (ReturnBuffer != NULL && ReturnBufferSize != 0)
+    {
+        ReturnBufferW = MyMalloc(ReturnBufferSize * sizeof(WCHAR));
+        if (ReturnBufferW == NULL) goto Cleanup;
+    }
+
+    ret = SetupGetInfFileListW(DirectoryPathW, InfStyle, ReturnBufferW, ReturnBufferSize, RequiredSize);
+
+    if (ret && ReturnBufferW != NULL)
+    {
+        ret = WideCharToMultiByte(CP_ACP, 0, ReturnBufferW, -1, ReturnBuffer, ReturnBufferSize, NULL, NULL) != 0;
+    }
+
+Cleanup:
+    if (DirectoryPathW != NULL)
+        MyFree(DirectoryPathW);
+    if (ReturnBufferW != NULL)
+        MyFree(ReturnBufferW);
+
+    return ret;
+}
+
+/***********************************************************************
  *		SetupDiGetINFClassW    (SETUPAPI.@)
  */
 BOOL WINAPI
@@ -2151,5 +2197,50 @@ cleanup:
        SetupCloseInfFile(hInf);
 
     TRACE("Returning %d\n", ret);
+    return ret;
+}
+
+/***********************************************************************
+ *      SetupDiGetINFClassA    (SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiGetINFClassA(
+    IN PCSTR InfName,
+    OUT LPGUID ClassGuid,
+    OUT PSTR ClassName,
+    IN DWORD ClassNameSize,
+    OUT PDWORD RequiredSize OPTIONAL)
+{
+    PWSTR InfNameW = NULL;
+    PWSTR ClassNameW = NULL;
+    BOOL ret = FALSE;
+
+    TRACE("%s %p %p %ld %p\n", debugstr_a(InfName), ClassGuid,
+        ClassName, ClassNameSize, RequiredSize);
+
+    if (InfName != NULL)
+    {
+        InfNameW = MultiByteToUnicode(InfName, CP_ACP);
+        if (InfNameW == NULL) goto Cleanup;
+    }
+
+    if (ClassName != NULL && ClassNameSize != 0)
+    {
+        ClassNameW = MyMalloc(ClassNameSize * sizeof(WCHAR));
+        if (ClassNameW == NULL) goto Cleanup;
+    }
+
+    ret = SetupDiGetINFClassW(InfNameW, ClassGuid, ClassNameW, ClassNameSize, RequiredSize);
+
+    if (ret && ClassNameW != NULL)
+    {
+        ret = WideCharToMultiByte(CP_ACP, 0, ClassNameW, -1, ClassName, ClassNameSize, NULL, NULL) != 0;
+    }
+
+Cleanup:
+    if (InfNameW != NULL)
+        MyFree(InfNameW);
+    if (ClassNameW != NULL)
+        MyFree(ClassNameW);
+
     return ret;
 }
