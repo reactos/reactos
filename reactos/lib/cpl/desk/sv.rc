@@ -3,86 +3,86 @@
 
 LANGUAGE LANG_SWEDISH, SUBLANG_DEFAULT
 
-IDD_BACKGROUND DIALOGEX DISCARDABLE 0, 0, 246, 228
+IDD_BACKGROUND DIALOGEX DISCARDABLE 0, 0, 246, 188
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Bakgrund"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "",IDC_BACKGROUND_PREVIEW,"Static",SS_OWNERDRAW,48,10,
-                    150,105,WS_EX_STATICEDGE
+    CONTROL         "",IDC_BACKGROUND_PREVIEW,"Static",SS_OWNERDRAW,78,10,
+                    90,65,WS_EX_STATICEDGE
     CONTROL         "",IDC_BACKGROUND_LIST,"SysListView32",LVS_REPORT | 
                     LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS |
-                    WS_BORDER | WS_TABSTOP,7,139,173,71
+                    WS_BORDER | WS_TABSTOP,7,99,173,71
     LTEXT           "Välj en bild du vill ha som skrivbordsunderlägg:",
-                    IDC_STATIC,8,127,180,8
-    PUSHBUTTON      "&Bläddra...",IDC_BROWSE_BUTTON,187,175,50,14
-    PUSHBUTTON      "&Färg...",IDC_COLOR_BUTTON,187,195,50,14
-    LTEXT           "Placering:",IDC_STATIC,187,138,36,8
-    COMBOBOX        IDC_PLACEMENT_COMBO,187,148,50,90,CBS_DROPDOWNLIST | 
+                    IDC_STATIC,8,87,180,8
+    PUSHBUTTON      "&Bläddra...",IDC_BROWSE_BUTTON,187,135,50,14
+    PUSHBUTTON      "&Färg...",IDC_COLOR_BUTTON,187,155,50,14
+    LTEXT           "Placering:",IDC_STATIC,187,98,36,8
+    COMBOBOX        IDC_PLACEMENT_COMBO,187,108,50,90,CBS_DROPDOWNLIST | 
                     CBS_SORT | WS_VSCROLL | WS_TABSTOP
 END
 
-IDD_SCREENSAVER DIALOGEX DISCARDABLE  0, 0, 246, 228
+IDD_SCREENSAVER DIALOGEX DISCARDABLE  0, 0, 246, 188
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Skärmsläckare"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "&Skärmsläckare",IDC_SCREENS_DUMMY, 5, 7, 238, 176
+    GROUPBOX        "&Skärmsläckare",IDC_SCREENS_DUMMY, 5, 7, 238, 136
     
     LTEXT           "Skärmsläckare:",IDC_STATIC,13, 24, 71, 9
     CONTROL         "",IDC_SCREENS_CHOICES,"SysListView32",LVS_REPORT | 
                     LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS |
-                    WS_BORDER | WS_TABSTOP,13, 34, 171, 109
-    PUSHBUTTON      "&Ta bort",IDC_SCREENS_DELETE, 189,47,39,10
+                    WS_BORDER | WS_TABSTOP,13, 34, 171, 69
+    PUSHBUTTON      "&Ta bort",IDC_SCREENS_DELETE, 190,47,39,10
     PUSHBUTTON      "&Lägg till",IDC_SCREENS_ADD_BUTTON,    190,34,39,10
 
-    PUSHBUTTON      "&Inställningar",IDC_SCREENS_SETTINGS,138, 164, 48, 12,WS_GROUP
-    PUSHBUTTON      "&Förhandsvisa",IDC_SCREENS_TESTSC,190, 164, 48, 12
+    PUSHBUTTON      "&Inställningar",IDC_SCREENS_SETTINGS,138, 124, 48, 12,WS_GROUP
+    PUSHBUTTON      "&Förhandsvisa",IDC_SCREENS_TESTSC,190, 124, 48, 12
 
     CONTROL         "&Kräv lösenord för att återvända.",IDC_SCREENS_USEPASSCHK,"button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,13, 161, 119, 18
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13, 121, 119, 18
 
-    LTEXT           "&Vänta:",IDC_STATIC,13, 150, 17, 9
-    EDITTEXT        IDC_SCREENS_TIMEDELAY,33, 149, 31, 12,ES_RIGHT | WS_GROUP
+    LTEXT           "&Vänta:",IDC_STATIC,13, 110, 17, 9
+    EDITTEXT        IDC_SCREENS_TIMEDELAY,33, 109, 31, 12,ES_RIGHT | WS_GROUP
     CONTROL         "",IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
-                    WS_BORDER | WS_GROUP,52, 149, 12, 12
-    LTEXT           "minuter innan skärmsläckaren visas.",IDC_STATIC,70, 151, 147, 9
+                    WS_BORDER | WS_GROUP,52, 109, 12, 12
+    LTEXT           "minuter innan skärmsläckaren visas.",IDC_STATIC,70, 111, 147, 9
 
-    GROUPBOX        "&Energisparfunktioner för din bildskärm",IDC_SCREENS_DUMMY2,5, 186, 238, 35
+    GROUPBOX        "&Energisparfunktioner för din bildskärm",IDC_SCREENS_DUMMY2,5, 146, 238, 35
     LTEXT           "För att ändra energisparfunktionerna för din bildskärm,\nklicka på Inställningar.",
-                    IDC_STATIC,16, 199, 155, 19
-    PUSHBUTTON      "Ins&tällningar",IDC_SCREENS_POWER_BUTTON,180, 202, 57, 12
+                    IDC_STATIC,16, 159, 155, 19
+    PUSHBUTTON      "Ins&tällningar",IDC_SCREENS_POWER_BUTTON,180, 162, 57, 12
 END
 
-IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 228
+IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 188
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Utseende"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "Det här utrymmet har avsiktligt\nlämnats tomt",IDC_STATIC,66,
-                    110,112,20
+                    90,112,20
 END
 
-IDD_SETTINGS DIALOGEX DISCARDABLE  0, 0, 246, 228
+IDD_SETTINGS DIALOGEX DISCARDABLE  0, 0, 246, 188
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Inställningar"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&Bild:",1820,3,140,30,8
-    LTEXT           "<ingen>",IDC_SETTINGS_DEVICE,9,149,224,8
-    GROUPBOX        "&Bildyta",1818,3,160,115,43
+    LTEXT           "&Bild:",1820,3,100,30,8
+    LTEXT           "<ingen>",IDC_SETTINGS_DEVICE,9,109,224,8
+    GROUPBOX        "&Bildyta",1818,3,120,115,43
     CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP,
-                    30,170,58,17
-    LTEXT           "Lägre",1815,9,170,19,8,NOT WS_GROUP
-    LTEXT           "Högre",1816,93,170,21,8,NOT WS_GROUP
-    LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,190,100,10,NOT WS_GROUP | SS_CENTER
-    GROUPBOX        "&Färger",1817,125,160,115,43
-    COMBOBOX        IDC_SETTINGS_BPP,131,170,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | 
+                    30,130,58,17
+    LTEXT           "Lägre",1815,9,130,19,8,NOT WS_GROUP
+    LTEXT           "Högre",1816,93,130,21,8,NOT WS_GROUP
+    LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,150,100,10,NOT WS_GROUP | SS_CENTER
+    GROUPBOX        "&Färger",1817,125,120,115,43
+    COMBOBOX        IDC_SETTINGS_BPP,131,130,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | 
                     WS_VSCROLL | WS_TABSTOP
     CONTROL         "",1813,"Static",SS_BITMAP | SS_CENTERIMAGE | SS_SUNKEN,
-                    131,188,103,9
-    PUSHBUTTON      "&Avancerat...",IDC_SETTINGS_ADVANCED,306,205,56,14
+                    131,138,103,9
+    PUSHBUTTON      "&Avancerat...",IDC_SETTINGS_ADVANCED,306,165,56,14
 END
 
 STRINGTABLE 
