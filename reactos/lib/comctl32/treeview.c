@@ -2821,8 +2821,6 @@ TREEVIEW_Refresh(TREEVIEW_INFO *infoPtr, HDC hdc, RECT *rc)
 	}
     }
 
-    TREEVIEW_UpdateScrollBars(infoPtr);
-
     if (infoPtr->cdmode & CDRF_NOTIFYPOSTPAINT)
 	infoPtr->cdmode =
 	    TREEVIEW_SendCustomDrawNotify(infoPtr, CDDS_POSTPAINT, hdc, rect);
@@ -3337,6 +3335,7 @@ TREEVIEW_Expand(TREEVIEW_INFO *infoPtr, TREEVIEW_ITEM *wineItem,
 	    }
 	}
     }
+    TREEVIEW_UpdateScrollBars(infoPtr);
 
     return TRUE;
 }
