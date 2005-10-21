@@ -2274,7 +2274,7 @@ IntFindWindow(PWINDOW_OBJECT Parent,
          /* Do not send WM_GETTEXT messages in the kernel mode version!
             The user mode version however calls GetWindowText() which will
             send WM_GETTEXT messages to windows belonging to its processes */
-         if((!CheckWindowName || !RtlCompareUnicodeString(WindowName, &(Child->WindowName), FALSE)) &&
+         if((!CheckWindowName || !RtlCompareUnicodeString(WindowName, &(Child->WindowName), TRUE)) &&
                (!ClassAtom || Child->Class->Atom == ClassAtom))
          {
             Ret = Child->hSelf;
@@ -2453,7 +2453,7 @@ NtUserFindWindowEx(HWND hwndParent,
                The user mode version however calls GetWindowText() which will
                send WM_GETTEXT messages to windows belonging to its processes */
             WindowMatches = !CheckWindowName || !RtlCompareUnicodeString(
-                               &WindowName, &TopLevelWindow->WindowName, FALSE);
+                               &WindowName, &TopLevelWindow->WindowName, TRUE);
             ClassMatches = !CheckClassName ||
                            ClassAtom == TopLevelWindow->Class->Atom;
 
