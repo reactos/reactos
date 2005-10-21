@@ -34,7 +34,7 @@ struct RegEntry : public Entry
 protected:
 	RegEntry() : Entry(ET_REGISTRY) {}
 
-	virtual bool get_path(PTSTR path) const;
+	virtual bool get_path(PTSTR path, size_t path_count) const;
 	virtual BOOL launch_entry(HWND hwnd, UINT nCmdShow);
 };
 

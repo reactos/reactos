@@ -102,7 +102,7 @@ typedef struct _FDINFO
 #define fdinfo_bucket_idx(i) ((i) >> FDINFO_ENTRIES_PER_BUCKET_SHIFT)
 /* get position inside a bucket (0-31) from an fd */
 #define fdinfo_bucket_entry_idx(i) ((i) & (FDINFO_ENTRIES_PER_BUCKET - 1))
-/* get bucket ptr. (ptr. to fist fdinfo inside a bucket) from an fd */
+/* get bucket ptr. (ptr. to first fdinfo inside a bucket) from an fd */
 #define fdinfo_bucket(i) ( __pioinfo[fdinfo_bucket_idx(i)])
 /* get fdinfo ptr. from an fd */
 #define fdinfo(i) (fdinfo_bucket(i) + fdinfo_bucket_entry_idx(i))

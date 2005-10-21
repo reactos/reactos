@@ -52,11 +52,14 @@ extern "C" {
 #endif
 typedef char CHAR;
 typedef short SHORT;
-typedef long LONG;
+#ifndef LONG_DEFINED
+#define LONG_DEFINED
+    typedef long LONG;
+    typedef unsigned long ULONG,*PULONG;
+#endif//LONG_DEFINED
 typedef char CCHAR, *PCCHAR;
 typedef unsigned char UCHAR,*PUCHAR;
 typedef unsigned short USHORT,*PUSHORT;
-typedef unsigned long ULONG,*PULONG;
 typedef char *PSZ;
 
 typedef void *PVOID,*LPVOID;
@@ -206,6 +209,10 @@ typedef DWORD FLONG;
 #define STANDARD_RIGHTS_ALL	0x1F0000
 #define SPECIFIC_RIGHTS_ALL	0xFFFF
 #define ACCESS_SYSTEM_SECURITY	0x1000000
+
+#ifndef WIN32_NO_STATUS 
+#define DBG_CONTINUE            ((DWORD)0x00010002L)
+#endif
 
 #define MAXIMUM_ALLOWED	0x2000000
 #define GENERIC_READ	0x80000000
@@ -1248,12 +1255,6 @@ typedef enum
 #define DLL_PROCESS_ATTACH	1
 #define DLL_THREAD_ATTACH	2
 #define DLL_THREAD_DETACH	3
-#define DBG_CONTINUE 0x10002
-#define DBG_TERMINATE_THREAD 0x40010003
-#define DBG_TERMINATE_PROCESS 0x40010004
-#define DBG_CONTROL_C 0x40010005
-#define DBG_CONTROL_BREAK 0x40010008
-#define DBG_EXCEPTION_NOT_HANDLED 0x80010001
 #define TAPE_ABSOLUTE_POSITION 0
 #define TAPE_LOGICAL_POSITION 1
 #define TAPE_PSEUDO_LOGICAL_POSITION 2
@@ -3383,6 +3384,13 @@ typedef struct _SYSTEM_POWER_INFORMATION {
 	ULONG  TimeRemaining;
 	UCHAR  CoolingMode;
 } SYSTEM_POWER_INFORMATION,*PSYSTEM_POWER_INFORMATION;
+#endif
+
+#if (_WIN32_WINNT >= 0x0500)
+typedef enum _AUDIT_EVENT_TYPE {
+    AuditEventObjectAccess,
+    AuditEventDirectoryServiceAccess
+} AUDIT_EVENT_TYPE, *PAUDIT_EVENT_TYPE;
 #endif
 
 #if (_WIN32_WINNT >= 0x0501)

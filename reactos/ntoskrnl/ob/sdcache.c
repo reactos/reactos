@@ -36,6 +36,7 @@ FAST_MUTEX ObpSdCacheMutex;
 /* FUNCTIONS ****************************************************************/
 
 NTSTATUS
+NTAPI
 ObpInitSdCache(VOID)
 {
   ULONG i;
@@ -207,6 +208,7 @@ ObpCompareSecurityDescriptors(IN PSECURITY_DESCRIPTOR Sd1,
 
 
 NTSTATUS
+NTAPI
 ObpAddSecurityDescriptor(IN PSECURITY_DESCRIPTOR SourceSD,
 			 OUT PSECURITY_DESCRIPTOR *DestinationSD)
 {
@@ -277,6 +279,7 @@ ObpAddSecurityDescriptor(IN PSECURITY_DESCRIPTOR SourceSD,
 
 
 NTSTATUS
+NTAPI
 ObpRemoveSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
   PSD_CACHE_ENTRY CacheEntry;
@@ -305,6 +308,7 @@ ObpRemoveSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor)
 
 
 VOID
+NTAPI
 ObpReferenceCachedSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
   PSD_CACHE_ENTRY CacheEntry;
@@ -325,6 +329,7 @@ ObpReferenceCachedSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor)
 
 
 VOID
+NTAPI
 ObpDereferenceCachedSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
   DPRINT("ObpDereferenceCachedSecurityDescriptor() called\n");

@@ -25,8 +25,8 @@
 @ stub CM_Create_DevNode_ExA
 @ stub CM_Create_DevNode_ExW
 @ stub CM_Create_Range_List
-@ stub CM_Delete_Class_Key
-@ stub CM_Delete_Class_Key_Ex
+@ stdcall CM_Delete_Class_Key(ptr long)
+@ stdcall CM_Delete_Class_Key_Ex(ptr long long)
 @ stub CM_Delete_DevNode_Key
 @ stub CM_Delete_DevNode_Key_Ex
 @ stub CM_Delete_Range
@@ -40,10 +40,10 @@
 @ stub CM_Enable_DevNode_Ex
 @ stdcall CM_Enumerate_Classes(long ptr long)
 @ stdcall CM_Enumerate_Classes_Ex(long ptr long ptr)
-@ stub CM_Enumerate_EnumeratorsA
-@ stub CM_Enumerate_EnumeratorsW
-@ stub CM_Enumerate_Enumerators_ExA
-@ stub CM_Enumerate_Enumerators_ExW
+@ stdcall CM_Enumerate_EnumeratorsA(long str ptr long)
+@ stdcall CM_Enumerate_EnumeratorsW(long wstr ptr long)
+@ stdcall CM_Enumerate_Enumerators_ExA(long str ptr long long)
+@ stdcall CM_Enumerate_Enumerators_ExW(long wstr ptr long long)
 @ stub CM_Find_Range
 @ stub CM_First_Range
 @ stub CM_Free_Log_Conf
@@ -127,8 +127,8 @@
 @ stdcall CM_Get_Version_Ex(long)
 @ stub CM_Intersect_Range_List
 @ stub CM_Invert_Range_List
-@ stub CM_Is_Dock_Station_Present
-@ stub CM_Is_Dock_Station_Present_Ex
+@ stdcall CM_Is_Dock_Station_Present(ptr)
+@ stdcall CM_Is_Dock_Station_Present_Ex(ptr long)
 @ stdcall CM_Locate_DevNodeA(ptr str long)
 @ stdcall CM_Locate_DevNodeW(ptr wstr long)
 @ stdcall CM_Locate_DevNode_ExA(ptr str long long)
@@ -282,7 +282,7 @@
 @ stdcall SetupDiClassNameFromGuidExW(ptr wstr long ptr wstr ptr)
 @ stdcall SetupDiClassNameFromGuidW(ptr wstr long ptr)
 @ stub SetupDiCreateDevRegKeyA
-@ stub SetupDiCreateDevRegKeyW
+@ stdcall SetupDiCreateDevRegKeyW(ptr ptr long long long ptr wstr)
 @ stdcall SetupDiCreateDeviceInfoA(ptr str ptr str ptr long ptr)
 @ stdcall SetupDiCreateDeviceInfoW(ptr wstr ptr wstr ptr long ptr)
 @ stdcall SetupDiCreateDeviceInfoList(ptr ptr)
@@ -341,8 +341,8 @@
 @ stub SetupDiGetHwProfileList
 @ stub SetupDiGetHwProfileListExA
 @ stub SetupDiGetHwProfileListExW
-@ stub SetupDiGetINFClassA
-@ stub SetupDiGetINFClassW
+@ stdcall SetupDiGetINFClassA(str ptr ptr long ptr)
+@ stdcall SetupDiGetINFClassW(wstr ptr ptr long ptr)
 @ stub SetupDiGetSelectedDevice
 @ stub SetupDiGetSelectedDriverA
 @ stdcall SetupDiGetSelectedDriverW(ptr ptr ptr)
@@ -375,7 +375,7 @@
 @ stdcall SetupDiSetClassInstallParamsA(ptr ptr ptr long)
 @ stub SetupDiSetClassInstallParamsW
 @ stub SetupDiSetDeviceInstallParamsA
-@ stub SetupDiSetDeviceInstallParamsW
+@ stdcall SetupDiSetDeviceInstallParamsW(ptr ptr ptr)
 @ stub SetupDiSetDeviceRegistryPropertyA
 @ stub SetupDiSetDeviceRegistryPropertyW
 @ stub SetupDiSetDriverInstallParamsA
@@ -401,7 +401,7 @@
 @ stub SetupGetFileCompressionInfoW
 @ stdcall SetupGetFileQueueCount(long long ptr)
 @ stdcall SetupGetFileQueueFlags(long ptr)
-@ stub SetupGetInfFileListA
+@ stdcall SetupGetInfFileListA(str long str long ptr)
 @ stdcall SetupGetInfFileListW(wstr long wstr long ptr)
 @ stdcall SetupGetInfInformationA(ptr long ptr long ptr)
 @ stdcall SetupGetInfInformationW(ptr long ptr long ptr)
@@ -437,10 +437,10 @@
 @ stdcall SetupInstallFilesFromInfSectionW(long long long wstr wstr long)
 @ stdcall SetupInstallFromInfSectionA(long long str long long str long ptr ptr long ptr)
 @ stdcall SetupInstallFromInfSectionW(long long wstr long long wstr long ptr ptr long ptr)
-@ stub SetupInstallServicesFromInfSectionA
-@ stub SetupInstallServicesFromInfSectionExA
-@ stub SetupInstallServicesFromInfSectionExW
-@ stub SetupInstallServicesFromInfSectionW
+@ stdcall SetupInstallServicesFromInfSectionA(long str long)
+@ stdcall SetupInstallServicesFromInfSectionExA(long str long ptr ptr ptr ptr)
+@ stdcall SetupInstallServicesFromInfSectionExW(long wstr long ptr ptr ptr ptr)
+@ stdcall SetupInstallServicesFromInfSectionW(long wstr long)
 @ stdcall SetupIterateCabinetA(str long ptr ptr)
 @ stdcall SetupIterateCabinetW(wstr long ptr ptr)
 @ stub SetupLogErrorA
@@ -455,7 +455,7 @@
 @ stdcall SetupOpenMasterInf()
 @ stub SetupPromptForDiskA
 @ stub SetupPromptForDiskW
-@ stub SetupPromptReboot
+@ stdcall SetupPromptReboot(ptr ptr long)
 @ stub SetupQueryDrivesInDiskSpaceListA
 @ stub SetupQueryDrivesInDiskSpaceListW
 @ stub SetupQueryFileLogA

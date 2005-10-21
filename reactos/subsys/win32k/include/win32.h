@@ -22,7 +22,7 @@ typedef struct _W32THREAD
 
 typedef struct _W32PROCESS
 {
-  LIST_ENTRY ClassListHead;
+  LIST_ENTRY ClassList;
   LIST_ENTRY MenuListHead;
   FAST_MUTEX PrivateFontListLock;
   LIST_ENTRY PrivateFontListHead;

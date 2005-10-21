@@ -165,7 +165,9 @@ KeCreateApplicationProcessorIdleThread(ULONG Id)
 	   Id, IdleThread->Cid.UniqueThread);
 }
 
-VOID INIT_FUNCTION
+VOID
+INIT_FUNCTION
+NTAPI
 KePrepareForApplicationProcessorInit(ULONG Id)
 {
   DPRINT("KePrepareForApplicationProcessorInit(Id %d)\n", Id);
@@ -205,6 +207,7 @@ KePrepareForApplicationProcessorInit(ULONG Id)
 }
 
 VOID
+NTAPI
 KeApplicationProcessorInit(VOID)
 {
   ULONG Offset;
@@ -266,7 +269,9 @@ KeApplicationProcessorInit(VOID)
   Ke386EnableInterrupts();
 }
 
-VOID INIT_FUNCTION
+VOID
+INIT_FUNCTION
+NTAPI
 KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
 {
    PKIPCR KPCR;
@@ -401,7 +406,9 @@ KeInit1(PCHAR CommandLine, PULONG LastKernelAddress)
    }
 }
 
-VOID INIT_FUNCTION
+VOID
+INIT_FUNCTION
+NTAPI
 KeInit2(VOID)
 {
    PKIPCR Pcr = (PKIPCR)KeGetCurrentKPCR();

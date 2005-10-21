@@ -17,9 +17,12 @@
 #define NDEBUG
 #include <debug.h>
 
+NTSTATUS STDCALL
+DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath);
+
 PDEVICE_OBJECT MouclassDeviceObject;
 
-BOOLEAN MouseClassCallBack(
+static BOOLEAN MouseClassCallBack(
    PDEVICE_OBJECT ClassDeviceObject, PMOUSE_INPUT_DATA MouseDataStart,
    PMOUSE_INPUT_DATA MouseDataEnd, PULONG ConsumedCount)
 {
@@ -103,7 +106,7 @@ BOOLEAN MouseClassCallBack(
    return TRUE;
 }
 
-NTSTATUS ConnectMousePortDriver(PDEVICE_OBJECT ClassDeviceObject)
+static NTSTATUS ConnectMousePortDriver(PDEVICE_OBJECT ClassDeviceObject)
 {
    PDEVICE_OBJECT PortDeviceObject = NULL;
    PFILE_OBJECT FileObject = NULL;
@@ -156,7 +159,7 @@ NTSTATUS ConnectMousePortDriver(PDEVICE_OBJECT ClassDeviceObject)
    return ioStatus.Status;
 }
 
-NTSTATUS STDCALL MouseClassDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+static NTSTATUS STDCALL MouseClassDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    PIO_STACK_LOCATION Stack = IoGetCurrentIrpStackLocation(Irp);
    NTSTATUS Status;
@@ -194,7 +197,7 @@ NTSTATUS STDCALL MouseClassDispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    return Status;
 }
 
-VOID STDCALL
+static VOID STDCALL
 MouseClassStartIo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
    PDEVICE_EXTENSION DeviceExtension = DeviceObject->DeviceExtension;

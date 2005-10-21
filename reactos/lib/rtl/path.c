@@ -44,7 +44,7 @@ static const UNICODE_STRING _nul = RTL_CONSTANT_STRING(L"NUL");
 /*
  * @implemented
  */
-ULONG STDCALL RtlGetLongestNtPathLength (VOID)
+ULONG NTAPI RtlGetLongestNtPathLength (VOID)
 {
    return (MAX_PATH + 9);
 }
@@ -54,7 +54,7 @@ ULONG STDCALL RtlGetLongestNtPathLength (VOID)
  * @implemented
  *
  */
-ULONG STDCALL
+ULONG NTAPI
 RtlDetermineDosPathNameType_U(PCWSTR Path)
 {
    DPRINT("RtlDetermineDosPathNameType_U %S\n", Path);
@@ -95,7 +95,7 @@ RtlDetermineDosPathNameType_U(PCWSTR Path)
 /*
  * @implemented
  */
-ULONG STDCALL
+ULONG NTAPI
 RtlIsDosDeviceName_U(PWSTR DeviceName)
 {
    ULONG Type;
@@ -188,7 +188,7 @@ RtlIsDosDeviceName_U(PWSTR DeviceName)
 /*
  * @implemented
  */
-ULONG STDCALL
+ULONG NTAPI
 RtlGetCurrentDirectory_U(ULONG MaximumLength,
 			 PWSTR Buffer)
 {
@@ -231,7 +231,7 @@ RtlGetCurrentDirectory_U(ULONG MaximumLength,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlSetCurrentDirectory_U(PUNICODE_STRING dir)
 {
    UNICODE_STRING full;
@@ -266,7 +266,7 @@ RtlSetCurrentDirectory_U(PUNICODE_STRING dir)
 			       NULL,
 			       NULL);
 
-   Status = NtOpenFile (&handle,
+   Status = ZwOpenFile (&handle,
 			SYNCHRONIZE | FILE_TRAVERSE,
 			&Attr,
 			&iosb,
@@ -281,12 +281,12 @@ RtlSetCurrentDirectory_U(PUNICODE_STRING dir)
    }
 
    /* don't keep the directory handle open on removable media */
-   if (NT_SUCCESS(NtQueryVolumeInformationFile( handle, &iosb, &device_info,
+   if (NT_SUCCESS(ZwQueryVolumeInformationFile( handle, &iosb, &device_info,
                                                 sizeof(device_info), FileFsDeviceInformation )) &&
      (device_info.Characteristics & FILE_REMOVABLE_MEDIA))
    {
       DPRINT1("don't keep the directory handle open on removable media\n");
-      NtClose( handle );
+      ZwClose( handle );
       handle = 0;
    }
 
@@ -302,7 +302,7 @@ RtlSetCurrentDirectory_U(PUNICODE_STRING dir)
               0,
               MAX_PATH*sizeof(WCHAR)+sizeof(ULONG));
 
-   Status = NtQueryInformationFile(handle,
+   Status = ZwQueryInformationFile(handle,
                &iosb,
                filenameinfo,
                MAX_PATH*sizeof(WCHAR)+sizeof(ULONG),
@@ -357,7 +357,7 @@ RtlSetCurrentDirectory_U(PUNICODE_STRING dir)
 
 
    if (cd->Handle)
-      NtClose(cd->Handle);
+      ZwClose(cd->Handle);
    cd->Handle = handle;
 
    /* append trailing \ if missing */
@@ -677,7 +677,7 @@ done:
  *
  * @implemented
  */
-DWORD STDCALL RtlGetFullPathName_U(
+DWORD NTAPI RtlGetFullPathName_U(
    const WCHAR* name,
    ULONG size,
    WCHAR* buffer,
@@ -733,7 +733,7 @@ DWORD STDCALL RtlGetFullPathName_U(
 /*
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 RtlDosPathNameToNtPathName_U(PWSTR dosname,
 			     PUNICODE_STRING ntname,
 			     PWSTR *FilePart,
@@ -858,7 +858,7 @@ RtlDosPathNameToNtPathName_U(PWSTR dosname,
  * @implemented
  */
 ULONG
-STDCALL
+NTAPI
 RtlDosSearchPath_U (
 	WCHAR *sp,
 	WCHAR *name,
@@ -934,7 +934,7 @@ RtlDosSearchPath_U (
 /*
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 RtlDoesFileExists_U(IN PWSTR FileName)
 {
 	UNICODE_STRING NtFileName;
@@ -961,7 +961,7 @@ RtlDoesFileExists_U(IN PWSTR FileName)
 	                            CurDir.Handle,
 	                            NULL);
 
-	Status = NtQueryAttributesFile (&Attr, &Info);
+	Status = ZwQueryAttributesFile (&Attr, &Info);
 
    RtlFreeUnicodeString(&NtFileName);
 
@@ -978,7 +978,7 @@ RtlDoesFileExists_U(IN PWSTR FileName)
 /*
  * @unimplemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 RtlDosPathNameToRelativeNtPathName_U(PVOID Unknown1,
                                      PVOID Unknown2,
                                      PVOID Unknown3,
@@ -993,20 +993,20 @@ RtlDosPathNameToRelativeNtPathName_U(PVOID Unknown1,
 /*
  * @unimplemented
  */
-VOID STDCALL
+VOID NTAPI
 RtlReleaseRelativeName(PVOID Unknown)
 {
     DPRINT1("RtlReleaseRelativeName(0x%p) UNIMPLEMENTED\n", Unknown);
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlpEnsureBufferSize(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3)
 {
     DPRINT1("RtlpEnsureBufferSize: stub\n");
     return STATUS_NOT_IMPLEMENTED;
 }
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlNtPathNameToDosPathName(ULONG Unknown1, ULONG Unknown2, ULONG Unknown3, ULONG Unknown4)
 {
     DPRINT1("RtlNtPathNameToDosPathName: stub\n");

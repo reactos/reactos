@@ -52,6 +52,13 @@ extern const LPCTSTR sCFSTR_SHELLIDLIST;
 #define	CFSTR_SHELLIDLIST sCFSTR_SHELLIDLIST
 #endif
 
+#ifdef _MSC_VER
+#define	NOVTABLE __declspec(novtable)
+#else
+#define	NOVTABLE
+#endif
+#define	ANSUNC
+
 
  // Exception Handling
 
@@ -85,7 +92,7 @@ struct COMExceptionBase
 				LocalFree(pBuf);
 			 } else {
 				TCHAR buffer[128];
-				_stprintf(buffer, TEXT("unknown Exception: 0x%08lX"), _hr);
+				_sntprintf(buffer, COUNTOF(buffer), TEXT("unknown Exception: 0x%08lX"), _hr);
 				_msg = buffer;
 			 }
 		}
@@ -438,6 +445,83 @@ protected:
 };
 
 
+struct NOVTABLE ComSrvObject	// NOVTABLE erlaubt, da protected Destruktor
+{
+protected:
+	ComSrvObject() : _ref(1) {}
+	virtual ~ComSrvObject() {}
+
+	ULONG	_ref;
+};
+
+struct SimpleComObject : public ComSrvObject
+{
+	ULONG IncRef() {return ++_ref;}
+	ULONG DecRef() {ULONG ref=--_ref; if (!ref) {_ref++; delete this;} return ref;}
+};
+
+
+ // server object interfaces
+
+template<typename BASE> struct IComSrvQI : public BASE
+{
+	IComSrvQI(REFIID uuid_base)
+	 :	_uuid_base(uuid_base)
+	{
+	}
+
+	STDMETHODIMP QueryInterface(REFIID riid, LPVOID* ppv)
+	{
+		*ppv = NULL;
+
+		if (IsEqualIID(riid, _uuid_base) || IsEqualIID(riid, IID_IUnknown))
+			{*ppv=static_cast<BASE*>(this); this->AddRef(); return S_OK;}
+
+		return E_NOINTERFACE;
+	}
+
+protected:
+	IComSrvQI() {}
+	virtual ~IComSrvQI() {}
+
+	REFIID	_uuid_base;
+};
+
+template<> struct IComSrvQI<IUnknown> : public IUnknown
+{
+	STDMETHODIMP QueryInterface(REFIID riid, LPVOID* ppv)
+	{
+		*ppv = NULL;
+
+		if (IsEqualIID(riid, IID_IUnknown))
+			{*ppv=this; AddRef(); return S_OK;}
+
+		return E_NOINTERFACE;
+	}
+
+protected:
+	IComSrvQI<IUnknown>() {}
+	virtual ~IComSrvQI<IUnknown>() {}
+};
+
+
+template<typename BASE, typename OBJ>
+	class IComSrvBase : public IComSrvQI<BASE>
+{
+	typedef IComSrvQI<BASE> super;
+
+protected:
+	IComSrvBase(REFIID uuid_base)
+	 :	super(uuid_base)
+	{
+	}
+
+public:
+	STDMETHODIMP_(ULONG) AddRef() {return static_cast<OBJ*>(this)->IncRef();}
+	STDMETHODIMP_(ULONG) Release() {return static_cast<OBJ*>(this)->DecRef();}
+};
+
+
 
 struct ShellFolder;
 
@@ -769,14 +853,14 @@ struct ShellPath : public SShellPtr<ITEMIDLIST>
 
 #ifdef UNICODE
 #define	StrRet StrRetW
-#define	tcscpyn wcscpyn
+//#define	tcscpyn wcscpyn
 #else
 #define	StrRet StrRetA
-#define	tcscpyn strcpyn
+//#define	tcscpyn strcpyn
 #endif
 
-extern LPSTR strcpyn(LPSTR dest, LPCSTR source, size_t count);
-extern LPWSTR wcscpyn(LPWSTR dest, LPCWSTR source, size_t count);
+//extern LPSTR strcpyn(LPSTR dest, LPCSTR source, size_t count);
+//extern LPWSTR wcscpyn(LPWSTR dest, LPCWSTR source, size_t count);
 
  /// easy retrieval of multi byte strings out of STRRET structures
 struct StrRetA : public STRRET
@@ -795,11 +879,11 @@ struct StrRetA : public STRRET
 			break;
 
 		  case STRRET_OFFSET:
-			strcpyn(b, (LPCSTR)&shiid+UNION_MEMBER(uOffset), l);
+			lstrcpynA(b, (LPCSTR)&shiid+UNION_MEMBER(uOffset), l);
 			break;
 
 		  case STRRET_CSTR:
-			strcpyn(b, UNION_MEMBER(cStr), l);
+			lstrcpynA(b, UNION_MEMBER(cStr), l);
 		}
 	}
 };
@@ -817,7 +901,7 @@ struct StrRetW : public STRRET
 	{
 		switch(uType) {
 		  case STRRET_WSTR:
-			wcscpyn(b, UNION_MEMBER(pOleStr), l);
+			lstrcpynW(b, UNION_MEMBER(pOleStr), l);
 			break;
 
 		  case STRRET_OFFSET:

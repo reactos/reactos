@@ -106,7 +106,7 @@ IntGdiOffsetRect(LPRECT Rect, INT x, INT y)
 BOOL STDCALL
 NtGdiOffsetRect(LPRECT UnsafeRect, INT x, INT y)
 {
-  RECT Rect;
+  RECT Rect = {0};
   NTSTATUS Status = STATUS_SUCCESS;
 
   _SEH_TRY
@@ -298,7 +298,7 @@ IntGdiIntersectRect(PRECT Dest, const RECT* Src1, const RECT* Src2)
 BOOL STDCALL
 NtGdiIntersectRect(PRECT UnsafeDest, const RECT* UnsafeSrc1, const RECT* UnsafeSrc2)
 {
-  RECT Dest, Src1, Src2;
+  RECT Dest, Src1, Src2 = {0};
   NTSTATUS Status = STATUS_SUCCESS;
   BOOL Ret;
 

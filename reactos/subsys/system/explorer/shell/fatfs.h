@@ -34,7 +34,7 @@ struct FATEntry : public Entry
 protected:
 	FATEntry() : Entry(ET_FAT) {}
 
-	virtual bool get_path(PTSTR path) const;
+	virtual bool get_path(PTSTR path, size_t path_count) const;
 	virtual ShellPath create_absolute_pidl() const;
 
 	DWORD	_cluster;

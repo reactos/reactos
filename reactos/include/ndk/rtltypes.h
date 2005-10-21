@@ -10,7 +10,7 @@
 #define _RTLTYPES_H
 
 /* DEPENDENCIES **************************************************************/
-#include "excpt.h"
+#include "pstypes.h"
 
 /* CONSTANTS *****************************************************************/
 #define MAXIMUM_LEADBYTES 12
@@ -27,6 +27,7 @@
 
 #define PEB_BASE                   (0x7FFDF000)
 
+#define EXCEPTION_CHAIN_END           ((PEXCEPTION_REGISTRATION_RECORD)-1)
 #define EXCEPTION_CONTINUE_SEARCH     0
 #define EXCEPTION_EXECUTE_HANDLER     1
 
@@ -106,6 +107,8 @@
 #define NLS_MB_CODE_PAGE_TAG NlsMbCodePageTag
 #define NLS_MB_OEM_CODE_PAGE_TAG NlsMbOemCodePageTag
 #define NLS_OEM_LEAD_BYTE_INFO NlsOemLeadByteInfo
+
+#define MAX_ATOM_LEN              255 /* TCHARS not including nullterm */
 
 /* List Macros */
 static __inline
@@ -292,11 +295,11 @@ typedef NTSTATUS
 );
 
 typedef EXCEPTION_DISPOSITION
-(*PEXCEPTION_HANDLER)(
-    struct _EXCEPTION_RECORD*,
-    PVOID,
-    struct _CONTEXT*,
-    PVOID
+(NTAPI *PEXCEPTION_ROUTINE)(
+    IN struct _EXCEPTION_RECORD *ExceptionRecord,
+    IN PVOID EstablisherFrame,
+    IN OUT struct _CONTEXT *ContextRecord,
+    IN OUT PVOID DispatcherContext
 );
 
 typedef LONG (NTAPI *PVECTORED_EXCEPTION_HANDLER)(
@@ -390,6 +393,14 @@ typedef OSVERSIONINFOW RTL_OSVERSIONINFOW;
 typedef LPOSVERSIONINFOW PRTL_OSVERSIONINFOW;
 typedef OSVERSIONINFOEXW RTL_OSVERSIONINFOEXW;
 typedef LPOSVERSIONINFOEXW PRTL_OSVERSIONINFOEXW;
+
+typedef EXCEPTION_DISPOSITION
+(*PEXCEPTION_HANDLER)(
+    struct _EXCEPTION_RECORD*,
+    PVOID,
+    struct _CONTEXT*,
+    PVOID
+);
 
 typedef struct _RTL_HEAP_PARAMETERS
 {
@@ -634,16 +645,11 @@ typedef struct _MODULE_INFORMATION
 } MODULE_INFORMATION, *PMODULE_INFORMATION;
 /* END REVIEW AREA */
 
-#ifdef _INC_EXCPT
-typedef struct _EXCEPTION_REGISTRATION
+typedef struct _EXCEPTION_REGISTRATION_RECORD
 {
-    struct _EXCEPTION_REGISTRATION *prev;
-    PEXCEPTION_HANDLER handler;
-} EXCEPTION_REGISTRATION, *PEXCEPTION_REGISTRATION;
-#endif
-
-typedef EXCEPTION_REGISTRATION EXCEPTION_REGISTRATION_RECORD;
-typedef PEXCEPTION_REGISTRATION PEXCEPTION_REGISTRATION_RECORD;
+    struct _EXCEPTION_REGISTRATION_RECORD *Next;
+    PEXCEPTION_HANDLER Handler;
+} EXCEPTION_REGISTRATION_RECORD, *PEXCEPTION_REGISTRATION_RECORD;
 
 typedef struct _CURDIR
 {

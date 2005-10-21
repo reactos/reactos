@@ -28,7 +28,11 @@
 NTSTATUS STDCALL
 LsaClose(LSA_HANDLE ObjectHandle)
 {
-  DPRINT1("(%p):LsaClose stub\n",ObjectHandle);
+  static int count = 0;
+  if (count++ < 20)
+  {
+     DPRINT1("(%p):LsaClose stub\n",ObjectHandle);
+  }
   return 0xc0000000;
 }
 
@@ -217,7 +221,11 @@ LsaOpenPolicy(PLSA_UNICODE_STRING lsaucs,
 	      ACCESS_MASK access,
 	      PLSA_HANDLE PolicyHandle)
 {
-  DPRINT1("LsaOpenPolicy - stub\n");
+  static int count = 0;
+  if (count++ < 20)
+  {
+     DPRINT1("LsaOpenPolicy - stub\n");
+  }
   return STATUS_SUCCESS;
 }
 

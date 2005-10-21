@@ -65,7 +65,7 @@
 185 stub -noname FireEvent_Quit
 187 stub -noname SHDGetPageLocation
 188 stub -noname SHIEErrorMsgBox
-189 stub -noname IEGetDisplayName
+189 stub @ # FIXME: same as ordinal 148
 190 stub -noname SHRunIndirectRegClientCommandForward
 191 stub -noname SHIsRegisteredClient
 192 stub -noname SHGetHistoryPIDL

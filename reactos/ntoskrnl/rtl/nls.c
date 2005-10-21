@@ -62,7 +62,9 @@ RtlpInitNls(VOID)
     RtlpCreateNlsSection();
 }
 
-VOID INIT_FUNCTION
+VOID
+INIT_FUNCTION
+NTAPI
 RtlpImportAnsiCodePage(PUSHORT TableBase,
              ULONG Size)
 {
@@ -71,7 +73,9 @@ RtlpImportAnsiCodePage(PUSHORT TableBase,
 }
 
 
-VOID INIT_FUNCTION
+VOID
+INIT_FUNCTION
+NTAPI
 RtlpImportOemCodePage(PUSHORT TableBase,
             ULONG Size)
 {
@@ -80,7 +84,9 @@ RtlpImportOemCodePage(PUSHORT TableBase,
 }
 
 
-VOID INIT_FUNCTION
+VOID
+NTAPI
+INIT_FUNCTION
 RtlpImportUnicodeCasemap(PUSHORT TableBase,
           ULONG Size)
 {
@@ -89,7 +95,9 @@ RtlpImportUnicodeCasemap(PUSHORT TableBase,
 }
 
 
-VOID INIT_FUNCTION
+VOID
+NTAPI
+INIT_FUNCTION
 RtlpCreateInitialNlsTables(VOID)
 {
   NLSTABLEINFO NlsTable;
@@ -109,8 +117,9 @@ RtlpCreateInitialNlsTables(VOID)
   RtlResetRtlTranslations (&NlsTable);
 }
 
-
-VOID INIT_FUNCTION
+VOID
+NTAPI
+INIT_FUNCTION
 RtlpCreateNlsSection(VOID)
 {
   NLSTABLEINFO NlsTable;

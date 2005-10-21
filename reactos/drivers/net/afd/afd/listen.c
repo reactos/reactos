@@ -12,10 +12,10 @@
 #include "tdiconn.h"
 #include "debug.h"
 
-VOID SatisfyAccept( PAFD_DEVICE_EXTENSION DeviceExt,
-                    PIRP Irp,
-                    PFILE_OBJECT NewFileObject,
-		    PAFD_TDI_OBJECT_QELT Qelt ) {
+static VOID SatisfyAccept( PAFD_DEVICE_EXTENSION DeviceExt,
+                           PIRP Irp,
+                           PFILE_OBJECT NewFileObject,
+		                   PAFD_TDI_OBJECT_QELT Qelt ) {
     PAFD_FCB FCB = NewFileObject->FsContext;
 
     if( !SocketAcquireStateLock( FCB ) ) return;
@@ -39,7 +39,7 @@ VOID SatisfyAccept( PAFD_DEVICE_EXTENSION DeviceExt,
     SocketStateUnlock( FCB );
 }
 
-VOID SatisfyPreAccept( PIRP Irp, PAFD_TDI_OBJECT_QELT Qelt ) {
+static VOID SatisfyPreAccept( PIRP Irp, PAFD_TDI_OBJECT_QELT Qelt ) {
     PAFD_RECEIVED_ACCEPT_DATA ListenReceive =
 	(PAFD_RECEIVED_ACCEPT_DATA)Irp->AssociatedIrp.SystemBuffer;
     PTA_IP_ADDRESS IPAddr;
@@ -72,7 +72,7 @@ VOID SatisfyPreAccept( PIRP Irp, PAFD_TDI_OBJECT_QELT Qelt ) {
     IoCompleteRequest( Irp, IO_NETWORK_INCREMENT );
 }
 
-NTSTATUS DDKAPI ListenComplete
+static NTSTATUS DDKAPI ListenComplete
 ( PDEVICE_OBJECT DeviceObject,
   PIRP Irp,
   PVOID Context ) {

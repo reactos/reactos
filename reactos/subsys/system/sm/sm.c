@@ -29,6 +29,7 @@
 #include <tchar.h>
 #include "resource.h"
 
+#define WIN32_NO_STATUS
 #include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
@@ -98,7 +99,7 @@ PSM_CMD_DESCRIPTOR LookupCommand (const TCHAR * CommandName)
 	{
 		LoadString( GetModuleHandle(NULL), IDS_Unknown, (LPTSTR) UsageMessage,RC_STRING_MAX_SIZE);
 
-		_ftprintf(stderr, _T("%s '%s'.\n"), UsageMessage, CommandName);
+		_ftprintf(stderr, UsageMessage, CommandName);
 		return NULL;
 	}
 	return & Command [i];

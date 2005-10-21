@@ -19,6 +19,9 @@
 
 /* GLOBALS *******************************************************************/
 
+NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT DriverObject,
+			     PUNICODE_STRING RegistryPath);
+
 /*
  * Driver data
  */
@@ -102,7 +105,7 @@ static VOID STDCALL KbdClassServiceCallback (
 	}
 }
 
-VOID STDCALL KbdStartIo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+static VOID STDCALL KbdStartIo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
 	/* We only do this for read irps */
 	DPRINT("KeyboardStartIo(DeviceObject %x Irp %x)\n",DeviceObject,Irp);
@@ -114,7 +117,7 @@ VOID STDCALL KbdStartIo(PDEVICE_OBJECT DeviceObject, PIRP Irp)
  * These are just passed down the stack but we must change the IOCTL to be
  * INTERNAL. MSDN says there might be more...
  */
-NTSTATUS STDCALL KbdDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+static NTSTATUS STDCALL KbdDeviceControl(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 {
 	PDEVICE_EXTENSION DevExt = DeviceObject->DeviceExtension;
 	PIO_STACK_LOCATION Stk = IoGetCurrentIrpStackLocation(Irp);

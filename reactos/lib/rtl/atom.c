@@ -135,7 +135,7 @@ RtlpCheckIntegerAtom(PWSTR AtomName,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlCreateAtomTable(IN ULONG TableSize,
                    IN OUT PRTL_ATOM_TABLE *AtomTable)
 {
@@ -183,7 +183,7 @@ RtlCreateAtomTable(IN ULONG TableSize,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlDestroyAtomTable(IN PRTL_ATOM_TABLE AtomTable)
 {
    PRTL_ATOM_TABLE_ENTRY *CurrentBucket, *LastBucket;
@@ -232,7 +232,7 @@ RtlDestroyAtomTable(IN PRTL_ATOM_TABLE AtomTable)
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlEmptyAtomTable(PRTL_ATOM_TABLE AtomTable,
                   BOOLEAN DeletePinned)
 {
@@ -286,7 +286,7 @@ RtlEmptyAtomTable(PRTL_ATOM_TABLE AtomTable,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlAddAtomToAtomTable(IN PRTL_ATOM_TABLE AtomTable,
                       IN PWSTR AtomName,
                       OUT PRTL_ATOM Atom)
@@ -347,6 +347,12 @@ RtlAddAtomToAtomTable(IN PRTL_ATOM_TABLE AtomTable,
         if (HashLink != NULL)
           {
              ULONG AtomNameLen = wcslen(AtomName);
+             
+             if (AtomNameLen > MAX_ATOM_LEN)
+             {
+                Status = STATUS_INVALID_PARAMETER;
+                goto end;
+             }
 
              Entry = RtlpAllocAtomTableEntry(sizeof(RTL_ATOM_TABLE_ENTRY) -
                                              sizeof(Entry->Name) +
@@ -390,7 +396,7 @@ RtlAddAtomToAtomTable(IN PRTL_ATOM_TABLE AtomTable,
              Status = STATUS_OBJECT_NAME_INVALID;
           }
      }
-
+end:
    RtlpUnlockAtomTable(AtomTable);
 
    return Status;
@@ -400,7 +406,7 @@ RtlAddAtomToAtomTable(IN PRTL_ATOM_TABLE AtomTable,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlDeleteAtomFromAtomTable(IN PRTL_ATOM_TABLE AtomTable,
                            IN RTL_ATOM Atom)
 {
@@ -472,7 +478,7 @@ RtlDeleteAtomFromAtomTable(IN PRTL_ATOM_TABLE AtomTable,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlLookupAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
                          IN PWSTR AtomName,
                          OUT PRTL_ATOM Atom)
@@ -529,7 +535,7 @@ RtlLookupAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlPinAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
                       IN RTL_ATOM Atom)
 {
@@ -565,8 +571,25 @@ RtlPinAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
 
 /*
  * @implemented
+ *
+ * This API is really messed up with regards to NameLength. If you pass in a
+ * valid buffer for AtomName, NameLength should be the size of the buffer
+ * (in bytes, not characters). So if you expect the string to be 6 char long,
+ * you need to allocate a buffer of 7 WCHARs and pass 14 for NameLength.
+ * The AtomName returned is always null terminated. If the NameLength you pass
+ * is smaller than 4 (4 would leave room for 1 character) the function will
+ * return with status STATUS_BUFFER_TOO_SMALL. If you pass more than 4, the
+ * return status will be STATUS_SUCCESS, even if the buffer is not large enough
+ * to hold the complete string. In that case, the string is silently truncated
+ * and made to fit in the provided buffer. On return NameLength is set to the
+ * number of bytes (but EXCLUDING the bytes for the null terminator) copied.
+ * So, if the string is 6 char long, you pass a buffer of 10 bytes, on return
+ * NameLength will be set to 8.
+ * If you pass in a NULL value for AtomName, the length of the string in bytes
+ * (again EXCLUDING the null terminator) is returned in NameLength, at least
+ * on Win2k, XP and ReactOS. NT4 will return 0 in that case.
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlQueryAtomInAtomTable(PRTL_ATOM_TABLE AtomTable,
                         RTL_ATOM Atom,
                         PULONG RefCount,
@@ -575,49 +598,37 @@ RtlQueryAtomInAtomTable(PRTL_ATOM_TABLE AtomTable,
                         PULONG NameLength)
 {
    ULONG Length;
+   BOOL Unlock = FALSE;
+   
+   union
+     {
+     /* A RTL_ATOM_TABLE_ENTRY has a "WCHAR Name[1]" entry at the end.
+      * Make sure we reserve enough room to facilitate a 12 character name */
+     RTL_ATOM_TABLE_ENTRY AtomTableEntry;
+     WCHAR StringBuffer[sizeof(RTL_ATOM_TABLE_ENTRY) / sizeof(WCHAR) + 12];
+     } NumberEntry;
    PRTL_ATOM_TABLE_ENTRY Entry;
    NTSTATUS Status = STATUS_SUCCESS;
 
    if (Atom < 0xC000)
      {
-        if (RefCount != NULL)
-          {
-             *RefCount = 1;
-          }
-
-        if (PinCount != NULL)
-          {
-             *PinCount = 1;
-          }
-
-        if ((AtomName != NULL) && (NameLength != NULL) && (NameLength > 0))
-          {
-             WCHAR NameString[12];
-             
-             Length = swprintf(NameString, L"#%lu", (ULONG)Atom) * sizeof(WCHAR);
-
-             if (*NameLength < Length + sizeof(WCHAR))
-               {
-                  *NameLength = Length;
-                  Status = STATUS_BUFFER_TOO_SMALL;
-               }
-             else 
-               {
-                  RtlCopyMemory(AtomName,
-                                NameString,
-                                Length);
-                  AtomName[Length / sizeof(WCHAR)] = L'\0';
-                  *NameLength = Length;
-               }
-          }
-
-        return Status;
+        /* Synthesize an entry */
+        NumberEntry.AtomTableEntry.Atom = Atom;
+        NumberEntry.AtomTableEntry.NameLength = swprintf(NumberEntry.AtomTableEntry.Name,
+                                                         L"#%lu",
+                                                         (ULONG)Atom);
+        NumberEntry.AtomTableEntry.ReferenceCount = 1;
+        NumberEntry.AtomTableEntry.Flags = RTL_ATOM_IS_PINNED;
+        Entry = &NumberEntry.AtomTableEntry;
      }
+   else
+     {
+        RtlpLockAtomTable(AtomTable);
+        Unlock = TRUE;
 
-   RtlpLockAtomTable(AtomTable);
-
-   Entry = RtlpGetAtomEntry(AtomTable,
-                            (ULONG)((USHORT)Atom - 0xC000));
+        Entry = RtlpGetAtomEntry(AtomTable,
+                                 (ULONG)((USHORT)Atom - 0xC000));
+     }
 
    if (Entry != NULL && Entry->Atom == (USHORT)Atom)
      {
@@ -633,23 +644,40 @@ RtlQueryAtomInAtomTable(PRTL_ATOM_TABLE AtomTable,
              *PinCount = ((Entry->Flags & RTL_ATOM_IS_PINNED) != 0);
           }
 
-        if ((AtomName != NULL) && (NameLength != NULL))
+        if (NULL != NameLength)
           {
              Length = Entry->NameLength * sizeof(WCHAR);
-
-             if (*NameLength < Length + sizeof(WCHAR))
+             if (NULL != AtomName)
                {
-                  *NameLength = Length;
-                  Status = STATUS_BUFFER_TOO_SMALL;
+                  if (*NameLength < Length + sizeof(WCHAR))
+                    {
+                       if (*NameLength < 4)
+                         {
+                            *NameLength = Length;
+                            Status = STATUS_BUFFER_TOO_SMALL;
+                         }
+                       else
+                         {
+                            Length = *NameLength - sizeof(WCHAR);
+                         }
+                    }
+                  if (NT_SUCCESS(Status))
+                    {
+                       RtlCopyMemory(AtomName,
+                                     Entry->Name,
+                                     Length);
+                       AtomName[Length / sizeof(WCHAR)] = L'\0';
+                       *NameLength = Length;
+                    }
                }
              else
                {
-                  RtlCopyMemory(AtomName,
-                                Entry->Name,
-                                Length);
-                  AtomName[Length / sizeof(WCHAR)] = L'\0';
                   *NameLength = Length;
                }
+          }
+        else if (NULL != AtomName)
+          {
+             Status = STATUS_INVALID_PARAMETER;
           }
      }
    else
@@ -657,7 +685,7 @@ RtlQueryAtomInAtomTable(PRTL_ATOM_TABLE AtomTable,
         Status = STATUS_INVALID_HANDLE;
      }
 
-   RtlpUnlockAtomTable(AtomTable);
+   if (Unlock) RtlpUnlockAtomTable(AtomTable);
 
    return Status;
 }
@@ -666,7 +694,7 @@ RtlQueryAtomInAtomTable(PRTL_ATOM_TABLE AtomTable,
 /*
  * @private - only used by NtQueryInformationAtom
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlQueryAtomListInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
                             IN ULONG MaxAtomCount,
                             OUT ULONG *AtomCount,

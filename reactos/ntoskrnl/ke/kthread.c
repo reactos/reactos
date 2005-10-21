@@ -38,7 +38,7 @@ KiRequestReschedule(CCHAR Processor)
 
     Pcr = (PKPCR)(KPCR_BASE + Processor * PAGE_SIZE);
     Pcr->Prcb->QuantumEnd = TRUE;
-    KiIpiSendRequest(1 << Processor, IPI_REQUEST_DPC);
+    KiIpiSendRequest(1 << Processor, IPI_DPC);
 }
 
 STATIC
@@ -76,7 +76,6 @@ PKTHREAD
 KiScanThreadList(KPRIORITY Priority,
                  KAFFINITY Affinity)
 {
-    PLIST_ENTRY current_entry;
     PKTHREAD current;
     ULONG Mask;
 
@@ -84,11 +83,7 @@ KiScanThreadList(KPRIORITY Priority,
 
     if (PriorityListMask & Mask) {
 
-        current_entry = PriorityListHead[Priority].Flink;
-
-        while (current_entry != &PriorityListHead[Priority]) {
-
-            current = CONTAINING_RECORD(current_entry, KTHREAD, WaitListEntry);
+        LIST_FOR_EACH(current, &PriorityListHead[Priority], KTHREAD, WaitListEntry) {
 
             if (current->State != Ready) {
 
@@ -102,8 +97,6 @@ KiScanThreadList(KPRIORITY Priority,
                 KiRemoveFromThreadList(current);
                 return(current);
             }
-
-            current_entry = current_entry->Flink;
         }
     }
 
@@ -463,36 +456,59 @@ KeRundownThread(VOID)
 {
     KIRQL OldIrql;
     PKTHREAD Thread = KeGetCurrentThread();
-    PLIST_ENTRY CurrentEntry;
+    PLIST_ENTRY NextEntry, ListHead;
     PKMUTANT Mutant;
-
     DPRINT("KeRundownThread: %x\n", Thread);
+
+    /* Optimized path if nothing is on the list at the moment */
+    if (IsListEmpty(&Thread->MutantListHead)) return;
 
     /* Lock the Dispatcher Database */
     OldIrql = KeAcquireDispatcherDatabaseLock();
 
-    while (!IsListEmpty(&Thread->MutantListHead)) {
-
+    /* Get the List Pointers */
+    ListHead = &Thread->MutantListHead;
+    NextEntry = ListHead->Flink;
+    while (NextEntry != ListHead)
+    {
         /* Get the Mutant */
-	CurrentEntry = RemoveHeadList(&Thread->MutantListHead);
-        Mutant = CONTAINING_RECORD(CurrentEntry, KMUTANT, MutantListEntry);
-        ASSERT(Mutant->ApcDisable == 0);
+        Mutant = CONTAINING_RECORD(NextEntry, KMUTANT, MutantListEntry);
+        DPRINT1("Mutant: %p. Type, Size %x %x\n",
+                 Mutant,
+                 Mutant->Header.Type,
+                 Mutant->Header.Size);
 
-        /* Uncondtionally abandon it */
+        /* Make sure it's not terminating with APCs off */
+        if (Mutant->ApcDisable)
+        {
+            /* Bugcheck the system */
+            KEBUGCHECKEX(0,//THREAD_TERMINATE_HELD_MUTEX,
+                         (ULONG_PTR)Thread,
+                         (ULONG_PTR)Mutant,
+                         0,
+                         0);
+        }
+
+        /* Now we can remove it */
+        RemoveEntryList(&Mutant->MutantListEntry);
+
+        /* Unconditionally abandon it */
         DPRINT("Abandonning the Mutant\n");
         Mutant->Header.SignalState = 1;
         Mutant->Abandoned = TRUE;
         Mutant->OwnerThread = NULL;
-        RemoveEntryList(&Mutant->MutantListEntry);
 
         /* Check if the Wait List isn't empty */
         DPRINT("Checking whether to wake the Mutant\n");
-        if (!IsListEmpty(&Mutant->Header.WaitListHead)) {
-
+        if (!IsListEmpty(&Mutant->Header.WaitListHead))
+        {
             /* Wake the Mutant */
             DPRINT("Waking the Mutant\n");
             KiWaitTest(&Mutant->Header, MUTANT_INCREMENT);
         }
+
+        /* Move on */
+        NextEntry = NextEntry->Flink;
     }
 
     /* Release the Lock */
@@ -534,8 +550,8 @@ KeResumeThread(PKTHREAD Thread)
     return PreviousCount;
 }
 
-BOOLEAN
-STDCALL
+VOID
+FASTCALL
 KiInsertQueueApc(PKAPC Apc,
                  KPRIORITY PriorityBoost);
 
@@ -548,35 +564,50 @@ STDCALL
 KeFreezeAllThreads(PKPROCESS Process)
 {
     KIRQL OldIrql;
-    PLIST_ENTRY CurrentEntry;
     PKTHREAD Current;
     PKTHREAD CurrentThread = KeGetCurrentThread();
 
     /* Acquire Lock */
     OldIrql = KeAcquireDispatcherDatabaseLock();
 
-    /* Loop the Process's Threads */
-    CurrentEntry = Process->ThreadListHead.Flink;
-    while (CurrentEntry != &Process->ThreadListHead)
+    /* If someone is already trying to free us, try again */
+    while (CurrentThread->FreezeCount)
     {
-        /* Get the Thread */
-        Current = CONTAINING_RECORD(CurrentEntry, KTHREAD, ThreadListEntry);
+        /* Release and re-acquire the lock so the APC will go through */
+        KeReleaseDispatcherDatabaseLock(OldIrql);
+        OldIrql = KeAcquireDispatcherDatabaseLock();
+    }
 
+    /* Enter a critical region */
+    KeEnterCriticalRegion();
+
+    /* Loop the Process's Threads */
+    LIST_FOR_EACH(Current, &Process->ThreadListHead, KTHREAD, ThreadListEntry)
+    {
         /* Make sure it's not ours */
-        if (Current == CurrentThread) continue;
-
-        /* Make sure it wasn't already frozen, and that it's not suspended */
-        if (!(++Current->FreezeCount) && !(Current->SuspendCount))
+        if (Current != CurrentThread)
         {
-            /* Insert the APC */
-            if (!KiInsertQueueApc(&Current->SuspendApc, IO_NO_INCREMENT))
+            /* Should be bother inserting the APC? */
+            if (Current->ApcQueueable)
             {
-                /* Unsignal the Semaphore, the APC already got inserted */
-                Current->SuspendSemaphore.Header.SignalState--;
+                /* Make sure it wasn't already frozen, and that it's not suspended */
+                if (!(++Current->FreezeCount) && !(Current->SuspendCount))
+                {
+                    /* Did we already insert it? */
+                    if (!Current->SuspendApc.Inserted)
+                    {
+                        /* Insert the APC */
+                        Current->SuspendApc.Inserted = TRUE;
+                        KiInsertQueueApc(&Current->SuspendApc, IO_NO_INCREMENT);
+                    }
+                    else
+                    {
+                        /* Unsignal the Semaphore, the APC already got inserted */
+                        Current->SuspendSemaphore.Header.SignalState--;
+                    }
+                }
             }
         }
-
-        CurrentEntry = CurrentEntry->Flink;
     }
 
     /* Release the lock */
@@ -603,20 +634,30 @@ KeSuspendThread(PKTHREAD Thread)
     {
         /* Raise an exception */
         KeReleaseDispatcherDatabaseLock(OldIrql);
-        ExRaiseStatus(STATUS_SUSPEND_COUNT_EXCEEDED);
+        RtlRaiseStatus(STATUS_SUSPEND_COUNT_EXCEEDED);
     }
 
-    /* Increment it */
-    Thread->SuspendCount++;
+    /* Should we bother to queue at all? */
+    if (Thread->ApcQueueable)
+    {
+        /* Increment the suspend count */
+        Thread->SuspendCount++;
 
-    /* Check if we should suspend it */
-    if (!PreviousCount && !Thread->FreezeCount) {
-
-        /* Insert the APC */
-        if (!KiInsertQueueApc(&Thread->SuspendApc, IO_NO_INCREMENT)) {
-
-            /* Unsignal the Semaphore, the APC already got inserted */
-            Thread->SuspendSemaphore.Header.SignalState--;
+        /* Check if we should suspend it */
+        if (!PreviousCount && !Thread->FreezeCount)
+        {
+            /* Is the APC already inserted? */
+            if (!Thread->SuspendApc.Inserted)
+            {
+                /* Not inserted, insert it */
+                Thread->SuspendApc.Inserted = TRUE;
+                KiInsertQueueApc(&Thread->SuspendApc, IO_NO_INCREMENT);
+            }
+            else
+            {
+                /* Unsignal the Semaphore, the APC already got inserted */
+                Thread->SuspendSemaphore.Header.SignalState--;
+            }
         }
     }
 
@@ -1456,8 +1497,8 @@ KiServiceCheck (VOID)
     if (Thread->ServiceTable != KeServiceDescriptorTableShadow) {
 
         /* We do. Initialize it and save the new table */
-        PsInitWin32Thread((PETHREAD)Thread);
         Thread->ServiceTable = KeServiceDescriptorTableShadow;
+        PsInitWin32Thread((PETHREAD)Thread);
     }
 }
 

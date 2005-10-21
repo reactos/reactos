@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/pnproot.c
@@ -309,6 +308,30 @@ PdoQueryResourceRequirements(
 }
 
 
+static NTSTATUS
+PnpRootPdoQueryCapabilities(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PIRP Irp,
+  PIO_STACK_LOCATION IrpSp)
+{
+  PPNPROOT_FDO_DEVICE_EXTENSION DeviceExtension;
+  PDEVICE_CAPABILITIES DeviceCapabilities;
+
+  DPRINT("Called\n");
+
+  DeviceExtension = (PPNPROOT_FDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+  DeviceCapabilities = IrpSp->Parameters.DeviceCapabilities.Capabilities;
+
+  if (DeviceCapabilities->Version != 1)
+    return STATUS_UNSUCCESSFUL;
+
+  DeviceCapabilities->UniqueID = TRUE;
+  /* FIXME: Fill other fields */
+
+  return STATUS_SUCCESS;
+}
+
+
 /*
  * FUNCTION: Handle Plug and Play IRPs for the child device
  * ARGUMENTS:
@@ -351,6 +374,10 @@ PnpRootPdoPnpControl(
 
   case IRP_MN_QUERY_RESOURCES:
     Status = PdoQueryResources(DeviceObject, Irp, IrpSp);
+    break;
+
+  case IRP_MN_QUERY_CAPABILITIES:
+    Status = PnpRootPdoQueryCapabilities(DeviceObject, Irp, IrpSp);
     break;
 
   case IRP_MN_START_DEVICE:
@@ -766,7 +793,6 @@ PnpRootQueryBusRelations(
   PPNPROOT_PDO_DEVICE_EXTENSION PdoDeviceExtension;
   PPNPROOT_FDO_DEVICE_EXTENSION DeviceExtension;
   PDEVICE_RELATIONS Relations;
-  PLIST_ENTRY CurrentEntry;
   PPNPROOT_DEVICE Device;
   NTSTATUS Status;
   ULONG Size;
@@ -796,11 +822,8 @@ PnpRootQueryBusRelations(
   Relations->Count = DeviceExtension->DeviceListCount;
 
   i = 0;
-  CurrentEntry = DeviceExtension->DeviceListHead.Flink;
-  while (CurrentEntry != &DeviceExtension->DeviceListHead)
+  LIST_FOR_EACH(Device,&DeviceExtension->DeviceListHead,PNPROOT_DEVICE, ListEntry) 
   {
-    Device = CONTAINING_RECORD(CurrentEntry, PNPROOT_DEVICE, ListEntry);
-
     if (!Device->Pdo)
     {
       /* Create a physical device object for the
@@ -894,8 +917,6 @@ PnpRootQueryBusRelations(
     Relations->Objects[i] = Device->Pdo;
 
     i++;
-
-    CurrentEntry = CurrentEntry->Flink;
   }
 
   if (NT_SUCCESS(Status))

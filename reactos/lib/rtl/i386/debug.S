@@ -1,10 +1,9 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
- * PROJECT:           ReactOS kernel
- * PURPOSE:           Run-Time Library
+ * PROJECT:           ReactOS Run-Time Library
+ * PURPOSE:           Debug Routines
  * FILE:              lib/rtl/i386/debug.S
  * PROGRAMER:         Alex Ionescu (alex@relsoft.net)
- * REVISION HISTORY:  27/07/2005 Created
  */
 
 .intel_syntax noprefix
@@ -14,6 +13,7 @@
 .globl  _DbgBreakPoint@0
 .globl  _DbgBreakPointWithStatus@4
 .globl  _DbgUserBreakPoint@0
+.globl  _DebugService@20
 
 /* FUNCTIONS ***************************************************************/
 
@@ -26,3 +26,36 @@ _DbgBreakPointWithStatus@4:
     mov eax, [esp+4]
     int 3
     ret 4
+
+_DebugService@20:
+
+    /* Setup the stack */
+    push ebp
+    mov ebp, esp
+
+    /* Save the registers */
+    push ecx
+    push ebx
+    push edi
+    push edi
+    push ebx
+
+    /* Call the Interrupt */
+    mov eax, [ebp+8]
+    mov ecx, [ebp+12]
+    mov edx, [ebp+16]
+    mov ebx, [ebp+20]
+    mov edi, [ebp+24]
+    int 0x2D
+    //int 3
+
+    /* Restore registers */
+    pop ebx
+    pop edi
+    pop edi
+    pop ebx
+
+    /* Return */
+    leave
+    ret 20
+

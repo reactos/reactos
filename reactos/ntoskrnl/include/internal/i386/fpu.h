@@ -12,10 +12,13 @@ NTSTATUS
 KiHandleFpuFault(PKTRAP_FRAME Tf, ULONG ExceptionNr);
 
 VOID
-KiFloatingSaveAreaToFxSaveArea(PFX_SAVE_AREA FxSaveArea, CONST FLOATING_SAVE_AREA *FloatingSaveArea);
+KiFxSaveAreaToFloatingSaveArea(FLOATING_SAVE_AREA *FloatingSaveArea, CONST PFX_SAVE_AREA FxSaveArea);
 
 BOOL
 KiContextToFxSaveArea(PFX_SAVE_AREA FxSaveArea, PCONTEXT Context);
+
+PFX_SAVE_AREA
+KiGetFpuState(PKTHREAD Thread);
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_I386_FPU_H */
 

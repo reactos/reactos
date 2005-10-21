@@ -14,6 +14,9 @@
 <directory name="advpack">
 	<xi:include href="advpack/advpack.xml" />
 </directory>
+<directory name="authz">
+	<xi:include href="authz/authz.xml" />
+</directory>
 <directory name="cabinet">
 	<xi:include href="cabinet/cabinet.xml" />
 </directory>
@@ -92,6 +95,9 @@
 <directory name="glu32">
 	<xi:include href="glu32/glu32.xml" />
 </directory>
+<directory name="hid">
+	<xi:include href="hid/hid.xml" />
+</directory>
 <directory name="imagehlp">
 	<xi:include href="imagehlp/imagehlp.xml" />
 </directory>
@@ -161,6 +167,15 @@
 <directory name="netapi32">
 	<xi:include href="netapi32/netapi32.xml" />
 </directory>
+<directory name="netcfgx">
+	<xi:include href="netcfgx/netcfgx.xml" />
+</directory>
+<directory name="newdev">
+	<xi:include href="newdev/newdev.xml" />
+</directory>
+<directory name="nt">
+	<xi:include href="nt/nt.xml" />
+</directory>
 <directory name="ntdll">
 	<xi:include href="ntdll/ntdll.xml" />
 </directory>
@@ -177,7 +192,7 @@
 	<xi:include href="oleaut32/oleaut32.xml" />
 </directory>
 <directory name="oledlg">
-        <xi:include href="oledlg/oledlg.xml" />
+	<xi:include href="oledlg/oledlg.xml" />
 </directory>
 <directory name="olepro32">
 	<xi:include href="olepro32/olepro32.xml" />
@@ -209,8 +224,14 @@
 <directory name="samlib">
 	<xi:include href="samlib/samlib.xml" />
 </directory>
+<directory name="samsrv">
+	<xi:include href="samsrv/samsrv.xml" />
+</directory>
 <directory name="secur32">
 	<xi:include href="secur32/secur32.xml" />
+</directory>
+<directory name="security">
+	<xi:include href="security/security.xml" />
 </directory>
 <directory name="serialui">
 	<xi:include href="serialui/serialui.xml" />
@@ -223,6 +244,12 @@
 </directory>
 <directory name="shell32">
 	<xi:include href="shell32/shell32.xml" />
+</directory>
+<directory name="shellext">
+	<xi:include href="shellext/directory.xml" />
+</directory>
+<directory name="shfolder">
+	<xi:include href="shfolder/shfolder.xml" />
 </directory>
 <directory name="shlwapi">
 	<xi:include href="shlwapi/shlwapi.xml" />
@@ -262,6 +289,9 @@
 </directory>
 <directory name="uxtheme">
 	<xi:include href="uxtheme/uxtheme.xml" />
+</directory>
+<directory name="vdmdbg">
+	<xi:include href="vdmdbg/vdmdbg.xml" />
 </directory>
 <directory name="version">
 	<xi:include href="version/version.xml" />

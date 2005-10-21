@@ -22,7 +22,7 @@
  */
 
 #include "videoprt.h"
-#include "internal/v86m.h"
+#include "internal/ke.h"
 
 /* PRIVATE FUNCTIONS **********************************************************/
 

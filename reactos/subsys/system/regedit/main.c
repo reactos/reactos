@@ -28,10 +28,13 @@
 #include <process.h>
 #include <stdio.h>
 #include <fcntl.h>
+#include <aclui.h>
+#include <cguid.h>
 
 #include "main.h"
 #include "hexedit.h"
 #include "security.h"
+#include "regproc.h"
 
 BOOL ProcessCmdLine(LPSTR lpCmdLine);
 
@@ -71,6 +74,9 @@ TCHAR szChildClass[MAX_LOADSTRING];
 BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 {
     BOOL AclUiAvailable;
+    HMENU hEditMenu;
+    TCHAR szBuffer[256];
+    LPCTSTR s;
 
     WNDCLASSEX wcFrame = {
                              sizeof(WNDCLASSEX),
@@ -116,12 +122,12 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     /* Initialize the Windows Common Controls DLL */
     InitCommonControls();
 
+    hEditMenu = GetSubMenu(hMenuFrame, 1);
+
     AclUiAvailable = InitializeAclUiDll();
     if(!AclUiAvailable)
     {
-      HMENU hEditMenu;
       /* hide the Edit/Permissions... menu entry */
-      hEditMenu = GetSubMenu(hMenuFrame, 1);
       if(hEditMenu != NULL)
       {
         RemoveMenu(hEditMenu, ID_EDIT_PERMISSIONS, MF_BYCOMMAND);
@@ -129,6 +135,9 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
         RemoveMenu(hEditMenu, 4, MF_BYPOSITION);
       }
     }
+
+    if(hEditMenu != NULL)
+        SetMenuDefaultItem(hEditMenu, ID_EDIT_MODIFY, MF_BYCOMMAND);
 
     nClipboardFormat = RegisterClipboardFormat(strClipboardFormat);
     /* if (nClipboardFormat == 0) {
@@ -152,6 +161,19 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
         SetupStatusBar(hFrameWnd, FALSE);
         CheckMenuItem(GetSubMenu(hMenuFrame, ID_VIEW_MENU), ID_VIEW_STATUSBAR, MF_BYCOMMAND|MF_CHECKED);
     }
+
+    /* Restore position */
+    if (RegQueryStringValue(HKEY_CURRENT_USER,
+        _T("Software\\Microsoft\\Windows\\CurrentVersion\\Applets\\Regedit"),
+        _T("LastKey"),
+        szBuffer, sizeof(szBuffer) / sizeof(szBuffer[0])) == ERROR_SUCCESS)
+    {
+        s = szBuffer;
+        if (!_tcsncmp(s, _T("My Computer\\"), 12))
+            s += 12;
+        SelectNode(g_pChildWnd->hTreeWnd, s);
+    }
+
     ShowWindow(hFrameWnd, nCmdShow);
     UpdateWindow(hFrameWnd);
     return TRUE;
@@ -163,6 +185,7 @@ void ExitInstance(HINSTANCE hInstance)
 {
     UnregisterHexEditorClass(hInstance);
     DestroyMenu(hMenuFrame);
+    DestroyMenu(hPopupMenus);
     UnloadAclUiDll();
 }
 
@@ -182,6 +205,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 {
     MSG msg;
     HACCEL hAccel;
+
     /*
         int hCrt;
         FILE *hf;
@@ -223,6 +247,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
             DispatchMessage(&msg);
         }
     }
+    
     ExitInstance(hInstance);
     return msg.wParam;
 }

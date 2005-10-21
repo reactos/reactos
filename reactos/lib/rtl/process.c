@@ -17,7 +17,7 @@
 /* INTERNAL FUNCTIONS *******************************************************/
 
 NTSTATUS
-STDCALL
+NTAPI
 RtlpMapFile(PUNICODE_STRING ImageFileName,
             ULONG Attributes,
             PHANDLE Section)
@@ -65,7 +65,7 @@ RtlpMapFile(PUNICODE_STRING ImageFileName,
 /* FUNCTIONS ****************************************************************/
 
 NTSTATUS
-STDCALL
+NTAPI
 RtlpInitEnvironment(HANDLE ProcessHandle,
                     PPEB Peb,
                     PRTL_USER_PROCESS_PARAMETERS ProcessParameters)
@@ -184,7 +184,7 @@ RtlpInitEnvironment(HANDLE ProcessHandle,
  * -Gunnar
  */
 NTSTATUS
-STDCALL
+NTAPI
 RtlCreateUserProcess(IN PUNICODE_STRING ImageFileName,
                      IN ULONG Attributes,
                      IN OUT PRTL_USER_PROCESS_PARAMETERS ProcessParameters,
@@ -319,13 +319,13 @@ RtlCreateUserProcess(IN PUNICODE_STRING ImageFileName,
  * @implemented
  */
 PVOID
-STDCALL
+NTAPI
 RtlEncodePointer(IN PVOID Pointer)
 {
   ULONG Cookie;
   NTSTATUS Status;
 
-  Status = NtQueryInformationProcess(NtCurrentProcess(),
+  Status = ZwQueryInformationProcess(NtCurrentProcess(),
                                      ProcessCookie,
                                      &Cookie,
                                      sizeof(Cookie),
@@ -338,6 +338,20 @@ RtlEncodePointer(IN PVOID Pointer)
   }
 
   return (PVOID)((ULONG_PTR)Pointer ^ Cookie);
+}
+
+/*
+ * @unimplemented
+ */
+NTSYSAPI
+VOID
+NTAPI
+RtlSetProcessIsCritical(
+    IN   BOOLEAN   NewValue,
+    OUT  PBOOLEAN  OldValue OPTIONAL,
+    IN   BOOLEAN   IsWinlogon)
+{
+	//TODO
 }
 
 /* EOF */

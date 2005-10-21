@@ -1,6 +1,6 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2002, 2003 ReactOS Team
+ *  Copyright (C) 2002, 2003, 2004, 2005 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -23,6 +23,7 @@
  * PURPOSE:         Partition list functions
  * PROGRAMMER:      Eric Kohl
  *                  Casper S. Hornstrup (chorns@users.sourceforge.net)
+ *                  Hartmut Birr
  */
 
 #include <usetup.h>
@@ -421,6 +422,238 @@ ScanForUnpartitionedDiskSpace (PDISKENTRY DiskEntry)
     }
 }
 
+NTSTATUS
+STDCALL
+DiskIdentifierQueryRoutine(PWSTR ValueName,
+                           ULONG ValueType,
+                           PVOID ValueData,
+                           ULONG ValueLength,
+                           PVOID Context,
+                           PVOID EntryContext)
+{
+  PBIOSDISKENTRY BiosDiskEntry = (PBIOSDISKENTRY)Context;
+  UNICODE_STRING NameU;
+
+  if (ValueType == REG_SZ &&
+      ValueLength == 20 * sizeof(WCHAR))
+    {
+      NameU.Buffer = (PWCHAR)ValueData;
+      NameU.Length = NameU.MaximumLength = 8 * sizeof(WCHAR);
+      RtlUnicodeStringToInteger(&NameU, 16, &BiosDiskEntry->Checksum);
+
+      NameU.Buffer = (PWCHAR)ValueData + 9;
+      RtlUnicodeStringToInteger(&NameU, 16, &BiosDiskEntry->Signature);
+
+      return STATUS_SUCCESS;
+    }
+    return STATUS_UNSUCCESSFUL;
+}
+
+NTSTATUS
+STDCALL
+DiskConfigurationDataQueryRoutine(PWSTR ValueName,
+                                  ULONG ValueType,
+                                  PVOID ValueData,
+                                  ULONG ValueLength,
+                                  PVOID Context,
+                                  PVOID EntryContext)
+{
+  PBIOSDISKENTRY BiosDiskEntry = (PBIOSDISKENTRY)Context;
+  PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
+  PCM_DISK_GEOMETRY_DEVICE_DATA DiskGeometry;
+
+  if (ValueType == REG_FULL_RESOURCE_DESCRIPTOR &&
+      ValueLength == sizeof(CM_FULL_RESOURCE_DESCRIPTOR) + sizeof(CM_DISK_GEOMETRY_DEVICE_DATA))
+    {
+      FullResourceDescriptor = (PCM_FULL_RESOURCE_DESCRIPTOR)ValueData;
+      /* FIXME:
+       *   Is this 'paranoia' check correct ?
+       */
+      if (FullResourceDescriptor->InterfaceType != InterfaceTypeUndefined ||
+          FullResourceDescriptor->BusNumber != 0 ||
+          FullResourceDescriptor->PartialResourceList.Count != 1 ||
+          FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].Type != CmResourceTypeDeviceSpecific ||
+          FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].u.DeviceSpecificData.DataSize != sizeof(CM_DISK_GEOMETRY_DEVICE_DATA))
+        {
+          return STATUS_UNSUCCESSFUL;
+        }
+      DiskGeometry = (PCM_DISK_GEOMETRY_DEVICE_DATA)(FullResourceDescriptor + 1);
+      BiosDiskEntry->DiskGeometry = *DiskGeometry;
+
+      return STATUS_SUCCESS;
+    }
+  return STATUS_UNSUCCESSFUL;
+}
+
+NTSTATUS
+STDCALL
+SystemConfigurationDataQueryRoutine(PWSTR ValueName,
+                                    ULONG ValueType,
+                                    PVOID ValueData,
+                                    ULONG ValueLength,
+                                    PVOID Context,
+                                    PVOID EntryContext)
+{
+  PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
+  PCM_INT13_DRIVE_PARAMETER* Int13Drives = (PCM_INT13_DRIVE_PARAMETER*)Context;
+
+  if (ValueType == REG_FULL_RESOURCE_DESCRIPTOR &&
+      ValueLength >= sizeof (CM_FULL_RESOURCE_DESCRIPTOR) &&
+      (ValueLength - sizeof(CM_FULL_RESOURCE_DESCRIPTOR)) % sizeof(CM_INT13_DRIVE_PARAMETER) == 0)
+    {
+      FullResourceDescriptor = (PCM_FULL_RESOURCE_DESCRIPTOR)ValueData;
+      if (FullResourceDescriptor->InterfaceType != InterfaceTypeUndefined ||
+          FullResourceDescriptor->BusNumber != -1 ||
+          FullResourceDescriptor->PartialResourceList.Count != 1 ||
+          FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].Type != CmResourceTypeDeviceSpecific)
+        {
+          return STATUS_UNSUCCESSFUL;
+        }
+      *Int13Drives = RtlAllocateHeap(ProcessHeap, 0, ValueLength - sizeof (CM_FULL_RESOURCE_DESCRIPTOR));
+      if (*Int13Drives == NULL)
+        {
+          return STATUS_NO_MEMORY;
+        }
+      memcpy(*Int13Drives, FullResourceDescriptor + 1, ValueLength - sizeof (CM_FULL_RESOURCE_DESCRIPTOR));
+      return STATUS_SUCCESS;
+    }
+  return STATUS_UNSUCCESSFUL;
+
+}
+#define ROOT_NAME   L"\\Registry\\Machine\\HARDWARE\\DESCRIPTION\\System\\MultifunctionAdapter"
+
+STATIC VOID
+EnumerateBiosDiskEntries(PPARTLIST PartList)
+{
+  RTL_QUERY_REGISTRY_TABLE QueryTable[3];
+  WCHAR Name[120];
+  ULONG AdapterCount;
+  ULONG DiskCount;
+  NTSTATUS Status;
+  PCM_INT13_DRIVE_PARAMETER Int13Drives;
+  PBIOSDISKENTRY BiosDiskEntry;
+
+  memset(QueryTable, 0, sizeof(QueryTable));
+
+  QueryTable[1].Name = L"Configuration Data";
+  QueryTable[1].QueryRoutine = SystemConfigurationDataQueryRoutine;
+  Int13Drives = NULL;
+  Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
+                                  L"\\Registry\\Machine\\HARDWARE\\DESCRIPTION\\System",
+                                  &QueryTable[1],
+                                  (PVOID)&Int13Drives,
+                                  NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      DPRINT1("Unable to query the 'Configuration Data' key in '\\Registry\\Machine\\HARDWARE\\DESCRIPTION\\System', status=%lx\n", Status);
+      return;
+    }
+
+  AdapterCount = 0;
+  while (1)
+    {
+      swprintf(Name, L"%s\\%lu", ROOT_NAME, AdapterCount);
+      Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
+                                      Name,
+                                      &QueryTable[2],
+                                      NULL,
+                                      NULL);
+      if (!NT_SUCCESS(Status))
+        {
+          break;
+        }
+        
+      swprintf(Name, L"%s\\%lu\\DiskController", ROOT_NAME, AdapterCount);
+      Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
+                                      Name,
+                                      &QueryTable[2],
+                                      NULL,
+                                      NULL);
+      if (NT_SUCCESS(Status))
+        {
+          while (1)
+            {
+              swprintf(Name, L"%s\\%lu\\DiskController\\0", ROOT_NAME, AdapterCount);
+              Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
+                                              Name,
+                                              &QueryTable[2],
+                                              NULL,
+                                              NULL);
+              if (!NT_SUCCESS(Status))
+                {
+                  RtlFreeHeap(ProcessHeap, 0, Int13Drives);
+                  return;
+                }
+                
+              swprintf(Name, L"%s\\%lu\\DiskController\\0\\DiskPeripheral", ROOT_NAME, AdapterCount);
+              Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
+                                              Name,
+                                              &QueryTable[2],
+                                              NULL,
+                                              NULL);
+              if (NT_SUCCESS(Status))
+                {
+                  QueryTable[0].Name = L"Identifier";
+                  QueryTable[0].QueryRoutine = DiskIdentifierQueryRoutine;
+                  QueryTable[1].Name = L"Configuration Data";
+                  QueryTable[1].QueryRoutine = DiskConfigurationDataQueryRoutine;
+                  DiskCount = 0;
+                  while (1)
+                    {
+                      BiosDiskEntry = RtlAllocateHeap(ProcessHeap, HEAP_ZERO_MEMORY, sizeof(BIOSDISKENTRY));
+                      if (BiosDiskEntry == NULL)
+                        {
+                          break;
+                        }
+                      swprintf(Name, L"%s\\%lu\\DiskController\\0\\DiskPeripheral\\%lu", ROOT_NAME, AdapterCount, DiskCount);
+                      Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
+                                                      Name,
+                                                      QueryTable,
+                                                      (PVOID)BiosDiskEntry,
+                                                      NULL);
+                      if (!NT_SUCCESS(Status))
+                        {
+                          RtlFreeHeap(ProcessHeap, 0, BiosDiskEntry);
+                          break;
+                        }
+                      BiosDiskEntry->DiskNumber = DiskCount;
+                      BiosDiskEntry->Recognized = FALSE;
+
+                      if (DiskCount < Int13Drives[0].NumberDrives)
+                        {
+                          BiosDiskEntry->Int13DiskData = Int13Drives[DiskCount];
+                        }
+                      else
+                        {
+                          DPRINT1("Didn't find int13 drive datas for disk %u\n", DiskCount);
+                        }
+
+
+                      InsertTailList(&PartList->BiosDiskListHead, &BiosDiskEntry->ListEntry);
+
+                      DPRINT("DiskNumber:        %d\n", BiosDiskEntry->DiskNumber);
+                      DPRINT("Signature:         %08x\n", BiosDiskEntry->Signature);
+                      DPRINT("Checksum:          %08x\n", BiosDiskEntry->Checksum);
+                      DPRINT("BytesPerSector:    %d\n", BiosDiskEntry->DiskGeometry.BytesPerSector);
+                      DPRINT("NumberOfCylinders: %d\n", BiosDiskEntry->DiskGeometry.NumberOfCylinders);
+                      DPRINT("NumberOfHeads:     %d\n", BiosDiskEntry->DiskGeometry.NumberOfHeads);
+                      DPRINT("DriveSelect:       %02x\n", BiosDiskEntry->Int13DiskData.DriveSelect);
+                      DPRINT("MaxCylinders:      %d\n", BiosDiskEntry->Int13DiskData.MaxCylinders);
+                      DPRINT("SectorsPerTrack:   %d\n", BiosDiskEntry->Int13DiskData.SectorsPerTrack);
+                      DPRINT("MaxHeads:          %d\n", BiosDiskEntry->Int13DiskData.MaxHeads);
+                      DPRINT("NumberDrives:      %d\n", BiosDiskEntry->Int13DiskData.NumberDrives);
+
+                      DiskCount++;
+                    }
+                }
+              RtlFreeHeap(ProcessHeap, 0, Int13Drives);
+              return;
+            }
+        }
+      AdapterCount++;
+    }
+  RtlFreeHeap(ProcessHeap, 0, Int13Drives);
+}
 
 static VOID
 AddDiskToList (HANDLE FileHandle,
@@ -433,6 +666,15 @@ AddDiskToList (HANDLE FileHandle,
   PDISKENTRY DiskEntry;
   IO_STATUS_BLOCK Iosb;
   NTSTATUS Status;
+  PPARTITION_SECTOR Mbr;
+  PULONG Buffer;
+  LARGE_INTEGER FileOffset;
+  WCHAR Identifier[20];
+  ULONG Checksum;
+  ULONG Signature;
+  ULONG i;
+  PLIST_ENTRY ListEntry;
+  PBIOSDISKENTRY BiosDiskEntry;
 
   Status = NtDeviceIoControlFile (FileHandle,
 				  NULL,
@@ -469,6 +711,51 @@ AddDiskToList (HANDLE FileHandle,
       return;
     }
 
+  Mbr = RtlAllocateHeap(ProcessHeap,
+                        0,
+                        DiskGeometry.BytesPerSector);
+
+  if (Mbr == NULL)
+    {
+      return;
+    }
+  
+  FileOffset.QuadPart = 0;
+  Status = NtReadFile(FileHandle,
+                      NULL,
+                      NULL,
+                      NULL,
+                      &Iosb,
+                      (PVOID)Mbr,
+                      DiskGeometry.BytesPerSector,
+                      &FileOffset,
+                      NULL);
+  if (!NT_SUCCESS(Status))
+    {
+      RtlFreeHeap(ProcessHeap,
+                  0,
+                  Mbr);
+      DPRINT1("NtReadFile failed, status=%x\n", Status);
+      return;
+    }
+  Signature = Mbr->Signature;
+
+  /* Calculate the MBR checksum */
+  Checksum = 0;
+  Buffer = (PULONG)Mbr;
+  for (i = 0; i < 128; i++)
+    {
+      Checksum += Buffer[i];
+    }
+  Checksum = ~Checksum + 1;
+
+  RtlFreeHeap (ProcessHeap,
+	       0,
+	       Mbr);
+
+  swprintf(Identifier, L"%08x-%08x-A", Checksum, Signature);
+  DPRINT("Identifier: %S\n", Identifier);
+
   DiskEntry = (PDISKENTRY)RtlAllocateHeap (ProcessHeap,
 					   0,
 					   sizeof(DISKENTRY));
@@ -476,6 +763,48 @@ AddDiskToList (HANDLE FileHandle,
     {
       return;
     }
+
+  DiskEntry->Checksum = Checksum;
+  DiskEntry->Signature = Signature;
+  if (Signature == 0)
+    {
+      /* If we have no signature, set the disk to dirty. WritePartitionsToDisk creates a new signature */
+      DiskEntry->Modified = TRUE;
+    }
+  DiskEntry->BiosFound = FALSE;
+
+  ListEntry = List->BiosDiskListHead.Flink;
+  while(ListEntry != &List->BiosDiskListHead)
+  {
+     BiosDiskEntry = CONTAINING_RECORD(ListEntry, BIOSDISKENTRY, ListEntry);
+     /* FIXME:
+      *   Compare the size from bios and the reported size from driver.
+      *   If we have more than one disk with a zero or with the same signatur
+      *   we must create new signatures and reboot. After the reboot, 
+      *   it is possible to identify the disks.
+      */
+     if (BiosDiskEntry->Signature == Signature &&
+         BiosDiskEntry->Checksum == Checksum &&
+         !BiosDiskEntry->Recognized)
+     {
+        if (!DiskEntry->BiosFound)
+        {
+           DiskEntry->BiosDiskNumber = BiosDiskEntry->DiskNumber;
+           DiskEntry->BiosFound = TRUE;
+           BiosDiskEntry->Recognized = TRUE;
+        }
+        else
+        {
+        }
+     }
+     ListEntry = ListEntry->Flink;
+  }
+
+  if (!DiskEntry->BiosFound)
+  {
+     RtlFreeHeap(ProcessHeap, 0, DiskEntry);
+     return;
+  }
 
   InitializeListHead (&DiskEntry->PartListHead);
 
@@ -509,8 +838,7 @@ AddDiskToList (HANDLE FileHandle,
 
   GetDriverName (DiskEntry);
 
-  InsertTailList (&List->DiskListHead,
-		  &DiskEntry->ListEntry);
+  InsertAscendingList(&List->DiskListHead, DiskEntry, DISKENTRY, ListEntry, BiosDiskNumber);
 
   LayoutBuffer = (DRIVE_LAYOUT_INFORMATION*)RtlAllocateHeap (ProcessHeap,
 							     0,
@@ -587,6 +915,9 @@ CreatePartitionList (SHORT Left,
   List->CurrentPartition = NULL;
 
   InitializeListHead (&List->DiskListHead);
+  InitializeListHead (&List->BiosDiskListHead);
+
+  EnumerateBiosDiskEntries(List);
 
   Status = NtQuerySystemInformation (SystemDeviceInformation,
 				     &Sdi,
@@ -667,6 +998,7 @@ VOID
 DestroyPartitionList (PPARTLIST List)
 {
   PDISKENTRY DiskEntry;
+  PBIOSDISKENTRY BiosDiskEntry;
   PPARTENTRY PartEntry;
   PLIST_ENTRY Entry;
 
@@ -692,6 +1024,15 @@ DestroyPartitionList (PPARTLIST List)
 
       /* Release disk entry */
       RtlFreeHeap (ProcessHeap, 0, DiskEntry);
+    }
+
+  /* release the bios disk info */
+  while(!IsListEmpty(&List->BiosDiskListHead))
+    {
+      Entry = RemoveHeadList(&List->BiosDiskListHead);
+      BiosDiskEntry = CONTAINING_RECORD(Entry, BIOSDISKENTRY, ListEntry);
+      
+      RtlFreeHeap(ProcessHeap, 0, BiosDiskEntry);
     }
 
   /* Release list head */
@@ -884,7 +1225,6 @@ PrintDiskData (PPARTLIST List,
 	       PDISKENTRY DiskEntry)
 {
   PPARTENTRY PartEntry;
-  PLIST_ENTRY Entry;
   CHAR LineBuffer[128];
   COORD coPos;
   ULONG Written;
@@ -964,17 +1304,12 @@ PrintDiskData (PPARTLIST List,
   PrintEmptyLine (List);
 
   /* Print partition lines*/
-  Entry = DiskEntry->PartListHead.Flink;
-  while (Entry != &DiskEntry->PartListHead)
+  LIST_FOR_EACH(PartEntry, &DiskEntry->PartListHead, PARTENTRY, ListEntry)
     {
-      PartEntry = CONTAINING_RECORD (Entry, PARTENTRY, ListEntry);
-
       /* Print disk entry */
       PrintPartitionData (List,
 			  DiskEntry,
 			  PartEntry);
-
-      Entry = Entry->Flink;
     }
 
   /* Print separator line */
@@ -1166,16 +1501,11 @@ DrawPartitionList (PPARTLIST List)
   /* print list entries */
   List->Line = - List->Offset;
 
-  Entry = List->DiskListHead.Flink;
-  while (Entry != &List->DiskListHead)
+  LIST_FOR_EACH(DiskEntry, &List->DiskListHead, DISKENTRY, ListEntry)
     {
-      DiskEntry = CONTAINING_RECORD (Entry, DISKENTRY, ListEntry);
-
       /* Print disk entry */
       PrintDiskData (List,
 		     DiskEntry);
-
-      Entry = Entry->Flink;
     }
 }
 
@@ -1944,7 +2274,8 @@ WritePartitionsToDisk (PPARTLIST List)
   WCHAR DstPath[MAX_PATH];
   UNICODE_STRING Name;
   HANDLE FileHandle;
-  PDISKENTRY DiskEntry;
+  PDISKENTRY DiskEntry1;
+  PDISKENTRY DiskEntry2;
   PPARTENTRY PartEntry;
   PLIST_ENTRY Entry1;
   PLIST_ENTRY Entry2;
@@ -1961,16 +2292,16 @@ WritePartitionsToDisk (PPARTLIST List)
   Entry1 = List->DiskListHead.Flink;
   while (Entry1 != &List->DiskListHead)
     {
-      DiskEntry = CONTAINING_RECORD (Entry1,
-				     DISKENTRY,
-				     ListEntry);
+      DiskEntry1 = CONTAINING_RECORD (Entry1,
+				      DISKENTRY,
+				      ListEntry);
 
-      if (DiskEntry->Modified == TRUE)
+      if (DiskEntry1->Modified == TRUE)
 	{
 	  /* Count partitioned entries */
 	  PartitionCount = 0;
-	  Entry2 = DiskEntry->PartListHead.Flink;
-	  while (Entry2 != &DiskEntry->PartListHead)
+	  Entry2 = DiskEntry1->PartListHead.Flink;
+	  while (Entry2 != &DiskEntry1->PartListHead)
 	    {
 	      PartEntry = CONTAINING_RECORD (Entry2,
 					     PARTENTRY,
@@ -1982,28 +2313,44 @@ WritePartitionsToDisk (PPARTLIST List)
 
 	      Entry2 = Entry2->Flink;
 	    }
-
-	  if (PartitionCount > 0)
-	    {
+          if (PartitionCount == 0)
+            {
+              DriveLayoutSize = sizeof (DRIVE_LAYOUT_INFORMATION) +
+		((4 - 1) * sizeof (PARTITION_INFORMATION));
+            }
+          else
+            {
 	      DriveLayoutSize = sizeof (DRIVE_LAYOUT_INFORMATION) +
 		((PartitionCount - 1) * sizeof (PARTITION_INFORMATION));
-	      DriveLayout = (PDRIVE_LAYOUT_INFORMATION)RtlAllocateHeap (ProcessHeap,
-									0,
-									DriveLayoutSize);
-	      if (DriveLayout == NULL)
-		{
-		  DPRINT1 ("RtlAllocateHeap() failed\n");
-		  return FALSE;
-		}
+            }
+	  DriveLayout = (PDRIVE_LAYOUT_INFORMATION)RtlAllocateHeap (ProcessHeap,
+								    0,
+                                                                    DriveLayoutSize);
+	  if (DriveLayout == NULL)
+	    {
+	      DPRINT1 ("RtlAllocateHeap() failed\n");
+	      return FALSE;
+	    }
 
-	      RtlZeroMemory (DriveLayout,
-			     DriveLayoutSize);
+	  RtlZeroMemory (DriveLayout,
+			 DriveLayoutSize);
 
+          if (PartitionCount == 0)
+            {
+              /* delete all partitions in the mbr */
+              DriveLayout->PartitionCount = 4;
+              for (Index = 0; Index < 4; Index++)
+                {
+                  DriveLayout->PartitionEntry[Index].RewritePartition = TRUE;
+                }
+            }
+          else
+	    {
 	      DriveLayout->PartitionCount = PartitionCount;
-
+              
 	      Index = 0;
-	      Entry2 = DiskEntry->PartListHead.Flink;
-	      while (Entry2 != &DiskEntry->PartListHead)
+	      Entry2 = DiskEntry1->PartListHead.Flink;
+	      while (Entry2 != &DiskEntry1->PartListHead)
 		{
 		  PartEntry = CONTAINING_RECORD (Entry2,
 						 PARTENTRY,
@@ -2018,74 +2365,127 @@ WritePartitionsToDisk (PPARTLIST List)
 
 		  Entry2 = Entry2->Flink;
 		}
+            }
+          if (DiskEntry1->Signature == 0)
+            {
+              LARGE_INTEGER SystemTime;
+              TIME_FIELDS TimeFields;
+              PUCHAR Buffer;
+              Buffer = (PUCHAR)&DiskEntry1->Signature;
 
-	      swprintf (DstPath,
-			L"\\Device\\Harddisk%d\\Partition0",
-			DiskEntry->DiskNumber);
-	      RtlInitUnicodeString (&Name,
-				    DstPath);
-	      InitializeObjectAttributes (&ObjectAttributes,
-					  &Name,
-					  0,
+              while (1)
+                {
+                  NtQuerySystemTime (&SystemTime);
+                  RtlTimeToTimeFields (&SystemTime, &TimeFields);
+
+                  Buffer[0] = (UCHAR)(TimeFields.Year & 0xFF) + (UCHAR)(TimeFields.Hour & 0xFF);
+                  Buffer[1] = (UCHAR)(TimeFields.Year >> 8) + (UCHAR)(TimeFields.Minute & 0xFF);
+                  Buffer[2] = (UCHAR)(TimeFields.Month & 0xFF) + (UCHAR)(TimeFields.Second & 0xFF);
+                  Buffer[3] = (UCHAR)(TimeFields.Day & 0xFF) + (UCHAR)(TimeFields.Milliseconds & 0xFF);
+
+                  if (DiskEntry1->Signature == 0)
+                    {
+                      continue;
+                    }
+
+                  /* check if the signature already exist */
+                  /* FIXME:
+                   *   Check also signatures from disks, which are 
+                   *   not visible (bootable) by the bios.
+                   */
+                  Entry2 = List->DiskListHead.Flink;
+                  while (Entry2 != &List->DiskListHead)
+                    {
+                      DiskEntry2 = CONTAINING_RECORD(Entry2, DISKENTRY, ListEntry);
+                      if (DiskEntry1 != DiskEntry2 &&
+                          DiskEntry1->Signature == DiskEntry2->Signature)
+                        {
+                          break;
+                        }
+                      Entry2 = Entry2->Flink;
+                    }
+                  if (Entry2 == &List->DiskListHead)
+                    {
+                      break;
+                    }
+                }
+              
+              /* set one partition entry to dirty, this will update the signature */
+              DriveLayout->PartitionEntry[0].RewritePartition = TRUE;
+
+            }
+
+          DriveLayout->Signature = DiskEntry1->Signature;
+
+
+	  swprintf (DstPath,
+		    L"\\Device\\Harddisk%d\\Partition0",
+		    DiskEntry1->DiskNumber);
+	  RtlInitUnicodeString (&Name,
+				DstPath);
+	  InitializeObjectAttributes (&ObjectAttributes,
+				      &Name,
+				      0,
+				      NULL,
+				      NULL);
+
+	  Status = NtOpenFile (&FileHandle,
+			       FILE_ALL_ACCESS,
+                               &ObjectAttributes,
+                               &Iosb,
+                               0,				   
+                               FILE_SYNCHRONOUS_IO_NONALERT);
+
+	  if (!NT_SUCCESS (Status))
+	    {
+	      DPRINT1 ("NtOpenFile() failed (Status %lx)\n", Status);
+	      return FALSE;
+	    }
+
+	  Status = NtDeviceIoControlFile (FileHandle,
 					  NULL,
-					  NULL);
-
-	      Status = NtOpenFile (&FileHandle,
-				   FILE_ALL_ACCESS,
-				   &ObjectAttributes,
-				   &Iosb,
-				   0,
-				   FILE_SYNCHRONOUS_IO_NONALERT);
-	      if (!NT_SUCCESS (Status))
-		{
-		  DPRINT1 ("NtOpenFile() failed (Status %lx)\n", Status);
-		  return FALSE;
-		}
-
-	      Status = NtDeviceIoControlFile (FileHandle,
-					      NULL,
-					      NULL,
-					      NULL,
-					      &Iosb,
-					      IOCTL_DISK_SET_DRIVE_LAYOUT,
-					      DriveLayout,
-					      DriveLayoutSize,
-					      NULL,
-					      0);
-	      if (!NT_SUCCESS (Status))
-		{
-		  DPRINT1 ("NtDeviceIoControlFile() failed (Status %lx)\n", Status);
-		  NtClose (FileHandle);
-		  return FALSE;
-		}
-
-	      RtlFreeHeap (ProcessHeap,
-			   0,
-			   DriveLayout);
-
+					  NULL,
+					  NULL,
+					  &Iosb,
+					  IOCTL_DISK_SET_DRIVE_LAYOUT,
+					  DriveLayout,
+					  DriveLayoutSize,
+					  NULL,
+					  0);
+	  if (!NT_SUCCESS (Status))
+	    {
+	      DPRINT1 ("NtDeviceIoControlFile() failed (Status %lx)\n", Status);
 	      NtClose (FileHandle);
+	      return FALSE;
+	    }
 
-	      /* Install MBR code if the disk is new */
-	      if (DiskEntry->NewDisk == TRUE)
-		{
-		  wcscpy (SrcPath, SourceRootPath.Buffer);
-		  wcscat (SrcPath, L"\\loader\\dosmbr.bin");
+	  RtlFreeHeap (ProcessHeap,
+		       0,
+		       DriveLayout);
 
-		  DPRINT1 ("Install MBR bootcode: %S ==> %S\n",
-			   SrcPath, DstPath);
+          NtClose (FileHandle);
 
-		  /* Install MBR bootcode */
-		  Status = InstallMbrBootCodeToDisk (SrcPath,
-						     DstPath);
-		  if (!NT_SUCCESS (Status))
-		    {
-		      DPRINT1 ("InstallMbrBootCodeToDisk() failed (Status %lx)\n",
-			       Status);
-		      return FALSE;
-		    }
+          /* Install MBR code if the disk is new */
+          if (DiskEntry1->NewDisk == TRUE &&
+              DiskEntry1->BiosDiskNumber == 0)
+	    {
+	      wcscpy (SrcPath, SourceRootPath.Buffer);
+	      wcscat (SrcPath, L"\\loader\\dosmbr.bin");
 
-		  DiskEntry->NewDisk = FALSE;
-		}
+	      DPRINT ("Install MBR bootcode: %S ==> %S\n",
+		       SrcPath, DstPath);
+
+	      /* Install MBR bootcode */
+	      Status = InstallMbrBootCodeToDisk (SrcPath,
+						 DstPath);
+	      if (!NT_SUCCESS (Status))
+	        {
+	          DPRINT1 ("InstallMbrBootCodeToDisk() failed (Status %lx)\n",
+	   	           Status);
+		  return FALSE;
+	        }
+
+	      DiskEntry1->NewDisk = FALSE;
 	    }
 	}
 
@@ -2094,5 +2494,43 @@ WritePartitionsToDisk (PPARTLIST List)
 
   return TRUE;
 }
+
+BOOL SetMountedDeviceValues(PPARTLIST List)
+{
+  PLIST_ENTRY Entry1, Entry2;
+  PDISKENTRY DiskEntry;
+  PPARTENTRY PartEntry;
+
+  if (List == NULL)
+    {
+      return FALSE;
+    }
+
+  Entry1 = List->DiskListHead.Flink;
+  while (Entry1 != &List->DiskListHead)
+    {
+      DiskEntry = CONTAINING_RECORD (Entry1,
+				     DISKENTRY,
+				     ListEntry);
+
+      Entry2 = DiskEntry->PartListHead.Flink;
+      while (Entry2 != &DiskEntry->PartListHead)
+        {
+          PartEntry = CONTAINING_RECORD(Entry2, PARTENTRY, ListEntry);
+          if (!PartEntry->Unpartitioned && PartEntry->DriveLetter)
+            {
+              if (!SetMountedDeviceValue(PartEntry->DriveLetter, DiskEntry->Signature, PartEntry->PartInfo[0].StartingOffset))
+                {
+                  return FALSE;
+                }
+            }
+          Entry2 = Entry2->Flink;
+        }
+      Entry1 = Entry1->Flink;
+    }
+  return TRUE;
+}
+
+
 
 /* EOF */

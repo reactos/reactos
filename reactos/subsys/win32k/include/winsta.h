@@ -41,7 +41,6 @@ typedef struct _WINSTATION_OBJECT
     ULONG Flags;
     struct _DESKTOP_OBJECT* ActiveDesktop;
     /* FIXME: Clipboard */
-    LIST_ENTRY HotKeyListHead;
 } WINSTATION_OBJECT, *PWINSTATION_OBJECT;
 
 extern WINSTATION_OBJECT *InputWindowStation;

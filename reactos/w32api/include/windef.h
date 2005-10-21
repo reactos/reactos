@@ -222,7 +222,11 @@ extern "C" {
 #define _finally __finally
 #endif
 
-typedef unsigned long DWORD;
+#ifndef DWORD_DEFINED
+#define DWORD_DEFINED
+    typedef unsigned long DWORD;
+#endif//DWORD_DEFINED
+
 typedef int WINBOOL,*PWINBOOL,*LPWINBOOL;
 /* FIXME: Is there a good solution to this? */
 #ifndef XFree86Server

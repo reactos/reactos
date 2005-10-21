@@ -22,6 +22,11 @@
 #define MAIN_MENU               0x201
 #define DIALOG_PAGESETUP        0x202
 #define ID_ACCEL                0x203
+#define DIALOG_ENCODING         0x204
+#define ID_ENCODING             0x205
+#define ID_EOLN                 0x206
+#define DIALOG_GOTO             0x207
+#define ID_LINENUMBER           0x208
 
 /* Commands */
 #define CMD_NEW                 0x100
@@ -43,9 +48,13 @@
 
 #define CMD_SEARCH              0x120
 #define CMD_SEARCH_NEXT         0x121
+#define CMD_REPLACE             0x122
+#define CMD_GOTO                0x123
 
 #define CMD_WRAP                0x119
 #define CMD_FONT                0x140
+
+#define CMD_STATUSBAR		0x150
 
 #define CMD_HELP_CONTENTS       0x130
 #define CMD_HELP_SEARCH         0x131
@@ -76,3 +85,13 @@
 
 #define STRING_NOTFOUND 0x17B
 #define STRING_OUT_OF_MEMORY 0x17C
+#define STRING_CANNOTFIND 0x17D
+
+#define STRING_ANSI 0x17E
+#define STRING_UNICODE 0x17F
+#define STRING_UNICODE_BE 0x180
+#define STRING_UTF8 0x181
+
+#define STRING_CRLF 0x182
+#define STRING_LF 0x183
+#define STRING_CR 0x184

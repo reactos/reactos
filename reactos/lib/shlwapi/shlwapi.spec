@@ -493,8 +493,8 @@
 493 stub -noname SHPropertyBag_ReadType
 494 stub -noname SHPropertyBag_ReadStr
 495 stub -noname SHPropertyBag_WriteStr
-496 stub -noname SHPropertyBag_ReadInt
-497 stub -noname SHPropertyBag_WriteInt
+496 stub -noname SHPropertyBag_ReadLONG
+497 stub -noname SHPropertyBag_WriteLONG
 498 stub -noname SHPropertyBag_ReadBOOLOld
 499 stub -noname SHPropertyBag_WriteBOOL
 
@@ -531,7 +531,7 @@
 535 stub -noname SHPropertyBag_Delete
 536 stub -noname IUnknown_QueryServicePropertyBag
 537 stub -noname SHBoolSystemParametersInfo
-538 stub -noname IUnknown_QueryServicePropertyBag
+538 stub -noname IUnknown_QueryServiceForWebBrowserApp
 539 stub -noname IUnknown_ShowBrowserBar
 540 stub -noname SHInvokeCommandOnContextMenu
 541 stub -noname SHInvokeCommandsOnContextMen
@@ -546,7 +546,7 @@
 550 stub -noname GetTemplateInfoFromHandle
 551 stub -noname IShellFolder_CompareIDs
 
-@ stdcall AssocCreate(long long long long ptr ptr)
+@ stdcall AssocCreate(double double ptr ptr)
 @ stdcall AssocIsDangerous(long)
 @ stdcall AssocQueryKeyA(long long str ptr ptr)
 @ stdcall AssocQueryKeyW(long long wstr ptr ptr)
@@ -768,11 +768,11 @@
 @ stdcall StrCpyW (ptr wstr)
 @ stdcall StrDupA (str)
 @ stdcall StrDupW (wstr)
-@ stdcall StrFormatByteSize64A(long long ptr long)
+@ stdcall StrFormatByteSize64A(double ptr long)
 @ stdcall StrFormatByteSizeA(long ptr long)
-@ stdcall StrFormatByteSizeW(long long ptr long)
-@ stdcall StrFormatKBSizeA(long long str long)
-@ stdcall StrFormatKBSizeW(long long wstr long)
+@ stdcall StrFormatByteSizeW(double ptr long)
+@ stdcall StrFormatKBSizeA(double str long)
+@ stdcall StrFormatKBSizeW(double wstr long)
 @ stdcall StrFromTimeIntervalA(ptr long long long)
 @ stdcall StrFromTimeIntervalW(ptr long long long)
 @ stdcall StrIsIntlEqualA(long str str long)

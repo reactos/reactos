@@ -23,7 +23,7 @@
 #include <windows.h>
 #include "regproc.h"
 
-static char *usage =
+static const char *usage =
     "Usage:\n"
     "    regedit filename\n"
     "    regedit /E filename [regpath]\n"
@@ -52,8 +52,7 @@ static char *usage =
     "\n"
     "The switches are case-insensitive, can be prefixed either by '-' or '/'.\n"
     "This program is command-line compatible with Microsoft Windows\n"
-    "regedit. The difference with Windows regedit - this application has\n"
-    "command-line interface only.\n";
+    "regedit.\n";
 
 typedef enum {
     ACTION_UNDEF, ACTION_ADD, ACTION_EXPORT, ACTION_DELETE
@@ -68,7 +67,7 @@ BOOL PerformRegAction(REGEDIT_ACTION action, LPSTR s);
  *   chu - the switch character in upper-case.
  *   s - the command line string where s points to the switch character.
  */
-void error_unknown_switch(char chu, char *s)
+static void error_unknown_switch(char chu, char *s)
 {
     if (isalpha(chu)) {
         fprintf(stderr,"%s: Undefined switch /%c!\n", getAppName(), chu);
@@ -195,6 +194,10 @@ BOOL PerformRegAction(REGEDIT_ACTION action, LPSTR s)
         }
     case ACTION_EXPORT: {
             CHAR filename[MAX_PATH];
+            LPCTSTR pszFilename;
+#ifdef UNICODE
+            WCHAR filename_wide[MAX_PATH];
+#endif
 
             filename[0] = '\0';
             get_file_name(&s, filename);
@@ -204,13 +207,21 @@ BOOL PerformRegAction(REGEDIT_ACTION action, LPSTR s)
                 exit(1);
             }
 
+#ifdef UNICODE
+            MultiByteToWideChar(CP_ACP, 0, filename, -1, filename_wide,
+                sizeof(filename_wide) / sizeof(filename_wide[0]));
+            pszFilename = filename_wide;
+#else
+            pszFilename = filename;
+#endif
+
             if (s[0]) {
                 CHAR reg_key_name[KEY_MAX_LEN];
 
                 get_file_name(&s, reg_key_name);
-                export_registry_key(filename, reg_key_name);
+                export_registry_key(pszFilename, reg_key_name);
             } else {
-                export_registry_key(filename, NULL);
+                export_registry_key(pszFilename, NULL);
             }
             break;
         }

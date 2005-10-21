@@ -48,8 +48,8 @@ int		isspace(int c);
 int		isdigit(int c);
 int		isxdigit(int c);
 
-char *	convert_to_ascii(char *buf, int c, ...);
-char *	convert_i64_to_ascii(char *buf, int c, ...);
+char *	convert_to_ascii(char *buf, int c, int num);
+char *	convert_i64_to_ascii(char *buf, int c, unsigned long long num);
 
 void	beep(void);
 void	delay(unsigned msec);

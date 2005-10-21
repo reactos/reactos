@@ -115,7 +115,15 @@ CleanupMenuImpl(VOID)
 
 PMENU_OBJECT FASTCALL UserGetMenuObject(HMENU hMenu)
 {
-   PMENU_OBJECT Menu = (PMENU_OBJECT)UserGetObject(&gHandleTable, hMenu, otMenu);
+   PMENU_OBJECT Menu;
+   
+   if (!hMenu)
+   {
+      SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
+      return NULL;
+   }
+   
+   Menu = (PMENU_OBJECT)UserGetObject(&gHandleTable, hMenu, otMenu);
    if (!Menu)
    {
       SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
@@ -824,7 +832,10 @@ IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINF
       }
       else
       {
-         MenuItem->fType |= MF_SEPARATOR;
+         if (0 == (MenuObject->MenuInfo.Flags & MF_SYSMENU))
+         {
+            MenuItem->fType |= MF_SEPARATOR;
+         }
          RtlInitUnicodeString(&MenuItem->Text, NULL);
       }
    }
@@ -1619,6 +1630,26 @@ NtUserGetMenuBarInfo(
 {
    UNIMPLEMENTED
 
+   switch (idObject)
+   {
+      case OBJID_CLIENT:
+      {
+         DPRINT1("OBJID_CLIENT, idItem = %d\n",idItem);
+         break;
+      }
+      case OBJID_MENU:
+      {
+         DPRINT1("OBJID_MENU, idItem = %d\n",idItem);
+         break;
+      }
+      case OBJID_SYSMENU:
+      {
+         DPRINT1("OBJID_SYSMENU, idItem = %d\n",idItem);
+         break;
+      }
+      default:
+         DPRINT1("Unknown idObject = %d, idItem = %d\n",idObject,idItem);
+   }
    return 0;
 }
 

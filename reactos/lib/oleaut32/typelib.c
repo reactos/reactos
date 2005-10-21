@@ -2155,7 +2155,7 @@ static CRITICAL_SECTION_DEBUG cache_section_debug =
 {
     0, 0, &cache_section,
     { &cache_section_debug.ProcessLocksList, &cache_section_debug.ProcessLocksList },
-      0, 0, { 0, (DWORD)(__FILE__ ": typelib loader cache") }
+      0, 0, { (DWORD_PTR)(__FILE__ ": typelib loader cache") }
 };
 static CRITICAL_SECTION cache_section = { &cache_section_debug, -1, 0, 0, 0, 0 };
 
@@ -3687,16 +3687,25 @@ static HRESULT WINAPI ITypeLib2_fnGetDocumentation(
         if(pBstrName)
         {
             if (This->Name)
-                if(!(*pBstrName = SysAllocString(This->Name))) goto memerr1;else;
+            {
+                if(!(*pBstrName = SysAllocString(This->Name)))
+                    goto memerr1;
+            }
             else
                 *pBstrName = NULL;
         }
         if(pBstrDocString)
         {
             if (This->DocString)
-                if(!(*pBstrDocString = SysAllocString(This->DocString))) goto memerr2;else;
+            {
+                if(!(*pBstrDocString = SysAllocString(This->DocString)))
+                    goto memerr2;
+            }
             else if (This->Name)
-                if(!(*pBstrDocString = SysAllocString(This->Name))) goto memerr2;else;
+            {
+                if(!(*pBstrDocString = SysAllocString(This->Name)))
+                    goto memerr2;
+            }
             else
                 *pBstrDocString = NULL;
         }
@@ -3707,7 +3716,10 @@ static HRESULT WINAPI ITypeLib2_fnGetDocumentation(
         if(pBstrHelpFile)
         {
             if (This->HelpFile)
-                if(!(*pBstrHelpFile = SysAllocString(This->HelpFile))) goto memerr3;else;
+            {
+                if(!(*pBstrHelpFile = SysAllocString(This->HelpFile)))
+                    goto memerr3;
+            }
             else
                 *pBstrHelpFile = NULL;
         }
@@ -4502,6 +4514,15 @@ _invoke(FARPROC func,CALLCONV callconv, int nrargs, DWORD *args) {
 		break;
 	case 11:
 		res = func(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],args[8],args[9],args[10]);
+		break;
+	case 12:
+		res = func(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],args[8],args[9],args[10],args[11]);
+		break;
+	case 13:
+		res = func(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],args[8],args[9],args[10],args[11],args[12]);
+		break;
+	case 14:
+		res = func(args[0],args[1],args[2],args[3],args[4],args[5],args[6],args[7],args[8],args[9],args[10],args[11],args[12],args[13]);
 		break;
 	default:
 		FIXME("unsupported number of arguments %d in stdcall\n",nrargs);

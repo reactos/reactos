@@ -358,7 +358,7 @@ static const struct hc_driver ohci_pci_hc_driver = {
 
 /*-------------------------------------------------------------------------*/
 
-const struct pci_device_id __devinitdata pci_ids [] = { {
+const struct pci_device_id __devinitdata ohci_pci_ids [] = { {
 
 	/* handle any USB OHCI controller */
 	.class =	(PCI_CLASS_SERIAL_USB << 8) | 0x10,
@@ -373,12 +373,12 @@ const struct pci_device_id __devinitdata pci_ids [] = { {
 
 	}, { /* end: all zeroes */ }
 };
-MODULE_DEVICE_TABLE (pci, pci_ids);
+MODULE_DEVICE_TABLE (pci, ohci_pci_ids);
 
 /* pci driver glue; this is a "new style" PCI driver module */
 struct pci_driver ohci_pci_driver = {
 	.name =		(char *) hcd_name,
-	.id_table =	pci_ids,
+	.id_table =	ohci_pci_ids,
 
 	.probe =	usb_hcd_pci_probe,
 	.remove =	usb_hcd_pci_remove,

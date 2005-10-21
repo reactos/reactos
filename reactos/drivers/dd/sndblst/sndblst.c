@@ -14,6 +14,9 @@
 #include <ddk/ntddk.h>
 #include "sndblst.h"
 
+NTSTATUS STDCALL
+DriverEntry(PDRIVER_OBJECT DriverObject,
+	    PUNICODE_STRING RegistryPath);
 
 /* INTERNAL VARIABLES ******************************************************/
 
@@ -22,7 +25,7 @@ UINT DeviceCount = 0;
 
 /* FUNCTIONS ***************************************************************/
 
-NTSTATUS InitDevice(
+static NTSTATUS InitDevice(
     IN PWSTR RegistryPath,
     IN PVOID Context)
 {

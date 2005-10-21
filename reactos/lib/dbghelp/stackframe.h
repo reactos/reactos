@@ -23,7 +23,10 @@
 
 #include <string.h>
 #include <winnt.h>
-#include <excpt.h>
+#define NTOS_MODE_USER
+#include <ndk/umtypes.h>
+#include <ndk/extypes.h>
+#include <ndk/rtlfuncs.h>
 
 #define SELECTOROF(ptr)     (HIWORD(ptr))
 #define OFFSETOF(ptr)       (LOWORD(ptr))
@@ -77,23 +80,5 @@ return -1;
 #define CURRENT_STACK16      ((STACK16FRAME*)MapSL(NtCurrentTeb()->cur_stack))
 #define CURRENT_DS           (CURRENT_STACK16->ds)
 
-/* Push bytes on the 16-bit stack of a thread;
- * return a segptr to the first pushed byte
- */
-static inline SEGPTR stack16_push( int size )
-{
-    STACK16FRAME *frame = CURRENT_STACK16;
-    memmove( (char*)frame - size, frame, sizeof(*frame) );
-    NtCurrentTeb()->cur_stack -= size;
-    return (SEGPTR)(NtCurrentTeb()->cur_stack + sizeof(*frame));
-}
-
-/* Pop bytes from the 16-bit stack of a thread */
-static inline void stack16_pop( int size )
-{
-    STACK16FRAME *frame = CURRENT_STACK16;
-    memmove( (char*)frame + size, frame, sizeof(*frame) );
-    NtCurrentTeb()->cur_stack += size;
-}
 
 #endif /* __WINE_STACKFRAME_H */

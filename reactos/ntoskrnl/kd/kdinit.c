@@ -27,6 +27,7 @@ KDP_DEBUG_MODE KdpDebugMode;
 PKDP_INIT_ROUTINE WrapperInitRoutine;
 KD_DISPATCH_TABLE WrapperTable;
 #endif
+BOOLEAN KdpEarlyBreak = FALSE;
 LIST_ENTRY KdProviders = {&KdProviders, &KdProviders};
 KD_DISPATCH_TABLE DispatchTable[KdMax];
 
@@ -43,7 +44,6 @@ KdpGetWrapperDebugMode(PCHAR Currentp2,
 {
     PCHAR p2 = Currentp2;
 
-#ifdef DBG
     /* Check for BOCHS Debugging */
     if (!_strnicmp(p2, "BOCHS", 5))
     {
@@ -75,7 +75,6 @@ KdpGetWrapperDebugMode(PCHAR Currentp2,
         /* Enable Debugging */
         KdDebuggerEnabled = TRUE;
     }
-#endif
 
 #ifdef KDBG
     /* Get the KDBG Settings and enable it */
@@ -181,6 +180,12 @@ KdInitSystem(ULONG BootPhase,
                 p2 += 10;
                 p2 = KdpGetDebugMode(p2);
                 p2 = KdpGetWrapperDebugMode(p2, LoaderBlock);
+            }
+            /* Check for early breakpoint */
+            else if (!_strnicmp(p2, "BREAK", 5))
+            {
+                p2 += 5;
+                KdpEarlyBreak = TRUE;
             }
             /* Check for Kernel Debugging Enable */
             else if (!_strnicmp(p2, "DEBUG", 5))

@@ -17,10 +17,16 @@
 /* DIRECT DRAW OBJECT                                                   */
 /************************************************************************/
 
-BOOL FASTCALL
-DD_Cleanup(PDD_DIRECTDRAW pDD)
+BOOL INTERNAL_CALL
+DD_Cleanup(PVOID ObjectBody)
 {
-	pDD->DrvDisableDirectDraw(pDD->Global.dhpdev);
+	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(ObjectBody, GDI_OBJECT_TYPE_DIRECTDRAW);
+	if (!pDirectDraw)
+		return FALSE;
+
+	pDirectDraw->DrvDisableDirectDraw(pDirectDraw->Global.dhpdev);
+
+	GDIOBJ_UnlockObjByPtr(pDirectDraw);
 	return TRUE;
 }
 
@@ -32,13 +38,14 @@ HANDLE STDCALL NtGdiDdCreateDirectDrawObject(
 	DD_SURFACECALLBACKS surface_callbacks;
 	DD_PALETTECALLBACKS palette_callbacks;
 
-	RtlZeroMemory(&callbacks, sizeof(callbacks));
-	callbacks.dwSize = sizeof(callbacks);
-	RtlZeroMemory(&surface_callbacks, sizeof(surface_callbacks));
-	surface_callbacks.dwSize = sizeof(surface_callbacks);
-	RtlZeroMemory(&palette_callbacks, sizeof(palette_callbacks));
-	palette_callbacks.dwSize = sizeof(palette_callbacks);
+	RtlZeroMemory(&callbacks, sizeof(DD_CALLBACKS));
+	callbacks.dwSize = sizeof(DD_CALLBACKS);
+	RtlZeroMemory(&surface_callbacks, sizeof(DD_SURFACECALLBACKS));
+	surface_callbacks.dwSize = sizeof(DD_SURFACECALLBACKS);
+	RtlZeroMemory(&palette_callbacks, sizeof(DD_PALETTECALLBACKS));
+	palette_callbacks.dwSize = sizeof(DD_PALETTECALLBACKS);
 
+	
 	DC *pDC = DC_LockDc(hdc);
 	if (!pDC)
 		return NULL;
@@ -49,7 +56,7 @@ HANDLE STDCALL NtGdiDdCreateDirectDrawObject(
 		DC_UnlockDc(pDC);
 		return NULL;
 	}
-
+	
 	BOOL success = pDC->DriverFunctions.EnableDirectDraw(
 		pDC->PDev, &callbacks, &surface_callbacks, &palette_callbacks);
 
@@ -61,7 +68,21 @@ HANDLE STDCALL NtGdiDdCreateDirectDrawObject(
 	}
 
 	HANDLE hDirectDraw = GDIOBJ_AllocObj(GDI_OBJECT_TYPE_DIRECTDRAW);
+	if (!hDirectDraw)
+	{
+		/* No more memmory */
+		DC_UnlockDc(pDC);
+		return NULL;
+	}
+
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDraw, GDI_OBJECT_TYPE_DIRECTDRAW);
+	if (!pDirectDraw)
+	{
+		/* invalid handle */
+		DC_UnlockDc(pDC);
+		return NULL;
+	}
+	
 
 	pDirectDraw->Global.dhpdev = pDC->PDev;
 	pDirectDraw->Local.lpGbl = &pDirectDraw->Global;
@@ -69,53 +90,15 @@ HANDLE STDCALL NtGdiDdCreateDirectDrawObject(
 	pDirectDraw->DrvGetDirectDrawInfo = pDC->DriverFunctions.GetDirectDrawInfo;
 	pDirectDraw->DrvDisableDirectDraw = pDC->DriverFunctions.DisableDirectDraw;
 
-	if (callbacks.dwFlags & DDHAL_CB32_CREATESURFACE)
-		pDirectDraw->DdCreateSurface = callbacks.CreateSurface;
-	if (callbacks.dwFlags & DDHAL_CB32_SETCOLORKEY)
-		pDirectDraw->DdDrvSetColorKey = callbacks.SetColorKey;
-	if (callbacks.dwFlags & DDHAL_CB32_WAITFORVERTICALBLANK)
-		pDirectDraw->DdWaitForVerticalBlank = callbacks.WaitForVerticalBlank;
-	if (callbacks.dwFlags & DDHAL_CB32_CANCREATESURFACE)
-		pDirectDraw->DdCanCreateSurface = callbacks.CanCreateSurface;
-	if (callbacks.dwFlags & DDHAL_CB32_CREATEPALETTE)
-		pDirectDraw->DdCreatePalette = callbacks.CreatePalette;
-	if (callbacks.dwFlags & DDHAL_CB32_GETSCANLINE)
-		pDirectDraw->DdGetScanLine = callbacks.GetScanLine;
-	if (callbacks.dwFlags & DDHAL_CB32_MAPMEMORY)
-		pDirectDraw->DdMapMemory = callbacks.MapMemory;
+    /* DD_CALLBACKS setup */	
+	RtlMoveMemory(&pDirectDraw->DD, &callbacks, sizeof(DD_CALLBACKS));
+	
+   	/* DD_SURFACECALLBACKS  setup*/	
+	RtlMoveMemory(&pDirectDraw->Surf, &surface_callbacks, sizeof(DD_SURFACECALLBACKS));
 
-	if (surface_callbacks.dwFlags & DDHAL_SURFCB32_DESTROYSURFACE)
-		pDirectDraw->DdDestroySurface = surface_callbacks.DestroySurface;
-	if (surface_callbacks.dwFlags & DDHAL_SURFCB32_FLIP)
-		pDirectDraw->DdFlip = surface_callbacks.Flip;
-	if (surface_callbacks.dwFlags & DDHAL_SURFCB32_SETCLIPLIST)
-		pDirectDraw->DdSetClipList = surface_callbacks.SetClipList;
-	if (surface_callbacks.dwFlags & DDHAL_SURFCB32_LOCK)
-		pDirectDraw->DdLock = surface_callbacks.Lock;
-	if (surface_callbacks.dwFlags & DDHAL_SURFCB32_UNLOCK)
-		pDirectDraw->DdUnlock = surface_callbacks.Unlock;
-	if (surface_callbacks.dwFlags & DDHAL_SURFCB32_BLT)
-		pDirectDraw->DdBlt = surface_callbacks.Blt;
-	if (surface_callbacks.dwFlags & DDHAL_SURFCB32_SETCOLORKEY)
-		pDirectDraw->DdSetColorKey = surface_callbacks.SetColorKey;
-	if (surface_callbacks.dwFlags & DDHAL_SURFCB32_ADDATTACHEDSURFACE)
-		pDirectDraw->DdAddAttachedSurface = surface_callbacks.AddAttachedSurface;
-	if (surface_callbacks.dwFlags & DDHAL_SURFCB32_GETBLTSTATUS)
-		pDirectDraw->DdGetBltStatus = surface_callbacks.GetBltStatus;
-	if (surface_callbacks.dwFlags & DDHAL_SURFCB32_GETFLIPSTATUS)
-		pDirectDraw->DdGetFlipStatus = surface_callbacks.GetFlipStatus;
-	if (surface_callbacks.dwFlags & DDHAL_SURFCB32_UPDATEOVERLAY)
-		pDirectDraw->DdUpdateOverlay = surface_callbacks.UpdateOverlay;
-	if (surface_callbacks.dwFlags & DDHAL_SURFCB32_SETOVERLAYPOSITION)
-		pDirectDraw->DdSetOverlayPosition = surface_callbacks.SetOverlayPosition;
-	if (surface_callbacks.dwFlags & DDHAL_SURFCB32_SETPALETTE)
-		pDirectDraw->DdSetPalette = surface_callbacks.SetPalette;
-
-	if (palette_callbacks.dwFlags & DDHAL_PALCB32_DESTROYPALETTE)
-		pDirectDraw->DdDestroyPalette = palette_callbacks.DestroyPalette;
-	if (palette_callbacks.dwFlags & DDHAL_PALCB32_SETENTRIES)
-		pDirectDraw->DdSetEntries = palette_callbacks.SetEntries;
-
+	/* DD_PALETTECALLBACKS setup*/	
+	RtlMoveMemory(&pDirectDraw->Pal, &surface_callbacks, sizeof(DD_PALETTECALLBACKS));
+	
 	GDIOBJ_UnlockObjByPtr(pDirectDraw);
 	DC_UnlockDc(pDC);
 
@@ -161,42 +144,407 @@ BOOL STDCALL NtGdiDdQueryDirectDrawObject(
 		return FALSE;
 	}
 
-	if (pHalInfo->lpD3DHALCallbacks)
+	if (pHalInfo)
 	{
-		RtlMoveMemory(puD3dCallbacks, pHalInfo->lpD3DHALCallbacks, sizeof(D3DNTHAL_CALLBACKS));
-		pDirectDraw->D3dContextCreate = puD3dCallbacks->ContextCreate;
-		pDirectDraw->D3dContextDestroy = puD3dCallbacks->ContextDestroy;
-	}
+       RtlMoveMemory(&pDirectDraw->Hal, pHalInfo, sizeof(DD_HALINFO));
 
-	if (pHalInfo->lpD3DGlobalDriverData)
-	{
-		RtlMoveMemory(puD3dDriverData, pHalInfo->lpD3DGlobalDriverData, sizeof(D3DNTHAL_GLOBALDRIVERDATA));
-	}
+	   if (pHalInfo->lpD3DHALCallbacks)
+	   {
+		 RtlMoveMemory(puD3dCallbacks, pHalInfo->lpD3DHALCallbacks, sizeof(D3DNTHAL_CALLBACKS));		
+	   }
 
-	if (pHalInfo->lpD3DBufCallbacks)
-	{
-		RtlMoveMemory(puD3dBufferCallbacks, pHalInfo->lpD3DBufCallbacks, sizeof(DD_D3DBUFCALLBACKS));
-		pDirectDraw->DdCanCreateD3DBuffer = puD3dBufferCallbacks->CanCreateD3DBuffer;
-		pDirectDraw->DdCreateD3DBuffer = puD3dBufferCallbacks->CreateD3DBuffer;
-		pDirectDraw->DdDestroyD3DBuffer = puD3dBufferCallbacks->DestroyD3DBuffer;
-		pDirectDraw->DdLockD3DBuffer = puD3dBufferCallbacks->LockD3DBuffer;
-		pDirectDraw->DdUnlockD3DBuffer = puD3dBufferCallbacks->UnlockD3DBuffer;
-	}
-
-
+	   if (pHalInfo->lpD3DGlobalDriverData)
+	   {
+		 RtlMoveMemory(puD3dDriverData, pHalInfo->lpD3DGlobalDriverData, sizeof(D3DNTHAL_GLOBALDRIVERDATA));
+	   }
+	   if (pHalInfo->lpD3DBufCallbacks)
+	   {
+		 RtlMoveMemory(puD3dBufferCallbacks, pHalInfo->lpD3DBufCallbacks, sizeof(DD_D3DBUFCALLBACKS));
+	   }
+       	   	
+	 }
+        
 	GDIOBJ_UnlockObjByPtr(pDirectDraw);
 
 	return TRUE;
 }
 
+
+DWORD STDCALL NtGdiDdGetDriverInfo(
+    HANDLE hDirectDrawLocal,
+    PDD_GETDRIVERINFODATA puGetDriverInfoData)
+
+{
+	DWORD  ddRVal;
+
+	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
+	if (pDirectDraw == NULL) 
+		return DDHAL_DRIVER_NOTHANDLED;
+
+	if   (!(pDirectDraw->Hal.dwFlags & DDHALINFO_GETDRIVERINFOSET))
+	     ddRVal = DDHAL_DRIVER_NOTHANDLED;
+	else
+	     ddRVal = pDirectDraw->Hal.GetDriverInfo(puGetDriverInfoData);
+   
+    GDIOBJ_UnlockObjByPtr(pDirectDraw);
+
+	return ddRVal;
+}
+
+/************************************************************************/
+/* DD CALLBACKS                                                         */
+/* FIXME NtGdiDdCreateSurface we do not call to ddCreateSurface         */
+/************************************************************************/
+
+DWORD STDCALL NtGdiDdCreateSurface(
+    HANDLE hDirectDrawLocal,
+    HANDLE *hSurface,
+    DDSURFACEDESC *puSurfaceDescription,
+    DD_SURFACE_GLOBAL *puSurfaceGlobalData,
+    DD_SURFACE_LOCAL *puSurfaceLocalData,
+    DD_SURFACE_MORE *puSurfaceMoreData,
+    PDD_CREATESURFACEDATA puCreateSurfaceData,
+    HANDLE *puhSurface
+)
+{
+	DWORD  ddRVal = DDHAL_DRIVER_NOTHANDLED;
+	
+
+	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
+	if (pDirectDraw == NULL) 
+		return DDHAL_DRIVER_NOTHANDLED;
+
+	if (!(pDirectDraw->DD.dwFlags & DDHAL_CB32_CANCREATESURFACE))
+		ddRVal = DDHAL_DRIVER_NOTHANDLED;
+	else
+	{	  
+	   ddRVal = pDirectDraw->DD.CreateSurface(puCreateSurfaceData);	 
+	}
+
+	GDIOBJ_UnlockObjByPtr(pDirectDraw);	
+	return ddRVal;
+}
+
+DWORD STDCALL NtGdiDdWaitForVerticalBlank(
+    HANDLE hDirectDrawLocal,
+    PDD_WAITFORVERTICALBLANKDATA puWaitForVerticalBlankData
+)
+{
+	DWORD  ddRVal;
+	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
+	if (pDirectDraw == NULL) 
+		return DDHAL_DRIVER_NOTHANDLED;
+
+	if (!(pDirectDraw->DD.dwFlags & DDHAL_CB32_WAITFORVERTICALBLANK))
+		ddRVal = DDHAL_DRIVER_NOTHANDLED;
+	else	
+  	    ddRVal = pDirectDraw->DD.WaitForVerticalBlank(puWaitForVerticalBlankData);
+
+    GDIOBJ_UnlockObjByPtr(pDirectDraw);
+	return ddRVal;
+}
+
+DWORD STDCALL NtGdiDdCanCreateSurface(
+    HANDLE hDirectDrawLocal,
+    PDD_CANCREATESURFACEDATA puCanCreateSurfaceData
+)
+{
+	DWORD  ddRVal;
+
+	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
+	if (pDirectDraw == NULL) 
+		return DDHAL_DRIVER_NOTHANDLED;
+
+	if (!(pDirectDraw->DD.dwFlags & DDHAL_CB32_CANCREATESURFACE))
+		ddRVal = DDHAL_DRIVER_NOTHANDLED;
+	else	
+	    ddRVal = pDirectDraw->DD.CanCreateSurface(puCanCreateSurfaceData);
+
+	GDIOBJ_UnlockObjByPtr(pDirectDraw);
+	return ddRVal;
+}
+
+DWORD STDCALL NtGdiDdGetScanLine(
+    HANDLE hDirectDrawLocal,
+    PDD_GETSCANLINEDATA puGetScanLineData
+)
+{
+	DWORD  ddRVal;
+
+	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
+	if (pDirectDraw == NULL) 
+		return DDHAL_DRIVER_NOTHANDLED;
+
+	if (!(pDirectDraw->DD.dwFlags & DDHAL_CB32_GETSCANLINE))
+		ddRVal = DDHAL_DRIVER_NOTHANDLED;
+	else	
+	    ddRVal = pDirectDraw->DD.GetScanLine(puGetScanLineData);
+
+	GDIOBJ_UnlockObjByPtr(pDirectDraw);
+	return ddRVal;
+}
+
+
+
+/************************************************************************/
+/* Surface CALLBACKS                                                    */
+/* FIXME                                                                */
+/* NtGdiDdDestroySurface                                                */ 
+/************************************************************************/
+
+DWORD STDCALL NtGdiDdDestroySurface(
+    HANDLE hSurface,
+    BOOL bRealDestroy
+)
+{	
+	DWORD  ddRVal  = DDHAL_DRIVER_NOTHANDLED;
+
+	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurface, GDI_OBJECT_TYPE_DIRECTDRAW);
+	if (pDirectDraw == NULL) 
+		return DDHAL_DRIVER_NOTHANDLED;
+
+	if (!(pDirectDraw->Surf.dwFlags & DDHAL_SURFCB32_DESTROYSURFACE))
+		ddRVal = DDHAL_DRIVER_NOTHANDLED;
+	else	
+	{
+		DD_DESTROYSURFACEDATA DestroySurf; 
+	
+		/* FIXME 
+		 * bRealDestroy 
+		 * are we doing right ??
+		 */
+        DestroySurf.lpDD =  &pDirectDraw->Global;
+
+        DestroySurf.lpDDSurface = hSurface;  // ?
+        DestroySurf.DestroySurface = pDirectDraw->Surf.DestroySurface;		
+		
+        ddRVal = pDirectDraw->Surf.DestroySurface(&DestroySurf); 
+	}
+
+    GDIOBJ_UnlockObjByPtr(pDirectDraw);
+    return ddRVal;			
+}
+
+DWORD STDCALL NtGdiDdFlip(
+    HANDLE hSurfaceCurrent,
+    HANDLE hSurfaceTarget,
+    HANDLE hSurfaceCurrentLeft,
+    HANDLE hSurfaceTargetLeft,
+    PDD_FLIPDATA puFlipData
+)
+{
+	DWORD  ddRVal;
+
+	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurfaceTarget, GDI_OBJECT_TYPE_DIRECTDRAW);
+	if (pDirectDraw == NULL) 
+		return DDHAL_DRIVER_NOTHANDLED;
+
+	if (!(pDirectDraw->Surf.dwFlags & DDHAL_SURFCB32_FLIP))
+		ddRVal = DDHAL_DRIVER_NOTHANDLED;
+	else
+        ddRVal = pDirectDraw->Surf.Flip(puFlipData);
+
+    GDIOBJ_UnlockObjByPtr(pDirectDraw);
+    return ddRVal;		
+}
+
+DWORD STDCALL NtGdiDdLock(
+    HANDLE hSurface,
+    PDD_LOCKDATA puLockData,
+    HDC hdcClip
+)
+{
+	DWORD  ddRVal;
+
+	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurface, GDI_OBJECT_TYPE_DIRECTDRAW);
+	if (pDirectDraw == NULL) 
+		return DDHAL_DRIVER_NOTHANDLED;
+
+	if (!(pDirectDraw->Surf.dwFlags & DDHAL_SURFCB32_LOCK))
+		ddRVal = DDHAL_DRIVER_NOTHANDLED;
+	else
+        ddRVal = pDirectDraw->Surf.Lock(puLockData);
+
+    GDIOBJ_UnlockObjByPtr(pDirectDraw);
+    return ddRVal;		
+}
+
+DWORD STDCALL NtGdiDdUnlock(
+    HANDLE hSurface,
+    PDD_UNLOCKDATA puUnlockData
+)
+{
+	DWORD  ddRVal;
+
+	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurface, GDI_OBJECT_TYPE_DIRECTDRAW);
+	if (pDirectDraw == NULL) 
+		return DDHAL_DRIVER_NOTHANDLED;
+
+	if (!(pDirectDraw->Surf.dwFlags & DDHAL_SURFCB32_UNLOCK))
+		ddRVal = DDHAL_DRIVER_NOTHANDLED;
+	else
+        ddRVal = pDirectDraw->Surf.Unlock(puUnlockData);
+
+    GDIOBJ_UnlockObjByPtr(pDirectDraw);    
+	return ddRVal;
+}
+
+DWORD STDCALL NtGdiDdBlt(
+    HANDLE hSurfaceDest,
+    HANDLE hSurfaceSrc,
+    PDD_BLTDATA puBltData
+)
+{
+    DWORD  ddRVal;
+
+    PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurfaceDest, GDI_OBJECT_TYPE_DIRECTDRAW);
+	if (pDirectDraw == NULL) 
+		return DDHAL_DRIVER_NOTHANDLED;
+
+	if (!(pDirectDraw->Surf.dwFlags & DDHAL_SURFCB32_BLT))
+		ddRVal = DDHAL_DRIVER_NOTHANDLED;
+	else
+        ddRVal = pDirectDraw->Surf.Blt(puBltData);
+
+    GDIOBJ_UnlockObjByPtr(pDirectDraw);
+    return ddRVal;
+   }
+
+DWORD STDCALL NtGdiDdSetColorKey(
+    HANDLE hSurface,
+    PDD_SETCOLORKEYDATA puSetColorKeyData
+)
+{
+	DWORD  ddRVal;
+
+	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurface, GDI_OBJECT_TYPE_DIRECTDRAW);
+	if (pDirectDraw == NULL) 
+		return DDHAL_DRIVER_NOTHANDLED;
+
+	if (!(pDirectDraw->Surf.dwFlags & DDHAL_SURFCB32_SETCOLORKEY))
+		ddRVal = DDHAL_DRIVER_NOTHANDLED;
+	else
+        ddRVal = pDirectDraw->Surf.SetColorKey(puSetColorKeyData);
+
+    GDIOBJ_UnlockObjByPtr(pDirectDraw);
+    return ddRVal;	
+}
+
+
+DWORD STDCALL NtGdiDdAddAttachedSurface(
+    HANDLE hSurface,
+    HANDLE hSurfaceAttached,
+    PDD_ADDATTACHEDSURFACEDATA puAddAttachedSurfaceData
+)
+{
+	DWORD  ddRVal;
+
+	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurfaceAttached, GDI_OBJECT_TYPE_DIRECTDRAW);
+	if (pDirectDraw == NULL) 
+		return DDHAL_DRIVER_NOTHANDLED;
+
+	if (!(pDirectDraw->Surf.dwFlags & DDHAL_SURFCB32_ADDATTACHEDSURFACE))
+		ddRVal = DDHAL_DRIVER_NOTHANDLED;
+	else
+        ddRVal = pDirectDraw->Surf.AddAttachedSurface(puAddAttachedSurfaceData);
+
+    GDIOBJ_UnlockObjByPtr(pDirectDraw);
+    return ddRVal;	
+}
+
+DWORD STDCALL NtGdiDdGetBltStatus(
+    HANDLE hSurface,
+    PDD_GETBLTSTATUSDATA puGetBltStatusData
+)
+{
+	DWORD  ddRVal;
+
+	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurface, GDI_OBJECT_TYPE_DIRECTDRAW);
+	if (pDirectDraw == NULL) 
+		return DDHAL_DRIVER_NOTHANDLED;
+
+	if (!(pDirectDraw->Surf.dwFlags & DDHAL_SURFCB32_GETBLTSTATUS))
+		ddRVal = DDHAL_DRIVER_NOTHANDLED;
+	else
+        ddRVal = pDirectDraw->Surf.GetBltStatus(puGetBltStatusData);
+
+    GDIOBJ_UnlockObjByPtr(pDirectDraw);
+    return ddRVal;		
+}
+
+DWORD STDCALL NtGdiDdGetFlipStatus(
+    HANDLE hSurface,
+    PDD_GETFLIPSTATUSDATA puGetFlipStatusData
+)
+{
+    DWORD  ddRVal;
+
+	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurface, GDI_OBJECT_TYPE_DIRECTDRAW);
+	if (pDirectDraw == NULL) 
+		return DDHAL_DRIVER_NOTHANDLED;
+
+	if (!(pDirectDraw->Surf.dwFlags & DDHAL_SURFCB32_GETFLIPSTATUS))
+		ddRVal = DDHAL_DRIVER_NOTHANDLED;
+	else
+        ddRVal = pDirectDraw->Surf.GetFlipStatus(puGetFlipStatusData);
+
+    GDIOBJ_UnlockObjByPtr(pDirectDraw);
+    return ddRVal;		
+}
+
+DWORD STDCALL NtGdiDdUpdateOverlay(
+    HANDLE hSurfaceDestination,
+    HANDLE hSurfaceSource,
+    PDD_UPDATEOVERLAYDATA puUpdateOverlayData
+)
+{
+	DWORD  ddRVal;
+
+    PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurfaceDestination, GDI_OBJECT_TYPE_DIRECTDRAW);
+	if (pDirectDraw == NULL) 
+		return DDHAL_DRIVER_NOTHANDLED;
+
+	if (!(pDirectDraw->Surf.dwFlags & DDHAL_SURFCB32_UPDATEOVERLAY))
+		ddRVal = DDHAL_DRIVER_NOTHANDLED;
+	else
+        ddRVal = pDirectDraw->Surf.UpdateOverlay(puUpdateOverlayData);
+
+    GDIOBJ_UnlockObjByPtr(pDirectDraw);
+    return ddRVal;
+}
+
+DWORD STDCALL NtGdiDdSetOverlayPosition(
+    HANDLE hSurfaceSource,
+    HANDLE hSurfaceDestination,
+    PDD_SETOVERLAYPOSITIONDATA puSetOverlayPositionData
+)
+{
+	DWORD  ddRVal;
+
+    PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurfaceDestination, GDI_OBJECT_TYPE_DIRECTDRAW);
+	if (pDirectDraw == NULL) 
+		return DDHAL_DRIVER_NOTHANDLED;
+
+	if (!(pDirectDraw->Surf.dwFlags & DDHAL_SURFCB32_SETOVERLAYPOSITION))
+		ddRVal = DDHAL_DRIVER_NOTHANDLED;
+	else
+        ddRVal = pDirectDraw->Surf.SetOverlayPosition(puSetOverlayPositionData);
+
+    GDIOBJ_UnlockObjByPtr(pDirectDraw);
+    return ddRVal;
+}
+
+
 /************************************************************************/
 /* SURFACE OBJECT                                                       */
 /************************************************************************/
 
-BOOL FASTCALL
-DDSURF_Cleanup(PDD_SURFACE pDDSurf)
+BOOL INTERNAL_CALL
+DDSURF_Cleanup(PVOID pDDSurf)
 {
-	//FIXME: implement
+	/* FIXME: implement 
+	 * PDD_SURFACE pDDSurf = PVOID pDDSurf
+	 */
 	return TRUE;
 }
 
@@ -243,6 +591,13 @@ BOOL STDCALL NtGdiDdDeleteSurfaceObject(
 	return GDIOBJ_FreeObj(hSurface, GDI_OBJECT_TYPE_DD_SURFACE);
 }
 
+
+
+/************************************************************************/
+/* DIRECT DRAW SURFACR END                                                   */
+/************************************************************************/
+
+
 /*
 BOOL STDCALL NtGdiDdAttachSurface(
     HANDLE hSurfaceFrom,
@@ -270,64 +625,17 @@ BOOL STDCALL NtGdiDdAttachSurface(
 }
 */
 
-
-
-DWORD STDCALL NtGdiDdGetDriverInfo(
+DWORD STDCALL NtGdiDdGetAvailDriverMemory(
     HANDLE hDirectDrawLocal,
-    PDD_GETDRIVERINFODATA puGetDriverInfoData)
-
-{
-	DWORD  pdwNumHeaps;
-	VIDEOMEMORY  *pvmList = NULL;
-    DWORD  pdwNumFourCC;
-    DWORD  *pdwFourCC = NULL;
-	DWORD  ddRVal;
-
-	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
-
-
-	 ddRVal = pDirectDraw->DrvGetDirectDrawInfo(
-                 pDirectDraw->Global.dhpdev,(PDD_HALINFO) puGetDriverInfoData,
-                 &pdwNumHeaps, pvmList, &pdwNumFourCC, pdwFourCC);
-
-    GDIOBJ_UnlockObjByPtr(pDirectDraw);
-
-	return ddRVal;
-}
-
-
-
-DWORD STDCALL NtGdiDdWaitForVerticalBlank(
-    HANDLE hDirectDrawLocal,
-    PDD_WAITFORVERTICALBLANKDATA puWaitForVerticalBlankData
+    PDD_GETAVAILDRIVERMEMORYDATA puGetAvailDriverMemoryData
 )
 {
-	DWORD  ddRVal;
-	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
-
-	puWaitForVerticalBlankData->lpDD = pDirectDraw->Local.lpGbl;
-
-	ddRVal = pDirectDraw->DdWaitForVerticalBlank(puWaitForVerticalBlankData);
-
-    GDIOBJ_UnlockObjByPtr(pDirectDraw);
-
-	return ddRVal;
-}
-
-
-DWORD STDCALL NtGdiDdCanCreateSurface(
-    HANDLE hDirectDrawLocal,
-    PDD_CANCREATESURFACEDATA puCanCreateSurfaceData
-)
-{
-	DWORD  ddRVal;
+	DWORD  ddRVal = DDHAL_DRIVER_NOTHANDLED;
 
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
 
-	puCanCreateSurfaceData->lpDD = pDirectDraw->Local.lpGbl;
-
-	ddRVal = pDirectDraw->DdCanCreateSurface(puCanCreateSurfaceData);
-
+   // ddRVal = pDirectDraw->DdGetAvailDriverMemory(puGetAvailDriverMemoryData); 
+ 
 	GDIOBJ_UnlockObjByPtr(pDirectDraw);
 
 	return ddRVal;
@@ -335,27 +643,22 @@ DWORD STDCALL NtGdiDdCanCreateSurface(
 
 
 
-DWORD STDCALL NtGdiDdBlt(
-    HANDLE hSurfaceDest,
-    HANDLE hSurfaceSrc,
-    PDD_BLTDATA puBltData
+
+DWORD STDCALL NtGdiDdSetExclusiveMode(
+    HANDLE hDirectDraw,
+    PDD_SETEXCLUSIVEMODEDATA puSetExclusiveModeData
 )
 {
- DWORD  ddRVal;
+	DWORD  ddRVal;
 
- PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurfaceDest, GDI_OBJECT_TYPE_DIRECTDRAW);
+	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDraw, GDI_OBJECT_TYPE_DIRECTDRAW);
 
- puBltData->lpDDDestSurface =  hSurfaceDest;
- puBltData->lpDDSrcSurface  =  hSurfaceSrc;
- puBltData->lpDD = pDirectDraw->Local.lpGbl;
+    ddRVal = pDirectDraw->DdSetExclusiveMode(puSetExclusiveModeData);
 
- ddRVal = pDirectDraw->DdBlt(puBltData);
-
- GDIOBJ_UnlockObjByPtr(pDirectDraw);
-
- return ddRVal;
+    GDIOBJ_UnlockObjByPtr(pDirectDraw);
+    
+	return ddRVal;	
 }
-
 
 
 

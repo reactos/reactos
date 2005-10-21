@@ -608,9 +608,35 @@ serialize_param(
     }
     case VT_PTR: {
 	DWORD cookie;
-	BOOL        derefhere;
+	BOOL        derefhere = TRUE;
 
-	derefhere = (tdesc->u.lptdesc->vt != VT_USERDEFINED);
+	if (tdesc->u.lptdesc->vt == VT_USERDEFINED) {
+	    ITypeInfo	*tinfo2;
+	    TYPEATTR	*tattr;
+
+	    hres = ITypeInfo_GetRefTypeInfo(tinfo,tdesc->u.lptdesc->u.hreftype,&tinfo2);
+	    if (hres) {
+		ERR("Could not get typeinfo of hreftype %lx for VT_USERDEFINED.\n",tdesc->u.lptdesc->u.hreftype);
+		return hres;
+	    }
+	    ITypeInfo_GetTypeAttr(tinfo2,&tattr);
+	    switch (tattr->typekind) {
+	    case TKIND_ENUM:	/* confirmed */
+	    case TKIND_RECORD:	/* FIXME: mostly untested */
+		derefhere=TRUE;
+		break;
+	    case TKIND_ALIAS:	/* FIXME: untested */
+	    case TKIND_DISPATCH:	/* will be done in VT_USERDEFINED case */
+	    case TKIND_INTERFACE:	/* will be done in VT_USERDEFINED case */
+		derefhere=FALSE;
+		break;
+	    default:
+		FIXME("unhandled switch cases tattr->typekind %d\n", tattr->typekind);
+		derefhere=FALSE;
+		break;
+	    }
+	    ITypeInfo_Release(tinfo2);
+	}
 
 	if (debugout) TRACE_(olerelay)("*");
 	/* Write always, so the other side knows when it gets a NULL pointer.
@@ -1184,9 +1210,35 @@ deserialize_param(
 	}
 	case VT_PTR: {
 	    DWORD	cookie;
-	    BOOL        derefhere = 0;
+	    BOOL        derefhere = TRUE;
 
-	    derefhere = (tdesc->u.lptdesc->vt != VT_USERDEFINED);
+	    if (tdesc->u.lptdesc->vt == VT_USERDEFINED) {
+		ITypeInfo	*tinfo2;
+		TYPEATTR	*tattr;
+
+		hres = ITypeInfo_GetRefTypeInfo(tinfo,tdesc->u.lptdesc->u.hreftype,&tinfo2);
+		if (hres) {
+		    ERR("Could not get typeinfo of hreftype %lx for VT_USERDEFINED.\n",tdesc->u.lptdesc->u.hreftype);
+		    return hres;
+		}
+		ITypeInfo_GetTypeAttr(tinfo2,&tattr);
+		switch (tattr->typekind) {
+		case TKIND_ENUM:	/* confirmed */
+		case TKIND_RECORD:	/* FIXME: mostly untested */
+		    derefhere=TRUE;
+		    break;
+		case TKIND_ALIAS:	/* FIXME: untested */
+		case TKIND_DISPATCH:	/* will be done in VT_USERDEFINED case */
+		case TKIND_INTERFACE:	/* will be done in VT_USERDEFINED case */
+		    derefhere=FALSE;
+		    break;
+		default:
+		    FIXME("unhandled switch cases tattr->typekind %d\n", tattr->typekind);
+		    derefhere=FALSE;
+		    break;
+		}
+		ITypeInfo_Release(tinfo2);
+	    }
 	    /* read it in all cases, we need to know if we have 
 	     * NULL pointer or not.
 	     */
@@ -1915,13 +1967,14 @@ PSFacBuf_CreateProxy(
 	}
     }
     proxy->lpvtbl2	= &tmproxyvtable;
-    /* 1 reference for the proxy and 1 for the object */
-    proxy->ref		= 2;
+    /* one reference for the proxy */
+    proxy->ref		= 1;
     proxy->tinfo	= tinfo;
     memcpy(&proxy->iid,riid,sizeof(*riid));
     proxy->chanbuf      = 0;
     *ppv		= (LPVOID)proxy;
     *ppProxy		= (IRpcProxyBuffer *)&(proxy->lpvtbl2);
+    IUnknown_AddRef((IUnknown *)*ppv);
     return S_OK;
 }
 

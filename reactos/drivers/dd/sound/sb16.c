@@ -14,6 +14,10 @@
 
 #include <ddk/ntddk.h>
 
+NTSTATUS STDCALL
+DriverEntry(PDRIVER_OBJECT DriverObject,
+	    PUNICODE_STRING RegistryPath);
+
 #define NDEBUG
 #include <debug.h>
 

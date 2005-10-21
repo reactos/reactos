@@ -42,20 +42,31 @@
 #ifndef DHCPD_H
 #define DHCPD_H
 
+#if defined (_MSC_VER)
+#pragma warning( once : 4103 ) 
+#endif
+
+#if !defined(ssize_t)
+#define ssize_t  long
+#endif
+
 #include <winsock2.h>
 #include <iphlpapi.h>
-#include "stdint.h"
+#include <stdint.h>
 
 #define IFNAMSIZ MAX_INTERFACE_NAME_LEN
 
 #define ETH_ALEN 6
 #define ETHER_ADDR_LEN  ETH_ALEN
+
+#include <pshpack1.h>
 struct ether_header
 {
   u_int8_t  ether_dhost[ETH_ALEN];      /* destination eth addr */
   u_int8_t  ether_shost[ETH_ALEN];      /* source ether addr    */
   u_int16_t ether_type;                 /* packet type ID field */
-} __attribute__ ((__packed__));
+} ;
+#include <poppack.h>
 
 struct ip
   {
@@ -92,9 +103,17 @@ struct udphdr {
 #define USE_SOCKET_RECEIVE
 #define USE_SOCKET_SEND
 
+#if defined (_MSC_VER)
+#include <types.h>
+#include <stat.h>
+#include <time.h>
+#include <stddef.h>
+#else
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#endif
+
 #include <ctype.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -286,12 +305,14 @@ void do_packet(struct interface_info *, struct dhcp_packet *,
     int, unsigned int, struct iaddr, struct hardware *);
 
 /* errwarn.c */
+#if defined (__GNUC__)
 extern int warnings_occurred;
 void error(char *, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
 int warning(char *, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
 int note(char *, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
 int debug(char *, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
 int parse_warn(char *, ...) __attribute__ ((__format__ (__printf__, 1, 2)));
+#endif
 
 /* conflex.c */
 extern int lexline, lexchar;

@@ -231,7 +231,7 @@ FrLdrSetupPae(ULONG Magic)
  *     will be used by the Kernel.
  *
  *--*/
-VOID
+static VOID
 FASTCALL
 FrLdrGetKernelBase(VOID)
 {

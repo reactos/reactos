@@ -241,7 +241,6 @@ ExecuteRuntimeAsserts(VOID)
     ASSERT(FIELD_OFFSET(KPROCESS, DirectoryTableBase) == KPROCESS_DIRECTORY_TABLE_BASE);
     ASSERT(FIELD_OFFSET(KPROCESS, IopmOffset) == KPROCESS_IOPM_OFFSET);
     ASSERT(FIELD_OFFSET(KPROCESS, LdtDescriptor) == KPROCESS_LDT_DESCRIPTOR0);
-    ASSERT(FIELD_OFFSET(KTRAP_FRAME, Reserved9) == KTRAP_FRAME_RESERVED9);
     ASSERT(FIELD_OFFSET(KV86M_TRAP_FRAME, SavedExceptionStack) == TF_SAVED_EXCEPTION_STACK);
     ASSERT(FIELD_OFFSET(KV86M_TRAP_FRAME, regs) == TF_REGS);
     ASSERT(FIELD_OFFSET(KV86M_TRAP_FRAME, orig_ebp) == TF_ORIG_EBP);
@@ -616,7 +615,7 @@ ExpInitializeExecutive(VOID)
 
     /* Report all resources used by hal */
     HalReportResourceUsage();
-    
+
     /* Clear the screen to blue */
     HalInitSystem(2, (PLOADER_PARAMETER_BLOCK)&KeLoaderBlock);
 
@@ -636,7 +635,8 @@ ExpInitializeExecutive(VOID)
     ExpInitTimeZoneInfo();
 
     /* Enter the kernel debugger before starting up the boot drivers */
-    if (KdDebuggerEnabled) KdbEnter();
+    if (KdDebuggerEnabled && KdpEarlyBreak)
+        DbgBreakPoint();
 
     /* Setup Drivers and Root Device Node */
     IoInit2(BootLog);

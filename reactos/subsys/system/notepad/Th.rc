@@ -42,26 +42,21 @@ MAIN_MENU MENU
   MENUITEM "วาง\tCtrl+V",    CMD_PASTE
   MENUITEM "ลบ\tDel",      CMD_DELETE
   MENUITEM SEPARATOR
+  MENUITEM "ค้นหา\tCtrl+F",   CMD_SEARCH
+  MENUITEM "ค้นหาต่อไป\tF3",  CMD_SEARCH_NEXT
+  MENUITEM SEPARATOR
   MENUITEM "เลือกทั้งหมด\tCtrl+A",       CMD_SELECT_ALL
   MENUITEM "วันที่/\tF5",    CMD_TIME_DATE
   MENUITEM SEPARATOR
   MENUITEM "ห่อบรรทัดยาว",  CMD_WRAP
   MENUITEM "รูปแบบดัวอักษร...",          CMD_FONT
  }
- POPUP "คันหา" {
-  MENUITEM "ค้นหา\tCtrl+F",   CMD_SEARCH
-  MENUITEM "ค้นหาต่อไป\tF3",  CMD_SEARCH_NEXT
- }
  POPUP "ช่วยเหลีอ" {
   MENUITEM "เนื้อหา",         CMD_HELP_CONTENTS
   MENUITEM "ค้นหา...",        CMD_HELP_SEARCH
   MENUITEM "เกี่ยวกับช่วยเหลีอ",     CMD_HELP_ON_HELP
   MENUITEM SEPARATOR
-  POPUP "รายละเอียด..." {
-   MENUITEM "ใบอนุญาต", CMD_LICENSE
-   MENUITEM "ไม่มี WARRANTY", CMD_NO_WARRANTY
-   MENUITEM "เกี่ยวกับ Wine... ", CMD_ABOUT_WINE
-  }
+  MENUITEM "รายละเอียด...", CMD_ABOUT_WINE
  }
 }
 

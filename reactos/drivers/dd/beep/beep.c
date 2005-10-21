@@ -18,6 +18,10 @@
 #define NDEBUG
 #include <debug.h>
 
+NTSTATUS STDCALL
+DriverEntry(PDRIVER_OBJECT DriverObject,
+            PUNICODE_STRING RegistryPath);
+
 /* TYEPEDEFS ***************************************************************/
 
 typedef struct _BEEP_DEVICE_EXTENSION

@@ -57,6 +57,7 @@ static const WCHAR cszTempFolder[]= {'T','e','m','p','F','o','l','d','e','r',0};
 
 typedef struct tagMSIRUNNINGACTION
 {
+    struct list entry;
     HANDLE handle;
     BOOL   process;
     LPWSTR name;
@@ -153,10 +154,8 @@ UINT ACTION_CustomAction(MSIPACKAGE *package,LPCWSTR action, BOOL execute)
         {
             FIXME("Rollback only action... rollbacks not supported yet\n");
             schedule_action(package, ROLLBACK_SCRIPT, action);
-            HeapFree(GetProcessHeap(),0,source);
-            HeapFree(GetProcessHeap(),0,target);
-            msiobj_release(&row->hdr);
-            return ERROR_SUCCESS;
+            rc = ERROR_SUCCESS;
+            goto end;
         }
         if (!execute)
         {
@@ -171,10 +170,8 @@ UINT ACTION_CustomAction(MSIPACKAGE *package,LPCWSTR action, BOOL execute)
                 schedule_action(package, INSTALL_SCRIPT, action);
             }
 
-            HeapFree(GetProcessHeap(),0,source);
-            HeapFree(GetProcessHeap(),0,target);
-            msiobj_release(&row->hdr);
-            return ERROR_SUCCESS;
+            rc = ERROR_SUCCESS;
+            goto end;
         }
         else
         {
@@ -183,15 +180,19 @@ UINT ACTION_CustomAction(MSIPACKAGE *package,LPCWSTR action, BOOL execute)
             static const WCHAR szActionData[] = {
             'C','u','s','t','o','m','A','c','t','i','o','n','D','a','t','a',0};
             static const WCHAR szBlank[] = {0};
-            LPWSTR actiondata = load_dynamic_property(package,action,NULL);
+            LPWSTR actiondata = msi_dup_property( package, action );
             if (actiondata)
                 MSI_SetPropertyW(package,szActionData,actiondata);
             else
                 MSI_SetPropertyW(package,szActionData,szBlank);
+            msi_free(actiondata);
         }
     }
     else if (!check_execution_scheduling_options(package,action,type))
-        return ERROR_SUCCESS;
+    {
+        rc = ERROR_SUCCESS;
+        goto end;
+    }
 
     switch (type & CUSTOM_ACTION_TYPE_MASK)
     {
@@ -216,12 +217,12 @@ UINT ACTION_CustomAction(MSIPACKAGE *package,LPCWSTR action, BOOL execute)
         case 35: /* Directory set with formatted text. */
             deformat_string(package,target,&deformated);
             MSI_SetTargetPathW(package, source, deformated);
-            HeapFree(GetProcessHeap(),0,deformated);
+            msi_free(deformated);
             break;
         case 51: /* Property set with formatted text. */
             deformat_string(package,target,&deformated);
             rc = MSI_SetPropertyW(package,source,deformated);
-            HeapFree(GetProcessHeap(),0,deformated);
+            msi_free(deformated);
             break;
         default:
             FIXME("UNHANDLED ACTION TYPE %i (%s %s)\n",
@@ -229,8 +230,9 @@ UINT ACTION_CustomAction(MSIPACKAGE *package,LPCWSTR action, BOOL execute)
              debugstr_w(target));
     }
 
-    HeapFree(GetProcessHeap(),0,source);
-    HeapFree(GetProcessHeap(),0,target);
+end:
+    msi_free(source);
+    msi_free(target);
     msiobj_release(&row->hdr);
     return rc;
 }
@@ -243,8 +245,7 @@ static UINT store_binary_to_temp(MSIPACKAGE *package, LPCWSTR source,
     static const WCHAR f1[] = {'m','s','i',0};
     WCHAR fmt[MAX_PATH];
 
-    if (MSI_GetPropertyW(package, cszTempFolder, fmt, &sz) 
-        != ERROR_SUCCESS)
+    if (MSI_GetPropertyW(package, cszTempFolder, fmt, &sz) != ERROR_SUCCESS)
         GetTempPathW(MAX_PATH,fmt);
 
     if (GetTempFileNameW(fmt,f1,0,tmp_file) == 0)
@@ -300,22 +301,15 @@ static UINT store_binary_to_temp(MSIPACKAGE *package, LPCWSTR source,
 static void file_running_action(MSIPACKAGE* package, HANDLE Handle, 
                                 BOOL process, LPCWSTR name)
 {
-    MSIRUNNINGACTION *newbuf = NULL;
-    INT count;
-    count = package->RunningActionCount;
-    package->RunningActionCount++;
-    if (count != 0)
-        newbuf = HeapReAlloc(GetProcessHeap(),0,
-                        package->RunningAction,
-                        package->RunningActionCount * sizeof(MSIRUNNINGACTION));
-    else
-        newbuf = HeapAlloc(GetProcessHeap(),0, sizeof(MSIRUNNINGACTION));
+    MSIRUNNINGACTION *action;
 
-    newbuf[count].handle = Handle;
-    newbuf[count].process = process;
-    newbuf[count].name = strdupW(name);
+    action = msi_alloc( sizeof(MSIRUNNINGACTION) );
 
-    package->RunningAction = newbuf;
+    action->handle = Handle;
+    action->process = process;
+    action->name = strdupW(name);
+
+    list_add_tail( &package->RunningActions, &action->entry );
 }
 
 static UINT process_action_return_value(UINT type, HANDLE ThreadHandle)
@@ -373,7 +367,7 @@ static UINT process_handle(MSIPACKAGE* package, UINT type,
         }
 
         CloseHandle(ThreadHandle);
-        if (ProcessHandle);
+        if (ProcessHandle)
             CloseHandle(ProcessHandle);
         if (finished)
             *finished = TRUE;
@@ -395,7 +389,7 @@ static UINT process_handle(MSIPACKAGE* package, UINT type,
         else
         {
             CloseHandle(ThreadHandle);
-            if (ProcessHandle);
+            if (ProcessHandle)
                 CloseHandle(ProcessHandle);
         }
         if (finished)
@@ -436,11 +430,11 @@ static DWORD WINAPI ACTION_CallDllFunction(thread_struct *stuff)
             MSIPACKAGE *package = stuff->package;
 
             TRACE("Calling function %s\n", proc);
-            hPackage = msiobj_findhandle( &package->hdr );
-            if (hPackage )
+            hPackage = alloc_msihandle( &package->hdr );
+            if (hPackage)
             {
-                rc = fn(hPackage);
-                msiobj_release( &package->hdr );
+                rc = fn( hPackage );
+                MsiCloseHandle( hPackage );
             }
             else
                 ERR("Handle for object %p not found\n", package );
@@ -448,15 +442,15 @@ static DWORD WINAPI ACTION_CallDllFunction(thread_struct *stuff)
         else
             ERR("Cannot load functon\n");
 
-        HeapFree(GetProcessHeap(),0,proc);
+        msi_free(proc);
         FreeLibrary(hModule);
     }
     else
         ERR("Unable to load library\n");
     msiobj_release( &stuff->package->hdr );
-    HeapFree(GetProcessHeap(),0,stuff->source);
-    HeapFree(GetProcessHeap(),0,stuff->target);
-    HeapFree(GetProcessHeap(), 0, stuff);
+    msi_free(stuff->source);
+    msi_free(stuff->target);
+    msi_free(stuff);
     return rc;
 }
 
@@ -498,7 +492,7 @@ static UINT HANDLE_CustomType1(MSIPACKAGE *package, LPCWSTR source,
         strcatW(tmp_file,dot);
     } 
 
-    info = HeapAlloc( GetProcessHeap(), 0, sizeof(*info) );
+    info = msi_alloc( sizeof(*info) );
     msiobj_addref( &package->hdr );
     info->package = package;
     info->target = strdupW(target);
@@ -541,7 +535,7 @@ static UINT HANDLE_CustomType2(MSIPACKAGE *package, LPCWSTR source,
     if (deformated)
         len += strlenW(deformated);
    
-    cmd = HeapAlloc(GetProcessHeap(),0,sizeof(WCHAR)*len);
+    cmd = msi_alloc(sizeof(WCHAR)*len);
 
     strcpyW(cmd,tmp_file);
     if (deformated)
@@ -549,7 +543,7 @@ static UINT HANDLE_CustomType2(MSIPACKAGE *package, LPCWSTR source,
         strcatW(cmd,spc);
         strcatW(cmd,deformated);
 
-        HeapFree(GetProcessHeap(),0,deformated);
+        msi_free(deformated);
     }
 
     TRACE("executing exe %s \n",debugstr_w(cmd));
@@ -557,7 +551,7 @@ static UINT HANDLE_CustomType2(MSIPACKAGE *package, LPCWSTR source,
     rc = CreateProcessW(NULL, cmd, NULL, NULL, FALSE, 0, NULL,
                   c_collen, &si, &info);
 
-    HeapFree(GetProcessHeap(),0,cmd);
+    msi_free(cmd);
 
     if ( !rc )
     {
@@ -602,7 +596,7 @@ static UINT HANDLE_CustomType18(MSIPACKAGE *package, LPCWSTR source,
         len += strlenW(deformated);
     len += 2;
 
-    cmd = HeapAlloc(GetProcessHeap(),0,len * sizeof(WCHAR));
+    cmd = msi_alloc(len * sizeof(WCHAR));
 
     lstrcpyW( cmd, file->TargetPath);
     if (deformated)
@@ -610,7 +604,7 @@ static UINT HANDLE_CustomType18(MSIPACKAGE *package, LPCWSTR source,
         strcatW(cmd, spc);
         strcatW(cmd, deformated);
 
-        HeapFree(GetProcessHeap(),0,deformated);
+        msi_free(deformated);
     }
 
     TRACE("executing exe %s \n",debugstr_w(cmd));
@@ -618,7 +612,7 @@ static UINT HANDLE_CustomType18(MSIPACKAGE *package, LPCWSTR source,
     rc = CreateProcessW(NULL, cmd, NULL, NULL, FALSE, 0, NULL,
                   c_collen, &si, &info);
 
-    HeapFree(GetProcessHeap(),0,cmd);
+    msi_free(cmd);
     
     if ( !rc )
     {
@@ -639,7 +633,7 @@ static UINT HANDLE_CustomType19(MSIPACKAGE *package, LPCWSTR source,
       'S','E','L','E','C','T',' ','`','M','e','s','s','a','g','e','`',' ',
       'F','R','O','M',' ','`','E','r','r','o','r','`',' ',
       'W','H','E','R','E',' ','`','E','r','r','o','r','`',' ','=',' ',
-      '\'','%','s','\'',0
+      '%','s',0
     };
     MSIRECORD *row = 0;
     LPWSTR deformated = NULL;
@@ -657,7 +651,7 @@ static UINT HANDLE_CustomType19(MSIPACKAGE *package, LPCWSTR source,
     else
         MessageBoxW( NULL, deformated, NULL, MB_OK );
 
-    HeapFree( GetProcessHeap(), 0, deformated );
+    msi_free( deformated );
 
     return ERROR_FUNCTION_FAILED;
 }
@@ -672,13 +666,12 @@ static UINT HANDLE_CustomType50(MSIPACKAGE *package, LPCWSTR source,
     WCHAR *deformated;
     WCHAR *cmd;
     INT len;
-    UINT prc;
     static const WCHAR spc[] = {' ',0};
 
     memset(&si,0,sizeof(STARTUPINFOW));
     memset(&info,0,sizeof(PROCESS_INFORMATION));
 
-    prop = load_dynamic_property(package,source,&prc);
+    prop = msi_dup_property( package, source );
     if (!prop)
         return ERROR_SUCCESS;
 
@@ -687,7 +680,7 @@ static UINT HANDLE_CustomType50(MSIPACKAGE *package, LPCWSTR source,
     if (deformated)
          len += strlenW(deformated);
 
-    cmd = HeapAlloc(GetProcessHeap(),0,sizeof(WCHAR)*len);
+    cmd = msi_alloc(sizeof(WCHAR)*len);
 
     strcpyW(cmd,prop);
     if (deformated)
@@ -695,15 +688,16 @@ static UINT HANDLE_CustomType50(MSIPACKAGE *package, LPCWSTR source,
         strcatW(cmd,spc);
         strcatW(cmd,deformated);
 
-        HeapFree(GetProcessHeap(),0,deformated);
+        msi_free(deformated);
     }
+    msi_free(prop);
 
     TRACE("executing exe %s \n",debugstr_w(cmd));
 
     rc = CreateProcessW(NULL, cmd, NULL, NULL, FALSE, 0, NULL,
                   c_collen, &si, &info);
 
-    HeapFree(GetProcessHeap(),0,cmd);
+    msi_free(cmd);
     
     if ( !rc )
     {
@@ -711,10 +705,7 @@ static UINT HANDLE_CustomType50(MSIPACKAGE *package, LPCWSTR source,
         return ERROR_SUCCESS;
     }
 
-    prc = process_handle(package, type, info.hThread, info.hProcess, action, 
-                         NULL);
-
-    return prc;
+    return process_handle(package, type, info.hThread, info.hProcess, action, NULL);
 }
 
 static UINT HANDLE_CustomType34(MSIPACKAGE *package, LPCWSTR source,
@@ -734,7 +725,7 @@ static UINT HANDLE_CustomType34(MSIPACKAGE *package, LPCWSTR source,
         return ERROR_FUNCTION_FAILED;
 
     SetCurrentDirectoryW(filename);
-    HeapFree(GetProcessHeap(),0,filename);
+    msi_free(filename);
 
     deformat_string(package,target,&deformated);
 
@@ -745,7 +736,7 @@ static UINT HANDLE_CustomType34(MSIPACKAGE *package, LPCWSTR source,
 
     rc = CreateProcessW(NULL, deformated, NULL, NULL, FALSE, 0, NULL,
                   c_collen, &si, &info);
-    HeapFree(GetProcessHeap(),0,deformated);
+    msi_free(deformated);
 
     if ( !rc )
     {
@@ -762,29 +753,30 @@ static UINT HANDLE_CustomType34(MSIPACKAGE *package, LPCWSTR source,
 
 void ACTION_FinishCustomActions(MSIPACKAGE* package)
 {
-    INT i;
+    struct list *item, *cursor;
     DWORD rc;
 
-    for (i = 0; i < package->RunningActionCount; i++)
+    LIST_FOR_EACH_SAFE( item, cursor, &package->RunningActions )
     {
-        TRACE("Checking on action %s\n",
-               debugstr_w(package->RunningAction[i].name));
+        MSIRUNNINGACTION *action = LIST_ENTRY( item, MSIRUNNINGACTION, entry );
 
-        if (package->RunningAction[i].process)
-            GetExitCodeProcess(package->RunningAction[i].handle, &rc);
+        TRACE("Checking on action %s\n", debugstr_w(action->name));
+
+        list_remove( &action->entry );
+
+        if (action->process)
+            GetExitCodeProcess( action->handle, &rc );
         else
-            GetExitCodeThread(package->RunningAction[i].handle, &rc);
+            GetExitCodeThread( action->handle, &rc );
 
         if (rc == STILL_ACTIVE)
         {
-            TRACE("Waiting on action %s\n",
-               debugstr_w(package->RunningAction[i].name));
-            msi_dialog_check_messages(package->RunningAction[i].handle);
+            TRACE("Waiting on action %s\n", debugstr_w( action->name) );
+            msi_dialog_check_messages( action->handle );
         }
 
-        HeapFree(GetProcessHeap(),0,package->RunningAction[i].name);
-        CloseHandle(package->RunningAction[i].handle);
+        CloseHandle( action->handle );
+        msi_free( action->name );
+        msi_free( action );
     }
-
-    HeapFree(GetProcessHeap(),0,package->RunningAction);
 }

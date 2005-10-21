@@ -14,7 +14,7 @@
 /* Null-terminated array of ports to probe. This is "semi-risky" (Don Becker).  */
 ULONG ProbeAddressList[] = { 0x280, 0x300, 0x320, 0x340, 0x360, 0x380, 0 };
 
-BOOLEAN ProbeAddressForNIC(
+static BOOLEAN ProbeAddressForNIC(
     ULONG address)
 /*
  * FUNCTION: Probes an address for a NIC
@@ -88,7 +88,7 @@ BOOLEAN NICCheck(
 }
 
 
-BOOLEAN NICTestAddress(
+static BOOLEAN NICTestAddress(
     PNIC_ADAPTER Adapter,
     ULONG Address)
 /*
@@ -118,7 +118,7 @@ BOOLEAN NICTestAddress(
 }
 
 
-BOOLEAN NICTestRAM(
+static BOOLEAN NICTestRAM(
     PNIC_ADAPTER Adapter)
 /*
  * FUNCTION: Finds out how much RAM a NIC has
@@ -163,7 +163,7 @@ BOOLEAN NICTestRAM(
 }
 
 
-VOID NICSetPhysicalAddress(
+static VOID NICSetPhysicalAddress(
     PNIC_ADAPTER Adapter)
 /*
  * FUNCTION: Initializes the physical address on the NIC
@@ -188,7 +188,7 @@ VOID NICSetPhysicalAddress(
 }
 
 
-VOID NICSetMulticastAddressMask(
+static VOID NICSetMulticastAddressMask(
     PNIC_ADAPTER Adapter)
 /*
  * FUNCTION: Initializes the multicast address mask on the NIC
@@ -213,7 +213,7 @@ VOID NICSetMulticastAddressMask(
 }
 
 
-BOOLEAN NICReadSAPROM(
+static BOOLEAN NICReadSAPROM(
     PNIC_ADAPTER Adapter)
 /*
  * FUNCTION: Reads the Station Address PROM data from the NIC
@@ -531,7 +531,7 @@ NDIS_STATUS NICReset(
 }
 
 
-VOID NICStartTransmit(
+static VOID NICStartTransmit(
     PNIC_ADAPTER Adapter)
 /*
  * FUNCTION: Starts transmitting a packet
@@ -574,7 +574,7 @@ VOID NICStartTransmit(
 }
 
 
-VOID NICSetBoundaryPage(
+static VOID NICSetBoundaryPage(
     PNIC_ADAPTER Adapter)
 /*
  * FUNCTION: Sets the boundary page on the adapter to be one less than NextPacket
@@ -592,7 +592,7 @@ VOID NICSetBoundaryPage(
 }
 
 
-VOID NICGetCurrentPage(
+static VOID NICGetCurrentPage(
     PNIC_ADAPTER Adapter)
 /*
  * FUNCTION: Retrieves the current page from the adapter
@@ -883,7 +883,7 @@ VOID NICWriteData(
 }
 
 
-VOID NICIndicatePacket(
+static VOID NICIndicatePacket(
     PNIC_ADAPTER Adapter)
 /*
  * FUNCTION: Indicates a packet to the wrapper
@@ -944,7 +944,7 @@ VOID NICIndicatePacket(
 }
 
 
-VOID NICReadPacket(
+static VOID NICReadPacket(
     PNIC_ADAPTER Adapter)
 /*
  * FUNCTION: Reads a full packet from the receive buffer ring
@@ -991,7 +991,7 @@ VOID NICReadPacket(
 }
 
 
-VOID NICWritePacket(
+static VOID NICWritePacket(
     PNIC_ADAPTER Adapter)
 /*
  * FUNCTION: Writes a full packet to the transmit buffer ring
@@ -1060,7 +1060,7 @@ VOID NICWritePacket(
 }
 
 
-BOOLEAN NICPrepareForTransmit(
+static BOOLEAN NICPrepareForTransmit(
     PNIC_ADAPTER Adapter)
 /*
  * FUNCTION: Prepares a packet for transmission
@@ -1142,7 +1142,7 @@ VOID NICTransmit(
 }
 
 
-VOID HandleReceive(
+static VOID HandleReceive(
     PNIC_ADAPTER Adapter)
 /*
  * FUNCTION: Handles reception of a packet
@@ -1254,7 +1254,7 @@ VOID HandleReceive(
 }
 
 
-VOID HandleTransmit(
+static VOID HandleTransmit(
     PNIC_ADAPTER Adapter)
 /*
  * FUNCTION: Handles transmission of a packet

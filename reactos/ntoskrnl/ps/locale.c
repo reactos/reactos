@@ -40,7 +40,9 @@ static LANGID PsInstallUILanguageId = 0;
  * Returns:
  *    None.
  */
-VOID INIT_FUNCTION
+VOID
+INIT_FUNCTION
+NTAPI
 PiInitDefaultLocale(VOID)
 {
    OBJECT_ATTRIBUTES ObjectAttributes;

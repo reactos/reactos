@@ -15,15 +15,12 @@
 #ifndef _CONFIG_H_INCLUDED_
 #define _CONFIG_H_INCLUDED_
 
-
-#ifndef __REACTOS__
-#define WIN32_LEAN_AND_MEAN
-#endif /* __REACTOS__ */
-
-
 /* Define to enable debugging code */
 //#define _DEBUG
 
+#define WIN32_LEAN_AND_MEAN
+
+//#define NT4_INTERNAL_COMMANDS
 
 /* Define to enable the alias command, and aliases.*/
 #define FEATURE_ALIASES
@@ -56,7 +53,7 @@
 /* #define LOCALE_GERMAN */    /* German locale */
 /* #define LOCALE_DEFAULT */   /* United States locale */
 
-#ifndef __REACTOS__
+#ifdef NT4_INTERNAL_COMMANDS
 #define INCLUDE_CMD_ACTIVATE
 #endif
 #define INCLUDE_CMD_ATTRIB
@@ -75,7 +72,7 @@
 #define INCLUDE_CMD_MEMORY
 #define INCLUDE_CMD_MKDIR
 #define INCLUDE_CMD_MOVE
-#ifndef __REACTOS__
+#ifdef NT4_INTERNAL_COMMANDS
 #define INCLUDE_CMD_MSGBOX
 #endif
 #define INCLUDE_CMD_PATH
@@ -95,7 +92,7 @@
 #define INCLUDE_CMD_BEEP
 #define INCLUDE_CMD_VERIFY
 #define INCLUDE_CMD_VOL
-#ifndef __REACTOS__
+#ifdef NT4_INTERNAL_COMMANDS
 #define INCLUDE_CMD_WINDOW
 #endif
 

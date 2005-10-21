@@ -1,4 +1,4 @@
-<module name="kbdbe" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbdbe.dll" warnings="true">
+<module name="kbdbe" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbdbe.dll" allowwarnings="true">
 	<importlibrary definition="kbdbe.def" />
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />

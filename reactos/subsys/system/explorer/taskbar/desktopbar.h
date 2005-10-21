@@ -31,7 +31,7 @@
 
 
 #define	DESKTOPBARBAR_HEIGHT	(GetSystemMetrics(SM_CYSIZE) + 5 * GetSystemMetrics(SM_CYEDGE))
-#define	REBARBAND_HEIGHT	(GetSystemMetrics(SM_CYSIZE) + 2 * GetSystemMetrics(SM_CYEDGE))
+#define	REBARBAND_HEIGHT		(GetSystemMetrics(SM_CYSIZE) + 2 * GetSystemMetrics(SM_CYEDGE))
 
 
 #define	IDC_START				0x1000
@@ -116,4 +116,16 @@ protected:
 #else
 	const UINT WM_TASKBARCREATED;
 #endif
+};
+
+
+ /// special "Start" button with one click activation
+struct StartButton : public PictureButton
+{
+	typedef PictureButton super;
+
+	StartButton(HWND hwnd);
+
+protected:
+	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 };

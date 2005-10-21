@@ -166,8 +166,10 @@ NTSTATUS tdiGetSetOfThings( HANDLE tcpFile,
                                   &allocationSizeForEntityArray,
                                   NULL );
 
-        if( !NT_SUCCESS(status) ) {
-            return status;
+        if(!status)
+        {
+            DPRINT("IOCTL Failed\n");
+            return STATUS_UNSUCCESSFUL;
         }
         
         arraySize = allocationSizeForEntityArray;
@@ -195,9 +197,10 @@ NTSTATUS tdiGetSetOfThings( HANDLE tcpFile,
         HeapFree( GetProcessHeap(), 0, entitySet );
         entitySet = 0;
 
-        if( !NT_SUCCESS(status) ) {
-            DPRINT("TdiGetSetOfThings() => %08x\n", (int)status);
-            return status;
+        if(!status)
+        {
+            DPRINT("IOCTL Failed\n");
+            return STATUS_UNSUCCESSFUL;
         }
 
         DPRINT("TdiGetSetOfThings(): Array changed size: %d -> %d.\n",
@@ -241,10 +244,11 @@ NTSTATUS tdiGetMibForIfEntity
                               &returnSize,
                               NULL );
 
-    if( !NT_SUCCESS(status) ) {
-        TRACE("failure: %08x\n", status);
-        return status;
-    } else TRACE("Success.\n");
+    if(!status)
+    {
+            DPRINT("IOCTL Failed\n");
+            return STATUS_UNSUCCESSFUL;
+    }
 
     DPRINT("TdiGetMibForIfEntity() => {\n"
            "  if_index ....................... %x\n"
@@ -304,13 +308,14 @@ static BOOL isInterface( TDIEntityID *if_maybe ) {
 
 static BOOL isLoopback( HANDLE tcpFile, TDIEntityID *loop_maybe ) {
     IFEntrySafelySized entryInfo;
+    NTSTATUS status;
 
-    tdiGetMibForIfEntity( tcpFile, 
-                          loop_maybe,
-                          &entryInfo );
+    status = tdiGetMibForIfEntity( tcpFile, 
+                                   loop_maybe,
+                                   &entryInfo );
 
-    return !entryInfo.ent.if_type || 
-        entryInfo.ent.if_type == IFENT_SOFTWARE_LOOPBACK;
+    return NT_SUCCESS(status) && (!entryInfo.ent.if_type || 
+        entryInfo.ent.if_type == IFENT_SOFTWARE_LOOPBACK);
 }
 
 NTSTATUS tdiGetEntityType( HANDLE tcpFile, TDIEntityID *ent, PULONG type ) {
@@ -338,7 +343,7 @@ NTSTATUS tdiGetEntityType( HANDLE tcpFile, TDIEntityID *ent, PULONG type ) {
 
     DPRINT("TdiGetEntityType() => %08x %08x\n", *type, status);
 
-    return status;
+    return (status ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
 }
 
 static NTSTATUS getInterfaceInfoSet( HANDLE tcpFile, 
@@ -358,6 +363,7 @@ static NTSTATUS getInterfaceInfoSet( HANDLE tcpFile,
     if( infoSetInt ) {
         for( i = 0; i < numEntities; i++ ) {
             if( isInterface( &entIDSet[i] ) ) {
+                infoSetInt[curInterf].entity_id = entIDSet[i];
                 status = tdiGetMibForIfEntity
                     ( tcpFile,
                       &entIDSet[i],
@@ -388,12 +394,18 @@ static NTSTATUS getInterfaceInfoSet( HANDLE tcpFile,
                 }
             }
         }
+
+        if (NT_SUCCESS(status)) {
+            *infoSet = infoSetInt;
+            *numInterfaces = curInterf;
+        } else {
+            HeapFree(GetProcessHeap(), 0, infoSetInt);
+        }
+
+        return status;
+    } else {
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
-
-    *infoSet = infoSetInt;
-    *numInterfaces = curInterf;
-
-    return STATUS_SUCCESS;
 }
 
 static DWORD getNumInterfacesInt(BOOL onlyNonLoopback)
@@ -418,8 +430,6 @@ static DWORD getNumInterfacesInt(BOOL onlyNonLoopback)
         return 0;
     }
 
-    closeTcpFile( tcpFile );
-
     for( i = 0; i < numEntities; i++ ) {
         if( isInterface( &entitySet[i] ) &&
             (!onlyNonLoopback || 
@@ -429,6 +439,8 @@ static DWORD getNumInterfacesInt(BOOL onlyNonLoopback)
 
     DPRINT("getNumInterfaces: success: %d %d %08x\n", 
            onlyNonLoopback, numInterfaces, status );
+
+    closeTcpFile( tcpFile );
 
     tdiFreeThingSet( entitySet );
     
@@ -758,7 +770,7 @@ DWORD getInterfaceEntryByName(const char *name, PMIB_IFROW entry)
                     sizeof(info.if_info) );
         }
         
-        DPRINT1("entry->bDescr = %s\n", entry->bDescr);
+        DPRINT("entry->bDescr = %s\n", entry->bDescr);
 
         closeTcpFile( tcpFile );
     }

@@ -23,9 +23,13 @@
  */
 
 #define UNICODE
+#define _UNICODE
+
+#define _CRT_SECURE_NO_DEPRECATE
 
 #include <windows.h>
 #include <stdio.h>
+#include <tchar.h>
 
 #include "main.h"
 #include "dialog.h"
@@ -76,6 +80,8 @@ static int NOTEPAD_MenuCommand(WPARAM wParam)
 
     case CMD_SEARCH:           DIALOG_Search(); break;
     case CMD_SEARCH_NEXT:      DIALOG_SearchNext(); break;
+    case CMD_REPLACE:          DIALOG_Replace(); break;
+    case CMD_GOTO:             DIALOG_GoTo(); break;
 
     case CMD_WRAP:             DIALOG_EditWrap(); break;
     case CMD_FONT:             DIALOG_SelectFont(); break;
@@ -91,6 +97,140 @@ static int NOTEPAD_MenuCommand(WPARAM wParam)
 	break;
     }
    return 0;
+}
+
+/***********************************************************************
+ *
+ *           NOTEPAD_FindTextAt
+ */
+
+static BOOL NOTEPAD_FindTextAt(FINDREPLACE *pFindReplace, LPCTSTR pszText, int iTextLength, DWORD dwPosition)
+{
+    BOOL bMatches;
+    int iTargetLength;
+	
+    iTargetLength = _tcslen(pFindReplace->lpstrFindWhat);
+
+    /* Make proper comparison */
+    if (pFindReplace->Flags & FR_MATCHCASE)
+        bMatches = !_tcsncmp(&pszText[dwPosition], pFindReplace->lpstrFindWhat, iTargetLength);
+    else
+        bMatches = !_tcsnicmp(&pszText[dwPosition], pFindReplace->lpstrFindWhat, iTargetLength);
+
+    if (bMatches && pFindReplace->Flags & FR_WHOLEWORD)
+    {
+        if ((dwPosition > 0) && !_istspace(pszText[dwPosition-1]))
+            bMatches = FALSE;
+        if ((dwPosition < iTextLength - 1) && !_istspace(pszText[dwPosition+1]))
+            bMatches = FALSE;
+    }
+
+    return bMatches;
+}
+
+/***********************************************************************
+ *
+ *           NOTEPAD_FindNext
+ */
+
+static BOOL NOTEPAD_FindNext(FINDREPLACE *pFindReplace, BOOL bReplace, BOOL bShowAlert)
+{
+    int iTextLength, iTargetLength;
+    int iAdjustment = 0;
+    LPTSTR pszText = NULL;
+    DWORD dwPosition, dwBegin, dwEnd;
+    BOOL bMatches = FALSE;
+    TCHAR szResource[128], szText[128];
+    BOOL bSuccess;
+
+    iTargetLength = _tcslen(pFindReplace->lpstrFindWhat);
+
+    iTextLength = GetWindowTextLength(Globals.hEdit);
+
+    if (iTextLength > 0)
+    {
+        pszText = (LPTSTR) HeapAlloc(GetProcessHeap(), 0, (iTextLength + 1) * sizeof(TCHAR));
+        if (!pszText)
+            return FALSE;
+
+        GetWindowText(Globals.hEdit, pszText, iTextLength + 1);
+    }
+
+    SendMessage(Globals.hEdit, EM_GETSEL, (WPARAM) &dwBegin, (LPARAM) &dwEnd);
+    if (bReplace && ((dwEnd - dwBegin) == iTargetLength))
+	{
+        if (NOTEPAD_FindTextAt(pFindReplace, pszText, iTextLength, dwBegin))
+		{
+            SendMessage(Globals.hEdit, EM_REPLACESEL, TRUE, (LPARAM) pFindReplace->lpstrReplaceWith);
+            iAdjustment = _tcslen(pFindReplace->lpstrReplaceWith) - (dwEnd - dwBegin);
+		}
+	}
+
+    dwPosition = dwEnd;
+    while(dwPosition < iTextLength)
+    {
+        bMatches = NOTEPAD_FindTextAt(pFindReplace, pszText, iTextLength, dwPosition);
+        if (bMatches)
+            break;
+
+        if (pFindReplace->Flags & FR_DOWN) 
+            dwPosition++;
+        else
+            dwPosition--;
+    }
+
+    if (bMatches)
+    {
+        /* Found target */
+        if (dwPosition > dwBegin)
+            dwPosition += iAdjustment;
+        SendMessage(Globals.hEdit, EM_SETSEL, dwPosition, dwPosition + iTargetLength);
+        SendMessage(Globals.hEdit, EM_SCROLLCARET, 0, 0);
+        bSuccess = TRUE;
+    }
+	else
+	{
+        /* Can't find target */
+        if (bShowAlert)
+		{
+            LoadString(Globals.hInstance, STRING_CANNOTFIND, szResource, SIZEOF(szResource));
+            _sntprintf(szText, SIZEOF(szText), szResource, pFindReplace->lpstrFindWhat);
+            LoadString(Globals.hInstance, STRING_NOTEPAD, szResource, SIZEOF(szResource));
+            MessageBox(Globals.hFindReplaceDlg, szText, szResource, MB_OK);
+		}
+        bSuccess = FALSE;
+	}
+
+    if (pszText)
+        HeapFree(GetProcessHeap(), 0, pszText);
+    return bSuccess;
+}
+
+/***********************************************************************
+ *
+ *           NOTEPAD_ReplaceAll
+ */
+
+static VOID NOTEPAD_ReplaceAll(FINDREPLACE *pFindReplace)
+{
+    BOOL bShowAlert = TRUE;
+
+    SendMessage(Globals.hEdit, EM_SETSEL, 0, 0);
+
+    while (NOTEPAD_FindNext(pFindReplace, TRUE, bShowAlert))
+    {
+        bShowAlert = FALSE;
+	}
+}
+
+/***********************************************************************
+ *
+ *           NOTEPAD_FindTerm
+ */
+
+static VOID NOTEPAD_FindTerm(VOID)
+{
+    Globals.hFindReplaceDlg = NULL;
 }
 
 /***********************************************************************
@@ -114,6 +254,30 @@ static VOID NOTEPAD_InitData(VOID)
 }
 
 /***********************************************************************
+ * Enable/disable items on the menu based on control state
+ */
+static VOID NOTEPAD_InitMenuPopup(HMENU menu, int index)
+{
+    int enable;
+
+    CheckMenuItem(GetMenu(Globals.hMainWnd), CMD_WRAP,
+        MF_BYCOMMAND | (Globals.bWrapLongLines ? MF_CHECKED : MF_UNCHECKED));
+
+    EnableMenuItem(menu, CMD_UNDO,
+        SendMessage(Globals.hEdit, EM_CANUNDO, 0, 0) ? MF_ENABLED : MF_GRAYED);
+    EnableMenuItem(menu, CMD_PASTE,
+        IsClipboardFormatAvailable(CF_TEXT) ? MF_ENABLED : MF_GRAYED);
+    enable = SendMessage(Globals.hEdit, EM_GETSEL, 0, 0);
+    enable = (HIWORD(enable) == LOWORD(enable)) ? MF_GRAYED : MF_ENABLED;
+    EnableMenuItem(menu, CMD_CUT, enable);
+    EnableMenuItem(menu, CMD_COPY, enable);
+    EnableMenuItem(menu, CMD_DELETE, enable);
+    
+    EnableMenuItem(menu, CMD_SELECT_ALL,
+        GetWindowTextLength(Globals.hEdit) ? MF_ENABLED : MF_GRAYED);
+}
+
+/***********************************************************************
  *
  *           NOTEPAD_WndProc
  */
@@ -127,11 +291,14 @@ static LRESULT WINAPI NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam,
         static const WCHAR editW[] = { 'e','d','i','t',0 };
         RECT rc;
         GetClientRect(hWnd, &rc);
-        Globals.hEdit = CreateWindowEx(WS_EX_CLIENTEDGE, editW, NULL,
-                             WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL |
-                             ES_AUTOVSCROLL | ES_MULTILINE,
+        Globals.hEdit = CreateWindowEx(EDIT_EXSTYLE, editW, NULL, Globals.bWrapLongLines ? EDIT_STYLE_WRAP : EDIT_STYLE,
                              0, 0, rc.right, rc.bottom, hWnd,
                              NULL, Globals.hInstance, NULL);
+        if (!Globals.hEdit)
+            return -1;
+        SendMessage(Globals.hEdit, EM_LIMITTEXT, 0, 0);
+        if (Globals.hFont)
+            SendMessage(Globals.hEdit, WM_SETFONT, (WPARAM)Globals.hFont, (LPARAM)TRUE);
         break;
     }
 
@@ -178,8 +345,27 @@ static LRESULT WINAPI NOTEPAD_WndProc(HWND hWnd, UINT msg, WPARAM wParam,
         DoOpenFile(szFileName);
         break;
     }
+    
+    case WM_INITMENUPOPUP:
+        NOTEPAD_InitMenuPopup((HMENU)wParam, lParam);
+        break;
 
     default:
+        if (msg == aFINDMSGSTRING)
+        {
+            FINDREPLACE *pFindReplace = (FINDREPLACE *) lParam;
+
+            if (pFindReplace->Flags & FR_FINDNEXT)
+                NOTEPAD_FindNext(pFindReplace, FALSE, TRUE);
+            else if (pFindReplace->Flags & FR_REPLACE)
+                NOTEPAD_FindNext(pFindReplace, TRUE, TRUE);
+            else if (pFindReplace->Flags & FR_REPLACEALL)
+                NOTEPAD_ReplaceAll(pFindReplace);
+            else if (pFindReplace->Flags & FR_DIALOGTERM)
+                NOTEPAD_FindTerm();
+            break;
+        }
+
         return DefWindowProc(hWnd, msg, wParam, lParam);
     }
     return 0;
@@ -194,7 +380,7 @@ static int AlertFileDoesNotExist(LPCWSTR szFileName)
    LoadString(Globals.hInstance, STRING_DOESNOTEXIST, szResource, SIZEOF(szResource));
    wsprintf(szMessage, szResource, szFileName);
 
-   LoadString(Globals.hInstance, STRING_ERROR, szResource, SIZEOF(szResource));
+   LoadString(Globals.hInstance, STRING_NOTEPAD, szResource, SIZEOF(szResource));
 
    nResult = MessageBox(Globals.hMainWnd, szMessage, szResource,
                         MB_ICONEXCLAMATION | MB_YESNO);
@@ -313,6 +499,7 @@ int PASCAL WinMain(HINSTANCE hInstance, HINSTANCE prev, LPSTR cmdline, int show)
 
     ZeroMemory(&Globals, sizeof(Globals));
     Globals.hInstance       = hInstance;
+    LoadSettings();
 
     ZeroMemory(&class, sizeof(class));
     class.cbSize        = sizeof(class);
@@ -320,7 +507,7 @@ int PASCAL WinMain(HINSTANCE hInstance, HINSTANCE prev, LPSTR cmdline, int show)
     class.hInstance     = Globals.hInstance;
     class.hIcon         = LoadIcon(0, IDI_APPLICATION);
     class.hCursor       = LoadCursor(0, IDC_ARROW);
-    class.hbrBackground = (HBRUSH)(COLOR_WINDOW);
+    class.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     class.lpszMenuName  = MAKEINTRESOURCE(MAIN_MENU);
     class.lpszClassName = className;
 
@@ -351,11 +538,13 @@ int PASCAL WinMain(HINSTANCE hInstance, HINSTANCE prev, LPSTR cmdline, int show)
 
     while (GetMessage(&msg, 0, 0, 0))
     {
-	if (!TranslateAccelerator(Globals.hMainWnd, hAccel, &msg) && !IsDialogMessage(Globals.hFindReplaceDlg, &msg))
-	{
-	    TranslateMessage(&msg);
-	    DispatchMessage(&msg);
-	}
+        if (!IsDialogMessage(Globals.hFindReplaceDlg, &msg) &&
+            !TranslateAccelerator(Globals.hMainWnd, hAccel, &msg))
+        {
+            TranslateMessage(&msg);
+            DispatchMessage(&msg);
+        }
     }
+    SaveSettings();
     return msg.wParam;
 }

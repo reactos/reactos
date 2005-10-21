@@ -25,7 +25,7 @@
 
 #ifdef FEATURE_UNIX_FILENAME_COMPLETION
 
-VOID CompleteFilename (LPTSTR str, INT charcount)
+VOID CompleteFilename (LPTSTR str, UINT charcount)
 {
 	WIN32_FIND_DATA file;
 	HANDLE hFile;
@@ -171,11 +171,7 @@ VOID CompleteFilename (LPTSTR str, INT charcount)
 
 		if(!perfectmatch)
 		{
-#ifdef __REACTOS__
-			Beep (440, 50);
-#else
 			MessageBeep (-1);
-#endif
 		}
 	}
 	else
@@ -193,11 +189,7 @@ VOID CompleteFilename (LPTSTR str, INT charcount)
 			}
 		}
 
-#ifdef __REACTOS__
-		Beep (440, 50);
-#else
 		MessageBeep (-1);
-#endif
 	}
 }
 
@@ -346,11 +338,7 @@ BOOL ShowCompletionMatches (LPTSTR str, INT charcount)
 	else
 	{
 		/* no match found */
-#ifdef __REACTOS__
-		Beep (440, 50);
-#else
 		MessageBeep (-1);
-#endif
 		return FALSE;
 	}
 
@@ -376,7 +364,7 @@ VOID FindPrefixAndSuffix(LPTSTR strIN, LPTSTR szPrefix, LPTSTR szSuffix)
 	/* number of quotes in the string */
 	INT nQuotes = 0;
 	/* used in for loops */
-	INT i;
+	UINT i;
 	/* Char number to break the string at */
 	INT PBreak = 0;
 	INT SBreak = 0;
@@ -509,7 +497,7 @@ VOID FindPrefixAndSuffix(LPTSTR strIN, LPTSTR szPrefix, LPTSTR szSuffix)
 	return ret;
  }
 
-VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, INT cusor)
+VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 {
 	/* Length of string before we complete it */
 	INT StartLength;
@@ -534,13 +522,21 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, INT cusor)
 	/* Number of files */
 	INT FileListSize = 0;
 	/* Used for loops */
-	INT i;
+	UINT i;
 	/* Editable string of what was passed in */
 	TCHAR str[MAX_PATH];
 	/* Keeps track of what element was last selected */
 	static INT Sel;
 	BOOL NeededQuote = FALSE;
+	BOOL ShowAll = TRUE;
+	TCHAR * line = strIN; 
+
 	strOut[0] = _T('\0');
+
+	while (_istspace (*line))
+			line++;	
+	if(!_tcsnicmp (line, _T("rd "), 3) || !_tcsnicmp (line, _T("cd "), 3))
+		ShowAll = FALSE;
 
 	/* Copy the string, str can be edited and orginal should not be */
 	_tcscpy(str,strIN);
@@ -615,6 +611,15 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, INT cusor)
 		if(!_tcscmp (file.cFileName, _T(".")) ||
 			!_tcscmp (file.cFileName, _T("..")))
 			continue;
+		
+		/* Don't show files when they are doing 'cd' or 'rd' */
+		if(!ShowAll)
+		{
+			DWORD attr = GetFileAttributes (file.cFileName);
+			if(attr != 0xFFFFFFFF && (!(attr & FILE_ATTRIBUTE_DIRECTORY)))
+				continue;
+		}
+
 		/* Add the file to the list of files */
       if(FileList == NULL) 
       {
@@ -640,7 +645,17 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, INT cusor)
  
 	}while(FindNextFile(hFile,&file));
 
-	
+	/* Check the size of the list to see if we
+	   found any matches */
+	if(FileListSize == 0)
+	{
+		_tcscpy(strOut,szOrginal);
+		CloseHandle(hFile);
+		if(FileList != NULL) 
+			free(FileList);
+		return;
+
+	}
 	/* Sort the files */
 	qsort(FileList,FileListSize,sizeof(FileName), compare);
 
@@ -692,14 +707,9 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, INT cusor)
 		/* insert the quoation and move things around */
 		if(szPrefix[LastSpace + 1] != _T('\"') && LastSpace != -1)
 		{
-			/* add another char or you will lose a null char ending */
-			_tcsncat(szPrefix,&szPrefix[_tcslen(szPrefix) - 1],1);
-			for(i = _tcslen(szPrefix) - 1; i > LastSpace; i--)
-			{
-				szPrefix[i] = szPrefix[i - 1];
-			}
+			memmove ( &szPrefix[LastSpace+1], &szPrefix[LastSpace], (_tcslen(szPrefix)-LastSpace+1) * sizeof(TCHAR) );
 			
-			if(LastSpace + 1 == _tcslen(szPrefix))
+			if((UINT)(LastSpace + 1) == _tcslen(szPrefix))
 			{
 				_tcscat(szPrefix,_T("\""));
 			}

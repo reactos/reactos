@@ -13,6 +13,8 @@
 
 #include <advapi32.h>
 
+#define NDEBUG
+#include <debug.h>
 
 /* FUNCTIONS ****************************************************************/
 
@@ -504,5 +506,170 @@ PrivilegedServiceAuditAlarmW (LPCWSTR SubsystemName,
 
   return TRUE;
 }
+
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+AccessCheckByTypeResultListAndAuditAlarmByHandleW(IN LPCWSTR SubsystemName,
+                                                  IN LPVOID HandleId,
+                                                  IN HANDLE ClientToken,
+                                                  IN LPCWSTR ObjectTypeName,
+                                                  IN LPCWSTR ObjectName,
+                                                  IN PSECURITY_DESCRIPTOR pSecurityDescriptor,
+                                                  IN PSID PrincipalSelfSid,
+                                                  IN DWORD DesiredAccess,
+                                                  IN AUDIT_EVENT_TYPE AuditType,
+                                                  IN DWORD Flags,
+                                                  IN POBJECT_TYPE_LIST ObjectTypeList,
+                                                  IN DWORD ObjectTypeListLength,
+                                                  IN PGENERIC_MAPPING GenericMapping,
+                                                  IN BOOL ObjectCreation,
+                                                  OUT LPDWORD GrantedAccess,
+                                                  OUT LPDWORD AccessStatusList,
+                                                  OUT LPBOOL pfGenerateOnClose)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+AccessCheckByTypeResultListAndAuditAlarmByHandleA(IN LPCSTR SubsystemName,
+                                                  IN LPVOID HandleId,
+                                                  IN HANDLE ClientToken,
+                                                  IN LPCSTR ObjectTypeName,
+                                                  IN LPCSTR ObjectName,
+                                                  IN PSECURITY_DESCRIPTOR pSecurityDescriptor,
+                                                  IN PSID PrincipalSelfSid,
+                                                  IN DWORD DesiredAccess,
+                                                  IN AUDIT_EVENT_TYPE AuditType,
+                                                  IN DWORD Flags,
+                                                  IN POBJECT_TYPE_LIST ObjectTypeList,
+                                                  IN DWORD ObjectTypeListLength,
+                                                  IN PGENERIC_MAPPING GenericMapping,
+                                                  IN BOOL ObjectCreation,
+                                                  OUT LPDWORD GrantedAccess,
+                                                  OUT LPDWORD AccessStatusList,
+                                                  OUT LPBOOL pfGenerateOnClose)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+AccessCheckByTypeResultListAndAuditAlarmW(IN LPCWSTR SubsystemName,
+                                          IN LPVOID HandleId,
+                                          IN LPCWSTR ObjectTypeName,
+                                          IN LPCWSTR ObjectName,
+                                          IN PSECURITY_DESCRIPTOR pSecurityDescriptor,
+                                          IN PSID PrincipalSelfSid,
+                                          IN DWORD DesiredAccess,
+                                          IN AUDIT_EVENT_TYPE AuditType,
+                                          IN DWORD Flags,
+                                          IN POBJECT_TYPE_LIST ObjectTypeList,
+                                          IN DWORD ObjectTypeListLength,
+                                          IN PGENERIC_MAPPING GenericMapping,
+                                          IN BOOL ObjectCreation,
+                                          OUT LPDWORD GrantedAccess,
+                                          OUT LPDWORD AccessStatusList,
+                                          OUT LPBOOL pfGenerateOnClose)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+AccessCheckByTypeResultListAndAuditAlarmA(IN LPCSTR SubsystemName,
+                                          IN LPVOID HandleId,
+                                          IN LPCSTR ObjectTypeName,
+                                          IN LPCSTR ObjectName,
+                                          IN PSECURITY_DESCRIPTOR pSecurityDescriptor,
+                                          IN PSID PrincipalSelfSid,
+                                          IN DWORD DesiredAccess,
+                                          IN AUDIT_EVENT_TYPE AuditType,
+                                          IN DWORD Flags,
+                                          IN POBJECT_TYPE_LIST ObjectTypeList,
+                                          IN DWORD ObjectTypeListLength,
+                                          IN PGENERIC_MAPPING GenericMapping,
+                                          IN BOOL ObjectCreation,
+                                          OUT LPDWORD GrantedAccess,
+                                          OUT LPDWORD AccessStatusList,
+                                          OUT LPBOOL pfGenerateOnClose)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+AccessCheckByTypeAndAuditAlarmW(IN LPCWSTR SubsystemName,
+                                IN LPVOID HandleId,
+                                IN LPCWSTR ObjectTypeName,
+                                IN LPCWSTR ObjectName,
+                                IN PSECURITY_DESCRIPTOR pSecurityDescriptor,
+                                IN PSID PrincipalSelfSid,
+                                IN DWORD DesiredAccess,
+                                IN AUDIT_EVENT_TYPE AuditType,
+                                IN DWORD Flags,
+                                IN POBJECT_TYPE_LIST ObjectTypeList,
+                                IN DWORD ObjectTypeListLength,
+                                IN PGENERIC_MAPPING GenericMapping,
+                                IN BOOL ObjectCreation,
+                                OUT LPDWORD GrantedAccess,
+                                OUT LPBOOL AccessStatus,
+                                OUT LPBOOL pfGenerateOnClose)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL STDCALL
+AccessCheckByTypeAndAuditAlarmA(IN LPCSTR SubsystemName,
+                                IN LPVOID HandleId,
+                                IN LPCSTR ObjectTypeName,
+                                IN LPCSTR ObjectName,
+                                IN PSECURITY_DESCRIPTOR pSecurityDescriptor,
+                                IN PSID PrincipalSelfSid,
+                                IN DWORD DesiredAccess,
+                                IN AUDIT_EVENT_TYPE AuditType,
+                                IN DWORD Flags,
+                                IN POBJECT_TYPE_LIST ObjectTypeList,
+                                IN DWORD ObjectTypeListLength,
+                                IN PGENERIC_MAPPING GenericMapping,
+                                IN BOOL ObjectCreation,
+                                OUT LPDWORD GrantedAccess,
+                                OUT LPBOOL AccessStatus,
+                                OUT LPBOOL pfGenerateOnClose)
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+
 
 /* EOF */

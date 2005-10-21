@@ -42,7 +42,7 @@ extern _SEHRegistration_t * __cdecl _SEHCurrentRegistration(void);
 extern void __stdcall RtlUnwind(void *, void *, void *, void *);
 void const * _SEHRtlUnwind = RtlUnwind;
 
-void __stdcall _SEHLocalUnwind
+static void __stdcall _SEHLocalUnwind
 (
  _SEHPortableFrame_t * frame,
  _SEHPortableTryLevel_t * dsttrylevel
@@ -68,7 +68,7 @@ void __stdcall _SEHLocalUnwind
  }
 }
 
-void __cdecl _SEHCallHandler
+static void __cdecl _SEHCallHandler
 (
  _SEHPortableFrame_t * frame,
  _SEHPortableTryLevel_t * trylevel
@@ -79,7 +79,7 @@ void __cdecl _SEHCallHandler
  frame->SPF_Handler(trylevel);
 }
 
-int __cdecl _SEHFrameHandler
+static int __cdecl _SEHFrameHandler
 (
  struct _EXCEPTION_RECORD * ExceptionRecord,
  void * EstablisherFrame,

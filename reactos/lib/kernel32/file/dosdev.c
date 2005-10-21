@@ -96,51 +96,68 @@ QueryDosDeviceA(
   UNICODE_STRING TargetPathU;
   ANSI_STRING TargetPathA;
   DWORD Length;
+  DWORD CurrentLength;
+  PWCHAR Buffer;
 
-  if (!RtlCreateUnicodeStringFromAsciiz (&DeviceNameU,
-					 (LPSTR)lpDeviceName))
+  if (lpDeviceName)
   {
+    if (!RtlCreateUnicodeStringFromAsciiz (&DeviceNameU,
+					   (LPSTR)lpDeviceName))
+    {
+      SetLastError (ERROR_NOT_ENOUGH_MEMORY);
+      return 0;
+    }
+  }
+  Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
+			    0,
+			    ucchMax * sizeof(WCHAR));
+  if (Buffer == NULL)
+  {
+    if (lpDeviceName)
+    {
+      RtlFreeHeap (RtlGetProcessHeap (),
+	           0,
+	           DeviceNameU.Buffer);
+    }
     SetLastError (ERROR_NOT_ENOUGH_MEMORY);
     return 0;
   }
 
-  TargetPathU.Length = 0;
-  TargetPathU.MaximumLength = (USHORT)ucchMax * sizeof(WCHAR);
-  TargetPathU.Buffer = RtlAllocateHeap (RtlGetProcessHeap (),
-					0,
-					TargetPathU.MaximumLength);
-  if (TargetPathU.Buffer == NULL)
-  {
-    SetLastError (ERROR_NOT_ENOUGH_MEMORY);
-    return 0;
-  }
-
-  Length = QueryDosDeviceW (DeviceNameU.Buffer,
-			    TargetPathU.Buffer,
+  Length = QueryDosDeviceW (lpDeviceName ? DeviceNameU.Buffer : NULL,
+			    Buffer,
 			    ucchMax);
   if (Length != 0)
   {
-    TargetPathU.Length = Length * sizeof(WCHAR);
-
-    TargetPathA.Length = 0;
-    TargetPathA.MaximumLength = (USHORT)ucchMax;
     TargetPathA.Buffer = lpTargetPath;
+    TargetPathU.Buffer = Buffer;
+    ucchMax = Length;
 
-    RtlUnicodeStringToAnsiString (&TargetPathA,
-				  &TargetPathU,
-				  FALSE);
+    while (ucchMax)
+    {
+      CurrentLength = min (ucchMax, MAXUSHORT / 2);
+      TargetPathU.MaximumLength = TargetPathU.Length = CurrentLength * sizeof(WCHAR);
+     
+      TargetPathA.Length = 0;
+      TargetPathA.MaximumLength = CurrentLength;
 
-    DPRINT ("TargetPathU: '%wZ'\n", &TargetPathU);
-    DPRINT ("TargetPathA: '%Z'\n", &TargetPathA);
+      RtlUnicodeStringToAnsiString (&TargetPathA,
+				    &TargetPathU,
+				    FALSE);
+      ucchMax -= CurrentLength;
+      TargetPathA.Buffer += TargetPathA.Length;
+      TargetPathU.Buffer += TargetPathU.Length / sizeof(WCHAR);
+    }
   }
 
   RtlFreeHeap (RtlGetProcessHeap (),
 	       0,
-	       TargetPathU.Buffer);
-  RtlFreeHeap (RtlGetProcessHeap (),
-	       0,
-	       DeviceNameU.Buffer);
-
+	       Buffer);
+  if (lpDeviceName)
+  {
+    RtlFreeHeap (RtlGetProcessHeap (),
+	         0,
+	         DeviceNameU.Buffer);
+  }
   return Length;
 }
 

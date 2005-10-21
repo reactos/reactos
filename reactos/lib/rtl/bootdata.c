@@ -18,7 +18,7 @@
 * @unimplemented
 */
 NTSTATUS
-STDCALL
+NTAPI
 RtlCreateSystemVolumeInformationFolder(
 	IN PUNICODE_STRING VolumeRootPath
 	)
@@ -31,7 +31,7 @@ RtlCreateSystemVolumeInformationFolder(
 * @unimplemented
 */
 NTSTATUS
-STDCALL
+NTAPI
 RtlGetSetBootStatusData(
 	HANDLE Filehandle,
 	BOOLEAN WriteMode,
@@ -49,7 +49,7 @@ RtlGetSetBootStatusData(
 * @unimplemented
 */
 NTSTATUS
-STDCALL
+NTAPI
 RtlLockBootStatusData(
 	HANDLE Filehandle
 	)
@@ -62,7 +62,7 @@ RtlLockBootStatusData(
 * @unimplemented
 */
 NTSTATUS
-STDCALL
+NTAPI
 RtlUnlockBootStatusData(
 	HANDLE Filehandle
 	)

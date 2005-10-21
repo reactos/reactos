@@ -28,9 +28,7 @@ VOID ErrorMessage (DWORD dwErrorCode, LPTSTR szFormat, ...)
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	TCHAR  szMessage[1024];
-#ifndef __REACTOS__
 	LPTSTR szError;
-#endif
 	va_list arg_ptr;
 
 	if (dwErrorCode == ERROR_SUCCESS)
@@ -45,50 +43,21 @@ VOID ErrorMessage (DWORD dwErrorCode, LPTSTR szFormat, ...)
 		va_end (arg_ptr);
 	}
 
-#ifndef __REACTOS__
-
 	if (FormatMessage (FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
 					   NULL, dwErrorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 					   (LPTSTR)&szError, 0, NULL))
 	{
 		ConErrPrintf (_T("%s %s\n"), szError, szMessage);
-		LocalFree (szError);
-		return;
-	}
-	else
-	{
-		LoadString(CMD_ModuleHandle, STRING_ERROR_ERROR1, szMsg, RC_STRING_MAX_SIZE);
-		ConErrPrintf(szMsg, dwErrorCode);
+		if(szError)
+			LocalFree (szError);
 		return;
 	}
 
-#else
-
-	switch (dwErrorCode)
-	{
-		case ERROR_FILE_NOT_FOUND:
-			LoadString(CMD_ModuleHandle, STRING_ERROR_FILE_NOT_FOUND, szMsg, RC_STRING_MAX_SIZE);
-			break;
-
-		case ERROR_PATH_NOT_FOUND:
-			LoadString(CMD_ModuleHandle, STRING_ERROR_PATH_NOT_FOUND, szMsg, RC_STRING_MAX_SIZE);
-			break;
-
-		case ERROR_NOT_READY:
-			LoadString(CMD_ModuleHandle, STRING_ERROR_DRIVER_NOT_READY, szMsg, RC_STRING_MAX_SIZE);
-			break;
-
-		default:
-			LoadString(CMD_ModuleHandle, STRING_ERROR_ERROR1, szMsg, RC_STRING_MAX_SIZE);
-			ConOutPrintf(szMsg);
-			return;
-	}
-
+	/* Fall back just in case the error is not defined */
 	if (szFormat)
-		ConOutPrintf (_T("%s -- %s\n"), szMsg, szMessage);
+		ConErrPrintf (_T("%s -- %s\n"), szMsg, szMessage);
 	else
-		ConOutPrintf (_T("%s\n"), szMsg);
-#endif
+		ConErrPrintf (_T("%s\n"), szMsg);
 }
 
 VOID error_parameter_format(TCHAR ch)

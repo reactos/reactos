@@ -25,11 +25,11 @@ extern "C" {
 #endif
 
 // FIXME: These should have been defined in other header files!
-typedef struct _DDVIDEOPORTDESC      *LPDDVIDEOPORTDESC; /* should be in dvp.h */
-typedef struct _DDVIDEOPORTBANDWIDTH *LPDDVIDEOPORTBANDWIDTH; /* should be in dvp.h */
-typedef struct _DDVIDEOPORTCONNECT   *LPDDVIDEOPORTCONNECT; /* should be in dvp.h */
-typedef struct _DDVIDEOPORTINFO      *LPDDVIDEOPORTINFO; /* should be in dvp.h */
 typedef struct _DD_VIDEOPORT_LOCAL   *PDD_VIDEOPORT_LOCAL; /* should be defined here once we have dvp.h */
+
+
+
+
 
 /************************************************************************/
 /* Video memory info structures                                         */
@@ -380,23 +380,21 @@ typedef struct
 	PDD_SURFCB_SETPALETTE         SetPalette;
 } DD_SURFACECALLBACKS, *PDD_SURFACECALLBACKS;
 
-enum
-{
-	DDHAL_SURFCB32_DESTROYSURFACE     = 1<<0,
-	DDHAL_SURFCB32_FLIP               = 1<<1,
-	DDHAL_SURFCB32_SETCLIPLIST        = 1<<2,
-	DDHAL_SURFCB32_LOCK               = 1<<3,
-	DDHAL_SURFCB32_UNLOCK             = 1<<4,
-	DDHAL_SURFCB32_BLT                = 1<<5,
-	DDHAL_SURFCB32_SETCOLORKEY        = 1<<6,
-	DDHAL_SURFCB32_ADDATTACHEDSURFACE = 1<<7,
-	DDHAL_SURFCB32_GETBLTSTATUS       = 1<<8,
-	DDHAL_SURFCB32_GETFLIPSTATUS      = 1<<9,
-	DDHAL_SURFCB32_UPDATEOVERLAY      = 1<<10,
-	DDHAL_SURFCB32_SETOVERLAYPOSITION = 1<<11,
-	DDHAL_SURFCB32_SETPALETTE         = 1<<13,
-};
 
+#define DDHAL_SURFCB32_DESTROYSURFACE       0x00000001
+#define DDHAL_SURFCB32_FLIP                 0x00000002
+#define DDHAL_SURFCB32_SETCLIPLIST          0x00000004
+#define DDHAL_SURFCB32_LOCK                 0x00000008
+#define DDHAL_SURFCB32_UNLOCK               0x00000010
+#define DDHAL_SURFCB32_BLT                  0x00000020
+#define DDHAL_SURFCB32_SETCOLORKEY          0x00000040
+#define DDHAL_SURFCB32_ADDATTACHEDSURFACE   0x00000080
+#define DDHAL_SURFCB32_GETBLTSTATUS         0x00000100
+#define DDHAL_SURFCB32_GETFLIPSTATUS        0x00000200
+#define DDHAL_SURFCB32_UPDATEOVERLAY        0x00000400
+#define DDHAL_SURFCB32_SETOVERLAYPOSITION   0x00000800
+#define DDHAL_SURFCB32_RESERVED4            0x00001000
+#define DDHAL_SURFCB32_SETPALETTE           0x00002000
 /************************************************************************/
 /* IDirectDraw callbacks                                                */
 /************************************************************************/
@@ -475,31 +473,39 @@ typedef struct
 } DD_MAPMEMORYDATA, *PDD_MAPMEMORYDATA;
 typedef DWORD (STDCALL *PDD_MAPMEMORY)(PDD_MAPMEMORYDATA);
 
-typedef struct
+
+typedef struct _DD_DESTROYDRIVERDATA *PDD_DESTROYDRIVERDATA;
+typedef struct _DD_SETMODEDATA *PDD_SETMODEDATA;
+
+typedef DWORD   (APIENTRY *PDD_DESTROYDRIVER)(PDD_DESTROYDRIVERDATA);
+typedef DWORD   (APIENTRY *PDD_SETMODE)(PDD_SETMODEDATA);
+
+typedef struct DD_CALLBACKS
 {
-	DWORD                    dwSize;
-	DWORD                    dwFlags;
-	PVOID                    Reserved1;
-	PDD_CREATESURFACE        CreateSurface;
-	PDD_SETCOLORKEY          SetColorKey;
-	PVOID                    Reserved2;
-	PDD_WAITFORVERTICALBLANK WaitForVerticalBlank;
-	PDD_CANCREATESURFACE     CanCreateSurface;
-	PDD_CREATEPALETTE        CreatePalette;
-	PDD_GETSCANLINE          GetScanLine;
-	PDD_MAPMEMORY            MapMemory;
+    DWORD                     dwSize;
+    DWORD                     dwFlags;
+    PDD_DESTROYDRIVER         DestroyDriver;
+    PDD_CREATESURFACE         CreateSurface;
+    PDD_SETCOLORKEY           SetColorKey;
+    PDD_SETMODE               SetMode;
+    PDD_WAITFORVERTICALBLANK  WaitForVerticalBlank;
+    PDD_CANCREATESURFACE      CanCreateSurface;
+    PDD_CREATEPALETTE         CreatePalette;
+    PDD_GETSCANLINE           GetScanLine;
+    PDD_MAPMEMORY             MapMemory;
 } DD_CALLBACKS, *PDD_CALLBACKS;
 
-enum
-{
-	DDHAL_CB32_CREATESURFACE        = 1<<1,
-	DDHAL_CB32_SETCOLORKEY          = 1<<2,
-	DDHAL_CB32_WAITFORVERTICALBLANK = 1<<4,
-	DDHAL_CB32_CANCREATESURFACE     = 1<<5,
-	DDHAL_CB32_CREATEPALETTE        = 1<<6,
-	DDHAL_CB32_GETSCANLINE          = 1<<7,
-	DDHAL_CB32_MAPMEMORY            = 1<<31,
-};
+
+
+#define DDHAL_CB32_DESTROYDRIVER        0x00000001l
+#define DDHAL_CB32_CREATESURFACE        0x00000002l
+#define DDHAL_CB32_SETCOLORKEY          0x00000004l
+#define DDHAL_CB32_SETMODE              0x00000008l
+#define DDHAL_CB32_WAITFORVERTICALBLANK 0x00000010l
+#define DDHAL_CB32_CANCREATESURFACE     0x00000020l
+#define DDHAL_CB32_CREATEPALETTE        0x00000040l
+#define DDHAL_CB32_GETSCANLINE          0x00000080l
+#define DDHAL_CB32_MAPMEMORY            0x80000000l
 
 typedef struct
 {
@@ -511,7 +517,7 @@ typedef struct
 	PVOID                    GetAvailDriverMemory;
 } DD_GETAVAILDRIVERMEMORYDATA, *PDD_GETAVAILDRIVERMEMORYDATA;
 typedef DWORD (STDCALL *PDD_GETAVAILDRIVERMEMORY)(PDD_GETAVAILDRIVERMEMORYDATA);
-
+            
 DEFINE_GUID(GUID_MiscellaneousCallbacks, 0xEFD60CC0, 0x49E7, 0x11D0, 0x88, 0x9D, 0x00, 0xAA, 0x00, 0xBB, 0xB7, 0x6A);
 
 typedef struct
@@ -521,10 +527,7 @@ typedef struct
 	PDD_GETAVAILDRIVERMEMORY GetAvailDriverMemory;
 } DD_MISCELLANEOUSCALLBACKS, *PDD_MISCELLANEOUSCALLBACKS;
 
-enum
-{
-	DDHAL_MISCCB32_GETAVAILDRIVERMEMORY = 1<<0,
-};
+#define DDHAL_MISCCB32_GETAVAILDRIVERMEMORY 0x00000001
 
 typedef DWORD (STDCALL *PDD_ALPHABLT)(PDD_BLTDATA);
 
@@ -571,13 +574,12 @@ typedef struct
 	PDD_DESTROYDDLOCAL        DestroyDDLocal;
 } DD_MISCELLANEOUS2CALLBACKS, *PDD_MISCELLANEOUS2CALLBACKS;
 
-enum
-{
-	DDHAL_MISC2CB32_ALPHABLT        = 1<<0,
-	DDHAL_MISC2CB32_CREATESURFACEEX = 1<<1,
-	DDHAL_MISC2CB32_GETDRIVERSTATE  = 1<<2,
-	DDHAL_MISC2CB32_DESTROYDDLOCAL  = 1<<3,
-};
+
+#define DDHAL_MISC2CB32_ALPHABLT            0x00000001
+#define DDHAL_MISC2CB32_CREATESURFACEEX     0x00000002
+#define DDHAL_MISC2CB32_GETDRIVERSTATE      0x00000004
+#define DDHAL_MISC2CB32_DESTROYDDLOCAL      0x00000008
+
 
 typedef struct
 {
@@ -659,11 +661,8 @@ typedef struct
 	PDD_PALCB_SETENTRIES     SetEntries;
 } DD_PALETTECALLBACKS, *PDD_PALETTECALLBACKS;
 
-enum
-{
-	DDHAL_PALCB32_DESTROYPALETTE = 1<<0,
-	DDHAL_PALCB32_SETENTRIES     = 1<<1,
-};
+#define DDHAL_PALCB32_DESTROYPALETTE    0x00000001l
+#define DDHAL_PALCB32_SETENTRIES    0x00000002l
 
 /************************************************************************/
 /* IDirectDrawVideoport callbacks                                       */
@@ -787,9 +786,7 @@ typedef struct
 } DD_GETVPORTFLIPSTATUSDATA, *PDD_GETVPORTFLIPSTATUSDATA;
 typedef DWORD (STDCALL *PDD_VPORTCB_GETFLIPSTATUS)(PDD_GETVPORTFLIPSTATUSDATA);
 
-#define DDRAWI_VPORTSTART          1
-#define DDRAWI_VPORTSTOP           2
-#define DDRAWI_VPORTUPDATE         3
+
 
 typedef struct
 {
@@ -828,8 +825,7 @@ typedef struct
 } DD_GETVPORTSIGNALDATA, *PDD_GETVPORTSIGNALDATA;
 typedef DWORD (STDCALL *PDD_VPORTCB_GETSIGNALSTATUS)(PDD_GETVPORTSIGNALDATA);
 
-#define DDRAWI_VPORTGETCOLOR       1
-#define DDRAWI_VPORTSETCOLOR       2
+
 
 typedef struct
 {
@@ -866,31 +862,29 @@ typedef struct
 	PDD_VPORTCB_COLORCONTROL       ColorControl;
 } DD_VIDEOPORTCALLBACKS, *PDD_VIDEOPORTCALLBACKS;
 
-enum
-{
-	DDHAL_VPORT32_CANCREATEVIDEOPORT = 1<<0,
-	DDHAL_VPORT32_CREATEVIDEOPORT    = 1<<1,
-	DDHAL_VPORT32_FLIP               = 1<<2,
-	DDHAL_VPORT32_GETBANDWIDTH       = 1<<3,
-	DDHAL_VPORT32_GETINPUTFORMATS    = 1<<4,
-	DDHAL_VPORT32_GETOUTPUTFORMATS   = 1<<5,
-	DDHAL_VPORT32_GETFIELD           = 1<<7,
-	DDHAL_VPORT32_GETLINE            = 1<<8,
-	DDHAL_VPORT32_GETCONNECT         = 1<<9,
-	DDHAL_VPORT32_DESTROY            = 1<<10,
-	DDHAL_VPORT32_GETFLIPSTATUS      = 1<<11,
-	DDHAL_VPORT32_UPDATE             = 1<<12,
-	DDHAL_VPORT32_WAITFORSYNC        = 1<<13,
-	DDHAL_VPORT32_GETSIGNALSTATUS    = 1<<14,
-	DDHAL_VPORT32_COLORCONTROL       = 1<<15,
-};
+#define DDHAL_VPORT32_CANCREATEVIDEOPORT    0x00000001
+#define DDHAL_VPORT32_CREATEVIDEOPORT       0x00000002
+#define DDHAL_VPORT32_FLIP                  0x00000004
+#define DDHAL_VPORT32_GETBANDWIDTH          0x00000008
+#define DDHAL_VPORT32_GETINPUTFORMATS       0x00000010
+#define DDHAL_VPORT32_GETOUTPUTFORMATS      0x00000020
+#define DDHAL_VPORT32_GETFIELD              0x00000080
+#define DDHAL_VPORT32_GETLINE               0x00000100
+#define DDHAL_VPORT32_GETCONNECT            0x00000200
+#define DDHAL_VPORT32_DESTROY               0x00000400
+#define DDHAL_VPORT32_GETFLIPSTATUS         0x00000800
+#define DDHAL_VPORT32_UPDATE                0x00001000
+#define DDHAL_VPORT32_WAITFORSYNC           0x00002000
+#define DDHAL_VPORT32_GETSIGNALSTATUS       0x00004000
+#define DDHAL_VPORT32_COLORCONTROL          0x00008000
+
 
 /************************************************************************/
 /* IDirectDrawColorControl callbacks                                    */
 /************************************************************************/
 
-#define DDRAWI_GETCOLOR      1
-#define DDRAWI_SETCOLOR      2
+#define DDRAWI_GETCOLOR      0x0001
+#define DDRAWI_SETCOLOR      0x0002
 
 typedef struct
 {
@@ -912,10 +906,7 @@ typedef struct
 	PDD_COLORCB_COLORCONTROL ColorControl;
 } DD_COLORCONTROLCALLBACKS, *PDD_COLORCONTROLCALLBACKS;
 
-enum
-{
-	DDHAL_COLOR_COLORCONTROL = 1<<0,
-};
+#define DDHAL_COLOR_COLORCONTROL            0x00000001
 
 /************************************************************************/
 /* IDirectDrawVideo callbacks                                           */
@@ -1037,7 +1028,7 @@ typedef struct
 } DD_RENDERMOCOMPDATA, *PDD_RENDERMOCOMPDATA;
 typedef DWORD (STDCALL *PDD_MOCOMPCB_RENDER)(PDD_RENDERMOCOMPDATA);
 
-#define DDMCQUERY_READ 1
+#define DDMCQUERY_READ 0x00000001
 
 typedef struct
 {
@@ -1076,19 +1067,16 @@ typedef struct
 } DD_MOTIONCOMPCALLBACKS;
 typedef DD_MOTIONCOMPCALLBACKS *PDD_MOTIONCOMPCALLBACKS;
 
-enum
-{
-	DDHAL_MOCOMP32_GETGUIDS        = 1<<0,
-	DDHAL_MOCOMP32_GETFORMATS      = 1<<1,
-	DDHAL_MOCOMP32_CREATE          = 1<<2,
-	DDHAL_MOCOMP32_GETCOMPBUFFINFO = 1<<3,
-	DDHAL_MOCOMP32_GETINTERNALINFO = 1<<4,
-	DDHAL_MOCOMP32_BEGINFRAME      = 1<<5,
-	DDHAL_MOCOMP32_ENDFRAME        = 1<<6,
-	DDHAL_MOCOMP32_RENDER          = 1<<7,
-	DDHAL_MOCOMP32_QUERYSTATUS     = 1<<8,
-	DDHAL_MOCOMP32_DESTROY         = 1<<9,
-};
+#define DDHAL_MOCOMP32_GETGUIDS             0x00000001
+#define DDHAL_MOCOMP32_GETFORMATS           0x00000002
+#define DDHAL_MOCOMP32_CREATE               0x00000004
+#define DDHAL_MOCOMP32_GETCOMPBUFFINFO      0x00000008
+#define DDHAL_MOCOMP32_GETINTERNALINFO      0x00000010
+#define DDHAL_MOCOMP32_BEGINFRAME           0x00000020
+#define DDHAL_MOCOMP32_ENDFRAME             0x00000040
+#define DDHAL_MOCOMP32_RENDER               0x00000080
+#define DDHAL_MOCOMP32_QUERYSTATUS          0x00000100
+#define DDHAL_MOCOMP32_DESTROY              0x00000200
 
 /************************************************************************/
 /* D3D buffer callbacks                                                 */
@@ -1224,6 +1212,41 @@ typedef struct
 		DDSCAPSEX ddsCapsExAlt;
 	} ddsExtendedHeapRestrictions[1];
 } DD_MORESURFACECAPS, *PDD_MORESURFACECAPS;
+
+
+/*********************************************************/
+/* Kernel Callbacks                                      */
+/*********************************************************/
+typedef struct _DD_SYNCSURFACEDATA
+{
+    PDD_DIRECTDRAW_LOCAL  lpDD;    
+    PDD_SURFACE_LOCAL     lpDDSurface;
+    DWORD                 dwSurfaceOffset;      
+    ULONG_PTR             fpLockPtr;           
+    LONG                  lPitch;               
+    DWORD                 dwOverlayOffset;       
+    ULONG                 dwDriverReserved1;     
+    ULONG                 dwDriverReserved2;     
+    ULONG                 dwDriverReserved3;     
+    ULONG                 dwDriverReserved4;     
+    HRESULT               ddRVal;
+} DD_SYNCSURFACEDATA, *PDD_SYNCSURFACEDATA;
+typedef DWORD (STDCALL *PDD_KERNELCB_SYNCSURFACE)(PDD_SYNCSURFACEDATA);
+
+typedef struct _DD_SYNCVIDEOPORTDATA
+{
+    PDD_DIRECTDRAW_LOCAL  lpDD;       
+    PDD_VIDEOPORT_LOCAL   lpVideoPort;
+    DWORD                 dwOriginOffset;      
+    DWORD                 dwHeight;            
+    DWORD                 dwVBIHeight;         
+    ULONG                 dwDriverReserved1;   
+    ULONG                 dwDriverReserved2;   
+    ULONG                 dwDriverReserved3;   
+    HRESULT               ddRVal;
+} DD_SYNCVIDEOPORTDATA, *PDD_SYNCVIDEOPORTDATA;
+typedef DWORD (STDCALL *PDD_KERNELCB_SYNCVIDEOPORT)(PDD_SYNCVIDEOPORTDATA);
+
 
 
 

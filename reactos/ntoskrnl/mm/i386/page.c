@@ -195,7 +195,9 @@ ProtectToPTE(ULONG flProtect)
 #define PAE_ADDR_TO_PTE_OFFSET(v)   ((((ULONG_PTR)(v)) % (512 * PAGE_SIZE)) / PAGE_SIZE)
 
 
-NTSTATUS Mmi386ReleaseMmInfo(PEPROCESS Process)
+NTSTATUS
+NTAPI
+Mmi386ReleaseMmInfo(PEPROCESS Process)
 {
    PUSHORT LdtDescriptor;
    ULONG LdtBase;
@@ -398,7 +400,9 @@ MmCopyMmInfo(PEPROCESS Src,
    return(STATUS_SUCCESS);
 }
 
-VOID MmDeletePageTable(PEPROCESS Process, PVOID Address)
+VOID
+NTAPI
+MmDeletePageTable(PEPROCESS Process, PVOID Address)
 {
    PEPROCESS CurrentProcess = PsGetCurrentProcess();
 
@@ -429,7 +433,9 @@ VOID MmDeletePageTable(PEPROCESS Process, PVOID Address)
    }
 }
 
-VOID MmFreePageTable(PEPROCESS Process, PVOID Address)
+VOID
+NTAPI
+MmFreePageTable(PEPROCESS Process, PVOID Address)
 {
    PEPROCESS CurrentProcess = PsGetCurrentProcess();
    ULONG i;
@@ -755,6 +761,7 @@ static ULONG MmGetPageEntryForProcess(PEPROCESS Process, PVOID Address)
 }
 
 PFN_TYPE
+NTAPI
 MmGetPfnForProcess(PEPROCESS Process,
                    PVOID Address)
 {
@@ -782,6 +789,7 @@ MmGetPfnForProcess(PEPROCESS Process,
 }
 
 VOID
+NTAPI
 MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOL* WasDirty, PPFN_TYPE Page)
 /*
  * FUNCTION: Delete a virtual mapping
@@ -867,6 +875,7 @@ MmDisableVirtualMapping(PEPROCESS Process, PVOID Address, BOOL* WasDirty, PPFN_T
 }
 
 VOID
+NTAPI
 MmRawDeleteVirtualMapping(PVOID Address)
 {
    if (Ke386Pae)
@@ -900,6 +909,7 @@ MmRawDeleteVirtualMapping(PVOID Address)
 }
 
 VOID
+NTAPI
 MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage,
                        BOOL* WasDirty, PPFN_TYPE Page)
 /*
@@ -1043,6 +1053,7 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOL FreePage,
 }
 
 VOID
+NTAPI
 MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
                         SWAPENTRY* SwapEntry)
 /*
@@ -1180,7 +1191,9 @@ Mmi386MakeKernelPageTableGlobal(PVOID PAddress)
    return(FALSE);
 }
 
-BOOLEAN MmIsDirtyPage(PEPROCESS Process, PVOID Address)
+BOOLEAN
+NTAPI
+MmIsDirtyPage(PEPROCESS Process, PVOID Address)
 {
    if (Ke386Pae)
    {
@@ -1193,6 +1206,7 @@ BOOLEAN MmIsDirtyPage(PEPROCESS Process, PVOID Address)
 }
 
 BOOLEAN
+NTAPI
 MmIsAccessedAndResetAccessPage(PEPROCESS Process, PVOID Address)
 {
    if (Address < MmSystemRangeStart && Process == NULL)
@@ -1258,7 +1272,9 @@ MmIsAccessedAndResetAccessPage(PEPROCESS Process, PVOID Address)
    }
 }
 
-VOID MmSetCleanPage(PEPROCESS Process, PVOID Address)
+VOID
+NTAPI
+MmSetCleanPage(PEPROCESS Process, PVOID Address)
 {
    if (Address < MmSystemRangeStart && Process == NULL)
    {
@@ -1321,7 +1337,9 @@ VOID MmSetCleanPage(PEPROCESS Process, PVOID Address)
    }
 }
 
-VOID MmSetDirtyPage(PEPROCESS Process, PVOID Address)
+VOID
+NTAPI
+MmSetDirtyPage(PEPROCESS Process, PVOID Address)
 {
    if (Address < MmSystemRangeStart && Process == NULL)
    {
@@ -1380,7 +1398,9 @@ VOID MmSetDirtyPage(PEPROCESS Process, PVOID Address)
    }
 }
 
-VOID MmEnableVirtualMapping(PEPROCESS Process, PVOID Address)
+VOID
+NTAPI
+MmEnableVirtualMapping(PEPROCESS Process, PVOID Address)
 {
    if (Ke386Pae)
    {
@@ -1434,7 +1454,9 @@ VOID MmEnableVirtualMapping(PEPROCESS Process, PVOID Address)
    }
 }
 
-BOOLEAN MmIsPagePresent(PEPROCESS Process, PVOID Address)
+BOOLEAN
+NTAPI
+MmIsPagePresent(PEPROCESS Process, PVOID Address)
 {
    if (Ke386Pae)
    {
@@ -1446,7 +1468,9 @@ BOOLEAN MmIsPagePresent(PEPROCESS Process, PVOID Address)
    }
 }
 
-BOOLEAN MmIsPageSwapEntry(PEPROCESS Process, PVOID Address)
+BOOLEAN
+NTAPI
+MmIsPageSwapEntry(PEPROCESS Process, PVOID Address)
 {
    if (Ke386Pae)
    {
@@ -1463,6 +1487,7 @@ BOOLEAN MmIsPageSwapEntry(PEPROCESS Process, PVOID Address)
 }
 
 NTSTATUS
+NTAPI
 MmCreateVirtualMappingForKernel(PVOID Address,
                                 ULONG flProtect,
                                 PPFN_TYPE Pages,
@@ -1590,6 +1615,7 @@ MmCreateVirtualMappingForKernel(PVOID Address,
 }
 
 NTSTATUS
+NTAPI
 MmCreatePageFileMapping(PEPROCESS Process,
                         PVOID Address,
                         SWAPENTRY SwapEntry)
@@ -1677,6 +1703,7 @@ MmCreatePageFileMapping(PEPROCESS Process,
 
 
 NTSTATUS
+NTAPI
 MmCreateVirtualMappingUnsafe(PEPROCESS Process,
                              PVOID Address,
                              ULONG flProtect,
@@ -1882,6 +1909,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
 }
 
 NTSTATUS
+NTAPI
 MmCreateVirtualMapping(PEPROCESS Process,
                        PVOID Address,
                        ULONG flProtect,
@@ -1907,6 +1935,7 @@ MmCreateVirtualMapping(PEPROCESS Process,
 }
 
 ULONG
+NTAPI
 MmGetPageProtect(PEPROCESS Process, PVOID Address)
 {
    ULONG Entry;
@@ -1952,6 +1981,7 @@ MmGetPageProtect(PEPROCESS Process, PVOID Address)
 }
 
 VOID
+NTAPI
 MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
 {
    ULONG Attributes = 0;
@@ -2063,6 +2093,7 @@ MmGetPhysicalAddress(PVOID vaddr)
 }
 
 PVOID
+NTAPI
 MmCreateHyperspaceMapping(PFN_TYPE Page)
 {
    PVOID Address;
@@ -2191,6 +2222,7 @@ MmCreateHyperspaceMapping(PFN_TYPE Page)
 }
 
 PFN_TYPE
+NTAPI
 MmChangeHyperspaceMapping(PVOID Address, PFN_TYPE NewPage)
 {
    PFN_TYPE Pfn;
@@ -2212,6 +2244,7 @@ MmChangeHyperspaceMapping(PVOID Address, PFN_TYPE NewPage)
 }
 
 PFN_TYPE
+NTAPI
 MmDeleteHyperspaceMapping(PVOID Address)
 {
    PFN_TYPE Pfn;
@@ -2232,7 +2265,9 @@ MmDeleteHyperspaceMapping(PVOID Address)
    return Pfn;
 }
 
-VOID MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
+VOID
+NTAPI
+MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
 {
    ULONG StartOffset, EndOffset, Offset;
 
@@ -2315,7 +2350,9 @@ VOID MmUpdatePageDir(PEPROCESS Process, PVOID Address, ULONG Size)
    }
 }
 
-VOID INIT_FUNCTION
+VOID
+INIT_FUNCTION
+NTAPI
 MmInitGlobalKernelPageDirectory(VOID)
 {
    ULONG i;
@@ -2361,12 +2398,15 @@ MmInitGlobalKernelPageDirectory(VOID)
 }
 
 ULONG
+NTAPI
 MiGetUserPageDirectoryCount(VOID)
 {
    return Ke386Pae ? PAE_ADDR_TO_PDE_OFFSET(MmSystemRangeStart) : ADDR_TO_PDE_OFFSET(MmSystemRangeStart);
 }
 
-VOID INIT_FUNCTION
+VOID
+INIT_FUNCTION
+NTAPI
 MiInitPageDirectoryMap(VOID)
 {
    MEMORY_AREA* kernel_map_desc = NULL;

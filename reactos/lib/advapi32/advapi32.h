@@ -12,6 +12,7 @@
 #include <stdio.h>
 
 /* PSDK/NDK Headers */
+#define WIN32_NO_STATUS
 #include <windows.h>
 #include <accctrl.h>
 #include <sddl.h>

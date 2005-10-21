@@ -112,4 +112,10 @@ NTSTATUS
 FsRecUdfsFsControl(IN PDEVICE_OBJECT DeviceObject,
 		   IN PIRP Irp);
 
+/* fs_rec.c */
+
+NTSTATUS STDCALL
+DriverEntry(PDRIVER_OBJECT DriverObject,
+	    PUNICODE_STRING RegistryPath);
+
 /* EOF */

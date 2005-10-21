@@ -1278,54 +1278,40 @@ BOOL WINAPI SHGetPathFromIDListW(LPCITEMIDLIST pidl, LPWSTR pszPath)
  */
 HRESULT WINAPI SHBindToParent(LPCITEMIDLIST pidl, REFIID riid, LPVOID *ppv, LPCITEMIDLIST *ppidlLast)
 {
-    IShellFolder    * psf;
-    LPITEMIDLIST    pidlChild, pidlParent;
+    IShellFolder    * psfDesktop;
     HRESULT         hr=E_FAIL;
 
     TRACE_(shell)("pidl=%p\n", pidl);
     pdump(pidl);
-
+    
+    if (!pidl || !ppv)
+        return E_INVALIDARG;
+    
     *ppv = NULL;
     if (ppidlLast)
         *ppidlLast = NULL;
 
+    hr = SHGetDesktopFolder(&psfDesktop);
+    if (FAILED(hr))
+        return hr;
+
     if (_ILIsPidlSimple(pidl))
     {
-        IShellFolder* desktop;
-
         /* we are on desktop level */
-        hr = SHGetDesktopFolder(&desktop);
-
-        if (SUCCEEDED(hr))
-        {
-            hr = IShellFolder_QueryInterface(desktop, riid, ppv);
-
-            if (SUCCEEDED(hr) && ppidlLast)
-                *ppidlLast = ILClone(pidl);
-
-            IShellFolder_Release(desktop);
-        }
+        hr = IShellFolder_QueryInterface(psfDesktop, riid, ppv);
     }
     else
     {
-        pidlChild =  ILClone(ILFindLastID(pidl));
-        pidlParent = ILClone(pidl);
+        LPITEMIDLIST pidlParent = ILClone(pidl);
         ILRemoveLastID(pidlParent);
-
-        hr = SHGetDesktopFolder(&psf);
-
-        if (SUCCEEDED(hr))
-            hr = IShellFolder_BindToObject(psf, pidlParent, NULL, riid, ppv);
-
-        if (SUCCEEDED(hr) && ppidlLast)
-            *ppidlLast = pidlChild;
-        else
-            ILFree (pidlChild);
-
+        hr = IShellFolder_BindToObject(psfDesktop, pidlParent, NULL, riid, ppv);
         SHFree (pidlParent);
-        if (psf)
-            IShellFolder_Release(psf);
     }
+
+    IShellFolder_Release(psfDesktop);
+
+    if (SUCCEEDED(hr) && ppidlLast)
+        *ppidlLast = ILFindLastID(pidl);
 
     TRACE_(shell)("-- psf=%p pidl=%p ret=0x%08lx\n", *ppv, (ppidlLast)?*ppidlLast:NULL, hr);
     return hr;

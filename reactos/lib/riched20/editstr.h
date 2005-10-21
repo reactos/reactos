@@ -161,6 +161,18 @@ typedef struct tagME_Row
   int nYPos;
 } ME_Row;
 
+/* the display item list layout is like this:
+ * - the document consists of paragraphs
+ * - each paragraph contains at least one run, the last run in the paragraph
+ *   is an end-of-paragraph run
+ * - each formatted paragraph contains at least one row, which corresponds
+ *   to a screen line (that's why there are no rows in an unformatted
+ *   paragraph
+ * - the paragraphs contain "shortcut" pointers to the previous and the next
+ *   paragraph, that makes iteration over paragraphs faster 
+ * - the list starts with diTextStart and ends with diTextEnd
+ */
+
 typedef struct tagME_DisplayItem
 {
   ME_DIType type;
@@ -212,7 +224,7 @@ struct tagME_InStream {
   EDITSTREAM *editstream;
   DWORD dwSize;
   DWORD dwUsed;
-  BYTE buffer[STREAMIN_BUFFER_SIZE];
+  char buffer[STREAMIN_BUFFER_SIZE];
 };
 typedef struct tagME_InStream ME_InStream;
 

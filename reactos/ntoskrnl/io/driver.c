@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
  * FILE:            ntoskrnl/io/driver.c
@@ -466,7 +465,7 @@ IopLoadServiceModule(
       return Status;
    }
    
-   IopDisplayLoadingMessage(ServiceName->Buffer, TRUE);
+   //IopDisplayLoadingMessage(ServiceName->Buffer, TRUE);
 
    /*
     * Normalize the image path for all later processing.
@@ -530,6 +529,9 @@ IopLoadServiceModule(
                break;
             }
          }
+         if (!NT_SUCCESS(Status))
+            /* Try to load it. It may just have been installed by PnP manager */
+            Status = LdrLoadModule(&ServiceImagePath, ModuleObject);
       }
 
       /*
@@ -1118,44 +1120,32 @@ IoCreateDriverList(VOID)
 NTSTATUS INIT_FUNCTION
 IoDestroyDriverList(VOID)
 {
-  PLIST_ENTRY GroupEntry;
-  PLIST_ENTRY ServiceEntry;
-  PSERVICE_GROUP CurrentGroup;
-  PSERVICE CurrentService;
+  PSERVICE_GROUP CurrentGroup, tmp1;
+  PSERVICE CurrentService, tmp2;
 
   DPRINT("IoDestroyDriverList() called\n");
 
   /* Destroy group list */
-  GroupEntry = GroupListHead.Flink;
-  while (GroupEntry != &GroupListHead)
+  LIST_FOR_EACH_SAFE(CurrentGroup, tmp1, &GroupListHead, SERVICE_GROUP, GroupListEntry)
     {
-      CurrentGroup = CONTAINING_RECORD(GroupEntry, SERVICE_GROUP, GroupListEntry);
-
       ExFreePool(CurrentGroup->GroupName.Buffer);
-      RemoveEntryList(GroupEntry);
+      RemoveEntryList(&CurrentGroup->GroupListEntry);
       if (CurrentGroup->TagArray)
         {
 	  ExFreePool(CurrentGroup->TagArray);
 	}
       ExFreePool(CurrentGroup);
-
-      GroupEntry = GroupListHead.Flink;
     }
 
   /* Destroy service list */
-  ServiceEntry = ServiceListHead.Flink;
-  while (ServiceEntry != &ServiceListHead)
+  LIST_FOR_EACH_SAFE(CurrentService, tmp2, &ServiceListHead, SERVICE, ServiceListEntry)
     {
-      CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
-
       ExFreePool(CurrentService->ServiceName.Buffer);
       ExFreePool(CurrentService->RegistryPath.Buffer);
       ExFreePool(CurrentService->ServiceGroup.Buffer);
       ExFreePool(CurrentService->ImagePath.Buffer);
-      RemoveEntryList(ServiceEntry);
+      RemoveEntryList(&CurrentService->ServiceListEntry);
       ExFreePool(CurrentService);
-
-      ServiceEntry = ServiceListHead.Flink;
     }
 
   DPRINT("IoDestroyDriverList() done\n");
@@ -1364,7 +1354,7 @@ IopInitializeBootDrivers(VOID)
    if (BootDriverCount == 0)
    {
       DbgPrint("No boot drivers available.\n");
-      KEBUGCHECK(0);
+      KEBUGCHECK(INACCESSIBLE_BOOT_DEVICE);
    }
 }
 
@@ -1423,8 +1413,6 @@ IopLoadDriver(PSERVICE Service)
 VOID FASTCALL
 IopInitializeSystemDrivers(VOID)
 {
-   PLIST_ENTRY GroupEntry;
-   PLIST_ENTRY ServiceEntry;
    PSERVICE_GROUP CurrentGroup;
    PSERVICE CurrentService;
    NTSTATUS Status;
@@ -1432,21 +1420,15 @@ IopInitializeSystemDrivers(VOID)
 
    DPRINT("IopInitializeSystemDrivers()\n");
 
-   GroupEntry = GroupListHead.Flink;
-   while (GroupEntry != &GroupListHead)
+   LIST_FOR_EACH(CurrentGroup, &GroupListHead, SERVICE_GROUP, GroupListEntry)
    {
-      CurrentGroup = CONTAINING_RECORD(GroupEntry, SERVICE_GROUP, GroupListEntry);
-
       DPRINT("Group: %wZ\n", &CurrentGroup->GroupName);
 
       /* Load all drivers with a valid tag */
       for (i = 0; i < CurrentGroup->TagCount; i++)
       {
-         ServiceEntry = ServiceListHead.Flink;
-         while (ServiceEntry != &ServiceListHead)
+         LIST_FOR_EACH(CurrentService, &ServiceListHead, SERVICE, ServiceListEntry)
          {
-            CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
-
             if ((RtlCompareUnicodeString(&CurrentGroup->GroupName,
                                          &CurrentService->ServiceGroup, TRUE) == 0) &&
 	        (CurrentService->Start == 1 /*SERVICE_SYSTEM_START*/) &&
@@ -1455,15 +1437,12 @@ IopInitializeSystemDrivers(VOID)
 	       DPRINT("  Path: %wZ\n", &CurrentService->RegistryPath);
                Status = IopLoadDriver(CurrentService);
  	    }
-            ServiceEntry = ServiceEntry->Flink;
          }
       }
 
       /* Load all drivers without a tag or with an invalid tag */
-      ServiceEntry = ServiceListHead.Flink;
-      while (ServiceEntry != &ServiceListHead)
+      LIST_FOR_EACH(CurrentService, &ServiceListHead, SERVICE, ServiceListEntry)
       {
-         CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
          if ((RtlCompareUnicodeString(&CurrentGroup->GroupName,
                                       &CurrentService->ServiceGroup, TRUE) == 0) &&
 	     (CurrentService->Start == 1 /*SERVICE_SYSTEM_START*/))
@@ -1481,10 +1460,8 @@ IopInitializeSystemDrivers(VOID)
                Status = IopLoadDriver(CurrentService);
  	    }
 	 }
-         ServiceEntry = ServiceEntry->Flink;
       }
 
-      GroupEntry = GroupEntry->Flink;
    }
 
    DPRINT("IopInitializeSystemDrivers() done\n");
@@ -1852,7 +1829,7 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
    RTL_QUERY_REGISTRY_TABLE QueryTable[3];
    UNICODE_STRING ImagePath;
    UNICODE_STRING ServiceName;
-   UNICODE_STRING CapturedDriverServiceName;
+   UNICODE_STRING CapturedDriverServiceName = {0};
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status;
    ULONG Type;
@@ -1878,11 +1855,9 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
    }
 #endif
 
-   Status = RtlCaptureUnicodeString(&CapturedDriverServiceName,
-                                    PreviousMode,
-                                    PagedPool,
-                                    FALSE,
-                                    DriverServiceName);
+   Status = ProbeAndCaptureUnicodeString(&CapturedDriverServiceName,
+                                         PreviousMode,
+                                         DriverServiceName);
    if (!NT_SUCCESS(Status))
    {
       return Status;
@@ -2021,9 +1996,8 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
    Status = IopStartDevice(DeviceNode);
 
 ReleaseCapturedString:
-   RtlReleaseCapturedUnicodeString(&CapturedDriverServiceName,
-                                   PreviousMode,
-                                   FALSE);
+   ReleaseCapturedUnicodeString(&CapturedDriverServiceName,
+                                PreviousMode);
 
    return Status;
 }

@@ -147,6 +147,13 @@ typedef enum _KTHREAD_STATE
     DeferredReady,
 } KTHREAD_STATE, *PKTHREAD_STATE;
 
+typedef enum _KPROCESS_STATE
+{
+    ProcessInMemory,
+    ProcessOutOfMemory,
+    ProcessInTransition,
+} KPROCESS_STATE, *PKPROCESS_STATE;
+
 /* FUNCTION TYPES ************************************************************/
 
 #ifdef NTOS_MODE_USER
@@ -164,8 +171,6 @@ typedef VOID
 #endif
 
 /* TYPES *********************************************************************/
-
-typedef LONG KPRIORITY;
 
 #ifdef NTOS_MODE_USER
 typedef CCHAR KPROCESSOR_MODE;

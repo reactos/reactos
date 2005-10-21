@@ -33,16 +33,15 @@ ULONG SmSsProcessId = 0;
 
 /* Native image's entry point */
 
-VOID STDCALL
-NtProcessStartup(PPEB Peb)
+NTSTATUS __cdecl _main(int argc,
+			char *argv[],
+			char *envp[],
+			ULONG DebugFlag)
 {
   NTSTATUS Status = STATUS_SUCCESS;
   PROCESS_BASIC_INFORMATION PBI = {0};
 
-PrintString("*** EXPERIMENTAL ***\n");
-  
-  PrintString("ReactOS Session Manager %s (Build %s)\n",
-	     KERNEL_RELEASE_STR,
+  PrintString("ReactOS Session Manager (Build %s)\n",
 	     KERNEL_VERSION_BUILD_STR);
 
   /* Lookup yourself */
@@ -94,7 +93,7 @@ ByeBye:
 
 //   NtTerminateProcess(NtCurrentProcess(), 0);
 #endif
-	NtTerminateThread(NtCurrentThread(), Status);
+	return NtTerminateThread(NtCurrentThread(), Status);
 }
 
 /* EOF */

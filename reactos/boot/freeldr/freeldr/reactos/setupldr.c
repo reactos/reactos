@@ -308,8 +308,6 @@ LoadNlsFile(PCHAR szSourcePath, PCHAR szFileName, PCHAR szModuleName)
   return(TRUE);
 }
 
-BOOL SetupUiInitialize(VOID);
-
 VOID RunLoader(VOID)
 {
   ULONG_PTR Base;

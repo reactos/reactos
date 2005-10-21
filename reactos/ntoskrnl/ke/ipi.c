@@ -22,6 +22,7 @@ KSPIN_LOCK KiIpiLock;
 /* FUNCTIONS *****************************************************************/
 
 VOID
+NTAPI
 KiIpiSendRequest(KAFFINITY TargetSet, ULONG IpiRequest)
 {
    LONG i;
@@ -59,18 +60,18 @@ KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame,
 
    Prcb = KeGetCurrentPrcb();
 
-   if (Ke386TestAndClearBit(IPI_REQUEST_APC, &Prcb->IpiFrozen))
+   if (Ke386TestAndClearBit(IPI_APC, &Prcb->IpiFrozen))
    {
       HalRequestSoftwareInterrupt(APC_LEVEL);
    }
 
-   if (Ke386TestAndClearBit(IPI_REQUEST_DPC, &Prcb->IpiFrozen))
+   if (Ke386TestAndClearBit(IPI_DPC, &Prcb->IpiFrozen))
    {
       Prcb->DpcInterruptRequested = TRUE;
       HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
    }
 
-   if (Ke386TestAndClearBit(IPI_REQUEST_FUNCTIONCALL, &Prcb->IpiFrozen))
+   if (Ke386TestAndClearBit(IPI_SYNCH_REQUEST, &Prcb->IpiFrozen))
    {
       InterlockedDecrementUL(&Prcb->SignalDone->CurrentPacket[1]);
       if (InterlockedCompareExchangeUL(&Prcb->SignalDone->CurrentPacket[2], 0, 0))
@@ -140,7 +141,7 @@ KiIpiSendPacket(KAFFINITY TargetSet, VOID (STDCALL*WorkerRoutine)(PVOID), PVOID 
        {
 	  Prcb = ((PKPCR)(KPCR_BASE + i * PAGE_SIZE))->Prcb;
 	  while(0 != InterlockedCompareExchangeUL(&Prcb->SignalDone, (LONG)CurrentPrcb, 0));
-	  Ke386TestAndSetBit(IPI_REQUEST_FUNCTIONCALL, &Prcb->IpiFrozen);
+	  Ke386TestAndSetBit(IPI_SYNCH_REQUEST, &Prcb->IpiFrozen);
 	  if (Processor != CurrentPrcb->SetMember)
 	  {
 	     HalRequestIpi(i);
@@ -156,6 +157,7 @@ KiIpiSendPacket(KAFFINITY TargetSet, VOID (STDCALL*WorkerRoutine)(PVOID), PVOID 
 }
 
 VOID
+NTAPI
 KeIpiGenericCall(VOID (STDCALL *Function)(PVOID), PVOID Argument)
 {
    KIRQL oldIrql;

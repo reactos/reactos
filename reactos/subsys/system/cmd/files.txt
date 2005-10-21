@@ -1,15 +1,11 @@
 Archive Contents
 ~~~~~~~~~~~~~~~~
-bugs.txt        Bug List
 files.txt       This file list
-history.txt     History of the shell development
+history.txt     History of revsions.  Not to date.  see svn.reactos.com for more info.
 license.txt     GNU license - applies to all files named here
 readme.txt      General shell info
-todo.txt        What I have to do
-wishlist.txt    Wish List
-
-makefile        experimental makefile
-makefile.lcc    makefile for lcc-win
+readme2.txt     Techincal shell info
+todo.txt        Things that need to be implmented or fixed(including bugs)
 
 alias.c         Alias code
 alias.h         Alias header file

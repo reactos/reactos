@@ -592,17 +592,6 @@ GetDevicePowerState(
     return 0;
 }
 
-/*
- * @unimplemented
- */
-VOID
-STDCALL
-GetNativeSystemInfo(
-    LPSYSTEM_INFO lpSystemInfo
-    )
-{
-    STUB;
-}
 
 /*
  * @unimplemented
@@ -720,7 +709,8 @@ IsWow64Process(
     )
 {
     STUB;
-    return 0;
+    *Wow64Process = FALSE;
+    return TRUE;
 }
 
 /*
@@ -1629,6 +1619,14 @@ STDCALL
 SetClientTimeZoneInformation(
 		       CONST TIME_ZONE_INFORMATION *lpTimeZoneInformation
 		       )
+{
+    STUB;
+    return 0;
+}
+
+ULONG
+WINAPI
+NlsGetCacheUpdateCount(VOID)
 {
     STUB;
     return 0;

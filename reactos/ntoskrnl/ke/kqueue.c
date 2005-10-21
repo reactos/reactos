@@ -118,9 +118,9 @@ KeInsertByKeyDeviceQueue(IN PKDEVICE_QUEUE DeviceQueue,
 
         /* Insert new entry after the last entry with SortKey less or equal to passed-in SortKey */
         InsertAscendingListFIFO(&DeviceQueue->DeviceListHead,
+                                DeviceQueueEntry,
                                 KDEVICE_QUEUE_ENTRY,
                                 DeviceListEntry,
-                                DeviceQueueEntry,
                                 SortKey);
         Inserted = TRUE;
     }
@@ -204,34 +204,25 @@ KeRemoveByKeyDeviceQueue (IN PKDEVICE_QUEUE DeviceQueue,
    } else {
 
         /* Find entry with SortKey greater than or equal to the passed-in SortKey */
-        ListEntry = DeviceQueue->DeviceListHead.Flink;
-        while (ListEntry != &DeviceQueue->DeviceListHead) {
-
-            /* Get Entry */
-            ReturnEntry = CONTAINING_RECORD(ListEntry,
-                                            KDEVICE_QUEUE_ENTRY,
-                                            DeviceListEntry);
-
+        LIST_FOR_EACH(ReturnEntry, &DeviceQueue->DeviceListHead, KDEVICE_QUEUE_ENTRY, DeviceListEntry) 
+        {
             /* Check if keys match */
-            if (ReturnEntry->SortKey >= SortKey) break;
-
-            /* Move to next item */
-            ListEntry = ListEntry->Flink;
+            if (ReturnEntry->SortKey >= SortKey) {
+               /* We found it, so just remove it */
+               RemoveEntryList(&ReturnEntry->DeviceListEntry);
+               break;
+            }
         }
 
         /* Check if we found something */
-        if (ListEntry == &DeviceQueue->DeviceListHead) {
+        if (!ReturnEntry) {
 
             /*  Not found, return the first entry */
             ListEntry = RemoveHeadList(&DeviceQueue->DeviceListHead);
             ReturnEntry = CONTAINING_RECORD(ListEntry,
                                             KDEVICE_QUEUE_ENTRY,
                                             DeviceListEntry);
-        } else {
-
-            /* We found it, so just remove it */
-            RemoveEntryList(&ReturnEntry->DeviceListEntry);
-        }
+        } 
 
         /* Set it as non-inserted */
         ReturnEntry->Inserted = FALSE;

@@ -27,6 +27,7 @@
 #ifndef __WINLOGON_MAIN_H__
 #define __WINLOGON_MAIN_H__
 
+#define WIN32_NO_STATUS
 #include <windows.h>
 #include <userenv.h>
 #include <winwlx.h>

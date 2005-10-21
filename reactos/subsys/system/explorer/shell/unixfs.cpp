@@ -156,40 +156,68 @@ Entry* UnixDirectory::find_entry(const void* p)
 
 
  // get full path of specified directory entry
-void UnixEntry::get_path(PTSTR path) const
+bool UnixEntry::get_path(PTSTR path, size_t path_count) const
 {
 	int level = 0;
-	int len = 0;
+	size_t len = 0;
 
-	for(const Entry* entry=this; entry; level++) {
-		LPCTSTR name = entry->_data.cFileName;
-		int l = 0;
+	if ( !path || 0 == path_count )
+		return false;
 
-		for(LPCTSTR s=name; *s && *s!=TEXT('/'); s++)
-			++l;
+	if ( path_count > 1 )
+	{
+		for(const Entry* entry=this; entry; level++) {
+			LPCTSTR name = entry->_data.cFileName;
+			size_t l = 0;
 
-		if (entry->_up) {
-			if (l > 0) {
-				memmove(path+l+1, path, len*sizeof(TCHAR));
-				memcpy(path+1, name, l*sizeof(TCHAR));
-				len += l+1;
+			for(LPCTSTR s=name; *s && *s!=TEXT('/'); s++)
+				++l;
 
-				path[0] = TEXT('/');
+			if (entry->_up) {
+				if (l > 0) {
+					if ( len+l+1 >= path_count )
+					{
+						/* compare to 2 here because of terminator plus the '\\' we prepend */
+						if ( l + 2 > path_count )
+							len = 0;
+						else
+							len = path_count - l - 2;
+					}
+					memmove(path+l+1, path, len*sizeof(TCHAR));
+					/* compare to 2 here because of terminator plus the '\\' we prepend */
+					if ( l+2 >= path_count )
+						l = path_count - 2;
+					memcpy(path+1, name, l*sizeof(TCHAR));
+					len += l+1;
+
+					path[0] = TEXT('/');
+				}
+
+				entry = entry->_up;
+			} else {
+				if ( len+l >= path_count )
+				{
+					if ( l + 1 > path_count )
+						len = 0;
+					else
+						len = path_count - l - 1;
+				}
+				memmove(path+l, path, len*sizeof(TCHAR));
+				if ( l+1 >= path_count )
+					l = path_count - 1;
+				memcpy(path, name, l*sizeof(TCHAR));
+				len += l;
+				break;
 			}
-
-			entry = entry->_up;
-		} else {
-			memmove(path+l, path, len*sizeof(TCHAR));
-			memcpy(path, name, l*sizeof(TCHAR));
-			len += l;
-			break;
 		}
+
+		if ( !level && (len+1 < path_count) )
+			path[len++] = TEXT('/');
 	}
 
-	if (!level)
-		path[len++] = TEXT('/');
-
 	path[len] = TEXT('\0');
+
+	return true;
 }
 
 #endif // __WINE__

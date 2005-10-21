@@ -297,7 +297,7 @@ FAT32FindAndMarkAvailableCluster (PDEVICE_EXTENSION DeviceExt, PULONG Cluster)
   return (STATUS_DISK_FULL);
 }
 
-NTSTATUS
+static NTSTATUS
 FAT12CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
 /*
  * FUNCTION: Counts free cluster in a FAT12 table
@@ -343,7 +343,7 @@ FAT12CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
 }
 
 
-NTSTATUS
+static NTSTATUS
 FAT16CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
 /*
  * FUNCTION: Counts free clusters in a FAT16 table
@@ -391,7 +391,7 @@ FAT16CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
 }
 
 
-NTSTATUS
+static NTSTATUS
 FAT32CountAvailableClusters(PDEVICE_EXTENSION DeviceExt)
 /*
  * FUNCTION: Counts free clusters in a FAT32 table

@@ -182,17 +182,14 @@ KeRemoveQueue(IN PKQUEUE Queue,
     /* Loop until the queue is processed */
     while (TRUE) {
 
-        /* Get the Entry */
-        ListEntry = Queue->EntryListHead.Flink;
-
         /* Check if the counts are valid and if there is still a queued entry */
         if ((Queue->CurrentCount < Queue->MaximumCount) &&
-             (ListEntry != &Queue->EntryListHead)) {
+             !IsListEmpty(&Queue->EntryListHead)) {
 
             /* Remove the Entry and Save it */
             DPRINT("Removing Queue Entry. CurrentCount: %d, Maximum Count: %d\n",
                     Queue->CurrentCount, Queue->MaximumCount);
-            ListEntry = RemoveHeadList(&Queue->EntryListHead);
+            ListEntry = Queue->EntryListHead.Flink;
 
             /* Decrease the number of entries */
             Queue->Header.SignalState--;
@@ -328,7 +325,7 @@ STDCALL
 KeRundownQueue(IN PKQUEUE Queue)
 {
     PLIST_ENTRY EnumEntry;
-    PLIST_ENTRY FirstEntry;
+    PLIST_ENTRY FirstEntry = NULL;
     PKTHREAD Thread;
     KIRQL OldIrql;
 
@@ -337,19 +334,11 @@ KeRundownQueue(IN PKQUEUE Queue)
     /* Get the Dispatcher Lock */
     OldIrql = KeAcquireDispatcherDatabaseLock();
 
-    /* Get the First Empty Entry */
-    FirstEntry = Queue->EntryListHead.Flink;
-
     /* Make sure the list is not empty */
-    if (FirstEntry == &Queue->EntryListHead) {
-
-        /* It is, so don't return anything */
-        FirstEntry = NULL;
-
-    } else {
-
+    if (!IsListEmpty(&Queue->EntryListHead)) 
+    {
         /* Remove it */
-        RemoveEntryList(&Queue->EntryListHead);
+        FirstEntry = RemoveHeadList(&Queue->EntryListHead);
     }
 
     /* Unlink threads and clear their Thread->Queue */

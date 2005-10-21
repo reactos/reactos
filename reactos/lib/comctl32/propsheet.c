@@ -2161,7 +2161,7 @@ static void PROPSHEET_SetTitleA(HWND hwndDlg, DWORD dwStyle, LPCSTR lpszText)
   {
      WCHAR szTitle[256];
      MultiByteToWideChar(CP_ACP, 0, lpszText, -1,
-			     szTitle, sizeof(szTitle));
+                         szTitle, sizeof(szTitle)/sizeof(WCHAR));
      PROPSHEET_SetTitleW(hwndDlg, dwStyle, szTitle);
   }
   else

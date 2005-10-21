@@ -62,7 +62,7 @@ RtlpWorkSpaceSizeLZNT1(USHORT Engine,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlCompressBuffer(IN USHORT CompressionFormatAndEngine,
                   IN PUCHAR UncompressedBuffer,
                   IN ULONG UncompressedBufferSize,
@@ -96,7 +96,7 @@ RtlCompressBuffer(IN USHORT CompressionFormatAndEngine,
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlCompressChunks(IN PUCHAR UncompressedBuffer,
                   IN ULONG UncompressedBufferSize,
                   OUT PUCHAR CompressedBuffer,
@@ -112,7 +112,7 @@ RtlCompressChunks(IN PUCHAR UncompressedBuffer,
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlDecompressBuffer(IN USHORT CompressionFormat,
                     OUT PUCHAR UncompressedBuffer,
                     IN ULONG UncompressedBufferSize,
@@ -127,7 +127,7 @@ RtlDecompressBuffer(IN USHORT CompressionFormat,
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlDecompressChunks(OUT PUCHAR UncompressedBuffer,
                     IN ULONG UncompressedBufferSize,
                     IN PUCHAR CompressedBuffer,
@@ -143,7 +143,7 @@ RtlDecompressChunks(OUT PUCHAR UncompressedBuffer,
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlDecompressFragment(IN USHORT CompressionFormat,
                       OUT PUCHAR UncompressedFragment,
                       IN ULONG UncompressedFragmentSize,
@@ -160,7 +160,7 @@ RtlDecompressFragment(IN USHORT CompressionFormat,
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlDescribeChunk(IN USHORT CompressionFormat,
                  IN OUT PUCHAR *CompressedBuffer,
                  IN PUCHAR EndOfCompressedBufferPlus1,
@@ -174,7 +174,7 @@ RtlDescribeChunk(IN USHORT CompressionFormat,
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlGetCompressionWorkSpaceSize(IN USHORT CompressionFormatAndEngine,
                                OUT PULONG CompressBufferAndWorkSpaceSize,
                                OUT PULONG CompressFragmentWorkSpaceSize)
@@ -199,7 +199,7 @@ RtlGetCompressionWorkSpaceSize(IN USHORT CompressionFormatAndEngine,
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlReserveChunk(IN USHORT CompressionFormat,
                 IN OUT PUCHAR *CompressedBuffer,
                 IN PUCHAR EndOfCompressedBufferPlus1,

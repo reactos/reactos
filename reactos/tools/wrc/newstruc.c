@@ -325,8 +325,11 @@ static int convert_bitmap(char *data, int size)
 	{
 		type |= FL_SIZEBE | FL_OS2;
 	}
-	else
+	else 
+	{
+		fprintf(stderr, "bisizel %d bosizel %d b4sizel %d\n", bisizel, bosizel, b4sizel);
 		yyerror("Invalid bitmap format, bih->biSize = %ld", bih->biSize);
+	}
 
 	switch(type)
 	{
@@ -816,8 +819,7 @@ static void handle_ani_list(riff_tag_t *lst, enum res_e type, int isswapped)
 				       isprint(rtp->tag[2]) ? rtp->tag[2] : '.',
 				       isprint(rtp->tag[3]) ? rtp->tag[3] : '.');
 
-		/* FIXME: This relies in sizeof(DWORD) == sizeof(pointer_type) */
-		if((DWORD)rtp & 1)
+		if((UINT_PTR)rtp & 1)
 			rtp = SKIP_TAG(rtp,1);
 	}
 }
@@ -927,8 +929,7 @@ ani_curico_t *new_ani_curico(enum res_e type, raw_data_t *rd, int *memopt)
 				       isprint(rtp->tag[2]) ? rtp->tag[2] : '.',
 				       isprint(rtp->tag[3]) ? rtp->tag[3] : '.');
 
-			/* FIXME: This relies in sizeof(DWORD) == sizeof(pointer_type) */
-			if((DWORD)rtp & 1)
+			if((UINT_PTR)rtp & 1)
 				rtp = SKIP_TAG(rtp,1);
 		}
 

@@ -813,7 +813,7 @@ static const ERROR_TABLE ErrorTable[] =
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 RtlAssert(PVOID FailedAssertion,
           PVOID FileName,
           ULONG LineNumber,
@@ -842,7 +842,7 @@ RtlAssert(PVOID FailedAssertion,
 * @unimplemented
 */
 NTSTATUS
-STDCALL
+NTAPI
 RtlMapSecurityErrorToNtStatus(
 	IN ULONG SecurityError
 	)
@@ -870,7 +870,7 @@ RtlMapSecurityErrorToNtStatus(
  *
  * @implemented
  */
-DWORD STDCALL
+DWORD NTAPI
 RtlNtStatusToDosErrorNoTeb(IN NTSTATUS Status)
 {
    PERROR_TABLE Table = (PERROR_TABLE)ErrorTable;
@@ -932,7 +932,7 @@ RtlNtStatusToDosErrorNoTeb(IN NTSTATUS Status)
  *
  * @implemented
  */
-DWORD STDCALL
+DWORD NTAPI
 RtlNtStatusToDosError(IN NTSTATUS Status)
 {
    PTEB Teb = NtCurrentTeb ();
@@ -966,7 +966,7 @@ RtlNtStatusToDosError(IN NTSTATUS Status)
  * REVISIONS
  *  1999-11-30 ea
  */
-INT STDCALL
+INT NTAPI
 RtlNtStatusToPsxErrno(IN NTSTATUS Status)
 {
 #if 0
@@ -981,7 +981,7 @@ RtlNtStatusToPsxErrno(IN NTSTATUS Status)
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlGetLastNtStatus(VOID)
 {
   return NtCurrentTeb()->LastStatusValue;
@@ -991,7 +991,7 @@ RtlGetLastNtStatus(VOID)
 /*
  * @implemented
  */
-ULONG STDCALL
+ULONG NTAPI
 RtlGetLastWin32Error(VOID)
 {
   return NtCurrentTeb()->LastErrorValue;
@@ -1001,7 +1001,7 @@ RtlGetLastWin32Error(VOID)
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 RtlSetLastWin32Error(IN ULONG Error)
 {
   NtCurrentTeb()->LastErrorValue = Error;
@@ -1011,7 +1011,7 @@ RtlSetLastWin32Error(IN ULONG Error)
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 RtlSetLastWin32ErrorAndNtStatusFromNtStatus(IN NTSTATUS Status)
 {
   NtCurrentTeb()->LastErrorValue = RtlNtStatusToDosError(Status);

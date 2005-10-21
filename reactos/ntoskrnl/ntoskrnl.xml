@@ -50,11 +50,11 @@
 		</if>
 		<file>apc.c</file>
 		<file>bug.c</file>
-		<file>catch.c</file>
 		<file>clock.c</file>
 		<file>device.c</file>
 		<file>dpc.c</file>
 		<file>event.c</file>
+		<file>exception.c</file>
 		<file>gate.c</file>
 		<file>gmutex.c</file>
 		<file>ipi.c</file>
@@ -116,6 +116,7 @@
 		<file>debug.c</file>
 	</directory>
 	<directory name="ex">
+		<file>atom.c</file>
 		<if property="ARCH" value="i386">
 			<directory name="i386">
 				<file>interlck.S</file>
@@ -201,10 +202,8 @@
 	</directory>
 	<directory name="kd">
 		<directory name="wrappers">
-			<if property="DBG" value="1">
-				<file>bochs.c</file>
-				<file>gdbstub.c</file>
-			</if>
+			<file>bochs.c</file>
+			<file>gdbstub.c</file>
 		</directory>
 		<file>kdinit.c</file>
 		<file>kdio.c</file>
@@ -285,11 +284,6 @@
 		<file>power.c</file>
 	</directory>
 	<directory name="ps">
-		<if property="ARCH" value="i386">
-			<directory name="i386">
-				<file>continue.c</file>
-			</directory>
-		</if>
 		<file>debug.c</file>
 		<file>idle.c</file>
 		<file>job.c</file>
@@ -312,13 +306,9 @@
 				<file>seh.s</file>
 			</directory>
 		</if>
-		<file>atom.c</file>
-		<file>capture.c</file>
-		<file>debug.c</file>
 		<file>libsupp.c</file>
 		<file>misc.c</file>
 		<file>nls.c</file>
-		<file>purecall.c</file>
 		<file>regio.c</file>
 		<file>strtok.c</file>
 	</directory>

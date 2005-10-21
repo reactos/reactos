@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * service control manager
  *
  * ReactOS Operating System

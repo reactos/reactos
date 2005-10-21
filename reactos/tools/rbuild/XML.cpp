@@ -17,7 +17,7 @@
  */
 #include "pch.h"
 
-#ifdef _MSC_VER
+#ifndef MAX_PATH
 #define MAX_PATH _MAX_PATH
 #endif
 
@@ -186,20 +186,28 @@ Path::RelativeFromDirectory (
 #ifdef WIN32
 	// this squirreliness is b/c win32 has drive letters and *nix doesn't...
 	// not possible to do relative across different drive letters
-	if ( vbase[0] != vpath[0] )
-		return path;
+	{
+		char path_driveletter = (path[1] == ':') ? toupper(path[0]) : 0;
+		char base_driveletter = (base_directory[1] == ':') ? toupper(base_directory[0]) : 0;
+		if ( path_driveletter != base_driveletter )
+			return path;
+	}
 #endif
 	size_t i = 0;
 	while ( i < vbase.size() && i < vpath.size() && vbase[i] == vpath[i] )
 		++i;
+
+	// did we go through all of the path?
 	if ( vbase.size() == vpath.size() && i == vpath.size() )
 		return ".";
+
 	if ( i < vbase.size() )
 	{
 		// path goes above our base directory, we will need some ..'s
-		for ( size_t j = 0; j < i; j++ )
+		for ( size_t j = i; j < vbase.size(); j++ )
 			vout.push_back ( ".." );
 	}
+
 	while ( i < vpath.size() )
 		vout.push_back ( vpath[i++] );
 
@@ -230,6 +238,11 @@ Path::Split ( vector<string>& out,
 	}
 	if ( include_last && strcmp ( prev, "." ) )
 		out.push_back ( prev );
+	// special-case where path only has "."
+	// don't move this check up higher as it might miss
+	// some funny paths...
+	if ( !out.size() && !strcmp ( prev, "." ) )
+		out.push_back ( "." );
 }
 
 XMLFile::XMLFile()

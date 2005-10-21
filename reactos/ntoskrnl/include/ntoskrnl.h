@@ -21,7 +21,7 @@
 #include <ndk/asm.h>
 
 /* FIXME: Temporary until CC Ros is gone */
-#include <ccros.h>        
+#include <ccros.h>
 
 /* ReactOS Headers */
 #include <reactos/version.h>

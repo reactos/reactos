@@ -7002,7 +7002,7 @@ char *yytext;
 #include "parser.h"
 #include "newstruc.h"
 
-#include "y.tab.h"
+#include "parser.tab.h"
 
 #define YY_USE_PROTOS
 #define YY_NO_UNPUT

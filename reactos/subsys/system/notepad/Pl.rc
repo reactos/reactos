@@ -45,26 +45,21 @@ POPUP "&Edycja" {
   MENUITEM "Wkl&ej\tCtrl+V",    CMD_PASTE
   MENUITEM "&UsuÒ\tDel",      CMD_DELETE
   MENUITEM SEPARATOR
+  MENUITEM "&Znajdü\tCtrl+F",   CMD_SEARCH
+  MENUITEM "Z&najdü nastÍpny\tF3",  CMD_SEARCH_NEXT
+  MENUITEM SEPARATOR
   MENUITEM "Zaznacz w&szystko\tCtrl+A",       CMD_SELECT_ALL
   MENUITEM "Godzina/&Data\tF5",    CMD_TIME_DATE
   MENUITEM SEPARATOR
   MENUITEM "&Zawijanie wierszy",  CMD_WRAP
   MENUITEM "Czci&onka...",          CMD_FONT
  }
-POPUP "&Znajdü" {
-  MENUITEM "&Znajdü\tCtrl+F",   CMD_SEARCH
-  MENUITEM "Z&najdü nastÍpny\tF3",  CMD_SEARCH_NEXT
- }
 POPUP "Pomo&c" {
   MENUITEM "&Tematy pomocy",         CMD_HELP_CONTENTS
   MENUITEM "&Szukaj...",        CMD_HELP_SEARCH
   MENUITEM "&Pomoc",     CMD_HELP_ON_HELP
   MENUITEM SEPARATOR
-  POPUP "In&fo..." {
-   MENUITEM "&Licencja",         CMD_LICENSE
-   MENUITEM "&BEZ GWARANCJI",     CMD_NO_WARRANTY
-   MENUITEM "&O Wine...",      CMD_ABOUT_WINE
-  }
+  MENUITEM "In&fo...",      CMD_ABOUT_WINE
  }
 }
 

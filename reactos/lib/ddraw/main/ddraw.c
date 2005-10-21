@@ -151,7 +151,7 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 ULONG WINAPI Main_DirectDraw_AddRef (LPDIRECTDRAW7 iface) 
 {
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-    ULONG ref = InterlockedIncrement(&This->DirectDrawGlobal.dwRefCnt);
+    ULONG ref = InterlockedIncrement((PLONG)&This->DirectDrawGlobal.dwRefCnt);
 
    	return ref;
 }
@@ -159,7 +159,7 @@ ULONG WINAPI Main_DirectDraw_AddRef (LPDIRECTDRAW7 iface)
 ULONG WINAPI Main_DirectDraw_Release (LPDIRECTDRAW7 iface) 
 {
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-    ULONG ref = InterlockedDecrement(&This->DirectDrawGlobal.dwRefCnt);
+    ULONG ref = InterlockedDecrement((PLONG)&This->DirectDrawGlobal.dwRefCnt);
     
     if (ref == 0)
     {

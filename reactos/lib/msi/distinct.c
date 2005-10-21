@@ -67,7 +67,7 @@ static DISTINCTSET ** distinct_insert( DISTINCTSET **x, UINT val, UINT row )
     }
 
     /* nothing found, so add one */
-    *x = HeapAlloc( GetProcessHeap(), 0, sizeof (DISTINCTSET) );
+    *x = msi_alloc( sizeof (DISTINCTSET) );
     if( *x )
     {
         (*x)->val = val;
@@ -85,7 +85,7 @@ static void distinct_free( DISTINCTSET *x )
     {
         DISTINCTSET *next = x->nextrow;
         distinct_free( x->nextcol );
-        HeapFree( GetProcessHeap(), 0, x );
+        msi_free( x );
         x = next;
     }
 }
@@ -126,7 +126,7 @@ static UINT DISTINCT_execute( struct tagMSIVIEW *view, MSIRECORD *record )
     if( r != ERROR_SUCCESS )
         return r;
 
-    dv->translation = HeapAlloc( GetProcessHeap(), 0, r_count*sizeof(UINT) );
+    dv->translation = msi_alloc( r_count*sizeof(UINT) );
     if( !dv->translation )
         return ERROR_FUNCTION_FAILED;
 
@@ -178,7 +178,7 @@ static UINT DISTINCT_close( struct tagMSIVIEW *view )
     if( !dv->table )
          return ERROR_FUNCTION_FAILED;
 
-    HeapFree( GetProcessHeap(), 0, dv->translation );
+    msi_free( dv->translation );
     dv->translation = NULL;
     dv->row_count = 0;
 
@@ -239,9 +239,9 @@ static UINT DISTINCT_delete( struct tagMSIVIEW *view )
     if( dv->table )
         dv->table->ops->delete( dv->table );
 
-    HeapFree( GetProcessHeap(), 0, dv->translation );
+    msi_free( dv->translation );
     msiobj_release( &dv->db->hdr );
-    HeapFree( GetProcessHeap(), 0, dv );
+    msi_free( dv );
 
     return ERROR_SUCCESS;
 }
@@ -275,7 +275,7 @@ UINT DISTINCT_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table )
         return r;
     }
 
-    dv = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof *dv );
+    dv = msi_alloc_zero( sizeof *dv );
     if( !dv )
         return ERROR_FUNCTION_FAILED;
     

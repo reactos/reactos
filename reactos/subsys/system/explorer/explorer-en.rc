@@ -30,6 +30,8 @@ IDM_MDIFRAME MENU DISCARDABLE
 BEGIN
     POPUP "&File"
     BEGIN
+        MENUITEM "&Execute...",                 ID_EXECUTE
+        MENUITEM SEPARATOR
         MENUITEM "E&xit",                       ID_FILE_EXIT
     END
     POPUP "&View"
@@ -102,7 +104,9 @@ IDM_SDIFRAME MENU DISCARDABLE
 BEGIN
     POPUP "&File"
     BEGIN
-        MENUITEM "E&xit",                       ID_FILE_EXIT
+        MENUITEM "&Execute...",                 ID_EXECUTE
+        MENUITEM SEPARATOR
+        MENUITEM "&Close",                      ID_FILE_EXIT
     END
     POPUP "&View"
     BEGIN
@@ -123,116 +127,6 @@ BEGIN
         MENUITEM "Explorer &FAQ...",            ID_EXPLORER_FAQ
         MENUITEM "&About Explorer...",          ID_ABOUT_EXPLORER
         MENUITEM "About &OS...",                ID_ABOUT_WINDOWS
-    END
-END
-
-IDM_WINEFILE MENU DISCARDABLE 
-BEGIN
-    POPUP "&File"
-    BEGIN
-        MENUITEM "&Open\tEnter",                101
-        MENUITEM "&Move...\tF7",                106
-        MENUITEM "&Copy...\tF8",                107
-        MENUITEM "&In Clipboard...\tF9",        118
-        MENUITEM "&Delete\tDel",                108
-        MENUITEM "Re&name...",                  109
-        MENUITEM "Propert&ies...\tAlt+Enter",   ID_EDIT_PROPERTIES
-        MENUITEM SEPARATOR
-        MENUITEM "C&ompress...",                119
-        MENUITEM "Dec&ompress...",              120
-        MENUITEM SEPARATOR
-        MENUITEM "&Run...",                     ID_EXECUTE
-        MENUITEM "&Print...",                   102
-        MENUITEM "Associate...",                103
-        MENUITEM SEPARATOR
-        MENUITEM "Cr&eate Directory...",        ID_EXECUTE
-        MENUITEM "Searc&h...",                  104
-        MENUITEM "&Select Files...",            116
-        MENUITEM SEPARATOR
-        MENUITEM "E&xit\tAlt+X",                ID_FILE_EXIT
-    END
-    POPUP "&Disk"
-    BEGIN
-        MENUITEM "&Copy Disk...",               201
-        MENUITEM "&Label Disk...",              202
-        MENUITEM SEPARATOR
-        MENUITEM "&Format Disk...",             203
-        MENUITEM SEPARATOR
-        MENUITEM "Connect &Network Drive",      252
-        MENUITEM "&Disconnect Network Drive",   253
-        MENUITEM SEPARATOR
-        MENUITEM "Share as...",                 254
-        MENUITEM "&Remove Share...",            255
-        MENUITEM SEPARATOR
-        MENUITEM "&Select Drive...",            251
-    END
-    POPUP "&Directories"
-    BEGIN
-        MENUITEM "&Next Level\t+",              301
-        MENUITEM "Expand &Tree\t*",             302
-        MENUITEM "Expand &all\tCtrl+*",         303
-        MENUITEM "Collapse &Tree\t-",           304
-        MENUITEM SEPARATOR
-        MENUITEM "&Mark Childs",                505
-    END
-    POPUP "&View"
-    BEGIN
-        MENUITEM "T&ree and Directory",         413
-        MENUITEM "Tr&ee Only",                  411
-        MENUITEM "Directory &Only",             412
-        MENUITEM SEPARATOR
-        MENUITEM "Sp&lit",                      414
-        MENUITEM SEPARATOR
-        MENUITEM "&Name",                       ID_VIEW_NAME
-        MENUITEM "&All File Details",           ID_VIEW_ALL_ATTRIBUTES
-        , CHECKED
-        MENUITEM "&Partial Details...",         ID_VIEW_SELECTED_ATTRIBUTES
-        MENUITEM SEPARATOR
-        MENUITEM "&Sort by Name",               404
-        MENUITEM "Sort &by Type",               405
-        MENUITEM "Sort by Si&ze",               406
-        MENUITEM "Sort by &Date",               407
-        MENUITEM SEPARATOR
-        MENUITEM "Sort by &...",                409
-    END
-    POPUP "&Options"
-    BEGIN
-        MENUITEM "&Confirmation...",            65535
-        MENUITEM "&Font...",                    65535
-        MENUITEM "Customize Tool&bar...",       65535
-        MENUITEM SEPARATOR
-        MENUITEM "&Toolbar",                    ID_VIEW_TOOL_BAR, CHECKED
-        MENUITEM "&Drivebar",                   ID_VIEW_DRIVE_BAR, CHECKED
-        MENUITEM "&Side Bar",                   ID_VIEW_SIDE_BAR
-        MENUITEM "&Status Bar",                 ID_VIEW_STATUSBAR, CHECKED
-        MENUITEM "F&ull Screen\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
-        MENUITEM SEPARATOR
-        MENUITEM "&Symbol after Running",       65535
-        MENUITEM "&Save Changes on Exit",       511
-    END
-    POPUP "&Security"
-    BEGIN
-        MENUITEM "&Access...",                  605
-        MENUITEM "&Logging...",                 606
-        MENUITEM "&Owner...",                   607
-    END
-    POPUP "&Window"
-    BEGIN
-        MENUITEM "New &Window",                 ID_WINDOW_NEW
-        MENUITEM "Cascading\tCtrl+F5",          ID_WINDOW_CASCADE
-        MENUITEM "Tile &Horizontally",          ID_WINDOW_TILE_HORZ
-        MENUITEM "Tile &Vertically\tCtrl+F4",   ID_WINDOW_TILE_VERT
-        MENUITEM "Arrange Automatically",       ID_WINDOW_AUTOSORT
-        MENUITEM "Arrange &Symbols",            ID_WINDOW_ARRANGE
-        MENUITEM "&Refresh\tF5",                ID_REFRESH
-    END
-    POPUP "&?"
-    BEGIN
-        MENUITEM "&Help Topics\tF1",            ID_HELP
-        MENUITEM "Help &Search...\tF1",         ID_HELP
-        MENUITEM "&Using Help\tF1",             ID_HELP_USING
-        MENUITEM SEPARATOR
-        MENUITEM "Info about &Winefile...",     ID_ABOUT_WINEFILE
     END
 END
 
@@ -360,22 +254,42 @@ BEGIN
     PUSHBUTTON      "&Cancel",IDCANCEL,151,153,50,14
 END
 
-IDD_MDI_SDI DIALOGEX 0, 0, 188, 126
-STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_THICKFRAME
+IDD_MDI_SDI DIALOGEX 0, 0, 194, 157
+STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Choose MDI / SDI mode"
+CAPTION "Choose Explorer window mode"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     LTEXT           "Please select your prefered explorer user interface:",
                     IDC_STATIC,7,7,160,8
-    CONTROL         "&MDI (multiple document interface)",IDC_MDI,"Button",
-                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,30,121,10
-    CONTROL         "&SDI (single document interface)",IDC_SDI,"Button",
-                    BS_AUTORADIOBUTTON,7,53,115,10
+    CONTROL         "&MDI (Multiple Document Interface)",IDC_MDI,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,31,124,10
+    CONTROL         "&SDI (Single Document Interface)",IDC_SDI,"Button",
+                    BS_AUTORADIOBUTTON,7,62,118,10
+    CONTROL         170,IDC_STATIC,"Static",SS_BITMAP,145,23,15,13
+    CONTROL         171,IDC_STATIC,"Static",SS_BITMAP,145,57,15,13
+    CONTROL         "Open Subfolders in s&eparate windows",
+                    IDC_SEPARATE_SUBFOLDERS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,90,135,10
     LTEXT           "This setting will be used as default for all explorer windows in the future.",
-                    IDC_STATIC,7,76,174,22
-    DEFPUSHBUTTON   "&OK",IDOK,29,105,50,14,WS_GROUP
-    PUSHBUTTON      "&Cancel",IDCANCEL,106,105,50,14
+                    IDC_STATIC,7,111,174,22
+    DEFPUSHBUTTON   "&OK",IDOK,29,136,50,14,WS_GROUP
+    PUSHBUTTON      "&Cancel",IDCANCEL,106,136,50,14
+END
+
+IDD_ABOUT_EXPLORER DIALOG DISCARDABLE  0, 0, 199, 106
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "About ReactOS Explorer"
+FONT 10, "MS Sans Serif"
+BEGIN
+    LTEXT           "ReactOS Explorer",IDC_ROS_EXPLORER,91,13,104,11
+    LTEXT           "V 0.9",IDC_VERSION_TXT,91,27,104,8
+    LTEXT           "(c) 2003-2005 Martin Fuchs",IDC_STATIC,91,42,104,8
+    LTEXT           "",IDC_WIN_VERSION,91,58,98,22
+    LTEXT           "http://www.sky.franken.de/explorer/",IDC_WWW,17,84,129,
+                    8
+    CONTROL         "&OK",IDOK,"Button",BS_OWNERDRAW | BS_FLAT | WS_GROUP,
+                    154,90,38,12
 END
 
 

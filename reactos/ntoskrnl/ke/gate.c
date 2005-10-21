@@ -47,7 +47,7 @@ KeWaitForGate(PKGATE Gate,
         OldIrql = KeAcquireDispatcherDatabaseLock();
         
         /* Check if it's already signaled */
-        if (!Gate->Header.SignalState)
+        if (Gate->Header.SignalState)
         {
             /* Unsignal it */
             Gate->Header.SignalState = 0;

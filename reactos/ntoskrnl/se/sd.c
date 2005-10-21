@@ -24,7 +24,9 @@ PSECURITY_DESCRIPTOR SeUnrestrictedSd = NULL;
 
 /* FUNCTIONS ***************************************************************/
 
-BOOLEAN INIT_FUNCTION
+BOOLEAN
+INIT_FUNCTION
+NTAPI
 SepInitSDs(VOID)
 {
   /* Create PublicDefaultSd */
@@ -180,6 +182,7 @@ SeSetWorldSecurityDescriptor(SECURITY_INFORMATION SecurityInformation,
 
 
 NTSTATUS
+NTAPI
 SepCaptureSecurityQualityOfService(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
                                    IN KPROCESSOR_MODE AccessMode,
                                    IN POOL_TYPE PoolType,
@@ -331,6 +334,7 @@ SepCaptureSecurityQualityOfService(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIO
 
 
 VOID
+NTAPI
 SepReleaseSecurityQualityOfService(IN PSECURITY_QUALITY_OF_SERVICE CapturedSecurityQualityOfService  OPTIONAL,
                                    IN KPROCESSOR_MODE AccessMode,
                                    IN BOOLEAN CaptureIfKernel)

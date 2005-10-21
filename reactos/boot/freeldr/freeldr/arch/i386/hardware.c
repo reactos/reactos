@@ -30,6 +30,7 @@
 
 #include "../../reactos/registry.h"
 #include "hardware.h"
+#include "machpc.h"
 
 
 #define MILLISEC     (10)
@@ -562,7 +563,7 @@ SetHarddiskIdentifier(FRLDRHKEY DiskKey,
   Identifier[17] = '-';
   Identifier[18] = 'A';
   Identifier[19] = 0;
-  DbgPrint((DPRINT_HWDETECT, "Identifier: %xsn", Identifier));
+  DbgPrint((DPRINT_HWDETECT, "Identifier: %x\n", Identifier));
 
   /* Set identifier */
   Error = RegSetValue(DiskKey,

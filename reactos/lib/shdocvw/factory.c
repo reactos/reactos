@@ -25,7 +25,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 
 /**********************************************************************
- * Implement the IWebBrowser class factory
+ * Implement the WebBrowser class factory
  *
  * (Based on implementation in ddraw/main.c)
  */
@@ -36,10 +36,19 @@ WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
 static HRESULT WINAPI WBCF_QueryInterface(LPCLASSFACTORY iface,
                                           REFIID riid, LPVOID *ppobj)
 {
-    FIXME("- no interface\n\tIID:\t%s\n", debugstr_guid(riid));
-    
-    if (ppobj == NULL) return E_POINTER;
-    
+    TRACE("(%s %p)\n", debugstr_guid(riid), ppobj);
+
+    if (!ppobj)
+        return E_POINTER;
+
+    if(IsEqualGUID(&IID_IUnknown, riid) || IsEqualGUID(&IID_IClassFactory, riid)) {
+        *ppobj = iface;
+        return S_OK;
+    }
+
+    WARN("Not supported interface %s\n", debugstr_guid(riid));
+
+    *ppobj = NULL;
     return E_NOINTERFACE;
 }
 
@@ -69,25 +78,7 @@ static ULONG WINAPI WBCF_Release(LPCLASSFACTORY iface)
 static HRESULT WINAPI WBCF_CreateInstance(LPCLASSFACTORY iface, LPUNKNOWN pOuter,
                                           REFIID riid, LPVOID *ppobj)
 {
-    IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
-
-    /* Don't support aggregation (yet?) */
-    if (pOuter)
-    {
-        TRACE ("Failed attempt to aggregate IWebBrowser\n");
-        return CLASS_E_NOAGGREGATION;
-    }
-
-    TRACE("(%p)->(%p,%s,%p)\n", This, pOuter, debugstr_guid(riid), ppobj);
-
-    if ((IsEqualGUID (&IID_IOleObject, riid)))
-    {
-        TRACE ("Instantiating IOleObject component\n");
-        *ppobj = (LPVOID)&SHDOCVW_OleObject;
-
-        return S_OK;
-    }
-    return CLASS_E_CLASSNOTAVAILABLE;
+    return WebBrowser_Create(pOuter, riid, ppobj);
 }
 
 /************************************************************************
@@ -98,9 +89,9 @@ static HRESULT WINAPI WBCF_LockServer(LPCLASSFACTORY iface, BOOL dolock)
     TRACE("(%d)\n", dolock);
 
     if (dolock)
-	    SHDOCVW_LockModule();
+        SHDOCVW_LockModule();
     else
-	    SHDOCVW_UnlockModule();
+        SHDOCVW_UnlockModule();
     
     return S_OK;
 }

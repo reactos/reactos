@@ -26,7 +26,9 @@ PACL SeUnrestrictedDacl = NULL;
 
 /* FUNCTIONS ****************************************************************/
 
-BOOLEAN INIT_FUNCTION
+BOOLEAN
+INIT_FUNCTION
+NTAPI
 SepInitDACLs(VOID)
 {
   ULONG AclLength;
@@ -261,6 +263,7 @@ SepCreateImpersonationTokenDacl(PTOKEN Token,
 }
 
 NTSTATUS
+NTAPI
 SepCaptureAcl(IN PACL InputAcl,
               IN KPROCESSOR_MODE AccessMode,
               IN POOL_TYPE PoolType,
@@ -347,6 +350,7 @@ SepCaptureAcl(IN PACL InputAcl,
 }
 
 VOID
+NTAPI
 SepReleaseAcl(IN PACL CapturedAcl,
               IN KPROCESSOR_MODE AccessMode,
               IN BOOLEAN CaptureIfKernel)

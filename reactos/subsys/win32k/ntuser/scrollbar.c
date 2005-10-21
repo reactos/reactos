@@ -548,6 +548,7 @@ NtUserGetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
    PWINDOW_OBJECT Window;
    BOOL Ret;
    DECLARE_RETURN(BOOL);
+   USER_REFERENCE_ENTRY Ref;
 
    DPRINT("Enter NtUserGetScrollBarInfo\n");
    UserEnterExclusive();
@@ -564,7 +565,7 @@ NtUserGetScrollBarInfo(HWND hWnd, LONG idObject, PSCROLLBARINFO psbi)
       RETURN(FALSE);
    }
 
-   UserRefObjectCo(Window);
+   UserRefObjectCo(Window, &Ref);
    Ret = co_IntGetScrollBarInfo(Window, idObject, &sbi);
    UserDerefObjectCo(Window);
 
@@ -595,6 +596,7 @@ NtUserGetScrollInfo(HWND hWnd, int fnBar, LPSCROLLINFO lpsi)
    DWORD sz;
    BOOL Ret;
    DECLARE_RETURN(BOOL);
+   USER_REFERENCE_ENTRY Ref;
 
    DPRINT("Enter NtUserGetScrollInfo\n");
    UserEnterExclusive();
@@ -619,7 +621,7 @@ NtUserGetScrollInfo(HWND hWnd, int fnBar, LPSCROLLINFO lpsi)
       RETURN(FALSE);
    }
 
-   UserRefObjectCo(Window);
+   UserRefObjectCo(Window, &Ref);
    Ret = co_IntGetScrollInfo(Window, fnBar, &psi);
    UserDerefObjectCo(Window);
 
@@ -650,6 +652,7 @@ NtUserEnableScrollBar(
    PSCROLLBARINFO InfoV = NULL, InfoH = NULL;
    BOOL Chg = FALSE;
    DECLARE_RETURN(BOOL);
+   USER_REFERENCE_ENTRY Ref;
 
    DPRINT("Enter NtUserEnableScrollBar\n");
    UserEnterExclusive();
@@ -658,7 +661,7 @@ NtUserEnableScrollBar(
    {
       RETURN(FALSE);
    }
-   UserRefObjectCo(Window);
+   UserRefObjectCo(Window, &Ref);
 
    if(wSBflags == SB_CTL)
    {
@@ -732,6 +735,7 @@ NtUserSetScrollBarInfo(
    NTSTATUS Status;
    LONG Obj;
    DECLARE_RETURN(BOOL);
+   USER_REFERENCE_ENTRY Ref;
 
    DPRINT("Enter NtUserSetScrollBarInfo\n");
    UserEnterExclusive();
@@ -740,7 +744,7 @@ NtUserSetScrollBarInfo(
    {
       RETURN( FALSE);
    }
-   UserRefObjectCo(Window);
+   UserRefObjectCo(Window, &Ref);
 
    Obj = SBOBJ_TO_SBID(idObject);
    if(!SBID_IS_VALID(Obj))
@@ -792,6 +796,7 @@ NtUserSetScrollInfo(
    NTSTATUS Status;
    SCROLLINFO ScrollInfo;
    DECLARE_RETURN(DWORD);
+   USER_REFERENCE_ENTRY Ref;
 
    DPRINT("Enter NtUserSetScrollInfo\n");
    UserEnterExclusive();
@@ -800,7 +805,7 @@ NtUserSetScrollInfo(
    {
       RETURN( 0);
    }
-   UserRefObjectCo(Window);
+   UserRefObjectCo(Window, &Ref);
 
    Status = MmCopyFromCaller(&ScrollInfo, lpsi, sizeof(SCROLLINFO) - sizeof(ScrollInfo.nTrackPos));
    if(!NT_SUCCESS(Status))
@@ -892,6 +897,7 @@ NtUserShowScrollBar(HWND hWnd, int wBar, DWORD bShow)
    PWINDOW_OBJECT Window;
    DECLARE_RETURN(DWORD);
    DWORD ret;
+   USER_REFERENCE_ENTRY Ref;
 
    DPRINT("Enter NtUserShowScrollBar\n");
    UserEnterExclusive();
@@ -901,7 +907,7 @@ NtUserShowScrollBar(HWND hWnd, int wBar, DWORD bShow)
       RETURN(0);
    }
 
-   UserRefObjectCo(Window);
+   UserRefObjectCo(Window, &Ref);
    ret = co_UserShowScrollBar(Window, wBar, bShow);
    UserDerefObjectCo(Window);
 

@@ -1982,6 +1982,12 @@ typedef struct {
 	char szText[CBEMAXSTRLEN];
 	int iWhy;
 } NMCBEENDEDITA, *LPNMCBEENDEDITA,*PNMCBEENDEDITA;
+typedef struct tagNMKEY
+{
+	NMHDR hdr;
+	UINT nVKey;
+	UINT uFlags;
+} NMKEY, *LPNMKEY;
 typedef struct _COLORMAP {
 	COLORREF from;
 	COLORREF to;

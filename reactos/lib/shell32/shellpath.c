@@ -1303,7 +1303,7 @@ static HRESULT _SHGetDefaultValue(BYTE folder, LPWSTR pszPath)
      IS_INTRESOURCE(CSIDL_Data[folder].szDefaultPath))
     {
         if (LoadStringW(shell32_hInstance,
-         (UINT)CSIDL_Data[folder].szDefaultPath, resourcePath, MAX_PATH))
+         LOWORD(CSIDL_Data[folder].szDefaultPath), resourcePath, MAX_PATH))
         {
             hr = S_OK;
             pDefaultPath = resourcePath;

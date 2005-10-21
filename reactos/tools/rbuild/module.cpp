@@ -248,6 +248,25 @@ Module::Module ( const Project& project,
 	else
 		extension = GetDefaultModuleExtension ();
 
+	att = moduleNode.GetAttribute ( "unicode", false );
+	if ( att != NULL )
+	{
+		const char* p = att->value.c_str();
+		if ( !stricmp ( p, "true" ) || !stricmp ( p, "yes" ) )
+			isUnicode = true;
+		else if ( !stricmp ( p, "false" ) || !stricmp ( p, "no" ) )
+			isUnicode = false;
+		else
+		{
+			throw InvalidAttributeValueException (
+				moduleNode.location,
+				"unicode",
+				att->value );
+		}
+	}
+	else
+		isUnicode = false;
+
 	att = moduleNode.GetAttribute ( "entrypoint", false );
 	if ( att != NULL )
 		entrypoint = att->value;
@@ -318,11 +337,20 @@ Module::Module ( const Project& project,
 	else
 		useWRC = true;
 
-	att = moduleNode.GetAttribute ( "warnings", false );
+	att = moduleNode.GetAttribute ( "allowwarnings", false );
+	if ( att == NULL )
+	{
+		att = moduleNode.GetAttribute ( "warnings", false );
+		if ( att != NULL )
+		{
+			printf ( "%s: WARNING: 'warnings' attribute of <module> is deprecated, use 'allowwarnings' instead\n",
+				moduleNode.location.c_str() );
+		}
+	}
 	if ( att != NULL )
-		enableWarnings = att->value == "true";
+		allowWarnings = att->value == "true";
 	else
-		enableWarnings = false;
+		allowWarnings = false;
 
 	att = moduleNode.GetAttribute ( "aliasof", false );
 	if ( type == Alias && att != NULL )
@@ -671,9 +699,15 @@ Module::GetDefaultModuleEntrypoint () const
 			return "_DllMain@12";
 		case Win32CUI:
 		case Test:
-			return "_mainCRTStartup";
+			if ( isUnicode )
+				return "_wmainCRTStartup";
+			else
+				return "_mainCRTStartup";
 		case Win32GUI:
-			return "_WinMainCRTStartup";
+			if ( isUnicode )
+				return "_wWinMainCRTStartup";
+			else
+				return "_WinMainCRTStartup";
 		case KernelModeDriver:
 			return "_DriverEntry@8";
 		case BuildTool:

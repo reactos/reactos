@@ -61,8 +61,8 @@ typedef struct IDsCaptureDriverBuffer *PIDSCDRIVERBUFFER;
 typedef struct _DSDRIVERDESC
 {
     DWORD      	dwFlags;
-    CHAR	szDesc[256];
-    CHAR	szDrvName[256];
+    TCHAR	szDesc[256];
+    TCHAR	szDrvname[256];
     DWORD	dnDevNode;
     WORD	wVxdId;
     WORD	wReserved;
@@ -75,6 +75,9 @@ typedef struct _DSDRIVERDESC
     LPVOID	pvReserved1;
     LPVOID	pvReserved2;
 } DSDRIVERDESC,*PDSDRIVERDESC;
+
+
+
 
 typedef struct _DSDRIVERCAPS
 {

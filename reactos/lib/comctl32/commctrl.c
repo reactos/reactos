@@ -150,6 +150,9 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
             break;
 
 	case DLL_PROCESS_DETACH:
+            /* clean up subclassing */ 
+            THEMING_Uninitialize();
+
             /* unregister all common control classes */
             ANIMATE_Unregister ();
             COMBOEX_Unregister ();

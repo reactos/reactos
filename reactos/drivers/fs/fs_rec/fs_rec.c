@@ -34,7 +34,7 @@
 
 /* FUNCTIONS ****************************************************************/
 
-NTSTATUS STDCALL
+static NTSTATUS STDCALL
 FsRecCreate(IN PDEVICE_OBJECT DeviceObject,
 	    IN PIRP Irp)
 {
@@ -52,7 +52,7 @@ FsRecCreate(IN PDEVICE_OBJECT DeviceObject,
 }
 
 
-NTSTATUS STDCALL
+static NTSTATUS STDCALL
 FsRecClose(IN PDEVICE_OBJECT DeviceObject,
 	   IN PIRP Irp)
 {
@@ -64,7 +64,7 @@ FsRecClose(IN PDEVICE_OBJECT DeviceObject,
 }
 
 
-NTSTATUS STDCALL
+static NTSTATUS STDCALL
 FsRecFsControl(IN PDEVICE_OBJECT DeviceObject,
 	       IN PIRP Irp)
 {
@@ -102,7 +102,7 @@ FsRecFsControl(IN PDEVICE_OBJECT DeviceObject,
 }
 
 
-VOID STDCALL
+static VOID STDCALL
 FsRecUnload(IN PDRIVER_OBJECT DriverObject)
 {
   PDEVICE_OBJECT NextDevice;

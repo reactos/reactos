@@ -12,7 +12,7 @@
 #include "tdiconn.h"
 #include "debug.h"
 
-NTSTATUS DDKAPI SendComplete
+static NTSTATUS DDKAPI SendComplete
 ( PDEVICE_OBJECT DeviceObject,
   PIRP Irp,
   PVOID Context ) {
@@ -152,7 +152,7 @@ NTSTATUS DDKAPI SendComplete
     return STATUS_SUCCESS;
 }
 
-NTSTATUS DDKAPI PacketSocketSendComplete
+static NTSTATUS DDKAPI PacketSocketSendComplete
 ( PDEVICE_OBJECT DeviceObject,
   PIRP Irp,
   PVOID Context ) {

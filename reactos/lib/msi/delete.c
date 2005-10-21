@@ -177,7 +177,7 @@ static UINT DELETE_delete( struct tagMSIVIEW *view )
     if( dv->table )
         dv->table->ops->delete( dv->table );
 
-    HeapFree( GetProcessHeap(), 0, dv );
+    msi_free( dv );
 
     return ERROR_SUCCESS;
 }
@@ -203,7 +203,7 @@ UINT DELETE_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table )
 
     TRACE("%p\n", dv );
 
-    dv = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof *dv );
+    dv = msi_alloc_zero( sizeof *dv );
     if( !dv )
         return ERROR_FUNCTION_FAILED;
     

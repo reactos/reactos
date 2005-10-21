@@ -116,7 +116,8 @@ CreateDirectoryW (
                                    (lpSecurityAttributes ? lpSecurityAttributes->lpSecurityDescriptor : NULL));
 
         Status = NtCreateFile (&DirectoryHandle,
-                               GENERIC_READ,
+                               FILE_LIST_DIRECTORY | SYNCHRONIZE |
+                                   FILE_OPEN_FOR_BACKUP_INTENT,
                                &ObjectAttributes,
                                &IoStatusBlock,
                                NULL,
@@ -157,17 +158,28 @@ CreateDirectoryExW (
         OBJECT_ATTRIBUTES ObjectAttributes;
         IO_STATUS_BLOCK IoStatusBlock;
         UNICODE_STRING NtPathU, NtTemplatePathU;
-        HANDLE DirectoryHandle, TemplateHandle;
+        HANDLE DirectoryHandle = NULL;
+        HANDLE TemplateHandle = NULL;
         FILE_EA_INFORMATION EaInformation;
+        FILE_BASIC_INFORMATION FileBasicInfo;
         NTSTATUS Status;
+        ULONG OpenOptions, CreateOptions;
+        ACCESS_MASK DesiredAccess;
+        BOOLEAN ReparsePoint = FALSE;
         PVOID EaBuffer = NULL;
         ULONG EaLength = 0;
+        
+        OpenOptions = FILE_DIRECTORY_FILE | FILE_OPEN_REPARSE_POINT |
+                      FILE_OPEN_FOR_BACKUP_INTENT;
+        CreateOptions = FILE_DIRECTORY_FILE | FILE_OPEN_FOR_BACKUP_INTENT;
+        DesiredAccess = FILE_LIST_DIRECTORY | SYNCHRONIZE | FILE_WRITE_ATTRIBUTES |
+                        FILE_READ_ATTRIBUTES;
 
-        DPRINT ("lpTemplateDirectory %S lpNewDirectory %S lpSecurityAttributes %p\n",
+        DPRINT ("lpTemplateDirectory %ws lpNewDirectory %ws lpSecurityAttributes %p\n",
                 lpTemplateDirectory, lpNewDirectory, lpSecurityAttributes);
 
         /*
-         * Read the extended attributes from the template directory
+         * Translate the template directory path
          */
 
         if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpTemplateDirectory,
@@ -180,30 +192,106 @@ CreateDirectoryExW (
         }
 
         InitializeObjectAttributes(&ObjectAttributes,
+                                   &NtPathU,
+                                   OBJ_CASE_INSENSITIVE,
+                                   NULL,
+                                   (lpSecurityAttributes ? lpSecurityAttributes->lpSecurityDescriptor : NULL));
+
+        InitializeObjectAttributes(&ObjectAttributes,
                                    &NtTemplatePathU,
                                    OBJ_CASE_INSENSITIVE,
                                    NULL,
                                    NULL);
 
-        Status = NtCreateFile (&TemplateHandle,
-                               GENERIC_READ,
-                               &ObjectAttributes,
-                               &IoStatusBlock,
-                               NULL,
-                               0,
-                               FILE_SHARE_READ | FILE_SHARE_WRITE,
-                               FILE_OPEN,
-                               FILE_DIRECTORY_FILE,
-                               NULL,
-                               0);
+        /*
+         * Open the template directory
+         */
+
+OpenTemplateDir:
+        Status = NtOpenFile (&TemplateHandle,
+                             FILE_LIST_DIRECTORY | FILE_READ_ATTRIBUTES | FILE_READ_EA,
+                             &ObjectAttributes,
+                             &IoStatusBlock,
+                             FILE_SHARE_READ | FILE_SHARE_WRITE,
+                             OpenOptions);
         if (!NT_SUCCESS(Status))
         {
-                RtlFreeHeap (RtlGetProcessHeap (),
-                             0,
-                             NtTemplatePathU.Buffer);
-                SetLastErrorByStatus (Status);
-                return FALSE;
+            if (Status == STATUS_INVALID_PARAMETER &&
+                (OpenOptions & FILE_OPEN_REPARSE_POINT))
+            {
+                /* Some FSs (FAT) don't support reparse points, try opening
+                   the directory without FILE_OPEN_REPARSE_POINT */
+                OpenOptions &= ~FILE_OPEN_REPARSE_POINT;
+                
+                DPRINT("Reparse points not supported, try with less options\n");
+
+                /* try again */
+                goto OpenTemplateDir;
+            }
+            else
+            {
+                DPRINT1("Failed to open the template directory: 0x%x\n", Status);
+                goto CleanupNoNtPath;
+            }
         }
+        
+        /*
+         * Translate the new directory path and check if they're the same
+         */
+        
+        if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpNewDirectory,
+                                           &NtPathU,
+                                           NULL,
+                                           NULL))
+        {
+            Status = STATUS_OBJECT_PATH_NOT_FOUND;
+            goto CleanupNoNtPath;
+        }
+        
+        if (RtlEqualUnicodeString(&NtPathU,
+                                  &NtTemplatePathU,
+                                  TRUE))
+        {
+            DPRINT1("Both directory paths are the same!\n");
+            Status = STATUS_OBJECT_NAME_INVALID;
+            goto Cleanup;
+        }
+        
+        /*
+         * Query the basic file attributes from the template directory
+         */
+
+        /* Make sure FILE_ATTRIBUTE_NORMAL is used in case the information
+           isn't set by the FS */
+        FileBasicInfo.FileAttributes = FILE_ATTRIBUTE_NORMAL;
+        Status = NtQueryInformationFile(TemplateHandle,
+                                        &IoStatusBlock,
+                                        &FileBasicInfo,
+                                        sizeof(FILE_BASIC_INFORMATION),
+                                        FileBasicInformation);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to query the basic directory attributes\n");
+            goto Cleanup;
+        }
+        
+        /* clear the reparse point attribute if present. We're going to set the
+           reparse point later which will cause the attribute to be set */
+        if (FileBasicInfo.FileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)
+        {
+            FileBasicInfo.FileAttributes &= ~FILE_ATTRIBUTE_REPARSE_POINT;
+
+            /* writing the extended attributes requires the FILE_WRITE_DATA
+               access right */
+            DesiredAccess |= FILE_WRITE_DATA;
+
+            CreateOptions |= FILE_OPEN_REPARSE_POINT;
+            ReparsePoint = TRUE;
+        }
+
+        /*
+         * Read the Extended Attributes if present
+         */
 
         for (;;)
         {
@@ -261,65 +349,121 @@ CreateDirectoryExW (
           }
         }
 
-        NtClose(TemplateHandle);
-
-        RtlFreeHeap (RtlGetProcessHeap (),
-                     0,
-                     NtTemplatePathU.Buffer);
-
         if (!NT_SUCCESS(Status))
         {
-                /* free the he extended attributes buffer */
-                if (EaBuffer != NULL)
-                {
-                        RtlFreeHeap (RtlGetProcessHeap (),
-                                     0,
-                                     EaBuffer);
-                }
-
-                SetLastErrorByStatus (Status);
-                return FALSE;
+            DPRINT1("Querying the EA data failed: 0x%x\n", Status);
+            goto Cleanup;
         }
 
         /*
-         * Create the new directory and copy over the extended attributes if
-         * needed
+         * Create the new directory
          */
-
-        if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpNewDirectory,
-                                           &NtPathU,
-                                           NULL,
-                                           NULL))
-        {
-                /* free the he extended attributes buffer */
-                if (EaBuffer != NULL)
-                {
-                        RtlFreeHeap (RtlGetProcessHeap (),
-                                     0,
-                                     EaBuffer);
-                }
-
-                SetLastError(ERROR_PATH_NOT_FOUND);
-                return FALSE;
-        }
-
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &NtPathU,
-                                   OBJ_CASE_INSENSITIVE,
-                                   NULL,
-                                   (lpSecurityAttributes ? lpSecurityAttributes->lpSecurityDescriptor : NULL));
-
         Status = NtCreateFile (&DirectoryHandle,
-                               GENERIC_READ,
+                               DesiredAccess,
                                &ObjectAttributes,
                                &IoStatusBlock,
                                NULL,
-                               FILE_ATTRIBUTE_NORMAL,
+                               FileBasicInfo.FileAttributes,
                                FILE_SHARE_READ | FILE_SHARE_WRITE,
                                FILE_CREATE,
-                               FILE_DIRECTORY_FILE | FILE_SYNCHRONOUS_IO_NONALERT,
+                               CreateOptions,
                                EaBuffer,
                                EaLength);
+        if (!NT_SUCCESS(Status))
+        {
+            if (ReparsePoint &&
+                (Status == STATUS_INVALID_PARAMETER || Status == STATUS_ACCESS_DENIED))
+            {
+                /* The FS doesn't seem to support reparse points... */
+                DPRINT1("Cannot copy the hardlink, destination doesn\'t support reparse points!\n");
+            }
+
+            goto Cleanup;
+        }
+        
+        if (ReparsePoint)
+        {
+            /*
+             * Copy the reparse point
+             */
+
+            PREPARSE_GUID_DATA_BUFFER ReparseDataBuffer =
+                (PREPARSE_GUID_DATA_BUFFER)RtlAllocateHeap(RtlGetProcessHeap(),
+                                                           0,
+                                                           MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
+
+            if (ReparseDataBuffer == NULL)
+            {
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto Cleanup;
+            }
+
+            /* query the size of the reparse data buffer structure */
+            Status = NtFsControlFile(TemplateHandle,
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     &IoStatusBlock,
+                                     FSCTL_GET_REPARSE_POINT,
+                                     NULL,
+                                     0,
+                                     ReparseDataBuffer,
+                                     MAXIMUM_REPARSE_DATA_BUFFER_SIZE);
+            if (NT_SUCCESS(Status))
+            {
+                /* write the reparse point */
+                Status = NtFsControlFile(DirectoryHandle,
+                                         NULL,
+                                         NULL,
+                                         NULL,
+                                         &IoStatusBlock,
+                                         FSCTL_SET_REPARSE_POINT,
+                                         ReparseDataBuffer,
+                                         MAXIMUM_REPARSE_DATA_BUFFER_SIZE,
+                                         NULL,
+                                         0);
+            }
+
+            RtlFreeHeap(RtlGetProcessHeap(),
+                        0,
+                        ReparseDataBuffer);
+
+            if (!NT_SUCCESS(Status))
+            {
+                /* fail, we were unable to read the reparse point data! */
+                DPRINT1("Querying or setting the reparse point failed: 0x%x\n", Status);
+                goto Cleanup;
+            }
+        }
+        else
+        {
+            /*
+             * Copy alternate file streams, if existing
+             */
+
+            /* FIXME - enumerate and copy the file streams */
+        }
+        
+        /*
+         * We successfully created the directory and copied all information
+         * from the template directory
+         */
+        Status = STATUS_SUCCESS;
+
+Cleanup:
+        RtlFreeHeap (RtlGetProcessHeap (),
+                     0,
+                     NtPathU.Buffer);
+
+CleanupNoNtPath:
+        if (TemplateHandle != NULL)
+        {
+                NtClose(TemplateHandle);
+        }
+        
+        RtlFreeHeap (RtlGetProcessHeap (),
+                     0,
+                     NtTemplatePathU.Buffer);
 
         /* free the he extended attributes buffer */
         if (EaBuffer != NULL)
@@ -329,17 +473,16 @@ CreateDirectoryExW (
                              EaBuffer);
         }
 
-        RtlFreeHeap (RtlGetProcessHeap (),
-                     0,
-                     NtPathU.Buffer);
+        if (DirectoryHandle != NULL)
+        {
+                NtClose(DirectoryHandle);
+        }
 
         if (!NT_SUCCESS(Status))
         {
                 SetLastErrorByStatus(Status);
                 return FALSE;
         }
-
-        NtClose (DirectoryHandle);
 
         return TRUE;
 }

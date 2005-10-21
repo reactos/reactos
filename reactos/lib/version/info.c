@@ -345,7 +345,7 @@ END:
  */
 DWORD
 WINAPI
-GetFileVersionInfoSizeW ( LPWSTR filename, LPDWORD handle )
+GetFileVersionInfoSizeW ( LPCWSTR filename, LPDWORD handle )
 {
 	DWORD len;
 
@@ -371,7 +371,7 @@ GetFileVersionInfoSizeW ( LPWSTR filename, LPDWORD handle )
  */
 DWORD
 WINAPI
-GetFileVersionInfoSizeA ( LPSTR filename, LPDWORD handle )
+GetFileVersionInfoSizeA ( LPCSTR filename, LPDWORD handle )
 {
 	LPWSTR filenameW = VERSION_AllocA2W(filename);
 	DWORD ret = GetFileVersionInfoSizeW ( filenameW, handle );
@@ -385,7 +385,7 @@ GetFileVersionInfoSizeA ( LPSTR filename, LPDWORD handle )
 BOOL
 WINAPI
 GetFileVersionInfoW (
-	LPWSTR filename, DWORD handle,
+	LPCWSTR filename, DWORD handle,
 	DWORD datasize, LPVOID data )
 {
 	DWORD len, extradata;
@@ -411,7 +411,7 @@ GetFileVersionInfoW (
 BOOL
 WINAPI
 GetFileVersionInfoA (
-	LPSTR filename, DWORD handle,
+	LPCSTR filename, DWORD handle,
 	DWORD datasize, LPVOID data )
 {
 	LPWSTR filenameW = VERSION_AllocA2W ( filename );

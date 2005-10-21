@@ -37,7 +37,7 @@ static CRITICAL_SECTION_DEBUG MSI_handle_cs_debug =
     0, 0, &MSI_handle_cs,
     { &MSI_handle_cs_debug.ProcessLocksList, 
       &MSI_handle_cs_debug.ProcessLocksList },
-      0, 0, { 0, (DWORD)(__FILE__ ": MSI_handle_cs") }
+      0, 0, { (DWORD_PTR)(__FILE__ ": MSI_handle_cs") }
 };
 static CRITICAL_SECTION MSI_handle_cs = { &MSI_handle_cs_debug, -1, 0, 0, 0, 0 };
 
@@ -47,7 +47,7 @@ static CRITICAL_SECTION_DEBUG MSI_object_cs_debug =
     0, 0, &MSI_object_cs,
     { &MSI_object_cs_debug.ProcessLocksList, 
       &MSI_object_cs_debug.ProcessLocksList },
-      0, 0, { 0, (DWORD)(__FILE__ ": MSI_object_cs") }
+      0, 0, { (DWORD_PTR)(__FILE__ ": MSI_object_cs") }
 };
 static CRITICAL_SECTION MSI_object_cs = { &MSI_object_cs_debug, -1, 0, 0, 0, 0 };
 
@@ -109,30 +109,11 @@ out:
     return (void*) ret;
 }
 
-MSIHANDLE msiobj_findhandle( MSIOBJECTHDR *hdr )
-{
-    MSIHANDLE ret = 0;
-    UINT i;
-
-    TRACE("%p\n", hdr);
-
-    EnterCriticalSection( &MSI_handle_cs );
-    for(i=0; (i<MSIMAXHANDLES) && !ret; i++)
-        if( msihandletable[i].obj == hdr )
-            ret = i+1;
-    LeaveCriticalSection( &MSI_handle_cs );
-
-    TRACE("%p -> %ld\n", hdr, ret);
-
-    msiobj_addref( hdr );
-    return ret;
-}
-
 void *alloc_msiobject(UINT type, UINT size, msihandledestructor destroy )
 {
     MSIOBJECTHDR *info;
 
-    info = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, size );
+    info = msi_alloc_zero( size );
     if( info )
     {
         info->magic = MSIHANDLE_MAGIC;
@@ -190,7 +171,7 @@ int msiobj_release( MSIOBJECTHDR *info )
     {
         if( info->destructor )
             info->destructor( info );
-        HeapFree( GetProcessHeap(), 0, info );
+        msi_free( info );
         TRACE("object %p destroyed\n", info);
     }
 

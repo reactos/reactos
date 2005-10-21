@@ -237,12 +237,12 @@ void NtObjDirectory::read_directory(int scan_flags)
 			} else {
 				info->type.string_ptr = TEXT("");
 			}
-			wcscpyn(p, info->name.string_ptr, _MAX_PATH);
+			lstrcpynW(p, info->name.string_ptr, _MAX_PATH);
 #else
 			WideCharToMultiByte(CP_ACP, 0, info->name.string_ptr, info->name.string_len, p, MAX_PATH, 0, 0);
 #endif
 
-			lstrcpy(w32fd.cFileName, p);
+			lstrcpyn(w32fd.cFileName, p, sizeof(w32fd.cFileName) / sizeof(0[w32fd.cFileName]));
 
 			const LPCWSTR* tname = NTDLL::s_ObjectTypes;
 			OBJECT_TYPE type = UNKNOWN_OBJECT_TYPE;
@@ -379,67 +379,9 @@ Entry* NtObjDirectory::find_entry(const void* p)
 
 
  // get full path of specified directory entry
-bool NtObjEntry::get_path(PTSTR path) const
+bool NtObjEntry::get_path(PTSTR path, size_t path_count) const
 {
-	int level = 0;
-	int len = 0;
-	int l = 0;
-	LPCTSTR name = NULL;
-	TCHAR buffer[MAX_PATH];
-
-	const Entry* entry;
-	for(entry=this; entry; level++) {
-		l = 0;
-
-		if (entry->_etype == ET_NTOBJS) {
-			name = entry->_data.cFileName;
-
-			for(LPCTSTR s=name; *s && *s!=TEXT('/') && *s!=TEXT('\\'); s++)
-				++l;
-
-			if (!entry->_up)
-				break;
-		} else {
-			if (entry->get_path(buffer)) {
-				l = _tcslen(buffer);
-				name = buffer;
-
-				/* special handling of drive names */
-				if (l>0 && buffer[l-1]=='\\' && path[0]=='\\')
-					--l;
-
-				memmove(path+l, path, len*sizeof(TCHAR));
-				memcpy(path, name, l*sizeof(TCHAR));
-				len += l;
-			}
-
-			entry = NULL;
-			break;
-		}
-
-		if (l > 0) {
-			memmove(path+l+1, path, len*sizeof(TCHAR));
-			memcpy(path+1, name, l*sizeof(TCHAR));
-			len += l+1;
-
-			path[0] = TEXT('\\');
-		}
-
-		entry = entry->_up;
-	}
-
-	if (entry) {
-		memmove(path+l, path, len*sizeof(TCHAR));
-		memcpy(path, name, l*sizeof(TCHAR));
-		len += l;
-	}
-
-	if (!level)
-		path[len++] = TEXT('\\');
-
-	path[len] = TEXT('\0');
-
-	return true;
+	return get_path_base ( path, path_count, ET_NTOBJS );
 }
 
 BOOL NtObjEntry::launch_entry(HWND hwnd, UINT nCmdShow)

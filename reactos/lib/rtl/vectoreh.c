@@ -74,7 +74,7 @@ RtlpInitializeVectoredExceptionHandling(VOID)
 /*
  * @implemented
  */
-PVOID STDCALL
+PVOID NTAPI
 RtlAddVectoredExceptionHandler(IN ULONG FirstHandler,
                                IN PVECTORED_EXCEPTION_HANDLER VectoredHandler)
 {
@@ -107,7 +107,7 @@ RtlAddVectoredExceptionHandler(IN ULONG FirstHandler,
 /*
  * @implemented
  */
-ULONG STDCALL
+ULONG NTAPI
 RtlRemoveVectoredExceptionHandler(IN PVOID VectoredHandlerHandle)
 {
   PLIST_ENTRY CurrentEntry;

@@ -42,25 +42,20 @@ POPUP "&Urejanje" {
   MENUITEM "&Prilepi\tCtrl+V",    CMD_PASTE
   MENUITEM "Izbri&ši\tDel",      CMD_DELETE
   MENUITEM SEPARATOR
+  MENUITEM "&Najdi ...",           CMD_SEARCH
+  MENUITEM "Na&daljuj iskanje\tF3",  CMD_SEARCH_NEXT
+  MENUITEM SEPARATOR
   MENUITEM "Izberi &vse",       CMD_SELECT_ALL
   MENUITEM "Èas/&Datum\tF5",    CMD_TIME_DATE
   MENUITEM SEPARATOR
   MENUITEM "Pr&elom vrstice",  CMD_WRAP
- }
-POPUP "&Iskanje" {
-  MENUITEM "&Najdi ...",           CMD_SEARCH
-  MENUITEM "Na&daljuj iskanje\tF3",  CMD_SEARCH_NEXT
  }
 POPUP "&Pomoè" {
   MENUITEM "&Teme pomoèi",         CMD_HELP_CONTENTS
   MENUITEM "&Najdi ...",        CMD_HELP_SEARCH
   MENUITEM "&O pomoèi",     CMD_HELP_ON_HELP
   MENUITEM SEPARATOR
-  POPUP "Inf&ormacije ..." {
-   MENUITEM "&Licenèna pogodba",         CMD_LICENSE
-   MENUITEM "&BREZ GARANCIJE",     CMD_NO_WARRANTY
-   MENUITEM "&O Wine",      CMD_ABOUT_WINE
-  }
+  MENUITEM "Inf&ormacije ...",      CMD_ABOUT_WINE
  }
 }
 

@@ -29,7 +29,7 @@
 #include <precomp.h>
 
 #include "taskbar.h"
-#include "traynotify.h"	// for NOTIFYAREA_WIDTH_DEF
+#include "traynotify.h" // for NOTIFYAREA_WIDTH_DEF
 
 
 DynamicFct<BOOL (WINAPI*)(HWND hwnd)> g_SetTaskmanWindow(TEXT("user32"), "SetTaskmanWindow");
@@ -118,8 +118,6 @@ HWND TaskBar::Create(HWND hwndParent)
 
 LRESULT TaskBar::Init(LPCREATESTRUCT pcs)
 {
-        TBMETRICS metrics;
-	
 	if (super::Init(pcs))
 		return 1;
 
@@ -135,13 +133,19 @@ LRESULT TaskBar::Init(LPCREATESTRUCT pcs)
 	//SetWindowFont(_htoolbar, GetStockFont(ANSI_VAR_FONT), FALSE);
 	//SendMessage(_htoolbar, TB_SETPADDING, 0, MAKELPARAM(8,8));
 
+#ifndef __MINGW32__	// TBMETRICS missing in MinGW (as of 20.09.2005)
+	 // set metrics for the Taskbar toolbar to enable button spacing
+	TBMETRICS metrics;
+
 	metrics.cbSize = sizeof(TBMETRICS);
 	metrics.dwMask = TBMF_BARPAD | TBMF_BUTTONSPACING;
 	metrics.cxBarPad = 0;
 	metrics.cyBarPad = 0;
 	metrics.cxButtonSpacing = 3;
 	metrics.cyButtonSpacing = 3;
+
 	SendMessage(_htoolbar, TB_SETMETRICS, 0, (LPARAM)&metrics);
+#endif
 
 	_next_id = IDC_FIRST_APP;
 
@@ -190,7 +194,7 @@ LRESULT TaskBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		Point pt(lparam);
 		ScreenToClient(_htoolbar, &pt);
 
-		if ((HWND)wparam==_htoolbar && SendMessage(_htoolbar, TB_HITTEST, 0, (LPARAM)&pt)>0)
+		if ((HWND)wparam==_htoolbar && SendMessage(_htoolbar, TB_HITTEST, 0, (LPARAM)&pt)>=0)
 			break;	// avoid displaying context menu for application button _and_ desktop bar at the same time
 
 		goto def;}
@@ -254,7 +258,7 @@ int TaskBar::Notify(int id, NMHDR* pnmh)
 				(it=_map.find_id(btninfo.idCommand))!=_map.end()) {
 				//TaskBarEntry& entry = it->second;
 
-				ActivateApp(it, false);
+				ActivateApp(it, false, false);	// don't restore minimized windows on right button click
 
 #ifndef __MINGW32__	// SHRestricted() missing in MinGW (as of 29.10.2003)
 				static DynamicFct<DWORD(STDAPICALLTYPE*)(RESTRICTIONS)> pSHRestricted(TEXT("SHELL32"), "SHRestricted");
@@ -273,7 +277,7 @@ int TaskBar::Notify(int id, NMHDR* pnmh)
 }
 
 
-void TaskBar::ActivateApp(TaskBarMap::iterator it, bool can_minimize)
+void TaskBar::ActivateApp(TaskBarMap::iterator it, bool can_minimize, bool can_restore)
 {
 	HWND hwnd = it->first;
 
@@ -281,7 +285,7 @@ void TaskBar::ActivateApp(TaskBarMap::iterator it, bool can_minimize)
 						(hwnd==GetForegroundWindow() || hwnd==_last_foreground_wnd);
 
 	 // switch to selected application window
-	if (!minimize_it)
+	if (can_restore && !minimize_it)
 		if (IsIconic(hwnd))
 			PostMessage(hwnd, WM_SYSCOMMAND, SC_RESTORE, 0);
 
@@ -308,8 +312,10 @@ void TaskBar::ShowAppSystemMenu(TaskBarMap::iterator it)
 		GetCursorPos(&pt);
 		int cmd = TrackPopupMenu(hmenu, TPM_LEFTBUTTON|TPM_RIGHTBUTTON|TPM_RETURNCMD, pt.x, pt.y, 0, _hwnd, NULL);
 
-		if (cmd)
+		if (cmd) {
+			ActivateApp(it, false, false);	// reactivate window after the context menu has closed
 			PostMessage(it->first, WM_SYSCOMMAND, cmd, 0);
+		}
 	}
 }
 
@@ -392,8 +398,7 @@ BOOL CALLBACK TaskBar::EnumWndProc(HWND hwnd, LPARAM lparam)
 			HICON hIcon = get_window_icon_small(hwnd);
 			BOOL delete_icon = FALSE;
 
-			if (!hIcon)
-			{
+			if (!hIcon) {
 				hIcon = LoadIcon(0, IDI_APPLICATION);
 				delete_icon = TRUE;
 			}
@@ -562,7 +567,7 @@ void TaskBar::ResizeButtons()
 
 	if (btns > 0) {
 		int bar_width = ClientRect(_hwnd).right;
-		int btn_width = bar_width / btns;
+		int btn_width = (bar_width / btns) - 3;
 
 		if (btn_width < TASKBUTTONWIDTH_MIN)
 			btn_width = TASKBUTTONWIDTH_MIN;

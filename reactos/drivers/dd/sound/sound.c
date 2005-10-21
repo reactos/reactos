@@ -26,7 +26,8 @@
 SB16 sb16;
 sb_status sb16_getenvironment(void);
 
-NTSTATUS STDCALL Dispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
+#if 0
+static NTSTATUS STDCALL Dispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
  * FUNCTION: Handles user mode requests
  * ARGUMENTS:
@@ -100,6 +101,7 @@ NTSTATUS ModuleEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath)
 #endif
 	return(STATUS_SUCCESS);
 }
+#endif
 
 sb_status sb16_getenvironment(void)
 {

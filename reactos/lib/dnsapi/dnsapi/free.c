@@ -8,12 +8,10 @@
  *              12/15/03 -- Created
  */
 
-#include <windows.h>
-#include <winerror.h>
-#include <windns.h>
-#include <internal/windns.h>
-#define NTOS_MODE_USER
-#include <ndk/ntndk.h>
+#include "precomp.h"
+
+#define NDEBUG
+#include <debug.h>
 
 VOID WINAPI DnsFree
 ( PVOID Data, DNS_FREE_TYPE FreeType ) {

@@ -9,13 +9,7 @@
  * UPDATE HISTORY:
  *      07/12/2004  Created
  */
-#include <windows.h>
-#include <ddk/hidpi.h>
-#include "internal.h"
-
-#define UNIMPLEMENTED \
-  DbgPrint("HID:  %s at %s:%d is UNIMPLEMENTED!\n",__FUNCTION__,__FILE__,__LINE__)
-
+#include <precomp.h>
 
 /*
  * @unimplemented

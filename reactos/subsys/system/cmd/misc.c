@@ -322,7 +322,7 @@ VOID freep (LPTSTR *p)
 }
 
 
-LPTSTR _stpcpy (LPTSTR dest, LPTSTR src)
+LPTSTR _stpcpy (LPTSTR dest, LPCTSTR src)
 {
 	_tcscpy (dest, src);
 	return (dest + _tcslen (src));
@@ -381,13 +381,12 @@ BOOL FileGetString (HANDLE hFile, LPTSTR lpBuffer, INT nBufferLength)
 	while ((--nBufferLength >  0) &&
 		   ReadFile(hFile, &ch, 1, &dwRead, NULL) && dwRead)
 	{
-		if ((ch == '\n') || (ch == '\r'))
+        lpString[len++] = ch;
+        if ((ch == '\n') || (ch == '\r'))
 		{
-			/* read it*/
-			lpString[len++] = ch;
+			/* break at new line*/
 			break;
 		}
-		lpString[len++] = ch;
 	}
 
 	if (!dwRead && !len)
@@ -400,40 +399,6 @@ BOOL FileGetString (HANDLE hFile, LPTSTR lpBuffer, INT nBufferLength)
 #endif
 	return TRUE;
 }
-
-#ifndef __REACTOS__
-/*
- * GetConsoleWindow - returns the handle to the current console window
- */
-HWND GetConsoleWindow (VOID)
-{
-	TCHAR original[256];
-	TCHAR temp[256];
-	HWND h=0;
-
-	if(h)
-		return h;
-
-	GetConsoleTitle (original, sizeof(original) / sizeof(TCHAR));
-
-	_tcscpy (temp, original);
-	_tcscat (temp, _T("-xxx   "));
-
-	if (FindWindow (0, temp) == NULL )
-	{
-		SetConsoleTitle (temp);
-		Sleep (0);
-
-		while(!(h = FindWindow (0, temp)))
-			;
-
-		SetConsoleTitle (original);
-	}
-
-	return h;
-}
-#endif
-
 
 INT PagePrompt (VOID)
 {

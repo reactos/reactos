@@ -38,6 +38,8 @@ VOID DIALOG_EditWrap(VOID);
 
 VOID DIALOG_Search(VOID);
 VOID DIALOG_SearchNext(VOID);
+VOID DIALOG_Replace(VOID);
+VOID DIALOG_GoTo(VOID);
 
 VOID DIALOG_SelectFont(VOID);
 
@@ -51,7 +53,7 @@ VOID DIALOG_HelpAboutWine(VOID);
 VOID DIALOG_TimeDate(VOID);
 
 /* utility functions */
-VOID ShowLastError();
+VOID ShowLastError(void);
 BOOL FileExists(LPCWSTR szFilename);
 BOOL DoCloseFile(void);
 void DoOpenFile(LPCWSTR szFileName);

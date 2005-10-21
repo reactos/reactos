@@ -21,12 +21,11 @@
 #include "config.h"
 
 #include <stdarg.h>
+#include <stdlib.h>
 
 #include "windef.h"
 #include "winbase.h"
 #include "winuser.h"
-#define NO_SHLWAPI_REG
-#include "shlwapi.h"
 #include "winnls.h"
 #include "wingdi.h"
 #include "uxtheme.h"
@@ -35,6 +34,7 @@
 #include "uxthemedll.h"
 #include "msstyles.h"
 
+#include "wine/unicode.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(uxtheme);
@@ -343,7 +343,7 @@ static BOOL MSSTYLES_ParseIniSectionName(LPCWSTR lpSection, DWORD dwLen, LPWSTR 
     *iStateId = 0;
     comp = sec;
     /* Get the application name */
-    tmp = StrChrW(comp, ':');
+    tmp = strchrW(comp, ':');
     if(tmp) {
         *tmp++ = 0;
         tmp++;
@@ -351,19 +351,19 @@ static BOOL MSSTYLES_ParseIniSectionName(LPCWSTR lpSection, DWORD dwLen, LPWSTR 
         comp = tmp;
     }
 
-    tmp = StrChrW(comp, '.');
+    tmp = strchrW(comp, '.');
     if(tmp) {
         *tmp++ = 0;
         lstrcpynW(szClassName, comp, MAX_THEME_CLASS_NAME);
         comp = tmp;
         /* now get the part & state */
-        tmp = StrChrW(comp, '(');
+        tmp = strchrW(comp, '(');
         if(tmp) {
             *tmp++ = 0;
             lstrcpynW(part, comp, sizeof(part)/sizeof(part[0]));
             comp = tmp;
             /* now get the state */
-            *StrChrW(comp, ')') = 0;
+            *strchrW(comp, ')') = 0;
             lstrcpynW(state, comp, sizeof(state)/sizeof(state[0]));
         }
         else {
@@ -371,13 +371,13 @@ static BOOL MSSTYLES_ParseIniSectionName(LPCWSTR lpSection, DWORD dwLen, LPWSTR 
         }
     }
     else {
-        tmp = StrChrW(comp, '(');
+        tmp = strchrW(comp, '(');
         if(tmp) {
             *tmp++ = 0;
             lstrcpynW(szClassName, comp, MAX_THEME_CLASS_NAME);
             comp = tmp;
             /* now get the state */
-            *StrChrW(comp, ')') = 0;
+            *strchrW(comp, ')') = 0;
             lstrcpynW(state, comp, sizeof(state)/sizeof(state[0]));
         }
         else {
@@ -805,7 +805,7 @@ PTHEME_CLASS MSSTYLES_OpenThemeClass(LPCWSTR pszAppName, LPCWSTR pszClassList)
     }
 
     start = pszClassList;
-    while((end = StrChrW(start, ';'))) {
+    while((end = strchrW(start, ';'))) {
         len = end-start;
         lstrcpynW(szClassName, start, min(len+1, sizeof(szClassName)/sizeof(szClassName[0])));
         start = end+1;

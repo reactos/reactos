@@ -48,7 +48,6 @@ AbortSystemShutdownA(LPCSTR lpMachineName)
             return FALSE;
     }
     rv = AbortSystemShutdownW(MachineNameW.Buffer);
-    RtlFreeAnsiString(&MachineNameA);
     RtlFreeUnicodeString(&MachineNameW);
     SetLastError(ERROR_SUCCESS);
     return rv;
@@ -110,7 +109,6 @@ InitiateSystemShutdownA(
         RtlInitAnsiString(&MachineNameA, lpMachineName);
         Status = RtlAnsiStringToUnicodeString(&MachineNameW, &MachineNameA, TRUE);
         if (STATUS_SUCCESS != Status) {
-            RtlFreeAnsiString(&MachineNameA);
             SetLastError(RtlNtStatusToDosError(Status));
             return FALSE;
         }
@@ -120,10 +118,8 @@ InitiateSystemShutdownA(
         Status = RtlAnsiStringToUnicodeString(&MessageW, &MessageA, TRUE);
         if (STATUS_SUCCESS != Status) {
             if (MachineNameW.Length) {
-                RtlFreeAnsiString(&MachineNameA);
                 RtlFreeUnicodeString(&MachineNameW);
             }
-            RtlFreeAnsiString(&MessageA);
             SetLastError(RtlNtStatusToDosError(Status));
             return FALSE;
         }
@@ -136,11 +132,9 @@ InitiateSystemShutdownA(
             bRebootAfterShutdown);
     LastError = GetLastError();
     if (lpMachineName) {
-        RtlFreeAnsiString(&MachineNameA);
         RtlFreeUnicodeString(&MachineNameW);
     }
     if (lpMessage) {
-        RtlFreeAnsiString(&MessageA);
         RtlFreeUnicodeString(&MessageW);
     }
     SetLastError(LastError);

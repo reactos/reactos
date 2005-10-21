@@ -675,8 +675,7 @@ KeyboardThreadMain(PVOID StartContext)
                                   KeyInput.Flags & KEY_E0 ? 0xE0 :
                                   (KeyInput.Flags & KEY_E1 ? 0xE1 : 0));
 
-            if (GetHotKey(InputWindowStation,
-                          ModifierState,
+            if (GetHotKey(ModifierState,
                           msg.wParam,
                           &Thread,
                           &hWnd,
@@ -717,6 +716,7 @@ UserAcquireOrReleaseInputOwnership(BOOLEAN Release)
       InputThreadsRunning = FALSE;
 
       NtAlertThread(KeyboardThreadHandle);
+      NtAlertThread(MouseThreadHandle);
    }
    else if (!Release && !InputThreadsRunning)
    {

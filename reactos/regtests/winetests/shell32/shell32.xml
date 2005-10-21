@@ -1,4 +1,4 @@
-<module name="shell32_winetest" type="win32cui" installbase="bin" installname="shell32_winetest.exe" warnings="true">
+<module name="shell32_winetest" type="win32cui" installbase="bin" installname="shell32_winetest.exe" allowwarnings="true">
     <include base="shell32_winetest">.</include>
     <define name="__USE_W32API" />
     <library>ntdll</library>

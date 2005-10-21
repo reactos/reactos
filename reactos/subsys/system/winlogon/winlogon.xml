@@ -14,4 +14,5 @@
 	<file>winlogon.c</file>
 	<file>wlx.c</file>
 	<file>winlogon.rc</file>
+	<pch>winlogon.h</pch>
 </module>

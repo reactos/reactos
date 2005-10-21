@@ -242,7 +242,8 @@ static UINT WHERE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
     if( r != ERROR_SUCCESS )
         return r;
 
-    wv->reorder = HeapAlloc( GetProcessHeap(), 0, count*sizeof(UINT) );
+    msi_free( wv->reorder );
+    wv->reorder = msi_alloc( count*sizeof(UINT) );
     if( !wv->reorder )
         return ERROR_FUNCTION_FAILED;
 
@@ -269,7 +270,7 @@ static UINT WHERE_close( struct tagMSIVIEW *view )
     if( !wv->table )
          return ERROR_FUNCTION_FAILED;
 
-    HeapFree( GetProcessHeap(), 0, wv->reorder );
+    msi_free( wv->reorder );
     wv->reorder = NULL;
 
     return wv->table->ops->close( wv->table );
@@ -328,13 +329,14 @@ static UINT WHERE_delete( struct tagMSIVIEW *view )
 
     if( wv->table )
         wv->table->ops->delete( wv->table );
+    wv->table = 0;
 
-    HeapFree( GetProcessHeap(), 0, wv->reorder );
+    msi_free( wv->reorder );
     wv->reorder = NULL;
     wv->row_count = 0;
 
     msiobj_release( &wv->db->hdr );
-    HeapFree( GetProcessHeap(), 0, wv );
+    msi_free( wv );
 
     return ERROR_SUCCESS;
 }
@@ -444,7 +446,7 @@ UINT WHERE_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table,
     MSIWHEREVIEW *wv = NULL;
     UINT count = 0, r, valid = 0;
 
-    TRACE("%p\n", wv );
+    TRACE("%p\n", table );
 
     r = table->ops->get_dimensions( table, NULL, &count );
     if( r != ERROR_SUCCESS )
@@ -462,7 +464,7 @@ UINT WHERE_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table,
             return ERROR_FUNCTION_FAILED;
     }
 
-    wv = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof *wv );
+    wv = msi_alloc_zero( sizeof *wv );
     if( !wv )
         return ERROR_FUNCTION_FAILED;
     

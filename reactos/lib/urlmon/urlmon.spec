@@ -17,14 +17,14 @@
 @ stub CoInternetGetProtocolFlags
 @ stub CoInternetGetSecurityUrl
 @ stdcall CoInternetGetSession(long ptr long)
-@ stub CoInternetParseUrl
+@ stdcall CoInternetParseUrl(wstr long long wstr long ptr long)
 @ stdcall CoInternetQueryInfo(ptr long long ptr long ptr long)
 @ stub CompareSecurityIds
 @ stub CopyBindInfo
 @ stub CopyStgMedium
 @ stdcall CreateAsyncBindCtx(long ptr ptr ptr)
 @ stdcall CreateAsyncBindCtxEx(ptr long ptr ptr ptr long)
-@ stub CreateFormatEnumerator
+@ stdcall CreateFormatEnumerator(long ptr ptr)
 @ stdcall CreateURLMoniker(ptr wstr ptr)
 @ stdcall -private DllCanUnloadNow()
 @ stdcall -private DllGetClassObject(ptr ptr ptr)
@@ -56,12 +56,12 @@
 @ stdcall ObtainUserAgentString(long str ptr)
 @ stub PrivateCoInstall
 @ stdcall RegisterBindStatusCallback(ptr ptr ptr long)
-@ stub RegisterFormatEnumerator
+@ stdcall RegisterFormatEnumerator(ptr ptr long)
 @ stub RegisterMediaTypeClass
 @ stub RegisterMediaTypes
 @ stdcall ReleaseBindInfo(ptr)
 @ stdcall RevokeBindStatusCallback(ptr ptr)
-@ stub RevokeFormatEnumerator
+@ stdcall RevokeFormatEnumerator(ptr ptr)
 @ stub SetSoftwareUpdateAdvertisementState
 @ stub URLDownloadA
 @ stub URLDownloadToCacheFileA

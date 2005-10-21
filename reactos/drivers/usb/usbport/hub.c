@@ -1053,6 +1053,7 @@ static void hub_port_connect_change(struct usb_hub *hubstate, int port,
 		/* Run it through the hoops (find a driver, etc) */
 		if (!usb_new_device(dev, &hub->dev)) {
 			hub->children[port] = dev;
+			usbfs_add_device(dev);
 			goto done;
 		}
 

@@ -77,12 +77,13 @@ ME_DisplayItem *ME_RowStart(ME_DisplayItem *item) {
   return ME_FindItemBackOrHere(item, diStartRow);
 }
 
+/*
 ME_DisplayItem *ME_RowEnd(ME_DisplayItem *item) {
   ME_DisplayItem *item2 = ME_FindItemFwd(item, diStartRowOrParagraphOrEnd);
   if (!item2) return NULL;
   return ME_FindItemBack(item, diRun);
 }
-
+*/
 
 ME_DisplayItem *
 ME_FindRowWithNumber(ME_TextEditor *editor, int nRow)

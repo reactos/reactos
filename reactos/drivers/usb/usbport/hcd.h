@@ -206,7 +206,7 @@ struct hc_driver {
 	int		(*hub_status_data) (struct usb_hcd *hcd, char *buf);
 	int		(*hub_control) (struct usb_hcd *hcd,
 				u16 typeReq, u16 wValue, u16 wIndex,
-				char *buf, u16 wLength);
+				u8 *buf, u16 wLength);
 };
 
 // old version, "just in case"
@@ -453,7 +453,14 @@ extern void usbfs_cleanup(void);
 
 static inline void usbfs_add_bus(struct usb_bus *bus) {}
 static inline void usbfs_remove_bus(struct usb_bus *bus) {}
-static inline void usbfs_add_device(struct usb_device *dev) {}
+static inline void usbfs_add_device(struct usb_device *dev)
+{
+	if (dev->parent)
+	{
+		PDEVICE_OBJECT Pdo = (PDEVICE_OBJECT)dev->parent->dev.dev_ext;
+		IoInvalidateDeviceRelations(Pdo, BusRelations);
+	}
+}
 static inline void usbfs_remove_device(struct usb_device *dev) {}
 static inline void usbfs_update_special (void) {}
 

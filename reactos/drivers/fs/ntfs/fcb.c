@@ -446,7 +446,7 @@ NtfsAttachFCBToFileObject(PDEVICE_EXTENSION Vcb,
 }
 
 
-NTSTATUS
+static NTSTATUS
 NtfsDirFindFile(PDEVICE_EXTENSION DeviceExt,
 		PFCB DirectoryFcb,
 		PWSTR FileToFind,

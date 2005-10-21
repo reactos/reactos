@@ -29,7 +29,9 @@ static BOOLEAN SepInitExports(VOID);
 
 /* FUNCTIONS ****************************************************************/
 
-BOOLEAN INIT_FUNCTION
+BOOLEAN 
+INIT_FUNCTION
+NTAPI
 SeInit1(VOID)
 {
   SepInitLuid();
@@ -55,7 +57,9 @@ SeInit1(VOID)
 }
 
 
-BOOLEAN INIT_FUNCTION
+BOOLEAN
+INIT_FUNCTION
+NTAPI
 SeInit2(VOID)
 {
   SepInitializeTokenImplementation();
@@ -65,6 +69,7 @@ SeInit2(VOID)
 
 
 BOOLEAN
+NTAPI
 SeInitSRM(VOID)
 {
   OBJECT_ATTRIBUTES ObjectAttributes;

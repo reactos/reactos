@@ -101,8 +101,11 @@ CcGetFileObjectFromSectionPtrs(IN PSECTION_OBJECT_POINTERS SectionObjectPointers
 }
 
 
-VOID INIT_FUNCTION
+VOID 
+INIT_FUNCTION
+NTAPI
 CcInitView(VOID)
+
 {
    NTSTATUS Status;
    PHYSICAL_ADDRESS BoundaryAddressMultiple;
@@ -297,6 +300,7 @@ CcUninitializeCacheMap (IN PFILE_OBJECT	FileObject,
    ExReleaseFastMutex(&CcCacheViewLock);
    return TRUE;
 }
+
 
 
 /* EOF */

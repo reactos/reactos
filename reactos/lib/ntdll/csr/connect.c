@@ -39,7 +39,7 @@ HANDLE
 NTAPI
 CsrGetProcessId(VOID)
 {
-	return CsrProcessId;
+    return CsrProcessId;
 }
 
 /*
@@ -57,7 +57,7 @@ CsrClientCallServer(PCSR_API_MESSAGE ApiMessage,
     PULONG_PTR Pointers;
     ULONG_PTR CurrentPointer;
     DPRINT("CsrClientCallServer\n");
-  
+
     /* Fill out the Port Message Header */
     ApiMessage->Header.u1.s1.DataLength = RequestLength - sizeof(PORT_MESSAGE);
     ApiMessage->Header.u1.s1.TotalLength = RequestLength;
@@ -79,7 +79,6 @@ CsrClientCallServer(PCSR_API_MESSAGE ApiMessage,
         if (CaptureBuffer)
         {
             /* We have to convert from our local view to the remote view */
-            DPRINT1("Converting CaptureBuffer\n");
             ApiMessage->CsrCaptureData = (PVOID)((ULONG_PTR)CaptureBuffer +
                                                  CsrPortMemoryDelta);
 
@@ -91,14 +90,19 @@ CsrClientCallServer(PCSR_API_MESSAGE ApiMessage,
             Pointers = CaptureBuffer->PointerArray;
 
             /* Loop through every pointer and convert it */
+            DPRINT("PointerCount: %lx\n", PointerCount);
             while (PointerCount--)
             {
                 /* Get this pointer and check if it's valid */
+                DPRINT("Array Address: %p. This pointer: %p. Data: %p\n",
+                        &Pointers, Pointers, *Pointers);
                 if ((CurrentPointer = *Pointers++))
                 {
                     /* Update it */
+                    DPRINT("CurrentPointer: %p.\n", *(PULONG_PTR)CurrentPointer);
                     *(PULONG_PTR)CurrentPointer += CsrPortMemoryDelta;
                     Pointers[-1] = CurrentPointer - (ULONG_PTR)ApiMessage;
+                    DPRINT("CurrentPointer: %p.\n", *(PULONG_PTR)CurrentPointer);
                 }
             }
         }
@@ -112,7 +116,7 @@ CsrClientCallServer(PCSR_API_MESSAGE ApiMessage,
         if (CaptureBuffer)
         {
             /* We have to convert from the remote view to our remote view */
-            DPRINT1("Reconverting CaptureBuffer\n");
+            DPRINT("Reconverting CaptureBuffer\n");
             ApiMessage->CsrCaptureData = (PVOID)((ULONG_PTR)
                                                  ApiMessage->CsrCaptureData -
                                                  CsrPortMemoryDelta);
@@ -180,7 +184,14 @@ CsrConnectToServer(IN PWSTR ObjectDirectory)
     PSID SystemSid = NULL;
     CSR_CONNECTION_INFO ConnectionInfo;
     ULONG ConnectionInfoLength = sizeof(CSR_CONNECTION_INFO);
-    DPRINT("CsrConnectToServer\n");
+
+    DPRINT("%s(%S)\n", __FUNCTION__, ObjectDirectory);
+
+    /* Binary compatibility with MS KERNEL32 */
+    if (NULL == ObjectDirectory)
+    {
+        ObjectDirectory = L"\\Windows";
+    }
 
     /* Calculate the total port name size */
     PortNameLength = ((wcslen(ObjectDirectory) + 1) * sizeof(WCHAR)) +
@@ -201,12 +212,12 @@ CsrConnectToServer(IN PWSTR ObjectDirectory)
     /* Create a section for the port memory */
     CsrSectionViewSize.QuadPart = CSR_CSRSS_SECTION_SIZE;
     Status = NtCreateSection(&CsrSectionHandle,
-	             		     SECTION_ALL_ACCESS,
-			                 NULL,
-			                 &CsrSectionViewSize,
-			                 PAGE_READWRITE,
-			                 SEC_COMMIT,
-			                 NULL);
+                             SECTION_ALL_ACCESS,
+                             NULL,
+                             &CsrSectionViewSize,
+                             PAGE_READWRITE,
+                             SEC_COMMIT,
+                             NULL);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failure allocating CSR Section\n");
@@ -248,13 +259,13 @@ CsrConnectToServer(IN PWSTR ObjectDirectory)
     /* Connect to the port */
     Status = NtSecureConnectPort(&CsrApiPort,
                                  &PortName,
-			                     &SecurityQos,
-			                     &LpcWrite,
+                                 &SecurityQos,
+                                 &LpcWrite,
                                  SystemSid,
-			                     &LpcRead,
-			                     NULL,
-			                     &ConnectionInfo,
-			                     &ConnectionInfoLength);
+                                 &LpcRead,
+                                 NULL,
+                                 &ConnectionInfo,
+                                 &ConnectionInfoLength);
     NtClose(CsrSectionHandle);
     if (!NT_SUCCESS(Status))
     {
@@ -411,9 +422,9 @@ CsrClientConnectToServer(PWSTR ObjectDirectory,
                                      sizeof(CSR_CLIENT_CONNECT));
 #endif
         Status = CsrClientCallServer(&RosApiMessage,
-				                     NULL,
-				                     MAKE_CSR_API(CONNECT_PROCESS, CSR_NATIVE),
-				                     sizeof(CSR_API_MESSAGE));
+                                     NULL,
+                                     MAKE_CSR_API(CONNECT_PROCESS, CSR_NATIVE),
+                                     sizeof(CSR_API_MESSAGE));
     }
     else
     {

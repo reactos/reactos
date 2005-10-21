@@ -1,4 +1,4 @@
-<module name="kbduk" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbduk.dll" warnings="true">
+<module name="kbduk" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbduk.dll" allowwarnings="true">
 	<importlibrary definition="kbduk.def" />
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />

@@ -157,7 +157,7 @@ InvalidateRect(
   CONST RECT *lpRect,
   BOOL bErase)
 {
-  return NtUserInvalidateRect( hWnd, lpRect, bErase );
+  return RedrawWindow( hWnd, lpRect, 0, RDW_INVALIDATE | (bErase ? RDW_ERASE : 0) ); 
 }
 
 
@@ -171,7 +171,7 @@ InvalidateRgn(
   HRGN hRgn,
   BOOL bErase)
 {
-  return NtUserInvalidateRgn( hWnd, hRgn, bErase );
+  return RedrawWindow(hWnd, NULL, hRgn, RDW_INVALIDATE | (bErase ? RDW_ERASE : 0) ); 
 }
 
 
@@ -224,7 +224,7 @@ STDCALL
 UpdateWindow(
   HWND hWnd)
 {
-  return NtUserUpdateWindow( hWnd );
+  return RedrawWindow( hWnd, NULL, 0, RDW_UPDATENOW | RDW_ALLCHILDREN );
 }
 
 
@@ -237,6 +237,8 @@ ValidateRect(
   HWND hWnd,
   CONST RECT *lpRect)
 {
+  /* FIXME: should RDW_NOCHILDREN be included too? Ros used to,
+     but Wine dont so i removed it... */
   return RedrawWindow(hWnd, lpRect, 0, RDW_VALIDATE);
 }
 
@@ -250,7 +252,9 @@ ValidateRgn(
   HWND hWnd,
   HRGN hRgn)
 {
-  return NtUserValidateRgn(hWnd, hRgn);
+  /* FIXME: should RDW_NOCHILDREN be included too? Ros used to,
+     but Wine dont so i removed it... */
+  return RedrawWindow( hWnd, NULL, hRgn, RDW_VALIDATE );
 }
 
 

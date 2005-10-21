@@ -105,10 +105,11 @@ GetClipboardFormatNameA(UINT format, LPSTR lpszFormatName, int cchMaxCount)
       SetLastError(ERROR_OUTOFMEMORY);
       return 0;
    }
-   RtlInitUnicodeString(&FormatName, lpBuffer);
+
    FormatName.Length = 0;
    FormatName.MaximumLength = cchMaxCount * sizeof(WCHAR);
    FormatName.Buffer = lpBuffer;
+
    Length = NtUserGetClipboardFormatName(format, &FormatName, cchMaxCount);
    DPRINT("GetClipboardFormatNameA(%x): %S\n", format, lpBuffer);
    HEAP_strcpyWtoA(lpszFormatName, lpBuffer, Length);

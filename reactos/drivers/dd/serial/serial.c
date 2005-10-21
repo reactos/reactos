@@ -10,7 +10,7 @@
 //#define NDEBUG
 #include "serial.h"
 
-VOID STDCALL
+static VOID STDCALL
 DriverUnload(IN PDRIVER_OBJECT DriverObject)
 {
 	// nothing to do here yet

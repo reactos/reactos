@@ -70,6 +70,7 @@
 		<file>nls.c</file>
 		<file>perfcnt.c</file>
 		<file>profile.c</file>
+		<file>recovery.c</file>
 		<file>res.c</file>
 		<file>stubs.c</file>
 		<file>sysinfo.c</file>

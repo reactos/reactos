@@ -25,7 +25,8 @@ static TEST TestList[] =
     { L"smallfill", L"Small Fill", NullInit, FillSmallProc, NullCleanup, NullCleanup },
     { L"hlines", L"Horizontal Lines", NullInit, LinesHorizontalProc, NullCleanup, NullCleanup },
     { L"vlines", L"Vertical Lines", NullInit, LinesVerticalProc, NullCleanup, NullCleanup },
-    { L"lines", L"Lines", NullInit, LinesProc, NullCleanup, NullCleanup }
+    { L"lines", L"Lines", NullInit, LinesProc, NullCleanup, NullCleanup },
+    { L"text", L"Text", NullInit, TextProc, NullCleanup, NullCleanup }
   };
 
 

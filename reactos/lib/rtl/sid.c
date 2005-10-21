@@ -17,7 +17,7 @@
 
 /* FUNCTIONS ***************************************************************/
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 RtlValidSid(IN PSID Sid_)
 {
   PISID Sid =  Sid_;
@@ -37,19 +37,20 @@ RtlValidSid(IN PSID Sid_)
 /*
  * @implemented
  */
-ULONG STDCALL
+ULONG NTAPI
 RtlLengthRequiredSid(IN ULONG SubAuthorityCount)
 {
   PAGED_CODE_RTL();
 
-  return (sizeof(SID) + (SubAuthorityCount - 1) * sizeof(ULONG));
+  return (sizeof(SID) - (ANYSIZE_ARRAY * sizeof(ULONG)) +
+          (SubAuthorityCount * sizeof(ULONG)));
 }
 
 
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlInitializeSid(IN PSID Sid_,
                  IN PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
                  IN UCHAR SubAuthorityCount)
@@ -71,7 +72,7 @@ RtlInitializeSid(IN PSID Sid_,
 /*
  * @implemented
  */
-PULONG STDCALL
+PULONG NTAPI
 RtlSubAuthoritySid(IN PSID Sid_,
                    IN ULONG SubAuthority)
 {
@@ -86,7 +87,7 @@ RtlSubAuthoritySid(IN PSID Sid_,
 /*
  * @implemented
  */
-PUCHAR STDCALL
+PUCHAR NTAPI
 RtlSubAuthorityCountSid(IN PSID Sid_)
 {
   PISID Sid =  Sid_;
@@ -100,49 +101,46 @@ RtlSubAuthorityCountSid(IN PSID Sid_)
 /*
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 RtlEqualSid(IN PSID Sid1_,
             IN PSID Sid2_)
 {
   PISID Sid1 =  Sid1_;
   PISID Sid2 =  Sid2_;
+  SIZE_T SidLen;
 
   PAGED_CODE_RTL();
 
-  if (Sid1->Revision != Sid2->Revision)
+  if (Sid1->Revision != Sid2->Revision ||
+      (*RtlSubAuthorityCountSid(Sid1)) != (*RtlSubAuthorityCountSid(Sid2)))
    {
       return(FALSE);
    }
-   if ((*RtlSubAuthorityCountSid(Sid1)) != (*RtlSubAuthorityCountSid(Sid2)))
-   {
-      return(FALSE);
-   }
-   if (RtlCompareMemory(Sid1, Sid2, RtlLengthSid(Sid1)) != RtlLengthSid(Sid1))
-   {
-      return(FALSE);
-   }
-   return(TRUE);
+   
+   SidLen = RtlLengthSid(Sid1);
+   return RtlCompareMemory(Sid1, Sid2, SidLen) == SidLen;
 }
 
 
 /*
  * @implemented
  */
-ULONG STDCALL
+ULONG NTAPI
 RtlLengthSid(IN PSID Sid_)
 {
   PISID Sid =  Sid_;
 
   PAGED_CODE_RTL();
 
-  return (sizeof(SID) + (Sid->SubAuthorityCount-1) * sizeof(ULONG));
+  return (sizeof(SID) - sizeof(Sid->SubAuthority) +
+          (Sid->SubAuthorityCount * sizeof(ULONG)));
 }
 
 
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlCopySid(ULONG BufferLength,
            PSID Dest,
            PSID Src)
@@ -165,7 +163,7 @@ RtlCopySid(ULONG BufferLength,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlCopySidAndAttributesArray(ULONG Count,
                              PSID_AND_ATTRIBUTES Src,
                              ULONG SidAreaSize,
@@ -206,7 +204,7 @@ RtlCopySidAndAttributesArray(ULONG Count,
 /*
  * @implemented
  */
-PSID_IDENTIFIER_AUTHORITY STDCALL
+PSID_IDENTIFIER_AUTHORITY NTAPI
 RtlIdentifierAuthoritySid(IN PSID Sid_)
 {
   PISID Sid =  Sid_;
@@ -220,7 +218,7 @@ RtlIdentifierAuthoritySid(IN PSID Sid_)
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlAllocateAndInitializeSid(PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
 			    UCHAR SubAuthorityCount,
 			    ULONG SubAuthority0,
@@ -243,7 +241,7 @@ RtlAllocateAndInitializeSid(PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
   if (Sid == NULL)
     return STATUS_INVALID_PARAMETER;
 
-  pSid = RtlpAllocateMemory(sizeof(SID) + (SubAuthorityCount - 1) * sizeof(ULONG),
+  pSid = RtlpAllocateMemory(RtlLengthRequiredSid(SubAuthorityCount),
                             TAG_SID);
   if (pSid == NULL)
     return STATUS_NO_MEMORY;
@@ -288,7 +286,7 @@ RtlAllocateAndInitializeSid(PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
  *  Docs says FreeSid does NOT return a value
  *  even thou it's defined to return a PVOID...
  */
-PVOID STDCALL
+PVOID NTAPI
 RtlFreeSid(IN PSID Sid)
 {
    PAGED_CODE_RTL();
@@ -301,7 +299,7 @@ RtlFreeSid(IN PSID Sid)
 /*
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 RtlEqualPrefixSid(IN PSID Sid1_,
                   IN PSID Sid2_)
 {
@@ -319,7 +317,7 @@ RtlEqualPrefixSid(IN PSID Sid1_,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlConvertSidToUnicodeString(PUNICODE_STRING String,
                              PSID Sid_,
                              BOOLEAN AllocateBuffer)
@@ -338,7 +336,7 @@ RtlConvertSidToUnicodeString(PUNICODE_STRING String,
    wcs = Buffer;
    wcs += swprintf (wcs, L"S-%u-", Sid->Revision);
    if (Sid->IdentifierAuthority.Value[0] == 0 &&
-         Sid->IdentifierAuthority.Value[1] == 0)
+       Sid->IdentifierAuthority.Value[1] == 0)
    {
       wcs += swprintf (wcs,
                        L"%lu",
@@ -366,28 +364,29 @@ RtlConvertSidToUnicodeString(PUNICODE_STRING String,
                        Sid->SubAuthority[i]);
    }
 
-   Length = (wcs - Buffer) * sizeof(WCHAR);
    if (AllocateBuffer)
    {
-      String->Buffer = RtlpAllocateMemory(Length + sizeof(WCHAR),
-                                          TAG_SID);
-      if (String->Buffer == NULL)
+      if (!RtlCreateUnicodeString(String,
+                                  Buffer))
+      {
          return STATUS_NO_MEMORY;
-      String->MaximumLength = Length + sizeof(WCHAR);
+      }
    }
    else
    {
+      Length = (wcs - Buffer) * sizeof(WCHAR);
+
       if (Length > String->MaximumLength)
          return STATUS_BUFFER_TOO_SMALL;
+
+      String->Length = Length;
+      RtlCopyMemory (String->Buffer,
+                     Buffer,
+                     Length);
+      if (Length < String->MaximumLength)
+         String->Buffer[Length / sizeof(WCHAR)] = 0;
    }
-
-   String->Length = Length;
-   RtlCopyMemory (String->Buffer,
-                  Buffer,
-                  Length);
-   if (Length < String->MaximumLength)
-      String->Buffer[Length / sizeof(WCHAR)] = 0;
-
+   
    return STATUS_SUCCESS;
 }
 

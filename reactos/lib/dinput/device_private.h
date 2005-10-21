@@ -30,8 +30,8 @@
 typedef struct IDirectInputDevice2AImpl IDirectInputDevice2AImpl;
 struct IDirectInputDevice2AImpl
 {
-        IDirectInputDevice2AVtbl       *lpVtbl;
-        DWORD                           ref;
+        const IDirectInputDevice2AVtbl *lpVtbl;
+        LONG                            ref;
         GUID                            guid;
 };
 

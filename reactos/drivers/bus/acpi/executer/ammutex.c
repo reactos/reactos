@@ -74,7 +74,7 @@ acpi_aml_unlink_mutex (
  *
  ******************************************************************************/
 
-void
+static void
 acpi_aml_link_mutex (
 	ACPI_OPERAND_OBJECT     *obj_desc,
 	ACPI_OPERAND_OBJECT     *list_head)

@@ -13,8 +13,8 @@
 #include "ldrtypes.h"
 #include "mmtypes.h"
 #include "obtypes.h"
-#include "extypes.h"
 #ifndef NTOS_MODE_USER
+#include "extypes.h"
 #include "setypes.h"
 #endif
 
@@ -55,6 +55,11 @@ extern NTSYSAPI POBJECT_TYPE PsProcessType;
 #define PROCESS_PRIORITY_CLASS_REALTIME         4
 #define PROCESS_PRIORITY_CLASS_BELOW_NORMAL     5
 #define PROCESS_PRIORITY_CLASS_ABOVE_NORMAL     6
+
+/* Process base priorities */
+#define PROCESS_PRIORITY_IDLE                   3
+#define PROCESS_PRIORITY_NORMAL                 8
+#define PROCESS_PRIORITY_NORMAL_FOREGROUND      9
 
 /* Global Flags */
 #define FLG_STOP_ON_EXCEPTION          0x00000001
@@ -202,6 +207,11 @@ typedef NTSTATUS
 
 /* TYPES *********************************************************************/
 
+struct _W32THREAD;
+struct _W32PROCESS;
+
+struct _ETHREAD;
+
 #ifdef NTOS_MODE_USER
 typedef struct _CLIENT_ID
 {
@@ -209,11 +219,6 @@ typedef struct _CLIENT_ID
     HANDLE UniqueThread;
 } CLIENT_ID, *PCLIENT_ID;
 #endif
-
-struct _W32THREAD;
-struct _W32PROCESS;
-
-struct _ETHREAD;
 
 typedef struct _DESCRIPTOR_TABLE_ENTRY
 {
@@ -493,6 +498,12 @@ typedef struct _PS_IMPERSONATION_INFORMATION
     BOOLEAN                         EffectiveOnly;
     SECURITY_IMPERSONATION_LEVEL    ImpersonationLevel;
 } PS_IMPERSONATION_INFORMATION, *PPS_IMPERSONATION_INFORMATION;
+
+typedef struct _TERMINATION_PORT
+{
+    struct _TERMINATION_PORT *Next;
+    PVOID Port;
+} TERMINATION_PORT, *PTERMINATION_PORT;
 
 #include <pshpack4.h>
 typedef struct _ETHREAD

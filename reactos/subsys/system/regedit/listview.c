@@ -27,6 +27,7 @@
 #include <stdio.h>
 
 #include "main.h"
+#include "regproc.h"
 
 #define CX_ICON    16
 #define CY_ICON    16
@@ -222,7 +223,7 @@ static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValB
                 LPTSTR strBinary;
                 if(dwCount > 0)
                 {
-		    strBinary = HeapAlloc(GetProcessHeap(), 0, (dwCount * sizeof(TCHAR) * 3) + 1);
+                    strBinary = HeapAlloc(GetProcessHeap(), 0, (dwCount * sizeof(TCHAR) * 3) + sizeof(TCHAR));
                     for (i = 0; i < dwCount; i++)
                     {
                         wsprintf( strBinary + i*3, _T("%02X "), pData[i] );
@@ -234,8 +235,8 @@ static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValB
                 else
                 {
                     TCHAR szText[128];
-		    LoadString(hInst, IDS_BINARY_EMPTY, szText, sizeof(szText)/sizeof(TCHAR));
-		    ListView_SetItemText(hwndLV, index, 2, szText);
+                    LoadString(hInst, IDS_BINARY_EMPTY, szText, sizeof(szText)/sizeof(TCHAR));
+                    ListView_SetItemText(hwndLV, index, 2, szText);
                 }
             }
             break;
@@ -309,6 +310,9 @@ static void OnGetDispInfo(NMLVDISPINFO* plvdi)
         break;
     case 1:
         switch (((LINE_INFO*)plvdi->item.lParam)->dwValType) {
+        case REG_NONE:
+            plvdi->item.pszText = _T("REG_NONE");
+            break;
         case REG_SZ:
             plvdi->item.pszText = _T("REG_SZ");
             break;
@@ -318,17 +322,17 @@ static void OnGetDispInfo(NMLVDISPINFO* plvdi)
         case REG_BINARY:
             plvdi->item.pszText = _T("REG_BINARY");
             break;
-        case REG_DWORD:
+        case REG_DWORD: /* REG_DWORD_LITTLE_ENDIAN */
             plvdi->item.pszText = _T("REG_DWORD");
             break;
         case REG_DWORD_BIG_ENDIAN:
             plvdi->item.pszText = _T("REG_DWORD_BIG_ENDIAN");
             break;
-        case REG_MULTI_SZ:
-            plvdi->item.pszText = _T("REG_MULTI_SZ");
-            break;
         case REG_LINK:
             plvdi->item.pszText = _T("REG_LINK");
+            break;
+        case REG_MULTI_SZ:
+            plvdi->item.pszText = _T("REG_MULTI_SZ");
             break;
         case REG_RESOURCE_LIST:
             plvdi->item.pszText = _T("REG_RESOURCE_LIST");
@@ -339,8 +343,8 @@ static void OnGetDispInfo(NMLVDISPINFO* plvdi)
         case REG_RESOURCE_REQUIREMENTS_LIST:
             plvdi->item.pszText = _T("REG_RESOURCE_REQUIREMENTS_LIST");
             break;
-        case REG_NONE:
-            plvdi->item.pszText = _T("REG_NONE");
+        case REG_QWORD: /* REG_QWORD_LITTLE_ENDIAN */
+            plvdi->item.pszText = _T("REG_QWORD");
             break;
         default: {
             TCHAR buf2[200];
@@ -442,11 +446,19 @@ BOOL ListWndNotifyProc(HWND hWnd, WPARAM wParam, LPARAM lParam, BOOL *Result)
 		    if(_tcslen(Info->item.pszText) == 0)
 		    {
 		      LoadString(hInst, IDS_ERR_RENVAL_TOEMPTY, msg, sizeof(msg)/sizeof(TCHAR));
+		      MessageBox(0, msg, NULL, 0);
+		      *Result = TRUE;
 		    }
 		    else
-                    _stprintf(msg, _T("rename from %s to %s"), lineinfo->name, Info->item.pszText);
-                    MessageBox(0, msg, NULL, 0);
-		    *Result = TRUE;
+			{
+			  HKEY hKeyRoot;
+			  LPCTSTR keyPath;
+			  LONG lResult;
+			  keyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
+			  lResult = RegRenameValue(hKeyRoot, keyPath, Info->item.pszText, lineinfo->name);
+		      *Result = TRUE;
+		      return (lResult == ERROR_SUCCESS);
+			}
 		  }
                 }
               }

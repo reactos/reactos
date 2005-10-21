@@ -120,13 +120,10 @@ FsRtlpFindNotifyEntry(
    PVOID FsContext
    )
 {
-   PLIST_ENTRY EnumEntry;
    PNOTIFY_ENTRY NotifyEntry;
 
-   LIST_FOR_EACH(EnumEntry, NotifyList)
+   LIST_FOR_EACH(NotifyEntry, NotifyList, NOTIFY_ENTRY, ListEntry)
    {
-      NotifyEntry = CONTAINING_RECORD(EnumEntry, NOTIFY_ENTRY, ListEntry);
-
       if (NotifyEntry->FsContext == FsContext)
       {
          return NotifyEntry;
@@ -310,15 +307,15 @@ FsRtlpWatchedDirectoryWasDeleted(
    )
 {
    LIST_ENTRY CompletedListHead;
-   PLIST_ENTRY EnumEntry, TmpEntry;
-   PNOTIFY_ENTRY NotifyEntry;
+   PLIST_ENTRY TmpEntry;
+   PNOTIFY_ENTRY NotifyEntry, tmp;
    PIRP Irp;
 
    InitializeListHead(&CompletedListHead);
 
    ExAcquireFastMutex((PFAST_MUTEX)NotifySync);
 
-   LIST_FOR_EACH_SAFE(EnumEntry, NotifyList, NotifyEntry, NOTIFY_ENTRY, ListEntry )
+   LIST_FOR_EACH_SAFE(NotifyEntry, tmp, NotifyList, NOTIFY_ENTRY, ListEntry )
    {
       if (NotifyEntry->Fcb == Fcb)
       {
@@ -654,8 +651,8 @@ FsRtlNotifyFullReportChange (
 {
    USHORT FullDirLen;
    STRING RelativeName;
+   PNOTIFY_ENTRY NotifyEntry, tmp;
    PLIST_ENTRY EnumEntry;
-   PNOTIFY_ENTRY NotifyEntry;
    PIRP Irp;
    LIST_ENTRY CompletedListHead;
    USHORT NameLenU;
@@ -676,7 +673,7 @@ FsRtlNotifyFullReportChange (
 
    ExAcquireFastMutex((PFAST_MUTEX)NotifySync);
 
-   LIST_FOR_EACH_SAFE(EnumEntry, NotifyList, NotifyEntry, NOTIFY_ENTRY, ListEntry )
+   LIST_FOR_EACH_SAFE(NotifyEntry, tmp, NotifyList, NOTIFY_ENTRY, ListEntry )
    {
       ASSERT(NotifyEntry->Unicode == FsRtlpIsUnicodePath(FullTargetName));
 

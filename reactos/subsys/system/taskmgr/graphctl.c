@@ -99,20 +99,18 @@ static void GraphCtrl_Init(TGraphCtrl* this)
     this->m_bitmapOldPlot = NULL;
 }
 
-#if 0
-TGraphCtrl::~TGraphCtrl()
+void GraphCtrl_Dispose(TGraphCtrl* this)
 {
     /*  just to be picky restore the bitmaps for the two memory dc's */
     /*  (these dc's are being destroyed so there shouldn't be any leaks) */
-    if (m_bitmapOldGrid != NULL) SelectObject(m_dcGrid, m_bitmapOldGrid);
-    if (m_bitmapOldPlot != NULL) SelectObject(m_dcPlot, m_bitmapOldPlot);
-    if (m_bitmapGrid    != NULL) DeleteObject(m_bitmapGrid);
-    if (m_bitmapPlot    != NULL) DeleteObject(m_bitmapPlot);
-    if (m_dcGrid        != NULL) DeleteDC(m_dcGrid);
-    if (m_dcPlot        != NULL) DeleteDC(m_dcPlot);
-    if (m_brushBack     != NULL) DeleteObject(m_brushBack);
+    if (this->m_bitmapOldGrid != NULL) SelectObject(this->m_dcGrid, this->m_bitmapOldGrid);
+    if (this->m_bitmapOldPlot != NULL) SelectObject(this->m_dcPlot, this->m_bitmapOldPlot);
+    if (this->m_bitmapGrid    != NULL) DeleteObject(this->m_bitmapGrid);
+    if (this->m_bitmapPlot    != NULL) DeleteObject(this->m_bitmapPlot);
+    if (this->m_dcGrid        != NULL) DeleteDC(this->m_dcGrid);
+    if (this->m_dcPlot        != NULL) DeleteDC(this->m_dcPlot);
+    if (this->m_brushBack     != NULL) DeleteObject(this->m_brushBack);
 }
-#endif
 
 BOOL GraphCtrl_Create(TGraphCtrl* this, HWND hWnd, HWND hParentWnd, UINT nID)
 {
@@ -123,7 +121,7 @@ BOOL GraphCtrl_Create(TGraphCtrl* this, HWND hWnd, HWND hParentWnd, UINT nID)
     this->m_hWnd = hWnd;
     GraphCtrl_Resize(this);
     if (result != 0)
-        GraphCtrl_InvalidateCtrl(this);
+        GraphCtrl_InvalidateCtrl(this, FALSE);
     return result;
 }
 
@@ -136,7 +134,7 @@ void GraphCtrl_SetRange(TGraphCtrl* this, double dLower, double dUpper, int nDec
     this->m_dRange          = this->m_dUpperLimit - this->m_dLowerLimit;
     this->m_dVerticalFactor = (double)this->m_nPlotHeight / this->m_dRange;
     /*  clear out the existing garbage, re-start with a clean plot */
-    GraphCtrl_InvalidateCtrl(this);
+    GraphCtrl_InvalidateCtrl(this, FALSE);
 }
 
 #if 0
@@ -159,7 +157,7 @@ void GraphCtrl_SetGridColor(TGraphCtrl* this, COLORREF color)
 {
     this->m_crGridColor = color;
     /*  clear out the existing garbage, re-start with a clean plot */
-    GraphCtrl_InvalidateCtrl(this);
+    GraphCtrl_InvalidateCtrl(this, FALSE);
 }
 
 void GraphCtrl_SetPlotColor(TGraphCtrl* this, int plot, COLORREF color)
@@ -168,7 +166,7 @@ void GraphCtrl_SetPlotColor(TGraphCtrl* this, int plot, COLORREF color)
     DeleteObject(this->m_penPlot[plot]);
     this->m_penPlot[plot] = CreatePen(PS_SOLID, 0, this->m_crPlotColor[plot]);
     /*  clear out the existing garbage, re-start with a clean plot */
-    GraphCtrl_InvalidateCtrl(this);
+    GraphCtrl_InvalidateCtrl(this, FALSE);
 }
 
 void GraphCtrl_SetBackgroundColor(TGraphCtrl* this, COLORREF color)
@@ -177,10 +175,10 @@ void GraphCtrl_SetBackgroundColor(TGraphCtrl* this, COLORREF color)
     DeleteObject(this->m_brushBack);
     this->m_brushBack = CreateSolidBrush(this->m_crBackColor);
     /*  clear out the existing garbage, re-start with a clean plot */
-    GraphCtrl_InvalidateCtrl(this);
+    GraphCtrl_InvalidateCtrl(this, FALSE);
 }
 
-void GraphCtrl_InvalidateCtrl(TGraphCtrl* this)
+void GraphCtrl_InvalidateCtrl(TGraphCtrl* this, BOOL bResize)
 {
     /*  There is a lot of drawing going on here - particularly in terms of  */
     /*  drawing the grid.  Don't panic, this is all being drawn (only once) */
@@ -204,6 +202,17 @@ void GraphCtrl_InvalidateCtrl(TGraphCtrl* this)
         this->m_dcGrid = CreateCompatibleDC(dc);
         this->m_bitmapGrid = CreateCompatibleBitmap(dc, this->m_nClientWidth, this->m_nClientHeight);
         this->m_bitmapOldGrid = (HBITMAP)SelectObject(this->m_dcGrid, this->m_bitmapGrid);
+    }
+    else if(bResize)
+    {
+        // the size of the drawing area has changed
+        // so create a new bitmap of the appropriate size
+        if(this->m_bitmapGrid != NULL)
+        {
+            DeleteObject(this->m_bitmapGrid);
+            this->m_bitmapGrid = CreateCompatibleBitmap(dc, this->m_nClientWidth, this->m_nClientHeight);
+            SelectObject(this->m_dcGrid, this->m_bitmapGrid);
+        }
     }
 
     SetBkColor(this->m_dcGrid, this->m_crBackColor);
@@ -325,6 +334,17 @@ void GraphCtrl_InvalidateCtrl(TGraphCtrl* this)
         this->m_dcPlot = CreateCompatibleDC(dc);
         this->m_bitmapPlot = CreateCompatibleBitmap(dc, this->m_nClientWidth, this->m_nClientHeight);
         this->m_bitmapOldPlot = (HBITMAP)SelectObject(this->m_dcPlot, this->m_bitmapPlot);
+    }
+    else if(bResize)
+    {
+        // the size of the drawing area has changed
+        // so create a new bitmap of the appropriate size
+        if(this->m_bitmapPlot != NULL)
+        {
+            DeleteObject(this->m_bitmapPlot);
+            this->m_bitmapPlot = CreateCompatibleBitmap(dc, this->m_nClientWidth, this->m_nClientHeight);
+            SelectObject(this->m_dcPlot, this->m_bitmapPlot);
+        }
     }
 
     /*  make sure the plot bitmap is cleared */
@@ -593,12 +613,12 @@ GraphCtrl_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         if (hWnd == hPerformancePageMemUsageHistoryGraph)
         {
             GraphCtrl_Resize(&PerformancePageMemUsageHistoryGraph);
-            GraphCtrl_InvalidateCtrl(&PerformancePageMemUsageHistoryGraph);
+            GraphCtrl_InvalidateCtrl(&PerformancePageMemUsageHistoryGraph, TRUE);
         }
         if (hWnd == hPerformancePageCpuUsageHistoryGraph)
         {
             GraphCtrl_Resize(&PerformancePageCpuUsageHistoryGraph);
-            GraphCtrl_InvalidateCtrl(&PerformancePageCpuUsageHistoryGraph);
+            GraphCtrl_InvalidateCtrl(&PerformancePageCpuUsageHistoryGraph, TRUE);
         }
         return 0;
 

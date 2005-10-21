@@ -133,6 +133,7 @@ CmiCallRegisteredCallbacks(IN REG_NOTIFY_CLASS Argument1,
                            IN PVOID Argument2)
 {
   PLIST_ENTRY CurrentEntry;
+  NTSTATUS Status = STATUS_SUCCESS;
 
   PAGED_CODE();
 
@@ -148,31 +149,29 @@ CmiCallRegisteredCallbacks(IN REG_NOTIFY_CLASS Argument1,
     if(!CurrentCallback->PendingDelete &&
        ExAcquireRundownProtectionEx(&CurrentCallback->RundownRef, 1))
     {
-      NTSTATUS Status;
-
       /* don't hold locks during the callbacks! */
       ExReleaseFastMutex(&CmiCallbackLock);
 
       Status = CurrentCallback->Function(CurrentCallback->Context,
-                                         (PVOID)Argument1,
+                                         Argument1,
                                          Argument2);
-      if(!NT_SUCCESS(Status))
-      {
-        /* one callback returned failure, don't call any more callbacks */
-        return Status;
-      }
 
       ExAcquireFastMutex(&CmiCallbackLock);
       /* don't release the rundown protection before holding the callback lock
          so the pointer to the next callback isn't cleared in case this callback
          get's deleted */
       ExReleaseRundownProtectionEx(&CurrentCallback->RundownRef, 1);
+      if(!NT_SUCCESS(Status))
+      {
+        /* one callback returned failure, don't call any more callbacks */
+        break;
+      }
     }
   }
 
   ExReleaseFastMutex(&CmiCallbackLock);
 
-  return STATUS_SUCCESS;
+  return Status;
 }
 
 
@@ -193,6 +192,8 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   UNICODE_STRING ObjectName;
   OBJECT_CREATE_INFORMATION ObjectCreateInfo;
   unsigned i;
+  REG_PRE_CREATE_KEY_INFORMATION PreCreateKeyInfo;
+  REG_POST_CREATE_KEY_INFORMATION PostCreateKeyInfo;
 
   PAGED_CODE();
 
@@ -201,28 +202,41 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 	 KeyHandle,
 	 ObjectAttributes->RootDirectory);
 
-   /* Capture all the info */
-   DPRINT("Capturing Create Info\n");
-   Status = ObpCaptureObjectAttributes(ObjectAttributes,
-                                       KeGetPreviousMode(),
-                                       CmiKeyType,
-                                       &ObjectCreateInfo,
-                                       &ObjectName);
-   if (!NT_SUCCESS(Status))
-     {
-	DPRINT("ObpCaptureObjectAttributes() failed (Status %lx)\n", Status);
-	return Status;
-     }
-
-  Status = ObFindObject(&ObjectCreateInfo,
-                        &ObjectName,
-			            (PVOID*)&Object,
-                        &RemainingPath,
-                        CmiKeyType);
-     ObpReleaseCapturedAttributes(&ObjectCreateInfo);
-   if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
+  /* Capture all the info */
+  DPRINT("Capturing Create Info\n");
+  Status = ObpCaptureObjectAttributes(ObjectAttributes,
+                                      KeGetPreviousMode(),
+                                      CmiKeyType,
+                                      &ObjectCreateInfo,
+                                      &ObjectName);
   if (!NT_SUCCESS(Status))
     {
+      DPRINT("ObpCaptureObjectAttributes() failed (Status %lx)\n", Status);
+      return Status;
+    }
+
+  PostCreateKeyInfo.CompleteName = &ObjectName;
+  PreCreateKeyInfo.CompleteName = &ObjectName;
+  Status = CmiCallRegisteredCallbacks(RegNtPreCreateKey, &PreCreateKeyInfo);
+  if (!NT_SUCCESS(Status))
+    {
+      ObpReleaseCapturedAttributes(&ObjectCreateInfo);
+      if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
+      return Status;
+    }
+    
+  Status = ObFindObject(&ObjectCreateInfo,
+                        &ObjectName,
+			(PVOID*)&Object,
+                        &RemainingPath,
+                        CmiKeyType);
+  ObpReleaseCapturedAttributes(&ObjectCreateInfo);
+  if (!NT_SUCCESS(Status))
+    {
+      PostCreateKeyInfo.Object = NULL;
+      PostCreateKeyInfo.Status = Status;
+      CmiCallRegisteredCallbacks(RegNtPostCreateKey, &PostCreateKeyInfo);
+      if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
       DPRINT("CmpFindObject failed, Status: 0x%x\n", Status);
       return(Status);
     }
@@ -236,6 +250,10 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 	{
 	  ObDereferenceObject(Object);
 	  RtlFreeUnicodeString(&RemainingPath);
+          PostCreateKeyInfo.Object = NULL;
+          PostCreateKeyInfo.Status = STATUS_UNSUCCESSFUL;
+          CmiCallRegisteredCallbacks(RegNtPostCreateKey, &PostCreateKeyInfo);
+          if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
 	  DPRINT("Object marked for delete!\n");
 	  return(STATUS_UNSUCCESSFUL);
 	}
@@ -252,6 +270,10 @@ NtCreateKey(OUT PHANDLE KeyHandle,
       DPRINT("ObpCreateHandle failed Status 0x%x\n", Status);
       ObDereferenceObject(Object);
       RtlFreeUnicodeString(&RemainingPath);
+      PostCreateKeyInfo.Object = NULL;
+      PostCreateKeyInfo.Status = Status;
+      CmiCallRegisteredCallbacks(RegNtPostCreateKey, &PostCreateKeyInfo);
+      if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
       return Status;
     }
 
@@ -268,6 +290,10 @@ NtCreateKey(OUT PHANDLE KeyHandle,
           ObDereferenceObject(Object);
           DPRINT1("NtCreateKey() doesn't create trees! (found \'\\\' in remaining path: \"%wZ\"!)\n", &RemainingPath);
           RtlFreeUnicodeString(&RemainingPath);
+          PostCreateKeyInfo.Object = NULL;
+          PostCreateKeyInfo.Status = STATUS_OBJECT_NAME_NOT_FOUND;
+          CmiCallRegisteredCallbacks(RegNtPostCreateKey, &PostCreateKeyInfo);
+          if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
           return STATUS_OBJECT_NAME_NOT_FOUND;
         }
     }
@@ -286,6 +312,10 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("ObCreateObject() failed!\n");
+      PostCreateKeyInfo.Object = NULL;
+      PostCreateKeyInfo.Status = Status;
+      CmiCallRegisteredCallbacks(RegNtPostCreateKey, &PostCreateKeyInfo);
+      if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
       return(Status);
     }
 
@@ -300,6 +330,10 @@ NtCreateKey(OUT PHANDLE KeyHandle,
       ObDereferenceObject(KeyObject);
       RtlFreeUnicodeString(&RemainingPath);
       DPRINT1("ObInsertObject() failed!\n");
+      PostCreateKeyInfo.Object = NULL;
+      PostCreateKeyInfo.Status = Status;
+      CmiCallRegisteredCallbacks(RegNtPostCreateKey, &PostCreateKeyInfo);
+      if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
       return(Status);
     }
 
@@ -338,6 +372,10 @@ NtCreateKey(OUT PHANDLE KeyHandle,
       ObDereferenceObject(KeyObject);
       ObDereferenceObject(Object);
       RtlFreeUnicodeString(&RemainingPath);
+      PostCreateKeyInfo.Object = NULL;
+      PostCreateKeyInfo.Status = STATUS_UNSUCCESSFUL;
+      CmiCallRegisteredCallbacks(RegNtPostCreateKey, &PostCreateKeyInfo);
+      if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
       return STATUS_UNSUCCESSFUL;
     }
 
@@ -382,6 +420,11 @@ NtCreateKey(OUT PHANDLE KeyHandle,
   if (Disposition)
     *Disposition = REG_CREATED_NEW_KEY;
 
+  PostCreateKeyInfo.Object = KeyObject;
+  PostCreateKeyInfo.Status = Status;
+  CmiCallRegisteredCallbacks(RegNtPostCreateKey, &PostCreateKeyInfo);
+  if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
+
   CmiSyncHives();
 
   return Status;
@@ -394,6 +437,8 @@ NtDeleteKey(IN HANDLE KeyHandle)
   KPROCESSOR_MODE PreviousMode;
   PKEY_OBJECT KeyObject;
   NTSTATUS Status;
+  REG_DELETE_KEY_INFORMATION DeleteKeyInfo;
+  REG_POST_OPERATION_INFORMATION PostOperationInfo;
 
   PAGED_CODE();
 
@@ -411,6 +456,17 @@ NtDeleteKey(IN HANDLE KeyHandle)
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("ObReferenceObjectByHandle() failed (Status %lx)\n", Status);
+      return Status;
+    }
+
+  PostOperationInfo.Object = (PVOID)KeyObject;
+  DeleteKeyInfo.Object = (PVOID)KeyObject;
+  Status = CmiCallRegisteredCallbacks(RegNtPreSetValueKey, &DeleteKeyInfo);
+  if (!NT_SUCCESS(Status))
+    {
+      PostOperationInfo.Status = Status;
+      CmiCallRegisteredCallbacks(RegNtDeleteKey, &PostOperationInfo);
+      ObDereferenceObject(KeyObject);
       return Status;
     }
 
@@ -438,13 +494,17 @@ NtDeleteKey(IN HANDLE KeyHandle)
 
   DPRINT("PointerCount %lu\n", ObGetObjectPointerCount((PVOID)KeyObject));
 
-  /* Dereference the object */
-  ObDereferenceObject(KeyObject);
   /* Remove the keep-alive reference */
   ObDereferenceObject(KeyObject);
 
   if (KeyObject->RegistryHive != KeyObject->ParentKey->RegistryHive)
     ObDereferenceObject(KeyObject);
+
+  PostOperationInfo.Status = Status;
+  CmiCallRegisteredCallbacks(RegNtPostDeleteKey, &PostOperationInfo);
+
+  /* Dereference the object */
+  ObDereferenceObject(KeyObject);
 
   DPRINT("PointerCount %lu\n", ObGetObjectPointerCount((PVOID)KeyObject));
   DPRINT("HandleCount %lu\n", ObGetObjectHandleCount((PVOID)KeyObject));
@@ -480,6 +540,8 @@ NtEnumerateKey(IN HANDLE KeyHandle,
   ULONG NameSize, ClassSize;
   KPROCESSOR_MODE PreviousMode;
   NTSTATUS Status;
+  REG_ENUMERATE_KEY_INFORMATION EnumerateKeyInfo;
+  REG_POST_OPERATION_INFORMATION PostOperationInfo;
 
   PAGED_CODE();
 
@@ -506,6 +568,20 @@ NtEnumerateKey(IN HANDLE KeyHandle,
       return(Status);
     }
 
+  PostOperationInfo.Object = (PVOID)KeyObject;
+  EnumerateKeyInfo.Object = (PVOID)KeyObject;
+  EnumerateKeyInfo.Index = Index;
+  EnumerateKeyInfo.KeyInformationClass = KeyInformationClass;
+  EnumerateKeyInfo.Length = Length;
+  EnumerateKeyInfo.ResultLength = ResultLength;
+
+  Status = CmiCallRegisteredCallbacks(RegNtEnumerateKey, &EnumerateKeyInfo);
+  if (!NT_SUCCESS(Status))
+    {
+      ObDereferenceObject(KeyObject);
+      return Status;
+    }
+
   /* Acquire hive lock */
   KeEnterCriticalRegion();
   ExAcquireResourceSharedLite(&CmiRegistryLock, TRUE);
@@ -523,6 +599,8 @@ NtEnumerateKey(IN HANDLE KeyHandle,
     {
       ExReleaseResourceLite(&CmiRegistryLock);
       KeLeaveCriticalRegion();
+      PostOperationInfo.Status = STATUS_NO_MORE_ENTRIES;
+      CmiCallRegisteredCallbacks(RegNtPostDeleteKey, &PostOperationInfo);
       ObDereferenceObject(KeyObject);
       DPRINT("No more volatile entries\n");
       return STATUS_NO_MORE_ENTRIES;
@@ -552,6 +630,8 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 	{
 	  ExReleaseResourceLite(&CmiRegistryLock);
 	  KeLeaveCriticalRegion();
+          PostOperationInfo.Status = STATUS_NO_MORE_ENTRIES;
+          CmiCallRegisteredCallbacks(RegNtPostEnumerateKey, &PostOperationInfo);
 	  ObDereferenceObject(KeyObject);
 	  DPRINT("No more non-volatile entries\n");
 	  return STATUS_NO_MORE_ENTRIES;
@@ -566,6 +646,8 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 	{
 	  ExReleaseResourceLite(&CmiRegistryLock);
 	  KeLeaveCriticalRegion();
+          PostOperationInfo.Status = STATUS_NO_MORE_ENTRIES;
+          CmiCallRegisteredCallbacks(RegNtPostEnumerateKey, &PostOperationInfo);
 	  ObDereferenceObject(KeyObject);
 	  return STATUS_NO_MORE_ENTRIES;
 	}
@@ -576,6 +658,8 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 	  DPRINT("CmiGetBlock() failed\n");
 	  ExReleaseResourceLite(&CmiRegistryLock);
 	  KeLeaveCriticalRegion();
+          PostOperationInfo.Status = STATUS_UNSUCCESSFUL;
+          CmiCallRegisteredCallbacks(RegNtPostEnumerateKey, &PostOperationInfo);
 	  ObDereferenceObject(KeyObject);
 	  return STATUS_UNSUCCESSFUL;
 	}
@@ -589,6 +673,8 @@ NtEnumerateKey(IN HANDLE KeyHandle,
     {
       ExReleaseResourceLite(&CmiRegistryLock);
       KeLeaveCriticalRegion();
+      PostOperationInfo.Status = STATUS_NO_MORE_ENTRIES;
+      CmiCallRegisteredCallbacks(RegNtPostEnumerateKey, &PostOperationInfo);
       ObDereferenceObject(KeyObject);
       DPRINT("No more entries\n");
       return STATUS_NO_MORE_ENTRIES;
@@ -804,6 +890,10 @@ NtEnumerateKey(IN HANDLE KeyHandle,
 
   ExReleaseResourceLite(&CmiRegistryLock);
   KeLeaveCriticalRegion();
+
+  PostOperationInfo.Status = Status;
+  CmiCallRegisteredCallbacks(RegNtPostEnumerateKey, &PostOperationInfo);
+
   ObDereferenceObject(KeyObject);
 
   DPRINT("Returning status %x\n", Status);
@@ -1121,11 +1211,13 @@ NtOpenKey(OUT PHANDLE KeyHandle,
 {
   UNICODE_STRING RemainingPath;
   KPROCESSOR_MODE PreviousMode;
-  PVOID Object;
+  PVOID Object = NULL;
   HANDLE hKey;
   NTSTATUS Status = STATUS_SUCCESS;
   UNICODE_STRING ObjectName;
   OBJECT_CREATE_INFORMATION ObjectCreateInfo;
+  REG_PRE_OPEN_KEY_INFORMATION PreOpenKeyInfo;
+  REG_POST_OPEN_KEY_INFORMATION PostOpenKeyInfo;
 
   PAGED_CODE();
 
@@ -1176,21 +1268,31 @@ NtOpenKey(OUT PHANDLE KeyHandle,
 	return Status;
      }
 
+  PostOpenKeyInfo.CompleteName = &ObjectName;
+  PreOpenKeyInfo.CompleteName = &ObjectName;
+  Status = CmiCallRegisteredCallbacks(RegNtPreOpenKey, &PreOpenKeyInfo);
+  if (!NT_SUCCESS(Status))
+    {
+      ObpReleaseCapturedAttributes(&ObjectCreateInfo);
+      if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
+      return Status;
+    }
+
+
   RemainingPath.Buffer = NULL;
 
   Status = ObFindObject(&ObjectCreateInfo,
                         &ObjectName,
-			            (PVOID*)&Object,
+	                (PVOID*)&Object,
                         &RemainingPath,
                         CmiKeyType);
-     ObpReleaseCapturedAttributes(&ObjectCreateInfo);
-   if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
+  ObpReleaseCapturedAttributes(&ObjectCreateInfo);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("CmpFindObject() returned 0x%08lx\n", Status);
-	  Status = STATUS_INVALID_HANDLE; /* Because CmpFindObject returns STATUS_UNSUCCESSFUL */
-	  hKey = *KeyHandle; /* Preserve hkResult value */
-	  goto openkey_cleanup;
+      Status = STATUS_INVALID_HANDLE; /* Because CmpFindObject returns STATUS_UNSUCCESSFUL */
+      hKey = *KeyHandle; /* Preserve hkResult value */
+      goto openkey_cleanup;
     }
 
   VERIFY_KEY_OBJECT((PKEY_OBJECT) Object);
@@ -1199,11 +1301,10 @@ NtOpenKey(OUT PHANDLE KeyHandle,
 
   if ((RemainingPath.Buffer != NULL) && (RemainingPath.Buffer[0] != 0))
     {
-      ObDereferenceObject(Object);
       RtlFreeUnicodeString(&RemainingPath);
       Status = STATUS_OBJECT_NAME_NOT_FOUND;
       hKey = NULL;
-	  goto openkey_cleanup;
+      goto openkey_cleanup;
     }
 
   RtlFreeUnicodeString(&RemainingPath);
@@ -1211,10 +1312,9 @@ NtOpenKey(OUT PHANDLE KeyHandle,
   /* Fail if the key has been deleted */
   if (((PKEY_OBJECT)Object)->Flags & KO_MARKED_FOR_DELETE)
     {
-      ObDereferenceObject(Object);
-	  Status = STATUS_UNSUCCESSFUL;
+      Status = STATUS_UNSUCCESSFUL;
       hKey = NULL;
-	  goto openkey_cleanup;
+      goto openkey_cleanup;
     }
 
   Status = ObpCreateHandle(PsGetCurrentProcess(),
@@ -1222,12 +1322,22 @@ NtOpenKey(OUT PHANDLE KeyHandle,
 			  DesiredAccess,
 			  TRUE,
 			  &hKey);
-  ObDereferenceObject(Object);
 
   if (!NT_SUCCESS(Status))
      hKey = NULL;
 
 openkey_cleanup:
+
+  PostOpenKeyInfo.Object = NT_SUCCESS(Status) ? (PVOID)Object : NULL;
+  PostOpenKeyInfo.Status = Status;
+  CmiCallRegisteredCallbacks (RegNtPostOpenKey, &PostOpenKeyInfo);
+  if (ObjectName.Buffer) ExFreePool(ObjectName.Buffer);
+
+  if (Object)
+    {
+      ObDereferenceObject(Object);
+    }
+
   _SEH_TRY
   {
     *KeyHandle = hKey;
@@ -1258,6 +1368,8 @@ NtQueryKey(IN HANDLE KeyHandle,
   PKEY_CELL KeyCell;
   ULONG NameSize, ClassSize;
   NTSTATUS Status;
+  REG_QUERY_KEY_INFORMATION QueryKeyInfo;
+  REG_POST_OPERATION_INFORMATION PostOperationInfo;
 
   PAGED_CODE();
 
@@ -1277,6 +1389,20 @@ NtQueryKey(IN HANDLE KeyHandle,
 		NULL);
   if (!NT_SUCCESS(Status))
     {
+      return Status;
+    }
+
+  PostOperationInfo.Object = (PVOID)KeyObject;
+  QueryKeyInfo.Object = (PVOID)KeyObject;
+  QueryKeyInfo.KeyInformationClass = KeyInformationClass;
+  QueryKeyInfo.KeyInformation = KeyInformation;
+  QueryKeyInfo.Length = Length;
+  QueryKeyInfo.ResultLength = ResultLength;
+  
+  Status = CmiCallRegisteredCallbacks(RegNtQueryKey, &QueryKeyInfo);
+  if (!NT_SUCCESS(Status))
+    {
+      ObDereferenceObject(KeyObject);
       return Status;
     }
 
@@ -1444,6 +1570,10 @@ NtQueryKey(IN HANDLE KeyHandle,
 
   ExReleaseResourceLite(&CmiRegistryLock);
   KeLeaveCriticalRegion();
+
+  PostOperationInfo.Status = Status;
+  CmiCallRegisteredCallbacks(RegNtPostQueryKey, &PostOperationInfo);
+
   ObDereferenceObject(KeyObject);
 
   return(Status);
@@ -1468,6 +1598,8 @@ NtQueryValueKey(IN HANDLE KeyHandle,
   PKEY_VALUE_BASIC_INFORMATION  ValueBasicInformation;
   PKEY_VALUE_PARTIAL_INFORMATION  ValuePartialInformation;
   PKEY_VALUE_FULL_INFORMATION  ValueFullInformation;
+  REG_QUERY_VALUE_KEY_INFORMATION QueryValueKeyInfo;
+  REG_POST_OPERATION_INFORMATION PostOperationInfo;
 
   PAGED_CODE();
 
@@ -1485,6 +1617,20 @@ NtQueryValueKey(IN HANDLE KeyHandle,
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("ObReferenceObjectByHandle() failed with status %x\n", Status);
+      return Status;
+    }
+  
+  PostOperationInfo.Object = (PVOID)KeyObject;
+  QueryValueKeyInfo.Object = (PVOID)KeyObject;
+  QueryValueKeyInfo.ValueName = ValueName;
+  QueryValueKeyInfo.KeyValueInformationClass = KeyValueInformationClass;
+  QueryValueKeyInfo.Length = Length;
+  QueryValueKeyInfo.ResultLength = ResultLength;
+
+  Status = CmiCallRegisteredCallbacks(RegNtPreQueryValueKey, &QueryValueKeyInfo);
+  if (!NT_SUCCESS(Status))
+    {
+      ObDereferenceObject(KeyObject);
       return Status;
     }
 
@@ -1686,6 +1832,9 @@ NtQueryValueKey(IN HANDLE KeyHandle,
 ByeBye:;
   ExReleaseResourceLite(&CmiRegistryLock);
   KeLeaveCriticalRegion();
+
+  PostOperationInfo.Status = Status;
+  CmiCallRegisteredCallbacks(RegNtPostQueryValueKey, &PostOperationInfo);
   ObDereferenceObject(KeyObject);
 
   return Status;
@@ -1710,6 +1859,8 @@ NtSetValueKey(IN HANDLE KeyHandle,
   PDATA_CELL NewDataCell;
   PHBIN pBin;
   ULONG DesiredAccess;
+  REG_SET_VALUE_KEY_INFORMATION SetValueKeyInfo;
+  REG_POST_OPERATION_INFORMATION PostOperationInfo;
 
   PAGED_CODE();
 
@@ -1727,6 +1878,20 @@ NtSetValueKey(IN HANDLE KeyHandle,
 				     NULL);
   if (!NT_SUCCESS(Status))
     return(Status);
+
+  PostOperationInfo.Object = (PVOID)KeyObject;
+  SetValueKeyInfo.Object = (PVOID)KeyObject;
+  SetValueKeyInfo.ValueName = ValueName;
+  SetValueKeyInfo.TitleIndex = TitleIndex;
+  SetValueKeyInfo.Type = Type;
+  SetValueKeyInfo.Data = Data;
+  SetValueKeyInfo.DataSize = DataSize;
+  Status = CmiCallRegisteredCallbacks(RegNtPreSetValueKey, &SetValueKeyInfo);
+  if (!NT_SUCCESS(Status))
+    {
+      ObDereferenceObject(KeyObject);
+      return Status;
+    }
 
   /* Acquire hive lock exclucively */
   KeEnterCriticalRegion();
@@ -1759,6 +1924,8 @@ NtSetValueKey(IN HANDLE KeyHandle,
 
       ExReleaseResourceLite(&CmiRegistryLock);
       KeLeaveCriticalRegion();
+      PostOperationInfo.Status = Status;
+      CmiCallRegisteredCallbacks(RegNtPostSetValueKey, &PostOperationInfo);
       ObDereferenceObject(KeyObject);
       return Status;
     }
@@ -1824,6 +1991,8 @@ NtSetValueKey(IN HANDLE KeyHandle,
 
 	  ExReleaseResourceLite(&CmiRegistryLock);
 	  KeLeaveCriticalRegion();
+          PostOperationInfo.Status = Status;
+          CmiCallRegisteredCallbacks(RegNtPostSetValueKey, &PostOperationInfo);
 	  ObDereferenceObject(KeyObject);
 
 	  return Status;
@@ -1849,6 +2018,8 @@ NtSetValueKey(IN HANDLE KeyHandle,
 
   ExReleaseResourceLite(&CmiRegistryLock);
   KeLeaveCriticalRegion();
+  PostOperationInfo.Status = Status;
+  CmiCallRegisteredCallbacks(RegNtPostSetValueKey, &PostOperationInfo);
   ObDereferenceObject(KeyObject);
 
   CmiSyncHives();
@@ -1865,6 +2036,8 @@ NtDeleteValueKey (IN HANDLE KeyHandle,
 {
   PKEY_OBJECT KeyObject;
   NTSTATUS Status;
+  REG_DELETE_VALUE_KEY_INFORMATION DeleteValueKeyInfo;
+  REG_POST_OPERATION_INFORMATION PostOperationInfo;
 
   PAGED_CODE();
 
@@ -1877,6 +2050,16 @@ NtDeleteValueKey (IN HANDLE KeyHandle,
 		NULL);
   if (!NT_SUCCESS(Status))
     {
+      return Status;
+    }
+  
+  DeleteValueKeyInfo.Object = (PVOID)KeyObject;
+  DeleteValueKeyInfo.ValueName = ValueName;
+
+  Status = CmiCallRegisteredCallbacks(RegNtPreDeleteValueKey, &DeleteValueKeyInfo);
+  if (!NT_SUCCESS(Status))
+    {
+      ObDereferenceObject(KeyObject);
       return Status;
     }
 
@@ -1897,6 +2080,11 @@ NtDeleteValueKey (IN HANDLE KeyHandle,
   /* Release hive lock */
   ExReleaseResourceLite(&CmiRegistryLock);
   KeLeaveCriticalRegion();
+
+  PostOperationInfo.Object = (PVOID)KeyObject;
+  PostOperationInfo.Status = Status;
+
+  CmiCallRegisteredCallbacks(RegNtPostDeleteValueKey, &PostOperationInfo);
 
   ObDereferenceObject (KeyObject);
 
@@ -2106,6 +2294,8 @@ NtQueryMultipleValueKey (IN HANDLE KeyHandle,
   NTSTATUS Status;
   PUCHAR DataPtr;
   ULONG i;
+  REG_QUERY_MULTIPLE_VALUE_KEY_INFORMATION QueryMultipleValueKeyInfo;
+  REG_POST_OPERATION_INFORMATION PostOperationInfo;
 
   PAGED_CODE();
 
@@ -2120,6 +2310,21 @@ NtQueryMultipleValueKey (IN HANDLE KeyHandle,
     {
       DPRINT("ObReferenceObjectByHandle() failed with status %x\n", Status);
       return(Status);
+    }
+
+  PostOperationInfo.Object = (PVOID)KeyObject;
+  QueryMultipleValueKeyInfo.Object = (PVOID)KeyObject;
+  QueryMultipleValueKeyInfo.ValueEntries = ValueList;
+  QueryMultipleValueKeyInfo.EntryCount = NumberOfValues;
+  QueryMultipleValueKeyInfo.ValueBuffer = Buffer;
+  QueryMultipleValueKeyInfo.BufferLength = Length;
+  QueryMultipleValueKeyInfo.RequiredBufferLength = ReturnLength;
+
+  Status = CmiCallRegisteredCallbacks(RegNtPreQueryMultipleValueKey, &QueryMultipleValueKeyInfo);
+  if (!NT_SUCCESS(Status))
+    {
+      ObDereferenceObject(KeyObject);
+      return Status;
     }
 
   /* Acquire hive lock */
@@ -2200,6 +2405,9 @@ NtQueryMultipleValueKey (IN HANDLE KeyHandle,
   /* Release hive lock */
   ExReleaseResourceLite(&CmiRegistryLock);
   KeLeaveCriticalRegion();
+
+  PostOperationInfo.Status = Status;
+  CmiCallRegisteredCallbacks(RegNtPostQueryMultipleValueKey, &PostOperationInfo);
 
   ObDereferenceObject(KeyObject);
 
@@ -2340,14 +2548,10 @@ NtSetInformationKey (IN HANDLE KeyHandle,
 {
   PKEY_OBJECT KeyObject;
   NTSTATUS Status;
+  REG_SET_INFORMATION_KEY_INFORMATION SetInformationKeyInfo;
+  REG_POST_OPERATION_INFORMATION PostOperationInfo;
 
   PAGED_CODE();
-
-  if (KeyInformationClass != KeyWriteTimeInformation)
-    return STATUS_INVALID_INFO_CLASS;
-
-  if (KeyInformationLength != sizeof (KEY_WRITE_TIME_INFORMATION))
-    return STATUS_INFO_LENGTH_MISMATCH;
 
   /* Verify that the handle is valid and is a registry key */
   Status = ObReferenceObjectByHandle (KeyHandle,
@@ -2362,25 +2566,56 @@ NtSetInformationKey (IN HANDLE KeyHandle,
       return Status;
     }
 
-  /* Acquire hive lock */
-  KeEnterCriticalRegion();
-  ExAcquireResourceExclusiveLite(&CmiRegistryLock, TRUE);
+  PostOperationInfo.Object = (PVOID)KeyObject;
+  SetInformationKeyInfo.Object = (PVOID)KeyObject;
+  SetInformationKeyInfo.KeySetInformationClass = KeyInformationClass;
+  SetInformationKeyInfo.KeySetInformation = KeyInformation;
+  SetInformationKeyInfo.KeySetInformationLength = KeyInformationLength;
 
-  VERIFY_KEY_OBJECT(KeyObject);
+  Status = CmiCallRegisteredCallbacks(RegNtSetInformationKey, &SetInformationKeyInfo);
+  if (!NT_SUCCESS(Status))
+    {
+      ObDereferenceObject (KeyObject);
+      return Status;
+    }
 
-  KeyObject->KeyCell->LastWriteTime.QuadPart =
-    ((PKEY_WRITE_TIME_INFORMATION)KeyInformation)->LastWriteTime.QuadPart;
+  if (KeyInformationClass != KeyWriteTimeInformation)
+    {
+      Status = STATUS_INVALID_INFO_CLASS;
+    }
 
-  CmiMarkBlockDirty (KeyObject->RegistryHive,
-		     KeyObject->KeyCellOffset);
+  else if (KeyInformationLength != sizeof (KEY_WRITE_TIME_INFORMATION))
+    {
+      Status = STATUS_INFO_LENGTH_MISMATCH;
+    }
+  else
+    {
+      /* Acquire hive lock */
+      KeEnterCriticalRegion();
+      ExAcquireResourceExclusiveLite(&CmiRegistryLock, TRUE);
 
-  /* Release hive lock */
-  ExReleaseResourceLite(&CmiRegistryLock);
-  KeLeaveCriticalRegion();
+      VERIFY_KEY_OBJECT(KeyObject);
+
+      KeyObject->KeyCell->LastWriteTime.QuadPart =
+        ((PKEY_WRITE_TIME_INFORMATION)KeyInformation)->LastWriteTime.QuadPart;
+
+      CmiMarkBlockDirty (KeyObject->RegistryHive,
+		         KeyObject->KeyCellOffset);
+
+      /* Release hive lock */
+      ExReleaseResourceLite(&CmiRegistryLock);
+      KeLeaveCriticalRegion();
+    }
+
+  PostOperationInfo.Status = Status;
+  CmiCallRegisteredCallbacks(RegNtPostSetInformationKey, &PostOperationInfo);
 
   ObDereferenceObject (KeyObject);
 
-  CmiSyncHives ();
+  if (NT_SUCCESS(Status))
+    {
+      CmiSyncHives ();
+    }
 
   DPRINT ("NtSaveKey() done\n");
 

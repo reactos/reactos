@@ -39,25 +39,20 @@ POPUP "编辑（&E）" {
   MENUITEM "粘贴（&P）\tCtrl+V",    CMD_PASTE
   MENUITEM "删除（&D）\tDel",      CMD_DELETE
   MENUITEM SEPARATOR
+  MENUITEM "搜索（&S）",           CMD_SEARCH
+  MENUITEM "搜索下一个（&S）\tF3",  CMD_SEARCH_NEXT
+  MENUITEM SEPARATOR
   MENUITEM "全选（&A）",       CMD_SELECT_ALL
   MENUITEM "插入日期、时间（&T）\tF5",    CMD_TIME_DATE
   MENUITEM SEPARATOR
   MENUITEM "自动换行（&W）",  CMD_WRAP
- }
-POPUP "搜索（&S）" {
-  MENUITEM "搜索（&S）",           CMD_SEARCH
-  MENUITEM "搜索下一个（&S）\tF3",  CMD_SEARCH_NEXT
  }
 POPUP "帮助（&H）" {
   MENUITEM "内容（&C）",         CMD_HELP_CONTENTS
   MENUITEM "搜索（&S）...",        CMD_HELP_SEARCH
   MENUITEM "如何使用帮助（&H）",     CMD_HELP_ON_HELP
   MENUITEM SEPARATOR
-  POPUP "资料信息（&O）..." {
-   MENUITEM "用户许可协议（&L）",         CMD_LICENSE
-   MENUITEM "责任无关（&N）",     CMD_NO_WARRANTY
-   MENUITEM "关于 Wine（&A）",      CMD_ABOUT_WINE
-  }
+  MENUITEM "资料信息（&O）...",      CMD_ABOUT_WINE
  }
 }
 

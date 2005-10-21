@@ -430,6 +430,9 @@ ReadAttribute(PATTRIBUTE attr, PVOID buffer, PDEVICE_EXTENSION Vcb,
 ULONG
 AttributeDataLength(PATTRIBUTE  attr);
 
+ULONG
+AttributeAllocatedLength (PATTRIBUTE Attribute);
+
 NTSTATUS
 ReadFileRecord (PDEVICE_EXTENSION Vcb,
 		ULONG index,
@@ -514,5 +517,11 @@ NtfsQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
 NTSTATUS STDCALL
 NtfsSetVolumeInformation(PDEVICE_OBJECT DeviceObject,
 			 PIRP Irp);
+
+/* ntfs.c */
+
+NTSTATUS STDCALL
+DriverEntry(PDRIVER_OBJECT DriverObject,
+	    PUNICODE_STRING RegistryPath);
 
 #endif /* NTFS_H */

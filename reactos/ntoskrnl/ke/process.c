@@ -85,7 +85,7 @@ KeInitializeProcess(PKPROCESS Process,
     Process->DirectoryTableBase = DirectoryTableBase;
     Process->AutoAlignment = TRUE;
     Process->IopmOffset = 0xFFFF;
-    Process->State = PROCESS_STATE_ACTIVE;
+    Process->State = ProcessInMemory;
 
     /* Initialize the Thread List */
     InitializeListHead(&Process->ThreadListHead);
@@ -205,7 +205,6 @@ STDCALL
 KiSwapProcess(PKPROCESS NewProcess,
               PKPROCESS OldProcess)
 {
-    /* FIXME: Write this in ASM. Much easier */
     DPRINT("Switching CR3 to: %x\n", NewProcess->DirectoryTableBase.u.LowPart);
     Ke386SetPageTableDirectory(NewProcess->DirectoryTableBase.u.LowPart);
 }

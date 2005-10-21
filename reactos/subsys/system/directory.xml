@@ -1,3 +1,4 @@
+<group>
 <directory name="autochk">
 	<xi:include href="autochk/autochk.xml" />
 </directory>
@@ -7,14 +8,17 @@
 <directory name="cmd">
 	<xi:include href="cmd/cmd.xml" />
 </directory>
-<directory name="dhcp">
-	<xi:include href="dhcp/dhcp.xml" />
+<directory name="devmgr">
+        <xi:include href="devmgr/devmgr.xml" />
 </directory>
 <directory name="expand">
 	<xi:include href="expand/expand.xml" />
 </directory>
 <directory name="explorer">
 	<xi:include href="explorer/explorer.xml" />
+</directory>
+<directory name="hostname">
+	<xi:include href="hostname/hostname.xml" />
 </directory>
 <directory name="ibrowser">
 	<xi:include href="ibrowser/ibrowser.xml" />
@@ -24,6 +28,9 @@
 </directory>
 <directory name="lsass">
 	<xi:include href="lsass/lsass.xml" />
+</directory>
+<directory name="msconfig">
+	<xi:include href="msconfig/msconfig.xml" />
 </directory>
 <directory name="msiexec">
 	<xi:include href="msiexec/msiexec.xml" />
@@ -55,6 +62,9 @@
 <directory name="sm">
 	<xi:include href="sm/sm.xml" />
 </directory>
+<directory name="sndvol32">
+	<xi:include href="sndvol32/sndvol32.xml" />
+</directory>
 <directory name="taskmgr">
 	<xi:include href="taskmgr/taskmgr.xml" />
 </directory>
@@ -73,9 +83,10 @@
 <directory name="winlogon">
 	<xi:include href="winlogon/winlogon.xml" />
 </directory>
-<directory name="hostname">
-	<xi:include href="hostname/hostname.xml" />
+<directory name="winver">
+	<xi:include href="winver/winver.xml" />
 </directory>
 <directory name="welcome">
 	<xi:include href="welcome/welcome.xml" />
 </directory>
+</group>

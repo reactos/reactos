@@ -55,7 +55,7 @@ static void MSI_FreeField( MSIFIELD *field )
     case MSIFIELD_INT:
         break;
     case MSIFIELD_WSTR:
-        HeapFree( GetProcessHeap(), 0, field->u.szwVal);
+        msi_free( field->u.szwVal);
         break;
     case MSIFIELD_STREAM:
         IStream_Release( field->u.stream );
@@ -654,7 +654,7 @@ UINT WINAPI MsiRecordSetStreamA(MSIHANDLE hRecord, unsigned int iField, LPCSTR s
              return ERROR_OUTOFMEMORY;
     }
     ret = MsiRecordSetStreamW(hRecord, iField, wstr);
-    HeapFree(GetProcessHeap(),0,wstr);
+    msi_free(wstr);
 
     return ret;
 }

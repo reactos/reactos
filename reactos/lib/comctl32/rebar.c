@@ -366,7 +366,7 @@ REBAR_DumpBandInfo( LPREBARBANDINFOA pB)
 {
     if( !TRACE_ON(rebar) ) return;
     TRACE("band info: ");
-    if (pB->fMask & RBBIM_ID);
+    if (pB->fMask & RBBIM_ID)
         TRACE("ID=%u, ", pB->wID);
     TRACE("size=%u, child=%p", pB->cbSize, pB->hwndChild);
     if (pB->fMask & RBBIM_COLORS)
@@ -415,7 +415,7 @@ REBAR_DumpBand (REBAR_INFO *iP)
     for (i = 0; i < iP->uNumBands; i++) {
 	pB = &iP->bands[i];
 	TRACE("band # %u:", i);
-	if (pB->fMask & RBBIM_ID);
+	if (pB->fMask & RBBIM_ID)
 	    TRACE(" ID=%u", pB->wID);
 	if (pB->fMask & RBBIM_CHILD)
 	    TRACE(" child=%p", pB->hwndChild);

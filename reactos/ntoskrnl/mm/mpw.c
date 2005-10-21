@@ -93,7 +93,9 @@ MmMpwThreadMain(PVOID Ignored)
    }
 }
 
-NTSTATUS MmInitMpwThread(VOID)
+NTSTATUS
+NTAPI
+MmInitMpwThread(VOID)
 {
    KPRIORITY Priority;
    NTSTATUS Status;

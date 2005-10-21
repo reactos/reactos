@@ -73,7 +73,7 @@ static TCHAR* GetInterfaceTypeName(UINT nInterfaceType)
     }
 }
 
-void PrintPhysicalAddr(PBYTE Addr, UINT len)
+static void PrintPhysicalAddr(PBYTE Addr, UINT len)
 {
     UINT i=0;
     for (i=0; i<len; i++)

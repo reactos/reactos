@@ -1,7 +1,7 @@
 #include <ddk/ntddk.h>
 #include "sndblst.h"
 
-
+#if 0
 BOOLEAN CheckIRQ(PDEVICE_EXTENSION Parameters)
 {
     static CONST ULONG ValidIRQs[] = VALID_IRQS;
@@ -89,3 +89,5 @@ NTSTATUS EnableIRQ(PDEVICE_OBJECT DeviceObject)
     return Status == STATUS_INVALID_PARAMETER ?
                      STATUS_DEVICE_CONFIGURATION_ERROR : Status;
 }
+#endif
+

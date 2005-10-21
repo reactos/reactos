@@ -33,17 +33,13 @@ VOID
 IoShutdownRegisteredDevices(VOID)
 {
    PSHUTDOWN_ENTRY ShutdownEntry;
-   PLIST_ENTRY Entry;
    IO_STATUS_BLOCK StatusBlock;
    PIRP Irp;
    KEVENT Event;
    NTSTATUS Status;
 
-   Entry = ShutdownListHead.Flink;
-   while (Entry != &ShutdownListHead)
+   LIST_FOR_EACH(ShutdownEntry, &ShutdownListHead, SHUTDOWN_ENTRY, ShutdownList)
      {
-	ShutdownEntry = CONTAINING_RECORD(Entry, SHUTDOWN_ENTRY, ShutdownList);
-
 	KeInitializeEvent (&Event,
 	                   NotificationEvent,
 	                   FALSE);
@@ -66,8 +62,6 @@ IoShutdownRegisteredDevices(VOID)
 		                       FALSE,
 		                       NULL);
 	}
-
-	Entry = Entry->Flink;
      }
 }
 
@@ -1082,27 +1076,24 @@ VOID
 STDCALL
 IoUnregisterShutdownNotification(PDEVICE_OBJECT DeviceObject)
 {
-   PSHUTDOWN_ENTRY ShutdownEntry;
-   PLIST_ENTRY Entry;
+   PSHUTDOWN_ENTRY ShutdownEntry, tmp;
    KIRQL oldlvl;
 
-   Entry = ShutdownListHead.Flink;
-   while (Entry != &ShutdownListHead)
+   LIST_FOR_EACH_SAFE(ShutdownEntry, tmp, &ShutdownListHead, SHUTDOWN_ENTRY, ShutdownList) 
      {
-	ShutdownEntry = CONTAINING_RECORD(Entry, SHUTDOWN_ENTRY, ShutdownList);
+
 	if (ShutdownEntry->DeviceObject == DeviceObject)
 	  {
 	    DeviceObject->Flags &= ~DO_SHUTDOWN_REGISTERED;
 
 	    KeAcquireSpinLock(&ShutdownListLock,&oldlvl);
-	    RemoveEntryList(Entry);
+       RemoveEntryList(&ShutdownEntry->ShutdownList);
 	    KeReleaseSpinLock(&ShutdownListLock,oldlvl);
 
-	    ExFreePool(Entry);
+       ExFreePool(ShutdownEntry);
 	    return;
 	  }
 
-	Entry = Entry->Flink;
      }
 }
 

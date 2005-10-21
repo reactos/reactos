@@ -107,6 +107,8 @@ IntWinStaObjectOpen(OB_OPEN_REASON Reason,
    PWINSTATION_OBJECT WinSta = (PWINSTATION_OBJECT)ObjectBody;
    NTSTATUS Status;
 
+DPRINT1("IntWinStaObjectOpen\n");
+
    if (Reason == ObCreateHandle)
    {
       DPRINT("Creating window station (0x%X)\n", WinSta);
@@ -115,10 +117,10 @@ IntWinStaObjectOpen(OB_OPEN_REASON Reason,
 
       InitializeListHead(&WinSta->DesktopListHead);
 
+DPRINT1("Create winsta atomtable\n");
       WinSta->AtomTable = NULL;
-
       Status = RtlCreateAtomTable(37, &WinSta->AtomTable);
-
+if (!NT_SUCCESS(Status)) DPRINT1("Error creating atom table\n");
       WinSta->SystemMenuTemplate = (HANDLE)0;
 
       DPRINT("Window station successfully created.\n");
@@ -257,6 +259,7 @@ IntGetFullWindowStationName(
       FullName->Length += WinStaName->Length + sizeof(WCHAR);
    if (DesktopName != NULL)
       FullName->Length += DesktopName->Length + sizeof(WCHAR);
+   FullName->MaximumLength = FullName->Length;
    FullName->Buffer = ExAllocatePoolWithTag(PagedPool, FullName->Length, TAG_STRING);
    if (FullName->Buffer == NULL)
    {
@@ -534,8 +537,6 @@ NtUserCreateWindowStation(
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
       return 0;
    }
-
-   InitHotKeys(WindowStationObject);
 
    CurInfo->Enabled = FALSE;
    CurInfo->ButtonsDown = 0;

@@ -50,6 +50,8 @@ typedef LPFINDINFOW LPLVFINDINFOW;
 #define TB_UNKWN463              (WM_USER+99)
 #define TB_UNKWN464              (WM_USER+100)
 
+#define TBN_WRAPHOTITEM         (TBN_FIRST-24) /* this is undocumented and the name is a guess */
+
 #define RBBS_USECHEVRON         0x00000200
 #define RBHT_CHEVRON            0x0008
 #define RBN_CHEVRONPUSHED       (RBN_FIRST-10)
@@ -81,5 +83,20 @@ static const WCHAR FLATSB_CLASSW[] = { 'f','l','a','t','s','b','_',
 static const WCHAR DRAGLISTMSGSTRINGW[] = { 'c','o','m','m','c','t','r','l', \
   '_','D','r','a','g','L','i','s','t','M','s','g',0 };
 #endif
+
+/* these are undocumented and the names are guesses */
+typedef struct
+{
+    NMHDR hdr;
+    HWND hwndDialog;
+} NMTBINITCUSTOMIZE;
+
+typedef struct
+{
+    NMHDR hdr;
+    INT idNew;
+    INT iDirection; /* left is -1, right is 1 */
+    DWORD dwReason; /* HICF_* */
+} NMTBWRAPHOTITEM;
 
 #endif /* __WINE_COMMCTRL_H */

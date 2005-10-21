@@ -22,10 +22,11 @@
  * FILE:             services/umpnpmgr/umpnpmgr.c
  * PURPOSE:          User-mode Plug and Play manager
  * PROGRAMMER:       Eric Kohl
+ *                   Hervé Poussineau (hpoussin@reactos.org)
  */
 
 /* INCLUDES *****************************************************************/
-
+#define WIN32_NO_STATUS
 #include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
@@ -109,6 +110,21 @@ void __RPC_FAR * __RPC_USER midl_user_allocate(size_t len)
 void __RPC_USER midl_user_free(void __RPC_FAR * ptr)
 {
     HeapFree(GetProcessHeap(), 0, ptr);
+}
+
+
+static CONFIGRET WINAPI
+NtStatusToCrError(NTSTATUS Status)
+{
+    switch (Status)
+    {
+    	case STATUS_NO_SUCH_DEVICE:
+    		return CR_NO_SUCH_DEVINST;
+    	default:
+    		/* FIXME: add more mappings */
+    		DPRINT1("Unable to map status 0x%08lx\n", Status);
+    		return CR_FAILURE;
+    }
 }
 
 
@@ -235,8 +251,7 @@ PNP_GetRelatedDeviceInstance(handle_t BindingHandle,
                                sizeof(PLUGPLAY_CONTROL_RELATED_DEVICE_DATA));
     if (!NT_SUCCESS(Status))
     {
-        /* FIXME: Map Status to ret */
-        ret = CR_FAILURE;
+        ret = NtStatusToCrError(Status);
     }
 
     DPRINT("PNP_GetRelatedDeviceInstance() done (returns %lx)\n", ret);
@@ -262,15 +277,15 @@ PNP_EnumerateSubKeys(handle_t BindingHandle,
     HKEY hKey;
     DWORD dwError;
 
-    DPRINT1("PNP_EnumerateSubKeys() called\n");
+    DPRINT("PNP_EnumerateSubKeys() called\n");
 
     switch (Branch)
     {
-        case 1:
+        case PNP_BRANCH_ENUM:
             hKey = hEnumKey;
             break;
 
-        case 2:
+        case PNP_BRANCH_CLASS:
             hKey = hClassKey;
             break;
 
@@ -289,16 +304,31 @@ PNP_EnumerateSubKeys(handle_t BindingHandle,
                             NULL);
     if (dwError != ERROR_SUCCESS)
     {
-        ret = CR_FAILURE;
+        ret = (dwError == ERROR_NO_MORE_ITEMS) ? CR_NO_SUCH_VALUE : CR_FAILURE;
+    }
+    else
+    {
+        (*RequiredLength)++;
     }
 
-    DPRINT1("PNP_EnumerateSubKeys() done (returns %lx)\n", ret);
-    if (ret == CR_SUCCESS)
-    {
-        DPRINT1("Sub key: %S\n", Buffer);
-    }
+    DPRINT("PNP_EnumerateSubKeys() done (returns %lx)\n", ret);
 
     return ret;
+}
+
+
+CONFIGRET
+PNP_GetDeviceListSize(handle_t BindingHandle,
+                      wchar_t *Filter,
+                      unsigned long *Length,
+                      DWORD Flags)
+{
+    DPRINT("PNP_GetDeviceListSize() called\n");
+
+    /* FIXME */
+    *Length = 2;
+
+    return CR_SUCCESS;
 }
 
 
@@ -326,7 +356,7 @@ PNP_GetDepth(handle_t BindingHandle,
     }
     else
     {
-        ret = CR_FAILURE; /* FIXME */
+        ret = NtStatusToCrError(Status);
     }
 
     DPRINT("PNP_GetDepth() done (returns %lx)\n", ret);
@@ -624,7 +654,7 @@ PNP_GetDeviceRegProp(handle_t BindingHandle,
         }
         else
         {
-            ret = CR_FAILURE; /* FIXME */
+            ret = NtStatusToCrError(Status);
         }
     }
 
@@ -635,10 +665,26 @@ PNP_GetDeviceRegProp(handle_t BindingHandle,
 
 
 CONFIGRET
+PNP_CreateKey(handle_t BindingHandle,
+              wchar_t *SubKey,
+              unsigned long samDesired,
+              unsigned long Flags)
+{
+    CONFIGRET ret = CR_SUCCESS;
+
+    DPRINT("PNP_CreateKey() called\n");
+
+    DPRINT("PNP_CreateKey() done (returns %lx)\n", ret);
+
+    return ret;
+}
+
+
+CONFIGRET
 PNP_GetClassName(handle_t BindingHandle,
-                 wchar_t *ClassGuid,    /* in */
-                 wchar_t *Buffer,       /* out */
-                 unsigned long *Length, /* in out */
+                 wchar_t *ClassGuid,
+                 wchar_t *Buffer,
+                 unsigned long *Length,
                  unsigned long Flags)
 {
     WCHAR szKeyName[MAX_PATH];
@@ -646,7 +692,7 @@ PNP_GetClassName(handle_t BindingHandle,
     HKEY hKey = NULL;
     ULONG ulSize;
 
-    DPRINT1("PNP_GetClassName() called\n");
+    DPRINT("PNP_GetClassName() called\n");
 
     lstrcpyW(szKeyName, L"System\\CurrentControlSet\\Control\\Class");
     lstrcatW(szKeyName, L"\\");
@@ -677,7 +723,33 @@ PNP_GetClassName(handle_t BindingHandle,
 
     RegCloseKey(hKey);
 
-    DPRINT1("PNP_GetClassName() done (returns %lx)\n", ret);
+    DPRINT("PNP_GetClassName() done (returns %lx)\n", ret);
+
+    return ret;
+}
+
+
+CONFIGRET
+PNP_DeleteClassKey(handle_t BindingHandle,
+                   wchar_t *ClassGuid,
+                   unsigned long Flags)
+{
+    CONFIGRET ret = CR_SUCCESS;
+
+    DPRINT("PNP_GetClassName(%S, %lx) called\n", ClassGuid, Flags);
+
+    if (Flags & CM_DELETE_CLASS_SUBKEYS)
+    {
+        if (RegDeleteTreeW(hClassKey, ClassGuid) != ERROR_SUCCESS)
+            ret = CR_REGISTRY_ERROR;
+    }
+    else
+    {
+        if (RegDeleteKeyW(hClassKey, ClassGuid) != ERROR_SUCCESS)
+            ret = CR_REGISTRY_ERROR;
+    }
+
+    DPRINT("PNP_DeleteClassKey() done (returns %lx)\n", ret);
 
     return ret;
 }
@@ -710,7 +782,7 @@ PNP_GetDeviceStatus(handle_t BindingHandle,
     }
     else
     {
-        ret = CR_FAILURE; /* FIXME */
+        ret = NtStatusToCrError(Status);
     }
 
     DPRINT("PNP_GetDeviceStatus() done (returns %lx)\n", ret);
@@ -736,6 +808,118 @@ PNP_SetDeviceProblem(handle_t BindingHandle,
     return ret;
 }
 
+
+/* Function 38 */
+CONFIGRET
+PNP_IsDockStationPresent(handle_t BindingHandle,
+                         unsigned long *Present)
+{
+    HKEY hKey;
+    DWORD dwType;
+    DWORD dwValue;
+    DWORD dwSize;
+    CONFIGRET ret = CR_SUCCESS;
+
+    DPRINT1("PNP_IsDockStationPresent() called\n");
+
+    *Present = FALSE;
+
+    if (RegOpenKeyExW(HKEY_CURRENT_CONFIG,
+                      L"CurrentDockInfo",
+                      0,
+                      KEY_READ,
+                      &hKey) != ERROR_SUCCESS)
+        return CR_REGISTRY_ERROR;
+
+    dwSize = sizeof(DWORD);
+    if (RegQueryValueExW(hKey,
+                         L"DockingState",
+                         NULL,
+                         &dwType,
+                         (LPBYTE)&dwValue,
+                         &dwSize) != ERROR_SUCCESS)
+        ret = CR_REGISTRY_ERROR;
+
+    RegCloseKey(hKey);
+
+    if (ret == CR_SUCCESS)
+    {
+        if (dwType != REG_DWORD || dwSize != sizeof(DWORD))
+        {
+            ret = CR_REGISTRY_ERROR;
+        }
+        else if (dwValue != 0)
+        {
+            *Present = TRUE;
+        }
+    }
+
+    DPRINT1("PNP_IsDockStationPresent() done (returns %lx)\n", ret);
+
+    return ret;
+}
+
+
+/* Function 39 */
+CONFIGRET
+PNP_RequestEjectPC(handle_t BindingHandle)
+{
+    CONFIGRET ret = CR_SUCCESS;
+
+    DPRINT1("PNP_RequestEjectPC() called\n");
+
+    ret = CR_FAILURE; /* FIXME */
+
+    DPRINT1("PNP_RequestEjectPC() done (returns %lx)\n", ret);
+
+    return ret;
+}
+
+typedef BOOL (WINAPI *PDEV_INSTALL_W)(HWND, HINSTANCE, LPCWSTR, INT);
+
+static BOOL
+InstallDevice(PCWSTR DeviceInstance)
+{
+    PLUGPLAY_CONTROL_STATUS_DATA PlugPlayData;
+    HMODULE hNewDev = NULL;
+    PDEV_INSTALL_W DevInstallW;
+    NTSTATUS Status;
+    BOOL DeviceInstalled = FALSE;
+
+    RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
+                         DeviceInstance);
+    PlugPlayData.Operation = 0; /* Get status */
+
+    /* Get device status */
+    Status = NtPlugPlayControl(PlugPlayControlDeviceStatus,
+                               (PVOID)&PlugPlayData,
+                               sizeof(PLUGPLAY_CONTROL_STATUS_DATA));
+    if (!NT_SUCCESS(Status))
+        return FALSE;
+
+    if (PlugPlayData.DeviceStatus & DNF_STARTED || PlugPlayData.DeviceStatus & DNF_START_FAILED)
+        /* Device is already started, or disabled due to some problem. Don't install it */
+        return TRUE;
+
+    /* Install device */
+    SetEnvironmentVariable(L"USERPROFILE", L"."); /* FIXME: why is it needed? */
+    hNewDev = LoadLibraryW(L"newdev.dll");
+    if (!hNewDev)
+        goto cleanup;
+    DevInstallW = (PDEV_INSTALL_W)GetProcAddress(hNewDev, (LPCSTR)"DevInstallW");
+    if (!DevInstallW)
+        goto cleanup;
+    if (!DevInstallW(NULL, NULL, DeviceInstance, SW_SHOWNOACTIVATE))
+        goto cleanup;
+
+    DeviceInstalled = TRUE;
+
+cleanup:
+    if (hNewDev != NULL)
+        FreeLibrary(hNewDev);
+
+    return DeviceInstalled;
+}
 
 static DWORD WINAPI
 PnpEventThread(LPVOID lpParameter)
@@ -777,6 +961,7 @@ PnpEventThread(LPVOID lpParameter)
         if (UuidEqual(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_ARRIVAL, &RpcStatus))
         {
             DPRINT("Device arrival event: %S\n", PnpEvent->TargetDevice.DeviceIds);
+            InstallDevice(PnpEvent->TargetDevice.DeviceIds);
         }
         else
         {

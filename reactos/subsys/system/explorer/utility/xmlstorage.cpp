@@ -36,21 +36,26 @@
 
 */
 
+#ifndef _NO_COMMENT
+#define _NO_COMMENT	// no #pragma comment(lib, ...) statements in .lib files
+#endif
+
 //#include "xmlstorage.h"
 #include <precomp.h>
 
 
  // work around GCC's wide string constant bug
 #ifdef __GNUC__
-const LPCXSSTR XMLStorage::XS_TRUE = XS_TEXT("true");
-const LPCXSSTR XMLStorage::XS_FALSE = XS_TEXT("false");
-const LPCXSSTR XMLStorage::XS_NUMBERFMT = XS_TEXT("%d");
+const LPCXSSTR XMLStorage::XS_TRUE = XS_TRUE_STR;
+const LPCXSSTR XMLStorage::XS_FALSE = XS_FALSE_STR;
+const LPCXSSTR XMLStorage::XS_NUMBERFMT = XS_NUMBERFMT_STR;
 #endif
 
 
 namespace XMLStorage {
 
 
+ /// remove escape characters from zero terminated string
 static std::string unescape(const char* s, char b='"', char e='"')
 {
 	const char* end = s + strlen(s);
@@ -68,6 +73,7 @@ static std::string unescape(const char* s, char b='"', char e='"')
 	return std::string(s, end-s);
 }
 
+ /// remove escape characters from string with specified length
 static std::string unescape(const char* s, int l, char b='"', char e='"')
 {
 	const char* end = s + l;
@@ -391,6 +397,7 @@ void XMLCALL XMLReaderBase::XML_DefaultHandler(void* userData, const XML_Char* s
 }
 
 
+ /// return error strings for Expat errors
 std::string XMLReaderBase::get_error_string() const
 {
 	XML_Error error = XML_GetErrorCode(_parser);
@@ -453,6 +460,7 @@ std::string XMLReaderBase::get_error_string() const
 }
 
 
+ /// encode XML string literals
 std::string EncodeXMLString(const XS_String& str)
 {
 	LPCXSSTR s = str.c_str();
@@ -492,6 +500,7 @@ std::string EncodeXMLString(const XS_String& str)
 #endif
 }
 
+ /// decode XML string literals
 XS_String DecodeXMLString(const XS_String& str)
 {
 	LPCXSSTR s = str.c_str();

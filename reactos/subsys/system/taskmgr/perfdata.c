@@ -345,6 +345,26 @@ BOOL PerfDataGetImageName(ULONG Index, LPTSTR lpImageName, int nMaxCount)
     return bSuccessful;
 }
 
+int PerfGetIndexByProcessId(DWORD dwProcessId)
+{
+    int Index, FoundIndex = -1;
+
+    EnterCriticalSection(&PerfDataCriticalSection);
+
+    for (Index = 0; Index < ProcessCount; Index++)
+    {
+        if ((DWORD)pPerfData[Index].ProcessId == dwProcessId)
+        {
+            FoundIndex = Index;
+            break;
+        }
+    }
+
+    LeaveCriticalSection(&PerfDataCriticalSection);
+
+    return FoundIndex;
+}
+
 ULONG PerfDataGetProcessId(ULONG Index)
 {
     ULONG    ProcessId;
@@ -806,15 +826,12 @@ ULONG PerfDataGetPhysicalMemorySystemCacheK(void)
 
     EnterCriticalSection(&PerfDataCriticalSection);
 
-    SystemCache = SystemCacheInfo.CurrentSize;
     PageSize = SystemBasicInfo.PageSize;
+    SystemCache = SystemCacheInfo.CurrentSizeIncludingTransitionInPages * PageSize;
 
     LeaveCriticalSection(&PerfDataCriticalSection);
 
-    /* SystemCache = SystemCache * (PageSize / 1024); */
-    SystemCache = SystemCache / 1024;
-
-    return SystemCache;
+    return SystemCache / 1024;
 }
 
 ULONG PerfDataGetSystemHandleCount(void)

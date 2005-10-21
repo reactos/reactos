@@ -55,7 +55,8 @@ BaseDumpAppcompatCache@0
 BaseFlushAppcompatCache@0
 ;BaseInitAppcompatCache
 ;BaseInitAppcompatCacheSupport
-;BaseProcessInitPostImport
+BaseProcessInitPostImport@0
+BaseQueryModuleData@20
 BaseUpdateAppcompatCache@12
 Beep@8
 BeginUpdateResourceA@8
@@ -128,8 +129,8 @@ CreateNamedPipeW@32
 CreateNlsSecurityDescriptor@12
 CreatePipe@16
 CreateProcessA@40
-;CreateProcessInternalA
-;CreateProcessInternalW
+CreateProcessInternalA@48
+CreateProcessInternalW@48
 CreateProcessW@40
 CreateRemoteThread@28
 CreateSemaphoreA@16
@@ -180,7 +181,7 @@ EnterCriticalSection@4=NTDLL.RtlEnterCriticalSection
 EnumCalendarInfoA@16
 EnumCalendarInfoExA@16
 EnumCalendarInfoExW@16
-;EnumCalendarInfoW@16
+EnumCalendarInfoW@16
 EnumDateFormatsA@12
 EnumDateFormatsExA@12
 EnumDateFormatsExW@12
@@ -277,6 +278,8 @@ FreeUserPhysicalPages@12
 FreeVirtualBuffer@4
 GenerateConsoleCtrlEvent@8
 GetACP@0
+GetApplicationRecoveryCallback@12
+GetApplicationRestart@16
 GetAtomNameA@12
 GetAtomNameW@12
 GetBinaryType@8=GetBinaryTypeA@8
@@ -648,7 +651,7 @@ MultiByteToWideChar@24
 NeedCurrentDirectoryForExePathA@4
 NeedCurrentDirectoryForExePathW@4
 NlsConvertIntegerToString@20
-;NlsGetCacheUpdateCount
+NlsGetCacheUpdateCount@0
 ;NlsResetProcessLocale
 ;NumaVirtualQueryNode
 OpenConsoleW@16
@@ -674,7 +677,7 @@ OutputDebugStringW@4
 PeekConsoleInputA@16
 PeekConsoleInputW@16
 PeekNamedPipe@24
-;PrivCopyFileExW
+PrivCopyFileExW@24
 ;PrivMoveFileIdentityW
 PostQueuedCompletionStatus@16
 PrepareTape@12
@@ -695,7 +698,7 @@ QueryPerformanceCounter@4
 QueryPerformanceFrequency@4
 QueueUserAPC@12
 QueueUserWorkItem@12
-;QueryWin31IniFilesMappedToRegistry@16
+QueryWin31IniFilesMappedToRegistry@16
 RaiseException@16
 ReadConsoleA@20
 ReadConsoleInputA@16
@@ -713,6 +716,10 @@ ReadFile@20
 ReadFileEx@20
 ReadFileScatter@20
 ReadProcessMemory@20
+RecoveryFinished@4
+RecoveryInProgress@4
+RegisterApplicationRecoveryCallback@8
+RegisterApplicationRestart@8
 ;RegisterConsoleIME
 ;RegisterConsoleOS2
 RegisterConsoleVDM@44

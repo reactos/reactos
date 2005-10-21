@@ -54,26 +54,34 @@ CcMdlWriteCompleteDev(
 );
 
 VOID
+NTAPI
 CcInitView(VOID);
 
-VOID CcInit(VOID);
+VOID
+NTAPI
+CcInit(VOID);
 
 VOID
+NTAPI
 CcInitCacheZeroPage(VOID);
 
 NTSTATUS
+NTAPI
 CcRosFlushDirtyPages(
     ULONG Target,
     PULONG Count
 );
 
 VOID
+NTAPI
 CcRosDereferenceCache(PFILE_OBJECT FileObject);
 
 VOID
+NTAPI
 CcRosReferenceCache(PFILE_OBJECT FileObject);
 
 VOID
+NTAPI
 CcRosSetRemoveOnClose(PSECTION_OBJECT_POINTERS SectionObjectPointer);
 
 /*

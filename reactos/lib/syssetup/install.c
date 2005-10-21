@@ -27,12 +27,14 @@
 
 /* INCLUDES *****************************************************************/
 
+#define WIN32_NO_STATUS
 #include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 
 #include <commctrl.h>
 #include <stdio.h>
+#include <io.h>
 #include <tchar.h>
 #include <stdlib.h>
 
@@ -158,21 +160,48 @@ HRESULT CreateShellLink(LPCTSTR linkPath, LPCTSTR cmd, LPCTSTR arg, LPCTSTR dir,
 }
 
 
-static VOID
-CreateCmdLink(VOID)
+static BOOL
+CreateShortcut(int csidl, LPCTSTR folder, LPCTSTR linkName, LPCTSTR command, UINT nIdTitle)
+{
+  TCHAR path[MAX_PATH];
+  TCHAR title[256];
+  LPTSTR p = path;
+
+  if (!SHGetSpecialFolderPath(0, path, csidl, TRUE))
+    return FALSE;
+
+  if (folder)
+    {
+      p = PathAddBackslash(p);
+      _tcscpy(p, folder);
+    }
+
+  p = PathAddBackslash(p);
+  _tcscpy(p, linkName);
+
+  if (!LoadString(hDllInstance, nIdTitle, title, 256))
+    return FALSE;
+
+  return SUCCEEDED(CreateShellLink(path, command, _T(""), NULL, NULL, 0, title));
+}
+
+
+static BOOL
+CreateShortcutFolder(int csidl, UINT nID, LPTSTR name, int nameLen)
 {
   TCHAR path[MAX_PATH];
   LPTSTR p;
 
-  CoInitialize(NULL);
+  if (!SHGetSpecialFolderPath(0, path, csidl, TRUE))
+    return FALSE;
 
-  SHGetSpecialFolderPath(0, path, CSIDL_DESKTOP, TRUE);
+  if (!LoadString(hDllInstance, nID, name, nameLen))
+    return FALSE;
+
   p = PathAddBackslash(path);
+  _tcscpy(p, name);
 
-  _tcscpy(p, _T("Command Prompt.lnk"));
-  CreateShellLink(path, _T("cmd.exe"), _T(""), NULL, NULL, 0, _T("Open command prompt"));
-
-  CoUninitialize();
+  return CreateDirectory(path, NULL) || GetLastError()==ERROR_ALREADY_EXISTS;
 }
 
 
@@ -369,6 +398,11 @@ ProcessSysSetupInf(VOID)
 DWORD STDCALL
 InstallReactOS (HINSTANCE hInstance)
 {
+  TCHAR sAccessories[256];
+  TCHAR sGames[256];
+  TCHAR Sys[_MAX_PATH];
+    
+
 # if 0
   OutputDebugStringA ("InstallReactOS() called\n");
 
@@ -399,7 +433,36 @@ InstallReactOS (HINSTANCE hInstance)
       return 0;
     }
 
-  CreateCmdLink();
+  CoInitialize(NULL);
+
+  /* create desktop shortcuts */
+  CreateShortcut(CSIDL_DESKTOP, NULL, _T("Command Prompt.lnk"), _T("cmd.exe"), IDS_CMT_CMD);
+
+  /* create program startmenu shortcuts */  
+  CreateShortcut(CSIDL_PROGRAMS, NULL, _T("winefile.lnk"), _T("winefile.exe"), IDS_CMT_WINEFILE);
+
+  /* create and fill Accessories subfolder */
+  if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_ACCESSORIES, sAccessories, 256)) {
+	CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("Command Prompt.lnk"), _T("cmd.exe"), IDS_CMT_CMD);
+    CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("notepad.lnk"), _T("notepad.exe"), IDS_CMT_NOTEPAD);
+    CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("explorer.lnk"), _T("explorer.exe"), IDS_CMT_EXPLORER);
+    CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("regedit.lnk"), _T("regedit.exe"), IDS_CMT_REGEDIT);
+  }
+
+  if(!GetSystemDirectory(Sys, _MAX_PATH))
+    Sys[0] = L'\0';
+
+  /* create Games subfolder and fill if the exe is available */
+  if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_GAMES, sGames, 256)) {
+	if (Sys[0] != L'\0') {
+   	  if((_taccess(_tcscat(Sys, _T("\\sol.exe")), 0 )) != -1)
+        CreateShortcut(CSIDL_PROGRAMS, sGames, _T("Solitaire.lnk"), _T("sol.exe"), IDS_CMT_SOLITAIRE);
+	  
+      /* winemine etc .... */
+	}
+  }
+
+  CoUninitialize();
 
   /* Create the semi-random Domain-SID */
   CreateRandomSid (&DomainSid);

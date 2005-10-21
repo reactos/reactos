@@ -34,7 +34,7 @@ char					reactos_module_strings[64][256];	// Array to hold module names
 unsigned long			reactos_memory_map_descriptor_size;
 memory_map_t			reactos_memory_map[32];		// Memory map
 
-BOOL
+static BOOL
 STDCALL
 FrLdrLoadKernel(PCHAR szFileName,
                 INT nPos)
@@ -144,7 +144,7 @@ LoadKernelSymbols(PCHAR szKernelName, int nPos)
   return TRUE;
 }
 
-BOOL
+static BOOL
 FrLdrLoadNlsFile(PCHAR szFileName,
                  PCHAR szModuleName)
 {
@@ -183,7 +183,7 @@ FrLdrLoadNlsFile(PCHAR szFileName,
     return(TRUE);
 }
 
-BOOL
+static BOOL
 FrLdrLoadNlsFiles(PCHAR szSystemRoot,
                   PCHAR szErrorOut)
 {
@@ -301,7 +301,7 @@ FrLdrLoadNlsFiles(PCHAR szSystemRoot,
     return(TRUE);
 }
 
-BOOL
+static BOOL
 FrLdrLoadDriver(PCHAR szFileName,
                 INT nPos)
 {
@@ -344,7 +344,7 @@ FrLdrLoadDriver(PCHAR szFileName,
     return(TRUE);
 }
 
-VOID
+static VOID
 FrLdrLoadBootDrivers(PCHAR szSystemRoot,
                      INT nPos)
 {
@@ -439,6 +439,7 @@ FrLdrLoadBootDrivers(PCHAR szSystemRoot,
                 /* Read the Start Value */
                 ValueSize = sizeof(ULONG);
                 rc = RegQueryValue(hDriverKey, "Start", &ValueType, (PUCHAR)&StartValue, &ValueSize);
+		if (rc != ERROR_SUCCESS) StartValue = (ULONG)-1;
                 DbgPrint((DPRINT_REACTOS, "  Start: %x  \n", (int)StartValue));
 
                 /* Read the Tag */
@@ -486,7 +487,7 @@ FrLdrLoadBootDrivers(PCHAR szSystemRoot,
                 } else {
 
                     DbgPrint((DPRINT_REACTOS, "  Skipping driver '%s' with Start %d, Tag %d and Group '%s' (Current Tag %d, current group '%s')\n",
-                    ServiceName, StartValue, TagValue, DriverGroup, OrderList[TagIndex], GroupName));
+                             ServiceName, StartValue, TagValue, DriverGroup, OrderList[TagIndex], GroupName));
                 }
 
                 Index++;
@@ -511,6 +512,7 @@ FrLdrLoadBootDrivers(PCHAR szSystemRoot,
             /* Read the Start Value */
             ValueSize = sizeof(ULONG);
             rc = RegQueryValue(hDriverKey, "Start", &ValueType, (PUCHAR)&StartValue, &ValueSize);
+            if (rc != ERROR_SUCCESS) StartValue = (ULONG)-1;
             DbgPrint((DPRINT_REACTOS, "  Start: %x  \n", (int)StartValue));
 
             /* Read the Tag */

@@ -32,6 +32,7 @@
  */
 VOID
 INIT_FUNCTION
+NTAPI
 KeInitDpc(PKPRCB Prcb)
 {
    InitializeListHead(&Prcb->DpcData[0].DpcListHead);
@@ -245,10 +246,10 @@ KeInsertQueueDpc(PKDPC Dpc,
 
                 if (Dpc->Number >= MAXIMUM_PROCESSORS) {
 
-                    KiIpiSendRequest(1 << (Dpc->Number - MAXIMUM_PROCESSORS), IPI_REQUEST_DPC);
+                    KiIpiSendRequest(1 << (Dpc->Number - MAXIMUM_PROCESSORS), IPI_DPC);
                 } else {
 
-                    KiIpiSendRequest(1 << Dpc->Number, IPI_REQUEST_DPC);
+                    KiIpiSendRequest(1 << Dpc->Number, IPI_DPC);
                 }
 
             }

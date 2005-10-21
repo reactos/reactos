@@ -89,6 +89,7 @@
 		<file>painting.c</file>
 		<file>prop.c</file>
 		<file>scrollbar.c</file>
+		<file>session.c</file>
 		<file>stubs.c</file>
 		<file>timer.c</file>
 		<file>useratom.c</file>
@@ -131,7 +132,7 @@
 		<file>xpstubs.c</file>
 	</directory>
 </module>
-<module name="win32k" type="kernelmodedriver" installbase="system32" installname="win32k.sys" warnings="true">
+<module name="win32k" type="kernelmodedriver" installbase="system32" installname="win32k.sys" allowwarnings="true">
 	<importlibrary definition="win32k.def" />
 	<library>win32k_base</library>
 	<library>pseh</library>

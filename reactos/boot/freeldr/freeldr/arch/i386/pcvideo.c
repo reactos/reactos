@@ -249,7 +249,8 @@ PcVideoSetFont8x14(VOID)
   Int386(0x10, &Regs, &Regs);
 }
 
-VOID PcVideoSelectAlternatePrintScreen(VOID)
+static VOID
+PcVideoSelectAlternatePrintScreen(VOID)
 {
   REGS Regs;
 
@@ -272,7 +273,8 @@ VOID PcVideoSelectAlternatePrintScreen(VOID)
   Int386(0x10, &Regs, &Regs);
 }
 
-VOID PcVideoDisableCursorEmulation(VOID)
+static VOID
+PcVideoDisableCursorEmulation(VOID)
 {
   REGS Regs;
 

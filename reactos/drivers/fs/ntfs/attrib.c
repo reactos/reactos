@@ -40,14 +40,14 @@
 
 
 
-ULONG
+static ULONG
 RunLength(PUCHAR run)
 {
   return(*run & 0x0f) + ((*run >> 4) & 0x0f) + 1;
 }
 
 
-LONGLONG
+static LONGLONG
 RunLCN(PUCHAR run)
 {
 	UCHAR n1 = *run & 0x0f;
@@ -62,7 +62,7 @@ RunLCN(PUCHAR run)
 
 
 
-ULONGLONG
+static ULONGLONG
 RunCount(PUCHAR run)
 {
 	UCHAR n =  *run & 0xf;

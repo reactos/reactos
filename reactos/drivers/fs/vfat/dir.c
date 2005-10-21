@@ -73,7 +73,7 @@ FsdSystemTimeToDosDateTime (PDEVICE_EXTENSION DeviceExt, PLARGE_INTEGER SystemTi
 
 #define ULONG_ROUND_UP(x)   ROUND_UP((x), (sizeof(ULONG)))
 
-NTSTATUS
+static NTSTATUS
 VfatGetFileNameInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
 			    PFILE_NAMES_INFORMATION pInfo, ULONG BufferLength)
 {
@@ -86,7 +86,7 @@ VfatGetFileNameInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
   return STATUS_SUCCESS;
 }
 
-NTSTATUS
+static NTSTATUS
 VfatGetFileDirectoryInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
 				 PDEVICE_EXTENSION DeviceExt,
 				 PFILE_DIRECTORY_INFORMATION pInfo,
@@ -156,7 +156,7 @@ VfatGetFileDirectoryInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
   return STATUS_SUCCESS;
 }
 
-NTSTATUS
+static NTSTATUS
 VfatGetFileFullDirectoryInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
 				     PDEVICE_EXTENSION DeviceExt,
 				     PFILE_FULL_DIR_INFORMATION pInfo,
@@ -210,7 +210,7 @@ VfatGetFileFullDirectoryInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
   return STATUS_SUCCESS;
 }
 
-NTSTATUS
+static NTSTATUS
 VfatGetFileBothInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
 			    PDEVICE_EXTENSION DeviceExt,
 			    PFILE_BOTH_DIR_INFORMATION pInfo,
@@ -290,7 +290,7 @@ VfatGetFileBothInformation (PVFAT_DIRENTRY_CONTEXT DirContext,
   return STATUS_SUCCESS;
 }
 
-NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
+static NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
 {
   NTSTATUS RC = STATUS_SUCCESS;
   long BufferLength = 0;

@@ -3,10 +3,10 @@
 <assemblyIdentity
     version="1.0.0.0"
     processorArchitecture="X86"
-    name="IrfanView"
+    name="ReactOS.Explorer"
     type="win32"
 />
-<description>Universal picture viewer</description>
+<description>ROS Excplorer</description>
 <dependency>
     <dependentAssembly>
         <assemblyIdentity

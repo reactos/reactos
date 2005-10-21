@@ -1,6 +1,6 @@
 /*
  * ReactOS Access Control List Editor
- * Copyright (C) 2004 ReactOS Team
+ * Copyright (C) 2004-2005 ReactOS Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -177,7 +177,8 @@ FindCheckItem(IN PCHECKLISTWND infoPtr,
          CurItem = CurItem->Next)
     {
         if ((CurItem->State & CIS_DISABLED) != CIS_DISABLED &&
-            !wcsnicmp(CurItem->Name, SearchText, Count))
+            !wcsnicmp(CurItem->Name,
+                      SearchText, Count))
         {
             break;
         }
@@ -762,7 +763,8 @@ PaintControl(IN PCHECKLISTWND infoPtr,
              rcUpdate,
              (HBRUSH)(COLOR_WINDOW + 1));
     
-    GetClientRect(infoPtr->hSelf, &rcClient);
+    GetClientRect(infoPtr->hSelf,
+                  &rcClient);
     
     ScrollPos = GetScrollPos(infoPtr->hSelf,
                              SB_VERT);
@@ -1204,7 +1206,8 @@ MapItemToRect(IN PCHECKLISTWND infoPtr,
         RECT rcClient;
         INT VisibleFirst;
         
-        GetClientRect(infoPtr->hSelf, &rcClient);
+        GetClientRect(infoPtr->hSelf,
+                      &rcClient);
         
         VisibleFirst = GetScrollPos(infoPtr->hSelf,
                                     SB_VERT);
@@ -1598,8 +1601,11 @@ CheckListWndProc(IN HWND hwnd,
                            nPage however also includes the partly cropped list
                            item at the bottom of the control */
 
-                        GetClientRect(hwnd, &rcClient);
-                        ScrollLines = max(1, (rcClient.bottom - rcClient.top) / infoPtr->ItemHeight);
+                        GetClientRect(hwnd,
+                                      &rcClient);
+
+                        ScrollLines = max(1,
+                                          (rcClient.bottom - rcClient.top) / infoPtr->ItemHeight);
                         
                         if (ScrollInfo.nPos + ScrollLines <= ScrollInfo.nMax)
                         {
@@ -1622,8 +1628,11 @@ CheckListWndProc(IN HWND hwnd,
                            nPage however also includes the partly cropped list
                            item at the bottom of the control */
 
-                        GetClientRect(hwnd, &rcClient);
-                        ScrollLines = max(1, (rcClient.bottom - rcClient.top) / infoPtr->ItemHeight);
+                        GetClientRect(hwnd,
+                                      &rcClient);
+
+                        ScrollLines = max(1,
+                                          (rcClient.bottom - rcClient.top) / infoPtr->ItemHeight);
                         
                         if (ScrollInfo.nPos >= ScrollLines)
                         {
@@ -1752,10 +1761,6 @@ CheckListWndProc(IN HWND hwnd,
                     UpdateControl(infoPtr);
                 }
                 Ret = TRUE;
-            }
-            else
-            {
-                Ret = FALSE;
             }
             break;
         }
@@ -2165,9 +2170,11 @@ CheckListWndProc(IN HWND hwnd,
                         if (!infoPtr->FocusVisible)
                         {
                             /* change the UI status */
-                            SendMessage(GetAncestor(hwnd, GA_ROOT),
+                            SendMessage(GetAncestor(hwnd,
+                                                    GA_ROOT),
                                         WM_CHANGEUISTATE,
-                                        MAKEWPARAM(UIS_INITIALIZE, UISF_HIDEFOCUS),
+                                        MAKEWPARAM(UIS_INITIALIZE,
+                                                   UISF_HIDEFOCUS),
                                         0);
                         }
 
@@ -2451,7 +2458,8 @@ CheckListWndProc(IN HWND hwnd,
                 infoPtr->TextColor[0] = GetSysColor(COLOR_GRAYTEXT);
                 infoPtr->TextColor[1] = GetSysColor(COLOR_WINDOWTEXT);
                 
-                GetClientRect(hwnd, &rcClient);
+                GetClientRect(hwnd,
+                              &rcClient);
                 
                 infoPtr->CheckBoxLeft[0] = rcClient.right - 30;
                 infoPtr->CheckBoxLeft[1] = rcClient.right - 15;
@@ -2535,7 +2543,7 @@ CheckListWndProc(IN HWND hwnd,
 }
 
 BOOL
-RegisterCheckListControl(HINSTANCE hInstance)
+RegisterCheckListControl(IN HINSTANCE hInstance)
 {
     WNDCLASS wc;
     
@@ -2545,7 +2553,8 @@ RegisterCheckListControl(HINSTANCE hInstance)
     wc.cbWndExtra = sizeof(PCHECKLISTWND);
     wc.hInstance = hInstance;
     wc.hIcon = NULL;
-    wc.hCursor = LoadCursor(0, (LPWSTR)IDC_ARROW);
+    wc.hCursor = LoadCursor(NULL,
+                            (LPWSTR)IDC_ARROW);
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wc.lpszMenuName = NULL;
     wc.lpszClassName = L"CHECKLIST_ACLUI";

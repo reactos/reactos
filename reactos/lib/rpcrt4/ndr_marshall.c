@@ -738,6 +738,11 @@ void WINAPI PointerUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
     pStubMsg->Buffer += 4;
     break;
   case RPC_FC_OP: /* object pointer - we must free data before overwriting it */
+    pointer_id = NDR_LOCAL_UINT32_READ(pStubMsg->Buffer);
+    pStubMsg->Buffer += 4;
+    if (*pPointer)
+        FIXME("free object pointer %p\n", *pPointer);
+    break;
   case RPC_FC_FP:
   default:
     FIXME("unhandled ptr type=%02x\n", type);
@@ -1865,18 +1870,10 @@ unsigned char * WINAPI NdrConformantArrayUnmarshall(PMIDL_STUB_MESSAGE pStubMsg,
   pFormat = ReadConformance(pStubMsg, pFormat+4);
   size = pStubMsg->MaxCount;
 
-  if (fMustAlloc) {
+  if (fMustAlloc || !*ppMemory)
     *ppMemory = NdrAllocate(pStubMsg, size*esize);
-    memcpy(*ppMemory, pStubMsg->Buffer, size*esize);
-  } else {
-    if (pStubMsg->ReuseBuffer && !*ppMemory)
-      /* for servers, we may just point straight into the RPC buffer, I think
-       * (I guess that's what MS does since MIDL code doesn't try to free) */
-      *ppMemory = pStubMsg->Buffer;
-    else
-      /* for clients, memory should be provided by caller */
-      memcpy(*ppMemory, pStubMsg->Buffer, size*esize);
-  }
+
+  memcpy(*ppMemory, pStubMsg->Buffer, size*esize);
 
   pStubMsg->BufferMark = pStubMsg->Buffer;
   pStubMsg->Buffer += size*esize;

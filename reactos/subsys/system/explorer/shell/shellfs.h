@@ -32,7 +32,7 @@ struct ShellEntry : public Entry
 	ShellEntry(Entry* parent, LPITEMIDLIST shell_path) : Entry(parent, ET_SHELL), _pidl(shell_path) {}
 	ShellEntry(Entry* parent, const ShellPath& shell_path) : Entry(parent, ET_SHELL), _pidl(shell_path) {}
 
-	virtual bool		get_path(PTSTR path) const;
+	virtual bool		get_path(PTSTR path, size_t path_count) const;
 	virtual ShellPath	create_absolute_pidl() const;
 	virtual HRESULT		GetUIObjectOf(HWND hWnd, REFIID riid, LPVOID* ppvOut);
 	virtual BOOL		launch_entry(HWND hwnd, UINT nCmdShow=SW_SHOWNORMAL);
@@ -103,7 +103,7 @@ struct ShellDirectory : public ShellEntry, public Directory
 	virtual const void* get_next_path_component(const void*) const;
 	virtual Entry* find_entry(const void*);
 
-	virtual bool get_path(PTSTR path) const;
+	virtual bool get_path(PTSTR path, size_t path_count) const;
 
 	int	extract_icons();
 

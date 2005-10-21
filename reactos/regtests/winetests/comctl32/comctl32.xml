@@ -1,4 +1,4 @@
-<module name="comctl32_winetest" type="win32cui" installbase="bin" installname="comctl32_winetest.exe" warnings="true">
+<module name="comctl32_winetest" type="win32cui" installbase="bin" installname="comctl32_winetest.exe" allowwarnings="true">
     <include base="comctl32_winetest">.</include>
     <define name="__USE_W32API" />
     <library>shlwapi</library>

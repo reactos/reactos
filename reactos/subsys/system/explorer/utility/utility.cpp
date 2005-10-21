@@ -365,12 +365,18 @@ BOOL RunDLL(HWND hwnd, LPCTSTR dllname, LPCSTR procname, LPCTSTR cmdline, UINT n
 }
 
 
+#ifdef UNICODE
+#define CONTROL_RUNDLL "Control_RunDLLW"
+#else
+#define CONTROL_RUNDLL "Control_RunDLLA"
+#endif
+
 BOOL launch_cpanel(HWND hwnd, LPCTSTR applet)
 {
-	//launch_file(_hwnd, applet, SW_SHOWNORMAL);	// This would be enough, but we want the fastest solution.
-	//launch_file(_hwnd, TEXT("rundll32.exe /d shell32.dll,Control_RunDLL ")+applet, SW_SHOWNORMAL);
+	//launch_file(_hwnd, applet, SW_SHOWNORMAL);	// This would be enough, but we want the to use the most direct and fastest call.
+	//launch_file(_hwnd, String(TEXT("rundll32.exe /d shell32.dll,Control_RunDLL "))+applet, SW_SHOWNORMAL);
 
-	return RunDLL(hwnd, TEXT("shell32"), "Control_RunDLL", applet, SW_SHOWNORMAL);
+	return RunDLL(hwnd, TEXT("shell32"), CONTROL_RUNDLL, applet, SW_SHOWNORMAL);
 }
 
 

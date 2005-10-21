@@ -20,6 +20,7 @@
 
 #include <stdio.h> // sprintf
 #include <math.h>
+#include <stdlib.h>
 
 #include <windows.h>
 #include <tchar.h>
@@ -124,9 +125,6 @@ int WINAPI WinMain( HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdline, int cmd
     WNDCLASS wc;
     HWND hWnd;
     HACCEL haccel;
-#ifdef UNICODE
-    CHAR s_ansi[CALC_BUF_SIZE];
-#endif
     TCHAR s[CALC_BUF_SIZE];
     int r;
 
@@ -139,12 +137,7 @@ int WINAPI WinMain( HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdline, int cmd
                          CALC_BUF_SIZE
     );
 
-#ifdef UNICODE
-    wcstombs(s_ansi, s, sizeof(s_ansi));
-    calc.sciMode  = atoi(s_ansi);
-#else
-    calc.sciMode  = atoi(s);
-#endif
+    calc.sciMode  = _ttoi(s);
 
     if (calc.sciMode != 0 &&
         calc.sciMode != 1)
@@ -157,12 +150,7 @@ int WINAPI WinMain( HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdline, int cmd
                          CALC_BUF_SIZE
         );
 
-#ifdef UNICODE
-    wcstombs(s_ansi, s, sizeof(s_ansi));
-    calc.digitGrouping  = atoi(s_ansi);
-#else
-    calc.digitGrouping  = atoi(s);
-#endif
+    calc.digitGrouping  = _ttoi(s);
 
     if (calc.digitGrouping != 0 &&
         calc.digitGrouping != 1)
@@ -194,7 +182,7 @@ int WINAPI WinMain( HINSTANCE hInst, HINSTANCE hPrevInst, LPSTR cmdline, int cmd
 
     hWnd = CreateWindow( appname,
         appname,
-        WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX,
+        WS_CLIPSIBLINGS | (WS_OVERLAPPEDWINDOW & ~WS_THICKFRAME & ~WS_MAXIMIZEBOX),
         CW_USEDEFAULT,
         CW_USEDEFAULT,
         calc.sciMode ? CALC_STANDARD_WIDTH :  CALC_SCIENTIFIC_WIDTH,
@@ -282,6 +270,7 @@ LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         }
 
         DestroyCalc( &calc );
+		DestroyMenus();
         PostQuitMessage( 0 );
         return 0;
 
@@ -482,7 +471,7 @@ LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 int len;
                 TCHAR *s;
                 HGLOBAL hGlobalMemory;
-                PSTR pGlobalMemory;
+                LPTSTR pGlobalMemory;
 
                 if (!(len = _tcslen(calc.display)))
                     return 0;
@@ -518,10 +507,10 @@ LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         case TEXT('\x16'): // Ctrl+V Paste
             {
                 TCHAR *s;
-                int c;
+                TCHAR c;
                 int cmd = 0;
-                int size = 0;
-                int i = 0;
+                size_t size = 0;
+                size_t i = 0;
                 HGLOBAL hGlobalMemory;
                 LPTSTR pGlobalMemory;
 
@@ -2754,6 +2743,8 @@ void DrawCalcText (HDC hdc, HDC hMemDC, PAINTSTRUCT  *ps, CALC *calc, int object
     HFONT hFontOrg;
     HPEN hPen;
     HPEN hPenOrg;
+    HBRUSH hBrush;
+    HBRUSH hBrushOrg;
 
     TCHAR s2[CALC_BUF_SIZE];
 
@@ -2814,6 +2805,8 @@ void DrawCalcText (HDC hdc, HDC hMemDC, PAINTSTRUCT  *ps, CALC *calc, int object
 
     hPen = CreatePen(PS_SOLID, 1, RGB(255,255,255));
     hPenOrg = SelectObject(hdc, hPen);
+    hBrush = GetSysColorBrush(COLOR_WINDOW);
+    hBrushOrg = SelectObject(hdc, hBrush);
 
     MoveToEx(hdc,
         WDISPLAY_LEFT - 1,
@@ -2827,6 +2820,7 @@ void DrawCalcText (HDC hdc, HDC hMemDC, PAINTSTRUCT  *ps, CALC *calc, int object
     Rectangle(hdc, WDISPLAY_LEFT, WDISPLAY_TOP, WDISPLAY_RIGHT, WDISPLAY_BOTTOM);
 
     SelectObject(hdc, hPenOrg);
+    SelectObject(hdc, hBrushOrg);
     DeleteObject(hPen);
 
     SetBkMode(hdc, TRANSPARENT);
@@ -2849,6 +2843,18 @@ void DestroyCalc (CALC *calc)
 
     for (i=0;i<calc->numButtons;i++)
         DestroyWindow(calc->cb[i].hBtn);
+}
+
+void DestroyMenus()
+{
+    if (menus[MENU_STD] != 0)
+        DestroyMenu(menus[MENU_STD]);
+
+    if (menus[MENU_SCIMS] != 0)
+        DestroyMenu(menus[MENU_SCIMS]);
+
+    if (menus[MENU_SCIWS] != 0)
+        DestroyMenu(menus[MENU_SCIWS]);
 }
 
 void calc_buffer_format(CALC *calc) {
@@ -2933,7 +2939,6 @@ void calc_buffer_format(CALC *calc) {
 void calc_buffer_display(CALC *calc) {
     TCHAR *p;
     TCHAR s[CALC_BUF_SIZE];
-    TCHAR r[CALC_BUF_SIZE] = TEXT("0");
     int point=0;
     calcfloat real;
 
@@ -2961,11 +2966,10 @@ void calc_buffer_display(CALC *calc) {
             else {
                 int i = 0;
                 int lz = 0;
-                calcfloat r;
                 int exp = 0;
 
-                r = calc_atof(calc->buffer, calc->numBase);
-                _stprintf(s, FMT_DESC_EXP, r);
+                real = calc_atof(calc->buffer, calc->numBase);
+                _stprintf(s, FMT_DESC_EXP, real);
                 // remove leading zeros in exponent
                 p = s;
                 while (*p) {
@@ -3021,13 +3025,11 @@ void calc_buffer_display(CALC *calc) {
             if (!point && calc->numBase == NBASE_DECIMAL)
                 _tcscat(s, TEXT("."));
 
-            if (*s == TEXT('.')) {
-                _tcscat(r, s);
-                _tcscpy(calc->display, r);
-            }
-            else {
-                _tcscpy(calc->display, s);
-            }
+            if (*s == TEXT('.'))
+                _tcscpy(calc->display, TEXT("0"));
+            else
+                calc->display[0] = 0;
+            _tcscat(calc->display, s);
         }
     }
     InvalidateRect(calc->hWnd, NULL, FALSE);
@@ -3077,7 +3079,7 @@ TCHAR *calc_sep(TCHAR *s)
         r[i++] = c;
         if (x++ % 3 == 0)
             r[i++] = TEXT(',');
-        if (n == -1)
+        if (n == 0)
             break;
     }
 
@@ -3189,38 +3191,26 @@ oper	= (%C)\n"),
     MessageBox(calc->hWnd, s, title, MB_OK);
 }
 
-calcfloat calc_atof(TCHAR *s, int base)
+calcfloat calc_atof(const TCHAR *s, int base)
 {
-    // converts from another base to decimal calcfloat
 #ifdef UNICODE
     char s_ansi[128];
-    wcstombs(s_ansi, s, sizeof(s_ansi));
+#endif
+
+    // converts from another base to decimal calcfloat
     switch (base) {
     case NBASE_DECIMAL:
+        wcstombs(s_ansi, s, sizeof(s_ansi));
         return CALC_ATOF(s_ansi);
     case NBASE_HEX:
-        return (calcfloat)strtol(s_ansi, NULL, 16);
+        return (calcfloat)_tcstol(s, NULL, 16);
     case NBASE_OCTAL:
-        return (calcfloat)strtol(s_ansi, NULL, 8);
+        return (calcfloat)_tcstol(s, NULL, 8);
     case NBASE_BINARY:
-        return (calcfloat)strtol(s_ansi, NULL, 2);
+        return (calcfloat)_tcstol(s, NULL, 2);
     default:
         break;
     }
-#else
-    switch (base) {
-    case NBASE_DECIMAL:
-        return CALC_ATOF(s);
-    case NBASE_HEX:
-        return (calcfloat)strtol(s, NULL, 16);
-    case NBASE_OCTAL:
-        return (calcfloat)strtol(s, NULL, 8);
-    case NBASE_BINARY:
-        return (calcfloat)strtol(s, NULL, 2);
-    default:
-        break;
-    }
-#endif
 
     return 0L;
 }
@@ -3261,6 +3251,7 @@ int parse(int wParam, int lParam)
         calc.next = 1;
         calc.buffer[0] = TEXT('\0');
         calc.value = 0;
+        calc.init = 1;
         break;
 
     case TEXT('0'):

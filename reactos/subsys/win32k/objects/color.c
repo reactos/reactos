@@ -122,7 +122,7 @@ BOOL STDCALL NtGdiAnimatePalette(HPALETTE hPal, UINT StartIndex,
           else
             DC_UnlockDc(dc);
         }		
-      UserReleaseDC(Wnd,hDC);   
+      UserReleaseDC(Wnd,hDC, FALSE);
     }
     return TRUE;
 }
@@ -638,6 +638,7 @@ NtGdiUpdateColors(HDC hDC)
 {
    PWINDOW_OBJECT Wnd;
    BOOL calledFromUser, ret;
+   USER_REFERENCE_ENTRY Ref;
 
    calledFromUser = UserIsEntered();
    
@@ -645,7 +646,7 @@ NtGdiUpdateColors(HDC hDC)
       UserEnterExclusive();
    }
 
-   Wnd = IntGetWindowObject(IntWindowFromDC(hDC));
+   Wnd = UserGetWindowObject(IntWindowFromDC(hDC));
    if (Wnd == NULL)
    {
       SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
@@ -657,9 +658,9 @@ NtGdiUpdateColors(HDC hDC)
       return FALSE;
    }
    
+   UserRefObjectCo(Wnd, &Ref);
    ret = co_UserRedrawWindow(Wnd, NULL, 0, RDW_INVALIDATE);
-   
-   IntReleaseWindowObject(Wnd); //temp hack
+   UserDerefObjectCo(Wnd);
    
    if (!calledFromUser){
       UserLeave();

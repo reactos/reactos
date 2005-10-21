@@ -121,6 +121,7 @@ int	mflag;			/* flag: if != 0, then active multi command */
 
 int	options;		/* used during socket creation */
 
+static char *slurpstring();
 
 
 int main(int argc, char *argv[])
@@ -310,8 +311,6 @@ void cmdscanner(top)
 	int top;
 {
 	register struct cmd *c;
-	struct cmd *getcmd();
-	extern int help();
 
 	if (!top)
 		(void) putchar('\n');
@@ -395,7 +394,6 @@ int slrflag;
 void makeargv()
 {
 	char **argp;
-	char *slurpstring();
 
 	margc = 0;
 	argp = margv;
@@ -411,7 +409,7 @@ void makeargv()
  * implemented with FSM to
  * handle quoting and strings
  */
-char *
+static char *
 slurpstring()
 {
 	int got_one = 0;
@@ -535,7 +533,7 @@ OUT1:
  * Help command.
  * Call each command handler with argc == 0 and argv[0] == name.
  */
-int help(argc, argv)
+void help(argc, argv)
 	int argc;
 	char *argv[];
 {
@@ -582,7 +580,7 @@ int help(argc, argv)
 			}
 		}
 		(void) fflush(stdout);
-		return 0;
+		return;
 	}
 	while (--argc > 0) {
 		register char *arg;
@@ -597,5 +595,4 @@ int help(argc, argv)
 				c->c_name, c->c_help);
 	}
 	(void) fflush(stdout);
-	return 0;
 }

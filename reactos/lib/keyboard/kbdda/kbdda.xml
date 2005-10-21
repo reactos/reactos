@@ -1,4 +1,4 @@
-<module name="kbdda" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbdda.dll" warnings="true">
+<module name="kbdda" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbdda.dll" allowwarnings="true">
 	<importlibrary definition="kbdda.def" />
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />

@@ -1,4 +1,17 @@
 
+int fgetcSocket(int s);
+char *fputsSocket(char *format, int s);
+
+char *fprintfSocket(int s, char *format, ...);
+
+int fputcSocket(int s, char putChar);
+int fputSocket(int s, char *putChar, int len);
+char *fgetsSocket(int s, char *string);
+
+char *hookup();
+char **glob();
+int herror(char *s);
+
 int getreply(int expecteof);
 int ruserpass(char *host, char **aname, char **apass, char **aacct);
 char *getpass(const char *prompt);
@@ -29,3 +42,25 @@ int confirm(char *cmd, char *file);
 void blkfree(char **av0);
 int getit(int argc, char *argv[], int restartit, char *mode);
 int sleep(int time);
+
+char *tail();
+int errno;
+char *mktemp();
+void	setbell(), setdebug();
+void	setglob(), sethash(), setport();
+void	setprompt();
+void	settrace(), setverbose();
+void	settype(), setform(), setstruct();
+void	restart(), syst();
+void	cd(), lcd(), delete(), mdelete();
+void	ls(), mls(), get(), mget(), help(), append(), put(), mput(), reget();
+void	status();
+void	renamefile();
+void	quote(), rmthelp(), site();
+void	pwd(), makedir(), removedir(), setcr();
+void	account(), doproxy(), reset(), setcase(), setntrans(), setnmap();
+void	setsunique(), setrunique(), cdup(), macdef();
+void	sizecmd(), modtime(), newer(), rmtstatus();
+void	do_chmod(), do_umask(), idle();
+void	shell(), user(), fsetmode();
+struct cmd	*getcmd();

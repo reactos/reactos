@@ -587,6 +587,13 @@ typedef PCONFLICT_DETAILS_A PCONFLICT_DETAILS;
 
 
 
+/* FIXME: Missing CMP_Init_Detection */
+/* FIXME: Missing CMP_RegisterNotification */
+/* FIXME: Missing CMP_Report_LogOn */
+/* FIXME: Missing CMP_UnregisterNotification */
+/* FIXME: Missing CMP_WaitNoPendingInstallEvents */
+/* FIXME: Missing CMP_WaitServicesAvailable */
+
 /* CM_Add_Empty_Log_Conf.ulFlags constants */
 #define PRIORITY_EQUAL_FIRST              0x00000008
 #define PRIORITY_EQUAL_LAST               0x00000000
@@ -708,8 +715,27 @@ CM_Connect_MachineW(
 /* FIXME: Obsolete CM_Create_DevNode */
 /* FIXME: Obsolete CM_Create_DevNodeEx */
 /* FIXME: Obsolete CM_Create_Range_List */
-/* FIXME: Obsolete CM_Delete_Class_Key */
-/* FIXME: Obsolete CM_Delete_Class_Key_Ex */
+
+/* Flags for CM_Delete_Class_Key.ulFlags constants */
+#define CM_DELETE_CLASS_ONLY              0x00000000
+#define CM_DELETE_CLASS_SUBKEYS           0x00000001
+#define CM_DELETE_CLASS_BITS              0x00000001
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Delete_Class_Key(
+  IN LPGUID  ClassGuid,
+  IN ULONG  ulFlags);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Delete_Class_Key_Ex(
+  IN LPGUID  ClassGuid,
+  IN ULONG  ulFlags,
+  IN HANDLE  hMachine);
+
 /* FIXME: Obsolete CM_Delete_DevNode_Key */
 /* FIXME: Obsolete CM_Delete_DevNode_Key_Ex */
 /* FIXME: Obsolete CM_Delete_Range */
@@ -1433,21 +1459,32 @@ CM_Get_Version_Ex(
 
 /* FIXME: Obsolete CM_Intersect_Range_List */
 /* FIXME: Obsolete CM_Invert_Range_List */
-/* FIXME: Obsolete CM_Is_Dock_Station_Present */
-/* FIXME: Obsolete CM_Is_Dock_Station_Present_Ex */
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Is_Dock_Station_Present(
+  OUT PBOOL  pbPresent);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Is_Dock_Station_Present_Ex(
+  OUT PBOOL  pbPresent,
+  IN HMACHINE  hMachine);
 
 /* CM_Locate_DevNode.ulFlags constants */
-#define CM_LOCATE_DEVNODE_NORMAL       		0x00000000
-#define CM_LOCATE_DEVNODE_PHANTOM      		0x00000001
-#define CM_LOCATE_DEVNODE_CANCELREMOVE 		0x00000002
-#define CM_LOCATE_DEVNODE_NOVALIDATION 		0x00000004
-#define CM_LOCATE_DEVNODE_BITS         		0x00000007
+#define CM_LOCATE_DEVNODE_NORMAL         0x00000000
+#define CM_LOCATE_DEVNODE_PHANTOM        0x00000001
+#define CM_LOCATE_DEVNODE_CANCELREMOVE   0x00000002
+#define CM_LOCATE_DEVNODE_NOVALIDATION   0x00000004
+#define CM_LOCATE_DEVNODE_BITS           0x00000007
 
-#define CM_LOCATE_DEVINST_NORMAL       		CM_LOCATE_DEVNODE_NORMAL
-#define CM_LOCATE_DEVINST_PHANTOM      		CM_LOCATE_DEVNODE_PHANTOM
-#define CM_LOCATE_DEVINST_CANCELREMOVE 		CM_LOCATE_DEVNODE_CANCELREMOVE
-#define CM_LOCATE_DEVINST_NOVALIDATION 		CM_LOCATE_DEVNODE_NOVALIDATION
-#define CM_LOCATE_DEVINST_BITS         		CM_LOCATE_DEVNODE_BITS
+#define CM_LOCATE_DEVINST_NORMAL         CM_LOCATE_DEVNODE_NORMAL
+#define CM_LOCATE_DEVINST_PHANTOM        CM_LOCATE_DEVNODE_PHANTOM
+#define CM_LOCATE_DEVINST_CANCELREMOVE   CM_LOCATE_DEVNODE_CANCELREMOVE
+#define CM_LOCATE_DEVINST_NOVALIDATION   CM_LOCATE_DEVNODE_NOVALIDATION
+#define CM_LOCATE_DEVINST_BITS           CM_LOCATE_DEVNODE_BITS
 
 CMAPI
 CONFIGRET
@@ -1736,8 +1773,18 @@ CM_Request_Device_EjectW(
 #define CM_Request_Device_Eject_Ex CM_Request_Device_Eject_ExA
 #endif /* UNICODE */
 
-/* FIXME: Obsolete CM_Request_Eject_PC */
-/* FIXME: Obsolete CM_Request_Eject_PC_Ex */
+CMAPI
+CONFIGRET
+WINAPI
+CM_Request_Eject_PC(
+  VOID);
+
+CMAPI
+CONFIGRET
+WINAPI
+CM_Request_Eject_PC_Ex(
+  IN HMACHINE  hMachine);
+
 /* FIXME: Obsolete CM_Run_Detection */
 /* FIXME: Obsolete CM_Run_Detection_Ex */
 /* FIXME: Obsolete CM_Set_Class_Registry_Property */

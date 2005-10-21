@@ -64,7 +64,7 @@ static UINT CREATE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
     static const WCHAR szTables[] =  { '_','T','a','b','l','e','s',0 };
     static const WCHAR szColumns[] = { '_','C','o','l','u','m','n','s',0 };
     MSIVIEW *tv = NULL;
-    MSIRECORD *rec;
+    MSIRECORD *rec = NULL;
 
     TRACE("%p Table %s (%s)\n", cv, debugstr_w(cv->name), 
           cv->bIsTemp?"temporary":"permanent");
@@ -148,6 +148,8 @@ static UINT CREATE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
         r = ERROR_SUCCESS;
 
 err:
+    if (rec)
+        msiobj_release( &rec->hdr );
     /* FIXME: remove values from the string table on error */
     if( tv )
         tv->ops->delete( tv );
@@ -199,7 +201,7 @@ static UINT CREATE_delete( struct tagMSIVIEW *view )
     TRACE("%p\n", cv );
 
     msiobj_release( &cv->db->hdr );
-    HeapFree( GetProcessHeap(), 0, cv );
+    msi_free( cv );
 
     return ERROR_SUCCESS;
 }
@@ -226,7 +228,7 @@ UINT CREATE_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR table,
 
     TRACE("%p\n", cv );
 
-    cv = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof *cv );
+    cv = msi_alloc_zero( sizeof *cv );
     if( !cv )
         return ERROR_FUNCTION_FAILED;
     

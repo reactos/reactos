@@ -150,7 +150,7 @@ void FindProgramDlg::Refresh(bool delete_cache)
 	_thread.Stop();
 
 	TCHAR buffer[1024];
-	GetWindowText(GetDlgItem(_hwnd, IDC_FILTER), buffer, 1024);
+	GetWindowText(GetDlgItem(_hwnd, IDC_FILTER), buffer, COUNTOF(buffer));
 #ifndef __WINE__ ///@todo _tcslwr() for Wine
 	_tcslwr(buffer);
 #endif
@@ -191,7 +191,7 @@ void FindProgramDlg::collect_programs_callback(Entry* entry, void* param)
 			if (SUCCEEDED(hr)) {
 				TCHAR entry_path[MAX_PATH];
 
-				entry->get_path(entry_path);
+				entry->get_path(entry_path, COUNTOF(entry_path));
 
 				String menu_path;
 
@@ -231,8 +231,8 @@ void FindProgramDlg::add_entry(const FPDEntry& cache_entry)
 	String lwr_name = cache_entry._entry->_display_name;
 
 #ifndef __WINE__ ///@todo _tcslwr() for Wine
-	_tcslwr((LPTSTR)lwr_path.c_str());
-	_tcslwr((LPTSTR)lwr_name.c_str());
+	_tcslwr(&lwr_path.at(0));
+	_tcslwr(&lwr_name.at(0));
 #endif
 
 	if (_lwr_filter.empty())

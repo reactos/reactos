@@ -167,15 +167,15 @@ ReportDetectedDevice(
 	FdoDeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	RtlZeroMemory(PdoDeviceExtension, sizeof(PDO_DEVICE_EXTENSION));
 	PdoDeviceExtension->Common.IsFDO = FALSE;
-	Status = SerenumDuplicateUnicodeString(&PdoDeviceExtension->DeviceDescription, DeviceDescription, PagedPool);
+	Status = RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, DeviceDescription, &PdoDeviceExtension->DeviceDescription);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Status = SerenumDuplicateUnicodeString(&PdoDeviceExtension->DeviceId, DeviceId, PagedPool);
+	Status = RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, DeviceId, &PdoDeviceExtension->DeviceId);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Status = SerenumDuplicateUnicodeString(&PdoDeviceExtension->InstanceId, InstanceId, PagedPool);
+	Status = RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, InstanceId, &PdoDeviceExtension->InstanceId);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Status = SerenumDuplicateUnicodeString(&PdoDeviceExtension->HardwareIds, HardwareIds, PagedPool);
+	Status = RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, HardwareIds, &PdoDeviceExtension->HardwareIds);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
-	Status = SerenumDuplicateUnicodeString(&PdoDeviceExtension->CompatibleIds, CompatibleIds, PagedPool);
+	Status = RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, CompatibleIds, &PdoDeviceExtension->CompatibleIds);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
 
 	/* Device attached to serial port (Pdo) may delegate work to

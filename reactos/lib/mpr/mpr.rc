@@ -24,6 +24,7 @@
 
 #include "version.rc"
 
+#include "mpr_Bg.rc"
 #include "mpr_Cs.rc"
 #include "mpr_De.rc"
 #include "mpr_En.rc"
@@ -32,6 +33,7 @@
 #include "mpr_It.rc"
 #include "mpr_Ja.rc"
 #include "mpr_Nl.rc"
+#include "mpr_No.rc"
 #include "mpr_Pt.rc"
 #include "mpr_Ru.rc"
 #include "mpr_Sv.rc"

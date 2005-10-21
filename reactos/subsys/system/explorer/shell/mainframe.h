@@ -27,7 +27,14 @@
 
 
 #define	PM_OPEN_WINDOW			(WM_APP+0x07)
-enum OPEN_WINDOW_MODE {OWM_EXPLORE=1, OWM_DETAILS=2, OWM_PIDL=4};
+
+enum OPEN_WINDOW_MODE {
+	OWM_EXPLORE=1,	/// window in explore mode
+	OWM_ROOTED=2,	/// "rooted" window with special shell namespace root
+	OWM_DETAILS=4,	/// view files in detail mode
+	OWM_PIDL=8,		/// path is given as PIDL, otherwise as LPCTSTR
+	OWM_SEPARATE=16	/// open separate subfolder windows
+};
 
 
  /// Explorer frame window base class
@@ -38,7 +45,7 @@ struct MainFrameBase : public PreTranslateWindow
 	MainFrameBase(HWND hwnd);
 	~MainFrameBase();
 
-	static HWND Create(LPCTSTR path, bool mdi=true, UINT cmdshow=SW_SHOWNORMAL);
+	static HWND Create(const ExplorerCmd& cmd);
 	static int OpenShellFolders(LPIDA pida, HWND hFrameWnd);
 
 	WindowHandle _hwndrebar;
@@ -52,15 +59,16 @@ struct MainFrameBase : public PreTranslateWindow
 	WindowHandle _hsidebar;
 	HIMAGELIST	_himl;
 
-	HMENU	_hMenuFrame;
-	HMENU	_hMenuWindow;
+	HMENU		_hMenuFrame;
+	HMENU		_hMenuWindow;
 
-	MenuInfo _menu_info;
+	MenuInfo	_menu_info;
 
 protected:
 	FullScreenParameters _fullscreen;
 
-	HACCEL	_hAccel;
+	HACCEL		_hAccel;
+	HIMAGELIST	_himl_old;
 
 	LRESULT	WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam);
 	bool	ProcessMessage(UINT nmsg, WPARAM wparam, LPARAM lparam, LRESULT* pres);
@@ -80,6 +88,8 @@ protected:
 
 	void	FillBookmarks();
 	virtual bool go_to(LPCTSTR url, bool new_window);
+
+	void	ExecuteCommandbar(LPCTSTR dir);
 };
 
 

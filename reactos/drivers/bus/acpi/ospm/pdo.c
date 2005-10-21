@@ -43,6 +43,46 @@ AcpiDuplicateUnicodeString(
 
 
 static NTSTATUS
+PdoQueryDeviceText(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PIRP Irp,
+  PIO_STACK_LOCATION IrpSp)
+{
+  PPDO_DEVICE_EXTENSION DeviceExtension;
+  PWSTR Buffer;
+  NTSTATUS Status;
+
+  DPRINT("Called\n");
+
+  DeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+  Status = STATUS_SUCCESS;
+
+  switch (IrpSp->Parameters.QueryDeviceText.DeviceTextType)
+  {
+    case DeviceTextDescription:
+      DPRINT("DeviceTextDescription\n");
+      Buffer = (PWSTR)ExAllocatePool(PagedPool, DeviceExtension->DeviceDescription.Length + sizeof(UNICODE_NULL));
+      if (Buffer == NULL)
+          Status = STATUS_INSUFFICIENT_RESOURCES;
+      else
+      {
+          RtlCopyMemory(Buffer, DeviceExtension->DeviceDescription.Buffer, DeviceExtension->DeviceDescription.Length);
+          Buffer[DeviceExtension->DeviceDescription.Length / sizeof(WCHAR)] = UNICODE_NULL;
+          Irp->IoStatus.Information = (ULONG_PTR)Buffer;
+      }
+      break;
+
+    default:
+      Irp->IoStatus.Information = 0;
+      Status = STATUS_INVALID_PARAMETER;
+  }
+
+  return Status;
+}
+
+
+static NTSTATUS
 PdoQueryId(
   IN PDEVICE_OBJECT DeviceObject,
   IN PIRP Irp,
@@ -241,6 +281,7 @@ PdoPnpControl(
     break;
 
   case IRP_MN_QUERY_DEVICE_TEXT:
+    Status = PdoQueryDeviceText(DeviceObject, Irp, IrpSp);
     break;
 
   case IRP_MN_QUERY_ID:

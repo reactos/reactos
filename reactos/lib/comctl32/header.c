@@ -930,6 +930,10 @@ HEADER_InsertItemA (HWND hwnd, WPARAM wParam, LPARAM lParam)
         nItem = infoPtr->uNumItem;
 
     iOrder = (phdi->mask & HDI_ORDER) ? phdi->iOrder : nItem;
+    if (iOrder < 0)
+        iOrder = 0;
+    else if (infoPtr->uNumItem < iOrder)
+        iOrder = infoPtr->uNumItem;
 
     if (infoPtr->uNumItem == 0) {
         infoPtr->items = Alloc (sizeof (HEADER_ITEM));

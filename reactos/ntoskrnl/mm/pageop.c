@@ -25,6 +25,7 @@ static NPAGED_LOOKASIDE_LIST MmPageOpLookasideList;
 /* FUNCTIONS *****************************************************************/
 
 VOID
+NTAPI
 MmReleasePageOp(PMM_PAGEOP PageOp)
 /*
  * FUNCTION: Release a reference to a page operation descriptor
@@ -68,6 +69,7 @@ MmReleasePageOp(PMM_PAGEOP PageOp)
 }
 
 PMM_PAGEOP
+NTAPI
 MmCheckForPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
                  PMM_SECTION_SEGMENT Segment, ULONG Offset)
 {
@@ -138,6 +140,7 @@ MmCheckForPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
 }
 
 PMM_PAGEOP
+NTAPI
 MmGetPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
             PMM_SECTION_SEGMENT Segment, ULONG Offset, ULONG OpType, BOOL First)
 /*
@@ -257,7 +260,9 @@ MmGetPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
    return(PageOp);
 }
 
-VOID INIT_FUNCTION
+VOID
+INIT_FUNCTION
+NTAPI
 MmInitializePageOp(VOID)
 {
    memset(MmPageOpHashTable, 0, sizeof(MmPageOpHashTable));

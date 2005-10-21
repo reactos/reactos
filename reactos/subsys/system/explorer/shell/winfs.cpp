@@ -229,70 +229,9 @@ Entry* WinDirectory::find_entry(const void* p)
 
 
  // get full path of specified directory entry
-bool WinEntry::get_path(PTSTR path) const
+bool WinEntry::get_path(PTSTR path, size_t path_count) const
 {
-	int level = 0;
-	int len = 0;
-	int l = 0;
-	LPCTSTR name = NULL;
-	TCHAR buffer[MAX_PATH];
-
-	const Entry* entry;
-	for(entry=this; entry; level++) {
-		l = 0;
-
-		if (entry->_etype == ET_WINDOWS) {
-			name = entry->_data.cFileName;
-
-			for(LPCTSTR s=name; *s && *s!=TEXT('/') && *s!=TEXT('\\'); s++)
-				++l;
-
-			if (!entry->_up)
-				break;
-		} else {
-			if (entry->get_path(buffer)) {
-				l = _tcslen(buffer);
-				name = buffer;
-
-				/* special handling of drive names */
-				if (l>0 && buffer[l-1]=='\\' && path[0]=='\\')
-					--l;
-
-				memmove(path+l, path, len*sizeof(TCHAR));
-				memcpy(path, name, l*sizeof(TCHAR));
-				len += l;
-			}
-
-			entry = NULL;
-			break;
-		}
-
-		if (l > 0) {
-			memmove(path+l+1, path, len*sizeof(TCHAR));
-			memcpy(path+1, name, l*sizeof(TCHAR));
-			len += l+1;
-
-			if (entry->_up && !(entry->_up->_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))	// a NTFS stream?
-				path[0] = TEXT(':');
-			else
-				path[0] = TEXT('\\');
-		}
-
-		entry = entry->_up;
-	}
-
-	if (entry) {
-		memmove(path+l, path, len*sizeof(TCHAR));
-		memcpy(path, name, l*sizeof(TCHAR));
-		len += l;
-	}
-
-	if (!level)
-		path[len++] = TEXT('\\');
-
-	path[len] = TEXT('\0');
-
-	return true;
+	return get_path_base ( path, path_count, ET_WINDOWS );
 }
 
 ShellPath WinEntry::create_absolute_pidl() const
@@ -301,7 +240,7 @@ ShellPath WinEntry::create_absolute_pidl() const
 
 	TCHAR path[MAX_PATH];
 
-	if (get_path(path))
+	if (get_path(path, COUNTOF(path)))
 		return ShellPath(path);
 
 	return ShellPath();

@@ -4,7 +4,7 @@
 #include <debug.h>
 #include "../../lib/bzip2/bzlib.h"
 
-NTSTATUS STDCALL RamdrvDispatchDeviceControl(PDEVICE_OBJECT DeviceObject,
+static NTSTATUS STDCALL RamdrvDispatchDeviceControl(PDEVICE_OBJECT DeviceObject,
 					     PIRP Irp)
 {
    PIO_STACK_LOCATION IrpStack;
@@ -45,7 +45,7 @@ NTSTATUS STDCALL RamdrvDispatchDeviceControl(PDEVICE_OBJECT DeviceObject,
    return Status;
 }
 
-NTSTATUS STDCALL RamdrvDispatchReadWrite(PDEVICE_OBJECT DeviceObject,
+static NTSTATUS STDCALL RamdrvDispatchReadWrite(PDEVICE_OBJECT DeviceObject,
 					 PIRP Irp)
 {
   PRAMDRV_DEVICE_EXTENSION devext = (PRAMDRV_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -74,7 +74,7 @@ NTSTATUS STDCALL RamdrvDispatchReadWrite(PDEVICE_OBJECT DeviceObject,
   return STATUS_SUCCESS;
 }
 
-NTSTATUS STDCALL RamdrvDispatchOpenClose(PDEVICE_OBJECT DeviceObject,
+static NTSTATUS STDCALL RamdrvDispatchOpenClose(PDEVICE_OBJECT DeviceObject,
 					 PIRP Irp)
 {
    DPRINT("RamdrvDispatchOpenClose\n");

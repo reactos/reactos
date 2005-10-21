@@ -35,7 +35,7 @@
 #define IDC_REGEDIT                     109
 #define IDC_REGEDIT_FRAME               110
 #define IDR_REGEDIT_MENU                130
-#define IDD_DIALOG1                     131
+#define IDD_EXPORTRANGE                 131
 #define IDI_OPEN_FILE                   132
 #define IDD_DIALOG2                     132
 #define IDI_CLOSED_FILE                 133
@@ -128,6 +128,13 @@
 #define IDS_ERR_RENVAL_TOEMPTY		32857
 #define ID_SWITCH_PANELS                32871
 #define ID_EDIT_PERMISSIONS		32872
+#define ID_TREE_DELETE                  32873
+#define ID_TREE_RENAME                  32874
+#define IDS_QUERY_DELETE_KEY_ONE        32875
+#define IDS_QUERY_DELETE_KEY_MORE       32876
+#define IDS_QUERY_DELETE_KEY_CONFIRM    32877
+#define ID_TREE_SUGGESTION_MIN          32878
+#define ID_TREE_SUGGESTION_MAX          32887
 
 #define IDS_FLT_REGFILES		31001
 #define IDS_FLT_REGFILES_FLT		31002
@@ -152,6 +159,11 @@
 #define IDS_INHERIT_THISKEYONLY		31121
 #define IDS_INHERIT_THISKEYANDSUBKEYS	31122
 #define IDS_INHERIT_SUBKEYSONLY		31123
+#define IDS_EXPAND                      31124
+#define IDS_COLLAPSE                    31125
+#define IDS_NEW_KEY                     31126
+#define IDS_NEW_VALUE                   31127
+#define IDS_GOTO_SUGGESTED_KEY          31128
 
 
 #define IDD_EDIT_STRING			2000
@@ -164,5 +176,9 @@
 
 #define IDD_EDIT_MULTI_STRING		2006
 #define IDD_EDIT_BIN_DATA		2007
+
+#define IDC_EXPORT_ALL          2008
+#define IDC_EXPORT_BRANCH       2009
+#define IDC_EXPORT_BRANCH_TEXT  2010
 
 #define IDC_STATIC                      -1

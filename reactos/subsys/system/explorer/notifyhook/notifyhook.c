@@ -108,7 +108,7 @@ DECL_NOTIFYHOOK int GetWindowModulePathCopyData(LPARAM lparam, HWND* phwnd, LPST
 		struct COPYDATA_STRUCT* cds = (struct COPYDATA_STRUCT*) data->lpData;
 
 		*phwnd = cds->_hwnd;
-		strncpy(buffer, cds->_path, size);
+		lstrcpyn(buffer, cds->_path, size);
 
 		return cds->_len;
 	} else

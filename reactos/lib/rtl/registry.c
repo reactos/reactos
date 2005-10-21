@@ -154,7 +154,7 @@ RtlpGetRegistryHandle(ULONG RelativeTo,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlCheckRegistryKey(IN ULONG RelativeTo,
 		    IN PWSTR Path)
 {
@@ -179,7 +179,7 @@ RtlCheckRegistryKey(IN ULONG RelativeTo,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlCreateRegistryKey(IN ULONG RelativeTo,
 		     IN PWSTR Path)
 {
@@ -204,7 +204,7 @@ RtlCreateRegistryKey(IN ULONG RelativeTo,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlDeleteRegistryValue(IN ULONG RelativeTo,
 		       IN PCWSTR Path,
 		       IN PCWSTR ValueName)
@@ -237,7 +237,7 @@ RtlDeleteRegistryValue(IN ULONG RelativeTo,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlFormatCurrentUserKeyPath (OUT PUNICODE_STRING KeyPath)
 {
   HANDLE TokenHandle;
@@ -323,7 +323,7 @@ RtlFormatCurrentUserKeyPath (OUT PUNICODE_STRING KeyPath)
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlOpenCurrentUser(IN ACCESS_MASK DesiredAccess,
 		   OUT PHANDLE KeyHandle)
 {
@@ -369,7 +369,7 @@ RtlOpenCurrentUser(IN ACCESS_MASK DesiredAccess,
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlQueryRegistryValues(IN ULONG RelativeTo,
 		       IN PCWSTR Path,
 		       IN PRTL_QUERY_REGISTRY_TABLE QueryTable,
@@ -873,7 +873,7 @@ RtlQueryRegistryValues(IN ULONG RelativeTo,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlWriteRegistryValue(IN ULONG RelativeTo,
 		      IN PCWSTR Path,
 		      IN PCWSTR ValueName,
@@ -920,7 +920,7 @@ RtlWriteRegistryValue(IN ULONG RelativeTo,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlpNtCreateKey(OUT HANDLE KeyHandle,
 		IN ACCESS_MASK DesiredAccess,
 		IN POBJECT_ATTRIBUTES ObjectAttributes,
@@ -944,7 +944,7 @@ RtlpNtCreateKey(OUT HANDLE KeyHandle,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlpNtEnumerateSubKey(IN HANDLE KeyHandle,
 		      OUT PUNICODE_STRING SubKeyName,
 		      IN ULONG Index,
@@ -998,7 +998,7 @@ RtlpNtEnumerateSubKey(IN HANDLE KeyHandle,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlpNtMakeTemporaryKey(IN HANDLE KeyHandle)
 {
   return(ZwDeleteKey(KeyHandle));
@@ -1008,7 +1008,7 @@ RtlpNtMakeTemporaryKey(IN HANDLE KeyHandle)
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlpNtOpenKey(OUT HANDLE KeyHandle,
 	      IN ACCESS_MASK DesiredAccess,
 	      IN POBJECT_ATTRIBUTES ObjectAttributes,
@@ -1026,7 +1026,7 @@ RtlpNtOpenKey(OUT HANDLE KeyHandle,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlpNtQueryValueKey(IN HANDLE KeyHandle,
 		    OUT PULONG Type OPTIONAL,
 		    OUT PVOID Data OPTIONAL,
@@ -1081,7 +1081,7 @@ RtlpNtQueryValueKey(IN HANDLE KeyHandle,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlpNtSetValueKey(IN HANDLE KeyHandle,
 		  IN ULONG Type,
 		  IN PVOID Data,

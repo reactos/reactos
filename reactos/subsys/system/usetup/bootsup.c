@@ -1002,13 +1002,13 @@ InstallMbrBootCodeToDisk (PWSTR SrcPath,
   UNICODE_STRING Name;
   HANDLE FileHandle;
   NTSTATUS Status;
-  PUCHAR OrigBootSector;
-  PUCHAR NewBootSector;
+  PPARTITION_SECTOR OrigBootSector;
+  PPARTITION_SECTOR NewBootSector;
 
   /* Allocate buffer for original bootsector */
-  OrigBootSector = (PUCHAR)RtlAllocateHeap(ProcessHeap,
-					   0,
-					   SECTORSIZE);
+  OrigBootSector = (PPARTITION_SECTOR)RtlAllocateHeap(ProcessHeap,
+				                      0,
+                                                      sizeof(PARTITION_SECTOR));
   if (OrigBootSector == NULL)
     return(STATUS_INSUFFICIENT_RESOURCES);
 
@@ -1052,9 +1052,9 @@ InstallMbrBootCodeToDisk (PWSTR SrcPath,
 
 
   /* Allocate buffer for new bootsector */
-  NewBootSector = (PUCHAR)RtlAllocateHeap(ProcessHeap,
-					  0,
-					  SECTORSIZE);
+  NewBootSector = (PPARTITION_SECTOR)RtlAllocateHeap(ProcessHeap,
+					             0,
+                                                     sizeof(PARTITION_SECTOR));
   if (NewBootSector == NULL)
   {
     RtlFreeHeap(ProcessHeap, 0, OrigBootSector);
@@ -1090,7 +1090,7 @@ InstallMbrBootCodeToDisk (PWSTR SrcPath,
 		      NULL,
 		      &IoStatusBlock,
 		      NewBootSector,
-		      SECTORSIZE,
+		      sizeof(PARTITION_SECTOR),
 		      NULL,
 		      NULL);
   NtClose(FileHandle);
@@ -1102,9 +1102,9 @@ InstallMbrBootCodeToDisk (PWSTR SrcPath,
   }
 
   /* Copy partition table from old MBR to new */
-  RtlCopyMemory ((NewBootSector + 446),
-		 (OrigBootSector + 446),
-		 4*16 /* Length of partition table */);
+  RtlCopyMemory (&NewBootSector->Signature,
+		 &OrigBootSector->Signature,
+		 sizeof(PARTITION_SECTOR) - offsetof(PARTITION_SECTOR, Signature) /* Length of partition table */);
 
   /* Free the original boot sector */
   RtlFreeHeap(ProcessHeap, 0, OrigBootSector);

@@ -13901,7 +13901,7 @@ char *yytext;
 #include <assert.h>
 
 #include "wpp_private.h"
-#include "wpp.tab.h"
+#include "ppy.tab.h"
 
 /*
  * Make sure that we are running an appropriate version of flex.

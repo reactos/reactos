@@ -247,45 +247,46 @@ LRESULT WebChildWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			return TRUE;
 
  		  case PM_DISPATCH_COMMAND: {
-			if (_control) {
-				HRESULT hr = E_FAIL;
+			if (!_control)
+				return FALSE;
 
-				switch(LOWORD(wparam)) {
-				  case ID_GO_BACK:
-					hr = _control->GoBack();
-					break;
+			HRESULT hr = E_FAIL;
 
-				  case ID_GO_FORWARD:
-					hr = _control->GoForward();
-					break;
+			switch(LOWORD(wparam)) {
+			  case ID_GO_BACK:
+				hr = _control->GoBack();
+				break;
 
-				  case ID_GO_UP:
-					///@todo
-					break;
+			  case ID_GO_FORWARD:
+				hr = _control->GoForward();
+				break;
 
-				  case ID_GO_HOME:
-					hr = _control->GoHome();
-					break;
+			  case ID_GO_UP:
+				///@todo
+				break;
 
-				  case ID_GO_SEARCH:
-					hr = _control->GoSearch();
-					break;
+			  case ID_GO_HOME:
+				hr = _control->GoHome();
+				break;
 
-				  case ID_REFRESH:
-					hr = _control->Refresh();
-					break;
+			  case ID_GO_SEARCH:
+				hr = _control->GoSearch();
+				break;
 
-				  case ID_STOP:
-					hr = _control->Stop();
-					break;
+			  case ID_REFRESH:
+				hr = _control->Refresh();
+				break;
 
-				  default:
-					return super::WndProc(nmsg, wparam, lparam);
-				}
+			  case ID_STOP:
+				hr = _control->Stop();
+				break;
 
-				if (FAILED(hr) && hr!=E_FAIL)
-					THROW_EXCEPTION(hr);
+			  default:
+				return super::WndProc(nmsg, wparam, lparam);
 			}
+
+			if (FAILED(hr) && hr!=E_FAIL)
+				THROW_EXCEPTION(hr);
 
 			return TRUE;}
 

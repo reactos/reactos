@@ -2962,7 +2962,8 @@ HRESULT WINAPI VarR4FromDec(DECIMAL* pDecIn, float *pFltOut)
   if (DEC_HI32(pDecIn))
   {
     highPart = (double)DEC_HI32(pDecIn) / (double)divisor;
-    highPart *= 1.0e64;
+    highPart *= 4294967296.0F;
+    highPart *= 4294967296.0F;
   }
   else
     highPart = 0.0;
@@ -3281,7 +3282,8 @@ HRESULT WINAPI VarR8FromDec(DECIMAL* pDecIn, double *pDblOut)
   if (DEC_HI32(pDecIn))
   {
     highPart = (double)DEC_HI32(pDecIn) / divisor;
-    highPart *= 1.0e64;
+    highPart *= 4294967296.0F;
+    highPart *= 4294967296.0F;
   }
   else
     highPart = 0.0;
@@ -5014,7 +5016,7 @@ static BOOL VARIANT_GetLocalisedText(LANGID langId, DWORD dwId, WCHAR *lpszDest)
   HRSRC hrsrc;
 
   hrsrc = FindResourceExW( OLEAUT32_hModule, (LPWSTR)RT_STRING,
-                           (LPCWSTR)((dwId >> 4) + 1), langId );
+                           MAKEINTRESOURCEW((dwId >> 4) + 1), langId );
   if (hrsrc)
   {
     HGLOBAL hmem = LoadResource( OLEAUT32_hModule, hrsrc );
@@ -5442,7 +5444,54 @@ static HRESULT VARIANT_BstrFromReal(DOUBLE dblIn, LCID lcid, ULONG dwFlags,
     *pbstrOut = SysAllocString(numbuff);
   }
   else
-    *pbstrOut = SysAllocString(buff);
+  {
+    WCHAR lpDecimalSep[16];
+
+    /* Native oleaut32 uses the locale-specific decimal separator even in the
+       absence of the LOCALE_USE_NLS flag. For example, the Spanish/Latin 
+       American locales will see "one thousand and one tenth" as "1000,1" 
+       instead of "1000.1" (notice the comma). The following code checks for
+       the need to replace the decimal separator, and if so, will prepare an
+       appropriate NUMBERFMTW structure to do the job via GetNumberFormatW().
+     */
+    GetLocaleInfoW(lcid, LOCALE_SDECIMAL, lpDecimalSep, sizeof(lpDecimalSep) / sizeof(WCHAR));
+    if (lpDecimalSep[0] == '.' && lpDecimalSep[1] == '\0')
+    {
+      /* locale is compatible with English - return original string */
+      *pbstrOut = SysAllocString(buff);
+    }
+    else
+    {
+      WCHAR *p;
+      WCHAR numbuff[256];
+      WCHAR empty[1] = {'\0'};
+      NUMBERFMTW minFormat;
+
+      minFormat.NumDigits = 0;
+      minFormat.LeadingZero = 0;
+      minFormat.Grouping = 0;
+      minFormat.lpDecimalSep = lpDecimalSep;
+      minFormat.lpThousandSep = empty;
+      minFormat.NegativeOrder = 1; /* NLS_NEG_LEFT */
+
+      /* count number of decimal digits in string */
+      p = strchrW( buff, '.' );
+      if (p) minFormat.NumDigits = strlenW(p + 1);
+
+      numbuff[0] = '\0';
+      if (!GetNumberFormatW(lcid, dwFlags & LOCALE_NOUSEROVERRIDE,
+                     buff, &minFormat, numbuff, sizeof(numbuff) / sizeof(WCHAR)))
+      {
+        WARN("GetNumberFormatW() failed, returning raw number string instead\n");
+        *pbstrOut = SysAllocString(buff);
+      }
+      else
+      {
+        TRACE("created minimal NLS string %s\n", debugstr_w(numbuff));
+        *pbstrOut = SysAllocString(numbuff);
+      }
+    }
+  }
   return *pbstrOut ? S_OK : E_OUTOFMEMORY;
 }
 

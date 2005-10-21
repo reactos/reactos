@@ -135,6 +135,7 @@ MmIsFileAPagingFile(PFILE_OBJECT FileObject)
 }
 
 VOID
+NTAPI
 MmShowOutOfSpaceMessagePagingFile(VOID)
 {
    if (!MmSwapSpaceMessage)
@@ -201,7 +202,9 @@ MmGetOffsetPageFile(PRETRIEVAL_POINTERS_BUFFER RetrievalPointers, LARGE_INTEGER 
 #endif
 }
 
-NTSTATUS MmWriteToSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
+NTSTATUS
+NTAPI
+MmWriteToSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
 {
    ULONG i, offset;
    LARGE_INTEGER file_offset;
@@ -255,7 +258,9 @@ NTSTATUS MmWriteToSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
    return(Status);
 }
 
-NTSTATUS MmReadFromSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
+NTSTATUS
+NTAPI
+MmReadFromSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
 {
    ULONG i, offset;
    LARGE_INTEGER file_offset;
@@ -309,7 +314,9 @@ NTSTATUS MmReadFromSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
    return(Status);
 }
 
-VOID INIT_FUNCTION
+VOID
+INIT_FUNCTION
+NTAPI
 MmInitPagingFile(VOID)
 {
    ULONG i;
@@ -344,6 +351,7 @@ MmInitPagingFile(VOID)
 }
 
 BOOLEAN
+NTAPI
 MmReserveSwapPages(ULONG Nr)
 {
    KIRQL oldIrql;
@@ -363,6 +371,7 @@ MmReserveSwapPages(ULONG Nr)
 }
 
 VOID
+NTAPI
 MmDereserveSwapPages(ULONG Nr)
 {
    KIRQL oldIrql;
@@ -400,6 +409,7 @@ MiAllocPageFromPagingFile(PPAGINGFILE PagingFile)
 }
 
 VOID
+NTAPI
 MmFreeSwapPage(SWAPENTRY Entry)
 {
    ULONG i;
@@ -435,12 +445,14 @@ MmFreeSwapPage(SWAPENTRY Entry)
 }
 
 BOOLEAN
+NTAPI
 MmIsAvailableSwapPage(VOID)
 {
    return(MiFreeSwapPages > 0);
 }
 
 SWAPENTRY
+NTAPI
 MmAllocSwapPage(VOID)
 {
    KIRQL oldIrql;
@@ -792,11 +804,9 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
 
    PreviousMode = ExGetPreviousMode();
 
-   Status = RtlCaptureUnicodeString(&CapturedFileName,
-                                    PreviousMode,
-                                    PagedPool,
-                                    FALSE,
-                                    FileName);
+   Status = ProbeAndCaptureUnicodeString(&CapturedFileName,
+                                         PreviousMode,
+                                         FileName);
    if (!NT_SUCCESS(Status))
    {
       return(Status);
@@ -816,9 +826,8 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
 
       if (!NT_SUCCESS(Status))
       {
-         RtlReleaseCapturedUnicodeString(&CapturedFileName,
-                                         PreviousMode,
-                                         FALSE);
+         ReleaseCapturedUnicodeString(&CapturedFileName,
+                                      PreviousMode);
          return Status;
       }
    }
@@ -849,9 +858,8 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
                          NULL,
                          SL_OPEN_PAGING_FILE | IO_NO_PARAMETER_CHECKING);
 
-   RtlReleaseCapturedUnicodeString(&CapturedFileName,
-                                   PreviousMode,
-                                   FALSE);
+   ReleaseCapturedUnicodeString(&CapturedFileName,
+                                PreviousMode);
    if (!NT_SUCCESS(Status))
    {
       return(Status);

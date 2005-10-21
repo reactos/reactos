@@ -41,6 +41,7 @@ BOOL StartVMwConfigWizard, DriverFilesFound, ActivateVBE = FALSE, UninstallDrive
 
 static WCHAR DestinationDriversPath[MAX_PATH+1];
 static WCHAR CDDrive = L'\0';
+static WCHAR PathToVideoDrivers55[MAX_PATH+1] = L"X:\\program files\\VMware\\VMware Tools\\Drivers\\video\\winnt2k\\32Bit\\";
 static WCHAR PathToVideoDrivers45[MAX_PATH+1] = L"X:\\program files\\VMware\\VMware Tools\\Drivers\\video\\winnt2k\\";
 static WCHAR PathToVideoDrivers40[MAX_PATH+1] = L"X:\\video\\winnt2k\\";
 static WCHAR DestinationPath[MAX_PATH+1];
@@ -124,7 +125,8 @@ FileExists(WCHAR *Path, WCHAR *File)
 
   if(FileHandle == INVALID_HANDLE_VALUE)
   {
-    return FALSE;
+    /* If it was a sharing violation the file must already exist */
+    return GetLastError() == ERROR_SHARING_VIOLATION;
   }
 
   if(GetFileSize(FileHandle, NULL) <= 0)
@@ -222,9 +224,12 @@ IsVMwareCDInDrive(WCHAR *Drv)
     if(GetDriveType(Drive) == DRIVE_CDROM)
     {
 #endif
+      PathToVideoDrivers55[0] = Current;
       PathToVideoDrivers40[0] = Current;
       PathToVideoDrivers45[0] = Current;
-      if(SetCurrentDirectory(PathToVideoDrivers45))
+      if(SetCurrentDirectory(PathToVideoDrivers55))
+        SrcPath = PathToVideoDrivers55;
+      else if(SetCurrentDirectory(PathToVideoDrivers45))
         SrcPath = PathToVideoDrivers45;
       else if(SetCurrentDirectory(PathToVideoDrivers40))
         SrcPath = PathToVideoDrivers40;
@@ -503,7 +508,14 @@ PageWelcomeProc(
         {
           if(DriverFilesFound)
           {
-            /* FIXME - check for existing registry entries! */
+            if(!AddVmwareRegistryEntries())
+            {
+              WCHAR Msg[1024];
+              LoadString(hAppInstance, IDS_FAILEDTOADDREGENTRIES, Msg, sizeof(Msg) / sizeof(WCHAR));
+              MessageBox(GetParent(hwndDlg), Msg, NULL, MB_ICONWARNING);
+              SetWindowLong(hwndDlg, DWL_MSGRESULT, IDD_WELCOMEPAGE);
+              return TRUE;
+            }
             if(!EnableVmwareDriver(TRUE, TRUE, TRUE))
             {
 

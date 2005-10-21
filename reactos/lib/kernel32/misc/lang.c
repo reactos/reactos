@@ -104,8 +104,20 @@ EnumCalendarInfoExW(
     return 0;
 }
 
-
-
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+EnumCalendarInfoW(
+    CALINFO_ENUMPROCW lpCalInfoEnumProcEx,
+    LCID                Locale,
+    CALID               Calendar,
+    CALTYPE             CalType)
+{
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
 
 /*
  * @unimplemented

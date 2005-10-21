@@ -44,7 +44,7 @@ WRC_SOURCES = $(addprefix $(WRC_BASE_), \
 	utils.c \
 	wrc.c \
 	writeres.c \
-	y.tab.c \
+	parser.tab.c \
 	lex.yy.c \
 	port$(SEP)mkstemps.c \
 	)
@@ -54,6 +54,9 @@ WRC_OBJECTS = \
 
 WRC_HOST_CFLAGS = -I$(WRC_BASE) $(TOOLS_CFLAGS) \
                   -D__USE_W32API -DWINE_UNICODE_API= \
+		  -DDWORD="unsigned int" -DDWORD_DEFINED \
+		  -DLONG="int" -DULONG="unsigned int" \
+		  -DPULONG="unsigned int *" -DLONG_DEFINED \
                   -Dwchar_t="unsigned short" -D_WCHAR_T_DEFINED \
                   -I$(UNICODE_BASE) -I$(WPP_BASE) \
                   -Iinclude/wine -Iinclude -Iw32api/include
@@ -101,7 +104,7 @@ $(WRC_INT_)writeres.o: $(WRC_BASE_)writeres.c | $(WRC_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 
-$(WRC_INT_)y.tab.o: $(WRC_BASE_)y.tab.c | $(WRC_INT)
+$(WRC_INT_)parser.tab.o: $(WRC_BASE_)parser.tab.c | $(WRC_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WRC_HOST_CFLAGS) -c $< -o $@
 

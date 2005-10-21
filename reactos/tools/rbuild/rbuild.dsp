@@ -114,6 +114,10 @@ SOURCE=.\backend\msvc\msvc.h
 
 SOURCE=.\backend\msvc\msvcmaker.cpp
 # End Source File
+# Begin Source File
+
+SOURCE=.\backend\msvc\vcprojmaker.cpp
+# End Source File
 # End Group
 # Begin Group "mingw"
 

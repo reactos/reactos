@@ -11,6 +11,14 @@
 #include <ne2000.h>
 #include <debug.h>
 
+NTSTATUS
+#ifndef _MSC_VER
+STDCALL
+#endif
+DriverEntry(
+    PDRIVER_OBJECT DriverObject,
+    PUNICODE_STRING RegistryPath);
+
 
 #ifdef DBG
 
@@ -55,7 +63,8 @@ DRIVER_INFORMATION      DriverInfo = {0};
 NDIS_PHYSICAL_ADDRESS   HighestAcceptableMax = NDIS_PHYSICAL_ADDRESS_CONST(-1, -1);
 
 
-BOOLEAN MiniportCheckForHang(
+#if 0
+static BOOLEAN MiniportCheckForHang(
     IN  NDIS_HANDLE MiniportAdapterContext)
 /*
  * FUNCTION: Examines if an adapter has hung
@@ -69,9 +78,10 @@ BOOLEAN MiniportCheckForHang(
 
     return FALSE;
 }
+#endif
 
 
-VOID STDCALL MiniportDisableInterrupt(
+static VOID STDCALL MiniportDisableInterrupt(
     IN  NDIS_HANDLE MiniportAdapterContext)
 /*
  * FUNCTION: Disables interrupts from an adapter
@@ -86,7 +96,7 @@ VOID STDCALL MiniportDisableInterrupt(
 }
 
 
-VOID STDCALL MiniportEnableInterrupt(
+static VOID STDCALL MiniportEnableInterrupt(
     IN  NDIS_HANDLE MiniportAdapterContext)
 /*
  * FUNCTION: Enables interrupts from an adapter
@@ -101,7 +111,7 @@ VOID STDCALL MiniportEnableInterrupt(
 }
 
 
-VOID STDCALL MiniportHalt(
+static VOID STDCALL MiniportHalt(
     IN  NDIS_HANDLE MiniportAdapterContext)
 /*
  * FUNCTION: Deallocates resources for and halts an adapter
@@ -141,7 +151,7 @@ VOID STDCALL MiniportHalt(
 }
 
 
-NDIS_STATUS STDCALL MiniportInitialize(
+static NDIS_STATUS STDCALL MiniportInitialize(
     OUT PNDIS_STATUS    OpenErrorStatus,
     OUT PUINT           SelectedMediumIndex,
     IN  PNDIS_MEDIUM    MediumArray,
@@ -349,7 +359,7 @@ NDIS_STATUS STDCALL MiniportInitialize(
 }
 
 
-VOID STDCALL MiniportISR(
+static VOID STDCALL MiniportISR(
     OUT PBOOLEAN    InterruptRecognized,
     OUT PBOOLEAN    QueueMiniportHandleInterrupt,
     IN  NDIS_HANDLE MiniportAdapterContext)
@@ -374,7 +384,7 @@ VOID STDCALL MiniportISR(
 }
 
 
-NDIS_STATUS STDCALL MiniportQueryInformation(
+static NDIS_STATUS STDCALL MiniportQueryInformation(
     IN  NDIS_HANDLE MiniportAdapterContext,
     IN  NDIS_OID    Oid,
     IN  PVOID       InformationBuffer,
@@ -532,7 +542,7 @@ NDIS_STATUS STDCALL MiniportQueryInformation(
 }
 
 
-NDIS_STATUS STDCALL MiniportReconfigure(
+static NDIS_STATUS STDCALL MiniportReconfigure(
     OUT PNDIS_STATUS    OpenErrorStatus,
     IN  NDIS_HANDLE     MiniportAdapterContext,
     IN  NDIS_HANDLE     WrapperConfigurationContext)
@@ -555,7 +565,7 @@ NDIS_STATUS STDCALL MiniportReconfigure(
 
 
 
-NDIS_STATUS STDCALL MiniportReset(
+static NDIS_STATUS STDCALL MiniportReset(
     OUT PBOOLEAN    AddressingReset,
     IN  NDIS_HANDLE MiniportAdapterContext)
 /*
@@ -575,7 +585,7 @@ NDIS_STATUS STDCALL MiniportReset(
 }
 
 
-NDIS_STATUS STDCALL MiniportSend(
+static NDIS_STATUS STDCALL MiniportSend(
     IN  NDIS_HANDLE     MiniportAdapterContext,
     IN  PNDIS_PACKET    Packet,
     IN  UINT            Flags)
@@ -616,7 +626,7 @@ NDIS_STATUS STDCALL MiniportSend(
 }
 
 
-NDIS_STATUS STDCALL MiniportSetInformation(
+static NDIS_STATUS STDCALL MiniportSetInformation(
     IN  NDIS_HANDLE MiniportAdapterContext,
     IN  NDIS_OID    Oid,
     IN  PVOID       InformationBuffer,
@@ -722,7 +732,7 @@ NDIS_STATUS STDCALL MiniportSetInformation(
 }
 
 
-NDIS_STATUS STDCALL MiniportTransferData(
+static NDIS_STATUS STDCALL MiniportTransferData(
     OUT PNDIS_PACKET    Packet,
     OUT PUINT           BytesTransferred,
     IN  NDIS_HANDLE     MiniportAdapterContext,

@@ -900,8 +900,8 @@ BOOL PRINTDLG_ChangePrinterA(HWND hDlg, char *name,
     dmSize = DocumentPropertiesA(0, 0, name, PrintStructures->lpDevMode, NULL,
 				 DM_OUT_BUFFER);
     if(lppd->hDevMode && (lpdm = GlobalLock(lppd->hDevMode)) &&
-			  !lstrcmpA(lpdm->dmDeviceName,
-				  PrintStructures->lpDevMode->dmDeviceName)) {
+			  !lstrcmpA( (LPSTR) lpdm->dmDeviceName,
+				     (LPSTR) PrintStructures->lpDevMode->dmDeviceName)) {
       /* Supplied devicemode matches current printer so try to use it */
         DocumentPropertiesA(0, 0, name, PrintStructures->lpDevMode, lpdm,
 			    DM_OUT_BUFFER | DM_IN_BUFFER);
@@ -3157,7 +3157,7 @@ PRINTDLG_PageDlgProcA(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 pda->curdlg.ptPaperSize.x = tmp;
             }
 	} else 
-	    WARN("GlobalLock(pda->pdlg.hDevMode) fail? hDevMode=%ld", (DWORD)pda->pdlg.hDevMode);
+	    WARN("GlobalLock(pda->pdlg.hDevMode) fail? hDevMode=%p", pda->pdlg.hDevMode);
 	/* Drawing paper prev */
 	PRINTDLG_PS_ChangePaperPrev(pda);
 	return TRUE;

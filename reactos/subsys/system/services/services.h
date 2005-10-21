@@ -1,11 +1,13 @@
-#include <stdio.h>
-#include <windows.h>
-#define NTOS_MODE_USER
-#include <ndk/ntndk.h>
-
 /*
  * services.h
  */
+
+#include <stdio.h>
+#define WIN32_NO_STATUS
+#include <windows.h>
+#define NTOS_MODE_USER
+#include <ndk/ntndk.h>
+#include <services/services.h>
 
 typedef struct _SERVICE
 {
@@ -45,8 +47,8 @@ NTSTATUS ScmCreateServiceDataBase(VOID);
 VOID ScmGetBootAndSystemDriverState(VOID);
 VOID ScmAutoStartServices(VOID);
 
-PSERVICE
-ScmGetServiceEntryByName(PUNICODE_STRING ServiceName);
+PSERVICE ScmGetServiceEntryByName(PUNICODE_STRING ServiceName);
+DWORD ScmMarkServiceForDelete(PSERVICE pService);
 
 
 /* rpcserver.c */

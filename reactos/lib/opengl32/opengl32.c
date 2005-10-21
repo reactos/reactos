@@ -10,6 +10,7 @@
  */
 
 #define WIN32_LEAN_AND_MEAN
+#define WIN32_NO_STATUS
 #include <windows.h>
 #include <winreg.h>
 #include "teb.h"
@@ -78,9 +79,10 @@ OPENGL32_ThreadAttach()
 static void
 OPENGL32_ThreadDetach()
 {
-	/* FIXME - do we need to release some HDC or something? */
 	GLTHREADDATA* lpData = NULL;
 	PROC *dispatchTable = NULL;
+
+	rosglMakeCurrent( NULL, NULL );
 
 	lpData = (GLTHREADDATA*)TlsGetValue( OPENGL32_tls );
 	if (lpData != NULL)

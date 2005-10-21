@@ -12,6 +12,8 @@
  */
 
 #include <advapi32.h>
+
+#define NDEBUG
 #include <debug.h>
 
 /*
@@ -455,6 +457,83 @@ ConvertToAutoInheritPrivateObjectSecurity(IN PSECURITY_DESCRIPTOR ParentDescript
 {
     UNIMPLEMENTED;
     return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+BuildSecurityDescriptorW(IN PTRUSTEE_W pOwner  OPTIONAL,
+                         IN PTRUSTEE_W pGroup  OPTIONAL,
+                         IN ULONG cCountOfAccessEntries,
+                         IN PEXPLICIT_ACCESS pListOfAccessEntries  OPTIONAL,
+                         IN ULONG cCountOfAuditEntries,
+                         IN PEXPLICIT_ACCESS pListOfAuditEntries  OPTIONAL,
+                         IN PSECURITY_DESCRIPTOR pOldSD  OPTIONAL,
+                         OUT PULONG pSizeNewSD,
+                         OUT PSECURITY_DESCRIPTOR* pNewSD)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+BuildSecurityDescriptorA(IN PTRUSTEE_A pOwner  OPTIONAL,
+                         IN PTRUSTEE_A pGroup  OPTIONAL,
+                         IN ULONG cCountOfAccessEntries,
+                         IN PEXPLICIT_ACCESS pListOfAccessEntries  OPTIONAL,
+                         IN ULONG cCountOfAuditEntries,
+                         IN PEXPLICIT_ACCESS pListOfAuditEntries  OPTIONAL,
+                         IN PSECURITY_DESCRIPTOR pOldSD  OPTIONAL,
+                         OUT PULONG pSizeNewSD,
+                         OUT PSECURITY_DESCRIPTOR* pNewSD)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+
+/*
+ * @unimplemented
+ */
+BOOL WINAPI DecryptFileW(LPCWSTR lpFileName, DWORD dwReserved)
+{
+    DPRINT1("%s() not implemented!\n", __FUNCTION__);
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL WINAPI DecryptFileA(LPCSTR lpFileName, DWORD dwReserved)
+{
+    DPRINT1("%s() not implemented!\n", __FUNCTION__);
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL WINAPI EncryptFileW(LPCWSTR lpFileName)
+{
+    DPRINT1("%s() not implemented!\n", __FUNCTION__);
+    return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+BOOL WINAPI EncryptFileA(LPCSTR lpFileName)
+{
+    DPRINT1("%s() not implemented!\n", __FUNCTION__);
+    return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
 /* EOF */

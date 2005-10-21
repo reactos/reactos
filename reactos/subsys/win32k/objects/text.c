@@ -189,7 +189,7 @@ IntLoadSystemFonts(VOID)
          return;
       }
 
-      FileName.Buffer = ExAllocatePool(PagedPool, MAX_PATH);
+      FileName.Buffer = ExAllocatePool(PagedPool, MAX_PATH * sizeof(WCHAR));
       if (FileName.Buffer == NULL)
       {
          ExFreePool(DirInfoBuffer);
@@ -197,7 +197,7 @@ IntLoadSystemFonts(VOID)
          return;
       }
       FileName.Length = 0;
-      FileName.MaximumLength = MAX_PATH;
+      FileName.MaximumLength = MAX_PATH * sizeof(WCHAR);
 
       while (1)
       {
@@ -255,7 +255,6 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
    NTSTATUS Status;
    HANDLE FileHandle;
    OBJECT_ATTRIBUTES ObjectAttributes;
-   FILE_STANDARD_INFORMATION FileStdInfo;
    PVOID Buffer = NULL;
    IO_STATUS_BLOCK Iosb;
    INT Error;
@@ -305,7 +304,7 @@ IntGdiAddFontResource(PUNICODE_STRING FileName, DWORD Characteristics)
    Error = FT_New_Memory_Face(
       library,
       Buffer,
-      FileStdInfo.EndOfFile.u.LowPart,
+      ViewSize,
       0,
       &Face);
    IntUnLockFreeType;
@@ -1459,7 +1458,7 @@ NtGdiExtTextOut(
    FT_Face face;
    FT_GlyphSlot glyph;
    LONGLONG TextLeft, RealXStart;
-   ULONG TextTop, pitch, previous, BackgroundLeft;
+   ULONG TextTop, previous, BackgroundLeft;
    FT_Bool use_kerning;
    RECTL DestRect, MaskRect, SpecifiedDestRect;
    POINTL SourcePoint, BrushOrigin;
@@ -1806,9 +1805,6 @@ NtGdiExtTextOut(
             DPRINT1("WARNING: Failed to render glyph!\n");
             goto fail;
          }
-         pitch = glyph->bitmap.pitch;
-      } else {
-         pitch = glyph->bitmap.width;
       }
 
       if (fuOptions & ETO_OPAQUE)
@@ -1846,9 +1842,17 @@ NtGdiExtTextOut(
        * We should create the bitmap out of the loop at the biggest possible
        * glyph size. Then use memset with 0 to clear it and sourcerect to
        * limit the work of the transbitblt.
+       *
+       * FIXME: DIB bitmaps should have an lDelta which is a multiple of 4.
+       * Here we pass in the pitch from the FreeType bitmap, which is not
+       * guaranteed to be a multiple of 4. If it's not, we should expand
+       * the FreeType bitmap to a temporary bitmap.
        */
 
-      HSourceGlyph = EngCreateBitmap(bitSize, pitch, (glyph->bitmap.pixel_mode == ft_pixel_mode_grays) ? BMF_8BPP : BMF_1BPP, BMF_TOPDOWN, glyph->bitmap.buffer);
+      HSourceGlyph = EngCreateBitmap(bitSize, glyph->bitmap.pitch,
+                                     (glyph->bitmap.pixel_mode == ft_pixel_mode_grays) ?
+                                     BMF_8BPP : BMF_1BPP, BMF_TOPDOWN,
+                                     glyph->bitmap.buffer);
       if ( !HSourceGlyph )
       {
         DPRINT1("WARNING: EngLockSurface() failed!\n");

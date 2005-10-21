@@ -219,6 +219,12 @@ typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
 #define NtCurrentThread() ( (HANDLE)(LONG_PTR) -2 )   
 #define ZwCurrentThread() NtCurrentThread()      
 
+#define DPFLTR_ERROR_LEVEL                  0
+#define DPFLTR_WARNING_LEVEL                1
+#define DPFLTR_TRACE_LEVEL                  2
+#define DPFLTR_INFO_LEVEL                   3
+#define DPFLTR_MASK                         0x80000000
+
 #define MAXIMUM_PROCESSORS                32
 
 #define MAXIMUM_WAIT_OBJECTS              64
@@ -3396,6 +3402,11 @@ typedef struct _IO_STACK_LOCATION {
 #define SL_INVOKE_ON_SUCCESS              0x40
 #define SL_INVOKE_ON_ERROR                0x80
 
+/* IO_STACK_LOCATION.Parameters.ReadWriteControl.WhichSpace */
+
+#define PCI_WHICHSPACE_CONFIG             0x0
+#define PCI_WHICHSPACE_ROM                0x52696350 /* 'PciR' */
+
 typedef enum _KEY_INFORMATION_CLASS {
   KeyBasicInformation,
   KeyNodeInformation,
@@ -4512,10 +4523,55 @@ typedef enum _TRACE_INFORMATION_CLASS {
   TraceHandleByNameClass
 } TRACE_INFORMATION_CLASS;
 
+typedef enum _REG_NOTIFY_CLASS
+{
+  RegNtDeleteKey,
+  RegNtPreDeleteKey = RegNtDeleteKey,
+  RegNtSetValueKey,
+  RegNtPreSetValueKey = RegNtSetValueKey,
+  RegNtDeleteValueKey,
+  RegNtPreDeleteValueKey = RegNtDeleteValueKey,
+  RegNtSetInformationKey,
+  RegNtPreSetInformationKey = RegNtSetInformationKey,
+  RegNtRenameKey,
+  RegNtPreRenameKey = RegNtRenameKey,
+  RegNtEnumerateKey,
+  RegNtPreEnumerateKey = RegNtEnumerateKey,
+  RegNtEnumerateValueKey,
+  RegNtPreEnumerateValueKey = RegNtEnumerateValueKey,
+  RegNtQueryKey,
+  RegNtPreQueryKey = RegNtQueryKey,
+  RegNtQueryValueKey,
+  RegNtPreQueryValueKey = RegNtQueryValueKey,
+  RegNtQueryMultipleValueKey,
+  RegNtPreQueryMultipleValueKey = RegNtQueryMultipleValueKey,
+  RegNtPreCreateKey,
+  RegNtPostCreateKey,
+  RegNtPreOpenKey,
+  RegNtPostOpenKey,
+  RegNtKeyHandleClose,
+  RegNtPreKeyHandleClose = RegNtKeyHandleClose,
+  RegNtPostDeleteKey,
+  RegNtPostSetValueKey,
+  RegNtPostDeleteValueKey,
+  RegNtPostSetInformationKey,
+  RegNtPostRenameKey,
+  RegNtPostEnumerateKey,
+  RegNtPostEnumerateValueKey,
+  RegNtPostQueryKey,
+  RegNtPostQueryValueKey,
+  RegNtPostQueryMultipleValueKey,
+  RegNtPostKeyHandleClose,
+  RegNtPreCreateKeyEx,
+  RegNtPostCreateKeyEx,
+  RegNtPreOpenKeyEx,
+  RegNtPostOpenKeyEx
+} REG_NOTIFY_CLASS, *PREG_NOTIFY_CLASS;
+
 typedef NTSTATUS
 (DDKAPI *PEX_CALLBACK_FUNCTION)(
   IN PVOID  CallbackContext,
-  IN PVOID  Argument1,
+  IN REG_NOTIFY_CLASS  Argument1,
   IN PVOID  Argument2);
 
 
@@ -4945,14 +5001,15 @@ RtlAssert(
 
 #endif /* DBG */
 
-#ifdef _NTSYSTEM_
+/* HACK HACK HACK - GCC (or perhaps LD) is messing this up */
+#if defined(_NTSYSTEM_) || defined(__GNUC__)
 #define NLS_MB_CODE_PAGE_TAG NlsMbCodePageTag
 #define NLS_MB_OEM_CODE_PAGE_TAG NlsMbOemCodePageTag
 #else
 #define NLS_MB_CODE_PAGE_TAG (*NlsMbCodePageTag)
 #define NLS_MB_OEM_CODE_PAGE_TAG (*NlsMbOemCodePageTag)
 #endif /* _NT_SYSTEM */
- 
+
 extern BOOLEAN NTSYSAPI NLS_MB_CODE_PAGE_TAG;
 extern BOOLEAN NTSYSAPI NLS_MB_OEM_CODE_PAGE_TAG;
 

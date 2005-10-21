@@ -28,8 +28,6 @@ typedef struct _WINDOW_OBJECT
 {
   /* Pointer to the window class. */
   PWNDCLASS_OBJECT Class;
-  /* entry in the window list of the class object */
-  LIST_ENTRY ClassListEntry;
   /* Extended style. */
   DWORD ExStyle;
   /* Window name. */
@@ -60,7 +58,6 @@ typedef struct _WINDOW_OBJECT
   UINT IDMenu;
   /* Handle of region of the window to be updated. */
   HANDLE UpdateRegion;
-  HANDLE NCUpdateRegion;
   /* Handle of the window region. */
   HANDLE WindowRegion;
   /* Pointer to the owning thread's message queue. */
@@ -157,7 +154,7 @@ BOOL FASTCALL
 IntIsWindowVisible (PWINDOW_OBJECT Window);
 
 BOOL FASTCALL
-IntIsChildWindow (HWND Parent, HWND Child);
+IntIsChildWindow (PWINDOW_OBJECT Parent, PWINDOW_OBJECT Child);
 
 VOID FASTCALL
 IntUnlinkWindow(PWINDOW_OBJECT Wnd);
@@ -174,8 +171,6 @@ IntGetParent(PWINDOW_OBJECT Wnd);
 PWINDOW_OBJECT FASTCALL
 IntGetOwner(PWINDOW_OBJECT Wnd);
 
-PWINDOW_OBJECT FASTCALL
-IntGetParentObject(PWINDOW_OBJECT Wnd);
 
 INT FASTCALL
 IntGetWindowRgn(PWINDOW_OBJECT Window, HRGN hRgn);

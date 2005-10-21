@@ -935,8 +935,9 @@ DWORD WINAPI GetInterfaceInfo(PIP_INTERFACE_INFO pIfTable, PULONG dwOutBufLen)
   if (!dwOutBufLen)
     ret = ERROR_INVALID_PARAMETER;
   else {
-    DWORD numInterfaces = getNumInterfaces();
-    ULONG size = sizeof(IP_INTERFACE_INFO) + (numInterfaces - 1) *
+    DWORD numNonLoopbackInterfaces = getNumNonLoopbackInterfaces();
+    DPRINT("numNonLoopbackInterfaces == 0x%x\n", numNonLoopbackInterfaces);
+    ULONG size = sizeof(IP_INTERFACE_INFO) + (numNonLoopbackInterfaces) *
      sizeof(IP_ADAPTER_INDEX_MAP);
 
     if (!pIfTable || *dwOutBufLen < size) {
@@ -944,10 +945,11 @@ DWORD WINAPI GetInterfaceInfo(PIP_INTERFACE_INFO pIfTable, PULONG dwOutBufLen)
       ret = ERROR_INSUFFICIENT_BUFFER;
     }
     else {
-      InterfaceIndexTable *table = getInterfaceIndexTable();
+      InterfaceIndexTable *table = getNonLoopbackInterfaceIndexTable();
+      DPRINT("table->numIndexes == 0x%x\n", table->numIndexes);
 
       if (table) {
-        size = sizeof(IP_INTERFACE_INFO) + (table->numIndexes - 1) *
+        size = sizeof(IP_INTERFACE_INFO) + (table->numIndexes) *
          sizeof(IP_ADAPTER_INDEX_MAP);
         if (*dwOutBufLen < size) {
           *dwOutBufLen = size;

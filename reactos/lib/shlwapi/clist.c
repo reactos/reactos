@@ -40,7 +40,7 @@ typedef struct tagSHLWAPI_CLIST
 typedef const SHLWAPI_CLIST* LPCSHLWAPI_CLIST;
 
 /* ulId for contained SHLWAPI_CLIST items */
-#define CLIST_ID_CONTAINER (~0UL)
+#define CLIST_ID_CONTAINER (~0U)
 
 HRESULT WINAPI SHAddDataBlock(LPSHLWAPI_CLIST*,LPCSHLWAPI_CLIST);
 

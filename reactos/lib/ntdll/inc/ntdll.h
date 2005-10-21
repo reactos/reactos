@@ -14,12 +14,14 @@
 
 /* C Headers */
 #define _CTYPE_DISABLE_MACROS
+#define _CRT_SECURE_NO_DEPRECATE
 #define _INC_SWPRINTF_INL_
 #include <limits.h>
 #include <stdio.h>
 #include <ctype.h>
 
 /* SDK/DDK/NDK Headers. */
+#define WIN32_NO_STATUS
 #include <windows.h>
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>

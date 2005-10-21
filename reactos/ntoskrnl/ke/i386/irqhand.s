@@ -489,3 +489,12 @@ _irq_handler_15:
 	iret
 
 #endif /* CONFIG_SMP */
+
+.intel_syntax noprefix
+.globl _KiUnexpectedInterrupt@0
+_KiUnexpectedInterrupt@0:
+
+    /* Bugcheck with invalid interrupt code */
+    push 0x12
+    call _KeBugCheck@4
+

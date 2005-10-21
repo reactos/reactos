@@ -1,26 +1,17 @@
-ReactOS command line interpreter CMD version 0.1.1
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ReactOS command line interpreter CMD
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The ReactOS command line interpreter CMD is derived from FreeCOM, the
 FreeDOS command line interpreter.
 
-We are going for 4NT compatibility but try to stay compatible with
-WinNT's CMD.EXE too.
+We are shooting mainly to be just like 2000/XP cmd.exe.  They are very close and only a small number(none that i can recall off the top of my head, so maybe 0) differences have been found between those two.  It has been reported that ROS cmd.exe does not work on nt4 because of a missing api.  I'm hoping to fix this at some point.
 
 
 Compiling
 ~~~~~~~~~
-Cmd can be built in two different versions. A full version for use under
-Windows 9x or Windows NT and a reduced version for use under ReactOS.
+ROS cmd used to depend on __REACTOS__ to provide two different ways to build cmd.  There is still code left in it for this but...  The __REACTOS__ = 0 has not been develped, maintained.  And therefore it does not even compile anymore.  __REACTOS__ = 1 works fine on both windows(nt). and someday i plan to remove all the __REACTOS__ = 0.
 
-Note: The full version won't run on ReactOS and the reduced version is not
-usable under Win 9x/NT.
-
-To build the full version, make sure the symbol '__REACTOS__' is NOT defined
-in 'rosapps/cmd/config.h' line 13.
-
-To build the reduced version, make sure the symbol '__REACTOS__' is defined
-in 'rosapps/cmd/config.h' line 13.
+Using rbuild you can compile cmd seperatly by "make cmd_install".  Also you can compile cmd using MSVC 6 and soon 7/8 hopefully.
 
 
 Current Features
@@ -31,8 +22,7 @@ Current Features
  - batch file processing.
  - input/output redirection and piping.
  - alias support.
- - filename completion (use TAB)
-   (this is still incomplete)
+ - filename completion (use TAB), both unix and windows style.
 
 
 Credits
@@ -57,14 +47,9 @@ ReactOS developers:
    Brandon Turner <turnerb7@msu.edu>
 
 
+
 Bugs
 ~~~~
-Batch file handling is still untested or buggy. Please report
-any bug you find.
+There is still many bugs ;)
+Please report bugs to ReactOS team <ros-dev@reactos.org> or to bugzilla at www.reactos.org
 
-Please report bugs to Eric Kohl <ekohl@rz-online.de>.
-
-
-Good luck
-
-  Eric Kohl

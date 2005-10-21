@@ -1,4 +1,4 @@
-/* $Id$ */
+/* $Id: explorer.rc 17951 2005-09-20 19:51:27Z mf $ */
 
 #include "explorer_intres.rc"
 
@@ -19,7 +19,3 @@ BEGIN
     IDS_VERSION_STR REACTOS_STR_PRODUCT_VERSION
     IDS_EXPLORER_VERSION_STR "ReactOS %s Explorer"
 END
-
-#define MANIFEST_RESOURCE_ID           1
-
-MANIFEST_RESOURCE_ID RT_MANIFEST "explorer.exe.manifest"

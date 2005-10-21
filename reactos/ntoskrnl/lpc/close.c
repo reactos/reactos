@@ -87,9 +87,27 @@ LpcpClosePort (PVOID	ObjectBody, ULONG	HandleCount)
 VOID STDCALL
 LpcpDeletePort (PVOID	ObjectBody)
 {
-   //   PEPORT Port = (PEPORT)ObjectBody;
+   PLIST_ENTRY Entry;
+   PQUEUEDMESSAGE	Message;
 
-   //   DPRINT1("Deleting port %x\n", Port);
+   PEPORT Port = (PEPORT)ObjectBody;
+
+   DPRINT("Deleting port %x\n", Port);
+
+   /* Free all waiting messages */
+   while (!IsListEmpty(&Port->QueueListHead))
+     {
+       Entry = RemoveHeadList(&Port->QueueListHead);
+       Message = CONTAINING_RECORD (Entry, QUEUEDMESSAGE, QueueListEntry);
+       ExFreePool(Message);
+     }
+
+   while (!IsListEmpty(&Port->ConnectQueueListHead))
+     {
+       Entry = RemoveHeadList(&Port->ConnectQueueListHead);
+       Message = CONTAINING_RECORD (Entry, QUEUEDMESSAGE, QueueListEntry);
+       ExFreePool(Message);
+     }
 }
 
 

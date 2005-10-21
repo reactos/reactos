@@ -24,6 +24,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <tchar.h>
+#include <zmouse.h>
 
 #include "hexedit.h"
 
@@ -516,7 +517,7 @@ HEXEDIT_WM_NCDESTROY(PHEXEDIT_DATA hed)
 {
   if(hed->hBuffer)
   {
-    while(LocalUnlock(hed->hBuffer));
+    //while(LocalUnlock(hed->hBuffer));
     LocalFree(hed->hBuffer);
   }
 

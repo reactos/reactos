@@ -144,14 +144,12 @@ IID* _dbg_ILGetGUIDPointer(LPCITEMIDLIST pidl)
 }
 
 static
-DWORD _dbg_ILSimpleGetText (LPCITEMIDLIST pidl, LPSTR szOut, UINT uOutSize)
+void _dbg_ILSimpleGetText (LPCITEMIDLIST pidl, LPSTR szOut, UINT uOutSize)
 {
-	DWORD		dwReturn=0;
 	LPSTR		szSrc;
 	GUID const * 	riid;
-	char szTemp[MAX_PATH];
 
-	if (!pidl) return 0;
+	if (!pidl) return;
 
 	if (szOut)
 	  *szOut = 0;
@@ -160,13 +158,11 @@ DWORD _dbg_ILSimpleGetText (LPCITEMIDLIST pidl, LPSTR szOut, UINT uOutSize)
 	{
 	 /* desktop */
 	  if (szOut) lstrcpynA(szOut, "Desktop", uOutSize);
-	  dwReturn = strlen ("Desktop");
 	}
 	else if (( szSrc = _dbg_ILGetTextPointer(pidl) ))
 	{
 	  /* filesystem */
 	  if (szOut) lstrcpynA(szOut, szSrc, uOutSize);
-	  dwReturn = strlen(szSrc);
 	}
 	else if (( riid = _dbg_ILGetGUIDPointer(pidl) ))
 	{
@@ -175,9 +171,7 @@ DWORD _dbg_ILSimpleGetText (LPCITEMIDLIST pidl, LPSTR szOut, UINT uOutSize)
                  riid->Data1, riid->Data2, riid->Data3,
                  riid->Data4[0], riid->Data4[1], riid->Data4[2], riid->Data4[3],
                  riid->Data4[4], riid->Data4[5], riid->Data4[6], riid->Data4[7] );
-	  dwReturn = strlen (szTemp);
 	}
-	return dwReturn;
 }
 
 
@@ -202,17 +196,18 @@ void pdump (LPCITEMIDLIST pidl)
 	    {
 	      DWORD dwAttrib = 0;
 	      LPPIDLDATA pData   = _dbg_ILGetDataPointer(pidltemp);
-	      DWORD type         = pData->type;
+	      DWORD type = pData ? pData->type : 0;
 	      LPSTR szLongName   = _dbg_ILGetTextPointer(pidltemp);
 	      LPSTR szShortName  = _dbg_ILGetSTextPointer(pidltemp);
 	      char szName[MAX_PATH];
 
 	      _dbg_ILSimpleGetText(pidltemp, szName, MAX_PATH);
-	      if( PT_FOLDER == type || PT_VALUE == type)
+	      if ( pData && (PT_FOLDER == type || PT_VALUE == type) )
 	        dwAttrib = pData->u.file.uFileAttribs;
 
-	      MESSAGE ("[%p] size=%04u type=%lx attr=0x%08lx name=\"%s\" (%s,%s)\n",
-	               pidltemp, pidltemp->mkid.cb,type,dwAttrib,szName,debugstr_a(szLongName), debugstr_a(szShortName));
+	      MESSAGE ("[%p] size=%04u type=%lx attr=0x%08lx name=%s (%s,%s)\n",
+	               pidltemp, pidltemp->mkid.cb, type, dwAttrib,
+                       debugstr_a(szName), debugstr_a(szLongName), debugstr_a(szShortName));
 
 	      pidltemp = _dbg_ILGetNext(pidltemp);
 
@@ -290,11 +285,7 @@ BOOL pcheck( LPCITEMIDLIST pidl )
     return TRUE;
 }
 
-static char shdebugstr_buf1[100];
-static char shdebugstr_buf2[100];
-static char * shdebugstr_buf = shdebugstr_buf1;
-
-static struct {
+static const struct {
 	REFIID riid;
 	const char *name;
 } InterfaceDesc[] = {
@@ -328,11 +319,8 @@ const char * shdebugstr_guid( const struct _GUID *id )
 	const char* name = NULL;
 	char clsidbuf[100];
 
-	shdebugstr_buf = (shdebugstr_buf == shdebugstr_buf1) ? shdebugstr_buf2 : shdebugstr_buf1;
+	if (!id) return "(null)";
 
-	if (!id) {
-	  strcpy (shdebugstr_buf, "(null)");
-	} else {
 	    for (i=0;InterfaceDesc[i].riid && !name;i++) {
 	        if (IsEqualIID(InterfaceDesc[i].riid, id)) name = InterfaceDesc[i].name;
 	    }
@@ -341,10 +329,8 @@ const char * shdebugstr_guid( const struct _GUID *id )
 		    name = clsidbuf;
 	    }
 
-	    sprintf( shdebugstr_buf, "\n\t{%08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x} (%s)",
+            return wine_dbg_sprintf( "\n\t{%08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x} (%s)",
                  id->Data1, id->Data2, id->Data3,
                  id->Data4[0], id->Data4[1], id->Data4[2], id->Data4[3],
                  id->Data4[4], id->Data4[5], id->Data4[6], id->Data4[7], name ? name : "unknown" );
-	}
-	return shdebugstr_buf;
 }

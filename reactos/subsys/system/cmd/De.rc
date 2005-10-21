@@ -4,7 +4,7 @@
  *  Update: frik85 2005-06-06
  */
 
-LANGUAGE LANG_GERMAN, SUBLANG_DEFAULT
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
 {
 
@@ -20,17 +20,17 @@ ATTRIB [+R | -R] [+A | -A] [+S | -S] [+H | -H] Dateiname ...\n\
  /S   Verarbeitet uebereinstimmende Dateien im aktuellen Ordner\n\
       und in allen Unterordnern.\n\
   /D  Verarbeitet auch die Ordner.\n\n\
-Tippen Sie ATTRIB ohne Parameter ein um die derzeit gesetzten Attribute (aller Dateien) anzuzeigen."
+ATTRIB ohne Parameter zeigt die derzeit gesetzten Attribute aller Dateien an."
 
-STRING_ALIAS_HELP,  "Setzt, loescht oder zeigt alias.\n\n\
+STRING_ALIAS_HELP,  "Setzt, loescht oder zeigt Alias.\n\n\
 ALIAS [alias=[command]]\n\n\
-  alias    Name des alias.\n\
-  command  Text welcher fuer das alias zugeordnet wird.\n\n\
-Listet alle aliases auf:\n\
+  alias    Name des Alias.\n\
+  command  Text welcher fuer den Alias zugeordnet wird.\n\n\
+Listet alle Aliase auf:\n\
   ALIAS\n\n\
-Setzt ein neues oder ueberschreibt ein bestehendes alias:\n\
+Setzt ein neues oder ueberschreibt ein bestehendes Alias:\n\
   ALIAS da=dir a:\n\n\
-Loescht ein alias von der alias-Liste:\n\
+Loescht ein Alias von der Alias-Liste:\n\
   ALIAS da="
 
 STRING_BEEP_HELP, "Gibt einen beep-Ton durch den PC-Speaker aus.\n\nBEEP"
@@ -46,7 +46,7 @@ CHDIR [Laufwerk:][Pfad]\n\
 CHDIR[..|.]\n\
 CD [Laufwerk:][Pfad]\n\
 CD[..|.]\n\n\
-  ..   uebergeordnete Verzeichnis\n\
+  ..   uebergeordnetes Verzeichnis\n\
   .    vorhergehende Verzeichnis\n\n\
 Geben Sie CD Laufwerk: ein, um das aktuelle Verzeichnis auf dem angegebenen\n\
 Laufwerk anzuzeigen.\n\
@@ -98,12 +98,12 @@ COLOR [attr [/F]] \n\n\
   attr        Gibt die Farbattribute fuer die Konsolenausgabe an.\n\
   /F          fuellte die Konsoleausgabe mit dem Farbattribut\n\n\
 Es gibt 3 Moeglickeiten die Farbe festzulegen:\n\
-1) [bright] name on [bright] name  (only the first three letters are required)\n\
+1) [bright] name on [bright] name  (Nur die 4 ersten Buchstaben sind noetig)\n\
 2) decimal on decimal\n\
 3) two hex digits\n\n\
 Farben:\n\
 dec  hex  name       dec  hex  name\n\
-0    0    Black       8   8    Gray(Bright black)\n\
+0    0    Black       8   8    Gray (Bright black)\n\
 1    1    Blue        9   9    Bright Blue\n\
 2    2    Green      10   A    Bright Green\n\
 3    3    Cyan       11   B    Bright Cyan\n\
@@ -117,7 +117,7 @@ STRING_COPY_HELP1,  " %s ueberschreiben (Ja/Nein/Alle)? "
 STRING_COPY_HELP2, "Kopiert eine oder mehrere Dateien an eine andere Position.\n\n\
 COPY [/V][/Y|/-Y][/A|/B] Quelle [/A|/B]\n\
      [+ source [/A|/B] [+ ...]] [destination [/A|/B]]\n\n\
-  source       SBezeichnet die zu kopierende(n) Datei(en).\n\
+  source       Bezeichnet die zu kopierende(n) Datei(en).\n\
   /A           Weist auf eine ASCII-Textdatei hin.\n\
   /B           Weist auf eine Binaerdatei hin.\n\
   destination  Bezeichnet das Verzeichnis und/oder Dateinamen der neuen Datei(en).\n\
@@ -136,12 +136,12 @@ STRING_DATE_HELP2, "\nGeben Sie das neue Datum ein (dd%cmm%cyyyy): "
 
 STRING_DATE_HELP3, "\nGeben Sie das neue Datum ein (yyyy%cmm%cdd): "
 
-STRING_DATE_HELP4, "Aendert das eingestellte Datum oder zeigt es an.\n\n\
+STRING_DATE_HELP4, "Andert das eingestellte Datum oder zeigt es an.\n\n\
 DATE [/T][date]\n\n\
   /T    nur Datum anzeigen\n\n\
 Der Befehl DATE ohne Parameter zeigt das aktuelle Datum an und fragt nach\n\
 einem neuen. Druecken Sie die EINGABETASTE, um das bisherige Datum zu behalten."
-				
+
 STRING_DEL_HELP1,  "Loescht eine oder mehrere Dateien.\n\n\
 DEL [/N /P /T /Q /W /Y /Z] Dateinamen ...\n\
 DELETE [/N /P /T /Q /W /Y /Z] Dateinamen ...\n\
@@ -205,7 +205,7 @@ STRING_DIR_HELP2, " Datentraeger in Laufwerk %c ist %s\n"
 STRING_DIR_HELP3, " Datentraeger in Laufwerk %c hat keinen Namen\n"
 STRING_DIR_HELP4, " Datentraeger-Seriennummer ist %04X-%04X\n"
 STRING_DIR_HELP5, "\n     Gelistete Dateien:\n%16i Datei(en)% 14s bytes\n"
-STRING_DIR_HELP6, "%16i VErzeichnis(se)% 15s bytes\n"
+STRING_DIR_HELP6, "%16i Verzeichnis(se)% 15s bytes\n"
 STRING_DIR_HELP7, "\n Verzeichnisse %s\n\n"
 STRING_DIR_HELP8, "%16i Datei(en)% 14s bytes\n"
 
@@ -317,13 +317,13 @@ MOVE [/N][Laufwerk:][Pfad]Verzeichnis1 Verzeichnis2\n\n\
 Derzeitige Einschraenkung:\n\
 Es ist noch nicht moeglich Objekte ueber die Laufwerksgrenzen hinaus zu verschieben.\n"
 
-STRING_MSGBOX_HELP, "Zeigt eine MessageBox und wartet auf eine Eingabe vom Benutzer.\n\n\
+STRING_MSGBOX_HELP, "Zeigt ein Fenster und wartet auf eine Eingabe vom Benutzer.\n\n\
 MSGBOX type ['title'] prompt\n\n\
-type          button displayed\n\
-              possible values are: OK, OKCANCEL,\n\
+type          Button anzeigen\n\
+              moegliche Werte sind: OK, OKCANCEL,\n\
               YESNO, YESNOCANCEL\n\
-title         title of message box\n\
-prompt        text displayed by the message box\n\n\n\
+title         Titel des Fensters\n\
+prompt        Text der in dem Fenster angezeigt wird\n\n\n\
 ERRORLEVEL is set according the button pressed:\n\n\
 YES  :  10    |  NO      :  11\n\
 OK   :  10    |  CANCEL  :  12\n"
@@ -355,8 +355,8 @@ Sie kann aus normalen Zeichen und folgenden Sonderzeichen bestehen:\n\n\
   $_   Carriage return and linefeed\n\
   $$   $ (Dollarzeichen)"
 
-STRING_PAUSE_HELP1, "Haelt die Ausfuehrung einer Batchdatei an und zeigt folgende Meldung an:\n\
-'Druecken Sie eine beliebige Taste . . .' or a user defined message.\n\n\
+STRING_PAUSE_HELP1, "Haelt die Ausfuehrung einer Batchdatei an und zeigt folgende Meldung oder eine benutzerdefinierte Nachricht an:\n\
+'Druecken Sie eine beliebige Taste . . .'.\n\n\
 PAUSE [message]"
 
 STRING_PROMPT_HELP2, "  $+   Zeigt die aktuelle Tiefe des Verzeichnis-Stacks an"
@@ -383,7 +383,7 @@ Nutzen Sie den 'move' Befehl falls Sie Objekte verschieben wollen.\n"
 STRING_REN_HELP2, "    %lu Datei umbennant\n"
 
 STRING_REN_HELP3, "    %lu Dateien umbennant\n"
-		 
+
 STRING_SHIFT_HELP, "Veraendert die Position ersetzbarer Parameter in einem Batchprogramm.\n\n\
 SHIFT [DOWN]"
 
@@ -426,11 +426,11 @@ TIMER  [ON|OFF] [/S] [/n] [/Fn]\n\n\
   /S          Split time. Return stopwatch split\n\
               time without changing its value\n\
   /n          Anzahl der Stopuhren\n\
-              Stopwaches avaliable are 0 to 9\n\
+              gueltige Stopuhren sind 0 bis 9\n\
               Standardwert = 1\n\
   /Fn         Ausgabeformatierung\n\
               n kann 0 oder 1 sein:\n\
-                    0    milliseconds\n\
+                    0    Millisekunden\n\
                     1    hh%cmm%css%cdd\n\n\
 Falls nicht ON, OFF oder /S angegeben wurde wird\n\
 die Stopuhr ausgeschalten.\n\n"
@@ -474,9 +474,9 @@ STRING_VERSION_HELP5, "\nSenden Sie Bug-Reports an <ros-dev@reactos.com>.\n\
 Updates sind auf der offiziellen ReactOS-Seite verfuegbar:\n\
 http://www.reactos.com"
 
-STRING_VERSION_HELP6, "\nFreeDOS version programmiert von:\n"
+STRING_VERSION_HELP6, "\nFreeDOS Version programmiert von:\n"
 
-STRING_VERSION_HELP7, "\nReactOS version programmiert von:\n"
+STRING_VERSION_HELP7, "\nReactOS Version programmiert von:\n"
 
 STRING_VOL_HELP1, " Datentraeger im Laufwerk %c: ist %s"
 STRING_VOL_HELP2, " Datentraeger im Laufwerk %c: hat keine Bezeichnung"
@@ -486,27 +486,27 @@ STRING_VOL_HELP4, "Zeigt die Laufwerksvolumebezeichnung und die Seriennummer an,
 STRING_WINDOW_HELP1, "change console window aspect\n\n\
 WINDOW [/POS[=]left,top,width,heigth]\n\
               [MIN|MAX|RESTORE] ['title']\n\n\
-/POS          specify window placement and dimensions\n\
-MIN           minimize the window\n\
-MAX           maximize the window\n\
-RESTORE       restore the window"
+/POS          Gibt Position und Größe des Fenster an\n\
+MIN           minimieren das Fenster\n\
+MAX           maximieren das Fenster\n\
+RESTORE       stellt das Fenster wieder her"
 
 STRING_WINDOW_HELP2, "change console window aspect\n\n\
 ACTIVATE 'window' [/POS[=]left,top,width,heigth]\n\
               [MIN|MAX|RESTORE] ['title']\n\n\
 window        tile of window on wich perform actions\n\
 /POS          specify window placement and dimensions\n\
-MIN           minimize the window\n\
-MAX           maximize the window\n\
-RESTORE       restore the window\n\
-title         new title"
+MIN           minimieren das Fenster\n\
+MAX           maximieren das Fenster\n\
+RESTORE       stellt das Fenster wieder her\n\
+title         neuer Titel"
 
 
 STRING_HELP1, "Uebersicht aller verfuegbaren Befehle und deren Kurzbeschreibung\n\n\
   Befehl /?     Um naehere Informationen zu einem bestimmten Befehl\n\
                 zu erhalten.\n\n\
 ?        Listet alle Befehle auf (ohne Erklarung).\n\
-ALIAS    Setzt, loescht oder zeigt alias.\n\
+ALIAS    Setzt, loescht oder zeigt den Alias.\n\
 ATTRIB   Zeigt Dateiattribute an bzw. aendert sie.\n\
 BEEP     Gibt einen beep-Ton durch den PC-Speaker aus.\n\
 CALL     Ruft eine Batchdatei aus einer anderen Batchdatei heraus auf.\n\
@@ -574,8 +574,9 @@ STRING_CHCP_ERROR4,          "ungueltige Code-Page\n"
 STRING_CHOICE_ERROR,         "Ungueltige Option. Erwartetes Format: /C[:]options"
 STRING_CHOICE_ERROR_TXT,     "Ungueltige Option. Erwartetes Format: /T[:]c,nn"
 STRING_CHOICE_ERROR_OPTION,  "Ungueltige Option: %s"
+STRING_MD_ERROR,             "Unterverzeichnis oder Datei existiert bereits.\n"
 STRING_CMD_ERROR1,           "Die Eingaben konnten nicht umgeleitet werden (von der Datei) %s\n"
-STRING_CMD_ERROR2,           "Error creating temporary file for pipe data\n"
+STRING_CMD_ERROR2,           "Ein Fehler ist beim Erstellen der temponaeren Date für Pipedaten aufgetreten\n"
 STRING_CMD_ERROR3,           "%s kann nicht in die Datei umgeleitet werden \n"
 STRING_CMD_ERROR4,           "Running %s...\n"
 STRING_CMD_ERROR5,           "Running cmdexit.bat...\n"
@@ -596,7 +597,7 @@ STRING_ERROR_ERROR1,         "Unbekannter Fehler! Fehlernummer: 0x%lx\n"
 STRING_ERROR_ERROR2,         "Syntax-Fehler"
 STRING_FOR_ERROR1,           "'in' fehlt fuer ein statement."
 STRING_FOR_ERROR2,           "Klammern nicht gefunden."
-STRING_FOR_ERROR3,           "'do' fehlt." 
+STRING_FOR_ERROR3,           "'do' fehlt."
 STRING_FOR_ERROR4,           "kein Befehl nach 'do'."
 STRING_FREE_ERROR1,          "Ungueltiges Laufwerk"
 STRING_FREE_ERROR2,          "keine Bezeichnung"
@@ -634,7 +635,7 @@ STRING_ERROR_DRIVER_NOT_READY,     "Laufwerk ist nicht bereit"
 STRING_PATH_ERROR,                 "CMD: Not in environment '%s'\n"
 
 STRING_CMD_SHELLINFO,              "\nReactOS Befehlszeilen Interpreter"
-STRING_VERSION_RUNVER,             " laeft in %s"
+STRING_VERSION_RUNVER,             " laeuft in %s"
 STRING_COPY_FILE ,                 "        %d Datei(en) kopiert\n"
 STRING_DELETE_WIPE,                "wiped"
 STRING_FOR_ERROR,                  "ungueltige Variablenangabe."

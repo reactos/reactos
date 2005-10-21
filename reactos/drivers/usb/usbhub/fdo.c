@@ -66,7 +66,7 @@ UsbhubFdoQueryBusRelations(
 	dev = DeviceExtension->dev;
 	
 	/* Create PDOs that are missing */
-	for (i = 0; i < USB_MAXCHILDREN; i++)
+	for (i = 0; i < dev->maxchild; i++)
 	{
 		if (dev->children[i] == NULL)
 		{
@@ -110,7 +110,11 @@ UsbhubFdoQueryBusRelations(
 		if (!NT_SUCCESS(Status))
 			goto ByeBye;
 		
-
+		DPRINT1("child #%lu: USB\\Vid_%04x&Pid_%04x&Rev_%04x\n",
+			i,
+			PdoExtension->dev->descriptor.idVendor,
+			PdoExtension->dev->descriptor.idProduct,
+			PdoExtension->dev->descriptor.bcdDevice);
 		sprintf(Buffer[0], "USB\\Vid_%04x&Pid_%04x&Rev_%04x",
 			PdoExtension->dev->descriptor.idVendor,
 			PdoExtension->dev->descriptor.idProduct,
@@ -133,15 +137,33 @@ UsbhubFdoQueryBusRelations(
 		if (PdoExtension->dev->actconfig->desc.bNumInterfaces == 1)
 		{
 			/* Single-interface USB device */
-			sprintf(Buffer[0], "USB\\Class_%02x&SubClass_%02x&Prot_%02x",
-				PdoExtension->dev->descriptor.bDeviceClass,
-				PdoExtension->dev->descriptor.bDeviceSubClass,
-				PdoExtension->dev->descriptor.bDeviceProtocol);
-			sprintf(Buffer[1], "USB\\Class_%02x&SubClass_%02x",
-				PdoExtension->dev->descriptor.bDeviceClass,
-				PdoExtension->dev->descriptor.bDeviceSubClass);
-			sprintf(Buffer[2], "USB\\Class_%02x",
-				PdoExtension->dev->descriptor.bDeviceClass);
+			if (PdoExtension->dev->descriptor.bDeviceClass != 0)
+			{
+				/* Use these values for device class/sub class/protocol */
+				sprintf(Buffer[0], "USB\\Class_%02x&SubClass_%02x&Prot_%02x",
+					PdoExtension->dev->descriptor.bDeviceClass,
+					PdoExtension->dev->descriptor.bDeviceSubClass,
+					PdoExtension->dev->descriptor.bDeviceProtocol);
+				sprintf(Buffer[1], "USB\\Class_%02x&SubClass_%02x",
+					PdoExtension->dev->descriptor.bDeviceClass,
+					PdoExtension->dev->descriptor.bDeviceSubClass);
+				sprintf(Buffer[2], "USB\\Class_%02x",
+					PdoExtension->dev->descriptor.bDeviceClass);
+			}
+			else
+			{
+				/* Use values specified in the interface descriptor */
+				struct usb_host_interface *itf = PdoExtension->dev->actconfig->interface->altsetting;
+				sprintf(Buffer[0], "USB\\Class_%02x&SubClass_%02x&Prot_%02x",
+					itf->desc.bInterfaceClass,
+					itf->desc.bInterfaceSubClass,
+					itf->desc.bInterfaceProtocol);
+				sprintf(Buffer[1], "USB\\Class_%02x&SubClass_%02x",
+					itf->desc.bInterfaceClass,
+					itf->desc.bInterfaceSubClass);
+				sprintf(Buffer[2], "USB\\Class_%02x",
+					itf->desc.bInterfaceClass);
+			}
 			Status = UsbhubInitMultiSzString(
 				&PdoExtension->CompatibleIds,
 				Buffer[0], Buffer[1], Buffer[2], NULL);
@@ -230,7 +252,7 @@ UsbhubPnpFdo(
 			{
 				case BusRelations:
 				{
-					PDEVICE_RELATIONS DeviceRelations;
+					PDEVICE_RELATIONS DeviceRelations = NULL;
 					DPRINT("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n");
 					Status = UsbhubFdoQueryBusRelations(DeviceObject, &DeviceRelations);
 					Information = (ULONG_PTR)DeviceRelations;

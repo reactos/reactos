@@ -235,9 +235,12 @@ static UINT ControlEvent_AddSource(MSIPACKAGE* package, LPCWSTR argument,
 static UINT ControlEvent_SetTargetPath(MSIPACKAGE* package, LPCWSTR argument, 
                                    msi_dialog* dialog)
 {
-    LPWSTR path = load_dynamic_property(package,argument, NULL);
+    LPWSTR path = msi_dup_property( package, argument );
+    UINT r;
     /* failure to set the path halts the executing of control events */
-    return MSI_SetTargetPathW(package, argument, path);
+    r = MSI_SetTargetPathW(package, argument, path);
+    msi_free(path);
+    return r;
 }
 
 /*
@@ -245,10 +248,10 @@ static UINT ControlEvent_SetTargetPath(MSIPACKAGE* package, LPCWSTR argument,
  */
 static void free_subscriber( struct subscriber *sub )
 {
-    HeapFree(GetProcessHeap(),0,sub->event);
-    HeapFree(GetProcessHeap(),0,sub->control);
-    HeapFree(GetProcessHeap(),0,sub->attribute);
-    HeapFree(GetProcessHeap(),0,sub);
+    msi_free(sub->event);
+    msi_free(sub->control);
+    msi_free(sub->attribute);
+    msi_free(sub);
 }
 
 VOID ControlEvent_SubscribeToEvent( MSIPACKAGE *package, LPCWSTR event,
@@ -256,7 +259,7 @@ VOID ControlEvent_SubscribeToEvent( MSIPACKAGE *package, LPCWSTR event,
 {
     struct subscriber *sub;
 
-    sub = HeapAlloc(GetProcessHeap(),0,sizeof (*sub));
+    sub = msi_alloc(sizeof (*sub));
     if( !sub )
         return;
     sub->event = strdupW(event);
@@ -349,7 +352,7 @@ UINT ACTION_DialogBox( MSIPACKAGE* package, LPCWSTR szDialogName )
 
         package->next_dialog = NULL;
         r = event_do_dialog( package, name, TRUE );
-        HeapFree( GetProcessHeap(), 0, name );
+        msi_free( name );
     }
 
     if( r == ERROR_IO_PENDING )
@@ -386,11 +389,11 @@ UINT ControlEvent_HandleControlEvent(MSIPACKAGE *package, LPCWSTR event,
         LPWSTR wevent = strdupAtoW(Events[i].event);
         if (lstrcmpW(wevent,event)==0)
         {
-            HeapFree(GetProcessHeap(),0,wevent);
+            msi_free(wevent);
             rc = Events[i].handler(package,argument,dialog);
             return rc;
         }
-        HeapFree(GetProcessHeap(),0,wevent);
+        msi_free(wevent);
         i++;
     }
     FIXME("unhandled control event %s arg(%s)\n",

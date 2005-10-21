@@ -124,7 +124,16 @@ static
 PMONITOR_OBJECT FASTCALL
 UserGetMonitorObject(IN HMONITOR hMonitor)
 {
-   PMONITOR_OBJECT Monitor = (PMONITOR_OBJECT)UserGetObject(&gHandleTable, hMonitor, otMonitor);
+   PMONITOR_OBJECT Monitor;
+   
+   if (!hMonitor)
+   {
+      SetLastWin32Error(ERROR_INVALID_MONITOR_HANDLE);
+      return NULL;
+   }
+   
+   
+   Monitor = (PMONITOR_OBJECT)UserGetObject(&gHandleTable, hMonitor, otMonitor);
    if (!Monitor)
    {
       SetLastWin32Error(ERROR_INVALID_MONITOR_HANDLE);

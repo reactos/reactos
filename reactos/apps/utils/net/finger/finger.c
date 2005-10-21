@@ -74,7 +74,6 @@ int lflag, mflag, pplan, sflag;
 
 static void userlist(int, char **);
 void usage();
-void netfinger(char *);
 
 int
 main(int argc, char **argv)

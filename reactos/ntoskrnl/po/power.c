@@ -229,6 +229,7 @@ PoUnregisterSystemState(
 }
 
 NTSTATUS
+NTAPI
 PopSetSystemPowerState(
   SYSTEM_POWER_STATE PowerState)
 {
@@ -291,6 +292,7 @@ PopSetSystemPowerState(
 
 VOID
 INIT_FUNCTION
+NTAPI
 PoInit(PLOADER_PARAMETER_BLOCK LoaderBlock,
        BOOLEAN ForceAcpiDisable)
 {

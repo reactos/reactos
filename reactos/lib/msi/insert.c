@@ -209,7 +209,7 @@ static UINT INSERT_delete( struct tagMSIVIEW *view )
     if( sv )
         sv->ops->delete( sv );
     msiobj_release( &iv->db->hdr );
-    HeapFree( GetProcessHeap(), 0, iv );
+    msi_free( iv );
 
     return ERROR_SUCCESS;
 }
@@ -250,7 +250,7 @@ UINT INSERT_CreateView( MSIDATABASE *db, MSIVIEW **view, LPWSTR table,
         return r;
     }
     
-    iv = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof *iv );
+    iv = msi_alloc_zero( sizeof *iv );
     if( !iv )
         return ERROR_FUNCTION_FAILED;
 

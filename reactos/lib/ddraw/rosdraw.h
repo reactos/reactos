@@ -37,7 +37,7 @@ typedef struct
 typedef struct 
 {
 	IDirectDrawSurface7Vtbl* lpVtbl;
-    DWORD ref;
+    LONG ref;
 
     IDirectDrawImpl* owner;
 
@@ -49,7 +49,7 @@ typedef struct
 typedef struct 
 {
 	IDirectDrawClipperVtbl* lpVtbl;
-    DWORD ref;
+    LONG ref;
 
     IDirectDrawImpl* owner;
 
@@ -61,7 +61,7 @@ typedef struct
 typedef struct 
 {
 	IDirectDrawPaletteVtbl* lpVtbl;
-    DWORD ref;
+    LONG ref;
 
     IDirectDrawImpl* owner;
 

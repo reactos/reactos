@@ -263,6 +263,8 @@ typedef struct _I8042_HOOK_WORKITEM
 #define MOUSE_NACK         0xFE
 
 /* i8042prt.c */
+extern UNICODE_STRING I8042RegistryPath;
+
 NTSTATUS I8042ReadData(UCHAR *Data);
 
 NTSTATUS I8042ReadStatus(UCHAR *Status);
@@ -295,6 +297,9 @@ VOID STDCALL I8042SendHookWorkItem(PDEVICE_OBJECT DeviceObject,
                                    PVOID Context);
 
 BOOLEAN I8042Write(PDEVICE_EXTENSION DevExt, PUCHAR addr, UCHAR data);
+
+NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT DriverObject,
+			     PUNICODE_STRING RegistryPath);
 
 /* keyboard.c */
 VOID STDCALL I8042IsrWritePortKbd(PVOID Context,

@@ -18,8 +18,6 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
-#define WIN32_LEAN_AND_MEAN     /* Exclude rarely-used stuff from Windows headers */
-
 #include <windows.h>
 #include <tchar.h>
 #include <commctrl.h>
@@ -28,6 +26,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <shellapi.h>
+#include <objsel.h>
+#include <objbase.h>
+#include <ole2.h>
 
 #include "main.h"
 #include "regproc.h"
@@ -61,7 +62,7 @@ static void resize_frame_rect(HWND hWnd, PRECT prect)
     MoveWindow(g_pChildWnd->hWnd, prect->left, prect->top, prect->right, prect->bottom, TRUE);
 }
 
-void resize_frame_client(HWND hWnd)
+static void resize_frame_client(HWND hWnd)
 {
     RECT rect;
 
@@ -77,7 +78,7 @@ static void OnEnterMenuLoop(HWND hWnd)
 
     /* Update the status bar pane sizes */
     nParts = -1;
-    SendMessage(hStatusBar, SB_SETPARTS, 1, (long)&nParts);
+    SendMessage(hStatusBar, SB_SETPARTS, 1, (LPARAM)&nParts);
     bInMenuLoop = TRUE;
     SendMessage(hStatusBar, SB_SETTEXT, (WPARAM)0, (LPARAM)_T(""));
 }
@@ -183,25 +184,6 @@ static BOOL CheckCommDlgError(HWND hWnd)
     return TRUE;
 }
 
-UINT_PTR CALLBACK ImportRegistryFile_OFNHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM lParam)
-{
-    OPENFILENAME* pOpenFileName;
-    OFNOTIFY* pOfNotify;
-
-    switch (uiMsg) {
-    case WM_INITDIALOG:
-        pOpenFileName = (OPENFILENAME*)lParam;
-        break;
-    case WM_NOTIFY:
-        pOfNotify = (OFNOTIFY*)lParam;
-    if (pOfNotify->hdr.code == CDN_INITDONE) {}
-        break;
-    default:
-        break;
-    }
-    return 0L;
-}
-
 #define MAX_CUSTOM_FILTER_SIZE 50
 TCHAR CustomFilterBuffer[MAX_CUSTOM_FILTER_SIZE];
 TCHAR FileNameBuffer[_MAX_PATH];
@@ -282,7 +264,7 @@ static BOOL ImportRegistryFile(HWND hWnd)
     /*    ofn.lCustData = ;*/
     if (GetOpenFileName(&ofn)) {
         /* FIXME - convert to ascii */
-	if (!import_registry_file((LPSTR)ofn.lpstrFile)) {
+	if (!import_registry_file(ofn.lpstrFile)) {
             /*printf("Can't open file \"%s\"\n", ofn.lpstrFile);*/
             return FALSE;
         }
@@ -311,26 +293,90 @@ static BOOL ImportRegistryFile(HWND hWnd)
 }
 
 
+static UINT_PTR CALLBACK ExportRegistryFile_OFNHookProc(HWND hdlg, UINT uiMsg, WPARAM wParam, LPARAM lParam)
+{
+    HWND hwndExportAll;
+    HWND hwndExportBranch;
+    HWND hwndExportBranchText;
+    UINT_PTR iResult = 0;
+    OPENFILENAME *pOfn;
+    LPTSTR pszSelectedKey;
+    OFNOTIFY *pOfnNotify;
+
+	switch(uiMsg) {
+	case WM_INITDIALOG:
+        pOfn = (OPENFILENAME *) lParam;
+        pszSelectedKey = (LPTSTR) pOfn->lCustData;
+
+        hwndExportAll = GetDlgItem(hdlg, IDC_EXPORT_ALL);
+        if (hwndExportAll)
+			SendMessage(hwndExportAll, BM_SETCHECK, pszSelectedKey[0] ? BST_UNCHECKED : BST_CHECKED, 0);
+
+        hwndExportBranch = GetDlgItem(hdlg, IDC_EXPORT_BRANCH);
+        if (hwndExportBranch)
+            SendMessage(hwndExportBranch, BM_SETCHECK, pszSelectedKey[0] ? BST_CHECKED : BST_UNCHECKED, 0);
+
+        hwndExportBranchText = GetDlgItem(hdlg, IDC_EXPORT_BRANCH_TEXT);
+        if (hwndExportBranchText)
+            SetWindowText(hwndExportBranchText, pszSelectedKey);
+        break;
+
+	case WM_NOTIFY:
+        if (((NMHDR *) lParam)->code == CDN_FILEOK)
+        {
+            pOfnNotify = (OFNOTIFY *) lParam;
+            pszSelectedKey = (LPTSTR) pOfnNotify->lpOFN->lCustData;
+
+            hwndExportBranch = GetDlgItem(hdlg, IDC_EXPORT_BRANCH);
+            hwndExportBranchText = GetDlgItem(hdlg, IDC_EXPORT_BRANCH_TEXT);
+            if (hwndExportBranch && hwndExportBranchText
+                && (SendMessage(hwndExportBranch, BM_GETCHECK, 0, 0) == BST_CHECKED))
+			{
+			    GetWindowText(hwndExportBranchText, pszSelectedKey, _MAX_PATH);
+			}
+			else
+			{
+			    pszSelectedKey[0] = '\0';
+			}
+		}
+        break;
+    }
+    return iResult;
+}
+
 static BOOL ExportRegistryFile(HWND hWnd)
 {
     OPENFILENAME ofn;
     TCHAR ExportKeyPath[_MAX_PATH];
     TCHAR Caption[128];
+    HKEY hKeyRoot;
+    LPCTSTR pszKeyPath;
 
-    ExportKeyPath[0] = _T('\0');
+    /* Figure out which key path we are exporting */
+    pszKeyPath = GetItemPath(g_pChildWnd->hTreeWnd, 0, &hKeyRoot);
+    RegKeyGetName(ExportKeyPath, sizeof(ExportKeyPath) / sizeof(ExportKeyPath[0]),
+        hKeyRoot, pszKeyPath);
+
     InitOpenFileName(hWnd, &ofn);
     LoadString(hInst, IDS_EXPORT_REG_FILE, Caption, sizeof(Caption)/sizeof(TCHAR));
     ofn.lpstrTitle = Caption;
-    /*    ofn.lCustData = ;*/
-    ofn.Flags = OFN_ENABLETEMPLATE + OFN_EXPLORER;
-    ofn.lpfnHook = ImportRegistryFile_OFNHookProc;
-    ofn.lpTemplateName = MAKEINTRESOURCE(IDD_DIALOG1);
+    ofn.lCustData = (LPARAM) ExportKeyPath;
+    ofn.Flags = OFN_ENABLETEMPLATE | OFN_EXPLORER | OFN_ENABLEHOOK;
+    ofn.lpfnHook = ExportRegistryFile_OFNHookProc;
+    ofn.lpTemplateName = MAKEINTRESOURCE(IDD_EXPORTRANGE);
     if (GetSaveFileName(&ofn)) {
         BOOL result;
-        /* FIXME - convert strings to ascii! */
-        result = export_registry_key((CHAR*)ofn.lpstrFile, (CHAR*)ExportKeyPath);
-        /*result = export_registry_key(ofn.lpstrFile, NULL);*/
-        /*if (!export_registry_key(ofn.lpstrFile, NULL)) {*/
+        LPSTR pszExportKeyPath;
+#ifdef UNICODE
+        CHAR buffer[_MAX_PATH];
+
+        WideCharToMultiByte(CP_ACP, 0, ExportKeyPath, -1, buffer, sizeof(buffer), NULL, NULL);
+        pszExportKeyPath = buffer;
+#else
+        pszExportKeyPath = ExportKeyPath;
+#endif
+
+        result = export_registry_key(ofn.lpstrFile, pszExportKeyPath);
         if (!result) {
             /*printf("Can't open file \"%s\"\n", ofn.lpstrFile);*/
             return FALSE;
@@ -375,7 +421,7 @@ BOOL PrintRegistryHive(HWND hWnd, LPTSTR path)
     pd.nToPage     = 0xFFFF;
     pd.nMinPage    = 1;
     pd.nMaxPage    = 0xFFFF;
-    if (PrintDlg(&pd) == TRUE) {
+    if (PrintDlg(&pd)) {
         /* GDI calls to render output. */
         DeleteDC(pd.hDC); /* Delete DC when done.*/
     }
@@ -424,7 +470,7 @@ BOOL PrintRegistryHive(HWND hWnd, LPTSTR path)
     return TRUE;
 }
 
-BOOL CopyKeyName(HWND hWnd, LPTSTR keyName)
+static BOOL CopyKeyName(HWND hWnd, LPCTSTR keyName)
 {
     BOOL result;
 
@@ -454,16 +500,199 @@ BOOL CopyKeyName(HWND hWnd, LPTSTR keyName)
     return result;
 }
 
-BOOL RefreshView(HWND hWnd)
+static BOOL CreateNewValue(HKEY hRootKey, LPCTSTR pszKeyPath, DWORD dwType)
 {
-    /* TODO:*/
-    MessageBeep(-1);
-    MessageBeep(MB_ICONASTERISK);
-    MessageBeep(MB_ICONEXCLAMATION);
-    MessageBeep(MB_ICONHAND);
-    MessageBeep(MB_ICONQUESTION);
-    MessageBeep(MB_OK);
+    TCHAR szNewValueFormat[128];
+    TCHAR szNewValue[128];
+    int iIndex = 1;
+    BYTE data[128];
+    DWORD dwExistingType, cbData;
+    LONG lResult;
+    HKEY hKey;
+    LVFINDINFO lvfi;
+
+    if (RegOpenKey(hRootKey, pszKeyPath, &hKey) != ERROR_SUCCESS)
+        return FALSE;    
+
+    LoadString(hInst, IDS_NEW_VALUE, szNewValueFormat, sizeof(szNewValueFormat)
+        / sizeof(szNewValueFormat[0]));
+
+    do
+    {
+        _sntprintf(szNewValue, sizeof(szNewValue) / sizeof(szNewValue[0]),
+            szNewValueFormat, iIndex++);
+
+        cbData = sizeof(data);
+        lResult = RegQueryValueEx(hKey, szNewValue, NULL, &dwExistingType, data, &cbData);
+    }
+    while(lResult == ERROR_SUCCESS);
+
+    switch(dwType) {
+    case REG_DWORD:
+        cbData = sizeof(DWORD);
+        break;
+    case REG_SZ:
+    case REG_EXPAND_SZ:
+        cbData = sizeof(TCHAR);
+        break;
+    case REG_MULTI_SZ:
+        cbData = sizeof(TCHAR) * 2;
+        break;
+    case REG_QWORD:
+        cbData = sizeof(DWORD) * 2;
+        break;
+    default:
+        cbData = 0;
+        break;
+    }
+    memset(data, 0, cbData);
+    lResult = RegSetValueEx(hKey, szNewValue, 0, dwType, data, cbData);
+    if (lResult != ERROR_SUCCESS)
+        return FALSE;
+
+    RefreshListView(g_pChildWnd->hListWnd, hRootKey, pszKeyPath);
+
+    /* locate the newly added value, and get ready to rename it */
+    memset(&lvfi, 0, sizeof(lvfi));
+    lvfi.flags = LVFI_STRING;
+    lvfi.psz = szNewValue;
+    iIndex = ListView_FindItem(g_pChildWnd->hListWnd, -1, &lvfi);
+    if (iIndex >= 0)
+        ListView_EditLabel(g_pChildWnd->hListWnd, iIndex);
+
     return TRUE;
+}
+
+static HRESULT
+InitializeRemoteRegistryPicker(OUT IDsObjectPicker **pDsObjectPicker)
+{
+    HRESULT hRet;
+
+    *pDsObjectPicker = NULL;
+
+    hRet = CoCreateInstance(&CLSID_DsObjectPicker,
+                            NULL,
+                            CLSCTX_INPROC_SERVER,
+                            &IID_IDsObjectPicker,
+                            (LPVOID*)pDsObjectPicker);
+    if (SUCCEEDED(hRet))
+    {
+        DSOP_INIT_INFO InitInfo;
+        static DSOP_SCOPE_INIT_INFO Scopes[] =
+        {
+            {
+                sizeof(DSOP_SCOPE_INIT_INFO),
+                DSOP_SCOPE_TYPE_USER_ENTERED_UPLEVEL_SCOPE | DSOP_SCOPE_TYPE_USER_ENTERED_DOWNLEVEL_SCOPE |
+                    DSOP_SCOPE_TYPE_GLOBAL_CATALOG | DSOP_SCOPE_TYPE_EXTERNAL_UPLEVEL_DOMAIN |
+                    DSOP_SCOPE_TYPE_EXTERNAL_DOWNLEVEL_DOMAIN | DSOP_SCOPE_TYPE_WORKGROUP |
+                    DSOP_SCOPE_TYPE_UPLEVEL_JOINED_DOMAIN | DSOP_SCOPE_TYPE_DOWNLEVEL_JOINED_DOMAIN,
+                0,
+                {
+                    {
+                        DSOP_FILTER_COMPUTERS,
+                        0,
+                        0
+                    },
+                    DSOP_DOWNLEVEL_FILTER_COMPUTERS
+                },
+                NULL,
+                NULL,
+                S_OK
+            },
+        };
+
+        InitInfo.cbSize = sizeof(InitInfo);
+        InitInfo.pwzTargetComputer = NULL;
+        InitInfo.cDsScopeInfos = sizeof(Scopes) / sizeof(Scopes[0]);
+        InitInfo.aDsScopeInfos = Scopes;
+        InitInfo.flOptions = 0;
+        InitInfo.cAttributesToFetch = 0;
+        InitInfo.apwzAttributeNames = NULL;
+
+        hRet = (*pDsObjectPicker)->lpVtbl->Initialize(*pDsObjectPicker,
+                                                      &InitInfo);
+
+        if (FAILED(hRet))
+        {
+            /* delete the object picker in case initialization failed! */
+            (*pDsObjectPicker)->lpVtbl->Release(*pDsObjectPicker);
+        }
+    }
+
+    return hRet;
+}
+
+static HRESULT
+InvokeRemoteRegistryPickerDialog(IN IDsObjectPicker *pDsObjectPicker,
+                                 IN HWND hwndParent  OPTIONAL,
+                                 OUT LPTSTR lpBuffer,
+                                 IN UINT uSize)
+{
+    IDataObject *pdo = NULL;
+    HRESULT hRet;
+
+    hRet = pDsObjectPicker->lpVtbl->InvokeDialog(pDsObjectPicker,
+                                                 hwndParent,
+                                                 &pdo);
+    if (hRet == S_OK)
+    {
+        STGMEDIUM stm;
+        FORMATETC fe;
+
+        fe.cfFormat = RegisterClipboardFormat(CFSTR_DSOP_DS_SELECTION_LIST);
+        fe.ptd = NULL;
+        fe.dwAspect = DVASPECT_CONTENT;
+        fe.lindex = -1;
+        fe.tymed = TYMED_HGLOBAL;
+
+        hRet = pdo->lpVtbl->GetData(pdo,
+                                    &fe,
+                                    &stm);
+        if (SUCCEEDED(hRet))
+        {
+            PDS_SELECTION_LIST SelectionList = (PDS_SELECTION_LIST)GlobalLock(stm.hGlobal);
+            if (SelectionList != NULL)
+            {
+                if (SelectionList->cItems == 1)
+                {
+                    UINT nlen = wcslen(SelectionList->aDsSelection[0].pwzName);
+                    if (nlen >= uSize)
+                    {
+                        nlen = uSize - 1;
+                    }
+#if UNICODE
+                    memcpy(lpBuffer,
+                           SelectionList->aDsSelection[0].pwzName,
+                           nlen * sizeof(WCHAR));
+#else
+                    WideCharToMultiByte(CP_ACP,
+                                        0,
+                                        SelectionList->aDsSelection[0].pwzName,
+                                        nlen,
+                                        lpBuffer,
+                                        uSize,
+                                        NULL,
+                                        NULL);
+#endif
+                    lpBuffer[nlen] = L'\0';
+                }
+
+                GlobalUnlock(stm.hGlobal);
+            }
+
+            ReleaseStgMedium(&stm);
+        }
+
+        pdo->lpVtbl->Release(pdo);
+    }
+
+    return hRet;
+}
+
+static VOID
+FreeObjectPicker(IN IDsObjectPicker *pDsObjectPicker)
+{
+    pDsObjectPicker->lpVtbl->Release(pDsObjectPicker);
 }
 
 /*******************************************************************************
@@ -491,7 +720,34 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         ExportRegistryFile(hWnd);
         return TRUE;
     case ID_REGISTRY_CONNECTNETWORKREGISTRY:
+    {
+        IDsObjectPicker *ObjectPicker;
+        TCHAR szComputerName[MAX_COMPUTERNAME_LENGTH + 1];
+        HRESULT hRet;
+        
+        hRet = CoInitialize(NULL);
+        if (SUCCEEDED(hRet))
+        {
+            hRet = InitializeRemoteRegistryPicker(&ObjectPicker);
+            if (SUCCEEDED(hRet))
+            {
+                hRet = InvokeRemoteRegistryPickerDialog(ObjectPicker,
+                                                        hWnd,
+                                                        szComputerName,
+                                                        sizeof(szComputerName) / sizeof(szComputerName[0]));
+                if (hRet == S_OK)
+                {
+                    /* FIXME - connect to the registry */
+                }
+
+                FreeObjectPicker(ObjectPicker);
+            }
+
+            CoUninitialize();
+        }
+
         return TRUE;
+    }
     case ID_REGISTRY_DISCONNECTNETWORKREGISTRY:
         return TRUE;
     case ID_REGISTRY_PRINT:
@@ -593,6 +849,15 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
           }
         }
 	break;
+    case ID_EDIT_NEW_STRINGVALUE:
+        CreateNewValue(hKeyRoot, keyPath, REG_SZ);
+        break;
+    case ID_EDIT_NEW_BINARYVALUE:
+        CreateNewValue(hKeyRoot, keyPath, REG_BINARY);
+        break;
+    case ID_EDIT_NEW_DWORDVALUE:
+        CreateNewValue(hKeyRoot, keyPath, REG_DWORD);
+        break;
     }
     case ID_EDIT_COPYKEYNAME:
         CopyKeyName(hWnd, _T(""));
@@ -617,11 +882,15 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
 
     case ID_VIEW_REFRESH:
-        RefreshView(hWnd);
+        RefreshTreeView(g_pChildWnd->hTreeWnd);
+        /*RefreshListView(g_pChildWnd->hListWnd, hKeyRoot, keyPath, NULL); */
         break;
    /*case ID_OPTIONS_TOOLBAR:*/
    /*	toggle_child(hWnd, LOWORD(wParam), hToolBar);*/
    /*    break;*/
+    case ID_EDIT_NEW_KEY:
+        CreateNewKey(g_pChildWnd->hTreeWnd, TreeView_GetSelection(g_pChildWnd->hTreeWnd));
+        break;
     default:
         result = FALSE;
     }
@@ -642,8 +911,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
  *
  */
 
-LRESULT CALLBACK
-FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     switch (message) {
     case WM_CREATE:
@@ -654,6 +922,10 @@ FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     case WM_COMMAND:
         if (!_CmdWndProc(hWnd, message, wParam, lParam))
             return DefWindowProc(hWnd, message, wParam, lParam);
+        break;
+    case WM_ACTIVATE:
+        if (LOWORD(hWnd)) 
+            SetFocus(g_pChildWnd->hWnd);
         break;
     case WM_SIZE:
         resize_frame_client(hWnd);
@@ -668,10 +940,6 @@ FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     case WM_MENUSELECT:
         OnMenuSelect(hWnd, LOWORD(wParam), HIWORD(wParam), (HMENU)lParam);
-        break;
-    case WM_ACTIVATE:
-        if (LOWORD(hWnd))
-          SetFocus(g_pChildWnd->hWnd);
         break;
     case WM_DESTROY:
         WinHelp(hWnd, _T("regedit"), HELP_QUIT, 0);

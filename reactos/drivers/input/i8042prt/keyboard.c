@@ -577,7 +577,7 @@ BOOLEAN STDCALL I8042KeyboardEnable(PDEVICE_EXTENSION DevExt)
 	return TRUE;
 }
 
-BOOLEAN STDCALL I8042KeyboardDefaultsAndDisable(PDEVICE_EXTENSION DevExt)
+static BOOLEAN STDCALL I8042KeyboardDefaultsAndDisable(PDEVICE_EXTENSION DevExt)
 {
 	DPRINT("Disabling keyboard\n");
 	if (STATUS_SUCCESS != I8042SynchWritePort(DevExt,
@@ -730,6 +730,6 @@ static VOID STDCALL I8042DebugWorkItem(PDEVICE_OBJECT DeviceObject,
 	/* We hope kernel would understand this. If
 	 * that's not the case, nothing would happen.
 	 */
-	KdpServiceDispatcher(TAG('R', 'o', 's', ' '), EnterDebugger, NULL);
+	KdpServiceDispatcher(TAG('R', 'o', 's', ' '), (PVOID)Key, NULL);
 #endif /* __REACTOS__ */
 }

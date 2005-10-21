@@ -123,6 +123,23 @@ BEGIN
             MENUITEM "&DWORD-värde",                ID_EDIT_NEW_DWORDVALUE
         END
   END
+  POPUP ""
+  BEGIN
+        MENUITEM "Visa/dölj nivå",                 ID_TREE_EXPANDBRANCH
+        POPUP "&Ny(tt)"
+        BEGIN
+            MENUITEM "&Nyckel",                        ID_EDIT_NEW_KEY
+            MENUITEM SEPARATOR
+            MENUITEM "&Strängvärde",               ID_EDIT_NEW_STRINGVALUE
+            MENUITEM "&Binärvärde",               ID_EDIT_NEW_BINARYVALUE
+            MENUITEM "&DWORD-värde",                ID_EDIT_NEW_DWORDVALUE
+        END
+        MENUITEM "&Sök",                           ID_EDIT_FIND, GRAYED
+        MENUITEM "&Ta bort",                         ID_TREE_DELETE
+        MENUITEM "&Byt namn",                         ID_TREE_RENAME
+        MENUITEM SEPARATOR
+        MENUITEM "&Kopiera nyckelnamn",                  ID_EDIT_COPYKEYNAME, GRAYED
+  END
 END
 
 
@@ -312,6 +329,12 @@ BEGIN
   IDS_INHERIT_THISKEYONLY        "Endast denna nyckel"
   IDS_INHERIT_THISKEYANDSUBKEYS  "Denna nyckel samt undernycklar"
   IDS_INHERIT_SUBKEYSONLY        "Endast undernycklar"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_EXPAND                     "&Visa nivå"
+  IDS_COLLAPSE                   "&Dölj nivå"
 END
 
 /*****************************************************************/

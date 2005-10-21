@@ -46,7 +46,6 @@ static char sccsid[] = "@(#)cmds.c	5.18 (Berkeley) 4/20/89";
 #include "prototypes.h"
 
 extern	char *globerr;
-extern	char **glob();
 extern	char home[];
 extern	char *remglob();
 extern	char *getenv();
@@ -67,7 +66,7 @@ extern int autologin;
  */
 void setpeer(int argc, char *argv[])
 {
-	char *host, *hookup();
+	char *host;
 
 	if (connected) {
 		printf("Already connected to %s, use close first.\n",
@@ -266,9 +265,9 @@ void setebcdic()
 /*
  * Set file transfer mode.
  */
-#if 0
+
 /*ARGSUSED*/
-void setmode(argc, argv)
+void fsetmode(argc, argv)
 	char *argv[];
 {
 
@@ -276,7 +275,7 @@ void setmode(argc, argv)
 	(void) fflush(stdout);
 	code = -1;
 }
-#endif
+
 
 /*
  * Set file transfer format.
@@ -379,7 +378,6 @@ void mput(argc, argv)
 {
 	register int i;
 	int ointer;
-	void mabort();
 	extern jmp_buf jabort;
 	char *tp;
 
@@ -650,7 +648,8 @@ usage:
 	return (0);
 }
 
-void
+#if 0
+static void
 mabort()
 {
 	int ointer;
@@ -670,6 +669,7 @@ mabort()
 	mflag = 0;
 	longjmp(jabort,0);
 }
+#endif
 
 /*
  * Get multiple files.
@@ -679,7 +679,6 @@ void mget(argc, argv)
 {
 	char *cp, *tp, *tp2, tmpbuf[MAXPATHLEN];
 	int ointer;
-	void mabort();
 	extern jmp_buf jabort;
 
 	if (argc < 2) {
@@ -809,7 +808,7 @@ remglob(argv,doswitch)
 	return (buf);
 }
 
-char *
+static char *
 onoff(bool)
 	int bool;
 {
@@ -1094,7 +1093,6 @@ void mdelete(argc, argv)
 {
 	char *cp;
 	int ointer;
-	void  mabort();
 	extern jmp_buf jabort;
 
 	if (argc < 2) {
@@ -1217,7 +1215,6 @@ void mls(argc, argv)
 {
 	char *cmd, mode[1], *dest;
 	int ointer, i;
-	void mabort();
 	extern jmp_buf jabort;
 
 	if (argc < 2) {
@@ -1276,7 +1273,7 @@ void mls(argc, argv)
  * Do a shell escape
  */
 /*ARGSUSED*/
-int shell(argc, argv)
+void shell(argc, argv)
 	char *argv[];
 {
 #if 0
@@ -1344,7 +1341,7 @@ int shell(argc, argv)
 
     if (NumBytes == 0)
     {
-        return(-1);
+        return;
     }
 
     AppName = ShellCmd;
@@ -1391,21 +1388,12 @@ int shell(argc, argv)
 
         CloseHandle( ProcessInformation.hProcess);
     }
-
-    if (Result)
-    {
-        return(-1);
-    }
-    else
-    {
-        return(0);
-    }
 }
 
 /*
  * Send new user information (re-login)
  */
-int user(argc, argv)
+void user(argc, argv)
 	int argc;
 	char **argv;
 {
@@ -1425,7 +1413,7 @@ int user(argc, argv)
 		printf("usage: %s username [password] [account]\n", argv[0]);
 		(void) fflush(stdout);
 		code = -1;
-		return (0);
+		return;
 	}
 	n = command("USER %s", argv[1]);
 	if (n == CONTINUE) {
@@ -1447,12 +1435,11 @@ int user(argc, argv)
 	if (n != COMPLETE) {
 		fprintf(stdout, "Login failed.\n");
 		(void) fflush(stdout);
-		return (0);
+		return;
 	}
 	if (!aflag && argc == 4) {
 		(void) command("ACCT %s", argv[3]);
 	}
-	return (1);
 }
 
 /*
@@ -1717,13 +1704,15 @@ int confirm(cmd, file)
 	return (*line != 'n' && *line != 'N');
 }
 
-void fatal(msg)
+#if 0
+static void fatal(msg)
 	char *msg;
 {
 
 	fprintf(stderr, "ftp: %s\n", msg);
 	exit(1);
 }
+#endif
 
 /*
  * Glob a local file name specification with
@@ -1785,7 +1774,8 @@ void account(argc,argv)
 
 jmp_buf abortprox;
 
-void
+#if 0
+static void
 proxabort()
 {
 	extern int proxy;
@@ -1802,12 +1792,12 @@ proxabort()
 	pswitch(0);
 	longjmp(abortprox,1);
 }
+#endif
 
 void doproxy(argc,argv)
 	int argc;
 	char *argv[];
 {
-	void proxabort();
 	register struct cmd *c;
 	struct cmd *getcmd();
 //	extern struct cmd cmdtab[];

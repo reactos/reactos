@@ -1,17 +1,9 @@
 #include <winsock.h>
 #include "fake.h"
+#include "prototypes.h"
 #include <setjmp.h>
 
 //typedef void (*Sig_t)(int);
-
-int fgetcSocket(int s);
-char *fputsSocket(char *format, int s);
-
-char *fprintfSocket(int s, char *format, ...);
-
-int fputcSocket(int s, char putChar);
-int fputSocket(int s, char *putChar, int len);
-char *fgetsSocket(int s, char *string);
 
 /* The following defines are from ftp.h and telnet.h from bsd.h */
 /* All relevent copyrights below apply.                         */
@@ -153,7 +145,7 @@ struct cmd {
 	char	c_bell;		/* give bell when command completes */
 	char	c_conn;		/* must be connected to use command */
 	char	c_proxy;	/* proxy server may execute */
-	int	(*c_handler)();	/* function to call */
+	void	(*c_handler)();	/* function to call */
 };
 
 struct macel {
@@ -166,11 +158,6 @@ int macnum;			/* number of defined macros */
 struct macel macros[16];
 char macbuf[4096];
 
-extern	char *tail();
-extern	char *remglob();
-extern	int errno;
-extern	char *mktemp();
-
 #if	defined(__ANSI__) || defined(sparc)
 typedef void sig_t;
 #else
@@ -178,4 +165,4 @@ typedef int sig_t;
 #endif
 
 typedef int uid_t;
-int herror(char *s);
+

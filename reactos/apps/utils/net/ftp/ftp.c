@@ -260,7 +260,7 @@ int login(char *host)
 	return (1);
 }
 
-void
+static void
 cmdabort(int sig)
 {
 	extern jmp_buf ptabort;
@@ -422,7 +422,7 @@ getreply(expecteof)
 	}
 }
 
-int
+static int
 empty(mask, sec)
 	struct fd_set *mask;
 	int sec;
@@ -436,6 +436,7 @@ empty(mask, sec)
 
 jmp_buf	sendabort;
 
+#if 0
 void abortsend()
 {
 
@@ -445,6 +446,7 @@ void abortsend()
 	(void) fflush(stdout);
 	longjmp(sendabort, 1);
 }
+#endif
 
 #define HASHBYTES 1024
 
@@ -454,7 +456,6 @@ void sendrequest(char *cmd, char *local, char *remote, int printnames)
         int dout = 0;
 	int (*closefunc)(), _pclose(), fclose();
 	sig_t (*oldintr)(), (*oldintp)();
-	void abortsend();
 	char buf[BUFSIZ], *bufp;
 	long bytes = 0, hashbytes = HASHBYTES;
 	register int c, d;
@@ -710,7 +711,7 @@ null();//		(void) signal(SIGPIPE, oldintp);
 
 jmp_buf	recvabort;
 
-
+#if 0
 void abortrecv()
 {
 
@@ -720,6 +721,7 @@ void abortrecv()
 	(void) fflush(stdout);
 	longjmp(recvabort, 1);
 }
+#endif
 
 void recvrequest(char *cmd, char *local, char *remote, char *mode,
                 int printnames)
@@ -728,9 +730,8 @@ void recvrequest(char *cmd, char *local, char *remote, char *mode,
         int din = 0;
 	int (*closefunc)(), _pclose(), fclose();
 	void (*oldintr)(int), (*oldintp)(int);
-	void abortrecv();
 	int oldverbose = 0, oldtype = 0, is_retr, tcrflag, nfnd, bare_lfs = 0;
-	char *gunique(), msg;
+	char msg;
 //	static char *buf; // Szurgot: Shouldn't this go SOMEWHERE?
         char buf[1024];
 	static int bufsize = 1024;
@@ -1417,6 +1418,7 @@ void pswitch(int flag)
 jmp_buf ptabort;
 int ptabflg;
 
+#if 0
 void
 abortpt()
 {
@@ -1427,12 +1429,12 @@ abortpt()
 	abrtflag = 0;
 	longjmp(ptabort, 1);
 }
+#endif
 
 void proxtrans(cmd, local, remote)
 	char *cmd, *local, *remote;
 {
 //	void (*oldintr)(int);
-	//void abortpt(int);
 	int tmptype, oldtype = 0, secndflag = 0, nfnd;
 	extern jmp_buf ptabort;
 	char *cmd2;
@@ -1756,6 +1758,7 @@ void reset()
 	}
 }
 
+#if 0
 char *
 gunique(local)
 	char *local;
@@ -1802,6 +1805,7 @@ gunique(local)
 	}
 	return(new);
 }
+#endif
 
 int null(void)
 {

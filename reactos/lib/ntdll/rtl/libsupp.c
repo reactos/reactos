@@ -1,9 +1,10 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
+ * PROJECT:         ReactOS NT User-Mode DLL
  * FILE:            lib/ntdll/rtl/libsup.c
- * PURPOSE:         Rtl library support routines
- * PROGRAMMER:      Gunnar Dalsnes
+ * PURPOSE:         RTL Support Routines
+ * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ *                  Gunnar Dalsnes
  */
 
 /* INCLUDES *****************************************************************/
@@ -14,36 +15,60 @@
 
 /* FUNCTIONS ***************************************************************/
 
+BOOLEAN
+NTAPI
+RtlpCheckForActiveDebugger(BOOLEAN Type)
+{
+    return (NtCurrentPeb()->BeingDebugged);
+}
+
+BOOLEAN
+NTAPI
+RtlpSetInDbgPrint(IN BOOLEAN NewValue)
+{
+    /* If we're setting it to false, do it and return */
+    if (NewValue == FALSE)
+    {
+        NtCurrentTeb()->InDbgPrint = FALSE;
+        return FALSE;
+    }
+
+    /* Setting to true; check if it's not already */
+    if (NtCurrentTeb()->InDbgPrint) return TRUE;
+
+    /* Set it and return */
+    NtCurrentTeb()->InDbgPrint = TRUE;
+    return FALSE;
+}
+
 KPROCESSOR_MODE
-STDCALL
+NTAPI
 RtlpGetMode()
 {
    return UserMode;
 }
 
 PPEB
-STDCALL
+NTAPI
 RtlpCurrentPeb(VOID)
 {
     return NtCurrentPeb();
 }
 
-
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 RtlAcquirePebLock(VOID)
 {
    PPEB Peb = NtCurrentPeb ();
    Peb->FastPebLockRoutine (Peb->FastPebLock);
 }
 
-
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 RtlReleasePebLock(VOID)
 {
    PPEB Peb = NtCurrentPeb ();
@@ -54,15 +79,15 @@ RtlReleasePebLock(VOID)
 * @implemented
 */
 ULONG
-STDCALL
+NTAPI
 RtlGetNtGlobalFlags(VOID)
 {
-	PPEB pPeb = NtCurrentPeb();
-	return pPeb->NtGlobalFlag;
+    PPEB pPeb = NtCurrentPeb();
+    return pPeb->NtGlobalFlag;
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 RtlDeleteHeapLock(
     PRTL_CRITICAL_SECTION CriticalSection)
 {
@@ -70,7 +95,7 @@ RtlDeleteHeapLock(
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 RtlEnterHeapLock(
     PRTL_CRITICAL_SECTION CriticalSection)
 {
@@ -78,15 +103,15 @@ RtlEnterHeapLock(
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 RtlInitializeHeapLock(
     PRTL_CRITICAL_SECTION CriticalSection)
 {
-     return RtlInitializeCriticalSection(CriticalSection );
+     return RtlInitializeCriticalSection(CriticalSection);
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 RtlLeaveHeapLock(
     PRTL_CRITICAL_SECTION CriticalSection)
 {
@@ -94,7 +119,7 @@ RtlLeaveHeapLock(
 }
 
 PVOID
-STDCALL
+NTAPI
 RtlpAllocateMemory(UINT Bytes,
                    ULONG Tag)
 {
@@ -107,7 +132,7 @@ RtlpAllocateMemory(UINT Bytes,
 
 
 VOID
-STDCALL
+NTAPI
 RtlpFreeMemory(PVOID Mem,
                ULONG Tag)
 {
@@ -126,6 +151,27 @@ CHECK_PAGED_CODE_RTL(char *file, int line)
   /* meaningless in user mode */
 }
 #endif
+
+BOOLEAN
+NTAPI
+RtlpHandleDpcStackException(IN PEXCEPTION_REGISTRATION_RECORD RegistrationFrame,
+                            IN ULONG_PTR RegistrationFrameEnd,
+                            IN OUT PULONG_PTR StackLow,
+                            IN OUT PULONG_PTR StackHigh)
+{
+    /* There's no such thing as a DPC stack in user-mode */
+    return FALSE;
+}
+
+VOID
+NTAPI
+RtlpCheckLogException(IN PEXCEPTION_RECORD ExceptionRecord,
+                      IN PCONTEXT ContextRecord,
+                      IN PVOID ContextData,
+                      IN ULONG Size)
+{
+    /* Exception logging is not done in user-mode */
+}
 
 /* RTL Atom Tables ************************************************************/
 

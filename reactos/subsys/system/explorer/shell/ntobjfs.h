@@ -91,7 +91,7 @@ struct NtObjEntry : public Entry
 protected:
 	NtObjEntry(OBJECT_TYPE type) : Entry(ET_NTOBJS), _type(type) {}
 
-	virtual bool get_path(PTSTR path) const;
+	virtual bool get_path(PTSTR path, size_t path_count) const;
 	virtual BOOL launch_entry(HWND hwnd, UINT nCmdShow);
 };
 

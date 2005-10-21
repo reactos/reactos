@@ -183,7 +183,7 @@ bool FileTypeManager::is_exe_file(LPCTSTR ext)
 const FileTypeInfo& FileTypeManager::operator[](String ext)
 {
 #ifndef __WINE__ ///@todo _tcslwr() for Wine
-	_tcslwr((LPTSTR)ext.c_str());
+	_tcslwr(&ext.at(0));
 #endif
 
 	iterator found = find(ext);
@@ -230,8 +230,7 @@ LPCTSTR FileTypeManager::set_type(Entry* entry, bool dont_hide_ext)
 		if (type._neverShowExt && !dont_hide_ext) {
 			int len = ext - entry->_data.cFileName;
 			entry->_display_name = (LPTSTR) malloc((len+1)*sizeof(TCHAR));
-			_tcsncpy(entry->_display_name, entry->_data.cFileName, len);
-			entry->_display_name[len] = TEXT('\0');
+			lstrcpyn(entry->_display_name, entry->_data.cFileName, len + 1);
 		}
 
 		if (is_exe_file(ext))
@@ -416,7 +415,7 @@ const Icon& IconCache::extract(LPCTSTR path, int idx)
 	CachePair key(path, idx);
 
 #ifndef __WINE__ ///@todo _tcslwr() for Wine
-	_tcslwr((LPTSTR)key.first.c_str());
+	_tcslwr(&key.first.at(0));
 #endif
 
 	PathIdxMap::iterator found = _pathIdxMap.find(key);
@@ -534,8 +533,10 @@ ResBitmap::ResBitmap(UINT nid)
 
 #ifndef ROSSHELL
 
-void explorer_show_frame(int cmdshow, LPTSTR lpCmdLine)
+void explorer_show_frame(int cmdShow, LPTSTR lpCmdLine)
 {
+	ExplorerCmd cmd;
+
 	if (g_Globals._hMainWnd) {
 		if (IsIconic(g_Globals._hMainWnd))
 			ShowWindow(g_Globals._hMainWnd, SW_RESTORE);
@@ -550,23 +551,126 @@ void explorer_show_frame(int cmdshow, LPTSTR lpCmdLine)
 	XMLPos explorer_options = g_Globals.get_cfg("general/explorer");
 	XS_String mdiStr = XMLString(explorer_options, "mdi");
 
+	 // If there isn't yet the "mdi" setting in the configuration, display MDI/SDI dialog.
 	if (mdiStr.empty())
 		Dialog::DoModal(IDD_MDI_SDI, WINDOW_CREATOR(MdiSdiDlg), g_Globals._hwndDesktop);
 
-	bool mdi = XMLBool(explorer_options, "mdi", true);
+	 // Now read the MDI attribute again and interpret it as boolean value.
+	cmd._mdi = XMLBool(explorer_options, "mdi", true);
+
+	cmd._cmdShow = cmdShow;
+
+	 // parse command line options, which may overwrite the MDI flag
+	if (lpCmdLine)
+		cmd.ParseCmdLine(lpCmdLine);
 
 	 // create main window
-	MainFrameBase::Create(lpCmdLine, mdi, cmdshow);
+	MainFrameBase::Create(cmd);
+}
+
+bool ExplorerCmd::ParseCmdLine(LPCTSTR lpCmdLine)
+{
+	bool ok = true;
+
+	LPCTSTR b = lpCmdLine;
+	LPCTSTR p = b;
+
+	while(*b) {
+		 // remove leading space
+		while(_istspace((unsigned)*b))
+			++b;
+
+		p = b;
+
+		bool quote = false;
+
+		 // options are separated by ','
+		for(; *p; ++p) {
+			if (*p == '"')	// Quote characters may appear at any position in the command line.
+				quote = !quote;
+			else if (*p==',' && !quote)
+				break;
+		}
+
+		if (p > b) {
+			int l = p - b;
+
+			 // remove trailing space
+			while(l>0 && _istspace((unsigned)b[l-1]))
+				--l;
+
+			if (!EvaluateOption(String(b, l)))
+				ok = false;
+
+			if (*p)
+				++p;
+
+			b = p;
+		}
+	}
+
+	return ok;
+}
+
+bool ExplorerCmd::EvaluateOption(LPCTSTR option)
+{
+	String opt_str;
+
+	 // Remove quote characters, as they are evaluated at this point.
+	for(; *option; ++option)
+		if (*option != '"')
+			opt_str += *option;
+
+	option = opt_str;
+
+	if (option[0] == '/') {
+		++option;
+
+		 // option /e for windows in explorer mode
+		if (!_tcsicmp(option, TEXT("e")))
+			_flags |= OWM_EXPLORE;
+		 // option /root for rooted explorer windows
+		else if (!_tcsicmp(option, TEXT("root")))
+			_flags |= OWM_ROOTED;
+		 // non-standard options: /mdi, /sdi
+		else if (!_tcsicmp(option, TEXT("mdi")))
+			_mdi = true;
+		else if (!_tcsicmp(option, TEXT("sdi")))
+			_mdi = false;
+		else
+			return false;
+	} else {
+		if (!_path.empty())
+			return false;
+
+		_path = opt_str;
+	}
+
+	return true;
+}
+
+bool ExplorerCmd::IsValidPath() const
+{
+	if (!_path.empty()) {
+		DWORD attribs = GetFileAttributes(_path);
+
+		if (attribs!=INVALID_FILE_ATTRIBUTES && (attribs&FILE_ATTRIBUTE_DIRECTORY))
+			return true;	// file system path
+		else if (*_path==':' && _path.at(1)==':')
+			return true;	// text encoded IDL
+	}
+
+	return false;
 }
 
 #else
 
-void explorer_show_frame(int cmdshow, LPTSTR lpCmdLine)
+void explorer_show_frame(int cmdShow, LPTSTR lpCmdLine)
 {
 	if (!lpCmdLine)
 		lpCmdLine = TEXT("explorer.exe");
 
-	launch_file(GetDesktopWindow(), lpCmdLine, cmdshow);
+	launch_file(GetDesktopWindow(), lpCmdLine, cmdShow);
 }
 
 #endif
@@ -670,7 +774,7 @@ static void InitInstance(HINSTANCE hInstance)
 }
 
 
-int explorer_main(HINSTANCE hInstance, LPTSTR lpCmdLine, int cmdshow)
+int explorer_main(HINSTANCE hInstance, LPTSTR lpCmdLine, int cmdShow)
 {
 	CONTEXT("explorer_main");
 
@@ -685,14 +789,14 @@ int explorer_main(HINSTANCE hInstance, LPTSTR lpCmdLine, int cmdshow)
 	}
 
 #ifndef ROSSHELL
-	if (cmdshow != SW_HIDE) {
+	if (cmdShow != SW_HIDE) {
 /*	// don't maximize if being called from the ROS desktop
-		if (cmdshow == SW_SHOWNORMAL)
+		if (cmdShow == SW_SHOWNORMAL)
 				///@todo read window placement from registry
-			cmdshow = SW_MAXIMIZE;
+			cmdShow = SW_MAXIMIZE;
 */
 
-		explorer_show_frame(cmdshow, lpCmdLine);
+		explorer_show_frame(cmdShow, lpCmdLine);
 	}
 #endif
 
@@ -720,10 +824,10 @@ int main(int argc, char* argv[])
 
 	LPWSTR cmdline = GetCommandLineW();
 
-	while(*cmdline && !_istspace(*cmdline))
+	while(*cmdline && !_istspace((unsigned)*cmdline))
 		++cmdline;
 
-	while(_istspace(*cmdline))
+	while(_istspace((unsigned)*cmdline))
 		++cmdline;
 
 	return wWinMain(GetModuleHandle(NULL), 0, cmdline, nShowCmd);
@@ -753,8 +857,19 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 
 	BOOL startup_desktop;
 
+	 // strip extended options from the front of the command line
+	String ext_options;
+
+	while(*lpCmdLine == '-') {
+		while(*lpCmdLine && !_istspace((unsigned)*lpCmdLine))
+			ext_options += *lpCmdLine++;
+
+		while(_istspace((unsigned)*lpCmdLine))
+			++lpCmdLine;
+	}
+
 	 // command line option "-install" to replace previous shell application with ROS Explorer
-	if (_tcsstr(lpCmdLine,TEXT("-install"))) {
+	if (_tcsstr(ext_options,TEXT("-install"))) {
 		 // install ROS Explorer into the registry
 		TCHAR path[MAX_PATH];
 
@@ -818,24 +933,24 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 #endif
 
 	 // If there is given the command line option "-desktop", create desktop window anyways
-	if (_tcsstr(lpCmdLine,TEXT("-desktop")))
+	if (_tcsstr(ext_options,TEXT("-desktop")))
 		startup_desktop = TRUE;
 #ifndef ROSSHELL
-	else if (_tcsstr(lpCmdLine,TEXT("-nodesktop")))
+	else if (_tcsstr(ext_options,TEXT("-nodesktop")))
 		startup_desktop = FALSE;
 
 	 // Don't display cabinet window in desktop mode
-	if (startup_desktop && !_tcsstr(lpCmdLine,TEXT("-explorer")))
+	if (startup_desktop && !_tcsstr(ext_options,TEXT("-explorer")))
 		nShowCmd = SW_HIDE;
 #endif
 
-	if (_tcsstr(lpCmdLine,TEXT("-noautostart")))
+	if (_tcsstr(ext_options,TEXT("-noautostart")))
 		autostart = false;
-	else if (_tcsstr(lpCmdLine,TEXT("-autostart")))
+	else if (_tcsstr(ext_options,TEXT("-autostart")))
 		autostart = true;
 
 #ifndef __WINE__
-	if (_tcsstr(lpCmdLine,TEXT("-console"))) {
+	if (_tcsstr(ext_options,TEXT("-console"))) {
 		AllocConsole();
 
 		_dup2(_open_osfhandle((long)GetStdHandle(STD_INPUT_HANDLE), _O_RDONLY), 0);
@@ -871,10 +986,10 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 
 	bool use_gdb_stub = false;	// !IsDebuggerPresent();
 
-	if (_tcsstr(lpCmdLine,TEXT("-debug")))
+	if (_tcsstr(ext_options,TEXT("-debug")))
 		use_gdb_stub = true;
 
-	if (_tcsstr(lpCmdLine,TEXT("-break"))) {
+	if (_tcsstr(ext_options,TEXT("-break"))) {
 		LOG(TEXT("debugger breakpoint"));
 #ifdef _MSC_VER
 		__asm int 3
@@ -928,16 +1043,11 @@ int WINAPI _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdL
 #ifndef ROSSHELL
 	if (g_Globals._hwndDesktop)
 		g_Globals._desktop_mode = true;
-
-	/**TODO fix command line handling */
-	if (*lpCmdLine=='"' && lpCmdLine[_tcslen(lpCmdLine)-1]=='"') {
-		++lpCmdLine;
-		lpCmdLine[_tcslen(lpCmdLine)-1] = '\0';
-	}
 #endif
 
 
 	int ret = explorer_main(hInstance, lpCmdLine, nShowCmd);
+
 
 	 // write configuration file
 	g_Globals.write_persistent();

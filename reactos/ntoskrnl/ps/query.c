@@ -143,13 +143,13 @@ NtQueryInformationProcess(IN  HANDLE ProcessHandle,
 
    PreviousMode = ExGetPreviousMode();
 
-   DefaultQueryInfoBufferCheck(ProcessInformationClass,
-                               PsProcessInfoClass,
-                               ProcessInformation,
-                               ProcessInformationLength,
-                               ReturnLength,
-                               PreviousMode,
-                               &Status);
+   Status = DefaultQueryInfoBufferCheck(ProcessInformationClass,
+                                        PsProcessInfoClass,
+                                        sizeof(PsProcessInfoClass) / sizeof(PsProcessInfoClass[0]),
+                                        ProcessInformation,
+                                        ProcessInformationLength,
+                                        ReturnLength,
+                                        PreviousMode);
    if(!NT_SUCCESS(Status))
    {
      DPRINT1("NtQueryInformationProcess() failed, Status: 0x%x\n", Status);
@@ -654,12 +654,12 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
 
    PreviousMode = ExGetPreviousMode();
 
-   DefaultSetInfoBufferCheck(ProcessInformationClass,
-                             PsProcessInfoClass,
-                             ProcessInformation,
-                             ProcessInformationLength,
-                             PreviousMode,
-                             &Status);
+   Status = DefaultSetInfoBufferCheck(ProcessInformationClass,
+                                      PsProcessInfoClass,
+                                      sizeof(PsProcessInfoClass) / sizeof(PsProcessInfoClass[0]),
+                                      ProcessInformation,
+                                      ProcessInformationLength,
+                                      PreviousMode);
    if(!NT_SUCCESS(Status))
    {
      DPRINT1("NtSetInformationProcess() %d %x  %x called\n", ProcessInformationClass, ProcessInformation, ProcessInformationLength);

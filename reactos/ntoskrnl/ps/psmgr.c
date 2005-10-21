@@ -49,14 +49,18 @@ VOID STDCALL PspKillMostProcesses();
 
 /* FUNCTIONS ***************************************************************/
 
-VOID PiShutdownProcessManager(VOID)
+VOID
+NTAPI
+PiShutdownProcessManager(VOID)
 {
    DPRINT("PiShutdownProcessManager()\n");
 
    PspKillMostProcesses();
 }
 
-VOID INIT_FUNCTION
+VOID
+INIT_FUNCTION
+NTAPI
 PiInitProcessManager(VOID)
 {
    PsInitJobManagment();
@@ -68,6 +72,7 @@ PiInitProcessManager(VOID)
 
 VOID
 INIT_FUNCTION
+NTAPI
 PsInitClientIDManagment(VOID)
 {
   PspCidTable = ExCreateHandleTable(NULL);
@@ -76,6 +81,7 @@ PsInitClientIDManagment(VOID)
 
 VOID
 INIT_FUNCTION
+NTAPI
 PsInitThreadManagment(VOID)
 /*
  * FUNCTION: Initialize thread managment
@@ -118,6 +124,7 @@ PsInitThreadManagment(VOID)
 
 VOID
 INIT_FUNCTION
+NTAPI
 PsInitProcessManagment(VOID)
 {
    PKPROCESS KProcess;
@@ -179,7 +186,7 @@ PsInitProcessManagment(VOID)
 
    PsIdleProcess->Pcb.Affinity = 0xFFFFFFFF;
    PsIdleProcess->Pcb.IopmOffset = 0xffff;
-   PsIdleProcess->Pcb.BasePriority = PROCESS_PRIO_IDLE;
+   PsIdleProcess->Pcb.BasePriority = PROCESS_PRIORITY_IDLE;
    PsIdleProcess->Pcb.QuantumReset = 6;
    InitializeListHead(&PsIdleProcess->Pcb.ThreadListHead);
    InitializeListHead(&PsIdleProcess->ThreadListHead);
@@ -213,9 +220,17 @@ PsInitProcessManagment(VOID)
 
    /* System threads may run on any processor. */
    RtlZeroMemory(PsInitialSystemProcess, sizeof(EPROCESS));
+#ifdef CONFIG_SMP   
+   /* FIXME:
+    *   Only the boot cpu is initialized. Threads of the 
+    *   system process should be able to run on all cpus.
+    */
+   PsInitialSystemProcess->Pcb.Affinity = 0xffffffff;
+#else
    PsInitialSystemProcess->Pcb.Affinity = KeActiveProcessors;
+#endif   
    PsInitialSystemProcess->Pcb.IopmOffset = 0xffff;
-   PsInitialSystemProcess->Pcb.BasePriority = PROCESS_PRIO_NORMAL;
+   PsInitialSystemProcess->Pcb.BasePriority = PROCESS_PRIORITY_NORMAL;
    PsInitialSystemProcess->Pcb.QuantumReset = 6;
    InitializeListHead(&PsInitialSystemProcess->Pcb.ThreadListHead);
    KeInitializeDispatcherHeader(&PsInitialSystemProcess->Pcb.Header,

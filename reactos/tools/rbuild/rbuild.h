@@ -57,6 +57,8 @@ typedef std::vector<std::string> string_list;
 #define SBAD_SEP "\\"
 #endif
 
+#define MS_VS_DEF_VERSION "7.10"
+
 class Project;
 class IfableData;
 class Module;
@@ -95,6 +97,7 @@ public:
 	bool AutomaticDependencies;
 	bool CheckDependenciesForModuleOnly;
 	std::string CheckDependenciesForModuleOnlyModule;
+	std::string VSProjectVersion;
 	bool MakeHandlesInstallDirectories;
 	bool GenerateProxyMakefilesInSourceTree;
 };
@@ -211,6 +214,7 @@ public:
 	const XMLElement& node;
 	std::string xmlbuildFile;
 	std::string name;
+	std::string guid;
 	std::string extension;
 	std::string entrypoint;
 	std::string baseaddress;
@@ -218,6 +222,7 @@ public:
 	ModuleType type;
 	ImportLibrary* importLibrary;
 	bool mangledSymbols;
+	bool isUnicode;
 	Bootstrap* bootstrap;
 	IfableData non_if_data;
 	std::vector<Invoke*> invocations;
@@ -233,7 +238,7 @@ public:
 	std::string installName;
 	std::string aliasedModuleName;
 	bool useWRC;
-	bool enableWarnings;
+	bool allowWarnings;
 	bool enabled;
 
 	Module ( const Project& project,

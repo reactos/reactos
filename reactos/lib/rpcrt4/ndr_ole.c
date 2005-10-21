@@ -113,7 +113,7 @@ static ULONG WINAPI RpcStream_Release(LPSTREAM iface)
   RpcStreamImpl *This = (RpcStreamImpl *)iface;
   if (!--(This->RefCount)) {
     TRACE("size=%ld\n", *This->size);
-    This->pMsg->Buffer = This->data + *This->size;
+    This->pMsg->Buffer = (unsigned char*)This->data + *This->size;
     HeapFree(GetProcessHeap(),0,This);
     return 0;
   }

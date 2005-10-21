@@ -38,12 +38,12 @@ void doQueryValue(LPSTR lpsLine);
 void doRegisterDLL(LPSTR lpsLine);
 void doUnregisterDLL(LPSTR lpsLine);
 
-BOOL export_registry_key(CHAR *file_name, CHAR *reg_key_name);
-BOOL import_registry_file(LPSTR filename);
+BOOL export_registry_key(const TCHAR *file_name, CHAR *reg_key_name);
+BOOL import_registry_file(LPTSTR filename);
 void delete_registry_key(CHAR *reg_key_name);
 
-void setAppName(CHAR *name);
-CHAR *getAppName();
+void setAppName(const CHAR *name);
+const CHAR *getAppName(void);
 
 void processRegLines(FILE *in, CommandAPI command);
 
@@ -61,7 +61,7 @@ HKEY    getRegClass(LPSTR lpLine);
 DWORD   getDataType(LPSTR *lpValue, DWORD* parse_type);
 LPSTR   getArg(LPSTR arg);
 HRESULT openKey(LPSTR stdInput);
-void    closeKey();
+void    closeKey(void);
 
 /*
  * api setValue prototypes
@@ -81,5 +81,20 @@ void    processQueryValue(LPSTR cmdline);
 BOOL InitializeAclUiDll(VOID);
 VOID UnloadAclUiDll(VOID);
 BOOL RegKeyEditPermissions(HWND hWndOwner, HKEY hKey, LPCTSTR lpMachine, LPCTSTR lpKeyName);
+
+/*
+ * Processing
+ */
+LONG RegDeleteKeyRecursive(HKEY hKey, LPCTSTR lpSubKey);
+LONG RegCopyKey(HKEY hDestKey, LPCTSTR lpDestSubKey, HKEY hSrcKey, LPCTSTR lpSrcSubKey);
+LONG RegMoveKey(HKEY hDestKey, LPCTSTR lpDestSubKey, HKEY hSrcKey, LPCTSTR lpSrcSubKey);
+LONG RegRenameKey(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpNewName);
+LONG RegRenameValue(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpDestValue, LPCTSTR lpSrcValue);
+LONG RegQueryStringValue(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpValueName, LPTSTR pszBuffer, DWORD dwBufferLen);
+
+/*
+ * Miscellaneous
+ */
+BOOL RegKeyGetName(LPTSTR pszDest, size_t iDestLength, HKEY hRootKey, LPCTSTR lpSubKey);
 
 /* EOF */

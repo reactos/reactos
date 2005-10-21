@@ -40,7 +40,6 @@
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(ole);
-WINE_DECLARE_DEBUG_CHANNEL(typelib);
 
 static IDispatch * WINAPI StdDispatch_Construct(IUnknown * punkOuter, void * pvThis, ITypeInfo * pTypeInfo);
 

@@ -62,7 +62,7 @@ _except_handler2(
  * @implemented
  */
 void __cdecl
-_global_unwind2(PEXCEPTION_REGISTRATION RegistrationFrame)
+_global_unwind2(PEXCEPTION_REGISTRATION_RECORD RegistrationFrame)
 {
    RtlUnwind(RegistrationFrame, &&__ret_label, NULL, 0);
 __ret_label:

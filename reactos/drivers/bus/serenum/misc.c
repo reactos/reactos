@@ -11,33 +11,6 @@
 #include "serenum.h"
 #include <stdarg.h>
 
-NTSTATUS
-SerenumDuplicateUnicodeString(
-	OUT PUNICODE_STRING Destination,
-	IN PUNICODE_STRING Source,
-	IN POOL_TYPE PoolType)
-{
-	ASSERT(Destination);
-
-	if (Source == NULL)
-	{
-		RtlInitUnicodeString(Destination, NULL);
-		return STATUS_SUCCESS;
-	}
-
-	Destination->Buffer = ExAllocatePoolWithTag(PoolType, Source->MaximumLength, SERENUM_TAG);
-	if (Destination->Buffer == NULL)
-	{
-		return STATUS_INSUFFICIENT_RESOURCES;
-	}
-
-	Destination->MaximumLength = Source->MaximumLength;
-	Destination->Length = Source->Length;
-	RtlCopyMemory(Destination->Buffer, Source->Buffer, Source->MaximumLength);
-
-	return STATUS_SUCCESS;
-}
-
 /* I really want PCSZ strings as last arguments because
  * PnP ids are ANSI-encoded in PnP device string
  * identification */
@@ -113,7 +86,7 @@ SerenumInitMultiSzString(
 	return Status;
 }
 
-NTSTATUS STDCALL
+static NTSTATUS STDCALL
 ForwardIrpAndWaitCompletion(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp,

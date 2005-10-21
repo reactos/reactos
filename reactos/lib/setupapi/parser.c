@@ -2,6 +2,7 @@
  * INF file parsing
  *
  * Copyright 2002 Alexandre Julliard for CodeWeavers
+ *           2005 Hervé Poussineau (hpoussin@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -35,6 +36,7 @@
 #include "winreg.h"
 #include "winternl.h"
 #include "winerror.h"
+#include "cfgmgr32.h"
 #include "setupapi.h"
 #include "setupapi_private.h"
 
@@ -956,8 +958,7 @@ static struct inf_file *parse_file( HANDLE handle, const WCHAR *class, UINT *err
         WCHAR *new_buff = HeapAlloc( GetProcessHeap(), 0, size * sizeof(WCHAR) );
         if (new_buff)
         {
-            DWORD len = MultiByteToWideChar( CP_ACP, 0, buffer, size, new_buff,
-                                             size * sizeof(WCHAR) );
+            DWORD len = MultiByteToWideChar( CP_ACP, 0, buffer, size, new_buff, size );
             err = parse_buffer( file, new_buff, new_buff + len, error_line );
             HeapFree( GetProcessHeap(), 0, new_buff );
         }
@@ -2070,5 +2071,176 @@ SetupGetInfFileListW(
     }
 
     HeapFree(GetProcessHeap(), 0, pFileSpecification);
+    return ret;
+}
+
+/***********************************************************************
+ *		SetupGetInfFileListA    (SETUPAPI.@)
+ */
+BOOL WINAPI
+SetupGetInfFileListA(
+    IN PCSTR DirectoryPath OPTIONAL,
+    IN DWORD InfStyle,
+    IN OUT PSTR ReturnBuffer OPTIONAL,
+    IN DWORD ReturnBufferSize OPTIONAL,
+    OUT PDWORD RequiredSize OPTIONAL)
+{
+    PWSTR DirectoryPathW = NULL;
+    PWSTR ReturnBufferW = NULL;
+    BOOL ret = FALSE;
+
+    TRACE("%s %lx %p %ld %p\n", debugstr_a(DirectoryPath), InfStyle,
+        ReturnBuffer, ReturnBufferSize, RequiredSize);
+
+    if (DirectoryPath != NULL)
+    {
+        DirectoryPathW = MultiByteToUnicode(DirectoryPath, CP_ACP);
+        if (DirectoryPathW == NULL) goto Cleanup;
+    }
+
+    if (ReturnBuffer != NULL && ReturnBufferSize != 0)
+    {
+        ReturnBufferW = MyMalloc(ReturnBufferSize * sizeof(WCHAR));
+        if (ReturnBufferW == NULL) goto Cleanup;
+    }
+
+    ret = SetupGetInfFileListW(DirectoryPathW, InfStyle, ReturnBufferW, ReturnBufferSize, RequiredSize);
+
+    if (ret && ReturnBufferW != NULL)
+    {
+        ret = WideCharToMultiByte(CP_ACP, 0, ReturnBufferW, -1, ReturnBuffer, ReturnBufferSize, NULL, NULL) != 0;
+    }
+
+Cleanup:
+    if (DirectoryPathW != NULL)
+        MyFree(DirectoryPathW);
+    if (ReturnBufferW != NULL)
+        MyFree(ReturnBufferW);
+
+    return ret;
+}
+
+/***********************************************************************
+ *		SetupDiGetINFClassW    (SETUPAPI.@)
+ */
+BOOL WINAPI
+SetupDiGetINFClassW(
+    IN PCWSTR InfName,
+    OUT LPGUID ClassGuid,
+    OUT PWSTR ClassName,
+    IN DWORD ClassNameSize,
+    OUT PDWORD RequiredSize OPTIONAL)
+{
+    HINF hInf = INVALID_HANDLE_VALUE;
+    DWORD requiredSize;
+    WCHAR guidW[MAX_GUID_STRING_LEN + 1];
+    BOOL ret = FALSE;
+
+    TRACE("%S %p %p %ld %p\n", InfName, ClassGuid,
+        ClassName, ClassNameSize, RequiredSize);
+
+    /* Open .inf file */
+    hInf = SetupOpenInfFileW(InfName, NULL, INF_STYLE_WIN4, NULL);
+    if (hInf == INVALID_HANDLE_VALUE)
+        goto cleanup;
+
+    /* Read class Guid */
+    if (!SetupGetLineTextW(NULL, hInf, L"Version", L"ClassGUID", guidW, sizeof(guidW), NULL))
+        goto cleanup;
+    guidW[37] = '\0'; /* Replace the } by a NULL character */
+    if (UuidFromStringW(&guidW[1], ClassGuid) != RPC_S_OK)
+        goto cleanup;
+
+    /* Read class name */
+    ret = SetupGetLineTextW(NULL, hInf, L"Version", L"Class", ClassName, ClassNameSize, &requiredSize);
+    if (ret && ClassName == NULL && ClassNameSize == 0)
+    {
+        if (RequiredSize)
+            *RequiredSize = requiredSize;
+        SetLastError(ERROR_INSUFFICIENT_BUFFER);
+        ret = FALSE;
+        goto cleanup;
+    }
+    if (!ret)
+    {
+        if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+        {
+            if (RequiredSize)
+                *RequiredSize = requiredSize;
+            goto cleanup;
+        }
+        else if (!SetupDiClassNameFromGuidW(ClassGuid, ClassName, ClassNameSize, &requiredSize))
+        {
+            if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+            {
+                if (RequiredSize)
+                    *RequiredSize = requiredSize;
+                goto cleanup;
+            }
+            /* Return a NULL class name */
+            if (RequiredSize)
+                *RequiredSize = 1;
+            if (ClassNameSize < 1)
+            {
+                SetLastError(ERROR_INSUFFICIENT_BUFFER);
+                goto cleanup;
+            }
+            memcpy(ClassGuid, &GUID_NULL, sizeof(GUID));
+            *ClassName = UNICODE_NULL;
+        }
+    }
+
+    ret = TRUE;
+
+cleanup:
+    if (hInf != INVALID_HANDLE_VALUE)
+       SetupCloseInfFile(hInf);
+
+    TRACE("Returning %d\n", ret);
+    return ret;
+}
+
+/***********************************************************************
+ *      SetupDiGetINFClassA    (SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiGetINFClassA(
+    IN PCSTR InfName,
+    OUT LPGUID ClassGuid,
+    OUT PSTR ClassName,
+    IN DWORD ClassNameSize,
+    OUT PDWORD RequiredSize OPTIONAL)
+{
+    PWSTR InfNameW = NULL;
+    PWSTR ClassNameW = NULL;
+    BOOL ret = FALSE;
+
+    TRACE("%s %p %p %ld %p\n", debugstr_a(InfName), ClassGuid,
+        ClassName, ClassNameSize, RequiredSize);
+
+    if (InfName != NULL)
+    {
+        InfNameW = MultiByteToUnicode(InfName, CP_ACP);
+        if (InfNameW == NULL) goto Cleanup;
+    }
+
+    if (ClassName != NULL && ClassNameSize != 0)
+    {
+        ClassNameW = MyMalloc(ClassNameSize * sizeof(WCHAR));
+        if (ClassNameW == NULL) goto Cleanup;
+    }
+
+    ret = SetupDiGetINFClassW(InfNameW, ClassGuid, ClassNameW, ClassNameSize, RequiredSize);
+
+    if (ret && ClassNameW != NULL)
+    {
+        ret = WideCharToMultiByte(CP_ACP, 0, ClassNameW, -1, ClassName, ClassNameSize, NULL, NULL) != 0;
+    }
+
+Cleanup:
+    if (InfNameW != NULL)
+        MyFree(InfNameW);
+    if (ClassNameW != NULL)
+        MyFree(ClassNameW);
+
     return ret;
 }

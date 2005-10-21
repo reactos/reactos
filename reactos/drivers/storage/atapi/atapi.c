@@ -52,6 +52,8 @@
 #include <ddk/srb.h>
 #include <ddk/scsi.h>
 #include <ddk/ntddscsi.h>
+#include <ddk/ntdddisk.h>
+#include <ddk/ntddstor.h>
 
 #include "atapi.h"
 
@@ -219,6 +221,9 @@ static BOOLEAN FASTCALL
 AtapiPacketInterrupt(IN PATAPI_MINIPORT_EXTENSION DevExt);
 
 static BOOLEAN FASTCALL
+AtapiSmartInterrupt(IN PATAPI_MINIPORT_EXTENSION DevExt);
+
+static BOOLEAN FASTCALL
 AtapiReadInterrupt(IN PATAPI_MINIPORT_EXTENSION DevExt);
 
 #ifdef ENABLE_DMA
@@ -262,6 +267,10 @@ AtapiSendAtapiCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
 static ULONG
 AtapiSendIdeCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
 		    IN PSCSI_REQUEST_BLOCK Srb);
+
+static ULONG
+AtapiSendSmartCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
+                      IN PSCSI_REQUEST_BLOCK Srb);
 
 static ULONG
 AtapiInquiry(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
@@ -936,6 +945,134 @@ AtapiStartIo(IN PVOID DeviceExtension,
 	  }
 	break;
 
+      case SRB_FUNCTION_IO_CONTROL:
+        {
+          PSRB_IO_CONTROL SrbIoControl = (PSRB_IO_CONTROL)Srb->DataBuffer;
+          if (Srb->DataTransferLength < sizeof(SRB_IO_CONTROL) ||
+              Srb->DataTransferLength < SrbIoControl->Length + sizeof(SRB_IO_CONTROL))
+            {
+              Result = SRB_STATUS_INVALID_REQUEST;
+            }
+          else
+            {
+              if (!_strnicmp((char*)SrbIoControl->Signature, "ScsiDisk", 8))
+                {
+                  switch (SrbIoControl->ControlCode)
+                    {
+                      default:
+                        Result = SRB_STATUS_INVALID_REQUEST;
+                        break;
+
+                      case IOCTL_SCSI_MINIPORT_ENABLE_DISABLE_AUTOSAVE:
+                      case IOCTL_SCSI_MINIPORT_SAVE_ATTRIBUTE_VALUES:
+                      case IOCTL_SCSI_MINIPORT_EXECUTE_OFFLINE_DIAGS:
+                      case IOCTL_SCSI_MINIPORT_ENABLE_SMART:
+                      case IOCTL_SCSI_MINIPORT_DISABLE_SMART:
+                      case IOCTL_SCSI_MINIPORT_RETURN_STATUS:
+                      case IOCTL_SCSI_MINIPORT_READ_SMART_ATTRIBS:
+                      case IOCTL_SCSI_MINIPORT_READ_SMART_THRESHOLDS:
+                      case IOCTL_SCSI_MINIPORT_READ_SMART_LOG:
+#if 0
+                      case IOCTL_SCSI_MINIPORT_WRITE_SMART_LOG:
+#endif
+                        Result = AtapiSendSmartCommand(DevExt, Srb);
+                        break;
+
+                      case IOCTL_SCSI_MINIPORT_SMART_VERSION:
+                        {
+                          GETVERSIONINPARAMS Version;      
+                          ULONG i;
+
+                          DPRINT("IOCTL_SCSI_MINIPORT_SMART_VERSION\n");
+
+                          RtlZeroMemory(&Version, sizeof(GETVERSIONINPARAMS));
+                          Version.bVersion = 1;
+                          Version.bRevision = 1;
+                          for (i = 0; i < 2; i++)
+                            {
+                              switch (DevExt->DeviceFlags[i] & (DEVICE_PRESENT|DEVICE_ATAPI))
+                                {
+                                  case DEVICE_PRESENT:
+                                    Version.bIDEDeviceMap |= 0x01 << i;
+                                    break;
+/*
+                                  case DEVICE_PRESENT|DEVICE_ATAPI:
+                                    Version.bIDEDeviceMap |= 0x11 << i;
+                                    break;
+*/
+                                }
+                            }
+                          Version.fCapabilities = CAP_ATA_ID_CMD/*|CAP_ATAPI_ID_CMD|CAP_SMART_CMD*/;
+                          SrbIoControl->Length = min(sizeof(GETVERSIONINPARAMS), Srb->DataTransferLength - sizeof(SRB_IO_CONTROL));
+                          memcpy(SrbIoControl + 1, &Version, SrbIoControl->Length);
+                          Result = SRB_STATUS_SUCCESS;
+                          break;
+                        }
+
+                      case IOCTL_SCSI_MINIPORT_IDENTIFY:
+                        {
+                          SENDCMDOUTPARAMS OutParams;
+                          SENDCMDINPARAMS InParams = *(PSENDCMDINPARAMS)(SrbIoControl + 1);
+
+                          DPRINT("IOCTL_SCSI_MINIPORT_IDENTIFY\n");
+
+                          if (Srb->DataTransferLength < sizeof(SRB_IO_CONTROL) + sizeof(SENDCMDINPARAMS) - 1)
+                            {
+                              Result = SRB_STATUS_INVALID_REQUEST;
+                              break;
+                            }
+                  
+                          RtlZeroMemory(&OutParams, sizeof(SENDCMDOUTPARAMS));
+
+                          if (InParams.irDriveRegs.bCommandReg != IDE_CMD_IDENT_ATA_DRV)
+                            {
+                              DPRINT("bCommandReg: %x\n", InParams.irDriveRegs.bCommandReg);
+                              OutParams.DriverStatus.bIDEError = 1;
+                              Result = SRB_STATUS_INVALID_REQUEST;
+                            }
+                          else if (InParams.bDriveNumber > 1 ||
+                                   (DevExt->DeviceFlags[InParams.bDriveNumber] & (DEVICE_PRESENT|DEVICE_ATAPI)) != DEVICE_PRESENT)
+                            {
+                              OutParams.DriverStatus.bIDEError = 1;
+                              Result = SRB_STATUS_NO_DEVICE;
+                            }
+                          else
+                            {
+                              Result = SRB_STATUS_SUCCESS;
+                            }
+                          if (Result == SRB_STATUS_SUCCESS)
+                            {
+                              SrbIoControl->Length = min(sizeof(SENDCMDOUTPARAMS) - 1 + IDENTIFY_BUFFER_SIZE, Srb->DataTransferLength - sizeof(SRB_IO_CONTROL));
+                            }
+                          else
+                            {
+                              SrbIoControl->Length = min(sizeof(SENDCMDOUTPARAMS) - 1, Srb->DataTransferLength - sizeof(SRB_IO_CONTROL));
+                            }
+
+                          if (SrbIoControl->Length >= sizeof(SENDCMDOUTPARAMS) - 1)
+                            {
+                              OutParams.cBufferSize = min(SrbIoControl->Length, IDENTIFY_BUFFER_SIZE);
+                            }
+                          
+                          memcpy(SrbIoControl + 1, &OutParams, min (SrbIoControl->Length, sizeof(SENDCMDOUTPARAMS) - 1));
+                         
+                          if (SrbIoControl->Length > sizeof(SENDCMDOUTPARAMS) - 1)
+                            {
+                              RtlCopyMemory((PVOID)((ULONG_PTR)(SrbIoControl + 1) + sizeof(SENDCMDOUTPARAMS) - 1), &DevExt->DeviceParams[InParams.bDriveNumber], OutParams.cBufferSize);
+                            }
+                          break;
+                        }
+                    }
+                }
+              else
+                {
+                  Result = SRB_STATUS_INVALID_REQUEST;
+                  SrbIoControl->Length = 0;
+                }
+            }
+          break;
+        }
+
       default:
 	Result = SRB_STATUS_INVALID_REQUEST;
 	break;
@@ -947,7 +1084,6 @@ AtapiStartIo(IN PVOID DeviceExtension,
   if (Result != SRB_STATUS_PENDING)
     {
       DevExt->CurrentSrb = NULL;
-      Srb->SrbStatus = (UCHAR)Result;
 
       ScsiPortNotification(RequestComplete,
 			   DeviceExtension,
@@ -1172,6 +1308,17 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 		  DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_DMA_CMD;
 		}
 #endif
+              if (!(DeviceExtension->DeviceParams[UnitNumber].SupportedFeatures83 & 0x1000) ||
+		  !(DeviceExtension->DeviceParams[UnitNumber].EnabledFeatures86 & 0x1000))
+                {
+                  DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_NO_FLUSH;                      
+                }
+
+              /* Don't flush CD/DVD drives */
+              if (((DeviceExtension->DeviceParams[UnitNumber].ConfigBits >> 8) & 0x1F) == READ_ONLY_DIRECT_ACCESS_DEVICE)
+	        {
+	          DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_NO_FLUSH;
+	        }
 	      DeviceFound = TRUE;
 	    }
 	  else
@@ -1213,6 +1360,22 @@ AtapiFindDevices(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 		  DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_DMA_CMD;
 		}
 #endif
+              if (DeviceExtension->DeviceFlags[UnitNumber] & DEVICE_48BIT_ADDRESS)
+                {
+                  if (!(DeviceExtension->DeviceParams[UnitNumber].SupportedFeatures83 & 0x2000) ||
+		      !(DeviceExtension->DeviceParams[UnitNumber].EnabledFeatures86 & 0x2000))
+                    {
+                      DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_NO_FLUSH;                      
+                    }
+                }
+              else
+                {
+                  if (!(DeviceExtension->DeviceParams[UnitNumber].SupportedFeatures83 & 0x1000) ||
+		      !(DeviceExtension->DeviceParams[UnitNumber].EnabledFeatures86 & 0x1000))
+                    {
+                      DeviceExtension->DeviceFlags[UnitNumber] |= DEVICE_NO_FLUSH;                      
+                    }
+                }
 	      DeviceFound = TRUE;
 	    }
 	  else
@@ -1272,6 +1435,9 @@ AtapiIdentifyDevice(IN ULONG CommandPort,
 {
   LONG i;
   ULONG mode;
+  char SerialNumber[20];
+  char FirmwareRev[8];
+  char ModelNumber[40];
 
   /*  Get the Drive Identify block from drive or die  */
   if (AtapiPolledRead(CommandPort,
@@ -1290,9 +1456,12 @@ AtapiIdentifyDevice(IN ULONG CommandPort,
     }
 
   /*  Report on drive parameters if debug mode  */
-  IDESwapBytePairs(DrvParms->SerialNumber, 20);
-  IDESwapBytePairs(DrvParms->FirmwareRev, 8);
-  IDESwapBytePairs(DrvParms->ModelNumber, 40);
+  memcpy(SerialNumber, DrvParms->SerialNumber, 20);
+  memcpy(FirmwareRev, DrvParms->FirmwareRev, 8);
+  memcpy(ModelNumber, DrvParms->ModelNumber, 40);
+  IDESwapBytePairs((PUCHAR)SerialNumber, 20);
+  IDESwapBytePairs((PUCHAR)FirmwareRev, 8);
+  IDESwapBytePairs((PUCHAR)ModelNumber, 40);
   DPRINT("Config:%04x  Cyls:%5d  Heads:%2d  Sectors/Track:%3d  Gaps:%02d %02d\n",
          DrvParms->ConfigBits,
          DrvParms->LogicalCyls,
@@ -1303,13 +1472,13 @@ AtapiIdentifyDevice(IN ULONG CommandPort,
   DPRINT("Bytes/PLO:%3d  Vendor Cnt:%2d  Serial number:[%.20s]\n",
          DrvParms->BytesInPLO,
          DrvParms->VendorUniqueCnt,
-         DrvParms->SerialNumber);
+         SerialNumber);
   DPRINT("Cntlr type:%2d  BufSiz:%5d  ECC bytes:%3d  Firmware Rev:[%.8s]\n",
          DrvParms->ControllerType,
          DrvParms->BufferSize * IDE_SECTOR_BUF_SZ,
          DrvParms->ECCByteCnt,
-         DrvParms->FirmwareRev);
-  DPRINT("Model:[%.40s]\n", DrvParms->ModelNumber);
+         FirmwareRev);
+  DPRINT("Model:[%.40s]\n", ModelNumber);
   DPRINT("RWMultMax?:%04x  RWMult?:%02x  LBA:%d  DMA:%d  MinPIO:%d ns  MinDMA:%d ns\n",
          (DrvParms->RWMultImplemented),
 	 (DrvParms->RWMultCurrent) & 0xff,
@@ -1598,6 +1767,219 @@ AtapiPolledRead(IN ULONG CommandPort,
 //  -------------------------------------------  Nondiscardable statics
 
 static ULONG
+AtapiSendSmartCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
+		      IN PSCSI_REQUEST_BLOCK Srb)
+{
+  PSRB_IO_CONTROL SrbIoControl = (PSRB_IO_CONTROL)Srb->DataBuffer;
+  SENDCMDINPARAMS InParams;
+  PSENDCMDOUTPARAMS OutParams = (PSENDCMDOUTPARAMS)(SrbIoControl + 1);
+  ULONG Retries;
+  UCHAR Status;
+
+  if (Srb->DataTransferLength < sizeof(SRB_IO_CONTROL) + sizeof(SENDCMDOUTPARAMS) - 1 ||
+      SrbIoControl->Length < sizeof(SENDCMDOUTPARAMS) - 1)
+    {
+      return SRB_STATUS_INVALID_REQUEST;
+    }
+  InParams = *(PSENDCMDINPARAMS)(SrbIoControl + 1);
+
+  DPRINT("%02x %02x %02x %02x %02x %02x %02x %02x\n",
+         InParams.irDriveRegs.bFeaturesReg,
+         InParams.irDriveRegs.bSectorCountReg,
+         InParams.irDriveRegs.bSectorNumberReg,
+         InParams.irDriveRegs.bCylLowReg,
+         InParams.irDriveRegs.bCylHighReg,
+         InParams.irDriveRegs.bDriveHeadReg,
+         InParams.irDriveRegs.bCommandReg,
+         InParams.irDriveRegs.bReserved);
+
+  if (InParams.bDriveNumber > 1 ||
+      (DeviceExtension->DeviceFlags[InParams.bDriveNumber] & (DEVICE_PRESENT|DEVICE_ATAPI)) != DEVICE_PRESENT)
+    {
+      RtlZeroMemory(&OutParams, sizeof(SENDCMDOUTPARAMS));
+      OutParams->DriverStatus.bIDEError = 1;
+      return SRB_STATUS_NO_DEVICE;
+    }
+
+  DeviceExtension->DataTransferLength = 0;
+
+  switch (SrbIoControl->ControlCode)
+    {
+      case IOCTL_SCSI_MINIPORT_READ_SMART_ATTRIBS:
+        DPRINT("IOCTL_SCSI_MINIPORT_READ_SMART_ATTRIBS\n");
+
+        if (Srb->DataTransferLength < sizeof(SRB_IO_CONTROL) + sizeof(SENDCMDOUTPARAMS) - 1 + READ_ATTRIBUTE_BUFFER_SIZE ||
+            SrbIoControl->Length < sizeof(SENDCMDOUTPARAMS) - 1 + READ_ATTRIBUTE_BUFFER_SIZE ||
+            InParams.irDriveRegs.bFeaturesReg != READ_ATTRIBUTES ||
+            InParams.irDriveRegs.bCylLowReg != SMART_CYL_LOW ||
+            InParams.irDriveRegs.bCylHighReg != SMART_CYL_HI ||
+            InParams.irDriveRegs.bCommandReg != SMART_CMD)
+          {
+            return SRB_STATUS_INVALID_REQUEST;            
+          }
+        InParams.irDriveRegs.bSectorCountReg = 0; 
+        InParams.irDriveRegs.bSectorNumberReg = 0;
+        DeviceExtension->DataTransferLength = READ_ATTRIBUTE_BUFFER_SIZE;
+        break;
+      
+      case IOCTL_SCSI_MINIPORT_READ_SMART_THRESHOLDS:
+        DPRINT("IOCTL_SCSI_MINIPORT_READ_SMART_THRESHOLDS\n");
+
+        if (Srb->DataTransferLength < sizeof(SRB_IO_CONTROL) + sizeof(SENDCMDOUTPARAMS) - 1 + READ_THRESHOLD_BUFFER_SIZE ||
+            SrbIoControl->Length < sizeof(SENDCMDOUTPARAMS) - 1 + READ_THRESHOLD_BUFFER_SIZE ||
+            InParams.irDriveRegs.bFeaturesReg != READ_THRESHOLDS ||
+            InParams.irDriveRegs.bCylLowReg != SMART_CYL_LOW ||
+            InParams.irDriveRegs.bCylHighReg != SMART_CYL_HI ||
+            InParams.irDriveRegs.bCommandReg != SMART_CMD)
+          {
+            return SRB_STATUS_INVALID_REQUEST;            
+          }
+        InParams.irDriveRegs.bSectorCountReg = 0; 
+        InParams.irDriveRegs.bSectorNumberReg = 0;
+        DeviceExtension->DataTransferLength = READ_THRESHOLD_BUFFER_SIZE;
+        break;
+
+      case IOCTL_SCSI_MINIPORT_READ_SMART_LOG:
+        DPRINT("IOCTL_SCSI_MINIPORT_READ_SMART_LOG\n");
+
+        if (Srb->DataTransferLength < sizeof(SRB_IO_CONTROL) + sizeof(SENDCMDOUTPARAMS) - 1 + max(1, InParams.irDriveRegs.bSectorCountReg) * SMART_LOG_SECTOR_SIZE ||
+            SrbIoControl->Length < sizeof(SENDCMDOUTPARAMS) - 1 + max(1, InParams.irDriveRegs.bSectorCountReg) * SMART_LOG_SECTOR_SIZE ||
+            InParams.irDriveRegs.bFeaturesReg != SMART_READ_LOG ||
+            InParams.irDriveRegs.bCylLowReg != SMART_CYL_LOW ||
+            InParams.irDriveRegs.bCylHighReg != SMART_CYL_HI ||
+            InParams.irDriveRegs.bCommandReg != SMART_CMD)
+          {
+            return SRB_STATUS_INVALID_REQUEST;            
+          }
+        DeviceExtension->DataTransferLength = max(1, InParams.irDriveRegs.bSectorCountReg) * SMART_LOG_SECTOR_SIZE;
+        break;
+
+      case IOCTL_SCSI_MINIPORT_ENABLE_DISABLE_AUTOSAVE:
+        DPRINT("IOCTL_SCSI_MINIPORT_ENABLE_DISABLE_AUTOSAVE\n");
+
+        if (InParams.irDriveRegs.bFeaturesReg != ENABLE_DISABLE_AUTOSAVE ||
+            (InParams.irDriveRegs.bSectorCountReg != 0 && InParams.irDriveRegs.bSectorCountReg != 1) || 
+            InParams.irDriveRegs.bCylLowReg != SMART_CYL_LOW ||
+            InParams.irDriveRegs.bCylHighReg != SMART_CYL_HI ||
+            InParams.irDriveRegs.bCommandReg != SMART_CMD)
+          {
+            return SRB_STATUS_INVALID_REQUEST;            
+          }
+        InParams.irDriveRegs.bSectorNumberReg = 0;
+        break;
+
+      case IOCTL_SCSI_MINIPORT_SAVE_ATTRIBUTE_VALUES:
+        DPRINT("IOCTL_SCSI_MINIPORT_SAVE_ATTRIBUTE_VALUES\n");
+
+        if (InParams.irDriveRegs.bFeaturesReg != SAVE_ATTRIBUTE_VALUES ||
+            (InParams.irDriveRegs.bSectorCountReg != 0 && InParams.irDriveRegs.bSectorCountReg != 0xf1) || 
+            InParams.irDriveRegs.bCylLowReg != SMART_CYL_LOW ||
+            InParams.irDriveRegs.bCylHighReg != SMART_CYL_HI ||
+            InParams.irDriveRegs.bCommandReg != SMART_CMD)
+          {
+            return SRB_STATUS_INVALID_REQUEST;            
+          }
+        InParams.irDriveRegs.bSectorNumberReg = 0;
+        break;
+
+      case IOCTL_SCSI_MINIPORT_EXECUTE_OFFLINE_DIAGS:
+        DPRINT("IOCTL_SCSI_MINIPORT_EXECUTE_OFFLINE_DIAGS\n");
+
+        if (InParams.irDriveRegs.bFeaturesReg != EXECUTE_OFFLINE_DIAGS ||
+            InParams.irDriveRegs.bCylLowReg != SMART_CYL_LOW ||
+            InParams.irDriveRegs.bCylHighReg != SMART_CYL_HI ||
+            InParams.irDriveRegs.bCommandReg != SMART_CMD)
+          {
+            return SRB_STATUS_INVALID_REQUEST;            
+          }
+        InParams.irDriveRegs.bSectorCountReg = 0; 
+        break;
+
+      case IOCTL_SCSI_MINIPORT_ENABLE_SMART:
+        DPRINT("IOCTL_SCSI_MINIPORT_ENABLE_SMART\n");
+
+        if (InParams.irDriveRegs.bFeaturesReg != ENABLE_SMART ||
+            InParams.irDriveRegs.bCylLowReg != SMART_CYL_LOW ||
+            InParams.irDriveRegs.bCylHighReg != SMART_CYL_HI ||
+            InParams.irDriveRegs.bCommandReg != SMART_CMD)
+          {
+            return SRB_STATUS_INVALID_REQUEST;            
+          }
+        InParams.irDriveRegs.bSectorCountReg = 0; 
+        InParams.irDriveRegs.bSectorNumberReg = 0;
+        break;
+
+      case IOCTL_SCSI_MINIPORT_DISABLE_SMART:
+        DPRINT("IOCTL_SCSI_MINIPORT_DISABLE_SMART\n");
+
+        if (InParams.irDriveRegs.bFeaturesReg != DISABLE_SMART ||
+            InParams.irDriveRegs.bCylLowReg != SMART_CYL_LOW ||
+            InParams.irDriveRegs.bCylHighReg != SMART_CYL_HI ||
+            InParams.irDriveRegs.bCommandReg != SMART_CMD)
+          {
+            return SRB_STATUS_INVALID_REQUEST;            
+          }
+        InParams.irDriveRegs.bSectorCountReg = 0; 
+        InParams.irDriveRegs.bSectorNumberReg = 0;
+        break;
+
+      case IOCTL_SCSI_MINIPORT_RETURN_STATUS:
+        DPRINT("IOCTL_SCSI_MINIPORT_RETURN_STATUS\n");
+
+        if (InParams.irDriveRegs.bFeaturesReg != RETURN_SMART_STATUS ||
+            InParams.irDriveRegs.bCylLowReg != SMART_CYL_LOW ||
+            InParams.irDriveRegs.bCylHighReg != SMART_CYL_HI ||
+            InParams.irDriveRegs.bCommandReg != SMART_CMD)
+          {
+            return SRB_STATUS_INVALID_REQUEST;            
+          }
+        InParams.irDriveRegs.bSectorCountReg = 0; 
+        InParams.irDriveRegs.bSectorNumberReg = 0;
+        break;
+    }
+
+  Srb->TargetId = InParams.bDriveNumber;
+  
+  /* Set pointer to data buffer. */
+  DeviceExtension->DataBuffer = (PUCHAR)OutParams->bBuffer;
+
+  DeviceExtension->CurrentSrb = Srb;
+
+  /*  wait for BUSY to clear  */
+  for (Retries = 0; Retries < IDE_MAX_BUSY_RETRIES; Retries++)
+    {
+      Status = IDEReadStatus(DeviceExtension->CommandPortBase);
+      if (!(Status & IDE_SR_BUSY))
+        {
+          break;
+        }
+      ScsiPortStallExecution(10);
+    }
+  if (Retries >= IDE_MAX_BUSY_RETRIES)
+    {
+      DPRINT ("Drive is BUSY for too long\n");
+      return(SRB_STATUS_BUSY);
+    }
+
+  /*  Select the desired drive  */
+  InParams.irDriveRegs.bDriveHeadReg = (InParams.bDriveNumber ? IDE_DH_DRV1 : IDE_DH_DRV0) | IDE_DH_FIXED;
+  IDEWriteDriveHead(DeviceExtension->CommandPortBase, InParams.irDriveRegs.bDriveHeadReg);
+  ScsiPortStallExecution(2);
+
+  IDEWritePrecomp(DeviceExtension->CommandPortBase, InParams.irDriveRegs.bFeaturesReg);
+  IDEWriteSectorCount(DeviceExtension->CommandPortBase, InParams.irDriveRegs.bSectorCountReg);
+  IDEWriteSectorNum(DeviceExtension->CommandPortBase, InParams.irDriveRegs.bSectorNumberReg);
+  IDEWriteCylinderLow(DeviceExtension->CommandPortBase, InParams.irDriveRegs.bCylLowReg);
+  IDEWriteCylinderHigh(DeviceExtension->CommandPortBase, InParams.irDriveRegs.bCylHighReg);
+
+  AtapiExecuteCommand(DeviceExtension, InParams.irDriveRegs.bCommandReg, AtapiSmartInterrupt);
+
+  /* Wait for interrupt. */
+  return SRB_STATUS_PENDING;
+
+}
+
+static ULONG
 AtapiSendAtapiCommand(IN PATAPI_MINIPORT_EXTENSION DeviceExtension,
 		      IN PSCSI_REQUEST_BLOCK Srb)
 {
@@ -1877,7 +2259,6 @@ AtapiInquiry(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 {
   PIDE_DRIVE_IDENTIFY DeviceParams;
   PINQUIRYDATA InquiryData;
-  ULONG i;
 
   DPRINT("SCSIOP_INQUIRY: DeviceExtension %p  TargetId: %lu\n",
 	 DeviceExtension, Srb->TargetId);
@@ -1886,10 +2267,7 @@ AtapiInquiry(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   DeviceParams = &DeviceExtension->DeviceParams[Srb->TargetId];
 
   /* clear buffer */
-  for (i = 0; i < Srb->DataTransferLength; i++)
-    {
-      ((PUCHAR)Srb->DataBuffer)[i] = 0;
-    }
+  memset(Srb->DataBuffer, 0, Srb->DataTransferLength);
 
   /* set device class */
   if (DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_ATAPI)
@@ -1897,12 +2275,6 @@ AtapiInquiry(PATAPI_MINIPORT_EXTENSION DeviceExtension,
       /* get it from the ATAPI configuration word */
       InquiryData->DeviceType = (DeviceParams->ConfigBits >> 8) & 0x1F;
       DPRINT("Device class: %u\n", InquiryData->DeviceType);
-
-      /* Don't flush CD/DVD drives */
-      if (InquiryData->DeviceType == READ_ONLY_DIRECT_ACCESS_DEVICE)
-	{
-	  DeviceExtension->DeviceFlags[Srb->TargetId] |= DEVICE_NO_FLUSH;
-	}
     }
   else
     {
@@ -1917,26 +2289,13 @@ AtapiInquiry(PATAPI_MINIPORT_EXTENSION DeviceExtension,
       InquiryData->RemovableMedia = 1;
     }
 
-  for (i = 0; i < 20; i += 2)
-    {
-      InquiryData->VendorId[i] =
-	((PUCHAR)DeviceParams->ModelNumber)[i];
-      InquiryData->VendorId[i+1] =
-	((PUCHAR)DeviceParams->ModelNumber)[i+1];
-    }
+  memcpy(InquiryData->VendorId, DeviceParams->ModelNumber, 20);
+  IDESwapBytePairs(InquiryData->VendorId, 20);
 
-  for (i = 0; i < 4; i++)
-    {
-      InquiryData->ProductId[12+i] = ' ';
-    }
+  memcpy(&InquiryData->ProductId[12], "    ", 4);
 
-  for (i = 0; i < 4; i += 2)
-    {
-      InquiryData->ProductRevisionLevel[i] =
-	((PUCHAR)DeviceParams->FirmwareRev)[i];
-      InquiryData->ProductRevisionLevel[i+1] =
-	((PUCHAR)DeviceParams->FirmwareRev)[i+1];
-    }
+  memcpy(InquiryData->ProductRevisionLevel, DeviceParams->FirmwareRev, 4);
+  IDESwapBytePairs(InquiryData->ProductRevisionLevel, 4);
 
   InquiryData->AdditionalLength = 31;
 
@@ -2175,8 +2534,6 @@ AtapiReadWrite(PATAPI_MINIPORT_EXTENSION DeviceExtension,
   IDEWriteCylinderLow(DeviceExtension->CommandPortBase, CylinderLow[0]);
   IDEWriteCylinderHigh(DeviceExtension->CommandPortBase, CylinderHigh[0]);
 
-  IDEWriteDriveHead(DeviceExtension->CommandPortBase, IDE_DH_FIXED | DrvHead);
-
 #ifdef ENABLE_DMA
   if (DeviceExtension->PRDTable &&
       DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_DMA_CMD)
@@ -2312,12 +2669,8 @@ AtapiFlushCache(PATAPI_MINIPORT_EXTENSION DeviceExtension,
        * it doesn't make sense to flush cache on devices we don't
        * write to.
        */
-      return SRB_STATUS_INVALID_REQUEST;
-    }
-
-  if (!(DeviceExtension->DeviceParams[Srb->TargetId].SupportedFeatures83 & 0x1000))
-    {
-      /* The device states it doesn't support the command */
+       
+      /* The device states it doesn't support the command or it is disabled */      
       DPRINT("The drive doesn't support FLUSH_CACHE\n");
       return SRB_STATUS_INVALID_REQUEST;
     }
@@ -2350,22 +2703,6 @@ AtapiFlushCache(PATAPI_MINIPORT_EXTENSION DeviceExtension,
 	              DeviceExtension->DeviceFlags[Srb->TargetId] & DEVICE_48BIT_ADDRESS ? IDE_CMD_FLUSH_CACHE_EXT : IDE_CMD_FLUSH_CACHE,
 		      AtapiNoDataInterrupt);
 
-  /* Wait for controller ready */
-  for (Retries = 0; Retries < IDE_MAX_WRITE_RETRIES; Retries++)
-    {
-      Status = IDEReadStatus(DeviceExtension->CommandPortBase);
-      if (!(Status & IDE_SR_BUSY) || (Status & IDE_SR_ERR))
-	{
-	  break;
-	}
-      ScsiPortStallExecution(10);
-    }
-  if (Retries >= IDE_MAX_WRITE_RETRIES)
-    {
-      DPRINT1("Drive is BUSY for too long after sending write command\n");
-      DeviceExtension->Handler = NULL;
-      return(SRB_STATUS_BUSY);
-    }
 
   DPRINT("AtapiFlushCache() done!\n");
 
@@ -2893,6 +3230,79 @@ AtapiDmaInterrupt(PATAPI_MINIPORT_EXTENSION DevExt)
   return TRUE;
 }
 #endif
+
+static BOOLEAN FASTCALL
+AtapiSmartInterrupt(PATAPI_MINIPORT_EXTENSION DevExt)
+{
+  PSCSI_REQUEST_BLOCK Srb;
+  UCHAR DeviceStatus;
+  PSRB_IO_CONTROL SrbIoControl;
+  PSENDCMDOUTPARAMS OutParams;
+  PIDEREGS IdeRegs;
+
+  DPRINT("AtapiSmartInterrupt() called!\n");
+
+  Srb = DevExt->CurrentSrb;
+
+
+  DeviceStatus = IDEReadStatus(DevExt->CommandPortBase);
+  if ((DeviceStatus & (IDE_SR_DRQ|IDE_SR_BUSY|IDE_SR_ERR)) != (DevExt->DataTransferLength ? IDE_SR_DRQ : 0))
+    {
+      if (DeviceStatus & (IDE_SR_ERR|IDE_SR_DRQ))
+        {
+	  AtapiCompleteRequest(DevExt, SRB_STATUS_ERROR);
+          DPRINT("AtapiSmartInterrupt() done!\n");
+	  return TRUE;
+        }
+      DPRINT("AtapiSmartInterrupt() done!\n");
+      return FALSE;
+    }
+
+  DPRINT("CommandPortBase: %lx  ControlPortBase: %lx\n", DevExt->CommandPortBase, DevExt->ControlPortBase);
+
+  if (DevExt->DataTransferLength)
+    {
+      IDEReadBlock(DevExt->CommandPortBase, DevExt->DataBuffer, 512);
+      DevExt->DataTransferLength -= 512;
+      DevExt->DataBuffer += 512;
+    }
+
+  if (DevExt->DataTransferLength == 0)
+    {
+      SrbIoControl = (PSRB_IO_CONTROL)Srb->DataBuffer;
+      OutParams = (PSENDCMDOUTPARAMS)(SrbIoControl + 1);
+
+      OutParams->DriverStatus.bDriverError = 0;
+      OutParams->DriverStatus.bIDEError = 0;
+
+      if (SrbIoControl->ControlCode == IOCTL_SCSI_MINIPORT_RETURN_STATUS)
+        {
+          IdeRegs = (PIDEREGS)OutParams->bBuffer;
+
+          IdeRegs->bFeaturesReg = RETURN_SMART_STATUS;
+          IdeRegs->bSectorCountReg = IDEReadSectorCount(DevExt->CommandPortBase);
+          IdeRegs->bSectorNumberReg = IDEReadSectorNum(DevExt->CommandPortBase);
+          IdeRegs->bCylLowReg = IDEReadCylinderLow(DevExt->CommandPortBase);
+          IdeRegs->bCylHighReg = IDEReadCylinderHigh(DevExt->CommandPortBase);
+          IdeRegs->bDriveHeadReg = IDEReadDriveHead(DevExt->CommandPortBase);
+          IdeRegs->bCommandReg = SMART_CMD;
+          IdeRegs->bReserved = 0;
+
+          OutParams->cBufferSize = 8;
+        }
+      else
+        {
+          OutParams->cBufferSize = DevExt->DataBuffer - OutParams->bBuffer;
+        }
+
+      AtapiCompleteRequest(DevExt, SRB_STATUS_SUCCESS);
+    }
+
+  DPRINT("AtapiSmartInterrupt() done!\n");
+
+  return(TRUE);
+}
+
 
 static BOOLEAN FASTCALL
 AtapiReadInterrupt(PATAPI_MINIPORT_EXTENSION DevExt)

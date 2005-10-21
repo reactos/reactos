@@ -14,6 +14,7 @@
 	<library>gdi32</library>
 	<library>comctl32</library>
 	<library>ole32</library>
+	<library>oleaut32</library>
 	<library>uxtheme</library>
 	<file>aclui.c</file>
 	<file>checklist.c</file>

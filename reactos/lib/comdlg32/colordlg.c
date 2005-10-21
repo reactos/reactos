@@ -1303,7 +1303,7 @@ BOOL WINAPI ChooseColorW( LPCHOOSECOLORW lpChCol )
     }
 
     bRet = DialogBoxIndirectParamW(COMDLG32_hInstance, template, lpChCol->hwndOwner,
-                     ColorDlgProc, (DWORD)lpChCol);
+                     ColorDlgProc, (LPARAM)lpChCol);
     return bRet;
 }
 

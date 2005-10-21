@@ -29,7 +29,7 @@ STDCALL
 ExRaiseAccessViolation(VOID)
 {
     /* Raise the Right Status */
-    ExRaiseStatus (STATUS_ACCESS_VIOLATION);
+    RtlRaiseStatus(STATUS_ACCESS_VIOLATION);
 }
 
 /*
@@ -40,39 +40,7 @@ STDCALL
 ExRaiseDatatypeMisalignment (VOID)
 {
     /* Raise the Right Status */
-    ExRaiseStatus (STATUS_DATATYPE_MISALIGNMENT);
-}
-
-/*
- * @implemented
- */
-VOID
-STDCALL
-ExRaiseStatus(IN NTSTATUS Status)
-{
-    EXCEPTION_RECORD ExceptionRecord;
-
-    DPRINT("ExRaiseStatus(%x)\n", Status);
-
-    /* Set up an Exception Record */
-    ExceptionRecord.ExceptionRecord = NULL;
-    ExceptionRecord.NumberParameters = 0;
-    ExceptionRecord.ExceptionCode = Status;
-    ExceptionRecord.ExceptionFlags = 0;
-
-    /* Call the Rtl Function */
-    RtlRaiseException(&ExceptionRecord);
-}
-
-/*
- * @implemented
- */
-VOID
-STDCALL
-ExRaiseException (PEXCEPTION_RECORD ExceptionRecord)
-{
-    /* Call the Rtl function */
-    RtlRaiseException(ExceptionRecord);
+    RtlRaiseStatus(STATUS_DATATYPE_MISALIGNMENT);
 }
 
 /*
@@ -127,7 +95,6 @@ NTSTATUS
 STDCALL
 NtSetDefaultHardErrorPort(IN HANDLE PortHandle)
 {
-
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
@@ -158,6 +125,14 @@ NtSetDefaultHardErrorPort(IN HANDLE PortHandle)
     }
 
     return Status;
+}
+
+VOID
+__cdecl
+_purecall(VOID)
+{
+    /* Not supported in Kernel Mode */
+    RtlRaiseStatus(STATUS_NOT_IMPLEMENTED);
 }
 
 /* EOF */

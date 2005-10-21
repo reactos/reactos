@@ -23,7 +23,7 @@
  * PURPOSE:         Second stage setup
  * PROGRAMMER:      Eric Kohl
  */
-
+#define WIN32_NO_STATUS
 #include <windows.h>
 #include <tchar.h>
 #include <syssetup/syssetup.h>

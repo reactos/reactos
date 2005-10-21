@@ -1091,7 +1091,7 @@ INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 		    stringId = 0;
 	    }
 	    lpdi->hinst = COMDLG32_hInstance;
-	    lpdi->lpszText =  (LPSTR) stringId;
+	    lpdi->lpszText =  MAKEINTRESOURCEA(stringId);
 	}
         return FALSE;
     }
@@ -2378,7 +2378,7 @@ static HRESULT FILEDLG95_FILETYPE_Init(HWND hwnd)
     lpstrFilter = (LPWSTR) CBGetItemDataPtr(fodInfos->DlgInfos.hwndFileTypeCB,
                                              nFilterIndexCB);
 
-    if ((INT)lpstrFilter == CB_ERR)  /* control is empty */
+    if ((INT_PTR)lpstrFilter == CB_ERR)  /* control is empty */
       lpstrFilter = NULL;
 
     if(lpstrFilter)
@@ -2423,7 +2423,7 @@ static BOOL FILEDLG95_FILETYPE_OnCommand(HWND hwnd, WORD wNotifyCode)
 
       lpstrFilter = (LPWSTR) CBGetItemDataPtr(fodInfos->DlgInfos.hwndFileTypeCB,
                                              iItem);
-      if((int)lpstrFilter != CB_ERR)
+      if((INT_PTR)lpstrFilter != CB_ERR)
       {
           DWORD len;
           CharLowerW(lpstrFilter); /* lowercase */

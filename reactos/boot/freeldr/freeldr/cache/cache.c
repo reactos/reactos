@@ -23,6 +23,7 @@
 #include <mm.h>
 #include <disk.h>
 #include <machine.h>
+#include <cache.h>
 #include <rtl.h>
 #include <debug.h>
 

@@ -23,6 +23,7 @@
 
 #include_next <winnt.h>
 #include <w32api.h>
+#include <stddef.h>
 
 /* non standard; keep the number high enough (but < 0xff) */
 #define LANG_ESPERANTO			 0x8f

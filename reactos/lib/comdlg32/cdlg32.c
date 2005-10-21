@@ -158,7 +158,7 @@ void COMDLG32_SetCommDlgExtendedError(DWORD err)
         if (COMDLG32_TlsIndex == TLS_OUT_OF_INDEXES)
 	  COMDLG32_TlsIndex = TlsAlloc();
 	if (COMDLG32_TlsIndex != TLS_OUT_OF_INDEXES)
-	  TlsSetValue(COMDLG32_TlsIndex, (void *)err);
+	  TlsSetValue(COMDLG32_TlsIndex, (LPVOID)(DWORD_PTR)err);
 	else
 	  FIXME("No Tls Space\n");
 }
@@ -176,7 +176,7 @@ void COMDLG32_SetCommDlgExtendedError(DWORD err)
 DWORD WINAPI CommDlgExtendedError(void)
 {
         if (COMDLG32_TlsIndex != TLS_OUT_OF_INDEXES)
-	  return (DWORD)TlsGetValue(COMDLG32_TlsIndex);
+	  return (DWORD_PTR)TlsGetValue(COMDLG32_TlsIndex);
 	else
 	  return 0; /* we never set an error, so there isn't one */
 }

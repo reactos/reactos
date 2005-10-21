@@ -22,7 +22,7 @@ WPP_SOURCES = $(addprefix $(WPP_BASE_), \
 	lex.yy.c \
 	preproc.c \
 	wpp.c \
-	wpp.tab.c \
+	ppy.tab.c \
 	)
 
 WPP_OBJECTS = \
@@ -49,7 +49,7 @@ $(WPP_INT_)wpp.o: $(WPP_BASE_)wpp.c | $(WPP_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WPP_HOST_CFLAGS) -c $< -o $@
 
-$(WPP_INT_)wpp.tab.o: $(WPP_BASE_)wpp.tab.c | $(WPP_INT)
+$(WPP_INT_)ppy.tab.o: $(WPP_BASE_)ppy.tab.c | $(WPP_INT)
 	$(ECHO_CC)
 	${host_gcc} $(WPP_HOST_CFLAGS) -c $< -o $@
 

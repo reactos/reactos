@@ -8,4 +8,4 @@
 
 #include "En.rc"
 #include "De.rc"
-
+#include "Ja.rc"

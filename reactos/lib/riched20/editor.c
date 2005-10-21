@@ -515,9 +515,9 @@ void
 ME_StreamInFill(ME_InStream *stream)
 {
   stream->editstream->dwError = stream->editstream->pfnCallback(stream->editstream->dwCookie,
-                                                                stream->buffer,
+                                                                (BYTE *)stream->buffer,
                                                                 sizeof(stream->buffer),
-                                                                &stream->dwSize);
+                                                                (LONG *)&stream->dwSize);
   stream->dwUsed = 0;
 }
 
@@ -1097,7 +1097,7 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
   SCROLLINFO si;
   ME_TextEditor *editor = (ME_TextEditor *)GetWindowLongW(hWnd, 0);
   
-  TRACE("hWnd %p msg %d (%s) %08x %08lx\n",
+  TRACE("hWnd %p msg %04x (%s) %08x %08lx\n",
         hWnd, msg, get_msg_name(msg), wParam, lParam);
   
   switch(msg) {
@@ -1188,7 +1188,7 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
     UINT from, to;
     PUINT pfrom = wParam ? (PUINT)wParam : &from;
     PUINT pto = lParam ? (PUINT)lParam : &to;
-    ME_GetSelection(editor, pfrom, pto);
+    ME_GetSelection(editor, (int *)pfrom, (int *)pto);
     if ((*pfrom|*pto) & 0xFFFF0000)
       return -1;
     return MAKELONG(*pfrom,*pto);
@@ -1359,13 +1359,14 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
     if (nPos<0)
       nPos = 0;
     if (nPos != editor->nScrollPosY) {
+      int dy = editor->nScrollPosY - nPos;
+      editor->nScrollPosY = nPos;
+      SetScrollPos(hWnd, SB_VERT, nPos, TRUE);
       if (editor->bRedraw)
       {
-        ScrollWindow(hWnd, 0, editor->nScrollPosY-nPos, NULL, NULL);
-        SetScrollPos(hWnd, SB_VERT, nPos, TRUE);
+        ScrollWindow(hWnd, 0, dy, NULL, NULL);
         UpdateWindow(hWnd);
       }
-      editor->nScrollPosY = nPos;
     }
     return TRUE; /* Should return false if a single line richedit control */
   }
@@ -1622,7 +1623,7 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
   case EM_LINELENGTH:
   {
     ME_DisplayItem *item, *item_end;
-    int nChars = 0;
+    int nChars = 0, nThisLineOfs = 0, nNextLineOfs = 0;
     
     if (wParam > ME_GetTextLength(editor))
       return 0;
@@ -1633,17 +1634,13 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
     }
     item = ME_FindItemAtOffset(editor, diRun, wParam, NULL);
     item = ME_RowStart(item);
-    item_end = ME_RowEnd(item);
-    if (!item_end)
-    {
-      /* Empty buffer, no runs */
-      nChars = 0;
-    }
+    nThisLineOfs = ME_CharOfsFromRunOfs(editor, ME_FindItemFwd(item, diRun), 0);
+    item_end = ME_FindItemFwd(item, diStartRow);
+    if (item_end)
+      nNextLineOfs = ME_CharOfsFromRunOfs(editor, ME_FindItemFwd(item_end, diRun), 0);
     else
-    {
-      nChars = ME_CharOfsFromRunOfs(editor, item_end, ME_StrLen(item_end->member.run.strText));
-      nChars -= ME_CharOfsFromRunOfs(editor, item, 0);
-    }
+      nNextLineOfs = ME_FindItemFwd(item, diParagraphOrEnd)->member.para.nCharOfs-1;
+    nChars = nNextLineOfs - nThisLineOfs;
     TRACE("EM_LINELENGTH(%d)==%d\n",wParam, nChars);
     return nChars;
   }
@@ -1849,13 +1846,14 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
       break;
     }
     if (nPos != editor->nScrollPosY) {
+      int dy = editor->nScrollPosY - nPos;
+      editor->nScrollPosY = nPos;
+      SetScrollPos(hWnd, SB_VERT, nPos, TRUE);
       if (editor->bRedraw)
       {
-        ScrollWindow(hWnd, 0, editor->nScrollPosY-nPos, NULL, NULL);
-        SetScrollPos(hWnd, SB_VERT, nPos, TRUE);
+        ScrollWindow(hWnd, 0, dy, NULL, NULL);
         UpdateWindow(hWnd);
       }
-      editor->nScrollPosY = nPos;
     }
     break;
   }
@@ -1872,13 +1870,14 @@ LRESULT WINAPI RichEditANSIWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
     if (nPos<0)
       nPos = 0;
     if (nPos != editor->nScrollPosY) {
+      int dy = editor->nScrollPosY - nPos;
+      editor->nScrollPosY = nPos;
+      SetScrollPos(hWnd, SB_VERT, nPos, TRUE);
       if (editor->bRedraw)
       {
-        ScrollWindow(hWnd, 0, editor->nScrollPosY-nPos, NULL, NULL);
-        SetScrollPos(hWnd, SB_VERT, nPos, TRUE);
+        ScrollWindow(hWnd, 0, dy, NULL, NULL);
         UpdateWindow(hWnd);
       }
-      editor->nScrollPosY = nPos;
     }
     break;
   }

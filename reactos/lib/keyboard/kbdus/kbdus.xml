@@ -1,4 +1,4 @@
-<module name="kbdus" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbdus.dll" warnings="true">
+<module name="kbdus" type="kernelmodedll" entrypoint="0" installbase="system32" installname="kbdus.dll" allowwarnings="true">
 	<importlibrary definition="kbdus.def" />
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />

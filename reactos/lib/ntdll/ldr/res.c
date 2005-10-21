@@ -85,7 +85,7 @@ PushLanguage(WORD *list, int pos, WORD lang)
 				    RESOURCE_DATA_LEVEL,
 				    &ResourceDataEntry);
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 LdrFindResource_U(PVOID BaseAddress,
                   PLDR_RESOURCE_INFO ResourceInfo,
                   ULONG Level,
@@ -260,7 +260,7 @@ found:;
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 LdrAccessResource(IN  PVOID BaseAddress,
                   IN  PIMAGE_RESOURCE_DATA_ENTRY ResourceDataEntry,
                   OUT PVOID* Resource OPTIONAL,
@@ -311,7 +311,7 @@ LdrAccessResource(IN  PVOID BaseAddress,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 LdrFindResourceDirectory_U(IN PVOID BaseAddress,
                            IN PLDR_RESOURCE_INFO info,
                            IN ULONG level,

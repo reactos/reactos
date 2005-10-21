@@ -53,7 +53,7 @@ CreateBrushIndirect@4
 CreateColorSpaceA@4
 CreateColorSpaceW@4
 CreateCompatibleBitmap@12=NtGdiCreateCompatibleBitmap@12
-CreateCompatibleDC@4=NtGdiCreateCompatableDC@4
+CreateCompatibleDC@4=NtGdiCreateCompatibleDC@4
 CreateDCA@16
 CreateDCW@16
 CreateDIBPatternBrush@8

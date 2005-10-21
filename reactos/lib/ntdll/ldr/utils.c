@@ -271,7 +271,7 @@ LdrpInitializeTlsForProccess(VOID)
                TlsData->TlsDataSize = TlsDirectory->EndAddressOfRawData - TlsDirectory->StartAddressOfRawData;
                TlsData->TlsZeroSize = TlsDirectory->SizeOfZeroFill;
                if (TlsDirectory->AddressOfCallBacks)
-                 TlsData->TlsAddressOfCallBacks = *TlsDirectory->AddressOfCallBacks;
+                 TlsData->TlsAddressOfCallBacks = *(PIMAGE_TLS_CALLBACK*)TlsDirectory->AddressOfCallBacks;
                else
                  TlsData->TlsAddressOfCallBacks = NULL;
                TlsData->Module = Module;
@@ -722,7 +722,7 @@ LdrpMapDllImageFile(IN PWSTR SearchPath OPTIONAL,
  *
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
             IN ULONG LoadFlags,
             IN PUNICODE_STRING Name,
@@ -775,7 +775,7 @@ LdrLoadDll (IN PWSTR SearchPath OPTIONAL,
  *
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 LdrFindEntryForAddress(PVOID Address,
                        PLDR_DATA_TABLE_ENTRY *Module)
 {
@@ -2217,7 +2217,7 @@ LdrpUnloadModule(PLDR_DATA_TABLE_ENTRY Module,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 LdrUnloadDll (IN PVOID BaseAddress)
 {
    PLDR_DATA_TABLE_ENTRY Module;
@@ -2246,7 +2246,7 @@ LdrUnloadDll (IN PVOID BaseAddress)
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 LdrDisableThreadCalloutsForDll(IN PVOID BaseAddress)
 {
     PLIST_ENTRY ModuleListHead;
@@ -2284,7 +2284,7 @@ LdrDisableThreadCalloutsForDll(IN PVOID BaseAddress)
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 LdrGetDllHandle(IN PWSTR DllPath OPTIONAL,
                 IN PULONG DllCharacteristics,
                 IN PUNICODE_STRING DllName,
@@ -2320,7 +2320,7 @@ LdrGetDllHandle(IN PWSTR DllPath OPTIONAL,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 LdrGetProcedureAddress (IN PVOID BaseAddress,
                         IN PANSI_STRING Name,
                         IN ULONG Ordinal,
@@ -2523,7 +2523,7 @@ LdrpAttachProcess(VOID)
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 LdrShutdownProcess (VOID)
 {
   LdrpDetachProcess(TRUE);
@@ -2584,7 +2584,7 @@ LdrpAttachThread (VOID)
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 LdrShutdownThread (VOID)
 {
    PLIST_ENTRY ModuleListHead;
@@ -2642,7 +2642,7 @@ LdrShutdownThread (VOID)
  *
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 LdrQueryProcessModuleInformation(IN PMODULE_INFORMATION ModuleInformation OPTIONAL,
                                  IN ULONG Size OPTIONAL,
                                  OUT PULONG ReturnedSize)
@@ -2839,7 +2839,7 @@ LdrpGetResidentSize(PIMAGE_NT_HEADERS NTHeaders)
  *
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 LdrVerifyImageMatchesChecksum (IN HANDLE FileHandle,
                                ULONG Unknown1,
                                ULONG Unknown2,
@@ -2933,7 +2933,7 @@ LdrVerifyImageMatchesChecksum (IN HANDLE FileHandle,
  *
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 LdrQueryImageFileExecutionOptions (IN PUNICODE_STRING SubKey,
                                    IN PCWSTR ValueName,
                                    IN ULONG Type,
@@ -3064,7 +3064,7 @@ LdrQueryImageFileExecutionOptions (IN PUNICODE_STRING SubKey,
 }
 
 
-PIMAGE_BASE_RELOCATION STDCALL
+PIMAGE_BASE_RELOCATION NTAPI
 LdrProcessRelocationBlock(IN PVOID Address,
 			  IN USHORT Count,
 			  IN PUSHORT TypeOffset,

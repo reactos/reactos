@@ -1,22 +1,19 @@
-/* $Id$ */
+#include <debug.h>
+#include <ntifs.h>
+#include <ntdddisk.h>
 
 //#define USE_ROS_CC_AND_FS
 
-#ifndef USE_ROS_CC_AND_FS
-#ifdef WINVER
-#undef WINVER
-#endif
-#define WINVER 0x0400
-#endif
-
-#include <ddk/ntifs.h>
-#include <ddk/ntdddisk.h>
+#ifdef __GNUC__
 #include <ndk/ntndk.h>
-#include <reactos/helper.h>
 #include <ccros.h>
-#include <limits.h>
-#include <debug.h>
 
+#else
+#define KEBUGCHECK KeBugCheck
+#define KEBUGCHECKEX KeBugCheckEx
+#define ROUND_DOWN(N, S) ((N) - ((N) % (S)))
+#define ROUND_UP(N, S) ROUND_DOWN((N) + (S) - 1, (S))
+#endif
 
 #include <pshpack1.h>
 struct _BootSector
@@ -427,7 +424,7 @@ typedef struct _VFAT_DIRENTRY_CONTEXT
 
 /*  ------------------------------------------------------  shutdown.c  */
 
-NTSTATUS STDCALL VfatShutdown (PDEVICE_OBJECT DeviceObject,
+NTSTATUS NTAPI VfatShutdown (PDEVICE_OBJECT DeviceObject,
                                PIRP Irp);
 
 /*  --------------------------------------------------------  volume.c  */
@@ -546,7 +543,7 @@ VfatSetAllocationSizeInformation(PFILE_OBJECT FileObject,
 
 /*  ---------------------------------------------------------  iface.c  */
 
-NTSTATUS STDCALL DriverEntry (PDRIVER_OBJECT DriverObject,
+NTSTATUS NTAPI DriverEntry (PDRIVER_OBJECT DriverObject,
                               PUNICODE_STRING RegistryPath);
 
 /*  ---------------------------------------------------------  dirwr.c  */
@@ -730,7 +727,7 @@ PVFAT_IRP_CONTEXT VfatAllocateIrpContext(PDEVICE_OBJECT DeviceObject,
 
 VOID VfatFreeIrpContext(PVFAT_IRP_CONTEXT IrpContext);
 
-NTSTATUS STDCALL VfatBuildRequest (PDEVICE_OBJECT DeviceObject,
+NTSTATUS NTAPI VfatBuildRequest (PDEVICE_OBJECT DeviceObject,
                                    PIRP Irp);
 
 PVOID VfatGetUserBuffer(IN PIRP);

@@ -14,7 +14,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
-VOID STDCALL
+VOID NTAPI
 RtlCopyLuid(PLUID LuidDest,
             PLUID LuidSrc)
 {
@@ -28,7 +28,7 @@ RtlCopyLuid(PLUID LuidDest,
 /*
  * @implemented
  */
-VOID STDCALL
+VOID NTAPI
 RtlCopyLuidAndAttributesArray(ULONG Count,
                               PLUID_AND_ATTRIBUTES Src,
                               PLUID_AND_ATTRIBUTES Dest)
@@ -50,7 +50,7 @@ RtlCopyLuidAndAttributesArray(ULONG Count,
 /*
  * @implemented
  */
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 RtlEqualLuid(PLUID Luid1,
              PLUID Luid2)
 {

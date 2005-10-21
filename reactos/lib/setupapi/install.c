@@ -334,7 +334,7 @@ static BOOL do_reg_operation( HKEY hkey, const WCHAR *value, INFCONTEXT *context
 
         if (type == REG_DWORD)
         {
-            DWORD dw = str ? strtoulW( str, NULL, 16 ) : 0;
+            DWORD dw = str ? strtoulW( str, NULL, 0 ) : 0;
             TRACE( "setting dword %s to %lx\n", debugstr_w(value), dw );
             RegSetValueExW( hkey, value, 0, type, (BYTE *)&dw, sizeof(dw) );
         }
@@ -952,4 +952,179 @@ void WINAPI InstallHinfSectionA( HWND hwnd, HINSTANCE handle, LPCSTR cmdline, IN
         InstallHinfSectionW( hwnd, handle, cmdlineW.Buffer, show );
         RtlFreeUnicodeString( &cmdlineW );
     }
+}
+
+
+/***********************************************************************
+ *		SetupInstallServicesFromInfSectionA  (SETUPAPI.@)
+ */
+BOOL WINAPI SetupInstallServicesFromInfSectionA( HINF hinf, PCSTR sectionname, DWORD flags )
+{
+    return SetupInstallServicesFromInfSectionExA( hinf, sectionname, flags,
+                                                  NULL, NULL, NULL, NULL );
+}
+
+
+/***********************************************************************
+ *		SetupInstallServicesFromInfSectionW  (SETUPAPI.@)
+ */
+BOOL WINAPI SetupInstallServicesFromInfSectionW( HINF hinf, PCWSTR sectionname, DWORD flags )
+{
+    return SetupInstallServicesFromInfSectionExW( hinf, sectionname, flags,
+                                                  NULL, NULL, NULL, NULL );
+}
+
+
+/***********************************************************************
+ *		SetupInstallServicesFromInfSectionExA  (SETUPAPI.@)
+ */
+BOOL WINAPI SetupInstallServicesFromInfSectionExA( HINF hinf, PCSTR sectionname, DWORD flags, HDEVINFO devinfo, PSP_DEVINFO_DATA devinfo_data, PVOID reserved1, PVOID reserved2 )
+{
+    UNICODE_STRING sectionnameW;
+    BOOL ret = FALSE;
+
+    if (RtlCreateUnicodeStringFromAsciiz( &sectionnameW, sectionname ))
+    {
+        ret = SetupInstallServicesFromInfSectionExW( hinf, sectionnameW.Buffer, flags, devinfo, devinfo_data, reserved1, reserved2 );
+        RtlFreeUnicodeString( &sectionnameW );
+    }
+    else
+        SetLastError( ERROR_NOT_ENOUGH_MEMORY );
+
+    return ret;
+}
+
+
+static BOOL GetLineText( HINF hinf, PCWSTR section_name, PCWSTR key_name, PWSTR *value)
+{
+    DWORD required;
+    PWSTR buf = NULL;
+
+    *value = NULL;
+
+    if (! SetupGetLineTextW( NULL, hinf, section_name, key_name, NULL, 0, &required )
+        && GetLastError() != ERROR_INSUFFICIENT_BUFFER )
+        return FALSE;
+
+    buf = HeapAlloc( GetProcessHeap(), 0, required * sizeof(WCHAR) );
+    if ( ! buf )
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
+    if (! SetupGetLineTextW( NULL, hinf, section_name, key_name, buf, required, &required ) )
+    {
+        HeapFree( GetProcessHeap(), 0, buf );
+        return FALSE;
+    }
+
+    *value = buf;
+    return TRUE;
+}
+
+
+static BOOL GetIntField( HINF hinf, PCWSTR section_name, PCWSTR key_name, INT *value)
+{
+    LPWSTR buffer, end;
+    INT res;
+
+    if (! GetLineText( hinf, section_name, key_name, &buffer ) )
+        return FALSE;
+
+    res = wcstol( buffer, &end, 0 );
+    if (end != buffer && !*end)
+    {
+        HeapFree(GetProcessHeap(), 0, buffer);
+        *value = res;
+        return TRUE;
+    }
+    else
+    {
+        HeapFree(GetProcessHeap(), 0, buffer);
+        SetLastError( ERROR_INVALID_DATA );
+        return FALSE;
+    }
+}
+
+
+/***********************************************************************
+ *		SetupInstallServicesFromInfSectionExW  (SETUPAPI.@)
+ */
+BOOL WINAPI SetupInstallServicesFromInfSectionExW( HINF hinf, PCWSTR sectionname, DWORD flags, HDEVINFO devinfo, PSP_DEVINFO_DATA devinfo_data, PVOID reserved1, PVOID reserved2 )
+{
+    SC_HANDLE hSCManager, hService;
+    LPWSTR ServiceBinary, LoadOrderGroup;
+    LPWSTR DisplayName, Description, Dependencies;
+    INT ServiceType, StartType, ErrorControl;
+
+    TRACE("%p, %s, 0x%lx, %p, %p, %p, %p\n", hinf, debugstr_w(sectionname),
+        flags, devinfo, devinfo_data, reserved1, reserved2);
+
+    if (!reserved1)
+    {
+        /* FIXME: I don't know how to get the service name. ATM, just fail the call */
+        DPRINT1("Service name not specified!\n");
+        return FALSE;
+    }
+    /* FIXME: use the flags parameters */
+    /* FIXME: use DeviceInfoSet, DeviceInfoData parameters */
+
+    if (!GetIntField(hinf, sectionname, L"ServiceType", &ServiceType))
+        return FALSE;
+    if (!GetIntField(hinf, sectionname, L"StartType", &StartType))
+        return FALSE;
+    if (!GetIntField(hinf, sectionname, L"ErrorControl", &ErrorControl))
+        return FALSE;
+
+    hSCManager = OpenSCManagerW(NULL, SERVICES_ACTIVE_DATABASE, SC_MANAGER_CREATE_SERVICE);
+    if (hSCManager == NULL)
+        return FALSE;
+
+    if (!GetLineText(hinf, sectionname, L"ServiceBinary", &ServiceBinary))
+    {
+        CloseServiceHandle(hSCManager);
+        return FALSE;
+    }
+    if (!GetLineText(hinf, sectionname, L"LoadOrderGroup", &LoadOrderGroup))
+        /* LoadOrderGroup value is optional. Ignore the error */
+        LoadOrderGroup = NULL;
+
+    /* Don't check return value, as these fields are optional and
+     * GetLineText initialize output parameter even on failure */
+    GetLineText(hinf, sectionname, L"DisplayName", &DisplayName);
+    GetLineText(hinf, sectionname, L"Description", &Description);
+    GetLineText(hinf, sectionname, L"Dependencies", &Dependencies);
+
+    hService = CreateServiceW(
+        hSCManager,
+        reserved1,
+        Description,
+        0,
+        ServiceType,
+        StartType,
+        ErrorControl,
+        /* BIG HACK!!! As GetLineText() give us a full path, ignore the
+         * first letters which should be the OS directory. If that's not
+         * the case, the file name written to registry will be bad and
+         * the driver will not load...
+         */
+        ServiceBinary + GetWindowsDirectoryW(NULL, 0),
+        LoadOrderGroup,
+        NULL,
+        Dependencies,
+        NULL, NULL);
+    HeapFree(GetProcessHeap(), 0, ServiceBinary);
+    HeapFree(GetProcessHeap(), 0, LoadOrderGroup);
+    HeapFree(GetProcessHeap(), 0, DisplayName);
+    HeapFree(GetProcessHeap(), 0, Description);
+    HeapFree(GetProcessHeap(), 0, Dependencies);
+    if (hService == NULL)
+    {
+        CloseServiceHandle(hSCManager);
+        return FALSE;
+    }
+    //CloseServiceHandle(hService);
+
+    return CloseServiceHandle(hSCManager);
 }

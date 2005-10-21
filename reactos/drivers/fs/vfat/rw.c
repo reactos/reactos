@@ -107,7 +107,7 @@ OffsetToCluster(PDEVICE_EXTENSION DeviceExt,
    }
 }
 
-NTSTATUS
+static NTSTATUS
 VfatReadFileData (PVFAT_IRP_CONTEXT IrpContext,
                   ULONG Length,
 		  LARGE_INTEGER ReadOffset,
@@ -323,7 +323,7 @@ VfatReadFileData (PVFAT_IRP_CONTEXT IrpContext,
   return Status;
 }
 
-NTSTATUS
+static NTSTATUS
 VfatWriteFileData(PVFAT_IRP_CONTEXT IrpContext,
 		  ULONG Length,
 		  LARGE_INTEGER WriteOffset)

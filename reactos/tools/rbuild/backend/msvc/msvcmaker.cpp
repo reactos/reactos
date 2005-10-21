@@ -1,3 +1,22 @@
+/*
+ * Copyright (C) 2002 Patrik Stridvall
+ * Copyright (C) 2005 Royce Mitchell III
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+
 #ifdef _MSC_VER
 #pragma warning ( disable : 4786 )
 #endif//_MSC_VER
@@ -11,6 +30,10 @@
 
 using std::string;
 using std::vector;
+
+#ifdef OUT
+#undef OUT
+#endif//OUT
 
 void
 MSVCBackend::_generate_dsp ( const Module& module )
@@ -29,13 +52,13 @@ MSVCBackend::_generate_dsp ( const Module& module )
 		imports.push_back ( module.non_if_data.libraries[i]->name );
 	}
 
-	string module_type = Right(module.GetTargetName(),3);
-	bool lib = (module_type == "lib");
-	bool dll = (module_type == "dll");
-	bool exe = (module_type == "exe");
+	string module_type = GetExtension(module.GetTargetName());
+	bool lib = (module_type == ".lib") || (module_type == ".a");
+	bool dll = (module_type == ".dll") || (module_type == ".cpl");
+	bool exe = (module_type == ".exe");
 	// TODO FIXME - need more checks here for 'sys' and possibly 'drv'?
 
-	bool console = exe; // FIXME: Not always correct
+	bool console = exe && (module.type == Win32CUI);
 
 	// TODO FIXME - not sure if the count here is right...
 	int parts = 0;
@@ -56,9 +79,14 @@ MSVCBackend::_generate_dsp ( const Module& module )
 
 	// TODO FIXME - what's diff. betw. 'c_srcs' and 'source_files'?
 	string dsp_path = module.GetBasePath();
-	vector<string> c_srcs, source_files, resource_files, includes;
+	vector<string> c_srcs, source_files, resource_files, includes, libraries, defines;
 	vector<const IfableData*> ifs_list;
+	ifs_list.push_back ( &module.project.non_if_data );
 	ifs_list.push_back ( &module.non_if_data );
+
+	// this is a define in MinGW w32api, but not Microsoft's headers
+	defines.push_back ( "STDCALL=__stdcall" );
+
 	while ( ifs_list.size() )
 	{
 		const IfableData& data = *ifs_list.back();
@@ -81,10 +109,32 @@ MSVCBackend::_generate_dsp ( const Module& module )
 		const vector<Include*>& incs = data.includes;
 		for ( i = 0; i < incs.size(); i++ )
 		{
+
+			// explicitly omit win32api directories
+			if ( !strncmp(incs[i]->directory.c_str(), "w32api", 6 ) )
+				continue;
+
+			// explicitly omit include/wine directories
+			if ( !strncmp(incs[i]->directory.c_str(), "include\\wine", 12 ) )
+				continue;
+
 			string path = Path::RelativeFromDirectory (
 				incs[i]->directory,
 				module.GetBasePath() );
 			includes.push_back ( path );
+		}
+		const vector<Library*>& libs = data.libraries;
+		for ( i = 0; i < libs.size(); i++ )
+		{
+			libraries.push_back ( libs[i]->name + ".lib" );
+		}
+		const vector<Define*>& defs = data.defines;
+		for ( i = 0; i < defs.size(); i++ )
+		{
+			if ( defs[i]->value[0] )
+				defines.push_back ( defs[i]->name + "=" + defs[i]->value );
+			else
+				defines.push_back ( defs[i]->name );
 		}
 	}
 	// TODO FIXME - we don't include header files in our build system
@@ -273,14 +323,6 @@ MSVCBackend::_generate_dsp ( const Module& module )
 		if ( dll ) fprintf ( OUT, "# PROP Ignore_Export_Lib 0\r\n" );
 		fprintf ( OUT, "# PROP Target_Dir \"\"\r\n" );
 
-		vector<string> defines;
-		defines.push_back ( "WINVER=0x0501" );
-		defines.push_back ( "_WIN32_WINNT=0x0501" );
-		defines.push_back ( "_WIN32_IE=0x0600" );
-		defines.push_back ( "WIN32" );
-		defines.push_back ( "_WINDOWS" );
-		defines.push_back ( "WIN32" );
-		defines.push_back ( "_MBCS" );
 		if ( debug )
 		{
 			defines.push_back ( "_DEBUG" );
@@ -330,13 +372,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 		fprintf ( OUT, " /c" );
 		fprintf ( OUT, "\r\n" );
 
-		vector<string> defines2;
-		defines2.push_back ( "WINVER=0x0501" );
-		defines2.push_back ( "_WIN32_WINNT=0x0501" );
-		defines2.push_back ( "_WIN32_IE=0x0600" );
-		defines2.push_back ( "WIN32" );
-		defines2.push_back ( "_WINDOWS" );
-		defines2.push_back ( "_MBCS" );
+		vector<string> defines2 = defines;
 		if ( debug )
 		{
 			defines2.push_back ( "_DEBUG" );
@@ -402,7 +438,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 			for ( i = 0; i < includes.size(); i++ )
 			{
 				const string& include = includes[i];
-				if ( strpbrk ( include.c_str(), "[\\\"]" ) )
+				if ( strpbrk ( include.c_str(), "[\\\"]" ) || !strncmp ( include.c_str(), "../", 3 ) )
 				{
 					fprintf ( OUT, " /I \"%s\"", include.c_str() );
 				}
@@ -447,12 +483,17 @@ MSVCBackend::_generate_dsp ( const Module& module )
 			}
 			fprintf ( OUT, "# ADD BASE RSC /l 0x41d /d \"_DEBUG\"\r\n" );
 			fprintf ( OUT, "# ADD RSC /l 0x41d" );
-			if ( wine )
+			/*if ( wine )*/
 			{
 				for ( i = 0; i < includes.size(); i++ )
 				{
 					fprintf ( OUT, " /i \"%s\"", includes[i].c_str() );
 				}
+			}
+
+			for ( i = 0; i < defines.size(); i++ )
+			{
+				fprintf ( OUT, " /D \"%s\"", defines[i].c_str() );
 			}
 			fprintf ( OUT, " /d \"_DEBUG\"\r\n" );
 		}
@@ -471,6 +512,13 @@ MSVCBackend::_generate_dsp ( const Module& module )
 				for ( i = 0; i < includes.size(); i++ )
 					fprintf ( OUT, " /i \"%s\"", includes[i].c_str() );
 			}
+
+			for ( i = 0; i < defines.size(); i++ )
+			{
+				fprintf ( OUT, " /D \"%s\"", defines[i].c_str() );
+			}
+
+
 			fprintf ( OUT, "/d \"NDEBUG\"\r\n" );
 		}
 		fprintf ( OUT, "BSC32=bscmake.exe\r\n" );
@@ -481,19 +529,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 		{
 			fprintf ( OUT, "LINK32=link.exe\r\n" );
 			fprintf ( OUT, "# ADD BASE LINK32 " );
-			vector<string> libraries;
-			libraries.push_back ( "kernel32.lib" );
-			libraries.push_back ( "user32.lib" );
-			libraries.push_back ( "gdi32.lib" );
-			libraries.push_back ( "winspool.lib" );
-			libraries.push_back ( "comdlg32.lib" );
-			libraries.push_back ( "advapi32.lib" );
-			libraries.push_back ( "shell32.lib" );
-			libraries.push_back ( "ole32.lib" );
-			libraries.push_back ( "oleaut32.lib" );
-			libraries.push_back ( "uuid.lib" );
-			libraries.push_back ( "odbc32.lib" );
-			libraries.push_back ( "odbccp32.lib" );
+
 			for ( i = 0; i < libraries.size(); i++ )
 			{
 				fprintf ( OUT, "%s ", libraries[i].c_str() );
@@ -523,6 +559,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 			// TODO FIXME - do we need their kludge?
 			//if ( module.name == "ntdll" ) fprintf ( OUT, " /nodefaultlib" ); // FIXME: Kludge
 			if ( dll ) fprintf ( OUT, " /def:\"%s.def\"", module.name.c_str() );
+			if (( dll ) && ( module_type == ".cpl")) fprintf ( OUT, " /out:\"Win32\\%s%s\"", module.name.c_str(), module_type.c_str() );
 			if ( debug ) fprintf ( OUT, " /pdbtype:sept" );
 			fprintf ( OUT, "\r\n" );
 		}
@@ -736,7 +773,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 	fprintf ( OUT, "# Begin Group \"Resource Files\"\r\n" );
 	fprintf ( OUT, "\r\n" );
 	fprintf ( OUT, "# PROP Default_Filter \"ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe\"\r\n" );
-	for ( i = 0; i < resource_files.size(); i++ )
+/*	for ( i = 0; i < resource_files.size(); i++ )
 	{
 		const string& resource_file = resource_files[i];
 		fprintf ( OUT, "# Begin Source File\r\n" );
@@ -744,7 +781,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 		fprintf ( OUT, "SOURCE=.\\%s\r\n", resource_file.c_str() );
 		fprintf ( OUT, "# End Source File\r\n" );
 	}
-	fprintf ( OUT, "# End Group\r\n" );
+*/	fprintf ( OUT, "# End Group\r\n" );
 
 	fprintf ( OUT, "# End Target\r\n" );
 	fprintf ( OUT, "# End Project\r\n" );

@@ -42,7 +42,7 @@
  * @implemented
  */
 
-BOOLEAN STDCALL
+BOOLEAN NTAPI
 RtlGetNtProductType(PNT_PRODUCT_TYPE ProductType)
 {
   *ProductType = SharedUserData->NtProductType;
@@ -70,7 +70,7 @@ RtlGetNtProductType(PNT_PRODUCT_TYPE ProductType)
  * @implemented
  */
 
-void STDCALL
+void NTAPI
 RtlGetNtVersionNumbers(LPDWORD major, LPDWORD minor, LPDWORD build)
 {
 	PPEB pPeb = NtCurrentPeb();
@@ -102,7 +102,7 @@ RtlGetNtVersionNumbers(LPDWORD major, LPDWORD minor, LPDWORD build)
 /*
 * @implemented
 */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlGetVersion(RTL_OSVERSIONINFOW *Info)
 {
    if (Info->dwOSVersionInfoSize == sizeof(RTL_OSVERSIONINFOW) ||

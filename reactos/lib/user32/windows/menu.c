@@ -4318,6 +4318,7 @@ ModifyMenuA(
   LPCSTR lpNewItem)
 {
   MENUITEMINFOA mii;
+  memset( &mii, 0, sizeof(mii) );
   mii.cbSize = sizeof(MENUITEMINFOA);
   mii.fMask = MIIM_FTYPE | MIIM_STRING | MIIM_STATE;
   mii.fType = 0;
@@ -4415,9 +4416,9 @@ ModifyMenuW(
   LPCWSTR lpNewItem)
 {
   MENUITEMINFOW mii;
+  memset ( &mii, 0, sizeof(mii) );
   mii.cbSize = sizeof(MENUITEMINFOW);
   mii.fMask = MIIM_FTYPE | MIIM_STRING | MIIM_STATE;
-  mii.fType = 0;
   mii.fState = MFS_ENABLED;
 
   UNIMPLEMENTED;
@@ -4442,10 +4443,10 @@ ModifyMenuW(
   }
   else
   {
-    if(mii.dwTypeData != NULL)
+    /*if(mii.dwTypeData != NULL)
     {
       HeapFree(GetProcessHeap(),0, mii.dwTypeData);
-    }
+    }*/
     if (*lpNewItem == '\b')
     {
        mii.fType |= MF_HELP;
@@ -4646,7 +4647,10 @@ SetMenuItemInfoW(
   MENUITEMINFOW MenuItemInfoW;
 
   RtlCopyMemory(&MenuItemInfoW, lpmii, min(lpmii->cbSize, sizeof(MENUITEMINFOW)));
-  MenuItemInfoW.cch = wcslen(MenuItemInfoW.dwTypeData);
+  if (0 != (MenuItemInfoW.fMask & MIIM_STRING))
+  {
+    MenuItemInfoW.cch = wcslen(MenuItemInfoW.dwTypeData);
+  }
 
   return NtUserMenuItemInfo(hMenu, uItem, fByPosition,
                             (PROSMENUITEMINFO)&MenuItemInfoW, TRUE);

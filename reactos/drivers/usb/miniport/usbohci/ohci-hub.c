@@ -153,7 +153,7 @@ static int ohci_hub_control (
 	u16		typeReq,
 	u16		wValue,
 	u16		wIndex,
-	char		*buf,
+	u8		*buf,
 	u16		wLength
 ) {
 	struct ohci_hcd	*ohci = hcd_to_ohci (hcd);

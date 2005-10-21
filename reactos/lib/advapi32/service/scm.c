@@ -245,25 +245,87 @@ CreateServiceA(
  *
  * @unimplemented
  */
-SC_HANDLE
-STDCALL
-CreateServiceW(
-    SC_HANDLE   hSCManager,
-    LPCWSTR     lpServiceName,
-    LPCWSTR     lpDisplayName,
-    DWORD       dwDesiredAccess,
-    DWORD       dwServiceType,
-    DWORD       dwStartType,
-    DWORD       dwErrorControl,
-    LPCWSTR     lpBinaryPathName,
-    LPCWSTR     lpLoadOrderGroup,
-    LPDWORD     lpdwTagId,
-    LPCWSTR     lpDependencies,
-    LPCWSTR     lpServiceStartName,
-    LPCWSTR     lpPassword)
+SC_HANDLE STDCALL
+CreateServiceW(SC_HANDLE hSCManager,
+               LPCWSTR lpServiceName,
+               LPCWSTR lpDisplayName,
+               DWORD dwDesiredAccess,
+               DWORD dwServiceType,
+               DWORD dwStartType,
+               DWORD dwErrorControl,
+               LPCWSTR lpBinaryPathName,
+               LPCWSTR lpLoadOrderGroup,
+               LPDWORD lpdwTagId,
+               LPCWSTR lpDependencies,
+               LPCWSTR lpServiceStartName,
+               LPCWSTR lpPassword)
 {
-    DPRINT1("CreateServiceW is unimplemented, but returning INVALID_HANDLE_VALUE instead of NULL\n");
-    return INVALID_HANDLE_VALUE;
+    SC_HANDLE hService = NULL;
+    DWORD dwError;
+    HKEY hEnumKey, hKey;
+    DWORD dwDependenciesLength = 0;
+    DWORD dwLength;
+    LPWSTR lpStr;
+
+    DPRINT1("CreateServiceW() called\n");
+
+    /* Calculate the Dependencies length*/
+    if (lpDependencies != NULL)
+    {
+        lpStr = (LPWSTR)lpDependencies;
+        while (*lpStr)
+        {
+            dwLength = wcslen(lpStr) + 1;
+            dwDependenciesLength += dwLength;
+            lpStr = lpStr + dwLength;
+        }
+        dwDependenciesLength++;
+    }
+
+    /* FIXME: Encrypt the password */
+
+#if 0
+    HandleBind();
+
+    /* Call to services.exe using RPC */
+    dwError = ScmrCreateServiceW(BindingHandle,
+                                 (unsigned int)hSCManager,
+                                 (LPWSTR)lpServiceName,
+                                 (LPWSTR)lpDisplayName,
+                                 dwDesiredAccess,
+                                 dwServiceType,
+                                 dwStartType,
+                                 dwErrorControl,
+                                 (LPWSTR)lpBinaryPathName,
+                                 (LPWSTR)lpLoadOrderGroup,
+                                 lpdwTagId,
+                                 lpDependencies,
+                                 dwDependenciesLength,
+                                 (LPWSTR)lpServiceStartName,
+                                 NULL,              /* FIXME: lpPassword */
+                                 0,                 /* FIXME: dwPasswordLength */
+                                 (unsigned int *)&hService);
+#else
+    RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Services", 0, KEY_ENUMERATE_SUB_KEYS, &hEnumKey);
+    RegCreateKeyExW(hEnumKey, lpServiceName, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, NULL);
+    RegCloseKey(hEnumKey);
+    if (lpLoadOrderGroup)
+      RegSetValueExW(hKey, L"Group", 0, REG_SZ, (const BYTE*)lpLoadOrderGroup, (wcslen(lpLoadOrderGroup) + 1) * sizeof(WCHAR));
+    RegSetValueExW(hKey, L"ImagePath", 0, REG_EXPAND_SZ, (const BYTE*)lpBinaryPathName, (wcslen(lpBinaryPathName) + 1) * sizeof(WCHAR));
+    RegSetValueExW(hKey, L"ErrorControl", 0, REG_DWORD, (const BYTE*)&dwErrorControl, sizeof(dwErrorControl));
+    RegSetValueExW(hKey, L"Start", 0, REG_DWORD, (const BYTE*)&dwStartType, sizeof(dwStartType));
+    RegSetValueExW(hKey, L"Type", 0, REG_DWORD, (const BYTE*)&dwStartType, sizeof(dwStartType));
+    RegCloseKey(hKey);
+    hService = INVALID_HANDLE_VALUE; dwError = ERROR_SUCCESS;
+#endif
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("ScmrCreateServiceW() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return INVALID_HANDLE_VALUE;
+    }
+
+    return hService;
 }
 
 
@@ -947,9 +1009,7 @@ UnlockServiceDatabase(SC_LOCK ScLock)
 {
   DWORD dwError;
 
-#if 0
-  DPRINT("UnlockServiceDatabase(%x)\n", hSCManager);
-#endif
+  DPRINT("UnlockServiceDatabase(%x)\n", ScLock);
 
   HandleBind();
 
@@ -967,10 +1027,39 @@ UnlockServiceDatabase(SC_LOCK ScLock)
 }
 
 
+/**********************************************************************
+ *  NotifyBootConfigStatus
+ *
+ * @implemented
+ */
+BOOL STDCALL
+NotifyBootConfigStatus(BOOL BootAcceptable)
+{
+    DWORD dwError;
+
+    DPRINT1("NotifyBootConfigStatus()\n");
+
+    HandleBind();
+
+    /* Call to services.exe using RPC */
+    dwError = ScmrNotifyBootConfigStatus(BindingHandle,
+                                         BootAcceptable);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("NotifyBootConfigStatus() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+
 void __RPC_FAR * __RPC_USER midl_user_allocate(size_t len)
 {
   return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
 }
+
 
 void __RPC_USER midl_user_free(void __RPC_FAR * ptr)
 {

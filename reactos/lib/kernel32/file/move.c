@@ -21,132 +21,20 @@
 /* GLOBALS *****************************************************************/
 
 /* FUNCTIONS ****************************************************************/
-
 static BOOL
-AdjustFileAttributes (
-	LPCWSTR ExistingFileName,
-	LPCWSTR NewFileName
-	)
+RemoveReadOnlyAttributeW(IN LPCWSTR lpFileName)
 {
-	IO_STATUS_BLOCK IoStatusBlock;
-	FILE_BASIC_INFORMATION ExistingInfo,
-		NewInfo;
-	HANDLE hFile;
-	DWORD Attributes;
-	NTSTATUS errCode;
-	BOOL Result = FALSE;
-
-	hFile = CreateFileW (ExistingFileName,
-	                     FILE_READ_ATTRIBUTES | FILE_WRITE_ATTRIBUTES,
-	                     FILE_SHARE_READ,
-	                     NULL,
-	                     OPEN_EXISTING,
-	                     FILE_ATTRIBUTE_NORMAL,
-	                     NULL);
-	if (INVALID_HANDLE_VALUE != hFile)
-	{
-		errCode = NtQueryInformationFile (hFile,
-		                                  &IoStatusBlock,
-		                                  &ExistingInfo,
-		                                  sizeof(FILE_BASIC_INFORMATION),
-		                                  FileBasicInformation);
-		if (NT_SUCCESS (errCode))
-		{
-			if (0 != (ExistingInfo.FileAttributes & FILE_ATTRIBUTE_READONLY))
-			{
-				Attributes = ExistingInfo.FileAttributes;
-				ExistingInfo.FileAttributes &= ~ FILE_ATTRIBUTE_READONLY;
-				if (0 == (ExistingInfo.FileAttributes &
-				          (FILE_ATTRIBUTE_HIDDEN |
-				           FILE_ATTRIBUTE_SYSTEM |
-				           FILE_ATTRIBUTE_ARCHIVE)))
-				{
-					ExistingInfo.FileAttributes |= FILE_ATTRIBUTE_NORMAL;
-				}
-				errCode = NtSetInformationFile (hFile,
-				                                &IoStatusBlock,
-				                                &ExistingInfo,
-				                                sizeof(FILE_BASIC_INFORMATION),
-				                                FileBasicInformation);
-				if (!NT_SUCCESS(errCode))
-				{
-					DPRINT("Removing READONLY attribute from source failed with status 0x%08x\n", errCode);
-				}
-				ExistingInfo.FileAttributes = Attributes;
-			}
-			CloseHandle(hFile);
-
-			if (NT_SUCCESS(errCode))
-			{
-				hFile = CreateFileW (NewFileName,
-				                     FILE_READ_ATTRIBUTES | FILE_WRITE_ATTRIBUTES,
-				                     FILE_SHARE_READ,
-				                     NULL,
-				                     OPEN_EXISTING,
-			        	             FILE_ATTRIBUTE_NORMAL,
-				                     NULL);
-				if (INVALID_HANDLE_VALUE != hFile)
-				{
-					errCode = NtQueryInformationFile(hFile,
-					                                 &IoStatusBlock,
-					                                 &NewInfo,
-					                                 sizeof(FILE_BASIC_INFORMATION),
-					                                 FileBasicInformation);
-					if (NT_SUCCESS(errCode))
-					{
-						NewInfo.FileAttributes = (NewInfo.FileAttributes &
-						                          ~ (FILE_ATTRIBUTE_HIDDEN |
-						                             FILE_ATTRIBUTE_SYSTEM |
-						                             FILE_ATTRIBUTE_READONLY |
-						                             FILE_ATTRIBUTE_NORMAL)) |
-					                                 (ExistingInfo.FileAttributes &
-					                                  (FILE_ATTRIBUTE_HIDDEN |
-						                           FILE_ATTRIBUTE_SYSTEM |
-						                           FILE_ATTRIBUTE_READONLY |
-						                           FILE_ATTRIBUTE_NORMAL)) |
-						                         FILE_ATTRIBUTE_ARCHIVE;
-						NewInfo.CreationTime = ExistingInfo.CreationTime;
-						NewInfo.LastAccessTime = ExistingInfo.LastAccessTime;
-						NewInfo.LastWriteTime = ExistingInfo.LastWriteTime;
-						errCode = NtSetInformationFile (hFile,
-						                                &IoStatusBlock,
-						                                &NewInfo,
-						                                sizeof(FILE_BASIC_INFORMATION),
-						                                FileBasicInformation);
-						if (NT_SUCCESS(errCode))
-						{
-							Result = TRUE;
-						}
-						else
-						{
-							DPRINT("Setting attributes on dest file failed with status 0x%08x\n", errCode);
-						}
-					}
-					else
-					{
-						DPRINT("Obtaining attributes from dest file failed with status 0x%08x\n", errCode);
-					}
-					CloseHandle(hFile);
-				}
-				else
-				{
-					DPRINT("Opening dest file to set attributes failed with code %d\n", GetLastError());
-				}
-			}
-		}
-		else
-		{
-			DPRINT("Obtaining attributes from source file failed with status 0x%08x\n", errCode);
-			CloseHandle(hFile);
-		}
-	}
-	else
-	{
-		DPRINT("Opening source file to obtain attributes failed with code %d\n", GetLastError());
-	}
-
-	return Result;
+    DWORD Attributes;
+    Attributes = GetFileAttributesW(lpFileName);
+    if (Attributes != INVALID_FILE_ATTRIBUTES)
+    {	
+        return SetFileAttributesW(lpFileName,Attributes - 
+			                      (Attributes & ~FILE_ATTRIBUTE_READONLY));
+    }
+ 
+    return FALSE;
 }
+
 
 /***********************************************************************
  *           add_boot_rename_entry
@@ -314,6 +202,7 @@ MoveFileWithProgressW (
 	NTSTATUS errCode;
 	BOOL Result;
 	UNICODE_STRING DstPathU;
+	BOOL folder = FALSE;
 
 	DPRINT("MoveFileWithProgressW()\n");
 
@@ -325,14 +214,15 @@ MoveFileWithProgressW (
 	                     FILE_SHARE_WRITE|FILE_SHARE_READ,
 	                     NULL,
 	                     OPEN_EXISTING,
-	                     FILE_ATTRIBUTE_NORMAL,
+	                     FILE_FLAG_BACKUP_SEMANTICS,
 	                     NULL);
 
 	if (hFile == INVALID_HANDLE_VALUE)
 	{
-           return FALSE;
+	   return FALSE;
 	}
 
+	
         /* validate & translate the filename */
         if (!RtlDosPathNameToNtPathName_U ((LPWSTR)lpNewFileName,
 				           &DstPathU,
@@ -366,80 +256,352 @@ MoveFileWithProgressW (
 	                                sizeof(FILE_RENAME_INFORMATION) + DstPathU.Length,
 	                                FileRenameInformation);
 	CloseHandle(hFile);
+
+	if (GetFileAttributesW(lpExistingFileName) & FILE_ATTRIBUTE_DIRECTORY)
+	{
+           folder = TRUE;
+	}
+
+	
+	/*
+	 *  FIXME:
+	 *  Fail now move the folder 
+	 *  Before we fail at CreateFileW 
+	 */
+	 
+	 
 	if (NT_SUCCESS(errCode))
 	{
 		Result = TRUE;
 	}
-	else if (STATUS_NOT_SAME_DEVICE == errCode &&
-		 MOVEFILE_COPY_ALLOWED == (dwFlags & MOVEFILE_COPY_ALLOWED))
+	else 
 	{
-		Result = CopyFileExW (lpExistingFileName,
+ 	        if (folder==FALSE)
+		{
+		    Result = CopyFileExW (lpExistingFileName,
 		                      lpNewFileName,
 		                      lpProgressRoutine,
 		                      lpData,
 		                      NULL,
 		                      FileRename->ReplaceIfExists ? 0 : COPY_FILE_FAIL_IF_EXISTS);
-		if (Result)
-		{
-			/* Cleanup the source file */
-			AdjustFileAttributes(lpExistingFileName, lpNewFileName);
+ 		    if (Result)
+		    {
+			/* Cleanup the source file */			
 	                Result = DeleteFileW (lpExistingFileName);
-		}
-	}
-#if 1
-	/* FIXME file rename not yet implemented in all FSDs so it will always
-	 * fail, even when the move is to the same device
-	 */
-	else if (STATUS_NOT_IMPLEMENTED == errCode)
-	{
+		    } 
+                  }
+		 else
+		 {
+		   /* move folder code start */
+		   WIN32_FIND_DATAW findBuffer;
+		   LPWSTR lpExistingFileName2 = NULL;
+		   LPWSTR lpNewFileName2 = NULL; 
+		   LPWSTR lpDeleteFile = NULL;
+		   INT size;
+		   INT size2;
+		   BOOL loop = TRUE;
+		   BOOL Result = FALSE;
+		   INT max_size = MAX_PATH;
 
-		UNICODE_STRING SrcPathU;
 
-		SrcPathU.Buffer = alloca(sizeof(WCHAR) * MAX_PATH);
-		SrcPathU.MaximumLength = MAX_PATH * sizeof(WCHAR);
-		SrcPathU.Length = GetFullPathNameW(lpExistingFileName, MAX_PATH, SrcPathU.Buffer, NULL);
-		if (SrcPathU.Length >= MAX_PATH)
-		{
-		    SetLastError(ERROR_FILENAME_EXCED_RANGE);
-		    return FALSE;
-		}
-		SrcPathU.Length *= sizeof(WCHAR);
+		   		   /* Build the string */
+		   size = wcslen(lpExistingFileName); 
+		   if (size+6> max_size)
+			   max_size = size + 6;
 
-		DstPathU.Buffer = alloca(sizeof(WCHAR) * MAX_PATH);
-		DstPathU.MaximumLength = MAX_PATH * sizeof(WCHAR);
-		DstPathU.Length = GetFullPathNameW(lpNewFileName, MAX_PATH, DstPathU.Buffer, NULL);
-		if (DstPathU.Length >= MAX_PATH)
-		{
-		    SetLastError(ERROR_FILENAME_EXCED_RANGE);
-		    return FALSE;
-		}
-		DstPathU.Length *= sizeof(WCHAR);
+		   lpDeleteFile = (LPWSTR) HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,max_size * sizeof(WCHAR));
+		   if (lpDeleteFile == NULL)		   
+		       return FALSE;		  		  
 
-		if (0 == RtlCompareUnicodeString(&SrcPathU, &DstPathU, TRUE))
-		{
-		   /* Source and destination file are the same, nothing to do */
-		   return TRUE;
-		}
+		   lpNewFileName2 = (LPWSTR) HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,max_size * sizeof(WCHAR));
+		   if (lpNewFileName2 == NULL)
+		   {		
+		     HeapFree(GetProcessHeap(),0,(VOID *)  lpDeleteFile);
+			 return FALSE;
+		   }
 
-		Result = CopyFileExW (lpExistingFileName,
-		                      lpNewFileName,
+		   lpExistingFileName2 = (LPWSTR) HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,max_size * sizeof(WCHAR));
+		   if (lpNewFileName2 == NULL)
+		   {		
+		     HeapFree(GetProcessHeap(),0,(VOID *)  lpNewFileName2);		  	  		    		
+		     HeapFree(GetProcessHeap(),0,(VOID *) lpDeleteFile);		
+		     return FALSE;
+		   }		   		   
+		
+		   wcscpy( (WCHAR *)lpExistingFileName2,lpExistingFileName);
+		   wcscpy( (WCHAR *)&lpExistingFileName2[size],L"\\*.*\0");
+	  
+		   /* Get the file name */
+		   memset(&findBuffer,0,sizeof(WIN32_FIND_DATAW));
+		   hFile = FindFirstFileW(lpExistingFileName2,  &findBuffer);
+		   if (hFile == NULL) 
+		       loop=FALSE;
+
+		   if (findBuffer.cFileName[0] == L'\0')
+		       loop=FALSE;
+		
+
+		    /* FIXME 
+			 * remove readonly flag from source folder and do not set the readonly flag to dest folder 
+			 */
+		   RemoveReadOnlyAttributeW(lpExistingFileName);
+           RemoveReadOnlyAttributeW(lpNewFileName);
+		   //CreateDirectoryExW(lpExistingFileName,lpNewFileName,NULL);
+		   CreateDirectoryW(lpNewFileName, NULL);
+		  		   
+		   /* search the files/folders and move them */
+		   while (loop==TRUE)
+		   {	
+		     Result = TRUE;
+
+		     if ((!wcscmp(findBuffer.cFileName,L"..")) || (!wcscmp(findBuffer.cFileName,L".")))
+		     {		  
+		       loop = FindNextFileW(hFile, &findBuffer);		  
+		  		  
+		       if (!loop)
+		       {					 
+		         size = wcslen(lpExistingFileName2)-4;
+		         FindClose(hFile);
+		         wcscpy( &lpExistingFileName2[size],L"\0");
+
+		         if (wcsncmp(lpExistingFileName,lpExistingFileName2,size))
+		         {  
+				   DWORD Attributes;
+
+		           FindClose(hFile);			     
+
+				   /* delete folder */					  				 
+				   DPRINT("MoveFileWithProgressW : Delete folder : %S\n",lpDeleteFile);
+
+				   /* remove system folder flag other wise we can not delete the folder */
+				   Attributes = GetFileAttributesW(lpExistingFileName2);
+                   if (Attributes != INVALID_FILE_ATTRIBUTES)
+                   {	
+                     SetFileAttributesW(lpExistingFileName2,(Attributes & ~FILE_ATTRIBUTE_SYSTEM));
+				   }
+				   
+				   RemoveReadOnlyAttributeW(lpExistingFileName2);
+					 				   
+				   Result = RemoveDirectoryW(lpExistingFileName2);
+				   if (Result == FALSE)
+				       break;
+				 				 
+				   loop=TRUE;				 				 
+				   size = wcslen(lpExistingFileName); 
+				
+				   if (size+6>max_size)
+				   {				       
+		              if (lpNewFileName2 != NULL)		          		
+		                  HeapFree(GetProcessHeap(),0,(VOID *)  lpNewFileName2);
+		           
+		              if (lpExistingFileName2 != NULL)		          	  
+		                  HeapFree(GetProcessHeap(),0,(VOID *) lpExistingFileName2);		
+		           		   
+		              if (lpDeleteFile != NULL)		   		
+		                  HeapFree(GetProcessHeap(),0,(VOID *) lpDeleteFile);		
+		          
+				      return FALSE;
+				   }
+
+				   wcscpy( lpExistingFileName2,lpExistingFileName);
+				   wcscpy( &lpExistingFileName2[size],L"\\*.*\0");
+
+				   /* Get the file name */
+				   memset(&findBuffer,0,sizeof(WIN32_FIND_DATAW));
+				   hFile = FindFirstFileW(lpExistingFileName2, &findBuffer);	                 
+		         }
+               } 		  
+               continue;		  		  
+             }
+	  	  	  
+		     if (findBuffer.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+		     {	               
+
+               /* Build the new src string */		  		  		  
+               size = wcslen(findBuffer.cFileName); 
+               size2= wcslen(lpExistingFileName2);
+
+               if (size2+size+6>max_size)
+               {
+	              FindClose(hFile);    		 
+
+		         if (lpNewFileName2 != NULL)		          		
+		              HeapFree(GetProcessHeap(),0,(VOID *)  lpNewFileName2);
+		           
+		         if (lpExistingFileName2 != NULL)		          	  
+		              HeapFree(GetProcessHeap(),0,(VOID *) lpExistingFileName2);		
+		           		   
+		         if (lpDeleteFile != NULL)		   		
+		              HeapFree(GetProcessHeap(),0,(VOID *) lpDeleteFile);		
+		          
+				 return FALSE;			      				 
+	           }
+
+	            wcscpy( &lpExistingFileName2[size2-3],findBuffer.cFileName);			   			  
+                wcscpy( &lpExistingFileName2[size2+size-3],L"\0");
+			   
+
+			   /* Continue */
+			   wcscpy( lpDeleteFile,lpExistingFileName2);
+	           wcscpy( &lpExistingFileName2[size2+size-3],L"\\*.*\0");
+          
+		  
+	           /* Build the new dst string */
+	           size = wcslen(lpExistingFileName2) + wcslen(lpNewFileName);
+	           size2 = wcslen(lpExistingFileName);
+		  
+	           if (size>max_size)
+	           {
+	             FindClose(hFile);    		 
+
+		         if (lpNewFileName2 != NULL)		          		
+		              HeapFree(GetProcessHeap(),0,(VOID *)  lpNewFileName2);
+		           
+		         if (lpExistingFileName2 != NULL)		          	  
+		              HeapFree(GetProcessHeap(),0,(VOID *) lpExistingFileName2);		
+		           		   
+		         if (lpDeleteFile != NULL)		   		
+		              HeapFree(GetProcessHeap(),0,(VOID *) lpDeleteFile);		
+		          
+				 return FALSE;			     
+	           }
+
+	           wcscpy( lpNewFileName2,lpNewFileName);		 		  
+	           size = wcslen(lpNewFileName);		 
+	           wcscpy( &lpNewFileName2[size], &lpExistingFileName2[size2]);
+	           size = wcslen(lpNewFileName2);
+	           wcscpy( &lpNewFileName2[size-4],L"\0");
+	           
+	           /* Create Folder */	          
+
+			   /* FIXME 
+			    * remove readonly flag from source folder and do not set the readonly flag to dest folder 
+				*/
+			   RemoveReadOnlyAttributeW(lpDeleteFile);
+			   RemoveReadOnlyAttributeW(lpNewFileName2);
+
+			   CreateDirectoryW(lpNewFileName2,NULL);
+	           //CreateDirectoryExW(lpDeleteFile, lpNewFileName2,NULL);
+			   
+
+			   /* set new search path  from src string */
+	           FindClose(hFile);
+	           memset(&findBuffer,0,sizeof(WIN32_FIND_DATAW));
+	           hFile = FindFirstFileW(lpExistingFileName2, &findBuffer);
+	         }
+		     else
+		     {
+		  
+	           /* Build the new string */		  		  		  		  
+	           size = wcslen(findBuffer.cFileName); 
+	           size2= wcslen(lpExistingFileName2);
+	           wcscpy( lpDeleteFile,lpExistingFileName2);	   
+	           wcscpy( &lpDeleteFile[size2-3],findBuffer.cFileName);	   
+		  
+	           /* Build dest string */
+	           size = wcslen(lpDeleteFile) + wcslen(lpNewFileName);
+	           size2 = wcslen(lpExistingFileName);
+
+	           if (size>max_size)
+	           {                 				  
+			      FindClose(hFile);    		 
+
+		          if (lpNewFileName2 != NULL)		          		
+		              HeapFree(GetProcessHeap(),0,(VOID *)  lpNewFileName2);
+		           
+		          if (lpExistingFileName2 != NULL)		          	  
+		              HeapFree(GetProcessHeap(),0,(VOID *) lpExistingFileName2);		
+		           		   
+		          if (lpDeleteFile != NULL)		   		
+		              HeapFree(GetProcessHeap(),0,(VOID *) lpDeleteFile);		
+		          
+				  return FALSE;
+			   }
+		  
+               wcscpy( lpNewFileName2,lpNewFileName);		 		  
+               size = wcslen(lpNewFileName);		 
+               wcscpy(&lpNewFileName2[size],&lpDeleteFile[size2]);
+		 
+              
+			   /* overrite existsen file, if the file got the flag have readonly 
+			    * we need reomve that flag 
+				*/
+			   
+			    /* copy file */
+			   
+			   DPRINT("MoveFileWithProgressW : Copy file : %S to %S\n",lpDeleteFile, lpNewFileName2);
+			   RemoveReadOnlyAttributeW(lpDeleteFile);
+			   RemoveReadOnlyAttributeW(lpNewFileName2);
+			  
+			   Result = CopyFileExW (lpDeleteFile,
+		                      lpNewFileName2,
 		                      lpProgressRoutine,
 		                      lpData,
 		                      NULL,
-		                      FileRename->ReplaceIfExists ? 0 : COPY_FILE_FAIL_IF_EXISTS);
-		if (Result)
-		{
-		    /* Cleanup the source file */
-                    AdjustFileAttributes(lpExistingFileName, lpNewFileName);
-		    Result = DeleteFileW (lpExistingFileName);
-		}
+		                      0);
+
+			   if (Result == FALSE)                                
+                   break;
+              
+               /* delete file */               		            
+			   DPRINT("MoveFileWithProgressW : remove readonly flag from file : %S\n",lpNewFileName2);
+			   Result = RemoveReadOnlyAttributeW(lpDeleteFile);
+			   if (Result == FALSE)
+			       break;
+
+               DPRINT("MoveFileWithProgressW : Delete file : %S\n",lpDeleteFile);
+			   Result = DeleteFileW(lpDeleteFile);
+               if (Result == FALSE)                               
+                   break;
+              
+             }	  	              
+             loop = FindNextFileW(hFile, &findBuffer);	  	  
+           }
+
+           
+		   /* Remove last folder */
+           if ((loop == FALSE) && (Result != FALSE))
+		   {
+		     DWORD Attributes;
+
+		     FindClose(hFile);				 
+			 Attributes = GetFileAttributesW(lpDeleteFile);
+             if (Attributes != INVALID_FILE_ATTRIBUTES)
+             {	
+                SetFileAttributesW(lpDeleteFile,(Attributes & ~FILE_ATTRIBUTE_SYSTEM));
+			 }
+					 				   				 
+		     Result = RemoveDirectoryW(lpExistingFileName);		     
+		   }
+           
+		   /* Cleanup */
+		   FindClose(hFile);    
+		   
+		   if (lpNewFileName2 != NULL)
+		   {		
+		     HeapFree(GetProcessHeap(),0,(VOID *)  lpNewFileName2);
+		     lpNewFileName2 = NULL;
+		   }
+
+		   if (lpExistingFileName2 != NULL)
+		   {	  
+		     HeapFree(GetProcessHeap(),0,(VOID *) lpExistingFileName2);		
+		     lpExistingFileName2 = NULL;
+		   }
+
+		   if (lpDeleteFile != NULL)
+		   {		
+		     HeapFree(GetProcessHeap(),0,(VOID *) lpDeleteFile);		
+		     lpDeleteFile = NULL;
+		   }
+
+           return Result;
+
+		   // end move folder code		 
+		  }
 	}
-#endif
-	else
-	{
-		SetLastErrorByStatus (errCode);
-		Result = FALSE;
-	}
+	
+	
 	return Result;
 }
 

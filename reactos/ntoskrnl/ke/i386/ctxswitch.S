@@ -114,7 +114,7 @@ BadThread:
 .globl @KiSwapContextInternal@0
 @KiSwapContextInternal@0:
 #ifdef KDBG
-    jmp SaveTrapFrameForKDB
+    //jmp SaveTrapFrameForKDB
 SaveTrapFrameForKDB_Return:
 #endif
 
@@ -130,12 +130,14 @@ SaveTrapFrameForKDB_Return:
     /* Switching, disable interrupts now */
     cli
 
+    /* Save the initial stack in EAX */
+    mov eax, [edi+KTHREAD_INITIAL_STACK]
+
 #ifdef CONFIG_SMP
     /* Save FPU state if the thread has used it. */
     mov dword ptr [ebx+KPCR_NPX_THREAD], 0
     test byte ptr [edi+KTHREAD_NPX_STATE], NPX_STATE_DIRTY
     jz 3f
-    mov eax, [edi+KTHREAD_INITIAL_STACK]
     cmp dword ptr _FxsrSupport, 0
     je 1f
     fxsave [eax-SIZEOF_FX_SAVE_AREA]
@@ -149,8 +151,18 @@ SaveTrapFrameForKDB_Return:
     
     /* Save the stack pointer in this processors TSS */
     mov ebp, [ebx+KPCR_TSS]
+
+    /* Check if this isn't V86 Mode, so we can bias the Esp0 */
+    test dword ptr [eax - KTRAP_FRAME_SIZE + KTRAP_FRAME_EFLAGS], X86_EFLAGS_VM
+    jnz NoAdjust
+
+    /* Bias esp */
+    //sub dword ptr ss:[ebp+KTSS_ESP0], KTRAP_FRAME_V86_GS - KTRAP_FRAME_SS
+
+NoAdjust:
+    /* Push ESP0 Value */
     push ss:[ebp+KTSS_ESP0]
-    
+
     /* Check if address space switch is needed */
     mov eax, [esi+KTHREAD_APCSTATE_PROCESS]
     cmp eax, [edi+KTHREAD_APCSTATE_PROCESS]

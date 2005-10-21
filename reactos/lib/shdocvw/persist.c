@@ -1,7 +1,8 @@
 /*
- * Implementation of IPersist interfaces for IE Web Browser control
+ * Implementation of IPersist interfaces for WebBrowser control
  *
  * Copyright 2001 John R. Sheets (for CodeWeavers)
+ * Copyright 2005 Jacek Caban
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -18,6 +19,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
+#define COBJMACROS
 #include "wine/debug.h"
 #include "shdocvw.h"
 
@@ -27,168 +29,169 @@ WINE_DEFAULT_DEBUG_CHANNEL(shdocvw);
  * Implement the IPersistStorage interface
  */
 
-static HRESULT WINAPI WBPS_QueryInterface(LPPERSISTSTORAGE iface,
-                                          REFIID riid, LPVOID *ppobj)
-{
-    FIXME("- no interface\n\tIID:\t%s\n", debugstr_guid(riid));
+#define PERSTORAGE_THIS(ifce) DEFINE_THIS(WebBrowser, PersistStorage, iface)
 
-    if (ppobj == NULL) return E_POINTER;
-    
-    return E_NOINTERFACE;
+static HRESULT WINAPI PersistStorage_QueryInterface(IPersistStorage *iface,
+        REFIID riid, LPVOID *ppobj)
+{
+    WebBrowser *This = PERSTORAGE_THIS(iface);
+    return IWebBrowser_QueryInterface(WEBBROWSER(This), riid, ppobj);
 }
 
-static ULONG WINAPI WBPS_AddRef(LPPERSISTSTORAGE iface)
+static ULONG WINAPI PersistStorage_AddRef(IPersistStorage *iface)
 {
-    SHDOCVW_LockModule();
-
-    return 2; /* non-heap based object */
+    WebBrowser *This = PERSTORAGE_THIS(iface);
+    return IWebBrowser_AddRef(WEBBROWSER(This));
 }
 
-static ULONG WINAPI WBPS_Release(LPPERSISTSTORAGE iface)
+static ULONG WINAPI PersistStorage_Release(IPersistStorage *iface)
 {
-    SHDOCVW_UnlockModule();
-
-    return 1; /* non-heap based object */
+    WebBrowser *This = PERSTORAGE_THIS(iface);
+    return IWebBrowser_Release(WEBBROWSER(This));
 }
 
-static HRESULT WINAPI WBPS_GetClassID(LPPERSISTSTORAGE iface, CLSID *pClassID)
+static HRESULT WINAPI PersistStorage_GetClassID(IPersistStorage *iface, CLSID *pClassID)
 {
-    FIXME("stub: CLSID = %s\n", debugstr_guid(pClassID));
-    return S_OK;
+    WebBrowser *This = PERSTORAGE_THIS(iface);
+    FIXME("(%p)->(%p)\n", This, pClassID);
+    return E_NOTIMPL;
 }
 
-static HRESULT WINAPI WBPS_IsDirty(LPPERSISTSTORAGE iface)
+static HRESULT WINAPI PersistStorage_IsDirty(IPersistStorage *iface)
 {
-    FIXME("stub\n");
-    return S_OK;
+    WebBrowser *This = PERSTORAGE_THIS(iface);
+    FIXME("(%p)\n", This);
+    return E_NOTIMPL;
 }
 
-static HRESULT WINAPI WBPS_InitNew(LPPERSISTSTORAGE iface, LPSTORAGE pStg)
+static HRESULT WINAPI PersistStorage_InitNew(IPersistStorage *iface, LPSTORAGE pStg)
 {
-    FIXME("stub: LPSTORAGE = %p\n", pStg);
-    return S_OK;
+    WebBrowser *This = PERSTORAGE_THIS(iface);
+    FIXME("(%p)->(%p)\n", This, pStg);
+    return E_NOTIMPL;
 }
 
-static HRESULT WINAPI WBPS_Load(LPPERSISTSTORAGE iface, LPSTORAGE pStg)
+static HRESULT WINAPI PersistStorage_Load(IPersistStorage *iface, LPSTORAGE pStg)
 {
-    FIXME("stub: LPSTORAGE = %p\n", pStg);
-    return S_OK;
+    WebBrowser *This = PERSTORAGE_THIS(iface);
+    FIXME("(%p)->(%p)\n", This, pStg);
+    return E_NOTIMPL;
 }
 
-static HRESULT WINAPI WBPS_Save(LPPERSISTSTORAGE iface, LPSTORAGE pStg,
-                                BOOL fSameAsLoad)
+static HRESULT WINAPI PersistStorage_Save(IPersistStorage *iface, LPSTORAGE pStg,
+        BOOL fSameAsLoad)
 {
-    FIXME("stub: LPSTORAGE = %p, fSameAsLoad = %d\n", pStg, fSameAsLoad);
-    return S_OK;
+    WebBrowser *This = PERSTORAGE_THIS(iface);
+    FIXME("(%p)->(%p %x)\n", This, pStg, fSameAsLoad);
+    return E_NOTIMPL;
 }
 
-static HRESULT WINAPI WBPS_SaveCompleted(LPPERSISTSTORAGE iface, LPSTORAGE pStgNew)
+static HRESULT WINAPI PersistStorage_SaveCompleted(IPersistStorage *iface, LPSTORAGE pStgNew)
 {
-    FIXME("stub: LPSTORAGE = %p\n", pStgNew);
-    return S_OK;
+    WebBrowser *This = PERSTORAGE_THIS(iface);
+    FIXME("(%p)->(%p)\n", This, pStgNew);
+    return E_NOTIMPL;
 }
 
-/**********************************************************************
- * IPersistStorage virtual function table for IE Web Browser component
- */
+#define PERSTORAGE_THIS(ifce) DEFINE_THIS(WebBrowser, PersistStorage, iface)
 
-static const IPersistStorageVtbl WBPS_Vtbl =
+static const IPersistStorageVtbl PersistStorageVtbl =
 {
-    WBPS_QueryInterface,
-    WBPS_AddRef,
-    WBPS_Release,
-    WBPS_GetClassID,
-    WBPS_IsDirty,
-    WBPS_InitNew,
-    WBPS_Load,
-    WBPS_Save,
-    WBPS_SaveCompleted
+    PersistStorage_QueryInterface,
+    PersistStorage_AddRef,
+    PersistStorage_Release,
+    PersistStorage_GetClassID,
+    PersistStorage_IsDirty,
+    PersistStorage_InitNew,
+    PersistStorage_Load,
+    PersistStorage_Save,
+    PersistStorage_SaveCompleted
 };
-
-IPersistStorageImpl SHDOCVW_PersistStorage = {&WBPS_Vtbl};
-
 
 /**********************************************************************
  * Implement the IPersistStreamInit interface
  */
 
-static HRESULT WINAPI WBPSI_QueryInterface(LPPERSISTSTREAMINIT iface,
-                                           REFIID riid, LPVOID *ppobj)
-{
-    FIXME("- no interface\n\tIID:\t%s\n", debugstr_guid(riid));
+#define PERSTRINIT_THIS(iface) DEFINE_THIS(WebBrowser, PersistStreamInit, iface)
 
-    if (ppobj == NULL) return E_POINTER;
-    
-    return E_NOINTERFACE;
+static HRESULT WINAPI PersistStreamInit_QueryInterface(IPersistStreamInit *iface,
+        REFIID riid, LPVOID *ppobj)
+{
+    WebBrowser *This = PERSTRINIT_THIS(iface);
+    return IWebBrowser_QueryInterface(WEBBROWSER(This), riid, ppobj);
 }
 
-static ULONG WINAPI WBPSI_AddRef(LPPERSISTSTREAMINIT iface)
+static ULONG WINAPI PersistStreamInit_AddRef(IPersistStreamInit *iface)
 {
-    SHDOCVW_LockModule();
-
-    return 2; /* non-heap based object */
+    WebBrowser *This = PERSTRINIT_THIS(iface);
+    return IWebBrowser_AddRef(WEBBROWSER(This));
 }
 
-static ULONG WINAPI WBPSI_Release(LPPERSISTSTREAMINIT iface)
+static ULONG WINAPI PersistStreamInit_Release(IPersistStreamInit *iface)
 {
-    SHDOCVW_UnlockModule();
-
-    return 1; /* non-heap based object */
+    WebBrowser *This = PERSTRINIT_THIS(iface);
+    return IWebBrowser_Release(WEBBROWSER(This));
 }
 
-static HRESULT WINAPI WBPSI_GetClassID(LPPERSISTSTREAMINIT iface, CLSID *pClassID)
+static HRESULT WINAPI PersistStreamInit_GetClassID(IPersistStreamInit *iface, CLSID *pClassID)
 {
-    FIXME("stub: CLSID = %s\n", debugstr_guid(pClassID));
-    return S_OK;
+    WebBrowser *This = PERSTRINIT_THIS(iface);
+    return IPersistStorage_GetClassID(PERSTORAGE(This), pClassID);
 }
 
-static HRESULT WINAPI WBPSI_IsDirty(LPPERSISTSTREAMINIT iface)
+static HRESULT WINAPI PersistStreamInit_IsDirty(IPersistStreamInit *iface)
 {
-    FIXME("stub\n");
-    return S_OK;
+    WebBrowser *This = PERSTRINIT_THIS(iface);
+    return IPersistStorage_IsDirty(PERSTORAGE(This));
 }
 
-static HRESULT WINAPI WBPSI_Load(LPPERSISTSTREAMINIT iface, LPSTREAM pStg)
+static HRESULT WINAPI PersistStreamInit_Load(IPersistStreamInit *iface, LPSTREAM pStg)
 {
-    FIXME("stub: LPSTORAGE = %p\n", pStg);
-    return S_OK;
+    WebBrowser *This = PERSTRINIT_THIS(iface);
+    FIXME("(%p)->(%p)\n", This, pStg);
+    return E_NOTIMPL;
 }
 
-static HRESULT WINAPI WBPSI_Save(LPPERSISTSTREAMINIT iface, LPSTREAM pStg,
-                                BOOL fSameAsLoad)
+static HRESULT WINAPI PersistStreamInit_Save(IPersistStreamInit *iface, LPSTREAM pStg,
+        BOOL fSameAsLoad)
 {
-    FIXME("stub: LPSTORAGE = %p, fSameAsLoad = %d\n", pStg, fSameAsLoad);
-    return S_OK;
+    WebBrowser *This = PERSTRINIT_THIS(iface);
+    FIXME("(%p)->(%p %x)\n", This, pStg, fSameAsLoad);
+    return E_NOTIMPL;
 }
 
-static HRESULT WINAPI WBPSI_GetSizeMax(LPPERSISTSTREAMINIT iface,
-                                       ULARGE_INTEGER *pcbSize)
+static HRESULT WINAPI PersistStreamInit_GetSizeMax(IPersistStreamInit *iface,
+        ULARGE_INTEGER *pcbSize)
 {
-    FIXME("stub: ULARGE_INTEGER = %p\n", pcbSize);
-    return S_OK;
+    WebBrowser *This = PERSTRINIT_THIS(iface);
+    FIXME("(%p)->(%p)\n", This, pcbSize);
+    return E_NOTIMPL;
 }
 
-static HRESULT WINAPI WBPSI_InitNew(LPPERSISTSTREAMINIT iface)
+static HRESULT WINAPI PersistStreamInit_InitNew(IPersistStreamInit *iface)
 {
-    FIXME("stub\n");
-    return S_OK;
+    WebBrowser *This = PERSTRINIT_THIS(iface);
+    FIXME("(%p)\n", This);
+    return E_NOTIMPL;
 }
 
-/**********************************************************************
- * IPersistStreamInit virtual function table for IE Web Browser component
- */
+#undef PERSTRINIT_THIS
 
-static const IPersistStreamInitVtbl WBPSI_Vtbl =
+static const IPersistStreamInitVtbl PersistStreamInitVtbl =
 {
-    WBPSI_QueryInterface,
-    WBPSI_AddRef,
-    WBPSI_Release,
-    WBPSI_GetClassID,
-    WBPSI_IsDirty,
-    WBPSI_Load,
-    WBPSI_Save,
-    WBPSI_GetSizeMax,
-    WBPSI_InitNew
+    PersistStreamInit_QueryInterface,
+    PersistStreamInit_AddRef,
+    PersistStreamInit_Release,
+    PersistStreamInit_GetClassID,
+    PersistStreamInit_IsDirty,
+    PersistStreamInit_Load,
+    PersistStreamInit_Save,
+    PersistStreamInit_GetSizeMax,
+    PersistStreamInit_InitNew
 };
 
-IPersistStreamInitImpl SHDOCVW_PersistStreamInit = {&WBPSI_Vtbl};
+void WebBrowser_Persist_Init(WebBrowser *This)
+{
+    This->lpPersistStorageVtbl    = &PersistStorageVtbl;
+    This->lpPersistStreamInitVtbl = &PersistStreamInitVtbl;
+}

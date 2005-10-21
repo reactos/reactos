@@ -1,0 +1,8 @@
+LIBRARY pciidex.sys
+
+EXPORTS
+PciIdeXGetBusData@16
+PciIdeXInitialize@16
+PciIdeXSetBusData@20
+
+;EOF

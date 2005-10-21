@@ -1,4 +1,5 @@
 <module name="string" type="staticlibrary">
+	<define name="__NO_CTYPE_INLINES" />
 	<if property="ARCH" value="i386">
 		<directory name="i386">
 			<file>memchr.s</file>

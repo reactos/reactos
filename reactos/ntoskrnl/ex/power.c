@@ -80,7 +80,7 @@ ShutdownThreadMain(PVOID Context)
 		KeInitializeDpc(Dpc, KiHaltProcessorDpcRoutine, (PVOID)Dpc);
 		KeSetTargetProcessorDpc(Dpc, i);
 		KeInsertQueueDpc(Dpc, NULL, NULL);
-		KiIpiSendRequest(1 << i, IPI_REQUEST_DPC);
+		KiIpiSendRequest(1 << i, IPI_DPC);
 	      }
 	  }
         KeLowerIrql(OldIrql);

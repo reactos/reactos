@@ -41,24 +41,17 @@ WINE_DEFAULT_DEBUG_CHANNEL(msi);
 UINT WINAPI MsiDoActionA( MSIHANDLE hInstall, LPCSTR szAction )
 {
     LPWSTR szwAction;
-    UINT rc;
+    UINT ret;
 
-    TRACE(" exteral attempt at action %s\n",szAction);
-
-    if (!szAction)
-        return ERROR_FUNCTION_FAILED;
-    if (hInstall == 0)
-        return ERROR_FUNCTION_FAILED;
+    TRACE("%s\n", debugstr_a(szAction));
 
     szwAction = strdupAtoW(szAction);
-
-    if (!szwAction)
+    if (szAction && !szwAction)
         return ERROR_FUNCTION_FAILED; 
 
-
-    rc = MsiDoActionW(hInstall, szwAction);
-    HeapFree(GetProcessHeap(),0,szwAction);
-    return rc;
+    ret = MsiDoActionW( hInstall, szwAction );
+    msi_free( szwAction );
+    return ret;
 }
 
 /***********************************************************************
@@ -67,159 +60,235 @@ UINT WINAPI MsiDoActionA( MSIHANDLE hInstall, LPCSTR szAction )
 UINT WINAPI MsiDoActionW( MSIHANDLE hInstall, LPCWSTR szAction )
 {
     MSIPACKAGE *package;
-    UINT ret = ERROR_INVALID_HANDLE;
+    UINT ret;
 
-    TRACE(" external attempt at action %s \n",debugstr_w(szAction));
+    TRACE("%s\n",debugstr_w(szAction));
 
-    package = msihandle2msiinfo(hInstall, MSIHANDLETYPE_PACKAGE);
-    if( package )
-    {
-        ret = ACTION_PerformUIAction(package,szAction);
-        msiobj_release( &package->hdr );
-    }
+    if (!szAction)
+        return ERROR_INVALID_PARAMETER;
+
+    package = msihandle2msiinfo( hInstall, MSIHANDLETYPE_PACKAGE );
+    if (!package)
+        return ERROR_INVALID_HANDLE;
+ 
+    ret = ACTION_PerformUIAction( package, szAction );
+    msiobj_release( &package->hdr );
+
     return ret;
+}
+
+/***********************************************************************
+ * MsiSequenceA       (MSI.@)
+ */
+UINT WINAPI MsiSequenceA( MSIHANDLE hInstall, LPCSTR szTable, INT iSequenceMode )
+{
+    LPWSTR szwTable;
+    UINT ret;
+
+    TRACE("%s\n", debugstr_a(szTable));
+
+    szwTable = strdupAtoW(szTable);
+    if (szTable && !szwTable)
+        return ERROR_FUNCTION_FAILED; 
+
+    ret = MsiSequenceW( hInstall, szwTable, iSequenceMode );
+    msi_free( szwTable );
+    return ret;
+}
+
+/***********************************************************************
+ * MsiSequenceW       (MSI.@)
+ */
+UINT WINAPI MsiSequenceW( MSIHANDLE hInstall, LPCWSTR szTable, INT iSequenceMode )
+{
+    MSIPACKAGE *package;
+    UINT ret;
+
+    TRACE("%s\n", debugstr_w(szTable));
+
+    package = msihandle2msiinfo( hInstall, MSIHANDLETYPE_PACKAGE );
+    if (!package)
+        return ERROR_INVALID_HANDLE;
+
+    ret = MSI_Sequence( package, szTable, iSequenceMode );
+    msiobj_release( &package->hdr );
+ 
+    return ret;
+}
+
+static UINT msi_strcpy_to_awstring( LPCWSTR str, awstring *awbuf, DWORD *sz )
+{
+    UINT len, r = ERROR_SUCCESS;
+
+    if (awbuf->str.w && !sz )
+        return ERROR_INVALID_PARAMETER;
+
+    if (!sz)
+        return r;
+ 
+    if (awbuf->unicode)
+    {
+        len = lstrlenW( str );
+        if (awbuf->str.w) 
+            lstrcpynW( awbuf->str.w, str, *sz );
+    }
+    else
+    {
+        len = WideCharToMultiByte( CP_ACP, 0, str, -1,
+                           awbuf->str.a, *sz, NULL, NULL );
+        len--;
+    }
+
+    if (len >= *sz)
+        r = ERROR_MORE_DATA;
+    *sz = len;
+    return r;
+}
+
+/***********************************************************************
+ * MsiGetTargetPath   (internal)
+ */
+UINT WINAPI MSI_GetTargetPath( MSIHANDLE hInstall, LPCWSTR szFolder,
+                               awstring *szPathBuf, DWORD* pcchPathBuf )
+{
+    MSIPACKAGE *package;
+    LPWSTR path;
+    UINT r;
+
+    if (!szFolder)
+        return ERROR_INVALID_PARAMETER;
+
+    package = msihandle2msiinfo( hInstall, MSIHANDLETYPE_PACKAGE );
+    if (!package)
+        return ERROR_INVALID_HANDLE;
+
+    path = resolve_folder( package, szFolder, FALSE, FALSE, NULL );
+    msiobj_release( &package->hdr );
+
+    if (!path)
+        return ERROR_DIRECTORY;
+
+    r = msi_strcpy_to_awstring( path, szPathBuf, pcchPathBuf );
+    msi_free( path );
+    return r;
 }
 
 /***********************************************************************
  * MsiGetTargetPathA        (MSI.@)
  */
 UINT WINAPI MsiGetTargetPathA( MSIHANDLE hInstall, LPCSTR szFolder, 
-                               LPSTR szPathBuf, DWORD* pcchPathBuf) 
+                               LPSTR szPathBuf, DWORD* pcchPathBuf )
 {
     LPWSTR szwFolder;
-    LPWSTR szwPathBuf;
-    UINT rc;
+    awstring path;
+    UINT r;
 
-    TRACE("getting folder %s %p %li\n",szFolder,szPathBuf, *pcchPathBuf);
-
-    if (!szFolder)
-        return ERROR_FUNCTION_FAILED;
-    if (hInstall == 0)
-        return ERROR_FUNCTION_FAILED;
+    TRACE("%s %p %p\n", debugstr_a(szFolder), szPathBuf, pcchPathBuf);
 
     szwFolder = strdupAtoW(szFolder);
-
-    if (!szwFolder)
+    if (szFolder && !szwFolder)
         return ERROR_FUNCTION_FAILED; 
 
-    szwPathBuf = HeapAlloc( GetProcessHeap(), 0 , *pcchPathBuf * sizeof(WCHAR));
+    path.unicode = FALSE;
+    path.str.a = szPathBuf;
 
-    rc = MsiGetTargetPathW(hInstall, szwFolder, szwPathBuf,pcchPathBuf);
+    r = MSI_GetTargetPath( hInstall, szwFolder, &path, pcchPathBuf );
 
-    WideCharToMultiByte( CP_ACP, 0, szwPathBuf, *pcchPathBuf, szPathBuf,
-                         *pcchPathBuf, NULL, NULL );
+    msi_free( szwFolder );
 
-    HeapFree(GetProcessHeap(),0,szwFolder);
-    HeapFree(GetProcessHeap(),0,szwPathBuf);
-
-    return rc;
+    return r;
 }
 
 /***********************************************************************
-* MsiGetTargetPathW        (MSI.@)
-*/
-UINT WINAPI MsiGetTargetPathW( MSIHANDLE hInstall, LPCWSTR szFolder, LPWSTR
-                                szPathBuf, DWORD* pcchPathBuf) 
+ * MsiGetTargetPathW        (MSI.@)
+ */
+UINT WINAPI MsiGetTargetPathW( MSIHANDLE hInstall, LPCWSTR szFolder,
+                               LPWSTR szPathBuf, DWORD* pcchPathBuf )
 {
-    LPWSTR path;
-    UINT rc = ERROR_FUNCTION_FAILED;
-    MSIPACKAGE *package;
+    awstring path;
 
-    TRACE("(%s %p %li)\n",debugstr_w(szFolder),szPathBuf,*pcchPathBuf);
+    TRACE("%s %p %p\n", debugstr_w(szFolder), szPathBuf, pcchPathBuf);
+
+    path.unicode = TRUE;
+    path.str.w = szPathBuf;
+
+    return MSI_GetTargetPath( hInstall, szFolder, &path, pcchPathBuf );
+}
+
+/***********************************************************************
+ * MsiGetSourcePath   (internal)
+ */
+static UINT MSI_GetSourcePath( MSIHANDLE hInstall, LPCWSTR szFolder,
+                               awstring *szPathBuf, DWORD* pcchPathBuf )
+{
+    MSIPACKAGE *package;
+    LPWSTR path;
+    UINT r;
+
+    TRACE("%s %p %p\n", debugstr_w(szFolder), szPathBuf, pcchPathBuf );
+
+    if (!szFolder)
+        return ERROR_INVALID_PARAMETER;
 
     package = msihandle2msiinfo(hInstall, MSIHANDLETYPE_PACKAGE);
     if (!package)
         return ERROR_INVALID_HANDLE;
-    path = resolve_folder(package, szFolder, FALSE, FALSE, NULL);
-    msiobj_release( &package->hdr );
 
-    if (path && (strlenW(path) > *pcchPathBuf))
+    if (szPathBuf->str.w && !pcchPathBuf )
     {
-        *pcchPathBuf = strlenW(path)+1;
-        rc = ERROR_MORE_DATA;
+        msiobj_release( &package->hdr );
+        return ERROR_INVALID_PARAMETER;
     }
-    else if (path)
-    {
-        *pcchPathBuf = strlenW(path)+1;
-        strcpyW(szPathBuf,path);
-        TRACE("Returning Path %s\n",debugstr_w(path));
-        rc = ERROR_SUCCESS;
-    }
-    HeapFree(GetProcessHeap(),0,path);
-    
-    return rc;
-}
 
-
-/***********************************************************************
-* MsiGetSourcePathA     (MSI.@)
-*/
-UINT WINAPI MsiGetSourcePathA( MSIHANDLE hInstall, LPCSTR szFolder, 
-                               LPSTR szPathBuf, DWORD* pcchPathBuf) 
-{
-    LPWSTR szwFolder;
-    LPWSTR szwPathBuf;
-    UINT rc;
-
-    TRACE("getting source %s %p %li\n",szFolder,szPathBuf, *pcchPathBuf);
-
-    if (!szFolder)
-        return ERROR_FUNCTION_FAILED;
-    if (hInstall == 0)
-        return ERROR_FUNCTION_FAILED;
-
-    szwFolder = strdupAtoW(szFolder);
-    if (!szwFolder)
-        return ERROR_FUNCTION_FAILED; 
-
-    szwPathBuf = HeapAlloc( GetProcessHeap(), 0 , *pcchPathBuf * sizeof(WCHAR));
-
-    rc = MsiGetSourcePathW(hInstall, szwFolder, szwPathBuf,pcchPathBuf);
-
-    WideCharToMultiByte( CP_ACP, 0, szwPathBuf, *pcchPathBuf, szPathBuf,
-                         *pcchPathBuf, NULL, NULL );
-
-    HeapFree(GetProcessHeap(),0,szwFolder);
-    HeapFree(GetProcessHeap(),0,szwPathBuf);
-
-    return rc;
-}
-
-/***********************************************************************
-* MsiGetSourcePathW     (MSI.@)
-*/
-UINT WINAPI MsiGetSourcePathW( MSIHANDLE hInstall, LPCWSTR szFolder, LPWSTR
-                                szPathBuf, DWORD* pcchPathBuf) 
-{
-    LPWSTR path;
-    UINT rc = ERROR_FUNCTION_FAILED;
-    MSIPACKAGE *package;
-
-    TRACE("(%s %p %li)\n",debugstr_w(szFolder),szPathBuf,*pcchPathBuf);
-
-    package = msihandle2msiinfo(hInstall, MSIHANDLETYPE_PACKAGE);
-    if( !package )
-        return ERROR_INVALID_HANDLE;
     path = resolve_folder(package, szFolder, TRUE, FALSE, NULL);
     msiobj_release( &package->hdr );
 
-    if (path && strlenW(path) > *pcchPathBuf)
-    {
-        *pcchPathBuf = strlenW(path)+1;
-        rc = ERROR_MORE_DATA;
-    }
-    else if (path)
-    {
-        *pcchPathBuf = strlenW(path)+1;
-        strcpyW(szPathBuf,path);
-        TRACE("Returning Path %s\n",debugstr_w(path));
-        rc = ERROR_SUCCESS;
-    }
-    HeapFree(GetProcessHeap(),0,path);
-    
-    return rc;
+    TRACE("path = %s\n",debugstr_w(path));
+    if (!path)
+        return ERROR_DIRECTORY;
+
+    r = msi_strcpy_to_awstring( path, szPathBuf, pcchPathBuf );
+    msi_free( path );
+    return r;
 }
 
+/***********************************************************************
+ * MsiGetSourcePathA     (MSI.@)
+ */
+UINT WINAPI MsiGetSourcePathA( MSIHANDLE hInstall, LPCSTR szFolder, 
+                               LPSTR szPathBuf, DWORD* pcchPathBuf )
+{
+    LPWSTR folder;
+    awstring str;
+    UINT r;
+
+    TRACE("%s %p %p\n", szFolder, debugstr_a(szPathBuf), pcchPathBuf);
+
+    str.unicode = FALSE;
+    str.str.a = szPathBuf;
+
+    folder = strdupAtoW( szFolder );
+    r = MSI_GetSourcePath( hInstall, folder, &str, pcchPathBuf );
+    msi_free( folder );
+
+    return r;
+}
+
+/***********************************************************************
+ * MsiGetSourcePathW     (MSI.@)
+ */
+UINT WINAPI MsiGetSourcePathW( MSIHANDLE hInstall, LPCWSTR szFolder,
+                               LPWSTR szPathBuf, DWORD* pcchPathBuf )
+{
+    awstring str;
+
+    TRACE("%s %p %p\n", debugstr_w(szFolder), szPathBuf, pcchPathBuf );
+
+    str.unicode = TRUE;
+    str.str.w = szPathBuf;
+
+    return MSI_GetSourcePath( hInstall, szFolder, &str, pcchPathBuf );
+}
 
 /***********************************************************************
  * MsiSetTargetPathA  (MSI.@)
@@ -243,14 +312,14 @@ UINT WINAPI MsiSetTargetPathA(MSIHANDLE hInstall, LPCSTR szFolder,
     szwFolderPath = strdupAtoW(szFolderPath);
     if (!szwFolderPath)
     {
-        HeapFree(GetProcessHeap(),0,szwFolder);
+        msi_free(szwFolder);
         return ERROR_FUNCTION_FAILED; 
     }
 
     rc = MsiSetTargetPathW(hInstall, szwFolder, szwFolderPath);
 
-    HeapFree(GetProcessHeap(),0,szwFolder);
-    HeapFree(GetProcessHeap(),0,szwFolderPath);
+    msi_free(szwFolder);
+    msi_free(szwFolderPath);
 
     return rc;
 }
@@ -295,7 +364,7 @@ UINT MSI_SetTargetPathW(MSIPACKAGE *package, LPCWSTR szFolder,
         RemoveDirectoryW(szFolderPath);
     }
 
-    HeapFree(GetProcessHeap(),0,folder->Property);
+    msi_free(folder->Property);
     folder->Property = build_directory_name(2, szFolderPath, NULL);
 
     if (lstrcmpiW(path, folder->Property) == 0)
@@ -304,10 +373,10 @@ UINT MSI_SetTargetPathW(MSIPACKAGE *package, LPCWSTR szFolder,
          *  Resolved Target has not really changed, so just 
          *  set this folder and do not recalculate everything.
          */
-        HeapFree(GetProcessHeap(),0,folder->ResolvedTarget);
+        msi_free(folder->ResolvedTarget);
         folder->ResolvedTarget = NULL;
         path2 = resolve_folder(package,szFolder,FALSE,TRUE,NULL);
-        HeapFree(GetProcessHeap(),0,path2);
+        msi_free(path2);
     }
     else
     {
@@ -315,17 +384,17 @@ UINT MSI_SetTargetPathW(MSIPACKAGE *package, LPCWSTR szFolder,
 
         LIST_FOR_EACH_ENTRY( f, &package->folders, MSIFOLDER, entry )
         {
-            HeapFree( GetProcessHeap(),0,f->ResolvedTarget);
+            msi_free(f->ResolvedTarget);
             f->ResolvedTarget=NULL;
         }
 
         LIST_FOR_EACH_ENTRY( f, &package->folders, MSIFOLDER, entry )
         {
             path2 = resolve_folder(package, f->Directory, FALSE, TRUE, NULL);
-            HeapFree(GetProcessHeap(),0,path2);
+            msi_free(path2);
         }
     }
-    HeapFree(GetProcessHeap(),0,path);
+    msi_free(path);
 
     return ERROR_SUCCESS;
 }
@@ -406,7 +475,7 @@ UINT WINAPI MsiSetFeatureStateA(MSIHANDLE hInstall, LPCSTR szFeature,
    
     rc = MsiSetFeatureStateW(hInstall,szwFeature, iState); 
 
-    HeapFree(GetProcessHeap(),0,szwFeature);
+    msi_free(szwFeature);
 
     return rc;
 }
@@ -478,7 +547,7 @@ UINT WINAPI MsiGetFeatureStateA(MSIHANDLE hInstall, LPSTR szFeature,
 
     rc = MsiGetFeatureStateW(hInstall,szwFeature,piInstalled, piAction);
 
-    HeapFree( GetProcessHeap(), 0 , szwFeature);
+    msi_free( szwFeature);
 
     return rc;
 }
@@ -534,7 +603,7 @@ UINT WINAPI MsiSetComponentStateA(MSIHANDLE hInstall, LPCSTR szComponent,
 
     rc = MsiSetComponentStateW(hInstall, szwComponent, iState);
 
-    HeapFree(GetProcessHeap(), 0, szwComponent);
+    msi_free(szwComponent);
 
     return rc;
 }
@@ -552,7 +621,7 @@ UINT WINAPI MsiGetComponentStateA(MSIHANDLE hInstall, LPSTR szComponent,
 
     rc = MsiGetComponentStateW(hInstall,szwComponent,piInstalled, piAction);
 
-    HeapFree( GetProcessHeap(), 0 , szwComponent);
+    msi_free( szwComponent);
 
     return rc;
 }
@@ -648,10 +717,10 @@ LANGID WINAPI MsiGetLanguage(MSIHANDLE hInstall)
     if (!package)
         return ERROR_INVALID_HANDLE;
 
-    buffer = load_dynamic_property(package,szProductLanguage,NULL);
+    buffer = msi_dup_property( package, szProductLanguage );
     langid = atoiW(buffer);
 
-    HeapFree(GetProcessHeap(),0,buffer);
+    msi_free(buffer);
     msiobj_release (&package->hdr);
     return langid;
 }

@@ -47,7 +47,9 @@ LUID SeEnableDelegationPrivilege;
 
 /* FUNCTIONS ***************************************************************/
 
-VOID INIT_FUNCTION
+VOID
+INIT_FUNCTION
+NTAPI
 SepInitPrivileges (VOID)
 {
   SeCreateTokenPrivilege.LowPart = SE_CREATE_TOKEN_PRIVILEGE;
@@ -106,6 +108,7 @@ SepInitPrivileges (VOID)
 
 
 BOOLEAN
+NTAPI
 SepPrivilegeCheck (PTOKEN Token,
 		   PLUID_AND_ATTRIBUTES Privileges,
 		   ULONG PrivilegeCount,
@@ -166,6 +169,7 @@ SepPrivilegeCheck (PTOKEN Token,
 
 
 NTSTATUS
+NTAPI
 SeCaptureLuidAndAttributesArray (PLUID_AND_ATTRIBUTES Src,
 				 ULONG PrivilegeCount,
 				 KPROCESSOR_MODE PreviousMode,
@@ -221,6 +225,7 @@ SeCaptureLuidAndAttributesArray (PLUID_AND_ATTRIBUTES Src,
 
 
 VOID
+NTAPI
 SeReleaseLuidAndAttributesArray (PLUID_AND_ATTRIBUTES Privilege,
 				 KPROCESSOR_MODE PreviousMode,
 				 ULONG a)

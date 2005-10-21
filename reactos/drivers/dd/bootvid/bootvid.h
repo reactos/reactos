@@ -121,4 +121,7 @@ typedef struct _VGA_REGISTERS
 extern VOID
 InbvPutPixels(int x, int y, unsigned long c);
 
+NTSTATUS STDCALL
+DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath);
+
 #endif /* _BOOTVID_H */

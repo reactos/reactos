@@ -118,8 +118,8 @@ CsrAllocateCaptureBuffer(ULONG ArgumentCount,
 ULONG
 NTAPI
 CsrAllocateMessagePointer(PCSR_CAPTURE_BUFFER CaptureBuffer,
-					      ULONG MessageLength,
-					      PVOID *CaptureData)
+                          ULONG MessageLength,
+                          PVOID *CaptureData)
 {
     /* If there's no data, our job is easy. */
     if (MessageLength == 0)
@@ -142,11 +142,11 @@ CsrAllocateMessagePointer(PCSR_CAPTURE_BUFFER CaptureBuffer,
         CaptureBuffer->BufferEnd += MessageLength;
     }
 
-    /* Increase the pointer count */
-    CaptureBuffer->PointerCount++;
-
     /* Write down this pointer in the array */
     CaptureBuffer->PointerArray[CaptureBuffer->PointerCount] = (ULONG_PTR)CaptureData;
+
+    /* Increase the pointer count */
+    CaptureBuffer->PointerCount++;
 
     /* Return the aligned length */
     return MessageLength;
@@ -158,9 +158,9 @@ CsrAllocateMessagePointer(PCSR_CAPTURE_BUFFER CaptureBuffer,
 VOID
 NTAPI
 CsrCaptureMessageBuffer(PCSR_CAPTURE_BUFFER CaptureBuffer,
-			            PVOID MessageString,
-			            ULONG StringLength,
-			            PVOID *CapturedData)
+                        PVOID MessageString,
+                        ULONG StringLength,
+                        PVOID *CapturedData)
 {
     /* Simply allocate a message pointer in the buffer */
     CsrAllocateMessagePointer(CaptureBuffer, StringLength, CapturedData);
@@ -254,7 +254,7 @@ CsrCaptureMessageString(PCSR_CAPTURE_BUFFER CaptureBuffer,
 PLARGE_INTEGER
 NTAPI
 CsrCaptureTimeout(LONG Milliseconds,
-		          PLARGE_INTEGER Timeout)
+                  PLARGE_INTEGER Timeout)
 {
     /* Validate the time */
     if (Milliseconds == -1) return NULL;

@@ -999,6 +999,11 @@ DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
   PDISK_DATA DiskData;
   ULONG Information;
   NTSTATUS Status;
+  KEVENT Event;
+  IO_STATUS_BLOCK IoSB;
+  PIRP LocalIrp;
+  PSRB_IO_CONTROL SrbIoControl;
+  PSENDCMDINPARAMS InParams;
 
   DPRINT("DiskClassDeviceControl() called!\n");
 
@@ -1251,6 +1256,338 @@ DiskClassDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	Information = 0;
 	break;
 
+      case SMART_GET_VERSION:
+        {
+          PGETVERSIONINPARAMS Version;
+          DPRINT("SMART_GET_VERSION\n");
+          if (OutputLength < sizeof(GETVERSIONINPARAMS)) 
+            {
+              Status = STATUS_BUFFER_TOO_SMALL;
+              Information = sizeof(GETVERSIONINPARAMS);
+              break;
+            }
+
+          SrbIoControl = ExAllocatePool(NonPagedPool, sizeof(SRB_IO_CONTROL) + sizeof(GETVERSIONINPARAMS));
+          if (SrbIoControl == NULL)
+            {
+	      Status = STATUS_INSUFFICIENT_RESOURCES;
+              break;
+            }
+          Version = (PGETVERSIONINPARAMS)(SrbIoControl + 1);
+          memset(SrbIoControl, 0, sizeof(SRB_IO_CONTROL) + sizeof(GETVERSIONINPARAMS));
+
+          SrbIoControl->HeaderLength = sizeof(SRB_IO_CONTROL);
+          memcpy(SrbIoControl->Signature, "ScsiDisk", 8);
+          SrbIoControl->Timeout = DeviceExtension->TimeOutValue * 4;
+          SrbIoControl->Length = sizeof(GETVERSIONINPARAMS);
+          SrbIoControl->ControlCode = IOCTL_SCSI_MINIPORT_SMART_VERSION;
+
+          KeInitializeEvent(&Event, NotificationEvent, FALSE);
+          LocalIrp = IoBuildDeviceIoControlRequest(IOCTL_SCSI_MINIPORT,
+                                                   DeviceExtension->PortDeviceObject,
+                                                   SrbIoControl,
+                                                   sizeof(SRB_IO_CONTROL),
+                                                   SrbIoControl,
+                                                   sizeof(SRB_IO_CONTROL) + sizeof(GETVERSIONINPARAMS),
+                                                   FALSE,
+                                                   &Event,
+                                                   &IoSB);
+          if (LocalIrp == NULL)
+            {
+              ExFreePool(SrbIoControl);
+	      Status = STATUS_INSUFFICIENT_RESOURCES;
+              break;
+            }
+
+          Status = IoCallDriver(DeviceExtension->PortDeviceObject, LocalIrp);
+          if (Status == STATUS_PENDING)
+            {
+              KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+              Status = IoSB.Status;
+            }
+          if (NT_SUCCESS(Status))
+            {
+              memcpy(Irp->AssociatedIrp.SystemBuffer, Version, sizeof(GETVERSIONINPARAMS));
+              Information = sizeof(GETVERSIONINPARAMS);
+            }
+          ExFreePool(SrbIoControl);
+          break;
+        }
+
+      case SMART_SEND_DRIVE_COMMAND: 
+        {
+          DPRINT("SMART_SEND_DRIVE_COMMAND\n");
+
+          if (InputLength < sizeof(SENDCMDINPARAMS) - 1)
+            {
+	      Status = STATUS_INFO_LENGTH_MISMATCH;
+              break;
+            }
+
+          InParams = (PSENDCMDINPARAMS)Irp->AssociatedIrp.SystemBuffer;
+          if (InParams->irDriveRegs.bCommandReg == SMART_CMD)
+            {
+              if (InParams->irDriveRegs.bFeaturesReg == ENABLE_DISABLE_AUTOSAVE)
+                {
+                  DPRINT("IOCTL_SCSI_MINIPORT_ENABLE_DISABLE_AUTOSAVE\n");
+                  ControlCode = IOCTL_SCSI_MINIPORT_ENABLE_DISABLE_AUTOSAVE;
+                  Information = sizeof(SENDCMDOUTPARAMS) - 1;
+                }
+              else if (InParams->irDriveRegs.bFeaturesReg == SAVE_ATTRIBUTE_VALUES)
+                {
+                  DPRINT("IOCTL_SCSI_MINIPORT_SAVE_ATTRIBUTE_VALUES\n");
+                  ControlCode = IOCTL_SCSI_MINIPORT_SAVE_ATTRIBUTE_VALUES;
+                  Information = sizeof(SENDCMDOUTPARAMS) - 1;
+                }
+              else if (InParams->irDriveRegs.bFeaturesReg == EXECUTE_OFFLINE_DIAGS)
+                {
+                  DPRINT("IOCTL_SCSI_MINIPORT_EXECUTE_OFFLINE_DIAGS\n");
+                  ControlCode = IOCTL_SCSI_MINIPORT_EXECUTE_OFFLINE_DIAGS;
+                  Information = sizeof(SENDCMDOUTPARAMS) - 1;
+                }
+              else if (InParams->irDriveRegs.bFeaturesReg == SMART_WRITE_LOG)
+                {
+                  DPRINT("IOCTL_SCSI_MINIPORT_WRITE_SMART_LOG\n");
+                  ControlCode = IOCTL_SCSI_MINIPORT_WRITE_SMART_LOG;
+                  if (InputLength < sizeof(SENDCMDINPARAMS) - 1 + 512 * max(1, InParams->irDriveRegs.bSectorCountReg))
+                    {
+	              Status = STATUS_INFO_LENGTH_MISMATCH;
+                      break;
+                    }
+                  Information = sizeof(SENDCMDOUTPARAMS) - 1;
+                }
+              else if (InParams->irDriveRegs.bFeaturesReg == ENABLE_SMART)
+                {
+                  DPRINT("IOCTL_SCSI_MINIPORT_ENABLE_SMART\n");
+                  ControlCode = IOCTL_SCSI_MINIPORT_ENABLE_SMART;
+                  Information = sizeof(SENDCMDOUTPARAMS) - 1;
+                }
+              else if (InParams->irDriveRegs.bFeaturesReg == DISABLE_SMART)
+                {
+                  DPRINT("IOCTL_SCSI_MINIPORT_DISABLE_SMART\n");
+                  ControlCode = IOCTL_SCSI_MINIPORT_DISABLE_SMART;
+                  Information = sizeof(SENDCMDOUTPARAMS) - 1;
+                }
+              else if (InParams->irDriveRegs.bFeaturesReg == RETURN_SMART_STATUS)
+                {
+                  DPRINT("IOCTL_SCSI_MINIPORT_RETURN_STATUS\n");
+                  ControlCode = IOCTL_SCSI_MINIPORT_RETURN_STATUS;
+                  Information = sizeof(SENDCMDOUTPARAMS) - 1 + sizeof(IDEREGS);
+                }
+              else if (InParams->irDriveRegs.bFeaturesReg == ENABLE_DISABLE_AUTO_OFFLINE)
+                {
+                  DPRINT("IOCTL_SCSI_MINIPORT_EXECUTE_OFFLINE_DIAGS\n");
+                  ControlCode = IOCTL_SCSI_MINIPORT_EXECUTE_OFFLINE_DIAGS;
+                  Information = sizeof(SENDCMDOUTPARAMS) - 1;
+                }
+              else
+                {
+                  DPRINT("%x\n", InParams->irDriveRegs.bFeaturesReg);
+                  Status = STATUS_INVALID_PARAMETER;
+                  break;
+                }
+            }
+          else
+            {
+              Status = STATUS_INVALID_PARAMETER;
+              break;
+            }
+          if (OutputLength < Information)
+            {
+              Status = STATUS_BUFFER_TOO_SMALL;
+              break;
+            }
+          
+          SrbIoControl = ExAllocatePool(NonPagedPool, sizeof(SRB_IO_CONTROL) + max(Information, sizeof(SENDCMDINPARAMS) - 1));
+          if (SrbIoControl == NULL) 
+            {
+              Status =  STATUS_INSUFFICIENT_RESOURCES;
+              Information = 0;
+              break;
+            }
+          memset(SrbIoControl, 0, sizeof(SRB_IO_CONTROL) + max(Information, sizeof(SENDCMDINPARAMS) - 1));
+
+          SrbIoControl->HeaderLength = sizeof(SRB_IO_CONTROL);
+          memcpy(SrbIoControl->Signature, "SCSIDISK", 8);
+          SrbIoControl->Timeout = DeviceExtension->TimeOutValue * 4;
+          SrbIoControl->Length = Information;
+          SrbIoControl->ControlCode = ControlCode;
+
+          InParams = (PSENDCMDINPARAMS)(SrbIoControl + 1);
+
+          memcpy(InParams, Irp->AssociatedIrp.SystemBuffer, sizeof(SENDCMDINPARAMS) - 1);
+          
+          InParams->bDriveNumber = DeviceExtension->TargetId;
+
+          KeInitializeEvent(&Event, NotificationEvent, FALSE);
+          LocalIrp = IoBuildDeviceIoControlRequest(IOCTL_SCSI_MINIPORT,
+                                                   DeviceExtension->PortDeviceObject,
+                                                   SrbIoControl,
+                                                   sizeof(SRB_IO_CONTROL) + sizeof(SENDCMDINPARAMS) - 1,
+                                                   SrbIoControl,
+                                                   sizeof(SRB_IO_CONTROL) + Information,
+                                                   FALSE,
+                                                   &Event,
+                                                   &IoSB);
+          if (LocalIrp == NULL)
+            {
+              ExFreePool(SrbIoControl);
+              Information = 0;
+	      Status = STATUS_INSUFFICIENT_RESOURCES;
+              break;
+            }
+          Status = IoCallDriver(DeviceExtension->PortDeviceObject, LocalIrp);
+          if (Status == STATUS_PENDING)
+            {
+              KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+              Status = IoSB.Status;
+            }
+          if (NT_SUCCESS(Status))
+            {
+              Information = SrbIoControl->Length;
+            }
+          else
+            {
+              Information = sizeof(SENDCMDOUTPARAMS) - 1;
+            }
+          memcpy(Irp->AssociatedIrp.SystemBuffer, InParams, Information);
+          ExFreePool(SrbIoControl);
+          break;
+        }
+
+      case SMART_RCV_DRIVE_DATA:
+        {
+          DPRINT("SMART_RCV_DRIVE_DATA\n");
+
+          if (InputLength < sizeof(SENDCMDINPARAMS) - 1)
+            {
+	      Status = STATUS_INFO_LENGTH_MISMATCH;
+              break;
+            }
+
+          InParams = (PSENDCMDINPARAMS)Irp->AssociatedIrp.SystemBuffer;
+          if (InParams->irDriveRegs.bCommandReg == ID_CMD) 
+            {
+              DPRINT("IOCTL_SCSI_MINIPORT_IDENTIFY\n");
+              ControlCode = IOCTL_SCSI_MINIPORT_IDENTIFY;
+              Information = IDENTIFY_BUFFER_SIZE + sizeof(SENDCMDOUTPARAMS) - 1;
+            }
+          else if (InParams->irDriveRegs.bCommandReg == SMART_CMD) 
+            {
+              if (InParams->irDriveRegs.bFeaturesReg == READ_ATTRIBUTES)
+                {
+                  DPRINT("IOCTL_SCSI_MINIPORT_READ_SMART_ATTRIBS\n");
+                  ControlCode = IOCTL_SCSI_MINIPORT_READ_SMART_ATTRIBS;
+                  Information = READ_ATTRIBUTE_BUFFER_SIZE + sizeof(SENDCMDOUTPARAMS) - 1;
+                }
+              else if (InParams->irDriveRegs.bFeaturesReg == READ_THRESHOLDS)
+                {
+                  DPRINT("IOCTL_SCSI_MINIPORT_READ_SMART_THRESHOLDS\n");
+                  ControlCode = IOCTL_SCSI_MINIPORT_READ_SMART_THRESHOLDS;
+                  Information = READ_THRESHOLD_BUFFER_SIZE + sizeof(SENDCMDOUTPARAMS) - 1;
+                }
+              else if (InParams->irDriveRegs.bFeaturesReg == SMART_READ_LOG)
+                {
+                  DPRINT("IOCTL_SCSI_MINIPORT_READ_SMART_LOG\n");
+                  ControlCode = IOCTL_SCSI_MINIPORT_READ_SMART_LOG;
+                  Information = sizeof(SENDCMDOUTPARAMS) - 1 + 512 * max(1, InParams->irDriveRegs.bSectorCountReg); 
+                }
+              else
+                {
+                  DPRINT("%x\n", InParams->irDriveRegs.bFeaturesReg);
+                  Status = STATUS_INVALID_PARAMETER;
+                  break;
+                }
+            }
+          else
+            {
+              DPRINT("%x\n", InParams->irDriveRegs.bCommandReg);
+              Status = STATUS_INVALID_PARAMETER;
+              break;
+            }
+          if (OutputLength < Information)
+            {
+              Status =  STATUS_BUFFER_TOO_SMALL;
+              break;
+            }
+          SrbIoControl = ExAllocatePool(NonPagedPool, sizeof(SRB_IO_CONTROL) + Information);
+          if (SrbIoControl == NULL) 
+            {
+              Status =  STATUS_INSUFFICIENT_RESOURCES;
+              Information = 0;
+              break;
+            }
+          memset(SrbIoControl, 0, sizeof(SRB_IO_CONTROL) + Information);
+
+          SrbIoControl->HeaderLength = sizeof(SRB_IO_CONTROL);
+          memcpy(SrbIoControl->Signature, "SCSIDISK", 8);
+          SrbIoControl->Timeout = DeviceExtension->TimeOutValue * 4;
+          SrbIoControl->Length = Information;
+          SrbIoControl->ControlCode = ControlCode;
+
+          InParams = (PSENDCMDINPARAMS)(SrbIoControl + 1);
+
+          memcpy(InParams, Irp->AssociatedIrp.SystemBuffer, sizeof(SENDCMDINPARAMS) - 1);
+          
+          InParams->bDriveNumber = DeviceExtension->TargetId;
+
+          KeInitializeEvent(&Event, NotificationEvent, FALSE);
+          LocalIrp = IoBuildDeviceIoControlRequest(IOCTL_SCSI_MINIPORT,
+                                                   DeviceExtension->PortDeviceObject,
+                                                   SrbIoControl,
+                                                   sizeof(SRB_IO_CONTROL) + sizeof(SENDCMDINPARAMS) - 1,
+                                                   SrbIoControl,
+                                                   sizeof(SRB_IO_CONTROL) + Information,
+                                                   FALSE,
+                                                   &Event,
+                                                   &IoSB);
+          if (LocalIrp == NULL)
+            {
+              ExFreePool(SrbIoControl);
+              Information = 0;
+	      Status = STATUS_INSUFFICIENT_RESOURCES;
+              break;
+            }
+          Status = IoCallDriver(DeviceExtension->PortDeviceObject, LocalIrp);
+          if (Status == STATUS_PENDING)
+            {
+              KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, NULL);
+              Status = IoSB.Status;
+            }
+          if (NT_SUCCESS(Status))
+            {
+#if 0            	
+              CHAR Buffer[256];
+              ULONG i, j;
+              UCHAR sum = 0;
+              memset(Buffer, 0, sizeof(Buffer));
+              for (i = 0; i < 512; i += 16)
+              {
+                 for (j = 0; j < 16 && i + j < 512; j++)
+                   {
+                     sprintf(&Buffer[3*j], "%02x ", ((PSENDCMDOUTPARAMS)(SrbIoControl + 1))->bBuffer[i + j]);
+                     sum += ((PSENDCMDOUTPARAMS)(SrbIoControl + 1))->bBuffer[i + j];
+                   }
+                 for (j = 0; j < 16 && i + j < 512; j++)
+                   {
+                       sprintf(&Buffer[3*16 + j], "%c", isprint(((PSENDCMDOUTPARAMS)(SrbIoControl + 1))->bBuffer[i + j]) ? ((PSENDCMDOUTPARAMS)(SrbIoControl + 1))->bBuffer[i + j] : '.');
+                   }
+                 DPRINT1("%04x %s\n", i, Buffer);
+              }
+              DPRINT1("Sum %02x\n", sum);
+#endif              
+              Information = SrbIoControl->Length;
+             
+            }
+          else
+            {
+              Information = sizeof(SENDCMDOUTPARAMS) -1;
+            }
+          memcpy(Irp->AssociatedIrp.SystemBuffer, InParams, Information);
+          ExFreePool(SrbIoControl);
+          break;
+        }
+
       default:
 	/* Call the common device control function */
 	return(ScsiClassDeviceControl(DeviceObject, Irp));
@@ -1316,21 +1653,13 @@ DiskClassShutdownFlush(IN PDEVICE_OBJECT DeviceObject,
       return(STATUS_INSUFFICIENT_RESOURCES);
     }
 
-  /* Initialize SRB */
   RtlZeroMemory(Srb, sizeof(SCSI_REQUEST_BLOCK));
-  Srb->Length = sizeof(SCSI_REQUEST_BLOCK);
 
-  /* Set device IDs */
-  Srb->PathId = DeviceExtension->PathId;
-  Srb->TargetId = DeviceExtension->TargetId;
-  Srb->Lun = DeviceExtension->Lun;
 
   /* Set timeout */
   Srb->TimeOutValue = DeviceExtension->TimeOutValue * 4;
 
   /* Flush write cache */
-  Srb->Function = SRB_FUNCTION_EXECUTE_SCSI;
-  Srb->SrbFlags = SRB_FLAGS_NO_DATA_TRANSFER;
   Srb->CdbLength = 10;
   Srb->Cdb[0] = SCSIOP_SYNCHRONIZE_CACHE;
   ScsiClassSendSrbSynchronous(DeviceObject,

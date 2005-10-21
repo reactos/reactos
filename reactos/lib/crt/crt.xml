@@ -317,6 +317,7 @@
 		<file>senv.c</file>
 		<file>strtod.c</file>
 		<file>strtoul.c</file>
+		<file>strtoull.c</file>
 		<file>swab.c</file>
 		<file>wcstod.c</file>
 		<file>wcstombs.c</file>

@@ -24,8 +24,11 @@
 /* INCLUDES */
 #include <ddk/ntddk.h>
 
-/* FUNCTIONS */
 NTSTATUS STDCALL
+DriverEntry(PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath);
+
+/* FUNCTIONS */
+static NTSTATUS STDCALL
 DebugOutDispatch(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 {
   PIO_STACK_LOCATION piosStack = IoGetCurrentIrpStackLocation(Irp);
@@ -82,7 +85,7 @@ DebugOutDispatch(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
   return nErrCode;
 }
 
-VOID STDCALL
+static VOID STDCALL
 DebugOutUnload(PDRIVER_OBJECT DriverObject)
 {
 }

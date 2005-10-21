@@ -20,18 +20,22 @@
 		<file>connect.c</file>
 	</directory>
 	<directory name="dbg">
-		<file>debug.c</file>
-		<file>print.c</file>
+		<file>dbgui.c</file>
 	</directory>
 	<directory name="ldr">
-		<file>entry.S</file>
 		<file>res.c</file>
 		<file>startup.c</file>
 		<file>utils.c</file>
 	</directory>
 	<directory name="main">
-		<file>dispatch.c</file>
-		<file>dllmain.c</file>
+		<if property="ARCH" value="i386">
+			<directory name="i386">
+				<file>dispatch.S</file>
+			</directory>
+		</if>
+		<ifnot property="ARCH" value="i386">
+			<file>dispatch.c</file>
+		</ifnot>
 	</directory>
 	<directory name="rtl">
 		<file>libsupp.c</file>

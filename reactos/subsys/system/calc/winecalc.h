@@ -23,8 +23,8 @@
 // numerics are defined here for easier porting
 
 typedef double calcfloat;
-#define FMT_DESC_FLOAT TEXT("%.32g")
-#define FMT_DESC_EXP TEXT("%.32e")
+#define FMT_DESC_FLOAT TEXT("%g")
+#define FMT_DESC_EXP TEXT("%e")
 
 #define CALC_ATOF(x) atof(x)
 
@@ -338,6 +338,7 @@ LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 void InitLuts(void);
 void InitMenus(HINSTANCE hInst);
+void DestroyMenus();
 
 void InitCalc (CALC *calc);
 void DestroyCalc (CALC *calc);
@@ -355,7 +356,7 @@ void calc_setmenuitem_radio(HMENU hMenu, UINT id);
 
 void show_debug(CALC *calc, TCHAR *title, long wParam, long lParam);
 
-calcfloat calc_atof(TCHAR *s, int base);
+calcfloat calc_atof(const TCHAR *s, int base);
 void calc_ftoa(CALC *calc, calcfloat r, TCHAR *buf);
 long factorial(long n);
 

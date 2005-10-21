@@ -1,6 +1,6 @@
 /*
  * ReactOS Access Control List Editor
- * Copyright (C) 2004 ReactOS Team
+ * Copyright (C) 2004-2005 ReactOS Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -32,40 +32,45 @@
 
 #include <precomp.h>
 
+static PCWSTR ObjectPickerAttributes[] =
+{
+    L"ObjectSid",
+};
+
 static INT
 LengthOfStrResource(IN HINSTANCE hInst,
                     IN UINT uID)
 {
-  HRSRC hrSrc;
-  HGLOBAL hRes;
-  LPWSTR lpName, lpStr;
+    HRSRC hrSrc;
+    HGLOBAL hRes;
+    LPWSTR lpName, lpStr;
 
-  if(hInst == NULL)
-  {
-    return -1;
-  }
-
-  /* There are always blocks of 16 strings */
-  lpName = (LPWSTR)MAKEINTRESOURCE((uID >> 4) + 1);
-
-  /* Find the string table block */
-  if((hrSrc = FindResourceW(hInst, lpName, (LPWSTR)RT_STRING)) &&
-     (hRes = LoadResource(hInst, hrSrc)) &&
-     (lpStr = LockResource(hRes)))
-  {
-    UINT x;
-
-    /* Find the string we're looking for */
-    uID &= 0xF; /* position in the block, same as % 16 */
-    for(x = 0; x < uID; x++)
+    if (hInst == NULL)
     {
-      lpStr += (*lpStr) + 1;
+        return -1;
     }
 
-    /* Found the string */
-    return (int)(*lpStr);
-  }
-  return -1;
+    /* There are always blocks of 16 strings */
+    lpName = (LPWSTR)MAKEINTRESOURCE((uID >> 4) + 1);
+
+    /* Find the string table block */
+    if ((hrSrc = FindResourceW(hInst, lpName, (LPWSTR)RT_STRING)) &&
+        (hRes = LoadResource(hInst, hrSrc)) &&
+        (lpStr = LockResource(hRes)))
+    {
+        UINT x;
+
+        /* Find the string we're looking for */
+        uID &= 0xF; /* position in the block, same as % 16 */
+        for (x = 0; x < uID; x++)
+        {
+            lpStr += (*lpStr) + 1;
+        }
+
+        /* Found the string */
+        return (int)(*lpStr);
+    }
+    return -1;
 }
 
 static INT
@@ -73,25 +78,25 @@ AllocAndLoadString(OUT LPWSTR *lpTarget,
                    IN HINSTANCE hInst,
                    IN UINT uID)
 {
-  INT ln;
+    INT ln;
 
-  ln = LengthOfStrResource(hInst,
-                           uID);
-  if(ln++ > 0)
-  {
-    (*lpTarget) = (LPWSTR)LocalAlloc(LMEM_FIXED,
-                                     ln * sizeof(WCHAR));
-    if((*lpTarget) != NULL)
+    ln = LengthOfStrResource(hInst,
+                             uID);
+    if (ln++ > 0)
     {
-      INT Ret;
-      if(!(Ret = LoadStringW(hInst, uID, *lpTarget, ln)))
-      {
-        LocalFree((HLOCAL)(*lpTarget));
-      }
-      return Ret;
+        (*lpTarget) = (LPWSTR)LocalAlloc(LMEM_FIXED,
+                                         ln * sizeof(WCHAR));
+        if ((*lpTarget) != NULL)
+        {
+            INT Ret;
+            if (!(Ret = LoadStringW(hInst, uID, *lpTarget, ln)))
+            {
+                LocalFree((HLOCAL)(*lpTarget));
+            }
+            return Ret;
+        }
     }
-  }
-  return 0;
+    return 0;
 }
 
 DWORD
@@ -100,30 +105,30 @@ LoadAndFormatString(IN HINSTANCE hInstance,
                     OUT LPWSTR *lpTarget,
                     ...)
 {
-  DWORD Ret = 0;
-  LPWSTR lpFormat;
-  va_list lArgs;
+    DWORD Ret = 0;
+    LPWSTR lpFormat;
+    va_list lArgs;
 
-  if(AllocAndLoadString(&lpFormat,
-                        hInstance,
-                        uID) > 0)
-  {
-    va_start(lArgs, lpTarget);
-    /* let's use FormatMessage to format it because it has the ability to allocate
-       memory automatically */
-    Ret = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_STRING,
-                         lpFormat,
-                         0,
-                         0,
-                         (LPWSTR)lpTarget,
-                         0,
-                         &lArgs);
-    va_end(lArgs);
+    if (AllocAndLoadString(&lpFormat,
+                           hInstance,
+                           uID) > 0)
+    {
+        va_start(lArgs, lpTarget);
+        /* let's use FormatMessage to format it because it has the ability to allocate
+           memory automatically */
+        Ret = FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_STRING,
+                             lpFormat,
+                             0,
+                             0,
+                             (LPWSTR)lpTarget,
+                             0,
+                             &lArgs);
+        va_end(lArgs);
 
-    LocalFree((HLOCAL)lpFormat);
-  }
+        LocalFree((HLOCAL)lpFormat);
+    }
 
-  return Ret;
+    return Ret;
 }
 
 BOOL
@@ -131,11 +136,9 @@ OpenLSAPolicyHandle(IN LPWSTR SystemName,
                     IN ACCESS_MASK DesiredAccess,
                     OUT PLSA_HANDLE PolicyHandle)
 {
-    LSA_OBJECT_ATTRIBUTES LsaObjectAttributes;
+    LSA_OBJECT_ATTRIBUTES LsaObjectAttributes = {0};
     LSA_UNICODE_STRING LsaSystemName, *psn;
     NTSTATUS Status;
-
-    ZeroMemory(&LsaObjectAttributes, sizeof(LSA_OBJECT_ATTRIBUTES));
 
     if (SystemName != NULL)
     {
@@ -207,7 +210,6 @@ ListViewSelectItem(IN HWND hwnd,
 HRESULT
 InitializeObjectPicker(IN PCWSTR ServerName,
                        IN PSI_OBJECT_INFO ObjectInfo,
-                       IN PCWSTR Attributes[],
                        OUT IDsObjectPicker **pDsObjectPicker)
 {
     HRESULT hRet;
@@ -223,13 +225,13 @@ InitializeObjectPicker(IN PCWSTR ServerName,
     {
         DSOP_INIT_INFO InitInfo;
         UINT i;
-        DSOP_SCOPE_INIT_INFO Scopes[] =
+        static DSOP_SCOPE_INIT_INFO Scopes[] =
         {
             {
                 sizeof(DSOP_SCOPE_INIT_INFO),
                 DSOP_SCOPE_TYPE_TARGET_COMPUTER,
                 DSOP_SCOPE_FLAG_DEFAULT_FILTER_USERS | DSOP_SCOPE_FLAG_DEFAULT_FILTER_GROUPS |
-                DSOP_SCOPE_FLAG_STARTING_SCOPE,
+                    DSOP_SCOPE_FLAG_STARTING_SCOPE,
                 {
                     {
                         0,
@@ -237,7 +239,7 @@ InitializeObjectPicker(IN PCWSTR ServerName,
                         0
                     },
                     DSOP_DOWNLEVEL_FILTER_USERS | DSOP_DOWNLEVEL_FILTER_LOCAL_GROUPS |
-                    DSOP_DOWNLEVEL_FILTER_GLOBAL_GROUPS | DSOP_DOWNLEVEL_FILTER_ALL_WELLKNOWN_SIDS
+                        DSOP_DOWNLEVEL_FILTER_GLOBAL_GROUPS | DSOP_DOWNLEVEL_FILTER_ALL_WELLKNOWN_SIDS
                 },
                 NULL,
                 NULL,
@@ -249,9 +251,9 @@ InitializeObjectPicker(IN PCWSTR ServerName,
         InitInfo.pwzTargetComputer = ServerName;
         InitInfo.cDsScopeInfos = sizeof(Scopes) / sizeof(Scopes[0]);
         InitInfo.aDsScopeInfos = Scopes;
-        InitInfo.flOptions = DSOP_FLAG_MULTISELECT | DSOP_SCOPE_TYPE_TARGET_COMPUTER;
-        InitInfo.cAttributesToFetch = sizeof(Attributes) / sizeof(Attributes[0]);
-        InitInfo.apwzAttributeNames = Attributes;
+        InitInfo.flOptions = DSOP_FLAG_MULTISELECT;
+        InitInfo.cAttributesToFetch = sizeof(ObjectPickerAttributes) / sizeof(ObjectPickerAttributes[0]);
+        InitInfo.apwzAttributeNames = ObjectPickerAttributes;
 
         for (i = 0; i < InitInfo.cDsScopeInfos; i++)
         {
@@ -276,5 +278,84 @@ InitializeObjectPicker(IN PCWSTR ServerName,
     }
 
     return hRet;
+}
+
+HRESULT
+InvokeObjectPickerDialog(IN IDsObjectPicker *pDsObjectPicker,
+                         IN HWND hwndParent  OPTIONAL,
+                         IN POBJPICK_SELECTED_SID SelectedSidCallback,
+                         IN PVOID Context  OPTIONAL)
+{
+    IDataObject *pdo = NULL;
+    HRESULT hRet;
+    
+    hRet = pDsObjectPicker->lpVtbl->InvokeDialog(pDsObjectPicker,
+                                                 hwndParent,
+                                                 &pdo);
+    if (hRet == S_OK)
+    {
+        STGMEDIUM stm;
+        FORMATETC fe;
+
+        fe.cfFormat = RegisterClipboardFormat(CFSTR_DSOP_DS_SELECTION_LIST);
+        fe.ptd = NULL;
+        fe.dwAspect = DVASPECT_CONTENT;
+        fe.lindex = -1;
+        fe.tymed = TYMED_HGLOBAL;
+
+        hRet = pdo->lpVtbl->GetData(pdo,
+                                    &fe,
+                                    &stm);
+        if (SUCCEEDED(hRet))
+        {
+            PDS_SELECTION_LIST SelectionList = (PDS_SELECTION_LIST)GlobalLock(stm.hGlobal);
+            if (SelectionList != NULL)
+            {
+                LPVARIANT vSid;
+                PSID pSid;
+                UINT i;
+                BOOL contLoop = TRUE;
+
+                for (i = 0; i < SelectionList->cItems && contLoop; i++)
+                {
+                    vSid = SelectionList->aDsSelection[i].pvarFetchedAttributes;
+
+                    if (vSid != NULL && V_VT(vSid) == (VT_ARRAY | VT_UI1))
+                    {
+                        hRet = SafeArrayAccessData(V_ARRAY(vSid),
+                                                   (void HUGEP**)&pSid);
+                        if (FAILED(hRet))
+                        {
+                            break;
+                        }
+
+                        if (pSid != NULL)
+                        {
+                            contLoop = SelectedSidCallback(pDsObjectPicker,
+                                                           hwndParent,
+                                                           pSid,
+                                                           Context);
+                        }
+
+                        SafeArrayUnaccessData(V_ARRAY(vSid));
+                    }
+                }
+
+                GlobalUnlock(stm.hGlobal);
+            }
+
+            ReleaseStgMedium(&stm);
+        }
+
+        pdo->lpVtbl->Release(pdo);
+    }
+    
+    return hRet;
+}
+
+VOID
+FreeObjectPicker(IN IDsObjectPicker *pDsObjectPicker)
+{
+    pDsObjectPicker->lpVtbl->Release(pDsObjectPicker);
 }
 

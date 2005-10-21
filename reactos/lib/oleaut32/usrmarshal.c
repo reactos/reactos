@@ -185,11 +185,26 @@ static unsigned wire_size(VARTYPE vt)
   }
 }
 
-static unsigned wire_extra(unsigned long *pFlags, VARIANT *pvar)
+static unsigned interface_variant_size(unsigned long *pFlags, REFIID riid, VARIANT *pvar)
 {
   ULONG size;
   HRESULT hr;
+  /* find the buffer size of the marshalled dispatch interface */
+  hr = CoGetMarshalSizeMax(&size, riid, V_UNKNOWN(pvar), LOWORD(*pFlags), NULL, MSHLFLAGS_NORMAL);
+  if (FAILED(hr)) {
+    if (!V_DISPATCH(pvar))
+      WARN("NULL dispatch pointer\n");
+    else
+      ERR("Dispatch variant buffer size calculation failed, HRESULT=0x%lx\n", hr);
+    return 0;
+  }
+  size += sizeof(ULONG); /* we have to store the buffersize in the stream */
+  TRACE("wire-size extra of dispatch variant is %ld\n", size);
+  return size;
+}
 
+static unsigned wire_extra(unsigned long *pFlags, VARIANT *pvar)
+{
   if (V_ISARRAY(pvar)) {
     FIXME("wire-size safearray\n");
     return 0;
@@ -206,19 +221,9 @@ static unsigned wire_extra(unsigned long *pFlags, VARIANT *pvar)
   case VT_VARIANT | VT_BYREF:
     return VARIANT_UserSize(pFlags, 0, V_VARIANTREF(pvar));
   case VT_UNKNOWN:
+    return interface_variant_size(pFlags, &IID_IUnknown, pvar);
   case VT_DISPATCH:
-    /* find the buffer size of the marshalled dispatch interface */
-    hr = CoGetMarshalSizeMax(&size, &IID_IDispatch, (IUnknown*)V_DISPATCH(pvar), LOWORD(*pFlags), NULL, MSHLFLAGS_NORMAL);
-    if (FAILED(hr)) {
-      if (!V_DISPATCH(pvar))
-        WARN("NULL dispatch pointer\n");
-      else
-        ERR("Dispatch variant buffer size calculation failed, HRESULT=0x%lx\n", hr);
-      return 0;
-    }
-    size += sizeof(ULONG); /* we have to store the buffersize in the stream */
-    TRACE("wire-size extra of dispatch variant is %ld\n", size);
-    return size;
+    return interface_variant_size(pFlags, &IID_IDispatch, pvar);
   case VT_RECORD:
     FIXME("wire-size record\n");
     return 0;
@@ -228,7 +233,8 @@ static unsigned wire_extra(unsigned long *pFlags, VARIANT *pvar)
 }
 
 /* helper: called for VT_DISPATCH variants to marshal the IDispatch* into the buffer. returns Buffer on failure, new position otherwise */
-static unsigned char* dispatch_variant_marshal(unsigned long *pFlags, unsigned char *Buffer, VARIANT *pvar) {
+static unsigned char* interface_variant_marshal(unsigned long *pFlags, unsigned char *Buffer, REFIID riid, VARIANT *pvar)
+{
   IStream *working; 
   HGLOBAL working_mem;
   void *working_memlocked;
@@ -257,7 +263,7 @@ static unsigned char* dispatch_variant_marshal(unsigned long *pFlags, unsigned c
     return oldpos;
   }
   
-  hr = CoMarshalInterface(working, &IID_IDispatch, (IUnknown*)V_DISPATCH(pvar), LOWORD(*pFlags), NULL, MSHLFLAGS_NORMAL);
+  hr = CoMarshalInterface(working, riid, V_UNKNOWN(pvar), LOWORD(*pFlags), NULL, MSHLFLAGS_NORMAL);
   if (hr != S_OK) {
     IStream_Release(working); /* this also releases the hglobal */
     return oldpos;
@@ -275,8 +281,9 @@ static unsigned char* dispatch_variant_marshal(unsigned long *pFlags, unsigned c
   return Buffer + sizeof(ULONG) + size;
 }
 
-/* helper: called for VT_DISPATCH variants to unmarshal the buffer back into a dispatch variant. returns Buffer on failure, new position otherwise */
-static unsigned char *dispatch_variant_unmarshal(unsigned long *pFlags, unsigned char *Buffer, VARIANT *pvar) {
+/* helper: called for VT_DISPATCH / VT_UNKNOWN variants to unmarshal the buffer. returns Buffer on failure, new position otherwise */
+static unsigned char *interface_variant_unmarshal(unsigned long *pFlags, unsigned char *Buffer, REFIID riid, VARIANT *pvar)
+{
   IStream *working;
   HGLOBAL working_mem;
   void *working_memlocked;
@@ -308,7 +315,7 @@ static unsigned char *dispatch_variant_unmarshal(unsigned long *pFlags, unsigned
   memcpy(working_memlocked, Buffer, size);
   GlobalUnlock(working_mem);
 
-  hr = CoUnmarshalInterface(working, &IID_IDispatch, (void**)&V_DISPATCH(pvar));
+  hr = CoUnmarshalInterface(working, riid, (void**)&V_UNKNOWN(pvar));
   if (hr != S_OK) {
     IStream_Release(working);
     return oldpos;
@@ -380,9 +387,13 @@ unsigned char * WINAPI VARIANT_UserMarshal(unsigned long *pFlags, unsigned char 
   case VT_DISPATCH | VT_BYREF:
     FIXME("handle DISPATCH by ref\n");
     break;
+  case VT_UNKNOWN:
+    /* this should probably call WdtpInterfacePointer_UserMarshal in ole32.dll */
+    Pos = interface_variant_marshal(pFlags, Pos, &IID_IUnknown, pvar);
+    break;
   case VT_DISPATCH:
     /* this should probably call WdtpInterfacePointer_UserMarshal in ole32.dll */
-    Pos = dispatch_variant_marshal(pFlags, Pos, pvar);
+    Pos = interface_variant_marshal(pFlags, Pos, &IID_IDispatch, pvar);
     break;
   case VT_RECORD:
     FIXME("handle BRECORD by val\n");
@@ -452,8 +463,11 @@ unsigned char * WINAPI VARIANT_UserUnmarshal(unsigned long *pFlags, unsigned cha
   case VT_RECORD | VT_BYREF:
     FIXME("handle BRECORD by ref\n");
     break;
+  case VT_UNKNOWN:
+    Pos = interface_variant_unmarshal(pFlags, Pos, &IID_IUnknown, pvar);
+    break;
   case VT_DISPATCH:
-    Pos = dispatch_variant_unmarshal(pFlags, Pos, pvar);
+    Pos = interface_variant_unmarshal(pFlags, Pos, &IID_IDispatch, pvar);
     break;
   case VT_DISPATCH | VT_BYREF:
     FIXME("handle DISPATCH by ref\n");
@@ -489,6 +503,10 @@ void WINAPI VARIANT_UserFree(unsigned long *pFlags, VARIANT *pvar)
     break;
   case VT_RECORD | VT_BYREF:
     FIXME("handle BRECORD by ref\n");
+    break;
+  case VT_UNKNOWN:
+  case VT_DISPATCH:
+    IUnknown_Release(V_UNKNOWN(pvar));
     break;
   default:
     FIXME("handle unknown complex type\n");

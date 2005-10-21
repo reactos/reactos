@@ -104,16 +104,16 @@ static HDDEDATA CALLBACK DdeCallback(
     switch (uType)
     {
     case XTYP_CONNECT:
-        return (HDDEDATA)Dde_OnConnect(hsz1, hsz2);
+        return (HDDEDATA)(DWORD_PTR)Dde_OnConnect(hsz1, hsz2);
     case XTYP_CONNECT_CONFIRM:
         Dde_OnConnectConfirm(hconv, hsz1, hsz2);
         return NULL;
     case XTYP_WILDCONNECT:
-        return (HDDEDATA)Dde_OnWildConnect(hsz1, hsz2);
+        return (HDDEDATA)(DWORD_PTR)Dde_OnWildConnect(hsz1, hsz2);
     case XTYP_REQUEST:
         return (HDDEDATA)Dde_OnRequest(uFmt, hconv, hsz1, hsz2);
     case XTYP_EXECUTE:
-        return (HDDEDATA)Dde_OnExecute(hconv, hsz1, hdata);
+        return (HDDEDATA)(DWORD_PTR)Dde_OnExecute(hconv, hsz1, hdata);
     case XTYP_DISCONNECT:
         Dde_OnDisconnect(hconv);
         return NULL;

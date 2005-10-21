@@ -67,6 +67,9 @@ typedef struct _DEVICE_EXTENSION
 /* FUNCTIONS **************************************************************/
 
 NTSTATUS STDCALL
+DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath);
+
+static NTSTATUS STDCALL
 ScrCreate(PDEVICE_OBJECT DeviceObject,
 	  PIRP Irp)
 {
@@ -156,7 +159,7 @@ ScrCreate(PDEVICE_OBJECT DeviceObject,
 }
 
 
-NTSTATUS STDCALL
+static NTSTATUS STDCALL
 ScrWrite(PDEVICE_OBJECT DeviceObject,
 	 PIRP Irp)
 {
@@ -298,7 +301,7 @@ ScrWrite(PDEVICE_OBJECT DeviceObject,
 }
 
 
-NTSTATUS STDCALL
+static NTSTATUS STDCALL
 ScrIoControl(PDEVICE_OBJECT DeviceObject,
 	     PIRP Irp)
 {
@@ -626,7 +629,7 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
 }
 
 
-NTSTATUS STDCALL
+static NTSTATUS STDCALL
 ScrDispatch(PDEVICE_OBJECT DeviceObject,
 	    PIRP Irp)
 {

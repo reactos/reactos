@@ -27,14 +27,14 @@ extern FAST_MUTEX UserLock;
       ASSERT(FALSE); \
    }  \
    UUserEnterExclusive(); \
-   ASSERT(InterlockedIncrement(&_locked) == 1 /*> 0*/); \
+   ASSERT(InterlockedIncrement((PLONG)(&_locked)) == 1 /*> 0*/); \
    _file = __FILE__; _line = __LINE__; \
   /* DPRINT("got lock, %s, %i (%i)\n",__FILE__,__LINE__, _locked);*/ \
 }
 
 #define UserLeave() \
 { \
-   ASSERT(InterlockedDecrement(&_locked) == 0/*>= 0*/); \
+   ASSERT(InterlockedDecrement((PLONG)(&_locked)) == 0/*>= 0*/); \
    /*DPRINT("unlock, %s, %i (%i)\n",__FILE__,__LINE__, _locked);*/ \
    if (UserLock.Owner != KeGetCurrentThread()) { \
      DPRINT1("file %s, line %i\n",_file, _line); \

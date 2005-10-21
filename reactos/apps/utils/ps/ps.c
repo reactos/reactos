@@ -22,8 +22,9 @@
 	Thanks to Filip Navara patch for fixing the Xp crash problem.
 */
 
-#include <windows.h>
 #define NTOS_MODE_USER
+#define WIN32_NO_STATUS
+#include <windows.h>
 #include <ndk/ntndk.h>
 
 typedef struct _SYSTEM_THREADS 	 
@@ -150,7 +151,8 @@ struct waitres {
    {34,"MaximumWaitReason"},
    {-1,"       ?         "}
 };
-BOOL CALLBACK
+
+static BOOL CALLBACK
 EnumThreadProc(HWND hwnd, LPARAM lp)
 {
 	DWORD r, pid, tid;

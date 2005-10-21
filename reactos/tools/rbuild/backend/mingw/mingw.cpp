@@ -19,7 +19,10 @@
 
 #include "mingw.h"
 #include <assert.h>
-#ifndef _MSC_VER
+#ifdef _MSC_VER
+#define popen _popen
+#define pclose _pclose
+#else
 #include <dirent.h>
 #endif//_MSC_VER
 #include "modulehandler.h"
@@ -838,17 +841,20 @@ MingwBackend::GetBinutilsVersion ( const string& binutilsCommand )
 	                                   NUL,
 	                                   NUL );
 	fp = popen ( versionCommand.c_str () , "r" );
-	for( i = 0; ( i < 80 ) && ( feof ( fp ) == 0 ); i++ )
+	for( i = 0; 
+             ( i < 80 ) && 
+                 ( feof ( fp ) == 0 && 
+                   ( ( ch = fgetc( fp ) ) != -1 ) ); 
+             i++ )
 	{
 		buffer[i] = (char) ch;
-		ch = fgetc( fp );
 	}
 	buffer[i] = '\0';
 	pclose ( fp );
 	
 	char separators[] = " ";
 	char *token;
-	char *prevtoken;
+	char *prevtoken = NULL;
 	
 	token = strtok ( buffer, separators );
 	while ( token != NULL )
@@ -857,9 +863,9 @@ MingwBackend::GetBinutilsVersion ( const string& binutilsCommand )
 		token = strtok ( NULL, separators );
 	}
 	string version = string ( prevtoken );
-	int firstSpace = version.find_last_not_of ( " \t" );
-	if ( firstSpace != -1 )
-		return string ( version, 0, firstSpace - 1);
+	int lastDigit = version.find_last_not_of ( "\t\r\n" );
+	if ( lastDigit != -1 )
+		return string ( version, 0, lastDigit+1 );
 	else
 		return version;
 }
@@ -904,7 +910,7 @@ MingwBackend::DetectBinutils ()
 	}
 	if ( detectedBinutils )
 	{
-		const string& binutilsVersion = GetBinutilsVersion ( binutilsCommand );
+		string binutilsVersion = GetBinutilsVersion ( binutilsCommand );
 		if ( IsSupportedBinutilsVersion ( binutilsVersion ) )
 			printf ( "detected (%s)\n", binutilsCommand.c_str () );
 		else

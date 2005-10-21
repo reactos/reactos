@@ -59,6 +59,8 @@ void LinesHorizontalProc(void *Context, PPERF_INFO PerfInfo, unsigned Reps);
 void LinesVerticalProc(void *Context, PPERF_INFO PerfInfo, unsigned Reps);
 void LinesProc(void *Context, PPERF_INFO PerfInfo, unsigned Reps);
 
+void TextProc(void *Context, PPERF_INFO PerfInfo, unsigned Reps);
+
 #endif /* ROSPERF_H_INCLUDED */
 
 /* EOF */

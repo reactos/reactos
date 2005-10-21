@@ -143,6 +143,7 @@ WinMain(HINSTANCE hInst,
       ulInnerWidth = BitmapInfo.bmWidth;
       ulInnerHeight = (ulInnerWidth * 3) / 4;
       ulTitleHeight = BitmapInfo.bmHeight + 3;
+      DeleteObject(hTitleBitmap);
     }
   ulInnerHeight -= GetSystemMetrics(SM_CYCAPTION);
 
@@ -485,7 +486,7 @@ PaintBanner(HDC hdc, LPRECT rcPanel)
 	 rcPanel->right - rcPanel->left,
 	 rcPanel->bottom - 3,
 	 hdcMem, 0, 0, SRCCOPY);
-  SelectObject(hdc, hOldBitmap);
+  SelectObject(hdcMem, hOldBitmap);
 
   /* Dark blue line */
   hOldBrush = SelectObject(hdc, hbrDarkBlue);
@@ -565,7 +566,7 @@ OnPaint(HWND hWnd, WPARAM wParam, LPARAM lParam)
 	     0,
 	     SRCCOPY);
     }
-  else if (hTopicBitmap[nTopic] != 0)
+  else if ((nTopic != -1) && (hTopicBitmap[nTopic] != 0))
     {
       GetObject(hTopicBitmap[nTopic], sizeof(BITMAP), &bmpInfo);
       hOldBitmap = SelectObject (hdcMem, hTopicBitmap[nTopic]);

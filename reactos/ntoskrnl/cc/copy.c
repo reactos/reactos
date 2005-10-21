@@ -46,6 +46,7 @@ MmMapViewInSystemCache(PCACHE_VIEW);
 
 
 VOID 
+NTAPI
 CcInitCacheZeroPage(VOID)
 {
    NTSTATUS Status;

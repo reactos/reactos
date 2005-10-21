@@ -2,7 +2,7 @@
 // this file is part of linux_wrapper.h
 
 //FIXME: Move this file, make its definitions more general
-#include "../usbohci/ohci_main.h"
+#include "../common/usbcommon_types.h"
 
 /*
   Initialize device before it's used by a driver. Ask low-level code to enable I/O and memory.
@@ -17,7 +17,7 @@ static int __inline__ pci_enable_device(struct pci_dev *dev)
 // Get physical address where resource x resides
 static PHYSICAL_ADDRESS __inline__ pci_resource_start (struct pci_dev *dev, int x)
 {
-	POHCI_DEVICE_EXTENSION dev_ext = (POHCI_DEVICE_EXTENSION)dev->dev_ext;
+	PUSBMP_DEVICE_EXTENSION dev_ext = (PUSBMP_DEVICE_EXTENSION)dev->dev_ext;
 	DPRINT1("pci_resource_start() called, x=0x%x\n", x);
 	
 	//FIXME: Take x into account
@@ -28,7 +28,7 @@ static PHYSICAL_ADDRESS __inline__ pci_resource_start (struct pci_dev *dev, int 
 // ???
 static unsigned long __inline__ pci_resource_len (struct pci_dev *dev, int x)
 {
-	POHCI_DEVICE_EXTENSION ext = (POHCI_DEVICE_EXTENSION)dev->dev_ext;
+	PUSBMP_DEVICE_EXTENSION ext = (PUSBMP_DEVICE_EXTENSION)dev->dev_ext;
 
 	DPRINT1("pci_resource_len() called, x=0x%x\n", x);
 
@@ -39,7 +39,7 @@ static unsigned long __inline__ pci_resource_len (struct pci_dev *dev, int x)
 // ???
 static int __inline__ pci_resource_flags(struct pci_dev *dev, int x)
 {
-	POHCI_DEVICE_EXTENSION ext = (POHCI_DEVICE_EXTENSION)dev->dev_ext;
+	PUSBMP_DEVICE_EXTENSION ext = (PUSBMP_DEVICE_EXTENSION)dev->dev_ext;
 	
 	DPRINT1("pci_resource_flags() called, x=0x%x\n", x);
 	

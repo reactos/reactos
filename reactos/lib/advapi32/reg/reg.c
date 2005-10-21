@@ -5,6 +5,7 @@
  * FILE:            lib/advapi32/reg/reg.c
  * PURPOSE:         Registry functions
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
+ *                  Thomas Weidenmueller <w3seek@reactos.com>
  * UPDATE HISTORY:
  *                  Created 01/11/98
  *                  19990309 EA Stubs
@@ -37,10 +38,14 @@ static BOOLEAN DefaultHandlesDisabled = FALSE;
 
 static NTSTATUS MapDefaultKey (PHANDLE ParentKey, HKEY Key);
 static VOID CloseDefaultKeys(VOID);
-#define CloseDefaultKey(Handle)                                                \
+#define ClosePredefKey(Handle)                                                 \
     if ((ULONG_PTR)Handle & 0x1) {                                             \
         NtClose(Handle);                                                       \
     }
+#define IsPredefKey(HKey)                                                      \
+    (((ULONG)(HKey) & 0xF0000000) == 0x80000000)
+#define GetPredefKeyIndex(HKey)                                                \
+    ((ULONG)(HKey) & 0x0FFFFFFF)
 
 static NTSTATUS OpenClassesRootKey(PHANDLE KeyHandle);
 static NTSTATUS OpenLocalMachineKey (PHANDLE KeyHandle);
@@ -88,6 +93,54 @@ RegCleanup (VOID)
 
 
 static NTSTATUS
+OpenPredefinedKey(IN ULONG Index,
+                  OUT HANDLE Handle)
+{
+    NTSTATUS Status;
+
+    switch (Index)
+    {
+        case 0: /* HKEY_CLASSES_ROOT */
+            Status = OpenClassesRootKey (Handle);
+            break;
+
+        case 1: /* HKEY_CURRENT_USER */
+            Status = RtlOpenCurrentUser (MAXIMUM_ALLOWED,
+                                         Handle);
+            break;
+
+        case 2: /* HKEY_LOCAL_MACHINE */
+            Status = OpenLocalMachineKey (Handle);
+            break;
+
+        case 3: /* HKEY_USERS */
+            Status = OpenUsersKey (Handle);
+            break;
+#if 0
+        case 4: /* HKEY_PERFORMANCE_DATA */
+            Status = OpenPerformanceDataKey (Handle);
+            break;
+#endif
+
+        case 5: /* HKEY_CURRENT_CONFIG */
+            Status = OpenCurrentConfigKey (Handle);
+            break;
+
+        case 6: /* HKEY_DYN_DATA */
+            Status = STATUS_NOT_IMPLEMENTED;
+            break;
+
+        default:
+            WARN("MapDefaultHandle() no handle creator\n");
+            Status = STATUS_INVALID_PARAMETER;
+            break;
+    }
+    
+    return Status;
+}
+
+
+static NTSTATUS
 MapDefaultKey (OUT PHANDLE RealKey,
                IN HKEY Key)
 {
@@ -98,14 +151,14 @@ MapDefaultKey (OUT PHANDLE RealKey,
 
   TRACE("MapDefaultKey (Key %x)\n", Key);
 
-  if (((ULONG)Key & 0xF0000000) != 0x80000000)
+  if (!IsPredefKey(Key))
     {
       *RealKey = (HANDLE)((ULONG_PTR)Key & ~0x1);
       return STATUS_SUCCESS;
     }
 
   /* Handle special cases here */
-  Index = (ULONG)Key & 0x0FFFFFFF;
+  Index = GetPredefKeyIndex(Key);
   if (Index >= MAX_DEFAULT_HANDLES)
     {
       return STATUS_INVALID_PARAMETER;
@@ -127,42 +180,8 @@ MapDefaultKey (OUT PHANDLE RealKey,
   if (DoOpen)
     {
       /* create/open the default handle */
-      switch (Index)
-	{
-	  case 0: /* HKEY_CLASSES_ROOT */
-	    Status = OpenClassesRootKey (Handle);
-	    break;
-
-	  case 1: /* HKEY_CURRENT_USER */
-	    Status = RtlOpenCurrentUser (MAXIMUM_ALLOWED,
-					 Handle);
-	    break;
-
-	  case 2: /* HKEY_LOCAL_MACHINE */
-	    Status = OpenLocalMachineKey (Handle);
-	    break;
-
-	  case 3: /* HKEY_USERS */
-	    Status = OpenUsersKey (Handle);
-	    break;
-#if 0
-	  case 4: /* HKEY_PERFORMANCE_DATA */
-	    Status = OpenPerformanceDataKey (Handle);
-	    break;
-#endif
-	  case 5: /* HKEY_CURRENT_CONFIG */
-	    Status = OpenCurrentConfigKey (Handle);
-	    break;
-
-	  case 6: /* HKEY_DYN_DATA */
-	    Status = STATUS_NOT_IMPLEMENTED;
-	    break;
-
-	  default:
-	    WARN("MapDefaultHandle() no handle creator\n");
-	    Status = STATUS_INVALID_PARAMETER;
-	    break;
-	}
+      Status = OpenPredefinedKey(Index,
+                                 Handle);
     }
 
    if (NT_SUCCESS(Status))
@@ -294,6 +313,64 @@ RegDisablePredefinedCacheEx(VOID)
 
 
 /************************************************************************
+ *  RegOverridePredefKey
+ *
+ * @implemented
+ */
+LONG STDCALL
+RegOverridePredefKey(IN HKEY hKey,
+                     IN HKEY hNewHKey  OPTIONAL)
+{
+    LONG ErrorCode = ERROR_SUCCESS;
+    
+    if ((hKey == HKEY_CLASSES_ROOT ||
+         hKey == HKEY_CURRENT_CONFIG ||
+         hKey == HKEY_CURRENT_USER ||
+         hKey == HKEY_LOCAL_MACHINE ||
+         hKey == HKEY_PERFORMANCE_DATA ||
+         hKey == HKEY_USERS) &&
+        !IsPredefKey(hNewHKey))
+    {
+        PHANDLE Handle;
+        ULONG Index;
+
+        Index = GetPredefKeyIndex(hKey);
+        Handle = &DefaultHandleTable[Index];
+
+        if (hNewHKey == NULL)
+        {
+            /* restore the default mapping */
+            NTSTATUS Status = OpenPredefinedKey(Index,
+                                                &hNewHKey);
+            if (!NT_SUCCESS(Status))
+            {
+                return RtlNtStatusToDosError(Status);
+            }
+            
+            ASSERT(hNewHKey != NULL);
+        }
+
+        RtlEnterCriticalSection (&HandleTableCS);
+
+        /* close the currently mapped handle if existing */
+        if (*Handle != NULL)
+        {
+            NtClose(*Handle);
+        }
+        
+        /* update the mapping */
+        *Handle = hNewHKey;
+
+        RtlLeaveCriticalSection (&HandleTableCS);
+    }
+    else
+        ErrorCode = ERROR_INVALID_HANDLE;
+
+    return ErrorCode;
+}
+
+
+/************************************************************************
  *  RegCloseKey
  *
  * @implemented
@@ -319,10 +396,292 @@ RegCloseKey (HKEY hKey)
 }
 
 
+static NTSTATUS
+RegpCopyTree(IN HKEY hKeySrc,
+             IN HKEY hKeyDest)
+{
+    typedef struct
+    {
+        LIST_ENTRY ListEntry;
+        HANDLE hKeySrc;
+        HANDLE hKeyDest;
+    } REGP_COPY_KEYS, *PREGP_COPY_KEYS;
+
+    LIST_ENTRY copyQueueHead;
+    PREGP_COPY_KEYS copyKeys, newCopyKeys;
+    union
+    {
+        KEY_VALUE_FULL_INFORMATION *KeyValue;
+        KEY_NODE_INFORMATION *KeyNode;
+        PVOID Buffer;
+    } Info;
+    ULONG Index, BufferSizeRequired, BufferSize = 0x200;
+    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS Status2 = STATUS_SUCCESS;
+    
+    InitializeListHead(&copyQueueHead);
+    
+    Info.Buffer = RtlAllocateHeap(ProcessHeap,
+                                  0,
+                                  BufferSize);
+    if (Info.Buffer == NULL)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    
+    copyKeys = RtlAllocateHeap(ProcessHeap,
+                               0,
+                               sizeof(REGP_COPY_KEYS));
+    if (copyKeys != NULL)
+    {
+        copyKeys->hKeySrc = hKeySrc;
+        copyKeys->hKeyDest = hKeyDest;
+        InsertHeadList(&copyQueueHead,
+                       &copyKeys->ListEntry);
+        
+        /* FIXME - copy security from hKeySrc to hKeyDest or just for the subkeys? */
+        
+        do
+        {
+            copyKeys = CONTAINING_RECORD(copyQueueHead.Flink,
+                                         REGP_COPY_KEYS,
+                                         ListEntry);
+
+            /* enumerate all values and copy them */
+            Index = 0;
+            for (;;)
+            {
+                Status2 = NtEnumerateValueKey(copyKeys->hKeySrc,
+                                              Index,
+                                              KeyValueFullInformation,
+                                              Info.KeyValue,
+                                              BufferSize,
+                                              &BufferSizeRequired);
+                if (NT_SUCCESS(Status2))
+                {
+                    UNICODE_STRING ValueName;
+                    PVOID Data;
+                    
+                    /* don't use RtlInitUnicodeString as the string is not NULL-terminated! */
+                    ValueName.Length = Info.KeyValue->NameLength;
+                    ValueName.MaximumLength = ValueName.Length;
+                    ValueName.Buffer = Info.KeyValue->Name;
+                    
+                    Data = (PVOID)((ULONG_PTR)Info.KeyValue + Info.KeyValue->DataOffset);
+                    
+                    Status2 = NtSetValueKey(copyKeys->hKeyDest,
+                                            &ValueName,
+                                            Info.KeyValue->TitleIndex,
+                                            Info.KeyValue->Type,
+                                            Data,
+                                            Info.KeyValue->DataLength);
+
+                    /* don't break, let's try to copy as many values as possible */
+                    if (!NT_SUCCESS(Status2) && NT_SUCCESS(Status))
+                    {
+                        Status = Status2;
+                    }
+
+                    Index++;
+                }
+                else if (Status2 == STATUS_BUFFER_OVERFLOW)
+                {
+                    PVOID Buffer;
+
+                    ASSERT(BufferSize < BufferSizeRequired);
+
+                    Buffer = RtlReAllocateHeap(ProcessHeap,
+                                               0,
+                                               Info.Buffer,
+                                               BufferSizeRequired);
+                    if (Buffer != NULL)
+                    {
+                        Info.Buffer = Buffer;
+                        /* try again */
+                    }
+                    else
+                    {
+                        /* don't break, let's try to copy as many values as possible */
+                        Status2 = STATUS_INSUFFICIENT_RESOURCES;
+                        Index++;
+                        
+                        if (NT_SUCCESS(Status))
+                        {
+                            Status = Status2;
+                        }
+                    }
+                }
+                else
+                {
+                    /* break to avoid an infinite loop in case of denied access or
+                       other errors! */
+                    if (Status2 != STATUS_NO_MORE_ENTRIES && NT_SUCCESS(Status))
+                    {
+                        Status = Status2;
+                    }
+                    
+                    break;
+                }
+            }
+            
+            /* enumerate all subkeys and open and enqueue them */
+            Index = 0;
+            for (;;)
+            {
+                Status2 = NtEnumerateKey(copyKeys->hKeySrc,
+                                         Index,
+                                         KeyNodeInformation,
+                                         Info.KeyNode,
+                                         BufferSize,
+                                         &BufferSizeRequired);
+                if (NT_SUCCESS(Status2))
+                {
+                    HANDLE KeyHandle, NewKeyHandle;
+                    OBJECT_ATTRIBUTES ObjectAttributes;
+                    UNICODE_STRING SubKeyName, ClassName;
+                    
+                    /* don't use RtlInitUnicodeString as the string is not NULL-terminated! */
+                    SubKeyName.Length = Info.KeyNode->NameLength;
+                    SubKeyName.MaximumLength = SubKeyName.Length;
+                    SubKeyName.Buffer = Info.KeyNode->Name;
+                    ClassName.Length = Info.KeyNode->ClassLength;
+                    ClassName.MaximumLength = ClassName.Length;
+                    ClassName.Buffer = (PWSTR)((ULONG_PTR)Info.KeyNode + Info.KeyNode->ClassOffset);
+                    
+                    /* open the subkey with sufficient rights */
+                    
+                    InitializeObjectAttributes(&ObjectAttributes,
+                                               &SubKeyName,
+                                               OBJ_CASE_INSENSITIVE,
+                                               copyKeys->hKeySrc,
+                                               NULL);
+                    
+                    Status2 = NtOpenKey(&KeyHandle,
+                                        KEY_ENUMERATE_SUB_KEYS | KEY_QUERY_VALUE,
+                                        &ObjectAttributes);
+                    if (NT_SUCCESS(Status2))
+                    {
+                        /* FIXME - attempt to query the security information */
+                        
+                        InitializeObjectAttributes(&ObjectAttributes,
+                                               &SubKeyName,
+                                               OBJ_CASE_INSENSITIVE,
+                                               copyKeys->hKeyDest,
+                                               NULL);
+
+                        Status2 = NtCreateKey(&NewKeyHandle,
+                                              KEY_ALL_ACCESS,
+                                              &ObjectAttributes,
+                                              Info.KeyNode->TitleIndex,
+                                              &ClassName,
+                                              0,
+                                              NULL);
+                        if (NT_SUCCESS(Status2))
+                        {
+                            newCopyKeys = RtlAllocateHeap(ProcessHeap,
+                                                          0,
+                                                          sizeof(REGP_COPY_KEYS));
+                            if (newCopyKeys != NULL)
+                            {
+                                /* save the handles and enqueue the subkey */
+                                newCopyKeys->hKeySrc = KeyHandle;
+                                newCopyKeys->hKeyDest = NewKeyHandle;
+                                InsertTailList(&copyQueueHead,
+                                               &newCopyKeys->ListEntry);
+                            }
+                            else
+                            {
+                                NtClose(KeyHandle);
+                                NtClose(NewKeyHandle);
+                                
+                                Status2 = STATUS_INSUFFICIENT_RESOURCES;
+                            }
+                        }
+                        else
+                        {
+                            NtClose(KeyHandle);
+                        }
+                    }
+                    
+                    if (!NT_SUCCESS(Status2) && NT_SUCCESS(Status))
+                    {
+                        Status = Status2;
+                    }
+                    
+                    Index++;
+                }
+                else if (Status2 == STATUS_BUFFER_OVERFLOW)
+                {
+                    PVOID Buffer;
+
+                    ASSERT(BufferSize < BufferSizeRequired);
+
+                    Buffer = RtlReAllocateHeap(ProcessHeap,
+                                               0,
+                                               Info.Buffer,
+                                               BufferSizeRequired);
+                    if (Buffer != NULL)
+                    {
+                        Info.Buffer = Buffer;
+                        /* try again */
+                    }
+                    else
+                    {
+                        /* don't break, let's try to copy as many keys as possible */
+                        Status2 = STATUS_INSUFFICIENT_RESOURCES;
+                        Index++;
+
+                        if (NT_SUCCESS(Status))
+                        {
+                            Status = Status2;
+                        }
+                    }
+                }
+                else
+                {
+                    /* break to avoid an infinite loop in case of denied access or
+                       other errors! */
+                    if (Status2 != STATUS_NO_MORE_ENTRIES && NT_SUCCESS(Status))
+                    {
+                        Status = Status2;
+                    }
+
+                    break;
+                }
+            }
+
+            /* close the handles and remove the entry from the list */
+            if (copyKeys->hKeySrc != hKeySrc)
+            {
+                NtClose(copyKeys->hKeySrc);
+            }
+            if (copyKeys->hKeyDest != hKeyDest)
+            {
+                NtClose(copyKeys->hKeyDest);
+            }
+            
+            RemoveEntryList(&copyKeys->ListEntry);
+
+            RtlFreeHeap(ProcessHeap,
+                        0,
+                        copyKeys);
+        } while (!IsListEmpty(&copyQueueHead));
+    }
+    else
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+    
+    RtlFreeHeap(ProcessHeap,
+                0,
+                Info.Buffer);
+
+    return Status;
+}
+
+
 /************************************************************************
  *  RegCopyTreeW
  *
- * @unimplemented
+ * @implemented
  */
 LONG STDCALL
 RegCopyTreeW(IN HKEY hKeySrc,
@@ -361,7 +720,7 @@ RegCopyTreeW(IN HKEY hKeySrc,
                                    NULL);
 
         Status = NtOpenKey(&SubKeyHandle,
-                           KEY_READ,
+                           KEY_ENUMERATE_SUB_KEYS | KEY_QUERY_VALUE,
                            &ObjectAttributes);
         if (!NT_SUCCESS(Status))
         {
@@ -373,8 +732,8 @@ RegCopyTreeW(IN HKEY hKeySrc,
     else
         CurKey = KeyHandle;
     
-    /* FIXME - copy all keys and values recursively */
-    Status = STATUS_NOT_IMPLEMENTED;
+    Status = RegpCopyTree(CurKey,
+                          hKeyDest);
     
     if (SubKeyHandle != NULL)
     {
@@ -382,9 +741,9 @@ RegCopyTreeW(IN HKEY hKeySrc,
     }
     
 Cleanup:
-    CloseDefaultKey(DestKeyHandle);
+    ClosePredefKey(DestKeyHandle);
 Cleanup2:
-    CloseDefaultKey(KeyHandle);
+    ClosePredefKey(KeyHandle);
     
     if (!NT_SUCCESS(Status))
     {
@@ -405,20 +764,15 @@ RegCopyTreeA(IN HKEY hKeySrc,
              IN LPCSTR lpSubKey  OPTIONAL,
              IN HKEY hKeyDest)
 {
-    UNICODE_STRING SubKeyName;
+    UNICODE_STRING SubKeyName = {0};
     LONG Ret;
     
-    if (lpSubKey != NULL)
+    if (lpSubKey != NULL &&
+        !RtlCreateUnicodeStringFromAsciiz(&SubKeyName,
+                                          (LPSTR)lpSubKey))
     {
-        if (!RtlCreateUnicodeStringFromAsciiz(&SubKeyName,
-                                              (LPSTR)lpSubKey))
-        {
-            return ERROR_NOT_ENOUGH_MEMORY;
-        }
+        return ERROR_NOT_ENOUGH_MEMORY;
     }
-    else
-        RtlInitUnicodeString(&SubKeyName,
-                             NULL);
 
     Ret = RegCopyTreeW(hKeySrc,
                        SubKeyName.Buffer,
@@ -440,20 +794,15 @@ RegConnectRegistryA (IN LPCSTR lpMachineName,
                      IN HKEY hKey,
                      OUT PHKEY phkResult)
 {
-    UNICODE_STRING MachineName;
+    UNICODE_STRING MachineName = {0};
     LONG Ret;
     
-    if (lpMachineName != NULL)
+    if (lpMachineName != NULL &&
+        !RtlCreateUnicodeStringFromAsciiz(&MachineName,
+                                          (LPSTR)lpMachineName))
     {
-        if (!RtlCreateUnicodeStringFromAsciiz(&MachineName,
-                                              (LPSTR)lpMachineName))
-        {
-            return ERROR_NOT_ENOUGH_MEMORY;
-        }
+        return ERROR_NOT_ENOUGH_MEMORY;
     }
-    else
-        RtlInitUnicodeString(&MachineName,
-                             NULL);
 
     Ret = RegConnectRegistryW(MachineName.Buffer,
                               hKey,
@@ -647,7 +996,7 @@ RegCreateKeyExA (HKEY hKey,
       RtlFreeUnicodeString (&ClassString);
     }
 
-  CloseDefaultKey(ParentKey);
+  ClosePredefKey(ParentKey);
 
   TRACE("Status %x\n", Status);
   if (!NT_SUCCESS(Status))
@@ -708,7 +1057,7 @@ RegCreateKeyExW (HKEY hKey,
                            samDesired,
                            lpdwDisposition);
 
-  CloseDefaultKey(ParentKey);
+  ClosePredefKey(ParentKey);
 
   TRACE("Status %x\n", Status);
   if (!NT_SUCCESS(Status))
@@ -807,7 +1156,7 @@ RegDeleteKeyA (HKEY hKey,
   NtClose (TargetKey);
   
 Cleanup:
-  CloseDefaultKey(ParentKey);
+  ClosePredefKey(ParentKey);
 
   if (!NT_SUCCESS(Status))
     {
@@ -859,7 +1208,7 @@ RegDeleteKeyW (HKEY hKey,
   NtClose (TargetKey);
   
 Cleanup:
-  CloseDefaultKey(ParentKey);
+  ClosePredefKey(ParentKey);
 
   if (!NT_SUCCESS(Status))
     {
@@ -930,7 +1279,7 @@ RegDeleteKeyValueW(IN HKEY hKey,
     }
     
 Cleanup:
-    CloseDefaultKey(KeyHandle);
+    ClosePredefKey(KeyHandle);
 
     if (!NT_SUCCESS(Status))
     {
@@ -951,33 +1300,23 @@ RegDeleteKeyValueA(IN HKEY hKey,
                    IN LPCSTR lpSubKey  OPTIONAL,
                    IN LPCSTR lpValueName  OPTIONAL)
 {
-    UNICODE_STRING SubKey, ValueName;
+    UNICODE_STRING SubKey = {0}, ValueName = {0};
     LONG Ret;
     
-    if (lpSubKey != NULL)
+    if (lpSubKey != NULL &&
+        !RtlCreateUnicodeStringFromAsciiz(&SubKey,
+                                          (LPSTR)lpSubKey))
     {
-        if (!RtlCreateUnicodeStringFromAsciiz(&SubKey,
-                                              (LPSTR)lpSubKey))
-        {
-            return ERROR_NOT_ENOUGH_MEMORY;
-        }
+        return ERROR_NOT_ENOUGH_MEMORY;
     }
-    else
-        RtlInitUnicodeString(&SubKey,
-                             NULL);
 
-    if (lpValueName != NULL)
+    if (lpValueName != NULL &&
+        !RtlCreateUnicodeStringFromAsciiz(&ValueName,
+                                          (LPSTR)lpValueName))
     {
-        if (!RtlCreateUnicodeStringFromAsciiz(&ValueName,
-                                              (LPSTR)lpValueName))
-        {
-            RtlFreeUnicodeString(&SubKey);
-            return ERROR_NOT_ENOUGH_MEMORY;
-        }
+        RtlFreeUnicodeString(&SubKey);
+        return ERROR_NOT_ENOUGH_MEMORY;
     }
-    else
-        RtlInitUnicodeString(&ValueName,
-                             NULL);
 
     Ret = RegDeleteKeyValueW(hKey,
                              SubKey.Buffer,
@@ -991,8 +1330,7 @@ RegDeleteKeyValueA(IN HKEY hKey,
 
 
 static NTSTATUS
-RegpDeleteTree(IN HKEY hKey,
-               OUT PBOOLEAN KeysDeleted)
+RegpDeleteTree(IN HKEY hKey)
 {
     typedef struct
     {
@@ -1008,8 +1346,6 @@ RegpDeleteTree(IN HKEY hKey,
     PREG_DEL_KEYS KeyDelRoot;
     NTSTATUS Status = STATUS_SUCCESS;
     NTSTATUS Status2 = STATUS_SUCCESS;
-    
-    *KeysDeleted = FALSE;
     
     InitializeListHead(&delQueueHead);
     
@@ -1068,7 +1404,7 @@ ReadFirstSubKey:
 
                 /* open the subkey */
                 Status2 = NtOpenKey(&newDelKeys->KeyHandle,
-                                    DELETE | KEY_ENUMERATE_SUB_KEYS | KEY_QUERY_VALUE,
+                                    DELETE | KEY_ENUMERATE_SUB_KEYS,
                                     &ObjectAttributes);
                 if (!NT_SUCCESS(Status2))
                 {
@@ -1128,16 +1464,33 @@ ReadFirstSubKey:
                         Status2 = STATUS_INSUFFICIENT_RESOURCES;
                     }
                 }
+                else if (Status2 == STATUS_NO_MORE_ENTRIES)
+                {
+                    /* in some race conditions where another thread would delete
+                       the same tree at the same time, newDelKeys could actually
+                       be != NULL! */
+                    if (newDelKeys != NULL)
+                    {
+                        RtlFreeHeap(ProcessHeap,
+                                    0,
+                                    newDelKeys);
+                    }
+                    break;
+                }
 
 SubKeyFailure:
-                ASSERT(newDelKeys != NULL);
-                RtlFreeHeap(ProcessHeap,
-                            0,
-                            newDelKeys);
+                /* newDelKeys can be NULL here when NtEnumerateKey returned an
+                   error other than STATUS_BUFFER_TOO_SMALL or STATUS_BUFFER_OVERFLOW! */
+                if (newDelKeys != NULL)
+                {
+                    RtlFreeHeap(ProcessHeap,
+                                0,
+                                newDelKeys);
+                }
 
 SubKeyFailureNoFree:
                 /* don't break, let's try to delete as many keys as possible */
-                if (Status2 != STATUS_NO_MORE_ENTRIES && NT_SUCCESS(Status))
+                if (NT_SUCCESS(Status))
                 {
                     Status = Status2;
                 }
@@ -1147,10 +1500,22 @@ SubKeyFailureNoFree:
             
             /* NOTE: do NOT close the handle anymore, it's invalid already! */
 
-            if (!NT_SUCCESS(Status2) && NT_SUCCESS(Status))
+            if (!NT_SUCCESS(Status2))
             {
-                /* don't break, let's try to delete as many keys as possible */
-                Status = Status2;
+                /* close the key handle so we don't leak handles for keys we were
+                   unable to delete. But only do this for handles not supplied
+                   by the caller! */
+
+                if (delKeys->KeyHandle != hKey)
+                {
+                    NtClose(delKeys->KeyHandle);
+                }
+
+                if (NT_SUCCESS(Status))
+                {
+                    /* don't break, let's try to delete as many keys as possible */
+                    Status = Status2;
+                }
             }
             
             /* remove the entry from the list */
@@ -1160,12 +1525,10 @@ SubKeyFailureNoFree:
                         0,
                         delKeys);
         } while (!IsListEmpty(&delQueueHead));
-        
-        *KeysDeleted = TRUE;
     }
     else
         Status = STATUS_INSUFFICIENT_RESOURCES;
-    
+
     return Status;
 }
 
@@ -1179,7 +1542,6 @@ LONG STDCALL
 RegDeleteTreeW(IN HKEY hKey,
                IN LPCWSTR lpSubKey  OPTIONAL)
 {
-    BOOLEAN KeysDeleted;
     HANDLE KeyHandle, CurKey, SubKeyHandle = NULL;
     NTSTATUS Status;
 
@@ -1205,7 +1567,7 @@ RegDeleteTreeW(IN HKEY hKey,
                                    NULL);
 
         Status = NtOpenKey(&SubKeyHandle,
-                           DELETE | KEY_ENUMERATE_SUB_KEYS | KEY_QUERY_VALUE,
+                           DELETE | KEY_ENUMERATE_SUB_KEYS,
                            &ObjectAttributes);
         if (!NT_SUCCESS(Status))
         {
@@ -1217,27 +1579,32 @@ RegDeleteTreeW(IN HKEY hKey,
     else
         CurKey = KeyHandle;
 
-    Status = RegpDeleteTree(CurKey,
-                            &KeysDeleted);
+    Status = RegpDeleteTree(CurKey);
 
-    if (!KeysDeleted)
+    if (NT_SUCCESS(Status))
     {
-        /* only close handles of keys that weren't deleted! */
+        /* make sure we only close hKey (KeyHandle) when the caller specified a
+           subkey, because the handle would be invalid already! */
+        if (CurKey != KeyHandle)
+        {
+            ClosePredefKey(KeyHandle);
+        }
+        
+        return ERROR_SUCCESS;
+    }
+    else
+    {
+        /* make sure we close all handles we created! */
         if (SubKeyHandle != NULL)
         {
             NtClose(SubKeyHandle);
         }
 
 Cleanup:
-        CloseDefaultKey(KeyHandle);
-    }
-
-    if (!NT_SUCCESS(Status))
-    {
+        ClosePredefKey(KeyHandle);
+        
         return RtlNtStatusToDosError(Status);
     }
-
-    return ERROR_SUCCESS;
 }
 
 
@@ -1250,20 +1617,15 @@ LONG STDCALL
 RegDeleteTreeA(IN HKEY hKey,
                IN LPCSTR lpSubKey  OPTIONAL)
 {
-    UNICODE_STRING SubKeyName;
+    UNICODE_STRING SubKeyName = {0};
     LONG Ret;
 
-    if (lpSubKey != NULL)
+    if (lpSubKey != NULL &&
+        !RtlCreateUnicodeStringFromAsciiz(&SubKeyName,
+                                          (LPSTR)lpSubKey))
     {
-        if (!RtlCreateUnicodeStringFromAsciiz(&SubKeyName,
-                                              (LPSTR)lpSubKey))
-        {
-            return ERROR_NOT_ENOUGH_MEMORY;
-        }
+        return ERROR_NOT_ENOUGH_MEMORY;
     }
-    else
-        RtlInitUnicodeString(&SubKeyName,
-                             NULL);
 
     Ret = RegDeleteTreeW(hKey,
                          SubKeyName.Buffer);
@@ -1339,7 +1701,7 @@ RegSetKeyValueW(IN HKEY hKey,
     }
     
 Cleanup:
-    CloseDefaultKey(KeyHandle);
+    ClosePredefKey(KeyHandle);
 
     return Ret;
 }
@@ -1417,7 +1779,7 @@ RegSetKeyValueA(IN HKEY hKey,
     }
     
 Cleanup:
-    CloseDefaultKey(KeyHandle);
+    ClosePredefKey(KeyHandle);
 
     return Ret;
 }
@@ -1449,7 +1811,7 @@ RegDeleteValueA (HKEY hKey,
 			     &ValueName);
   RtlFreeUnicodeString (&ValueName);
   
-  CloseDefaultKey(KeyHandle);
+  ClosePredefKey(KeyHandle);
   
   if (!NT_SUCCESS(Status))
     {
@@ -1486,7 +1848,7 @@ RegDeleteValueW (HKEY hKey,
   Status = NtDeleteValueKey (KeyHandle,
 			     &ValueName);
 
-  CloseDefaultKey(KeyHandle);
+  ClosePredefKey(KeyHandle);
 
   if (!NT_SUCCESS(Status))
     {
@@ -1711,7 +2073,7 @@ RegEnumKeyExA (HKEY hKey,
 		KeyInfo);
 
 Cleanup:
-    CloseDefaultKey(KeyHandle);
+    ClosePredefKey(KeyHandle);
 
     return ErrorCode;
 }
@@ -1859,7 +2221,7 @@ RegEnumKeyExW (HKEY hKey,
 	       KeyInfo);
 
 Cleanup:
-  CloseDefaultKey(KeyHandle);
+  ClosePredefKey(KeyHandle);
 
   return ErrorCode;
 }
@@ -1974,7 +2336,7 @@ RegEnumValueA( HKEY hKey, DWORD index, LPSTR value, LPDWORD val_count,
 
  done:
     if (buf_ptr != buffer) HeapFree( GetProcessHeap(), 0, buf_ptr );
-    CloseDefaultKey(KeyHandle);
+    ClosePredefKey(KeyHandle);
     return RtlNtStatusToDosError(status);
 }
 
@@ -2082,7 +2444,7 @@ RegEnumValueW( HKEY hKey, DWORD index, LPWSTR value, PDWORD val_count,
 
  done:
     if (buf_ptr != buffer) HeapFree( GetProcessHeap(), 0, buf_ptr );
-    CloseDefaultKey(KeyHandle);
+    ClosePredefKey(KeyHandle);
     return RtlNtStatusToDosError(status);
 }
 
@@ -2111,7 +2473,7 @@ RegFlushKey(HKEY hKey)
 
   Status = NtFlushKey (KeyHandle);
   
-  CloseDefaultKey(KeyHandle);
+  ClosePredefKey(KeyHandle);
   
   if (!NT_SUCCESS(Status))
     {
@@ -2155,7 +2517,7 @@ RegGetKeySecurity(HKEY hKey,
 				 *lpcbSecurityDescriptor,
 				 lpcbSecurityDescriptor);
 
-  CloseDefaultKey(KeyHandle);
+  ClosePredefKey(KeyHandle);
 
   if (!NT_SUCCESS(Status))
     {
@@ -2263,7 +2625,7 @@ RegLoadKeyW (HKEY hKey,
     }
 
 Cleanup:
-  CloseDefaultKey(KeyHandle);
+  ClosePredefKey(KeyHandle);
 
   return ErrorCode;
 }
@@ -2320,7 +2682,7 @@ RegNotifyChangeKeyValue (HKEY hKey,
       ErrorCode = RtlNtStatusToDosError (Status);
     }
 
-  CloseDefaultKey(KeyHandle);
+  ClosePredefKey(KeyHandle);
 
   return ErrorCode;
 }
@@ -2439,7 +2801,7 @@ RegOpenKeyExA (HKEY hKey,
 		ErrorCode = RtlNtStatusToDosError (Status);
 	}
 	
-	CloseDefaultKey(KeyHandle);
+	ClosePredefKey(KeyHandle);
 
 	return ErrorCode;
 }
@@ -2490,7 +2852,7 @@ RegOpenKeyExW (HKEY hKey,
 		ErrorCode = RtlNtStatusToDosError (Status);
 	}
 	
-	CloseDefaultKey(KeyHandle);
+	ClosePredefKey(KeyHandle);
 
 	return ErrorCode;
 }
@@ -2876,7 +3238,7 @@ RegQueryInfoKeyW (HKEY hKey,
     }
 
 Cleanup:
-  CloseDefaultKey(KeyHandle);
+  ClosePredefKey(KeyHandle);
   
   return ErrorCode;
 }
@@ -3126,7 +3488,7 @@ RegQueryValueExW (HKEY hKey,
 	       ValueInfo);
 
 Cleanup:
-  CloseDefaultKey(KeyHandle);
+  ClosePredefKey(KeyHandle);
 
   return ErrorCode;
 }
@@ -3395,7 +3757,7 @@ RegQueryValueW (HKEY hKey,
     }
 
 Cleanup:
-  CloseDefaultKey(KeyHandle);
+  ClosePredefKey(KeyHandle);
 
   return ErrorCode;
 }
@@ -3557,7 +3919,7 @@ RegReplaceKeyW (HKEY hKey,
     }
 
 Cleanup:
-  CloseDefaultKey(KeyHandle);
+  ClosePredefKey(KeyHandle);
 
   return ErrorCode;
 }
@@ -3651,7 +4013,7 @@ RegRestoreKeyW (HKEY hKey,
   NtClose (FileHandle);
   
 Cleanup:
-  CloseDefaultKey(KeyHandle);
+  ClosePredefKey(KeyHandle);
 
   if (!NT_SUCCESS(Status))
     {
@@ -3752,7 +4114,7 @@ RegSaveKeyW (HKEY hKey,
   NtClose (FileHandle);
 
 Cleanup:
-  CloseDefaultKey(KeyHandle);
+  ClosePredefKey(KeyHandle);
 
   if (!NT_SUCCESS(Status))
     {
@@ -3792,7 +4154,7 @@ RegSetKeySecurity (HKEY hKey,
 				SecurityInformation,
 				pSecurityDescriptor);
 
-  CloseDefaultKey(KeyHandle);
+  ClosePredefKey(KeyHandle);
   
   if (!NT_SUCCESS(Status))
     {
@@ -3942,7 +4304,7 @@ RegSetValueExW (HKEY hKey,
 			  (PVOID)lpData,
 			  (ULONG)cbData);
 
-  CloseDefaultKey(KeyHandle);
+  ClosePredefKey(KeyHandle);
 
   if (!NT_SUCCESS(Status))
     {
@@ -4067,7 +4429,7 @@ RegSetValueW (HKEY hKey,
     }
 
 Cleanup:
-  CloseDefaultKey(KeyHandle);
+  ClosePredefKey(KeyHandle);
 
   return ErrorCode;
 }
@@ -4133,7 +4495,7 @@ RegUnLoadKeyW (HKEY hKey,
 
   Status = NtUnloadKey (&ObjectAttributes);
   
-  CloseDefaultKey(KeyHandle);
+  ClosePredefKey(KeyHandle);
 
   if (!NT_SUCCESS(Status))
     {

@@ -38,12 +38,12 @@ extern HWND create_webchildwindow(const WebChildWndInfo& info);
 #include "../dialogs/settings.h"	// for MdiSdiDlg
 
 
-HWND MainFrameBase::Create(LPCTSTR path, bool mdi, UINT cmdshow)
+HWND MainFrameBase::Create(const ExplorerCmd& cmd)
 {
 	HWND hFrame;
 
-#ifndef _NO_MDI	///@todo implement command line option to switch between MDI and SDI
-	if (mdi)
+#ifndef _NO_MDI
+	if (cmd._mdi)
 		hFrame = MDIMainFrame::Create();
 	else
 #endif
@@ -54,32 +54,20 @@ HWND MainFrameBase::Create(LPCTSTR path, bool mdi, UINT cmdshow)
 
 		g_Globals._hMainWnd = hFrame;
 
-		if (path) {
-			static String sPath = path;	// copy path to avoid accessing freed memory
-			path = sPath;
-		}
-
 		if (hwndOld)
 			DestroyWindow(hwndOld);
 
-		ShowWindow(hFrame, cmdshow);
+		ShowWindow(hFrame, cmd._cmdShow);
 		UpdateWindow(hFrame);
 
-		bool valid_dir = false;
-
-		if (path) {
-			DWORD attribs = GetFileAttributes(path);
-
-			if (attribs!=INVALID_FILE_ATTRIBUTES && (attribs&FILE_ATTRIBUTE_DIRECTORY))
-				valid_dir = true;
-			else if (*path==':' || *path=='"')
-				valid_dir = true;
-		}
-
 		 // Open the first child window after initializing the application
-		if (valid_dir)
-			PostMessage(hFrame, PM_OPEN_WINDOW, 0, (LPARAM)path);
-		else
+		if (cmd.IsValidPath()) {
+			 // We use the static s_path variable to store the path string in order 
+			 // to avoid accessing prematurely freed memory in the PostMessage handlers.
+			static String s_path = cmd._path;
+
+			PostMessage(hFrame, PM_OPEN_WINDOW, cmd._flags, (LPARAM)(LPCTSTR)s_path);
+		} else
 			PostMessage(hFrame, PM_OPEN_WINDOW, OWM_EXPLORE|OWM_DETAILS, 0);
 	}
 
@@ -93,6 +81,7 @@ int MainFrameBase::OpenShellFolders(LPIDA pida, HWND hFrameWnd)
 
 	LPCITEMIDLIST parent_pidl = (LPCITEMIDLIST) ((LPBYTE)pida+pida->aoffset[0]);
 	ShellFolder folder(parent_pidl);
+	LOG(FmtString(TEXT("MainFrameBase::OpenShellFolders(): parent_pidl=%s"), (LPCTSTR)FileSysShellPath(parent_pidl)));
 
 	for(int i=pida->cidl; i>0; --i) {
 		LPCITEMIDLIST pidl = (LPCITEMIDLIST) ((LPBYTE)pida+pida->aoffset[i]);
@@ -103,17 +92,25 @@ int MainFrameBase::OpenShellFolders(LPIDA pida, HWND hFrameWnd)
 		if (SUCCEEDED(hr))
 			if (attribs & SFGAO_FOLDER) {
 				try {
-					ShellPath pidl_abs = ShellPath(pidl).create_absolute_pidl(parent_pidl);
+					XMLPos explorer_options = g_Globals.get_cfg("general/explorer");
 
-					if (hFrameWnd) {
-						if (SendMessage(hFrameWnd, PM_OPEN_WINDOW, OWM_PIDL, (LPARAM)(LPCITEMIDLIST)pidl_abs))
+					bool mdi = XMLBool(explorer_options, "mdi", true);
+					bool separateFolders = XMLBool(explorer_options, "separate-folders", true);
+
+					ShellPath pidl_abs = ShellPath(pidl).create_absolute_pidl(parent_pidl);
+					LOG(FmtString(TEXT("MainFrameBase::OpenShellFolders(): pidl_abs=%s"), (LPCTSTR)FileSysShellPath(pidl_abs)));
+
+					if (hFrameWnd && (mdi || !separateFolders)) {
+						int flags = OWM_PIDL;
+
+						if (separateFolders)
+							flags |= OWM_SEPARATE;
+
+						if (SendMessage(hFrameWnd, PM_OPEN_WINDOW, flags, (LPARAM)(LPCITEMIDLIST)pidl_abs))
 							++cnt;
 					} else {
 						HWND hwnd;
 #ifndef _NO_MDI
-						XMLPos explorer_options = g_Globals.get_cfg("general/explorer");
-						bool mdi = XMLBool(explorer_options, "mdi", true);
-
 						if (mdi)
 							hwnd = MDIMainFrame::Create(pidl_abs, 0);
 						else
@@ -215,7 +212,7 @@ MainFrameBase::MainFrameBase(HWND hwnd)
 					WS_CHILD|WS_TABSTOP|WS_BORDER|/*WS_VISIBLE|*/WS_CHILD|TVS_HASLINES|TVS_HASBUTTONS|TVS_SHOWSELALWAYS|TVS_INFOTIP,
 					-1, -1, 200, 0, _hwnd, (HMENU)IDW_SIDEBAR, g_Globals._hInstance, 0);
 
-	(void)TreeView_SetImageList(_hsidebar, _himl, TVSIL_NORMAL);
+	_himl_old = TreeView_SetImageList(_hsidebar, _himl, TVSIL_NORMAL);
 
 	CheckMenuItem(_menu_info._hMenuView, ID_VIEW_SIDE_BAR, MF_BYCOMMAND|MF_UNCHECKED/*MF_CHECKED*/);
 
@@ -257,6 +254,7 @@ MainFrameBase::MainFrameBase(HWND hwnd)
 
 MainFrameBase::~MainFrameBase()
 {
+	(void)TreeView_SetImageList(_hsidebar, _himl_old, TVSIL_NORMAL);
 	ImageList_Destroy(_himl);
 
 	 // don't exit desktop when closing file manager window
@@ -377,7 +375,7 @@ int MainFrameBase::Command(int id, int code)
 		ExecuteDialog dlg = {{0}, 0};
 
 		if (DialogBoxParam(g_Globals._hInstance, MAKEINTRESOURCE(IDD_EXECUTE), _hwnd, ExecuteDialog::WndProc, (LPARAM)&dlg) == IDOK) {
-			CONTEXT("ShellExecute()");
+			CONTEXT("ID_EXECUTE - ShellExecute()");
 
 			HINSTANCE hinst = ShellExecute(_hwnd, NULL/*operation*/, dlg.cmd/*file*/, NULL/*parameters*/, NULL/*dir*/, dlg.cmdshow);
 
@@ -420,7 +418,8 @@ int MainFrameBase::Command(int id, int code)
 		break;
 
 	  case IDW_COMMANDBAR:
-		//@todo execute command in command bar
+		if (code == 1)
+			ExecuteCommandbar(NULL);
 		break;
 
 	  default:
@@ -428,6 +427,36 @@ int MainFrameBase::Command(int id, int code)
 	}
 
 	return 0;
+}
+
+
+void MainFrameBase::ExecuteCommandbar(LPCTSTR dir)
+{
+	TCHAR cmd[BUFFER_LEN];
+
+	if (GetWindowText(_hcommandedit, cmd, BUFFER_LEN)) {
+		CONTEXT("ExecuteCommandbar - ShellExecute()");
+
+		 // remove command prompt from 'cmd' string
+		LPCTSTR p = cmd;
+
+		if (*p == '>')
+			++p;
+
+		while(*p == ' ')
+			++p;
+
+		if (dir) {
+			 // remove "file://" from directory URL
+			if (!_tcsnicmp(dir, TEXT("file://"), 7))
+				dir += 7;
+		}
+
+		HINSTANCE hinst = ShellExecute(_hwnd, NULL, p, NULL, dir, SW_SHOWNORMAL);
+
+		if ((int)hinst <= 32)
+			display_error(_hwnd, GetLastError());
+	}
 }
 
 
@@ -729,29 +758,34 @@ MDIMainFrame::MDIMainFrame(HWND hwnd)
 	 // insert shell namespace button
 	extraBtns.iString = SendMessage(_hextrabar, TB_ADDSTRING, 0, (LPARAM)TEXT("Shell\0"));
 	extraBtns.idCommand = ID_DRIVE_SHELL_NS;
+	extraBtns.iBitmap = 6;
 	SendMessage(_hextrabar, TB_INSERTBUTTON, INT_MAX, (LPARAM)&extraBtns);
 
 	 // insert web control button
 	extraBtns.iString = SendMessage(_hextrabar, TB_ADDSTRING, 0, (LPARAM)TEXT("Web\0"));
 	extraBtns.idCommand = ID_WEB_WINDOW;
+	extraBtns.iBitmap = 7;
 	SendMessage(_hextrabar, TB_INSERTBUTTON, INT_MAX, (LPARAM)&extraBtns);
 
 	if ((HIWORD(GetVersion())>>14) == W_VER_NT) {
 		 // insert NT object namespace button
 		extraBtns.iString = SendMessage(_hextrabar, TB_ADDSTRING, 0, (LPARAM)TEXT("NT Obj\0"));
 		extraBtns.idCommand = ID_DRIVE_NTOBJ_NS;
+		extraBtns.iBitmap = 8;
 		SendMessage(_hextrabar, TB_INSERTBUTTON, INT_MAX, (LPARAM)&extraBtns);
 	}
 
 	 // insert Registry button
 	extraBtns.iString = SendMessage(_hextrabar, TB_ADDSTRING, 0, (LPARAM)TEXT("Reg.\0"));
 	extraBtns.idCommand = ID_DRIVE_REGISTRY;
+	extraBtns.iBitmap = 9;
 	SendMessage(_hextrabar, TB_INSERTBUTTON, INT_MAX, (LPARAM)&extraBtns);
 
 #ifdef _DEBUG
 	 // insert FAT direct file system access button
 	extraBtns.iString = SendMessage(_hextrabar, TB_ADDSTRING, 0, (LPARAM)TEXT("FAT\0"));
 	extraBtns.idCommand = ID_DRIVE_FAT;
+	extraBtns.iBitmap = 10;
 	SendMessage(_hextrabar, TB_INSERTBUTTON, INT_MAX, (LPARAM)&extraBtns);
 #endif
 
@@ -895,27 +929,29 @@ BOOL MDIMainFrame::TranslateMsg(MSG* pmsg)
 LRESULT MDIMainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 {
 	switch(nmsg) {
-	  case PM_OPEN_WINDOW: {CONTEXT("MDIMainFrame PM_OPEN_WINDOW");
+	  case PM_OPEN_WINDOW: {
+		CONTEXT("MDIMainFrame PM_OPEN_WINDOW");
+
 		TCHAR buffer[MAX_PATH];
 		LPCTSTR path;
-		ShellPath shell_path = DesktopFolderPath();
+		ShellPath root_path = DesktopFolderPath();
 
 		if (lparam) {
 			if (wparam & OWM_PIDL) {
 				 // take over PIDL from lparam
-				shell_path.assign((LPCITEMIDLIST)lparam);	// create as "rooted" window
-				FileSysShellPath fsp(shell_path);
+				root_path.assign((LPCITEMIDLIST)lparam);	// create as "rooted" window
+				FileSysShellPath fsp(root_path);
 				path = fsp;
 
 				if (path) {
-					LOG(FmtString(TEXT("PM_OPEN_WINDOW: path=%s"), path));
+					LOG(FmtString(TEXT("MDIMainFrame PM_OPEN_WINDOW: path=%s"), path));
 					lstrcpy(buffer, path);
 					path = buffer;
 				}
 			} else {
 				 // take over path from lparam
 				path = (LPCTSTR)lparam;
-				shell_path = path;	// create as "rooted" window
+				root_path = path;	// create as "rooted" window
 			}
 		} else {
 			///@todo read paths and window placements from registry
@@ -933,15 +969,15 @@ LRESULT MDIMainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			OBJ_CONTEXT("create ShellChildWndInfo", path);
 
 			 // Shell Namespace as default view
-			ShellChildWndInfo create_info(_hmdiclient, path, shell_path);
+			ShellChildWndInfo create_info(_hmdiclient, path, root_path);
 
-			create_info._pos.showCmd = SW_SHOWMAXIMIZED;
-			create_info._pos.rcNormalPosition.left = 0;
-			create_info._pos.rcNormalPosition.top = 0;
-			create_info._pos.rcNormalPosition.right = 600;
-			create_info._pos.rcNormalPosition.bottom = 280;
+			create_info._pos.showCmd = wparam&OWM_SEPARATE? SW_SHOWNORMAL: SW_SHOWMAXIMIZED;
+			create_info._pos.rcNormalPosition.left = CW_USEDEFAULT;
+			create_info._pos.rcNormalPosition.top = CW_USEDEFAULT;
+			create_info._pos.rcNormalPosition.right = CW_USEDEFAULT;
+			create_info._pos.rcNormalPosition.bottom = CW_USEDEFAULT;
 
-			create_info._open_mode = (OPEN_WINDOW_MODE)wparam;
+			create_info._open_mode = wparam;
 
 		//	FileChildWindow::create(_hmdiclient, create_info);
 			return (LRESULT)MDIShellBrowserChild::create(create_info);
@@ -1101,7 +1137,21 @@ int MDIMainFrame::Command(int id, int code)
 		break;
 
 	  case ID_VIEW_SDI:
-		MainFrameBase::Create(NULL, false);
+		MainFrameBase::Create(ExplorerCmd());
+		break;
+
+	  case IDW_COMMANDBAR:
+		if (code == 1) {
+			TCHAR url[BUFFER_LEN];
+			LPCTSTR dir;
+
+			if (GetWindowText(_haddressedit, url, BUFFER_LEN))
+				dir = url;
+			else
+				dir = NULL;
+
+			ExecuteCommandbar(dir);
+		}
 		break;
 
 	///@todo There are even more menu items!
@@ -1340,46 +1390,51 @@ LRESULT SDIMainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 	  case WM_PAINT: {
 		PaintCanvas canvas(_hwnd);
-		ClientRect rt(_hwnd);
-		rt.left = _split_pos-SPLIT_WIDTH/2;
-		rt.right = _split_pos+SPLIT_WIDTH/2+1;
 
-		if (_right_hwnd) {
-			WindowRect right_rect(_right_hwnd);
-			ScreenToClient(_hwnd, &right_rect);
-			rt.top = right_rect.top;
-			rt.bottom = right_rect.bottom;
+		if (_left_hwnd) {
+			ClientRect rt(_hwnd);
+			rt.left = _split_pos-SPLIT_WIDTH/2;
+			rt.right = _split_pos+SPLIT_WIDTH/2+1;
+
+			if (_right_hwnd) {
+				WindowRect right_rect(_right_hwnd);
+				ScreenToClient(_hwnd, &right_rect);
+				rt.top = right_rect.top;
+				rt.bottom = right_rect.bottom;
+			}
+
+			HBRUSH lastBrush = SelectBrush(canvas, GetStockBrush(COLOR_SPLITBAR));
+			Rectangle(canvas, rt.left, rt.top-1, rt.right, rt.bottom+1);
+			SelectObject(canvas, lastBrush);
 		}
-
-		HBRUSH lastBrush = SelectBrush(canvas, GetStockBrush(COLOR_SPLITBAR));
-		Rectangle(canvas, rt.left, rt.top-1, rt.right, rt.bottom+1);
-		SelectObject(canvas, lastBrush);
 		break;}
 
 	  case WM_SETCURSOR:
-		if (LOWORD(lparam) == HTCLIENT) {
-			POINT pt;
-			GetCursorPos(&pt);
-			ScreenToClient(_hwnd, &pt);
+  		if (_left_hwnd)
+			if (LOWORD(lparam) == HTCLIENT) {
+				POINT pt;
+				GetCursorPos(&pt);
+				ScreenToClient(_hwnd, &pt);
 
-			if (pt.x>=_split_pos-SPLIT_WIDTH/2 && pt.x<_split_pos+SPLIT_WIDTH/2+1) {
-				SetCursor(LoadCursor(0, IDC_SIZEWE));
-				return TRUE;
+				if (pt.x>=_split_pos-SPLIT_WIDTH/2 && pt.x<_split_pos+SPLIT_WIDTH/2+1) {
+					SetCursor(LoadCursor(0, IDC_SIZEWE));
+					return TRUE;
+				}
 			}
-		}
 		goto def;
 
-	  case WM_LBUTTONDOWN: {
-		int x = GET_X_LPARAM(lparam);
+	  case WM_LBUTTONDOWN:
+		if (_left_hwnd) {
+			int x = GET_X_LPARAM(lparam);
 
-		ClientRect rt(_hwnd);
+			ClientRect rt(_hwnd);
 
-		if (x>=_split_pos-SPLIT_WIDTH/2 && x<_split_pos+SPLIT_WIDTH/2+1) {
-			_last_split = _split_pos;
-			SetCapture(_hwnd);
+			if (x>=_split_pos-SPLIT_WIDTH/2 && x<_split_pos+SPLIT_WIDTH/2+1) {
+				_last_split = _split_pos;
+				SetCapture(_hwnd);
+			}
 		}
-
-		break;}
+		break;
 
 	  case WM_LBUTTONUP:
 		if (GetCapture() == _hwnd)
@@ -1399,7 +1454,7 @@ LRESULT SDIMainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 	  case WM_MOUSEMOVE:
 		if (GetCapture() == _hwnd) {
-			int x = LOWORD(lparam);
+			int x = GET_X_LPARAM(lparam);
 
 			ClientRect rt(_hwnd);
 
@@ -1416,27 +1471,29 @@ LRESULT SDIMainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		}
 		break;
 
-	  case PM_OPEN_WINDOW: {CONTEXT("SDIMainFrame PM_OPEN_WINDOW");
+	  case PM_OPEN_WINDOW: {
+		CONTEXT("SDIMainFrame PM_OPEN_WINDOW");
+
 		TCHAR buffer[MAX_PATH];
 		LPCTSTR path;
-		ShellPath shell_path = DesktopFolderPath();
+		ShellPath root_path = DesktopFolderPath();
 
 		if (lparam) {
 			if (wparam & OWM_PIDL) {
 				 // take over PIDL from lparam
-				shell_path.assign((LPCITEMIDLIST)lparam);	// create as "rooted" window
-				FileSysShellPath fsp(shell_path);
+				root_path.assign((LPCITEMIDLIST)lparam);	// create as "rooted" window
+				FileSysShellPath fsp(root_path);
 				path = fsp;
 
 				if (path) {
-					LOG(FmtString(TEXT("PM_OPEN_WINDOW: path=%s"), path));
+					LOG(FmtString(TEXT("SDIMainFrame PM_OPEN_WINDOW: path=%s"), path));
 					lstrcpy(buffer, path);
 					path = buffer;
 				}
 			} else {
 				 // take over path from lparam
 				path = (LPCTSTR)lparam;
-				shell_path = path;	// create as "rooted" window
+				root_path = path;	// create as "rooted" window
 			}
 		} else {
 			///@todo read paths and window placements from registry
@@ -1444,9 +1501,10 @@ LRESULT SDIMainFrame::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 				*buffer = '\0';
 
 			path = buffer;
+			root_path = path;
 		}
 
-		jump_to(shell_path, (OPEN_WINDOW_MODE)wparam);
+		jump_to(root_path, wparam);	//@todo content of 'path' not used any more
 		return TRUE;}	// success
 
 	  default: def:
@@ -1460,7 +1518,12 @@ int SDIMainFrame::Command(int id, int code)
 {
 	switch(id) {
 	  case ID_VIEW_MDI:
-		MainFrameBase::Create(_url, true);
+		MainFrameBase::Create(ExplorerCmd(_url, true));
+		break;
+
+	  case IDW_COMMANDBAR:
+		if (code == 1)
+			ExecuteCommandbar(_url);
 		break;
 
 	  default:
@@ -1531,7 +1594,7 @@ void SDIMainFrame::resize_children()
 
 		hdwp = DeferWindowPos(hdwp, _left_hwnd, 0, _clnt_rect.left, _clnt_rect.top, _split_pos-SPLIT_WIDTH/2-_clnt_rect.left, _clnt_rect.bottom-_clnt_rect.top, SWP_NOZORDER|SWP_NOACTIVATE);
 	} else {
-		//_split_pos = 0;
+		//_split_pos = -1;
 		cx = 0;
 	}
 
@@ -1556,6 +1619,8 @@ void SDIMainFrame::update_shell_browser()
 		split_pos = _split_pos;
 		delete _shellBrowser.release();
 	}
+
+	///@todo use OWM_ROOTED flag
 
 	 // create explorer treeview
 	if (_shellpath_info._open_mode & OWM_EXPLORE) {
@@ -1608,7 +1673,7 @@ void SDIMainFrame::entry_selected(Entry* entry)
 
 		TCHAR path[MAX_PATH];
 
-		if (shell_entry->get_path(path)) {
+		if (shell_entry->get_path(path,COUNTOF(path))) {
 			String url;
 
 			if (path[0] == ':')
@@ -1644,7 +1709,7 @@ void SDIMainFrame::jump_to(LPCTSTR path, int mode)
 	} else */{
 		_shellpath_info._open_mode = mode;
 		_shellpath_info._shell_path = path;
-		_shellpath_info._root_shell_path = SpecialFolderPath(CSIDL_DRIVES, _hwnd);	//@@
+		_shellpath_info._root_shell_path = SpecialFolderPath(CSIDL_DRIVES, _hwnd);	//@@ path
 
 		update_shell_browser();
 	}
@@ -1661,7 +1726,7 @@ void SDIMainFrame::jump_to(LPCITEMIDLIST path, int mode)
 	} else {
 		_shellpath_info._open_mode = mode;
 		_shellpath_info._shell_path = path;
-		_shellpath_info._root_shell_path = SpecialFolderPath(CSIDL_DRIVES, _hwnd);	//@@
+		_shellpath_info._root_shell_path = path;	//@@ MF 02.10.2005 was: SpecialFolderPath(CSIDL_DRIVES, _hwnd);
 
 		update_shell_browser();
 	}

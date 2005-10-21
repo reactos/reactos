@@ -40,7 +40,7 @@ static BOOLEAN RtlpDebugInfoFreeList[MAX_STATIC_CS_DEBUG_OBJECTS];
  *
  *--*/
 VOID
-STDCALL
+NTAPI
 RtlpCreateCriticalSectionSem(PRTL_CRITICAL_SECTION CriticalSection)
 {
     HANDLE hEvent = CriticalSection->LockSemaphore;
@@ -94,7 +94,7 @@ RtlpCreateCriticalSectionSem(PRTL_CRITICAL_SECTION CriticalSection)
  *
  *--*/
 NTSTATUS
-STDCALL
+NTAPI
 RtlpWaitForCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
 {
     NTSTATUS Status;
@@ -175,7 +175,7 @@ RtlpWaitForCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
  *
  *--*/
 VOID
-STDCALL
+NTAPI
 RtlpUnWaitCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
 {
     NTSTATUS Status;
@@ -218,7 +218,7 @@ RtlpUnWaitCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
  *
  *--*/
 VOID
-STDCALL
+NTAPI
 RtlpInitDeferedCriticalSection(VOID)
 {
 
@@ -249,7 +249,7 @@ RtlpInitDeferedCriticalSection(VOID)
  *
  *--*/
 PRTL_CRITICAL_SECTION_DEBUG
-STDCALL
+NTAPI
 RtlpAllocateDebugInfo(VOID)
 {
     ULONG i;
@@ -293,7 +293,7 @@ RtlpAllocateDebugInfo(VOID)
  *
  *--*/
 VOID
-STDCALL
+NTAPI
 RtlpFreeDebugInfo(PRTL_CRITICAL_SECTION_DEBUG DebugInfo)
 {
     ULONG EntryId;
@@ -341,7 +341,7 @@ RtlpFreeDebugInfo(PRTL_CRITICAL_SECTION_DEBUG DebugInfo)
  *
  *--*/
 NTSTATUS
-STDCALL
+NTAPI
 RtlDeleteCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
 {
     NTSTATUS Status = STATUS_SUCCESS;
@@ -393,7 +393,7 @@ RtlDeleteCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
  *
  *--*/
 DWORD
-STDCALL
+NTAPI
 RtlSetCriticalSectionSpinCount(PRTL_CRITICAL_SECTION CriticalSection,
                                ULONG SpinCount)
 {
@@ -421,7 +421,7 @@ RtlSetCriticalSectionSpinCount(PRTL_CRITICAL_SECTION CriticalSection,
  *
  *--*/
 NTSTATUS
-STDCALL
+NTAPI
 RtlEnterCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
 {
     HANDLE Thread = (HANDLE)NtCurrentTeb()->Cid.UniqueThread;
@@ -478,7 +478,7 @@ RtlEnterCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
  *
  *--*/
 NTSTATUS
-STDCALL
+NTAPI
 RtlInitializeCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
 {
     /* Call the Main Function */
@@ -504,7 +504,7 @@ RtlInitializeCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
  *
  *--*/
 NTSTATUS
-STDCALL
+NTAPI
 RtlInitializeCriticalSectionAndSpinCount(PRTL_CRITICAL_SECTION CriticalSection,
                                          ULONG SpinCount)
 {
@@ -590,7 +590,7 @@ RtlInitializeCriticalSectionAndSpinCount(PRTL_CRITICAL_SECTION CriticalSection,
  *
  *--*/
 NTSTATUS
-STDCALL
+NTAPI
 RtlLeaveCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
 {
 #ifndef NDEBUG
@@ -648,7 +648,7 @@ RtlLeaveCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
  *
  *--*/
 BOOLEAN
-STDCALL
+NTAPI
 RtlTryEnterCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
 {
     /* Try to take control */

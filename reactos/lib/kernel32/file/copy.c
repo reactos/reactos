@@ -385,4 +385,23 @@ CopyFileW (
 	                    bFailIfExists);
 }
 
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+PrivCopyFileExW (
+	LPCWSTR			lpExistingFileName,
+	LPCWSTR			lpNewFileName,
+	LPPROGRESS_ROUTINE	lpProgressRoutine,
+	LPVOID			lpData,
+	BOOL			*pbCancel,
+	DWORD			dwCopyFlags
+	)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
 /* EOF */

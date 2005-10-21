@@ -2093,7 +2093,7 @@ NTSTATUS  WINAPI RtlOemStringToUnicodeString(UNICODE_STRING*,const STRING*,BOOLE
 NTSTATUS  WINAPI RtlOemToUnicodeN(LPWSTR,DWORD,LPDWORD,LPCSTR,DWORD);
 DWORD     WINAPI RtlOpenCurrentUser(ACCESS_MASK,PHANDLE);
 
-NTSTATUS  WINAPI RtlPinAtomInAtomTable(RTL_ATOM_TABLE,RTL_ATOM);
+NTSTATUS  WINAPI RtlPinAtomInAtomTable(PRTL_ATOM_TABLE,RTL_ATOM);
 BOOLEAN   WINAPI RtlPrefixString(const STRING*,const STRING*,BOOLEAN);
 BOOLEAN   WINAPI RtlPrefixUnicodeString(const UNICODE_STRING*,const UNICODE_STRING*,BOOLEAN);
 
@@ -2180,8 +2180,17 @@ NTSTATUS  WINAPI RtlpNtCreateKey(PHANDLE,ACCESS_MASK,const OBJECT_ATTRIBUTES*,UL
 NTSTATUS  WINAPI RtlpWaitForCriticalSection(RTL_CRITICAL_SECTION *);
 NTSTATUS  WINAPI RtlpUnWaitCriticalSection(RTL_CRITICAL_SECTION *);
 
-NTSTATUS WINAPI vDbgPrintEx(ULONG,ULONG,LPCSTR,va_list);
-NTSTATUS WINAPI vDbgPrintExWithPrefix(LPCSTR,ULONG,ULONG,LPCSTR,va_list);
+ULONG WINAPI
+vDbgPrintEx(IN ULONG ComponentId,
+            IN ULONG Level,
+            IN LPCSTR Format,
+            IN va_list ap);
+ULONG WINAPI
+vDbgPrintExWithPrefix(IN LPCSTR Prefix,
+                      IN ULONG ComponentId,
+                      IN ULONG Level,
+                      IN LPCSTR Format,
+                      IN va_list ap);
 
 /* Wine internal functions */
 

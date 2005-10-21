@@ -134,7 +134,7 @@ LONG WINAPI SHRegOpenUSKeyW(LPCWSTR Path, REGSAM AccessType, HUSKEY hRelativeUSK
 
     /* Create internal HUSKEY */
     hKey = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*hKey));
-    lstrcpynW(hKey->lpszPath, Path, sizeof(hKey->lpszPath));
+    lstrcpynW(hKey->lpszPath, Path, sizeof(hKey->lpszPath)/sizeof(WCHAR));
 
     if (hRelativeUSKey)
     {

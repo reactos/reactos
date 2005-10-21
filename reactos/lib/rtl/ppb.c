@@ -22,7 +22,7 @@
 /* FUNCTIONS ****************************************************************/
 
 
-static inline VOID
+static __inline VOID
 RtlpCopyParameterString(PWCHAR *Ptr,
 			PUNICODE_STRING Destination,
 			PUNICODE_STRING Source,
@@ -41,7 +41,7 @@ RtlpCopyParameterString(PWCHAR *Ptr,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlCreateProcessParameters(PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
 			   PUNICODE_STRING ImagePathName,
 			   PUNICODE_STRING DllPath,
@@ -219,7 +219,7 @@ RtlCreateProcessParameters(PRTL_USER_PROCESS_PARAMETERS *ProcessParameters,
 /*
  * @implemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlDestroyProcessParameters(PRTL_USER_PROCESS_PARAMETERS ProcessParameters)
 {
    ULONG RegionSize = 0;
@@ -235,7 +235,7 @@ RtlDestroyProcessParameters(PRTL_USER_PROCESS_PARAMETERS ProcessParameters)
  *
  * @implemented
  */
-PRTL_USER_PROCESS_PARAMETERS STDCALL
+PRTL_USER_PROCESS_PARAMETERS NTAPI
 RtlDeNormalizeProcessParams(PRTL_USER_PROCESS_PARAMETERS Params)
 {
    if (Params && (Params->Flags & PPF_NORMALIZED))
@@ -260,7 +260,7 @@ RtlDeNormalizeProcessParams(PRTL_USER_PROCESS_PARAMETERS Params)
  *
  * @implemented
  */
-PRTL_USER_PROCESS_PARAMETERS STDCALL
+PRTL_USER_PROCESS_PARAMETERS NTAPI
 RtlNormalizeProcessParams(PRTL_USER_PROCESS_PARAMETERS Params)
 {
    if (Params && !(Params->Flags & PPF_NORMALIZED))

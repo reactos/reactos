@@ -64,6 +64,7 @@ reactos/lib/rpcrt4		# Synced to Wine-20050830
 reactos/lib/setupapi		# Forked at Wine-20050524
 reactos/lib/shell32             # Synced to Wine-20050830
 reactos/lib/shdocvw             # Synced to Wine-20050830
+reactos/lib/shfolder            # Synced to Wine-20050830
 reactos/lib/shlwapi             # Synced to Wine-20050830
 reactos/lib/twain		# Out of sync
 reactos/lib/urlmon		# Synced to Wine-20050830

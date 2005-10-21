@@ -199,8 +199,8 @@ typedef struct _DIRFINDLISTNODE
 } DIRFINDLISTNODE, *PDIRFINDLISTNODE;
 
 
-typedef BOOL STDCALL
-(*PGETFREEDISKSPACEEX)(LPCTSTR, PULARGE_INTEGER, PULARGE_INTEGER, PULARGE_INTEGER);
+typedef BOOL
+(WINAPI *PGETFREEDISKSPACEEX)(LPCTSTR, PULARGE_INTEGER, PULARGE_INTEGER, PULARGE_INTEGER);
 
 
 /* Globally save the # of dirs, files and bytes,
@@ -240,6 +240,8 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
   BOOL bPNegative;	/* Negative switch parameter */
   BOOL bIntoQuotes;	/* A flag showing if we are in quotes (") */
   LPTSTR ptrLast;	/* A pointer to the last character of param */
+  UINT t = 0;
+  
 
 	/* Initialize variables; */
 	cCurSwitch = _T(' ');
@@ -257,6 +259,32 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
 	lpFlags->stAttribs.bParSetted = TRUE;
 	lpFlags->stOrderBy.bParSetted = TRUE;
 	lpFlags->stTimeField.bParSetted = TRUE;
+
+	
+	/* Add correct handling of *. */
+	for(t=0;t<_tcslen(Line);t++)
+	{		  
+	  static INT count=0;  
+
+	  if ((count==0) && (Line[t]==_T('*'))) 
+		   count++;
+	        
+	  else if ((count==1) && (Line[t]==_T('.'))) 
+		   count++;
+	 
+	  else if ((count==2) && (Line[t]==_T('*'))) 
+		   count++; 
+
+	  else if (!_istspace(Line[t]))
+	       {
+		      if (count==2) 	          
+	              lpFlags->bWideListColSort = ! bNegative;	      
+		      count=-1;
+	       }	 
+	  }
+
+	  
+
 
 	/* Main Loop (see README_DIR.txt) */
 	/* scan the command line char per char, and we process its char */
@@ -1294,7 +1322,7 @@ DirPrintWideList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN] Files' Info */
   {
     /* Calculate the lines that will be printed */
 //    iLines = ceil((float)dwCount/(float)iColumns);
-    iLines = dwCount / iColumns;
+    iLines = (USHORT)(dwCount / iColumns);
 
     for (i = 0;i < iLines;i++)
     {
@@ -1982,22 +2010,25 @@ INT CommandDir(LPTSTR first, LPTSTR rest)
 /* <Debug :>
    Uncomment this to show the final state of switch flags*/
 #ifdef _DEBUG
-	ConOutPrintf("Attributes mask/value %x/%x\n",stFlags.stAttribs.dwAttribMask,stFlags.stAttribs.dwAttribVal  );
-	ConOutPrintf("(B) Bare format : %i\n", stFlags.bBareFormat );
-	ConOutPrintf("(C) Thousand : %i\n", stFlags.bTSeperator );
-	ConOutPrintf("(W) Wide list : %i\n", stFlags.bWideList );
-	ConOutPrintf("(D) Wide list sort by column : %i\n", stFlags.bWideListColSort );
-	ConOutPrintf("(L) Lowercase : %i\n", stFlags.bLowerCase );
-	ConOutPrintf("(N) New : %i\n", stFlags.bNewLongList );
-	ConOutPrintf("(O) Order : %i\n", stFlags.stOrderBy.sCriteriaCount );
-	for (i =0;i<stFlags.stOrderBy.sCriteriaCount;i++)
-		ConOutPrintf(" Order Criteria [%i]: %i (Reversed: %i)\n",i, stFlags.stOrderBy.eCriteria[i], stFlags.stOrderBy.bCriteriaRev[i] );
-	ConOutPrintf("(P) Pause : %i\n", stFlags.bPause  );
-	ConOutPrintf("(Q) Owner : %i\n", stFlags.bUser );
-	ConOutPrintf("(S) Recursive : %i\n", stFlags.bRecursive );
-	ConOutPrintf("(T) Time field : %i\n", stFlags.stTimeField.eTimeField );
-	ConOutPrintf("(X) Short names : %i\n", stFlags.bShortName );
-	ConOutPrintf("Parameter : %s\n", param );
+	{
+		int i;
+		ConOutPrintf(_T("Attributes mask/value %x/%x\n"),stFlags.stAttribs.dwAttribMask,stFlags.stAttribs.dwAttribVal  );
+		ConOutPrintf(_T("(B) Bare format : %i\n"), stFlags.bBareFormat );
+		ConOutPrintf(_T("(C) Thousand : %i\n"), stFlags.bTSeperator );
+		ConOutPrintf(_T("(W) Wide list : %i\n"), stFlags.bWideList );
+		ConOutPrintf(_T("(D) Wide list sort by column : %i\n"), stFlags.bWideListColSort );
+		ConOutPrintf(_T("(L) Lowercase : %i\n"), stFlags.bLowerCase );
+		ConOutPrintf(_T("(N) New : %i\n"), stFlags.bNewLongList );
+		ConOutPrintf(_T("(O) Order : %i\n"), stFlags.stOrderBy.sCriteriaCount );
+		for (i =0;i<stFlags.stOrderBy.sCriteriaCount;i++)
+			ConOutPrintf(_T(" Order Criteria [%i]: %i (Reversed: %i)\n"),i, stFlags.stOrderBy.eCriteria[i], stFlags.stOrderBy.bCriteriaRev[i] );
+		ConOutPrintf(_T("(P) Pause : %i\n"), stFlags.bPause  );
+		ConOutPrintf(_T("(Q) Owner : %i\n"), stFlags.bUser );
+		ConOutPrintf(_T("(S) Recursive : %i\n"), stFlags.bRecursive );
+		ConOutPrintf(_T("(T) Time field : %i\n"), stFlags.stTimeField.eTimeField );
+		ConOutPrintf(_T("(X) Short names : %i\n"), stFlags.bShortName );
+		ConOutPrintf(_T("Parameter : %s\n"), param );
+	}
 #endif
 
 	/* print the header  */

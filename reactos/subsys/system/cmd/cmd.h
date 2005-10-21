@@ -43,12 +43,7 @@
 
 
 /* command line buffer length */
-#ifdef __REACTOS__
 #define CMDLINE_LENGTH  8192
-#else
-#define CMDLINE_LENGTH  8192
-//#define CMDLINE_LENGTH  1024
-#endif
 
 /* global variables */
 extern HANDLE hOut;
@@ -99,6 +94,7 @@ INT cmd_cls (LPTSTR, LPTSTR);
 
 /* Prototypes for CMD.C */
 VOID ParseCommandLine (LPTSTR);
+LPCTSTR GetEnvVarOrSpecial ( LPCTSTR varName );
 VOID AddBreakHandler (VOID);
 VOID RemoveBreakHandler (VOID);
 
@@ -224,11 +220,11 @@ VOID msg_pause (VOID);
 
 /* Prototypes for FILECOMP.C */
 #ifdef FEATURE_UNIX_FILENAME_COMPLETION
-VOID CompleteFilename (LPTSTR, INT);
+VOID CompleteFilename (LPTSTR, UINT);
 INT  ShowCompletionMatches (LPTSTR, INT);
 #endif
 #ifdef FEATURE_4NT_FILENAME_COMPLETION
-VOID CompleteFilename (LPTSTR, BOOL, LPTSTR, INT);
+VOID CompleteFilename (LPTSTR, BOOL, LPTSTR, UINT);
 #endif
 
 
@@ -299,14 +295,11 @@ TCHAR  cgetchar (VOID);
 BOOL   CheckCtrlBreak (INT);
 LPTSTR *split (LPTSTR, LPINT, BOOL);
 VOID   freep (LPTSTR *);
-LPTSTR _stpcpy (LPTSTR, LPTSTR);
+LPTSTR _stpcpy (LPTSTR, LPCTSTR);
 BOOL   IsValidPathName (LPCTSTR);
 BOOL   IsExistingFile (LPCTSTR);
 BOOL   IsExistingDirectory (LPCTSTR);
 BOOL   FileGetString (HANDLE, LPTSTR, INT);
-#ifndef __REACTOS__
-HWND   GetConsoleWindow(VOID);
-#endif
 
 #define PROMPT_NO    0
 #define PROMPT_YES   1

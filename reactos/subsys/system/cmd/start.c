@@ -19,10 +19,12 @@
 
 INT cmd_start (LPTSTR First, LPTSTR Rest)
 {
-	TCHAR szFullName[MAX_PATH];
+	TCHAR szFullName[CMDLINE_LENGTH];
 	TCHAR first[CMDLINE_LENGTH];
 	TCHAR *rest = NULL; 
 	TCHAR *param = NULL;
+	INT size;
+	LPTSTR comspec;
 	BOOL bWait = FALSE;
 	BOOL bBat  = FALSE;
 	BOOL bCreate = FALSE;
@@ -38,17 +40,46 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 		return 0;
 	}
 
+	/* get comspec */
+	comspec = malloc ( MAX_PATH * sizeof(TCHAR));
+	if (comspec == NULL)
+	{
+		error_out_of_memory();
+		return 1;
+	}
+	SetLastError(0);
+	size = GetEnvironmentVariable (_T("COMSPEC"), comspec, 512);
+	if(GetLastError() == ERROR_ENVVAR_NOT_FOUND)
+	{
+		Rest = _T("cmd");
+	}
+	else
+	{
+		if (size > MAX_PATH)
+		{
+			comspec = realloc(comspec,size * sizeof(TCHAR) );
+			if (comspec==NULL)
+			{
+				return 1;
+			}
+			size = GetEnvironmentVariable (_T("COMSPEC"), comspec, size);
+		}		
+	}
+
 	nErrorLevel = 0;
 
 	if( !*Rest )
 	{
-		// FIXME: use comspec instead
-		Rest = _T("cmd");
+		_tcscpy(Rest,_T("\""));
+		_tcscat(Rest,comspec);
+		_tcscat(Rest,_T("\""));
 	}
-	
+
 	rest = malloc ( _tcslen(Rest) + 1 * sizeof(TCHAR)); 
 	if (rest == NULL)
 	{
+	 if(comspec != NULL)
+		free(comspec);
 	 error_out_of_memory();
 	 return 1;
 	}
@@ -56,6 +87,8 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 	param =malloc ( _tcslen(Rest) + 1 * sizeof(TCHAR)); 
 	if (rest == NULL)
 	{
+	 if(comspec != NULL)
+		free(comspec);
 	 free(rest);
 	 error_out_of_memory();
 	 return 1;
@@ -117,12 +150,12 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 	
 	if (!_tcscmp (first + 1, _T(":")) && _istalpha (*first))
 	{
-		TCHAR szPath[MAX_PATH];
+		TCHAR szPath[CMDLINE_LENGTH];
 
 		_tcscpy (szPath, _T("A:"));
 		szPath[0] = _totupper (*first);
 		SetCurrentDirectory (szPath);
-		GetCurrentDirectory (MAX_PATH, szPath);
+		GetCurrentDirectory (CMDLINE_LENGTH, szPath);
 		if (szPath[0] != (TCHAR)_totupper (*first))
 			ConErrResPuts (STRING_FREE_ERROR1);
 
@@ -131,11 +164,11 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 
 	    if (param != NULL) 
 		    free(param);
-
+		 if (comspec != NULL)
+			 free(comspec);
 		return 0;
 	}
 	
-	  
 	/* get the PATH environment variable and parse it */
 	/* search the PATH environment variable for the binary */
 	if (!SearchForExecutable (rest, szFullName))
@@ -148,8 +181,11 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 	    if (param != NULL) 
 		    free(param);
 
+		 if (comspec != NULL)
+			 free(comspec);
 		return 1;
 	}
+	
 
 	/* check if this is a .BAT or .CMD file */
 	if (!_tcsicmp (_tcsrchr (szFullName, _T('.')), _T(".bat")) ||
@@ -158,28 +194,14 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 		bBat = TRUE;				
 		memset(szFullCmdLine,0,CMDLINE_LENGTH * sizeof(TCHAR));
 
-		/* FIXME : use comspec instead */
-		if (!SearchForExecutable (_T("CMD"), szFullCmdLine))
-	    {
-		    error_bad_command ();
 
-		    if (rest != NULL) 
-		        free(rest);
-
-	        if (param != NULL) 
-		        free(param);
-
-		    return 1;
-	    }
+		_tcscpy(szFullCmdLine,comspec);
 
 		memcpy(&szFullCmdLine[_tcslen(szFullCmdLine)],_T("\" /K \""), 6 * sizeof(TCHAR));				
 		memcpy(&szFullCmdLine[_tcslen(szFullCmdLine)], szFullName, _tcslen(szFullName) * sizeof(TCHAR));		
 		memcpy(&szFullCmdLine[1], &szFullCmdLine[0], _tcslen(szFullCmdLine) * sizeof(TCHAR)); 
         szFullCmdLine[0] = _T('\"');					
         szFullCmdLine[_tcslen(szFullCmdLine)] = _T('\"');
-		
-
-
 	}
 
 #ifdef _DEBUG
@@ -215,9 +237,8 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 		}
 		else
 		{
-		 bCreate = CreateProcess (szFullName, szFullCmdLine, NULL, NULL, FALSE,
-			DETACHED_PROCESS, NULL, NULL, &stui, &prci);
-		
+				bCreate = CreateProcess (szFullName, szFullCmdLine, NULL, NULL, FALSE,
+					CREATE_NEW_CONSOLE, NULL, NULL, &stui, &prci);
 		}
 		
 		if (bCreate)
@@ -248,6 +269,8 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
     if (param != NULL) 
 	    free(param);
 
+	 if (comspec != NULL)
+		 free(comspec);
 	return 0;
 }
 

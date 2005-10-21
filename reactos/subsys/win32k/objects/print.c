@@ -55,17 +55,20 @@ IntGdiEscape(PDC    dc,
              LPCSTR InData,
              LPVOID OutData)
 {
+  if (Escape == QUERYESCSUPPORT)
+    return FALSE;
+
   UNIMPLEMENTED;
-  return 0;
+  return SP_ERROR;
 }
 
 INT
 STDCALL
 NtGdiEscape(HDC  hDC,
-                INT  Escape,
-                INT  InSize,
-                LPCSTR  InData,
-                LPVOID  OutData)
+            INT  Escape,
+            INT  InSize,
+            LPCSTR  InData,
+            LPVOID  OutData)
 {
   PDC dc;
   INT ret;
@@ -74,7 +77,7 @@ NtGdiEscape(HDC  hDC,
   if (dc == NULL)
   {
     SetLastWin32Error(ERROR_INVALID_HANDLE);
-    return 0;
+    return SP_ERROR;
   }
 
   /* TODO FIXME - don't pass umode buffer to an Int function */
@@ -94,10 +97,10 @@ IntEngExtEscape(
    INT      OutSize,
    LPVOID   OutData)
 {
-   if (Escape == 0x1101)
-      return 0;
+   if (Escape == QUERYESCSUPPORT)
+      return FALSE;
 
-   DPRINT1("IntEngExtEscape is nimplemented. - Keep going and have a nice day\n");
+   DPRINT1("IntEngExtEscape is unimplemented. - Keep going and have a nice day\n");
    return -1;
 }
 

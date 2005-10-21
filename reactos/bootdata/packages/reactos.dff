@@ -35,7 +35,7 @@ drivers\dd\bootvid\bootvid.sys          2
 drivers\dd\null\null.sys                2
 drivers\dd\serial\serial.sys            2
 drivers\video\displays\vga\vgaddi.dll   1
-drivers\video\displays\framebuf\framebuf.dll   1
+drivers\video\displays\framebuf\framebuf.dll 1
 drivers\video\miniport\vga\vgamp.sys    2
 drivers\video\miniport\vbe\vbemp.sys    2
 drivers\video\videoprt\videoprt.sys     2
@@ -54,6 +54,10 @@ drivers\net\tdi\tdi.sys                 2
 drivers\net\wshtcpip\wshtcpip.dll       1
 drivers\net\dd\ne2000\ne2000.sys        2
 drivers\net\dd\pcnet\pcnet.sys          2
+drivers\usb\miniport\usbohci\usbohci.sys 2
+drivers\usb\miniport\usbuhci\usbuhci.sys 2
+drivers\usb\usbhub\usbhub.sys           2
+drivers\usb\usbport\usbport.sys         2
 lib\advapi32\advapi32.dll               1
 lib\advpack\advpack.dll                 1
 lib\aclui\aclui.dll                     1
@@ -68,6 +72,7 @@ lib\cpl\main\main.cpl                   1
 lib\cpl\ncpa\ncpa.cpl                   1
 lib\cpl\sysdm\sysdm.cpl                 1
 lib\cpl\timedate\timedate.cpl           1
+lib\cfgmgr32\cfgmgr32.dll               1
 lib\comctl32\comctl32.dll               1
 lib\comdlg32\comdlg32.dll               1
 lib\crtdll\crtdll.dll                   1
@@ -84,10 +89,11 @@ lib\freetype\freetype.dll               1
 lib\gdi32\gdi32.dll                     1
 lib\gdiplus\gdiplus.dll                 1
 lib\glu32\glu32.dll                     1
+lib\hid\hid.dll                         1
 lib\imagehlp\imagehlp.dll               1
 lib\imm32\imm32.dll                     1
 lib\iphlpapi\iphlpapi.dll               1
-lib\keyboard\kbdbe\kbdbe.dll		1
+lib\keyboard\kbdbe\kbdbe.dll            1
 lib\keyboard\kbdda\kbdda.dll            1
 lib\keyboard\kbddv\kbddv.dll            1
 lib\keyboard\kbdes\kbdes.dll            1
@@ -99,6 +105,7 @@ lib\keyboard\kbdsg\kbdsg.dll            1
 lib\keyboard\kbduk\kbduk.dll            1
 lib\keyboard\kbdus\kbdus.dll            1
 lib\kernel32\kernel32.dll               1
+lib\lsasrv\lsasrv.dll                   1
 lib\lzexpand\lz32.dll                   1
 lib\mesa32\mesa32.dll                   1
 lib\winmm\midimap\midimap.dll           1
@@ -114,12 +121,14 @@ lib\msvcrt20\msvcrt20.dll               1
 lib\msvideo\msvfw32.dll                 1
 lib\mswsock\mswsock.dll                 1
 lib\netapi32\netapi32.dll               1
+lib\netcfgx\netcfgx.dll                 1
+lib\newdev\newdev.dll                   1
 lib\ntdll\ntdll.dll                     1
 lib\ntmarta\ntmarta.dll                 1
 lib\objsel\objsel.dll                   1
 lib\ole32\ole32.dll                     1
 lib\oleaut32\oleaut32.dll               1
-lib\oledlg\oledlg.dll			1
+lib\oledlg\oledlg.dll                   1
 lib\olepro32\olepro32.dll               1
 lib\opengl32\opengl32.dll               1
 lib\psapi\psapi.dll                     1
@@ -127,11 +136,13 @@ lib\riched20\riched20.dll               1
 lib\richedit\riched32.dll               1
 lib\rpcrt4\rpcrt4.dll                   1
 lib\samlib\samlib.dll                   1
+lib\samsrv\samsrv.dll                   1
 lib\secur32\secur32.dll                 1
 lib\serialui\serialui.dll               1
 lib\setupapi\setupapi.dll               1
 lib\shdocvw\shdocvw.dll                 1
 lib\shell32\shell32.dll                 1
+lib\shfolder\shfolder.dll               1
 lib\shlwapi\shlwapi.dll                 1
 lib\smdll\smdll.dll                     1
 lib\syssetup\syssetup.dll               1
@@ -150,10 +161,10 @@ lib\wshirda\wshirda.dll                 1
 lib\wsock32\wsock32.dll                 1
 subsys\csrss\csrss.exe                  1
 subsys\csrss\win32csr\win32csr.dll      1
-subsys\csr\csr.exe                      1	optional
-subsys\csr\csrsrv\csrsrv.dll            1	optional
-subsys\win\basesrv\basesrv.dll          1	optional
-subsys\win\winsrv\winsrv.dll            1	optional
+subsys\csr\csr.exe                      1        optional
+subsys\csr\csrsrv\csrsrv.dll            1        optional
+subsys\win\basesrv\basesrv.dll          1        optional
+subsys\win\winsrv\winsrv.dll            1        optional
 subsys\ntvdm\ntvdm.exe                  1
 subsys\smss\smss.exe                    1
 subsys\win32k\win32k.sys                1
@@ -168,6 +179,7 @@ subsys\system\ibrowser\ibrowser.exe     1
 subsys\system\msiexec\msiexec.exe       1
 subsys\system\notepad\notepad.exe       1
 subsys\system\regedit\regedit.exe       4
+subsys\system\regedit\clb\clb.dll       1
 subsys\system\regsvr32\regsvr32.exe     1
 subsys\system\reporterror\reporterror.exe 1
 subsys\system\rundll32\rundll32.exe     1
@@ -178,12 +190,15 @@ subsys\system\userinit\userinit.exe     1
 subsys\system\vmwinst\vmwinst.exe       1
 subsys\system\winlogon\winlogon.exe     1
 subsys\system\winefile\winefile.exe     1
-subsys\system\dhcp\dhcp.exe             1
+subsys\system\winver\winver.exe         1
 subsys\system\sm\sm.exe                 1
 subsys\system\expand\expand.exe         1
 subsys\system\hostname\hostname.exe     1
+services\dhcp\dhcp.exe                  1
 services\eventlog\eventlog.exe          1
 services\rpcss\rpcss.exe                1
+services\tcpsvcs\tcpsvcs.exe            1
+services\tcpsvcs\quotes                 5
 services\umpnpmgr\umpnpmgr.exe          1
 apps\utils\net\arp\arp.exe              1
 apps\utils\net\route\route.exe          1
@@ -193,6 +208,7 @@ apps\utils\net\ipconfig\ipconfig.exe    1
 apps\utils\net\netstat\netstat.exe      1
 apps\utils\net\ping\ping.exe            1
 apps\utils\net\telnet\telnet.exe        1
+apps\utils\net\tracert\tracert.exe      1
 apps\utils\net\whois\whois.exe          1
 apps\utils\ps\ps.exe                    1
 apps\utils\rosperf\rosperf.exe          1
@@ -275,43 +291,50 @@ media\nls\c_28597.nls                   1
 media\nls\c_28598.nls                   1
 media\nls\c_28599.nls                   1
 media\drivers\etc\services              5
+media\inf\acpi.inf                      6
 media\inf\cdrom.inf                     6
-media\inf\NET_NIC.inf                   6
+media\inf\hdc.inf                       6
 media\inf\layout.inf                    6
+media\inf\machine.inf                   6
 media\inf\mouse.inf                     6
+media\inf\NET_NIC.inf                   6
+media\inf\netamd.inf                    6
+media\inf\netisa.inf                    6
 media\inf\ports.inf                     6
 media\inf\scsi.inf                      6
 media\inf\syssetup.inf                  6
 media\inf\usbport.inf                   6
-modules\os2\server\os2srv.dll           1	optional
-modules\os2\lib\doscalls\doscalls.dll   1	optional
-modules\posix\server\psxsrv.dll         1	optional
-modules\posix\lib\psxdll\psxdll.dll     1	optional
-modules\rosky\lib\libsky\libsky.dll     1       optional
-modules\rosky\lib\libskygi\libskygi.dll 1       optional
-modules\vms\server\vmssrv.dll           1	optional
-modules\vms\lib\vmsdll\vmsdll.dll       1	optional
-modules\rosapps\cmdutils\find.exe	1	optional
-modules\rosapps\cmdutils\more.exe	1	optional
-modules\rosapps\cmdutils\sort.exe	1	optional
-modules\rosapps\cmdutils\tee.exe	1	optional
-modules\rosapps\cmdutils\y.exe          1	optional
-modules\rosapps\cmdutils\mode\mode.exe	1	optional
-modules\rosapps\cmdutils\touch\touch.exe	1	optional
-modules\rosapps\games\solitaire\sol.exe	1	optional
-modules\rosapps\games\winemine\winemine.exe	1	optional
-modules\rosapps\mc\mc.exe		1	optional
-modules\rosapps\net\ncftp\ncftp.exe	1	optional
-modules\rosapps\net\niclist\niclist.exe	1	optional
-modules\rosapps\notevil\notevil.exe	1	optional
-modules\rosapps\packmgr\cmd-line\rosget.exe	1	optional
-modules\rosapps\packmgr\gui\packmgr.exe	1	optional
-modules\rosapps\packmgr\lib\packlib.dll	1	optional
-modules\rosapps\sysutils\ctm\ctm.exe	1	optional
-modules\rosapps\sysutils\lsdd\lsdd.exe	1	optional
-modules\rosapps\sysutils\man\man.exe	1	optional
-modules\rosapps\sysutils\pedump\pedump.exe	1	optional
-modules\rosapps\sysutils\regexpl\regexpl.exe	1	optional
-modules\rosapps\sysutils\shutdown\shutdown.exe	1	optional
-modules\rosapps\sysutils\tcat\cat.exe	1	optional
-modules\rosapps\sysutils\tlist\tlist.exe	1	optional
+media\inf\usbstor.inf                   6
+modules\os2\server\os2srv.dll           1        optional
+modules\os2\lib\doscalls\doscalls.dll   1        optional
+modules\posix\server\psxsrv.dll         1        optional
+modules\posix\lib\psxdll\psxdll.dll     1        optional
+modules\rosky\lib\libsky\libsky.dll     1        optional
+modules\rosky\lib\libskygi\libskygi.dll 1        optional
+modules\vms\server\vmssrv.dll           1        optional
+modules\vms\lib\vmsdll\vmsdll.dll       1        optional
+modules\rosapps\cmdutils\comp\comp.exe  1        optional
+modules\rosapps\cmdutils\find\find.exe  1        optional
+modules\rosapps\cmdutils\mode\mode.exe  1        optional
+modules\rosapps\cmdutils\more\more.exe  1        optional
+modules\rosapps\cmdutils\sort\sort.exe  1        optional
+modules\rosapps\cmdutils\tee\tee.exe    1        optional
+modules\rosapps\cmdutils\touch\touch.exe       1 optional
+modules\rosapps\cmdutils\y\y.exe        1        optional
+modules\rosapps\games\solitaire\sol.exe 1        optional
+modules\rosapps\games\winemine\winemine.exe    1 optional
+modules\rosapps\mc\mc.exe               1        optional
+modules\rosapps\net\ncftp\ncftp.exe     1        optional
+modules\rosapps\net\niclist\niclist.exe 1        optional
+modules\rosapps\notevil\notevil.exe     1        optional
+modules\rosapps\packmgr\cmd-line\rosget.exe    1 optional
+modules\rosapps\packmgr\gui\packmgr.exe 1        optional
+modules\rosapps\packmgr\lib\packlib.dll 1        optional
+modules\rosapps\sysutils\ctm\ctm.exe    1        optional
+modules\rosapps\sysutils\lsdd\lsdd.exe  1        optional
+modules\rosapps\sysutils\man\man.exe    1        optional
+modules\rosapps\sysutils\pedump\pedump.exe     1 optional
+modules\rosapps\sysutils\regexpl\regexpl.exe   1 optional
+modules\rosapps\sysutils\shutdown\shutdown.exe 1 optional
+modules\rosapps\sysutils\tcat\cat.exe          1 optional
+modules\rosapps\sysutils\tlist\tlist.exe       1 optional

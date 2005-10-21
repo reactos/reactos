@@ -69,7 +69,9 @@ NTSTATUS MmReleaseMemoryArea(PEPROCESS Process, PMEMORY_AREA Marea)
    return(STATUS_SUCCESS);
 }
 
-NTSTATUS MmReleaseMmInfo(PEPROCESS Process)
+NTSTATUS
+NTAPI
+MmReleaseMmInfo(PEPROCESS Process)
 {
    DPRINT("MmReleaseMmInfo(Process %x (%s))\n", Process,
           Process->ImageFileName);
@@ -136,7 +138,9 @@ BOOLEAN STDCALL MmIsAddressValid(PVOID VirtualAddress)
    return(TRUE);
 }
 
-NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
+NTSTATUS
+NTAPI
+MmAccessFault(KPROCESSOR_MODE Mode,
                        ULONG_PTR Address,
                        BOOLEAN FromMdl)
 {
@@ -234,7 +238,9 @@ NTSTATUS MmAccessFault(KPROCESSOR_MODE Mode,
    return(Status);
 }
 
-NTSTATUS MmCommitPagedPoolAddress(PVOID Address, BOOLEAN Locked)
+NTSTATUS
+NTAPI
+MmCommitPagedPoolAddress(PVOID Address, BOOLEAN Locked)
 {
    NTSTATUS Status;
    PFN_TYPE AllocatedPage;
@@ -258,7 +264,9 @@ NTSTATUS MmCommitPagedPoolAddress(PVOID Address, BOOLEAN Locked)
    return(Status);
 }
 
-NTSTATUS MmNotPresentFault(KPROCESSOR_MODE Mode,
+NTSTATUS
+NTAPI
+MmNotPresentFault(KPROCESSOR_MODE Mode,
                            ULONG_PTR Address,
                            BOOLEAN FromMdl)
 {

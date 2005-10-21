@@ -3,6 +3,7 @@
 // Used by explorer_intres.rc
 //
 #define IDS_TITLE                       1
+#define MANIFEST_RESOURCE_ID            1
 #define IDS_START                       2
 #define IDS_LOGOFF                      3
 #define IDS_SHUTDOWN                    4
@@ -61,7 +62,6 @@
 #define IDR_MAINFRAME                   109
 #define IDM_MDIFRAME                    110
 #define ID_EXECUTE                      111
-#define IDM_WINEFILE                    112
 #define IDM_SDIFRAME                    113
 #define IDI_LOGOFF                      124
 #define IDI_FOLDERARROW                 125
@@ -114,6 +114,8 @@
 #define IDI_ARROW_DOWN                  167
 #define IDI_NOTIFY_L                    168
 #define IDI_NOTIFY_R                    169
+#define IDB_MDI                         170
+#define IDB_SDI                         171
 #define ID_VIEW_NAME                    401
 #define ID_VIEW_ALL_ATTRIBUTES          402
 #define ID_VIEW_SELECTED_ATTRIBUTES     403
@@ -161,8 +163,8 @@
 #define IDC_WIN_VERSION                 1030
 #define IDC_MDI                         1030
 #define IDC_SDI                         1031
+#define IDC_SEPARATE_SUBFOLDERS         1034
 #define ID_REFRESH                      1704
-#define ID_ABOUT_WINEFILE               1705
 #define IDS_VERSION_STR                 5000
 #define IDS_EXPLORER_VERSION_STR        5001
 #define IDC_FILETREE                    10001
@@ -218,7 +220,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        169
 #define _APS_NEXT_COMMAND_VALUE         40024
-#define _APS_NEXT_CONTROL_VALUE         1033
+#define _APS_NEXT_CONTROL_VALUE         1035
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

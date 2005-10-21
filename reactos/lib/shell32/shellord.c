@@ -355,16 +355,16 @@ int WINAPIV ShellMessageBoxW(
 	va_start(args, uType);
 	/* wvsprintfA(buf,fmt, args); */
 
-	TRACE("(%08lx,%08lx,%p,%p,%08x)\n",
-	(DWORD)hInstance,(DWORD)hWnd,lpText,lpCaption,uType);
+	TRACE("(%p,%p,%p,%p,%08x)\n",
+	    hInstance,hWnd,lpText,lpCaption,uType);
 
-	if (!HIWORD(lpCaption))
-	  LoadStringW(hInstance, (DWORD)lpCaption, szTitle, sizeof(szTitle)/sizeof(szTitle[0]));
+	if (IS_INTRESOURCE(lpCaption))
+	  LoadStringW(hInstance, LOWORD(lpCaption), szTitle, sizeof(szTitle)/sizeof(szTitle[0]));
 	else
 	  pszTitle = lpCaption;
 
-	if (!HIWORD(lpText))
-	  LoadStringW(hInstance, (DWORD)lpText, szText, sizeof(szText)/sizeof(szText[0]));
+	if (IS_INTRESOURCE(lpText))
+	  LoadStringW(hInstance, LOWORD(lpText), szText, sizeof(szText)/sizeof(szText[0]));
 	else
 	  pszText = lpText;
 
@@ -412,16 +412,16 @@ int WINAPIV ShellMessageBoxA(
 	va_start(args, uType);
 	/* wvsprintfA(buf,fmt, args); */
 
-	TRACE("(%08lx,%08lx,%p,%p,%08x)\n",
-	(DWORD)hInstance,(DWORD)hWnd,lpText,lpCaption,uType);
+	TRACE("(%p,%p,%p,%p,%08x)\n",
+	    hInstance,hWnd,lpText,lpCaption,uType);
 
-	if (!HIWORD(lpCaption))
-	  LoadStringA(hInstance, (DWORD)lpCaption, szTitle, sizeof(szTitle));
+	if (IS_INTRESOURCE(lpCaption))
+	  LoadStringA(hInstance, LOWORD(lpCaption), szTitle, sizeof(szTitle));
 	else
 	  pszTitle = lpCaption;
 
-	if (!HIWORD(lpText))
-	  LoadStringA(hInstance, (DWORD)lpText, szText, sizeof(szText));
+	if (IS_INTRESOURCE(lpText))
+	  LoadStringA(hInstance, LOWORD(lpText), szText, sizeof(szText));
 	else
 	  pszText = lpText;
 
@@ -1004,10 +1004,9 @@ static LPUNKNOWN SHELL32_IExplorerInterface=0;
  * NOTES
  *  Sets the interface
  */
-HRESULT WINAPI SHSetInstanceExplorer (LPUNKNOWN lpUnknown)
+VOID WINAPI SHSetInstanceExplorer (LPUNKNOWN lpUnknown)
 {	TRACE("%p\n", lpUnknown);
 	SHELL32_IExplorerInterface = lpUnknown;
-	return (HRESULT) lpUnknown;
 }
 /*************************************************************************
  * SHGetInstanceExplorer			[SHELL32.@]

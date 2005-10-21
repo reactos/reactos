@@ -31,7 +31,7 @@ BEGIN
                     LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS |
                     WS_BORDER | WS_TABSTOP,13, 34, 171, 109
     PUSHBUTTON      "&Odebrat",IDC_SCREENS_DELETE, 189,47,39,10
-    PUSHBUTTON      "&Pøidat",IDC_SCREENS_POWER_BUTTON,    190,34,39,10
+    PUSHBUTTON      "&Pøidat",IDC_SCREENS_ADD_BUTTON,    190,34,39,10
 
     PUSHBUTTON      "&Nastavení...",IDC_SCREENS_SETTINGS,140, 164, 48, 12,WS_GROUP
     PUSHBUTTON      "&Ukázka",IDC_SCREENS_TESTSC,192, 164, 43, 12
@@ -46,7 +46,7 @@ BEGIN
                     WS_BORDER | WS_GROUP,52, 149, 12, 12
     LTEXT           "Minut než se spustí spoøiè obrazovky.",IDC_STATIC,70, 151, 147, 9
 
-    GROUPBOX        "Šetøení &energie monitoru",IDC_SCREENS_DUMMY,5, 186, 238, 35
+    GROUPBOX        "Šetøení &energie monitoru",IDC_SCREENS_DUMMY2,5, 186, 238, 35
     LTEXT           "Pro možnosti napájení monitoru klepnìta na tlaèítko Možnosti napájení.",
                     IDC_STATIC,16, 199, 155, 19
     PUSHBUTTON      "M&ožnosti napájení",IDC_SCREENS_POWER_BUTTON,180, 202, 57, 12

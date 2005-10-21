@@ -31,7 +31,6 @@
 #include "winreg.h"
 #include "ntstatus.h"
 #include "thread.h" /* FIXME: must be included before winternl.h */
-#include "winternl.h"
 #include "wine/debug.h"
 #include "stackframe.h"
 
@@ -127,10 +126,11 @@ BOOL WINAPI StackWalk(DWORD MachineType, HANDLE hProcess, HANDLE hThread,
         /* cur_switch holds address of curr_stack's field in TEB in debuggee
          * address space
          */
+        /*
         if (NtQueryInformationThread(hThread, ThreadBasicInformation, &info,    
                                      sizeof(info), NULL) != STATUS_SUCCESS)
             goto done_err;
-        curr_switch = (unsigned long)info.TebBaseAddress + FIELD_OFFSET(TEB, cur_stack);
+        curr_switch = (unsigned long)info.TebBaseAddress + FIELD_OFFSET(TEB, cur_stack); */
         if (!f_read_mem(hProcess, (void*)curr_switch, &next_switch, 
                         sizeof(next_switch), NULL))
         {

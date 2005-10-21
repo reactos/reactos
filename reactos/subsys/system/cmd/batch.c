@@ -408,7 +408,7 @@ LPTSTR ReadBatchLine (LPBOOL bLocalEcho)
 			return textline;
 		}
 
-		if (!FileGetString (bc->hBatchFile, textline, sizeof (textline)))
+		if (!FileGetString (bc->hBatchFile, textline, sizeof (textline) / sizeof (textline[0])))
 		{
 #ifdef _DEBUG
 			DebugPrintf (_T("ReadBatchLine(): Reached EOF!\n"));

@@ -51,6 +51,7 @@ PsIdleThreadMain(PVOID Context)
  * creation until I can merge my fix for properly creating them.
  */
 NTSTATUS
+NTAPI
 PsInitializeIdleOrFirstThread(PEPROCESS Process,
                               PETHREAD* ThreadPtr,
                               PKSTART_ROUTINE StartRoutine,
@@ -93,6 +94,7 @@ PsInitializeIdleOrFirstThread(PEPROCESS Process,
  */
 VOID
 INIT_FUNCTION
+NTAPI
 PsInitIdleThread(VOID)
 {
     PETHREAD IdleThread;

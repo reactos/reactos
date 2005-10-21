@@ -43,7 +43,7 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 	LPTSTR pp;
 
 #ifdef _DEBUG
-	DebugPrintf (_T("cmd_if: (\'%S\', \'%S\')\n"), cmd, param);
+	DebugPrintf (_T("cmd_if: (\'%s\', \'%s\')\n"), cmd, param);
 #endif
 
 	if (!_tcsncmp (param, _T("/?"), 2))
@@ -52,7 +52,7 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 		return 0;
 	}
 
-	/* First check if param string begins with word 'not' */
+	/* First check if param string begins with 'not' */
 	if (!_tcsnicmp (param, _T("not"), 3) && _istspace (*(param + 3)))
 	{
 		x_flag = X_EXEC;            /* Remember 'NOT' */
@@ -64,20 +64,42 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 	/* Check for 'exist' form */
 	if (!_tcsnicmp (param, _T("exist"), 5) && _istspace (*(param + 5)))
 	{
+		UINT i;
+		BOOL bInside = FALSE;
+
 		param += 5;
 		while (_istspace (*param))
 			param++;
 
 		pp = param;
-		while (*pp && !_istspace (*pp))
+
+		/* find the whole path to the file */
+		for(i = 0; i < _tcslen(param); i++)
+		{
+			if(param[i] == _T('\"')) 
+				bInside = !bInside;
+			if((param[i] == _T(' ')) && !bInside)
+			{					
+				break;
+			}
 			pp++;
+		}
+		*pp++ = _T('\0');
+		i = 0;
+		/* remove quotes */
+		while(i < _tcslen(param))
+		{
+			if(param[i] == _T('\"'))
+				memmove(&param[i],&param[i + 1], _tcslen(&param[i]) * sizeof(TCHAR));
+			else
+				i++;
+		}
 
 		if (*pp)
-		{
+		{			
 			WIN32_FIND_DATA f;
 			HANDLE hFind;
-
-			*pp++ = _T('\0');
+			
 			hFind = FindFirstFile (param, &f);
 			x_flag ^= (hFind == INVALID_HANDLE_VALUE) ? 0 : X_EXEC;
 			if (hFind != INVALID_HANDLE_VALUE)
@@ -109,7 +131,7 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 		if (*pp)
 		{
 			*pp++ = _T('\0');
-			ValueSize = GetEnvironmentVariable(param, Value, sizeof Value);
+			ValueSize = GetEnvironmentVariable(param, Value, sizeof(Value) / sizeof(Value[0]));
 			x_flag ^= (0 == ValueSize)
 					? 0
 					: X_EXEC;
@@ -134,36 +156,36 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 
 		x_flag |= X_EMPTY;          /* Syntax error if comd empty */
 	}
-	else if (NULL == (pp = _tcsstr (param, _T("=="))))
-	{
-		/* Check that '==' is present, syntax error if not */
-		error_syntax (NULL);
-		return 1;
-	}
 	else
 	{
-		/* Change first '='to space to terminate comparison loop */
-
-		*pp = _T(' ');   /* Need a space to terminate comparison loop */
-		pp += 2;                /* over '==' */
+		BOOL bInQuote = FALSE;
+		INT p1len;
+		pp = param;
+		while ( *pp && ( bInQuote || *pp != _T('=') ) )
+		{
+			if ( *pp == _T('\"') )
+				bInQuote = !bInQuote;
+			++pp;
+		}
+		p1len = pp-param;
+		/* check for "==" */
+		if ( *pp++ != _T('=') || *pp++ != _T('=') )
+		{
+			error_syntax ( NULL );
+			return 1;
+		}
 		while (_istspace (*pp)) /* Skip subsequent spaces */
 			pp++;
 
-		_tcscat (pp, _T(" "));  /* Add one space to ensure comparison ends */
+		/* are the two sides equal, and does the second end in the same place? */
+		if ( !_tcsncmp(param,pp,p1len) && _tcschr(_T(" ("),pp[p1len]) )
+			x_flag ^= X_EXEC;
+		pp += p1len;
 
-		while (*param == *pp)       /* Comparison loop */
-		{
-			if (_istspace (*param))      /* Terminates on space */
-				break;
-
-			param++, pp++;
-		}
-
-		if (x_flag ^= (*param != *pp) ? 0 : X_EXEC)
+		if ( x_flag )
 		{
 			while (*pp && !_istspace (*pp))  /* Find first space, */
 				pp++;
-
 			x_flag |= X_EMPTY;
 		}
 	}

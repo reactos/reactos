@@ -10,6 +10,7 @@
 
 #include <roscfg.h>
 #include <ndk/asm.h>
+#include <internal/i386/ke.h>
 #include <ndk/i386/segment.h>
 
 #define KernelMode 0
@@ -352,5 +353,59 @@ _KiTrapUnknown:
 	movl	$255, %esi
 	jmp	_KiTrapProlog
 
+.intel_syntax noprefix
+.globl _KiCoprocessorError@0
+_KiCoprocessorError@0:
+
+    /* Get the NPX Thread's Initial stack */
+    mov eax, [fs:KPCR_NPX_THREAD]
+    mov eax, [eax+KTHREAD_INITIAL_STACK]
+
+    /* Make space for the FPU Save area */
+    sub eax, SIZEOF_FX_SAVE_AREA
+
+    /* Set the CR0 State */
+    mov dword ptr [eax+FN_CR0_NPX_STATE], 8
+
+    /* Update it */
+    mov eax, cr0
+    or eax, 8
+    mov cr0, eax
+
+    /* Return to caller */
+    ret
+
+.globl _Ki386AdjustEsp0@4
+_Ki386AdjustEsp0@4:
+
+    /* Get the current thread */
+    mov eax, [fs:KPCR_CURRENT_THREAD]
+
+    /* Get trap frame and stack */
+    mov edx, [esp+4]
+    mov eax, [eax+KTHREAD_INITIAL_STACK]
+
+    /* Check if V86 */
+    test dword ptr [edx+KTRAP_FRAME_EFLAGS], X86_EFLAGS_VM
+    jnz NoAdjust
+
+    /* Bias the stack */
+    sub eax, KTRAP_FRAME_V86_GS - KTRAP_FRAME_SS
+
+NoAdjust:
+    /* Skip FX Save Area */
+    sub eax, SIZEOF_FX_SAVE_AREA
+
+    /* Disable interrupts */
+    pushf
+    cli
+
+    /* Adjust ESP0 */
+    mov edx, [fs:KPCR_TSS]
+    mov ss:[edx+KTSS_ESP0], eax
+
+    /* Enable interrupts and return */
+    popf
+    ret 4
 
 /* EOF */

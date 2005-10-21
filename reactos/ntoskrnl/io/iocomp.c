@@ -359,13 +359,13 @@ NtQueryIoCompletion(IN  HANDLE IoCompletionHandle,
     PAGED_CODE();
 
     /* Check buffers and parameters */
-    DefaultQueryInfoBufferCheck(IoCompletionInformationClass,
-                                IoCompletionInfoClass,
-                                IoCompletionInformation,
-                                IoCompletionInformationLength,
-                                ResultLength,
-                                PreviousMode,
-                                &Status);
+    Status = DefaultQueryInfoBufferCheck(IoCompletionInformationClass,
+                                         IoCompletionInfoClass,
+                                         sizeof(IoCompletionInfoClass) / sizeof(IoCompletionInfoClass[0]),
+                                         IoCompletionInformation,
+                                         IoCompletionInformationLength,
+                                         ResultLength,
+                                         PreviousMode);
     if(!NT_SUCCESS(Status)) {
 
         DPRINT1("NtQueryMutant() failed, Status: 0x%x\n", Status);

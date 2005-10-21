@@ -30,8 +30,8 @@ MAIN_MENU MENU
   MENUITEM "&Speichern",        CMD_SAVE
   MENUITEM "Speichern &unter...",       CMD_SAVE_AS
   MENUITEM SEPARATOR
-  MENUITEM "&Drucken",          CMD_PRINT
   MENUITEM "Seite ein&richten...",      CMD_PAGE_SETUP
+  MENUITEM "&Drucken",          CMD_PRINT
   MENUITEM "Drucker&einrichtung...",    CMD_PRINTER_SETUP
   MENUITEM SEPARATOR
   MENUITEM "&Beenden",          CMD_EXIT
@@ -44,26 +44,27 @@ POPUP "&Bearbeiten" {
   MENUITEM "&Einfügen\tStrg+V",         CMD_PASTE
   MENUITEM "&Löschen\tEntf",    CMD_DELETE
   MENUITEM SEPARATOR
-  MENUITEM "Alles &markieren",  CMD_SELECT_ALL
-  MENUITEM "&Uhrzeit/Datum\tF5",        CMD_TIME_DATE
-  MENUITEM SEPARATOR
-  MENUITEM "&Zeilenumbruch",    CMD_WRAP
-  MENUITEM "&Schriftarten...",	CMD_FONT
- }
-POPUP "&Suchen" {
   MENUITEM "Suchen...", CMD_SEARCH
   MENUITEM "&Weitersuchen\tF3", CMD_SEARCH_NEXT
+  MENUITEM "&Ersetzen\tCtrl+H",   CMD_REPLACE
+  MENUITEM "Gehe zu...\tCtrl+G",  CMD_GOTO
+  MENUITEM SEPARATOR
+  MENUITEM "Alles &markieren",  CMD_SELECT_ALL
+  MENUITEM "&Uhrzeit/Datum\tF5",        CMD_TIME_DATE
  }
+POPUP "F&ormat" {
+  MENUITEM "&Zeilenumbruch",    CMD_WRAP
+  MENUITEM "&Schriftart...",	CMD_FONT
+}
+POPUP "&Anicht" {
+  MENUITEM "Status&leiste",    CMD_STATUSBAR
+}
 POPUP "&Hilfe" {
   MENUITEM "&Inhalt",           CMD_HELP_CONTENTS
   MENUITEM "&Suchen...",        CMD_HELP_SEARCH
   MENUITEM "&Hilfe benutzen",   CMD_HELP_ON_HELP
   MENUITEM SEPARATOR
-  POPUP "Inf&o..." {
-   MENUITEM "&Lizenz",          CMD_LICENSE
-   MENUITEM "&KEINE GARANTIE",  CMD_NO_WARRANTY
-   MENUITEM "&Über Wine",       CMD_ABOUT_WINE
-  }
+  MENUITEM "Inf&o",       CMD_ABOUT_WINE
  }
 }
 

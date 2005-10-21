@@ -249,7 +249,7 @@ void StartMenu::AddShellEntries(const ShellDirectory& dir, int max, const String
 		_tcscat(ignore_path, ignore_dir);
 		_tcscat(ignore_name, ignore_ext);
 
-		dir.get_path(dir_path);
+		dir.get_path(dir_path, COUNTOF(dir_path));
 
 		if (_tcsicmp(trim_path_slash(dir_path), trim_path_slash(ignore_path)))
 			*ignore_name = '\0';
@@ -311,7 +311,7 @@ LRESULT StartMenu::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		break;
 
 	  case WM_MOVE: {
-		POINTS& pos = MAKEPOINTS(lparam);
+		const POINTS& pos = MAKEPOINTS(lparam);
 
 		 // move open submenus of floating menus
 		if (_submenu) {
@@ -1286,7 +1286,7 @@ void StartMenu::ActivateEntry(int id, const ShellEntrySet& entries)
 			else {
 				TCHAR path[MAX_PATH];
 
-				if (entry->get_path(path))
+				if (entry->get_path(path, COUNTOF(path)))
 					new_folders.push_back(path);
 			}
 
@@ -1555,12 +1555,18 @@ StartMenuRoot::StartMenuRoot(HWND hwnd)
 		// ignore exception and don't show additional shortcuts
 	}
 
+	ReadLogoSize();
+}
+
+void StartMenuRoot::ReadLogoSize()
+{
 	 // read size of logo bitmap
 	BITMAP bmp_hdr;
-	GetObject(ResBitmap(IDB_LOGOV), sizeof(BITMAP), &bmp_hdr);
+	GetObject(ResBitmap(GetLogoResId()), sizeof(BITMAP), &bmp_hdr);
 	_logo_size.cx = bmp_hdr.bmWidth;
 	_logo_size.cy = bmp_hdr.bmHeight;
 
+	 // cache logo width
 	_border_left = _logo_size.cx + 1;
 }
 
@@ -1617,13 +1623,13 @@ void StartMenuRoot::TrackStartmenu()
 	ShowWindow(hwnd, SW_SHOW);
 	SetForegroundWindow(hwnd);
 
-	while(IsWindow(hwnd)) {
+	while(IsWindow(hwnd) && IsWindowVisible(hwnd)) {
 		if (!GetMessage(&msg, 0, 0, 0)) {
 			PostQuitMessage(msg.wParam);
 			break;
 		}
 
-		 // Check for a mouse click on any window, which is not part of the start menu
+		 // Check for a mouse click on any window, that is not part of the start menu
 		if (msg.message==WM_LBUTTONDOWN || msg.message==WM_MBUTTONDOWN || msg.message==WM_RBUTTONDOWN) {
 			StartMenu* menu_wnd = NULL;
 
@@ -1776,6 +1782,11 @@ LRESULT	StartMenuRoot::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		Paint(canvas);
 		break;}
 
+	  case WM_DISPLAYCHANGE:
+		 // re-evaluate logo size using the correct color depth
+		ReadLogoSize();
+		break;
+
 	  default:
 		return super::WndProc(nmsg, wparam, lparam);
 	}
@@ -1785,11 +1796,8 @@ LRESULT	StartMenuRoot::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 
 void StartMenuRoot::Paint(PaintCanvas& canvas)
 {
-	int clr_bits;
-	{WindowCanvas dc(_hwnd); clr_bits=GetDeviceCaps(dc, BITSPIXEL);}
-
 	MemCanvas mem_dc;
-	ResBitmap bmp(clr_bits<=8? clr_bits<=4? IDB_LOGOV16: IDB_LOGOV256: IDB_LOGOV);
+	ResBitmap bmp(GetLogoResId());
 	BitmapSelection sel(mem_dc, bmp);
 
 	ClientRect clnt(_hwnd);
@@ -1805,6 +1813,20 @@ void StartMenuRoot::Paint(PaintCanvas& canvas)
 	BitBlt(canvas, 0, clnt.bottom-h, _logo_size.cx, h, mem_dc, 0, 0, SRCCOPY);
 
 	super::Paint(canvas);
+}
+
+UINT StartMenuRoot::GetLogoResId()
+{
+	WindowCanvas dc(_hwnd);
+
+	int clr_bits = GetDeviceCaps(dc, BITSPIXEL);
+
+	if (clr_bits > 8)
+		return IDB_LOGOV;
+	else if (clr_bits > 4)
+		return IDB_LOGOV256;
+	else
+		return IDB_LOGOV16;
 }
 
 
@@ -1989,7 +2011,7 @@ int StartMenuHandler::Command(int id, int code)
 	// browse menu
 
 	  case IDC_NETWORK:
-#ifdef _ROS_	// to be removed when network will be implemented
+#ifdef _ROS_	///@todo to be removed when network browsing will be implemented in shell namespace
 		MessageBox(0, TEXT("network not yet implemented"), ResString(IDS_TITLE), MB_OK);
 #else
 		CreateSubmenu(id, CSIDL_NETWORK, ResString(IDS_NETWORK));
@@ -2030,21 +2052,25 @@ int StartMenuHandler::Command(int id, int code)
 
 void StartMenuHandler::ShowSearchDialog()
 {
+#ifndef _ROS_	///@todo to be removed when SHFindFiles() will be implemented in shell32.dll
 	static DynamicFct<SHFINDFILES> SHFindFiles(TEXT("SHELL32"), 90);
 
 	if (SHFindFiles)
 		(*SHFindFiles)(NULL, NULL);
 	else
+#endif
 		MessageBox(0, TEXT("SHFindFiles() not yet implemented in SHELL32"), ResString(IDS_TITLE), MB_OK);
 }
 
 void StartMenuHandler::ShowSearchComputer()
 {
+#ifndef _ROS_	///@todo to be removed when SHFindComputer() will be implemented in shell32.dll
 	static DynamicFct<SHFINDCOMPUTER> SHFindComputer(TEXT("SHELL32"), 91);
 
 	if (SHFindComputer)
 		(*SHFindComputer)(NULL, NULL);
 	else
+#endif
 		MessageBox(0, TEXT("SHFindComputer() not yet implemented in SHELL32"), ResString(IDS_TITLE), MB_OK);
 }
 

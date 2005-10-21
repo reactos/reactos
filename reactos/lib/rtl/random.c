@@ -64,7 +64,7 @@ static ULONG SavedValue[128] =
 /*
 * @implemented
 */
-ULONG STDCALL
+ULONG NTAPI
 RtlRandom (IN OUT PULONG Seed)
 {
    ULONG Rand;
@@ -86,7 +86,7 @@ RtlRandom (IN OUT PULONG Seed)
 * @unimplemented
 */
 ULONG
-STDCALL
+NTAPI
 RtlRandomEx(
 	PULONG Seed
 	)
@@ -122,7 +122,7 @@ RtlRandomEx(
  *  function and our function return a random number uniformly
  *  distributed over [0..MAXLONG-1].
  */
-ULONG STDCALL
+ULONG NTAPI
 RtlUniform (PULONG Seed)
 {
   ULONG Result;

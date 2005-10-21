@@ -15,23 +15,22 @@ typedef struct _HOT_KEY_ITEM
 } HOT_KEY_ITEM, *PHOT_KEY_ITEM;
 
 NTSTATUS FASTCALL
-InitHotKeys(PWINSTATION_OBJECT WinStaObject);
+InitHotkeyImpl();
 
-NTSTATUS FASTCALL
-CleanupHotKeys(PWINSTATION_OBJECT WinStaObject);
+//NTSTATUS FASTCALL
+//CleanupHotKeys(PWINSTATION_OBJECT WinStaObject);
 
-BOOL
-GetHotKey (PWINSTATION_OBJECT WinStaObject,
-       UINT fsModifiers,
+BOOL FASTCALL
+GetHotKey (UINT fsModifiers,
 	   UINT vk,
 	   struct _ETHREAD **Thread,
 	   HWND *hWnd,
 	   int *id);
 
-VOID
+VOID FASTCALL
 UnregisterWindowHotKeys(PWINDOW_OBJECT Window);
 
-VOID
+VOID FASTCALL
 UnregisterThreadHotKeys(struct _ETHREAD *Thread);
 
 #endif /* _WIN32K_HOTKEY_H */

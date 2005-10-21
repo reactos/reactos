@@ -81,8 +81,6 @@ typedef struct _USER_MESSAGE_QUEUE
   ULONG LastMsgRead;
   /* Current window with focus (ie. receives keyboard input) for this queue. */
   HWND FocusWindow;
-  /* True if a window needs painting. */
-  BOOLEAN PaintPosted;
   /* Count of paints pending. */
   ULONG PaintCount;
   /* Current active window for this queue. */

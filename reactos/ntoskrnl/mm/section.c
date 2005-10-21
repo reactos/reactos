@@ -121,6 +121,7 @@ ULONG
 MmGetShareCountPage(PFN_TYPE Pfn);
 
 ULONG
+NTAPI
 MmGetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
                              ULONG Offset);
 
@@ -472,6 +473,7 @@ MmChangeSectionSegmentSize(PMM_SECTION_SEGMENT Segment,
      
 
 VOID
+NTAPI
 MmSetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
                              ULONG Offset,
                              ULONG Entry)
@@ -508,6 +510,7 @@ MmSetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
 
 
 ULONG
+NTAPI
 MmGetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
                              ULONG Offset)
 {
@@ -538,6 +541,7 @@ MmGetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
 }
 
 VOID
+NTAPI
 MmSharePageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
                                ULONG Offset)
 {
@@ -557,6 +561,7 @@ MmSharePageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
 }
 
 BOOLEAN
+NTAPI
 MmUnsharePageEntrySectionSegment(PSECTION_OBJECT Section,
                                  PMM_SECTION_SEGMENT Segment,
                                  ULONG Offset,
@@ -2204,6 +2209,7 @@ MmspNotPresentFaultPageFileSectionView(PMADDRESS_SPACE AddressSpace,
 /*****************************************************************************************************/
 
 NTSTATUS
+NTAPI
 MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
                              MEMORY_AREA* MemoryArea,
                              PVOID Address,
@@ -2245,6 +2251,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
 }
 
 NTSTATUS
+NTAPI
 MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
                          MEMORY_AREA* MemoryArea,
                          PVOID Address,
@@ -2457,6 +2464,7 @@ MmPageOutDeleteMapping(PVOID Context, PEPROCESS Process, PVOID Address)
 }
 
 NTSTATUS
+NTAPI
 MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
                      MEMORY_AREA* MemoryArea,
                      PVOID Address,
@@ -2755,6 +2763,7 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
 }
 
 NTSTATUS
+NTAPI
 MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
                        PMEMORY_AREA MemoryArea,
                        PVOID Address,
@@ -2968,6 +2977,7 @@ MmAlterViewAttributes(PMADDRESS_SPACE AddressSpace,
 }
 
 NTSTATUS
+NTAPI
 MmProtectSectionView(PMADDRESS_SPACE AddressSpace,
                      PMEMORY_AREA MemoryArea,
                      PVOID BaseAddress,
@@ -3038,6 +3048,7 @@ MmQuerySectionView(PMEMORY_AREA MemoryArea,
 }
 
 VOID
+NTAPI
 MmpFreePageFileSegment(PMM_SECTION_SEGMENT Segment)
 {
    ULONG Length;
@@ -3159,7 +3170,9 @@ MmpCloseSection(PVOID ObjectBody,
            ObjectBody, HandleCount, ObGetObjectPointerCount(ObjectBody));
 }
 
-NTSTATUS INIT_FUNCTION
+NTSTATUS
+INIT_FUNCTION
+NTAPI
 MmCreatePhysicalMemorySection(VOID)
 {
    PSECTION_OBJECT PhysSection;
@@ -3232,7 +3245,9 @@ MmspWorkerThread(PVOID);
    KeSetTimerEx(&MmspWorkerThreadTimer, DueTime, 5000, NULL);
 }
 
-NTSTATUS INIT_FUNCTION
+NTSTATUS 
+INIT_FUNCTION
+NTAPI
 MmInitSectionImplementation(VOID)
 {
    OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
@@ -3267,6 +3282,7 @@ MmInitSectionImplementation(VOID)
 }
 
 NTSTATUS
+NTAPI
 MmCreatePageFileSection(PSECTION_OBJECT *SectionObject,
                         ACCESS_MASK DesiredAccess,
                         POBJECT_ATTRIBUTES ObjectAttributes,
@@ -3338,6 +3354,7 @@ MmCreatePageFileSection(PSECTION_OBJECT *SectionObject,
 
 
 NTSTATUS
+NTAPI
 MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
                         ACCESS_MASK DesiredAccess,
                         POBJECT_ATTRIBUTES ObjectAttributes,
@@ -4364,6 +4381,8 @@ MmCreateImageSection(PSECTION_OBJECT *SectionObject,
          ObDereferenceObject(Section);
          return(STATUS_NO_MEMORY);
       }
+      
+      RtlZeroMemory(ImageSectionObject, sizeof(MM_IMAGE_SECTION_OBJECT));
 
       StatusExeFmt = ExeFmtpCreateImageSection(FileObject, ImageSectionObject);
 
@@ -5150,13 +5169,13 @@ NtQuerySection(IN HANDLE SectionHandle,
 
    PreviousMode = ExGetPreviousMode();
 
-   DefaultQueryInfoBufferCheck(SectionInformationClass,
-                               ExSectionInfoClass,
-                               SectionInformation,
-                               SectionInformationLength,
-                               ResultLength,
-                               PreviousMode,
-                               &Status);
+   Status = DefaultQueryInfoBufferCheck(SectionInformationClass,
+                                        ExSectionInfoClass,
+                                        sizeof(ExSectionInfoClass) / sizeof(ExSectionInfoClass[0]),
+                                        SectionInformation,
+                                        SectionInformationLength,
+                                        ResultLength,
+                                        PreviousMode);
 
    if(!NT_SUCCESS(Status))
    {

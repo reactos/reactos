@@ -23,7 +23,21 @@
 
 #include "notepad_res.h"
 
+#define EDIT_STYLE_WRAP (WS_CHILD | WS_VISIBLE | WS_VSCROLL \
+    | ES_AUTOVSCROLL | ES_MULTILINE | ES_NOHIDESEL)
+#define EDIT_STYLE (EDIT_STYLE_WRAP | WS_HSCROLL | ES_AUTOHSCROLL)
+#define EDIT_EXSTYLE (WS_EX_CLIENTEDGE)
+
 #define MAX_STRING_LEN      255
+
+#define ENCODING_ANSI		0
+#define ENCODING_UNICODE	1
+#define ENCODING_UNICODE_BE	2
+#define ENCODING_UTF8		3
+
+#define EOLN_CRLF           0
+#define EOLN_LF             1
+#define EOLN_CR             2
 
 typedef struct
 {
@@ -35,6 +49,7 @@ typedef struct
   LOGFONT lfFont;
   BOOL    bWrapLongLines;
   WCHAR   szFindText[MAX_PATH];
+  WCHAR   szReplaceText[MAX_PATH];
   WCHAR   szFileName[MAX_PATH];
   WCHAR   szFileTitle[MAX_PATH];
   WCHAR   szFilter[2 * MAX_STRING_LEN + 100];
@@ -44,6 +59,8 @@ typedef struct
   WCHAR   szMarginRight[MAX_PATH];
   WCHAR   szHeader[MAX_PATH];
   WCHAR   szFooter[MAX_PATH];
+  int     iEncoding;
+  int     iEoln;
 
   FINDREPLACE find;
 } NOTEPAD_GLOBALS;
@@ -51,3 +68,13 @@ typedef struct
 extern NOTEPAD_GLOBALS Globals;
 
 VOID SetFileName(LPCWSTR szFileName);
+
+/* from text.c */
+BOOL ReadText(HANDLE hFile, LPWSTR *ppszText, DWORD *pdwTextLen, int *piEncoding, int *piEoln);
+BOOL WriteText(HANDLE hFile, LPCWSTR pszText, DWORD dwTextLen, int iEncoding, int iEoln);
+
+/* from settings.c */
+void LoadSettings(void);
+void SaveSettings(void);
+
+

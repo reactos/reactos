@@ -17,3 +17,5 @@
  */
 
 REGINST REGINST urlmon.inf
+
+#include "version.rc"

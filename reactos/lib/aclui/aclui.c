@@ -1,6 +1,6 @@
 /*
  * ReactOS Access Control List Editor
- * Copyright (C) 2004 ReactOS Team
+ * Copyright (C) 2004-2005 ReactOS Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -29,11 +29,6 @@
 #include <precomp.h>
 
 HINSTANCE hDllInstance;
-
-static PCWSTR ObjectPickerAttributes[] =
-{
-    L"ObjectSid",
-};
 
 static VOID
 DestroySecurityPage(IN PSECURITY_PAGE sp)
@@ -95,6 +90,233 @@ FindSidInPrincipalsList(IN PPRINCIPAL_LISTITEM PrincipalsListHead,
     return NULL;
 }
 
+static BOOL
+AddPrincipalToList(IN PSECURITY_PAGE sp,
+                   IN PSID Sid)
+{
+    if (!FindSidInPrincipalsList(sp->PrincipalsListHead,
+                                 Sid))
+    {
+        DWORD SidLength, AccountNameSize, DomainNameSize;
+        SID_NAME_USE SidNameUse;
+        DWORD LookupResult;
+        PPRINCIPAL_LISTITEM AceListItem, *NextAcePtr;
+
+        AccountNameSize = 0;
+        DomainNameSize = 0;
+
+        /* calculate the size of the buffer we need to calculate */
+        if (!LookupAccountSid(sp->ServerName,
+                              Sid,
+                              NULL,
+                              &AccountNameSize,
+                              NULL,
+                              &DomainNameSize,
+                              &SidNameUse))
+        {
+            LookupResult = GetLastError();
+            if (LookupResult != ERROR_NONE_MAPPED &&
+                LookupResult != ERROR_INSUFFICIENT_BUFFER)
+            {
+                return FALSE;
+            }
+        }
+        
+        NextAcePtr = &sp->PrincipalsListHead;
+        for (AceListItem = sp->PrincipalsListHead;
+             AceListItem != NULL;
+             AceListItem = AceListItem->Next)
+        {
+            NextAcePtr = &AceListItem->Next;
+        }
+        
+        SidLength = GetLengthSid(Sid);
+
+        /* allocate the ace */
+        AceListItem = HeapAlloc(GetProcessHeap(),
+                                0,
+                                sizeof(PRINCIPAL_LISTITEM) + SidLength +
+                                    ((AccountNameSize + DomainNameSize) * sizeof(WCHAR)));
+        if (AceListItem != NULL)
+        {
+            AceListItem->AccountName = (LPWSTR)((ULONG_PTR)(AceListItem + 1) + SidLength);
+            AceListItem->DomainName = AceListItem->AccountName + AccountNameSize;
+
+            CopySid(SidLength,
+                    (PSID)(AceListItem + 1),
+                    Sid);
+
+            LookupResult = ERROR_SUCCESS;
+            if (!LookupAccountSid(sp->ServerName,
+                                  Sid,
+                                  AceListItem->AccountName,
+                                  &AccountNameSize,
+                                  AceListItem->DomainName,
+                                  &DomainNameSize,
+                                  &SidNameUse))
+            {
+                LookupResult = GetLastError();
+                if (LookupResult != ERROR_NONE_MAPPED)
+                {
+                    HeapFree(GetProcessHeap(),
+                             0,
+                             AceListItem);
+                    return FALSE;
+                }
+            }
+
+            if (AccountNameSize == 0)
+            {
+                AceListItem->AccountName = NULL;
+            }
+            if (DomainNameSize == 0)
+            {
+                AceListItem->DomainName = NULL;
+            }
+
+            AceListItem->Next = NULL;
+            if (LookupResult == ERROR_NONE_MAPPED)
+            {
+                if (!ConvertSidToStringSid(Sid,
+                                           &AceListItem->DisplayString))
+                {
+                    AceListItem->DisplayString = NULL;
+                }
+            }
+            else
+            {
+                LSA_HANDLE LsaHandle;
+                NTSTATUS Status;
+
+                AceListItem->DisplayString = NULL;
+
+                /* read the domain of the SID */
+                if (OpenLSAPolicyHandle(sp->ServerName,
+                                        POLICY_LOOKUP_NAMES | POLICY_VIEW_LOCAL_INFORMATION,
+                                        &LsaHandle))
+                {
+                    PLSA_REFERENCED_DOMAIN_LIST ReferencedDomain;
+                    PLSA_TRANSLATED_NAME Names;
+                    PLSA_TRUST_INFORMATION Domain;
+                    PLSA_UNICODE_STRING DomainName;
+                    PPOLICY_ACCOUNT_DOMAIN_INFO PolicyAccountDomainInfo = NULL;
+
+                    Status = LsaLookupSids(LsaHandle,
+                                           1,
+                                           &Sid,
+                                           &ReferencedDomain,
+                                           &Names);
+                    if (NT_SUCCESS(Status))
+                    {
+                        if (ReferencedDomain != NULL &&
+                            Names->DomainIndex >= 0)
+                        {
+                            Domain = &ReferencedDomain->Domains[Names->DomainIndex];
+                            DomainName = &Domain->Name;
+                        }
+                        else
+                        {
+                            Domain = NULL;
+                            DomainName = NULL;
+                        }
+
+                        AceListItem->SidNameUse = Names->Use;
+
+                        switch (Names->Use)
+                        {
+                            case SidTypeAlias:
+                                if (Domain != NULL)
+                                {
+                                    /* query the domain name for BUILTIN accounts */
+                                    Status = LsaQueryInformationPolicy(LsaHandle,
+                                                                       PolicyAccountDomainInformation,
+                                                                       (PVOID*)&PolicyAccountDomainInfo);
+                                    if (NT_SUCCESS(Status))
+                                    {
+                                        DomainName = &PolicyAccountDomainInfo->DomainName;
+
+                                        /* make the user believe this is a group */
+                                        AceListItem->SidNameUse = SidTypeGroup;
+                                    }
+                                }
+                                /* fall through */
+
+                            case SidTypeUser:
+                            {
+                                if (Domain != NULL)
+                                {
+                                    SIZE_T Size = (AccountNameSize + DomainName->Length +
+                                                   Names->Name.Length + 6) * sizeof(WCHAR);
+                                    AceListItem->DisplayString = (LPWSTR)LocalAlloc(LMEM_FIXED,
+                                                                                    Size);
+                                    if (AceListItem->DisplayString != NULL)
+                                    {
+                                        WCHAR *s;
+
+                                        /* NOTE: LSA_UNICODE_STRINGs are not always NULL-terminated! */
+
+                                        wcscpy(AceListItem->DisplayString,
+                                               AceListItem->AccountName);
+                                        wcscat(AceListItem->DisplayString,
+                                               L" (");
+                                        s = AceListItem->DisplayString + wcslen(AceListItem->DisplayString);
+                                        CopyMemory(s,
+                                                   DomainName->Buffer,
+                                                   DomainName->Length);
+                                        s += DomainName->Length / sizeof(WCHAR);
+                                        *(s++) = L'\\';
+                                        CopyMemory(s,
+                                                   Names->Name.Buffer,
+                                                   Names->Name.Length);
+                                        s += Names->Name.Length / sizeof(WCHAR);
+                                        *(s++) = L')';
+                                        *s = L'\0';
+                                    }
+
+                                    /* mark the ace as a user unless it's a
+                                       BUILTIN account */
+                                    if (PolicyAccountDomainInfo == NULL)
+                                    {
+                                        AceListItem->SidNameUse = SidTypeUser;
+                                    }
+                                }
+                                break;
+                            }
+
+                            case SidTypeWellKnownGroup:
+                            {
+                                /* make the user believe this is a group */
+                                AceListItem->SidNameUse = SidTypeGroup;
+                                break;
+                            }
+
+                            default:
+                            {
+                                DPRINT("Unhandled SID type: 0x%x\n", Names->Use);
+                                break;
+                            }
+                        }
+
+                        if (PolicyAccountDomainInfo != NULL)
+                        {
+                            LsaFreeMemory(PolicyAccountDomainInfo);
+                        }
+
+                        LsaFreeMemory(ReferencedDomain);
+                        LsaFreeMemory(Names);
+                    }
+                    LsaClose(LsaHandle);
+                }
+            }
+
+            /* append item to the cached ACL */
+            *NextAcePtr = AceListItem;
+        }
+    }
+
+    return TRUE;
+}
+
 static VOID
 ReloadPrincipalsList(IN PSECURITY_PAGE sp)
 {
@@ -116,17 +338,12 @@ ReloadPrincipalsList(IN PSECURITY_PAGE sp)
         if (GetSecurityDescriptorDacl(SecurityDescriptor,
                                       &DaclPresent,
                                       &Dacl,
-                                      &DaclDefaulted))
+                                      &DaclDefaulted) &&
+            DaclPresent && Dacl != NULL)
         {
-            PPRINCIPAL_LISTITEM AceListItem, *NextAcePtr;
             PSID Sid;
             PVOID Ace;
             ULONG AceIndex;
-            DWORD AccountNameSize, DomainNameSize, SidLength;
-            SID_NAME_USE SidNameUse;
-            DWORD LookupResult;
-            
-            NextAcePtr = &sp->PrincipalsListHead;
             
             for (AceIndex = 0;
                  AceIndex < Dacl->AceCount;
@@ -137,208 +354,9 @@ ReloadPrincipalsList(IN PSECURITY_PAGE sp)
                        &Ace);
 
                 Sid = (PSID)&((PACCESS_ALLOWED_ACE)Ace)->SidStart;
-
-                if (!FindSidInPrincipalsList(sp->PrincipalsListHead,
-                                             Sid))
-                {
-                    SidLength = GetLengthSid(Sid);
-
-                    AccountNameSize = 0;
-                    DomainNameSize = 0;
-
-                    /* calculate the size of the buffer we need to calculate */
-                    LookupAccountSid(sp->ServerName,
-                                     Sid,
-                                     NULL,
-                                     &AccountNameSize,
-                                     NULL,
-                                     &DomainNameSize,
-                                     &SidNameUse);
-
-                    /* allocate the ace */
-                    AceListItem = HeapAlloc(GetProcessHeap(),
-                                            0,
-                                            sizeof(PRINCIPAL_LISTITEM) +
-                                            SidLength +
-                                            ((AccountNameSize + DomainNameSize) * sizeof(WCHAR)));
-                    if (AceListItem != NULL)
-                    {
-                        AceListItem->AccountName = (LPWSTR)((ULONG_PTR)(AceListItem + 1) + SidLength);
-                        AceListItem->DomainName = AceListItem->AccountName + AccountNameSize;
-
-                        CopySid(SidLength,
-                                (PSID)(AceListItem + 1),
-                                Sid);
-
-                        LookupResult = ERROR_SUCCESS;
-                        if (!LookupAccountSid(sp->ServerName,
-                                              Sid,
-                                              AceListItem->AccountName,
-                                              &AccountNameSize,
-                                              AceListItem->DomainName,
-                                              &DomainNameSize,
-                                              &SidNameUse))
-                        {
-                            LookupResult = GetLastError();
-                            if (LookupResult != ERROR_NONE_MAPPED)
-                            {
-                                HeapFree(GetProcessHeap(),
-                                         0,
-                                         AceListItem);
-                                continue;
-                            }
-                        }
-
-                        if (AccountNameSize == 0)
-                        {
-                            AceListItem->AccountName = NULL;
-                        }
-                        if (DomainNameSize == 0)
-                        {
-                            AceListItem->DomainName = NULL;
-                        }
-
-                        AceListItem->Next = NULL;
-                        if (LookupResult == ERROR_NONE_MAPPED)
-                        {
-                            if (!ConvertSidToStringSid(Sid,
-                                                       &AceListItem->DisplayString))
-                            {
-                                AceListItem->DisplayString = NULL;
-                            }
-                        }
-                        else
-                        {
-                            LSA_HANDLE LsaHandle;
-                            NTSTATUS Status;
-
-                            AceListItem->DisplayString = NULL;
-
-                            /* read the domain of the SID */
-                            if (OpenLSAPolicyHandle(sp->ServerName,
-                                                    POLICY_LOOKUP_NAMES | POLICY_VIEW_LOCAL_INFORMATION,
-                                                    &LsaHandle))
-                            {
-                                PLSA_REFERENCED_DOMAIN_LIST ReferencedDomain;
-                                PLSA_TRANSLATED_NAME Names;
-                                PLSA_TRUST_INFORMATION Domain;
-                                PLSA_UNICODE_STRING DomainName;
-                                PPOLICY_ACCOUNT_DOMAIN_INFO PolicyAccountDomainInfo = NULL;
-
-                                Status = LsaLookupSids(LsaHandle,
-                                                       1,
-                                                       &Sid,
-                                                       &ReferencedDomain,
-                                                       &Names);
-                                if (NT_SUCCESS(Status))
-                                {
-                                    if (ReferencedDomain != NULL &&
-                                        Names->DomainIndex >= 0)
-                                    {
-                                        Domain = &ReferencedDomain->Domains[Names->DomainIndex];
-                                        DomainName = &Domain->Name;
-                                    }
-                                    else
-                                    {
-                                        Domain = NULL;
-                                        DomainName = NULL;
-                                    }
-
-                                    AceListItem->SidNameUse = Names->Use;
-
-                                    switch (Names->Use)
-                                    {
-                                        case SidTypeAlias:
-                                            if (Domain != NULL)
-                                            {
-                                                /* query the domain name for BUILTIN accounts */
-                                                Status = LsaQueryInformationPolicy(LsaHandle,
-                                                                                   PolicyAccountDomainInformation,
-                                                                                   (PVOID*)&PolicyAccountDomainInfo);
-                                                if (NT_SUCCESS(Status))
-                                                {
-                                                    DomainName = &PolicyAccountDomainInfo->DomainName;
-
-                                                    /* make the user believe this is a group */
-                                                    AceListItem->SidNameUse = SidTypeGroup;
-                                                }
-                                            }
-                                            /* fall through */
-
-                                        case SidTypeUser:
-                                        {
-                                            if (Domain != NULL)
-                                            {
-                                                AceListItem->DisplayString = (LPWSTR)LocalAlloc(LMEM_FIXED,
-                                                                                                (AccountNameSize * sizeof(WCHAR)) +
-                                                                                                (DomainName->Length + sizeof(WCHAR)) +
-                                                                                                (Names->Name.Length + sizeof(WCHAR)) +
-                                                                                                (4 * sizeof(WCHAR)));
-                                                if (AceListItem->DisplayString != NULL)
-                                                {
-                                                    WCHAR *s;
-
-                                                    /* NOTE: LSA_UNICODE_STRINGs are not always NULL-terminated! */
-
-                                                    wcscpy(AceListItem->DisplayString,
-                                                           AceListItem->AccountName);
-                                                    wcscat(AceListItem->DisplayString,
-                                                           L" (");
-                                                    s = AceListItem->DisplayString + wcslen(AceListItem->DisplayString);
-                                                    CopyMemory(s,
-                                                               DomainName->Buffer,
-                                                               DomainName->Length);
-                                                    s += DomainName->Length / sizeof(WCHAR);
-                                                    *(s++) = L'\\';
-                                                    CopyMemory(s,
-                                                               Names->Name.Buffer,
-                                                               Names->Name.Length);
-                                                    s += Names->Name.Length / sizeof(WCHAR);
-                                                    *(s++) = L')';
-                                                    *s = L'\0';
-                                                }
-
-                                                /* mark the ace as a user unless it's a
-                                                   BUILTIN account */
-                                                if (PolicyAccountDomainInfo == NULL)
-                                                {
-                                                    AceListItem->SidNameUse = SidTypeUser;
-                                                }
-                                            }
-                                            break;
-                                        }
-
-                                        case SidTypeWellKnownGroup:
-                                        {
-                                            /* make the user believe this is a group */
-                                            AceListItem->SidNameUse = SidTypeGroup;
-                                            break;
-                                        }
-
-                                        default:
-                                        {
-                                            DPRINT("Unhandled SID type: 0x%x\n", Names->Use);
-                                            break;
-                                        }
-                                    }
-
-                                    if (PolicyAccountDomainInfo != NULL)
-                                    {
-                                        LsaFreeMemory(PolicyAccountDomainInfo);
-                                    }
-
-                                    LsaFreeMemory(ReferencedDomain);
-                                    LsaFreeMemory(Names);
-                                }
-                                LsaClose(LsaHandle);
-                            }
-                        }
-
-                        /* append item to the cached ACL */
-                        *NextAcePtr = AceListItem;
-                        NextAcePtr = &AceListItem->Next;
-                    }
-                }
+                
+                AddPrincipalToList(sp,
+                                   Sid);
             }
         }
         LocalFree((HLOCAL)SecurityDescriptor);
@@ -358,7 +376,10 @@ AddPrincipalListEntry(IN PSECURITY_PAGE sp,
     li.iSubItem = 0;
     li.state = (Selected ? LVIS_SELECTED : 0);
     li.stateMask = LVIS_SELECTED;
-    li.pszText = (PrincipalListItem->DisplayString != NULL ? PrincipalListItem->DisplayString : PrincipalListItem->AccountName);
+    li.pszText = (PrincipalListItem->DisplayString != NULL ?
+                  PrincipalListItem->DisplayString :
+                  PrincipalListItem->AccountName);
+
     switch (PrincipalListItem->SidNameUse)
     {
         case SidTypeUser:
@@ -390,8 +411,6 @@ FillPrincipalsList(IN PSECURITY_PAGE sp)
 
     ListView_DeleteAllItems(sp->hWndPrincipalsList);
 
-    ReloadPrincipalsList(sp);
-
     for (CurItem = sp->PrincipalsListHead;
          CurItem != NULL;
          CurItem = CurItem->Next)
@@ -404,7 +423,8 @@ FillPrincipalsList(IN PSECURITY_PAGE sp)
     
     EnableRedrawWindow(sp->hWndPrincipalsList);
     
-    GetClientRect(sp->hWndPrincipalsList, &rcLvClient);
+    GetClientRect(sp->hWndPrincipalsList,
+                  &rcLvClient);
     
     ListView_SetColumnWidth(sp->hWndPrincipalsList,
                             0,
@@ -416,8 +436,10 @@ UpdateControlStates(IN PSECURITY_PAGE sp)
 {
     PPRINCIPAL_LISTITEM Selected = (PPRINCIPAL_LISTITEM)ListViewGetSelectedItemData(sp->hWndPrincipalsList);
 
-    EnableWindow(sp->hBtnRemove, Selected != NULL);
-    EnableWindow(sp->hAceCheckList, Selected != NULL);
+    EnableWindow(sp->hBtnRemove,
+                 Selected != NULL);
+    EnableWindow(sp->hAceCheckList,
+                 Selected != NULL);
     
     if (Selected != NULL)
     {
@@ -613,192 +635,192 @@ ResizeControls(IN PSECURITY_PAGE sp,
         nControls += 2;
     }
     
-    if (!(dwp = BeginDeferWindowPos(nControls)))
+    if ((dwp = BeginDeferWindowPos(nControls)))
     {
-        return;
-    }
-    
-    /* resize the Principal list view */
-    GetWindowRect(sp->hWndPrincipalsList,
-                  &rcControl);
-    if (!(dwp = DeferWindowPos(dwp,
-                               sp->hWndPrincipalsList,
-                               NULL,
-                               0,
-                               0,
-                               cxWidth,
-                               rcControl.bottom - rcControl.top,
-                               SWP_NOMOVE | SWP_NOZORDER)))
-    {
-        return;
-    }
-    
-    /* move the Add Principal button */
-    GetWindowRect(sp->hBtnAdd,
-                  &rcControl);
-    GetWindowRect(sp->hBtnRemove,
-                  &rcControl2);
-    btnSpacing = rcControl2.left - rcControl.right;
-    pt2.x = 0;
-    pt2.y = 0;
-    MapWindowPoints(sp->hBtnAdd,
-                    sp->hWnd,
-                    &pt2,
-                    1);
-    if (!(dwp = DeferWindowPos(dwp,
-                               sp->hBtnAdd,
-                               NULL,
-                               pt.x + cxWidth - (rcControl2.right - rcControl2.left) -
-                                   (rcControl.right - rcControl.left) -
-                                   btnSpacing - cxEdge,
-                               pt2.y,
-                               0,
-                               0,
-                               SWP_NOSIZE | SWP_NOZORDER)))
-    {
-        return;
-    }
-    
-    /* move the Delete Principal button */
-    pt2.x = 0;
-    pt2.y = 0;
-    MapWindowPoints(sp->hBtnRemove,
-                    sp->hWnd,
-                    &pt2,
-                    1);
-    if (!(dwp = DeferWindowPos(dwp,
-                               sp->hBtnRemove,
-                               NULL,
-                               pt.x + cxWidth - (rcControl2.right - rcControl2.left) - cxEdge,
-                               pt2.y,
-                               0,
-                               0,
-                               SWP_NOSIZE | SWP_NOZORDER)))
-    {
-        return;
-    }
-    
-    /* move the Permissions For label */
-    GetWindowRect(hWndAllow,
-                  &rcControl);
-    GetWindowRect(hWndDeny,
-                  &rcControl2);
-    GetWindowRect(sp->hPermissionsForLabel,
-                  &rcControl3);
-    pt2.x = 0;
-    pt2.y = 0;
-    MapWindowPoints(sp->hPermissionsForLabel,
-                    sp->hWnd,
-                    &pt2,
-                    1);
-    if (!(dwp = DeferWindowPos(dwp,
-                               sp->hPermissionsForLabel,
-                               NULL,
-                               0,
-                               0,
-                               cxWidth - (rcControl2.right - rcControl2.left) -
-                                   (rcControl.right - rcControl.left) -
-                                   (2 * btnSpacing) - cxEdge,
-                               rcControl3.bottom - rcControl3.top,
-                               SWP_NOMOVE | SWP_NOZORDER)))
-    {
-        return;
-    }
-    
-    /* move the Allow label */
-    pt2.x = 0;
-    pt2.y = 0;
-    MapWindowPoints(hWndAllow,
-                    sp->hWnd,
-                    &pt2,
-                    1);
-    if (!(dwp = DeferWindowPos(dwp,
-                               hWndAllow,
-                               NULL,
-                               cxWidth - (rcControl2.right - rcControl2.left) -
-                                   (rcControl.right - rcControl.left) -
-                                   btnSpacing - cxEdge,
-                               pt2.y,
-                               0,
-                               0,
-                               SWP_NOSIZE | SWP_NOZORDER)))
-    {
-        return;
-    }
-    
-    /* move the Deny label */
-    pt2.x = 0;
-    pt2.y = 0;
-    MapWindowPoints(hWndDeny,
-                    sp->hWnd,
-                    &pt2,
-                    1);
-    if (!(dwp = DeferWindowPos(dwp,
-                               hWndDeny,
-                               NULL,
-                               cxWidth - (rcControl2.right - rcControl2.left) - cxEdge,
-                               pt2.y,
-                               0,
-                               0,
-                               SWP_NOSIZE | SWP_NOZORDER)))
-    {
-        return;
-    }
-    
-    /* resize the Permissions check list box */
-    GetWindowRect(sp->hAceCheckList,
-                  &rcControl);
-    GetWindowRect(sp->hBtnAdvanced,
-                  &rcControl2);
-    GetWindowRect(GetDlgItem(sp->hWnd,
-                             IDC_LABEL_ADVANCED),
-                  &rcControl3);
-    if (!(dwp = DeferWindowPos(dwp,
-                               sp->hAceCheckList,
-                               NULL,
-                               0,
-                               0,
-                               cxWidth,
-                               ((sp->ObjectInfo.dwFlags & SI_ADVANCED) ?
-                                   Height - (rcControl.top - rcWnd.top) - (rcControl3.bottom - rcControl3.top) - pt.x - btnSpacing :
-                                   Height - (rcControl.top - rcWnd.top) - pt.x),
-                               SWP_NOMOVE | SWP_NOZORDER)))
-    {
-        return;
-    }
-    
-    if (sp->ObjectInfo.dwFlags & SI_ADVANCED)
-    {
-        /* move and resize the Advanced label */
+        /* resize the Principal list view */
+        GetWindowRect(sp->hWndPrincipalsList,
+                      &rcControl);
         if (!(dwp = DeferWindowPos(dwp,
-                                   GetDlgItem(sp->hWnd,
-                                              IDC_LABEL_ADVANCED),
+                                   sp->hWndPrincipalsList,
                                    NULL,
-                                   pt.x,
-                                   Height - (rcControl3.bottom - rcControl3.top) - pt.x,
-                                   cxWidth - (rcControl2.right - rcControl2.left) - cxEdge,
-                                   rcControl3.bottom - rcControl3.top,
-                                   SWP_NOZORDER)))
+                                   0,
+                                   0,
+                                   cxWidth,
+                                   rcControl.bottom - rcControl.top,
+                                   SWP_NOMOVE | SWP_NOZORDER)))
         {
-            return;
+            goto EndDeferWnds;
         }
-        
-        /* move and resize the Advanced button */
+
+        /* move the Add Principal button */
+        GetWindowRect(sp->hBtnAdd,
+                      &rcControl);
+        GetWindowRect(sp->hBtnRemove,
+                      &rcControl2);
+        btnSpacing = rcControl2.left - rcControl.right;
+        pt2.x = 0;
+        pt2.y = 0;
+        MapWindowPoints(sp->hBtnAdd,
+                        sp->hWnd,
+                        &pt2,
+                        1);
         if (!(dwp = DeferWindowPos(dwp,
-                                   sp->hBtnAdvanced,
+                                   sp->hBtnAdd,
                                    NULL,
-                                   cxWidth - (rcControl2.right - rcControl2.left) + pt.x,
-                                   Height - (rcControl2.bottom - rcControl2.top) - pt.x,
+                                   pt.x + cxWidth - (rcControl2.right - rcControl2.left) -
+                                       (rcControl.right - rcControl.left) -
+                                       btnSpacing - cxEdge,
+                                   pt2.y,
                                    0,
                                    0,
                                    SWP_NOSIZE | SWP_NOZORDER)))
         {
-            return;
+            goto EndDeferWnds;
         }
+
+        /* move the Delete Principal button */
+        pt2.x = 0;
+        pt2.y = 0;
+        MapWindowPoints(sp->hBtnRemove,
+                        sp->hWnd,
+                        &pt2,
+                        1);
+        if (!(dwp = DeferWindowPos(dwp,
+                                   sp->hBtnRemove,
+                                   NULL,
+                                   pt.x + cxWidth - (rcControl2.right - rcControl2.left) - cxEdge,
+                                   pt2.y,
+                                   0,
+                                   0,
+                                   SWP_NOSIZE | SWP_NOZORDER)))
+        {
+            goto EndDeferWnds;
+        }
+
+        /* move the Permissions For label */
+        GetWindowRect(hWndAllow,
+                      &rcControl);
+        GetWindowRect(hWndDeny,
+                      &rcControl2);
+        GetWindowRect(sp->hPermissionsForLabel,
+                      &rcControl3);
+        pt2.x = 0;
+        pt2.y = 0;
+        MapWindowPoints(sp->hPermissionsForLabel,
+                        sp->hWnd,
+                        &pt2,
+                        1);
+        if (!(dwp = DeferWindowPos(dwp,
+                                   sp->hPermissionsForLabel,
+                                   NULL,
+                                   0,
+                                   0,
+                                   cxWidth - (rcControl2.right - rcControl2.left) -
+                                       (rcControl.right - rcControl.left) -
+                                       (2 * btnSpacing) - cxEdge,
+                                   rcControl3.bottom - rcControl3.top,
+                                   SWP_NOMOVE | SWP_NOZORDER)))
+        {
+            goto EndDeferWnds;
+        }
+
+        /* move the Allow label */
+        pt2.x = 0;
+        pt2.y = 0;
+        MapWindowPoints(hWndAllow,
+                        sp->hWnd,
+                        &pt2,
+                        1);
+        if (!(dwp = DeferWindowPos(dwp,
+                                   hWndAllow,
+                                   NULL,
+                                   cxWidth - (rcControl2.right - rcControl2.left) -
+                                       (rcControl.right - rcControl.left) -
+                                       btnSpacing - cxEdge,
+                                   pt2.y,
+                                   0,
+                                   0,
+                                   SWP_NOSIZE | SWP_NOZORDER)))
+        {
+            goto EndDeferWnds;
+        }
+
+        /* move the Deny label */
+        pt2.x = 0;
+        pt2.y = 0;
+        MapWindowPoints(hWndDeny,
+                        sp->hWnd,
+                        &pt2,
+                        1);
+        if (!(dwp = DeferWindowPos(dwp,
+                                   hWndDeny,
+                                   NULL,
+                                   cxWidth - (rcControl2.right - rcControl2.left) - cxEdge,
+                                   pt2.y,
+                                   0,
+                                   0,
+                                   SWP_NOSIZE | SWP_NOZORDER)))
+        {
+            goto EndDeferWnds;
+        }
+
+        /* resize the Permissions check list box */
+        GetWindowRect(sp->hAceCheckList,
+                      &rcControl);
+        GetWindowRect(sp->hBtnAdvanced,
+                      &rcControl2);
+        GetWindowRect(GetDlgItem(sp->hWnd,
+                                 IDC_LABEL_ADVANCED),
+                      &rcControl3);
+        if (!(dwp = DeferWindowPos(dwp,
+                                   sp->hAceCheckList,
+                                   NULL,
+                                   0,
+                                   0,
+                                   cxWidth,
+                                   ((sp->ObjectInfo.dwFlags & SI_ADVANCED) ?
+                                       Height - (rcControl.top - rcWnd.top) -
+                                           (rcControl3.bottom - rcControl3.top) - pt.x - btnSpacing :
+                                       Height - (rcControl.top - rcWnd.top) - pt.x),
+                                   SWP_NOMOVE | SWP_NOZORDER)))
+        {
+            goto EndDeferWnds;
+        }
+
+        if (sp->ObjectInfo.dwFlags & SI_ADVANCED)
+        {
+            /* move and resize the Advanced label */
+            if (!(dwp = DeferWindowPos(dwp,
+                                       GetDlgItem(sp->hWnd,
+                                                  IDC_LABEL_ADVANCED),
+                                       NULL,
+                                       pt.x,
+                                       Height - (rcControl3.bottom - rcControl3.top) - pt.x,
+                                       cxWidth - (rcControl2.right - rcControl2.left) - cxEdge,
+                                       rcControl3.bottom - rcControl3.top,
+                                       SWP_NOZORDER)))
+            {
+                goto EndDeferWnds;
+            }
+
+            /* move and resize the Advanced button */
+            if (!(dwp = DeferWindowPos(dwp,
+                                       sp->hBtnAdvanced,
+                                       NULL,
+                                       cxWidth - (rcControl2.right - rcControl2.left) + pt.x,
+                                       Height - (rcControl2.bottom - rcControl2.top) - pt.x,
+                                       0,
+                                       0,
+                                       SWP_NOSIZE | SWP_NOZORDER)))
+            {
+                goto EndDeferWnds;
+            }
+        }
+
+        EndDeferWindowPos(dwp);
     }
-    
-    EndDeferWindowPos(dwp);
-    
+
+EndDeferWnds:
     /* update the width of the principal list view column */
     GetClientRect(sp->hWndPrincipalsList,
                   &rcControl);
@@ -815,6 +837,20 @@ ResizeControls(IN PSECURITY_PAGE sp,
     SetAceCheckListColumns(sp->hAceCheckList,
                            CLB_DENY,
                            hWndDeny);
+}
+
+static BOOL
+AddSelectedPrincipal(IN IDsObjectPicker *pDsObjectPicker,
+                     IN HWND hwndParent  OPTIONAL,
+                     IN PSID pSid,
+                     IN PVOID Context  OPTIONAL)
+{
+    PSECURITY_PAGE sp = (PSECURITY_PAGE)Context;
+    
+    AddPrincipalToList(sp,
+                       pSid);
+
+    return TRUE;
 }
 
 static INT_PTR CALLBACK
@@ -881,28 +917,33 @@ SecurityPageProc(IN HWND hwndDlg,
                 case IDC_ADD_PRINCIPAL:
                 {
                     HRESULT hRet;
-                    IDsObjectPicker *pDsObjectPicker = NULL;
-                    IDataObject *Selections = NULL;
                     
                     sp = (PSECURITY_PAGE)GetWindowLongPtr(hwndDlg,
                                                           DWL_USER);
                     
                     hRet = InitializeObjectPicker(sp->ServerName,
                                                   &sp->ObjectInfo,
-                                                  ObjectPickerAttributes,
-                                                  &pDsObjectPicker);
+                                                  &sp->pDsObjectPicker);
                     if (SUCCEEDED(hRet))
                     {
-                        hRet = pDsObjectPicker->lpVtbl->InvokeDialog(pDsObjectPicker,
-                                                                     hwndDlg,
-                                                                     &Selections);
+                        hRet = InvokeObjectPickerDialog(sp->pDsObjectPicker,
+                                                        hwndDlg,
+                                                        AddSelectedPrincipal,
+                                                        sp);
                         if (FAILED(hRet))
                         {
-                            MessageBox(hwndDlg, L"InvokeDialog failed!\n", NULL, 0);
+                            MessageBox(hwndDlg, L"InvokeObjectPickerDialog failed!\n", NULL, 0);
                         }
                         
                         /* delete the instance */
-                        pDsObjectPicker->lpVtbl->Release(pDsObjectPicker);
+                        FreeObjectPicker(sp->pDsObjectPicker);
+                        
+                        /* reload the principal list */
+                        FillPrincipalsList(sp);
+                    }
+                    else
+                    {
+                        MessageBox(hwndDlg, L"InitializeObjectPicker failed!\n", NULL, 0);
                     }
                     break;
                 }
@@ -952,10 +993,10 @@ SecurityPageProc(IN HWND hwndDlg,
                                  (DWORD_PTR)sp);
 
                 sp->hiPrincipals = ImageList_LoadBitmap(hDllInstance,
-                                                  MAKEINTRESOURCE(IDB_USRGRPIMAGES),
-                                                  16,
-                                                  3,
-                                                  0);
+                                                        MAKEINTRESOURCE(IDB_USRGRPIMAGES),
+                                                        16,
+                                                        3,
+                                                        0);
 
                 /* setup the listview control */
                 ListView_SetExtendedListViewStyleEx(sp->hWndPrincipalsList,
@@ -965,13 +1006,18 @@ SecurityPageProc(IN HWND hwndDlg,
                                       sp->hiPrincipals,
                                       LVSIL_SMALL);
 
-                GetClientRect(sp->hWndPrincipalsList, &rcLvClient);
+                GetClientRect(sp->hWndPrincipalsList,
+                              &rcLvClient);
                 
                 /* add a column to the list view */
                 lvc.mask = LVCF_FMT | LVCF_WIDTH;
                 lvc.fmt = LVCFMT_LEFT;
                 lvc.cx = rcLvClient.right;
-                ListView_InsertColumn(sp->hWndPrincipalsList, 0, &lvc);
+                ListView_InsertColumn(sp->hWndPrincipalsList,
+                                      0,
+                                      &lvc);
+                
+                ReloadPrincipalsList(sp);
 
                 FillPrincipalsList(sp);
                 
@@ -1045,9 +1091,9 @@ HPROPSHEETPAGE
 WINAPI
 CreateSecurityPage(IN LPSECURITYINFO psi)
 {
-    PROPSHEETPAGE psp;
+    PROPSHEETPAGE psp = {0};
     PSECURITY_PAGE sPage;
-    SI_OBJECT_INFO ObjectInfo;
+    SI_OBJECT_INFO ObjectInfo = {0};
     HRESULT hRet;
 
     if (psi == NULL)
@@ -1061,8 +1107,8 @@ CreateSecurityPage(IN LPSECURITYINFO psi)
     /* get the object information from the server. Zero the structure before
        because some applications seem to return SUCCESS but only seem to set the
        fields they care about. */
-    ZeroMemory(&ObjectInfo, sizeof(ObjectInfo));
-    hRet = psi->lpVtbl->GetObjectInformation(psi, &ObjectInfo);
+    hRet = psi->lpVtbl->GetObjectInformation(psi,
+                                             &ObjectInfo);
 
     if (FAILED(hRet))
     {
@@ -1097,8 +1143,6 @@ CreateSecurityPage(IN LPSECURITYINFO psi)
     }
     sPage->psi = psi;
     sPage->ObjectInfo = ObjectInfo;
-
-    ZeroMemory(&psp, sizeof(psp));
 
     psp.dwSize = sizeof(PROPSHEETPAGE);
     psp.dwFlags = PSP_USECALLBACK;
@@ -1140,10 +1184,10 @@ EditSecurity(IN HWND hwndOwner,
              IN LPSECURITYINFO psi)
 {
     HRESULT hRet;
-    SI_OBJECT_INFO ObjectInfo;
+    SI_OBJECT_INFO ObjectInfo = {0};
     PROPSHEETHEADER psh;
     HPROPSHEETPAGE hPages[1];
-    LPWSTR lpCaption;
+    LPWSTR lpCaption = NULL;
     BOOL Ret;
 
     if (psi == NULL)
@@ -1157,8 +1201,8 @@ EditSecurity(IN HWND hwndOwner,
     /* get the object information from the server. Zero the structure before
        because some applications seem to return SUCCESS but only seem to set the
        fields they care about. */
-    ZeroMemory(&ObjectInfo, sizeof(ObjectInfo));
-    hRet = psi->lpVtbl->GetObjectInformation(psi, &ObjectInfo);
+    hRet = psi->lpVtbl->GetObjectInformation(psi,
+                                             &ObjectInfo);
 
     if (FAILED(hRet))
     {
@@ -1184,11 +1228,17 @@ EditSecurity(IN HWND hwndOwner,
     /* Set the page title to the object name, make sure the format string
        has "%1" NOT "%s" because it uses FormatMessage() to automatically
        allocate the right amount of memory. */
-    LoadAndFormatString(hDllInstance,
-                        IDS_PSP_TITLE,
-                        &lpCaption,
-                        ObjectInfo.pszObjectName);
-    psh.pszCaption = lpCaption;
+    if (LoadAndFormatString(hDllInstance,
+                            IDS_PSP_TITLE,
+                            &lpCaption,
+                            ObjectInfo.pszObjectName))
+    {
+        psh.pszCaption = lpCaption;
+    }
+    else
+    {
+        psh.pszCaption = ObjectInfo.pszObjectName;
+    }
 
     psh.nPages = sizeof(hPages) / sizeof(HPROPSHEETPAGE);
     psh.nStartPage = 0;

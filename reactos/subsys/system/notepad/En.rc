@@ -30,8 +30,8 @@ MAIN_MENU MENU
   MENUITEM "&Save\tCtrl+S",     CMD_SAVE
   MENUITEM "Save &as...",       CMD_SAVE_AS
   MENUITEM SEPARATOR
-  MENUITEM "&Print",            CMD_PRINT
   MENUITEM "Page Se&tup...",    CMD_PAGE_SETUP
+  MENUITEM "&Print",            CMD_PRINT
   MENUITEM "P&rinter Setup...", CMD_PRINTER_SETUP
   MENUITEM SEPARATOR
   MENUITEM "E&xit",             CMD_EXIT
@@ -44,26 +44,29 @@ POPUP "&Edit" {
   MENUITEM "&Paste\tCtrl+V",    CMD_PASTE
   MENUITEM "&Delete\tDel",      CMD_DELETE
   MENUITEM SEPARATOR
+  MENUITEM "&Find...\tCtrl+F",  CMD_SEARCH
+  MENUITEM "Find &next\tF3",    CMD_SEARCH_NEXT
+  MENUITEM "Replace\tCtrl+H",   CMD_REPLACE
+  MENUITEM "Go To...\tCtrl+G",  CMD_GOTO
+  MENUITEM SEPARATOR
   MENUITEM "Select &all\tCtrl+A",       CMD_SELECT_ALL
   MENUITEM "&Time/Date\tF5",    CMD_TIME_DATE
-  MENUITEM SEPARATOR
+ }
+POPUP "F&ormat" {
   MENUITEM "&Wrap long lines",  CMD_WRAP
   MENUITEM "&Font...",          CMD_FONT
- }
-POPUP "&Search" {
-  MENUITEM "&Search\tCtrl+F",   CMD_SEARCH
-  MENUITEM "&Search next\tF3",  CMD_SEARCH_NEXT
- }
+}
+POPUP "&View" {
+  MENUITEM "Status&bar",    CMD_STATUSBAR
+}
 POPUP "&Help" {
   MENUITEM "&Contents",         CMD_HELP_CONTENTS
   MENUITEM "&Search...",        CMD_HELP_SEARCH
   MENUITEM "&Help on help",     CMD_HELP_ON_HELP
   MENUITEM SEPARATOR
-  POPUP "Inf&o..." {
-   MENUITEM "&License",         CMD_LICENSE
-   MENUITEM "&NO WARRANTY",     CMD_NO_WARRANTY
-   MENUITEM "&About Wine",      CMD_ABOUT_WINE
-  }
+  MENUITEM "&License",         CMD_LICENSE
+  MENUITEM "&NO WARRANTY",     CMD_NO_WARRANTY
+  MENUITEM "Inf&o",      CMD_ABOUT_WINE
  }
 }
 
@@ -92,6 +95,31 @@ EDITTEXT /*STRING_PAGESETUP_BOTTOMVALUE,*/ 0x150,    130, 73, 35, 11, WS_CHILD |
 DEFPUSHBUTTON "OK",         0x151,                   180,  3, 40, 15, WS_TABSTOP
 PUSHBUTTON    "Cancel",     0x152,               180, 21, 40, 15, WS_TABSTOP
 PUSHBUTTON    "&Help",       0x153,                180, 39, 40, 15, WS_TABSTOP
+}
+
+/* Dialog `Encoding' */
+DIALOG_ENCODING DIALOG 0, 0, 256, 44
+STYLE DS_SETFONT | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | 
+    WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Encoding"
+{
+COMBOBOX        ID_ENCODING,54,0,156,80,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+LTEXT           "Encoding:",0x155,5,2,41,12
+COMBOBOX        ID_EOLN,54,18,156,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+LTEXT           "Endlines:",0x156,5,20,41,12
+}
+
+/* Dialog 'Go To' */
+DIALOG_GOTO DIALOG 0,0,165,50
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Goto line"
+{
+EDITTEXT        ID_LINENUMBER,54,10,106,12,WS_CHILD | WS_BORDER | WS_TABSTOP
+LTEXT           "Line number:",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
+DEFPUSHBUTTON   "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
+PUSHBUTTON      "Cancel", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 }
 
 STRINGTABLE DISCARDABLE
@@ -125,5 +153,12 @@ STRING_NOTFOUND,                                        "'%s' can not be found."
 STRING_OUT_OF_MEMORY,                   "Not enough memory to complete this \
 task. \nClose one or more applications to increase the amount of \nfree \
 memory."
-
+STRING_CANNOTFIND                               "Cannot find '%s'"
+STRING_ANSI,                                    "ANSI"
+STRING_UNICODE,                                 "Unicode"
+STRING_UNICODE_BE,                              "Unicode (big endian)"
+STRING_UTF8,                                    "UTF-8"
+STRING_CRLF,                                    "Windows"
+STRING_LF,                                      "Unix"
+STRING_CR,                                      "Mac"
 }

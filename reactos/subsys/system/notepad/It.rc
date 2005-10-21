@@ -46,26 +46,21 @@ POPUP "&Modifica" {
   MENUITEM "&Incolla\tCtrl+V",    CMD_PASTE
   MENUITEM "&Elimina\tDel",      CMD_DELETE
   MENUITEM SEPARATOR
+  MENUITEM "&Trova\tCtrl+F",   CMD_SEARCH
+  MENUITEM "&Trova successivo\tF3",  CMD_SEARCH_NEXT
+  MENUITEM SEPARATOR
   MENUITEM "Seleziona &tutto\tCtrl+A",       CMD_SELECT_ALL
   MENUITEM "&Ora/Data\tF5",    CMD_TIME_DATE
   MENUITEM SEPARATOR
   MENUITEM "&A campo automatico",  CMD_WRAP
   MENUITEM "&Imposta carattere...",          CMD_FONT
  }
-POPUP "&Trova" {
-  MENUITEM "&Trova\tCtrl+F",   CMD_SEARCH
-  MENUITEM "&Trova successivo\tF3",  CMD_SEARCH_NEXT
- }
 POPUP "&Aiuto" {
   MENUITEM "&Contenuti",         CMD_HELP_CONTENTS
   MENUITEM "&Trova...",        CMD_HELP_SEARCH
   MENUITEM "&Aiuto sulla Guida",     CMD_HELP_ON_HELP
   MENUITEM SEPARATOR
-  POPUP "Inf&o..." {
-   MENUITEM "&Licenza",         CMD_LICENSE
-   MENUITEM "&Garanzia",     CMD_NO_WARRANTY
-   MENUITEM "&Informazioni sul Blocco Note",      CMD_ABOUT_WINE
-  }
+  MENUITEM "Inf&o...",      CMD_ABOUT_WINE
  }
 }
 

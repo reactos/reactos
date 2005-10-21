@@ -238,10 +238,13 @@ MdiSdiDlg::MdiSdiDlg(HWND hwnd)
 
 	XMLPos explorer_options = g_Globals.get_cfg("general/explorer");
 	bool mdi = XMLBool(explorer_options, "mdi", true);
+	bool separateFolders = XMLBool(explorer_options, "separate-folders", true);
 
 	int id = mdi? IDC_MDI: IDC_SDI;
 	CheckDlgButton(hwnd, id, BST_CHECKED);
 	SetFocus(GetDlgItem(hwnd, id));
+
+	CheckDlgButton(hwnd, IDC_SEPARATE_SUBFOLDERS, separateFolders?BST_CHECKED:BST_UNCHECKED);
 }
 
 int	MdiSdiDlg::Command(int id, int code)
@@ -250,8 +253,12 @@ int	MdiSdiDlg::Command(int id, int code)
 		switch(id) {
 		  case IDOK: {
 			bool mdi = IsDlgButtonChecked(_hwnd, IDC_MDI)==BST_CHECKED;
+			bool separateFolders = IsDlgButtonChecked(_hwnd, IDC_SEPARATE_SUBFOLDERS)==BST_CHECKED;
+
 			XMLPos explorer_options = g_Globals.get_cfg("general/explorer");
+
 			XMLBoolRef(explorer_options, "mdi") = mdi;
+			XMLBoolRef(explorer_options, "separate-folders") = separateFolders;
 		  } // fall through
 
 		  case IDCANCEL:

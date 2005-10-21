@@ -82,8 +82,8 @@ namespace XMLStorage {
 #define	XS_nicmp strnicmp
 #define	XS_toi atoi
 #define	XS_len strlen
-#define	XS_sprintf sprintf
-#define	XS_vsprintf vsprintf
+#define	XS_snprintf snprintf
+#define	XS_vsnprintf vsnprintf
 #else
 #define	XS_CHAR TCHAR
 #define	XS_TEXT(x) TEXT(x)
@@ -93,8 +93,12 @@ namespace XMLStorage {
 #define	XS_nicmp _tcsnicmp
 #define	XS_toi _ttoi
 #define	XS_len _tcslen
-#define	XS_sprintf _stprintf
-#define	XS_vsprintf _vstprintf
+#define	XS_snprintf _sntprintf
+#define	XS_vsnprintf _vsntprintf
+#endif
+
+#ifndef COUNTOF
+#define COUNTOF(b) (sizeof(b)/sizeof(b[0]))
 #endif
 
 #if defined(_STRING_DEFINED) && !defined(XS_STRING_UTF8)
@@ -121,46 +125,46 @@ struct XS_String
 	XS_String() {}
 
 	XS_String(LPCXSSTR s) {if (s) super::assign(s);}
-	XS_String(LPCXSSTR s, int l) : super(s, l) {}
+	XS_String(LPCXSSTR s, size_t l) : super(s, l) {}
 
 	XS_String(const super& other) : super(other) {}
 	XS_String(const XS_String& other) : super(other) {}
 
 #if defined(UNICODE) && !defined(XS_STRING_UTF8)
 	XS_String(LPCSTR s) {assign(s);}
-	XS_String(LPCSTR s, int l) {assign(s, l);}
+	XS_String(LPCSTR s, size_t l) {assign(s, l);}
 	XS_String(const std::string& other) {assign(other.c_str());}
 	XS_String& operator=(LPCSTR s) {assign(s); return *this;}
-	void assign(LPCSTR s) {if (s) {int bl=strlen(s); LPWSTR b=(LPWSTR)alloca(sizeof(WCHAR)*bl); super::assign(b, MultiByteToWideChar(CP_ACP, 0, s, bl, b, bl));} else erase();}
-	void assign(LPCSTR s, int l) {if (s) {int bl=l; LPWSTR b=(LPWSTR)alloca(sizeof(WCHAR)*bl); super::assign(b, MultiByteToWideChar(CP_ACP, 0, s, l, b, bl));} else erase();}
+	void assign(LPCSTR s) {if (s) {size_t bl=strlen(s); LPWSTR b=(LPWSTR)alloca(sizeof(WCHAR)*bl); super::assign(b, MultiByteToWideChar(CP_ACP, 0, s, bl, b, bl));} else erase();}
+	void assign(LPCSTR s, size_t l) {if (s) {size_t bl=l; LPWSTR b=(LPWSTR)alloca(sizeof(WCHAR)*bl); super::assign(b, MultiByteToWideChar(CP_ACP, 0, s, l, b, bl));} else erase();}
 #else
 	XS_String(LPCWSTR s) {assign(s);}
-	XS_String(LPCWSTR s, int l) {assign(s, l);}
+	XS_String(LPCWSTR s, size_t l) {assign(s, l);}
 	XS_String(const std::wstring& other) {assign(other.c_str());}
 	XS_String& operator=(LPCWSTR s) {assign(s); return *this;}
 #ifdef XS_STRING_UTF8
 	void assign(const XS_String& s) {assign(s.c_str());}
-	void assign(LPCWSTR s) {if (s) {int bl=wcslen(s); LPSTR b=(LPSTR)alloca(bl); super::assign(b, WideCharToMultiByte(CP_UTF8, 0, s, bl, b, bl, 0, 0));} else erase();}
-	void assign(LPCWSTR s, int l) {int bl=l; if (s) {LPSTR b=(LPSTR)alloca(bl); super::assign(b, WideCharToMultiByte(CP_UTF8, 0, s, l, b, bl, 0, 0));} else erase();}
+	void assign(LPCWSTR s) {if (s) {size_t bl=wcslen(s); LPSTR b=(LPSTR)alloca(bl); super::assign(b, WideCharToMultiByte(CP_UTF8, 0, s, (int)bl, b, (int)bl, 0, 0));} else erase();}
+	void assign(LPCWSTR s, size_t l) {size_t bl=l; if (s) {LPSTR b=(LPSTR)alloca(bl); super::assign(b, WideCharToMultiByte(CP_UTF8, 0, s, (int)l, b, (int)bl, 0, 0));} else erase();}
 #else // if !UNICODE && !XS_STRING_UTF8
-	void assign(LPCWSTR s) {if (s) {int bl=wcslen(s); LPSTR b=(LPSTR)alloca(bl); super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, bl, b, bl, 0, 0));} else erase();}
-	void assign(LPCWSTR s, int l) {int bl=l; if (s) {LPSTR b=(LPSTR)alloca(bl); super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, l, b, bl, 0, 0));} else erase();}
+	void assign(LPCWSTR s) {if (s) {size_t bl=wcslen(s); LPSTR b=(LPSTR)alloca(bl); super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, (int)bl, b, (int)bl, 0, 0));} else erase();}
+	void assign(LPCWSTR s, size_t l) {size_t bl=l; if (s) {LPSTR b=(LPSTR)alloca(bl); super::assign(b, WideCharToMultiByte(CP_ACP, 0, s, (int)l, b, (int)bl, 0, 0));} else erase();}
 #endif
 #endif
 
 	XS_String& operator=(LPCXSSTR s) {if (s) super::assign(s); else erase(); return *this;}
 	XS_String& operator=(const super& s) {super::assign(s); return *this;}
 	void assign(LPCXSSTR s) {super::assign(s);}
-	void assign(LPCXSSTR s, int l) {super::assign(s, l);}
+	void assign(LPCXSSTR s, size_t l) {super::assign(s, l);}
 
 	operator LPCXSSTR() const {return c_str();}
 
 #ifdef XS_STRING_UTF8
-	operator std::wstring() const {int bl=length(); LPWSTR b=(LPWSTR)alloca(sizeof(WCHAR)*bl); return std::wstring(b, MultiByteToWideChar(CP_UTF8, 0, c_str(), bl, b, bl));}
+	operator std::wstring() const {size_t bl=length(); LPWSTR b=(LPWSTR)alloca(sizeof(WCHAR)*bl); return std::wstring(b, MultiByteToWideChar(CP_UTF8, 0, c_str(), bl, b, bl));}
 #elif defined(UNICODE)
-	operator std::string() const {int bl=length(); LPSTR b=(LPSTR)alloca(bl); return std::string(b, WideCharToMultiByte(CP_ACP, 0, c_str(), bl, b, bl, 0, 0));}
+	operator std::string() const {size_t bl=length(); LPSTR b=(LPSTR)alloca(bl); return std::string(b, WideCharToMultiByte(CP_ACP, 0, c_str(), bl, b, bl, 0, 0));}
 #else
-	operator std::wstring() const {int bl=length(); LPWSTR b=(LPWSTR)alloca(sizeof(WCHAR)*bl); return std::wstring(b, MultiByteToWideChar(CP_ACP, 0, c_str(), bl, b, bl));}
+	operator std::wstring() const {size_t bl=length(); LPWSTR b=(LPWSTR)alloca(sizeof(WCHAR)*bl); return std::wstring(b, MultiByteToWideChar(CP_ACP, 0, c_str(), (int)bl, b, (int)bl));}
 #endif
 
 	XS_String& printf(LPCXSSTR fmt, ...)
@@ -169,7 +173,7 @@ struct XS_String
 		XS_CHAR b[BUFFER_LEN];
 
 		va_start(l, fmt);
-		super::assign(b, XS_vsprintf(b, fmt, l));
+		super::assign(b, XS_vsnprintf(b, COUNTOF(b), fmt, l));
 		va_end(l);
 
 		return *this;
@@ -179,7 +183,7 @@ struct XS_String
 	{
 		XS_CHAR b[BUFFER_LEN];
 
-		super::assign(b, XS_vsprintf(b, fmt, l));
+		super::assign(b, XS_vsnprintf(b, COUNTOF(b), fmt, l));
 
 		return *this;
 	}
@@ -190,7 +194,7 @@ struct XS_String
 		XS_CHAR b[BUFFER_LEN];
 
 		va_start(l, fmt);
-		super::append(b, XS_vsprintf(b, fmt, l));
+		super::append(b, XS_vsnprintf(b, COUNTOF(b), fmt, l));
 		va_end(l);
 
 		return *this;
@@ -200,7 +204,7 @@ struct XS_String
 	{
 		XS_CHAR b[BUFFER_LEN];
 
-		super::append(b, XS_vsprintf(b, fmt, l));
+		super::append(b, XS_vsnprintf(b, COUNTOF(b), fmt, l));
 
 		return *this;
 	}
@@ -215,7 +219,7 @@ struct XS_String
 
 inline void assign_utf8(XS_String& s, const char* str)
 {
-	int lutf8 = strlen(str);
+	int lutf8 = (int)strlen(str);
 
 #ifdef UNICODE
 	LPTSTR buffer = (LPTSTR)alloca(sizeof(TCHAR)*lutf8);
@@ -231,17 +235,17 @@ inline void assign_utf8(XS_String& s, const char* str)
 	s.assign(buffer, l);
 }
 
-inline std::string get_utf8(LPCTSTR s, int l)
+inline std::string get_utf8(LPCTSTR s, size_t l)
 {
 #ifdef UNICODE
-	int bl=2*l; LPSTR buffer = (LPSTR)alloca(bl);
-	l = WideCharToMultiByte(CP_UTF8, 0, s, l, buffer, bl, 0, 0);
+	size_t bl=2*l; LPSTR buffer = (LPSTR)alloca(bl);
+	l = WideCharToMultiByte(CP_UTF8, 0, s, (int)l, buffer, (int)bl, 0, 0);
 #else
 	LPWSTR wbuffer = (LPWSTR)alloca(sizeof(WCHAR)*l);
-	l = MultiByteToWideChar(CP_ACP, 0, s, l, wbuffer, l);
+	l = MultiByteToWideChar(CP_ACP, 0, s, (int)l, wbuffer, (int)l);
 
-	int bl=2*l; LPSTR buffer = (LPSTR)alloca(bl);
-	l = WideCharToMultiByte(CP_UTF8, 0, wbuffer, l, buffer, bl, 0, 0);
+	size_t bl=2*l; LPSTR buffer = (LPSTR)alloca(bl);
+	l = WideCharToMultiByte(CP_UTF8, 0, wbuffer, (int)l, buffer, (int)bl, 0, 0);
 #endif
 
 	return std::string(buffer, l);
@@ -336,6 +340,7 @@ typedef XS_String String_from_XML_Char;
 
 #else
 
+ /// converter from Expat strings to XMLStorage internal strings
 struct String_from_XML_Char : public XS_String
 {
 	String_from_XML_Char(const XML_Char* str)
@@ -397,6 +402,7 @@ struct XMLNode : public XS_String
 	typedef std::map<XS_String, XS_String> AttributeMap;
 #endif
 
+	 /// internal children node list
 	struct Children : public std::list<XMLNode*>
 	{
 		void assign(const Children& other)
@@ -678,9 +684,10 @@ protected:
 	}
 #endif
 
-	 /// XPath find functions
+	 /// XPath find function (const)
 	const XMLNode* find_relative(const char* path) const;
 
+	 /// XPath find function
 	XMLNode* find_relative(const char* path)
 		{return const_cast<XMLNode*>(const_cast<const XMLNode*>(this)->find_relative(path));}
 
@@ -708,6 +715,7 @@ struct XMLChildrenFilter
 	{
 	}
 
+	 /// internal iterator class
 	struct iterator
 	{
 		typedef XMLNode::Children::iterator BaseIterator;
@@ -806,6 +814,7 @@ struct const_XMLChildrenFilter
 	{
 	}
 
+	 /// internal iterator class
 	struct const_iterator
 	{
 		typedef XMLNode::Children::const_iterator BaseIterator;
@@ -954,6 +963,7 @@ struct XMLPos
 		return _cur->get(attr_name);
 	}
 
+	 /// attribute setting
 	void put(const XS_String& attr_name, const XS_String& value)
 	{
 		_cur->put(attr_name, value);
@@ -1218,18 +1228,23 @@ protected:
 };
 
 
+#define	XS_TRUE_STR XS_TEXT("true")
+#define	XS_FALSE_STR XS_TEXT("false")
+#define	XS_NUMBERFMT_STR XS_TEXT("%d")
+
  // work around GCC's wide string constant bug
 #ifdef __GNUC__
 extern const LPCXSSTR XS_TRUE;
 extern const LPCXSSTR XS_FALSE;
 extern const LPCXSSTR XS_NUMBERFMT;
 #else
-#define	XS_TRUE XS_TEXT("true")
-#define	XS_FALSE XS_TEXT("false")
-#define	XS_NUMBERFMT XS_TEXT("%d")
+#define	XS_TRUE XS_TRUE_STR
+#define	XS_FALSE XS_FALSE_STR
+#define	XS_NUMBERFMT XS_NUMBERFMT_STR
 #endif
 
 
+ /// type converter for boolean data
 struct XMLBool
 {
 	XMLBool(bool value=false)
@@ -1277,6 +1292,7 @@ private:
 	void operator=(const XMLBool&); // disallow assignment operations
 };
 
+ /// type converter for boolean data with write access
 struct XMLBoolRef
 {
 	XMLBoolRef(XMLNode* node, const XS_String& attr_name, bool def=false)
@@ -1318,6 +1334,7 @@ protected:
 };
 
 
+ /// type converter for integer data
 struct XMLInt
 {
 	XMLInt(int value)
@@ -1351,7 +1368,7 @@ struct XMLInt
 	operator XS_String() const
 	{
 		XS_CHAR buffer[32];
-		XS_sprintf(buffer, XS_NUMBERFMT, _value);
+		XS_snprintf(buffer, COUNTOF(buffer), XS_NUMBERFMT, _value);
 		return buffer;
 	}
 
@@ -1362,6 +1379,7 @@ private:
 	void operator=(const XMLInt&); // disallow assignment operations
 };
 
+ /// type converter for integer data with write access
 struct XMLIntRef
 {
 	XMLIntRef(XMLNode* node, const XS_String& attr_name, int def=0)
@@ -1386,7 +1404,7 @@ struct XMLIntRef
 	void assign(int value)
 	{
 		XS_CHAR buffer[32];
-		XS_sprintf(buffer, XS_NUMBERFMT, value);
+		XS_snprintf(buffer, COUNTOF(buffer), XS_NUMBERFMT, value);
 		_ref.assign(buffer);
 	}
 
@@ -1395,6 +1413,7 @@ protected:
 };
 
 
+ /// type converter for string data
 struct XMLString
 {
 	XMLString(const XS_String& value)
@@ -1437,6 +1456,7 @@ private:
 	void operator=(const XMLString&); // disallow assignment operations
 };
 
+ /// type converter for string data with write access
 struct XMStringRef
 {
 	XMStringRef(XMLNode* node, const XS_String& attr_name, LPCXSSTR def=XS_TEXT(""))
@@ -1580,6 +1600,7 @@ protected:
 };
 
 
+ /// management of XML file headers
 struct XMLHeader
 {
 	XMLHeader(const std::string& xml_version="1.0", const std::string& encoding="UTF-8", const std::string& doctype="")
@@ -1589,12 +1610,16 @@ struct XMLHeader
 	{
 	}
 
-	void print(std::ostream& out) const
+	void print(std::ostream& out, bool pretty=true) const
 	{
-		out << "<?xml version=\"" << _version << "\" encoding=\"" << _encoding << "\"?>\n";
+		out << "<?xml version=\"" << _version << "\" encoding=\"" << _encoding << "\"?>";
+
+		if (pretty)
+			out << std::endl;
 
 		if (!_doctype.empty())
 			out << _doctype << '\n';
+
 		if (!_additional.empty())
 			out << _additional << '\n';
 	}
@@ -1606,6 +1631,7 @@ struct XMLHeader
 };
 
 
+ /// XML document holder
 struct XMLDoc : public XMLNode
 {
 	XMLDoc()
@@ -1715,6 +1741,7 @@ struct XMLDoc : public XMLNode
 };
 
 
+ /// XML message wrapper
 struct XMLMessage : public XMLDoc
 {
 	XMLMessage(const char* name)
@@ -1724,6 +1751,174 @@ struct XMLMessage : public XMLDoc
 	}
 
 	XMLPos	_pos;
+};
+
+
+enum PRETTY_FLAGS {
+	PRETTY_PLAIN	= 0,
+	PRETTY_LINEFEED	= 1,
+	PRETTY_INDENT	= 2
+};
+
+struct XMLWriter
+{
+	XMLWriter(std::ostream& out, PRETTY_FLAGS pretty=PRETTY_INDENT, const XMLHeader& header=XMLHeader())
+	 :	_pofstream(NULL),
+		_out(out),
+		_pretty(pretty)
+	{
+		header.print(_out, false);
+	}
+
+	XMLWriter(LPCTSTR path, PRETTY_FLAGS pretty=PRETTY_INDENT, const XMLHeader& header=XMLHeader())
+	 :	_pofstream(new tofstream(path)),
+		_out(*_pofstream),
+		_pretty(pretty)
+	{
+		header.print(_out, false);
+	}
+
+	~XMLWriter()
+	{
+		_out << std::endl;
+		delete _pofstream;
+	}
+
+	 /// create node and move to it
+	void create(const XS_String& name)
+	{
+		if (!_stack.empty()) {
+			StackEntry& last = _stack.top();
+
+			if (last._state < PRE_CLOSED) {
+				write_attributes(last);
+				close_pre(last);
+			}
+
+			++last._children;
+		}
+
+		StackEntry entry;
+		entry._node_name = name;
+		_stack.push(entry);
+
+		write_pre(entry);
+	}
+
+	 /// go back to previous position
+	bool back()
+	{
+		if (!_stack.empty()) {
+			write_post(_stack.top());
+
+			_stack.pop();
+			return true;
+		} else
+			return false;
+	}
+
+	 /// attribute setting
+	void put(const XS_String& attr_name, const XS_String& value)
+	{
+		if (!_stack.empty())
+			_stack.top()._attributes[attr_name] = value;
+	}
+
+	 /// C++ write access to an attribute
+	XS_String& operator[](const XS_String& attr_name)
+	{
+		if (_stack.empty())
+			return s_empty_attr;
+
+		return _stack.top()._attributes[attr_name];
+	}
+
+	void set_content(const XS_String& s)
+	{
+		if (!_stack.empty())
+			_stack.top()._content = s;
+	}
+
+	 // public for access in StackEntry
+	enum WRITESTATE {
+		NOTHING, /*PRE,*/ ATTRIBUTES, PRE_CLOSED, /*CONTENT,*/ POST
+	};
+
+protected:
+	tofstream*		_pofstream;
+	std::ostream&	_out;
+	PRETTY_FLAGS	_pretty;
+
+	typedef XMLNode::AttributeMap AttrMap;
+
+	struct StackEntry {
+		XS_String	_node_name;
+		AttrMap		_attributes;
+		std::string	_content;
+		WRITESTATE	_state;
+		bool		_children;
+
+		StackEntry() : _state(NOTHING), _children(false) {}
+	};
+
+	std::stack<StackEntry> _stack;
+
+	static XS_String s_empty_attr;
+
+	void close_pre(StackEntry& entry)
+	{
+		_out << '>';
+
+		entry._state = PRE_CLOSED;
+	}
+
+	void write_pre(StackEntry& entry)
+	{
+		if (_pretty >= PRETTY_LINEFEED)
+			_out << std::endl;
+
+		if (_pretty == PRETTY_INDENT)
+			for(int i=_stack.size(); --i>0; )
+				_out << XML_INDENT_SPACE;
+
+		_out << '<' << EncodeXMLString(entry._node_name);
+		//entry._state = PRE;
+	}
+
+	void write_attributes(StackEntry& entry)
+	{
+		for(AttrMap::const_iterator it=entry._attributes.begin(); it!=entry._attributes.end(); ++it)
+			_out << ' ' << EncodeXMLString(it->first) << "=\"" << EncodeXMLString(it->second) << "\"";
+
+		entry._state = ATTRIBUTES;
+	}
+
+	void write_post(StackEntry& entry)
+	{
+		if (entry._state < ATTRIBUTES)
+			write_attributes(entry);
+
+		if (entry._children || !entry._content.empty()) {
+			if (entry._state < PRE_CLOSED)
+				close_pre(entry);
+
+			_out << entry._content;
+			//entry._state = CONTENT;
+
+			if (_pretty>=PRETTY_LINEFEED && entry._content.empty())
+				_out << std::endl;
+
+			if (_pretty==PRETTY_INDENT && entry._content.empty())
+				for(int i=_stack.size(); --i>0; )
+					_out << XML_INDENT_SPACE;
+
+			_out << "</" << EncodeXMLString(entry._node_name) << ">";
+		} else {
+			_out << "/>";
+		}
+
+		entry._state = POST;
+	}
 };
 
 

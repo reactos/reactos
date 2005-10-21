@@ -9,6 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 /* SDK/DDK/NDK Headers. */
+#define WIN32_NO_STATUS
 #define NTOS_MODE_USER
 #define __GDI32__
 #include <windows.h>

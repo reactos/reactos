@@ -24,11 +24,9 @@
 #include "ldr.h"
 #include "kd.h"
 #include "ex.h"
-#include "xhal.h"
-#include "v86m.h"
-#include "fs.h"
-#include "port.h"
-#include "nls.h"
+#include "fsrtl.h"
+#include "lpc.h"
+#include "rtl.h"
 #ifdef KDBG
 #include "../kdbg/kdb.h"
 #endif
@@ -75,33 +73,95 @@ RtlpCreateUnicodeString(
    IN OUT PUNICODE_STRING UniDest,
    IN PCWSTR  Source,
    IN POOL_TYPE PoolType);
-   
-NTSTATUS
-RtlCaptureUnicodeString(
-    OUT PUNICODE_STRING Dest,
-    IN KPROCESSOR_MODE CurrentMode,
-    IN POOL_TYPE PoolType,
-    IN BOOLEAN CaptureIfKernel,
-    IN PUNICODE_STRING UnsafeSrc
-);
 
 VOID
-RtlReleaseCapturedUnicodeString(
-    IN PUNICODE_STRING CapturedString,
-    IN KPROCESSOR_MODE CurrentMode,
-    IN BOOLEAN CaptureIfKernel
-);
+NTAPI
+RtlpLogException(IN PEXCEPTION_RECORD ExceptionRecord,
+                 IN PCONTEXT ContextRecord,
+                 IN PVOID ContextData,
+                 IN ULONG Size);
+
+#define ExRaiseStatus RtlRaiseStatus
 
 /*
  * Inlined Probing Macros
- *
+ */
+static __inline
+NTSTATUS
+NTAPI
+ProbeAndCaptureUnicodeString(OUT PUNICODE_STRING Dest,
+                             KPROCESSOR_MODE CurrentMode,
+                             IN PUNICODE_STRING UnsafeSrc)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+    PVOID Buffer;
+    ASSERT(Dest != NULL);
+
+    /* Probe the structure and buffer*/
+    if(CurrentMode != KernelMode)
+    {
+        _SEH_TRY
+        {
+            ProbeForRead(UnsafeSrc,
+                         sizeof(UNICODE_STRING),
+                         sizeof(ULONG));
+            *Dest = *UnsafeSrc;
+            if(Dest->Length > 0)
+            {
+                ProbeForRead(Dest->Buffer,
+                             Dest->Length,
+                             sizeof(WCHAR));
+            }
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+
+        if (!NT_SUCCESS(Status)) return Status;
+    }
+    else
+    {
+        /* Just copy it directly */
+        *Dest = *UnsafeSrc;
+    }
+
+    /* Allocate space for the buffer */
+    Buffer = ExAllocatePool(PagedPool, Dest->MaximumLength);
+
+    if (Buffer != NULL)
+    {
+        /* Copy it */
+        RtlCopyMemory(Buffer, Dest->Buffer, Dest->MaximumLength);
+
+        /* Set it as the buffer */
+        Dest->Buffer = Buffer;
+    }
+    else
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Return */
+    return Status;
+}
+
+static __inline
+VOID
+NTAPI
+ReleaseCapturedUnicodeString(IN PUNICODE_STRING CapturedString,
+                             KPROCESSOR_MODE CurrentMode)
+{
+    if(CurrentMode != KernelMode) ExFreePool(CapturedString->Buffer);
+}
+
+/*
  * NOTE: Alignment of the pointers is not verified!
  */
 #define ProbeForWriteGenericType(Ptr, Type)                                    \
     do {                                                                       \
         if ((ULONG_PTR)(Ptr) + sizeof(Type) - 1 < (ULONG_PTR)(Ptr) ||          \
             (ULONG_PTR)(Ptr) + sizeof(Type) - 1 >= (ULONG_PTR)MmUserProbeAddress) { \
-            ExRaiseStatus (STATUS_ACCESS_VIOLATION);                           \
+            RtlRaiseStatus (STATUS_ACCESS_VIOLATION);                          \
         }                                                                      \
         *(volatile Type *)(Ptr) = *(volatile Type *)(Ptr);                     \
     } while (0)
@@ -146,6 +206,138 @@ RtlReleaseCapturedUnicodeString(
 #define ProbeForReadLangid(Ptr) ProbeForReadGenericType(Ptr, LANGID, 0)
 #define ProbeForReadLargeInteger(Ptr) ((LARGE_INTEGER)ProbeForReadGenericType(&(Ptr)->QuadPart, LONGLONG, 0))
 #define ProbeForReadUlargeInteger(Ptr) ((ULARGE_INTEGER)ProbeForReadGenericType(&(Ptr)->QuadPart, ULONGLONG, 0))
+
+/*
+ * generic information class probing code
+ */
+
+#define ICIF_QUERY               0x1
+#define ICIF_SET                 0x2
+#define ICIF_QUERY_SIZE_VARIABLE 0x4
+#define ICIF_SET_SIZE_VARIABLE   0x8
+#define ICIF_SIZE_VARIABLE (ICIF_QUERY_SIZE_VARIABLE | ICIF_SET_SIZE_VARIABLE)
+
+typedef struct _INFORMATION_CLASS_INFO
+{
+  ULONG RequiredSizeQUERY;
+  ULONG RequiredSizeSET;
+  ULONG AlignmentSET;
+  ULONG AlignmentQUERY;
+  ULONG Flags;
+} INFORMATION_CLASS_INFO, *PINFORMATION_CLASS_INFO;
+
+#define ICI_SQ_SAME(Size, Alignment, Flags)                                    \
+  { Size, Size, Alignment, Alignment, Flags }
+
+#define ICI_SQ(SizeQuery, SizeSet, AlignmentQuery, AlignmentSet, Flags)        \
+  { SizeQuery, SizeSet, AlignmentQuery, AlignmentSet, Flags }
+
+static inline NTSTATUS
+DefaultSetInfoBufferCheck(UINT Class,
+                          const INFORMATION_CLASS_INFO *ClassList,
+                          UINT ClassListEntries,
+                          PVOID Buffer,
+                          ULONG BufferLength,
+                          KPROCESSOR_MODE PreviousMode)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    if (Class >= 0 && Class < ClassListEntries)
+    {
+        if (!(ClassList[Class].Flags & ICIF_SET))
+        {
+            Status = STATUS_INVALID_INFO_CLASS;
+        }
+        else if (ClassList[Class].RequiredSizeSET > 0 &&
+                 BufferLength != ClassList[Class].RequiredSizeSET)
+        {
+            if (!(ClassList[Class].Flags & ICIF_SET_SIZE_VARIABLE))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+            }
+        }
+
+        if (NT_SUCCESS(Status))
+        {
+            if (PreviousMode != KernelMode)
+            {
+                _SEH_TRY
+                {
+                    ProbeForRead(Buffer,
+                                 BufferLength,
+                                 ClassList[Class].AlignmentSET);
+                }
+                _SEH_HANDLE
+                {
+                    Status = _SEH_GetExceptionCode();
+                }
+                _SEH_END;
+            }
+        }
+    }
+    else
+        Status = STATUS_INVALID_INFO_CLASS;
+
+    return Status;
+}
+
+static inline NTSTATUS
+DefaultQueryInfoBufferCheck(UINT Class,
+                            const INFORMATION_CLASS_INFO *ClassList,
+                            UINT ClassListEntries,
+                            PVOID Buffer,
+                            ULONG BufferLength,
+                            PULONG ReturnLength,
+                            KPROCESSOR_MODE PreviousMode)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    if (Class >= 0 && Class < ClassListEntries)
+    {
+        if (!(ClassList[Class].Flags & ICIF_QUERY))
+        {
+            Status = STATUS_INVALID_INFO_CLASS;
+        }
+        else if (ClassList[Class].RequiredSizeQUERY > 0 &&
+                 BufferLength != ClassList[Class].RequiredSizeQUERY)
+        {
+            if (!(ClassList[Class].Flags & ICIF_QUERY_SIZE_VARIABLE))
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+            }
+        }
+
+        if (NT_SUCCESS(Status))
+        {
+            if (PreviousMode != KernelMode)
+            {
+                _SEH_TRY
+                {
+                    if (Buffer != NULL)
+                    {
+                        ProbeForWrite(Buffer,
+                                      BufferLength,
+                                      ClassList[Class].AlignmentQUERY);
+                    }
+
+                    if (ReturnLength != NULL)
+                    {
+                        ProbeForWriteUlong(ReturnLength);
+                    }
+                }
+                _SEH_HANDLE
+                {
+                    Status = _SEH_GetExceptionCode();
+                }
+                _SEH_END;
+            }
+        }
+    }
+    else
+        Status = STATUS_INVALID_INFO_CLASS;
+
+    return Status;
+}
 
 /*
  * Use IsPointerOffset to test whether a pointer should be interpreted as an offset

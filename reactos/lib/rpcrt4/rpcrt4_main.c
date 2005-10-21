@@ -129,7 +129,7 @@ static CRITICAL_SECTION_DEBUG critsect_debug =
 {
     0, 0, &uuid_cs,
     { &critsect_debug.ProcessLocksList, &critsect_debug.ProcessLocksList },
-      0, 0, { 0, (DWORD)(__FILE__ ": uuid_cs") }
+      0, 0, { (DWORD_PTR)(__FILE__ ": uuid_cs") }
 };
 static CRITICAL_SECTION uuid_cs = { &critsect_debug, -1, 0, 0, 0, 0 };
 

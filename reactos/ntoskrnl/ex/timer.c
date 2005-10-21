@@ -545,13 +545,13 @@ NtQueryTimer(IN HANDLE TimerHandle,
     DPRINT("NtQueryTimer(TimerHandle: 0x%p, Class: %d)\n", TimerHandle, TimerInformationClass);
 
     /* Check Validity */
-    DefaultQueryInfoBufferCheck(TimerInformationClass,
-                                ExTimerInfoClass,
-                                TimerInformation,
-                                TimerInformationLength,
-                                ReturnLength,
-                                PreviousMode,
-                                &Status);
+    Status = DefaultQueryInfoBufferCheck(TimerInformationClass,
+                                         ExTimerInfoClass,
+                                         sizeof(ExTimerInfoClass) / sizeof(ExTimerInfoClass[0]),
+                                         TimerInformation,
+                                         TimerInformationLength,
+                                         ReturnLength,
+                                         PreviousMode);
     if(!NT_SUCCESS(Status))
     {
         DPRINT1("NtQueryTimer() failed, Status: 0x%x\n", Status);

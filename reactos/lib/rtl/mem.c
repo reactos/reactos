@@ -12,6 +12,10 @@
 #define NDEBUG
 #include <debug.h>
 
+#undef RtlUlonglongByteSwap
+#undef RtlUlongByteSwap
+#undef RtlUshortByteSwap
+
 /* FUNCTIONS *****************************************************************/
 
 /******************************************************************************
@@ -30,7 +34,7 @@
  *
  * @implemented
  */
-SIZE_T STDCALL
+SIZE_T NTAPI
 RtlCompareMemory(IN const VOID *Source1,
                  IN const VOID *Source2,
                  IN SIZE_T Length)
@@ -46,7 +50,7 @@ RtlCompareMemory(IN const VOID *Source1,
  * @implemented
  */
 ULONG
-STDCALL
+NTAPI
 RtlCompareMemoryUlong (
    PVOID Source,
    ULONG Length,
@@ -81,7 +85,7 @@ RtlCompareMemoryUlong (
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 RtlFillMemory (
    PVOID Destination,
    ULONG Length,
@@ -97,7 +101,7 @@ RtlFillMemory (
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 RtlFillMemoryUlong (
    PVOID Destination,
    ULONG Length,
@@ -121,7 +125,7 @@ RtlFillMemoryUlong (
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 RtlMoveMemory (
    PVOID    Destination,
    CONST VOID  * Source,
@@ -154,7 +158,7 @@ RtlPrefetchMemoryNonTemporal(
  * @implemented
  */
 VOID
-STDCALL
+NTAPI
 RtlZeroMemory (
    PVOID Destination,
    ULONG Length

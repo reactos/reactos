@@ -1,7 +1,7 @@
 /*
  * Implementation of the Microsoft Installer (msi.dll)
  *
- * Copyright 2002-2004 Mike McCormack for CodeWeavers
+ * Copyright 2002-2005 Mike McCormack for CodeWeavers
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -41,9 +41,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
 typedef struct tagMSICOLUMNINFO
 {
-    LPWSTR tablename;
+    LPCWSTR tablename;
     UINT   number;
-    LPWSTR colname;
+    LPCWSTR colname;
     UINT   type;
     UINT   offset;
 } MSICOLUMNINFO;
@@ -51,10 +51,8 @@ typedef struct tagMSICOLUMNINFO
 struct tagMSITABLE
 {
     USHORT **data;
-    UINT ref_count;
     UINT row_count;
-    struct tagMSITABLE *next;
-    struct tagMSITABLE *prev;
+    struct list entry;
     WCHAR name[1];
 };
 
@@ -64,8 +62,9 @@ static UINT table_get_column_info( MSIDATABASE *db, LPCWSTR name,
        MSICOLUMNINFO **pcols, UINT *pcount );
 static UINT get_tablecolumns( MSIDATABASE *db, 
        LPCWSTR szTableName, MSICOLUMNINFO *colinfo, UINT *sz);
+static void msi_free_colinfo( MSICOLUMNINFO *colinfo, UINT count );
 
-static inline UINT bytes_per_column( MSICOLUMNINFO *col )
+static inline UINT bytes_per_column( const MSICOLUMNINFO *col )
 {
     if( col->type & MSITYPE_STRING )
         return 2;
@@ -97,7 +96,7 @@ static LPWSTR encode_streamname(BOOL bTable, LPCWSTR in)
 
     if( !bTable )
         count = lstrlenW( in )+2;
-    out = HeapAlloc( GetProcessHeap(), 0, count*sizeof(WCHAR) );
+    out = msi_alloc( count*sizeof(WCHAR) );
     p = out;
 
     if( bTable )
@@ -131,7 +130,7 @@ static LPWSTR encode_streamname(BOOL bTable, LPCWSTR in)
         *p++ = ch;
     }
     ERR("Failed to encode stream name (%s)\n",debugstr_w(in));
-    HeapFree( GetProcessHeap(), 0, out );
+    msi_free( out );
     return NULL;
 }
 
@@ -219,7 +218,7 @@ static UINT read_stream_data( IStorage *stg, LPCWSTR stname,
 
     r = IStorage_OpenStream(stg, encname, NULL, 
             STGM_READ | STGM_SHARE_EXCLUSIVE, 0, &stm);
-    HeapFree( GetProcessHeap(), 0, encname );
+    msi_free( encname );
     if( FAILED( r ) )
     {
         WARN("open stream failed r = %08lx - empty table?\n",r);
@@ -240,7 +239,7 @@ static UINT read_stream_data( IStorage *stg, LPCWSTR stname,
     }
         
     sz = stat.cbSize.QuadPart;
-    data = HeapAlloc( GetProcessHeap(), 0, sz );
+    data = msi_alloc( sz );
     if( !data )
     {
         WARN("couldn't allocate memory r=%08lx!\n",r);
@@ -251,7 +250,7 @@ static UINT read_stream_data( IStorage *stg, LPCWSTR stname,
     r = IStream_Read(stm, data, sz, &count );
     if( FAILED( r ) || ( count != sz ) )
     {
-        HeapFree( GetProcessHeap(), 0, data );
+        msi_free( data );
         WARN("read stream failed r = %08lx!\n",r);
         goto end;
     }
@@ -277,7 +276,7 @@ UINT db_get_raw_stream( MSIDATABASE *db, LPCWSTR stname, IStream **stm )
 
     r = IStorage_OpenStream(db->storage, encname, NULL, 
             STGM_READ | STGM_SHARE_EXCLUSIVE, 0, stm);
-    HeapFree( GetProcessHeap(), 0, encname );
+    msi_free( encname );
     if( FAILED( r ) )
     {
         WARN("open stream failed r = %08lx - empty table?\n",r);
@@ -314,7 +313,7 @@ UINT read_raw_stream_data( MSIDATABASE *db, LPCWSTR stname,
     }
         
     sz = stat.cbSize.QuadPart;
-    data = HeapAlloc( GetProcessHeap(), 0, sz );
+    data = msi_alloc( sz );
     if( !data )
     {
         WARN("couldn't allocate memory r=%08lx!\n",r);
@@ -325,7 +324,7 @@ UINT read_raw_stream_data( MSIDATABASE *db, LPCWSTR stname,
     r = IStream_Read(stm, data, sz, &count );
     if( FAILED( r ) || ( count != sz ) )
     {
-        HeapFree( GetProcessHeap(), 0, data );
+        msi_free( data );
         WARN("read stream failed r = %08lx!\n",r);
         goto end;
     }
@@ -359,7 +358,7 @@ static UINT write_stream_data( IStorage *stg, LPCWSTR stname,
         r = IStorage_CreateStream( stg, encname,
                 STGM_WRITE | STGM_SHARE_EXCLUSIVE, 0, 0, &stm);
     }
-    HeapFree( GetProcessHeap(), 0, encname );
+    msi_free( encname );
     if( FAILED( r ) )
     {
         WARN("open stream failed r = %08lx\n",r);
@@ -397,62 +396,70 @@ end:
     return ret;
 }
 
-static UINT read_table_from_storage( MSIDATABASE *db, LPCWSTR name, MSITABLE **ptable)
+static void free_table( MSITABLE *table )
+{
+    int i;
+    for( i=0; i<table->row_count; i++ )
+        msi_free( table->data[i] );
+    msi_free( table->data );
+    msi_free( table );
+}
+
+static UINT msi_table_get_row_size( const MSICOLUMNINFO *cols, UINT count )
+{
+    const MSICOLUMNINFO *last_col = &cols[count-1];
+    if (!count)
+        return 0;
+    return last_col->offset + bytes_per_column( last_col );
+}
+
+/* add this table to the list of cached tables in the database */
+static MSITABLE *read_table_from_storage( IStorage *stg, LPCWSTR name,
+                                    const MSICOLUMNINFO *cols, UINT num_cols )
 {
     MSITABLE *t;
     USHORT *rawdata = NULL;
-    UINT rawsize = 0, r, i, j, row_size = 0, num_cols = 0;
-    MSICOLUMNINFO *cols, *last_col;
+    UINT rawsize = 0, i, j, row_size = 0;
 
     TRACE("%s\n",debugstr_w(name));
 
     /* nonexistent tables should be interpreted as empty tables */
-    t = HeapAlloc( GetProcessHeap(), 0, 
-                   sizeof (MSITABLE) + lstrlenW(name)*sizeof (WCHAR) );
+    t = msi_alloc( sizeof (MSITABLE) + lstrlenW(name)*sizeof (WCHAR) );
     if( !t )
-        return ERROR_NOT_ENOUGH_MEMORY;
+        return t;
 
-    r = table_get_column_info( db, name, &cols, &num_cols );
-    if( r != ERROR_SUCCESS )
-    {
-        HeapFree( GetProcessHeap(), 0, t );
-        return r;
-    }
-    last_col = &cols[num_cols-1];
-    row_size = last_col->offset + bytes_per_column( last_col );
+    row_size = msi_table_get_row_size( cols, num_cols );
 
     t->row_count = 0;
     t->data = NULL;
     lstrcpyW( t->name, name );
-    t->ref_count = 1;
-    *ptable = t;
 
     /* if we can't read the table, just assume that it's empty */
-    read_stream_data( db->storage, name, &rawdata, &rawsize );
+    read_stream_data( stg, name, &rawdata, &rawsize );
     if( !rawdata )
-        return ERROR_SUCCESS;
+        return t;
 
     TRACE("Read %d bytes\n", rawsize );
 
     if( rawsize % row_size )
     {
         WARN("Table size is invalid %d/%d\n", rawsize, row_size );
-        return ERROR_FUNCTION_FAILED;
+        goto err;
     }
 
     t->row_count = rawsize / row_size;
-    t->data = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, 
-                         t->row_count * sizeof (USHORT*) );
+    t->data = msi_alloc_zero( t->row_count * sizeof (USHORT*) );
     if( !t->data )
-        return ERROR_NOT_ENOUGH_MEMORY;  /* FIXME: memory leak */
+        goto err;
 
     /* transpose all the data */
     TRACE("Transposing data from %d columns\n", t->row_count );
     for( i=0; i<t->row_count; i++ )
     {
-        t->data[i] = HeapAlloc( GetProcessHeap(), 0, row_size );
+        t->data[i] = msi_alloc( row_size );
         if( !t->data[i] )
-            return ERROR_NOT_ENOUGH_MEMORY;  /* FIXME: memory leak */
+            goto err;
+
         for( j=0; j<num_cols; j++ )
         {
             UINT ofs = cols[j].offset/2;
@@ -469,91 +476,44 @@ static UINT read_table_from_storage( MSIDATABASE *db, LPCWSTR name, MSITABLE **p
                 break;
             default:
                 ERR("oops - unknown column width %d\n", n);
-                return ERROR_FUNCTION_FAILED;
+                goto err;
             }
         }
     }
 
-    HeapFree( GetProcessHeap(), 0, cols );
-    HeapFree( GetProcessHeap(), 0, rawdata );
-
-    return ERROR_SUCCESS;
-}
-
-/* add this table to the list of cached tables in the database */
-void add_table(MSIDATABASE *db, MSITABLE *table)
-{
-    table->next = db->first_table;
-    table->prev = NULL;
-    if( db->first_table )
-        db->first_table->prev = table;
-    else
-        db->last_table = table;
-    db->first_table = table;
-}
- 
-/* remove from the list of cached tables */
-void remove_table( MSIDATABASE *db, MSITABLE *table )
-{
-    if( table->next )
-        table->next->prev = table->prev;
-    else
-        db->last_table = table->prev;
-    if( table->prev )
-        table->prev->next = table->next;
-    else
-        db->first_table = table->next;
-    table->next = NULL;
-    table->prev = NULL;
-}
-
-static void release_table( MSIDATABASE *db, MSITABLE *table )
-{
-    if( !table->ref_count )
-        ERR("Trying to destroy table with refcount 0\n");
-    table->ref_count --;
-    if( !table->ref_count )
-    {
-        remove_table( db, table );
-        HeapFree( GetProcessHeap(), 0, table->data );
-        HeapFree( GetProcessHeap(), 0, table );
-        TRACE("Destroyed table %s\n", debugstr_w(table->name));
-    }
+    msi_free( rawdata );
+    return t;
+err:
+    msi_free( rawdata );
+    free_table( t );
+    return NULL;
 }
 
 void free_cached_tables( MSIDATABASE *db )
 {
-    while( db->first_table )
+    while( !list_empty( &db->tables ) )
     {
-        MSITABLE *t = db->first_table;
+        MSITABLE *t = LIST_ENTRY( list_head( &db->tables ), MSITABLE, entry );
 
-        if ( --t->ref_count )
-            ERR("table ref count not zero for %s\n", debugstr_w(t->name));
-        remove_table( db, t );
-        HeapFree( GetProcessHeap(), 0, t->data );
-        HeapFree( GetProcessHeap(), 0, t );
+        list_remove( &t->entry );
+        free_table( t );
     }
 }
 
-UINT find_cached_table(MSIDATABASE *db, LPCWSTR name, MSITABLE **ptable)
+static MSITABLE *find_cached_table( MSIDATABASE *db, LPCWSTR name )
 {
     MSITABLE *t;
 
-    for( t = db->first_table; t; t=t->next )
-    {
+    LIST_FOR_EACH_ENTRY( t, &db->tables, MSITABLE, entry )
         if( !lstrcmpW( name, t->name ) )
-        {
-            *ptable = t;
-            return ERROR_SUCCESS;
-        }
-    }
+            return t;
 
-    return ERROR_FUNCTION_FAILED;
+    return NULL;
 }
 
 static UINT table_get_column_info( MSIDATABASE *db, LPCWSTR name, MSICOLUMNINFO **pcols, UINT *pcount )
 {
-    UINT r, column_count;
+    UINT r, column_count = 0;
     MSICOLUMNINFO *columns;
 
     /* get the number of columns in this table */
@@ -568,14 +528,14 @@ static UINT table_get_column_info( MSIDATABASE *db, LPCWSTR name, MSICOLUMNINFO 
 
     TRACE("Table %s found\n", debugstr_w(name) );
 
-    columns = HeapAlloc( GetProcessHeap(), 0, column_count*sizeof (MSICOLUMNINFO));
+    columns = msi_alloc( column_count*sizeof (MSICOLUMNINFO) );
     if( !columns )
         return ERROR_FUNCTION_FAILED;
 
     r = get_tablecolumns( db, name, columns, &column_count );
     if( r != ERROR_SUCCESS )
     {
-        HeapFree( GetProcessHeap(), 0, columns );
+        msi_free( columns );
         return ERROR_FUNCTION_FAILED;
     }
 
@@ -585,36 +545,28 @@ static UINT table_get_column_info( MSIDATABASE *db, LPCWSTR name, MSICOLUMNINFO 
     return r;
 }
 
-UINT get_table(MSIDATABASE *db, LPCWSTR name, MSITABLE **ptable)
+static MSITABLE *get_table( MSIDATABASE *db, LPCWSTR name,
+                            const MSICOLUMNINFO *cols, UINT num_cols )
 {
-    UINT r;
-
-    *ptable = NULL;
+    MSITABLE *table;
 
     /* first, see if the table is cached */
-    r = find_cached_table( db, name, ptable );
-    if( r == ERROR_SUCCESS )
-    {
-        (*ptable)->ref_count++;
-        return r;
-    }
+    table = find_cached_table( db, name );
+    if( table )
+        return table;
 
-    r = read_table_from_storage( db, name, ptable );
-    if( r != ERROR_SUCCESS )
-        return r;
+    table = read_table_from_storage( db->storage, name, cols, num_cols );
+    if( table )
+        list_add_head( &db->tables, &table->entry );
 
-    /* add the table to the list */
-    add_table( db, *ptable );
-    (*ptable)->ref_count++;
-
-    return ERROR_SUCCESS;
+    return table;
 }
 
 static UINT save_table( MSIDATABASE *db, MSITABLE *t )
 {
     USHORT *rawdata = NULL, *p;
     UINT rawsize, r, i, j, row_size, num_cols = 0;
-    MSICOLUMNINFO *cols, *last_col;
+    MSICOLUMNINFO *cols = NULL;
 
     TRACE("Saving %s\n", debugstr_w( t->name ) );
 
@@ -622,13 +574,15 @@ static UINT save_table( MSIDATABASE *db, MSITABLE *t )
     if( r != ERROR_SUCCESS )
         return r;
     
-    last_col = &cols[num_cols-1];
-    row_size = last_col->offset + bytes_per_column( last_col );
+    row_size = msi_table_get_row_size( cols, num_cols );
 
     rawsize = t->row_count * row_size;
-    rawdata = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, rawsize );
+    rawdata = msi_alloc_zero( rawsize );
     if( !rawdata )
-        return ERROR_NOT_ENOUGH_MEMORY;
+    {
+        r = ERROR_NOT_ENOUGH_MEMORY;
+        goto err;
+    }
 
     p = rawdata;
     for( i=0; i<num_cols; i++ )
@@ -646,7 +600,10 @@ static UINT save_table( MSIDATABASE *db, MSITABLE *t )
     TRACE("writing %d bytes\n", rawsize);
     r = write_stream_data( db->storage, t->name, rawdata, rawsize );
 
-    HeapFree( GetProcessHeap(), 0, rawdata );
+err:
+    msi_free_colinfo( cols, num_cols );
+    msi_free( cols );
+    msi_free( rawdata );
 
     return r;
 }
@@ -668,7 +625,7 @@ HRESULT init_string_table( IStorage *stg )
     /* create the StringPool stream... add the zero string to it*/
     r = IStorage_CreateStream( stg, encname,
             STGM_WRITE | STGM_SHARE_EXCLUSIVE, 0, 0, &stm);
-    HeapFree( GetProcessHeap(), 0, encname );
+    msi_free( encname );
     if( r ) 
     {
         TRACE("Failed\n");
@@ -688,7 +645,7 @@ HRESULT init_string_table( IStorage *stg )
     encname = encode_streamname(TRUE, szStringData );
     r = IStorage_CreateStream( stg, encname,
             STGM_WRITE | STGM_SHARE_EXCLUSIVE, 0, 0, &stm);
-    HeapFree( GetProcessHeap(), 0, encname );
+    msi_free( encname );
     if( r ) 
     {
         TRACE("Failed\n");
@@ -699,27 +656,22 @@ HRESULT init_string_table( IStorage *stg )
     return r;
 }
 
-UINT load_string_table( MSIDATABASE *db )
+string_table *load_string_table( IStorage *stg )
 {
+    string_table *st = NULL;
     CHAR *data;
     USHORT *pool;
-    UINT r, ret = ERROR_FUNCTION_FAILED, datasize = 0, poolsize = 0, codepage;
+    UINT r, datasize = 0, poolsize = 0, codepage;
     DWORD i, count, offset, len, n;
     static const WCHAR szStringData[] = {
         '_','S','t','r','i','n','g','D','a','t','a',0 };
     static const WCHAR szStringPool[] = {
         '_','S','t','r','i','n','g','P','o','o','l',0 };
 
-    if( db->strings )
-    {
-        msi_destroy_stringtable( db->strings );
-        db->strings = NULL;
-    }
-
-    r = read_stream_data( db->storage, szStringPool, &pool, &poolsize );
+    r = read_stream_data( stg, szStringPool, &pool, &poolsize );
     if( r != ERROR_SUCCESS)
         goto end;
-    r = read_stream_data( db->storage, szStringData, (USHORT**)&data, &datasize );
+    r = read_stream_data( stg, szStringData, (USHORT**)&data, &datasize );
     if( r != ERROR_SUCCESS)
         goto end;
 
@@ -728,7 +680,7 @@ UINT load_string_table( MSIDATABASE *db )
         codepage = pool[0] | ( pool[1] << 16 );
     else
         codepage = CP_ACP;
-    db->strings = msi_init_stringtable( count, codepage );
+    st = msi_init_stringtable( count, codepage );
 
     offset = 0;
     n = 1;
@@ -753,7 +705,7 @@ UINT load_string_table( MSIDATABASE *db )
         /* don't add the high word of a string's length as a string */
         if ( len || !pool[i*2+1] )
         {
-            r = msi_addstring( db->strings, n, data+offset, len, pool[i*2+1] );
+            r = msi_addstring( st, n, data+offset, len, pool[i*2+1] );
             if( r != n )
                 ERR("Failed to add string %ld\n", n );
             n++;
@@ -767,13 +719,11 @@ UINT load_string_table( MSIDATABASE *db )
 
     TRACE("Loaded %ld strings\n", count);
 
-    ret = ERROR_SUCCESS;
-
 end:
-    HeapFree( GetProcessHeap(), 0, pool );
-    HeapFree( GetProcessHeap(), 0, data );
+    msi_free( pool );
+    msi_free( data );
 
-    return ret;
+    return st;
 }
 
 static UINT save_string_table( MSIDATABASE *db )
@@ -793,13 +743,13 @@ static UINT save_string_table( MSIDATABASE *db )
     datasize = msi_string_totalsize( db->strings, &count );
     poolsize = count*2*sizeof(USHORT);
 
-    pool = HeapAlloc( GetProcessHeap(), 0, poolsize );
+    pool = msi_alloc( poolsize );
     if( ! pool )
     {
         WARN("Failed to alloc pool %d bytes\n", poolsize );
         goto err;
     }
-    data = HeapAlloc( GetProcessHeap(), 0, datasize );
+    data = msi_alloc( datasize );
     if( ! data )
     {
         WARN("Failed to alloc data %d bytes\n", poolsize );
@@ -821,7 +771,7 @@ static UINT save_string_table( MSIDATABASE *db )
         }
         if( sz && (sz < (datasize - used ) ) )
             sz--;
-        TRACE("adding %u bytes %s\n", sz, data+used );
+        TRACE("adding %u bytes %s\n", sz, debugstr_a(data+used) );
         pool[ i*2 ] = sz;
         pool[ i*2 + 1 ] = msi_id_refcount( db->strings, i );
         used += sz;
@@ -851,8 +801,8 @@ static UINT save_string_table( MSIDATABASE *db )
     ret = ERROR_SUCCESS;
 
 err:
-    HeapFree( GetProcessHeap(), 0, data );
-    HeapFree( GetProcessHeap(), 0, pool );
+    msi_free( data );
+    msi_free( pool );
 
     return ret;
 }
@@ -866,51 +816,61 @@ static const WCHAR szColumn[]  = { 'C','o','l','u','m','n',0 };
 static const WCHAR szNumber[]  = { 'N','u','m','b','e','r',0 };
 static const WCHAR szType[]    = { 'T','y','p','e',0 };
 
-struct standard_table {
-    LPCWSTR tablename;
-    LPCWSTR columnname;
-    UINT number;
-    UINT type;
-} MSI_standard_tables[] =
-{
-  { szTables,  szName,   1, MSITYPE_VALID | MSITYPE_STRING | 32},
-  { szColumns, szTable,  1, MSITYPE_VALID | MSITYPE_STRING | 32},
-  { szColumns, szNumber, 2, MSITYPE_VALID | 2},
-  { szColumns, szName,   3, MSITYPE_VALID | MSITYPE_STRING | 32},
-  { szColumns, szType,   4, MSITYPE_VALID | 2},
+static const MSICOLUMNINFO _Columns_cols[4] = {
+    { szColumns, 1, szTable,  MSITYPE_VALID | MSITYPE_STRING | 64, 0 },
+    { szColumns, 2, szNumber, MSITYPE_VALID | 2,                   2 },
+    { szColumns, 3, szName,   MSITYPE_VALID | MSITYPE_STRING | 64, 4 },
+    { szColumns, 4, szType,   MSITYPE_VALID | 2,                   6 },
+};
+static const MSICOLUMNINFO _Tables_cols[1] = {
+    { szTables,  1, szName,   MSITYPE_VALID | MSITYPE_STRING | 64, 0 },
 };
 
-#define STANDARD_TABLE_COUNT \
-     (sizeof(MSI_standard_tables)/sizeof(struct standard_table))
-
-static UINT get_defaulttablecolumns( LPCWSTR szTable, MSICOLUMNINFO *colinfo, UINT *sz)
+static UINT get_defaulttablecolumns( LPCWSTR name, MSICOLUMNINFO *colinfo, UINT *sz)
 {
-    DWORD i, n=0;
+    const MSICOLUMNINFO *p;
+    DWORD i, n;
 
-    for(i=0; i<STANDARD_TABLE_COUNT; i++)
+    TRACE("%s\n", debugstr_w(name));
+
+    if (!lstrcmpW( name, szTables ))
     {
-        if( lstrcmpW( szTable, MSI_standard_tables[i].tablename ) )
-            continue;
-        if(colinfo && (n < *sz) )
+        p = _Tables_cols;
+        n = 1;
+    }
+    else if (!lstrcmpW( name, szColumns ))
+    {
+        p = _Columns_cols;
+        n = 4;
+    }
+    else
+        return ERROR_FUNCTION_FAILED;
+
+    /* duplicate the string data so we can free it in msi_free_colinfo */
+    for (i=0; i<n; i++)
+    {
+        if (colinfo && (i < *sz) )
         {
-            colinfo[n].tablename = strdupW(MSI_standard_tables[i].tablename);
-            colinfo[n].colname = strdupW(MSI_standard_tables[i].columnname);
-            colinfo[n].number = MSI_standard_tables[i].number;
-            colinfo[n].type = MSI_standard_tables[i].type;
-            /* ERR("Table %s has column %s\n",debugstr_w(colinfo[n].tablename),
-                    debugstr_w(colinfo[n].colname)); */
-            if( n )
-                colinfo[n].offset = colinfo[n-1].offset
-                                  + bytes_per_column( &colinfo[n-1] );
-            else
-                colinfo[n].offset = 0;
+            memcpy( &colinfo[i], &p[i], sizeof(MSICOLUMNINFO) );
+            colinfo[i].tablename = strdupW( p[i].tablename );
+            colinfo[i].colname = strdupW( p[i].colname );
         }
-        n++;
-        if( colinfo && (n >= *sz) )
+        if( colinfo && (i >= *sz) )
             break;
     }
     *sz = n;
     return ERROR_SUCCESS;
+}
+
+static void msi_free_colinfo( MSICOLUMNINFO *colinfo, UINT count )
+{
+    UINT i;
+
+    for( i=0; i<count; i++ )
+    {
+        msi_free( (LPWSTR) colinfo[i].tablename );
+        msi_free( (LPWSTR) colinfo[i].colname );
+    }
 }
 
 LPWSTR MSI_makestring( MSIDATABASE *db, UINT stringid)
@@ -921,13 +881,13 @@ LPWSTR MSI_makestring( MSIDATABASE *db, UINT stringid)
     r = msi_id2stringW( db->strings, stringid, NULL, &sz );
     if( r != ERROR_SUCCESS )
         return NULL;
-    str = HeapAlloc( GetProcessHeap(), 0, sz*sizeof (WCHAR));
+    str = msi_alloc( sz*sizeof (WCHAR) );
     if( !str )
         return str;
     r = msi_id2stringW( db->strings, stringid, str, &sz );
     if( r == ERROR_SUCCESS )
         return str;
-    HeapFree(  GetProcessHeap(), 0, str );
+    msi_free( str );
     return NULL;
 }
 
@@ -936,25 +896,23 @@ static UINT get_tablecolumns( MSIDATABASE *db,
 {
     UINT r, i, n=0, table_id, count, maxcount = *sz;
     MSITABLE *table = NULL;
-    static const WCHAR szColumns[] = { '_','C','o','l','u','m','n','s',0 };
 
     /* first check if there is a default table with that name */
     r = get_defaulttablecolumns( szTableName, colinfo, sz );
     if( ( r == ERROR_SUCCESS ) && *sz )
         return r;
 
-    r = get_table( db, szColumns, &table);
-    if( r != ERROR_SUCCESS )
+    table = get_table( db, szColumns, _Columns_cols, 4 );
+    if( !table )
     {
-        WARN("table %s not available\n", debugstr_w(szColumns));
-        return r;
+        ERR("couldn't load _Columns table\n");
+        return ERROR_FUNCTION_FAILED;
     }
 
     /* convert table and column names to IDs from the string table */
     r = msi_string2idW( db->strings, szTableName, &table_id );
     if( r != ERROR_SUCCESS )
     {
-        release_table( db, table );
         WARN("Couldn't find id for %s\n", debugstr_w(szTableName));
         return r;
     }
@@ -972,7 +930,7 @@ static UINT get_tablecolumns( MSIDATABASE *db,
             colinfo[n].tablename = MSI_makestring( db, table_id );
             colinfo[n].number = table->data[ i ][ 1 ] - (1<<15);
             colinfo[n].colname = MSI_makestring( db, id );
-            colinfo[n].type = table->data[ i ] [ 3 ];
+            colinfo[n].type = table->data[ i ] [ 3 ] ^ 0x8000;
             /* this assumes that columns are in order in the table */
             if( n )
                 colinfo[n].offset = colinfo[n-1].offset
@@ -996,16 +954,12 @@ static UINT get_tablecolumns( MSIDATABASE *db,
     }
     *sz = n;
 
-    release_table( db, table );
-
     return ERROR_SUCCESS;
 }
 
 /* try to find the table name in the _Tables table */
 BOOL TABLE_Exists( MSIDATABASE *db, LPWSTR name )
 {
-    static const WCHAR szTables[] = { '_','T','a','b','l','e','s',0 };
-    static const WCHAR szColumns[] = { '_','C','o','l','u','m','n','s',0 };
     UINT r, table_id = 0, i, count;
     MSITABLE *table = NULL;
 
@@ -1021,8 +975,8 @@ BOOL TABLE_Exists( MSIDATABASE *db, LPWSTR name )
         return FALSE;
     }
 
-    r = get_table( db, szTables, &table);
-    if( r != ERROR_SUCCESS )
+    table = get_table( db, szTables, _Tables_cols, 1 );
+    if( !table )
     {
         TRACE("table %s not available\n", debugstr_w(szTables));
         return FALSE;
@@ -1033,8 +987,6 @@ BOOL TABLE_Exists( MSIDATABASE *db, LPWSTR name )
     for( i=0; i<count; i++ )
         if( table->data[ i ][ 0 ] == table_id )
             break;
-
-    release_table( db, table );
 
     if (i!=count)
         return TRUE;
@@ -1141,7 +1093,7 @@ static UINT TABLE_fetch_stream( struct tagMSIVIEW *view, UINT row, UINT col, ISt
         return ERROR_INVALID_PARAMETER;
 
     len = lstrlenW( tv->name ) + 2 + lstrlenW( sval );
-    full_name = HeapAlloc( GetProcessHeap(), 0, len*sizeof(WCHAR) );
+    full_name = msi_alloc( len*sizeof(WCHAR) );
     lstrcpyW( full_name, tv->name );
     lstrcatW( full_name, szDot );
     lstrcatW( full_name, sval );
@@ -1149,8 +1101,8 @@ static UINT TABLE_fetch_stream( struct tagMSIVIEW *view, UINT row, UINT col, ISt
     r = db_get_raw_stream( tv->db, full_name, stm );
     if( r )
         ERR("fetching stream %s, error = %d\n",debugstr_w(full_name), r);
-    HeapFree( GetProcessHeap(), 0, full_name );
-    HeapFree( GetProcessHeap(), 0, sval );
+    msi_free( full_name );
+    msi_free( sval );
 
     return r;
 }
@@ -1203,18 +1155,18 @@ static UINT table_create_new_row( struct tagMSIVIEW *view, UINT *num )
     if( !tv->table )
         return ERROR_INVALID_PARAMETER;
 
-    row = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, tv->row_size );
+    row = msi_alloc_zero( tv->row_size );
     if( !row )
         return ERROR_NOT_ENOUGH_MEMORY;
 
     sz = (tv->table->row_count + 1) * sizeof (UINT*);
     if( tv->table->data )
-        p = HeapReAlloc( GetProcessHeap(), 0, tv->table->data, sz );
+        p = msi_realloc( tv->table->data, sz );
     else
-        p = HeapAlloc( GetProcessHeap(), 0, sz );
+        p = msi_alloc( sz );
     if( !p )
     {
-        HeapFree( GetProcessHeap(), 0, row );
+        msi_free( row );
         return ERROR_NOT_ENOUGH_MEMORY;
     }
 
@@ -1229,19 +1181,13 @@ static UINT table_create_new_row( struct tagMSIVIEW *view, UINT *num )
 static UINT TABLE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
 {
     MSITABLEVIEW *tv = (MSITABLEVIEW*)view;
-    UINT r;
 
     TRACE("%p %p\n", tv, record);
 
-    if( tv->table )
-    {
-        release_table( tv->db, tv->table );
-        tv->table = NULL;
-    }
-
-    r = get_table( tv->db, tv->name, &tv->table );
-    if( r != ERROR_SUCCESS )
-        return r;
+    TRACE("There are %d columns\n", tv->num_cols );
+    tv->table = get_table( tv->db, tv->name, tv->columns, tv->num_cols );
+    if( !tv->table )
+        return ERROR_FUNCTION_FAILED;
 
     return ERROR_SUCCESS;
 }
@@ -1255,7 +1201,6 @@ static UINT TABLE_close( struct tagMSIVIEW *view )
     if( !tv->table )
         return ERROR_FUNCTION_FAILED;
 
-    release_table( tv->db, tv->table );
     tv->table = NULL;
     
     return ERROR_SUCCESS;
@@ -1470,23 +1415,16 @@ static UINT TABLE_delete( struct tagMSIVIEW *view )
 
     TRACE("%p\n", view );
 
-    if( tv->table )
-        release_table( tv->db, tv->table );
     tv->table = NULL;
 
     if( tv->columns )
     {
-        UINT i;
-        for( i=0; i<tv->num_cols; i++)
-        {
-            HeapFree( GetProcessHeap(), 0, tv->columns[i].colname );
-            HeapFree( GetProcessHeap(), 0, tv->columns[i].tablename );
-        }
-        HeapFree( GetProcessHeap(), 0, tv->columns );
+        msi_free_colinfo( tv->columns, tv->num_cols );
+        msi_free( tv->columns );
     }
     tv->columns = NULL;
 
-    HeapFree( GetProcessHeap(), 0, tv );
+    msi_free( tv );
 
     return ERROR_SUCCESS;
 }
@@ -1510,7 +1448,7 @@ UINT TABLE_CreateView( MSIDATABASE *db, LPCWSTR name, MSIVIEW **view )
 {
     MSITABLEVIEW *tv ;
     UINT r, sz, column_count;
-    MSICOLUMNINFO *columns, *last_col;
+    MSICOLUMNINFO *columns;
 
     TRACE("%p %s %p\n", db, debugstr_w(name), view );
 
@@ -1527,28 +1465,26 @@ UINT TABLE_CreateView( MSIDATABASE *db, LPCWSTR name, MSIVIEW **view )
     TRACE("Table found\n");
 
     sz = sizeof *tv + lstrlenW(name)*sizeof name[0] ;
-    tv = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, sz );
+    tv = msi_alloc_zero( sz );
     if( !tv )
         return ERROR_FUNCTION_FAILED;
     
-    columns = HeapAlloc( GetProcessHeap(), 0, column_count*sizeof (MSICOLUMNINFO));
+    columns = msi_alloc( column_count*sizeof (MSICOLUMNINFO));
     if( !columns )
     {
-        HeapFree( GetProcessHeap(), 0, tv );
+        msi_free( tv );
         return ERROR_FUNCTION_FAILED;
     }
 
     r = get_tablecolumns( db, name, columns, &column_count );
     if( r != ERROR_SUCCESS )
     {
-        HeapFree( GetProcessHeap(), 0, columns );
-        HeapFree( GetProcessHeap(), 0, tv );
+        msi_free( columns );
+        msi_free( tv );
         return ERROR_FUNCTION_FAILED;
     }
 
     TRACE("Table has %d columns\n", column_count);
-
-    last_col = &columns[column_count-1];
 
     /* fill the structure */
     tv->view.ops = &table_ops;
@@ -1556,9 +1492,9 @@ UINT TABLE_CreateView( MSIDATABASE *db, LPCWSTR name, MSIVIEW **view )
     tv->columns = columns;
     tv->num_cols = column_count;
     tv->table = NULL;
-    tv->row_size = last_col->offset + bytes_per_column( last_col );
+    tv->row_size = msi_table_get_row_size( columns, column_count );
 
-    TRACE("one row is %d bytes\n", tv->row_size );
+    TRACE("%s one row is %d bytes\n", debugstr_w(name), tv->row_size );
 
     *view = (MSIVIEW*) tv;
     lstrcpyW( tv->name, name );
@@ -1580,7 +1516,7 @@ UINT MSI_CommitTables( MSIDATABASE *db )
         return r;
     }
 
-    for( table = db->first_table; table; table = table->next )
+    LIST_FOR_EACH_ENTRY( table, &db->tables, MSITABLE, entry )
     {
         r = save_table( db, table );
         if( r != ERROR_SUCCESS )

@@ -55,6 +55,8 @@ inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
 {
    PUSER_HANDLE_ENTRY entry;
 
+//   DPRINT1("handles used %i\n",usedHandles);
+
    if (ht->freelist)
    {
       entry = ht->freelist;
@@ -273,7 +275,7 @@ VOID FASTCALL ObmReferenceObject(PVOID obj)
 }
 
 
-BOOL FASTCALL ObmDereferenceObject(PVOID obj)
+BOOL FASTCALL ObmDereferenceObject2(PVOID obj)
 {
    PUSER_OBJECT_HEADER hdr = USER_BODY_TO_HEADER(obj);
 
@@ -305,7 +307,7 @@ BOOL FASTCALL ObmCreateHandleTable()
    PVOID mem;
 
    //FIXME: dont alloc all at once! must be mapped into umode also...
-   mem = ExAllocatePool(PagedPool, sizeof(USER_HANDLE_ENTRY) * 1024);
+   mem = ExAllocatePool(PagedPool, sizeof(USER_HANDLE_ENTRY) * 1024*2);
    if (!mem)
    {
       DPRINT1("Failed creating handle table\n");
@@ -313,7 +315,7 @@ BOOL FASTCALL ObmCreateHandleTable()
    }
 
    //FIXME: make auto growable
-   UserInitHandleTable(&gHandleTable, mem, sizeof(USER_HANDLE_ENTRY) * 1024);
+   UserInitHandleTable(&gHandleTable, mem, sizeof(USER_HANDLE_ENTRY) * 1024*2);
 
    return TRUE;
 }

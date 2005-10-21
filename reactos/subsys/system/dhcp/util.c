@@ -10,6 +10,8 @@ char *piaddr( struct iaddr addr ) {
     return inet_ntoa( sa.sin_addr );
 }
 
+#if defined (__GNUC__)
+
 int note( char *format, ... ) {
     va_list arg_begin;
     va_start( arg_begin, format );
@@ -71,6 +73,8 @@ void error( char *format, ... ) {
 
     DPRINT1("ERROR: %s\n", buf);
 }
+
+#endif
 
 int16_t getShort( unsigned char *data ) {
     return (int16_t) ntohs(*(int16_t*) data);

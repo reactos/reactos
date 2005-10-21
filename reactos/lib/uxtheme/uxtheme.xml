@@ -1,4 +1,4 @@
-<module name="uxtheme" type="win32dll" baseaddress="${BASEADDRESS_UXTHEME}" installbase="system32" installname="uxtheme.dll" warnings="true">
+<module name="uxtheme" type="win32dll" baseaddress="${BASEADDRESS_UXTHEME}" installbase="system32" installname="uxtheme.dll" allowwarnings="true">
 	<importlibrary definition="uxtheme.spec.def" />
 	<include base="uxtheme">.</include>
 	<include base="ReactOS">include/wine</include>

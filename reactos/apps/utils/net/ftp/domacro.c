@@ -36,7 +36,6 @@ void domacro(argc, argv)
 	register char *cp1, *cp2;
 	int count = 2, loopflg = 0;
 	char line2[200];
-	extern char **glob();
 	struct cmd *getcmd(), *c;
 
 	if (argc < 2) {

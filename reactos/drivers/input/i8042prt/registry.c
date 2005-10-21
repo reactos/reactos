@@ -30,9 +30,6 @@ VOID STDCALL I8042ReadRegistry(PDRIVER_OBJECT DriverObject,
 
 {
 	RTL_QUERY_REGISTRY_TABLE Parameters[19];
-	UNICODE_STRING ParametersPath;
-
-	PWSTR RegistryPath = L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\i8042Prt\\Parameters";
 
 	NTSTATUS Status;
 
@@ -54,23 +51,6 @@ VOID STDCALL I8042ReadRegistry(PDRIVER_OBJECT DriverObject,
 	ULONG DefaultSampleRate = 60;
 	ULONG DefaultNumberOfButtons = 2;
 	ULONG DefaultEnableWheelDetection = 1;
-
-	RtlInitUnicodeString(&ParametersPath, NULL);
-	ParametersPath.MaximumLength = (wcslen(RegistryPath) *
-				       		sizeof(WCHAR)) +
-			               sizeof(UNICODE_NULL);
-
-	ParametersPath.Buffer = ExAllocatePoolWithTag(PagedPool,
-	                                      ParametersPath.MaximumLength,
-	                                      TAG_I8042);
-
-	if (!ParametersPath.Buffer) {
-		DPRINT1("No buffer space for reading registry\n");
-		return;
-	}
-
-	RtlZeroMemory(ParametersPath.Buffer, ParametersPath.MaximumLength);
-	RtlAppendUnicodeToString(&ParametersPath, RegistryPath);
 
 	RtlZeroMemory(Parameters, sizeof(Parameters));
 
@@ -202,9 +182,8 @@ VOID STDCALL I8042ReadRegistry(PDRIVER_OBJECT DriverObject,
 	Parameters[17].DefaultData = &DefaultEnableWheelDetection;
 	Parameters[17].DefaultLength = sizeof(ULONG);
 
-	Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE |
-			                        RTL_REGISTRY_OPTIONAL,
-	                                ParametersPath.Buffer,
+	Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE | RTL_REGISTRY_OPTIONAL,
+	                                I8042RegistryPath.Buffer,
 	                                Parameters,
 	                                NULL,
 	                                NULL);
@@ -224,7 +203,6 @@ VOID STDCALL I8042ReadRegistry(PDRIVER_OBJECT DriverObject,
 		DPRINT1 ("Manually set defaults\n");
 
 	}
-	ExFreePoolWithTag(ParametersPath.Buffer, TAG_I8042);
 
 	if (DevExt->Settings.MouseResolution > 3)
 		DevExt->Settings.MouseResolution = 3;

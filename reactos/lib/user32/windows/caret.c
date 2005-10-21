@@ -108,7 +108,7 @@ GetCaretPos(LPPOINT lpPoint)
 BOOL STDCALL
 HideCaret(HWND hWnd)
 {
-  return (BOOL)NtUserHideCaret(hWnd);
+  return NtUserShowCaret(hWnd, FALSE);
 }
 
 
@@ -139,7 +139,7 @@ SetCaretPos(int X,
 BOOL STDCALL
 ShowCaret(HWND hWnd)
 {
-  return (BOOL)NtUserShowCaret(hWnd);
+  return NtUserShowCaret(hWnd, TRUE);
 }
 
 /* EOF */

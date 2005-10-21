@@ -184,7 +184,6 @@ IopNotifyPlugPlayNotification(
 	IN PVOID EventCategoryData2)
 {
 	PPNP_NOTIFY_ENTRY ChangeEntry;
-	PLIST_ENTRY Entry;
 	PVOID NotificationStructure;
 	BOOLEAN CallCurrentEntry;
 
@@ -249,10 +248,8 @@ IopNotifyPlugPlayNotification(
 	 * list to find those that meet some criteria.
 	 */
 
-	Entry = PnpNotifyListHead.Flink;
-	while (Entry != &PnpNotifyListHead)
+   LIST_FOR_EACH(ChangeEntry,&PnpNotifyListHead, PNP_NOTIFY_ENTRY, PnpNotifyList)
 	{
-		ChangeEntry = CONTAINING_RECORD(Entry, PNP_NOTIFY_ENTRY, PnpNotifyList);
 		CallCurrentEntry = FALSE;
 
 		switch (EventCategory)
@@ -294,7 +291,6 @@ IopNotifyPlugPlayNotification(
 				ChangeEntry->Context);
 		}
 
-		Entry = Entry->Flink;
 	}
 	KeReleaseGuardedMutex(&PnpNotifyListLock);
 	ExFreePoolWithTag(NotificationStructure, TAG_PNP_NOTIFY);

@@ -137,20 +137,21 @@
  *
  *    06-jul-2005 (Magnus Olsen <magnus@greatlord.com>)
  *        translate '%errorlevel%' to the internal value.
- *        Add proper memmory alloc ProcessInput, the error 
+ *        Add proper memmory alloc ProcessInput, the error
  *        handling for memmory handling need to be improve
  */
 
 #include <precomp.h>
+#include <malloc.h>
 #include "resource.h"
 
 #ifndef NT_SUCCESS
 #define NT_SUCCESS(StatCode)  ((NTSTATUS)(StatCode) >= 0)
 #endif
 
-typedef NTSTATUS (STDCALL *NtQueryInformationProcessProc)(HANDLE, PROCESSINFOCLASS,
+typedef NTSTATUS (WINAPI *NtQueryInformationProcessProc)(HANDLE, PROCESSINFOCLASS,
                                                           PVOID, ULONG, PULONG);
-typedef NTSTATUS (STDCALL *NtReadVirtualMemoryProc)(HANDLE, PVOID, PVOID, ULONG, PULONG);
+typedef NTSTATUS (WINAPI *NtReadVirtualMemoryProc)(HANDLE, PVOID, PVOID, ULONG, PULONG);
 
 BOOL bExit = FALSE;       /* indicates EXIT was typed */
 BOOL bCanExit = TRUE;     /* indicates if this shell is exitable */
@@ -199,8 +200,9 @@ static BOOL IsConsoleProcess(HANDLE Process)
 		return TRUE;
 	}
 
-	Status = NtQueryInformationProcessPtr(Process, ProcessBasicInformation,
-                                              &Info, sizeof(PROCESS_BASIC_INFORMATION), NULL);
+	Status = NtQueryInformationProcessPtr (
+		Process, ProcessBasicInformation,
+		&Info, sizeof(PROCESS_BASIC_INFORMATION), NULL);
 	if (! NT_SUCCESS(Status))
 	{
 #ifdef _DEBUG
@@ -208,8 +210,9 @@ static BOOL IsConsoleProcess(HANDLE Process)
 #endif
 		return TRUE;
 	}
-	Status = NtReadVirtualMemoryPtr(Process, Info.PebBaseAddress, &ProcessPeb,
-                                        sizeof(PEB), &BytesRead);
+	Status = NtReadVirtualMemoryPtr (
+		Process, Info.PebBaseAddress, &ProcessPeb,
+		sizeof(PEB), &BytesRead);
 	if (! NT_SUCCESS(Status) || sizeof(PEB) != BytesRead)
 	{
 #ifdef _DEBUG
@@ -230,24 +233,24 @@ static BOOL IsConsoleProcess(HANDLE Process)
 #endif
 
 typedef HINSTANCE (WINAPI *MYEX)(
-    HWND hwnd,
-    LPCTSTR lpOperation,
-    LPCTSTR lpFile,
-    LPCTSTR lpParameters,
-    LPCTSTR lpDirectory,
-    INT nShowCmd
+	HWND hwnd,
+	LPCTSTR lpOperation,
+	LPCTSTR lpFile,
+	LPCTSTR lpParameters,
+	LPCTSTR lpDirectory,
+	INT nShowCmd
 );
 
 
 
 static BOOL RunFile(LPTSTR filename)
 {
-	HMODULE 	hShell32;
-	MYEX		hShExt;
-	HINSTANCE	ret;
+	HMODULE     hShell32;
+	MYEX        hShExt;
+	HINSTANCE   ret;
 
 #ifdef _DEBUG
-		DebugPrintf (_T("RunFile(%s)\n"), filename);
+	DebugPrintf (_T("RunFile(%s)\n"), filename);
 #endif
 	hShell32 = LoadLibrary(_T("SHELL32.DLL"));
 	if (!hShell32)
@@ -295,59 +298,68 @@ static BOOL RunFile(LPTSTR filename)
 static VOID
 Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 {
-	TCHAR szFullName[MAX_PATH];
+	TCHAR *szFullName=NULL;
 	TCHAR *first = NULL;
-	TCHAR *rest = NULL; 
-	TCHAR *full = NULL; 
-#ifndef __REACTOS__
+	TCHAR *rest = NULL;
+	TCHAR *full = NULL;
+	TCHAR *dot = NULL;
 	TCHAR szWindowTitle[MAX_PATH];
-#endif
 	DWORD dwExitCode = 0;
 
 #ifdef _DEBUG
 	DebugPrintf (_T("Execute: \'%s\' \'%s\'\n"), first, rest);
 #endif
 
-	/* we need biger buffer that First, Rest, Full are already 
-	   need rewrite some code to use realloc when it need instead 
+	/* we need biger buffer that First, Rest, Full are already
+	   need rewrite some code to use realloc when it need instead
 	   of add 512bytes extra */
 
-	first = malloc ( _tcslen(First) + 512 * sizeof(TCHAR)); 
+	first = malloc ( (_tcslen(First) + 512) * sizeof(TCHAR));
 	if (first == NULL)
 	{
-	 error_out_of_memory();
-	 return ;
+		error_out_of_memory();
+		return ;
 	}
 
-	rest =	malloc ( _tcslen(Rest) + 512 * sizeof(TCHAR)); 
+	rest = malloc ( (_tcslen(Rest) + 512) * sizeof(TCHAR));
 	if (rest == NULL)
 	{
-	 free (full);
-	 error_out_of_memory();
-	 return ;
+		free (first);
+		error_out_of_memory();
+		return ;
 	}
 
-	full =	malloc ( _tcslen(Full) + 512 * sizeof(TCHAR));
+	full = malloc ( (_tcslen(Full) + 512) * sizeof(TCHAR));
 	if (full == NULL)
 	{
-	 free (full);
-	 free (rest);
-	 error_out_of_memory();
-	 return ;
+		free (first);
+		free (rest);
+		error_out_of_memory();
+		return ;
+	}
+
+	szFullName = malloc ( (_tcslen(Full) + 512) * sizeof(TCHAR));
+	if (full == NULL)
+	{
+		free (first);
+		free (rest);
+		free (full);
+		error_out_of_memory();
+		return ;
 	}
 
 
 	/* Though it was already parsed once, we have a different set of rules
 	   for parsing before we pass to CreateProccess */
 	if(!_tcschr(Full,_T('\"')))
-	{		 
+	{
 		_tcscpy(first,First);
 		_tcscpy(rest,Rest);
 		_tcscpy(full,Full);
 	}
 	else
 	{
-		INT i = 0;		
+		UINT i = 0;
 		BOOL bInside = FALSE;
 		rest[0] = _T('\0');
 		full[0] = _T('\0');
@@ -399,6 +411,11 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 
 		if (!working) ConErrResPuts (STRING_FREE_ERROR1);
 
+		free (first);
+		free (rest);
+		free (full);
+		free (szFullName);
+
 		return;
 	}
 
@@ -406,17 +423,20 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 	/* search the PATH environment variable for the binary */
 	if (!SearchForExecutable (first, szFullName))
 	{
-		error_bad_command ();
-		return;
+			error_bad_command ();
+			free (first);
+			free (rest);
+			free (full);
+			free (szFullName);
+			return;
+
 	}
 
-#ifndef __REACTOS__
 	GetConsoleTitle (szWindowTitle, MAX_PATH);
-#endif
 
 	/* check if this is a .BAT or .CMD file */
-	if (!_tcsicmp (_tcsrchr (szFullName, _T('.')), _T(".bat")) ||
-		!_tcsicmp (_tcsrchr (szFullName, _T('.')), _T(".cmd")))
+	dot = _tcsrchr (szFullName, _T('.'));
+	if (dot && (!_tcsicmp (dot, _T(".bat")) || !_tcsicmp (dot, _T(".cmd"))))
 	{
 #ifdef _DEBUG
 		DebugPrintf (_T("[BATCH: %s %s]\n"), szFullName, rest);
@@ -487,20 +507,20 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 			}
 		}
 		// restore console mode
-		SetConsoleMode( GetStdHandle( STD_INPUT_HANDLE ),
-				ENABLE_PROCESSED_INPUT );
+		SetConsoleMode (
+			GetStdHandle( STD_INPUT_HANDLE ),
+			ENABLE_PROCESSED_INPUT );
 	}
 
 	/* Get code page if it has been change */
 	InputCodePage= GetConsoleCP();
-    OutputCodePage = GetConsoleOutputCP();
-#ifndef __REACTOS__
+	OutputCodePage = GetConsoleOutputCP();
 	SetConsoleTitle (szWindowTitle);
-#endif
 
- free(first);
- free(rest);
- free(full);
+	free(first);
+	free(rest);
+	free(full);
+	free (szFullName);
 }
 
 
@@ -516,8 +536,8 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 static VOID
 DoCommand (LPTSTR line)
 {
-	TCHAR com[CMDLINE_LENGTH];  /* the first word in the command */
-	LPTSTR cp = com;
+	TCHAR *com = NULL;  /* the first word in the command */
+	TCHAR *cp = NULL;
 	LPTSTR cstart;
 	LPTSTR rest;   /* pointer to the rest of the command line */
 	INT cl;
@@ -527,6 +547,14 @@ DoCommand (LPTSTR line)
 	DebugPrintf (_T("DoCommand: (\'%s\')\n"), line);
 #endif /* DEBUG */
 
+	com = malloc( (_tcslen(line) +512)*sizeof(TCHAR) );
+	if (com == NULL)
+	{
+		error_out_of_memory();
+		return;
+	}
+
+	cp = com;
 	/* Skip over initial white space */
 	while (_istspace (*line))
 		line++;
@@ -558,12 +586,15 @@ DoCommand (LPTSTR line)
 		/* Terminate first word */
 		*cp = _T('\0');
 
-		/* commands are limited to MAX_PATH */
+		/* Do not limit commands to MAX_PATH */
+		/*
 		if(_tcslen(com) > MAX_PATH)
 		{
-		  error_bad_command();
-		  return;
+			error_bad_command();
+			free(com);
+			return;
 		}
+		*/
 
 		/* Skip over whitespace to rest of line */
 		while (_istspace (*rest))
@@ -611,6 +642,7 @@ DoCommand (LPTSTR line)
 			}
 		}
 	}
+	free(com);
 }
 
 
@@ -701,7 +733,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 		nRedirFlags |= ERROR_APPEND;
 		_tcscpy(err, bc->Err);
 	}
-		
+
 
 	/* Set up the initial conditions ... */
 	/* preserve STDIN, STDOUT and STDERR handles */
@@ -715,10 +747,10 @@ VOID ParseCommandLine (LPTSTR cmd)
 		HANDLE hFile;
 		SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
 
-    /* we need make sure the LastError msg is zero before calling CreateFile */
-		SetLastError(0); 
+	/* we need make sure the LastError msg is zero before calling CreateFile */
+		SetLastError(0);
 
-    /* Set up pipe for the standard input handler */
+	/* Set up pipe for the standard input handler */
 		hFile = CreateFile (in, GENERIC_READ, FILE_SHARE_READ, &sa, OPEN_EXISTING,
 		                    FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hFile == INVALID_HANDLE_VALUE)
@@ -729,7 +761,7 @@ VOID ParseCommandLine (LPTSTR cmd)
 		}
 
 		if (!SetStdHandle (STD_INPUT_HANDLE, hFile))
-		{      
+		{
 			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR1, szMsg, RC_STRING_MAX_SIZE);
 			ConErrPrintf(szMsg, in);
 			return;
@@ -746,19 +778,19 @@ VOID ParseCommandLine (LPTSTR cmd)
 	while (num-- > 1)
 	{
 		SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
-    
-    /* Create unique temporary file name */
+
+		/* Create unique temporary file name */
 		GetTempFileName (szTempPath, _T("CMD"), 0, szFileName[1]);
 
-    /* we need make sure the LastError msg is zero before calling CreateFile */
-		 SetLastError(0); 
+		/* we need make sure the LastError msg is zero before calling CreateFile */
+		SetLastError(0);
 
 		/* Set current stdout to temporary file */
 		hFile[1] = CreateFile (szFileName[1], GENERIC_WRITE, 0, &sa,
 				       TRUNCATE_EXISTING, FILE_ATTRIBUTE_TEMPORARY, NULL);
-		
-    if (hFile[1] == INVALID_HANDLE_VALUE)
-		{            
+
+		if (hFile[1] == INVALID_HANDLE_VALUE)
+		{
 			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR2, szMsg, RC_STRING_MAX_SIZE);
 			ConErrPrintf(szMsg);
 			return;
@@ -791,8 +823,8 @@ VOID ParseCommandLine (LPTSTR cmd)
 		_tcscpy (szFileName[0], szFileName[1]);
 		*szFileName[1] = _T('\0');
 
-    /* we need make sure the LastError msg is zero before calling CreateFile */
-		SetLastError(0); 
+		/* we need make sure the LastError msg is zero before calling CreateFile */
+		SetLastError(0);
 
 		/* open new stdin file */
 		hFile[0] = CreateFile (szFileName[0], GENERIC_READ, 0, &sa,
@@ -809,37 +841,37 @@ VOID ParseCommandLine (LPTSTR cmd)
 		/* Final output to here */
 		HANDLE hFile;
 		SECURITY_ATTRIBUTES sa = {sizeof(SECURITY_ATTRIBUTES), NULL, TRUE};
-		
-    /* we need make sure the LastError msg is zero before calling CreateFile */
-		SetLastError(0); 
 
-    hFile = CreateFile (out, GENERIC_WRITE, FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE, &sa,
+		/* we need make sure the LastError msg is zero before calling CreateFile */
+		SetLastError(0);
+
+		hFile = CreateFile (out, GENERIC_WRITE, FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE, &sa,
 		                    (nRedirFlags & OUTPUT_APPEND) ? OPEN_ALWAYS : CREATE_ALWAYS,
 		                    FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, NULL);
-		
-    if (hFile == INVALID_HANDLE_VALUE)
+
+		if (hFile == INVALID_HANDLE_VALUE)
 		{
-      INT size = _tcslen(out)-1;
-      
-      if (out[size] != _T(':'))
-      {
-			   LoadString(CMD_ModuleHandle, STRING_CMD_ERROR3, szMsg, RC_STRING_MAX_SIZE);
-			   ConErrPrintf(szMsg, out);
-			   return;
-      }
-      
-      out[size]=_T('\0');
-      hFile = CreateFile (out, GENERIC_WRITE, FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE, &sa,
-		                    (nRedirFlags & OUTPUT_APPEND) ? OPEN_ALWAYS : CREATE_ALWAYS,
-		                    FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, NULL);
+			INT size = _tcslen(out)-1;
 
-     if (hFile == INVALID_HANDLE_VALUE)
-     {
-			   LoadString(CMD_ModuleHandle, STRING_CMD_ERROR3, szMsg, RC_STRING_MAX_SIZE);
-			   ConErrPrintf(szMsg, out);
-			   return;
-      }
-      
+			if (out[size] != _T(':'))
+			{
+				LoadString(CMD_ModuleHandle, STRING_CMD_ERROR3, szMsg, RC_STRING_MAX_SIZE);
+				ConErrPrintf(szMsg, out);
+				return;
+			}
+
+			out[size]=_T('\0');
+			hFile = CreateFile (out, GENERIC_WRITE, FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE, &sa,
+			                    (nRedirFlags & OUTPUT_APPEND) ? OPEN_ALWAYS : CREATE_ALWAYS,
+			                    FILE_ATTRIBUTE_NORMAL | FILE_FLAG_WRITE_THROUGH, NULL);
+
+			if (hFile == INVALID_HANDLE_VALUE)
+			{
+				LoadString(CMD_ModuleHandle, STRING_CMD_ERROR3, szMsg, RC_STRING_MAX_SIZE);
+				ConErrPrintf(szMsg, out);
+				return;
+			}
+
 		}
 
 		if (!SetStdHandle (STD_OUTPUT_HANDLE, hFile))
@@ -1027,6 +1059,213 @@ VOID ParseCommandLine (LPTSTR cmd)
 #endif /* FEATURE_REDIRECTION */
 }
 
+BOOL
+GrowIfNecessary ( UINT needed, LPTSTR* ret, UINT* retlen )
+{
+	if ( *ret && needed < *retlen )
+		return TRUE;
+	*retlen = needed;
+	if ( *ret )
+		free ( *ret );
+	*ret = (LPTSTR)malloc ( *retlen * sizeof(TCHAR) );
+	if ( !*ret )
+		SetLastError ( ERROR_OUTOFMEMORY );
+	return *ret != NULL;
+}
+
+LPCTSTR
+GetEnvVarOrSpecial ( LPCTSTR varName )
+{
+	static LPTSTR ret = NULL;
+	static UINT retlen = 0;
+	UINT size;
+
+	size = GetEnvironmentVariable ( varName, ret, retlen );
+	if ( size > retlen )
+	{
+		if ( !GrowIfNecessary ( size, &ret, &retlen ) )
+			return NULL;
+		size = GetEnvironmentVariable ( varName, ret, retlen );
+	}
+	if ( size )
+		return ret;
+
+	/* env var doesn't exist, look for a "special" one */
+	/* %CD% */
+	if (_tcsicmp(varName,_T("cd")) ==0)
+	{
+		size = GetCurrentDirectory ( retlen, ret );
+		if ( size > retlen )
+		{
+			if ( !GrowIfNecessary ( size, &ret, &retlen ) )
+				return NULL;
+			size = GetCurrentDirectory ( retlen, ret );
+		}
+		if ( !size )
+			return NULL;
+		return ret;
+	}
+	/* %TIME% */
+	else if (_tcsicmp(varName,_T("time")) ==0)
+	{
+		SYSTEMTIME t;
+		if ( !GrowIfNecessary ( MAX_PATH, &ret, &retlen ) )
+			return NULL;
+		GetSystemTime(&t);
+		_sntprintf ( ret, retlen, _T("%02d%c%02d%c%02d%c%02d"),
+			t.wHour, cTimeSeparator, t.wMinute, cTimeSeparator,
+			t.wSecond, cDecimalSeparator, t.wMilliseconds );
+		return ret;
+	}
+	/* %DATE% */
+	else if (_tcsicmp(varName,_T("date")) ==0)
+	{
+		LPTSTR tmp;
+
+		if ( !GrowIfNecessary ( MAX_PATH, &ret, &retlen ) )
+			return NULL;
+		size = GetDateFormat(LOCALE_USER_DEFAULT, 0, NULL, _T("ddd"), ret, retlen );
+		/* TODO FIXME - test whether GetDateFormat() can return a value indicating the buffer wasn't big enough */
+		if ( !size )
+			return NULL;
+		tmp = ret + _tcslen(ret);
+		*tmp++ = _T(' ');
+		size = GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, NULL, NULL, tmp, retlen-(tmp-ret));
+		/* TODO FIXME - test whether GetDateFormat() can return a value indicating the buffer wasn't big enough */
+		if ( !size )
+			return NULL;
+		return ret;
+	}
+
+	/* %RANDOM% */
+	else if (_tcsicmp(varName,_T("random")) ==0)
+	{
+		if ( !GrowIfNecessary ( MAX_PATH, &ret, &retlen ) )
+			return NULL;
+		/* Get random number */
+		_itot(rand(),ret,10);
+		return ret;
+	}
+
+	/* %CMDCMDLINE% */
+	else if (_tcsicmp(varName,_T("cmdcmdline")) ==0)
+	{
+		return GetCommandLine();
+	}
+
+	/* %CMDEXTVERSION% */
+	else if (_tcsicmp(varName,_T("cmdextversion")) ==0)
+	{
+		if ( !GrowIfNecessary ( MAX_PATH, &ret, &retlen ) )
+			return NULL;
+		/* Set version number to 2 */
+		_itot(2,ret,10);
+		return ret;
+	}
+
+	/* %ERRORLEVEL% */
+	else if (_tcsicmp(varName,_T("errorlevel")) ==0)
+	{
+		if ( !GrowIfNecessary ( MAX_PATH, &ret, &retlen ) )
+			return NULL;
+		_itot(nErrorLevel,ret,10);
+		return ret;
+	}
+
+	return _T(""); /* not found - return empty string */
+}
+
+LPCTSTR
+GetParsedEnvVar ( LPCTSTR varName, UINT* varNameLen, BOOL ModeSetA )
+{
+	static LPTSTR ret = NULL;
+	static UINT retlen = 0;
+	LPTSTR p, tmp;
+	UINT size;
+
+	if ( varNameLen )
+		*varNameLen = 0;
+	SetLastError(0);
+	if ( *varName++ != '%' )
+		return NULL;
+	switch ( *varName )
+	{
+	case _T('0'):
+	case _T('1'):
+	case _T('2'):
+	case _T('3'):
+	case _T('4'):
+	case _T('5'):
+	case _T('6'):
+	case _T('7'):
+	case _T('8'):
+	case _T('9'):
+		if ((tmp = FindArg (*varName - _T('0'))))
+		{
+			if ( varNameLen )
+				*varNameLen = 2;
+			if ( !*tmp )
+				return _T("");
+			if ( !GrowIfNecessary ( _tcslen(tmp)+1, &ret, &retlen ) )
+				return NULL;
+			_tcscpy ( ret, tmp );
+			return ret;
+		}
+		if ( !GrowIfNecessary ( 3, &ret, &retlen ) )
+			return NULL;
+		ret[0] = _T('%');
+		ret[1] = *varName;
+		ret[2] = 0;
+		if ( varNameLen )
+			*varNameLen = 2;
+		return ret;
+
+	case _T('%'):
+		if ( !GrowIfNecessary ( 2, &ret, &retlen ) )
+			return NULL;
+		ret[0] = _T('%');
+		ret[1] = 0;
+		if ( varNameLen )
+			*varNameLen = 2;
+		return ret;
+
+	case _T('?'):
+		/* TODO FIXME 10 is only max size for 32-bit */
+		if ( !GrowIfNecessary ( 11, &ret, &retlen ) )
+			return NULL;
+		_sntprintf ( ret, retlen, _T("%u"), nErrorLevel);
+		ret[retlen-1] = 0;
+		if ( varNameLen )
+			*varNameLen = 2;
+		return ret;
+	}
+	if ( ModeSetA )
+	{
+		/* HACK for set/a */
+		if ( !GrowIfNecessary ( 2, &ret, &retlen ) )
+			return NULL;
+		ret[0] = _T('%');
+		ret[1] = 0;
+		if ( varNameLen )
+			*varNameLen = 1;
+		return ret;
+	}
+	p = _tcschr ( varName, _T('%') );
+	if ( !p )
+	{
+		SetLastError ( ERROR_INVALID_PARAMETER );
+		return NULL;
+	}
+	size = p-varName;
+	if ( varNameLen )
+		*varNameLen = size + 2;
+	p = alloca ( (size+1) * sizeof(TCHAR) );
+	memmove ( p, varName, size * sizeof(TCHAR) );
+	p[size] = 0;
+	varName = p;
+	return GetEnvVarOrSpecial ( varName );
+}
+
 
 /*
  * do the prompt/input/process loop
@@ -1038,12 +1277,12 @@ ProcessInput (BOOL bFlag)
 {
 	TCHAR commandline[CMDLINE_LENGTH];
 	TCHAR readline[CMDLINE_LENGTH];
-	LPTSTR tp = NULL;
 	LPTSTR ip;
 	LPTSTR cp;
+	LPCTSTR tmp;
 	BOOL bEchoThisLine;
+	BOOL bModeSetA;
 
- 
 	do
 	{
 		/* if no batch input then... */
@@ -1057,186 +1296,102 @@ ProcessInput (BOOL bFlag)
 			bEchoThisLine = FALSE;
 		}
 
+		/* skip leading blanks */
+		while ( _istspace(*ip) )
+			++ip;
+
 		cp = commandline;
+		bModeSetA = FALSE;
 		while (*ip)
 		{
-         if (*ip == _T('%'))
+			if ( *ip == _T('%') )
 			{
-				switch (*++ip)
-				{
-					case _T('%'):
-						*cp++ = *ip++;
-						break;
-
-					case _T('0'):
-					case _T('1'):
-					case _T('2'):
-					case _T('3'):
-					case _T('4'):
-					case _T('5'):
-					case _T('6'):
-					case _T('7'):
-					case _T('8'):
-					case _T('9'):
-						if ((tp = FindArg (*ip - _T('0'))))
-						{
-							cp = _stpcpy (cp, tp);
-							ip++;
-						}
-						else
-							*cp++ = _T('%');
-						break;
-
-					case _T('?'):
-						cp += _stprintf (cp, _T("%u"), nErrorLevel);
-						ip++;
-						break;
-
-					default:
-						tp = _tcschr(ip, _T('%'));
-						if ((tp != NULL) &&
-						    (tp <= _tcschr(ip, _T(' ')) - 1))
-						{
-              INT size = 512;
-							TCHAR *evar;
-							*tp = _T('\0');
-
-              /* FIXME: Correct error handling when it can not alloc memmory */
-                          	
-              /* %CD% */
-              if (_tcsicmp(ip,_T("cd")) ==0)
-              {
-                TCHAR szPath[MAX_PATH];
-		            GetCurrentDirectory (MAX_PATH, szPath);
-                cp = _stpcpy (cp, szPath);                 
-              }
-              /* %TIME% */
-              else if (_tcsicmp(ip,_T("time")) ==0)
-              {
-                TCHAR szTime[40];                                                                               
-                SYSTEMTIME t;
-                GetSystemTime(&t); 
-
-                _sntprintf(szTime ,40,_T("%02d%c%02d%c%02d%c%02d"), t.wHour, cTimeSeparator,t.wMinute , cTimeSeparator,t.wSecond , cDecimalSeparator, t.wMilliseconds );
-                cp = _stpcpy (cp, szTime);                 	              
-              }
-              
-              /* %DATE% */
-              else if (_tcsicmp(ip,_T("date")) ==0)
-              {
-              TCHAR szDate[40];
-
-	            GetDateFormat(LOCALE_USER_DEFAULT, 0, NULL, _T("ddd"), szDate, sizeof (szDate));
-              cp = _stpcpy (cp, szDate);        
-              cp = _stpcpy (cp, _T(" "));        
-              GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, NULL, NULL, szDate, sizeof (szDate));
-              cp = _stpcpy (cp, szDate);        
-              }
-
-              /* %RANDOM% */
-              else if (_tcsicmp(ip,_T("random")) ==0)
-              {
-               TCHAR szRand[40];               
-               /* Get random number */
-               _itot(rand(),szRand,10);
-               cp = _stpcpy (cp, szRand); 
-              }
-               
-              /* %CMDCMDLINE% */
-              else if (_tcsicmp(ip,_T("cmdcmdline")) ==0)
-              {                      
-               TCHAR *pargv;               
-               /* Get random number */        
-               pargv = GetCommandLine();
-               cp = _stpcpy (cp, pargv); 
-              }
-
-              /* %CMDEXTVERSION% */
-              else if (_tcsicmp(ip,_T("cmdextversion")) ==0)
-              {
-               TCHAR szVER[40];               
-               /* Set version number to 2 */
-               _itot(2,szVER,10);
-               cp = _stpcpy (cp, szVER); 
-              }
-                       
-              /* %ERRORLEVEL% */
-              else if (_tcsicmp(ip,_T("errorlevel")) ==0)
-              {
-                evar = malloc ( size * sizeof(TCHAR));
-                if (evar==NULL) 
-                    return 1; 
-
-                memset(evar,0,512 * sizeof(TCHAR));
-                _itot(nErrorLevel,evar,10);        
-                cp = _stpcpy (cp, evar);
-
-                free(evar);
-              }               
-							else 
-              {
-                evar = malloc ( 512 * sizeof(TCHAR));
-                if (evar==NULL) 
-                    return 1; 
-					 SetLastError(0);
-                size = GetEnvironmentVariable (ip, evar, 512);
-					 if(GetLastError() == ERROR_ENVVAR_NOT_FOUND)
-					 {
-						 /* if no env var is found you must 
-						    continue with what was input*/
-					   cp = _stpcpy (cp, _T("%"));
-						cp = _stpcpy (cp, ip);
-						cp = _stpcpy (cp, _T("%"));
-					 }
-					 else
-					 {
-                if (size > 512)
-                {
-                    evar = realloc(evar,size * sizeof(TCHAR) );
-                    if (evar==NULL)
-                    {
-                      return 1;
-                    }
-                    size = GetEnvironmentVariable (ip, evar, size);
-                }
-
-                if (size)
-                {
-								 cp = _stpcpy (cp, evar);
-                }
-					 }
-
-                free(evar);
-              }
-               
-							ip = tp + 1;
-
-						}
-						else
-						{
-							*cp++ = _T('%');
-						}              
-           
-						break;
-				}
+				UINT envNameLen;
+				LPCTSTR envVal = GetParsedEnvVar ( ip, &envNameLen, bModeSetA );
+				if ( !envVal )
+					return 1;
+				ip += envNameLen;
+				cp = _stpcpy ( cp, envVal );
 				continue;
 			}
-
-
-     
 
 			if (_istcntrl (*ip))
 				*ip = _T(' ');
 			*cp++ = *ip++;
+
+			/* HACK HACK HACK check whether bModeSetA needs to be toggled */
+			*cp = 0;
+			tmp = commandline;
+			tmp += _tcsspn(tmp,_T(" \t"));
+			/* first we find and skip and pre-redirections... */
+			while ( _tcschr(_T("<>"),*tmp)
+				|| !_tcsncmp(tmp,_T("1>"),2)
+				|| !_tcsncmp(tmp,_T("2>"),2) )
+			{
+				if ( _istdigit(*tmp) )
+					tmp += 2;
+				else
+					tmp++;
+				tmp += _tcsspn(tmp,_T(" \t"));
+				if ( *tmp == _T('\"') )
+				{
+					tmp = _tcschr(tmp+1,_T('\"'));
+					if ( tmp )
+						++tmp;
+				}
+				else
+					tmp = _tcspbrk(tmp,_T(" \t"));
+				tmp += _tcsspn(tmp,_T(" \t"));
+			}
+			/* we should now be pointing to the actual command
+			 * (if there is one yet)*/
+			if ( tmp )
+			{
+				/* if we're currently substituting ( which is default )
+				 * check to see if we've parsed out a set/a. if so, we
+				 * need to disable substitution until we come across a
+				 * redirection */
+				if ( !bModeSetA )
+				{
+					/* look for set /a */
+					if ( !_tcsnicmp(tmp,_T("set"),3) )
+					{
+						tmp += 3;
+						tmp += _tcsspn(tmp,_T(" \t"));
+						if ( !_tcsnicmp(tmp,_T("/a"),2) )
+							bModeSetA = TRUE;
+					}
+				}
+				/* if we're not currently substituting, it means we're
+				 * already inside a set /a. now we need to look for
+				 * a redirection in order to turn redirection back on */
+				else
+				{
+					/* look for redirector of some kind after the command */
+					while ( (tmp = _tcspbrk ( tmp, _T("^<>|") )) )
+					{
+						if ( *tmp == _T('^') )
+						{
+							if ( _tcschr(_T("<>|&"), *++tmp ) && *tmp )
+								++tmp;
+						}
+						else
+						{
+							bModeSetA = FALSE;
+							break;
+						}
+					}
+				}
+			}
 		}
 
 		*cp = _T('\0');
 
 		/* strip trailing spaces */
-		while ((--cp >= commandline) && _istspace (*cp));     
+		while ((--cp >= commandline) && _istspace (*cp));
 
 		*(cp + 1) = _T('\0');
-   
+
 		/* JPP 19980807 */
 		/* Echo batch file line */
 		if (bEchoThisLine)
@@ -1348,14 +1503,14 @@ Initialize (int argc, TCHAR* argv[])
 
 	//INT len;
 	//TCHAR *ptr, *cmdLine;
-	
+
 	/* get version information */
 	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 	GetVersionEx (&osvi);
 
 	/* Some people like to run ReactOS cmd.exe on Win98, it helps in the
-           build process. So don't link implicitly against ntdll.dll, load it
-           dynamically instead */
+	 * build process. So don't link implicitly against ntdll.dll, load it
+	 * dynamically instead */
 
 	if (osvi.dwPlatformId == VER_PLATFORM_WIN32_NT)
 	{
@@ -1376,12 +1531,10 @@ Initialize (int argc, TCHAR* argv[])
 
 
 #ifdef _DEBUG
-	INT x;
-
 	DebugPrintf (_T("[command args:\n"));
-	for (x = 0; x < argc; x++)
+	for (i = 0; i < argc; i++)
 	{
-		DebugPrintf (_T("%d. %s\n"), x, argv[x]);
+		DebugPrintf (_T("%d. %s\n"), i, argv[i]);
 	}
 	DebugPrintf (_T("]\n"));
 #endif
@@ -1392,11 +1545,11 @@ Initialize (int argc, TCHAR* argv[])
 	hOut = GetStdHandle (STD_OUTPUT_HANDLE);
 	hIn  = GetStdHandle (STD_INPUT_HANDLE);
 
-	/* Set EnvironmentVariable PROMPT if it does not exists any env value. 
-	   for you can change the EnvirommentVariable for prompt before cmd start 
+	/* Set EnvironmentVariable PROMPT if it does not exists any env value.
+	   for you can change the EnvirommentVariable for prompt before cmd start
 	   this patch are not 100% right, if it does not exists a PROMPT value cmd should use
 	   $P$G as defualt not set EnvirommentVariable PROMPT to $P$G if it does not exists */
-	if (GetEnvironmentVariable(_T("PROMPT"),lpBuffer, 2 * sizeof(TCHAR)) == 0) 
+	if (GetEnvironmentVariable(_T("PROMPT"),lpBuffer, sizeof(lpBuffer) / sizeof(lpBuffer[0])) == 0)
 	    SetEnvironmentVariable (_T("PROMPT"), _T("$P$G"));
 
 
@@ -1463,13 +1616,14 @@ Initialize (int argc, TCHAR* argv[])
 				++i;
 				if (i < argc)
 				{
-					_tcscpy (commandline, argv[i]);
+					_tcscpy (commandline, _T("\""));
+					_tcscat (commandline, argv[i]);
+					_tcscat (commandline, _T("\""));
 					while (++i < argc)
 					{
 						_tcscat (commandline, _T(" "));
 						_tcscat (commandline, argv[i]);
 					}
-
 					ParseCommandLine(commandline);
 				}
 			}
@@ -1494,24 +1648,6 @@ Initialize (int argc, TCHAR* argv[])
 	{
 		ParseCommandLine (_T("\\cmdstart.bat"));
 	}
-#ifndef __REACTOS__
-	else
-	{
-		/* try to run cmdstart.bat from install dir */
-		LPTSTR p;
-
-		_tcscpy (commandline, argv[0]);
-		p = _tcsrchr (commandline, _T('\\')) + 1;
-		_tcscpy (p, _T("cmdstart.bat"));
-
-		if (IsExistingFile (_T("commandline")))
-		{
-			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR4, szMsg, RC_STRING_MAX_SIZE);
-			ConErrPrintf(szMsg, commandline);
-			ParseCommandLine (commandline);
-		}
-	}
-#endif
 
 #ifdef FEATURE_DIR_STACK
 	/* initialize directory stack */
@@ -1538,10 +1674,6 @@ Initialize (int argc, TCHAR* argv[])
 
 static VOID Cleanup (int argc, TCHAR *argv[])
 {
-#ifndef __REACTOS__
-	TCHAR szMsg[RC_STRING_MAX_SIZE];
-#endif
-
 	/* run cmdexit.bat */
 	if (IsExistingFile (_T("cmdexit.bat")))
 	{
@@ -1554,25 +1686,6 @@ static VOID Cleanup (int argc, TCHAR *argv[])
 		ConErrResPuts (STRING_CMD_ERROR5);
 		ParseCommandLine (_T("\\cmdexit.bat"));
 	}
-#ifndef __REACTOS__
-	else
-	{
-		/* try to run cmdexit.bat from install dir */
-		TCHAR commandline[CMDLINE_LENGTH];
-		LPTSTR p;
-
-		_tcscpy (commandline, argv[0]);
-		p = _tcsrchr (commandline, _T('\\')) + 1;
-		_tcscpy (p, _T("cmdexit.bat"));
-
-		if (IsExistingFile (_T("commandline")))
-		{
-			LoadString(CMD_ModuleHandle, STRING_CMD_ERROR4, szMsg, RC_STRING_MAX_SIZE);
-			ConErrPrintf(szMsg, commandline);
-			ParseCommandLine (commandline);
-		}
-	}
-#endif
 
 #ifdef FEATURE_ALIASES
 	DestroyAlias ();
@@ -1603,53 +1716,6 @@ static VOID Cleanup (int argc, TCHAR *argv[])
 	}
 }
 
-#ifdef __REACTOS__
-#ifdef _UNICODE
-PWCHAR * _CommandLineToArgvW(PWCHAR lpCmdLine, int *pNumArgs)
-{
-   PWCHAR * argvw = NULL;
-   PWCHAR ptr = lpCmdLine;
-   PWCHAR str;
-   int len;
-   int NumArgs;
-
-   NumArgs = 0;
-
-   while(lpCmdLine && *lpCmdLine)
-   {
-       while (iswspace(*lpCmdLine)) lpCmdLine++;
-       if (*lpCmdLine)
-       {
-	   if ((NumArgs % 10)==0)
-	   {
-               PWCHAR * old_argvw = argvw;
-	       argvw = malloc((NumArgs + 10) * sizeof(PWCHAR));
-	       memcpy(argvw, old_argvw, NumArgs * sizeof(PWCHAR));
-	       free(old_argvw);
-	   }
-	   ptr = wcschr(lpCmdLine, L' ');
-	   if (ptr)
-	   {
-	       len = ptr - lpCmdLine;
-	   }
-	   else
-	   {
-	       len = wcslen(lpCmdLine);
-	   }
-	   str = malloc((len + 1) * sizeof(WCHAR));
-	   memcpy(str, lpCmdLine, len * sizeof(WCHAR));
-	   str[len] = 0;
-	   argvw[NumArgs]=str;
-	   NumArgs++;
-	   lpCmdLine = ptr;
-       }
-   }
-   *pNumArgs = NumArgs;
-   return argvw;
-}
-#endif
-#endif
-
 /*
  * main function
  */
@@ -1659,53 +1725,47 @@ int _main(void)
 int _main (int argc, char *argv[])
 #endif
 {
-  TCHAR startPath[MAX_PATH];
-  CONSOLE_SCREEN_BUFFER_INFO Info;
-  INT nExitCode;
+	TCHAR startPath[MAX_PATH];
+	CONSOLE_SCREEN_BUFFER_INFO Info;
+	INT nExitCode;
 #ifdef _UNICODE
-  PWCHAR * argv;
-  int argc=0;
-#ifdef __REACTOS__
-  argv = _CommandLineToArgvW(GetCommandLineW(), &argc);
-#else
-  argv = CommandLineToArgvW(GetCommandLineW(), &argc);
+	PWCHAR * argv;
+	int argc=0;
+	argv = CommandLineToArgvW(GetCommandLineW(), &argc);
 #endif
-#endif
-      
-  GetCurrentDirectory(MAX_PATH,startPath);
-  _tchdir(startPath);
 
-  SetFileApisToOEM();
-  InputCodePage= 0;
-  OutputCodePage = 0;
+	GetCurrentDirectory(MAX_PATH,startPath);
+	_tchdir(startPath);
 
-  hConsole = CreateFile(_T("CONOUT$"), GENERIC_READ|GENERIC_WRITE,
-                        FILE_SHARE_READ|FILE_SHARE_WRITE, NULL,
-			OPEN_EXISTING, 0, NULL);
-  if (GetConsoleScreenBufferInfo(hConsole, &Info) == FALSE)
-    {
-      ConErrFormatMessage(GetLastError());
-      return(1);
-    }
-  wColor = Info.wAttributes;
-  wDefColor = wColor;
+	SetFileApisToOEM();
+	InputCodePage= 0;
+	OutputCodePage = 0;
 
-  InputCodePage= GetConsoleCP();
-  OutputCodePage = GetConsoleOutputCP();
-  CMD_ModuleHandle = GetModuleHandle(NULL);
-  
-  /* check switches on command-line */
-  Initialize(argc, argv);
+	hConsole = CreateFile(_T("CONOUT$"), GENERIC_READ|GENERIC_WRITE,
+		FILE_SHARE_READ|FILE_SHARE_WRITE, NULL,
+		OPEN_EXISTING, 0, NULL);
+	if (GetConsoleScreenBufferInfo(hConsole, &Info) == FALSE)
+	{
+		ConErrFormatMessage(GetLastError());
+		return(1);
+	}
+	wColor = Info.wAttributes;
+	wDefColor = wColor;
 
-  /* call prompt routine */
-  nExitCode = ProcessInput(FALSE);
+	InputCodePage= GetConsoleCP();
+	OutputCodePage = GetConsoleOutputCP();
+	CMD_ModuleHandle = GetModuleHandle(NULL);
 
-  
-  /* do the cleanup */
-  Cleanup(argc, argv);
+	/* check switches on command-line */
+	Initialize(argc, argv);
 
-  
-  return(nExitCode);
+	/* call prompt routine */
+	nExitCode = ProcessInput(FALSE);
+
+	/* do the cleanup */
+	Cleanup(argc, argv);
+
+	return(nExitCode);
 }
 
 /* EOF */

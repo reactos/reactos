@@ -62,6 +62,25 @@ typedef struct _MACHINE_INFO
 } MACHINE_INFO, *PMACHINE_INFO;
 
 
+static BOOL GuidToString(LPGUID Guid, LPWSTR String)
+{
+    LPWSTR lpString;
+
+    if (UuidToStringW(Guid, &lpString) != RPC_S_OK)
+        return FALSE;
+
+    lstrcpyW(&String[1], lpString);
+
+    String[0] = L'{';
+    String[MAX_GUID_STRING_LEN - 2] = L'}';
+    String[MAX_GUID_STRING_LEN - 1] = 0;
+
+    RpcStringFree(&lpString);
+
+    return TRUE;
+}
+
+
 /***********************************************************************
  * CM_Connect_MachineA [SETUPAPI.@]
  */
@@ -124,6 +143,54 @@ CONFIGRET WINAPI CM_Connect_MachineW(PCWSTR UNCServerName, PHMACHINE phMachine)
 
 
 /***********************************************************************
+ * CM_Delete_Class_Key [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Delete_Class_Key(LPGUID ClassGuid, ULONG ulFlags)
+{
+    TRACE("%p %lx\n", ClassGuid, ulFlags);
+    return CM_Delete_Class_Key_Ex(ClassGuid, ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Delete_Class_Key_Ex [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Delete_Class_Key_Ex(
+    LPGUID ClassGuid, ULONG ulFlags, HANDLE hMachine)
+{
+    WCHAR szGuidString[MAX_GUID_STRING_LEN];
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+
+    TRACE("%p %lx %lx\n", ClassGuid, ulFlags, hMachine);
+
+    if (ClassGuid == NULL)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags & ~CM_DELETE_CLASS_BITS)
+        return CR_INVALID_FLAG;
+
+    if (!GuidToString(ClassGuid, szGuidString))
+        return CR_INVALID_DATA;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, NULL))
+            return CR_FAILURE;
+    }
+
+    return PNP_DeleteClassKey(BindingHandle,
+                             szGuidString,
+                             ulFlags);
+}
+
+
+/***********************************************************************
  * CM_Disconnect_Machine [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Disconnect_Machine(HMACHINE hMachine)
@@ -159,46 +226,16 @@ CONFIGRET WINAPI CM_Enumerate_Classes(
 }
 
 
-static CONFIGRET GetCmCodeFromErrorCode(DWORD ErrorCode)
-{
-    switch (ErrorCode)
-    {
-        case ERROR_SUCCESS:
-            return CR_SUCCESS;
-
-        case ERROR_ACCESS_DENIED:
-            return CR_ACCESS_DENIED;
-
-        case ERROR_INSUFFICIENT_BUFFER:
-            return CR_BUFFER_SMALL;
-
-        case ERROR_INVALID_DATA:
-            return CR_INVALID_DATA;
-
-        case ERROR_INVALID_PARAMETER:
-            return CR_INVALID_DATA;
-
-        case ERROR_NO_MORE_ITEMS:
-            return CR_NO_SUCH_VALUE;
-
-        case ERROR_NO_SYSTEM_RESOURCES:
-            return CR_OUT_OF_MEMORY;
-
-        default:
-            return CR_FAILURE;
-    }
-}
-
-
 /***********************************************************************
  * CM_Enumerate_Classes_Ex [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Enumerate_Classes_Ex(
     ULONG ulClassIndex, LPGUID ClassGuid, ULONG ulFlags, HMACHINE hMachine)
 {
-    HKEY hRelativeKey, hKey;
-    DWORD rc;
-    WCHAR Buffer[MAX_GUID_STRING_LEN];
+    WCHAR szBuffer[MAX_GUID_STRING_LEN];
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+    CONFIGRET ret = CR_SUCCESS;
+    ULONG ulLength = MAX_GUID_STRING_LEN;
 
     TRACE("%lx %p %lx %p\n", ulClassIndex, ClassGuid, ulFlags, hMachine);
 
@@ -210,39 +247,146 @@ CONFIGRET WINAPI CM_Enumerate_Classes_Ex(
 
     if (hMachine != NULL)
     {
-        FIXME("hMachine argument ignored\n");
-        hRelativeKey = HKEY_LOCAL_MACHINE; /* FIXME: use here a field in hMachine */
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
     }
     else
-        hRelativeKey = HKEY_LOCAL_MACHINE;
-
-    rc = RegOpenKeyExW(
-        hRelativeKey,
-        ControlClass,
-        0, /* options */
-        KEY_ENUMERATE_SUB_KEYS,
-        &hKey);
-    if (rc != ERROR_SUCCESS)
-        return GetCmCodeFromErrorCode(rc);
-
-    rc = RegEnumKeyW(
-        hKey,
-        ulClassIndex,
-        Buffer,
-        sizeof(Buffer) / sizeof(WCHAR));
-
-    RegCloseKey(hKey);
-
-    if (rc == ERROR_SUCCESS)
     {
-        /* Remove the {} */
-        Buffer[MAX_GUID_STRING_LEN - 2] = UNICODE_NULL;
-        /* Convert the buffer to a GUID */
-        if (UuidFromStringW(&Buffer[1], ClassGuid) != RPC_S_OK)
+        if (!PnpGetLocalHandles(&BindingHandle, NULL))
             return CR_FAILURE;
     }
 
-    return GetCmCodeFromErrorCode(rc);
+    ret = PNP_EnumerateSubKeys(BindingHandle,
+                               PNP_BRANCH_CLASS,
+                               ulClassIndex,
+                               szBuffer,
+                               MAX_GUID_STRING_LEN,
+                               &ulLength,
+                               ulFlags);
+    if (ret == CR_SUCCESS)
+    {
+        /* Remove the {} */
+        szBuffer[MAX_GUID_STRING_LEN - 2] = UNICODE_NULL;
+
+        /* Convert the buffer to a GUID */
+        if (UuidFromStringW(&szBuffer[1], ClassGuid) != RPC_S_OK)
+            return CR_FAILURE;
+    }
+
+    return ret;
+}
+
+
+/***********************************************************************
+ * CM_Enumerate_EnumeratorsA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Enumerate_EnumeratorsA(
+    ULONG ulEnumIndex, PCHAR Buffer, PULONG pulLength, ULONG ulFlags)
+{
+    TRACE("%lu %p %p %lx\n", ulEnumIndex, Buffer, pulLength, ulFlags);
+    return CM_Enumerate_Enumerators_ExA(ulEnumIndex, Buffer, pulLength,
+                                        ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Enumerate_EnumeratorsW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Enumerate_EnumeratorsW(
+    ULONG ulEnumIndex, PWCHAR Buffer, PULONG pulLength, ULONG ulFlags)
+{
+    TRACE("%lu %p %p %lx\n", ulEnumIndex, Buffer, pulLength, ulFlags);
+    return CM_Enumerate_Enumerators_ExW(ulEnumIndex, Buffer, pulLength,
+                                        ulFlags, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Enumerate_Enumerators_ExA [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Enumerate_Enumerators_ExA(
+    ULONG ulEnumIndex, PCHAR Buffer, PULONG pulLength, ULONG ulFlags,
+    HMACHINE hMachine)
+{
+    WCHAR szBuffer[MAX_DEVICE_ID_LEN];
+    ULONG ulOrigLength;
+    ULONG ulLength;
+    CONFIGRET ret = CR_SUCCESS;
+
+    TRACE("%lu %p %p %lx %lx\n", ulEnumIndex, Buffer, pulLength, ulFlags,
+          hMachine);
+
+    if (Buffer == NULL || pulLength == NULL)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    ulOrigLength = *pulLength;
+    *pulLength = 0;
+
+    ulLength = MAX_DEVICE_ID_LEN;
+    ret = CM_Enumerate_Enumerators_ExW(ulEnumIndex, szBuffer, &ulLength,
+                                       ulFlags, hMachine);
+    if (ret == CR_SUCCESS)
+    {
+        if (WideCharToMultiByte(CP_ACP,
+                                0,
+                                szBuffer,
+                                ulLength,
+                                Buffer,
+                                ulOrigLength,
+                                NULL,
+                                NULL) == 0)
+            ret = CR_FAILURE;
+        else
+            *pulLength = lstrlenA(Buffer) + 1;
+    }
+
+    return ret;
+}
+
+
+/***********************************************************************
+ * CM_Enumerate_Enumerators_ExW [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Enumerate_Enumerators_ExW(
+    ULONG ulEnumIndex, PWCHAR Buffer, PULONG pulLength, ULONG ulFlags,
+    HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+
+    TRACE("%lu %p %p %lx %lx\n", ulEnumIndex, Buffer, pulLength, ulFlags,
+          hMachine);
+
+    if (Buffer == NULL || pulLength == NULL)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags != 0)
+        return CR_INVALID_FLAG;
+
+    *Buffer = UNICODE_NULL;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, NULL))
+            return CR_FAILURE;
+    }
+
+    return PNP_EnumerateSubKeys(BindingHandle,
+                                PNP_BRANCH_ENUM,
+                                ulEnumIndex,
+                                Buffer,
+                                *pulLength,
+                                pulLength,
+                                ulFlags);
 }
 
 
@@ -390,25 +534,6 @@ CONFIGRET WINAPI CM_Get_Class_Key_Name_ExA(
     }
 
     return CR_SUCCESS;
-}
-
-
-static BOOL GuidToString(LPGUID Guid, LPWSTR String)
-{
-    LPWSTR lpString;
-
-    if (UuidToStringW(Guid, &lpString) != RPC_S_OK)
-        return FALSE;
-
-    lstrcpyW(&String[1], lpString);
-
-    String[0] = L'{';
-    String[MAX_GUID_STRING_LEN - 2] = L'}';
-    String[MAX_GUID_STRING_LEN - 1] = 0;
-
-    RpcStringFree(&lpString);
-
-    return TRUE;
 }
 
 
@@ -654,11 +779,67 @@ CONFIGRET WINAPI CM_Get_DevNode_Registry_Property_ExA(
     DEVINST dnDevInst, ULONG ulProperty, PULONG pulRegDataType,
     PVOID Buffer, PULONG pulLength, ULONG ulFlags, HMACHINE hMachine)
 {
-    FIXME("%lx %lu %p %p %p %lx %lx\n",
+    PVOID BufferW;
+    ULONG LengthW;
+    ULONG RegDataType;
+    CONFIGRET ret;
+
+    TRACE("%lx %lu %p %p %p %lx %lx\n",
           dnDevInst, ulProperty, pulRegDataType, Buffer, pulLength,
           ulFlags, hMachine);
 
-    return CR_CALL_NOT_IMPLEMENTED;
+    if (!pulLength)
+        return CR_INVALID_POINTER;
+
+    LengthW = *pulLength * sizeof(WCHAR);
+    BufferW = HeapAlloc(GetProcessHeap(), 0, LengthW);
+
+    if (!BufferW)
+        return CR_OUT_OF_MEMORY;
+
+    ret = CM_Get_DevNode_Registry_Property_ExW(dnDevInst,
+                                               ulProperty,
+                                               &RegDataType,
+                                               BufferW,
+                                               &LengthW,
+                                               ulFlags,
+                                               hMachine);
+
+    if (ret == CR_SUCCESS)
+    {
+        if (RegDataType == REG_SZ || RegDataType == REG_EXPAND_SZ)
+        {
+            /* Do W->A conversion */
+            *pulLength = WideCharToMultiByte(CP_ACP,
+                                             0,
+                                             BufferW,
+                                             lstrlenW(BufferW) + 1,
+                                             Buffer,
+                                             *pulLength,
+                                             NULL,
+                                             NULL);
+            if (*pulLength == 0)
+                ret = CR_FAILURE;
+        }
+        else
+        {
+            /* Directly copy the value */
+            if (LengthW <= *pulLength)
+                memcpy(Buffer, BufferW, LengthW);
+            else
+            {
+                *pulLength = LengthW;
+                ret = CR_BUFFER_SMALL;
+            }
+        }
+    }
+
+    if (pulRegDataType)
+        *pulRegDataType = RegDataType;
+
+    HeapFree(GetProcessHeap(), 0, BufferW);
+
+    return ret;
 }
 
 
@@ -676,7 +857,7 @@ CONFIGRET WINAPI CM_Get_DevNode_Registry_Property_ExW(
     ULONG ulDataType = 0;
     ULONG ulTransferLength = 0;
 
-    FIXME("%lx %lu %p %p %p %lx %lx\n",
+    TRACE("%lx %lu %p %p %p %lx %lx\n",
           dnDevInst, ulProperty, pulRegDataType, Buffer, pulLength,
           ulFlags, hMachine);
 
@@ -1070,9 +1251,34 @@ CONFIGRET WINAPI CM_Get_Device_ID_List_Size_ExA(
 CONFIGRET WINAPI CM_Get_Device_ID_List_Size_ExW(
     PULONG pulLen, PCWSTR pszFilter, ULONG ulFlags, HMACHINE hMachine)
 {
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+
     FIXME("%p %s %ld %lx\n", pulLen, debugstr_w(pszFilter), ulFlags, hMachine);
-    *pulLen = 2;
-    return CR_SUCCESS;
+
+    if (pulLen == NULL)
+        return CR_INVALID_POINTER;
+
+    if (ulFlags & ~CM_GETIDLIST_FILTER_BITS)
+        return CR_INVALID_FLAG;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, NULL))
+            return CR_FAILURE;
+    }
+
+    *pulLen = 0;
+
+    return PNP_GetDeviceListSize(BindingHandle,
+                                 (LPWSTR)pszFilter,
+                                 pulLen,
+                                 ulFlags);
 }
 
 
@@ -1371,6 +1577,49 @@ WORD WINAPI CM_Get_Version_Ex(HMACHINE hMachine)
 
 
 /***********************************************************************
+ * CM_Is_Dock_Station_Present [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Is_Dock_Station_Present(
+    PBOOL pbPresent)
+{
+    TRACE("%p\n", pbPresent);
+    return CM_Is_Dock_Station_Present_Ex(pbPresent, NULL);
+}
+
+
+/***********************************************************************
+ * CM_Is_Dock_Station_Present_Ex [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Is_Dock_Station_Present_Ex(
+    PBOOL pbPresent, HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+
+    TRACE("%p %lx\n", pbPresent, hMachine);
+
+    if (pbPresent == NULL)
+        return CR_INVALID_POINTER;
+
+    *pbPresent = FALSE;
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, NULL))
+            return CR_FAILURE;
+    }
+
+    return PNP_IsDockStationPresent(BindingHandle,
+                                    (unsigned long *)pbPresent);
+}
+
+
+/***********************************************************************
  * CM_Locate_DevNodeA [SETUPAPI.@]
  */
 CONFIGRET WINAPI CM_Locate_DevNodeA(
@@ -1639,6 +1888,42 @@ CONFIGRET WINAPI CM_Open_Class_Key_ExW(
     }
 
     return CR_SUCCESS;
+}
+
+
+/***********************************************************************
+ * CM_Request_Eject_PC [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Request_Eject_PC(VOID)
+{
+    TRACE("\n");
+    return CM_Request_Eject_PC_Ex(NULL);
+}
+
+
+/***********************************************************************
+ * CM_Request_Eject_PC_Ex [SETUPAPI.@]
+ */
+CONFIGRET WINAPI CM_Request_Eject_PC_Ex(
+    HMACHINE hMachine)
+{
+    RPC_BINDING_HANDLE BindingHandle = NULL;
+
+    TRACE("%lx\n", hMachine);
+
+    if (hMachine != NULL)
+    {
+        BindingHandle = ((PMACHINE_INFO)hMachine)->BindingHandle;
+        if (BindingHandle == NULL)
+            return CR_FAILURE;
+    }
+    else
+    {
+        if (!PnpGetLocalHandles(&BindingHandle, NULL))
+            return CR_FAILURE;
+    }
+
+    return PNP_RequestEjectPC(BindingHandle);
 }
 
 

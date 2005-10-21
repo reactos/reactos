@@ -705,7 +705,9 @@ MmFindGapAtAddress(
  * Initialize the memory area list implementation.
  */
 
-NTSTATUS INIT_FUNCTION
+NTSTATUS
+INIT_FUNCTION
+NTAPI
 MmInitMemoryAreas(VOID)
 {
    DPRINT("MmInitMemoryAreas()\n",0);

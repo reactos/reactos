@@ -40,25 +40,20 @@ POPUP "&Правка" {
   MENUITEM "Вст&авить\tCtrl+V",    CMD_PASTE
   MENUITEM "&Удалить\tDel",      CMD_DELETE
   MENUITEM SEPARATOR
+  MENUITEM "&Найти",           CMD_SEARCH
+  MENUITEM "Найти &далее\tF3",  CMD_SEARCH_NEXT
+  MENUITEM SEPARATOR
   MENUITEM "Выделить в&се",       CMD_SELECT_ALL
   MENUITEM "Врем&я и дата\tF5",    CMD_TIME_DATE
   MENUITEM SEPARATOR
   MENUITEM "&Перенос по словам",  CMD_WRAP
- }
-POPUP "П&оиск" {
-  MENUITEM "&Найти",           CMD_SEARCH
-  MENUITEM "Найти &далее\tF3",  CMD_SEARCH_NEXT
  }
 POPUP "&Справка" {
   MENUITEM "&Содержание",         CMD_HELP_CONTENTS
   MENUITEM "&Поиск...",        CMD_HELP_SEARCH
   MENUITEM "&Использование справки",     CMD_HELP_ON_HELP
   MENUITEM SEPARATOR
-  POPUP "&Сведения..." {
-   MENUITEM "&Лицензия",         CMD_LICENSE
-   MENUITEM "&БЕЗ ГАРАНТИЙ",     CMD_NO_WARRANTY
-   MENUITEM "&O Wine",      CMD_ABOUT_WINE
-  }
+  MENUITEM "&Сведения...",      CMD_ABOUT_WINE
  }
 }
 

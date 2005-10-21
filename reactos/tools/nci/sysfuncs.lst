@@ -20,6 +20,7 @@ NtCloseObjectAuditAlarm 3
 NtCompleteConnectPort 1
 NtConnectPort 8
 NtContinue 2
+NtCreateDebugObject 4
 NtCreateDirectoryObject 3
 NtCreateEvent 5
 NtCreateEventPair 3
@@ -41,6 +42,7 @@ NtCreateThread 8
 NtCreateTimer 4
 NtCreateToken 13
 NtCreateWaitablePort 5
+NtDebugContinue 3
 NtDelayExecution 2
 NtDeleteAtom 1
 NtDeleteBootEntry 2
@@ -113,6 +115,7 @@ NtQueryInformationAtom 5
 NtQueryAttributesFile 2
 NtQueryBootEntryOrder 2
 NtQueryBootOptions 2
+NtQueryDebugFilterState 2
 NtQueryDefaultLocale 2
 NtQueryDefaultUILanguage 1
 NtQueryDirectoryFile 11
@@ -173,6 +176,7 @@ NtSaveKeyEx 3
 NtSecureConnectPort 9
 NtSetBootEntryOrder 2
 NtSetBootOptions 2
+NtSetDebugFilterState 3
 NtSetIoCompletion 5
 NtSetContextThread 2
 NtSetDefaultHardErrorPort 1
@@ -223,6 +227,7 @@ NtUnlockFile 5
 NtUnlockVirtualMemory 4
 NtUnmapViewOfSection 2
 NtVdmControl 2
+NtWaitForDebugEvent 4
 NtWaitForMultipleObjects 5
 NtWaitForSingleObject 3
 NtWaitHighEventPair 1

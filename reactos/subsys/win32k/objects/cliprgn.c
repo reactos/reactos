@@ -83,10 +83,17 @@ NtGdiSelectVisRgn(HDC hdc, HRGN hrgn)
       dc->w.hVisRgn = NtGdiCreateRectRgn(0, 0, 0, 0);
       GDIOBJ_CopyOwnership(hdc, dc->w.hVisRgn);
     }
+  else
+    {
+      NtGdiOffsetRgn(dc->w.hVisRgn, dc->w.DCOrgX, dc->w.DCOrgY);
+    }
 
   retval = NtGdiCombineRgn(dc->w.hVisRgn, hrgn, 0, RGN_COPY);
   if ( retval != ERROR )
-    CLIPPING_UpdateGCRegion(dc);
+    {
+      NtGdiOffsetRgn(dc->w.hVisRgn, -dc->w.DCOrgX, -dc->w.DCOrgY);
+      CLIPPING_UpdateGCRegion(dc);
+    }
   DC_UnlockDc(dc);
 
   return retval;

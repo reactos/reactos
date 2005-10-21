@@ -44,7 +44,7 @@ const LPCTSTR sCFSTR_SHELLIDLIST = TEXT("Shell IDList Array");
 
  // helper functions for string copying
 
-LPSTR strcpyn(LPSTR dest, LPCSTR source, size_t count)
+/*LPSTR strcpyn(LPSTR dest, LPCSTR source, size_t count)
 {
 	LPCSTR s;
 	LPSTR d = dest;
@@ -64,7 +64,7 @@ LPWSTR wcscpyn(LPWSTR dest, LPCWSTR source, size_t count)
 		count--;
 
 	return dest;
-}
+}*/
 
 
 String COMException::toString() const

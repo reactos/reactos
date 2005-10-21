@@ -569,7 +569,7 @@ void usb_sg_cancel (struct usb_sg_request *io)
 int usb_get_descriptor(struct usb_device *dev, unsigned char type, unsigned char index, void *buf, int size)
 {
 	int i = 5;
-	int result;
+	int result = 0;
 	
 	memset(buf,0,size);	// Make sure we parse really received data
 

@@ -16,7 +16,7 @@
 /*
  * @unimplemented
  */
-PDEBUG_BUFFER STDCALL
+PDEBUG_BUFFER NTAPI
 RtlCreateQueryDebugBuffer(IN ULONG Size,
                           IN BOOLEAN EventPair)
 {
@@ -46,7 +46,7 @@ RtlCreateQueryDebugBuffer(IN ULONG Size,
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlDestroyQueryDebugBuffer(IN PDEBUG_BUFFER Buf)
 {
    NTSTATUS Status = STATUS_SUCCESS;
@@ -69,7 +69,7 @@ RtlDestroyQueryDebugBuffer(IN PDEBUG_BUFFER Buf)
  *	Based on lib/epsapi/enum/modules.c by KJK::Hyperion.
  *
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
                               IN PMODULE_INFORMATION ModuleInformation OPTIONAL,
                               IN ULONG Size OPTIONAL,
@@ -227,7 +227,7 @@ RtlpQueryRemoteProcessModules(HANDLE ProcessHandle,
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 RtlQueryProcessDebugInformation(IN ULONG ProcessId,
                                 IN ULONG DebugInfoMask,
                                 IN OUT PDEBUG_BUFFER Buf)

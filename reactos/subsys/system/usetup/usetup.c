@@ -2545,7 +2545,7 @@ InstallDirectoryPage1(PWCHAR InstallDir, PDISKENTRY DiskEntry, PPARTENTRY PartEn
   RtlFreeUnicodeString(&DestinationArcPath);
   swprintf(PathBuffer,
 	   L"multi(0)disk(0)rdisk(%lu)partition(%lu)",
-	   DiskEntry->DiskNumber,
+	   DiskEntry->BiosDiskNumber,
 	   PartEntry->PartInfo[0].PartitionNumber);
   if (InstallDir[0] != L'\\')
     wcscat(PathBuffer,
@@ -3240,6 +3240,9 @@ RegistryPage(PINPUT_RECORD Ir)
 	    }
 	}
     }
+
+  /* Update the mounted devices list */
+  SetMountedDeviceValues(PartitionList);
 
   SetStatusText("   Done...");
 
