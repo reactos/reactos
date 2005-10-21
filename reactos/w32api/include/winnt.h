@@ -3386,6 +3386,13 @@ typedef struct _SYSTEM_POWER_INFORMATION {
 } SYSTEM_POWER_INFORMATION,*PSYSTEM_POWER_INFORMATION;
 #endif
 
+#if (_WIN32_WINNT >= 0x0500)
+typedef enum _AUDIT_EVENT_TYPE {
+    AuditEventObjectAccess,
+    AuditEventDirectoryServiceAccess
+} AUDIT_EVENT_TYPE, *PAUDIT_EVENT_TYPE;
+#endif
+
 #if (_WIN32_WINNT >= 0x0501)
 typedef enum _HEAP_INFORMATION_CLASS {
 	HeapCompatibilityInformation
