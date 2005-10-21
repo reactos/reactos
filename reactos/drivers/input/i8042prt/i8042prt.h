@@ -246,6 +246,17 @@ typedef struct _I8042_HOOK_WORKITEM
 #define KBD_GTO            0x40
 #define KBD_PERR           0x80
 
+/*
+ * Controller command byte bits
+ */
+#define CCB_KBD_INT_ENAB   0x01
+#define CCB_MOUSE_INT_ENAB 0x02
+#define CCB_SYSTEM_FLAG    0x04
+#define CCB_IGN_KEY_LOCK   0x08
+#define CCB_KBD_DISAB      0x10
+#define CCB_MOUSE_DISAB    0x20
+#define CCB_TRANSLATE      0x40
+
 
 /*
  * LED bits
@@ -359,6 +370,7 @@ VOID STDCALL I8042MouseHandle(PDEVICE_EXTENSION DevExt,
 
 BOOLEAN STDCALL I8042MouseEnable(PDEVICE_EXTENSION DevExt);
 BOOLEAN STDCALL I8042MouseDisable(PDEVICE_EXTENSION DevExt);
+BOOLEAN STDCALL I8042DetectMouse(PDEVICE_EXTENSION DevExt);
 
 /* ps2pp.c */
 VOID I8042MouseHandlePs2pp(PDEVICE_EXTENSION DevExt, UCHAR Input);

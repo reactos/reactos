@@ -10,9 +10,7 @@
 
 /* INCLUDES ****************************************************************/
 
-#ifndef NDEBUG
 #define NDEBUG
-#endif
 #include <debug.h>
 
 #include "i8042prt.h"
@@ -78,7 +76,7 @@ NTSTATUS I8042ReadData(UCHAR *Data)
 		DPRINT("Read: %x (status: %x)\n", Data[0], Status);
 
 		// If the data is valid (not timeout, not parity error)
-		if (0 == (Status & (KBD_GTO | KBD_PERR)))
+		if (0 == (Status & KBD_PERR))
 			return STATUS_SUCCESS;
 	}
 	return STATUS_UNSUCCESSFUL;
@@ -115,7 +113,7 @@ VOID I8042Flush()
 	UCHAR Ignore;
 
 	while (STATUS_SUCCESS == I8042ReadData(&Ignore)) {
-		; /* drop */
+		DPRINT("Data flushed\n"); /* drop */
 	}
 }
 
@@ -146,25 +144,38 @@ NTSTATUS STDCALL I8042SynchWritePort(PDEVICE_EXTENSION DevExt,
 	do {
 		if (Port)
 			if (!I8042Write(DevExt, I8042_DATA_PORT, Port))
-				return STATUS_TIMEOUT;
+			{
+				DPRINT1("Failed to write Port\n");
+				return STATUS_IO_TIMEOUT;
+			}
 
 		if (!I8042Write(DevExt, I8042_DATA_PORT, Value))
-			return STATUS_TIMEOUT;
+		{
+			DPRINT1("Failed to write Value\n");
+			return STATUS_IO_TIMEOUT;
+		}
 
 		if (WaitForAck) {
 			Status = I8042ReadDataWait(DevExt, &Ack);
 			if (!NT_SUCCESS(Status))
+			{
+				DPRINT1("Failed to read Ack\n");
 				return Status;
+			}
 			if (Ack == KBD_ACK)
 				return STATUS_SUCCESS;
 			if (Ack != KBD_RESEND)
+			{
+				DPRINT1("Unexpected Ack 0x%x\n", Ack);
 				return STATUS_UNEXPECTED_IO_ERROR;
+			}
 		} else {
 			return STATUS_SUCCESS;
 		}
+		DPRINT("Reiterating\n");
 		ResendIterations--;
 	} while (ResendIterations);
-	return STATUS_TIMEOUT;
+	return STATUS_IO_TIMEOUT;
 }
 
 /*
@@ -241,7 +252,7 @@ NTSTATUS STDCALL I8042StartPacket(PDEVICE_EXTENSION DevExt,
 		DevExt->PacketPort = 0;
 
 	if (!I8042PacketWrite(DevExt)) {
-		Status = STATUS_TIMEOUT;
+		Status = STATUS_IO_TIMEOUT;
 		DevExt->Packet.State = Idle;
 		DevExt->PacketResult = STATUS_ABANDONED;
 		goto startpacketdone;
@@ -273,7 +284,7 @@ BOOLEAN STDCALL I8042PacketIsr(PDEVICE_EXTENSION DevExt,
 		if (DevExt->PacketResends > DevExt->Settings.ResendIterations) {
 			DevExt->Packet.State = Idle;
 			DevExt->PacketComplete = TRUE;
-			DevExt->PacketResult = STATUS_TIMEOUT;
+			DevExt->PacketResult = STATUS_IO_TIMEOUT;
 			DevExt->PacketResends = 0;
 			return TRUE;
 		}
@@ -301,7 +312,7 @@ BOOLEAN STDCALL I8042PacketIsr(PDEVICE_EXTENSION DevExt,
 	if (!I8042PacketWrite(DevExt)) {
 		DevExt->Packet.State = Idle;
 		DevExt->PacketComplete = TRUE;
-		DevExt->PacketResult = STATUS_TIMEOUT;
+		DevExt->PacketResult = STATUS_IO_TIMEOUT;
 		return TRUE;
 	}
 	DevExt->Packet.CurrentByte++;
@@ -519,21 +530,51 @@ static NTSTATUS STDCALL I8042BasicDetect(PDEVICE_EXTENSION DevExt)
 
 	I8042Flush();
 
-	if (!I8042Write(DevExt, I8042_CTRL_PORT, KBD_SELF_TEST))
-		return STATUS_TIMEOUT;
+	if (!I8042Write(DevExt, I8042_CTRL_PORT, KBD_SELF_TEST)) {
+		DPRINT1("Writing KBD_SELF_TEST command failed\n");
+		return STATUS_IO_TIMEOUT;
+	}
 
 	// Wait longer?
 	Counter = 3;
 	do {
 		Status = I8042ReadDataWait(DevExt, &Value);
-	} while ((Counter--) && (STATUS_TIMEOUT == Status));
+	} while ((Counter--) && (STATUS_IO_TIMEOUT == Status));
 
-	if (!NT_SUCCESS(Status))
+	if (!NT_SUCCESS(Status)) {
+		DPRINT1("Failed to read KBD_SELF_TEST response, status 0x%x\n",
+		        Status);
 		return Status;
+	}
 
 	if (Value != 0x55) {
 		DPRINT1("Got %x instead of 55\n", Value);
 		return STATUS_IO_DEVICE_ERROR;
+	}
+
+	if (!I8042Write(DevExt, I8042_CTRL_PORT, KBD_READ_MODE)) {
+		DPRINT1("Can't read i8042 mode\n");
+		return FALSE;
+	}
+
+	Status = I8042ReadDataWait(DevExt, &Value);
+	if (!NT_SUCCESS(Status)) {
+		DPRINT1("No response after read i8042 mode\n");
+		return FALSE;
+	}
+
+	Value |= CCB_KBD_DISAB | CCB_MOUSE_DISAB; /* disable keyboard/mouse */
+	Value &= ~(CCB_KBD_INT_ENAB | CCB_MOUSE_INT_ENAB);
+                 /* don't enable keyboard and mouse interrupts */
+
+	if (!I8042Write(DevExt, I8042_CTRL_PORT, KBD_WRITE_MODE)) {
+		DPRINT1("Can't set i8042 mode\n");
+		return FALSE;
+	}
+
+	if (!I8042Write(DevExt, I8042_DATA_PORT, Value)) {
+		DPRINT1("Can't send i8042 mode\n");
+		return FALSE;
 	}
 
 	if (I8042Write(DevExt, I8042_CTRL_PORT, KBD_LINE_TEST))
@@ -561,6 +602,11 @@ static NTSTATUS STDCALL I8042Initialize(PDEVICE_EXTENSION DevExt)
 	if (!NT_SUCCESS(Status)) {
 		DPRINT1("Basic keyboard detection failed: %x\n", Status);
 		return Status;
+	}
+
+	if (DevExt->MouseExists) {
+		DPRINT("Aux port detected\n");
+		DevExt->MouseExists = I8042DetectMouse(DevExt);
 	}
 
 	if (!DevExt->KeyboardExists) {
@@ -820,4 +866,3 @@ NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT DriverObject,
 
 	return(STATUS_SUCCESS);
 }
-

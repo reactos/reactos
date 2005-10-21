@@ -11,12 +11,10 @@
 
 /* INCLUDES ****************************************************************/
 
-#ifndef NDEBUG
-#define NDEBUG
-#endif
-#include <debug.h>
-
 #include "i8042prt.h"
+
+#define NDEBUG
+#include <debug.h>
 
 /*
  * These functions are callbacks for filter driver custom interrupt
@@ -896,4 +894,55 @@ BOOLEAN STDCALL I8042MouseDisable(PDEVICE_EXTENSION DevExt)
 	 */
 
 	return TRUE;
+}
+
+BOOLEAN STDCALL I8042DetectMouse(PDEVICE_EXTENSION DevExt)
+{
+	BOOLEAN Ok = TRUE;
+	NTSTATUS Status;
+	UCHAR Value;
+	UCHAR ExpectedReply[] = { 0xFA, 0xAA, 0x00 };
+	unsigned ReplyByte;
+
+	if (! I8042Write(DevExt, I8042_CTRL_PORT, 0xD4) ||
+	    ! I8042Write(DevExt, I8042_DATA_PORT, 0xFF))
+	{
+		DPRINT1("Failed to write reset command to mouse\n");
+		Ok = FALSE;
+	}
+
+	for (ReplyByte = 0;
+	     ReplyByte < sizeof(ExpectedReply) / sizeof(ExpectedReply[0]) && Ok;
+	     ReplyByte++)
+	{
+		Status = I8042ReadDataWait(DevExt, &Value);
+		if (! NT_SUCCESS(Status))
+		{
+			DPRINT1("No ACK after mouse reset, status 0x%08x\n",
+			        Status);
+			Ok = FALSE;
+		}
+		else if (Value != ExpectedReply[ReplyByte])
+		{
+			DPRINT1("Unexpected reply: 0x%02x (expected 0x%02x)\n",
+			        Value, ExpectedReply[ReplyByte]);
+			Ok = FALSE;
+		}
+	}
+
+	if (! Ok)
+	{
+		/* There is probably no mouse present. On some systems,
+		   the probe locks the entire keyboard controller. Let's
+		   try to get access to the keyboard again by sending a
+		   reset */
+		I8042Flush();
+		I8042Write(DevExt, I8042_CTRL_PORT, KBD_SELF_TEST);
+		I8042ReadDataWait(DevExt, &Value);
+		I8042Flush();
+	}
+		
+	DPRINT("Mouse %sdetected\n", Ok ? "" : "not ");
+
+	return Ok;
 }
