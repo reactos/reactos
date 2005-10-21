@@ -1,0 +1,10 @@
+#include <windows.h>
+#include "resource.h"
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+IDB_WATERMARK BITMAP "resources/watermark.bmp"
+IDB_HEADER    BITMAP "resources/header.bmp"
+
+#include "En.rc"
+#include "De.rc"
