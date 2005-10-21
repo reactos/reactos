@@ -11,12 +11,10 @@
 
 /* INCLUDES ****************************************************************/
 
-#ifndef NDEBUG
-#define NDEBUG
-#endif
-#include <debug.h>
-
 #include "i8042prt.h"
+
+#define NDEBUG
+#include <debug.h>
 
 /* GLOBALS *******************************************************************/
 
@@ -559,34 +557,73 @@ intcontfailure:
  * some really old broken keyboard controllers which I hope won't be
  * necessary.
  *
- * Anyway, disabling the keyboard helps the detection and it also
- * clears the keyboard buffer and sets defaults which is what we
- * want.
+ * We change the command byte, sending KBD_ENABLE/DISABLE seems to confuse
+ * some kvm switches.
  */
 
 BOOLEAN STDCALL I8042KeyboardEnable(PDEVICE_EXTENSION DevExt)
 {
-	DPRINT("Enabling keyboard\n");
-	if (STATUS_SUCCESS != I8042SynchWritePort(DevExt,
-	                                          0,
-	                                          KBD_ENABLE,
-	                                          TRUE)) {
-		DPRINT("Can't enable keyboard\n");
+	UCHAR Value;
+	NTSTATUS Status;
+
+	DPRINT("Enable keyboard\n");
+
+	if (!I8042Write(DevExt, I8042_CTRL_PORT, KBD_READ_MODE)) {
+		DPRINT1("Can't read i8042 mode\n");
 		return FALSE;
 	}
+
+	Status = I8042ReadDataWait(DevExt, &Value);
+	if (!NT_SUCCESS(Status)) {
+		DPRINT1("No response after read i8042 mode\n");
+		return FALSE;
+	}
+
+	Value &= ~CCB_KBD_DISAB; // don't disable keyboard
+
+	if (!I8042Write(DevExt, I8042_CTRL_PORT, KBD_WRITE_MODE)) {
+		DPRINT1("Can't set i8042 mode\n");
+		return FALSE;
+	}
+
+	if (!I8042Write(DevExt, I8042_DATA_PORT, Value)) {
+		DPRINT1("Can't send i8042 mode\n");
+		return FALSE;
+	}
+
 	return TRUE;
 }
 
 static BOOLEAN STDCALL I8042KeyboardDefaultsAndDisable(PDEVICE_EXTENSION DevExt)
 {
+	UCHAR Value;
+	NTSTATUS Status;
+
 	DPRINT("Disabling keyboard\n");
-	if (STATUS_SUCCESS != I8042SynchWritePort(DevExt,
-	                                          0,
-	                                          KBD_DISABLE,
-	                                          TRUE)) {
-		DPRINT("Can't disable keyboard\n");
+
+	if (!I8042Write(DevExt, I8042_CTRL_PORT, KBD_READ_MODE)) {
+		DPRINT1("Can't read i8042 mode\n");
 		return FALSE;
 	}
+
+	Status = I8042ReadDataWait(DevExt, &Value);
+	if (!NT_SUCCESS(Status)) {
+		DPRINT1("No response after read i8042 mode\n");
+		return FALSE;
+	}
+
+	Value |= CCB_KBD_DISAB; // disable keyboard
+
+	if (!I8042Write(DevExt, I8042_CTRL_PORT, KBD_WRITE_MODE)) {
+		DPRINT1("Can't set i8042 mode\n");
+		return FALSE;
+	}
+
+	if (!I8042Write(DevExt, I8042_DATA_PORT, Value)) {
+		DPRINT1("Can't send i8042 mode\n");
+		return FALSE;
+	}
+
 	return TRUE;
 }
 
@@ -608,8 +645,8 @@ BOOLEAN STDCALL I8042KeyboardEnableInterrupt(PDEVICE_EXTENSION DevExt)
 		return FALSE;
 	}
 
-	Value &= ~(0x10); // don't disable keyboard
-	Value |= 0x01;    // enable keyboard interrupts
+	Value &= ~CCB_KBD_DISAB; // don't disable keyboard
+	Value |= CCB_KBD_INT_ENAB;    // enable keyboard interrupts
 
 	if (!I8042Write(DevExt, I8042_CTRL_PORT, KBD_WRITE_MODE)) {
 		DPRINT1("Can't set i8042 mode\n");
@@ -628,6 +665,7 @@ BOOLEAN STDCALL I8042DetectKeyboard(PDEVICE_EXTENSION DevExt)
 {
 	NTSTATUS Status;
 	UCHAR Value;
+	UCHAR Value2;
 	ULONG RetryCount = 10;
 
 	DPRINT("Detecting keyboard\n");
@@ -635,12 +673,15 @@ BOOLEAN STDCALL I8042DetectKeyboard(PDEVICE_EXTENSION DevExt)
 	I8042KeyboardDefaultsAndDisable(DevExt);
 
 	do {
+		I8042Flush();
 		Status = I8042SynchWritePort(DevExt, 0, KBD_GET_ID, TRUE);
-	} while (STATUS_TIMEOUT == Status && RetryCount--);
+	} while (STATUS_IO_TIMEOUT == Status && RetryCount--);
 
 	if (!NT_SUCCESS(Status)) {
 		DPRINT1("Can't write GET_ID (%x)\n", Status);
-		return FALSE;
+		/* Could be an AT keyboard */
+		DevExt->KeyboardIsAT = TRUE;
+		goto detectsetleds;
 	}
 
 	Status = I8042ReadDataWait(DevExt, &Value);
@@ -658,17 +699,17 @@ BOOLEAN STDCALL I8042DetectKeyboard(PDEVICE_EXTENSION DevExt)
 		return FALSE;
 	}
 
-	DPRINT("Keyboard ID: %x", Value);
-
-	Status = I8042ReadDataWait(DevExt, &Value);
+	Status = I8042ReadDataWait(DevExt, &Value2);
 	if (!NT_SUCCESS(Status)) {
 		DPRINT("Partial ID\n");
 		return FALSE;
 	}
 
-	DPRINT ("%x\n", Value);
+	DPRINT("Keyboard ID: 0x%x 0x%x\n", Value, Value2);
 
 detectsetleds:
+	I8042Flush(); /* Flush any bytes left over from GET_ID */
+
 	Status = I8042SynchWritePort(DevExt, 0, KBD_SET_LEDS, TRUE);
 	if (!NT_SUCCESS(Status)) {
 		DPRINT("Can't write SET_LEDS (%x)\n", Status);
