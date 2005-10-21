@@ -6,9 +6,6 @@
  */
 
 #include <advapi32.h>
-#include <accctrl.h>
-#include <malloc.h>
-#include <ntsecapi.h>
 
 #define NDEBUG
 #include <debug.h>

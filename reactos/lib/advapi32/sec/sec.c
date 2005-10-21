@@ -12,6 +12,8 @@
  */
 
 #include <advapi32.h>
+
+#define NDEBUG
 #include <debug.h>
 
 /*
