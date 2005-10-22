@@ -56,7 +56,7 @@ static RTL_RESOURCE DatabaseLock;
 /* FUNCTIONS *****************************************************************/
 
 PSERVICE
-ScmGetServiceEntryByName(PUNICODE_STRING ServiceName)
+ScmGetServiceEntryByName(LPWSTR lpServiceName)
 {
   PLIST_ENTRY ServiceEntry;
   PSERVICE CurrentService;
@@ -69,9 +69,9 @@ ScmGetServiceEntryByName(PUNICODE_STRING ServiceName)
       CurrentService = CONTAINING_RECORD(ServiceEntry,
 					 SERVICE,
 					 ServiceListEntry);
-      if (RtlEqualUnicodeString(&CurrentService->ServiceName, ServiceName, TRUE))
+      if (_wcsicmp(CurrentService->lpServiceName, lpServiceName) == 0)
 	{
-	  DPRINT("Found service: '%wZ'\n", &CurrentService->ServiceName);
+	  DPRINT("Found service: '%S'\n", CurrentService->lpServiceName);
 	  return CurrentService;
 	}
 
@@ -183,54 +183,28 @@ CreateGroupListRoutine(PWSTR ValueName,
 
 
 static NTSTATUS STDCALL
-CreateServiceListEntry(PUNICODE_STRING ServiceName)
+CreateServiceListEntry(LPWSTR lpServiceName)
 {
   RTL_QUERY_REGISTRY_TABLE QueryTable[6];
+  UNICODE_STRING ServiceName;
   PSERVICE Service = NULL;
   NTSTATUS Status;
 
   DPRINT("Service: '%wZ'\n", ServiceName);
 
+
   /* Allocate service entry */
-  Service = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-		      sizeof(SERVICE));
+  Service = HeapAlloc(GetProcessHeap(),
+                      HEAP_ZERO_MEMORY,
+                      sizeof(SERVICE) + ((wcslen(lpServiceName) + 1) * sizeof(WCHAR)));
   if (Service == NULL)
     {
       return STATUS_INSUFFICIENT_RESOURCES;
     }
 
   /* Copy service name */
-  Service->ServiceName.Length = ServiceName->Length;
-  Service->ServiceName.MaximumLength = ServiceName->Length + sizeof(WCHAR);
-  Service->ServiceName.Buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-					  Service->ServiceName.MaximumLength);
-  if (Service->ServiceName.Buffer == NULL)
-    {
-      HeapFree(GetProcessHeap(), 0, Service);
-      return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-  RtlCopyMemory(Service->ServiceName.Buffer,
-		ServiceName->Buffer,
-		ServiceName->Length);
-  Service->ServiceName.Buffer[ServiceName->Length / sizeof(WCHAR)] = 0;
-
-  /* Build registry path */
-  Service->RegistryPath.MaximumLength = MAX_PATH * sizeof(WCHAR);
-  Service->RegistryPath.Buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-					   MAX_PATH * sizeof(WCHAR));
-  if (Service->ServiceName.Buffer == NULL)
-    {
-      HeapFree(GetProcessHeap(), 0, Service->ServiceName.Buffer);
-      HeapFree(GetProcessHeap(), 0, Service);
-      return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-  wcscpy(Service->RegistryPath.Buffer,
-	 L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\");
-  wcscat(Service->RegistryPath.Buffer,
-	 Service->ServiceName.Buffer);
-  Service->RegistryPath.Length = wcslen(Service->RegistryPath.Buffer) * sizeof(WCHAR);
+  wcscpy(Service->szServiceName, lpServiceName);
+  Service->lpServiceName = Service->szServiceName;
 
   /* Get service data */
   RtlZeroMemory(&QueryTable,
@@ -238,15 +212,15 @@ CreateServiceListEntry(PUNICODE_STRING ServiceName)
 
   QueryTable[0].Name = L"Start";
   QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
-  QueryTable[0].EntryContext = &Service->Start;
+  QueryTable[0].EntryContext = &Service->dwStartType;
 
   QueryTable[1].Name = L"Type";
   QueryTable[1].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
-  QueryTable[1].EntryContext = &Service->Type;
+  QueryTable[1].EntryContext = &Service->Status.dwServiceType;
 
   QueryTable[2].Name = L"ErrorControl";
   QueryTable[2].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
-  QueryTable[2].EntryContext = &Service->ErrorControl;
+  QueryTable[2].EntryContext = &Service->dwErrorControl;
 
   QueryTable[3].Name = L"Group";
   QueryTable[3].Flags = RTL_QUERY_REGISTRY_DIRECT;
@@ -254,38 +228,38 @@ CreateServiceListEntry(PUNICODE_STRING ServiceName)
 
   QueryTable[4].Name = L"Tag";
   QueryTable[4].Flags = RTL_QUERY_REGISTRY_DIRECT;
-  QueryTable[4].EntryContext = &Service->Tag;
+  QueryTable[4].EntryContext = &Service->dwTag;
 
   Status = RtlQueryRegistryValues(RTL_REGISTRY_SERVICES,
-				  ServiceName->Buffer,
+				  lpServiceName,
 				  QueryTable,
 				  NULL,
 				  NULL);
   if (!NT_SUCCESS(Status))
     {
       PrintString("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
-      RtlFreeUnicodeString(&Service->RegistryPath);
-      RtlFreeUnicodeString(&Service->ServiceName);
       HeapFree(GetProcessHeap(), 0, Service);
       return Status;
     }
 
-  DPRINT("ServiceName: '%wZ'\n", &Service->ServiceName);
-  DPRINT("RegistryPath: '%wZ'\n", &Service->RegistryPath);
+  DPRINT("ServiceName: '%S'\n", Service->lpServiceName);
   DPRINT("ServiceGroup: '%wZ'\n", &Service->ServiceGroup);
   DPRINT("Start %lx  Type %lx  Tag %lx  ErrorControl %lx\n",
-	 Service->Start, Service->Type, Service->Tag, Service->ErrorControl);
+         Service->dwStartType,
+         Service->Status.dwServiceType,
+         Service->dwTag,
+         Service->dwErrorControl);
 
   /* Append service entry */
   InsertTailList(&ServiceListHead,
 		 &Service->ServiceListEntry);
 
-  Service->CurrentState = SERVICE_STOPPED;
-  Service->ControlsAccepted = 0;
-  Service->Win32ExitCode = 0;
-  Service->ServiceSpecificExitCode = 0;
-  Service->CheckPoint = 0;
-  Service->WaitHint = 2000; /* 2 seconds */
+  Service->Status.dwCurrentState = SERVICE_STOPPED;
+  Service->Status.dwControlsAccepted = 0;
+  Service->Status.dwWin32ExitCode = 0;
+  Service->Status.dwServiceSpecificExitCode = 0;
+  Service->Status.dwCheckPoint = 0;
+  Service->Status.dwWaitHint = 2000; /* 2 seconds */
 
   return STATUS_SUCCESS;
 }
@@ -376,7 +350,7 @@ ScmCreateServiceDataBase(VOID)
 	      SubKeyName.Buffer[SubKeyName.Length / sizeof(WCHAR)] = 0;
 
 	      DPRINT("KeyName: '%wZ'\n", &SubKeyName);
-	      Status = CreateServiceListEntry(&SubKeyName);
+	      Status = CreateServiceListEntry(SubKeyName.Buffer);
 
 	      /* Ignore services without proper registry. */
 	      if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
@@ -415,9 +389,9 @@ ScmCheckDriver(PSERVICE Service)
   PLIST_ENTRY GroupEntry;
   PSERVICE_GROUP CurrentGroup;
 
-  DPRINT("ScmCheckDriver(%wZ) called\n", &Service->ServiceName);
+  DPRINT("ScmCheckDriver(%S) called\n", Service->lpServiceName);
 
-  if (Service->Type == SERVICE_KERNEL_DRIVER)
+  if (Service->Status.dwServiceType == SERVICE_KERNEL_DRIVER)
     {
       RtlInitUnicodeString(&DirName,
 			   L"\\Driver");
@@ -461,21 +435,21 @@ ScmCheckDriver(PSERVICE Service)
       if (Status == STATUS_NO_MORE_ENTRIES)
 	{
 	  /* FIXME: Add current service to 'failed service' list */
-	  DPRINT("Service '%wZ' failed\n", &Service->ServiceName);
+	  DPRINT("Service '%S' failed\n", Service->lpServiceName);
 	  break;
 	}
 
       if (!NT_SUCCESS(Status))
 	break;
 
-      DPRINT("Comparing: '%wZ'  '%wZ'\n", &Service->ServiceName, &DirInfo->ObjectName);
+      DPRINT("Comparing: '%S'  '%wZ'\n", Service->lpServiceName, &DirInfo->ObjectName);
 
-      if (RtlEqualUnicodeString(&Service->ServiceName, &DirInfo->ObjectName, TRUE))
+       if (_wcsicmp(Service->lpServiceName, DirInfo->ObjectName.Buffer) == 0)
 	{
-	  DPRINT("Found: '%wZ'  '%wZ'\n", &Service->ServiceName, &DirInfo->ObjectName);
+	  DPRINT("Found: '%S'  '%wZ'\n", Service->lpServiceName, &DirInfo->ObjectName);
 
 	  /* Mark service as 'running' */
-	  Service->CurrentState = SERVICE_RUNNING;
+	  Service->Status.dwCurrentState = SERVICE_RUNNING;
 
 	  /* Find the driver's group and mark it as 'running' */
 	  if (Service->ServiceGroup.Buffer != NULL)
@@ -520,11 +494,11 @@ ScmGetBootAndSystemDriverState(VOID)
     {
       CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
 
-      if (CurrentService->Start == SERVICE_BOOT_START ||
-	  CurrentService->Start == SERVICE_SYSTEM_START)
+      if (CurrentService->dwStartType == SERVICE_BOOT_START ||
+	  CurrentService->dwStartType == SERVICE_SYSTEM_START)
 	{
 	  /* Check driver */
-	  DPRINT("  Checking service: %wZ\n", &CurrentService->ServiceName);
+	  DPRINT("  Checking service: %S\n", CurrentService->lpServiceName);
 
 	  ScmCheckDriver(CurrentService);
 	}
@@ -549,7 +523,7 @@ ScmSendStartCommand(PSERVICE Service, LPWSTR Arguments)
   DPRINT("ScmSendStartCommand() called\n");
 
   /* Calculate the total length of the start command line */
-  TotalLength = wcslen(Service->ServiceName.Buffer) + 1;
+  TotalLength = wcslen(Service->lpServiceName) + 1;
 #if 0
   if (Arguments != NULL)
   {
@@ -574,8 +548,8 @@ ScmSendStartCommand(PSERVICE Service, LPWSTR Arguments)
   StartPacket->Command = SCM_START_COMMAND;
   StartPacket->Size = TotalLength;
   Ptr = &StartPacket->Arguments[0];
-  wcscpy(Ptr, Service->ServiceName.Buffer);
-  Ptr += (wcslen(Service->ServiceName.Buffer) + 1);
+  wcscpy(Ptr, Service->lpServiceName);
+  Ptr += (wcslen(Service->lpServiceName) + 1);
 
   /* FIXME: Copy argument list */
 
@@ -626,7 +600,7 @@ ScmStartUserModeService(PSERVICE Service)
   QueryTable[1].EntryContext = &ImagePath;
 
   Status = RtlQueryRegistryValues(RTL_REGISTRY_SERVICES,
-				  Service->ServiceName.Buffer,
+				  Service->lpServiceName,
 				  QueryTable,
 				  NULL,
 				  NULL);
@@ -680,7 +654,7 @@ ScmStartUserModeService(PSERVICE Service)
       CloseHandle(Service->ControlPipeHandle);
       Service->ControlPipeHandle = INVALID_HANDLE_VALUE;
 
-      DPRINT1("Starting '%S' failed!\n", Service->ServiceName.Buffer);
+      DPRINT1("Starting '%S' failed!\n", Service->lpServiceName);
       return STATUS_UNSUCCESSFUL;
     }
 
@@ -752,20 +726,30 @@ static NTSTATUS
 ScmStartService(PSERVICE Service,
 		PSERVICE_GROUP Group)
 {
+  WCHAR szDriverPath[MAX_PATH];
+  UNICODE_STRING DriverPath;
   NTSTATUS Status;
 
   DPRINT("ScmStartService() called\n");
 
   Service->ControlPipeHandle = INVALID_HANDLE_VALUE;
-  DPRINT("Service->Type: %u\n", Service->Type);
+  DPRINT("Service->Type: %lu\n", Service->Status.dwServiceType);
 
-  if (Service->Type == SERVICE_KERNEL_DRIVER ||
-      Service->Type == SERVICE_FILE_SYSTEM_DRIVER ||
-      Service->Type == SERVICE_RECOGNIZER_DRIVER)
+  if (Service->Status.dwServiceType == SERVICE_KERNEL_DRIVER ||
+      Service->Status.dwServiceType == SERVICE_FILE_SYSTEM_DRIVER ||
+      Service->Status.dwServiceType == SERVICE_RECOGNIZER_DRIVER)
     {
       /* Load driver */
-      DPRINT("  Path: %wZ\n", &Service->RegistryPath);
-      Status = NtLoadDriver(&Service->RegistryPath);
+      wcscpy(szDriverPath,
+             L"\\Registry\\Machine\\System\\CurrentControlSet\\Services");
+      wcscat(szDriverPath,
+             Service->lpServiceName);
+
+      RtlInitUnicodeString(&DriverPath,
+                           szDriverPath);
+
+      DPRINT("  Path: %wZ\n", &DriverPath);
+      Status = NtLoadDriver(&DriverPath);
     }
   else
     {
@@ -781,7 +765,7 @@ ScmStartService(PSERVICE Service,
 	{
 	  Group->ServicesRunning = TRUE;
 	}
-      Service->CurrentState = SERVICE_RUNNING;
+      Service->Status.dwCurrentState = SERVICE_RUNNING;
     }
 #if 0
   else
@@ -852,9 +836,9 @@ ScmAutoStartServices(VOID)
 	      CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
 
 	      if ((RtlEqualUnicodeString(&CurrentGroup->GroupName, &CurrentService->ServiceGroup, TRUE)) &&
-	          (CurrentService->Start == SERVICE_AUTO_START) &&
+	          (CurrentService->dwStartType == SERVICE_AUTO_START) &&
 	          (CurrentService->ServiceVisited == FALSE) &&
-		  (CurrentService->Tag == CurrentGroup->TagArray[i]))
+		  (CurrentService->dwTag == CurrentGroup->TagArray[i]))
 	        {
 	          CurrentService->ServiceVisited = TRUE;
 	          ScmStartService(CurrentService,
@@ -872,7 +856,7 @@ ScmAutoStartServices(VOID)
 	  CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
 
 	  if ((RtlEqualUnicodeString(&CurrentGroup->GroupName, &CurrentService->ServiceGroup, TRUE)) &&
-	      (CurrentService->Start == SERVICE_AUTO_START) &&
+	      (CurrentService->dwStartType == SERVICE_AUTO_START) &&
 	      (CurrentService->ServiceVisited == FALSE))
 	    {
 	      CurrentService->ServiceVisited = TRUE;
@@ -893,7 +877,7 @@ ScmAutoStartServices(VOID)
       CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
 
       if ((CurrentService->ServiceGroup.Length != 0) &&
-	  (CurrentService->Start == SERVICE_AUTO_START) &&
+	  (CurrentService->dwStartType == SERVICE_AUTO_START) &&
 	  (CurrentService->ServiceVisited == FALSE))
 	{
 	  CurrentService->ServiceVisited = TRUE;
@@ -911,7 +895,7 @@ ScmAutoStartServices(VOID)
       CurrentService = CONTAINING_RECORD(ServiceEntry, SERVICE, ServiceListEntry);
 
       if ((CurrentService->ServiceGroup.Length == 0) &&
-	  (CurrentService->Start == SERVICE_AUTO_START) &&
+	  (CurrentService->dwStartType == SERVICE_AUTO_START) &&
 	  (CurrentService->ServiceVisited == FALSE))
 	{
 	  CurrentService->ServiceVisited = TRUE;

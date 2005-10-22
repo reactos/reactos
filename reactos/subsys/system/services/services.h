@@ -11,28 +11,24 @@
 
 typedef struct _SERVICE
 {
-  LIST_ENTRY ServiceListEntry;
-  UNICODE_STRING ServiceName;
-  UNICODE_STRING RegistryPath;
-  UNICODE_STRING ServiceGroup;
+    LIST_ENTRY ServiceListEntry;
+    LPWSTR lpServiceName;
+    UNICODE_STRING ServiceGroup;
 
-  ULONG Start;
-  ULONG Type;
-  ULONG ErrorControl;
-  ULONG Tag;
+    SERVICE_STATUS Status;
+    DWORD dwStartType;
+    DWORD dwErrorControl;
+    DWORD dwTag;
 
-  ULONG CurrentState;
-  ULONG ControlsAccepted;
-  ULONG Win32ExitCode;
-  ULONG ServiceSpecificExitCode;
-  ULONG CheckPoint;
-  ULONG WaitHint;
+    ULONG Flags;
 
-  BOOLEAN ServiceVisited;
+    BOOLEAN ServiceVisited;
 
-  HANDLE ControlPipeHandle;
-  ULONG ProcessId;
-  ULONG ThreadId;
+    HANDLE ControlPipeHandle;
+    ULONG ProcessId;
+    ULONG ThreadId;
+
+    WCHAR szServiceName[1];
 } SERVICE, *PSERVICE;
 
 
@@ -47,7 +43,7 @@ NTSTATUS ScmCreateServiceDataBase(VOID);
 VOID ScmGetBootAndSystemDriverState(VOID);
 VOID ScmAutoStartServices(VOID);
 
-PSERVICE ScmGetServiceEntryByName(PUNICODE_STRING ServiceName);
+PSERVICE ScmGetServiceEntryByName(LPWSTR lpServiceName);
 DWORD ScmMarkServiceForDelete(PSERVICE pService);
 
 

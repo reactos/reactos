@@ -306,13 +306,9 @@ ScmrControlService(handle_t BindingHandle,
 
 
   /* Return service status information */
-  lpServiceStatus->dwServiceType = lpService->Type;
-  lpServiceStatus->dwCurrentState = lpService->CurrentState;
-  lpServiceStatus->dwControlsAccepted = lpService->ControlsAccepted;
-  lpServiceStatus->dwWin32ExitCode = lpService->Win32ExitCode;
-  lpServiceStatus->dwServiceSpecificExitCode = lpService->ServiceSpecificExitCode;
-  lpServiceStatus->dwCheckPoint = lpService->CheckPoint;
-  lpServiceStatus->dwWaitHint = lpService->WaitHint;
+  RtlCopyMemory(lpServiceStatus,
+                &lpService->Status,
+                sizeof(SERVICE_STATUS));
 
   return ERROR_SUCCESS;
 }
@@ -435,13 +431,7 @@ ScmrQueryServiceStatus(handle_t BindingHandle,
   }
 
   /* Return service status information */
-  lpServiceStatus->dwServiceType = lpService->Type;
-  lpServiceStatus->dwCurrentState = lpService->CurrentState;
-  lpServiceStatus->dwControlsAccepted = lpService->ControlsAccepted;
-  lpServiceStatus->dwWin32ExitCode = lpService->Win32ExitCode;
-  lpServiceStatus->dwServiceSpecificExitCode = lpService->ServiceSpecificExitCode;
-  lpServiceStatus->dwCheckPoint = lpService->CheckPoint;
-  lpServiceStatus->dwWaitHint = lpService->WaitHint;
+  RtlCopyMemory(lpServiceStatus, &lpService->Status, sizeof(SERVICE_STATUS));
 
   return ERROR_SUCCESS;
 }
@@ -477,6 +467,28 @@ ScmrNotifyBootConfigStatus(handle_t BindingHandle,
   /* FIXME */
   return ERROR_SUCCESS;
 }
+
+
+/* Function 11 */
+#if 0
+unsigned long
+ScmrChangeServiceConfigW([in] handle_t BiningHandle,
+                         [in] SC_HANDLE hService,
+                         [in] DWORD dwServiceType,
+                         [in] DWORD dwStartType,
+                         [in] DWORD dwErrorControl,
+                         [in, string, unique] LPCWSTR lpBinaryPathName,
+                         [in, string, unique] LPCWSTR lpLoadOrderGroup,
+                         [in, out, unique] LPDWORD lpdwTagId,
+                         [in, size_is(dwDependenciesLength), unique] LPCWSTR lpDependencies,
+                         [in] DWORD dwDependenciesLength,
+                         [in, string, unique] LPCWSTR lpServiceStartName,
+                         [in, size_is(dwPasswordLength), unique] LPCWSTR lpPassword,
+                         [in] DWORD dwPasswordLength,
+                         [in, string, unique] LPCWSTR lpDisplayName)
+{
+}
+#endif
 
 
 #if 0
@@ -592,6 +604,8 @@ ScmrCreateServiceW(handle_t BindingHandle,
     }
 
     /* FIXME: Allocate and fill a service entry */
+//    dwError = CreateNewServiceListEntry(lpServiceName,
+//                                        &lpServiceEntry)
 
 //    if (lpdwTagId != NULL)
 //        *lpdwTagId = 0;
@@ -605,7 +619,7 @@ ScmrCreateServiceW(handle_t BindingHandle,
     if (dwError != ERROR_SUCCESS)
         goto done;
 
-    if ((lpDisplayName != NULL) && (wcslen(lpDisplayName) > 0))
+    if (lpDisplayName != NULL && *lpDisplayName != 0)
     {
         RegSetValueExW(hServiceKey,
                        L"DisplayName",
@@ -683,6 +697,16 @@ ScmrCreateServiceW(handle_t BindingHandle,
             goto done;
     }
 
+    if (lpDependencies != NULL && *lpDependencies != 0)
+    {
+        /* FIXME: Write dependencies */
+    }
+
+    if (lpPassword != NULL)
+    {
+        /* FIXME: Write password */
+    }
+
 done:;
     if (hServiceKey != NULL)
         RegCloseKey(hServiceKey);
@@ -750,7 +774,6 @@ ScmrOpenServiceW(handle_t BindingHandle,
                  unsigned long dwDesiredAccess,
                  unsigned int *hService)
 {
-  UNICODE_STRING ServiceName;
   PSERVICE lpService;
   PMANAGER_HANDLE hManager;
   SC_HANDLE hHandle;
@@ -772,10 +795,7 @@ ScmrOpenServiceW(handle_t BindingHandle,
   /* FIXME: Lock the service list */
 
   /* Get service database entry */
-  RtlInitUnicodeString(&ServiceName,
-                       lpServiceName);
-
-  lpService = ScmGetServiceEntryByName(&ServiceName);
+  lpService = ScmGetServiceEntryByName(lpServiceName);
   if (lpService == NULL)
   {
     DPRINT1("Could not find a service!\n");
