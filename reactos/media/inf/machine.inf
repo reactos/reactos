@@ -26,24 +26,24 @@ HKR, , Icon,           0, "-27"
 %IntelMfg% = IntelMfg
 
 [IntelMfg]
-%PCI\VEN_8086&DEV_7190.DeviceDesc% = NO_DRV, PCI\VEN_8086&DEV_7190 ;Intel 440LX
-%PCI\VEN_8086&DEV_7192.DeviceDesc% = NO_DRV, PCI\VEN_8086&DEV_7192 ;Intel 440BX
-%PCI\VEN_8086&DEV_7113.DeviceDesc% = NO_DRV, PCI\VEN_8086&DEV_7113
-
 ; DO NOT INSTALL ISAPNP -> FREEZES SYSTEM
 ;%PCI\VEN_8086&DEV_7110.DeviceDesc% = Intel_PCI_ISA_Inst, PCI\VEN_8086&DEV_7110
-%PCI\VEN_8086&DEV_7110.DeviceDesc% = INO_DRV, PCI\VEN_8086&DEV_7110
+%PCI\VEN_8086&DEV_7110.DeviceDesc% = NO_DRV, PCI\VEN_8086&DEV_7110
+%PCI\VEN_8086&DEV_7113.DeviceDesc% = NO_DRV, PCI\VEN_8086&DEV_7113
+%PCI\VEN_8086&DEV_7180.DeviceDesc% = NO_DRV, PCI\VEN_8086&DEV_7180
+%PCI\VEN_8086&DEV_7190.DeviceDesc% = NO_DRV, PCI\VEN_8086&DEV_7190
+%PCI\VEN_8086&DEV_7192.DeviceDesc% = NO_DRV, PCI\VEN_8086&DEV_7192
 
 [GenericMfg]
-%*PNP0A03.DeviceDesc% = PCI_Inst,*PNP0A03
+%*PNP0001.DeviceDesc% = NO_DRV_Inst, *PNP0001
 %*PNP0100.DeviceDesc% = NO_DRV_Inst, *PNP0100
 %*PNP0200.DeviceDesc% = NO_DRV_Inst, *PNP0200
 %*PNP0800.DeviceDesc% = NO_DRV_Inst, *PNP0800
+%*PNP0A03.DeviceDesc% = PCI_Inst,*PNP0A03
 %*PNP0A05.DeviceDesc% = NO_DRV_Inst, *PNP0A05
 %*PNP0B00.DeviceDesc% = NO_DRV_Inst, *PNP0B00
 %*PNP0C02.DeviceDesc% = NO_DRV_Inst, *PNP0C02
-%*PNP0001.DeviceDesc% = NO_DRV_Inst, *PNP0001
-%ACPI\FixedButton.DeviceDesc% = NO_DRV_Inst, ACPI\FixedButton
+%ACPI\FixedButton.DeviceDesc% = NO_DRV, ACPI\FixedButton
 %PCI\CC_0604.DeviceDesc% = PCI_Inst,PCI\CC_0604
 
 ;---------------------------- NO DRIVER REQ -----------------------------
@@ -52,16 +52,6 @@ HKR, , Icon,           0, "-27"
 
 [NO_DRV.Services]
 AddService = , 0x00000002
-
-[NO_DRV_Inst]
-AddReg = NO_DRV_Inst_REG
-
-[NO_DRV_Inst.Services]
-AddService = , 0x00000002
-
-[NO_DRV_Inst_REG]
-HKR,,ResourcePickerExceptions,0,"IO@0-0xFF:*;IO:HAL,MBRES;IRQ:HAL,*"
-HKR,,ResourcePickerTags,0,"MBRES"
 
 ;----------------------------- INTEL DRIVER -----------------------------
 
@@ -106,21 +96,20 @@ ReactOS = "ReactOS Team"
 SystemClassName = "System devices"
 
 GenericMfg = "(Generic system devices)"
-IntelMfg = "Intel"
-
+*PNP0001.DeviceDesc = "EISA programmable interrupt controller"
 *PNP0A03.DeviceDesc = "PCI bus"
+*PNP0A05.DeviceDesc = "Generic ACPI bus"
+*PNP0B00.DeviceDesc = "AT real-time clock"
 *PNP0100.DeviceDesc = "System timer"
 *PNP0200.DeviceDesc = "DMA controller"
 *PNP0800.DeviceDesc = "System speaker"
-*PNP0A05.DeviceDesc = "Generic ACPI bus"
-*PNP0b00.DeviceDesc = "AT real-time clock"
 *PNP0C02.DeviceDesc = "Motherboard resources"
-*PNP0001.DeviceDesc = "EISA programmable interrupt controller"
-
-ACPI\FixedButton.DeviceDesc=" ACPI Fixed Feature Button"
+ACPI\FixedButton.DeviceDesc ="ACPI Fixed Feature Button"
 PCI\CC_0604.DeviceDesc = "Standard PCI to PCI bridge"
 
-PCI\VEN_8086&DEV_7190.DeviceDesc = "Intel 82443BX Pentium(R) II CPU to PCI-Bridge"
-PCI\VEN_8086&DEV_7192.DeviceDesc = "Intel 82443BX Pentium(R) II CPU to PCI-Bridge"
+IntelMfg = "Intel"
+PCI\VEN_8086&DEV_7180.DeviceDesc = "Intel 82443LX/EX Pentium(R) II CPU to PCI-Bridge"
+PCI\VEN_8086&DEV_7190.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU to PCI-Bridge"
+PCI\VEN_8086&DEV_7192.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU to PCI-Bridge"
 PCI\VEN_8086&DEV_7113.DeviceDesc = "Intel 82371AB/EB Power Management Controller"
 PCI\VEN_8086&DEV_7110.DeviceDesc = "Intel 82371AB/EB PCI to ISA Bridge"
