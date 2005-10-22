@@ -1747,7 +1747,7 @@ MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
        * memory area was mapped at an offset in the file which is page aligned
        * then note this is a direct mapped page.
        */
-      if ((Offset + MemoryArea->Data.SectionData.ViewOffset % PAGE_SIZE) == 0 &&
+      if (((Offset + Segment->FileOffset) % PAGE_SIZE) == 0 &&
             (Offset + PAGE_SIZE <= Segment->RawLength || !IsImageSection))
       {
          DirectMapped = TRUE;
@@ -2813,6 +2813,7 @@ MmspPageAlignSegments
    ULONG i;
    ULONG LastSegment;
    BOOLEAN Initialized;
+   PMM_SECTION_SEGMENT EffectiveSegment;
 
    if (Flags & EXEFMT_LOAD_ASSUME_SEGMENTS_PAGE_ALIGNED)
    {
@@ -2822,11 +2823,10 @@ MmspPageAlignSegments
 
    Initialized = FALSE;
    LastSegment = 0;
+   EffectiveSegment = &ImageSectionObject->Segments[LastSegment];
 
    for ( i = 0; i < ImageSectionObject->NrSegments; ++ i )
    {
-      PMM_SECTION_SEGMENT EffectiveSegment = &ImageSectionObject->Segments[LastSegment];
-
       /*
        * The first segment requires special handling
        */
@@ -2880,11 +2880,14 @@ MmspPageAlignSegments
 
             EffectiveSegment = &ImageSectionObject->Segments[LastSegment];
 
-            /*
-             * Copy the current segment. If necessary, the effective segment
-             * will be expanded later
-             */
-            *EffectiveSegment = *Segment;
+            if (LastSegment != i)
+            {
+               /*
+                * Copy the current segment. If necessary, the effective segment
+                * will be expanded later
+                */
+               *EffectiveSegment = *Segment;
+            }
 
             /*
              * Page-align the virtual size. We know for sure the virtual address
@@ -2937,7 +2940,7 @@ MmspPageAlignSegments
             /*
              * Extend the virtual size
              */
-            ASSERT(PAGE_ROUND_UP(Segment->VirtualAddress + Segment->Length) > EndOfEffectiveSegment);
+            ASSERT(PAGE_ROUND_UP(Segment->VirtualAddress + Segment->Length) >= EndOfEffectiveSegment);
 
             EffectiveSegment->Length = PAGE_ROUND_UP(Segment->VirtualAddress + Segment->Length) -
                                        EffectiveSegment->VirtualAddress;
@@ -2981,6 +2984,7 @@ MmspPageAlignSegments
          }
       }
    }
+   ImageSectionObject->NrSegments = LastSegment + 1;
 
    return TRUE;
 }
