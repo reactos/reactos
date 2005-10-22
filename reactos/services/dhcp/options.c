@@ -41,6 +41,7 @@
  */
 
 #include <ctype.h>
+#include <string.h>
 
 #define DHCP_OPTION_DATA
 #include "rosdhcp.h"
@@ -592,7 +593,8 @@ pretty_print_option(unsigned int code, unsigned char *data, int len,
 				break;
 			case 'I':
 				foo.s_addr = htonl(getULong(dp));
-				opcount = strlcpy(op, inet_ntoa(foo), opleft);
+				strncpy(op, inet_ntoa(foo), opleft - 1);
+				op[opleft - 1] = ANSI_NULL;
 				if (opcount >= opleft)
 					goto toobig;
 				opleft -= opcount;
@@ -650,8 +652,8 @@ pretty_print_option(unsigned int code, unsigned char *data, int len,
 				opleft -= opcount;
 				break;
 			case 'f':
-				opcount = strlcpy(op,
-				    *dp++ ? "true" : "false", opleft);
+				opcount = (size_t) strncpy(op, *dp++ ? "true" : "false", opleft - 1);
+				op[opleft - 1] = ANSI_NULL;
 				if (opcount >= opleft)
 					goto toobig;
 				opleft -= opcount;

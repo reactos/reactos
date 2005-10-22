@@ -93,7 +93,6 @@ int addr_eq( struct iaddr a, struct iaddr b ) {
 }
 
 void *dmalloc( int size, char *name ) { return malloc( size ); }
-void dfree( void *v, char *name ) { free( v ); }
 
 int read_client_conf(void) {
        error("util.c read_client_conf not implemented!");

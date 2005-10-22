@@ -234,7 +234,7 @@ state_reboot(void *ipp)
 	/* make_request doesn't initialize xid because it normally comes
 	   from the DHCPDISCOVER, but we haven't sent a DHCPDISCOVER,
 	   so pick an xid now. */
-	ip->client->xid = arc4random();
+	ip->client->xid = rand();
 
 	/* Make a DHCPREQUEST packet, and set appropriate per-interface
 	   flags. */
@@ -940,7 +940,7 @@ send_discover(void *ipp)
 			ip->client->interval =
 			    ip->client->config->initial_interval;
 		else {
-			ip->client->interval += (arc4random() >> 2) %
+			ip->client->interval += (rand() >> 2) %
 			    (2 * ip->client->interval);
 		}
 
@@ -949,7 +949,7 @@ send_discover(void *ipp)
 		    ip->client->config->backoff_cutoff)
 			ip->client->interval =
 				((ip->client->config->backoff_cutoff / 2)
-				 + ((arc4random() >> 2) %
+				 + ((rand() >> 2) %
 				    ip->client->config->backoff_cutoff));
 	} else if (!ip->client->interval)
 		ip->client->interval =
@@ -1142,7 +1142,7 @@ send_request(void *ipp)
 	if (!ip->client->interval)
 		ip->client->interval = ip->client->config->initial_interval;
 	else
-		ip->client->interval += ((arc4random() >> 2) %
+		ip->client->interval += ((rand() >> 2) %
 		    (2 * ip->client->interval));
 
 	/* Don't backoff past cutoff. */
@@ -1150,7 +1150,7 @@ send_request(void *ipp)
 	    ip->client->config->backoff_cutoff)
 		ip->client->interval =
 		    ((ip->client->config->backoff_cutoff / 2) +
-		    ((arc4random() >> 2) % ip->client->interval));
+		    ((rand() >> 2) % ip->client->interval));
 
 	/* If the backoff would take us to the expiry time, just set the
 	   timeout to the expiry time. */
@@ -1280,7 +1280,7 @@ make_discover(struct interface_info *ip, struct client_lease *lease)
 	ip->client->packet.htype = ip->hw_address.htype;
 	ip->client->packet.hlen = ip->hw_address.hlen;
 	ip->client->packet.hops = 0;
-	ip->client->packet.xid = arc4random();
+	ip->client->packet.xid = rand();
 	ip->client->packet.secs = 0; /* filled in by send_discover. */
 	ip->client->packet.flags = 0;
 
@@ -1986,7 +1986,7 @@ int
 ipv4addrs(char * buf)
 {
     char *tmp;
-    struct in_addr jnk;
+    unsigned long jnk;
     int i = 0;
 
     note("Input: %s\n", buf);
@@ -1994,7 +1994,8 @@ ipv4addrs(char * buf)
     do {
         tmp = strtok(buf, " ");
         note("got %s\n", tmp);
-        if( tmp && inet_aton(tmp, &jnk) ) i++;
+		jnk = inet_addr( tmp );
+		if( tmp ) i++;
         buf = NULL;
     } while( tmp );
 

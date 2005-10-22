@@ -76,4 +76,18 @@ new_hash_bucket(void)
 	return (rval);
 }
 
-void free_hash_bucket(struct hash_bucket *hb) { free(hb); }
+void
+dfree(void *ptr, char *name)
+{
+	if (!ptr) {
+		warning("dfree %s: free on null pointer.", name);
+		return;
+	}
+	free(ptr);
+}
+
+void
+free_hash_bucket(struct hash_bucket *ptr, char *name)
+{
+	dfree(ptr, name);
+}

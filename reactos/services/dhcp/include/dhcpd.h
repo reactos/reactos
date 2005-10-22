@@ -322,6 +322,9 @@ pair cons(caddr_t, pair);
 struct string_list	*new_string_list(size_t size);
 struct hash_table	*new_hash_table(int);
 struct hash_bucket	*new_hash_bucket(void);
+void dfree(void *, char *);
+void free_hash_bucket(struct hash_bucket *, char *);
+
 
 /* bpf.c */
 int if_register_bpf(struct interface_info *);
