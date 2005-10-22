@@ -141,10 +141,9 @@ _KiUserExceptionDispatcher@8:
     mov ecx, [esp+4]
     mov ebx, [esp]
 
+    /* Call the vectored exception handler */
     push ecx
     push ebx
-
-    /* Call the vectored exception handler */
     call _RtlpExecuteVectoredExceptionHandlers@8
 
     /* Check for success */
@@ -152,6 +151,7 @@ _KiUserExceptionDispatcher@8:
     jnz ContinueExecution
 
     /* Dispatch the exception */
+    sub esp, 8
     call _RtlDispatchException@8
 
     /* Check for success */
