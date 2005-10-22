@@ -730,14 +730,11 @@ void DesktopShellView::PositionIcons(int dir)
 	int dx2 = dir_x2 * cx;
 	int dy2 = dir_y2 * cy;
 
-	int start_x = (start_pos.x * work_area.right)/cx*cx + (cx-32)/2;
-	int start_y = (start_pos.y * work_area.bottom)/cy*cy + 4/*(cy-32)/2*/;
+	int xoffset = (cx-32)/2;
+	int yoffset = 4/*(cy-32)/2*/;
 
-	if (start_x >= work_area.right)
-		start_x -= cx;
-
-	if (start_y >= work_area.bottom)
-		start_y -= cy;
+	int start_x = start_pos.x * (work_area.right - cx) + xoffset;
+	int start_y = start_pos.y * (work_area.bottom - cy) + yoffset;
 
 	int x = start_x;
 	int y = start_y;
@@ -755,19 +752,22 @@ void DesktopShellView::PositionIcons(int dir)
 
 	IconMap pos_idx;
 	int cnt = 0;
+	int xhv = start_x;
+	int yhv = start_y;
 
 	for(int idx=i1; idx!=i2; idx+=dir) {
 		pos_idx[IconPos(y, x)] = idx;
 
 		if (_icon_algo == ARRANGE_BORDER_DOWN) {
 			if (++cnt & 1)
-				x = work_area.right - x;
+				x = work_area.right - x - cx + 2*xoffset;
 			else {
 				y += dy1;
 
-				if (y >= work_area.bottom) {
+				if (y + cy - 2 * yoffset > work_area.bottom) {
 					y = start_y;
-					x += dx2;
+					start_x += dx2;
+					x = start_x;
 				}
 			}
 
@@ -775,20 +775,32 @@ void DesktopShellView::PositionIcons(int dir)
 		}
 		else if (_icon_algo == ARRANGE_BORDER_HV) {
 			if (++cnt & 1)
-				x = work_area.right - x;
+				x = work_area.right - x - cx + 2*xoffset;
 			else if (cnt & 2) {
-				y += dy1;
+				yhv += cy;
+				y = yhv;
+				x = start_x;
 
-				if (y >= work_area.bottom) {
-					y = start_y;
-					x += dx2;
+				if (y + cy - 2 * yoffset > work_area.bottom) {
+					start_x += cx;
+					xhv = start_x;
+					x = xhv;
+					start_y += cy;
+					yhv = start_y;
+					y = yhv;
 				}
 			} else {
-				x += dx1;
+				xhv += cx;
+				x = xhv;
+				y = start_y;
 
-				if (x >= work_area.right) {
-					x = start_x;
-					y += dy2;
+				if (x + cx - 2 * xoffset > work_area.right) {
+					start_x += cx;
+					xhv = start_x;
+					x = xhv;
+					start_y += cy;
+					yhv = start_y;
+					y = yhv;
 				}
 			}
 
@@ -803,10 +815,10 @@ void DesktopShellView::PositionIcons(int dir)
 		x += dx1;
 		y += dy1;
 
-		if (x<0 || x>=work_area.right) {
+		if (x<0 || x+cx-2*xoffset>work_area.right) {
 			x = start_x;
 			y += dy2;
-		} else if (y<0 || y>=work_area.bottom) {
+		} else if (y<0 || y+cy-2*yoffset>work_area.bottom) {
 			y = start_y;
 			x += dx2;
 		}
