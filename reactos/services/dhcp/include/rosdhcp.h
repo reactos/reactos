@@ -67,5 +67,6 @@ extern DWORD DSQueryHWInfo( PipeSendFunc Send, COMM_DHCP_REQ *Req );
 extern DWORD DSLeaseIpAddress( PipeSendFunc Send, COMM_DHCP_REQ *Req );
 extern DWORD DSRenewIpAddressLease( PipeSendFunc Send, COMM_DHCP_REQ *Req );
 extern DWORD DSReleaseIpAddressLease( PipeSendFunc Send, COMM_DHCP_REQ *Req );
+extern int inet_aton(const char *s, struct in_addr *addr);
 int warn( char *format, ... );
 #endif/*ROSDHCP_H*/

@@ -30,6 +30,7 @@ u_int32_t arc4random()
 	return ret;
 }
 
+
 int inet_aton(const char *cp, struct in_addr *inp)
 {
 	inp->S_un.S_addr = inet_addr(cp);
@@ -38,3 +39,4 @@ int inet_aton(const char *cp, struct in_addr *inp)
 
 	return 1;
 }
+

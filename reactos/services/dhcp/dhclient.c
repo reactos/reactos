@@ -1986,7 +1986,7 @@ int
 ipv4addrs(char * buf)
 {
     char *tmp;
-    unsigned long jnk;
+    struct in_addr jnk;
     int i = 0;
 
     note("Input: %s\n", buf);
@@ -1994,8 +1994,7 @@ ipv4addrs(char * buf)
     do {
         tmp = strtok(buf, " ");
         note("got %s\n", tmp);
-		jnk = inet_addr( tmp );
-		if( tmp ) i++;
+		if( tmp && inet_aton(tmp, &jnk) ) i++;
         buf = NULL;
     } while( tmp );
 
