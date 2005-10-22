@@ -22,6 +22,7 @@ endif
 
 include tools/bin2c.mak
 include tools/rsym.mak
+include tools/raddr2line.mak
 include tools/pefixup.mak
 include tools/bin2res/bin2res.mak
 include tools/buildno/buildno.mak
