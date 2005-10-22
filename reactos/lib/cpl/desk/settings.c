@@ -9,13 +9,6 @@
  *                  Hervé Poussineau (poussine@freesurf.fr)
  */
 
-#include <windows.h>
-#include <commctrl.h>
-#include <stdio.h>
-#include <tchar.h>
-#include <cpl.h>
-
-#include "resource.h"
 #include "desk.h"
 
 /* As slider control can't contain user data, we have to keep an

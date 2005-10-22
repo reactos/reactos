@@ -8,12 +8,6 @@
  * PROGRAMMERS:     Trevor McCort (lycan359@gmail.com)
  */
 
-#include <windows.h>
-#include <commctrl.h>
-
-#include "resource.h"
-#include <cpl.h>
-#include <tchar.h>
 #include "desk.h"
 
 #define MAX_SCREENSAVERS 100

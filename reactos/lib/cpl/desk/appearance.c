@@ -8,10 +8,7 @@
  * PROGRAMMERS:     Trevor McCort (lycan359@gmail.com)
  */
 
-#include <windows.h>
-#include <commctrl.h>
-
-#include "resource.h"
+#include "desk.h"
 
 INT_PTR CALLBACK AppearancePageProc(HWND hwndDlg,
                                     UINT uMsg,

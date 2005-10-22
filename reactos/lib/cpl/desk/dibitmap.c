@@ -8,7 +8,7 @@
  * PROGRAMMERS:     Trevor McCort (lycan359@gmail.com)
  */
 
-#include "dibitmap.h"
+#include "desk.h"
 
 DIBitmap *DibLoadImage(TCHAR *filename)
 {

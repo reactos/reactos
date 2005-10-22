@@ -1,6 +1,7 @@
 <group>
 <installfile base="inf">acpi.inf</installfile>
 <installfile base="inf">cdrom.inf</installfile>
+<installfile base="inf">display.inf</installfile>
 <installfile base="inf">hdc.inf</installfile>
 <installfile base="inf">layout.inf</installfile>
 <installfile base="inf">machine.inf</installfile>

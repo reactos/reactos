@@ -8,16 +8,7 @@
  * PROGRAMMERS:     Trevor McCort (lycan359@gmail.com)
  */
 
-#include <windows.h>
-#include <commctrl.h>
-#include <commdlg.h>
-#include <cpl.h>
-#include <tchar.h>
-
-#include "resource.h"
-
 #include "desk.h"
-#include "dibitmap.h"
 
 #define MAX_BACKGROUNDS     100
 
