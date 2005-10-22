@@ -374,8 +374,8 @@ co_WinPosMinMaximize(PWINDOW_OBJECT Window, UINT ShowFlag, RECT* NewPos)
                   Window->Style &= ~WS_MINIMIZE;
                   if (Window->Flags & WINDOWOBJECT_RESTOREMAX)
                   {
-                     co_WinPosGetMinMaxInfo(Window, NULL,
-                                            &InternalPos->MaxPos, NULL, &Size);
+                     co_WinPosGetMinMaxInfo(Window, &Size,
+                                            &InternalPos->MaxPos, NULL, NULL);
                      Window->Style |= WS_MAXIMIZE;
                      IntGdiSetRect(NewPos, InternalPos->MaxPos.x,
                                    InternalPos->MaxPos.y, Size.x, Size.y);
@@ -1359,7 +1359,6 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
 
       case SW_SHOWMAXIMIZED:
          {
-//__asm__("int $3\n");
             Swp |= SWP_SHOWWINDOW;
             if (!(Window->Style & WS_MAXIMIZE))
             {
