@@ -28,7 +28,7 @@ typedef struct _RTL_VECTORED_EXCEPTION_HANDLER
 
 /* FUNCTIONS ***************************************************************/
 
-EXCEPTION_DISPOSITION
+EXCEPTION_DISPOSITION NTAPI
 RtlpExecuteVectoredExceptionHandlers(IN PEXCEPTION_RECORD  ExceptionRecord,
                                      IN PCONTEXT  Context)
 {
