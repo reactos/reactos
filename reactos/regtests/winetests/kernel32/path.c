@@ -251,13 +251,13 @@ static void test_FunnyChars(CHAR *curdir,CHAR *curdir_short,CHAR *filename, INT 
     ok(passfail.longlen==0,"GetLongPathNameA passed when it shouldn't have\n");
     if(valid) {
       ok(passfail.longerror==ERROR_FILE_NOT_FOUND,
-         "%s: GetLongPathA returned %ld and not %d\n",
-         errstr,passfail.longerror,ERROR_FILE_NOT_FOUND);
+         "%s: GetLongPathA returned %ld and not %ld\n",
+         errstr,passfail.longerror,(DWORD) ERROR_FILE_NOT_FOUND);
     } else {
       ok(passfail.longerror==ERROR_INVALID_NAME ||
          passfail.longerror==ERROR_FILE_NOT_FOUND,
-         "%s: GetLongPathA returned %ld and not %d or %d'\n",
-         errstr, passfail.longerror,ERROR_INVALID_NAME,ERROR_FILE_NOT_FOUND);
+         "%s: GetLongPathA returned %ld and not %ld or %ld'\n",
+         errstr, passfail.longerror,(DWORD) ERROR_INVALID_NAME,(DWORD)ERROR_FILE_NOT_FOUND);
     }
   }
 }
