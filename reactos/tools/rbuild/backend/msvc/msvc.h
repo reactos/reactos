@@ -63,6 +63,7 @@ class MSVCBackend : public Backend
 
 		FILE* m_dswFile;
 		FILE* m_slnFile;
+		FILE* m_rulesFile;
 
 		// functions in msvcmaker.cpp:
 
@@ -79,6 +80,7 @@ class MSVCBackend : public Backend
 
 		// functions in vcprojmaker.cpp:
 
+		std::string _get_solution_verion ( void );
 		std::string _gen_guid();
 		std::string _replace_str(
 			std::string string1,
@@ -90,10 +92,11 @@ class MSVCBackend : public Backend
 		void _generate_sln_header ( FILE* OUT );
 		void _generate_sln_footer ( FILE* OUT );
 		void _generate_sln ( FILE* OUT );
+		void _generate_rules_file ( FILE* OUT );
 		void _generate_sln_project (
 			FILE* OUT,
 			const Module& module,
-			std::string dsp_file,
+			std::string vcproj_file,
 			std::string sln_guid,
 			std::string vcproj_guid,
 			const std::vector<Dependency*>& dependencies );

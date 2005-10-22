@@ -54,10 +54,21 @@ MSVCBackend::MSVCBackend(Project &project,
 void MSVCBackend::Process()
 {
 	string filename_sln ( ProjectNode.name );
+	string filename_rules = "gccasm.rules";
+	
 	if ( configuration.VSProjectVersion == "6.00" )
 		filename_sln += ".dsw";
-	else
+	else {
 		filename_sln += ".sln";
+
+		m_rulesFile = fopen ( filename_rules.c_str(), "wb" );
+		if ( m_rulesFile )
+		{
+			_generate_rules_file ( m_rulesFile );
+		}
+		fclose ( m_rulesFile );
+	}
+
 	printf ( "Creating MSVC workspace: %s\n", filename_sln.c_str() );
 	
 	ProcessModules();
