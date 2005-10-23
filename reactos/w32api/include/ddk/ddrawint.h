@@ -25,9 +25,34 @@ extern "C" {
 #endif
 
 
+DEFINE_GUID( GUID_MiscellaneousCallbacks,  0xEFD60CC0, 0x49e7, 0x11d0, 0x88, 0x9d, 0x0, 0xaa, 0x0, 0xbb, 0xb7, 0x6a);
+DEFINE_GUID( GUID_Miscellaneous2Callbacks, 0x406B2F00, 0x3E5A, 0x11D1, 0xB6, 0x40, 0x00, 0xAA, 0x00, 0xA1, 0xF9, 0x6A);
+DEFINE_GUID( GUID_VideoPortCallbacks,      0xefd60cc1, 0x49e7, 0x11d0, 0x88, 0x9d, 0x0, 0xaa, 0x0, 0xbb, 0xb7, 0x6a);
+DEFINE_GUID( GUID_ColorControlCallbacks,   0xefd60cc2, 0x49e7, 0x11d0, 0x88, 0x9d, 0x0, 0xaa, 0x0, 0xbb, 0xb7, 0x6a);
+DEFINE_GUID( GUID_MotionCompCallbacks,    0xb1122b40, 0x5dA5, 0x11d1, 0x8f, 0xcF, 0x00, 0xc0, 0x4f, 0xc2, 0x9b, 0x4e);
+DEFINE_GUID( GUID_VideoPortCaps,           0xefd60cc3, 0x49e7, 0x11d0, 0x88, 0x9d, 0x0, 0xaa, 0x0, 0xbb, 0xb7, 0x6a);
+DEFINE_GUID( GUID_D3DCaps,                 0x7bf06991, 0x8794, 0x11d0, 0x91, 0x39, 0x08, 0x00, 0x36, 0xd2, 0xef, 0x02);
+DEFINE_GUID( GUID_D3DExtendedCaps, 	 	   0x7de41f80, 0x9d93, 0x11d0, 0x89, 0xab, 0x00, 0xa0, 0xc9, 0x05, 0x41, 0x29);
+DEFINE_GUID( GUID_D3DCallbacks,            0x7bf06990, 0x8794, 0x11d0, 0x91, 0x39, 0x08, 0x00, 0x36, 0xd2, 0xef, 0x02);
+DEFINE_GUID( GUID_D3DCallbacks2,           0xba584e1, 0x70b6, 0x11d0, 0x88, 0x9d, 0x0, 0xaa, 0x0, 0xbb, 0xb7, 0x6a);
+DEFINE_GUID( GUID_D3DCallbacks3,           0xddf41230, 0xec0a, 0x11d0, 0xa9, 0xb6, 0x00, 0xaa, 0x00, 0xc0, 0x99, 0x3e);
+DEFINE_GUID( GUID_NonLocalVidMemCaps,      0x86c4fa80, 0x8d84, 0x11d0, 0x94, 0xe8, 0x00, 0xc0, 0x4f, 0xc3, 0x41, 0x37);
+DEFINE_GUID( GUID_KernelCallbacks,         0x80863800, 0x6B06, 0x11D0, 0x9B, 0x06, 0x0, 0xA0, 0xC9, 0x03, 0xA3, 0xB8);
+DEFINE_GUID( GUID_KernelCaps,              0xFFAA7540, 0x7AA8, 0x11D0, 0x9B, 0x06, 0x00, 0xA0, 0xC9, 0x03, 0xA3, 0xB8);
+DEFINE_GUID( GUID_ZPixelFormats,           0x93869880, 0x36cf, 0x11d1, 0x9b, 0x1b, 0x0, 0xaa, 0x0, 0xbb, 0xb8, 0xae);
+DEFINE_GUID( GUID_DDMoreCaps,              0x880baf30, 0xb030, 0x11d0, 0x8e, 0xa7, 0x00, 0x60, 0x97, 0x97, 0xea, 0x5b);
+DEFINE_GUID( GUID_D3DParseUnknownCommandCallback, 0x2e04ffa0, 0x98e4, 0x11d1, 0x8c, 0xe1, 0x0, 0xa0, 0xc9, 0x6, 0x29, 0xa8);
+DEFINE_GUID( GUID_NTCallbacks,             0x6fe9ecde, 0xdf89, 0x11d1, 0x9d, 0xb0, 0x00, 0x60, 0x08, 0x27, 0x71, 0xba);
+DEFINE_GUID( GUID_DDMoreSurfaceCaps,       0x3b8a0466, 0xf269, 0x11d1, 0x88, 0x0b, 0x0, 0xc0, 0x4f, 0xd9, 0x30, 0xc5);
+DEFINE_GUID( GUID_GetHeapAlignment,        0x42e02f16, 0x7b41, 0x11d2, 0x8b, 0xff, 0x0, 0xa0, 0xc9, 0x83, 0xea, 0xf6);
+DEFINE_GUID( GUID_UpdateNonLocalHeap,      0x42e02f17, 0x7b41, 0x11d2, 0x8b, 0xff, 0x0, 0xa0, 0xc9, 0x83, 0xea, 0xf6);
+DEFINE_GUID( GUID_NTPrivateDriverCaps,     0xfad16a23, 0x7b66, 0x11d2, 0x83, 0xd7, 0x0, 0xc0, 0x4f, 0x7c, 0xe5, 0x8c);
+DEFINE_GUID( GUID_DDStereoMode,            0xf828169c, 0xa8e8, 0x11d2, 0xa1, 0xf2, 0x0, 0xa0, 0xc9, 0x83, 0xea, 0xf6);
+DEFINE_GUID( GUID_VPE2Callbacks,            0x52882147, 0x2d47, 0x469a, 0xa0, 0xd1, 0x3, 0x45, 0x58, 0x90, 0xf6, 0xc8);
 
 
-typedef struct _DD_VIDEOPORT_LOCAL   *PDD_VIDEOPORT_LOCAL; /* should be defined here once we have dvp.h */
+
+typedef struct _DD_VIDEOPORT_LOCAL   *PDD_VIDEOPORT_LOCAL; 
 
 
 
@@ -35,7 +60,7 @@ typedef struct _DD_VIDEOPORT_LOCAL   *PDD_VIDEOPORT_LOCAL; /* should be defined 
 /* Video memory info structures                                         */
 /************************************************************************/
 
-typedef struct
+typedef struct _VIDEOMEMORY
 {
 	DWORD          dwFlags;
 	FLATPTR        fpStart;
@@ -53,7 +78,7 @@ typedef struct
 	};
 } VIDEOMEMORY, *PVIDEOMEMORY;
 
-typedef struct
+typedef struct _VIDEOMEMORYINFO
 {
 	FLATPTR       fpPrimary;
 	DWORD         dwFlags;
@@ -74,7 +99,7 @@ typedef VIDEOMEMORYINFO *LPVIDEOMEMORYINFO;
 /* DDI representation of the DirectDraw object                          */
 /************************************************************************/
 
-typedef struct
+typedef struct _DD_DIRECTDRAW_GLOBAL
 {
 	PVOID             dhpdev;
 	ULONG_PTR         dwReserved1;
@@ -82,7 +107,7 @@ typedef struct
 	LPDDVIDEOPORTCAPS lpDDVideoPortCaps;
 } DD_DIRECTDRAW_GLOBAL, *PDD_DIRECTDRAW_GLOBAL;
 
-typedef struct
+typedef struct _DD_DIRECTDRAW_LOCAL
 {
 	PDD_DIRECTDRAW_GLOBAL lpGbl;
 } DD_DIRECTDRAW_LOCAL, *PDD_DIRECTDRAW_LOCAL;
@@ -91,7 +116,7 @@ typedef struct
 /* DDI representation of the DirectDrawSurface object                   */
 /************************************************************************/
 
-typedef struct
+typedef struct _DD_SURFACE_GLOBAL
 {
 	union 
 	{
@@ -122,7 +147,7 @@ typedef struct
 	HANDLE           hCreatorProcess;
 } DD_SURFACE_GLOBAL, *PDD_SURFACE_GLOBAL;
 
-typedef struct
+typedef struct _DD_SURFACE_MORE
 {
 	DWORD               dwMipMapCount;
 	PDD_VIDEOPORT_LOCAL lpVideoPort;
@@ -133,7 +158,7 @@ typedef struct
 
 typedef struct _DD_ATTACHLIST *PDD_ATTACHLIST;
 
-typedef struct
+typedef struct _DD_SURFACE_LOCAL
 {
 	PDD_SURFACE_GLOBAL lpGbl;
 	DWORD              dwFlags;
@@ -161,7 +186,7 @@ typedef struct _DD_ATTACHLIST
 	PDD_SURFACE_LOCAL  lpAttached;
 } DD_ATTACHLIST;
 
-typedef struct
+typedef struct _DD_SURFACE_INT
 {
 	PDD_SURFACE_LOCAL lpLcl;
 } DD_SURFACE_INT, *PDD_SURFACE_INT;
@@ -170,7 +195,7 @@ typedef struct
 /* DDI representation of the DirectDrawPalette object                   */
 /************************************************************************/
 
-typedef struct
+typedef struct _DD_PALETTE_GLOBAL
 {
     ULONG_PTR Reserved1;
 } DD_PALETTE_GLOBAL, *PDD_PALETTE_GLOBAL;
@@ -213,7 +238,7 @@ typedef struct _DD_VIDEOPORT_LOCAL
 /* IDirectDrawSurface callbacks                                         */
 /************************************************************************/
 
-typedef struct
+typedef struct _DD_LOCKDATA
 {
 	PDD_DIRECTDRAW_GLOBAL         lpDD;
 	PDD_SURFACE_LOCAL             lpDDSurface;
@@ -227,7 +252,8 @@ typedef struct
 } DD_LOCKDATA, *PDD_LOCKDATA;
 typedef DWORD (STDCALL *PDD_SURFCB_LOCK)(PDD_LOCKDATA);
 
-typedef struct
+
+typedef struct _DD_UNLOCKDATA
 {
 	PDD_DIRECTDRAW_GLOBAL         lpDD;
 	PDD_SURFACE_LOCAL             lpDDSurface;
@@ -239,12 +265,9 @@ typedef DWORD (STDCALL *PDD_SURFCB_UNLOCK)(PDD_UNLOCKDATA);
 #define DDABLT_SRCOVERDEST        0x00000001
 #define DDBLT_AFLAGS              0x80000000
 
-typedef struct
-{
-	BYTE blue, green, red, alpha;
-} DDARGB, *PDDARGB;
 
-typedef struct
+
+typedef struct _DD_BLTDATA
 {
 	PDD_DIRECTDRAW_GLOBAL         lpDD;
 	PDD_SURFACE_LOCAL             lpDDDestSurface;
@@ -266,7 +289,7 @@ typedef struct
 } DD_BLTDATA, *PDD_BLTDATA;
 typedef DWORD (STDCALL *PDD_SURFCB_BLT)(PDD_BLTDATA);
 
-typedef struct
+typedef struct _DD_UPDATEOVERLAYDATA
 {
 	PDD_DIRECTDRAW_GLOBAL         lpDD;
 	PDD_SURFACE_LOCAL             lpDDDestSurface;
