@@ -245,8 +245,52 @@ HRESULT WINAPI Main_DirectDraw_GetCaps(LPDIRECTDRAW7 iface, LPDDCAPS pDriverCaps
 }
 
 HRESULT WINAPI Main_DirectDraw_GetDisplayMode(LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD) 
-{
-   	DX_STUB;
+{    
+	IDirectDrawImpl *This = (IDirectDrawImpl *)iface;
+
+	if (pDDSD == NULL)
+	{
+      return DD_FALSE;
+	}
+	
+	pDDSD->dwFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_PITCH | DDSD_PIXELFORMAT | DDSD_REFRESHRATE | DDSD_WIDTH; 
+	pDDSD->dwHeight  = This->DirectDrawGlobal.vmiData.dwDisplayHeight;
+    pDDSD->dwWidth = This->DirectDrawGlobal.vmiData.dwDisplayWidth; 
+
+	/* FIXME Do not use DUMMYUNIONNAME1 some how union lPitch does not see by the compiler
+	   but rest of the union are visable. more header problem ??? 
+    */
+    pDDSD->DUMMYUNIONNAME1.lPitch  = This->DirectDrawGlobal.vmiData.lDisplayPitch;
+	
+    
+	/* have not check where I should get hold of this info yet
+    DWORD  dwBackBufferCount;
+    */
+
+    pDDSD->dwRefreshRate = This->DirectDrawGlobal.dwMonitorFrequency;
+
+	/* have not check where I should get hold of this info yet
+    DWORD  dwAlphaBitDepth;
+    DWORD  dwReserved;
+    LPVOID lpSurface;
+    union
+    {
+        DDCOLORKEY    ddckCKDestOverlay;
+        DWORD         dwEmptyFaceColor;
+    } 
+    DDCOLORKEY    ddckCKDestBlt;
+    DDCOLORKEY    ddckCKSrcOverlay;
+    DDCOLORKEY    ddckCKSrcBlt;
+	*/
+
+    RtlCopyMemory(&pDDSD->ddpfPixelFormat,&This->DirectDrawGlobal.vmiData.ddpfDisplay,sizeof(DDPIXELFORMAT));
+    RtlCopyMemory(&pDDSD->ddsCaps,&This->DirectDrawGlobal.ddCaps,sizeof(DDCORECAPS));
+	
+	/* have not check where I should get hold of this info yet    
+    DWORD         dwTextureStage;
+    */
+  
+   	return DD_OK;
 }
 
 
@@ -263,7 +307,15 @@ HRESULT WINAPI Main_DirectDraw_GetGDISurface(LPDIRECTDRAW7 iface,
 
 HRESULT WINAPI Main_DirectDraw_GetMonitorFrequency(LPDIRECTDRAW7 iface,LPDWORD freq)
 {  
-   	DX_STUB;
+    IDirectDrawImpl *This = (IDirectDrawImpl *)iface;
+
+	if (freq == NULL)
+	{
+	 return DD_FALSE;
+	}
+
+   	*freq = This->DirectDrawGlobal.dwMonitorFrequency;
+	return DD_OK;
 }
 
 HRESULT WINAPI Main_DirectDraw_GetScanLine(LPDIRECTDRAW7 iface, LPDWORD lpdwScanLine)
