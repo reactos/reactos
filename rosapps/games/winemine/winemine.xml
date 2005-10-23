@@ -7,4 +7,5 @@
 	<library>gdi32</library> 
 	<file>main.c</file>
 	<file>dialog.c</file>
+	<file>winemine.rc</file>
 </module>
