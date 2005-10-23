@@ -782,7 +782,9 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window)
             }
             if (NULL != dc->w.hClipRgn)
             {
+               int FASTCALL CLIPPING_UpdateGCRegion(DC* Dc);
                NtGdiOffsetRgn(dc->w.hClipRgn, DeltaX, DeltaY);
+               CLIPPING_UpdateGCRegion(dc);
             }
             if (NULL != pDCE->hClipRgn)
             {
