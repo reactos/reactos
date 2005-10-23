@@ -97,7 +97,8 @@ typedef struct IDirectDrawGammaControl *LPDIRECTDRAWGAMMACONTROL;
 #define DDENUMRET_CANCEL	0
 #define DDENUMRET_OK		1
 
-#define DD_OK			0
+#define DD_OK			S_OK
+#define DD_FALSE        S_FALSE
 
 
 #define _FACDD		0x876
