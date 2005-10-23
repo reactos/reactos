@@ -21,20 +21,26 @@
 #define QBUFSIZ 160
 #define NUMQUOTES 60
 
-LPCTSTR FilePath = "C:\\ReactOS\\system32\\drivers\\etc\\quotes";
+LPCTSTR FilePath = _T("\\drivers\\etc\\quotes");
 
 DWORD WINAPI QotdHandler(VOID* Sock_)
 {
     FILE *fp;
     SOCKET Sock;
-    INT QuoteToPrint;
+    TCHAR Sys[MAX_PATH];
     TCHAR Quote[NUMQUOTES][BUFSIZ]; // need to set this dynamically
+    INT QuoteToPrint;
     INT i = 0;
 
     Sock = (SOCKET)Sock_;
 
+    if(! GetSystemDirectory(Sys, MAX_PATH))
+    	_tprintf(_T("Getting system path failed. Error: %lu\n"), GetLastError());
+    
+    _tcscat(Sys, FilePath);
+
     _tprintf(_T("Opening quotes file\n"));
-    if ((fp = _tfopen(FilePath, "r")) == NULL)
+    if ((fp = _tfopen(Sys, "r")) == NULL)
     {
         _tprintf(_T("Error opening file: %lu\n"), GetLastError());
         _tprintf(_T("Terminating qotd thread\n"));
