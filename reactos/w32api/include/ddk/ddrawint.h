@@ -9,15 +9,15 @@
 #ifndef _NO_COM
 #define _NO_COM
 #include <ddraw.h>
-#include <dvp.h> 
+#include <ddk/ddrawi.h> /* FIXME: We shouldn't include this header. */
 #undef _NO_COM
 #else
 #include <ddraw.h>
-#include <dvp.h> 
+#include <ddk/ddrawi.h> /* FIXME: We shouldn't include this header. */
 #endif
 #else
 #include <ddraw.h>
-#include <dvp.h> 
+#include <ddk/ddrawi.h> /* FIXME: We shouldn't include this header. */
 #endif
 
 #ifdef __cplusplus
