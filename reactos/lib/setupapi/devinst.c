@@ -3698,7 +3698,8 @@ AddDriverToList(
     driverInfo->Details.Reserved = (ULONG_PTR)driverInfo;
 
     /* Copy InfFileName field */
-    wcsncpy(driverInfo->Details.InfFileName, InfFile, MAX_PATH);
+    wcsncpy(driverInfo->Details.InfFileName, InfFile, MAX_PATH - 1);
+    driverInfo->Details.InfFileName[MAX_PATH - 1] = '\0';
 
     /* Fill InfDate field */
     /* FIXME: hFile = CreateFile(driverInfo->Details.InfFileName,
@@ -3942,7 +3943,7 @@ SetupDiBuildDriverInfoList(
     HINF hInf = INVALID_HANDLE_VALUE;
     LPWSTR ProviderName = NULL;
     LPWSTR ManufacturerName = NULL;
-    LPWSTR ManufacturerSection = NULL;
+    WCHAR ManufacturerSection[LINE_LEN + 1];
     LPWSTR HardwareIDs = NULL;
     LPWSTR CompatibleIDs = NULL;
     FILETIME DriverDate;
@@ -4114,29 +4115,24 @@ SetupDiBuildDriverInfoList(
                             ManufacturerName, RequiredSize,
                             &RequiredSize);
                     }
+                    /* Get manufacturer section name */
                     Result = SetupGetStringFieldW(
                         &ContextManufacturer,
                         1, /* Field index */
-                        NULL, 0,
+                        ManufacturerSection, LINE_LEN,
                         &RequiredSize);
                     if (Result)
                     {
-                        /* We got the needed size for the buffer */
-                        ManufacturerSection = HeapAlloc(GetProcessHeap(), 0, RequiredSize * sizeof(WCHAR));
-                        if (!ManufacturerSection)
+                        ManufacturerSection[RequiredSize] = 0; /* Final NULL char */
+                        /* Add (possible) extension to manufacturer section name */
+                        Result = SetupDiGetActualSectionToInstallW(
+                            hInf, ManufacturerSection, ManufacturerSection, LINE_LEN, NULL, NULL);
+                        if (Result)
                         {
-                            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-                            goto done;
+                            TRACE("Enumerating devices in manufacturer %S\n", ManufacturerSection);
+                            Result = SetupFindFirstLineW(hInf, ManufacturerSection, NULL, &ContextDevice);
                         }
-                        Result = SetupGetStringFieldW(
-                            &ContextManufacturer,
-                            1, /* Field index */
-                            ManufacturerSection, RequiredSize,
-                            &RequiredSize);
                     }
-
-                    TRACE("Enumerating devices in manufacturer %S\n", ManufacturerSection);
-                    Result = SetupFindFirstLineW(hInf, ManufacturerSection, NULL, &ContextDevice);
                     while (Result)
                     {
                         if (DriverType == SPDIT_CLASSDRIVER)
@@ -4239,8 +4235,7 @@ SetupDiBuildDriverInfoList(
                     }
 
                     HeapFree(GetProcessHeap(), 0, ManufacturerName);
-                    HeapFree(GetProcessHeap(), 0, ManufacturerSection);
-                    ManufacturerName = ManufacturerSection = NULL;
+                    ManufacturerName = NULL;
                     Result = SetupFindNextLine(&ContextManufacturer, &ContextManufacturer);
                 }
 
@@ -4274,7 +4269,6 @@ done:
 
     HeapFree(GetProcessHeap(), 0, ProviderName);
     HeapFree(GetProcessHeap(), 0, ManufacturerName);
-    HeapFree(GetProcessHeap(), 0, ManufacturerSection);
     HeapFree(GetProcessHeap(), 0, HardwareIDs);
     HeapFree(GetProcessHeap(), 0, CompatibleIDs);
     if (hInf != INVALID_HANDLE_VALUE)
