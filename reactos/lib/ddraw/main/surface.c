@@ -28,7 +28,7 @@ HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIREC
    
 	/* can the driver create the surface */
 	DDHAL_CANCREATESURFACEDATA CanCreateData;
-	memset(&CanCreateData, 0, sizeof(DD_CANCREATESURFACEDATA));
+	memset(&CanCreateData, 0, sizeof(DDHAL_CANCREATESURFACEDATA));
 	CanCreateData.lpDD = &This->owner->DirectDrawGlobal; 
 	CanCreateData.lpDDSurfaceDesc = (DDSURFACEDESC*)pDDSD;
 	CanCreateData.CanCreateSurface = This->owner->HalInfo.lpDDCallbacks->CanCreateSurface;

@@ -6,12 +6,13 @@
 #include <windows.h>
 #include <stdio.h>
 #include <ddraw.h>
-
-#include <ddk/ddrawint.h>
-#include <ddk/d3dnthal.h>
+#include <ddk/ddrawi.h>
 #include <ddk/d3dhal.h>
 #include <ddrawgdi.h>
-#include <d3d8thk.h>
+
+
+
+
 
 
 /******** Main Object ********/
