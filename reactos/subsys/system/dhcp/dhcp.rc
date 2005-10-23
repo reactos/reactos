@@ -1,6 +1,0 @@
-/* $Id: regsvr32.rc 12852 2005-01-06 13:58:04Z mf $ */
-
-#define REACTOS_STR_FILE_DESCRIPTION	"DHCP Client Service"
-#define REACTOS_STR_INTERNAL_NAME	"dhcp\0"
-#define REACTOS_STR_ORIGINAL_FILENAME	"dhcp.exe\0"
-#include <reactos/version.rc>
