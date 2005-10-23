@@ -37,7 +37,7 @@ LIST_ENTRY CcFreeCacheViewListHead;
 LIST_ENTRY CcInUseCacheViewListHead;
 PMEMORY_AREA CcCacheViewMemoryArea;
 
-NTSTATUS
+NTSTATUS NTAPI
 MmCreateDataFileSection(PSECTION_OBJECT *SectionObject,
                         ACCESS_MASK DesiredAccess,
                         POBJECT_ATTRIBUTES ObjectAttributes,
