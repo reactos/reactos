@@ -1565,10 +1565,15 @@ MingwModuleHandler::GenerateObjectFileTargets (
 		const string& baseHeaderFilename = module.pch->file.name;
 		const string& pchFilename = GetPrecompiledHeaderFilename ();
 		CLEAN_FILE(pchFilename);
+		string dependencies = baseHeaderFilename;
+		/* WIDL generated headers may be used */
+		vector<string> rpcDependencies;
+		GetRpcHeaderDependencies ( rpcDependencies );
+		dependencies += " " + v2s ( rpcDependencies, 5 );
 		fprintf ( fMakefile,
 		          "%s: %s\n",
 		          pchFilename.c_str(),
-		          baseHeaderFilename.c_str() );
+		          dependencies.c_str() );
 		fprintf ( fMakefile, "\t$(ECHO_PCH)\n" );
 		fprintf ( fMakefile,
 		          "\t%s -o %s %s -g %s\n\n",
