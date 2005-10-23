@@ -14,7 +14,7 @@
 #define NTOS_MODE_USER
 #include <ndk/ntndk.h>
 #include <debug.h>
-#include "eventlogrpc_s.h"
+//#include "eventlogrpc_s.h"
 
 typedef struct _IO_ERROR_LPC
 {
