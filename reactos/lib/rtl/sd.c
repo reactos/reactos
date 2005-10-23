@@ -729,7 +729,7 @@ RtlSelfRelativeToAbsoluteSD(PISECURITY_DESCRIPTOR RelSD,
  * @unimplemented
  */
 NTSTATUS NTAPI
-RtlSelfRelativeToAbsoluteSD2(PISECURITY_DESCRIPTOR_RELATIVE SelfRelativeSecurityDescriptor,
+RtlSelfRelativeToAbsoluteSD2(PISECURITY_DESCRIPTOR SelfRelativeSecurityDescriptor,
                              PULONG BufferSize)
 {
    UNIMPLEMENTED;

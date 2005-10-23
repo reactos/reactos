@@ -606,6 +606,7 @@ RtlRunDecodeUnicodeString@8
 RtlRunEncodeUnicodeString@8
 RtlSecondsSince1970ToTime@8
 RtlSecondsSince1980ToTime@8
+RtlSelfRelativeToAbsoluteSD2@8
 RtlSelfRelativeToAbsoluteSD@44
 RtlSetAllBits@4
 RtlSetAttributesSecurityDescriptor@12

@@ -273,6 +273,28 @@ MakeAbsoluteSD (
  */
 BOOL
 STDCALL
+MakeAbsoluteSD2(IN OUT PSECURITY_DESCRIPTOR pSelfRelativeSecurityDescriptor,
+                OUT LPDWORD lpdwBufferSize)
+{
+    NTSTATUS Status;
+
+    Status = RtlSelfRelativeToAbsoluteSD2(pSelfRelativeSecurityDescriptor,
+                                          lpdwBufferSize);
+	if (!NT_SUCCESS(Status))
+	{
+		SetLastError (RtlNtStatusToDosError (Status));
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
 MakeSelfRelativeSD (
 	PSECURITY_DESCRIPTOR	pAbsoluteSecurityDescriptor,
 	PSECURITY_DESCRIPTOR	pSelfRelativeSecurityDescriptor,

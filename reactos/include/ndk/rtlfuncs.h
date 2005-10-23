@@ -542,6 +542,14 @@ RtlSelfRelativeToAbsoluteSD(
 NTSYSAPI
 NTSTATUS
 NTAPI
+RtlSelfRelativeToAbsoluteSD2(
+    IN OUT PSECURITY_DESCRIPTOR SelfRelativeSD,
+    OUT PULONG BufferSize
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
 RtlSetControlSecurityDescriptor(
     IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     IN SECURITY_DESCRIPTOR_CONTROL ControlBitsOfInterest,
