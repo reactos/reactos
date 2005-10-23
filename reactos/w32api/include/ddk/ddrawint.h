@@ -24,10 +24,10 @@
 extern "C" {
 #endif
 
-// FIXME: These should have been defined in other header files!
+
+
+
 typedef struct _DD_VIDEOPORT_LOCAL   *PDD_VIDEOPORT_LOCAL; /* should be defined here once we have dvp.h */
-
-
 
 
 
@@ -193,6 +193,21 @@ typedef struct
 	LPVOID               lpDriverReserved2;
 	LPVOID               lpDriverReserved3;
 } DD_MOTIONCOMP_LOCAL, *PDD_MOTIONCOMP_LOCAL;
+
+
+typedef struct _DD_VIDEOPORT_LOCAL
+{
+    PDD_DIRECTDRAW_LOCAL  lpDD;
+    DDVIDEOPORTDESC       ddvpDesc;
+    DDVIDEOPORTINFO       ddvpInfo;
+    PDD_SURFACE_INT       lpSurface;
+    PDD_SURFACE_INT      lpVBISurface;
+    DWORD                 dwNumAutoflip;
+    DWORD                      dwNumVBIAutoflip;
+    ULONG_PTR                   dwReserved1;
+    ULONG_PTR                   dwReserved2;
+    ULONG_PTR                   dwReserved3;
+} DD_VIDEOPORT_LOCAL ;
 
 /************************************************************************/
 /* IDirectDrawSurface callbacks                                         */
