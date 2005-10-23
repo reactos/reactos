@@ -14,7 +14,6 @@
 
 
 
-
 /******** Main Object ********/
 
 typedef struct 
@@ -32,7 +31,6 @@ typedef struct
 
 } IDirectDrawImpl; 
 
-
 /******** Surface Object ********/
 
 typedef struct 
@@ -43,7 +41,6 @@ typedef struct
     IDirectDrawImpl* owner;
 
 } IDirectDrawSurfaceImpl;
-
 
 /******** Clipper Object ********/
 
@@ -56,7 +53,6 @@ typedef struct
 
 } IDirectDrawClipperImpl;
 
-
 /******** Palette Object ********/
 
 typedef struct 
@@ -66,14 +62,12 @@ typedef struct
 
     IDirectDrawImpl* owner;
 
-} IDirect3DDeviceImpl;
-
+} IDirectDrawPaletteImpl;
 
 /*********** VTables ************/
 
 extern IDirectDraw7Vtbl DirectDraw_VTable;
 extern IDirectDrawSurface7Vtbl DDrawSurface_VTable;
-
 
 /********* Prototypes **********/
 
@@ -84,5 +78,9 @@ VOID Hal_DirectDraw_Release (LPDIRECTDRAW7 iface);
 HRESULT Hel_DirectDraw_Initialize (LPDIRECTDRAW7 iface);
 HRESULT Hel_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface);
 VOID Hel_DirectDraw_Release (LPDIRECTDRAW7 iface);
+
+/*********** Macros ***********/
+
+#define DX_STUB return DD_OK;
 
 #endif /* __DDRAW_PRIVATE */
