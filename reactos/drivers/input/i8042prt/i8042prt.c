@@ -577,12 +577,12 @@ static NTSTATUS STDCALL I8042BasicDetect(PDEVICE_EXTENSION DevExt)
 		return FALSE;
 	}
 
-	if (I8042Write(DevExt, I8042_CTRL_PORT, KBD_LINE_TEST))
-	{
-		Status = I8042ReadDataWait(DevExt, &Value);
-		if (NT_SUCCESS(Status) && Value == 0)
-			DevExt->KeyboardExists = TRUE;
-	}
+	/*
+	 * We used to send a KBD_LINE_TEST command here, but on at least HP
+	 * Pavilion notebooks the response to that command was incorrect.
+	 * So now we just assume that a keyboard is attached.
+	 */
+	DevExt->KeyboardExists = TRUE;
 
 	if (I8042Write(DevExt, I8042_CTRL_PORT, MOUSE_LINE_TEST))
 	{
