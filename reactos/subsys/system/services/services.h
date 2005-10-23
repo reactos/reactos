@@ -32,9 +32,11 @@ typedef struct _SERVICE
 } SERVICE, *PSERVICE;
 
 
-/* services.c */
+/* config.c */
 
-VOID PrintString(LPCSTR fmt, ...);
+DWORD ScmWriteDependencies(HKEY hServiceKey,
+                           LPWSTR lpDependencies,
+                           DWORD dwDependenciesLength);
 
 
 /* database.c */
@@ -52,6 +54,12 @@ DWORD ScmMarkServiceForDelete(PSERVICE pService);
 /* rpcserver.c */
 
 VOID ScmStartRpcServer(VOID);
+
+
+/* services.c */
+
+VOID PrintString(LPCSTR fmt, ...);
+
 
 
 /* EOF */

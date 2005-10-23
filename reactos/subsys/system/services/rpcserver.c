@@ -472,25 +472,32 @@ ScmrNotifyBootConfigStatus(handle_t BindingHandle,
 
 
 /* Function 11 */
-#if 0
 unsigned long
-ScmrChangeServiceConfigW([in] handle_t BiningHandle,
-                         [in] SC_HANDLE hService,
-                         [in] DWORD dwServiceType,
-                         [in] DWORD dwStartType,
-                         [in] DWORD dwErrorControl,
-                         [in, string, unique] LPCWSTR lpBinaryPathName,
-                         [in, string, unique] LPCWSTR lpLoadOrderGroup,
-                         [in, out, unique] LPDWORD lpdwTagId,
-                         [in, size_is(dwDependenciesLength), unique] LPCWSTR lpDependencies,
-                         [in] DWORD dwDependenciesLength,
-                         [in, string, unique] LPCWSTR lpServiceStartName,
-                         [in, size_is(dwPasswordLength), unique] LPCWSTR lpPassword,
-                         [in] DWORD dwPasswordLength,
-                         [in, string, unique] LPCWSTR lpDisplayName)
+ScmrChangeServiceConfigW(handle_t BiningHandle,
+                         unsigned int hService,
+                         unsigned long dwServiceType,
+                         unsigned long dwStartType,
+                         unsigned long dwErrorControl,
+                         wchar_t *lpBinaryPathName,
+                         wchar_t *lpLoadOrderGroup,
+                         unsigned long *lpdwTagId, /* in, out, unique */
+                         wchar_t *lpDependencies,
+                         unsigned long dwDependenciesLength,
+                         wchar_t *lpServiceStartName,
+                         wchar_t *lpPassword,
+                         unsigned long dwPasswordLength,
+                         wchar_t *lpDisplayName)
 {
+    DPRINT1("ScmrChangeServiceConfigW() called\n");
+    DPRINT1("dwServiceType = %lu\n", dwServiceType);
+    DPRINT1("dwStartType = %lu\n", dwStartType);
+    DPRINT1("dwErrorControl = %lu\n", dwErrorControl);
+    DPRINT1("lpBinaryPathName = %S\n", lpBinaryPathName);
+    DPRINT1("lpLoadOrderGroup = %S\n", lpLoadOrderGroup);
+    DPRINT1("lpDisplayName = %S\n", lpDisplayName);
+
+    return ERROR_SUCCESS;
 }
-#endif
 
 
 static DWORD
@@ -710,9 +717,14 @@ ScmrCreateServiceW(handle_t BindingHandle,
         /* FIXME: Write tag */
     }
 
+    /* Write dependencies */
     if (lpDependencies != NULL && *lpDependencies != 0)
     {
-        /* FIXME: Write dependencies */
+        dwError = ScmWriteDependencies(hServiceKey,
+                                       lpDependencies,
+                                       dwDependenciesLength);
+        if (dwError != ERROR_SUCCESS)
+            goto done;
     }
 
     if (lpPassword != NULL)

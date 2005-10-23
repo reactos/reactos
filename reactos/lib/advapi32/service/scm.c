@@ -106,26 +106,68 @@ ChangeServiceConfigA(
 /**********************************************************************
  *  ChangeServiceConfigW
  *
- * @unimplemented
+ * @implemented
  */
-BOOL
-STDCALL
-ChangeServiceConfigW(
-    SC_HANDLE   hService,
-    DWORD       dwServiceType,
-    DWORD       dwStartType,
-    DWORD       dwErrorControl,
-    LPCWSTR     lpBinaryPathName,
-    LPCWSTR     lpLoadOrderGroup,
-    LPDWORD     lpdwTagId,
-    LPCWSTR     lpDependencies,
-    LPCWSTR     lpServiceStartName,
-    LPCWSTR     lpPassword,
-    LPCWSTR     lpDisplayName)
+BOOL STDCALL
+ChangeServiceConfigW(SC_HANDLE hService,
+                     DWORD dwServiceType,
+                     DWORD dwStartType,
+                     DWORD dwErrorControl,
+                     LPCWSTR lpBinaryPathName,
+                     LPCWSTR lpLoadOrderGroup,
+                     LPDWORD lpdwTagId,
+                     LPCWSTR lpDependencies,
+                     LPCWSTR lpServiceStartName,
+                     LPCWSTR lpPassword,
+                     LPCWSTR lpDisplayName)
 {
-    DPRINT1("ChangeServiceConfigW is unimplemented\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    DWORD dwError;
+    DWORD dwDependenciesLength = 0;
+    DWORD dwLength;
+    LPWSTR lpStr;
+
+    DPRINT1("ChangeServiceConfigW() called\n");
+
+    /* Calculate the Dependencies length*/
+    if (lpDependencies != NULL)
+    {
+        lpStr = (LPWSTR)lpDependencies;
+        while (*lpStr)
+        {
+            dwLength = wcslen(lpStr) + 1;
+            dwDependenciesLength += dwLength;
+            lpStr = lpStr + dwLength;
+        }
+        dwDependenciesLength++;
+    }
+
+    /* FIXME: Encrypt the password */
+
+    HandleBind();
+
+    /* Call to services.exe using RPC */
+    dwError = ScmrChangeServiceConfigW(BindingHandle,
+                                       (unsigned int)hService,
+                                       dwServiceType,
+                                       dwStartType,
+                                       dwErrorControl,
+                                       (LPWSTR)lpBinaryPathName,
+                                       (LPWSTR)lpLoadOrderGroup,
+                                       lpdwTagId,
+                                       (LPWSTR)lpDependencies,
+                                       dwDependenciesLength,
+                                       (LPWSTR)lpServiceStartName,
+                                       NULL,              /* FIXME: lpPassword */
+                                       0,                 /* FIXME: dwPasswordLength */
+                                       (LPWSTR)lpDisplayName);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("ScmrChangeServiceConfigW() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 
@@ -243,7 +285,7 @@ CreateServiceA(
 /**********************************************************************
  *  CreateServiceW
  *
- * @unimplemented
+ * @implemented
  */
 SC_HANDLE STDCALL
 CreateServiceW(SC_HANDLE hSCManager,
@@ -262,7 +304,6 @@ CreateServiceW(SC_HANDLE hSCManager,
 {
     SC_HANDLE hService = NULL;
     DWORD dwError;
-    HKEY hEnumKey, hKey;
     DWORD dwDependenciesLength = 0;
     DWORD dwLength;
     LPWSTR lpStr;
@@ -284,7 +325,6 @@ CreateServiceW(SC_HANDLE hSCManager,
 
     /* FIXME: Encrypt the password */
 
-#if 0
     HandleBind();
 
     /* Call to services.exe using RPC */
@@ -299,25 +339,12 @@ CreateServiceW(SC_HANDLE hSCManager,
                                  (LPWSTR)lpBinaryPathName,
                                  (LPWSTR)lpLoadOrderGroup,
                                  lpdwTagId,
-                                 lpDependencies,
+                                 (LPWSTR)lpDependencies,
                                  dwDependenciesLength,
                                  (LPWSTR)lpServiceStartName,
                                  NULL,              /* FIXME: lpPassword */
                                  0,                 /* FIXME: dwPasswordLength */
                                  (unsigned int *)&hService);
-#else
-    RegOpenKeyExW(HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Services", 0, KEY_ENUMERATE_SUB_KEYS, &hEnumKey);
-    RegCreateKeyExW(hEnumKey, lpServiceName, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_SET_VALUE, NULL, &hKey, NULL);
-    RegCloseKey(hEnumKey);
-    if (lpLoadOrderGroup)
-      RegSetValueExW(hKey, L"Group", 0, REG_SZ, (const BYTE*)lpLoadOrderGroup, (wcslen(lpLoadOrderGroup) + 1) * sizeof(WCHAR));
-    RegSetValueExW(hKey, L"ImagePath", 0, REG_EXPAND_SZ, (const BYTE*)lpBinaryPathName, (wcslen(lpBinaryPathName) + 1) * sizeof(WCHAR));
-    RegSetValueExW(hKey, L"ErrorControl", 0, REG_DWORD, (const BYTE*)&dwErrorControl, sizeof(dwErrorControl));
-    RegSetValueExW(hKey, L"Start", 0, REG_DWORD, (const BYTE*)&dwStartType, sizeof(dwStartType));
-    RegSetValueExW(hKey, L"Type", 0, REG_DWORD, (const BYTE*)&dwStartType, sizeof(dwStartType));
-    RegCloseKey(hKey);
-    hService = INVALID_HANDLE_VALUE; dwError = ERROR_SUCCESS;
-#endif
     if (dwError != ERROR_SUCCESS)
     {
         DPRINT1("ScmrCreateServiceW() failed (Error %lu)\n", dwError);
