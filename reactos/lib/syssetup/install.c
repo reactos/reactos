@@ -401,6 +401,7 @@ InstallReactOS (HINSTANCE hInstance)
   TCHAR sAccessories[256];
   TCHAR sGames[256];
   TCHAR Sys[MAX_PATH];
+  TCHAR GamePath[MAX_PATH];
     
 
 # if 0
@@ -453,11 +454,15 @@ InstallReactOS (HINSTANCE hInstance)
   /* create Games subfolder and fill if the exe is available */
   if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_GAMES, sGames, 256)) {
 	if(GetSystemDirectory(Sys, MAX_PATH)) {
-   	  if((_taccess(_tcscat(Sys, _T("\\sol.exe")), 0 )) != -1)
+	  /* copy system dir */	
+	  _tcscpy(GamePath, Sys);
+	  /* concatonate full file path and check for existance */
+   	  if((_taccess(_tcscat(GamePath, _T("\\sol.exe")), 0 )) != -1)
         CreateShortcut(CSIDL_PROGRAMS, sGames, _T("Solitaire.lnk"), _T("sol.exe"), IDS_CMT_SOLITAIRE);
-	  /* winemine is broken
-      if((_taccess(_tcscat(Sys, _T("\\winemine.exe")), 0 )) != -1)
-        CreateShortcut(CSIDL_PROGRAMS, sGames, _T("winemine.lnk"), _T("winemine.exe"), IDS_CMT_WINEMINE); */
+      
+	  _tcscpy(GamePath, Sys);
+      if((_taccess(_tcscat(GamePath, _T("\\winemine.exe")), 0 )) != -1)
+        CreateShortcut(CSIDL_PROGRAMS, sGames, _T("winemine.lnk"), _T("winemine.exe"), IDS_CMT_WINEMINE);
 	}
   }
 

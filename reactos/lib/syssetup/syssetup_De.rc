@@ -203,4 +203,11 @@ BEGIN
     IDS_CMT_REGEDIT     "Starte Registry Editor"
 END
 
+STRINGTABLE
+BEGIN
+    IDS_GAMES		    "Games"
+    IDS_CMT_SOLITAIRE	"Solitaire"
+    IDS_CMT_WINEMINE	"WineMine"
+END
+
 /* EOF */
