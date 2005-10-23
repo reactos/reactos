@@ -20,20 +20,20 @@
 #define RESOURCE_H
 
 #define IDB_WATERMARK			100
-#define IDB_HEADER			101
+#define IDB_HEADER				101
 
-#define IDC_STATIC			-1
+#define IDC_STATIC				-1
 
 #define IDD_WELCOMEPAGE			1000
 #define IDC_WELCOMETITLE		1001
 
-#define IDD_ACKPAGE			1010
+#define IDD_ACKPAGE				1010
 #define IDC_PROJECTS			1011
-#define IDC_VIEWGPL			1012
+#define IDC_VIEWGPL				1012
 
 #define IDD_OWNERPAGE			1020
 #define IDC_OWNERNAME			1021
-#define IDC_OWNERORGANIZATION		1022
+#define IDC_OWNERORGANIZATION	1022
 
 #define IDD_COMPUTERPAGE		1030
 #define IDC_COMPUTERNAME		1031
@@ -59,11 +59,11 @@
 #define IDC_FINISHTITLE			1071
 
 
-#define IDD_RESTART			2000
-#define IDC_RESTART_PROGRESS		2001
+#define IDD_RESTART				2000
+#define IDC_RESTART_PROGRESS	2001
 
-#define IDD_GPL                         2100
-#define IDC_GPL_TEXT                    2101
+#define IDD_GPL                 2100
+#define IDC_GPL_TEXT            2101
 
 #define IDS_ACKTITLE			3010
 #define IDS_ACKSUBTITLE			3011
@@ -94,7 +94,8 @@
 #define IDS_CMT_NOTEPAD			3213
 #define IDS_CMT_REGEDIT			3214
 #define IDS_CMT_SOLITAIRE		3215
+#define IDS_CMT_WINEMINE		3216
 
-#define IDR_GPL				4000
+#define IDR_GPL					4000
 
 #endif /* RESOURCE_H */
