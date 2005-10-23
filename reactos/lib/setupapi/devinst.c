@@ -3326,7 +3326,11 @@ HKEY WINAPI SetupDiCreateDevRegKeyW(
                     0,
                     NULL,
                     REG_OPTION_NON_VOLATILE,
+#if _WIN32_WINNT >= 0x502
                     KEY_READ | KEY_WRITE,
+#else
+                    KEY_ALL_ACCESS,
+#endif
                     NULL,
                     &hKey,
                     &Disposition);
@@ -5310,7 +5314,11 @@ SetupDiInstallDevice(
     lpFullGuidString[RequiredSize + 2] = '\0';
 
     /* Open/Create driver key information */
-    hKey = SetupDiOpenDevRegKey(DeviceInfoSet, DeviceInfoData, DICS_FLAG_GLOBAL, 0, DIREG_DRV, KEY_SET_VALUE);
+#if _WIN32_WINNT >= 0x502
+    hKey = SetupDiOpenDevRegKey(DeviceInfoSet, DeviceInfoData, DICS_FLAG_GLOBAL, 0, DIREG_DRV, KEY_READ | KEY_WRITE);
+#else
+    hKey = SetupDiOpenDevRegKey(DeviceInfoSet, DeviceInfoData, DICS_FLAG_GLOBAL, 0, DIREG_DRV, KEY_ALL_ACCESS);
+#endif
     if (hKey == INVALID_HANDLE_VALUE && GetLastError() == ERROR_FILE_NOT_FOUND)
         hKey = SetupDiCreateDevRegKeyW(DeviceInfoSet, DeviceInfoData, DICS_FLAG_GLOBAL, 0, DIREG_DRV, NULL, NULL);
     if (hKey == INVALID_HANDLE_VALUE)
