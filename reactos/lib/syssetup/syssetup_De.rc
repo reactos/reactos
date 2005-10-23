@@ -205,7 +205,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_GAMES		    "Games"
+    IDS_GAMES		"Spiele"
     IDS_CMT_SOLITAIRE	"Solitaire"
     IDS_CMT_WINEMINE	"WineMine"
 END
