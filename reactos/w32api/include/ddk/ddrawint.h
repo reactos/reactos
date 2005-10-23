@@ -303,7 +303,7 @@ typedef struct _DD_UPDATEOVERLAYDATA
 } DD_UPDATEOVERLAYDATA, *PDD_UPDATEOVERLAYDATA;
 typedef DWORD (STDCALL *PDD_SURFCB_UPDATEOVERLAY)(PDD_UPDATEOVERLAYDATA);
 
-typedef struct
+typedef struct _DD_SETOVERLAYPOSITIONDATA
 {
 	PDD_DIRECTDRAW_GLOBAL         lpDD;
 	PDD_SURFACE_LOCAL             lpDDSrcSurface;
@@ -315,7 +315,7 @@ typedef struct
 } DD_SETOVERLAYPOSITIONDATA, *PDD_SETOVERLAYPOSITIONDATA;
 typedef DWORD (STDCALL *PDD_SURFCB_SETOVERLAYPOSITION)(PDD_SETOVERLAYPOSITIONDATA);
 
-typedef struct
+typedef struct _DD_SETPALETTEDATA
 {
 	PDD_DIRECTDRAW_GLOBAL         lpDD;
 	PDD_SURFACE_LOCAL             lpDDSurface;
@@ -326,7 +326,7 @@ typedef struct
 } DD_SETPALETTEDATA, *PDD_SETPALETTEDATA;
 typedef DWORD (STDCALL *PDD_SURFCB_SETPALETTE)(PDD_SETPALETTEDATA);
 
-typedef struct
+typedef struct _DD_FLIPDATA
 {
 	PDD_DIRECTDRAW_GLOBAL         lpDD;
 	PDD_SURFACE_LOCAL             lpSurfCurr;
@@ -339,7 +339,7 @@ typedef struct
 } DD_FLIPDATA, *PDD_FLIPDATA;
 typedef DWORD (STDCALL *PDD_SURFCB_FLIP)(PDD_FLIPDATA);
 
-typedef struct
+typedef struct _DD_DESTROYSURFACEDATA
 {
 	PDD_DIRECTDRAW_GLOBAL         lpDD;
 	PDD_SURFACE_LOCAL             lpDDSurface;
@@ -348,7 +348,7 @@ typedef struct
 } DD_DESTROYSURFACEDATA, *PDD_DESTROYSURFACEDATA;
 typedef DWORD (STDCALL *PDD_SURFCB_DESTROYSURFACE)(PDD_DESTROYSURFACEDATA);
 
-typedef struct
+typedef struct _DD_SETCLIPLISTDATA
 {
 	PDD_DIRECTDRAW_GLOBAL         lpDD;
 	PDD_SURFACE_LOCAL             lpDDSurface;
@@ -357,7 +357,7 @@ typedef struct
 } DD_SETCLIPLISTDATA, *PDD_SETCLIPLISTDATA;
 typedef DWORD (STDCALL *PDD_SURFCB_SETCLIPLIST)(PDD_SETCLIPLISTDATA);
 
-typedef struct
+typedef struct _DD_ADDATTACHEDSURFACEDATA
 {
 	PDD_DIRECTDRAW_GLOBAL         lpDD;
 	PDD_SURFACE_LOCAL             lpDDSurface;
@@ -367,7 +367,7 @@ typedef struct
 } DD_ADDATTACHEDSURFACEDATA, *PDD_ADDATTACHEDSURFACEDATA;
 typedef DWORD (STDCALL *PDD_SURFCB_ADDATTACHEDSURFACE)(PDD_ADDATTACHEDSURFACEDATA);
 
-typedef struct
+typedef struct _DD_SETCOLORKEYDATA
 {
 	PDD_DIRECTDRAW_GLOBAL         lpDD;
 	PDD_SURFACE_LOCAL             lpDDSurface;
@@ -378,7 +378,7 @@ typedef struct
 } DD_SETCOLORKEYDATA, *PDD_SETCOLORKEYDATA;
 typedef DWORD (STDCALL *PDD_SURFCB_SETCOLORKEY)(PDD_SETCOLORKEYDATA);
 
-typedef struct
+typedef struct _DD_GETBLTSTATUSDATA
 {
 	PDD_DIRECTDRAW_GLOBAL         lpDD;
 	PDD_SURFACE_LOCAL             lpDDSurface;
@@ -388,7 +388,7 @@ typedef struct
 } DD_GETBLTSTATUSDATA, *PDD_GETBLTSTATUSDATA;
 typedef DWORD (STDCALL *PDD_SURFCB_GETBLTSTATUS)(PDD_GETBLTSTATUSDATA);
 
-typedef struct
+typedef struct _DD_GETFLIPSTATUSDATA
 {
 	PDD_DIRECTDRAW_GLOBAL         lpDD;
 	PDD_SURFACE_LOCAL             lpDDSurface;
@@ -398,7 +398,7 @@ typedef struct
 } DD_GETFLIPSTATUSDATA, *PDD_GETFLIPSTATUSDATA;
 typedef DWORD (STDCALL *PDD_SURFCB_GETFLIPSTATUS)(PDD_GETFLIPSTATUSDATA);
 
-typedef struct
+typedef struct DD_SURFACECALLBACKS
 {
 	DWORD                         dwSize;
 	DWORD                         dwFlags;
@@ -437,7 +437,7 @@ typedef struct
 /* IDirectDraw callbacks                                                */
 /************************************************************************/
 
-typedef struct
+typedef struct _DD_CREATESURFACEDATA
 {
 	PDD_DIRECTDRAW_GLOBAL    lpDD;
 	DDSURFACEDESC           *lpDDSurfaceDesc;
@@ -448,7 +448,7 @@ typedef struct
 } DD_CREATESURFACEDATA, *PDD_CREATESURFACEDATA;
 typedef DWORD (STDCALL *PDD_CREATESURFACE)(PDD_CREATESURFACEDATA);
 
-typedef struct
+typedef struct _DD_DRVSETCOLORKEYDATA
 {
 	PDD_SURFACE_LOCAL        lpDDSurface;
 	DWORD                    dwFlags;
@@ -460,7 +460,7 @@ typedef DWORD (STDCALL *PDD_SETCOLORKEY)(PDD_DRVSETCOLORKEYDATA);
 
 #define DDWAITVB_I_TESTVB    0x80000006
 
-typedef struct
+typedef struct _DD_WAITFORVERTICALBLANKDATA
 {
 	PDD_DIRECTDRAW_GLOBAL    lpDD;
 	DWORD                    dwFlags;
@@ -471,7 +471,7 @@ typedef struct
 } DD_WAITFORVERTICALBLANKDATA, *PDD_WAITFORVERTICALBLANKDATA;
 typedef DWORD (STDCALL *PDD_WAITFORVERTICALBLANK)(PDD_WAITFORVERTICALBLANKDATA);
 
-typedef struct
+typedef struct _DD_CANCREATESURFACEDATA
 {
 	PDD_DIRECTDRAW_GLOBAL    lpDD;
 	DDSURFACEDESC           *lpDDSurfaceDesc;
@@ -481,7 +481,7 @@ typedef struct
 } DD_CANCREATESURFACEDATA, *PDD_CANCREATESURFACEDATA;
 typedef DWORD (STDCALL *PDD_CANCREATESURFACE)(PDD_CANCREATESURFACEDATA);
 
-typedef struct
+typedef struct _DD_CREATEPALETTEDATA
 {
 	PDD_DIRECTDRAW_GLOBAL    lpDD;
 	PDD_PALETTE_GLOBAL       lpDDPalette;
@@ -492,7 +492,7 @@ typedef struct
 } DD_CREATEPALETTEDATA, *PDD_CREATEPALETTEDATA;
 typedef DWORD (STDCALL *PDD_CREATEPALETTE)(PDD_CREATEPALETTEDATA);
 
-typedef struct
+typedef struct _DD_GETSCANLINEDATA
 {
 	PDD_DIRECTDRAW_GLOBAL    lpDD;
 	DWORD                    dwScanLine;
@@ -501,7 +501,7 @@ typedef struct
 } DD_GETSCANLINEDATA, *PDD_GETSCANLINEDATA;
 typedef DWORD (STDCALL *PDD_GETSCANLINE)(PDD_GETSCANLINEDATA);
 
-typedef struct
+typedef struct _DD_MAPMEMORYDATA
 {
 	PDD_DIRECTDRAW_GLOBAL    lpDD;
 	BOOL                     bMap;
@@ -510,6 +510,8 @@ typedef struct
 	HRESULT                  ddRVal;
 } DD_MAPMEMORYDATA, *PDD_MAPMEMORYDATA;
 typedef DWORD (STDCALL *PDD_MAPMEMORY)(PDD_MAPMEMORYDATA);
+
+
 
 
 typedef struct _DD_DESTROYDRIVERDATA *PDD_DESTROYDRIVERDATA;
@@ -545,7 +547,7 @@ typedef struct DD_CALLBACKS
 #define DDHAL_CB32_GETSCANLINE          0x00000080l
 #define DDHAL_CB32_MAPMEMORY            0x80000000l
 
-typedef struct
+typedef struct _DD_GETAVAILDRIVERMEMORYDATA
 {
 	PDD_DIRECTDRAW_GLOBAL    lpDD;
 	DDSCAPS                  DDSCaps;
@@ -556,9 +558,7 @@ typedef struct
 } DD_GETAVAILDRIVERMEMORYDATA, *PDD_GETAVAILDRIVERMEMORYDATA;
 typedef DWORD (STDCALL *PDD_GETAVAILDRIVERMEMORY)(PDD_GETAVAILDRIVERMEMORYDATA);
             
-DEFINE_GUID(GUID_MiscellaneousCallbacks, 0xEFD60CC0, 0x49E7, 0x11D0, 0x88, 0x9D, 0x00, 0xAA, 0x00, 0xBB, 0xB7, 0x6A);
-
-typedef struct
+typedef struct _DD_MISCELLANEOUSCALLBACKS
 {
 	DWORD                    dwSize;
 	DWORD                    dwFlags;
@@ -569,7 +569,7 @@ typedef struct
 
 typedef DWORD (STDCALL *PDD_ALPHABLT)(PDD_BLTDATA);
 
-typedef struct
+typedef struct _DD_CREATESURFACEEXDATA
 {
 	DWORD                     dwFlags;
 	PDD_DIRECTDRAW_LOCAL      lpDDLcl;
@@ -578,7 +578,7 @@ typedef struct
 } DD_CREATESURFACEEXDATA, *PDD_CREATESURFACEEXDATA;
 typedef DWORD (STDCALL *PDD_CREATESURFACEEX)(PDD_CREATESURFACEEXDATA);
 
-typedef struct
+typedef struct _DD_GETDRIVERSTATEDATA
 {
 	DWORD                     dwFlags;
 	union
@@ -592,7 +592,7 @@ typedef struct
 } DD_GETDRIVERSTATEDATA, *PDD_GETDRIVERSTATEDATA;
 typedef DWORD (STDCALL *PDD_GETDRIVERSTATE)(PDD_GETDRIVERSTATEDATA);
 
-typedef struct
+typedef struct _DD_DESTROYDDLOCALDATA
 {
 	DWORD                     dwFlags;
 	PDD_DIRECTDRAW_LOCAL      pDDLcl;
@@ -600,9 +600,9 @@ typedef struct
 } DD_DESTROYDDLOCALDATA, *PDD_DESTROYDDLOCALDATA;
 typedef DWORD (STDCALL *PDD_DESTROYDDLOCAL)(PDD_DESTROYDDLOCALDATA);
 
-DEFINE_GUID(GUID_Miscellaneous2Callbacks, 0x406B2F00, 0x3E5A, 0x11D1, 0xB6, 0x40, 0x00, 0xAA, 0x00, 0xA1, 0xF9, 0x6A);
 
-typedef struct
+
+typedef struct _DD_MISCELLANEOUS2CALLBACKS
 {
 	DWORD                     dwSize;
 	DWORD                     dwFlags;
@@ -619,7 +619,7 @@ typedef struct
 #define DDHAL_MISC2CB32_DESTROYDDLOCAL      0x00000008
 
 
-typedef struct
+typedef struct _DD_FREEDRIVERMEMORYDATA
 {
 	PDD_DIRECTDRAW_GLOBAL lpDD;
 	PDD_SURFACE_LOCAL     lpDDSurface;
@@ -628,7 +628,7 @@ typedef struct
 } DD_FREEDRIVERMEMORYDATA, *PDD_FREEDRIVERMEMORYDATA;
 typedef DWORD (STDCALL *PDD_FREEDRIVERMEMORY)(PDD_FREEDRIVERMEMORYDATA);
 
-typedef struct
+typedef struct _DD_SETEXCLUSIVEMODEDATA
 {
 	PDD_DIRECTDRAW_GLOBAL lpDD;
 	DWORD                 dwEnterExcl;
@@ -638,7 +638,7 @@ typedef struct
 } DD_SETEXCLUSIVEMODEDATA, *PDD_SETEXCLUSIVEMODEDATA;
 typedef DWORD (STDCALL *PDD_SETEXCLUSIVEMODE)(PDD_SETEXCLUSIVEMODEDATA);
 
-typedef struct
+typedef struct _DD_FLIPTOGDISURFACEDATA
 {
 	PDD_DIRECTDRAW_GLOBAL lpDD;
 	DWORD                 dwToGDI;
@@ -648,9 +648,9 @@ typedef struct
 } DD_FLIPTOGDISURFACEDATA, *PDD_FLIPTOGDISURFACEDATA;
 typedef DWORD (STDCALL *PDD_FLIPTOGDISURFACE)(PDD_FLIPTOGDISURFACEDATA);
 
-DEFINE_GUID(GUID_NTCallbacks, 0x6FE9ECDE, 0xDF89, 0x11D1, 0x9D, 0xB0, 0x00, 0x60, 0x08, 0x27, 0x71, 0xBA);
 
-typedef struct
+
+typedef struct _DD_NTCALLBACKS
 {
 	DWORD                 dwSize;
 	DWORD                 dwFlags;
@@ -659,18 +659,16 @@ typedef struct
 	PDD_FLIPTOGDISURFACE  FlipToGDISurface;
 } DD_NTCALLBACKS, *PDD_NTCALLBACKS;
 
-enum
-{
-	DDHAL_NTCB32_FREEDRIVERMEMORY = 1<<0,
-	DDHAL_NTCB32_SETEXCLUSIVEMODE = 1<<1,
-	DDHAL_NTCB32_FLIPTOGDISURFACE = 1<<2,
-};
+
+#define DDHAL_NTCB32_FREEDRIVERMEMORY 0x00000001
+#define DDHAL_NTCB32_SETEXCLUSIVEMODE 0x00000002
+#define DDHAL_NTCB32_FLIPTOGDISURFACE 0x00000004
 
 /************************************************************************/
 /* IDirectDrawPalette callbacks                                         */
 /************************************************************************/
 
-typedef struct
+typedef struct _DD_DESTROYPALETTEDATA
 {
 	PDD_DIRECTDRAW_GLOBAL    lpDD;
 	PDD_PALETTE_GLOBAL       lpDDPalette;
@@ -679,7 +677,7 @@ typedef struct
 } DD_DESTROYPALETTEDATA, *PDD_DESTROYPALETTEDATA;
 typedef DWORD (STDCALL *PDD_PALCB_DESTROYPALETTE)(PDD_DESTROYPALETTEDATA);
 
-typedef struct
+typedef struct _DD_SETENTRIESDATA
 {
 	PDD_DIRECTDRAW_GLOBAL    lpDD;
 	PDD_PALETTE_GLOBAL       lpDDPalette;
@@ -691,7 +689,7 @@ typedef struct
 } DD_SETENTRIESDATA, *PDD_SETENTRIESDATA;
 typedef DWORD (STDCALL *PDD_PALCB_SETENTRIES)(PDD_SETENTRIESDATA);
 
-typedef struct
+typedef struct DD_PALETTECALLBACKS
 {
 	DWORD                    dwSize;
 	DWORD                    dwFlags;
@@ -706,7 +704,7 @@ typedef struct
 /* IDirectDrawVideoport callbacks                                       */
 /************************************************************************/
 
-typedef struct
+typedef struct _DD_CANCREATEVPORTDATA
 {
 	PDD_DIRECTDRAW_LOCAL           lpDD;
 	LPDDVIDEOPORTDESC              lpDDVideoPortDesc;
@@ -715,7 +713,7 @@ typedef struct
 } DD_CANCREATEVPORTDATA, *PDD_CANCREATEVPORTDATA;
 typedef DWORD (STDCALL *PDD_VPORTCB_CANCREATEVIDEOPORT)(PDD_CANCREATEVPORTDATA);
 
-typedef struct
+typedef struct _DD_CREATEVPORTDATA
 {
 	PDD_DIRECTDRAW_LOCAL           lpDD;
 	LPDDVIDEOPORTDESC              lpDDVideoPortDesc;
@@ -725,7 +723,7 @@ typedef struct
 } DD_CREATEVPORTDATA, *PDD_CREATEVPORTDATA;
 typedef DWORD (STDCALL *PDD_VPORTCB_CREATEVIDEOPORT)(PDD_CREATEVPORTDATA);
 
-typedef struct
+typedef struct _DD_FLIPVPORTDATA
 {
 	PDD_DIRECTDRAW_LOCAL           lpDD;
 	PDD_VIDEOPORT_LOCAL            lpVideoPort;
@@ -736,7 +734,7 @@ typedef struct
 } DD_FLIPVPORTDATA, *PDD_FLIPVPORTDATA;
 typedef DWORD (STDCALL *PDD_VPORTCB_FLIP)(PDD_FLIPVPORTDATA);
 
-typedef struct
+typedef struct _DD_GETVPORTBANDWIDTHDATA
 {
 	PDD_DIRECTDRAW_LOCAL           lpDD;
 	PDD_VIDEOPORT_LOCAL            lpVideoPort;
@@ -750,7 +748,7 @@ typedef struct
 } DD_GETVPORTBANDWIDTHDATA, *PDD_GETVPORTBANDWIDTHDATA;
 typedef DWORD (STDCALL *PDD_VPORTCB_GETBANDWIDTH)(PDD_GETVPORTBANDWIDTHDATA);
 
-typedef struct
+typedef struct _DD_GETVPORTINPUTFORMATDATA
 {
 	PDD_DIRECTDRAW_LOCAL           lpDD;
 	PDD_VIDEOPORT_LOCAL            lpVideoPort;
@@ -762,7 +760,7 @@ typedef struct
 } DD_GETVPORTINPUTFORMATDATA, *PDD_GETVPORTINPUTFORMATDATA;
 typedef DWORD (STDCALL *PDD_VPORTCB_GETINPUTFORMATS)(PDD_GETVPORTINPUTFORMATDATA);
 
-typedef struct
+typedef struct _DD_GETVPORTOUTPUTFORMATDATA
 {
 	PDD_DIRECTDRAW_LOCAL           lpDD;
 	PDD_VIDEOPORT_LOCAL            lpVideoPort;
@@ -775,7 +773,7 @@ typedef struct
 } DD_GETVPORTOUTPUTFORMATDATA, *PDD_GETVPORTOUTPUTFORMATDATA;
 typedef DWORD (STDCALL *PDD_VPORTCB_GETOUTPUTFORMATS)(PDD_GETVPORTOUTPUTFORMATDATA);
 
-typedef struct
+typedef struct _DD_GETVPORTFIELDDATA
 {
 	PDD_DIRECTDRAW_LOCAL           lpDD;
 	PDD_VIDEOPORT_LOCAL            lpVideoPort;
@@ -785,7 +783,7 @@ typedef struct
 } DD_GETVPORTFIELDDATA, *PDD_GETVPORTFIELDDATA;
 typedef DWORD (STDCALL *PDD_VPORTCB_GETFIELD)(PDD_GETVPORTFIELDDATA);
 
-typedef struct
+typedef struct _DD_GETVPORTLINEDATA
 {
 	PDD_DIRECTDRAW_LOCAL           lpDD;
 	PDD_VIDEOPORT_LOCAL            lpVideoPort;
@@ -795,7 +793,7 @@ typedef struct
 } DD_GETVPORTLINEDATA, *PDD_GETVPORTLINEDATA;
 typedef DWORD (STDCALL *PDD_VPORTCB_GETLINE)(PDD_GETVPORTLINEDATA);
 
-typedef struct
+typedef struct _DD_GETVPORTCONNECTDATA
 {
 	PDD_DIRECTDRAW_LOCAL           lpDD;
 	DWORD                          dwPortId;
@@ -806,7 +804,7 @@ typedef struct
 } DD_GETVPORTCONNECTDATA, *PDD_GETVPORTCONNECTDATA;
 typedef DWORD (STDCALL *PDD_VPORTCB_GETVPORTCONNECT)(PDD_GETVPORTCONNECTDATA);
 
-typedef struct
+typedef struct _DD_DESTROYVPORTDATA
 {
 	PDD_DIRECTDRAW_LOCAL           lpDD;
 	PDD_VIDEOPORT_LOCAL            lpVideoPort;
@@ -815,7 +813,7 @@ typedef struct
 } DD_DESTROYVPORTDATA, *PDD_DESTROYVPORTDATA;
 typedef DWORD (STDCALL *PDD_VPORTCB_DESTROYVPORT)(PDD_DESTROYVPORTDATA);
 
-typedef struct
+typedef struct _DD_GETVPORTFLIPSTATUSDATA
 {
 	PDD_DIRECTDRAW_LOCAL           lpDD;
 	FLATPTR                        fpSurface;
@@ -826,7 +824,7 @@ typedef DWORD (STDCALL *PDD_VPORTCB_GETFLIPSTATUS)(PDD_GETVPORTFLIPSTATUSDATA);
 
 
 
-typedef struct
+typedef struct _DD_UPDATEVPORTDATA
 {
 	PDD_DIRECTDRAW_LOCAL           lpDD;
 	PDD_VIDEOPORT_LOCAL            lpVideoPort;
@@ -841,7 +839,7 @@ typedef struct
 } DD_UPDATEVPORTDATA, *PDD_UPDATEVPORTDATA;
 typedef DWORD (STDCALL *PDD_VPORTCB_UPDATE)(PDD_UPDATEVPORTDATA);
 
-typedef struct
+typedef struct _DD_WAITFORVPORTSYNCDATA
 {
 	PDD_DIRECTDRAW_LOCAL           lpDD;
 	PDD_VIDEOPORT_LOCAL            lpVideoPort;
@@ -853,7 +851,7 @@ typedef struct
 } DD_WAITFORVPORTSYNCDATA, *PDD_WAITFORVPORTSYNCDATA;
 typedef DWORD (STDCALL *PDD_VPORTCB_WAITFORSYNC)(PDD_WAITFORVPORTSYNCDATA);
 
-typedef struct
+typedef struct _DD_GETVPORTSIGNALDATA
 {
 	PDD_DIRECTDRAW_LOCAL           lpDD;
 	PDD_VIDEOPORT_LOCAL            lpVideoPort;
@@ -865,7 +863,7 @@ typedef DWORD (STDCALL *PDD_VPORTCB_GETSIGNALSTATUS)(PDD_GETVPORTSIGNALDATA);
 
 
 
-typedef struct
+typedef struct _DD_VPORTCOLORDATA
 {
 	PDD_DIRECTDRAW_LOCAL           lpDD;
 	PDD_VIDEOPORT_LOCAL            lpVideoPort;
@@ -876,9 +874,8 @@ typedef struct
 } DD_VPORTCOLORDATA, *PDD_VPORTCOLORDATA;
 typedef DWORD (STDCALL *PDD_VPORTCB_COLORCONTROL)(PDD_VPORTCOLORDATA);
 
-DEFINE_GUID(GUID_VideoPortCallbacks, 0xEFD60CC1, 0x49E7, 0x11D0, 0x88, 0x9D, 0x00, 0xAA, 0x00, 0xBB, 0xB7, 0x6A);
 
-typedef struct
+typedef struct DD_VIDEOPORTCALLBACKS
 {
 	DWORD                          dwSize;
 	DWORD                          dwFlags;
@@ -888,7 +885,7 @@ typedef struct
 	PDD_VPORTCB_GETBANDWIDTH       GetVideoPortBandwidth;
 	PDD_VPORTCB_GETINPUTFORMATS    GetVideoPortInputFormats;
 	PDD_VPORTCB_GETOUTPUTFORMATS   GetVideoPortOutputFormats;
-	PVOID                          Reserved;
+	PVOID                          lpReserved1;
 	PDD_VPORTCB_GETFIELD           GetVideoPortField;
 	PDD_VPORTCB_GETLINE            GetVideoPortLine;
 	PDD_VPORTCB_GETVPORTCONNECT    GetVideoPortConnectInfo;
