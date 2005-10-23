@@ -23,7 +23,7 @@ HRESULT WINAPI Create_DirectDraw (LPGUID pGUID, LPDIRECTDRAW* pIface,
 
 	ZeroMemory(This,sizeof(IDirectDrawImpl));
 
-	This->lpVtbl = &DirectDraw_VTable;
+	This->lpVtbl = &DirectDraw_Vtable;
 	This->DirectDrawGlobal.dwRefCnt = 1;
 	*pIface = (LPDIRECTDRAW)This;
 

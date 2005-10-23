@@ -11,10 +11,6 @@
 #include <ddk/d3dhal.h>
 #include <ddrawgdi.h>
 
-
-
-
-
 /******** Main Object ********/
 
 typedef struct 
@@ -67,8 +63,12 @@ typedef struct
 
 /*********** VTables ************/
 
-extern IDirectDraw7Vtbl DirectDraw_VTable;
-extern IDirectDrawSurface7Vtbl DDrawSurface_VTable;
+extern IDirectDraw7Vtbl				DirectDraw_Vtable;
+extern IDirectDrawSurface7Vtbl		DirectDrawSurface_Vtable;
+extern IDirectDrawPaletteVtbl		DirectDrawPalette_Vtable;
+extern IDirectDrawClipperVtbl		DirectDrawClipper_Vtable;
+extern IDirectDrawColorControlVtbl	DirectDrawColorControl_Vtable;
+extern IDirectDrawGammaControlVtbl	DirectDrawGammaControl_Vtable;
 
 /********* Prototypes **********/
 

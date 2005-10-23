@@ -421,7 +421,7 @@ HRESULT WINAPI Main_DDrawSurface_UpdateOverlayZOrder (LPDIRECTDRAWSURFACE7 iface
     DX_STUB;
 }
 
-IDirectDrawSurface7Vtbl DDrawSurface_VTable =
+IDirectDrawSurface7Vtbl DirectDrawSurface_Vtable =
 {
     Main_DDrawSurface_QueryInterface,
     Main_DDrawSurface_AddRef,

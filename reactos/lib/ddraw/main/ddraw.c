@@ -140,7 +140,7 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 	if (That == NULL) 
 		return E_OUTOFMEMORY;
 
-	That->lpVtbl = &DDrawSurface_VTable;
+	That->lpVtbl = &DirectDrawSurface_Vtable;
 	That->ref = 1;
 	*ppSurf = (LPDIRECTDRAWSURFACE7)That;
 
@@ -380,7 +380,7 @@ HRESULT WINAPI Main_DirectDraw_EvaluateMode(LPDIRECTDRAW7 iface,DWORD a,DWORD* b
    	DX_STUB;
 }
 
-IDirectDraw7Vtbl DirectDraw_VTable =
+IDirectDraw7Vtbl DirectDraw_Vtable =
 {
     Main_DirectDraw_QueryInterface,
     Main_DirectDraw_AddRef,
