@@ -186,11 +186,10 @@ static NTSTATUS STDCALL
 CreateServiceListEntry(LPWSTR lpServiceName)
 {
     RTL_QUERY_REGISTRY_TABLE QueryTable[6];
-    UNICODE_STRING ServiceName;
     PSERVICE Service = NULL;
     NTSTATUS Status;
 
-    DPRINT("Service: '%wZ'\n", ServiceName);
+    DPRINT("Service: '%S'\n", lpServiceName);
 
 
     /* Allocate service entry */
@@ -262,6 +261,42 @@ CreateServiceListEntry(LPWSTR lpServiceName)
     Service->Status.dwWaitHint = 2000; /* 2 seconds */
 
     return STATUS_SUCCESS;
+}
+
+
+DWORD
+ScmCreateNewServiceRecord(LPWSTR lpServiceName,
+                          PSERVICE *lpServiceRecord)
+{
+    PSERVICE lpService = NULL;
+
+    DPRINT("Service: '%S'\n", lpServiceName);
+
+    /* Allocate service entry */
+    lpService = HeapAlloc(GetProcessHeap(),
+                          HEAP_ZERO_MEMORY,
+                          sizeof(SERVICE) + ((wcslen(lpServiceName) + 1) * sizeof(WCHAR)));
+    if (lpService == NULL)
+        return ERROR_NOT_ENOUGH_MEMORY;
+
+    *lpServiceRecord = lpService;
+
+    /* Copy service name */
+    wcscpy(lpService->szServiceName, lpServiceName);
+    lpService->lpServiceName = lpService->szServiceName;
+
+    /* Append service entry */
+    InsertTailList(&ServiceListHead,
+                   &lpService->ServiceListEntry);
+
+    lpService->Status.dwCurrentState = SERVICE_STOPPED;
+    lpService->Status.dwControlsAccepted = 0;
+    lpService->Status.dwWin32ExitCode = ERROR_SERVICE_NEVER_STARTED;
+    lpService->Status.dwServiceSpecificExitCode = 0;
+    lpService->Status.dwCheckPoint = 0;
+    lpService->Status.dwWaitHint = 2000; /* 2 seconds */
+
+    return ERROR_SUCCESS;
 }
 
 

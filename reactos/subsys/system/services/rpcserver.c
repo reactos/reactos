@@ -493,9 +493,9 @@ ScmrChangeServiceConfigW([in] handle_t BiningHandle,
 #endif
 
 
-#if 0
 static DWORD
-CreateServiceKey(LPWSTR lpServiceName, PHKEY phKey)
+CreateServiceKey(LPWSTR lpServiceName,
+                 PHKEY phKey)
 {
     HKEY hServicesKey = NULL;
     DWORD dwDisposition;
@@ -520,6 +520,7 @@ CreateServiceKey(LPWSTR lpServiceName, PHKEY phKey)
                               NULL,
                               phKey,
                               &dwDisposition);
+#if 0
     if ((dwError == ERROR_SUCCESS) &&
         (dwDisposition == REG_OPENED_EXISTING_KEY))
     {
@@ -527,12 +528,12 @@ CreateServiceKey(LPWSTR lpServiceName, PHKEY phKey)
         *phKey = NULL;
         dwError = ERROR_SERVICE_EXISTS;
     }
+#endif
 
     RegCloseKey(hServicesKey);
 
     return dwError;
 }
-#endif
 
 
 /* Function 12 */
@@ -557,10 +558,10 @@ ScmrCreateServiceW(handle_t BindingHandle,
 {
     PMANAGER_HANDLE hManager;
     DWORD dwError = ERROR_SUCCESS;
-#if 0
-    HKEY hServiceKey = NULL;
+    PSERVICE lpService = NULL;
+    SC_HANDLE hServiceHandle = NULL;
     LPWSTR lpImagePath = NULL;
-#endif
+    HKEY hServiceKey = NULL;
 
     DPRINT1("ScmrCreateServiceW() called\n");
     DPRINT1("lpServiceName = %S\n", lpServiceName);
@@ -588,15 +589,16 @@ ScmrCreateServiceW(handle_t BindingHandle,
         return ERROR_ACCESS_DENIED;
     }
 
-    /* FIXME: Fail if the service already exists! */
+    /* Fail if the service already exists! */
+    if (ScmGetServiceEntryByName(lpServiceName) != NULL)
+        return ERROR_SERVICE_EXISTS;
 
-#if 0
     if (dwServiceType & SERVICE_DRIVER)
     {
         /* FIXME: Adjust the image path */
         lpImagePath = HeapAlloc(GetProcessHeap(),
                                 HEAP_ZERO_MEMORY,
-                                wcslen(lpBinaryPathName) + sizeof(WCHAR));
+                                (wcslen(lpBinaryPathName) + 1) * sizeof(WCHAR));
         if (lpImagePath == NULL)
         {
             dwError = ERROR_NOT_ENOUGH_MEMORY;
@@ -605,14 +607,18 @@ ScmrCreateServiceW(handle_t BindingHandle,
         wcscpy(lpImagePath, lpBinaryPathName);
     }
 
-    /* FIXME: Allocate and fill a service entry */
-//    dwError = CreateNewServiceListEntry(lpServiceName,
-//                                        &lpServiceEntry)
+    /* Allocate a new service entry */
+    dwError = ScmCreateNewServiceRecord(lpServiceName,
+                                        &lpService);
+    if (dwError != ERROR_SUCCESS)
+        goto done;
 
-//    if (lpdwTagId != NULL)
-//        *lpdwTagId = 0;
+    /* Fill the new service entry */
+    lpService->Status.dwServiceType = dwServiceType;
+    lpService->dwStartType = dwStartType;
+    lpService->dwErrorControl = dwErrorControl;
 
-//    *hService = 0;
+    /* FIXME: set lpLoadOrderGroup, lpDependencies etc. */
 
 
     /* Write service data to the registry */
@@ -621,6 +627,7 @@ ScmrCreateServiceW(handle_t BindingHandle,
     if (dwError != ERROR_SUCCESS)
         goto done;
 
+    /* Set the display name */
     if (lpDisplayName != NULL && *lpDisplayName != 0)
     {
         RegSetValueExW(hServiceKey,
@@ -667,7 +674,7 @@ ScmrCreateServiceW(handle_t BindingHandle,
         dwError = RegSetValueExW(hServiceKey,
                                  L"ImagePath",
                                  0,
-                                 REG_SZ,
+                                 REG_EXPAND_SZ,
                                  (LPBYTE)lpBinaryPathName,
                                  (wcslen(lpBinaryPathName) + 1) * sizeof(WCHAR));
         if (dwError != ERROR_SUCCESS)
@@ -675,13 +682,12 @@ ScmrCreateServiceW(handle_t BindingHandle,
     }
     else if (dwServiceType & SERVICE_DRIVER)
     {
-        /* FIXME: Adjust the path name */
         dwError = RegSetValueExW(hServiceKey,
                                  L"ImagePath",
                                  0,
-                                 REG_SZ,
+                                 REG_EXPAND_SZ,
                                  (LPBYTE)lpImagePath,
-                                 (wcslen(lpImagePath) +  1) *sizeof(WCHAR));
+                                 (wcslen(lpImagePath) + 1) *sizeof(WCHAR));
         if (dwError != ERROR_SUCCESS)
             goto done;
     }
@@ -699,6 +705,11 @@ ScmrCreateServiceW(handle_t BindingHandle,
             goto done;
     }
 
+    if (lpdwTagId != NULL)
+    {
+        /* FIXME: Write tag */
+    }
+
     if (lpDependencies != NULL && *lpDependencies != 0)
     {
         /* FIXME: Write dependencies */
@@ -709,13 +720,44 @@ ScmrCreateServiceW(handle_t BindingHandle,
         /* FIXME: Write password */
     }
 
+    dwError = ScmCreateServiceHandle(lpService,
+                                     &hServiceHandle);
+    if (dwError != ERROR_SUCCESS)
+        goto done;
+
+    dwError = ScmCheckAccess(hServiceHandle,
+                             dwDesiredAccess);
+    if (dwError != ERROR_SUCCESS)
+        goto done;
+
 done:;
     if (hServiceKey != NULL)
         RegCloseKey(hServiceKey);
 
+    if (dwError == ERROR_SUCCESS)
+    {
+        DPRINT1("hService %lx\n", hServiceHandle);
+        *hService = (unsigned int)hServiceHandle;
+
+        if (lpdwTagId != NULL)
+            *lpdwTagId = 0; /* FIXME */
+    }
+    else
+    {
+        if (hServiceHandle != NULL)
+        {
+            /* Remove the service handle */
+            HeapFree(GetProcessHeap(), 0, hServiceHandle);
+        }
+
+        if (lpService != NULL)
+        {
+            /* FIXME: remove the service entry */
+        }
+    }
+
     if (lpImagePath != NULL)
         HeapFree(GetProcessHeap(), 0, lpImagePath);
-#endif
 
     DPRINT1("ScmrCreateServiceW() done (Error %lu)\n", dwError);
 

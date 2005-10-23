@@ -44,6 +44,8 @@ VOID ScmGetBootAndSystemDriverState(VOID);
 VOID ScmAutoStartServices(VOID);
 
 PSERVICE ScmGetServiceEntryByName(LPWSTR lpServiceName);
+DWORD ScmCreateNewServiceRecord(LPWSTR lpServiceName,
+                                PSERVICE *lpServiceRecord);
 DWORD ScmMarkServiceForDelete(PSERVICE pService);
 
 
