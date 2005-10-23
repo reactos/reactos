@@ -80,18 +80,50 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 		return 1;
 	}
 		
-	/* fill some extra data */	
-	This->DirectDrawGlobal.vmiData.dwDisplayWidth = This->Width;
-	This->DirectDrawGlobal.vmiData.dwDisplayHeight = This->Height;
-	This->DirectDrawGlobal.vmiData.lDisplayPitch =  This->Width * This->Bpp/8;
-	This->DirectDrawGlobal.vmiData.dwOffscreenAlign = 64;
-	This->DirectDrawGlobal.vmiData.dwOverlayAlign = 64;
-	This->DirectDrawGlobal.vmiData.dwTextureAlign = 64;
-	This->DirectDrawGlobal.vmiData.dwZBufferAlign = 64;
-	This->DirectDrawGlobal.vmiData.dwAlphaAlign = 64;
-	//This->DirectDrawGlobal.vmiData.ddpfDisplay; // This has to be filled
+	/* Copy HalInfo to DirectDrawGlobal */
 
-	This->DirectDrawGlobal.ddCaps = This->HalInfo.ddCaps;
+	/* have not check where it should go into yet  
+       LPDDHAL_DDCALLBACKS		lpDDCallbacks;
+       LPDDHAL_DDSURFACECALLBACKS	lpDDSurfaceCallbacks;
+       LPDDHAL_DDPALETTECALLBACKS	lpDDPaletteCallbacks;
+     */
+    
+	RtlCopyMemory(&This->DirectDrawGlobal.vmiData,&This->HalInfo.vmiData,sizeof(VIDMEMINFO));
+	RtlCopyMemory(&This->DirectDrawGlobal.ddCaps,&This->HalInfo.ddCaps,sizeof(DDCORECAPS));
+	This->DirectDrawGlobal.dwMonitorFrequency = This->HalInfo.dwMonitorFrequency;
+        
+    /* have not check where it should go into yet
+	   LPDDHAL_GETDRIVERINFO	GetDriverInfo;
+    */
+
+    This->DirectDrawGlobal.dwModeIndex = This->HalInfo.dwModeIndex;
+
+	/* have not check where it should go into yet
+       LPDWORD			lpdwFourCC;
+     */
+
+    This->DirectDrawGlobal.dwNumModes =  This->HalInfo.dwNumModes;
+    This->DirectDrawGlobal.lpModeInfo =  This->HalInfo.lpModeInfo;
+
+	/* have not check where it should go into yet
+       DWORD			    dwFlags;
+	*/
+
+	/* Unsure which of these two for lpPDevice 
+      This->DirectDrawGlobal.dwPDevice = This->HalInfo.lpPDevice;
+	  This->lpDriverHandle = This->HalInfo.lpPDevice;
+	*/
+
+    This->DirectDrawGlobal.hInstance = This->HalInfo.hInstance;    
+    
+	/* have not check where it should go into yet
+       ULONG_PTR			lpD3DGlobalDriverData;
+       ULONG_PTR			lpD3DHALCallbacks;
+       LPDDHAL_DDEXEBUFCALLBACKS	lpDDExeBufCallbacks;
+    */ 
+	
+
+	
 	This->DirectDrawGlobal.lpDDCBtmp->HALDD = This->DirectDrawGlobal.lpDDCBtmp->cbDDCallbacks;
 	This->DirectDrawGlobal.lpDDCBtmp->HALDDSurface = This->DirectDrawGlobal.lpDDCBtmp->cbDDSurfaceCallbacks;
 	This->DirectDrawGlobal.lpDDCBtmp->HALDDExeBuf = This->DirectDrawGlobal.lpDDCBtmp->cbDDExeBufCallbacks;

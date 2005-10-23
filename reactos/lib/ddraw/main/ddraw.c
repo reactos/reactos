@@ -223,7 +223,25 @@ HRESULT WINAPI Main_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7 iface)
 HRESULT WINAPI Main_DirectDraw_GetCaps(LPDIRECTDRAW7 iface, LPDDCAPS pDriverCaps,
 			LPDDCAPS pHELCaps) 
 {
-	DX_STUB;
+	DWORD status = DD_FALSE;
+	IDirectDrawImpl *This = (IDirectDrawImpl *)iface;
+
+	if (pDriverCaps != NULL) 
+	{
+	  RtlCopyMemory(pDriverCaps,&This->DirectDrawGlobal.ddCaps,sizeof(DDCORECAPS));
+	  status = DD_OK;
+	}
+
+	if (pHELCaps != NULL) 
+	{
+	  RtlCopyMemory(pDriverCaps,&This->DirectDrawGlobal.ddHELCaps,sizeof(DDCORECAPS));
+	  status = DD_OK;
+	}
+
+	/* Both caps mixed ?? */
+	/* DDCORECAPS ddBothCaps; */
+	
+	return status;
 }
 
 HRESULT WINAPI Main_DirectDraw_GetDisplayMode(LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD) 
