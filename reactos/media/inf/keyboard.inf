@@ -1,0 +1,67 @@
+; KEYBOARD.INF
+
+; Installation file for keyboard devices
+
+[Version]
+Signature  = "$Windows NT$"
+;Signature  = "$ReactOS$"
+LayoutFile = layout.inf
+Class      = Keyboard
+ClassGUID  = {4D36E96B-E325-11CE-BFC1-08002BE10318}
+Provider   = %ReactOS%
+DriverVer  = 10/08/2005,1.01.0.0
+
+[ClassInstall32.NT]
+AddReg = KeyboardClass.NT.AddReg
+
+[KeyboardClass.NT.AddReg]
+HKR, , ,               0, %KeyboardClassName%
+HKR, , Icon,           0, "-2"
+;HKR, , Installer32,    0, "syssetup.dll,KeyboardClassInstaller"
+HKR, , NoInstallClass, 0, 1
+
+[Manufacturer]
+%StdMfg% = StdMfg
+
+[StdMfg]
+%*PNP0303.DeviceDesc%    = PS2_Inst,*PNP0303
+
+;------------------------------ PS/2 DRIVER -----------------------------
+
+[PS2_Inst.NT]
+CopyFiles = PS2_CopyFiles.NT, kbdclass_CopyFiles.NT
+AddReg = PS2_AddReg
+
+[PS2_CopyFiles.NT]
+i8042prt.sys
+
+[PS2_Inst.NT.Services]
+AddService = i8042prt, 0x00000002, i8042prt_Service_Inst
+AddService = kbdclass, , kbdclass_Service_Inst
+
+[i8042prt_Service_Inst]
+ServiceType   = 1
+StartType     = 1
+ErrorControl  = 1
+ServiceBinary = %12%\i8042prt.sys
+LoadOrderGroup = Keyboard Port
+
+;---------------------------- KBDCLASS DRIVER ---------------------------
+
+[kbdclass_CopyFiles.NT]
+mouclass.sys
+
+[kbdclass_Service_Inst]
+ServiceType   = 1
+StartType     = 3
+ErrorControl  = 1
+ServiceBinary = %12%\kbdclass.sys
+LoadOrderGroup = Keyboard Class
+
+;-------------------------------- STRINGS -------------------------------
+
+[Strings]
+ReactOS = "ReactOS Team"
+KeyboardClassName = "Keyboards"
+StdMfg = "(Standard keyboards)"
+*PNP0303.DeviceDesc = "IBM PC/AT keyboard"

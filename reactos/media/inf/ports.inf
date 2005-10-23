@@ -28,6 +28,15 @@ HKR, , Icon,           0, "-23"
 [StdMfg]
 %*PNP0500.DeviceDesc% = ComPort_Inst,*PNP0500,*PNP0501
 %*PNP0501.DeviceDesc% = ComPort_Inst,*PNP0501
+%*PNP0400.DeviceDesc% = LptPort_Inst, *PNP0400,*PNP0401
+%*PNP0401.DeviceDesc% = LptPort_Inst, *PNP0401
+
+;---------------------------- LPT PORT DRIVER ---------------------------
+
+[LptPort_Inst.NT]
+CopyFiles = LptPort_CopyFiles.NT
+
+[LptPort_CopyFiles.NT]
 
 ;---------------------------- COM PORT DRIVER ---------------------------
 
@@ -71,3 +80,5 @@ PortsClassName = "Serial and parallel ports"
 StdMfg = "(Standard ports)"
 *PNP0500.DeviceDesc = "Serial communication port"
 *PNP0501.DeviceDesc = "Serial communication port"
+*PNP0400.DeviceDesc = "Standard LPT printer port"
+*PNP0401.DeviceDesc = "ECP printer port"

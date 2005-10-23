@@ -35,14 +35,15 @@ HKR, , Icon,           0, "-27"
 %PCI\VEN_8086&DEV_7192.DeviceDesc% = NO_DRV, PCI\VEN_8086&DEV_7192
 
 [GenericMfg]
-%*PNP0001.DeviceDesc% = NO_DRV_Inst, *PNP0001
-%*PNP0100.DeviceDesc% = NO_DRV_Inst, *PNP0100
-%*PNP0200.DeviceDesc% = NO_DRV_Inst, *PNP0200
-%*PNP0800.DeviceDesc% = NO_DRV_Inst, *PNP0800
-%*PNP0A03.DeviceDesc% = PCI_Inst,*PNP0A03
-%*PNP0A05.DeviceDesc% = NO_DRV_Inst, *PNP0A05
-%*PNP0B00.DeviceDesc% = NO_DRV_Inst, *PNP0B00
-%*PNP0C02.DeviceDesc% = NO_DRV_Inst, *PNP0C02
+%*PNP0001.DeviceDesc% = NO_DRV,   *PNP0001
+%*PNP0100.DeviceDesc% = NO_DRV,   *PNP0100
+%*PNP0200.DeviceDesc% = NO_DRV,   *PNP0200
+%*PNP0800.DeviceDesc% = NO_DRV,   *PNP0800
+%*PNP0A03.DeviceDesc% = PCI_Inst, *PNP0A03
+%*PNP0A05.DeviceDesc% = NO_DRV,   *PNP0A05
+%*PNP0B00.DeviceDesc% = NO_DRV,   *PNP0B00
+%*PNP0C02.DeviceDesc% = NO_DRV,   *PNP0C02
+%*PNP0C0F.DeviceDesc% = NO_DRV,   *PNP0C0F
 %ACPI\FixedButton.DeviceDesc% = NO_DRV, ACPI\FixedButton
 %PCI\CC_0604.DeviceDesc% = PCI_Inst,PCI\CC_0604
 
@@ -104,6 +105,7 @@ GenericMfg = "(Generic system devices)"
 *PNP0200.DeviceDesc = "DMA controller"
 *PNP0800.DeviceDesc = "System speaker"
 *PNP0C02.DeviceDesc = "Motherboard resources"
+*PNP0C0F.DeviceDesc = "PCI interrupt link device"
 ACPI\FixedButton.DeviceDesc ="ACPI Fixed Feature Button"
 PCI\CC_0604.DeviceDesc = "Standard PCI to PCI bridge"
 
