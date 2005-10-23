@@ -9,15 +9,15 @@
 #ifndef _NO_COM
 #define _NO_COM
 #include <ddraw.h>
-#include <ddk/ddrawi.h> /* FIXME: We shouldn't include this header. */
+#include <dvp.h> 
 #undef _NO_COM
 #else
 #include <ddraw.h>
-#include <ddk/ddrawi.h> /* FIXME: We shouldn't include this header. */
+#include <dvp.h> 
 #endif
 #else
 #include <ddraw.h>
-#include <ddk/ddrawi.h> /* FIXME: We shouldn't include this header. */
+#include <dvp.h> 
 #endif
 
 #ifdef __cplusplus
@@ -54,11 +54,18 @@ DEFINE_GUID( GUID_VPE2Callbacks,            0x52882147, 0x2d47, 0x469a, 0xa0, 0x
 
 typedef struct _DD_VIDEOPORT_LOCAL   *PDD_VIDEOPORT_LOCAL; 
 
-
+/************************************************************************/
+/* _DD_GETHEAPALIGNMENTDATA is defined in dmemmgr.h                     */
+ /************************************************************************/
+struct _DD_GETHEAPALIGNMENTDATA;
+typedef struct _DD_GETHEAPALIGNMENTDATA *PDD_GETHEAPALIGNMENTDATA;
 
 /************************************************************************/
 /* Video memory info structures                                         */
 /************************************************************************/
+
+
+typedef ULONG_PTR FLATPTR;
 
 typedef struct _VIDEOMEMORY
 {
@@ -921,7 +928,7 @@ typedef struct DD_VIDEOPORTCALLBACKS
 #define DDRAWI_GETCOLOR      0x0001
 #define DDRAWI_SETCOLOR      0x0002
 
-typedef struct
+typedef struct _DD_COLORCONTROLDATA
 {
 	PDD_DIRECTDRAW_GLOBAL    lpDD;
 	PDD_SURFACE_LOCAL        lpDDSurface;
@@ -932,9 +939,9 @@ typedef struct
 } DD_COLORCONTROLDATA, *PDD_COLORCONTROLDATA;
 typedef DWORD (STDCALL *PDD_COLORCB_COLORCONTROL)(PDD_COLORCONTROLDATA);
 
-DEFINE_GUID(GUID_ColorControlCallbacks, 0xEFD60CC2, 0x49E7, 0x11D0, 0x88, 0x9D, 0x00, 0xAA, 0x00, 0xBB, 0xB7, 0x6A);
 
-typedef struct
+
+typedef struct _DD_COLORCONTROLCALLBACKS
 {
 	DWORD                    dwSize;
 	DWORD                    dwFlags;
@@ -947,7 +954,7 @@ typedef struct
 /* IDirectDrawVideo callbacks                                           */
 /************************************************************************/
 
-typedef struct
+typedef struct _DD_GETMOCOMPGUIDSDATA
 {
 	PDD_DIRECTDRAW_LOCAL         lpDD;
 	DWORD                        dwNumGuids;
@@ -956,7 +963,7 @@ typedef struct
 } DD_GETMOCOMPGUIDSDATA, *PDD_GETMOCOMPGUIDSDATA;
 typedef DWORD (STDCALL *PDD_MOCOMPCB_GETGUIDS)(PDD_GETMOCOMPGUIDSDATA);
 
-typedef struct
+typedef struct _DD_GETMOCOMPFORMATSDATA
 {
 	PDD_DIRECTDRAW_LOCAL         lpDD;
 	GUID                        *lpGuid;
@@ -966,7 +973,7 @@ typedef struct
 } DD_GETMOCOMPFORMATSDATA, *PDD_GETMOCOMPFORMATSDATA;
 typedef DWORD (STDCALL *PDD_MOCOMPCB_GETFORMATS)(PDD_GETMOCOMPFORMATSDATA);
 
-typedef struct
+typedef struct _DD_CREATEMOCOMPDATA
 {
 	PDD_DIRECTDRAW_LOCAL         lpDD;
 	PDD_MOTIONCOMP_LOCAL         lpMoComp;
@@ -980,7 +987,7 @@ typedef struct
 } DD_CREATEMOCOMPDATA, *PDD_CREATEMOCOMPDATA;
 typedef DWORD (STDCALL *PDD_MOCOMPCB_CREATE)(PDD_CREATEMOCOMPDATA);
 
-typedef struct
+typedef struct _DDCOMPBUFFERINFO
 {
 	DWORD                        dwSize;
 	DWORD                        dwNumCompBuffers;
@@ -989,9 +996,9 @@ typedef struct
 	DWORD                        dwBytesToAllocate;
 	DDSCAPS2                     ddCompCaps;
 	DDPIXELFORMAT                ddPixelFormat;
-} DDCOMPBUFFERINFO, *PDDCOMPBUFFERINFO;
+} DDCOMPBUFFERINFO, *LPDDCOMPBUFFERINFO;
 
-typedef struct
+typedef struct _DD_GETMOCOMPCOMPBUFFDATA
 {
 	PDD_DIRECTDRAW_LOCAL         lpDD;
 	GUID                        *lpGuid;
@@ -999,12 +1006,12 @@ typedef struct
 	DWORD                        dwHeight;
 	DDPIXELFORMAT                ddPixelFormat;
 	DWORD                        dwNumTypesCompBuffs;
-	PDDCOMPBUFFERINFO            lpCompBuffInfo;
+	LPDDCOMPBUFFERINFO            lpCompBuffInfo;
 	HRESULT                      ddRVal;
 } DD_GETMOCOMPCOMPBUFFDATA, *PDD_GETMOCOMPCOMPBUFFDATA;
 typedef DWORD (STDCALL *PDD_MOCOMPCB_GETCOMPBUFFINFO)(PDD_GETMOCOMPCOMPBUFFDATA);
 
-typedef struct
+typedef struct _DD_GETINTERNALMOCOMPDATA
 {
 	PDD_DIRECTDRAW_LOCAL         lpDD;
 	GUID                        *lpGuid;
@@ -1016,7 +1023,7 @@ typedef struct
 } DD_GETINTERNALMOCOMPDATA, *PDD_GETINTERNALMOCOMPDATA;
 typedef DWORD (STDCALL *PDD_MOCOMPCB_GETINTERNALINFO)(PDD_GETINTERNALMOCOMPDATA);
 
-typedef struct
+typedef struct _DD_BEGINMOCOMPFRAMEDATA
 {
 	PDD_DIRECTDRAW_LOCAL         lpDD;
 	PDD_MOTIONCOMP_LOCAL         lpMoComp;
@@ -1029,7 +1036,7 @@ typedef struct
 } DD_BEGINMOCOMPFRAMEDATA, *PDD_BEGINMOCOMPFRAMEDATA;
 typedef DWORD (STDCALL *PDD_MOCOMPCB_BEGINFRAME)(PDD_BEGINMOCOMPFRAMEDATA);
 
-typedef struct
+typedef struct _DD_ENDMOCOMPFRAMEDATA
 {
 	PDD_DIRECTDRAW_LOCAL         lpDD;
 	PDD_MOTIONCOMP_LOCAL         lpMoComp;
@@ -1039,21 +1046,21 @@ typedef struct
 } DD_ENDMOCOMPFRAMEDATA, *PDD_ENDMOCOMPFRAMEDATA;
 typedef DWORD (STDCALL *PDD_MOCOMPCB_ENDFRAME)(PDD_ENDMOCOMPFRAMEDATA);
 
-typedef struct
+typedef struct _DDMOCOMPBUFFERINFO
 {
 	DWORD                        dwSize;
 	PDD_SURFACE_LOCAL            lpCompSurface;
 	DWORD                        dwDataOffset;
 	DWORD                        dwDataSize;
 	LPVOID                       lpPrivate;
-} DDMOCOMPBUFFERINFO, *PDDMOCOMPBUFFERINFO;
+} DDMOCOMPBUFFERINFO, *LPDDMOCOMPBUFFERINFO;
 
-typedef struct
+typedef struct _DD_RENDERMOCOMPDATA
 {
 	PDD_DIRECTDRAW_LOCAL         lpDD;
 	PDD_MOTIONCOMP_LOCAL         lpMoComp;
 	DWORD                        dwNumBuffers;
-	PDDMOCOMPBUFFERINFO          lpBufferInfo;
+	LPDDMOCOMPBUFFERINFO         lpBufferInfo;
 	DWORD                        dwFunction;
 	LPVOID                       lpInputData;
 	DWORD                        dwInputDataSize;
@@ -1065,7 +1072,7 @@ typedef DWORD (STDCALL *PDD_MOCOMPCB_RENDER)(PDD_RENDERMOCOMPDATA);
 
 #define DDMCQUERY_READ 0x00000001
 
-typedef struct
+typedef struct _DD_QUERYMOCOMPSTATUSDATA
 {
 	PDD_DIRECTDRAW_LOCAL         lpDD;
 	PDD_MOTIONCOMP_LOCAL         lpMoComp;
@@ -1075,7 +1082,7 @@ typedef struct
 } DD_QUERYMOCOMPSTATUSDATA, *PDD_QUERYMOCOMPSTATUSDATA;
 typedef DWORD (STDCALL *PDD_MOCOMPCB_QUERYSTATUS)(PDD_QUERYMOCOMPSTATUSDATA);
 
-typedef struct
+typedef struct _DD_DESTROYMOCOMPDATA
 {
 	PDD_DIRECTDRAW_LOCAL         lpDD;
 	PDD_MOTIONCOMP_LOCAL         lpMoComp;
@@ -1083,9 +1090,9 @@ typedef struct
 } DD_DESTROYMOCOMPDATA, *PDD_DESTROYMOCOMPDATA;
 typedef DWORD (STDCALL *PDD_MOCOMPCB_DESTROY)(PDD_DESTROYMOCOMPDATA);
 
-DEFINE_GUID(GUID_MotionCompCallbacks, 0xB1122B40, 0x5DA5, 0x11D1, 0x8F, 0xCF, 0x00, 0xC0, 0x4F, 0xC2, 0x9B, 0x4E);
 
-typedef struct
+
+typedef struct DD_MOTIONCOMPCALLBACKS
 {
 	DWORD                        dwSize;
 	DWORD                        dwFlags;
@@ -1099,8 +1106,7 @@ typedef struct
 	PDD_MOCOMPCB_RENDER          RenderMoComp;
 	PDD_MOCOMPCB_QUERYSTATUS     QueryMoCompStatus;
 	PDD_MOCOMPCB_DESTROY         DestroyMoComp;
-} DD_MOTIONCOMPCALLBACKS;
-typedef DD_MOTIONCOMPCALLBACKS *PDD_MOTIONCOMPCALLBACKS;
+} DD_MOTIONCOMPCALLBACKS, *PDD_MOTIONCOMPCALLBACKS;
 
 #define DDHAL_MOCOMP32_GETGUIDS             0x00000001
 #define DDHAL_MOCOMP32_GETFORMATS           0x00000002
@@ -1117,7 +1123,7 @@ typedef DD_MOTIONCOMPCALLBACKS *PDD_MOTIONCOMPCALLBACKS;
 /* D3D buffer callbacks                                                 */
 /************************************************************************/
 
-typedef struct
+typedef struct _DD_D3DBUFCALLBACKS
 {
 	DWORD                     dwSize;
 	DWORD                     dwFlags;
@@ -1132,7 +1138,7 @@ typedef struct
 /* DdGetDriverInfo callback                                             */
 /************************************************************************/
 
-typedef struct
+typedef struct _DD_GETDRIVERINFODATA
 {
 	// Input:
 	PVOID   dhpdev;
@@ -1143,8 +1149,7 @@ typedef struct
 	PVOID   lpvData;
 	// Output:
 	DWORD   dwActualSize;
-	HRESULT ddRVal;
-	ULONG_PTR  dwContext;
+	HRESULT ddRVal;	
 } DD_GETDRIVERINFODATA, *PDD_GETDRIVERINFODATA;
 typedef DWORD (STDCALL *PDD_GETDRIVERINFO)(PDD_GETDRIVERINFODATA);
 
@@ -1155,7 +1160,7 @@ typedef DWORD (STDCALL *PDD_GETDRIVERINFO)(PDD_GETDRIVERINFODATA);
 /* Driver info structures                                               */
 /************************************************************************/
 
-typedef struct
+typedef struct _DDNTCORECAPS
 {
 	DWORD   dwSize;
 	DWORD   dwCaps;
@@ -1210,7 +1215,17 @@ typedef struct
 	DWORD   dwSVBCaps2;
 } DDNTCORECAPS, *PDDNTCORECAPS;
 
-typedef struct
+
+typedef struct _DD_HALINFO_V4
+{
+    DWORD              dwSize;
+    VIDEOMEMORYINFO    vmiData;
+    DDNTCORECAPS       ddCaps;
+    PDD_GETDRIVERINFO  GetDriverInfo;
+    DWORD              dwFlags;
+} DD_HALINFO_V4, *PDD_HALINFO_V4;
+
+typedef struct _DD_HALINFO
 {
 	DWORD               dwSize;
 	VIDEOMEMORYINFO     vmiData;
@@ -1223,9 +1238,8 @@ typedef struct
 } DD_HALINFO, *PDD_HALINFO;
 
 
-DEFINE_GUID(GUID_NonLocalVidMemCaps, 0x86C4FA80, 0x8D84, 0x11D0, 0x94, 0xE8, 0x00, 0xC0, 0x4F, 0xC3, 0x41, 0x37);
 
-typedef struct
+typedef struct _DD_NONLOCALVIDMEMCAPS
 {
 	DWORD dwSize;
 	DWORD dwNLVBCaps;
@@ -1235,13 +1249,13 @@ typedef struct
 	DWORD dwNLVBRops[DD_ROP_SPACE];
 } DD_NONLOCALVIDMEMCAPS, *PDD_NONLOCALVIDMEMCAPS;
 
-DEFINE_GUID(GUID_DDMoreSurfaceCaps, 0x3B8A0466, 0xF269, 0x11D1, 0x88, 0x0B, 0x00, 0xC0, 0x4F, 0xD9, 0x30, 0xC5);
 
-typedef struct
+
+typedef struct _DD_MORESURFACECAPS
 {
 	DWORD         dwSize;
 	DDSCAPSEX     ddsCapsMore;
-	struct
+	struct tagNTExtendedHeapRestrictions
 	{
 		DDSCAPSEX ddsCapsEx;
 		DDSCAPSEX ddsCapsExAlt;
@@ -1283,7 +1297,162 @@ typedef struct _DD_SYNCVIDEOPORTDATA
 typedef DWORD (STDCALL *PDD_KERNELCB_SYNCVIDEOPORT)(PDD_SYNCVIDEOPORTDATA);
 
 
+typedef struct DD_NTPRIVATEDRIVERCAPS
+{
+    DWORD                   dwSize;
+    DWORD                   dwPrivateCaps;
+} DD_NTPRIVATEDRIVERCAPS;
 
+typedef struct _DD_UPDATENONLOCALHEAPDATA
+{
+    PDD_DIRECTDRAW_GLOBAL   lpDD;        
+    DWORD                   dwHeap;      
+    FLATPTR                 fpGARTLin;   
+    FLATPTR                 fpGARTDev;   
+    ULONG_PTR               ulPolicyMaxBytes;
+    HRESULT                 ddRVal; 
+    VOID*                   UpdateNonLocalHeap;
+} DD_UPDATENONLOCALHEAPDATA, *PDD_UPDATENONLOCALHEAPDATA;
+
+typedef struct _DD_STEREOMODE
+{
+    DWORD dwSize; 
+    DWORD dwHeight;
+    DWORD dwWidth;
+    DWORD dwBpp;
+    DWORD dwRefreshRate;
+    BOOL bSupported;
+} DD_STEREOMODE, *PDD_STEREOMODE;
+
+typedef struct _DD_MORECAPS
+{
+    DWORD dwSize;
+    DWORD dwAlphaCaps;
+    DWORD dwSVBAlphaCaps;
+    DWORD dwVSBAlphaCaps;
+    DWORD dwSSBAlphaCaps;
+    DWORD dwFilterCaps;
+    DWORD dwSVBFilterCaps;
+    DWORD dwVSBFilterCaps;
+    DWORD dwSSBFilterCaps;
+} DD_MORECAPS, *PDD_MORECAPS;
+
+typedef struct _DD_CLIPPER_GLOBAL
+{
+    ULONG_PTR dwReserved1;
+} DD_CLIPPER_GLOBAL;
+
+typedef struct _DD_CLIPPER_LOCAL
+{
+    ULONG_PTR dwReserved1;
+} DD_CLIPPER_LOCAL;
+
+typedef struct _DD_PALETTE_LOCAL
+{
+    ULONG  dwReserved0;
+    ULONG_PTR dwReserved1;
+} DD_PALETTE_LOCAL;
+
+
+typedef struct DD_KERNELCALLBACKS
+{
+    DWORD dwSize;
+    DWORD  dwFlags;
+    PDD_KERNELCB_SYNCSURFACE   SyncSurfaceData;
+    PDD_KERNELCB_SYNCVIDEOPORT SyncVideoPortData;
+} DD_KERNELCALLBACKS, *PDD_KERNELCALLBACKS;
+typedef DWORD (STDCALL *PDD_KERNELCB_SYNCVIDEOPORT)(PDD_SYNCVIDEOPORTDATA);
+
+
+
+#define MAX_AUTOFLIP_BUFFERS                  10
+#define DDSCAPS_EXECUTEBUFFER                 DDSCAPS_RESERVED2
+#define DDSCAPS_COMMANDBUFFER                 DDSCAPS_RESERVED3
+#define DDSCAPS_VERTEXBUFFER                  DDSCAPS_RESERVED4
+#define DDPF_D3DFORMAT                        0x00200000l
+#define D3DFORMAT_OP_TEXTURE                  0x00000001L
+#define D3DFORMAT_OP_VOLUMETEXTURE            0x00000002L
+#define D3DFORMAT_OP_CUBETEXTURE              0x00000004L
+#define D3DFORMAT_OP_OFFSCREEN_RENDERTARGET   0x00000008L
+#define D3DFORMAT_OP_SAME_FORMAT_RENDERTARGET 0x00000010L
+#define D3DFORMAT_OP_ZSTENCIL                 0x00000040L
+#define D3DFORMAT_OP_ZSTENCIL_WITH_ARBITRARY_COLOR_DEPTH    0x00000080L
+#define D3DFORMAT_OP_SAME_FORMAT_UP_TO_ALPHA_RENDERTARGET   0x00000100L
+#define D3DFORMAT_OP_DISPLAYMODE              0x00000400L
+#define D3DFORMAT_OP_3DACCELERATION           0x00000800L
+#define D3DFORMAT_OP_PIXELSIZE                0x00001000L
+#define D3DFORMAT_OP_CONVERT_TO_ARGB          0x00002000L
+#define D3DFORMAT_OP_OFFSCREENPLAIN           0x00004000L
+#define D3DFORMAT_OP_SRGBREAD                 0x00008000L
+#define D3DFORMAT_OP_BUMPMAP                  0x00010000L
+#define D3DFORMAT_OP_DMAP                     0x00020000L
+#define D3DFORMAT_OP_NOFILTER                 0x00040000L
+#define D3DFORMAT_MEMBEROFGROUP_ARGB          0x00080000L
+#define D3DFORMAT_OP_SRGBWRITE                0x00100000L
+#define D3DFORMAT_OP_NOALPHABLEND             0x00200000L
+#define D3DFORMAT_OP_AUTOGENMIPMAP            0x00400000L
+#define D3DFORMAT_OP_VERTEXTEXTURE            0x00800000L 
+#define D3DFORMAT_OP_NOTEXCOORDWRAPNORMIP	  0x01000000L
+
+#define DDHAL_PLEASEALLOC_BLOCKSIZE           0x00000002l
+#define DDHAL_PLEASEALLOC_USERMEM             0x00000004l
+
+#define VIDMEM_ISLINEAR                       0x00000001l 
+#define VIDMEM_ISRECTANGULAR                  0x00000002l 
+#define VIDMEM_ISHEAP                         0x00000004l 
+#define VIDMEM_ISNONLOCAL                     0x00000008l 
+#define VIDMEM_ISWC                           0x00000010l 
+#define VIDMEM_HEAPDISABLED                   0x00000020l 
+
+#define DDHAL_CREATESURFACEEX_SWAPHANDLES     0x00000001l
+
+#define DDHAL_KERNEL_SYNCSURFACEDATA          0x00000001l
+#define DDHAL_KERNEL_SYNCVIDEOPORTDATA        0x00000002l
+
+#define DDHAL_DRIVER_NOTHANDLED               0x00000000l
+#define DDHAL_DRIVER_HANDLED                  0x00000001l
+#define DDHAL_DRIVER_NOCKEYHW                 0x00000002l
+
+#define DDRAWISURF_HASCKEYSRCBLT              0x00000800L 
+#define DDRAWISURF_HASPIXELFORMAT             0x00002000L 
+#define DDRAWISURF_HASOVERLAYDATA             0x00004000L 
+#define DDRAWISURF_FRONTBUFFER                0x04000000L 
+#define DDRAWISURF_BACKBUFFER                 0x08000000L 
+#define DDRAWISURF_INVALID                    0x10000000L 
+#define DDRAWISURF_DRIVERMANAGED              0x40000000L 
+
+#define ROP_HAS_SOURCE                        0x00000001l
+#define ROP_HAS_PATTERN                       0x00000002l
+#define ROP_HAS_SOURCEPATTERN                 ROP_HAS_SOURCE | ROP_HAS_PATTERN
+
+#define DDHAL_EXEBUFCB32_CANCREATEEXEBUF      0x00000001l
+#define DDHAL_EXEBUFCB32_CREATEEXEBUF         0x00000002l
+#define DDHAL_EXEBUFCB32_DESTROYEXEBUF        0x00000004l
+#define DDHAL_EXEBUFCB32_LOCKEXEBUF           0x00000008l
+#define DDHAL_EXEBUFCB32_UNLOCKEXEBUF         0x00000010l
+
+#define DDHAL_D3DBUFCB32_CANCREATED3DBUF      DDHAL_EXEBUFCB32_CANCREATEEXEBUF
+#define DDHAL_D3DBUFCB32_CREATED3DBUF         DDHAL_EXEBUFCB32_CREATEEXEBUF
+#define DDHAL_D3DBUFCB32_DESTROYD3DBUF        DDHAL_EXEBUFCB32_DESTROYEXEBUF
+#define DDHAL_D3DBUFCB32_LOCKD3DBUF           DDHAL_EXEBUFCB32_LOCKEXEBUF
+#define DDHAL_D3DBUFCB32_UNLOCKD3DBUF         DDHAL_EXEBUFCB32_UNLOCKEXEBUF
+
+#define DDHALINFO_GETDRIVERINFOSET            0x00000004l   
+#define DDHALINFO_GETDRIVERINFO2              0x00000008l
+
+#define DDRAWIVPORT_ON                        0x00000001  
+#define DDRAWIVPORT_SOFTWARE_AUTOFLIP         0x00000002  
+#define DDRAWIVPORT_COLORKEYANDINTERP         0x00000004  
+
+#define DDHAL_PRIVATECAP_ATOMICSURFACECREATION   0x00000001l
+#define DDHAL_PRIVATECAP_NOTIFYPRIMARYCREATION   0x00000002l
+#define DDHAL_PRIVATECAP_RESERVED1               0x00000004l
+
+#define DDRAWI_VPORTSTART                     0x0001
+#define DDRAWI_VPORTSTOP                      0x0002
+#define DDRAWI_VPORTUPDATE                    0x0003
+#define DDRAWI_VPORTGETCOLOR                  0x0001
+#define DDRAWI_VPORTSETCOLOR                  0x0002
 
 #ifdef __cplusplus
 } /* extern "C" */
