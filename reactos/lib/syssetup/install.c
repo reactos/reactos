@@ -444,10 +444,11 @@ InstallReactOS (HINSTANCE hInstance)
 
   /* create and fill Accessories subfolder */
   if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_ACCESSORIES, sAccessories, 256)) {
+	CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("Calculator.lnk"), _T("calc.exe"), IDS_CMT_CALC);
 	CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("Command Prompt.lnk"), _T("cmd.exe"), IDS_CMT_CMD);
-    CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("notepad.lnk"), _T("notepad.exe"), IDS_CMT_NOTEPAD);
-    CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("explorer.lnk"), _T("explorer.exe"), IDS_CMT_EXPLORER);
-    CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("regedit.lnk"), _T("regedit.exe"), IDS_CMT_REGEDIT);
+    CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("Notepad.lnk"), _T("notepad.exe"), IDS_CMT_NOTEPAD);
+    CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("ReactOS Explorer.lnk"), _T("explorer.exe"), IDS_CMT_EXPLORER);
+    CreateShortcut(CSIDL_PROGRAMS, sAccessories, _T("Regedit.lnk"), _T("regedit.exe"), IDS_CMT_REGEDIT);
   }
 
 
@@ -462,7 +463,7 @@ InstallReactOS (HINSTANCE hInstance)
       
 	  _tcscpy(GamePath, Sys);
       if((_taccess(_tcscat(GamePath, _T("\\winemine.exe")), 0 )) != -1)
-        CreateShortcut(CSIDL_PROGRAMS, sGames, _T("winemine.lnk"), _T("winemine.exe"), IDS_CMT_WINEMINE);
+        CreateShortcut(CSIDL_PROGRAMS, sGames, _T("WineMine.lnk"), _T("winemine.exe"), IDS_CMT_WINEMINE);
 	}
   }
 

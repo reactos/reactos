@@ -196,6 +196,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_ACCESSORIES     "Zubehör"
+    IDS_CMT_CALC        "Launch Calculator"
     IDS_CMT_CMD         "Öffne Kommandozeilenfenster"
     IDS_CMT_EXPLORER    "Starte Explorer"
     IDS_CMT_WINEFILE    "Starte Winefile"
