@@ -81,6 +81,6 @@ VOID Hel_DirectDraw_Release (LPDIRECTDRAW7 iface);
 
 /*********** Macros ***********/
 
-#define DX_STUB return DD_OK;
+#define DX_STUB return DDERR_UNSUPPORTED; 
 
 #endif /* __DDRAW_PRIVATE */
