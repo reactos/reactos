@@ -58,7 +58,7 @@ WriteProcessMemory (
 	SIZE_T *lpNumberOfBytesWritten
 	)
 {
-	NTSTATUS Status, ProtectStatus;
+	NTSTATUS Status, ProtectStatus = STATUS_SUCCESS;
 	MEMORY_BASIC_INFORMATION MemInfo;
 	ULONG Length;
 	BOOLEAN UnProtect;
