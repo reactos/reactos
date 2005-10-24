@@ -25,27 +25,28 @@ HKR, , Icon,           0, "-27"
 %GenericMfg% = GenericMfg
 %IntelMfg% = IntelMfg
 
-[IntelMfg]
-; DO NOT INSTALL ISAPNP -> FREEZES SYSTEM
-;%PCI\VEN_8086&DEV_7110.DeviceDesc% = Intel_PCI_ISA_Inst, PCI\VEN_8086&DEV_7110
-%PCI\VEN_8086&DEV_7110.DeviceDesc% = NO_DRV, PCI\VEN_8086&DEV_7110
-%PCI\VEN_8086&DEV_7113.DeviceDesc% = NO_DRV, PCI\VEN_8086&DEV_7113
-%PCI\VEN_8086&DEV_7180.DeviceDesc% = NO_DRV, PCI\VEN_8086&DEV_7180
-%PCI\VEN_8086&DEV_7190.DeviceDesc% = NO_DRV, PCI\VEN_8086&DEV_7190
-%PCI\VEN_8086&DEV_7192.DeviceDesc% = NO_DRV, PCI\VEN_8086&DEV_7192
-
 [GenericMfg]
-%*PNP0001.DeviceDesc% = NO_DRV,   *PNP0001
-%*PNP0100.DeviceDesc% = NO_DRV,   *PNP0100
-%*PNP0200.DeviceDesc% = NO_DRV,   *PNP0200
-%*PNP0800.DeviceDesc% = NO_DRV,   *PNP0800
-%*PNP0A03.DeviceDesc% = PCI_Inst, *PNP0A03
-%*PNP0A05.DeviceDesc% = NO_DRV,   *PNP0A05
-%*PNP0B00.DeviceDesc% = NO_DRV,   *PNP0B00
-%*PNP0C02.DeviceDesc% = NO_DRV,   *PNP0C02
-%*PNP0C0F.DeviceDesc% = NO_DRV,   *PNP0C0F
-%ACPI\FixedButton.DeviceDesc% = NO_DRV, ACPI\FixedButton
-%PCI\CC_0604.DeviceDesc% = PCI_Inst,PCI\CC_0604
+%*PNP0001.DeviceDesc% = NO_DRV,*PNP0001
+%*PNP0100.DeviceDesc% = NO_DRV,*PNP0100
+%*PNP0200.DeviceDesc% = NO_DRV,*PNP0200
+%*PNP0800.DeviceDesc% = NO_DRV,*PNP0800
+%*PNP0A00.DeviceDesc% = PCI_ISA_Inst,*PNP0A00
+%*PNP0A03.DeviceDesc% = PCI_Inst,*PNP0A03
+%*PNP0A05.DeviceDesc% = NO_DRV,*PNP0A05
+%*PNP0B00.DeviceDesc% = NO_DRV,*PNP0B00
+%*PNP0C02.DeviceDesc% = NO_DRV,*PNP0C02
+%ACPI\FixedButton.DeviceDesc% = NO_DRV,ACPI\FixedButton
+%PCI\CC_0600.DeviceDesc% = NO_DRV,PCI\CC_0600
+%PCI\CC_0601.DeviceDesc% = PCI_Inst,PCI\CC_0604
+%PCI\CC_0604.DeviceDesc% = PCI_ISA_Inst,PCI\CC_0604
+
+[IntelMfg]
+%PCI\VEN_8086&DEV_7110.DeviceDesc% = PCI_ISA_Inst,PCI\VEN_8086&DEV_7110
+%PCI\VEN_8086&DEV_7110.DeviceDesc% = NO_DRV,PCI\VEN_8086&DEV_7110
+%PCI\VEN_8086&DEV_7113.DeviceDesc% = NO_DRV,PCI\VEN_8086&DEV_7113
+%PCI\VEN_8086&DEV_7180.DeviceDesc% = NO_DRV,PCI\VEN_8086&DEV_7180
+%PCI\VEN_8086&DEV_7190.DeviceDesc% = NO_DRV,PCI\VEN_8086&DEV_7190
+%PCI\VEN_8086&DEV_7192.DeviceDesc% = NO_DRV,PCI\VEN_8086&DEV_7192
 
 ;---------------------------- NO DRIVER REQ -----------------------------
 
@@ -54,16 +55,18 @@ HKR, , Icon,           0, "-27"
 [NO_DRV.Services]
 AddService = , 0x00000002
 
-;----------------------------- INTEL DRIVER -----------------------------
+;-------------------------- PCI-ISA BUS DRIVER --------------------------
 
-[Intel_PCI_ISA_Inst]
-CopyFiles = Intel_PCI_ISA_CopyFiles.NT
+[PCI_ISA_Inst.NT]
+CopyFiles = PCI_ISA_CopyFiles.NT
 
-[Intel_PCI_ISA_CopyFiles.NT]
+[PCI_ISA_CopyFiles.NT]
 isapnp.sys
 
-[Intel_PCI_ISA_Inst.NT.Services]
-AddService = isapnp, 0x00000002, isapnp_Service_Inst
+[PCI_ISA_Inst.NT.Services]
+;DO NOT INSTALL ISAPNP -> FREEZES SYSTEM
+;AddService = isapnp, 0x00000002, isapnp_Service_Inst
+AddService = , 0x00000002
 
 [isapnp_Service_Inst]
 ServiceType   = 1
@@ -107,11 +110,13 @@ GenericMfg = "(Generic system devices)"
 *PNP0C02.DeviceDesc = "Motherboard resources"
 *PNP0C0F.DeviceDesc = "PCI interrupt link device"
 ACPI\FixedButton.DeviceDesc ="ACPI Fixed Feature Button"
+PCI\CC_0600.DeviceDesc = "Standard CPU to PCI bridge"
+PCI\CC_0601.DeviceDesc = "Standard PCI to ISA bridge"
 PCI\CC_0604.DeviceDesc = "Standard PCI to PCI bridge"
 
 IntelMfg = "Intel"
+PCI\VEN_8086&DEV_7110.DeviceDesc = "Intel 82371AB/EB PCI to ISA Bridge"
+PCI\VEN_8086&DEV_7113.DeviceDesc = "Intel 82371AB/EB Power Management Controller"
 PCI\VEN_8086&DEV_7180.DeviceDesc = "Intel 82443LX/EX Pentium(R) II CPU to PCI-Bridge"
 PCI\VEN_8086&DEV_7190.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU to PCI-Bridge"
 PCI\VEN_8086&DEV_7192.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU to PCI-Bridge"
-PCI\VEN_8086&DEV_7113.DeviceDesc = "Intel 82371AB/EB Power Management Controller"
-PCI\VEN_8086&DEV_7110.DeviceDesc = "Intel 82371AB/EB PCI to ISA Bridge"

@@ -34,9 +34,9 @@ HKR, , Icon,           0, "-23"
 ;---------------------------- LPT PORT DRIVER ---------------------------
 
 [LptPort_Inst.NT]
-CopyFiles = LptPort_CopyFiles.NT
 
-[LptPort_CopyFiles.NT]
+[LptPort_Inst.NT.Services]
+AddService = , 0x00000002
 
 ;---------------------------- COM PORT DRIVER ---------------------------
 
