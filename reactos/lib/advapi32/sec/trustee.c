@@ -198,10 +198,8 @@ BuildTrusteeWithObjectsAndNameA(PTRUSTEEA pTrustee, POBJECTS_AND_NAME_A pObjName
                                 SE_OBJECT_TYPE ObjectType, LPSTR ObjectTypeName,
                                 LPSTR InheritedObjectTypeName, LPSTR Name)
 {
-#if 0
     DPRINT("%p %p 0x%08x %p %p %s\n", pTrustee, pObjName,
-           ObjectType, ObjectTypeName, InheritedObjectTypeName, debugstr_a(Name));
-#endif
+           ObjectType, ObjectTypeName, InheritedObjectTypeName, Name);
 
     pTrustee->pMultipleTrustee = NULL;
     pTrustee->MultipleTrusteeOperation = NO_MULTIPLE_TRUSTEE;
@@ -219,10 +217,8 @@ BuildTrusteeWithObjectsAndNameW(PTRUSTEEW pTrustee, POBJECTS_AND_NAME_W pObjName
                                 SE_OBJECT_TYPE ObjectType, LPWSTR ObjectTypeName,
                                 LPWSTR InheritedObjectTypeName, LPWSTR Name)
 {
-#if 0
-    DPRINT("%p %p 0x%08x %p %p %s\n", pTrustee, pObjName,
-           ObjectType, ObjectTypeName, InheritedObjectTypeName, debugstr_w(Name));
-#endif
+    DPRINT("%p %p 0x%08x %p %p %S\n", pTrustee, pObjName,
+           ObjectType, ObjectTypeName, InheritedObjectTypeName, Name);
 
     pTrustee->pMultipleTrustee = NULL;
     pTrustee->MultipleTrusteeOperation = NO_MULTIPLE_TRUSTEE;
