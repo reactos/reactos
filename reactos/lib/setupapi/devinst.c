@@ -116,6 +116,14 @@ struct DeviceInterface /* Element of DeviceInfoElement.InterfaceListHead */
     WCHAR SymbolicLink[0]; /* \\?\ACPI#PNP0501#4&2658d0a0&0#{GUID} */
 };
 
+/* We don't want to open the .inf file to read only one information in it, so keep a handle to it once it
+ * has been already loaded once. Keep also a reference counter */
+struct InfFileDetails
+{
+    HINF hInf;
+    ULONG References;
+};
+
 struct DriverInfoElement /* Element of DeviceInfoSet.DriverListHead and DeviceInfoElement.DriverListHead */
 {
     LIST_ENTRY ListEntry;
@@ -125,6 +133,7 @@ struct DriverInfoElement /* Element of DeviceInfoSet.DriverListHead and DeviceIn
     SP_DRVINFO_DETAIL_DATA_W Details;
     GUID ClassGuid;
     LPWSTR MatchingId;
+    struct InfFileDetails *InfFileDetails;
 };
 
 struct DeviceInfoElement /* Element of DeviceInfoSet.ListHead */
@@ -1934,6 +1943,57 @@ BOOL WINAPI SetupDiEnumDeviceInterfaces(
     return ret;
 }
 
+static BOOL DestroyDriverInfoElement(struct DriverInfoElement* driverInfo)
+{
+    if (InterlockedDecrement(&driverInfo->InfFileDetails->References) == 0)
+    {
+        SetupCloseInfFile(driverInfo->InfFileDetails->hInf);
+        HeapFree(GetProcessHeap(), 0, driverInfo->InfFileDetails);
+    }
+    HeapFree(GetProcessHeap(), 0, driverInfo->MatchingId);
+    HeapFree(GetProcessHeap(), 0, driverInfo);
+    return TRUE;
+}
+
+static BOOL DestroyDeviceInfoElement(struct DeviceInfoElement* deviceInfo)
+{
+    PLIST_ENTRY ListEntry;
+    struct DriverInfoElement *driverInfo;
+
+    while (!IsListEmpty(&deviceInfo->DriverListHead))
+    {
+        ListEntry = RemoveHeadList(&deviceInfo->DriverListHead);
+        driverInfo = (struct DriverInfoElement *)ListEntry;
+        if (!DestroyDriverInfoElement(driverInfo))
+            return FALSE;
+    }
+    while (!IsListEmpty(&deviceInfo->InterfaceListHead))
+    {
+        ListEntry = RemoveHeadList(&deviceInfo->InterfaceListHead);
+        HeapFree(GetProcessHeap(), 0, ListEntry);
+    }
+    HeapFree(GetProcessHeap(), 0, deviceInfo);
+    return TRUE;
+}
+
+static BOOL DestroyDeviceInfoSet(struct DeviceInfoSet* list)
+{
+    PLIST_ENTRY ListEntry;
+    struct DeviceInfoElement *deviceInfo;
+
+    while (!IsListEmpty(&list->ListHead))
+    {
+        ListEntry = RemoveHeadList(&list->ListHead);
+        deviceInfo = (struct DeviceInfoElement *)ListEntry;
+        if (!DestroyDeviceInfoElement(deviceInfo))
+            return FALSE;
+    }
+    if (list->HKLM != HKEY_LOCAL_MACHINE)
+        RegCloseKey(list->HKLM);
+    HeapFree(GetProcessHeap(), 0, list);
+    return TRUE;
+}
+
 /***********************************************************************
  *		SetupDiDestroyDeviceInfoList (SETUPAPI.@)
  */
@@ -1947,25 +2007,7 @@ BOOL WINAPI SetupDiDestroyDeviceInfoList(HDEVINFO devinfo)
         struct DeviceInfoSet *list = (struct DeviceInfoSet *)devinfo;
 
         if (list->magic == SETUP_DEV_INFO_SET_MAGIC)
-        {
-            PLIST_ENTRY ListEntry, InterfaceEntry;
-            struct DeviceInfoElement *deviceInfo;
-            while (!IsListEmpty(&list->ListHead))
-            {
-                ListEntry = RemoveHeadList(&list->ListHead);
-                deviceInfo = (struct DeviceInfoElement *)ListEntry;
-                while (!IsListEmpty(&deviceInfo->InterfaceListHead))
-                {
-                    InterfaceEntry = RemoveHeadList(&deviceInfo->InterfaceListHead);
-                    HeapFree(GetProcessHeap(), 0, InterfaceEntry);
-                }
-                HeapFree(GetProcessHeap(), 0, ListEntry);
-            }
-            if (list->HKLM != HKEY_LOCAL_MACHINE)
-                RegCloseKey(list->HKLM);
-            HeapFree(GetProcessHeap(), 0, list);
-            ret = TRUE;
-        }
+            ret = DestroyDeviceInfoSet(list);
         else
             SetLastError(ERROR_INVALID_HANDLE);
     }
@@ -3824,6 +3866,7 @@ AddDriverToList(
     IN DWORD DriverType, /* SPDIT_CLASSDRIVER or SPDIT_COMPATDRIVER */
     IN LPGUID ClassGuid,
     IN INFCONTEXT ContextDevice,
+    IN struct InfFileDetails *InfFileDetails,
     IN LPCWSTR InfFile,
     IN LPCWSTR ProviderName,
     IN LPCWSTR ManufacturerName,
@@ -3929,6 +3972,8 @@ AddDriverToList(
         driverInfo->Info.ProviderName[0] = '\0';
     driverInfo->Info.DriverDate = DriverDate;
     driverInfo->Info.DriverVersion = DriverVersion;
+    InterlockedIncrement(&InfFileDetails->References);
+    driverInfo->InfFileDetails = InfFileDetails;
 
     /* Insert current driver in driver list, according to its rank */
     PreviousEntry = DriverListHead->Flink;
@@ -4094,7 +4139,7 @@ SetupDiBuildDriverInfoList(
     struct DeviceInfoSet *list;
     SP_DEVINSTALL_PARAMS_W InstallParams;
     PVOID Buffer = NULL;
-    HINF hInf = INVALID_HANDLE_VALUE;
+    struct InfFileDetails *currentInfFileDetails = NULL;
     LPWSTR ProviderName = NULL;
     LPWSTR ManufacturerName = NULL;
     WCHAR ManufacturerSection[LINE_LEN + 1];
@@ -4220,19 +4265,29 @@ SetupDiBuildDriverInfoList(
                 GUID ClassGuid;
                 TRACE("Opening file %S\n", filename);
 
-                hInf = SetupOpenInfFileW(filename, NULL, INF_STYLE_WIN4, NULL);
-                if (hInf == INVALID_HANDLE_VALUE)
+                currentInfFileDetails = HeapAlloc(GetProcessHeap(), 0, sizeof(struct InfFileDetails));
+                if (!currentInfFileDetails)
                     continue;
+                memset(currentInfFileDetails, 0, sizeof(struct InfFileDetails));
+
+                currentInfFileDetails->hInf = SetupOpenInfFileW(filename, NULL, INF_STYLE_WIN4, NULL);
+                if (currentInfFileDetails->hInf == INVALID_HANDLE_VALUE)
+                {
+                    HeapFree(GetProcessHeap(), 0, currentInfFileDetails);
+                    currentInfFileDetails = NULL;
+                    continue;
+                }
 
                 if (!GetVersionInformationFromInfFile(
-                    hInf,
+                    currentInfFileDetails->hInf,
                     &ClassGuid,
                     &ProviderName,
                     &DriverDate,
                     &DriverVersion))
                 {
-                    SetupCloseInfFile(hInf);
-                    hInf = INVALID_HANDLE_VALUE;
+                    SetupCloseInfFile(currentInfFileDetails->hInf);
+                    HeapFree(GetProcessHeap(), 0, currentInfFileDetails->hInf);
+                    currentInfFileDetails = NULL;
                     continue;
                 }
 
@@ -4246,7 +4301,7 @@ SetupDiBuildDriverInfoList(
                 }
 
                 /* Get the manufacturers list */
-                Result = SetupFindFirstLineW(hInf, L"Manufacturer", NULL, &ContextManufacturer);
+                Result = SetupFindFirstLineW(currentInfFileDetails->hInf, L"Manufacturer", NULL, &ContextManufacturer);
                 while (Result)
                 {
                     Result = SetupGetStringFieldW(
@@ -4280,11 +4335,11 @@ SetupDiBuildDriverInfoList(
                         ManufacturerSection[RequiredSize] = 0; /* Final NULL char */
                         /* Add (possible) extension to manufacturer section name */
                         Result = SetupDiGetActualSectionToInstallW(
-                            hInf, ManufacturerSection, ManufacturerSection, LINE_LEN, NULL, NULL);
+                            currentInfFileDetails->hInf, ManufacturerSection, ManufacturerSection, LINE_LEN, NULL, NULL);
                         if (Result)
                         {
                             TRACE("Enumerating devices in manufacturer %S\n", ManufacturerSection);
-                            Result = SetupFindFirstLineW(hInf, ManufacturerSection, NULL, &ContextDevice);
+                            Result = SetupFindFirstLineW(currentInfFileDetails->hInf, ManufacturerSection, NULL, &ContextDevice);
                         }
                     }
                     while (Result)
@@ -4297,6 +4352,7 @@ SetupDiBuildDriverInfoList(
                                 DriverType,
                                 &ClassGuid,
                                 ContextDevice,
+                                currentInfFileDetails,
                                 filename,
                                 ProviderName,
                                 ManufacturerName,
@@ -4352,6 +4408,7 @@ SetupDiBuildDriverInfoList(
                                             DriverType,
                                             &ClassGuid,
                                             ContextDevice,
+                                            currentInfFileDetails,
                                             filename,
                                             ProviderName,
                                             ManufacturerName,
@@ -4372,6 +4429,7 @@ SetupDiBuildDriverInfoList(
                                                 DriverType,
                                                 &ClassGuid,
                                                 ContextDevice,
+                                                currentInfFileDetails,
                                                 filename,
                                                 ProviderName,
                                                 ManufacturerName,
@@ -4398,8 +4456,12 @@ next:
                 HeapFree(GetProcessHeap(), 0, ProviderName);
                 ProviderName = NULL;
 
-                SetupCloseInfFile(hInf);
-                hInf = INVALID_HANDLE_VALUE;
+                if (currentInfFileDetails->References == 0)
+                {
+                    SetupCloseInfFile(currentInfFileDetails->hInf);
+                    HeapFree(GetProcessHeap(), 0, currentInfFileDetails);
+                    currentInfFileDetails = NULL;
+                }
             }
             ret = TRUE;
         }
@@ -4425,8 +4487,11 @@ done:
     HeapFree(GetProcessHeap(), 0, ManufacturerName);
     HeapFree(GetProcessHeap(), 0, HardwareIDs);
     HeapFree(GetProcessHeap(), 0, CompatibleIDs);
-    if (hInf != INVALID_HANDLE_VALUE)
-        SetupCloseInfFile(hInf);
+    if (currentInfFileDetails && currentInfFileDetails->References == 0)
+    {
+        SetupCloseInfFile(currentInfFileDetails->hInf);
+        HeapFree(GetProcessHeap(), 0, currentInfFileDetails);
+    }
     HeapFree(GetProcessHeap(), 0, Buffer);
 
     TRACE("Returning %d\n", ret);
@@ -4505,8 +4570,7 @@ SetupDiDestroyDriverInfoList(
             {
                  ListEntry = RemoveHeadList(&list->DriverListHead);
                  driverInfo = (struct DriverInfoElement *)ListEntry;
-                 HeapFree(GetProcessHeap(), 0, driverInfo->MatchingId);
-                 HeapFree(GetProcessHeap(), 0, driverInfo);
+                 DestroyDriverInfoElement(driverInfo);
             }
             InstallParams.Reserved = 0;
             InstallParams.Flags &= ~(DI_DIDCLASS | DI_MULTMFGS);
@@ -4531,8 +4595,7 @@ SetupDiDestroyDriverInfoList(
                      InstallParamsSet.Reserved = 0;
                      SetupDiSetDeviceInstallParamsW(DeviceInfoSet, NULL, &InstallParamsSet);
                  }
-                 HeapFree(GetProcessHeap(), 0, driverInfo->MatchingId);
-                 HeapFree(GetProcessHeap(), 0, driverInfo);
+                 DestroyDriverInfoElement(driverInfo);
             }
             InstallParams.Reserved = 0;
             InstallParams.Flags &= ~DI_DIDCOMPAT;
@@ -5263,7 +5326,6 @@ SetupDiInstallDriverFiles(
     else
     {
         SP_DEVINSTALL_PARAMS_W InstallParams;
-        HINF hInf = INVALID_HANDLE_VALUE;
         struct DriverInfoElement *SelectedDriver;
         WCHAR SectionName[MAX_PATH];
         DWORD SectionNameLength = 0;
@@ -5280,18 +5342,17 @@ SetupDiInstallDriverFiles(
             goto cleanup;
         }
 
-        hInf = SetupOpenInfFileW(SelectedDriver->Details.InfFileName, NULL, INF_STYLE_WIN4, NULL);
-        if (hInf == INVALID_HANDLE_VALUE)
-            goto cleanup;
-
-        ret = SetupDiGetActualSectionToInstallW(hInf, SelectedDriver->Details.SectionName,
+        ret = SetupDiGetActualSectionToInstallW(
+            SelectedDriver->InfFileDetails->hInf,
+            SelectedDriver->Details.SectionName,
             SectionName, MAX_PATH, &SectionNameLength, NULL);
         if (!ret)
             goto cleanup;
 
         if (InstallParams.InstallMsgHandler)
         {
-            ret = SetupInstallFromInfSectionW(InstallParams.hwndParent, hInf, SectionName,
+            ret = SetupInstallFromInfSectionW(InstallParams.hwndParent,
+                SelectedDriver->InfFileDetails->hInf, SectionName,
                 SPINST_FILES, NULL, NULL, SP_COPY_NEWER,
                 InstallParams.InstallMsgHandler, InstallParams.InstallMsgHandlerContext,
                 DeviceInfoSet, DeviceInfoData);
@@ -5299,15 +5360,14 @@ SetupDiInstallDriverFiles(
         else
         {
             PVOID callback_context = SetupInitDefaultQueueCallback(InstallParams.hwndParent);
-            ret = SetupInstallFromInfSectionW(InstallParams.hwndParent, hInf, SectionName,
+            ret = SetupInstallFromInfSectionW(InstallParams.hwndParent,
+                SelectedDriver->InfFileDetails->hInf, SectionName,
                 SPINST_FILES, NULL, NULL, SP_COPY_NEWER,
                 SetupDefaultQueueCallbackW, callback_context,
                 DeviceInfoSet, DeviceInfoData);
                 SetupTermDefaultQueueCallback(callback_context);
         }
 cleanup:
-        if (hInf != INVALID_HANDLE_VALUE)
-            SetupCloseInfFile(hInf);
         if (ret)
         {
             InstallParams.Flags |= DI_NOFILECOPY;
@@ -5371,10 +5431,9 @@ SetupDiInstallDevice(
     INT Flags;
     ULONG DoAction;
     DWORD RequiredSize;
-    HINF hInf = INVALID_HANDLE_VALUE;
     LPCWSTR AssociatedService = NULL;
     LPWSTR pSectionName = NULL;
-    LPWSTR ClassName = NULL;
+    WCHAR ClassName[MAX_CLASS_NAME_LEN];
     GUID ClassGuid;
     LPWSTR lpGuidString = NULL, lpFullGuidString = NULL;
     BOOL RebootRequired = FALSE;
@@ -5422,32 +5481,17 @@ SetupDiInstallDevice(
 
     FileTimeToSystemTime(&SelectedDriver->Info.DriverDate, &DriverDate);
 
-    hInf = SetupOpenInfFileW(SelectedDriver->Details.InfFileName, NULL, INF_STYLE_WIN4, NULL);
-    if (hInf == INVALID_HANDLE_VALUE)
-        goto cleanup;
-
-    Result = SetupDiGetActualSectionToInstallW(hInf, SelectedDriver->Details.SectionName,
+    Result = SetupDiGetActualSectionToInstallW(
+        SelectedDriver->InfFileDetails->hInf,
+        SelectedDriver->Details.SectionName,
         SectionName, MAX_PATH, &SectionNameLength, NULL);
     if (!Result || SectionNameLength > MAX_PATH - 9)
         goto cleanup;
     pSectionName = &SectionName[wcslen(SectionName)];
 
     /* Get information from [Version] section */
-    ClassName = NULL;
-    RequiredSize = 0;
-    if (!SetupDiGetINFClassW(SelectedDriver->Details.InfFileName, &ClassGuid, ClassName, RequiredSize, &RequiredSize))
-    {
-        if (GetLastError() != ERROR_INSUFFICIENT_BUFFER)
-            goto cleanup;
-        ClassName = HeapAlloc(GetProcessHeap(), 0, RequiredSize * sizeof(WCHAR));
-        if (!ClassName)
-        {
-            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-            goto cleanup;
-        }
-        if (!SetupDiGetINFClassW(SelectedDriver->Details.InfFileName, &ClassGuid, ClassName, RequiredSize, &RequiredSize))
-            goto cleanup;
-    }
+    if (!SetupDiGetINFClassW(SelectedDriver->Details.InfFileName, &ClassGuid, ClassName, MAX_CLASS_NAME_LEN, &RequiredSize))
+        goto cleanup;
     /* Format ClassGuid to a string */
     if (UuidToStringW((UUID*)&ClassGuid, &lpGuidString) != RPC_S_OK)
         goto cleanup;
@@ -5481,7 +5525,8 @@ SetupDiInstallDevice(
     /* Files have already been copied in SetupDiInstallDriverFiles.
      * Process only registry entries. */
     *pSectionName = '\0';
-    Result = SetupInstallFromInfSectionW(InstallParams.hwndParent, hInf, SectionName,
+    Result = SetupInstallFromInfSectionW(InstallParams.hwndParent,
+        SelectedDriver->InfFileDetails->hInf, SectionName,
         DoAction, hKey, NULL, SP_COPY_NEWER,
         InstallParams.InstallMsgHandler, InstallParams.InstallMsgHandlerContext,
         DeviceInfoSet, DeviceInfoData);
@@ -5541,7 +5586,7 @@ SetupDiInstallDevice(
 
     /* Install .Services section */
     wcscpy(pSectionName, L".Services");
-    Result = SetupFindFirstLineW(hInf, SectionName, NULL, &ContextService);
+    Result = SetupFindFirstLineW(SelectedDriver->InfFileDetails->hInf, SectionName, NULL, &ContextService);
     while (Result)
     {
         LPWSTR ServiceName = NULL;
@@ -5600,12 +5645,14 @@ SetupDiInstallDevice(
                 &ContextService,
                 3, /* Field index */
                 ServiceSection, RequiredSize,
-               &RequiredSize);
+                &RequiredSize);
             if (!Result)
-               goto nextfile;
+                goto nextfile;
         }
         SetLastError(ERROR_SUCCESS);
-        Result = SetupInstallServicesFromInfSectionExW(hInf, ServiceSection, Flags, DeviceInfoSet, DeviceInfoData, ServiceName, NULL);
+        Result = SetupInstallServicesFromInfSectionExW(
+            SelectedDriver->InfFileDetails->hInf,
+            ServiceSection, Flags, DeviceInfoSet, DeviceInfoData, ServiceName, NULL);
         if (Result && (Flags & SPSVCINST_ASSOCSERVICE))
         {
             AssociatedService = ServiceName;
@@ -5631,7 +5678,8 @@ nextfile:
 
     /* Install .HW section */
     wcscpy(pSectionName, L".HW");
-    Result = SetupInstallFromInfSectionW(InstallParams.hwndParent, hInf, SectionName,
+    Result = SetupInstallFromInfSectionW(InstallParams.hwndParent,
+        SelectedDriver->InfFileDetails->hInf, SectionName,
         SPINST_REGISTRY, hKey, NULL, 0,
         InstallParams.InstallMsgHandler, InstallParams.InstallMsgHandlerContext,
         DeviceInfoSet, DeviceInfoData);
@@ -5681,10 +5729,7 @@ cleanup:
     if (lpGuidString)
         RpcStringFreeW(&lpGuidString);
     HeapFree(GetProcessHeap(), 0, (LPWSTR)AssociatedService);
-    HeapFree(GetProcessHeap(), 0, ClassName);
     HeapFree(GetProcessHeap(), 0, lpFullGuidString);
-    if (hInf != INVALID_HANDLE_VALUE)
-        SetupCloseInfFile(hInf);
 
     TRACE("Returning %d\n", ret);
     return ret;
