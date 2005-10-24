@@ -143,6 +143,11 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
                 TreeView_DeleteItem(pChildWnd->hTreeWnd, hSelection);
         }
         break;
+    case ID_EDIT_COPYKEYNAME:
+        hSelection = TreeView_GetSelection(pChildWnd->hTreeWnd);
+        keyPath = GetItemPath(pChildWnd->hTreeWnd, hSelection, &hRootKey);
+        CopyKeyName(hWnd, hRootKey, keyPath);
+        break;
     case ID_EDIT_NEW_KEY:
         CreateNewKey(pChildWnd->hTreeWnd, TreeView_GetSelection(pChildWnd->hTreeWnd));
         break;
@@ -178,6 +183,8 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
  *  Key suggestion
  */
 
+#define MIN(a,b)	((a < b) ? (a) : (b))
+
 static void SuggestKeys(HKEY hRootKey, LPCTSTR pszKeyPath, LPTSTR pszSuggestions,
 	size_t iSuggestionsLength)
 {
@@ -201,7 +208,9 @@ static void SuggestKeys(HKEY hRootKey, LPCTSTR pszKeyPath, LPTSTR pszSuggestions
 			if (RegQueryStringValue(hRootKey, pszKeyPath, NULL,
 				szBuffer, sizeof(szBuffer) / sizeof(szBuffer[0])) == ERROR_SUCCESS)
 			{
-				if (szBuffer[0] != '\0')
+				/* Sanity check this key; it cannot be empty, nor can it be a
+				 * loop back */
+				if ((szBuffer[0] != '\0') && _tcsicmp(szBuffer, pszKeyPath))
 				{
 					if (RegOpenKey(hRootKey, szBuffer, &hOtherKey) == ERROR_SUCCESS)
 					{
@@ -211,7 +220,7 @@ static void SuggestKeys(HKEY hRootKey, LPCTSTR pszKeyPath, LPTSTR pszSuggestions
 	    				iSuggestionsLength -= i;
 
 						lstrcpyn(pszSuggestions, szBuffer, iSuggestionsLength);
-						i = _tcslen(pszSuggestions) + 1;
+						i = MIN(_tcslen(pszSuggestions) + 1, iSuggestionsLength);
 						pszSuggestions += i;
 						iSuggestionsLength -= i;
 						RegCloseKey(hOtherKey);
@@ -223,7 +232,7 @@ static void SuggestKeys(HKEY hRootKey, LPCTSTR pszKeyPath, LPTSTR pszSuggestions
 				}
 			}
 		}
-		while(bFound);
+		while(bFound && (iSuggestionsLength > 0));
 
 		/* Check CLSID key */
 		if (RegOpenKey(hRootKey, pszKeyPath, &hSubKey) == ERROR_SUCCESS)
@@ -237,7 +246,7 @@ static void SuggestKeys(HKEY hRootKey, LPCTSTR pszKeyPath, LPTSTR pszSuggestions
 				iSuggestionsLength -= i;
 
 				lstrcpyn(pszSuggestions, szBuffer, iSuggestionsLength);
-				i = _tcslen(pszSuggestions) + 1;
+				i = MIN(_tcslen(pszSuggestions) + 1, iSuggestionsLength);
 				pszSuggestions += i;
 				iSuggestionsLength -= i;
 			}

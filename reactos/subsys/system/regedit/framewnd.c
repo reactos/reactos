@@ -470,34 +470,43 @@ BOOL PrintRegistryHive(HWND hWnd, LPTSTR path)
     return TRUE;
 }
 
-static BOOL CopyKeyName(HWND hWnd, LPCTSTR keyName)
+BOOL CopyKeyName(HWND hWnd, HKEY hRootKey, LPCTSTR keyName)
 {
-    BOOL result;
+    BOOL bClipboardOpened = FALSE;
+    BOOL bSuccess = FALSE;
+    TCHAR szBuffer[512];
+    HGLOBAL hGlobal;
+    LPTSTR s;
 
-    result = OpenClipboard(hWnd);
-    if (result) {
-        result = EmptyClipboard();
-        if (result) {
+    if (!OpenClipboard(hWnd))
+        goto done;
+    bClipboardOpened = TRUE;
 
-            /*HANDLE hClipData;*/
-            /*hClipData = SetClipboardData(UINT uFormat, HANDLE hMem);*/
+    if (!EmptyClipboard())
+        goto done;
 
-        } else {
-            /* error emptying clipboard*/
-            /* DWORD dwError = GetLastError(); */
-            ;
-        }
-        if (!CloseClipboard()) {
-            /* error closing clipboard*/
-            /* DWORD dwError = GetLastError(); */
-            ;
-        }
-    } else {
-        /* error opening clipboard*/
-        /* DWORD dwError = GetLastError(); */
-        ;
-    }
-    return result;
+    if (!RegKeyGetName(szBuffer, sizeof(szBuffer) / sizeof(szBuffer[0]), hRootKey, keyName))
+        goto done;
+
+    hGlobal = GlobalAlloc(GMEM_MOVEABLE, (_tcslen(szBuffer) + 1) * sizeof(TCHAR));
+    if (!hGlobal)
+        goto done;
+
+    s = GlobalLock(hGlobal);
+    _tcscpy(s, szBuffer);
+    GlobalUnlock(hGlobal);
+
+#ifdef UNICODE
+    SetClipboardData(CF_UNICODETEXT, hGlobal);
+#else
+    SetClipboardData(CF_TEXT, hGlobal);
+#endif
+    bSuccess = TRUE;
+
+done:
+    if (bClipboardOpened)
+        CloseClipboard();
+    return bSuccess;
 }
 
 static BOOL CreateNewValue(HKEY hRootKey, LPCTSTR pszKeyPath, DWORD dwType)
@@ -860,7 +869,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     }
     case ID_EDIT_COPYKEYNAME:
-        CopyKeyName(hWnd, _T(""));
+        CopyKeyName(hWnd, hKeyRoot, keyPath);
         break;
     case ID_EDIT_PERMISSIONS:
         if(keyPath != NULL && _tcslen(keyPath) > 0)

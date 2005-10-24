@@ -89,6 +89,7 @@ extern LRESULT CALLBACK ChildWndProc(HWND, UINT, WPARAM, LPARAM);
 extern LRESULT CALLBACK FrameWndProc(HWND, UINT, WPARAM, LPARAM);
 extern void SetupStatusBar(HWND hWnd, BOOL bResize);
 extern void UpdateStatusBar(void);
+extern BOOL CopyKeyName(HWND hWnd, HKEY hRootKey, LPCTSTR keyName);
 
 /* listview.c */
 extern HWND CreateListView(HWND hwndParent, int id);

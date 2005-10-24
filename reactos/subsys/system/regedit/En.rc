@@ -138,7 +138,7 @@ BEGIN
         MENUITEM "&Delete",                         ID_TREE_DELETE
         MENUITEM "&Rename",                         ID_TREE_RENAME
         MENUITEM SEPARATOR
-        MENUITEM "&Copy Key Name",                  ID_EDIT_COPYKEYNAME, GRAYED
+        MENUITEM "&Copy Key Name",                  ID_EDIT_COPYKEYNAME
   END
 END
 
