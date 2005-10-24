@@ -3,7 +3,7 @@
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS
  * FILE:                 lib/ddraw/main/clipper.c
- * PURPOSE:              DirectDraw Implementation 
+ * PURPOSE:              IDirectDrawClipper Implementation 
  * PROGRAMMER:           Maarten Bosma
  *
  */

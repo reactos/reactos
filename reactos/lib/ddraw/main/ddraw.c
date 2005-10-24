@@ -3,7 +3,7 @@
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS
  * FILE:                 lib/ddraw/main/ddraw.c
- * PURPOSE:              DirectDraw Implementation 
+ * PURPOSE:              IDirectDraw7 Implementation 
  * PROGRAMMER:           Magnus Olsen, Maarten Bosma
  *
  */
@@ -140,7 +140,9 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 	if (That == NULL) 
 		return E_OUTOFMEMORY;
 
-	That->lpVtbl = &DirectDrawSurface_Vtable;
+	That->lpVtbl = &DirectDrawSurface7_Vtable;
+	That->lpVtbl_v3 = &DDRAW_IDDS3_Thunk_VTable;
+
 	That->ref = 1;
 	*ppSurf = (LPDIRECTDRAWSURFACE7)That;
 
@@ -173,12 +175,38 @@ ULONG WINAPI Main_DirectDraw_Release (LPDIRECTDRAW7 iface)
    	return ref;
 }
 
-/**** Stubs ****/
-
-HRESULT WINAPI Main_DirectDraw_QueryInterface (LPDIRECTDRAW7 iface,REFIID refiid,LPVOID *obj) 
+HRESULT WINAPI Main_DirectDraw_QueryInterface (
+	LPDIRECTDRAW7 iface, REFIID id, LPVOID *obj ) 
 {
-	DX_STUB;
+    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+    
+    if (IsEqualGUID(&IID_IDirectDraw7, id))
+	{
+		*obj = &This->lpVtbl;
+    }
+    else if (IsEqualGUID(&IID_IDirectDraw, id))
+	{
+		*obj = &This->lpVtbl_v1;
+    }
+    else if (IsEqualGUID(&IID_IDirectDraw2, id))
+	{
+		*obj = &This->lpVtbl_v2;
+    }
+    else if (IsEqualGUID(&IID_IDirectDraw4, id))
+	{
+		*obj = &This->lpVtbl_v4;
+    }
+    else
+	{
+		*obj = NULL;
+		return E_NOINTERFACE;
+    }
+
+    Main_DirectDraw_AddRef(iface);
+    return S_OK;
 }
+
+/**** Stubs ****/
 
 HRESULT WINAPI Main_DirectDraw_Compact(LPDIRECTDRAW7 iface) 
 {
@@ -380,7 +408,7 @@ HRESULT WINAPI Main_DirectDraw_EvaluateMode(LPDIRECTDRAW7 iface,DWORD a,DWORD* b
    	DX_STUB;
 }
 
-IDirectDraw7Vtbl DirectDraw_Vtable =
+IDirectDraw7Vtbl DirectDraw7_Vtable =
 {
     Main_DirectDraw_QueryInterface,
     Main_DirectDraw_AddRef,

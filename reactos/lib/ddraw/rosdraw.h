@@ -3,7 +3,6 @@
 
 /********* Includes  *********/
 
-
 #include <windows.h>
 #include <stdio.h>
 #include <ddraw.h>
@@ -16,6 +15,10 @@
 typedef struct 
 {
 	IDirectDraw7Vtbl* lpVtbl;
+	IDirectDraw4Vtbl* lpVtbl_v4;
+	IDirectDraw2Vtbl* lpVtbl_v2;
+	IDirectDrawVtbl*  lpVtbl_v1;
+
 	DDRAWI_DIRECTDRAW_GBL DirectDrawGlobal;
 	DDHALINFO HalInfo;	
 
@@ -33,6 +36,8 @@ typedef struct
 typedef struct 
 {
 	IDirectDrawSurface7Vtbl* lpVtbl;
+	IDirectDrawSurface3Vtbl* lpVtbl_v3;
+
     LONG ref;
 
     IDirectDrawImpl* owner;
@@ -63,8 +68,14 @@ typedef struct
 
 /*********** VTables ************/
 
-extern IDirectDraw7Vtbl				DirectDraw_Vtable;
-extern IDirectDrawSurface7Vtbl		DirectDrawSurface_Vtable;
+extern IDirectDraw7Vtbl				DirectDraw7_Vtable;
+extern IDirectDrawVtbl				DDRAW_IDirectDraw_VTable;
+extern IDirectDraw2Vtbl				DDRAW_IDirectDraw2_VTable;
+extern IDirectDraw4Vtbl				DDRAW_IDirectDraw4_VTable;
+
+extern IDirectDrawSurface7Vtbl		DirectDrawSurface7_Vtable;
+extern IDirectDrawSurface3Vtbl		DDRAW_IDDS3_Thunk_VTable;
+
 extern IDirectDrawPaletteVtbl		DirectDrawPalette_Vtable;
 extern IDirectDrawClipperVtbl		DirectDrawClipper_Vtable;
 extern IDirectDrawColorControlVtbl	DirectDrawColorControl_Vtable;

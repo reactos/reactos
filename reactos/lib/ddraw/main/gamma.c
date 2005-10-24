@@ -3,7 +3,7 @@
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS
  * FILE:                 lib/ddraw/main/gamma.c
- * PURPOSE:              DirectDraw Implementation 
+ * PURPOSE:              IDirectDrawGamma Implementation 
  * PROGRAMMER:           Maarten Bosma
  *
  */

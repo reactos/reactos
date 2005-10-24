@@ -1,4 +1,4 @@
-<module name="ddraw" type="win32dll" installbase="system32" installname="ddraw.dll" allowwarnings="true">
+<module name="ddraw" type="win32dll" installbase="system32" installname="ddraw.dll">
 	<importlibrary definition="ddraw.def" />
 	<include base="ddraw">.</include>	
 	<define name="UNICODE" />
@@ -32,6 +32,11 @@
 	</directory>
 
 	<directory name="soft">
+		<file>ddraw.c</file>
+		<file>surface.c</file>
+	</directory>
+
+	<directory name="thunks">
 		<file>ddraw.c</file>
 		<file>surface.c</file>
 	</directory>

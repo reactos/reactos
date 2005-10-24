@@ -3,7 +3,7 @@
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS
  * FILE:                 lib/ddraw/main/palette.c
- * PURPOSE:              DirectDraw Implementation 
+ * PURPOSE:              IDirectDrawPalette Implementation 
  * PROGRAMMER:           Maarten Bosma
  *
  */

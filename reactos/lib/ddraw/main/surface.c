@@ -3,7 +3,7 @@
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS
  * FILE:                 lib/ddraw/main/surface.c
- * PURPOSE:              DirectDraw Implementation 
+ * PURPOSE:              IDirectDrawSurface7 Implementation 
  * PROGRAMMER:           Magnus Olsen, Maarten Bosma
  *
  */
@@ -113,6 +113,13 @@ ULONG WINAPI Main_DDrawSurface_Release(LPDIRECTDRAWSURFACE7 iface)
 
 /**** Stubs ****/
 
+HRESULT WINAPI
+Main_DDrawSurface_QueryInterface(LPDIRECTDRAWSURFACE7 iface, REFIID riid,
+				      LPVOID* ppObj)
+{
+    DX_STUB;
+}
+
 HRESULT WINAPI Main_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rdst,
 			  LPDIRECTDRAWSURFACE7 src, LPRECT rsrc, DWORD dwFlags, LPDDBLTFX lpbltfx)
 {
@@ -126,13 +133,6 @@ HRESULT WINAPI Main_DDrawSurface_Lock (LPDIRECTDRAWSURFACE7 iface, LPRECT prect,
 }
 
 HRESULT WINAPI Main_DDrawSurface_Unlock (LPDIRECTDRAWSURFACE7 iface, LPRECT pRect)
-{
-    DX_STUB;
-}
-
-HRESULT WINAPI
-Main_DDrawSurface_QueryInterface(LPDIRECTDRAWSURFACE7 iface, REFIID riid,
-				      LPVOID* ppObj)
 {
     DX_STUB;
 }
@@ -421,7 +421,7 @@ HRESULT WINAPI Main_DDrawSurface_UpdateOverlayZOrder (LPDIRECTDRAWSURFACE7 iface
     DX_STUB;
 }
 
-IDirectDrawSurface7Vtbl DirectDrawSurface_Vtable =
+IDirectDrawSurface7Vtbl DirectDrawSurface7_Vtable =
 {
     Main_DDrawSurface_QueryInterface,
     Main_DDrawSurface_AddRef,

@@ -3,7 +3,7 @@
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS
  * FILE:                 lib/ddraw/main/color.c
- * PURPOSE:              DirectDraw Implementation 
+ * PURPOSE:              IDirectDrawColorControl Implementation 
  * PROGRAMMER:           Maarten Bosma
  *
  */
