@@ -1116,11 +1116,12 @@ IntWriteConsole(HANDLE hConsoleOutput,
   }
 
   CsrRequest = MAKE_CSR_API(WRITE_CONSOLE, CSR_CONSOLE);
-  Request->Data.WriteConsoleRequest.ConsoleHandle = hConsoleOutput;
-  Request->Data.WriteConsoleRequest.Unicode = bUnicode;
 
   while(nNumberOfCharsToWrite > 0)
   {
+    Request->Data.WriteConsoleRequest.ConsoleHandle = hConsoleOutput;
+    Request->Data.WriteConsoleRequest.Unicode = bUnicode;
+
     nChars = min(nNumberOfCharsToWrite, CSRSS_MAX_WRITE_CONSOLE / CharSize);
     Request->Data.WriteConsoleRequest.NrCharactersToWrite = nChars;
 
@@ -1224,6 +1225,7 @@ IntReadConsole(HANDLE hConsoleInput,
   }
 
   Request->Status = STATUS_SUCCESS;
+  CsrRequest = MAKE_CSR_API(READ_CONSOLE, CSR_CONSOLE);
 
   do
   {
@@ -1237,7 +1239,6 @@ IntReadConsole(HANDLE hConsoleInput,
       }
     }
 
-    CsrRequest = MAKE_CSR_API(READ_CONSOLE, CSR_CONSOLE);
     Request->Data.ReadConsoleRequest.ConsoleHandle = hConsoleInput;
     Request->Data.ReadConsoleRequest.Unicode = bUnicode;
     Request->Data.ReadConsoleRequest.NrCharactersToRead = min(nNumberOfCharsToRead, CSRSS_MAX_READ_CONSOLE / CharSize);
@@ -1659,12 +1660,11 @@ IntReadConsoleInput(HANDLE hConsoleInput,
   NTSTATUS Status;
 
   CsrRequest = MAKE_CSR_API(READ_INPUT, CSR_CONSOLE);
-  Request.Data.ReadInputRequest.ConsoleHandle = hConsoleInput;
-  Request.Data.ReadInputRequest.Unicode = bUnicode;
-
   Read = 0;
   while(nLength > 0)
   {
+    Request.Data.ReadInputRequest.ConsoleHandle = hConsoleInput;
+    Request.Data.ReadInputRequest.Unicode = bUnicode;
     Status = CsrClientCallServer(&Request, NULL,
                                  CsrRequest,
                                  sizeof(CSR_API_MESSAGE));
@@ -2114,14 +2114,14 @@ IntReadConsoleOutputCharacter(HANDLE hConsoleOutput,
   }
 
   CsrRequest = MAKE_CSR_API(READ_CONSOLE_OUTPUT_CHAR, CSR_CONSOLE);
-  Request->Data.ReadConsoleOutputCharRequest.ConsoleHandle = hConsoleOutput;
-  Request->Data.ReadConsoleOutputCharRequest.Unicode = bUnicode;
   Request->Data.ReadConsoleOutputCharRequest.ReadCoord = dwReadCoord;
 
   while(nLength > 0)
   {
     DWORD BytesRead;
 
+    Request->Data.ReadConsoleOutputCharRequest.ConsoleHandle = hConsoleOutput;
+    Request->Data.ReadConsoleOutputCharRequest.Unicode = bUnicode;
     Request->Data.ReadConsoleOutputCharRequest.NumCharsToRead = min(nLength, nChars);
     SizeBytes = Request->Data.ReadConsoleOutputCharRequest.NumCharsToRead * CharSize;
 
@@ -2238,11 +2238,12 @@ ReadConsoleOutputAttribute(
   }
 
   CsrRequest = MAKE_CSR_API(READ_CONSOLE_OUTPUT_ATTRIB, CSR_CONSOLE);
-  Request->Data.ReadConsoleOutputAttribRequest.ConsoleHandle = hConsoleOutput;
-  Request->Data.ReadConsoleOutputAttribRequest.ReadCoord = dwReadCoord;
 
   while (nLength != 0)
     {
+      Request->Data.ReadConsoleOutputAttribRequest.ConsoleHandle = hConsoleOutput;
+      Request->Data.ReadConsoleOutputAttribRequest.ReadCoord = dwReadCoord;
+
       if (nLength > CSRSS_MAX_READ_CONSOLE_OUTPUT_ATTRIB / sizeof(WORD))
 	Size = CSRSS_MAX_READ_CONSOLE_OUTPUT_ATTRIB / sizeof(WCHAR);
       else
@@ -2303,14 +2304,14 @@ IntWriteConsoleOutputCharacter(HANDLE hConsoleOutput,
   }
 
   CsrRequest = MAKE_CSR_API(WRITE_CONSOLE_OUTPUT_CHAR, CSR_CONSOLE);
-  Request->Data.WriteConsoleOutputCharRequest.ConsoleHandle = hConsoleOutput;
-  Request->Data.WriteConsoleOutputCharRequest.Unicode = bUnicode;
   Request->Data.WriteConsoleOutputCharRequest.Coord = dwWriteCoord;
 
   while(nLength > 0)
   {
     DWORD BytesWrite;
 
+    Request->Data.WriteConsoleOutputCharRequest.ConsoleHandle = hConsoleOutput;
+    Request->Data.WriteConsoleOutputCharRequest.Unicode = bUnicode;
     Request->Data.WriteConsoleOutputCharRequest.Length = min(nLength, nChars);
     BytesWrite = Request->Data.WriteConsoleOutputCharRequest.Length * CharSize;
 
@@ -2419,13 +2420,14 @@ WriteConsoleOutputAttribute(
    }
 
    CsrRequest = MAKE_CSR_API(WRITE_CONSOLE_OUTPUT_ATTRIB, CSR_CONSOLE);
-   Request->Data.WriteConsoleOutputAttribRequest.ConsoleHandle = hConsoleOutput;
    Request->Data.WriteConsoleOutputAttribRequest.Coord = dwWriteCoord;
+
    if( lpNumberOfAttrsWritten )
       *lpNumberOfAttrsWritten = nLength;
    while( nLength )
       {
 	 Size = min(nLength, CSRSS_MAX_WRITE_CONSOLE_OUTPUT_ATTRIB / sizeof(WORD));
+         Request->Data.WriteConsoleOutputAttribRequest.ConsoleHandle = hConsoleOutput;
 	 Request->Data.WriteConsoleOutputAttribRequest.Length = Size;
          memcpy(Request->Data.WriteConsoleOutputAttribRequest.Attribute, lpAttribute, Size * sizeof(WORD));
 
