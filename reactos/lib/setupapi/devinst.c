@@ -1943,13 +1943,23 @@ BOOL WINAPI SetupDiEnumDeviceInterfaces(
     return ret;
 }
 
+static VOID ReferenceInfFile(struct InfFileDetails* infFile)
+{
+    InterlockedIncrement(&infFile->References);
+}
+
+static VOID DereferenceInfFile(struct InfFileDetails* infFile)
+{
+    if (InterlockedDecrement(&infFile->References) == 0)
+    {
+        SetupCloseInfFile(infFile->hInf);
+        HeapFree(GetProcessHeap(), 0, infFile);
+    }
+}
+
 static BOOL DestroyDriverInfoElement(struct DriverInfoElement* driverInfo)
 {
-    if (InterlockedDecrement(&driverInfo->InfFileDetails->References) == 0)
-    {
-        SetupCloseInfFile(driverInfo->InfFileDetails->hInf);
-        HeapFree(GetProcessHeap(), 0, driverInfo->InfFileDetails);
-    }
+    DereferenceInfFile(driverInfo->InfFileDetails);
     HeapFree(GetProcessHeap(), 0, driverInfo->MatchingId);
     HeapFree(GetProcessHeap(), 0, driverInfo);
     return TRUE;
@@ -3972,7 +3982,7 @@ AddDriverToList(
         driverInfo->Info.ProviderName[0] = '\0';
     driverInfo->Info.DriverDate = DriverDate;
     driverInfo->Info.DriverVersion = DriverVersion;
-    InterlockedIncrement(&InfFileDetails->References);
+    ReferenceInfFile(InfFileDetails);
     driverInfo->InfFileDetails = InfFileDetails;
 
     /* Insert current driver in driver list, according to its rank */
@@ -4271,6 +4281,7 @@ SetupDiBuildDriverInfoList(
                 memset(currentInfFileDetails, 0, sizeof(struct InfFileDetails));
 
                 currentInfFileDetails->hInf = SetupOpenInfFileW(filename, NULL, INF_STYLE_WIN4, NULL);
+                ReferenceInfFile(currentInfFileDetails);
                 if (currentInfFileDetails->hInf == INVALID_HANDLE_VALUE)
                 {
                     HeapFree(GetProcessHeap(), 0, currentInfFileDetails);
@@ -4456,12 +4467,8 @@ next:
                 HeapFree(GetProcessHeap(), 0, ProviderName);
                 ProviderName = NULL;
 
-                if (currentInfFileDetails->References == 0)
-                {
-                    SetupCloseInfFile(currentInfFileDetails->hInf);
-                    HeapFree(GetProcessHeap(), 0, currentInfFileDetails);
-                    currentInfFileDetails = NULL;
-                }
+                DereferenceInfFile(currentInfFileDetails);
+                currentInfFileDetails = NULL;
             }
             ret = TRUE;
         }
@@ -4487,11 +4494,8 @@ done:
     HeapFree(GetProcessHeap(), 0, ManufacturerName);
     HeapFree(GetProcessHeap(), 0, HardwareIDs);
     HeapFree(GetProcessHeap(), 0, CompatibleIDs);
-    if (currentInfFileDetails && currentInfFileDetails->References == 0)
-    {
-        SetupCloseInfFile(currentInfFileDetails->hInf);
-        HeapFree(GetProcessHeap(), 0, currentInfFileDetails);
-    }
+    if (currentInfFileDetails)
+        DereferenceInfFile(currentInfFileDetails);
     HeapFree(GetProcessHeap(), 0, Buffer);
 
     TRACE("Returning %d\n", ret);
