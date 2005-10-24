@@ -129,7 +129,7 @@ Value:
 	None.
 
 Elements:
-	bootstrap, component, define, dependency, directory, file, if, importlibrary, include, invoke, library, property.
+	bootstrap, component, define, dependency, directory, file, if, importlibrary, include, invoke, library, linkerscript, property.
 
 
 Module types
@@ -461,6 +461,23 @@ Attributes:
 
 Value:
 	Name of the module to link with.
+
+Elements:
+	None.
+
+
+Linkerscript
+------------
+A linkerscript element specifies the filename of a binutils linker script.
+
+Syntax:
+	<linkerscript base="mymodule">MyLinkerScript</linkerscript>
+
+Attributes:
+	base - Module which the value of this element is relative to. This attribute is optional. If left out, the linker script is relative to the position of the top-level xml build file.
+
+Value:
+	Relative linker script filename.
 
 Elements:
 	None.

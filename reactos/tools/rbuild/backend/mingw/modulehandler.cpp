@@ -1417,12 +1417,18 @@ MingwModuleHandler::GenerateLinkerCommand (
 {
 	string target ( GetTargetMacro ( module ) );
 	string target_folder ( GetDirectory ( GetTargetFilename ( module, NULL ) ) );
-	string def_file = GetDefinitionFilename ();
+	string definitionFilename = GetDefinitionFilename ();
+
+	string linkerScriptArgument;
+	if ( module.linkerScript != NULL )
+		linkerScriptArgument = ssprintf ( "-Wl,-T,%s", module.linkerScript->directory.c_str () );
+	else
+		linkerScriptArgument = "";
 
 	fprintf ( fMakefile,
 		"%s: %s %s $(RSYM_TARGET) $(PEFIXUP_TARGET) | %s\n",
 		target.c_str (),
-		def_file.c_str (),
+		definitionFilename.c_str (),
 		dependencies.c_str (),
 		target_folder.c_str () );
 	fprintf ( fMakefile, "\t$(ECHO_LD)\n" );
@@ -1432,19 +1438,20 @@ MingwModuleHandler::GenerateLinkerCommand (
 	{
 		string temp_exp = ros_temp + module.name + ".temp.exp";
 		CLEAN_FILE ( temp_exp );
-	
+		
 		string killAt = module.mangledSymbols ? "" : "--kill-at";
 		fprintf ( fMakefile,
 		          "\t${dlltool} --dllname %s --def %s --output-exp %s %s\n",
 		          targetName.c_str (),
-		          def_file.c_str (),
+		          definitionFilename.c_str (),
 		          temp_exp.c_str (),
 		          killAt.c_str () );
 	
 		fprintf ( fMakefile,
-		          "\t%s %s %s -o %s %s %s %s\n",
+		          "\t%s %s %s -o %s %s %s %s %s\n",
 		          linker.c_str (),
 		          linkerParameters.c_str (),
+		          linkerScriptArgument.c_str (),
 		          temp_exp.c_str (),
 		          target.c_str (),
 		          objectsMacro.c_str (),
@@ -1463,9 +1470,10 @@ MingwModuleHandler::GenerateLinkerCommand (
 	else
 	{
 		fprintf ( fMakefile,
-		          "\t%s %s -o %s %s %s %s\n",
+		          "\t%s %s -o %s %s %s %s %s\n",
 		          linker.c_str (),
 		          linkerParameters.c_str (),
+		          linkerScriptArgument.c_str (),
 		          target.c_str (),
 		          objectsMacro.c_str (),
 		          libsMacro.c_str (),

@@ -73,6 +73,7 @@ class ImportLibrary;
 class If;
 class CompilerFlag;
 class LinkerFlag;
+class LinkerScript;
 class Property;
 class TestSupportCode;
 class WineResource;
@@ -230,6 +231,7 @@ public:
 	std::vector<CompilerFlag*> compilerFlags;
 	std::vector<LinkerFlag*> linkerFlags;
 	std::vector<StubbedComponent*> stubbedComponents;
+	LinkerScript* linkerScript;
 	PchFile* pch;
 	bool cplusplus;
 	std::string prefix;
@@ -473,6 +475,24 @@ public:
 	void ProcessXML();
 private:
 	void Initialize();
+};
+
+
+class LinkerScript
+{
+public:
+	const Project& project;
+	const Module* module;
+	const XMLElement& node;
+	const Module* baseModule;
+	std::string directory;
+	std::string basePath;
+
+	LinkerScript ( const Project& project,
+	               const Module* module,
+	               const XMLElement& node );
+	~LinkerScript ();
+	void ProcessXML();
 };
 
 

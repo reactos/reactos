@@ -211,6 +211,7 @@ Module::Module ( const Project& project,
 	  node (moduleNode),
 	  importLibrary (NULL),
 	  bootstrap (NULL),
+	  linkerScript (NULL),
 	  pch (NULL),
 	  cplusplus (false),
 	  host (HostDefault)
@@ -372,6 +373,8 @@ Module::~Module ()
 		delete linkerFlags[i];
 	for ( i = 0; i < stubbedComponents.size(); i++ )
 		delete stubbedComponents[i];
+	if ( linkerScript )
+		delete linkerScript;
 	if ( pch )
 		delete pch;
 }
@@ -409,6 +412,8 @@ Module::ProcessXML()
 	for ( i = 0; i < stubbedComponents.size(); i++ )
 		stubbedComponents[i]->ProcessXML();
 	non_if_data.ProcessXML();
+	if ( linkerScript )
+		linkerScript->ProcessXML();
 	if ( pch )
 		pch->ProcessXML();
 }
@@ -554,6 +559,15 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	else if ( e.name == "linkerflag" )
 	{
 		linkerFlags.push_back ( new LinkerFlag ( project, this, e ) );
+		subs_invalid = true;
+	}
+	else if ( e.name == "linkerscript" )
+	{
+		if ( linkerScript )
+			throw InvalidBuildFileException (
+				e.location,
+				"Only one <linkerscript> is valid per module" );
+		linkerScript = new LinkerScript ( project, this, e );
 		subs_invalid = true;
 	}
 	else if ( e.name == "component" )

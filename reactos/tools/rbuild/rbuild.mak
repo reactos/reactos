@@ -163,6 +163,7 @@ RBUILD_COMMON_SOURCES = \
 		include.cpp \
 		installfile.cpp \
 		linkerflag.cpp \
+		linkerscript.cpp \
 		module.cpp \
 		project.cpp \
 		ssprintf.cpp \
@@ -296,6 +297,10 @@ $(RBUILD_INT_)installfile.o: $(RBUILD_BASE_)installfile.cpp $(RBUILD_HEADERS) | 
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)linkerflag.o: $(RBUILD_BASE_)linkerflag.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_INT_)linkerscript.o: $(RBUILD_BASE_)linkerscript.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
 	$(ECHO_CC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
