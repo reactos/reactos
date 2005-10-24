@@ -2997,19 +2997,23 @@ GetFunctionPointer(
         goto cleanup;
     }
 
-    /* W->A conversion for function name */
-    FunctionNameA = UnicodeToMultiByte(Comma + 1, CP_ACP);
-    if (!FunctionNameA)
-    {
-        rc = GetLastError();
-        goto cleanup;
-    }
-
     /* Load library */
     *Comma = '\0';
     hModule = LoadLibraryW(InstallerName);
     *Comma = ',';
     if (!hModule)
+    {
+        rc = GetLastError();
+        goto cleanup;
+    }
+
+    /* Skip comma spaces */
+    while (*Comma == ',' || isspaceW(*Comma))
+        Comma++;
+
+    /* W->A conversion for function name */
+    FunctionNameA = UnicodeToMultiByte(Comma, CP_ACP);
+    if (!FunctionNameA)
     {
         rc = GetLastError();
         goto cleanup;
@@ -3141,7 +3145,39 @@ BOOL WINAPI SetupDiCallClassInstaller(
 
             if (CanHandle & DEVICE_COINSTALLER)
             {
-                FIXME("Doesn't use Device co-installers at the moment\n");
+                hKey = SetupDiOpenDevRegKey(DeviceInfoSet, DeviceInfoData, DICS_FLAG_GLOBAL, 0, DIREG_DRV, KEY_QUERY_VALUE);
+                if (hKey != INVALID_HANDLE_VALUE)
+                {
+                    rc = RegQueryValueExW(hKey, L"CoInstallers32", NULL, &dwRegType, NULL, &dwLength);
+                    if (rc == ERROR_SUCCESS && dwRegType == REG_MULTI_SZ)
+                    {
+                        LPWSTR KeyBuffer = HeapAlloc(GetProcessHeap(), 0, dwLength);
+                        if (KeyBuffer != NULL)
+                        {
+                            rc = RegQueryValueExW(hKey, L"CoInstallers32", NULL, NULL, (LPBYTE)KeyBuffer, &dwLength);
+                            if (rc == ERROR_SUCCESS)
+                            {
+                                LPWSTR ptr;
+                                for (ptr = KeyBuffer; *ptr; ptr += strlenW(ptr) + 1)
+                                {
+                                    /* Add coinstaller to DeviceCoInstallersListHead list */
+                                    struct CoInstallerElement *coinstaller;
+                                    TRACE("Got device coinstaller '%s'\n", debugstr_w(ptr));
+                                    coinstaller = HeapAlloc(GetProcessHeap(), 0, sizeof(struct CoInstallerElement));
+                                    if (!coinstaller)
+                                        continue;
+                                    memset(coinstaller, 0, sizeof(struct CoInstallerElement));
+                                    if (GetFunctionPointer(ptr, &coinstaller->Module, (PVOID*)&coinstaller->Function) == ERROR_SUCCESS)
+                                        InsertTailList(&DeviceCoInstallersListHead, &coinstaller->ListEntry);
+                                    else
+                                        HeapFree(GetProcessHeap(), 0, coinstaller);
+                                }
+                            }
+                            HeapFree(GetProcessHeap(), 0, KeyBuffer);
+                        }
+                    }
+                    RegCloseKey(hKey);
+                }
             }
             if (CanHandle & CLASS_COINSTALLER)
             {
@@ -3157,7 +3193,7 @@ BOOL WINAPI SetupDiCallClassInstaller(
                     if (UuidToStringW((UUID*)&DeviceInfoData->ClassGuid, &lpGuidString) == RPC_S_OK)
                     {
                         rc = RegQueryValueExW(hKey, lpGuidString, NULL, &dwRegType, NULL, &dwLength);
-                        if (rc == ERROR_SUCCESS && dwRegType == REG_SZ)
+                        if (rc == ERROR_SUCCESS && dwRegType == REG_MULTI_SZ)
                         {
                             LPWSTR KeyBuffer = HeapAlloc(GetProcessHeap(), 0, dwLength);
                             if (KeyBuffer != NULL)
@@ -3165,11 +3201,20 @@ BOOL WINAPI SetupDiCallClassInstaller(
                                 rc = RegQueryValueExW(hKey, lpGuidString, NULL, NULL, (LPBYTE)KeyBuffer, &dwLength);
                                 if (rc == ERROR_SUCCESS)
                                 {
-                                    LPCWSTR ptr;
+                                    LPWSTR ptr;
                                     for (ptr = KeyBuffer; *ptr; ptr += strlenW(ptr) + 1)
                                     {
                                         /* Add coinstaller to ClassCoInstallersListHead list */
-                                        FIXME("Class coinstaller is '%S'. UNIMPLEMENTED!\n", ptr);
+                                        struct CoInstallerElement *coinstaller;
+                                        TRACE("Got class coinstaller '%s'\n", debugstr_w(ptr));
+                                        coinstaller = HeapAlloc(GetProcessHeap(), 0, sizeof(struct CoInstallerElement));
+                                        if (!coinstaller)
+                                            continue;
+                                        memset(coinstaller, 0, sizeof(struct CoInstallerElement));
+                                        if (GetFunctionPointer(ptr, &coinstaller->Module, (PVOID*)&coinstaller->Function) == ERROR_SUCCESS)
+                                            InsertTailList(&ClassCoInstallersListHead, &coinstaller->ListEntry);
+                                        else
+                                            HeapFree(GetProcessHeap(), 0, coinstaller);
                                     }
                                 }
                                 HeapFree(GetProcessHeap(), 0, KeyBuffer);
@@ -3195,6 +3240,7 @@ BOOL WINAPI SetupDiCallClassInstaller(
                             if (rc == ERROR_SUCCESS)
                             {
                                 /* Get ClassInstaller function pointer */
+                                TRACE("Got class installer '%s'\n", debugstr_w(KeyBuffer));
                                 if (GetFunctionPointer(KeyBuffer, &ClassInstallerLibrary, (PVOID*)&ClassInstaller) != ERROR_SUCCESS)
                                 {
                                     InstallParams.FlagsEx |= DI_FLAGSEX_CI_FAILED;
@@ -5337,13 +5383,13 @@ SetupDiInstallDriverFiles(
         InstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS_W);
         ret = SetupDiGetDeviceInstallParamsW(DeviceInfoSet, DeviceInfoData, &InstallParams);
         if (!ret)
-            goto cleanup;
+            goto done;
 
         SelectedDriver = (struct DriverInfoElement *)InstallParams.Reserved;
         if (!SelectedDriver)
         {
             SetLastError(ERROR_NO_DRIVER_SELECTED);
-            goto cleanup;
+            goto done;
         }
 
         ret = SetupDiGetActualSectionToInstallW(
@@ -5351,34 +5397,22 @@ SetupDiInstallDriverFiles(
             SelectedDriver->Details.SectionName,
             SectionName, MAX_PATH, &SectionNameLength, NULL);
         if (!ret)
-            goto cleanup;
+            goto done;
 
-        if (InstallParams.InstallMsgHandler)
+        if (!InstallParams.InstallMsgHandler)
         {
-            ret = SetupInstallFromInfSectionW(InstallParams.hwndParent,
-                SelectedDriver->InfFileDetails->hInf, SectionName,
-                SPINST_FILES, NULL, NULL, SP_COPY_NEWER,
-                InstallParams.InstallMsgHandler, InstallParams.InstallMsgHandlerContext,
-                DeviceInfoSet, DeviceInfoData);
+            InstallParams.InstallMsgHandler = SetupDefaultQueueCallbackW;
+            InstallParams.InstallMsgHandlerContext = SetupInitDefaultQueueCallback(InstallParams.hwndParent);
+            SetupDiSetDeviceInstallParamsW(DeviceInfoSet, DeviceInfoData, &InstallParams);
         }
-        else
-        {
-            PVOID callback_context = SetupInitDefaultQueueCallback(InstallParams.hwndParent);
-            ret = SetupInstallFromInfSectionW(InstallParams.hwndParent,
-                SelectedDriver->InfFileDetails->hInf, SectionName,
-                SPINST_FILES, NULL, NULL, SP_COPY_NEWER,
-                SetupDefaultQueueCallbackW, callback_context,
-                DeviceInfoSet, DeviceInfoData);
-                SetupTermDefaultQueueCallback(callback_context);
-        }
-cleanup:
-        if (ret)
-        {
-            InstallParams.Flags |= DI_NOFILECOPY;
-            ret = SetupDiSetDeviceInstallParamsW(DeviceInfoSet, DeviceInfoData, &InstallParams);
-        }
+        ret = SetupInstallFromInfSectionW(InstallParams.hwndParent,
+            SelectedDriver->InfFileDetails->hInf, SectionName,
+            SPINST_FILES, NULL, NULL, SP_COPY_NEWER,
+            InstallParams.InstallMsgHandler, InstallParams.InstallMsgHandlerContext,
+            DeviceInfoSet, DeviceInfoData);
     }
 
+done:
     TRACE("Returning %d\n", ret);
     return ret;
 }
@@ -5391,12 +5425,91 @@ SetupDiRegisterCoDeviceInstallers(
     IN HDEVINFO DeviceInfoSet,
     IN PSP_DEVINFO_DATA DeviceInfoData)
 {
+    BOOL ret = FALSE; /* Return value */
+
     TRACE("%p %p\n", DeviceInfoSet, DeviceInfoData);
 
-    FIXME("SetupDiRegisterCoDeviceInstallers not implemented. Doing nothing\n");
-    //SetLastError(ERROR_GEN_FAILURE);
-    //return FALSE;
-    return TRUE;
+    if (!DeviceInfoSet)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+        SetLastError(ERROR_INVALID_HANDLE);
+    else if (!DeviceInfoData)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else
+    {
+        SP_DEVINSTALL_PARAMS_W InstallParams;
+        struct DriverInfoElement *SelectedDriver;
+        BOOL Result;
+        DWORD DoAction;
+        WCHAR SectionName[MAX_PATH];
+        DWORD SectionNameLength = 0;
+        HKEY hKey = INVALID_HANDLE_VALUE;;
+
+        InstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS_W);
+        Result = SetupDiGetDeviceInstallParamsW(DeviceInfoSet, DeviceInfoData, &InstallParams);
+        if (!Result)
+            goto cleanup;
+
+        SelectedDriver = (struct DriverInfoElement *)InstallParams.Reserved;
+        if (SelectedDriver == NULL)
+        {
+            SetLastError(ERROR_NO_DRIVER_SELECTED);
+            goto cleanup;
+        }
+
+        /* Get .CoInstallers section name */
+        Result = SetupDiGetActualSectionToInstallW(
+            SelectedDriver->InfFileDetails->hInf,
+            SelectedDriver->Details.SectionName,
+            SectionName, MAX_PATH, &SectionNameLength, NULL);
+        if (!Result || SectionNameLength > MAX_PATH - wcslen(L".CoInstallers") - 1)
+            goto cleanup;
+        wcscat(SectionName, L".CoInstallers");
+
+        /* Open/Create driver key information */
+#if _WIN32_WINNT >= 0x502
+        hKey = SetupDiOpenDevRegKey(DeviceInfoSet, DeviceInfoData, DICS_FLAG_GLOBAL, 0, DIREG_DRV, KEY_READ | KEY_WRITE);
+#else
+        hKey = SetupDiOpenDevRegKey(DeviceInfoSet, DeviceInfoData, DICS_FLAG_GLOBAL, 0, DIREG_DRV, KEY_ALL_ACCESS);
+#endif
+        if (hKey == INVALID_HANDLE_VALUE && GetLastError() == ERROR_FILE_NOT_FOUND)
+            hKey = SetupDiCreateDevRegKeyW(DeviceInfoSet, DeviceInfoData, DICS_FLAG_GLOBAL, 0, DIREG_DRV, NULL, NULL);
+        if (hKey == INVALID_HANDLE_VALUE)
+            goto cleanup;
+
+        /* Install .CoInstallers section */
+        DoAction = SPINST_REGISTRY;
+        if (!(InstallParams.Flags & DI_NOFILECOPY))
+        {
+            DoAction |= SPINST_FILES;
+            if (!InstallParams.InstallMsgHandler)
+            {
+                InstallParams.InstallMsgHandler = SetupDefaultQueueCallbackW;
+                InstallParams.InstallMsgHandlerContext = SetupInitDefaultQueueCallback(InstallParams.hwndParent);
+                SetupDiSetDeviceInstallParamsW(DeviceInfoSet, DeviceInfoData, &InstallParams);
+            }
+        }
+        Result = SetupInstallFromInfSectionW(InstallParams.hwndParent,
+            SelectedDriver->InfFileDetails->hInf, SectionName,
+            DoAction, hKey, NULL, SP_COPY_NEWER,
+            InstallParams.InstallMsgHandler, InstallParams.InstallMsgHandlerContext,
+            DeviceInfoSet, DeviceInfoData);
+        if (!Result)
+            goto cleanup;
+
+        ret = TRUE;
+
+cleanup:
+        if (hKey != INVALID_HANDLE_VALUE)
+            RegCloseKey(hKey);
+    }
+
+    TRACE("Returning %d\n", ret);
+    return ret;
 }
 
 /***********************************************************************
@@ -5525,9 +5638,15 @@ SetupDiInstallDevice(
     /* Install main section */
     DoAction = SPINST_REGISTRY;
     if (!(InstallParams.Flags & DI_NOFILECOPY))
+    {
         DoAction |= SPINST_FILES;
-    /* Files have already been copied in SetupDiInstallDriverFiles.
-     * Process only registry entries. */
+        if (!InstallParams.InstallMsgHandler)
+        {
+            InstallParams.InstallMsgHandler = SetupDefaultQueueCallbackW;
+            InstallParams.InstallMsgHandlerContext = SetupInitDefaultQueueCallback(InstallParams.hwndParent);
+            SetupDiSetDeviceInstallParamsW(DeviceInfoSet, DeviceInfoData, &InstallParams);
+        }
+    }
     *pSectionName = '\0';
     Result = SetupInstallFromInfSectionW(InstallParams.hwndParent,
         SelectedDriver->InfFileDetails->hInf, SectionName,
@@ -5538,10 +5657,11 @@ SetupDiInstallDevice(
         goto cleanup;
     if (!(InstallParams.Flags & DI_NOFILECOPY) && !(InstallParams.Flags & DI_NOVCP))
     {
-        Result = SetupCommitFileQueueW(InstallParams.hwndParent,
-            InstallParams.FileQueue,
-            InstallParams.InstallMsgHandler,
-            InstallParams.InstallMsgHandlerContext);
+        if (Result && InstallParams.InstallMsgHandler == SetupDefaultQueueCallbackW)
+        {
+            /* Delete resources allocated by SetupInitDefaultQueueCallback */
+            SetupTermDefaultQueueCallback(InstallParams.InstallMsgHandlerContext);
+        }
     }
     InstallParams.Flags |= DI_NOFILECOPY;
     SetupDiSetDeviceInstallParamsW(DeviceInfoSet, DeviceInfoData, &InstallParams);
