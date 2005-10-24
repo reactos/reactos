@@ -184,8 +184,8 @@ MiQueryVirtualMemory (IN HANDLE ProcessHandle,
                                                  ResultLength);
                      break;
 		  case MEMORY_AREA_NO_ACCESS:
-	             Info->Type = 0;
-                     Info->State = MEM_FREE;
+	             Info->Type = MEM_PRIVATE;
+                     Info->State = MEM_RESERVE;
 	             Info->Protect = MemoryArea->Attributes;
 		     Info->AllocationProtect = MemoryArea->Attributes;
 	             Info->BaseAddress = MemoryArea->StartingAddress;
@@ -196,7 +196,7 @@ MiQueryVirtualMemory (IN HANDLE ProcessHandle,
                      *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
 	             break;
 		  case MEMORY_AREA_SHARED_DATA:
-	             Info->Type = 0;
+	             Info->Type = MEM_PRIVATE;
                      Info->State = MEM_COMMIT;
 	             Info->Protect = MemoryArea->Attributes;
 		     Info->AllocationProtect = MemoryArea->Attributes;
@@ -422,7 +422,7 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
    else
    {
       /* FIXME: Should we return failure or success in this case? */
-      Status = STATUS_SUCCESS;
+      Status = STATUS_CONFLICTING_ADDRESSES;
    }
 
    MmUnlockAddressSpace(AddressSpace);
@@ -478,6 +478,13 @@ NtProtectVirtualMemory(IN HANDLE ProcessHandle,
      {
        BaseAddress = *UnsafeBaseAddress;
        NumberOfBytesToProtect = *UnsafeNumberOfBytesToProtect;
+     }
+
+   if ((ULONG_PTR)BaseAddress + NumberOfBytesToProtect - 1 < (ULONG_PTR)BaseAddress ||
+       (ULONG_PTR)BaseAddress + NumberOfBytesToProtect - 1 >= MmUserProbeAddress)
+     {
+       /* Don't allow to change the protection of a kernel mode address */
+       return STATUS_INVALID_PARAMETER_2;
      }
 
    /* (tMk 2004.II.5) in Microsoft SDK I read:
@@ -554,15 +561,46 @@ NtReadVirtualMemory(IN HANDLE ProcessHandle,
 
    PAGED_CODE();
 
+   DPRINT("NtReadVirtualMemory(ProcessHandle %x, BaseAddress %x, "
+          "Buffer %x, NumberOfBytesToRead %d)\n",ProcessHandle,BaseAddress,
+          Buffer,NumberOfBytesToRead);
+
+   if ((ULONG_PTR)BaseAddress + NumberOfBytesToRead - 1 < (ULONG_PTR)BaseAddress ||
+       (ULONG_PTR)BaseAddress + NumberOfBytesToRead - 1 >= MmUserProbeAddress)
+     {
+       /* Don't allow to read from kernel space */
+       return STATUS_ACCESS_VIOLATION;
+     }
+
    PreviousMode = ExGetPreviousMode();
+
+   if (PreviousMode != KernelMode)
+     {
+       if ((ULONG_PTR)Buffer + NumberOfBytesToRead - 1 < (ULONG_PTR)Buffer ||
+           (ULONG_PTR)Buffer + NumberOfBytesToRead - 1 >= MmUserProbeAddress)
+         {
+           /* Don't allow to write into kernel space */
+           return STATUS_ACCESS_VIOLATION;
+         }
+     }
+
+   Status = ObReferenceObjectByHandle(ProcessHandle,
+                                      PROCESS_VM_READ,
+                                      NULL,
+                                      PreviousMode,
+                                      (PVOID*)(&Process),
+                                      NULL);
+   if (!NT_SUCCESS(Status))
+   {
+      return(Status);
+   }
+
+   CurrentProcess = PsGetCurrentProcess();
 
    if(PreviousMode != KernelMode)
    {
      _SEH_TRY
      {
-       ProbeForWrite(Buffer,
-                     NumberOfBytesToRead,
-                     1);
        if(NumberOfBytesRead != NULL)
        {
          ProbeForWriteUlong(NumberOfBytesRead);
@@ -580,22 +618,6 @@ NtReadVirtualMemory(IN HANDLE ProcessHandle,
      }
    }
 
-   DPRINT("NtReadVirtualMemory(ProcessHandle %x, BaseAddress %x, "
-          "Buffer %x, NumberOfBytesToRead %d)\n",ProcessHandle,BaseAddress,
-          Buffer,NumberOfBytesToRead);
-
-   Status = ObReferenceObjectByHandle(ProcessHandle,
-                                      PROCESS_VM_READ,
-                                      NULL,
-                                      PreviousMode,
-                                      (PVOID*)(&Process),
-                                      NULL);
-   if (!NT_SUCCESS(Status))
-   {
-      return(Status);
-   }
-
-   CurrentProcess = PsGetCurrentProcess();
 
    if (Process == CurrentProcess)
    {
@@ -639,7 +661,6 @@ NtReadVirtualMemory(IN HANDLE ProcessHandle,
 
           Status = STATUS_SUCCESS;
           _SEH_TRY {
-              ProbeForRead(BaseAddress, NumberOfBytesToRead, 1);
               Status = STATUS_PARTIAL_COPY;
               RtlCopyMemory(SystemAddress, BaseAddress, NumberOfBytesToRead);
               Status = STATUS_SUCCESS;
@@ -750,9 +771,6 @@ NtWriteVirtualMemory(IN HANDLE ProcessHandle,
    PMDL Mdl;
    PVOID SystemAddress;
    PEPROCESS Process;
-   ULONG OldProtection = 0;
-   PVOID ProtectBaseAddress;
-   ULONG ProtectNumberOfBytes;
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS CopyStatus, Status = STATUS_SUCCESS;
 
@@ -760,24 +778,40 @@ NtWriteVirtualMemory(IN HANDLE ProcessHandle,
           "Buffer %x, NumberOfBytesToWrite %d)\n",ProcessHandle,BaseAddress,
           Buffer,NumberOfBytesToWrite);
 
+   if ((ULONG_PTR)BaseAddress + NumberOfBytesToWrite - 1 < (ULONG_PTR)BaseAddress ||
+       (ULONG_PTR)BaseAddress + NumberOfBytesToWrite - 1 >= MmUserProbeAddress)
+     {
+       /* Don't allow to write into kernel space */
+       return STATUS_ACCESS_VIOLATION;
+     }
+
    PreviousMode = ExGetPreviousMode();
    
-   if (PreviousMode != KernelMode && NumberOfBytesWritten != NULL)
+   if (PreviousMode != KernelMode)
      {
-       _SEH_TRY
+       if ((ULONG_PTR)Buffer + NumberOfBytesToWrite - 1 < (ULONG_PTR)Buffer ||
+           (ULONG_PTR)Buffer + NumberOfBytesToWrite - 1 >= MmUserProbeAddress)
          {
-           ProbeForWriteUlong(NumberOfBytesWritten);
+           /* Don't allow to read from kernel space */
+           return STATUS_ACCESS_VIOLATION;
          }
-       _SEH_HANDLE
+       if (NumberOfBytesWritten != NULL)
          {
-           Status = _SEH_GetExceptionCode();
-         }
-       _SEH_END;
+           _SEH_TRY
+             {
+               ProbeForWriteUlong(NumberOfBytesWritten);
+             }
+           _SEH_HANDLE
+             {
+               Status = _SEH_GetExceptionCode();
+             }
+           _SEH_END;
        
-       if (!NT_SUCCESS(Status))
-         {
-           return Status;
-         }
+           if (!NT_SUCCESS(Status))
+             {
+               return Status;
+             }
+          }
      }
 
    Status = ObReferenceObjectByHandle(ProcessHandle,
@@ -791,35 +825,14 @@ NtWriteVirtualMemory(IN HANDLE ProcessHandle,
       return(Status);
    }
 
-   /* We have to make sure the target memory is writable.
-    *
-    * I am not sure if it is correct to do this in any case, but it has to be
-    * done at least in some cases because you can use WriteProcessMemory to
-    * write into the .text section of a module where memcpy() would crash.
-    *  -blight (2005/01/09)
-    */
-   ProtectBaseAddress = BaseAddress;
-   ProtectNumberOfBytes = NumberOfBytesToWrite;
-   
    CopyStatus = STATUS_SUCCESS;
 
    /* Write memory */
    if (Process == PsGetCurrentProcess())
    {
-      Status = MiProtectVirtualMemory(Process,
-                                      &ProtectBaseAddress,
-                                      &ProtectNumberOfBytes,
-                                      PAGE_READWRITE,
-                                      &OldProtection);
-      if (!NT_SUCCESS(Status))
-      {
-         ObDereferenceObject(Process);
-         return Status;
-      }
-
       if (PreviousMode != KernelMode)
         {
-          _SEH_TRY
+	  _SEH_TRY
             {
               memcpy(BaseAddress, Buffer, NumberOfBytesToWrite);
             }
@@ -841,51 +854,48 @@ NtWriteVirtualMemory(IN HANDLE ProcessHandle,
                         Buffer,
                         NumberOfBytesToWrite);
       if(Mdl == NULL)
-      {
-         ObDereferenceObject(Process);
-         return(STATUS_NO_MEMORY);
-      }
-
-      /* Make the target area writable. */
-      Status = MiProtectVirtualMemory(Process,
-                                      &ProtectBaseAddress,
-                                      &ProtectNumberOfBytes,
-                                      PAGE_READWRITE,
-                                      &OldProtection);
-      if (!NT_SUCCESS(Status))
-      {
-         ObDereferenceObject(Process);
-         ExFreePool(Mdl);
-         return Status;
-      }
-
-      /* Map the MDL. */
-      MmProbeAndLockPages(Mdl,
-                          UserMode,
-                          IoReadAccess);
-
-      /* Copy memory from the mapped MDL into the target buffer. */
-      KeAttachProcess(&Process->Pcb);
-
-      SystemAddress = MmGetSystemAddressForMdl(Mdl);
-      if (PreviousMode != KernelMode)
         {
-          _SEH_TRY
+          ObDereferenceObject(Process);
+          return(STATUS_NO_MEMORY);
+        }
+      _SEH_TRY
+        {
+          /* Map the MDL. */
+          MmProbeAndLockPages(Mdl,
+                              UserMode,
+                              IoReadAccess);
+	}
+      _SEH_HANDLE
+        {
+	  CopyStatus = _SEH_GetExceptionCode();
+        }
+      _SEH_END;
+
+      if (NT_SUCCESS(CopyStatus))
+        {
+          /* Copy memory from the mapped MDL into the target buffer. */
+          KeAttachProcess(&Process->Pcb);
+
+          SystemAddress = MmGetSystemAddressForMdl(Mdl);
+          if (PreviousMode != KernelMode)
+            {
+              _SEH_TRY
+                {
+                  memcpy(BaseAddress, SystemAddress, NumberOfBytesToWrite);
+                }
+              _SEH_HANDLE
+                {
+                  CopyStatus = _SEH_GetExceptionCode();
+                }
+              _SEH_END;
+            }
+          else
             {
               memcpy(BaseAddress, SystemAddress, NumberOfBytesToWrite);
             }
-          _SEH_HANDLE
-            {
-              CopyStatus = _SEH_GetExceptionCode();
-            }
-          _SEH_END;
-        }
-      else
-        {
-          memcpy(BaseAddress, SystemAddress, NumberOfBytesToWrite);
-        }
 
-      KeDetachProcess();
+          KeDetachProcess();
+	}
 
       /* Free the MDL. */
       if (Mdl->MappedSystemVa != NULL)
@@ -895,22 +905,9 @@ NtWriteVirtualMemory(IN HANDLE ProcessHandle,
       MmUnlockPages(Mdl);
       ExFreePool(Mdl);
    }
-
-   /* Reset the protection of the target memory. */
-   Status = MiProtectVirtualMemory(Process,
-                                   &ProtectBaseAddress,
-                                   &ProtectNumberOfBytes,
-                                   OldProtection,
-                                   &OldProtection);
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT1("Failed to reset protection of the target memory! (Status 0x%x)\n", Status);
-      /* FIXME: Should we bugcheck here? */
-   }
-
    ObDereferenceObject(Process);
 
-   if (NumberOfBytesWritten != NULL)
+   if (NT_SUCCESS(CopyStatus) && NumberOfBytesWritten != NULL)
      {
        if (PreviousMode != KernelMode)
          {
@@ -1030,7 +1027,7 @@ ProbeForWrite (IN CONST VOID *Address,
       ExRaiseStatus (STATUS_DATATYPE_MISALIGNMENT);
    }
 
-   Last = (PCHAR)((ULONG_PTR)Address + Length - 1);
+   Last = (CHAR*)((ULONG_PTR)Address + Length - 1);
    if ((ULONG_PTR)Last < (ULONG_PTR)Address ||
        (ULONG_PTR)Last >= (ULONG_PTR)MmUserProbeAddress)
    {
@@ -1039,11 +1036,13 @@ ProbeForWrite (IN CONST VOID *Address,
 
    /* Check for accessible pages */
    Current = (CHAR*)Address;
-   do
+   *Current = *Current;
+   Current = (PCHAR)((ULONG_PTR)PAGE_ROUND_DOWN(Current) + PAGE_SIZE);
+   while (Current <= Last)
    {
      *Current = *Current;
      Current = (CHAR*)((ULONG_PTR)Current + PAGE_SIZE);
-   } while (Current <= Last);
+   } 
 }
 
 /* EOF */
