@@ -247,7 +247,10 @@ STDCALL
 AddAccessDeniedObjectAce(
 	PACL	pAcl,
 	DWORD	dwAceRevision,
+	DWORD	AceFlags,
 	DWORD	AccessMask,
+	GUID*   ObjectTypeGuid,
+	GUID*   InheritedObjectTypeGuid,
 	PSID	pSid)
 {
 	DPRINT1("%s() not implemented!\n", __FUNCTION__);
