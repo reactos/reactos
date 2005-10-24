@@ -1448,7 +1448,7 @@ MingwModuleHandler::GenerateLinkerCommand (
 		          killAt.c_str () );
 	
 		fprintf ( fMakefile,
-		          "\t%s %s %s -o %s %s %s %s %s\n",
+		          "\t%s %s %s %s -o %s %s %s %s\n",
 		          linker.c_str (),
 		          linkerParameters.c_str (),
 		          linkerScriptArgument.c_str (),
@@ -1470,7 +1470,7 @@ MingwModuleHandler::GenerateLinkerCommand (
 	else
 	{
 		fprintf ( fMakefile,
-		          "\t%s %s -o %s %s %s %s %s\n",
+		          "\t%s %s %s -o %s %s %s %s\n",
 		          linker.c_str (),
 		          linkerParameters.c_str (),
 		          linkerScriptArgument.c_str (),
