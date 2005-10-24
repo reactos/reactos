@@ -64,7 +64,7 @@ HRESULT WINAPI Main_DirectDrawClipper_IsClipListChanged(
    	DX_STUB;
 }
 
-static IDirectDrawClipperVtbl DirectDrawClipper_Vtable =
+IDirectDrawClipperVtbl DirectDrawClipper_Vtable =
 {
     Main_DirectDrawClipper_QueryInterface,
     Main_DirectDrawClipper_AddRef,
