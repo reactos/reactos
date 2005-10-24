@@ -44,19 +44,20 @@ typedef struct
 	DD_COLORCONTROLCALLBACKS         Color;
 
 	// D3DHAL_CALLBACKS
-	//D3DHAL_CALLBACKS                 D3dHal;
-	//D3DHAL_CALLBACKS3                D3dHal3;
-	//D3DHAL_D3DEXTENDEDCAPS           D3dHal3Ext;
+	// D3DHAL_CALLBACKS                 D3dHal;
+	// D3DHAL_CALLBACKS3                D3dHal3;
+	// D3DHAL_D3DEXTENDEDCAPS           D3dHal3Ext;
 
 	// Heap Callback
-	//DD_GETHEAPALIGNMENTDATA          HeapData;
+	DD_GETHEAPALIGNMENTDATA          HeapData;
 	
 	// Kernel Callback
-	//DD_KERNELCALLBACKS               Kernel;
-    //DDKERNELCAPS                     KernelCaps;
+	DD_KERNELCALLBACKS               Kernel;
+    DDKERNELCAPS                     KernelCaps;
 
 	// Miscellaneous Callback
 	DD_MISCELLANEOUSCALLBACKS        Misc;
+
 
     
 	// NT-based Callback 
