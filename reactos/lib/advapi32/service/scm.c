@@ -121,6 +121,7 @@ ChangeServiceConfigW(SC_HANDLE hService,
                      LPCWSTR lpPassword,
                      LPCWSTR lpDisplayName)
 {
+#if 0 /* Temporarily deactivated to fix the build (ScmrChangeServiceConfigW is missing */
     DWORD dwError;
     DWORD dwDependenciesLength = 0;
     DWORD dwLength;
@@ -168,6 +169,11 @@ ChangeServiceConfigW(SC_HANDLE hService,
     }
 
     return TRUE;
+#else
+    DPRINT1("ChangeServiceConfigW temporarily disabled\n");
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return FALSE;
+#endif
 }
 
 
