@@ -71,10 +71,12 @@ HRESULT WINAPI Main_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface, HWND hw
 	This->hdc = GetDC(hwnd);
 	This->cooperative_level = cooplevel;
 
-	if((ret = Hel_DirectDraw_SetCooperativeLevel (iface)) != DD_OK)
-		return ret;
+	
 
 	if((ret = Hal_DirectDraw_SetCooperativeLevel (iface)) != DD_OK)
+		return ret;
+
+	if((ret = Hel_DirectDraw_SetCooperativeLevel (iface)) != DD_OK)
 		return ret;
 
    	return DD_OK;
@@ -371,7 +373,7 @@ HRESULT WINAPI Main_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7 iface, DWORD d
 HRESULT WINAPI Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
 				   LPDWORD total, LPDWORD free)											   
 {
-  
+     
    	DX_STUB;
 }
 												   
