@@ -35,6 +35,7 @@ HKR, , Icon,           0, "-27"
 %*PNP0A05.DeviceDesc% = NO_DRV,*PNP0A05
 %*PNP0B00.DeviceDesc% = NO_DRV,*PNP0B00
 %*PNP0C02.DeviceDesc% = NO_DRV,*PNP0C02
+%*PNP0C0F.DeviceDesc% = NO_DRV,*PNP0C0F
 %ACPI\FixedButton.DeviceDesc% = NO_DRV,ACPI\FixedButton
 %PCI\CC_0600.DeviceDesc% = NO_DRV,PCI\CC_0600
 %PCI\CC_0601.DeviceDesc% = PCI_Inst,PCI\CC_0604
