@@ -642,9 +642,9 @@ BOOLEAN DIB_1BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 				for (DesY=DestRect->bottom-zoomY; DesY>=0; DesY-=zoomY)
 				{
 					if (DesIsBiggerY)
-						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
-					else
 						sy = (int) ((ULONG) DesSizeY * (ULONG) DesY) / ((ULONG) SrcSizeY); 
+					else
+						sy = (int) ((ULONG) SrcSizeY * (ULONG) DesY) / ((ULONG) DesSizeY);
                 				
 					if (sy > SourceRect->bottom) break;
 
@@ -652,14 +652,14 @@ BOOLEAN DIB_1BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
 
 					for (DesX=DestRect->right-zoomX; DesX>=0; DesX-=zoomX)				
 					{
-						sx = (int) ((ULONG) DesSizeX * (ULONG) DesX) / ((ULONG) SrcSizeX);                 				       	            
+						sx = (int) ((ULONG) SrcSizeX * (ULONG) DesX) / ((ULONG) DesSizeX);                 				       	            
 					
 						if (sx > SourceRect->right) break;
 					
 						color = DIB_1BPP_GetPixel(SourceSurf, sx, sy);
 						
 						for (count=DesY;count<saveY;count++)
-							DIB_1BPP_HLine(DestSurf, DesX, saveX, count, color);
+							DIB_1BPP_HLine(DestSurf, DesX, DesX + zoomX, count, color);
 					                    						
 					 }
 		          }
