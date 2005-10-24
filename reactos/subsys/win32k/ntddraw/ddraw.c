@@ -208,12 +208,19 @@ DWORD STDCALL NtGdiDdCreateSurface(
 )
 {
 	DWORD  ddRVal = DDHAL_DRIVER_NOTHANDLED;
-	
+	PDD_DIRECTDRAW_GLOBAL lgpl;
 
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
 	if (pDirectDraw == NULL) 
 		return DDHAL_DRIVER_NOTHANDLED;
 
+	/* backup the orignal PDev and info */
+	lgpl = puCreateSurfaceData->lpDD;
+
+	/* use our cache version instead */
+	puCreateSurfaceData->lpDD = &pDirectDraw->Global;
+	
+	/* make the call */
 	if (!(pDirectDraw->DD.dwFlags & DDHAL_CB32_CANCREATESURFACE))
 		ddRVal = DDHAL_DRIVER_NOTHANDLED;
 	else
@@ -221,6 +228,9 @@ DWORD STDCALL NtGdiDdCreateSurface(
 	   ddRVal = pDirectDraw->DD.CreateSurface(puCreateSurfaceData);	 
 	}
 
+	/* But back the orignal PDev */
+	puCreateSurfaceData->lpDD = lgpl;
+    
 	GDIOBJ_UnlockObjByPtr(pDirectDraw);	
 	return ddRVal;
 }
@@ -231,14 +241,26 @@ DWORD STDCALL NtGdiDdWaitForVerticalBlank(
 )
 {
 	DWORD  ddRVal;
+	PDD_DIRECTDRAW_GLOBAL lgpl;
+
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
 	if (pDirectDraw == NULL) 
 		return DDHAL_DRIVER_NOTHANDLED;
 
+	/* backup the orignal PDev and info */
+	lgpl = puWaitForVerticalBlankData->lpDD;
+
+	/* use our cache version instead */
+	puWaitForVerticalBlankData->lpDD = &pDirectDraw->Global;
+
+	/* make the call */
 	if (!(pDirectDraw->DD.dwFlags & DDHAL_CB32_WAITFORVERTICALBLANK))
 		ddRVal = DDHAL_DRIVER_NOTHANDLED;
 	else	
   	    ddRVal = pDirectDraw->DD.WaitForVerticalBlank(puWaitForVerticalBlankData);
+
+	/* But back the orignal PDev */
+	puWaitForVerticalBlankData->lpDD = lgpl;
 
     GDIOBJ_UnlockObjByPtr(pDirectDraw);
 	return ddRVal;
@@ -250,15 +272,26 @@ DWORD STDCALL NtGdiDdCanCreateSurface(
 )
 {
 	DWORD  ddRVal;
+	PDD_DIRECTDRAW_GLOBAL lgpl;
 
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
 	if (pDirectDraw == NULL) 
 		return DDHAL_DRIVER_NOTHANDLED;
 
+	/* backup the orignal PDev and info */
+	lgpl = puCanCreateSurfaceData->lpDD;
+
+	/* use our cache version instead */
+	puCanCreateSurfaceData->lpDD = &pDirectDraw->Global;
+
+	/* make the call */
 	if (!(pDirectDraw->DD.dwFlags & DDHAL_CB32_CANCREATESURFACE))
 		ddRVal = DDHAL_DRIVER_NOTHANDLED;
 	else	
 	    ddRVal = pDirectDraw->DD.CanCreateSurface(puCanCreateSurfaceData);
+
+	/* But back the orignal PDev */
+	puCanCreateSurfaceData->lpDD = lgpl;
 
 	GDIOBJ_UnlockObjByPtr(pDirectDraw);
 	return ddRVal;
@@ -270,15 +303,26 @@ DWORD STDCALL NtGdiDdGetScanLine(
 )
 {
 	DWORD  ddRVal;
+	PDD_DIRECTDRAW_GLOBAL lgpl;
 
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
 	if (pDirectDraw == NULL) 
 		return DDHAL_DRIVER_NOTHANDLED;
 
+	/* backup the orignal PDev and info */
+	lgpl = puGetScanLineData->lpDD;
+
+	/* use our cache version instead */
+	puGetScanLineData->lpDD = &pDirectDraw->Global;
+
+	/* make the call */
 	if (!(pDirectDraw->DD.dwFlags & DDHAL_CB32_GETSCANLINE))
 		ddRVal = DDHAL_DRIVER_NOTHANDLED;
 	else	
 	    ddRVal = pDirectDraw->DD.GetScanLine(puGetScanLineData);
+
+	/* But back the orignal PDev */
+	puGetScanLineData->lpDD = lgpl;
 
 	GDIOBJ_UnlockObjByPtr(pDirectDraw);
 	return ddRVal;
@@ -321,6 +365,7 @@ DWORD STDCALL NtGdiDdDestroySurface(
         ddRVal = pDirectDraw->Surf.DestroySurface(&DestroySurf); 
 	}
 
+	
     GDIOBJ_UnlockObjByPtr(pDirectDraw);
     return ddRVal;			
 }
@@ -334,15 +379,26 @@ DWORD STDCALL NtGdiDdFlip(
 )
 {
 	DWORD  ddRVal;
+	PDD_DIRECTDRAW_GLOBAL lgpl;
 
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurfaceTarget, GDI_OBJECT_TYPE_DIRECTDRAW);
 	if (pDirectDraw == NULL) 
 		return DDHAL_DRIVER_NOTHANDLED;
 
+	/* backup the orignal PDev and info */
+	lgpl = puFlipData->lpDD;
+
+	/* use our cache version instead */
+	puFlipData->lpDD = &pDirectDraw->Global;
+
+	/* make the call */
 	if (!(pDirectDraw->Surf.dwFlags & DDHAL_SURFCB32_FLIP))
 		ddRVal = DDHAL_DRIVER_NOTHANDLED;
 	else
         ddRVal = pDirectDraw->Surf.Flip(puFlipData);
+
+	/* But back the orignal PDev */
+	puFlipData->lpDD = lgpl;
 
     GDIOBJ_UnlockObjByPtr(pDirectDraw);
     return ddRVal;		
@@ -355,15 +411,26 @@ DWORD STDCALL NtGdiDdLock(
 )
 {
 	DWORD  ddRVal;
+	PDD_DIRECTDRAW_GLOBAL lgpl;
 
 	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(hSurface, GDI_OBJECT_TYPE_DIRECTDRAW);
 	if (pDirectDraw == NULL) 
 		return DDHAL_DRIVER_NOTHANDLED;
 
+	/* backup the orignal PDev and info */
+	lgpl = puLockData->lpDD;
+
+	/* use our cache version instead */
+	puLockData->lpDD = &pDirectDraw->Global;
+
+	/* make the call */
 	if (!(pDirectDraw->Surf.dwFlags & DDHAL_SURFCB32_LOCK))
 		ddRVal = DDHAL_DRIVER_NOTHANDLED;
 	else
         ddRVal = pDirectDraw->Surf.Lock(puLockData);
+
+	/* But back the orignal PDev */
+	puLockData->lpDD = lgpl;
 
     GDIOBJ_UnlockObjByPtr(pDirectDraw);
     return ddRVal;		
