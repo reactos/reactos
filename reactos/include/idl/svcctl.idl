@@ -74,7 +74,21 @@ cpp_quote("#endif")
   /* Function 9 */
   DWORD ScmrNotifyBootConfigStatus([in] handle_t BindingHandle,
                                    [in] BOOL BootAcceptable);
-
+  /* Function 11 */
+  DWORD ScmrChangeServiceConfigW([in] handle_t BiningHandle,
+                                 [in] SC_HANDLE hSCManager,
+                                 [in] DWORD dwServiceType,
+                                 [in] DWORD dwStartType,
+				 [in] DWORD dwErrorControl,
+                                 [in, string, ref] LPCWSTR lpBinaryPathName,
+				 [in, string, unique] LPCWSTR lpLoadOrderGroup,
+                                 [in, out, unique] LPDWORD lpdwTagId,
+                                 [in, size_is(dwDependenciesLength), unique] LPCWSTR lpDependencies,
+                                 [in] DWORD dwDependenciesLength,
+                                 [in, string, unique] LPCWSTR lpServiceStartName,
+                                 [in, size_is(dwPasswordLength), unique] LPCWSTR lpPassword,
+                                 [in] DWORD dwPasswordLength,
+                                 [in, string, unique] LPCWSTR lpDisplayName);
 
   /* Function 12 */
   DWORD ScmrCreateServiceW([in] handle_t BindingHandle,
