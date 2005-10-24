@@ -440,8 +440,8 @@ static void HandleCommandLine(LPWSTR cmdline)
     if (*cmdline)
     {
         /* file name is passed in the command line */
-        LPCWSTR file_name;
-        BOOL file_exists;
+        LPCWSTR file_name = NULL;
+        BOOL file_exists = FALSE;
         WCHAR buf[MAX_PATH];
 
         if (cmdline[0] == '"')
@@ -455,7 +455,7 @@ static void HandleCommandLine(LPWSTR cmdline)
             file_exists = TRUE;
             file_name = cmdline;
         }
-        else
+        else if (!HasFileExtension(cmdline))
         {
             static const WCHAR txtW[] = { '.','t','x','t',0 };
 
@@ -463,7 +463,6 @@ static void HandleCommandLine(LPWSTR cmdline)
             if (!lstrcmp(txtW, cmdline + lstrlen(cmdline) - lstrlen(txtW)))
             {
                 file_exists = FALSE;
-                file_name = cmdline;
             }
             else
             {
@@ -476,6 +475,7 @@ static void HandleCommandLine(LPWSTR cmdline)
 
         if (file_exists)
         {
+            file_name = cmdline;
             DoOpenFile(file_name);
             InvalidateRect(Globals.hMainWnd, NULL, FALSE);
             if (opt_print)

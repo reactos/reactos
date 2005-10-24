@@ -55,5 +55,6 @@ VOID DIALOG_TimeDate(VOID);
 /* utility functions */
 VOID ShowLastError(void);
 BOOL FileExists(LPCWSTR szFilename);
+BOOL HasFileExtension(LPCWSTR szFilename);
 BOOL DoCloseFile(void);
 void DoOpenFile(LPCWSTR szFileName);

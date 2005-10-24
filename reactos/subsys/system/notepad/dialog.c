@@ -139,6 +139,17 @@ BOOL FileExists(LPCWSTR szFilename)
 }
 
 
+BOOL HasFileExtension(LPCWSTR szFilename)
+{
+    LPCWSTR s;
+
+    s = wcsrchr(szFilename, '\\');
+    if (s)
+        szFilename = s;
+    return wcsrchr(szFilename, '.') != NULL;
+}
+
+
 static VOID DoSaveFile(VOID)
 {
     HANDLE hFile;
