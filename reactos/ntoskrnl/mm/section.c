@@ -1354,7 +1354,7 @@ MmPageOutDeleteMapping(PVOID Context, PEPROCESS Process, PVOID Address)
       MmReleasePageMemoryConsumer(MC_USER, Page);
    }
 
-   DPRINT("PhysicalAddress %I64x, Address %x\n", Page, Address);
+   DPRINT("PhysicalAddress %x, Address %x\n", Page << PAGE_SHIFT, Address);
 }
 
 NTSTATUS
@@ -1975,8 +1975,7 @@ MmQuerySectionView(PMEMORY_AREA MemoryArea,
    }
    Info->BaseAddress = RegionBaseAddress;
    Info->AllocationProtect = MemoryArea->Attributes;
-   Info->RegionSize = PAGE_ROUND_UP((ULONG_PTR)MemoryArea->EndingAddress -
-                                    (ULONG_PTR)MemoryArea->StartingAddress);
+   Info->RegionSize = Region->Length;
    Info->State = MEM_COMMIT;
    Info->Protect = Region->Protect;
 
