@@ -73,7 +73,7 @@ static inline BYTE Ki386ReadFsByte(ULONG offset)
 
 static inline VOID Ki386WriteFsByte(ULONG offset, BYTE value)
 {
-   __asm__ __volatile__("movb %0,%%fs:(%1)"::"r" (value), "r" (offset));
+   __asm__ __volatile__("movb %0,%%fs:(%1)"::"q" (value), "r" (offset));
 }
 
 #elif defined(_MSC_VER)
