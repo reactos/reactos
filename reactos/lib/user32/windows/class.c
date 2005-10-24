@@ -401,6 +401,170 @@ RealGetWindowClassA(
 }
 
 /*
+ * Create a small icon based on a standard icon
+ */
+static HICON
+CreateSmallIcon(HICON StdIcon)
+{
+   HICON SmallIcon = NULL;
+   ICONINFO StdInfo;
+   int SmallIconWidth;
+   int SmallIconHeight;
+   BITMAP StdBitmapInfo;
+   HDC hInfoDc = NULL;
+   HDC hSourceDc = NULL;
+   HDC hDestDc = NULL;
+   ICONINFO SmallInfo;
+   HBITMAP OldSourceBitmap = NULL;
+   HBITMAP OldDestBitmap = NULL;
+
+   SmallInfo.hbmColor = NULL;
+   SmallInfo.hbmMask = NULL;
+
+   /* We need something to work with... */
+   if (NULL == StdIcon)
+   {
+      goto cleanup;
+   }
+
+   SmallIconWidth = GetSystemMetrics(SM_CXSMICON);
+   SmallIconHeight = GetSystemMetrics(SM_CYSMICON);
+   if (! GetIconInfo(StdIcon, &StdInfo))
+   {
+      DPRINT1("Failed to get icon info for icon 0x%x\n", StdIcon);
+      goto cleanup;
+   }
+   if (! GetObjectW(StdInfo.hbmMask, sizeof(BITMAP), &StdBitmapInfo))
+   {
+      DPRINT1("Failed to get bitmap info for icon 0x%x bitmap 0x%x\n",
+              StdIcon, StdInfo.hbmColor);
+      goto cleanup;
+   }
+   if (StdBitmapInfo.bmWidth == SmallIconWidth &&
+       StdBitmapInfo.bmHeight == SmallIconHeight)
+   {
+      /* Icon already has the correct dimensions */
+      return StdIcon;
+   }
+
+   /* Get a handle to a info DC and handles to DCs which can be used to
+      select a bitmap into. This is done to avoid triggering a switch to
+      graphics mode (if we're currently in text/blue screen mode) */
+   hInfoDc = CreateICW(NULL, NULL, NULL, NULL);
+   if (NULL == hInfoDc)
+   {
+      DPRINT1("Failed to create info DC\n");
+      goto cleanup;
+   }
+   hSourceDc = CreateCompatibleDC(NULL);
+   if (NULL == hSourceDc)
+   {
+      DPRINT1("Failed to create source DC\n");
+      goto cleanup;
+   }
+   hDestDc = CreateCompatibleDC(NULL);
+   if (NULL == hDestDc)
+   {
+      DPRINT1("Failed to create dest DC\n");
+      goto cleanup;
+   }
+
+   OldSourceBitmap = SelectObject(hSourceDc, StdInfo.hbmColor);
+   if (NULL == OldSourceBitmap)
+   {
+      DPRINT1("Failed to select source color bitmap\n");
+      goto cleanup;
+   }
+   SmallInfo.hbmColor = CreateCompatibleBitmap(hInfoDc, SmallIconWidth,
+                                              SmallIconHeight);
+   if (NULL == SmallInfo.hbmColor)
+   {
+      DPRINT1("Failed to create color bitmap\n");
+      goto cleanup;
+   }
+   OldDestBitmap = SelectObject(hDestDc, SmallInfo.hbmColor);
+   if (NULL == OldDestBitmap)
+   {
+      DPRINT1("Failed to select dest color bitmap\n");
+      goto cleanup;
+   }
+   if (! StretchBlt(hDestDc, 0, 0, SmallIconWidth, SmallIconHeight,
+                    hSourceDc, 0, 0, StdBitmapInfo.bmWidth,
+                    StdBitmapInfo.bmHeight, SRCCOPY))
+   {
+     DPRINT1("Failed to stretch color bitmap\n");
+     goto cleanup;
+   }
+
+   if (NULL == SelectObject(hSourceDc, StdInfo.hbmMask))
+   {
+      DPRINT1("Failed to select source mask bitmap\n");
+      goto cleanup;
+   }
+   SmallInfo.hbmMask = CreateBitmap(SmallIconWidth, SmallIconHeight, 1, 1,
+                                    NULL);
+   if (NULL == SmallInfo.hbmMask)
+   {
+      DPRINT1("Failed to create mask bitmap\n");
+      goto cleanup;
+   }
+   if (NULL == SelectObject(hDestDc, SmallInfo.hbmMask))
+   {
+      DPRINT1("Failed to select dest mask bitmap\n");
+      goto cleanup;
+   }
+   if (! StretchBlt(hDestDc, 0, 0, SmallIconWidth, SmallIconHeight,
+                    hSourceDc, 0, 0, StdBitmapInfo.bmWidth,
+                    StdBitmapInfo.bmHeight, SRCCOPY))
+   {
+      DPRINT1("Failed to stretch mask bitmap\n");
+      goto cleanup;
+   }
+
+   SmallInfo.fIcon = TRUE;
+   SmallInfo.xHotspot = SmallIconWidth / 2;
+   SmallInfo.yHotspot = SmallIconHeight / 2;
+   SmallIcon = CreateIconIndirect(&SmallInfo);
+   if (NULL == SmallIcon)
+   {
+      DPRINT1("Failed to create icon\n");
+      goto cleanup;
+   }
+
+cleanup:
+   if (NULL != SmallInfo.hbmMask)
+   {
+      DeleteObject(SmallInfo.hbmMask);
+   }
+   if (NULL != OldDestBitmap)
+   {
+      SelectObject(hDestDc, OldDestBitmap);
+   }
+   if (NULL != SmallInfo.hbmColor)
+   {
+      DeleteObject(SmallInfo.hbmColor);
+   }
+   if (NULL != hDestDc)
+   {
+      DeleteDC(hDestDc);
+   }
+   if (NULL != OldSourceBitmap)
+   {
+      SelectObject(hSourceDc, OldSourceBitmap);
+   }
+   if (NULL != hSourceDc)
+   {
+      DeleteDC(hSourceDc);
+   }
+   if (NULL != hInfoDc)
+   {
+      DeleteDC(hInfoDc);
+   }
+
+   return SmallIcon;
+}
+
+/*
  * @implemented
  */
 ATOM STDCALL
@@ -438,6 +602,11 @@ RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
       ((WNDCLASSEXA*)lpwcx)->hInstance = GetModuleHandleW(NULL);
 
    RtlCopyMemory(&WndClass, lpwcx, sizeof(WNDCLASSEXW));
+
+   if (NULL == WndClass.hIconSm)
+   {
+      WndClass.hIconSm = CreateSmallIcon(WndClass.hIcon);
+   }
 
    if (IS_ATOM(lpwcx->lpszMenuName) || lpwcx->lpszMenuName == 0)
    {
@@ -513,6 +682,11 @@ RegisterClassExW(CONST WNDCLASSEXW *lpwcx)
       ((WNDCLASSEXW*)lpwcx)->hInstance = GetModuleHandleW(NULL);
 
    RtlCopyMemory(&WndClass, lpwcx, sizeof(WNDCLASSEXW));
+
+   if (NULL == WndClass.hIconSm)
+   {
+      WndClass.hIconSm = CreateSmallIcon(WndClass.hIcon);
+   }
 
    if (IS_ATOM(lpwcx->lpszMenuName))
    {
