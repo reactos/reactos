@@ -59,7 +59,7 @@ DevInstallW(
 		&regDataType,
 		NULL, 0,
 		&requiredSize);
-	if (!ret && GetLastError() == ERROR_MORE_DATA && regDataType == REG_SZ)
+	if (!ret && GetLastError() == ERROR_INSUFFICIENT_BUFFER && regDataType == REG_SZ)
 	{
 		buffer = HeapAlloc(GetProcessHeap(), 0, requiredSize);
 		if (!buffer)
