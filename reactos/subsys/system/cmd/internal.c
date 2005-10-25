@@ -683,7 +683,13 @@ INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
 INT CommandExit (LPTSTR cmd, LPTSTR param)
 {
 	if (!_tcsncmp (param, _T("/?"), 2))
+	{
 		ConOutResPaging(TRUE,STRING_EXIT_HELP);
+		/* Just make sure */
+		bExit = FALSE;
+		/* Dont exit */
+		return 0;
+	}
 
 	if (bc != NULL && _tcsnicmp(param,_T("/b"),2) == 0)
 	{
