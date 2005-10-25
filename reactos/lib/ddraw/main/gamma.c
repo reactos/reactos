@@ -10,22 +10,30 @@
 
 #include "rosdraw.h"
 
-
-HRESULT WINAPI
-Main_DirectDrawGammaControl_QueryInterface(LPDIRECTDRAWGAMMACONTROL iface, REFIID riid,
-				      LPVOID *ppObj)
-{
-   	DX_STUB;
-}
-
 ULONG WINAPI
 Main_DirectDrawGammaControl_AddRef(LPDIRECTDRAWGAMMACONTROL iface)
 {
-   	DX_STUB;
+    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+    ULONG ref = InterlockedIncrement((PLONG)&This->DirectDrawGlobal.dwRefCnt);
+
+   	return ref;
 }
 
 ULONG WINAPI
 Main_DirectDrawGammaControl_Release(LPDIRECTDRAWGAMMACONTROL iface)
+{
+    IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
+    ULONG ref = InterlockedDecrement(&This->ref);
+    
+    if (ref == 0)
+		HeapFree(GetProcessHeap(), 0, This);
+
+    return ref;
+}
+
+HRESULT WINAPI
+Main_DirectDrawGammaControl_QueryInterface(LPDIRECTDRAWGAMMACONTROL iface, REFIID riid,
+				      LPVOID *ppObj)
 {
    	DX_STUB;
 }

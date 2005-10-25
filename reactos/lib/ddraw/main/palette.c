@@ -10,6 +10,33 @@
 
 #include "rosdraw.h"
 
+ULONG WINAPI
+Main_DirectDrawPalette_Release(LPDIRECTDRAWPALETTE iface)
+{
+    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+    ULONG ref = InterlockedIncrement((PLONG)&This->DirectDrawGlobal.dwRefCnt);
+
+   	return ref;
+}
+
+ULONG WINAPI Main_DirectDrawPalette_AddRef(LPDIRECTDRAWPALETTE iface) 
+{
+    IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
+    ULONG ref = InterlockedDecrement(&This->ref);
+    
+    if (ref == 0)
+		HeapFree(GetProcessHeap(), 0, This);
+
+    return ref;
+}
+
+HRESULT WINAPI
+Main_DirectDrawPalette_Initialize(LPDIRECTDRAWPALETTE iface,
+				  LPDIRECTDRAW ddraw, DWORD dwFlags,
+				  LPPALETTEENTRY palent)
+{
+    return DD_OK;
+}
 
 HRESULT WINAPI
 Main_DirectDrawPalette_GetEntries(LPDIRECTDRAWPALETTE iface, DWORD dwFlags,
@@ -26,26 +53,6 @@ Main_DirectDrawPalette_SetEntries(LPDIRECTDRAWPALETTE iface, DWORD dwFlags,
 {
     DX_STUB;
 }
-
-ULONG WINAPI
-Main_DirectDrawPalette_Release(LPDIRECTDRAWPALETTE iface)
-{
-    DX_STUB;
-}
-
-ULONG WINAPI Main_DirectDrawPalette_AddRef(LPDIRECTDRAWPALETTE iface) 
-{
-    DX_STUB;
-}
-
-HRESULT WINAPI
-Main_DirectDrawPalette_Initialize(LPDIRECTDRAWPALETTE iface,
-				  LPDIRECTDRAW ddraw, DWORD dwFlags,
-				  LPPALETTEENTRY palent)
-{
-    DX_STUB;
-}
-
 HRESULT WINAPI
 Main_DirectDrawPalette_GetCaps(LPDIRECTDRAWPALETTE iface, LPDWORD lpdwCaps)
 {

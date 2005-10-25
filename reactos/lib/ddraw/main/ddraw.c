@@ -125,33 +125,6 @@ HRESULT WINAPI Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidt
 	return DD_OK;
 }
 
-HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD,
-											LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter) 
-{
-    if (pUnkOuter!=NULL) 
-		return DDERR_INVALIDPARAMS; 
-
-	if(sizeof(DDSURFACEDESC2)!=pDDSD->dwSize)
-		return DDERR_UNSUPPORTED;
-
-	// the nasty com stuff
-	IDirectDrawSurfaceImpl* That; 
-
-	That = (IDirectDrawSurfaceImpl*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IDirectDrawSurfaceImpl));
-
-	if (That == NULL) 
-		return E_OUTOFMEMORY;
-
-	That->lpVtbl = &DirectDrawSurface7_Vtable;
-	That->lpVtbl_v3 = &DDRAW_IDDS3_Thunk_VTable;
-
-	That->ref = 1;
-	*ppSurf = (LPDIRECTDRAWSURFACE7)That;
-
-	// the real surface object creation
-   	return That->lpVtbl->Initialize (*ppSurf, (LPDIRECTDRAW)iface, pDDSD);
-}
-
 ULONG WINAPI Main_DirectDraw_AddRef (LPDIRECTDRAW7 iface) 
 {
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
@@ -208,22 +181,89 @@ HRESULT WINAPI Main_DirectDraw_QueryInterface (
     return S_OK;
 }
 
-/**** Stubs ****/
-
-HRESULT WINAPI Main_DirectDraw_Compact(LPDIRECTDRAW7 iface) 
+HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD,
+											LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter) 
 {
-   	DX_STUB;
+    if (pUnkOuter!=NULL) 
+		return DDERR_INVALIDPARAMS; 
+
+	if(sizeof(DDSURFACEDESC2)!=pDDSD->dwSize)
+		return DDERR_UNSUPPORTED;
+
+	// the nasty com stuff
+	IDirectDrawSurfaceImpl* That; 
+
+	That = (IDirectDrawSurfaceImpl*)HeapAlloc(GetProcessHeap(), 0, sizeof(IDirectDrawSurfaceImpl));
+
+	if (That == NULL) 
+		return E_OUTOFMEMORY;
+
+	ZeroMemory(That, sizeof(IDirectDrawSurfaceImpl));
+
+	That->lpVtbl = &DirectDrawSurface7_Vtable;
+	That->lpVtbl_v3 = &DDRAW_IDDS3_Thunk_VTable;
+	That->ref = 1;
+
+	*ppSurf = (LPDIRECTDRAWSURFACE7)That;
+
+	// the real surface object creation
+   	return That->lpVtbl->Initialize (*ppSurf, (LPDIRECTDRAW)iface, pDDSD);
 }
 
 HRESULT WINAPI Main_DirectDraw_CreateClipper(LPDIRECTDRAW7 iface, DWORD dwFlags, 
 											 LPDIRECTDRAWCLIPPER *ppClipper, IUnknown *pUnkOuter)
 {
-   	DX_STUB;
+    if (pUnkOuter!=NULL) 
+		return DDERR_INVALIDPARAMS; 
+
+	IDirectDrawClipperImpl* That; 
+	That = (IDirectDrawClipperImpl*)HeapAlloc(GetProcessHeap(), 0, sizeof(IDirectDrawClipperImpl));
+
+	if (That == NULL) 
+		return E_OUTOFMEMORY;
+
+	ZeroMemory(That, sizeof(IDirectDrawClipperImpl));
+
+	That->lpVtbl = &DirectDrawClipper_Vtable;
+	That->ref = 1;
+	*ppClipper = (LPDIRECTDRAWCLIPPER)That;
+
+   	return That->lpVtbl->Initialize (*ppClipper, (LPDIRECTDRAW)iface, dwFlags);
 }
-HRESULT WINAPI Main_DirectDraw_CreatePalette(LPDIRECTDRAW7 iface, DWORD dwFlags,
-			      LPPALETTEENTRY palent,LPDIRECTDRAWPALETTE* ppPalette,LPUNKNOWN pUnknown)
+
+// This function is exported by the dll
+HRESULT WINAPI DirectDrawCreateClipper (DWORD dwFlags, 
+										LPDIRECTDRAWCLIPPER* lplpDDClipper, LPUNKNOWN pUnkOuter)
 {
-	DX_STUB;
+    return Main_DirectDraw_CreateClipper(NULL, dwFlags, lplpDDClipper, pUnkOuter);
+}
+
+HRESULT WINAPI Main_DirectDraw_CreatePalette(LPDIRECTDRAW7 iface, DWORD dwFlags,
+			      LPPALETTEENTRY palent, LPDIRECTDRAWPALETTE* ppPalette, LPUNKNOWN pUnkOuter)
+{
+    if (pUnkOuter!=NULL) 
+		return DDERR_INVALIDPARAMS; 
+
+	IDirectDrawPaletteImpl* That; 
+	That = (IDirectDrawPaletteImpl*)HeapAlloc(GetProcessHeap(), 0, sizeof(IDirectDrawPaletteImpl));
+
+	if (That == NULL) 
+		return E_OUTOFMEMORY;
+
+	ZeroMemory(That, sizeof(IDirectDrawPaletteImpl));
+
+	That->lpVtbl = &DirectDrawPalette_Vtable;
+	That->ref = 1;
+	*ppPalette = (LPDIRECTDRAWPALETTE)That;
+
+   	return That->lpVtbl->Initialize (*ppPalette, (LPDIRECTDRAW)iface, dwFlags, palent);
+}
+
+/**** Stubs ****/
+
+HRESULT WINAPI Main_DirectDraw_Compact(LPDIRECTDRAW7 iface) 
+{
+   	DX_STUB;
 }
 
 HRESULT WINAPI Main_DirectDraw_DuplicateSurface(LPDIRECTDRAW7 iface, LPDIRECTDRAWSURFACE7 src,

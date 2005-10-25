@@ -101,11 +101,3 @@ HRESULT WINAPI DirectDrawEnumerateExW(
      DX_STUB;
 }
  
-HRESULT WINAPI DirectDrawCreateClipper(
-  DWORD dwFlags, 
-  LPDIRECTDRAWCLIPPER* lplpDDClipper, 
-  LPUNKNOWN pUnkOuter
-)
-{
-     DX_STUB;
-}

@@ -11,13 +11,33 @@
 #include "rosdraw.h"
 
 
-HRESULT WINAPI Main_DirectDrawClipper_SetHwnd(
-    LPDIRECTDRAWCLIPPER iface, DWORD dwFlags, HWND hWnd) 
+ULONG WINAPI Main_DirectDrawClipper_Release(LPDIRECTDRAWCLIPPER iface) 
 {
-   	DX_STUB;
+    IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
+    ULONG ref = InterlockedDecrement(&This->ref);
+    
+    if (ref == 0)
+		HeapFree(GetProcessHeap(), 0, This);
+
+    return ref;
 }
 
-ULONG WINAPI Main_DirectDrawClipper_Release(LPDIRECTDRAWCLIPPER iface) 
+ULONG WINAPI Main_DirectDrawClipper_AddRef (LPDIRECTDRAWCLIPPER iface)
+{
+    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+    ULONG ref = InterlockedIncrement((PLONG)&This->DirectDrawGlobal.dwRefCnt);
+
+   	return ref;
+}
+
+HRESULT WINAPI Main_DirectDrawClipper_Initialize(
+     LPDIRECTDRAWCLIPPER iface, LPDIRECTDRAW lpDD, DWORD dwFlags) 
+{
+	return DD_OK;
+}
+
+HRESULT WINAPI Main_DirectDrawClipper_SetHwnd(
+    LPDIRECTDRAWCLIPPER iface, DWORD dwFlags, HWND hWnd) 
 {
    	DX_STUB;
 }
@@ -41,19 +61,8 @@ HRESULT WINAPI Main_DirectDrawClipper_QueryInterface(
    	DX_STUB;
 }
 
-ULONG WINAPI Main_DirectDrawClipper_AddRef (LPDIRECTDRAWCLIPPER iface)
-{
-   	DX_STUB;
-}
-
 HRESULT WINAPI Main_DirectDrawClipper_GetHWnd(
     LPDIRECTDRAWCLIPPER iface, HWND* hWndPtr) 
-{
-   	DX_STUB;
-}
-
-HRESULT WINAPI Main_DirectDrawClipper_Initialize(
-     LPDIRECTDRAWCLIPPER iface, LPDIRECTDRAW lpDD, DWORD dwFlags) 
 {
    	DX_STUB;
 }
