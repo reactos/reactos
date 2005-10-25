@@ -2383,7 +2383,10 @@ BOOL WINAPI SetupDiGetDeviceRegistryPropertyW(
                     *RequiredSize = BufferSize;
                 switch(rc) {
                     case ERROR_SUCCESS:
-                        ret = TRUE;
+                        if (PropertyBuffer != NULL || BufferSize == 0)
+                            ret = TRUE;
+                        else
+                            SetLastError(ERROR_INSUFFICIENT_BUFFER);
                         break;
                     case ERROR_MORE_DATA:
                         SetLastError(ERROR_INSUFFICIENT_BUFFER);
