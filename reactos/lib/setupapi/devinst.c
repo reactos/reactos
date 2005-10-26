@@ -4204,6 +4204,7 @@ SetupDiBuildDriverInfoList(
     WCHAR ManufacturerSection[LINE_LEN + 1];
     LPWSTR HardwareIDs = NULL;
     LPWSTR CompatibleIDs = NULL;
+    LPWSTR FullInfFileName = NULL;
     FILETIME DriverDate;
     DWORDLONG DriverVersion = 0;
     DWORD RequiredSize;
@@ -4325,18 +4326,31 @@ SetupDiBuildDriverInfoList(
         if (Result)
         {
             LPCWSTR filename;
-            WCHAR FullInfFileName[MAX_PATH];
             LPWSTR pFullFilename;
 
             if (*InstallParams.DriverPath)
             {
-                GetFullPathNameW(InstallParams.DriverPath, MAX_PATH, FullInfFileName, &pFullFilename);
+                DWORD len;
+                len = GetFullPathNameW(InstallParams.DriverPath, 0, NULL, NULL);
+                if (len == 0)
+                    goto done;
+                FullInfFileName = HeapAlloc(GetProcessHeap(), 0, len + MAX_PATH);
+                if (!FullInfFileName)
+                    goto done;
+                len = GetFullPathNameW(InstallParams.DriverPath, len, FullInfFileName, NULL);
+                if (len == 0)
+                    goto done;
                 if (*FullInfFileName && FullInfFileName[wcslen(FullInfFileName) - 1] != '\\')
                     wcscat(FullInfFileName, L"\\");
                 pFullFilename = &FullInfFileName[wcslen(FullInfFileName)];
             }
             else
+            {
+                FullInfFileName = HeapAlloc(GetProcessHeap(), 0, MAX_PATH);
+                if (!FullInfFileName)
+                    goto done;
                 pFullFilename = &FullInfFileName[0];
+            }
 
             for (filename = (LPCWSTR)Buffer; *filename; filename += wcslen(filename) + 1)
             {
@@ -4565,6 +4579,7 @@ done:
     HeapFree(GetProcessHeap(), 0, ManufacturerName);
     HeapFree(GetProcessHeap(), 0, HardwareIDs);
     HeapFree(GetProcessHeap(), 0, CompatibleIDs);
+    HeapFree(GetProcessHeap(), 0, FullInfFileName);
     if (currentInfFileDetails)
         DereferenceInfFile(currentInfFileDetails);
     HeapFree(GetProcessHeap(), 0, Buffer);
