@@ -15,7 +15,7 @@
 
 
 DWORD len;
-LPTSTR msg = "--- continue ---";
+LPTSTR msg = _T("--- continue ---");
 
 
 /*handle for file and console*/
@@ -31,8 +31,8 @@ GetScreenSize (PSHORT maxx, PSHORT maxy)
 	CONSOLE_SCREEN_BUFFER_INFO csbi;
 
 	GetConsoleScreenBufferInfo (hStdOut, &csbi);
-		*maxx = csbi.srWindow.Right;
-		*maxy = csbi.srWindow.Bottom;
+		*maxx = (csbi.srWindow.Right - csbi.srWindow.Left) + 1;
+		*maxy = (csbi.srWindow.Bottom  - csbi.srWindow.Top) - 4;
 
 }
 
@@ -85,6 +85,8 @@ int main (int argc, char **argv)
 	SHORT maxx,maxy;
 	SHORT line_count=0,ch_count=0;
 	INT i, last;
+	HANDLE hFile = INVALID_HANDLE_VALUE;
+	TCHAR szFullPath[MAX_PATH];
 
 	/*reading/writing buffer*/
 	TCHAR *buff;
@@ -106,18 +108,32 @@ int main (int argc, char **argv)
 		return 0;
 	}
 
-	hKeyboard = CreateFile ("CONIN$", GENERIC_READ,
+	hKeyboard = CreateFile (_T("CONIN$"), GENERIC_READ,
 	                        0,NULL,OPEN_ALWAYS,0,0);
 
 	GetScreenSize(&maxx,&maxy);
 
 	buff=malloc(4096);
 
-	FlushConsoleInputBuffer (hKeyboard);
+	FlushConsoleInputBuffer (hKeyboard);	
+
+	if(argc > 1)
+	{
+		GetFullPathName(argv[1], MAX_PATH, szFullPath, NULL);
+		hFile = CreateFile (szFullPath, GENERIC_READ,
+	                        0,NULL,OPEN_ALWAYS,0,0);
+	}
 
 	do
 	{
-		bRet = ReadFile(hStdIn,buff,4096,&dwRead,NULL);
+		if(hFile != INVALID_HANDLE_VALUE)
+		{			
+			bRet = ReadFile(hFile,buff,4096,&dwRead,NULL);
+		}
+		else
+		{
+			bRet = ReadFile(hStdIn,buff,4096,&dwRead,NULL);
+		}
 
 		for(last=i=0;i<dwRead && bRet;i++)
 		{
@@ -144,6 +160,7 @@ int main (int argc, char **argv)
 
 	free (buff);
 	CloseHandle (hKeyboard);
+	CloseHandle (hFile);
 
 	return 0;
 }
