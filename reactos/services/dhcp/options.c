@@ -595,6 +595,7 @@ pretty_print_option(unsigned int code, unsigned char *data, int len,
 				foo.s_addr = htonl(getULong(dp));
 				strncpy(op, inet_ntoa(foo), opleft - 1);
 				op[opleft - 1] = ANSI_NULL;
+				opcount = strlen(op);
 				if (opcount >= opleft)
 					goto toobig;
 				opleft -= opcount;
