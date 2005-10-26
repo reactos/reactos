@@ -4314,6 +4314,14 @@ SetupDiBuildDriverInfoList(
                 Buffer, RequiredSize,
                 &RequiredSize);
         }
+        if (!Result && GetLastError() == ERROR_FILE_NOT_FOUND)
+        {
+            /* No .inf file in specified directory. So, we should
+             * success as we created an empty driver info list.
+             */
+            ret = TRUE;
+            goto done;
+        }
         if (Result)
         {
             LPCWSTR filename;
@@ -4604,18 +4612,6 @@ SetupDiDestroyDriverInfoList(
         if (!DeviceInfoData)
             /* Fall back to destroying class driver list */
             DriverType = SPDIT_CLASSDRIVER;
-        if (DriverType == SPDIT_CLASSDRIVER)
-        {
-            if (!(InstallParams.Flags & DI_DIDCLASS))
-                /* The list was not created */
-                goto done;
-        }
-        else if (DriverType == SPDIT_COMPATDRIVER)
-        {
-            if (!(InstallParams.Flags & DI_DIDCOMPAT))
-                /* The list was not created */
-                goto done;
-        }
 
         if (DriverType == SPDIT_CLASSDRIVER)
         {
