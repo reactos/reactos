@@ -381,7 +381,7 @@
 @ stub SetupDiSetDriverInstallParamsA
 @ stub SetupDiSetDriverInstallParamsW
 @ stub SetupDiSetSelectedDevice
-@ stub SetupDiSetSelectedDriverA
+@ stdcall SetupDiSetSelectedDriverA(ptr ptr ptr)
 @ stdcall SetupDiSetSelectedDriverW(ptr ptr ptr)
 @ stub SetupDiUnremoveDevice
 @ stub SetupDuplicateDiskSpaceListA

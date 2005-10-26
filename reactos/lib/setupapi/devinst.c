@@ -121,7 +121,7 @@ struct DeviceInterface /* Element of DeviceInfoElement.InterfaceListHead */
 struct InfFileDetails
 {
     HINF hInf;
-    ULONG References;
+    LONG References;
 };
 
 struct DriverInfoElement /* Element of DeviceInfoSet.DriverListHead and DeviceInfoElement.DriverListHead */
@@ -4973,6 +4973,70 @@ SetupDiGetSelectedDriverW(
     TRACE("Returning %d\n", ret);
     return ret;
 }
+
+
+/***********************************************************************
+ *		SetupDiSetSelectedDriverA (SETUPAPI.@)
+ */
+BOOL WINAPI
+SetupDiSetSelectedDriverA(
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
+    IN OUT PSP_DRVINFO_DATA_A DriverInfoData OPTIONAL)
+{
+    SP_DRVINFO_DATA_V1_W DriverInfoDataW;
+    PSP_DRVINFO_DATA_W pDriverInfoDataW = NULL;
+    BOOL ret = FALSE;
+
+    if (DriverInfoData != NULL)
+    {
+        if (DriverInfoData->cbSize != sizeof(SP_DRVINFO_DATA_V2_A) &&
+            DriverInfoData->cbSize != sizeof(SP_DRVINFO_DATA_V1_A));
+        {
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return FALSE;
+        }
+
+        DriverInfoDataW.cbSize = sizeof(SP_DRVINFO_DATA_V1_W);
+        DriverInfoDataW.Reserved = DriverInfoData->Reserved;
+
+        if (DriverInfoDataW.Reserved == 0)
+        {
+            DriverInfoDataW.DriverType = DriverInfoData->DriverType;
+
+            /* convert the strings to unicode */
+            if (!MultiByteToWideChar(CP_ACP,
+                                     0,
+                                     DriverInfoData->Description,
+                                     LINE_LEN,
+                                     DriverInfoDataW.Description,
+                                     LINE_LEN) ||
+                !MultiByteToWideChar(CP_ACP,
+                                     0,
+                                     DriverInfoData->ProviderName,
+                                     LINE_LEN,
+                                     DriverInfoDataW.ProviderName,
+                                     LINE_LEN))
+            {
+                return FALSE;
+            }
+        }
+
+        pDriverInfoDataW = (PSP_DRVINFO_DATA_W)&DriverInfoDataW;
+    }
+
+    ret = SetupDiSetSelectedDriverW(DeviceInfoSet,
+                                    DeviceInfoData,
+                                    pDriverInfoDataW);
+
+    if (ret && pDriverInfoDataW != NULL)
+    {
+        DriverInfoData->Reserved = DriverInfoDataW.Reserved;
+    }
+
+    return ret;
+}
+
 
 /***********************************************************************
  *		SetupDiSetSelectedDriverW (SETUPAPI.@)
