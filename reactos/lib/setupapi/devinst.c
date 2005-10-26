@@ -4325,19 +4325,33 @@ SetupDiBuildDriverInfoList(
         if (Result)
         {
             LPCWSTR filename;
+            WCHAR FullInfFileName[MAX_PATH];
+            LPWSTR pFullFilename;
+
+            if (*InstallParams.DriverPath)
+            {
+                GetFullPathNameW(InstallParams.DriverPath, MAX_PATH, FullInfFileName, &pFullFilename);
+                if (*FullInfFileName && FullInfFileName[wcslen(FullInfFileName) - 1] != '\\')
+                    wcscat(FullInfFileName, L"\\");
+                pFullFilename = &FullInfFileName[wcslen(FullInfFileName)];
+            }
+            else
+                pFullFilename = &FullInfFileName[0];
 
             for (filename = (LPCWSTR)Buffer; *filename; filename += wcslen(filename) + 1)
             {
                 INFCONTEXT ContextManufacturer, ContextDevice;
                 GUID ClassGuid;
-                TRACE("Opening file %S\n", filename);
+
+                wcscpy(pFullFilename, filename);
+                TRACE("Opening file %S\n", FullInfFileName);
 
                 currentInfFileDetails = HeapAlloc(GetProcessHeap(), 0, sizeof(struct InfFileDetails));
                 if (!currentInfFileDetails)
                     continue;
                 memset(currentInfFileDetails, 0, sizeof(struct InfFileDetails));
 
-                currentInfFileDetails->hInf = SetupOpenInfFileW(filename, NULL, INF_STYLE_WIN4, NULL);
+                currentInfFileDetails->hInf = SetupOpenInfFileW(FullInfFileName, NULL, INF_STYLE_WIN4, NULL);
                 ReferenceInfFile(currentInfFileDetails);
                 if (currentInfFileDetails->hInf == INVALID_HANDLE_VALUE)
                 {
