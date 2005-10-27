@@ -19,6 +19,7 @@
 	<library>winmm</library>
 	<library>dxguid</library>
 	<library>dinput</library>
+      <file>version.rc</file>
 	<file>dinput8_main.c</file>
 	<file>dinput8.spec</file>
 </module>
