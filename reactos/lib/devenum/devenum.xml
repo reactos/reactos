@@ -18,6 +18,7 @@
 	<library>winmm</library>
 	<library>dxguid</library>
 	<library>strmiids</library>
+      <file>devenum.rc</file>
 	<file>createdevenum.c</file>
 	<file>devenum_main.c</file>
 	<file>factory.c</file>
