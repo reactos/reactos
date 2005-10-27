@@ -1,5 +1,5 @@
 .\" -*- nroff -*-
-.TH WINEBUILD 1 "September 2005" "@PACKAGE_STRING@" "Wine dll builder"
+.TH WINEBUILD 1 "October 2005" "@PACKAGE_STRING@" "Wine Developers Manual"
 .SH NAME
 winebuild \- Wine dll builder
 .SH SYNOPSIS
@@ -20,10 +20,10 @@ what you want winebuild to generate.
 .TP
 .BI \--dll
 Build an assembly file from a .spec file (see \fBSPEC FILE SYNTAX\fR
-for details), or from a standard Windows .def file. The
-.spec/.def file is specified via the -E option. The resulting file
-must be assembled and linked to the other object files to build a
-working Wine dll.  In this mode, the
+for details), or from a standard Windows .def file. The .spec/.def
+file is specified via the -E option. The resulting file must be
+assembled and linked to the other object files to build a working Wine
+dll.  In this mode, the
 .I input files
 should be the list of all object files that will be linked into the
 final dll, to allow

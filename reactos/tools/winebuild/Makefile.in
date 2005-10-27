@@ -5,6 +5,7 @@ VPATH     = @srcdir@
 EXEEXT    = @EXEEXT@
 
 PROGRAMS = winebuild$(EXEEXT)
+MANPAGES = winebuild.man
 MODULE   = none
 
 C_SRCS = \
@@ -18,25 +19,19 @@ C_SRCS = \
 	spec32.c \
 	utils.c
 
-all: $(PROGRAMS) winebuild.man
+all: $(PROGRAMS) $(MANPAGES)
 
 @MAKE_RULES@
 
 winebuild$(EXEEXT): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LIBPORT) $(LDFLAGS)
 
-winebuild.man: winebuild.man.in
-	sed -e 's,@PACKAGE_STRING\@,@PACKAGE_STRING@,g' $(SRCDIR)/winebuild.man.in >$@ || ($(RM) $@ && false)
-
-install:: $(PROGRAMS) winebuild.man
+install:: $(PROGRAMS) $(MANPAGES)
 	$(MKINSTALLDIRS) $(bindir) $(mandir)/man$(prog_manext)
 	$(INSTALL_PROGRAM) winebuild$(EXEEXT) $(bindir)/winebuild$(EXEEXT)
 	$(INSTALL_DATA) winebuild.man $(mandir)/man$(prog_manext)/winebuild.$(prog_manext)
 
 uninstall::
 	$(RM) $(bindir)/winebuild$(EXEEXT) $(mandir)/man$(prog_manext)/winebuild.$(prog_manext)
-
-clean::
-	$(RM) winebuild.man
 
 ### Dependencies:

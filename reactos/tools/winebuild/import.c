@@ -720,7 +720,7 @@ static void output_import_thunk( FILE *outfile, const char *name, const char *ta
         }
         else
         {
-            fprintf( outfile, "\tlis %s, (%s+%d)@hi\n", ppc_reg(9), table, pos );
+            fprintf( outfile, "\tlis %s, (%s+%d)@h\n", ppc_reg(9), table, pos );
             fprintf( outfile, "\tla  %s, (%s+%d)@l(%s)\n", ppc_reg(8), table, pos, ppc_reg(9) );
         }
         fprintf( outfile, "\tlwz  %s, 0(%s)\n", ppc_reg(7), ppc_reg(8) );
