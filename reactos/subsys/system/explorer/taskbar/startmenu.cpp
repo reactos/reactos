@@ -1748,7 +1748,9 @@ LRESULT	StartMenuRoot::Init(LPCREATESTRUCT pcs)
 		AddButton(ResString(IDS_SHUTDOWN),	ICID_LOGOFF, false, IDC_SHUTDOWN);
 
 
+#ifndef _ROS_
 	AddButton(ResString(IDS_TERMINATE),	ICID_LOGOFF, false, IDC_TERMINATE);
+#endif
 
 
 #ifdef __MINGW32__
@@ -1911,9 +1913,11 @@ int StartMenuHandler::Command(int id, int code)
 		ShowLogoffDialog(g_Globals._hwndDesktopBar);
 		break;
 
+#ifndef _ROS_
 	  case IDC_TERMINATE:
 		DestroyWindow(GetParent(_hwnd));
 		break;
+#endif
 
 	  case IDC_SHUTDOWN:
 		CloseStartMenu(id);
