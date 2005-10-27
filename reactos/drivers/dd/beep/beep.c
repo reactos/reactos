@@ -243,7 +243,6 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
   PDEVICE_EXTENSION DeviceExtension;
   PDEVICE_OBJECT DeviceObject;
   UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\Beep");
-  UNICODE_STRING SymlinkName = RTL_CONSTANT_STRING(L"\\??\\Beep");
   NTSTATUS Status;
 
   DPRINT("Beep Device Driver 0.0.3\n");
@@ -276,10 +275,6 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
   KeInitializeEvent(&DeviceExtension->Event,
 		    SynchronizationEvent,
 		    FALSE);
-
-  /* Create the dos device link */
-  IoCreateSymbolicLink(&SymlinkName,
-		       &DeviceName);
 
   return(STATUS_SUCCESS);
 }
