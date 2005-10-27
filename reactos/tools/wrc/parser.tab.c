@@ -226,7 +226,7 @@
 
 
 /* Copy the first part of user declarations.  */
-#line 1 "./parser.y"
+#line 1 "parser.y"
 
 /*
  * Copyright 1994	Martin von Loewis
@@ -482,7 +482,7 @@ static int rsrcid_to_token(int lookahead);
 #endif
 
 #if ! defined (YYSTYPE) && ! defined (YYSTYPE_IS_DECLARED)
-#line 241 "./parser.y"
+#line 241 "parser.y"
 typedef union YYSTYPE {
 	string_t	*str;
 	int		num;
@@ -1982,7 +1982,7 @@ yyreduce:
   switch (yyn)
     {
         case 2:
-#line 364 "./parser.y"
+#line 364 "parser.y"
     {
 		resource_t *rsc;
 		/* First add stringtables to the resource-list */
@@ -2012,16 +2012,16 @@ yyreduce:
 			yyvsp[0].res = rsc;
 		/* Final statement before were done */
 		resource_top = get_resource_head(yyvsp[0].res);
-		}
+		;}
     break;
 
   case 3:
-#line 398 "./parser.y"
-    { yyval.res = NULL; want_id = 1; }
+#line 398 "parser.y"
+    { yyval.res = NULL; want_id = 1; ;}
     break;
 
   case 4:
-#line 399 "./parser.y"
+#line 399 "parser.y"
     {
 		if(yyvsp[0].res)
 		{
@@ -2066,11 +2066,11 @@ yyreduce:
 		if(!dont_want_id)	/* See comments in language parsing below */
 			want_id = 1;
 		dont_want_id = 0;
-		}
+		;}
     break;
 
   case 6:
-#line 475 "./parser.y"
+#line 475 "parser.y"
     {
 		yyval.res = yyvsp[0].res;
 		if(yyval.res)
@@ -2082,11 +2082,11 @@ yyreduce:
 			yyval.res->name->name.i_name = yyvsp[-2].num;
 			chat("Got %s (%d)", get_typename(yyvsp[0].res), yyval.res->name->name.i_name);
 			}
-			}
+			;}
     break;
 
   case 7:
-#line 487 "./parser.y"
+#line 487 "parser.y"
     {
 		yyval.res = yyvsp[0].res;
 		if(yyval.res)
@@ -2096,11 +2096,11 @@ yyreduce:
 			yyval.res->name->name.s_name = yyvsp[-2].str;
 			chat("Got %s (%s)", get_typename(yyvsp[0].res), yyval.res->name->name.s_name->str.cstr);
 		}
-		}
+		;}
     break;
 
   case 8:
-#line 497 "./parser.y"
+#line 497 "parser.y"
     {
 		/* Don't do anything, stringtables are converted to
 		 * resource_t structures when we are finished parsing and
@@ -2108,16 +2108,16 @@ yyreduce:
 		 */
 		yyval.res = NULL;
 		chat("Got STRINGTABLE");
-		}
+		;}
     break;
 
   case 9:
-#line 505 "./parser.y"
-    {want_nl = 1; }
+#line 505 "parser.y"
+    {want_nl = 1; ;}
     break;
 
   case 10:
-#line 505 "./parser.y"
+#line 505 "parser.y"
     {
 		/* We *NEED* the newline to delimit the expression.
 		 * Otherwise, we would not be able to set the next
@@ -2155,60 +2155,60 @@ yyreduce:
 		currentlanguage = new_language(yyvsp[-2].num, yyvsp[0].num);
 		yyval.res = NULL;
 		chat("Got LANGUAGE %d,%d (0x%04x)", yyvsp[-2].num, yyvsp[0].num, (yyvsp[0].num<<10) + yyvsp[-2].num);
-		}
+		;}
     break;
 
   case 11:
-#line 549 "./parser.y"
-    { yychar = rsrcid_to_token(yychar); }
+#line 549 "parser.y"
+    { yychar = rsrcid_to_token(yychar); ;}
     break;
 
   case 12:
-#line 555 "./parser.y"
+#line 555 "parser.y"
     {
 		if(yyvsp[0].num > 65535 || yyvsp[0].num < -32768)
 			yyerror("Resource's ID out of range (%d)", yyvsp[0].num);
 		yyval.nid = new_name_id();
 		yyval.nid->type = name_ord;
 		yyval.nid->name.i_name = yyvsp[0].num;
-		}
+		;}
     break;
 
   case 13:
-#line 562 "./parser.y"
+#line 562 "parser.y"
     {
 		yyval.nid = new_name_id();
 		yyval.nid->type = name_str;
 		yyval.nid->name.s_name = yyvsp[0].str;
-		}
+		;}
     break;
 
   case 14:
-#line 572 "./parser.y"
-    { yyval.nid = yyvsp[0].nid; }
+#line 572 "parser.y"
+    { yyval.nid = yyvsp[0].nid; ;}
     break;
 
   case 15:
-#line 573 "./parser.y"
+#line 573 "parser.y"
     {
 		yyval.nid = new_name_id();
 		yyval.nid->type = name_str;
 		yyval.nid->name.s_name = yyvsp[0].str;
-		}
+		;}
     break;
 
   case 16:
-#line 582 "./parser.y"
-    { yyval.res = new_resource(res_acc, yyvsp[0].acc, yyvsp[0].acc->memopt, yyvsp[0].acc->lvc.language); }
+#line 582 "parser.y"
+    { yyval.res = new_resource(res_acc, yyvsp[0].acc, yyvsp[0].acc->memopt, yyvsp[0].acc->lvc.language); ;}
     break;
 
   case 17:
-#line 583 "./parser.y"
-    { yyval.res = new_resource(res_bmp, yyvsp[0].bmp, yyvsp[0].bmp->memopt, yyvsp[0].bmp->data->lvc.language); }
+#line 583 "parser.y"
+    { yyval.res = new_resource(res_bmp, yyvsp[0].bmp, yyvsp[0].bmp->memopt, yyvsp[0].bmp->data->lvc.language); ;}
     break;
 
   case 18:
-#line 584 "./parser.y"
+#line 584 "parser.y"
     {
 		resource_t *rsc;
 		if(yyvsp[0].ani->type == res_anicur)
@@ -2232,41 +2232,41 @@ yyreduce:
 		else
 			internal_error(__FILE__, __LINE__, "Invalid top-level type %d in cursor resource", yyvsp[0].ani->type);
 		free(yyvsp[0].ani);
-		}
+		;}
     break;
 
   case 19:
-#line 608 "./parser.y"
-    { yyval.res = new_resource(res_dlg, yyvsp[0].dlg, yyvsp[0].dlg->memopt, yyvsp[0].dlg->lvc.language); }
+#line 608 "parser.y"
+    { yyval.res = new_resource(res_dlg, yyvsp[0].dlg, yyvsp[0].dlg->memopt, yyvsp[0].dlg->lvc.language); ;}
     break;
 
   case 20:
-#line 609 "./parser.y"
+#line 609 "parser.y"
     {
 		if(win32)
 			yyval.res = new_resource(res_dlgex, yyvsp[0].dlgex, yyvsp[0].dlgex->memopt, yyvsp[0].dlgex->lvc.language);
 		else
 			yyval.res = NULL;
-		}
+		;}
     break;
 
   case 21:
-#line 615 "./parser.y"
-    { yyval.res = new_resource(res_dlginit, yyvsp[0].dginit, yyvsp[0].dginit->memopt, yyvsp[0].dginit->data->lvc.language); }
+#line 615 "parser.y"
+    { yyval.res = new_resource(res_dlginit, yyvsp[0].dginit, yyvsp[0].dginit->memopt, yyvsp[0].dginit->data->lvc.language); ;}
     break;
 
   case 22:
-#line 616 "./parser.y"
-    { yyval.res = new_resource(res_fnt, yyvsp[0].fnt, yyvsp[0].fnt->memopt, yyvsp[0].fnt->data->lvc.language); }
+#line 616 "parser.y"
+    { yyval.res = new_resource(res_fnt, yyvsp[0].fnt, yyvsp[0].fnt->memopt, yyvsp[0].fnt->data->lvc.language); ;}
     break;
 
   case 23:
-#line 617 "./parser.y"
-    { yyval.res = new_resource(res_fntdir, yyvsp[0].fnd, yyvsp[0].fnd->memopt, yyvsp[0].fnd->data->lvc.language); }
+#line 617 "parser.y"
+    { yyval.res = new_resource(res_fntdir, yyvsp[0].fnd, yyvsp[0].fnd->memopt, yyvsp[0].fnd->data->lvc.language); ;}
     break;
 
   case 24:
-#line 618 "./parser.y"
+#line 618 "parser.y"
     {
 		resource_t *rsc;
 		if(yyvsp[0].ani->type == res_aniico)
@@ -2290,76 +2290,76 @@ yyreduce:
 		else
 			internal_error(__FILE__, __LINE__, "Invalid top-level type %d in icon resource", yyvsp[0].ani->type);
 		free(yyvsp[0].ani);
-		}
+		;}
     break;
 
   case 25:
-#line 642 "./parser.y"
-    { yyval.res = new_resource(res_men, yyvsp[0].men, yyvsp[0].men->memopt, yyvsp[0].men->lvc.language); }
+#line 642 "parser.y"
+    { yyval.res = new_resource(res_men, yyvsp[0].men, yyvsp[0].men->memopt, yyvsp[0].men->lvc.language); ;}
     break;
 
   case 26:
-#line 643 "./parser.y"
+#line 643 "parser.y"
     {
 		if(win32)
 			yyval.res = new_resource(res_menex, yyvsp[0].menex, yyvsp[0].menex->memopt, yyvsp[0].menex->lvc.language);
 		else
 			yyval.res = NULL;
-		}
+		;}
     break;
 
   case 27:
-#line 649 "./parser.y"
-    { yyval.res = new_resource(res_msg, yyvsp[0].msg, WRC_MO_MOVEABLE | WRC_MO_DISCARDABLE, yyvsp[0].msg->data->lvc.language); }
+#line 649 "parser.y"
+    { yyval.res = new_resource(res_msg, yyvsp[0].msg, WRC_MO_MOVEABLE | WRC_MO_DISCARDABLE, yyvsp[0].msg->data->lvc.language); ;}
     break;
 
   case 28:
-#line 650 "./parser.y"
-    { yyval.res = new_resource(res_html, yyvsp[0].html, yyvsp[0].html->memopt, yyvsp[0].html->data->lvc.language); }
+#line 650 "parser.y"
+    { yyval.res = new_resource(res_html, yyvsp[0].html, yyvsp[0].html->memopt, yyvsp[0].html->data->lvc.language); ;}
     break;
 
   case 29:
-#line 651 "./parser.y"
-    { yyval.res = new_resource(res_rdt, yyvsp[0].rdt, yyvsp[0].rdt->memopt, yyvsp[0].rdt->data->lvc.language); }
+#line 651 "parser.y"
+    { yyval.res = new_resource(res_rdt, yyvsp[0].rdt, yyvsp[0].rdt->memopt, yyvsp[0].rdt->data->lvc.language); ;}
     break;
 
   case 30:
-#line 652 "./parser.y"
-    { yyval.res = new_resource(res_toolbar, yyvsp[0].tlbar, yyvsp[0].tlbar->memopt, yyvsp[0].tlbar->lvc.language); }
+#line 652 "parser.y"
+    { yyval.res = new_resource(res_toolbar, yyvsp[0].tlbar, yyvsp[0].tlbar->memopt, yyvsp[0].tlbar->lvc.language); ;}
     break;
 
   case 31:
-#line 653 "./parser.y"
-    { yyval.res = new_resource(res_usr, yyvsp[0].usr, yyvsp[0].usr->memopt, yyvsp[0].usr->data->lvc.language); }
+#line 653 "parser.y"
+    { yyval.res = new_resource(res_usr, yyvsp[0].usr, yyvsp[0].usr->memopt, yyvsp[0].usr->data->lvc.language); ;}
     break;
 
   case 32:
-#line 654 "./parser.y"
-    { yyval.res = new_resource(res_ver, yyvsp[0].veri, WRC_MO_MOVEABLE | WRC_MO_DISCARDABLE, yyvsp[0].veri->lvc.language); }
+#line 654 "parser.y"
+    { yyval.res = new_resource(res_ver, yyvsp[0].veri, WRC_MO_MOVEABLE | WRC_MO_DISCARDABLE, yyvsp[0].veri->lvc.language); ;}
     break;
 
   case 33:
-#line 658 "./parser.y"
-    { yyval.str = make_filename(yyvsp[0].str); }
+#line 658 "parser.y"
+    { yyval.str = make_filename(yyvsp[0].str); ;}
     break;
 
   case 34:
-#line 659 "./parser.y"
-    { yyval.str = make_filename(yyvsp[0].str); }
+#line 659 "parser.y"
+    { yyval.str = make_filename(yyvsp[0].str); ;}
     break;
 
   case 35:
-#line 660 "./parser.y"
-    { yyval.str = make_filename(yyvsp[0].str); }
+#line 660 "parser.y"
+    { yyval.str = make_filename(yyvsp[0].str); ;}
     break;
 
   case 36:
-#line 664 "./parser.y"
-    { yyval.bmp = new_bitmap(yyvsp[0].raw, yyvsp[-1].iptr); }
+#line 664 "parser.y"
+    { yyval.bmp = new_bitmap(yyvsp[0].raw, yyvsp[-1].iptr); ;}
     break;
 
   case 37:
-#line 668 "./parser.y"
+#line 668 "parser.y"
     {
 		yyval.ani = new_ani_any();
 		if(yyvsp[0].raw->size > 4 && !memcmp(yyvsp[0].raw->data, riff, sizeof(riff)))
@@ -2372,11 +2372,11 @@ yyreduce:
 			yyval.ani->type = res_curg;
 			yyval.ani->u.curg = new_cursor_group(yyvsp[0].raw, yyvsp[-1].iptr);
 		}
-	}
+	;}
     break;
 
   case 38:
-#line 684 "./parser.y"
+#line 684 "parser.y"
     {
 		yyval.ani = new_ani_any();
 		if(yyvsp[0].raw->size > 4 && !memcmp(yyvsp[0].raw->data, riff, sizeof(riff)))
@@ -2389,45 +2389,45 @@ yyreduce:
 			yyval.ani->type = res_icog;
 			yyval.ani->u.icog = new_icon_group(yyvsp[0].raw, yyvsp[-1].iptr);
 		}
-	}
+	;}
     break;
 
   case 39:
-#line 706 "./parser.y"
-    { yyval.fnt = new_font(yyvsp[0].raw, yyvsp[-1].iptr); }
+#line 706 "parser.y"
+    { yyval.fnt = new_font(yyvsp[0].raw, yyvsp[-1].iptr); ;}
     break;
 
   case 40:
-#line 716 "./parser.y"
-    { yyval.fnd = new_fontdir(yyvsp[0].raw, yyvsp[-1].iptr); }
+#line 716 "parser.y"
+    { yyval.fnd = new_fontdir(yyvsp[0].raw, yyvsp[-1].iptr); ;}
     break;
 
   case 41:
-#line 724 "./parser.y"
+#line 724 "parser.y"
     {
 		if(!win32)
 			yywarning("MESSAGETABLE not supported in 16-bit mode");
 		yyval.msg = new_messagetable(yyvsp[0].raw, yyvsp[-1].iptr);
-		}
+		;}
     break;
 
   case 42:
-#line 732 "./parser.y"
-    { yyval.html = new_html(yyvsp[0].raw, yyvsp[-1].iptr); }
+#line 732 "parser.y"
+    { yyval.html = new_html(yyvsp[0].raw, yyvsp[-1].iptr); ;}
     break;
 
   case 43:
-#line 736 "./parser.y"
-    { yyval.rdt = new_rcdata(yyvsp[0].raw, yyvsp[-1].iptr); }
+#line 736 "parser.y"
+    { yyval.rdt = new_rcdata(yyvsp[0].raw, yyvsp[-1].iptr); ;}
     break;
 
   case 44:
-#line 740 "./parser.y"
-    { yyval.dginit = new_dlginit(yyvsp[0].raw, yyvsp[-1].iptr); }
+#line 740 "parser.y"
+    { yyval.dginit = new_dlginit(yyvsp[0].raw, yyvsp[-1].iptr); ;}
     break;
 
   case 45:
-#line 744 "./parser.y"
+#line 744 "parser.y"
     {
 #ifdef WORDS_BIGENDIAN
 			if(pedantic && byteorder != WRC_BO_LITTLE)
@@ -2436,29 +2436,29 @@ yyreduce:
 #endif
 				yywarning("Byteordering is not little-endian and type cannot be interpreted");
 			yyval.usr = new_user(yyvsp[-2].nid, yyvsp[0].raw, yyvsp[-1].iptr);
-		}
+		;}
     break;
 
   case 46:
-#line 755 "./parser.y"
+#line 755 "parser.y"
     {
 		yyval.nid = new_name_id();
 		yyval.nid->type = name_ord;
 		yyval.nid->name.i_name = yyvsp[0].num;
-		}
+		;}
     break;
 
   case 47:
-#line 760 "./parser.y"
+#line 760 "parser.y"
     {
 		yyval.nid = new_name_id();
 		yyval.nid->type = name_str;
 		yyval.nid->name.s_name = yyvsp[0].str;
-		}
+		;}
     break;
 
   case 48:
-#line 769 "./parser.y"
+#line 769 "parser.y"
     {
 		yyval.acc = new_accelerator();
 		if(yyvsp[-4].iptr)
@@ -2480,76 +2480,76 @@ yyreduce:
 		}
 		if(!yyval.acc->lvc.language)
 			yyval.acc->lvc.language = dup_language(currentlanguage);
-		}
+		;}
     break;
 
   case 49:
-#line 793 "./parser.y"
-    { yyval.event=NULL; }
+#line 793 "parser.y"
+    { yyval.event=NULL; ;}
     break;
 
   case 50:
-#line 794 "./parser.y"
-    { yyval.event=add_string_event(yyvsp[-3].str, yyvsp[-1].num, yyvsp[0].num, yyvsp[-4].event); }
+#line 794 "parser.y"
+    { yyval.event=add_string_event(yyvsp[-3].str, yyvsp[-1].num, yyvsp[0].num, yyvsp[-4].event); ;}
     break;
 
   case 51:
-#line 795 "./parser.y"
-    { yyval.event=add_event(yyvsp[-3].num, yyvsp[-1].num, yyvsp[0].num, yyvsp[-4].event); }
+#line 795 "parser.y"
+    { yyval.event=add_event(yyvsp[-3].num, yyvsp[-1].num, yyvsp[0].num, yyvsp[-4].event); ;}
     break;
 
   case 52:
-#line 804 "./parser.y"
-    { yyval.num = 0; }
+#line 804 "parser.y"
+    { yyval.num = 0; ;}
     break;
 
   case 53:
-#line 805 "./parser.y"
-    { yyval.num = yyvsp[0].num; }
+#line 805 "parser.y"
+    { yyval.num = yyvsp[0].num; ;}
     break;
 
   case 54:
-#line 808 "./parser.y"
-    { yyval.num = yyvsp[0].num; }
+#line 808 "parser.y"
+    { yyval.num = yyvsp[0].num; ;}
     break;
 
   case 55:
-#line 809 "./parser.y"
-    { yyval.num = yyvsp[-2].num | yyvsp[0].num; }
+#line 809 "parser.y"
+    { yyval.num = yyvsp[-2].num | yyvsp[0].num; ;}
     break;
 
   case 56:
-#line 812 "./parser.y"
-    { yyval.num = WRC_AF_NOINVERT; }
+#line 812 "parser.y"
+    { yyval.num = WRC_AF_NOINVERT; ;}
     break;
 
   case 57:
-#line 813 "./parser.y"
-    { yyval.num = WRC_AF_SHIFT; }
+#line 813 "parser.y"
+    { yyval.num = WRC_AF_SHIFT; ;}
     break;
 
   case 58:
-#line 814 "./parser.y"
-    { yyval.num = WRC_AF_CONTROL; }
+#line 814 "parser.y"
+    { yyval.num = WRC_AF_CONTROL; ;}
     break;
 
   case 59:
-#line 815 "./parser.y"
-    { yyval.num = WRC_AF_ALT; }
+#line 815 "parser.y"
+    { yyval.num = WRC_AF_ALT; ;}
     break;
 
   case 60:
-#line 816 "./parser.y"
-    { yyval.num = WRC_AF_ASCII; }
+#line 816 "parser.y"
+    { yyval.num = WRC_AF_ASCII; ;}
     break;
 
   case 61:
-#line 817 "./parser.y"
-    { yyval.num = WRC_AF_VIRTKEY; }
+#line 817 "parser.y"
+    { yyval.num = WRC_AF_VIRTKEY; ;}
     break;
 
   case 62:
-#line 823 "./parser.y"
+#line 823 "parser.y"
     {
 		if(yyvsp[-11].iptr)
 		{
@@ -2580,162 +2580,162 @@ yyreduce:
 
 		if(!yyval.dlg->lvc.language)
 			yyval.dlg->lvc.language = dup_language(currentlanguage);
-		}
+		;}
     break;
 
   case 63:
-#line 857 "./parser.y"
-    { yyval.dlg=new_dialog(); }
+#line 857 "parser.y"
+    { yyval.dlg=new_dialog(); ;}
     break;
 
   case 64:
-#line 858 "./parser.y"
-    { yyval.dlg=dialog_style(yyvsp[0].style,yyvsp[-2].dlg); }
+#line 858 "parser.y"
+    { yyval.dlg=dialog_style(yyvsp[0].style,yyvsp[-2].dlg); ;}
     break;
 
   case 65:
-#line 859 "./parser.y"
-    { yyval.dlg=dialog_exstyle(yyvsp[0].style,yyvsp[-2].dlg); }
+#line 859 "parser.y"
+    { yyval.dlg=dialog_exstyle(yyvsp[0].style,yyvsp[-2].dlg); ;}
     break;
 
   case 66:
-#line 860 "./parser.y"
-    { yyval.dlg=dialog_caption(yyvsp[0].str,yyvsp[-2].dlg); }
+#line 860 "parser.y"
+    { yyval.dlg=dialog_caption(yyvsp[0].str,yyvsp[-2].dlg); ;}
     break;
 
   case 67:
-#line 861 "./parser.y"
-    { yyval.dlg=dialog_font(yyvsp[0].fntid,yyvsp[-1].dlg); }
+#line 861 "parser.y"
+    { yyval.dlg=dialog_font(yyvsp[0].fntid,yyvsp[-1].dlg); ;}
     break;
 
   case 68:
-#line 862 "./parser.y"
-    { yyval.dlg=dialog_class(yyvsp[0].nid,yyvsp[-2].dlg); }
+#line 862 "parser.y"
+    { yyval.dlg=dialog_class(yyvsp[0].nid,yyvsp[-2].dlg); ;}
     break;
 
   case 69:
-#line 863 "./parser.y"
-    { yyval.dlg=dialog_menu(yyvsp[0].nid,yyvsp[-2].dlg); }
+#line 863 "parser.y"
+    { yyval.dlg=dialog_menu(yyvsp[0].nid,yyvsp[-2].dlg); ;}
     break;
 
   case 70:
-#line 864 "./parser.y"
-    { yyval.dlg=dialog_language(yyvsp[0].lan,yyvsp[-1].dlg); }
+#line 864 "parser.y"
+    { yyval.dlg=dialog_language(yyvsp[0].lan,yyvsp[-1].dlg); ;}
     break;
 
   case 71:
-#line 865 "./parser.y"
-    { yyval.dlg=dialog_characteristics(yyvsp[0].chars,yyvsp[-1].dlg); }
+#line 865 "parser.y"
+    { yyval.dlg=dialog_characteristics(yyvsp[0].chars,yyvsp[-1].dlg); ;}
     break;
 
   case 72:
-#line 866 "./parser.y"
-    { yyval.dlg=dialog_version(yyvsp[0].ver,yyvsp[-1].dlg); }
+#line 866 "parser.y"
+    { yyval.dlg=dialog_version(yyvsp[0].ver,yyvsp[-1].dlg); ;}
     break;
 
   case 73:
-#line 869 "./parser.y"
-    { yyval.ctl = NULL; }
+#line 869 "parser.y"
+    { yyval.ctl = NULL; ;}
     break;
 
   case 74:
-#line 870 "./parser.y"
-    { yyval.ctl=ins_ctrl(-1, 0, yyvsp[0].ctl, yyvsp[-2].ctl); }
+#line 870 "parser.y"
+    { yyval.ctl=ins_ctrl(-1, 0, yyvsp[0].ctl, yyvsp[-2].ctl); ;}
     break;
 
   case 75:
-#line 871 "./parser.y"
-    { yyval.ctl=ins_ctrl(CT_EDIT, 0, yyvsp[0].ctl, yyvsp[-2].ctl); }
+#line 871 "parser.y"
+    { yyval.ctl=ins_ctrl(CT_EDIT, 0, yyvsp[0].ctl, yyvsp[-2].ctl); ;}
     break;
 
   case 76:
-#line 872 "./parser.y"
-    { yyval.ctl=ins_ctrl(CT_LISTBOX, 0, yyvsp[0].ctl, yyvsp[-2].ctl); }
+#line 872 "parser.y"
+    { yyval.ctl=ins_ctrl(CT_LISTBOX, 0, yyvsp[0].ctl, yyvsp[-2].ctl); ;}
     break;
 
   case 77:
-#line 873 "./parser.y"
-    { yyval.ctl=ins_ctrl(CT_COMBOBOX, 0, yyvsp[0].ctl, yyvsp[-2].ctl); }
+#line 873 "parser.y"
+    { yyval.ctl=ins_ctrl(CT_COMBOBOX, 0, yyvsp[0].ctl, yyvsp[-2].ctl); ;}
     break;
 
   case 78:
-#line 874 "./parser.y"
-    { yyval.ctl=ins_ctrl(CT_SCROLLBAR, 0, yyvsp[0].ctl, yyvsp[-2].ctl); }
+#line 874 "parser.y"
+    { yyval.ctl=ins_ctrl(CT_SCROLLBAR, 0, yyvsp[0].ctl, yyvsp[-2].ctl); ;}
     break;
 
   case 79:
-#line 875 "./parser.y"
-    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_CHECKBOX, yyvsp[0].ctl, yyvsp[-2].ctl); }
+#line 875 "parser.y"
+    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_CHECKBOX, yyvsp[0].ctl, yyvsp[-2].ctl); ;}
     break;
 
   case 80:
-#line 876 "./parser.y"
-    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_DEFPUSHBUTTON, yyvsp[0].ctl, yyvsp[-2].ctl); }
+#line 876 "parser.y"
+    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_DEFPUSHBUTTON, yyvsp[0].ctl, yyvsp[-2].ctl); ;}
     break;
 
   case 81:
-#line 877 "./parser.y"
-    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_GROUPBOX, yyvsp[0].ctl, yyvsp[-2].ctl);}
+#line 877 "parser.y"
+    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_GROUPBOX, yyvsp[0].ctl, yyvsp[-2].ctl);;}
     break;
 
   case 82:
-#line 878 "./parser.y"
-    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_PUSHBUTTON, yyvsp[0].ctl, yyvsp[-2].ctl); }
+#line 878 "parser.y"
+    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_PUSHBUTTON, yyvsp[0].ctl, yyvsp[-2].ctl); ;}
     break;
 
   case 83:
-#line 880 "./parser.y"
-    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_RADIOBUTTON, yyvsp[0].ctl, yyvsp[-2].ctl); }
+#line 880 "parser.y"
+    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_RADIOBUTTON, yyvsp[0].ctl, yyvsp[-2].ctl); ;}
     break;
 
   case 84:
-#line 881 "./parser.y"
-    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_AUTO3STATE, yyvsp[0].ctl, yyvsp[-2].ctl); }
+#line 881 "parser.y"
+    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_AUTO3STATE, yyvsp[0].ctl, yyvsp[-2].ctl); ;}
     break;
 
   case 85:
-#line 882 "./parser.y"
-    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_3STATE, yyvsp[0].ctl, yyvsp[-2].ctl); }
+#line 882 "parser.y"
+    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_3STATE, yyvsp[0].ctl, yyvsp[-2].ctl); ;}
     break;
 
   case 86:
-#line 883 "./parser.y"
-    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_AUTOCHECKBOX, yyvsp[0].ctl, yyvsp[-2].ctl); }
+#line 883 "parser.y"
+    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_AUTOCHECKBOX, yyvsp[0].ctl, yyvsp[-2].ctl); ;}
     break;
 
   case 87:
-#line 884 "./parser.y"
-    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_AUTORADIOBUTTON, yyvsp[0].ctl, yyvsp[-2].ctl); }
+#line 884 "parser.y"
+    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_AUTORADIOBUTTON, yyvsp[0].ctl, yyvsp[-2].ctl); ;}
     break;
 
   case 88:
-#line 885 "./parser.y"
-    { yyval.ctl=ins_ctrl(CT_STATIC, SS_LEFT, yyvsp[0].ctl, yyvsp[-2].ctl); }
+#line 885 "parser.y"
+    { yyval.ctl=ins_ctrl(CT_STATIC, SS_LEFT, yyvsp[0].ctl, yyvsp[-2].ctl); ;}
     break;
 
   case 89:
-#line 886 "./parser.y"
-    { yyval.ctl=ins_ctrl(CT_STATIC, SS_CENTER, yyvsp[0].ctl, yyvsp[-2].ctl); }
+#line 886 "parser.y"
+    { yyval.ctl=ins_ctrl(CT_STATIC, SS_CENTER, yyvsp[0].ctl, yyvsp[-2].ctl); ;}
     break;
 
   case 90:
-#line 887 "./parser.y"
-    { yyval.ctl=ins_ctrl(CT_STATIC, SS_RIGHT, yyvsp[0].ctl, yyvsp[-2].ctl); }
+#line 887 "parser.y"
+    { yyval.ctl=ins_ctrl(CT_STATIC, SS_RIGHT, yyvsp[0].ctl, yyvsp[-2].ctl); ;}
     break;
 
   case 91:
-#line 889 "./parser.y"
+#line 889 "parser.y"
     {
 		yyvsp[0].ctl->title = yyvsp[-7].nid;
 		yyvsp[0].ctl->id = yyvsp[-5].num;
 		yyvsp[0].ctl->x = yyvsp[-3].num;
 		yyvsp[0].ctl->y = yyvsp[-1].num;
 		yyval.ctl = ins_ctrl(CT_STATIC, SS_ICON, yyvsp[0].ctl, yyvsp[-9].ctl);
-		}
+		;}
     break;
 
   case 92:
-#line 899 "./parser.y"
+#line 899 "parser.y"
     {
 		yyval.ctl=new_control();
 		yyval.ctl->title = new_name_id();
@@ -2757,11 +2757,11 @@ yyreduce:
 			}
 			free(yyvsp[0].styles);
 		}
-		}
+		;}
     break;
 
   case 93:
-#line 924 "./parser.y"
+#line 924 "parser.y"
     {
 		yyval.ctl = new_control();
 		yyval.ctl->id = yyvsp[-9].num;
@@ -2780,36 +2780,36 @@ yyreduce:
 			}
 			free(yyvsp[0].styles);
 		}
-		}
+		;}
     break;
 
   case 94:
-#line 946 "./parser.y"
-    { yyval.ctl = new_control(); }
+#line 946 "parser.y"
+    { yyval.ctl = new_control(); ;}
     break;
 
   case 95:
-#line 948 "./parser.y"
+#line 948 "parser.y"
     {
 		yyval.ctl = new_control();
 		yyval.ctl->width = yyvsp[-2].num;
 		yyval.ctl->height = yyvsp[0].num;
-		}
+		;}
     break;
 
   case 96:
-#line 953 "./parser.y"
+#line 953 "parser.y"
     {
 		yyval.ctl = new_control();
 		yyval.ctl->width = yyvsp[-4].num;
 		yyval.ctl->height = yyvsp[-2].num;
 		yyval.ctl->style = yyvsp[0].style;
 		yyval.ctl->gotstyle = TRUE;
-		}
+		;}
     break;
 
   case 97:
-#line 960 "./parser.y"
+#line 960 "parser.y"
     {
 		yyval.ctl = new_control();
 		yyval.ctl->width = yyvsp[-6].num;
@@ -2818,11 +2818,11 @@ yyreduce:
 		yyval.ctl->gotstyle = TRUE;
 		yyval.ctl->exstyle = yyvsp[0].style;
 		yyval.ctl->gotexstyle = TRUE;
-		}
+		;}
     break;
 
   case 98:
-#line 971 "./parser.y"
+#line 971 "parser.y"
     {
 		yyval.ctl=new_control();
 		yyval.ctl->title = yyvsp[-16].nid;
@@ -2836,11 +2836,11 @@ yyreduce:
 		yyval.ctl->height = yyvsp[-2].num;
 		yyval.ctl->exstyle = yyvsp[0].style;
 		yyval.ctl->gotexstyle = TRUE;
-		}
+		;}
     break;
 
   case 99:
-#line 985 "./parser.y"
+#line 985 "parser.y"
     {
 		yyval.ctl=new_control();
 		yyval.ctl->title = yyvsp[-14].nid;
@@ -2852,69 +2852,69 @@ yyreduce:
 		yyval.ctl->y = yyvsp[-4].num;
 		yyval.ctl->width = yyvsp[-2].num;
 		yyval.ctl->height = yyvsp[0].num;
-		}
+		;}
     break;
 
   case 100:
-#line 1000 "./parser.y"
-    { yyval.fntid = new_font_id(yyvsp[-2].num, yyvsp[0].str, 0, 0); }
+#line 1000 "parser.y"
+    { yyval.fntid = new_font_id(yyvsp[-2].num, yyvsp[0].str, 0, 0); ;}
     break;
 
   case 101:
-#line 1005 "./parser.y"
-    { yyval.styles = NULL; }
+#line 1005 "parser.y"
+    { yyval.styles = NULL; ;}
     break;
 
   case 102:
-#line 1006 "./parser.y"
-    { yyval.styles = new_style_pair(yyvsp[0].style, 0); }
+#line 1006 "parser.y"
+    { yyval.styles = new_style_pair(yyvsp[0].style, 0); ;}
     break;
 
   case 103:
-#line 1007 "./parser.y"
-    { yyval.styles = new_style_pair(yyvsp[-2].style, yyvsp[0].style); }
+#line 1007 "parser.y"
+    { yyval.styles = new_style_pair(yyvsp[-2].style, yyvsp[0].style); ;}
     break;
 
   case 104:
-#line 1011 "./parser.y"
-    { yyval.style = new_style(yyvsp[-2].style->or_mask | yyvsp[0].style->or_mask, yyvsp[-2].style->and_mask | yyvsp[0].style->and_mask); free(yyvsp[-2].style); free(yyvsp[0].style);}
+#line 1011 "parser.y"
+    { yyval.style = new_style(yyvsp[-2].style->or_mask | yyvsp[0].style->or_mask, yyvsp[-2].style->and_mask | yyvsp[0].style->and_mask); free(yyvsp[-2].style); free(yyvsp[0].style);;}
     break;
 
   case 105:
-#line 1012 "./parser.y"
-    { yyval.style = yyvsp[-1].style; }
+#line 1012 "parser.y"
+    { yyval.style = yyvsp[-1].style; ;}
     break;
 
   case 106:
-#line 1013 "./parser.y"
-    { yyval.style = new_style(yyvsp[0].num, 0); }
+#line 1013 "parser.y"
+    { yyval.style = new_style(yyvsp[0].num, 0); ;}
     break;
 
   case 107:
-#line 1014 "./parser.y"
-    { yyval.style = new_style(0, yyvsp[0].num); }
+#line 1014 "parser.y"
+    { yyval.style = new_style(0, yyvsp[0].num); ;}
     break;
 
   case 108:
-#line 1018 "./parser.y"
+#line 1018 "parser.y"
     {
 		yyval.nid = new_name_id();
 		yyval.nid->type = name_ord;
 		yyval.nid->name.i_name = yyvsp[0].num;
-		}
+		;}
     break;
 
   case 109:
-#line 1023 "./parser.y"
+#line 1023 "parser.y"
     {
 		yyval.nid = new_name_id();
 		yyval.nid->type = name_str;
 		yyval.nid->name.s_name = yyvsp[0].str;
-		}
+		;}
     break;
 
   case 110:
-#line 1032 "./parser.y"
+#line 1032 "parser.y"
     {
 		if(!win32)
 			yywarning("DIALOGEX not supported in 16-bit mode");
@@ -2954,167 +2954,167 @@ yyreduce:
 
 		if(!yyval.dlgex->lvc.language)
 			yyval.dlgex->lvc.language = dup_language(currentlanguage);
-		}
+		;}
     break;
 
   case 111:
-#line 1075 "./parser.y"
-    { yyval.dlgex=new_dialogex(); }
+#line 1075 "parser.y"
+    { yyval.dlgex=new_dialogex(); ;}
     break;
 
   case 112:
-#line 1076 "./parser.y"
-    { yyval.dlgex=dialogex_style(yyvsp[0].style,yyvsp[-2].dlgex); }
+#line 1076 "parser.y"
+    { yyval.dlgex=dialogex_style(yyvsp[0].style,yyvsp[-2].dlgex); ;}
     break;
 
   case 113:
-#line 1077 "./parser.y"
-    { yyval.dlgex=dialogex_exstyle(yyvsp[0].style,yyvsp[-2].dlgex); }
+#line 1077 "parser.y"
+    { yyval.dlgex=dialogex_exstyle(yyvsp[0].style,yyvsp[-2].dlgex); ;}
     break;
 
   case 114:
-#line 1078 "./parser.y"
-    { yyval.dlgex=dialogex_caption(yyvsp[0].str,yyvsp[-2].dlgex); }
+#line 1078 "parser.y"
+    { yyval.dlgex=dialogex_caption(yyvsp[0].str,yyvsp[-2].dlgex); ;}
     break;
 
   case 115:
-#line 1079 "./parser.y"
-    { yyval.dlgex=dialogex_font(yyvsp[0].fntid,yyvsp[-1].dlgex); }
+#line 1079 "parser.y"
+    { yyval.dlgex=dialogex_font(yyvsp[0].fntid,yyvsp[-1].dlgex); ;}
     break;
 
   case 116:
-#line 1080 "./parser.y"
-    { yyval.dlgex=dialogex_font(yyvsp[0].fntid,yyvsp[-1].dlgex); }
+#line 1080 "parser.y"
+    { yyval.dlgex=dialogex_font(yyvsp[0].fntid,yyvsp[-1].dlgex); ;}
     break;
 
   case 117:
-#line 1081 "./parser.y"
-    { yyval.dlgex=dialogex_class(yyvsp[0].nid,yyvsp[-2].dlgex); }
+#line 1081 "parser.y"
+    { yyval.dlgex=dialogex_class(yyvsp[0].nid,yyvsp[-2].dlgex); ;}
     break;
 
   case 118:
-#line 1082 "./parser.y"
-    { yyval.dlgex=dialogex_menu(yyvsp[0].nid,yyvsp[-2].dlgex); }
+#line 1082 "parser.y"
+    { yyval.dlgex=dialogex_menu(yyvsp[0].nid,yyvsp[-2].dlgex); ;}
     break;
 
   case 119:
-#line 1083 "./parser.y"
-    { yyval.dlgex=dialogex_language(yyvsp[0].lan,yyvsp[-1].dlgex); }
+#line 1083 "parser.y"
+    { yyval.dlgex=dialogex_language(yyvsp[0].lan,yyvsp[-1].dlgex); ;}
     break;
 
   case 120:
-#line 1084 "./parser.y"
-    { yyval.dlgex=dialogex_characteristics(yyvsp[0].chars,yyvsp[-1].dlgex); }
+#line 1084 "parser.y"
+    { yyval.dlgex=dialogex_characteristics(yyvsp[0].chars,yyvsp[-1].dlgex); ;}
     break;
 
   case 121:
-#line 1085 "./parser.y"
-    { yyval.dlgex=dialogex_version(yyvsp[0].ver,yyvsp[-1].dlgex); }
+#line 1085 "parser.y"
+    { yyval.dlgex=dialogex_version(yyvsp[0].ver,yyvsp[-1].dlgex); ;}
     break;
 
   case 122:
-#line 1088 "./parser.y"
-    { yyval.ctl = NULL; }
+#line 1088 "parser.y"
+    { yyval.ctl = NULL; ;}
     break;
 
   case 123:
-#line 1089 "./parser.y"
-    { yyval.ctl=ins_ctrl(-1, 0, yyvsp[0].ctl, yyvsp[-2].ctl); }
+#line 1089 "parser.y"
+    { yyval.ctl=ins_ctrl(-1, 0, yyvsp[0].ctl, yyvsp[-2].ctl); ;}
     break;
 
   case 124:
-#line 1090 "./parser.y"
-    { yyval.ctl=ins_ctrl(CT_EDIT, 0, yyvsp[0].ctl, yyvsp[-2].ctl); }
+#line 1090 "parser.y"
+    { yyval.ctl=ins_ctrl(CT_EDIT, 0, yyvsp[0].ctl, yyvsp[-2].ctl); ;}
     break;
 
   case 125:
-#line 1091 "./parser.y"
-    { yyval.ctl=ins_ctrl(CT_LISTBOX, 0, yyvsp[0].ctl, yyvsp[-2].ctl); }
+#line 1091 "parser.y"
+    { yyval.ctl=ins_ctrl(CT_LISTBOX, 0, yyvsp[0].ctl, yyvsp[-2].ctl); ;}
     break;
 
   case 126:
-#line 1092 "./parser.y"
-    { yyval.ctl=ins_ctrl(CT_COMBOBOX, 0, yyvsp[0].ctl, yyvsp[-2].ctl); }
+#line 1092 "parser.y"
+    { yyval.ctl=ins_ctrl(CT_COMBOBOX, 0, yyvsp[0].ctl, yyvsp[-2].ctl); ;}
     break;
 
   case 127:
-#line 1093 "./parser.y"
-    { yyval.ctl=ins_ctrl(CT_SCROLLBAR, 0, yyvsp[0].ctl, yyvsp[-2].ctl); }
+#line 1093 "parser.y"
+    { yyval.ctl=ins_ctrl(CT_SCROLLBAR, 0, yyvsp[0].ctl, yyvsp[-2].ctl); ;}
     break;
 
   case 128:
-#line 1094 "./parser.y"
-    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_CHECKBOX, yyvsp[0].ctl, yyvsp[-2].ctl); }
+#line 1094 "parser.y"
+    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_CHECKBOX, yyvsp[0].ctl, yyvsp[-2].ctl); ;}
     break;
 
   case 129:
-#line 1095 "./parser.y"
-    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_DEFPUSHBUTTON, yyvsp[0].ctl, yyvsp[-2].ctl); }
+#line 1095 "parser.y"
+    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_DEFPUSHBUTTON, yyvsp[0].ctl, yyvsp[-2].ctl); ;}
     break;
 
   case 130:
-#line 1096 "./parser.y"
-    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_GROUPBOX, yyvsp[0].ctl, yyvsp[-2].ctl);}
+#line 1096 "parser.y"
+    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_GROUPBOX, yyvsp[0].ctl, yyvsp[-2].ctl);;}
     break;
 
   case 131:
-#line 1097 "./parser.y"
-    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_PUSHBUTTON, yyvsp[0].ctl, yyvsp[-2].ctl); }
+#line 1097 "parser.y"
+    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_PUSHBUTTON, yyvsp[0].ctl, yyvsp[-2].ctl); ;}
     break;
 
   case 132:
-#line 1099 "./parser.y"
-    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_RADIOBUTTON, yyvsp[0].ctl, yyvsp[-2].ctl); }
+#line 1099 "parser.y"
+    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_RADIOBUTTON, yyvsp[0].ctl, yyvsp[-2].ctl); ;}
     break;
 
   case 133:
-#line 1100 "./parser.y"
-    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_AUTO3STATE, yyvsp[0].ctl, yyvsp[-2].ctl); }
+#line 1100 "parser.y"
+    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_AUTO3STATE, yyvsp[0].ctl, yyvsp[-2].ctl); ;}
     break;
 
   case 134:
-#line 1101 "./parser.y"
-    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_3STATE, yyvsp[0].ctl, yyvsp[-2].ctl); }
+#line 1101 "parser.y"
+    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_3STATE, yyvsp[0].ctl, yyvsp[-2].ctl); ;}
     break;
 
   case 135:
-#line 1102 "./parser.y"
-    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_AUTOCHECKBOX, yyvsp[0].ctl, yyvsp[-2].ctl); }
+#line 1102 "parser.y"
+    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_AUTOCHECKBOX, yyvsp[0].ctl, yyvsp[-2].ctl); ;}
     break;
 
   case 136:
-#line 1103 "./parser.y"
-    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_AUTORADIOBUTTON, yyvsp[0].ctl, yyvsp[-2].ctl); }
+#line 1103 "parser.y"
+    { yyval.ctl=ins_ctrl(CT_BUTTON, BS_AUTORADIOBUTTON, yyvsp[0].ctl, yyvsp[-2].ctl); ;}
     break;
 
   case 137:
-#line 1104 "./parser.y"
-    { yyval.ctl=ins_ctrl(CT_STATIC, SS_LEFT, yyvsp[0].ctl, yyvsp[-2].ctl); }
+#line 1104 "parser.y"
+    { yyval.ctl=ins_ctrl(CT_STATIC, SS_LEFT, yyvsp[0].ctl, yyvsp[-2].ctl); ;}
     break;
 
   case 138:
-#line 1105 "./parser.y"
-    { yyval.ctl=ins_ctrl(CT_STATIC, SS_CENTER, yyvsp[0].ctl, yyvsp[-2].ctl); }
+#line 1105 "parser.y"
+    { yyval.ctl=ins_ctrl(CT_STATIC, SS_CENTER, yyvsp[0].ctl, yyvsp[-2].ctl); ;}
     break;
 
   case 139:
-#line 1106 "./parser.y"
-    { yyval.ctl=ins_ctrl(CT_STATIC, SS_RIGHT, yyvsp[0].ctl, yyvsp[-2].ctl); }
+#line 1106 "parser.y"
+    { yyval.ctl=ins_ctrl(CT_STATIC, SS_RIGHT, yyvsp[0].ctl, yyvsp[-2].ctl); ;}
     break;
 
   case 140:
-#line 1108 "./parser.y"
+#line 1108 "parser.y"
     {
 		yyvsp[0].ctl->title = yyvsp[-7].nid;
 		yyvsp[0].ctl->id = yyvsp[-5].num;
 		yyvsp[0].ctl->x = yyvsp[-3].num;
 		yyvsp[0].ctl->y = yyvsp[-1].num;
 		yyval.ctl = ins_ctrl(CT_STATIC, SS_ICON, yyvsp[0].ctl, yyvsp[-9].ctl);
-		}
+		;}
     break;
 
   case 141:
-#line 1119 "./parser.y"
+#line 1119 "parser.y"
     {
 		yyval.ctl=new_control();
 		yyval.ctl->title = yyvsp[-18].nid;
@@ -3138,11 +3138,11 @@ yyreduce:
 			free(yyvsp[-1].iptr);
 		}
 		yyval.ctl->extra = yyvsp[0].raw;
-		}
+		;}
     break;
 
   case 142:
-#line 1143 "./parser.y"
+#line 1143 "parser.y"
     {
 		yyval.ctl=new_control();
 		yyval.ctl->title = yyvsp[-15].nid;
@@ -3155,11 +3155,11 @@ yyreduce:
 		yyval.ctl->width = yyvsp[-3].num;
 		yyval.ctl->height = yyvsp[-1].num;
 		yyval.ctl->extra = yyvsp[0].raw;
-		}
+		;}
     break;
 
   case 143:
-#line 1159 "./parser.y"
+#line 1159 "parser.y"
     {
 		yyval.ctl=new_control();
 		yyval.ctl->title = new_name_id();
@@ -3184,11 +3184,11 @@ yyreduce:
 		}
 
 		yyval.ctl->extra = yyvsp[0].raw;
-		}
+		;}
     break;
 
   case 144:
-#line 1187 "./parser.y"
+#line 1187 "parser.y"
     {
 		yyval.ctl = new_control();
 		yyval.ctl->id = yyvsp[-11].num;
@@ -3209,46 +3209,46 @@ yyreduce:
 			free(yyvsp[-2].styles);
 		}
 		yyval.ctl->extra = yyvsp[0].raw;
-		}
+		;}
     break;
 
   case 145:
-#line 1210 "./parser.y"
-    { yyval.raw = NULL; }
+#line 1210 "parser.y"
+    { yyval.raw = NULL; ;}
     break;
 
   case 146:
-#line 1211 "./parser.y"
-    { yyval.raw = yyvsp[0].raw; }
+#line 1211 "parser.y"
+    { yyval.raw = yyvsp[0].raw; ;}
     break;
 
   case 147:
-#line 1214 "./parser.y"
-    { yyval.iptr = NULL; }
+#line 1214 "parser.y"
+    { yyval.iptr = NULL; ;}
     break;
 
   case 148:
-#line 1215 "./parser.y"
-    { yyval.iptr = new_int(yyvsp[0].num); }
+#line 1215 "parser.y"
+    { yyval.iptr = new_int(yyvsp[0].num); ;}
     break;
 
   case 149:
-#line 1219 "./parser.y"
-    { yyval.fntid = new_font_id(yyvsp[-7].num, yyvsp[-5].str, yyvsp[-3].num, yyvsp[-1].num); }
+#line 1219 "parser.y"
+    { yyval.fntid = new_font_id(yyvsp[-7].num, yyvsp[-5].str, yyvsp[-3].num, yyvsp[-1].num); ;}
     break;
 
   case 150:
-#line 1226 "./parser.y"
-    { yyval.fntid = NULL; }
+#line 1226 "parser.y"
+    { yyval.fntid = NULL; ;}
     break;
 
   case 151:
-#line 1227 "./parser.y"
-    { yyval.fntid = NULL; }
+#line 1227 "parser.y"
+    { yyval.fntid = NULL; ;}
     break;
 
   case 152:
-#line 1231 "./parser.y"
+#line 1231 "parser.y"
     {
 		if(!yyvsp[0].menitm)
 			yyerror("Menu must contain items");
@@ -3268,21 +3268,21 @@ yyreduce:
 		}
 		if(!yyval.men->lvc.language)
 			yyval.men->lvc.language = dup_language(currentlanguage);
-		}
+		;}
     break;
 
   case 153:
-#line 1254 "./parser.y"
-    { yyval.menitm = yyvsp[-1].menitm; }
+#line 1254 "parser.y"
+    { yyval.menitm = yyvsp[-1].menitm; ;}
     break;
 
   case 154:
-#line 1258 "./parser.y"
-    {yyval.menitm = NULL;}
+#line 1258 "parser.y"
+    {yyval.menitm = NULL;;}
     break;
 
   case 155:
-#line 1259 "./parser.y"
+#line 1259 "parser.y"
     {
 		yyval.menitm=new_menu_item();
 		yyval.menitm->prev = yyvsp[-5].menitm;
@@ -3291,21 +3291,21 @@ yyreduce:
 		yyval.menitm->id =  yyvsp[-1].num;
 		yyval.menitm->state = yyvsp[0].num;
 		yyval.menitm->name = yyvsp[-3].str;
-		}
+		;}
     break;
 
   case 156:
-#line 1268 "./parser.y"
+#line 1268 "parser.y"
     {
 		yyval.menitm=new_menu_item();
 		yyval.menitm->prev = yyvsp[-2].menitm;
 		if(yyvsp[-2].menitm)
 			yyvsp[-2].menitm->next = yyval.menitm;
-		}
+		;}
     break;
 
   case 157:
-#line 1274 "./parser.y"
+#line 1274 "parser.y"
     {
 		yyval.menitm = new_menu_item();
 		yyval.menitm->prev = yyvsp[-4].menitm;
@@ -3313,46 +3313,46 @@ yyreduce:
 			yyvsp[-4].menitm->next = yyval.menitm;
 		yyval.menitm->popup = get_item_head(yyvsp[0].menitm);
 		yyval.menitm->name = yyvsp[-2].str;
-		}
+		;}
     break;
 
   case 158:
-#line 1293 "./parser.y"
-    { yyval.num = 0; }
+#line 1293 "parser.y"
+    { yyval.num = 0; ;}
     break;
 
   case 159:
-#line 1294 "./parser.y"
-    { yyval.num = yyvsp[0].num | MF_CHECKED; }
+#line 1294 "parser.y"
+    { yyval.num = yyvsp[0].num | MF_CHECKED; ;}
     break;
 
   case 160:
-#line 1295 "./parser.y"
-    { yyval.num = yyvsp[0].num | MF_GRAYED; }
+#line 1295 "parser.y"
+    { yyval.num = yyvsp[0].num | MF_GRAYED; ;}
     break;
 
   case 161:
-#line 1296 "./parser.y"
-    { yyval.num = yyvsp[0].num | MF_HELP; }
+#line 1296 "parser.y"
+    { yyval.num = yyvsp[0].num | MF_HELP; ;}
     break;
 
   case 162:
-#line 1297 "./parser.y"
-    { yyval.num = yyvsp[0].num | MF_DISABLED; }
+#line 1297 "parser.y"
+    { yyval.num = yyvsp[0].num | MF_DISABLED; ;}
     break;
 
   case 163:
-#line 1298 "./parser.y"
-    { yyval.num = yyvsp[0].num | MF_MENUBARBREAK; }
+#line 1298 "parser.y"
+    { yyval.num = yyvsp[0].num | MF_MENUBARBREAK; ;}
     break;
 
   case 164:
-#line 1299 "./parser.y"
-    { yyval.num = yyvsp[0].num | MF_MENUBREAK; }
+#line 1299 "parser.y"
+    { yyval.num = yyvsp[0].num | MF_MENUBREAK; ;}
     break;
 
   case 165:
-#line 1303 "./parser.y"
+#line 1303 "parser.y"
     {
 		if(!win32)
 			yywarning("MENUEX not supported in 16-bit mode");
@@ -3374,21 +3374,21 @@ yyreduce:
 		}
 		if(!yyval.menex->lvc.language)
 			yyval.menex->lvc.language = dup_language(currentlanguage);
-		}
+		;}
     break;
 
   case 166:
-#line 1328 "./parser.y"
-    { yyval.menexitm = yyvsp[-1].menexitm; }
+#line 1328 "parser.y"
+    { yyval.menexitm = yyvsp[-1].menexitm; ;}
     break;
 
   case 167:
-#line 1332 "./parser.y"
-    {yyval.menexitm = NULL; }
+#line 1332 "parser.y"
+    {yyval.menexitm = NULL; ;}
     break;
 
   case 168:
-#line 1333 "./parser.y"
+#line 1333 "parser.y"
     {
 		yyval.menexitm = new_menuex_item();
 		yyval.menexitm->prev = yyvsp[-3].menexitm;
@@ -3404,21 +3404,21 @@ yyreduce:
 		yyval.menexitm->gotstate = yyvsp[0].exopt->gotstate;
 		yyval.menexitm->gothelpid = yyvsp[0].exopt->gothelpid;
 		free(yyvsp[0].exopt);
-		}
+		;}
     break;
 
   case 169:
-#line 1349 "./parser.y"
+#line 1349 "parser.y"
     {
 		yyval.menexitm = new_menuex_item();
 		yyval.menexitm->prev = yyvsp[-2].menexitm;
 		if(yyvsp[-2].menexitm)
 			yyvsp[-2].menexitm->next = yyval.menexitm;
-		}
+		;}
     break;
 
   case 170:
-#line 1355 "./parser.y"
+#line 1355 "parser.y"
     {
 		yyval.menexitm = new_menuex_item();
 		yyval.menexitm->prev = yyvsp[-4].menexitm;
@@ -3435,24 +3435,24 @@ yyreduce:
 		yyval.menexitm->gotstate = yyvsp[-1].exopt->gotstate;
 		yyval.menexitm->gothelpid = yyvsp[-1].exopt->gothelpid;
 		free(yyvsp[-1].exopt);
-		}
+		;}
     break;
 
   case 171:
-#line 1375 "./parser.y"
-    { yyval.exopt = new_itemex_opt(0, 0, 0, 0); }
+#line 1375 "parser.y"
+    { yyval.exopt = new_itemex_opt(0, 0, 0, 0); ;}
     break;
 
   case 172:
-#line 1376 "./parser.y"
+#line 1376 "parser.y"
     {
 		yyval.exopt = new_itemex_opt(yyvsp[0].num, 0, 0, 0);
 		yyval.exopt->gotid = TRUE;
-		}
+		;}
     break;
 
   case 173:
-#line 1380 "./parser.y"
+#line 1380 "parser.y"
     {
 		yyval.exopt = new_itemex_opt(yyvsp[-3].iptr ? *(yyvsp[-3].iptr) : 0, yyvsp[-1].iptr ? *(yyvsp[-1].iptr) : 0, yyvsp[0].num, 0);
 		yyval.exopt->gotid = TRUE;
@@ -3460,11 +3460,11 @@ yyreduce:
 		yyval.exopt->gotstate = TRUE;
 		if(yyvsp[-3].iptr) free(yyvsp[-3].iptr);
 		if(yyvsp[-1].iptr) free(yyvsp[-1].iptr);
-		}
+		;}
     break;
 
   case 174:
-#line 1388 "./parser.y"
+#line 1388 "parser.y"
     {
 		yyval.exopt = new_itemex_opt(yyvsp[-4].iptr ? *(yyvsp[-4].iptr) : 0, yyvsp[-2].iptr ? *(yyvsp[-2].iptr) : 0, yyvsp[0].num, 0);
 		yyval.exopt->gotid = TRUE;
@@ -3472,34 +3472,34 @@ yyreduce:
 		yyval.exopt->gotstate = TRUE;
 		if(yyvsp[-4].iptr) free(yyvsp[-4].iptr);
 		if(yyvsp[-2].iptr) free(yyvsp[-2].iptr);
-		}
+		;}
     break;
 
   case 175:
-#line 1399 "./parser.y"
-    { yyval.exopt = new_itemex_opt(0, 0, 0, 0); }
+#line 1399 "parser.y"
+    { yyval.exopt = new_itemex_opt(0, 0, 0, 0); ;}
     break;
 
   case 176:
-#line 1400 "./parser.y"
+#line 1400 "parser.y"
     {
 		yyval.exopt = new_itemex_opt(yyvsp[0].num, 0, 0, 0);
 		yyval.exopt->gotid = TRUE;
-		}
+		;}
     break;
 
   case 177:
-#line 1404 "./parser.y"
+#line 1404 "parser.y"
     {
 		yyval.exopt = new_itemex_opt(yyvsp[-2].iptr ? *(yyvsp[-2].iptr) : 0, yyvsp[0].num, 0, 0);
 		if(yyvsp[-2].iptr) free(yyvsp[-2].iptr);
 		yyval.exopt->gotid = TRUE;
 		yyval.exopt->gottype = TRUE;
-		}
+		;}
     break;
 
   case 178:
-#line 1410 "./parser.y"
+#line 1410 "parser.y"
     {
 		yyval.exopt = new_itemex_opt(yyvsp[-4].iptr ? *(yyvsp[-4].iptr) : 0, yyvsp[-2].iptr ? *(yyvsp[-2].iptr) : 0, yyvsp[0].num, 0);
 		if(yyvsp[-4].iptr) free(yyvsp[-4].iptr);
@@ -3507,11 +3507,11 @@ yyreduce:
 		yyval.exopt->gotid = TRUE;
 		yyval.exopt->gottype = TRUE;
 		yyval.exopt->gotstate = TRUE;
-		}
+		;}
     break;
 
   case 179:
-#line 1418 "./parser.y"
+#line 1418 "parser.y"
     {
 		yyval.exopt = new_itemex_opt(yyvsp[-6].iptr ? *(yyvsp[-6].iptr) : 0, yyvsp[-4].iptr ? *(yyvsp[-4].iptr) : 0, yyvsp[-2].iptr ? *(yyvsp[-2].iptr) : 0, yyvsp[0].num);
 		if(yyvsp[-6].iptr) free(yyvsp[-6].iptr);
@@ -3521,11 +3521,11 @@ yyreduce:
 		yyval.exopt->gottype = TRUE;
 		yyval.exopt->gotstate = TRUE;
 		yyval.exopt->gothelpid = TRUE;
-		}
+		;}
     break;
 
   case 180:
-#line 1438 "./parser.y"
+#line 1438 "parser.y"
     {
 		if(!yyvsp[-1].stt)
 		{
@@ -3563,11 +3563,11 @@ yyreduce:
 		}
 
 		yyval.stt = tagstt;
-		}
+		;}
     break;
 
   case 181:
-#line 1479 "./parser.y"
+#line 1479 "parser.y"
     {
 		if((tagstt = find_stringtable(yyvsp[0].lvc)) == NULL)
 			tagstt = new_stringtable(yyvsp[0].lvc);
@@ -3576,16 +3576,16 @@ yyreduce:
 		tagstt_characts = yyvsp[0].lvc->characts;
 		if(yyvsp[0].lvc)
 			free(yyvsp[0].lvc);
-		}
+		;}
     break;
 
   case 182:
-#line 1490 "./parser.y"
-    { yyval.stt = NULL; }
+#line 1490 "parser.y"
+    { yyval.stt = NULL; ;}
     break;
 
   case 183:
-#line 1491 "./parser.y"
+#line 1491 "parser.y"
     {
 		int i;
 		assert(tagstt != NULL);
@@ -3616,11 +3616,11 @@ yyreduce:
 		if(win32 && yyvsp[0].str->size > 65534) /* Hmm..., does this happen? */
 			yyerror("Stringtable entry more than 65534 characters (probably something else that went wrong)");
 		yyval.stt = tagstt;
-		}
+		;}
     break;
 
   case 186:
-#line 1531 "./parser.y"
+#line 1531 "parser.y"
     {
 		yyval.veri = yyvsp[-3].veri;
 		if(yyvsp[-4].iptr)
@@ -3633,16 +3633,16 @@ yyreduce:
 		yyval.veri->blocks = get_ver_block_head(yyvsp[-1].blk);
 		/* Set language; there is no version or characteristics */
 		yyval.veri->lvc.language = dup_language(currentlanguage);
-		}
+		;}
     break;
 
   case 187:
-#line 1547 "./parser.y"
-    { yyval.veri = new_versioninfo(); }
+#line 1547 "parser.y"
+    { yyval.veri = new_versioninfo(); ;}
     break;
 
   case 188:
-#line 1548 "./parser.y"
+#line 1548 "parser.y"
     {
 		if(yyvsp[-8].veri->gotit.fv)
 			yyerror("FILEVERSION already defined");
@@ -3652,11 +3652,11 @@ yyreduce:
 		yyval.veri->filever_min1 = yyvsp[-2].num;
 		yyval.veri->filever_min2 = yyvsp[0].num;
 		yyval.veri->gotit.fv = 1;
-		}
+		;}
     break;
 
   case 189:
-#line 1558 "./parser.y"
+#line 1558 "parser.y"
     {
 		if(yyvsp[-8].veri->gotit.pv)
 			yyerror("PRODUCTVERSION already defined");
@@ -3666,144 +3666,144 @@ yyreduce:
 		yyval.veri->prodver_min1 = yyvsp[-2].num;
 		yyval.veri->prodver_min2 = yyvsp[0].num;
 		yyval.veri->gotit.pv = 1;
-		}
+		;}
     break;
 
   case 190:
-#line 1568 "./parser.y"
+#line 1568 "parser.y"
     {
 		if(yyvsp[-2].veri->gotit.ff)
 			yyerror("FILEFLAGS already defined");
 		yyval.veri = yyvsp[-2].veri;
 		yyval.veri->fileflags = yyvsp[0].num;
 		yyval.veri->gotit.ff = 1;
-		}
+		;}
     break;
 
   case 191:
-#line 1575 "./parser.y"
+#line 1575 "parser.y"
     {
 		if(yyvsp[-2].veri->gotit.ffm)
 			yyerror("FILEFLAGSMASK already defined");
 		yyval.veri = yyvsp[-2].veri;
 		yyval.veri->fileflagsmask = yyvsp[0].num;
 		yyval.veri->gotit.ffm = 1;
-		}
+		;}
     break;
 
   case 192:
-#line 1582 "./parser.y"
+#line 1582 "parser.y"
     {
 		if(yyvsp[-2].veri->gotit.fo)
 			yyerror("FILEOS already defined");
 		yyval.veri = yyvsp[-2].veri;
 		yyval.veri->fileos = yyvsp[0].num;
 		yyval.veri->gotit.fo = 1;
-		}
+		;}
     break;
 
   case 193:
-#line 1589 "./parser.y"
+#line 1589 "parser.y"
     {
 		if(yyvsp[-2].veri->gotit.ft)
 			yyerror("FILETYPE already defined");
 		yyval.veri = yyvsp[-2].veri;
 		yyval.veri->filetype = yyvsp[0].num;
 		yyval.veri->gotit.ft = 1;
-		}
+		;}
     break;
 
   case 194:
-#line 1596 "./parser.y"
+#line 1596 "parser.y"
     {
 		if(yyvsp[-2].veri->gotit.fst)
 			yyerror("FILESUBTYPE already defined");
 		yyval.veri = yyvsp[-2].veri;
 		yyval.veri->filesubtype = yyvsp[0].num;
 		yyval.veri->gotit.fst = 1;
-		}
+		;}
     break;
 
   case 195:
-#line 1606 "./parser.y"
-    { yyval.blk = NULL; }
+#line 1606 "parser.y"
+    { yyval.blk = NULL; ;}
     break;
 
   case 196:
-#line 1607 "./parser.y"
+#line 1607 "parser.y"
     {
 		yyval.blk = yyvsp[0].blk;
 		yyval.blk->prev = yyvsp[-1].blk;
 		if(yyvsp[-1].blk)
 			yyvsp[-1].blk->next = yyval.blk;
-		}
+		;}
     break;
 
   case 197:
-#line 1616 "./parser.y"
+#line 1616 "parser.y"
     {
 		yyval.blk = new_ver_block();
 		yyval.blk->name = yyvsp[-3].str;
 		yyval.blk->values = get_ver_value_head(yyvsp[-1].val);
-		}
+		;}
     break;
 
   case 198:
-#line 1624 "./parser.y"
-    { yyval.val = NULL; }
+#line 1624 "parser.y"
+    { yyval.val = NULL; ;}
     break;
 
   case 199:
-#line 1625 "./parser.y"
+#line 1625 "parser.y"
     {
 		yyval.val = yyvsp[0].val;
 		yyval.val->prev = yyvsp[-1].val;
 		if(yyvsp[-1].val)
 			yyvsp[-1].val->next = yyval.val;
-		}
+		;}
     break;
 
   case 200:
-#line 1634 "./parser.y"
+#line 1634 "parser.y"
     {
 		yyval.val = new_ver_value();
 		yyval.val->type = val_block;
 		yyval.val->value.block = yyvsp[0].blk;
-		}
+		;}
     break;
 
   case 201:
-#line 1639 "./parser.y"
+#line 1639 "parser.y"
     {
 		yyval.val = new_ver_value();
 		yyval.val->type = val_str;
 		yyval.val->key = yyvsp[-2].str;
 		yyval.val->value.str = yyvsp[0].str;
-		}
+		;}
     break;
 
   case 202:
-#line 1645 "./parser.y"
+#line 1645 "parser.y"
     {
 		yyval.val = new_ver_value();
 		yyval.val->type = val_words;
 		yyval.val->key = yyvsp[-2].str;
 		yyval.val->value.words = yyvsp[0].verw;
-		}
+		;}
     break;
 
   case 203:
-#line 1654 "./parser.y"
-    { yyval.verw = new_ver_words(yyvsp[0].num); }
+#line 1654 "parser.y"
+    { yyval.verw = new_ver_words(yyvsp[0].num); ;}
     break;
 
   case 204:
-#line 1655 "./parser.y"
-    { yyval.verw = add_ver_words(yyvsp[-2].verw, yyvsp[0].num); }
+#line 1655 "parser.y"
+    { yyval.verw = add_ver_words(yyvsp[-2].verw, yyvsp[0].num); ;}
     break;
 
   case 205:
-#line 1659 "./parser.y"
+#line 1659 "parser.y"
     {
 		int nitems;
 		toolbar_item_t *items = get_tlbr_buttons_head(yyvsp[-1].tlbarItems, &nitems);
@@ -3826,39 +3826,39 @@ yyreduce:
 		{
 			yyval.tlbar->lvc.language = dup_language(currentlanguage);
 		}
-		}
+		;}
     break;
 
   case 206:
-#line 1685 "./parser.y"
-    { yyval.tlbarItems = NULL; }
+#line 1685 "parser.y"
+    { yyval.tlbarItems = NULL; ;}
     break;
 
   case 207:
-#line 1686 "./parser.y"
+#line 1686 "parser.y"
     {
 		toolbar_item_t *idrec = new_toolbar_item();
 		idrec->id = yyvsp[0].num;
 		yyval.tlbarItems = ins_tlbr_button(yyvsp[-2].tlbarItems, idrec);
-		}
+		;}
     break;
 
   case 208:
-#line 1691 "./parser.y"
+#line 1691 "parser.y"
     {
 		toolbar_item_t *idrec = new_toolbar_item();
 		idrec->id = 0;
 		yyval.tlbarItems = ins_tlbr_button(yyvsp[-1].tlbarItems, idrec);
-	}
+	;}
     break;
 
   case 209:
-#line 1700 "./parser.y"
-    { yyval.iptr = NULL; }
+#line 1700 "parser.y"
+    { yyval.iptr = NULL; ;}
     break;
 
   case 210:
-#line 1701 "./parser.y"
+#line 1701 "parser.y"
     {
 		if(yyvsp[-1].iptr)
 		{
@@ -3868,11 +3868,11 @@ yyreduce:
 		}
 		else
 			yyval.iptr = yyvsp[0].iptr;
-		}
+		;}
     break;
 
   case 211:
-#line 1711 "./parser.y"
+#line 1711 "parser.y"
     {
 		if(yyvsp[-1].iptr)
 		{
@@ -3885,51 +3885,51 @@ yyreduce:
 			*yyvsp[0].iptr &= WRC_MO_MOVEABLE | WRC_MO_DISCARDABLE | WRC_MO_PURE;
 			yyval.iptr = yyvsp[0].iptr;
 		}
-		}
+		;}
     break;
 
   case 212:
-#line 1726 "./parser.y"
-    { yyval.iptr = new_int(WRC_MO_PRELOAD); }
+#line 1726 "parser.y"
+    { yyval.iptr = new_int(WRC_MO_PRELOAD); ;}
     break;
 
   case 213:
-#line 1727 "./parser.y"
-    { yyval.iptr = new_int(WRC_MO_MOVEABLE); }
+#line 1727 "parser.y"
+    { yyval.iptr = new_int(WRC_MO_MOVEABLE); ;}
     break;
 
   case 214:
-#line 1728 "./parser.y"
-    { yyval.iptr = new_int(WRC_MO_DISCARDABLE); }
+#line 1728 "parser.y"
+    { yyval.iptr = new_int(WRC_MO_DISCARDABLE); ;}
     break;
 
   case 215:
-#line 1729 "./parser.y"
-    { yyval.iptr = new_int(WRC_MO_PURE); }
+#line 1729 "parser.y"
+    { yyval.iptr = new_int(WRC_MO_PURE); ;}
     break;
 
   case 216:
-#line 1732 "./parser.y"
-    { yyval.iptr = new_int(~WRC_MO_PRELOAD); }
+#line 1732 "parser.y"
+    { yyval.iptr = new_int(~WRC_MO_PRELOAD); ;}
     break;
 
   case 217:
-#line 1733 "./parser.y"
-    { yyval.iptr = new_int(~WRC_MO_MOVEABLE); }
+#line 1733 "parser.y"
+    { yyval.iptr = new_int(~WRC_MO_MOVEABLE); ;}
     break;
 
   case 218:
-#line 1734 "./parser.y"
-    { yyval.iptr = new_int(~WRC_MO_PURE); }
+#line 1734 "parser.y"
+    { yyval.iptr = new_int(~WRC_MO_PURE); ;}
     break;
 
   case 219:
-#line 1738 "./parser.y"
-    { yyval.lvc = new_lvc(); }
+#line 1738 "parser.y"
+    { yyval.lvc = new_lvc(); ;}
     break;
 
   case 220:
-#line 1739 "./parser.y"
+#line 1739 "parser.y"
     {
 		if(!win32)
 			yywarning("LANGUAGE not supported in 16-bit mode");
@@ -3937,11 +3937,11 @@ yyreduce:
 			yyerror("Language already defined");
 		yyval.lvc = yyvsp[-1].lvc;
 		yyvsp[-1].lvc->language = yyvsp[0].lan;
-		}
+		;}
     break;
 
   case 221:
-#line 1747 "./parser.y"
+#line 1747 "parser.y"
     {
 		if(!win32)
 			yywarning("CHARACTERISTICS not supported in 16-bit mode");
@@ -3949,11 +3949,11 @@ yyreduce:
 			yyerror("Characteristics already defined");
 		yyval.lvc = yyvsp[-1].lvc;
 		yyvsp[-1].lvc->characts = yyvsp[0].chars;
-		}
+		;}
     break;
 
   case 222:
-#line 1755 "./parser.y"
+#line 1755 "parser.y"
     {
 		if(!win32)
 			yywarning("VERSION not supported in 16-bit mode");
@@ -3961,29 +3961,29 @@ yyreduce:
 			yyerror("Version already defined");
 		yyval.lvc = yyvsp[-1].lvc;
 		yyvsp[-1].lvc->version = yyvsp[0].ver;
-		}
+		;}
     break;
 
   case 223:
-#line 1773 "./parser.y"
+#line 1773 "parser.y"
     { yyval.lan = new_language(yyvsp[-2].num, yyvsp[0].num);
 					  if (get_language_codepage(yyvsp[-2].num, yyvsp[0].num) == -1)
 						yyerror( "Language %04x is not supported", (yyvsp[0].num<<10) + yyvsp[-2].num);
-					}
+					;}
     break;
 
   case 224:
-#line 1780 "./parser.y"
-    { yyval.chars = new_characts(yyvsp[0].num); }
+#line 1780 "parser.y"
+    { yyval.chars = new_characts(yyvsp[0].num); ;}
     break;
 
   case 225:
-#line 1784 "./parser.y"
-    { yyval.ver = new_version(yyvsp[0].num); }
+#line 1784 "parser.y"
+    { yyval.ver = new_version(yyvsp[0].num); ;}
     break;
 
   case 226:
-#line 1788 "./parser.y"
+#line 1788 "parser.y"
     {
 		if(yyvsp[-3].lvc)
 		{
@@ -3995,172 +3995,172 @@ yyreduce:
 			yyvsp[-1].raw->lvc.language = dup_language(currentlanguage);
 
 		yyval.raw = yyvsp[-1].raw;
-		}
+		;}
     break;
 
   case 227:
-#line 1803 "./parser.y"
-    { yyval.raw = yyvsp[0].raw; }
+#line 1803 "parser.y"
+    { yyval.raw = yyvsp[0].raw; ;}
     break;
 
   case 228:
-#line 1804 "./parser.y"
-    { yyval.raw = int2raw_data(yyvsp[0].num); }
+#line 1804 "parser.y"
+    { yyval.raw = int2raw_data(yyvsp[0].num); ;}
     break;
 
   case 229:
-#line 1805 "./parser.y"
-    { yyval.raw = int2raw_data(-(yyvsp[0].num)); }
+#line 1805 "parser.y"
+    { yyval.raw = int2raw_data(-(yyvsp[0].num)); ;}
     break;
 
   case 230:
-#line 1806 "./parser.y"
-    { yyval.raw = long2raw_data(yyvsp[0].num); }
+#line 1806 "parser.y"
+    { yyval.raw = long2raw_data(yyvsp[0].num); ;}
     break;
 
   case 231:
-#line 1807 "./parser.y"
-    { yyval.raw = long2raw_data(-(yyvsp[0].num)); }
+#line 1807 "parser.y"
+    { yyval.raw = long2raw_data(-(yyvsp[0].num)); ;}
     break;
 
   case 232:
-#line 1808 "./parser.y"
-    { yyval.raw = str2raw_data(yyvsp[0].str); }
+#line 1808 "parser.y"
+    { yyval.raw = str2raw_data(yyvsp[0].str); ;}
     break;
 
   case 233:
-#line 1809 "./parser.y"
-    { yyval.raw = merge_raw_data(yyvsp[-2].raw, yyvsp[0].raw); free(yyvsp[0].raw->data); free(yyvsp[0].raw); }
+#line 1809 "parser.y"
+    { yyval.raw = merge_raw_data(yyvsp[-2].raw, yyvsp[0].raw); free(yyvsp[0].raw->data); free(yyvsp[0].raw); ;}
     break;
 
   case 234:
-#line 1810 "./parser.y"
-    { yyval.raw = merge_raw_data_int(yyvsp[-2].raw, yyvsp[0].num); }
+#line 1810 "parser.y"
+    { yyval.raw = merge_raw_data_int(yyvsp[-2].raw, yyvsp[0].num); ;}
     break;
 
   case 235:
-#line 1811 "./parser.y"
-    { yyval.raw = merge_raw_data_int(yyvsp[-3].raw, -(yyvsp[0].num)); }
+#line 1811 "parser.y"
+    { yyval.raw = merge_raw_data_int(yyvsp[-3].raw, -(yyvsp[0].num)); ;}
     break;
 
   case 236:
-#line 1812 "./parser.y"
-    { yyval.raw = merge_raw_data_long(yyvsp[-2].raw, yyvsp[0].num); }
+#line 1812 "parser.y"
+    { yyval.raw = merge_raw_data_long(yyvsp[-2].raw, yyvsp[0].num); ;}
     break;
 
   case 237:
-#line 1813 "./parser.y"
-    { yyval.raw = merge_raw_data_long(yyvsp[-3].raw, -(yyvsp[0].num)); }
+#line 1813 "parser.y"
+    { yyval.raw = merge_raw_data_long(yyvsp[-3].raw, -(yyvsp[0].num)); ;}
     break;
 
   case 238:
-#line 1814 "./parser.y"
-    { yyval.raw = merge_raw_data_str(yyvsp[-2].raw, yyvsp[0].str); }
+#line 1814 "parser.y"
+    { yyval.raw = merge_raw_data_str(yyvsp[-2].raw, yyvsp[0].str); ;}
     break;
 
   case 239:
-#line 1818 "./parser.y"
-    { yyval.raw = load_file(yyvsp[0].str,dup_language(currentlanguage)); }
+#line 1818 "parser.y"
+    { yyval.raw = load_file(yyvsp[0].str,dup_language(currentlanguage)); ;}
     break;
 
   case 240:
-#line 1819 "./parser.y"
-    { yyval.raw = yyvsp[0].raw; }
+#line 1819 "parser.y"
+    { yyval.raw = yyvsp[0].raw; ;}
     break;
 
   case 241:
-#line 1826 "./parser.y"
-    { yyval.iptr = 0; }
+#line 1826 "parser.y"
+    { yyval.iptr = 0; ;}
     break;
 
   case 242:
-#line 1827 "./parser.y"
-    { yyval.iptr = new_int(yyvsp[0].num); }
+#line 1827 "parser.y"
+    { yyval.iptr = new_int(yyvsp[0].num); ;}
     break;
 
   case 243:
-#line 1831 "./parser.y"
-    { yyval.num = (yyvsp[0].num); }
+#line 1831 "parser.y"
+    { yyval.num = (yyvsp[0].num); ;}
     break;
 
   case 244:
-#line 1834 "./parser.y"
-    { yyval.num = (yyvsp[-2].num) + (yyvsp[0].num); }
+#line 1834 "parser.y"
+    { yyval.num = (yyvsp[-2].num) + (yyvsp[0].num); ;}
     break;
 
   case 245:
-#line 1835 "./parser.y"
-    { yyval.num = (yyvsp[-2].num) - (yyvsp[0].num); }
+#line 1835 "parser.y"
+    { yyval.num = (yyvsp[-2].num) - (yyvsp[0].num); ;}
     break;
 
   case 246:
-#line 1836 "./parser.y"
-    { yyval.num = (yyvsp[-2].num) | (yyvsp[0].num); }
+#line 1836 "parser.y"
+    { yyval.num = (yyvsp[-2].num) | (yyvsp[0].num); ;}
     break;
 
   case 247:
-#line 1837 "./parser.y"
-    { yyval.num = (yyvsp[-2].num) & (yyvsp[0].num); }
+#line 1837 "parser.y"
+    { yyval.num = (yyvsp[-2].num) & (yyvsp[0].num); ;}
     break;
 
   case 248:
-#line 1838 "./parser.y"
-    { yyval.num = (yyvsp[-2].num) * (yyvsp[0].num); }
+#line 1838 "parser.y"
+    { yyval.num = (yyvsp[-2].num) * (yyvsp[0].num); ;}
     break;
 
   case 249:
-#line 1839 "./parser.y"
-    { yyval.num = (yyvsp[-2].num) / (yyvsp[0].num); }
+#line 1839 "parser.y"
+    { yyval.num = (yyvsp[-2].num) / (yyvsp[0].num); ;}
     break;
 
   case 250:
-#line 1840 "./parser.y"
-    { yyval.num = (yyvsp[-2].num) ^ (yyvsp[0].num); }
+#line 1840 "parser.y"
+    { yyval.num = (yyvsp[-2].num) ^ (yyvsp[0].num); ;}
     break;
 
   case 251:
-#line 1841 "./parser.y"
-    { yyval.num = ~(yyvsp[0].num); }
+#line 1841 "parser.y"
+    { yyval.num = ~(yyvsp[0].num); ;}
     break;
 
   case 252:
-#line 1842 "./parser.y"
-    { yyval.num = -(yyvsp[0].num); }
+#line 1842 "parser.y"
+    { yyval.num = -(yyvsp[0].num); ;}
     break;
 
   case 253:
-#line 1843 "./parser.y"
-    { yyval.num = yyvsp[0].num; }
+#line 1843 "parser.y"
+    { yyval.num = yyvsp[0].num; ;}
     break;
 
   case 254:
-#line 1844 "./parser.y"
-    { yyval.num = yyvsp[-1].num; }
+#line 1844 "parser.y"
+    { yyval.num = yyvsp[-1].num; ;}
     break;
 
   case 255:
-#line 1845 "./parser.y"
-    { yyval.num = yyvsp[0].num; }
+#line 1845 "parser.y"
+    { yyval.num = yyvsp[0].num; ;}
     break;
 
   case 256:
-#line 1849 "./parser.y"
-    { yyval.num = (yyvsp[0].num); }
+#line 1849 "parser.y"
+    { yyval.num = (yyvsp[0].num); ;}
     break;
 
   case 257:
-#line 1850 "./parser.y"
-    { yyval.num = ~(yyvsp[0].num); }
+#line 1850 "parser.y"
+    { yyval.num = ~(yyvsp[0].num); ;}
     break;
 
   case 258:
-#line 1853 "./parser.y"
-    { yyval.num = yyvsp[0].num; }
+#line 1853 "parser.y"
+    { yyval.num = yyvsp[0].num; ;}
     break;
 
   case 259:
-#line 1854 "./parser.y"
-    { yyval.num = yyvsp[0].num; }
+#line 1854 "parser.y"
+    { yyval.num = yyvsp[0].num; ;}
     break;
 
 
@@ -4392,7 +4392,7 @@ yyreturn:
 }
 
 
-#line 1857 "./parser.y"
+#line 1857 "parser.y"
 
 /* Dialog specific functions */
 static dialog_t *dialog_style(style_t * st, dialog_t *dlg)
@@ -4859,7 +4859,7 @@ static raw_data_t *load_file(string_t *filename, language_t *lang)
 	if (codepage <= 0 && filename->type != str_char)
 		yyerror("Cannot convert filename to ASCII string");
 	name = convert_string( filename, str_char, codepage );
-	if (!(path = wpp_find_include(name->str.cstr, 1)))
+	if (!(path = wpp_find_include(name->str.cstr, input_name, 1)))
 		yyerror("Cannot open file %s", name->str.cstr);
 	if (!(fp = fopen( path, "rb" )))
 		yyerror("Cannot open file %s", name->str.cstr);
