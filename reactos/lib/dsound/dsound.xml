@@ -16,6 +16,7 @@
 	<library>ole32</library>
 	<library>winmm</library>
 	<library>dxguid</library>
+      <file>version.rc</file>
 	<file>buffer.c</file>	
       <file>capture.c</file>
       <file>dsound.c</file>
