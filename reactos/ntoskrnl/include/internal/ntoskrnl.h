@@ -90,11 +90,11 @@ static __inline
 NTSTATUS
 NTAPI
 ProbeAndCaptureUnicodeString(OUT PUNICODE_STRING Dest,
-                             KPROCESSOR_MODE CurrentMode,
+                             IN KPROCESSOR_MODE CurrentMode,
                              IN PUNICODE_STRING UnsafeSrc)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    PVOID Buffer;
+    WCHAR *Buffer;
     ASSERT(Dest != NULL);
 
     /* Probe the structure and buffer*/
@@ -106,11 +106,44 @@ ProbeAndCaptureUnicodeString(OUT PUNICODE_STRING Dest,
                          sizeof(UNICODE_STRING),
                          sizeof(ULONG));
             *Dest = *UnsafeSrc;
-            if(Dest->Length > 0)
+            if(Dest->Buffer != NULL)
             {
-                ProbeForRead(Dest->Buffer,
-                             Dest->Length,
-                             sizeof(WCHAR));
+                if (Dest->Length != 0)
+                {
+                    ProbeForRead(Dest->Buffer,
+                                 Dest->Length,
+                                 sizeof(WCHAR));
+
+                    /* Allocate space for the buffer */
+                    Buffer = ExAllocatePoolWithTag(PagedPool,
+                                                   Dest->Length + sizeof(WCHAR),
+                                                   TAG('U', 'S', 'T', 'R'));
+                    if (Buffer == NULL)
+                    {
+                        Status = STATUS_INSUFFICIENT_RESOURCES;
+                        _SEH_LEAVE;
+                    }
+
+                    /* Copy it */
+                    RtlCopyMemory(Buffer, Dest->Buffer, Dest->Length);
+                    Buffer[Dest->Length / sizeof(WCHAR)] = UNICODE_NULL;
+
+                    /* Set it as the buffer */
+                    Dest->Buffer = Buffer;
+                }
+                else
+                {
+                    /* sanitize structure */
+                    Dest->Length = 0;
+                    Dest->MaximumLength = 0;
+                    Dest->Buffer = NULL;
+                }
+            }
+            else
+            {
+                /* sanitize structure */
+                Dest->Length = 0;
+                Dest->MaximumLength = 0;
             }
         }
         _SEH_HANDLE
@@ -118,28 +151,13 @@ ProbeAndCaptureUnicodeString(OUT PUNICODE_STRING Dest,
             Status = _SEH_GetExceptionCode();
         }
         _SEH_END;
-
-        if (!NT_SUCCESS(Status)) return Status;
     }
     else
     {
-        /* Just copy it directly */
+        /* Just copy the UNICODE_STRING structure, don't allocate new memory!
+           We trust the caller to supply valid pointers and data. */
         *Dest = *UnsafeSrc;
     }
-
-    /* Allocate space for the buffer */
-    Buffer = ExAllocatePool(PagedPool, Dest->MaximumLength);
-
-    if (Buffer != NULL)
-    {
-        /* Copy it */
-        RtlCopyMemory(Buffer, Dest->Buffer, Dest->MaximumLength);
-
-        /* Set it as the buffer */
-        Dest->Buffer = Buffer;
-    }
-    else
-        Status = STATUS_INSUFFICIENT_RESOURCES;
 
     /* Return */
     return Status;
@@ -149,9 +167,12 @@ static __inline
 VOID
 NTAPI
 ReleaseCapturedUnicodeString(IN PUNICODE_STRING CapturedString,
-                             KPROCESSOR_MODE CurrentMode)
+                             IN KPROCESSOR_MODE CurrentMode)
 {
-    if(CurrentMode != KernelMode) ExFreePool(CapturedString->Buffer);
+    if(CurrentMode != KernelMode && CapturedString->Buffer != NULL)
+    {
+        ExFreePool(CapturedString->Buffer);
+    }
 }
 
 /*
