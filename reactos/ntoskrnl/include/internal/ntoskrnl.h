@@ -134,7 +134,6 @@ ProbeAndCaptureUnicodeString(OUT PUNICODE_STRING Dest,
                 else
                 {
                     /* sanitize structure */
-                    Dest->Length = 0;
                     Dest->MaximumLength = 0;
                     Dest->Buffer = NULL;
                 }
@@ -209,7 +208,7 @@ ReleaseCapturedUnicodeString(IN PUNICODE_STRING CapturedString,
     (((ULONG_PTR)(Ptr) + sizeof(Type) - 1 < (ULONG_PTR)(Ptr) ||                \
 	 (ULONG_PTR)(Ptr) + sizeof(Type) - 1 >= (ULONG_PTR)MmUserProbeAddress) ?   \
 	     ExRaiseStatus (STATUS_ACCESS_VIOLATION), Default :                    \
-	     *(Type *)(Ptr))
+	     *(volatile Type *)(Ptr))
 
 #define ProbeForReadBoolean(Ptr) ProbeForReadGenericType(Ptr, BOOLEAN, FALSE)
 #define ProbeForReadUchar(Ptr) ProbeForReadGenericType(Ptr, UCHAR, 0)
