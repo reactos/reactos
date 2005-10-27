@@ -1275,7 +1275,10 @@ static void TAB_SetItemBounds (TAB_INFO *infoPtr)
   infoPtr->uNumRows = curItemRowCount;
 
   /* Arrange all tabs evenly if style says so */
-   if (!(lStyle & TCS_RAGGEDRIGHT) &&  ((lStyle & TCS_MULTILINE) || (lStyle & TCS_VERTICAL)) && (infoPtr->uNumItem > 0))
+   if (!(lStyle & TCS_RAGGEDRIGHT) &&
+       ((lStyle & TCS_MULTILINE) || (lStyle & TCS_VERTICAL)) &&
+       (infoPtr->uNumItem > 0) &&
+       (infoPtr->uNumRows > 1))
    {
       INT tabPerRow,remTab,iRow;
       UINT iItm;
@@ -2022,7 +2025,7 @@ static void TAB_DrawItem(
       if ((theme = GetWindowTheme (infoPtr->hwnd)) 
           && ((lStyle & (TCS_VERTICAL | TCS_BOTTOM)) == 0))
       {
-          const static int partIds[8] = {
+          static const int partIds[8] = {
               /* Normal item */
               TABP_TABITEM,
               TABP_TABITEMLEFTEDGE,

@@ -1854,7 +1854,7 @@ TOOLBAR_GetCheckedGroupButtonIndex (TOOLBAR_INFO *infoPtr, INT nIndex)
     nRunIndex = nIndex - 1;
     while (nRunIndex >= 0) {
 	btnPtr = &infoPtr->buttons[nRunIndex];
-	if ((btnPtr->fsStyle & BTNS_CHECKGROUP) == BTNS_CHECKGROUP) {
+	if ((btnPtr->fsStyle & BTNS_GROUP) == BTNS_GROUP) {
 	    if (btnPtr->fsState & TBSTATE_CHECKED)
 		return nRunIndex;
 	}
@@ -1867,7 +1867,7 @@ TOOLBAR_GetCheckedGroupButtonIndex (TOOLBAR_INFO *infoPtr, INT nIndex)
     nRunIndex = nIndex + 1;
     while (nRunIndex < infoPtr->nNumButtons) {
 	btnPtr = &infoPtr->buttons[nRunIndex];
-	if ((btnPtr->fsStyle & BTNS_CHECKGROUP) == BTNS_CHECKGROUP) {
+	if ((btnPtr->fsStyle & BTNS_GROUP) == BTNS_GROUP) {
 	    if (btnPtr->fsState & TBSTATE_CHECKED)
 		return nRunIndex;
 	}

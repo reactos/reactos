@@ -1277,7 +1277,7 @@ REBAR_ForceResize (REBAR_INFO *infoPtr)
 static VOID
 REBAR_MoveChildWindows (REBAR_INFO *infoPtr, UINT start, UINT endplus)
 {
-    const static WCHAR strComboBox[] = { 'C','o','m','b','o','B','o','x',0 };
+    static const WCHAR strComboBox[] = { 'C','o','m','b','o','B','o','x',0 };
     REBAR_BAND *lpBand;
     WCHAR szClassName[40];
     UINT i;
