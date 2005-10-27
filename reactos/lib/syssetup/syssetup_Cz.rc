@@ -144,21 +144,9 @@ BEGIN
     LTEXT "Completing the ReactOS Setup Wizard",IDC_FINISHTITLE,115,9,195,37
     LTEXT "You have successfully completed ReactOS Setup.\n\n" \
           "When you click Finish, your computer will restart.", IDC_STATIC, 115, 58, 195, 100
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
     LTEXT "If there is a CD in a drive, remove it. Then, to restart "\
           "your computer, click Finish.", IDC_STATIC, 115, 160, 195, 31
-END
-
-
-IDD_RESTART DIALOG 6, 18, 245, 116
-STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "Instatalace ReactOSu"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    LTEXT "Instalace ReactOSu byla úspìšnì dokonèena.", -1, 13, 12, 212, 16
-    LTEXT "Pro pokraèování potøebuje instalaèní program restartovat Váš poèítaè. Poèítaè bude automaticky restartován za 15 sekund nebo zmáèknete-li tlaèítko Restartovat.", -1, 13, 33, 212, 32
-/*    GROUPBOX "", -1, 7, 3, 231, 106 */
-    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 13, 70, 212, 8 
-    PUSHBUTTON "&Restartovat", IDOK, 98, 87, 50, 14
 END
 
 

@@ -147,23 +147,9 @@ BEGIN
     LTEXT "ReactOS セットアップ ウィザードが完了しました", IDC_FINISHTITLE, 115, 8, 195, 24
     LTEXT "ReactOS セットアップが正常に完了しました。\n\n" \
           "[完了] をクリックすると、コンピュータを再起動します。", IDC_STATIC, 115, 40, 195, 100
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
     LTEXT "ドライブに CD が入っている場合は、CD を取り出してください。CD を取り出し"\
           "たら、[完了] をクリックしてコンピュータを再起動してください。", IDC_STATIC, 115, 169, 195, 17
-END
-
-
-IDD_RESTART DIALOG 6, 18, 245, 116
-STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "ReactOS のインストール"
-FONT 9, "MS UI Gothic"
-BEGIN
-    LTEXT "ReactOS は正常にインストールされました。", IDC_STATIC, 13, 12, 212, 16
-    LTEXT "インストール プログラムを続けるには、コンピュータを再起動する必要があります。"\
-          "コンピュータは 15 秒後に自動的に再起動します。今すぐ再起動するには"\
-          "[再起動] ボタンをクリックしてください。", IDC_STATIC, 13, 33, 212, 32
-/*    GROUPBOX "", -1, 7, 3, 231, 106 */
-    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 13, 70, 212, 8 
-    PUSHBUTTON "再起動(&R)", IDOK, 98, 87, 50, 14
 END
 
 

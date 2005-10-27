@@ -147,23 +147,9 @@ BEGIN
     LTEXT "L'assistant d'installation de ReactOS est terminé.",IDC_FINISHTITLE,115,9,195,37
     LTEXT "Vous avez installé avec succès ReactOS.\n\n" \
           "En cliquant sur Terminer, votre ordinateur va redémarrer.", IDC_STATIC, 115, 58, 195, 100
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 115, 138, 188, 12
     LTEXT "S'il y a un CD dans un lecteur, enlevez-le. Puis, pour redémarrer "\
           "votre ordinateur, cliquez sur Terminer.", IDC_STATIC, 115, 160, 195, 31
-END
-
-
-IDD_RESTART DIALOG 6, 18, 245, 116
-STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
-CAPTION "Installation de ReactOS"
-FONT 8, "MS Shell Dlg"
-BEGIN
-   LTEXT "L'assistant d'installation de ReactOS est terminé.", IDC_STATIC, 13, 12, 212, 16
-   LTEXT "Pour continuer, l'assistant a besoin de redémarrer votre ordinateur. "\
-         "L'ordinateur redémarrera automatiquement dans 15 secondes, ou quand vous appuyerez "\
-         "sur le bouton Redémarrer.", IDC_STATIC, 13, 33, 212, 32
-/*   GROUPBOX "", -1, 7, 3, 231, 106 */
-   CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 13, 70, 212, 8 
-   PUSHBUTTON "&Redémarrer", IDOK, 98, 87, 50, 14
 END
 
 

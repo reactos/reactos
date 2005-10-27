@@ -57,10 +57,7 @@
 
 #define IDD_FINISHPAGE			1070
 #define IDC_FINISHTITLE			1071
-
-
-#define IDD_RESTART				2000
-#define IDC_RESTART_PROGRESS	2001
+#define IDC_RESTART_PROGRESS	1072
 
 #define IDD_GPL                 2100
 #define IDC_GPL_TEXT            2101

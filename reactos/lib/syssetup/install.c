@@ -50,8 +50,6 @@
 #include "globals.h"
 #include "resource.h"
 
-#define VMWINST
-
 
 /* GLOBALS ******************************************************************/
 
@@ -78,30 +76,6 @@ DebugPrint(char* fmt,...)
 	      "ReactOS Setup",
 	      MB_OK);
 }
-
-
-#ifdef VMWINST
-static BOOL
-RunVMWInstall(VOID)
-{
-  PROCESS_INFORMATION ProcInfo;
-  STARTUPINFO si;
-  WCHAR InstallName[] = L"vmwinst.exe";
-
-  ZeroMemory(&si, sizeof(STARTUPINFO));
-  si.cb = sizeof(STARTUPINFO);
-
-  if(CreateProcess(NULL, InstallName, NULL, NULL, TRUE, NORMAL_PRIORITY_CLASS,
-                   NULL, NULL, &si, &ProcInfo))
-  {
-    WaitForSingleObject(ProcInfo.hProcess, INFINITE);
-    CloseHandle(ProcInfo.hThread);
-    CloseHandle(ProcInfo.hProcess);
-    return TRUE;
-  }
-  return FALSE;
-}
-#endif
 
 
 HRESULT CreateShellLink(LPCTSTR linkPath, LPCTSTR cmd, LPCTSTR arg, LPCTSTR dir, LPCTSTR iconPath, int icon_nr, LPCTSTR comment)
@@ -560,15 +534,6 @@ InstallReactOS (HINSTANCE hInstance)
   InstallWizard();
 
   SetupCloseInfFile(hSysSetupInf);
-
-#ifdef VMWINST
-  RunVMWInstall();
-#endif
-
-  DialogBox(hDllInstance,
-	    MAKEINTRESOURCE(IDD_RESTART),
-	    NULL,
-	    RestartDlgProc);
 
   return 0;
 }
