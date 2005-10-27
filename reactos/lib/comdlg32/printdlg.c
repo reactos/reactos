@@ -1270,10 +1270,10 @@ static LRESULT PRINTDLG_WMInitDialog(HWND hDlg, WPARAM wParam,
 static LRESULT PRINTDLG_WMInitDialogW(HWND hDlg, WPARAM wParam,
 				     PRINT_PTRW* PrintStructures)
 {
-    const static WCHAR PD32_COLLATE[] = { 'P', 'D', '3', '2', '_', 'C', 'O', 'L', 'L', 'A', 'T', 'E', 0 };
-    const static WCHAR PD32_NOCOLLATE[] = { 'P', 'D', '3', '2', '_', 'N', 'O', 'C', 'O', 'L', 'L', 'A', 'T', 'E', 0 };
-    const static WCHAR PD32_PORTRAIT[] = { 'P', 'D', '3', '2', '_', 'P', 'O', 'R', 'T', 'R', 'A', 'I', 'T', 0 };
-    const static WCHAR PD32_LANDSCAPE[] = { 'P', 'D', '3', '2', '_', 'L', 'A', 'N', 'D', 'S', 'C', 'A', 'P', 'E', 0 };
+    static const WCHAR PD32_COLLATE[] = { 'P', 'D', '3', '2', '_', 'C', 'O', 'L', 'L', 'A', 'T', 'E', 0 };
+    static const WCHAR PD32_NOCOLLATE[] = { 'P', 'D', '3', '2', '_', 'N', 'O', 'C', 'O', 'L', 'L', 'A', 'T', 'E', 0 };
+    static const WCHAR PD32_PORTRAIT[] = { 'P', 'D', '3', '2', '_', 'P', 'O', 'R', 'T', 'R', 'A', 'I', 'T', 0 };
+    static const WCHAR PD32_LANDSCAPE[] = { 'P', 'D', '3', '2', '_', 'L', 'A', 'N', 'D', 'S', 'C', 'A', 'P', 'E', 0 };
     LPPRINTDLGW lppd = PrintStructures->lpPrintDlg;
     DEVNAMES *pdn;
     DEVMODEW *pdm;
@@ -2366,9 +2366,9 @@ _c_size2strA(PageSetupDataA *pda,DWORD size,LPSTR strout) {
 }
 static void
 _c_size2strW(PageSetupDataW *pda,DWORD size,LPWSTR strout) {
-    const static WCHAR UNDEF[] = { '<', 'u', 'n', 'd', 'e', 'f', '>', 0 };
-    const static WCHAR mm_fmt[] = { '%', '.', '2', 'f', 'm', 'm', 0 };
-    const static WCHAR in_fmt[] = { '%', '.', '2', 'f', 'i', 'n', 0 };
+    static const WCHAR UNDEF[] = { '<', 'u', 'n', 'd', 'e', 'f', '>', 0 };
+    static const WCHAR mm_fmt[] = { '%', '.', '2', 'f', 'm', 'm', 0 };
+    static const WCHAR in_fmt[] = { '%', '.', '2', 'f', 'i', 'n', 0 };
     lstrcpyW(strout, UNDEF);
     if (pda->dlga->Flags & PSD_INHUNDREDTHSOFMILLIMETERS) {
 	wsprintfW(strout,mm_fmt,(size*1.0)/100.0);
@@ -3182,7 +3182,7 @@ PRINTDLG_PageDlgProcA(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 static INT_PTR CALLBACK
 PageDlgProcW(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    const static WCHAR __WINE_PAGESETUPDLGDATA[] = 
+    static const WCHAR __WINE_PAGESETUPDLGDATA[] = 
 	{ '_', '_', 'W', 'I', 'N', 'E', '_', 'P', 'A', 'G', 'E', 
 	  'S', 'E', 'T', 'U', 'P', 'D', 'L', 'G', 'D', 'A', 'T', 'A', 0 };
     PageSetupDataW	*pda;

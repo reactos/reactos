@@ -2500,7 +2500,7 @@ static void FILEDLG95_FILETYPE_Clean(HWND hwnd)
  */
 static inline BOOL FILEDLG95_unixfs_is_rooted_at_desktop(void) {
     HKEY hKey;
-    const static WCHAR wszRootedAtDesktop[] = { 'S','o','f','t','w','a','r','e','\\',
+    static const WCHAR wszRootedAtDesktop[] = { 'S','o','f','t','w','a','r','e','\\',
         'M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\',
         'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
         'E','x','p','l','o','r','e','r','\\','D','e','s','k','t','o','p','\\',
