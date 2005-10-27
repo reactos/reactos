@@ -1,4 +1,6 @@
 <group>
+<property name="BASEADDRESS_DPLAYX" value="0x5E080000" />
+<property name="BASEADDRESS_DPLAY" value="0x71E80000" />
 <property name="BASEADDRESS_REGTESTS" value="0x07000000" />
 <property name="BASEADDRESS_NOTIFYHOOK" value="0x08000000" />
 <property name="BASEADDRESS_DEVENUM" value="0x35680000" />
