@@ -62,6 +62,12 @@
 <directory name="dnsapi">
 	<xi:include href="dnsapi/dnsapi.xml" />
 </directory>
+<directory name="dplay">
+	<xi:include href="dplay/dplay.xml" />
+</directory>
+<directory name="dplayx">
+	<xi:include href="dplayx/dplayx.xml" />
+</directory>
 <directory name="dsound">
 	<xi:include href="dsound/dsound.xml" />
 </directory>
