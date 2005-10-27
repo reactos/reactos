@@ -204,7 +204,7 @@ void pp_pop_define_state(void);
 pp_entry_t *pp_add_define(char *def, char *text);
 pp_entry_t *pp_add_macro(char *ident, marg_t *args[], int nargs, mtext_t *exp);
 void pp_del_define(const char *name);
-FILE *pp_open_include(const char *name, int search, char **newpath);
+FILE *pp_open_include(const char *name, const char *parent_name, char **newpath, int type);
 void pp_push_if(pp_if_state_t s);
 void pp_next_if_state(int);
 pp_if_state_t pp_pop_if(void);

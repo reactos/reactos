@@ -1448,7 +1448,7 @@ void pp_do_include(char *fname, int type)
 	/* Undo the effect of the quotation */
 	fname[n-1] = '\0';
 
-	if((ppin = pp_open_include(fname+1, type, &newpath)) == NULL)
+	if((ppin = pp_open_include(fname+1, type ? pp_status.input : NULL, &newpath)) == NULL)
 		pperror("Unable to open include file %s", fname+1);
 
 	fname[n-1] = *fname;	/* Redo the quotes */
