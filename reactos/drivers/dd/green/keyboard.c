@@ -178,7 +178,7 @@ KeyboardDeviceWorker(
 	KIRQL OldIrql;
 	ULONG i, Queue;
 	ULONG SpaceInQueue;
-	ULONG BytesConsumed;
+	ULONG BytesConsumed = 0;
 	PKEYBOARD_INPUT_DATA Input;
 	NTSTATUS Status;
 
