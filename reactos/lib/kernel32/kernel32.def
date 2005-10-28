@@ -152,6 +152,7 @@ DebugActiveProcessStop@4
 DebugBreak@0=NTDLL.DbgBreakPoint
 DebugBreakProcess@4
 DebugSetProcessKillOnExit@4
+DecodePointer@4=NTDLL.RtlDecodePointer
 DefineDosDeviceA@12
 DefineDosDeviceW@12
 DelayLoadFailureHook@8
@@ -175,6 +176,7 @@ DosPathToSessionPathA@12
 DosPathToSessionPathW@12
 DuplicateConsoleHandle@16
 DuplicateHandle@28
+EncodePointer@4=NTDLL.RtlEncodePointer
 EndUpdateResourceA@8
 EndUpdateResourceW@8
 EnterCriticalSection@4=NTDLL.RtlEnterCriticalSection
