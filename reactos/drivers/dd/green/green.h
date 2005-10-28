@@ -1,9 +1,10 @@
 #if defined(__GNUC__)
   #include <ddk/ntddk.h>
   #include <ddk/ntddser.h>
-  #include <ntos/halfuncs.h>
-  #include <ddk/ntddblue.h>
+  #include <wincon.h>
+  #include <drivers/blue/ntddblue.h>
   #include <ddk/ntddkbd.h> /* should be in kbdmou.h */
+  #include <winbase.h>
 
   #include <debug.h>
 
