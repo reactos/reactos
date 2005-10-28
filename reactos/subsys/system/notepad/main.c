@@ -450,10 +450,10 @@ static void HandleCommandLine(LPWSTR cmdline)
             cmdline[lstrlen(cmdline) - 1] = 0;
         }
 
-        if (FileExists(cmdline))
+        file_name = cmdline;
+        if (FileExists(file_name))
         {
             file_exists = TRUE;
-            file_name = cmdline;
         }
         else if (!HasFileExtension(cmdline))
         {
@@ -469,13 +469,12 @@ static void HandleCommandLine(LPWSTR cmdline)
                 lstrcpyn(buf, cmdline, MAX_PATH - lstrlen(txtW) - 1);
                 lstrcat(buf, txtW);
                 file_name = buf;
-                file_exists = FileExists(buf);
+                file_exists = FileExists(file_name);
             }
         }
 
         if (file_exists)
         {
-            file_name = cmdline;
             DoOpenFile(file_name);
             InvalidateRect(Globals.hMainWnd, NULL, FALSE);
             if (opt_print)
