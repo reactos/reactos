@@ -3554,7 +3554,23 @@ NtUserGetWindowPlacement(HWND hWnd,
    }
 
    Safepl.flags = 0;
-   Safepl.showCmd = ((Window->Flags & WINDOWOBJECT_RESTOREMAX) ? SW_MAXIMIZE : SW_SHOWNORMAL);
+   if (0 == (Window->Style & WS_VISIBLE))
+   {
+      Safepl.showCmd = SW_HIDE;
+   }
+   else if (0 != (Window->Flags & WINDOWOBJECT_RESTOREMAX) ||
+            0 != (Window->Style & WS_MAXIMIZE))
+   {
+      Safepl.showCmd = SW_MAXIMIZE;
+   }
+   else if (0 != (Window->Style & WS_MINIMIZE))
+   {
+      Safepl.showCmd = SW_MINIMIZE;
+   }
+   else if (0 != (Window->Style & WS_MINIMIZE))
+   {
+      Safepl.showCmd = SW_SHOWNORMAL;
+   }
 
    Size.x = Window->WindowRect.left;
    Size.y = Window->WindowRect.top;
