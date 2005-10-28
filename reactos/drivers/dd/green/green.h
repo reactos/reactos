@@ -1,24 +1,15 @@
+#include <ntddk.h>
+#include <ntddser.h>
+#include <kbdmou.h>
+#include <stdarg.h>
+
 #if defined(__GNUC__)
-  #include <ddk/ntddk.h>
-  #include <ddk/ntddser.h>
   #include <wincon.h>
   #include <drivers/blue/ntddblue.h>
-  #include <ddk/ntddkbd.h> /* should be in kbdmou.h */
-  #include <winbase.h>
 
-  #include <debug.h>
+  #define INFINITE 0xFFFFFFFF
 
-  /* FIXME: should be in kbdmou.h */
-  typedef struct _CONNECT_DATA {
-    PDEVICE_OBJECT ClassDeviceObject;
-    PVOID ClassService;
-  } CONNECT_DATA, *PCONNECT_DATA;
-
-  /* FIXME: should be in kbdmou.h */
-  #define IOCTL_INTERNAL_KEYBOARD_CONNECT \
-    CTL_CODE(FILE_DEVICE_KEYBOARD, 0x0080, METHOD_NEITHER, FILE_ANY_ACCESS)
-
-  NTSTATUS STDCALL
+  NTSTATUS NTAPI
   ObReferenceObjectByName(PUNICODE_STRING ObjectPath,
     ULONG Attributes,
     PACCESS_STATE PassedAccessState,
@@ -27,9 +18,6 @@
     KPROCESSOR_MODE AccessMode,
     PVOID ParseContext,
     PVOID* ObjectPtr);
-
-  /* FIXME: should be in kbdmou.h */
-  typedef VOID (*PSERVICE_CALLBACK_ROUTINE)(PDEVICE_OBJECT, PKEYBOARD_INPUT_DATA, PKEYBOARD_INPUT_DATA, PULONG);
 
   typedef struct _CLASS_INFORMATION
   {
@@ -40,16 +28,7 @@
   #define KEYBOARD_BUFFER_SIZE 100
 
 #elif defined(_MSC_VER)
-  #include <ntddk.h>
-  #include <ntddser.h>
-  #include <kbdmou.h>
-
-  #define STDCALL
-
-  #define DPRINT1 DbgPrint("(%s:%d) ", __FILE__, __LINE__), DbgPrint
-  #define CHECKPOINT1 DbgPrint("(%s:%d)\n", __FILE__, __LINE__)
-  #define DPRINT DPRINT1
-  #define CHECKPOINT CHECKPOINT1
+  /* Nothing more to do */
 #else
   #error Unknown compiler!
 #endif

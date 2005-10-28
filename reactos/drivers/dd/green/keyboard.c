@@ -1,14 +1,15 @@
-/* $Id:
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS VT100 emulator
  * FILE:            drivers/dd/green/keyboard.c
  * PURPOSE:         Keyboard part of green management
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #define NDEBUG
+#include <debug.h>
+
 #include "green.h"
 
 static BOOLEAN
@@ -138,7 +139,7 @@ KeyboardInitialize(
 	return STATUS_SUCCESS;
 }
 
-static VOID STDCALL
+static VOID NTAPI
 KeyboardDpcSendData(
 	IN PKDPC Dpc,
 	IN PVOID pDeviceExtension, /* real type PKEYBOARD_DEVICE_EXTENSION */
@@ -161,7 +162,7 @@ KeyboardDpcSendData(
 
 	DeviceExtension->InputDataCount[Queue] = 0;
 }
-static VOID STDCALL
+static VOID NTAPI
 KeyboardDeviceWorker(
 	PVOID Context)
 {

@@ -1,17 +1,18 @@
-/* $Id:
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS VT100 emulator
  * FILE:            drivers/dd/green/green.c
  * PURPOSE:         Driver entry point
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
 //#define NDEBUG
+#include <debug.h>
+
 #include "green.h"
 
-VOID STDCALL
+VOID NTAPI
 DriverUnload(IN PDRIVER_OBJECT DriverObject)
 {
 	// nothing to do here yet
@@ -20,7 +21,7 @@ DriverUnload(IN PDRIVER_OBJECT DriverObject)
 /*
  * Standard DriverEntry method.
  */
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 DriverEntry(
 	IN PDRIVER_OBJECT DriverObject,
 	IN PUNICODE_STRING RegPath)

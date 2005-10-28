@@ -1,14 +1,15 @@
-/* $Id:
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS VT100 emulator
  * FILE:            drivers/dd/green/misc.c
  * PURPOSE:         Misceallenous operations
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
 //#define NDEBUG
+#include <debug.h>
+
 #include "green.h"
 
 NTSTATUS

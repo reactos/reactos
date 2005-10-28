@@ -1,5 +1,4 @@
-/* $Id:
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS VT100 emulator
  * FILE:            drivers/dd/green/screen.c
@@ -7,12 +6,13 @@
  *
  * PROGRAMMERS:     Eric Kohl (ekohl@abo.rhein-zeitung.de)
  *                  Art Yerkes
- *                  Hervé Poussineau (hpoussin@reactos.com)
+ *                  Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #define NDEBUG
+#include <debug.h>
+
 #include "green.h"
-#include <stdarg.h>
 
 #define ESC       ((UCHAR)0x1b)
 

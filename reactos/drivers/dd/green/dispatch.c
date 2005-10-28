@@ -1,17 +1,18 @@
-/* $Id:
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS VT100 emulator
  * FILE:            drivers/dd/green/dispatch.c
  * PURPOSE:         Dispatch routines
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.com)
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
 #define NDEBUG
+#include <debug.h>
+
 #include "green.h"
 
-NTSTATUS STDCALL
+NTSTATUS NTAPI
 GreenDispatch(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
