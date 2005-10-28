@@ -29,6 +29,7 @@
 		<file>color.c</file>
 		<file>gamma.c</file>
 		<file>palette.c</file>
+		<file>videoport.c</file>
 	</directory>
 
 	<directory name="soft">
