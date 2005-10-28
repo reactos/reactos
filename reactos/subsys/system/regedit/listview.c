@@ -494,6 +494,24 @@ fail:
     return NULL;
 }
 
+void DestroyListView(HWND hwndLV) {
+    INT count, i;
+	LVITEM item;
+
+    if (g_valueName)
+        HeapFree(GetProcessHeap(), 0, g_valueName);
+
+    count = ListView_GetItemCount(hwndLV);
+    for (i = 0; i < count; i++) {
+        item.mask = LVIF_PARAM;
+        item.iItem = i;
+        ListView_GetItem(hwndLV, &item);
+        free(((LINE_INFO*)item.lParam)->name);
+        HeapFree(GetProcessHeap(), 0, (void*)item.lParam);
+    }
+ 
+}
+
 BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCTSTR keyPath)
 {
     DWORD max_sub_key_len;

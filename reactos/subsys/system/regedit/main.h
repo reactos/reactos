@@ -107,6 +107,9 @@ extern HTREEITEM InsertNode(HWND hwndTV, HTREEITEM hItem, LPTSTR name);
 extern HWND StartKeyRename(HWND hwndTV);
 extern BOOL CreateNewKey(HWND hwndTV, HTREEITEM hItem);
 extern BOOL SelectNode(HWND hwndTV, LPCTSTR keyPath);
+extern void DestroyTreeView( void );
+extern void DestroyListView( HWND hwndLV );
+extern void DestroyMainMenu( void );
 
 /* edit.c */
 extern BOOL ModifyValue(HWND hwnd, HKEY hKey, LPCTSTR valueName, BOOL EditBin);
