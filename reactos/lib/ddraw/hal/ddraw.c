@@ -131,9 +131,17 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 
 	/* Todo add a check see if HalInfo.GetDriverInfo is supported or not */
 
+	 /* Do not trust msdn what it say about dwContext it is not in use for 
+	    windows nt, it is in use for all os, and it always pont to 
+		DirectDrawGlobal.hDD                                             */
+
 	DDHAL_GETDRIVERINFODATA DriverInfo;
 	memset(&DriverInfo,0, sizeof(DDHAL_GETDRIVERINFODATA));
 	DriverInfo.dwSize = sizeof(DDHAL_GETDRIVERINFODATA);
+	DriverInfo.dwContext = DirectDrawGlobal.hDD; 
+
+	
+
 
 	/* Get ColorControlCallbacks  */	
 	DriverInfo.guidInfo = GUID_ColorControlCallbacks;
@@ -207,12 +215,12 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 	
 
 	/* Get the KernelCaps  */
-	/*
+	/* Need Alloc memmory for lpDDKernelCaps ?? */
 	DriverInfo.guidInfo = GUID_KernelCaps;
-	DriverInfo.lpvData = &misc;
-	DriverInfo.dwExpectedSize = sizeof(DDHAL_DDMISCELLANEOUSCALLBACKS);
+	DriverInfo.lpvData = &This->DirectDrawGlobal.lpDDKernelCaps;
+	DriverInfo.dwExpectedSize = sizeof(DDHAL_DDKERNELCALLBACKS);
 	This->HalInfo.GetDriverInfo( &DriverInfo);
-	*/
+	
 
 	/* Get the MiscellaneousCallbacks  */	
 	DriverInfo.guidInfo = GUID_MiscellaneousCallbacks;
@@ -229,8 +237,7 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 	This->HalInfo.GetDriverInfo( &DriverInfo);
     */
 
-	/* Get the MotionCompCallbacks  */	
-	
+	/* Get the MotionCompCallbacks  */		
 	DriverInfo.guidInfo = GUID_MotionCompCallbacks;
 	DriverInfo.lpvData = &This->DirectDrawGlobal.lpDDCBtmp->HALDDMotionComp;
 	DriverInfo.dwExpectedSize = sizeof(DDHAL_DDMOTIONCOMPCALLBACKS);
