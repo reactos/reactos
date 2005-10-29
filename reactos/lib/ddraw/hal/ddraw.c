@@ -15,29 +15,32 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 {
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
  
+
+	/* point to it self */
+	This->DirectDrawGlobal.lp16DD = &This->DirectDrawGlobal;
+
 	/* get the object */
 	if(!DdCreateDirectDrawObject (&This->DirectDrawGlobal, This->hdc))
 		return DDERR_INVALIDPARAMS;
 
- 	/* alloc some space */
-	This->DirectDrawGlobal.lpDDCBtmp = (LPDDHAL_CALLBACKS)HeapAlloc(GetProcessHeap(), 0, sizeof(DDHAL_CALLBACKS));
-	memset(This->DirectDrawGlobal.lpDDCBtmp, 0, sizeof(DDHAL_CALLBACKS));
-	This->HalInfo.lpDDCallbacks = &This->DirectDrawGlobal.lpDDCBtmp->cbDDCallbacks;
-	This->HalInfo.lpDDSurfaceCallbacks = &This->DirectDrawGlobal.lpDDCBtmp->cbDDSurfaceCallbacks;
-	This->HalInfo.lpDDExeBufCallbacks = &This->DirectDrawGlobal.lpDDCBtmp->cbDDExeBufCallbacks;
-	This->HalInfo.lpDDPaletteCallbacks = &This->DirectDrawGlobal.lpDDCBtmp->cbDDPaletteCallbacks;
-	This->DirectDrawGlobal.lpD3DHALCallbacks = (ULONG_PTR)HeapAlloc(GetProcessHeap(), 0, sizeof(D3DHAL_CALLBACKS));
-	This->DirectDrawGlobal.lpD3DGlobalDriverData = (ULONG_PTR)HeapAlloc(GetProcessHeap(), 0, sizeof(D3DHAL_GLOBALDRIVERDATA));
+	
+	
+	
+	/* alloc all the space */
+	This->DirectDrawGlobal.lpDDCBtmp = (LPDDHAL_CALLBACKS)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DDHAL_CALLBACKS));		
+	This->DirectDrawGlobal.lpD3DHALCallbacks = (ULONG_PTR)HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY, sizeof(D3DHAL_CALLBACKS));	
+	This->DirectDrawGlobal.lpD3DGlobalDriverData = (ULONG_PTR)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(D3DHAL_GLOBALDRIVERDATA));			
+	
 
-	/* fill the sizeofs */
-	This->HalInfo.dwSize = sizeof(DDHALINFO);
-	This->HalInfo.lpDDCallbacks->dwSize = sizeof(DDHAL_DDCALLBACKS);
-	This->HalInfo.lpDDSurfaceCallbacks->dwSize = sizeof(DDHAL_DDSURFACECALLBACKS);
-	This->HalInfo.lpDDPaletteCallbacks->dwSize = sizeof(DDHAL_DDPALETTECALLBACKS);
-	This->HalInfo.lpDDExeBufCallbacks->dwSize = sizeof(DDHAL_DDEXEBUFCALLBACKS);
-	((LPD3DHAL_CALLBACKS)This->DirectDrawGlobal.lpD3DHALCallbacks)->dwSize = sizeof(D3DHAL_CALLBACKS);
-	((LPD3DHAL_GLOBALDRIVERDATA)This->DirectDrawGlobal.lpD3DGlobalDriverData)->dwSize = sizeof(D3DHAL_GLOBALDRIVERDATA);	
+	/* Fill in some info */
+	This->HalInfo.lpD3DGlobalDriverData = This->DirectDrawGlobal.lpD3DGlobalDriverData;
+	This->HalInfo.lpD3DHALCallbacks = This->DirectDrawGlobal.lpD3DHALCallbacks;
+	This->HalInfo.lpDDCallbacks = &This->DirectDrawGlobal.lpDDCBtmp->HALDD;
+	This->HalInfo.lpDDExeBufCallbacks = &This->DirectDrawGlobal.lpDDCBtmp->HALDDExeBuf;
+	This->HalInfo.lpDDPaletteCallbacks = &This->DirectDrawGlobal.lpDDCBtmp->HALDDPalette;
+	This->HalInfo.lpDDSurfaceCallbacks = &This->DirectDrawGlobal.lpDDCBtmp->HALDDSurface;
 
+	
 	/* query all kinds of infos from the driver */
 	if(!DdQueryDirectDrawObject (
 		&This->DirectDrawGlobal, 
@@ -136,6 +139,7 @@ HRESULT Hal_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface)
 {
    	return DD_OK;
 }
+
 
 VOID Hal_DirectDraw_Release (LPDIRECTDRAW7 iface) 
 {
