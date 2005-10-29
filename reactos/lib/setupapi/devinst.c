@@ -3486,7 +3486,42 @@ BOOL WINAPI SetupDiSetDeviceInstallParamsW(
 }
 
 /***********************************************************************
- *		SetupDiCreateDevRegKey (SETUPAPI.@)
+ *		SetupDiCreateDevRegKeyA (SETUPAPI.@)
+ */
+HKEY WINAPI SetupDiCreateDevRegKeyA(
+        IN HDEVINFO DeviceInfoSet,
+        IN PSP_DEVINFO_DATA DeviceInfoData,
+        IN DWORD Scope,
+        IN DWORD HwProfile,
+        IN DWORD KeyType,
+        IN HINF InfHandle OPTIONAL,
+        IN PCSTR InfSectionName OPTIONAL)
+{
+    PCWSTR InfSectionNameW = NULL;
+    HKEY ret = INVALID_HANDLE_VALUE;
+
+    if (InfSectionName)
+    {
+        InfSectionNameW = MultiByteToUnicode(InfSectionName, CP_ACP);
+        if (InfSectionNameW == NULL) return INVALID_HANDLE_VALUE;
+    }
+
+    ret = SetupDiCreateDevRegKeyW(DeviceInfoSet,
+                                  DeviceInfoData,
+                                  Scope,
+                                  HwProfile,
+                                  KeyType,
+                                  InfHandle,
+                                  InfSectionNameW);
+
+    if (InfSectionNameW != NULL)
+        MyFree((PVOID)InfSectionNameW);
+
+    return ret;
+}
+
+/***********************************************************************
+ *		SetupDiCreateDevRegKeyW (SETUPAPI.@)
  */
 HKEY WINAPI SetupDiCreateDevRegKeyW(
         IN HDEVINFO DeviceInfoSet,
