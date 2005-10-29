@@ -183,8 +183,8 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
                  IN HANDLE ExceptionPort  OPTIONAL)
 {
     HANDLE hProcess;
-    PEPROCESS Process;
-    PEPROCESS pParentProcess;
+    PEPROCESS Process = NULL;
+    PEPROCESS pParentProcess = NULL;
     PEPORT pDebugPort = NULL;
     PEPORT pExceptionPort = NULL;
     PSECTION_OBJECT SectionObject = NULL;
@@ -194,6 +194,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     KAFFINITY Affinity;
     HANDLE_TABLE_ENTRY CidEntry;
     DirectoryTableBase.QuadPart = (ULONGLONG)0;
+    BOOLEAN ProcessCreated = FALSE;
 
     DPRINT("PspCreateProcess(ObjectAttributes %x)\n", ObjectAttributes);
 
@@ -210,7 +211,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to reference the parent process: Status: 0x%x\n", Status);
-            return(Status);
+            goto Cleanup;
         }
 
         /* Inherit Parent process's Affinity. */
@@ -242,7 +243,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
         if (!NT_SUCCESS(Status))
         {
                 DPRINT1("Failed to reference the debug port: Status: 0x%x\n", Status);
-                goto exitdereferenceobjects;
+                goto Cleanup;
         }
     }
 
@@ -259,7 +260,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to reference the exception port: Status: 0x%x\n", Status);
-            goto exitdereferenceobjects;
+            goto Cleanup;
         }
     }
 
@@ -267,7 +268,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     if (SectionHandle != NULL)
     {
         Status = ObReferenceObjectByHandle(SectionHandle,
-                                           0,
+                                           SECTION_MAP_EXECUTE,
                                            MmSectionObjectType,
                                            PreviousMode,
                                            (PVOID*)&SectionObject,
@@ -275,7 +276,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to reference process image section: Status: 0x%x\n", Status);
-            goto exitdereferenceobjects;
+            goto Cleanup;
         }
     }
 
@@ -294,7 +295,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create process object, Status: 0x%x\n", Status);
-        goto exitdereferenceobjects;
+        goto Cleanup;
     }
 
     /* Clean up the Object */
@@ -350,8 +351,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     if (!NT_SUCCESS(Status))
     {
         DbgPrint("PspInitializeProcessSecurity failed (Status %x)\n", Status);
-        ObDereferenceObject(Process);
-        goto exitdereferenceobjects;
+        goto Cleanup;
     }
 
     /* Create the Process' Address Space */
@@ -360,8 +360,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Failed to create Address Space\n");
-        ObDereferenceObject(Process);
-        goto exitdereferenceobjects;
+        goto Cleanup;
     }
 
     if (SectionObject)
@@ -380,8 +379,8 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     if(!Process->UniqueProcessId)
     {
         DPRINT1("Failed to create CID handle\n");
-        ObDereferenceObject(Process);
-        goto exitdereferenceobjects;
+        Status = STATUS_UNSUCCESSFUL; /* FIXME - what error should we return? */
+        goto Cleanup;
     }
 
     /* FIXME: Insert into Job Object */
@@ -394,13 +393,8 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
         if (!NT_SUCCESS(Status))
         {
             DbgPrint("NtCreateProcess() Peb creation failed: Status %x\n",Status);
-            ObDereferenceObject(Process);
-            goto exitdereferenceobjects;
+            goto Cleanup;
         }
-
-        /* Let's take advantage of this time to kill the reference too */
-        ObDereferenceObject(pParentProcess);
-        pParentProcess = NULL;
     }
 
     /* W00T! The process can now be activated */
@@ -408,6 +402,8 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     ExAcquireFastMutex(&PspActiveProcessMutex);
     InsertTailList(&PsActiveProcessHead, &Process->ActiveProcessLinks);
     ExReleaseFastMutex(&PspActiveProcessMutex);
+    
+    ProcessCreated = TRUE;
 
     /* FIXME: SeCreateAccessStateEx */
 
@@ -419,37 +415,35 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
                             0,
                             NULL,
                             &hProcess);
-    if (!NT_SUCCESS(Status))
+    if (NT_SUCCESS(Status))
     {
-       DPRINT1("Could not get a handle to the Process Object\n");
-       ObDereferenceObject(Process);
-       goto exitdereferenceobjects;
+        /* Set the Creation Time */
+        KeQuerySystemTime(&Process->CreateTime);
+
+        DPRINT("Done. Returning handle: %x\n", hProcess);
+        _SEH_TRY
+        {
+           *ProcessHandle = hProcess;
+        }
+        _SEH_HANDLE
+        {
+           Status = _SEH_GetExceptionCode();
+        } _SEH_END;
+        /* FIXME: ObGetObjectSecurity(Process, &SecurityDescriptor)
+                  SeAccessCheck
+        */
     }
 
-    /* Set the Creation Time */
-    KeQuerySystemTime(&Process->CreateTime);
-
-    DPRINT("Done. Returning handle: %x\n", hProcess);
-    _SEH_TRY
-    {
-       *ProcessHandle = hProcess;
-    }
-    _SEH_HANDLE
-    {
-       Status = _SEH_GetExceptionCode();
-    } _SEH_END;
-
-    /* FIXME: ObGetObjectSecurity(Process, &SecurityDescriptor)
-              SeAccessCheck
-    */
-    ObDereferenceObject(Process);
-    return Status;
-
-exitdereferenceobjects:
-    if(SectionObject != NULL) ObDereferenceObject(SectionObject);
-    if(pExceptionPort != NULL) ObDereferenceObject(pExceptionPort);
-    if(pDebugPort != NULL) ObDereferenceObject(pDebugPort);
+Cleanup:
     if(pParentProcess != NULL) ObDereferenceObject(pParentProcess);
+    if (!ProcessCreated)
+    {
+        if(SectionObject != NULL) ObDereferenceObject(SectionObject);
+        if(pExceptionPort != NULL) ObDereferenceObject(pExceptionPort);
+        if(pDebugPort != NULL) ObDereferenceObject(pDebugPort);
+        if(Process != NULL) ObDereferenceObject(Process);
+    }
+
     return Status;
 }
 

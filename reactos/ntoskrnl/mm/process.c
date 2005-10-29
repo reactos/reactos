@@ -473,10 +473,8 @@ MmCreateProcessAddressSpace(IN PEPROCESS Process,
         if (!NT_SUCCESS(Status))
         {
             DPRINT1("Failed to map process Image\n");
-            ObDereferenceObject(Section);
             goto exit;
         }
-        ObDereferenceObject(Section);
 
         /* Save the pointer */
         Process->SectionBaseAddress = ImageBase;
