@@ -3412,12 +3412,11 @@ int parse(int wParam, int lParam)
                 else {
                     calc.memory = calc_atof(calc.buffer, calc.numBase);
                 }
+                return 0;
             }
-            return 0;
         }
-        break;
+        // fall through for Enter processing
 
-        // fall through for Enter processing ... but there is a bug here in Ctrl+M vs. Return
     case TEXT('='):
         {
             calcfloat r = calc.operand;
