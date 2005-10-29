@@ -4044,6 +4044,7 @@ AddDriverToList(
             InsertHeadList(PreviousEntry, &driverInfo->ListEntry);
             break;
         }
+        PreviousEntry = PreviousEntry->Flink;
     }
     if (PreviousEntry == DriverListHead)
     {
