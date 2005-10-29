@@ -51,6 +51,33 @@ typedef struct _DDKERNELCAPS
 #define DDIRQ_VPORT9_VSYNC		         	 0x00010000
 #define DDIRQ_VPORT9_LINE         			 0x00020000
 
+#if defined(_WIN32) && !defined(_NO_COM)
+
+#undef INTERFACE
+#define INTERFACE IDirectDrawKernel
+DECLARE_INTERFACE_ (IDirectDrawKernel, IUnknown)
+{
+    STDMETHOD(QueryInterface) (THIS_ REFIID riid, LPVOID* ppvObj) PURE;
+    STDMETHOD_(ULONG,AddRef) (THIS) PURE;
+    STDMETHOD_(ULONG,Release) (THIS) PURE;
+	STDMETHOD(GetKernelHandle) (THIS_ ULONG*) PURE;
+	STDMETHOD(ReleaseKernelHandle) (THIS) PURE;
+};
+
+#undef INTERFACE
+#define INTERFACE IDirectDrawSurfaceKernel
+DECLARE_INTERFACE_ (IDirectDrawSurfaceKernel, IUnknown)
+{
+    STDMETHOD(QueryInterface) (THIS_ REFIID riid, LPVOID* ppvObj) PURE;
+    STDMETHOD_(ULONG,AddRef) (THIS) PURE;
+    STDMETHOD_(ULONG,Release) (THIS) PURE;
+	STDMETHOD(GetKernelHandle) (THIS_ ULONG*) PURE;
+	STDMETHOD(ReleaseKernelHandle) (THIS) PURE;
+};
+
+#undef INTERFACE
+#endif // defined(_WIN32) && !defined(_NO_COM)
+
 #ifdef __cplusplus
 };
 #endif
