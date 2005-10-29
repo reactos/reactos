@@ -140,8 +140,6 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 	DriverInfo.dwSize = sizeof(DDHAL_GETDRIVERINFODATA);
 	DriverInfo.dwContext = This->DirectDrawGlobal.hDD; 
 
-	
-
 
 	/* Get ColorControlCallbacks  */	
 	DriverInfo.guidInfo = GUID_ColorControlCallbacks;
@@ -160,20 +158,20 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 	This->HalInfo.GetDriverInfo( &DriverInfo);*/
 	
 	/* Get the D3DCallbacks2 */
-	/* do we need alloc memmory for This->DirectDrawGlobal.lpD3DHALCallbacks2 */
+	This->DirectDrawGlobal.lpD3DHALCallbacks2 = (ULONG_PTR)HeapAlloc(GetProcessHeap(), 0, sizeof(D3DHAL_CALLBACKS2));	
 	DriverInfo.guidInfo = GUID_D3DCallbacks2;
-	DriverInfo.lpvData =  &This->DirectDrawGlobal.lpD3DHALCallbacks2;
+	DriverInfo.lpvData =  (PVOID)This->DirectDrawGlobal.lpD3DHALCallbacks2;
 	DriverInfo.dwExpectedSize = sizeof(D3DHAL_CALLBACKS2);
 	This->HalInfo.GetDriverInfo( &DriverInfo);
 
 	
 	/* Get the D3DCallbacks3 */	
-	/*
+    This->DirectDrawGlobal.lpD3DHALCallbacks = (ULONG_PTR)HeapAlloc(GetProcessHeap(), 0, sizeof(D3DHAL_CALLBACKS3));		
 	DriverInfo.guidInfo = GUID_D3DCallbacks3;
-	DriverInfo.lpvData = &misc;
-	DriverInfo.dwExpectedSize = sizeof(DDHAL_DDMISCELLANEOUSCALLBACKS);
+	DriverInfo.lpvData =   (PVOID)This->DirectDrawGlobal.lpD3DHALCallbacks;
+	DriverInfo.dwExpectedSize = sizeof(D3DHAL_CALLBACKS3);
 	This->HalInfo.GetDriverInfo( &DriverInfo);
-	*/
+	
 
 	/* Get the misc callback */
 	/* Problem with include files	
@@ -184,12 +182,13 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 	*/
 
 	/* Get the D3DExtendedCaps  */
-	/*
+	
+	This->DirectDrawGlobal.lpD3DExtendedCaps = (ULONG_PTR)HeapAlloc(GetProcessHeap(), 0, sizeof(D3DHAL_D3DEXTENDEDCAPS));
 	DriverInfo.guidInfo = GUID_D3DExtendedCaps;
-	DriverInfo.lpvData = &misc;
-	DriverInfo.dwExpectedSize = sizeof(DDHAL_DDMISCELLANEOUSCALLBACKS);
+	DriverInfo.lpvData = (PVOID) This->DirectDrawGlobal.lpD3DExtendedCaps;
+	DriverInfo.dwExpectedSize = sizeof(D3DHAL_D3DEXTENDEDCAPS);
 	This->HalInfo.GetDriverInfo( &DriverInfo);
-    */
+    
 
 	/* Get the D3DParseUnknownCommandCallback  */
 	/*
@@ -215,9 +214,9 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 	
 
 	/* Get the KernelCaps  */
-	/* Need Alloc memmory for lpDDKernelCaps ?? */
+	This->DirectDrawGlobal.lpDDKernelCaps = (LPDDKERNELCAPS)HeapAlloc(GetProcessHeap(), 0, sizeof(DDHAL_DDKERNELCALLBACKS));
 	DriverInfo.guidInfo = GUID_KernelCaps;
-	DriverInfo.lpvData = &This->DirectDrawGlobal.lpDDKernelCaps;
+	DriverInfo.lpvData = (PVOID) This->DirectDrawGlobal.lpDDKernelCaps;
 	DriverInfo.dwExpectedSize = sizeof(DDHAL_DDKERNELCALLBACKS);
 	This->HalInfo.GetDriverInfo( &DriverInfo);
 	
