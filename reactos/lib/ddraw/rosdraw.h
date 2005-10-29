@@ -93,6 +93,15 @@ VOID Hel_DirectDraw_Release (LPDIRECTDRAW7 iface);
 
 /*********** Macros ***********/
 
-#define DX_STUB return DDERR_UNSUPPORTED; 
+#define DX_STUB \
+	static BOOL firstcall = TRUE; \
+	if (firstcall) \
+	{ \
+		char buffer[1024]; \
+		sprintf ( buffer, "Function %s is not implemented yet (%s:%d)\n", __FUNCTION__,__FILE__,__LINE__ ); \
+		OutputDebugStringA(buffer); \
+		firstcall = FALSE; \
+	} \
+	return DDERR_UNSUPPORTED; 
 
 #endif /* __DDRAW_PRIVATE */
