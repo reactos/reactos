@@ -138,7 +138,7 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 	DDHAL_GETDRIVERINFODATA DriverInfo;
 	memset(&DriverInfo,0, sizeof(DDHAL_GETDRIVERINFODATA));
 	DriverInfo.dwSize = sizeof(DDHAL_GETDRIVERINFODATA);
-	DriverInfo.dwContext = DirectDrawGlobal.hDD; 
+	DriverInfo.dwContext = This->DirectDrawGlobal.hDD; 
 
 	
 
