@@ -63,7 +63,7 @@ HRESULT WINAPI
 Main_DirectDrawPalette_QueryInterface(LPDIRECTDRAWPALETTE iface,
 				      REFIID refiid, LPVOID *obj)
 {
-    DX_STUB;
+	return E_NOINTERFACE;
 }
 
 IDirectDrawPaletteVtbl DirectDrawPalette_Vtable =

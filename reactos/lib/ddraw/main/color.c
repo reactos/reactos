@@ -35,7 +35,7 @@ HRESULT WINAPI
 Main_DirectDrawColorControl_QueryInterface(LPDIRECTDRAWCOLORCONTROL iface, 
 										   REFIID riid, LPVOID* ppvObj) 
 {
-   	DX_STUB;
+	return E_NOINTERFACE;
 }
 
 HRESULT WINAPI

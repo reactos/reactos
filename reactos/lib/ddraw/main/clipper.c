@@ -58,7 +58,7 @@ HRESULT WINAPI Main_DirectDrawClipper_SetClipList(
 HRESULT WINAPI Main_DirectDrawClipper_QueryInterface(
     LPDIRECTDRAWCLIPPER iface, REFIID riid, LPVOID* ppvObj) 
 {
-   	DX_STUB;
+	return E_NOINTERFACE;
 }
 
 HRESULT WINAPI Main_DirectDrawClipper_GetHWnd(

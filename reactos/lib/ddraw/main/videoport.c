@@ -3,7 +3,7 @@
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS
  * FILE:                 lib/ddraw/main/videoport.c
- * PURPOSE:              IDirectDrawVideoPort and DDVideoPortContainer Implementation 
+ * PURPOSE:              IDirectDrawVideoPort, DDVideoPortContainer and IDirectDrawVideoPortNotify Implementation 
  * PROGRAMMER:           Maarten Bosma
  *
  */
@@ -16,19 +16,19 @@
 HRESULT WINAPI 
 Main_DirectDrawVideoPort_QueryInterface (LPDIRECTDRAWVIDEOPORT iface, REFIID riid, LPVOID* ppvObj)
 {
-	DX_STUB;
+	return E_NOINTERFACE;
 }
 
 ULONG WINAPI 
 Main_DirectDrawVideoPort_AddRef (LPDIRECTDRAWVIDEOPORT iface) 
 {
-	DX_STUB;
+	return 1;
 }
 
 ULONG WINAPI 
 Main_DirectDrawVideoPort_Release (LPDIRECTDRAWVIDEOPORT iface)
 {
-	DX_STUB;
+	return 0;
 }
 
 HRESULT WINAPI 
@@ -113,17 +113,17 @@ HRESULT WINAPI Main_DirectDrawVideoPort_WaitForSync (LPDIRECTDRAWVIDEOPORT iface
 
 HRESULT WINAPI Main_DDVideoPortContainer_QueryInterface (LPDDVIDEOPORTCONTAINER iface, REFIID riid, LPVOID* ppvObj)
 {
-    DX_STUB;
+	return E_NOINTERFACE;
 }
 
 ULONG WINAPI Main_DDVideoPortContainer_AddRef (LPDDVIDEOPORTCONTAINER iface) 
 {
-    DX_STUB;
+	return 1;
 }
 
 ULONG WINAPI Main_DDVideoPortContainer_Release (LPDDVIDEOPORTCONTAINER iface)
 {
-    DX_STUB;
+	return 0;
 }
 
 HRESULT WINAPI Main_DDVideoPortContainer_CreateVideoPort (LPDDVIDEOPORTCONTAINER iface, DWORD dwFlags, LPDDVIDEOPORTDESC pPortDesc, 
@@ -145,6 +145,33 @@ HRESULT WINAPI Main_DDVideoPortContainer_GetVideoPortConnectInfo (LPDDVIDEOPORTC
 }
 
 HRESULT WINAPI Main_DDVideoPortContainer_QueryVideoPortStatus (LPDDVIDEOPORTCONTAINER iface, DWORD PortId, LPDDVIDEOPORTSTATUS pStatus)
+{
+    DX_STUB;
+}
+
+/************* IDirectDrawVideoPortNotify *************/ 
+
+HRESULT WINAPI Main_DDVideoPortNotify_QueryInterface (LPDIRECTDRAWVIDEOPORTNOTIFY iface, REFIID riid, LPVOID* ppvObj)
+{
+	return E_NOINTERFACE;
+}
+
+ULONG WINAPI Main_DDVideoPortNotify_AddRef (LPDIRECTDRAWVIDEOPORTNOTIFY iface)
+{
+	return 1;
+}
+
+ULONG WINAPI Main_DDVideoPortNotify_Release (LPDIRECTDRAWVIDEOPORTNOTIFY iface)
+{
+	return 0;
+}
+
+HRESULT WINAPI Main_DDVideoPortNotify_AcquireNotification (LPDIRECTDRAWVIDEOPORTNOTIFY iface, HANDLE* h, LPDDVIDEOPORTNOTIFY pVideoPortNotify)
+{
+    DX_STUB;
+}
+
+HRESULT WINAPI Main_DDVideoPortNotify_ReleaseNotification (LPDIRECTDRAWVIDEOPORTNOTIFY iface, HANDLE h)
 {
     DX_STUB;
 }
@@ -179,4 +206,13 @@ IDDVideoPortContainerVtbl DDVideoPortContainer_Vtable =
     Main_DDVideoPortContainer_EnumVideoPorts,
     Main_DDVideoPortContainer_GetVideoPortConnectInfo,
     Main_DDVideoPortContainer_QueryVideoPortStatus
+};
+
+IDirectDrawVideoPortNotifyVtbl DDVideoPortNotify_Vtable =
+{
+   Main_DDVideoPortNotify_QueryInterface,
+   Main_DDVideoPortNotify_AddRef,
+   Main_DDVideoPortNotify_Release,
+   Main_DDVideoPortNotify_AcquireNotification,
+   Main_DDVideoPortNotify_ReleaseNotification 
 };

@@ -117,7 +117,7 @@ HRESULT WINAPI
 Main_DDrawSurface_QueryInterface(LPDIRECTDRAWSURFACE7 iface, REFIID riid,
 				      LPVOID* ppObj)
 {
-    DX_STUB;
+	return E_NOINTERFACE;
 }
 
 HRESULT WINAPI Main_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rdst,

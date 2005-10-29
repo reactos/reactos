@@ -35,7 +35,7 @@ HRESULT WINAPI
 Main_DirectDrawGammaControl_QueryInterface(LPDIRECTDRAWGAMMACONTROL iface, REFIID riid,
 				      LPVOID *ppObj)
 {
-   	DX_STUB;
+	return E_NOINTERFACE;
 }
 
 HRESULT WINAPI
