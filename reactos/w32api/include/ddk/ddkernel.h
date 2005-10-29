@@ -1,4 +1,4 @@
-/* $Id: $
+/* $Id$
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
@@ -10,6 +10,11 @@
 
 #ifndef __DDKM_INCLUDED__
 #define __DDKM_INCLUDED__
+
+#if defined (_WIN32) && !defined (_NO_COM)
+DEFINE_GUID (IID_IDirectDrawKernel,        0x8D56C120,0x6A08,0x11D0,0x9B,0x06,0x00,0xA0,0xC9,0x03,0xA3,0xB8);
+DEFINE_GUID (IID_IDirectDrawSurfaceKernel, 0x60755DA0,0x6A40,0x11D0,0x9B,0x06,0x00,0xA0,0xC9,0x03,0xA3,0xB8);
+#endif
 
 typedef struct _DDKERNELCAPS
 {
@@ -50,6 +55,9 @@ typedef struct _DDKERNELCAPS
 #define DDIRQ_VPORT8_LINE         			 0x00080000
 #define DDIRQ_VPORT9_VSYNC		         	 0x00010000
 #define DDIRQ_VPORT9_LINE         			 0x00020000
+
+typedef struct IDirectDrawKernel* LPDIRECTDRAWKERNEL;
+typedef struct IDirectDrawSurfaceKernel* LPDIRECTDRAWSURFACEKERNEL;
 
 #if defined(_WIN32) && !defined(_NO_COM)
 
