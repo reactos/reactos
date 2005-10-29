@@ -1616,7 +1616,7 @@ NtQueryValueKey(IN HANDLE KeyHandle,
 
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("ObReferenceObjectByHandle() failed with status %x\n", Status);
+      DPRINT1("ObReferenceObjectByHandle() failed with status %x %p\n", Status, KeyHandle);
       return Status;
     }
   
@@ -2038,27 +2038,42 @@ NtDeleteValueKey (IN HANDLE KeyHandle,
   NTSTATUS Status;
   REG_DELETE_VALUE_KEY_INFORMATION DeleteValueKeyInfo;
   REG_POST_OPERATION_INFORMATION PostOperationInfo;
+  KPROCESSOR_MODE PreviousMode;
+  UNICODE_STRING CapturedValueName;
 
   PAGED_CODE();
+  
+  PreviousMode = KeGetPreviousMode();
 
   /* Verify that the handle is valid and is a registry key */
   Status = ObReferenceObjectByHandle(KeyHandle,
-		KEY_QUERY_VALUE,
+		KEY_SET_VALUE,
 		CmiKeyType,
-		UserMode,
+		PreviousMode,
 		(PVOID *)&KeyObject,
 		NULL);
   if (!NT_SUCCESS(Status))
     {
       return Status;
     }
-  
-  DeleteValueKeyInfo.Object = (PVOID)KeyObject;
-  DeleteValueKeyInfo.ValueName = ValueName;
 
+  Status = ProbeAndCaptureUnicodeString(&CapturedValueName,
+                                        PreviousMode,
+                                        ValueName);
+  if (!NT_SUCCESS(Status))
+    {
+      goto Fail;
+    }
+  DeleteValueKeyInfo.Object = (PVOID)KeyObject;
+  DeleteValueKeyInfo.ValueName = &CapturedValueName;
+
+  /* FIXME - check if value exists before calling the callbacks? */
   Status = CmiCallRegisteredCallbacks(RegNtPreDeleteValueKey, &DeleteValueKeyInfo);
   if (!NT_SUCCESS(Status))
     {
+      ReleaseCapturedUnicodeString(&CapturedValueName,
+                                   PreviousMode);
+Fail:
       ObDereferenceObject(KeyObject);
       return Status;
     }
@@ -2080,6 +2095,9 @@ NtDeleteValueKey (IN HANDLE KeyHandle,
   /* Release hive lock */
   ExReleaseResourceLite(&CmiRegistryLock);
   KeLeaveCriticalRegion();
+
+  ReleaseCapturedUnicodeString(&CapturedValueName,
+                               PreviousMode);
 
   PostOperationInfo.Object = (PVOID)KeyObject;
   PostOperationInfo.Status = Status;
