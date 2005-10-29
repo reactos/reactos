@@ -20,6 +20,7 @@ typedef struct
 	IDirectDrawVtbl*  lpVtbl_v1;
 
 	DDRAWI_DIRECTDRAW_GBL DirectDrawGlobal;
+	DDHAL_DDMISCELLANEOUSCALLBACKS Misc2Callback;
 	DDHALINFO HalInfo;	
 
     HWND window;

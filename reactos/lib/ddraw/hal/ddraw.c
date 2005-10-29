@@ -135,6 +135,10 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 	    windows nt, it is in use for all os, and it always pont to 
 		DirectDrawGlobal.hDD                                             */
 
+	 /* FIXME add all callback that have been commect out to gpl  */
+	 /* FIXME free the memmor that being alloc when ddraw.dll exists */
+	 /* FIXME add check for DriverInfo if the handle or not */
+
 	DDHAL_GETDRIVERINFODATA DriverInfo;
 	memset(&DriverInfo,0, sizeof(DDHAL_GETDRIVERINFODATA));
 	DriverInfo.dwSize = sizeof(DDHAL_GETDRIVERINFODATA);
@@ -154,7 +158,7 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 	DDHAL_DDMISCELLANEOUSCALLBACKS  misc;
 	DriverInfo.guidInfo = GUID_D3DCallbacks;
 	DriverInfo.lpvData = &misc;
-	DriverInfo.dwExpectedSize = sizeof(DDHAL_DDMISCELLANEOUSCALLBACKS);
+	DriverInfo.dwExpectedSize = sizeof();
 	This->HalInfo.GetDriverInfo( &DriverInfo);*/
 	
 	/* Get the D3DCallbacks2 */
@@ -177,7 +181,7 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 	/* Problem with include files	
 	DriverInfo.guidInfo = GUID_D3DCaps;
 	DriverInfo.lpvData = &misc;
-	DriverInfo.dwExpectedSize = sizeof(DDHAL_DDMISCELLANEOUSCALLBACKS);
+	DriverInfo.dwExpectedSize = sizeof();
 	This->HalInfo.GetDriverInfo( &DriverInfo);
 	*/
 
@@ -191,20 +195,21 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
     
 
 	/* Get the D3DParseUnknownCommandCallback  */
-	/*
+	/*  D3dDrawPrimitives2 callback where should it be fill in 
 	DriverInfo.guidInfo = GUID_D3DParseUnknownCommandCallback;
 	DriverInfo.lpvData = &misc;
-	DriverInfo.dwExpectedSize = sizeof(DDHAL_DDMISCELLANEOUSCALLBACKS);
-	This->HalInfo.GetDriverInfo( &DriverInfo);
+	DriverInfo.dwExpectedSize = sizeof();
+	This->HalInfo.GetDriverInfo( &DriverInfo);		
     */
 
-	/* Get the GetHeapAlignment  */	
-	/*
+	/* Get the GetHeapAlignment  */		
+	/* where should it be fill in
 	DriverInfo.guidInfo = GUID_GetHeapAlignment;
 	DriverInfo.lpvData = &misc;
-	DriverInfo.dwExpectedSize = sizeof(DDHAL_DDMISCELLANEOUSCALLBACKS);
+	DriverInfo.dwExpectedSize = sizeof();
 	This->HalInfo.GetDriverInfo( &DriverInfo);
 	*/
+	
 	
 	/* Get the KernelCallbacks  */	
 	DriverInfo.guidInfo = GUID_KernelCallbacks;
@@ -229,12 +234,13 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 	
 
 	/* Get the Miscellaneous2Callbacks  */
-	/*
+	/* Not in the DDRAWI_DIRECTDRAW_GBL we map it up as private 
+	   Contain CreatesurfaceEx and other nice callbacks */
 	DriverInfo.guidInfo = GUID_Miscellaneous2Callbacks;
-	DriverInfo.lpvData = &misc;
+	DriverInfo.lpvData = &This->Misc2Callback;
 	DriverInfo.dwExpectedSize = sizeof(DDHAL_DDMISCELLANEOUSCALLBACKS);
 	This->HalInfo.GetDriverInfo( &DriverInfo);
-    */
+    
 
 	/* Get the MotionCompCallbacks  */		
 	DriverInfo.guidInfo = GUID_MotionCompCallbacks;
@@ -244,67 +250,78 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 	
 
     /* Get the NonLocalVidMemCaps  */
-	/*
+    This->DirectDrawGlobal.lpddNLVCaps = (LPDDNONLOCALVIDMEMCAPS)HeapAlloc(GetProcessHeap(), 0, sizeof(DDNONLOCALVIDMEMCAPS));	
 	DriverInfo.guidInfo = GUID_NonLocalVidMemCaps;
-	DriverInfo.lpvData = &misc;
-	DriverInfo.dwExpectedSize = sizeof(DDHAL_DDMISCELLANEOUSCALLBACKS);
+	DriverInfo.lpvData = (PVOID)This->DirectDrawGlobal.lpddNLVCaps;
+	DriverInfo.dwExpectedSize = sizeof(DDNONLOCALVIDMEMCAPS);
 	This->HalInfo.GetDriverInfo( &DriverInfo);
-	*/
+	
 
     /* Get the NTCallbacks  */
-	/*
+	/*  Fill in wher
 	DriverInfo.guidInfo = GUID_NTCallbacks;
 	DriverInfo.lpvData = &misc;
-	DriverInfo.dwExpectedSize = sizeof(DDHAL_DDMISCELLANEOUSCALLBACKS);
+	DriverInfo.dwExpectedSize = sizeof();
 	This->HalInfo.GetDriverInfo( &DriverInfo);
 	*/
 	
 	/* Get the NTPrivateDriverCaps  */	
-	/*
+	/*  Fill in wher
 	DriverInfo.guidInfo = GUID_NTPrivateDriverCaps;
 	DriverInfo.lpvData = &misc;
-	DriverInfo.dwExpectedSize = sizeof(DDHAL_DDMISCELLANEOUSCALLBACKS);
+	DriverInfo.dwExpectedSize = sizeof();
 	This->HalInfo.GetDriverInfo( &DriverInfo);
 	*/
 	
 	/* Get the UpdateNonLocalHeap  */	
-	/*
+	/* Fill in where
 	DriverInfo.guidInfo = GUID_UpdateNonLocalHeap;
 	DriverInfo.lpvData = &misc;
-	DriverInfo.dwExpectedSize = sizeof(DDHAL_DDMISCELLANEOUSCALLBACKS);
+	DriverInfo.dwExpectedSize = sizeof();
 	This->HalInfo.GetDriverInfo( &DriverInfo);
 	*/
 	
-	/* Get the VideoPortCallbacks  */    
-	/*  Problem with include files
+	/* Get the VideoPortCallbacks  */    	
 	DriverInfo.guidInfo = GUID_VideoPortCallbacks;
 	DriverInfo.lpvData = &This->DirectDrawGlobal.lpDDCBtmp->HALDDVideoPort;
-	DriverInfo.dwExpectedSize = sizeof(HALDDVideoPort);
+	DriverInfo.dwExpectedSize = sizeof(DDHAL_DDVIDEOPORTCALLBACKS);
 	This->HalInfo.GetDriverInfo( &DriverInfo);
-	*/
 	
-	
+		
 	/* Get the VideoPortCaps  */
-	/*
+    This->DirectDrawGlobal.lpDDVideoPortCaps = (LPDDVIDEOPORTCAPS)HeapAlloc(GetProcessHeap(), 0, sizeof(DDVIDEOPORTCAPS));		
 	DriverInfo.guidInfo = GUID_VideoPortCaps;
-	DriverInfo.lpvData = &misc;
-	DriverInfo.dwExpectedSize = sizeof(DDHAL_DDMISCELLANEOUSCALLBACKS);
+	DriverInfo.lpvData = (PVOID)This->DirectDrawGlobal.lpDDVideoPortCaps;
+	DriverInfo.dwExpectedSize = sizeof(DDVIDEOPORTCAPS);
 	This->HalInfo.GetDriverInfo( &DriverInfo);
-	*/
+	
 
 	/* Get the ZPixelFormats */
-	/*
+	This->DirectDrawGlobal.lpZPixelFormats = (LPDDPIXELFORMAT)HeapAlloc(GetProcessHeap(), 0, sizeof(DDPIXELFORMAT));	
 	DriverInfo.guidInfo = GUID_ZPixelFormats;
-	DriverInfo.lpvData = &misc;
-	DriverInfo.dwExpectedSize = sizeof(DDHAL_DDMISCELLANEOUSCALLBACKS);
+	DriverInfo.lpvData = (PVOID)This->DirectDrawGlobal.lpZPixelFormats;
+	DriverInfo.dwExpectedSize = sizeof(DDPIXELFORMAT);
 	This->HalInfo.GetDriverInfo( &DriverInfo);
-	*/
 	
 	
-	/* FIXME add setup for one call ot get memmory */
+	
+	 /* Setup some info from the callbacks we got  */
+
+	 /* FIXME do more callbacks and fill the gpl struct */
+
+	 DDHAL_GETAVAILDRIVERMEMORYDATA  mem;
+	 mem.lpDD = &This->DirectDrawGlobal;
+	
+	 This->DirectDrawGlobal.lpDDCBtmp->HALDDMiscellaneous.GetAvailDriverMemory(&mem); 
+
+	 This->DirectDrawGlobal.ddCaps.dwVidMemFree = mem.dwFree;
+	 This->DirectDrawGlobal.ddCaps.dwVidMemTotal = mem.dwTotal;
+		
 
 
-	/* now all insate of HAL is done and we hopply do not have forget anything*/
+
+
+	/* Now all setup for HAL is done and we hopply do not have forget anything */
 
 	return DD_OK;
 }
