@@ -1148,20 +1148,6 @@ GetModuleHandleExW(
 /*
  * @unimplemented
  */
-UINT
-STDCALL
-GetSystemWow64DirectoryW(
-    LPWSTR lpBuffer,
-    UINT uSize
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
 BOOL
 STDCALL
 GetVolumeNameForVolumeMountPointW(
@@ -1384,20 +1370,6 @@ GetModuleHandleExA(
     DWORD        dwFlags,
     LPCSTR     lpModuleName,
     HMODULE*    phModule
-    )
-{
-    STUB;
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-UINT
-STDCALL
-GetSystemWow64DirectoryA(
-    LPSTR lpBuffer,
-    UINT uSize
     )
 {
     STUB;

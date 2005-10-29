@@ -324,4 +324,53 @@ GetSystemWindowsDirectoryW(
     return GetWindowsDirectoryW( lpBuffer, uSize );
 }
 
+/*
+ * @unimplemented
+ */
+UINT
+STDCALL
+GetSystemWow64DirectoryW(
+    LPWSTR lpBuffer,
+    UINT uSize
+    )
+{
+#ifdef _WIN64
+    DPRINT1("GetSystemWow64DirectoryW is UNIMPLEMENTED!\n");
+    return 0;
+#else
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+#endif
+}
+
+/*
+ * @unimplemented
+ */
+UINT
+STDCALL
+GetSystemWow64DirectoryA(
+    LPSTR lpBuffer,
+    UINT uSize
+    )
+{
+#ifdef _WIN64
+   WCHAR BufferW[MAX_PATH];
+   UINT ret;
+
+   ret = GetSystemWow64DirectoryW(BufferW, MAX_PATH);
+
+   if (!ret) return 0;
+   if (ret > MAX_PATH)
+   {
+      SetLastError(ERROR_FILENAME_EXCED_RANGE);
+      return 0;
+   }
+
+   return FilenameW2A_FitOrFail(lpBuffer, uSize, BufferW, ret+1);
+#else
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+#endif
+}
+
 /* EOF */
