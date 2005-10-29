@@ -587,6 +587,8 @@ NtCreateThread(OUT PHANDLE ThreadHandle,
                IN BOOLEAN CreateSuspended)
 {
     INITIAL_TEB SafeInitialTeb;
+    CONTEXT SafeContext;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     PAGED_CODE();
 
@@ -594,6 +596,11 @@ NtCreateThread(OUT PHANDLE ThreadHandle,
             ThreadHandle,ThreadContext);
 
     if(KeGetPreviousMode() != KernelMode) {
+
+        if (ThreadContext == NULL) {
+            DPRINT1("No context for User-Mode Thread!!\n");
+            return STATUS_INVALID_PARAMETER;
+        }
 
         _SEH_TRY {
 
@@ -608,40 +615,37 @@ NtCreateThread(OUT PHANDLE ThreadHandle,
 
             if(ThreadContext != NULL) {
 
-            ProbeForRead(ThreadContext,
-                         sizeof(CONTEXT),
-                         sizeof(ULONG));
-
-            } else {
-
-                DPRINT1("No context for User-Mode Thread!!\n");
-                return STATUS_INVALID_PARAMETER;
+                ProbeForRead(ThreadContext,
+                             sizeof(CONTEXT),
+                             sizeof(ULONG));
+                SafeContext = *ThreadContext;
+                ThreadContext = &SafeContext;
             }
 
             ProbeForRead(InitialTeb,
                          sizeof(INITIAL_TEB),
                          sizeof(ULONG));
+            SafeInitialTeb = *InitialTeb;
+            InitialTeb = &SafeInitialTeb;
 
         } _SEH_HANDLE {
 
-            return _SEH_GetExceptionCode();
+            Status = _SEH_GetExceptionCode();
 
         } _SEH_END;
+
+        if (!NT_SUCCESS(Status)) return Status;
     }
 
-    /* Use probed data for the Initial TEB */
-    SafeInitialTeb = *InitialTeb; /* FIXME - not protected! */
-    InitialTeb = &SafeInitialTeb;
-
     /* Call the shared function */
-    return PspCreateThread(ThreadHandle, /* FIXME - not protected! */
+    return PspCreateThread(ThreadHandle,
                            DesiredAccess,
                            ObjectAttributes,
                            ProcessHandle,
                            NULL,
-                           ClientId, /* FIXME - not protected! */
-                           ThreadContext, /* FIXME - not protected! */
-                           InitialTeb, /* FIXME - not protected! */
+                           ClientId,
+                           ThreadContext,
+                           InitialTeb,
                            CreateSuspended,
                            NULL,
                            NULL);
@@ -654,16 +658,20 @@ NTSTATUS
 STDCALL
 NtOpenThread(OUT PHANDLE ThreadHandle,
              IN ACCESS_MASK DesiredAccess,
-             IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIONAL,
+             IN POBJECT_ATTRIBUTES ObjectAttributes,
              IN PCLIENT_ID ClientId  OPTIONAL)
 {
-    KPROCESSOR_MODE PreviousMode  = ExGetPreviousMode();
+    KPROCESSOR_MODE PreviousMode;
     CLIENT_ID SafeClientId;
-    HANDLE hThread = 0;
+    ULONG Attributes = 0;
+    HANDLE hThread = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
     PETHREAD Thread;
+    BOOLEAN HasObjectName = FALSE;
 
     PAGED_CODE();
+
+    PreviousMode = KeGetPreviousMode();
 
     /* Probe the paraemeters */
     if(PreviousMode != KernelMode)
@@ -681,6 +689,14 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
                 SafeClientId = *ClientId;
                 ClientId = &SafeClientId;
             }
+
+            /* just probe the object attributes structure, don't capture it
+               completely. This is done later if necessary */
+            ProbeForRead(ObjectAttributes,
+                         sizeof(OBJECT_ATTRIBUTES),
+                         sizeof(ULONG));
+            HasObjectName = (ObjectAttributes->ObjectName != NULL);
+            Attributes = ObjectAttributes->Attributes;
         }
         _SEH_HANDLE
         {
@@ -690,9 +706,20 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
 
         if(!NT_SUCCESS(Status)) return Status;
     }
+    else
+    {
+        HasObjectName = (ObjectAttributes->ObjectName != NULL);
+        Attributes = ObjectAttributes->Attributes;
+    }
+    
+    if (HasObjectName && ClientId != NULL)
+    {
+        /* can't pass both, n object name and a client id */
+        return STATUS_INVALID_PARAMETER_MIX;
+    }
 
     /* Open by name if one was given */
-    if (ObjectAttributes->ObjectName) /* FIXME - neither probed nor protected! */
+    if (HasObjectName)
     {
         /* Open it */
         Status = ObOpenObjectByName(ObjectAttributes,
@@ -703,22 +730,19 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
                                     NULL,
                                     &hThread);
 
-        if (Status != STATUS_SUCCESS)
+        if (!NT_SUCCESS(Status))
         {
             DPRINT1("Could not open object by name\n");
         }
-        /* FIXME - would be a good idea to return the handle in case of success! */
-        /* Return Status */
-        return(Status);
     }
-    else if (ClientId)
+    else if (ClientId != NULL)
     {
         /* Open by Thread ID */
-        if (ClientId->UniqueProcess) /* FIXME - neither probed nor protected! */
+        if (ClientId->UniqueProcess)
         {
             /* Get the Process */
-            DPRINT("Opening by Process ID: %x\n", ClientId->UniqueProcess); /* FIXME - neither probed nor protected! */
-            Status = PsLookupProcessThreadByCid(ClientId, /* FIXME - neither probed nor protected! */
+            DPRINT("Opening by Process ID: %x\n", ClientId->UniqueProcess);
+            Status = PsLookupProcessThreadByCid(ClientId,
                                                 NULL,
                                                 &Thread);
         }
@@ -738,7 +762,7 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
 
         /* Open the Thread Object */
         Status = ObOpenObjectByPointer(Thread,
-                                       ObjectAttributes->Attributes, /* FIXME - neither probed nor protected! */
+                                       Attributes,
                                        NULL,
                                        DesiredAccess,
                                        PsThreadType,
@@ -751,6 +775,11 @@ NtOpenThread(OUT PHANDLE ThreadHandle,
 
         /* Dereference the thread */
         ObDereferenceObject(Thread);
+    }
+    else
+    {
+        /* neither an object name nor a client id was passed */
+        return STATUS_INVALID_PARAMETER_MIX;
     }
 
     /* Write back the handle */

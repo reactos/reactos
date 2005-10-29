@@ -308,14 +308,14 @@ PsAssignImpersonationToken(PETHREAD Thread,
         ImpersonationLevel = 0;
     }
 
-    PsImpersonateClient(Thread,
-                        Token,
-                        FALSE,
-                        FALSE,
-                        ImpersonationLevel);
+    Status = PsImpersonateClient(Thread,
+                                 Token,
+                                 FALSE,
+                                 FALSE,
+                                 ImpersonationLevel);
 
     if (Token != NULL) ObDereferenceObject(Token);
-    return(STATUS_SUCCESS);
+    return Status;
 }
 
 /*
@@ -379,10 +379,7 @@ PsImpersonateClient(IN PETHREAD Thread,
     Thread->ImpersonationInfo->EffectiveOnly = EffectiveOnly;
     Thread->ImpersonationInfo->Token = Token;
 
-    ObReferenceObjectByPointer(Token,
-                               0,
-                               SepTokenObjectType,
-                               KernelMode);
+    ObReferenceObject(Token);
 
     Thread->ActiveImpersonationInfo = TRUE;
 
