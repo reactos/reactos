@@ -28,58 +28,50 @@ MM_STATS MmStats;
 /* FUNCTIONS ****************************************************************/
 
 
-NTSTATUS MmReleaseMemoryArea(PEPROCESS Process, PMEMORY_AREA Marea)
-{
-   NTSTATUS Status;
-
-   DPRINT("MmReleaseMemoryArea(Process %x, Marea %x)\n",Process,Marea);
-
-   DPRINT("Releasing %x between %x %x (type %d)\n",
-          Marea, Marea->StartingAddress, Marea->EndingAddress,
-          Marea->Type);
-
-   switch (Marea->Type)
-   {
-      case MEMORY_AREA_SECTION_VIEW:
-         Status = MmUnmapViewOfSection(Process, (PVOID)Marea->StartingAddress);
-         ASSERT(Status == STATUS_SUCCESS);
-         return(STATUS_SUCCESS);
-
-      case MEMORY_AREA_VIRTUAL_MEMORY:
-      case MEMORY_AREA_PEB_OR_TEB:
-         MmFreeVirtualMemory(Process, Marea);
-         break;
-
-      case MEMORY_AREA_SHARED_DATA:
-      case MEMORY_AREA_NO_ACCESS:
-         Status = MmFreeMemoryArea(&Process->AddressSpace,
-                                   Marea,
-                                   NULL,
-                                   NULL);
-         break;
-
-      case MEMORY_AREA_MDL_MAPPING:
-         KEBUGCHECK(PROCESS_HAS_LOCKED_PAGES);
-         break;
-
-      default:
-         KEBUGCHECK(0);
-   }
-
-   return(STATUS_SUCCESS);
-}
-
-NTSTATUS
+NTSTATUS 
 NTAPI
 MmReleaseMmInfo(PEPROCESS Process)
 {
+   PVOID Address;
+   PMEMORY_AREA MemoryArea;
+
    DPRINT("MmReleaseMmInfo(Process %x (%s))\n", Process,
           Process->ImageFileName);
 
    MmLockAddressSpace(&Process->AddressSpace);
 
-   while (Process->AddressSpace.MemoryAreaRoot != NULL)
-      MmReleaseMemoryArea(Process, Process->AddressSpace.MemoryAreaRoot);
+   while ((MemoryArea = Process->AddressSpace.MemoryAreaRoot) != NULL)
+   {
+      switch (MemoryArea->Type)
+      {
+         case MEMORY_AREA_SECTION_VIEW:
+             Address = (PVOID)MemoryArea->StartingAddress;
+             MmUnlockAddressSpace(&Process->AddressSpace);
+             MmUnmapViewOfSection(Process, Address);
+             MmLockAddressSpace(&Process->AddressSpace);
+             break;
+
+         case MEMORY_AREA_VIRTUAL_MEMORY:
+         case MEMORY_AREA_PEB_OR_TEB:
+             MmFreeVirtualMemory(Process, MemoryArea);
+             break;
+
+         case MEMORY_AREA_SHARED_DATA:
+         case MEMORY_AREA_NO_ACCESS:
+             MmFreeMemoryArea(&Process->AddressSpace,
+                              MemoryArea,
+                              NULL,
+                              NULL);
+             break;
+
+         case MEMORY_AREA_MDL_MAPPING:
+            KEBUGCHECK(PROCESS_HAS_LOCKED_PAGES);
+            break;
+
+         default:
+            KEBUGCHECK(0);
+      }
+   }
 
    Mmi386ReleaseMmInfo(Process);
 
