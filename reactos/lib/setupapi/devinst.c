@@ -4955,6 +4955,67 @@ SetupDiEnumDriverInfoW(
     return ret;
 }
 
+
+/***********************************************************************
+ *		SetupDiGetSelectedDriverA (SETUPAPI.@)
+ */
+BOOL WINAPI
+SetupDiGetSelectedDriverA(
+    IN HDEVINFO DeviceInfoSet,
+    IN PSP_DEVINFO_DATA DeviceInfoData OPTIONAL,
+    OUT PSP_DRVINFO_DATA_A DriverInfoData)
+{
+    SP_DRVINFO_DATA_V2_W driverInfoData2W;
+    BOOL ret = FALSE;
+
+    if (DriverInfoData == NULL)
+        SetLastError(ERROR_INVALID_PARAMETER);
+    else if (DriverInfoData->cbSize != sizeof(SP_DRVINFO_DATA_V1_A) && DriverInfoData->cbSize != sizeof(SP_DRVINFO_DATA_V2_A))
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+    else
+    {
+        driverInfoData2W.cbSize = sizeof(SP_DRVINFO_DATA_V2_W);
+
+        ret = SetupDiGetSelectedDriverW(DeviceInfoSet,
+                                        DeviceInfoData,
+                                        &driverInfoData2W);
+
+        if (ret)
+        {
+            /* Do W->A conversion */
+            DriverInfoData->DriverType = driverInfoData2W.DriverType;
+            DriverInfoData->Reserved = driverInfoData2W.Reserved;
+            if (WideCharToMultiByte(CP_ACP, 0, driverInfoData2W.Description, -1,
+                DriverInfoData->Description, LINE_LEN, NULL, NULL) == 0)
+            {
+                DriverInfoData->Description[0] = '\0';
+                ret = FALSE;
+            }
+            if (WideCharToMultiByte(CP_ACP, 0, driverInfoData2W.MfgName, -1,
+                DriverInfoData->MfgName, LINE_LEN, NULL, NULL) == 0)
+            {
+                DriverInfoData->MfgName[0] = '\0';
+                ret = FALSE;
+            }
+            if (WideCharToMultiByte(CP_ACP, 0, driverInfoData2W.ProviderName, -1,
+                DriverInfoData->ProviderName, LINE_LEN, NULL, NULL) == 0)
+            {
+                DriverInfoData->ProviderName[0] = '\0';
+                ret = FALSE;
+            }
+            if (DriverInfoData->cbSize == sizeof(SP_DRVINFO_DATA_V2_A))
+            {
+                /* Copy more fields */
+                DriverInfoData->DriverDate = driverInfoData2W.DriverDate;
+                DriverInfoData->DriverVersion = driverInfoData2W.DriverVersion;
+            }
+        }
+    }
+
+    return ret;
+}
+
+
 /***********************************************************************
  *		SetupDiGetSelectedDriverW (SETUPAPI.@)
  */
