@@ -30,6 +30,7 @@
 		<file>gamma.c</file>
 		<file>palette.c</file>
 		<file>videoport.c</file>
+		<file>kernel.c</file>
 	</directory>
 
 	<directory name="soft">
