@@ -873,7 +873,6 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
                 IN HANDLE DebugPort  OPTIONAL,
                 IN HANDLE ExceptionPort  OPTIONAL)
 {
-    HANDLE hProcess;
     KPROCESSOR_MODE PreviousMode  = ExGetPreviousMode();
     NTSTATUS Status = STATUS_SUCCESS;
 
@@ -903,9 +902,8 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
     }
     else
     {
-        /* Create a user Process, do NOT pass the pointer to the handle supplied
-           by the caller directly!!! */
-        Status = PspCreateProcess(&hProcess,
+        /* Create a user Process */
+        Status = PspCreateProcess(ProcessHandle,
                                   DesiredAccess,
                                   ObjectAttributes,
                                   ParentProcess,
@@ -913,18 +911,6 @@ NtCreateProcess(OUT PHANDLE ProcessHandle,
                                   SectionHandle,
                                   DebugPort,
                                   ExceptionPort);
-        if (NT_SUCCESS(Status))
-        {
-            _SEH_TRY
-            {
-                *ProcessHandle = hProcess;
-            }
-            _SEH_HANDLE
-            {
-                Status = _SEH_GetExceptionCode();
-            }
-            _SEH_END;
-        }
     }
 
     /* Return Status */
@@ -941,21 +927,67 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
               IN  POBJECT_ATTRIBUTES ObjectAttributes,
               IN  PCLIENT_ID ClientId)
 {
-    KPROCESSOR_MODE PreviousMode  = ExGetPreviousMode();
-    NTSTATUS Status = STATUS_INVALID_PARAMETER;
-    PEPROCESS Process;
+    KPROCESSOR_MODE PreviousMode;
+    CLIENT_ID SafeClientId;
+    ULONG Attributes = 0;
+    HANDLE hProcess;
+    BOOLEAN HasObjectName = FALSE;
     PETHREAD Thread = NULL;
-
-    DPRINT("NtOpenProcess(ProcessHandle %x, DesiredAccess %x, "
-           "ObjectAttributes %x, ClientId %x { UniP %d, UniT %d })\n",
-           ProcessHandle, DesiredAccess, ObjectAttributes, ClientId,
-           ClientId->UniqueProcess, ClientId->UniqueThread);
+    PEPROCESS Process = NULL;
+    NTSTATUS Status = STATUS_SUCCESS;
 
     PAGED_CODE();
 
+    PreviousMode = KeGetPreviousMode();
+
+    /* Probe the paraemeters */
+    if(PreviousMode != KernelMode)
+    {
+        _SEH_TRY
+        {
+            ProbeForWriteHandle(ProcessHandle);
+
+            if(ClientId != NULL)
+            {
+                ProbeForRead(ClientId,
+                             sizeof(CLIENT_ID),
+                             sizeof(ULONG));
+
+                SafeClientId = *ClientId;
+                ClientId = &SafeClientId;
+            }
+
+            /* just probe the object attributes structure, don't capture it
+               completely. This is done later if necessary */
+            ProbeForRead(ObjectAttributes,
+                         sizeof(OBJECT_ATTRIBUTES),
+                         sizeof(ULONG));
+            HasObjectName = (ObjectAttributes->ObjectName != NULL);
+            Attributes = ObjectAttributes->Attributes;
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+
+        if(!NT_SUCCESS(Status)) return Status;
+    }
+    else
+    {
+        HasObjectName = (ObjectAttributes->ObjectName != NULL);
+        Attributes = ObjectAttributes->Attributes;
+    }
+
+    if (HasObjectName && ClientId != NULL)
+    {
+        /* can't pass both, n object name and a client id */
+        return STATUS_INVALID_PARAMETER_MIX;
+    }
+
     /* Open by name if one was given */
     DPRINT("Checking type\n");
-    if (ObjectAttributes->ObjectName) /* FIXME - neither probed nor protected! */
+    if (HasObjectName)
     {
         /* Open it */
         DPRINT("Opening by name\n");
@@ -965,36 +997,30 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
                                     PreviousMode,
                                     DesiredAccess,
                                     NULL,
-                                    ProcessHandle);
+                                    &hProcess);
 
-        if (Status != STATUS_SUCCESS)
+        if (!NT_SUCCESS(Status))
         {
             DPRINT1("Could not open object by name\n");
         }
-
-        /* Return Status */
-        DPRINT("Found: %x\n", ProcessHandle);
-        return(Status);
     }
-    else if (ClientId)
+    else if (ClientId != NULL)
     {
         /* Open by Thread ID */
-        if (ClientId->UniqueThread) /* FIXME - neither probed nor protected! */
+        if (ClientId->UniqueThread)
         {
             /* Get the Process */
-            DPRINT("Opening by Thread ID: %x\n", ClientId->UniqueThread); /* FIXME - neither probed nor protected! */
-            Status = PsLookupProcessThreadByCid(ClientId, /* FIXME - neither probed nor protected! */
+            DPRINT("Opening by Thread ID: %x\n", ClientId->UniqueThread);
+            Status = PsLookupProcessThreadByCid(ClientId,
                                                 &Process,
                                                 &Thread);
-            DPRINT("Found: %x\n", Process);
         }
         else
         {
             /* Get the Process */
-            DPRINT("Opening by Process ID: %x\n", ClientId->UniqueProcess); /* FIXME - neither probed nor protected! */
-            Status = PsLookupProcessByProcessId(ClientId->UniqueProcess, /* FIXME - neither probed nor protected! */
+            DPRINT("Opening by Process ID: %x\n", ClientId->UniqueProcess);
+            Status = PsLookupProcessByProcessId(ClientId->UniqueProcess,
                                                 &Process);
-            DPRINT("Found: %x\n", Process);
         }
 
         if(!NT_SUCCESS(Status))
@@ -1005,12 +1031,12 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
 
         /* Open the Process Object */
         Status = ObOpenObjectByPointer(Process,
-                                       ObjectAttributes->Attributes, /* FIXME - neither probed nor protected! */
+                                       Attributes,
                                        NULL,
                                        DesiredAccess,
                                        PsProcessType,
                                        PreviousMode,
-                                       ProcessHandle); /* FIXME - neither probed nor protected! */
+                                       &hProcess);
         if(!NT_SUCCESS(Status))
         {
             DPRINT1("Failure to open process\n");
@@ -1021,6 +1047,25 @@ NtOpenProcess(OUT PHANDLE ProcessHandle,
 
         /* Dereference the Process */
         ObDereferenceObject(Process);
+    }
+    else
+    {
+        /* neither an object name nor a client id was passed */
+        return STATUS_INVALID_PARAMETER_MIX;
+    }
+
+    /* Write back the handle */
+    if(NT_SUCCESS(Status))
+    {
+        _SEH_TRY
+        {
+            *ProcessHandle = hProcess;
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
     }
 
     return Status;
