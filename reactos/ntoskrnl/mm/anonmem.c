@@ -171,6 +171,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
     */
    if (!WasDirty)
    {
+      MmLockAddressSpace(AddressSpace);
       MmDeleteVirtualMapping(AddressSpace->Process, Address, FALSE, NULL, NULL);
       MmDeleteAllRmaps(Page, NULL, NULL);
       if ((SwapEntry = MmGetSavedSwapEntryPage(Page)) != 0)
@@ -178,6 +179,7 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
          MmCreatePageFileMapping(AddressSpace->Process, Address, SwapEntry);
          MmSetSavedSwapEntryPage(Page, 0);
       }
+      MmUnlockAddressSpace(AddressSpace);
       MmReleasePageMemoryConsumer(MC_USER, Page);
       PageOp->Status = STATUS_SUCCESS;
       KeSetEvent(&PageOp->CompletionEvent, IO_NO_INCREMENT, FALSE);
@@ -222,8 +224,10 @@ MmPageOutVirtualMemory(PMADDRESS_SPACE AddressSpace,
     * Otherwise we have succeeded, free the page
     */
    DPRINT("MM: Swapped out virtual memory page 0x%.8X!\n", Page << PAGE_SHIFT);
+   MmLockAddressSpace(AddressSpace);
    MmDeleteVirtualMapping(AddressSpace->Process, Address, FALSE, NULL, NULL);
    MmCreatePageFileMapping(AddressSpace->Process, Address, SwapEntry);
+   MmUnlockAddressSpace(AddressSpace);
    MmDeleteAllRmaps(Page, NULL, NULL);
    MmSetSavedSwapEntryPage(Page, 0);
    MmReleasePageMemoryConsumer(MC_USER, Page);
@@ -997,7 +1001,7 @@ MmQueryAnonMem(PMEMORY_AREA MemoryArea,
    Info->BaseAddress = RegionBase;
    Info->AllocationBase = MemoryArea->StartingAddress;
    Info->AllocationProtect = MemoryArea->Attributes;
-   Info->RegionSize = (char*)RegionBase + Region->Length - (char*)Info->BaseAddress;
+   Info->RegionSize = Region->Length;
    Info->State = Region->Type;
    Info->Protect = Region->Protect;
    Info->Type = MEM_PRIVATE;
