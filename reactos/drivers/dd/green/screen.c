@@ -38,6 +38,9 @@ AddToSendBuffer(
 	int CurrentInt;
 	UCHAR CurrentChar;
 	NTSTATUS Status;
+        LARGE_INTEGER ZeroOffset;
+
+        ZeroOffset.QuadPart = 0;
 
 	SizeLeft = sizeof(DeviceExtension->SendBuffer) - DeviceExtension->SendBufferPosition;
 	if (SizeLeft < NumberOfChars * 2 || NumberOfChars == 0)
@@ -47,7 +50,7 @@ AddToSendBuffer(
 			IRP_MJ_WRITE,
 			SerialDevice,
 			DeviceExtension->SendBuffer, DeviceExtension->SendBufferPosition,
-			NULL, /* StartingOffset */
+                        &ZeroOffset,
 			NULL, /* Event */
 			&ioStatus);
 		if (!Irp)
@@ -55,7 +58,9 @@ AddToSendBuffer(
 			DPRINT1("Green: IoBuildSynchronousFsdRequest() failed. Unable to flush output buffer\n");
 			return;
 		}
+
 		Status = IoCallDriver(SerialDevice, Irp);
+
 		if (!NT_SUCCESS(Status) && Status != STATUS_PENDING)
 		{
 			DPRINT1("Green: IoCallDriver() failed. Status = 0x%08lx\n", Status);
@@ -69,6 +74,7 @@ AddToSendBuffer(
 	while (NumberOfChars-- > 0)
 	{
 		CurrentInt = va_arg(args, int);
+
 		if (CurrentInt > 0)
 		{
 			CurrentChar = (UCHAR)CurrentInt;
@@ -107,7 +113,7 @@ ScreenInitialize(
 	IN PDRIVER_OBJECT DriverObject,
 	OUT PDEVICE_OBJECT* ScreenFdo)
 {
-	PDEVICE_OBJECT Fdo;
+	PDEVICE_OBJECT Fdo, PreviousBlue = NULL;
 	PSCREEN_DEVICE_EXTENSION DeviceExtension;
 	UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\BlueScreen");
 	NTSTATUS Status;
@@ -121,12 +127,56 @@ ScreenInitialize(
 		FILE_DEVICE_SECURE_OPEN,
 		TRUE,
 		&Fdo);
-	if (!NT_SUCCESS(Status))
+
+        if (Status == STATUS_OBJECT_NAME_COLLISION)
+        {
+		DPRINT("Green: Attaching to old blue\n");
+
+		/* Suggested by hpoussin .. Hide previous blue device 
+		 * This makes us able to coexist with blue, and install
+		 * when loaded */
+		Status = IoCreateDevice(DriverObject,
+			sizeof(SCREEN_DEVICE_EXTENSION),
+			NULL,
+			FILE_DEVICE_SCREEN,
+			FILE_DEVICE_SECURE_OPEN,
+			TRUE,
+			&Fdo);
+
+		if (!NT_SUCCESS(Status))
+			return Status;
+
+		Status = IoAttachDevice(
+			Fdo,
+			&DeviceName, /* FIXME: don't hardcode string */
+			&PreviousBlue);
+
+		if (!NT_SUCCESS(Status)) {
+			IoDeleteDevice(Fdo);
+			return Status;
+		}
+        }
+	else if (!NT_SUCCESS(Status))
 		return Status;
 
+	/* We definately have a device object.  PreviousBlue may or may
+	 * not be null */
+	
 	DeviceExtension = (PSCREEN_DEVICE_EXTENSION)Fdo->DeviceExtension;
 	RtlZeroMemory(DeviceExtension, sizeof(SCREEN_DEVICE_EXTENSION));
 	DeviceExtension->Common.Type = Screen;
+	DeviceExtension->PreviousBlue = PreviousBlue;
+
+	if (!NT_SUCCESS(Status)) 
+	{
+		/* If a device was attached, detach it first */
+		if (DeviceExtension->PreviousBlue)
+			IoDetachDevice(DeviceExtension->PreviousBlue);
+
+		IoDeleteDevice(Fdo);
+                return Status;
+	}
+
 	/* initialize screen */
 	DeviceExtension->Columns = 80;
 	DeviceExtension->Rows = 25;
@@ -136,6 +186,10 @@ ScreenInitialize(
 		2 * DeviceExtension->Columns * DeviceExtension->Rows * sizeof(UCHAR));
 	if (!DeviceExtension->VideoMemory)
 	{
+		/* If a device was attached, detach it first */
+		if (DeviceExtension->PreviousBlue)
+			IoDetachDevice(DeviceExtension->PreviousBlue);
+
 		IoDeleteDevice(Fdo);
 		return STATUS_INSUFFICIENT_RESOURCES;
 	}
@@ -150,7 +204,7 @@ ScreenInitialize(
 	AddToSendBuffer(DeviceExtension, 4, ESC, '[', '7', 'l'); /* disable line wrap */
 	AddToSendBuffer(DeviceExtension, 4, ESC, '[', '3', 'g'); /* clear all tabs */
 
-	Fdo->Flags |= DO_POWER_PAGABLE | DO_BUFFERED_IO;
+	Fdo->Flags |= DO_POWER_PAGABLE;
 	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
 
 	*ScreenFdo = Fdo;
@@ -166,6 +220,7 @@ ScreenWrite(
 	PIO_STACK_LOCATION Stack;
 	PUCHAR Buffer;
 	PSCREEN_DEVICE_EXTENSION DeviceExtension;
+	PDEVICE_OBJECT SerialDevice;
 	PUCHAR VideoMemory; /* FIXME: is it useful? */
 	ULONG VideoMemorySize; /* FIXME: is it useful? */
 
@@ -181,16 +236,27 @@ ScreenWrite(
 	DeviceExtension = (PSCREEN_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	VideoMemory = DeviceExtension->VideoMemory;
 
+	SerialDevice = ((PGREEN_DEVICE_EXTENSION)DeviceExtension->Green->DeviceExtension)->Serial;
+	if (!SerialDevice)
+	{
+		DPRINT1("Calling blue\n");
+		IoSkipCurrentIrpStackLocation(Irp);
+		return IoCallDriver(DeviceExtension->PreviousBlue, Irp);
+	}
+
 	Columns = DeviceExtension->Columns;
 	Rows = DeviceExtension->Rows;
 	CursorX = (DeviceExtension->LogicalOffset / 2) % Columns + 1;
 	CursorY = (DeviceExtension->LogicalOffset / 2) / Columns + 1;
 	VideoMemorySize = Columns * Rows * 2 * sizeof(UCHAR);
-	DPRINT1("Y: %lu\n", CursorY);
-	DPRINT1("Buffer =");
+
+#if DBG
+	DPRINT("Y: %lu\n", CursorY);
+	DPRINT("Buffer =");
 	for (i = 0; i < Stack->Parameters.Write.Length; i++)
 		DbgPrint(" 0x%02x", Buffer[i]);
 	DbgPrint("\n");
+#endif
 
 	if (!(DeviceExtension->Mode & ENABLE_PROCESSED_OUTPUT))
 	{
@@ -228,6 +294,7 @@ ScreenWrite(
 				{
 					CursorY++;
 					CursorX = 1;
+					AddToSendBuffer(DeviceExtension, 1, '\n');
 					AddToSendBuffer(DeviceExtension, 6, ESC, '[', -(int)CursorY, ';', '1', 'H');
 					break;
 				}
@@ -268,17 +335,18 @@ ScreenWrite(
 					if (CursorX > Columns)
 					{
 						CursorX = 1;
-						DPRINT1("Y: %lu -> %lu\n", CursorY, CursorY + 1);
+						DPRINT("Y: %lu -> %lu\n", CursorY, CursorY + 1);
 						CursorY++;
 						AddToSendBuffer(DeviceExtension, 6, ESC, '[', -(int)CursorY, ';', '1', 'H');
 
 					}
 				}
 			}
-			if (CursorY > Rows)
+			if (CursorY >= Rows)
 			{
-				DPRINT1("Y: %lu -> %lu\n", CursorY, CursorY - 1);
+				DPRINT("Y: %lu -> %lu\n", CursorY, CursorY - 1);
 				CursorY--;
+				AddToSendBuffer(DeviceExtension, 6, ESC, '[', -(int)1, ';', -(int)(Rows), 'r');
 				AddToSendBuffer(DeviceExtension, 2, ESC, 'D');
 				AddToSendBuffer(DeviceExtension, 6, ESC, '[', -(int)CursorY, ';', -(int)CursorX, 'H');
 			}
@@ -304,10 +372,19 @@ ScreenDeviceControl(
 {
 	PIO_STACK_LOCATION Stack;
 	PSCREEN_DEVICE_EXTENSION DeviceExtension;
+	PDEVICE_OBJECT SerialDevice;
 	NTSTATUS Status;
 
 	Stack = IoGetCurrentIrpStackLocation(Irp);
 	DeviceExtension = (PSCREEN_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+
+	SerialDevice = ((PGREEN_DEVICE_EXTENSION)DeviceExtension->Green->DeviceExtension)->Serial;
+	if (!SerialDevice)
+	{
+		DPRINT1("Calling blue\n");
+		IoSkipCurrentIrpStackLocation(Irp);
+		return IoCallDriver(DeviceExtension->PreviousBlue, Irp);
+	}
 
 	switch (Stack->Parameters.DeviceIoControl.IoControlCode)
 	{
@@ -510,7 +587,7 @@ ScreenDeviceControl(
 						-(int)(ConsoleDraw->Y + y), ';',
 						-(int)(ConsoleDraw->X), 'H');
 					Video = (PUCHAR)(ConsoleDraw + 1);
-					Video = &Video[((ConsoleDraw->Y + y) * DeviceExtension->Columns + ConsoleDraw->X) * 2];
+					Video = &Video[((ConsoleDraw->Y + y) * /*DeviceExtension->Columns +*/ ConsoleDraw->X) * 2];
 					for (x = 0; x < ConsoleDraw->SizeX; x++)
 					{
 						AddToSendBuffer(DeviceExtension, 1, Video[x * 2]);

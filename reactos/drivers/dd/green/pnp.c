@@ -32,8 +32,12 @@ GreenAddDevice(
 		FILE_DEVICE_SECURE_OPEN,
 		TRUE,
 		&Fdo);
+
 	if (!NT_SUCCESS(Status))
+	{
+		DPRINT1("Status = %08x\n", Status);
 		return Status;
+	}
 
 	DeviceExtension = (PGREEN_DEVICE_EXTENSION)Fdo->DeviceExtension;
 	RtlZeroMemory(DeviceExtension, sizeof(GREEN_DEVICE_EXTENSION));
@@ -43,6 +47,7 @@ GreenAddDevice(
 	if (!NT_SUCCESS(Status))
 	{
 		IoDeleteDevice(Fdo);
+		DPRINT1("Status = %08x\n", Status);
 		return Status;
 	}
 	((PKEYBOARD_DEVICE_EXTENSION)DeviceExtension->Keyboard->DeviceExtension)->Green = Fdo;
@@ -52,6 +57,7 @@ GreenAddDevice(
 	{
 		IoDeleteDevice(DeviceExtension->Keyboard);
 		IoDeleteDevice(Fdo);
+		DPRINT1("Status = %08x\n", Status);
 		return Status;
 	}
 	((PSCREEN_DEVICE_EXTENSION)DeviceExtension->Screen->DeviceExtension)->Green = Fdo;
@@ -84,5 +90,6 @@ GreenAddDevice(
 	Fdo->Flags |= DO_POWER_PAGABLE | DO_BUFFERED_IO;
 	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
 
+	DPRINT1("Status = %08x\n", Status);
 	return Status;
 }
