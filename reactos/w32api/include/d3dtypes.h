@@ -151,19 +151,19 @@ typedef struct _D3DCOLORVALUE {
         union {
                 D3DVALUE r;
                 D3DVALUE dvR;
-        } DUMMYUNIONNAME1;
+        };
         union {
                 D3DVALUE g;
                 D3DVALUE dvG;
-        } DUMMYUNIONNAME2;
+        };
         union {
                 D3DVALUE b;
                 D3DVALUE dvB;
-        } DUMMYUNIONNAME3;
+        };
         union {
                 D3DVALUE a;
                 D3DVALUE dvA;
-        } DUMMYUNIONNAME4;
+        };
 } D3DCOLORVALUE,*LPD3DCOLORVALUE;
 
 typedef struct _D3DRECT {
