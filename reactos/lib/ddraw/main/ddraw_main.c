@@ -16,6 +16,8 @@ HRESULT WINAPI Main_DirectDraw_Initialize (LPDIRECTDRAW7 iface, LPGUID lpGUID)
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
 	HRESULT ret;
 
+	
+
 	// this if it is not called by DirectDrawCreate
 	if(FALSE)
 		return DDERR_ALREADYINITIALIZED;
@@ -48,7 +50,6 @@ HRESULT WINAPI Main_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface, HWND hw
 	// - allow more Flags
 
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-	HRESULT ret;
 
 	// check the parameters
 	if (This->cooperative_level == cooplevel && This->window == hwnd)
@@ -72,20 +73,21 @@ HRESULT WINAPI Main_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface, HWND hw
 	This->cooperative_level = cooplevel;
 
 	
+    if (This->DirectDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_SETEXCLUSIVEMODE) 
+	{
+	    return Hal_DirectDraw_SetCooperativeLevel (iface);		
+	}
 
-	if((ret = Hal_DirectDraw_SetCooperativeLevel (iface)) != DD_OK)
-		return ret;
+	return Hel_DirectDraw_SetCooperativeLevel(iface);
 
-	if((ret = Hel_DirectDraw_SetCooperativeLevel (iface)) != DD_OK)
-		return ret;
-
-   	return DD_OK;
 }
 
 HRESULT WINAPI Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD dwHeight, 
 																DWORD dwBPP, DWORD dwRefreshRate, DWORD dwFlags)
 {
 	DWORD ret;
+
+    /* FIXME implement hal setMode */
 	if((ret = Hal_DirectDraw_SetDisplayMode(iface,  dwWidth,  dwHeight, 
                                             dwBPP,  dwRefreshRate,  dwFlags)) == DD_OK)
 	{
@@ -174,7 +176,11 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 
 	That->lpVtbl = &DirectDrawSurface7_Vtable;
 	That->lpVtbl_v3 = &DDRAW_IDDS3_Thunk_VTable;
-	That->ref = 1;
+	
+	That->owner->DirectDrawGlobal.dsList->dwIntRefCnt =1;
+
+	/* we alwasy set to use the DirectDrawSurface7_Vtable as internel */
+	That->owner->DirectDrawGlobal.dsList->lpVtbl = (PVOID) &DirectDrawSurface7_Vtable;
 
 	*ppSurf = (LPDIRECTDRAWSURFACE7)That;
 

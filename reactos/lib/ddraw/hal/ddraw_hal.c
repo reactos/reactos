@@ -319,6 +319,33 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 		
 
 
+     /* */
+	 /*  DWORD   dwIntRefCnt;
+
+	 
+        LPVOID  lpVtbl;
+        LPDDRAWI_DDRAWSURFACE_LCL  lpLcl;
+        LPDDRAWI_DDRAWSURFACE_INT  lpLink;
+       
+        } DDRAWI_DDRAWSURFACE_INT;
+     */
+
+	 /* Setting up some part for surface not ever thing are being fill in yet */
+	 This->DirectDrawGlobal.dsList = (LPDDRAWI_DDRAWSURFACE_INT)HeapAlloc(GetProcessHeap(), 0,
+		                              sizeof(DDRAWI_DDRAWSURFACE_INT));
+
+	 This->DirectDrawGlobal.dsList->lpLink = (LPDDRAWI_DDRAWSURFACE_INT) &This->DirectDrawGlobal.dsList;
+
+	 This->DirectDrawGlobal.dsList->lpLcl = (LPDDRAWI_DDRAWSURFACE_LCL)HeapAlloc(GetProcessHeap(), 0,
+		                              sizeof(DDRAWI_DDRAWSURFACE_LCL));
+
+	 This->DirectDrawGlobal.dsList->lpLcl->lpGbl = 
+		           (LPDDRAWI_DDRAWSURFACE_GBL)HeapAlloc(GetProcessHeap(), 0, sizeof(DDRAWI_DDRAWSURFACE_GBL));
+
+	 This->DirectDrawGlobal.dsList->lpLcl->lpGbl->lpDD  = &This->DirectDrawGlobal;
+
+	 
+
 
 
 	/* Now all setup for HAL is done and we hopply do not have forget anything */
@@ -328,7 +355,25 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 
 HRESULT Hal_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface)
 {
-   	return DD_OK;
+   	IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+
+	DDHAL_SETEXCLUSIVEMODEDATA SetExclusiveMode;
+
+	if (!(This->DirectDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_SETEXCLUSIVEMODE)) 
+	{
+		return DDERR_NODRIVERSUPPORT;
+	}
+
+	SetExclusiveMode.lpDD = &This->DirectDrawGlobal;
+    SetExclusiveMode.ddRVal = DDERR_NOTPALETTIZED;
+	SetExclusiveMode.dwEnterExcl = This->cooperative_level;
+
+	if (This->DirectDrawGlobal.lpDDCBtmp->HALDD.SetExclusiveMode(&SetExclusiveMode) != DDHAL_DRIVER_HANDLED)
+	{
+	   return DDERR_NODRIVERSUPPORT;
+	}
+
+	return SetExclusiveMode.ddRVal;
 }
 
 

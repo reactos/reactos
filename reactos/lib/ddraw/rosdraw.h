@@ -38,13 +38,7 @@ typedef struct
 {
 	IDirectDrawSurface7Vtbl* lpVtbl;
 	IDirectDrawSurface3Vtbl* lpVtbl_v3;
-
-    LONG ref;
-
-	DDRAWI_DDRAWSURFACE_GBL Global;
-	DDRAWI_DDRAWSURFACE_MORE More;
-	DDRAWI_DDRAWSURFACE_LCL Local;
-
+   
     IDirectDrawImpl* owner;
 
 } IDirectDrawSurfaceImpl;
