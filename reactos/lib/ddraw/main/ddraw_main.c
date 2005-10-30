@@ -259,15 +259,14 @@ HRESULT WINAPI Main_DirectDraw_EnumSurfaces(LPDIRECTDRAW7 iface, DWORD dwFlags,
 
 HRESULT WINAPI Main_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7 iface) 
 {
-	DWORD ret;
+	IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
 
-	if((ret = Hal_DirectDraw_FlipToGDISurface( iface)) == DD_OK)
-		return ret;
+	if (This->DirectDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_FLIPTOGDISURFACE) 
+	{
+		return Hal_DirectDraw_FlipToGDISurface( iface);
+	}
 
-	if((ret = Hel_DirectDraw_FlipToGDISurface( iface)) == DD_OK)
-		return ret;
-
-	return DDERR_NOTINITIALIZED;  
+	return Hel_DirectDraw_FlipToGDISurface( iface);
 }
 
 HRESULT WINAPI Main_DirectDraw_GetCaps(LPDIRECTDRAW7 iface, LPDDCAPS pDriverCaps,
@@ -370,16 +369,15 @@ HRESULT WINAPI Main_DirectDraw_GetMonitorFrequency(LPDIRECTDRAW7 iface,LPDWORD f
 }
 
 HRESULT WINAPI Main_DirectDraw_GetScanLine(LPDIRECTDRAW7 iface, LPDWORD lpdwScanLine)
-{
-	DWORD ret;
+{	
+	IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
 
-	if((ret = Hal_DirectDraw_GetScanLine( iface,  lpdwScanLine)) == DD_OK)
-		return ret;
+	if (This->DirectDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_GETSCANLINE) 
+	{
+	    return Hal_DirectDraw_GetScanLine( iface,  lpdwScanLine); 		
+	}
 
-	if((ret = Hel_DirectDraw_GetScanLine( iface,  lpdwScanLine)) == DD_OK)
-		return ret;
-
-	return DDERR_NOTINITIALIZED;   	
+	return Hel_DirectDraw_GetScanLine( iface,  lpdwScanLine);
 }
 
 HRESULT WINAPI Main_DirectDraw_GetVerticalBlankStatus(LPDIRECTDRAW7 iface, LPBOOL status)
@@ -395,31 +393,27 @@ HRESULT WINAPI Main_DirectDraw_RestoreDisplayMode(LPDIRECTDRAW7 iface)
 HRESULT WINAPI Main_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7 iface, DWORD dwFlags,
 												   HANDLE h)
 {
-    DWORD ret;
+	IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
 
-    if((ret = Hal_DirectDraw_WaitForVerticalBlank( iface,  dwFlags, h)) == DD_OK)
-		return ret;
+    if (This->DirectDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_WAITFORVERTICALBLANK) 
+	{
+       return Hal_DirectDraw_WaitForVerticalBlank( iface,  dwFlags, h);		
+	}
 
-	if((ret = Hel_DirectDraw_WaitForVerticalBlank( iface,  dwFlags, h)) == DD_OK)
-		return ret;
-
-	return DDERR_NOTINITIALIZED;   	
+	return Hel_DirectDraw_WaitForVerticalBlank( iface,  dwFlags, h);		
 }
 
 HRESULT WINAPI Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
 				   LPDWORD total, LPDWORD free)											   
 {	
-	DWORD ret;
+	IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
 
-    if((ret = Hal_DirectDraw_GetAvailableVidMem (iface,ddscaps,total,free)) == DD_OK)
-		return ret;
+	if (This->DirectDrawGlobal.lpDDCBtmp->HALDDMiscellaneous.dwFlags & DDHAL_MISCCB32_GETAVAILDRIVERMEMORY) 
+	{
+		return Hal_DirectDraw_GetAvailableVidMem (iface,ddscaps,total,free);
+	}
 
-	if((ret = Hel_DirectDraw_GetAvailableVidMem (iface,ddscaps,total,free)) == DD_OK)
-		return ret;
-
-
-	return DDERR_NOTINITIALIZED;
-
+	return Hel_DirectDraw_GetAvailableVidMem (iface,ddscaps,total,free);
 }
 												   
 HRESULT WINAPI Main_DirectDraw_GetSurfaceFromDC(LPDIRECTDRAW7 iface, HDC hdc,
