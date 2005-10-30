@@ -889,6 +889,62 @@ IntEngStretchBlt(SURFOBJ *DestSurf,
   return ret;
 }
 
+BOOL STDCALL
+IntEngAlphaBlend(IN SURFOBJ *Dest,
+                 IN SURFOBJ *Source,
+                 IN CLIPOBJ *Clip,
+                 IN XLATEOBJ *ColorTranslation,
+                 IN PRECTL DestRect,
+                 IN PRECTL SourceRect,
+                 IN BLENDOBJ *BlendObj)
+{
+	BOOL ret = FALSE;
+	BITMAPOBJ *DestObj;
+	BITMAPOBJ *SourceObj;
+
+	ASSERT(Dest);
+	DestObj = CONTAINING_RECORD(Dest, BITMAPOBJ, SurfObj);
+	ASSERT(DestObj);
+
+	ASSERT(Source);
+	SourceObj = CONTAINING_RECORD(Source, BITMAPOBJ, SurfObj);
+	ASSERT(SourceObj);
+
+	ASSERT(DestRect);
+	ASSERT(SourceRect);
+
+	BITMAPOBJ_LockBitmapBits(DestObj);
+	MouseSafetyOnDrawStart(Dest, DestRect->left, DestRect->top,
+	                       DestRect->right, DestRect->bottom);
+
+	if (Source != Dest)
+		BITMAPOBJ_LockBitmapBits(SourceObj);
+	MouseSafetyOnDrawStart(Source, SourceRect->left, SourceRect->top,
+	                       SourceRect->right, SourceRect->bottom);
+
+	/* Call the driver's DrvAlphaBlend if available */
+	if (DestObj->flHooks & HOOK_ALPHABLEND)
+	{
+		ret = GDIDEVFUNCS(Dest).AlphaBlend(
+		                  Dest, Source, Clip, ColorTranslation,
+		                  DestRect, SourceRect, BlendObj);
+	}
+
+	if (! ret)
+	{
+		ret = EngAlphaBlend(Dest, Source, Clip, ColorTranslation,
+		                    DestRect, SourceRect, BlendObj);
+	}
+
+	MouseSafetyOnDrawEnd(Source);
+	if (Source != Dest)
+		BITMAPOBJ_UnlockBitmapBits(SourceObj);
+	MouseSafetyOnDrawEnd(Dest);
+	BITMAPOBJ_UnlockBitmapBits(DestObj);
+
+	return ret;
+}
+
 /**** REACTOS FONT RENDERING CODE *********************************************/
 
 /* renders the alpha mask bitmap */

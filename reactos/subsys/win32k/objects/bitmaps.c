@@ -1284,6 +1284,145 @@ failed:
 	return Status;
 }
 
+BOOL STDCALL
+NtGdiAlphaBlend(
+	HDC  hDCDest,
+	INT  XOriginDest,
+	INT  YOriginDest,
+	INT  WidthDest,
+	INT  HeightDest,
+	HDC  hDCSrc,
+	INT  XOriginSrc,
+	INT  YOriginSrc,
+	INT  WidthSrc,
+	INT  HeightSrc,
+	BLENDFUNCTION  BlendFunc)
+{
+	PDC DCDest = NULL;
+	PDC DCSrc  = NULL;
+	BITMAPOBJ *BitmapDest, *BitmapSrc;
+	RECTL DestRect, SourceRect;
+	BOOL Status;
+	XLATEOBJ *XlateObj;
+	BLENDOBJ BlendObj = {BlendFunc};
+	HPALETTE SourcePalette = 0, DestPalette = 0;
+
+	DCDest = DC_LockDc(hDCDest);
+	if (NULL == DCDest)
+	{
+		DPRINT1("Invalid destination dc handle (0x%08x) passed to NtGdiAlphaBlend\n", hDCDest);
+		SetLastWin32Error(ERROR_INVALID_HANDLE);
+		return FALSE;
+	}
+	if (DCDest->IsIC)
+	{
+		DC_UnlockDc(DCDest);
+		/* Yes, Windows really returns TRUE in this case */
+		return TRUE;
+	}
+
+	if (hDCSrc != hDCDest)
+	{
+		DCSrc = DC_LockDc(hDCSrc);
+		if (NULL == DCSrc)
+		{
+			DC_UnlockDc(DCDest);
+			DPRINT1("Invalid source dc handle (0x%08x) passed to NtGdiBitBlt\n", hDCSrc);
+			SetLastWin32Error(ERROR_INVALID_HANDLE);
+			return FALSE;
+		}
+		if (DCSrc->IsIC)
+		{
+			DC_UnlockDc(DCSrc);
+			DC_UnlockDc(DCDest);
+			/* Yes, Windows really returns TRUE in this case */
+			return TRUE;
+		}
+	}
+	else
+	{
+		DCSrc = DCDest;
+	}
+
+	/* Offset the destination and source by the origin of their DCs. */
+	XOriginDest += DCDest->w.DCOrgX;
+	YOriginDest += DCDest->w.DCOrgY;
+	XOriginSrc += DCSrc->w.DCOrgX;
+	YOriginSrc += DCSrc->w.DCOrgY;
+
+	DestRect.left   = XOriginDest;
+	DestRect.top    = YOriginDest;
+	DestRect.right  = XOriginDest + WidthDest;
+	DestRect.bottom = YOriginDest + HeightDest;
+
+	SourceRect.left   = XOriginSrc;
+	SourceRect.top    = YOriginSrc;
+	SourceRect.right  = XOriginSrc + WidthSrc;
+	SourceRect.bottom = YOriginSrc + HeightSrc;
+
+	/* Determine surfaces to be used in the bitblt */
+	BitmapDest = BITMAPOBJ_LockBitmap(DCDest->w.hBitmap);
+	if (DCSrc->w.hBitmap == DCDest->w.hBitmap)
+		BitmapSrc = BitmapDest;
+	else
+		BitmapSrc = BITMAPOBJ_LockBitmap(DCSrc->w.hBitmap);
+
+	/* Create the XLATEOBJ. */
+	if (DCDest->w.hPalette != 0)
+		DestPalette = DCDest->w.hPalette;
+	if (DCSrc->w.hPalette != 0)
+		SourcePalette = DCSrc->w.hPalette;
+
+	/* KB41464 details how to convert between mono and color */
+	if (DCDest->w.bitsPerPixel == 1 && DCSrc->w.bitsPerPixel == 1)
+	{
+		XlateObj = NULL;
+	}
+	else
+	{
+		if (DCDest->w.bitsPerPixel == 1)
+		{
+			XlateObj = IntEngCreateMonoXlate(0, DestPalette, SourcePalette, DCSrc->w.backgroundColor);
+		}
+		else if (DCSrc->w.bitsPerPixel == 1)
+		{
+			XlateObj = IntEngCreateSrcMonoXlate(DestPalette, DCSrc->w.backgroundColor, DCSrc->w.textColor);
+		}
+		else
+		{
+			XlateObj = IntEngCreateXlate(0, 0, DestPalette, SourcePalette);
+		}
+		if (NULL == XlateObj)
+		{
+			BITMAPOBJ_UnlockBitmap(BitmapDest);
+			if (BitmapSrc != BitmapDest)
+				BITMAPOBJ_UnlockBitmap(BitmapSrc);
+			DC_UnlockDc(DCDest);
+			if (hDCSrc != hDCDest)
+				DC_UnlockDc(DCSrc);
+			SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+			return FALSE;
+		}
+	}
+
+	/* Perform the alpha blend operation */
+	Status = IntEngAlphaBlend(&BitmapDest->SurfObj, &BitmapSrc->SurfObj,
+	                          DCDest->CombinedClip, XlateObj,
+	                          &DestRect, &SourceRect, &BlendObj);
+
+	if (XlateObj != NULL)
+		EngDeleteXlate(XlateObj);
+
+	BITMAPOBJ_UnlockBitmap(BitmapDest);
+	if (BitmapSrc != BitmapDest)
+		BITMAPOBJ_UnlockBitmap(BitmapSrc);
+	DC_UnlockDc(DCDest);
+	if (hDCSrc != hDCDest)
+		DC_UnlockDc(DCSrc);
+
+	return Status;
+}
+
 /*  Internal Functions  */
 
 INT FASTCALL
