@@ -68,6 +68,46 @@ TCHAR cgetchar (VOID)
 #endif /* _UNICODE */
 }
 
+/*
+ * Takes a path in and returns it with the correct case of the letters
+ */
+VOID GetPathCase( TCHAR * Path, TCHAR * OutPath)
+{
+	INT i = 0;
+	_tcscpy(OutPath, _T(""));
+	TCHAR TempPath[MAX_PATH];  
+	WIN32_FIND_DATA FindFileData;
+	HANDLE hFind;
+	_tcscpy(TempPath, _T(""));
+
+	
+	for(i = 0; i < _tcslen(Path); i++)
+	{
+		if(Path[i] != _T('\\'))
+		{
+			_tcsncat(TempPath, &Path[i], 1);
+			if(i != _tcslen(Path) - 1)
+				continue;
+		}
+		/* Handle the base part of the path different.
+		   Because if you put it into findfirstfile, it will
+		   return your current folder */
+		if(_tcslen(TempPath) == 2 && TempPath[1] == _T(':'))
+		{
+			_tcscat(OutPath, TempPath);
+			_tcscat(OutPath, _T("\\"));
+			_tcscat(TempPath, _T("\\"));
+		}
+		else
+		{
+			hFind = FindFirstFile(TempPath,&FindFileData);
+			_tcscat(TempPath, _T("\\"));
+			_tcscat(OutPath, FindFileData.cFileName);
+			_tcscat(OutPath, _T("\\"));
+			CloseHandle(hFind);
+		}
+	}
+}
 
 /*
  * Check if Ctrl-Break was pressed during the last calls

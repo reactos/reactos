@@ -241,8 +241,8 @@ BOOL SetRootPath(TCHAR *InPath)
   /* The use of both of these together will correct the case of a path
      where as one alone or GetFullPath will not.  Exameple:
 	  c:\windows\SYSTEM32 => C:\WINDOWS\system32 */
-  GetShortPathName(OutPathTemp, OutPathTemp2, MAX_PATH);
-  GetLongPathName(OutPathTemp2, OutPath, MAX_PATH);  
+  GetFullPathName(OutPathTemp, MAX_PATH, OutPathTemp2, NULL);
+  GetPathCase(OutPathTemp2, OutPath);
 
   fail = SetCurrentDirectory(OutPath);
   if (!fail) 
@@ -395,19 +395,19 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 		_tcscat(szFinalPath,f.cFileName);      
 		
 		if ((f.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ==  FILE_ATTRIBUTE_DIRECTORY)
-    {  		       
+		{  		       
 			if(!SetRootPath(szFinalPath))
 			{
 				/* Change for /D */
 				if(bChangeDrive)
-        {   
-           _tcsupr(szFinalPath); 
-           GetLongPathName(szFinalPath, szPath, MAX_PATH);  
-					 SetCurrentDirectory(szPath);
-        }
+				{   
+					_tcsupr(szFinalPath);   
+					GetPathCase(szFinalPath, szPath);
+					SetCurrentDirectory(szPath);
+				}
 				return 0;
 			}
-      
+
 		}
 	}while(FindNextFile (hFile, &f));
  
