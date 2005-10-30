@@ -24,9 +24,14 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 
 			
 	/* alloc all the space */
-	This->DirectDrawGlobal.lpDDCBtmp = (LPDDHAL_CALLBACKS)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DDHAL_CALLBACKS));		
-	This->DirectDrawGlobal.lpD3DHALCallbacks = (ULONG_PTR)HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY, sizeof(D3DHAL_CALLBACKS));	
-	This->DirectDrawGlobal.lpD3DGlobalDriverData = (ULONG_PTR)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(D3DHAL_GLOBALDRIVERDATA));			
+	This->DirectDrawGlobal.lpDDCBtmp = (LPDDHAL_CALLBACKS)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
+		                                                            sizeof(DDHAL_CALLBACKS));		
+
+	This->DirectDrawGlobal.lpD3DHALCallbacks = (ULONG_PTR)HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY, 
+		                                                            sizeof(D3DHAL_CALLBACKS));	
+
+	This->DirectDrawGlobal.lpD3DGlobalDriverData = (ULONG_PTR)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
+		                                                                sizeof(D3DHAL_GLOBALDRIVERDATA));			
 	
 	/* Fill in some info */
 	This->HalInfo.lpD3DGlobalDriverData = This->DirectDrawGlobal.lpD3DGlobalDriverData;
@@ -53,9 +58,14 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 		return DD_FALSE;
 	}
 	
-	This->HalInfo.vmiData.pvmList = HeapAlloc(GetProcessHeap(), 0, sizeof(VIDMEM) * This->HalInfo.vmiData.dwNumHeaps);
-	This->DirectDrawGlobal.lpdwFourCC = HeapAlloc(GetProcessHeap(), 0, sizeof(DWORD) * This->HalInfo.ddCaps.dwNumFourCCCodes);	
-	((LPD3DHAL_GLOBALDRIVERDATA)This->DirectDrawGlobal.lpD3DGlobalDriverData)->lpTextureFormats = HeapAlloc(GetProcessHeap(), 0, sizeof(DDSURFACEDESC) * ((LPD3DHAL_GLOBALDRIVERDATA)This->DirectDrawGlobal.lpD3DGlobalDriverData)->dwNumTextureFormats);
+	This->HalInfo.vmiData.pvmList = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
+		                                      sizeof(VIDMEM) * This->HalInfo.vmiData.dwNumHeaps);
+
+	This->DirectDrawGlobal.lpdwFourCC = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
+		                                          sizeof(DWORD) * This->HalInfo.ddCaps.dwNumFourCCCodes);	
+	((LPD3DHAL_GLOBALDRIVERDATA)This->DirectDrawGlobal.lpD3DGlobalDriverData)->lpTextureFormats = 
+		 HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DDSURFACEDESC) * 
+		 ((LPD3DHAL_GLOBALDRIVERDATA)This->DirectDrawGlobal.lpD3DGlobalDriverData)->dwNumTextureFormats);
 
 	if(!DdQueryDirectDrawObject (
 		&This->DirectDrawGlobal, 
@@ -134,7 +144,8 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 	This->HalInfo.GetDriverInfo( &DriverInfo);*/
 	
 	/* Get the D3DCallbacks2 */
-	This->DirectDrawGlobal.lpD3DHALCallbacks2 = (ULONG_PTR)HeapAlloc(GetProcessHeap(), 0, sizeof(D3DHAL_CALLBACKS2));	
+	This->DirectDrawGlobal.lpD3DHALCallbacks2 = (ULONG_PTR)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
+		                                                             sizeof(D3DHAL_CALLBACKS2));	
 	DriverInfo.guidInfo = GUID_D3DCallbacks2;
 	DriverInfo.lpvData =  (PVOID)This->DirectDrawGlobal.lpD3DHALCallbacks2;
 	DriverInfo.dwExpectedSize = sizeof(D3DHAL_CALLBACKS2);
@@ -142,7 +153,8 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 
 	
 	/* Get the D3DCallbacks3 */	
-    This->DirectDrawGlobal.lpD3DHALCallbacks = (ULONG_PTR)HeapAlloc(GetProcessHeap(), 0, sizeof(D3DHAL_CALLBACKS3));		
+    This->DirectDrawGlobal.lpD3DHALCallbacks = (ULONG_PTR)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
+		                                                            sizeof(D3DHAL_CALLBACKS3));		
 	DriverInfo.guidInfo = GUID_D3DCallbacks3;
 	DriverInfo.lpvData =   (PVOID)This->DirectDrawGlobal.lpD3DHALCallbacks;
 	DriverInfo.dwExpectedSize = sizeof(D3DHAL_CALLBACKS3);
@@ -159,7 +171,8 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 
 	/* Get the D3DExtendedCaps  */
 	
-	This->DirectDrawGlobal.lpD3DExtendedCaps = (ULONG_PTR)HeapAlloc(GetProcessHeap(), 0, sizeof(D3DHAL_D3DEXTENDEDCAPS));
+	This->DirectDrawGlobal.lpD3DExtendedCaps = (ULONG_PTR)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
+		                                                            sizeof(D3DHAL_D3DEXTENDEDCAPS));
 	DriverInfo.guidInfo = GUID_D3DExtendedCaps;
 	DriverInfo.lpvData = (PVOID) This->DirectDrawGlobal.lpD3DExtendedCaps;
 	DriverInfo.dwExpectedSize = sizeof(D3DHAL_D3DEXTENDEDCAPS);
@@ -191,7 +204,8 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 	
 
 	/* Get the KernelCaps  */
-	This->DirectDrawGlobal.lpDDKernelCaps = (LPDDKERNELCAPS)HeapAlloc(GetProcessHeap(), 0, sizeof(DDHAL_DDKERNELCALLBACKS));
+	This->DirectDrawGlobal.lpDDKernelCaps = (LPDDKERNELCAPS)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
+		                                                              sizeof(DDHAL_DDKERNELCALLBACKS));
 	DriverInfo.guidInfo = GUID_KernelCaps;
 	DriverInfo.lpvData = (PVOID) This->DirectDrawGlobal.lpDDKernelCaps;
 	DriverInfo.dwExpectedSize = sizeof(DDHAL_DDKERNELCALLBACKS);
@@ -222,7 +236,8 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 	
 
     /* Get the NonLocalVidMemCaps  */
-    This->DirectDrawGlobal.lpddNLVCaps = (LPDDNONLOCALVIDMEMCAPS)HeapAlloc(GetProcessHeap(), 0, sizeof(DDNONLOCALVIDMEMCAPS));	
+	This->DirectDrawGlobal.lpddNLVCaps = (LPDDNONLOCALVIDMEMCAPS)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
+		                                                                   sizeof(DDNONLOCALVIDMEMCAPS));	
 	DriverInfo.guidInfo = GUID_NonLocalVidMemCaps;
 	DriverInfo.lpvData = (PVOID)This->DirectDrawGlobal.lpddNLVCaps;
 	DriverInfo.dwExpectedSize = sizeof(DDNONLOCALVIDMEMCAPS);
@@ -261,7 +276,8 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 	
 		
 	/* Get the VideoPortCaps  */
-    This->DirectDrawGlobal.lpDDVideoPortCaps = (LPDDVIDEOPORTCAPS)HeapAlloc(GetProcessHeap(), 0, sizeof(DDVIDEOPORTCAPS));		
+	This->DirectDrawGlobal.lpDDVideoPortCaps = (LPDDVIDEOPORTCAPS)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
+		                                                                    sizeof(DDVIDEOPORTCAPS));		
 	DriverInfo.guidInfo = GUID_VideoPortCaps;
 	DriverInfo.lpvData = (PVOID)This->DirectDrawGlobal.lpDDVideoPortCaps;
 	DriverInfo.dwExpectedSize = sizeof(DDVIDEOPORTCAPS);
@@ -269,7 +285,8 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 	
 
 	/* Get the ZPixelFormats */
-	This->DirectDrawGlobal.lpZPixelFormats = HeapAlloc(GetProcessHeap(), 0, sizeof(DDPIXELFORMAT) * This->DirectDrawGlobal.dwNumZPixelFormats);
+	This->DirectDrawGlobal.lpZPixelFormats = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
+		                                       sizeof(DDPIXELFORMAT) * This->DirectDrawGlobal.dwNumZPixelFormats);
 	DriverInfo.guidInfo = GUID_ZPixelFormats;
 	DriverInfo.lpvData = (PVOID)This->DirectDrawGlobal.lpZPixelFormats;
 	DriverInfo.dwExpectedSize = sizeof(DDPIXELFORMAT);
@@ -318,19 +335,33 @@ VOID Hal_DirectDraw_Release (LPDIRECTDRAW7 iface)
 
 	DdDeleteDirectDrawObject (&This->DirectDrawGlobal);
 
-	if(This->HalInfo.vmiData.pvmList)
-		HeapFree(GetProcessHeap(), 0, This->HalInfo.vmiData.pvmList);
+	if(This->DirectDrawGlobal.lpDDKernelCaps)
+		HeapFree(GetProcessHeap(), 0, This->DirectDrawGlobal.lpDDKernelCaps);
+
+	if(This->DirectDrawGlobal.lpddNLVCaps)
+		HeapFree(GetProcessHeap(), 0, This->DirectDrawGlobal.lpddNLVCaps);
+
+	if(This->DirectDrawGlobal.lpDDVideoPortCaps)
+		HeapFree(GetProcessHeap(), 0, This->DirectDrawGlobal.lpDDVideoPortCaps);
+
 	if(This->DirectDrawGlobal.lpdwFourCC)
 		HeapFree(GetProcessHeap(), 0, This->DirectDrawGlobal.lpdwFourCC);
+
 	if(This->DirectDrawGlobal.lpZPixelFormats)
 		HeapFree(GetProcessHeap(), 0, This->DirectDrawGlobal.lpZPixelFormats);
+
+	if(This->HalInfo.vmiData.pvmList)
+		HeapFree(GetProcessHeap(), 0, This->HalInfo.vmiData.pvmList);
+		
 	if(((LPD3DHAL_GLOBALDRIVERDATA)This->DirectDrawGlobal.lpD3DGlobalDriverData)->lpTextureFormats)
 		HeapFree(GetProcessHeap(), 0, ((LPD3DHAL_GLOBALDRIVERDATA)This->DirectDrawGlobal.lpD3DGlobalDriverData)->lpTextureFormats);			
 	
 	if(This->DirectDrawGlobal.lpDDCBtmp)
 		HeapFree(GetProcessHeap(), 0, This->DirectDrawGlobal.lpDDCBtmp);
+	
 	if(This->DirectDrawGlobal.lpD3DHALCallbacks)
 		HeapFree(GetProcessHeap(), 0, (PVOID)This->DirectDrawGlobal.lpD3DHALCallbacks);
+	
 	if(This->DirectDrawGlobal.lpD3DGlobalDriverData)
 		HeapFree(GetProcessHeap(), 0, (PVOID)This->DirectDrawGlobal.lpD3DGlobalDriverData);
 }
