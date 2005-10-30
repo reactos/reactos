@@ -4520,7 +4520,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
                                   *ViewSize,
                                   Protect,
                                   ViewOffset,
-                                  (AllocationType & MEM_TOP_DOWN));
+                                  (AllocationType & MEM_TOP_DOWN) == MEM_TOP_DOWN);
       MmUnlockSectionSegment(Section->Segment);
       if (!NT_SUCCESS(Status))
       {
