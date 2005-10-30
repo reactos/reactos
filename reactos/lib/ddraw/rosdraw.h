@@ -41,6 +41,10 @@ typedef struct
    
     IDirectDrawImpl* owner;
 
+	DDRAWI_DDRAWSURFACE_GBL Global; 
+	DDRAWI_DDRAWSURFACE_MORE More; 
+	DDRAWI_DDRAWSURFACE_LCL Local;
+
 } IDirectDrawSurfaceImpl;
 
 /******** Clipper Object ********/

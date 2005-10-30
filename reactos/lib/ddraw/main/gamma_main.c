@@ -22,8 +22,8 @@ Main_DirectDrawGammaControl_AddRef(LPDIRECTDRAWGAMMACONTROL iface)
 ULONG WINAPI
 Main_DirectDrawGammaControl_Release(LPDIRECTDRAWGAMMACONTROL iface)
 {
-    IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
-    ULONG ref = InterlockedDecrement(&This->ref);
+    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+    ULONG ref = InterlockedDecrement(&This->DirectDrawGlobal.dwRefCnt);
     
     if (ref == 0)
 		HeapFree(GetProcessHeap(), 0, This);
