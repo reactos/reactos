@@ -41,38 +41,33 @@ HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIREC
 			return CanCreateData.ddRVal;
 	}
 
-	/* down here we got a crach */
-
 	/* surface global struct */
-	DDRAWI_DDRAWSURFACE_GBL Global;
-	memset(&Global, 0, sizeof(DDRAWI_DDRAWSURFACE_GBL));
-	Global.lpDD = &This->owner->DirectDrawGlobal;	
-	Global.wHeight = This->owner->Height;
-	Global.wWidth = This->owner->Width;
-	Global.dwLinearSize =  Global.wWidth * This->owner->Bpp/8;
+	memset(&This->Global, 0, sizeof(DDRAWI_DDRAWSURFACE_GBL));
+	This->Global.lpDD = &This->owner->DirectDrawThis->Global;	
+	This->Global.wHeight = This->owner->Height;
+	This->Global.wWidth = This->owner->Width;
+	This->Global.dwLinearSize =  This->Global.wWidth * This->owner->Bpp/8;
 	
 	/* surface more struct */
-	DDRAWI_DDRAWSURFACE_MORE More;
-	memset(&More, 0, sizeof(DDRAWI_DDRAWSURFACE_MORE));
-	More.dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
+	memset(&This->More, 0, sizeof(DDRAWI_DDRAWSURFACE_MORE));
+	This->More.dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
 
 	/* surface local struct */
-	DDRAWI_DDRAWSURFACE_LCL Local;
-	memset(&Local, 0, sizeof(DDRAWI_DDRAWSURFACE_LCL));
-	Local.lpGbl = &Global;
-	Local.lpSurfMore = &More;
-	Local.ddsCaps = *(DDSCAPS*)&pDDSD->ddsCaps;
+	memset(&This->Local, 0, sizeof(DDRAWI_DDRAWSURFACE_LCL));
+	This->Local.lpGbl = &This->Global;
+	This->Local.lpSurfMore = &This->More;
+	This->Local.ddsCaps = *(DDSCAPS*)&pDDSD->ddsCaps;
 
 	/* we need to set some flags if we create the primary surface */
 	if(pDDSD->ddsCaps.dwCaps == DDSCAPS_PRIMARYSURFACE)
 	{
-		Local.dwFlags |= DDRAWISURF_FRONTBUFFER;
-		Global.dwGlobalFlags |= DDRAWISURFGBL_ISGDISURFACE;
+		This->Local.dwFlags |= DDRAWISURF_FRONTBUFFER;
+		This->Global.dwGlobalFlags |= DDRAWISURFGBL_ISGDISURFACE;
 	}
 
 	/* for the double pointer below */
 	DDRAWI_DDRAWSURFACE_LCL *pLocal[2]; 
-	pLocal[0] = &Local; 
+	pLocal[0] = &This->Local; 
     pLocal[1] = NULL;  // we need this one for bad written drivers
 
 	/* the parameter struct */
@@ -84,7 +79,6 @@ HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIREC
 	CreateData.lplpSList = pLocal;	
 	
 	/* this is the call we were waiting for */
-	MessageBox(0,0,0,0);
 	if(This->owner->DirectDrawGlobal.lpDDCBtmp->HALDD.CreateSurface(&CreateData) == DDHAL_DRIVER_NOTHANDLED)
 		return DDERR_INVALIDPARAMS;
 	

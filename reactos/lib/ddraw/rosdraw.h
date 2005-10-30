@@ -41,6 +41,10 @@ typedef struct
 
     LONG ref;
 
+	DDRAWI_DDRAWSURFACE_GBL Global;
+	DDRAWI_DDRAWSURFACE_MORE More;
+	DDRAWI_DDRAWSURFACE_LCL Local;
+
     IDirectDrawImpl* owner;
 
 } IDirectDrawSurfaceImpl;

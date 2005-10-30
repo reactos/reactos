@@ -10,30 +10,31 @@
 
 #include "rosdraw.h"
 
-HRESULT Hal_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rdst,
-			  LPDIRECTDRAWSURFACE7 src, LPRECT rsrc, DWORD dwFlags, LPDDBLTFX lpbltfx)
+HRESULT Hal_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rDest,
+			  LPDIRECTDRAWSURFACE7 src, LPRECT rSrc, DWORD dwFlags, LPDDBLTFX lpbltfx)
 {
-  
-	DDHAL_BLTDATA BltData;
-    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+    IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
+    IDirectDrawSurfaceImpl* That = (IDirectDrawSurfaceImpl*)src;
  	
-	if (!(This->DirectDrawGlobal.lpDDCBtmp->HALDDSurface.dwFlags  & DDHAL_SURFCB32_BLT)) 
+	if (!(This->owner->DirectDrawGlobal.lpDDCBtmp->HALDDSurface.dwFlags  & DDHAL_SURFCB32_BLT)) 
 	{
 		return DDERR_NODRIVERSUPPORT;
 	}
 
-	BltData.lpDD = &This->DirectDrawGlobal;
-	/* RtlCopyMemory( &BltData.bltFX, lpbltfx,sizeof(DDBLTFX)); */
-	BltData.dwFlags =  dwFlags;
+	DDHAL_BLTDATA BltData;
+	BltData.lpDD = &This->owner->DirectDrawGlobal;
+	BltData.dwFlags = dwFlags;
+	BltData.lpDDDestSurface = This->local;
+    if(rDest) BltData.rDest = *(RECTL*)rDest;
+    if(rSrc) BltData.rSrc = *(RECTL*)rSrc;
+    if(That) BltData.lpDDSrcSurface = That->local;
+	if(lpbltfx) BltData.bltFX = *lpbltfx;
 
-    /* FIXME blt is not complete */
-
-	if (This->DirectDrawGlobal.lpDDCBtmp->HALDDSurface.Blt(&BltData) != DDHAL_DRIVER_HANDLED)
+	if (This->owner->DirectDrawGlobal.lpDDCBtmp->HALDDSurface.Blt(&BltData) != DDHAL_DRIVER_HANDLED)
 	{
 	   return DDERR_NODRIVERSUPPORT;
 	}
 	
 	return BltData.ddRVal;
-
 }
 
