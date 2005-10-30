@@ -393,7 +393,7 @@ HRESULT Hal_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7 iface, DWORD dwFlags,H
 
 	DDHAL_WAITFORVERTICALBLANKDATA WaitVectorData;
 
-	if (!(This->DirectDrawGlobal.lpDDCBtmp->HALDDMiscellaneous.dwFlags & DDHAL_CB32_WAITFORVERTICALBLANK)) 
+	if (!(This->DirectDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_WAITFORVERTICALBLANK)) 
 	{
 		return DDERR_NODRIVERSUPPORT;
 	}
@@ -417,7 +417,7 @@ HRESULT Hal_DirectDraw_GetScanLine(LPDIRECTDRAW7 iface, LPDWORD lpdwScanLine)
 
     DDHAL_GETSCANLINEDATA GetScan;
 
-	if (!(This->DirectDrawGlobal.lpDDCBtmp->HALDDMiscellaneous.dwFlags & DDHAL_CB32_GETSCANLINE)) 
+	if (!(This->DirectDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_GETSCANLINE)) 
 	{
 		return DDERR_NODRIVERSUPPORT;
 	}
@@ -432,4 +432,27 @@ HRESULT Hal_DirectDraw_GetScanLine(LPDIRECTDRAW7 iface, LPDWORD lpdwScanLine)
 
 	*lpdwScanLine = GetScan.ddRVal;
 	return  GetScan.ddRVal;
+}
+
+HRESULT Hal_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7 iface) 
+{
+	IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+
+	DDHAL_FLIPTOGDISURFACEDATA FlipGdi;
+
+	if (!(This->DirectDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_FLIPTOGDISURFACE)) 
+	{
+		return DDERR_NODRIVERSUPPORT;
+	}
+
+	FlipGdi.lpDD = &This->DirectDrawGlobal;
+    FlipGdi.ddRVal = DDERR_NOTPALETTIZED;
+
+	if (This->DirectDrawGlobal.lpDDCBtmp->HALDD.FlipToGDISurface(&FlipGdi) != DDHAL_DRIVER_HANDLED)
+	{
+	   return DDERR_NODRIVERSUPPORT;
+	}
+	
+	/* FIXME where should FlipGdi.dwToGDI be fill in */
+    return  FlipGdi.ddRVal;
 }

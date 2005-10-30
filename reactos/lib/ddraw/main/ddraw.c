@@ -287,7 +287,15 @@ HRESULT WINAPI Main_DirectDraw_EnumSurfaces(LPDIRECTDRAW7 iface, DWORD dwFlags,
 
 HRESULT WINAPI Main_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7 iface) 
 {
-	DX_STUB;
+	DWORD ret;
+
+	if((ret = Hal_DirectDraw_FlipToGDISurface( iface)) == DD_OK)
+		return ret;
+
+	if((ret = Hel_DirectDraw_FlipToGDISurface( iface)) == DD_OK)
+		return ret;
+
+	return DDERR_NOTINITIALIZED;  
 }
 
 HRESULT WINAPI Main_DirectDraw_GetCaps(LPDIRECTDRAW7 iface, LPDDCAPS pDriverCaps,

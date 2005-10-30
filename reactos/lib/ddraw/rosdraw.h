@@ -95,6 +95,9 @@ HRESULT Hal_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7 iface, DWORD dwFlags,
 					HANDLE h); 
 
 HRESULT Hal_DirectDraw_GetScanLine(LPDIRECTDRAW7 iface, LPDWORD lpdwScanLine);
+HRESULT Hal_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7 iface); 
+
+
 
 
 HRESULT Hel_DirectDraw_Initialize (LPDIRECTDRAW7 iface);
@@ -108,7 +111,7 @@ HRESULT Hel_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7 iface, DWORD dwFlags,
 					HANDLE h); 
 
 HRESULT Hel_DirectDraw_GetScanLine(LPDIRECTDRAW7 iface, LPDWORD lpdwScanLine);
-
+HRESULT Hel_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7 iface);
 
 
 /*********** Macros ***********/

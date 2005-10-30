@@ -42,3 +42,9 @@ HRESULT Hel_DirectDraw_GetScanLine(LPDIRECTDRAW7 iface, LPDWORD lpdwScanLine)
 {
 	DX_STUB;
 }
+
+HRESULT Hel_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7 iface) 
+{
+	DX_STUB;
+}
+
