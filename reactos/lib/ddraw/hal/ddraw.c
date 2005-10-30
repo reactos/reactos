@@ -454,5 +454,35 @@ HRESULT Hal_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7 iface)
 	}
 	
 	/* FIXME where should FlipGdi.dwToGDI be fill in */
-    return  FlipGdi.ddRVal;
+    return  FlipGdi.ddRVal;	
+}
+
+HRESULT Hal_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD dwHeight, 
+													DWORD dwBPP, DWORD dwRefreshRate, DWORD dwFlags)
+{
+  DDHAL_SETMODEDATA mode;
+
+  IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+  
+  if (!(This->DirectDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_SETMODE)) 
+  {
+	 return DDERR_NODRIVERSUPPORT;
+  }
+
+  mode.lpDD = &This->DirectDrawGlobal;
+  mode.ddRVal = DDERR_NODRIVERSUPPORT;
+
+  /* FIXME : add search for which mode.ModeIndex we should use */
+  /* FIXME : fill the mode.inexcl; */
+  /* FIXME : fill the mode.useRefreshRate; */
+
+  /*
+  if (This->DirectDrawGlobal.lpDDCBtmp->HALDD.SetMode(&mode) != DDHAL_DRIVER_HANDLED)
+  {
+	  return DDERR_NODRIVERSUPPORT;
+  } 
+  */
+
+  DX_STUB;
+  /* return mode.ddRVal */
 }

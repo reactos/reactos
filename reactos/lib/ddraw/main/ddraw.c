@@ -85,6 +85,21 @@ HRESULT WINAPI Main_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface, HWND hw
 HRESULT WINAPI Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD dwHeight, 
 																DWORD dwBPP, DWORD dwRefreshRate, DWORD dwFlags)
 {
+	DWORD ret;
+	if((ret = Hal_DirectDraw_SetDisplayMode(iface,  dwWidth,  dwHeight, 
+                                            dwBPP,  dwRefreshRate,  dwFlags)) == DD_OK)
+	{
+		return ret;
+	}
+
+	if((ret = Hel_DirectDraw_SetDisplayMode(iface,  dwWidth,  dwHeight, 
+                                            dwBPP,  dwRefreshRate,  dwFlags)) == DD_OK)
+	{
+		return ret;
+	}
+
+	return DDERR_NOTINITIALIZED; 
+
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
 
 	// this only for exclusive mode
