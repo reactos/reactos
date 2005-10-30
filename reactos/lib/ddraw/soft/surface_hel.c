@@ -9,3 +9,9 @@
  */
 
 #include "rosdraw.h"
+
+HRESULT Hel_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rdst,
+			  LPDIRECTDRAWSURFACE7 src, LPRECT rsrc, DWORD dwFlags, LPDDBLTFX lpbltfx)
+{
+    DX_STUB;
+}

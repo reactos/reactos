@@ -84,40 +84,26 @@ extern IDirectDrawGammaControlVtbl	DirectDrawGammaControl_Vtable;
 
 /********* Prototypes **********/
 
-HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface);
-HRESULT Hal_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface);
-VOID Hal_DirectDraw_Release (LPDIRECTDRAW7 iface);
-
-HRESULT Hal_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
-				   LPDWORD total, LPDWORD free);	
-
-HRESULT Hal_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7 iface, DWORD dwFlags,
-					HANDLE h); 
-
-HRESULT Hal_DirectDraw_GetScanLine(LPDIRECTDRAW7 iface, LPDWORD lpdwScanLine);
-HRESULT Hal_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7 iface); 
-HRESULT Hal_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD dwHeight, 
-													DWORD dwBPP, DWORD dwRefreshRate, DWORD dwFlags);
+HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 );
+HRESULT Hal_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 );
+VOID Hal_DirectDraw_Release (LPDIRECTDRAW7 );
+HRESULT Hal_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7, LPDDSCAPS2, LPDWORD, LPDWORD );	
+HRESULT Hal_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7, DWORD, HANDLE ); 
+HRESULT Hal_DirectDraw_GetScanLine(LPDIRECTDRAW7 , LPDWORD );
+HRESULT Hal_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7 ); 
+HRESULT Hal_DirectDraw_SetDisplayMode (LPDIRECTDRAW7, DWORD, DWORD, DWORD, DWORD, DWORD );
+HRESULT Hal_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7, LPRECT, LPDIRECTDRAWSURFACE7, LPRECT, DWORD, LPDDBLTFX );
 
 
-
-
-
-HRESULT Hel_DirectDraw_Initialize (LPDIRECTDRAW7 iface);
-HRESULT Hel_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface);
-VOID Hel_DirectDraw_Release (LPDIRECTDRAW7 iface);
-
-HRESULT Hel_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
-				   LPDWORD total, LPDWORD free);	
-
-HRESULT Hel_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7 iface, DWORD dwFlags,
-					HANDLE h); 
-
-HRESULT Hel_DirectDraw_GetScanLine(LPDIRECTDRAW7 iface, LPDWORD lpdwScanLine);
-HRESULT Hel_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7 iface);
-HRESULT Hel_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD dwHeight, 
-													DWORD dwBPP, DWORD dwRefreshRate, DWORD dwFlags);
-
+HRESULT Hel_DirectDraw_Initialize (LPDIRECTDRAW7 );
+HRESULT Hel_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 );
+VOID Hel_DirectDraw_Release (LPDIRECTDRAW7 );
+HRESULT Hel_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 , LPDDSCAPS2 ddsaps, LPDWORD , LPDWORD );	
+HRESULT Hel_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7, DWORD, HANDLE ); 
+HRESULT Hel_DirectDraw_GetScanLine(LPDIRECTDRAW7 , LPDWORD );
+HRESULT Hel_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7 );
+HRESULT Hel_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 , DWORD , DWORD ,DWORD , DWORD , DWORD );
+HRESULT Hel_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7, LPRECT, LPDIRECTDRAWSURFACE7, LPRECT, DWORD, LPDDBLTFX );
 
 /*********** Macros ***********/
 
