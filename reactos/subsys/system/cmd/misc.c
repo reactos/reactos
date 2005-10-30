@@ -101,6 +101,11 @@ VOID GetPathCase( TCHAR * Path, TCHAR * OutPath)
 		else
 		{
 			hFind = FindFirstFile(TempPath,&FindFileData);
+			if(hFind == INVALID_HANDLE_VALUE)
+			{
+				_tcscpy(OutPath, Path);
+				return;
+			}
 			_tcscat(TempPath, _T("\\"));
 			_tcscat(OutPath, FindFileData.cFileName);
 			_tcscat(OutPath, _T("\\"));
