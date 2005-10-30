@@ -136,6 +136,13 @@ cpp_quote("#endif")
                                    [out, size_is(*lpcchBuffer), unique] LPWSTR lpDisplayName,
                                    [in, out, ref] LPDWORD lpcchBuffer);
 
+  /* Function 21 */
+  DWORD ScmrGetServiceKeyNameW([in] handle_t BindingHandle,
+                               [in] SC_HANDLE hSCManager,
+                               [in, string, ref] LPCWSTR lpDisplayName,
+                               [out, size_is(*lpcchBuffer), unique] LPWSTR lpServiceName,
+                               [in, out, ref] LPDWORD lpcchBuffer);
+
 
   /* Function 27 */
   DWORD ScmrOpenSCManagerA([in] handle_t BindingHandle,

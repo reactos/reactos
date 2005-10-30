@@ -15,6 +15,7 @@ typedef struct _SERVICE
     LPWSTR lpServiceName;
     LPWSTR lpDisplayName;
     UNICODE_STRING ServiceGroup;
+    BOOL bDeleted;
 
     SERVICE_STATUS Status;
     DWORD dwStartType;

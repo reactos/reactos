@@ -348,7 +348,15 @@ ScmrDeleteService(handle_t BindingHandle,
 
     /* FIXME: Acquire service database lock exclusively */
 
+    if (lpService->bDeleted)
+    {
+        DPRINT1("The service has already been marked for delete!\n");
+        return ERROR_SERVICE_MARKED_FOR_DELETE;
+    }
+
     /* Mark service for delete */
+    lpService->bDeleted = TRUE;
+
     dwError = ScmMarkServiceForDelete(lpService);
 
     /* FIXME: Release service database lock */
@@ -533,7 +541,18 @@ ScmrChangeServiceConfigW(handle_t BiningHandle,
         return ERROR_INVALID_HANDLE;
     }
 
+    /* FIXME: Lock database exclusively */
+
+    if (lpService->bDeleted)
+    {
+        /* FIXME: Unlock database */
+        DPRINT1("The service has already been marked for delete!\n");
+        return ERROR_SERVICE_MARKED_FOR_DELETE;
+    }
+
     /* FIXME: ... */
+
+    /* FIXME: Unlock database */
 
     DPRINT1("ScmrChangeServiceConfigW() done (Error %lu)\n", dwError);
 
@@ -997,6 +1016,56 @@ ScmrGetServiceDisplayNameW(handle_t BindingHandle,
         *lpcchBuffer > dwLength)
     {
         wcscpy(lpDisplayName, lpService->lpDisplayName);
+    }
+
+    dwError = (*lpcchBuffer > dwLength) ? ERROR_SUCCESS : ERROR_INSUFFICIENT_BUFFER;
+
+    *lpcchBuffer = dwLength;
+
+    return dwError;
+}
+
+
+/* Function 21 */
+unsigned long
+ScmrGetServiceKeyNameW(handle_t BindingHandle,
+                       unsigned int hSCManager,
+                       wchar_t *lpDisplayName,
+                       wchar_t *lpServiceName, /* [out, unique] */
+                       unsigned long *lpcchBuffer)
+{
+//    PMANAGER_HANDLE hManager;
+    PSERVICE lpService;
+    DWORD dwLength;
+    DWORD dwError;
+
+    DPRINT1("ScmrGetServiceKeyNameW() called\n");
+    DPRINT1("hSCManager = %x\n", hSCManager);
+    DPRINT1("lpDisplayName: %S\n", lpDisplayName);
+    DPRINT1("lpServiceName: %p\n", lpServiceName);
+    DPRINT1("*lpcchBuffer: %lu\n", *lpcchBuffer);
+
+//    hManager = (PMANAGER_HANDLE)hSCManager;
+//    if (hManager->Handle.Tag != MANAGER_TAG)
+//    {
+//        DPRINT1("Invalid manager handle!\n");
+//        return ERROR_INVALID_HANDLE;
+//    }
+
+    /* Get service database entry */
+    lpService = ScmGetServiceEntryByDisplayName(lpDisplayName);
+    if (lpService == NULL)
+    {
+        DPRINT1("Could not find a service!\n");
+        return ERROR_SERVICE_DOES_NOT_EXIST;
+    }
+
+    dwLength = wcslen(lpService->lpServiceName);
+
+    if (lpServiceName != NULL &&
+        *lpcchBuffer > dwLength)
+    {
+        wcscpy(lpServiceName, lpService->lpServiceName);
     }
 
     dwError = (*lpcchBuffer > dwLength) ? ERROR_SUCCESS : ERROR_INSUFFICIENT_BUFFER;

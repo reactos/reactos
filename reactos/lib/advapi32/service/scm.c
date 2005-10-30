@@ -618,7 +618,7 @@ GetServiceKeyNameA(
 /**********************************************************************
  *  GetServiceKeyNameW
  *
- * @unimplemented
+ * @implemented
  */
 BOOL STDCALL
 GetServiceKeyNameW(SC_HANDLE hSCManager,
@@ -626,7 +626,6 @@ GetServiceKeyNameW(SC_HANDLE hSCManager,
                    LPWSTR lpServiceName,
                    LPDWORD lpcchBuffer)
 {
-#if 0
     DWORD dwError;
 
     DPRINT("GetServiceKeyNameW() called\n");
@@ -646,10 +645,6 @@ GetServiceKeyNameW(SC_HANDLE hSCManager,
     }
 
     return TRUE;
-#endif
-    DPRINT1("GetServiceKeyNameW is unimplemented\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
 }
 
 
