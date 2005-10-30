@@ -647,8 +647,14 @@ static NTSTATUS STDCALL I8042AddDevice(PDRIVER_OBJECT DriverObject,
 	PDEVICE_EXTENSION DevExt;
 	PFDO_DEVICE_EXTENSION FdoDevExt;
 	PDEVICE_OBJECT Fdo;
+	static BOOLEAN AlreadyAdded = FALSE;
 
 	DPRINT("I8042AddDevice\n");
+
+	/* HACK! */
+	if (AlreadyAdded)
+		return STATUS_UNSUCCESSFUL;
+	AlreadyAdded = TRUE;
 
 	Status = IoCreateDevice(DriverObject,
 	               sizeof(DEVICE_EXTENSION),
