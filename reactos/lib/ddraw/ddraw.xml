@@ -18,28 +18,28 @@
 	<file>regsvr.c</file>
 
 	<directory name="hal">
-		<file>ddraw.c</file>
-		<file>surface.c</file>
+		<file>ddraw_hal.c</file>
+		<file>surface_hal.c</file>
 	</directory>
 
 	<directory name="main">
-		<file>ddraw.c</file>
-		<file>surface.c</file>
-		<file>clipper.c</file>
-		<file>color.c</file>
-		<file>gamma.c</file>
-		<file>palette.c</file>
-		<file>videoport.c</file>
-		<file>kernel.c</file>
+		<file>ddraw_main.c</file>
+		<file>surface_main.c</file>
+		<file>clipper_main.c</file>
+		<file>color_main.c</file>
+		<file>gamma_main.c</file>
+		<file>palette_main.c</file>
+		<file>videoport_main.c</file>
+		<file>kernel_main.c</file>
 	</directory>
 
 	<directory name="soft">
-		<file>ddraw.c</file>
-		<file>surface.c</file>
+		<file>ddraw_hel.c</file>
+		<file>surface_hel.c</file>
 	</directory>
 
 	<directory name="thunks">
-		<file>ddraw.c</file>
-		<file>surface.c</file>
+		<file>ddraw_thunk.c</file>
+		<file>surface_thunk.c</file>
 	</directory>
 </module>

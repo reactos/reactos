@@ -481,8 +481,7 @@ HRESULT Hal_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD
   {
 	  return DDERR_NODRIVERSUPPORT;
   } 
-  */
-
+  */  
   DX_STUB;
   /* return mode.ddRVal */
 }
