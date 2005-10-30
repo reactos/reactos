@@ -409,6 +409,4 @@ HRESULT Hal_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7 iface, DWORD dwFlags,H
 	}
 
 	return WaitVectorData.ddRVal;
-
-	return DD_OK;
 }

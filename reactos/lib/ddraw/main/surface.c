@@ -31,13 +31,14 @@ HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIREC
 	memset(&CanCreateData, 0, sizeof(DDHAL_CANCREATESURFACEDATA));
 	CanCreateData.lpDD = &This->owner->DirectDrawGlobal; 
 	CanCreateData.lpDDSurfaceDesc = (DDSURFACEDESC*)pDDSD;
-	CanCreateData.CanCreateSurface = This->owner->HalInfo.lpDDCallbacks->CanCreateSurface;
-	
-	if (CanCreateData.CanCreateSurface(&CanCreateData) == DDHAL_DRIVER_NOTHANDLED)
+		
+	if (This->owner->DirectDrawGlobal.lpDDCBtmp->HALDD.CanCreateSurface(&CanCreateData) == DDHAL_DRIVER_NOTHANDLED)
         return DDERR_INVALIDPARAMS;
 	
 	if(CanCreateData.ddRVal != DD_OK)
 		return CanCreateData.ddRVal;
+
+	/* down here we got a crach */
 
 	/* surface global struct */
 	DDRAWI_DDRAWSURFACE_GBL Global;
@@ -77,8 +78,7 @@ HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIREC
 	CreateData.lpDD = &This->owner->DirectDrawGlobal; 
 	CreateData.lpDDSurfaceDesc = (DDSURFACEDESC*)pDDSD;
 	CreateData.dwSCnt = 1;
-	CreateData.lplpSList = pLocal;
-	CreateData.CreateSurface = This->owner->HalInfo.lpDDCallbacks->CreateSurface;
+	CreateData.lplpSList = pLocal;	
 	
 	/* this is the call we were waiting for */
 	if(CreateData.CreateSurface(&CreateData) == DDHAL_DRIVER_NOTHANDLED)
