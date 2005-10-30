@@ -24,3 +24,10 @@ HRESULT Hel_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface)
 VOID Hel_DirectDraw_Release (LPDIRECTDRAW7 iface) 
 {
 }
+
+
+HRESULT Hel_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
+				   LPDWORD total, LPDWORD free)	
+{
+	DX_STUB;
+}

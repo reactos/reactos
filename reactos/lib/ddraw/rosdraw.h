@@ -88,9 +88,17 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface);
 HRESULT Hal_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface);
 VOID Hal_DirectDraw_Release (LPDIRECTDRAW7 iface);
 
+HRESULT Hal_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
+				   LPDWORD total, LPDWORD free);											   
+
+
 HRESULT Hel_DirectDraw_Initialize (LPDIRECTDRAW7 iface);
 HRESULT Hel_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface);
 VOID Hel_DirectDraw_Release (LPDIRECTDRAW7 iface);
+
+HRESULT Hel_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
+				   LPDWORD total, LPDWORD free);											   
+
 
 /*********** Macros ***********/
 

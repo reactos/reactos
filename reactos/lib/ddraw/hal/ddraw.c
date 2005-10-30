@@ -354,3 +354,33 @@ VOID Hal_DirectDraw_Release (LPDIRECTDRAW7 iface)
 	if(This->DirectDrawGlobal.lpD3DGlobalDriverData)
 		HeapFree(GetProcessHeap(), 0, (PVOID)This->DirectDrawGlobal.lpD3DGlobalDriverData);
 }
+
+
+HRESULT Hal_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
+				   LPDWORD total, LPDWORD free)											   
+{
+	IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+	
+	DDHAL_GETAVAILDRIVERMEMORYDATA  mem;
+
+	if (!(This->DirectDrawGlobal.lpDDCBtmp->HALDDMiscellaneous.dwFlags & DDHAL_MISCCB32_GETAVAILDRIVERMEMORY)) 
+	{
+		return DDERR_NODRIVERSUPPORT;
+	}
+
+	mem.lpDD = &This->DirectDrawGlobal;	
+	if (This->DirectDrawGlobal.lpDDCBtmp->HALDDMiscellaneous.GetAvailDriverMemory(&mem) != DDHAL_DRIVER_HANDLED)
+	{
+	   return DDERR_NODRIVERSUPPORT;
+	}
+
+
+	ddscaps->dwCaps = mem.DDSCaps.dwCaps;
+	ddscaps->dwCaps2 = mem.ddsCapsEx.dwCaps2;
+    ddscaps->dwCaps3 = mem.ddsCapsEx.dwCaps3;
+	ddscaps->dwCaps4 = mem.ddsCapsEx.dwCaps4;
+	*total = mem.dwTotal;
+	*free = mem.dwFree;
+
+	return mem.ddRVal;
+}

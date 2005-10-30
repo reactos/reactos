@@ -352,7 +352,8 @@ HRESULT WINAPI Main_DirectDraw_GetDisplayMode(LPDIRECTDRAW7 iface, LPDDSURFACEDE
     DDCOLORKEY    ddckCKSrcOverlay;
     DDCOLORKEY    ddckCKSrcBlt;
 	*/
-
+    
+	
     RtlCopyMemory(&pDDSD->ddpfPixelFormat,&This->DirectDrawGlobal.vmiData.ddpfDisplay,sizeof(DDPIXELFORMAT));
     RtlCopyMemory(&pDDSD->ddsCaps,&This->DirectDrawGlobal.ddCaps,sizeof(DDCORECAPS));
 	
@@ -412,9 +413,18 @@ HRESULT WINAPI Main_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7 iface, DWORD d
 
 HRESULT WINAPI Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
 				   LPDWORD total, LPDWORD free)											   
-{
-     
-   	DX_STUB;
+{	
+	DWORD ret;
+
+     if((ret = Hal_DirectDraw_GetAvailableVidMem (iface,ddscaps,total,free)) == DD_OK)
+		return ret;
+
+	if((ret = Hel_DirectDraw_GetAvailableVidMem (iface,ddscaps,total,free)) == DD_OK)
+		return ret;
+
+
+	return DDERR_NOTINITIALIZED;
+
 }
 												   
 HRESULT WINAPI Main_DirectDraw_GetSurfaceFromDC(LPDIRECTDRAW7 iface, HDC hdc,
