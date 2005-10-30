@@ -391,7 +391,15 @@ HRESULT WINAPI Main_DirectDraw_GetMonitorFrequency(LPDIRECTDRAW7 iface,LPDWORD f
 
 HRESULT WINAPI Main_DirectDraw_GetScanLine(LPDIRECTDRAW7 iface, LPDWORD lpdwScanLine)
 {
-	DX_STUB;
+	DWORD ret;
+
+	if((ret = Hal_DirectDraw_GetScanLine( iface,  lpdwScanLine)) == DD_OK)
+		return ret;
+
+	if((ret = Hel_DirectDraw_GetScanLine( iface,  lpdwScanLine)) == DD_OK)
+		return ret;
+
+	return DDERR_NOTINITIALIZED;   	
 }
 
 HRESULT WINAPI Main_DirectDraw_GetVerticalBlankStatus(LPDIRECTDRAW7 iface, LPBOOL status)
@@ -407,7 +415,6 @@ HRESULT WINAPI Main_DirectDraw_RestoreDisplayMode(LPDIRECTDRAW7 iface)
 HRESULT WINAPI Main_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7 iface, DWORD dwFlags,
 												   HANDLE h)
 {
-
     DWORD ret;
 
     if((ret = Hal_DirectDraw_WaitForVerticalBlank( iface,  dwFlags, h)) == DD_OK)

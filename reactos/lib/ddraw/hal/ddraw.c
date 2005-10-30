@@ -410,3 +410,26 @@ HRESULT Hal_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7 iface, DWORD dwFlags,H
 
 	return WaitVectorData.ddRVal;
 }
+
+HRESULT Hal_DirectDraw_GetScanLine(LPDIRECTDRAW7 iface, LPDWORD lpdwScanLine)
+{
+	IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+
+    DDHAL_GETSCANLINEDATA GetScan;
+
+	if (!(This->DirectDrawGlobal.lpDDCBtmp->HALDDMiscellaneous.dwFlags & DDHAL_CB32_GETSCANLINE)) 
+	{
+		return DDERR_NODRIVERSUPPORT;
+	}
+
+	GetScan.lpDD = &This->DirectDrawGlobal;
+    GetScan.ddRVal = DDERR_NOTPALETTIZED;
+
+	if (This->DirectDrawGlobal.lpDDCBtmp->HALDD.GetScanLine(&GetScan) != DDHAL_DRIVER_HANDLED)
+	{
+	   return DDERR_NODRIVERSUPPORT;
+	}
+
+	*lpdwScanLine = GetScan.ddRVal;
+	return  GetScan.ddRVal;
+}

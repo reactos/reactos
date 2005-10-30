@@ -81,7 +81,7 @@ HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIREC
 	CreateData.lplpSList = pLocal;	
 	
 	/* this is the call we were waiting for */
-	if(CreateData.CreateSurface(&CreateData) == DDHAL_DRIVER_NOTHANDLED)
+	if(This->owner->DirectDrawGlobal.lpDDCBtmp->HALDD.CreateSurface(&CreateData) == DDHAL_DRIVER_NOTHANDLED)
 		return DDERR_INVALIDPARAMS;
 	
 	if(CreateData.ddRVal != DD_OK)
