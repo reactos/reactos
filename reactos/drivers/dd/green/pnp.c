@@ -35,7 +35,7 @@ GreenAddDevice(
 
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT1("Status = %08x\n", Status);
+		DPRINT1("Status = %08lx\n", Status);
 		return Status;
 	}
 
@@ -47,7 +47,7 @@ GreenAddDevice(
 	if (!NT_SUCCESS(Status))
 	{
 		IoDeleteDevice(Fdo);
-		DPRINT1("Status = %08x\n", Status);
+		DPRINT1("Status = %08lx\n", Status);
 		return Status;
 	}
 	((PKEYBOARD_DEVICE_EXTENSION)DeviceExtension->Keyboard->DeviceExtension)->Green = Fdo;
@@ -57,7 +57,7 @@ GreenAddDevice(
 	{
 		IoDeleteDevice(DeviceExtension->Keyboard);
 		IoDeleteDevice(Fdo);
-		DPRINT1("Status = %08x\n", Status);
+		DPRINT1("Status = %08lx\n", Status);
 		return Status;
 	}
 	((PSCREEN_DEVICE_EXTENSION)DeviceExtension->Screen->DeviceExtension)->Green = Fdo;
@@ -90,6 +90,6 @@ GreenAddDevice(
 	Fdo->Flags |= DO_POWER_PAGABLE | DO_BUFFERED_IO;
 	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
 
-	DPRINT1("Status = %08x\n", Status);
+	DPRINT("Status = %08lx\n", Status);
 	return Status;
 }
