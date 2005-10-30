@@ -49,9 +49,8 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 		NULL, 
 		NULL, 
 		NULL ))
-	{
-		OutputDebugString(L"First DdQueryDirectDrawObject failed");
-		return 1;
+	{	
+		return DD_FALSE;
 	}
 	
 	This->HalInfo.vmiData.pvmList = HeapAlloc(GetProcessHeap(), 0, sizeof(VIDMEM) * This->HalInfo.vmiData.dwNumHeaps);
@@ -71,9 +70,8 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 		This->DirectDrawGlobal.lpdwFourCC, 
 		This->HalInfo.vmiData.pvmList 
 		))
-	{
-		OutputDebugString(L"Second DdQueryDirectDrawObject failed");
-		return 1;
+	{		
+		return DD_FALSE;
 	}
 		
 	/* Copy HalInfo to DirectDrawGlobal (Not complete)*/
@@ -277,12 +275,7 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 	DriverInfo.dwExpectedSize = sizeof(DDPIXELFORMAT);
 	This->HalInfo.GetDriverInfo( &DriverInfo);
 	
-	
-	
-	/* Setup some info from the callbacks we got  */
-
-	/* FIXME do more callbacks and fill the gpl struct */
-
+	/* Setup some info from the callbacks we got  */	
 	DDHAL_GETAVAILDRIVERMEMORYDATA  mem;
 	mem.lpDD = &This->DirectDrawGlobal;
 	
@@ -290,9 +283,8 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 
 	This->DirectDrawGlobal.ddCaps.dwVidMemFree = mem.dwFree;
 	This->DirectDrawGlobal.ddCaps.dwVidMemTotal = mem.dwTotal;
-		    
-	/* Now all setup for HAL is done and we hopply do not have forget anything */
-
+	
+	/* Now all setup for HAL is done */
 	return DD_OK;
 }
 
