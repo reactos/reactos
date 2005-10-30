@@ -108,7 +108,7 @@ void GetBasicInfo(OSVERSIONINFOEX osvi, char * HostName, char * OSName, char * V
 }
 int main (int argc, char *argv[])
 {
-	DWORD Operations;
+	DWORD Operations = 0;
 	INT i = 0;
 	OSVERSIONINFOEX osvi;
 	
