@@ -24,10 +24,10 @@ HRESULT Hal_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rDest,
 	DDHAL_BLTDATA BltData;
 	BltData.lpDD = &This->owner->DirectDrawGlobal;
 	BltData.dwFlags = dwFlags;
-	BltData.lpDDDestSurface = This->local;
+	BltData.lpDDDestSurface = &This->Local;
     if(rDest) BltData.rDest = *(RECTL*)rDest;
     if(rSrc) BltData.rSrc = *(RECTL*)rSrc;
-    if(That) BltData.lpDDSrcSurface = That->local;
+    if(That) BltData.lpDDSrcSurface = &That->Local;
 	if(lpbltfx) BltData.bltFX = *lpbltfx;
 
 	if (This->owner->DirectDrawGlobal.lpDDCBtmp->HALDDSurface.Blt(&BltData) != DDHAL_DRIVER_HANDLED)
@@ -37,4 +37,3 @@ HRESULT Hal_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rDest,
 	
 	return BltData.ddRVal;
 }
-
