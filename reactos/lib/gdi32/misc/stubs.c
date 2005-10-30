@@ -1855,18 +1855,6 @@ GdiAddGlsBounds(HDC hdc,LPRECT prc)
  */
 BOOL 
 STDCALL
-GdiAlphaBlend(HDC hdcDst,LONG DstX,LONG DstY,LONG DstCx,LONG DstCy,HDC hdcSrc,LONG SrcX,LONG SrcY,LONG SrcCx,LONG SrcCy,BLENDFUNCTION BlendFunction)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL 
-STDCALL
 GdiArtificialDecrementDriver(LPWSTR pDriverName,BOOL unknown)
 {
 	UNIMPLEMENTED;

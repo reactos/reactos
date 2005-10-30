@@ -248,7 +248,7 @@ FrameRgn@20=NtGdiFrameRgn@20
 GdiAddFontResourceW@12
 GdiAddGlsBounds@8
 GdiAddGlsRecord@16
-GdiAlphaBlend@44
+GdiAlphaBlend@44=NtGdiAlphaBlend@44
 GdiArtificialDecrementDriver@8
 GdiCleanCacheDC@4
 GdiComment@12
