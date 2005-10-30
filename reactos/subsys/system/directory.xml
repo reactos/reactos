@@ -17,6 +17,9 @@
 <directory name="explorer">
 	<xi:include href="explorer/explorer.xml" />
 </directory>
+<directory name="gettype">
+	<xi:include href="gettype/gettype.xml" />
+</directory>
 <directory name="hostname">
 	<xi:include href="hostname/hostname.xml" />
 </directory>
