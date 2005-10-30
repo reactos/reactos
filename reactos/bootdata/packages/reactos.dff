@@ -178,6 +178,7 @@ subsys\system\format\format.exe         1
 subsys\system\ibrowser\ibrowser.exe     1
 subsys\system\msiexec\msiexec.exe       1
 subsys\system\notepad\notepad.exe       1
+subsys\system\gettype\gettype.exe       1
 subsys\system\regedit\regedit.exe       4
 subsys\system\regedit\clb\clb.dll       1
 subsys\system\regsvr32\regsvr32.exe     1
