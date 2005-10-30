@@ -13,7 +13,6 @@
 
 HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIRECTDRAW pDD, LPDDSURFACEDESC2 pDDSD)
 {
-	DX_STUB;
     IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
 
 	if (This->owner)
