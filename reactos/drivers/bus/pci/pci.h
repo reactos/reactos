@@ -68,6 +68,8 @@ typedef struct _PDO_DEVICE_EXTENSION
   UNICODE_STRING DeviceDescription;
   // Textual description of device location
   UNICODE_STRING DeviceLocation;
+  // Number of interfaces references
+  LONG References;
 } PDO_DEVICE_EXTENSION, *PPDO_DEVICE_EXTENSION;
 
 /* Functional Device Object device extension for the PCI driver device object */

@@ -370,12 +370,12 @@ FdoStartDevice(
   AllocatedResources = IoGetCurrentIrpStackLocation(Irp)->Parameters.StartDevice.AllocatedResources;
   if (!AllocatedResources)
   {
-    DPRINT("PCI: No allocated resources sent to driver\n");
+    DPRINT("No allocated resources sent to driver\n");
     return STATUS_INSUFFICIENT_RESOURCES;
   }
   if (AllocatedResources->Count < 1)
   {
-    DPRINT("PCI: Not enough allocated resources sent to driver\n");
+    DPRINT("Not enough allocated resources sent to driver\n");
     return STATUS_INSUFFICIENT_RESOURCES;
   }
   if (AllocatedResources->List[0].PartialResourceList.Version != 1
@@ -394,17 +394,17 @@ FdoStartDevice(
         if (FoundBusNumber || ResourceDescriptor->u.BusNumber.Length != 1)
           return STATUS_INVALID_PARAMETER;
         DeviceExtension->BusNumber = ResourceDescriptor->u.BusNumber.Start;
-        DPRINT("PCI: Found bus number resource: %lu\n", DeviceExtension->BusNumber);
+        DPRINT("Found bus number resource: %lu\n", DeviceExtension->BusNumber);
         FoundBusNumber = TRUE;
         break;
       }
       default:
-        DPRINT1("PCI: Unknown resource descriptor type 0x%x\n", ResourceDescriptor->Type);
+        DPRINT1("Unknown resource descriptor type 0x%x\n", ResourceDescriptor->Type);
     }
   }
   if (!FoundBusNumber)
   {
-    DPRINT("PCI: All required resources were not found in allocated resources list\n");
+    DPRINT("Some required resources were not found in allocated resources list\n");
     return STATUS_INSUFFICIENT_RESOURCES;
   }
 
@@ -519,7 +519,7 @@ FdoPnpControl(
     break;
 #endif
   default:
-    DPRINT("Unknown IOCTL 0x%X\n", IrpSp->MinorFunction);
+    DPRINT1("Unknown IOCTL 0x%lx\n", IrpSp->MinorFunction);
 
     /*
      * Do NOT complete the IRP as it will be processed by the lower

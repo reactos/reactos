@@ -828,31 +828,200 @@ PdoQueryResources(
 }
 
 
+static VOID NTAPI
+InterfaceReference(
+  IN PVOID Context)
+{
+  PPDO_DEVICE_EXTENSION DeviceExtension;
+
+  DPRINT("InterfaceReference(%p)\n", Context);
+
+  DeviceExtension = (PPDO_DEVICE_EXTENSION)((PDEVICE_OBJECT)Context)->DeviceExtension;
+  InterlockedIncrement(&DeviceExtension->References);
+}
+
+
+static VOID NTAPI
+InterfaceDereference(
+  IN PVOID Context)
+{
+  PPDO_DEVICE_EXTENSION DeviceExtension;
+
+  DPRINT("InterfaceDereference(%p)\n", Context);
+
+  DeviceExtension = (PPDO_DEVICE_EXTENSION)((PDEVICE_OBJECT)Context)->DeviceExtension;
+  InterlockedDecrement(&DeviceExtension->References);
+}
+
+
+static BOOLEAN NTAPI
+InterfaceBusTranslateBusAddress(
+  IN PVOID Context,
+  IN PHYSICAL_ADDRESS BusAddress,
+  IN ULONG Length,
+  IN OUT PULONG AddressSpace,
+  OUT PPHYSICAL_ADDRESS TranslatedAddress)
+{
+  PPDO_DEVICE_EXTENSION DeviceExtension;
+  PFDO_DEVICE_EXTENSION FdoDeviceExtension;
+
+  DPRINT("InterfaceBusTranslateBusAddress(%p %p 0x%lx %p %p)\n",
+    Context, BusAddress, Length, AddressSpace, TranslatedAddress);
+
+  DeviceExtension = (PPDO_DEVICE_EXTENSION)((PDEVICE_OBJECT)Context)->DeviceExtension;
+  FdoDeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceExtension->Fdo->DeviceExtension;
+
+  return HalTranslateBusAddress(
+    PCIBus, FdoDeviceExtension->BusNumber,
+    BusAddress, AddressSpace, TranslatedAddress);
+}
+
+
+static PDMA_ADAPTER NTAPI
+InterfaceBusGetDmaAdapter(
+  IN PVOID Context,
+  IN PDEVICE_DESCRIPTION DeviceDescription,
+  OUT PULONG NumberOfMapRegisters)
+{
+  DPRINT("InterfaceBusGetDmaAdapter(%p %p %p)\n",
+    Context, DeviceDescription, NumberOfMapRegisters);
+  return (PDMA_ADAPTER)HalGetAdapter(DeviceDescription, NumberOfMapRegisters);
+}
+
+
+static ULONG NTAPI
+InterfaceBusSetBusData(
+  IN PVOID Context,
+  IN ULONG DataType,
+  IN PVOID Buffer,
+  IN ULONG Offset,
+  IN ULONG Length)
+{
+  PPDO_DEVICE_EXTENSION DeviceExtension;
+  ULONG Size;
+
+  DPRINT("InterfaceBusSetBusData()\n",
+    Context, DataType, Buffer, Offset, Length);
+
+  if (DataType != PCI_WHICHSPACE_CONFIG)
+  {
+    DPRINT("Unknown DataType %lu\n", DataType);
+    return 0;
+  }
+
+  DeviceExtension = (PPDO_DEVICE_EXTENSION)((PDEVICE_OBJECT)Context)->DeviceExtension;
+
+  /* Get PCI configuration space */
+  Size = HalSetBusDataByOffset(PCIConfiguration,
+                              DeviceExtension->PciDevice->BusNumber,
+                              DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
+                              Buffer,
+                              Offset,
+                              Length);
+  return Size;
+}
+
+
+static ULONG NTAPI
+InterfaceBusGetBusData(
+  IN PVOID Context,
+  IN ULONG DataType,
+  IN PVOID Buffer,
+  IN ULONG Offset,
+  IN ULONG Length)
+{
+  PPDO_DEVICE_EXTENSION DeviceExtension;
+  ULONG Size;
+
+  DPRINT("InterfaceBusGetBusData() called\n",
+    Context, DataType, Buffer, Offset, Length);
+
+  if (DataType != PCI_WHICHSPACE_CONFIG)
+  {
+    DPRINT("Unknown DataType %lu\n", DataType);
+    return 0;
+  }
+
+  DeviceExtension = (PPDO_DEVICE_EXTENSION)((PDEVICE_OBJECT)Context)->DeviceExtension;
+
+  /* Get PCI configuration space */
+  Size = HalGetBusDataByOffset(PCIConfiguration,
+                              DeviceExtension->PciDevice->BusNumber,
+                              DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
+                              Buffer,
+                              Offset,
+                              Length);
+  return Size;
+}
+
+
+static NTSTATUS
+PdoQueryInterface(
+  IN PDEVICE_OBJECT DeviceObject,
+  IN PIRP Irp,
+  PIO_STACK_LOCATION IrpSp)
+{
+  NTSTATUS Status;
+
+  if (RtlCompareMemory(IrpSp->Parameters.QueryInterface.InterfaceType,
+    &GUID_BUS_INTERFACE_STANDARD, sizeof(GUID)) == sizeof(GUID))
+  {
+    /* BUS_INTERFACE STANDARD */
+    if (IrpSp->Parameters.QueryInterface.Version < 1)
+      Status = STATUS_NOT_SUPPORTED;
+    else if (IrpSp->Parameters.QueryInterface.Size < sizeof(BUS_INTERFACE_STANDARD))
+      Status = STATUS_BUFFER_TOO_SMALL;
+    else
+    {
+      PBUS_INTERFACE_STANDARD BusInterface;
+      BusInterface = (PBUS_INTERFACE_STANDARD)IrpSp->Parameters.QueryInterface.Interface;
+      BusInterface->Size = sizeof(BUS_INTERFACE_STANDARD);
+      BusInterface->Version = 1;
+      BusInterface->Context = DeviceObject;
+      BusInterface->InterfaceReference = InterfaceReference;
+      BusInterface->InterfaceDereference = InterfaceDereference;
+      BusInterface->TranslateBusAddress = InterfaceBusTranslateBusAddress;
+      BusInterface->GetDmaAdapter = InterfaceBusGetDmaAdapter;
+      BusInterface->SetBusData = InterfaceBusSetBusData;
+      BusInterface->GetBusData = InterfaceBusGetBusData;
+      Status = STATUS_SUCCESS;
+    }
+  }
+  else
+  {
+    /* Not a supported interface */
+    return STATUS_NOT_SUPPORTED;
+  }
+
+  if (NT_SUCCESS(Status))
+  {
+    /* Add a reference for the returned interface */
+    PINTERFACE Interface;
+    Interface = (PINTERFACE)IrpSp->Parameters.QueryInterface.Interface;
+    Interface->InterfaceReference(Interface->Context);
+  }
+
+  return Status;
+}
+
+
 static NTSTATUS
 PdoReadConfig(
   IN PDEVICE_OBJECT DeviceObject,
   IN PIRP Irp,
   PIO_STACK_LOCATION IrpSp)
 {
-  PPDO_DEVICE_EXTENSION DeviceExtension;
   ULONG Size;
 
-  DPRINT1("PdoReadConfig() called\n");
+  DPRINT("PdoReadConfig() called\n");
 
-  DeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
+  Size = InterfaceBusGetBusData(
+    DeviceObject,
+    IrpSp->Parameters.ReadWriteConfig.WhichSpace,
+    IrpSp->Parameters.ReadWriteConfig.Buffer,
+    IrpSp->Parameters.ReadWriteConfig.Offset,
+    IrpSp->Parameters.ReadWriteConfig.Length);
 
-#if 0
-  if (IrpSp->Parameters.ReadWriteConfig.WhichSpace != PCI_WHICHSPACE_CONFIG)
-    return STATUS_NOT_SUPPORTED;
-#endif
-
-  /* Get PCI configuration space */
-  Size= HalGetBusDataByOffset(PCIConfiguration,
-                              DeviceExtension->PciDevice->BusNumber,
-                              DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
-                              IrpSp->Parameters.ReadWriteConfig.Buffer,
-                              IrpSp->Parameters.ReadWriteConfig.Offset,
-                              IrpSp->Parameters.ReadWriteConfig.Length);
   if (Size != IrpSp->Parameters.ReadWriteConfig.Length)
   {
     DPRINT1("Size %lu  Length %lu\n", Size, IrpSp->Parameters.ReadWriteConfig.Length);
@@ -872,25 +1041,18 @@ PdoWriteConfig(
   IN PIRP Irp,
   PIO_STACK_LOCATION IrpSp)
 {
-  PPDO_DEVICE_EXTENSION DeviceExtension;
   ULONG Size;
 
   DPRINT1("PdoWriteConfig() called\n");
 
-  DeviceExtension = (PPDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-
-#if 0
-  if (IrpSp->Parameters.ReadWriteConfig.WhichSpace != PCI_WHICHSPACE_CONFIG)
-    return STATUS_NOT_SUPPORTED;
-#endif
-
   /* Get PCI configuration space */
-  Size= HalSetBusDataByOffset(PCIConfiguration,
-                              DeviceExtension->PciDevice->BusNumber,
-                              DeviceExtension->PciDevice->SlotNumber.u.AsULONG,
-                              IrpSp->Parameters.ReadWriteConfig.Buffer,
-                              IrpSp->Parameters.ReadWriteConfig.Offset,
-                              IrpSp->Parameters.ReadWriteConfig.Length);
+  Size = InterfaceBusSetBusData(
+    DeviceObject,
+    IrpSp->Parameters.ReadWriteConfig.WhichSpace,
+    IrpSp->Parameters.ReadWriteConfig.Buffer,
+    IrpSp->Parameters.ReadWriteConfig.Offset,
+    IrpSp->Parameters.ReadWriteConfig.Length);
+
   if (Size != IrpSp->Parameters.ReadWriteConfig.Length)
   {
     DPRINT1("Size %lu  Length %lu\n", Size, IrpSp->Parameters.ReadWriteConfig.Length);
@@ -1019,18 +1181,23 @@ PdoPnpControl(
     Status = STATUS_SUCCESS;
     break;
 
+  case IRP_MN_QUERY_INTERFACE:
+    DPRINT("IRP_MN_QUERY_INTERFACE received\n");
+    Status = PdoQueryInterface(DeviceObject, Irp, IrpSp);
+    break;
+
   case IRP_MN_READ_CONFIG:
-    DPRINT1("IRP_MN_READ_CONFIG received\n");
+    DPRINT("IRP_MN_READ_CONFIG received\n");
     Status = PdoReadConfig(DeviceObject, Irp, IrpSp);
     break;
 
   case IRP_MN_WRITE_CONFIG:
-    DPRINT1("IRP_MN_WRITE_CONFIG received\n");
+    DPRINT("IRP_MN_WRITE_CONFIG received\n");
     Status = PdoWriteConfig(DeviceObject, Irp, IrpSp);
     break;
 
   default:
-    DPRINT("Unknown IOCTL 0x%X\n", IrpSp->MinorFunction);
+    DPRINT1("Unknown IOCTL 0x%lx\n", IrpSp->MinorFunction);
     break;
   }
 
