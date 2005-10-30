@@ -26,17 +26,20 @@ HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIREC
 
 	This->owner = (IDirectDrawImpl*)pDD;
    
-	/* can the driver create the surface */
-	DDHAL_CANCREATESURFACEDATA CanCreateData;
-	memset(&CanCreateData, 0, sizeof(DDHAL_CANCREATESURFACEDATA));
-	CanCreateData.lpDD = &This->owner->DirectDrawGlobal; 
-	CanCreateData.lpDDSurfaceDesc = (DDSURFACEDESC*)pDDSD;
+	if (This->owner->DirectDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_CANCREATESURFACE)
+	{
+		/* can the driver create the surface */
+		DDHAL_CANCREATESURFACEDATA CanCreateData;
+		memset(&CanCreateData, 0, sizeof(DDHAL_CANCREATESURFACEDATA));
+		CanCreateData.lpDD = &This->owner->DirectDrawGlobal; 
+		CanCreateData.lpDDSurfaceDesc = (DDSURFACEDESC*)pDDSD;
+			
+		if (This->owner->DirectDrawGlobal.lpDDCBtmp->HALDD.CanCreateSurface(&CanCreateData) == DDHAL_DRIVER_NOTHANDLED)
+			return DDERR_INVALIDPARAMS;
 		
-	if (This->owner->DirectDrawGlobal.lpDDCBtmp->HALDD.CanCreateSurface(&CanCreateData) == DDHAL_DRIVER_NOTHANDLED)
-        return DDERR_INVALIDPARAMS;
-	
-	if(CanCreateData.ddRVal != DD_OK)
-		return CanCreateData.ddRVal;
+		if(CanCreateData.ddRVal != DD_OK)
+			return CanCreateData.ddRVal;
+	}
 
 	/* down here we got a crach */
 
@@ -81,6 +84,7 @@ HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIREC
 	CreateData.lplpSList = pLocal;	
 	
 	/* this is the call we were waiting for */
+	MessageBox(0,0,0,0);
 	if(This->owner->DirectDrawGlobal.lpDDCBtmp->HALDD.CreateSurface(&CreateData) == DDHAL_DRIVER_NOTHANDLED)
 		return DDERR_INVALIDPARAMS;
 	
