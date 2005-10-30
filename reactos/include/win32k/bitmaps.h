@@ -55,6 +55,21 @@ HBITMAP FASTCALL IntCreateCompatibleBitmap(PDC Dc, INT Width, INT Height);
 /*  User Entry Points  */
 BOOL
 STDCALL
+NtGdiAlphaBlend(
+	HDC  hDCDest,
+	INT  XOriginDest,
+	INT  YOriginDest,
+	INT  WidthDest,
+	INT  HeightDest,
+	HDC  hDCSrc,
+	INT  XOriginSrc,
+	INT  YOriginSrc,
+	INT  WidthSrc,
+	INT  HeightSrc,
+	BLENDFUNCTION  BlendFunc);
+
+BOOL
+STDCALL
 NtGdiBitBlt (
 	HDC	hDCDest,
 	INT	XDest,
