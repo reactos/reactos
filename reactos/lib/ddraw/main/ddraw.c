@@ -90,54 +90,11 @@ HRESULT WINAPI Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidt
                                             dwBPP,  dwRefreshRate,  dwFlags)) == DD_OK)
 	{
 		return ret;
-	}
+	}	
 
-	if((ret = Hel_DirectDraw_SetDisplayMode(iface,  dwWidth,  dwHeight, 
-                                            dwBPP,  dwRefreshRate,  dwFlags)) == DD_OK)
-	{
-		return ret;
-	}
+	ret = Hel_DirectDraw_SetDisplayMode(iface,  dwWidth,  dwHeight, dwBPP,  dwRefreshRate,  dwFlags);
 
-	return DDERR_NOTINITIALIZED; 
-
-    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-
-	// this only for exclusive mode
-	if(!(This->cooperative_level & DDSCL_EXCLUSIVE))
-   		return DDERR_NOEXCLUSIVEMODE;
-
-	// change the resolution using normal WinAPI function
-	DEVMODE mode;
-	mode.dmSize = sizeof(mode);
-	mode.dmPelsWidth = dwWidth;
-	mode.dmPelsHeight = dwHeight;
-	mode.dmBitsPerPel = dwBPP;
-	mode.dmDisplayFrequency = dwRefreshRate;
-	mode.dmFields = 0;
-
-	if(dwWidth)
-		mode.dmFields |= DM_PELSWIDTH;
-	if(dwHeight)
-		mode.dmFields |= DM_PELSHEIGHT;
-	if(dwBPP)
-		mode.dmFields |= DM_BITSPERPEL;
-	if(dwRefreshRate)
-		mode.dmFields |= DM_DISPLAYFREQUENCY;
-
-	if (ChangeDisplaySettings(&mode, CDS_FULLSCREEN) != DISP_CHANGE_SUCCESSFUL)
-		return DDERR_UNSUPPORTEDMODE;
-	
-	// TODO: reactivate ddraw object, maximize window, set it in foreground 
-	// and set excluive mode (if implemented by the driver)
-
-	if(dwWidth)
-		This->Height = dwWidth;
-	if(dwHeight)
-		This->Width = dwHeight;
-	if(dwBPP)
-		This->Bpp = dwBPP;
-
-	return DD_OK;
+	return ret; 
 }
 
 ULONG WINAPI Main_DirectDraw_AddRef (LPDIRECTDRAW7 iface) 
