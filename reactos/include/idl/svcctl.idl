@@ -9,7 +9,9 @@
 #define BOOL unsigned long
 #define SC_HANDLE unsigned int
 #define SC_LOCK unsigned int
+#define LPSTR char*
 #define LPCSTR char*
+#define LPWSTR wchar_t*
 #define LPCWSTR wchar_t*
 #define LPDWORD unsigned long*
 
@@ -125,6 +127,14 @@ cpp_quote("#endif")
                              [in, string] LPCWSTR lpServiceName,
                              [in] DWORD dwDesiredAccess,
                              [out] SC_HANDLE *hScm);
+
+
+  /* Function 20 */
+  DWORD ScmrGetServiceDisplayNameW([in] handle_t BindingHandle,
+                                   [in] SC_HANDLE hSCManager,
+                                   [in, string, ref] LPCWSTR lpServiceName,
+                                   [out, size_is(*lpcchBuffer), unique] LPWSTR lpDisplayName,
+                                   [in, out, ref] LPDWORD lpcchBuffer);
 
 
   /* Function 27 */

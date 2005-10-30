@@ -40,6 +40,8 @@ int WINAPI RegisterServicesProcess(DWORD ServicesProcessId);
 #define PIPE_BUFSIZE 1024
 #define PIPE_TIMEOUT 1000
 
+BOOL ScmShutdown = FALSE;
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -286,6 +288,23 @@ AcquireLoadDriverPrivilege(VOID)
 }
 
 
+BOOL WINAPI
+ShutdownHandlerRoutine(DWORD dwCtrlType)
+{
+    DPRINT1("ShutdownHandlerRoutine() called\n");
+
+    if (dwCtrlType == CTRL_SHUTDOWN_EVENT)
+    {
+        DPRINT1("Shutdown event received!\n");
+        ScmShutdown = TRUE;
+
+        /* FIXME: Shut all services down */
+    }
+
+    return TRUE;
+}
+
+
 int STDCALL
 WinMain(HINSTANCE hInstance,
         HINSTANCE hPrevInstance,
@@ -330,17 +349,15 @@ WinMain(HINSTANCE hInstance,
     ScmStartRpcServer();
 
     /* Register service process with CSRSS */
-//    RegisterServicesProcess(GetCurrentProcessId());
+    RegisterServicesProcess(GetCurrentProcessId());
 
     DPRINT("SERVICES: Initialized.\n");
 
     /* Signal start event */
     SetEvent(hScmStartEvent);
 
-#if 0
-    /* FIXME: register event handler (used for system shutdown) */
-    SetConsoleCtrlHandler(...);
-#endif
+    /* Register event handler (used for system shutdown) */
+    SetConsoleCtrlHandler(ShutdownHandlerRoutine, TRUE);
 
     /* Start auto-start services */
     ScmAutoStartServices();

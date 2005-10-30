@@ -13,6 +13,7 @@ typedef struct _SERVICE
 {
     LIST_ENTRY ServiceListEntry;
     LPWSTR lpServiceName;
+    LPWSTR lpDisplayName;
     UNICODE_STRING ServiceGroup;
 
     SERVICE_STATUS Status;
@@ -32,6 +33,13 @@ typedef struct _SERVICE
 } SERVICE, *PSERVICE;
 
 
+/* VARIABLES ***************************************************************/
+
+extern BOOL ScmShutdown;
+
+
+/* FUNCTIONS ***************************************************************/
+
 /* config.c */
 
 DWORD ScmWriteDependencies(HKEY hServiceKey,
@@ -46,6 +54,7 @@ VOID ScmGetBootAndSystemDriverState(VOID);
 VOID ScmAutoStartServices(VOID);
 
 PSERVICE ScmGetServiceEntryByName(LPWSTR lpServiceName);
+PSERVICE ScmGetServiceEntryByDisplayName(LPWSTR lpDisplayName);
 DWORD ScmCreateNewServiceRecord(LPWSTR lpServiceName,
                                 PSERVICE *lpServiceRecord);
 DWORD ScmMarkServiceForDelete(PSERVICE pService);

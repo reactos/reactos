@@ -566,19 +566,33 @@ GetServiceDisplayNameA(
 /**********************************************************************
  *  GetServiceDisplayNameW
  *
- * @unimplemented
+ * @implemented
  */
-BOOL
-STDCALL
-GetServiceDisplayNameW(
-    SC_HANDLE   hSCManager,
-    LPCWSTR     lpServiceName,
-    LPWSTR      lpDisplayName,
-    LPDWORD     lpcchBuffer)
+BOOL STDCALL
+GetServiceDisplayNameW(SC_HANDLE hSCManager,
+                       LPCWSTR lpServiceName,
+                       LPWSTR lpDisplayName,
+                       LPDWORD lpcchBuffer)
 {
-    DPRINT1("GetServiceDisplayNameW is unimplemented\n");
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    DWORD dwError;
+
+    DPRINT("GetServiceDisplayNameW() called\n");
+
+    HandleBind();
+
+    dwError = ScmrGetServiceDisplayNameW(BindingHandle,
+                                         (unsigned int)hSCManager,
+                                         (LPWSTR)lpServiceName,
+                                         lpDisplayName,
+                                         lpcchBuffer);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("ScmrGetServiceDisplayNameW() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 
@@ -606,14 +620,33 @@ GetServiceKeyNameA(
  *
  * @unimplemented
  */
-BOOL
-STDCALL
-GetServiceKeyNameW(
-    SC_HANDLE   hSCManager,
-    LPCWSTR     lpDisplayName,
-    LPWSTR      lpServiceName,
-    LPDWORD     lpcchBuffer)
+BOOL STDCALL
+GetServiceKeyNameW(SC_HANDLE hSCManager,
+                   LPCWSTR lpDisplayName,
+                   LPWSTR lpServiceName,
+                   LPDWORD lpcchBuffer)
 {
+#if 0
+    DWORD dwError;
+
+    DPRINT("GetServiceKeyNameW() called\n");
+
+    HandleBind();
+
+    dwError = ScmrGetServiceKeyNameW(BindingHandle,
+                                     (unsigned int)hSCManager,
+                                     (LPWSTR)lpDisplayName,
+                                     lpServiceName,
+                                     lpcchBuffer);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("ScmrGetServiceKeyNameW() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
+
+    return TRUE;
+#endif
     DPRINT1("GetServiceKeyNameW is unimplemented\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;

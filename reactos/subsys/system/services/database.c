@@ -84,6 +84,35 @@ ScmGetServiceEntryByName(LPWSTR lpServiceName)
 }
 
 
+PSERVICE
+ScmGetServiceEntryByDisplayName(LPWSTR lpDisplayName)
+{
+    PLIST_ENTRY ServiceEntry;
+    PSERVICE CurrentService;
+
+    DPRINT("ScmGetServiceEntryByDisplayName() called\n");
+
+    ServiceEntry = ServiceListHead.Flink;
+    while (ServiceEntry != &ServiceListHead)
+    {
+        CurrentService = CONTAINING_RECORD(ServiceEntry,
+                                           SERVICE,
+                                           ServiceListEntry);
+        if (_wcsicmp(CurrentService->lpDisplayName, lpDisplayName) == 0)
+        {
+            DPRINT("Found service: '%S'\n", CurrentService->lpDisplayName);
+            return CurrentService;
+        }
+
+        ServiceEntry = ServiceEntry->Flink;
+    }
+
+    DPRINT("Couldn't find a matching service\n");
+
+    return NULL;
+}
+
+
 static NTSTATUS STDCALL
 CreateGroupOrderListRoutine(PWSTR ValueName,
                             ULONG ValueType,
@@ -204,6 +233,7 @@ CreateServiceListEntry(LPWSTR lpServiceName)
     /* Copy service name */
     wcscpy(Service->szServiceName, lpServiceName);
     Service->lpServiceName = Service->szServiceName;
+    Service->lpDisplayName = Service->lpServiceName;
 
     /* Get service data */
     RtlZeroMemory(&QueryTable,
@@ -284,6 +314,7 @@ ScmCreateNewServiceRecord(LPWSTR lpServiceName,
     /* Copy service name */
     wcscpy(lpService->szServiceName, lpServiceName);
     lpService->lpServiceName = lpService->szServiceName;
+    lpService->lpDisplayName = lpService->lpServiceName;
 
     /* Append service entry */
     InsertTailList(&ServiceListHead,
