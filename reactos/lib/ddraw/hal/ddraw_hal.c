@@ -15,7 +15,6 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 {
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
  
-
 	/* point to it self */
 	This->DirectDrawGlobal.lp16DD = &This->DirectDrawGlobal;
 
@@ -29,7 +28,6 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 	This->DirectDrawGlobal.lpD3DHALCallbacks = (ULONG_PTR)HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY, sizeof(D3DHAL_CALLBACKS));	
 	This->DirectDrawGlobal.lpD3DGlobalDriverData = (ULONG_PTR)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(D3DHAL_GLOBALDRIVERDATA));			
 	
-
 	/* Fill in some info */
 	This->HalInfo.lpD3DGlobalDriverData = This->DirectDrawGlobal.lpD3DGlobalDriverData;
 	This->HalInfo.lpD3DHALCallbacks = This->DirectDrawGlobal.lpD3DHALCallbacks;
@@ -37,8 +35,6 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 	This->HalInfo.lpDDExeBufCallbacks = &This->DirectDrawGlobal.lpDDCBtmp->HALDDExeBuf;
 	This->HalInfo.lpDDPaletteCallbacks = &This->DirectDrawGlobal.lpDDCBtmp->HALDDPalette;
 	This->HalInfo.lpDDSurfaceCallbacks = &This->DirectDrawGlobal.lpDDCBtmp->HALDDSurface;
-
-	/* FIXME The insate is not right we need the info that the three NULL return */
 	
 	/* query all kinds of infos from the driver */
 	if(!DdQueryDirectDrawObject (
@@ -57,15 +53,9 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 		OutputDebugString(L"First DdQueryDirectDrawObject failed");
 		return 1;
 	}
-
-	/* FIXME The insate is not right we need the info that the three NULL return and use it here*/
-
-	/* Fixme shall we selected the pixel type before we call the DdQueryDirectDrawObject second time 
-	  and fill in more info ?? */
-
+	
 	This->HalInfo.vmiData.pvmList = HeapAlloc(GetProcessHeap(), 0, sizeof(VIDMEM) * This->HalInfo.vmiData.dwNumHeaps);
-	This->DirectDrawGlobal.lpdwFourCC = HeapAlloc(GetProcessHeap(), 0, sizeof(DWORD) * This->HalInfo.ddCaps.dwNumFourCCCodes);
-	This->DirectDrawGlobal.lpZPixelFormats = HeapAlloc(GetProcessHeap(), 0, sizeof(DDPIXELFORMAT) * This->DirectDrawGlobal.dwNumZPixelFormats);
+	This->DirectDrawGlobal.lpdwFourCC = HeapAlloc(GetProcessHeap(), 0, sizeof(DWORD) * This->HalInfo.ddCaps.dwNumFourCCCodes);	
 	((LPD3DHAL_GLOBALDRIVERDATA)This->DirectDrawGlobal.lpD3DGlobalDriverData)->lpTextureFormats = HeapAlloc(GetProcessHeap(), 0, sizeof(DDSURFACEDESC) * ((LPD3DHAL_GLOBALDRIVERDATA)This->DirectDrawGlobal.lpD3DGlobalDriverData)->dwNumTextureFormats);
 
 	if(!DdQueryDirectDrawObject (
@@ -91,23 +81,11 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 	RtlCopyMemory(&This->DirectDrawGlobal.vmiData,&This->HalInfo.vmiData,sizeof(VIDMEMINFO));
 	RtlCopyMemory(&This->DirectDrawGlobal.ddCaps,&This->HalInfo.ddCaps,sizeof(DDCORECAPS));
 	This->DirectDrawGlobal.dwMonitorFrequency = This->HalInfo.dwMonitorFrequency;
-        
-    /* have not check where it should go into yet
-       This->HalInfo.GetDriverInfo datatype LPDDHAL_GETDRIVERINFO	
-    */
-
+            
     This->DirectDrawGlobal.dwModeIndex = This->HalInfo.dwModeIndex;
-
-	/* have not check where it should go into yet
-	   This->HalInfo.lpdwFourCC datatype LPDWORD			
-     */
-
     This->DirectDrawGlobal.dwNumModes =  This->HalInfo.dwNumModes;
     This->DirectDrawGlobal.lpModeInfo =  This->HalInfo.lpModeInfo;
 
-	/* have not check where it should go into yet
-	   This->HalInfo.dwFlags data type DWORD
-	*/
 
 	/* Unsure which of these two for lpPDevice 
       This->DirectDrawGlobal.dwPDevice = This->HalInfo.lpPDevice;
@@ -115,12 +93,8 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 	*/
 
     This->DirectDrawGlobal.hInstance = This->HalInfo.hInstance;    
-    
-	/* have not check where it should go into yet
-       This->lpD3DGlobalDriverData datatype ULONG_PTR
-       This->lpD3DHALCallbacks datatype  ULONG_PTR
-    */ 
-	 RtlCopyMemory(&This->DirectDrawGlobal.lpDDCBtmp->HALDDExeBuf,&This->HalInfo.lpDDExeBufCallbacks,sizeof(DDHAL_DDEXEBUFCALLBACKS));
+     
+	RtlCopyMemory(&This->DirectDrawGlobal.lpDDCBtmp->HALDDExeBuf,&This->HalInfo.lpDDExeBufCallbacks,sizeof(DDHAL_DDEXEBUFCALLBACKS));
 
 	
 	 
@@ -297,7 +271,7 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 	
 
 	/* Get the ZPixelFormats */
-	This->DirectDrawGlobal.lpZPixelFormats = (LPDDPIXELFORMAT)HeapAlloc(GetProcessHeap(), 0, sizeof(DDPIXELFORMAT));	
+	This->DirectDrawGlobal.lpZPixelFormats = HeapAlloc(GetProcessHeap(), 0, sizeof(DDPIXELFORMAT) * This->DirectDrawGlobal.dwNumZPixelFormats);
 	DriverInfo.guidInfo = GUID_ZPixelFormats;
 	DriverInfo.lpvData = (PVOID)This->DirectDrawGlobal.lpZPixelFormats;
 	DriverInfo.dwExpectedSize = sizeof(DDPIXELFORMAT);
@@ -305,49 +279,18 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 	
 	
 	
-	 /* Setup some info from the callbacks we got  */
+	/* Setup some info from the callbacks we got  */
 
-	 /* FIXME do more callbacks and fill the gpl struct */
+	/* FIXME do more callbacks and fill the gpl struct */
 
-	 DDHAL_GETAVAILDRIVERMEMORYDATA  mem;
-	 mem.lpDD = &This->DirectDrawGlobal;
+	DDHAL_GETAVAILDRIVERMEMORYDATA  mem;
+	mem.lpDD = &This->DirectDrawGlobal;
 	
-	 This->DirectDrawGlobal.lpDDCBtmp->HALDDMiscellaneous.GetAvailDriverMemory(&mem); 
+	This->DirectDrawGlobal.lpDDCBtmp->HALDDMiscellaneous.GetAvailDriverMemory(&mem); 
 
-	 This->DirectDrawGlobal.ddCaps.dwVidMemFree = mem.dwFree;
-	 This->DirectDrawGlobal.ddCaps.dwVidMemTotal = mem.dwTotal;
-		
-
-
-     /* */
-	 /*  DWORD   dwIntRefCnt;
-
-	 
-        LPVOID  lpVtbl;
-        LPDDRAWI_DDRAWSURFACE_LCL  lpLcl;
-        LPDDRAWI_DDRAWSURFACE_INT  lpLink;
-       
-        } DDRAWI_DDRAWSURFACE_INT;
-     */
-
-	 /* Setting up some part for surface not ever thing are being fill in yet */
-	 This->DirectDrawGlobal.dsList = (LPDDRAWI_DDRAWSURFACE_INT)HeapAlloc(GetProcessHeap(), 0,
-		                              sizeof(DDRAWI_DDRAWSURFACE_INT));
-
-	 This->DirectDrawGlobal.dsList->lpLink = (LPDDRAWI_DDRAWSURFACE_INT) &This->DirectDrawGlobal.dsList;
-
-	 This->DirectDrawGlobal.dsList->lpLcl = (LPDDRAWI_DDRAWSURFACE_LCL)HeapAlloc(GetProcessHeap(), 0,
-		                              sizeof(DDRAWI_DDRAWSURFACE_LCL));
-
-	 This->DirectDrawGlobal.dsList->lpLcl->lpGbl = 
-		           (LPDDRAWI_DDRAWSURFACE_GBL)HeapAlloc(GetProcessHeap(), 0, sizeof(DDRAWI_DDRAWSURFACE_GBL));
-
-	 This->DirectDrawGlobal.dsList->lpLcl->lpGbl->lpDD  = &This->DirectDrawGlobal;
-
-	 
-
-
-
+	This->DirectDrawGlobal.ddCaps.dwVidMemFree = mem.dwFree;
+	This->DirectDrawGlobal.ddCaps.dwVidMemTotal = mem.dwTotal;
+		    
 	/* Now all setup for HAL is done and we hopply do not have forget anything */
 
 	return DD_OK;
