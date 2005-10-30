@@ -91,5 +91,6 @@ MSVCBackend::_gen_guid()
 std::string
 MSVCBackend::_gen_guid()
 {
+	return std::string();
 }
 #endif /* WIN32/Linux */
