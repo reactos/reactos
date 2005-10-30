@@ -31,3 +31,9 @@ HRESULT Hel_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscap
 {
 	DX_STUB;
 }
+
+
+HRESULT Hel_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7 iface, DWORD dwFlags,HANDLE h) 
+{
+	DX_STUB;
+}

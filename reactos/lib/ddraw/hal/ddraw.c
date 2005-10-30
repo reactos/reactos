@@ -369,11 +369,12 @@ HRESULT Hal_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscap
 	}
 
 	mem.lpDD = &This->DirectDrawGlobal;	
+	mem.ddRVal = DDERR_NOTPALETTIZED;
+
 	if (This->DirectDrawGlobal.lpDDCBtmp->HALDDMiscellaneous.GetAvailDriverMemory(&mem) != DDHAL_DRIVER_HANDLED)
 	{
 	   return DDERR_NODRIVERSUPPORT;
 	}
-
 
 	ddscaps->dwCaps = mem.DDSCaps.dwCaps;
 	ddscaps->dwCaps2 = mem.ddsCapsEx.dwCaps2;
@@ -381,6 +382,33 @@ HRESULT Hal_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscap
 	ddscaps->dwCaps4 = mem.ddsCapsEx.dwCaps4;
 	*total = mem.dwTotal;
 	*free = mem.dwFree;
-
+	
 	return mem.ddRVal;
+}
+
+HRESULT Hal_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7 iface, DWORD dwFlags,HANDLE h) 
+{
+
+	IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+
+	DDHAL_WAITFORVERTICALBLANKDATA WaitVectorData;
+
+	if (!(This->DirectDrawGlobal.lpDDCBtmp->HALDDMiscellaneous.dwFlags & DDHAL_CB32_WAITFORVERTICALBLANK)) 
+	{
+		return DDERR_NODRIVERSUPPORT;
+	}
+	  
+	WaitVectorData.lpDD = &This->DirectDrawGlobal;
+	WaitVectorData.dwFlags = dwFlags;
+	WaitVectorData.hEvent = (DWORD)h;
+	WaitVectorData.ddRVal = DDERR_NOTPALETTIZED;
+
+	if (This->DirectDrawGlobal.lpDDCBtmp->HALDD.WaitForVerticalBlank(&WaitVectorData) != DDHAL_DRIVER_HANDLED)
+	{
+	   return DDERR_NODRIVERSUPPORT;
+	}
+
+	return WaitVectorData.ddRVal;
+
+	return DD_OK;
 }

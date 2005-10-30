@@ -407,8 +407,16 @@ HRESULT WINAPI Main_DirectDraw_RestoreDisplayMode(LPDIRECTDRAW7 iface)
 HRESULT WINAPI Main_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7 iface, DWORD dwFlags,
 												   HANDLE h)
 {
-  
-   	DX_STUB;
+
+    DWORD ret;
+
+    if((ret = Hal_DirectDraw_WaitForVerticalBlank( iface,  dwFlags, h)) == DD_OK)
+		return ret;
+
+	if((ret = Hel_DirectDraw_WaitForVerticalBlank( iface,  dwFlags, h)) == DD_OK)
+		return ret;
+
+	return DDERR_NOTINITIALIZED;   	
 }
 
 HRESULT WINAPI Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
@@ -416,7 +424,7 @@ HRESULT WINAPI Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS
 {	
 	DWORD ret;
 
-     if((ret = Hal_DirectDraw_GetAvailableVidMem (iface,ddscaps,total,free)) == DD_OK)
+    if((ret = Hal_DirectDraw_GetAvailableVidMem (iface,ddscaps,total,free)) == DD_OK)
 		return ret;
 
 	if((ret = Hel_DirectDraw_GetAvailableVidMem (iface,ddscaps,total,free)) == DD_OK)
