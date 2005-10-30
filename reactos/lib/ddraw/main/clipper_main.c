@@ -14,7 +14,7 @@
 ULONG WINAPI Main_DirectDrawClipper_Release(LPDIRECTDRAWCLIPPER iface) 
 {
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-    ULONG ref = InterlockedDecrement(&This->DirectDrawGlobal.dwRefCnt);
+    ULONG ref = InterlockedDecrement((PLONG)&This->DirectDrawGlobal.dwRefCnt);
     
     if (ref == 0)
 		HeapFree(GetProcessHeap(), 0, This);
