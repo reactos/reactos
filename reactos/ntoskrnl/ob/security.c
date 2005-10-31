@@ -253,4 +253,28 @@ NtSetSecurityObject(IN HANDLE Handle,
   return Status;
 }
 
+
+/*
+ * @unimplemented
+ */
+NTSTATUS STDCALL
+ObLogSecurityDescriptor(IN PSECURITY_DESCRIPTOR InputSecurityDescriptor,
+                        OUT PSECURITY_DESCRIPTOR *OutputSecurityDescriptor,
+                        IN ULONG RefBias)
+{
+    DPRINT1("ObLogSecurityDescriptor is not implemented!\n");
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+
+/*
+ * @unimplemented
+ */
+NTSTATUS STDCALL
+ObDereferenceSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
+                                IN ULONG Count)
+{
+    DPRINT1("ObDereferenceSecurityDescriptor is not implemented!\n");
+}
+
 /* EOF */

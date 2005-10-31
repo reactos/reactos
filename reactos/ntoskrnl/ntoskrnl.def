@@ -828,10 +828,12 @@ ObAssignSecurity@16
 ;ObCheckCreateObjectAccess@28
 ;ObCheckObjectAccess@20
 ObCreateObject@36
+ObDereferenceSecurityDescriptor@8
 ObFindHandleForObject@20
 ObGetObjectPointerCount@4
 ObGetObjectSecurity@12
 ObInsertObject@24
+ObLogSecurityDescriptor@12
 ObMakeTemporaryObject@4
 ObOpenObjectByName@28
 ObOpenObjectByPointer@28
