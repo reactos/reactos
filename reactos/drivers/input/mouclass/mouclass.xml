@@ -3,6 +3,7 @@
 	<define name="__USE_W32API" />
 	<library>ntoskrnl</library>
 	<library>hal</library>
+	<file>misc.c</file>
 	<file>mouclass.c</file>
 	<file>mouclass.rc</file>
 </module>

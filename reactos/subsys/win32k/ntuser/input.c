@@ -151,7 +151,7 @@ ProcessMouseInputData(PMOUSE_INPUT_DATA Data, ULONG InputCount)
 VOID STDCALL
 MouseThreadMain(PVOID StartContext)
 {
-   UNICODE_STRING MouseDeviceName = RTL_CONSTANT_STRING(L"\\??\\Mouse");
+   UNICODE_STRING MouseDeviceName = RTL_CONSTANT_STRING(L"\\Device\\PointerClassPnp0");
    OBJECT_ATTRIBUTES MouseObjectAttributes;
    IO_STATUS_BLOCK Iosb;
    NTSTATUS Status;
@@ -161,17 +161,20 @@ MouseThreadMain(PVOID StartContext)
                               0,
                               NULL,
                               NULL);
-   Status = NtOpenFile(&MouseDeviceHandle,
+   do
+   {
+      LARGE_INTEGER DueTime;
+      KEVENT Event;
+      DueTime.QuadPart = (LONGLONG)(-10000000);
+      KeInitializeEvent(&Event, NotificationEvent, FALSE);
+      Status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &DueTime); 
+      Status = NtOpenFile(&MouseDeviceHandle,
                        FILE_ALL_ACCESS,
                        &MouseObjectAttributes,
                        &Iosb,
                        0,
                        FILE_SYNCHRONOUS_IO_ALERT);
-   if(!NT_SUCCESS(Status))
-   {
-      DPRINT1("Win32K: Failed to open mouse.\n");
-      return; //(Status);
-   }
+   } while (!NT_SUCCESS(Status));
 
    for(;;)
    {
@@ -422,17 +425,20 @@ KeyboardThreadMain(PVOID StartContext)
                               0,
                               NULL,
                               NULL);
-   Status = NtOpenFile(&KeyboardDeviceHandle,
+   do
+   {
+      LARGE_INTEGER DueTime;
+      KEVENT Event;
+      DueTime.QuadPart = (LONGLONG)(-10000000);
+      KeInitializeEvent(&Event, NotificationEvent, FALSE);
+      Status = KeWaitForSingleObject(&Event, Executive, KernelMode, FALSE, &DueTime); 
+      Status = NtOpenFile(&KeyboardDeviceHandle,
                        FILE_ALL_ACCESS,
                        &KeyboardObjectAttributes,
                        &Iosb,
                        0,
                        FILE_SYNCHRONOUS_IO_ALERT);
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT1("Win32K: Failed to open keyboard.\n");
-      return; //(Status);
-   }
+   } while (!NT_SUCCESS(Status));
 
    /* Not sure if converting this thread to a win32 thread is such
       a great idea. Since we're posting keyboard messages to the focus

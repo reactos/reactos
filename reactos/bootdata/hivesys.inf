@@ -532,7 +532,7 @@ HKLM,"SYSTEM\CurrentControlSet\Services\mouclass","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\mouclass","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\mouclass\Parameters","ConnectMultiplePorts",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\mouclass\Parameters","MouseDataQueueSize",0x00010001,0x00000064
-HKLM,"SYSTEM\CurrentControlSet\Services\mouclass\Parameters","PointerDeviceBaseName",0x00000000,"PointerClass"
+HKLM,"SYSTEM\CurrentControlSet\Services\mouclass\Parameters","PointerDeviceBaseName",0x00000000,"PointerClassPnp"
 HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E96F-E325-11CE-BFC1-08002BE10318}","UpperFilters",0x00010000,"mouclass"
 
 ; Mailslot filesystem driver
