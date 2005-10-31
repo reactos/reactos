@@ -18,8 +18,6 @@ HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIREC
 	if(sizeof(DDSURFACEDESC2) != pDDSD2->dwSize)
 		return DDERR_UNSUPPORTED;
 
-	if(!(pDDSD2->dwFlags & DDSD_CAPS))
-		return DDERR_INVALIDPARAMS;
 
 	This->owner = (IDirectDrawImpl*)pDD;	
 
@@ -29,6 +27,29 @@ HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIREC
 	 ddsd.dwSize = sizeof(DDSURFACEDESC);
 
     /* FIXME Fill the rest from ddsd2 to ddsd */
+
+	 RtlCopyMemory(&ddsd.ddckCKDestBlt,&pDDSD2->ddckCKDestBlt,sizeof(ddsd.ddckCKDestBlt));
+	 RtlCopyMemory(&ddsd.ddckCKDestOverlay,&pDDSD2->ddckCKDestOverlay,sizeof(ddsd.ddckCKDestOverlay));
+	 RtlCopyMemory(&ddsd.ddckCKSrcBlt,&pDDSD2->ddckCKSrcBlt,sizeof(ddsd.ddckCKSrcBlt));
+	 RtlCopyMemory(&ddsd.ddckCKSrcOverlay,&pDDSD2->ddckCKSrcOverlay,sizeof(ddsd.ddckCKSrcOverlay));
+	 RtlCopyMemory(&ddsd.ddpfPixelFormat,&pDDSD2->ddpfPixelFormat,sizeof(ddsd.ddpfPixelFormat));
+	 RtlCopyMemory(&ddsd.ddsCaps,&pDDSD2->ddsCaps,sizeof(ddsd.ddsCaps));
+
+	 ddsd.dwAlphaBitDepth = pDDSD2->dwAlphaBitDepth;
+	 ddsd.dwBackBufferCount = pDDSD2->dwBackBufferCount; 
+	 ddsd.dwFlags       = pDDSD2->dwFlags;
+	 ddsd.dwHeight      = pDDSD2->dwHeight;
+	 /* FIXME ddsd.dwLinearSize  = pDDSD2->dwLinearSize; Problem with our header for dx */
+	 ddsd.dwMipMapCount = pDDSD2->dwMipMapCount;
+	 ddsd.dwRefreshRate = pDDSD2->dwRefreshRate;
+	 ddsd.dwReserved    = pDDSD2->dwReserved;
+	 ddsd.dwWidth       = pDDSD2->dwWidth;
+	 /* FIXME ddsd.dwZBufferBitDepth where in pDDSD2 */
+	 /* FIXME ddsd.lPitch        = pDDSD2->lPitch;  Problem with our header for dx */
+	 ddsd.lpSurface     = pDDSD2->lpSurface;
+
+
+
 	 
     /************ Test see if we can Create Surface ***********************/
 	if (This->owner->DirectDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_CANCREATESURFACE)
