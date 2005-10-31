@@ -436,9 +436,9 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
 
 Cleanup:
     if(pParentProcess != NULL) ObDereferenceObject(pParentProcess);
+    if(SectionObject != NULL) ObDereferenceObject(SectionObject);
     if (!ProcessCreated)
     {
-        if(SectionObject != NULL) ObDereferenceObject(SectionObject);
         if(pExceptionPort != NULL) ObDereferenceObject(pExceptionPort);
         if(pDebugPort != NULL) ObDereferenceObject(pDebugPort);
         if(Process != NULL) ObDereferenceObject(Process);
