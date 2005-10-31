@@ -17,6 +17,7 @@ ClassGUID={00000000-0000-0000-0000-000000000000}
 cdrom.inf
 display.inf
 hdc.inf
+keyboard.inf
 machine.inf
 mouse.inf
 NET_NIC.inf

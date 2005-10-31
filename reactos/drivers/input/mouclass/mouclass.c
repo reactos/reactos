@@ -94,10 +94,6 @@ IrpStub(
 			}
 		}
 	}
-	else if (IoGetCurrentIrpStackLocation(Irp)->MajorFunction == IRP_MJ_INTERNAL_DEVICE_CONTROL) /* HACK FOR I8042PRT */
-	{
-		Status = STATUS_SUCCESS;
-	}
 	else
 	{
 		DPRINT1("Class DO stub for major function 0x%lx\n",
@@ -121,7 +117,7 @@ ReadRegistryEntries(
 
 	ULONG DefaultConnectMultiplePorts = 1;
 	ULONG DefaultMouseDataQueueSize = 0x64;
-	UNICODE_STRING DefaultPointerDeviceBaseName = RTL_CONSTANT_STRING(L"PointerClassPnp");
+	UNICODE_STRING DefaultPointerDeviceBaseName = RTL_CONSTANT_STRING(L"PointerClass");
 
 	RtlZeroMemory(Parameters, sizeof(Parameters));
 
@@ -216,7 +212,7 @@ CreatePointerClassDeviceObject(
 	DeviceIdW = &DeviceNameU.Buffer[PrefixLength / sizeof(WCHAR)];
 	while (DeviceId < 9999)
 	{
-		DeviceNameU.Length = PrefixLength + swprintf(DeviceIdW, L"%ld", DeviceId) * sizeof(WCHAR);
+		DeviceNameU.Length = PrefixLength + swprintf(DeviceIdW, L"%lu", DeviceId) * sizeof(WCHAR);
 		Status = IoCreateDevice(
 			DriverObject,
 			sizeof(MOUCLASS_DEVICE_EXTENSION),
@@ -251,7 +247,6 @@ cleanup:
 	DeviceExtension->InputCount = 0;
 	DeviceExtension->PortData = ExAllocatePool(NonPagedPool, DeviceExtension->DriverExtension->MouseDataQueueSize * sizeof(MOUSE_INPUT_DATA));
 	Fdo->Flags |= DO_POWER_PAGABLE;
-	Fdo->Flags |= DO_BUFFERED_IO;
 	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
 
 	/* FIXME: create registry entry in HKEY_LOCAL_MACHINE\HARDWARE\DEVICEMAP */
@@ -290,8 +285,9 @@ MouclassCallback(
 		Stack = IoGetCurrentIrpStackLocation(Irp);
 
 		/* A read request is waiting for input, so go straight to it */
-		RtlMoveMemory(
-			Irp->AssociatedIrp.SystemBuffer,
+		/* FIXME: use SEH */
+		RtlCopyMemory(
+			Irp->MdlAddress ? MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority) : Irp->UserBuffer,
 			MouseDataStart,
 			sizeof(MOUSE_INPUT_DATA));
 
@@ -475,8 +471,9 @@ MouclassStartIo(
 
 		KeAcquireSpinLock(&DeviceExtension->SpinLock, &oldIrql);
 
-		RtlMoveMemory(
-			Irp->AssociatedIrp.SystemBuffer,
+		/* FIXME: use SEH */
+		RtlCopyMemory(
+			Irp->MdlAddress ? MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority) : Irp->UserBuffer,
 			DeviceExtension->PortData - DeviceExtension->InputCount,
 			sizeof(MOUSE_INPUT_DATA));
 
@@ -508,35 +505,120 @@ MouclassStartIo(
 
 static NTSTATUS
 SearchForLegacyDrivers(
+	IN PDRIVER_OBJECT DriverObject,
 	IN PMOUCLASS_DRIVER_EXTENSION DriverExtension)
 {
-	PDEVICE_OBJECT PortDeviceObject = NULL;
-	PFILE_OBJECT FileObject = NULL;
-	UNICODE_STRING PortName = RTL_CONSTANT_STRING(L"\\Device\\PointerClass0");
+	UNICODE_STRING DeviceMapKeyU = RTL_CONSTANT_STRING(L"\\REGISTRY\\MACHINE\\HARDWARE\\DEVICEMAP");
+	UNICODE_STRING PortBaseName = {0, };
+	PKEY_VALUE_BASIC_INFORMATION KeyValueInformation = NULL;
+	OBJECT_ATTRIBUTES ObjectAttributes;
+	HANDLE hDeviceMapKey = (HANDLE)-1;
+	HANDLE hPortKey = (HANDLE)-1;
+	ULONG Index = 0;
+	ULONG Size, ResultLength;
 	NTSTATUS Status;
 
-	/* FIXME: search for more than once legacy driver */
-
-	Status = IoGetDeviceObjectPointer(&PortName, FILE_READ_ATTRIBUTES, &FileObject, &PortDeviceObject);
-	if(Status != STATUS_SUCCESS)
-	{
-		DPRINT("Could not open old device object (Status 0x%08lx)\n", Status);
-		return Status;
-	}
-
-	if (DriverExtension->ConnectMultiplePorts)
-		Status = ConnectMousePortDriver(PortDeviceObject, DriverExtension->MainMouclassDeviceObject);
-	else
-	{
-		/* What to do */
-		KEBUGCHECK(0);
-	}
+	/* Create port base name, by replacing Class by Port at the end of the class base name */
+	Status = RtlDuplicateUnicodeString(
+		RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
+		&DriverExtension->PointerDeviceBaseName,
+		&PortBaseName);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("ConnectMousePortDriver() failed with status 0x%08lx\n", Status);
-		return Status;
+		DPRINT("RtlDuplicateUnicodeString() failed with status 0x%08lx\n", Status);
+		goto cleanup;
 	}
-	return STATUS_SUCCESS;
+	PortBaseName.Length -= (sizeof(L"Class") - sizeof(UNICODE_NULL));
+	RtlAppendUnicodeToString(&PortBaseName, L"Port");
+
+	/* Allocate memory */
+	Size = sizeof(KEY_VALUE_BASIC_INFORMATION) + MAX_PATH;
+	KeyValueInformation = ExAllocatePool(PagedPool, Size);
+	if (!KeyValueInformation)
+	{
+		DPRINT("ExAllocatePool() failed\n");
+		Status = STATUS_INSUFFICIENT_RESOURCES;
+		goto cleanup;
+	}
+
+	/* Open HKEY_LOCAL_MACHINE\HARDWARE\DEVICEMAP */
+	InitializeObjectAttributes(&ObjectAttributes, &DeviceMapKeyU, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
+	Status = ZwOpenKey(&hDeviceMapKey, 0, &ObjectAttributes);
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT("ZwOpenKey() failed with status 0x%08lx\n", Status);
+		goto cleanup;
+	}
+
+	/* Open sub key */
+	InitializeObjectAttributes(&ObjectAttributes, &PortBaseName, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, hDeviceMapKey, NULL);
+	Status = ZwOpenKey(&hPortKey, KEY_QUERY_VALUE, &ObjectAttributes);
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT("ZwOpenKey() failed with status 0x%08lx\n", Status);
+		DPRINT1("ZwOpenKey() failed with status 0x%08lx\n", Status);
+		goto cleanup;
+	}
+
+	/* Read each value name */
+	while (ZwEnumerateValueKey(hPortKey, Index++, KeyValueBasicInformation, KeyValueInformation, Size, &ResultLength) == STATUS_SUCCESS)
+	{
+		UNICODE_STRING PortName;
+		PDEVICE_OBJECT PortDeviceObject = NULL;
+		PFILE_OBJECT FileObject = NULL;
+
+		PortName.Length = PortName.MaximumLength = KeyValueInformation->NameLength;
+		PortName.Buffer = KeyValueInformation->Name;
+
+		/* Open the device object pointer */
+		Status = IoGetDeviceObjectPointer(&PortName, FILE_READ_ATTRIBUTES, &FileObject, &PortDeviceObject);
+		if (!NT_SUCCESS(Status))
+		{
+			DPRINT("IoGetDeviceObjectPointer(%wZ) failed with status 0x%08lx\n", Status);
+		}
+
+		/* Connect the port device object */
+		if (DriverExtension->ConnectMultiplePorts)
+		{
+			Status = ConnectMousePortDriver(PortDeviceObject, DriverExtension->MainMouclassDeviceObject);
+			if (!NT_SUCCESS(Status))
+			{
+				/* FIXME: Log the error */
+				DPRINT("ConnectMousePortDriver() failed with status 0x%08lx\n", Status);
+				/* FIXME: cleanup */
+			}
+		}
+		else
+		{
+			PDEVICE_OBJECT ClassDO;
+			Status = CreatePointerClassDeviceObject(DriverObject, &ClassDO);
+			if (!NT_SUCCESS(Status))
+			{
+				/* FIXME: Log the error */
+				DPRINT("CreatePointerClassDeviceObject() failed with status 0x%08lx\n", Status);
+				/* FIXME: cleanup */
+				continue;
+			}
+			Status = ConnectMousePortDriver(PortDeviceObject, ClassDO);
+			if (!NT_SUCCESS(Status))
+			{
+				/* FIXME: Log the error */
+				DPRINT("ConnectMousePortDriver() failed with status 0x%08lx\n", Status);
+				/* FIXME: cleanup */
+			}
+		}
+	}
+	if (Status == STATUS_NO_MORE_ENTRIES)
+		Status = STATUS_SUCCESS;
+
+cleanup:
+	if (KeyValueInformation != NULL)
+		ExFreePool(KeyValueInformation);
+	if (hDeviceMapKey != (HANDLE)-1)
+		ZwClose(hDeviceMapKey);
+	if (hPortKey != (HANDLE)-1)
+		ZwClose(hPortKey);
+	return Status;
 }
 
 /*
@@ -593,7 +675,7 @@ DriverEntry(
 	DriverObject->MajorFunction[IRP_MJ_READ]   = MouclassRead;
 	DriverObject->DriverStartIo                = MouclassStartIo;
 
-	SearchForLegacyDrivers(DriverExtension);
+	Status = SearchForLegacyDrivers(DriverObject, DriverExtension);
 
-	return STATUS_SUCCESS;
+	return Status;
 }

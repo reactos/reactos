@@ -1,98 +1,65 @@
-#ifndef _KEYBOARD_H_
-#define _KEYBOARD_H_
-#include <ddk/ntddkbd.h>
-#include <ddk/ntdd8042.h>
+#include <ntifs.h>
+#include <kbdmou.h>
+#include <ntddkbd.h>
+#include <stdio.h>
 
-#define KBD_BUFFER_SIZE    32
-#define KBD_WRAP_MASK      0x1F
+#if defined(__GNUC__)
+  NTSTATUS NTAPI
+  IoAttachDeviceToDeviceStackSafe(
+    IN PDEVICE_OBJECT SourceDevice,
+    IN PDEVICE_OBJECT TargetDevice,
+    OUT PDEVICE_OBJECT *AttachedToDeviceObject);
+#else
+  #error Unknown compiler!
+#endif
 
-/*-----------------------------------------------------
- *  DeviceExtension
- * --------------------------------------------------*/
-typedef struct _DEVICE_EXTENSION
+typedef enum
 {
-	PDEVICE_OBJECT I8042Device;
-	PDEVICE_OBJECT DeviceObject;
+	dsStopped,
+	dsStarted,
+	dsPaused,
+	dsRemoved,
+	dsSurpriseRemoved
+} KBDCLASS_DEVICE_STATE;
 
-	KEYBOARD_INPUT_DATA KbdBuffer[KBD_BUFFER_SIZE];
-	int BufHead,BufTail;
-	int KeysInBuffer;
+typedef struct _KBDCLASS_DRIVER_EXTENSION
+{
+	/* Registry settings */
+	ULONG ConnectMultiplePorts;
+	ULONG KeyboardDataQueueSize;
+	UNICODE_STRING KeyboardDeviceBaseName;
 
-	BOOLEAN AlreadyOpened;
-} DEVICE_EXTENSION, *PDEVICE_EXTENSION;
+	PDEVICE_OBJECT MainKbdclassDeviceObject;
+} KBDCLASS_DRIVER_EXTENSION, *PKBDCLASS_DRIVER_EXTENSION;
 
-typedef struct _CONNECT_DATA {
-	PDEVICE_OBJECT ClassDeviceObject;
-	PVOID ClassService;
-} CONNECT_DATA, *PCONNECT_DATA;
+typedef struct _COMMON_DEVICE_EXTENSION
+{
+	BOOLEAN IsClassDO;
+} COMMON_DEVICE_EXTENSION, *PCOMMON_DEVICE_EXTENSION;
 
-/*
- * Some defines
- */
+typedef struct _KBDPORT_DEVICE_EXTENSION
+{
+	COMMON_DEVICE_EXTENSION Common;
+} KBDPORT_DEVICE_EXTENSION, *PKBDPORT_DEVICE_EXTENSION;
 
-#define IOCTL_INTERNAL_KEYBOARD_CONNECT \
-   CTL_CODE(FILE_DEVICE_KEYBOARD, 0x0080, METHOD_NEITHER, FILE_ANY_ACCESS)
+typedef struct _KBDCLASS_DEVICE_EXTENSION
+{
+	COMMON_DEVICE_EXTENSION Common;
 
-#define KEYBOARD_IRQ       1
+	KBDCLASS_DEVICE_STATE PnpState;
+	PKBDCLASS_DRIVER_EXTENSION DriverExtension;
+	PDEVICE_OBJECT LowerDevice;
+	UNICODE_STRING KeyboardInterfaceName;
 
-#define disable()          __asm__("cli\n\t")
-#define enable()           __asm__("sti\n\t")
+	KSPIN_LOCK SpinLock;
+	BOOLEAN ReadIsPending;
+	ULONG InputCount;
+	PKEYBOARD_INPUT_DATA PortData;
+} KBDCLASS_DEVICE_EXTENSION, *PKBDCLASS_DEVICE_EXTENSION;
 
-#define ALT_PRESSED			(LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED)
-#define CTRL_PRESSED			(LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)
+/* misc.c */
 
-
-/*
- * Keyboard controller ports
- */
-
-#define KBD_DATA_PORT      0x60
-#define KBD_CTRL_PORT      0x64
-
-
-/*
- * Controller commands
- */
-
-#define KBD_READ_MODE      0x20
-#define KBD_WRITE_MODE     0x60
-#define KBD_SELF_TEST      0xAA
-#define KBD_LINE_TEST      0xAB
-#define KBD_CTRL_ENABLE    0xAE
-
-/*
- * Keyboard commands
- */
-
-#define KBD_ENABLE         0xF4
-#define KBD_DISABLE        0xF5
-#define KBD_RESET          0xFF
-
-
-/*
- * Keyboard responces
- */
-
-#define KBD_ACK            0xFA
-#define KBD_BATCC          0xAA
-
-
-/*
- * Controller status register bits
- */
-
-#define KBD_OBF            0x01
-#define KBD_IBF            0x02
-#define KBD_GTO            0x40
-#define KBD_PERR           0x80
-
-
-/*
- * LED bits
- */
-
-#define KBD_LED_SCROLL     0x01
-#define KBD_LED_NUM        0x02
-#define KBD_LED_CAPS       0x04
-
-#endif // _KEYBOARD_H_
+NTSTATUS NTAPI
+ForwardIrpAndForget(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp);

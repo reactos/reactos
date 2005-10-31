@@ -151,7 +151,7 @@ ProcessMouseInputData(PMOUSE_INPUT_DATA Data, ULONG InputCount)
 VOID STDCALL
 MouseThreadMain(PVOID StartContext)
 {
-   UNICODE_STRING MouseDeviceName = RTL_CONSTANT_STRING(L"\\Device\\PointerClassPnp0");
+   UNICODE_STRING MouseDeviceName = RTL_CONSTANT_STRING(L"\\Device\\PointerClass0");
    OBJECT_ATTRIBUTES MouseObjectAttributes;
    IO_STATUS_BLOCK Iosb;
    NTSTATUS Status;
@@ -404,7 +404,7 @@ co_IntKeyboardSendAltKeyMsg()
 STATIC VOID STDCALL
 KeyboardThreadMain(PVOID StartContext)
 {
-   UNICODE_STRING KeyboardDeviceName = RTL_CONSTANT_STRING(L"\\??\\Keyboard");
+   UNICODE_STRING KeyboardDeviceName = RTL_CONSTANT_STRING(L"\\Device\\KeyboardClass0");
    OBJECT_ATTRIBUTES KeyboardObjectAttributes;
    IO_STATUS_BLOCK Iosb;
    NTSTATUS Status;

@@ -1,4 +1,4 @@
-#include <ntddk.h>
+#include <ntifs.h>
 #include <kbdmou.h>
 #include <ntddmou.h>
 #include <stdio.h>

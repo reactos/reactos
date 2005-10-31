@@ -417,6 +417,7 @@ VOID STDCALL I8042SendHookWorkItem(PDEVICE_OBJECT DeviceObject,
 		goto hookworkitemdone;
 	}
 
+#if 0
 	Status = IoCallDriver(
 			WorkItemData->Target,
 	                NewIrp);
@@ -427,6 +428,7 @@ VOID STDCALL I8042SendHookWorkItem(PDEVICE_OBJECT DeviceObject,
 		                      KernelMode,
 		                      FALSE,
 		                      NULL);
+#endif
 
 	if (IsKbd) {
 		/* Call the hooked initialization if it exists */
@@ -633,11 +635,58 @@ static NTSTATUS STDCALL I8042Initialize(PDEVICE_EXTENSION DevExt)
 	return STATUS_SUCCESS;
 }
 
+static NTSTATUS
+AddRegistryEntry(
+	IN PCWSTR PortTypeName,
+	IN PUNICODE_STRING DeviceName,
+	IN PCWSTR RegistryPath)
+{
+	UNICODE_STRING PathU = RTL_CONSTANT_STRING(L"\\REGISTRY\\MACHINE\\HARDWARE\\DEVICEMAP");
+	OBJECT_ATTRIBUTES ObjectAttributes;
+	HANDLE hDeviceMapKey = (HANDLE)-1;
+	HANDLE hPortKey = (HANDLE)-1;
+	UNICODE_STRING PortTypeNameU;
+	NTSTATUS Status;
+
+	InitializeObjectAttributes(&ObjectAttributes, &PathU, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
+	Status = ZwOpenKey(&hDeviceMapKey, 0, &ObjectAttributes);
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT("ZwOpenKey() failed with status 0x%08lx\n", Status);
+		goto cleanup;
+	}
+
+	RtlInitUnicodeString(&PortTypeNameU, PortTypeName);
+	InitializeObjectAttributes(&ObjectAttributes, &PortTypeNameU, OBJ_KERNEL_HANDLE, hDeviceMapKey, NULL);
+	Status = ZwCreateKey(&hPortKey, KEY_SET_VALUE, &ObjectAttributes, 0, NULL, REG_OPTION_VOLATILE, NULL);
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT("ZwCreateKey() failed with status 0x%08lx\n", Status);
+		goto cleanup;
+	}
+
+	Status = ZwSetValueKey(hPortKey, DeviceName, 0, REG_SZ, (PVOID)RegistryPath, wcslen(RegistryPath) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT("ZwSetValueKey() failed with status 0x%08lx\n", Status);
+		goto cleanup;
+	}
+
+	Status = STATUS_SUCCESS;
+
+cleanup:
+	if (hDeviceMapKey != (HANDLE)-1)
+		ZwClose(hDeviceMapKey);
+	if (hPortKey != (HANDLE)-1)
+		ZwClose(hPortKey);
+	return Status;
+}
+
 static NTSTATUS STDCALL I8042AddDevice(PDRIVER_OBJECT DriverObject,
                                        PDEVICE_OBJECT Pdo)
 {
-	UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\KeyboardClass0");
-	UNICODE_STRING MouseName = RTL_CONSTANT_STRING(L"\\Device\\PointerClass0");
+	UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\KeyboardPort8042");
+	UNICODE_STRING MouseName = RTL_CONSTANT_STRING(L"\\Device\\PointerPort8042");
 	ULONG MappedIrqKeyboard = 0, MappedIrqMouse = 0;
 	KIRQL DirqlKeyboard = 0;
 	KIRQL DirqlMouse = 0;
@@ -716,6 +765,7 @@ static NTSTATUS STDCALL I8042AddDevice(PDRIVER_OBJECT DriverObject,
 
 		if (NT_SUCCESS(Status))
 		{
+			AddRegistryEntry(L"KeyboardPort", &DeviceName, L"REGISTRY\\MACHINE\\SYSTEM\\CurrentControlSet\\Services\\i8042prt");
 			FdoDevExt = Fdo->DeviceExtension;
 
 			RtlZeroMemory(FdoDevExt, sizeof(FDO_DEVICE_EXTENSION));
@@ -764,6 +814,7 @@ static NTSTATUS STDCALL I8042AddDevice(PDRIVER_OBJECT DriverObject,
 
 		if (NT_SUCCESS(Status))
 		{
+			AddRegistryEntry(L"PointerPort", &MouseName, L"REGISTRY\\MACHINE\\SYSTEM\\CurrentControlSet\\Services\\i8042prt");
 			FdoDevExt = Fdo->DeviceExtension;
 
 			RtlZeroMemory(FdoDevExt, sizeof(FDO_DEVICE_EXTENSION));

@@ -64,15 +64,69 @@ CreateRootHubPdo(
 	*pPdo = Pdo;
 	return STATUS_SUCCESS;
 }
-#if 0
+
+static NTSTATUS
+AddRegistryEntry(
+	IN PCWSTR PortTypeName,
+	IN PUNICODE_STRING DeviceName,
+	IN PCWSTR RegistryPath)
+{
+	UNICODE_STRING PathU = RTL_CONSTANT_STRING(L"\\REGISTRY\\MACHINE\\HARDWARE\\DEVICEMAP");
+	OBJECT_ATTRIBUTES ObjectAttributes;
+	HANDLE hDeviceMapKey = (HANDLE)-1;
+	HANDLE hPortKey = (HANDLE)-1;
+	UNICODE_STRING PortTypeNameU;
+	NTSTATUS Status;
+
+	InitializeObjectAttributes(&ObjectAttributes, &PathU, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
+	Status = ZwOpenKey(&hDeviceMapKey, 0, &ObjectAttributes);
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT("ZwOpenKey() failed with status 0x%08lx\n", Status);
+		goto cleanup;
+	}
+
+	RtlInitUnicodeString(&PortTypeNameU, PortTypeName);
+	InitializeObjectAttributes(&ObjectAttributes, &PortTypeNameU, OBJ_KERNEL_HANDLE, hDeviceMapKey, NULL);
+	Status = ZwCreateKey(&hPortKey, KEY_SET_VALUE, &ObjectAttributes, 0, NULL, REG_OPTION_VOLATILE, NULL);
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT("ZwCreateKey() failed with status 0x%08lx\n", Status);
+		goto cleanup;
+	}
+
+	Status = ZwSetValueKey(hPortKey, DeviceName, 0, REG_SZ, (PVOID)RegistryPath, wcslen(RegistryPath) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT("ZwSetValueKey() failed with status 0x%08lx\n", Status);
+		goto cleanup;
+	}
+
+	Status = STATUS_SUCCESS;
+
+cleanup:
+	if (hDeviceMapKey != (HANDLE)-1)
+		ZwClose(hDeviceMapKey);
+	if (hPortKey != (HANDLE)-1)
+		ZwClose(hPortKey);
+	return Status;
+}
+
 static NTSTATUS
 AddDevice_Keyboard(
 	IN PDRIVER_OBJECT DriverObject,
 	IN PDEVICE_OBJECT Pdo)
 {
-	UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\KeyboardClass0");
+	UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\KeyboardPortUSB");
 	PDEVICE_OBJECT Fdo;
 	NTSTATUS Status;
+
+	Status = AddRegistryEntry(L"KeyboardPort", &DeviceName, L"REGISTRY\\MACHINE\\SYSTEM\\CurrentControlSet\\Services\\usbport");
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT1("USBMP: AddRegistryEntry() for usb keyboard driver failed with status 0x%08lx\n", Status);
+		return Status;
+	}
 
 	Status = IoCreateDevice(DriverObject,
 		8, // debug
@@ -99,9 +153,16 @@ AddDevice_Mouse(
 	IN PDRIVER_OBJECT DriverObject,
 	IN PDEVICE_OBJECT Pdo)
 {
-	UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\PointerClass0");
+	UNICODE_STRING DeviceName = RTL_CONSTANT_STRING(L"\\Device\\PointerPortUSB");
 	PDEVICE_OBJECT Fdo;
 	NTSTATUS Status;
+
+	Status = AddRegistryEntry(L"PointerPort", &DeviceName, L"REGISTRY\\MACHINE\\SYSTEM\\CurrentControlSet\\Services\\usbport");
+	if (!NT_SUCCESS(Status))
+	{
+		DPRINT1("USBMP: AddRegistryEntry() for usb mouse driver failed with status 0x%08lx\n", Status);
+		return Status;
+	}
 
 	Status = IoCreateDevice(DriverObject,
 		8, // debug
@@ -122,7 +183,6 @@ AddDevice_Mouse(
 
 	return STATUS_SUCCESS;
 }
-#endif
 
 NTSTATUS STDCALL
 AddDevice(
@@ -230,12 +290,10 @@ AddDevice(
 
 	Status = IoCreateSymbolicLink(&LinkDeviceName, &DeviceName);
 
-	/*
 	if (NT_SUCCESS(Status))
 		Status = AddDevice_Keyboard(DriverObject, pdo);
 	if (NT_SUCCESS(Status))
 		Status = AddDevice_Mouse(DriverObject, pdo);
-	*/
 
 	if (!NT_SUCCESS(Status))
 	{
