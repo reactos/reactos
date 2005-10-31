@@ -218,7 +218,7 @@ static ULARGE_INTEGER recurse_bytes;
  */
 static VOID DirHelp(VOID)
 {
-  ConOutResPuts(STRING_DIR_HELP1);
+  ConOutResPaging(TRUE, STRING_DIR_HELP1);
 }
 
 
