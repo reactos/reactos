@@ -270,7 +270,7 @@ ObLogSecurityDescriptor(IN PSECURITY_DESCRIPTOR InputSecurityDescriptor,
 /*
  * @unimplemented
  */
-NTSTATUS STDCALL
+VOID STDCALL
 ObDereferenceSecurityDescriptor(IN PSECURITY_DESCRIPTOR SecurityDescriptor,
                                 IN ULONG Count)
 {
