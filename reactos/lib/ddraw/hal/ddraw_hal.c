@@ -58,13 +58,13 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 		return DD_FALSE;
 	}
 	
-	This->HalInfo.vmiData.pvmList = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
+	This->HalInfo.vmiData.pvmList = (LPVIDMEM) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
 		                                      sizeof(VIDMEM) * This->HalInfo.vmiData.dwNumHeaps);
 
-	This->DirectDrawGlobal.lpdwFourCC = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
+	This->DirectDrawGlobal.lpdwFourCC = (DWORD *) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
 		                                          sizeof(DWORD) * This->HalInfo.ddCaps.dwNumFourCCCodes);	
 	((LPD3DHAL_GLOBALDRIVERDATA)This->DirectDrawGlobal.lpD3DGlobalDriverData)->lpTextureFormats = 
-		 HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DDSURFACEDESC) * 
+		 (LPDDSURFACEDESC) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DDSURFACEDESC) * 
 		 ((LPD3DHAL_GLOBALDRIVERDATA)This->DirectDrawGlobal.lpD3DGlobalDriverData)->dwNumTextureFormats);
 
 	if(!DdQueryDirectDrawObject (
@@ -285,7 +285,7 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 	
 
 	/* Get the ZPixelFormats */
-	This->DirectDrawGlobal.lpZPixelFormats = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
+	This->DirectDrawGlobal.lpZPixelFormats = (LPDDPIXELFORMAT) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
 		                                       sizeof(DDPIXELFORMAT) * This->DirectDrawGlobal.dwNumZPixelFormats);
 	DriverInfo.guidInfo = GUID_ZPixelFormats;
 	DriverInfo.lpvData = (PVOID)This->DirectDrawGlobal.lpZPixelFormats;
