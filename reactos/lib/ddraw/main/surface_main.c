@@ -14,17 +14,14 @@
 HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIRECTDRAW pDD, LPDDSURFACEDESC2 pDDSD)
 {
     IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
-
-	if (This->owner)
-		return DDERR_ALREADYINITIALIZED;
-
+	
 	if(sizeof(DDSURFACEDESC2) != pDDSD->dwSize)
 		return DDERR_UNSUPPORTED;
 
 	if(!(pDDSD->dwFlags & DDSD_CAPS))
 		return DDERR_INVALIDPARAMS;
 
-	This->owner = (IDirectDrawImpl*)pDD;
+	This->owner = (IDirectDrawImpl*)pDD;	
    
 	if (This->owner->DirectDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_CANCREATESURFACE)
 	{

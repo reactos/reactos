@@ -13,7 +13,8 @@
 HRESULT Hal_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rDest,
 			  LPDIRECTDRAWSURFACE7 src, LPRECT rSrc, DWORD dwFlags, LPDDBLTFX lpbltfx)
 {
-    IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
+    
+	IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
     IDirectDrawSurfaceImpl* That = (IDirectDrawSurfaceImpl*)src;
  	
 	if (!(This->owner->DirectDrawGlobal.lpDDCBtmp->HALDDSurface.dwFlags  & DDHAL_SURFCB32_BLT)) 

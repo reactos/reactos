@@ -38,7 +38,8 @@ HRESULT WINAPI Main_DirectDraw_Initialize (LPDIRECTDRAW7 iface, LPGUID lpGUID)
 	// ... then overwrite with hal
 	if((ret = Hel_DirectDraw_Initialize (iface)) != DD_OK)
 		return ret;
-
+	
+   
 	return DD_OK;
 }
 
@@ -165,22 +166,30 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
 		return DDERR_UNSUPPORTED;
 
 	// the nasty com stuff
+	IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+
 	IDirectDrawSurfaceImpl* That; 
 
 	That = (IDirectDrawSurfaceImpl*)HeapAlloc(GetProcessHeap(), 0, sizeof(IDirectDrawSurfaceImpl));
-
+	
 	if (That == NULL) 
 		return E_OUTOFMEMORY;
 
 	ZeroMemory(That, sizeof(IDirectDrawSurfaceImpl));
-
+	
 	That->lpVtbl = &DirectDrawSurface7_Vtable;
 	That->lpVtbl_v3 = &DDRAW_IDDS3_Thunk_VTable;
-	
+
+	This->DirectDrawGlobal.dsList = (LPDDRAWI_DDRAWSURFACE_INT)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
+		                                                                    sizeof(DDRAWI_DDRAWSURFACE_INT));		
+
+	That->owner = (IDirectDrawImpl *)This;
+
 	That->owner->DirectDrawGlobal.dsList->dwIntRefCnt =1;
 
 	/* we alwasy set to use the DirectDrawSurface7_Vtable as internel */
 	That->owner->DirectDrawGlobal.dsList->lpVtbl = (PVOID) &DirectDrawSurface7_Vtable;
+	
 
 	*ppSurf = (LPDIRECTDRAWSURFACE7)That;
 
