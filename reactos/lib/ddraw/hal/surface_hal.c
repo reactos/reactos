@@ -13,7 +13,8 @@
 HRESULT Hal_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rDest,
 			  LPDIRECTDRAWSURFACE7 src, LPRECT rSrc, DWORD dwFlags, LPDDBLTFX lpbltfx)
 {
-    
+	DX_STUB;
+
 	IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
     IDirectDrawSurfaceImpl* That = (IDirectDrawSurfaceImpl*)src;
  	

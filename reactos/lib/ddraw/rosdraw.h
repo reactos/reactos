@@ -44,6 +44,7 @@ typedef struct
 	DDRAWI_DDRAWSURFACE_GBL Global; 
 	DDRAWI_DDRAWSURFACE_MORE More; 
 	DDRAWI_DDRAWSURFACE_LCL Local;
+	DDRAWI_DDRAWSURFACE_LCL *pLocal[2]; 
 
 } IDirectDrawSurfaceImpl;
 

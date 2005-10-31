@@ -14,7 +14,7 @@
 HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIRECTDRAW pDD, LPDDSURFACEDESC2 pDDSD2)
 {
     IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
-	
+
 	if(sizeof(DDSURFACEDESC2) != pDDSD2->dwSize)
 		return DDERR_UNSUPPORTED;
 
@@ -23,69 +23,83 @@ HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIREC
 
 	This->owner = (IDirectDrawImpl*)pDD;	
 
-	DDSURFACEDESC DDSD = *(LPDDSURFACEDESC)pDDSD2;
-	DDSD.dwSize = sizeof(pDDSD2);
-   
+	 /************ fill the discription of our primary surface ***********************/  
+	 DDSURFACEDESC ddsd; 	
+	 memset (&ddsd, 0, sizeof(DDSURFACEDESC));
+	 ddsd.dwSize = sizeof(DDSURFACEDESC);
+
+    /* FIXME Fill the rest from ddsd2 to ddsd */
+	 
+    /************ Test see if we can Create Surface ***********************/
 	if (This->owner->DirectDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_CANCREATESURFACE)
 	{
 		/* can the driver create the surface */
 		DDHAL_CANCREATESURFACEDATA CanCreateData;
 		memset(&CanCreateData, 0, sizeof(DDHAL_CANCREATESURFACEDATA));
 		CanCreateData.lpDD = &This->owner->DirectDrawGlobal; 
-		CanCreateData.lpDDSurfaceDesc = &DDSD;
+		CanCreateData.lpDDSurfaceDesc = (LPDDSURFACEDESC)&ddsd;
 			
 		if (This->owner->DirectDrawGlobal.lpDDCBtmp->HALDD.CanCreateSurface(&CanCreateData) == DDHAL_DRIVER_NOTHANDLED)
 			return DDERR_INVALIDPARAMS;
 		
-		if(CanCreateData.ddRVal != DD_OK)
+	   if(CanCreateData.ddRVal != DD_OK)
 			return CanCreateData.ddRVal;
 	}
 
-	/* surface global struct */
-	memset(&This->Global, 0, sizeof(DDRAWI_DDRAWSURFACE_GBL));
+
+   /************ Create Surface ***********************/
+
+	/* FIXME we are skipping filling in some data, I do not care for now */
+
+	LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal = &This->owner->DirectDrawGlobal; 	
+	ddsd.dwFlags = DDSD_CAPS;
+	ddsd.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
+	 
+	/* surface global struct */	
+	memset(&This->Global, 0, sizeof(DDRAWI_DDRAWSURFACE_GBL));	
 	This->Global.lpDD = &This->owner->DirectDrawGlobal;	
 	This->Global.wHeight = This->owner->DirectDrawGlobal.vmiData.dwDisplayHeight;
 	This->Global.wWidth = This->owner->DirectDrawGlobal.vmiData.dwDisplayWidth;
 	This->Global.dwLinearSize =  This->owner->DirectDrawGlobal.vmiData.lDisplayPitch;
+    
 	
-	/* surface more struct */
+	/* surface more struct */	
 	memset(&This->More, 0, sizeof(DDRAWI_DDRAWSURFACE_MORE));
 	This->More.dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
-
+ 
 	/* surface local struct */
+	
 	memset(&This->Local, 0, sizeof(DDRAWI_DDRAWSURFACE_LCL));
 	This->Local.lpGbl = &This->Global;
 	This->Local.lpSurfMore = &This->More;
-	This->Local.ddsCaps = DDSD.ddsCaps;
 
-	/* we need to set some flags if we create the primary surface */
-	if(pDDSD2->ddsCaps.dwCaps == DDSCAPS_PRIMARYSURFACE)
-	{
-		This->Local.dwFlags |= DDRAWISURF_FRONTBUFFER;
-		This->Global.dwGlobalFlags |= DDRAWISURFGBL_ISGDISURFACE;
-	}
-
+	/* FIXME do a memcopy */
+	This->Local.ddsCaps = *(DDSCAPS*)&ddsd.ddsCaps;
+ 
 	/* for the double pointer below */
 	DDRAWI_DDRAWSURFACE_LCL *pLocal[2]; 
 	pLocal[0] = &This->Local; 
-    pLocal[1] = NULL;  // we need this one for bad written drivers
-
+    pLocal[1] = NULL;  
+ 
 	/* the parameter struct */
 	DDHAL_CREATESURFACEDATA CreateData;
 	memset(&CreateData, 0, sizeof(DDHAL_CREATESURFACEDATA));
-	CreateData.lpDD = &This->owner->DirectDrawGlobal; 
-	CreateData.lpDDSurfaceDesc = &DDSD;
+	CreateData.lpDD = pDirectDrawGlobal;
+	CreateData.lpDDSurfaceDesc = (LPDDSURFACEDESC) &ddsd; 
 	CreateData.dwSCnt = 1;
 	CreateData.lplpSList = pLocal;	
-	
+	CreateData.ddRVal	= DD_FALSE;
+		
+		
 	/* this is the call we were waiting for */
 	if(This->owner->DirectDrawGlobal.lpDDCBtmp->HALDD.CreateSurface(&CreateData) == DDHAL_DRIVER_NOTHANDLED)
 		return DDERR_INVALIDPARAMS;
-	
+
+	/* FIXME remove the if and debug string*/
 	if(CreateData.ddRVal != DD_OK)
 		return CreateData.ddRVal;
-
-	OutputDebugString(L"This does not get hit :( ");
+	
+	OutputDebugString(L"This does hit By Ati Readon but not for nvida :( ");
 	OutputDebugString(L"Yet ;)");
 
    	return DD_OK;
@@ -122,6 +136,8 @@ HRESULT WINAPI Main_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rdst,
 			  LPDIRECTDRAWSURFACE7 src, LPRECT rsrc, DWORD dwFlags, LPDDBLTFX lpbltfx)
 {
 	IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+	
+	DX_STUB;
 
 	if (This->DirectDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_FLIPTOGDISURFACE) 
 	{
