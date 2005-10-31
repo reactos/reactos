@@ -128,22 +128,15 @@ CreateNamedPipeW(LPCWSTR lpName,
    if (!(dwOpenMode & FILE_FLAG_OVERLAPPED))
        CreateOptions |= FILE_SYNCHRONOUS_IO_NONALERT;
 
-   switch (dwOpenMode & PIPE_ACCESS_DUPLEX)
+   if (dwOpenMode & PIPE_ACCESS_INBOUND)
      {
-       case PIPE_ACCESS_INBOUND:
-	      ShareAccess |= FILE_SHARE_WRITE;
-	      DesiredAccess |= GENERIC_READ;
-	      break;
-
-       case PIPE_ACCESS_OUTBOUND:
-	      ShareAccess |= FILE_SHARE_READ;
-	      DesiredAccess |= GENERIC_WRITE;
-	      break;
-
-       case PIPE_ACCESS_DUPLEX:
-	      ShareAccess |= FILE_SHARE_READ | FILE_SHARE_WRITE;
-	      DesiredAccess |= GENERIC_READ | GENERIC_WRITE;
-	      break;
+	   ShareAccess |= FILE_SHARE_WRITE;
+	   DesiredAccess |= GENERIC_READ;
+     }
+   if (dwOpenMode & PIPE_ACCESS_OUTBOUND)
+     {
+	   ShareAccess |= FILE_SHARE_READ;
+	   DesiredAccess |= GENERIC_WRITE;
      }
 
    if (dwPipeMode & PIPE_TYPE_MESSAGE)
@@ -243,7 +236,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
 			      NULL,
 			      NULL);
    Status = NtOpenFile(&FileHandle,
-		       FILE_GENERIC_READ,
+		       FILE_READ_ATTRIBUTES | SYNCHRONIZE,
 		       &ObjectAttributes,
 		       &Iosb,
 		       FILE_SHARE_READ | FILE_SHARE_WRITE,
