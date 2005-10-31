@@ -11,25 +11,28 @@
 #include "rosdraw.h"
 
 
-HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIRECTDRAW pDD, LPDDSURFACEDESC2 pDDSD)
+HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIRECTDRAW pDD, LPDDSURFACEDESC2 pDDSD2)
 {
     IDirectDrawSurfaceImpl* This = (IDirectDrawSurfaceImpl*)iface;
 	
-	if(sizeof(DDSURFACEDESC2) != pDDSD->dwSize)
+	if(sizeof(DDSURFACEDESC2) != pDDSD2->dwSize)
 		return DDERR_UNSUPPORTED;
 
-	if(!(pDDSD->dwFlags & DDSD_CAPS))
+	if(!(pDDSD2->dwFlags & DDSD_CAPS))
 		return DDERR_INVALIDPARAMS;
 
 	This->owner = (IDirectDrawImpl*)pDD;	
-   	
+
+	DDSURFACEDESC DDSD = *(LPDDSURFACEDESC)pDDSD2;
+	DDSD.dwSize = sizeof(pDDSD2);
+   
 	if (This->owner->DirectDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_CANCREATESURFACE)
 	{
 		/* can the driver create the surface */
 		DDHAL_CANCREATESURFACEDATA CanCreateData;
 		memset(&CanCreateData, 0, sizeof(DDHAL_CANCREATESURFACEDATA));
 		CanCreateData.lpDD = &This->owner->DirectDrawGlobal; 
-		CanCreateData.lpDDSurfaceDesc = (DDSURFACEDESC*)pDDSD;
+		CanCreateData.lpDDSurfaceDesc = &DDSD;
 			
 		if (This->owner->DirectDrawGlobal.lpDDCBtmp->HALDD.CanCreateSurface(&CanCreateData) == DDHAL_DRIVER_NOTHANDLED)
 			return DDERR_INVALIDPARAMS;
@@ -45,9 +48,6 @@ HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIREC
 	This->Global.wWidth = This->owner->DirectDrawGlobal.vmiData.dwDisplayWidth;
 	This->Global.dwLinearSize =  This->owner->DirectDrawGlobal.vmiData.lDisplayPitch;
 	
-
-
-	
 	/* surface more struct */
 	memset(&This->More, 0, sizeof(DDRAWI_DDRAWSURFACE_MORE));
 	This->More.dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
@@ -56,10 +56,10 @@ HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIREC
 	memset(&This->Local, 0, sizeof(DDRAWI_DDRAWSURFACE_LCL));
 	This->Local.lpGbl = &This->Global;
 	This->Local.lpSurfMore = &This->More;
-	This->Local.ddsCaps = *(DDSCAPS*)&pDDSD->ddsCaps;
+	This->Local.ddsCaps = DDSD.ddsCaps;
 
 	/* we need to set some flags if we create the primary surface */
-	if(pDDSD->ddsCaps.dwCaps == DDSCAPS_PRIMARYSURFACE)
+	if(pDDSD2->ddsCaps.dwCaps == DDSCAPS_PRIMARYSURFACE)
 	{
 		This->Local.dwFlags |= DDRAWISURF_FRONTBUFFER;
 		This->Global.dwGlobalFlags |= DDRAWISURFGBL_ISGDISURFACE;
@@ -74,7 +74,7 @@ HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIREC
 	DDHAL_CREATESURFACEDATA CreateData;
 	memset(&CreateData, 0, sizeof(DDHAL_CREATESURFACEDATA));
 	CreateData.lpDD = &This->owner->DirectDrawGlobal; 
-	CreateData.lpDDSurfaceDesc = (DDSURFACEDESC*)pDDSD;
+	CreateData.lpDDSurfaceDesc = &DDSD;
 	CreateData.dwSCnt = 1;
 	CreateData.lplpSList = pLocal;	
 	
