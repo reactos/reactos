@@ -22,7 +22,7 @@ HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIREC
 		return DDERR_INVALIDPARAMS;
 
 	This->owner = (IDirectDrawImpl*)pDD;	
-   
+   	
 	if (This->owner->DirectDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_CANCREATESURFACE)
 	{
 		/* can the driver create the surface */
@@ -41,9 +41,12 @@ HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIREC
 	/* surface global struct */
 	memset(&This->Global, 0, sizeof(DDRAWI_DDRAWSURFACE_GBL));
 	This->Global.lpDD = &This->owner->DirectDrawGlobal;	
-	This->Global.wHeight = This->owner->Height;
-	This->Global.wWidth = This->owner->Width;
-	This->Global.dwLinearSize =  This->Global.wWidth * This->owner->Bpp/8;
+	This->Global.wHeight = This->owner->DirectDrawGlobal.vmiData.dwDisplayHeight;
+	This->Global.wWidth = This->owner->DirectDrawGlobal.vmiData.dwDisplayWidth;
+	This->Global.dwLinearSize =  This->owner->DirectDrawGlobal.vmiData.lDisplayPitch;
+	
+
+
 	
 	/* surface more struct */
 	memset(&This->More, 0, sizeof(DDRAWI_DDRAWSURFACE_MORE));
