@@ -726,14 +726,157 @@ RtlSelfRelativeToAbsoluteSD(PISECURITY_DESCRIPTOR RelSD,
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 NTSTATUS NTAPI
 RtlSelfRelativeToAbsoluteSD2(PISECURITY_DESCRIPTOR SelfRelativeSecurityDescriptor,
                              PULONG BufferSize)
 {
-   UNIMPLEMENTED;
-   return STATUS_NOT_IMPLEMENTED;
+    PISECURITY_DESCRIPTOR AbsSD = SelfRelativeSecurityDescriptor;
+    PISECURITY_DESCRIPTOR_RELATIVE RelSD = (PISECURITY_DESCRIPTOR_RELATIVE)SelfRelativeSecurityDescriptor;
+#ifdef _WIN64
+    PVOID DataStart;
+    ULONG DataSize;
+    ULONG OwnerLength;
+    ULONG GroupLength;
+    ULONG DaclLength;
+    ULONG SaclLength;
+#endif
+    PSID pOwner;
+    PSID pGroup;
+    PACL pDacl;
+    PACL pSacl;
+
+    PAGED_CODE_RTL();
+
+    if (SelfRelativeSecurityDescriptor == NULL)
+    {
+        return STATUS_INVALID_PARAMETER_1;
+    }
+    if (BufferSize == NULL)
+    {
+        return STATUS_INVALID_PARAMETER_2;
+    }
+
+    if (RelSD->Revision != SECURITY_DESCRIPTOR_REVISION1)
+    {
+        return STATUS_UNKNOWN_REVISION;
+    }
+    if (!(RelSD->Control & SE_SELF_RELATIVE))
+    {
+        return STATUS_BAD_DESCRIPTOR_FORMAT;
+    }
+
+    ASSERT(FIELD_OFFSET(SECURITY_DESCRIPTOR, Owner) ==
+           FIELD_OFFSET(SECURITY_DESCRIPTOR_RELATIVE, Owner));
+
+#ifdef _WIN64
+
+    RtlpQuerySecurityDescriptor(SelfRelativeSecurityDescriptor,
+                                &pOwner,
+                                &OwnerLength,
+                                &pGroup,
+                                &GroupLength,
+                                &pDacl,
+                                &DaclLength,
+                                &pSacl,
+                                &SaclLength);
+
+    ASSERT(sizeof(SECURITY_DESCRIPTOR) > sizeof(SECURITY_DESCRIPTOR_RELATIVE));
+
+    DataSize = OwnerLength + GroupLength + DaclLength + SaclLength;
+    if (*BufferSize < sizeof(SECURITY_DESCRIPTOR) + DataSize)
+    {
+        *BufferSize = sizeof(SECURITY_DESCRIPTOR) + DataSize;
+        return STATUS_BUFFER_TOO_SMALL;
+    }
+
+    if (DataSize != 0)
+    {
+        /* calculate the start of the data area, we simply just move the data by
+           the difference between the size of the relative and absolute security
+           descriptor structure */
+        DataStart = pOwner;
+        if ((pGroup != NULL && (ULONG_PTR)pGroup < (ULONG_PTR)DataStart) || DataStart == NULL)
+            DataStart = pGroup;
+        if ((pDacl != NULL && (ULONG_PTR)pDacl < (ULONG_PTR)DataStart) || DataStart == NULL)
+            DataStart = pDacl;
+        if ((pSacl != NULL && (ULONG_PTR)pSacl < (ULONG_PTR)DataStart) || DataStart == NULL)
+            DataStart = pSacl;
+
+        /* if DataSize != 0 ther must be at least one SID or ACL in the security
+           descriptor! Also the data area must be located somewhere after the
+           end of the SECURITY_DESCRIPTOR_RELATIVE structure */
+        ASSERT(DataStart != NULL);
+        ASSERT((ULONG_PTR)DataStart >= (ULONG_PTR)(RelSD + 1));
+
+        /* it's time to move the data */
+        RtlMoveMemory((PVOID)(AbsSD + 1),
+                      DataStart,
+                      DataSize);
+
+        /* adjust the pointers if neccessary */
+        if (pOwner != NULL)
+            AbsSD->Owner = (PSID)((ULONG_PTR)pOwner +
+                                  sizeof(SECURITY_DESCRIPTOR) - sizeof(SECURITY_DESCRIPTOR_RELATIVE));
+        else
+            AbsSD->Owner = NULL;
+
+        if (pGroup != NULL)
+            AbsSD->Group = (PSID)((ULONG_PTR)pGroup +
+                                  sizeof(SECURITY_DESCRIPTOR) - sizeof(SECURITY_DESCRIPTOR_RELATIVE));
+        else
+            AbsSD->Group = NULL;
+
+        if (pSacl != NULL)
+            AbsSD->Sacl = (PACL)((ULONG_PTR)pSacl +
+                                 sizeof(SECURITY_DESCRIPTOR) - sizeof(SECURITY_DESCRIPTOR_RELATIVE));
+        else
+            AbsSD->Sacl = NULL;
+
+        if (pDacl != NULL)
+            AbsSD->Dacl = (PACL)((ULONG_PTR)pDacl +
+                                 sizeof(SECURITY_DESCRIPTOR) - sizeof(SECURITY_DESCRIPTOR_RELATIVE));
+        else
+            AbsSD->Dacl = NULL;
+    }
+    else
+    {
+        /* all pointers must be NULL! */
+        ASSERT(pOwner == NULL);
+        ASSERT(pGroup == NULL);
+        ASSERT(pSacl == NULL);
+        ASSERT(pDacl == NULL);
+
+        AbsSD->Owner = NULL;
+        AbsSD->Group = NULL;
+        AbsSD->Dacl = NULL;
+        AbsSD->Sacl = NULL;
+    }
+
+    /* clear the self-relative flag */
+    AbsSD->Control &= ~SE_SELF_RELATIVE;
+
+#else
+
+    RtlpQuerySecurityDescriptorPointers(SelfRelativeSecurityDescriptor,
+                                        &pOwner,
+                                        &pGroup,
+                                        &pSacl,
+                                        &pDacl);
+
+    ASSERT(sizeof(SECURITY_DESCRIPTOR) == sizeof(SECURITY_DESCRIPTOR_RELATIVE));
+
+    /* clear the self-relative flag and simply convert the offsets to pointers */
+    AbsSD->Control &= ~SE_SELF_RELATIVE;
+    AbsSD->Owner = pOwner;
+    AbsSD->Group = pGroup;
+    AbsSD->Sacl = pDacl;
+    AbsSD->Dacl = pSacl;
+
+#endif
+
+    return STATUS_SUCCESS;
 }
 
 
