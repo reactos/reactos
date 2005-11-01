@@ -69,6 +69,8 @@ RtlAnsiStringToUnicodeString(
     ULONG Length;
     ULONG Index;
 
+    PAGED_CODE_RTL();
+
     Length = RtlAnsiStringToUnicodeSize(AnsiSource);
     if (Length > MAXUSHORT) return STATUS_INVALID_PARAMETER_2;
     UniDest->Length = (USHORT)Length - sizeof(WCHAR);
@@ -350,10 +352,11 @@ VOID
 NTAPI
 RtlFreeAnsiString(IN PANSI_STRING AnsiString)
 {
+    PAGED_CODE_RTL();
+
     if (AnsiString->Buffer)
     {
         RtlpFreeStringMemory(AnsiString->Buffer, TAG_ASTR);
-        RtlZeroMemory(AnsiString, sizeof(ANSI_STRING));
     }
 }
 
@@ -364,7 +367,12 @@ VOID
 NTAPI
 RtlFreeOemString(IN POEM_STRING OemString)
 {
-   if (OemString->Buffer) RtlpFreeStringMemory(OemString->Buffer, TAG_OSTR);
+   PAGED_CODE_RTL();
+
+   if (OemString->Buffer)
+   {
+       RtlpFreeStringMemory(OemString->Buffer, TAG_OSTR);
+   }
 }
 
 /*
@@ -374,10 +382,11 @@ VOID
 NTAPI
 RtlFreeUnicodeString(IN PUNICODE_STRING UnicodeString)
 {
+    PAGED_CODE_RTL();
+
     if (UnicodeString->Buffer)
     {
         RtlpFreeStringMemory(UnicodeString->Buffer, TAG_ASTR);
-        RtlZeroMemory(UnicodeString, sizeof(UNICODE_STRING));
     }
 }
 
@@ -476,7 +485,7 @@ RtlInitUnicodeStringEx(OUT PUNICODE_STRING DestinationString,
     if(SourceString)
     {
         DestSize = wcslen(SourceString) * sizeof(WCHAR);
-        if (DestSize > 0xFFFC) return STATUS_NAME_TOO_LONG;
+        if (DestSize > 0xFFFE) return STATUS_NAME_TOO_LONG;
         DestinationString->Length = (USHORT)DestSize;
         DestinationString->MaximumLength = (USHORT)DestSize + sizeof(WCHAR);
     }
@@ -905,6 +914,8 @@ RtlUnicodeStringToAnsiString(
     ULONG Length;
     ULONG Index;
 
+    PAGED_CODE_RTL();
+
     Length = RtlUnicodeStringToAnsiSize(UniSource);
     if (Length > MAXUSHORT) return STATUS_INVALID_PARAMETER_2;
 
@@ -958,6 +969,8 @@ RtlOemStringToUnicodeString(
     ULONG Length;
     ULONG Index;
 
+    PAGED_CODE_RTL();
+
     Length = RtlOemStringToUnicodeSize(OemSource);
     if (Length > MAXUSHORT) return STATUS_INVALID_PARAMETER_2;
 
@@ -1007,6 +1020,8 @@ RtlUnicodeStringToOemString(
     NTSTATUS Status;
     ULONG Length;
     ULONG Index;
+
+    PAGED_CODE_RTL();
 
     Length = RtlUnicodeStringToOemSize(UniSource);
     if (Length > MAXUSHORT) return STATUS_INVALID_PARAMETER_2;
@@ -1118,6 +1133,8 @@ RtlOemStringToCountedUnicodeString(
     NTSTATUS Status;
     ULONG Length;
     ULONG Index;
+
+    PAGED_CODE_RTL();
 
     Length = RtlOemStringToCountedUnicodeSize(OemSource);
 
@@ -1427,6 +1444,8 @@ RtlUnicodeStringToCountedOemString(
     ULONG Length;
     ULONG Index;
 
+    PAGED_CODE_RTL();
+
     Length = RtlUnicodeStringToCountedOemSize(UniSource);
 
     if (!Length)
@@ -1532,6 +1551,8 @@ RtlUpcaseUnicodeString(
 {
     ULONG i, j;
 
+    PAGED_CODE_RTL();
+
     if (AllocateDestinationString == TRUE)
     {
         UniDest->MaximumLength = UniSource->Length;
@@ -1571,6 +1592,8 @@ RtlUpcaseUnicodeStringToAnsiString(
     NTSTATUS Status;
     ULONG Length;
     ULONG Index;
+
+    PAGED_CODE_RTL();
 
     Length = RtlUnicodeStringToAnsiSize(UniSource);
     if (Length > MAXUSHORT) return STATUS_INVALID_PARAMETER_2;
@@ -1622,6 +1645,8 @@ RtlUpcaseUnicodeStringToCountedOemString(
     NTSTATUS Status;
     ULONG Length;
     ULONG Index;
+
+    PAGED_CODE_RTL();
 
     Length = RtlUnicodeStringToCountedOemSize(UniSource);
 
@@ -1679,6 +1704,8 @@ RtlUpcaseUnicodeStringToOemString (
     NTSTATUS Status;
     ULONG Length;
     ULONG Index;
+
+    PAGED_CODE_RTL();
 
     Length = RtlUnicodeStringToOemSize(UniSource);
     if (Length > MAXUSHORT) return STATUS_INVALID_PARAMETER_2;
@@ -1914,7 +1941,11 @@ RtlCreateUnicodeString(
 {
     ULONG Length;
 
+    PAGED_CODE_RTL();
+
     Length = (wcslen(Source) + 1) * sizeof(WCHAR);
+    if (Length > 0xFFFE) return FALSE;
+
     UniDest->Buffer = RtlpAllocateStringMemory(Length, TAG_USTR);
 
     if (UniDest->Buffer == NULL) return FALSE;
@@ -1964,6 +1995,8 @@ RtlDowncaseUnicodeString(
 {
     ULONG i;
     ULONG StopGap;
+
+    PAGED_CODE_RTL();
 
     if (AllocateDestinationString)
     {
@@ -2108,6 +2141,8 @@ RtlDuplicateUnicodeString(
    IN PCUNICODE_STRING SourceString,
    OUT PUNICODE_STRING DestinationString)
 {
+   PAGED_CODE_RTL();
+
    if (SourceString == NULL || DestinationString == NULL)
       return STATUS_INVALID_PARAMETER;
 
