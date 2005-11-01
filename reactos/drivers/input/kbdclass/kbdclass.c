@@ -48,6 +48,20 @@ KbdclassClose(
 }
 
 static NTSTATUS NTAPI
+KbdclassCleanup(
+	IN PDEVICE_OBJECT DeviceObject,
+	IN PIRP Irp)
+{
+	DPRINT("IRP_MJ_CLEANUP\n");
+
+	if (!((PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsClassDO)
+		return ForwardIrpAndForget(DeviceObject, Irp);
+
+	/* FIXME: close all associated Port devices */
+	return STATUS_SUCCESS;
+}
+
+static NTSTATUS NTAPI
 KbdclassRead(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
@@ -79,7 +93,7 @@ KbdclassDeviceControl(
 	NTSTATUS Status;
 
 	DPRINT("IRP_MJ_DEVICE_CONTROL\n");
-	
+
 	if (!((PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsClassDO)
 		return ForwardIrpAndForget(DeviceObject, Irp);
 
@@ -148,12 +162,25 @@ ReadRegistryEntries(
 	IN PUNICODE_STRING RegistryPath,
 	IN PKBDCLASS_DRIVER_EXTENSION DriverExtension)
 {
+	UNICODE_STRING ParametersRegistryKey;
 	RTL_QUERY_REGISTRY_TABLE Parameters[4];
 	NTSTATUS Status;
 
 	ULONG DefaultConnectMultiplePorts = 1;
 	ULONG DefaultKeyboardDataQueueSize = 0x64;
 	UNICODE_STRING DefaultKeyboardDeviceBaseName = RTL_CONSTANT_STRING(L"KeyboardClass");
+
+	ParametersRegistryKey.Length = 0;
+	ParametersRegistryKey.MaximumLength = RegistryPath->Length + sizeof(L"\\Parameters") + sizeof(UNICODE_NULL);
+	ParametersRegistryKey.Buffer = ExAllocatePool(PagedPool, ParametersRegistryKey.MaximumLength);
+	if (!ParametersRegistryKey.Buffer)
+	{
+		DPRINT("ExAllocatePool() failed\n");
+		return STATUS_INSUFFICIENT_RESOURCES;
+	}
+	RtlCopyUnicodeString(&ParametersRegistryKey, RegistryPath);
+	RtlAppendUnicodeToString(&ParametersRegistryKey, L"\\Parameters");
+	ParametersRegistryKey.Buffer[ParametersRegistryKey.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
 	RtlZeroMemory(Parameters, sizeof(Parameters));
 
@@ -163,14 +190,14 @@ ReadRegistryEntries(
 	Parameters[0].DefaultType = REG_DWORD;
 	Parameters[0].DefaultData = &DefaultConnectMultiplePorts;
 	Parameters[0].DefaultLength = sizeof(ULONG);
-	
+
 	Parameters[1].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
 	Parameters[1].Name = L"KeyboardDataQueueSize";
 	Parameters[1].EntryContext = &DriverExtension->KeyboardDataQueueSize;
 	Parameters[1].DefaultType = REG_DWORD;
 	Parameters[1].DefaultData = &DefaultKeyboardDataQueueSize;
 	Parameters[1].DefaultLength = sizeof(ULONG);
-	
+
 	Parameters[2].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_REGISTRY_OPTIONAL;
 	Parameters[2].Name = L"KeyboardDeviceBaseName";
 	Parameters[2].EntryContext = &DriverExtension->KeyboardDeviceBaseName;
@@ -180,7 +207,7 @@ ReadRegistryEntries(
 
 	Status = RtlQueryRegistryValues(
 		RTL_REGISTRY_ABSOLUTE,
-		RegistryPath->Buffer,
+		ParametersRegistryKey.Buffer,
 		Parameters,
 		NULL,
 		NULL);
@@ -198,6 +225,16 @@ ReadRegistryEntries(
 			DriverExtension->KeyboardDataQueueSize = DefaultKeyboardDataQueueSize;
 		}
 	}
+	else if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+	{
+		/* Registry path doesn't exist. Set defaults */
+		DriverExtension->ConnectMultiplePorts = DefaultConnectMultiplePorts;
+		DriverExtension->KeyboardDataQueueSize = DefaultKeyboardDataQueueSize;
+		Status = RtlDuplicateUnicodeString(
+			RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
+			&DefaultKeyboardDeviceBaseName,
+			&DriverExtension->KeyboardDeviceBaseName);
+	}
 
 	return Status;
 }
@@ -208,6 +245,7 @@ CreateKeyboardClassDeviceObject(
 	OUT PDEVICE_OBJECT *ClassDO OPTIONAL)
 {
 	PKBDCLASS_DRIVER_EXTENSION DriverExtension;
+	UNICODE_STRING SymbolicLinkName = RTL_CONSTANT_STRING(L"\\??\\Keyboard");
 	ULONG DeviceId = 0;
 	ULONG PrefixLength;
 	UNICODE_STRING DeviceNameU;
@@ -255,7 +293,7 @@ CreateKeyboardClassDeviceObject(
 			&DeviceNameU,
 			FILE_DEVICE_KEYBOARD,
 			FILE_DEVICE_SECURE_OPEN,
-			FALSE,
+			TRUE,
 			&Fdo);
 		if (NT_SUCCESS(Status))
 			goto cleanup;
@@ -269,9 +307,11 @@ CreateKeyboardClassDeviceObject(
 	DPRINT("Too much devices starting with '\\Device\\%wZ'\n", &DriverExtension->KeyboardDeviceBaseName);
 	Status = STATUS_UNSUCCESSFUL;
 cleanup:
-	ExFreePool(DeviceNameU.Buffer);
 	if (!NT_SUCCESS(Status))
+	{
+		ExFreePool(DeviceNameU.Buffer);
 		return Status;
+	}
 
 	DeviceExtension = (PKBDCLASS_DEVICE_EXTENSION)Fdo->DeviceExtension;
 	RtlZeroMemory(DeviceExtension, sizeof(KBDCLASS_DEVICE_EXTENSION));
@@ -282,10 +322,16 @@ cleanup:
 	DeviceExtension->ReadIsPending = FALSE;
 	DeviceExtension->InputCount = 0;
 	DeviceExtension->PortData = ExAllocatePool(NonPagedPool, DeviceExtension->DriverExtension->KeyboardDataQueueSize * sizeof(KEYBOARD_INPUT_DATA));
-	Fdo->Flags |= DO_POWER_PAGABLE;
+	Fdo->Flags |= DO_POWER_PAGABLE | DO_BUFFERED_IO;
 	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
 
 	/* FIXME: create registry entry in HKEY_LOCAL_MACHINE\HARDWARE\DEVICEMAP */
+
+	/* HACK: 1st stage setup needs a keyboard to open it in user-mode
+	 * Create a link to user space... */
+	IoCreateSymbolicLink(&SymbolicLinkName, &DeviceNameU);
+
+	ExFreePool(DeviceNameU.Buffer);
 
 	if (ClassDO)
 		*ClassDO = Fdo;
@@ -323,7 +369,7 @@ KbdclassCallback(
 		/* A read request is waiting for input, so go straight to it */
 		/* FIXME: use SEH */
 		RtlCopyMemory(
-			Irp->MdlAddress ? MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority) : Irp->UserBuffer,
+			Irp->MdlAddress ? MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority) : Irp->AssociatedIrp.SystemBuffer,
 			KeyboardDataStart,
 			sizeof(KEYBOARD_INPUT_DATA));
 
@@ -416,6 +462,9 @@ ConnectKeyboardPortDriver(
 	else
 		IoStatus.Status = Status;
 
+	if (NT_SUCCESS(Status))
+		ObReferenceObject(KeyboardPortDO);
+
 	return IoStatus.Status;
 }
 
@@ -440,7 +489,7 @@ KbdclassAddDevice(
 		NULL,
 		Pdo->DeviceType,
 		FILE_DEVICE_SECURE_OPEN,
-		FALSE,
+		TRUE,
 		&Fdo);
 	if (!NT_SUCCESS(Status))
 	{
@@ -461,7 +510,6 @@ KbdclassAddDevice(
 		return Status;
 	}
 	Fdo->Flags |= DO_BUFFERED_IO;
-	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
 
 	if (DriverExtension->ConnectMultiplePorts)
 		Status = ConnectKeyboardPortDriver(Fdo, DriverExtension->MainKbdclassDeviceObject);
@@ -470,11 +518,12 @@ KbdclassAddDevice(
 	if (!NT_SUCCESS(Status))
 	{
 		DPRINT("ConnectKeyboardPortDriver() failed with status 0x%08lx\n", Status);
+		IoDetachDevice(DeviceExtension->LowerDevice);
 		/* FIXME: why can't I cleanup without error? */
-		//IoDetachDevice(Fdo);
 		//IoDeleteDevice(Fdo);
 		return Status;
 	}
+	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
 
 	/* Register GUID_DEVINTERFACE_KEYBOARD interface */
 	Status = IoRegisterDeviceInterface(
@@ -621,7 +670,7 @@ SearchForLegacyDrivers(
 			{
 				/* FIXME: Log the error */
 				DPRINT("ConnectKeyboardPortDriver() failed with status 0x%08lx\n", Status);
-				/* FIXME: cleanup */
+				ObReferenceObject(PortDeviceObject);
 			}
 		}
 		else
@@ -632,7 +681,7 @@ SearchForLegacyDrivers(
 			{
 				/* FIXME: Log the error */
 				DPRINT("CreatePointerClassDeviceObject() failed with status 0x%08lx\n", Status);
-				/* FIXME: cleanup */
+				ObReferenceObject(PortDeviceObject);
 				continue;
 			}
 			Status = ConnectKeyboardPortDriver(PortDeviceObject, ClassDO);
@@ -640,7 +689,8 @@ SearchForLegacyDrivers(
 			{
 				/* FIXME: Log the error */
 				DPRINT("ConnectKeyboardPortDriver() failed with status 0x%08lx\n", Status);
-				/* FIXME: cleanup */
+				ObReferenceObject(PortDeviceObject);
+				IoDeleteDevice(ClassDO);
 			}
 		}
 	}
@@ -708,6 +758,7 @@ DriverEntry(
 
 	DriverObject->MajorFunction[IRP_MJ_CREATE]         = KbdclassCreate;
 	DriverObject->MajorFunction[IRP_MJ_CLOSE]          = KbdclassClose;
+	DriverObject->MajorFunction[IRP_MJ_CLEANUP]        = KbdclassCleanup;
 	DriverObject->MajorFunction[IRP_MJ_READ]           = KbdclassRead;
 	DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = KbdclassDeviceControl;
 	DriverObject->DriverStartIo                        = KbdclassStartIo;
