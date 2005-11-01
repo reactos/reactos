@@ -868,8 +868,8 @@ RtlSelfRelativeToAbsoluteSD2(PISECURITY_DESCRIPTOR SelfRelativeSecurityDescripto
 
         AbsSD->Owner = NULL;
         AbsSD->Group = NULL;
-        AbsSD->Dacl = NULL;
         AbsSD->Sacl = NULL;
+        AbsSD->Dacl = NULL;
     }
 
     /* clear the self-relative flag */
@@ -889,8 +889,8 @@ RtlSelfRelativeToAbsoluteSD2(PISECURITY_DESCRIPTOR SelfRelativeSecurityDescripto
     AbsSD->Control &= ~SE_SELF_RELATIVE;
     AbsSD->Owner = pOwner;
     AbsSD->Group = pGroup;
-    AbsSD->Sacl = pDacl;
-    AbsSD->Dacl = pSacl;
+    AbsSD->Sacl = pSacl;
+    AbsSD->Dacl = pDacl;
 
 #endif
 
