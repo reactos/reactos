@@ -1943,6 +1943,8 @@ RtlCreateUnicodeString(
     PAGED_CODE_RTL();
 
     Length = (wcslen(Source) + 1) * sizeof(WCHAR);
+    if (Length > 0xFFFE) return FALSE;
+
     UniDest->Buffer = RtlpAllocateStringMemory(Length, TAG_USTR);
 
     if (UniDest->Buffer == NULL) return FALSE;
