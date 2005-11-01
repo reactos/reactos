@@ -80,6 +80,7 @@ HRESULT Hal_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIRECTDRAW pD
 	This->Local.lpGbl = &This->Global;
 	This->Local.lpSurfMore = &This->More;
 
+	
 	/* FIXME do a memcopy */
 	This->Local.ddsCaps = *(DDSCAPS*)&This->ddsd.ddsCaps;
  

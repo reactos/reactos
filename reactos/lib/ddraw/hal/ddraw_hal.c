@@ -315,6 +315,7 @@ VOID Hal_DirectDraw_Release (LPDIRECTDRAW7 iface)
 
     DdDeleteDirectDrawObject (&This->DirectDrawGlobal);
 
+	/*
     if(This->DirectDrawGlobal.lpDDKernelCaps)
         HeapFree(GetProcessHeap(), 0, This->DirectDrawGlobal.lpDDKernelCaps);
 
@@ -344,6 +345,7 @@ VOID Hal_DirectDraw_Release (LPDIRECTDRAW7 iface)
     
     if(This->DirectDrawGlobal.lpD3DGlobalDriverData)
         HeapFree(GetProcessHeap(), 0, (PVOID)This->DirectDrawGlobal.lpD3DGlobalDriverData);
+	*/
 }
 
 
