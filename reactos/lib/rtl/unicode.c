@@ -357,6 +357,7 @@ RtlFreeAnsiString(IN PANSI_STRING AnsiString)
     if (AnsiString->Buffer)
     {
         RtlpFreeStringMemory(AnsiString->Buffer, TAG_ASTR);
+        RtlZeroMemory(AnsiString, sizeof(ANSI_STRING));
     }
 }
 
@@ -369,10 +370,7 @@ RtlFreeOemString(IN POEM_STRING OemString)
 {
    PAGED_CODE_RTL();
 
-   if (OemString->Buffer)
-   {
-       RtlpFreeStringMemory(OemString->Buffer, TAG_OSTR);
-   }
+   if (OemString->Buffer) RtlpFreeStringMemory(OemString->Buffer, TAG_OSTR);
 }
 
 /*
@@ -387,6 +385,7 @@ RtlFreeUnicodeString(IN PUNICODE_STRING UnicodeString)
     if (UnicodeString->Buffer)
     {
         RtlpFreeStringMemory(UnicodeString->Buffer, TAG_ASTR);
+        RtlZeroMemory(UnicodeString, sizeof(UNICODE_STRING));
     }
 }
 
@@ -485,7 +484,7 @@ RtlInitUnicodeStringEx(OUT PUNICODE_STRING DestinationString,
     if(SourceString)
     {
         DestSize = wcslen(SourceString) * sizeof(WCHAR);
-        if (DestSize > 0xFFFE) return STATUS_NAME_TOO_LONG;
+        if (DestSize >= 0xFFFC) return STATUS_NAME_TOO_LONG;
         DestinationString->Length = (USHORT)DestSize;
         DestinationString->MaximumLength = (USHORT)DestSize + sizeof(WCHAR);
     }
@@ -1944,8 +1943,6 @@ RtlCreateUnicodeString(
     PAGED_CODE_RTL();
 
     Length = (wcslen(Source) + 1) * sizeof(WCHAR);
-    if (Length > 0xFFFE) return FALSE;
-
     UniDest->Buffer = RtlpAllocateStringMemory(Length, TAG_USTR);
 
     if (UniDest->Buffer == NULL) return FALSE;
