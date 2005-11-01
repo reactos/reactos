@@ -290,10 +290,11 @@ HRESULT WINAPI Main_DirectDraw_GetDisplayMode(LPDIRECTDRAW7 iface, LPDDSURFACEDE
     pDDSD->lPitch  = This->DirectDrawGlobal.vmiData.lDisplayPitch;
     pDDSD->dwRefreshRate = This->DirectDrawGlobal.dwMonitorFrequency;
     
-    /* have not check where I should get hold of this info yet */
-    DWORD  dwBackBufferCount;
+    RtlCopyMemory(&pDDSD->ddpfPixelFormat,&This->DirectDrawGlobal.vmiData.ddpfDisplay,sizeof(DDPIXELFORMAT));
+    RtlCopyMemory(&pDDSD->ddsCaps,&This->DirectDrawGlobal.ddCaps,sizeof(DDCORECAPS));
 
     /* have not check where I should get hold of this info yet
+	DWORD  dwBackBufferCount;
     DWORD  dwAlphaBitDepth;
     DWORD  dwReserved;
     LPVOID lpSurface;
@@ -304,17 +305,11 @@ HRESULT WINAPI Main_DirectDraw_GetDisplayMode(LPDIRECTDRAW7 iface, LPDDSURFACEDE
     } 
     DDCOLORKEY    ddckCKDestBlt;
     DDCOLORKEY    ddckCKSrcOverlay;
-    DDCOLORKEY    ddckCKSrcBlt;
-    */
-    
-    RtlCopyMemory(&pDDSD->ddpfPixelFormat,&This->DirectDrawGlobal.vmiData.ddpfDisplay,sizeof(DDPIXELFORMAT));
-    RtlCopyMemory(&pDDSD->ddsCaps,&This->DirectDrawGlobal.ddCaps,sizeof(DDCORECAPS));
-    
-    /* have not check where I should get hold of this info yet    
+    DDCOLORKEY    ddckCKSrcBlt;  
     DWORD         dwTextureStage;
     */
   
-       return DD_OK;
+    return DD_OK;
 }
 
 HRESULT WINAPI Main_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7 iface, DWORD dwFlags,
