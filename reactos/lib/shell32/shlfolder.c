@@ -411,14 +411,13 @@ HRESULT SHELL32_GetItemAttributes (IShellFolder * psf, LPCITEMIDLIST pidl, LPDWO
         *pdwAttributes &= dwSupportedAttr;
     }
 
+    dwAttributes = *pdwAttributes;
+
     if (_ILIsDrive (pidl)) {
         *pdwAttributes &= SFGAO_HASSUBFOLDER|SFGAO_FILESYSTEM|SFGAO_FOLDER|SFGAO_FILESYSANCESTOR|
 	    SFGAO_DROPTARGET|SFGAO_HASPROPSHEET|SFGAO_CANLINK;
-    } else if (_ILGetGUIDPointer (pidl)) {
-	if (!HCR_GetFolderAttributes (pidl, pdwAttributes)) {
-	    *pdwAttributes &= SFGAO_HASSUBFOLDER|SFGAO_FOLDER|SFGAO_FILESYSANCESTOR|
-		SFGAO_DROPTARGET|SFGAO_HASPROPSHEET|SFGAO_CANRENAME|SFGAO_CANLINK;
-	}
+    } else if (_ILGetGUIDPointer (pidl) && HCR_GetFolderAttributes(pidl, &dwAttributes)) {
+	*pdwAttributes = dwAttributes;
     } else if (_ILGetDataPointer (pidl)) {
 	dwAttributes = _ILGetFileAttributes (pidl, NULL, 0);
 
