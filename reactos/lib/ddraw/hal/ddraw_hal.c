@@ -447,24 +447,19 @@ HRESULT Hal_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7 iface)
     return  FlipGdi.ddRVal;    
 }
 
-HRESULT Hal_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD dwHeight, 
-                                                    DWORD dwBPP, DWORD dwRefreshRate, DWORD dwFlags)
-{
-    DX_STUB;
-}
 
-#if 0
+
 HRESULT Hal_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD dwHeight, 
                                                     DWORD dwBPP, DWORD dwRefreshRate, DWORD dwFlags)
 {
-    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-  
+    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;	
+	DDHAL_SETMODEDATA mode;
+
     if (!(This->DirectDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_SETMODE)) 
     {
         return DDERR_NODRIVERSUPPORT;
     }
-
-    DDHAL_SETMODEDATA mode;
+    
     mode.lpDD = &This->DirectDrawGlobal;
     mode.ddRVal = DDERR_NODRIVERSUPPORT;
 
@@ -476,11 +471,8 @@ HRESULT Hal_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD
     {
         return DDERR_NODRIVERSUPPORT;
     } 
-
-	BOOL dummy;
-	DdReenableDirectDrawObject(&This->DirectDrawGlobal, &dummy);
-    
+	   
 	return mode.ddRVal;
 }
-#endif
+
 

@@ -83,20 +83,35 @@ HRESULT WINAPI Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidt
                                                                 DWORD dwBPP, DWORD dwRefreshRate, DWORD dwFlags)
 {
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+	BOOL dummy = TRUE;
+	DWORD ret;
+	
+	/* FIXME check the refresrate if it same if it not same do the mode switch */
+	if ((This->DirectDrawGlobal.vmiData.dwDisplayHeight == dwHeight) && 
+		(This->DirectDrawGlobal.vmiData.dwDisplayWidth == dwWidth)  && 
+		(This->DirectDrawGlobal.vmiData.ddpfDisplay.dwRGBBitCount == dwBPP))  
+		{
+          
+		  return DD_OK;
+		}
 
-    /* FIXME implement hal setMode */
-    if(Hal_DirectDraw_SetDisplayMode(iface, dwWidth, dwHeight, 
-                                            dwBPP, dwRefreshRate, dwFlags) == DD_OK)
-    {
-        return DD_OK;
+	/* Check use the Hal or Hel for SetMode */
+	if (This->DirectDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_SETMODE)
+	{
+		ret = Hal_DirectDraw_SetDisplayMode(iface, dwWidth, dwHeight, dwBPP, dwRefreshRate, dwFlags);       
     }    
-
-    DWORD ret = Hel_DirectDraw_SetDisplayMode(iface, dwWidth, dwHeight, dwBPP, dwRefreshRate, dwFlags);
-
-	BOOL dummy;
-	DdReenableDirectDrawObject(&This->DirectDrawGlobal, &dummy);
-
-    return ret; 
+	else 
+	{
+		ret = Hel_DirectDraw_SetDisplayMode(iface, dwWidth, dwHeight, dwBPP, dwRefreshRate, dwFlags);
+	}
+	
+	if (ret == DD_OK)
+	{
+		DdReenableDirectDrawObject(&This->DirectDrawGlobal, &dummy);
+		/* FIXME fill the This->DirectDrawGlobal.vmiData right */
+	}
+  
+	return ret;
 }
 
 ULONG WINAPI Main_DirectDraw_AddRef (LPDIRECTDRAW7 iface) 
