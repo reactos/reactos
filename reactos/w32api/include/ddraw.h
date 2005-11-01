@@ -998,13 +998,13 @@ typedef struct _DDSURFACEDESC
 	union {
 		LONG	lPitch;	/* 10: distance to start of next line (return value only)*/
 		DWORD	dwLinearSize;
-	} DUMMYUNIONNAME1;
+	};
 	DWORD	dwBackBufferCount;/* 14: number of back buffers requested*/
 	union {
 		DWORD	dwMipMapCount;/* 18:number of mip-map levels requested*/
 		DWORD	dwZBufferBitDepth;/*18: depth of Z buffer requested*/
 		DWORD	dwRefreshRate;/* 18:refresh rate (used when display mode is described)*/
-	} DUMMYUNIONNAME2;
+	};
 	DWORD	dwAlphaBitDepth;/* 1C:depth of alpha buffer requested*/
 	DWORD	dwReserved;	/* 20:reserved*/
 	LPVOID	lpSurface;	/* 24:pointer to the associated surface memory*/
@@ -1025,28 +1025,27 @@ typedef struct _DDSURFACEDESC2
 	union {
 		LONG	lPitch;	      /*10: distance to start of next line (return value only)*/
 		DWORD   dwLinearSize; /*10: formless late-allocated optimized surface size */
-	} DUMMYUNIONNAME1;
+	};
 	DWORD	dwBackBufferCount;/* 14: number of back buffers requested*/
 	union {
 		DWORD	dwMipMapCount;/* 18:number of mip-map levels requested*/
 		DWORD	dwRefreshRate;/* 18:refresh rate (used when display mode is described)*/
 		DWORD   dwSrcVBHandle;/* 18:source used in VB::Optimize */
-	} DUMMYUNIONNAME2;
+	};
 	DWORD	dwAlphaBitDepth;/* 1C:depth of alpha buffer requested*/
 	DWORD	dwReserved;	/* 20:reserved*/
 	LPVOID	lpSurface;	/* 24:pointer to the associated surface memory*/
 	union {
 		DDCOLORKEY	ddckCKDestOverlay; /* 28: CK for dest overlay use*/
 		DWORD 		dwEmptyFaceColor;  /* 28: color for empty cubemap faces */
-	} DUMMYUNIONNAME3;
+	};
 	DDCOLORKEY	ddckCKDestBlt;	/* 30: CK for destination blt use*/
 	DDCOLORKEY	ddckCKSrcOverlay;/* 38: CK for source overlay use*/
 	DDCOLORKEY	ddckCKSrcBlt;	/* 40: CK for source blt use*/
-
 	union {
 		DDPIXELFORMAT	ddpfPixelFormat;/* 48: pixel format description of the surface*/
 		DWORD 		dwFVF;	/* 48: vertex format description of vertex buffers */
-	} DUMMYUNIONNAME4;
+	};
 	DDSCAPS2	ddsCaps;  /* 68: DDraw surface caps */
 	DWORD		dwTextureStage; /* 78: stage in multitexture cascade */
 } DDSURFACEDESC2,*LPDDSURFACEDESC2;
