@@ -45,6 +45,9 @@
 <directory name="templates">
 	<xi:include href="templates/directory.xml" />
 </directory>
+<directory name="tests">
+	<xi:include href="tests/directory.xml" />
+</directory>
 <!--
 <directory name="welcome">
 	<xi:include href="welcome/welcome.xml" />
