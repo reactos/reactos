@@ -257,9 +257,7 @@ void StartMenu::AddShellEntries(const ShellDirectory& dir, int max, const String
 		*ignore_name = '\0';
 
 	String lwr_filter = _create_info._filter;
-#ifndef __WINE__ ///@todo _tcslwr() for Wine
-	_tcslwr((LPTSTR)lwr_filter.c_str());
-#endif
+	lwr_filter.toLower();
 
 	int cnt = 0;
 	for(Entry*entry=dir._down; entry; entry=entry->_next) {
@@ -281,10 +279,8 @@ void StartMenu::AddShellEntries(const ShellDirectory& dir, int max, const String
 			String lwr_name = entry->_data.cFileName;
 			String lwr_disp = entry->_display_name;
 
-#ifndef __WINE__ ///@todo _tcslwr() for Wine
-			_tcslwr((LPTSTR)lwr_name.c_str());
-			_tcslwr((LPTSTR)lwr_disp.c_str());
-#endif
+			lwr_name.toLower();
+			lwr_disp.toLower();
 
 			if (!_tcsstr(lwr_name,lwr_filter) && !_tcsstr(lwr_disp,lwr_filter))
 				continue;
@@ -1548,7 +1544,6 @@ StartMenuRoot::StartMenuRoot(HWND hwnd)
 
 	try {
 		 // insert directory "<user name>\Start Menu"
-
 		ShellDirectory usr_startmenu(GetDesktopFolder(), SpecialFolderPath(CSIDL_STARTMENU, _hwnd), _hwnd);
 		_dirs.push_back(StartMenuDirectory(usr_startmenu, (LPCTSTR)SpecialFolderFSPath(CSIDL_PROGRAMS, _hwnd)));
 	} catch(COMException&) {
@@ -2217,9 +2212,7 @@ void FavoritesMenu::AddEntries()
 	super::AddEntries();
 
 	String lwr_filter = _create_info._filter;
-#ifndef __WINE__ ///@todo _tcslwr() for Wine
-	_tcslwr((LPTSTR)lwr_filter.c_str());
-#endif
+	lwr_filter.toLower();
 
 	for(BookmarkList::iterator it=_bookmarks.begin(); it!=_bookmarks.end(); ++it) {
 		BookmarkNode& node = *it;
@@ -2246,11 +2239,9 @@ void FavoritesMenu::AddEntries()
 				String lwr_desc = bookmark._description;
 				String lwr_url = bookmark._url;
 
-#ifndef __WINE__ ///@todo _tcslwr() for Wine
-				_tcslwr((LPTSTR)lwr_name.c_str());
-				_tcslwr((LPTSTR)lwr_desc.c_str());
-				_tcslwr((LPTSTR)lwr_url.c_str());
-#endif
+				lwr_name.toLower();
+				lwr_desc.toLower();
+				lwr_url.toLower();
 
 				if (!_tcsstr(lwr_name,lwr_filter) && !_tcsstr(lwr_desc,lwr_filter) && !_tcsstr(lwr_url,lwr_filter))
 					continue;

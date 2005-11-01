@@ -128,7 +128,7 @@ ShellPath ShellEntry::create_absolute_pidl() const
  // get full path of a shell entry
 bool ShellEntry::get_path(PTSTR path, size_t path_count) const
 {
-	if ( !path || 0 == path_count )
+	if (!path || path_count==0)
 		return false;
 /*
 	path[0] = TEXT('\0');
@@ -152,7 +152,7 @@ bool ShellDirectory::get_path(PTSTR path, size_t path_count) const
 {
 	CONTEXT("ShellDirectory::get_path()");
 
-	if ( !path || 0 == path_count )
+	if (!path || path_count==0)
 		return false;
 
 	path[0] = TEXT('\0');

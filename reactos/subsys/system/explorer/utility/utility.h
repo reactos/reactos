@@ -798,6 +798,8 @@ struct String
 	operator wstring() const {WCHAR b[BUFFER_LEN]; return wstring(b, MultiByteToWideChar(CP_ACP, 0, c_str(), -1, b, BUFFER_LEN)-1);}
 #endif
 
+	LPTSTR str() {return (LPTSTR)data();}	/// return modifyable character string pointer
+
 	String& printf(LPCTSTR fmt, ...)
 	{
 		va_list l;
@@ -838,6 +840,12 @@ struct String
 		super::append(b, _vsntprintf(b, COUNTOF(b), fmt, l));
 
 		return *this;
+	}
+
+	void toLower()
+	{
+		if (!empty())
+			CharLower(str());
 	}
 };
 

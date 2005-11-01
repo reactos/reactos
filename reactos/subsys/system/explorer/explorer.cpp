@@ -182,9 +182,7 @@ bool FileTypeManager::is_exe_file(LPCTSTR ext)
 
 const FileTypeInfo& FileTypeManager::operator[](String ext)
 {
-#ifndef __WINE__ ///@todo _tcslwr() for Wine
-	_tcslwr(&ext.at(0));
-#endif
+	ext.toLower();
 
 	iterator found = find(ext);
 	if (found != end())
@@ -414,9 +412,7 @@ const Icon& IconCache::extract(LPCTSTR path, int idx)
 {
 	CachePair key(path, idx);
 
-#ifndef __WINE__ ///@todo _tcslwr() for Wine
-	_tcslwr(&key.first.at(0));
-#endif
+	key.first.toLower();
 
 	PathIdxMap::iterator found = _pathIdxMap.find(key);
 

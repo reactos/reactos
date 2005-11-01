@@ -555,7 +555,7 @@ int NotifyArea::Notify(int id, NMHDR* pnmh)
 			static ResString sShowIcons(IDS_SHOW_HIDDEN_ICONS);
 			static ResString sHideIcons(IDS_HIDE_ICONS);
 
-			pdi->lpszText = (LPTSTR)(_show_hidden? sHideIcons: sShowIcons).c_str();
+			pdi->lpszText = (_show_hidden? sHideIcons: sShowIcons).str();
 		} else {
 			NotifyIconSet::iterator found = IconHitTest(pt);
 
@@ -565,7 +565,7 @@ int NotifyArea::Notify(int id, NMHDR* pnmh)
 				 // enable multiline tooltips (break at CR/LF and for very long one-line strings)
 				SendMessage(pnmh->hwndFrom, TTM_SETMAXTIPWIDTH, 0, 400);
 
-				pdi->lpszText = (LPTSTR)entry._tipText.c_str();
+				pdi->lpszText = entry._tipText.str();
 			}
 		}
 	}
@@ -974,24 +974,24 @@ void TrayNotifyDlg::Refresh()
 	tv.mask = TVIF_TEXT|TVIF_IMAGE|TVIF_SELECTEDIMAGE;
 
 	ResString str_cur(IDS_ITEMS_CUR);
-	tv.pszText = (LPTSTR)str_cur.c_str();
+	tv.pszText = str_cur.str();
 	tv.iSelectedImage = tv.iImage = 0;	// IDI_DOT
 	_hitemCurrent = TreeView_InsertItem(_tree_ctrl, &tvi);
 
 	ResString str_conf(IDS_ITEMS_CONFIGURED);
-	tv.pszText = (LPTSTR)str_conf.c_str();
+	tv.pszText = str_conf.str();
 	tv.iSelectedImage = tv.iImage = 2;	// IDI_DOT_RED
 	_hitemConfig = TreeView_InsertItem(_tree_ctrl, &tvi);
 
 	tvi.hParent = _hitemCurrent;
 
 	ResString str_visible(IDS_ITEMS_VISIBLE);
-	tv.pszText = (LPTSTR)str_visible.c_str();
+	tv.pszText = str_visible.str();
 	tv.iSelectedImage = tv.iImage = 0;	// IDI_DOT
 	_hitemCurrent_visible = TreeView_InsertItem(_tree_ctrl, &tvi);
 
 	ResString str_hidden(IDS_ITEMS_HIDDEN);
-	tv.pszText = (LPTSTR)str_hidden.c_str();
+	tv.pszText = str_hidden.str();
 	tv.iSelectedImage = tv.iImage = 1;	// IDI_DOT_TRANS
 	_hitemCurrent_hidden = TreeView_InsertItem(_tree_ctrl, &tvi);
 
@@ -1075,7 +1075,7 @@ void TrayNotifyDlg::InsertItem(HTREEITEM hparent, HTREEITEM after, const NotifyI
 	tv.mask = TVIF_TEXT|TVIF_IMAGE|TVIF_SELECTEDIMAGE|TVIF_PARAM;
 
 	tv.lParam = (LPARAM)idx;
-	tv.pszText = (LPTSTR)txt.c_str();
+	tv.pszText = txt.str();
 	tv.iSelectedImage = tv.iImage = ImageList_AddAlphaIcon(_himl, hicon, GetStockBrush(WHITE_BRUSH), hdc);
 	(void)TreeView_InsertItem(_tree_ctrl, &tvi);
 }

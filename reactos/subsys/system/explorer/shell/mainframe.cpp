@@ -679,7 +679,7 @@ void MainFrameBase::FillBookmarks()
 	tvi.hInsertAfter = TVI_LAST;
 	tvi.item.mask = TVIF_TEXT|TVIF_IMAGE|TVIF_SELECTEDIMAGE;
 	ResString sFavorites(IDS_FAVORITES);
-	tvi.item.pszText = (LPTSTR)sFavorites.c_str();
+	tvi.item.pszText = sFavorites.str();
 	tvi.item.iSelectedImage = tvi.item.iImage = 0;
 
 	HTREEITEM hitem_bookmarks = TreeView_InsertItem(_hsidebar, &tvi);
@@ -1673,7 +1673,7 @@ void SDIMainFrame::entry_selected(Entry* entry)
 
 		TCHAR path[MAX_PATH];
 
-		if (shell_entry->get_path(path,COUNTOF(path))) {
+		if (shell_entry->get_path(path, COUNTOF(path))) {
 			String url;
 
 			if (path[0] == ':')

@@ -151,9 +151,7 @@ void FindProgramDlg::Refresh(bool delete_cache)
 
 	TCHAR buffer[1024];
 	GetWindowText(GetDlgItem(_hwnd, IDC_FILTER), buffer, COUNTOF(buffer));
-#ifndef __WINE__ ///@todo _tcslwr() for Wine
-	_tcslwr(buffer);
-#endif
+	CharLower(buffer);
 	_lwr_filter = buffer;
 
 	HiddenWindow hide_listctrl(_list_ctrl);
@@ -230,10 +228,8 @@ void FindProgramDlg::add_entry(const FPDEntry& cache_entry)
 	String lwr_path = cache_entry._path;
 	String lwr_name = cache_entry._entry->_display_name;
 
-#ifndef __WINE__ ///@todo _tcslwr() for Wine
-	_tcslwr(&lwr_path.at(0));
-	_tcslwr(&lwr_name.at(0));
-#endif
+	lwr_path.toLower();
+	lwr_name.toLower();
 
 	if (_lwr_filter.empty())
 		if (_tcsstr(lwr_name, _T("uninstal")) || _tcsstr(lwr_name, _T("deinstal")))	// filter out deinstallation links

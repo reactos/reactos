@@ -161,7 +161,7 @@ bool UnixEntry::get_path(PTSTR path, size_t path_count) const
 	int level = 0;
 	size_t len = 0;
 
-	if ( !path || 0 == path_count )
+	if (!path || path_count==0)
 		return false;
 
 	if ( path_count > 1 )
