@@ -25,37 +25,37 @@ handle_t BindingHandle = NULL;
 static VOID
 HandleBind(VOID)
 {
-  LPWSTR pszStringBinding;
-  RPC_STATUS status;
+    LPWSTR pszStringBinding;
+    RPC_STATUS status;
 
-  if (BindingHandle != NULL)
-    return;
+    if (BindingHandle != NULL)
+        return;
 
-  status = RpcStringBindingComposeW(NULL,
-                                    L"ncacn_np",
-                                    NULL,
-                                    L"\\pipe\\ntsvcs",
-                                    NULL,
-                                    &pszStringBinding);
-  if (status)
-  {
-    DPRINT1("RpcStringBindingCompose returned 0x%x\n", status);
-    return;
-  }
+    status = RpcStringBindingComposeW(NULL,
+                                      L"ncacn_np",
+                                      NULL,
+                                      L"\\pipe\\ntsvcs",
+                                      NULL,
+                                      &pszStringBinding);
+    if (status)
+    {
+        DPRINT1("RpcStringBindingCompose returned 0x%x\n", status);
+        return;
+    }
 
-  /* Set the binding handle that will be used to bind to the server. */
-  status = RpcBindingFromStringBindingW(pszStringBinding,
-                                        &BindingHandle);
-  if (status)
-  {
-    DPRINT1("RpcBindingFromStringBinding returned 0x%x\n", status);
-  }
+    /* Set the binding handle that will be used to bind to the server. */
+    status = RpcBindingFromStringBindingW(pszStringBinding,
+                                          &BindingHandle);
+    if (status)
+    {
+        DPRINT1("RpcBindingFromStringBinding returned 0x%x\n", status);
+    }
 
-  status = RpcStringFreeW(&pszStringBinding);
-  if (status)
-  {
-    DPRINT1("RpcStringFree returned 0x%x\n", status);
-  }
+    status = RpcStringFreeW(&pszStringBinding);
+    if (status)
+    {
+        DPRINT1("RpcStringFree returned 0x%x\n", status);
+    }
 }
 
 
@@ -63,16 +63,16 @@ HandleBind(VOID)
 static VOID
 HandleUnbind(VOID)
 {
-  RPC_STATUS status;
+    RPC_STATUS status;
 
-  if (BindingHandle == NULL)
-    return;
+    if (BindingHandle == NULL)
+        return;
 
-  status = RpcBindingFree(&BindingHandle);
-  if (status)
-  {
-    DPRINT1("RpcBindingFree returned 0x%x\n", status);
-  }
+    status = RpcBindingFree(&BindingHandle);
+    if (status)
+    {
+        DPRINT1("RpcBindingFree returned 0x%x\n", status);
+    }
 }
 #endif
 
@@ -179,25 +179,25 @@ ChangeServiceConfigW(SC_HANDLE hService,
 BOOL STDCALL
 CloseServiceHandle(SC_HANDLE hSCObject)
 {
-  DWORD dwError;
+    DWORD dwError;
 
-  DPRINT("CloseServiceHandle() called\n");
+    DPRINT("CloseServiceHandle() called\n");
 
-  HandleBind();
+    HandleBind();
 
-  /* Call to services.exe using RPC */
-  dwError = ScmrCloseServiceHandle(BindingHandle,
-                                   (unsigned int)hSCObject);
-  if (dwError)
-  {
-    DPRINT1("ScmrCloseServiceHandle() failed (Error %lu)\n", dwError);
-    SetLastError(dwError);
-    return FALSE;
-  }
+    /* Call to services.exe using RPC */
+    dwError = ScmrCloseServiceHandle(BindingHandle,
+                                     (unsigned int)hSCObject);
+    if (dwError)
+    {
+        DPRINT1("ScmrCloseServiceHandle() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
 
-  DPRINT("CloseServiceHandle() done\n");
+    DPRINT("CloseServiceHandle() done\n");
 
-  return TRUE;
+    return TRUE;
 }
 
 
@@ -207,32 +207,32 @@ CloseServiceHandle(SC_HANDLE hSCObject)
  * @unimplemented
  */
 BOOL STDCALL
-ControlService(SC_HANDLE        hService,
-               DWORD            dwControl,
+ControlService(SC_HANDLE hService,
+               DWORD dwControl,
                LPSERVICE_STATUS lpServiceStatus)
 {
-  DWORD dwError;
+    DWORD dwError;
 
-  DPRINT("ControlService(%x, %x, %p)\n",
-         hService, dwControl, lpServiceStatus);
+    DPRINT("ControlService(%x, %x, %p)\n",
+           hService, dwControl, lpServiceStatus);
 
-  HandleBind();
+    HandleBind();
 
-  /* Call to services.exe using RPC */
-  dwError = ScmrControlService(BindingHandle,
-                               (unsigned int)hService,
-                               dwControl,
-                               lpServiceStatus);
-  if (dwError != ERROR_SUCCESS)
-  {
-    DPRINT1("ScmrControlService() failed (Error %lu)\n", dwError);
-    SetLastError(dwError);
-    return FALSE;
-  }
+    /* Call to services.exe using RPC */
+    dwError = ScmrControlService(BindingHandle,
+                                 (unsigned int)hService,
+                                 dwControl,
+                                 lpServiceStatus);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("ScmrControlService() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
 
-  DPRINT("ControlService() done\n");
+    DPRINT("ControlService() done\n");
 
-  return TRUE;
+    return TRUE;
 }
 
 
@@ -364,23 +364,23 @@ CreateServiceW(SC_HANDLE hSCManager,
 BOOL STDCALL
 DeleteService(SC_HANDLE hService)
 {
-  DWORD dwError;
+    DWORD dwError;
 
-  DPRINT("DeleteService(%x)\n", hService);
+    DPRINT("DeleteService(%x)\n", hService);
 
-  HandleBind();
+    HandleBind();
 
-  /* Call to services.exe using RPC */
-  dwError = ScmrDeleteService(BindingHandle,
-                              (unsigned int)hService);
-  if (dwError != ERROR_SUCCESS)
-  {
-    DPRINT1("ScmrDeleteService() failed (Error %lu)\n", dwError);
-    SetLastError(dwError);
-    return FALSE;
-  }
+    /* Call to services.exe using RPC */
+    dwError = ScmrDeleteService(BindingHandle,
+                                (unsigned int)hService);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("ScmrDeleteService() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
 
-  return TRUE;
+    return TRUE;
 }
 
 
@@ -656,67 +656,67 @@ GetServiceKeyNameW(SC_HANDLE hSCManager,
 SC_LOCK STDCALL
 LockServiceDatabase(SC_HANDLE hSCManager)
 {
-  SC_LOCK hLock;
-  DWORD dwError;
+    SC_LOCK hLock;
+    DWORD dwError;
 
-  DPRINT("LockServiceDatabase(%x)\n", hSCManager);
+    DPRINT("LockServiceDatabase(%x)\n", hSCManager);
 
-  HandleBind();
+    HandleBind();
 
-  /* Call to services.exe using RPC */
-  dwError = ScmrLockServiceDatabase(BindingHandle,
-                                    (unsigned int)hSCManager,
-                                    (unsigned int *)&hLock);
-  if (dwError != ERROR_SUCCESS)
-  {
-    DPRINT1("ScmrLockServiceDatabase() failed (Error %lu)\n", dwError);
-    SetLastError(dwError);
-    return NULL;
-  }
+    /* Call to services.exe using RPC */
+    dwError = ScmrLockServiceDatabase(BindingHandle,
+                                      (unsigned int)hSCManager,
+                                      (unsigned int *)&hLock);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("ScmrLockServiceDatabase() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return NULL;
+    }
 
-  DPRINT("hLock = %p\n", hLock);
+    DPRINT("hLock = %p\n", hLock);
 
-  return hLock;
+    return hLock;
 }
 
 
 static VOID
 WaitForSCManager(VOID)
 {
-  HANDLE hEvent;
+    HANDLE hEvent;
 
-  DPRINT("WaitForSCManager() called\n");
+    DPRINT("WaitForSCManager() called\n");
 
-  /* Try to open the existing event */
-  hEvent = OpenEventW(SYNCHRONIZE,
-                      FALSE,
-                      L"SvcctrlStartEvent_A3725DX");
-  if (hEvent == NULL)
-  {
-    if (GetLastError() != ERROR_FILE_NOT_FOUND)
-      return;
-
-    /* Try to create a new event */
-    hEvent = CreateEventW(NULL,
-                          TRUE,
-                          FALSE,
-                          L"SvcctrlStartEvent_A3725DX");
+    /* Try to open the existing event */
+    hEvent = OpenEventW(SYNCHRONIZE,
+                        FALSE,
+                        L"SvcctrlStartEvent_A3725DX");
     if (hEvent == NULL)
     {
-      /* Try to open the existing event again */
-      hEvent = OpenEventW(SYNCHRONIZE,
-                          FALSE,
-                          L"SvcctrlStartEvent_A3725DX");
-      if (hEvent == NULL)
-        return;
+        if (GetLastError() != ERROR_FILE_NOT_FOUND)
+            return;
+
+        /* Try to create a new event */
+        hEvent = CreateEventW(NULL,
+                              TRUE,
+                              FALSE,
+                              L"SvcctrlStartEvent_A3725DX");
+        if (hEvent == NULL)
+        {
+            /* Try to open the existing event again */
+            hEvent = OpenEventW(SYNCHRONIZE,
+                                FALSE,
+                                L"SvcctrlStartEvent_A3725DX");
+            if (hEvent == NULL)
+                return;
+        }
     }
-  }
 
-  /* Wait for 3 minutes */
-  WaitForSingleObject(hEvent, 180000);
-  CloseHandle(hEvent);
+    /* Wait for 3 minutes */
+    WaitForSingleObject(hEvent, 180000);
+    CloseHandle(hEvent);
 
-  DPRINT("ScmWaitForSCManager() done\n");
+    DPRINT("ScmWaitForSCManager() done\n");
 }
 
 
@@ -730,32 +730,32 @@ OpenSCManagerA(LPCSTR lpMachineName,
                LPCSTR lpDatabaseName,
                DWORD dwDesiredAccess)
 {
-  SC_HANDLE hScm = NULL;
-  DWORD dwError;
+    SC_HANDLE hScm = NULL;
+    DWORD dwError;
 
-  DPRINT("OpenSCManagerA(%s, %s, %lx)\n",
-         lpMachineName, lpDatabaseName, dwDesiredAccess);
+    DPRINT("OpenSCManagerA(%s, %s, %lx)\n",
+           lpMachineName, lpDatabaseName, dwDesiredAccess);
 
-  WaitForSCManager();
+    WaitForSCManager();
 
-  HandleBind();
+    HandleBind();
 
-  /* Call to services.exe using RPC */
-  dwError = ScmrOpenSCManagerA(BindingHandle,
-                               (LPSTR)lpMachineName,
-                               (LPSTR)lpDatabaseName,
-                               dwDesiredAccess,
-                               (unsigned int*)&hScm);
-  if (dwError != ERROR_SUCCESS)
-  {
-    DPRINT1("ScmrOpenSCManagerA() failed (Error %lu)\n", dwError);
-    SetLastError(dwError);
-    return NULL;
-  }
+    /* Call to services.exe using RPC */
+    dwError = ScmrOpenSCManagerA(BindingHandle,
+                                 (LPSTR)lpMachineName,
+                                 (LPSTR)lpDatabaseName,
+                                 dwDesiredAccess,
+                                 (unsigned int*)&hScm);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("ScmrOpenSCManagerA() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return NULL;
+    }
 
-  DPRINT("hScm = %p\n", hScm);
+    DPRINT("hScm = %p\n", hScm);
 
-  return hScm;
+    return hScm;
 }
 
 
@@ -769,32 +769,32 @@ OpenSCManagerW(LPCWSTR lpMachineName,
                LPCWSTR lpDatabaseName,
                DWORD dwDesiredAccess)
 {
-  SC_HANDLE hScm = NULL;
-  DWORD dwError;
+    SC_HANDLE hScm = NULL;
+    DWORD dwError;
 
-  DPRINT("OpenSCManagerW(%S, %S, %lx)\n",
-         lpMachineName, lpDatabaseName, dwDesiredAccess);
+    DPRINT("OpenSCManagerW(%S, %S, %lx)\n",
+           lpMachineName, lpDatabaseName, dwDesiredAccess);
 
-  WaitForSCManager();
+    WaitForSCManager();
 
-  HandleBind();
+    HandleBind();
 
-  /* Call to services.exe using RPC */
-  dwError = ScmrOpenSCManagerW(BindingHandle,
-                               (LPWSTR)lpMachineName,
-                               (LPWSTR)lpDatabaseName,
-                               dwDesiredAccess,
-                               (unsigned int*)&hScm);
-  if (dwError != ERROR_SUCCESS)
-  {
-    DPRINT1("ScmrOpenSCManagerW() failed (Error %lu)\n", dwError);
-    SetLastError(dwError);
-    return NULL;
-  }
+    /* Call to services.exe using RPC */
+    dwError = ScmrOpenSCManagerW(BindingHandle,
+                                 (LPWSTR)lpMachineName,
+                                 (LPWSTR)lpDatabaseName,
+                                 dwDesiredAccess,
+                                 (unsigned int*)&hScm);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("ScmrOpenSCManagerW() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return NULL;
+    }
 
-  DPRINT("hScm = %p\n", hScm);
+    DPRINT("hScm = %p\n", hScm);
 
-  return hScm;
+    return hScm;
 }
 
 
@@ -808,30 +808,30 @@ OpenServiceA(SC_HANDLE hSCManager,
              LPCSTR lpServiceName,
              DWORD dwDesiredAccess)
 {
-  SC_HANDLE hService = NULL;
-  DWORD dwError;
+    SC_HANDLE hService = NULL;
+    DWORD dwError;
 
-  DPRINT("OpenServiceA(%p, %s, %lx)\n",
-         hSCManager, lpServiceName, dwDesiredAccess);
+    DPRINT("OpenServiceA(%p, %s, %lx)\n",
+           hSCManager, lpServiceName, dwDesiredAccess);
 
-  HandleBind();
+    HandleBind();
 
-  /* Call to services.exe using RPC */
-  dwError = ScmrOpenServiceA(BindingHandle,
-                             (unsigned int)hSCManager,
-                             (LPSTR)lpServiceName,
-                             dwDesiredAccess,
-                             (unsigned int*)&hService);
-  if (dwError != ERROR_SUCCESS)
-  {
-    DPRINT1("ScmrOpenServiceA() failed (Error %lu)\n", dwError);
-    SetLastError(dwError);
-    return NULL;
-  }
+    /* Call to services.exe using RPC */
+    dwError = ScmrOpenServiceA(BindingHandle,
+                               (unsigned int)hSCManager,
+                               (LPSTR)lpServiceName,
+                               dwDesiredAccess,
+                               (unsigned int*)&hService);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("ScmrOpenServiceA() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return NULL;
+    }
 
-  DPRINT("hService = %p\n", hService);
+    DPRINT("hService = %p\n", hService);
 
-  return hService;
+    return hService;
 }
 
 
@@ -845,30 +845,30 @@ OpenServiceW(SC_HANDLE hSCManager,
              LPCWSTR lpServiceName,
              DWORD dwDesiredAccess)
 {
-  SC_HANDLE hService = NULL;
-  DWORD dwError;
+    SC_HANDLE hService = NULL;
+    DWORD dwError;
 
-  DPRINT("OpenServiceW(%p, %S, %lx)\n",
-         hSCManager, lpServiceName, dwDesiredAccess);
+    DPRINT("OpenServiceW(%p, %S, %lx)\n",
+           hSCManager, lpServiceName, dwDesiredAccess);
 
-  HandleBind();
+    HandleBind();
 
-  /* Call to services.exe using RPC */
-  dwError = ScmrOpenServiceW(BindingHandle,
-                             (unsigned int)hSCManager,
-                             (LPWSTR)lpServiceName,
-                             dwDesiredAccess,
-                             (unsigned int*)&hService);
-  if (dwError != ERROR_SUCCESS)
-  {
-    DPRINT1("ScmrOpenServiceW() failed (Error %lu)\n", dwError);
-    SetLastError(dwError);
-    return NULL;
-  }
+    /* Call to services.exe using RPC */
+    dwError = ScmrOpenServiceW(BindingHandle,
+                               (unsigned int)hSCManager,
+                               (LPWSTR)lpServiceName,
+                               dwDesiredAccess,
+                               (unsigned int*)&hService);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("ScmrOpenServiceW() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return NULL;
+    }
 
-  DPRINT("hService = %p\n", hService);
+    DPRINT("hService = %p\n", hService);
 
-  return hService;
+    return hService;
 }
 
 
@@ -977,25 +977,25 @@ BOOL STDCALL
 QueryServiceStatus(SC_HANDLE hService,
                    LPSERVICE_STATUS lpServiceStatus)
 {
-  DWORD dwError;
+    DWORD dwError;
 
-  DPRINT("QueryServiceStatus(%p, %p)\n",
-         hService, lpServiceStatus);
+    DPRINT("QueryServiceStatus(%p, %p)\n",
+           hService, lpServiceStatus);
 
-  HandleBind();
+    HandleBind();
 
-  /* Call to services.exe using RPC */
-  dwError = ScmrQueryServiceStatus(BindingHandle,
-                                   (unsigned int)hService,
-                                   lpServiceStatus);
-  if (dwError != ERROR_SUCCESS)
-  {
-    DPRINT1("ScmrQueryServiceStatus() failed (Error %lu)\n", dwError);
-    SetLastError(dwError);
-    return FALSE;
-  }
+    /* Call to services.exe using RPC */
+    dwError = ScmrQueryServiceStatus(BindingHandle,
+                                     (unsigned int)hService,
+                                     lpServiceStatus);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("ScmrQueryServiceStatus() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
 
-  return TRUE;
+    return TRUE;
 }
 
 
@@ -1062,23 +1062,23 @@ StartServiceW(
 BOOL STDCALL
 UnlockServiceDatabase(SC_LOCK ScLock)
 {
-  DWORD dwError;
+    DWORD dwError;
 
-  DPRINT("UnlockServiceDatabase(%x)\n", ScLock);
+    DPRINT("UnlockServiceDatabase(%x)\n", ScLock);
 
-  HandleBind();
+    HandleBind();
 
-  /* Call to services.exe using RPC */
-  dwError = ScmrUnlockServiceDatabase(BindingHandle,
-                                      (unsigned int)ScLock);
-  if (dwError != ERROR_SUCCESS)
-  {
-    DPRINT1("ScmrUnlockServiceDatabase() failed (Error %lu)\n", dwError);
-    SetLastError(dwError);
-    return FALSE;
-  }
+    /* Call to services.exe using RPC */
+    dwError = ScmrUnlockServiceDatabase(BindingHandle,
+                                        (unsigned int)ScLock);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("ScmrUnlockServiceDatabase() failed (Error %lu)\n", dwError);
+        SetLastError(dwError);
+        return FALSE;
+    }
 
-  return TRUE;
+    return TRUE;
 }
 
 
@@ -1112,13 +1112,13 @@ NotifyBootConfigStatus(BOOL BootAcceptable)
 
 void __RPC_FAR * __RPC_USER midl_user_allocate(size_t len)
 {
-  return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
+    return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, len);
 }
 
 
 void __RPC_USER midl_user_free(void __RPC_FAR * ptr)
 {
-  HeapFree(GetProcessHeap(), 0, ptr);
+    HeapFree(GetProcessHeap(), 0, ptr);
 }
 
 /* EOF */
