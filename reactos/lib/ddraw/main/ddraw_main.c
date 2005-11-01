@@ -14,90 +14,86 @@
 HRESULT WINAPI Main_DirectDraw_Initialize (LPDIRECTDRAW7 iface, LPGUID lpGUID)
 {
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-	HRESULT ret;
+    HRESULT ret;
 
-	
+    // this if it is not called by DirectDrawCreate
+    if(FALSE)
+        return DDERR_ALREADYINITIALIZED;
 
-	// this if it is not called by DirectDrawCreate
-	if(FALSE)
-		return DDERR_ALREADYINITIALIZED;
+    // save the parameter
+    This->lpGUID = lpGUID;
 
-	// save the parameter
-	This->lpGUID = lpGUID;
+    // get the HDC
+    This->hdc = GetWindowDC(GetDesktopWindow());
+    This->Height = GetDeviceCaps(This->hdc, VERTRES);
+    This->Width = GetDeviceCaps(This->hdc, HORZRES);
+    This->Bpp = GetDeviceCaps(This->hdc, BITSPIXEL);
 
-	// get the HDC
-	This->hdc = GetWindowDC(GetDesktopWindow());
-	This->Height = GetDeviceCaps(This->hdc, VERTRES);
-	This->Width = GetDeviceCaps(This->hdc, HORZRES);
-	This->Bpp = GetDeviceCaps(This->hdc, BITSPIXEL);
-
-	// call software first
-	if((ret = Hal_DirectDraw_Initialize (iface)) != DD_OK)
-		return ret;
-	
-	// ... then overwrite with hal
-	if((ret = Hel_DirectDraw_Initialize (iface)) != DD_OK)
-		return ret;
-	
+    // call software first
+    if((ret = Hal_DirectDraw_Initialize (iface)) != DD_OK)
+        return ret;
+    
+    // ... then overwrite with hal
+    if((ret = Hel_DirectDraw_Initialize (iface)) != DD_OK)
+        return ret;
    
-	return DD_OK;
+    return DD_OK;
 }
 
 HRESULT WINAPI Main_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface, HWND hwnd, DWORD cooplevel)
 {
-	// TODO:															
-	// - create a scaner that check which driver we should get the HDC from	
-	//   for now we always asume it is the active dirver that should be use.
-	// - allow more Flags
+    // TODO:                                                            
+    // - create a scaner that check which driver we should get the HDC from    
+    //   for now we always asume it is the active dirver that should be use.
+    // - allow more Flags
 
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
 
-	// check the parameters
-	if (This->cooperative_level == cooplevel && This->window == hwnd)
-		return DD_OK;
+    // check the parameters
+    if (This->cooperative_level == cooplevel && This->window == hwnd)
+        return DD_OK;
 
-	if (This->window)
-		return DDERR_HWNDALREADYSET;
+    if (This->window)
+        return DDERR_HWNDALREADYSET;
 
-	if (This->cooperative_level)
-		return DDERR_EXCLUSIVEMODEALREADYSET;
+    if (This->cooperative_level)
+        return DDERR_EXCLUSIVEMODEALREADYSET;
 
-	if ((cooplevel&DDSCL_EXCLUSIVE) && !(cooplevel&DDSCL_FULLSCREEN))
-		return DDERR_INVALIDPARAMS;
+    if ((cooplevel&DDSCL_EXCLUSIVE) && !(cooplevel&DDSCL_FULLSCREEN))
+        return DDERR_INVALIDPARAMS;
 
-	if (cooplevel&DDSCL_NORMAL && cooplevel&DDSCL_FULLSCREEN)
-		return DDERR_INVALIDPARAMS;
+    if (cooplevel&DDSCL_NORMAL && cooplevel&DDSCL_FULLSCREEN)
+        return DDERR_INVALIDPARAMS;
 
-	// set the data
-	This->window = hwnd;
-	This->hdc = GetDC(hwnd);
-	This->cooperative_level = cooplevel;
+    // set the data
+    This->window = hwnd;
+    This->hdc = GetDC(hwnd);
+    This->cooperative_level = cooplevel;
 
-	
     if (This->DirectDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_SETEXCLUSIVEMODE) 
-	{
-	    return Hal_DirectDraw_SetCooperativeLevel (iface);		
-	}
+    {
+        return Hal_DirectDraw_SetCooperativeLevel (iface);        
+    }
 
-	return Hel_DirectDraw_SetCooperativeLevel(iface);
+    return Hel_DirectDraw_SetCooperativeLevel(iface);
 
 }
 
 HRESULT WINAPI Main_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD dwHeight, 
-																DWORD dwBPP, DWORD dwRefreshRate, DWORD dwFlags)
+                                                                DWORD dwBPP, DWORD dwRefreshRate, DWORD dwFlags)
 {
-	DWORD ret;
+    DWORD ret;
 
     /* FIXME implement hal setMode */
-	if((ret = Hal_DirectDraw_SetDisplayMode(iface,  dwWidth,  dwHeight, 
+    if((ret = Hal_DirectDraw_SetDisplayMode(iface,  dwWidth,  dwHeight, 
                                             dwBPP,  dwRefreshRate,  dwFlags)) == DD_OK)
-	{
-		return ret;
-	}	
+    {
+        return ret;
+    }    
 
-	ret = Hel_DirectDraw_SetDisplayMode(iface,  dwWidth,  dwHeight, dwBPP,  dwRefreshRate,  dwFlags);
+    ret = Hel_DirectDraw_SetDisplayMode(iface,  dwWidth,  dwHeight, dwBPP,  dwRefreshRate,  dwFlags);
 
-	return ret; 
+    return ret; 
 }
 
 ULONG WINAPI Main_DirectDraw_AddRef (LPDIRECTDRAW7 iface) 
@@ -105,7 +101,7 @@ ULONG WINAPI Main_DirectDraw_AddRef (LPDIRECTDRAW7 iface)
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
     ULONG ref = InterlockedIncrement((PLONG)&This->DirectDrawGlobal.dwRefCnt);
 
-   	return ref;
+    return ref;
 }
 
 ULONG WINAPI Main_DirectDraw_Release (LPDIRECTDRAW7 iface) 
@@ -115,41 +111,41 @@ ULONG WINAPI Main_DirectDraw_Release (LPDIRECTDRAW7 iface)
     
     if (ref == 0)
     {
-		// set resoltion back to the one in registry
-		if(This->cooperative_level & DDSCL_EXCLUSIVE)
-			ChangeDisplaySettings(NULL, 0);
+        // set resoltion back to the one in registry
+        if(This->cooperative_level & DDSCL_EXCLUSIVE)
+            ChangeDisplaySettings(NULL, 0);
 
-		HeapFree(GetProcessHeap(), 0, This);
+        HeapFree(GetProcessHeap(), 0, This);
     }
 
-   	return ref;
+       return ref;
 }
 
 HRESULT WINAPI Main_DirectDraw_QueryInterface (
-	LPDIRECTDRAW7 iface, REFIID id, LPVOID *obj ) 
+    LPDIRECTDRAW7 iface, REFIID id, LPVOID *obj ) 
 {
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
     
     if (IsEqualGUID(&IID_IDirectDraw7, id))
-	{
-		*obj = &This->lpVtbl;
+    {
+        *obj = &This->lpVtbl;
     }
     else if (IsEqualGUID(&IID_IDirectDraw, id))
-	{
-		*obj = &This->lpVtbl_v1;
+    {
+        *obj = &This->lpVtbl_v1;
     }
     else if (IsEqualGUID(&IID_IDirectDraw2, id))
-	{
-		*obj = &This->lpVtbl_v2;
+    {
+        *obj = &This->lpVtbl_v2;
     }
     else if (IsEqualGUID(&IID_IDirectDraw4, id))
-	{
-		*obj = &This->lpVtbl_v4;
+    {
+        *obj = &This->lpVtbl_v4;
     }
     else
-	{
-		*obj = NULL;
-		return E_NOINTERFACE;
+    {
+        *obj = NULL;
+        return E_NOINTERFACE;
     }
 
     Main_DirectDraw_AddRef(iface);
@@ -157,183 +153,147 @@ HRESULT WINAPI Main_DirectDraw_QueryInterface (
 }
 
 HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD,
-											LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter) 
+                                            LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter) 
 {
     if (pUnkOuter!=NULL) 
-		return DDERR_INVALIDPARAMS; 
+        return DDERR_INVALIDPARAMS; 
 
-	if(sizeof(DDSURFACEDESC2)!=pDDSD->dwSize)
-		return DDERR_UNSUPPORTED;
+    if(sizeof(DDSURFACEDESC2)!=pDDSD->dwSize)
+        return DDERR_UNSUPPORTED;
 
-	// the nasty com stuff
-	IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+    // the nasty com stuff
+    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
 
-	IDirectDrawSurfaceImpl* That; 
+    IDirectDrawSurfaceImpl* That; 
 
-	That = (IDirectDrawSurfaceImpl*)HeapAlloc(GetProcessHeap(), 0, sizeof(IDirectDrawSurfaceImpl));
-	
-	if (That == NULL) 
-		return E_OUTOFMEMORY;
+    That = (IDirectDrawSurfaceImpl*)HeapAlloc(GetProcessHeap(), 0, sizeof(IDirectDrawSurfaceImpl));
+    
+    if (That == NULL) 
+        return E_OUTOFMEMORY;
 
-	ZeroMemory(That, sizeof(IDirectDrawSurfaceImpl));
-	
-	That->lpVtbl = &DirectDrawSurface7_Vtable;
-	That->lpVtbl_v3 = &DDRAW_IDDS3_Thunk_VTable;
+    ZeroMemory(That, sizeof(IDirectDrawSurfaceImpl));
+    
+    That->lpVtbl = &DirectDrawSurface7_Vtable;
+    That->lpVtbl_v3 = &DDRAW_IDDS3_Thunk_VTable;
 
-	This->DirectDrawGlobal.dsList = (LPDDRAWI_DDRAWSURFACE_INT)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
-		                                                                    sizeof(DDRAWI_DDRAWSURFACE_INT));		
+    This->DirectDrawGlobal.dsList = (LPDDRAWI_DDRAWSURFACE_INT)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
+                                                                            sizeof(DDRAWI_DDRAWSURFACE_INT));        
+    That->owner = (IDirectDrawImpl *)This;
+    That->owner->DirectDrawGlobal.dsList->dwIntRefCnt =1;
 
-	That->owner = (IDirectDrawImpl *)This;
+    /* we alwasy set to use the DirectDrawSurface7_Vtable as internel */
+    That->owner->DirectDrawGlobal.dsList->lpVtbl = (PVOID) &DirectDrawSurface7_Vtable;
+    
+    *ppSurf = (LPDIRECTDRAWSURFACE7)That;
 
-	That->owner->DirectDrawGlobal.dsList->dwIntRefCnt =1;
-
-	/* we alwasy set to use the DirectDrawSurface7_Vtable as internel */
-	That->owner->DirectDrawGlobal.dsList->lpVtbl = (PVOID) &DirectDrawSurface7_Vtable;
-	
-
-	*ppSurf = (LPDIRECTDRAWSURFACE7)That;
-
-	// the real surface object creation
-   	return That->lpVtbl->Initialize (*ppSurf, (LPDIRECTDRAW)iface, pDDSD);
+    // the real surface object creation
+    return That->lpVtbl->Initialize (*ppSurf, (LPDIRECTDRAW)iface, pDDSD);
 }
 
 HRESULT WINAPI Main_DirectDraw_CreateClipper(LPDIRECTDRAW7 iface, DWORD dwFlags, 
-											 LPDIRECTDRAWCLIPPER *ppClipper, IUnknown *pUnkOuter)
+                                             LPDIRECTDRAWCLIPPER *ppClipper, IUnknown *pUnkOuter)
 {
     if (pUnkOuter!=NULL) 
-		return DDERR_INVALIDPARAMS; 
+        return DDERR_INVALIDPARAMS; 
 
-	IDirectDrawClipperImpl* That; 
-	That = (IDirectDrawClipperImpl*)HeapAlloc(GetProcessHeap(), 0, sizeof(IDirectDrawClipperImpl));
+    IDirectDrawClipperImpl* That; 
+    That = (IDirectDrawClipperImpl*)HeapAlloc(GetProcessHeap(), 0, sizeof(IDirectDrawClipperImpl));
 
-	if (That == NULL) 
-		return E_OUTOFMEMORY;
+    if (That == NULL) 
+        return E_OUTOFMEMORY;
 
-	ZeroMemory(That, sizeof(IDirectDrawClipperImpl));
+    ZeroMemory(That, sizeof(IDirectDrawClipperImpl));
 
-	That->lpVtbl = &DirectDrawClipper_Vtable;
-	That->ref = 1;
-	*ppClipper = (LPDIRECTDRAWCLIPPER)That;
+    That->lpVtbl = &DirectDrawClipper_Vtable;
+    That->ref = 1;
+    *ppClipper = (LPDIRECTDRAWCLIPPER)That;
 
-   	return That->lpVtbl->Initialize (*ppClipper, (LPDIRECTDRAW)iface, dwFlags);
+    return That->lpVtbl->Initialize (*ppClipper, (LPDIRECTDRAW)iface, dwFlags);
 }
 
 // This function is exported by the dll
 HRESULT WINAPI DirectDrawCreateClipper (DWORD dwFlags, 
-										LPDIRECTDRAWCLIPPER* lplpDDClipper, LPUNKNOWN pUnkOuter)
+                                        LPDIRECTDRAWCLIPPER* lplpDDClipper, LPUNKNOWN pUnkOuter)
 {
     return Main_DirectDraw_CreateClipper(NULL, dwFlags, lplpDDClipper, pUnkOuter);
 }
 
 HRESULT WINAPI Main_DirectDraw_CreatePalette(LPDIRECTDRAW7 iface, DWORD dwFlags,
-			      LPPALETTEENTRY palent, LPDIRECTDRAWPALETTE* ppPalette, LPUNKNOWN pUnkOuter)
+                  LPPALETTEENTRY palent, LPDIRECTDRAWPALETTE* ppPalette, LPUNKNOWN pUnkOuter)
 {
     if (pUnkOuter!=NULL) 
-		return DDERR_INVALIDPARAMS; 
+        return DDERR_INVALIDPARAMS; 
 
-	IDirectDrawPaletteImpl* That; 
-	That = (IDirectDrawPaletteImpl*)HeapAlloc(GetProcessHeap(), 0, sizeof(IDirectDrawPaletteImpl));
+    IDirectDrawPaletteImpl* That; 
+    That = (IDirectDrawPaletteImpl*)HeapAlloc(GetProcessHeap(), 0, sizeof(IDirectDrawPaletteImpl));
 
-	if (That == NULL) 
-		return E_OUTOFMEMORY;
+    if (That == NULL) 
+        return E_OUTOFMEMORY;
 
-	ZeroMemory(That, sizeof(IDirectDrawPaletteImpl));
+    ZeroMemory(That, sizeof(IDirectDrawPaletteImpl));
 
-	That->lpVtbl = &DirectDrawPalette_Vtable;
-	That->ref = 1;
-	*ppPalette = (LPDIRECTDRAWPALETTE)That;
+    That->lpVtbl = &DirectDrawPalette_Vtable;
+    That->ref = 1;
+    *ppPalette = (LPDIRECTDRAWPALETTE)That;
 
-   	return That->lpVtbl->Initialize (*ppPalette, (LPDIRECTDRAW)iface, dwFlags, palent);
-}
-
-/**** Stubs ****/
-
-HRESULT WINAPI Main_DirectDraw_Compact(LPDIRECTDRAW7 iface) 
-{
-   	DX_STUB;
-}
-
-HRESULT WINAPI Main_DirectDraw_DuplicateSurface(LPDIRECTDRAW7 iface, LPDIRECTDRAWSURFACE7 src,
-				 LPDIRECTDRAWSURFACE7* dst) 
-{
-	DX_STUB;	
-}
-
-HRESULT WINAPI Main_DirectDraw_EnumDisplayModes(LPDIRECTDRAW7 iface, DWORD dwFlags,
-				 LPDDSURFACEDESC2 pDDSD, LPVOID context, LPDDENUMMODESCALLBACK2 callback) 
-{
-	DX_STUB;
-}
-
-HRESULT WINAPI Main_DirectDraw_EnumSurfaces(LPDIRECTDRAW7 iface, DWORD dwFlags,
-			     LPDDSURFACEDESC2 lpDDSD2, LPVOID context,
-			     LPDDENUMSURFACESCALLBACK7 callback) 
-{
-	DX_STUB;
+       return That->lpVtbl->Initialize (*ppPalette, (LPDIRECTDRAW)iface, dwFlags, palent);
 }
 
 HRESULT WINAPI Main_DirectDraw_FlipToGDISurface(LPDIRECTDRAW7 iface) 
 {
-	IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
 
-	if (This->DirectDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_FLIPTOGDISURFACE) 
-	{
-		return Hal_DirectDraw_FlipToGDISurface( iface);
-	}
+    if (This->DirectDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_FLIPTOGDISURFACE) 
+    {
+        return Hal_DirectDraw_FlipToGDISurface( iface);
+    }
 
-	return Hel_DirectDraw_FlipToGDISurface( iface);
+    return Hel_DirectDraw_FlipToGDISurface( iface);
 }
 
 HRESULT WINAPI Main_DirectDraw_GetCaps(LPDIRECTDRAW7 iface, LPDDCAPS pDriverCaps,
-			LPDDCAPS pHELCaps) 
+            LPDDCAPS pHELCaps) 
 {
-	DWORD status = DD_FALSE;
-	IDirectDrawImpl *This = (IDirectDrawImpl *)iface;
+    DWORD status = DD_FALSE;
+    IDirectDrawImpl *This = (IDirectDrawImpl *)iface;
 
-	if (pDriverCaps != NULL) 
-	{
-	  RtlCopyMemory(pDriverCaps,&This->DirectDrawGlobal.ddCaps,sizeof(DDCORECAPS));
-	  status = DD_OK;
-	}
+    if (pDriverCaps != NULL) 
+    {
+      RtlCopyMemory(pDriverCaps,&This->DirectDrawGlobal.ddCaps,sizeof(DDCORECAPS));
+      status = DD_OK;
+    }
 
-	if (pHELCaps != NULL) 
-	{
-	  RtlCopyMemory(pDriverCaps,&This->DirectDrawGlobal.ddHELCaps,sizeof(DDCORECAPS));
-	  status = DD_OK;
-	}
+    if (pHELCaps != NULL) 
+    {
+      RtlCopyMemory(pDriverCaps,&This->DirectDrawGlobal.ddHELCaps,sizeof(DDCORECAPS));
+      status = DD_OK;
+    }
 
-	/* Both caps mixed ?? */
-	/* DDCORECAPS ddBothCaps; */
-	
-	return status;
+    /* Both caps mixed ?? */
+    /* DDCORECAPS ddBothCaps; */
+    
+    return status;
 }
 
 HRESULT WINAPI Main_DirectDraw_GetDisplayMode(LPDIRECTDRAW7 iface, LPDDSURFACEDESC2 pDDSD) 
 {    
-	IDirectDrawImpl *This = (IDirectDrawImpl *)iface;
+    IDirectDrawImpl *This = (IDirectDrawImpl *)iface;
 
-	if (pDDSD == NULL)
-	{
+    if (pDDSD == NULL)
+    {
       return DD_FALSE;
-	}
-	
-	pDDSD->dwFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_PITCH | DDSD_PIXELFORMAT | DDSD_REFRESHRATE | DDSD_WIDTH; 
-	pDDSD->dwHeight  = This->DirectDrawGlobal.vmiData.dwDisplayHeight;
-    pDDSD->dwWidth = This->DirectDrawGlobal.vmiData.dwDisplayWidth; 
-
-	/* FIXME Do not use DUMMYUNIONNAME1 some how union lPitch does not see by the compiler
-	   but rest of the union are visable. more header problem ??? 
-    */
-    pDDSD->lPitch  = This->DirectDrawGlobal.vmiData.lDisplayPitch;
-	
+    }
     
-	/* have not check where I should get hold of this info yet
-    DWORD  dwBackBufferCount;
-    */
-
+    pDDSD->dwFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_PITCH | DDSD_PIXELFORMAT | DDSD_REFRESHRATE | DDSD_WIDTH; 
+    pDDSD->dwHeight  = This->DirectDrawGlobal.vmiData.dwDisplayHeight;
+    pDDSD->dwWidth = This->DirectDrawGlobal.vmiData.dwDisplayWidth; 
+    pDDSD->lPitch  = This->DirectDrawGlobal.vmiData.lDisplayPitch;
     pDDSD->dwRefreshRate = This->DirectDrawGlobal.dwMonitorFrequency;
+    
+    /* have not check where I should get hold of this info yet */
+    DWORD  dwBackBufferCount;
 
-	/* have not check where I should get hold of this info yet
+    /* have not check where I should get hold of this info yet
     DWORD  dwAlphaBitDepth;
     DWORD  dwReserved;
     LPVOID lpSurface;
@@ -345,123 +305,148 @@ HRESULT WINAPI Main_DirectDraw_GetDisplayMode(LPDIRECTDRAW7 iface, LPDDSURFACEDE
     DDCOLORKEY    ddckCKDestBlt;
     DDCOLORKEY    ddckCKSrcOverlay;
     DDCOLORKEY    ddckCKSrcBlt;
-	*/
+    */
     
-	
     RtlCopyMemory(&pDDSD->ddpfPixelFormat,&This->DirectDrawGlobal.vmiData.ddpfDisplay,sizeof(DDPIXELFORMAT));
     RtlCopyMemory(&pDDSD->ddsCaps,&This->DirectDrawGlobal.ddCaps,sizeof(DDCORECAPS));
-	
-	/* have not check where I should get hold of this info yet    
+    
+    /* have not check where I should get hold of this info yet    
     DWORD         dwTextureStage;
     */
   
-   	return DD_OK;
+       return DD_OK;
 }
 
-
-HRESULT WINAPI Main_DirectDraw_GetFourCCCodes(LPDIRECTDRAW7 iface, LPDWORD pNumCodes, LPDWORD pCodes)
+HRESULT WINAPI Main_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7 iface, DWORD dwFlags,
+                                                   HANDLE h)
 {
-   	DX_STUB;
+    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+
+    if (This->DirectDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_WAITFORVERTICALBLANK) 
+    {
+        return Hal_DirectDraw_WaitForVerticalBlank( iface,  dwFlags, h);        
+    }
+
+    return Hel_DirectDraw_WaitForVerticalBlank( iface,  dwFlags, h);        
 }
 
-HRESULT WINAPI Main_DirectDraw_GetGDISurface(LPDIRECTDRAW7 iface, 
-											 LPDIRECTDRAWSURFACE7 *lplpGDIDDSSurface)
-{
-   	DX_STUB;
+HRESULT WINAPI Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
+                   LPDWORD total, LPDWORD free)                                               
+{    
+    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+
+    if (This->DirectDrawGlobal.lpDDCBtmp->HALDDMiscellaneous.dwFlags & DDHAL_MISCCB32_GETAVAILDRIVERMEMORY) 
+    {
+        return Hal_DirectDraw_GetAvailableVidMem (iface,ddscaps,total,free);
+    }
+
+    return Hel_DirectDraw_GetAvailableVidMem (iface,ddscaps,total,free);
 }
 
 HRESULT WINAPI Main_DirectDraw_GetMonitorFrequency(LPDIRECTDRAW7 iface,LPDWORD freq)
 {  
     IDirectDrawImpl *This = (IDirectDrawImpl *)iface;
 
-	if (freq == NULL)
-	{
-	 return DD_FALSE;
-	}
+    if (freq == NULL)
+    {
+        return DD_FALSE;
+    }
 
-   	*freq = This->DirectDrawGlobal.dwMonitorFrequency;
-	return DD_OK;
+    *freq = This->DirectDrawGlobal.dwMonitorFrequency;
+    return DD_OK;
 }
 
 HRESULT WINAPI Main_DirectDraw_GetScanLine(LPDIRECTDRAW7 iface, LPDWORD lpdwScanLine)
-{	
-	IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+{    
+    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
 
-	if (This->DirectDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_GETSCANLINE) 
-	{
-	    return Hal_DirectDraw_GetScanLine( iface,  lpdwScanLine); 		
-	}
+    if (This->DirectDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_GETSCANLINE) 
+    {
+        return Hal_DirectDraw_GetScanLine( iface,  lpdwScanLine);         
+    }
 
-	return Hel_DirectDraw_GetScanLine( iface,  lpdwScanLine);
+    return Hel_DirectDraw_GetScanLine( iface,  lpdwScanLine);
+}
+
+/********************************** Stubs **********************************/
+
+HRESULT WINAPI Main_DirectDraw_Compact(LPDIRECTDRAW7 iface) 
+{
+       DX_STUB;
+}
+
+HRESULT WINAPI Main_DirectDraw_DuplicateSurface(LPDIRECTDRAW7 iface, LPDIRECTDRAWSURFACE7 src,
+                 LPDIRECTDRAWSURFACE7* dst) 
+{
+    DX_STUB;    
+}
+
+HRESULT WINAPI Main_DirectDraw_EnumDisplayModes(LPDIRECTDRAW7 iface, DWORD dwFlags,
+                 LPDDSURFACEDESC2 pDDSD, LPVOID context, LPDDENUMMODESCALLBACK2 callback) 
+{
+    DX_STUB;
+}
+
+HRESULT WINAPI Main_DirectDraw_EnumSurfaces(LPDIRECTDRAW7 iface, DWORD dwFlags,
+                 LPDDSURFACEDESC2 lpDDSD2, LPVOID context,
+                 LPDDENUMSURFACESCALLBACK7 callback) 
+{
+    DX_STUB;
+}
+
+
+HRESULT WINAPI Main_DirectDraw_GetFourCCCodes(LPDIRECTDRAW7 iface, LPDWORD pNumCodes, LPDWORD pCodes)
+{
+       DX_STUB;
+}
+
+HRESULT WINAPI Main_DirectDraw_GetGDISurface(LPDIRECTDRAW7 iface, 
+                                             LPDIRECTDRAWSURFACE7 *lplpGDIDDSSurface)
+{
+       DX_STUB;
 }
 
 HRESULT WINAPI Main_DirectDraw_GetVerticalBlankStatus(LPDIRECTDRAW7 iface, LPBOOL status)
 {
-	DX_STUB;
+    DX_STUB;
 }
 
 HRESULT WINAPI Main_DirectDraw_RestoreDisplayMode(LPDIRECTDRAW7 iface)
 {
-   	DX_STUB;
+       DX_STUB;
 }
-
-HRESULT WINAPI Main_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7 iface, DWORD dwFlags,
-												   HANDLE h)
-{
-	IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-
-    if (This->DirectDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_WAITFORVERTICALBLANK) 
-	{
-       return Hal_DirectDraw_WaitForVerticalBlank( iface,  dwFlags, h);		
-	}
-
-	return Hel_DirectDraw_WaitForVerticalBlank( iface,  dwFlags, h);		
-}
-
-HRESULT WINAPI Main_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscaps,
-				   LPDWORD total, LPDWORD free)											   
-{	
-	IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
-
-	if (This->DirectDrawGlobal.lpDDCBtmp->HALDDMiscellaneous.dwFlags & DDHAL_MISCCB32_GETAVAILDRIVERMEMORY) 
-	{
-		return Hal_DirectDraw_GetAvailableVidMem (iface,ddscaps,total,free);
-	}
-
-	return Hel_DirectDraw_GetAvailableVidMem (iface,ddscaps,total,free);
-}
-												   
+                                                   
 HRESULT WINAPI Main_DirectDraw_GetSurfaceFromDC(LPDIRECTDRAW7 iface, HDC hdc,
-												LPDIRECTDRAWSURFACE7 *lpDDS)
+                                                LPDIRECTDRAWSURFACE7 *lpDDS)
 {  
-   	DX_STUB;
+       DX_STUB;
 }
 
 HRESULT WINAPI Main_DirectDraw_RestoreAllSurfaces(LPDIRECTDRAW7 iface)
 {
-   	DX_STUB;
+       DX_STUB;
 }
 
 HRESULT WINAPI Main_DirectDraw_TestCooperativeLevel(LPDIRECTDRAW7 iface) 
 {
-   	DX_STUB;
+       DX_STUB;
 }
 
 HRESULT WINAPI Main_DirectDraw_GetDeviceIdentifier(LPDIRECTDRAW7 iface,
-				   LPDDDEVICEIDENTIFIER2 pDDDI, DWORD dwFlags)
+                   LPDDDEVICEIDENTIFIER2 pDDDI, DWORD dwFlags)
 {    
-   	DX_STUB;
+       DX_STUB;
 }
 
 HRESULT WINAPI Main_DirectDraw_StartModeTest(LPDIRECTDRAW7 iface, LPSIZE pModes,
-			      DWORD dwNumModes, DWORD dwFlags)
+                  DWORD dwNumModes, DWORD dwFlags)
 {    
-   	DX_STUB;
+       DX_STUB;
 }
 
 HRESULT WINAPI Main_DirectDraw_EvaluateMode(LPDIRECTDRAW7 iface,DWORD a,DWORD* b)
 {    
-   	DX_STUB;
+       DX_STUB;
 }
 
 IDirectDraw7Vtbl DirectDraw7_Vtable =
