@@ -22,6 +22,8 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
     if(!DdCreateDirectDrawObject (&This->DirectDrawGlobal, This->hdc))
         return DDERR_INVALIDPARAMS;
 
+	BOOL dummy;
+	DdReenableDirectDrawObject(&This->DirectDrawGlobal, &dummy);
             
     /* alloc all the space */
     This->DirectDrawGlobal.lpDDCBtmp = (LPDDHAL_CALLBACKS)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
@@ -226,7 +228,6 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
     DriverInfo.dwExpectedSize = sizeof(DDNONLOCALVIDMEMCAPS);
     This->HalInfo.GetDriverInfo(&DriverInfo);
     
-
     /* Get the NTCallbacks  */
     /*  Fill in wher
     DriverInfo.guidInfo = GUID_NTCallbacks;
@@ -476,8 +477,11 @@ HRESULT Hal_DirectDraw_SetDisplayMode (LPDIRECTDRAW7 iface, DWORD dwWidth, DWORD
     {
         return DDERR_NODRIVERSUPPORT;
     } 
+
+	BOOL dummy;
+	DdReenableDirectDrawObject(&This->DirectDrawGlobal, &dummy);
     
-	return mode.ddRVal
+	return mode.ddRVal;
 }
 #endif
 
