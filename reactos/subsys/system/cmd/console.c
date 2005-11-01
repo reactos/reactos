@@ -178,7 +178,7 @@ VOID ConPuts(LPTSTR szText, DWORD nStdHandle)
 	           &dwWritten,
 	           NULL);
 	WriteFile (GetStdHandle (nStdHandle),
-	           "\n",
+	           _T("\n"),
 	           1,
 	           &dwWritten,
 	           NULL);
@@ -294,7 +294,7 @@ VOID ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdH
 	for(i = 0; i < len; i++)
 	{ 
       
-                if(pBuf[i] == '\n')
+                if(pBuf[i] == _T('\n'))
 		{			        
 			LineCount++; 
                         CharEL=0;
@@ -306,7 +306,7 @@ VOID ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdH
                         {        
                                 if (i+1<len)
                                 {
-                                        if(pBuf[i+1] != '\n') LineCount++;          
+                                        if(pBuf[i+1] != _T('\n')) LineCount++;          
                                 }
                                 CharEL=0;
                         }
@@ -316,8 +316,8 @@ VOID ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdH
                 WriteFile (GetStdHandle (nStdHandle),&pBuf[i],sizeof(CHAR),&dwWritten,NULL);
 	        if(LineCount >= ScreenLines)
 	        {
-                        if(strnicmp(&pBuf[i], "\n", 2)!=0)
-                        WriteFile (GetStdHandle (nStdHandle),"\n",sizeof(CHAR),&dwWritten,NULL); 
+                        if(_tcsnicmp(&pBuf[i], _T("\n"), 2)!=0)
+                        WriteFile (GetStdHandle (nStdHandle),_T("\n"),sizeof(CHAR),&dwWritten,NULL); 
 
 		        if(PagePrompt() != PROMPT_YES)
 		        {

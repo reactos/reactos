@@ -74,11 +74,11 @@ TCHAR cgetchar (VOID)
 VOID GetPathCase( TCHAR * Path, TCHAR * OutPath)
 {
 	INT i = 0;
-	_tcscpy(OutPath, _T(""));
 	TCHAR TempPath[MAX_PATH];  
 	WIN32_FIND_DATA FindFileData;
 	HANDLE hFind;
 	_tcscpy(TempPath, _T(""));
+	_tcscpy(OutPath, _T(""));
 
 	
 	for(i = 0; i < _tcslen(Path); i++)
@@ -206,7 +206,7 @@ static BOOL expand (LPINT ac, LPTSTR **arg, LPCTSTR pattern)
 			return FALSE;
 		}
 		memcpy(dirpart, pattern, pathend - pattern + 1);
-		dirpart[pathend - pattern + 1] = '\0';
+		dirpart[pathend - pattern + 1] = _T('\0');
 	}
 	else
 	{
@@ -427,7 +427,7 @@ BOOL FileGetString (HANDLE hFile, LPTSTR lpBuffer, INT nBufferLength)
 		   ReadFile(hFile, &ch, 1, &dwRead, NULL) && dwRead)
 	{
         lpString[len++] = ch;
-        if ((ch == '\n') || (ch == '\r'))
+        if ((ch == _T('\n')) || (ch == _T('\r')))
 		{
 			/* break at new line*/
 			break;
@@ -437,7 +437,7 @@ BOOL FileGetString (HANDLE hFile, LPTSTR lpBuffer, INT nBufferLength)
 	if (!dwRead && !len)
 		return FALSE;
 
-	lpString[len++] = '\0';
+	lpString[len++] = _T('\0');
 #ifdef _UNICODE
 	MultiByteToWideChar(CP_ACP, 0, lpString, len, lpBuffer, len);
 	free(lpString);
@@ -466,7 +466,7 @@ INT PagePrompt (VOID)
 	ConInEnable ();
 
 	if ((ir.Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE) ||
-	    ((ir.Event.KeyEvent.wVirtualKeyCode == 'C') &&
+	    ((ir.Event.KeyEvent.wVirtualKeyCode == _T('C')) &&
 	     (ir.Event.KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))))
 		return PROMPT_BREAK;
 
@@ -606,7 +606,7 @@ INT FilePromptYNA (LPTSTR szFormat, ...)
 	ConInEnable ();
 
 	if ((ir.Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE) ||
-	    ((ir.Event.KeyEvent.wVirtualKeyCode == 'C') &&
+	    ((ir.Event.KeyEvent.wVirtualKeyCode == _T('C')) &&
 	     (ir.Event.KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED))))
 		return PROMPT_BREAK;
 
