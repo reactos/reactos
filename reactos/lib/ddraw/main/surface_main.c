@@ -21,27 +21,27 @@ HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIREC
 	This->owner = (IDirectDrawImpl*)pDD;	
 
 	/************ fill the discription of our primary surface ***********************/  	
-	memset (&ddsd, 0, sizeof(DDSURFACEDESC));
-	ddsd.dwSize = sizeof(DDSURFACEDESC);
+	memset (&This->ddsd, 0, sizeof(DDSURFACEDESC));
+	This->ddsd.dwSize = sizeof(DDSURFACEDESC);
 
-	RtlCopyMemory(&ddsd.ddckCKDestBlt,&pDDSD2->ddckCKDestBlt,sizeof(ddsd.ddckCKDestBlt));
-	RtlCopyMemory(&ddsd.ddckCKDestOverlay,&pDDSD2->ddckCKDestOverlay,sizeof(ddsd.ddckCKDestOverlay));
-	RtlCopyMemory(&ddsd.ddckCKSrcBlt,&pDDSD2->ddckCKSrcBlt,sizeof(ddsd.ddckCKSrcBlt));
-	RtlCopyMemory(&ddsd.ddckCKSrcOverlay,&pDDSD2->ddckCKSrcOverlay,sizeof(ddsd.ddckCKSrcOverlay));
-	RtlCopyMemory(&ddsd.ddpfPixelFormat,&pDDSD2->ddpfPixelFormat,sizeof(ddsd.ddpfPixelFormat));
-	RtlCopyMemory(&ddsd.ddsCaps,&pDDSD2->ddsCaps,sizeof(ddsd.ddsCaps));
+	RtlCopyMemory(&This->ddsd.ddckCKDestBlt,&pDDSD2->ddckCKDestBlt,sizeof(This->ddsd.ddckCKDestBlt));
+	RtlCopyMemory(&This->ddsd.ddckCKDestOverlay,&pDDSD2->ddckCKDestOverlay,sizeof(This->ddsd.ddckCKDestOverlay));
+	RtlCopyMemory(&This->ddsd.ddckCKSrcBlt,&pDDSD2->ddckCKSrcBlt,sizeof(This->ddsd.ddckCKSrcBlt));
+	RtlCopyMemory(&This->ddsd.ddckCKSrcOverlay,&pDDSD2->ddckCKSrcOverlay,sizeof(This->ddsd.ddckCKSrcOverlay));
+	RtlCopyMemory(&This->ddsd.ddpfPixelFormat,&pDDSD2->ddpfPixelFormat,sizeof(This->ddsd.ddpfPixelFormat));
+	RtlCopyMemory(&This->ddsd.ddsCaps,&pDDSD2->ddsCaps,sizeof(This->ddsd.ddsCaps));
 
-	ddsd.dwAlphaBitDepth = pDDSD2->dwAlphaBitDepth;
-	ddsd.dwBackBufferCount = pDDSD2->dwBackBufferCount; 
-	ddsd.dwFlags = pDDSD2->dwFlags;
-	ddsd.dwHeight = pDDSD2->dwHeight;
-	ddsd.dwLinearSize = pDDSD2->dwLinearSize; 
-	ddsd.dwMipMapCount = pDDSD2->dwMipMapCount;
-	ddsd.dwRefreshRate = pDDSD2->dwRefreshRate;
-	ddsd.dwReserved = pDDSD2->dwReserved;
-	ddsd.dwWidth  = pDDSD2->dwWidth;
-	ddsd.lPitch = pDDSD2->lPitch; 
-	ddsd.lpSurface = pDDSD2->lpSurface;
+	This->ddsd.dwAlphaBitDepth = pDDSD2->dwAlphaBitDepth;
+	This->ddsd.dwBackBufferCount = pDDSD2->dwBackBufferCount; 
+	This->ddsd.dwFlags = pDDSD2->dwFlags;
+	This->ddsd.dwHeight = pDDSD2->dwHeight;
+	This->ddsd.dwLinearSize = pDDSD2->dwLinearSize; 
+	This->ddsd.dwMipMapCount = pDDSD2->dwMipMapCount;
+	This->ddsd.dwRefreshRate = pDDSD2->dwRefreshRate;
+	This->ddsd.dwReserved = pDDSD2->dwReserved;
+	This->ddsd.dwWidth  = pDDSD2->dwWidth;
+	This->ddsd.lPitch = pDDSD2->lPitch; 
+	This->ddsd.lpSurface = pDDSD2->lpSurface;
 
     /************ Test see if we can Create Surface ***********************/
 	if (This->owner->DirectDrawGlobal.lpDDCBtmp->HALDD.dwFlags & DDHAL_CB32_CANCREATESURFACE)
@@ -50,7 +50,7 @@ HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIREC
 		DDHAL_CANCREATESURFACEDATA CanCreateData;
 		memset(&CanCreateData, 0, sizeof(DDHAL_CANCREATESURFACEDATA));
 		CanCreateData.lpDD = &This->owner->DirectDrawGlobal; 
-		CanCreateData.lpDDSurfaceDesc = (LPDDSURFACEDESC)&ddsd;
+		CanCreateData.lpDDSurfaceDesc = (LPDDSURFACEDESC)&This->ddsd;
 			
 		if (This->owner->DirectDrawGlobal.lpDDCBtmp->HALDD.CanCreateSurface(&CanCreateData) == DDHAL_DRIVER_NOTHANDLED)
 			return DDERR_INVALIDPARAMS;
@@ -64,8 +64,8 @@ HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIREC
 	/* FIXME we are skipping filling in some data, I do not care for now */
 
 	LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal = &This->owner->DirectDrawGlobal; 	
-	ddsd.dwFlags = DDSD_CAPS;
-	ddsd.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
+	This->ddsd.dwFlags = DDSD_CAPS;
+	This->ddsd.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
 	 
 	/* surface global struct */	
 	memset(&This->Global, 0, sizeof(DDRAWI_DDRAWSURFACE_GBL));	
@@ -86,7 +86,7 @@ HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIREC
 	This->Local.lpSurfMore = &This->More;
 
 	/* FIXME do a memcopy */
-	This->Local.ddsCaps = *(DDSCAPS*)&ddsd.ddsCaps;
+	This->Local.ddsCaps = *(DDSCAPS*)&This->ddsd.ddsCaps;
  
 	/* for the double pointer below */
 	DDRAWI_DDRAWSURFACE_LCL *pLocal[2]; 
@@ -97,7 +97,7 @@ HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIREC
 	DDHAL_CREATESURFACEDATA CreateData;
 	memset(&CreateData, 0, sizeof(DDHAL_CREATESURFACEDATA));
 	CreateData.lpDD = pDirectDrawGlobal;
-	CreateData.lpDDSurfaceDesc = (LPDDSURFACEDESC) &ddsd; 
+	CreateData.lpDDSurfaceDesc = (LPDDSURFACEDESC) &This->ddsd; 
 	CreateData.dwSCnt = 1;
 	CreateData.lplpSList = pLocal;	
 	CreateData.ddRVal = DD_FALSE;

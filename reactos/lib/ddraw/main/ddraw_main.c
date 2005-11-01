@@ -324,7 +324,7 @@ HRESULT WINAPI Main_DirectDraw_GetDisplayMode(LPDIRECTDRAW7 iface, LPDDSURFACEDE
 	/* FIXME Do not use DUMMYUNIONNAME1 some how union lPitch does not see by the compiler
 	   but rest of the union are visable. more header problem ??? 
     */
-    pDDSD->DUMMYUNIONNAME1.lPitch  = This->DirectDrawGlobal.vmiData.lDisplayPitch;
+    pDDSD->lPitch  = This->DirectDrawGlobal.vmiData.lDisplayPitch;
 	
     
 	/* have not check where I should get hold of this info yet
