@@ -735,8 +735,9 @@ RtlSelfRelativeToAbsoluteSD2(PISECURITY_DESCRIPTOR SelfRelativeSecurityDescripto
     PISECURITY_DESCRIPTOR AbsSD = SelfRelativeSecurityDescriptor;
     PISECURITY_DESCRIPTOR_RELATIVE RelSD = (PISECURITY_DESCRIPTOR_RELATIVE)SelfRelativeSecurityDescriptor;
 #ifdef _WIN64
-    PVOID DataStart;
+    PVOID DataStart, DataEnd;
     ULONG DataSize;
+    LONG MoveDelta;
     ULONG OwnerLength;
     ULONG GroupLength;
     ULONG DaclLength;
@@ -784,7 +785,37 @@ RtlSelfRelativeToAbsoluteSD2(PISECURITY_DESCRIPTOR SelfRelativeSecurityDescripto
 
     ASSERT(sizeof(SECURITY_DESCRIPTOR) > sizeof(SECURITY_DESCRIPTOR_RELATIVE));
 
-    DataSize = OwnerLength + GroupLength + DaclLength + SaclLength;
+    /* calculate the start and end of the data area, we simply just move the
+       data by the difference between the size of the relative and absolute
+       security descriptor structure */
+    DataStart = pOwner;
+    DataEnd = (PVOID)((ULONG_PTR)pOwner + OwnerLength);
+    if (pGroup != NULL)
+    {
+        if (((ULONG_PTR)pGroup < (ULONG_PTR)DataStart) || DataStart == NULL)
+            DataStart = pGroup;
+        if (((ULONG_PTR)pGroup + GroupLength > (ULONG_PTR)DataEnd) || DataEnd == NULL)
+            DataEnd = (PVOID)((ULONG_PTR)pGroup + GroupLength);
+    }
+    if (pDacl != NULL)
+    {
+        if (((ULONG_PTR)pDacl < (ULONG_PTR)DataStart) || DataStart == NULL)
+            DataStart = pDacl;
+        if (((ULONG_PTR)pDacl + DaclLength > (ULONG_PTR)DataEnd) || DataEnd == NULL)
+            DataEnd = (PVOID)((ULONG_PTR)pDacl + DaclLength);
+    }
+    if (pSacl != NULL)
+    {
+        if (((ULONG_PTR)pSacl < (ULONG_PTR)DataStart) || DataStart == NULL)
+            DataStart = pSacl;
+        if (((ULONG_PTR)pSacl + DaclLength > (ULONG_PTR)DataEnd) || DataEnd == NULL)
+            DataEnd = (PVOID)((ULONG_PTR)pSacl + SaclLength);
+    }
+
+    ASSERT((ULONG_PTR)DataEnd >= (ULONG_PTR)DataStart);
+
+    DataSize = (ULONG)((ULONG_PTR)DataEnd >= (ULONG_PTR)DataStart);
+
     if (*BufferSize < sizeof(SECURITY_DESCRIPTOR) + DataSize)
     {
         *BufferSize = sizeof(SECURITY_DESCRIPTOR) + DataSize;
@@ -793,17 +824,6 @@ RtlSelfRelativeToAbsoluteSD2(PISECURITY_DESCRIPTOR SelfRelativeSecurityDescripto
 
     if (DataSize != 0)
     {
-        /* calculate the start of the data area, we simply just move the data by
-           the difference between the size of the relative and absolute security
-           descriptor structure */
-        DataStart = pOwner;
-        if ((pGroup != NULL && (ULONG_PTR)pGroup < (ULONG_PTR)DataStart) || DataStart == NULL)
-            DataStart = pGroup;
-        if ((pDacl != NULL && (ULONG_PTR)pDacl < (ULONG_PTR)DataStart) || DataStart == NULL)
-            DataStart = pDacl;
-        if ((pSacl != NULL && (ULONG_PTR)pSacl < (ULONG_PTR)DataStart) || DataStart == NULL)
-            DataStart = pSacl;
-
         /* if DataSize != 0 ther must be at least one SID or ACL in the security
            descriptor! Also the data area must be located somewhere after the
            end of the SECURITY_DESCRIPTOR_RELATIVE structure */
@@ -815,28 +835,26 @@ RtlSelfRelativeToAbsoluteSD2(PISECURITY_DESCRIPTOR SelfRelativeSecurityDescripto
                       DataStart,
                       DataSize);
 
+        MoveDelta = (LONG)((LONG_PTR)(AbsSD + 1) - (LONG_PTR)DataStart);
+
         /* adjust the pointers if neccessary */
         if (pOwner != NULL)
-            AbsSD->Owner = (PSID)((ULONG_PTR)pOwner +
-                                  sizeof(SECURITY_DESCRIPTOR) - sizeof(SECURITY_DESCRIPTOR_RELATIVE));
+            AbsSD->Owner = (PSID)((LONG_PTR)pOwner + MoveDelta);
         else
             AbsSD->Owner = NULL;
 
         if (pGroup != NULL)
-            AbsSD->Group = (PSID)((ULONG_PTR)pGroup +
-                                  sizeof(SECURITY_DESCRIPTOR) - sizeof(SECURITY_DESCRIPTOR_RELATIVE));
+            AbsSD->Group = (PSID)((LONG_PTR)pGroup + MoveDelta);
         else
             AbsSD->Group = NULL;
 
         if (pSacl != NULL)
-            AbsSD->Sacl = (PACL)((ULONG_PTR)pSacl +
-                                 sizeof(SECURITY_DESCRIPTOR) - sizeof(SECURITY_DESCRIPTOR_RELATIVE));
+            AbsSD->Sacl = (PACL)((LONG_PTR)pSacl + MoveDelta);
         else
             AbsSD->Sacl = NULL;
 
         if (pDacl != NULL)
-            AbsSD->Dacl = (PACL)((ULONG_PTR)pDacl +
-                                 sizeof(SECURITY_DESCRIPTOR) - sizeof(SECURITY_DESCRIPTOR_RELATIVE));
+            AbsSD->Dacl = (PACL)((LONG_PTR)pDacl + MoveDelta);
         else
             AbsSD->Dacl = NULL;
     }
