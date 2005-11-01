@@ -60,11 +60,7 @@ HRESULT Hal_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIRECTDRAW pD
 
    /************ Create Surface ***********************/
 
-	/* FIXME we are skipping filling in some data, I do not care for now */
-
-	LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal = &This->owner->DirectDrawGlobal; 	
-	This->ddsd.dwFlags = DDSD_CAPS;
-	This->ddsd.ddsCaps.dwCaps = DDSCAPS_PRIMARYSURFACE;
+	/* FIXME we are skipping filling in some data, I do not care for now */	
 	 
 	/* surface global struct */	
 	memset(&This->Global, 0, sizeof(DDRAWI_DDRAWSURFACE_GBL));	
@@ -72,7 +68,7 @@ HRESULT Hal_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIRECTDRAW pD
 	This->Global.wHeight = This->owner->DirectDrawGlobal.vmiData.dwDisplayHeight;
 	This->Global.wWidth = This->owner->DirectDrawGlobal.vmiData.dwDisplayWidth;
 	This->Global.dwLinearSize =  This->owner->DirectDrawGlobal.vmiData.lDisplayPitch;
-    
+	
 	
 	/* surface more struct */	
 	memset(&This->More, 0, sizeof(DDRAWI_DDRAWSURFACE_MORE));
@@ -87,18 +83,17 @@ HRESULT Hal_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIRECTDRAW pD
 	/* FIXME do a memcopy */
 	This->Local.ddsCaps = *(DDSCAPS*)&This->ddsd.ddsCaps;
  
-	/* for the double pointer below */
-	DDRAWI_DDRAWSURFACE_LCL *pLocal[2]; 
-	pLocal[0] = &This->Local; 
-    pLocal[1] = NULL;  
+	/* for the double pointer below */	
+	This->pLocal[0] = &This->Local; 
+    This->pLocal[1] = NULL;  
  
 	/* the parameter struct */
 	DDHAL_CREATESURFACEDATA CreateData;
 	memset(&CreateData, 0, sizeof(DDHAL_CREATESURFACEDATA));
-	CreateData.lpDD = pDirectDrawGlobal;
+	CreateData.lpDD = &This->owner->DirectDrawGlobal;	
 	CreateData.lpDDSurfaceDesc = (LPDDSURFACEDESC) &This->ddsd; 
 	CreateData.dwSCnt = 1;
-	CreateData.lplpSList = pLocal;	
+	CreateData.lplpSList = This->pLocal;	
 	CreateData.ddRVal = DD_FALSE;
 		
 	/* this is the call we were waiting for */
