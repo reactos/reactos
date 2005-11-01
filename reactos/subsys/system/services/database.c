@@ -987,9 +987,28 @@ ScmAutoStartServices(VOID)
 DWORD
 ScmMarkServiceForDelete(PSERVICE pService)
 {
-    DPRINT1("ScmMarkServiceForDelete() called\n");
+    HKEY hServiceKey = NULL;
+    DWORD dwValue = 1;
+    DWORD dwError;
 
-    return ERROR_SUCCESS;
+    DPRINT("ScmMarkServiceForDelete() called\n");
+
+    dwError = ScmOpenServiceKey(pService->lpServiceName,
+                                KEY_WRITE,
+                                &hServiceKey);
+    if (dwError != ERROR_SUCCESS)
+        return dwError;
+
+    dwError = RegSetValueExW(hServiceKey,
+                             L"DeleteFlag",
+                             0,
+                             REG_DWORD,
+                             (LPBYTE)&dwValue,
+                             sizeof(DWORD));
+
+    RegCloseKey(hServiceKey);
+
+    return dwError;
 }
 
 /* EOF */

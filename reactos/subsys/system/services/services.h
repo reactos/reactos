@@ -43,6 +43,10 @@ extern BOOL ScmShutdown;
 
 /* config.c */
 
+DWORD ScmOpenServiceKey(LPWSTR lpServiceName,
+                        REGSAM samDesired,
+                        PHKEY phKey);
+
 DWORD ScmWriteDependencies(HKEY hServiceKey,
                            LPWSTR lpDependencies,
                            DWORD dwDependenciesLength);

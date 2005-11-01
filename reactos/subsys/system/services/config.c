@@ -11,6 +11,37 @@
 
 /* FUNCTIONS *****************************************************************/
 
+
+DWORD
+ScmOpenServiceKey(LPWSTR lpServiceName,
+                  REGSAM samDesired,
+                  PHKEY phKey)
+{
+    HKEY hServicesKey = NULL;
+    DWORD dwError;
+
+    *phKey = NULL;
+
+    dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                            L"System\\CurrentControlSet\\Services",
+                            0,
+                            KEY_READ,
+                            &hServicesKey);
+    if (dwError != ERROR_SUCCESS)
+        return dwError;
+
+    dwError = RegOpenKeyExW(hServicesKey,
+                            lpServiceName,
+                            0,
+                            samDesired,
+                            phKey);
+
+    RegCloseKey(hServicesKey);
+
+    return dwError;
+}
+
+
 DWORD
 ScmWriteDependencies(HKEY hServiceKey,
                      LPWSTR lpDependencies,
