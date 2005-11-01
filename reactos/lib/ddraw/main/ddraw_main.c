@@ -161,7 +161,7 @@ HRESULT WINAPI Main_DirectDraw_CreateSurface (LPDIRECTDRAW7 iface, LPDDSURFACEDE
     if (pUnkOuter!=NULL) 
         return DDERR_INVALIDPARAMS; 
 
-    if(sizeof(DDSURFACEDESC2)!=pDDSD->dwSize)
+    if(sizeof(DDSURFACEDESC2)!=pDDSD->dwSize && sizeof(DDSURFACEDESC)!=pDDSD->dwSize)
         return DDERR_UNSUPPORTED;
 
     // the nasty com stuff
@@ -370,7 +370,7 @@ HRESULT WINAPI Main_DirectDraw_GetScanLine(LPDIRECTDRAW7 iface, LPDWORD lpdwScan
 
 HRESULT WINAPI Main_DirectDraw_Compact(LPDIRECTDRAW7 iface) 
 {
-       DX_STUB;
+    DX_STUB;
 }
 
 HRESULT WINAPI Main_DirectDraw_DuplicateSurface(LPDIRECTDRAW7 iface, LPDIRECTDRAWSURFACE7 src,
@@ -395,13 +395,13 @@ HRESULT WINAPI Main_DirectDraw_EnumSurfaces(LPDIRECTDRAW7 iface, DWORD dwFlags,
 
 HRESULT WINAPI Main_DirectDraw_GetFourCCCodes(LPDIRECTDRAW7 iface, LPDWORD pNumCodes, LPDWORD pCodes)
 {
-       DX_STUB;
+    DX_STUB;
 }
 
 HRESULT WINAPI Main_DirectDraw_GetGDISurface(LPDIRECTDRAW7 iface, 
                                              LPDIRECTDRAWSURFACE7 *lplpGDIDDSSurface)
 {
-       DX_STUB;
+    DX_STUB;
 }
 
 HRESULT WINAPI Main_DirectDraw_GetVerticalBlankStatus(LPDIRECTDRAW7 iface, LPBOOL status)
@@ -411,40 +411,40 @@ HRESULT WINAPI Main_DirectDraw_GetVerticalBlankStatus(LPDIRECTDRAW7 iface, LPBOO
 
 HRESULT WINAPI Main_DirectDraw_RestoreDisplayMode(LPDIRECTDRAW7 iface)
 {
-       DX_STUB;
+    DX_STUB;
 }
                                                    
 HRESULT WINAPI Main_DirectDraw_GetSurfaceFromDC(LPDIRECTDRAW7 iface, HDC hdc,
                                                 LPDIRECTDRAWSURFACE7 *lpDDS)
 {  
-       DX_STUB;
+    DX_STUB;
 }
 
 HRESULT WINAPI Main_DirectDraw_RestoreAllSurfaces(LPDIRECTDRAW7 iface)
 {
-       DX_STUB;
+    DX_STUB;
 }
 
 HRESULT WINAPI Main_DirectDraw_TestCooperativeLevel(LPDIRECTDRAW7 iface) 
 {
-       DX_STUB;
+    DX_STUB;
 }
 
 HRESULT WINAPI Main_DirectDraw_GetDeviceIdentifier(LPDIRECTDRAW7 iface,
                    LPDDDEVICEIDENTIFIER2 pDDDI, DWORD dwFlags)
 {    
-       DX_STUB;
+    DX_STUB;
 }
 
 HRESULT WINAPI Main_DirectDraw_StartModeTest(LPDIRECTDRAW7 iface, LPSIZE pModes,
                   DWORD dwNumModes, DWORD dwFlags)
 {    
-       DX_STUB;
+    DX_STUB;
 }
 
 HRESULT WINAPI Main_DirectDraw_EvaluateMode(LPDIRECTDRAW7 iface,DWORD a,DWORD* b)
 {    
-       DX_STUB;
+    DX_STUB;
 }
 
 IDirectDraw7Vtbl DirectDraw7_Vtable =

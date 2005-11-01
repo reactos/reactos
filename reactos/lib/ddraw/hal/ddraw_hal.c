@@ -287,7 +287,7 @@ HRESULT Hal_DirectDraw_Initialize (LPDIRECTDRAW7 iface)
 
 HRESULT Hal_DirectDraw_SetCooperativeLevel (LPDIRECTDRAW7 iface)
 {
-       IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
+    IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
 
     DDHAL_SETEXCLUSIVEMODEDATA SetExclusiveMode;
 
@@ -379,7 +379,6 @@ HRESULT Hal_DirectDraw_GetAvailableVidMem(LPDIRECTDRAW7 iface, LPDDSCAPS2 ddscap
 
 HRESULT Hal_DirectDraw_WaitForVerticalBlank(LPDIRECTDRAW7 iface, DWORD dwFlags,HANDLE h) 
 {
-
     IDirectDrawImpl* This = (IDirectDrawImpl*)iface;
 
     DDHAL_WAITFORVERTICALBLANKDATA WaitVectorData;
