@@ -293,6 +293,7 @@ INT GetRootPath(TCHAR *InPath,TCHAR *OutPath,INT size);
 BOOL SetRootPath(TCHAR *InPath);
 TCHAR  cgetchar (VOID);
 BOOL   CheckCtrlBreak (INT);
+BOOL add_entry (LPINT ac, LPTSTR **arg, LPCTSTR entry);
 LPTSTR *split (LPTSTR, LPINT, BOOL);
 VOID   freep (LPTSTR *);
 LPTSTR _stpcpy (LPTSTR, LPCTSTR);

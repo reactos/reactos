@@ -162,7 +162,7 @@ BOOL CheckCtrlBreak (INT mode)
 }
 
 /* add new entry for new argument */
-static BOOL add_entry (LPINT ac, LPTSTR **arg, LPCTSTR entry)
+BOOL add_entry (LPINT ac, LPTSTR **arg, LPCTSTR entry)
 {
 	LPTSTR q;
 	LPTSTR *oldarg;
