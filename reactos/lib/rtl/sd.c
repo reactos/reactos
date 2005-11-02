@@ -455,6 +455,7 @@ RtlMakeSelfRelativeSD(PISECURITY_DESCRIPTOR AbsSD,
    TotalLength = sizeof(SECURITY_DESCRIPTOR_RELATIVE) + OwnerLength + GroupLength + SaclLength + DaclLength;
    if (*BufferLength < TotalLength)
    {
+      *BufferLength = TotalLength;
       return STATUS_BUFFER_TOO_SMALL;
    }
 
