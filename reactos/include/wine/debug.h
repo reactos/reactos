@@ -17,7 +17,9 @@
 #endif
 
 #ifndef __GNUC__
+#if !defined(_MSC_VER) || _MSC_VER < 8
 #define	__FUNCTION__ ""
+#endif//_MSC_VER
 #define	inline __inline
 #endif
 
