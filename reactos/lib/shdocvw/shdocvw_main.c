@@ -307,6 +307,7 @@ static DWORD WINAPI ThreadFunc( LPVOID info )
 {
     IBindStatusCallback *dl;
     static const WCHAR szUrlVal[] = {'M','o','z','i','l','l','a','U','r','l',0};
+    static const WCHAR szFileProtocol[] = {'f','i','l','e',':','/','/','/',0};
     WCHAR path[MAX_PATH], szUrl[MAX_PATH];
     LPWSTR p;
     STARTUPINFOW si;
@@ -315,6 +316,7 @@ static DWORD WINAPI ThreadFunc( LPVOID info )
     DWORD r, sz, type;
     HKEY hkey;
     BOOL bCancelled = FALSE;
+    BOOL bTempfile = FALSE;
 
     /* find the name of the thing to download */
     szUrl[0] = 0;
@@ -329,21 +331,27 @@ static DWORD WINAPI ThreadFunc( LPVOID info )
     if( r != ERROR_SUCCESS )
         goto end;
 
-    /* built the path for the download */
-    p = strrchrW( szUrl, '/' );
-    if (!p)
-        goto end;
-    if (!GetTempPathW( MAX_PATH, path ))
-        goto end;
-    strcatW( path, p+1 );
+    if( !strncmpW(szUrl, szFileProtocol, strlenW(szFileProtocol)) )
+        lstrcpynW( path, szUrl+strlenW(szFileProtocol), MAX_PATH );
+    else
+    {
+        /* built the path for the download */
+        p = strrchrW( szUrl, '/' );
+        if (!p)
+            goto end;
+        if (!GetTempPathW( MAX_PATH, path ))
+            goto end;
+        strcatW( path, p+1 );
 
-    /* download it */
-    dl = create_dl(info, &bCancelled);
-    r = URLDownloadToFileW( NULL, szUrl, path, 0, dl );
-    if( dl )
-        IBindStatusCallback_Release( dl );
-    if( (r != S_OK) || bCancelled )
-        goto end;
+        /* download it */
+        bTempfile = TRUE;
+        dl = create_dl(info, &bCancelled);
+        r = URLDownloadToFileW( NULL, szUrl, path, 0, dl );
+        if( dl )
+            IBindStatusCallback_Release( dl );
+        if( (r != S_OK) || bCancelled )
+            goto end;
+    }
 
     /* run it */
     memset( &si, 0, sizeof si );
@@ -352,8 +360,12 @@ static DWORD WINAPI ThreadFunc( LPVOID info )
     if( !r )
         goto end;
     WaitForSingleObject( pi.hProcess, INFINITE );
+    CloseHandle( pi.hProcess );
+    CloseHandle( pi.hThread );
 
 end:
+    if( bTempfile )
+        DeleteFileW( path );
     EndDialog( hDlg, 0 );
     return 0;
 }
