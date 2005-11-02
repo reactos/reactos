@@ -16,6 +16,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef __FreeBSD__
+# include <sys/stat.h>
+#endif // __FreeBSD__
 #include "cabinet.h"
 #include "raw.h"
 #include "mszip.h"

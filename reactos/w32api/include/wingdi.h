@@ -1225,14 +1225,14 @@ typedef struct tagBITMAPCOREHEADER {
 	WORD	bcPlanes;
 	WORD	bcBitCount;
 } BITMAPCOREHEADER,*LPBITMAPCOREHEADER,*PBITMAPCOREHEADER;
-#pragma pack(push,1)
+#include "pshpack1.h"
 typedef struct tagRGBTRIPLE {
 	BYTE rgbtBlue;
 	BYTE rgbtGreen;
 	BYTE rgbtRed;
 } RGBTRIPLE,*LPRGBTRIPLE;
-#pragma pack(pop)
-#pragma pack(push,2)
+#include "poppack.h"
+#include "pshpack2.h"
 typedef struct tagBITMAPFILEHEADER {
 	WORD	bfType;
 	DWORD	bfSize;
@@ -1240,7 +1240,7 @@ typedef struct tagBITMAPFILEHEADER {
 	WORD	bfReserved2;
 	DWORD	bfOffBits;
 } BITMAPFILEHEADER,*LPBITMAPFILEHEADER,*PBITMAPFILEHEADER;
-#pragma pack(pop)
+#include "poppack.h"
 typedef struct _BITMAPCOREINFO {
 	BITMAPCOREHEADER	bmciHeader;
 	RGBTRIPLE	bmciColors[1];
@@ -2024,7 +2024,7 @@ typedef struct tagEMRSELECTCLIPPATH {
 	EMR emr;
 	DWORD iMode;
 } EMRSELECTCLIPPATH,*PEMRSELECTCLIPPATH,EMRSETBKMODE,*PEMRSETBKMODE,EMRSETMAPMODE,*PEMRSETMAPMODE,EMRSETPOLYFILLMODE,*PEMRSETPOLYFILLMODE,EMRSETROP2,*PEMRSETROP2,EMRSETSTRETCHBLTMODE,*PEMRSETSTRETCHBLTMODE,EMRSETTEXTALIGN,*PEMRSETTEXTALIGN,EMRENABLEICM,*PEMRENABLEICM;
-#pragma pack(push,2)
+#include "pshpack2.h"
 typedef struct tagMETAHEADER {
 	WORD mtType;
 	WORD mtHeaderSize;
@@ -2034,7 +2034,7 @@ typedef struct tagMETAHEADER {
 	DWORD mtMaxRecord;
 	WORD mtNoParameters;
 } METAHEADER,*PMETAHEADER,*LPMETAHEADER;
-#pragma pack(pop)
+#include "poppack.h"
 typedef struct tagENHMETAHEADER {
 	DWORD iType;
 	DWORD nSize;
@@ -2320,7 +2320,7 @@ typedef struct tagLOCALESIGNATURE {
 	DWORD lsCsbSupported[2];
 } LOCALESIGNATURE,*PLOCALESIGNATURE,*LPLOCALESIGNATURE;
 typedef LONG LCSTYPE;
-#pragma pack(push,4)
+#include "pshpack4.h"
 typedef struct tagNEWTEXTMETRICA {
 	LONG tmHeight;
 	LONG tmAscent;
@@ -2373,7 +2373,7 @@ typedef struct tagNEWTEXTMETRICW {
 	UINT ntmCellHeight;
 	UINT ntmAvgWidth;
 } NEWTEXTMETRICW,*PNEWTEXTMETRICW,*LPNEWTEXTMETRICW;
-#pragma pack(pop)
+#include "poppack.h"
 typedef struct tagNEWTEXTMETRICEXA {
 	NEWTEXTMETRICA ntmTm;
 	FONTSIGNATURE ntmFontSig;

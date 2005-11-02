@@ -33,7 +33,7 @@ typedef  unsigned long ULONG_PTR;
 #endif
 #endif
 
-#pragma pack(push,2)
+#pragma pack(2)
 typedef struct _IMAGE_DOS_HEADER {
   WORD e_magic;
   WORD e_cblp;
@@ -55,13 +55,13 @@ typedef struct _IMAGE_DOS_HEADER {
   WORD e_res2[10];
   LONG e_lfanew;
 } IMAGE_DOS_HEADER,*PIMAGE_DOS_HEADER;
-#pragma pack(pop)
+#pragma pack(4)
 
 #define IMAGE_FILE_LINE_NUMS_STRIPPED	4
 #define IMAGE_FILE_LOCAL_SYMS_STRIPPED	8
 #define IMAGE_FILE_DEBUG_STRIPPED	512
 
-#pragma pack(push,4)
+#pragma pack(4)
 typedef struct _IMAGE_FILE_HEADER {
   WORD Machine;
   WORD NumberOfSections;
@@ -162,7 +162,7 @@ typedef struct {
   USHORT s_nlnno;    /* number of line number entries    */
   ULONG  s_flags;    /* flags                            */
 } SCNHDR;
-#pragma pack(pop)
+#pragma pack(4)
 
 typedef struct _SYMBOLFILE_HEADER {
   ULONG SymbolsOffset;
@@ -238,7 +238,7 @@ typedef struct _STAB_ENTRY {
 #define C_ALIAS	 	105	/* duplicate tag		*/
 #define C_HIDDEN	106	/* ext symbol in dmert public lib */
 
-#pragma pack(push,1)
+#pragma pack(1)
 typedef struct _COFF_SYMENT
 {
   union
@@ -258,7 +258,7 @@ typedef struct _COFF_SYMENT
   UCHAR e_sclass;
   UCHAR e_numaux;
 } COFF_SYMENT, *PCOFF_SYMENT;
-#pragma pack(pop)
+#pragma pack(4)
 
 typedef struct _ROSSYM_ENTRY {
   ULONG_PTR Address;

@@ -47,7 +47,7 @@ typedef int LONG;
 #define IMAGE_FIRST_SECTION(h) ((PIMAGE_SECTION_HEADER) ((unsigned long)h+FIELD_OFFSET(IMAGE_NT_HEADERS,OptionalHeader)+((PIMAGE_NT_HEADERS)(h))->FileHeader.SizeOfOptionalHeader))
 #define IMAGE_DIRECTORY_ENTRY_EXPORT 0
 
-#pragma pack(push,2)
+#pragma pack(2)
 typedef struct _IMAGE_DOS_HEADER {
 	WORD e_magic;
 	WORD e_cblp;
@@ -69,8 +69,8 @@ typedef struct _IMAGE_DOS_HEADER {
 	WORD e_res2[10];
 	LONG e_lfanew;
 } IMAGE_DOS_HEADER,*PIMAGE_DOS_HEADER;
-#pragma pack(pop)
-#pragma pack(push,4)
+#pragma pack(4)
+#pragma pack(4)
 typedef struct _IMAGE_EXPORT_DIRECTORY {
 	DWORD Characteristics;
 	DWORD TimeDateStamp;
@@ -150,7 +150,7 @@ typedef struct _IMAGE_SECTION_HEADER {
 	WORD NumberOfLinenumbers;
 	DWORD Characteristics;
 } IMAGE_SECTION_HEADER,*PIMAGE_SECTION_HEADER;
-#pragma pack(pop)
+#pragma pack(4)
 
 /* End of ripped definitions */
 

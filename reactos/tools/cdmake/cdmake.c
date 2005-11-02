@@ -35,15 +35,19 @@
 #include <stdlib.h>
 #include <string.h>
 #ifdef WIN32
-#include <io.h>
-#include <dos.h>
+# include <io.h>
+# include <dos.h>
 #else
-#include <sys/io.h>
-#include <errno.h>
-#include <sys/types.h>
-#include <dirent.h>
-#include <unistd.h>
-#endif
+# ifdef __FreeBSD__
+#  include <sys/uio.h>
+# else
+#  include <sys/io.h>
+# endif // __FreeBSD__
+# include <errno.h>
+# include <sys/types.h>
+# include <dirent.h>
+# include <unistd.h>
+#endif // WIN32
 #include <ctype.h>
 #include <setjmp.h>
 #include <time.h>

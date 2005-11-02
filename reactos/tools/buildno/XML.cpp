@@ -71,13 +71,19 @@ unsigned long long
 filelen ( FILE* f )
 {
 #ifdef WIN32
-	return _filelengthi64 ( _fileno(f) );
+        return _filelengthi64 ( _fileno(f) );
 #else
-	struct stat64 file_stat;
-	if ( fstat64(fileno(f), &file_stat) != 0 )
-		return 0;
-	return file_stat.st_size;
-#endif
+# ifdef __FreeBSD__
+        struct stat file_stat;
+        if ( fstat(fileno(f), &file_stat) != 0 )
+# else
+        struct stat64 file_stat;
+        if ( fstat64(fileno(f), &file_stat) != 0 )
+# endif // __FreeBSD__
+                return 0;
+        return file_stat.st_size;
+
+#endif // WIN32
 }
 
 Path::Path()

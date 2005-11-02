@@ -2,11 +2,22 @@
 
 #include "pch.h"
 
-#include <malloc.h>
+#ifdef __FreeBSD__
+# include <stdlib.h>
+#else
+# include <malloc.h>
+#endif // __FreeBSD__
 #include <math.h>
 #include <float.h>
 #include <assert.h>
 #include "ssprintf.h"
+
+#ifdef __FreeBSD__
+# define __isnan isnan
+# define __finite finite
+# define powl __builtin_powl
+# define modfl __builtin_modfl
+#endif // _FreeBSD__
 
 #ifdef _MSC_VER
 #define alloca _alloca
