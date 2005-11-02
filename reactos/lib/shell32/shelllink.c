@@ -1152,6 +1152,7 @@ HRESULT WINAPI IShellLink_Constructor( IUnknown *pUnkOuter,
                REFIID riid, LPVOID *ppv )
 {
 	IShellLinkImpl * sl;
+	HRESULT r;
 
 	TRACE("unkOut=%p riid=%s\n",pUnkOuter, debugstr_guid(riid));
 
@@ -1176,18 +1177,9 @@ HRESULT WINAPI IShellLink_Constructor( IUnknown *pUnkOuter,
 
 	TRACE("(%p)->()\n",sl);
 
-	if (IsEqualIID(riid, &IID_IUnknown) ||
-	    IsEqualIID(riid, &IID_IShellLinkA))
-	    *ppv = sl;
-	else if (IsEqualIID(riid, &IID_IShellLinkW))
-	    *ppv = &(sl->lpvtblw);
-	else {
-	    LocalFree((HLOCAL)sl);
-	    ERR("E_NOINTERFACE\n");
-	    return E_NOINTERFACE;
-	}
-
-	return S_OK;
+        r = ShellLink_QueryInterface( sl, riid, ppv );
+        ShellLink_Release( sl );
+        return r;
 }
 
 

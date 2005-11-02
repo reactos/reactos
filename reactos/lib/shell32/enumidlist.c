@@ -112,9 +112,9 @@ BOOL CreateFolderEnumList(
     HANDLE hFile;
     WCHAR  szPath[MAX_PATH];
     BOOL succeeded = TRUE;
-    const static WCHAR stars[] = { '*','.','*',0 };
-    const static WCHAR dot[] = { '.',0 };
-    const static WCHAR dotdot[] = { '.','.',0 };
+    static const WCHAR stars[] = { '*','.','*',0 };
+    static const WCHAR dot[] = { '.',0 };
+    static const WCHAR dotdot[] = { '.','.',0 };
 
     TRACE("(%p)->(path=%s flags=0x%08lx) \n",list,debugstr_w(lpszPath),dwFlags);
 

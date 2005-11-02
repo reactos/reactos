@@ -290,8 +290,8 @@
 @ stdcall ExtractIconW(long wstr long)
 @ stub ExtractVersionResource16W
 @ stub FindExeDlgProc
-@ stdcall FindExecutableA(ptr ptr ptr)
-@ stdcall FindExecutableW(wstr wstr wstr)
+@ stdcall FindExecutableA(str str ptr)
+@ stdcall FindExecutableW(wstr wstr ptr)
 @ stub FixupOptionalComponents
 @ stdcall FreeIconList(long)
 @ stub InternalExtractIconListA

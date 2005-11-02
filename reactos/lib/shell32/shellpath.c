@@ -805,7 +805,7 @@ static const WCHAR szSHUserFolders[] = {'S','o','f','t','w','a','r','e','\\','M'
 /* This defaults to L"Documents and Settings" on Windows 2000/XP, but we're
  * acting more Windows 9x-like for now.
  */
-static const WCHAR szDefaultProfileDirW[] = {'w','i','n','d','o','w','s','\\','p','r','o','f','i','l','e','s','\0'};
+static const WCHAR szDefaultProfileDirW[] = {'p','r','o','f','i','l','e','s','\0'};
 static const WCHAR AllUsersW[] = {'A','l','l',' ','U','s','e','r','s','\0'};
 
 typedef enum _CSIDL_Type {
@@ -1259,6 +1259,9 @@ static HRESULT _SHGetDefaultValue(BYTE folder, LPWSTR pszPath)
     switch (folder)
     {
         case CSIDL_PERSONAL:
+        case CSIDL_MYMUSIC:
+        case CSIDL_MYPICTURES:
+        case CSIDL_MYVIDEO:
         {
             const char *home = getenv("HOME");
 
@@ -1792,6 +1795,7 @@ static HRESULT _SHRegisterUserShellFolders(BOOL bDefault)
      CSIDL_PROGRAMS,
      CSIDL_PERSONAL,
      CSIDL_FAVORITES,
+     CSIDL_APPDATA,
      CSIDL_STARTUP,
      CSIDL_RECENT,
      CSIDL_SENDTO,

@@ -772,7 +772,8 @@ static HDDEDATA CALLBACK dde_cb(UINT uType, UINT uFmt, HCONV hConv,
 static unsigned dde_connect(WCHAR* key, WCHAR* start, WCHAR* ddeexec,
                             const WCHAR* lpFile, WCHAR *env,
 			    LPCWSTR szCommandline, LPITEMIDLIST pidl, SHELL_ExecuteW32 execfunc,
-			    LPSHELLEXECUTEINFOW psei, LPSHELLEXECUTEINFOW psei_out)
+                            LPSHELLEXECUTEINFOW psei, LPSHELLEXECUTEINFOW psei_out,
+                            BOOL unicode)
 {
     static const WCHAR wApplication[] = {'\\','a','p','p','l','i','c','a','t','i','o','n',0};
     static const WCHAR wTopic[] = {'\\','t','o','p','i','c',0};
@@ -803,9 +804,15 @@ static unsigned dde_connect(WCHAR* key, WCHAR* start, WCHAR* ddeexec,
         strcpyW(topic, wSystem);
     }
 
-    if (DdeInitializeW(&ddeInst, dde_cb, APPCMD_CLIENTONLY, 0L) != DMLERR_NO_ERROR)
+    if (unicode)
     {
-        return 2;
+        if (DdeInitializeW(&ddeInst, dde_cb, APPCMD_CLIENTONLY, 0L) != DMLERR_NO_ERROR)
+            return 2;
+    }
+    else
+    {
+        if (DdeInitializeA(&ddeInst, dde_cb, APPCMD_CLIENTONLY, 0L) != DMLERR_NO_ERROR)
+            return 2;
     }
 
     hszApp = DdeCreateStringHandleW(ddeInst, app, CP_WINUNICODE);
@@ -845,8 +852,18 @@ static unsigned dde_connect(WCHAR* key, WCHAR* start, WCHAR* ddeexec,
     /* It's documented in the KB 330337 that IE has a bug and returns
      * error DMLERR_NOTPROCESSED on XTYP_EXECUTE request.
      */
-    hDdeData = DdeClientTransaction((LPBYTE)res, (strlenW(res) + 1) * sizeof(WCHAR), hConv, 0L, 0,
-                                     XTYP_EXECUTE, 10000, &tid);
+    if (unicode)
+        hDdeData = DdeClientTransaction((LPBYTE)res, (strlenW(res) + 1) * sizeof(WCHAR), hConv, 0L, 0,
+                                         XTYP_EXECUTE, 10000, &tid);
+    else
+    {
+        DWORD lenA = WideCharToMultiByte(CP_ACP, 0, res, -1, NULL, 0, NULL, NULL);
+        char *resA = HeapAlloc(GetProcessHeap(), 0, lenA);
+        WideCharToMultiByte(CP_ACP, 0, res, -1, resA, lenA, NULL, NULL);
+        hDdeData = DdeClientTransaction( (LPBYTE)resA, lenA, hConv, 0L, 0,
+                                         XTYP_EXECUTE, 10000, &tid );
+        HeapFree(GetProcessHeap(), 0, resA);
+    }
     if (hDdeData)
         DdeFreeDataHandle(hDdeData);
     else
@@ -866,7 +883,8 @@ static unsigned dde_connect(WCHAR* key, WCHAR* start, WCHAR* ddeexec,
  */
 static UINT_PTR execute_from_key(LPWSTR key, LPCWSTR lpFile, WCHAR *env, LPCWSTR szCommandline,
 			     SHELL_ExecuteW32 execfunc,
-			     LPSHELLEXECUTEINFOW psei, LPSHELLEXECUTEINFOW psei_out)
+                             LPSHELLEXECUTEINFOW psei, LPSHELLEXECUTEINFOW psei_out,
+                             BOOL unicode)
 {
     WCHAR cmd[1024];
     LONG cmdlen = sizeof(cmd);
@@ -894,7 +912,7 @@ static UINT_PTR execute_from_key(LPWSTR key, LPCWSTR lpFile, WCHAR *env, LPCWSTR
         if (RegQueryValueW(HKEY_CLASSES_ROOT, key, param, &paramlen) == ERROR_SUCCESS)
         {
             TRACE("Got ddeexec %s => %s\n", debugstr_w(key), debugstr_w(param));
-            retval = dde_connect(key, cmd, param, lpFile, env, szCommandline, psei->lpIDList, execfunc, psei, psei_out);
+            retval = dde_connect(key, cmd, param, lpFile, env, szCommandline, psei->lpIDList, execfunc, psei, psei_out, unicode);
         }
         else
         {
@@ -966,9 +984,9 @@ HINSTANCE WINAPI FindExecutableW(LPCWSTR lpFile, LPCWSTR lpDirectory, LPWSTR lpR
 }
 
 /*************************************************************************
- *	ShellExecuteExW32 [Internal]
+ *	SHELL_execute [Internal]
  */
-BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
+BOOL SHELL_execute( LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc, BOOL unicode )
 {
     static const WCHAR wQuote[] = {'"',0};
     static const WCHAR wSpace[] = {' ',0};
@@ -1296,7 +1314,7 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfun
         }
         TRACE("%s/%s => %s/%s\n", debugstr_w(wszApplicationName), debugstr_w(sei_tmp.lpVerb), debugstr_w(wszQuotedCmd), debugstr_w(lpstrProtocol));
         if (*lpstrProtocol)
-            retval = execute_from_key(lpstrProtocol, wszApplicationName, env, sei_tmp.lpParameters, execfunc, &sei_tmp, sei);
+            retval = execute_from_key(lpstrProtocol, wszApplicationName, env, sei_tmp.lpParameters, execfunc, &sei_tmp, sei, unicode);
         else
             retval = execfunc(wszQuotedCmd, env, FALSE, &sei_tmp, sei);
         HeapFree( GetProcessHeap(), 0, env );
@@ -1329,7 +1347,7 @@ BOOL WINAPI ShellExecuteExW32 (LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfun
             lpFile += iSize;
             while (*lpFile == ':') lpFile++;
         }
-        retval = execute_from_key(lpstrProtocol, lpFile, NULL, sei_tmp.lpParameters, execfunc, &sei_tmp, sei);
+        retval = execute_from_key(lpstrProtocol, lpFile, NULL, sei_tmp.lpParameters, execfunc, &sei_tmp, sei, unicode);
     }
     /* Check if file specified is in the form www.??????.*** */
     else if (!strncmpiW(lpFile, wWww, 3))
@@ -1414,7 +1432,7 @@ BOOL WINAPI ShellExecuteExA (LPSHELLEXECUTEINFOA sei)
     else
         seiW.lpClass = NULL;
 
-    ret = ShellExecuteExW32 (&seiW, SHELL_ExecuteW);
+    ret = SHELL_execute( &seiW, SHELL_ExecuteW, FALSE );
 
     sei->hInstApp = seiW.hInstApp;
 
@@ -1436,7 +1454,7 @@ BOOL WINAPI ShellExecuteExA (LPSHELLEXECUTEINFOA sei)
  */
 BOOL WINAPI ShellExecuteExW (LPSHELLEXECUTEINFOW sei)
 {
-    return  ShellExecuteExW32 (sei, SHELL_ExecuteW);
+    return  SHELL_execute( sei, SHELL_ExecuteW, TRUE );
 }
 
 /*************************************************************************
@@ -1465,6 +1483,6 @@ HINSTANCE WINAPI ShellExecuteW(HWND hwnd, LPCWSTR lpOperation, LPCWSTR lpFile,
     sei.dwHotKey = 0;
     sei.hProcess = 0;
 
-    ShellExecuteExW32 (&sei, SHELL_ExecuteW);
+    SHELL_execute( &sei, SHELL_ExecuteW, TRUE );
     return sei.hInstApp;
 }
