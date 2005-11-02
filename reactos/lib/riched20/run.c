@@ -23,6 +23,8 @@
 #include "editor.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(richedit);
+WINE_DECLARE_DEBUG_CHANNEL(richedit_check);
+WINE_DECLARE_DEBUG_CHANNEL(richedit_lists);
 
 int ME_CanJoinRuns(ME_Run *run1, ME_Run *run2)
 {
@@ -72,26 +74,26 @@ void ME_CheckCharOffsets(ME_TextEditor *editor)
 {
   ME_DisplayItem *p = editor->pBuffer->pFirst;
   int ofs = 0, ofsp = 0;
-  if(TRACE_ON(richedit))
+  if(TRACE_ON(richedit_lists))
   {
-    TRACE("---\n");
+    TRACE_(richedit_lists)("---\n");
     ME_DumpDocument(editor->pBuffer);
   }
   do {
     p = ME_FindItemFwd(p, diRunOrParagraphOrEnd);
     switch(p->type) {
       case diTextEnd:
-        TRACE("tend, real ofsp = %d, counted = %d\n", p->member.para.nCharOfs, ofsp+ofs);
+        TRACE_(richedit_check)("tend, real ofsp = %d, counted = %d\n", p->member.para.nCharOfs, ofsp+ofs);
         assert(ofsp+ofs == p->member.para.nCharOfs);
         return;
       case diParagraph:
-        TRACE("para, real ofsp = %d, counted = %d\n", p->member.para.nCharOfs, ofsp+ofs);
+        TRACE_(richedit_check)("para, real ofsp = %d, counted = %d\n", p->member.para.nCharOfs, ofsp+ofs);
         assert(ofsp+ofs == p->member.para.nCharOfs);
         ofsp = p->member.para.nCharOfs;
         ofs = 0;
         break;
       case diRun:
-        TRACE("run, real ofs = %d (+ofsp = %d), counted = %d, len = %d, txt = \"%s\", flags=%08x, fx&mask = %08lx\n",
+        TRACE_(richedit_check)("run, real ofs = %d (+ofsp = %d), counted = %d, len = %d, txt = \"%s\", flags=%08x, fx&mask = %08lx\n",
           p->member.run.nCharOfs, p->member.run.nCharOfs+ofsp, ofsp+ofs,
           p->member.run.strText->nLen, debugstr_w(p->member.run.strText->szData),
           p->member.run.nFlags,
@@ -143,6 +145,7 @@ void ME_RunOfsFromCharOfs(ME_TextEditor *editor, int nCharOfs, ME_DisplayItem **
 
     if (nCharOfs < pPara->member.para.next_para->member.para.nCharOfs)
     {
+      int eollen = 1;
       *ppRun = ME_FindItemFwd(pPara, diRun);
       assert(*ppRun);
       while (!((*ppRun)->member.run.nFlags & MERF_ENDPARA))
@@ -157,7 +160,10 @@ void ME_RunOfsFromCharOfs(ME_TextEditor *editor, int nCharOfs, ME_DisplayItem **
         }
         *ppRun = pNext;
       }
-      if (nCharOfs == nParaOfs + (*ppRun)->member.run.nCharOfs) {
+      /* the handling of bEmulateVersion10 may be a source of many bugs, I'm afraid */
+      eollen = (editor->bEmulateVersion10 ? 2 : 1);
+      if (nCharOfs >= nParaOfs + (*ppRun)->member.run.nCharOfs &&
+        nCharOfs < nParaOfs + (*ppRun)->member.run.nCharOfs + eollen) {
         *pOfs = 0;
         return;
       }

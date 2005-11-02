@@ -21,7 +21,7 @@
 
 #include "editor.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL(riched20);
+WINE_DEFAULT_DEBUG_CHANNEL(richedit_lists);
 
 void ME_InsertBefore(ME_DisplayItem *diWhere, ME_DisplayItem *diWhat)
 {
@@ -181,7 +181,7 @@ void ME_DumpDocument(ME_TextBuffer *buffer)
           pItem->member.run.nCharOfs);
         break;
       case diTextEnd:
-        TRACE("\nEnd\n");
+        TRACE("\nEnd(ofs=%d)\n", pItem->member.para.nCharOfs);
         break;
       default:
         break;

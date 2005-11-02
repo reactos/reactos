@@ -616,7 +616,7 @@ ME_StreamOutRTFText(ME_TextEditor *editor, WCHAR *text, LONG nChars)
         buffer[pos++] = *letter;
       } else {
          for (i = 0; i < nBytes; i++)
-           pos += sprintf(buffer + pos, "\\'%02x", letter[i]);
+           pos += sprintf(buffer + pos, "\\'%02x", (BYTE)letter[i]);
       }
       text++;
       nChars--;

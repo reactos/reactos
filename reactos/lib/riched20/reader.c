@@ -127,13 +127,6 @@ int _RTFGetChar(RTF_Info *info)
 
 	TRACE("\n");
 
-	/* Doc says, that if the last buffer wasn't full, it's EOF.
-	Actually, that's not true. */
-/*
-	if (stream->dwSize > 0 && stream->dwSize == stream->dwUsed
-            && stream->dwSize < sizeof(stream->buffer))
-		return EOF;
-*/
 	if (stream->dwSize <= stream->dwUsed)
 	{
                 ME_StreamInFill(stream);
@@ -455,6 +448,10 @@ int RTFGetToken(RTF_Info *info)
 	RTFFuncPtr	p;
 
 	TRACE("\n");
+	/* don't try to return anything once EOF is reached */
+	if (info->rtfClass == rtfEOF) {
+		return rtfEOF;
+	}
 
 	for (;;)
 	{
@@ -885,6 +882,8 @@ static void ReadFontTbl(RTF_Info *info)
 	for (;;)
 	{
 		RTFGetToken (info);
+		if (info->rtfClass == rtfEOF)
+			break;
 		if (RTFCheckCM (info, rtfGroup, rtfEndGroup))
 			break;
 		if (old < 0)		/* first entry - determine tbl type */
@@ -901,6 +900,8 @@ static void ReadFontTbl(RTF_Info *info)
 			if (!RTFCheckCM (info, rtfGroup, rtfBeginGroup))
 				RTFPanic (info, "%s: missing \"{\"", fn);
 			RTFGetToken (info);	/* yes, skip to next token */
+			if (info->rtfClass == rtfEOF)
+				break;
 		}
 		fp = New (RTFFont);
 		if (fp == NULL)
@@ -1002,12 +1003,18 @@ static void ReadFontTbl(RTF_Info *info)
 							fn,info->rtfTextBuf);
 			}
 			RTFGetToken (info);
+			if (info->rtfClass == rtfEOF)
+				break;
 		}
+		if (info->rtfClass == rtfEOF)
+			break;
 		if (old == 0)	/* need to see "}" here */
 		{
 			RTFGetToken (info);
 			if (!RTFCheckCM (info, rtfGroup, rtfEndGroup))
 				RTFPanic (info, "%s: missing \"}\"", fn);
+			if (info->rtfClass == rtfEOF)
+				break;
 		}
 
                 /* Apply the real properties of the default font */
@@ -1055,6 +1062,8 @@ static void ReadColorTbl(RTF_Info *info)
 	for (;;)
 	{
 		RTFGetToken (info);
+		if (info->rtfClass == rtfEOF)
+			break;
 		if (RTFCheckCM (info, rtfGroup, rtfEndGroup))
 			break;
 		cp = New (RTFColor);
@@ -1074,6 +1083,8 @@ static void ReadColorTbl(RTF_Info *info)
 			}
 			RTFGetToken (info);
 		}
+		if (info->rtfClass == rtfEOF)
+			break;
 		if (!RTFCheckCM (info, rtfText, ';'))
 			RTFPanic (info,"%s: malformed entry", fn);
 	}
