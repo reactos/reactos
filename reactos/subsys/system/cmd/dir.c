@@ -216,7 +216,8 @@ static ULARGE_INTEGER recurse_bytes;
  * displays help screen for dir
  * Rob Lake
  */
-static VOID DirHelp(VOID)
+static VOID 
+DirHelp(VOID)
 {
   ConOutResPaging(TRUE, STRING_DIR_HELP1);
 }
@@ -228,10 +229,11 @@ static VOID DirHelp(VOID)
  *
  * Parse the parameters and switches of the command line and exports them
  */
-static BOOL DirReadParam(LPTSTR Line,					/* [IN] The line with the parameters & switches */
-							LPTSTR** params,				/* [OUT] The parameters after parsing */
-							LPINT entries,				/* [OUT] The number of parameters after parsing */
-							LPDIRSWITCHFLAGS lpFlags)	/* [IN/OUT] The flags after calculating switches */
+static BOOL 
+DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
+			LPTSTR** params,			/* [OUT] The parameters after parsing */
+			LPINT entries,				/* [OUT] The number of parameters after parsing */
+			LPDIRSWITCHFLAGS lpFlags)	/* [IN/OUT] The flags after calculating switches */
 {
 	TCHAR cCurSwitch;	/* The current switch */
 	TCHAR cCurChar;		/* Current examing character */
@@ -1220,7 +1222,8 @@ TCHAR* getExt(const TCHAR* file)
  *
  * Get the name of the file without extension
  */
-static LPTSTR getName(const TCHAR* file, TCHAR * dest)
+static LPTSTR 
+getName(const TCHAR* file, TCHAR * dest)
 {
 	int iLen;
 	LPTSTR end;
@@ -1320,9 +1323,9 @@ DirPrintNewList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN]Files' Info */
  */
 static VOID
 DirPrintWideList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN] Files' Info */
-		 DWORD dwCount,			/* [IN] The quantity of files */
-		 TCHAR *szCurPath,		/* [IN] Full path of current directory */
-		 LPDIRSWITCHFLAGS lpFlags)	/* [IN] The flags used */
+				 DWORD dwCount,			/* [IN] The quantity of files */
+				 TCHAR *szCurPath,		/* [IN] Full path of current directory */
+				 LPDIRSWITCHFLAGS lpFlags)	/* [IN] The flags used */
 {
   SHORT iScreenWidth;
   USHORT iColumns;
@@ -1512,9 +1515,9 @@ ULARGE_INTEGER u64FileSize;		/* The file size */
  */
 static VOID
 DirPrintBareList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN] Files' Info */
-		 DWORD dwCount,			/* [IN] The number of files */
-		 LPTSTR lpCurPath,		/* [IN] Full path of current directory */
-		 LPDIRSWITCHFLAGS lpFlags)	/* [IN] The flags used */
+				 DWORD dwCount,			/* [IN] The number of files */
+				 LPTSTR lpCurPath,		/* [IN] Full path of current directory */
+				 LPDIRSWITCHFLAGS lpFlags)	/* [IN] The flags used */
 {
 	TCHAR szFullName[MAX_PATH];
 	DWORD i;
@@ -1556,9 +1559,9 @@ DirPrintBareList(LPWIN32_FIND_DATA ptrFiles[],	/* [IN] Files' Info */
  */
 static VOID
 DirPrintFiles(LPWIN32_FIND_DATA ptrFiles[],	/* [IN] Files' Info */
-	      DWORD dwCount,			/* [IN] The quantity of files */
-	      TCHAR *szCurPath,			/* [IN] Full path of current directory */
-	      LPDIRSWITCHFLAGS lpFlags)		/* [IN] The flags used */
+			  DWORD dwCount,			/* [IN] The quantity of files */
+			  TCHAR *szCurPath,			/* [IN] Full path of current directory */
+			  LPDIRSWITCHFLAGS lpFlags)		/* [IN] The flags used */
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	TCHAR szTemp[MAX_PATH];			/* A buffer to format the directory header */
@@ -1617,8 +1620,8 @@ DirPrintFiles(LPWIN32_FIND_DATA ptrFiles[],	/* [IN] Files' Info */
  */
 static BOOL
 CompareFiles(LPWIN32_FIND_DATA lpFile1,	/* [IN] A pointer to WIN32_FIND_DATA of file 1 */
-	     LPWIN32_FIND_DATA lpFile2,	/* [IN] A pointer to WIN32_FIND_DATA of file 2 */
-	     LPDIRSWITCHFLAGS lpFlags)	/* [IN] The flags that we use to list */
+			 LPWIN32_FIND_DATA lpFile2,	/* [IN] A pointer to WIN32_FIND_DATA of file 2 */
+			 LPDIRSWITCHFLAGS lpFlags)	/* [IN] The flags that we use to list */
 {
   ULARGE_INTEGER u64File1;
   ULARGE_INTEGER u64File2;
@@ -1768,9 +1771,9 @@ QsortFiles(LPWIN32_FIND_DATA ptrArray[],	/* [IN/OUT] The array with file info po
  */
 static INT
 DirList(LPTSTR szPath,			/* [IN] The path that dir starts */
-	LPTSTR szFilespec,		/* [IN] The type of file that we are looking for */
-	LPINT pLine,			/* FIXME: Maybe used for paginating */
-	LPDIRSWITCHFLAGS lpFlags)	/* [IN] The flags of the listing */
+		LPTSTR szFilespec,		/* [IN] The type of file that we are looking for */
+		LPINT pLine,			/* FIXME: Maybe used for paginating */
+		LPDIRSWITCHFLAGS lpFlags)	/* [IN] The flags of the listing */
 {
 	HANDLE hSearch;							/* The handle of the search */
 	HANDLE hRecSearch;						/* The handle for searching recursivly */
@@ -1974,7 +1977,8 @@ ULARGE_INTEGER u64Temp;					/* A temporary counter */
  *
  * internal dir command
  */
-INT CommandDir(LPTSTR first, LPTSTR rest)
+INT 
+CommandDir(LPTSTR first, LPTSTR rest)
 {
 	TCHAR	dircmd[256];	/* A variable to store the DIRCMD enviroment variable */
 	TCHAR	cDrive;
