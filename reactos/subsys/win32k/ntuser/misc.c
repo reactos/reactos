@@ -813,8 +813,9 @@ IntGetFontMetricSetting(LPWSTR lpValueName, PLOGFONTW font)
 {
    RTL_QUERY_REGISTRY_TABLE QueryTable[2];
    NTSTATUS Status;
+   /* Firefox 1.0.7 depends on the lfHeight value being negative */
    static LOGFONTW DefaultFont = {
-                                    11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
+                                    -11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
                                     0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS,
                                     L"Bitstream Vera Sans"
                                  };
