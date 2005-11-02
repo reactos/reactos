@@ -44,23 +44,30 @@ PspGetOrSetContextKernelRoutine(PKAPC Apc,
     PKEVENT Event;
     PCONTEXT Context;
     KPROCESSOR_MODE Mode;
+    PETHREAD Thread;
+    PKTRAP_FRAME TrapFrame;
 
     /* Get the Context Structure */
     GetSetContext = CONTAINING_RECORD(Apc, GET_SET_CTX_CONTEXT, Apc);
     Context = &GetSetContext->Context;
     Event = &GetSetContext->Event;
     Mode = GetSetContext->Mode;
+    Thread = SystemArgument2;
+
+    /* Get trap frame */
+    TrapFrame = (PKTRAP_FRAME)((ULONG_PTR)Thread->Tcb.InitialStack -
+                               sizeof(KTRAP_FRAME) - sizeof(FX_SAVE_AREA));
 
     /* Check if it's a set or get */
-    if (SystemArgument1) {
-
+    if (SystemArgument1)
+    {
         /* Get the Context */
-        KeTrapFrameToContext(KeGetCurrentThread()->TrapFrame, NULL, Context);
-
-    } else {
-
+        KeTrapFrameToContext(TrapFrame, NULL, Context);
+    }
+    else
+    {
         /* Set the Context */
-        KeContextToTrapFrame(Context, NULL, KeGetCurrentThread()->TrapFrame, Mode);
+        KeContextToTrapFrame(Context, NULL, TrapFrame, Mode);
     }
 
     /* Notify the Native API that we are done */
