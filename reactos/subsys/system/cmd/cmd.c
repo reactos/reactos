@@ -1282,6 +1282,7 @@ ProcessInput (BOOL bFlag)
 	LPCTSTR tmp;
 	BOOL bEchoThisLine;
 	BOOL bModeSetA;
+        BOOL bIsBatch;
 
 	do
 	{
@@ -1294,7 +1295,12 @@ ProcessInput (BOOL bFlag)
 			ReadCommand (readline, CMDLINE_LENGTH);
 			ip = readline;
 			bEchoThisLine = FALSE;
+                        bIsBatch = FALSE;
 		}
+                else
+                {
+                        bIsBatch = TRUE;
+                }
 
 		/* skip leading blanks */
 		while ( _istspace(*ip) )
@@ -1403,7 +1409,7 @@ ProcessInput (BOOL bFlag)
 		if (*commandline)
 		{
 			ParseCommandLine (commandline);
-			if (bEcho && !bIgnoreEcho)
+			if (bEcho && !bIgnoreEcho && (!bIsBatch || bEchoThisLine))
 				ConOutChar ('\n');
 			bIgnoreEcho = FALSE;
 		}
