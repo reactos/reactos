@@ -46,7 +46,7 @@ SourceFile::SourceFile ( AutomaticDependency* automaticDependency,
 void
 SourceFile::GetDirectoryAndFilenameParts ()
 {
-	size_t index = filename.find_last_of ( CSEP );
+	size_t index = filename.find_last_of ( cSep );
 	if ( index != string::npos )
 	{
 		directoryPart = filename.substr ( 0, index );
@@ -347,7 +347,7 @@ AutomaticDependency::LocateIncludedFile ( const string& directory,
                                           const string& includedFilename,
                                           string& resolvedFilename )
 {
-	string normalizedFilename = NormalizeFilename ( directory + SSEP + includedFilename );
+	string normalizedFilename = NormalizeFilename ( directory + sSep + includedFilename );
 	FILE* f = fopen ( normalizedFilename.c_str (), "rb" );
 	if ( f != NULL )
 	{
@@ -362,7 +362,7 @@ AutomaticDependency::LocateIncludedFile ( const string& directory,
 string
 AutomaticDependency::GetFilename ( const string& filename )
 {
-	size_t index = filename.find_last_of ( CSEP );
+	size_t index = filename.find_last_of ( cSep );
 	if (index == string::npos)
 		return filename;
 	else

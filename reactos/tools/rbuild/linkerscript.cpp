@@ -66,7 +66,7 @@ LinkerScript::ProcessXML()
 				node.location,
 				"<linkerscript> attribute 'base' references non-existant project or module '%s'",
 				att->value.c_str() );
-		directory = NormalizeFilename ( basePath + SSEP + node.value );
+		directory = NormalizeFilename ( basePath + sSep + node.value );
 	}
 	else
 		directory = NormalizeFilename ( node.value );

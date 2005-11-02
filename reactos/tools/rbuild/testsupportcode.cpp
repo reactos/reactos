@@ -69,7 +69,7 @@ TestSupportCode::GenerateTestSupportCodeForModule ( Module& module,
 string
 TestSupportCode::GetHooksFilename ( Module& module )
 {
-	return NormalizeFilename ( Environment::GetIntermediatePath () + SSEP + module.GetBasePath () + SSEP + "_hooks.c" );
+	return NormalizeFilename ( Environment::GetIntermediatePath () + sSep + module.GetBasePath () + sSep + "_hooks.c" );
 }
 
 char*
@@ -135,7 +135,7 @@ TestSupportCode::WriteHooksFile ( Module& module )
 string
 TestSupportCode::GetStubsFilename ( Module& module )
 {
-	return NormalizeFilename ( Environment::GetIntermediatePath () + SSEP + module.GetBasePath () + SSEP + "_stubs.S" );
+	return NormalizeFilename ( Environment::GetIntermediatePath () + sSep + module.GetBasePath () + sSep + "_stubs.S" );
 }
 
 string
@@ -226,7 +226,7 @@ TestSupportCode::WriteStubsFile ( Module& module )
 string
 TestSupportCode::GetStartupFilename ( Module& module )
 {
-	return NormalizeFilename ( Environment::GetIntermediatePath () + SSEP + module.GetBasePath () + SSEP + "_startup.c" );
+	return NormalizeFilename ( Environment::GetIntermediatePath () + sSep + module.GetBasePath () + sSep + "_startup.c" );
 }
 
 bool

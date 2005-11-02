@@ -50,7 +50,7 @@ InstallFile::~InstallFile ()
 string
 InstallFile::GetPath () const
 {
-	return path + SSEP + name;
+	return path + sSep + name;
 }
 
 void

@@ -104,10 +104,10 @@ WineResource::UnpackResourcesInModule ( Module& module,
 	}
 
 	string outputDirectory = module.GetBasePath ();
-	string parameters = ssprintf ( "-b %s -f -x %s",
+	    string parameters = ssprintf ( "-b %s -f -x %s",
 	                               NormalizeFilename ( outputDirectory ).c_str (),
 	                               NormalizeFilename ( resourceFilename ).c_str () );
-	string command = bin2res + " " + parameters;
+	string command = FixSeparatorForSystemCommand(bin2res) + " " + parameters;
 	int exitcode = system ( command.c_str () );
 	if ( exitcode != 0 )
 	{

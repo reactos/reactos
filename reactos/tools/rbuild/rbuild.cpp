@@ -35,6 +35,13 @@ static string BuildSystem;
 static string RootXmlFile = "ReactOS.xml";
 static Configuration configuration;
 
+string ExePrefix;
+string ExePostfix;
+string sSep;
+string sBadSep;
+char cSep;
+char cBadSep;
+
 bool
 ParseAutomaticDependencySwitch ( char switchChar2,
 	                             char* switchStart )
@@ -186,6 +193,43 @@ ParseArguments ( int argc, char** argv )
 int
 main ( int argc, char** argv )
 {
+        char *SepValue, *ExePostfixValue, *ExePrefixValue;;
+
+        SepValue = getenv("SEP");
+        if (SepValue && (0 == strcmp(SepValue, DEF_SSEP) || 0 == strcmp(SepValue, DEF_SBAD_SEP)))
+        {
+            cSep = SepValue[0];
+            sSep = SepValue;
+        }
+        else
+        {
+            cSep = DEF_CSEP;
+            sSep = DEF_SSEP;
+        }
+        if (cSep == DEF_CSEP)
+        {
+            cBadSep = DEF_CBAD_SEP;
+            sBadSep = DEF_SBAD_SEP;
+        }
+        else
+        {
+            cBadSep = DEF_CSEP;
+            sBadSep = DEF_SSEP;
+        }
+        ExePostfixValue = getenv("EXEPOSTFIX");
+        ExePrefixValue = getenv("EXEPREFIX");
+        if ((ExePostfixValue == NULL || 0 == strlen(ExePostfixValue)) &&
+            (ExePrefixValue == NULL || 0 == strlen(ExePrefixValue)))
+        {
+            ExePostfix = DEF_EXEPOSTFIX;
+            ExePrefix = DEF_EXEPREFIX;
+        }
+        else
+        {
+            ExePostfix = ExePostfixValue ? ExePostfixValue : "";
+            ExePrefix = ExePrefixValue ? ExePrefixValue : "";
+        }
+
 	if ( !ParseArguments ( argc, argv ) )
 	{
 		printf ( "Generates project files for buildsystems\n\n" );

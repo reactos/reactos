@@ -55,11 +55,24 @@ string
 FixSeparator ( const string& s )
 {
 	string s2(s);
-	char* p = strchr ( &s2[0], CBAD_SEP );
+	char* p = strchr ( &s2[0], cBadSep );
 	while ( p )
 	{
-		*p++ = CSEP;
-		p = strchr ( p, CBAD_SEP );
+		*p++ = cSep;
+		p = strchr ( p, cBadSep );
+	}
+	return s2;
+}
+
+string
+FixSeparatorForSystemCommand ( const string& s )
+{
+	string s2(s);
+	char* p = strchr ( &s2[0], DEF_CBAD_SEP );
+	while ( p )
+	{
+		*p++ = DEF_CSEP;
+		p = strchr ( p, DEF_CBAD_SEP );
 	}
 	return s2;
 }
@@ -111,7 +124,7 @@ GetSubPath (
 			"<directory> tag has invalid characters in 'name' attribute" );
 	if ( !path.size() )
 		return att_value;
-	return FixSeparator(path + CSEP + att_value);
+	return FixSeparator(path + cSep + att_value);
 }
 
 string
@@ -129,7 +142,7 @@ GetExtension ( const string& filename )
 string
 GetDirectory ( const string& filename )
 {
-	size_t index = filename.find_last_of ( CSEP );
+	size_t index = filename.find_last_of ( cSep );
 	if ( index == string::npos )
 		return "";
 	else
@@ -139,7 +152,7 @@ GetDirectory ( const string& filename )
 string
 GetFilename ( const string& filename )
 {
-	size_t index = filename.find_last_of ( CSEP );
+	size_t index = filename.find_last_of ( cSep );
 	if ( index == string::npos )
 		return filename;
 	else
@@ -453,7 +466,7 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 			else if ( !stricmp ( ext.c_str(), ".cxx" ) )
 				cplusplus = true;
 		}
-		File* pFile = new File ( FixSeparator ( path + CSEP + e.value ),
+		File* pFile = new File ( FixSeparator ( path + cSep + e.value ),
 		                         first,
 		                         switches,
 		                         false );
@@ -597,7 +610,7 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 				e.location,
 				"Only one <pch> is valid per module" );
 		pch = new PchFile (
-			e, *this, File ( FixSeparator ( path + CSEP + e.value ), false, "", true ) );
+			e, *this, File ( FixSeparator ( path + cSep + e.value ), false, "", true ) );
 		subs_invalid = true;
 	}
 	if ( subs_invalid && e.subElements.size() > 0 )
@@ -661,7 +674,7 @@ Module::GetDefaultModuleExtension () const
 	switch (type)
 	{
 		case BuildTool:
-			return EXEPOSTFIX;
+			return ExePostfix;
 		case StaticLibrary:
 			return ".a";
 		case ObjectLibrary:
@@ -868,7 +881,7 @@ string
 Module::GetPath () const
 {
 	if ( path.length() > 0 )
-		return path + CSEP + GetTargetName ();
+		return path + cSep + GetTargetName ();
 	else
 		return GetTargetName ();
 }
@@ -876,7 +889,7 @@ Module::GetPath () const
 string
 Module::GetPathWithPrefix ( const string& prefix ) const
 {
-	return path + CSEP + prefix + GetTargetName ();
+	return path + cSep + prefix + GetTargetName ();
 }
 
 string
@@ -914,7 +927,7 @@ Module::InvokeModule () const
 	for ( size_t i = 0; i < invocations.size (); i++ )
 	{
 		Invoke& invoke = *invocations[i];
-		string command = invoke.invokeModule->GetPath () + " " + invoke.GetParameters ();
+		string command = FixSeparatorForSystemCommand(invoke.invokeModule->GetPath ()) + " " + invoke.GetParameters ();
 		printf ( "Executing '%s'\n\n", command.c_str () );
 		int exitcode = system ( command.c_str () );
 		if ( exitcode != 0 )
@@ -1034,7 +1047,7 @@ Invoke::ProcessXMLSubElementInput ( const XMLElement& e )
 	bool subs_invalid = false;
 	if ( e.name == "inputfile" && e.value.size () > 0 )
 	{
-		input.push_back ( new InvokeFile ( e, FixSeparator ( module.path + CSEP + e.value ) ) );
+		input.push_back ( new InvokeFile ( e, FixSeparator ( module.path + cSep + e.value ) ) );
 		subs_invalid = true;
 	}
 	if ( subs_invalid && e.subElements.size() > 0 )
@@ -1049,7 +1062,7 @@ Invoke::ProcessXMLSubElementOutput ( const XMLElement& e )
 	bool subs_invalid = false;
 	if ( e.name == "outputfile" && e.value.size () > 0 )
 	{
-		output.push_back ( new InvokeFile ( e, FixSeparator ( module.path + CSEP + e.value ) ) );
+		output.push_back ( new InvokeFile ( e, FixSeparator ( module.path + cSep + e.value ) ) );
 		subs_invalid = true;
 	}
 	if ( subs_invalid && e.subElements.size() > 0 )

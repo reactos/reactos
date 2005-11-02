@@ -41,20 +41,27 @@
 
 typedef std::vector<std::string> string_list;
 
+extern std::string ExePrefix;
+extern std::string ExePostfix;
+extern std::string sSep;
+extern std::string sBadSep;
+extern char cSep;
+extern char cBadSep;
+
 #ifdef WIN32
-#define EXEPREFIX ""
-#define EXEPOSTFIX ".exe"
-#define CSEP '\\'
-#define CBAD_SEP '/'
-#define SSEP "\\"
-#define SBAD_SEP "/"
+#define DEF_EXEPREFIX ""
+#define DEF_EXEPOSTFIX ".exe"
+#define DEF_CSEP '\\'
+#define DEF_CBAD_SEP '/'
+#define DEF_SSEP "\\"
+#define DEF_SBAD_SEP "/"
 #else
-#define EXEPREFIX "./"
-#define EXEPOSTFIX ""
-#define CSEP '/'
-#define CBAD_SEP '\\'
-#define SSEP "/"
-#define SBAD_SEP "\\"
+#define DEF_EXEPREFIX "./"
+#define DEF_EXEPOSTFIX ""
+#define DEF_CSEP '/'
+#define DEF_CBAD_SEP '\\'
+#define DEF_SSEP "/"
+#define DEF_SBAD_SEP "\\"
 #endif
 
 #define MS_VS_DEF_VERSION "7.10"
@@ -772,6 +779,9 @@ Replace ( const std::string& s, const std::string& find, const std::string& with
 
 extern std::string
 FixSeparator ( const std::string& s );
+
+extern std::string
+FixSeparatorForSystemCommand ( const std::string& s );
 
 extern std::string
 DosSeparator ( const std::string& s );

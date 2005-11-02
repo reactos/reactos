@@ -50,7 +50,7 @@ PrefixFilename (
 	{
 		if ( p2 > p1 )
 			p1 = p2;
-		out += string(pfilename,p1-pfilename) + CSEP;
+		out += string(pfilename,p1-pfilename) + cSep;
 		pfilename = p1 + 1;
 	}
 	out += prefix + pfilename;
@@ -106,7 +106,7 @@ MingwModuleHandler::RemoveVariables ( string path)
 		size_t j = path.find ( ')', i );
 		if ( j != string::npos )
 		{
-			if ( j + 2 < path.length () && path[j + 1] == CSEP )
+			if ( j + 2 < path.length () && path[j + 1] == cSep )
 				return path.substr ( j + 2);
 			else
 				return path.substr ( j + 1);
@@ -130,7 +130,7 @@ MingwModuleHandler::PassThruCacheDirectory (
 	{
 		if ( file == "" )
 			return generatedFilesDirectory;
-		return generatedFilesDirectory + SSEP + file;
+		return generatedFilesDirectory + sSep + file;
 	}
 }
 
@@ -518,7 +518,7 @@ MingwModuleHandler::GenerateInstallTarget () const
 		return;
 	fprintf ( fMakefile, ".PHONY: %s_install\n", module.name.c_str() );
 	string normalizedTargetFilename = MingwModuleHandler::PassThruCacheDirectory (
-		NormalizeFilename ( module.installBase + SSEP + module.installName ),
+		NormalizeFilename ( module.installBase + sSep + module.installName ),
 		backend->installDirectory );
 	fprintf ( fMakefile,
 	          "%s_install: %s\n",
@@ -581,7 +581,7 @@ MingwModuleHandler::GenerateGccDefineParametersFromVector (
 	return parameters;
 }
 
-string
+string  
 MingwModuleHandler::GenerateGccDefineParameters () const
 {
 	string parameters = GenerateGccDefineParametersFromVector ( module.project.non_if_data.defines );
@@ -601,10 +601,10 @@ MingwModuleHandler::ConcatenatePaths (
 {
 	if ( ( path1.length () == 0 ) || ( path1 == "." ) || ( path1 == "./" ) )
 		return path2;
-	if ( path1[path1.length ()] == CSEP )
+	if ( path1[path1.length ()] == cSep )
 		return path1 + path2;
 	else
-		return path1 + CSEP + path2;
+		return path1 + cSep + path2;
 }
 
 /* static */ string
@@ -1838,7 +1838,7 @@ MingwModuleHandler::GenerateRules ()
 	if ( module.name != "zlib" ) /* Avoid make warning */
 	{
 		string proxyMakefile = PassThruCacheDirectory (
-			NormalizeFilename ( module.GetBasePath () + SSEP + "makefile" ),
+			NormalizeFilename ( module.GetBasePath () + sSep + "makefile" ),
 			backend->outputDirectory );
 		CLEAN_FILE ( proxyMakefile );
 	}
@@ -2009,7 +2009,7 @@ MingwModuleHandler::GetDefinitionFilename () const
 {
 	if ( module.importLibrary != NULL )
 	{
-		string defFilename = module.GetBasePath () + SSEP + module.importLibrary->definition;
+		string defFilename = module.GetBasePath () + sSep + module.importLibrary->definition;
 		if ( IsWineModule () )
 			return PassThruCacheDirectory ( NormalizeFilename ( defFilename ),
 			                                backend->intermediateDirectory );
@@ -2017,7 +2017,7 @@ MingwModuleHandler::GetDefinitionFilename () const
 			return defFilename;
 	}
 	else
-		return "tools" SSEP "rbuild" SSEP "empty.def";
+		return "tools" + sSep + "rbuild" + sSep + "empty.def";
 }
 
 void
@@ -2181,8 +2181,9 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ()
 
 		string dependencies = linkDepsMacro + " " + objectsMacro;
 
-		string linkerParameters = ssprintf ( "-Wl,-T,%s" SSEP "ntoskrnl.lnk -Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -shared",
+		string linkerParameters = ssprintf ( "-Wl,-T,%s%cntoskrnl.lnk -Wl,--subsystem,native -Wl,--entry,%s -Wl,--image-base,%s -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -shared",
 		                                     module.GetBasePath ().c_str (),
+                                                     cSep,
 		                                     module.entrypoint.c_str (),
 		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( dependencies,
@@ -2693,7 +2694,7 @@ MingwIsoModuleHandler::OutputBootstrapfileCopyCommands (
 			string sourceFilename = PassThruCacheDirectory (
 				NormalizeFilename ( m.GetPath () ),
 				backend->outputDirectory );
-			string targetFilenameNoFixup ( bootcdDirectory + SSEP + m.bootstrap->base + SSEP + m.bootstrap->nameoncd );
+			string targetFilenameNoFixup ( bootcdDirectory + sSep + m.bootstrap->base + sSep + m.bootstrap->nameoncd );
 			string targetFilename = MingwModuleHandler::PassThruCacheDirectory (
 				NormalizeFilename ( targetFilenameNoFixup ),
 				backend->outputDirectory );
@@ -2714,7 +2715,7 @@ MingwIsoModuleHandler::OutputCdfileCopyCommands (
 	for ( size_t i = 0; i < module.project.cdfiles.size (); i++ )
 	{
 		const CDFile& cdfile = *module.project.cdfiles[i];
-		string targetFilenameNoFixup = bootcdDirectory + SSEP + cdfile.base + SSEP + cdfile.nameoncd;
+		string targetFilenameNoFixup = bootcdDirectory + sSep + cdfile.base + sSep + cdfile.nameoncd;
 		string targetFilename = MingwModuleHandler::PassThruCacheDirectory (
 			NormalizeFilename ( targetFilenameNoFixup ),
 			backend->outputDirectory );
@@ -2738,7 +2739,7 @@ MingwIsoModuleHandler::GetBootstrapCdDirectories ( const string& bootcdDirectory
 			continue;
 		if ( m.bootstrap != NULL )
 		{
-			string targetDirectory ( bootcdDirectory + SSEP + m.bootstrap->base );
+			string targetDirectory ( bootcdDirectory + sSep + m.bootstrap->base );
 			if ( directories.size () > 0 )
 				directories += " ";
 			directories += PassThruCacheDirectory (
@@ -2756,7 +2757,7 @@ MingwIsoModuleHandler::GetNonModuleCdDirectories ( const string& bootcdDirectory
 	for ( size_t i = 0; i < module.project.cdfiles.size (); i++ )
 	{
 		const CDFile& cdfile = *module.project.cdfiles[i];
-		string targetDirectory ( bootcdDirectory + SSEP + cdfile.base );
+		string targetDirectory ( bootcdDirectory + sSep + cdfile.base );
 		if ( directories.size () > 0 )
 			directories += " ";
 		directories += PassThruCacheDirectory (
@@ -2817,20 +2818,20 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 {
 	string bootcdDirectory = "cd";
 	string bootcd = PassThruCacheDirectory (
-		NormalizeFilename ( bootcdDirectory + SSEP ),
+		NormalizeFilename ( bootcdDirectory + sSep ),
 		backend->outputDirectory );
 	string isoboot = PassThruCacheDirectory (
-		NormalizeFilename ( "boot" SSEP "freeldr" SSEP "bootsect" SSEP "isoboot.o" ),
+		NormalizeFilename ( "boot" + sSep + "freeldr" + sSep + "bootsect" + sSep + "isoboot.o" ),
 		backend->outputDirectory );
-	string bootcdReactosNoFixup = bootcdDirectory + SSEP "reactos";
+	string bootcdReactosNoFixup = bootcdDirectory + sSep + "reactos";
 	string bootcdReactos = PassThruCacheDirectory (
-		NormalizeFilename ( bootcdReactosNoFixup + SSEP ),
+		NormalizeFilename ( bootcdReactosNoFixup + sSep ),
 		backend->outputDirectory );
 	CLEAN_FILE ( bootcdReactos );
 	string reactosInf = PassThruCacheDirectory (
-		NormalizeFilename ( bootcdReactosNoFixup + SSEP "reactos.inf" ),
+		NormalizeFilename ( bootcdReactosNoFixup + sSep + "reactos.inf" ),
 		backend->outputDirectory );
-	string reactosDff = NormalizeFilename ( "bootdata" SSEP "packages" SSEP "reactos.dff" );
+	string reactosDff = NormalizeFilename ( "bootdata" + sSep + "packages" + sSep + "reactos.dff" );
 	string cdDirectories = GetCdDirectories ( bootcdDirectory );
 	vector<string> vCdFiles;
 	GetCdFiles ( vCdFiles );
@@ -2887,7 +2888,7 @@ void
 MingwLiveIsoModuleHandler::CreateDirectory ( const string& directory )
 {
 	string normalizedDirectory = MingwModuleHandler::PassThruCacheDirectory (
-		NormalizeFilename ( directory ) + SSEP,
+		NormalizeFilename ( directory ) + sSep,
 		backend->outputDirectory );
 }
 
@@ -2897,7 +2898,7 @@ MingwLiveIsoModuleHandler::OutputCopyCommand ( const string& sourceFilename,
                                                const string& targetDirectory )
 {
 	string normalizedTargetFilename = MingwModuleHandler::PassThruCacheDirectory (
-		NormalizeFilename ( targetDirectory + SSEP + targetFilename ),
+		NormalizeFilename ( targetDirectory + sSep + targetFilename ),
 		backend->outputDirectory );
 	fprintf ( fMakefile,
 	          "\t$(ECHO_CP)\n" );
@@ -2924,7 +2925,7 @@ MingwLiveIsoModuleHandler::OutputModuleCopyCommands ( string& livecdDirectory,
 				backend->outputDirectory );
 			OutputCopyCommand ( sourceFilename,
 			                    m.installName,
-			                    livecdDirectory + SSEP + reactosDirectory + SSEP + m.installBase );
+			                    livecdDirectory + sSep + reactosDirectory + sSep + m.installBase );
 		}
 	}
 }
@@ -2938,21 +2939,21 @@ MingwLiveIsoModuleHandler::OutputNonModuleCopyCommands ( string& livecdDirectory
 		const InstallFile& installfile = *module.project.installfiles[i];
 		OutputCopyCommand ( installfile.GetPath (),
 	                        installfile.newname,
-	                        livecdDirectory + SSEP + reactosDirectory + SSEP + installfile.base );
+	                        livecdDirectory + sSep + reactosDirectory + sSep + installfile.base );
 	}
 }
 
 void
 MingwLiveIsoModuleHandler::OutputProfilesDirectoryCommands ( string& livecdDirectory )
 {
-	CreateDirectory ( livecdDirectory + SSEP "Profiles" );
-	CreateDirectory ( livecdDirectory + SSEP "Profiles" SSEP "All Users") ;
-	CreateDirectory ( livecdDirectory + SSEP "Profiles" SSEP "All Users" SSEP "Desktop" );
-	CreateDirectory ( livecdDirectory + SSEP "Profiles" SSEP "Default User" );
-	CreateDirectory ( livecdDirectory + SSEP "Profiles" SSEP "Default User" SSEP "Desktop" );
-	CreateDirectory ( livecdDirectory + SSEP "Profiles" SSEP "Default User" SSEP "My Documents" );
+	CreateDirectory ( livecdDirectory + sSep + "Profiles" );
+	CreateDirectory ( livecdDirectory + sSep + "Profiles" + sSep + "All Users") ;
+	CreateDirectory ( livecdDirectory + sSep + "Profiles" + sSep + "All Users" + sSep + "Desktop" );
+	CreateDirectory ( livecdDirectory + sSep + "Profiles" + sSep + "Default User" );
+	CreateDirectory ( livecdDirectory + sSep + "Profiles" + sSep + "Default User" + sSep + "Desktop" );
+	CreateDirectory ( livecdDirectory + sSep + "Profiles" + sSep + "Default User" + sSep + "My Documents" );
 
-	string livecdIni = "bootdata" SSEP "livecd.ini";
+	string livecdIni = "bootdata" + sSep + "livecd.ini";
 	OutputCopyCommand ( livecdIni,
                         "freeldr.ini",
                         livecdDirectory );
@@ -2962,12 +2963,12 @@ void
 MingwLiveIsoModuleHandler::OutputLoaderCommands ( string& livecdDirectory )
 {
 	string freeldr = PassThruCacheDirectory (
-		NormalizeFilename ( "boot" SSEP "freeldr" SSEP "freeldr" SSEP "freeldr.sys" ),
+		NormalizeFilename ( "boot" + sSep + "freeldr" + sSep + "freeldr" + sSep + "freeldr.sys" ),
 		backend->outputDirectory );
-	CreateDirectory ( livecdDirectory + SSEP "loader" );
+	CreateDirectory ( livecdDirectory + sSep + "loader" );
 	OutputCopyCommand ( freeldr,
                         "setupldr.sys",
-                        livecdDirectory + SSEP + "loader" );
+                        livecdDirectory + sSep + "loader" );
 }
 
 void
@@ -2975,13 +2976,15 @@ MingwLiveIsoModuleHandler::OutputRegistryCommands ( string& livecdDirectory )
 {
 	string reactosSystem32ConfigDirectory = NormalizeFilename (
 		MingwModuleHandler::PassThruCacheDirectory (
-		livecdDirectory + SSEP "reactos" SSEP "system32" SSEP "config" SSEP,
+		livecdDirectory + sSep + "reactos" + sSep + "system32" + sSep + "config" + sSep,
 		backend->outputDirectory ) );
 	fprintf ( fMakefile,
 	          "\t$(ECHO_MKHIVE)\n" );
 	fprintf ( fMakefile,
-	          "\t$(MKHIVE_TARGET) bootdata %s bootdata" SSEP "livecd.inf bootdata" SSEP "hiveinst.inf\n",
-	          reactosSystem32ConfigDirectory.c_str () );
+	          "\t$(MKHIVE_TARGET) bootdata %s bootdata%clivecd.inf bootdata%chiveinst.inf\n",
+	          reactosSystem32ConfigDirectory.c_str (),
+                  cSep,
+                  cSep );
 }
 
 void
@@ -2989,15 +2992,15 @@ MingwLiveIsoModuleHandler::GenerateLiveIsoModuleTarget ()
 {
 	string livecdDirectory = "livecd";
 	string livecd = PassThruCacheDirectory (
-		NormalizeFilename ( livecdDirectory + SSEP ),
+		NormalizeFilename ( livecdDirectory + sSep ),
 		backend->outputDirectory );
 	string isoboot = PassThruCacheDirectory (
-		NormalizeFilename ( "boot" SSEP "freeldr" SSEP "bootsect" SSEP "isoboot.o" ),
+		NormalizeFilename ( "boot" + sSep + "freeldr" + sSep + "bootsect" + sSep + "isoboot.o" ),
 		backend->outputDirectory );
 	string reactosDirectory = "reactos";
-	string livecdReactosNoFixup = livecdDirectory + SSEP + reactosDirectory;
+	string livecdReactosNoFixup = livecdDirectory + sSep + reactosDirectory;
 	string livecdReactos = NormalizeFilename ( PassThruCacheDirectory (
-		NormalizeFilename ( livecdReactosNoFixup + SSEP ),
+		NormalizeFilename ( livecdReactosNoFixup + sSep ),
 		backend->outputDirectory ) );
 	CLEAN_FILE ( livecdReactos );
 
@@ -3041,10 +3044,10 @@ MingwTestModuleHandler::Process ()
 void
 MingwTestModuleHandler::GetModuleSpecificSourceFiles ( vector<File*>& sourceFiles )
 {
-	string basePath = "$(INTERMEDIATE)" SSEP + module.GetBasePath ();
-	sourceFiles.push_back ( new File ( basePath + SSEP "_hooks.c", false, "", false ) );
-	sourceFiles.push_back ( new File ( basePath + SSEP "_stubs.S", false, "", false ) );
-	sourceFiles.push_back ( new File ( basePath + SSEP "_startup.c", false, "", false ) );
+	string basePath = "$(INTERMEDIATE)" + sSep + module.GetBasePath ();
+	sourceFiles.push_back ( new File ( basePath + sSep + "_hooks.c", false, "", false ) );
+	sourceFiles.push_back ( new File ( basePath + sSep + "_stubs.S", false, "", false ) );
+	sourceFiles.push_back ( new File ( basePath + sSep + "_startup.c", false, "", false ) );
 }
 
 void

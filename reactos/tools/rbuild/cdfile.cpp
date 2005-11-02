@@ -50,7 +50,7 @@ CDFile::~CDFile ()
 string
 CDFile::GetPath () const
 {
-	return path + SSEP + name;
+	return path + sSep + name;
 }
 
 void

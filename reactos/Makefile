@@ -115,7 +115,11 @@ all: makefile.auto
 
 ifeq ($(HOST),)
 ifeq ($(word 1,$(shell gcc -dumpmachine)),mingw32)
+ifeq ($(OSTYPE),msys)
+HOST=mingw32-linux
+else
 HOST=mingw32-windows
+endif
 else
 HOST=mingw32-linux
 endif
@@ -207,9 +211,13 @@ host_ld = $(Q)ld
 host_ar = $(Q)ar
 host_objcopy = $(Q)objcopy
 ifeq ($(HOST),mingw32-linux)
-	EXEPREFIX = ./
-	EXEPOSTFIX =
-	SEP = /
+	export EXEPREFIX = ./
+ifeq ($(OSTYPE),msys)
+	export EXEPOSTFIX = .exe
+else	
+	export EXEPOSTFIX =
+endif
+	export SEP = /
 	mkdir = -$(Q)mkdir -p
 	gcc = $(Q)$(PREFIX)-gcc
 	gpp = $(Q)$(PREFIX)-g++
@@ -224,10 +232,29 @@ ifeq ($(HOST),mingw32-linux)
 	cp = $(Q)cp
 	NUL = /dev/null
 else # mingw32-windows
-	EXEPREFIX =
-	EXEPOSTFIX = .exe
+  ifeq ($(OSTYPE),msys)
+	HOST=mingw32-linux
+	export EXEPREFIX = ./
+	export EXEPOSTFIX = .exe
+	export SEP = /
+	mkdir = -$(Q)mkdir -p
+	gcc = $(Q)gcc
+	gpp = $(Q)g++
+	ld = $(Q)ld
+	nm = $(Q)nm
+	objdump = $(Q)objdump
+	ar = $(Q)ar
+	objcopy = $(Q)objcopy
+	dlltool = $(Q)dlltool
+	windres = $(Q)windres
+	rm = $(Q)rm -f
+	cp = $(Q)cp
+	NUL = /dev/null
+  else
+	export EXEPREFIX =
+	export EXEPOSTFIX = .exe
 	ROS_EMPTY =
-	SEP = \$(ROS_EMPTY)
+	export SEP = \$(ROS_EMPTY)
 	mkdir = -$(Q)mkdir
 	gcc = $(Q)gcc
 	gpp = $(Q)g++
@@ -241,6 +268,7 @@ else # mingw32-windows
 	rm = $(Q)del /f /q
 	cp = $(Q)copy /y
 	NUL = NUL
+  endif
 endif
 
 ifneq ($(ROS_INTERMEDIATE),)
