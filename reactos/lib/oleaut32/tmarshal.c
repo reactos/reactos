@@ -344,7 +344,9 @@ typedef struct _TMAsmProxy {
 #include "poppack.h"
 
 #else /* __i386__ */
-# error You need to implement stubless proxies for your architecture
+# warning You need to implement stubless proxies for your architecture
+typedef struct _TMAsmProxy {
+} TMAsmProxy;
 #endif
 
 typedef struct _TMProxyImpl {
@@ -1939,6 +1941,7 @@ PSFacBuf_CreateProxy(
 		for (j=0;j<fdesc->cParams;j++)
 		    nrofargs += _argsize(fdesc->lprgelemdescParam[j].tdesc.vt);
 
+#ifdef __i386__
 		if (fdesc->callconv != CC_STDCALL) {
 		    ERR("calling convention is not stdcall????\n");
 		    return E_FAIL;
@@ -1963,6 +1966,10 @@ PSFacBuf_CreateProxy(
 		xasm->bytestopop= (nrofargs+2)*4; /* pop args, This, iMethod */
 		proxy->lpvtbl[i] = xasm;
 		break;
+#else
+                FIXME("not implemented on non i386\n");
+                return E_FAIL;
+#endif
 	    }
 	}
     }

@@ -91,6 +91,11 @@ extern const IID IID_ISupportErrorInfo;
 extern const IID IID_IRecordInfo;
 extern const IID IID_ITypeMarshal;
 
+#ifndef __ITypeLib_FWD_DEFINED__
+#define __ITypeLib_FWD_DEFINED__
+typedef struct ITypeLib ITypeLib;
+#endif
+
 typedef enum tagSYSKIND {
 	SYS_WIN16,SYS_WIN32,SYS_MAC
 } SYSKIND;
@@ -586,6 +591,301 @@ DECLARE_INTERFACE_(ITypeInfo,IUnknown)
 #define ITypeInfo_ReleaseVarDesc(p,a) (p)->lpVtbl->ReleaseVarDesc(p,a)
 #endif
 
+HRESULT CALLBACK ITypeInfo_RemoteGetTypeAttr_Proxy(
+    ITypeInfo* This,
+    LPTYPEATTR* ppTypeAttr,
+    CLEANLOCALSTORAGE* pDummy);
+void __RPC_STUB ITypeInfo_RemoteGetTypeAttr_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK ITypeInfo_GetTypeAttr_Proxy(
+    ITypeInfo* This,
+    TYPEATTR** ppTypeAttr);
+HRESULT __RPC_STUB ITypeInfo_GetTypeAttr_Stub(
+    ITypeInfo* This,
+    LPTYPEATTR* ppTypeAttr,
+    CLEANLOCALSTORAGE* pDummy);
+HRESULT CALLBACK ITypeInfo_GetTypeComp_Proxy(
+    ITypeInfo* This,
+    ITypeComp** ppTComp);
+void __RPC_STUB ITypeInfo_GetTypeComp_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK ITypeInfo_RemoteGetFuncDesc_Proxy(
+    ITypeInfo* This,
+    UINT index,
+    LPFUNCDESC* ppFuncDesc,
+    CLEANLOCALSTORAGE* pDummy);
+void __RPC_STUB ITypeInfo_RemoteGetFuncDesc_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK ITypeInfo_GetFuncDesc_Proxy(
+    ITypeInfo* This,
+    UINT index,
+    FUNCDESC** ppFuncDesc);
+HRESULT __RPC_STUB ITypeInfo_GetFuncDesc_Stub(
+    ITypeInfo* This,
+    UINT index,
+    LPFUNCDESC* ppFuncDesc,
+    CLEANLOCALSTORAGE* pDummy);
+HRESULT CALLBACK ITypeInfo_RemoteGetVarDesc_Proxy(
+    ITypeInfo* This,
+    UINT index,
+    LPVARDESC* ppVarDesc,
+    CLEANLOCALSTORAGE* pDummy);
+void __RPC_STUB ITypeInfo_RemoteGetVarDesc_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK ITypeInfo_GetVarDesc_Proxy(
+    ITypeInfo* This,
+    UINT index,
+    VARDESC** ppVarDesc);
+HRESULT __RPC_STUB ITypeInfo_GetVarDesc_Stub(
+    ITypeInfo* This,
+    UINT index,
+    LPVARDESC* ppVarDesc,
+    CLEANLOCALSTORAGE* pDummy);
+HRESULT CALLBACK ITypeInfo_RemoteGetNames_Proxy(
+    ITypeInfo* This,
+    MEMBERID memid,
+    BSTR* rgBstrNames,
+    UINT cMaxNames,
+    UINT* pcNames);
+void __RPC_STUB ITypeInfo_RemoteGetNames_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK ITypeInfo_GetNames_Proxy(
+    ITypeInfo* This,
+    MEMBERID memid,
+    BSTR* rgBstrNames,
+    UINT cMaxNames,
+    UINT* pcNames);
+HRESULT __RPC_STUB ITypeInfo_GetNames_Stub(
+    ITypeInfo* This,
+    MEMBERID memid,
+    BSTR* rgBstrNames,
+    UINT cMaxNames,
+    UINT* pcNames);
+HRESULT CALLBACK ITypeInfo_GetRefTypeOfImplType_Proxy(
+    ITypeInfo* This,
+    UINT index,
+    HREFTYPE* pRefType);
+void __RPC_STUB ITypeInfo_GetRefTypeOfImplType_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK ITypeInfo_GetImplTypeFlags_Proxy(
+    ITypeInfo* This,
+    UINT index,
+    INT* pImplTypeFlags);
+void __RPC_STUB ITypeInfo_GetImplTypeFlags_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK ITypeInfo_LocalGetIDsOfNames_Proxy(
+    ITypeInfo* This);
+void __RPC_STUB ITypeInfo_LocalGetIDsOfNames_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK ITypeInfo_GetIDsOfNames_Proxy(
+    ITypeInfo* This,
+    LPOLESTR* rgszNames,
+    UINT cNames,
+    MEMBERID* pMemId);
+HRESULT __RPC_STUB ITypeInfo_GetIDsOfNames_Stub(
+    ITypeInfo* This);
+HRESULT CALLBACK ITypeInfo_LocalInvoke_Proxy(
+    ITypeInfo* This);
+void __RPC_STUB ITypeInfo_LocalInvoke_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK ITypeInfo_Invoke_Proxy(
+    ITypeInfo* This,
+    PVOID pvInstance,
+    MEMBERID memid,
+    WORD wFlags,
+    DISPPARAMS* pDispParams,
+    VARIANT* pVarResult,
+    EXCEPINFO* pExcepInfo,
+    UINT* puArgErr);
+HRESULT __RPC_STUB ITypeInfo_Invoke_Stub(
+    ITypeInfo* This);
+HRESULT CALLBACK ITypeInfo_RemoteGetDocumentation_Proxy(
+    ITypeInfo* This,
+    MEMBERID memid,
+    DWORD refPtrFlags,
+    BSTR* pBstrName,
+    BSTR* pBstrDocString,
+    DWORD* pdwHelpContext,
+    BSTR* pBstrHelpFile);
+void __RPC_STUB ITypeInfo_RemoteGetDocumentation_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK ITypeInfo_GetDocumentation_Proxy(
+    ITypeInfo* This,
+    MEMBERID memid,
+    BSTR* pBstrName,
+    BSTR* pBstrDocString,
+    DWORD* pdwHelpContext,
+    BSTR* pBstrHelpFile);
+HRESULT __RPC_STUB ITypeInfo_GetDocumentation_Stub(
+    ITypeInfo* This,
+    MEMBERID memid,
+    DWORD refPtrFlags,
+    BSTR* pBstrName,
+    BSTR* pBstrDocString,
+    DWORD* pdwHelpContext,
+    BSTR* pBstrHelpFile);
+HRESULT CALLBACK ITypeInfo_RemoteGetDllEntry_Proxy(
+    ITypeInfo* This,
+    MEMBERID memid,
+    INVOKEKIND invKind,
+    DWORD refPtrFlags,
+    BSTR* pBstrDllName,
+    BSTR* pBstrName,
+    WORD* pwOrdinal);
+void __RPC_STUB ITypeInfo_RemoteGetDllEntry_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK ITypeInfo_GetDllEntry_Proxy(
+    ITypeInfo* This,
+    MEMBERID memid,
+    INVOKEKIND invKind,
+    BSTR* pBstrDllName,
+    BSTR* pBstrName,
+    WORD* pwOrdinal);
+HRESULT __RPC_STUB ITypeInfo_GetDllEntry_Stub(
+    ITypeInfo* This,
+    MEMBERID memid,
+    INVOKEKIND invKind,
+    DWORD refPtrFlags,
+    BSTR* pBstrDllName,
+    BSTR* pBstrName,
+    WORD* pwOrdinal);
+HRESULT CALLBACK ITypeInfo_GetRefTypeInfo_Proxy(
+    ITypeInfo* This,
+    HREFTYPE hRefType,
+    ITypeInfo** ppTInfo);
+void __RPC_STUB ITypeInfo_GetRefTypeInfo_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK ITypeInfo_LocalAddressOfMember_Proxy(
+    ITypeInfo* This);
+void __RPC_STUB ITypeInfo_LocalAddressOfMember_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK ITypeInfo_AddressOfMember_Proxy(
+    ITypeInfo* This,
+    MEMBERID memid,
+    INVOKEKIND invKind,
+    PVOID* ppv);
+HRESULT __RPC_STUB ITypeInfo_AddressOfMember_Stub(
+    ITypeInfo* This);
+HRESULT CALLBACK ITypeInfo_RemoteCreateInstance_Proxy(
+    ITypeInfo* This,
+    REFIID riid,
+    IUnknown** ppvObj);
+void __RPC_STUB ITypeInfo_RemoteCreateInstance_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK ITypeInfo_CreateInstance_Proxy(
+    ITypeInfo* This,
+    IUnknown* pUnkOuter,
+    REFIID riid,
+    PVOID* ppvObj);
+HRESULT __RPC_STUB ITypeInfo_CreateInstance_Stub(
+    ITypeInfo* This,
+    REFIID riid,
+    IUnknown** ppvObj);
+HRESULT CALLBACK ITypeInfo_GetMops_Proxy(
+    ITypeInfo* This,
+    MEMBERID memid,
+    BSTR* pBstrMops);
+void __RPC_STUB ITypeInfo_GetMops_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK ITypeInfo_RemoteGetContainingTypeLib_Proxy(
+    ITypeInfo* This,
+    ITypeLib** ppTLib,
+    UINT* pIndex);
+void __RPC_STUB ITypeInfo_RemoteGetContainingTypeLib_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK ITypeInfo_GetContainingTypeLib_Proxy(
+    ITypeInfo* This,
+    ITypeLib** ppTLib,
+    UINT* pIndex);
+HRESULT __RPC_STUB ITypeInfo_GetContainingTypeLib_Stub(
+    ITypeInfo* This,
+    ITypeLib** ppTLib,
+    UINT* pIndex);
+HRESULT CALLBACK ITypeInfo_LocalReleaseTypeAttr_Proxy(
+    ITypeInfo* This);
+void __RPC_STUB ITypeInfo_LocalReleaseTypeAttr_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+void CALLBACK ITypeInfo_ReleaseTypeAttr_Proxy(
+    ITypeInfo* This,
+    TYPEATTR* pTypeAttr);
+HRESULT __RPC_STUB ITypeInfo_ReleaseTypeAttr_Stub(
+    ITypeInfo* This);
+HRESULT CALLBACK ITypeInfo_LocalReleaseFuncDesc_Proxy(
+    ITypeInfo* This);
+void __RPC_STUB ITypeInfo_LocalReleaseFuncDesc_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+void CALLBACK ITypeInfo_ReleaseFuncDesc_Proxy(
+    ITypeInfo* This,
+    FUNCDESC* pFuncDesc);
+HRESULT __RPC_STUB ITypeInfo_ReleaseFuncDesc_Stub(
+    ITypeInfo* This);
+HRESULT CALLBACK ITypeInfo_LocalReleaseVarDesc_Proxy(
+    ITypeInfo* This);
+void __RPC_STUB ITypeInfo_LocalReleaseVarDesc_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+void CALLBACK ITypeInfo_ReleaseVarDesc_Proxy(
+    ITypeInfo* This,
+    VARDESC* pVarDesc);
+HRESULT __RPC_STUB ITypeInfo_ReleaseVarDesc_Stub(
+    ITypeInfo* This);
+
 #define INTERFACE ITypeInfo2
 DECLARE_INTERFACE_(ITypeInfo2,ITypeInfo)
 {
@@ -703,6 +1003,161 @@ DECLARE_INTERFACE_(ITypeLib,IUnknown)
 #define ITypeLib_FindName(p,a,b,c,d,e) (p)->lpVtbl->FindName(p,a,b,c,d,e)
 #define ITypeLib_ReleaseTLibAttr(p,a) (p)->lpVtbl->ReleaseTLibAttr(p,a)
 #endif
+
+HRESULT CALLBACK ITypeLib_RemoteGetTypeInfoCount_Proxy(
+    ITypeLib* This,
+    UINT* pcTInfo);
+void __RPC_STUB ITypeLib_RemoteGetTypeInfoCount_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+UINT CALLBACK ITypeLib_GetTypeInfoCount_Proxy(
+    ITypeLib* This);
+HRESULT __RPC_STUB ITypeLib_GetTypeInfoCount_Stub(
+    ITypeLib* This,
+    UINT* pcTInfo);
+HRESULT CALLBACK ITypeLib_GetTypeInfo_Proxy(
+    ITypeLib* This,
+    UINT index,
+    ITypeInfo** ppTInfo);
+void __RPC_STUB ITypeLib_GetTypeInfo_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK ITypeLib_GetTypeInfoType_Proxy(
+    ITypeLib* This,
+    UINT index,
+    TYPEKIND* pTKind);
+void __RPC_STUB ITypeLib_GetTypeInfoType_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK ITypeLib_GetTypeInfoOfGuid_Proxy(
+    ITypeLib* This,
+    REFGUID guid,
+    ITypeInfo** ppTinfo);
+void __RPC_STUB ITypeLib_GetTypeInfoOfGuid_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK ITypeLib_RemoteGetLibAttr_Proxy(
+    ITypeLib* This,
+    LPTLIBATTR* ppTLibAttr,
+    CLEANLOCALSTORAGE* pDummy);
+void __RPC_STUB ITypeLib_RemoteGetLibAttr_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK ITypeLib_GetLibAttr_Proxy(
+    ITypeLib* This,
+    TLIBATTR** ppTLibAttr);
+HRESULT __RPC_STUB ITypeLib_GetLibAttr_Stub(
+    ITypeLib* This,
+    LPTLIBATTR* ppTLibAttr,
+    CLEANLOCALSTORAGE* pDummy);
+HRESULT CALLBACK ITypeLib_GetTypeComp_Proxy(
+    ITypeLib* This,
+    ITypeComp** ppTComp);
+void __RPC_STUB ITypeLib_GetTypeComp_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK ITypeLib_RemoteGetDocumentation_Proxy(
+    ITypeLib* This,
+    INT index,
+    DWORD refPtrFlags,
+    BSTR* pBstrName,
+    BSTR* pBstrDocString,
+    DWORD* pdwHelpContext,
+    BSTR* pBstrHelpFile);
+void __RPC_STUB ITypeLib_RemoteGetDocumentation_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK ITypeLib_GetDocumentation_Proxy(
+    ITypeLib* This,
+    INT index,
+    BSTR* pBstrName,
+    BSTR* pBstrDocString,
+    DWORD* pdwHelpContext,
+    BSTR* pBstrHelpFile);
+HRESULT __RPC_STUB ITypeLib_GetDocumentation_Stub(
+    ITypeLib* This,
+    INT index,
+    DWORD refPtrFlags,
+    BSTR* pBstrName,
+    BSTR* pBstrDocString,
+    DWORD* pdwHelpContext,
+    BSTR* pBstrHelpFile);
+HRESULT CALLBACK ITypeLib_RemoteIsName_Proxy(
+    ITypeLib* This,
+    LPOLESTR szNameBuf,
+    ULONG lHashVal,
+    BOOL* pfName,
+    BSTR* pBstrLibName);
+void __RPC_STUB ITypeLib_RemoteIsName_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK ITypeLib_IsName_Proxy(
+    ITypeLib* This,
+    LPOLESTR szNameBuf,
+    ULONG lHashVal,
+    BOOL* pfName);
+HRESULT __RPC_STUB ITypeLib_IsName_Stub(
+    ITypeLib* This,
+    LPOLESTR szNameBuf,
+    ULONG lHashVal,
+    BOOL* pfName,
+    BSTR* pBstrLibName);
+HRESULT CALLBACK ITypeLib_RemoteFindName_Proxy(
+    ITypeLib* This,
+    LPOLESTR szNameBuf,
+    ULONG lHashVal,
+    ITypeInfo** ppTInfo,
+    MEMBERID* rgMemId,
+    USHORT* pcFound,
+    BSTR* pBstrLibName);
+void __RPC_STUB ITypeLib_RemoteFindName_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+HRESULT CALLBACK ITypeLib_FindName_Proxy(
+    ITypeLib* This,
+    LPOLESTR szNameBuf,
+    ULONG lHashVal,
+    ITypeInfo** ppTInfo,
+    MEMBERID* rgMemId,
+    USHORT* pcFound);
+HRESULT __RPC_STUB ITypeLib_FindName_Stub(
+    ITypeLib* This,
+    LPOLESTR szNameBuf,
+    ULONG lHashVal,
+    ITypeInfo** ppTInfo,
+    MEMBERID* rgMemId,
+    USHORT* pcFound,
+    BSTR* pBstrLibName);
+HRESULT CALLBACK ITypeLib_LocalReleaseTLibAttr_Proxy(
+    ITypeLib* This);
+void __RPC_STUB ITypeLib_LocalReleaseTLibAttr_Stub(
+    struct IRpcStubBuffer* This,
+    struct IRpcChannelBuffer* pRpcChannelBuffer,
+    PRPC_MESSAGE pRpcMessage,
+    DWORD* pdwStubPhase);
+void CALLBACK ITypeLib_ReleaseTLibAttr_Proxy(
+    ITypeLib* This,
+    TLIBATTR* pTLibAttr);
+HRESULT __RPC_STUB ITypeLib_ReleaseTLibAttr_Stub(
+    ITypeLib* This);
 
 #define INTERFACE ITypeLib2
 DECLARE_INTERFACE_(ITypeLib2,ITypeLib)

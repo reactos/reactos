@@ -967,8 +967,24 @@ HRESULT CALLBACK ITypeInfo_GetContainingTypeLib_Proxy(
     ITypeLib** ppTLib,
     UINT* pIndex)
 {
-  FIXME("not implemented\n");
-  return E_FAIL;
+    ITypeLib *pTL;
+    UINT index;
+    HRESULT hr;
+
+    TRACE("(%p, %p, %p)\n", This, ppTLib, pIndex );
+    
+    hr = ITypeInfo_RemoteGetContainingTypeLib_Proxy(This, &pTL, &index);
+    if(SUCCEEDED(hr))
+    {
+        if(pIndex)
+            *pIndex = index;
+
+        if(ppTLib)
+            *ppTLib = pTL;
+        else
+            ITypeLib_Release(pTL);
+    }
+    return hr;
 }
 
 HRESULT __RPC_STUB ITypeInfo_GetContainingTypeLib_Stub(
@@ -976,8 +992,8 @@ HRESULT __RPC_STUB ITypeInfo_GetContainingTypeLib_Stub(
     ITypeLib** ppTLib,
     UINT* pIndex)
 {
-  FIXME("not implemented\n");
-  return E_FAIL;
+    TRACE("(%p, %p, %p)\n", This, ppTLib, pIndex );
+    return ITypeInfo_GetContainingTypeLib(This, ppTLib, pIndex);
 }
 
 void CALLBACK ITypeInfo_ReleaseTypeAttr_Proxy(
@@ -1055,24 +1071,30 @@ HRESULT __RPC_STUB ITypeInfo2_GetDocumentation2_Stub(
 UINT CALLBACK ITypeLib_GetTypeInfoCount_Proxy(
     ITypeLib* This)
 {
-  FIXME("not implemented\n");
-  return E_FAIL;
+    UINT count = 0;
+    TRACE("(%p)\n", This);
+
+    ITypeLib_RemoteGetTypeInfoCount_Proxy(This, &count);
+    
+    return count;
 }
 
 HRESULT __RPC_STUB ITypeLib_GetTypeInfoCount_Stub(
     ITypeLib* This,
     UINT* pcTInfo)
 {
-  FIXME("not implemented\n");
-  return E_FAIL;
+    TRACE("(%p, %p)\n", This, pcTInfo);
+    *pcTInfo = ITypeLib_GetTypeInfoCount(This);
+    return S_OK;
 }
 
 HRESULT CALLBACK ITypeLib_GetLibAttr_Proxy(
     ITypeLib* This,
     TLIBATTR** ppTLibAttr)
 {
-  FIXME("not implemented\n");
-  return E_FAIL;
+    CLEANLOCALSTORAGE stg;
+    TRACE("(%p, %p)\n", This, ppTLibAttr);
+    return ITypeLib_RemoteGetLibAttr_Proxy(This, ppTLibAttr, &stg);    
 }
 
 HRESULT __RPC_STUB ITypeLib_GetLibAttr_Stub(
@@ -1080,8 +1102,8 @@ HRESULT __RPC_STUB ITypeLib_GetLibAttr_Stub(
     LPTLIBATTR* ppTLibAttr,
     CLEANLOCALSTORAGE* pDummy)
 {
-  FIXME("not implemented\n");
-  return E_FAIL;
+    TRACE("(%p, %p)\n", This, ppTLibAttr);
+    return ITypeLib_GetLibAttr(This, ppTLibAttr);
 }
 
 HRESULT CALLBACK ITypeLib_GetDocumentation_Proxy(
@@ -1159,14 +1181,15 @@ void CALLBACK ITypeLib_ReleaseTLibAttr_Proxy(
     ITypeLib* This,
     TLIBATTR* pTLibAttr)
 {
-  FIXME("not implemented\n");
+    TRACE("(%p, %p)\n", This, pTLibAttr);
+    CoTaskMemFree(pTLibAttr);
 }
 
 HRESULT __RPC_STUB ITypeLib_ReleaseTLibAttr_Stub(
     ITypeLib* This)
 {
-  FIXME("not implemented\n");
-  return E_FAIL;
+    TRACE("nothing to do\n");
+    return S_OK;
 }
 
 
