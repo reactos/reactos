@@ -1,20 +1,17 @@
+/*
+ * COPYRIGHT:   See COPYING in the top level directory
+ * PROJECT:     ReactOS SC utility
+ * FILE:        subsys/system/sc/sc.c
+ * PURPOSE:     control ReactOS services
+ * PROGRAMMERS: Ged Murphy (gedmurphy@gmail.com)
+ * REVISIONS:
+ *           Ged Murphy 20/10/05 Created
+ *
+ */
+
 #include "sc.h"
 
-HANDLE OutputHandle;
-HANDLE InputHandle;
-
 SC_HANDLE hSCManager;
-
-VOID dprintf(TCHAR* fmt, ...)
-{
-   va_list args;
-   char buffer[255];
-
-   va_start(args, fmt);
-   wvsprintfA(buffer, fmt, args);
-   WriteConsole(OutputHandle, buffer, lstrlenA(buffer), NULL, NULL);
-   va_end(args);
-}
 
 DWORD ReportLastError(VOID)
 {
@@ -52,18 +49,18 @@ INT ScControl(LPTSTR MachineName, LPCTSTR Command, TCHAR **Args)
 
     if (MachineName)
     {
-        dprintf("Remote service control is not yet implemented\n");
+        _tprintf(_T("Remote service control is not yet implemented\n"));
         return 2;
     }
-
+/*
     hSCManager = OpenSCManager(MachineName, NULL, SC_MANAGER_ALL_ACCESS);
     if (hSCManager == NULL)
     {
-        dprintf("[SC] OpenSCManager FAILED \n");
+        _tprintf(_T("[SC] OpenSCManager FAILED %d:\n\n"), GetLastError());
         ReportLastError();
         return -1;
     }
-
+*/
 
     if (_tcsicmp(Command, _T("query")) == 0)
         Query(Args, FALSE);
@@ -73,46 +70,70 @@ INT ScControl(LPTSTR MachineName, LPCTSTR Command, TCHAR **Args)
         
     else if (_tcsicmp(Command, _T("start")) == 0)
     {
-        /*if (! **Args)
-            StartUsage();
+        if (*Args)
+            Start(3, Args);
         else
-            Start(Args);*/
+            StartUsage();
     }
     else if (_tcsicmp(Command, _T("pause")) == 0)
-        Control(SERVICE_CONTROL_PAUSE, ++Args);
-
+    {
+        if (*Args)
+            Control(SERVICE_CONTROL_PAUSE, Args);
+        else
+            PauseUsage();
+    }
     else if (_tcsicmp(Command, _T("interrogate")) == 0)
-        Control(SERVICE_CONTROL_INTERROGATE, ++Args);
-        
-    else if (_tcsicmp(Command, _T("interrogate")) == 0)
-        Control(SERVICE_CONTROL_INTERROGATE, ++Args);
-        
+    {
+        if (*Args)
+            Control(SERVICE_CONTROL_INTERROGATE, Args);
+        else
+            InterrogateUsage();
+    }
+    else if (_tcsicmp(Command, _T("stop")) == 0)
+    {
+        if (*Args)
+            Control(SERVICE_CONTROL_STOP, Args);
+        else
+            StopUsage();
+    }
     else if (_tcsicmp(Command, _T("continue")) == 0)
-        Control(SERVICE_CONTROL_CONTINUE, ++Args);
-        
+    {
+        if (*Args)
+            Control(SERVICE_CONTROL_CONTINUE, Args);
+        else
+            ContinueUsage();
+    }
     else if (_tcsicmp(Command, _T("delete")) == 0)
-        Delete(Args);
-        
+    {
+        if (*Args)
+            Delete(Args);
+        else
+            DeleteUsage();
+    }
     else if (_tcsicmp(Command, _T("create")) == 0)
-        Create(Args);
-        
+    {
+        if (*Args)
+            Create(Args);
+        else
+            CreateUsage();
+    }
     else if (_tcsicmp(Command, _T("control")) == 0)
-        Control((DWORD)NULL, Args);
-    
+    {
+        if (*Args)
+            Control((DWORD)NULL, ++Args);
+        else
+            ContinueUsage();
+    }
     return 0;
 }
 
 
-int main(int argc, char* argv[])
+int _tmain(DWORD argc, LPCTSTR argv[])
 {
     LPTSTR MachineName = NULL;  // remote machine
     LPCTSTR Command = argv[1];  // sc command
     TCHAR **Args = NULL;        // rest of args
     
-     /*  initialize standard input / output and get handles */
-    AllocConsole();
-    InputHandle = GetStdHandle(STD_INPUT_HANDLE);
-    OutputHandle =  GetStdHandle(STD_OUTPUT_HANDLE);
 
     if (argc < 2)
         return MainUsage();
@@ -125,12 +146,12 @@ int main(int argc, char* argv[])
 
         _tcscpy(MachineName, argv[1]);
         Command = argv[2];
-        Args = &argv[3];
+        Args = (TCHAR **)&argv[3];
         return ScControl(MachineName, Command, Args);
     }
     else
     {
-        Args = &argv[2];
+        Args = (TCHAR **)&argv[2];
         return ScControl(MachineName, Command, Args);
     }
 
