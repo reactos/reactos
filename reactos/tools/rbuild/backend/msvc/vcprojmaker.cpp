@@ -367,6 +367,24 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		const string& source_file = DosSeparator(source_files[isrcfile]);
 		fprintf ( OUT, "\t\t\t<File\r\n" );
 		fprintf ( OUT, "\t\t\t\tRelativePath=\"%s\">\r\n", source_file.c_str() );
+
+		if (configuration.VSProjectVersion < "8.00") {
+			if (source_file.at(source_file.size() - 1) == 'S') {
+				for ( size_t iconfig = 0; iconfig < cfgs.size(); iconfig++ )
+				{
+					std::string& config = cfgs[iconfig];
+					fprintf ( OUT, "\t\t\t\t<FileConfiguration\r\n" );
+					fprintf ( OUT, "\t\t\t\t\tName=\"" );
+					fprintf ( OUT, config.c_str());
+					fprintf ( OUT, "|Win32\">\r\n" );
+					fprintf ( OUT, "\t\t\t\t\t<Tool\r\n" );
+					fprintf ( OUT, "\t\t\t\t\t\tName=\"VCCustomBuildTool\"\r\n" );
+					fprintf ( OUT, "\t\t\t\t\t\tCommandLine=\"cl /E &quot;$(InputPath)&quot; | as -o &quot;$(OutDir)\\$(InputName).obj&quot;\"\r\n" );
+					fprintf ( OUT, "\t\t\t\t\t\tOutputs=\"$(OutDir)\\$(InputName).obj\"/>\r\n" );
+					fprintf ( OUT, "\t\t\t\t</FileConfiguration>\r\n" );
+				}
+			}
+		}
 		fprintf ( OUT, "\t\t\t</File>\r\n" );
 	}
 	fprintf ( OUT, "\t\t</Filter>\r\n" );
