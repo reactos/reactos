@@ -55,7 +55,6 @@ PspGetOrSetContextKernelRoutine(PKAPC Apc,
     Context = &GetSetContext->Context;
     Event = &GetSetContext->Event;
     Mode = GetSetContext->Mode;
-    Thread = SystemArgument2;
 
     if (TrapFrame->Cs == KERNEL_CS && Mode != KernelMode)
     {
