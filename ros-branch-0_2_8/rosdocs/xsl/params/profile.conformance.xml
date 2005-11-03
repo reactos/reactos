@@ -1,0 +1,33 @@
+<refentry id="profile.conformance">
+<refmeta>
+<refentrytitle>profile.conformance</refentrytitle>
+<refmiscinfo role="type">string</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>profile.conformance</refname>
+<refpurpose>Target profile for <sgmltag class="attribute">conformance</sgmltag>
+attribute</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='profile.conformance.frag'>
+<xsl:param name="profile.conformance" select="''"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>Value of this parameter specifies profiles which should be
+included in the output. You can specify multiple profiles by
+separating them by semicolon. You can change separator character by
+<link linkend="profile.separator"><parameter>profile.separator</parameter></link>
+parameter.</para>
+
+<para>This parameter has effect only when you are using profiling
+stylesheets (<filename>profile-docbook.xsl</filename>,
+<filename>profile-chunk.xsl</filename>, &#x2026;) instead of normal
+ones (<filename>docbook.xsl</filename>,
+<filename>chunk.xsl</filename>, &#x2026;).</para>
+
+</refsect1>
+</refentry>

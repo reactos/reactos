@@ -1,0 +1,7 @@
+/* $Id: tlist.rc,v 1.3 2004/10/16 22:30:19 gvg Exp $ */
+
+#define REACTOS_STR_FILE_DESCRIPTION	"ReactOS W32 T(ask)List\0"
+#define REACTOS_STR_INTERNAL_NAME	"tlist\0"
+#define REACTOS_STR_ORIGINAL_FILENAME	"tlist.exe\0"
+#define REACTOS_STR_ORIGINAL_COPYRIGHT	"2000,2001 Emanuele Aliberti\0"
+#include <reactos/version.rc>

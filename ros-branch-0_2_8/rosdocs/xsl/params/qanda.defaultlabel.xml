@@ -1,0 +1,23 @@
+<refentry id="qanda.defaultlabel">
+<refmeta>
+<refentrytitle>qanda.defaultlabel</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>qanda.defaultlabel</refname>
+<refpurpose>Sets the default for defaultlabel on QandASet.</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='qanda.defaultlabel.frag'><xsl:param name="qanda.defaultlabel">number</xsl:param></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If no defaultlabel attribute is specified on a QandASet, this
+value is used. It must be one of the legal values for the defaultlabel
+attribute.
+</para>
+
+</refsect1>
+</refentry>

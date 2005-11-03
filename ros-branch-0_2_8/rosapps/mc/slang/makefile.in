@@ -1,0 +1,78 @@
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+rootdir = $(srcdir)/..
+@MCFG@@MCF@
+
+CFLAGS = $(XCFLAGS)
+CPPFLAGS = $(XCPPFLAGS)
+LDFLAGS = $(XLDFLAGS)
+DEFS = $(XDEFS)
+LIBS = $(XLIBS) $(XLIB)
+AR = @AR@
+
+SLANGSRCS = 	sldisply.c slerr.c slsmg.c slutty.c slgetkey.c slmemcpy.c \
+		slmemset.c sltermin.c sltoken.c slsignal.c \
+		slvideo.c slw32tty.c slos2tty.c
+
+SLANGHDRS = slang.h _slang.h sl-feat.h jdmacros.h
+
+SLANGOBJS = 	sldisply.o slerr.o slsmg.o slutty.o \
+		slgetkey.o slmemcpy.o slmemset.o sltermin.o \
+		sltoken.o slsignal.o
+
+#
+# Distribution variables
+#
+
+DISTSLANG = 	Makefile.in README $(SLANGSRCS) $(SLANGHDRS)
+
+all: @LIBSLANG@
+
+.c.o:
+	$(CC) -c $(CPPFLAGS) $(DEFS) $(CFLAGS) $<
+
+check:
+	@echo no tests are supplied.
+
+libmcslang.a: $(SLANGOBJS)
+	$(RMF) $@
+	$(AR) cr $@ $(SLANGOBJS)
+	-$(RANLIB) $@
+
+showlibdep:
+	@echo 'OBJS="$(SLANGOBJS)"'
+
+cross:
+	$(MAKE) CC=gcc-linux CPP="gcc-linux -E" \
+	CPPFLAGS="$(CPPFLAGS) -I/usr/local/lib/gcc-lib/i386-linux-linux/include/ncurses "
+
+TAGS: $(SLANGSRCS)
+	etags $(SLANGSRCS)
+
+clean:
+	$(RMF) *.o core a.out libmcslang.a
+
+realclean: clean
+	$(RMF) .depend
+	$(RMF) TAGS
+	$(RMF) *~
+
+distclean:
+	-$(RMF) $(srcdir)/*~ $(srcdir)/*.o $(srcdir)/core $(srcdir)/a.out
+	-$(RMF) $(srcdir)/libmcslang.a 
+	-if test $(srcdir) = .; then $(MAKE) realclean; fi
+	-$(RMF) $(srcdir)/Makefile
+
+distcopy: 
+	$(CP) $(DISTSLANG) ../../mc-$(VERSION)/slang
+
+install uninstall:
+
+depend dep: mcdep
+
+fastdeploc:
+
+# ***Dependencies***Do not edit***
+@DOTDEPEND@
+# ***End of dependencies***

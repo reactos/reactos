@@ -1,0 +1,53 @@
+19 June 2000
+
+Changes from DocBook V3.1 to DocBook XML V4.1:
+
+Global:
+
+- Broad changes required for XML compatibility
+- Added a *provisional* set of character entities based on the ISO
+  entity sets. The DocBook TC is not willing to accept the long-term
+  responsibility for defining and maintaining these sets. The TC
+  will ask OASIS to form a new TC for this purpose.
+
+Markup:
+
+- RFE  17: Added a common attribute 'Condition' for generic effectivity
+- RFE  38: The nav.class elements (ToC|LoT|Index|Glossary|Bibliography) are
+           now allowed at the beginning and end of components and sections
+- RFE  58: The 'optmult' and 'reqmult' attribute values have been
+           removed from Group
+- RFE  65: Added several class attribute values to Filename and SystemItem
+           at the request of the Linux community
+- RFE  73: Removed BookBiblio and SeriesInfo
+- RFE  81: Added SidebarInfo to Sidebar
+- RFE  87: Added 'xmlpi' and 'emptytag' as class values of SGMLTag
+- RFE  92: Added 'CO' to Synopsis and LiteralLayout
+- RFE  99: Added SimpleMsgEntry as an alternative to MsgEntry in order
+           to provide a simpler MsgSet construct
+- RFE 103: Added RevDescription as an alternative to RevRemark in
+           RevHistory; this allows longer descriptive text in a revision
+- RFE 104: Added 'Specification' to the list of document classes on Article
+- RFE 108: Allow admonitions in Answers
+- RFE 110: Allow a RevHistory on QandAEntry
+- RFE 115: Allow optional Title on OrderedList and ItemizedList
+- RFE 116: Added LineNumbering attribute to linespecific environments for
+           presentation of line numbers
+- Added a common attribute 'Security' for effectivity
+- Added synopsis markup for modern programming languages (e.g, object
+  oriented languages like Java, C++, and IDL)
+- Renamed DocInfo to PrefaceInfo, ChapterInfo, AppendixInfo, etc.
+- Comment was renamed Remark
+- InterfaceDefinition was removed
+
+Other:
+
+- RFE  88: Added PEs to include/ignore dbnotn.mod and dbcent.mod
+- RFE 102: Fixed some outstanding namecase problems
+- RFE 105: Added PNG notation
+- RFE 106: Removed some odd *.content PEs that interfered with
+           customization layers
+- RFE 109: Added FPI to content of dbgenent.mod (for consistency)
+- RFE 111: Added the Euro symbol
+- Fixed bug in cals-tbl.dtd; a model group was used for the element
+  declaration, but the attlist declaration used "Table" literally.

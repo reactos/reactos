@@ -1,0 +1,1154 @@
+<chapter>
+<chapterinfo>
+<releaseinfo role="meta">
+$Id: publishing.xml,v 1.1 2002/06/13 20:31:58 chorns Exp $
+</releaseinfo>
+<author><surname>Stayton</surname>
+<firstname>Bob</firstname></author>
+<copyright><year>2000</year><holder>Bob Stayton</holder>
+</copyright>
+</chapterinfo>
+<title>DocBook XSL</title>
+<?dbhtml filename="publishing.html"?>
+ <sect1>
+  <title>Using XSL tools to publish DocBook
+   documents</title>
+  <para>There is a growing list of tools to process DocBook
+   documents using XSL stylesheets. Each tool implements parts
+   or all of the XSL standard, which actually has several
+   components:
+   <variablelist>
+    <varlistentry>
+     <term>Extensible Stylesheet Language (XSL)</term>
+     <listitem>
+      <para>A language for expressing stylesheets written
+       in XML. It includes the formatting object language, but
+       refers to separate documents for the transformation
+       language and the path language.</para>
+  </listitem>
+  </varlistentry>
+  <varlistentry>
+   <term>XSL Transformation (XSLT)</term>
+   <listitem>
+    <para>The part of XSL for transforming XML documents
+       into other XML documents, HTML, or text. It can be used to
+       rearrange the content and generate new content.</para>
+  </listitem>
+ </varlistentry>
+ <varlistentry>
+  <term>XML Path Language (XPath)</term>
+  <listitem>
+   <para>A language for addressing parts of an XML
+       document. It is used to find the parts of your document to
+       apply different styles to. All XSL processors use this
+       component.</para>
+ </listitem>
+</varlistentry>
+</variablelist></para>
+<para>To publish HTML from your XML documents, you just
+   need an XSLT engine. To get to print, you need an XSLT
+   engine to produce formatting objects (FO), which then must
+   be processed with an FO engine to produce
+   PostScript or PDF output.</para>
+    <sect2>
+      <title>XSLT engines</title>
+
+      <para>This section provides a discussion about which XSLT
+        engines you might want to use to generate HTML and FO output
+        from your DocBook XML documents, along with a few short
+        examples of how to actually use some specific XSLT engines to
+        generate that output. Before using any particular XSLT engine,
+        you should consult its reference documentation for more
+        detailed information.</para>
+
+      <sect3>
+        <title>Which XSLT engine should I use?</title>
+
+      <para>Before reading anything else in this section, please take
+      a few seconds to read the following warning.</para>
+
+      <warning>
+        <simpara>One engine you should definitely
+        <emphasis>not</emphasis> use is James Clark's XT. XT is an
+        incomplete implementation of the XSLT 1.0 specification. One
+        of the important things that's missing from it is support for
+        XSLT "keys", which the DocBook XSLT stylesheets rely on for
+        generating indexes, among other things. So you can't use XT
+        reliably with current versions of the stylesheets.
+        </simpara>
+      </warning>
+
+        <para>Your choice of an XSLT engine may depend a lot on the
+	  environment you'll be running the engine in. Many DocBook
+	  users who need or want to use a non-Java application are using
+	  Daniel Veillard's C-based implementation, xsltproc (the
+	  command line processor packaged with libxslt, the XSLT C
+	  library for Gnome, <ulink url="http://xmlsoft.org/XSLT/"
+	    >http://xmlsoft.org/XSLT/</ulink>). It's very fast, and also a
+	  good choice because Veillard monitors the DocBook mailing
+	  lists to field usage and troubleshooting questions and
+	  responds very quickly to bug reports. (And the libxslt site
+	  features a <ulink url="http://xmlsoft.org/XSLT/docbook.html"
+	    >DocBook page</ulink> that, among other things, includes a
+	  shell script you can use to automatically generate <ulink
+	    url="http://xmlsoft.org/catalog.html" >XML catalogs</ulink>
+	  for DocBook.) But one current limitation xsltproc has is that
+	  it doesn't yet support Norm Walsh's DocBook-specific XSLT
+	  extension functions.</para>
+
+      <para>The current Java-based XSLT engine of choice for many
+      DocBook users seems to be Michael Kay's Saxon (<ulink
+      url="http://saxon.sourceforge.net/"
+      >http://saxon.sourceforge.net/</ulink>). It supports Norm
+      Walsh's DocBook-specific XSLT extension functions, and among the
+      Java-based engines, seems to generate the fewest bug reports to
+      the DocBook mailing lists.</para>
+
+        <para>A variety of XSLT engines are available. Not all of them
+          are used much in the DocBook community, but here's a list of
+          some free/open-source ones you might want to try (including
+          the two previously mentioned).
+          <itemizedlist>
+            <listitem>
+              <para>xsltproc, written in C, from Daniel Veillard (<ulink
+                  url="http://xmlsoft.org/XSLT/"
+                  >http://xmlsoft.org/XSLT/</ulink>)</para>
+            </listitem>
+            <listitem>
+              <para>Saxon, written in Java, from Michael Kay (<ulink
+                  url="http://saxon.sourceforge.net/"
+                  >http://saxon.sourceforge.net/</ulink>)</para>
+            </listitem>
+            <listitem>
+              <para>Xalan, written in Java, from the Apache XML
+                Project (<ulink url="http://xml.apache.org"
+                >http://xml.apache.org</ulink>)</para>
+            </listitem>
+            <listitem>
+              <para>4XSLT, written in Python, from FourThought LLC
+              (<ulink url="http://www.fourthought.com"
+              >http://www.fourthought.com</ulink>)</para>
+            </listitem>
+            <listitem>
+              <para>Sablotron, written in C++, from Ginger Alliance
+              (<ulink url="http://www.gingerall.com"
+              >http://www.gingerall.com</ulink>)</para>
+            </listitem>
+            <listitem>
+              <para>XML::XSLT,written in Perl, from Geert Josten and
+                Egon Willighagen (<ulink url="http://www.cpan.org"
+                >http://www.cpan.org</ulink>)</para>
+            </listitem>
+          </itemizedlist>
+        </para>
+
+        <para>For generating print/PDF output from FO files, there are
+          two free/open-source FO engines that, while they aren't
+          complete bug-free implementations of the FO part of the XSL
+          specification, are still very useful:
+          <itemizedlist>
+            <listitem><para>PassiveTeX (TeX-based) from Sebastian
+                  Rahtz (<ulink
+                  url="http://www.hcu.ox.ac.uk/TEI/Software/passivetex/"
+                  >http://www.hcu.ox.ac.uk/TEI/Software/passivetex/</ulink>)</para>
+            </listitem>
+            <listitem>
+              <para>FOP (Java-based) from the Apache XML Project
+                  (<ulink url="http://xml.apache.org/fop/"
+                  >http://xml.apache.org/fop/</ulink>)</para>
+            </listitem>
+          </itemizedlist>
+          Of those, PassiveTeX currently seems to be the more mature,
+          less buggy implementation.
+        </para>
+        <para>And there are two proprietary commercial products that
+        both seem to be fairly mature, complete implementations of the
+        FO part of the XSL specification:
+          <itemizedlist>
+            <listitem>
+              <para>Epic Editor 4.2 (includes support for processing
+                formatting object files) from Arbortext (<ulink
+                  url="http://www.arbortext.com"></ulink>)</para>
+            </listitem>
+            <listitem>
+              <para>XEP (written in Java) from RenderX (<ulink
+                  url="http://www.renderx.com"
+                  >http://www.renderx.com</ulink>).</para>
+            </listitem>
+          </itemizedlist>
+        </para>
+      
+      </sect3>
+      <sect3>
+        <title>How do I use an XSLT engine?</title>
+
+        <para>Before using any XSLT engine, you should consult the
+          reference documentation that comes with it for details about
+          its command syntax and so on. But there are some common
+          steps to follow when using the Java-based engines, so here's
+          an example of using Saxon from the UNIX command line that
+          might help give you general idea of how to use the Java-based
+          engines.</para>
+
+        <note>
+          <para>You'll need to alter your
+            <parameter>CLASSPATH</parameter> environment variable to
+            include the path to where you put the
+            <filename>saxon.jar</filename> file from the Saxon
+            distribution. And you'll need to specify the correct path
+            to the <filename>docbook.xsl</filename> HTML stylesheet
+            file in your local environment.</para>
+        </note>
+
+        <example>
+          <title>Using Saxon to generate HTML output</title>
+<screen>CLASSPATH=saxon.jar:$CLASSPATH
+export CLASSPATH
+java  com.icl.saxon.StyleSheet  <replaceable>filename.xml</replaceable> <replaceable>docbook/html/docbook.xsl</replaceable> &gt; <replaceable>output.html</replaceable></screen>
+</example>
+        <para>If you replace the path to the HTML stylesheet with the
+          path to the FO stylesheet, Saxon will produce a formatting
+          object file. Then you can convert that to PDF using a FO
+          engine such such as FOP, the free/open-source FO engine
+          available from the Apache XML Project (<ulink
+          url="http://xml.apache.org/fop/">http://xml.apache.org/fop/</ulink>).
+          Here is an example of that two-stage process.</para>
+        <example>
+          <title>Using Saxon and FOP to generate PDF output</title>
+<screen>CLASSPATH=saxon.jar:fop.jar:$CLASSPATH
+export CLASSPATH
+java  com.icl.saxon.StyleSheet <replaceable>filename.xml</replaceable> <replaceable>docbook/fo/docbook.xsl</replaceable> &gt; <replaceable>output.fo</replaceable>
+java  org.apache.fop.apps.CommandLine <replaceable>output.fo</replaceable> <replaceable>output.pdf</replaceable></screen>
+</example>
+
+        <para>Using a C-based XSLT engine such as xsltproc is a little
+        easier, since it doesn't require setting any environment
+        variables or remembering Java package names. Here's an example
+        of using xsltproc to generate HTML output.</para>
+
+        <example>
+          <title>Using xsltproc to generate HTML output</title>
+          <screen
+>xsltproc <replaceable>docbook/html/docbook.xsl</replaceable> <replaceable>filename.xml</replaceable> &gt; <replaceable>output.html</replaceable></screen>
+        </example>
+
+        <para>Note that when using xsltproc, the pathname to the
+        stylesheet file precedes the name of your XML source file on
+        the command line (it's the other way around with Saxon and
+        with most other Java-based XSLT engines).</para>
+
+</sect3>
+
+</sect2>
+
+</sect1>
+<sect1>
+<title>A brief introduction to XSL</title>
+<para>XSL is both a transformation language and a
+ formatting language. The XSLT transformation part lets you
+ scan through a document's structure and rearrange its
+ content any way you like. You can write out the content
+ using a different set of XML tags, and generate text as
+ needed. For example, you can scan through a document to
+ locate all headings and then insert a generated table of
+ contents at the beginning of the document, at the same time
+ writing out the content marked up as HTML. XSL is also a
+ rich formatting language, letting you apply typesetting
+ controls to all components of your output. With a good
+ formatting backend, it is capable of producing high quality
+ printed pages.</para>
+<para>An XSL stylesheet is written using XML syntax, and is
+ itself a well-formed XML document. That makes the basic
+ syntax familiar, and enables an XML processor to check for
+ basic syntax errors. The stylesheet instructions use
+ special element names, which typically begin with
+ <literal>xsl:</literal> to distinguish them from any XML
+ tags you want to appear in the output. The XSL namespace is
+ identified at the top of the stylesheet file. As with other
+ XML, any XSL elements that are not empty will require a
+ closing tag. And some XSL elements have specific attributes
+ that control their behavior. It helps to keep a good XSL
+ reference book handy.</para>
+<para>Here is an example of a simple XSL stylesheet applied
+ to a simple XML file to generate HTML output.</para>
+<example>
+<title>Simple XML file</title>
+<programlisting>&lt;?xml version="1.0"?&gt;
+&lt;document&gt;
+&lt;title&gt;Using a mouse&lt;/title&gt;
+&lt;para&gt;It's easy to use a mouse. Just roll it
+around and click the buttons.&lt;/para&gt;
+&lt;/document&gt;</programlisting>
+</example>
+<example>
+<title>Simple XSL stylesheet</title>
+<programlisting>&lt;?xml version='1.0'?&gt;
+&lt;xsl:stylesheet
+          xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version='1.0'&gt;
+&lt;xsl:output method="html"/&gt;
+
+&lt;xsl:template match="document"&gt;
+  &lt;HTML&gt;&lt;HEAD&gt;&lt;TITLE&gt;
+    &lt;xsl:value-of select="./title"/&gt;
+  &lt;/TITLE&gt;
+  &lt;/HEAD&gt;
+  &lt;BODY&gt;
+    &lt;xsl:apply-templates/&gt;
+  &lt;/BODY&gt;
+  &lt;/HTML&gt;
+&lt;/xsl:template&gt;
+
+&lt;xsl:template match="title"&gt;
+  &lt;H1&gt;&lt;xsl:apply-templates/&gt;&lt;/H1&gt;
+&lt;/xsl:template&gt;
+
+&lt;xsl:template match="para"&gt;
+  &lt;P&gt;&lt;xsl:apply-templates/&gt;&lt;/P&gt;
+&lt;/xsl:template&gt;
+
+&lt;/xsl:stylesheet&gt;
+</programlisting>
+</example>
+<example>
+<title>HTML output</title>
+<programlisting>&lt;HTML&gt;
+&lt;HEAD&gt;
+&lt;TITLE&gt;Using a mouse&lt;/TITLE&gt;
+&lt;/HEAD&gt;
+&lt;BODY&gt;
+&lt;H1&gt;Using a mouse&lt;/H1&gt;
+&lt;P&gt;It's easy to use a mouse. Just roll it
+around and click the buttons.&lt;/P&gt;
+&lt;/BODY&gt;
+&lt;/HTML&gt;
+</programlisting>
+</example>
+</sect1>
+<sect1>
+<title>XSL processing model</title>
+<para>XSL is a template language, not a procedural
+language. That means a stylesheet specifies a sample of the
+output, not a sequence of programming steps to generate it.
+A stylesheet consists of a mixture of output samples with
+instructions of what to put in each sample. Each bit of
+output sample and instructions is called
+a  <emphasis>template</emphasis>.</para>
+<para>In general, you write a template for each element
+type in your document. That lets you concentrate on
+handling just one element at a time, and keeps a stylesheet
+modular. The power of XSL comes from processing the
+templates recursively. That is, each template handles the
+processing of its own element, and then calls other
+templates to process its children, and so on. Since an XML
+document is always a single root element at the top level
+that contains all of the nested descendent elements, the
+XSL templates also start at the top and work their way down
+through the hierarchy of elements.</para>
+<para>Take the
+DocBook <literal>&lt;para&gt;</literal> paragraph element as
+an example. To convert this to HTML, you want to wrap the
+paragraph content with the HTML
+tags <literal>&lt;p&gt;</literal> and <literal>&lt;/p&gt;</literal>.
+But a DocBook <literal>&lt;para&gt;</literal>  can contain
+any number of in-line DocBook elements marking up the text.
+Fortunately, you can let other templates take care of those
+elements, so your XSL template
+for <literal>&lt;para&gt;</literal> can be quite
+simple:</para>
+<programlisting>&lt;xsl:template match="para"&gt;
+  &lt;p&gt;
+    &lt;xsl:apply-templates/&gt;
+  &lt;/p&gt;
+&lt;/xsl:template&gt;
+</programlisting>
+<para>The <literal>&lt;xsl:template&gt;</literal> element
+starts a new template, and
+its <literal>match</literal> attribute indicates where to
+apply the template, in this case to
+any <literal>&lt;para&gt;</literal> elements. The template
+says to output a literal <literal>&lt;p&gt;</literal> string
+and then execute
+the <literal>&lt;xsl:apply-templates/&gt;</literal> instruction.
+This tells the XSL processor to look among all the
+templates in the stylesheet for any that should be applied
+to the content of the paragraph. If each template in the
+stylesheet includes
+an <literal>&lt;xsl:apply-templates/&gt;</literal> instruction,
+then all descendents will eventually be processed. When it
+is through recursively applying templates to the paragraph
+content, it outputs the <literal>&lt;/p&gt;</literal> closing
+tag.</para>
+<sect2>
+<title>Context is important</title>
+<para>Since you aren't writing a linear procedure to
+process your document, the context of where and how to
+apply each modular template is important.
+The <literal>match</literal> attribute
+of <literal>&lt;xsl:template&gt;</literal> provides that
+context for most templates. There is an entire expression
+language, XPath, for identifying what parts of your
+document should be handled by each template. The simplest
+context is just an element name, as in the example above.
+But you can also specify elements as children of other
+elements, elements with certain attribute values, the first
+or last elements in a sequence, and so on. Here is how the
+DocBook <literal>&lt;formalpara&gt;</literal> element is
+handled:</para>
+<programlisting>&lt;xsl:template match="formalpara"&gt;
+  &lt;p&gt;
+    &lt;xsl:apply-templates/&gt;
+  &lt;/p&gt;
+&lt;/xsl:template&gt;
+
+&lt;xsl:template match="formalpara/title"&gt;
+  &lt;b&gt;&lt;xsl:apply-templates/&gt;&lt;/b&gt;
+  &lt;xsl:text&gt; &lt;/xsl:text&gt;
+&lt;/xsl:template&gt;
+
+&lt;xsl:template match="formalpara/para"&gt;
+  &lt;xsl:apply-templates/&gt;
+&lt;/xsl:template&gt;
+</programlisting>
+<para>There are three templates defined, one for
+the <literal>&lt;formalpara&gt;</literal> element itself,
+ and one for each of its children elements. The <literal>match</literal> attribute
+value <literal>formalpara/title</literal>    in the second
+template is an XPath expression indicating
+a <literal>&lt;title&gt;</literal> element that is an
+immediate child of
+a <literal>&lt;formalpara&gt;</literal> element. This
+distinguishes such titles from
+other <literal>&lt;title&gt;</literal> elements used in
+DocBook. XPath expressions are the key to controlling how
+your templates are applied.</para>
+<para>In general, the XSL processor has internal rules that
+apply templates that are more specific before templates
+that are less specific. That lets you control the details,
+but also provides a fallback mechanism to a less specific
+template when you don't supply the full context for every
+combination of elements. This feature is illustrated by the
+third template, for <literal>formalpara/para</literal>. By
+including this template, the stylesheet processes a <literal>&lt;para&gt;</literal> within <literal>&lt;formalpara&gt;</literal> in
+a special way, in this case by not outputting the HTML <literal>&lt;p&gt;</literal> tags already output by its parent. If this template had not been included, then the processor would have fallen back to the template
+specified by <literal>match="para"</literal> described
+above, which would have output a second set of <literal>&lt;p&gt;</literal> tags.</para>
+<para>You can also control template context with
+XSL <emphasis>modes</emphasis>, which are used extensively
+in the DocBook stylesheets. Modes let you process the same
+input more than once in different ways.
+A <literal>mode</literal> attribute in
+an <literal>&lt;xsl:template&gt;</literal> definition adds a
+specific mode name to that template. When the same mode
+name is used
+in <literal>&lt;xsl:apply-templates/&gt;</literal>, it acts
+as a filter to narrow the selection of templates to only
+those selected by
+the <literal>match</literal> expression <emphasis>and</emphasis> that
+have that mode name. This lets you define two different
+templates for the same element match that are applied under
+different contexts. For example, there are two templates
+defined for
+DocBook <literal>&lt;listitem&gt;</literal>  elements:</para>
+<programlisting>&lt;xsl:template match="listitem"&gt;
+  &lt;li&gt;&lt;xsl:apply-templates/&gt;&lt;/li&gt;
+&lt;/xsl:template&gt;
+
+&lt;xsl:template match="listitem" mode="xref"&gt;
+  &lt;xsl:number format="1"/&gt;
+&lt;/xsl:template&gt;
+</programlisting>
+<para>The first template is for the normal list item
+context where you want to output the
+HTML <literal>&lt;li&gt;</literal> tags. The second template
+is called with <literal>&lt;xsl:apply-templates
+select="$target" mode="xref"/&gt;</literal> in the context
+of processing <literal>&lt;xref&gt;</literal> elements. In
+this case the <literal>select</literal> attribute locates
+the ID of the specific list item and
+the <literal>mode</literal> attribute selects the second
+template, whose effect is to output its item number when it
+is in an ordered list. Because there are many such special
+needs when
+processing <literal>&lt;xref&gt;</literal> elements, it is
+convenient to define a mode name <literal>xref</literal> to
+handle them all. Keep in mind that mode settings
+do <emphasis>not</emphasis> automatically get passed down to
+other templates
+through <literal>&lt;xsl:apply-templates/&gt;</literal>.</para>
+</sect2>
+<sect2>
+<title>Programming features</title>
+<para>Although XSL is template-driven, it also has some
+features of traditional programming languages. Here are
+some examples from the DocBook stylesheets. </para>
+<programlisting><lineannotation>Assign a value to a variable:</lineannotation>
+&lt;xsl:variable name="refelem" select="name($target)"/&gt;
+
+<lineannotation>If statement:</lineannotation>
+&lt;xsl:if test="$show.comments"&gt;
+    &lt;i&gt;&lt;xsl:call-template name="inline.charseq"/&gt;&lt;/i&gt;
+&lt;/xsl:if&gt;
+
+<lineannotation>Case statement:</lineannotation>
+&lt;xsl:choose&gt;
+    &lt;xsl:when test="@columns"&gt;
+        &lt;xsl:value-of select="@columns"/&gt;
+    &lt;/xsl:when&gt;
+    &lt;xsl:otherwise&gt;1&lt;/xsl:otherwise&gt;
+&lt;/xsl:choose&gt;
+
+<lineannotation>Call a template by name like a subroutine, passing parameter values and accepting a return value:</lineannotation>
+&lt;xsl:call-template name="xref.xreflabel"&gt;
+   &lt;xsl:with-param name="target" select="$target"/&gt;
+&lt;/xsl:call-template&gt;
+</programlisting>
+<para>However, you can't always use these constructs as you
+do in other programming languages. Variables in particular
+have very different behavior.</para>
+<sect3>
+<title>Using variables and parameters</title>
+<para>XSL provides two elements that let you assign a value
+to a
+name: <literal>&lt;xsl:variable&gt;</literal> and <literal>&lt;xsl:param&gt;</literal>.
+These share the same name space and syntax for assigning
+names and values. Both can be referred to using
+the <literal>$name</literal> syntax. The main difference
+between these two elements is that a param's value acts as
+a default value that can be overridden when a template is
+called using
+a <literal>&lt;xsl:with-param&gt;</literal> element as in the
+last example above.</para>
+<para>Here are two examples from DocBook:</para>
+<programlisting>&lt;xsl:param name="cols"&gt;1&lt;/xsl:param&gt;
+&lt;xsl:variable name="segnum" select="position()"/&gt;
+</programlisting>
+<para>In both elements, the name of the parameter or
+variable is specified with
+the <literal>name</literal> attribute. So the name of
+the <literal>param</literal> here
+is <literal>cols</literal> and the name of
+the <literal>variable</literal> is <literal>segnum</literal>.
+The value of either can be supplied in two ways. The value
+of the first example is the text node "1" and is supplied
+as the content of the element. The value of the second
+example is supplied as the result of the expression in
+its <literal>select</literal> attribute, and the element
+itself has no content.</para>
+<para>The feature of XSL variables that is odd to new users
+is that once you assign a value to a variable, you cannot
+assign a new value within the same scope. Doing so will
+generate an error. So variables are not used as dynamic
+storage bins they way they are in other languages. They
+hold a fixed value within their scope of application, and
+then disappear when the scope is exited. This feature is a
+result of the design of XSL, which is template-driven and
+not procedural. This means there is no definite order of
+processing, so you can't rely on the values of changing
+variables. To use variables in XSL, you need to understand
+how their scope is defined.</para>
+<para>Variables defined outside of all templates are
+considered global variables, and they are readable within
+all templates. The value of a global variable is fixed, and
+its global value can't be altered from within any template.
+However, a template can create a local variable of the same
+name and give it a different value. That local value
+remains in effect only within the scope of the local
+variable.</para>
+<para>Variables defined within a template remain in effect
+only within their permitted scope, which is defined as all
+following siblings and their descendants. To understand
+such a scope, you have to remember that XSL instructions
+are true XML elements that are embedded in an XML family
+hierarchy of XSL elements, often referred to as parents,
+children, siblings, ancestors and descendants. Taking the
+family analogy a step further, think of a variable
+assignment as a piece of advice that you are allowed to
+give to certain family members. You can give your advice
+only to your younger siblings (those that follow you) and
+their descendents. Your older siblings won't listen,
+neither will your parents or any of your ancestors. To
+stretch the analogy a bit, it is an error to try to give
+different advice under the same name to the same group of
+listeners (in other words, to redefine the variable). Keep
+in mind that this family is not the elements of your
+document, but just the XSL instructions in your stylesheet.
+To help you keep track of such scopes in hand-written
+stylesheets, it helps to indent nested XSL elements. Here
+is an edited snippet from the DocBook stylesheet
+file <filename>pi.xsl</filename> that illustrates different
+scopes for two variables:</para>
+<programlisting>
+ 1 &lt;xsl:template name="dbhtml-attribute"&gt;
+ 2 ...
+ 3    &lt;xsl:choose&gt;
+ 4       &lt;xsl:when test="$count&gt;count($pis)"&gt;
+ 5          &lt;!-- not found --&gt;
+ 6       &lt;/xsl:when&gt;
+ 7       &lt;xsl:otherwise&gt;
+ 8          &lt;xsl:variable name="pi"&gt;
+ 9             &lt;xsl:value-of select="$pis[$count]"/&gt;
+10          &lt;/xsl:variable&gt;
+11          &lt;xsl:choose&gt;
+12             &lt;xsl:when test="contains($pi,concat($attribute, '='))"&gt;
+13                &lt;xsl:variable name="rest" select="substring-after($pi,concat($attribute,'='))"/&gt;
+14                &lt;xsl:variable name="quote" select="substring($rest,1,1)"/&gt;
+15                &lt;xsl:value-of select="substring-before(substring($rest,2),$quote)"/&gt;
+16             &lt;/xsl:when&gt;
+17             &lt;xsl:otherwise&gt;
+18             ...
+19             &lt;/xsl:otherwise&gt;
+20          &lt;/xsl:choose&gt;
+21       &lt;/xsl:otherwise&gt;
+22    &lt;/xsl:choose&gt;
+23 &lt;/xsl:template&gt;
+
+</programlisting>
+<para>The scope of the variable <literal>pi</literal> begins
+on line 8 where it is defined in this template, and ends on
+line 20 when its last sibling ends.<footnote><para>Technically, the scope extends to the end tag of the parent of the <literal>&lt;xsl:variable&gt;</literal> element. That is effectively the last sibling.</para></footnote>     The scope of the
+variable <literal>rest</literal> begins on line 13 and ends
+on line 15. Fortunately, line 15 outputs an expression
+using the value before it goes out of scope.</para>
+<para>What happens when
+an <literal>&lt;xsl:apply-templates/&gt;</literal> element
+is used within the scope of a local variable? Do the
+templates that are applied to the document children get the
+variable? The answer is no. The templates that are applied
+are not actually within the scope of the variable. They
+exist elsewhere in the stylesheet and are not following
+siblings or their descendants. </para>
+<para>To pass a value to another template, you pass a
+parameter using
+the <literal>&lt;xsl:with-param&gt;</literal> element. This
+parameter passing is usually done with calls to a specific
+named template
+using <literal>&lt;xsl:call-template&gt;</literal>, although
+it works
+with <literal>&lt;xsl:apply-templates&gt;</literal> too.
+That's because the called template must be expecting the
+parameter by defining it using
+a <literal>&lt;xsl:param&gt;</literal> element with the same
+parameter name. Any passed parameters whose names are not
+defined in the called template are ignored.</para>
+<para>Here is an example of parameter passing
+from <filename>docbook.xsl</filename>:</para>
+<programlisting>&lt;xsl:call-template name="head.content"&gt;
+   &lt;xsl:with-param name="node" select="$doc"/&gt;
+&lt;/xsl:call-template&gt;
+</programlisting>
+<para>Here a template
+named <literal>head.content</literal> is being called and
+passed a parameter named <literal>node</literal> whose
+content is the value of the <literal>$doc</literal> variable
+in the current context. The top of that template looks like
+this:</para>
+<programlisting>&lt;xsl:template name="head.content"&gt;
+   &lt;xsl:param name="node" select="."/&gt;
+</programlisting>
+<para>The template is expecting the parameter because it
+has a <literal>&lt;xsl:param&gt;</literal> defined with the
+same name. The value in this definition is the default
+value. This would be the parameter value used in the
+template if the template was called without passing that
+parameter.</para>
+</sect3>
+</sect2>
+<sect2>
+<title>Generating HTML output.</title>
+<para>You generate HTML from your DocBook XML files by
+applying the HTML version of the stylesheets. This is done
+by using the HTML driver
+file <filename>docbook/html/docbook.xsl</filename> as your
+stylesheet. That is the master stylesheet file that
+uses <literal>&lt;xsl:include&gt;</literal> to pull in the
+component files it needs to assemble a complete stylesheet
+for producing HTML. </para>
+<para>The way the DocBook stylesheet generates HTML is to
+apply templates that output a mix of text content and HTML
+elements. Starting at the top level in the main
+file <filename>docbook.xsl</filename>:</para>
+<programlisting>&lt;xsl:template match="/"&gt;
+  &lt;xsl:variable name="doc" select="*[1]"/&gt;
+  &lt;html&gt;
+  &lt;head&gt;
+    &lt;xsl:call-template name="head.content"&gt;
+      &lt;xsl:with-param name="node" select="$doc"/&gt;
+    &lt;/xsl:call-template&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;xsl:apply-templates/&gt;
+  &lt;/body&gt;
+  &lt;/html&gt;
+&lt;/xsl:template&gt;
+</programlisting>
+<para>This template matches the root element of your input
+document, and starts the process of recursively applying
+templates. It first defines a variable
+named <literal>doc</literal> and then outputs two literal
+HTML elements <literal>&lt;html&gt;</literal> and <literal>&lt;head&gt;</literal>.
+Then it calls a named
+template <literal>head.content</literal> to process the
+content of the HTML <literal>&lt;head&gt;</literal>, closes
+the <literal>&lt;head&gt;</literal> and starts
+the <literal>&lt;body&gt;</literal>. There it
+uses <literal>&lt;xsl:apply-templates/&gt;</literal> to
+recursively process the entire input document. Then it just
+closes out the HTML file.</para>
+<para>Simple HTML elements can generated as literal
+elements as shown here. But if the HTML being output
+depends on the context, you need something more powerful to
+select the element name and possibly add attributes and
+their values. Here is a fragment
+from <filename>sections.xsl</filename> that shows how a
+heading tag is generated using
+the <literal>&lt;xsl:element&gt;</literal> and <literal>&lt;xsl:attribute&gt;</literal> elements:</para>
+<programlisting>
+ 1 &lt;xsl:element name="h{$level}"&gt;
+ 2   &lt;xsl:attribute name="class"&gt;title&lt;/xsl:attribute&gt;
+ 3   &lt;xsl:if test="$level&lt;3"&gt;
+ 4     &lt;xsl:attribute name="style"&gt;clear: all&lt;/xsl:attribute&gt;
+ 5   &lt;/xsl:if&gt;
+ 6   &lt;a&gt;
+ 7     &lt;xsl:attribute name="name"&gt;
+ 8       &lt;xsl:call-template name="object.id"/&gt;
+ 9     &lt;/xsl:attribute&gt;
+10     &lt;b&gt;&lt;xsl:copy-of select="$title"/&gt;&lt;/b&gt;
+11   &lt;/a&gt;
+12 &lt;/xsl:element&gt;
+</programlisting>
+<para>This whole example is generating a single HTML
+heading element. Line 1 begins the HTML element definition
+by identifying the name of the element. In this case, the
+name is an expression that includes the
+variable <literal>$level</literal> passed as a parameter to
+this template. Thus a single template can
+generate <literal>&lt;h1&gt;</literal>, <literal>&lt;h2&gt;</literal>,
+etc. depending on the context in which it is called. Line 2
+defines a <literal>class="title"</literal> attribute that is
+added to this element. Lines 3 to 5 add
+a <literal>style="clear all"</literal> attribute, but only
+if the heading level is less than 3. Line 6 opens
+an <literal>&lt;a&gt;</literal> anchor element. Although this
+looks like a literal output string, it is actually modified
+by lines 7 to 9 that insert
+the <literal>name</literal> attribute into
+the <literal>&lt;a&gt;</literal> element. This illustrates
+that XSL is managing output elements as active element
+nodes, not just text strings. Line 10 outputs the text of
+the heading title, also passed as a parameter to the
+template, enclosed in HTML boldface tags. Line 11 closes
+the anchor tag with the
+literal <literal>&lt;/a&gt;</literal> syntax, while line 12
+closes the heading tag by closing the element definition.
+Since the actual element name is a variable, it couldn't
+use the literal syntax.</para>
+<para>As you follow the sequence of nested templates
+processing elements, you might be wondering how the
+ordinary text of your input document gets to the output. In
+the file <filename>docbook.xsl</filename> you will find
+this template that handles any text not processed by any
+other template:</para>
+<programlisting>&lt;xsl:template match="text()"&gt;
+  &lt;xsl:value-of select="."/&gt;
+&lt;/xsl:template&gt;
+</programlisting>
+<para>This template's body consists of the "value" of the text node,
+which is just its text. In general, all XSL processors have
+some built-in templates to handle any content for which
+your stylesheet doesn't supply a matching template. This
+template serves the same function but appears explicitly in
+the stylesheet.</para>
+</sect2>
+<sect2>
+<title>Generating formatting objects.</title>
+<para>You generate formatting objects from your DocBook XML
+files by applying the fo version of the stylesheets. This
+is done by using the fo driver
+file <filename>docbook/fo/docbook.xsl</filename> as your
+stylesheet. That is the master stylesheet file that
+uses <literal>&lt;xsl:include&gt;</literal> to pull in the
+component files it needs to assemble a complete stylesheet
+for producing formatting objects. Generating a formatting
+objects file is only half the process of producing typeset
+output. You also need a formatting object processor such as
+the Apache XML Project's FOP as described in an earlier
+section.</para>
+<para>The DocBook fo stylesheet works in a similar manner
+to the HTML stylesheet. Instead of outputting HTML tags, it
+outputs text marked up
+with <literal>&lt;fo:<replaceable>something</replaceable>&gt;</literal> tags.
+For example, to indicate that some text should be kept
+in-line and typeset with a monospace font, it might look
+like this:</para>
+<programlisting>&lt;fo:inline-sequence font-family="monospace"&gt;/usr/man&lt;/fo:inline-sequence&gt;</programlisting>
+<para>The templates
+in <filename>docbook/fo/inline.xsl</filename>      that produce
+this output for a
+DocBook   <literal>&lt;filename&gt;</literal>     element look
+like this:</para>
+<programlisting>&lt;xsl:template match="filename"&gt;
+  &lt;xsl:call-template name="inline.monoseq"/&gt;
+&lt;/xsl:template&gt;
+
+&lt;xsl:template name="inline.monoseq"&gt;
+  &lt;xsl:param name="content"&gt;
+    &lt;xsl:apply-templates/&gt;
+  &lt;/xsl:param&gt;
+  &lt;fo:inline-sequence font-family="monospace"&gt;
+    &lt;xsl:copy-of select="$content"/&gt;
+  &lt;/fo:inline-sequence&gt;
+&lt;/xsl:template&gt;
+</programlisting>
+<para>There are dozens of fo tags and attributes specified
+in the XSL standard. It is beyond the scope of this
+document to cover how all of them are used in the DocBook
+stylesheets. Fortunately, this is only an intermediate
+format that you probably won't have to deal with very much
+directly unless you are writing your own
+stylesheets.</para>
+</sect2>
+</sect1>
+<sect1>
+<title>Customizing DocBook XSL stylesheets</title>
+<para>The DocBook XSL stylesheets are written in a modular
+fashion. Each of the HTML and FO stylesheets starts with a
+driver file that assembles a collection of component files
+into a complete stylesheet. This modular design puts similar things together into smaller files that are easier to write and maintain than one big stylesheet. The modular stylesheet files
+are distributed among four directories:</para>
+
+<variablelist>
+<varlistentry><term>common/</term>
+<listitem>
+<para>contains code common to both stylesheets, including localization data
+</para>
+</listitem>
+</varlistentry>
+<varlistentry><term>fo/</term>
+<listitem>
+<para>a stylesheet that produces XSL FO result trees
+</para>
+</listitem>
+</varlistentry>
+<varlistentry><term>html/</term>
+<listitem>
+<para>a stylesheet that produces HTML/XHTML result trees
+</para>
+</listitem>
+</varlistentry>
+<varlistentry><term>lib/</term>
+<listitem>
+<para>contains schema-independent functions
+</para>
+</listitem>
+</varlistentry>
+</variablelist>
+
+<para>The driver files for each of HTML and FO stylesheets
+are <filename>html/docbook.xsl</filename> and <filename>fo/docbook.xsl</filename>,
+respectively. A driver file consists mostly of a bunch
+of <literal>&lt;xsl:include&gt;</literal> instructions to
+pull in the component templates, and then defines some
+top-level templates. For example:</para>
+<programlisting>&lt;xsl:include href="../VERSION"/&gt;
+&lt;xsl:include href="../lib/lib.xsl"/&gt;
+&lt;xsl:include href="../common/l10n.xsl"/&gt;
+&lt;xsl:include href="../common/common.xsl"/&gt;
+&lt;xsl:include href="autotoc.xsl"/&gt;
+&lt;xsl:include href="lists.xsl"/&gt;
+&lt;xsl:include href="callout.xsl"/&gt;
+...
+&lt;xsl:include href="param.xsl"/&gt;
+&lt;xsl:include href="pi.xsl"/&gt;
+</programlisting>
+<para>The first four modules are shared with the FO
+stylesheet and are referenced using relative pathnames to
+the common directories. Then the long list of component
+stylesheets starts. Pathnames in include statements are
+always taken to be relative to the including file. Each
+included file must be a valid XSL stylesheet, which means
+its root element must
+be <literal>&lt;xsl:stylesheet&gt;</literal>.</para>
+<sect2>
+<title>Stylesheet inclusion vs. importing</title>
+<para>XSL actually provides two inclusion
+mechanisms: <literal>&lt;xsl:include&gt;</literal> and <literal>&lt;xsl:import&gt;</literal>.
+Of the two, <literal>&lt;xsl:include&gt;</literal> is
+the simpler. It treats the included content as if it were
+actually typed into the file at that point, and doesn't
+give it any more or less precedence relative to the
+surrounding text. It is best used when assembling
+dissimilar templates that don't overlap what they match.
+The DocBook driver files use this instruction to assemble a
+set of modules into a stylesheet.</para>
+<para>In contrast, <literal>&lt;xsl:import&gt;</literal> lets
+you manage the precedence of templates and variables. It is
+the preferred mode of customizing another stylesheet because
+it lets you override definitions in the distributed
+stylesheet with your own, without altering the distribution
+files at all. You simply import the whole stylesheet and
+add whatever changes you want.</para>
+<para>The precedence rules for import are detailed and
+rigorously defined in the XSL standard. The basic rule is
+that any templates and variables in the importing
+stylesheet have precedence over equivalent templates and
+variables in the imported stylesheet. Think of the imported stylesheet elements as a fallback collection, to be used only if a match is not found in the current stylesheet. You can customize the templates you want to change in your stylesheet file, and let the imported stylesheet handle the rest.</para>
+<note>
+<para>Customizing a DocBook XSL stylesheet is the opposite
+of customizing a DocBook DTD. When you customize a DocBook
+DTD, the rules of XML and SGML dictate that
+the <emphasis>first</emphasis> of any duplicate declarations
+wins. Any subsequent declarations of the same element or
+entity are ignored. The architecture of the DTD provides
+slots for inserting your own custom declarations early
+enough in the DTD for them to override the standard
+declarations. In contrast, customizing an XSL stylesheet is
+simpler because your definitions have precedence over imported ones.</para>
+</note>
+<para>You can carry modularization to deeper levels because
+module files can also include or import other modules.
+You'll need to be careful to maintain the precedence that
+you want as the modules get rolled up into a complete
+stylesheet. </para>
+</sect2>
+<sect2>
+<title>Customizing
+with <literal>&lt;xsl:import&gt;</literal></title>
+<para>There is currently one example of customizing
+with <literal>&lt;xsl:import&gt;</literal> in the HTML
+version of the DocBook stylesheets.
+The <filename>xtchunk.xsl</filename> stylesheet modifies the
+HTML processing to output many smaller HTML files rather
+than a single large file per input document. It uses XSL
+extensions defined only in the XSL
+processor <command>XT</command>. In the driver
+file <filename>xtchunk.xsl</filename>, the first instruction
+is <literal>&lt;xsl:import
+href="docbook.xsl"/&gt;</literal>. That instruction imports
+the original driver file, which in turn uses
+many <literal>&lt;xsl:include&gt;</literal> instructions to
+include all the modules. That single import instruction
+gives the new stylesheet the complete set of DocBook
+templates to start with.</para>
+<para>After the
+import, <filename>xtchunk.xsl</filename> redefines some of
+the templates and adds some new ones. Here is one example
+of a redefined template:</para>
+<programlisting><lineannotation>Original template in autotoc.xsl</lineannotation>
+&lt;xsl:template name="href.target"&gt;
+  &lt;xsl:param name="object" select="."/&gt;
+  &lt;xsl:text&gt;#&lt;/xsl:text&gt;
+  &lt;xsl:call-template name="object.id"&gt;
+    &lt;xsl:with-param name="object" select="$object"/&gt;
+  &lt;/xsl:call-template&gt;
+&lt;/xsl:template&gt;
+
+<lineannotation>New template in xtchunk.xsl</lineannotation>
+&lt;xsl:template name="href.target"&gt;
+  &lt;xsl:param name="object" select="."/&gt;
+  &lt;xsl:variable name="ischunk"&gt;
+    &lt;xsl:call-template name="chunk"&gt;
+      &lt;xsl:with-param name="node" select="$object"/&gt;
+    &lt;/xsl:call-template&gt;
+  &lt;/xsl:variable&gt;
+
+  &lt;xsl:apply-templates mode="chunk-filename" select="$object"/&gt;
+
+  &lt;xsl:if test="$ischunk='0'"&gt;
+    &lt;xsl:text&gt;#&lt;/xsl:text&gt;
+    &lt;xsl:call-template name="object.id"&gt;
+      &lt;xsl:with-param name="object" select="$object"/&gt;
+    &lt;/xsl:call-template&gt;
+  &lt;/xsl:if&gt;
+&lt;/xsl:template&gt;
+</programlisting>
+<para>The new template handles the more complex processing
+of HREFs when the output is split into many HTML files.
+Where the old template could simply
+output <literal>#<replaceable>object.id</replaceable></literal>,
+the new one outputs <literal><replaceable>filename</replaceable>#<replaceable>object.id</replaceable></literal>.</para>
+</sect2>
+<sect2>
+<title>Setting stylesheet variables</title>
+<para>You may not have to define any new templates,
+however. The DocBook stylesheets are parameterized using
+XSL variables rather than hard-coded values for many of the
+formatting features. Since
+the <literal>&lt;xsl:import&gt;</literal> mechanism also
+lets you redefine global variables, this gives you an easy
+way to customize many features of the DocBook
+stylesheets. Over time, more features will be parameterized to permit customization. If you find hardcoded values in the stylesheets that would be useful to customize, please let the maintainer know.</para>
+<para>Near the end of the list of includes in the main
+DocBook driver file is the
+instruction <literal>&lt;xsl:include
+href="param.xsl"/&gt;</literal>.
+The <filename>param.xsl</filename> file is the most
+important module for customizing a DocBook XSL stylesheet.
+This module contains no templates, only definitions of
+stylesheet variables. Since these variables are defined
+outside of any template, they are global variables and
+apply to the entire stylesheet. By redefining these
+variables in an importing stylesheet, you can change the
+behavior of the stylesheet.</para>
+<para>To create a customized DocBook stylesheet, you simply
+create a new stylesheet file such
+as <filename>mystyle.xsl</filename> that imports the standard
+stylesheet and adds your own new variable definitions. Here
+is an example of a complete custom stylesheet that changes
+the depth of sections listed in the table of contents from
+two to three:</para>
+<programlisting>&lt;?xml version='1.0'?&gt;
+&lt;xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                version='1.0'
+                xmlns="http://www.w3.org/TR/xhtml1/transitional"
+                exclude-result-prefixes="#default"&gt;
+
+&lt;xsl:import href="docbook.xsl"/&gt;
+
+&lt;xsl:variable name="toc.section.depth"&gt;3&lt;/xsl:variable&gt;
+&lt;!-- Add other variable definitions here --&gt;
+
+&lt;/xsl:stylesheet&gt;
+</programlisting>
+<para>Following the opening stylesheet element are the
+import instruction and one variable definition. The
+variable <literal>toc.section.depth</literal> was defined
+in <filename>param.xsl</filename> with value "2", and here
+it is defined as "3". Since the importing stylesheet takes
+precedence, this new value is used. Thus documents
+processed with <filename>mystyle.xsl</filename> instead
+of <filename>docbook.xsl</filename> will have three levels
+of sections in the tables of contents, and all other
+processing will be the same.</para>
+<para>Use the list of variables
+in <filename>param.xsl</filename> as your guide for creating
+a custom stylesheet. If the changes you want are controlled
+by a variable there, then customizing is easy. </para>
+
+</sect2>
+<sect2>
+<title>Writing your own templates</title>
+<para>If the changes you want are more extensive than what
+is supported by variables, you can write new templates. You
+can put your new templates directly in your importing
+stylesheet, or you can modularize your importing stylesheet
+as well. You can write your own stylesheet module
+containing a collection of templates for processing lists,
+for example, and put them in a file
+named <filename>mylists.xsl</filename>. Then your importing
+stylesheet can pull in your list templates with
+a <literal>&lt;xsl:include
+href="mylists.xsl"/&gt;</literal> instruction. Since your
+included template definitions appear after the main import
+instruction, your templates will take precedence.</para>
+<para>You'll need to make sure your new templates are
+compatible with the remaining modules, which means:</para>
+<itemizedlist>
+<listitem>
+<para>Any named templates should use the same name so
+calling templates in other modules can find them.</para>
+</listitem>
+<listitem>
+<para>Your template set should process the same elements
+matched by templates in the original module, to ensure
+complete coverage.</para>
+</listitem>
+<listitem>
+<para>Include the same set
+of <literal>&lt;xsl:param&gt;</literal> elements in each
+template to interface properly with any calling templates,
+although you can set different values for your
+parameters.</para>
+</listitem>
+<listitem>
+<para>Any templates that are used like subroutines to
+return a value should return the same data type.</para>
+</listitem>
+</itemizedlist>
+</sect2>
+<sect2>
+<title>Writing your own driver</title>
+<para>Another approach to customizing the stylesheets is to
+write your own driver file. Instead of
+using <literal>&lt;xsl:import
+href="docbook.xsl"/&gt;</literal>, you copy that file to a
+new name and rewrite any of
+the <literal>&lt;xsl:include/&gt;</literal> instructions to
+assemble a custom collection of stylesheet modules. One
+reason to do this is to speed up processing by reducing the
+size of the stylesheet. If you are using a customized
+DocBook DTD that omits many elements you never use, you
+might be able to omit those modules of the
+stylesheet.</para>
+</sect2>
+<sect2>
+<title>Localization</title>
+<para>The DocBook stylesheets include features for
+localizing generated text, that is, printing any generated
+text in a language other than the default English. In
+general, the stylesheets will switch to the language
+identified by a <literal>lang</literal> attribute when
+processing elements in your documents. If your documents
+use the <literal>lang</literal> attribute, then you don't
+need to customize the stylesheets at all for
+localization.</para>
+<para>As far as the stylesheets go,
+a <literal>lang</literal> attribute is inherited by the
+descendents of a document element. The stylesheet searches
+for a <literal>lang</literal> attribute using this XPath
+expression:</para>
+<programlisting>&lt;xsl:variable name="lang-attr"
+         select="($target/ancestor-or-self::*/@lang
+                  |$target/ancestor-or-self::*/@xml:lang)[last()]"/&gt;</programlisting>
+
+<para>This locates the attribute on the current element or
+its most recent ancestor. Thus
+a <literal>lang</literal> attribute is in effect for an
+element and all of its descendents, unless it is reset in
+one of those descendents. If you define it in only your
+document root element, then it applies to the whole
+document:</para>
+<programlisting>&lt;?xml version="1.0"?&gt;
+&lt;!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.0//EN" "docbook.dtd"&gt;
+&lt;book lang="fr"&gt;
+...
+&lt;/book&gt;</programlisting>
+<para>When text is being generated, the stylesheet checks
+the most recent <literal>lang</literal> attribute and looks
+up the generated text strings for that language in a
+localization XML file. These are located in
+the <filename>common</filename> directory of the
+stylesheets, one file per language. Here is the top of the
+file <filename>fr.xml</filename>:</para>
+<programlisting>&lt;localization language="fr"&gt;
+
+&lt;gentext key="abstract"                 text="R&amp;#x00E9;sum&amp;#x00E9;"/&gt;
+&lt;gentext key="answer"                   text="R:"/&gt;
+&lt;gentext key="appendix"                 text="Annexe"/&gt;
+&lt;gentext key="article"                  text="Article"/&gt;
+&lt;gentext key="bibliography"             text="Bibliographie"/&gt;
+...
+</programlisting>
+<para>The stylesheet templates use the gentext key names,
+and then the stylesheet looks up the associated text value
+when the document is processed with that lang setting. The
+file <filename>l10n.xml</filename> (note
+the <filename>.xml</filename> suffix) lists the filenames of
+all the supported languages.</para>
+<para>You can also create a custom stylesheet that sets the
+language. That might be useful if your documents don't make
+appropriate use of the <literal>lang</literal> attribute.
+The module <filename>l10n.xsl</filename> defines two global
+variables that can be overridden with an importing
+stylesheet as described above. Here are their default
+definitions:</para>
+<programlisting>&lt;xsl:variable name="l10n.gentext.language"&gt;&lt;/xsl:variable&gt;
+&lt;xsl:variable name="l10n.gentext.default.language"&gt;en&lt;/xsl:variable&gt;
+</programlisting>
+<para>The first one sets the language for all elements,
+regardless of an element's <literal>lang</literal> attribute
+value. The second just sets a default language for any
+elements that haven't got a <literal>lang</literal> setting
+of their own (or their ancestors).</para>
+</sect2>
+</sect1>
+</chapter>

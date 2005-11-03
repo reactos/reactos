@@ -1,0 +1,23 @@
+<refentry id="use.id.as.filename">
+<refmeta>
+<refentrytitle>use.id.as.filename</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>use.id.as.filename</refname>
+<refpurpose>Use ID value of chunk elements as the filename?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='use.id.as.filename.frag'><xsl:param name="use.id.as.filename" select="'0'"/></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If <parameter>use.id.as.filename</parameter>
+is non-zero, the filename of chunk elements that have IDs will be
+derived from the ID value.
+</para>
+
+</refsect1>
+</refentry>

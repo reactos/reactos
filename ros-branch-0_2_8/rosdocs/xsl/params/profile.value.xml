@@ -1,0 +1,36 @@
+<refentry id="profile.value">
+<refmeta>
+<refentrytitle>profile.value</refentrytitle>
+<refmiscinfo role="type">string</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>profile.value</refname>
+<refpurpose>Target profile for user-specified attribute</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='profile.value.frag'>
+<xsl:param name="profile.value" select="''"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>When you are using this parameter you must also specify name of
+profiling attribute with parameter <link
+linkend="profile.attribute"><parameter>profile.attribute</parameter></link>.</para>
+
+<para>Value of this parameter specifies profiles which should be
+included in the output. You can specify multiple profiles by
+separating them by semicolon. You can change separator character by
+<link linkend="profile.separator"><parameter>profile.separator</parameter></link>
+parameter.</para>
+
+<para>This parameter has effect only when you are using profiling
+stylesheets (<filename>profile-docbook.xsl</filename>,
+<filename>profile-chunk.xsl</filename>, &#x2026;) instead of normal
+ones (<filename>docbook.xsl</filename>,
+<filename>chunk.xsl</filename>, &#x2026;).</para>
+
+</refsect1>
+</refentry>

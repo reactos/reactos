@@ -1,0 +1,23 @@
+<refentry id="htmlhelp.chm">
+<refmeta>
+<refentrytitle>htmlhelp.chm</refentrytitle>
+<refmiscinfo role="type">string</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>htmlhelp.chm</refname>
+<refpurpose>Filename of output HTML Help file.</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='htmlhelp.chm.frag'>
+<xsl:param name="htmlhelp.chm" select="'htmlhelp.chm'"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>Change this parameter if you want different name of result
+CHM file than htmlhelp.chm.</para>
+
+</refsect1>
+</refentry>

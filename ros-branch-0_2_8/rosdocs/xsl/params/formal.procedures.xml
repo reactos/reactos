@@ -1,0 +1,23 @@
+<refentry id="formal.procedures">
+<refmeta>
+<refentrytitle>formal.procedures</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>formal.procedures</refname>
+<refpurpose>Selects formal or informal procedures</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='formal.procedures.frag'>
+<xsl:param name="formal.procedures" select="1"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>Formal procedures are numbered and always have a title.
+</para>
+
+</refsect1>
+</refentry>

@@ -1,0 +1,21 @@
+<refentry id="runinhead.default.title.end.punct">
+<refmeta>
+<refentrytitle>runinhead.default.title.end.punct</refentrytitle>
+<refmiscinfo role="type">string</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>runinhead.default.title.end.punct</refname>
+<refpurpose>Default punctuation character on a run-in-head</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='runinhead.default.title.end.punct.frag'><xsl:param name="runinhead.default.title.end.punct" select="'.'"/></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>FIXME:
+</para>
+
+</refsect1>
+</refentry>

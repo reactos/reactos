@@ -1,0 +1,21 @@
+<refentry id="hyphenate">
+<refmeta>
+<refentrytitle>hyphenate</refentrytitle>
+
+</refmeta>
+<refnamediv>
+<refname>hyphenate</refname>
+<refpurpose>Specify hyphenation behavior</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='hyphenate.frag'><xsl:param name="hyphenate">true</xsl:param></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If true, words may be hyphenated. Otherwise, they may not.
+</para>
+
+</refsect1>
+</refentry>

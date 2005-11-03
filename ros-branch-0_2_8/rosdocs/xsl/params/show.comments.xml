@@ -1,0 +1,24 @@
+<refentry id="show.comments">
+<refmeta>
+<refentrytitle>show.comments</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>show.comments</refname>
+<refpurpose>Display <sgmltag>comment</sgmltag> elements?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='show.comments.frag'><xsl:param name="show.comments">1</xsl:param></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If true (non-zero), comments will be displayed, otherwise they are suppressed.
+Comments here refers to the <sgmltag>comment</sgmltag> element,
+which will be renamed <sgmltag>remark</sgmltag> in DocBook V4.0,
+not XML comments (&lt;-- like this --&gt;) which are unavailable.
+</para>
+
+</refsect1>
+</refentry>

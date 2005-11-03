@@ -1,0 +1,4 @@
+#define REACTOS_STR_FILE_DESCRIPTION    "File Compare Utility\0"
+#define REACTOS_STR_INTERNAL_NAME   "comp\0"
+#define REACTOS_STR_ORIGINAL_FILENAME   "comp.exe\0"
+#include <reactos/version.rc>

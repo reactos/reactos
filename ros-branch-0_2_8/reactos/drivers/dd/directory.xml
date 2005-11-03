@@ -1,0 +1,33 @@
+<directory name="beep">
+	<xi:include href="beep/beep.xml" />
+</directory>
+<directory name="blue">
+	<xi:include href="blue/blue.xml" />
+</directory>
+<directory name="bootvid">
+	<xi:include href="bootvid/bootvid.xml" />
+</directory>
+<directory name="debugout">
+	<xi:include href="debugout/debugout.xml" />
+</directory>
+<directory name="mpu401">
+	<xi:include href="mpu401/mpu401.xml" />
+</directory>
+<directory name="null">
+	<xi:include href="null/null.xml" />
+</directory>
+<directory name="parallel">
+	<xi:include href="parallel/parallel.xml" />
+</directory>
+<directory name="ramdrv">
+	<xi:include href="ramdrv/ramdrv.xml" />
+</directory>
+<directory name="serial">
+	<xi:include href="serial/serial.xml" />
+</directory>
+<directory name="sndblst">
+	<xi:include href="sndblst/sndblst.xml" />
+</directory>
+<directory name="sound">
+	<xi:include href="sound/sound.xml" />
+</directory>

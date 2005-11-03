@@ -1,0 +1,24 @@
+<refentry id="navig.graphics">
+<refmeta>
+<refentrytitle>navig.graphics</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>navig.graphics</refname>
+<refpurpose>Use graphics in navigational headers and footers?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='navig.graphics.frag'><xsl:param name="navig.graphics" select="0"/></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If true (non-zero), the navigational headers and footers in chunked
+HTML are presented in an alternate style that uses
+graphical icons for Next, Previous, Up, and Home.
+Default graphics are provided in the distribution.
+</para>
+
+</refsect1>
+</refentry>

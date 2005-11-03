@@ -1,0 +1,22 @@
+<refentry id="base.dir">
+<refmeta>
+<refentrytitle>base.dir</refentrytitle>
+
+</refmeta>
+<refnamediv>
+<refname>base.dir</refname>
+<refpurpose>The base directory of chunks</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='base.dir.frag'><xsl:param name="base.dir" select="''"/></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If specified, the <literal>base.dir</literal> identifies
+the output directory for chunks. (If not specified, the output directory
+is system dependent.)</para>
+
+</refsect1>
+</refentry>

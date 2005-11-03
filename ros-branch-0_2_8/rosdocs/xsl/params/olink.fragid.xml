@@ -1,0 +1,20 @@
+<refentry id="olink.fragid">
+<refmeta>
+<refentrytitle>olink.fragid</refentrytitle>
+<refmiscinfo role="type">string</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>olink.fragid</refname>
+<refpurpose>Names the fragment identifier portion of an OLink resolver query</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='olink.fragid.frag'><xsl:param name="olink.fragid" select="'fragid='"/></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>FIXME:</para>
+
+</refsect1>
+</refentry>

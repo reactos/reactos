@@ -1,0 +1,158 @@
+<?xml version='1.0' encoding='utf-8'?>
+<!--
+<!DOCTYPE chapter PUBLIC '-//OASIS//DTD DocBook XML V4.1.2//EN'
+                      'http://www.oasis-open.org/docbook/xml/4.0/docbookx.dtd'>
+-->
+<chapter lang="en">
+<chapterinfo>
+<author>
+<firstname>Jirka</firstname>
+<surname>Kosek</surname>
+</author>
+<copyright>
+<year>2001</year>
+<holder>Ji&rcaron;&iacute; Kosek</holder>
+</copyright>
+<releaseinfo>$Id: htmlhelp.xml,v 1.1 2002/06/13 20:31:59 chorns Exp $</releaseinfo>
+</chapterinfo>
+<title>Using the XSL stylesheets to generate HTML Help</title>
+<?dbhtml filename="htmlhelp.html"?>
+
+<para>HTML Help (HH) is a help format used in newer versions of Microsoft
+Windows and applications written for that platform. The HTML Help format allows
+you to pack several HTML files together with images, a table of contents, and
+an index into a single file. Windows contains a browser for this file format
+and full-text search is also supported on HH files. If you want to know
+more about HH and its capabilities, visit the Microsoft <ulink
+url="http://msdn.microsoft.com/library/tools/htmlhelp/chm/HH1Start.htm">HTML
+Help Start Page</ulink>.</para>
+
+<section>
+<title>How to generate your first HTML Help file from DocBook sources</title>
+
+<para>Working with the HH stylesheets is the same as with other XSL DocBook
+stylesheets. Simply run your favorite XSLT processor on your document
+with the HH stylesheet:</para>
+
+<screen format="linespecific">saxon <replaceable>yourfile</replaceable> <replaceable>/path/to/stylesheets/</replaceable>htmlhelp/htmlhelp.xsl</screen>
+
+<para>The stylesheet imports the standard chunking stylesheet, so a set of
+HTML files is created in the usual way. Other files are also created
+&ndash; <filename>htmlhelp.hhp</filename> is the project file for the HTML
+Help Compiler and <filename>toc.hhc</filename> holds the structure of your
+document.</para>
+
+<para>The language identifier for the overall HH file is taken from the top-most
+element with a <sgmltag class="attribute">lang</sgmltag> attribute in
+your DocBook source. This is perfectly legal for documents in only one
+language. If a language is not specified in the document, US English is
+used. There is one problem &ndash; MS language codes are country-sensitive,
+and this information is not available in the DocBook source. If
+the stylesheet selects a bad code for you, edit
+<filename>langcodes.xml</filename>, and remove all entries which have
+your language code, but are located in an inappropriate country.</para>
+
+<para>The title for the overall HH file is taken from the first title element in your
+document. Full-text searching is automatically on. If your document
+contains index terms, they are automatically converted to HH ActiveX
+objects, which are recognized by the HTML Help compiler.</para>
+
+<para>The stylesheet creates couple other files which are then used as an
+input for the HTML Help Compiler (HHC), which is part of <ulink
+url="http://msdn.microsoft.com/library/default.asp?url=/library/en-us/htmlhelp/html/hwMicrosoftHTMLHelpDownloads.asp"
+>HTML Help Workshop</ulink>. If you have HHC in your path, you can
+start conversion to the HH format by running this command:</para>
+
+<screen format="linespecific">hhc htmlhelp.hhp</screen>
+
+<para>If you cannot stand to work without using your mouse, there is alternative
+way. Just double-click on the <filename
+moreinfo="none">htmlhelp.hhp</filename> file. HH Workshop will be
+launched automatically. Generation of the HH file can be started by selecting
+<menuchoice moreinfo="none">
+<guimenu moreinfo="none">File</guimenu> <guimenuitem
+moreinfo="none">Compile</guimenuitem> </menuchoice> from the application's
+menu.</para>
+
+</section>
+
+<section>
+<title>Customizing generated files</title>
+
+<section>
+<title>Enabling navigation links</title>
+
+<para>By default, the HTML Help stylesheet disables navigation links at
+the start and the bottom of each page. If you want to enable the
+links instead, start your XSLT processor with the parameter <parameter
+moreinfo="none">suppress.navigation</parameter> set to 0.</para>
+
+<screen format="linespecific">saxon <replaceable>yourfile</replaceable> <replaceable>/path/to/stylesheets/</replaceable>htmlhelp/htmlhelp.xsl "suppress.navigation=0"</screen>
+
+<para>Another approach is to create a driver file, which overrides
+the default parameter value.</para>
+
+<programlisting><![CDATA[<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+	        version="1.0">
+
+  <xsl:import href="]]><replaceable>/path/to/stylesheets/</replaceable>htmlhelp/htmlhelp.xsl<![CDATA["/>
+
+  <xsl:param name="suppress.navigation" select="0"/>
+
+</xsl:stylesheet>
+]]></programlisting>
+
+</section>
+
+<section>
+<title>Generating HTML Help for non-Western European languages</title>
+
+<para>If you are generating HTML Help for non-Western Europe
+languages, you should change the output encoding of your files, because
+the HTML Help compiler improperly handles UTF-8 and even character
+entities in the TOC file and index entries. This can be easily done using a 
+<quote>driver</quote> file like this:</para>
+
+<programlisting><![CDATA[<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+	        version="1.0">
+
+  <xsl:import href="]]><replaceable>/path/to/stylesheets/</replaceable>contrib/htmlhelp/htmlhelp.xsl<![CDATA["/>
+
+  <xsl:param name="htmlhelp.encoding" select="'windows-1250'"/>
+  <xsl:param name="default.encoding" select="'windows-1250'"/>
+  <xsl:param name="saxon.character.representation" select="'native'"/>
+
+</xsl:stylesheet>
+]]></programlisting>
+
+<para>Default encoding is ISO-8859-1 (aka ISO Latin 1). If you get
+some strange message about characters from your XSLT processor and
+your document is in some of Western European languages, try changing
+encoding to <literal>windows-1252</literal>. This encoding is similar
+to ISO-8859-1 but contains some additional characters like
+<quote>typographical quotes</quote> and dashes.</para>
+
+</section>
+
+<section>
+<title>More about customizing</title>
+
+<para>More info will come in a near future (I hope and
+believe). Meanwhile look into reference for description of <ulink
+url="http://docbook.sourceforge.net/release/xsl/snapshot/doc/html/">HTML Help
+specific parameters</ulink>.</para>
+
+</section>
+
+</section>
+
+<section>
+<title>Feedback</title>
+
+<para>If you have any comments and suggestions about the HTML Help
+stylesheet feel free to contact me at following address
+<email>jirka@kosek.cz</email>.</para>
+
+</section>
+
+</chapter>

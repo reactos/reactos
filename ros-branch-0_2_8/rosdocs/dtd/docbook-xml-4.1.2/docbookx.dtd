@@ -1,0 +1,125 @@
+<!-- ...................................................................... -->
+<!-- DocBook XML DTD V4.1.2 ................................................. -->
+<!-- File docbookx.dtd .................................................... -->
+
+<!-- Copyright 1992-2000 HaL Computer Systems, Inc.,
+     O'Reilly & Associates, Inc., ArborText, Inc., Fujitsu Software
+     Corporation, Norman Walsh, and the Organization for the Advancement
+     of Structured Information Standards (OASIS).
+
+     $Id: docbookx.dtd,v 1.1 2001/10/09 17:54:26 jfilby Exp $
+
+     Permission to use, copy, modify and distribute the DocBook XML DTD
+     and its accompanying documentation for any purpose and without fee
+     is hereby granted in perpetuity, provided that the above copyright
+     notice and this paragraph appear in all copies.  The copyright
+     holders make no representation about the suitability of the DTD for
+     any purpose.  It is provided "as is" without expressed or implied
+     warranty.
+
+     If you modify the DocBook DTD in any way, except for declaring and
+     referencing additional sets of general entities and declaring
+     additional notations, label your DTD as a variant of DocBook.  See
+     the maintenance documentation for more information.
+
+     Please direct all questions, bug reports, or suggestions for 
+     changes to the docbook@lists.oasis-open.org mailing list. For more
+     information, see http://www.oasis-open.org/docbook/.
+-->
+
+<!-- ...................................................................... -->
+
+<!-- This is the driver file for V4.1.2 of the DocBook DTD.
+     Please use the following formal public identifier to identify it:
+
+     "-//OASIS//DTD DocBook XML V4.1.2//EN"
+
+     For example, if your document's top-level element is Book, and
+     you are using DocBook directly, use the FPI in the DOCTYPE
+     declaration:
+
+     <!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+                    "http://www.oasis-open.org/docbook/xml/4.0/docbookx.dtd"
+                    [...]>
+
+     Or, if you have a higher-level driver file that customizes DocBook,
+     use the FPI in the parameter entity declaration:
+
+     <!ENTITY % DocBookDTD PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+                "http://www.oasis-open.org/docbook/xml/4.0/docbookx.dtd">
+     %DocBookDTD;
+
+     See the documentation for detailed information on the parameter
+     entity and module scheme used in DocBook, customizing DocBook and
+     planning for interchange, and changes made since the last release
+     of DocBook.
+-->
+
+<!-- ...................................................................... -->
+<!-- Notation declarations ................................................ -->
+
+<!ENTITY % dbnotn.module "INCLUDE">
+<![%dbnotn.module;[
+<!ENTITY % dbnotn PUBLIC 
+"-//OASIS//ENTITIES DocBook XML Notations V4.1.2//EN"
+"dbnotnx.mod">
+%dbnotn;
+]]>
+
+<!-- ...................................................................... -->
+<!-- ISO character entity sets ............................................ -->
+
+<!ENTITY % dbcent.module "INCLUDE">
+<![%dbcent.module;[
+<!ENTITY euro "&#x20AC;"><!-- euro sign, U+20AC NEW -->
+<!ENTITY % dbcent PUBLIC 
+"-//OASIS//ENTITIES DocBook XML Character Entities V4.1.2//EN"
+"dbcentx.mod">
+%dbcent;
+]]>
+
+<!-- ...................................................................... -->
+<!-- DTD modules .......................................................... -->
+
+<!-- Information pool .............. -->
+
+<!ENTITY % dbpool.module "INCLUDE">
+<![ %dbpool.module; [
+<!ENTITY % dbpool PUBLIC 
+"-//OASIS//ELEMENTS DocBook XML Information Pool V4.1.2//EN"
+"dbpoolx.mod">
+%dbpool;
+]]>
+
+<!-- Redeclaration placeholder ..... -->
+
+<!ENTITY % intermod.redecl.module "IGNORE">
+<![%intermod.redecl.module;[
+<!-- Defining rdbmods here makes some buggy XML parsers happy. -->
+<!ENTITY % rdbmods "">
+%rdbmods;
+<!--end of intermod.redecl.module-->]]>
+
+<!-- Document hierarchy ............ -->
+
+<!ENTITY % dbhier.module "INCLUDE">
+<![ %dbhier.module; [
+<!ENTITY % dbhier PUBLIC 
+"-//OASIS//ELEMENTS DocBook XML Document Hierarchy V4.1.2//EN"
+"dbhierx.mod">
+%dbhier;
+]]>
+
+<!-- ...................................................................... -->
+<!-- Other general entities ............................................... -->
+
+<!ENTITY % dbgenent.module "INCLUDE">
+<![ %dbgenent.module; [
+<!ENTITY % dbgenent PUBLIC
+"-//OASIS//ENTITIES DocBook XML Additional General Entities V4.1.2//EN"
+"dbgenent.mod">
+%dbgenent;
+]]>
+
+<!-- End of DocBook XML DTD V4.1.2 .......................................... -->
+<!-- ...................................................................... -->

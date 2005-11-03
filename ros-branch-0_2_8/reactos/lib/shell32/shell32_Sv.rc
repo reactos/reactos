@@ -1,0 +1,221 @@
+/*
+ * Copyright 2005 David Nordenberg
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+LANGUAGE LANG_SWEDISH, SUBLANG_DEFAULT
+
+MENU_001 MENU DISCARDABLE
+BEGIN
+	MENUITEM "&Stora ikoner",	FCIDM_SHVIEW_BIGICON
+	MENUITEM "S&må ikoner",	FCIDM_SHVIEW_SMALLICON
+	MENUITEM "&Lista",		FCIDM_SHVIEW_LISTVIEW
+	MENUITEM "&Detaljer",		FCIDM_SHVIEW_REPORTVIEW
+END
+
+/*
+ shellview background menu
+*/
+MENU_002 MENU DISCARDABLE
+BEGIN
+	POPUP ""
+	BEGIN
+	  POPUP "&Visa"
+	  BEGIN
+	    MENUITEM "&Stora ikoner",	FCIDM_SHVIEW_BIGICON
+	    MENUITEM "S&må ikoner",	FCIDM_SHVIEW_SMALLICON
+	    MENUITEM "&Lista",		FCIDM_SHVIEW_LISTVIEW
+	    MENUITEM "&Detaljer",	FCIDM_SHVIEW_REPORTVIEW
+	  END
+	  MENUITEM SEPARATOR
+	  POPUP "Ordna &ikoner efter"
+	  BEGIN
+	    MENUITEM "&Namn",	0x30	/* column 0 */
+	    MENUITEM "&Typ",	0x32	/* column 2 */
+	    MENUITEM "&Storlek",	0x31	/* ... */
+	    MENUITEM "&Datum",	0x33
+	    MENUITEM SEPARATOR
+	    MENUITEM "&Ordna automatiskt",	FCIDM_SHVIEW_AUTOARRANGE
+	  END
+	  MENUITEM "Rada upp ikoner",	FCIDM_SHVIEW_SNAPTOGRID
+	  MENUITEM SEPARATOR
+	  MENUITEM "&Uppdatera",		FCIDM_SHVIEW_REFRESH
+	  MENUITEM SEPARATOR
+	  MENUITEM "K&listra in",		FCIDM_SHVIEW_INSERT
+	  MENUITEM "Klistra in som genväg",	FCIDM_SHVIEW_INSERTLINK
+	  MENUITEM SEPARATOR
+	  POPUP "&Ny"
+	  BEGIN
+	    MENUITEM "Ny &mapp",	FCIDM_SHVIEW_NEWFOLDER
+	    MENUITEM "Ny &genväg",	FCIDM_SHVIEW_NEWLINK
+	    MENUITEM SEPARATOR
+	  END
+	  MENUITEM SEPARATOR
+	  MENUITEM "&Egenskaper",	FCIDM_SHVIEW_PROPERTIES
+	END
+END
+
+/*
+ shellview item menu
+*/
+MENU_SHV_FILE MENU DISCARDABLE
+BEGIN
+	POPUP ""
+	BEGIN
+	  MENUITEM "&Utforska",		FCIDM_SHVIEW_EXPLORE
+	  MENUITEM "&Öppna",		FCIDM_SHVIEW_OPEN
+	  MENUITEM SEPARATOR
+	  MENUITEM "&Klipp ut",		FCIDM_SHVIEW_CUT
+	  MENUITEM "K&opiera",		FCIDM_SHVIEW_COPY
+	  MENUITEM SEPARATOR
+	  MENUITEM "Skapa &genväg",	FCIDM_SHVIEW_CREATELINK
+	  MENUITEM "&Ta bort",		FCIDM_SHVIEW_DELETE
+	  MENUITEM "&Byt namn",		FCIDM_SHVIEW_RENAME
+	  MENUITEM SEPARATOR
+	  MENUITEM "&Egenskaper",	FCIDM_SHVIEW_PROPERTIES
+	END
+END
+
+SHBRSFORFOLDER_MSGBOX DIALOG LOADONCALL MOVEABLE DISCARDABLE 15, 40, 188, 192
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_MODALFRAME | DS_SETFONT | DS_3DLOOK
+CAPTION "Bläddra efter mapp"
+FONT 8, "MS Shell Dlg"
+{
+ DEFPUSHBUTTON "OK", 1, 80, 176, 50, 12, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Avbryt", 2, 134, 176, 50, 12, WS_GROUP | WS_TABSTOP
+ LTEXT "", IDD_TITLE, 4, 4, 180, 12
+ LTEXT "", IDD_STATUS, 4, 25, 180, 12
+ CONTROL "", IDD_TREEVIEW, "SysTreeView32",
+ 	TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT |
+	WS_BORDER | WS_TABSTOP,
+	4, 40, 180, 120
+}
+
+SHELL_ABOUT_MSGBOX DIALOG LOADONCALL MOVEABLE DISCARDABLE 15, 40, 210, 152
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Om %s"
+FONT 10, "MS Shell Dlg"
+{
+ DEFPUSHBUTTON "OK", IDOK, 153, 133, 50, 12, WS_TABSTOP
+ LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
+ ICON "", 1088, 10, 10, 14, 16
+ LTEXT "", 100, 30, 10, 137, 10
+ LTEXT "", 101, 30, 22, 137, 10
+ LTEXT "ReactOS hade inte varit möjligt utan dessa personer:", 98, 8, 55, 137, 10
+}
+
+SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+{
+ ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+LTEXT "Skriv namnet på ett program, en mapp eller ett dokument för att öppna det.", 12289, 36, 11, 182, 18
+ LTEXT "&Öppna:", 12305, 7, 39, 24, 10
+ CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+ DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
+ PUSHBUTTON "Avbryt", IDCANCEL, 116, 63, 50, 14, WS_TABSTOP
+ PUSHBUTTON "&Bläddra...", 12288, 170, 63, 50, 14, WS_TABSTOP
+}
+
+/*
+	special folders
+*/
+STRINGTABLE DISCARDABLE
+{
+	IDS_DESKTOP		"Skrivbord"
+	IDS_MYCOMPUTER		"Den här datorn"
+}
+
+/*
+	context menus
+*/
+STRINGTABLE DISCARDABLE
+{
+	IDS_VIEW_LARGE		"&Stora ikoner"
+	IDS_VIEW_SMALL		"S&må ikoner"
+	IDS_VIEW_LIST		"&Lista"
+	IDS_VIEW_DETAILS	"&Detaljer"
+	IDS_SELECT		"Välj"
+	IDS_OPEN		"Öppna"
+}
+
+STRINGTABLE DISCARDABLE
+{
+	IDS_CREATEFOLDER_DENIED "Kan inte skapa ny mapp: Åtkomst nekad."
+	IDS_CREATEFOLDER_CAPTION "Fel vid försök att skapa ny mapp"
+	IDS_DELETEITEM_CAPTION "Bekräfta borttagning av fil"
+	IDS_DELETEFOLDER_CAPTION "Bekräfta borttagning av mapp"
+	IDS_DELETEITEM_TEXT "Är du säker på att du vill ta bort '%1'?"
+	IDS_DELETEMULTIPLE_TEXT "Är du säker på att du vill ta bort de här %1 objekten?"
+	IDS_OVERWRITEFILE_TEXT "Skriv över fil %1?"
+	IDS_OVERWRITEFILE_CAPTION "Bekräfta filöverskrivning"
+}
+
+/*	columns in the shellview	*/
+STRINGTABLE
+BEGIN
+	IDS_SHV_COLUMN1		"Fil"
+	IDS_SHV_COLUMN2		"Storlek"
+	IDS_SHV_COLUMN3		"Typ"
+	IDS_SHV_COLUMN4		"Modifierad"
+	IDS_SHV_COLUMN5		"Attribut"
+	IDS_SHV_COLUMN6		"Storlek"
+	IDS_SHV_COLUMN7		"Storlek tillgänglig"
+	IDS_SHV_COLUMN8		"Namn"
+	IDS_SHV_COLUMN9		"Kommentarer"
+END
+
+/* message box strings */
+STRINGTABLE DISCARDABLE
+{
+	IDS_RESTART_TITLE	"Starta om"
+	IDS_RESTART_PROMPT	"Vill du starta om datorn?"
+	IDS_SHUTDOWN_TITLE	"Stäng av"
+	IDS_SHUTDOWN_PROMPT	"Vill du stänga av datorn?"
+}
+
+/* shell folder path default values */
+STRINGTABLE DISCARDABLE
+{
+	IDS_PROGRAMS                "Start-meny\\Program"
+	IDS_PERSONAL                "Mina dokument"
+	IDS_FAVORITES               "Favoriter"
+	IDS_STARTUP                 "Start-meny\\Program\\Autostart"
+	IDS_RECENT                  "Tidigare"
+	IDS_SENDTO                  "Skicka till"
+	IDS_STARTMENU               "Start-meny"
+	IDS_MYMUSIC                 "Mina dokument\\Min musik"
+	IDS_MYVIDEO                 "Mina dokument\\Mina videoklipp"
+	IDS_DESKTOPDIRECTORY        "Skrivbord"
+	IDS_NETHOOD                 "Nätverk"
+	IDS_TEMPLATES               "Mallar"
+	IDS_APPDATA                 "Application Data"
+	IDS_PRINTHOOD               "Skrivare"
+	IDS_LOCAL_APPDATA           "Lokala inställningar\\Application Data"
+	IDS_INTERNET_CACHE          "Temporary Internet Files"
+	IDS_COOKIES                 "Cookies"
+	IDS_HISTORY                 "Tidigare"
+	IDS_PROGRAM_FILES           "Program"
+	IDS_MYPICTURES              "Mina dokument\\Mina bilder"
+	IDS_PROGRAM_FILES_COMMON    "Program\\Delade filer"
+	IDS_COMMON_DOCUMENTS        "Delade dokument"
+	IDS_ADMINTOOLS              "Start-meny\\Program\\Administrativa verktyg"
+	IDS_COMMON_MUSIC            "Delade dokument\\Min musik"
+	IDS_COMMON_PICTURES         "Delade dokument\\Mina bilder"
+	IDS_COMMON_VIDEO            "Delade dokument\\Mina videoklipp"
+	IDS_CDBURN_AREA             "Lokala inställningar\\Application Data\\Microsoft\\CD Burning"
+}

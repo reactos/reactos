@@ -1,0 +1,27 @@
+<refentry id="html.longdesc">
+<refmeta>
+<refentrytitle>html.longdesc</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>html.longdesc</refname>
+<refpurpose>Should longdesc URIs be created?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='html.longdesc.frag'>
+<xsl:param name="html.longdesc" select="1"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If non-zero, HTML files will be created for the
+<sgmltag class="attribute">longdesc</sgmltag> attribute. These files
+are created from the <sgmltag>textobject</sgmltag>s in
+<sgmltag>mediaobject</sgmltag>s and
+<sgmltag>inlinemediaobject</sgmltag>.
+</para>
+
+</refsect1>
+</refentry>

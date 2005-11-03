@@ -1,0 +1,6 @@
+Embedded DHCP Server for ReactOS - Carlos Manuel Duclos Vergara
+
+TODO:
+Make it a real Windows Service
+Use the registry rather than a config file
+Fix a few races and check to see how it can scale.

@@ -1,0 +1,36 @@
+2002-05-17  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* Makefile: Fix bugs in jar creation
+
+2002-03-21  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* Makefile: Abandon support for Saxon 6.4.2
+
+2001-11-15  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* Makefile: Support saxon 6.5
+
+2001-09-26  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* Makefile: Bug #465146: use  in extensions/Makefile
+
+2001-09-22  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* Makefile: Support Saxon 6.4.4
+
+2001-07-16  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* Makefile: Produce correct 6.4.2/6.4.3 jar files
+
+2001-07-07  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* Makefile: Remove old versions of Saxon from Makefile; make sure jars are always up-to-date
+
+2001-05-21  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* Makefile: Tweak Makefile for Saxon 6.3
+
+2001-04-02  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* .cvsignore, Makefile, prj.el: New file.
+

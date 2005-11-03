@@ -1,0 +1,30 @@
+<refentry id="page.margin.outer">
+<refmeta>
+<refentrytitle>page.margin.outer</refentrytitle>
+
+</refmeta>
+<refnamediv>
+<refname>page.margin.outer</refname>
+<refpurpose>The outer page margin</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='page.margin.outer.frag'><xsl:param name="page.margin.outer">
+  <xsl:choose>
+    <xsl:when test="$double.sided != 0">0.75in</xsl:when>
+    <xsl:otherwise>1in</xsl:otherwise>
+  </xsl:choose>
+</xsl:param></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>The outer page margin is the distance from non-binding edge of the
+page to the last column of text. In the left-to-right, top-to-bottom writing
+direction, this is the right margin of recto pages.</para>
+<para>The inner and outer margins are usually the same unless the output
+is double-sided.
+</para>
+
+</refsect1>
+</refentry>

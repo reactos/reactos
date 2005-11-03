@@ -1,0 +1,24 @@
+<refentry id="ulink.footnotes">
+<refmeta>
+<refentrytitle>ulink.footnotes</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>ulink.footnotes</refname>
+<refpurpose>Generate footnotes for <sgmltag>ULink</sgmltag>s?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='ulink.footnotes.frag'>
+<xsl:param name="ulink.footnotes" select="0"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If non-zero, the URL of each <sgmltag>ULink</sgmltag> will
+appear as a footnote. <emphasis>Not yet implemented!</emphasis>
+</para>
+
+</refsect1>
+</refentry>

@@ -1,0 +1,23 @@
+<refentry id="callouts.extension">
+<refmeta>
+<refentrytitle>callouts.extension</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>callouts.extension</refname>
+<refpurpose>Enable the callout extension</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='callouts.extension.frag'><xsl:param name="callouts.extension" select="'1'"/></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>The callouts extension processes <sgmltag>areaset</sgmltag>
+elements in <sgmltag>ProgramListingCO</sgmltag> and other text-based
+callout elements.
+</para>
+
+</refsect1>
+</refentry>

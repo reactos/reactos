@@ -1,0 +1,22 @@
+<refentry id="title.font.family">
+<refmeta>
+<refentrytitle>title.font.family</refentrytitle>
+
+</refmeta>
+<refnamediv>
+<refname>title.font.family</refname>
+<refpurpose>The default font family for titles</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='title.font.family.frag'><xsl:param name="title.font.family">Helvetica</xsl:param></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>The title font family is used for titles (chapter, section, figure,
+etc.)
+</para>
+
+</refsect1>
+</refentry>

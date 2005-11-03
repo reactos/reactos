@@ -1,0 +1,18 @@
+2002-05-15  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* xsl2profile.xsl: Hopefully fixed bug #549736. Single-pass profiling should also work in FO stylesheet from now.
+
+2002-03-18  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* strip-attributes.xsl: New file.
+
+2002-03-03  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* profile-mode.xsl: Added new stylesheet parameters for profiling.
+
+	* profile.xsl: New file.
+
+2002-03-01  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* profile-mode.xsl, xsl2profile.xsl: New file.
+

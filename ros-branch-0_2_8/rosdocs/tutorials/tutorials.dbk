@@ -1,0 +1,101 @@
+<?xml version="1.0"?>
+<!DOCTYPE book PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+"http://www.oasis-open.org/docbook/xml/4.0/docbookx.dtd" [
+  <!ENTITY whyandhow SYSTEM "user/intro/whyandhow.xml">
+  <!ENTITY license SYSTEM "user/intro/license.xml">
+  <!ENTITY organizational SYSTEM "user/intro/organizational.xml">
+  <!ENTITY installiso SYSTEM "user/intro/installiso.xml">
+  <!ENTITY installbin SYSTEM "user/intro/installbin.xml">
+  <!ENTITY testbin SYSTEM "user/intro/testbin.xml">
+  <!ENTITY compilesrc SYSTEM "dev/newdev/compilesrc.xml">
+  <!ENTITY cdpack SYSTEM "dev/advandev/cdpack.xml">
+  <!ENTITY archoverview SYSTEM "dev/advandev/archoverview.xml">
+  <!ENTITY win32wine SYSTEM "dev/advandev/win32wine.xml">
+  <!ENTITY introbochs SYSTEM "dev/bochtest/introbochs.xml">
+  <!ENTITY getbochs SYSTEM "dev/bochtest/getbochs.xml">
+  <!ENTITY bochscyc SYSTEM "dev/bochtest/bochscyc.xml">
+  <!ENTITY introvmware SYSTEM "dev/vmware/introvmware.xml">
+  <!ENTITY wineconf SYSTEM "history/2002/wineconf.xml">
+]>
+<set>
+  <title>Tutorials for ReactOS</title>
+  <setinfo>
+    <corpauthor>ReactOS Development Team</corpauthor>
+  </setinfo>
+  <book>
+    <title>User Tutorials</title>
+    <part>
+      <title>Introduction</title>
+      &whyandhow;
+      &license;
+      &organizational;
+      <chapter>
+        <title>About ReactOS</title>
+      </chapter>
+      &installiso;
+      &installbin;
+      &testbin;
+      <chapter>
+        <title>Where to go from here (newbie user)</title>
+      </chapter>
+    </part>
+  </book>
+  <book>
+    <title>Developer Tutorials</title>
+    <part>
+      <title>Newbie Developer</title>
+      <chapter>
+        <title>Introduction to ReactOS development</title>
+      </chapter>
+      &compilesrc;
+      <chapter>
+        <title>Testing your compiled ReactOS code</title>
+      </chapter>
+      <chapter>
+        <title>Updating your tree with the latest code</title>
+      </chapter>
+      <chapter>
+        <title>Where to go from here (newbie developer)</title>
+      </chapter>
+    </part>
+    <part>
+      <title>Advanced Developer</title>
+      &cdpack;
+      &archoverview;
+      &win32wine;
+    </part>
+    <part>
+      <title>Bochs testing</title>
+      &introbochs;
+      <title>Downloading and Using Bochs with ReactOS</title>
+      &getbochs;
+      <title>The compile, test and debug cycle under Bochs</title>
+      &bochscyc;
+    </part>
+    <part>
+      <title>VMware Testing</title>
+      &introvmware;
+    </part>
+  </book>
+  <book>
+    <title>Historical</title>
+    <part>
+      <title>2002</title>
+      &wineconf;
+    </part>
+  </book>
+</set>
+<!--
+<artheader>
+   <title>Tutorials for ReactOS</title>
+   <author>
+      <firstname>Jason</firstname>
+      <surname>Filby</surname>
+      <affiliation>
+        <address>
+          <email>jasonfilby@yahoo.com</email>
+        </address>
+      </affiliation>
+   </author>
+</artheader>
+-->

@@ -1,0 +1,54 @@
+<refentry id="generate.id.attributes">
+<refmeta>
+<refentrytitle>generate.id.attributes</refentrytitle>
+<refmiscinfo role="type"></refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>generate.id.attributes</refname>
+<refpurpose></refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='generate.id.attributes.frag'>
+<xsl:param name="generate.id.attributes" select="0"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If non-zero, the HTML stylesheet will generate ID attributes on
+containers. For example, the markup:</para>
+
+<screen><![CDATA[<section id="foo"><title>Some Title</title>
+<para>Some para.</para>
+</section>]]></screen>
+
+<para>might produce:</para>
+
+<screen><![CDATA[<div class="section" id="foo">
+<h2>Some Title</h2>
+<p>Some para.</p>
+</div>]]></screen>
+
+<para>The alternative is to generate anchors:</para>
+
+<screen><![CDATA[<div class="section">
+<h2><a name="foo"></a>Some Title</h2>
+<p>Some para.</p>
+</div>]]></screen>
+
+<para>Because the <sgmltag class="attribute">name</sgmltag> attribute of
+the <sgmltag>a</sgmltag> element and the <sgmltag class="attribute">id</sgmltag>
+attribute of other tags are both of type <quote>ID</quote>, producing both
+generates invalid documents.</para>
+
+<para>As of version 1.50, you can use this switch to control which type of
+identifier is generated. For backwards-compatibility, generating
+<sgmltag>a</sgmltag> anchors is preferred.</para>
+
+<para>Note: at present, this switch is incompletely implemented.
+Disabling ID attributes will suppress them, but enabling ID attributes
+will not suppress the anchors.</para>
+
+</refsect1>
+</refentry>

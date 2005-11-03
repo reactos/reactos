@@ -1,0 +1,81 @@
+<!-- iso-num.ent (initially distributed with DocBook XML DTD V4.1.1beta1) -->
+
+<!-- Derived from the corresponding ISO 8879 standard entity set
+     and the Unicode character mappings provided by Sebastian Rahtz -->
+
+<!ENTITY half	"&#x00BD;"> <!-- VULGAR FRACTION ONE HALF -->
+<!ENTITY frac12	"&#x00BD;"> <!-- VULGAR FRACTION ONE HALF -->
+<!ENTITY frac14	"&#x00BC;"> <!-- VULGAR FRACTION ONE QUARTER -->
+<!ENTITY frac34	"&#x00BE;"> <!-- VULGAR FRACTION THREE QUARTERS -->
+<!ENTITY frac18	"&#x215B;"> <!--  -->
+<!ENTITY frac38	"&#x215C;"> <!--  -->
+<!ENTITY frac58	"&#x215D;"> <!--  -->
+<!ENTITY frac78	"&#x215E;"> <!--  -->
+<!ENTITY sup1	"&#x00B9;"> <!-- SUPERSCRIPT ONE -->
+<!ENTITY sup2	"&#x00B2;"> <!-- SUPERSCRIPT TWO -->
+<!ENTITY sup3	"&#x00B3;"> <!-- SUPERSCRIPT THREE -->
+<!ENTITY plus	"&#x002B;"> <!-- PLUS SIGN -->
+<!ENTITY plusmn	"&#x00B1;"> <!-- PLUS-MINUS SIGN -->
+<!ENTITY lt	"&#38;#60;"> <!-- LESS-THAN SIGN -->
+<!ENTITY equals	"&#x003D;"> <!-- EQUALS SIGN -->
+<!ENTITY gt	"&#x003E;"> <!-- GREATER-THAN SIGN -->
+<!ENTITY divide	"&#x00F7;"> <!-- DIVISION SIGN -->
+<!ENTITY times	"&#x00D7;"> <!-- MULTIPLICATION SIGN -->
+<!ENTITY curren	"&#x00A4;"> <!-- CURRENCY SIGN -->
+<!ENTITY pound	"&#x00A3;"> <!-- POUND SIGN -->
+<!ENTITY dollar	"&#x0024;"> <!-- DOLLAR SIGN -->
+<!ENTITY cent	"&#x00A2;"> <!-- CENT SIGN -->
+<!ENTITY yen	"&#x00A5;"> <!-- YEN SIGN -->
+<!ENTITY num	"&#x0023;"> <!-- NUMBER SIGN -->
+<!ENTITY percnt	"&#x0025;"> <!-- PERCENT SIGN -->
+<!ENTITY amp	"&#38;#38;"> <!-- AMPERSAND -->
+<!ENTITY ast	"&#x002A;"> <!-- ASTERISK OPERATOR -->
+<!ENTITY commat	"&#x0040;"> <!-- COMMERCIAL AT -->
+<!ENTITY lsqb	"&#x005B;"> <!-- LEFT SQUARE BRACKET -->
+<!ENTITY bsol	"&#x005C;"> <!-- REVERSE SOLIDUS -->
+<!ENTITY rsqb	"&#x005D;"> <!-- RIGHT SQUARE BRACKET -->
+<!ENTITY lcub	"&#x007B;"> <!-- LEFT CURLY BRACKET -->
+<!ENTITY horbar	"&#x2015;"> <!-- HORIZONTAL BAR -->
+<!ENTITY verbar	"&#x007C;"> <!-- VERTICAL LINE -->
+<!ENTITY rcub	"&#x007D;"> <!-- RIGHT CURLY BRACKET -->
+<!ENTITY micro	"&#x00B5;"> <!-- MICRO SIGN -->
+<!ENTITY ohm	"&#x2126;"> <!-- OHM SIGN -->
+<!ENTITY deg	"&#x00B0;"> <!-- DEGREE SIGN -->
+<!ENTITY ordm	"&#x00BA;"> <!-- MASCULINE ORDINAL INDICATOR -->
+<!ENTITY ordf	"&#x00AA;"> <!-- FEMININE ORDINAL INDICATOR -->
+<!ENTITY sect	"&#x00A7;"> <!-- SECTION SIGN -->
+<!ENTITY para	"&#x00B6;"> <!-- PILCROW SIGN -->
+<!ENTITY middot	"&#x00B7;"> <!-- MIDDLE DOT -->
+<!ENTITY larr	"&#x2190;"> <!-- LEFTWARDS DOUBLE ARROW -->
+<!ENTITY rarr	"&#x2192;"> <!-- RIGHTWARDS DOUBLE ARROW -->
+<!ENTITY uarr	"&#x2191;"> <!-- UPWARDS ARROW -->
+<!ENTITY darr	"&#x2193;"> <!-- DOWNWARDS ARROW -->
+<!ENTITY copy	"&#x00A9;"> <!-- COPYRIGHT SIGN -->
+<!ENTITY reg	"&#x00AE;"> <!-- REG TRADE MARK SIGN -->
+<!ENTITY trade	"&#x2122;"> <!-- TRADE MARK SIGN -->
+<!ENTITY brvbar	"&#x00A6;"> <!-- BROKEN BAR -->
+<!ENTITY not	"&#x00AC;"> <!-- NOT SIGN -->
+<!ENTITY sung	"&#x2669;"> <!--  -->
+<!ENTITY excl	"&#x0021;"> <!-- EXCLAMATION MARK -->
+<!ENTITY iexcl	"&#x00A1;"> <!-- INVERTED EXCLAMATION MARK -->
+<!ENTITY quot	"&#x0022;"> <!-- QUOTATION MARK -->
+<!ENTITY apos	"&#x0027;"> <!-- APOSTROPHE -->
+<!ENTITY lpar	"&#x0028;"> <!-- LEFT PARENTHESIS -->
+<!ENTITY rpar	"&#x0029;"> <!-- RIGHT PARENTHESIS -->
+<!ENTITY comma	"&#x002C;"> <!-- COMMA -->
+<!ENTITY lowbar	"&#x005F;"> <!-- LOW LINE -->
+<!ENTITY hyphen	"&#x002D;"> <!-- HYPHEN-MINUS -->
+<!ENTITY period	"&#x002E;"> <!-- FULL STOP -->
+<!ENTITY sol	"&#x002F;"> <!-- SOLIDUS -->
+<!ENTITY colon	"&#x003A;"> <!-- COLON -->
+<!ENTITY semi	"&#x003B;"> <!-- SEMICOLON -->
+<!ENTITY quest	"&#x003F;"> <!-- QUESTION MARK -->
+<!ENTITY iquest	"&#x00BF;"> <!-- INVERTED QUESTION MARK -->
+<!ENTITY laquo	"&#x00AB;"> <!-- LEFT-POINTING DOUBLE ANGLE QUOTATION MARK -->
+<!ENTITY raquo	"&#x00BB;"> <!-- RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK -->
+<!ENTITY lsquo	"&#x2018;"> <!--  -->
+<!ENTITY rsquo	"&#x2019;"> <!-- RIGHT SINGLE QUOTATION MARK -->
+<!ENTITY ldquo	"&#x201C;"> <!--  -->
+<!ENTITY rdquo	"&#x201D;"> <!-- RIGHT DOUBLE QUOTATION MARK -->
+<!ENTITY nbsp	"&#x00A0;"> <!-- NO-BREAK SPACE -->
+<!ENTITY shy	"&#x00AD;"> <!-- SOFT HYPHEN -->

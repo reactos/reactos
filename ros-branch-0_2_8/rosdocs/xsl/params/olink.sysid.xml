@@ -1,0 +1,20 @@
+<refentry id="olink.sysid">
+<refmeta>
+<refentrytitle>olink.sysid</refentrytitle>
+<refmiscinfo role="type">string</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>olink.sysid</refname>
+<refpurpose>Names the system identifier portion of an OLink resolver query</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='olink.sysid.frag'><xsl:param name="olink.sysid" select="'sysid='"/></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>FIXME:</para>
+
+</refsect1>
+</refentry>

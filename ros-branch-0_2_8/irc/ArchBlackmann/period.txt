@@ -1,0 +1,11 @@
+minute
+hour
+day
+week
+fortnight
+month
+year
+decade
+century
+millenium
+eon

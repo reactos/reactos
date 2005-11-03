@@ -1,0 +1,1086 @@
+<HTML>
+<HEAD>
+   <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
+   <META NAME="Author" CONTENT="Mike Gleason">
+   <META NAME="GENERATOR" CONTENT="Mozilla/4.03 [en] (WinNT; I) [Netscape]">
+   <TITLE>sio: SocketIO Library</TITLE>
+</HEAD>
+<BODY BGCOLOR="#FFFFFF">
+
+<H1>
+SocketIO Library Documentation</H1>
+
+<UL>
+<LI>
+<A HREF="#Introduction">Introduction</A></LI>
+
+<LI>
+<A HREF="#Installation">Installation</A></LI>
+
+<LI>
+<A HREF="#Functions">Function Reference</A></LI>
+
+<LI>
+<A HREF="#Sample">Sample Code</A></LI>
+</UL>
+The purpose of the <I>SocketIO Library</I> (<I>sio</I> for short) is to
+provide a safe and consistent wrapper interface to a BSD Sockets implementation.&nbsp;
+The library also takes steps to protect against a few common pitfalls that
+plague poorly written BSD Sockets programs.&nbsp; Specifically, it was
+designed to do the following:
+
+
+<UL>
+<LI>
+Take care of reading and writing the full operation.
+
+<P><FONT SIZE=-1>For example, a network <TT>write()</TT> for 50 bytes may
+only write 30 bytes; <I>Sio</I> would continue writing until all 50 bytes
+have been sent.</FONT>
+<P></LI>
+
+<LI>
+<P>
+Allow operations that would normally block can be set to timeout after
+a customizable period of time.<P></LI>
+
+<LI>
+<P>
+Catch the SIGPIPE signal which would cause an unexpecting process to exit.<P>
+
+<P><FONT SIZE=-1>A frequent source of problems for beginning programmers
+is the situation where their process is suddenly no longer running because
+a write to a socket caused a broken pipe.  This problem can be difficult
+to diagnose if the process is running as a daemon process in the background.</FONT>
+<P>
+</LI>
+
+<LI>
+<P>
+Resume operation when system calls are interrupted (operations errout
+with <TT>EINTR</TT>).<P></LI>
+
+<LI>
+<P>
+Cater to the internet socket interface (i.e. <TT>struct sockaddr_in</TT>).<P></LI>
+
+<LI>
+<P>
+Simplified interface to name service.
+
+
+<P><FONT SIZE=-1>Library routines can take a textual address specification
+instead of you having to prepare a <TT>struct sockaddr_in</TT>.</FONT>
+<P>
+</LI>
+
+</UL>
+The library was written by Mike Gleason.  The first incarnation dates
+back to some time in 1992. The library may be used and distributed
+freely, as long as you give due credit.
+<P>
+<H3>
+<A NAME="Introduction"></A>Introduction</H3>
+The reader is assumed to be familiar with BSD Sockets.&nbsp; An excellent
+source of information is W. Richard Stevens' <U>UNIX Network Programming,
+Volume 1, Second Edition: Networking APIs: Sockets and XTI</U>, Prentice
+Hall, 1998, ISBN 0-13-490012-X.
+<BR>&nbsp;
+<H4>
+<A NAME="Connection_modes"></A>Connection modes</H4>
+A communications exchange between two end-points can be connection-oriented
+or connectionless.&nbsp; An connection-oriented exchange is characterized
+by a connection establishment, a series of messages, and a disconnection.&nbsp;
+A connectionless exchange is characterized by one or more independent messages.&nbsp;
+An analogy to a connection-oriented exchange would be a telephone call
+where one party establishes a connection to another, and a conversation
+ensues.&nbsp; A connectionless exchange analogy would be a letter sent
+via the postal service -- even if a writer sends two letters to the same
+recipient, each letter is transported independently.
+<BR>&nbsp;
+<H4>
+<A NAME="Message_modes"></A>Message modes</H4>
+For the <I>sio</I> library, all connection-oriented exchanges are data
+streams using the <I>TCP/IP</I> protocol.&nbsp; After connection establishment,
+the conversation consists of one long sequence of data bytes, which is
+known as a <I>stream</I>.&nbsp; Therefore there is no concept of a record
+boundary associated with a stream connection at the transport level, although
+often there is a record associated over the stream at the application level.&nbsp;
+The important thing here is to realize that there is no flow control associated
+with the stream, so although the data bytes are guaranteed to arrive in
+order, there is no guarantee that messages will be read in the same size
+blocks as they were originally written.
+
+<P>For connectionless exchanges, <I>sio</I> uses the <I>UDP/IP</I> protocol's
+datagram messages.&nbsp; There is an implicit definition of a record boundary,
+because each message is treated as a record. So, three writes results in
+three separate messages.
+
+<P>For example, let's say a sender writes three 50-byte messages.&nbsp;
+If a receiver does a 20-byte read followed by 100-byte read followed by
+a 50-byte read, the receiver would get the first 20 bytes of the first
+message, 50 of 50 bytes of the second message, and 50 of 50 bytes of the
+third message.&nbsp; It's important to understand that in the first read
+that since UDP datagrams are message oriented that the remaining 30 bytes
+of the first message are lost, and that although the second read is for
+100 bytes, the read immediately returns as finished even though only 50
+bytes were actually read.
+
+<P>With UDP datagrams, there are also other important implications that
+affect message ordering, duplication, and overall reliability.
+<BR>&nbsp;
+<H4>
+<A NAME="Creating_and_disposing"></A>Creating and disposing sockets</H4>
+A socket is an I/O descriptor that is associated with one side of a communications
+exchange.&nbsp; A socket must be either a client or a server, although
+after communications is established the difference is arbitrary.&nbsp;
+A server socket is one that waits for contact to be initiated by a client
+on a mutually agreed upon address and port number.&nbsp; A client socket
+initiates the first communication by sending to an existing server socket.&nbsp;
+Client and server sockets may of course be on different machines, and different
+networks altogether.
+
+<P>A stream server socket is created using <TT><A HREF="#SNewStreamServer">SNewStreamServer()</A></TT>,
+which returns a socket file descriptor ready to accept new client connections.&nbsp;
+After a socket descriptor is obtained, your server program can then use
+<TT><A HREF="#SAccept">SAccept()</A></TT> to establish a connection with
+a client.
+
+<P>A stream client socket is created using <TT><A HREF="#SNewStreamClient">SNewStreamClient()</A></TT>.&nbsp;
+After a socket descriptor is obtained, your client program can use <TT><A HREF="#SConnectByName">SConnectByName()</A></TT>
+or <TT><A HREF="#SConnect">SConnect()</A></TT> to initiate a connection
+to a server.
+
+<P>A datagram server socket is created using <TT><A HREF="#SNewDatagramServer">SNewDatagramServer()</A></TT>.&nbsp;
+After a socket descriptor is obtained, it is ready to receive messages
+from clients using <TT><A HREF="#SRecvfrom">SRecvfrom()</A></TT> and reply
+back with <TT><A HREF="#SSendto">SSendto()</A></TT>.
+
+<P>A datagram client socket is created using <TT><A HREF="#SNewDatagramClient">SNewDatagramClient()</A></TT>.&nbsp;
+After a socket descriptor is obtained, it is ready to communicate with
+servers using <TT><A HREF="#SSendto">SSendto()</A></TT> and <TT><A HREF="#SRecvfrom">SRecvfrom()</A></TT>.
+
+<P>All socket descriptors are disposed of with <TT><A HREF="#SClose">SClose()</A></TT>
+when communication is finished.
+<BR>&nbsp;
+<H4>
+<A NAME="SocketIO"></A>Socket I/O</H4>
+A stream connection uses <TT><A HREF="#SRead">SRead()</A></TT> to receive
+data from the stream and <TT><A HREF="#SWrite">SWrite()</A></TT> to send
+data.&nbsp; A datagram socket should use <TT><A HREF="#SRecvfrom">SRecvfrom()</A></TT>
+to read a message and <TT><A HREF="#SSendtoByName">SSendtoByName()</A></TT>
+or <TT><A HREF="#SSendto">SSendto()</A></TT> to send a message.&nbsp; Since
+each datagram communication is independent, these routines use an address
+specifier along with each call.
+<BR>&nbsp;
+<H3>
+<A NAME="Installation"></A>Installation</H3>
+First, unpack the archive. If the package arrived as a '.tar.gz' or '.tgz'
+file, you need to run gunzip, and then tar to extract the source files.
+You can do that in one shot by doing "<TT>gunzip -c sio.tgz | tar xvf -</TT>".
+If the package you have is a '.tar' file you can use "<TT>tar xvf sio.tar</TT>".
+If the package you have is a '.zip' file you can use "<TT>unzip sio.zip</TT>"
+or "<TT>pkunzip sio.zip</TT>".
+
+<P>Now go to the "<TT>sio</TT>" directory you just made. There is a script
+you must run which will checks your system for certain features, so that
+the library can be compiled on a variety of U<FONT SIZE=-1>NIX</FONT> systems.
+Run this script by typing "<TT>sh ./configure</TT>" in that directory.
+After that, you can look at the <TT>Makefile</TT> it made if you like,
+and then you run "<TT>make</TT>" to create the "<TT>libsio.a</TT>" library
+file.
+
+<P>Finally, install the library and headers. You can manually copy the
+files, or you can run "<TT>make install</TT>" to copy the files for you.
+If you choose to "<TT>make install</TT>" you may want to edit the <TT>Makefile</TT>
+if you do not want to install to the <TT>/usr/local</TT> tree.
+<BR>&nbsp;
+<H3>
+<A NAME="Functions"></A>Function Reference</H3>
+
+<UL>
+<table width="100%">
+	<tr>
+		<td><A HREF="#AddrStrToAddr">AddrStrToAddr</A></td>
+		<td><A HREF="#SConnectByName">SConnectByName</A></td>
+		<td><A HREF="#SSendtoByName">SSendtoByName</A></td>
+	</tr>
+	<tr>
+		<td><A HREF="#AddrToAddrStr">AddrToAddrStr</A></td>
+		<td><A HREF="#SListen">SListen</A></td>
+		<td><A HREF="#SWrite">SWrite</A></td>
+	</tr>
+	<tr>
+		<td><A HREF="#DisposeSReadlineInfo">DisposeSReadlineInfo</A></td>
+		<td><A HREF="#SNewDatagramClient">SNewDatagramClient</A></td>
+		<td><A HREF="#SelectR">SelectR</A></td>
+	</tr>
+	<tr>
+		<td><A HREF="#FlushSReadlineInfo">FlushSReadlineInfo</A></td>
+		<td><A HREF="#SNewDatagramServer">SNewDatagramServer</A></td>
+		<td><A HREF="#SelectSetAdd">SelectSetAdd</A></td>
+	</tr>
+	<tr>
+		<td><A HREF="#GetSocketBufSize">GetSocketBufSize</A></td>
+		<td><A HREF="#SNewStreamClient">SNewStreamClient</A></td>
+		<td><A HREF="#SelectSetInit">SelectSetInit</A></td>
+	</tr>
+	<tr>
+		<td><A HREF="#GetSocketLinger">GetSocketLinger</A></td>
+		<td><A HREF="#SNewStreamServer">SNewStreamServer</A></td>
+		<td><A HREF="#SelectSetRemove">SelectSetRemove</A></td>
+	</tr>
+	<tr>
+		<td><A HREF="#GetSocketNagleAlgorithm">GetSocketNagleAlgorithm</A></td>
+		<td><A HREF="#SRead">SRead</A></td>
+		<td><A HREF="#SelectW">SelectW</A></td>
+	</tr>
+	<tr>
+		<td><A HREF="#InitSReadlineInfo">InitSReadlineInfo</A></td>
+		<td><A HREF="#SReadline">SReadline</A></td>
+		<td><A HREF="#Sendto">Sendto</A></td>
+	</tr>
+	<tr>
+		<td><A HREF="#SAcceptA">SAcceptA</A></td>
+		<td><A HREF="#SRecv">SRecv</A></td>
+		<td><A HREF="#SendtoByName">SendtoByName</A></td>
+	</tr>
+	<tr>
+		<td><A HREF="#SAcceptS">SAcceptS</A></td>
+		<td><A HREF="#SRecvfrom">SRecvfrom</A></td>
+		<td><A HREF="#SetSocketBufSize">SetSocketBufSize</A></td>
+	</tr>
+	<tr>
+		<td><A HREF="#SBind">SBind</A></td>
+		<td><A HREF="#SRecvmsg">SRecvmsg</A></td>
+		<td><A HREF="#SetSocketLinger">SetSocketLinger</A></td>
+	</tr>
+	<tr>
+		<td><A HREF="#SClose">SClose</A></td>
+		<td><A HREF="#SSend">SSend</A></td>
+		<td><A HREF="#SetSocketNagleAlgorithm">SetSocketNagleAlgorithm</A></td>
+	</tr>
+	<tr>
+		<td><A HREF="#SConnect">SConnect</A></td>
+		<td><A HREF="#SSendto">SSendto</A></td>
+	</tr>
+</table>
+</UL>
+
+<H5>
+<A NAME="AddrStrToAddr"></A>AddrStrToAddr</H5>
+<TT>int</TT> <TT>AddrStrToAddr(const char * const s, struct sockaddr_in
+* const sa, const int defaultPort);</TT>
+
+<P>This takes a textual internet address specification and converts it
+to a <TT>struct sockaddr_in</TT>.&nbsp; An address string may be any of
+the following forms:
+<UL>
+<LI>
+<TT>hostname:port</TT></LI>
+
+<LI>
+<TT>service://hostname</TT></LI>
+
+<LI>
+<TT>service://hostname:port</TT></LI>
+
+<LI>
+<TT>service://hostname[/more/junk/which/is/ignored/]</TT></LI>
+
+<LI>
+<TT>port@hostname</TT></LI>
+</UL>
+Additionally, the <I>hostname</I> may be a name or an IP address string
+(i.e. <TT>192.168.1.13</TT>).
+
+<P>If the string contains a hostname but a port number does not appear
+to be present and the <I>defaultPort</I> parameter is greater than zero,
+then the address structure will use <I>defaultPort</I> as the port number.
+
+<P>The function returns a negative number if the string could not be converted,
+such as the case where the hostname was not found in the name service.
+Name service is not used unless there is a name instead of an IP address,
+so if you don't want to use name service, only use IP addresses.
+
+<P><I>Example</I>:
+<UL>
+<PRE>struct sockaddr_in addr;
+int result;
+
+result = AddrStrToAddr("ftp.probe.net", &amp;addr, 21);
+result = AddrStrToAddr("ftp.probe.net:21", &amp;addr, 21);
+result = AddrStrToAddr("206.28.166.234:21", &amp;addr, 21);
+result = AddrStrToAddr("ftp://ftp.probe.net", &amp;addr, 0);
+result = AddrStrToAddr("21@ftp.probe.net", &amp;addr, 0);</PRE>
+</UL>
+
+<UL>
+<PRE></PRE>
+</UL>
+
+<H5>
+<A NAME="#AddrToAddrStr"></A>AddrToAddrStr</H5>
+<TT>char *AddrToAddrStr(char *const dst, size_t dsize, struct sockaddr_in
+* const saddrp, int dns, const char *fmt);</TT>
+
+<P>This function takes a <TT>struct sockaddr_in</TT> and converts into
+a readable internet textual address.
+
+<P>The <I>dns</I> parameter specifies if name service should be used to
+lookup the symbolic hostname from the raw address.&nbsp; If zero, it expresses
+the raw IP address in the standard dotted-decimal format, like 192.168.1.13.
+
+<P>The <I>fmt</I> parameter is a magic cookie string, with the following
+cookies:
+<UL>
+<LI>
+<TT>%h</TT> = hostname</LI>
+
+<LI>
+<TT>%p</TT> = port number</LI>
+
+<LI>
+<TT>%s</TT> = service name (based off of the port number)</LI>
+</UL>
+This lets you print the address in just about any way you like.&nbsp; The
+<I>dst</I> parameter is the string to write the results to, and is always
+null-terminated.&nbsp; The <I>dst</I> parameter is also returned as the
+result of the function.
+
+<P><I>Example</I>:
+<UL>
+<PRE>char str[128];
+
+fputs(AddrToAddrStr(str, sizeof(str), &amp;sin, 1, "%h"), stdout);
+fputs(AddrToAddrStr(str, sizeof(str), &amp;sin, 1, "%h:%p"), stdout);
+fputs(AddrToAddrStr(str, sizeof(str), &amp;sin, 1, "%s://%h"), stdout);</PRE>
+</UL>
+
+<H5>
+<A NAME="#DisposeSReadlineInfo"></A>DisposeSReadlineInfo</H5>
+<TT>void DisposeSReadlineInfo(SReadlineInfo *srl);</TT>
+
+<P>This function is used to dispose of a <TT>SReadlineInfo</TT> structure
+that was created using <TT><A HREF="#InitSReadlineInfo">InitSReadlineInfo()</A></TT>.&nbsp;
+You're required to use this to free dynamically allocated buffers it creates
+unless you specified that you wanted to use your own buffer, in which case
+it's optional (but recommended for clarity).
+<H5>
+<A NAME="#FlushSReadlineInfo"></A>FlushSReadlineInfo</H5>
+<TT>void FlushSReadlineInfo(SReadlineInfo *srl);</TT>
+
+<P>This rarely used function is used to reset and clear the buffer used
+by <TT><A HREF="#SReadline">SReadline()</A></TT>.&nbsp; It acts similarly
+to a <TT>fflush(stdin)</TT>.
+<H5>
+<A NAME="#GetSocketBufSize"></A>GetSocketBufSize</H5>
+<TT>int GetSocketBufSize(int sockfd, size_t *const rsize, size_t *const
+ssize);</TT>
+
+<P>This utility routine returns the size of the socket's internal buffers,
+as maintained by the kernel (or socket library).&nbsp; It does this by
+calling <TT>getsockopt()</TT> with the <TT>SO_RCVBUF</TT> and <TT>SO_SNDBUF</TT>
+options, if they are defined.&nbsp; In the event they aren't defined, it
+returns a negative result code.
+
+<P><I>Example</I>:
+<UL>
+<PRE>size_t rsize, ssize;
+
+if (GetSocketBufSize(sockfd, &amp;rsize, &amp;ssize) == 0) ...</PRE>
+</UL>
+
+<H5>
+<A NAME="#GetSocketLinger"></A>GetSocketLinger</H5>
+<TT>int GetSocketLinger(const int fd, int *const lingertime);</TT>
+
+<P>This utility routine returns whether linger mode has been turned on,
+and also sets the amount of time in the <I>lingertime</I> parameter.
+
+<P><I>Example</I>:
+<UL>
+<PRE>int lingertime;
+
+if (GetSocketLinger(sockfd, &amp;lingtime) > 0)
+&nbsp;&nbsp;&nbsp; /* linger is on... */ ...;</PRE>
+</UL>
+
+<H5>
+<A NAME="#GetSocketNagleAlgorithm"></A>GetSocketNagleAlgorithm</H5>
+<TT>int GetSocketNagleAlgorithm(const int fd);</TT>
+
+<P>This utility routine returns whether the <I>Nagle Algorithm</I> is in
+effect (<TT>TCP_NODELAY</TT> mode not on).
+<H5>
+<A NAME="#InitSReadlineInfo"></A>InitSReadlineInfo</H5>
+<TT>int InitSReadlineInfo(SReadlineInfo *srl, int sockfd, char *buf, size_t
+bsize, int tlen);</TT>
+
+<P>This function is used to prepare a <TT>SReadlineInfo</TT> structure
+for use with the <TT><A HREF="#SReadline">SReadline()</A></TT> function.&nbsp;
+The <I>sockfd</I> parameter specifies the socket that will be used for
+line buffering.&nbsp; The <I>sio</I> library does not open or close this
+socket.
+
+<P>The buf parameter is the area of memory to use for buffering; it should
+be large enough to hold several lines of data.&nbsp; If <I>buf</I> is NULL,
+the function will <TT>malloc()</TT> one of <I>bsize</I> bytes, otherwise
+it is assumed that buf is maintained by you and is of size <I>bsize</I>
+bytes.&nbsp; If you let <I>sio</I> <TT>malloc()</TT> this buffer, you must
+also use <TT><A HREF="#DisposeSReadlineInfo">DisposeSReadlineInfo()</A></TT>
+to free it when you're finished with it.
+
+<P>The <I>tlen</I> parameter is the timeout value (in seconds) to use for
+each call of <TT><A HREF="#SReadline">SReadline()</A></TT>.
+
+<P><I>Example</I>:
+<UL>
+<PRE>SReadlineInfo sri;
+char localbuf[2048];
+
+if (InitSReadlineInfo(&amp;sri, sockfd, NULL, 512, 10) &lt; 0)
+&nbsp;&nbsp;&nbsp; perror("malloc 512 bytes failed");
+...or...
+(void) InitSReadlineInfo(&amp;sri, sockfd, localbuf, sizeof(localbuf), 10);</PRE>
+</UL>
+
+<H5>
+<A NAME="SAccept"></A>SAccept</H5>
+<TT>int SAccept(int sfd, struct sockaddr_in *const addr, int tlen);</TT>
+
+<P>This is does an <TT>accept()</TT>, with a timeout of <I>tlen</I> seconds
+(<I>tlen</I> may be zero to mean block indefinitely).&nbsp; If no new connection
+is accepted, <TT>kTimeoutErr</TT> is returned, otherwise a new socket or
+(-1) is returned.&nbsp; The socket is still usable if a timeout occurred,
+so you can call <TT>SAccept()</TT> again.
+<H5>
+<A NAME="#SBind"></A>SBind</H5>
+<TT>int SBind(int sockfd, const int port, const int nTries, const int reuseFlag);</TT>
+
+<P>This calls <TT>bind()</TT>, to the wildcard address with the specified
+<I>port </I>(not in network byte order).&nbsp; The <I>nTries</I> parameter
+tells how many attempts it tries before giving up (which is useful if other
+processes are grabbing the same port number).&nbsp; If the <I>reuseFlag</I>
+parameter is non-zero, <TT>SBind()</TT> tries to turn on the <TT>SO_REUSEADDR</TT>
+(and <TT>SO_REUSEPORT</TT>, if available) socket options before binding.
+
+<P>Normally you will not call this function directly, since <TT><A HREF="#SNewStreamServer">SNewStreamServer()</A></TT>
+and <TT><A HREF="#SNewDatagramServer">SNewDatagramServer()</A></TT> do
+this for you.
+<H5>
+<A NAME="#SClose"></A>SClose</H5>
+<TT>int SClose(int sfd, int tlen);</TT>
+
+<P>This is <TT>close()</TT> with a timeout of <I>tlen</I> seconds.&nbsp;
+Normally you don't need to worry about <TT>close()</TT> blocking, but if
+you have turned on linger mode, <TT>close()</TT> could block.&nbsp; <TT>SClose()</TT>
+calls <TT>close()</TT> for up to <I>tlen</I> seconds, and if the timeout
+expires, it calls <TT>shutdown()</TT> on the socket.
+<H5>
+<A NAME="#SConnect"></A>SConnect</H5>
+<TT>int SConnect(int sfd, const struct sockaddr_in *const addr, int tlen);</TT>
+
+<P>This is <TT>connect()</TT> with a timeout of <I>tlen</I> seconds (<I>tlen</I>
+may be zero to mean block indefinitely).&nbsp; If it returns (-1) or <TT>kTimeoutErr</TT>,
+the socket is no longer usable and must be closed.
+<H5>
+<A NAME="#SConnectByName"></A>SConnectByName</H5>
+<TT>int SConnectByName(int sfd, const char * const addrStr, const int tlen);</TT>
+
+<P>This is <TT>connect()</TT> with a timeout of <I>tlen</I> seconds (<I>tlen</I>
+may be zero to mean block indefinitely).&nbsp; If it returns (-1) or <TT>kTimeoutErr</TT>,
+the socket is no longer usable and must be closed. The difference between
+<TT><A HREF="#SConnect">SConnect()</A></TT> is that this function takes
+a textual address string instead of a <TT>struct sockaddr_in</TT>.
+
+<P><I>Example</I>:
+<UL>
+<PRE>if (SConnectByName(sockfd, "http://www.probe.net", 15) == 0) ...</PRE>
+</UL>
+
+<H5>
+<A NAME="#SListen"></A>SListen</H5>
+<TT>int SListen(int sfd, int backlog);</TT>
+
+<P>This isn't too useful at present, since it just does <TT>listen(sfd,
+backlog)</TT>.&nbsp; And, you will not call this function directly, since
+<TT><A HREF="#SNewStreamServer">SNewStreamServer()</A></TT> and <TT><A HREF="#SNewDatagramServer">SNewDatagramServer()</A></TT>
+do this for you.
+<H5>
+<A NAME="#SNewDatagramClient"></A>SNewDatagramClient</H5>
+<TT>int SNewDatagramClient(void);</TT>
+
+<P>This returns a new datagram socket, which is ready to send (and then
+receive) datagrams.&nbsp; This function is just <TT>socket(AF_INET, SOCK_DGRAM,
+0)</TT>. If successful, it returns a non-negative socket descriptor.
+
+<P><I>Example</I>:
+<UL>
+<PRE>int sockfd;
+
+sockfd = SNewDatagramClient();</PRE>
+</UL>
+
+<H5>
+<A NAME="#SNewDatagramServer"></A>SNewDatagramServer</H5>
+<TT>int SNewDatagramServer(const int port, const int nTries, const int
+reuseFlag);</TT>
+
+<P>This function creates a new socket and binds it to the specified <I>port</I>
+(not in network byte order) on the wildcard address.&nbsp; The <I>nTries</I>
+and <I>reuseFlag</I> are used when it calls <TT><A HREF="#SBind">SBind()</A></TT>.
+If successful, it returns a non-negative socket descriptor.
+
+<P><I>Example</I>:
+<UL>
+<PRE>int sockfd;
+
+sockfd = SNewDatagramServer(13, 3, 0);
+if (sockfd >= 0)
+&nbsp;&nbsp;&nbsp; /* ready to receive requests on the daytime port (13) */</PRE>
+</UL>
+
+<H5>
+<A NAME="#SNewStreamClient"></A>SNewStreamClient</H5>
+<TT>int SNewStreamClient(void);</TT>
+<P>
+This returns a new stream socket, which is ready to <TT><A HREF="#SConnect">SConnect()</A></TT>
+to a server.&nbsp; This function is just <TT>socket(AF_INET, SOCK_STREAM,
+0)</TT>.&nbsp; If successful, it returns a non-negative socket descriptor.
+
+<P><I>Example</I>:
+<UL>
+<PRE>int sockfd;
+
+sockfd = SNewStreamClient();</PRE>
+</UL>
+
+<H5>
+<A NAME="#SNewStreamServer"></A>SNewStreamServer</H5>
+<TT>int SNewStreamServer(const int port, const int nTries, const int reuseFlag,
+int listenQueueSize);</TT>
+
+<P>This function creates a new socket, binds it to the specified <I>port</I>
+(not in network byte order) on the wildcard address, and turns it on for
+listening.&nbsp; The <I>nTries</I> and <I>reuseFlag</I> are used when it
+calls <TT><A HREF="#SBind">SBind()</A></TT>. The <I>listenQueueSize</I>
+is for the <TT>listen()</TT> call.&nbsp; If successful, it returns a non-negative
+socket descriptor.
+
+<P><I>Example</I>:
+<UL>
+<PRE>int sockfd;
+
+sockfd = SNewStreamServer(80, 3, 0);
+if (sockfd >= 0)
+&nbsp;&nbsp;&nbsp; /* ready to accept HTTP connections */</PRE>
+</UL>
+
+<H5>
+<A NAME="#SRead"></A>SRead</H5>
+<TT>int SRead(int sfd, char *const buf0, size_t size, int tlen, int retry);</TT>
+
+<P>This is <TT>read()</TT> on a socket descriptor, with a timeout of <I>tlen</I>
+seconds (<I>tlen</I> must be greater than zero).&nbsp; Like <TT>read()</TT>,
+it can return 0, (-1), or the number of bytes read, but in addition, it
+can also return <TT>kTimeoutErr</TT>.
+
+<P>If <I>retry</I> is set to <TT>kFullBufferRequired</TT>, <TT>SRead()</TT>
+does not return until <I>size</I> bytes has been read or EOF is encountered.&nbsp;
+This is useful if you expect fixed-length records, and it doesn't do much
+good until a complete record has been read. However, it is still possible
+that an EOF is encountered after some bytes have been read, and with <I>retry</I>
+set to <TT>kFullBufferRequired</TT>, you get EOF instead of that partial
+record.&nbsp; If you set retry to <TT>kFullBufferRequiredExceptLast</TT>,
+you get the partial record (and EOF on the next <TT>SRead()</TT>).&nbsp;
+Otherwise, if you should set retry to kFullBufferNotRequired and SRead()
+will return when there is some data read.
+
+<P><I>Example</I>:
+<UL>
+<PRE>int nread;
+char buf[256];
+
+while (1) {
+&nbsp;&nbsp;&nbsp; nread = SRead(sockfd, buf, sizeof(buf), 15, kFullBufferNotRequired);
+&nbsp;&nbsp;&nbsp; if (nread &lt;= 0) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (nread == 0)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; break;&nbsp;&nbsp;&nbsp; /* okay, EOF */
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (nread == kTimeoutErr) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; fprintf(stderr, "timed-out\n");
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; break;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; } else {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; perror("read");
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }
+&nbsp;&nbsp;&nbsp; }
+&nbsp;&nbsp;&nbsp; (void) write(1, buf, nread);
+}</PRE>
+</UL>
+
+<H5>
+<A NAME="#SReadline"></A>SReadline</H5>
+<TT>int SReadline(SReadlineInfo *srl, char *const linebuf, size_t linebufsize);</TT>
+
+<P>It is often desirable to process data from sockets line by line, however
+this is cumbersome to do on a socket descriptor.&nbsp; The <TT>SReadline()</TT>
+function allows you to do this, so you can do one call of the function
+and get back a line of input.&nbsp; It accomplishes this much the same
+way the standard library's I/O routines do this, using a buffer.&nbsp;
+However, it is usually not possible to determine if the standard library
+takes the same special I/O measures on socket descriptors that sio does,
+so using the standard library function <TT>fdopen()</TT> with a socket
+descriptor may or may not work the way you want.
+
+<P><TT>SReadline()</TT> needs to maintain state information for each call,
+so a data structure is required.&nbsp; You must first call <TT><A HREF="#InitSReadlineInfo">InitSReadlineInfo()</A></TT>
+to initialize a <TT>SReadlineInfo</TT> structure.&nbsp; After that, you
+may call <TT>SReadline()</TT> repeatedly until it returns 0 to indicate
+EOF. The function returns the number of characters in the input line, including
+a newline (however, carriage return characters are omitted).&nbsp; You
+must call <TT><A HREF="#DisposeSReadlineInfo">DisposeSReadlineInfo()</A></TT>
+if you chose to let <TT><A HREF="#InitSReadlineInfo">InitSReadlineInfo()</A></TT>
+use <TT>malloc()</TT> to allocate your buffer.
+
+<P><I>Example</I>:
+<UL>
+<PRE>SReadlineInfo sri;
+char line[80];
+int nread;
+
+if (InitSReadlineInfo(&amp;sri, sockfd, NULL, 512, 10) &lt; 0) {
+&nbsp;&nbsp;&nbsp; perror("malloc");
+&nbsp;&nbsp;&nbsp; exit(1);
+}
+while (1) {
+&nbsp;&nbsp;&nbsp; nread = SReadline(&amp;sri, line, sizeof(line));
+&nbsp;&nbsp;&nbsp; if (nread &lt;= 0) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (nread == kTimeoutErr)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; fprintf(stderr, "readline timed-out.\n");
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else if (nread &lt; 0)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; perror("readline");
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; break;
+&nbsp;&nbsp;&nbsp; }
+&nbsp;&nbsp;&nbsp; line[nread] = '\0';&nbsp;&nbsp;&nbsp; /* omit newline */
+&nbsp;&nbsp;&nbsp; fprintf(stdout, "read [%s]\n", line);
+}
+DisposeSReadlineInfo(&amp;sri);
+(void) SClose(sockfd, 3);</PRE>
+</UL>
+
+<H5>
+<A NAME="#SRecv"></A>SRecv</H5>
+<TT>int SRecv(int sfd, char *const buf0, size_t size, int fl, int tlen,
+int retry);</TT>
+
+<P>This is the corresponding wrapper for <TT>recv()</TT>, as <TT><A HREF="#SRead">SRead()</A></TT>
+is for <TT>read()</TT>.&nbsp; You will never need this function, unless
+you need the special receiving flags that <TT>recv()</TT> gives you.
+<H5>
+<A NAME="#SRecvfrom"></A>SRecvfrom</H5>
+<TT>int SRecvfrom(int sfd, char *const buf, size_t size, int fl, struct
+sockaddr_in *const fromAddr, int tlen);</TT>
+
+<P>This is <TT>recvfrom()</TT> with a timeout of <I>tlen</I> seconds (<I>tlen</I>
+must be greater than zero).&nbsp; Like <TT>recvfrom()</TT>, it can return
+0, (-1), or the number of bytes read, but in addition, it can also return
+<TT>kTimeoutErr</TT>. Upon a timeout, the socket is still valid for additional
+I/O.
+
+<P><I>Example</I>:
+<UL>
+<PRE>int nread;
+char buf[80];
+struct sockaddr_in remoteClientAddr;
+
+nread = SRecvfrom(sockfd, buf, sizeof(buf), 0, &amp;remoteClientAddr, 15);
+if (nread &lt;= 0) {
+&nbsp;&nbsp;&nbsp; if (nread == kTimeoutErr)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; fprintf(stderr, "recvfrom timed-out.\n");
+&nbsp;&nbsp;&nbsp; else if (nread &lt; 0)
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; perror("recvfrom");
+}</PRE>
+</UL>
+
+<H5>
+<A NAME="#SRecvmsg"></A>SRecvmsg</H5>
+<TT>int SRecvmsg(int sfd, void *const msg, int fl, int tlen);</TT>
+
+<P>This is the corresponding wrapper for <TT>recvmsg()</TT>, as <TT><A HREF="#SRead">SRead()</A></TT>
+is for <TT>read()</TT>.
+<H5>
+<A NAME="#SSend"></A>SSend</H5>
+<TT>int SSend(int sfd, char *buf0, size_t size, int fl, int tlen);</TT>
+
+<P>This is the corresponding wrapper for <TT>send()</TT>, as <TT><A HREF="#SWrite">SWrite()</A></TT>
+is for <TT>write()</TT>.&nbsp; You will never need this function, unless
+you need the special receiving flags that <TT>send()</TT> gives you.
+<H5>
+<A NAME="#SSendto"></A>SSendto</H5>
+<TT>int SSendto(int sfd, const char *const buf, size_t size, int fl, const
+struct sockaddr_in *const toAddr, int tlen);</TT>
+
+<P>This is <TT>sendto()</TT> with a timeout of <I>tlen</I> seconds (<I>tlen</I>
+must be greater than zero).&nbsp; Like <TT>sendto()</TT>, it can return
+0, (-1), or the number of bytes sent, but in addition, it can also return
+<TT>kTimeoutErr</TT>. Upon a timeout, the socket is still valid for additional
+I/O.
+
+<P>Since <TT>sendto()</TT> rarely blocks (only if the outgoing queue is
+full), you probably do not want to use a timeout or bother with its associated
+overhead; therefore <TT><A HREF="#Sendto">Sendto()</A></TT> would be a
+better choice.
+<H5>
+<A NAME="#SSendtoByName"></A>SSendtoByName</H5>
+<TT>int SSendtoByName(int sfd, const char *const buf, size_t size, int
+fl, const char *const toAddrStr, int tlen);</TT>
+
+<P>This is <TT><A HREF="#SSendto">SSendto()</A></TT>, only you can use
+a textual internet address string instead of a <TT>struct sockaddr_in</TT>.
+<H5>
+<A NAME="#SWrite"></A>SWrite</H5>
+<TT>int SWrite(int sfd, const char *const buf0, size_t size, int tlen);</TT>
+
+<P>This is <TT>write()</TT> on a network socket with a timeout of <I>tlen</I>
+seconds (<I>tlen</I> must be greater than zero).&nbsp; Like <TT>write()</TT>,
+it can return 0, (-1), or the number of bytes sent, but in addition, it
+can also return <TT>kTimeoutErr</TT>.
+<H5>
+<A NAME="SelectR"></A>SelectR</H5>
+<TT>int SelectR(SelectSetPtr ssp, SelectSetPtr resultssp);</TT>
+
+<P>This does a <TT>select()</TT> for reading with the file descriptors
+in the specified <TT>SelectSet</TT>.&nbsp; Using a <TT>SelectSet</TT> ensures
+that the first argument to select is always correct (the smallest correct
+value, for speed) and <TT>SelectR()</TT> does not destroy the original
+<TT>fd_set</TT> and <TT>timeval</TT> (it copies it to <I>resultssp</I>
+before using <TT>select()</TT>).
+
+<P><I>Example</I>:
+<UL>
+<PRE>SelectSet ss, selected;
+
+SelectSetInit(&amp;ss, 10.0);
+SelectSetAdd(&amp;ss, sockfd1);
+SelectSetAdd(&amp;ss, sockfd2);
+rc = SelectR(&amp;ss, &amp;selected);
+if ((rc > 0) &amp;&amp; (FD_ISSET(sockfd2, &amp;selected.fds))) ...</PRE>
+</UL>
+
+<H5>
+<A NAME="SelectW"></A>SelectW</H5>
+<TT>int SelectW(SelectSetPtr ssp, SelectSetPtr resultssp);</TT>
+
+<P>This does a <TT>select()</TT> for writing with the file descriptors
+in the specified <TT>SelectSet</TT>.&nbsp; Using a <TT>SelectSet</TT> ensures
+that the first argument to select is always correct (the smallest correct
+value, for speed) and <TT>SelectW()</TT> does not destroy the original
+<TT>fd_set</TT> and <TT>timeval</TT> (it copies it to <I>resultssp</I>
+before using <TT>select()</TT>).
+
+<P><I>Example</I>:
+<UL>
+<PRE>SelectSet ss, selected;
+
+SelectSetInit(&amp;ss, 10.0);
+SelectSetAdd(&amp;ss, sockfd1);
+SelectSetAdd(&amp;ss, sockfd2);
+rc = SelectW(&amp;ss, &amp;selected);
+if ((rc > 0) &amp;&amp; (FD_ISSET(sockfd2, &amp;selected.fds))) ...</PRE>
+</UL>
+
+<H5>
+<A NAME="#SelectSetAdd"></A>SelectSetAdd</H5>
+<TT>void SelectSetAdd(SelectSetPtr const ssp, const int fd);</TT>
+
+<P>This adds a descriptor to the set to select on.
+
+<P><I>Example</I>:
+<UL>
+<PRE>SelectSet ss;
+
+SelectSetInit(&amp;ss, 10.0);
+SelectSetAdd(&amp;ss, sockfd);</PRE>
+</UL>
+
+<H5>
+<A NAME="#SelectSetInit"></A>SelectSetInit</H5>
+<TT>void SelectSetInit(SelectSetPtr const ssp, const double timeout);</TT>
+
+<P>Before adding members to the <TT>SelectSet</TT> structure, it must be
+initialized with this function.&nbsp; The timeout parameter initializes
+the timeout to use for future <TT>Selects</TT>.
+<H5>
+<A NAME="#SelectSetRemove"></A>SelectSetRemove</H5>
+<TT>void SelectSetRemove(SelectSetPtr const ssp, const int fd);</TT>
+
+<P>This removes a descriptor from the set to select on.&nbsp; You will
+need to do this just before you close a descriptor that was in the set.
+<H5>
+<A NAME="#Sendto"></A>Sendto</H5>
+<TT>int Sendto(int sfd, const char *const buf, size_t size, const struct
+sockaddr_in *const toAddr);</TT>
+
+<P>This is a simple wrapper for <TT>sendto()</TT>, which only handles <TT>EINTR</TT>
+for you.&nbsp; It does not worry about <TT>SIGPIPEs</TT>.
+<H5>
+<A NAME="#SendtoByName"></A>SendtoByName</H5>
+<TT>int SendtoByName(int sfd, const char *const buf, size_t size, const
+char *const toAddrStr);</TT>
+
+<P>This is a simple wrapper for <TT>sendto()</TT>, which only handles <TT>EINTR</TT>
+for you.&nbsp; In addition, you can use a textual internet address string
+instead of a <TT>struct sockaddr_in</TT>.
+
+<P><I>Example</I>:
+<UL>
+<PRE>if (SendtoByName(sockfd, msg, sizeof(msg), "elwood.probe.net:13") > 0) ...</PRE>
+</UL>
+
+<H5>
+<A NAME="#SetSocketBufSize"></A>SetSocketBufSize</H5>
+<TT>int SetSocketBufSize(int sockfd, size_t rsize, size_t ssize);</TT>
+
+<P>This utility routine changes the size of the socket's internal buffers,
+as maintained by the kernel (or socket library).&nbsp; It does this by
+calling <TT>setsockopt()</TT> with the <TT>SO_RCVBUF</TT> and <TT>SO_SNDBUF</TT>
+options, if they are defined.&nbsp; In the event they aren't defined, it
+returns a negative result code.&nbsp; The operation is only performed if
+the size is greater than zero, so if you only wanted to change the receive
+buffer you could set <I>rsize</I> to greater than zero and <I>ssize</I>
+to 0.
+<H5>
+<A NAME="#SetSocketLinger"></A>SetSocketLinger</H5>
+<TT>int SetSocketLinger(const int fd, const int l_onoff, const int l_linger);</TT>
+
+<P>This is an interface to the <TT>SO_LINGER</TT> socket option.&nbsp;
+The <I>l_onoff</I> parameter is a boolean specifying whether linger is
+on, and the <I>l_linger</I> parameter specifies the length of the linger
+time if enabled.
+
+<P><I>Example</I>:
+<UL>
+<PRE>if (SetSocketLinger(sockfd, 1, 90) == 0) ...</PRE>
+</UL>
+
+<H5>
+<A NAME="#SetSocketNagleAlgorithm"></A>SetSocketNagleAlgorithm</H5>
+<TT>int SetSocketNagleAlgorithm(const int fd, const int onoff);</TT>
+
+<P>This utility routine enables or disables the <I>Nagle Algorithm</I>
+(<TT>TCP_NODELAY</TT> mode is off or on).&nbsp; Generally you won't care
+about this, unless you're writing an interactive application like <I>telnet</I>,
+<I>talk</I>, or <I>rlogin</I>, where response time is more important than
+throughput.
+
+<P><I>Example</I>:
+<UL>
+<PRE>if (SetSocketNagleAlgorithm(sockfd, 0) == 0) ...</PRE>
+</UL>
+
+<H3>
+<A NAME="Sample"></A>Sample Code</H3>
+Here is an example client and server that uses the <I>sio</I> library routines.&nbsp;
+The server simply takes data and uppercases any lower case data, and returns
+the result to the client.&nbsp; To try it on port number 5123, you could
+run "<TT>ucase_s 5123</TT>" in one window, and "<TT>ucase_c localhost:5123</TT>"
+in another.
+<BR>&nbsp;
+<H4>
+Server:</H4>
+
+<PRE>/* ucase_s.c */
+
+#include &lt;unistd.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/socket.h&gt;
+#include &lt;sys/wait.h&gt;
+#include &lt;netinet/in.h&gt;
+#include &lt;arpa/inet.h&gt;
+#include &lt;errno.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;time.h&gt;
+
+#include &quot;sio.h&quot;
+
+static void
+ServeOneClient(int sockfd, struct sockaddr_in *cliAddr)
+{
+	char buf[32], cliAddrStr[64];
+	int nread, nwrote, i;
+
+	printf(&quot;subserver[%d]: started, connected to %s.\n&quot;, (int) getpid(),
+		AddrToAddrStr(cliAddrStr, sizeof(cliAddrStr), cliAddr, 1, &quot;&lt;%h:%p&gt;&quot;)
+	);
+	for (;;) {
+		nread = SRead(sockfd, buf, sizeof(buf), 15, kFullBufferNotRequired);
+		if (nread == 0) {
+			break;
+		} else if (nread &lt; 0) {
+			fprintf(stderr, &quot;subserver[%d]: read error: %s\n&quot;,
+				(int) getpid(), strerror(errno));
+			break;
+		}
+		for (i=0; i&lt;nread; i++)
+			if (islower(buf[i]))
+				buf[i] = toupper(buf[i]);
+		nwrote = SWrite(sockfd, buf, nread, 15);
+		if (nwrote &lt; 0) {
+			fprintf(stderr, &quot;subserver[%d]: write error: %s\n&quot;,
+				(int) getpid(), strerror(errno));
+			break;
+		}
+	}
+	(void) SClose(sockfd, 10);
+	printf(&quot;subserver[%d]: done.\n&quot;, (int) getpid());
+	exit(0);
+}	/* ServeOneClient */
+
+
+static void
+Server(int port)
+{
+	int sockfd, newsockfd;
+	struct sockaddr_in cliAddr;
+	int pid;
+
+	sockfd = SNewStreamServer(port, 3, kReUseAddrYes, 3);
+	if (sockfd &lt; 0) {
+		perror(&quot;Server setup failed&quot;);
+		exit(1);
+	}
+
+	printf(&quot;server[%d]: started.\n&quot;, (int) getpid());
+	for(;;) {
+		while (waitpid(-1, NULL, WNOHANG) &gt; 0) ;
+		newsockfd = SAccept(sockfd, &amp;cliAddr, 5);
+		if (newsockfd &lt; 0) {
+			if (newsockfd == kTimeoutErr)
+				printf(&quot;server[%d]: idle\n&quot;, (int) getpid());
+			else
+				fprintf(stderr, &quot;server[%d]: accept error: %s\n&quot;,
+					(int) getpid(), strerror(errno));
+		} else if ((pid = fork()) &lt; 0) {
+			fprintf(stderr, &quot;server[%d]: fork error: %s\n&quot;,
+				(int) getpid(), strerror(errno));
+			exit(1);
+		} else if (pid == 0) {
+			ServeOneClient(newsockfd, &amp;cliAddr);
+			exit(0);
+		} else {
+			/* Parent doesn't need it now. */
+			(void) close(newsockfd);
+		}
+	}
+}	/* Server */
+
+
+void
+main(int argc, char **argv)
+{
+	int port;
+
+	if (argc &lt; 2) {
+		fprintf(stderr, &quot;Usage: %s &lt;port&gt;\n&quot;, argv[0]);
+		exit(2);
+	}
+	port = atoi(argv[1]);
+	Server(port);
+	exit(0);
+}	/* main */
+</PRE>
+
+<H4>
+Client:</H4>
+
+<PRE>/* ucase_c.c */
+
+#include &lt;unistd.h&gt;
+#include &lt;sys/types.h&gt;
+#include &lt;sys/socket.h&gt;
+#include &lt;sys/wait.h&gt;
+#include &lt;netinet/in.h&gt;
+#include &lt;arpa/inet.h&gt;
+#include &lt;errno.h&gt;
+#include &lt;stdio.h&gt;
+#include &lt;string.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;time.h&gt;
+
+#include &quot;sio.h&quot;
+
+static void
+Client(char *serverAddrStr)
+{
+	char buf[256];
+	int nread, nwrote, sockfd;
+
+	sockfd = SNewStreamClient();
+	if (sockfd &lt; 0) {
+		fprintf(stderr, &quot;client[%d]: socket error: %s\n&quot;,
+			(int) getpid(), strerror(errno));
+		exit(1);
+	}
+
+	if (SConnectByName(sockfd, serverAddrStr, 15) &lt; 0) {
+		fprintf(stderr, &quot;client[%d]: could not connect to &lt;%s&gt;: %s\n&quot;,
+			(int) getpid(), serverAddrStr, strerror(errno));
+		exit(1);
+	}
+
+	printf(&quot;client[%d]: connected to &lt;%s&gt;.\n&quot;, (int) getpid(), serverAddrStr);
+	for (buf[sizeof(buf) - 1] = '\0';;) {
+		printf(&quot;client[%d]: Enter message to send -&gt; &quot;, (int) getpid());
+		if (fgets(buf, sizeof(buf) - 1, stdin) == NULL)
+			break;
+		buf[strlen(buf) - 1] = '\0';	/* Delete newline. */
+		if (buf[0] == '\0')
+			continue;		/* Blank line. */
+
+		/* Send the request line to the server. */
+		nwrote = SWrite(sockfd, buf, strlen(buf), 15);
+		if (nwrote &lt; 0) {
+			fprintf(stderr, &quot;client[%d]: write error: %s\n&quot;,
+				(int) getpid(), strerror(errno));
+			break;
+		}
+
+		/* Wait for complete reply line */
+		nread = SRead(sockfd, buf, nwrote, 15, kFullBufferRequired);
+		if (nread == 0) {
+			fprintf(stderr, &quot;client[%d]: no reply received (EOF).\n&quot;,
+				(int) getpid());
+			break;
+		} else if (nread &lt; 0) {
+			fprintf(stderr, &quot;client[%d]: read error: %s\n&quot;,
+				(int) getpid(), strerror(errno));
+			break;
+		}
+		buf[nread] = '\0';
+		fprintf(stdout, &quot;client[%d]: received: %s\n&quot;,
+			(int) getpid(), buf);
+	}
+	(void) SClose(sockfd, 10);
+	printf(&quot;\nclient[%d]: done.\n&quot;, (int) getpid());
+	exit(0);
+}	/* Client */
+
+
+void
+main(int argc, char **argv)
+{
+	int port;
+
+	if (argc &lt; 2) {
+		fprintf(stderr, &quot;Usage: %s &lt;host:port&gt;\n&quot;, argv[0]);
+		exit(2);
+	}
+	Client(argv[1]);
+	exit(0);
+}	/* main */
+</PRE>
+
+</BODY>
+</HTML>

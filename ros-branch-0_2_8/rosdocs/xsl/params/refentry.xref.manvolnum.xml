@@ -1,0 +1,24 @@
+<refentry id="refentry.xref.manvolnum">
+<refmeta>
+<refentrytitle>refentry.xref.manvolnum</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>refentry.xref.manvolnum</refname>
+<refpurpose>Output <sgmltag>manvolnum</sgmltag> as part of 
+<sgmltag>refentry</sgmltag> cross-reference?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='refentry.xref.manvolnum.frag'><xsl:param name="refentry.xref.manvolnum" select="1"/></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>if true (non-zero), the <sgmltag>manvolnum</sgmltag> is used when cross-referencing
+<sgmltag>refentry</sgmltag>s, either with <sgmltag>xref</sgmltag>
+or <sgmltag>citerefentry</sgmltag>.
+</para>
+
+</refsect1>
+</refentry>

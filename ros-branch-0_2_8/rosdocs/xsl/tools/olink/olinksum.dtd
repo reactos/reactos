@@ -1,0 +1,60 @@
+<!-- $Id: olinksum.dtd,v 1.1 2002/06/13 20:32:58 chorns Exp $
+
+     DTD for OLINK Summary Information
+
+     Common declaration:
+
+     <!DOCTYPE div
+               PUBLIC "-//Norman Walsh//DTD DocBook OLink Summary V1.2//EN">
+-->
+
+<!ENTITY % commonatts
+"	type		CDATA	#IMPLIED
+	name		CDATA	#IMPLIED
+	href		CDATA	#IMPLIED
+	id		ID	#IMPLIED
+	label		CDATA	#IMPLIED
+	lang		CDATA	#IMPLIED
+	arch		CDATA	#IMPLIED
+	conformance	CDATA	#IMPLIED
+	os		CDATA	#IMPLIED
+	revision	CDATA	#IMPLIED
+	userlevel	CDATA	#IMPLIED
+	vendor		CDATA	#IMPLIED">
+
+<!ELEMENT div (ttl, objttl, xref, obj*, div*)>
+<!ATTLIST div %commonatts;>
+
+<!ELEMENT obj (ttl, objttl, xref)>
+<!ATTLIST obj %commonatts;>
+
+<!ENTITY % inlines "tt|i|sub|sup|span">
+
+<!ELEMENT ttl (#PCDATA|%inlines;)*>
+<!ELEMENT objttl (#PCDATA|%inlines;)*>
+<!ELEMENT xref (#PCDATA|%inlines;)*>
+
+<!ELEMENT tt (#PCDATA|%inlines;)*>   <!-- typewriter (courier) -->
+<!ATTLIST tt
+	class	CDATA	#IMPLIED
+>
+
+<!ELEMENT i (#PCDATA|%inlines;)*>   <!-- italics -->
+<!ATTLIST i
+	class	CDATA	#IMPLIED
+>
+
+<!ELEMENT sub (#PCDATA|%inlines;)*>  <!-- subscript -->
+<!ATTLIST sub
+	class	CDATA	#IMPLIED
+>
+
+<!ELEMENT sup (#PCDATA|%inlines;)*>  <!-- superscript -->
+<!ATTLIST sup
+	class	CDATA	#IMPLIED
+>
+
+<!ELEMENT span (#PCDATA|%inlines;)*> <!-- span -->
+<!ATTLIST span
+	class	CDATA	#IMPLIED
+>

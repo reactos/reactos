@@ -1,0 +1,24 @@
+<refentry id="body.margin.top">
+<refmeta>
+<refentrytitle>body.margin.top</refentrytitle>
+
+</refmeta>
+<refnamediv>
+<refname>body.margin.top</refname>
+<refpurpose>To specify the size of the top margin of a page</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='body.margin.top.frag'>
+<xsl:param name="body.margin.top">1in</xsl:param>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>The body top margin is the distance from the top of the region-before
+to the first line of text in the page body.
+</para>
+
+</refsect1>
+</refentry>

@@ -1,0 +1,112 @@
+<chapter>
+<title>ReactOS boot options</title>
+
+<!--
+<artheader>
+   <title>ReactOS boot options</title>
+   <author>
+      <firstname>Casper</firstname>
+      <surname>Hornstrup</surname>
+      <affiliation>
+        <address>
+          <email>chorns@users.sourceforge.net</email>
+        </address>
+      </affiliation>
+   </author>
+</artheader>
+-->
+
+<abstract>
+<para>
+Boot options affect how ReactOS behaves during the boot phase and normal operation.
+</para>
+</abstract>
+
+<sect2>
+<title>Kernel command line</title>
+<para>
+The kernel command line is a text string that is passed to ReactOS by the boot loader (usually FreeLoader).
+It consists of several switches, each of which has a special meaning to ReactOS. A switch is a forward slash (/) followed by a text string (the name of the switch),
+and optionally an equal sign (=) and a text string (the value). If the equal sign (=) is present, then the value is required.
+In FreeLoader the kernel command line is specified in an Options setting in freeldr.ini. Here is an example:
+<programlisting>
+; Boot ReactOS from drive C:
+[ReactOS]
+BootType=ReactOS
+SystemPath=multi(0)disk(0)rdisk(0)partition(1)\reactos
+Options=/DEBUGPORT=SCREEN
+</programlisting>
+
+/DEBUGPORT is a boot option. It tells ReactOS to print debugging information to the screen.
+
+</para>
+</sect2>
+
+<sect2>
+<title>DEBUGPORT</title>
+<para>
+Format: DEBUGPORT=[SCREEN|BOCHS|GDB|PICE|COM1|COM2|COM3|COM4|FILE|MDA]
+</para>
+
+<para>
+Will enable some debugging features.
+</para>
+<itemizedlist>
+<listitem><emphasis>SCREEN</emphasis>: Send debug output to the screen.</listitem>
+<listitem><emphasis>BOCHS</emphasis>: Send debug output to bochs.</listitem>
+<listitem><emphasis>GDB</emphasis>: Enable the GNU debugger stub so remote debugging using GDB is possible.</listitem>
+<listitem><emphasis>PICE</emphasis>: Enable the Private ICE driver so debugging using Private ICE is possible.</listitem>
+<listitem><emphasis>COM1</emphasis>: Send debug output to COM1.</listitem>
+<listitem><emphasis>COM2</emphasis>: Send debug output to COM2.</listitem>
+<listitem><emphasis>COM3</emphasis>: Send debug output to COM3.</listitem>
+<listitem><emphasis>COM4</emphasis>: Send debug output to COM4.</listitem>
+<listitem><emphasis>FILE</emphasis>: Send debug output to a file (which file?).</listitem>
+<listitem><emphasis>MDA</emphasis>: Send debug output to MDA (what is this?).</listitem>
+</itemizedlist>
+</sect2>
+
+<sect2>
+<title>BAUDRATE</title>
+<para>
+Format: BAUDRATE=[baudrate]
+</para>
+
+<para>
+Specifies baudrate of the serial port to be [baudrate] bps. Used in conjunction with COM1-4 or GDB.
+</para>
+</sect2>
+
+<sect2>
+<title>IRQ</title>
+<para>
+Format: IRQ=[irq-number]
+</para>
+
+<para>
+Specifies IRQ number of the serial port to be [irq-number]. Used in conjunction with COM1-4 or GDB.
+</para>
+</sect2>
+
+<sect2>
+<title>PROFILE</title>
+<para>
+Format: PROFILE
+</para>
+
+<para>
+Enables profiling. Profiling information will be written in %windir%\profiler.log. This will slow down the system quite a bit.
+</para>
+</sect2>
+
+<sect2>
+<title>MAXMEM</title>
+<para>
+Format: MAXMEM=[maxmem]
+</para>
+
+<para>
+Will restrict ReactOS to use only the first [maxmem] MB of physical memory.
+</para>
+</sect2>
+
+</chapter>

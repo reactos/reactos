@@ -1,0 +1,29 @@
+<refentry id="html.cleanup">
+<refmeta>
+<refentrytitle>html.cleanup</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>html.cleanup</refname>
+<refpurpose>Attempt to clean up the resulting HTML?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='html.cleanup.frag'>
+<xsl:param name="html.cleanup" select="1"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If non-zero, and if the <ulink url="http://www.exslt.org/">EXSLT</ulink>
+extensions are supported by your processor, the resulting HTML will be
+<quote>cleaned up</quote>. This improves the chances that the
+resulting HTML will be valid. It may also improve the formatting of
+some elements.</para>
+
+<para>This parameter is different from <parameter>make.valid.html</parameter>
+because it uses extension functions to manipulate result-tree-fragments.</para>
+
+</refsect1>
+</refentry>

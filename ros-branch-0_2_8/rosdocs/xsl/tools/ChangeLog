@@ -1,0 +1,8 @@
+2001-08-01  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* profile.xsl: Moved profile.xsl to profile subdirectory
+
+2001-07-31  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* profile.xsl: New file.
+

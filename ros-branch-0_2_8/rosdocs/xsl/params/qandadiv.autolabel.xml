@@ -1,0 +1,21 @@
+<refentry id="qandadiv.autolabel">
+<refmeta>
+<refentrytitle>qandadiv.autolabel</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>qandadiv.autolabel</refname>
+<refpurpose>Are divisions in QAndASets enumerated?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='qandadiv.autolabel.frag'><xsl:param name="qandadiv.autolabel" select="1"/></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If true (non-zero), unlabeled qandadivs will be enumerated.
+</para>
+
+</refsect1>
+</refentry>

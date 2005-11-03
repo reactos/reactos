@@ -1,0 +1,102 @@
+<chapter>
+<title>Organizational structure</title>
+
+<!--
+<artheader>
+   <title>The organizational structure of the ReactOS project</title>
+   <author>
+      <firstname>Jason</firstname>
+      <surname>Filby</surname>
+      <affiliation>
+        <address>
+          <email>jasonfilby@yahoo.com</email>
+        </address>
+      </affiliation>
+   </author>
+</artheader>
+-->
+
+<abstract>
+<para>
+A description of the organization of people within the ReactOS project.
+</para>
+</abstract>
+
+<sect2>
+<title>Teams and Coordinators</title>
+<para>
+ReactOS consists of several teams, including the Kernel, Applications and Media teams. Each team has a coordinator and there is an overall project coordinator.
+</para>
+</sect2>
+
+<sect2>
+<title>Coordinators</title>
+<para>
+The coordinators are more facilitators than instructors of the teams. They are those who organize and assist the team where needed and are usually developers as well. Each coordinator has authority to make an overruling decision in any argument that may occur. This is exceptionally rare as ReactOS coordinators and developers always try to find the best solution that everyone is happy with.
+</para>
+<table>
+<title>Coordinators</title>
+<tgroup cols="3">
+<thead>
+<row>
+<entry>Position</entry>
+<entry>Name</entry>
+<entry>Email</entry>
+</row>
+</thead>
+<tbody>
+<row>
+<entry>Project Coordinator</entry>
+<entry>Jason Filby</entry>
+<entry>jasonfilby at yahoo dot com</entry>
+</row>
+<row>
+<entry>Kernel Team Coordinator</entry>
+<entry>Rex Jolliff</entry>
+<entry>rex at lvcablemodem dot com</entry>
+</row>
+<row>
+<entry>Applications Team Coordinator</entry>
+<entry>Brian Palmer</entry>
+<entry>brianp at sginet dot com</entry>
+</row>
+<row>
+<entry>Media Team Coordinator</entry>
+<entry>Eric Cayer</entry>
+<entry>ecayer at mail dot cgocable dot ca</entry>
+</row>
+</tbody>
+</tgroup>
+</table>
+</sect2>
+
+<sect2>
+<title>Team definitions</title>
+<table>
+<title>Teams</title>
+<tgroup cols="3">
+<thead>
+<row>
+<entry>Team</entry>
+<entry>Description</entry>
+</row>
+</thead>
+<tbody>
+<row>
+<entry>Kernel Team</entry>
+<entry>Responsible for designing and implementing the ReactOS kernel and its system libraries. This is the most active team.</entry>
+</row>
+<row>
+<entry>Applications Team</entry>
+<entry>Responsible for designing and implementing common applications for ReactOS. Initial shell and small application discussions.</entry>
+</row>
+<row>
+<entry>Media Team</entry>
+<entry>Responsible for websites, graphics and everything media related</entry>
+</row>
+</tbody>
+</tgroup>
+</table>
+</sect2>
+
+</chapter>

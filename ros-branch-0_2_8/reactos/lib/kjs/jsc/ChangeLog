@@ -1,0 +1,652 @@
+1999-01-11  Markku Rossi  <mtr@amme.ssh.fi>
+
+	* lexer.js (JSC$lexer_read_string): Optimized the stream reading
+	by using the new String.append(INTEGER) method.
+
+1998-10-26  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* parser.js (JSC$parser_parse_stmt): Implemented function
+	declarations as statements.
+
+	* gram.js (JSC$stmt_function_declaration): New statement for
+	nested function declarations.
+
+	* defs.js: New statement type JSC$STMT_FUNCTION_DECLARATION.
+
+	* gram.js (JSC$expr_call_asm): Added support for function
+	pointers.
+
+	* asm.js: Added support for function pointers.
+	Added new operands `jsr_w' and `load_global_w' which operate with
+	the with chains.
+
+1998-10-12  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* gram.js (JSC$expr_additive_constant_folding): Implemented simple
+	constant folding optimization.
+
+	* parser.js (JSC$parser_parse_assignment_expr): Implemented
+	constant folding optimization.
+
+	* entry.js (JSC$compile_stream): Added a try-finally block over
+	the stream compilation.  This assures that the stream is always
+	closed, even if the compilation fails.
+
+1998-10-01  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* parser.js (JSC$parser_parse_function_declaration): Fixed the
+	parameter list parsing.  Now we do require that the parameters are
+	separated by a ','.
+
+1998-09-17  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* gram.js (JSC$stmt_try_asm): If none of the catch blocks matches
+	the exception, we must throw it the upper level.
+
+1998-09-10  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* asm.js (JSC$ASM_const_i_print): Cleaned up the output.
+
+	* gram.js (JSC$expr_object_initializer): New expression object for
+	object literals.
+
+	* parser.js (JSC$parser_parse_primary_expr): Implemented object
+	literals.
+
+	* asm.js (JSC$ASM_const_i): New operand to push a Int32 integer to
+	the stack.  Effectively this operand removes all integer constants
+	from the constants section.  They can be expressed in the same
+	space that was used to present the integer index.
+
+	* gram.js (JSC$expr_integer_asm): Changed to use the new `const_i'
+	operand.
+
+1998-09-07  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* parser.js (JSC$parser_parse_function_declaration): Implemented
+	the `arguments' property of function instance.
+
+	* gram.js (JSC$function_declaration_asm): Added support for the
+	`arguments' property of function instance.  If the property is
+	used in the function body, we add code to the beginning of the
+	function to create the arguments array.
+	(JSC$stmt_for_count_locals): Fixed the counting of the local
+	variables.
+	(JSC$stmt_for_in_count_locals): Fixed the counting of local
+	variables.
+
+	* entry.js: New flag JSC$FLAG_WARN_DEPRECATED to generate error
+	messages about uses of deprecated features.
+
+	* asm.js (JSC$ASM_load_nth_arg): New byte-code operand to load the
+	nth argument of function, where the index is at the top of the
+	stack.  This is needed in the implemenation of the `arguments'
+	property of function instances.
+	Re-organized byte-code operand numbers.  All old byte-code files
+	must be re-compiled.
+
+1998-09-04  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* asm.js: Re-organized byte-code operand numbers.  All old
+	byte-code files must be re-compiled.
+
+	* parser.js (JSC$parser_parse_primary_expr): Changed the way how
+	the regular expression constants are handled.  We must decide the
+	point when we accept a regexp constant.  The lexer can't do it
+	because the div operand and regexp constants can't be
+	distinguished based on lexical analysis.
+	(JSC$parser_parse_equality_expr): Implemented strict equals and
+	does-not-equal operators.  The change affects lexer.js, parser.js,
+	gram.js, asm.js, and defs.js.
+
+	* defs.js: Removed constant JSC$tREGEXP.
+
+	* lexer.js (JSC$lexer): Changed the way how the regular expression
+	constants are handled.  We no longer return them as a token.  We
+	return the starting '/' character as-is and the parser recognizes
+	the cases when it can start a regexp constant.  In those cases,
+	the parser will call JSC$lexer_read_regexp_constant() that reads
+	the constant and compiles it to the RegExp built-in object.
+
+1998-09-03  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* lexer.js (JSC$lexer): Changed the way how errors are returned
+	form the malformed regular expression constants.  This is needed
+	because the syntax of the try-statement was changed.
+
+	* gram.js (JSC$stmt_for): Added support for local variable
+	declarations.
+	(JSC$stmt_for_in): Added support for local variable declarations.
+
+	* parser.js (JSC$parser_parse_iteration_stmt): Added support for
+	local variable declarations in the head of the for statement.
+
+	* entry.js (JSC$compile_stream): Clear the syntax tree after the
+	assembler has been generated.  This saves some memory.
+
+	* Replaced all JC$Lists in the compiler sources with built-in
+	Array objects.
+	Removed the list.js file from the project.
+
+	* asm.js (JSC$asm_print): Cleaned up the annotated assembler
+	output.
+
+	* gram.js (JSC$ContBreak): Added support for labeled statements.
+	The constructor and all calculation methods were fixed to support
+	the labels.
+	(JSC$ContBreak$is_unique_label): New method is_unique_label() to
+	check if the given label is unique in the current continue-break
+	stack.
+	(JSC$stmt_continue): Added support for labeled statements.
+	(JSC$stmt_break): Added support for labeled statements.
+	(JSC$stmt_labeled_stmt): New statement for the labeled
+	statements.
+
+	* parser.js (JSC$parser_parse_stmt): Implemented labeled
+	statements.
+	(JSC$parser_parse_stmt): Added optional label to break and
+	continue statements.
+
+1998-09-02  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* parser.js (JSC$parser_parse_try): New function to parse try
+	statements.
+
+	* gram.js (JSC$stmt_break_asm): Cleaned up the try and with
+	nesting calculation.  Now we use the methods, instead of directly
+	investigating the top frame in the cont_break stack.
+	(JSC$stmt_try): Re-implemented the try statement, including its
+	asm() and count_locals() methods.  Now the implementation is
+	ECMAScript compatible.
+
+1998-09-01  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* asm.js (JSC$asm_optimize): Optimize cases `const_true, iftrue'
+	and `const_false, iffalse' to jumps.
+	(JSC$asm_optimize): Cleaned up the peephole optimizations.
+	Implemented a new byte-code side optimization that removes
+	unnecessary jumps to the immediately following labels.
+
+	* gram.js (JSC$stmt_switch): New statement object for the switch
+	statements.
+	(JSC$stmt_continue_asm): Fixed to work inside a switch statement.
+	(JSC$ContBreak): Cleaned up the continue-break handling in loops.
+	Now it should work inside switch statements, including nested
+	switch statements.
+
+	* parser.js (JSC$parser_parse_switch): New function to parse
+	switch statements.
+
+1998-08-25  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* parser.js (JSC$parser_parse_stmt): Added strict_ecma warning
+	about line terminators between `throw' and the expression.
+
+	* gram.js (JSC$stmt_do_while): New statement object for do...while
+	statements.
+
+	* parser.js (JSC$parser_parse_variable_stmt): Fixed the variable
+	declaration parsing.  Now it should co-operate correctly with the
+	automatic semicolon insertion.
+	(JSC$parser_parse_iteration_stmt): Implemented do...while
+	statements.
+
+	* lexer.js (JSC$lexer_read_regexp): New function to read regular
+	expression literals.  The backslash escapes within them are so
+	different from string literals that they need an own function to
+	handle them.
+	(JSC$lexer_read_backslash_escape): New function to handle
+	backslash escapes in strings, character constants, and partly in
+	regular expression literals.
+	(JSC$lexer_read_backslash_escape): Added support for \xHH and
+	\uHHHH escapes.
+	Now the lexer should be ECMAScript 2.0 (draft) compatible.
+
+1998-08-19  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* parser.js: New functions JSC$warning() and JSC$message() to
+	report warnings and messages from the compiler.  Changed all
+	outputs in the sources to use these functions.  There shouldn't be
+	any System.error() calls left.
+
+1998-08-17  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* gram.js (JSC$expr_array_initializer): New expression for array
+	initializers.
+
+	* parser.js (JSC$parser_parse_primary_expr): Implemented array
+	initializers.
+
+	* defs.js: New expression type JSC$EXPR_ARRAY_INITIALIZER.
+
+	* list.js: Cleaned up the code.
+
+1998-08-14  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* asm.js: Changed JSC$CONST_REGEXP's value to 11.  It is returned
+	as a JS_BUILTIN.
+
+	* parser.js: Added support for the regular expression constants.
+
+	* gram.js (JSC$expr_regexp): New grammar component for the regular
+	expression constants.
+
+	* asm.js: Added support for the regular expression constants.
+
+	* defs.js: New type constant JSC$JS_BUILTIN.
+
+1998-08-13  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* defs.js: New token constant JSC$tREGEXP.
+
+	* parser.js (JSC$parser_parse): Fixed to report the number of
+	missing semicolons only if there are any.
+
+	* entry.js: New flag JSC$FLAG_WARN_STRICT_ECMA to generate error
+	messages about features that are supported but which are agains
+	the ECMAScript standard.
+
+	* lexer.js (JSC$lexer): Fixed all error messages to be in the
+	`FILENAME:LINENUM: MESSAGE' format.
+	(JSC$lexer_read_string): Added warning about line terminators in
+	string and regular expression constants.
+	Fixed all error messages.
+	Optimized the data creation to use the String.append() method.
+	(JSC$lexer): Implemented regular expression literals.
+
+1998-08-12  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* parser.js: Changed messages about automatic semicolon inserting
+	to warnings.
+
+	* entry.js: New flag JSC$FLAG_WARN_MISSING_SEMICOLON.
+
+1998-08-11  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* parser.js (JSC$parser_parse_source_element): Tag the global
+	level variable declarations so that we can distinguish them at the
+	assembler creation time.
+	Implemented automatic semicolon inserting.
+	(JSC$parser_parse): Added statistics about the missing
+	semicolons.
+
+	* gram.js (JSC$stmt_variable_asm): Changed the variables, declared
+	at the global level, to be global variables.
+	Fixed some panic() calls to report the error with the `error()'
+	global method.
+
+1998-08-05  Markku Rossi  <mtr@purple.ngs.fi>
+
+	* entry.js: New flag JSC$FLAG_GENERATE_EXECUTABLE_BC_FILES.
+	(JSC$compile_stream): Added support for
+	JSC$FLAG_GENERATE_EXECUTABLE_BC_FILES.
+
+1998-06-08  Markku Rossi  <mtr@ngs.fi>
+
+	* parser.js (JSC$parser_parse_arguments): Fixed a bug that allowed
+	us to call functions so that the individual arguements were not
+	separated by a comma #','.
+
+	* asm.js: Removed operands `assert_args', `assert_min_args', and
+	`assert_max_args'.
+	Added operands `min_args', `add_1_i', and `add_2_i'.
+
+	* gram.js (JSC$function_declaration_asm): Removed conditional
+	function argument count checks.  The check were replaced with
+	`min_args' operand that arranges things so that the minimum amount
+	of arguments is present.
+
+	* entry.js (JSC$compile_stream): Removed flag
+	JSC$FLAG_ARGUMENT_COUNT_CHECKS.  JavaScript allows functions to be
+	called with any number of arguments.  Therefore, we can't assert
+	the minimum amount of arguments for function.
+
+	* gram.js (JSC$expr_new_asm): Added support for `new Foo'
+	expressions.
+
+	* asm.js: Changed constant types to new values.
+
+1998-06-05  Markku Rossi  <mtr@ngs.fi>
+
+	* asm.js (JSC$ASM_mod): Implemented operand mod.
+	Cleaned up byte-code operand opcodes.
+
+1998-06-03  Markku Rossi  <mtr@ngs.fi>
+
+	* asm.js: Cleaned up the byte-code creation.  Now we have common
+	byte-code creation methods for different operand values: int8,
+	int16, etc.  This cleanup removes redundancy and saves nine
+	functions.
+	Cleaned up the compiler progress messages.
+
+1998-06-02  Markku Rossi  <mtr@ngs.fi>
+
+	* lexer.js (JSC$lexer): Implemented 'data' -strings.  The
+	character constants are now presented as #'a'.
+
+1998-05-15  Markku Rossi  <mtr@ngs.fi>
+
+	* gram.js (JSC$stmt_if_count_locals): Changed the way how the
+	number of locals is counted.  We don't need #if + #else, but we
+	need max(#if, #else).
+
+	* parser.js (JSC$parser_parse_stmt): Implemented the `throw'
+	statement.
+
+	* gram.js (JSC$stmt_throw): Implemented the `throw' statement.
+
+	* asm.js (JSC$ASM_throw): Implemented operand `throw'.
+
+	* defs.js: Defined new statement JSC$STMT_THROW.
+
+1998-05-14  Markku Rossi  <mtr@ngs.fi>
+
+	* parser.js (JSC$parser_parse_stmt): Implemented the `try...catch'
+	statement.
+	Fixed a typo where function syntax_error() was called instead of
+	JSC$parser_syntax_error().
+
+	* gram.js (JSC$ContBreak$try_return_nesting): New function to
+	count how many try_pop's the return statement should invoke.
+	(JSC$stmt_return_asm): Changed to invoke try_pop's if the return
+	occurs inside a try-block.
+	(JSC$stmt_try): Implemented the `try...catch' statement.
+
+	* asm.js: Implemented new operands try_push and try_pop to
+	implement the `try...catch' statement.
+	(JSC$asm_is_local_jump): Added JSC$OP_TRY_PUSH.
+	(JSC$asm_optimize): Changed to stop `dup...pop' searching on
+	`try_pop' operand.
+
+	* defs.js: Defined tokens for the ECMA Script's future reserved
+	keywords.
+	Defined new statement JSC$STMT_TRY.
+
+	* lexer.js (JSC$lexer): Added support for the ECMA Script's future
+	reserved keywords.
+
+	* gram.js: Cleaned up the `continue' and `break' statement
+	handling.  Now there is an instance of class JSC$ContBreak that
+	holds the state of the currently active looping constructs.
+
+1998-05-13  Markku Rossi  <mtr@ngs.fi>
+
+	* gram.js: Checked all XXX's and fixed them.
+
+1998-05-12  Markku Rossi  <mtr@ngs.fi>
+
+	* parser.js (JSC$parser_parse_iteration_stmt): Implemented
+	`for...in' statements.
+
+	* gram.js (JSC$stmt_for_in): Implemented `for...in' statements.
+
+	* defs.js: New statement type JSC$STMT_FOR_IN.
+
+	* asm.js: Reorganized byte-code operands.
+	(JSC$ASM_roll): New operand to roll the n uppermost items in the
+	stack.
+	(JSC$ASM_nth): New operand to return the nth item from array,
+	object, or string.
+
+1998-05-11  Markku Rossi  <mtr@ngs.fi>
+
+	* asm.js (JSC$ASM_delete_property): New function for the
+	`delete_property' operand.
+	(JSC$ASM_delete_array): New function for the `delete_array'
+	operand.
+	The new functions JSC$ASM_delete_property and JSC$ASM_delete_array
+	replace the old `delete' operand.
+
+	* gram.js (JSC$expr_unary_asm): Implemented (correctly) the delete
+	operator.
+
+1998-05-07  Markku Rossi  <mtr@ngs.fi>
+
+	* asm.js (JSC$asm_optimize): Fixed a bug from the peep-hole
+	optimization.  We must not optimize over subroutine calls like:
+	jsr, new, call_method or return operands.
+
+	* lexer.js (JSC$lexer_read_string): Fixed to handle
+	backslash+newline like C does.
+
+1998-04-16  Markku Rossi  <mtr@ngs.fi>
+
+	* lexer.js (JSC$lexer): Implemented decimal literals.
+
+	* asm.js (JSC$ASM_const_bytecode): Implemented float and NaN
+	constants.
+
+	* entry.js: New flag JSC$FLAG_WARN_WITH_CLOBBER to control
+	warnings about the with-lookup clobbering.
+
+	* gram.js (JSC$asm_expr_lvalue_load_asm): Added warnings for
+	symbols which with-lookup is clobbered by a local variable or a
+	function argument declaration.
+
+1998-04-15  Markku Rossi  <mtr@ngs.fi>
+
+	* asm.js (JSC$ASM_with_pop): Added argument `value' that specifies
+	how many with-frames the operand pops.
+
+	* gram.js (JSC$stmt_with_asm): Finished with statement.  Now it
+	handles break and continue statements within the with block.
+
+1998-03-31  Markku Rossi  <mtr@ngs.fi>
+
+	* entry.js: Renamed flag JSC$FLAG_OPTIMIZE_JUMPS_TO_JUMPS to
+	JSC$FLAG_OPTIMIZE_JUMPS.
+
+1998-03-26  Markku Rossi  <mtr@ngs.fi>
+
+	* Added tests for the compiler.
+
+	* defs.js: Changed JSC$alloc_id() calls with constant values.
+
+1998-03-25  Markku Rossi  <mtr@ngs.fi>
+
+	* asm.js (JSC$asm_optimize): Replaced individual `dup nnn pop =>
+	nnn' optimizations with one generic dup-pop optimizations.  This
+	new optimizations handles all the optimizable dup-pop cases.
+
+1998-03-24  Markku Rossi  <mtr@ngs.fi>
+
+	* asm.js (JSC$asm_optimize): New optimizations for `while (true)'
+	and `while (false)' cases.
+
+1998-03-05  Markku Rossi  <mtr@ngs.fi>
+
+	* parser.js (JSC$parser_parse_left_hand_side_expr): Fixed few
+	typos where JSC$parser_get_token() was called without arguments.
+
+	* lexer.js (JSC$lexer): Implemented some character constants.  Now
+	the lexer supports all character constants that can be found from
+	the ANSI-C reference.
+
+	* gram.js: Added language types for all expressions that know
+	them.
+	Changed to generate type aware assembler operands for expressions
+	and statements for which the type is known.
+
+	* entry.js (JSC$compile_stream): Added unconditional
+	optimizations: constant folding and type optimizations.
+
+	* defs.js: Added language primitive types.
+
+	* asm.js: Implemented type aware iffalse_b and iftrue_b operands.
+
+1998-03-04  Markku Rossi  <mtr@ngs.fi>
+
+	* gram.js (JSC$expr_real_asm): Implemented.
+
+1998-03-03  Markku Rossi  <mtr@ngs.fi>
+
+	* asm.js (JSC$optimize_heavy): New function to perform
+	optimizations that require the liveness information of local
+	variables and arguments.
+
+	* entry.js: New flag JSC$FLAG_OPTIMIZE_HEAVY for heavy
+	optimizations.
+
+	* asm.js: Re-organized assembler operands.
+	Implemented all missing operands.
+
+	* entry.js: New flag JSC$FLAG_ARGUMENT_COUNT_CHECKS.
+
+	* gram.js (JSC$function_declaration_asm): Added argument count
+	checks.
+	Renamed shift operands.
+
+1998-03-02  Markku Rossi  <mtr@ngs.fi>
+
+	* parser.js: Fixes some bugs, shown by the new function argument
+	count check.
+
+	* gram.js: Changed all `new JSC$ASM_*()' constructors to
+	explicitly call the link() method.
+
+	* asm.js: Removed call to JSC$asm_append() from all asm
+	constructors.  The linking is now implemented with the link()
+	method that is defined to all assembler operands, labels and
+	symbols.
+
+	* gram.js (JSC$function_declaration): Added lbrace_ln to hold the
+	line number of the opening lbrace of the body.
+	(JSC$function_declaration_asm): Set locals' linenumber to be
+	lbrace_ln.
+
+1998-02-27  Markku Rossi  <mtr@ngs.fi>
+
+	* asm.js (JSC$asm_bytecode): Added debugging information.
+
+	* entry.js: Renamed to entry.js from main.js.
+	New flag JSC$FLAG_ANNOTATE_ASSEMBLER.
+	(JSC$compile_stream): Changed to handle
+	JSC$FLAG_ANNOTATE_ASSEMBLER flag.
+	New flag JSC$FLAG_GENERATE_DEBUG_INFO.
+	(JSC$compile_stream): Changed to handle
+	JSC$FLAG_GENERATE_DEBUG_INFO flga.
+
+	* streams.js: Added rewind and readln methods to all streams.
+
+	* asm.js (JSC$asm_print): If requested, annotate the generated
+	assembler listing with the original source code.
+
+	* gram.js: Added line number information to all assembler
+	operands.
+
+	* parser.js: Added line number information to all statements and
+	expressions.
+
+1998-02-26  Markku Rossi  <mtr@ngs.fi>
+
+	* asm.js (JSC$asm_optimize): Implemented new optimization for
+	assembler, generated from statements like `i++' and `i--'.
+
+1998-02-24  Markku Rossi  <mtr@ngs.fi>
+
+	* asm.js (JSC$ASM_xor): Implemented xor opcode.
+	(JSC$ASM_with_push): Implemented with statements.
+	(JSC$asm_generate): Changed to ensure that the evaluation of the
+	global section returns some sane value to the caller.
+	(JSC$asm_optimize): New peephole optimization for apop + pop.
+	(JSC$ASM_locals): Changed the argument to be a 16 bit integer.
+
+	* parser.js (JSC$parser_parse): Fixed an infinite loop.  We must
+	check that parse_source_element() returns true.  Otherwise we have
+	encountered a syntax error.
+
+	* gram.js (JSC$expr_unary_asm): Implemented rest unary
+	expressions.
+	(JSC$stmt_with): Implemented with statement.
+
+	* lexer.js (JSC$lexer): Made `#!' a single line commment starter.
+	(JSC$lexer): Implemented '\ooo' notations to top-level and to
+	string constants.
+
+1998-02-23  Markku Rossi  <mtr@ngs.fi>
+
+	* namespace.js: Changed namespace to report errors and warnings
+	about different variable and argument definition illegalities.
+
+	* main.js (JSC$compile_stream): Changed to raise an error if the
+	input stream couldn't be opened.
+
+	* gram.js (JSC$stmt_variable_asm): Removed warnings about multiply
+	defined variables.  They are now reported directly from
+	namespace.
+
+	* asm.js (JSC$asm_optimize): Added argument flags that tells which
+	optimizations the function should perform.
+
+1998-02-20  Markku Rossi  <mtr@ngs.fi>
+
+	* parser.js (JSC$parser_reset): New function to reset all global
+	variables.
+
+	* main.js (JSC$compiler_reset): New function to reset the whole
+	compiler.
+
+	* gram.js (JSC$gram_reset): New function to reset all global
+	variables.
+
+	* asm.js (JSC$asm_reset): New function to reset all global
+	variables.  This replaces the old JSC$asm_clear() function.
+
+	* Changed all errors to be reported with the error() global
+	method.
+
+1998-02-18  Markku Rossi  <mtr@ngs.fi>
+
+	* main.js (JSC$compile_stream): Made error messages more
+	informative.
+
+	* streams.js: Added property `error' for all streams.
+
+	* namespace.js (JSC$NameSpace_define_symbol): Changed to return a
+	boolean status code that identify whether the symbol was already
+	defined or not.
+
+	* gram.js: Added line number information for statements.
+
+1998-02-16  Markku Rossi  <mtr@ngs.fi>
+
+	* gram.js (JSC$stmt_continue): Implemented `continue' statement.
+	(JSC$stmt_break): Implemented `break' statement.
+
+	* asm.js (JSC$asm_bytecode): Changed to use String.append()
+	instead of the plus operand.  This saves memory usage noticeably.
+
+1998-02-13  Markku Rossi  <mtr@ngs.fi>
+
+	* asm.js (JSC$asm_optimize): Made heavy optimizations to depend on
+	the JSC$optimize_heavy variable.
+
+	* main.js: Create a new public interface to the compiler.
+	Made all diagnostics messages to depend on the JSC$verbose
+	variable.
+
+	* asm.js (JSC$asm_optimize): Cleaned up the optimization code.
+	Run the dead code elimination optimizations in a loop until no
+	more changes can be done.
+	(JSC$asm_generate): Added support for local variables in the
+	global statements.
+
+	* parser.js (JSC$parser_parse_left_hand_side_expr): Implemented
+	array references.
+
+1998-02-11  Markku Rossi  <mtr@ngs.fi>
+
+	* The JavaScript compiler is now self-hosting.  It can generate
+	valid byte-code files which can be executed with the virtual
+	machine.  The perl assembler is no longer needed.
+
+	* gram.js: Changed to generate internal assembler objects instead
+	of dumping the assembler code to the stdout.
+
+	* asm.js: New file to implement the assembler.
+
+1998-02-09  Markku Rossi  <mtr@ngs.fi>
+
+	* streams.js (JSC$StreamString): Implemented string stream.
+
+	* The JavaScript JavaScript compiler can now compile itself.

@@ -1,0 +1,15 @@
+TARGETNAME=ndis
+TARGETPATH=obj
+TARGETTYPE=EXPORT_DRIVER
+
+C_DEFINES=-DNDIS_WRAPPER=1 -DNDIS50=1 -DNDIS51=1 -DNDIS50_MINIPORT=1 -DNDIS51_MINIPORT=1
+
+INCLUDES=..\include;..\..\..\..\include;..\..\..\..\include\reactos
+
+SOURCES= 40gone.c 50gone.c buffer.c cl.c cm.c co.c config.c control.c \
+         efilter.c hardware.c io.c main.c memory.c miniport.c protocol.c \
+         string.c stubs.c time.c
+
+MSC_WARNING_LEVEL=/W3 /WX
+
+DLLDEF=$(O)/ndis.def

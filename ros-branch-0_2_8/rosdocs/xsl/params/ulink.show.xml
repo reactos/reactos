@@ -1,0 +1,24 @@
+<refentry id="ulink.show">
+<refmeta>
+<refentrytitle>ulink.show</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>ulink.show</refname>
+<refpurpose>Display URLs after <sgmltag>ulink</sgmltag>s?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='ulink.show.frag'>
+<xsl:param name="ulink.show" select="1"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If non-zero, the URL of each <sgmltag>ULink</sgmltag> will
+appear after the text of the link. If the text of the link and the URL
+are identical, the URL is suppressed.</para>
+
+</refsect1>
+</refentry>

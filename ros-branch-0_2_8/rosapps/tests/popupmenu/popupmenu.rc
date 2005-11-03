@@ -1,0 +1,47 @@
+#include <windows.h>
+#include <reactos/resource.h>
+#include "resource.h"
+
+IDM_MAINMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+{
+  POPUP "&File"
+  {
+    MENUITEM "&New\tCtrl+N", 1
+    MENUITEM "&Open\tCtrl+O", 2
+    POPUP "Open &Recent"
+    {
+      MENUITEM "&1", 11
+      MENUITEM "&2", 12
+      MENUITEM "&3", 13
+      MENUITEM "&4", 14
+      MENUITEM "&5", 15
+      MENUITEM "&6", 16
+      MENUITEM "&7", 17
+      MENUITEM "&8", 18
+      MENUITEM "&9", 19
+    }
+    MENUITEM SEPARATOR
+    MENUITEM "&Save\tCtrl+S", 3 
+    MENUITEM "Save &as...", 4
+    MENUITEM SEPARATOR
+    MENUITEM "E&xit\tAlt-F4", IDM_EXIT
+  }
+  POPUP "&Edit"
+  {
+    MENUITEM "&Undo\tCtrl+Z", 20
+    MENUITEM "&Redo\tShift+Ctrl+Z", 21
+    MENUITEM SEPARATOR
+    MENUITEM "&Cut\tCtrl+X", 22
+    MENUITEM "&Copy\tCtrl+C", 23
+    MENUITEM "&Paste\tCtrl+V", 24
+    MENUITEM SEPARATOR
+    MENUITEM "Select &all", 25
+    MENUITEM "&Delete\tDel", 26
+  }
+  POPUP "&Help"
+  {
+    MENUITEM "&Help Topics\tF1", 30
+    MENUITEM SEPARATOR
+    MENUITEM "&About...", 31
+  }
+}

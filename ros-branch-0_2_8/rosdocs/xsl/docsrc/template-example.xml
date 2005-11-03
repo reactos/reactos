@@ -1,0 +1,12 @@
+<t:templates xmlns:t="http://nwalsh.com/docbook/xsl/template/1.0"
+             xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+             base-stylesheet="/path/to/html/docbook.xsl">
+
+<t:titlepage element="article" wrapper="div" class="titlepage">
+  <t:titlepage-content side="recto" order="document">
+    <title predicate="[1]"/>
+    <author/>
+    <edition/>
+  </t:titlepage-content>
+</t:titlepage>
+</t:templates>

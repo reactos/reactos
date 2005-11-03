@@ -1,0 +1,29 @@
+<refentry id="html.longdesc.link">
+<refmeta>
+<refentrytitle>html.longdesc.link</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>html.longdesc.link</refname>
+<refpurpose>Should a link to the longdesc be included in the HTML?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='html.longdesc.link.frag'>
+<xsl:param name="html.longdesc.link" select="$html.longdesc"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If non-zero, links will be created to the
+HTML files created for the
+<sgmltag class="attribute">longdesc</sgmltag> attribute. It makes no
+sense to turn enable this option without also enabling the
+<parameter>$html.longdesc</parameter> parameter.</para>
+
+<para>The <literal>longdesc.link</literal> named template is called
+to construct the link.</para>
+
+</refsect1>
+</refentry>

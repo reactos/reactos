@@ -1,0 +1,635 @@
+<t:templates xmlns:t="http://nwalsh.com/docbook/xsl/template/1.0"
+	     xmlns:param="http://nwalsh.com/docbook/xsl/template/1.0/param"
+             xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+
+<!-- ==================================================================== -->
+
+<t:titlepage element="article" wrapper="div" class="titlepage">
+  <t:titlepage-content side="recto">
+    <title/>
+    <subtitle/>
+    <corpauthor/>
+    <authorgroup/>
+    <author/>
+    <othercredit/>
+    <releaseinfo/>
+    <copyright/>
+    <legalnotice/>
+    <pubdate/>
+    <revision/>
+    <revhistory/>
+    <abstract/>
+  </t:titlepage-content>
+
+  <t:titlepage-content side="verso">
+  </t:titlepage-content>
+
+  <t:titlepage-separator>
+    <hr/>
+  </t:titlepage-separator>
+
+  <t:titlepage-before side="recto">
+  </t:titlepage-before>
+
+  <t:titlepage-before side="verso">
+  </t:titlepage-before>
+</t:titlepage>
+
+<!-- ==================================================================== -->
+
+<t:titlepage element="set" wrapper="div" class="titlepage">
+  <t:titlepage-content side="recto">
+    <title/>
+    <subtitle/>
+    <corpauthor/>
+    <authorgroup/>
+    <author/>
+    <othercredit/>
+    <releaseinfo/>
+    <copyright/>
+    <legalnotice/>
+    <pubdate/>
+    <revision/>
+    <revhistory/>
+    <abstract/>
+  </t:titlepage-content>
+
+  <t:titlepage-content side="verso">
+  </t:titlepage-content>
+
+  <t:titlepage-separator>
+    <hr/>
+  </t:titlepage-separator>
+
+  <t:titlepage-before side="recto">
+  </t:titlepage-before>
+
+  <t:titlepage-before side="verso">
+  </t:titlepage-before>
+</t:titlepage>
+
+<!-- ==================================================================== -->
+
+<t:titlepage element="book" wrapper="div" class="titlepage">
+  <t:titlepage-content side="recto">
+    <title/>
+    <subtitle/>
+    <corpauthor/>
+    <authorgroup/>
+    <author/>
+    <othercredit/>
+    <releaseinfo/>
+    <copyright/>
+    <legalnotice/>
+    <pubdate/>
+    <revision/>
+    <revhistory/>
+    <abstract/>
+  </t:titlepage-content>
+
+  <t:titlepage-content side="verso">
+  </t:titlepage-content>
+
+  <t:titlepage-separator>
+    <hr/>
+  </t:titlepage-separator>
+
+  <t:titlepage-before side="recto">
+  </t:titlepage-before>
+
+  <t:titlepage-before side="verso">
+  </t:titlepage-before>
+</t:titlepage>
+
+<!-- ==================================================================== -->
+
+<t:titlepage element="part" wrapper="div" class="titlepage">
+  <t:titlepage-content side="recto">
+    <title/>
+    <subtitle/>
+    <corpauthor/>
+    <authorgroup/>
+    <author/>
+    <othercredit/>
+    <releaseinfo/>
+    <copyright/>
+    <legalnotice/>
+    <pubdate/>
+    <revision/>
+    <revhistory/>
+    <abstract/>
+  </t:titlepage-content>
+
+  <t:titlepage-content side="verso">
+  </t:titlepage-content>
+
+  <t:titlepage-separator>
+  </t:titlepage-separator>
+
+  <t:titlepage-before side="recto">
+  </t:titlepage-before>
+
+  <t:titlepage-before side="verso">
+  </t:titlepage-before>
+</t:titlepage>
+
+<t:titlepage element="partintro" wrapper="div">
+  <t:titlepage-content side="recto">
+    <title/>
+    <subtitle/>
+    <corpauthor/>
+    <authorgroup/>
+    <author/>
+    <othercredit/>
+    <releaseinfo/>
+    <copyright/>
+    <legalnotice/>
+    <pubdate/>
+    <revision/>
+    <revhistory/>
+    <abstract/>
+  </t:titlepage-content>
+
+  <t:titlepage-content side="verso">
+  </t:titlepage-content>
+
+  <t:titlepage-separator>
+  </t:titlepage-separator>
+
+  <t:titlepage-before side="recto">
+  </t:titlepage-before>
+
+  <t:titlepage-before side="verso">
+  </t:titlepage-before>
+</t:titlepage>
+
+<!-- ==================================================================== -->
+
+<t:titlepage element="reference" wrapper="div" class="titlepage">
+  <t:titlepage-content side="recto">
+    <title/>
+    <subtitle/>
+    <corpauthor/>
+    <authorgroup/>
+    <author/>
+    <othercredit/>
+    <releaseinfo/>
+    <copyright/>
+    <legalnotice/>
+    <pubdate/>
+    <revision/>
+    <revhistory/>
+    <abstract/>
+  </t:titlepage-content>
+
+  <t:titlepage-content side="verso">
+  </t:titlepage-content>
+
+  <t:titlepage-separator>
+    <hr/>
+  </t:titlepage-separator>
+
+  <t:titlepage-before side="recto">
+  </t:titlepage-before>
+
+  <t:titlepage-before side="verso">
+  </t:titlepage-before>
+</t:titlepage>
+
+<!-- ==================================================================== -->
+
+<t:titlepage element="refentry" wrapper="div" class="titlepage">
+  <t:titlepage-content side="recto">
+<!-- uncomment this if you want refentry titlepages
+    <title force="1"
+	   named-template="refentry.title"
+	   param:node="ancestor-or-self::refentry[1]"/>
+-->
+  </t:titlepage-content>
+
+  <t:titlepage-content side="verso">
+  </t:titlepage-content>
+
+  <t:titlepage-separator/>
+
+  <t:titlepage-before side="recto">
+  </t:titlepage-before>
+
+  <t:titlepage-before side="verso">
+  </t:titlepage-before>
+</t:titlepage>
+
+<!-- ==================================================================== -->
+
+  <t:titlepage element="dedication" wrapper="div" class="titlepage">
+    <t:titlepage-content side="recto">
+    <title
+	   force="1"
+	   named-template="component.title"
+	   param:node="ancestor-or-self::dedication[1]"/>
+    <subtitle/>
+    </t:titlepage-content>
+
+  <t:titlepage-content side="verso">
+  </t:titlepage-content>
+
+  <t:titlepage-separator>
+  </t:titlepage-separator>
+
+  <t:titlepage-before side="recto">
+  </t:titlepage-before>
+
+  <t:titlepage-before side="verso">
+  </t:titlepage-before>
+</t:titlepage>
+
+<!-- ==================================================================== -->
+
+<t:titlepage element="preface" wrapper="div" class="titlepage">
+  <t:titlepage-content side="recto">
+    <title/>
+    <subtitle/>
+    <corpauthor/>
+    <authorgroup/>
+    <author/>
+    <othercredit/>
+    <releaseinfo/>
+    <copyright/>
+    <legalnotice/>
+    <pubdate/>
+    <revision/>
+    <revhistory/>
+    <abstract/>
+  </t:titlepage-content>
+
+  <t:titlepage-content side="verso">
+  </t:titlepage-content>
+
+  <t:titlepage-separator>
+  </t:titlepage-separator>
+
+  <t:titlepage-before side="recto">
+  </t:titlepage-before>
+
+  <t:titlepage-before side="verso">
+  </t:titlepage-before>
+</t:titlepage>
+
+<!-- ==================================================================== -->
+
+<t:titlepage element="chapter" wrapper="div" class="titlepage">
+  <t:titlepage-content side="recto">
+    <title/>
+    <subtitle/>
+    <corpauthor/>
+    <authorgroup/>
+    <author/>
+    <othercredit/>
+    <releaseinfo/>
+    <copyright/>
+    <legalnotice/>
+    <pubdate/>
+    <revision/>
+    <revhistory/>
+    <abstract/>
+  </t:titlepage-content>
+
+  <t:titlepage-content side="verso">
+  </t:titlepage-content>
+
+  <t:titlepage-separator>
+  </t:titlepage-separator>
+
+  <t:titlepage-before side="recto">
+  </t:titlepage-before>
+
+  <t:titlepage-before side="verso">
+  </t:titlepage-before>
+</t:titlepage>
+
+<!-- ==================================================================== -->
+
+<t:titlepage element="appendix" wrapper="div" class="titlepage">
+  <t:titlepage-content side="recto">
+    <title/>
+    <subtitle/>
+    <corpauthor/>
+    <authorgroup/>
+    <author/>
+    <othercredit/>
+    <releaseinfo/>
+    <copyright/>
+    <legalnotice/>
+    <pubdate/>
+    <revision/>
+    <revhistory/>
+    <abstract/>
+  </t:titlepage-content>
+
+  <t:titlepage-content side="verso">
+  </t:titlepage-content>
+
+  <t:titlepage-separator>
+  </t:titlepage-separator>
+
+  <t:titlepage-before side="recto">
+  </t:titlepage-before>
+
+  <t:titlepage-before side="verso">
+  </t:titlepage-before>
+</t:titlepage>
+
+<!-- ==================================================================== -->
+
+<t:titlepage element="section" wrapper="div" class="titlepage">
+  <t:titlepage-content side="recto">
+    <title/>
+    <subtitle/>
+    <corpauthor/>
+    <authorgroup/>
+    <author/>
+    <othercredit/>
+    <releaseinfo/>
+    <copyright/>
+    <legalnotice/>
+    <pubdate/>
+    <revision/>
+    <revhistory/>
+    <abstract/>
+  </t:titlepage-content>
+
+  <t:titlepage-content side="verso">
+  </t:titlepage-content>
+
+  <t:titlepage-separator>
+    <xsl:if test="count(parent::*)='0'"><hr/></xsl:if>
+  </t:titlepage-separator>
+
+  <t:titlepage-before side="recto">
+  </t:titlepage-before>
+
+  <t:titlepage-before side="verso">
+  </t:titlepage-before>
+</t:titlepage>
+
+<t:titlepage element="sect1" wrapper="div" class="titlepage">
+  <t:titlepage-content side="recto">
+    <title/>
+    <subtitle/>
+    <corpauthor/>
+    <authorgroup/>
+    <author/>
+    <othercredit/>
+    <releaseinfo/>
+    <copyright/>
+    <legalnotice/>
+    <pubdate/>
+    <revision/>
+    <revhistory/>
+    <abstract/>
+  </t:titlepage-content>
+
+  <t:titlepage-content side="verso">
+  </t:titlepage-content>
+
+  <t:titlepage-separator>
+    <xsl:if test="count(parent::*)='0'"><hr/></xsl:if>
+  </t:titlepage-separator>
+
+  <t:titlepage-before side="recto">
+  </t:titlepage-before>
+
+  <t:titlepage-before side="verso">
+  </t:titlepage-before>
+</t:titlepage>
+
+<t:titlepage element="sect2" wrapper="div" class="titlepage">
+  <t:titlepage-content side="recto">
+    <title/>
+    <subtitle/>
+    <corpauthor/>
+    <authorgroup/>
+    <author/>
+    <othercredit/>
+    <releaseinfo/>
+    <copyright/>
+    <legalnotice/>
+    <pubdate/>
+    <revision/>
+    <revhistory/>
+    <abstract/>
+  </t:titlepage-content>
+
+  <t:titlepage-content side="verso">
+  </t:titlepage-content>
+
+  <t:titlepage-separator>
+    <xsl:if test="count(parent::*)='0'"><hr/></xsl:if>
+  </t:titlepage-separator>
+
+  <t:titlepage-before side="recto">
+  </t:titlepage-before>
+
+  <t:titlepage-before side="verso">
+  </t:titlepage-before>
+</t:titlepage>
+
+<t:titlepage element="sect3" wrapper="div" class="titlepage">
+  <t:titlepage-content side="recto">
+    <title/>
+    <subtitle/>
+    <corpauthor/>
+    <authorgroup/>
+    <author/>
+    <othercredit/>
+    <releaseinfo/>
+    <copyright/>
+    <legalnotice/>
+    <pubdate/>
+    <revision/>
+    <revhistory/>
+    <abstract/>
+  </t:titlepage-content>
+
+  <t:titlepage-content side="verso">
+  </t:titlepage-content>
+
+  <t:titlepage-separator>
+    <xsl:if test="count(parent::*)='0'"><hr/></xsl:if>
+  </t:titlepage-separator>
+
+  <t:titlepage-before side="recto">
+  </t:titlepage-before>
+
+  <t:titlepage-before side="verso">
+  </t:titlepage-before>
+</t:titlepage>
+
+<t:titlepage element="sect4" wrapper="div" class="titlepage">
+  <t:titlepage-content side="recto">
+    <title/>
+    <subtitle/>
+    <corpauthor/>
+    <authorgroup/>
+    <author/>
+    <othercredit/>
+    <releaseinfo/>
+    <copyright/>
+    <legalnotice/>
+    <pubdate/>
+    <revision/>
+    <revhistory/>
+    <abstract/>
+  </t:titlepage-content>
+
+  <t:titlepage-content side="verso">
+  </t:titlepage-content>
+
+  <t:titlepage-separator>
+    <xsl:if test="count(parent::*)='0'"><hr/></xsl:if>
+  </t:titlepage-separator>
+
+  <t:titlepage-before side="recto">
+  </t:titlepage-before>
+
+  <t:titlepage-before side="verso">
+  </t:titlepage-before>
+</t:titlepage>
+
+<t:titlepage element="sect5" wrapper="div" class="titlepage">
+  <t:titlepage-content side="recto">
+    <title/>
+    <subtitle/>
+    <corpauthor/>
+    <authorgroup/>
+    <author/>
+    <othercredit/>
+    <releaseinfo/>
+    <copyright/>
+    <legalnotice/>
+    <pubdate/>
+    <revision/>
+    <revhistory/>
+    <abstract/>
+  </t:titlepage-content>
+
+  <t:titlepage-content side="verso">
+  </t:titlepage-content>
+
+  <t:titlepage-separator>
+    <xsl:if test="count(parent::*)='0'"><hr/></xsl:if>
+  </t:titlepage-separator>
+
+  <t:titlepage-before side="recto">
+  </t:titlepage-before>
+
+  <t:titlepage-before side="verso">
+  </t:titlepage-before>
+</t:titlepage>
+
+<t:titlepage element="simplesect" wrapper="div" class="titlepage">
+  <t:titlepage-content side="recto">
+    <title/>
+    <subtitle/>
+    <corpauthor/>
+    <authorgroup/>
+    <author/>
+    <othercredit/>
+    <releaseinfo/>
+    <copyright/>
+    <legalnotice/>
+    <pubdate/>
+    <revision/>
+    <revhistory/>
+    <abstract/>
+  </t:titlepage-content>
+
+  <t:titlepage-content side="verso">
+  </t:titlepage-content>
+
+  <t:titlepage-separator>
+    <xsl:if test="count(parent::*)='0'"><hr/></xsl:if>
+  </t:titlepage-separator>
+
+  <t:titlepage-before side="recto">
+  </t:titlepage-before>
+
+  <t:titlepage-before side="verso">
+  </t:titlepage-before>
+</t:titlepage>
+
+<!-- ==================================================================== -->
+
+<t:titlepage element="bibliography" wrapper="div" class="titlepage">
+  <t:titlepage-content side="recto">
+    <title
+	   force="1"
+	   named-template="component.title"
+	   param:node="ancestor-or-self::bibliography[1]"/>
+    <subtitle/>
+  </t:titlepage-content>
+
+  <t:titlepage-content side="verso">
+  </t:titlepage-content>
+
+  <t:titlepage-separator>
+  </t:titlepage-separator>
+
+  <t:titlepage-before side="recto">
+  </t:titlepage-before>
+
+  <t:titlepage-before side="verso">
+  </t:titlepage-before>
+</t:titlepage>
+
+<!-- ==================================================================== -->
+
+<t:titlepage element="glossary" wrapper="div" class="titlepage">
+  <t:titlepage-content side="recto">
+    <title
+	   force="1"
+	   named-template="component.title"
+	   param:node="ancestor-or-self::glossary[1]"/>
+    <subtitle/>
+  </t:titlepage-content>
+
+  <t:titlepage-content side="verso">
+  </t:titlepage-content>
+
+  <t:titlepage-separator>
+  </t:titlepage-separator>
+
+  <t:titlepage-before side="recto">
+  </t:titlepage-before>
+
+  <t:titlepage-before side="verso">
+  </t:titlepage-before>
+</t:titlepage>
+
+<!-- ==================================================================== -->
+
+<t:titlepage element="index" wrapper="div" class="titlepage">
+  <t:titlepage-content side="recto">
+    <title
+	   force="1"
+	   named-template="component.title"
+	   param:node="ancestor-or-self::index[1]"/>
+    <subtitle/>
+  </t:titlepage-content>
+
+  <t:titlepage-content side="verso">
+  </t:titlepage-content>
+
+  <t:titlepage-separator>
+  </t:titlepage-separator>
+
+  <t:titlepage-before side="recto">
+  </t:titlepage-before>
+
+  <t:titlepage-before side="verso">
+  </t:titlepage-before>
+</t:titlepage>
+
+<!-- ==================================================================== -->
+
+</t:templates>

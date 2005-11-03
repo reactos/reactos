@@ -1,0 +1,6 @@
+#define WIN32_LEAN_AND_MEAN
+#include <winuser.h>
+
+CREATEPROCESS_MANIFEST_RESOURCE_ID RT_MANIFEST "manifest.xml"
+
+// EOF

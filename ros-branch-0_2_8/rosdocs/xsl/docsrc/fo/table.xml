@@ -1,0 +1,150 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE reference
+  PUBLIC "-//Norman Walsh//DTD JRefEntry V1.1//EN" "http://docbook.sourceforge.net/release/jrefentry/1.1/jrefentry.dtd">
+<reference>
+<referenceinfo>
+<releaseinfo role="meta">
+$Id: table.xml,v 1.1 2002/06/13 20:32:02 chorns Exp $
+</releaseinfo>
+<author><surname>Walsh</surname>
+<firstname>Norman</firstname></author>
+<copyright><year>1999</year><year>2000</year>
+<holder>Norman Walsh</holder>
+</copyright>
+</referenceinfo>
+<title>Formatting Object Table Reference</title>
+
+<partintro>
+<section><title>Introduction</title>
+
+
+<para>This is technical reference documentation for the DocBook XSL
+Stylesheets; it documents (some of) the parameters, templates, and
+other elements of the stylesheets.</para>
+
+
+
+<para>This is not intended to be <quote>user</quote> documentation.
+It is provided for developers writing customization layers for the
+stylesheets, and for anyone who's interested in <quote>how it
+works</quote>.</para>
+
+
+
+<para>Although I am trying to be thorough, this documentation is known
+to be incomplete. Don't forget to read the source, too :-)</para>
+
+</section>
+</partintro>
+
+<refentry id="template.calc.column.width">
+<refnamediv>
+<refname>calc.column.width</refname>
+<refpurpose>Calculate an XSL FO table column width specification from a
+CALS table column width specification.</refpurpose>
+</refnamediv>
+<refsynopsisdiv>
+<synopsis>&lt;xsl:template name="calc.column.width"&gt;
+&lt;xsl:param name="colwidth"&gt;1*&lt;/xsl:param&gt;
+  ...
+&lt;/xsl:template&gt;</synopsis>
+</refsynopsisdiv>
+<refdescription>
+
+<para>CALS expresses table column widths in the following basic
+forms:</para>
+
+
+
+<itemizedlist>
+<listitem>
+
+<para><emphasis>99.99units</emphasis>, a fixed length specifier.</para>
+
+</listitem>
+<listitem>
+
+<para><emphasis>99.99</emphasis>, a fixed length specifier without any units.</para>
+
+</listitem>
+<listitem>
+
+<para><emphasis>99.99*</emphasis>, a relative length specifier.</para>
+
+</listitem>
+<listitem>
+
+<para><emphasis>99.99*+99.99units</emphasis>, a combination of both.</para>
+
+</listitem>
+</itemizedlist>
+
+
+
+<para>The CALS units are points (pt), picas (pi), centimeters (cm),
+millimeters (mm), and inches (in). These are the same units as XSL,
+except that XSL abbreviates picas "pc" instead of "pi". If a length
+specifier has no units, the CALS default unit (pt) is assumed.</para>
+
+
+
+<para>Relative length specifiers are represented in XSL with the
+proportional-column-width() function.</para>
+
+
+
+<para>Here are some examples:</para>
+
+
+
+<itemizedlist>
+<listitem>
+
+<para>"36pt" becomes "36pt"</para>
+
+</listitem>
+<listitem>
+
+<para>"3pi" becomes "3pc"</para>
+
+</listitem>
+<listitem>
+
+<para>"36" becomes "36pt"</para>
+
+</listitem>
+<listitem>
+
+<para>"3*" becomes "proportional-column-width(3)"</para>
+
+</listitem>
+<listitem>
+
+<para>"3*+2pi" becomes "proportional-column-width(3)+2pc"</para>
+
+</listitem>
+<listitem>
+
+<para>"1*+2" becomes "proportional-column-width(1)+2pt"</para>
+
+</listitem>
+</itemizedlist>
+
+</refdescription><refparameter>
+
+<variablelist>
+<varlistentry><term>colwidth</term>
+<listitem>
+
+<para>The CALS column width specification.</para>
+
+</listitem>
+</varlistentry>
+</variablelist>
+
+</refparameter><refreturn>
+
+<para>The XSL column width specification.</para>
+
+</refreturn></refentry>
+</reference>

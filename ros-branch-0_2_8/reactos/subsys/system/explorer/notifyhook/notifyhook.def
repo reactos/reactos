@@ -1,0 +1,5 @@
+EXPORTS
+DeinstallNotifyHook
+GetWindowModulePath
+GetWindowModulePathCopyData
+InstallNotifyHook

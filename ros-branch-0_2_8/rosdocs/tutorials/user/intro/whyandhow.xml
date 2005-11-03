@@ -1,0 +1,50 @@
+<chapter>
+<title>The why and how of ReactOS</title>
+<!--
+<artheader>
+   <title>The why and how of ReactOS</title>
+   <author>
+      <firstname>Jason</firstname>
+      <surname>Filby</surname>
+      <affiliation>
+        <address>
+          <email>jasonfilby@yahoo.com</email>
+        </address>
+      </affiliation>
+   </author>
+</artheader>
+-->
+<abstract>
+<para>
+As an introduction to ReactOS. The chapter is about how the project came about and what the developers hope to achieve.
+</para>
+</abstract>
+
+<sect2>
+<title>Running Windows applications on an Open Source Operating System</title>
+<para>
+Since Microsoft Windows has a monopoly on the desktop, many projects have been started to get Windows applications to run on other operating systems. This is because if you have a fantastic OS, but no or little applications, your OS will probably see little growth or die. This is the story of many OSs, that while technically superior to Windows at the time, died off or have seen little growth.
+</para>
+<para>
+Ever since OS/2, people have been trying to get Windows applications to run on other OSs. Linux has at least two projects towards this end, <ulink url="http://www.winehq.org/">WINE</ulink> (more popular) and <ulink url="http://www.willows.com/">TWIN</ulink>.
+</para>
+</sect2>
+
+<sect2>
+<title>ReactOS beginnings</title>
+<para>
+Around about 1996 some people decided to create an OS from scratch that would run Windows applications. It would be called FreeWin95. These people were dissatisfied with the Linux/WINE solution and wanted an OS that was dedicated to running Windows applications, without having to pay Microsoft money and being Open Source (source code available to all). Unfortunately, this project did not take off because people could not agree on exactly what the project should be or how it should be designed.
+</para>
+<para>
+In early 1998, Jason Filby volunteered to become project coordinator of the almost abandoned project. After some initial discussion it was decided that the project would be mostly a Windows NT clone. The project was renamed to ReactOS to reflect the change in direction and the fact that Microsoft's desktop monopoly had prompted this reaction from developers around the world. Since NT was far superior to the then Windows 95, it was the obvious choice. It was also decided that instead of just being application compatible, ReactOS would also be driver compatible with NT.
+</para>
+</sect2>
+
+<sect2>
+<title>ReactOS today</title>
+<para>
+ReactOS still has a long way to go, but the developers are confident that ReactOS will one day be a viable alternative to Microsoft desktop operating systems. Some are even considering using ReactOS as a server, as it is based on NT. We look forward to the future of ReactOS with great expectation!
+</para>
+</sect2>
+
+</chapter>

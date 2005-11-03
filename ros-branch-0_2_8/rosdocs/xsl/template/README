@@ -1,0 +1,15 @@
+This directory contains rudimentary support for the notion of
+stylesheet templates.
+
+The idea is that if you want to change the behavior of the
+stylesheets, for example, processing different bibliography
+elements, you will construct a tempate document that describes
+what you want and then process that template with the "template"
+stylesheet.
+
+The result of this processing will be a customization layer for
+the DocBook XSL Stylesheets that does what you want. This
+removes the stylesheet customizer from the burdon of figuring
+out how the stylesheets work and modifying them.
+
+In theory, anyway...

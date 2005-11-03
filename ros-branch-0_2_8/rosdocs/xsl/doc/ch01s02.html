@@ -1,0 +1,67 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>A brief introduction to XSL</title><link rel="stylesheet" href="reference.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.50.0"><link rel="home" href="index.html" title="DocBook XSL Stylesheet Documentation"><link rel="up" href="publishing.html" title="Chapter 1. DocBook XSL"><link rel="previous" href="publishing.html" title="Chapter 1. DocBook XSL"><link rel="next" href="ch01s03.html" title="XSL processing model"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">A brief introduction to XSL</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="publishing.html">Prev</a>&nbsp;</td><th width="60%" align="center">Chapter 1. DocBook XSL</th><td width="20%" align="right">&nbsp;<a accesskey="n" href="ch01s03.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="d0e173"></a>A brief introduction to XSL</h2></div></div><p>XSL is both a transformation language and a
+ formatting language. The XSLT transformation part lets you
+ scan through a document's structure and rearrange its
+ content any way you like. You can write out the content
+ using a different set of XML tags, and generate text as
+ needed. For example, you can scan through a document to
+ locate all headings and then insert a generated table of
+ contents at the beginning of the document, at the same time
+ writing out the content marked up as HTML. XSL is also a
+ rich formatting language, letting you apply typesetting
+ controls to all components of your output. With a good
+ formatting backend, it is capable of producing high quality
+ printed pages.</p><p>An XSL stylesheet is written using XML syntax, and is
+ itself a well-formed XML document. That makes the basic
+ syntax familiar, and enables an XML processor to check for
+ basic syntax errors. The stylesheet instructions use
+ special element names, which typically begin with
+ <tt>xsl:</tt> to distinguish them from any XML
+ tags you want to appear in the output. The XSL namespace is
+ identified at the top of the stylesheet file. As with other
+ XML, any XSL elements that are not empty will require a
+ closing tag. And some XSL elements have specific attributes
+ that control their behavior. It helps to keep a good XSL
+ reference book handy.</p><p>Here is an example of a simple XSL stylesheet applied
+ to a simple XML file to generate HTML output.</p><div class="example"><p class="title"><b>Example 1.1. Simple XML file</b></p><pre class="programlisting">&lt;?xml version="1.0"?&gt;
+&lt;document&gt;
+&lt;title&gt;Using a mouse&lt;/title&gt;
+&lt;para&gt;It's easy to use a mouse. Just roll it
+around and click the buttons.&lt;/para&gt;
+&lt;/document&gt;</pre></div><div class="example"><p class="title"><b>Example 1.2. Simple XSL stylesheet</b></p><pre class="programlisting">&lt;?xml version='1.0'?&gt;
+&lt;xsl:stylesheet
+          xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version='1.0'&gt;
+&lt;xsl:output method="html"/&gt;
+
+&lt;xsl:template match="document"&gt;
+  &lt;HTML&gt;&lt;HEAD&gt;&lt;TITLE&gt;
+    &lt;xsl:value-of select="./title"/&gt;
+  &lt;/TITLE&gt;
+  &lt;/HEAD&gt;
+  &lt;BODY&gt;
+    &lt;xsl:apply-templates/&gt;
+  &lt;/BODY&gt;
+  &lt;/HTML&gt;
+&lt;/xsl:template&gt;
+
+&lt;xsl:template match="title"&gt;
+  &lt;H1&gt;&lt;xsl:apply-templates/&gt;&lt;/H1&gt;
+&lt;/xsl:template&gt;
+
+&lt;xsl:template match="para"&gt;
+  &lt;P&gt;&lt;xsl:apply-templates/&gt;&lt;/P&gt;
+&lt;/xsl:template&gt;
+
+&lt;/xsl:stylesheet&gt;
+</pre></div><div class="example"><p class="title"><b>Example 1.3. HTML output</b></p><pre class="programlisting">&lt;HTML&gt;
+&lt;HEAD&gt;
+&lt;TITLE&gt;Using a mouse&lt;/TITLE&gt;
+&lt;/HEAD&gt;
+&lt;BODY&gt;
+&lt;H1&gt;Using a mouse&lt;/H1&gt;
+&lt;P&gt;It's easy to use a mouse. Just roll it
+around and click the buttons.&lt;/P&gt;
+&lt;/BODY&gt;
+&lt;/HTML&gt;
+</pre></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="publishing.html">Prev</a>&nbsp;</td><td width="20%" align="center"><a accesskey="u" href="publishing.html">Up</a></td><td width="40%" align="right">&nbsp;<a accesskey="n" href="ch01s03.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 1. DocBook XSL&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;XSL processing model</td></tr></table></div></body></html>

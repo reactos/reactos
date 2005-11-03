@@ -1,0 +1,31 @@
+<refentry id="page.width">
+<refmeta>
+<refentrytitle>page.width</refentrytitle>
+
+</refmeta>
+<refnamediv>
+<refname>page.width</refname>
+<refpurpose>The width of the physical page</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='page.width.frag'><xsl:param name="page.width">
+  <xsl:choose>
+    <xsl:when test="$page.orientation = 'portrait'">
+      <xsl:value-of select="$page.width.portrait"/>
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:value-of select="$page.height.portrait"/>
+    </xsl:otherwise>
+  </xsl:choose>
+</xsl:param></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>The page width is generally calculated from the
+<literal>paper.type</literal> and <literal>page.orientation</literal>.
+</para>
+
+</refsect1>
+</refentry>

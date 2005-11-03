@@ -1,0 +1,61 @@
+<chapter>
+<title>Downloading and Using Bochs with ReactOS</title>
+
+<!--
+<artheader>
+   <title>Downloading and Using Bochs with ReactOS</title>
+   <author>
+      <firstname>Jason</firstname>
+      <surname>Filby</surname>
+      <affiliation>
+        <address>
+          <email>jasonfilby@yahoo.com</email>
+        </address>
+      </affiliation>
+   </author>
+</artheader>
+-->
+
+<abstract>
+<para>
+How to download Bochs and use it for testing ReactOS.
+</para>
+</abstract>
+
+<sect2>
+<title>Downloading Bochs</title>
+<para>
+The <ulink url="http://www.reactos.com/">reactos.com</ulink> site provides several Bochs distributions:
+<itemizedlist>
+<listitem>Bochs preloaded with ReactOS disk images.</listitem>
+<listitem>ReactOS disk images only.</listitem>
+<listitem>Bochs only.</listitem>
+</itemizedlist>
+These downloads are available from the same page as the ReactOS binaries on reactos.com (under Software, ReactOS).
+</para>
+<para>
+Typically, you'd want to download Bochs preloaded with ReactOS disk images. If you want to use an emulator other than Bochs, then the disk images only download would be more useful. Disk images only are also useful if you want to try out a newer version of ReactOS and already have Bochs. The Bochs only download is useful for when an updated version of the Bochs emulator is available on the reactos.com site.
+</para>
+</sect2>
+
+<sect2>
+<title>Using MTools: Upgrading the ReactOS Files on the Virtual Disk</title>
+<para>
+MTools are used to copy files to and from the disk images. Run mtinst.bat to have MTools configure properly. This batch file copies the mtools.exe file to the various MTools commands (eg. mcopy, mmd). These files are used by binst.bat (used to update the ReactOS files on the virtual disk).
+</para>
+<para>
+To upgrade the ReactOS files on the virtual disk, copy the ReactOS binary distribution directory (named reactos) into the directory where Bochs is installed. Then run binst.bat to copy the new files into the virtual disk (be sure to have run mtinst.bat at some time in the past before doing this).
+</para>
+</sect2>
+
+<sect2>
+<title>Running ReactOS under Bochs</title>
+<para>
+Simply run the boot.bat file in the directory where Bochs was installed. If Freeloader is installed on the floppy image, then ReactOS will automatically be booted by Freeloader. If FreeDOS is on the floppy image, you'll boot into an A: prompt. Run boot.bat from this prompt.
+</para>
+<para>
+To switch to booting with Freeloader, run the freeldr.bat file in the Bochs directory. To switch to booting with FreeDOS, run the freedos.bat file.
+</para>
+</sect2>
+
+</chapter>

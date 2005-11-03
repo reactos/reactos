@@ -1,0 +1,35 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>Customizing generated files</title><link rel="stylesheet" href="reference.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.50.0"><link rel="home" href="index.html" title="DocBook XSL Stylesheet Documentation"><link rel="up" href="htmlhelp.html" title="Chapter 6. Using the XSL stylesheets to generate HTML Help"><link rel="previous" href="htmlhelp.html" title="Chapter 6. Using the XSL stylesheets to generate HTML Help"><link rel="next" href="ch06s03.html" title="Feedback"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Customizing generated files</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="htmlhelp.html">Prev</a>&nbsp;</td><th width="60%" align="center">Chapter 6. Using the XSL stylesheets to generate HTML Help</th><td width="20%" align="right">&nbsp;<a accesskey="n" href="ch06s03.html">Next</a></td></tr></table><hr></div><div class="section"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="d0e1211"></a>Customizing generated files</h2></div></div><div class="section"><div class="titlepage"><div><h3 class="title"><a name="d0e1214"></a>Enabling navigation links</h3></div></div><p>By default, the HTML Help stylesheet disables navigation links at
+the start and the bottom of each page. If you want to enable the
+links instead, start your XSLT processor with the parameter <i><tt>suppress.navigation</tt></i> set to 0.</p><pre class="screen">saxon <i><tt>yourfile</tt></i> <i><tt>/path/to/stylesheets/</tt></i>htmlhelp/htmlhelp.xsl "suppress.navigation=0"</pre><p>Another approach is to create a driver file, which overrides
+the default parameter value.</p><pre class="programlisting">&lt;xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+	        version="1.0"&gt;
+
+  &lt;xsl:import href="<i><tt>/path/to/stylesheets/</tt></i>htmlhelp/htmlhelp.xsl"/&gt;
+
+  &lt;xsl:param name="suppress.navigation" select="0"/&gt;
+
+&lt;/xsl:stylesheet&gt;
+</pre></div><div class="section"><div class="titlepage"><div><h3 class="title"><a name="d0e1237"></a>Generating HTML Help for non-Western European languages</h3></div></div><p>If you are generating HTML Help for non-Western Europe
+languages, you should change the output encoding of your files, because
+the HTML Help compiler improperly handles UTF-8 and even character
+entities in the TOC file and index entries. This can be easily done using a 
+&#8220;driver&#8221; file like this:</p><pre class="programlisting">&lt;xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+	        version="1.0"&gt;
+
+  &lt;xsl:import href="<i><tt>/path/to/stylesheets/</tt></i>contrib/htmlhelp/htmlhelp.xsl"/&gt;
+
+  &lt;xsl:param name="htmlhelp.encoding" select="'windows-1250'"/&gt;
+  &lt;xsl:param name="default.encoding" select="'windows-1250'"/&gt;
+  &lt;xsl:param name="saxon.character.representation" select="'native'"/&gt;
+
+&lt;/xsl:stylesheet&gt;
+</pre><p>Default encoding is ISO-8859-1 (aka ISO Latin 1). If you get
+some strange message about characters from your XSLT processor and
+your document is in some of Western European languages, try changing
+encoding to <tt>windows-1252</tt>. This encoding is similar
+to ISO-8859-1 but contains some additional characters like
+&#8220;typographical quotes&#8221; and dashes.</p></div><div class="section"><div class="titlepage"><div><h3 class="title"><a name="d0e1258"></a>More about customizing</h3></div></div><p>More info will come in a near future (I hope and
+believe). Meanwhile look into reference for description of <a href="http://docbook.sourceforge.net/release/xsl/snapshot/doc/html/" target="_top">HTML Help
+specific parameters</a>.</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="htmlhelp.html">Prev</a>&nbsp;</td><td width="20%" align="center"><a accesskey="u" href="htmlhelp.html">Up</a></td><td width="40%" align="right">&nbsp;<a accesskey="n" href="ch06s03.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 6. Using the XSL stylesheets to generate HTML Help&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;Feedback</td></tr></table></div></body></html>

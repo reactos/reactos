@@ -1,0 +1,140 @@
+/*
+ * Copyright 1998 Juergen Schmied
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
+
+MENU_001 MENU DISCARDABLE
+BEGIN
+	MENUITEM "大きなｱｲｺﾝ(&G)",	FCIDM_SHVIEW_BIGICON
+	MENUITEM "小さなｱｲｺﾝ(&M)",	FCIDM_SHVIEW_SMALLICON
+	MENUITEM "一覧(&L)",		FCIDM_SHVIEW_LISTVIEW
+	MENUITEM "詳細(&D)",		FCIDM_SHVIEW_REPORTVIEW
+END
+
+MENU_002 MENU DISCARDABLE
+BEGIN
+	POPUP ""
+	BEGIN
+	  POPUP "表\示(&V)"
+	  BEGIN
+	    MENUITEM "大きいアイコン(&G)",	FCIDM_SHVIEW_BIGICON
+	    MENUITEM "小さいアイコン(&M)",	FCIDM_SHVIEW_SMALLICON
+	    MENUITEM "一覧(&L)",		FCIDM_SHVIEW_LISTVIEW
+	    MENUITEM "詳細(&D)",	FCIDM_SHVIEW_REPORTVIEW
+	  END
+	  MENUITEM SEPARATOR
+	  POPUP "アイコンの整列(&I)"
+	  BEGIN
+	    MENUITEM "名前順(&N)",	0x30	/* column 0 */
+	    MENUITEM "種類順(&T)",	0x32	/* column 2 */
+	    MENUITEM "サイズ順(&S)",	0x31	/* ... */
+	    MENUITEM "日付順(&D)",	0x33
+	    MENUITEM SEPARATOR
+	    MENUITEM "アイコンの自動整列(&A)",	FCIDM_SHVIEW_AUTOARRANGE
+	  END
+	  MENUITEM "等間隔に整列",	FCIDM_SHVIEW_SNAPTOGRID
+	  MENUITEM SEPARATOR
+	  MENUITEM "貼\り付け",		FCIDM_SHVIEW_INSERT
+	  MENUITEM "ショートカットの貼\り付け",	FCIDM_SHVIEW_INSERTLINK
+	  POPUP "新規作成"
+	  BEGIN
+	    MENUITEM "新規フォルダ(&F)",	0x7053
+	    MENUITEM "新規ショートカット(&L)",	0x7052
+	    MENUITEM SEPARATOR
+	  END
+	  MENUITEM "プロパティ",		FCIDM_SHVIEW_PROPERTIES
+	END
+END
+
+MENU_SHV_FILE MENU DISCARDABLE
+BEGIN
+	POPUP ""
+	BEGIN
+	  MENUITEM "切り取り(&U)",		FCIDM_SHVIEW_CUT
+	  MENUITEM "コピー(&C)",	FCIDM_SHVIEW_COPY
+	  MENUITEM SEPARATOR
+	  MENUITEM "ショートカットの作成(&L)",	0x7051
+	  MENUITEM "削除(&D)",	FCIDM_SHVIEW_DELETE
+	  MENUITEM "名前の変更(&R)",	0x7050
+	  MENUITEM SEPARATOR
+	  MENUITEM "プロパティ(&P)",	FCIDM_SHVIEW_PROPERTIES
+	END
+END
+
+/*
+	special folders
+*/
+STRINGTABLE DISCARDABLE
+{
+	IDS_DESKTOP		"ﾃﾞｽｸﾄｯﾌﾟ"
+	IDS_MYCOMPUTER		"ﾏｲｺﾝﾋﾟｭｰﾀ"
+}
+
+/*
+	context menus
+*/
+STRINGTABLE DISCARDABLE
+{
+	IDS_VIEW_LARGE		"大きいアイコン(&G)"
+	IDS_VIEW_SMALL		"小さいアイコン(&M)"
+	IDS_VIEW_LIST		"一覧(&L)"
+	IDS_VIEW_DETAILS	"詳細(&D)"
+	IDS_SELECT		"選択"
+	IDS_OPEN		"開く"
+}
+
+SHELL_ABOUT_MSGBOX DIALOG LOADONCALL MOVEABLE DISCARDABLE 15, 40, 210, 152
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "%s について"
+FONT 10, "MS Shell Dlg"
+{
+ DEFPUSHBUTTON "OK", IDOK, 153, 133, 50, 12, WS_TABSTOP
+ LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
+ ICON "", 1088, 10, 10, 14, 16
+ LTEXT "", 100, 30, 10, 137, 10
+ LTEXT "", 101, 30, 22, 137, 10
+ LTEXT "ReactOS was brought to you by:", 98, 8, 55, 137, 10
+}
+
+SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+{
+ ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+ LTEXT "Type the name of a program, folder, document, or Internet resource, and ReactOS will open it for you.", 12289, 36, 11, 182, 18
+ LTEXT "&Open:", 12305, 7, 39, 24, 10
+ CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+ DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
+ PUSHBUTTON "Cancel", IDCANCEL, 116, 63, 50, 14, WS_TABSTOP
+ PUSHBUTTON "&Browse...", 12288, 170, 63, 50, 14, WS_TABSTOP
+}
+
+/*	columns in the shellview	*/
+STRINGTABLE DISCARDABLE
+BEGIN
+	IDS_SHV_COLUMN1		"名前"
+	IDS_SHV_COLUMN2		"サイズ"
+	IDS_SHV_COLUMN3		"ファイルの種類"
+	IDS_SHV_COLUMN4		"更新日時"
+	IDS_SHV_COLUMN5		"属性"
+	IDS_SHV_COLUMN6		"合計サイズ"
+	IDS_SHV_COLUMN7		"空き容量"
+	IDS_SHV_COLUMN8		"Name" /*FIXME*/
+	IDS_SHV_COLUMN9		"Comments" /*FIXME*/
+END

@@ -1,0 +1,43 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>DocBook XSL Stylesheets Release Notes</title><meta name="generator" content="DocBook XSL Stylesheets V1.51.0"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="article"><div class="titlepage"><div><h1 class="title"><a name="d0e1"></a>DocBook XSL Stylesheets Release Notes</h1></div><div><h3 class="corpauthor">DocBook Open Repository Team</h3></div><div><p class="releaseinfo">$Id: RELEASE-NOTES.html,v 1.1 2002/06/13 20:29:52 chorns Exp $
+</p></div><div><p class="pubdate">02 Jun 2002</p></div><hr></div><p>These are the release notes for the DocBook XSL Stylesheets.
+This file documents (mostly) changes to the public APIs. What,
+exactly, counts as a public API is still somewhat in question, but it
+includes at least the global parameters.</p><div class="itemizedlist"><p class="title"><b>Release 1.51.0</b></p><ul type="disc"><li><p>Added an extension function to determine the intrinsic size of
+an image. Works for the image formats supported by the Java Image
+class and or PostScript-derived formats.</p></li><li><p>Added callout bullets 11-15.
+</p></li><li><p>Removed obsolete <i><tt>using.chunker</tt></i> parameter.
+</p></li><li><p>Added <i><tt>points.per.em</tt></i> parameter.
+</p></li><li><p>Added <i><tt>generate.manifest</tt></i> parameter.
+</p></li><li><p>Added <i><tt>manifest</tt></i> parameter.
+</p></li><li><p>Added <i><tt>compact.list.item.spacing</tt></i> parameter.
+</p></li><li><p>Added <i><tt>html.extra.head.links</tt></i> parameter.
+</p></li><li><p>Added <i><tt>use.svg</tt></i> parameter; support SVG in HTML.
+</p></li><li><p>Convert the library code to a literate programming style with xweb.
+</p></li><li><p>Support <tt class="sgmltag-element">xref</tt> to any element that has a title (at least
+when it has a title).
+</p></li><li><p>Pass MathML through unchanged.
+</p></li><li><p>Completely reworked support for graphic attributes in HTML.
+</p></li><li><p>Add additional <tt class="sgmltag-element">LINK</tt> elements to the HTML
+<tt class="sgmltag-element">HEAD</tt> (for site navigation as in Mozilla---note,
+however, that Mozilla has disabled this recently for the 1.0 release).
+</p></li><li><p>Support <i><tt>shade.verbatim</tt></i> parameter in FO.
+</p></li><li><p>Support compact list spacing in FO.
+</p></li></ul></div><div class="itemizedlist"><p class="title"><b>Release 1.50.0</b></p><ul type="disc"><li><p>This release introduces a new version numbering scheme. Version
+numbers are now three part: major.middle.minor. Changes to the middle
+version number indicate a change in the public API. Changes in only the
+minor number indicate simply a new release.</p></li><li><p>The <i><tt>generate.<i><tt>*</tt></i>.toc</tt></i>
+and <i><tt>generate.<i><tt>*</tt></i>.lot</tt></i>
+parameters have been replaced by a single structured parameter,
+<i><tt>generate.toc</tt></i>.</p><p>It's likely that the HTML and FO stylesheets do not handle ToC generation
+in exactly the same way, but they should.</p></li><li><p>Added <tt>strip-attributes.xsl</tt> to the profiling
+stylesheets. This allows one to strip off, for example, profiling attributes
+after a document has been profiled.</p></li><li><p>Improved numeration of footnotes and table footnotes. Made table footnotes
+render &#8220;properly&#8221; in FOs.</p></li><li><p>Added a <i><tt>formal.title.placement</tt></i> parameter, allowing
+users to select placement of formal object titles either above or below the
+object.</p></li><li><p>Improved control over delimiters for TeX equations.</p></li><li><p>Support <tt class="sgmltag-element">classsynopsis</tt> and friends in FOs.</p></li><li><p>Changed HTML stylesheets to use <tt class="sgmltag-element">em</tt> instead of
+<tt class="sgmltag-element">i</tt> for <tt class="sgmltag-element">emphasis</tt>.</p></li><li><p>Added <tt class="sgmltag-element">chunk.quietly</tt> parameter.</p></li><li><p>Improved profiling code to support the full range of profiling attributes
+and to support one-pass profiling (if your XSLT processor understands the
+<a href="http://www.exslt.org/" target="_top">EXSLT</a> <tt>node-set</tt>
+function.</p></li></ul></div></div></body></html>

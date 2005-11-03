@@ -1,0 +1,16 @@
+<Combine fileversion="1.0" name="CHMLibrary" description="">
+  <StartMode startupentry="CHMLibrary" single="True">
+    <Execute entry="CHMLibrary" type="None" />
+  </StartMode>
+  <Entries>
+    <Entry filename=".\.\CHMLibrary.prjx" />
+  </Entries>
+  <Configurations active="Debug">
+    <Configuration name="Release">
+      <Entry name="CHMLibrary" configurationname="Debug" build="False" />
+    </Configuration>
+    <Configuration name="Debug">
+      <Entry name="CHMLibrary" configurationname="Debug" build="False" />
+    </Configuration>
+  </Configurations>
+</Combine>

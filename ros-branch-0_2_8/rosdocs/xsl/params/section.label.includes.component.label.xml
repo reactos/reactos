@@ -1,0 +1,22 @@
+<refentry id="section.label.includes.component.label">
+<refmeta>
+<refentrytitle>section.label.includes.component.label</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>section.label.includes.component.label</refname>
+<refpurpose>Do section labels include the component label?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='section.label.includes.component.label.frag'><xsl:param name="section.label.includes.component.label" select="0"/></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If true (non-zero), section labels are prefixed with the label of the
+component that contains them.
+</para>
+
+</refsect1>
+</refentry>

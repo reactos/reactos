@@ -1,0 +1,22 @@
+<refentry id="table.entry.padding">
+<refmeta>
+<refentrytitle>table.entry.padding</refentrytitle>
+<refmiscinfo role="type"></refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>table.entry.padding</refname>
+<refpurpose></refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='table.entry.padding.frag'>
+<xsl:param name="table.entry.padding" select="'2pt'"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>FIXME:</para>
+
+</refsect1>
+</refentry>

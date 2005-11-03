@@ -1,0 +1,20 @@
+<refentry id="informal.object.properties">
+<refnamediv>
+<refname>informal.object.properties</refname>
+<refpurpose>Properties associated with a formal object such as a figure, or other component that has a title</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='informal.object.properties.frag'><xsl:attribute-set name="informal.object.properties">
+  <xsl:attribute name="space-before.minimum">0.5em</xsl:attribute>
+  <xsl:attribute name="space-before.optimum">1em</xsl:attribute>
+  <xsl:attribute name="space-before.maximum">2em</xsl:attribute>
+  <xsl:attribute name="space-after.minimum">0.5em</xsl:attribute>
+  <xsl:attribute name="space-after.optimum">1em</xsl:attribute>
+  <xsl:attribute name="space-after.maximum">2em</xsl:attribute>
+</xsl:attribute-set></src:fragment>
+</refsynopsisdiv>
+<refsect1><title>Description</title>
+<para>The styling for informal objects in docbook. Specify the spacing before and after the object.</para>
+</refsect1>
+</refentry>

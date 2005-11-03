@@ -1,0 +1,21 @@
+<refentry id="part.autolabel">
+<refmeta>
+<refentrytitle>part.autolabel</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>part.autolabel</refname>
+<refpurpose>Are parts and references enumerated?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='part.autolabel.frag'><xsl:param name="part.autolabel" select="1"/></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If true (non-zero), unlabeled parts and references will be enumerated.
+</para>
+
+</refsect1>
+</refentry>

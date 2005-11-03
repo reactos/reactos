@@ -1,0 +1,23 @@
+<refentry id="punct.honorific">
+<refmeta>
+<refentrytitle>punct.honorific</refentrytitle>
+<refmiscinfo role="type">string</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>punct.honorific</refname>
+<refpurpose>Punctuation after an honorific in a personal name.</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='punct.honorific.frag'>
+<xsl:param name="punct.honorific" select="'.'"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>This parameter specifies the punctuation that should be added after an
+honorific in a personal name.</para>
+
+</refsect1>
+</refentry>

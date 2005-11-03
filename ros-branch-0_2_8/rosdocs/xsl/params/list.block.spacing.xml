@@ -1,0 +1,17 @@
+<refentry id="list.block.spacing">
+<refnamediv>
+<refname>list.block.spacing</refname>
+<refpurpose>What spacing do you want before lists?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='list.block.spacing.frag'><xsl:attribute-set name="list.block.spacing">
+  <xsl:attribute name="space-before.optimum">1em</xsl:attribute>
+  <xsl:attribute name="space-before.minimum">0.8em</xsl:attribute>
+  <xsl:attribute name="space-before.maximum">1.2em</xsl:attribute>
+</xsl:attribute-set></src:fragment>
+</refsynopsisdiv>
+<refsect1><title>Description</title>
+<para>Specify the spacing required before a list. </para>
+</refsect1>
+</refentry>

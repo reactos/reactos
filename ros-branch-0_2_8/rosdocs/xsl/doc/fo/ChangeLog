@@ -1,0 +1,28 @@
+2002-03-09  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* Makefile: Removed hardcoded reference for XSLT processor as it is already set in Makefile.incl. Fixed typo in DocBook DTD URI.
+
+2002-01-10  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* page.png: New file.
+
+2001-11-12  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* Makefile: Hacking at producing chunked parameter references
+
+2001-10-13  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* Makefile: Changes to make the documentation work with the new litprog sources
+
+2001-08-06  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* Makefile: Documentation and documentation generation tweaks
+
+2001-06-20  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* Makefile: Use XT again (neither Saxon nor Xalan work)
+
+2001-04-03  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* .cvsignore, Makefile: New file.
+

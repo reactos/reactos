@@ -1,0 +1,20 @@
+<refentry id="olink.resolver">
+<refmeta>
+<refentrytitle>olink.resolver</refentrytitle>
+<refmiscinfo role="type"></refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>olink.resolver</refname>
+<refpurpose>The root name of the OLink resolver (usually a script)</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='olink.resolver.frag'><xsl:param name="olink.resolver" select="'/cgi-bin/olink'"/></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>FIXME:</para>
+
+</refsect1>
+</refentry>

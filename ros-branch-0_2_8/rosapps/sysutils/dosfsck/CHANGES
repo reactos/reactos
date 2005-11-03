@@ -1,0 +1,10 @@
+Changes from version 0 to 1
+===========================
+
+  - fixed an off-by-two error in check.c:check_file
+  - fixed marking clusters bad in fat.c:set_fat
+  - fat.c:reclaim_free was also reclaiming bad clusters.
+  - fixed many incorrect byte sex conversions in check.c and fat.c
+  - -t and -w now require -a or -r
+  - added option -d to drop files.
+  - added option -u to try to "undelete" non-directory files.

@@ -1,0 +1,35 @@
+<refentry id="show.revisionflag">
+<refmeta>
+<refentrytitle>show.revisionflag</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>show.revisionflag</refname>
+<refpurpose>Enable decoration of elements that have a revisionflag</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='show.revisionflag.frag'><xsl:param name="show.revisionflag">0</xsl:param></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>
+If <literal>show.revisionflag</literal> is turned on, then the stylesheets
+may produce additional markup designed to allow a CSS stylesheet to
+highlight elements that have specific revisionflag settings.</para>
+
+<para>The markup inserted will be usually be either a &lt;span&gt; or &lt;div&gt;
+with an appropriate <literal>class</literal> attribute. (The value of
+the class attribute will be the same as the value of the revisionflag
+attribute). In some contexts, for example tables, where extra markup
+would be structurally illegal, the class attribute will be added to the
+appropriate container element.</para>
+
+<para>In general, the stylesheets only test for revisionflag in contexts
+where an importing stylesheet would have to redefine whole templates.
+Most of the revisionflag processing is expected to be done by another
+stylesheet, for example <filename>changebars.xsl</filename>.</para>
+
+</refsect1>
+</refentry>

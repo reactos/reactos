@@ -1,0 +1,26 @@
+<refentry id="chunk.first.sections">
+<refmeta>
+<refentrytitle>chunk.first.sections</refentrytitle>
+
+</refmeta>
+<refnamediv>
+<refname>chunk.first.sections</refname>
+<refpurpose>Chunk the first top-level section?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='chunk.first.sections.frag'>
+<xsl:param name="chunk.first.sections" select="0"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If non-zero, a chunk will be created for the first top-level
+<sgmltag>sect1</sgmltag> or <sgmltag>section</sgmltag> elements in
+each component. Otherwise, that section will be part of the chunk for
+its parent.
+</para>
+
+</refsect1>
+</refentry>

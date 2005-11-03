@@ -1,0 +1,23 @@
+<refentry id="htmlhelp.map.file">
+<refmeta>
+<refentrytitle>htmlhelp.map.file</refentrytitle>
+<refmiscinfo role="type">string</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>htmlhelp.map.file</refname>
+<refpurpose>Filename of map file.</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='htmlhelp.map.file.frag'>
+<xsl:param name="htmlhelp.map.file" select="'context.h'"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>Change this parameter if you want different name of map file
+than <filename>context.h</filename>.</para>
+
+</refsect1>
+</refentry>

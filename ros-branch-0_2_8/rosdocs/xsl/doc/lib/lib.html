@@ -1,0 +1,418 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>XSL Library Template Reference</title><meta name="generator" content="DocBook XSL Stylesheets V0.00+"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="book"><div class="titlepage"><div><h1 class="title"><a name="d0e3"></a>XSL Library Template Reference</h1></div><div><h3 class="corpauthor">DocBook Open Repository Team</h3></div><div><p class="releaseinfo">$Id: lib.html,v 1.1 2002/06/13 20:30:09 chorns Exp $
+</p></div><div><p class="copyright">Copyright &copy; 1999, 2000, 2001, 2002 Norman Walsh</p></div><hr></div><div class="toc"><p><b>Table of Contents</b></p><dl><dt><a href="#d0e22">Introduction</a></dt><dt>I. <a href="#d0e37">General Library Templates</a></dt><dd><dl><dt><a href="#dot.count">dot.count</a> - Returns the number of . characters in a string</dt><dt><a href="#copy-string">copy-string</a> - Returns count copies of a string</dt><dt><a href="#string.subst">string.subst</a> - Substitute one text string for another in a string</dt><dt><a href="#xpointer.idref">xpointer.idref</a> - Extract IDREF from an XPointer</dt><dt><a href="#length-magnitude">length-magnitude</a> - Return the unqualified dimension from a length specification</dt><dt><a href="#length-units">length-units</a> - Return the units from a length specification</dt><dt><a href="#length-spec">length-spec</a> - Return a fully qualified length specification</dt><dt><a href="#length-in-points">length-in-points</a> - Returns the size, in points, of a specified length</dt><dt><a href="#pi-attribute">pi-attribute</a> - Extract a pseudo-attribute from a PI</dt><dt><a href="#lookup.key">lookup.key</a> - Retrieve the value associated with a particular key in a table</dt><dt><a href="#xpath.location">xpath.location</a> - Calculate the XPath child-sequence to the current node</dt></dl></dd><dt>II. <a href="#d0e293">Relative URI Functions</a></dt><dd><dl><dt><a href="#count.uri.path.depth">count.uri.path.depth</a> - Count the number of path components in a relative URI</dt><dt><a href="#trim.common.uri.paths">trim.common.uri.paths</a> - Trim common leading path components from a relative URI</dt></dl></dd><dt>A. <a href="#d0e347">The Stylesheet</a></dt></dl></div><div class="preface"><div class="titlepage"><div><h2 class="title"><a name="d0e22"></a>Introduction</h2></div></div><p>This is technical reference documentation for the DocBook XSL
+Stylesheets; it documents (some of) the parameters, templates, and
+other elements of the stylesheets.</p><p>This is not intended to be &#8220;user&#8221; documentation.
+It is provided for developers writing customization layers for the
+stylesheets, and for anyone who's interested in &#8220;how it
+works&#8221;.</p><p>Although I am trying to be thorough, this documentation is known
+to be incomplete. Don't forget to read the source, too :-)</p></div><div class="reference"><a name="d0e37"></a><div class="titlepage"><div><h1 class="title"><a name="d0e37"></a>General Library Templates</h1></div><hr></div><div class="toc"><p><b>Table of Contents</b></p><dl><dt><a href="#dot.count">dot.count</a> - Returns the number of . characters in a string</dt><dt><a href="#copy-string">copy-string</a> - Returns count copies of a string</dt><dt><a href="#string.subst">string.subst</a> - Substitute one text string for another in a string</dt><dt><a href="#xpointer.idref">xpointer.idref</a> - Extract IDREF from an XPointer</dt><dt><a href="#length-magnitude">length-magnitude</a> - Return the unqualified dimension from a length specification</dt><dt><a href="#length-units">length-units</a> - Return the units from a length specification</dt><dt><a href="#length-spec">length-spec</a> - Return a fully qualified length specification</dt><dt><a href="#length-in-points">length-in-points</a> - Returns the size, in points, of a specified length</dt><dt><a href="#pi-attribute">pi-attribute</a> - Extract a pseudo-attribute from a PI</dt><dt><a href="#lookup.key">lookup.key</a> - Retrieve the value associated with a particular key in a table</dt><dt><a href="#xpath.location">xpath.location</a> - Calculate the XPath child-sequence to the current node</dt></dl></div><div class="refentry"><a name="dot.count"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>dot.count &#8212; Returns the number of &#8220;.&#8221; characters in a string</p></div><div class="refsect1"><h2>Description</h2><pre class="programlisting"><a name="dot.count.frag"></a><table border="1" width="100%"><tr><td><p><b>&sect;1</b>: <a href="#top">&sect;14</a></p></td></tr><tr><td><pre class="src:fragment">&nbsp;&nbsp;1| &lt;xsl:template name="dot.count"&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;!-- Returns the number of "." characters in a string --&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:param name="string"/&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:param name="count"
+&nbsp;&nbsp;5|              select="0"/&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:choose&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;xsl:when test="contains($string, '.')"&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;xsl:call-template name="dot.count"&gt;
+&nbsp;&nbsp;&nbsp;|         &lt;xsl:with-param name="string"
+&nbsp;10|                         select="substring-after($string, '.')"/&gt;
+&nbsp;&nbsp;&nbsp;|         &lt;xsl:with-param name="count"
+&nbsp;&nbsp;&nbsp;|                         select="$count+1"/&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;/xsl:call-template&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;/xsl:when&gt;
+&nbsp;15|     &lt;xsl:otherwise&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;xsl:value-of select="$count"/&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;/xsl:otherwise&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;/xsl:choose&gt;
+&nbsp;&nbsp;&nbsp;| &lt;/xsl:template&gt;</pre></td></tr></table></pre></div></div><div class="refentry"><div class="refentry.separator"><hr></div><a name="copy-string"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>copy-string &#8212; Returns &#8220;count&#8221; copies of a string</p></div><div class="refsect1"><h2>Description</h2><pre class="programlisting"><a name="copy-string.frag"></a><table border="1" width="100%"><tr><td><p><b>&sect;2</b>: <a href="#top">&sect;14</a></p></td></tr><tr><td><pre class="src:fragment">&nbsp;&nbsp;1| &lt;xsl:template name="copy-string"&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;!-- returns 'count' copies of 'string' --&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:param name="string"/&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:param name="count"
+&nbsp;&nbsp;5|              select="0"/&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:param name="result"/&gt;
+&nbsp;&nbsp;&nbsp;| 
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:choose&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;xsl:when test="$count&gt;0"&gt;
+&nbsp;10|       &lt;xsl:call-template name="copy-string"&gt;
+&nbsp;&nbsp;&nbsp;|         &lt;xsl:with-param name="string"
+&nbsp;&nbsp;&nbsp;|                         select="$string"/&gt;
+&nbsp;&nbsp;&nbsp;|         &lt;xsl:with-param name="count"
+&nbsp;&nbsp;&nbsp;|                         select="$count - 1"/&gt;
+&nbsp;15|         &lt;xsl:with-param name="result"&gt;
+&nbsp;&nbsp;&nbsp;|           &lt;xsl:value-of select="$result"/&gt;
+&nbsp;&nbsp;&nbsp;|           &lt;xsl:value-of select="$string"/&gt;
+&nbsp;&nbsp;&nbsp;|         &lt;/xsl:with-param&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;/xsl:call-template&gt;
+&nbsp;20|     &lt;/xsl:when&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;xsl:otherwise&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;xsl:value-of select="$result"/&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;/xsl:otherwise&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;/xsl:choose&gt;
+&nbsp;25| &lt;/xsl:template&gt;</pre></td></tr></table></pre></div></div><div class="refentry"><div class="refentry.separator"><hr></div><a name="string.subst"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>string.subst &#8212; Substitute one text string for another in a string</p></div><div class="refsect1"><h2>Description</h2><p>The <tt>string.subst</tt> template replaces all
+occurances of <i><tt>target</tt></i> in <i><tt>string</tt></i>
+with <i><tt>replacement</tt></i> and returns the result.
+</p><pre class="programlisting"><a name="string.subst.frag"></a><table border="1" width="100%"><tr><td><p><b>&sect;3</b>: <a href="#top">&sect;14</a></p></td></tr><tr><td><pre class="src:fragment">&nbsp;&nbsp;1| &lt;xsl:template name="string.subst"&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:param name="string"/&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:param name="target"/&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:param name="replacement"/&gt;
+&nbsp;&nbsp;5| 
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:choose&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;xsl:when test="contains($string, $target)"&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;xsl:variable name="rest"&gt;
+&nbsp;&nbsp;&nbsp;|         &lt;xsl:call-template name="string.subst"&gt;
+&nbsp;10|           &lt;xsl:with-param name="string"
+&nbsp;&nbsp;&nbsp;|                           select="substring-after($string, $target)"/&gt;
+&nbsp;&nbsp;&nbsp;|           &lt;xsl:with-param name="target"
+&nbsp;&nbsp;&nbsp;|                           select="$target"/&gt;
+&nbsp;&nbsp;&nbsp;|           &lt;xsl:with-param name="replacement"
+&nbsp;15|                           select="$replacement"/&gt;
+&nbsp;&nbsp;&nbsp;|         &lt;/xsl:call-template&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;/xsl:variable&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;xsl:value-of select="concat(substring-before($string, $target),                                    $replacement,                                    $rest)"/&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;/xsl:when&gt;
+&nbsp;20|     &lt;xsl:otherwise&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;xsl:value-of select="$string"/&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;/xsl:otherwise&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;/xsl:choose&gt;
+&nbsp;&nbsp;&nbsp;| &lt;/xsl:template&gt;</pre></td></tr></table></pre></div></div><div class="refentry"><div class="refentry.separator"><hr></div><a name="xpointer.idref"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>xpointer.idref &#8212; Extract IDREF from an XPointer</p></div><div class="refsect1"><h2>Description</h2><p>The <tt>xpointer.idref</tt> template returns the
+ID portion of an XPointer which is a pointer to an ID within the current
+document, or the empty string if it is not.</p><p>In other words, <tt>xpointer.idref</tt> returns
+&#8220;foo&#8221; when passed either <tt>#foo</tt>
+or <tt>#xpointer(id('foo'))</tt>, otherwise it returns
+the empty string.</p><pre class="programlisting"><a name="xpointer.idref.frag"></a><table border="1" width="100%"><tr><td><p><b>&sect;4</b>: <a href="#top">&sect;14</a></p></td></tr><tr><td><pre class="src:fragment">&nbsp;&nbsp;1| &lt;xsl:template name="xpointer.idref"&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:param name="xpointer"&gt;http://...&lt;/xsl:param&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:choose&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;xsl:when test="starts-with($xpointer, '#xpointer(id(')"&gt;
+&nbsp;&nbsp;5|       &lt;xsl:variable name="rest"
+&nbsp;&nbsp;&nbsp;|                     select="substring-after($xpointer, '#xpointer(id(')"/&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;xsl:variable name="quote"
+&nbsp;&nbsp;&nbsp;|                     select="substring($rest, 1, 1)"/&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;xsl:value-of select="substring-before(substring-after($xpointer, $quote), $quote)"/&gt;
+&nbsp;10|     &lt;/xsl:when&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;xsl:when test="starts-with($xpointer, '#')"&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;xsl:value-of select="substring-after($xpointer, '#')"/&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;/xsl:when&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;!-- otherwise it's a pointer to some other document --&gt;
+&nbsp;15|   &lt;/xsl:choose&gt;
+&nbsp;&nbsp;&nbsp;| &lt;/xsl:template&gt;</pre></td></tr></table></pre></div></div><div class="refentry"><div class="refentry.separator"><hr></div><a name="length-magnitude"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>length-magnitude &#8212; Return the unqualified dimension from a length specification</p></div><div class="refsect1"><h2>Description</h2><p>The <tt>length-magnitude</tt> template returns the
+unqualified length ("20" for "20pt") from a dimension.
+</p><pre class="programlisting"><a name="length-magnitude.frag"></a><table border="1" width="100%"><tr><td><p><b>&sect;5</b>: <a href="#top">&sect;14</a></p></td></tr><tr><td><pre class="src:fragment">&nbsp;&nbsp;1| &lt;xsl:template name="length-magnitude"&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:param name="length"
+&nbsp;&nbsp;&nbsp;|              select="'0pt'"/&gt;
+&nbsp;&nbsp;&nbsp;| 
+&nbsp;&nbsp;5|   &lt;xsl:choose&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;xsl:when test="string-length($length) = 0"/&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;xsl:when test="substring($length,1,1) = '0'                     or substring($length,1,1) = '1'                     or substring($length,1,1) = '2'                     or substring($length,1,1) = '3'                     or substring($length,1,1) = '4'                     or substring($length,1,1) = '5'                     or substring($length,1,1) = '6'                     or substring($length,1,1) = '7'                     or substring($length,1,1) = '8'                     or substring($length,1,1) = '9'                     or substring($length,1,1) = '.'"&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;xsl:value-of select="substring($length,1,1)"/&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;xsl:call-template name="length-magnitude"&gt;
+&nbsp;10|         &lt;xsl:with-param name="length"
+&nbsp;&nbsp;&nbsp;|                         select="substring($length,2)"/&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;/xsl:call-template&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;/xsl:when&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;/xsl:choose&gt;
+&nbsp;15| &lt;/xsl:template&gt;</pre></td></tr></table></pre></div></div><div class="refentry"><div class="refentry.separator"><hr></div><a name="length-units"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>length-units &#8212; Return the units from a length specification</p></div><div class="refsect1"><h2>Description</h2><p>The <tt>length-units</tt> template returns the
+units ("pt" for "20pt") from a length. If no units are supplied on the
+length, the <i><tt>defauilt.units</tt></i> are returned.</p><pre class="programlisting"><a name="length-units.frag"></a><table border="1" width="100%"><tr><td><p><b>&sect;6</b>: <a href="#top">&sect;14</a></p></td></tr><tr><td><pre class="src:fragment">&nbsp;&nbsp;1| &lt;xsl:template name="length-units"&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:param name="length"
+&nbsp;&nbsp;&nbsp;|              select="'0pt'"/&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:param name="default.units"
+&nbsp;&nbsp;5|              select="'px'"/&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:variable name="magnitude"&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;xsl:call-template name="length-magnitude"&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;xsl:with-param name="length"
+&nbsp;&nbsp;&nbsp;|                       select="$length"/&gt;
+&nbsp;10|     &lt;/xsl:call-template&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;/xsl:variable&gt;
+&nbsp;&nbsp;&nbsp;| 
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:variable name="units"&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;xsl:value-of select="substring($length, string-length($magnitude)+1)"/&gt;
+&nbsp;15|   &lt;/xsl:variable&gt;
+&nbsp;&nbsp;&nbsp;| 
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:choose&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;xsl:when test="$units = ''"&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;xsl:value-of select="$default.units"/&gt;
+&nbsp;20|     &lt;/xsl:when&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;xsl:otherwise&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;xsl:value-of select="$units"/&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;/xsl:otherwise&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;/xsl:choose&gt;
+&nbsp;25| &lt;/xsl:template&gt;</pre></td></tr></table></pre></div></div><div class="refentry"><div class="refentry.separator"><hr></div><a name="length-spec"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>length-spec &#8212; Return a fully qualified length specification</p></div><div class="refsect1"><h2>Description</h2><p>The <tt>length-spec</tt> template returns the
+qualified length from a dimension. If an unqualified length is given,
+the <i><tt>default.units</tt></i> will be added to it.
+</p><pre class="programlisting"><a name="length-spec.frag"></a><table border="1" width="100%"><tr><td><p><b>&sect;7</b>: <a href="#top">&sect;14</a></p></td></tr><tr><td><pre class="src:fragment">&nbsp;&nbsp;1| &lt;xsl:template name="length-spec"&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:param name="length"
+&nbsp;&nbsp;&nbsp;|              select="'0pt'"/&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:param name="default.units"
+&nbsp;&nbsp;5|              select="'px'"/&gt;
+&nbsp;&nbsp;&nbsp;| 
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:variable name="magnitude"&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;xsl:call-template name="length-magnitude"&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;xsl:with-param name="length"
+&nbsp;10|                       select="$length"/&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;/xsl:call-template&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;/xsl:variable&gt;
+&nbsp;&nbsp;&nbsp;| 
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:variable name="units"&gt;
+&nbsp;15|     &lt;xsl:value-of select="substring($length, string-length($magnitude)+1)"/&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;/xsl:variable&gt;
+&nbsp;&nbsp;&nbsp;| 
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:value-of select="$magnitude"/&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:choose&gt;
+&nbsp;20|     &lt;xsl:when test="$units='cm'                     or $units='mm'                     or $units='in'                     or $units='pt'                     or $units='pc'                     or $units='px'                     or $units='em'"&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;xsl:value-of select="$units"/&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;/xsl:when&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;xsl:when test="$units = ''"&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;xsl:value-of select="$default.units"/&gt;
+&nbsp;25|     &lt;/xsl:when&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;xsl:otherwise&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;xsl:message&gt;
+&nbsp;&nbsp;&nbsp;|         &lt;xsl:text&gt;Unrecognized unit of measure: &lt;/xsl:text&gt;
+&nbsp;&nbsp;&nbsp;|         &lt;xsl:value-of select="$units"/&gt;
+&nbsp;30|         &lt;xsl:text&gt;.&lt;/xsl:text&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;/xsl:message&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;/xsl:otherwise&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;/xsl:choose&gt;
+&nbsp;&nbsp;&nbsp;| &lt;/xsl:template&gt;</pre></td></tr></table></pre></div></div><div class="refentry"><div class="refentry.separator"><hr></div><a name="length-in-points"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>length-in-points &#8212; Returns the size, in points, of a specified length</p></div><div class="refsect1"><h2>Description</h2><p>The <tt>length-in-points</tt> template converts a length
+specification to points and returns that value as an unqualified
+number.
+</p><div class="caution" style="margin-left: 0.5in; margin-right: 0.5in;"><h3 class="title">Caution</h3><p>There is no way for the template to infer the size of an
+<tt>em</tt>. It relies on the default <i><tt>em.size</tt></i>
+which is initially <tt>10</tt> (for 10pt).</p><p>Similarly, converting pixesl to points relies on the
+<i><tt>pixels.per.inch</tt></i> parameter which is initially
+<tt>90</tt>.
+</p></div><pre class="programlisting"><a name="length-in-points.frag"></a><table border="1" width="100%"><tr><td><p><b>&sect;8</b>: <a href="#top">&sect;14</a></p></td></tr><tr><td><pre class="src:fragment">&nbsp;&nbsp;1| &lt;xsl:template name="length-in-points"&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:param name="length"
+&nbsp;&nbsp;&nbsp;|              select="'0pt'"/&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:param name="em.size"
+&nbsp;&nbsp;5|              select="10"/&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:param name="pixels.per.inch"
+&nbsp;&nbsp;&nbsp;|              select="90"/&gt;
+&nbsp;&nbsp;&nbsp;| 
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:variable name="magnitude"&gt;
+&nbsp;10|     &lt;xsl:call-template name="length-magnitude"&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;xsl:with-param name="length"
+&nbsp;&nbsp;&nbsp;|                       select="$length"/&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;/xsl:call-template&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;/xsl:variable&gt;
+&nbsp;15| 
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:variable name="units"&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;xsl:value-of select="substring($length, string-length($magnitude)+1)"/&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;/xsl:variable&gt;
+&nbsp;&nbsp;&nbsp;| 
+&nbsp;20|   &lt;xsl:choose&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;xsl:when test="$units = 'pt'"&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;xsl:value-of select="$magnitude"/&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;/xsl:when&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;xsl:when test="$units = 'cm'"&gt;
+&nbsp;25|       &lt;xsl:value-of select="$magnitude div 2.54 * 72.0"/&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;/xsl:when&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;xsl:when test="$units = 'mm'"&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;xsl:value-of select="$magnitude div 25.4 * 72.0"/&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;/xsl:when&gt;
+&nbsp;30|     &lt;xsl:when test="$units = 'in'"&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;xsl:value-of select="$magnitude * 72.0"/&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;/xsl:when&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;xsl:when test="$units = 'pc'"&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;xsl:value-of select="$magnitude div 6.0 * 72.0"/&gt;
+&nbsp;35|     &lt;/xsl:when&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;xsl:when test="$units = 'px'"&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;xsl:value-of select="$magnitude div $pixels.per.inch * 72.0"/&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;/xsl:when&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;xsl:when test="$units = 'em'"&gt;
+&nbsp;40|       &lt;xsl:value-of select="$magnitude * $em.size"/&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;/xsl:when&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;xsl:otherwise&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;xsl:message&gt;
+&nbsp;&nbsp;&nbsp;|         &lt;xsl:text&gt;Unrecognized unit of measure: &lt;/xsl:text&gt;
+&nbsp;45|         &lt;xsl:value-of select="$units"/&gt;
+&nbsp;&nbsp;&nbsp;|         &lt;xsl:text&gt;.&lt;/xsl:text&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;/xsl:message&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;/xsl:otherwise&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;/xsl:choose&gt;
+&nbsp;50| &lt;/xsl:template&gt;</pre></td></tr></table></pre></div></div><div class="refentry"><div class="refentry.separator"><hr></div><a name="pi-attribute"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>pi-attribute &#8212; Extract a pseudo-attribute from a PI</p></div><div class="refsect1"><h2>Description</h2><p>The <tt>pi-attribute</tt> template extracts a pseudo-attribute
+from a processing instruction. For example, given the PI
+&#8220;<tt>&lt;?foo bar="1" baz='red'?&gt;</tt>&#8221;,</p><pre class="programlisting">&lt;xsl:call-template name="pi-attribute"&gt;
+  &lt;xsl:with-param name="pis" select="processing-instruction('foo')"/&gt;
+  &lt;xsl:with-param name="attribute" select="'baz'"/&gt;
+&lt;/xsl:call-template&gt;</pre><p>will return &#8220;red&#8221;. This template returns the first matching
+attribute that it finds. Presented with processing instructions that
+contain badly formed pseudo-attributes (missing or unbalanced quotes,
+for example), the template may silently return erroneous results.</p><pre class="programlisting"><a name="pi-attribute.frag"></a><table border="1" width="100%"><tr><td><p><b>&sect;9</b>: <a href="#top">&sect;14</a></p></td></tr><tr><td><pre class="src:fragment">&nbsp;&nbsp;1| &lt;xsl:template name="pi-attribute"&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:param name="pis"
+&nbsp;&nbsp;&nbsp;|              select="processing-instruction('')"/&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:param name="attribute"&gt;filename&lt;/xsl:param&gt;
+&nbsp;&nbsp;5|   &lt;xsl:param name="count"&gt;1&lt;/xsl:param&gt;
+&nbsp;&nbsp;&nbsp;| 
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:choose&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;xsl:when test="$count&gt;count($pis)"&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;!-- not found --&gt;
+&nbsp;10|     &lt;/xsl:when&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;xsl:otherwise&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;xsl:variable name="pi"&gt;
+&nbsp;&nbsp;&nbsp;|         &lt;xsl:value-of select="$pis[$count]"/&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;/xsl:variable&gt;
+&nbsp;15|       &lt;xsl:choose&gt;
+&nbsp;&nbsp;&nbsp;|         &lt;xsl:when test="contains($pi,concat($attribute, '='))"&gt;
+&nbsp;&nbsp;&nbsp;|           &lt;xsl:variable name="rest"
+&nbsp;&nbsp;&nbsp;|                         select="substring-after($pi,concat($attribute,'='))"/&gt;
+&nbsp;&nbsp;&nbsp;|           &lt;xsl:variable name="quote"
+&nbsp;20|                         select="substring($rest,1,1)"/&gt;
+&nbsp;&nbsp;&nbsp;|           &lt;xsl:value-of select="substring-before(substring($rest,2),$quote)"/&gt;
+&nbsp;&nbsp;&nbsp;|         &lt;/xsl:when&gt;
+&nbsp;&nbsp;&nbsp;|         &lt;xsl:otherwise&gt;
+&nbsp;&nbsp;&nbsp;|           &lt;xsl:call-template name="pi-attribute"&gt;
+&nbsp;25|             &lt;xsl:with-param name="pis"
+&nbsp;&nbsp;&nbsp;|                             select="$pis"/&gt;
+&nbsp;&nbsp;&nbsp;|             &lt;xsl:with-param name="attribute"
+&nbsp;&nbsp;&nbsp;|                             select="$attribute"/&gt;
+&nbsp;&nbsp;&nbsp;|             &lt;xsl:with-param name="count"
+&nbsp;30|                             select="$count + 1"/&gt;
+&nbsp;&nbsp;&nbsp;|           &lt;/xsl:call-template&gt;
+&nbsp;&nbsp;&nbsp;|         &lt;/xsl:otherwise&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;/xsl:choose&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;/xsl:otherwise&gt;
+&nbsp;35|   &lt;/xsl:choose&gt;
+&nbsp;&nbsp;&nbsp;| &lt;/xsl:template&gt;</pre></td></tr></table></pre></div></div><div class="refentry"><div class="refentry.separator"><hr></div><a name="lookup.key"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>lookup.key &#8212; Retrieve the value associated with a particular key in a table</p></div><div class="refsect1"><h2>Description</h2><p>Given a table of space-delimited key/value pairs,
+the <tt>lookup.key</tt> template extracts the value associated
+with a particular key.</p><pre class="programlisting"><a name="lookup.key.frag"></a><table border="1" width="100%"><tr><td><p><b>&sect;10</b>: <a href="#top">&sect;14</a></p></td></tr><tr><td><pre class="src:fragment">&nbsp;&nbsp;1| &lt;xsl:template name="lookup.key"&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:param name="key"
+&nbsp;&nbsp;&nbsp;|              select="''"/&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:param name="table"
+&nbsp;&nbsp;5|              select="''"/&gt;
+&nbsp;&nbsp;&nbsp;| 
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:if test="contains($table, ' ')"&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;xsl:choose&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;xsl:when test="substring-before($table, ' ') = $key"&gt;
+&nbsp;10|         &lt;xsl:variable name="rest"
+&nbsp;&nbsp;&nbsp;|                       select="substring-after($table, ' ')"/&gt;
+&nbsp;&nbsp;&nbsp;|         &lt;xsl:choose&gt;
+&nbsp;&nbsp;&nbsp;|           &lt;xsl:when test="contains($rest, ' ')"&gt;
+&nbsp;&nbsp;&nbsp;|             &lt;xsl:value-of select="substring-before($rest, ' ')"/&gt;
+&nbsp;15|           &lt;/xsl:when&gt;
+&nbsp;&nbsp;&nbsp;|           &lt;xsl:otherwise&gt;
+&nbsp;&nbsp;&nbsp;|             &lt;xsl:value-of select="$rest"/&gt;
+&nbsp;&nbsp;&nbsp;|           &lt;/xsl:otherwise&gt;
+&nbsp;&nbsp;&nbsp;|         &lt;/xsl:choose&gt;
+&nbsp;20|       &lt;/xsl:when&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;xsl:otherwise&gt;
+&nbsp;&nbsp;&nbsp;|         &lt;xsl:call-template name="lookup.key"&gt;
+&nbsp;&nbsp;&nbsp;|           &lt;xsl:with-param name="key"
+&nbsp;&nbsp;&nbsp;|                           select="$key"/&gt;
+&nbsp;25|           &lt;xsl:with-param name="table"
+&nbsp;&nbsp;&nbsp;|                           select="substring-after(substring-after($table,' '), ' ')"/&gt;
+&nbsp;&nbsp;&nbsp;|         &lt;/xsl:call-template&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;/xsl:otherwise&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;/xsl:choose&gt;
+&nbsp;30|   &lt;/xsl:if&gt;
+&nbsp;&nbsp;&nbsp;| &lt;/xsl:template&gt;</pre></td></tr></table></pre></div></div><div class="refentry"><div class="refentry.separator"><hr></div><a name="xpath.location"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>xpath.location &#8212; Calculate the XPath child-sequence to the current node</p></div><div class="refsect1"><h2>Description</h2><p>The <tt>xpath.location</tt> template calculates the
+absolute path from the root of the tree to the current element node.
+</p><pre class="programlisting"><a name="xpath.location.frag"></a><table border="1" width="100%"><tr><td><p><b>&sect;11</b>: <a href="#top">&sect;14</a></p></td></tr><tr><td><pre class="src:fragment">&nbsp;&nbsp;1| &lt;xsl:template name="xpath.location"&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:param name="node"
+&nbsp;&nbsp;&nbsp;|              select="."/&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:param name="path"
+&nbsp;&nbsp;5|              select="''"/&gt;
+&nbsp;&nbsp;&nbsp;| 
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:variable name="next.path"&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;xsl:value-of select="local-name($node)"/&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;xsl:if test="$path != ''"&gt;/&lt;/xsl:if&gt;
+&nbsp;10|     &lt;xsl:value-of select="$path"/&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;/xsl:variable&gt;
+&nbsp;&nbsp;&nbsp;| 
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:choose&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;xsl:when test="$node/parent::*"&gt;
+&nbsp;15|       &lt;xsl:call-template name="xpath.location"&gt;
+&nbsp;&nbsp;&nbsp;|         &lt;xsl:with-param name="node"
+&nbsp;&nbsp;&nbsp;|                         select="$node/parent::*"/&gt;
+&nbsp;&nbsp;&nbsp;|         &lt;xsl:with-param name="path"
+&nbsp;&nbsp;&nbsp;|                         select="$next.path"/&gt;
+&nbsp;20|       &lt;/xsl:call-template&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;/xsl:when&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;xsl:otherwise&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;xsl:text&gt;/&lt;/xsl:text&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;xsl:value-of select="$next.path"/&gt;
+&nbsp;25|     &lt;/xsl:otherwise&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;/xsl:choose&gt;
+&nbsp;&nbsp;&nbsp;| &lt;/xsl:template&gt;</pre></td></tr></table></pre></div></div></div><div class="reference"><a name="d0e293"></a><div class="titlepage"><div><h1 class="title"><a name="d0e293"></a>Relative URI Functions</h1></div><hr></div><div class="partintro"><div><div><h1 class="title"><a name="d0e296"></a>Introduction</h1></div></div><p>These functions manipulate relative URI references.</p><p>The following assumptions must hold true:</p><div class="orderedlist"><ol type="1"><li><p>All URIs are relative.</p></li><li><p>No URI contains the &#8220;<tt>../</tt>&#8221; sequence
+which would effectively move &#8220;up&#8221; the hierarchy.</p></li></ol></div><p>If these assumptions do not hold, the results are unpredictable.</p><div class="toc"><p><b>Table of Contents</b></p><dl><dt><a href="#count.uri.path.depth">count.uri.path.depth</a> - Count the number of path components in a relative URI</dt><dt><a href="#trim.common.uri.paths">trim.common.uri.paths</a> - Trim common leading path components from a relative URI</dt></dl></div></div><div class="refentry"><a name="count.uri.path.depth"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>count.uri.path.depth &#8212; Count the number of path components in a relative URI</p></div><div class="refsect1"><h2>Description</h2><p>This function counts the number of path components in a relative URI.</p><pre class="programlisting"><a name="count.uri.path.depth.frag"></a><table border="1" width="100%"><tr><td><p><b>&sect;12</b>: <a href="#top">&sect;14</a></p></td></tr><tr><td><pre class="src:fragment">&nbsp;&nbsp;1| &lt;xsl:template name="count.uri.path.depth"&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:param name="filename"
+&nbsp;&nbsp;&nbsp;|              select="''"/&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:param name="count"
+&nbsp;&nbsp;5|              select="0"/&gt;
+&nbsp;&nbsp;&nbsp;| 
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:choose&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;xsl:when test="contains($filename, '/')"&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;xsl:call-template name="count.uri.path.depth"&gt;
+&nbsp;10|         &lt;xsl:with-param name="filename"
+&nbsp;&nbsp;&nbsp;|                         select="substring-after($filename, '/')"/&gt;
+&nbsp;&nbsp;&nbsp;|         &lt;xsl:with-param name="count"
+&nbsp;&nbsp;&nbsp;|                         select="$count + 1"/&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;/xsl:call-template&gt;
+&nbsp;15|     &lt;/xsl:when&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;xsl:otherwise&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;xsl:value-of select="$count"/&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;/xsl:otherwise&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;/xsl:choose&gt;
+&nbsp;20| &lt;/xsl:template&gt;</pre></td></tr></table></pre></div></div><div class="refentry"><div class="refentry.separator"><hr></div><a name="trim.common.uri.paths"></a><div class="titlepage"></div><div class="refnamediv"><h2>Name</h2><p>trim.common.uri.paths &#8212; Trim common leading path components from a relative URI</p></div><div class="refsect1"><h2>Description</h2><p>This function trims common leading path components from a relative URI.</p><pre class="programlisting"><a name="trim.common.uri.paths.frag"></a><table border="1" width="100%"><tr><td><p><b>&sect;13</b>: <a href="#top">&sect;14</a></p></td></tr><tr><td><pre class="src:fragment">&nbsp;&nbsp;1| &lt;xsl:template name="trim.common.uri.paths"&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:param name="uriA"
+&nbsp;&nbsp;&nbsp;|              select="''"/&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:param name="uriB"
+&nbsp;&nbsp;5|              select="''"/&gt;
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:param name="return"
+&nbsp;&nbsp;&nbsp;|              select="'A'"/&gt;
+&nbsp;&nbsp;&nbsp;| 
+&nbsp;&nbsp;&nbsp;|   &lt;xsl:choose&gt;
+&nbsp;10|     &lt;xsl:when test="contains($uriA, '/') and contains($uriB, '/')                     and substring-before($uriA, '/') = substring-before($uriB, '/')"&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;xsl:call-template name="trim.common.uri.paths"&gt;
+&nbsp;&nbsp;&nbsp;|         &lt;xsl:with-param name="uriA"
+&nbsp;&nbsp;&nbsp;|                         select="substring-after($uriA, '/')"/&gt;
+&nbsp;&nbsp;&nbsp;|         &lt;xsl:with-param name="uriB"
+&nbsp;15|                         select="substring-after($uriB, '/')"/&gt;
+&nbsp;&nbsp;&nbsp;|         &lt;xsl:with-param name="return"
+&nbsp;&nbsp;&nbsp;|                         select="$return"/&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;/xsl:call-template&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;/xsl:when&gt;
+&nbsp;20|     &lt;xsl:otherwise&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;xsl:choose&gt;
+&nbsp;&nbsp;&nbsp;|         &lt;xsl:when test="$return = 'A'"&gt;
+&nbsp;&nbsp;&nbsp;|           &lt;xsl:value-of select="$uriA"/&gt;
+&nbsp;&nbsp;&nbsp;|         &lt;/xsl:when&gt;
+&nbsp;25|         &lt;xsl:otherwise&gt;
+&nbsp;&nbsp;&nbsp;|           &lt;xsl:value-of select="$uriB"/&gt;
+&nbsp;&nbsp;&nbsp;|         &lt;/xsl:otherwise&gt;
+&nbsp;&nbsp;&nbsp;|       &lt;/xsl:choose&gt;
+&nbsp;&nbsp;&nbsp;|     &lt;/xsl:otherwise&gt;
+&nbsp;30|   &lt;/xsl:choose&gt;
+&nbsp;&nbsp;&nbsp;| &lt;/xsl:template&gt;</pre></td></tr></table></pre></div></div></div><div class="appendix"><div class="titlepage"><div><h2 class="title"><a name="d0e347"></a>Appendix A. The Stylesheet</h2></div></div><p>The <tt>lib.xsl</tt> stylesheet is just a wrapper
+around these functions.</p><a name="top"></a><table border="1" width="100%"><tr><td><p><b>&sect;14</b></p></td></tr><tr><td><pre class="src:fragment">&nbsp;&nbsp;1| 
+&nbsp;&nbsp;&nbsp;| &lt;!-- ********************************************************************
+&nbsp;&nbsp;&nbsp;|      $Id: lib.html,v 1.1 2002/06/13 20:30:09 chorns Exp $
+&nbsp;&nbsp;&nbsp;|      ********************************************************************
+&nbsp;&nbsp;5| 
+&nbsp;&nbsp;&nbsp;|      This file is part of the XSL DocBook Stylesheet distribution.
+&nbsp;&nbsp;&nbsp;|      See ../README or http://nwalsh.com/docbook/xsl/ for copyright
+&nbsp;&nbsp;&nbsp;|      and other information.
+&nbsp;&nbsp;&nbsp;| 
+&nbsp;10|      This module implements DTD-independent functions
+&nbsp;&nbsp;&nbsp;| 
+&nbsp;&nbsp;&nbsp;|      ******************************************************************** --&gt;
+&nbsp;&nbsp;&nbsp;| 
+&nbsp;&nbsp;&nbsp;| &lt;xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+&nbsp;15|                 exclude-result-prefixes="src"
+&nbsp;&nbsp;&nbsp;|                 version="1.0"&gt;
+&nbsp;&nbsp;&nbsp;| 
+&nbsp;&nbsp;&nbsp;| <a href="#dot.count.frag"><i>&sect;1. dot.count</i></a>
+&nbsp;&nbsp;&nbsp;| <a href="#copy-string.frag"><i>&sect;2. copy-string</i></a>
+&nbsp;20| <a href="#string.subst.frag"><i>&sect;3. string.subst</i></a>
+&nbsp;&nbsp;&nbsp;| <a href="#xpointer.idref.frag"><i>&sect;4. xpointer.idref</i></a>
+&nbsp;&nbsp;&nbsp;| <a href="#length-magnitude.frag"><i>&sect;5. length-magnitude</i></a>
+&nbsp;&nbsp;&nbsp;| <a href="#length-units.frag"><i>&sect;6. length-units</i></a>
+&nbsp;&nbsp;&nbsp;| <a href="#length-spec.frag"><i>&sect;7. length-spec</i></a>
+&nbsp;25| <a href="#length-in-points.frag"><i>&sect;8. length-in-points</i></a>
+&nbsp;&nbsp;&nbsp;| <a href="#pi-attribute.frag"><i>&sect;9. pi-attribute</i></a>
+&nbsp;&nbsp;&nbsp;| <a href="#lookup.key.frag"><i>&sect;10. lookup.key</i></a>
+&nbsp;&nbsp;&nbsp;| <a href="#xpath.location.frag"><i>&sect;11. xpath.location</i></a>
+&nbsp;&nbsp;&nbsp;| <a href="#count.uri.path.depth.frag"><i>&sect;12. count.uri.path.depth</i></a>
+&nbsp;30| <a href="#trim.common.uri.paths.frag"><i>&sect;13. trim.common.uri.paths</i></a>
+&nbsp;&nbsp;&nbsp;| 
+&nbsp;&nbsp;&nbsp;| &lt;/xsl:stylesheet&gt;</pre></td></tr></table></div></div></body></html>

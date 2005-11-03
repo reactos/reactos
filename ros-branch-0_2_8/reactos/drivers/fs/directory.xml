@@ -1,0 +1,21 @@
+<directory name="cdfs">
+	<xi:include href="cdfs/cdfs.xml" />
+</directory>
+<directory name="fs_rec">
+	<xi:include href="fs_rec/fs_rec.xml" />
+</directory>
+<directory name="ms">
+	<xi:include href="ms/msfs.xml" />
+</directory>
+<directory name="mup">
+	<xi:include href="mup/mup.xml" />
+</directory>
+<directory name="np">
+	<xi:include href="np/npfs.xml" />
+</directory>
+<directory name="ntfs">
+	<xi:include href="ntfs/ntfs.xml" />
+</directory>
+<directory name="vfat">
+	<xi:include href="vfat/vfatfs.xml" />
+</directory>

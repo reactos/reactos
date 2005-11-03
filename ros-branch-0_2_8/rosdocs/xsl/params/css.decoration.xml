@@ -1,0 +1,26 @@
+<refentry id="css.decoration">
+<refmeta>
+<refentrytitle>css.decoration</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>css.decoration</refname>
+<refpurpose>Enable CSS decoration of elements</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='css.decoration.frag'><xsl:param name="css.decoration">1</xsl:param></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>
+If <literal>css.decoration</literal> is turned on, then HTML elements
+produced by the
+stylesheet may be decorated with STYLE attributes.  For example, the
+LI tags produced for list items may include a fragment of CSS in the
+STYLE attribute which sets the CSS property "list-style-type".
+</para>
+
+</refsect1>
+</refentry>

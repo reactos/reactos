@@ -1,0 +1,472 @@
+<!DOCTYPE book [
+<!ENTITY % param.ent SYSTEM "param.ent">
+%param.ent;
+]>
+<book xmlns:src="http://nwalsh.com/xmlns/litprog/fragment"
+      xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+<bookinfo>
+<title>HTML Parameter Reference</title>
+<releaseinfo role="meta">
+$Id: param.xweb,v 1.1 2002/06/13 20:32:45 chorns Exp $
+</releaseinfo>
+<author>
+  <surname>Walsh</surname>
+  <firstname>Norman</firstname>
+</author>
+<copyright>
+  <year>1999</year>
+  <year>2000</year>
+  <year>2001</year>
+  <holder>Norman Walsh</holder>
+</copyright>
+</bookinfo>
+
+<preface><title>Introduction</title>
+
+<para>This is technical reference documentation for the DocBook XSL
+Stylesheets; it documents (some of) the parameters, templates, and
+other elements of the stylesheets.</para>
+
+<para>This reference describes each of the HTML Stylesheet parameters.
+These are the <quote>easily customizable</quote> parts of the stylesheet.
+If you want to specify an alternate value for one or more of these
+parameters, you can do so in a <quote>driver</quote> stylesheet.</para>
+
+<para>For example, if you want to change the <literal>html.stylesheet</literal>
+to <filename>reference.css</filename>, you might create a driver
+stylesheet like this:</para>
+
+<programlisting><![CDATA[<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                version='1.0'>
+
+  <xsl:import href="http://docbook.sourceforge.net/release/xsl/snapshot/html/docbook.xsl"/>
+
+  <xsl:param name="html.stylesheet">reference.css</xsl:param>
+
+</xsl:stylesheet>]]></programlisting>
+
+<para>Naturally, you have to change the
+<sgmltag class='attribute'>href</sgmltag> attribute on
+<literal>&lt;xsl:import&gt;</literal> to point to
+<filename>docbook.xsl</filename> on your system. (Or
+<filename>chunk.xsl</filename>, if you're using chunking.)</para>
+
+<para>This is not intended to be <quote>user</quote> documentation.
+It is provided for developers writing customization layers for the
+stylesheets, and for anyone who's interested in <quote>how it
+works</quote>.</para>
+
+<para>Although I am trying to be thorough, this documentation is known
+to be incomplete. Don't forget to read the source, too :-)</para>
+</preface>
+
+<reference><title>Admonitions</title>
+&admon.graphics.extension;
+&admon.graphics.path;
+&admon.graphics;
+&admon.style;
+</reference>
+
+<reference><title>Callouts</title>
+&callout.defaultcolumn;
+&callout.graphics.extension;
+&callout.graphics.number.limit;
+&callout.graphics.path;
+&callout.graphics;
+&callout.list.table;
+&callout.unicode.number.limit;
+&callout.unicode.start.character;
+&callout.unicode;
+&callouts.extension;
+</reference>
+
+<reference><title>EBNF</title>
+&ebnf.table.bgcolor;
+&ebnf.table.border;
+</reference>
+
+<reference><title>ToC/LoT/Index Generation</title>
+&annotate.toc;
+&autotoc.label.separator;
+&process.source.toc;
+&process.empty.source.toc;
+&bridgehead.in.toc;
+&manual.toc;
+&toc.list.type;
+&toc.section.depth;
+&generate.toc;
+&generate.section.toc.level;
+&generate.index;
+</reference>
+
+<reference><title>Extensions</title>
+&linenumbering.everyNth;
+&linenumbering.extension;
+&linenumbering.separator;
+&linenumbering.width;
+&tablecolumns.extension;
+&textinsert.extension;
+&use.extensions;
+</reference>
+
+<reference><title>Automatic labelling</title>
+&chapter.autolabel;
+&appendix.autolabel;
+&part.autolabel;
+&preface.autolabel;
+&qandadiv.autolabel;
+&section.autolabel;
+&section.label.includes.component.label;
+&label.from.part;
+</reference>
+
+<!--
+<reference><title></title>
+</reference>
+-->
+
+<reference><title>HTML</title>
+&html.base;
+&html.stylesheet.type;
+&html.stylesheet;
+&use.id.as.filename;
+&css.decoration;
+&spacing.paras;
+&emphasis.propagates.style;
+&phrase.propagates.style;
+&html.longdesc;
+&html.longdesc.link;
+&make.valid.html;
+&html.cleanup;
+&draft.watermark.image;
+&generate.id.attributes;
+</reference>
+
+<reference><title>XSLT Processing</title>
+&rootid;
+&suppress.navigation;
+</reference>
+
+<reference><title>Meta/*Info</title>
+&inherit.keywords;
+&make.single.year.ranges;
+&make.year.ranges;
+&author.othername.in.middle;
+&generate.legalnotice.link;
+</reference>
+
+<reference><title>Reference Pages</title>
+&funcsynopsis.decoration;
+&funcsynopsis.style;
+&function.parens;
+&refentry.generate.name;
+&refentry.generate.title;
+&refentry.xref.manvolnum;
+&citerefentry.link;
+&refentry.separator;
+</reference>
+
+<reference><title>Tables</title>
+&default.table.width;
+&nominal.table.width;
+&table.borders.with.css;
+&table.border.style;
+&table.border.thickness;
+&table.border.color;
+</reference>
+
+<reference><title>QAndASet</title>
+&qanda.defaultlabel;
+&qanda.inherit.numeration;
+</reference>
+
+<reference><title>Linking</title>
+&link.mailto.url;
+&ulink.target;
+&olink.fragid;
+&olink.outline.ext;
+&olink.pubid;
+&olink.sysid;
+&olink.resolver;
+</reference>
+
+<reference><title>Bibliography</title>
+&biblioentry.item.separator;
+&bibliography.collection;
+</reference>
+
+<reference><title>Glossary</title>
+&glossterm.auto.link;
+&firstterm.only.link;
+&glossary.collection;
+</reference>
+
+<reference><title>Miscellaneous</title>
+&graphic.default.extension;
+&formal.procedures;
+&formal.title.placement;
+&runinhead.default.title.end.punct;
+&runinhead.title.end.punct;
+&show.comments;
+&show.revisionflag;
+&shade.verbatim;
+&shade.verbatim.style;
+&punct.honorific;
+&segmentedlist.as.table;
+&variablelist.as.table;
+&tex.math.in.alt;
+&tex.math.file;
+&tex.math.delims;
+&pixels.per.inch;
+&points.per.em;
+&use.svg;
+</reference>
+
+<reference><title>Chunking</title>
+&html.ext;
+&html.extra.head.links;
+&root.filename;
+&base.dir;
+&generate.manifest;
+&manifest;
+&chunk.toc;
+&chunk.section.depth;
+&chunk.first.sections;
+&chunk.quietly;
+&saxon.character.representation;
+&default.encoding;
+&output.method;
+&chunk.datafile;
+&navig.graphics;
+&navig.graphics.extension;
+&navig.graphics.path;
+&navig.showtitles;
+</reference>
+
+<reference><title>Profiling</title>
+<partintro>
+<para>Following parameters can be used for attribute value based
+profiling of your document. For more info about profiling look at
+<ulink
+url="http://docbook.sourceforge.net/projects/xsl/doc/tools/profiling.html">http://docbook.sourceforge.net/projects/xsl/doc/tools/profiling.html</ulink>.</para>
+</partintro>
+&profile.arch;
+&profile.condition;
+&profile.conformance;
+&profile.lang;
+&profile.os;
+&profile.revision;
+&profile.revisionflag;
+&profile.role;
+&profile.security;
+&profile.userlevel;
+&profile.vendor;
+&profile.attribute;
+&profile.value;
+&profile.separator;
+</reference>
+
+<reference><title>HTML Help</title>
+&htmlhelp.encoding;
+&htmlhelp.autolabel;
+&htmlhelp.chm;
+&htmlhelp.default.topic;
+&htmlhelp.hhp;
+&htmlhelp.hhc;
+&htmlhelp.hhp.tail;
+&htmlhelp.enumerate.images;
+&htmlhelp.force.map.and.alias;
+&htmlhelp.map.file;
+&htmlhelp.alias.file;
+&htmlhelp.hhc.section.depth;
+&htmlhelp.hhc.show.root;
+&htmlhelp.hhc.folders.instead.books;
+&htmlhelp.title;
+</reference>
+
+<appendix><title>The Stylesheet</title>
+
+<para>The <filename>param.xsl</filename> stylesheet is just a wrapper
+around all these parameters.</para>
+
+<src:fragment id="top" mundane-result-prefixes="xsl">
+
+<!-- This file is generated from param.xweb; do not edit this file! -->
+
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+                exclude-result-prefixes="src"
+                version='1.0'>
+
+<!-- ********************************************************************
+     $Id: param.xweb,v 1.1 2002/06/13 20:32:45 chorns Exp $
+     ********************************************************************
+
+     This file is part of the XSL DocBook Stylesheet distribution.
+     See ../README or http://nwalsh.com/docbook/xsl/ for copyright
+     and other information.
+
+     ******************************************************************** -->
+
+<src:fragref linkend="admon.graphics.extension.frag"/>
+<src:fragref linkend="admon.graphics.frag"/>
+<src:fragref linkend="admon.graphics.path.frag"/>
+<src:fragref linkend="admon.style.frag"/>
+<src:fragref linkend="annotate.toc.frag"/>
+<src:fragref linkend="appendix.autolabel.frag"/>
+<src:fragref linkend="author.othername.in.middle.frag"/>
+<src:fragref linkend="autotoc.label.separator.frag"/>
+<src:fragref linkend="base.dir.frag"/>
+<src:fragref linkend="biblioentry.item.separator.frag"/>
+<src:fragref linkend="bibliography.collection.frag"/>
+<src:fragref linkend="bridgehead.in.toc.frag"/>
+<src:fragref linkend="callout.defaultcolumn.frag"/>
+<src:fragref linkend="callout.graphics.extension.frag"/>
+<src:fragref linkend="callout.graphics.frag"/>
+<src:fragref linkend="callout.graphics.number.limit.frag"/>
+<src:fragref linkend="callout.graphics.path.frag"/>
+<src:fragref linkend="callout.list.table.frag"/>
+<src:fragref linkend="callout.unicode.frag"/>
+<src:fragref linkend="callout.unicode.number.limit.frag"/>
+<src:fragref linkend="callout.unicode.start.character.frag"/>
+<src:fragref linkend="callouts.extension.frag"/>
+<src:fragref linkend="chapter.autolabel.frag"/>
+<src:fragref linkend="chunk.datafile.frag"/>
+<src:fragref linkend="chunk.first.sections.frag"/>
+<src:fragref linkend="chunk.quietly.frag"/>
+<src:fragref linkend="chunk.section.depth.frag"/>
+<src:fragref linkend="chunk.toc.frag"/>
+<src:fragref linkend="citerefentry.link.frag"/>
+<src:fragref linkend="css.decoration.frag"/>
+<src:fragref linkend="default.encoding.frag"/>
+<src:fragref linkend="default.table.width.frag"/>
+<src:fragref linkend="draft.watermark.image.frag"/>
+<src:fragref linkend="ebnf.table.bgcolor.frag"/>
+<src:fragref linkend="ebnf.table.border.frag"/>
+<src:fragref linkend="emphasis.propagates.style.frag"/>
+<src:fragref linkend="firstterm.only.link.frag"/>
+<src:fragref linkend="formal.procedures.frag"/>
+<src:fragref linkend="formal.title.placement.frag"/>
+<src:fragref linkend="funcsynopsis.decoration.frag"/>
+<src:fragref linkend="funcsynopsis.style.frag"/>
+<src:fragref linkend="function.parens.frag"/>
+<src:fragref linkend="generate.id.attributes.frag"/>
+<src:fragref linkend="generate.index.frag"/>
+<src:fragref linkend="generate.legalnotice.link.frag"/>
+<src:fragref linkend="generate.manifest.frag"/>
+<src:fragref linkend="generate.section.toc.level.frag"/>
+<src:fragref linkend="generate.toc.frag"/>
+<src:fragref linkend="glossary.collection.frag"/>
+<src:fragref linkend="glossterm.auto.link.frag"/>
+<src:fragref linkend="graphic.default.extension.frag"/>
+<src:fragref linkend="html.base.frag"/>
+<src:fragref linkend="html.cleanup.frag"/>
+<src:fragref linkend="html.ext.frag"/>
+<src:fragref linkend="html.extra.head.links.frag"/>
+<src:fragref linkend="html.longdesc.frag"/>
+<src:fragref linkend="html.longdesc.link.frag"/>
+<src:fragref linkend="html.stylesheet.frag"/>
+<src:fragref linkend="html.stylesheet.type.frag"/>
+<src:fragref linkend="htmlhelp.alias.file.frag"/>
+<src:fragref linkend="htmlhelp.autolabel.frag"/>
+<src:fragref linkend="htmlhelp.chm.frag"/>
+<src:fragref linkend="htmlhelp.default.topic.frag"/>
+<src:fragref linkend="htmlhelp.encoding.frag"/>
+<src:fragref linkend="htmlhelp.enumerate.images.frag"/>
+<src:fragref linkend="htmlhelp.force.map.and.alias.frag"/>
+<src:fragref linkend="htmlhelp.hhc.frag"/>
+<src:fragref linkend="htmlhelp.hhc.folders.instead.books.frag"/>
+<src:fragref linkend="htmlhelp.hhc.section.depth.frag"/>
+<src:fragref linkend="htmlhelp.hhc.show.root.frag"/>
+<src:fragref linkend="htmlhelp.hhp.frag"/>
+<src:fragref linkend="htmlhelp.hhp.tail.frag"/>
+<src:fragref linkend="htmlhelp.map.file.frag"/>
+<src:fragref linkend="htmlhelp.title.frag"/>
+<src:fragref linkend="inherit.keywords.frag"/>
+<src:fragref linkend="label.from.part.frag"/>
+<src:fragref linkend="linenumbering.everyNth.frag"/>
+<src:fragref linkend="linenumbering.extension.frag"/>
+<src:fragref linkend="linenumbering.separator.frag"/>
+<src:fragref linkend="linenumbering.width.frag"/>
+<src:fragref linkend="link.mailto.url.frag"/>
+<src:fragref linkend="make.single.year.ranges.frag"/>
+<src:fragref linkend="make.valid.html.frag"/>
+<src:fragref linkend="make.year.ranges.frag"/>
+<src:fragref linkend="manifest.frag"/>
+<src:fragref linkend="manual.toc.frag"/>
+<src:fragref linkend="navig.graphics.extension.frag"/>
+<src:fragref linkend="navig.graphics.frag"/>
+<src:fragref linkend="navig.graphics.path.frag"/>
+<src:fragref linkend="navig.showtitles.frag"/>
+<src:fragref linkend="nominal.table.width.frag"/>
+<src:fragref linkend="olink.fragid.frag"/>
+<src:fragref linkend="olink.outline.ext.frag"/>
+<src:fragref linkend="olink.pubid.frag"/>
+<src:fragref linkend="olink.resolver.frag"/>
+<src:fragref linkend="olink.sysid.frag"/>
+<src:fragref linkend="output.method.frag"/>
+<src:fragref linkend="part.autolabel.frag"/>
+<src:fragref linkend="phrase.propagates.style.frag"/>
+<src:fragref linkend="pixels.per.inch.frag"/>
+<src:fragref linkend="points.per.em.frag"/>
+<src:fragref linkend="preface.autolabel.frag"/>
+<src:fragref linkend="process.empty.source.toc.frag"/>
+<src:fragref linkend="process.source.toc.frag"/>
+<src:fragref linkend="profile.arch.frag"/>
+<src:fragref linkend="profile.condition.frag"/>
+<src:fragref linkend="profile.conformance.frag"/>
+<src:fragref linkend="profile.lang.frag"/>
+<src:fragref linkend="profile.os.frag"/>
+<src:fragref linkend="profile.revision.frag"/>
+<src:fragref linkend="profile.revisionflag.frag"/>
+<src:fragref linkend="profile.role.frag"/>
+<src:fragref linkend="profile.security.frag"/>
+<src:fragref linkend="profile.userlevel.frag"/>
+<src:fragref linkend="profile.vendor.frag"/>
+<src:fragref linkend="profile.attribute.frag"/>
+<src:fragref linkend="profile.value.frag"/>
+<src:fragref linkend="profile.separator.frag"/>
+<src:fragref linkend="punct.honorific.frag"/>
+<src:fragref linkend="qanda.defaultlabel.frag"/>
+<src:fragref linkend="qanda.inherit.numeration.frag"/>
+<src:fragref linkend="qandadiv.autolabel.frag"/>
+<src:fragref linkend="refentry.generate.name.frag"/>
+<src:fragref linkend="refentry.generate.title.frag"/>
+<src:fragref linkend="refentry.separator.frag"/>
+<src:fragref linkend="refentry.xref.manvolnum.frag"/>
+<src:fragref linkend="root.filename.frag"/>
+<src:fragref linkend="rootid.frag"/>
+<src:fragref linkend="runinhead.default.title.end.punct.frag"/>
+<src:fragref linkend="runinhead.title.end.punct.frag"/>
+<src:fragref linkend="saxon.character.representation.frag"/>
+<src:fragref linkend="section.autolabel.frag"/>
+<src:fragref linkend="section.label.includes.component.label.frag"/>
+<src:fragref linkend="segmentedlist.as.table.frag"/>
+<src:fragref linkend="shade.verbatim.frag"/>
+<src:fragref linkend="shade.verbatim.style.frag"/>
+<src:fragref linkend="show.comments.frag"/>
+<src:fragref linkend="show.revisionflag.frag"/>
+<src:fragref linkend="spacing.paras.frag"/>
+<src:fragref linkend="suppress.navigation.frag"/>
+<src:fragref linkend="table.border.color.frag"/>
+<src:fragref linkend="table.border.style.frag"/>
+<src:fragref linkend="table.border.thickness.frag"/>
+<src:fragref linkend="table.borders.with.css.frag"/>
+<src:fragref linkend="tablecolumns.extension.frag"/>
+<src:fragref linkend="textinsert.extension.frag"/>
+<src:fragref linkend="tex.math.file.frag"/>
+<src:fragref linkend="tex.math.in.alt.frag"/>
+<src:fragref linkend="tex.math.delims.frag"/>
+<src:fragref linkend="toc.list.type.frag"/>
+<src:fragref linkend="toc.section.depth.frag"/>
+<src:fragref linkend="ulink.target.frag"/>
+<src:fragref linkend="use.extensions.frag"/>
+<src:fragref linkend="use.id.as.filename.frag"/>
+<src:fragref linkend="use.svg.frag"/>
+<src:fragref linkend="variablelist.as.table.frag"/>
+
+</xsl:stylesheet>
+</src:fragment>
+
+</appendix>
+
+</book>

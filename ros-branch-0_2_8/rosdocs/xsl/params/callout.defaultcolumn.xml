@@ -1,0 +1,23 @@
+<refentry id="callout.defaultcolumn">
+<refmeta>
+<refentrytitle>callout.defaultcolumn</refentrytitle>
+<refmiscinfo role="type">integer</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>callout.defaultcolumn</refname>
+<refpurpose>Indicates what column callouts appear in by default</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='callout.defaultcolumn.frag'><xsl:param name="callout.defaultcolumn" select="'60'"/></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If a callout does not identify a column (for example, if it uses
+the <literal>linerange</literal> <sgmltag class="attribute">unit</sgmltag>),
+it will appear in the default column.
+</para>
+
+</refsect1>
+</refentry>

@@ -1,0 +1,25 @@
+<refentry id="callout.list.table">
+<refmeta>
+<refentrytitle>callout.list.table</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>callout.list.table</refname>
+<refpurpose>Present callout lists using a table?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='callout.list.table.frag'><xsl:param name="callout.list.table" select="'1'"/></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>The default presentation of <sgmltag>CalloutList</sgmltag>s uses
+an HTML <sgmltag>DL</sgmltag>. Some browsers don't align DLs very well
+if <parameter>callout.graphics</parameter> are used. With this option
+turned on, <sgmltag>CalloutList</sgmltag>s are presented in an HTML
+<sgmltag>TABLE</sgmltag>, which usually results in better alignment
+of the callout number with the callout description.</para>
+
+</refsect1>
+</refentry>

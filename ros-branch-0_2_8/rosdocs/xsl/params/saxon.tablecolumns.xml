@@ -1,0 +1,23 @@
+<refentry id="saxon.tablecolumns">
+<refmeta>
+<refentrytitle>saxon.tablecolumns</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>saxon.tablecolumns</refname>
+<refpurpose>Enable the table columns extension function</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='saxon.tablecolumns.frag'><xsl:param name="saxon.tablecolumns" select="'1'"/></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>The table columns extension function adjusts the widths of table
+columns in the HTML result to more accurately reflect the specifications
+in the CALS table.
+</para>
+
+</refsect1>
+</refentry>

@@ -1,0 +1,24 @@
+<refentry id="page.margin.bottom">
+<refmeta>
+<refentrytitle>page.margin.bottom</refentrytitle>
+
+</refmeta>
+<refnamediv>
+<refname>page.margin.bottom</refname>
+<refpurpose>The bottom margin of the page</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='page.margin.bottom.frag'>
+<xsl:param name="page.margin.bottom">0.5in</xsl:param>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>The bottom page margin is the distance from the bottom of the region-after
+to the physical bottom of the page.
+</para>
+
+</refsect1>
+</refentry>

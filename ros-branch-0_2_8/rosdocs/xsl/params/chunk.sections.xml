@@ -1,0 +1,23 @@
+<refentry id="chunk.sections">
+<refmeta>
+<refentrytitle>chunk.sections</refentrytitle>
+
+</refmeta>
+<refnamediv>
+<refname>chunk.sections</refname>
+<refpurpose>Should top-level sections be chunks in their own right?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='chunk.sections.frag'><xsl:param name="chunk.sections" select="'1'"/></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If non-zero, chunks will be created for top-level
+<sgmltag>sect1</sgmltag> and <sgmltag>section</sgmltag> elements in
+each component.
+</para>
+
+</refsect1>
+</refentry>

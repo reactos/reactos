@@ -1,0 +1,111 @@
+/*
+ * desk (Spanish resources)
+ *
+ * Copyright 2005 Patricio Martínez Ros
+ *
+ */
+
+LANGUAGE LANG_SPANISH, SUBLANG_SPANISH
+
+IDD_BACKGROUND DIALOGEX DISCARDABLE 0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Escritorio"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL         "",IDC_BACKGROUND_PREVIEW,"Static",SS_OWNERDRAW,48,10,
+                    150,105,WS_EX_STATICEDGE
+    CONTROL         "",IDC_BACKGROUND_LIST,"SysListView32",LVS_REPORT |
+                    LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS |
+                    WS_BORDER | WS_TABSTOP,7,139,173,71
+    LTEXT           "Fondo:",
+                    IDC_STATIC,8,127,180,8
+    PUSHBUTTON      "&Examinar...",IDC_BROWSE_BUTTON,187,175,50,14
+    PUSHBUTTON      "&Color...",IDC_COLOR_BUTTON,187,195,50,14
+    LTEXT           "Posición",IDC_STATIC,187,138,36,8
+    COMBOBOX        IDC_PLACEMENT_COMBO,187,148,50,90,CBS_DROPDOWNLIST |
+                    CBS_SORT | WS_VSCROLL | WS_TABSTOP
+END
+
+IDD_SCREENSAVER DIALOGEX DISCARDABLE  0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Protector de pantalla"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX        "&Protector de pantalla",IDC_SCREENS_DUMMY, 5, 7, 238, 176
+
+    LTEXT           "Lista de protectores de pantalla:",IDC_STATIC,13, 24, 108, 9
+    CONTROL         "",IDC_SCREENS_CHOICES,"SysListView32",LVS_REPORT |
+                    LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS |
+                    WS_BORDER | WS_TABSTOP,13, 34, 171, 109
+    PUSHBUTTON      "Eliminar",IDC_SCREENS_DELETE, 189,47,39,10
+    PUSHBUTTON      "&Añadir",IDC_SCREENS_POWER_BUTTON,    190,34,39,10
+
+    PUSHBUTTON      "Configuración...",IDC_SCREENS_SETTINGS,133, 164, 56, 12,WS_GROUP
+    PUSHBUTTON      "&Vista previa",IDC_SCREENS_TESTSC,192, 164, 43, 12
+
+    CONTROL         "Protección con &password.",IDC_SCREENS_USEPASSCHK,"button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13, 161, 119, 18
+
+    LTEXT           "&Esperar:",IDC_STATIC,13, 150, 31, 9
+    EDITTEXT        IDC_SCREENS_TIMEDELAY,44, 148, 31, 12,ES_RIGHT | WS_GROUP
+    CONTROL         "",IDC_SCREENS_TIME ,"UPDOWN_CLASS",UDS_SETBUDDYINT |
+                    UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
+                    WS_BORDER | WS_GROUP,62, 148, 12, 12
+    LTEXT           "Minutos antes de mostrar el protector de pantalla.",IDC_STATIC,79, 150, 161, 9
+
+    GROUPBOX        "Ahorro de energía del monitor",IDC_SCREENS_DUMMY,5, 186, 238, 35
+    LTEXT           "Para ajustar la configuración de energía del monitor, haga click en Energía.",
+                    IDC_STATIC,16, 199, 155, 19
+    PUSHBUTTON      "Energía...",IDC_SCREENS_POWER_BUTTON,180, 202, 57, 12
+END
+
+IDD_APPEARANCE DIALOGEX DISCARDABLE  0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Apariencia"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Este espacio se ha dejado en blanco intencionadamente",IDC_STATIC,33,
+                    109,181,10
+END
+
+IDD_SETTINGS DIALOGEX DISCARDABLE  0, 0, 246, 228
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Configuración"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Monitor",1820,3,140,30,8
+    LTEXT           "<ninguno>",IDC_SETTINGS_DEVICE,9,149,224,8
+    GROUPBOX        "Resolución de &pantalla",1818,3,160,115,43
+    CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",TBS_AUTOTICKS | WS_TABSTOP,
+                    30,170,58,17
+    LTEXT           "Menos",1815,8,170,21,8,NOT WS_GROUP
+    LTEXT           "Más",1816,93,170,21,8,NOT WS_GROUP
+    LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,190,100,10,NOT WS_GROUP | SS_CENTER
+    GROUPBOX        "&Calidad de color",1817,125,160,115,43
+    COMBOBOX        IDC_SETTINGS_BPP,131,170,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
+                    WS_VSCROLL | WS_TABSTOP
+    CONTROL         "",1813,"Static",SS_BITMAP | SS_CENTERIMAGE | SS_SUNKEN,
+                    131,188,103,9
+    PUSHBUTTON      "A&vanzado...",IDC_SETTINGS_ADVANCED,306,205,56,14
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CPLNAME "Pantalla"
+    IDS_CPLDESCRIPTION "Personaliza el fondo de escritorio y el protector de pantalla."
+
+    IDS_NONE "(Ninguno)"
+    IDS_CENTER "Centrada"
+    IDS_STRETCH "Expandida"
+    IDS_TILE "En mosaico"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_COLOR_4BIT "Muy baja (4 bits)"
+    IDS_COLOR_8BIT "Baja (8 bits)"
+    IDS_COLOR_16BIT "Media (16 bits)"
+    IDS_COLOR_24BIT "Alta (24 bits)"
+    IDS_COLOR_32BIT "La más alta (32 bits)"
+    IDS_PIXEL "%lu por %lu píxeles"
+END

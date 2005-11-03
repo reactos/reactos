@@ -1,0 +1,25 @@
+<refentry id="chunk.quietly">
+<refmeta>
+<refentrytitle>chunk.quietly</refentrytitle>
+
+</refmeta>
+<refnamediv>
+<refname>chunk.quietly</refname>
+<refpurpose>Omit the chunked filename messages.</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='chunk.quietly.frag'>
+<xsl:param name="chunk.quietly" select="0"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If zero (the default), the XSL processor emits a message naming
+each separate chunk filename as it is being output.
+If nonzero, then the messages are suppressed.
+</para>
+
+</refsect1>
+</refentry>

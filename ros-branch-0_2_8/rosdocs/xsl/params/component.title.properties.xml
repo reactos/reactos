@@ -1,0 +1,30 @@
+<refentry id="component.title.properties">
+<refnamediv>
+<refname>component.title.properties</refname>
+<refpurpose>Specify the styling for the title elements of a component.</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='component.title.properties.frag'><xsl:attribute-set name="component.title.properties">
+  <xsl:attribute name="space-before.optimum">2em</xsl:attribute>
+  <xsl:attribute name="space-before.minimum">1.8em</xsl:attribute>
+  <xsl:attribute name="space-before.maximum">2.2em</xsl:attribute>
+  <xsl:attribute name="font-weight">bold</xsl:attribute>
+  <xsl:attribute name="font-size">18pt</xsl:attribute>
+  <xsl:attribute name="space-after.optimum">1.5em</xsl:attribute>
+  <xsl:attribute name="space-after.minimum">1.3em</xsl:attribute>
+  <xsl:attribute name="space-after.maximum">1.8em</xsl:attribute>
+  <xsl:attribute name="hyphenate">false</xsl:attribute>
+  <xsl:attribute name="keep-with-next.within-column">always</xsl:attribute>
+</xsl:attribute-set></src:fragment>
+</refsynopsisdiv>
+<refsect1><title>Description</title>
+
+<para>A set of attributes are used to style the title of a
+component (chapters, appendixes, articles, etc.). Components are usually
+printed in the <parameter>title.font.family</parameter>.
+Spacing before and after, font size etc are specified
+using this parameter.</para>
+
+</refsect1>
+</refentry>

@@ -1,0 +1,30 @@
+2002-05-17  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* javahelp.xsl: Put ancillary files in base.dir
+
+2002-03-14  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* .cvsignore: New file.
+
+	* javahelp.xsl: Whitespace only: change CR/LF back to LF. Norm was a total moron.
+
+	* javahelp.xsl: Whitespace changes only: use PC-style CR/LF because Unix clients choke on this far less often than PC clients choke on the reverse. Grrr.
+
+2002-03-01  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* Makefile: New file.
+
+2001-11-27  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* javahelp-common.xsl, javahelp.xsl, xtjavahelp.xsl: Removed obsolete XT support; added support for rootid parameter
+
+	* javahelp.xsl: Fixed simple select typo
+
+2001-05-20  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* javahelp-common.xsl: Fixed bug #425149, colphons and articles inside book are now handled
+
+2001-04-04  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* javahelp-common.xsl, javahelp.xsl, xtjavahelp.xsl: New file.
+

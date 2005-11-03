@@ -1,0 +1,39 @@
+<chapter>
+<title>Applying for write access</title>
+
+<!--
+<artheader>
+   <title>Applying for write access</title>
+   <author>
+      <firstname>Jason</firstname>
+      <surname>Filby</surname>
+      <affiliation>
+        <address>
+          <email>jasonfilby@yahoo.com</email>
+        </address>
+      </affiliation>
+   </author>
+</artheader>
+-->
+
+<abstract>
+<para>
+When and how to apply for write access to CVS.
+</para>
+</abstract>
+
+<sect2>
+<title>When to apply</title>
+<para>
+Once you have started submitting patches and new code to the project you can be considered for application. We would prefer not to give access to someone who makes two or three updates and then never again. Also, if you are only going to submit patches now and again, rather just send them to someone who has write access. If, however, you become a contributing developer on a continuing basis, you should definitely consider applying for write access.
+</para>
+</sect2>
+
+<sect2>
+<title>Who to apply to</title>
+<para>
+Submit your request to Rex Jolliff at "rex at lvcablemodem dot com" (compress this into a normal email address) with a username and password. If your request is granted, Rex will create a user for you with the details you specified. You must then change your CVSROOT setting to include your username instead of "cvsanon" and will also now log in to the CVS client with your password.
+</para>
+</sect2>
+
+</chapter>

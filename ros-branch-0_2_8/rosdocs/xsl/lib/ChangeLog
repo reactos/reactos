@@ -1,0 +1,38 @@
+2002-05-12  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* lib.xweb: Changed default units to px; added length-in-points template
+
+2002-03-25  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* .cvsignore: Ignore lib.xsl too
+
+	* .cvsignore, Makefile, lib.xsl, lib.xweb: Use Literate XML to generate lib.xsl
+
+	* Makefile: Update documentation build to reflect use of lib.xweb
+
+2002-03-18  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* lib.xsl: Replace generate.*.toc and generate.*.lot with single generate.toc parameter.
+
+2002-03-14  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* lib.xsl: Whitespace only: change CR/LF back to LF. Norm was a total moron.
+
+	* lib.xsl: Whitespace changes only: use PC-style CR/LF because Unix clients choke on this far less often than PC clients choke on the reverse. Grrr.
+
+2002-01-09  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* lib.xsl: Added length-units template to extract units from lengths
+
+2001-11-28  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* lib.xsl: Added pi-attribute template
+
+2001-04-03  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* lib.xsl: Documentation fixes
+
+2001-04-02  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* lib.xsl: New file.
+

@@ -1,0 +1,22 @@
+<refentry id="draft.watermark.image">
+<refmeta>
+<refentrytitle>draft.watermark.image</refentrytitle>
+<refmiscinfo role="type">uri</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>draft.watermark.image</refname>
+<refpurpose>The URI of the image to be used for draft watermarks</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='draft.watermark.image.frag'>
+<xsl:param name="draft.watermark.image" select="'http://docbook.sourceforge.net/release/images/draft.png'"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>The image to be used for draft watermarks.</para>
+
+</refsect1>
+</refentry>

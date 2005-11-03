@@ -1,0 +1,24 @@
+<refentry id="linenumbering.extension">
+<refmeta>
+<refentrytitle>linenumbering.extension</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>linenumbering.extension</refname>
+<refpurpose>Enable the line numbering extension</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='linenumbering.extension.frag'><xsl:param name="linenumbering.extension" select="'1'"/></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If true, verbatim environments (elements that have the
+format='linespecific' notation attribute: address, literallayout,
+programlisting, screen, synopsis) that specify line numbering will
+have, surprise, line numbers.
+</para>
+
+</refsect1>
+</refentry>

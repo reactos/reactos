@@ -1,0 +1,422 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>XSL processing model</title><link rel="stylesheet" href="reference.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.50.0"><link rel="home" href="index.html" title="DocBook XSL Stylesheet Documentation"><link rel="up" href="publishing.html" title="Chapter 1. DocBook XSL"><link rel="previous" href="ch01s02.html" title="A brief introduction to XSL"><link rel="next" href="ch01s04.html" title="Customizing DocBook XSL stylesheets"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">XSL processing model</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="ch01s02.html">Prev</a>&nbsp;</td><th width="60%" align="center">Chapter 1. DocBook XSL</th><td width="20%" align="right">&nbsp;<a accesskey="n" href="ch01s04.html">Next</a></td></tr></table><hr></div><div class="sect1"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="d0e200"></a>XSL processing model</h2></div></div><p>XSL is a template language, not a procedural
+language. That means a stylesheet specifies a sample of the
+output, not a sequence of programming steps to generate it.
+A stylesheet consists of a mixture of output samples with
+instructions of what to put in each sample. Each bit of
+output sample and instructions is called
+a  <span class="emphasis"><em>template</em></span>.</p><p>In general, you write a template for each element
+type in your document. That lets you concentrate on
+handling just one element at a time, and keeps a stylesheet
+modular. The power of XSL comes from processing the
+templates recursively. That is, each template handles the
+processing of its own element, and then calls other
+templates to process its children, and so on. Since an XML
+document is always a single root element at the top level
+that contains all of the nested descendent elements, the
+XSL templates also start at the top and work their way down
+through the hierarchy of elements.</p><p>Take the
+DocBook <tt>&lt;para&gt;</tt> paragraph element as
+an example. To convert this to HTML, you want to wrap the
+paragraph content with the HTML
+tags <tt>&lt;p&gt;</tt> and <tt>&lt;/p&gt;</tt>.
+But a DocBook <tt>&lt;para&gt;</tt>  can contain
+any number of in-line DocBook elements marking up the text.
+Fortunately, you can let other templates take care of those
+elements, so your XSL template
+for <tt>&lt;para&gt;</tt> can be quite
+simple:</p><pre class="programlisting">&lt;xsl:template match="para"&gt;
+  &lt;p&gt;
+    &lt;xsl:apply-templates/&gt;
+  &lt;/p&gt;
+&lt;/xsl:template&gt;
+</pre><p>The <tt>&lt;xsl:template&gt;</tt> element
+starts a new template, and
+its <tt>match</tt> attribute indicates where to
+apply the template, in this case to
+any <tt>&lt;para&gt;</tt> elements. The template
+says to output a literal <tt>&lt;p&gt;</tt> string
+and then execute
+the <tt>&lt;xsl:apply-templates/&gt;</tt> instruction.
+This tells the XSL processor to look among all the
+templates in the stylesheet for any that should be applied
+to the content of the paragraph. If each template in the
+stylesheet includes
+an <tt>&lt;xsl:apply-templates/&gt;</tt> instruction,
+then all descendents will eventually be processed. When it
+is through recursively applying templates to the paragraph
+content, it outputs the <tt>&lt;/p&gt;</tt> closing
+tag.</p><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="d0e252"></a>Context is important</h3></div></div><p>Since you aren't writing a linear procedure to
+process your document, the context of where and how to
+apply each modular template is important.
+The <tt>match</tt> attribute
+of <tt>&lt;xsl:template&gt;</tt> provides that
+context for most templates. There is an entire expression
+language, XPath, for identifying what parts of your
+document should be handled by each template. The simplest
+context is just an element name, as in the example above.
+But you can also specify elements as children of other
+elements, elements with certain attribute values, the first
+or last elements in a sequence, and so on. Here is how the
+DocBook <tt>&lt;formalpara&gt;</tt> element is
+handled:</p><pre class="programlisting">&lt;xsl:template match="formalpara"&gt;
+  &lt;p&gt;
+    &lt;xsl:apply-templates/&gt;
+  &lt;/p&gt;
+&lt;/xsl:template&gt;
+
+&lt;xsl:template match="formalpara/title"&gt;
+  &lt;b&gt;&lt;xsl:apply-templates/&gt;&lt;/b&gt;
+  &lt;xsl:text&gt; &lt;/xsl:text&gt;
+&lt;/xsl:template&gt;
+
+&lt;xsl:template match="formalpara/para"&gt;
+  &lt;xsl:apply-templates/&gt;
+&lt;/xsl:template&gt;
+</pre><p>There are three templates defined, one for
+the <tt>&lt;formalpara&gt;</tt> element itself,
+ and one for each of its children elements. The <tt>match</tt> attribute
+value <tt>formalpara/title</tt>    in the second
+template is an XPath expression indicating
+a <tt>&lt;title&gt;</tt> element that is an
+immediate child of
+a <tt>&lt;formalpara&gt;</tt> element. This
+distinguishes such titles from
+other <tt>&lt;title&gt;</tt> elements used in
+DocBook. XPath expressions are the key to controlling how
+your templates are applied.</p><p>In general, the XSL processor has internal rules that
+apply templates that are more specific before templates
+that are less specific. That lets you control the details,
+but also provides a fallback mechanism to a less specific
+template when you don't supply the full context for every
+combination of elements. This feature is illustrated by the
+third template, for <tt>formalpara/para</tt>. By
+including this template, the stylesheet processes a <tt>&lt;para&gt;</tt> within <tt>&lt;formalpara&gt;</tt> in
+a special way, in this case by not outputting the HTML <tt>&lt;p&gt;</tt> tags already output by its parent. If this template had not been included, then the processor would have fallen back to the template
+specified by <tt>match="para"</tt> described
+above, which would have output a second set of <tt>&lt;p&gt;</tt> tags.</p><p>You can also control template context with
+XSL <span class="emphasis"><em>modes</em></span>, which are used extensively
+in the DocBook stylesheets. Modes let you process the same
+input more than once in different ways.
+A <tt>mode</tt> attribute in
+an <tt>&lt;xsl:template&gt;</tt> definition adds a
+specific mode name to that template. When the same mode
+name is used
+in <tt>&lt;xsl:apply-templates/&gt;</tt>, it acts
+as a filter to narrow the selection of templates to only
+those selected by
+the <tt>match</tt> expression <span class="emphasis"><em>and</em></span> that
+have that mode name. This lets you define two different
+templates for the same element match that are applied under
+different contexts. For example, there are two templates
+defined for
+DocBook <tt>&lt;listitem&gt;</tt>  elements:</p><pre class="programlisting">&lt;xsl:template match="listitem"&gt;
+  &lt;li&gt;&lt;xsl:apply-templates/&gt;&lt;/li&gt;
+&lt;/xsl:template&gt;
+
+&lt;xsl:template match="listitem" mode="xref"&gt;
+  &lt;xsl:number format="1"/&gt;
+&lt;/xsl:template&gt;
+</pre><p>The first template is for the normal list item
+context where you want to output the
+HTML <tt>&lt;li&gt;</tt> tags. The second template
+is called with <tt>&lt;xsl:apply-templates
+select="$target" mode="xref"/&gt;</tt> in the context
+of processing <tt>&lt;xref&gt;</tt> elements. In
+this case the <tt>select</tt> attribute locates
+the ID of the specific list item and
+the <tt>mode</tt> attribute selects the second
+template, whose effect is to output its item number when it
+is in an ordered list. Because there are many such special
+needs when
+processing <tt>&lt;xref&gt;</tt> elements, it is
+convenient to define a mode name <tt>xref</tt> to
+handle them all. Keep in mind that mode settings
+do <span class="emphasis"><em>not</em></span> automatically get passed down to
+other templates
+through <tt>&lt;xsl:apply-templates/&gt;</tt>.</p></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="d0e362"></a>Programming features</h3></div></div><p>Although XSL is template-driven, it also has some
+features of traditional programming languages. Here are
+some examples from the DocBook stylesheets. </p><pre class="programlisting">Assign a value to a variable:
+&lt;xsl:variable name="refelem" select="name($target)"/&gt;
+
+If statement:
+&lt;xsl:if test="$show.comments"&gt;
+    &lt;i&gt;&lt;xsl:call-template name="inline.charseq"/&gt;&lt;/i&gt;
+&lt;/xsl:if&gt;
+
+Case statement:
+&lt;xsl:choose&gt;
+    &lt;xsl:when test="@columns"&gt;
+        &lt;xsl:value-of select="@columns"/&gt;
+    &lt;/xsl:when&gt;
+    &lt;xsl:otherwise&gt;1&lt;/xsl:otherwise&gt;
+&lt;/xsl:choose&gt;
+
+Call a template by name like a subroutine, passing parameter values and accepting a return value:
+&lt;xsl:call-template name="xref.xreflabel"&gt;
+   &lt;xsl:with-param name="target" select="$target"/&gt;
+&lt;/xsl:call-template&gt;
+</pre><p>However, you can't always use these constructs as you
+do in other programming languages. Variables in particular
+have very different behavior.</p><div class="sect3"><div class="titlepage"><div><h4 class="title"><a name="d0e382"></a>Using variables and parameters</h4></div></div><p>XSL provides two elements that let you assign a value
+to a
+name: <tt>&lt;xsl:variable&gt;</tt> and <tt>&lt;xsl:param&gt;</tt>.
+These share the same name space and syntax for assigning
+names and values. Both can be referred to using
+the <tt>$name</tt> syntax. The main difference
+between these two elements is that a param's value acts as
+a default value that can be overridden when a template is
+called using
+a <tt>&lt;xsl:with-param&gt;</tt> element as in the
+last example above.</p><p>Here are two examples from DocBook:</p><pre class="programlisting">&lt;xsl:param name="cols"&gt;1&lt;/xsl:param&gt;
+&lt;xsl:variable name="segnum" select="position()"/&gt;
+</pre><p>In both elements, the name of the parameter or
+variable is specified with
+the <tt>name</tt> attribute. So the name of
+the <tt>param</tt> here
+is <tt>cols</tt> and the name of
+the <tt>variable</tt> is <tt>segnum</tt>.
+The value of either can be supplied in two ways. The value
+of the first example is the text node "1" and is supplied
+as the content of the element. The value of the second
+example is supplied as the result of the expression in
+its <tt>select</tt> attribute, and the element
+itself has no content.</p><p>The feature of XSL variables that is odd to new users
+is that once you assign a value to a variable, you cannot
+assign a new value within the same scope. Doing so will
+generate an error. So variables are not used as dynamic
+storage bins they way they are in other languages. They
+hold a fixed value within their scope of application, and
+then disappear when the scope is exited. This feature is a
+result of the design of XSL, which is template-driven and
+not procedural. This means there is no definite order of
+processing, so you can't rely on the values of changing
+variables. To use variables in XSL, you need to understand
+how their scope is defined.</p><p>Variables defined outside of all templates are
+considered global variables, and they are readable within
+all templates. The value of a global variable is fixed, and
+its global value can't be altered from within any template.
+However, a template can create a local variable of the same
+name and give it a different value. That local value
+remains in effect only within the scope of the local
+variable.</p><p>Variables defined within a template remain in effect
+only within their permitted scope, which is defined as all
+following siblings and their descendants. To understand
+such a scope, you have to remember that XSL instructions
+are true XML elements that are embedded in an XML family
+hierarchy of XSL elements, often referred to as parents,
+children, siblings, ancestors and descendants. Taking the
+family analogy a step further, think of a variable
+assignment as a piece of advice that you are allowed to
+give to certain family members. You can give your advice
+only to your younger siblings (those that follow you) and
+their descendents. Your older siblings won't listen,
+neither will your parents or any of your ancestors. To
+stretch the analogy a bit, it is an error to try to give
+different advice under the same name to the same group of
+listeners (in other words, to redefine the variable). Keep
+in mind that this family is not the elements of your
+document, but just the XSL instructions in your stylesheet.
+To help you keep track of such scopes in hand-written
+stylesheets, it helps to indent nested XSL elements. Here
+is an edited snippet from the DocBook stylesheet
+file <tt>pi.xsl</tt> that illustrates different
+scopes for two variables:</p><pre class="programlisting">
+ 1 &lt;xsl:template name="dbhtml-attribute"&gt;
+ 2 ...
+ 3    &lt;xsl:choose&gt;
+ 4       &lt;xsl:when test="$count&gt;count($pis)"&gt;
+ 5          &lt;!-- not found --&gt;
+ 6       &lt;/xsl:when&gt;
+ 7       &lt;xsl:otherwise&gt;
+ 8          &lt;xsl:variable name="pi"&gt;
+ 9             &lt;xsl:value-of select="$pis[$count]"/&gt;
+10          &lt;/xsl:variable&gt;
+11          &lt;xsl:choose&gt;
+12             &lt;xsl:when test="contains($pi,concat($attribute, '='))"&gt;
+13                &lt;xsl:variable name="rest" select="substring-after($pi,concat($attribute,'='))"/&gt;
+14                &lt;xsl:variable name="quote" select="substring($rest,1,1)"/&gt;
+15                &lt;xsl:value-of select="substring-before(substring($rest,2),$quote)"/&gt;
+16             &lt;/xsl:when&gt;
+17             &lt;xsl:otherwise&gt;
+18             ...
+19             &lt;/xsl:otherwise&gt;
+20          &lt;/xsl:choose&gt;
+21       &lt;/xsl:otherwise&gt;
+22    &lt;/xsl:choose&gt;
+23 &lt;/xsl:template&gt;
+
+</pre><p>The scope of the variable <tt>pi</tt> begins
+on line 8 where it is defined in this template, and ends on
+line 20 when its last sibling ends.<sup>[<a name="d0e439" href="#ftn.d0e439">1</a>]</sup>     The scope of the
+variable <tt>rest</tt> begins on line 13 and ends
+on line 15. Fortunately, line 15 outputs an expression
+using the value before it goes out of scope.</p><p>What happens when
+an <tt>&lt;xsl:apply-templates/&gt;</tt> element
+is used within the scope of a local variable? Do the
+templates that are applied to the document children get the
+variable? The answer is no. The templates that are applied
+are not actually within the scope of the variable. They
+exist elsewhere in the stylesheet and are not following
+siblings or their descendants. </p><p>To pass a value to another template, you pass a
+parameter using
+the <tt>&lt;xsl:with-param&gt;</tt> element. This
+parameter passing is usually done with calls to a specific
+named template
+using <tt>&lt;xsl:call-template&gt;</tt>, although
+it works
+with <tt>&lt;xsl:apply-templates&gt;</tt> too.
+That's because the called template must be expecting the
+parameter by defining it using
+a <tt>&lt;xsl:param&gt;</tt> element with the same
+parameter name. Any passed parameters whose names are not
+defined in the called template are ignored.</p><p>Here is an example of parameter passing
+from <tt>docbook.xsl</tt>:</p><pre class="programlisting">&lt;xsl:call-template name="head.content"&gt;
+   &lt;xsl:with-param name="node" select="$doc"/&gt;
+&lt;/xsl:call-template&gt;
+</pre><p>Here a template
+named <tt>head.content</tt> is being called and
+passed a parameter named <tt>node</tt> whose
+content is the value of the <tt>$doc</tt> variable
+in the current context. The top of that template looks like
+this:</p><pre class="programlisting">&lt;xsl:template name="head.content"&gt;
+   &lt;xsl:param name="node" select="."/&gt;
+</pre><p>The template is expecting the parameter because it
+has a <tt>&lt;xsl:param&gt;</tt> defined with the
+same name. The value in this definition is the default
+value. This would be the parameter value used in the
+template if the template was called without passing that
+parameter.</p></div></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="d0e493"></a>Generating HTML output.</h3></div></div><p>You generate HTML from your DocBook XML files by
+applying the HTML version of the stylesheets. This is done
+by using the HTML driver
+file <tt>docbook/html/docbook.xsl</tt> as your
+stylesheet. That is the master stylesheet file that
+uses <tt>&lt;xsl:include&gt;</tt> to pull in the
+component files it needs to assemble a complete stylesheet
+for producing HTML. </p><p>The way the DocBook stylesheet generates HTML is to
+apply templates that output a mix of text content and HTML
+elements. Starting at the top level in the main
+file <tt>docbook.xsl</tt>:</p><pre class="programlisting">&lt;xsl:template match="/"&gt;
+  &lt;xsl:variable name="doc" select="*[1]"/&gt;
+  &lt;html&gt;
+  &lt;head&gt;
+    &lt;xsl:call-template name="head.content"&gt;
+      &lt;xsl:with-param name="node" select="$doc"/&gt;
+    &lt;/xsl:call-template&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;xsl:apply-templates/&gt;
+  &lt;/body&gt;
+  &lt;/html&gt;
+&lt;/xsl:template&gt;
+</pre><p>This template matches the root element of your input
+document, and starts the process of recursively applying
+templates. It first defines a variable
+named <tt>doc</tt> and then outputs two literal
+HTML elements <tt>&lt;html&gt;</tt> and <tt>&lt;head&gt;</tt>.
+Then it calls a named
+template <tt>head.content</tt> to process the
+content of the HTML <tt>&lt;head&gt;</tt>, closes
+the <tt>&lt;head&gt;</tt> and starts
+the <tt>&lt;body&gt;</tt>. There it
+uses <tt>&lt;xsl:apply-templates/&gt;</tt> to
+recursively process the entire input document. Then it just
+closes out the HTML file.</p><p>Simple HTML elements can generated as literal
+elements as shown here. But if the HTML being output
+depends on the context, you need something more powerful to
+select the element name and possibly add attributes and
+their values. Here is a fragment
+from <tt>sections.xsl</tt> that shows how a
+heading tag is generated using
+the <tt>&lt;xsl:element&gt;</tt> and <tt>&lt;xsl:attribute&gt;</tt> elements:</p><pre class="programlisting">
+ 1 &lt;xsl:element name="h{$level}"&gt;
+ 2   &lt;xsl:attribute name="class"&gt;title&lt;/xsl:attribute&gt;
+ 3   &lt;xsl:if test="$level&lt;3"&gt;
+ 4     &lt;xsl:attribute name="style"&gt;clear: all&lt;/xsl:attribute&gt;
+ 5   &lt;/xsl:if&gt;
+ 6   &lt;a&gt;
+ 7     &lt;xsl:attribute name="name"&gt;
+ 8       &lt;xsl:call-template name="object.id"/&gt;
+ 9     &lt;/xsl:attribute&gt;
+10     &lt;b&gt;&lt;xsl:copy-of select="$title"/&gt;&lt;/b&gt;
+11   &lt;/a&gt;
+12 &lt;/xsl:element&gt;
+</pre><p>This whole example is generating a single HTML
+heading element. Line 1 begins the HTML element definition
+by identifying the name of the element. In this case, the
+name is an expression that includes the
+variable <tt>$level</tt> passed as a parameter to
+this template. Thus a single template can
+generate <tt>&lt;h1&gt;</tt>, <tt>&lt;h2&gt;</tt>,
+etc. depending on the context in which it is called. Line 2
+defines a <tt>class="title"</tt> attribute that is
+added to this element. Lines 3 to 5 add
+a <tt>style="clear all"</tt> attribute, but only
+if the heading level is less than 3. Line 6 opens
+an <tt>&lt;a&gt;</tt> anchor element. Although this
+looks like a literal output string, it is actually modified
+by lines 7 to 9 that insert
+the <tt>name</tt> attribute into
+the <tt>&lt;a&gt;</tt> element. This illustrates
+that XSL is managing output elements as active element
+nodes, not just text strings. Line 10 outputs the text of
+the heading title, also passed as a parameter to the
+template, enclosed in HTML boldface tags. Line 11 closes
+the anchor tag with the
+literal <tt>&lt;/a&gt;</tt> syntax, while line 12
+closes the heading tag by closing the element definition.
+Since the actual element name is a variable, it couldn't
+use the literal syntax.</p><p>As you follow the sequence of nested templates
+processing elements, you might be wondering how the
+ordinary text of your input document gets to the output. In
+the file <tt>docbook.xsl</tt> you will find
+this template that handles any text not processed by any
+other template:</p><pre class="programlisting">&lt;xsl:template match="text()"&gt;
+  &lt;xsl:value-of select="."/&gt;
+&lt;/xsl:template&gt;
+</pre><p>This template's body consists of the "value" of the text node,
+which is just its text. In general, all XSL processors have
+some built-in templates to handle any content for which
+your stylesheet doesn't supply a matching template. This
+template serves the same function but appears explicitly in
+the stylesheet.</p></div><div class="sect2"><div class="titlepage"><div><h3 class="title"><a name="d0e588"></a>Generating formatting objects.</h3></div></div><p>You generate formatting objects from your DocBook XML
+files by applying the fo version of the stylesheets. This
+is done by using the fo driver
+file <tt>docbook/fo/docbook.xsl</tt> as your
+stylesheet. That is the master stylesheet file that
+uses <tt>&lt;xsl:include&gt;</tt> to pull in the
+component files it needs to assemble a complete stylesheet
+for producing formatting objects. Generating a formatting
+objects file is only half the process of producing typeset
+output. You also need a formatting object processor such as
+the Apache XML Project's FOP as described in an earlier
+section.</p><p>The DocBook fo stylesheet works in a similar manner
+to the HTML stylesheet. Instead of outputting HTML tags, it
+outputs text marked up
+with <tt>&lt;fo:<i><tt>something</tt></i>&gt;</tt> tags.
+For example, to indicate that some text should be kept
+in-line and typeset with a monospace font, it might look
+like this:</p><pre class="programlisting">&lt;fo:inline-sequence font-family="monospace"&gt;/usr/man&lt;/fo:inline-sequence&gt;</pre><p>The templates
+in <tt>docbook/fo/inline.xsl</tt>      that produce
+this output for a
+DocBook   <tt>&lt;filename&gt;</tt>     element look
+like this:</p><pre class="programlisting">&lt;xsl:template match="filename"&gt;
+  &lt;xsl:call-template name="inline.monoseq"/&gt;
+&lt;/xsl:template&gt;
+
+&lt;xsl:template name="inline.monoseq"&gt;
+  &lt;xsl:param name="content"&gt;
+    &lt;xsl:apply-templates/&gt;
+  &lt;/xsl:param&gt;
+  &lt;fo:inline-sequence font-family="monospace"&gt;
+    &lt;xsl:copy-of select="$content"/&gt;
+  &lt;/fo:inline-sequence&gt;
+&lt;/xsl:template&gt;
+</pre><p>There are dozens of fo tags and attributes specified
+in the XSL standard. It is beyond the scope of this
+document to cover how all of them are used in the DocBook
+stylesheets. Fortunately, this is only an intermediate
+format that you probably won't have to deal with very much
+directly unless you are writing your own
+stylesheets.</p></div><div class="footnotes"><br><hr width="100" align="left"><div class="footnote"><p><sup>[<a name="ftn.d0e439" href="#d0e439">1</a>] </sup>Technically, the scope extends to the end tag of the parent of the <tt>&lt;xsl:variable&gt;</tt> element. That is effectively the last sibling.</p></div></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="ch01s02.html">Prev</a>&nbsp;</td><td width="20%" align="center"><a accesskey="u" href="publishing.html">Up</a></td><td width="40%" align="right">&nbsp;<a accesskey="n" href="ch01s04.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">A brief introduction to XSL&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;Customizing DocBook XSL stylesheets</td></tr></table></div></body></html>

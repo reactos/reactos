@@ -1,0 +1,24 @@
+<refentry id="emphasis.propagates.style">
+<refmeta>
+<refentrytitle>emphasis.propagates.style</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>emphasis.propagates.style</refname>
+<refpurpose>Pass emphasis role attribute through to HTML?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='emphasis.propagates.style.frag'>
+<xsl:param name="emphasis.propagates.style" select="1"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If true, the role attribute of <sgmltag>emphasis</sgmltag> elements
+will be passed through to the HTML as a class attribute on a
+<sgmltag>span</sgmltag> that surrounds the emphasis.</para>
+
+</refsect1>
+</refentry>

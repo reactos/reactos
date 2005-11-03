@@ -1,0 +1,71 @@
+<!DOCTYPE book
+  PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+  "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+<!ENTITY reference.xml SYSTEM "reference.xml" NDATA SGML>
+<!ENTITY publishing.xml SYSTEM "publishing.xml">
+<!ENTITY extensions.xml SYSTEM "extensions.xml">
+<!ENTITY templates.xml SYSTEM "templates.xml">
+<!ENTITY html-param.xml SYSTEM "html/param.xml" NDATA SGML>
+<!ENTITY tools-profiling.xml SYSTEM "tools/profiling.xml" NDATA SGML>
+<!ENTITY htmlhelp.xml SYSTEM "htmlhelp.xml">
+]>
+<book>
+<bookinfo>
+<title>DocBook XSL Stylesheet Documentation</title>
+<!-- $Id: documentation.xml,v 1.1 2002/06/13 20:31:59 chorns Exp $ -->
+
+<authorgroup>
+<author><surname>Walsh</surname>
+<firstname>Norman</firstname></author>
+<othercredit><surname>Stayton</surname>
+<firstname>Bob</firstname></othercredit>
+<othercredit><surname>Kosek</surname>
+<firstname>Ji&rcaron;&iacute;</firstname>
+</othercredit>
+</authorgroup>
+
+<copyright><year>1999</year><year>2000</year><year>2001</year>
+<holder>Norman Walsh</holder>
+</copyright>
+</bookinfo>
+
+<preface><title>Preface</title>
+
+<para>This is the beginnings of documentation for the DocBook XSL
+Stylesheets.</para>
+
+</preface>
+
+&publishing.xml;
+&extensions.xml;
+
+<chapter>
+<title>Tools documentation</title>
+
+<para>There are several tools useful for usage with DocBook in
+directory <filename>tools</filename>.</para>
+
+<itemizedlist>
+<listitem>
+<para><ulink url="tools/profiling.html">Profiling</ulink></para>
+</listitem>
+</itemizedlist>
+
+</chapter>
+
+<chapter>
+<title>Reference Documentation</title>
+
+<para>Reference documentation is also available:</para>
+
+<itemizedlist>
+<listitem><para><olink type="title" localinfo="reference.html"
+                       targetdocent="reference.xml"/></para>
+</listitem>
+</itemizedlist>
+</chapter>
+
+&templates.xml;
+&htmlhelp.xml;
+</book>
+

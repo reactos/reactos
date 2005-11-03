@@ -1,0 +1,12 @@
+<directory name="acpi">
+	<xi:include href="acpi/acpi.xml" />
+</directory>
+<directory name="isapnp">
+	<xi:include href="isapnp/isapnp.xml" />
+</directory>
+<directory name="pci">
+	<xi:include href="pci/pci.xml" />
+</directory>
+<directory name="serenum">
+	<xi:include href="serenum/serenum.xml" />
+</directory>

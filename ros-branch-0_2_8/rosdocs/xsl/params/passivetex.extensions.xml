@@ -1,0 +1,24 @@
+<refentry id="passivetex.extensions">
+<refmeta>
+<refentrytitle>passivetex.extensions</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>passivetex.extensions</refname>
+<refpurpose>Enable PassiveTeX extensions?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='passivetex.extensions.frag'><xsl:param name="passivetex.extensions" select="0"/></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If non-zero,
+<ulink url="http://users.ox.ac.uk/~rahtz/passivetex/">PassiveTeX</ulink>
+extensions will be used. At present, this consists of PDF bookmarks
+and sorted index terms.
+</para>
+
+</refsect1>
+</refentry>

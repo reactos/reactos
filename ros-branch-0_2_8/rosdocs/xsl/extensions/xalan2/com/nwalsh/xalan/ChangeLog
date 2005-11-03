@@ -1,0 +1,28 @@
+2002-05-08  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* ImageIntrinsics.java: New file.
+
+2001-07-15  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* Verbatim.java: New Xalan code sometimes (always?) returns DOCUMENT_NODE where DOCUMENT_FRAGMENT_NODE used to be returned: handle it
+
+2001-07-10  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* Params.java: Use new getVariableOrParam method
+
+	* Table.java: Remove redundant get... methods (now centralized in Param)
+
+2001-07-07  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* FormatDingbatCallout.java, Table.java, Verbatim.java: 
+	Working towards Xalan 2.2 support (this code is BROKEN)
+
+2001-05-21  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* FormatCallout.java, Table.java, Verbatim.java: Updates for Xalan 2.0.x API as released by Apache
+
+2001-04-02  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* CVS.java, Callout.java, FormatCallout.java, FormatGraphicCallout.java, FormatTextCallout.java, FormatUnicodeCallout.java, Func.java, Params.java, Table.java, Text.java, Verbatim.java, package.html: 
+	New file.
+

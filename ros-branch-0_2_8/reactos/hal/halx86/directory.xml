@@ -1,0 +1,12 @@
+<directory name="generic">
+	<xi:include href="generic/generic.xml" />
+</directory>
+<directory name="up">
+	<xi:include href="up/halup.xml" />
+</directory>
+<directory name="mp">
+	<xi:include href="mp/halmp.xml" />
+</directory>
+<directory name="xbox">
+	<xi:include href="xbox/halxbox.xml" />
+</directory>

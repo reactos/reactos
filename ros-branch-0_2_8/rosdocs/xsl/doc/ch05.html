@@ -1,0 +1,60 @@
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+   <title>Chapter 5. The Template System</title><link rel="stylesheet" href="reference.css" type="text/css"><meta name="generator" content="DocBook XSL Stylesheets V1.50.0"><link rel="home" href="index.html" title="DocBook XSL Stylesheet Documentation"><link rel="up" href="index.html" title="DocBook XSL Stylesheet Documentation"><link rel="previous" href="ch04.html" title="Chapter 4. Reference Documentation"><link rel="next" href="htmlhelp.html" title="Chapter 6. Using the XSL stylesheets to generate HTML Help"></head><body bgcolor="white" text="black" link="#0000FF" vlink="#840084" alink="#0000FF"><div class="navheader"><table width="100%" summary="Navigation header"><tr><th colspan="3" align="center">Chapter 5. The Template System</th></tr><tr><td width="20%" align="left"><a accesskey="p" href="ch04.html">Prev</a>&nbsp;</td><th width="60%" align="center">&nbsp;</th><td width="20%" align="right">&nbsp;<a accesskey="n" href="htmlhelp.html">Next</a></td></tr></table><hr></div><div class="chapter"><div class="titlepage"><div><h2 class="title"><a name="d0e1027"></a>Chapter 5. The Template System</h2></div><div><div class="author"><h3 class="author">Norman Walsh</h3></div></div><div><p class="releaseinfo">
+$Id: ch05.html,v 1.1 2002/06/13 20:30:08 chorns Exp $
+</p></div><div><p class="copyright">Copyright &copy; 2000 Norman Walsh</p></div></div><div class="toc"><p><b>Table of Contents</b></p><dl><dt><a href="ch05.html#d0e1051">Changing the Article Title Page</a></dt></dl></div><p>Some parts of the DocBook XSL Stylesheets are actually generated
+using XSL Stylesheets. In particular, the formatting of title pages
+is generated using a special template system. The same template system
+will eventually allow you to easily customize bibliography entries and
+perhaps other parts of the system as well.</p><p>FIXME: there needs to be more introductory/explanatory text
+here!</p><div class="section"><div class="titlepage"><div><h2 class="title" style="clear: both"><a name="d0e1051"></a>Changing the Article Title Page</h2></div></div><p>In order to demonstrate how this system works, let's consider
+how we can use it to change the format of article title pages.</p><p>By default, the stylesheets print the following elements on the
+article title page, in this order: <span class="simplelist"><tt class="sgmltag-element">title</tt>, <tt class="sgmltag-element">subtitle</tt>, <tt class="sgmltag-element">corpauthor</tt>, <tt class="sgmltag-element">authorgroup</tt>, <tt class="sgmltag-element">author</tt>, <tt class="sgmltag-element">releaseinfo</tt>, <tt class="sgmltag-element">copyright</tt>, <tt class="sgmltag-element">legalnotice</tt>, <tt class="sgmltag-element">pubdate</tt>, <tt class="sgmltag-element">revision</tt>, <tt class="sgmltag-element">revhistory</tt>, <tt class="sgmltag-element">abstract</tt></span>. Suppose we want to put only the
+<tt class="sgmltag-element">title</tt>, <tt class="sgmltag-element">author</tt>, and
+<tt class="sgmltag-element">edition</tt> elements on the title page, in the order
+that they appear in the <tt class="sgmltag-element">articleinfo</tt>.
+</p><p>The &#8220;hard&#8221; (and wrong!) way to do it would be to
+edit <tt>titlepage.templates.xsl</tt> and make the changes
+by hand.</p><p>The easy and right way is to construct a template document that
+describes the order and sequence of elements that you want:</p><pre class="screen">
+&lt;t:templates xmlns:t="http://nwalsh.com/docbook/xsl/template/1.0"
+             xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+             base-stylesheet="/path/to/html/docbook.xsl"&gt;
+
+&lt;t:titlepage element="article" wrapper="div" class="titlepage"&gt;
+  &lt;t:titlepage-content side="recto" order="document"&gt;
+    &lt;title predicate="[1]"/&gt;
+    &lt;author/&gt;
+    &lt;edition/&gt;
+  &lt;/t:titlepage-content&gt;
+&lt;/t:titlepage&gt;
+&lt;/t:templates&gt;
+</pre><p>Then process this document with the
+<tt>template/titlepage.xsl</tt> stylesheet. This will
+produce the following somewhat cryptic stylesheet:</p><pre class="screen">
+&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0"&gt;
+
+&lt;!-- This stylesheet was created by titlepage.xsl; do not edit it by hand. --&gt;
+
+&lt;xsl:import href="/path/to/html/docbook.xsl"/&gt;
+
+&lt;xsl:template name="article.titlepage.recto"&gt;&lt;xsl:apply-templates mode="article.titlepage.recto.mode" select="(articleinfo/title|artheader/title|title)[1]|articleinfo/author|artheader/author|articleinfo/edition|artheader/edition"/&gt;
+&lt;/xsl:template&gt;
+
+&lt;xsl:template name="article.titlepage"&gt;
+  &lt;div class="titlepage"&gt;
+    &lt;xsl:call-template name="article.titlepage.before.recto"/&gt;
+    &lt;xsl:call-template name="article.titlepage.recto"/&gt;
+    &lt;xsl:call-template name="article.titlepage.before.verso"/&gt;
+    &lt;xsl:call-template name="article.titlepage.verso"/&gt;
+    &lt;xsl:call-template name="article.titlepage.separator"/&gt;
+  &lt;/div&gt;
+&lt;/xsl:template&gt;
+
+&lt;/xsl:stylesheet&gt;
+</pre><p>Despite its cryptic appearance, it has the desired result.
+If you want to change <span class="emphasis"><em>how</em></span> the titlepage elements
+are formatted (as opposed to which ones are formatted), you have to
+write your own customization layer that overrides the template for
+the element in question in the &#8220;titlepage.mode&#8221; mode.</p></div></div><div class="navfooter"><hr><table width="100%" summary="Navigation footer"><tr><td width="40%" align="left"><a accesskey="p" href="ch04.html">Prev</a>&nbsp;</td><td width="20%" align="center"><a accesskey="u" href="index.html">Up</a></td><td width="40%" align="right">&nbsp;<a accesskey="n" href="htmlhelp.html">Next</a></td></tr><tr><td width="40%" align="left" valign="top">Chapter 4. Reference Documentation&nbsp;</td><td width="20%" align="center"><a accesskey="h" href="index.html">Home</a></td><td width="40%" align="right" valign="top">&nbsp;Chapter 6. Using the XSL stylesheets to generate HTML Help</td></tr></table></div></body></html>

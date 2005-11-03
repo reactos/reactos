@@ -1,0 +1,20 @@
+<refentry id="olink.outline.ext">
+<refmeta>
+<refentrytitle>olink.outline.ext</refentrytitle>
+<refmiscinfo role="type">string</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>olink.outline.ext</refname>
+<refpurpose>The extension of OLink outline files</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='olink.outline.ext.frag'><xsl:param name="olink.outline.ext" select="'.olink'"/></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>FIXME:</para>
+
+</refsect1>
+</refentry>

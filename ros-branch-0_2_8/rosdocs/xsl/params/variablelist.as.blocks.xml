@@ -1,0 +1,27 @@
+<refentry id="variablelist.as.blocks">
+<refmeta>
+<refentrytitle>variablelist.as.blocks</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>variablelist.as.blocks</refname>
+<refpurpose>Format <sgmltag>variablelist</sgmltag>s lists as blocks?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='variablelist.as.blocks.frag'>
+<xsl:param name="variablelist.as.blocks" select="0"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If non-zero, <sgmltag>variablelist</sgmltag>s will be formatted as
+blocks.</para>
+
+<para>If you have long terms, proper list markup in the FO case may produce
+unattractive lists. By setting this parameter, you can force the stylesheets
+to produce block markup instead of proper lists.</para>
+
+</refsect1>
+</refentry>

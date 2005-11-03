@@ -1,0 +1,45 @@
+<!ENTITY % prefix "l">
+
+<!ENTITY % xmlns "xmlns:%prefix;">
+<!ENTITY % uri "'http://docbook.sourceforge.net/xmlns/l10n/1.0'">
+
+<!ENTITY % i18n "%prefix;:i18n">
+<!ENTITY % l10n "%prefix;:l10n">
+<!ENTITY % gentext "%prefix;:gentext">
+<!ENTITY % dingbat "%prefix;:dingbat">
+<!ENTITY % context "%prefix;:context">
+<!ENTITY % template "%prefix;:template">
+
+<!ELEMENT %i18n; ((%l10n;)+)>
+<!ATTLIST %i18n;
+	%xmlns;		CDATA	#FIXED %uri;
+>
+
+<!ELEMENT %l10n; (%gentext;|%dingbat;|%context;)*>
+<!ATTLIST %l10n;
+	%xmlns;		CDATA	#FIXED %uri;
+	language	CDATA	#REQUIRED
+>
+
+<!ELEMENT %gentext; EMPTY>
+<!ATTLIST %gentext;
+	key		CDATA	#REQUIRED
+	text		CDATA	#REQUIRED
+>
+
+<!ELEMENT %dingbat; EMPTY>
+<!ATTLIST %dingbat;
+	key		CDATA	#REQUIRED
+	text		CDATA	#REQUIRED
+>
+
+<!ELEMENT %context; ((%template;)+)>
+<!ATTLIST %context;
+	name		CDATA	#REQUIRED
+>
+
+<!ELEMENT %template; EMPTY>
+<!ATTLIST %template;
+	name		CDATA	#REQUIRED
+	text		CDATA	#REQUIRED
+>

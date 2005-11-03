@@ -1,0 +1,12 @@
+2002-03-09  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* Makefile: Removed hardcoded reference for XSLT processor as it is already set in Makefile.incl. Fixed typo in DocBook DTD URI.
+
+2001-08-09  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* Makefile: Use saxon and docbook.xsl
+
+2001-07-31  Jirka Kosek <kosek@users.sourceforge.net>
+
+	* .cvsignore, Makefile: New file.
+

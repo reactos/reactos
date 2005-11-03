@@ -1,0 +1,26 @@
+<refentry id="refentry.generate.title">
+<refmeta>
+<refentrytitle>refentry.generate.title</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>refentry.generate.title</refname>
+<refpurpose>Output title before 'RefName'(s)?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='refentry.generate.title.frag'>
+<xsl:param name="refentry.generate.title" select="0"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If true (non-zero), the reference page title or first name is
+output before the list of 'RefName's. This parameter and
+<parameter>refentry.generate.name</parameter> are mutually exclusive.
+</para>
+
+
+</refsect1>
+</refentry>

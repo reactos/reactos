@@ -1,0 +1,25 @@
+<refentry id="label.from.part">
+<refmeta>
+<refentrytitle>label.from.part</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>label.from.part</refname>
+<refpurpose>Renumber chapters in each part?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='label.from.part.frag'><xsl:param name="label.from.part" select="'0'"/></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If <parameter>label.from.part</parameter> is non-zero, components
+(<sgmltag>chapter</sgmltag>s, <sgmltag>appendixe</sgmltag>s, etc.)
+will be numbered from 1 in each <sgmltag>part</sgmltag>. Otherwise,
+they will be numbered monotonically throughout each
+<sgmltag>book</sgmltag>.
+</para>
+
+</refsect1>
+</refentry>

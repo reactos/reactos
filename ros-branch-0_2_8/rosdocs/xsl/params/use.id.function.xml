@@ -1,0 +1,25 @@
+<refentry id="use.id.function">
+<refmeta>
+<refentrytitle>use.id.function</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>use.id.function</refname>
+<refpurpose>Use the XPath id() function to find link targets?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='use.id.function.frag'><xsl:param name="use.id.function" select="'1'"/></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If 1, the stylesheets use the <function>id()</function> function
+to find the targets of cross reference elements. This is more
+efficient, but only works if your XSLT processor implements the
+<function>id()</function> function, naturally.</para>
+<para>THIS PARAMETER IS NOT SUPPORTED. IT IS ALWAYS ASSUMED TO BE 1.
+SEE xref.xsl IF YOU NEED TO TURN IT OFF.</para>
+
+</refsect1>
+</refentry>

@@ -1,0 +1,11 @@
+WISHLIST:
+* Make timeouts configurable.
+* `fake' reverse queries (give nnn.nnn.nnn.nnn either always or on error)
+* `fake' forward queries (allow nnn.nnn.nnn.nnn -> A)
+* DNSSEC compatibility - be able to retreive KEY and SIG RRs
+* DNSSEC minimum functionality - ignore Additional when AD set.
+* IPv6 name<->address translation - but which version ??
+* IPv6 transport.
+* Threadsafe version/mode.
+* Caching in the library.
+* SRV RRs.

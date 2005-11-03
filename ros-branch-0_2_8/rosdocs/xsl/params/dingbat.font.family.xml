@@ -1,0 +1,22 @@
+<refentry id="dingbat.font.family">
+<refmeta>
+<refentrytitle>dingbat.font.family</refentrytitle>
+
+</refmeta>
+<refnamediv>
+<refname>dingbat.font.family</refname>
+<refpurpose>The font family for copyright, quotes, and other symbols</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='dingbat.font.family.frag'><xsl:param name="dingbat.font.family">Times Roman</xsl:param></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>The dingbat font family is used for dingbats. If it is defined
+as the empty string, no font change is effected around dingbats.
+</para>
+
+</refsect1>
+</refentry>

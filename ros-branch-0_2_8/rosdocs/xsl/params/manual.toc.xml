@@ -1,0 +1,24 @@
+<refentry id="manual.toc">
+<refmeta>
+<refentrytitle>manual.toc</refentrytitle>
+<refmiscinfo role="type">string</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>manual.toc</refname>
+<refpurpose>An explicit TOC to be used for the TOC</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='manual.toc.frag'>
+<xsl:param name="manual.toc" select="''"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>The <parameter>manual.toc</parameter> identifies an explicit TOC that
+will be used for building the printed TOC.
+</para>
+
+</refsect1>
+</refentry>

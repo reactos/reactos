@@ -1,0 +1,22 @@
+2002-05-08  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* ImageIntrinsics.java: New file.
+
+2002-03-21  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* CalloutEmitter.java, NumberLinesEmitter.java: Fix nesting bug in XHTML
+
+2001-08-05  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* FormatDingbatCallout.java, FormatUnicodeCallout.java, Verbatim.java: 
+	Removed the FormatDingbatCallout classes, they were the same as the FormatUnicodeCallout classes but with a font wrapper. Added a callout.unicode.font parameter to wrap Unicode callouts
+
+2001-07-31  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* FormatCallout.java: Fix attribute test
+
+2001-07-16  Norman Walsh <nwalsh@users.sourceforge.net>
+
+	* CVS.java, Callout.java, CalloutEmitter.java, ColumnScanEmitter.java, ColumnUpdateEmitter.java, CopyEmitter.java, FormatCallout.java, FormatDingbatCallout.java, FormatGraphicCallout.java, FormatTextCallout.java, FormatUnicodeCallout.java, LineCountEmitter.java, NumberLinesEmitter.java, Table.java, Text.java, TextFactory.java, Verbatim.java, package.html: 
+	New file.
+

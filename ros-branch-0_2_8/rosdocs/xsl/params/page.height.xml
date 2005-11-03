@@ -1,0 +1,32 @@
+<refentry id="page.height">
+<refmeta>
+<refentrytitle>page.height</refentrytitle>
+
+</refmeta>
+<refnamediv>
+<refname>page.height</refname>
+<refpurpose>The height of the physical page</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='page.height.frag'><xsl:param name="page.height">
+  <xsl:choose>
+    <xsl:when test="$page.orientation = 'portrait'">
+      <xsl:value-of select="$page.height.portrait"/>
+    </xsl:when>
+    <xsl:otherwise>
+      <xsl:value-of select="$page.width.portrait"/>
+    </xsl:otherwise>
+  </xsl:choose>
+</xsl:param></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>The page height is generally calculated from the
+<literal>paper.type</literal> and
+<literal>page.orientation</literal>.
+</para>
+
+</refsect1>
+</refentry>

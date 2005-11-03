@@ -1,0 +1,83 @@
+.\"
+.\" Manual page for the js disassembler.
+.\" Copyright (c) 1998 New Generation Software (NGS) Oy
+.\" Author: Markku Rossi <mtr@iki.fi>
+.\"
+.\" This program is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 2, or (at your option)
+.\" any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; see the file COPYING.  If not, write to
+.\" the Free Software Foundation, 59 Temple Place - Suite 330,
+.\" Boston, MA 02111-1307, USA.
+.\"
+.TH JSDAS 1 "May 27, 1998" "JSDAS" "JSDAS"
+
+.SH NAME
+jsdas \- disassemble and manipulate JavaScript byte\-code files
+
+.SH SYNOPSIS
+.B jsdas
+[\f3\-cCdhisSV\f1]
+[\f3\-l \f2type\f1 \f2data\f1]
+[\f3\-r \f2type\f1]
+\f2file\f1...
+
+.SH DESCRIPTION
+
+The \f3jsdas\f1 program is a disassembler and a manipulator for the
+JavaScript byte\-code files.  The program can be used to view,
+disassemble and manipulate the byte\-code files.
+
+.SH OPTIONS
+
+.TP 8
+.B \-c, \-\-code
+Print the code section of the byte\-code files.  This is the default
+action that is preformed if no options are given for the \f3jsdas\f1
+program.
+.TP 8
+.B \-C, \-\-constants
+Print the constants section of the byte\-code file.
+.TP 8
+.B \-d, \-\-debug
+Print the debug section of the byte\-code file.
+.TP 8
+.B \-h, \-\-help
+Print a short help message that describes the options that can be given
+to the \f3jsdas\f1 program.
+.TP 8
+.B \-i, \-\-info
+Print the byte\-code file information.
+.TP 8
+.B \-l \f2type\f3 \f2data\f3, \-\-link \f2type\f3 \f2data\f3
+Link a new section to the byte\-code file.  The section's type is
+\f2type\f1 and its contents is read from file \f2data\f1.
+.TP 8
+.B \-r \f2type\f3, \-\-remove \f2type\f3
+Remove section of type \f2type\f1 from the byte\-code files.
+.TP 8
+.B \-s, \-\-symtab
+Print the symbol table section of the byte\-code file.
+.TP 8
+.B \-S, \-\-strip
+Remove the debug section from the byte\-code files.
+.TP 8
+.B \-V, \-\-version
+Print the version number of the \f3jsdas\f1 program.
+
+
+.SH AUTHOR
+Markku Rossi <mtr@ngs.fi>
+
+NGS JavaScript WWW home page: <http://www.ngs.fi/js/>
+
+.SH SEE ALSO
+js(1)

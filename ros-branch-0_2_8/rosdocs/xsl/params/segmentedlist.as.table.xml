@@ -1,0 +1,23 @@
+<refentry id="segmentedlist.as.table">
+<refmeta>
+<refentrytitle>segmentedlist.as.table</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>segmentedlist.as.table</refname>
+<refpurpose>Format segmented lists as tables?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='segmentedlist.as.table.frag'>
+<xsl:param name="segmentedlist.as.table" select="0"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If non-zero, <sgmltag>segmentedlist</sgmltag>s will be formatted as
+tables.</para>
+
+</refsect1>
+</refentry>

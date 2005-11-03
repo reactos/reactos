@@ -1,0 +1,23 @@
+<refentry id="table.borders.with.css">
+<refmeta>
+<refentrytitle>table.borders.with.css</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>table.borders.with.css</refname>
+<refpurpose>Use CSS to specify table, row, and cell borders?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='table.borders.with.css.frag'>
+<xsl:param name="table.borders.with.css" select="0"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If true (non-zero), CSS will be used to draw table borders.
+</para>
+
+</refsect1>
+</refentry>

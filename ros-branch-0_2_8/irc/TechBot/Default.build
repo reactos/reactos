@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<project name="TechBot" default="build">
+
+	<target name="build" description="Build components">
+		<delete dir="bin" failonerror="false" />
+		<nant buildfile="Compression/Default.build" />
+		<nant buildfile="CHMLibrary/Default.build" />
+		<nant buildfile="TechBot.IRCLibrary/Default.build" />
+		<nant buildfile="TechBot.Library/Default.build" />
+		<nant buildfile="TechBot.Console/Default.build" />
+		<nant buildfile="TechBot/Default.build" />
+	</target>
+
+</project>

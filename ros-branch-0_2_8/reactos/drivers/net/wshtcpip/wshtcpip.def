@@ -1,0 +1,23 @@
+; WSHTCPIP.DLL - Windows Sockets Helper DLL for TCP/IP
+
+LIBRARY wshtcpip.dll
+
+EXPORTS
+WSHAddressToString@20
+WSHEnumProtocols@16
+WSHGetBroadcastSockaddr@12
+WSHGetProviderGuid@8
+WSHGetSockaddrType@12
+WSHGetSocketInformation@32
+WSHGetWildcardSockaddr@12
+WSHGetWinsockMapping@8
+WSHGetWSAProtocolInfo@12
+WSHIoctl@52
+WSHJoinLeaf@52
+WSHNotify@20
+WSHOpenSocket@24
+WSHOpenSocket2@32
+WSHSetSocketInformation@32
+WSHStringToAddress@20
+
+; EOF

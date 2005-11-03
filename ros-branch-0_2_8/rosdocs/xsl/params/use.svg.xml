@@ -1,0 +1,25 @@
+<refentry id="use.svg">
+<refmeta>
+<refentrytitle>use.svg</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>use.svg</refname>
+<refpurpose>Allow SVG in the result tree?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='use.svg.frag'>
+<xsl:param name="use.svg" select="1"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If non-zero, SVG will be considered an acceptable image format. SVG
+is passed through to the result tree, so correct rendering of the resulting
+diagram depends on the formatter (FO processor or web browser) that is used
+to process the output from the stylesheet.</para>
+
+</refsect1>
+</refentry>

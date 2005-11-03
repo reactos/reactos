@@ -1,0 +1,24 @@
+<refentry id="firstterm.only.link">
+<refmeta>
+<refentrytitle>firstterm.only.link</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>firstterm.only.link</refname>
+<refpurpose>Does automatic glossterm linking only apply to firstterms?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='firstterm.only.link.frag'>
+<xsl:param name="firstterm.only.link" select="0"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If true, only <sgmltag>firstterm</sgmltag>s will be automatically linked
+to the glossary. If glossary linking is not enabled, this parameter
+has no effect.</para>
+
+</refsect1>
+</refentry>

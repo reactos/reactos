@@ -1,0 +1,23 @@
+<refentry id="htmlhelp.hhc.folders.instead.books">
+<refmeta>
+<refentrytitle>htmlhelp.hhc.folders.instead.books</refentrytitle>
+<refmiscinfo role="type"></refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>htmlhelp.hhc.folders.instead.books</refname>
+<refpurpose></refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='htmlhelp.hhc.folders.instead.books.frag'>
+<xsl:param name="htmlhelp.hhc.folders.instead.books" select="1"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>This parameter controls whether there should be folder-like
+icons (1) or book-like icons (0) in ToC.</para>
+
+</refsect1>
+</refentry>

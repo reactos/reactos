@@ -1,0 +1,23 @@
+<refentry id="bridgehead.in.toc">
+<refmeta>
+<refentrytitle>bridgehead.in.toc</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>bridgehead.in.toc</refname>
+<refpurpose>Should bridgehead elements appear in the TOC?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='bridgehead.in.toc.frag'><xsl:param name="bridgehead.in.toc" select="0"/></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If non-zero, bridgeheads appear in the TOC. Note that this option
+is not fully supported and may be removed in a future version of the
+stylesheets.
+</para>
+
+</refsect1>
+</refentry>

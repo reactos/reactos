@@ -1,0 +1,104 @@
+<chapter>
+<title>Download and install the latest ReactOS ISO-CD image</title>
+
+<!--
+<artheader>
+   <title>Download and install the latest ReactOS ISO-CD image</title>
+   <author>
+      <firstname>Jason</firstname>
+      <surname>Filby</surname>
+      <affiliation>
+        <address>
+          <email>jasonfilby@yahoo.com</email>
+        </address>
+      </affiliation>
+   </author>
+</artheader>
+-->
+
+<abstract>
+<para>
+Where to get the latest ReactOS ISO-CD image and how to install it.
+</para>
+</abstract>
+
+<sect2>
+<title>Where to download from</title>
+<para>
+ReactOS ISO-CD images are physically stored on ReactOS' SourceForge development site. You can download an image directly from the SourceForge site, but some users may prefer to go via ReactOS.com.
+</para>
+</sect2>
+
+<sect2>
+<title>Obtaining the latest images via reactos.com</title>
+<itemizedlist>
+<listitem><para>Visit <ulink url="http://reactos.com">reactos.com</ulink> which is the ReactOS portal site. This site will always point to the latest binaries.</para></listitem>
+<listitem>Click on the link, on the opening page of reactos.com that points to the latest "ISO-CD Image".</listitem>
+<listitem>On the Latest Release page, click on the "Download ReactOS x.x.xx ISO-CD Image" (eg. "Download ReactOS 0.1.0 ISO-CD Image") link.</listitem>
+</itemizedlist>
+</sect2>
+
+<sect2>
+<title>Obtaining the latest binaries via SourceForge</title>
+<itemizedlist>
+<listitem>Visit <ulink url="http://sourceforge.net/projects/reactos">sourceforge.net/projects/reactos</ulink> which is ReactOS' development site, hosted by SourceForge.</listitem>
+<listitem>Scroll down to the "Latest File Releases"</listitem>
+<listitem>Click on the "Download" link for the reactos package.</listitem>
+<listitem>Scroll down to the reactos package (should be hilighted purple) and click on the xxxx_iso.zip (eg. 010_iso.zip) link to download the binaries.</listitem>
+</itemizedlist>
+</sect2>
+
+<sect2>
+<title>Creating the ReactOS-CD</title>
+<itemizedlist>
+<listitem>Use your favourite zip utility to open the downloaded image file.</listitem>
+<listitem>Extract the CD-Image "reactos.iso" into a temporary directory.</listitem>
+<listitem>Use your favorite CD writing software (WinOnCD, Nero burning ROM, etc.) to write the "reactos.iso" image file onto a CD-R or CD-RW.</listitem>
+</itemizedlist>
+<para>
+<emphasis>Note:</emphasis> Have a look at the documentation of your CD writing software if you do not know how to write ISO-Images onto a CD-R.
+</para>
+</sect2>
+
+<sect2>
+<title>Supported hardware and Setup limitations</title>
+<para>ReactOS does not support all available hardware. It can only be booted from IDE CD-Drives and IDE Harddisks. USB-, Firewire- and SCSI-Drives or non-standard IDE controllers (eg. IDE-RAID controllers)are not supported yet.
+</para>
+<para>The setup utility is also limited in several ways:</para>
+<itemizedlist>
+<listitem>Disk partitions can be formatted using FAT32 only (don't format a partition smaller than approx. 500MB).</listitem>
+<listitem>ReactOS can only be installed on FAT16 or FAT32 partitions.</listitem>
+<listitem>The active partition must be a FAT16 or FAT32 partitions.</listitem>
+<listitem>Filesystem integrity can not be checked.</listitem>
+<listitem>It does not stop the user from doing stupid things.</listitem>
+</itemizedlist>
+</sect2>
+
+<sect2>
+<title>Installing ReactOS from the CD</title>
+<itemizedlist>
+<listitem>Insert the ReactOS-CD into a CD-Drive and reboot your computer. ReactOS will boot from the CD and enter its setup program.</listitem>
+<listitem>Follow the instructions on the screen to install ReactOS on your computer.</listitem>
+<listitem>After the installation has finished, remove the CD from the CD-Drive and press "Return" to reboot your computer. Now, you can start ReactOS by selecting it from the boot menu.</listitem>
+</itemizedlist>
+<para>
+<emphasis>Note:</emphasis> Have a look at the documentation of computers motherboard if your computer does not boot from the CD. Search the BIOS settings for "boot sequence" and change it to "CDROM A: C:".
+</para>
+</sect2>
+
+
+<sect2>
+<title>What happens to the Harddisk, especially the Bootsector?</title>
+<itemizedlist>
+<listitem><para>If the Windows NT/2000/XP boot manager NTLDR (and BOOT.INI) is found on the active partition nothing will happen to the bootsector of the partition. The FreeLoader-Bootcode is written to the file "BOOTSECT.ROS" and an entry is added to "BOOT.INI" which points to "BOOTSECT.ROS". FreeLoader becomes a secondary Boot-Manager.</para>
+<para>To remove FreeLoader you will only have to delete the files FREELDR.SYS, FREELDR.INI, BOOTSECT.ROS and remove the "ReactOS" entry from the hidden "BOOT.INI" file.</para></listitem>
+<listitem><para>If MS-DOS or Windows 9x is found on the active partition (MSDOS.SYS and IO.SYS) the original bootsector will be saved to the file "BOOTSECT.DOS". The FreeLoader-Bootcode will then be written to the Partiton-Bootsector and FreeLoader becomes the primary Boot-Manager. Finally a "DOS/Win9x"-Entry will be added to "FREELDR.INI" which points to "BOOTSECT.DOS".</para>
+<para>To remove FreeLoader you will have to boot DOS from a floppy disk and run "SYS C:" to replace the FreeLoader-Bootcode by the original DOS-Bootcode.</para></listitem>
+<listitem><para>If none of the Operating-Systems mentioned above is found on the active partition the original Bootsector is written to the file "BOOTSECT.OLD". The FreeLoader-Bootcode will then be written to the Partition-Bootsector. FreeLoader becomes the primary Boot-Manager. If you are using another Boot-Manager you will have to add "BOOSECT.OLD" to the boot menu in "FREELDR.INI".</para>
+<para>To remove FreeLoader you will have to write "BOOTSECT.OLD" back to the bootsector. You can use "dd" to do this on Linux and other *nix-compatible Operating-Systems.</para></listitem>
+</itemizedlist>
+<para><emphasis>Note:</emphasis> If the active partition uses a FAT32 filesystem the bootcode does not fit into a single sector but occupies two sectors. Microsoft uses Sector 0 (bootsector) and Sector 12. FreeLoader uses sector 0 and Sector 14. So, there should not be any conflicts with existing implementations.</para>
+<para><emphasis>Note:</emphasis> The implementation for non-Microsoft Operating-Systems is not as good as it should be. It will become more flexible in the future.</para>
+</sect2>
+
+</chapter>

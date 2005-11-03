@@ -1,0 +1,4 @@
+stubs.c
+syscall.c
+*.o
+*.d

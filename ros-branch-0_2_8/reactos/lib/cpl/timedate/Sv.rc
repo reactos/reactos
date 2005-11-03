@@ -1,0 +1,47 @@
+/*
+ * Swedish resources by Andreas Bjerkeholt
+ *
+ */
+
+LANGUAGE LANG_SWEDISH, SUBLANG_DEFAULT
+
+IDD_DATETIMEPAGE DIALOGEX 0, 0, 252, 146
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Datum && Tid"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX "&Datum", -1, 4, 2, 122, 125
+    CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
+            DTS_SHORTDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
+            11, 17, 108, 12
+    CONTROL "", IDC_MONTHCALENDAR, "SysMonthCal32",
+            WS_CHILD | WS_VISIBLE | WS_TABSTOP,
+            11, 37, 108, 80
+    GROUPBOX "&Tid", -1, 132, 2, 113, 125
+    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32",
+            DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP,
+            144, 17, 90, 12
+    LTEXT "", IDC_TIMEZONE, 4, 136, 241, 8
+END
+
+
+IDD_TIMEZONEPAGE DIALOGEX 0, 0, 252, 146
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Tidszon"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    COMBOBOX IDC_TIMEZONELIST, 5, 4, 241, 136,
+             CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
+    AUTOCHECKBOX "&Justera klockan automatiskt för sommar- och vintertid",
+                 IDC_AUTODAYLIGHT, 5, 136, 241, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
+END
+
+
+STRINGTABLE
+BEGIN
+    IDS_CPLNAME "Datum/Tid"
+    IDS_CPLDESCRIPTION "Ändrar information om datum, tid och tidszon."
+    IDS_TIMEZONETEXT "Aktuell tidszon: %s"
+    IDS_TIMEZONEINVALID "Felaktig"
+    IDS_TIMEZONEUNKNOWN "Okänd"
+END

@@ -1,0 +1,22 @@
+<refentry id="points.per.em">
+<refmeta>
+<refentrytitle>points.per.em</refentrytitle>
+<refmiscinfo role="type">number</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>points.per.em</refname>
+<refpurpose>Specify the nominal size of an em-space in points</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='points.per.em.frag'>
+<xsl:param name="points.per.em" select="10"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>FIXME:</para>
+
+</refsect1>
+</refentry>

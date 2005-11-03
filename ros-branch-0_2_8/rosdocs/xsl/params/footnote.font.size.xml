@@ -1,0 +1,23 @@
+<refentry id="footnote.font.size">
+<refmeta>
+<refentrytitle>footnote.font.size</refentrytitle>
+
+</refmeta>
+<refnamediv>
+<refname>footnote.font.size</refname>
+<refpurpose>The font size for footnotes</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='footnote.font.size.frag'><xsl:param name="footnote.font.size">
+ <xsl:value-of select="$body.font.master * 0.8"/><xsl:text>pt</xsl:text>
+</xsl:param></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>The footnote font size is used for...footnotes!
+</para>
+
+</refsect1>
+</refentry>

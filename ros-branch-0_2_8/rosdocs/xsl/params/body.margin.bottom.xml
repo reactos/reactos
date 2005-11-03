@@ -1,0 +1,24 @@
+<refentry id="body.margin.bottom">
+<refmeta>
+<refentrytitle>body.margin.bottom</refentrytitle>
+
+</refmeta>
+<refnamediv>
+<refname>body.margin.bottom</refname>
+<refpurpose>The bottom margin of the body text</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='body.margin.bottom.frag'>
+<xsl:param name="body.margin.bottom">0.5in</xsl:param>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>The body bottom margin is the distance from the last line of text
+in the page body to the bottom of the region-after.
+</para>
+
+</refsect1>
+</refentry>

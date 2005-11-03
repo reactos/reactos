@@ -1,0 +1,23 @@
+<refentry id="arbortext.extensions">
+<refmeta>
+<refentrytitle>arbortext.extensions</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>arbortext.extensions</refname>
+<refpurpose>Enable Arbortext extensions?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='arbortext.extensions.frag'><xsl:param name="arbortext.extensions" select="0"/></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If non-zero,
+<ulink url="http://www.arbortext.com/">Arbortext</ulink>
+extensions will be used.
+</para>
+
+</refsect1>
+</refentry>

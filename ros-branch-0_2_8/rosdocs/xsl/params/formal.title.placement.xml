@@ -1,0 +1,35 @@
+<refentry id="formal.title.placement">
+<refmeta>
+<refentrytitle>formal.title.placement</refentrytitle>
+<refmiscinfo role="type"></refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>formal.title.placement</refname>
+<refpurpose></refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='formal.title.placement.frag'>
+<xsl:param name="formal.title.placement">
+figure before
+example before
+equation before
+table before
+procedure before
+</xsl:param>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>Specifies where formal object titles should occur. For each formal object
+type (<sgmltag>figure</sgmltag>,
+<sgmltag>example</sgmltag>,
+<sgmltag>equation</sgmltag>,
+<sgmltag>table</sgmltag>, and <sgmltag>procedure</sgmltag>)
+you can specify either the keyword
+<quote><literal>before</literal></quote> or
+<quote><literal>after</literal></quote>.</para>
+
+</refsect1>
+</refentry>

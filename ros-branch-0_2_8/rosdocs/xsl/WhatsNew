@@ -1,0 +1,515 @@
+Changes since version 1.50.0 (2002-03-21)
+
+Changes to xsl/*
+
+  | 2002-06-03  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* VERSION: Version 1.51.1 released.
+  | 
+  | 2002-06-02  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* RELEASE-NOTES.xml: Added release notes for 1.51.0
+  | 
+  | 	* VERSION: Version 1.51.0 released.
+  | 
+  | 2002-05-16  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* VERSION: Oops.
+  | 
+  | 	* VERSION: Oops again.
+  | 
+  | 	* VERSION: Version 1.50.1-EXP2 released.
+  | 
+  | 2002-03-25  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* Makefile: Updated xhtml generation
+  | 
+  | 	* VERSION: Version 1.50.1-EXP released.
+  | 
+
+Changes to xsl/common/*
+
+  | 2002-05-23  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* common.xsl: Support for SVG in HTML
+  | 
+  | 2002-05-21  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* gentext.xsl: Whitespace
+  | 
+  | 	* labels.xsl: Don't generate '. ' after QandA labels
+  | 
+  | 2002-05-12  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* common.xsl: Fix bugs in extension checking in
+  | 	  mediaobject.filename
+  | 
+  | 	* l10n.xsl: Reworked test in gentext.template; should have no
+  | 	  user-visible changes
+  | 
+  | 	* table.xsl: Removed some obsolete templates; reworked
+  | 	  inheritance for improved border support (still implements
+  | 	  old DocBook semantics which aren't quite CALS)
+  | 
+  | 	* titles.xsl: Improved error message
+  | 
+  | 2002-04-21  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* .cvsignore, Makefile, l10n.xml: Add support for Hebrew
+  | 	  localization
+  | 
+  | 2002-03-24  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* common.xsl: Change comment: personname is no longer
+  | 	  experimental
+  | 
+
+Changes to xsl/docsrc/*
+
+  | 2002-04-26  Michael Smith <xmldoc@users.sourceforge.net>
+  | 
+  | 	* publishing.xml: added links to Daniel Veillard's DocBook
+  | 	  page
+  | 
+  | 2002-03-27  Michael Smith <xmldoc@users.sourceforge.net>
+  | 
+  | 	* publishing.xml: Added admon: Don't use XT; XT examples ->
+  | 	  Saxon; added info on xsltproc
+  | 
+  | 2002-03-25  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* Makefile: The lib documenation is now built with Literate
+  | 	  XML
+  | 
+  | 	* reference.xml: Update documentation build to reflect use of
+  | 	  lib.xweb
+  | 
+
+Changes to xsl/extensions/*
+
+  | 2002-05-17  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* Makefile: Fix bugs in jar creation
+  | 
+
+Changes to xsl/fo/*
+
+  | 2002-06-02  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* lists.xsl: Support title on step in procedure
+  | 
+  | 2002-06-01  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* inline.xsl: Bug #560808 make systemitem formatting
+  | 	  consistent
+  | 
+  | 2002-05-23  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* param.ent, param.xweb: Support for SVG in HTML
+  | 
+  | 2002-05-21  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* qandaset.xsl: Output '. ' in some contexts (this is a hack)
+  | 
+  | 2002-05-14  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* footnote.xsl: Format footnotes with format.footnote.mark
+  | 	  named template for easy customization
+  | 
+  | 2002-05-13  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* lists.xsl, param.ent, param.xweb: Support spacing=compact on
+  | 	  itemizedlist and orderedlist (Bug #501063)
+  | 
+  | 2002-05-12  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* block.xsl: Make sure IDs get generated for blockquote and
+  | 	  epigraph
+  | 
+  | 	* formal.xsl, table.xsl: Make border-collapse='collapse'
+  | 	  explicitly (that's the only model that works for CALS
+  | 	  tables)
+  | 
+  | 	* graphics.xsl: Reworked support for graphic attributes; now
+  | 	  support DocBook 4.2CR1 attributes
+  | 
+  | 	* lists.xsl: Bug #511965: add formal.title.properties to
+  | 	  calloutlist titles
+  | 
+  | 	* math.xsl: Support MathML by passing it silently through to
+  | 	  the FO result
+  | 
+  | 	* sections.xsl: Allow anchors in section titles; improve
+  | 	  efforts to prevent page/column breaks immediately after
+  | 	  section titles
+  | 
+  | 	* xref.xsl: Support xref to refnamediv and all elements with
+  | 	  titles (at least when they have titles)
+  | 
+  | 2002-05-06  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* admon.xsl: Fix url() in admonition graphics
+  | 
+  | 	* callout.xsl: Fix url() in callout graphics
+  | 
+  | 2002-04-30  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* biblio.xsl: Use title.font.family in bibliodiv
+  | 
+  | 2002-04-20  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* param.ent, param.xweb, verbatim.xsl: Support shade.verbatim
+  | 	  in FO; stop using vendor test to decide what extension
+  | 	  function to call for line numbering
+  | 
+  | 2002-03-28  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* autotoc.xsl: Attempt to fix duplicate-id problem in ToC
+  | 	  generation
+  | 
+  | 	* xep.xsl: Make XEP point to ToC pages for books, parts, etc.
+  | 	  from PDF bookmarks
+  | 
+  | 2002-03-26  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* lists.xsl: Set maxlength of termlength to 12
+  | 
+  | 	* param.xweb: Documentation fix
+  | 
+  | 2002-03-25  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* component.xsl: Handle prefaceinfo
+  | 
+  | 	* formal.xsl: Handle textobject in tables
+  | 
+  | 	* graphics.xsl: Add template for mediaobjectco
+  | 
+  | 	* inline.xsl: Support personname
+  | 
+  | 	* math.xsl: Handle alt
+  | 
+  | 	* xref.xsl: Support xrefs to editor, othercredit, and
+  | 	  personname
+  | 
+  | 2002-03-22  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* titlepage.xsl: Output blocks instead of wrappers around
+  | 	  authors
+  | 
+
+Changes to xsl/html/*
+
+  | 2002-05-23  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* graphics.xsl, param.ent, param.xweb: Support for SVG in HTML
+  | 
+  | 	* html-rtf.xsl: Protect calls to extension functions behind
+  | 	  function-available tests
+  | 
+  | 2002-05-21  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* qandaset.xsl: Fix anchors for references to QandAEntrys.
+  | 	  Output '. ' in some contexts (this is a hack)
+  | 
+  | 2002-05-17  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* onechunk.xsl: Make TOC (and other internal references) all
+  | 	  just fragment identifiers...we're making one chunk after all
+  | 
+  | 2002-05-16  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* autotoc.xsl, html.xsl: Moved href.target to html.xsl; added
+  | 	  href.target.uri (which is functionally equivalent to
+  | 	  href.target in the non-chunking case)
+  | 
+  | 2002-05-15  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* chunk.xsl, onechunk.xsl: Fix bugs in onechunk---it wasn't
+  | 	  working at all
+  | 
+  | 2002-05-14  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* graphics.xsl: Bug #555809: make sure that a longdesc, if
+  | 	  written, gets the correct relative URI
+  | 
+  | 2002-05-13  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* chunk-common.xsl: Fix inherited directory naming problems
+  | 	  when using dbhtml. Add context to site navigation link calls
+  | 
+  | 	* chunk-common.xsl, param.ent, param.xweb: Add extra LINK
+  | 	  elements to the HTML HEAD of chunked output (for enhanced
+  | 	  site navigation as per Mozilla 1.0)
+  | 
+  | 	* chunker.xsl: Work around relative filename bug in libxslt
+  | 
+  | 	* pi.xsl: Try to avoid x//y in inherited dbhtml dir settings
+  | 
+  | 2002-05-12  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* block.xsl: Support title on blockquote
+  | 
+  | 	* chunk.xsl: Turn off refentry.separator by default when
+  | 	  chunking
+  | 
+  | 	* chunk.xsl: Fix ugly prev/next bug introduced by my attempt
+  | 	  to work around Xalan problems
+  | 
+  | 	* graphics.xsl: Reworked support for graphic attributes; now
+  | 	  support DocBook 4.2CR1 attributes
+  | 
+  | 	* html.xsl: Remove reference to obsolete using.chunker
+  | 	  parameter
+  | 
+  | 	* math.xsl: Support MathML by passing it through unchanged
+  | 
+  | 	* param.ent, param.xweb: Added points.per.em; removed obsolete
+  | 	  using.chunker
+  | 
+  | 	* table.xsl: Improve support for table borders drawn with CSS
+  | 	  (get the semantics right); add support for entry-bgcolor PI
+  | 
+  | 	* verbatim.xsl: Format literal layout elements correctly when
+  | 	  linenumbering
+  | 
+  | 	* xref.xsl: Support xref to refnamediv and all elements with
+  | 	  titles (at least when they have titles)
+  | 
+  | 2002-05-10  Jirka Kosek <kosek@users.sourceforge.net>
+  | 
+  | 	* chunk.xsl: Added support for manifest file as requested by
+  | 	  Nik in #552945
+  | 
+  | 2002-05-10  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* lists.xsl: Remove reference to obsolete using.chunker
+  | 	  parameter
+  | 
+  | 2002-05-10  Jirka Kosek <kosek@users.sourceforge.net>
+  | 
+  | 	* manifest.xsl, param.ent, param.xweb: Added support for
+  | 	  manifest file as requested by Nik in #552945
+  | 
+  | 2002-05-10  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* pi.xsl: Remove reference to obsolete using.chunker parameter
+  | 
+  | 2002-05-07  Robert Stayton <bobstayton@users.sourceforge.net>
+  | 
+  | 	* chunk.xsl: The call to write.chunk did not have the
+  | 	  $chunk.quietly parameter set. I think I failed to commit
+  | 	  that change after testing it in Feb.
+  | 
+  | 	* xref.xsl: Added a template for article in mode="xref-to"
+  | 	  that is similar to the one for chapter. Now you can use
+  | 	  <xref> with a linkend pointing to an article.
+  | 
+  | 2002-05-06  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* chunk.xsl, onechunk.xsl: Fix bug #551966 applying onechunk
+  | 	  to book
+  | 
+  | 2002-04-30  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* chunk.xsl: First attempt to workaround Xalan
+  | 	  array-out-of-bounds bug
+  | 
+  | 2002-03-25  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* autotoc.xsl, chunk-common.xsl, pi.xsl: Handle links across
+  | 	  dbhtml-specified relative directories correctly
+  | 
+  | 	* formal.xsl: Support longdesc on tables
+  | 
+  | 	* table.xsl: Use the textobject/phrase for the table summary
+  | 	  attribute, if one is present
+  | 
+  | 2002-03-24  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* graphics.xsl: Remove style from longdesc link; added support
+  | 	  for textdata in textobject
+  | 
+  | 	* inline.xsl: Support personname
+  | 
+  | 	* xref.xsl: Handle xref to editor, othercredit, and personname
+  | 
+
+Changes to xsl/lib/*
+
+  | 2002-05-12  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* lib.xweb: Changed default units to px; added
+  | 	  length-in-points template
+  | 
+  | 2002-03-25  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* .cvsignore: Ignore lib.xsl too
+  | 
+  | 	* .cvsignore, Makefile, lib.xsl, lib.xweb: Use Literate XML to
+  | 	  generate lib.xsl
+  | 
+  | 	* Makefile: Update documentation build to reflect use of
+  | 	  lib.xweb
+  | 
+
+Changes to xsl/xhtml/*
+
+  | 2002-05-17  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* Makefile: Make the add-new rule actually, uhm, add new
+  | 	  files.
+  | 
+  | 2002-03-25  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* Makefile: Improved rules
+  | 
+
+Changes to xsl/params/*
+
+  | 2002-05-24  <dcramer@users.sourceforge.net>
+  | 
+  | 	* callout.unicode.number.limit.xml,
+  | 	  callout.unicode.start.character.xml: Updating docs.
+  | 
+  | 2002-05-23  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* use.svg.xml: New file.
+  | 
+  | 2002-05-14  Michael Smith <xmldoc@users.sourceforge.net>
+  | 
+  | 	* generate.manifest.xml, manifest.xml: added descriptions
+  | 
+  | 2002-05-13  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* compact.list.item.spacing.xml: New file.
+  | 
+  | 	* html.extra.head.links.xml: New file.
+  | 
+  | 2002-05-10  Jirka Kosek <kosek@users.sourceforge.net>
+  | 
+  | 	* generate.manifest.xml, manifest.xml: New file.
+  | 
+  | 2002-05-10  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* points.per.em.xml: New file.
+  | 
+  | 	* using.chunker.xml: Obsolete parameter
+  | 
+  | 2002-04-20  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* generate.toc.xml: Improve documentation
+  | 
+  | 	* shade.verbatim.style.xml: Support shade.verbatim in FO; stop
+  | 	  using vendor test to decide what extension function to call
+  | 	  for line numbering
+  | 
+  | 	* verbatim.properties.xml: Whitespace
+  | 
+
+Changes to xsl/doc/*
+
+  | 2002-03-25  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* Makefile: Update documentation build to reflect use of
+  | 	  lib.xweb
+  | 
+
+Changes to xsl/htmlhelp/*
+
+  | 2002-05-10  Jirka Kosek <kosek@users.sourceforge.net>
+  | 
+  | 	* htmlhelp.xsl: Updated to use shared manifest code.
+  | 
+  | 2002-04-11  Jirka Kosek <kosek@users.sourceforge.net>
+  | 
+  | 	* htmlhelp.xsl: Updated to support new generate.toc parameter.
+  | 
+
+Changes to xsl/javahelp/*
+
+  | 2002-05-17  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* javahelp.xsl: Put ancillary files in base.dir
+  | 
+
+Changes to xsl/profiling/*
+
+  | 2002-05-15  Jirka Kosek <kosek@users.sourceforge.net>
+  | 
+  | 	* xsl2profile.xsl: Hopefully fixed bug #549736. Single-pass
+  | 	  profiling should also work in FO stylesheet from now.
+  | 
+
+Changes to xsl/images/callouts/*
+
+  | 2002-05-17  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* 11.gif, 11.png, 12.gif, 12.png, 13.gif, 13.png, 14.gif,
+  | 	  14.png, 15.gif, 15.png: New file.
+  | 
+
+Changes to xsl/doc/lib/*
+
+  | 2002-03-25  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* Makefile: Update documentation build to reflect use of
+  | 	  lib.xweb
+  | 
+
+Changes to xsl/extensions/saxon643/.classes/*
+
+  | 2002-05-17  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* Makefile.common: Fix bugs in jar creation
+  | 
+  | 2002-05-08  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* Makefile.incl: New extensions to determine the size of an
+  | 	  image
+  | 
+
+Changes to xsl/extensions/xalan2/.classes/*
+
+  | 2002-05-17  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* Makefile.common: Fix bugs in jar creation
+  | 
+
+Changes to xsl/extensions/saxon643/.classes/com/*
+
+  | 2002-05-08  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* Makefile.incl: New extensions to determine the size of an
+  | 	  image
+  | 
+
+Changes to xsl/extensions/saxon643/.classes/com/nwalsh/*
+
+  | 2002-05-08  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* Makefile.incl: New extensions to determine the size of an
+  | 	  image
+  | 
+
+Changes to xsl/extensions/saxon643/com/nwalsh/saxon/*
+
+  | 2002-05-08  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* ImageIntrinsics.java: New file.
+  | 
+
+Changes to xsl/extensions/xalan2/com/nwalsh/xalan/*
+
+  | 2002-05-08  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* ImageIntrinsics.java: New file.
+  | 
+
+Changes to xsl/extensions/saxon643/.classes/com/nwalsh/saxon/*
+
+  | 2002-05-08  Norman Walsh <nwalsh@users.sourceforge.net>
+  | 
+  | 	* Makefile.incl: New extensions to determine the size of an
+  | 	  image
+  | 
+

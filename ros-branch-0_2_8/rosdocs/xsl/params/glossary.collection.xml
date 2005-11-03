@@ -1,0 +1,189 @@
+<refentry id="glossary.collection">
+<refmeta>
+<refentrytitle>glossary.collection</refentrytitle>
+<refmiscinfo role="type">string</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>glossary.collection</refname>
+<refpurpose>Name of the glossary collection file</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='glossary.collection.frag'>
+<xsl:param name="glossary.collection" select="''"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>Glossaries maintained independently across a set of documents
+are likely to become inconsistent unless considerable effort is
+expended to keep them in sync. It makes much more sense, usually, to
+store all of the glossary entries in a single place and simply
+<quote>extract</quote> the ones you need in each document.</para>
+
+<para>That's the purpose of the
+<parameter>glossary.collection</parameter> parameter. To setup a global
+glossary <quote>database</quote>, follow these steps:</para>
+
+<refsect2><title>Setting Up the Glossary Database</title>
+
+<para>First, create a stand-alone glossary document that contains all of
+the entries that you wish to reference. Make sure that each glossary
+entry has an ID.</para>
+
+<para>Here's an example glossary:</para>
+
+<informalexample>
+<programlisting><![CDATA[
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE glossary
+  PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+  "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd">
+<glossary>
+<glossaryinfo>
+<editor><firstname>Eric</firstname><surname>Raymond</surname></editor>
+<title>Jargon File 4.2.3 (abridged)</title>
+<releaseinfo>Just some test data</releaseinfo>
+</glossaryinfo>
+
+<glossdiv><title>0</title>
+
+<glossentry>
+<glossterm>0</glossterm>
+<glossdef>
+<para>Numeric zero, as opposed to the letter `O' (the 15th letter of
+the English alphabet). In their unmodified forms they look a lot
+alike, and various kluges invented to make them visually distinct have
+compounded the confusion. If your zero is center-dotted and letter-O
+is not, or if letter-O looks almost rectangular but zero looks more
+like an American football stood on end (or the reverse), you're
+probably looking at a modern character display (though the dotted zero
+seems to have originated as an option on IBM 3270 controllers). If
+your zero is slashed but letter-O is not, you're probably looking at
+an old-style ASCII graphic set descended from the default typewheel on
+the venerable ASR-33 Teletype (Scandinavians, for whom /O is a letter,
+curse this arrangement). (Interestingly, the slashed zero long
+predates computers; Florian Cajori's monumental "A History of
+Mathematical Notations" notes that it was used in the twelfth and
+thirteenth centuries.) If letter-O has a slash across it and the zero
+does not, your display is tuned for a very old convention used at IBM
+and a few other early mainframe makers (Scandinavians curse <emphasis>this</emphasis>
+arrangement even more, because it means two of their letters collide).
+Some Burroughs/Unisys equipment displays a zero with a <emphasis>reversed</emphasis>
+slash. Old CDC computers rendered letter O as an unbroken oval and 0
+as an oval broken at upper right and lower left. And yet another
+convention common on early line printers left zero unornamented but
+added a tail or hook to the letter-O so that it resembled an inverted
+Q or cursive capital letter-O (this was endorsed by a draft ANSI
+standard for how to draw ASCII characters, but the final standard
+changed the distinguisher to a tick-mark in the upper-left corner).
+Are we sufficiently confused yet?</para>
+</glossdef>
+</glossentry>
+
+<glossentry>
+<glossterm>1TBS</glossterm>
+<glossdef>
+<para role="accidence">
+<phrase role="pronounce"></phrase>
+<phrase role="partsofspeach">n</phrase>
+</para>
+<para>The "One True Brace Style"</para>
+<glossseealso>indent style</glossseealso>
+</glossdef>
+</glossentry>
+
+<!-- ... -->
+
+</glossdiv>
+
+<!-- ... -->
+
+</glossary>]]></programlisting>
+</informalexample>
+
+</refsect2>
+
+<refsect2><title>Marking Up Glossary Terms</title>
+
+<para>That takes care of the glossary database, now you have to get the entries
+into your document. Unlike bibliography entries, which can be empty, creating
+<quote>placeholder</quote> glossary entries would be very tedious. So instead,
+support for <parameter>glossary.collection</parameter> relies on implicit linking.</para>
+
+<para>In your source document, simply use <sgmltag>firstterm</sgmltag> and
+<sgmltag>glossterm</sgmltag> to identify the terms you wish to have included
+in the glossary. The stylesheets assume that you will either set the
+<sgmltag class="attribute">baseform</sgmltag> attribute correctly, or that the
+content of the element exactly matches a term in your glossary.</para>
+
+<para>If you're using a <parameter>glossary.collection</parameter>, don't
+make explicit links on the terms in your document.</para>
+
+<para>So, in your document, you might write things like this:</para>
+
+<informalexample>
+<programlisting><![CDATA[<para>This is dummy text, without any real meaning.
+The point is simply to reference glossary terms like <glossterm>0</glossterm>
+and the <firstterm baseform="1TBS">One True Brace Style (1TBS)</firstterm>.
+The <glossterm>1TBS</glossterm>, as you can probably imagine, is a nearly
+religious issue.</para>]]></programlisting>
+</informalexample>
+
+<para>If you set the <parameter>firstterm.only.link</parameter> parameter,
+only the terms marked with <sgmltag>firstterm</sgmltag> will be links.
+Otherwise, all the terms will be linked.</para>
+
+</refsect2>
+
+<refsect2><title>Marking Up the Glossary</title>
+
+<para>The glossary itself has to be identified for the stylesheets. For lack
+of a better choice, the <sgmltag class="attribute">role</sgmltag> is used.
+To identify the glossary as the target for automatic processing, set
+the role to <quote><literal>auto</literal></quote>. The title of this
+glossary (and any other information from the <sgmltag>glossaryinfo</sgmltag>
+that's rendered by your stylesheet) will be displayed, but the entries will
+come from the database.
+</para>
+
+<para>Unfortunately, the glossary can't be empty, so you must put in
+at least one <sgmltag>glossentry</sgmltag>. The content of this entry
+is irrelevant, it will not be rendered:</para>
+
+<informalexample>
+<programlisting><![CDATA[<glossary role="auto">
+<glossentry>
+<glossterm>Irrelevant</glossterm>
+<glossdef>
+<para>If you can see this, the document was processed incorrectly. Use
+the <parameter>glossary.collection</parameter> parameter.</para>
+</glossdef>
+</glossentry>
+</glossary>]]></programlisting>
+</informalexample>
+
+<para>What about glossary divisions? If your glossary database has glossary
+divisions <emphasis>and</emphasis> your automatic glossary contains at least
+one <sgmltag>glossdiv</sgmltag>, the automic glossary will have divisions.
+If the <sgmltag>glossdiv</sgmltag> is missing from either location, no divisions
+will be rendered.</para>
+
+<para>Glossary entries (and divisions, if appropriate) in the glossary will
+occur in precisely the order they occur in your database.</para>
+
+</refsect2>
+
+<refsect2><title>Formatting the Document</title>
+
+<para>Finally, when you are ready to format your document, simply set the
+<parameter>glossary.collection</parameter> parameter (in either a
+customization layer or directly through your processor's interface) to
+point to your global glossary.</para>
+
+<para>The stylesheets will format the glossary in your document as if
+all of the entries implicilty referenced appeared there literally.</para>
+</refsect2>
+</refsect1>
+</refentry>

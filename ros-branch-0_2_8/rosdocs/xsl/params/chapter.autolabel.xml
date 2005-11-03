@@ -1,0 +1,21 @@
+<refentry id="chapter.autolabel">
+<refmeta>
+<refentrytitle>chapter.autolabel</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>chapter.autolabel</refname>
+<refpurpose>Are chapters automatically enumerated?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='chapter.autolabel.frag'><xsl:param name="chapter.autolabel" select="1"/></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If true (non-zero), unlabeled chapters will be enumerated.
+</para>
+
+</refsect1>
+</refentry>

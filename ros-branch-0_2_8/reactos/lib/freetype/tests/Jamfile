@@ -1,0 +1,41 @@
+# FreeType 2 src Jamfile (c) 2001 David Turner
+#
+
+SubDir  FT2_TOP tests ;
+
+test_programs = gview ;
+
+SubDirHdrs [ FT2_SubDir  .. nirvana include ] ;
+
+NV_TOP = [ FT2_SubDir .. .. nirvana ] ;
+
+NIRVANA_LINKLIBS = $(NV_TOP)/objs/libnirvana$(SUFLIB) ;
+
+{
+  local t ;
+
+  for t in $(test_programs)
+  {
+    Main  $(t) : $(t).c ;
+
+    LinkLibraries $(t) : $(FT2_LIB) ;
+
+    if $(WIN)
+    {
+      if $(TOOLSET) = MINGW
+      {
+        LINKKLIBS on $(t)$(SUFEXE) = "-luser32 -lgdi32" ;
+      }
+      else
+      {
+        LINKLIBS on $(t)$(SUFEXE) = user32.lib gdi32.lib ;
+      }
+    }
+    else
+    {
+      LINKLIBS on $(t)$(SUFEXE) = -L/usr/X11R6/lib -lX11 -lm ;
+    }
+
+    NEEDLIBS on $(t)$(SUFEXE) += $(NIRVANA_LINKLIBS) ;
+  }
+}

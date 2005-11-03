@@ -1,0 +1,22 @@
+<refentry id="refentry.separator">
+<refmeta>
+<refentrytitle>refentry.separator</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>refentry.separator</refname>
+<refpurpose>Generate a separator between consecutive RefEntry elements?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='refentry.separator.frag'><xsl:param name="refentry.separator" select="'1'"/></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If true, a separator will be generated between consecutive
+reference pages.
+</para>
+
+</refsect1>
+</refentry>

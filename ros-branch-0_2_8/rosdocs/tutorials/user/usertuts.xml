@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<!DOCTYPE book SYSTEM "../../dtd/docbook-xml-4.1.2/docbookx.dtd">
+<?xml-stylesheet type="text/xsl" href="../../docbook-xsl-1.45/xhtml/docbook.xsl"?>
+
+<article>
+
+<artheader>
+   <title>User Tutorials for ReactOS</title>
+   <author>
+      <firstname>Jason</firstname>
+      <surname>Filby</surname>
+      <affiliation>
+        <address>
+          <email>jasonfilby@yahoo.com</email>
+        </address>
+      </affiliation>
+   </author>
+</artheader>
+
+<sect1>
+<title>Introduction</title>
+<itemizedlist>
+<listitem><ulink url="intro/whyandhow.html">The why and how of ReactOS</ulink></listitem>
+<listitem>ReactOS license: GNU General Public License</listitem>
+<listitem><ulink url="intro/organizational.html">Organizational structure</ulink></listitem>
+<listitem>About ReactOS</listitem>
+<listitem><ulink url="intro/installiso.html">Download and install the latest ReactOS ISO-CD image</ulink></listitem>
+<listitem><ulink url="intro/installbin.html">Download and install the latest ReactOS release binaries</ulink></listitem>
+<listitem><ulink url="testbin.html">Testing ReactOS</ulink></listitem>
+<listitem>Where to go from here (newbie user)</listitem>
+</itemizedlist>
+</sect1>
+
+</article>

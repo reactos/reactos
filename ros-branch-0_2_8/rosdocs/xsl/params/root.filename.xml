@@ -1,0 +1,22 @@
+<refentry id="root.filename">
+<refmeta>
+<refentrytitle>root.filename</refentrytitle>
+
+</refmeta>
+<refnamediv>
+<refname>root.filename</refname>
+<refpurpose>Identifies the name of the root HTML file when chunking</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='root.filename.frag'><xsl:param name="root.filename" select="'index'"/></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>The <parameter>root.filename</parameter> is the base filename for
+the chunk created for the root of each document processed.
+</para>
+
+</refsect1>
+</refentry>

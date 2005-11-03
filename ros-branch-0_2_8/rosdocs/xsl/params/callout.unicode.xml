@@ -1,0 +1,21 @@
+<refentry id="callout.unicode">
+<refmeta>
+<refentrytitle>callout.unicode</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>callout.unicode</refname>
+<refpurpose>Use Unicode characters rather than images for callouts.</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='callout.unicode.frag'><xsl:param name="callout.unicode" select="0"/></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>The stylesheets can use either an image of the numbers one to ten, or the single Unicode character which represents the numeral, in white on a black background. Use this to select the Unicode character option.
+</para>
+
+</refsect1>
+</refentry>

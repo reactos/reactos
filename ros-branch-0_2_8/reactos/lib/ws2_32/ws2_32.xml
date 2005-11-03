@@ -1,0 +1,29 @@
+<module name="ws2_32" type="win32dll" baseaddress="${BASEADDRESS_WS2_32}" installbase="system32" installname="ws2_32.dll">
+	<importlibrary definition="ws2_32.def" />
+	<include base="ws2_32">include</include>
+	<define name="_DISABLE_TIDENTS" />
+	<define name="UNICODE" />
+	<define name="LE" />
+	<define name="__USE_W32API" />
+	<define name="_WIN32_WINNT">0x0500</define>
+	<library>ntdll</library>
+	<library>kernel32</library>
+	<library>user32</library>
+	<library>advapi32</library>
+	<library>dnsapi</library>
+	<directory name="include">
+		<pch>ws2_32.h</pch>
+	</directory>
+	<directory name="misc">
+		<file>bsd.c</file>
+		<file>catalog.c</file>
+		<file>dllmain.c</file>
+		<file>event.c</file>
+		<file>handle.c</file>
+		<file>ns.c</file>
+		<file>sndrcv.c</file>
+		<file>stubs.c</file>
+		<file>upcall.c</file>
+	</directory>
+	<file>ws2_32.rc</file>
+</module>

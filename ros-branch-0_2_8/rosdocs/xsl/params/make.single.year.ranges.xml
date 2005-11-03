@@ -1,0 +1,22 @@
+<refentry id="make.single.year.ranges">
+<refmeta>
+<refentrytitle>make.single.year.ranges</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>make.single.year.ranges</refname>
+<refpurpose>Print single-year ranges (e.g., 1998-1999)</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='make.single.year.ranges.frag'><xsl:param name="make.single.year.ranges" select="0"/></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If non-zero, year ranges that span a single year will be printed
+in range notation (1998-1999) instead of discrete notation
+(1998, 1999).</para>
+
+</refsect1>
+</refentry>

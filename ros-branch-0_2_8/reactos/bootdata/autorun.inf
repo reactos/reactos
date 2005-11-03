@@ -1,0 +1,4 @@
+[autorun]
+
+open=reactos\welcome.exe
+icon=icon.ico

@@ -1,0 +1,30 @@
+<refentry id="page.margin.inner">
+<refmeta>
+<refentrytitle>page.margin.inner</refentrytitle>
+
+</refmeta>
+<refnamediv>
+<refname>page.margin.inner</refname>
+<refpurpose>The inner page margin</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='page.margin.inner.frag'><xsl:param name="page.margin.inner">
+  <xsl:choose>
+    <xsl:when test="$double.sided != 0">1.25in</xsl:when>
+    <xsl:otherwise>1in</xsl:otherwise>
+  </xsl:choose>
+</xsl:param></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>The inner page margin is the distance from binding edge of the
+page to the first column of text. In the left-to-right, top-to-bottom writing
+direction, this is the left margin of recto pages.</para>
+<para>The inner and outer margins are usually the same unless the output
+is double-sided.
+</para>
+
+</refsect1>
+</refentry>

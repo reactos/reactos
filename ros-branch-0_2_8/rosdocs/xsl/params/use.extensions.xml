@@ -1,0 +1,24 @@
+<refentry id="use.extensions">
+<refmeta>
+<refentrytitle>use.extensions</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>use.extensions</refname>
+<refpurpose>Enable extensions</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='use.extensions.frag'><xsl:param name="use.extensions" select="'0'"/></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>If non-zero, extensions may be used. Each extension is
+further controlled by its own parameter. But if
+<parameter>use.extensions</parameter> is zero, no extensions will
+be used.
+</para>
+
+</refsect1>
+</refentry>

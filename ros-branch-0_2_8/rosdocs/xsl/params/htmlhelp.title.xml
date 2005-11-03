@@ -1,0 +1,23 @@
+<refentry id="htmlhelp.title">
+<refmeta>
+<refentrytitle>htmlhelp.title</refentrytitle>
+<refmiscinfo role="type">string</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>htmlhelp.title</refname>
+<refpurpose>Title of HTML Help</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='htmlhelp.title.frag'>
+<xsl:param name="htmlhelp.title" select="''"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>Content of this parameter will be used as a title for generated
+HTML Help. If empty, title will be automatically taken from document.</para>
+
+</refsect1>
+</refentry>

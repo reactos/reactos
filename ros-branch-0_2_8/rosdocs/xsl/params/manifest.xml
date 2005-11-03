@@ -1,0 +1,23 @@
+<refentry id="manifest">
+  <refmeta>
+    <refentrytitle>manifest</refentrytitle>
+    <refmiscinfo role="type">string</refmiscinfo>
+  </refmeta>
+  <refnamediv>
+    <refname>manifest</refname>
+    <refpurpose>Name of manifest file</refpurpose>
+  </refnamediv>
+
+  <refsynopsisdiv>
+    <src:fragment id='manifest.frag'
+      ><xsl:param name="manifest" select="'HTML.manifest'"/></src:fragment>
+  </refsynopsisdiv>
+
+  <refsect1><title>Description</title>
+
+    <para>The name of the file to which a manifest is written (if the
+      value of the <parameter>generate.manifest</parameter> parameter
+      is non-zero).</para>
+
+  </refsect1>
+</refentry>

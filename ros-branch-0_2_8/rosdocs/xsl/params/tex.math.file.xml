@@ -1,0 +1,24 @@
+<refentry id="tex.math.file">
+<refmeta>
+<refentrytitle>tex.math.file</refentrytitle>
+<refmiscinfo role="type">string</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>tex.math.file</refname>
+<refpurpose>Name of temporary file for generating images from equations</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='tex.math.file.frag'>
+<xsl:param name="tex.math.file" select="'tex-math-equations.tex'"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>Name of auxiliary file for TeX equations. This file can be
+processed by dvi2bitmap to get bitmap versions of equations for HTML
+output.</para>
+
+</refsect1>
+</refentry>

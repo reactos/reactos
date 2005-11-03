@@ -1,0 +1,14 @@
+<group>
+	<directory name="tools">
+		<xi:include href="tools/directory.xml" />
+	</directory>
+	<directory name="apps">
+		<xi:include href="apps/directory.xml" />
+	</directory>
+	<directory name="lib">
+		<xi:include href="lib/directory.xml" />
+	</directory>
+	<directory name="server">
+		<xi:include href="server/psxsrv.xml" />
+	</directory>
+</group>

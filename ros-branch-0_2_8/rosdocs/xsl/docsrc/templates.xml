@@ -1,0 +1,104 @@
+<chapter>
+<chapterinfo>
+<releaseinfo role="meta">
+$Id: templates.xml,v 1.1 2002/06/13 20:31:59 chorns Exp $
+</releaseinfo>
+<author><surname>Walsh</surname>
+<firstname>Norman</firstname></author>
+<copyright><year>2000</year><holder>Norman Walsh</holder>
+</copyright>
+</chapterinfo>
+<title>The Template System</title>
+
+<para>Some parts of the DocBook XSL Stylesheets are actually generated
+using XSL Stylesheets. In particular, the formatting of title pages
+is generated using a special template system. The same template system
+will eventually allow you to easily customize bibliography entries and
+perhaps other parts of the system as well.</para>
+
+<para>FIXME: there needs to be more introductory/explanatory text
+here!</para>
+
+<section><title>Changing the Article Title Page</title>
+
+<para>In order to demonstrate how this system works, let's consider
+how we can use it to change the format of article title pages.</para>
+
+<para>By default, the stylesheets print the following elements on the
+article title page, in this order: <simplelist type="inline">
+<member><sgmltag>title</sgmltag></member>
+<member><sgmltag>subtitle</sgmltag></member>
+<member><sgmltag>corpauthor</sgmltag></member>
+<member><sgmltag>authorgroup</sgmltag></member>
+<member><sgmltag>author</sgmltag></member>
+<member><sgmltag>releaseinfo</sgmltag></member>
+<member><sgmltag>copyright</sgmltag></member>
+<member><sgmltag>legalnotice</sgmltag></member>
+<member><sgmltag>pubdate</sgmltag></member>
+<member><sgmltag>revision</sgmltag></member>
+<member><sgmltag>revhistory</sgmltag></member>
+<member><sgmltag>abstract</sgmltag></member>
+</simplelist>. Suppose we want to put only the
+<sgmltag>title</sgmltag>, <sgmltag>author</sgmltag>, and
+<sgmltag>edition</sgmltag> elements on the title page, in the order
+that they appear in the <sgmltag>articleinfo</sgmltag>.
+</para>
+
+<para>The <quote>hard</quote> (and wrong!) way to do it would be to
+edit <filename>titlepage.templates.xsl</filename> and make the changes
+by hand.</para>
+
+<para>The easy and right way is to construct a template document that
+describes the order and sequence of elements that you want:</para>
+
+<screen><![CDATA[
+<t:templates xmlns:t="http://nwalsh.com/docbook/xsl/template/1.0"
+             xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+             base-stylesheet="/path/to/html/docbook.xsl">
+
+<t:titlepage element="article" wrapper="div" class="titlepage">
+  <t:titlepage-content side="recto" order="document">
+    <title predicate="[1]"/>
+    <author/>
+    <edition/>
+  </t:titlepage-content>
+</t:titlepage>
+</t:templates>
+]]></screen>
+
+<para>Then process this document with the
+<filename>template/titlepage.xsl</filename> stylesheet. This will
+produce the following somewhat cryptic stylesheet:</para>
+
+<screen><![CDATA[
+<?xml version="1.0" encoding="utf-8"?>
+<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+
+<!-- This stylesheet was created by titlepage.xsl; do not edit it by hand. -->
+
+<xsl:import href="/path/to/html/docbook.xsl"/>
+
+<xsl:template name="article.titlepage.recto"><xsl:apply-templates mode="article.titlepage.recto.mode" select="(articleinfo/title|artheader/title|title)[1]|articleinfo/author|artheader/author|articleinfo/edition|artheader/edition"/>
+</xsl:template>
+
+<xsl:template name="article.titlepage">
+  <div class="titlepage">
+    <xsl:call-template name="article.titlepage.before.recto"/>
+    <xsl:call-template name="article.titlepage.recto"/>
+    <xsl:call-template name="article.titlepage.before.verso"/>
+    <xsl:call-template name="article.titlepage.verso"/>
+    <xsl:call-template name="article.titlepage.separator"/>
+  </div>
+</xsl:template>
+
+</xsl:stylesheet>
+]]></screen>
+
+<para>Despite its cryptic appearance, it has the desired result.
+If you want to change <emphasis>how</emphasis> the titlepage elements
+are formatted (as opposed to which ones are formatted), you have to
+write your own customization layer that overrides the template for
+the element in question in the <quote>titlepage.mode</quote> mode.</para>
+</section>
+
+</chapter>

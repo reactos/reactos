@@ -1,0 +1,98 @@
+/*
+ *  ReactOS Cards
+ *
+ *  Copyright (C) 2003  Filip Navara <xnavara@volny.org>
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ */
+
+#include <windows.h>
+
+#define REACTOS_VERSION_DLL
+#define REACTOS_STR_FILE_DESCRIPTION	"Cardplaying Helper DLL\0"
+#define REACTOS_STR_INTERNAL_NAME	"cards\0"
+#define REACTOS_STR_ORIGINAL_FILENAME	"cards.dll\0"
+#include <reactos/version.rc>
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+1 BITMAP "res/Clubs_Ace.bmp"
+2 BITMAP "res/Clubs_Two.bmp"
+3 BITMAP "res/Clubs_Three.bmp"
+4 BITMAP "res/Clubs_Four.bmp"
+5 BITMAP "res/Clubs_Five.bmp"
+6 BITMAP "res/Clubs_Six.bmp"
+7 BITMAP "res/Clubs_Seven.bmp"
+8 BITMAP "res/Clubs_Eight.bmp"
+9 BITMAP "res/Clubs_Nine.bmp"
+10 BITMAP "res/Clubs_Ten.bmp"
+11 BITMAP "res/Clubs_Jack.bmp"
+12 BITMAP "res/Clubs_Queen.bmp"
+13 BITMAP "res/Clubs_King.bmp"
+14 BITMAP "res/Diamonds_Ace.bmp"
+15 BITMAP "res/Diamonds_Two.bmp"
+16 BITMAP "res/Diamonds_Three.bmp"
+17 BITMAP "res/Diamonds_Four.bmp"
+18 BITMAP "res/Diamonds_Five.bmp"
+19 BITMAP "res/Diamonds_Six.bmp"
+20 BITMAP "res/Diamonds_Seven.bmp"
+21 BITMAP "res/Diamonds_Eight.bmp"
+22 BITMAP "res/Diamonds_Nine.bmp"
+23 BITMAP "res/Diamonds_Ten.bmp"
+24 BITMAP "res/Diamonds_Jack.bmp"
+25 BITMAP "res/Diamonds_Queen.bmp"
+26 BITMAP "res/Diamonds_King.bmp"
+27 BITMAP "res/Hearts_Ace.bmp"
+28 BITMAP "res/Hearts_Two.bmp"
+29 BITMAP "res/Hearts_Three.bmp"
+30 BITMAP "res/Hearts_Four.bmp"
+31 BITMAP "res/Hearts_Five.bmp"
+32 BITMAP "res/Hearts_Six.bmp"
+33 BITMAP "res/Hearts_Seven.bmp"
+34 BITMAP "res/Hearts_Eight.bmp"
+35 BITMAP "res/Hearts_Nine.bmp"
+36 BITMAP "res/Hearts_Ten.bmp"
+37 BITMAP "res/Hearts_Jack.bmp"
+38 BITMAP "res/Hearts_Queen.bmp"
+39 BITMAP "res/Hearts_King.bmp"
+40 BITMAP "res/Spades_Ace.bmp"
+41 BITMAP "res/Spades_Two.bmp"
+42 BITMAP "res/Spades_Three.bmp"
+43 BITMAP "res/Spades_Four.bmp"
+44 BITMAP "res/Spades_Five.bmp"
+45 BITMAP "res/Spades_Six.bmp"
+46 BITMAP "res/Spades_Seven.bmp"
+47 BITMAP "res/Spades_Eight.bmp"
+48 BITMAP "res/Spades_Nine.bmp"
+49 BITMAP "res/Spades_Ten.bmp"
+50 BITMAP "res/Spades_Jack.bmp"
+51 BITMAP "res/Spades_Queen.bmp"
+52 BITMAP "res/Spades_King.bmp"
+53 BITMAP "res/FreeCard.bmp"
+54 BITMAP "res/Background_1.bmp"
+55 BITMAP "res/Background_1.bmp"
+56 BITMAP "res/Background_1.bmp"
+57 BITMAP "res/Background_1.bmp"
+58 BITMAP "res/Background_1.bmp"
+59 BITMAP "res/Background_1.bmp"
+60 BITMAP "res/Background_1.bmp"
+61 BITMAP "res/Background_1.bmp"
+62 BITMAP "res/Background_1.bmp"
+63 BITMAP "res/Background_1.bmp"
+64 BITMAP "res/Background_1.bmp"
+65 BITMAP "res/Background_1.bmp"
+66 BITMAP "res/Joker.bmp"
+67 BITMAP "res/XSign.bmp"
+68 BITMAP "res/OSign.bmp"

@@ -1,0 +1,22 @@
+<refentry id="callout.graphics.path">
+<refmeta>
+<refentrytitle>callout.graphics.path</refentrytitle>
+<refmiscinfo role="type">string</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>callout.graphics.path</refname>
+<refpurpose>Path to callout graphics</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='callout.graphics.path.frag'><xsl:param name="callout.graphics.path" select="'images/callouts/'"/></src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>Sets the path, probably relative to the directory where the HTML
+files are created, to the callout graphics.
+</para>
+
+</refsect1>
+</refentry>

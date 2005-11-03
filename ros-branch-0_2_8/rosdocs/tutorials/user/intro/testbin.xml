@@ -1,0 +1,52 @@
+<chapter>
+<title>Testing ReactOS</title>
+
+<!--
+<artheader>
+   <title>Testing ReactOS</title>
+   <author>
+      <firstname>Steven</firstname>
+      <surname>Edwards</surname>
+      <affiliation>
+        <address>
+          <email>Steven_Ed4153@yahoo.com</email>
+        </address>
+      </affiliation>
+   </author>
+</artheader>
+-->
+
+<abstract>
+<para>
+How to test the installed ReactOS binaries.
+</para>
+</abstract>
+
+<sect2>
+<title>Booting ReactOS</title>
+<para>
+Reboot your system in plain DOS 
+Change directory to C:\reactos 
+Type "boot" or "aboot" at the command prompt (aboot.bat is the boot script with ACPI support). 
+You should observe a few messages as drivers load.
+Wait until the prompt reappears (the screen should turn blue while ReactOS boots). 
+Go on to next section.
+</para>
+</sect2>
+
+<sect2>
+<title>Testing ReactOS</title>
+<para>
+
+</para>
+</sect2>
+
+<sect2>
+<title>Reporting Problems</title>
+<para>
+If you encounter problems with either booting or running your application, please send a email to ros-general@reactos.com with a subject of "BUG REPORT: Problem run foo while booting on bar". Foo being your application and bar being the release 
+of ReactOS you are running, (0.0.19-Release). Please Include in the body of your email, a detailed discription of the hardware you are running on, application you are having problems with and all debug output.
+</para>
+</sect2>
+
+</chapter>

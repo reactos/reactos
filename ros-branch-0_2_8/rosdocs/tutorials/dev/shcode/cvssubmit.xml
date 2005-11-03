@@ -1,0 +1,81 @@
+<chapter>
+<title>Submitting your code with CVS</title>
+
+<!--
+<artheader>
+   <title>Submitting your code with CVS</title>
+   <author>
+      <firstname>Jason</firstname>
+      <surname>Filby</surname>
+      <affiliation>
+        <address>
+          <email>jasonfilby@yahoo.com</email>
+        </address>
+      </affiliation>
+   </author>
+</artheader>
+-->
+
+<abstract>
+<para>
+How to submit code with CVS access.
+</para>
+</abstract>
+
+<sect2>
+<title>Proper testing before submitting code</title>
+<para>
+Please be sure to perform thorough tests before submitting any code to CVS. Here is some good advice for proper testing:
+<itemizedlist>
+<listitem>Thoroughly check that your change works as intended.</listitem>
+<listitem>Test your changes with the latest code from CVS. Something may have changed in the latest code that either breaks your change or causes your change to break something else.</listitem>
+<listitem>Make sure that ReactOS can still boot and that any applications or systems that may be affected by your change still run properly.</listitem>
+</itemizedlist>
+</para>
+</sect2>
+
+<sect2>
+<title>Adding a directory to the CVS repository</title>
+<para>
+<programlisting>
+cvs add directory
+</programlisting>
+An example would be:
+<programlisting>
+<prompt>C:\></prompt>cd\ros\reactos\subsys
+<prompt>C:\ROS\REACTOS\SUBSYS></prompt>cvs add win32k
+</programlisting>
+You must add a directory to the CVS repository before you can add anything in it to the repository.
+</para>
+</sect2>
+
+<sect2>
+<title>Adding files to the CVS repository</title>
+<para>
+<programlisting>
+cvs add file
+</programlisting>
+Examples:
+<programlisting>
+<prompt>C:\></prompt>cd\ros\reactos\subsys\win32k\ntuser
+<prompt>C:\ROS\REACTOS\SUBSYS\WIN32K\NTUSER></prompt>cvs add guicheck.c
+<prompt>C:\ROS\REACTOS\SUBSYS\WIN32K\NTUSER></prompt>cvs add msgqueue.c message.c
+<prompt>C:\ROS\REACTOS\SUBSYS\WIN32K\NTUSER></prompt>cvs add *.c
+</programlisting>
+</para>
+Once you have added the file information, you must you the CVS commit command to actually copy the files to the repository.
+</sect2>
+
+<sect2>
+<title>Committing changes to the repository</title>
+<para>
+The CVS commit command is used to upload your changes to the repository, including new files and changed files. Lets say that you want to add all new files and update all the files you changed in reactos\subsys\win32k:
+<programlisting>
+<prompt>C:\></prompt>cd\ros\reactos\subsys\win32k
+<prompt>C:\ROS\REACTOS\SUBSYS\WIN32K></prompt>cvs commit -m "Commit message"
+</programlisting>
+CVS will then commit any new and changed files in win32k's directory and subdirectories to the repository. You'll notice that the -m switch is used to denote a commit message. This should be a short, overall description of what the commit is about. It will be stored in the CVS repository next to the version of the file committed and appear in the ros-commit mailing list. All changes to the ReactOS CVS repository are mailed to a subscription list, ros-commit.
+</para>
+</sect2>
+
+</chapter>

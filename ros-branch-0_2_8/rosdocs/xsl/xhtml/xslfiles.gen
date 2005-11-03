@@ -1,0 +1,173 @@
+xslfiles: admon.xsl \
+autoidx.xsl \
+autotoc.xsl \
+biblio.xsl \
+block.xsl \
+callout.xsl \
+changebars.xsl \
+chunk-common.xsl \
+chunk.xsl \
+chunker.xsl \
+chunktoc.xsl \
+component.xsl \
+division.xsl \
+docbook.xsl \
+ebnf.xsl \
+footnote.xsl \
+formal.xsl \
+glossary.xsl \
+graphics.xsl \
+html-rtf.xsl \
+html.xsl \
+index.xsl \
+info.xsl \
+inline.xsl \
+keywords.xsl \
+lists.xsl \
+maketoc.xsl \
+math.xsl \
+oldchunker.xsl \
+onechunk.xsl \
+param.xsl \
+pi.xsl \
+profile-onechunk.xsl \
+qandaset.xsl \
+refentry.xsl \
+sections.xsl \
+synop.xsl \
+table.xsl \
+titlepage.templates.xsl \
+titlepage.xsl \
+toc.xsl \
+verbatim.xsl \
+xref.xsl
+
+admon.xsl: ../html/admon.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+autoidx.xsl: ../html/autoidx.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+autotoc.xsl: ../html/autotoc.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+biblio.xsl: ../html/biblio.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+block.xsl: ../html/block.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+callout.xsl: ../html/callout.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+changebars.xsl: ../html/changebars.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+chunk-common.xsl: ../html/chunk-common.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+chunk.xsl: ../html/chunk.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+chunker.xsl: ../html/chunker.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+chunktoc.xsl: ../html/chunktoc.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+component.xsl: ../html/component.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+division.xsl: ../html/division.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+docbook.xsl: ../html/docbook.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+ebnf.xsl: ../html/ebnf.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+footnote.xsl: ../html/footnote.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+formal.xsl: ../html/formal.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+glossary.xsl: ../html/glossary.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+graphics.xsl: ../html/graphics.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+html-rtf.xsl: ../html/html-rtf.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+html.xsl: ../html/html.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+index.xsl: ../html/index.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+info.xsl: ../html/info.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+inline.xsl: ../html/inline.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+keywords.xsl: ../html/keywords.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+lists.xsl: ../html/lists.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+maketoc.xsl: ../html/maketoc.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+math.xsl: ../html/math.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+oldchunker.xsl: ../html/oldchunker.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+onechunk.xsl: ../html/onechunk.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+param.xsl: ../html/param.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+pi.xsl: ../html/pi.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+profile-onechunk.xsl: ../html/profile-onechunk.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+qandaset.xsl: ../html/qandaset.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+refentry.xsl: ../html/refentry.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+sections.xsl: ../html/sections.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+synop.xsl: ../html/synop.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+table.xsl: ../html/table.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+titlepage.templates.xsl: ../html/titlepage.templates.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+titlepage.xsl: ../html/titlepage.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+toc.xsl: ../html/toc.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+verbatim.xsl: ../html/verbatim.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+
+xref.xsl: ../html/xref.xsl
+	$(XSLT) $< html2xhtml.xsl $@
+

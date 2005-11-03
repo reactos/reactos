@@ -1,0 +1,25 @@
+<refentry id="chunk.datafile">
+<refmeta>
+<refentrytitle>chunk.datafile</refentrytitle>
+
+</refmeta>
+<refnamediv>
+<refname>chunk.datafile</refname>
+<refpurpose>Name of the temporary file used to hold chunking data</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='chunk.datafile.frag'>
+<xsl:param name="chunk.datafile" select="'.chunks'"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>Chunking is now a two-step process. The
+<parameter>chunk.datafile</parameter> is the name of the file used to
+hold the chunking data.
+</para>
+
+</refsect1>
+</refentry>

@@ -1,0 +1,80 @@
+<chapter>
+<title>Where to get the latest ReactOS source, compilation tools and how to compile the source</title>
+
+<!--
+<artheader>
+   <title>Download and compile the latest ReactOS release source</title>
+   <author>
+      <firstname>Jason</firstname>
+      <surname>Filby</surname>
+      <affiliation>
+        <address>
+          <email>jasonfilby@yahoo.com</email>
+        </address>
+      </affiliation>
+   </author>
+</artheader>
+-->
+
+<abstract>
+<para>
+Where to get the latest ReactOS source, compilation tools and how to compile the source.
+</para>
+</abstract>
+
+<sect2>
+<title>Where to download the source</title>
+<para>
+The ReactOS source is physically stored on ReactOS' SourceForge development site. You can download ReactOS directly from the SourceForge site, but some users may prefer to go via ReactOS.com.
+</para>
+</sect2>
+
+<sect2>
+<title>Obtaining the latest source via reactos.com</title>
+<itemizedlist>
+<listitem>Visit <ulink url="http://reactos.com">reactos.com</ulink> which is the ReactOS portal site. This site will always point to the latest source.</listitem>
+<listitem>Click on the link, on the opening page of reactos.com that points to the latest "Kernel Release".</listitem>
+<listitem>On the Latest Release page, click on the "Download kernel x.x.xx source" (eg. "Download kernel 0.0.18 source") link.</listitem>
+</itemizedlist>
+</sect2>
+
+<sect2>
+<title>Obtaining the latest source via SourceForge</title>
+<itemizedlist>
+<listitem>Visit <ulink url="http://sourceforge.net/projects/reactos">sourceforge.net/projects/reactos</ulink> which is ReactOS' development site, hosted by SourceForge.</listitem>
+<listitem>Scroll down to the "Latest File Releases".</listitem>
+<listitem>Click on the "Download" link for the reactos package.</listitem>
+<listitem>Scroll down to the reactos package (should be high-lighted purple) and click on the xxxx_source.zip (eg. 0018_source.zip) link to download the source.</listitem>
+</itemizedlist>
+</sect2>
+
+<sect2>
+<title>Downloading GCC: the C compiler</title>
+<itemizedlist>
+<listitem>Visit <ulink url="http://reactos.com/index.php?current_menu=tools&amp;content_page=gccget.inc">reactos.com's GCC download page</ulink> OR look for GCC on ReactOS' <ulink url="https://sourceforge.net/project/showfiles.php?group_id=6553">SourceForge download files page</ulink>.</listitem>
+<listitem>There are instructions on the reactos.com indicating which files must be loaded to obtain a complete GCC installation.</listitem>
+<listitem>If you chose the sourceforge.net link then you must click on the release name (eg. 2.95.3-20011023) for instructions on which files you need to download for a complete GCC installation.</listitem>
+<listitem>Extract the files to your hard drive (eg. in the directory c:\gcc). If you do not have an extraction utility that can handle .tar.gz files, try <ulink url="http://www.winzip.com">WinZip</ulink>.</listitem>
+<listitem>Add the 'bin' subdirectory of the installation to your path (eg. PATH=%PATH%;c:\gcc\bin). You must make this change to your autoexec.bat file and be sure to run it before trying to compile with GCC.</listitem>
+</itemizedlist>
+</sect2>
+
+<sect2>
+<title>Downloading NASM: the assembler</title>
+<itemizedlist>
+<listitem>Visit <ulink url="http://reactos.com/index.php?current_menu=tools&amp;content_page=nasmget.inc">reactos.com's NASM page</ulink>. This page points to the location of the NASM binaries.</listitem>
+<listitem>Extract the files to your hard drive (eg. in the directory c:\nasm).</listitem>
+<listitem>Add the extracted directory of the installation to your path (eg. PATH=%PATH%;c:\nasm). As with GCC, you must make sure the path information in your autoexec.bat file is updated and that you rerun autoexec.bat before trying to compile anything.</listitem>
+</itemizedlist>
+</sect2>
+
+<sect2>
+<title>Compiling the ReactOS source</title>
+<itemizedlist>
+<listitem>Change into the directory where you extract the ReactOS source to (eg. cd \reactos\source).</listitem>
+<listitem>Run the command 'make'. GCC and NASM should then begin to build the source code.</listitem>
+<listitem>If you do not encounter any errors in the build process, you should be able to install and test the compiled binaries. Refer to the development tutorial 'Testing ReactOS' for more information on how to do this.</listitem>
+</itemizedlist>
+</sect2>
+
+</chapter>

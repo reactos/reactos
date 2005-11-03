@@ -1,0 +1,191 @@
+-*-Text-*-
+
+Contents:
+---------
+  Intro text
+  Midnight Commander editions
+  Where to get more information
+  The Midnight Commander
+  Mini-docs
+  Obtaining the Midnight Commander
+  Reporting problems.
+
+This is version 4 of the Midnight Commander, a free Norton Commander
+Clone with many useful features. The Midnight Commander comes with
+mouse support on xterms and optionally on the Linux console.
+
+The Midnight Commander is a directory browsing tool which bears a
+certain remote resemblance to John Socha's Norton Commander for DOS.
+It is feature packed:
+
+	o Built in Virtual File System: manipulate remote files
+	systems through the ftp protocol or Midnight Commander's own
+	mcfs protocol.  Browse tar, compressed tar files, rpm, zip,
+	cpio, lha and rar files with a single click.  
+
+	o All of the Midnight Commander operations work with the virtual
+	file system, enabling you to do complex tasks.
+
+	o Mouse support on the Linux console and under X11's xterms. 
+
+	o Learn Keys: The Midnight Commander may be configured at run
+	time to support any kind of input keys for a given terminal,
+	making its operation even on the most wierd terminals a
+	breeze. 
+
+	o Text and hex editors are available for you to use.
+
+	o Hotlist allows you to keep a list of common visited
+	locations (including ftp sites).
+
+	o Command completion: By pressing Alt-Tab in any place where a
+	filename or an executable are expected, the Midnight Commander
+	will complete for you the name.  If you quickly press Alt-Tab
+	twice you can get a listbox with the possible completions
+	available. 
+
+	o Subshell support: Run your commands by a real shell
+	interpreter.  The Midnight Commander interacts with bash, tcsh
+	and zsh to provide you with all of the facilities available in
+	your shell.
+
+	o Find file command can now search inside the contents of
+	files.
+
+	o Background operations allows you to copy or move files from
+	any virtual file system while you do other tasks (ie, you can
+	do background ftp copies).
+
+	o Proxy support with our ftpfs.
+
+	o Linux file recovery: If you are using Linux system, you can
+	recover deleted files from an ext2fs partition with the
+	undelete file system.  This is a low level file recovery
+	function that will recover files deleted by any program in
+	Linux. 
+
+	Please note that the undelete file system can only recover
+	12 file system blocks if the file was deleted with a kernel 
+	in the 2.0.x series.  The 2.1.x series have fixed this and you
+	can recover all of the file contents there.
+
+	o External panelization: You can run any arbitrary external
+	command and the Midnight Commander will display the output
+	generated as a file listing that can be manipulated as a
+	regular directory. 
+
+	o Emacs like key bindings in all of our widgets.
+
+	o Powerfull context dependant actions are available. 
+
+	o Powerfull built-in file viewer:  The file viewer, together
+	with the context dependant actions is used to format man pages
+	on the fly, coloring mail messages and more.
+
+
+Midnight Commander editions:
+----------------------------
+
+The Midnight Commander may be compiled into three different editions:
+the text mode edition, the Tk edition and the XView edition.  Please
+note that currently the only supported edition is the text mode
+edition.  The Tk and XView editions are included with the tar file but
+are not finished and thus not supported.
+
+
+Where to get more information:
+------------------------------
+
+There is a mailing list for discussion on enhancing the program, future
+directions and announcements; if you want to subscribe, send mail to:
+
+majordomo@roxanne.nuclecu.unam.mx
+
+There is a WWW page for the Midnight Commander with the URL:
+<http://mc.blackdown.org/mc/>.
+
+
+The Midnight Commander:
+-----------------------
+
+The Midnight Commander is released under the GNU General Public License
+version 2.0 or any later version.  A copy of the file is included with
+this distribution package.
+
+If you have comments, you can send them to me:
+
+miguel@roxanne.nuclecu.unam.mx
+
+or if it would benefit more people, to the mailing list:
+
+mc@roxanne.nuclecu.unam.mx
+
+Help develop and enhance free software.
+
+
+Mini-documentation:
+-------------------
+
+o Use the F-Keys for invoking the commands in the function key bar.
+  If your terminal doesn't support F-keys, you can use the <ESC digit>
+  sequence to invoke the corresponding F-digit key.
+
+o Tab changes the current panel.
+
+o All input lines have emacs-like key-bindings (command history is
+  accessed through the M-p and M-n keys).
+
+o The panels accept C-n, C-p for browsing the panel (like in emacs).
+
+o M-Enter copies the currently selected file name to the input line.
+
+o M-Tab completes the current word (or tries to).
+
+o The Virtual File System is a cute addition to the project, you may 
+  browse in tar and compressed tar files as well as browsing remote 
+  machines with the mcfs file system.
+
+o Please read the manual page.
+
+o Read the file src/TODO for the current projects.
+
+You can access the whole documentation online with the F1 key,
+although it's not as nice as the groff printed manual page :-)
+
+
+Where you may obtain the Midnight Commander
+-------------------------------------------
+
+The software should be available by anonymous ftp at sunsite.unc.edu
+in the directory /pub/Linux/utils/file and at ftp.nuclecu.unam.mx
+in the directory /linux/local.
+
+The last alpha versions are available at ftp.nuclecu.unam.mx in the
+directory /linux/local/devel.
+
+European mirrors of both version 3.1 and alpha versions are available
+at sunsite.mff.cuni.cz in the directory /GNU/mc and at ftp.teuto.de
+in the directory /lmb/mc.
+
+
+Reporting problems
+------------------
+
+Please, send a detailed description of your problem to the
+mc-bugs@roxanne.nuclecu.unam.mx address.
+
+Include the version of the program, the operating system that you are
+using, the compiler and compiler flags used to compile the program (if
+you know them), what kind of distribution you are using (if a
+GNU/Linux system).
+
+If the program crashed and produces a core dump, please provide a
+stack trace of the program.
+
+You can do this by running dbx or gdb like this:
+
+gdb mc core
+(gdb) where
+
+
+

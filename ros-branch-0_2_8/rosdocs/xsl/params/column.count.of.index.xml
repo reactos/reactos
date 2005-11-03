@@ -1,0 +1,23 @@
+<refentry id="column.count.of.index">
+<refmeta>
+<refentrytitle>column.count.of.index</refentrytitle>
+<refmiscinfo role="type">integer</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>column.count.of.index</refname>
+<refpurpose>Number of columns in the index</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='column.count.of.index.frag'>
+<xsl:param name="column.count.of.index" select="$column.count"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>This parameter specifies the number of columns on pages in the index.
+The default is the same as the <parameter>column.count</parameter>.</para>
+
+</refsect1>
+</refentry>

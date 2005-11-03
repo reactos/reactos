@@ -1,0 +1,29 @@
+TOPSRCDIR = @top_srcdir@
+TOPOBJDIR = ../..
+SRCDIR    = @srcdir@
+VPATH     = @srcdir@
+MODULE    = dbghelp.dll
+IMPORTS   = psapi kernel32 ntdll
+
+C_SRCS = \
+	coff.c \
+	dbghelp.c \
+	elf_module.c \
+	image.c \
+	memory.c \
+	minidump.c \
+	module.c \
+	msc.c \
+	path.c \
+	pe_module.c \
+	source.c \
+	stabs.c \
+	stack.c \
+	storage.c \
+	symbol.c \
+	type.c \
+	regex.c # ReactOS Port
+
+@MAKE_DLL_RULES@
+
+### Dependencies:

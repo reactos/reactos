@@ -1,0 +1,35 @@
+<t:templates xmlns:t="http://nwalsh.com/docbook/xsl/template/1.0"
+             base-stylesheet="../html/docbook.xsl">
+
+<t:titlepage element="article" wrapper="div" class="titlepage">
+  <t:titlepage-content side="recto">
+    <title/>
+    <subtitle/>
+    <corpauthor/>
+    <authorgroup/>
+    <author/>
+    <othercredit/>
+    <releaseinfo/>
+    <copyright/>
+    <legalnotice/>
+    <pubdate/>
+    <revision/>
+    <revhistory/>
+    <abstract/>
+  </t:titlepage-content>
+
+  <t:titlepage-content side="verso">
+  </t:titlepage-content>
+
+  <t:titlepage-separator>
+    <hr/>
+  </t:titlepage-separator>
+
+  <t:titlepage-before side="recto">
+  </t:titlepage-before>
+
+  <t:titlepage-before side="verso">
+  </t:titlepage-before>
+</t:titlepage>
+
+</t:templates>

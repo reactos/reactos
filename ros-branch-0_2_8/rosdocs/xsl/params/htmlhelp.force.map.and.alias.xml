@@ -1,0 +1,24 @@
+<refentry id="htmlhelp.force.map.and.alias">
+<refmeta>
+<refentrytitle>htmlhelp.force.map.and.alias</refentrytitle>
+<refmiscinfo role="type">boolean</refmiscinfo>
+</refmeta>
+<refnamediv>
+<refname>htmlhelp.force.map.and.alias</refname>
+<refpurpose>Should be [MAP] and [ALIAS] section added to project file unconditionaly?</refpurpose>
+</refnamediv>
+
+<refsynopsisdiv>
+<src:fragment id='htmlhelp.force.map.and.alias.frag'>
+<xsl:param name="htmlhelp.force.map.and.alias" select="0"/>
+</src:fragment>
+</refsynopsisdiv>
+
+<refsect1><title>Description</title>
+
+<para>You should turn on this flag, if you have your own
+<filename>alias.h</filename> and <filename>contex.h</filename> files
+and you want include reference to them in project file.</para>
+
+</refsect1>
+</refentry>
