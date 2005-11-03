@@ -86,6 +86,7 @@ NtGetContextThread(IN HANDLE ThreadHandle,
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     GET_SET_CTX_CONTEXT GetSetContext;
     NTSTATUS Status = STATUS_SUCCESS;
+    PCONTEXT SafeThreadContext = NULL;
 
     PAGED_CODE();
 
@@ -98,6 +99,7 @@ NtGetContextThread(IN HANDLE ThreadHandle,
                           sizeof(CONTEXT),
                           sizeof(ULONG));
             GetSetContext.Context = *ThreadContext;
+            SafeThreadContext = &GetSetContext.Context;
 
         } _SEH_HANDLE {
 
@@ -106,6 +108,8 @@ NtGetContextThread(IN HANDLE ThreadHandle,
         } _SEH_END;
 
         if(!NT_SUCCESS(Status)) return Status;
+    } else {
+        SafeThreadContext = ThreadContext;
     }
 
     /* Get the Thread Object */
@@ -121,14 +125,19 @@ NtGetContextThread(IN HANDLE ThreadHandle,
 
         /* Check if we're running in the same thread */
         if(Thread == PsGetCurrentThread()) {
-
             /*
              * I don't know if trying to get your own context makes much
              * sense but we can handle it more efficently.
              */
-            KeTrapFrameToContext(Thread->Tcb.TrapFrame, NULL, &GetSetContext.Context);
+            KeTrapFrameToContext(Thread->Tcb.TrapFrame, NULL, SafeThreadContext);
 
         } else {
+
+            /* Copy context into GetSetContext if not already done */
+            if(PreviousMode == KernelMode) {
+                GetSetContext.Context = *ThreadContext;
+                SafeThreadContext = &GetSetContext.Context;
+            }
 
             /* Use an APC... Initialize the Event */
             KeInitializeEvent(&GetSetContext.Event,
@@ -173,7 +182,7 @@ NtGetContextThread(IN HANDLE ThreadHandle,
         ObDereferenceObject(Thread);
 
         /* Check for success and return the Context */
-        if(NT_SUCCESS(Status)) {
+        if(NT_SUCCESS(Status) && SafeThreadContext != ThreadContext) {
             _SEH_TRY {
 
                 *ThreadContext = GetSetContext.Context;
