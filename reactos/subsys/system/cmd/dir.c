@@ -1985,7 +1985,7 @@ CommandDir(LPTSTR first, LPTSTR rest)
 	TCHAR	szPath[MAX_PATH];
 	TCHAR	szFilespec[MAX_PATH];
 	LPTSTR*	params;
-	UINT	entries = 0;
+	INT		entries = 0;
 	INT		nLine = 0;
 	UINT	loop = 0;
 	DIRSWITCHFLAGS stFlags;
