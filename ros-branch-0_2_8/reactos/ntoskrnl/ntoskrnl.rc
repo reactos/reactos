@@ -1,8 +1,0 @@
-/* $Id$ */
-
-#define REACTOS_STR_FILE_DESCRIPTION	"ReactOS Kernel & System\0"
-#define REACTOS_STR_INTERNAL_NAME	"ntoskrnl\0"
-#define REACTOS_STR_ORIGINAL_FILENAME	"ntoskrnl.exe\0"
-#include <reactos/version.rc>
-
-#include "bugcodes.rc"

@@ -1,9 +1,0 @@
-/* $Id: dflat32.rc,v 1.3 2004/10/16 22:30:17 gvg Exp $ */
-
-#define REACTOS_VERSION_DLL
-#define REACTOS_STR_FILE_DESCRIPTION	"dflat32 console windowing library\0"
-#define REACTOS_STR_INTERNAL_NAME	"dflat\0"
-#define REACTOS_STR_ORIGINAL_FILENAME	"dflat.dll\0"
-#include <reactos/version.rc>
-
-/* EOF */

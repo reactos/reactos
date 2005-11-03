@@ -1,9 +1,0 @@
-'Install rutine for Mozilla Control 1.6
-
-Sub Main
-  download ("http://www.iol.ie/~locka/mozilla/MozillaControl16.exe", "mozillacontrol16.exe")
-End Sub
-
-Sub After
-  shell mozillacontrol16.exe
-End Sub

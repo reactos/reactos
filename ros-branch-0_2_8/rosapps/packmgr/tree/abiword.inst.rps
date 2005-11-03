@@ -1,9 +1,0 @@
-'Install rutine for abiword
-
-Sub Main     
-  download ("http://www.abisource.com/downloads/abiword/2.2.5/Windows/abiword-setup-2.2.5.exe", "abisetup.exe")
-End Sub
-
-Sub After
-  shell abisetup.exe
-End Sub

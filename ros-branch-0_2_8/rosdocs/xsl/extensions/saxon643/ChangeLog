@@ -1,8 +1,0 @@
-2001-11-11  Norman Walsh <nwalsh@users.sourceforge.net>
-
-	* .cvsignore: Removed .classes
-
-2001-07-16  Norman Walsh <nwalsh@users.sourceforge.net>
-
-	* .cvsignore, prj.el: New file.
-

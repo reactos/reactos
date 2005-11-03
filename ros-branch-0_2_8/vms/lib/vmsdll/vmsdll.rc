@@ -1,4 +1,0 @@
-#define REACTOS_STR_FILE_DESCRIPTION	"ReactOS/VMS API Client Library\0"
-#define REACTOS_STR_INTERNAL_NAME	"vmsdll\0"
-#define REACTOS_STR_ORIGINAL_FILENAME	"vmdsll.dll\0"
-#include <reactos/version.rc>

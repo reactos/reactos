@@ -1,6 +1,0 @@
-The fo stylesheet is probably not in perfect sync with the html stylesheet
-
-Using Equations w/o titles results in incorrectly numbered
-  equations with titles.  Use InformalEquation instead.
-
-The 'char' alignment in tables is not supported
