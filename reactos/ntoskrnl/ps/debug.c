@@ -23,6 +23,7 @@ typedef struct _GET_SET_CTX_CONTEXT {
     KEVENT Event;
     CONTEXT Context;
     KPROCESSOR_MODE Mode;
+    NTSTATUS Status;
 } GET_SET_CTX_CONTEXT, *PGET_SET_CTX_CONTEXT;
 
 
@@ -44,8 +45,10 @@ PspGetOrSetContextKernelRoutine(PKAPC Apc,
     PKEVENT Event;
     PCONTEXT Context;
     KPROCESSOR_MODE Mode;
-    PETHREAD Thread;
     PKTRAP_FRAME TrapFrame;
+
+    TrapFrame = (PKTRAP_FRAME)((ULONG_PTR)KeGetCurrentThread()->InitialStack -
+                                          sizeof (FX_SAVE_AREA) - sizeof (KTRAP_FRAME));
 
     /* Get the Context Structure */
     GetSetContext = CONTAINING_RECORD(Apc, GET_SET_CTX_CONTEXT, Apc);
@@ -54,20 +57,21 @@ PspGetOrSetContextKernelRoutine(PKAPC Apc,
     Mode = GetSetContext->Mode;
     Thread = SystemArgument2;
 
-    /* Get trap frame */
-    TrapFrame = (PKTRAP_FRAME)((ULONG_PTR)Thread->Tcb.InitialStack -
-                               sizeof(KTRAP_FRAME) - sizeof(FX_SAVE_AREA));
-
-    /* Check if it's a set or get */
-    if (SystemArgument1)
+    if (TrapFrame->Cs == KERNEL_CS && Mode != KernelMode)
     {
-        /* Get the Context */
-        KeTrapFrameToContext(TrapFrame, NULL, Context);
+        GetSetContext->Status = STATUS_ACCESS_DENIED;
     }
     else
     {
-        /* Set the Context */
-        KeContextToTrapFrame(Context, NULL, TrapFrame, Mode);
+        /* Check if it's a set or get */
+        if (*SystemArgument1) {
+            /* Get the Context */
+            KeTrapFrameToContext(TrapFrame, NULL, Context);
+        } else {
+            /* Set the Context */
+            KeContextToTrapFrame(Context, NULL, TrapFrame, Mode);
+        }
+        GetSetContext->Status = STATUS_SUCCESS;
     }
 
     /* Notify the Native API that we are done */
@@ -77,7 +81,7 @@ PspGetOrSetContextKernelRoutine(PKAPC Apc,
 NTSTATUS
 STDCALL
 NtGetContextThread(IN HANDLE ThreadHandle,
-                   OUT PCONTEXT ThreadContext)
+                   IN OUT PCONTEXT ThreadContext)
 {
     PETHREAD Thread;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
@@ -94,6 +98,8 @@ NtGetContextThread(IN HANDLE ThreadHandle,
             ProbeForWrite(ThreadContext,
                           sizeof(CONTEXT),
                           sizeof(ULONG));
+            GetSetContext.Context = *ThreadContext;
+
         } _SEH_HANDLE {
 
             Status = _SEH_GetExceptionCode();
@@ -159,6 +165,8 @@ NtGetContextThread(IN HANDLE ThreadHandle,
                                                KernelMode,
                                                FALSE,
                                                NULL);
+                if (NT_SUCCESS(Status))
+                    Status = GetSetContext.Status;
             }
         }
 
@@ -167,7 +175,6 @@ NtGetContextThread(IN HANDLE ThreadHandle,
 
         /* Check for success and return the Context */
         if(NT_SUCCESS(Status)) {
-
             _SEH_TRY {
 
                 *ThreadContext = GetSetContext.Context;
@@ -231,12 +238,16 @@ NtSetContextThread(IN HANDLE ThreadHandle,
         if(Thread == PsGetCurrentThread()) {
 
             /*
-             * I don't know if trying to get your own context makes much
+             * I don't know if trying to set your own context makes much
              * sense but we can handle it more efficently.
              */
-            KeContextToTrapFrame(&GetSetContext.Context, NULL, Thread->Tcb.TrapFrame, PreviousMode);
+            KeContextToTrapFrame(ThreadContext, NULL, Thread->Tcb.TrapFrame, PreviousMode);
 
         } else {
+
+            /* Copy context into GetSetContext if not already done */
+            if(PreviousMode == KernelMode)
+                GetSetContext.Context = *ThreadContext;
 
             /* Use an APC... Initialize the Event */
             KeInitializeEvent(&GetSetContext.Event,
@@ -258,7 +269,7 @@ NtSetContextThread(IN HANDLE ThreadHandle,
 
             /* Queue it as a Get APC */
             if (!KeInsertQueueApc(&GetSetContext.Apc,
-                                  NULL,
+                                  (PVOID)0,
                                   NULL,
                                   IO_NO_INCREMENT)) {
 
@@ -272,6 +283,8 @@ NtSetContextThread(IN HANDLE ThreadHandle,
                                                KernelMode,
                                                FALSE,
                                                NULL);
+                if (NT_SUCCESS(Status))
+                    Status = GetSetContext.Status;
             }
         }
 
