@@ -11,10 +11,18 @@
 #define WIN32_LEAN_AND_MEAN
 #define WIN32_NO_STATUS
 #include <windows.h>
+
+#define NTOS_MODE_USER
+#include <ddraw.h>
+#include <ddrawi.h>
+#include <ddk/winddi.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include "teb.h"
+
 #define OPENGL32_GL_FUNC_PROTOTYPES
 #include "opengl32.h"
 
@@ -27,13 +35,12 @@ extern "C" {
 #endif
 
 
-#define EXT_QUERY_OPENGLDRIVERINFO	0x1101 /*!< ExtEscape code to get driver info */
-typedef struct tagEXT_OPENGLDRIVERINFO
+typedef struct _OPENGL_INFO
 {
-	DWORD version;          /*!< Driver interface version */
-	DWORD driver_version;	/*!< Driver version */
-	WCHAR driver_name[256]; /*!< Driver name */
-} EXT_OPENGLDRIVERINFO;
+	DWORD Version;          /*!< Driver interface version */
+	DWORD DriverVersion;    /*!< Driver version */
+	WCHAR DriverName[256];  /*!< Driver name */
+} OPENGL_INFO, *POPENGL_INFO;
 
 
 /*! \brief Append OpenGL Rendering Context (GLRC) to list
@@ -295,7 +302,7 @@ ROSGL_ICDForHDC( HDC hdc )
 	if (dcdata->icd == NULL)
 	{
 		LPCWSTR driverName;
-		EXT_OPENGLDRIVERINFO info;
+		OPENGL_INFO info;
 
 		driverName = _wgetenv( L"OPENGL32_DRIVER" );
 		if (driverName == NULL)
@@ -304,13 +311,13 @@ ROSGL_ICDForHDC( HDC hdc )
 			LONG ret;
 
 			/* get driver name */
-			dwInput = EXT_QUERY_OPENGLDRIVERINFO;
+			dwInput = OPENGL_GETINFO;
 			ret = ExtEscape( hdc, QUERYESCSUPPORT, sizeof (dwInput), (LPCSTR)&dwInput, 0, NULL );
 			if (ret > 0)
 			{
 				dwInput = 0;
-				ret = ExtEscape( hdc, EXT_QUERY_OPENGLDRIVERINFO, sizeof (dwInput),
-				                 (LPCSTR)&dwInput, sizeof (EXT_OPENGLDRIVERINFO),
+				ret = ExtEscape( hdc, OPENGL_GETINFO, sizeof (dwInput),
+				                 (LPCSTR)&dwInput, sizeof (OPENGL_INFO),
 				                 (LPSTR)&info );
 			}
 			if (ret <= 0)
@@ -338,8 +345,8 @@ ROSGL_ICDForHDC( HDC hdc )
 				}
 
 				/* query value */
-				size = sizeof (info.driver_name);
-				ret = RegQueryValueExW( hKey, L"DefaultDriver", 0, &type, (LPBYTE)info.driver_name, &size );
+				size = sizeof (info.DriverName);
+				ret = RegQueryValueExW( hKey, L"DefaultDriver", 0, &type, (LPBYTE)info.DriverName, &size );
 				RegCloseKey( hKey );
 				if (ret != ERROR_SUCCESS || type != REG_SZ)
 				{
@@ -351,10 +358,10 @@ ROSGL_ICDForHDC( HDC hdc )
 		}
 		else
 		{
-			wcsncpy( info.driver_name, driverName, sizeof (info.driver_name) / sizeof (info.driver_name[0]) );
+			wcsncpy( info.DriverName, driverName, sizeof (info.DriverName) / sizeof (info.DriverName[0]) );
 		}
 		/* load driver (or get a reference) */
-		dcdata->icd = OPENGL32_LoadICD( info.driver_name );
+		dcdata->icd = OPENGL32_LoadICD( info.DriverName );
 		if (dcdata->icd == NULL)
 		{
 			WCHAR Buffer[256];
@@ -363,7 +370,7 @@ ROSGL_ICDForHDC( HDC hdc )
 			MessageBox(WindowFromDC( hdc ), Buffer,
 			           L"OPENGL32.dll: Warning",
 			           MB_OK | MB_ICONWARNING);
-                }
+		}
 	}
 
 	return dcdata->icd;
