@@ -41,6 +41,7 @@
 typedef struct _CHECKITEM
 {
     struct _CHECKITEM *Next;
+    ACCESS_MASK AccessMask;
     DWORD State;
     WCHAR Name[1];
 } CHECKITEM, *PCHECKITEM;
@@ -142,6 +143,29 @@ FindCheckItemByIndex(IN PCHECKLISTWND infoPtr,
         }
     }
     
+    return Found;
+}
+
+static UINT
+FindCheckItemIndexByAccessMask(IN PCHECKLISTWND infoPtr,
+                               IN ACCESS_MASK AccessMask)
+{
+    PCHECKITEM Item;
+    UINT Index = 0, Found = -1;
+
+    for (Item = infoPtr->CheckItemListHead;
+         Item != NULL;
+         Item = Item->Next)
+    {
+        if (Item->AccessMask == AccessMask)
+        {
+            Found = Index;
+            break;
+        }
+
+        Index++;
+    }
+
     return Found;
 }
 
@@ -469,6 +493,7 @@ static PCHECKITEM
 AddCheckItem(IN PCHECKLISTWND infoPtr,
              IN LPWSTR Name,
              IN DWORD State,
+             IN ACCESS_MASK AccessMask,
              OUT INT *Index)
 {
     PCHECKITEM CurItem;
@@ -488,6 +513,7 @@ AddCheckItem(IN PCHECKLISTWND infoPtr,
         }
         
         Item->Next = NULL;
+        Item->AccessMask = AccessMask;
         Item->State = State & CIS_MASK;
         wcscpy(Item->Name,
                Name);
@@ -1692,7 +1718,8 @@ CheckListWndProc(IN HWND hwnd,
             INT Index = -1;
             PCHECKITEM Item = AddCheckItem(infoPtr,
                                            (LPWSTR)lParam,
-                                           (DWORD)wParam,
+                                           CIS_NONE,
+                                           (ACCESS_MASK)wParam,
                                            &Index);
             if (Item != NULL)
             {
@@ -1821,6 +1848,13 @@ CheckListWndProc(IN HWND hwnd,
         case CLM_SETQUICKSEARCH_TIMEOUT_SETFOCUS:
         {
             infoPtr->QuickSearchSetFocusDelay = (UINT)wParam;
+            break;
+        }
+        
+        case CLM_FINDITEMBYACCESSMASK:
+        {
+            Ret = (LRESULT)FindCheckItemIndexByAccessMask(infoPtr,
+                                                          (ACCESS_MASK)wParam);
             break;
         }
         
@@ -2129,7 +2163,7 @@ CheckListWndProc(IN HWND hwnd,
                             MakeCheckItemVisible(infoPtr,
                                                  infoPtr->FocusedCheckItem);
 
-                            OtherBox =  ((infoPtr->FocusedCheckItemBox == CLB_ALLOW) ? CLB_DENY : CLB_ALLOW);
+                            OtherBox = ((infoPtr->FocusedCheckItemBox == CLB_ALLOW) ? CLB_DENY : CLB_ALLOW);
                             OtherStateMask = ((OtherBox == CLB_ALLOW) ?
                                               (CIS_ALLOW | CIS_ALLOWDISABLED) :
                                               (CIS_DENY | CIS_DENYDISABLED));

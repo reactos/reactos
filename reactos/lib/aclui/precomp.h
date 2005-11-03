@@ -27,9 +27,15 @@ ULONG DbgPrint(PCH Format,...);
 
 extern HINSTANCE hDllInstance;
 
+typedef struct _ACE_ENTRY
+{
+    struct _ACE_ENTRY *Next;
+} ACE_ENTRY, *PACE_ENTRY;
+
 typedef struct _PRINCIPAL_LISTITEM
 {
     struct _PRINCIPAL_LISTITEM *Next;
+    PACE_ENTRY ACEs;
     SID_NAME_USE SidNameUse;
     WCHAR *DisplayString;
     WCHAR *AccountName;
@@ -130,6 +136,7 @@ InvokeObjectPickerDialog(IN IDsObjectPicker *pDsObjectPicker,
 #define CLM_ENABLEQUICKSEARCH   (WM_USER + 9)
 #define CLM_SETQUICKSEARCH_TIMEOUT_RESET        (WM_USER + 10)
 #define CLM_SETQUICKSEARCH_TIMEOUT_SETFOCUS     (WM_USER + 11)
+#define CLM_FINDITEMBYACCESSMASK    (WM_USER + 12)
 
 #define CLN_CHANGINGITEMCHECKBOX        (101)
 
@@ -147,5 +154,13 @@ RegisterCheckListControl(HINSTANCE hInstance);
 
 VOID
 UnregisterCheckListControl(VOID);
+
+/* DLLMAIN ********************************************************************/
+
+BOOL
+WINAPI
+DllMain(IN HINSTANCE hinstDLL,
+        IN DWORD dwReason,
+        IN LPVOID lpvReserved);
 
 /* EOF */
