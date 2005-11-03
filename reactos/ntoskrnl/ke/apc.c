@@ -17,10 +17,10 @@
 /* FUNCTIONS *****************************************************************/
 
 /*++
- * KiKernelApcDeliveryCheck
+ * KiCheckForKernelApcDelivery
  * @implemented NT 5.2
  *
- *     The KiKernelApcDeliveryCheck routine is called whenever APCs have just
+ *     The KiCheckForKernelApcDelivery routine is called whenever APCs have just
  *     been re-enabled in Kernel Mode, such as after leaving a Critical or
  *     Guarded Region. It delivers APCs if the environment is right.
  *
@@ -38,7 +38,7 @@
  *--*/
 VOID
 STDCALL
-KiKernelApcDeliveryCheck(VOID)
+KiCheckForKernelApcDelivery(VOID)
 {
     /* We should only deliver at passive */
     if (KeGetCurrentIrql() == PASSIVE_LEVEL)
@@ -127,7 +127,7 @@ KeLeaveCriticalRegion (VOID)
             (Thread->SpecialApcDisable == 0))
         {
             /* Check for the right environment */
-            KiKernelApcDeliveryCheck();
+            KiCheckForKernelApcDelivery();
         }
     }
 }

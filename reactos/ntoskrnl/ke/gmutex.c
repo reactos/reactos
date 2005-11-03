@@ -59,7 +59,7 @@ KeLeaveGuardedRegion(VOID)
         if (!IsListEmpty(&Thread->ApcState.ApcListHead[KernelMode]))
         {
             /* Check for APC Delivery */
-            KiKernelApcDeliveryCheck();
+            KiCheckForKernelApcDelivery();
         }
     }
 }

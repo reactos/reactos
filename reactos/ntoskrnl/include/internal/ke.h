@@ -58,7 +58,7 @@ extern ULONG_PTR KERNEL_BASE;
         if (!IsListEmpty(&_Thread->ApcState.ApcListHead[KernelMode]) && \
             (_Thread->SpecialApcDisable == 0)) \
         { \
-            KiKernelApcDeliveryCheck(); \
+            KiCheckForKernelApcDelivery(); \
         } \
     } \
 }
@@ -413,7 +413,7 @@ KiDeliverApc(
 
 VOID
 STDCALL
-KiKernelApcDeliveryCheck(VOID);
+KiCheckForKernelApcDelivery(VOID);
 
 LONG
 STDCALL

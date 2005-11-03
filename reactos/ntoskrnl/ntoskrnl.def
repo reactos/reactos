@@ -653,8 +653,8 @@ KeWaitForSingleObject@20
 @KiAcquireSpinLock@4
 ;KiBugCheckData DATA
 KiCoprocessorError@0
+KiCheckForKernelApcDelivery@0
 KiDeliverApc@12
-KiKernelApcDeliveryCheck@0
 KiDispatchInterrupt@0
 KiEnableTimerWatchdog
 KiInterruptDispatch2@8
