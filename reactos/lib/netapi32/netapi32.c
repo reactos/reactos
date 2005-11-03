@@ -66,6 +66,13 @@ NET_API_STATUS  WINAPI NetServerEnum(
     return ERROR_NO_BROWSER_SERVERS_FOUND;
 }
 
+NET_API_STATUS WINAPI 
+NetServerGetInfo(LPWSTR servername, DWORD level, LPBYTE* bufptr)
+{
+    FIXME("stub (%p, %ld, %p)\n", servername, level, bufptr);
+    return ERROR_ACCESS_DENIED;
+}
+
 
 /************************************************************
  *                NetStatisticsGet  (NETAPI32.@)
