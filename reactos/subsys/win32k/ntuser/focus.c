@@ -200,8 +200,8 @@ co_IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWin
       /* FIXME: Send WM_ACTIVATEAPP to all thread windows. */
    }
 
-   co_IntSendActivateMessages(hWndPrev, hWnd, MouseActivate);
    co_IntSendSetFocusMessages(hWndFocusPrev, hWndFocus);
+   co_IntSendActivateMessages(hWndPrev, hWnd, MouseActivate);
 
    return TRUE;
 }
