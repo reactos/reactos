@@ -52,7 +52,7 @@ INT ScControl(LPTSTR MachineName, LPCTSTR Command, TCHAR **Args)
         _tprintf(_T("Remote service control is not yet implemented\n"));
         return 2;
     }
-/*
+
     hSCManager = OpenSCManager(MachineName, NULL, SC_MANAGER_ALL_ACCESS);
     if (hSCManager == NULL)
     {
@@ -60,7 +60,7 @@ INT ScControl(LPTSTR MachineName, LPCTSTR Command, TCHAR **Args)
         ReportLastError();
         return -1;
     }
-*/
+
 
     if (_tcsicmp(Command, _T("query")) == 0)
         Query(Args, FALSE);
@@ -71,7 +71,7 @@ INT ScControl(LPTSTR MachineName, LPCTSTR Command, TCHAR **Args)
     else if (_tcsicmp(Command, _T("start")) == 0)
     {
         if (*Args)
-            Start(3, Args);
+            Start(0, Args);
         else
             StartUsage();
     }

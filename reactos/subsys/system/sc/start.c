@@ -21,13 +21,15 @@ BOOL Start(INT ArgCount, TCHAR **Args)
     
 
     /* testing */
-    printf("service to start - %s\n\n", ServiceName);
-    printf("Arguments :\n");
+    _tprintf(_T("service to start - %s\n\n"), ServiceName);
+    _tprintf(_T("Arguments :\n"));
     while (*ServiceArgs)
     {
         printf("%s\n", *ServiceArgs);
         ServiceArgs++;
     }
+	if (! *ServiceArgs)
+		ServiceArgs = NULL;
 
     /* get a handle to the service requested for starting */
     hSc = OpenService(hSCManager, ServiceName, SERVICE_ALL_ACCESS);
