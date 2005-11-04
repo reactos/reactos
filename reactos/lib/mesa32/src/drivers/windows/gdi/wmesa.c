@@ -18,7 +18,7 @@
  * Updated for Mesa 4.0 by Karl Schultz (kschultz@sourceforge.net)
  */
 
-#ifdef NDEBUG
+#if defined(NDEBUG) && defined(_MSC_VER)
 #pragma auto_inline(on)
 #pragma inline_depth(255)
 #pragma inline_recursion(on)
@@ -72,7 +72,7 @@
 /* Stereo and parallel not tested for Mesa 4.0. */
 #define NO_STEREO
 #if !defined(NO_STEREO)
-#include "gl\glu.h"
+#include "GL/glu.h"
 #include "stereo.h"
 #endif
 
@@ -112,6 +112,8 @@ WMesaContext WC = NULL;
 
 #if defined(_MSC_VER) && _MSC_VER >= 1200
 #define FORCEINLINE __forceinline
+#elif defined(__GNUC__) && (__GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ >= 1))
+#define FORCEINLINE __attribute__((always_inline))
 #else
 #define FORCEINLINE __inline
 #endif
@@ -470,7 +472,7 @@ static void clear(GLcontext* ctx, GLbitfield mask,
    mask &= ~DD_BACK_LEFT_BIT; 
 #endif // DDRAW 
 #else 
-   DWORD   dwColor; 
+   DWORD   dwColor = 0; 
    WORD    wColor; 
    BYTE    bColor; 
    LPDWORD lpdw = (LPDWORD)Current->pbPixels; 
@@ -521,8 +523,6 @@ static void clear(GLcontext* ctx, GLbitfield mask,
          GetGValue(Current->clearpixel), 
          GetBValue(Current->clearpixel)); 
    }
-   else
-       dwColor = 0;
 
    if (nBypp != 3) 
    { 

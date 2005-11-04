@@ -29,7 +29,7 @@
 #include "assyntax.h"
 #include "glapioffsets.h"
 
-#ifndef __WIN32__
+#if 1 //ndef __WIN32__
 
 #if defined(STDCALL_API)
 # if defined(USE_MGL_NAMESPACE)

@@ -286,7 +286,7 @@ fetch_texel_2d_f_rgb_dxt1( const struct gl_texture_image *texImage,
                             GLint i, GLint j, GLint k, GLfloat *texel )
 {
    /* just sample as GLchan and convert to float here */
-   GLchan rgba[4];
+   GLchan rgba[4] = {0, 0, 0, 0};
    fetch_texel_2d_rgb_dxt1(texImage, i, j, k, rgba);
    texel[RCOMP] = CHAN_TO_FLOAT(rgba[RCOMP]);
    texel[GCOMP] = CHAN_TO_FLOAT(rgba[GCOMP]);
@@ -308,7 +308,7 @@ fetch_texel_2d_f_rgba_dxt1( const struct gl_texture_image *texImage,
                             GLint i, GLint j, GLint k, GLfloat *texel )
 {
    /* just sample as GLchan and convert to float here */
-   GLchan rgba[4];
+   GLchan rgba[4] = {0, 0, 0, 0};
    fetch_texel_2d_rgba_dxt1(texImage, i, j, k, rgba);
    texel[RCOMP] = CHAN_TO_FLOAT(rgba[RCOMP]);
    texel[GCOMP] = CHAN_TO_FLOAT(rgba[GCOMP]);
@@ -330,7 +330,7 @@ fetch_texel_2d_f_rgba_dxt3( const struct gl_texture_image *texImage,
                             GLint i, GLint j, GLint k, GLfloat *texel )
 {
    /* just sample as GLchan and convert to float here */
-   GLchan rgba[4];
+   GLchan rgba[4] = {0, 0, 0, 0};
    fetch_texel_2d_rgba_dxt3(texImage, i, j, k, rgba);
    texel[RCOMP] = CHAN_TO_FLOAT(rgba[RCOMP]);
    texel[GCOMP] = CHAN_TO_FLOAT(rgba[GCOMP]);
@@ -352,7 +352,7 @@ fetch_texel_2d_f_rgba_dxt5( const struct gl_texture_image *texImage,
                             GLint i, GLint j, GLint k, GLfloat *texel )
 {
    /* just sample as GLchan and convert to float here */
-   GLchan rgba[4];
+   GLchan rgba[4] = {0, 0, 0, 0};
    fetch_texel_2d_rgba_dxt5(texImage, i, j, k, rgba);
    texel[RCOMP] = CHAN_TO_FLOAT(rgba[RCOMP]);
    texel[GCOMP] = CHAN_TO_FLOAT(rgba[GCOMP]);

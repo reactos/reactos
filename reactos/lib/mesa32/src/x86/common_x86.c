@@ -132,6 +132,36 @@ static void sigfpe_handler( int signal, struct sigcontext sc )
 }
 #endif /* __linux__ && _POSIX_SOURCE && X86_FXSR_MAGIC */
 
+#if defined(WIN32)
+#ifndef STATUS_FLOAT_MULTIPLE_TRAPS
+# define STATUS_FLOAT_MULTIPLE_TRAPS (0xC00002B5L)
+#endif
+static LONG WINAPI ExceptionFilter(LPEXCEPTION_POINTERS exp)
+{
+   PEXCEPTION_RECORD rec = exp->ExceptionRecord;
+   PCONTEXT ctx = exp->ContextRecord;
+
+   if ( rec->ExceptionCode == EXCEPTION_ILLEGAL_INSTRUCTION ) {
+      message( "EXCEPTION_ILLEGAL_INSTRUCTION, " );
+      _mesa_x86_cpu_features &= ~(X86_FEATURE_XMM);
+   } else if ( rec->ExceptionCode == STATUS_FLOAT_MULTIPLE_TRAPS ) {
+      message( "STATUS_FLOAT_MULTIPLE_TRAPS, " );
+      /* Windows seems to clear the exception flag itself, we just have to increment Eip */
+   } else {
+      message( "UNEXPECTED EXCEPTION (0x%08x), terminating!" );
+      return EXCEPTION_EXECUTE_HANDLER;
+   }
+
+   if ( (ctx->ContextFlags & CONTEXT_CONTROL) != CONTEXT_CONTROL ) {
+      message( "Context does not contain control registers, terminating!" );
+      return EXCEPTION_EXECUTE_HANDLER;
+   }
+   ctx->Eip += 3;
+
+   return EXCEPTION_CONTINUE_EXECUTION;
+}
+#endif /* WIN32 */
+
 /* If we're running on a processor that can do SSE, let's see if we
  * are allowed to or not.  This will catch 2.4.0 or later kernels that
  * haven't been configured for a Pentium III but are running on one,
@@ -225,6 +255,44 @@ static void check_os_sse_support( void )
       ret = sysctlbyname("hw.instruction_sse", &enabled, &len, NULL, 0);
       if (ret || !enabled)
          _mesa_x86_cpu_features &= ~(X86_FEATURE_XMM);
+   }
+#elif defined(WIN32)
+   LPTOP_LEVEL_EXCEPTION_FILTER oldFilter;
+
+   /* Install our ExceptionFilter */
+   oldFilter = SetUnhandledExceptionFilter( ExceptionFilter );
+
+   if ( cpu_has_xmm ) {
+      message( "Testing OS support for SSE... " );
+
+      _mesa_test_os_sse_support();
+
+      if ( cpu_has_xmm ) {
+	 message( "yes.\n" );
+      } else {
+	 message( "no!\n" );
+      }
+   }
+
+   if ( cpu_has_xmm ) {
+      message( "Testing OS support for SSE unmasked exceptions... " );
+
+      _mesa_test_os_sse_exception_support();
+
+      if ( cpu_has_xmm ) {
+	 message( "yes.\n" );
+      } else {
+	 message( "no!\n" );
+      }
+   }
+
+   /* Restore previous exception filter */
+   SetUnhandledExceptionFilter( oldFilter );
+
+   if ( cpu_has_xmm ) {
+      message( "Tests of OS support for SSE passed.\n" );
+   } else {
+      message( "Tests of OS support for SSE failed!\n" );
    }
 #else
    /* Do nothing on other platforms for now.
