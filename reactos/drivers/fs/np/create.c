@@ -113,6 +113,7 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
   PNPFS_FCB ClientFcb;
   PNPFS_FCB ServerFcb = NULL;
   PNPFS_DEVICE_EXTENSION DeviceExt;
+  BOOLEAN SpecialAccess;
 
   DPRINT("NpfsCreate(DeviceObject %p Irp %p)\n", DeviceObject, Irp);
 
@@ -123,6 +124,12 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
   DPRINT("FileName %wZ\n", &FileObject->FileName);
 
   Irp->IoStatus.Information = 0;
+
+  SpecialAccess = ((IoStack->Parameters.CreatePipe.ShareAccess & 3) == 3);
+  if (SpecialAccess)
+    {
+      DPRINT("NpfsCreate() open client end for special use!\n");
+    }
 
   /*
    * Step 1. Find the pipe we're trying to open.
@@ -165,7 +172,7 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
   ClientFcb->Pipe = Pipe;
   ClientFcb->PipeEnd = FILE_PIPE_CLIENT_END;
   ClientFcb->OtherSide = NULL;
-  ClientFcb->PipeState = FILE_PIPE_DISCONNECTED_STATE;
+  ClientFcb->PipeState = SpecialAccess ? 0 : FILE_PIPE_DISCONNECTED_STATE;
   InitializeListHead(&ClientFcb->ReadRequestListHead);
 
   DPRINT("Fcb: %x\n", ClientFcb);
@@ -204,56 +211,67 @@ NpfsCreate(PDEVICE_OBJECT DeviceObject,
    * Step 3. Search for listening server FCB.
    */
 
-  /*
-   * WARNING: Point of no return! Once we get the server FCB it's
-   * possible that we completed a wait request and so we have to
-   * complete even this request.
-   */
-
-  ServerFcb = NpfsFindListeningServerInstance(Pipe);
-  if (ServerFcb == NULL)
+  if (!SpecialAccess)
     {
-      PLIST_ENTRY CurrentEntry;
-      PNPFS_FCB Fcb;
-
       /*
-       * If no waiting server FCB was found then try to pick
-       * one of the listing server FCB on the pipe.
+       * WARNING: Point of no return! Once we get the server FCB it's
+       * possible that we completed a wait request and so we have to
+       * complete even this request.
        */
 
-      CurrentEntry = Pipe->ServerFcbListHead.Flink;
-      while (CurrentEntry != &Pipe->ServerFcbListHead)
-        {
-          Fcb = CONTAINING_RECORD(CurrentEntry, NPFS_FCB, FcbListEntry);
-          if (Fcb->PipeState == FILE_PIPE_LISTENING_STATE)
-            {
-              ServerFcb = Fcb;
-              break;
-            }
-          CurrentEntry = CurrentEntry->Flink;
-        }
-
-      /*
-       * No one is listening to me?! I'm so lonely... :(
-       */
-
+      ServerFcb = NpfsFindListeningServerInstance(Pipe);
       if (ServerFcb == NULL)
         {
-          /* Not found, bail out with error for FILE_OPEN requests. */
-          DPRINT("No listening server fcb found!\n");
-          if (ClientFcb->Data)
-            ExFreePool(ClientFcb->Data);
-          KeUnlockMutex(&Pipe->FcbListLock);
-          Irp->IoStatus.Status = STATUS_PIPE_NOT_AVAILABLE;
-          IoCompleteRequest(Irp, IO_NO_INCREMENT);
-          return STATUS_PIPE_NOT_AVAILABLE;
+          PLIST_ENTRY CurrentEntry;
+          PNPFS_FCB Fcb;
+
+          /*
+           * If no waiting server FCB was found then try to pick
+           * one of the listing server FCB on the pipe.
+           */
+
+          CurrentEntry = Pipe->ServerFcbListHead.Flink;
+          while (CurrentEntry != &Pipe->ServerFcbListHead)
+            {
+              Fcb = CONTAINING_RECORD(CurrentEntry, NPFS_FCB, FcbListEntry);
+              if (Fcb->PipeState == FILE_PIPE_LISTENING_STATE)
+                {
+                  ServerFcb = Fcb;
+                  break;
+                }
+              CurrentEntry = CurrentEntry->Flink;
+            }
+
+          /*
+           * No one is listening to me?! I'm so lonely... :(
+           */
+
+          if (ServerFcb == NULL)
+            {
+              /* Not found, bail out with error for FILE_OPEN requests. */
+              DPRINT("No listening server fcb found!\n");
+              if (ClientFcb->Data)
+                ExFreePool(ClientFcb->Data);
+              KeUnlockMutex(&Pipe->FcbListLock);
+              Irp->IoStatus.Status = STATUS_PIPE_BUSY;
+              IoCompleteRequest(Irp, IO_NO_INCREMENT);
+              return STATUS_PIPE_BUSY;
+            }
+        }
+      else
+        {
+          /* Signal the server thread and remove it from the waiter list */
+          /* FIXME: Merge this with the NpfsFindListeningServerInstance routine. */
+          NpfsSignalAndRemoveListeningServerInstance(Pipe, ServerFcb);
         }
     }
-  else
+  else if (IsListEmpty(&Pipe->ServerFcbListHead))
     {
-      /* Signal the server thread and remove it from the waiter list */
-      /* FIXME: Merge this with the NpfsFindListeningServerInstance routine. */
-      NpfsSignalAndRemoveListeningServerInstance(Pipe, ServerFcb);
+      DPRINT("No server fcb found!\n");
+      KeUnlockMutex(&Pipe->FcbListLock);
+      Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
+      IoCompleteRequest(Irp, IO_NO_INCREMENT);
+      return STATUS_UNSUCCESSFUL;
     }
 
   /*

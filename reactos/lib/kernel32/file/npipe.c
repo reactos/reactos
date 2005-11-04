@@ -15,12 +15,6 @@
 #define NDEBUG
 #include "../include/debug.h"
 
-/* FIXME - defined in ntifs.h */
-#if !defined(FILE_PIPE_BYTE_STREAM_TYPE) && !defined(FILE_PIPE_MESSAGE_TYPE)
-#define FILE_PIPE_BYTE_STREAM_TYPE      0x00000000
-#define FILE_PIPE_MESSAGE_TYPE          0x00000001
-#endif
-
 /* FUNCTIONS ****************************************************************/
 
 /*
@@ -78,6 +72,7 @@ CreateNamedPipeW(LPCWSTR lpName,
    HANDLE PipeHandle;
    ACCESS_MASK DesiredAccess;
    ULONG CreateOptions;
+   ULONG CreateDisposition;
    ULONG WriteModeMessage;
    ULONG ReadModeMessage;
    ULONG NonBlocking;
@@ -85,12 +80,6 @@ CreateNamedPipeW(LPCWSTR lpName,
    ULONG ShareAccess, Attributes;
    LARGE_INTEGER DefaultTimeOut;
    PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
-   
-   if (nMaxInstances == 0 || nMaxInstances > PIPE_UNLIMITED_INSTANCES)
-   {
-       SetLastError(ERROR_INVALID_PARAMETER);
-       return INVALID_HANDLE_VALUE;
-   }
 
    Result = RtlDosPathNameToNtPathName_U((LPWSTR)lpName,
 					 &NamedPipeName,
@@ -119,40 +108,77 @@ CreateNamedPipeW(LPCWSTR lpName,
 			      NULL,
 			      SecurityDescriptor);
 
-   DesiredAccess = SYNCHRONIZE | (dwOpenMode & (WRITE_DAC | WRITE_OWNER | ACCESS_SYSTEM_SECURITY));
+   DesiredAccess = 0;
    ShareAccess = 0;
+   CreateDisposition = FILE_OPEN_IF;
    CreateOptions = 0;
-
    if (dwOpenMode & FILE_FLAG_WRITE_THROUGH)
-       CreateOptions |= FILE_WRITE_THROUGH;
+     {
+	CreateOptions = CreateOptions | FILE_WRITE_THROUGH;
+     }
    if (!(dwOpenMode & FILE_FLAG_OVERLAPPED))
-       CreateOptions |= FILE_SYNCHRONOUS_IO_NONALERT;
-
-   if (dwOpenMode & PIPE_ACCESS_INBOUND)
      {
-	   ShareAccess |= FILE_SHARE_WRITE;
-	   DesiredAccess |= GENERIC_READ;
+	CreateOptions = CreateOptions | FILE_SYNCHRONOUS_IO_NONALERT;
      }
-   if (dwOpenMode & PIPE_ACCESS_OUTBOUND)
+   if (dwOpenMode & PIPE_ACCESS_DUPLEX)
      {
-	   ShareAccess |= FILE_SHARE_READ;
-	   DesiredAccess |= GENERIC_WRITE;
+	CreateOptions = CreateOptions | FILE_PIPE_FULL_DUPLEX;
+	DesiredAccess |= (FILE_GENERIC_READ | FILE_GENERIC_WRITE);
+     }
+   else if (dwOpenMode & PIPE_ACCESS_INBOUND)
+     {
+	CreateOptions = CreateOptions | FILE_PIPE_INBOUND;
+	DesiredAccess |= FILE_GENERIC_READ;
+     }
+   else if (dwOpenMode & PIPE_ACCESS_OUTBOUND)
+     {
+	CreateOptions = CreateOptions | FILE_PIPE_OUTBOUND;
+	DesiredAccess |= FILE_GENERIC_WRITE;
      }
 
-   if (dwPipeMode & PIPE_TYPE_MESSAGE)
-       WriteModeMessage = FILE_PIPE_MESSAGE_TYPE;
+   if (dwPipeMode & PIPE_TYPE_BYTE)
+     {
+	WriteModeMessage = FILE_PIPE_BYTE_STREAM_MODE;
+     }
+   else if (dwPipeMode & PIPE_TYPE_MESSAGE)
+     {
+	WriteModeMessage = FILE_PIPE_MESSAGE_MODE;
+     }
    else
-       WriteModeMessage = FILE_PIPE_BYTE_STREAM_TYPE;
+     {
+	WriteModeMessage = FILE_PIPE_BYTE_STREAM_MODE;
+     }
 
-   if (dwPipeMode & PIPE_READMODE_MESSAGE)
-       ReadModeMessage = FILE_PIPE_MESSAGE_MODE;
+   if (dwPipeMode & PIPE_READMODE_BYTE)
+     {
+	ReadModeMessage = FILE_PIPE_BYTE_STREAM_MODE;
+     }
+   else if (dwPipeMode & PIPE_READMODE_MESSAGE)
+     {
+	ReadModeMessage = FILE_PIPE_MESSAGE_MODE;
+     }
    else
-       ReadModeMessage = FILE_PIPE_BYTE_STREAM_MODE;
+     {
+	ReadModeMessage = FILE_PIPE_BYTE_STREAM_MODE;
+     }
 
-   if (dwPipeMode & PIPE_NOWAIT)
-       NonBlocking = FILE_PIPE_COMPLETE_OPERATION;
+   if (dwPipeMode & PIPE_WAIT)
+     {
+	NonBlocking = FILE_PIPE_QUEUE_OPERATION;
+     }
+   else if (dwPipeMode & PIPE_NOWAIT)
+     {
+	NonBlocking = FILE_PIPE_COMPLETE_OPERATION;
+     }
    else
-       NonBlocking = FILE_PIPE_QUEUE_OPERATION;
+     {
+	NonBlocking = FILE_PIPE_QUEUE_OPERATION;
+     }
+
+   if (nMaxInstances >= PIPE_UNLIMITED_INSTANCES)
+     {
+	nMaxInstances = 0xFFFFFFFF;
+     }
 
    DefaultTimeOut.QuadPart = nDefaultTimeOut * -10000LL;
 
@@ -161,7 +187,7 @@ CreateNamedPipeW(LPCWSTR lpName,
 				  &ObjectAttributes,
 				  &Iosb,
 				  ShareAccess,
-				  FILE_OPEN_IF,
+				  CreateDisposition,
 				  CreateOptions,
 				  WriteModeMessage,
 				  ReadModeMessage,
