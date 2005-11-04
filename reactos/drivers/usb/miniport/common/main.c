@@ -199,16 +199,6 @@ AddDevice(
 	PUSBMP_DEVICE_EXTENSION DeviceExtension;
 	ULONG DeviceNumber;
 
-	/* FIXME: actually, we prevent multiple USB controllers on a computer */
-	static BOOLEAN xbox_workaround = FALSE;
-
-	DPRINT("USBMP: AddDevice called\n");
-	
-	if (xbox_workaround)
-		// Fail for any other host controller than the first
-		return STATUS_INSUFFICIENT_RESOURCES;
-	xbox_workaround = TRUE;
-
 	// Allocate driver extension now
 	DriverExtension = IoGetDriverObjectExtension(DriverObject, DriverObject);
 	if (DriverExtension == NULL)

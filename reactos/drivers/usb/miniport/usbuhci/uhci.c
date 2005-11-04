@@ -26,6 +26,7 @@ InitLinuxWrapper(PDEVICE_OBJECT DeviceObject)
 	/* Initialize generic linux structure */
 	dev->irq = DeviceExtension->InterruptVector;
 	dev->dev_ext = (PVOID)DeviceExtension;
+	dev->dev.dev_ext = (PVOID)DeviceExtension;
 	dev->slot_name = ExAllocatePoolWithTag(NonPagedPool, 128, USB_UHCI_TAG); // 128 max len for slot name
 	init_wrapper(dev);
 	
@@ -47,10 +48,6 @@ InitLinuxWrapper(PDEVICE_OBJECT DeviceObject)
 
 	/* Probe device with real id now */
 	uhci_pci_driver.probe(dev, uhci_pci_ids);
-
-//	DPRINT1("UHCI :SysIoBusNumA %d\n",DeviceExtension->SystemIoBusNumber);
-//	DeviceExtension->SystemIoBusNumber = dev->bus->number;
-//	DPRINT1("UHCI: SysIoBusNumB %d\n",DeviceExtension->SystemIoBusNumber);
 
 	return Status; 
 }

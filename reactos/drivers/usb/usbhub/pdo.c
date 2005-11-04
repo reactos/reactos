@@ -149,11 +149,7 @@ UsbhubPdoQueryDeviceText(
 
 	switch (DeviceTextType)
 	{
-		/*case DeviceTextDescription:
-		{
-			DPRINT1("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_TEXT / DeviceTextDescription\n");
-			return STATUS_NOT_IMPLEMENTED;
-		}*/
+		case DeviceTextDescription:
 		case DeviceTextLocationInformation:
 		{
 			unsigned short size;
@@ -161,7 +157,11 @@ UsbhubPdoQueryDeviceText(
 			PWCHAR buf;
 			PWCHAR bufret;
 
-			DPRINT("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_TEXT / DeviceTextLocationInformation\n");
+			if (DeviceTextType == DeviceTextDescription)
+				DPRINT("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_TEXT / DeviceTextDescription\n");
+			else
+				DPRINT("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_TEXT / DeviceTextLocationInformation\n");
+			
 			if (!DeviceExtension->dev->descriptor.iProduct)
 				return STATUS_NOT_SUPPORTED;
 

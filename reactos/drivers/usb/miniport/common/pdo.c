@@ -286,37 +286,20 @@ UsbMpPnpPdo(
 			Status = Irp->IoStatus.Status;
 			break;
 		}
-#if 0 /* FIXME */
 		case IRP_MN_QUERY_DEVICE_TEXT: /* 0x0c */
 		{
 			switch (Stack->Parameters.QueryDeviceText.DeviceTextType)
 			{
 				case DeviceTextDescription:
 				{
-					ULONG DescriptionSize;
-					PWSTR Description;
+					UNICODE_STRING SourceString = RTL_CONSTANT_STRING(L"Root USB hub");
+					UNICODE_STRING Description;
+					
 					DPRINT("USBMP: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_TEXT / DeviceTextDescription\n");
 					
-					Status = IoGetDeviceProperty(
-						DeviceObject,
-						DevicePropertyDeviceDescription,
-						0, NULL,
-						&DescriptionSize);
-					if (Status == STATUS_BUFFER_TOO_SMALL)
-					{
-						Description = ExAllocatePool(PagedPool, DescriptionSize);
-						if (!Description)
-							Status = STATUS_INSUFFICIENT_RESOURCES;
-						else
-						{
-							Status = IoGetDeviceProperty(
-								DeviceObject,
-								DevicePropertyDeviceDescription,
-								DescriptionSize, Description,
-								&DescriptionSize);
-							Information = DescriptionSize;
-						}
-					}
+					Status = RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, &SourceString, &Description);
+					if (NT_SUCCESS(Status))
+						Information = (ULONG_PTR)Description.Buffer;
 					break;
 				}
 				case DeviceTextLocationInformation:
@@ -337,7 +320,6 @@ UsbMpPnpPdo(
 			}
 			break;
 		}
-#endif
 		case IRP_MN_QUERY_ID: /* 0x13 */
 		{
 			Status = UsbMpPdoQueryId(DeviceObject, Irp, &Information);

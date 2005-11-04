@@ -7,7 +7,7 @@
         Lots of definitions should go to corresponding files
 */
 
-#include <ddk/ntddk.h>
+#include <ddk/ntifs.h>
 #include <ddk/kbdmou.h>
 #include <debug.h>
 
