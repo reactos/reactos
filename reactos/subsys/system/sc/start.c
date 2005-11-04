@@ -11,14 +11,11 @@
 
 #include "sc.h"
 
-BOOL Start(INT ArgCount, TCHAR **Args)
+BOOL Start(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, INT ArgCount)
 {
     SC_HANDLE hSc;
     SERVICE_STATUS_PROCESS ServiceStatus;
-    LPCTSTR ServiceName = *Args++;
-    LPCTSTR *ServiceArgs = (LPCTSTR *)Args;
     DWORD BytesNeeded;
-    
 
     /* testing */
     _tprintf(_T("service to start - %s\n\n"), ServiceName);
@@ -28,8 +25,7 @@ BOOL Start(INT ArgCount, TCHAR **Args)
         printf("%s\n", *ServiceArgs);
         ServiceArgs++;
     }
-	if (! *ServiceArgs)
-		ServiceArgs = NULL;
+    
 
     /* get a handle to the service requested for starting */
     hSc = OpenService(hSCManager, ServiceName, SERVICE_ALL_ACCESS);

@@ -142,13 +142,25 @@ INT DeleteUsage(VOID)
 
 INT CreateUsage(VOID)
 {
-    _tprintf(_T("DESCRIPTION:\n")
-                _T("Creates a service entry in the registry and Service Database.\n")
-                _T("        If the service is running, or another process has an\n")
-                _T("        open handle to the service, the service is simply marked\n")
-                _T("        for deletion.\n")
-                _T("USAGE:\n")
-                _T("        sc <server> delete [service name]\n"));
+    _tprintf(_T("Creates a service entry in the registry and Service Database.\n")
+                _T("SYNTAX:\n")
+                _T("sc create [service name] [binPath= ] <option1> <option2>...\n")
+                _T("CREATE OPTIONS:\n")
+                _T("NOTE: The option name includes the equal sign.\n")
+                _T(" type= <own|share|interact|kernel|filesys|rec>\n")
+                _T("       (default = own)\n")
+                _T(" start= <boot|system|auto|demand|disabled>\n")
+                _T("       (default = demand)\n")
+                _T(" error= <normal|severe|critical|ignore>\n")
+                _T("       (default = normal)\n")
+                _T(" binPath= <BinaryPathName>\n")
+                _T(" group= <LoadOrderGroup>\n")
+                _T(" tag= <yes|no>\n")
+                _T(" depend= <Dependencies(separated by / (forward slash))>\n")
+                _T(" obj= <AccountName|ObjectName>\n")
+                _T("       (default = LocalSystem)\n")
+                _T(" DisplayName= <display name>\n")
+                _T(" password= <password>\n"));
 
     return 0;
 }

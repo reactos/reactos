@@ -11,12 +11,14 @@
 
 #include "sc.h"
 
-BOOL Create(TCHAR **Args)
+BOOL Create(LPCTSTR ServiceName, LPCTSTR *ServiceArgs)
 {
     SC_HANDLE hSc;
-    LPCTSTR ServiceName = *Args;
-    LPCTSTR BinaryPathName = *++Args;
-    LPCTSTR *Options = (LPCTSTR *)++Args;
+    LPCTSTR BinaryPathName = *++ServiceArgs;
+    LPCTSTR *Options = ++ServiceArgs;
+    
+    if ((! ServiceName) || (! BinaryPathName))
+        return CreateUsage();
     
     /* testing */
     printf("service to create - %s\n", ServiceName);
@@ -27,7 +29,6 @@ BOOL Create(TCHAR **Args)
         printf("%s\n", *Options);
         Options++;
     }
-
 
     hSc = CreateService(hSCManager,
                         ServiceName,

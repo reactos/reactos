@@ -7,11 +7,11 @@ extern SC_HANDLE hSCManager; // declared in sc.c
 //#define DBG
 
 /* control functions */
-BOOL Query(TCHAR **Args, BOOL bExtended);
-BOOL Start(INT ArgCount, TCHAR **Args);
-BOOL Create(TCHAR **Args);
-BOOL Delete(TCHAR **Args);
-BOOL Control(DWORD Control, TCHAR **Args);
+BOOL Query(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, BOOL bExtended);
+BOOL Start(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, INT ArgCount);
+BOOL Create(LPCTSTR ServiceName, LPCTSTR *ServiceArgs);
+BOOL Delete(LPCTSTR ServiceName);
+BOOL Control(DWORD Control, LPCTSTR ServiceName, LPCTSTR *Args);
 
 /* print and error functions */
 DWORD ReportLastError(VOID);
@@ -25,3 +25,5 @@ INT ContinueUsage(VOID);
 INT StopUsage(VOID);
 INT ConfigUsage(VOID);
 INT DescriptionUsage(VOID);
+INT DeleteUsage(VOID);
+INT CreateUsage(VOID);

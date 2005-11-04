@@ -44,8 +44,14 @@ DWORD ReportLastError(VOID)
 }
 
 
-INT ScControl(LPTSTR MachineName, LPCTSTR Command, TCHAR **Args)
+INT ScControl(LPTSTR MachineName,   // remote machine name
+              LPCTSTR Command,      // sc command
+              LPCTSTR ServiceName,  // name of service
+              LPCTSTR *ServiceArgs, // any options
+              DWORD ArgCount)       // argument counter
 {
+    /* count trailing arguments */
+    ArgCount -= 3;
 
     if (MachineName)
     {
@@ -61,66 +67,66 @@ INT ScControl(LPTSTR MachineName, LPCTSTR Command, TCHAR **Args)
         return -1;
     }
 
-
+    /* emurate command */
     if (_tcsicmp(Command, _T("query")) == 0)
-        Query(Args, FALSE);
+        Query(ServiceName, ServiceArgs, FALSE);
         
     else if (_tcsicmp(Command, _T("queryex")) == 0)
-        Query(Args, TRUE);
+        Query(ServiceName, ServiceArgs, TRUE);
         
     else if (_tcsicmp(Command, _T("start")) == 0)
     {
-        if (*Args)
-            Start(0, Args);
+        if (ServiceName)
+            Start(ServiceName, ServiceArgs, ArgCount);
         else
             StartUsage();
     }
     else if (_tcsicmp(Command, _T("pause")) == 0)
     {
-        if (*Args)
-            Control(SERVICE_CONTROL_PAUSE, Args);
+        if (ServiceName)
+            Control(SERVICE_CONTROL_PAUSE, ServiceName, ServiceArgs);
         else
             PauseUsage();
     }
     else if (_tcsicmp(Command, _T("interrogate")) == 0)
     {
-        if (*Args)
-            Control(SERVICE_CONTROL_INTERROGATE, Args);
+        if (ServiceName)
+            Control(SERVICE_CONTROL_INTERROGATE, ServiceName, ServiceArgs);
         else
             InterrogateUsage();
     }
     else if (_tcsicmp(Command, _T("stop")) == 0)
     {
-        if (*Args)
-            Control(SERVICE_CONTROL_STOP, Args);
+        if (ServiceName)
+            Control(SERVICE_CONTROL_STOP, ServiceName, ServiceArgs);
         else
             StopUsage();
     }
     else if (_tcsicmp(Command, _T("continue")) == 0)
     {
-        if (*Args)
-            Control(SERVICE_CONTROL_CONTINUE, Args);
+        if (ServiceName)
+            Control(SERVICE_CONTROL_CONTINUE, ServiceName, ServiceArgs);
         else
             ContinueUsage();
     }
     else if (_tcsicmp(Command, _T("delete")) == 0)
     {
-        if (*Args)
-            Delete(Args);
+        if (ServiceName)
+            Delete(ServiceName);
         else
             DeleteUsage();
     }
     else if (_tcsicmp(Command, _T("create")) == 0)
     {
-        if (*Args)
-            Create(Args);
+        if (*ServiceArgs)
+            Create(ServiceName, ServiceArgs);
         else
             CreateUsage();
     }
     else if (_tcsicmp(Command, _T("control")) == 0)
     {
-        if (*Args)
-            Control((DWORD)NULL, ++Args);
+        if (ServiceName)
+            Control((DWORD)NULL, ServiceName, ServiceArgs);
         else
             ContinueUsage();
     }
@@ -130,10 +136,9 @@ INT ScControl(LPTSTR MachineName, LPCTSTR Command, TCHAR **Args)
 
 int _tmain(DWORD argc, LPCTSTR argv[])
 {
-    LPTSTR MachineName = NULL;  // remote machine
-    LPCTSTR Command = argv[1];  // sc command
-    TCHAR **Args = NULL;        // rest of args
-    
+    LPTSTR MachineName = NULL;   // remote machine
+    LPCTSTR Command = NULL;      // sc command
+    LPCTSTR ServiceName = NULL;  // Name of service
 
     if (argc < 2)
         return MainUsage();
@@ -146,13 +151,16 @@ int _tmain(DWORD argc, LPCTSTR argv[])
 
         _tcscpy(MachineName, argv[1]);
         Command = argv[2];
-        Args = (TCHAR **)&argv[3];
-        return ScControl(MachineName, Command, Args);
+        if (argc > 3)
+            ServiceName = argv[3];
+        return ScControl(MachineName, Command, ServiceName,  &argv[4], argc);
     }
     else
     {
-        Args = (TCHAR **)&argv[2];
-        return ScControl(MachineName, Command, Args);
+        Command = argv[1];
+        if (argc > 2)
+            ServiceName = argv[2];
+        return ScControl(MachineName, Command, ServiceName, &argv[3], argc);
     }
 
     return MainUsage();

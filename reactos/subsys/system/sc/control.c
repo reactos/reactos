@@ -16,14 +16,26 @@
  * control, continue, interrogate, pause, stop
  */
 
-BOOL Control(DWORD Control, TCHAR **Args)
+BOOL Control(DWORD Control, LPCTSTR ServiceName, LPCTSTR *Args)
 {
     SC_HANDLE hSc;
     SERVICE_STATUS Status;
-    LPCTSTR ServiceName = *Args;
+    
+    /* testing */
+    _tprintf(_T("service to control - %s\n\n"), ServiceName);
+    _tprintf(_T("command - %lu\n\n"), Control);
+    _tprintf(_T("Arguments :\n"));
+    while (*Args)
+    {
+        printf("%s\n", *Args);
+        Args++;
+    }
 
 
-    hSc = OpenService(hSCManager, ServiceName, DELETE);
+    hSc = OpenService(hSCManager, ServiceName,
+                      SERVICE_INTERROGATE | SERVICE_PAUSE_CONTINUE |
+                      SERVICE_STOP | SERVICE_USER_DEFINED_CONTROL |
+                      SERVICE_QUERY_STATUS);
 
     if (hSc == NULL)
     {
@@ -40,6 +52,9 @@ BOOL Control(DWORD Control, TCHAR **Args)
     }
 
     CloseServiceHandle(hSc);
+    
+    /* print the status information */
+    
     return TRUE;
 
 }

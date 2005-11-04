@@ -12,32 +12,31 @@
 #include "sc.h"
 
 /* local function decs */
-VOID PrintService(ENUM_SERVICE_STATUS_PROCESS *pSStatus, BOOL bExtended);
+VOID PrintService(BOOL bExtended);
 INT EnumServices(DWORD ServiceType, DWORD ServiceState);
 
 /* global variables */
 static ENUM_SERVICE_STATUS_PROCESS *pServiceStatus = NULL;
 
-BOOL
-Query(TCHAR **Args, BOOL bExtended)
+
+BOOL Query(LPCTSTR ServiceName, LPCTSTR *ServiceArgs, BOOL bExtended)
 {
             
-    LPCTSTR ServiceName = *Args;
-
-    if (! *Args)
+    if (! ServiceName)
     {
-        printf("Service name %s\n", ServiceName); // test
+        /* display all running services and drivers */
+        _tprintf(_T("No service name, displaying all services\n")); // test
 
         /* get default values */
         EnumServices(SERVICE_WIN32, SERVICE_ACTIVE);
         
         /* print default values */
-        PrintService(pServiceStatus, bExtended);
+        PrintService(bExtended);
     }
-    
-    if (_tcsicmp(Args[0], _T("type=")) == 0)
+    else if (_tcsicmp(ServiceName, _T("type=")) == 0)
     {
-        TCHAR *Type = *++Args;
+        LPCTSTR Type = *ServiceArgs;
+        
         _tprintf(_T("got type\narg = %s\n"), Type); // test
         if (_tcsicmp(Type, _T("driver")) == 0)
             EnumServices(SERVICE_DRIVER, SERVICE_STATE_ALL);
@@ -51,11 +50,11 @@ Query(TCHAR **Args, BOOL bExtended)
             _tprintf(_T("Must be \"driver\" or \"service\" or \"all\"\n"));
         }
         
-        PrintService(pServiceStatus, bExtended);
+        PrintService(bExtended);
     }
-    else if(_tcsicmp(Args[0], _T("state=")) == 0)
+    else if(_tcsicmp(ServiceName, _T("state=")) == 0)
     {
-        TCHAR *State = *++Args;
+        LPCTSTR State = *ServiceArgs;
 
         if (_tcsicmp(State, _T("active")) == 0)
             EnumServices(SERVICE_DRIVER|SERVICE_WIN32, SERVICE_ACTIVE);
@@ -69,26 +68,26 @@ Query(TCHAR **Args, BOOL bExtended)
             _tprintf(_T("Must be \"active\" or \"inactive\" or \"all\"\n"));
         }
             
-        PrintService(pServiceStatus, bExtended);
+        PrintService(bExtended);
     }
+/*
+    else if(_tcsicmp(ServiceName, _T("bufsize=")))
+
+    else if(_tcsicmp(ServiceName, _T("ri=")))
+
+    else if(_tcsicmp(ServiceName, _T("group=")))
+*/
     else
     {
-        printf("no args\n"); // test
+        /* print only the service requested */
+        printf("Service name %s\n", ServiceName); // test
+
         /* get default values */
         EnumServices(SERVICE_WIN32, SERVICE_ACTIVE);
 
         /* print default values */
-        PrintService(pServiceStatus, bExtended);
+        PrintService(bExtended);
     }
-
-/*
-    else if(_tcsicmp(Args[0], _T("bufsize=")))
-
-    else if(_tcsicmp(Args[0], _T("ri=")))
-
-    else if(_tcsicmp(Args[0], _T("group=")))
-*/
-
 
 }
 
@@ -100,6 +99,8 @@ INT EnumServices(DWORD ServiceType, DWORD ServiceState)
     DWORD BytesNeeded = 0;
     DWORD NumServices = 0;
     DWORD ResumeHandle = 0;
+    
+//    hSc = OpenService(hSCManager, ServiceName, SERVICE_QUERY_STATUS);
 
     /* determine required buffer size */
     if (! EnumServicesStatusEx(hSCManager,
@@ -147,8 +148,7 @@ INT EnumServices(DWORD ServiceType, DWORD ServiceState)
 
 
 VOID
-PrintService(ENUM_SERVICE_STATUS_PROCESS *pServiceStatus,
-                    BOOL bExtended)
+PrintService(BOOL bExtended)
 {
     _tprintf(_T("SERVICE_NAME: %s\n"), pServiceStatus->lpServiceName);
     _tprintf(_T("DISPLAY_NAME: %s\n"), pServiceStatus->lpDisplayName);

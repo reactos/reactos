@@ -11,10 +11,9 @@
 
 #include "sc.h"
 
-BOOL Delete(TCHAR **Args)
+BOOL Delete(LPCTSTR ServiceName)
 {
     SC_HANDLE hSc;
-    LPCTSTR ServiceName = *Args;
 
     /* testing */
     printf("service to delete - %s\n\n", ServiceName);
