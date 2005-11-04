@@ -889,60 +889,320 @@ IntEngStretchBlt(SURFOBJ *DestSurf,
   return ret;
 }
 
+BOOL
+STDCALL
+EngAlphaBlend(IN SURFOBJ *Dest,
+              IN SURFOBJ *Source,
+              IN CLIPOBJ *ClipRegion,
+              IN XLATEOBJ *ColorTranslation,
+              IN PRECTL DestRect,
+              IN PRECTL SourceRect,
+              IN BLENDOBJ *BlendObj)
+{
+  RECTL              SourceStretchedRect;
+  SIZEL              SourceStretchedSize;
+  HBITMAP            SourceStretchedBitmap = 0;
+  SURFOBJ*           SourceStretchedObj = NULL;
+  RECTL              InputRect;
+  RECTL              OutputRect;
+  RECTL              ClipRect;
+  RECTL              CombinedRect;
+  RECTL              Rect;
+  POINTL             Translate;
+  INTENG_ENTER_LEAVE EnterLeaveSource;
+  INTENG_ENTER_LEAVE EnterLeaveDest;
+  SURFOBJ*           InputObj;
+  SURFOBJ*           OutputObj;
+  LONG               Width;
+  LONG               ClippingType;
+  RECT_ENUM          RectEnum;
+  BOOL               EnumMore;
+  INT                i;
+  BOOLEAN            Ret;
+
+  DPRINT("EngAlphaBlend(Dest:0x%p, Source:0x%p, ClipRegion:0x%p, ColorTranslation:0x%p,\n", Dest, Source, ClipRegion, ColorTranslation);
+  DPRINT("              DestRect:{0x%x, 0x%x, 0x%x, 0x%x}, SourceRect:{0x%x, 0x%x, 0x%x, 0x%x},\n",
+         DestRect->left, DestRect->top, DestRect->right, DestRect->bottom,
+         SourceRect->left, SourceRect->top, SourceRect->right, SourceRect->bottom);
+  DPRINT("              BlendObj:{0x%x, 0x%x, 0x%x, 0x%x}\n", BlendObj->BlendFunction.BlendOp,
+         BlendObj->BlendFunction.BlendFlags, BlendObj->BlendFunction.SourceConstantAlpha,
+         BlendObj->BlendFunction.AlphaFormat);
+
+  /* Validate input */
+  if (DestRect->left >= DestRect->right || DestRect->top >= DestRect->bottom)
+    {
+      DPRINT1("Empty destination rectangle!\n");
+      return FALSE;
+    }
+  if (SourceRect->left >= SourceRect->right || SourceRect->top >= SourceRect->bottom)
+    {
+      DPRINT1("Empty source rectangle!\n");
+      return FALSE;
+    }
+  if (Dest == Source &&
+      !(DestRect->left >= SourceRect->right || SourceRect->left >= DestRect->right ||
+        DestRect->top >= SourceRect->bottom || SourceRect->top >= DestRect->bottom))
+    {
+      DPRINT1("Source and destination rectangles overlap!\n");
+      return FALSE;
+    }
+
+  if (BlendObj->BlendFunction.BlendOp != AC_SRC_OVER)
+    {
+      DPRINT1("BlendOp != AC_SRC_OVER (0x%x)\n", BlendObj->BlendFunction.BlendOp);
+      return FALSE;
+    }
+  if (BlendObj->BlendFunction.BlendFlags != 0)
+    {
+      DPRINT1("BlendFlags != 0 (0x%x)\n", BlendObj->BlendFunction.BlendFlags);
+      return FALSE;
+    }
+  if ((BlendObj->BlendFunction.AlphaFormat & ~AC_SRC_ALPHA) != 0)
+    {
+      DPRINT1("Unsupported AlphaFormat (0x%x)\n", BlendObj->BlendFunction.AlphaFormat);
+      return FALSE;
+    }
+
+  /* Check if there is anything to draw */
+  if (ClipRegion != NULL &&
+      (ClipRegion->rclBounds.left >= ClipRegion->rclBounds.right ||
+       ClipRegion->rclBounds.top >= ClipRegion->rclBounds.bottom))
+    {
+      /* Nothing to do */
+      return TRUE;
+    }
+
+  /* Stretch source if needed */
+  if (DestRect->right - DestRect->left != SourceRect->right - SourceRect->left ||
+      DestRect->bottom - DestRect->top != SourceRect->bottom - SourceRect->top)
+    {
+      SourceStretchedSize.cx = DestRect->right - DestRect->left;
+      SourceStretchedSize.cy = DestRect->bottom - DestRect->top;
+      Width = DIB_GetDIBWidthBytes(SourceStretchedSize.cx, BitsPerFormat(Source->iBitmapFormat));
+      /* FIXME: Maybe it is a good idea to use EngCreateDeviceBitmap and IntEngStretchBlt
+                if possible to get a HW accelerated stretch. */
+      SourceStretchedBitmap = EngCreateBitmap(SourceStretchedSize, Width, Source->iBitmapFormat,
+                                              BMF_TOPDOWN | BMF_NOZEROINIT, NULL);
+      if (SourceStretchedBitmap == 0)
+        {
+          DPRINT1("EngCreateBitmap failed!\n");
+          return FALSE;
+        }
+      SourceStretchedObj = EngLockSurface((HSURF)SourceStretchedBitmap);
+      if (SourceStretchedObj == NULL)
+        {
+          DPRINT1("EngLockSurface failed!\n");
+          EngDeleteSurface((HSURF)SourceStretchedBitmap);
+          return FALSE;
+        }
+
+      SourceStretchedRect.left = 0;
+      SourceStretchedRect.right = SourceStretchedSize.cx;
+      SourceStretchedRect.top = 0;
+      SourceStretchedRect.bottom = SourceStretchedSize.cy;
+      /* FIXME: IntEngStretchBlt isn't used here atm because it results in a
+                try to acquire an already acquired mutex (lock the already locked source surface) */
+      /*if (!IntEngStretchBlt(SourceStretchedObj, Source, NULL, NULL,
+                            NULL, &SourceStretchedRect, SourceRect, NULL,
+                            NULL, NULL, COLORONCOLOR))*/
+      if (!EngStretchBlt(SourceStretchedObj, Source, NULL, NULL, NULL,
+                         NULL, NULL, &SourceStretchedRect, SourceRect,
+                         NULL, COLORONCOLOR))
+        {
+          DPRINT1("EngStretchBlt failed!\n");
+          EngFreeMem(SourceStretchedObj->pvBits);
+          EngUnlockSurface(SourceStretchedObj);
+          EngDeleteSurface((HSURF)SourceStretchedBitmap);
+          return FALSE;
+        }
+      SourceRect = &SourceStretchedRect;
+      Source = SourceStretchedObj;
+    }
+
+  /* Now call the DIB function */
+  InputRect.left = SourceRect->left;
+  InputRect.right = SourceRect->right;
+  InputRect.top = SourceRect->top;
+  InputRect.bottom = SourceRect->bottom;
+  if (!IntEngEnter(&EnterLeaveSource, Source, &InputRect, TRUE, &Translate, &InputObj))
+    {
+      if (SourceStretchedObj != NULL)
+        {
+          EngFreeMem(SourceStretchedObj->pvBits);
+          EngUnlockSurface(SourceStretchedObj);
+        }
+      if (SourceStretchedBitmap != 0)
+        {
+          EngDeleteSurface((HSURF)SourceStretchedBitmap);
+        }
+      return FALSE;
+    }
+  InputRect.left = SourceRect->left + Translate.x;
+  InputRect.right = SourceRect->right + Translate.x;
+  InputRect.top = SourceRect->top + Translate.y;
+  InputRect.bottom = SourceRect->bottom + Translate.y;
+
+  OutputRect.left = DestRect->left;
+  OutputRect.right = DestRect->right;
+  OutputRect.top = DestRect->top;
+  OutputRect.bottom = DestRect->bottom;
+  if (!IntEngEnter(&EnterLeaveDest, Dest, &OutputRect, FALSE, &Translate, &OutputObj))
+    {
+      IntEngLeave(&EnterLeaveSource);
+      if (SourceStretchedObj != NULL)
+        {
+          EngFreeMem(SourceStretchedObj->pvBits);
+          EngUnlockSurface(SourceStretchedObj);
+        }
+      if (SourceStretchedBitmap != 0)
+        {
+          EngDeleteSurface((HSURF)SourceStretchedBitmap);
+        }
+      return FALSE;
+    }
+  OutputRect.left = DestRect->left + Translate.x;
+  OutputRect.right = DestRect->right + Translate.x;
+  OutputRect.top = DestRect->top + Translate.y;
+  OutputRect.bottom = DestRect->bottom + Translate.y;
+
+  Ret = FALSE;
+  ClippingType = (ClipRegion == NULL) ? DC_TRIVIAL : ClipRegion->iDComplexity;
+  switch(ClippingType)
+    {
+    case DC_TRIVIAL:
+      Ret = DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_AlphaBlend(
+                OutputObj, InputObj, &OutputRect, &InputRect, ClipRegion, ColorTranslation, BlendObj);
+      break;
+
+    case DC_RECT:
+      ClipRect.left = ClipRegion->rclBounds.left + Translate.x;
+      ClipRect.right = ClipRegion->rclBounds.right + Translate.x;
+      ClipRect.top = ClipRegion->rclBounds.top + Translate.y;
+      ClipRect.bottom = ClipRegion->rclBounds.bottom + Translate.y;
+      if (EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect))
+        {
+          Rect.left = InputRect.left + CombinedRect.left - OutputRect.left;
+          Rect.right = InputRect.right + CombinedRect.right - OutputRect.right;
+          Rect.top = InputRect.top + CombinedRect.top - OutputRect.top;
+          Rect.bottom = InputRect.bottom + CombinedRect.bottom - OutputRect.bottom;
+          Ret = DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_AlphaBlend(
+                    OutputObj, InputObj, &CombinedRect, &Rect, ClipRegion, ColorTranslation, BlendObj);
+        }
+      break;
+
+    case DC_COMPLEX:
+      Ret = TRUE;
+      CLIPOBJ_cEnumStart(ClipRegion, FALSE, CT_RECTANGLES, CD_ANY, 0);
+      do
+        {
+          EnumMore = CLIPOBJ_bEnum(ClipRegion,(ULONG) sizeof(RectEnum),
+                                   (PVOID) &RectEnum);
+
+          for (i = 0; i < RectEnum.c; i++)
+            {
+              ClipRect.left = RectEnum.arcl[i].left + Translate.x;
+              ClipRect.right = RectEnum.arcl[i].right + Translate.x;
+              ClipRect.top = RectEnum.arcl[i].top + Translate.y;
+              ClipRect.bottom = RectEnum.arcl[i].bottom + Translate.y;
+              if (EngIntersectRect(&CombinedRect, &OutputRect, &ClipRect))
+                {
+                  Rect.left = InputRect.left + CombinedRect.left - OutputRect.left;
+                  Rect.right = InputRect.right + CombinedRect.right - OutputRect.right;
+                  Rect.top = InputRect.top + CombinedRect.top - OutputRect.top;
+                  Rect.bottom = InputRect.bottom + CombinedRect.bottom - OutputRect.bottom;
+                  Ret = DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_AlphaBlend(
+                            OutputObj, InputObj, &CombinedRect, &Rect, ClipRegion, ColorTranslation, BlendObj) && Ret;
+                }
+            }
+        }
+      while(EnumMore);
+      break;
+
+    default:
+      UNIMPLEMENTED;
+      ASSERT(FALSE);
+      break;
+    }
+
+  IntEngLeave(&EnterLeaveDest);
+  IntEngLeave(&EnterLeaveSource);
+
+  if (SourceStretchedObj != NULL)
+    {
+      EngFreeMem(SourceStretchedObj->pvBits);
+      EngUnlockSurface(SourceStretchedObj);
+    }
+  if (SourceStretchedBitmap != 0)
+    {
+      EngDeleteSurface((HSURF)SourceStretchedBitmap);
+    }
+
+  return Ret;
+}
+
 BOOL STDCALL
 IntEngAlphaBlend(IN SURFOBJ *Dest,
                  IN SURFOBJ *Source,
-                 IN CLIPOBJ *Clip,
+                 IN CLIPOBJ *ClipRegion,
                  IN XLATEOBJ *ColorTranslation,
                  IN PRECTL DestRect,
                  IN PRECTL SourceRect,
                  IN BLENDOBJ *BlendObj)
 {
-	BOOL ret = FALSE;
-	BITMAPOBJ *DestObj;
-	BITMAPOBJ *SourceObj;
+  BOOL ret = FALSE;
+  BITMAPOBJ *DestObj;
+  BITMAPOBJ *SourceObj;
 
-	ASSERT(Dest);
-	DestObj = CONTAINING_RECORD(Dest, BITMAPOBJ, SurfObj);
-	ASSERT(DestObj);
+  ASSERT(Dest);
+  DestObj = CONTAINING_RECORD(Dest, BITMAPOBJ, SurfObj);
+  ASSERT(DestObj);
 
-	ASSERT(Source);
-	SourceObj = CONTAINING_RECORD(Source, BITMAPOBJ, SurfObj);
-	ASSERT(SourceObj);
+  ASSERT(Source);
+  SourceObj = CONTAINING_RECORD(Source, BITMAPOBJ, SurfObj);
+  ASSERT(SourceObj);
 
-	ASSERT(DestRect);
-	ASSERT(SourceRect);
+  ASSERT(DestRect);
+  ASSERT(SourceRect);
 
-	BITMAPOBJ_LockBitmapBits(DestObj);
-	MouseSafetyOnDrawStart(Dest, DestRect->left, DestRect->top,
-	                       DestRect->right, DestRect->bottom);
+  /* Check if there is anything to draw */
+  if (ClipRegion != NULL &&
+      (ClipRegion->rclBounds.left >= ClipRegion->rclBounds.right ||
+       ClipRegion->rclBounds.top >= ClipRegion->rclBounds.bottom))
+    {
+      /* Nothing to do */
+      return TRUE;
+    }
 
-	if (Source != Dest)
-		BITMAPOBJ_LockBitmapBits(SourceObj);
-	MouseSafetyOnDrawStart(Source, SourceRect->left, SourceRect->top,
-	                       SourceRect->right, SourceRect->bottom);
+  BITMAPOBJ_LockBitmapBits(DestObj);
+  MouseSafetyOnDrawStart(Dest, DestRect->left, DestRect->top,
+                         DestRect->right, DestRect->bottom);
 
-	/* Call the driver's DrvAlphaBlend if available */
-	if (DestObj->flHooks & HOOK_ALPHABLEND)
-	{
-		ret = GDIDEVFUNCS(Dest).AlphaBlend(
-		                  Dest, Source, Clip, ColorTranslation,
-		                  DestRect, SourceRect, BlendObj);
-	}
+  if (Source != Dest)
+    BITMAPOBJ_LockBitmapBits(SourceObj);
+  MouseSafetyOnDrawStart(Source, SourceRect->left, SourceRect->top,
+                         SourceRect->right, SourceRect->bottom);
 
-	if (! ret)
-	{
-		ret = EngAlphaBlend(Dest, Source, Clip, ColorTranslation,
-		                    DestRect, SourceRect, BlendObj);
-	}
+  /* Call the driver's DrvAlphaBlend if available */
+  if (DestObj->flHooks & HOOK_ALPHABLEND)
+    {
+      ret = GDIDEVFUNCS(Dest).AlphaBlend(
+                        Dest, Source, ClipRegion, ColorTranslation,
+                        DestRect, SourceRect, BlendObj);
+    }
 
-	MouseSafetyOnDrawEnd(Source);
-	if (Source != Dest)
-		BITMAPOBJ_UnlockBitmapBits(SourceObj);
-	MouseSafetyOnDrawEnd(Dest);
-	BITMAPOBJ_UnlockBitmapBits(DestObj);
+  if (! ret)
+    {
+      ret = EngAlphaBlend(Dest, Source, ClipRegion, ColorTranslation,
+                          DestRect, SourceRect, BlendObj);
+    }
 
-	return ret;
+  MouseSafetyOnDrawEnd(Source);
+  if (Source != Dest)
+    BITMAPOBJ_UnlockBitmapBits(SourceObj);
+  MouseSafetyOnDrawEnd(Dest);
+  BITMAPOBJ_UnlockBitmapBits(DestObj);
+
+  return ret;
 }
 
 /**** REACTOS FONT RENDERING CODE *********************************************/

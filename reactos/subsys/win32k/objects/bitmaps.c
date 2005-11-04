@@ -1327,7 +1327,7 @@ NtGdiAlphaBlend(
 		if (NULL == DCSrc)
 		{
 			DC_UnlockDc(DCDest);
-			DPRINT1("Invalid source dc handle (0x%08x) passed to NtGdiBitBlt\n", hDCSrc);
+			DPRINT1("Invalid source dc handle (0x%08x) passed to NtGdiAlphaBlend\n", hDCSrc);
 			SetLastWin32Error(ERROR_INVALID_HANDLE);
 			return FALSE;
 		}

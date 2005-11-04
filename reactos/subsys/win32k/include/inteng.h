@@ -117,6 +117,10 @@ IntEngCreateSrcMonoXlate(HPALETTE PaletteDest,
                          ULONG ForegroundColor,
                          ULONG BackgroundColor);
 
+HPALETTE FASTCALL
+IntEngGetXlatePalette(XLATEOBJ *XlateObj,
+                      ULONG Palette);
+
 BOOL STDCALL
 IntEngPolyline(SURFOBJ *DestSurf,
                CLIPOBJ *Clip,
@@ -165,7 +169,7 @@ IntEngMovePointer(IN SURFOBJ *pso,
 BOOL STDCALL
 IntEngAlphaBlend(IN SURFOBJ *Dest,
                  IN SURFOBJ *Source,
-                 IN CLIPOBJ *Clip,
+                 IN CLIPOBJ *ClipRegion,
                  IN XLATEOBJ *ColorTranslation,
                  IN PRECTL DestRect,
                  IN PRECTL SourceRect,

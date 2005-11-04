@@ -416,6 +416,24 @@ IntEngCreateSrcMonoXlate(HPALETTE PaletteDest,
    return XlateObj;
 }
 
+HPALETTE FASTCALL
+IntEngGetXlatePalette(XLATEOBJ *XlateObj,
+                      ULONG Palette)
+{
+   XLATEGDI *XlateGDI = ObjToGDI(XlateObj, XLATE);
+   switch (Palette)
+   {
+   case XO_DESTPALETTE:
+      return XlateGDI->DestPal;
+      break;
+
+   case XO_SRCPALETTE:
+      return XlateGDI->SourcePal;
+      break;
+   }
+   return 0;
+}
+
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 /*

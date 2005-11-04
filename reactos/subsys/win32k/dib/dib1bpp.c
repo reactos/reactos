@@ -1303,4 +1303,13 @@ DIB_1BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
   return FALSE;
 }
 
+BOOLEAN
+DIB_1BPP_AlphaBlend(SURFOBJ* Dest, SURFOBJ* Source, RECTL* DestRect,
+                    RECTL* SourceRect, CLIPOBJ* ClipRegion,
+                    XLATEOBJ* ColorTranslation, BLENDOBJ* BlendObj)
+{
+  UNIMPLEMENTED;
+  return FALSE;
+}
+
 /* EOF */

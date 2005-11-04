@@ -1256,4 +1256,98 @@ DIB_32BPP_TransparentBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
   return TRUE;
 }
 
+typedef union {
+   ULONG ul;
+   struct {
+      UCHAR red;
+      UCHAR green;
+      UCHAR blue;
+      UCHAR alpha;
+   } col;
+} NICEPIXEL32;
+
+STATIC inline UCHAR
+Clamp8(ULONG val)
+{
+   return (val > 255) ? 255 : val;
+}
+
+BOOLEAN
+DIB_32BPP_AlphaBlend(SURFOBJ* Dest, SURFOBJ* Source, RECTL* DestRect,
+                     RECTL* SourceRect, CLIPOBJ* ClipRegion,
+                     XLATEOBJ* ColorTranslation, BLENDOBJ* BlendObj)
+{
+   INT Rows, Cols, SrcX, SrcY;
+   register PULONG Dst;
+   ULONG DstDelta;
+   BLENDFUNCTION BlendFunc;
+   register NICEPIXEL32 DstPixel, SrcPixel;
+   UCHAR Alpha, SrcBpp;
+
+   DPRINT("DIB_32BPP_AlphaBlend: srcRect: (%d,%d)-(%d,%d), dstRect: (%d,%d)-(%d,%d)\n",
+          SourceRect->left, SourceRect->top, SourceRect->right, SourceRect->bottom,
+          DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
+
+   ASSERT(DestRect->bottom - DestRect->top == SourceRect->bottom - SourceRect->top &&
+          DestRect->right - DestRect->left == SourceRect->right - SourceRect->left);
+
+   BlendFunc = BlendObj->BlendFunction;
+   if (BlendFunc.BlendOp != AC_SRC_OVER)
+   {
+      DPRINT1("BlendOp != AC_SRC_OVER\n");
+      return FALSE;
+   }
+   if (BlendFunc.BlendFlags != 0)
+   {
+      DPRINT1("BlendFlags != 0\n");
+      return FALSE;
+   }
+   if ((BlendFunc.AlphaFormat & ~AC_SRC_ALPHA) != 0)
+   {
+      DPRINT1("Unsupported AlphaFormat (0x%x)\n", BlendFunc.AlphaFormat);
+      return FALSE;
+   }
+   if ((BlendFunc.AlphaFormat & AC_SRC_ALPHA) != 0 &&
+       BitsPerFormat(Source->iBitmapFormat) != 32)
+   {
+      DPRINT1("Source bitmap must be 32bpp when AC_SRC_ALPHA is set\n");
+      return FALSE;
+   }
+
+   Dst = (PULONG)((ULONG_PTR)Dest->pvScan0 + (DestRect->top * Dest->lDelta) +
+                             (DestRect->left << 2));
+   DstDelta = Dest->lDelta - ((DestRect->right - DestRect->left) << 2);
+   SrcBpp = BitsPerFormat(Source->iBitmapFormat);
+
+   Rows = DestRect->bottom - DestRect->top;
+   SrcY = SourceRect->top;
+   while (--Rows >= 0)
+   {
+      Cols = DestRect->right - DestRect->left;
+      SrcX = SourceRect->left;
+      while (--Cols >= 0)
+      {
+         SrcPixel.ul = DIB_GetSource(Source, SrcX++, SrcY, ColorTranslation);
+         SrcPixel.col.red = SrcPixel.col.red * BlendFunc.SourceConstantAlpha / 255;
+         SrcPixel.col.green = SrcPixel.col.green * BlendFunc.SourceConstantAlpha / 255;
+         SrcPixel.col.blue = SrcPixel.col.blue * BlendFunc.SourceConstantAlpha / 255;
+         SrcPixel.col.alpha = (SrcBpp == 32) ? (SrcPixel.col.alpha * BlendFunc.SourceConstantAlpha / 255) : BlendFunc.SourceConstantAlpha;
+
+         Alpha = ((BlendFunc.AlphaFormat & AC_SRC_ALPHA) != 0) ?
+                 SrcPixel.col.alpha : BlendFunc.SourceConstantAlpha;
+
+         DstPixel.ul = *Dst;
+         DstPixel.col.red = Clamp8(DstPixel.col.red * (255 - Alpha) / 255 + SrcPixel.col.red);
+         DstPixel.col.green = Clamp8(DstPixel.col.green * (255 - Alpha) / 255 + SrcPixel.col.green);
+         DstPixel.col.blue = Clamp8(DstPixel.col.blue * (255 - Alpha) / 255 + SrcPixel.col.blue);
+         DstPixel.col.alpha = Clamp8(DstPixel.col.alpha * (255 - Alpha) / 255 + SrcPixel.col.alpha);
+         *Dst++ = DstPixel.ul;
+      }
+      Dst = (PULONG)((ULONG_PTR)Dst + DstDelta);
+      SrcY++;
+   }
+
+   return TRUE;
+}
+
 /* EOF */
